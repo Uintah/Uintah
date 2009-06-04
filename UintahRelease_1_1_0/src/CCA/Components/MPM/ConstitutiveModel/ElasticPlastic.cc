@@ -894,7 +894,8 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
       pVolume_deformed[idx]=pMass[idx]/rho_cur;
 
       // Compute polar decomposition of F (F = RU)
-      tensorF_new.polarDecomposition(tensorU, tensorR, d_tol, true);
+//      tensorF_new.polarDecomposition(tensorU, tensorR, d_tol, true);
+      tensorF_new.polarDecompositionRMB(tensorU, tensorR);
 
       // Calculate rate of deformation tensor (D)
       tensorD = (tensorL + tensorL.Transpose())*0.5;
@@ -1718,7 +1719,8 @@ ElasticPlastic::computeStressTensorImplicit(const PatchSubset* patches,
       //           values for R and V if the incremental algorithm 
       //           for the polar decomposition is used in the explicit
       //           calculations following an implicit calculation.)
-      DefGrad.polarDecomposition(RightStretch, Rotation, d_tol, true);
+//      DefGrad.polarDecomposition(RightStretch, Rotation, d_tol, true);
+      DefGrad.polarDecompositionRMB(RightStretch, Rotation);
       pRotation_new[idx] = Rotation;
 
       // Compute the current strain and strain rate

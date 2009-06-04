@@ -144,6 +144,13 @@ BoundaryCondition::~BoundaryCondition()
   if(d_intrusionBC){
     delete d_intrusionBC;
   }
+  for ( EfficiencyMap::iterator iter = d_effVars.begin(); iter != d_effVars.end(); iter++){
+    VarLabel::destroy(iter->second.label);
+  }
+
+  for ( SpeciesEffMap::iterator iter = d_speciesEffInfo.begin(); iter != d_speciesEffInfo.end(); iter++){
+    VarLabel::destroy(iter->second.flowRateLabel);
+  }
 }
 
 //****************************************************************************

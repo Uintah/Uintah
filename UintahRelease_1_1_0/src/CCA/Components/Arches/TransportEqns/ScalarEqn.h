@@ -151,11 +151,22 @@ public:
   inline const vector<string> getSourcesList(){
     return d_sources; };
 
+
+  template<class phiType> void
+  clipPhi( const Patch* p, 
+           phiType& phi );
+
 private:
 
   vector<std::string> d_sources;
 
   double d_turbPrNo;
+  double d_lowClip; 
+  double d_highClip; 
+
+  bool d_doClipping; 
+  bool d_doLowClip;
+  bool d_doHighClip;  
 
 }; // class ScalarEqn
 } // namespace Uintah

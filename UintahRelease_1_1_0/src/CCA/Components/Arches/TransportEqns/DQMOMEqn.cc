@@ -89,6 +89,7 @@ DQMOMEqn::problemSetup(const ProblemSpecP& inputdb, int qn)
   db->require( "scaling_const", d_scalingConstant ); 
 
   // initial value blocks
+  d_initValue = 0.0;
   for (ProblemSpecP db_initvals = db->findBlock("initial_value");
        db_initvals != 0; db_initvals = db_initvals->findNextBlock("initial_value") ) {
     
@@ -145,7 +146,7 @@ DQMOMEqn::problemSetup(const ProblemSpecP& inputdb, int qn)
   d_lowClip = 0.0; // initializing this to zero for getAbscissa values
   double clip_default = -9999999999.0;
   if (db_clipping) {
-    //This seems like a "safe" number to assume 
+    //This seems like a *safe* number to assume 
     d_doLowClip = false; 
     d_doHighClip = false; 
     d_doClipping = true;
@@ -249,8 +250,6 @@ void DQMOMEqn::initializeVariables( const ProcessorGroup* pc,
   //patch loop
   for (int p=0; p < patches->size(); p++){
 
-    //Ghost::GhostType  gaf = Ghost::AroundFaces;
-    //Ghost::GhostType  gac = Ghost::AroundCells;
     Ghost::GhostType  gn  = Ghost::None;
 
     const Patch* patch = patches->get(p);
@@ -260,7 +259,7 @@ void DQMOMEqn::initializeVariables( const ProcessorGroup* pc,
     CCVariable<double> rkoldVar; 
     CCVariable<double> icValue; 
     constCCVariable<double> oldVar; 
-    new_dw->allocateAndPut( newVar  , d_transportVarLabel, matlIndex, patch );
+    new_dw->allocateAndPut( newVar, d_transportVarLabel, matlIndex, patch );
     new_dw->allocateAndPut( rkoldVar, d_oldtransportVarLabel, matlIndex, patch ); 
     new_dw->allocateAndPut( icValue , d_icLabel, matlIndex, patch );
     old_dw->get(oldVar, d_transportVarLabel, matlIndex, patch, gn, 0);
@@ -283,6 +282,7 @@ void DQMOMEqn::initializeVariables( const ProcessorGroup* pc,
     Fdiff.initialize(0.0);
     Fconv.initialize(0.0);
     RHS.initialize(0.0);
+
   }
 }
 //---------------------------------------------------------------------------
@@ -313,7 +313,7 @@ DQMOMEqn::sched_buildTransportEqn( const LevelP& level, SchedulerP& sched, int t
   tsk->requires(Task::NewDW, iter->second, Ghost::AroundCells, 1); 
  
   //-----OLD-----
-  //tsk->requires(Task::OldDW, d_transportVarLabel, Ghost::AroundCells, 2);
+  tsk->requires(Task::OldDW, d_transportVarLabel, Ghost::AroundCells, 2);
   tsk->requires(Task::OldDW, d_fieldLabels->d_viscosityCTSLabel, Ghost::AroundCells, 1);
   tsk->requires(Task::OldDW, d_fieldLabels->d_uVelocitySPBCLabel, Ghost::AroundCells, 1);   
 #ifdef YDIM
@@ -345,7 +345,6 @@ DQMOMEqn::buildTransportEqn( const ProcessorGroup* pc,
   //patch loop
   for (int p=0; p < patches->size(); p++){
 
-    //Ghost::GhostType  gaf = Ghost::AroundFaces;
     Ghost::GhostType  gac = Ghost::AroundCells;
     Ghost::GhostType  gn  = Ghost::None;
 
@@ -394,6 +393,9 @@ DQMOMEqn::buildTransportEqn( const ProcessorGroup* pc,
     new_dw->getModifiable(RHS, d_RHSLabel, matlIndex, patch);
 
     //----BOUNDARY CONDITIONS
+    // Note: BC's are set here on phi (not phiOld) because phi will be 
+    // copied to phiOld at the end of the rk sub-step.  
+    // For first time step, bc's have been set in dqmomInit
     computeBCs( patch, d_eqnName, phi );
 
     //----CONVECTION
@@ -430,6 +432,7 @@ DQMOMEqn::sched_solveTransportEqn( const LevelP& level, SchedulerP& sched, int t
   tsk->modifies(d_transportVarLabel);
   tsk->modifies(d_oldtransportVarLabel); 
   tsk->requires(Task::NewDW, d_RHSLabel, Ghost::None, 0);
+  tsk->requires(Task::OldDW, d_transportVarLabel, Ghost::None, 0);
 
   sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
 }
@@ -456,18 +459,20 @@ DQMOMEqn::solveTransportEqn( const ProcessorGroup* pc,
     old_dw->get(DT, d_fieldLabels->d_sharedState->get_delt_label());
     double dt = DT; 
 
-    CCVariable<double> phi;
-    CCVariable<double> oldphi; 
+    CCVariable<double> phi;    // phi @ current sub-level 
+    CCVariable<double> oldphi; // phi @ last update for rk substeps
     constCCVariable<double> RHS; 
+    constCCVariable<double> rk1_phi; // phi @ n for averaging 
 
     new_dw->getModifiable(phi, d_transportVarLabel, matlIndex, patch);
     new_dw->getModifiable(oldphi, d_oldtransportVarLabel, matlIndex, patch); 
     new_dw->get(RHS, d_RHSLabel, matlIndex, patch, gn, 0);
+    old_dw->get(rk1_phi, d_transportVarLabel, matlIndex, patch, gn, 0);
 
     d_timeIntegrator->singlePatchFEUpdate( patch, phi, RHS, dt );
     Vector alpha = d_timeIntegrator->d_alpha; 
     Vector beta  = d_timeIntegrator->d_beta; 
-    d_timeIntegrator->timeAvePhi( patch, phi, oldphi, timeSubStep, alpha, beta ); 
+    d_timeIntegrator->timeAvePhi( patch, phi, rk1_phi, timeSubStep, alpha, beta ); 
 
     if (d_doClipping) 
       clipPhi( patch, phi ); 
@@ -974,48 +979,15 @@ DQMOMEqn::computeDiff( const Patch* p, fT& Fdiff, oldPhiT& oldPhi, gammaT& gamma
 //---------------------------------------------------------------------------
 // Method: Compute the boundary conditions. 
 //---------------------------------------------------------------------------
+#if 0
 template<class phiType> void
 DQMOMEqn::computeBCs( const Patch* p, 
                        string varName,
                        phiType& phi )
 {
-  //d_boundaryCond->setScalarValueBC( 0, patch, phi, varName ); 
-  // Going to hard code these until I figure out a better way to handle
-  // the boundary conditions
-  bool xminus = p->getBCType(Patch::xminus) != Patch::Neighbor;
-  //bool xplus =  p->getBCType(Patch::xplus) != Patch::Neighbor;
-  //bool yminus = p->getBCType(Patch::yminus) != Patch::Neighbor;
-  //bool yplus =  p->getBCType(Patch::yplus) != Patch::Neighbor;
-  //bool zminus = p->getBCType(Patch::zminus) != Patch::Neighbor;
-  //bool zplus =  p->getBCType(Patch::zplus) != Patch::Neighbor;
-
-  double inletR = 0.007112;
-  double boundaryValue = d_initValue;
-  Vector cent(0,.1556,.1556); 
-
-  IntVector cLow  = p->getCellLowIndex__New(); 
-  IntVector cHigh = p->getCellHighIndex__New();  
-
-  if (xminus) {
-    int cx = cLow.x() - 1; 
-    for(  int cy = cLow.y(); cy < cHigh.y(); cy += 1)
-    {
-      for(  int cz = cLow.z(); cz < cHigh.z(); cz += 1)
-      {
-
-        IntVector c(cx,cy,cz);
-        Point mypoint = p->cellPosition(c); 
-        double myradius = pow( mypoint.y() - cent.y(), 2.0 );
-        myradius += pow( mypoint.z() - cent.z(), 2.0 ); 
-        myradius = pow( myradius, 1.0/2.0 ); 
-
-        if ( myradius < inletR ) 
-          phi[c] = boundaryValue; 
-
-      }
-    }
-  }
+  d_boundaryCond->setScalarValueBC( 0, p, phi, varName );
 }
+#endif
 //---------------------------------------------------------------------------
 // Method: Interpolate a variable to the face of its respective cv
 //---------------------------------------------------------------------------
