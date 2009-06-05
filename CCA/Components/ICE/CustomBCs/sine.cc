@@ -91,6 +91,8 @@ bool read_Sine_BC_inputs(const ProblemSpecP& prob_spec,
     }
     sine->require("omega", sine_vb->omega);
     sine->require("A",     sine_vb->A);
+    sine->require("reference_pressure", sine_vb->p_ref);
+    sine->require("reference_velocity",sine_vb->vel_ref);
     
     ProblemSpecP mat_ps= 
       prob_spec->findBlockWithOutAttribute("MaterialProperties");
@@ -179,7 +181,6 @@ void  preprocess_Sine_BCs(DataWarehouse* new_dw,
 /*_________________________________________________________________
  Function~ set_Sine_Velocity_BC--
  Purpose~  Set velocity boundary conditions
-           THIS IS JUST A PLACEHOLDER
 ___________________________________________________________________*/
 void set_Sine_Velocity_BC(const Patch* patch,
                           const Patch::FaceType face,
@@ -200,17 +201,23 @@ void set_Sine_Velocity_BC(const Patch* patch,
       throw InternalError("set_Sine_velocity_BC", __FILE__, __LINE__);
     }
     
-//    double A     =  sine_var_basket->A;
-//    double omega = sine_var_basket->omega;                    
-//    double t     = sharedState->getElapsedTime();                        
-//    t += sine_v->delT;                                                
-                                                                      
+    double A       = sine_var_basket->A;
+    double omega   = sine_var_basket->omega; 
+    Vector vel_ref = sine_var_basket->vel_ref;           
+    double t       = sharedState->getElapsedTime(); 
+    t += sine_v->delT;
+    double change  = A * sin(omega*t);
+    
+    Vector smallNum(1e-100);
+    Vector one_or_zero = vel_ref/(vel_ref + smallNum);                                 
+                                                      
+    // only alter the velocity in the direction that the reference_velocity
+    // is non-zero.       
     for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++)   {
-      IntVector c = *bound_ptr;                                             
-                                                                      
-      vel_CC[c].x(0.0);   // this need to be changed  
-      vel_CC[c].y(0.0);  
-      vel_CC[c].z(0.0);                                               
+      IntVector c = *bound_ptr;                                           
+      vel_CC[c].x(vel_ref.x() +  one_or_zero.x() * change);
+      vel_CC[c].y(vel_ref.y() +  one_or_zero.y() * change);  
+      vel_CC[c].z(vel_ref.z() +  one_or_zero.z() * change);                                               
     }
   } 
 }
@@ -268,14 +275,15 @@ void set_Sine_press_BC(const Patch* patch,
   }
                             
   double A     =  sine_var_basket->A;
-  double omega =  sine_var_basket->omega;                                  
-  double t     =  sharedState->getElapsedTime();                         
-  double p_ref = 101325;                                             
-  t += sine_v->delT;  // delT is either 0 or delT                                          
+  double omega =  sine_var_basket->omega;   
+  double p_ref =  sine_var_basket->p_ref;                               
+  double t     =  sharedState->getElapsedTime();               
+  t += sine_v->delT;  // delT is either 0 or delT 
+  double change = A * sin(omega*t);                               
 
   for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {  
     IntVector c = *bound_ptr;                                    
-    press_CC[c] = p_ref + A * sin(omega*t);                 
+    press_CC[c] = p_ref + change;                 
   }                                                                  
 }
   

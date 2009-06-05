@@ -53,6 +53,8 @@ namespace Uintah {
     double gamma;
     double cv;
     double delT;
+    double p_ref;
+    Vector vel_ref;
   };    
   //____________________________________________________________
   // This struct contains all of the additional variables needed by setBC.
@@ -112,7 +114,6 @@ namespace Uintah {
 /*______________________________________________________________________ 
  Function~  set_Sine_BCs_FC--
  Purpose~   Sets the face center velocity boundary conditions
-            THIS IS JUST A PLACEHOLDER FOR NOW
  ______________________________________________________________________*/
  template<class T>
  bool set_Sine_BCs_FC( const Patch* patch,
@@ -127,7 +128,7 @@ namespace Uintah {
                        sine_variable_basket* sine_var_basket,
                        sine_vars* sine_v)
 {
-  cout<< "Doing set_sine_BCs_FC: \t\t" << whichVel   << " face " << face << endl;
+//  cout<< "Doing set_sine_BCs_FC: \t\t" << whichVel   << " face " << face << endl;
   
   bool IveSetBC = false;
  
@@ -155,18 +156,20 @@ namespace Uintah {
   
   //__________________________________
   //                            
-//  double A     = sine_var_basket->A;
-//  double omega = sine_var_basket->omega;                                
-//  double t     = sharedState->getElapsedTime();                         
-//  t += sine_v->delT;                                                 
-                                                                     
+  double A     = sine_var_basket->A;
+  double omega = sine_var_basket->omega;
+  Vector vel_ref=sine_var_basket->vel_ref;                                
+  double t     = sharedState->getElapsedTime();                         
+  t += sine_v->delT;     
+  double change =   A * sin(omega*t);
+                                             
   for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {  
     IntVector c = *bound_ptr - one_or_zero;                  
       
     Vector vel(0.0,0.0,0.0);                                         
-    vel.x( 0.0 );  
-    vel.y( 0.0 );
-    vel.z( 0.0 );  
+    vel.x(vel_ref.x() +  change); 
+    vel.y(vel_ref.y() +  change );
+    vel.z(vel_ref.z() +  change );  
                                                                      
     vel_FC[c] = x_one_zero * vel.x()                                 
               + y_one_zero * vel.y()                                 
