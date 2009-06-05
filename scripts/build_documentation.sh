@@ -2,6 +2,10 @@
 
 cd /tmp
 
+if [ -d uintah ] ; then
+	rm -rf uintah
+fi
+
 svn checkout https://gforge.sci.utah.edu/svn/uintah/trunk uintah
 
 cd uintah/doc
@@ -24,7 +28,11 @@ cd /tmp/uintah
 
 doxygen src/scripts/doxygen/doxy_config
 
-cp -a --remove-destination html /var/www/uintah/htdocs/doxygen
+if [ -d /var/www/uintah/htdocs/doxygen ]; then
+	rm -rf /var/www/uintah/htdocs/doxygen
+fi
+
+mv html /var/www/uintah/htdocs/doxygen
 
 chown -R www-data.root /var/www/uintah/htdocs/doxygen
 chmod go+r /var/www/uintah/htdocs/doxygen
