@@ -36,9 +36,9 @@ FFLAGS += -DNOEOSMOD -DGEO_MBF_BETA
 
 SRCS     += \
 	$(SRCDIR)/Hooke.F	\
-	$(SRCDIR)/geochk.F	\
-	$(SRCDIR)/Isotropic_Geomaterial_init.F	\
-	$(SRCDIR)/Isotropic_Geomaterial_calcs.F	\
-	$(SRCDIR)/Isotropic_Geomaterial_calcNew.F	\
+        $(SRCDIR)/Kayenta_chk.F   \
+	$(SRCDIR)/Kayenta_init.F	\
+	$(SRCDIR)/Kayenta_calcs.F	\
+	$(SRCDIR)/Kayenta_calcNew.F	\
 	$(SRCDIR)/MIGUtilsF.F	\
 	$(SRCDIR)/MIGUtils.cc
