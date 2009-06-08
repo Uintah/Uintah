@@ -70,10 +70,10 @@ extern "C"{
 #elif defined( FORTRAN_UNDERSCORE_LINUX )
 #  define GEOCHK geochk_
 #  define GEORXV georxv_
-#  define KAYENTA_CALC kayenta_calc_
+#  define KAYENTA_CALC kayenta_calc__
 #else // NONE
 #  define GEOCHK geochk
-#  define KAYENTA_CALC kayenta_calc_
+#  define KAYENTA_CALC kayenta_calc
 #  define GEORXV georxv
 #endif
 
