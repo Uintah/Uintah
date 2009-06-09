@@ -42,17 +42,15 @@ typedef unsigned char byte;
 
 // forwared function declarations
 void usage( char *prog_name );
-//void parseArgs( int argc, char* argv[], string & infile, bool & binmode);
-//bool ReadImage(const char* szfile, int nsize, byte* pb);
 bool isPointInsideSphere(double xv, double yv, double zv,
                          double xcen, double ycen, double zcen, double rad);
 
 //----------------------------------------------------------------------------------
 /*
-Descriptive comment to go here
+Generate a raw file containing a 3D image based on a text file containing sphere
+descriptions, namely, x, y and z of the centers, and radii.  This can then be used
+with the file geometry piece type, after processing with pfs2, to generate geometry for Uintah simulations.
 */
-// function main : main entry point of application
-//
 int main(int argc, char *argv[])
 {
   // Establish physical size of the image
@@ -63,14 +61,17 @@ int main(int argc, char *argv[])
 
   // image resolution
   vector<int> res(3);
-  res[0]=32;
-  res[1]=32;
-  res[2]=32;
+  res[0]=256;
+  res[1]=256;
+  res[2]=256;
 
   // calculate voxel size
   double dx=X[0]/((double) res[0]);
   double dy=X[1]/((double) res[1]);
   double dz=X[2]/((double) res[2]);
+  if(dx!=dy || dx!=dz || dy !=dz){
+    cerr << "WARNING:  Subsequent code assumes that voxel dimensions are equal\n";
+  }
 
   // Open file containing sphere center locations and radii
   string spherefile_name = "spheres.txt";
@@ -101,10 +102,24 @@ int main(int argc, char *argv[])
 
   // Loop over spheres
   for(unsigned int ns = 0; ns<xcen.size(); ns++){
+    // find the cell that contains the sphere center
+    int ic = xcen[ns]/dx;
+    int jc = ycen[ns]/dy;
+    int kc = zcen[ns]/dz;
+    // find a conservative estimate of how many cells make up the sphere radius
+    int rc = rad[ns]/dx+2;
+    // determine the bounding box that contains the sphere
+    int bbx_min = max(0,ic-rc);
+    int bbx_max = min(res[0],ic+rc);
+    int bby_min = max(0,jc-rc);
+    int bby_max = min(res[1],jc+rc);
+    int bbz_min = max(0,kc-rc);
+    int bbz_max = min(res[2],kc+rc);
+  
    // Loop over all voxels of the image to determine which are "inside" the sphere
-   for(int i=0;i<res[0];i++){
-     for(int j=0;j<res[1];j++){
-       for(int k=0;k<res[2];k++){
+   for(int i=bbx_min;i<bbx_max;i++){
+     for(int j=bby_min;j<bby_max;j++){
+       for(int k=bbz_min;k<bbz_max;k++){
          double xv=((double) i + 0.5)*dx;
          double yv=((double) j + 0.5)*dy;
          double zv=((double) k + 0.5)*dz;
