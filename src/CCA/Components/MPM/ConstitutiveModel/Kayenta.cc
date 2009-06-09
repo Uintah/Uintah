@@ -58,25 +58,27 @@ DEALINGS IN THE SOFTWARE.
 
 ////////////////////////////////////////////////////////////////////////////////
 // The following functions are found in fortran/*.F
+//SUBROUTINE KAYENTA_CALC( NBLK, NINSV, DT, PROP,
+  //   $                                   SIGARG, D, SVARG, USM   )
 
 extern "C"{
 
 #if defined( FORTRAN_UNDERSCORE_END )
 #  define GEOCHK geochk_
-#  define ISOTROPIC_GEOMATERIAL_CALC isotropic_geomaterial_calc_
+#  define KAYENTA_CALC kayenta_calc_
 #  define GEORXV georxv_
 #elif defined( FORTRAN_UNDERSCORE_LINUX )
 #  define GEOCHK geochk_
 #  define GEORXV georxv_
-#  define ISOTROPIC_GEOMATERIAL_CALC isotropic_geomaterial_calc__
+#  define KAYENTA_CALC kayenta_calc__
 #else // NONE
 #  define GEOCHK geochk
-#  define ISOTROPIC_GEOMATERIAL_CALC isotropic_geommaterial_calc_
+#  define KAYENTA_CALC kayenta_calc
 #  define GEORXV georxv
 #endif
 
    void GEOCHK( double UI[], double UJ[], double UK[] );
-   void ISOTROPIC_GEOMATERIAL_CALC( int &nblk, int &ninsv, double &dt,
+   void KAYENTA_CALC( int &nblk, int &ninsv, double &dt,
                                     double UI[], double stress[], double D[],
                                     double svarg[], double &USM );
    void GEORXV( double UI[], double UJ[], double UK[], int &nx, char* namea[],
@@ -86,10 +88,7 @@ extern "C"{
 
 // End fortran functions.
 ////////////////////////////////////////////////////////////////////////////////
-
-using std::cerr;
-using namespace Uintah;
-using namespace SCIRun;
+using std::cerr; using namespace Uintah; using namespace SCIRun;
 
 Kayenta::Kayenta(ProblemSpecP& ps,MPMFlags* Mflag)
   : ConstitutiveModel(Mflag)
@@ -492,7 +491,7 @@ void Kayenta::computeStressTensor(const PatchSubset* patches,
         svarg[i]=ISVs[i][idx];
       }
 
-      ISOTROPIC_GEOMATERIAL_CALC(nblk, d_NINSV, dt, UI, sigarg,
+      KAYENTA_CALC(nblk, d_NINSV, dt, UI, sigarg,
                                  Darray, svarg, USM);
 
       // Unload ISVs from 1D array into ISVs_new 

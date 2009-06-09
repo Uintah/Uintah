@@ -1,4 +1,7 @@
 \newcommand{\SUM}{\raise1.5pt\hbox{$\scriptstyle\sum_{s=1}^N$}}
+\newcommand {\cc}{\tiny(CC)}
+\newcommand {\fc}{\tiny(FC)}
+\newcommand {\dat}{\tiny(dat)}
 
 \chapter{ICE} \label{Sec:ICE}
 
@@ -530,7 +533,7 @@ The input parameters for the Tillotson equation of state \cite{ref:gathers} for 
 \subsection{Exchange Properties}
 The heat and momentum exchange coefficients $K_{rs}$ and $H_{rs}$, which
 determine the rate at which momentum and heat are transferred between
-materials, are specified in the following format.
+materials, and are specified in the following format.
 %
 \begin{Verbatim}[fontsize=\footnotesize]
 0->1,   0->2,  0->3
@@ -599,10 +602,10 @@ cell using
   </BoundaryConditions>
 </Grid>
 \end{Verbatim}
-There is also the field \TT{id = "all"}.  In principal, one could set
+There is also the field tag \TT{id = "all".}  In principal, one could set
 different boundary condition types for different materials.  In practice,
 this is rarely used, so the usage illustrated here should be used.  Note that
-pressure field id is always 0.Symmetric boundary conditions are set using:
+pressure field id is always 0.  Symmetric boundary conditions are set using:
 %
 \begin{Verbatim}[fontsize=\footnotesize]
 <Face side = "y-">
@@ -794,6 +797,17 @@ wvel\_FCME            & $L/t$ & z-component of velocity, after momentum exchange
 \end{center}
 \normalsize
 %______________________________________________________________________
+The variables,
+\TT{mag\_div\_vel\_CC,
+mag\_grad\_press\_CC,  
+mag\_grad\_rho\_CC, 
+mag\_grad\_temp\_CC,   
+mag\_grad\_vol\_frac\_CC,}
+are the magnitude of the gradient or divergence of the respective primative variable.  
+If the user visual To  are large and based on this information
+the adaptive mesh cell refinement criteria can be set.
+
+%______________________________________________________________________
 %  XML tags
 \newpage
 Below is a list of the \TT{XML} tags pertaining specifically to \TT{ICE} problems.
@@ -801,9 +815,9 @@ Below is a list of the \TT{XML} tags pertaining specifically to \TT{ICE} problem
 \subsection{XML tag description}
 %__________________________________
 \begin {center}
+\scriptsize
 \begin{tabular}{lllp{8cm}}
-\\
-\footnotesize{XML tag} & \footnotesize{Type} & \footnotesize{Dimensions} & \footnotesize{Description}\\
+XML tag & Type & Dimensions & Description\\
 \hline
 \hline
 cfl                   & double &               &    Courant Number.\\
@@ -812,7 +826,7 @@ gravity               & Vector & $[L/t^2]$     &    gravitational acceleration, 
 \underline{\footnotesize{global material properties}} & & &\\
 dynamic\_viscosity    & double & $[M/Lt]$      &    viscosity, $\mu$.\\
 thermal\_conditucivity& double & $[ML/t^3T]$   &    thermal conductivity, $k$\\
-specific\_heat        & double & $ [L^2/t^2 T]$ &   $c_p$\\
+specific\_heat        & double & $[L^2/t^2 T]$ &   $c_p$\\
 gamma                 & double &               &    ratio of specific heats, $\gamma$.\\
 \\
 \underline{\footnotesize{geometry object related}} & & &\\

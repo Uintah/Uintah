@@ -62,13 +62,13 @@ typedef unsigned char byte;
 void usage( char *prog_name );
 //void parseArgs( int argc, char* argv[], string & infile, bool & binmode);
 GridP CreateGrid(ProblemSpecP ups);
-bool ReadImage(const char* szfile, int nsize, byte* pb);
+bool ReadImage(const char* szfile, unsigned int nsize, byte* pb);
 
-inline Point CreatePoint(int n, vector<int>& res, double dx, double dy, double dz)
+inline Point CreatePoint(unsigned int n, vector<int>& res, double dx, double dy, double dz)
 {
-  int k = n / (res[0]*res[1]); n -= k* res[0]*res[1];
-  int j = n / res[0];
-  int i = n % res[0];
+  unsigned int k = n / (res[0]*res[1]); n -= k* res[0]*res[1];
+  unsigned int j = n / res[0];
+  unsigned int i = n % res[0];
 
   return Point( dx*((double)i + 0.5), dy*(((double)(res[1]-1-j)) + 0.5),dz*((double)k + 0.5));
 //  return Point( dx*((double)i + 0.5), dy*(((double)(j)) + 0.5),dz*((double)k + 0.5));
@@ -251,7 +251,7 @@ int main(int argc, char *argv[])
           }
 
           // read the image data
-          int nsize = res[0]*res[1]*res[2];
+          unsigned int nsize = res[0]*res[1]*res[2];
           cout << "Reading " << nsize << " bytes\n";
           byte* pimg = scinew byte[nsize];
           if (ReadImage(imgname.c_str(), nsize, pimg) == false) {
@@ -273,7 +273,8 @@ int main(int argc, char *argv[])
           vector< vector<int> > points(npatches);
           vector<int> sizes(npatches);
 
-          int i, j, k, n;
+          int i, j, k;
+          unsigned int n;
           Point pt;
           byte* pb = pimg;
 
@@ -288,7 +289,7 @@ int main(int argc, char *argv[])
                 if ((*pb >= L[0]) && (*pb <= L[1])) {
                   pt = CreatePoint(n, res, dx, dy, dz);
                   currentpatch = level->selectPatchForCellIndex(level->getCellIndex(pt));
-                  int pid = currentpatch->getID();
+                  unsigned int pid = currentpatch->getID();
                   sizes[pid]++;
                 }
               }
@@ -312,7 +313,7 @@ int main(int argc, char *argv[])
 
                  const Patch* currentpatch =
                                       level->selectPatchForCellIndex(level->getCellIndex(pt));
-                  int pid = currentpatch->getID();
+                  unsigned int pid = currentpatch->getID();
                   min = Min(pt,min);
                   max = Max(pt,max);
                   points[pid][ sizes[pid] ] = n;
@@ -330,7 +331,7 @@ int main(int argc, char *argv[])
           for(Level::const_patchIterator iter = level->patchesBegin();
               iter != level->patchesEnd(); iter++){
             const Patch* patch = *iter;
-            int pid = patch->getID();
+            unsigned int pid = patch->getID();
 
             char fnum[5];
             sprintf(fnum,".%d",pid);
@@ -428,12 +429,12 @@ void usage( char *prog_name )
 //-----------------------------------------------------------------------------------------------
 // function ReadImage : Reads the image data from file and stores it in a buffer
 //
-bool ReadImage(const char* szfile, int nsize, byte* pb)
+bool ReadImage(const char* szfile, unsigned int nsize, byte* pb)
 {
   FILE* fp = fopen(szfile, "rb");
   if (fp == 0) return false;
 
-  int nread = fread(pb, sizeof(byte), nsize, fp);
+  unsigned int nread = fread(pb, sizeof(byte), nsize, fp);
   fclose(fp);
 
   return (nread == nsize);  
