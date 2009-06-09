@@ -2298,7 +2298,7 @@ void SerialMPM::setPrescribedMotion(const ProcessorGroup*,
       gacceleration.initialize(Vector(0.0));
       Matrix3 Fdot(0.);
 
-      // Get U and R from file by interpolating between available times
+      // Get F and Q from file by interpolating between available times
       int s;  // This time index will be the lower of the two we interpolate from
       int smin = 0;
       int smax = (int) (d_prescribedTimes.size()-1);
@@ -2347,10 +2347,9 @@ void SerialMPM::setPrescribedMotion(const ProcessorGroup*,
       const double sinthetat = sin(thetat);
       Matrix3 aa(a,a);
       Matrix3 A(0.0,-a.z(),a.y(),a.z(),0.0,-a.x(),-a.y(),a.x(),0.0);
-
-      //construct the rotation matrix:
-      Matrix3 Qt(thetat,a);
-
+      Matrix3 Qt;
+      Qt = (Ident-aa)*costhetat+A*sinthetat + aa;
+     
       //calculate thetadot:
       double thetadot = PrescribedTheta*(degtorad)/(t2-t1);
 
@@ -2359,36 +2358,43 @@ void SerialMPM::setPrescribedMotion(const ProcessorGroup*,
       Qdot = (Ident-aa)*(-sinthetat*thetadot) + A*costhetat*thetadot;
 
 
-      Matrix3 Ftinverse;
-      Ftinverse = Ft.Inverse();
 
-      Vector Unrotated_NodePosition, Unrotated_velocity;
-      Matrix3 Total_Rotation;
-      Total_Rotation.Identity();
+      Matrix3 Previous_Rotations;
+      Previous_Rotations.Identity();
       int i;
-      //now we need to compute the total superimposed rotation:
+      //now we need to compute the total previous rotation:
       for(i=0;i<s+1;i++){
-              Matrix3 Qi(d_prescribedAngle[i]*degtorad,d_prescribedRotationAxis[i]);
-              Total_Rotation = Qi*Total_Rotation;
+              Vector ai;
+              double thetai = d_prescribedAngle[i]*degtorad;
+              ai = d_prescribedRotationAxis[i];
+              const double costhetati = cos(thetai);
+              const double sinthetati = sin(thetai);
+
+              Matrix3 aai(ai,ai);
+              Matrix3 Ai(0.0,-ai.z(),ai.y(),ai.z(),0.0,-ai.x(),-ai.y(),ai.x(),0.0);
+              Matrix3 Qi;
+              Qi = (Ident-aai)*costhetati+Ai*sinthetati + aai;
+
+              Previous_Rotations = Qi*Previous_Rotations;
       }
-      //add the current rotation to the total rotation
-      Total_Rotation= Qt*Total_Rotation;
+     
 
 
+      // Fstar is the deformation gradient with the superimposed rotations included
+      // Fdotstar is the rate of the deformation gradient with superimposed rotations included
+      Matrix3 Fstar;
+      Matrix3 Fdotstar;
+      Fstar = Qt*Previous_Rotations*Ft;
+      Fdotstar = Qdot*Previous_Rotations*Ft + Qt*Previous_Rotations*Fdot;
+      
+      
       for(NodeIterator iter=patch->getExtraNodeIterator__New();!iter.done();
                                                                 iter++){
         IntVector n = *iter;
 
         Vector NodePosition = patch->getNodePosition(n).asVector();
 
-        //Now we need to compute the unrotated nodal position:
-        Unrotated_NodePosition= Total_Rotation*NodePosition;
-
-        //Now we compute the unrotated velocity:
-        Unrotated_velocity = Fdot * Ftinverse*Unrotated_NodePosition;
-
-        //Now we add the rotation to the velocity:
-        gvelocity_star[n] = Total_Rotation*Unrotated_velocity + Qdot*Unrotated_NodePosition;
+        gvelocity_star[n] = Fdotstar*Ft.Inverse()*Previous_Rotations.Inverse()*Qt.Transpose()*NodePosition;
 
 
       } // Node Iterator
