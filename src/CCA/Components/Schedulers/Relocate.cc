@@ -579,6 +579,7 @@ void Relocate::finalizeCommunication()
 
 const Patch* findFinePatch(const Point& pos, const Patch* guess, Level* fineLevel)
 {
+  cout << "Consider replacing getPatchFromPoint with selectPatchForCellIndex(level->getCellIndex(pos))" << endl;
   if (guess && guess->getExtraBox().contains(pos))
     return guess;
   return fineLevel->getPatchFromPoint(pos);
@@ -586,6 +587,7 @@ const Patch* findFinePatch(const Point& pos, const Patch* guess, Level* fineLeve
 
 const Patch* findCoarsePatch(const Point& pos, const Patch* guess, Level* coarseLevel)
 {
+  cout << "Consider replacing getPatchFromPoint with selectPatchForCellIndex(level->getCellIndex(pos))" << endl;
   if (guess && guess->getExtraBox().contains(pos))
     return guess;
   return coarseLevel->getPatchFromPoint(pos);
