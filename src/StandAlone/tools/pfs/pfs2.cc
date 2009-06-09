@@ -261,7 +261,7 @@ int main(int argc, char *argv[])
           cout << "Done reading " << nsize << " bytes\n";
 
           // these points define the extremas of the grid
-          Point MIN(1.e30,1.e30,1.e30),MAX(-1.e30,-1.e30,-1.e30);
+          Point minP(1.e30,1.e30,1.e30),maxP(-1.e30,-1.e30,-1.e30);
 
           // create the points
           // It was noted that the original algorithm was using
@@ -317,8 +317,8 @@ int main(int argc, char *argv[])
                  const Patch* currentpatch =
                                       level->selectPatchForCellIndex(level->getCellIndex(pt));
                   unsigned int pid = currentpatch->getID();
-                  MIN = Min(pt,MIN);
-                  MAX = Max(pt,MAX);
+                  minP = Min(pt,minP);
+                  maxP = Max(pt,maxP);
                   points[pid][ sizes[pid] ] = n;
                   sizes[pid]++;
                 }
@@ -349,8 +349,8 @@ int main(int argc, char *argv[])
               exit(0);
             }
             double x[6];
-            x[0] = MIN.x(), x[1] = MIN.y(), x[2] = MIN.z();
-            x[3] = MAX.x(), x[4] = MAX.y(), x[5] = MAX.z();
+            x[0] = minP.x(), x[1] = minP.y(), x[2] = minP.z();
+            x[3] = maxP.x(), x[4] = maxP.y(), x[5] = maxP.z();
             if(binmode) {
               fwrite(x, sizeof(double),6,dest);
             } else {
