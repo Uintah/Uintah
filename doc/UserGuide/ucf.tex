@@ -1117,6 +1117,26 @@ We then hit 'Draw'. When combined with the 'Mesh' plot we get a visualization si
   \label{VisItInverseGhostZoneViewer}
 \end{figure}
 
+\subsection{Picking on particles}
+
+The 'Node pick mode' on the visualization window can be used to pick particles and investigate particles attributes. After plotting particles using the 'Molecule' plot, the user can then select the 'Node pick mode' ~\ref{VisItNodePick} and select paricles (by clicking on them) of interest. 
+
+\begin{figure}
+  \center
+  \includegraphics[scale=0.5]{VisItNodePick.png}
+  \caption{The 'Node pick mode' on the visualization window}
+  \label{VisItNodePick}
+\end{figure}
+
+Once a particle is picked, the 'Pick' window pops up with the particle attributes. By default only the variable plotted is queried, if the user wants to query more variables per pick - they can be added by selecting additional variables from the 'Variables' menu and as shown in the figure ~\ref{VisItPickWindow}.
+
+\begin{figure}
+  \center
+  \includegraphics[scale=0.5]{VisItPickWindow.png}
+  \caption{The 'Pick'window }
+  \label{VisItPickWindow}
+\end{figure}
+
 \chapter{Visualization Tools -- Manta}
 >>>>>>> .r44338
 
