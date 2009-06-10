@@ -74,19 +74,19 @@ The first two tags take names of materials previously defined in the input file,
 \newpage
 \subsection{Steady Burn} \label{Sec:SteadyBurn}
 
-Steady Burn is a more accurate model than Simple Burn.  It is based on WSB model of combustion developed by Ward, Son and Brewster in \cite{ref:wardsonbrewster}.  WSB is based on a simplified two-step chemical model with an initial exothermic, zero-order step:
+Steady Burn is a more accurate model than Simple Burn.  It is based on WSB model of combustion developed by Ward, Son and Brewster in \cite{ref:wardsonbrewster}.  WSB is based on a simplified two-step chemical model with an initial zero-order, thermally activated ($E_c > 0$), mildly exothermic, solid-to-gas reaction, modeled as a thermal decomposition of the solid:
 
 \begin{equation}
 A(solid)\rightarrow B(gas)
 \end{equation}
 
-Intermediate $B$, in the presence of any gas phase collision partner $M$, reacts in a highly exothermic fashion producing a bimolecular flame based on the assumption that $E_g=0$ for gas $B$, such that:
+Intermediate $B$, in the presence of any gas phase collision partner $M$, reacts in a highly exothermic fashion producing a flame.  This step is modelled as a second-order, gas phase, free radical chain reaction based on the assumption that $E_g = 0$:
 
 \begin{equation}
 B(gas)+M(gas)\rightarrow C(gas)+M(gas)
 \end{equation}
 
-As such, this second equation represents the reaction in the flame that causes heat convection back to the surface that activate the first reaction.  In Steady Burn, a solution is found by iteratively solving two equations: one for mass burning rate $\dot{m}$ and one for surface temperature $T_s$.  Mass flux is initially solved with an assumed value $T_s$ (in the model set to $850.0 K$) using WSB:
+As such, this second equation represents the reaction in the gas phase that causes heat convection back to the surface that activate the first reaction.  In Steady Burn, a solution is found by iteratively solving two equations: one for mass burning rate $\dot{m}$ and one for surface temperature $T_s$.  Mass flux is initially solved with an assumed value $T_s$ (in the model set to $850.0 K$) using WSB:
 
 \begin{equation}
 \dot{m}\left(T_s\right)=\sqrt{\frac{\displaystyle \kappa_c \rho_c A_c R T_s^2 \exp\left({\frac{\displaystyle -E_c}{\displaystyle R T_s}}\right)}{\displaystyle C_p E_c \left(T_s - T_0 - \frac{Q_c}{2 C_p}\right)}}
@@ -137,6 +137,7 @@ The following table describes the input parameters for Steady Burn.  The final c
 \begin{tabular}{| l | c | p{4cm} | l |}
 \hline
   \multicolumn{4}{|c|}{\textbf{Steady Burn Input Parameters}} \\
+\hline
 \hline
   \textbf{Tag} & \textbf{Type} & \textbf{Description} & \textbf{HMX Value} \\
 \hline
@@ -200,6 +201,7 @@ The following table describes the input parameters for Unsteady Burn.
 \begin{tabular}{| l | c | p{7cm} |}
 \hline  
   \multicolumn{3}{|c|}{\textbf{Unsteady Burn Input Parameters}} \\
+\hline
 \hline
   \textbf{Tag} & \textbf{Type} & \textbf{Description}\\
 \hline
@@ -453,7 +455,8 @@ the response of the steel cylinder to increased pressure.  Note that mass flux w
 to \ref{simburneqn}.  Another interesting view of the simulation can be seen in Figure~\ref{figsimburn3}.
 On the left is the normal particle and pseudocolor map representing solid mass and pressure respectively.
 On the top right, change in pressure during the timestep can be seen (delP\_Dilatate).  The bottom shows
-change in pressure due to mass exchange (del\_MassX).  
+change in pressure due to mass exchange (del\_MassX).  See table \ref{table:iceLabels} for description of
+these variables.
 
 
 \begin{figure}
@@ -494,7 +497,7 @@ This problem consistes of a cylinder initially at 600 K causing burning.  Steady
 \item [Component used:] \hfill mpmice (MPM-ICE)
 \item [Input file name:] \hfill SteadyBurn\_2dRT.ups
 \item [Preprocessing on input file:]\hfill \\ 1) Comment out or remove $<$max\_Timesteps$>$ \\ 2) Comment out $<$outputTimestepInterval$>$ and uncomment $<$outputInterval$>$ around line 101 \\
-\item [Command used to run input file:]\hfill mpirun -np 4 sus TBurner\_2dRT.ups
+\item [Command used to run input file:]\hfill mpirun -np 4 sus SteadyBurn\_2dRT.ups
 
 \item [Simulation Domain:]\hfill    9 x 9 x 0.1 cm
 
