@@ -173,6 +173,7 @@ CNHDamage::setErosionAlgorithm()
   d_setStressToZero = false;
   d_allowNoTension = false;
   d_removeMass = false;
+  d_allowNoShear = false;
   if (flag->d_doErosion) {
     if (flag->d_erosionAlgorithm == "RemoveMass") 
       d_removeMass = true;
@@ -180,6 +181,8 @@ CNHDamage::setErosionAlgorithm()
       d_allowNoTension = true;
     else if (flag->d_erosionAlgorithm == "ZeroStress") 
       d_setStressToZero = true;
+    else if (flag->d_erosionAlgorithm == "AllowNoShear") 
+      d_allowNoShear = true;
   }
 }
 
@@ -189,6 +192,7 @@ CNHDamage::setErosionAlgorithm(const CNHDamage* cm)
   d_setStressToZero = cm->d_setStressToZero;
   d_allowNoTension = cm->d_allowNoTension;
   d_removeMass = cm->d_removeMass;
+  d_allowNoShear = cm->d_allowNoShear;
 }
 
 void 
@@ -579,7 +583,7 @@ CNHDamage::updateFailedParticlesAndModifyStress(const Matrix3& FF,
       if (d_allowNoTension) {
         if (pressure > 0.0) pStress_new = zero;
         else pStress_new = Identity*pressure;
-      }
+      } else if (d_allowNoShear) pStress_new = Identity*pressure;
       else if (d_setStressToZero) pStress_new = zero;
     }
   }
