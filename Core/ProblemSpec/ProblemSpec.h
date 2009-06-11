@@ -39,10 +39,10 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Geometry/IntVector.h>
 #include <Core/Geometry/Vector.h>
 
-#include   <string>
-#include   <vector>
-#include   <map>
-#include   <iostream>
+#include <string>
+#include <vector>
+#include <map>
+#include <iostream>
 
 typedef struct _xmlNode xmlNode;
 
@@ -355,6 +355,11 @@ WARNING
       bool isNull() {
         return (d_node == 0);
       }
+
+      // Returns the name of the file that this problem spec came from... WARNING
+      // haven't tested this extensively.  It is in place for 'hacks' that need to
+      // deal with data in UDAs that is _NOT_ managed explicitly by the Datawarehouse.
+      string getFile() const;
 
       //////////
       // to output the document
