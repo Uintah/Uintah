@@ -7,6 +7,7 @@
                                                                         ideal_gas, membrane, mw_visco_elastic, rigid, shell_CNH, 
                                                                         small_strain_plastic, trans_iso_hyper, visco_plastic, 
                                                                         visco_scram, visco_trans_iso_hyper, water, kayenta, cnh_mms cnh_damage '">
+    <allow_no_tension              spec="OPTIONAL BOOLEAN" />
     <alpha                         spec="OPTIONAL DOUBLE" />
     <Beta                          spec="OPTIONAL DOUBLE" />
     <bulk_modulus                  spec="OPTIONAL DOUBLE" />

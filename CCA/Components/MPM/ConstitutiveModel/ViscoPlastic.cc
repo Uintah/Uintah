@@ -102,6 +102,8 @@ ViscoPlastic::ViscoPlastic(ProblemSpecP& ps, MPMFlags* Mflag) :
   ps->get("remove_particles",d_removeParticles);
   d_setStressToZero = true;
   ps->get("zero_stress_upon_failure",d_setStressToZero);
+  d_allowNoTension = false;
+  ps->get("allow_no_tension",d_allowNoTension);
   d_checkFailure = false;
   ps->get("check_failure", d_checkFailure);
 
@@ -216,6 +218,7 @@ void ViscoPlastic::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
   cm_ps->appendElement("useModifiedEOS",d_useModifiedEOS);
   cm_ps->appendElement("remove_particles",d_removeParticles);
   cm_ps->appendElement("zero_stress_upon_failure",d_setStressToZero);
+  cm_ps->appendElement("allow_no_tension",d_allowNoTension);
 //   cm_ps->appendElement("evolve_porosity",d_evolvePorosity);
 //   cm_ps->appendElement("evolve_damage",d_evolveDamage);
 //   cm_ps->appendElement("check_TEPLA_failure_criterion",
@@ -800,6 +803,7 @@ ViscoPlastic::computeStressTensor(const PatchSubset* patches,
       if (!(defRateSq > 0) || pLocalized[idx]==1) {
         pStress_new[idx] = pStress[idx];
         pStrainRate_new[idx] = 0.0;
+//         pPlasticStrain_new[idx] = 0.0;
         pPlasticStrain_new[idx] = pPlasticStrain[idx];
 //         pDamage_new[idx] = pDamage[idx];
 //         pPorosity_new[idx] = pPorosity[idx];
@@ -894,6 +898,10 @@ ViscoPlastic::computeStressTensor(const PatchSubset* patches,
 
          if (d_setStressToZero) {
              pStress_new[idx] = zero;
+         } else if (d_allowNoTension) {
+             double pressure = (1.0/3.0)*pStress_new[idx].Trace();
+             if (pressure > 0.0) pStress_new[idx] = zero;
+             else pStress_new[idx] = one*pressure;
          } else {
              pStress_new[idx] = pStress[idx];
          }
@@ -3082,6 +3090,11 @@ if (!d_varf.failureByStress) {  //failure by strain only
      isLocalized = true;
 
      if (d_setStressToZero) pStress_new = zero;
+     else if (d_allowNoTension) {
+        double pressure=(1.0/3.0)*pStress_new.Trace();
+        if (pressure > 0.0) pStress_new = zero;
+        else pStress_new = Identity*pressure;
+     }
   }
 
 return isLocalized;
