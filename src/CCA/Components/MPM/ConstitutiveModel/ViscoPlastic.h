@@ -133,6 +133,7 @@ namespace Uintah {
     bool   d_checkFailure;
     bool   d_removeParticles;
     bool   d_setStressToZero;
+    bool   d_allowNoTension;
 
     YieldCondition*     d_yield;
     StabilityCheck*     d_stable;
