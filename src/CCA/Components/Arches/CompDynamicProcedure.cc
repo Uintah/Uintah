@@ -107,8 +107,9 @@ CompDynamicProcedure::problemSetup(const ProblemSpecP& params)
     db->require("variance_coefficient",d_CFVar); // const reqd by variance eqn
     db->getWithDefault("filter_variance_limit_scalar",
                        d_filter_var_limit_scalar,true);
-    if (d_filter_var_limit_scalar)
+    if( d_filter_var_limit_scalar) {
       proc0cout << "Scalar for variance limit will be Favre filtered" << endl;
+    }
     else {
       proc0cout << "WARNING! Scalar for variance limit will NOT be filtered" << endl;
       proc0cout << "possibly causing high variance values" << endl;

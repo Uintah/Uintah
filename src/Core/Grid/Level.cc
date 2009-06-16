@@ -415,21 +415,24 @@ Point Level::positionToIndex(const Point& p) const
 }
 
 void Level::selectPatches(const IntVector& low, const IntVector& high,
-                          selectType& neighbors) const
+                          selectType& neighbors, bool cache) const
 {
  TAU_PROFILE("Level::selectPatches", " ", TAU_USER);
 #ifdef BRYAN_SELECT_CACHE
     
-  // look it up in the cache first
-  selectCache::const_iterator iter = d_selectCache.find(make_pair(low, high));
-  if (iter != d_selectCache.end()) {
-    const vector<const Patch*>& cache = iter->second;
-    for (unsigned i = 0; i < cache.size(); i++) {
-      neighbors.push_back(cache[i]);
-    }
-    return;
-  }
-  ASSERT(neighbors.size() == 0);
+ if(cache)
+ {
+   // look it up in the cache first
+   selectCache::const_iterator iter = d_selectCache.find(make_pair(low, high));
+   if (iter != d_selectCache.end()) {
+     const vector<const Patch*>& cache = iter->second;
+     for (unsigned i = 0; i < cache.size(); i++) {
+       neighbors.push_back(cache[i]);
+     }
+     return;
+   }
+   ASSERT(neighbors.size() == 0);
+ }
 #endif
 
    //cout << Parallel::getMPIRank() << " Level Quesy: " << low << " " << high << endl;
@@ -455,12 +458,15 @@ void Level::selectPatches(const IntVector& low, const IntVector& high,
 #endif
 
 #ifdef BRYAN_SELECT_CACHE
-   // put it in the cache - start at orig_size in case there was something in
-   // neighbors before this query
-   vector<const Patch*>& cache = d_selectCache[make_pair(low,high)];
-   cache.reserve(6);  // don't reserve too much to save memory, not too little to avoid too much reallocation
-   for (int i = 0; i < neighbors.size(); i++) {
-     cache.push_back(neighbors[i]);
+   if(cache)
+   {
+     // put it in the cache - start at orig_size in case there was something in
+     // neighbors before this query
+     vector<const Patch*>& cache = d_selectCache[make_pair(low,high)];
+     cache.reserve(6);  // don't reserve too much to save memory, not too little to avoid too much reallocation
+     for (int i = 0; i < neighbors.size(); i++) {
+       cache.push_back(neighbors[i]);
+     }
    }
 #endif
 }
@@ -824,7 +830,7 @@ const Patch* Level::selectPatchForCellIndex( const IntVector& idx) const
 {
   selectType pv;
   IntVector i(1,1,1);
-  selectPatches(idx - i,idx + i,pv);
+  selectPatches(idx - i,idx + i,pv,false);
   if(pv.size() == 0)
     return 0;
   else {
@@ -839,7 +845,7 @@ const Patch* Level::selectPatchForNodeIndex( const IntVector& idx) const
 {
   selectType pv;
   IntVector i(1,1,1);
-  selectPatches(idx - i,idx + i,pv);
+  selectPatches(idx - i,idx + i,pv,false);
   if(pv.size() == 0)
     return 0;
   else {

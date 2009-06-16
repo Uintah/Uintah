@@ -1327,3 +1327,8 @@ ProblemSpec::createDocument(const string& name)
   return scinew ProblemSpec(node, true );
 }
 
+string
+ProblemSpec::getFile() const
+{
+  return (const char *)( d_node->doc->URL );
+}

@@ -84,7 +84,7 @@ MPMFlags::MPMFlags(const ProcessorGroup* myworld)
   d_computeNodalHeatFlux = false;
   d_doTransientImplicitHeatConduction = true;
   d_prescribeDeformation = false;
-  d_prescribedDeformationFile = "time_stretch_rotation";
+  d_prescribedDeformationFile = "time_defgrad_rotation";
   d_doGridReset = true;
   d_min_part_mass = 3.e-15;
   d_min_mass_for_acceleration = 0;// Min mass to allow division by in computing acceleration

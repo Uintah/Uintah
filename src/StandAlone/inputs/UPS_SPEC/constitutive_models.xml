@@ -7,6 +7,7 @@
                                                                         ideal_gas, membrane, mw_visco_elastic, rigid, shell_CNH, 
                                                                         small_strain_plastic, trans_iso_hyper, visco_plastic, 
                                                                         visco_scram, visco_trans_iso_hyper, water, kayenta, cnh_mms cnh_damage '">
+    <allow_no_tension              spec="OPTIONAL BOOLEAN" />
     <alpha                         spec="OPTIONAL DOUBLE" />
     <Beta                          spec="OPTIONAL DOUBLE" />
     <bulk_modulus                  spec="OPTIONAL DOUBLE" />
@@ -78,6 +79,7 @@
     <failure_strain_distrib        spec="OPTIONAL STRING 'constant, gauss, weibull'" />
     <failure_strain_scale          spec="OPTIONAL DOUBLE" />
     <failure_by_stress             spec="OPTIONAL BOOLEAN" />
+    <failure_by_pressure             spec="OPTIONAL BOOLEAN" />
     <frac_nucleation               spec="OPTIONAL DOUBLE" />
     <fracture_toughness_curve      spec="OPTIONAL NO_DATA" >
       <crack_propagation_criterion spec="REQUIRED STRING 'empirical_criterion'" />
