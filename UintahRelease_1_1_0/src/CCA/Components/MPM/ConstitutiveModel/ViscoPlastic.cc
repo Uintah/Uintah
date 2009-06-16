@@ -102,6 +102,8 @@ ViscoPlastic::ViscoPlastic(ProblemSpecP& ps, MPMFlags* Mflag) :
   ps->get("remove_particles",d_removeParticles);
   d_setStressToZero = true;
   ps->get("zero_stress_upon_failure",d_setStressToZero);
+  d_allowNoTension = false;
+  ps->get("allow_no_tension",d_allowNoTension);
   d_checkFailure = false;
   ps->get("check_failure", d_checkFailure);
 
@@ -216,6 +218,7 @@ void ViscoPlastic::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
   cm_ps->appendElement("useModifiedEOS",d_useModifiedEOS);
   cm_ps->appendElement("remove_particles",d_removeParticles);
   cm_ps->appendElement("zero_stress_upon_failure",d_setStressToZero);
+  cm_ps->appendElement("allow_no_tension",d_allowNoTension);
 //   cm_ps->appendElement("evolve_porosity",d_evolvePorosity);
 //   cm_ps->appendElement("evolve_damage",d_evolveDamage);
 //   cm_ps->appendElement("check_TEPLA_failure_criterion",
@@ -228,6 +231,7 @@ void ViscoPlastic::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
   cm_ps->appendElement("failure_variable_std",d_varf.std);
   cm_ps->appendElement("failure_variable_distrib",d_varf.dist);
   cm_ps->appendElement("failure_by_stress",d_varf.failureByStress);
+  cm_ps->appendElement("failure_by_pressure",d_varf.failureByPressure);
 
 
 //  cm_ps->appendElement("check_failure_max_tensile_stress",
@@ -294,10 +298,12 @@ ViscoPlastic::getFailureVariableData(ProblemSpecP& ps)
   d_varf.std = 0.0;  // STD failure strain
   d_varf.dist = "constant";
   d_varf.failureByStress = true; // failure by stress default
+  d_varf.failureByPressure = false; // failure by mean stress
   ps->get("failure_variable_mean",    d_varf.mean);
   ps->get("failure_variable_std",     d_varf.std);
   ps->get("failure_variable_distrib", d_varf.dist);
   ps->get("failure_by_stress", d_varf.failureByStress);
+  ps->get("failure_by_pressure", d_varf.failureByPressure);
 }
 
 void
@@ -307,6 +313,7 @@ ViscoPlastic::setFailureVariableData(const ViscoPlastic* cm)
   d_varf.std = cm->d_varf.std;
   d_varf.dist = cm->d_varf.dist;
   d_varf.failureByStress = cm->d_varf.failureByStress;
+  d_varf.failureByPressure = cm->d_varf.failureByPressure;
 }
 
 void 
@@ -800,6 +807,7 @@ ViscoPlastic::computeStressTensor(const PatchSubset* patches,
       if (!(defRateSq > 0) || pLocalized[idx]==1) {
         pStress_new[idx] = pStress[idx];
         pStrainRate_new[idx] = 0.0;
+//         pPlasticStrain_new[idx] = 0.0;
         pPlasticStrain_new[idx] = pPlasticStrain[idx];
 //         pDamage_new[idx] = pDamage[idx];
 //         pPorosity_new[idx] = pPorosity[idx];
@@ -894,6 +902,10 @@ ViscoPlastic::computeStressTensor(const PatchSubset* patches,
 
          if (d_setStressToZero) {
              pStress_new[idx] = zero;
+         } else if (d_allowNoTension) {
+             double pressure = (1.0/3.0)*pStress_new[idx].Trace();
+             if (pressure > 0.0) pStress_new[idx] = zero;
+             else pStress_new[idx] = one*pressure;
          } else {
              pStress_new[idx] = pStress[idx];
          }
@@ -3052,29 +3064,36 @@ if (d_removeParticles) {
 Vector  eigval(0.0, 0.0, 0.0);
 Matrix3 eigvec(0.0), ee(0.0);
 
+double pressure = (1.0/3.0)*pStress_new.Trace();
+
 if (!d_varf.failureByStress) {  //failure by strain only
 
   // Compute Finger tensor (left Cauchy-Green)
   Matrix3 bb = FF*FF.Transpose();
 
-//  double pressure = (1.0/3.0)*pStress_new.Trace();
-
   // Compute Eulerian strain tensor
   ee = (Identity - bb.Inverse())*0.5;    
 }
 
-  // Compute the maximum principal strain or stress
   if (d_varf.failureByStress) {
-      pStress_new.eigen(eigval, eigvec);
-  } else {                      //failure by strain
-      ee.eigen(eigval, eigvec);
+      pStress_new.eigen(eigval, eigvec);  //principal stress
+  } else if (!d_varf.failureByPressure) { //failure by strain
+      ee.eigen(eigval, eigvec);		 //principal strain 
   }
 
+double epsMax;
+
 //  double epsMax = Max(fabs(eigval[0]),fabs(eigval[2]));
-  double epsMax = Max(eigval[0], eigval[2]);
+  if (d_varf.failureByPressure) {
+      epsMax = pressure;
+  } else {
+    epsMax = Max(eigval[0], eigval[2]); //max principal stress or strain
+  }
+
 //  cout << "e0= " << eigval[0] << ", e2=" << eigval[2] << endl;
   // Find if the particle has failed
   pLocalized_new = pLocalized;
+
   if (epsMax > pFailureVariable) pLocalized_new = 1;
   if (pLocalized != pLocalized_new) {
      cout << "Particle " << particleID << " has failed: current value = " << epsMax 
@@ -3082,10 +3101,11 @@ if (!d_varf.failureByStress) {  //failure by strain only
      isLocalized = true;
 
      if (d_setStressToZero) pStress_new = zero;
+     else if (d_allowNoTension) {
+        if (pressure > 0.0) pStress_new = zero;
+        else pStress_new = Identity*pressure;
+     }
   }
 
 return isLocalized;
 }
-
-
-
