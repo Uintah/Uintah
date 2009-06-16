@@ -31,6 +31,7 @@ tau
 TODO
 exclude.txt
 scripts
+svn_commits.txt
 
 CCA/Components/SpatialOps
 CCA/Components/Arches/MCRT
