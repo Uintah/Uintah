@@ -148,7 +148,7 @@ and how frequently the simulation is checkpointed.
 
 The \tt <filebase> \normalfont tag is used to specify the directory
 name and by convention, the \tt .uda \normalfont suffix is attached denoting the
-``uintah data archive".
+``Uintah Data Archive".
 
 Data can be saved based on a frequency setting that is either based on time
 intervals;\\
@@ -157,7 +157,7 @@ or timestep intervals; \\
 \tt <outputInterval> integer\_number\_of\_steps </outputInterval> \normalfont\\
 
 Each simulation component specifies variables with label names that
-can be specified for data output.  By convention, particle data is
+can be specified for data output.  By convention, particle data are
 denoted by \tt p. \normalfont followed by a particular variable name
 such as mass, velocity, stress, etc.  Whereas for node based data, the
 convention is to use the \tt g. \normalfont followed by the variable
@@ -188,14 +188,13 @@ data is stored (cycle)  and how often it is generated (interval).
 
 As an example of checkpoint data that has two timesteps worth of
 checkpoint data that is created every .01 seconds of simulation time
-is shown below:
+are shown below:
 
 \begin{Verbatim}[fontsize=\footnotesize]
 <checkpoint cycle = "2" interval = "0.01"/>
 \end{Verbatim}
 
-
-To restart from a checkpointed archive, simply put "-restart" in the
+To restart from a checkpointed archive, simply put ``\tt -restart\normalfont" in the
 sus command-line arguments and specify the .uda directory instead of
 a ups file (sus reads the copied \tt input.xml \normalfont from the
 archive).  One can optionally specify a certain timestep to restart
@@ -211,7 +210,7 @@ new uda directory.
 %(e.g., if you are cramped for disk space).  Either way it creates a new uda
 %directory for you as always.
 
-Here are some example:
+Here are some examples:
 
 \begin{Verbatim}[fontsize=\footnotesize]
 ./sus -mpm -restart disks.uda.000 -nocopy
@@ -220,14 +219,12 @@ Here are some example:
 %
 %__________________________________
 \section{Geometry objects} \label{Sec:GeometryObjects}
-%FIXME
-%- what is res \\
 
 Within several of the components, the material is described by a
 combination of physical parameters and the geometry.  Geometry objects
 use the notion of constructive solid geometry operations to compose
 the layout of the material from simple shapes such as boxes, spheres,
-cylinders, as well as operators which include the union,
+cylinders and cones, as well as operators which include the union,
 intersections, differences of the simple shapes.  In addition to the
 simple shapes, triangulated surfaces can be used in conjunction with
 the simple shapes and the operations on these shapes.
@@ -243,7 +240,6 @@ As an example of a non-trivial geometry object is shown below:
 
 \begin{Verbatim}[fontsize=\footnotesize]
 <geom_object>
-
      <intersection>
        <box label = "Domain">
           <min>[0.0,0.0,0.0]</min>
@@ -282,7 +278,7 @@ right circular cone/frustram.
 (vector) plus a tag for the radius (float).
 
 \tt parallelepiped \normalfont requires that four points be specified as
-illustrated by the ASCI art snippet taken from the source code:
+illustrated by the ASCII art snippet taken from the source code:
 
 \begin{Verbatim}[fontsize=\footnotesize]
 //********************************************
@@ -307,7 +303,6 @@ triangulated surface (file\_name.tri) contains a list of integers
 describing the connectivities of points specified in file\_name.pts.
 Here is an excerpt from a tri file and a points file:
 
-
 \begin{Verbatim}[fontsize=\footnotesize]
 Triangulated file
 
@@ -322,8 +317,9 @@ Points file
 0.35227 0.13023 -0.005
 0.00403479 0.0296797 -0.005
 . . .
-
 \end{Verbatim}
+The Mach 2 Wedge example in Section~\ref{Sec:MPMICE_EXAMPLES} depicts usage of
+this option.
 
 The boolean operators on the geometry pieces include \tt difference,
 intersection, \normalfont and \tt union.\normalfont
@@ -334,6 +330,86 @@ intersection \normalfont operator requires at least two geometry
 pieces in forming an intersection geometry piece.  Whereas the \tt
 union \normalfont operator aggregates a collection of geometry pieces.
 Multiple operators can be used to form very complex geometry pieces.
+
+An additional input in the \tt <geom\_object> \normalfont field is the
+\tt <res> \normalfont tag.  In MPM, this simply refers to how many particles
+are placed in each cell in each coordinate direction.  For multi-material ICE
+simulations, the \tt <res> \normalfont serves a similar purpose in that one
+can specify the subgrid resolution of the initial material distribution
+of mixed cells at the interface of geometry objects.
+
+In addition to the above, it is also possible in MPM simulations to describe
+geometry by providing a file containing a series of particle locations.  These
+can be in either ASCII or binary format.  In addition, it is also possible to
+provide initial data for certain variables on the particles, including
+volume, temperature, external force, fiber direction (used in material models
+with transverse isotropy) and velocity.  The following is an example in which
+external force and fiber direction are specified:
+
+\begin{Verbatim}[fontsize=\footnotesize]
+          <file>
+              <name>LVcoarse.pts</name>
+              <var>p.externalforce</var>
+              <var>p.fiberdir</var>
+          </file>
+\end{Verbatim}
+
+where the text file LVcoarse.pts looks like:
+
+\begin{Verbatim}[fontsize=\footnotesize]
+0.0385 0.0335 0.0015 0 0 0 0.248865 -0.0593421 -0.966718
+0.0395 0.0335 0.0015 0 0 0 0.254892 -0.0220365 -0.966718
+0.0405 0.0335 0.0015 0 0 0 0.267002 0.0197728 -0.963493
+0.0415 0.0335 0.0015 0 0 0 0.261177 0.0588869 -0.963493
+	.
+	.
+	.
+\end{Verbatim}
+Because these files can be arbitrarily large, an additional preprocessing step
+must be taken before issuing the \tt sus \normalfont command.
+\tt pfs \normalfont for ``Particle File Splitter" is a utility that splits the
+data in the \tt .pts \normalfont file into a series of files
+(\tt file.pts.0, file.pts.1, \normalfont, etc), one for each
+patch.  By doing this, each processor needs only read in the data for the
+patches that it contains, rather than each processor reading in the entire file,
+which can be hard on the file system.  Note, that this step is required,
+even if only using a single patch, and must be reissued any time the patch
+configuration is changed.  Usage of this utility, which is compiled
+into the \tt StandAlone/tools/pfs \normalfont directory, is:
+
+\begin{Verbatim}[fontsize=\footnotesize]
+   pfs input.ups
+\end{Verbatim}
+
+One final option is available for initializing particle positions in MPM
+simulations, and that is through the use of three dimensional image data,
+such as might be collected via CT scans or confocal microscopy.  The image data are provided as 8-bit raw files, and usage in the input file is given as:
+
+\begin{Verbatim}[fontsize=\footnotesize]
+        <image>
+          <name>spheres.raw</name>
+          <res>[1600, 1600, 1600]</res>
+          <threshold>[1, 25]</threshold>
+        </image>
+        <file>
+          <name>spheres.pts</name>
+          <format>bin</format>
+        </file>
+\end{Verbatim}
+
+The \tt <image> \normalfont section gives the name of the file, the resolution, in pixels,
+in the various coordinate directions, and threshold range.  Particles will be
+generated at voxels within the specified range.  The \tt <file> \normalfont
+section is the same as that described above.  A different preprocessing utility
+is provided when using image data (for the same reasons decribed previously).
+Usage is as follows:
+
+\begin{Verbatim}[fontsize=\footnotesize]
+   pfs2 -b input.ups
+\end{Verbatim}
+
+The -b indicates that binary \tt spheres.pts.\# \normalfont files will be created, which
+saves considerable disk space when performing large simulations.
 
 
 %__________________________________
@@ -493,6 +569,7 @@ identical grids:
     <spacing>         [0.5,0.5,0.5]    </spacing>
 </Level>
 \end{Verbatim}
+
 \begin{Verbatim}[fontsize=\footnotesize]
 <Level>
     <Box label="1">
@@ -532,7 +609,7 @@ that will become patches if refinement is required in the tiles region.
 
 The following is an example of this regridder.
 
-\begin{Verbatim}     
+\begin{Verbatim}[fontsize=\footnotesize]
 <Regridder type="Tiled">   
     <max_levels>2</max_levels>
     <cell_refinement_ratio> [[2,2,1]] </cell_refinement_ratio>
@@ -549,7 +626,7 @@ to be created.  The \emph{cell\_refinement\_ratio} tag specifies the
 refinement ratio between the levels.  This can be specified on a per 
 level basis as follows:
 
-\begin{Verbatim}
+\begin{Verbatim}[fontsize=\footnotesize]
     <cell_refinement_ratio> [[2,2,1],[4,4,1]] </cell_refinement_ratio>
 \end{Verbatim}
 
@@ -576,7 +653,7 @@ evenly distributed.  Uintah currently supports a wide array of
 load balancing algorithms.  To specify a load balancing algorithm 
 add a block similar to the following:
 
-\begin{Verbatim}
+\begin{Verbatim}[fontsize=\footnotesize]
   <LoadBalancer type="DLB">
        <dynamicAlgorithm>patchFactor</dynamicAlgorithm>
        <timestepInterval>50</timestepInterval>
@@ -593,7 +670,7 @@ algorithms to achieve more efficient patch assignments.  To use the DLB load
 balancer you must include the  \emph{dynamicAlgorithm} tag. This tag can be 
 \emph{PatchFactor} or \emph{Zoltan}.  
 
-\begin{Verbatim}
+\begin{Verbatim}[fontsize=\footnotesize]
        <dynamicAlgorithm>patchFactor</dynamicAlgorithm>
 \end{Verbatim}
 
@@ -602,7 +679,7 @@ or an algorithm cost model.  By default  the profiling model is used as it provi
 highly accurate estimates and does not require the specification of model parameters.  
 To disable profiling add the tag
 
-\begin{Verbatim}
+\begin{Verbatim}[fontsize=\footnotesize]
        <doCostProfiling>false</doCostProfiling>
 \end{Verbatim}
 
@@ -612,7 +689,7 @@ in the patch, $N_c$ is the number of cells on the patch, $c_1$ is the weight per
 particle, $c_2$ is the weight per cell, and $c_3$ is a constanct cost on the
 patch.  These constants can be specified with the following tags:
 
-\begin{Verbatim}
+\begin{Verbatim}[fontsize=\footnotesize]
        <cellCost>1</cellCost>
        <particleCost>1.25</particleCost>
        <patchCost>4</patchCost>
@@ -621,12 +698,12 @@ patch.  These constants can be specified with the following tags:
 The number of particles will always be zero unless the algorithm is instructed to
 collect particles with the collectParticles tag.  
 
-\begin{Verbatim}
+\begin{Verbatim}[fontsize=\footnotesize]
        <collectParticles>true</collectParticles>
 \end{Verbatim}
 
 The following are a couple of extra load balancer parameters that may be useful.
-\begin{Verbatim}
+\begin{Verbatim}[fontsize=\footnotesize]
        <timestepInterval>50</timestepInterval>
        <gainThreshold>0.05</gainThreshold>
        <outputNthProc>8</outputNthProc>
@@ -643,7 +720,7 @@ to the same file system at the same time.
 If the dynamic algorithm is set to \emph{Zoltan} then the user must also specify which
 Zoltan algorithm to use with the \emph{zoltanAlgorithm} tag.  
 
-\begin{Verbatim}
+\begin{Verbatim}[fontsize=\footnotesize]
        <zoltanAlgorithm>HSFC</zoltanAlgorithm>
 \end{Verbatim}
 
@@ -669,9 +746,11 @@ already exists, the next version number is used.  Additionally, a
 symbolic link named ``disks.uda'' (is updated to and) will point to
 the newest version of this simulations UDA.  Eg:
 
+\begin{Verbatim}[fontsize=\footnotesize]
 disks.uda.000
 disks.uda.001
 disks.uda.001 <- disks.uda
+\end{Verbatim}
 
 %\subsubsection{UDA Files}
 
@@ -679,45 +758,47 @@ Each UDA consists of a number of top level files, a checkpoints
 subdirectory, and subdirectories for each saved timestep.  These files
 include:
 
-- \tt.dat\normalfont files contain global information about the simulation
+- \tt.dat \normalfont files contain global information about the simulation
 (each line in the .dat files contains: simulation\_time value).
-- The \tt checkpoints\normalfont directory contains a limited number of time
+- The \tt checkpoints \normalfont directory contains a limited number of time
 step data subdirectories that contain a complete snapshot of the
 simulation (allowing for the simulation to be restarted from that
 time).
-- \tt input.xml\normalfont contains the original problem specification (the
+- \tt input.xml \normalfont contains the original problem specification (the
 .ups file).
-- \tt index.xml\normalfont contains information on the actual simulation run.
-- \tt t0000 FIXME number sign\normalfont contains data saved for that specific time step.  The
+- \tt index.xml \normalfont contains information on the actual simulation run.
+- \tt t0000\# \normalfont contains data saved for that specific time step.  The
 data saved is specified in .ups file and may be a very limited subset
-of the full simulation data.
+of the full simulation data.  See Section~\ref{Sec:DataArchiver} for a
+description of how to specify what data are saved and how frequently.
 
-Example UDA file list:
+% The following seems not that useful to me.  JG
+%Example UDA file list:
 
-CenterOfMassPosition.dat
-CenterOfMassVelocity.dat
-KineticEnergy.dat
-StrainEnergy.dat
-TotalMass.dat
-checkpoints
-index.xml
-input.xml
-t00001
-t00057
+%CenterOfMassPosition.dat
+%CenterOfMassVelocity.dat
+%KineticEnergy.dat
+%StrainEnergy.dat
+%TotalMass.dat
+%checkpoints
+%index.xml
+%input.xml
+%t00001
+%t00057
 
 %\subsection{Known Issues}
 
-Occasionally, due (most likely) to file system issues on large
-clusters, some of the files in the UDA have been found to be corrupted
-or nonexistent.  (There is error checking in the code to try to
-prevent this.  We believe that either the OS/File system is
-incorreclty returning error codes, or, more likely, that the files are
-corrupted (due to file system issues) after the simulation is done.
+%Occasionally, due (most likely) to file system issues on large
+%clusters, some of the files in the UDA have been found to be corrupted
+%or nonexistent.  (There is error checking in the code to try to
+%prevent this.  We believe that either the OS/File system is
+%incorreclty returning error codes, or, more likely, that the files are
+%corrupted (due to file system issues) after the simulation is done.
 
 %\subsection{Restarting}
 
-The sus executable provides a mechanism for checkpointing the code and
-then restarting the ongoing simulation from a given checkpoint.
+%The sus executable provides a mechanism for checkpointing the code and
+%then restarting the ongoing simulation from a given checkpoint.
 
 
 
@@ -737,7 +818,7 @@ interactively interrogate reasonably large datasets, provided the user has
 access to a reasonable shared memory resource, (e.g. an 8 core desktop system).
 
 
-\section{Reading Uintah Data Archive's}
+\section{Reading Uintah Data Archives}
 
 Once you have installed VisIt and the UDA reader plugin, you can launch VisIt and start visualizing UDA's. To open a UDA, select \tt Open File \normalfont from the \tt  File \normalfont menu. Browse into the UDA you want to load and select the \tt index.xml \normalfont file. Then hit on \tt OK \normalfont and a list of timesteps should now appear on the gui. Figure~\ref{VisItFileOpen} illustrates this process.
 
@@ -759,9 +840,9 @@ VisIt displays data as plots. A plot might render a specific variable or it migh
   \label{VisItPlots}
 \end{figure}
 
-Note that VisIt attempts to analyze the variables and associate them with the appropriate plots. As shown in figure~\ref{VisItPlots}, only vector variables are available for the vector plot. The most commonly used plots for visualizing UDA's are Pseudocolor, Volume and the Vector plot. The Subset plot can be used to visualize the structure of patches in an AMR dataset. %The Mesh plot can be used to display the mesh structure.
+Note that VisIt attempts to analyze the variables and associate them with the appropriate plots. As shown in Figure~\ref{VisItPlots}, only vector variables are available for the vector plot. The most commonly used plots for visualizing UDA's are Pseudocolor, Volume and the Vector plot. The Subset plot can be used to visualize the structure of patches in an AMR dataset. %The Mesh plot can be used to display the mesh structure.
 
-Once you have a plot, you change plot attributes by clicking on the PlotAtts menu and selecting the plot of you choice. Alternatively, you may double click on the plot itself in Active plots window. For example, if you have a Volume plot and you want to change its attributes, the window shown in figure~\ref{VisItVolumeAtts} pops up.
+Once you have a plot, you change plot attributes by clicking on the PlotAtts menu and selecting the plot of you choice. Alternatively, you may double click on the plot itself in Active plots window. For example, if you have a Volume plot and you want to change its attributes, the window shown in Figure~\ref{VisItVolumeAtts} pops up.
 
 \begin{figure}
   \center
@@ -770,11 +851,11 @@ Once you have a plot, you change plot attributes by clicking on the PlotAtts men
   \label{VisItVolumeAtts}
 \end{figure}
 
-As seen in figure~\ref{VisItVolumeAtts}, you can change the color map, opacity curve, rendering method, no. of samples, lighting options, etc. in this window.
+As seen in Figure~\ref{VisItVolumeAtts}, you can change the color map, opacity curve, rendering method, no. of samples, lighting options, etc. in this window.
 
 \section{Operators}
 
-A wide variety of operators can be applied to the plots, as mentioned earlier. These modify the incoming datasets in some way (eg., a slice formats a 3D dataset into a 2D slice), which can then be plotted. However, you will first need to select a plot and then only you can apply an operator to it (though the order of operation is opposite). An important thing to keep in mind is that when you select an operator, by default it gets applied to all the plots in the Active plots window. You will need to uncheck the Apply operators checkbox, in case you just want to apply the operator to a single plot. This is illustrated in figure~\ref{VisItApplyOperators}.
+A wide variety of operators can be applied to the plots, as mentioned earlier. These modify the incoming datasets in some way (eg., a slice formats a 3D dataset into a 2D slice), which can then be plotted. However, you will first need to select a plot and then only you can apply an operator to it (though the order of operation is opposite). An important thing to keep in mind is that when you select an operator, by default it gets applied to all the plots in the Active plots window. You will need to uncheck the Apply operators checkbox, in case you just want to apply the operator to a single plot. This is illustrated in Figure~\ref{VisItApplyOperators}.
 
 \begin{figure}
   \center
@@ -801,7 +882,7 @@ First, apply the Pseudocolor plot to a desired variable, and then select the Sli
   \label{VisItSelectOperator}
 \end{figure}
 
-At this point in time, you should have an ordering similar to that in figure~\ref{VisItOrderOperator}.  
+At this point in time, you should have an ordering similar to that in Figure~\ref{VisItOrderOperator}.  
 
 \begin{figure}
   \center
@@ -810,7 +891,7 @@ At this point in time, you should have an ordering similar to that in figure~\re
   \label{VisItOrderOperator}
 \end{figure}
 
-Once you have this order, select Slice from the OpAtts menu. This will pop up the Slice operator attributes window, as shown in figure~\ref{VisItSliceAtts}.
+Once you have this order, select Slice from the OpAtts menu. This will pop up the Slice operator attributes window, as shown in Figure~\ref{VisItSliceAtts}.
 
 \begin{figure}
   \center
@@ -824,7 +905,7 @@ You can now play up with the various attributes (eg., selecting normal plane) to
 \section{Vectors}
 
 By default, VisIt reduces the number of vectors plotted (to 400) and this needs to be manually changed to the original number or something greater, only if required.
-This can be accomplished by changing the attributes of the Vector plot. In figure~\ref{VisItVectorNumber}, the no of vectors has been increased to 2000.
+This can be accomplished by changing the attributes of the Vector plot. In Figure~\ref{VisItVectorNumber}, the no of vectors has been increased to 2000.
 
 \begin{figure}
   \center
@@ -850,7 +931,7 @@ Figure~\ref{VisItVectorScale} describes this.
 
 \section{AMR datasets}
 
-AMR datasets are read the same way as single level datasets. Once you have it read, you can apply an plot/ operator on it. Since the dataset is organized as levels and patches, you now have the flexibility of visualizing each of them independently or as in a group. To achieve this (assuming that you have already selected a plot), click on the Subset button either on the Active Plots window in the gui or on the same option in the Controls menu. This is illustrated in figures~\ref{VisItSubsetIcon} and ~\ref{VisItSubsetWin}.
+AMR datasets are read the same way as single level datasets. Once you have it read, you can apply an plot/ operator on it. Since the dataset is organized as levels and patches, you now have the flexibility of visualizing each of them independently or as in a group. To achieve this (assuming that you have already selected a plot), click on the Subset button either on the Active Plots window in the gui or on the same option in the Controls menu. This is illustrated in Figures~\ref{VisItSubsetIcon} and ~\ref{VisItSubsetWin}.
 
 \begin{figure}
   \center
@@ -872,7 +953,7 @@ AMR datasets are read the same way as single level datasets. Once you have it re
 
 a. Read in the uda by selecting the index.xml file. A list of timesteps should now appear on the gui.
 
-b. The first timestep (cycle 0000) should be preselected. In case you are interested in plotting a different timestep, just double click on it. Alternatively you can type it in the small rectangular box (figure~\ref{VisItTimestepBox}), just below the list of timesteps. This can also be done at a later period in time, when you are done plotting the variable associated with a specific timestep and want to traverse through the others.
+b. The first timestep (cycle 0000) should be preselected. In case you are interested in plotting a different timestep, just double click on it. Alternatively you can type it in the small rectangular box (Figure~\ref{VisItTimestepBox}), just below the list of timesteps. This can also be done at a later period in time, when you are done plotting the variable associated with a specific timestep and want to traverse through the others.
 
 \begin{figure}
   \center
@@ -881,7 +962,7 @@ b. The first timestep (cycle 0000) should be preselected. In case you are intere
   \label{VisItTimestepBox}
 \end{figure}
 
-c. Next we select a variable to plotted. We click on the Plots menu, select the Volume plot and then select the variable tempIN as shown in the figure~\ref{VisItVolumeTempINATK08}. The number '1' refers to the material associated with the variable.
+c. Next we select a variable to plotted. We click on the Plots menu, select the Volume plot and then select the variable tempIN as shown in the Figure~\ref{VisItVolumeTempINATK08}. The number '1' refers to the material associated with the variable.
 
 \begin{figure}
   \center
@@ -890,7 +971,7 @@ c. Next we select a variable to plotted. We click on the Plots menu, select the 
   \label{VisItVolumeTempINATK08}
 \end{figure}
 
-d. The variable tempIN/1 now appears on the Active plots window (figure~\ref{VisItDrawTempINATK08}). Select the variable and click Draw.
+d. The variable tempIN/1 now appears on the Active plots window (Figure~\ref{VisItDrawTempINATK08}). Select the variable and click Draw.
 
 \begin{figure}
   \center
@@ -899,7 +980,7 @@ d. The variable tempIN/1 now appears on the Active plots window (figure~\ref{Vis
   \label{VisItDrawTempINATK08}
 \end{figure}
 
-e. A visualization now appears on the Viewer window, as shown in figure~\ref{VisItVolumeTempINATK08Viewer}. You can interact with the visualization in terms of rotating it (holding the left mouse button and dragging it), zooming in/ out (scrolling the roller on the mouse and/ or selecting the magnifier at the top of the Viewer window) etc.
+e. A visualization now appears on the Viewer window, as shown in Figure~\ref{VisItVolumeTempINATK08Viewer}. You can interact with the visualization in terms of rotating it (holding the left mouse button and dragging it), zooming in/ out (scrolling the roller on the mouse and/ or selecting the magnifier at the top of the Viewer window) etc.
 
 \begin{figure}
   \center
@@ -908,7 +989,7 @@ e. A visualization now appears on the Viewer window, as shown in figure~\ref{Vis
   \label{VisItVolumeTempINATK08Viewer}
 \end{figure}
 
-f. Once you have this basic volume visualization, you can change its attributes by double clicking on the Volume - tempIN/1 plot in the Active plots window. This pops up the Volume plot attributes window (figure~\ref{VisItVolumeAttributes1} and figure~\ref{VisItVolumeAttributes2}).
+f. Once you have this basic volume visualization, you can change its attributes by double clicking on the Volume - tempIN/1 plot in the Active plots window. This pops up the Volume plot attributes window (Figure~\ref{VisItVolumeAttributes1} and figure~\ref{VisItVolumeAttributes2}).
 
 \begin{figure}
   \center
@@ -930,7 +1011,7 @@ A different color table can be selected by clicking on the Default button and th
 
 The user also has the option of specifying a Min and Max on the scalar value range by checking on the associated box(s) and entering in the values.
 
-The second tab Opacity lets you specify a transfer function for the color table. Clicking on the check box Show Colors copies the colors from the color table onto this graph. Selecting the Interaction Mode as Gaussian lets you draw curves and specify a more accurate color table (figure~\ref{VisItTransferFunction}).
+The second tab Opacity lets you specify a transfer function for the color table. Clicking on the check box Show Colors copies the colors from the color table onto this graph. Selecting the Interaction Mode as Gaussian lets you draw curves and specify a more accurate color table (Figure~\ref{VisItTransferFunction}).
 
 \begin{figure}
   \center
@@ -945,7 +1026,7 @@ After specifying an opacity transfer function, one can select an appropriate ren
 
 \subsection{Particle visualization}
 
-a. To add particles, we select the Molecule plot and then click on the variable p.temperature as shown in the figure~\ref{VisItMoleculePTempATK08}. The asterisk '*' refers to all the materials associated with the variable.
+a. To add particles, we select the Molecule plot and then click on the variable p.temperature as shown in the Figure~\ref{VisItMoleculePTempATK08}. The asterisk '*' refers to all the materials associated with the variable.
 
 \begin{figure}
   \center
@@ -956,7 +1037,7 @@ a. To add particles, we select the Molecule plot and then click on the variable 
 
 b. The variable p.temperature/* now appears on the Active plots list. Select the variable and hit Draw. A container in the form of particles now appears on the Viewer window.
 
-c. Now double click on the variable name in Active plots list. This brings up the Molecule plot attributes window as shown in figure~\ref{VisItMoleculeAttributesPTemp1}.
+c. Now double click on the variable name in Active plots list. This brings up the Molecule plot attributes window as shown in Figure~\ref{VisItMoleculeAttributesPTemp1}.
 
 \begin{figure}
   \center
@@ -969,7 +1050,7 @@ We choose to visualize the particles as Sphere Imposters (doesn't runs the GPU o
 
 Finally in Colors tab, we set the Color map for scalars as orangehot.
 
-Combined with volume visualization, we get a visualization as shown in figure~\ref{VisItMoleculePTtempViewer}.
+Combined with volume visualization, we get a visualization as shown in Figure~\ref{VisItMoleculePTtempViewer}.
 
 \begin{figure}
   \center
@@ -979,8 +1060,8 @@ Combined with volume visualization, we get a visualization as shown in figure~\r
 \end{figure}
 
 \subsection{Visualizing patch boundaries}
-%In order to generate an image, like the one shown in figure~\ref{VisItSubsetPlot}, we use the Subset plot. As with other variables, we select the Subset plot and an associated variable. The variables have a prefix 'level/ patch'. There is a level/ patch variable associated with every kind of variable (Cell Centered, Node Centered, Face Centeerd) present in the dataset. In the figure~\ref{VisItSubsetPlotVariables}, we select one such variable.
-In order to visualize patch boundaries, we use the Subset plot. As with other variables, we select the Subset plot and an associated variable. The variables have a prefix 'level/ patch'. There is a level/ patch variable associated with every kind of variable (Cell Centered, Node Centered, Face Centeerd) present in the dataset. In the figure~\ref{VisItSubsetPlotVariables}, we select one such variable.
+%In order to generate an image, like the one shown in Figure~\ref{VisItSubsetPlot}, we use the Subset plot. As with other variables, we select the Subset plot and an associated variable. The variables have a prefix 'level/ patch'. There is a level/ patch variable associated with every kind of variable (Cell Centered, Node Centered, Face Centeerd) present in the dataset. In the figure~\ref{VisItSubsetPlotVariables}, we select one such variable.
+In order to visualize patch boundaries, we use the Subset plot. As with other variables, we select the Subset plot and an associated variable. The variables have a prefix 'level/ patch'. There is a level/ patch variable associated with every kind of variable (Cell Centered, Node Centered, Face Centeerd) present in the dataset. In the Figure~\ref{VisItSubsetPlotVariables}, we select one such variable.
 
 %\begin{figure}
 %  \center
@@ -996,7 +1077,7 @@ In order to visualize patch boundaries, we use the Subset plot. As with other va
   \label{VisItSubsetPlotVariables}
 \end{figure}
 
-Next, we hit Draw. This produces a visualization as shown in figure~\ref{VisItSubsetPlotViewer}. To generate a wireframe model, we double click on the Subset plot in the Active plots window. This pops up the Subset plot attributes window, where we check the Wireframe mode as shown in figure`\ref{VisItSubsetPlotAttrib}. This would produce a visualization, similar to one shown in figure~\ref{VisItSubsetPlotWireframe}.
+Next, we hit Draw. This produces a visualization as shown in Figure~\ref{VisItSubsetPlotViewer}. To generate a wireframe model, we double click on the Subset plot in the Active plots window. This pops up the Subset plot attributes window, where we check the Wireframe mode as shown in Figure`\ref{VisItSubsetPlotAttrib}. This would produce a visualization, similar to one shown in Figure~\ref{VisItSubsetPlotWireframe}.
 
 \begin{figure}
   \center
@@ -1030,7 +1111,7 @@ The easiest way to draw iso-surfaces is to use the 'Contour' Plot. As with other
   \label{VisItContourPlot}
 \end{figure}
 
-Once the plot is selected, we hit 'Draw'. This would produce a visualization, similar to one shown in figure~\ref{VisItContourPlotViewer}. You can then modify the attributes the plot attribute's by double clicking on the plot in the 'Active plots' window. This would pop up the 'Contour plot attributes window', as shown in figure~\ref{VisItContourPlotAttrib}. 
+Once the plot is selected, we hit 'Draw'. This would produce a visualization, similar to one shown in Figure~\ref{VisItContourPlotViewer}. You can then modify the attributes the plot attribute's by double clicking on the plot in the 'Active plots' window. This would pop up the 'Contour plot attributes window', as shown in Figure~\ref{VisItContourPlotAttrib}. 
 
 \begin{figure}
   \center
@@ -1052,7 +1133,7 @@ The 'Select by' option can be changed to 'Value(s)' and 'Percent(s)'. When speci
 
 The 'Streamlines' plot has issues with the current version of VisIt (1.11.2 and older). Howerver, these have been corrected in the trunk and should be out in version 2.0. The controls remain the same in all these version and the example below was implemented on the trunk version.
 
-As shown in figure~\ref{VisItStreamlinesPlot} we select the 'Streamlines' plot on a vector variable. We then double click on the plot itself, which pops up the 'Streamlines attributes window'. 
+As shown in Figure~\ref{VisItStreamlinesPlot} we select the 'Streamlines' plot on a vector variable. We then double click on the plot itself, which pops up the 'Streamlines attributes window'. 
 
 \begin{figure}
   \center
@@ -1061,9 +1142,9 @@ As shown in figure~\ref{VisItStreamlinesPlot} we select the 'Streamlines' plot o
   \label{VisItStreamlinesPlot}
 \end{figure}
 
-We set the 'Distance' parameter such that it covers the entire computational domain. We set the  'Streamline direciton' as forward. In the 'Source' tab, figure~\ref{VisItStreamlinesAttrib1}, we define the 'Source type' as 'Line'. We can select other options too, notably 'Single Point', 'Sphere' etc. We now define the line 'Start' and 'End' coordinates. In this specific case, we define them as [-0.1 -0.05 0] and [-0.1 0.05 0] respectively. This choice ensures that we cover the entire y axis and start at the leftmost corner of the computational domain.
+We set the 'Distance' parameter such that it covers the entire computational domain. We set the  'Streamline direciton' as forward. In the 'Source' tab, Figure~\ref{VisItStreamlinesAttrib1}, we define the 'Source type' as 'Line'. We can select other options too, notably 'Single Point', 'Sphere' etc. We now define the line 'Start' and 'End' coordinates. In this specific case, we define them as [-0.1 -0.05 0] and [-0.1 0.05 0] respectively. This choice ensures that we cover the entire y axis and start at the leftmost corner of the computational domain.
 
-To ensure that our stream lines are smooth, we change the 'Maximum step length' in the in the 'Advanced' tab. In this case, we change it to 1.e-05. The thing to keep in mind is that this length should be order of magnitude smaller than the length of the computational domain. This is shown in figure ~\ref{VisItStreamlinesAttrib2}.
+To ensure that our stream lines are smooth, we change the 'Maximum step length' in the in the 'Advanced' tab. In this case, we change it to 1.e-05. The thing to keep in mind is that this length should be order of magnitude smaller than the length of the computational domain. This is shown in Figure ~\ref{VisItStreamlinesAttrib2}.
 
 \begin{figure}
   \center
@@ -1079,7 +1160,7 @@ To ensure that our stream lines are smooth, we change the 'Maximum step length' 
   \label{VisItStreamlinesAttrib2}
 \end{figure}
 
-Once these parameters are set, we hit 'Apply' and then click on the 'Draw' button on the gui. This produces a visualization similar to one shown in figure ~\ref{VisItStreamlinesViewer}.
+Once these parameters are set, we hit 'Apply' and then click on the 'Draw' button on the gui. This produces a visualization similar to one shown in Figure ~\ref{VisItStreamlinesViewer}.
 
 \begin{figure}
   \center
@@ -1108,7 +1189,7 @@ After the operator is applied to the 'Pseudocolor' plot, we double click on the 
   \label{VisItInverseGhostZoneAttribs}
 \end{figure}
 
-We then hit 'Draw'. When combined with the 'Mesh' plot we get a visualization similar to the one shown in figure ~\ref{VisItInverseGhostZoneViewer}. The pick operations on the viewer can then be used to investigate the value(s) in these extra cells. 
+We then hit 'Draw'. When combined with the 'Mesh' plot we get a visualization similar to the one shown in Figure ~\ref{VisItInverseGhostZoneViewer}. The pick operations on the viewer can then be used to investigate the value(s) in these extra cells. 
 
 \begin{figure}
   \center
@@ -1128,7 +1209,7 @@ The 'Node pick mode' on the visualization window can be used to pick particles a
   \label{VisItNodePick}
 \end{figure}
 
-Once a particle is picked, the 'Pick' window pops up with the particle attributes. By default only the variable plotted is queried, if the user wants to query more variables per pick - they can be added by selecting additional variables from the 'Variables' menu and as shown in the figure ~\ref{VisItPickWindow}.
+Once a particle is picked, the 'Pick' window pops up with the particle attributes. By default only the variable plotted is queried, if the user wants to query more variables per pick - they can be added by selecting additional variables from the 'Variables' menu and as shown in the Figure ~\ref{VisItPickWindow}.
 
 \begin{figure}
   \center
@@ -1141,12 +1222,12 @@ Once a particle is picked, the 'Pick' window pops up with the particle attribute
 >>>>>>> .r44338
 
 To run the C-SAFE scene: 
-\begin{Verbatim}
+\begin{Verbatim}[fontsize=\footnotesize]
   Manta/build/bin/csafe_scene
 \end{Verbatim}
 
 The csafescene window will open showing a transfer function editor.  To add files to load run:
-\begin{Verbatim}
+\begin{Verbatim}[fontsize=\footnotesize]
   File -> Add/Remove NRRD Files
 \end{Verbatim}
 
@@ -1168,7 +1249,7 @@ This will open a window where you can add volume and particle files in .nrrd or 
 
 A similarly named volume nrrd should be automatically added if in the same folder.  Close the window by pressing "OK".  The files won't be loaded yet so you can make modifications to the data to be loaded in before loading them.  To load the files:
 
-\begin{Verbatim}
+\begin{Verbatim}[fontsize=\footnotesize]
   Scene -> Generate
 \end{Verbatim}
 
