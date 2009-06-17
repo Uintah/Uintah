@@ -603,7 +603,7 @@ for what are frequently referred to as ``ghost-cells".
 
 The regridder creates a multilevel grid from the refinement flags.
 Each level will completely cover the refinement flags from the corser
-level.  The primary regridder used in Uintah is the \emph{Tiled} regridder.
+level.  The primary regridder used in Uintah is the \TT{Tiled} regridder.
 The tiled regridder creates a set of evenly sized tiles across the domain
 that will become patches if refinement is required in the tiles region.
 
@@ -621,8 +621,8 @@ The following is an example of this regridder.
 </Regridder>
 \end{Verbatim}
 
-The \emph{max\_levels} tag specifies the maximum number of levels
-to be created.  The \emph{cell\_refinement\_ratio} tag specifies the 
+The \TT{max\_levels} tag specifies the maximum number of levels
+to be created.  The \TT{cell\_refinement\_ratio} tag specifies the 
 refinement ratio between the levels.  This can be specified on a per 
 level basis as follows:
 
@@ -630,19 +630,19 @@ level basis as follows:
     <cell_refinement_ratio> [[2,2,1],[4,4,1]] </cell_refinement_ratio>
 \end{Verbatim}
 
-The \emph{cell\_stability\_dilation} tag specifies how many cells around
+The \TT{cell\_stability\_dilation} tag specifies how many cells around
 the refinement flags are also gaurenteed to be refined.  The
-\emph{min\_boundary\_cells} tag specifies the size of the boundary layers. 
-The size of the tiles is specified using the \emph{min\_patch\_size} tag
+\TT{min\_boundary\_cells} tag specifies the size of the boundary layers. 
+The size of the tiles is specified using the \TT{min\_patch\_size} tag
 and can also be specified on a per level basis.
 
 Finally the size of the tiles can change at run time.  If the number
 of patches is higher than what is needed then the tile size will double in
 the smallest dimension.  Conversely if the target number of patches is low
 then the tile size will halve in the longest dimension but will never go
-below the \emph{min\_patch\_size}.  The target number of patches per processor is 
-specified using the \emph{patches\_per\_level\_per\_proc} tag. To prevent the 
-resizing of tiles set the tag \emph{dynamic\_size} to false. 
+below the \TT{min\_patch\_size}.  The target number of patches per processor is 
+specified using the \TT{patches\_per\_level\_per\_proc} tag. To prevent the 
+resizing of tiles set the tag \TT{dynamic\_size} to false. 
 
 %
 %__________________________________
@@ -661,14 +661,14 @@ add a block similar to the following:
   </LoadBalancer>
 \end{Verbatim}
 
-The type specifies which load balancer is used.  The type can be \emph{DLB}, 
-\emph{RoundRobin}, \emph{SimpleLoadBalancer}, or \emph{SingleProcessorLoadBalancer}.  
+The type specifies which load balancer is used.  The type can be \TT{DLB}, 
+\TT{RoundRobin}, \TT{SimpleLoadBalancer}, or \TT{SingleProcessorLoadBalancer}.  
 If no load balancer is specified than either the SimpleLoadBalancer 
 or the SingleProcessorLoadBalancer will be used.  For complex problems including 
 AMR the DLB load  balancer should be used.  This load balancer uses advanced 
 algorithms to achieve more efficient patch assignments.  To use the DLB load 
-balancer you must include the  \emph{dynamicAlgorithm} tag. This tag can be 
-\emph{PatchFactor} or \emph{Zoltan}.  
+balancer you must include the  \TT{dynamicAlgorithm} tag. This tag can be 
+\TT{PatchFactor} or \TT{Zoltan}.  
 
 \begin{Verbatim}[fontsize=\footnotesize]
        <dynamicAlgorithm>patchFactor</dynamicAlgorithm>
@@ -709,22 +709,22 @@ The following are a couple of extra load balancer parameters that may be useful.
        <outputNthProc>8</outputNthProc>
 \end{Verbatim}
 
-The \emph{timestepInterval} tag specifies the maximum number of timesteps the simulation
-can run without attempting to load balance.  The \emph{gainThreshold} tag specifies the 
+The \TT{timestepInterval} tag specifies the maximum number of timesteps the simulation
+can run without attempting to load balance.  The \TT{gainThreshold} tag specifies the 
 percent improvement that a load balance must provide over the old load balance in 
-order for the new load balance to be used.  Finally the \emph{outputNthProc} tag causes
+order for the new load balance to be used.  Finally the \TT{outputNthProc} tag causes
 the data archive to be written to by every Nth processor instead of every processor.  
 This can allieviate problems caused by having to many processors attempting to write 
 to the same file system at the same time. 
 
-If the dynamic algorithm is set to \emph{Zoltan} then the user must also specify which
-Zoltan algorithm to use with the \emph{zoltanAlgorithm} tag.  
+If the dynamic algorithm is set to \TT{Zoltan} then the user must also specify which
+Zoltan algorithm to use with the \TT{zoltanAlgorithm} tag.  
 
 \begin{Verbatim}[fontsize=\footnotesize]
        <zoltanAlgorithm>HSFC</zoltanAlgorithm>
 \end{Verbatim}
 
-The Zoltan algorithm can be set to \emph{HSFC}, \emph{RIB}, \emph{RCB}.
+The Zoltan algorithm can be set to \TT{HSFC}, \TT{RIB}, \TT{RCB}.
 
 %__________________________________
 \section{UDA}
