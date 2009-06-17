@@ -2,21 +2,12 @@
 
 /bin/rm -f *.aux
 
-#mkdir -p PDF
 
-#set OUTPUT_DIR="-output-directory=PDF"
-
-cd InstallationGuide
-pdflatex installation.tex
-pdflatex installation.tex
-
-cd ../DeveloperGuide 
-pdflatex UintahAPI.tex
-pdflatex UintahAPI.tex
-
-cd ../UserGuide
-#pdflatex  --halt-on-error $OUTPUT_DIR uintah.tex
-pdflatex  --halt-on-error  uintah.tex
+echo "----------------------------------------"
+echo "            User guide"
+echo "----------------------------------------"
+cd UserGuide
+pdflatex  -file-line-error --halt-on-error  uintah.tex
 
 
 if [ $? -eq 0 ]; then
@@ -27,15 +18,31 @@ if [ $? -eq 0 ]; then
   bibtex ice
   bibtex mpm
   bibtex mpmice
-#  pdflatex -interaction=batchmode $OUTPUT_DIR uintah.tex
-#  pdflatex -interaction=batchmode $OUTPUT_DIR uintah.tex
   pdflatex -interaction=batchmode uintah.tex
   pdflatex -interaction=batchmode uintah.tex
 fi
 
+echo
+echo 
+echo "----------------------------------------"
+echo "            Installation guide"
+echo "----------------------------------------"
+cd ../InstallationGuide
+pdflatex -file-line-error --halt-on-error installation.tex
+
+echo
+echo 
+echo "----------------------------------------"
+echo "            Developer guide"
+echo "----------------------------------------"
+cd ../DeveloperGuide 
+pdflatex -file-line-error --halt-on-error UintahAPI.tex
+
+
 #cleanup
 echo "------------------"
 echo "now cleaning up"
-cd ../InstallationGuide
-/bin/rm -f installation.log installation.aux installation.out
-cd ../
+find . -name "*.out" -exec /bin/rm -f {} \;
+find . -name "*.aux" -exec /bin/rm -f {} \;
+find . -name "*.log" -exec /bin/rm -r {} \;
+
