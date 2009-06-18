@@ -64,24 +64,24 @@ DEALINGS IN THE SOFTWARE.
 extern "C"{
 
 #if defined( FORTRAN_UNDERSCORE_END )
-#  define GEOCHK geochk_
+#  define KMMCHK kmmchk_
 #  define KAYENTA_CALC kayenta_calc_
-#  define GEORXV georxv_
+#  define KMMRXV kmmrxv_
 #elif defined( FORTRAN_UNDERSCORE_LINUX )
-#  define GEOCHK geochk_
-#  define GEORXV georxv_
+#  define KMMCHK kmmchk_
+#  define KMMRXV kmmrxv_
 #  define KAYENTA_CALC kayenta_calc__
 #else // NONE
-#  define GEOCHK geochk
+#  define KMMCHK kmmchk
 #  define KAYENTA_CALC kayenta_calc
-#  define GEORXV georxv
+#  define KMMRXV kmmrxv
 #endif
 
-   void GEOCHK( double UI[], double UJ[], double UK[] );
+   void KMMCHK( double UI[], double UJ[], double UK[] );
    void KAYENTA_CALC( int &nblk, int &ninsv, double &dt,
                                     double UI[], double stress[], double D[],
                                     double svarg[], double &USM );
-   void GEORXV( double UI[], double UJ[], double UK[], int &nx, char* namea[],
+   void KMMRXV( double UI[], double UJ[], double UK[], int &nx, char* namea[],
                 char* keya[], double rinit[], double rdim[], int iadvct[], 
                 int itype[] );
 }
@@ -102,7 +102,7 @@ Kayenta::Kayenta(ProblemSpecP& ps,MPMFlags* Mflag)
 
   // Check that model parameters are valid and allow model to change if needed
 
-  GEOCHK(UI,UI,UI);
+  KMMCHK(UI,UI,UI);
 
   //Create VarLabels for GeoModel internal state variables (ISVs)
   int nx;
@@ -113,7 +113,7 @@ Kayenta::Kayenta(ProblemSpecP& ps,MPMFlags* Mflag)
   int iadvct[100];
   int itype[100];
   
-  GEORXV( UI, UI, UI, nx, namea, keya, rinit, rdim, iadvct, itype );
+  KMMRXV( UI, UI, UI, nx, namea, keya, rinit, rdim, iadvct, itype );
 
   cout << "nx = " << nx << endl;
   d_NINSV=nx;
