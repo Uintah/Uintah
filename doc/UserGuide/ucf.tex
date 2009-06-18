@@ -218,6 +218,69 @@ Here are some examples:
 \end{Verbatim}
 %
 %__________________________________
+
+\section{Simulation Options} \label{Sec:SimulationOptions}
+
+
+There are many options available when running MPM simulations.  These
+are generally specified in the \tt <MPM> \normalfont section of the input file.
+A list of these options taken from 
+\tt inputs/UPS\_SPEC/mpm\_spec.xml \normalfont  is given in section \ref{Sec:UintahImp}.
+
+\subsection{Axisymmetry} \label{Axisymmetry}
+
+\subsection{Prescribed Motion} \label{PrescribedMotion} The prescribed motion
+capability in Uintah allows the user to prescribe arbitrary material
+deformations and superimposed rotations.  This capability is particularly
+useful in verifying that the constitutive model is behaving as expected and is
+frame indifferent.  To prescribe material motion the following tag must be
+included in the \tt <MPM> \normalfont section of the input file:
+
+\begin{Verbatim}
+ <MPM>
+     <UsePrescribedDeformation>true</UsePrescribedDeformation>
+ </MPM>
+\end{Verbatim}
+
+The desired motion must then be specified in a file named \tt time\_defgrad\_rotation \normalfont.  The format of this file is as follows:
+
+\begin{Verbatim}
+t0 F11 F12 F13 F21 F22 F23 F31 F32 F33 theta0 a0 a1 a2
+t1 F11 F12 F13 F21 F22 F23 F31 F32 F33 theta1 a0 a1 a2
+. . .
+tn F11 F12 F13 F21 F22 F23 F31 F32 F33 thetan a0 a1 a2
+
+\end{Verbatim}
+where the first column is time, columns two through ten are the nine components of the prescribed deformation gradient, the eleventh column is the desired rotation angle, and the remaining three columns are the three components of the axis of prescribed rotation.  The components of the deformation gradient are linearly interpolated for times between those specified in the table.  The axis of rotation may be changed for each specified time.  As a result, the angle of rotation about the specified axis linearly increases from zero to the specified value at the end of the specified interval.  For example, the following table:
+
+\begin{Verbatim}
+0 1 0 0 0 1 0 0 0 1 0 0 0 0
+1 1 0 0 0 1 0 0 0 1 90 0 0 1
+2 1 0 0 0 1 0 0 0 1 91 0 0 1
+\end{Verbatim}
+specifies a pure rotation (no stretch) about the 3-axis.  At time=0 the material will have rotated 90 degrees about the 3-axis.  At time=2 the material will have rotated an additional 91 degrees about the 3-axis for a total of 181 degrees of rotation.  As a warning to the user, it is possible to specify the deformation gradient such that interpolating between to entries in the table results in a singular deformation gradient.  For example:
+\begin{Verbatim}
+0 1 0 0 0 1 0 0 0 1 0 0 0 0
+1 1 0 0 0 1 0 0 0 1 0 0 0 1
+2 -1 0 0 0 -1 0 0 0 1 0 0 0 1
+\end{Verbatim}
+would result in the simulation failing due to a negative jacobian error between time=1 and time=2 since the 11 and 22 components are linearly varying from 1 to -1 during that time, which will attempt to invert the computational cell.  The deformation gradient at time=2 corresponds to a 180 degree rotation about the 3-axis, and can be accomplished using the rotation feature described above.
+
+As a final example the table:
+\begin{Verbatim}
+0 1 0 0 0 1 0 0 0 1 0 0 0 0
+1 0.5 0 0 0 0.5 0 0 0 0.5 45 0 1 0 
+2 0.5 0 0 0.5 0.5 0 0 0 0.5 90 0 0 1
+\end{Verbatim}
+would result in 50\% hydrostatic compression at time=1 with a 45 degree superimposed rotation about the 2-axis, followed by  simple shear and a 90 degree rotation about the 3-axis between time=1 and time=2.  
+
+
+
+
+
+
+
+
 \section{Geometry objects} \label{Sec:GeometryObjects}
 
 Within several of the components, the material is described by a
