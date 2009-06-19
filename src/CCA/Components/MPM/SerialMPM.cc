@@ -1476,6 +1476,19 @@ void SerialMPM::actuallyInitialize(const ProcessorGroup*,
             << " the sum of the two is [1,1,1].\n";
         throw ProblemSetupException(msg.str(),__FILE__, __LINE__);
     }
+
+    // Only allow axisymmetric runs if the grid is one cell thick in the theta dir.
+    if(flags->d_axisymmetric){
+      IntVector patchLowNode = patch->getNodeLowIndex__New();
+      IntVector patchHighNode = patch->getNodeHighIndex__New();
+      int num_cells_in_theta = (patchHighNode.z() - patchLowNode.z()) - 1;
+      if(num_cells_in_theta > 1){
+        ostringstream msg;
+        msg << "\n ERROR: When using <axisymmetric>true</axisymmetric> \n"
+            << "the grid can only have one cell in the circumferential direction.\n";
+        throw ProblemSetupException(msg.str(),__FILE__, __LINE__);
+      }
+    }
   }
 
   if (flags->d_accStrainEnergy) {
