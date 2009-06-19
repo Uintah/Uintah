@@ -28,7 +28,6 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include <CCA/Components/MPM/Contact/ApproachContact.h>
 #include <Core/Math/Matrix3.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/IntVector.h>
@@ -39,12 +38,14 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/Variables/NodeIterator.h>
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/SimulationStateP.h>
-#include <CCA/Ports/DataWarehouse.h>
 #include <Core/Grid/Task.h>
-#include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Labels/MPMLabel.h>
 #include <Core/Containers/StaticArray.h>
+#include <CCA/Ports/DataWarehouse.h>
+#include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
+#include <CCA/Components/MPM/Contact/ApproachContact.h>
+#include <CCA/Components/MPM/MPMBoundCond.h>
 #include <vector>
 #include <iostream>
 #include <fstream>
@@ -101,7 +102,6 @@ void ApproachContact::exMomInterpolated(const ProcessorGroup*,
 					DataWarehouse* old_dw,
 					DataWarehouse* new_dw)
 { 
-  typedef IntVector IV;
   Ghost::GhostType  gan   = Ghost::AroundNodes;
   Ghost::GhostType  gnone = Ghost::None;
 
@@ -115,7 +115,6 @@ void ApproachContact::exMomInterpolated(const ProcessorGroup*,
   StaticArray<NCVariable<Vector> >       gvelocity(numMatls);
   StaticArray<NCVariable<Vector> >       gsurfnorm(numMatls);
   StaticArray<NCVariable<double> >       frictionWork(numMatls);
-  StaticArray<NCVariable<Matrix3> >      gstress(numMatls);
 
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
@@ -125,59 +124,15 @@ void ApproachContact::exMomInterpolated(const ProcessorGroup*,
     ParticleInterpolator* interpolator = flag->d_interpolator->clone(patch);
     vector<IntVector> ni(interpolator->size());
     vector<double> S(interpolator->size());
+    vector<Vector> d_S(interpolator->size());
+    string interp_type = flag->d_interpolator_type;
 
     delt_vartype delT;
     old_dw->get(delT, lb->delTLabel, getLevel(patches));
 
-    IntVector low(patch->getNodeLowIndex__New());
-    IntVector high(patch->getNodeHighIndex__New());
-
-    int ILOW=0,IHIGH=0,JLOW=0,JHIGH=0,KLOW=0,KHIGH=0;
-    // First, figure out some ranges for for loops
-    for(Patch::FaceType face = Patch::startFace;
-      		  face <= Patch::endFace; face=Patch::nextFace(face)){
-	Patch::BCType bc_type = patch->getBCType(face);
-
-        switch(face) {
-         case Patch::xminus:
-          if(bc_type == Patch::Neighbor) { ILOW = low.x(); }
-          else if(bc_type == Patch::None || 
-                  bc_type == Patch::Coarse){ ILOW = low.x()+1; }
-          break;
-         case Patch::xplus:
-          if(bc_type == Patch::Neighbor) { IHIGH = high.x(); }
-          else if(bc_type == Patch::None ||
-                  bc_type == Patch::Coarse){ IHIGH = high.x()-1; }
-          break;
-         case Patch::yminus:
-          if(bc_type == Patch::Neighbor) { JLOW = low.y(); }
-          else if(bc_type == Patch::None ||
-                  bc_type == Patch::Coarse){ JLOW = low.y()+1; }
-          break;
-         case Patch::yplus:
-          if(bc_type == Patch::Neighbor) { JHIGH = high.y(); }
-          else if(bc_type == Patch::None ||
-                  bc_type == Patch::Coarse){ JHIGH = high.y()-1; }
-          break;
-         case Patch::zminus:
-          if(bc_type == Patch::Neighbor) { KLOW = low.z(); }
-          else if(bc_type == Patch::None ||
-                  bc_type == Patch::Coarse){ KLOW = low.z()+1; }
-          break;
-         case Patch::zplus:
-          if(bc_type == Patch::Neighbor) { KHIGH = high.z(); }
-          else if(bc_type == Patch::None ||
-                  bc_type == Patch::Coarse){ KHIGH = high.z()-1; }
-          break;
-         default:
-          break;
-      }
-    }
-
     // First, calculate the gradient of the mass everywhere
     // normalize it, and stick it in surfNorm
-    Vector surnor;
-    for(int m=0;m<matls->size();m++){
+    for(int m=0;m<numMatls;m++){
       int dwi = matls->get(m);
 
       new_dw->get(gmass[m],           lb->gMassLabel,  dwi, patch, gan,   1);
@@ -187,198 +142,64 @@ void ApproachContact::exMomInterpolated(const ProcessorGroup*,
       new_dw->getModifiable(gvelocity[m],  lb->gVelocityLabel,       dwi,patch);
       new_dw->allocateAndPut(gsurfnorm[m], lb->gSurfNormLabel,       dwi,patch);
       new_dw->getModifiable(frictionWork[m],lb->frictionalWorkLabel, dwi,patch);
-      new_dw->allocateAndPut(gstress[m],      lb->gStressLabel,      dwi,patch);
-      gstress[m].initialize(Matrix3(0.0));
+
+      ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch,
+                                                       gan, NGP, lb->pXLabel);
+
+      constParticleVariable<Point>  px;
+      constParticleVariable<double> pmass, pvolume;
+      constParticleVariable<Vector> psize;
+
+      old_dw->get(px,                  lb->pXLabel,                  pset);
+      old_dw->get(pmass,               lb->pMassLabel,               pset);
+      old_dw->get(pvolume,             lb->pVolumeLabel,             pset);
+      old_dw->get(psize,               lb->pSizeLabel,               pset);
+
+//      new_dw->allocateAndPut(gsurfnorm, lb->gSurfNormLabel,       dwi,patch);
       gsurfnorm[m].initialize(Vector(0.0,0.0,0.0));
 
       if(!d_matls.requested(m)) continue;
 
       // Compute the normals for all of the interior nodes
-      for(int i = ILOW; i < IHIGH; i++){
-        int ip = i+1; int im = i-1;
-        for(int j = JLOW; j < JHIGH; j++){
-          int jp = j+1; int jm = j-1;
-          for(int k = KLOW; k < KHIGH; k++){
-	     surnor = Vector(
-                    -(gmass[m][IV(ip,j,k)] - gmass[m][IV(im,j,k)])/dx.x(),
-                    -(gmass[m][IV(i,jp,k)] - gmass[m][IV(i,jm,k)])/dx.y(), 
-                    -(gmass[m][IV(i,j,k+1)] - gmass[m][IV(i,j,k-1)])/dx.z()); 
-	     double length = surnor.length();
-	     if(length>0.0){
-	    	 gsurfnorm[m][IntVector(i,j,k)] = surnor/length;;
-	     }
-          }
+      if(flag->d_axisymmetric){
+        for(ParticleSubset::iterator it=pset->begin();it!=pset->end();it++){
+          particleIndex idx = *it;
+
+          interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx]);
+          double rho = pmass[idx]/pvolume[idx];
+
+           for(int k = 0; k < flag->d_8or27; k++) {
+             if (patch->containsNode(ni[k])){
+               Vector G(d_S[k].x(),d_S[k].y(),d_S[k].z()/px[idx].x());
+               gsurfnorm[m][ni[k]] += rho * G;
+             }
+           }
         }
-      }
+     } else {
+        for(ParticleSubset::iterator it=pset->begin();it!=pset->end();it++){
+          particleIndex idx = *it;
 
-      // Fix the normals on the surface nodes
-      for(Patch::FaceType face = Patch::startFace;
-      		  face <= Patch::endFace; face=Patch::nextFace(face)){
-	Patch::BCType bc_type = patch->getBCType(face);
+          interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx]);
 
-	if (bc_type == Patch::None) {
-          int i=0,j=0,k=0;
-	  if(face==Patch::xplus || face==Patch::xminus){
-            int I=0;
-            if(face==Patch::xminus){ I=low.x(); }
-            if(face==Patch::xplus) { I=high.x()-1; }
-            // Faces
-            for (j = JLOW; j<JHIGH; j++) {
-              int jp = j+1; int jm = j-1;
-              for (k = KLOW; k<KHIGH; k++) {
-           	surnor = Vector( 0.0,
-                       -(gmass[m][IV(I,jp,k)] - gmass[m][IV(I,jm,k)])/dx.y(),
-                       -(gmass[m][IV(I,j,k+1)] - gmass[m][IV(I,j,k-1)])/dx.z());
-                double length = surnor.length();
-                if(length>0.0){
-                   gsurfnorm[m][IntVector(I,j,k)] = surnor/length;;
-                }
-              }
-            }
-            // Edges
-            if(patch->getBCType(Patch::yminus)==Patch::None){
-              j=JLOW-1;
-              for (k = KLOW; k<KHIGH; k++) {
-                surnor = Vector( 0.0,0.0,
-                     -(gmass[m][IV(I,j,k+1)] - gmass[m][IV(I,j,k-1)])/dx.z());
-                double length = surnor.length();
-                if(length>0.0){
-                  gsurfnorm[m][IntVector(I,j,k)] = surnor/length;;
-                }
-              }
-            }
-            if(patch->getBCType(Patch::yplus)==Patch::None){
-              j=JHIGH;
-              for (k = KLOW; k<KHIGH; k++) {
-                surnor = Vector( 0.0,0.0,
-                     -(gmass[m][IV(I,j,k+1)] - gmass[m][IV(I,j,k-1)])/dx.z());
-                double length = surnor.length();
-                if(length>0.0){
-                  gsurfnorm[m][IntVector(I,j,k)] = surnor/length;;
-                }
-              }
-            }
+           for(int k = 0; k < flag->d_8or27; k++) {
+             if (patch->containsNode(ni[k])){
+               gsurfnorm[m][ni[k]] += pmass[idx] * d_S[k];
+             }
+           }
+        }
+     }
+
+     MPMBoundCond bc;
+     bc.setBoundaryCondition(patch,dwi,"Symmetric",  gsurfnorm[m],interp_type);
+
+     for(NodeIterator iter=patch->getExtraNodeIterator__New();
+                       !iter.done();iter++){
+          IntVector c = *iter;
+          double length = gsurfnorm[m][c].length();
+          if(length>1.0e-15){
+            gsurfnorm[m][c] = gsurfnorm[m][c]/length;
           }
-
-          if(face==Patch::yplus || face==Patch::yminus){
-            int J=0;
-            if(face==Patch::yminus){ J=low.y(); }
-            if(face==Patch::yplus) { J=high.y()-1; }
-            // Faces
-            for (i = ILOW; i<IHIGH; i++) {
-              int ip = i+1; int im = i-1;
-              for (k = KLOW; k<KHIGH; k++) {
-		surnor = Vector(
-	               -(gmass[m][IV(ip,J,k)] - gmass[m][IV(im,J,k)])/dx.x(),
-			 0.0,
-		       -(gmass[m][IV(i,J,k+1)] - gmass[m][IV(i,J,k-1)])/dx.z());
-		double length = surnor.length();
-		if(length>0.0){
-		  gsurfnorm[m][IntVector(i,J,k)] = surnor/length;;
-		}
-              }
-            }
-            // Edges
-            if(patch->getBCType(Patch::zminus)==Patch::None){
-              k=KLOW-1;
-              for (i = ILOW; i<IHIGH; i++) {
-		surnor = Vector(
-	               -(gmass[m][IV(i+1,J,k)] - gmass[m][IV(i-1,J,k)])/dx.x(),
-			 0.0,0.0);
-		double length = surnor.length();
-		if(length>0.0){
-		  gsurfnorm[m][IntVector(i,J,k)] = surnor/length;;
-		}
-              }
-            }
-            if(patch->getBCType(Patch::zplus)==Patch::None){
-              k=KHIGH;
-              for (i = ILOW; i<IHIGH; i++) {
-		surnor = Vector(
-	               -(gmass[m][IV(i+1,J,k)] - gmass[m][IV(i-1,J,k)])/dx.x(),
-			 0.0,0.0);
-		double length = surnor.length();
-		if(length>0.0){
-		  gsurfnorm[m][IntVector(i,J,k)] = surnor/length;;
-		}
-              }
-            }
-          }
-
-          if(face==Patch::zplus || face==Patch::zminus){
-            int K=0;
-            if(face==Patch::zminus){ K=low.z(); }
-            if(face==Patch::zplus) { K=high.z()-1; }
-            // Faces
-            for (i = ILOW; i<IHIGH; i++) {
-              int ip = i+1; int im = i-1;
-              for (j = JLOW; j<JHIGH; j++) {
-		surnor = Vector(
-	               -(gmass[m][IV(ip,j,K)] - gmass[m][IV(im,j,K)])/dx.x(),
-	               -(gmass[m][IV(i,j+1,K)] - gmass[m][IV(i,j-1,K)])/dx.y(), 
-	               0.0);
-		double length = surnor.length();
-		if(length>0.0){
-		  gsurfnorm[m][IntVector(i,j,K)] = surnor/length;;
-		}
-              }
-            }
-            // Edges
-            if(patch->getBCType(Patch::xminus)==Patch::None){
-              i=ILOW-1;
-              for (j = JLOW; j<JHIGH; j++) {
-		surnor = Vector(0.0,
-	               -(gmass[m][IV(i,j+1,K)] - gmass[m][IV(i,j-1,K)])/dx.y(), 
-	               0.0);
-		double length = surnor.length();
-		if(length>0.0){
-		  gsurfnorm[m][IntVector(i,j,K)] = surnor/length;;
-		}
-              }
-            }
-            if(patch->getBCType(Patch::xplus)==Patch::None){
-              i=IHIGH;
-              for (j = JLOW; j<JHIGH; j++) {
-		surnor = Vector(0.0,
-	               -(gmass[m][IV(i,j+1,K)] - gmass[m][IV(i,j-1,K)])/dx.y(), 
-	               0.0);
-		double length = surnor.length();
-		if(length>0.0){
-		  gsurfnorm[m][IntVector(i,j,K)] = surnor/length;;
-		}
-              }
-            }
-          } // if zsomething
-	} // else if (bc_type == Patch::None)
-      }
-
-      // Create arrays for the particle stress and grid stress
-      ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch,
-                                               Ghost::AroundNodes, NGP,
-                                               lb->pXLabel);
-      constParticleVariable<Matrix3> pstress;
-      constParticleVariable<Point> px;
-      old_dw->get(pstress, lb->pStressLabel, pset);
-      old_dw->get(px,      lb->pXLabel,      pset);
-
-      // Next, interpolate the stress to the grid
-      constParticleVariable<Vector> psize;
-      old_dw->get(psize, lb->pSizeLabel, pset);
-
-      for(ParticleSubset::iterator iter = pset->begin();
-         iter != pset->end(); iter++){
-         particleIndex idx = *iter;
-
-         // Get the node indices that surround the cell
-	 interpolator->findCellAndWeights(px[idx], ni, S, psize[idx]);
-         
-         // Add each particles contribution to the local mass & velocity
-         // Must use the node indices
-         for(int k = 0; k < flag->d_8or27; k++) {
-	   if (patch->containsNode(ni[k]))
-	     gstress[m][ni[k]] += pstress[idx] * S[k];
-         }
-      }
+     }
     }
 
     for(NodeIterator iter = patch->getNodeIterator__New(); !iter.done(); iter++){
@@ -513,7 +334,6 @@ void ApproachContact::exMomInterpolated(const ProcessorGroup*,
     }          // NodeIterator
     delete interpolator;
   }  // patches
-  
 }
 
 void ApproachContact::exMomIntegrated(const ProcessorGroup*,
@@ -522,8 +342,6 @@ void ApproachContact::exMomIntegrated(const ProcessorGroup*,
 				      DataWarehouse* old_dw,
 				      DataWarehouse* new_dw)
 {
-  IntVector onex(1,0,0), oney(0,1,0), onez(0,0,1);
-  typedef IntVector IV;
   Ghost::GhostType  gnone = Ghost::None;
 
   int numMatls = d_sharedState->getNumMPMMatls();
@@ -561,7 +379,7 @@ void ApproachContact::exMomIntegrated(const ProcessorGroup*,
     old_dw->get(delT, lb->delTLabel, getLevel(patches));
     double epsilon_max_max=0.0;
 
-    for(NodeIterator iter = patch->getNodeIterator__New(); !iter.done(); iter++){
+    for(NodeIterator iter = patch->getNodeIterator__New(); !iter.done();iter++){
       IntVector c = *iter;
       Vector centerOfMassMom(0.,0.,0.);
       double centerOfMassMass=0.0; 
@@ -587,7 +405,7 @@ void ApproachContact::exMomIntegrated(const ProcessorGroup*,
        if((totalNodalVol/cell_vol)*(64./totalNearParticles) > d_vol_const){
 	 double scale_factor=1.0;
 
-       // 2. This option uses only cell volumes.  The idea is that a cell is full
+       // 2. This option uses only cell volumes. The idea is that a cell is full
        // if totalNodalVol/cell_vol .ge. 1.0, and the contraint should only be
        // applied when cells are full.  This logic is used when d_vol_const=0.
        // For d_vol_const > 0 the contact forces are ramped up linearly from 0
@@ -680,7 +498,6 @@ void ApproachContact::exMomIntegrated(const ProcessorGroup*,
 	      }
 	      Dv=scale_factor*Dv;
 	      gvelocity_star[n][c]+=Dv;
-	      Dv=Dv/delT;
             } // if approaching
 	  }   // if !compare && !compare
         }     // for numMatls
@@ -722,15 +539,14 @@ void ApproachContact::addComputesAndRequiresInterpolated(SchedulerP & sched,
   const MaterialSubset* mss = ms->getUnion();
   t->requires(Task::OldDW, lb->delTLabel);
   t->requires(Task::OldDW, lb->pXLabel,                Ghost::AroundNodes, NGP);
-  t->requires(Task::OldDW, lb->pStressLabel,           Ghost::AroundNodes, NGP);
+  t->requires(Task::OldDW, lb->pMassLabel,             Ghost::AroundNodes, NGP);
+  t->requires(Task::OldDW, lb->pVolumeLabel,           Ghost::AroundNodes, NGP);
   t->requires(Task::OldDW, lb->pSizeLabel,             Ghost::AroundNodes, NGP);
   t->requires(Task::NewDW, lb->gMassLabel,             Ghost::AroundNodes, 1);
   t->requires(Task::NewDW, lb->gVolumeLabel,           Ghost::None);
   t->requires(Task::NewDW, lb->gNumNearParticlesLabel, Ghost::None);
 
-//t->computes(lb->gNormTractionLabel);
   t->computes(lb->gSurfNormLabel);
-  t->computes(lb->gStressLabel);
   t->modifies(lb->frictionalWorkLabel, mss);
   t->modifies(lb->gVelocityLabel, mss);
   
@@ -746,7 +562,6 @@ void ApproachContact::addComputesAndRequiresIntegrated(SchedulerP & sched,
   
   const MaterialSubset* mss = ms->getUnion();
   t->requires(Task::OldDW, lb->delTLabel);
-//t->requires(Task::NewDW, lb->gNormTractionLabel,     Ghost::None);
   t->requires(Task::NewDW, lb->gSurfNormLabel,         Ghost::None);
   t->requires(Task::NewDW, lb->gMassLabel,             Ghost::None);
   t->requires(Task::NewDW, lb->gVolumeLabel,           Ghost::None);
