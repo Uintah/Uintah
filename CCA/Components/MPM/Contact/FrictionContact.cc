@@ -128,7 +128,7 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     Vector dx = patch->dCell();
-//    double cell_vol = dx.x()*dx.y()*dx.z();
+    double cell_vol = dx.x()*dx.y()*dx.z();
 
     ParticleInterpolator* interpolator = flag->d_interpolator->clone(patch);
     vector<IntVector> ni(interpolator->size());
