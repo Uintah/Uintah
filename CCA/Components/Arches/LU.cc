@@ -158,7 +158,7 @@ LU::back_subs( double* rhs )
 
   // algorithm from Numerical Recipes (C):
 
-  int i, j, ii=0, ip=0;
+  int i, j, ii=-1, ip=0;
   float sum;
 
   // forward substitution
