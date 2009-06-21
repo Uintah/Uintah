@@ -208,8 +208,8 @@ KobayashiSarofimDevol::sched_computeModel( const LevelP& level, SchedulerP& sche
     if ( iMap != LabelToRoleMap.end() ) {
       if ( iMap->second == "temperature") {
         // automatically use Arches' temperature label if role="temperature"
-        //tsk->requires(Task::OldDW, d_fieldLabels->d_dummyTLabel, Ghost::AroundCells, 1);
-        tsk->requires(Task::OldDW, d_fieldLabels->d_tempINLabel, Ghost::AroundCells, 1);
+        tsk->requires(Task::OldDW, d_fieldLabels->d_dummyTLabel, Ghost::AroundCells, 1);
+        //tsk->requires(Task::OldDW, d_fieldLabels->d_tempINLabel, Ghost::AroundCells, 1);
 
         // Only require() variables found in equation factories (right now we're not tracking temperature this way)
       } else if ( iMap->second == "raw_coal_mass_fraction") {
@@ -284,8 +284,8 @@ KobayashiSarofimDevol::computeModel( const ProcessorGroup * pc,
     // - get all weights (for number density)
 
     constCCVariable<double> temperature;
-    //old_dw->get( temperature, d_fieldLabels->d_dummyTLabel, matlIndex, patch, gac, 1 );
-    old_dw->get( temperature, d_fieldLabels->d_tempINLabel, matlIndex, patch, gac, 1 );
+    old_dw->get( temperature, d_fieldLabels->d_dummyTLabel, matlIndex, patch, gac, 1 );
+    //old_dw->get( temperature, d_fieldLabels->d_tempINLabel, matlIndex, patch, gac, 1 );
     constCCVariable<double> w_omegac;
     new_dw->get( w_omegac, d_raw_coal_mass_fraction_label, matlIndex, patch, gn, 0 );
     constCCVariable<double> weight;
