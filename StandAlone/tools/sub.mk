@@ -53,4 +53,26 @@ ifeq ($(BUILD_VISIT),yes)
         endif 
 endif
 
+########################################################
+# compute_Lnorm_udas
+
+ifeq ($(LARGESOS),yes)
+  PSELIBS := Packages/Uintah
+else
+
+  PSELIBS := \
+        Core/Exceptions   \
+        Core/DataArchive \
+        CCA/Components/DataArchiver         
+endif
+
+LIBS :=
+
+SRCS := $(SRCDIR)/compute_Lnorm_udas.cc 
+PROGRAM := $(SRCDIR)/compute_Lnorm_udas
+
+include $(SCIRUN_SCRIPTS)/program.mk
+
+compute_Lnorm_udas: prereqs StandAlone/tools/compute_Lnorm_udas
+
 include $(SCIRUN_SCRIPTS)/recurse.mk
