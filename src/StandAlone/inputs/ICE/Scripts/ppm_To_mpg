@@ -59,7 +59,7 @@ while ( $ans == "n" || $ans == "N")
   endif
   
   if ( $movieFormat == "" ) then
-    set $movieFormat = "mpeg"
+    set movieFormat = "mpeg"
   endif
 
   echo "-------------------"
