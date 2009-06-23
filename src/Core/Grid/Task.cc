@@ -58,6 +58,7 @@ void Task::initialize()
   for(int i=0;i<TotalDWs;i++)
     dwmap[i]=Task::InvalidDW;
   sortedOrder=-1;
+  d_phase=-1;
 }
 
 Task::ActionBase::~ActionBase()

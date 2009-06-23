@@ -180,12 +180,9 @@ TaskGraph::setupTaskConnections(GraphSortInfoMap& sortinfo)
   // While we are at it, ensure that we aren't producing anything
   // into an "old" data warehouse
   ReductionTasksMap reductionTasks;
-  int currblock=0;
   for( iter=d_tasks.begin(); iter != d_tasks.end(); iter++ ) {
     Task* task = *iter;
-    task->Block = currblock;
     if (task->isReductionTask()){
-      currblock++; 
       continue; // already a reduction task so skip it
     }
 
@@ -220,8 +217,6 @@ TaskGraph::setupTaskConnections(GraphSortInfoMap& sortinfo)
           taskname << "Reduction: " << comp->var->getName() 
             << ", level " << levelidx << ", dw " << dw;
           Task* newtask = scinew Task(taskname.str(), Task::Reduction);
-          newtask->Block = currblock;
-          currblock++;
 
           sortinfo[newtask] = GraphSortInfo();
 
@@ -909,12 +904,19 @@ TaskGraph::createDetailedDependencies()
   // Put internal links between the reduction tasks so a mixed thread/mpi
   // scheduler won't have out of order reduction problems.
   DetailedTask* lastReductionTask = 0;
+  int currphase=0;
   for(int i=0;i<dts_->numTasks();i++){
     DetailedTask* task = dts_->getTask(i);
+    task->task->d_phase=currphase;
+    //cout << d_myworld->myrank()  << " Task: " << *task << " phase: " << currphase << endl;
     if (task->task->getType() == Task::Reduction) {
       if (lastReductionTask != 0)
+      {
         task->addInternalDependency(lastReductionTask,
             task->task->getModifies()->var);
+      //  cout << d_myworld->myrank() << " reduction dependency:  making " << *lastReductionTask << " dependent on " << *task << " var:" << *task->task->getModifies()->var << endl;
+      }
+      currphase++;
       lastReductionTask = task;
     }
   }

@@ -587,7 +587,7 @@ WARNING
     
     struct Edge;
       
-    int Block;  //synchronized block id, for dynamic task scheduling
+    int d_phase;  //synchronized phase id, for dynamic task scheduling
 
     enum DepType {
       Modifies, Computes, Requires
