@@ -2055,6 +2055,8 @@ getGridVar(GridVariableBase& var, const VarLabel* label, int matlIndex, const Pa
 
   if(!d_varDB.exists(label, matlIndex, patch)) {
     //print();
+    cout << d_myworld->myrank() << " unable to find variable '" << label->getName() << " on patch: " << patch->getID() << " matl: " << matlIndex << endl;
+    //WAIT_FOR_DEBUGGER();
     SCI_THROW(UnknownVariable(label->getName(), getID(), patch, matlIndex, "", __FILE__, __LINE__));
   }
   if(patch->isVirtual()){

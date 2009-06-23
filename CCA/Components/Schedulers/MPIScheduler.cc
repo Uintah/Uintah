@@ -823,12 +823,12 @@ MPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
       initiateTask( dts->localTask(i), abort, abort_point, iteration );
   }
 #endif
-  int currblock=0;
-  map<int, int> blockTasks;
-  map<int, int> blockTasksDone;
+  int currphase=0;
+  map<int, int> phaseTasks;
+  map<int, int> phaseTasksDone;
   if (useExternalQueue_ && !d_sharedState->isCopyDataTimestep()) {
     for (int i = 0; i < ntasks; i++)
-      blockTasks[dts->localTask(i)->getTask()->Block]++;
+      phaseTasks[dts->localTask(i)->getTask()->d_phase]++;
   }
 
   set<DetailedTask*> pending_tasks;
@@ -928,7 +928,11 @@ MPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
       if (dts->numInternalReadyTasks() > 0) {
         DetailedTask * task = dts->getNextInternalReadyTask();
 
-        if (task->getTask()->getType() == Task::Reduction) reducetask = task;
+        if (task->getTask()->getType() == Task::Reduction) 
+        {
+          ASSERT(reducetask==0);
+          reducetask = task;
+        }
         else {
           initiateTask( task, abort, abort_point, iteration );
           task->markInitiated();
@@ -948,17 +952,21 @@ MPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
         ASSERTEQ(task->getExternalDepCount(), 0);
         runTask(task, iteration);
         numTasksDone++;
-        blockTasksDone[task->getTask()->Block]++;
+        phaseTasksDone[task->getTask()->d_phase]++;
+        //cout << d_myworld->myrank() << " finished task(0) " << *task << " scheduled in phase: " << task->getTask()->d_phase << ", tasks finished in that phase: " <<  phaseTasksDone[task->getTask()->d_phase] << " current phase:" << currphase << endl; 
       } 
       }
-      if ((reducetask!=0) && (blockTasksDone[currblock] == blockTasks[currblock]-1)){
+      if ((reducetask!=0) && (phaseTasksDone[currphase] == phaseTasks[currphase]-1)){
             if(!abort) {
               taskdbg << d_myworld->myrank() << " Running task " << reducetask->getTask()->getName() << endl;
               initiateReduction(reducetask);
             }
+            ASSERT(reducetask->getTask()->d_phase==currphase);
+
             numTasksDone++;
-            blockTasksDone[reducetask->getTask()->Block]++;
-            currblock++;
+            phaseTasksDone[reducetask->getTask()->d_phase]++;
+            //cout << d_myworld->myrank() << " finished reduction task(1) " << *reducetask << " scheduled in phase: " << reducetask->getTask()->d_phase << ", tasks finished in that phase: " <<  phaseTasksDone[reducetask->getTask()->d_phase] << " current phase:" << currphase << endl; 
+            currphase++;
             reducetask=0;
       } else if (numTasksDone < ntasks){
         // we have nothing to do, so wait until we get something
