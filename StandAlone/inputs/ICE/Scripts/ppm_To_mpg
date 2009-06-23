@@ -40,7 +40,10 @@ while ( $ans == "n" || $ans == "N")
   set size = $<
 
   echo  "Play back speed, frames per second [5]"
-  set playBackSpeed = $<  
+  set playBackSpeed = $< 
+  
+  echo  "Enter movie format [mpeg].  Type ffmpeg -formats for options"
+  set movieFormat = $<
 
 
   #__________________________________
@@ -54,11 +57,16 @@ while ( $ans == "n" || $ans == "N")
   if ( $playBackSpeed == "" ) then
     set playBackSpeed = "5"
   endif
+  
+  if ( $movieFormat == "" ) then
+    set $movieFormat = "mpeg"
+  endif
 
   echo "-------------------"
   echo "backup images..........$backup"
   echo "movie size.............$size"
   echo "movie playback speed...$playBackSpeed"
+  echo "movie filetype.........$movieFormat"
   echo "-------------------"
   echo ""
   echo "Is this correct? [y]"
@@ -189,8 +197,10 @@ rm Label*.png
 # make the movies mpg
 echo "___________________________________"
 echo "Now making the movie"
+echo "ffmpeg -qscale 1 -s $size -r $playBackSpeed -i %d.a.png -r 30 movie.$movieFormat"
+
 rm movie.mpeg
-ffmpeg -qscale 1 -s $size -r $playBackSpeed -i %d.a.png -r 30 movie.mpeg
+ffmpeg -qscale 1 -s $size -r $playBackSpeed -i %d.a.png -r 30 movie.$movieFormat
 #ffmpeg -mbd rd -flags +trell -cmp 2 -subcmp 2 -g 100 -pass 1/2 -s $size -r $playBackSpeed -i %d.a.png -r 30 movie.mpeg
 #__________________________________
 echo "__________________________________"
