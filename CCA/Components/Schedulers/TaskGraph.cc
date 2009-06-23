@@ -181,14 +181,11 @@ TaskGraph::setupTaskConnections(GraphSortInfoMap& sortinfo)
   // into an "old" data warehouse
   ReductionTasksMap reductionTasks;
   int currblock=0;
-  int newblock=0;
   for( iter=d_tasks.begin(); iter != d_tasks.end(); iter++ ) {
-    currblock = currblock + newblock;
-    newblock = 0;
     Task* task = *iter;
     task->Block = currblock;
     if (task->isReductionTask()){
-      newblock = 1;
+      currblock++; 
       continue; // already a reduction task so skip it
     }
 
@@ -224,7 +221,7 @@ TaskGraph::setupTaskConnections(GraphSortInfoMap& sortinfo)
             << ", level " << levelidx << ", dw " << dw;
           Task* newtask = scinew Task(taskname.str(), Task::Reduction);
           newtask->Block = currblock;
-          newblock = 1;
+          currblock++;
 
           sortinfo[newtask] = GraphSortInfo();
 
