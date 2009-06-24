@@ -45,6 +45,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/Box.h>
 #include <Core/Grid/Grid.h>
 #include <Core/Grid/Level.h>
+#include <Core/Grid/Variables/GridIterator.h>
 #include <Core/Grid/Variables/NodeIterator.h>
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Grid/Variables/CCVariable.h>
@@ -105,318 +106,114 @@ void abort_uncomparable()
   cerr << "\nThe uda directories may not be compared.\n";
   Thread::exitAll(5);
 }
-
-
-bool norm(double a, double b)
-{
-  // Return false only if BOTH absolute and relative comparisons fail.
 #if 0
-  double max_abs = fabs(a);
-  if (fabs(b) > max_abs) max_abs = fabs(b);
-  if (fabs(a - b) > abs_tolerance) {
-    if (max_abs > 0 && (fabs(a-b) / max_abs) > rel_tolerance)
-      return false;
-    else
-      return true;
-  }
-  else
-    return true;
+void initialize(double a, double value)
+{
+  a = value;
+}
+void initialize(Vector a, double value)
+{
+  a = Vector(value, value, value);
+}
+
+bool norm(double a, double b, double sum)
+{
+  return sum += Abs(a) - Abs(b);
+}
+
+
+bool norm(Vector a, Vector b, Vector sum)
+{
+  return norm(a.x(), b.x(), sum.x()) &&
+         norm(a.y(), b.y(), sum.y()) &&
+         norm(a.z(), b.z(), sum.z());
+}
 #endif
-}
-
-bool norm(float a, float b)
-{
-  return norm((double)a, (double)b);
-}
-
-bool norm(long64 a, long64 b)
-{
-  return (a == b);
-}
-
-bool norm(int a, int b)
-{
-  return (a == b); 
-}
-
-bool norm(Vector a, Vector b)
-{
-  return norm(a.x(), b.x()) &&
-         norm(a.y(), b.y()) &&
-         norm(a.z(), b.z());
-}
-
-bool norm(Point a, Point b)
-{ 
-  return norm(a.asVector(), b.asVector());
-}
-
-bool norm(const Matrix3& a, const Matrix3& b)
-{
-  //  for (int i = 0; i < 3; i++)
-  //    for (int j = 0; j < 3; j++)
-  //      if (!norm(a(i,j), b(i, j), abs_tolerance, rel_tolerance))
-  // Comparing element by element is overly sensitive to code changes
-  // The following is a hopefully more informative metric of agreement
-  if(!norm(a.Norm(), b.Norm())){
-    return false;
-  } else {
-    return true;
-  }
-}
-
-///______________________________________________________________________
+//__________________________________
 //
-class FieldComparator
+GridIterator
+getIterator( const Uintah::TypeDescription * td, const Patch * patch, bool use_extra_cells ) 
 {
-public:
-
-  virtual ~FieldComparator() {};
-  virtual void
-  compareFields(DataArchive* da1, 
-                DataArchive* da2,
-                const string& var,
-                ConsecutiveRangeSet matls, 
-                const Patch* patch,
-                const Array3<const Patch*>& patch2Map,
-                double time, 
-                int timestep) = 0;
-
-  static FieldComparator*
-  makeFieldComparator(const Uintah::TypeDescription* td,
-                      const Uintah::TypeDescription* subtype,
-                      const Patch* patch);
-};
-
-template <class Field, class Iterator>
-class SpecificFieldComparator : public FieldComparator
-{
-public:
-  SpecificFieldComparator(Iterator begin)
-    : d_begin_(begin) { }
-  virtual ~SpecificFieldComparator() {}
-  
-  virtual void
-  compareFields(DataArchive* da1, 
-                DataArchive* da2, 
-                const string& var,
-                ConsecutiveRangeSet matls, 
-                const Patch* patch,
-                const Array3<const Patch*>& patch2Map,
-                double time, 
-                int timestep);
-private:
-  Iterator d_begin_;
-};
+  switch( td->getType() ){
+    case Uintah::TypeDescription::NCVariable :    return GridIterator( patch->getNodeIterator__New() );
+    case Uintah::TypeDescription::CCVariable :    return GridIterator( patch->getCellIterator__New() );
+    case Uintah::TypeDescription::SFCXVariable :  return GridIterator( patch->getSFCXIterator__New() );
+    case Uintah::TypeDescription::SFCYVariable :  return GridIterator( patch->getSFCYIterator__New() );
+    case Uintah::TypeDescription::SFCZVariable :  return GridIterator( patch->getSFCZIterator__New() );
+    default:
+      cout << "ERROR: Don't know how to handle type: " << td->getName() << "\n";
+      exit( 1 );
+  }
+} // end getIterator()
 
 //__________________________________
-FieldComparator* FieldComparator::
-makeFieldComparator(const Uintah::TypeDescription* td,
-                    const Uintah::TypeDescription* subtype, 
-                    const Patch* patch)
+template <class Field, class subtype>
+void compareFields(DataArchive* da1, 
+                   DataArchive* da2, 
+                   const string& var,
+                   const int matl,
+                   const Patch* patch,
+                   const Array3<const Patch*>& cellToPatchMap,
+                   int timestep)
 {
-  switch(td->getType()){
-  case Uintah::TypeDescription::NCVariable: {
-    NodeIterator iter = patch->getNodeIterator__New();
-    switch(subtype->getType()){
-    case Uintah::TypeDescription::double_type:
-      return scinew
-        SpecificFieldComparator<NCVariable<double>, NodeIterator>(iter);
-    case Uintah::TypeDescription::float_type:
-      return scinew
-        SpecificFieldComparator<NCVariable<float>, NodeIterator>(iter);
-    case Uintah::TypeDescription::int_type:
-      return scinew
-        SpecificFieldComparator<NCVariable<int>, NodeIterator>(iter);
-    case Uintah::TypeDescription::Point:
-      return scinew
-        SpecificFieldComparator<NCVariable<Point>, NodeIterator>(iter);
-    case Uintah::TypeDescription::Vector:
-      return scinew
-        SpecificFieldComparator<NCVariable<Vector>, NodeIterator>(iter);
-    case Uintah::TypeDescription::Matrix3:
-      return scinew
-        SpecificFieldComparator<NCVariable<Matrix3>, NodeIterator>(iter);
-    default:
-      cerr << "FieldComparator::makeFieldComparator: NC Variable of unsupported type: " << subtype->getName() << '\n';
-      Thread::exitAll(-1);
-    }
-  }
-  case Uintah::TypeDescription::CCVariable: {
-    CellIterator iter = patch->getCellIterator__New();
-    switch(subtype->getType()){
-    case Uintah::TypeDescription::double_type:
-      return scinew
-        SpecificFieldComparator<CCVariable<double>, CellIterator>(iter);
-    case Uintah::TypeDescription::float_type:
-      return scinew
-        SpecificFieldComparator<CCVariable<float>, CellIterator>(iter);
-    case Uintah::TypeDescription::int_type:
-      return scinew
-        SpecificFieldComparator<CCVariable<int>, CellIterator>(iter);
-    case Uintah::TypeDescription::Point:
-      return scinew
-        SpecificFieldComparator<CCVariable<Point>, CellIterator>(iter);
-    case Uintah::TypeDescription::Vector:
-      return scinew
-        SpecificFieldComparator<CCVariable<Vector>, CellIterator>(iter);
-    case Uintah::TypeDescription::Matrix3:
-      return scinew
-        SpecificFieldComparator<CCVariable<Matrix3>, CellIterator>(iter);
-    default:
-      cerr << "FieldComparator::makeFieldComparator: CC Variable of unsupported type: " << subtype->getName() << '\n';
-      Thread::exitAll(-1);
-    }
-  }
-  case Uintah::TypeDescription::SFCXVariable: {
-    CellIterator iter = patch->getSFCXIterator__New();
-    switch(subtype->getType()){
-    case Uintah::TypeDescription::double_type:
-      return scinew
-        SpecificFieldComparator<SFCXVariable<double>, CellIterator>(iter);
-    case Uintah::TypeDescription::float_type:
-      return scinew
-        SpecificFieldComparator<SFCXVariable<float>, CellIterator>(iter);
-    case Uintah::TypeDescription::int_type:
-      return scinew
-        SpecificFieldComparator<SFCXVariable<int>, CellIterator>(iter);
-    case Uintah::TypeDescription::Point:
-      return scinew
-        SpecificFieldComparator<SFCXVariable<Point>, CellIterator>(iter);
-    case Uintah::TypeDescription::Vector:
-      return scinew
-        SpecificFieldComparator<SFCXVariable<Vector>, CellIterator>(iter);
-    case Uintah::TypeDescription::Matrix3:
-      return scinew
-        SpecificFieldComparator<SFCXVariable<Matrix3>, CellIterator>(iter);
-    default:
-      cerr << "FieldComparator::makeFieldComparator: SFCX Variable of unsupported type: " << subtype->getName() << '\n';
-      Thread::exitAll(-1);
-    }
-  }
-  case Uintah::TypeDescription::SFCYVariable: {
-    CellIterator iter = patch->getSFCYIterator__New();
-    switch(subtype->getType()){
-    case Uintah::TypeDescription::double_type:
-      return scinew
-        SpecificFieldComparator<SFCYVariable<double>, CellIterator>(iter);
-    case Uintah::TypeDescription::float_type:
-      return scinew
-        SpecificFieldComparator<SFCYVariable<float>, CellIterator>(iter);
-    case Uintah::TypeDescription::int_type:
-      return scinew
-        SpecificFieldComparator<SFCYVariable<int>, CellIterator>(iter);
-    case Uintah::TypeDescription::Point:
-      return scinew
-        SpecificFieldComparator<SFCYVariable<Point>, CellIterator>(iter);
-    case Uintah::TypeDescription::Vector:
-      return scinew
-        SpecificFieldComparator<SFCYVariable<Vector>, CellIterator>(iter);
-    case Uintah::TypeDescription::Matrix3:
-      return scinew
-        SpecificFieldComparator<SFCYVariable<Matrix3>, CellIterator>(iter);
-    default:
-      cerr << "FieldComparator::makeFieldComparator: SFCY Variable of unsupported type: " << subtype->getName() << '\n';
-      Thread::exitAll(-1);
-    }
-  }
-  case Uintah::TypeDescription::SFCZVariable: {
-    CellIterator iter = patch->getSFCZIterator__New();
-    switch(subtype->getType()){
-    case Uintah::TypeDescription::double_type:
-      return scinew
-        SpecificFieldComparator<SFCZVariable<double>, CellIterator>(iter);
-    case Uintah::TypeDescription::float_type:
-      return scinew
-        SpecificFieldComparator<SFCZVariable<float>, CellIterator>(iter);
-    case Uintah::TypeDescription::int_type:
-      return scinew
-        SpecificFieldComparator<SFCZVariable<int>, CellIterator>(iter);
-    case Uintah::TypeDescription::Point:
-      return scinew
-        SpecificFieldComparator<SFCZVariable<Point>, CellIterator>(iter);
-    case Uintah::TypeDescription::Vector:
-      return scinew
-        SpecificFieldComparator<SFCZVariable<Vector>, CellIterator>(iter);
-    case Uintah::TypeDescription::Matrix3:
-      return scinew
-        SpecificFieldComparator<SFCZVariable<Matrix3>, CellIterator>(iter);
-    default:
-      cerr << "FieldComparator::makeFieldComparator: SFCZ Variable of unsupported type: " << subtype->getName() << '\n';
-      Thread::exitAll(-1);
-    }
-  }
-  default:
-    cerr << "FieldComparator::makeFieldComparator: Variable of unsupported type: " << td->getName() << '\n';
-    Thread::exitAll(-1);
-  }
-  return 0;
-}
-
-//__________________________________
-template <class Field, class Iterator>
-void SpecificFieldComparator<Field, Iterator>::
-compareFields(DataArchive* da1, 
-              DataArchive* da2, 
-              const string& var,
-              ConsecutiveRangeSet matls, 
-              const Patch* patch,
-              const Array3<const Patch*>& cellToPatchMap,
-              double time1, 
-              int timestep)
-{
-  Field* field2;
-  bool firstMatl = true;
+  Field field2;
+  Field field1;
+  subtype sum(0);
+  subtype max(0);
+ 
+  const Uintah::TypeDescription * td1 = field1.getTypeDescription();
+  GridIterator iter = getIterator( td1, patch, false);
+  cout << " iter " << iter <<endl;
   
-  ConsecutiveRangeSet::iterator matlIter = matls.begin();
-  for ( ;matlIter != matls.end(); matlIter++){
-    int matl = *matlIter;
-    
-    Field field;
-    da1->query(field, var, matl, patch, timestep);
+  ConsecutiveRangeSet matls1 = da1->queryMaterials(var, patch, timestep);
+  
+  da1->query(field1, var, matl, patch, timestep);
 
-    map<const Patch*, Field*> patch2FieldMap;
-    typename map<const Patch*, Field*>::iterator findIter;
+  map<const Patch*, Field*> patch2FieldMap;
+  typename map<const Patch*, Field*>::iterator findIter;
+#if 0
+  for( ; !iter.done(); iter++ ) {
+    IntVector c = *iter;
+    const Patch* patch2 = cellToPatchMap[c];
     
-    for (Iterator iter = d_begin_ ; !iter.done(); iter++ ) {
-      IntVector c = *iter;
-      const Patch* patch2 = cellToPatchMap[c];
-      
-      findIter = patch2FieldMap.find(patch2);
-      
-      // first time through
-      if (findIter == patch2FieldMap.end()) {
-        if (firstMatl) { // check only needs to be made the first round
-          ConsecutiveRangeSet matls2 = da2->queryMaterials(var, patch2, timestep);
-          ASSERT(matls == matls2); // check should have been made previously
-        }
-        field2 = scinew Field();
-        patch2FieldMap[patch2] = field2;
-        da2->query(*field2, var, matl, patch2, timestep);
-      }else {
-        field2 = (*findIter).second;
-      }
-      
-      cout << " *iter " << c << endl;
-      //norm(field[c], (*field2)[c])
+    ConsecutiveRangeSet matls2 = da2->queryMaterials(var, patch2, timestep);
+    ASSERT(matls1 == matls2);
+
+    findIter = patch2FieldMap.find(patch2);
+    
+    // load in data
+    if (findIter == patch2FieldMap.end()) {
+      field2 = scinew Field();
+      patch2FieldMap[patch2] = field2;
+      da2->query(*field2, var, matl, patch2, timestep);
+    }else {
+      field2 = (*findIter).second;
     }
 
-    typename map<const Patch*, Field*>::iterator iter = patch2FieldMap.begin();
-    for ( ; iter != patch2FieldMap.end(); iter++) {
-      delete (*iter).second;
-    }
-    firstMatl = false;
-  }  // matl
+    sum += field1[c];
+    max = Max(max(field1[c]));
+    cout << " *iter " << c << endl;
+    //norm(field[c], (*field2)[c])
+  }
+#endif
+  cout << "sum " << sum << " max " << max << endl;
+
+  typename map<const Patch*, Field*>::iterator itr = patch2FieldMap.begin();
+  for ( ; itr != patch2FieldMap.end(); itr++) {
+    delete (*itr).second;
+  }
+
+
 }
 
 
 //__________________________________
-// For each cell put a patch 
+// function loop
 void BuildCellToPatchMap(LevelP level, 
-                   const string& filebase,
-                   Array3<const Patch*>& patchMap, 
-                   double time, 
-                   Patch::VariableBasis basis)
+                         const string& filebase,
+                         Array3<const Patch*>& patchMap, 
+                         double time, 
+                         Patch::VariableBasis basis)
 {
   const PatchSet* allPatches = level->allPatches();
   const PatchSubset* patches = allPatches->getUnion();
@@ -435,8 +232,6 @@ void BuildCellToPatchMap(LevelP level,
   
   patchMap.resize(low, high);
   patchMap.initialize(0);
-
-
 
   Level::const_patchIterator patch_iter;
   for(patch_iter = level->patchesBegin(); patch_iter != level->patchesEnd(); patch_iter++) {
@@ -525,172 +320,184 @@ main(int argc, char** argv)
     usage("", argv[0]);
   }
 
-  try {
-    DataArchive* da1 = scinew DataArchive(filebase1);
-    DataArchive* da2 = scinew DataArchive(filebase2);
+  DataArchive* da1 = scinew DataArchive(filebase1);
+  DataArchive* da2 = scinew DataArchive(filebase2);
 
-    vector<string> vars, vars2;
-    vector<const Uintah::TypeDescription*> types, types2;
-    vector< pair<string, const Uintah::TypeDescription*> > vartypes1,vartypes2;    
-    da1->queryVariables(vars,  types);
-    da2->queryVariables(vars2, types2);
-    
-    ASSERTEQ(vars.size(),  types.size());
-    ASSERTEQ(vars2.size(), types2.size());
-    
-    if (vars.size() != vars2.size()) {
-      cerr << filebase1 << " has " << vars.size() << " variables\n";
-      cerr << filebase2 << " has " << vars2.size() << " variables\n";
+  vector<string> vars, vars2;
+  vector<const Uintah::TypeDescription*> types, types2;
+  vector< pair<string, const Uintah::TypeDescription*> > vartypes1,vartypes2;    
+  da1->queryVariables(vars,  types);
+  da2->queryVariables(vars2, types2);
+
+  ASSERTEQ(vars.size(),  types.size());
+  ASSERTEQ(vars2.size(), types2.size());
+
+  if (vars.size() != vars2.size()) {
+    cerr << filebase1 << " has " << vars.size() << " variables\n";
+    cerr << filebase2 << " has " << vars2.size() << " variables\n";
+    abort_uncomparable();
+  }
+
+  //__________________________________
+  // bulletproofing    
+  for (unsigned int i = 0; i < vars.size(); i++) {
+    if (vars[i] != vars2[i]) {
+      cerr << "Variable " << vars[i]  << " in " << filebase1 << " does not match\n";
+      cerr << "variable " << vars2[i] << " in " << filebase2 << endl;
       abort_uncomparable();
     }
 
-    //__________________________________
-    // bulletproofing    
-    for (unsigned int i = 0; i < vars.size(); i++) {
-      if (vars[i] != vars2[i]) {
-        cerr << "Variable " << vars[i]  << " in " << filebase1 << " does not match\n";
-        cerr << "variable " << vars2[i] << " in " << filebase2 << endl;
-        abort_uncomparable();
-      }
-      
-      if (types[i] != types2[i]) {
-        cerr << "Variable " << vars[i] << " does not have the same type in both uda directories.\n";
-        cerr << "In " << filebase1 << " its type is " << types[i]->getName() << endl;
-        cerr << "In " << filebase2 << " its type is " << types2[i]->getName() << endl;
-        abort_uncomparable();
-      } 
+    if (types[i] != types2[i]) {
+      cerr << "Variable " << vars[i] << " does not have the same type in both uda directories.\n";
+      cerr << "In " << filebase1 << " its type is " << types[i]->getName() << endl;
+      cerr << "In " << filebase2 << " its type is " << types2[i]->getName() << endl;
+      abort_uncomparable();
+    } 
+  }
+
+  //__________________________________
+  // Look over timesteps
+  vector<int> index, index2;
+  vector<double> times, times2;
+
+  da1->queryTimesteps(index,  times);
+  da2->queryTimesteps(index2, times2);
+
+  ASSERTEQ(index.size(),  times.size());
+  ASSERTEQ(index2.size(), times2.size());
+
+  for(unsigned long t = 0; t < times.size() && t < times2.size(); t++){
+
+    double time1 = times[t];
+    double time2 = times2[t];
+    cerr << "time = " << time1 << "\n";
+    GridP grid  = da1->queryGrid(t);
+    GridP grid2 = da2->queryGrid(t);
+
+    // bullet proofing
+    if (grid->numLevels() != grid2->numLevels()) {
+      cerr << "Grid at time " << time1 << " in " << filebase1 << " has " << grid->numLevels() << " levels.\n";
+      cerr << "Grid at time " << time2 << " in " << filebase2 << " has " << grid2->numLevels() << " levels.\n";
+      abort_uncomparable();
     }
-      
+    if (abs(times[t] - times2[t]) > 1e-5) {
+      cerr << "Timestep at time " << times[t] << " in " << filebase1 << " does not match\n";
+      cerr << "timestep at time " << times2[t] << " in " << filebase2 << " within the allowable tolerance.\n";
+      abort_uncomparable();
+    }
+
+
     //__________________________________
-    // Look over timesteps
-    vector<int> index, index2;
-    vector<double> times, times2;
-    
-    da1->queryTimesteps(index,  times);
-    da2->queryTimesteps(index2, times2);
-    
-    ASSERTEQ(index.size(),  times.size());
-    ASSERTEQ(index2.size(), times2.size());
+    //  Loop over variables
+    for(int v=0;v<(int)vars.size();v++){
+      std::string var = vars[v];
+      const Uintah::TypeDescription* td = types[v];
+      const Uintah::TypeDescription* subtype = td->getSubType();
 
-    for(unsigned long t = 0; t < times.size() && t < times2.size(); t++){
-      if (!norm(times[t], times2[t])) {
-        cerr << "Timestep at time " << times[t] << " in " << filebase1 << " does not match\n";
-        cerr << "timestep at time " << times2[t] << " in " << filebase2 << " within the allowable tolerance.\n";
-        abort_uncomparable();
-      }
-      
-      double time1 = times[t];
-      double time2 = times2[t];
-      cerr << "time = " << time1 << "\n";
-      GridP grid  = da1->queryGrid(t);
-      GridP grid2 = da2->queryGrid(t);
-      
-      // bullet proofing
-      if (grid->numLevels() != grid2->numLevels()) {
-        cerr << "Grid at time " << time1 << " in " << filebase1 << " has " << grid->numLevels() << " levels.\n";
-        cerr << "Grid at time " << time2 << " in " << filebase2 << " has " << grid2->numLevels() << " levels.\n";
-        abort_uncomparable();
-      }
+      cerr << "\tVariable: " << var << ", type " << td->getName() << "\n";
 
+      Patch::VariableBasis basis=Patch::translateTypeToBasis(td->getType(),false);
 
-      //__________________________________
-      //  Loop over variables
-      for(int v=0;v<(int)vars.size();v++){
-        std::string var = vars[v];
-        const Uintah::TypeDescription* td = types[v];
-        const Uintah::TypeDescription* subtype = td->getSubType();
-        
-        cerr << "\tVariable: " << var << ", type " << td->getName() << "\n";
-        
-        Patch::VariableBasis basis=Patch::translateTypeToBasis(td->getType(),false);
-        
-        for(int l=0;l<grid->numLevels();l++){
-          LevelP level   = grid->getLevel(l);
-          LevelP level2  = grid2->getLevel(l);
-         
-          //check patch coverage
-          vector<Region> region1, region2, difference1, difference2;
+      for(int l=0;l<grid->numLevels();l++){
+        LevelP level   = grid->getLevel(l);
+        LevelP level2  = grid2->getLevel(l);
 
-          for(int i=0;i<level->numPatches();i++){
-            const Patch* patch=level->getPatch(i);
-            region1.push_back(Region(patch->getExtraCellLowIndex__New(),patch->getExtraCellHighIndex__New()));
-          }
-          
-          for(int i=0;i<level2->numPatches();i++){
-            const Patch* patch=level2->getPatch(i);
-            region2.push_back(Region(patch->getExtraCellLowIndex__New(),patch->getExtraCellHighIndex__New()));
-          }
+        //check patch coverage
+        vector<Region> region1, region2, difference1, difference2;
 
-          difference1 = Region::difference(region1,region2);
-          difference2 = Region::difference(region1,region2);
+        for(int i=0;i<level->numPatches();i++){
+          const Patch* patch=level->getPatch(i);
+          region1.push_back(Region(patch->getExtraCellLowIndex__New(),patch->getExtraCellHighIndex__New()));
+        }
 
-          if(!difference1.empty() || !difference2.empty()){
-            cerr << "Patches on level:" << l << " do not cover the same area\n";
+        for(int i=0;i<level2->numPatches();i++){
+          const Patch* patch=level2->getPatch(i);
+          region2.push_back(Region(patch->getExtraCellLowIndex__New(),patch->getExtraCellHighIndex__New()));
+        }
+
+        difference1 = Region::difference(region1,region2);
+        difference2 = Region::difference(region1,region2);
+
+        if(!difference1.empty() || !difference2.empty()){
+          cerr << "Patches on level:" << l << " do not cover the same area\n";
+          abort_uncomparable();
+        }
+
+        // map cells to patches in level and level2 respectively
+        Array3<const Patch*> cellToPatchMap;
+        Array3<const Patch*> cellToPatchMap2;
+
+        BuildCellToPatchMap(level,  filebase1, cellToPatchMap,  time1, basis);
+        BuildCellToPatchMap(level2, filebase2, cellToPatchMap2, time2, basis);
+
+        // bulletproofing
+        for ( Array3<const Patch*>::iterator nodePatchIter = cellToPatchMap.begin(); nodePatchIter != cellToPatchMap.end(); nodePatchIter++) {
+
+          IntVector index = nodePatchIter.getIndex();
+
+          if ((cellToPatchMap[index]  == 0 && cellToPatchMap2[index] != 0) ||
+              (cellToPatchMap2[index] == 0 && cellToPatchMap[index] != 0)) {
+            cerr << "Inconsistent patch coverage on level " << l << " at time " << time1 << endl;
+
+            if (cellToPatchMap[index] != 0) {
+              cerr << index << " is covered by " << filebase1 << " and not " << filebase2 << endl;
+            } else {
+              cerr << index << " is covered by " << filebase2 << " and not " << filebase1 << endl;
+            }
+
             abort_uncomparable();
           }
-          
-          // map cells to patches in level and level2 respectively
-          Array3<const Patch*> cellToPatchMap;
-          Array3<const Patch*> cellToPatchMap2;
-          
-          BuildCellToPatchMap(level,  filebase1, cellToPatchMap,  time1, basis);
-          BuildCellToPatchMap(level2, filebase2, cellToPatchMap2, time2, basis);
-          
-          for ( Array3<const Patch*>::iterator nodePatchIter = cellToPatchMap.begin(); nodePatchIter != cellToPatchMap.end(); nodePatchIter++) {
-          
-            IntVector index = nodePatchIter.getIndex();
-           
-            if ((cellToPatchMap[index]  == 0 && cellToPatchMap2[index] != 0) ||
-                (cellToPatchMap2[index] == 0 && cellToPatchMap[index] != 0)) {
-              cerr << "Inconsistent patch coverage on level " << l << " at time " << time1 << endl;
-              
-              if (cellToPatchMap[index] != 0) {
-                cerr << index << " is covered by " << filebase1 << " and not " << filebase2 << endl;
-              } else {
-                cerr << index << " is covered by " << filebase2 << " and not " << filebase1 << endl;
-              }
-              
-              abort_uncomparable();
-            }
-          }
-          
-          //__________________________________
-          //  compare the fields
+        }
+
+        //__________________________________
+        //  compare the fields
+        
+        //ConsecutiveRangeSet matls = da1->queryMaterials(var, patch, timestep);
+        //ConsecutiveRangeSet::iterator matlIter;
+        //for ( matlIter = matls.begin() ;matlIter != matls.end(); matlIter++){
+        //int matl = *matlIter;
+          int matl = 0;
           Level::const_patchIterator iter;
-          
           for(iter = level->patchesBegin();iter != level->patchesEnd(); iter++) {
             const Patch* patch = *iter;
- 
-            ConsecutiveRangeSet matls = da1->queryMaterials(var, patch, t);
 
-            FieldComparator* comparator =
-              FieldComparator::makeFieldComparator(td, subtype, patch);
-              
-            if (comparator != 0) {
-              comparator->compareFields(da1, da2, var, matls, patch,
-                                        cellToPatchMap2, time1, t);
-              delete comparator;
+            switch(td->getType()){
+              case Uintah::TypeDescription::CCVariable:                                                   
+                switch(subtype->getType()){                                                                 
+                  case Uintah::TypeDescription::int_type:{ 
+                    cout <<" int " << endl;                                                                   
+                    compareFields<CCVariable<int>,int>(da1, da2, var, matl, patch, cellToPatchMap2, t);        
+                    break;
+                  }
+                  case Uintah::TypeDescription::double_type:{
+                    cout << "double" << endl;
+                    compareFields<CCVariable<double>,double>(da1, da2, var, matl, patch, cellToPatchMap2, t); 
+                    break;
+                  }               
+                  case Uintah::TypeDescription::Vector:{
+                    cout <<" vector " << endl;
+                    compareFields<CCVariable<Vector>,Vector>(da1, da2, var, matl, patch, cellToPatchMap2, t);  
+                    break;
+                  }
+                }
+                break; 
+              default:
+                cerr << "Variable of unknown type: " << td->getName() << endl;
+              break;
             }
           }  // patches
-        }  // levels
-      }  // variables
-    }
-    
-    if (times.size() != times2.size()) {
-      cerr << endl;
-      cerr << filebase1 << " has " << times.size() << " timesteps\n";
-      cerr << filebase2 << " has " << times2.size() << " timesteps\n";
-      abort_uncomparable();
-    }
-    delete da1;
-    delete da2;
-    
-  } catch (Exception& e) {
-    cerr << "Caught exception: " << e.message() << '\n';
-    abort();
-  } catch(...){
-    cerr << "Caught unknown exception\n";
-    abort();
+        //}  // matls
+      }  // levels
+    }  // variables
   }
+
+  if (times.size() != times2.size()) {
+    cerr << endl;
+    cerr << filebase1 << " has " << times.size() << " timesteps\n";
+    cerr << filebase2 << " has " << times2.size() << " timesteps\n";
+    abort_uncomparable();
+  }
+  delete da1;
+  delete da2;
   return 0;
 }
