@@ -42,7 +42,6 @@ DEALINGS IN THE SOFTWARE.
  */
 
 #include <Core/DataArchive/DataArchive.h>
-#include <Core/Grid/Box.h>
 #include <Core/Grid/Grid.h>
 #include <Core/Grid/Level.h>
 #include <Core/Grid/Variables/GridIterator.h>
@@ -53,22 +52,14 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/Variables/SFCXVariable.h>
 #include <Core/Grid/Variables/SFCYVariable.h>
 #include <Core/Grid/Variables/SFCZVariable.h>
-#include <Core/Math/Matrix3.h>
 #include <Core/Math/MinMax.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
-#include <Core/OS/Dir.h>
 #include <Core/Thread/Thread.h>
 #include <Core/Util/ProgressiveWarning.h>
 #include <iostream>
 #include <string>
-#include <vector>
 #include <sstream>
-#include <iterator>
-#include <algorithm>
-#include <iomanip>
-#include <cmath>
-using namespace SCIRun;
 using namespace std;
 using namespace Uintah;
 
@@ -81,25 +72,8 @@ void usage(const std::string& badarg, const std::string& progname)
        << " [options] <archive file 1> <archive file 2>\n\n";
   cerr << "Valid options are:\n";
   cerr << "  -h[elp]\n";
-  cerr << "  -as_warnings             (treat tolerance errors as warnings and continue)\n";
-  cerr << "  -skip_unknown_types      (skip variable comparisons of unknown types without error)\n";
-  cerr << "  -ignoreVariable [string] (skip this variable)\n";
-  cerr << "  -dont_sort               (don't sort the variable names before comparing them)";
-  cerr << "\nNote: The absolute and relative tolerance tests must both fail\n"
-       << "      for a comparison to fail.\n\n";
   Thread::exitAll(1);
 }
-
-// I don't want to have to pass these parameters all around, so
-// I've made them file-scope.
-string filebase1;
-string filebase2;
-bool strict_types = true;
-
-enum Norm {
-    L1, L2, LInfinity
-};
-
 
 void abort_uncomparable()
 {
@@ -153,13 +127,16 @@ void compareFields(DataArchive* da1,
                    const string& var,
                    const int matl,
                    const Patch* patch,
+                   const LevelP level1,
+                   const LevelP level2,
                    const Array3<const Patch*>& cellToPatchMap,
                    int timestep)
 {
-  Field field2;
+  Field* field2;
   Field field1;
-  subtype sum(0);
-  subtype max(0);
+  subtype sumDiff(0);
+  subtype sumDiffSqr(0);
+  subtype maxDiff(0);
  
   const Uintah::TypeDescription * td1 = field1.getTypeDescription();
   GridIterator iter = getIterator( td1, patch, false);
@@ -169,46 +146,53 @@ void compareFields(DataArchive* da1,
   
   da1->query(field1, var, matl, patch, timestep);
 
-  map<const Patch*, Field*> patch2FieldMap;
+  map<const Patch*, Field*> patch_FieldMap;
   typename map<const Patch*, Field*>::iterator findIter;
-#if 0
+  
+  //__________________________________
+  //  Loop over the cells of patch1
   for( ; !iter.done(); iter++ ) {
     IntVector c = *iter;
+    
     const Patch* patch2 = cellToPatchMap[c];
-    
-    ConsecutiveRangeSet matls2 = da2->queryMaterials(var, patch2, timestep);
-    ASSERT(matls1 == matls2);
 
-    findIter = patch2FieldMap.find(patch2);
+    // find the number of occurances of the key (patch2) in the map
+    int count = patch_FieldMap.count(patch2);
     
-    // load in data
-    if (findIter == patch2FieldMap.end()) {
+    if (count == 0 ) {                       // field is not in the map and has not been loaded previously
       field2 = scinew Field();
-      patch2FieldMap[patch2] = field2;
+      
+      patch_FieldMap[patch2] = field2;       // store value (field) in the map
+      
       da2->query(*field2, var, matl, patch2, timestep);
-    }else {
-      field2 = (*findIter).second;
+      
+    }else {                                  // field is in the map
+      field2 = patch_FieldMap[patch2];       // pull out field
     }
 
-    sum += field1[c];
-    max = Max(max(field1[c]));
+#if 0
+    subtype diff = Abs(field1[c] - field1[c]);
+    sumDiff    += diff;
+    sumDiffSqr += diff * diff;
+    
+    maxDiff = Max(maxDiff, diff);
     cout << " *iter " << c << endl;
     //norm(field[c], (*field2)[c])
-  }
 #endif
-  cout << "sum " << sum << " max " << max << endl;
+  }
+  cout << "sum " << sumDiff << " max " << maxDiff << endl;
 
-  typename map<const Patch*, Field*>::iterator itr = patch2FieldMap.begin();
-  for ( ; itr != patch2FieldMap.end(); itr++) {
+  // now cleanup memory.
+  typename map<const Patch*, Field*>::iterator itr = patch_FieldMap.begin();
+  for ( ; itr != patch_FieldMap.end(); itr++) {
     delete (*itr).second;
   }
-
-
 }
 
 
 //__________________________________
-// function loop
+// At each cell index determine what patch you're on and store
+// it in an cellToPatchMap
 void BuildCellToPatchMap(LevelP level, 
                          const string& filebase,
                          Array3<const Patch*>& patchMap, 
@@ -221,6 +205,7 @@ void BuildCellToPatchMap(LevelP level,
     return;
   }
 
+  // find the index range for this level and variable type basis
   IntVector bl=IntVector(0,0,0);
   IntVector low  = patches->get(0)->getExtraLowIndex(basis,bl);
   IntVector high = patches->get(0)->getExtraHighIndex(basis,bl);
@@ -230,6 +215,7 @@ void BuildCellToPatchMap(LevelP level,
     high = Max(high, patches->get(i)->getExtraHighIndex(basis,bl));
   }
   
+  // resize the array and initialize it
   patchMap.resize(low, high);
   patchMap.initialize(0);
 
@@ -237,20 +223,21 @@ void BuildCellToPatchMap(LevelP level,
   for(patch_iter = level->patchesBegin(); patch_iter != level->patchesEnd(); patch_iter++) {
     const Patch* patch = *patch_iter;
     
-    ASSERT(Min(patch->getExtraLowIndex(basis,bl), low) == low);
-    ASSERT(Max(patch->getExtraHighIndex(basis,bl), high) == high);
+    IntVector ex_low = patch->getExtraLowIndex(basis,bl);
+    IntVector ex_high = patch->getExtraHighIndex(basis,bl);
     
-    patchMap.rewindow(patch->getExtraLowIndex(basis,bl),
-                      patch->getExtraHighIndex(basis,bl));
+    ASSERT(Min(ex_low,  low) == low);
+    ASSERT(Max(ex_high, high) == high);
+    
+    patchMap.rewindow(ex_low, ex_high);
     
     for (Array3<const Patch*>::iterator iter = patchMap.begin(); iter != patchMap.end(); iter++) {
+      
       if (*iter != 0) {
-        static ProgressiveWarning pw("Two patches on the same grid overlap", 10);
-        if (pw.invoke())
-          cerr << "Patches " << patch->getID() << " and " 
+       
+       cerr << "Patches " << patch->getID() << " and " 
                << (*iter)->getID() << " overlap on the same file at time " << time
                << " in " << filebase << " at index " << iter.getIndex() << endl;
-        //abort_uncomparable();
         
         // in some cases, we can have overlapping patches, where an extra cell/node 
         // overlaps an interior cell/node of another patch.  We prefer the interior
@@ -266,9 +253,8 @@ void BuildCellToPatchMap(LevelP level,
             pos.x() < in_high.x() && pos.y() < in_high.y() && pos.z() < in_high.z()) {
           *iter = patch;
         }
-      }else{
-        IntVector pos = iter.getIndex();
-        *iter = patch;
+      }else{  
+        *iter = patch;     // insert patch into the array
       }
     }  //patchMap
   }  //level
@@ -282,6 +268,8 @@ main(int argc, char** argv)
   Thread::setDefaultAbortMode("exit");
   string ignoreVar = "none";
   bool sortVariables = true;
+  string filebase1;
+  string filebase2;
 
   //__________________________________
   // Parse Args:
@@ -291,7 +279,6 @@ main(int argc, char** argv)
       sortVariables = false;
     }
     else if(s == "-skip_unknown_types") {
-      strict_types = false;
     }
     else if(s == "-ignoreVariable") {
       if (++i == argc){
@@ -371,12 +358,12 @@ main(int argc, char** argv)
     double time1 = times[t];
     double time2 = times2[t];
     cerr << "time = " << time1 << "\n";
-    GridP grid  = da1->queryGrid(t);
-    GridP grid2 = da2->queryGrid(t);
+    GridP grid1  = da1->queryGrid(t);
+    GridP grid2  = da2->queryGrid(t);
 
     // bullet proofing
-    if (grid->numLevels() != grid2->numLevels()) {
-      cerr << "Grid at time " << time1 << " in " << filebase1 << " has " << grid->numLevels() << " levels.\n";
+    if (grid1->numLevels() != grid2->numLevels()) {
+      cerr << "Grid at time " << time1 << " in " << filebase1 << " has " << grid1->numLevels() << " levels.\n";
       cerr << "Grid at time " << time2 << " in " << filebase2 << " has " << grid2->numLevels() << " levels.\n";
       abort_uncomparable();
     }
@@ -397,16 +384,17 @@ main(int argc, char** argv)
       cerr << "\tVariable: " << var << ", type " << td->getName() << "\n";
 
       Patch::VariableBasis basis=Patch::translateTypeToBasis(td->getType(),false);
-
-      for(int l=0;l<grid->numLevels();l++){
-        LevelP level   = grid->getLevel(l);
+      //__________________________________
+      //  loop over levels
+      for(int l=0;l<grid1->numLevels();l++){
+        LevelP level1  = grid1->getLevel(l);
         LevelP level2  = grid2->getLevel(l);
 
         //check patch coverage
         vector<Region> region1, region2, difference1, difference2;
 
-        for(int i=0;i<level->numPatches();i++){
-          const Patch* patch=level->getPatch(i);
+        for(int i=0;i<level1->numPatches();i++){
+          const Patch* patch=level1->getPatch(i);
           region1.push_back(Region(patch->getExtraCellLowIndex__New(),patch->getExtraCellHighIndex__New()));
         }
 
@@ -423,23 +411,23 @@ main(int argc, char** argv)
           abort_uncomparable();
         }
 
-        // map cells to patches in level and level2 respectively
-        Array3<const Patch*> cellToPatchMap;
+        // map cells to patches on level1 and level2
+        Array3<const Patch*> cellToPatchMap1;
         Array3<const Patch*> cellToPatchMap2;
 
-        BuildCellToPatchMap(level,  filebase1, cellToPatchMap,  time1, basis);
+        BuildCellToPatchMap(level1, filebase1, cellToPatchMap1,  time1, basis);
         BuildCellToPatchMap(level2, filebase2, cellToPatchMap2, time2, basis);
 
         // bulletproofing
-        for ( Array3<const Patch*>::iterator nodePatchIter = cellToPatchMap.begin(); nodePatchIter != cellToPatchMap.end(); nodePatchIter++) {
+        for ( Array3<const Patch*>::iterator nodePatchIter = cellToPatchMap1.begin(); nodePatchIter != cellToPatchMap1.end(); nodePatchIter++) {
 
           IntVector index = nodePatchIter.getIndex();
 
-          if ((cellToPatchMap[index]  == 0 && cellToPatchMap2[index] != 0) ||
-              (cellToPatchMap2[index] == 0 && cellToPatchMap[index] != 0)) {
+          if ((cellToPatchMap1[index] == 0 && cellToPatchMap2[index] != 0) ||
+              (cellToPatchMap2[index] == 0 && cellToPatchMap1[index] != 0)) {
             cerr << "Inconsistent patch coverage on level " << l << " at time " << time1 << endl;
 
-            if (cellToPatchMap[index] != 0) {
+            if (cellToPatchMap1[index] != 0) {
               cerr << index << " is covered by " << filebase1 << " and not " << filebase2 << endl;
             } else {
               cerr << index << " is covered by " << filebase2 << " and not " << filebase1 << endl;
@@ -458,27 +446,26 @@ main(int argc, char** argv)
         //int matl = *matlIter;
           int matl = 0;
           Level::const_patchIterator iter;
-          for(iter = level->patchesBegin();iter != level->patchesEnd(); iter++) {
+          for(iter = level1->patchesBegin();iter != level1->patchesEnd(); iter++) {
             const Patch* patch = *iter;
 
             switch(td->getType()){
               case Uintah::TypeDescription::CCVariable:                                                   
                 switch(subtype->getType()){                                                                 
-                  case Uintah::TypeDescription::int_type:{ 
-                    cout <<" int " << endl;                                                                   
-                    compareFields<CCVariable<int>,int>(da1, da2, var, matl, patch, cellToPatchMap2, t);        
+                  case Uintah::TypeDescription::int_type:{                                                         
+                    compareFields<CCVariable<int>,int>(da1, da2, var, matl, patch, level1, level2, cellToPatchMap2, t);        
                     break;
                   }
                   case Uintah::TypeDescription::double_type:{
-                    cout << "double" << endl;
-                    compareFields<CCVariable<double>,double>(da1, da2, var, matl, patch, cellToPatchMap2, t); 
+                    compareFields<CCVariable<double>,double>(da1, da2, var, matl, patch, level1, level2, cellToPatchMap2, t); 
                     break;
                   }               
                   case Uintah::TypeDescription::Vector:{
-                    cout <<" vector " << endl;
-                    compareFields<CCVariable<Vector>,Vector>(da1, da2, var, matl, patch, cellToPatchMap2, t);  
+                    compareFields<CCVariable<Vector>,Vector>(da1, da2, var, matl, patch, level1, level2, cellToPatchMap2, t);  
                     break;
                   }
+                  default:
+                    cerr << " data type not supported "<< td->getName() <<  endl;
                 }
                 break; 
               default:
