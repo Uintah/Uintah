@@ -53,6 +53,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/Variables/SFCYVariable.h>
 #include <Core/Grid/Variables/SFCZVariable.h>
 #include <Core/Math/MinMax.h>
+#include <Core/Math/MiscMath.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Thread/Thread.h>
@@ -64,10 +65,12 @@ using namespace std;
 using namespace Uintah;
 
 
+
 void usage(const std::string& badarg, const std::string& progname)
 {
-  if(badarg != "")
+  if(badarg != ""){
     cerr << "\nError parsing argument: " << badarg << '\n';
+  }
   cerr << "\nUsage: " << progname 
        << " [options] <archive file 1> <archive file 2>\n\n";
   cerr << "Valid options are:\n";
@@ -80,29 +83,15 @@ void abort_uncomparable()
   cerr << "\nThe uda directories may not be compared.\n";
   Thread::exitAll(5);
 }
-#if 0
-void initialize(double a, double value)
+Vector Sqrt(const Vector a)
 {
-  a = value;
-}
-void initialize(Vector a, double value)
-{
-  a = Vector(value, value, value);
-}
-
-bool norm(double a, double b, double sum)
-{
-  return sum += Abs(a) - Abs(b);
+  return Vector(Sqrt(a.x()), Sqrt(a.y()), Sqrt(a.z()));
 }
 
 
-bool norm(Vector a, Vector b, Vector sum)
-{
-  return norm(a.x(), b.x(), sum.x()) &&
-         norm(a.y(), b.y(), sum.y()) &&
-         norm(a.z(), b.z(), sum.z());
-}
-#endif
+
+
+
 //__________________________________
 //
 GridIterator
@@ -134,13 +123,14 @@ void compareFields(DataArchive* da1,
 {
   Field* field2;
   Field field1;
-  subtype sumDiff(0);
-  subtype sumDiffSqr(0);
-  subtype maxDiff(0);
- 
+  subtype L1(0);
+  subtype L2(0);
+  subtype Linf(0);
+  int n = 0;
+  
+  
   const Uintah::TypeDescription * td1 = field1.getTypeDescription();
   GridIterator iter = getIterator( td1, patch, false);
-  cout << " iter " << iter <<endl;
   
   ConsecutiveRangeSet matls1 = da1->queryMaterials(var, patch, timestep);
   
@@ -170,17 +160,17 @@ void compareFields(DataArchive* da1,
       field2 = patch_FieldMap[patch2];       // pull out field
     }
 
-#if 0
-    subtype diff = Abs(field1[c] - field1[c]);
-    sumDiff    += diff;
-    sumDiffSqr += diff * diff;
-    
-    maxDiff = Max(maxDiff, diff);
-    cout << " *iter " << c << endl;
-    //norm(field[c], (*field2)[c])
-#endif
+    n += 1;
+    subtype diff = Abs(field1[c] - (*field2)[c]);
+    L1 += diff;
+    L2 += diff * diff;
+    Linf += Max(Linf, diff);
   }
-  cout << "sum " << sumDiff << " max " << maxDiff << endl;
+  
+  L1 = L1/(subtype) n;
+  L2 = Sqrt( L2/(subtype) n );
+  Linf = Linf/(subtype) n;
+  cerr << "\t Norms L1: " << L1 << " L2: " << L2 << " Linf: " << Linf << endl;
 
   // now cleanup memory.
   typename map<const Patch*, Field*>::iterator itr = patch_FieldMap.begin();
@@ -235,10 +225,11 @@ void BuildCellToPatchMap(LevelP level,
       
       if (*iter != 0) {
        
+       #if 0
        cerr << "Patches " << patch->getID() << " and " 
                << (*iter)->getID() << " overlap on the same file at time " << time
                << " in " << filebase << " at index " << iter.getIndex() << endl;
-        
+        #endif
         // in some cases, we can have overlapping patches, where an extra cell/node 
         // overlaps an interior cell/node of another patch.  We prefer the interior
         // one.  (if there are two overlapping interior ones (nodes or face centers only),
@@ -267,7 +258,6 @@ main(int argc, char** argv)
 {
   Thread::setDefaultAbortMode("exit");
   string ignoreVar = "none";
-  bool sortVariables = true;
   string filebase1;
   string filebase2;
 
@@ -275,30 +265,24 @@ main(int argc, char** argv)
   // Parse Args:
   for( int i = 1; i < argc; i++ ) {
     string s = argv[i];
-    if(s == "-dont_sort") {
-      sortVariables = false;
-    }
-    else if(s == "-skip_unknown_types") {
-    }
-    else if(s == "-ignoreVariable") {
+    if(s == "-ignoreVariable") {
       if (++i == argc){
         usage("-ignoreVariable, no variable given", argv[0]);
       }else{
         ignoreVar = argv[i];
       }
-    }
-    else if(s[0] == '-' && s[1] == 'h' ) { // lazy check for -h[elp] option
+    }else if(s[0] == '-' && s[1] == 'h' ) { // lazy check for -h[elp] option
       usage( "", argv[0] );
-    }
-    else {
+    }else {
       if (filebase1 != "") {
-        if (filebase2 != "")
+        if (filebase2 != ""){
           usage(s, argv[0]);
-        else
+        }else{
           filebase2 = argv[i];
-      }
-      else
+        }
+      }else{
         filebase1 = argv[i];
+      }
     }
   }
   //__________________________________
@@ -381,12 +365,13 @@ main(int argc, char** argv)
       const Uintah::TypeDescription* td = types[v];
       const Uintah::TypeDescription* subtype = td->getSubType();
 
-      cerr << "\tVariable: " << var << ", type " << td->getName() << "\n";
+      cerr << "\t" << var;
 
       Patch::VariableBasis basis=Patch::translateTypeToBasis(td->getType(),false);
       //__________________________________
       //  loop over levels
       for(int l=0;l<grid1->numLevels();l++){
+        cerr << " \t L-" << l;
         LevelP level1  = grid1->getLevel(l);
         LevelP level2  = grid2->getLevel(l);
 
@@ -445,11 +430,15 @@ main(int argc, char** argv)
         //for ( matlIter = matls.begin() ;matlIter != matls.end(); matlIter++){
         //int matl = *matlIter;
           int matl = 0;
+          cerr << "\t Matl-" << matl;
+                    
           Level::const_patchIterator iter;
           for(iter = level1->patchesBegin();iter != level1->patchesEnd(); iter++) {
             const Patch* patch = *iter;
 
             switch(td->getType()){
+              //__________________________________
+              //  CC
               case Uintah::TypeDescription::CCVariable:                                                   
                 switch(subtype->getType()){                                                                 
                   case Uintah::TypeDescription::int_type:{                                                         
@@ -465,11 +454,79 @@ main(int argc, char** argv)
                     break;
                   }
                   default:
-                    cerr << " data type not supported "<< td->getName() <<  endl;
+                    cerr << " Data type not supported "<< td->getName() <<  endl;
+                }
+                break;
+              //__________________________________
+              //  NC
+              case Uintah::TypeDescription::NCVariable:                                                   
+                switch(subtype->getType()){                                                                 
+                  case Uintah::TypeDescription::int_type:{                                                         
+                    compareFields<NCVariable<int>,int>(da1, da2, var, matl, patch, level1, level2, cellToPatchMap2, t);        
+                    break;
+                  }
+                  case Uintah::TypeDescription::double_type:{
+                    compareFields<NCVariable<double>,double>(da1, da2, var, matl, patch, level1, level2, cellToPatchMap2, t); 
+                    break;
+                  }               
+                  case Uintah::TypeDescription::Vector:{
+                    compareFields<NCVariable<Vector>,Vector>(da1, da2, var, matl, patch, level1, level2, cellToPatchMap2, t);  
+                    break;
+                  }
+                  default:
+                    cerr << " Data type not supported "<< td->getName() <<  endl;
+                }
+                break;
+              //__________________________________
+              //  SFCX
+              case Uintah::TypeDescription::SFCXVariable:                                                   
+                switch(subtype->getType()){                                                                 
+                  case Uintah::TypeDescription::int_type:{                                                         
+                    compareFields<SFCXVariable<int>,int>(da1, da2, var, matl, patch, level1, level2, cellToPatchMap2, t);        
+                    break;
+                  }
+                  case Uintah::TypeDescription::double_type:{
+                    compareFields<SFCXVariable<double>,double>(da1, da2, var, matl, patch, level1, level2, cellToPatchMap2, t); 
+                    break;
+                  }
+                  default:
+                    cerr << " Data type not supported "<< td->getName() <<  endl;
                 }
                 break; 
+              //__________________________________
+              //  SFCY
+              case Uintah::TypeDescription::SFCYVariable:                                                   
+                switch(subtype->getType()){                                                                 
+                  case Uintah::TypeDescription::int_type:{                                                         
+                    compareFields<SFCYVariable<int>,int>(da1, da2, var, matl, patch, level1, level2, cellToPatchMap2, t);        
+                    break;
+                  }
+                  case Uintah::TypeDescription::double_type:{
+                    compareFields<SFCYVariable<double>,double>(da1, da2, var, matl, patch, level1, level2, cellToPatchMap2, t); 
+                    break;
+                  }
+                  default:
+                    cerr << " Data type not supported "<< td->getName() <<  endl;
+                }
+                break;
+              //__________________________________
+              //  SFCZ
+              case Uintah::TypeDescription::SFCZVariable:                                                   
+                switch(subtype->getType()){                                                                 
+                  case Uintah::TypeDescription::int_type:{                                                         
+                    compareFields<SFCZVariable<int>,int>(da1, da2, var, matl, patch, level1, level2, cellToPatchMap2, t);        
+                    break;
+                  }
+                  case Uintah::TypeDescription::double_type:{
+                    compareFields<SFCZVariable<double>,double>(da1, da2, var, matl, patch, level1, level2, cellToPatchMap2, t); 
+                    break;
+                  }
+                  default:
+                    cerr << " Data type not supported "<< td->getName() <<  endl;
+                }
+                break;
               default:
-                cerr << "Variable of unknown type: " << td->getName() << endl;
+                cerr << " Data type not yet supported: " << td->getName() << endl;
               break;
             }
           }  // patches
