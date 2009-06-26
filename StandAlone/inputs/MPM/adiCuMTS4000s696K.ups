@@ -79,7 +79,6 @@
         <density>              8930.0 </density>
         <thermal_conductivity> 386.0  </thermal_conductivity>
         <specific_heat>        414.0  </specific_heat>
-        <room_temp>            294.0  </room_temp>
         <melt_temp>            1356.0 </melt_temp>
         <constitutive_model type="rigid">
           <shear_modulus> 46.0e9  </shear_modulus>
@@ -101,7 +100,6 @@
         <density>              8930.0 </density>
         <thermal_conductivity> 386.0  </thermal_conductivity>
         <specific_heat>        414.0  </specific_heat>
-        <room_temp>            294.0  </room_temp>
         <melt_temp>            1356.0 </melt_temp>
         <constitutive_model type="elastic_plastic">
           <isothermal>                    false   </isothermal>
