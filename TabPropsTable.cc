@@ -148,12 +148,12 @@ TabPropsTable::problemSetup( const ProblemSpecP& propertiesParameters )
     // Extract DVs from input file
     for(ProblemSpecP db_dv = db_vars->findBlock("save"); db_dv !=0; 
         db_dv = db_dv->findNextBlock("save") ) {
-      string tableLookup;
+      bool tableLookup = false;
       string dvName;
       db_dv->getAttribute("table_lookup", tableLookup);
       db_dv->getAttribute("label", dvName);
 
-      if( tableLookup.compare("true")==0 ){
+      if( tableLookup ){
         allUserDepVarNames.push_back( dvName ); 
       } 
     } 
