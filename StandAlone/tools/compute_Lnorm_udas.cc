@@ -42,7 +42,6 @@ DEALINGS IN THE SOFTWARE.
  */
 
 #include <Core/DataArchive/DataArchive.h>
-#include <Core/Exceptions/InternalError.h>
 #include <Core/Grid/Grid.h>
 #include <Core/Grid/Level.h>
 #include <Core/Grid/Variables/GridIterator.h>
@@ -57,38 +56,55 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Math/MiscMath.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
+#include <Core/OS/Dir.h> // for MKDIR
 #include <Core/Thread/Thread.h>
 #include <Core/Util/ProgressiveWarning.h>
+#include <dirent.h>
 #include <iostream>
+#include <fstream>
 #include <string>
-#include <sstream>
 
 using namespace std;
 using namespace Uintah;
 
-
 void usage(const std::string& badarg, const std::string& progname)
 {
   if(badarg != ""){
-    cerr << "\nError parsing argument: " << badarg << '\n';
+    cerr << "\nError parsing argument: " << badarg << "\n\n";
   }
-  cerr << "\nUsage: " << progname 
-       << " [options] <archive file 1> <archive file 2>\n\n";
-  cerr << "Valid options are:\n";
-  cerr << "  -h[elp]\n";
+  cout << " \n compute_Lnorm_uda:  Computes the L(1,2,inf) norm for each variable in two udas.  Each variable in uda1 \n"
+       << " is examined at each level and timestep.  You can compare udas that have different computational domains\n"
+       << " and different patch distributions.  The uda with the small compuational domain should always be specified first.\n \n"
+       << " Output is sent to the terminal in addition to a directory named 'Lnorm'.  The structure of 'Lnorm' is:\n"
+       << " Lnorm/ \n"
+       << "   -- L-0 \n"
+       << "    |-- delP_Dilatate_0 \n"
+       << "    |-- mom_L_ME_CC_0 \n"
+       << "    |-- press_CC_0 \n"
+       << "    |-- press_equil_CC_0 \n"
+       << "In each file is the physical time, L1, L2, Linf norms.\n";
+       
+  cout << "\nNote only CC, NC, SFCX, SFCY, SFCZ variables are supported.\n";      
+  cout << "\nUsage: "
+       << " [options] <uda1> <uda2>\n\n";
+  cout << "Valid options are:\n";
+  cout << "  -h[elp]\n";
   Thread::exitAll(1);
 }
-
+//__________________________________
 void abort_uncomparable()
 {
   cerr << "\nThe uda directories may not be compared.\n";
   Thread::exitAll(5);
 }
+
+//__________________________________
 Vector Sqrt(const Vector a)
 {
   return Vector(Sqrt(a.x()), Sqrt(a.y()), Sqrt(a.z()));
 }
 
+//__________________________________
 template <class T>
 class Norms{
   public:
@@ -117,6 +133,21 @@ class Norms{
       d_L1   = d_L1/((T)d_n);
       d_L2   = Sqrt( d_L2/((T)d_n) );
       cout << " \t norms: L1 " << d_L1 << " L2: " << d_L2 << " Linf: " << d_Linf<< " n_cells: " << d_n<<endl;
+    }
+    
+    void outputNorms(const double& time,const string& filename) 
+    {
+      ofstream out(filename.c_str(), ios_base::app);
+      
+      out.setf(ios::scientific,ios::floatfield);
+      out.precision(10);
+      
+      if(! out){
+        cerr << " could not open output file: " << filename << endl;
+        abort_uncomparable();
+      }
+      out << time << " " << d_L1 << " " << d_L2 << " " << d_Linf<<endl;
+      out.close();
     }
     
     int get_n()
@@ -200,12 +231,10 @@ void compareFields(Norms<subtype>* norms,
     if (p1.x() != p2.x()   ||
        (p1.y() != p2.y() ) ||
        (p1.z() != p2.z() ) ){
-      ostringstream warn;
-      warn <<"\n__________________________________\n "
-            << " You can't compare data at different physical locations  \n"
-            << " uda1: " << p1 << " uda2: " << p2 << endl;
-            
-      throw InternalError(warn.str(), __FILE__, __LINE__);
+      cout <<"\n__________________________________\n "
+            << "You can't compare data at different physical locations  \n"
+            << " uda1 data location: " << p1 << "\n uda2 data location: " << p2 << endl;
+      abort_uncomparable();
     }
     
     // do the work
@@ -297,7 +326,49 @@ void BuildCellToPatchMap(LevelP level,
   }  //level
   patchMap.rewindow(low, high);
 }
+//______________________________________________________________________
+// create the directory   Lnorms/LevelIndex
+void
+createDirectory(string& levelIndex, string& path)
+{
+  string dirName = "./Lnorm";
+  DIR *check = opendir(dirName.c_str());
+  if ( check == NULL ) {
+    cout << "Making directory "<< dirName<<endl;
+    MKDIR( dirName.c_str(), 0777 );
+  } else {
+    closedir(check);
+  }
+  
+  // level index
+  path = dirName + "/" + levelIndex;
+  check = opendir(path.c_str());
+  if ( check == NULL ) {
+    cout << "Making directory " << path << endl;
+    MKDIR( path.c_str(), 0777 );
+  } else {
+    closedir(check);
+  }
+}
+//__________________________________
+//
+void createFile(string& filename, const int timestep)
+{ 
+  if(timestep == 0){
+    ofstream out(filename.c_str(), ios_base::out);
+    if(! out){
+      cerr << " could not open output file: " << filename << endl;
+      abort_uncomparable();
+    }
+    cout << " Now creating the file: "<< filename << endl;
+    out << "#Time \t\t\t L1 \t\t L2 \t\t Linf" <<endl;
+    out.close();
+  }
+}
 
+
+//______________________________________________________________________
+// Main
 //______________________________________________________________________
 int
 main(int argc, char** argv)
@@ -346,6 +417,8 @@ main(int argc, char** argv)
   da1->queryVariables(vars,  types);
   da2->queryVariables(vars2, types2);
 
+  //__________________________________
+  // bulletproofing   
   ASSERTEQ(vars.size(),  types.size());
   ASSERTEQ(vars2.size(), types2.size());
 
@@ -354,9 +427,7 @@ main(int argc, char** argv)
     cerr << filebase2 << " has " << vars2.size() << " variables\n";
     abort_uncomparable();
   }
-
-  //__________________________________
-  // bulletproofing    
+ 
   for (unsigned int i = 0; i < vars.size(); i++) {
     if (vars[i] != vars2[i]) {
       cerr << "Variable " << vars[i]  << " in " << filebase1 << " does not match\n";
@@ -372,8 +443,6 @@ main(int argc, char** argv)
     } 
   }
 
-  //__________________________________
-  // Look over timesteps
   vector<int> index, index2;
   vector<double> times, times2;
 
@@ -383,26 +452,51 @@ main(int argc, char** argv)
   ASSERTEQ(index.size(),  times.size());
   ASSERTEQ(index2.size(), times2.size());
 
+  //__________________________________
+  //  create the output directory
+  GridP g        = da1->queryGrid(0);
+  int numLevels  = g->numLevels();
+  string path;
+  for(int l=0;l<numLevels;l++){
+    ostringstream li;
+    li << "L-" << l;
+    string levelIndex = li.str();
+    createDirectory(levelIndex, path);
+  }
+
+  //__________________________________
+  // Look over timesteps
   for(unsigned long t = 0; t < times.size() && t < times2.size(); t++){
 
     double time1 = times[t];
     double time2 = times2[t];
-    cerr << "time = " << time1 << "\n";
+    cout << "time = " << time1 << "\n";
     GridP grid1  = da1->queryGrid(t);
     GridP grid2  = da2->queryGrid(t);
 
+    BBox b1, b2;
+    grid1->getInteriorSpatialRange(b1);
+    grid2->getInteriorSpatialRange(b2);
+    
+    // warn the user that the computational domains are different
+    if ((b1.min() != b2.min() ) ||
+        (b1.max() != b2.max() ) ){
+      cout << " The compuational domains of uda1 & uda2 are different" << endl;
+      cout << " uda1: " << b1 << "\n uda2: " << b2 << endl;
+    }
+    
     // bullet proofing
     if (grid1->numLevels() != grid2->numLevels()) {
       cerr << "Grid at time " << time1 << " in " << filebase1 << " has " << grid1->numLevels() << " levels.\n";
       cerr << "Grid at time " << time2 << " in " << filebase2 << " has " << grid2->numLevels() << " levels.\n";
       abort_uncomparable();
     }
+    
     if (abs(times[t] - times2[t]) > 1e-5) {
       cerr << "Timestep at time " << times[t] << " in " << filebase1 << " does not match\n";
       cerr << "timestep at time " << times2[t] << " in " << filebase2 << " within the allowable tolerance.\n";
       abort_uncomparable();
     }
-
 
     //__________________________________
     //  Loop over variables
@@ -411,13 +505,13 @@ main(int argc, char** argv)
       const Uintah::TypeDescription* td = types[v];
       const Uintah::TypeDescription* subtype = td->getSubType();
 
-      cerr << "\t" << var << "\n";
+      cout << "\t" << var << "\n";
 
       Patch::VariableBasis basis=Patch::translateTypeToBasis(td->getType(),false);
       //__________________________________
       //  loop over levels
       for(int l=0;l<grid1->numLevels();l++){
-        cerr << " \t\t L-" << l;
+        cout << " \t\t L-" << l;
         LevelP level1  = grid1->getLevel(l);
         LevelP level2  = grid2->getLevel(l);
 
@@ -438,11 +532,14 @@ main(int argc, char** argv)
         difference2 = Region::difference(region1,region2);
 
         if(!difference1.empty() || !difference2.empty()){
-          cerr << "Patches on level:" << l << " do not cover the same area\n";
+          cerr << "\n__________________________________\n"
+               << "The physical region covered on level " << l << " is not the same on both udas\n"
+               << "If one of the udas has a smaller computational domain make sure it's the first\n"
+               << "one listed in the command line arguments\n";
           abort_uncomparable();
         }
 
-        // map cells to patches on level1 and level2
+        // for each cell assign a patch to it on level1 and level2
         Array3<const Patch*> cellToPatchMap1;
         Array3<const Patch*> cellToPatchMap2;
 
@@ -469,18 +566,22 @@ main(int argc, char** argv)
         }
 
         //__________________________________
-        //  compare the fields
+        //  compare the fields (CC, SFC(X,Y,Z), NC variables
         const Patch* dummyPatch=level1->getPatch(0);
         ConsecutiveRangeSet matls = da1->queryMaterials(var, dummyPatch, t);
         
         for (ConsecutiveRangeSet::iterator matlIter = matls.begin();matlIter != matls.end(); matlIter++){
           int matl = *matlIter;
           
-          cerr << "\t";  // output formatting
+          cout << "\t";  // output formatting
           if(matl> 0 ){
-            cerr << "\t\t";
+            cout << "\t\t";
           }
-          cerr << " Matl-"<<matl;
+          cout << " Matl-"<<matl;
+          ostringstream fname;
+          fname<< path << "/" << var << "_" << matl;
+          string filename = fname.str();
+          createFile(filename, t);
           
           Norms<int>* inorm    = scinew Norms<int>();
           Norms<double>* dnorm = scinew Norms<double>();
@@ -513,7 +614,7 @@ main(int argc, char** argv)
                     break;
                   }
                   default:
-                    cerr << " Data type not supported "<< td->getName() <<  endl;
+                    cout << " Data type not supported "<< td->getName() <<  endl;
                 }
                 break;
               //__________________________________
@@ -533,7 +634,7 @@ main(int argc, char** argv)
                     break;
                   }
                   default:
-                    cerr << " Data type not supported "<< td->getName() <<  endl;
+                    cout << " Data type not supported "<< td->getName() <<  endl;
                 }
                 break;
               //__________________________________
@@ -549,7 +650,7 @@ main(int argc, char** argv)
                     break;
                   }
                   default:
-                    cerr << " Data type not supported "<< td->getName() <<  endl;
+                    cout << " Data type not supported "<< td->getName() <<  endl;
                 }
                 break; 
               //__________________________________
@@ -565,7 +666,7 @@ main(int argc, char** argv)
                     break;
                   }
                   default:
-                    cerr << " Data type not supported "<< td->getName() <<  endl;
+                    cout << " Data type not supported "<< td->getName() <<  endl;
                 }
                 break;
               //__________________________________
@@ -581,42 +682,41 @@ main(int argc, char** argv)
                     break;
                   }
                   default:
-                    cerr << " Data type not supported "<< td->getName() <<  endl;
+                    cout << " Data type not supported "<< td->getName() <<  endl;
                 }
                 break;
               default:
-                cerr << " Data type not yet supported: " << td->getName() << endl;
+                cout << " Data type not yet supported: " << td->getName() << endl;
               break;
             }
           }  // patches
           
-          // only one of these will get called
+          // only one these conditionals true
           if (inorm->get_n() > 0){     
-            inorm->printNorms();       
+            inorm->printNorms(); 
+            inorm->outputNorms(time1, filename);      
           }                            
           if (dnorm->get_n() > 0){     
-            dnorm->printNorms();       
+            dnorm->printNorms();
+            dnorm->outputNorms(time1, filename);      
           }                            
           if (vnorm->get_n() > 0){     
-            vnorm->printNorms();       
+            vnorm->printNorms();
+            vnorm->outputNorms(time1, filename);   
           }                            
           delete inorm;                
           delete dnorm;                
           delete vnorm;
 
         }  // matls
-        
-
       }  // levels
-      
-                
     }  // variables
   }
 
   if (times.size() != times2.size()) {
-    cerr << endl;
-    cerr << filebase1 << " has " << times.size() << " timesteps\n";
-    cerr << filebase2 << " has " << times2.size() << " timesteps\n";
+    cout << endl;
+    cout << filebase1 << " has " << times.size() << " timesteps\n";
+    cout << filebase2 << " has " << times2.size() << " timesteps\n";
     abort_uncomparable();
   }
   delete da1;
