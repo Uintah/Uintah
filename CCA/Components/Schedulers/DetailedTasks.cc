@@ -1140,6 +1140,10 @@ operator<<(ostream& out, const DetailedDep& dep)
 void
 DetailedTasks::internalDependenciesSatisfied(DetailedTask* task)
 {
+  //only satisfy an internal dependency of a task if it is my own task
+   if(task->getAssignedResourceIndex() != d_myworld->myrank())
+     return;
+     
   if( mixedDebug.active() ) {
     cerrLock.lock();
     mixedDebug << "Begin internalDependenciesSatisfied\n";
