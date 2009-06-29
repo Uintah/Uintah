@@ -333,9 +333,9 @@ handlePatchData( QueryInfo& qinfo, IntVector& offset,
 
     int material = *qinfo.materials.begin();
 
-    /*if( !args.quiet ) { 
+    if( !args.quiet ) { 
       cout << "  Extracting data for material " << material << ".\n"; 
-      }*/
+    }
 
     qinfo.archive->query(patch_data, qinfo.varname, material, patch,
 	qinfo.timestep);
