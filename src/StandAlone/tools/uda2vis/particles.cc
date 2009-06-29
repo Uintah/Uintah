@@ -210,7 +210,7 @@ void
 /*ParticleDataContainer*/
 handleParticleData<Vector>( QueryInfo & qinfo, int matlNo, bool matlClassfication, ParticleDataContainer& result, string varSelected)
 {
-  cout << "In handleParticleData<Vector>\n";
+  // cout << "In handleParticleData<Vector>\n";
   vector<float> dataX, dataY, dataZ;
   vector<int> matlList;
     
@@ -311,7 +311,7 @@ handleParticleData<Vector>( QueryInfo & qinfo, int matlNo, bool matlClassficatio
   result.type = VECTOR;
   result.numParticles = dataX.size();
 
-  cout << "Out handleParticleData<Vector>\n";	
+  // cout << "Out handleParticleData<Vector>\n";	
 
   // return result;
 } // end handleParticleData<Vector>
@@ -321,7 +321,7 @@ void
 /*ParticleDataContainer*/
 handleParticleData<Matrix3>( QueryInfo & qinfo, int matlNo, bool matlClassfication, ParticleDataContainer& result, string varSelected)
 {
-  cout << "In handleParticleData<Matrix3>\n";
+  // cout << "In handleParticleData<Matrix3>\n";
   vector<float> data;
   matrixVec matrixRep /*= new matrixVec()*/;
   vector<int> matlList;
@@ -429,7 +429,7 @@ handleParticleData<Matrix3>( QueryInfo & qinfo, int matlNo, bool matlClassficati
 
   // cout << result.matrixRep.size() << endl;
 
-  cout << "Out handleParticleData<Matrix3>\n";
+  // cout << "Out handleParticleData<Matrix3>\n";
 
   // return result;
 }

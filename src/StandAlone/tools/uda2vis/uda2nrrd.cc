@@ -485,18 +485,6 @@ getPatchIndex(const string& input_uda_name, int timeStepNo, int levelNo, int pat
 
 	if(remove_boundary) {
 	  level->findInteriorIndexRange(low, hi);
-	  if(varType.find("NC") != string::npos) {
-	    /*IntVector a = level->getPeriodicBoundaries();
-	    if (a.x() == 1) {
-	      hi = IntVector(hi.x() + 1, hi.y(), hi.z());
-	    }
-	    if (a.y() == 1) {
-	      hi = IntVector(hi.x(), hi.y() + 1, hi.z());
-	    }
-	    if (a.z() == 1) {
-	      hi = IntVector(hi.x(), hi.y(), hi.z() + 1);
-	    }*/
-	  }
 	} 
 	else {
 	  level->findIndexRange(low, hi);
@@ -507,14 +495,24 @@ getPatchIndex(const string& input_uda_name, int timeStepNo, int levelNo, int pat
 	  const Patch* patch = level->getPatch(j);
 
 	  if (remove_boundary) { // this needs to be kept outside the loop, same check again and again
-	    if(varType.find("CC") != string::npos) {
+	    if((varType.find("CC")   != string::npos) /*||
+	       (varType.find("SFCX") != string::npos)*/) {
 	      patch_lo = patch->getCellLowIndex__New();
 	      patch_hi = patch->getCellHighIndex__New();
 	    } 
 	    else {
 	      patch_lo = patch->getNodeLowIndex__New();
-	      if(varType.find("SFCX") != string::npos)
-		patch_hi = patch->getHighIndex(Patch::XFaceBased);
+	      if(varType.find("SFCX") != string::npos) {
+		// patch_hi = patch->getHighIndex(Patch::XFaceBased);
+		/*if (patch_hi.x() < hi.x()) {
+		  patch_hi = IntVector(patch_hi.x() + 1, patch_hi.y(), patch_hi.z());
+		}*/
+
+		patch_hi = patch_lo + (patch->getCellHighIndex__New() - patch->getCellLowIndex__New());
+		if (patch_hi.x() == (hi.x() - 1)) {
+		  patch_hi = IntVector(patch_hi.x() + 1, patch_hi.y(), patch_hi.z());
+		}
+              }		
 	      else if(varType.find("SFCY") != string::npos)
 		patch_hi = patch->getHighIndex(Patch::YFaceBased);
 	      else if(varType.find("SFCZ") != string::npos)
@@ -551,6 +549,8 @@ getPatchIndex(const string& input_uda_name, int timeStepNo, int levelNo, int pat
 		patch_hi = patch->getExtraNodeHighIndex__New();
 	    }
 	  }
+
+	  // cout << patch->getID() << " " << patch_lo << " " << patch_hi << endl;
 
 	  /*if(remove_boundary) {
 	    level->findInteriorIndexRange(low, hi);
@@ -740,7 +740,7 @@ getPatchIndex(const string& input_uda_name, int timeStepNo, int levelNo, int pat
       for (unsigned int i = 0; i < vars.size(); i++) {
 	string nameType = vars[i] + "/" + types[i]->getName(); 
 	udaVarList->push_back(nameType);
-	cout << vars[i] << " " << types[i]->getName() << endl;
+	// cout << vars[i] << " " << types[i]->getName() << endl;
       }
 
       delete archive;
@@ -751,12 +751,12 @@ getPatchIndex(const string& input_uda_name, int timeStepNo, int levelNo, int pat
   extern "C"
     timeStep*
     processData(int argc, char argv[][128], 
-                int timeStepNo, 
-		bool dataReq, 
-		int matlNo, 
-	        bool matlClassfication, 
-		const string& varSelected,
-		int patchNo) // patchNo not required anymore, should remove it
+	int timeStepNo, 
+	bool dataReq, 
+	int matlNo, 
+	bool matlClassfication, 
+	const string& varSelected,
+	int patchNo) // patchNo not required anymore, should remove it
     {
       /*
        * Default values
@@ -1240,7 +1240,7 @@ getPatchIndex(const string& input_uda_name, int timeStepNo, int levelNo, int pat
 	    } // end switch( subtype )
 
 	    particleDataArray.push_back( data );
-            
+
 	  } else { // Handle Grid Variables
 
 	    switch (subtype->getType()) {
@@ -1290,7 +1290,7 @@ getPatchIndex(const string& input_uda_name, int timeStepNo, int levelNo, int pat
 	// dataBank->push_back(timeStepObj);
 
 	// particleDataArray.clear();
-        
+
 	delete archive;
 	return timeStepObjPtr;
 
