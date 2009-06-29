@@ -42,6 +42,7 @@ DEALINGS IN THE SOFTWARE.
  */
 
 #include <Core/DataArchive/DataArchive.h>
+#include <Core/Exceptions/InternalError.h>
 #include <Core/Grid/Grid.h>
 #include <Core/Grid/Level.h>
 #include <Core/Grid/Variables/GridIterator.h>
@@ -61,9 +62,9 @@ DEALINGS IN THE SOFTWARE.
 #include <iostream>
 #include <string>
 #include <sstream>
+
 using namespace std;
 using namespace Uintah;
-
 
 
 void usage(const std::string& badarg, const std::string& progname)
@@ -149,8 +150,6 @@ void compareFields(Norms<subtype>* norms,
                    const string& var,
                    const int matl,
                    const Patch* patch,
-                   const LevelP level1,
-                   const LevelP level2,
                    const Array3<const Patch*>& cellToPatchMap,
                    int timestep)
 {
@@ -194,6 +193,21 @@ void compareFields(Norms<subtype>* norms,
       field2 = patch_FieldMap[patch2];       // pull out field
     }
 
+    // bulletproofing
+    Point p1 = patch->getCellPosition(c);
+    Point p2 = patch2->getCellPosition(c);
+    
+    if (p1.x() != p2.x()   ||
+       (p1.y() != p2.y() ) ||
+       (p1.z() != p2.z() ) ){
+      ostringstream warn;
+      warn <<"\n__________________________________\n "
+            << " You can't compare data at different physical locations  \n"
+            << " uda1: " << p1 << " uda2: " << p2 << endl;
+            
+      throw InternalError(warn.str(), __FILE__, __LINE__);
+    }
+    
     // do the work
     n += 1;
     subtype diff = Abs(field1[c] - (*field2)[c]);
@@ -461,7 +475,8 @@ main(int argc, char** argv)
         
         for (ConsecutiveRangeSet::iterator matlIter = matls.begin();matlIter != matls.end(); matlIter++){
           int matl = *matlIter;
-          cerr << "\t";
+          
+          cerr << "\t";  // output formatting
           if(matl> 0 ){
             cerr << "\t\t";
           }
@@ -486,15 +501,15 @@ main(int argc, char** argv)
               case Uintah::TypeDescription::CCVariable:                                                   
                 switch(subtype->getType()){                                                                 
                   case Uintah::TypeDescription::int_type:{                                                         
-                    compareFields<CCVariable<int>,int>( inorm, da1, da2, var, matl, patch, level1, level2, cellToPatchMap2, t);        
+                    compareFields<CCVariable<int>,int>( inorm, da1, da2, var, matl, patch, cellToPatchMap2, t);        
                     break;
                   }
                   case Uintah::TypeDescription::double_type:{
-                    compareFields<CCVariable<double>,double>(dnorm,da1, da2, var, matl, patch, level1, level2, cellToPatchMap2, t); 
+                    compareFields<CCVariable<double>,double>(dnorm,da1, da2, var, matl, patch, cellToPatchMap2, t); 
                     break;
                   }               
                   case Uintah::TypeDescription::Vector:{
-                    compareFields<CCVariable<Vector>,Vector>(vnorm,da1, da2, var, matl, patch, level1, level2, cellToPatchMap2, t);  
+                    compareFields<CCVariable<Vector>,Vector>(vnorm,da1, da2, var, matl, patch, cellToPatchMap2, t);  
                     break;
                   }
                   default:
@@ -506,15 +521,15 @@ main(int argc, char** argv)
               case Uintah::TypeDescription::NCVariable:                                                   
                 switch(subtype->getType()){                                                                 
                   case Uintah::TypeDescription::int_type:{                                                         
-                    compareFields<NCVariable<int>,int>(inorm, da1, da2, var, matl, patch, level1, level2, cellToPatchMap2, t);        
+                    compareFields<NCVariable<int>,int>(inorm, da1, da2, var, matl, patch, cellToPatchMap2, t);        
                     break;
                   }
                   case Uintah::TypeDescription::double_type:{
-                    compareFields<NCVariable<double>,double>(dnorm, da1, da2, var, matl, patch, level1, level2, cellToPatchMap2, t); 
+                    compareFields<NCVariable<double>,double>(dnorm, da1, da2, var, matl, patch, cellToPatchMap2, t); 
                     break;
                   }               
                   case Uintah::TypeDescription::Vector:{
-                    compareFields<NCVariable<Vector>,Vector>(vnorm, da1, da2, var, matl, patch, level1, level2, cellToPatchMap2, t);  
+                    compareFields<NCVariable<Vector>,Vector>(vnorm, da1, da2, var, matl, patch, cellToPatchMap2, t);  
                     break;
                   }
                   default:
@@ -526,11 +541,11 @@ main(int argc, char** argv)
               case Uintah::TypeDescription::SFCXVariable:                                                   
                 switch(subtype->getType()){                                                                 
                   case Uintah::TypeDescription::int_type:{                                                         
-                    compareFields<SFCXVariable<int>,int>(inorm, da1, da2, var, matl, patch, level1, level2, cellToPatchMap2, t);        
+                    compareFields<SFCXVariable<int>,int>(inorm, da1, da2, var, matl, patch, cellToPatchMap2, t);        
                     break;
                   }
                   case Uintah::TypeDescription::double_type:{
-                    compareFields<SFCXVariable<double>,double>(dnorm, da1, da2, var, matl, patch, level1, level2, cellToPatchMap2, t); 
+                    compareFields<SFCXVariable<double>,double>(dnorm, da1, da2, var, matl, patch, cellToPatchMap2, t); 
                     break;
                   }
                   default:
@@ -542,11 +557,11 @@ main(int argc, char** argv)
               case Uintah::TypeDescription::SFCYVariable:                                                   
                 switch(subtype->getType()){                                                                 
                   case Uintah::TypeDescription::int_type:{                                                         
-                    compareFields<SFCYVariable<int>,int>(inorm, da1, da2, var, matl, patch, level1, level2, cellToPatchMap2, t);        
+                    compareFields<SFCYVariable<int>,int>(inorm, da1, da2, var, matl, patch, cellToPatchMap2, t);        
                     break;
                   }
                   case Uintah::TypeDescription::double_type:{
-                    compareFields<SFCYVariable<double>,double>(dnorm, da1, da2, var, matl, patch, level1, level2, cellToPatchMap2, t); 
+                    compareFields<SFCYVariable<double>,double>(dnorm, da1, da2, var, matl, patch, cellToPatchMap2, t); 
                     break;
                   }
                   default:
@@ -558,11 +573,11 @@ main(int argc, char** argv)
               case Uintah::TypeDescription::SFCZVariable:                                                   
                 switch(subtype->getType()){                                                                 
                   case Uintah::TypeDescription::int_type:{                                                         
-                    compareFields<SFCZVariable<int>,int>(inorm, da1, da2, var, matl, patch, level1, level2, cellToPatchMap2, t);        
+                    compareFields<SFCZVariable<int>,int>(inorm, da1, da2, var, matl, patch, cellToPatchMap2, t);        
                     break;
                   }
                   case Uintah::TypeDescription::double_type:{
-                    compareFields<SFCZVariable<double>,double>(dnorm, da1, da2, var, matl, patch, level1, level2, cellToPatchMap2, t); 
+                    compareFields<SFCZVariable<double>,double>(dnorm, da1, da2, var, matl, patch, cellToPatchMap2, t); 
                     break;
                   }
                   default:
