@@ -1635,6 +1635,60 @@ simulation. The variable containing the density data within the uda is ``rho\_CC
 ./lineextract -v rho_CC  -timestep 7 -istart 60 0 0 -iend 60 1000 0 -m 1 -o rho -uda test01.uda.000
 \end{Verbatim}
 
+%__________________________________
+\section{compute\_Lnorm\_udas}
+\TT{Compute\_Lnorm\_udas} computes the $L_1$, $L_2$ and $L_\infty$ norms
+for each variable in two udas.  This utility is useful in monitoring how the solution differs from small changes in either the solution tolerances, input parameters or algorithmic changes.  You can also use it to test the domain size influence.  The norms are computed using:
+%
+\begin{equation}
+  d[i] = |uda_1[i] - uda_2[i]|
+\end{equation}
+%
+\begin{equation}
+  L_1 = \frac{\raise1.5pt\hbox{$\sum_i^\text{All Cells}$}d[i]}{\text{number of cells}}
+\end{equation}
+%
+\begin{equation}
+  L_2 = \sqrt{ \frac{\raise1.5pt\hbox{$\sum_i^\text{All Cells}$}d[i]^2}{\text{number of cells}} }
+\end{equation}
+%
+\begin{equation}
+  L_\infty = \text{max}(d[i])
+\end{equation}
+%
+These norms are computed for each \TT{CC, NC, SFCX, SFCY, SFCZ} variable,
+on each level for each timestep.  The output is displayed on the screen and is
+placed in a directory named `Lnorm.'  The directory structure is:
+%
+\begin{Verbatim}[fontsize=\footnotesize]
+ Lnorm/
+   -- L-0
+    |-- delP_Dilatate_0
+    |-- mom_L_ME_CC_0
+    |-- press_CC_0
+    |-- press_equil_CC_0
+    |-- variable
+    |-- variable
+    |--etc
+\end{Verbatim}
+%
+and in each variable file is the physical time, $L_1$, $L_2$ and $L_\infty.$  These data can be plotted using \TT{gnuplot} or another plotting program.
+
+The command usage is
+%
+\begin{Verbatim}[fontsize=\footnotesize]
+  compute_Lnorm_udas <uda1> <uda2>
+\end{Verbatim}
+%
+The utility allows for \TT{udas} that have different computational domains and different
+patch distributions to be compared.  The uda with the smallest compuational domain should
+always be specified first.
+%
+In order for the norms to be computed the physical times must satisfy 
+\begin{equation*}
+| \text{physical Time}_{uda_1} - \text{physical Time}_{uda_2}| < 1e^{-5}.
+\end{equation*} 
+
 %\section{timeextract}
 
 %\section{compare\_uda}
