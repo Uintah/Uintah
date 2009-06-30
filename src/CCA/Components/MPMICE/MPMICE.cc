@@ -83,6 +83,7 @@ MPMICE::MPMICE(const ProcessorGroup* myworld,
   d_rigidMPM = false;
   d_doAMR = doAMR;
   d_testForNegTemps_mpm = true;
+  d_recompile = false;
   
   switch(mpmtype) {
   case RIGID_MPMICE:

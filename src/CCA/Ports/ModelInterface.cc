@@ -34,7 +34,7 @@ DEALINGS IN THE SOFTWARE.
 using namespace Uintah;
 
 ModelInterface::ModelInterface(const ProcessorGroup* myworld)
-  : d_myworld(myworld)
+  : d_modelComputesThermoTransportProps(false), d_myworld(myworld)
 {
 }
 
