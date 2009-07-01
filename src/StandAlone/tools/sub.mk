@@ -62,7 +62,12 @@ else
 
   PSELIBS := \
         Core/Exceptions   \
-        Core/DataArchive \
+        Core/Containers   \
+        Core/DataArchive  \
+	Core/Grid         \
+	Core/Math         \
+	Core/Thread       \
+	Core/Util         \
         CCA/Components/DataArchiver         
 endif
 
