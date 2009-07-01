@@ -32,9 +32,9 @@
 SRCDIR := testprograms/Thread
 
 ifeq ($(LARGESOS),yes)
-PSELIBS := Core
+PSELIBS := Core Core/Util
 else
-PSELIBS := Core/Thread
+PSELIBS := Core/Thread Core/Util
 endif
 LIBS := $(THREAD_LIBRARY) $(XML_LIBRARY)
 
