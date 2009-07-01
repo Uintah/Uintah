@@ -231,9 +231,11 @@ The following table describes the input parameters for Unsteady Burn.
 \hline
   $<$BoundaryParticles$>$ & int & Max \# of particles a cell can have and be burning\\
 \hline
-  $<$BurnrateModCoef$>$ & double & not sure... \\
+  $<$BurnrateModCoef$>$ & double & if $\neq$1.0, scale unsteady rate with steady rate as $\dot{m}_u=\dot{m}_s\left(\frac{\displaystyle\dot{m}_u}{\displaystyle\dot{m}_s}\right)^{B_m}$\\
 \hline
-  $<$CondUnsteadyCoef$>$ & double & not sure... \\
+  $<$CondUnsteadyCoef$>$ & double & Coefficient for condensed phase pressure response relaxation \\
+\hline
+  $<$GasUnsteadyCoef$>$ & double & Coefficient for gas phase pressure response relaxation \\
 \hline
   $<$ThresholdPressure$>$ & double & Threshold pressure cell must be $\ge$ to burn mass\\
 \hline
@@ -463,7 +465,7 @@ these variables.
   \center
   \includegraphics[scale=.3]{SimpleBurn0000.png}
 
-  \caption{Receding PBX9501 leads to pressure increase in cylinder.}
+  \caption{Receding PBX9501 leads to pressure increase in cylindrical steel shell.}
   \label{figsimburn1}
 \end{figure}
 
@@ -529,7 +531,7 @@ Figure~\ref{figsteadyburn1} shows a nice view of the cylinder as the PBX particl
   \center
   \includegraphics[scale=.4]{SteadyBurn0001.png}
 
-  \caption{Expansion of steel casing as explosion occurs.}
+  \caption{Expansion of steel casing as explosion occurs--response to pressure build-up.}
   \label{figsteadyburn2}
 \end{figure}
 
@@ -537,7 +539,7 @@ Figure~\ref{figsteadyburn1} shows a nice view of the cylinder as the PBX particl
   \center
   \includegraphics[scale=.4]{SteadyBurn0002.png}
 
-  \caption{Burning Cells.}
+  \caption{Burning Cells denoted by red squares.}
   \label{figsteadyburn3}
 \end{figure}
 
@@ -611,6 +613,5 @@ the importance
 
 %
 %__________________________________
-\subsection{References}
 \bibliographystyle{plain}
 \bibliography{ice}
