@@ -208,14 +208,15 @@ bool CommRecMPI::donesome( const ProcessorGroup * pg, int donecount, vector<MPI_
     if(handlers[idx]){
 
       if( mixedDebug.active() ) {
-	cerrLock.lock();
-	mixedDebug << "Actually received " << idx << "\n";
-	cerrLock.unlock();
+        cerrLock.lock();
+        mixedDebug << "Actually received " << idx << "\n";
+        cerrLock.unlock();
       }
       handlers[idx]->finishedCommunication(pg,statii[i]);
       ASSERT(handlers[idx]!=0);
       delete handlers[idx];
       handlers[idx]=0;
+      ASSERT(byteCounts[idx]==statii[i]._count);
     }
     ids[idx] = MPI_REQUEST_NULL;
     totalBytes_ -= byteCounts[idx];    
@@ -225,12 +226,13 @@ bool CommRecMPI::donesome( const ProcessorGroup * pg, int donecount, vector<MPI_
     if (--groupWaitCount_[groupID] <= 0) {
       ASSERTEQ(groupWaitCount_[groupID], 0);
       if (finishedGroups != 0) {
-	finishedGroups->push_back(groupID);
+        finishedGroups->push_back(groupID);
       }
       anyFinished = true;
     }
   }
   if(donecount == (int)ids.size()){
+    ASSERT(totalBytes_==0);
     ids.clear();
     handlers.clear();
     byteCounts.clear();
