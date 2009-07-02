@@ -734,11 +734,16 @@ DetailedTasks::possiblyCreateDependency(DetailedTask* from,
     addScrubCount(req->var, matl, fromPatch, req->whichdw);
   }
 
-  if(fromresource == d_myworld->myrank() && (fromresource == toresource || 
-     req->var->typeDescription()->isReductionVariable())) {
+  //if the dependency is on the same processor then add an internal dependency
+  if(fromresource == d_myworld->myrank()  && fromresource == toresource) {
     to->addInternalDependency(from, req->var);
     return;
   }
+  
+  //if the dependency is a reduction variable then don't create a dependency
+  if( req->var->typeDescription()->isReductionVariable() )
+    return;
+
   
   // if neither task talks to this processor, return
   if (fromresource != d_myworld->myrank() && toresource != d_myworld->myrank()) {
@@ -1074,6 +1079,7 @@ void DetailedTask::dependencySatisfied(InternalDependency* dep)
     cerrLock.unlock();
   }
 
+  //cout << Parallel::getMPIRank() << " satisfying dependency: prereq: " << *dep->prerequisiteTask << " dep: " << *dep->dependentTask << " numPending: " << numPendingInternalDependencies << endl;   
   if (numPendingInternalDependencies == 0) {
     taskGroup->internalDependenciesSatisfied(this);
     // reset for next timestep
@@ -1140,10 +1146,6 @@ operator<<(ostream& out, const DetailedDep& dep)
 void
 DetailedTasks::internalDependenciesSatisfied(DetailedTask* task)
 {
-  //only satisfy an internal dependency of a task if it is my own task
-   if(task->getAssignedResourceIndex() != d_myworld->myrank())
-     return;
-     
   if( mixedDebug.active() ) {
     cerrLock.lock();
     mixedDebug << "Begin internalDependenciesSatisfied\n";
