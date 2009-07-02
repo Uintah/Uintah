@@ -148,7 +148,7 @@ LU::back_subs( double* rhs )
 
   if( isSingular_ ) {
     for (int i=0; i<dim_; ++i) {
-      //rhs[i] = 0;
+      rhs[i] = 0;
     }
     return;
   }
