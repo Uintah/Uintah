@@ -235,8 +235,11 @@ namespace Uintah {
    template<class T>
       Array3Window<T>::~Array3Window()
       {
-	 if(data && data->removeReference())
-	    delete data;
+        if(data && data->removeReference())
+        {
+          delete data;
+          data=0;
+        }
       }
 } // End namespace Uintah
 
