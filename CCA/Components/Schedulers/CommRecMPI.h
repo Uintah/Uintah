@@ -96,7 +96,7 @@ private:
   vector<MPI_Status> statii;
   vector<int> indices;
 
-  bool donesome(const ProcessorGroup * pg, int donecount, vector<MPI_Status> statii,
+  bool donesome(const ProcessorGroup * pg, int donecount, vector<MPI_Status> &statii,
 		list<int>* finishedGroups = 0);
 };
 
