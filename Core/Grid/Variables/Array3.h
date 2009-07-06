@@ -211,16 +211,20 @@ namespace Uintah {
       }
       virtual ~Array3()
       {
-        if(d_window && d_window->removeReference()){
+        if(d_window && d_window->removeReference())
+        {
           delete d_window;
+          d_window=0;
         }
       }
 
       void copyPointer(const Array3& copy) {
         if(copy.d_window)
           copy.d_window->addReference();
-        if(d_window && d_window->removeReference()){
+        if(d_window && d_window->removeReference())
+        {
           delete d_window;
+          d_window=0;
         }
         d_window = copy.d_window;
       }    
@@ -253,7 +257,10 @@ namespace Uintah {
 
       void resize(const IntVector& lowIndex, const IntVector& highIndex) {
         if(d_window && d_window->removeReference())
+        {
           delete d_window;
+          d_window=0;
+        }
         IntVector size = highIndex-lowIndex;
         d_window=scinew Array3Window<T>(new Array3Data<T>(size), lowIndex, lowIndex, highIndex);
         d_window->addReference();
@@ -264,7 +271,10 @@ namespace Uintah {
         d_window=scinew Array3Window<T>(d_window->getData(), d_window->getOffset() + offset, getLowIndex() + offset, getHighIndex() + offset);
         d_window->addReference();
         if(old_window && old_window->removeReference())
+        {
           delete old_window;
+          old_window=0;
+        }
       }
 
       // return true iff no reallocation is needed
@@ -466,7 +476,11 @@ namespace Uintah {
       }
       d_window->addReference();      
       if(oldWindow->removeReference())
+      {
         delete oldWindow;
+        oldWindow=0;
+      }
+
       return no_reallocation_needed;
     }
 

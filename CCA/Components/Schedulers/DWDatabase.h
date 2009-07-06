@@ -178,6 +178,7 @@ void DWDatabase<DomainType>::clear()
     }
 #endif
     delete iter->second.var;
+    iter->second.var=0;
   }
   vars.clear();
 }
@@ -197,6 +198,7 @@ DWDatabase<DomainType>::cleanForeign()
         delete delvar;
       }
       delete var;
+      iter->second.var=0;
       typename varDBtype::iterator deliter = iter;
       iter++;
       vars.erase(deliter);

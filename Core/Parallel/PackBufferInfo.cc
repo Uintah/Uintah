@@ -50,7 +50,10 @@ PackBufferInfo::PackBufferInfo()
 PackBufferInfo::~PackBufferInfo()
 {
   if (packedBuffer && packedBuffer->removeReference())
+  {
     delete packedBuffer;
+    packedBuffer=0;
+  }
 }
 
 void
@@ -126,7 +129,9 @@ PackBufferInfo::unpack(MPI_Comm comm,MPI_Status &status)
   int position = 0;
   for (int i = 0; i < (int)startbufs.size(); i++) {
     if(counts[i]>0)
+    {
       MPI_Unpack(buf, bufsize, &position, startbufs[i], counts[i], datatypes[i], comm);
+    }
   }
 }
 
