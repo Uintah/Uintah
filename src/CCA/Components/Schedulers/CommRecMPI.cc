@@ -196,7 +196,7 @@ bool CommRecMPI::testsome(const ProcessorGroup * pg,
   return donesome(pg, donecount,statii, finishedGroups);
 }
 
-bool CommRecMPI::donesome( const ProcessorGroup * pg, int donecount, vector<MPI_Status> statii,
+bool CommRecMPI::donesome( const ProcessorGroup * pg, int donecount, vector<MPI_Status>& statii,
 			   list<int>* finishedGroups )
 {
   bool anyFinished = false;
@@ -205,6 +205,11 @@ bool CommRecMPI::donesome( const ProcessorGroup * pg, int donecount, vector<MPI_
   ASSERT(donecount != MPI_UNDEFINED);
   for(int i=0;i<donecount;i++){
     int idx=indices[i];
+    ASSERT(byteCounts[idx]==statii[i]._count);
+    
+    //if(byteCounts[idx]==112000)
+    //  WAIT_FOR_DEBUGGER();
+
     if(handlers[idx]){
 
       if( mixedDebug.active() ) {
@@ -213,10 +218,10 @@ bool CommRecMPI::donesome( const ProcessorGroup * pg, int donecount, vector<MPI_
         cerrLock.unlock();
       }
       handlers[idx]->finishedCommunication(pg,statii[i]);
+      ASSERT(byteCounts[idx]==statii[i]._count);
       ASSERT(handlers[idx]!=0);
       delete handlers[idx];
       handlers[idx]=0;
-      ASSERT(byteCounts[idx]==statii[i]._count);
     }
     ids[idx] = MPI_REQUEST_NULL;
     totalBytes_ -= byteCounts[idx];    
