@@ -401,7 +401,7 @@ void SFC<LOCS>::ProfileMergeParameters(int repeat)
 
   rank=d_myworld->myrank();
   Comm=d_myworld->getComm();
-        
+
   if((int)refinements*DIM<=(int)sizeof(unsigned char)*8)
   {
     ProfileMergeParametersT<DIM,unsigned char>(repeat);
@@ -2959,9 +2959,10 @@ void SFC<LOCS>::Parallel0()
 template <class BITS>
 struct MergeInfo
 {
+  unsigned int n;
   BITS min;
   BITS max;
-  unsigned int n;
+  MergeInfo<BITS>() : min(0), max(0), n(0) {};
 };
 
 #define ASCENDING 0
@@ -2984,10 +2985,9 @@ int SFC<LOCS>::MergeExchange(int to,vector<History<BITS> > &sendbuf, vector<Hist
     myinfo.min=sendbuf[0].bits;
     myinfo.max=sendbuf[n-1].bits;
   }
-  //cout << rank << " n:" << n << " min:" << (int)myinfo.min << "max:" << (int)myinfo.max << endl;
 
-  MPI_Isend(&myinfo,sizeof(myinfo),MPI_BYTE,to,0,Comm,&srequest);
-  MPI_Irecv(&theirinfo,sizeof(theirinfo),MPI_BYTE,to,0,Comm,&rrequest);
+  MPI_Isend(&myinfo,sizeof(MergeInfo<BITS>),MPI_BYTE,to,0,Comm,&srequest);
+  MPI_Irecv(&theirinfo,sizeof(MergeInfo<BITS>),MPI_BYTE,to,0,Comm,&rrequest);
   MPI_Wait(&rrequest,&status);
   MPI_Wait(&srequest,&status);
 
