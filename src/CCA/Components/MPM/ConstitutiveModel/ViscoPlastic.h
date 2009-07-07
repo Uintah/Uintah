@@ -95,8 +95,7 @@ namespace Uintah {
       double mean;      /*< Mean failure variable */
       double std;       /*< Standard deviation of failure variable */
       std::string dist; /*< Failure variable distrinution */
-      bool failureByStress; /*<Failure by maximum principle stress (default) */
-      bool failureByPressure; /*<Failure by maximum tensile mean stress */
+      bool failureByStress; /*<Failure by stress (default) */
     };
 
 
@@ -135,6 +134,7 @@ namespace Uintah {
     bool   d_removeParticles;
     bool   d_setStressToZero;
     bool   d_allowNoTension;
+    bool   d_usePolarDecompositionRMB; /*< use RMB's polar decomposition */
 
     YieldCondition*     d_yield;
     StabilityCheck*     d_stable;
