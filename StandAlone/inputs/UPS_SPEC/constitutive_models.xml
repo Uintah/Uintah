@@ -79,6 +79,7 @@
     <failure_strain_distrib        spec="OPTIONAL STRING 'constant, gauss, weibull'" />
     <failure_strain_scale          spec="OPTIONAL DOUBLE" />
     <failure_by_stress             spec="OPTIONAL BOOLEAN" />
+    <failure_by_pressure             spec="OPTIONAL BOOLEAN" />
     <frac_nucleation               spec="OPTIONAL DOUBLE" />
     <fracture_toughness_curve      spec="OPTIONAL NO_DATA" >
       <crack_propagation_criterion spec="REQUIRED STRING 'empirical_criterion'" />
