@@ -403,7 +403,8 @@ CNHDamage::computeStressTensor(const PatchSubset* patches,
     new_dw->allocateAndPut(pDeformRate, 
                            pDeformRateLabel_preReloc,             pset);
     new_dw->allocateAndPut(p_q,    lb->p_qLabel_preReloc,         pset);
-
+    ParticleVariable<Matrix3> velGrad;
+    new_dw->allocateTemporary(velGrad, pset);
     // Copy failure strains to new dw
     pFailureStrain_new.copyData(pFailureStrain);
 
@@ -416,7 +417,8 @@ CNHDamage::computeStressTensor(const PatchSubset* patches,
       // Assign zero internal heating by default - modify if necessary.
       pdTdt[idx] = 0.0;
       // Initialize velocity gradient
-      Matrix3 velGrad(0.0);
+//       Matrix3 velGrad(0.0);
+        Matrix3 tensorL(0.0);
 
       if(!flag->d_axisymmetric){
         // Get the node indices that surround the cell
@@ -427,28 +429,28 @@ CNHDamage::computeStressTensor(const PatchSubset* patches,
          for(int k=0; k<27; k++){
            pgFld[k]=pgCode[idx][k];
          }
-         computeVelocityGradient(velGrad,ni,d_S,oodx,pgFld,gVelocity,GVelocity);
+         computeVelocityGradient(tensorL,ni,d_S,oodx,pgFld,gVelocity,GVelocity);
         } else {
         double erosion = pErosion[idx];
-        computeVelocityGradient(velGrad,ni,d_S, oodx, gVelocity, erosion);
+        computeVelocityGradient(tensorL,ni,d_S, oodx, gVelocity, erosion);
         }
       } else {  // axi-symmetric kinematics
         // Get the node indices that surround the cell
         interpolator->findCellAndWeightsAndShapeDerivatives(pX[idx],ni,S,d_S,
                                                                     pSize[idx]);
         // x -> r, y -> z, z -> theta
-        computeAxiSymVelocityGradient(velGrad,ni,d_S,S,oodx,gVelocity,pX[idx]);
+        computeAxiSymVelocityGradient(tensorL,ni,d_S,S,oodx,gVelocity,pX[idx]);
       }
-
+      velGrad[idx]=tensorL;
       // Compute the rate of defomation tensor
-      Matrix3 D = (velGrad + velGrad.Transpose())*0.5;
+      Matrix3 D = (velGrad[idx] + velGrad[idx].Transpose())*0.5;
       pDeformRate[idx] = D;
 
       // Compute the deformation gradient increment using the time_step
       // velocity gradient ( F_n^np1 = dudx * dt + Identity)
-      pDefGradInc = velGrad*delT + Identity;
+      pDefGradInc = velGrad[idx]*delT + Identity;
       
-      double Jinc = pDefGradInc.Determinant();
+//       double Jinc = pDefGradInc.Determinant();
 
       // Update the deformation gradient tensor to its time n+1 value.
       FF = pDefGradInc*pDefGrad[idx];
@@ -464,7 +466,7 @@ CNHDamage::computeStressTensor(const PatchSubset* patches,
         cerr << getpid() ;
         cerr << "**ERROR** Negative Jacobian of deformation gradient"
              << " in particle " << pParticleID[idx] << endl;
-        cerr << "l = " << velGrad << endl;
+        cerr << "l = " << velGrad[idx] << endl;
         cerr << "F_old = " << pDefGrad[idx] << endl;
         cerr << "F_inc = " << pDefGradInc << endl;
         cerr << "F_new = " << FF << endl;
@@ -473,15 +475,75 @@ CNHDamage::computeStressTensor(const PatchSubset* patches,
       }
 
       pDefGrad_new[idx] = FF;
+      
+      } // end of the particle loop
+      
+    // The following is used only for pressure stabilization
+    CCVariable<double> J_CC;
+    new_dw->allocateTemporary(J_CC,     patch);
+    J_CC.initialize(0.);
+    if(flag->d_doPressureStabilization) {
+      CCVariable<double> vol_0_CC;
+      CCVariable<double> vol_CC;
+      new_dw->allocateTemporary(vol_0_CC, patch);
+      new_dw->allocateTemporary(vol_CC, patch);
+
+      vol_0_CC.initialize(0.);
+      vol_CC.initialize(0.);
+      for(ParticleSubset::iterator iter = pset->begin();
+          iter != pset->end(); iter++){
+        particleIndex idx = *iter;
+  
+        // get the volumetric part of the deformation
+        J = pDefGrad_new[idx].Determinant();
+  
+        // Get the deformed volume
+        pvolume_new[idx]=(pmass[idx]/rho_orig)*J;
+  
+        IntVector cell_index;
+        patch->findCell(pX[idx],cell_index);
+  
+        vol_CC[cell_index]+=pvolume_new[idx];
+        vol_0_CC[cell_index]+=pmass[idx]/rho_orig;
+      }
+
+      for(CellIterator iter=patch->getCellIterator__New(); !iter.done();iter++){
+        IntVector c = *iter;
+        J_CC[c]=vol_CC[c]/vol_0_CC[c];
+      }
+    } //end of pressureStabilization loop  at the patch level
+
+    for(ParticleSubset::iterator iter = pset->begin();
+        iter != pset->end(); iter++){
+        particleIndex idx = *iter;
+        
+        if(flag->d_doPressureStabilization) {
+        IntVector cell_index;
+        patch->findCell(pX[idx],cell_index);
+
+        // get the original volumetric part of the deformation
+        J = pDefGrad_new[idx].Determinant();
+
+        // Change F such that the determinant is equal to the average for
+        // the cell
+        pDefGrad_new[idx]*=cbrt(J_CC[cell_index])/cbrt(J);
+      }
+
+      J = pDefGrad_new[idx].Determinant();
 
       // Get the deformed volume
       pvolume_new[idx]=(pmass[idx]/rho_orig)*J;
 
       // Compute Bbar
 //      Matrix3 pRelDefGradBar = pDefGradInc*pow(Jinc, -onethird);
-      Matrix3 pRelDefGradBar = pDefGradInc/cbrt(Jinc);
+//       Matrix3 pRelDefGradBar = pDefGradInc/cbrt(Jinc);
 
-      pBBar_new = pRelDefGradBar*pBeBar[idx]*pRelDefGradBar.Transpose();
+//       pBBar_new = pRelDefGradBar*pBeBar[idx]*pRelDefGradBar.Transpose();
+
+      double cubeRootJ=cbrt(J);
+      double Jtothetwothirds=cubeRootJ*cubeRootJ;
+      pBBar_new = pDefGrad_new[idx]* pDefGrad_new[idx].Transpose()/Jtothetwothirds;
+
       IEl = onethird*pBBar_new.Trace();
       pBeBar_new[idx] = pBBar_new;
 
@@ -517,6 +579,7 @@ CNHDamage::computeStressTensor(const PatchSubset* patches,
       if (flag->d_artificial_viscosity) {
         double dx_ave = (dx.x() + dx.y() + dx.z())/3.0;
         double c_bulk = sqrt(bulk/rho_cur);
+        Matrix3 D=(velGrad[idx] + velGrad[idx].Transpose())*0.5;
         p_q[idx] = artificialBulkViscosity(D.Trace(), c_bulk, rho_cur, dx_ave);
       } else {
         p_q[idx] = 0.;
