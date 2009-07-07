@@ -95,7 +95,8 @@ namespace Uintah {
       double mean;      /*< Mean failure variable */
       double std;       /*< Standard deviation of failure variable */
       std::string dist; /*< Failure variable distrinution */
-      bool failureByStress; /*<Failure by stress (default) */
+      bool failureByStress; /*<Failure by maximum principle stress (default) */
+      bool failureByPressure; /*<Failure by maximum tensile mean stress */
     };
 
 
