@@ -505,7 +505,9 @@ RadLinearSolver::radLinearSolve()
       throw UintahPetscError(ierr, "PCILUSetFill", __FILE__, __LINE__);
   #endif
 #else //3.*.*
-    //how do you do this in 3.0.0?
+    ierr = PCFactorSetFill(peqnpc, d_fill);
+    if(ierr)
+      throw UintahPetscError(ierr, "PCFactorSetFill", __FILE__, __LINE__);
 #endif
   }
   else {

@@ -548,7 +548,9 @@ Models_PetscSolver::radLinearSolve()
       throw UintahPetscError(ierr, "PCILUSetFill", __FILE__, __LINE__);
   #endif
 #else // 3.*.*
-    //what is the 3.0 equivalent?
+    ierr = PCFactorSetFill(peqnpc, d_fill);
+    if(ierr)
+      throw UintahPetscError(ierr, "PCFactorSetFill", __FILE__, __LINE__);
 #endif
   }
   else {
