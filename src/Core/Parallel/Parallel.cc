@@ -161,7 +161,7 @@ Parallel::determineIfRunningUnderMPI( int argc, char** argv )
     ::usingMPI=true;
   } else if(getenv("MPIRUN_RANK")) {                                         // Hera's MPI (LLNL)
     ::usingMPI=true;
-  } else if(getenv("OMPI_MCA_ns_nds_num_procs") || getenv("OMPI_MCA_pls")) { // Open MPI
+  } else if(getenv("OMPI_MCA_ns_nds_num_procs") || getenv("OMPI_MCA_pls") || getenv("OMPI_COMM_WORLD_RANK")) { // Open MPI
     ::usingMPI=true;
   } else if( getenv("MPI_LOCALNRANKS") ) {                                   // Updraft.chpc.utah.edu
     ::usingMPI = true;
