@@ -106,8 +106,8 @@ ViscoPlastic::ViscoPlastic(ProblemSpecP& ps, MPMFlags* Mflag) :
   ps->get("allow_no_tension",d_allowNoTension);
   d_checkFailure = false;
   ps->get("check_failure", d_checkFailure);
-  d_usePolarDecompositionRMB = false;
-  ps->get("use_poloar_decomposition_RMB", d_usePolarDecompositionRMB);
+  d_usePolarDecompositionRMB = true;
+  ps->get("use_polar_decomposition_RMB", d_usePolarDecompositionRMB);
 
 
 
@@ -223,7 +223,7 @@ void ViscoPlastic::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
   cm_ps->appendElement("remove_particles",d_removeParticles);
   cm_ps->appendElement("zero_stress_upon_failure",d_setStressToZero);
   cm_ps->appendElement("allow_no_tension",d_allowNoTension);
-  cm_ps->appendElement("use_poloar_decomposition_RMB", d_usePolarDecompositionRMB);
+  cm_ps->appendElement("use_polar_decomposition_RMB", d_usePolarDecompositionRMB);
 //   cm_ps->appendElement("evolve_porosity",d_evolvePorosity);
 //   cm_ps->appendElement("evolve_damage",d_evolveDamage);
 //   cm_ps->appendElement("check_TEPLA_failure_criterion",
