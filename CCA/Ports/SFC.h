@@ -2962,7 +2962,7 @@ struct MergeInfo
   unsigned int n;
   BITS min;
   BITS max;
-  MergeInfo<BITS>() : min(0), max(0), n(0) {};
+  MergeInfo<BITS>() : n(0), min(0), max(0) {};
 };
 
 #define ASCENDING 0
