@@ -78,6 +78,7 @@
     <failure_strain_std            spec="OPTIONAL DOUBLE" />
     <failure_strain_distrib        spec="OPTIONAL STRING 'constant, gauss, weibull'" />
     <failure_strain_scale          spec="OPTIONAL DOUBLE" />
+    <failure_strain_seed           spec="OPTIONAL INTEGER" />
     <failure_by_stress             spec="OPTIONAL BOOLEAN" />
     <failure_by_pressure             spec="OPTIONAL BOOLEAN" />
     <frac_nucleation               spec="OPTIONAL DOUBLE" />
@@ -280,6 +281,8 @@
     <zero_stress_upon_failure      spec="OPTIONAL BOOLEAN" />  <!-- FIXME: what is this for? -->
 
   <!-- The following are for the Kayenta model -->
+  <!-- IF YOU ADD  A VALUE FOR THE KAYENTA MODEL, ADD IT FOR THE
+       PERTURBED KAYENTA MODEL BELOW!!! -->
     <B0        spec="OPTIONAL DOUBLE" /> <!--initial bulk modulus (stress) -->
     <B1        spec="OPTIONAL DOUBLE" /> <!--nonlinear bulk mod param (stress) -->
     <B2        spec="OPTIONAL DOUBLE" /> <!-- nonlinear bulk mod param (stress) -->
@@ -346,6 +349,79 @@
     <YSLOPEI  spec="OPTIONAL DOUBLE" />
     <YSLOPEF  spec="OPTIONAL DOUBLE" />
 
+
+  <!-- The following are for the PERTURBED Kayenta model -->
+  <!-- IF YOU ADD  A VALUE FOR THE PERTURBED KAYENTA MODEL, ADD IT FOR THE
+       REGULAR KAYENTA MODEL ABOVE!!! -->
+    <WB0       spec="OPTIONAL STRING" /> <!--initial bulk modulus (stress) -->
+    <WB1       spec="OPTIONAL STRING" /> <!--nonlinear bulk mod param (stress) -->
+    <WB2       spec="OPTIONAL STRING" /> <!-- nonlinear bulk mod param (stress) -->
+    <WB3       spec="OPTIONAL STRING" /> <!-- nonlinear bulk mod param (stress) -->
+    <WB4       spec="OPTIONAL STRING" /> <!-- nonlinear bulk mod param (dim. less) -->
+    <WG0       spec="OPTIONAL STRING" /> <!-- initial shear modulus (stress) -->
+    <WG1       spec="OPTIONAL STRING" /> <!-- nonlinear shear mod param (dim. less) -->
+    <WG2       spec="OPTIONAL STRING" /> <!-- nonlinear shear mod param (1/stress) -->
+    <WG3       spec="OPTIONAL STRING" /> <!-- nonlinear shear mod param (stress) -->
+    <WG4       spec="OPTIONAL STRING" /> <!-- nonlinear shear mod param (dim. less) -->
+    <WRJS      spec="OPTIONAL STRING" /> <!-- joint spacing (iso. joint set)  -->
+    <WRKS      spec="OPTIONAL STRING" /> <!-- joint shear stiffness (iso. case) (stress/length) -->
+    <WRKN      spec="OPTIONAL STRING" /> <!-- joint normal stiffness (iso. case) (stress/length) -->
+
+    <WA1       spec="OPTIONAL STRING" /> <!-- meridional yld prof param (stress)-->
+    <WA2       spec="OPTIONAL STRING" /> <!-- meridional yld prof param (1/stress)-->
+    <WA3       spec="OPTIONAL STRING" /> <!-- meridional yld prof param (stress)-->
+    <WA4       spec="OPTIONAL STRING" /> <!-- meridional yld prof param (dim. less)-->
+
+    <WP0       spec="OPTIONAL STRING" /> <!-- init hydrostatic crush press (stress)-->
+    <WP1       spec="OPTIONAL STRING" /> <!-- crush curve parameter (1/stress)-->
+    <WP2       spec="OPTIONAL STRING" /> <!-- crush curve parameter (1/stress^2)-->
+    <WP3       spec="OPTIONAL STRING" /> <!-- crush curve parameter (strain)-->
+
+    <WCR       spec="OPTIONAL STRING" /> <!-- cap curvature parameter (dim. less)-->
+    <WRK       spec="OPTIONAL STRING" /> <!-- TXE/TXC strength ratio (dim. less)-->
+    <WRN       spec="OPTIONAL STRING" /> <!-- TXE/TXC strength ratio (stress)-->
+    <WHC       spec="OPTIONAL STRING" /> <!-- kinematic hardening modulus (stress)-->
+
+    <WCTI1     spec="OPTIONAL STRING" /> <!--Tension I1 cut-off (stress)-->
+    <WCTPS     spec="OPTIONAL STRING" /> <!--Tension prin. stress cut-off (stress)-->
+
+    <WT1       spec="OPTIONAL STRING" /> <!--rate dep. primary relax. time (time)-->
+    <WT2       spec="OPTIONAL STRING" /> <!--rate dep. nonlinear param (1/time)-->
+    <WT3       spec="OPTIONAL STRING" /> <!--rate dep. nonlinear param (dim. less)-->
+    <WT4       spec="OPTIONAL STRING" /> <!--not used (1/time)-->
+    <WT5       spec="OPTIONAL STRING" /> <!--not used (stress)-->
+    <WT6       spec="OPTIONAL STRING" /> <!--rate dep. nonlinear param (time)-->
+    <WT7       spec="OPTIONAL STRING" /> <!--rate dep. nonlinear param (1/stress)-->
+    <WJ3TYPE   spec="OPTIONAL STRING" /> <!-- octahedral profile shape option (dim. less) -->
+    <WA2PF     spec="OPTIONAL STRING" /> <!-- flow potential analog of A2 -->
+    <WA4PF     spec="OPTIONAL STRING" /> <!-- flow potential analog of A4 -->
+    <WCRPF     spec="OPTIONAL STRING" /> <!-- flow potential analog of CR -->
+    <WRKPF     spec="OPTIONAL STRING" /> <!-- flow potential analog of RK -->
+    <WSUBX     spec="OPTIONAL STRING" /> <!-- subcycle control exponent (dim. less) -->
+    <WDEJAVU   spec="OPTIONAL STRING" />
+    <WFSPEED   spec="OPTIONAL STRING" />
+    <WPEAKI1I  spec="OPTIONAL STRING" />
+    <WSTRENI   spec="OPTIONAL STRING" />
+    <WFSLOPEI  spec="OPTIONAL STRING" />
+    <WPEAKI1F  spec="OPTIONAL STRING" />
+    <WSTRENF   spec="OPTIONAL STRING" />
+    <WJOBFAIL  spec="OPTIONAL STRING" />
+    <WFSLOPEF  spec="OPTIONAL STRING" />
+    <WFAILSTAT spec="OPTIONAL STRING" />
+    <WFREE01   spec="OPTIONAL STRING" />
+    <WFREE02   spec="OPTIONAL STRING" />
+    <WFREE03   spec="OPTIONAL STRING" />
+    <WFREE04   spec="OPTIONAL STRING" />
+    <WFREE05   spec="OPTIONAL STRING" />
+    <WFREE06   spec="OPTIONAL STRING" />
+    <WFREE07   spec="OPTIONAL STRING" />
+    <WFREE08   spec="OPTIONAL STRING" />
+    <WYSLOPEI  spec="OPTIONAL STRING" />
+    <WYSLOPEF  spec="OPTIONAL STRING" />
+  
+  
+  
+    <PEAKI1IDIST spec="OPTIONAL STRING" />
   </constitutive_model>
 
 </Uintah_Include>
