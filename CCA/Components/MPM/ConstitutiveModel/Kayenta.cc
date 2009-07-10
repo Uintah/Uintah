@@ -51,6 +51,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Math/MinMax.h>
 
 #include <sci_defs/uintah_defs.h>
+#include <Core/Math/Weibull.h>
 
 #include <fstream>
 #include <iostream>
@@ -127,6 +128,13 @@ Kayenta::Kayenta(const Kayenta* cm) : ConstitutiveModel(cm)
     UI[i] = cm->UI[i];
   }
 
+  wdist.WeibMed    = cm->wdist.WeibMed;
+  wdist.WeibMod    = cm->wdist.WeibMod;
+  wdist.WeibRefVol = cm->wdist.WeibRefVol;
+  wdist.WeibSeed   = cm->wdist.WeibSeed;
+  wdist.Perturb    = cm->wdist.Perturb;
+  wdist.WeibDist   = cm->wdist.WeibDist;
+
   //Create VarLabels for GeoModel internal state variables (ISVs)
   initializeLocalMPMLabels();
 }
@@ -136,6 +144,9 @@ Kayenta::~Kayenta()
    for (unsigned int i = 0; i< ISVLabels.size();i++){
      VarLabel::destroy(ISVLabels[i]);
    }
+   VarLabel::destroy(peakI1IDistLabel);
+   VarLabel::destroy(peakI1IDistLabel_preReloc);
+
 }
 
 void Kayenta::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
@@ -214,7 +225,13 @@ void Kayenta::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
   cm_ps->appendElement("FREE08",UI[57]);//
   cm_ps->appendElement("YSLOPEI",UI[58]);//
   cm_ps->appendElement("YSLOPEF",UI[59]);//
-
+  
+  cm_ps->appendElement("peakI1IPerturb", wdist.Perturb);
+  cm_ps->appendElement("peakI1IMed",     wdist.WeibMed);
+  cm_ps->appendElement("peakI1IMod",     wdist.WeibMod);
+  cm_ps->appendElement("peakI1IRefVol",  wdist.WeibRefVol);
+  cm_ps->appendElement("peakI1ISeed",    wdist.WeibSeed);
+  cm_ps->appendElement("PEAKI1IDIST",    wdist.WeibDist);
 }
 
 Kayenta* Kayenta::clone()
@@ -242,6 +259,25 @@ void Kayenta::initializeCMData(const Patch* patch,
     }
   }
 
+  ParticleVariable<double> peakI1IDist;
+  new_dw->allocateAndPut(peakI1IDist, peakI1IDistLabel, pset);
+  cout << "Weibull Variables for PEAKI1I: (initialize CMData)\n"
+       << "Median:          " << wdist.WeibMed
+       << "\nModulus:         " << wdist.WeibMod
+       << "\nReference Vol:   " << wdist.WeibRefVol
+       << "\nSeed:            " << wdist.WeibSeed
+       << "\nPerturb?:        " << wdist.Perturb << std::endl;
+  if ( wdist.Perturb){
+  //SCIRun::Weibull weibGen(wdist.WeibMed, wdist.WeibMod, wdist.WeibScale, 0);
+    SCIRun::Weibull weibGen(wdist.WeibMed,wdist.WeibMod,wdist.WeibRefVol,wdist.WeibSeed);
+    constParticleVariable<double>pVolume;
+    new_dw->get(pVolume, lb->pVolumeLabel, pset);
+  
+    ParticleSubset::iterator iter = pset->begin();
+    for(;iter != pset->end();iter++){
+       peakI1IDist[*iter] = weibGen.rand(pVolume[*iter]);
+    }
+  }
   computeStableTimestep(patch, matl, new_dw);
 }
 
@@ -260,6 +296,7 @@ void Kayenta::allocateCMDataAddRequires(Task* task,
   for(int i=0;i<d_NINSV;i++){
     task->requires(Task::NewDW,ISVLabels_preReloc[i], matlset, Ghost::None);
   }
+  task->requires(Task::NewDW,peakI1IDistLabel_preReloc,matlset,Ghost::None);
 }
 
 
@@ -277,6 +314,18 @@ void Kayenta::allocateCMDataAdd(DataWarehouse* new_dw,
 
   StaticArray<ParticleVariable<double> > ISVs(d_NINSV+1);
   StaticArray<constParticleVariable<double> > o_ISVs(d_NINSV+1);
+  constParticleVariable<double> o_peakI1IDist;
+
+  new_dw->get(o_peakI1IDist,peakI1IDistLabel_preReloc,delset);
+
+  ParticleVariable<double> peakI1IDist;
+  new_dw->allocateTemporary(peakI1IDist,addset);
+
+  ParticleSubset::iterator o,n = addset->begin();
+  for (o=delset->begin(); o != delset->end(); o++, n++) {
+	  peakI1IDist[*n] = o_peakI1IDist[*o];
+  }
+  (*newState)[peakI1IDistLabel]=peakI1IDist.clone();
 
   for(int i=0;i<d_NINSV;i++){
     new_dw->allocateTemporary(ISVs[i], addset);
@@ -298,14 +347,16 @@ void Kayenta::addParticleState(std::vector<const VarLabel*>& from,
     from.push_back(ISVLabels[i]);
     to.push_back(ISVLabels_preReloc[i]);
   }
+  from.push_back(peakI1IDistLabel);
+  to.push_back(peakI1IDistLabel_preReloc);
 }
 
 void Kayenta::computeStableTimestep(const Patch* patch,
                                     const MPMMaterial* matl,
                                     DataWarehouse* new_dw)
 {
-   // This is only called for the initial timestep - all other timesteps
-   // are computed as a side-effect of computeStressTensor
+  // This is only called for the initial timestep - all other timesteps
+  // are computed as a side-effect of computeStressTensor
   Vector dx = patch->dCell();
   int dwi = matl->getDWIndex();
   ParticleSubset* pset = new_dw->getParticleSubset(dwi, patch);
@@ -366,8 +417,8 @@ void Kayenta::computeStressTensor(const PatchSubset* patches,
     constParticleVariable<Matrix3> deformationGradient, pstress;
     ParticleVariable<Matrix3> pstress_new;
     ParticleVariable<Matrix3> deformationGradient_new;
-    constParticleVariable<double> pmass, pvolume, ptemperature;
-    ParticleVariable<double> pvolume_new;
+    constParticleVariable<double> pmass, pvolume, ptemperature, peakI1IDist;
+    ParticleVariable<double> pvolume_new, peakI1IDist_new;
     constParticleVariable<Vector> pvelocity, psize;
     constNCVariable<Vector> gvelocity;
     delt_vartype delT;
@@ -383,6 +434,7 @@ void Kayenta::computeStressTensor(const PatchSubset* patches,
     old_dw->get(pvelocity,           lb->pVelocityLabel,           pset);
     old_dw->get(ptemperature,        lb->pTemperatureLabel,        pset);
     old_dw->get(deformationGradient, lb->pDeformationMeasureLabel, pset);
+    old_dw->get(peakI1IDist,       peakI1IDistLabel,         pset);
 
     StaticArray<constParticleVariable<double> > ISVs(d_NINSV+1);
     for(int i=0;i<d_NINSV;i++){
@@ -399,6 +451,9 @@ void Kayenta::computeStressTensor(const PatchSubset* patches,
     new_dw->allocateAndPut(p_q,             lb->p_qLabel_preReloc,       pset);
     new_dw->allocateAndPut(deformationGradient_new,
                            lb->pDeformationMeasureLabel_preReloc,        pset);
+    new_dw->allocateAndPut(peakI1IDist_new, peakI1IDistLabel_preReloc,    pset);
+
+	peakI1IDist_new.copyData(peakI1IDist);
 
     StaticArray<ParticleVariable<double> > ISVs_new(d_NINSV+1);
     for(int i=0;i<d_NINSV;i++){
@@ -444,6 +499,20 @@ void Kayenta::computeStressTensor(const PatchSubset* patches,
 
       // get the volumetric part of the deformation
       double J = deformationGradient[idx].Determinant();
+      // Check 1: Look at Jacobian
+      if (!(J > 0.0)) {
+        cerr << getpid() ;
+        constParticleVariable<long64> pParticleID;
+        old_dw->get(pParticleID, lb->pParticleIDLabel, pset);
+        cerr << "**ERROR** Negative Jacobian of deformation gradient"
+             << " in particle " << pParticleID[idx] << endl;
+        cerr << "l = " << velGrad << endl;
+        cerr << "F_old = " << deformationGradient[idx] << endl;
+        cerr << "F_inc = " << deformationGradientInc << endl;
+        cerr << "F_new = " << deformationGradient_new[idx] << endl;
+        cerr << "J = " << J << endl;
+        throw InternalError("Negative Jacobian",__FILE__,__LINE__);
+      }
       pvolume_new[idx]=Jinc*pvolume[idx];
 
       // Compute the local sound speed
@@ -491,8 +560,19 @@ void Kayenta::computeStressTensor(const PatchSubset* patches,
         svarg[i]=ISVs[i][idx];
       }
 
-      KAYENTA_CALC(nblk, d_NINSV, dt, UI, sigarg,
-                                 Darray, svarg, USM);
+	  // 'Hijack' UI[42] with perturbed value if desired
+	  // put real value of UI[42] in tmp var just in case
+	  if (wdist.Perturb){
+		  double tempVar = UI[42];
+		  UI[42] = peakI1IDist[idx];
+
+          KAYENTA_CALC(nblk, d_NINSV, dt, UI, sigarg,
+                                     Darray, svarg, USM);
+		  UI[42]=tempVar;
+	  } else {
+          KAYENTA_CALC(nblk, d_NINSV, dt, UI, sigarg,
+                                     Darray, svarg, USM);
+	  }
 
       // Unload ISVs from 1D array into ISVs_new 
       for(int i=0;i<d_NINSV;i++){
@@ -567,6 +647,14 @@ void Kayenta::carryForward(const PatchSubset* patches,
     int dwi = matl->getDWIndex();
     ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
 
+    constParticleVariable<double> peakI1IDist;
+    ParticleVariable<double> peakI1IDist_new;
+
+	old_dw->get(peakI1IDist, peakI1IDistLabel, pset);
+	new_dw->allocateAndPut(peakI1IDist_new,
+		                   peakI1IDistLabel_preReloc, pset);
+	peakI1IDist_new.copyData(peakI1IDist);
+
     // Carry forward the data common to all constitutive models 
     // when using RigidMPM.
     // This method is defined in the ConstitutiveModel base class.
@@ -586,6 +674,7 @@ void Kayenta::carryForward(const PatchSubset* patches,
     new_dw->put(delt_vartype(1.e10), lb->delTLabel, patch->getLevel());
     new_dw->put(sum_vartype(0.),     lb->StrainEnergyLabel);
   }
+
 }
 
 void Kayenta::addInitialComputesAndRequires(Task* task,
@@ -601,7 +690,9 @@ void Kayenta::addInitialComputesAndRequires(Task* task,
   for(int i=0;i<d_NINSV;i++){
     task->computes(ISVLabels_preReloc[i], matlset);
   }
+  task->computes(peakI1IDistLabel, matlset);
 }
+
 void Kayenta::addComputesAndRequires(Task* task,
                                      const MPMMaterial* matl,
                                      const PatchSet* patches) const
@@ -617,6 +708,8 @@ void Kayenta::addComputesAndRequires(Task* task,
     task->requires(Task::OldDW, ISVLabels[i],          matlset, Ghost::None);
     task->computes(             ISVLabels_preReloc[i], matlset);
   }
+  task->requires(Task::OldDW, peakI1IDistLabel, matlset, Ghost::None);
+  task->computes(peakI1IDistLabel_preReloc, matlset);
 }
 
 void Kayenta::addComputesAndRequires(Task*,
@@ -742,6 +835,14 @@ Kayenta::getInputParameters(ProblemSpecP& ps)
   ps->getWithDefault("FREE08",UI[57],0.0);//
   ps->getWithDefault("YSLOPEI",UI[58],0.0);//
   ps->getWithDefault("YSLOPEF",UI[59],0.0);//
+
+  ps->get("PEAKI1IDIST",wdist.WeibDist);
+  WeibullParser(wdist);
+  cout << "Weibull Variables for PEAKI1I (getInputParameters):\n"
+       << "Median:            " << wdist.WeibMed
+       << "\nModulus:         " << wdist.WeibMod
+       << "\nReference Vol:   " << wdist.WeibRefVol
+       << "\nSeed:            " << wdist.WeibSeed << std::endl;
 }
 
 void
@@ -753,7 +854,7 @@ Kayenta::initializeLocalMPMLabels()
   ISVNames.push_back("INDEX");
   ISVNames.push_back("EQDOT");
   ISVNames.push_back("I1");
-  ISVNames.push_back("ROOTJ2");
+  ISVNames.push_back("p.ROOTJ2");
   ISVNames.push_back("ALXX");
   ISVNames.push_back("ALYY");
   ISVNames.push_back("ALZZ");
@@ -770,7 +871,7 @@ Kayenta::initializeLocalMPMLabels()
   ISVNames.push_back("CRACK");
   ISVNames.push_back("SHEAR");
   ISVNames.push_back("YIELD");
-  ISVNames.push_back("LODE");
+  ISVNames.push_back("p.LODE");
   ISVNames.push_back("QSSIGXX");
   ISVNames.push_back("QSSIGYY");
   ISVNames.push_back("QSSIGZZ");
@@ -785,8 +886,8 @@ Kayenta::initializeLocalMPMLabels()
   ISVNames.push_back("QSBSXY");
   ISVNames.push_back("QSBSYZ");
   ISVNames.push_back("QSBSXZ");
-  ISVNames.push_back("NONAME1");
-  ISVNames.push_back("NONAME2");
+  ISVNames.push_back("p.TGROW");
+  ISVNames.push_back("p.COHER");
 
   for(int i=0;i<d_NINSV;i++){
     ISVLabels.push_back(VarLabel::create(ISVNames[i],
@@ -794,4 +895,120 @@ Kayenta::initializeLocalMPMLabels()
     ISVLabels_preReloc.push_back(VarLabel::create(ISVNames[i]+"+",
                           ParticleVariable<double>::getTypeDescription()));
   }
+  peakI1IDistLabel = VarLabel::create("p.peakI1IDist",
+	             ParticleVariable<double>::getTypeDescription());
+  peakI1IDistLabel_preReloc = VarLabel::create("p.peakI1IDist+",
+	             ParticleVariable<double>::getTypeDescription());
+}
+
+
+// Weibull input parser that accepts a structure of input
+// parameters defined as:
+//
+// bool Perturb        'True' for perturbed parameter
+// double WeibMed       Medain distrib. value OR const value
+//                         depending on bool Perturb
+// double WeibMod       Weibull modulus
+// double WeibRefVol    Reference Volume
+// int    WeibSeed      Seed for random number generator
+// std::string WeibDist  String for Distribution
+//
+// the string 'WeibDist' accepts strings of the following form
+// when a perturbed value is desired:
+//
+// --Distribution--|-Median-|-Modulus-|-Reference Vol -|- Seed -|
+// "    weibull,      45e6,      4,        0.0001,          0"
+//
+// or simply a number if no perturbed value is desired.
+
+void
+Kayenta::WeibullParser(WeibParameters &iP)
+{
+
+  // Remove all unneeded characters
+  // only remaining are alphanumeric '.' and ','
+  for ( int i = iP.WeibDist.length()-1; i >= 0; i--) {
+    iP.WeibDist[i] = tolower(iP.WeibDist[i]);
+    if ( !isalnum(iP.WeibDist[i]) && 
+       iP.WeibDist[i] != '.' &&
+       iP.WeibDist[i] != ',' &&
+       iP.WeibDist[i] != '-' &&
+       iP.WeibDist[i] != EOF) {
+         iP.WeibDist.erase(i,1);
+    }
+  } // End for
+
+  if (iP.WeibDist.substr(0,4) == "weib") {
+    iP.Perturb = true;
+  } else {
+    iP.Perturb = false;
+  }
+
+  // ######
+  // If perturbation is NOT desired
+  // ######
+  if ( !iP.Perturb ) {
+    bool escape = false;
+    int num_of_e = 0;
+    int num_of_periods = 0;
+    for ( unsigned int i = 0; i < iP.WeibDist.length(); i++) {
+      if ( iP.WeibDist[i] != '.'
+           && iP.WeibDist[i] != 'e'
+           && iP.WeibDist[i] != '-'
+           && !isdigit(iP.WeibDist[i]) ) escape = true;
+
+      if ( iP.WeibDist[i] == 'e' ) num_of_e += 1;
+
+      if ( iP.WeibDist[i] == '.' ) num_of_periods += 1;
+
+      if ( num_of_e > 1 || num_of_periods > 1 || escape ) {
+        std::cerr << "\n\nERROR:\nInput value cannot be parsed. Please\n"
+                     "check your input values.\n" << std::endl;
+        exit (1);
+      }
+    } // end for(int i = 0;....)
+
+    if ( escape ) exit (1);
+
+    iP.WeibMed  = atof(iP.WeibDist.c_str());
+  }
+
+  // ######
+  // If perturbation IS desired
+  // ######
+  if ( iP.Perturb ) {
+    int weibValues[4];
+    int weibValuesCounter = 0;
+
+    for ( unsigned int r = 0; r < iP.WeibDist.length(); r++) {
+      if ( iP.WeibDist[r] == ',' ) {
+        weibValues[weibValuesCounter] = r;
+        weibValuesCounter += 1;
+      } // end if(iP.WeibDist[r] == ',')
+    } // end for(int r = 0; ...... )
+
+    if (weibValuesCounter != 4) {
+      std::cerr << "\n\nERROR:\nWeibull perturbed input string must contain\n"
+                   "exactly 4 commas. Verify that your input string is\n"
+                   "of the form 'weibull, 45e6, 4, 0.001, 1'.\n" << std::endl;
+      exit (1);
+    } // end if(weibValuesCounter != 4)
+
+    std::string weibMedian;
+    std::string weibModulus;
+    std::string weibRefVol;
+    std::string weibSeed;
+
+    weibMedian  = iP.WeibDist.substr(weibValues[0]+1,weibValues[1]-weibValues[0]-1);
+    weibModulus = iP.WeibDist.substr(weibValues[1]+1,weibValues[2]-weibValues[1]-1);
+    weibRefVol  = iP.WeibDist.substr(weibValues[2]+1,weibValues[3]-weibValues[2]-1);
+    weibSeed    = iP.WeibDist.substr(weibValues[3]+1);
+
+    iP.WeibMed    = atof(weibMedian.c_str());
+    iP.WeibMod    = atof(weibModulus.c_str());
+    iP.WeibRefVol = atof(weibRefVol.c_str());
+    iP.WeibSeed   = atoi(weibSeed.c_str());
+    
+  } // End if (iP.Perturb)
+
 }
