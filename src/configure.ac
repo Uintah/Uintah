@@ -223,6 +223,12 @@ SCI_ARG_WITH(blas,
   [with_blas="$withval"
    sci_required_blas=yes],
   [with_blas=""])
+SCI_ARG_WITH(electric_fence,
+  AC_HELP_STRING(--with-electric-fence=DIR,
+                 Use Electric Fence (Memory Tracking) library in DIR),
+  [with_electric_fence="$withval"
+   sci_required_electric_fence=yes],
+  [with_electric_fence=""])
 SCI_ARG_WITH(lapack,
   AC_HELP_STRING(--with-lapack=DIR, 
                  Use the lapack installation in DIR),
@@ -2340,6 +2346,29 @@ MPI_EXTRA_LIB_DIR="$MPI_EXTRA_LIB_DIR $F_LIB_DIR_FLAG"
 
 AC_LANG(C)
 
+
+##  --  Electric Fence  -------------------------------------
+
+if test "$with_electric_fence"; then
+
+  if test "$with_electric_fence" = "yes"; then
+    SCI_TRY_LINK(ELECTRIC_FENCE,
+                 electric fence library,,,
+                 efence,
+                 ,,,
+                 required)
+  else
+    SCI_TRY_LINK(ELECTRIC_FENCE,
+                 electric fence library,,,
+                 efence,$with_electric_fence,
+                 ,,
+                 specific)
+  fi
+fi
+
+AC_SUBST(HAVE_ELECTRIC_FENCE)
+AC_SUBST(ELECTRIC_FENCE_LIB_FLAG)
+AC_SUBST(ELECTRIC_FENCE_LIB_DIR_FLAG)
 
 ##  --  search for acml (optimized blas/lapack) stuff  -------------------------------------
 
