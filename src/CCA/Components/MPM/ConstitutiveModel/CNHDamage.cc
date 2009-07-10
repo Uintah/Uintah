@@ -107,11 +107,12 @@ void CNHDamage::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
 
   CompNeoHook::outputProblemSpec(cm_ps,false);
 
-  cm_ps->appendElement("failure_strain_mean",d_epsf.mean);
-  cm_ps->appendElement("failure_strain_std",d_epsf.std);
-  cm_ps->appendElement("failure_strain_scale",d_epsf.scale);
-  cm_ps->appendElement("failure_strain_distrib",d_epsf.dist);
-  cm_ps->appendElement("failure_by_stress",d_epsf.failureByStress);
+  cm_ps->appendElement("failure_strain_mean",    d_epsf.mean);
+  cm_ps->appendElement("failure_strain_std",     d_epsf.std);
+  cm_ps->appendElement("failure_strain_scale",   d_epsf.scale);
+  cm_ps->appendElement("failure_strain_seed" ,   d_epsf.seed);
+  cm_ps->appendElement("failure_strain_distrib", d_epsf.dist);
+  cm_ps->appendElement("failure_by_stress",      d_epsf.failureByStress);
 
 }
 
@@ -145,14 +146,16 @@ CNHDamage::initializeLocalMPMLabels()
 void 
 CNHDamage::getFailureStrainData(ProblemSpecP& ps)
 {
-  d_epsf.mean = 10.0; // Mean failure strain
-  d_epsf.std = 0.0;  // STD failure strain
-  d_epsf.scale = 1.0; // Scale Parameter for Weibull Distribution
-  d_epsf.dist = "constant";
+  d_epsf.mean   = 10.0; // Mean failure strain
+  d_epsf.std    = 0.0;  // STD failure strain
+  d_epsf.scale  = 1.0; // Scale Parameter for Weibull Distribution
+  d_epsf.seed   = 0.0; // seed for weibull distribution generator
+  d_epsf.dist   = "constant";
   d_epsf.failureByStress = false; // failure by strain default
   ps->get("failure_strain_mean",    d_epsf.mean);
   ps->get("failure_strain_std",     d_epsf.std);
   ps->get("failure_strain_scale",   d_epsf.scale);
+  ps->get("failure_strain_seed",    d_epsf.seed);
   ps->get("failure_strain_distrib", d_epsf.dist);
   ps->get("failure_by_stress", d_epsf.failureByStress);
 }
@@ -163,6 +166,7 @@ CNHDamage::setFailureStrainData(const CNHDamage* cm)
   d_epsf.mean = cm->d_epsf.mean;
   d_epsf.std = cm->d_epsf.std;
   d_epsf.scale = cm->d_epsf.scale;
+  d_epsf.seed  = cm->d_epsf.scale;
   d_epsf.dist = cm->d_epsf.dist;
   d_epsf.failureByStress = cm->d_epsf.failureByStress;
 }
@@ -230,20 +234,16 @@ CNHDamage::initializeCMData(const Patch* patch,
   ParticleVariable<Matrix3> pBeBar;
   ParticleVariable<double>  pFailureStrain;
   ParticleVariable<int>     pFailed;
+  constParticleVariable<double> pVolume;
 
+  new_dw->get(pVolume, lb->pVolumeLabel, pset);
   new_dw->allocateAndPut(pBeBar,         bElBarLabel,         pset);
   new_dw->allocateAndPut(pFailureStrain, pFailureStrainLabel, pset);
   new_dw->allocateAndPut(pFailed,        pFailedLabel,        pset);
 
   ParticleSubset::iterator iter = pset->begin();
 
-  if (d_epsf.dist == "constant") {
-    for(;iter != pset->end();iter++){
-      pBeBar[*iter] = Id;
-      pFailureStrain[*iter] = d_epsf.mean;
-      pFailed[*iter] = 0;
-    }
-  } else if (d_epsf.dist == "gauss"){
+  if (d_epsf.dist == "gauss"){
     // Initialize a gaussian random number generator
     SCIRun::Gaussian gaussGen(d_epsf.mean, d_epsf.std, 0);
 
@@ -254,11 +254,17 @@ CNHDamage::initializeCMData(const Patch* patch,
     }
   } else if (d_epsf.dist == "weibull"){
     // Initialize a weibull random number generator
-    SCIRun::Weibull weibGen(d_epsf.mean, d_epsf.std, d_epsf.scale, 0);
+    SCIRun::Weibull weibGen(d_epsf.mean, d_epsf.std, d_epsf.scale, d_epsf.seed);
 
     for(;iter != pset->end();iter++){
       pBeBar[*iter] = Id;
-      pFailureStrain[*iter] = weibGen.rand();
+      pFailureStrain[*iter] = weibGen.rand(pVolume[*iter]);
+      pFailed[*iter] = 0;
+    }
+  } else if (d_epsf.dist == "constant") {
+    for(;iter != pset->end();iter++){
+      pBeBar[*iter] = Id;
+      pFailureStrain[*iter] = d_epsf.mean;
       pFailed[*iter] = 0;
     }
   }
@@ -403,8 +409,7 @@ CNHDamage::computeStressTensor(const PatchSubset* patches,
     new_dw->allocateAndPut(pDeformRate, 
                            pDeformRateLabel_preReloc,             pset);
     new_dw->allocateAndPut(p_q,    lb->p_qLabel_preReloc,         pset);
-    ParticleVariable<Matrix3> velGrad;
-    new_dw->allocateTemporary(velGrad, pset);
+
     // Copy failure strains to new dw
     pFailureStrain_new.copyData(pFailureStrain);
 
@@ -417,8 +422,7 @@ CNHDamage::computeStressTensor(const PatchSubset* patches,
       // Assign zero internal heating by default - modify if necessary.
       pdTdt[idx] = 0.0;
       // Initialize velocity gradient
-//       Matrix3 velGrad(0.0);
-        Matrix3 tensorL(0.0);
+      Matrix3 velGrad(0.0);
 
       if(!flag->d_axisymmetric){
         // Get the node indices that surround the cell
@@ -429,26 +433,26 @@ CNHDamage::computeStressTensor(const PatchSubset* patches,
          for(int k=0; k<27; k++){
            pgFld[k]=pgCode[idx][k];
          }
-         computeVelocityGradient(tensorL,ni,d_S,oodx,pgFld,gVelocity,GVelocity);
+         computeVelocityGradient(velGrad,ni,d_S,oodx,pgFld,gVelocity,GVelocity);
         } else {
         double erosion = pErosion[idx];
-        computeVelocityGradient(tensorL,ni,d_S, oodx, gVelocity, erosion);
+        computeVelocityGradient(velGrad,ni,d_S, oodx, gVelocity, erosion);
         }
       } else {  // axi-symmetric kinematics
         // Get the node indices that surround the cell
         interpolator->findCellAndWeightsAndShapeDerivatives(pX[idx],ni,S,d_S,
                                                                     pSize[idx]);
         // x -> r, y -> z, z -> theta
-        computeAxiSymVelocityGradient(tensorL,ni,d_S,S,oodx,gVelocity,pX[idx]);
+        computeAxiSymVelocityGradient(velGrad,ni,d_S,S,oodx,gVelocity,pX[idx]);
       }
-      velGrad[idx]=tensorL;
+
       // Compute the rate of defomation tensor
-      Matrix3 D = (velGrad[idx] + velGrad[idx].Transpose())*0.5;
+      Matrix3 D = (velGrad + velGrad.Transpose())*0.5;
       pDeformRate[idx] = D;
 
       // Compute the deformation gradient increment using the time_step
       // velocity gradient ( F_n^np1 = dudx * dt + Identity)
-      pDefGradInc = velGrad[idx]*delT + Identity;
+      pDefGradInc = velGrad*delT + Identity;
       
 //       double Jinc = pDefGradInc.Determinant();
 
@@ -466,7 +470,7 @@ CNHDamage::computeStressTensor(const PatchSubset* patches,
         cerr << getpid() ;
         cerr << "**ERROR** Negative Jacobian of deformation gradient"
              << " in particle " << pParticleID[idx] << endl;
-        cerr << "l = " << velGrad[idx] << endl;
+        cerr << "l = " << velGrad << endl;
         cerr << "F_old = " << pDefGrad[idx] << endl;
         cerr << "F_inc = " << pDefGradInc << endl;
         cerr << "F_new = " << FF << endl;
@@ -579,8 +583,8 @@ CNHDamage::computeStressTensor(const PatchSubset* patches,
       if (flag->d_artificial_viscosity) {
         double dx_ave = (dx.x() + dx.y() + dx.z())/3.0;
         double c_bulk = sqrt(bulk/rho_cur);
-        Matrix3 D=(velGrad[idx] + velGrad[idx].Transpose())*0.5;
-        p_q[idx] = artificialBulkViscosity(D.Trace(), c_bulk, rho_cur, dx_ave);
+        p_q[idx] = artificialBulkViscosity(pDeformRate[idx].Trace(),
+                                           c_bulk, rho_cur, dx_ave);
       } else {
         p_q[idx] = 0.;
       }

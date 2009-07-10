@@ -49,9 +49,26 @@ DEALINGS IN THE SOFTWARE.
 namespace Uintah {
   class Kayenta : public ConstitutiveModel {
   public:
+
+    // For usage instructions, see the 'WeibullParser' function
+    // header in Kayenta.cc
+    struct WeibParameters {
+      bool Perturb;       // 'True' for perturbed parameter
+      double WeibMed;     // Medain distrib. value OR const value depending on bool Perturb
+      int    WeibSeed;        // seed for random number generator
+      double WeibMod;         // Weibull modulus
+      double WeibRefVol;      // Reference Volume
+      std::string WeibDist;   // String for Distribution
+    };
+
     double UI[90];
+    // weibull parameter set
+    WeibParameters wdist;
+    
     vector<const VarLabel*> ISVLabels;
     vector<const VarLabel*> ISVLabels_preReloc;
+    const VarLabel* peakI1IDistLabel;
+    const VarLabel* peakI1IDistLabel_preReloc;
     int d_NINSV;
 
   private:
@@ -138,6 +155,18 @@ namespace Uintah {
 
     virtual void addParticleState(std::vector<const VarLabel*>& from,
 				  std::vector<const VarLabel*>& to);
+
+    // Weibull input parser that accepts a structure of input
+    // parameters defined as:
+    //
+    // bool Perturb        'True' for perturbed parameter
+    // double WeibMed       Medain distrib. value OR const value
+    //                         depending on bool Perturb
+    // double WeibMod       Weibull modulus
+    // double WeibScale     Scale parameter
+    // std::string WeibDist  String for Distribution
+    virtual void WeibullParser(WeibParameters &iP);
+
   };
 
 } // End namespace Uintah
