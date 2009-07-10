@@ -28327,10 +28327,6 @@ _sci_includes=''
 
 
   fi
-else
-  HAVE_ELECTRIC_FENCE=
-  ELECTRIC_FENCE_LIB_FLAG=
-  ELECTRIC_FENCE_LIB_DIR_FLAG=
 fi
 
 
