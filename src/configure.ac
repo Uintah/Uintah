@@ -2364,6 +2364,10 @@ if test "$with_electric_fence"; then
                  ,,
                  specific)
   fi
+else
+  HAVE_ELECTRIC_FENCE=
+  ELECTRIC_FENCE_LIB_FLAG=
+  ELECTRIC_FENCE_LIB_DIR_FLAG=
 fi
 
 AC_SUBST(HAVE_ELECTRIC_FENCE)
