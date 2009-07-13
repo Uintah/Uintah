@@ -69,8 +69,8 @@ POSSIBLE REVISIONS
 #include <CCA/Components/Arches/Arches.h>
 #include <CCA/Components/Arches/ArchesLabel.h>
 #include <CCA/Components/Arches/BoundaryCondition.h>
-#include <CCA/Components/Arches/MixingRxnTable.h>
-#include <CCA/Components/Arches/TabPropsTable.h>
+#include <CCA/Components/Arches/ChemMix/MixingRxnTable.h>
+#include <CCA/Components/Arches/ChemMix/TabPropsTable.h>
 #ifdef PetscFilter
 #include <CCA/Components/Arches/Filter.h>
 #endif

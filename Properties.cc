@@ -33,7 +33,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Arches/Properties.h>
 #include <CCA/Components/Arches/Arches.h>
 #include <CCA/Components/Arches/ArchesLabel.h>
-#include <CCA/Components/Arches/TabPropsTable.h>
+#include <CCA/Components/Arches/ChemMix/TabPropsTable.h>
 #include <CCA/Components/Arches/Mixing/MixingModel.h>
 #include <CCA/Components/Arches/Mixing/ColdflowMixingModel.h>
 #include <CCA/Components/Arches/Mixing/MOMColdflowMixingModel.h>

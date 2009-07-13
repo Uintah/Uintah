@@ -34,7 +34,7 @@ DEALINGS IN THE SOFTWARE.
 //
 
 // includes for Arches
-#include <CCA/Components/Arches/MixingRxnTable.h>
+#include <CCA/Components/Arches/ChemMix/MixingRxnTable.h>
 #include <CCA/Components/Arches/Properties.h>
 #include <CCA/Components/Arches/Arches.h>
 
