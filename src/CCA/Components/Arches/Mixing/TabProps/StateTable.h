@@ -36,7 +36,7 @@ DEALINGS IN THE SOFTWARE.
 #include <string>
 #include <stdexcept>
 
-#include <CCA/Components/Arches/TabProps/BSpline.h>
+#include <CCA/Components/Arches/Mixing/TabProps/BSpline.h>
 
 #include <sci_defs/hdf5_defs.h>
 
