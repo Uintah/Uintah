@@ -34,7 +34,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Arches/Arches.h>
 #include <CCA/Components/Arches/ArchesLabel.h>
 #include <CCA/Components/Arches/MixingRxnTable.h>
-#include <CCA/Components/Arches/TabProps/StateTable.h>
+#include <CCA/Components/Arches/Mixing/TabProps/StateTable.h>
 #include <CCA/Components/Arches/TabPropsTable.h>
 #include <CCA/Components/Arches/Properties.h>
 
