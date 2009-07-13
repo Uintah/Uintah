@@ -100,7 +100,7 @@ PSELIBS := \
         CCA/Components/Arches/Mixing    \
         CCA/Components/Arches/MCRT/ArchesRMCRT  \
         CCA/Components/Arches/Radiation \
-        CCA/Components/Arches/TabProps  \
+        CCA/Components/Arches/Mixing/TabProps  \
         CCA/Components/OnTheFlyAnalysis \
         CCA/Ports     \
         Core/Parallel \
