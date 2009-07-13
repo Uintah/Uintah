@@ -28,55 +28,31 @@
 # 
 # 
 # 
-# Makefile fragment for this subdirectory
-
-# include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
-
-SRCDIR  := CCA/Components
-
-ADIR = $(SRCDIR)/Arches
-
-# The following variables are used by the Fake* scripts... please
-# do not modify...
+# http://software.sci.utah.edu/doc/Developer/Guide/create_module.html
 #
+# Makefile fragment for this subdirectory
+# $Id: sub.mk 40521 2008-03-19 21:06:39Z dav $
+#
+include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-ifeq ($(BUILD_MPM),yes)
-  MPM         := $(SRCDIR)/MPM
-  ifeq ($(BUILD_ICE),yes)
-    MPMICE    := $(SRCDIR)/MPMICE
-  endif
-endif
-ifeq ($(BUILD_ICE),yes)
-  ICE         := $(SRCDIR)/ICE
-endif
-ifeq ($(BUILD_ARCHES),yes)
-  ARCHES      := $(SRCDIR)/Arches $(ADIR)/ChemMix/TabProps $(ADIR)/fortran $(ADIR)/Mixing $(ADIR)/Radiation $(ADIR)/Radiation/fortran $(ADIR)/MCRT/ArchesRMCRT
-  ifeq ($(BUILD_MPM),yes)
-    MPMARCHES := $(SRCDIR)/MPMArches
-  endif
-endif
+SRCDIR := CCA/Components/Arches/ChemMix/TabProps
 
-SUBDIRS := \
-        $(SRCDIR)/DataArchiver \
-        $(SRCDIR)/Examples \
-        $(SRCDIR)/Models \
-        $(SRCDIR)/LoadBalancers \
-        $(SRCDIR)/Schedulers \
-        $(SRCDIR)/Regridder \
-        $(SRCDIR)/SimulationController \
-        $(MPM)            \
-        $(ICE)            \
-        $(MPMICE)         \
-        $(ARCHES)         \
-        $(MPMARCHES)      \
-        $(SRCDIR)/Angio   \
-	$(SRCDIR)/SpatialOps \
-        $(SRCDIR)/ProblemSpecification \
-        $(SRCDIR)/PatchCombiner \
-        $(SRCDIR)/Solvers \
-        $(SRCDIR)/SwitchingCriteria \
-        $(SRCDIR)/OnTheFlyAnalysis \
-        $(SRCDIR)/Parent
+SRCS := \
+        $(SRCDIR)/BSpline.cc \
+        $(SRCDIR)/LU.cc \
+        $(SRCDIR)/StateTable.cc
 
-include $(SCIRUN_SCRIPTS)/recurse.mk
+PSELIBS := \
+    Core/Exceptions \
+    Core/Geometry   \
+    Core/Thread
 
+# variables HDF5_LIBRARY, BLAS_LIBRARY, etc are set in configVars.mk
+# everything compiles OK with either LIBS var, I don't think the blas/lapack libraries make a difference
+# (maybe check with BLAS and LAPACK libraries soon - use w/ DQMOM)
+
+#LIBS := $(HDF5_LIBRARY) $(BLAS_LIBRARY) $(LAPACK_LIBRARY)
+LIBS := $(HDF5_LIBRARY)
+INCLUDES += $(HDF5_INCLUDE)
+
+include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk

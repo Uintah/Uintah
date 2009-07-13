@@ -36,8 +36,8 @@ DEALINGS IN THE SOFTWARE.
 // includes for Arches
 #include <CCA/Components/Arches/Arches.h>
 #include <CCA/Components/Arches/ArchesLabel.h>
-#include <CCA/Components/Arches/MixingRxnTable.h>
-#include <CCA/Components/Arches/Mixing/TabProps/StateTable.h>
+#include <CCA/Components/Arches/ChemMix/MixingRxnTable.h>
+#include <CCA/Components/Arches/ChemMix/TabProps/StateTable.h>
 #include <CCA/Components/Arches/Properties.h>
 
 // includes for Uintah
