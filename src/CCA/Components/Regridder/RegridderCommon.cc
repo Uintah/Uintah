@@ -62,6 +62,7 @@ RegridderCommon::RegridderCommon(const ProcessorGroup* pg) : Regridder(), Uintah
   d_filterType = FILTER_BOX;
   d_lastRegridTimestep = 0;
   d_dilationTimestep = 3;
+  d_newGrid = true;
   d_dilatedCellsStabilityLabel  = VarLabel::create("DilatedCellsStability",
                              CCVariable<int>::getTypeDescription());
   d_dilatedCellsRegridLabel  = VarLabel::create("DilatedCellsRegrid",
