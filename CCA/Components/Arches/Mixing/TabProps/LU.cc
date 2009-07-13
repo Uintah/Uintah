@@ -33,7 +33,7 @@ DEALINGS IN THE SOFTWARE.
 #include <iomanip>
 #include <stdexcept>
 
-#include <CCA/Components/Arches/TabProps/LU.h>
+#include <CCA/Components/Arches/Mixing/TabProps/LU.h>
 
 //--------------------------------------------------------------------
 LU::LU( const int dim, const int bandwidth )
