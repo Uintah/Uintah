@@ -11,6 +11,11 @@
 \graphicspath{ {../figures/}}
 \usepackage{color}
 
+%__________________________________
+% new commands for all sections --- !!!! FIXME: This should be pulled in from
+% user_guide.tex... not sure how to do this !!!!
+\newcommand{\TT}[1]{\tt{#1} \normalfont}
+
 \begin{document}
 
 \title{Uintah v1.1 Installation Guide}
@@ -38,13 +43,15 @@ The \textbf{\emph{VisIt}} \url{https://wci.llnl.gov/codes/visit/},
 \textbf{\emph{Teem}} \url{http://teem.sourceforge.net/} applications
 are used to visualize data generated from \textbf{Uintah}.
 
-Uintah can be obtained either from a tarball 
+\subsection{Obtaining the Code}
+Uintah can be obtained either as a compressed tarball 
 \url{http://www.uintah.utah.edu/chrome/site/uintah.tar.gz} or by
-using svn to download the latest source from the following:
+using Subversion (SVN) to download the latest source code:
 
 \begin{verbatim}
 svn co https://gforge.sci.utah.edu/svn/uintah/trunk uintah
 \end{verbatim}
+
 The above command checks out the \textbf{Uintah} source tree and
 installs it into a directory called uintah in the users home
 directory.
@@ -67,7 +74,7 @@ The installation procedure follows the basic outline:
 
 \begin{enumerate}
 
-\item Install basic dependencies: mpi, blas, lapack, hypre, petsc, \emph{etc}.
+\item Install basic dependencies: MPI, Blas, Lapack, Hypre, PETSc, \emph{etc}.
 
 \item Install visualization tools (optional if installing on a supercomputer)
 
@@ -87,7 +94,7 @@ distributions.
 
 Required libraries:
 \begin{itemize}
-\item mpi (openmpi, mpich, or lam or a vendor supplied mpi library)
+\item mpi (OpenMpi, Mpich, or LAM or a vendor supplied mpi library)
 \item blas
 \item lapack
 \item make
@@ -103,7 +110,7 @@ Required libraries:
 Useful libraries:
 \begin{itemize}
 \item hypre-2.0 (\url{https://computation.llnl.gov/casc/hypre/software.html})
-\item petsc 2.3.3 (\url{http://www.mcs.anl.gov/petsc/petsc-as/download/index.html})
+\item PETSc 2.3.3 (\url{http://www.mcs.anl.gov/petsc/petsc-as/download/index.html})
 \end{itemize}
 
 
@@ -129,7 +136,7 @@ followed by installation of \textbf{Uintah}.
 \subsection{Fedora Core 9 Dependencies}
 
 \textbf{Fedora Core 9} \url{http://fedoraproject.org/} offers all the
-dependencies except for petsc and hypre.  Install the following
+dependencies except for PETSc and hypre.  Install the following
 libraries:
 \begin{verbatim}
 sudo yum install openmpi-devel openmpi-libs lapack-devel \
@@ -137,14 +144,14 @@ gcc-gfortran blas-devel gcc-c++ libxml2-devel subversion \
 make tar diffutils
 \end{verbatim}
 
-Please see the section~\ref{sec:mpi} about issues relating to mpi
+Please see the section~\ref{sec:mpi} about issues relating to MPI
 installation on RedHat based distributions.
 
 
 \subsection{CentOS 5 Dependencies}
 
 \textbf{CentOS 5} \url{http://www.centos.org/} is similar to \textbf{Fedora
-Core 9} however, it does not provide an openmpi rpm.  A src.rpm can be
+Core 9} however, it does not provide an OpenMpi rpm.  A src.rpm can be
 downloaded from \url{http://www.open-mpi.org:80/software/ompi/v1.3/}
 and installed via rpmbuild
 
@@ -155,7 +162,7 @@ rpm -i openmpi-1.3.1-1.*.rpm
 The location of the rpm is likely to be found in
 /usr/src/redhat/RPMS/ARCH where ARCH is either i386 or x86\_64.
 
-Once mpi has been built, the other libraries can be installed:
+Once MPI has been built, the other libraries can be installed:
 \begin{verbatim}
 sudo yum install lapack-devel gcc-gfortran blas-devel gcc-c++ \
 libxml2-devel subversion make tar diffutils
@@ -164,7 +171,7 @@ libxml2-devel subversion make tar diffutils
 \section{MPI issues} 
 \label{sec:mpi}
 
-The openmpi library that is installed with \textbf{Fedora Core 9}
+The OpenMpi library that is installed with \textbf{Fedora Core 9}
 needs to have a 'helper' directory set up with symbolic links assigned
 so that during the \emph{configure} of \textbf{Uintah} can find the
 location of specific include files and shared libraries.
@@ -180,18 +187,18 @@ ln -s /usr/lib64/openmpi/1.2.4-gcc lib
 
 
 
-\section{Petsc Installation}
+\section{PETSc Installation}
 
-Petsc can be installed by executing the following simplified
-instructions.  Please refer to the petsc website for comprehensive
+PETSc can be installed by executing the following simplified
+instructions.  Please refer to the PETSc website for comprehensive
 installation instructions if you encounter any difficulties.
 
 Download petsc-2.3.3 from
 \url{http://www.mcs.anl.gov/petsc/petsc-as/download/index.html}
 
-The following configure script assumes the location of mpi is in
+The following configure script assumes the location of MPI is in
 /usr/local/openmpi using the Fedora Core 9 OS.  For other OS
-distributions, the location of the mpi libraries may be found
+distributions, the location of the MPI libraries may be found
 automatically.
 
 \begin{Verbatim}
@@ -223,7 +230,7 @@ the Makefile in \tt hypre-2.0.0/src/lapack \normalfont and add the
 ${CC} -c -fPIC dlamch.c
 \end{verbatim}
 
-Depending on the location of the mpi libraries, i.e. location of mpi.h
+Depending on the location of the MPI libraries, i.e. location of mpi.h
 and libmpi.so, the configure line for hypre should look like this:
 \begin{verbatim}
 cd hypre-2.0.0/src
@@ -248,7 +255,7 @@ VisIt package from LLNL is general purpose visualization software that
 offers all of the usual capabilities for rendering scientific data.
 It is still developed and maintained by LLNL staff, and its interface
 to \textbf{Uintah} data is supported by the Uintah team.  Manta offers
-volume rendering and particle visualizaton based on parallel (shared
+volume rendering and particle visualization based on parallel (shared
 memory) ray tracing techniques.  While the capabilities of Manta are
 more limited, it is a fast way to interactively interrogate reasonably
 large datasets, provided the user has access to a reasonable shared
@@ -260,7 +267,7 @@ memory resource, (e.g. an 8 core desktop system).
 
 Download Teem from
 \url{http://teem.sourceforge.net/download/index.html}.  Teem uses
-cmake to configure the build system. Installation instructions for
+CMake to configure the build system. Installation instructions for
 Teem are found at \url{http://teem.sourceforge.net/build.html}.  Simplified
 instructions are as follows:
 
@@ -315,7 +322,7 @@ latest version is 1.11.2). This is a link to the script,
 \url{https://wci.llnl.gov/codes/visit/1.11.2/build\_visit}.
 
 You can also use the following command on the terminal (from most
-linux boxes), to download the file directly,
+Linux boxes), to download the file directly,
 
 \begin{verbatim}
 wget https://wci.llnl.gov/codes/visit/1.11.1/build_visit
@@ -367,7 +374,7 @@ Note particularly the changes that need to be made in the file,
 <path\_to\_visit>/visit1.11.2/src/config-site/<your_machine_name>.conf
 \end{verbatim}
 
-\normalfont Once you make these edit's, you can then finish building VisIt by typing make in the \tt <path\_to\_visit>/visit1.11.2/src \normalfont directory.  
+\normalfont Once you make these edits, you can then finish building VisIt by typing make in the \tt <path\_to\_visit>/visit1.11.2/src \normalfont directory.  
 
 \subsubsection{When the build script fails}
 \label{sec:WhenTheBuildsSriptFails}
@@ -393,7 +400,7 @@ After a successful build, the executable will be placed in,
 \subsubsection{Building and installing the UDA reader plugin}
 \label{sec:BuildingAndInstallingUDAPlugin}
 
-Add the following arguements to the \textbf{Uintah} configure line,
+Add the following arguments to the \textbf{Uintah} configure line,
 
 \begin{verbatim}
 --with-visit=/path/to/visit 
@@ -416,7 +423,7 @@ and the \tt teem \normalfont directory should have \tt bin\normalfont
 By specifying the above configure arguments (to the \textbf{Uintah}
 configure), \textbf{Uintah} will automatically build a VisIt plugin
 (when you type "make"). The plugin will be placed in (a sub-directory
-of) ~/.visit. When VisIt is run, it will find the plugin and allow for
+of) \textasciitilde/.visit. When VisIt is run, it will find the plugin and allow for
 reading UDA's.
 
 \subsubsection{Remote visualization}
@@ -456,7 +463,7 @@ Settings' in the 'Options' menu on the gui.
 
 For the remote visualization option to work, you must have ports 5600
 - 5609 open. You can try this by running the following on your local
-desktop (on linux distributions),
+desktop (on Linux distributions),
 
 \begin{verbatim}
 traceroute -p 560[0-9] <remote machine> 
@@ -511,7 +518,7 @@ data.
 
 %The build\_visit script will launch a GUI.  Use the space key to
 %unselect the Optional and then scroll down to the Parallel option and
-%select that.  The GUI will determine the location of the mpi libraries
+%select that.  The GUI will determine the location of the MPI libraries
 %and then start the build process.  All source files will be downloaded
 %and installed in the ~/Visit/visit1.11.2 directory.  The \tt visit
 %\normalfont executable is found in ~/Visit/visit1.11.2/src/bin .
@@ -541,7 +548,7 @@ mkdir Manta/build
 svn co https://code.sci.utah.edu/svn/Manta/trunk Manta/src
 \end{verbatim}
 \item
-The build is configured with cmake.
+The build is configured with CMake.
 \begin{verbatim}
 cd Manta/build
 ccmake ..
@@ -567,37 +574,66 @@ ccmake ..
 
 \section{Configuring and Building Uintah}
 
-cd to\tt ~/uintah \normalfont and create the following directories:
-dbg and opt
+\subsection{Configure}
+
+cd to \TT{ \textasciitilde/uintah} and create the following directories:
+\TT{dbg} (debug) and \TT{opt} (optimized)
 
 \begin{verbatim}
 mkdir dbg opt
 \end{verbatim}
 
-Go to the dbg directory and enter the following:
+Go to the \TT{dbg} directory and enter the following:
+
+(Note, if you are not planning on using (or have not installed) VisIt,
+then do NOT use the \TT{--with-team} and \TT{--with-visit} seen below!)
 
 \begin{verbatim}
-../src/configure --enable-debug --with-teem=/usr/local
---with-visit=/home/user_name/Visit/visit1.11.2
+../src/configure                 \
+          --enable-debug         \
+          --with-teem=/usr/local \
+          --with-visit=/home/user_name/Visit/visit1.11.2
 \end{verbatim}
 
-If building on a 64bit platform, append \tt --enable-64bit \normalfont
-to the configure line.
+If building on a 64bit platform, append \TT{--enable-64bit} to the configure line.
 
-After the configuration process, type \tt make \normalfont to compile
-Uintah.
+After the configuration process, type \TT{make} to compile Uintah.
 
-Once a debug build has finished, change to the opt directory and enter
+Once a debug build has finished, change to the \TT{opt} directory and enter
 the following configure line:
 
 \begin{verbatim}
-./src/configure '--enable-optimze=-03 -mfpmath=sse' \
---enable-assertion-level=0 \
---with-teem=/usr/local \
---with-visit=/home/user_name/Visit/visit1.11.2
+../src/configure                              \
+          '--enable-optimze=-03 -mfpmath=sse' \
+          --enable-assertion-level=0          \
+          --with-teem=/usr/local              \
+          --with-visit=/home/user_name/Visit/visit1.11.2
 \end{verbatim}
 
-Then build the software by typing \tt make \normalfont at the command line and create symbolic links to the inputs directory found in \tt ~/uintah/src/StandAlone/inputs \normalfont.
+\subsubsection{Other configure options}
+
+Other useful configure options are seen below.  Note, depending on
+where libraries are installed on your system, you may or may not need
+to specify some (or all) of these options:
+
+\begin{verbatim}
+        --with-mpi=/usr/lib64/openmpi                 <= Specifies which MPI to use (and its locating).
+        --enable-64bit                                <= Specify whether you wish to use a 32 or 64 bit build.
+        --enable-32bit
+        --with-petsc=/path/petsc-2.3.3-p13            <= Specify the use (and location) of PETSc
+        --with-hypre=/path/hypre-2.0.0/hypre_install  <= Specify the use (and location) of Hypre
+
+        F77=gfortran-4.3                   <= Specify a specific compiler (Fortran, C, C++) to use:
+        CC=/usr/bin/gcc-4.3
+        CXX=/usr/bin/g++-4.3
+
+        PETSC_ARCH=linux-gnu-c-real-opt    <= Specify the PETSc architecture to use. (For use with --with-petsc.)
+\end{verbatim}
+
+
+\subsection{Build}
+
+Then build the software by typing \TT{make} at the command line and create symbolic links to the inputs directory found in \TT{\textasciitilde/uintah/src/StandAlone/inputs}.
 \begin{verbatim}
 make
 make link_inputs
@@ -643,7 +679,7 @@ X11 can be found in the "Optional Installs" directory accompanying your Mac OS I
 Installation is as simple as downloading the disk image from this site, mounting it, double-clicking the installer application, and following instructions.
 
 \subsection{Installing an LAM MPI}
-Download LAM MPI from \url{http://www.lam-mpi.org/7.1/download.php} version 7.1.4 or newer.  Make a new directory in ~/ for this and all of the following source packages.  This documentation assumes this directory is ~/Uintah.  Inside this directory make another for installation directories.  This documentation assumes this directory is ~/Uintah/installs
+Download LAM MPI from \url{http://www.lam-mpi.org/7.1/download.php} version 7.1.4 or newer.  Make a new directory in \textasciitilde/ for this and all of the following source packages.  This documentation assumes this directory is \textasciitilde/Uintah.  Inside this directory make another for installation directories.  This documentation assumes this directory is \textasciitilde/Uintah/installs
 
 \begin{verbatim}
 cd ~/Uintah/installs
@@ -658,7 +694,7 @@ These last two commands will build LAM in the directory to which --prefix= point
 
 \subsection{Installing PETSc}
 PETSc and Hypre (the next two packages to install) are used by Uintah for their PDE and linear algebra and capabilities respectively.
-Download PETSc from \url{http://www-unix.mcs.anl.gov/petsc/petsc-as/download/index.html}.  Unarchive it in ~/Uintah/installs directory using a similar tar command as is found above.  Configure using:
+Download PETSc from \url{http://www-unix.mcs.anl.gov/petsc/petsc-as/download/index.html}.  Unarchive it in \textasciitilde/Uintah/installs directory using a similar tar command as is found above.  Configure using:
 
 \begin{verbatim}
 ./config/configure.py \
@@ -678,7 +714,7 @@ make install
 \end{verbatim}
 
 \subsection{Installing Hypre}
-Download Hypre version 2.x from \url{https://computation.llnl.gov/casc/hypre/software.html} to ~/Uintah/installs.  Unarchive and install by running
+Download Hypre version 2.x from \url{https://computation.llnl.gov/casc/hypre/software.html} to \textasciitilde/Uintah/installs.  Unarchive and install by running
 
 \begin{verbatim}
 cd hypre-2.x.x/src
@@ -726,8 +762,8 @@ make all
   
 
 Some useful programs can be found in the installation:  
-sus will be built and installed in ~/Uintah/mac32opt/StandAlone  
-Extraction utilities that extract specific variables from UDA (Uintah Data Archive) can be found in ~/Uintah/mac32opt/StandAlone/tools
+sus will be built and installed in \textasciitilde/Uintah/mac32opt/StandAlone  
+Extraction utilities that extract specific variables from UDA (Uintah Data Archive) can be found in \textasciitilde/Uintah/mac32opt/StandAlone/tools
 
 \subsection{Installing Visit and udaReader on Mac}
 

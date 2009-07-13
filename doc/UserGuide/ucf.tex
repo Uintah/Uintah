@@ -28,17 +28,22 @@ description of using \tt sus \normalfont within the realm of
 structural mechanics, fluid mechanics, and structure-fluid
 interactions.
 
+\section{Installing the Uintah Software}
+
+For information on downloading the Uintah software package (via
+tarball or SVN), and how to setup (configure) and build (make) the
+system, please refer to the Uintah Installation Guide.
 
 %__________________________________
 \section{Mechanics of Running sus}
 
-For single processor simulations, the \tt sus \normalfont excutable
+For single processor simulations, the \tt sus \normalfont executable
 (Standalone Uintah Simulation) is run from the command line prompt
 like this:
 \begin{Verbatim}[fontsize=\footnotesize]
   sus input.ups
 \end{Verbatim}
-where \tt input.ups \normalfont is an xml formatted input file.  The
+where \tt input.ups \normalfont is an XML formatted input file.  The
 Uintah software release contains numerous example input files located
 in the \tt src/StandAlone/inputs/UintahRelease \normalfont directory.
 
@@ -94,7 +99,7 @@ components.  Within the individual sections on MPM, ICE, MPMICE,
 Arches, and MPMArches, the individual tags will be explained more
 fully.
 
-The sus executable verifies that the input file adheres to a consitent
+The sus executable verifies that the input file adheres to a consistent
 specification and that all necessary tags are specified.  However, it
 is up to the individual creating or modifying the input file to put in
 physically reasonable set of consistent parameters.
@@ -115,7 +120,7 @@ attribute that must be specified with either \tt mpm, mpmice, ice, arches,
 %__________________________________
 \section{Time Related Variables} \label{Sec:TimeRelatedVariables}
 Uintah components are time dependent codes.  As such, one of the first
-entries in each input file describes the timestepping parameters.  An
+entries in each input file describes the time-stepping parameters.  An
 input file segment is given below that encompasses all of the possible
 parameters.  Most are self-explanatory, and not all are required, (e.g
 \tt <max\_Timestep>, <max\_delt\_increase>,
@@ -180,7 +185,7 @@ inputs/labelNames component
 \end{Verbatim}
 where \tt component \normalfont is, e.g., \tt mpm, \normalfont \tt ice, \normalfont etc.
 
-Checkpointing information can be created that provides a mechanism for
+Check-pointing information can be created that provides a mechanism for
 restarting a simulation at a later point in time.  The \tt
 <checkpoint> \normalfont tag with the \tt cycle \normalfont and \tt
 interval \normalfont attributes describe how many copies of checkpoint
@@ -335,7 +340,7 @@ radius tag specified as a float.
 
 \tt cone \normalfont has a tag for the top and bottom origins (vector)
 as well as tags for the top and bottom radius (float) to create a
-right circular cone/frustram.
+right circular cone/frustum.
 
 \tt cylinder \normalfont has a tag for the top and bottom origins
 (vector) plus a tag for the radius (float).
@@ -363,7 +368,7 @@ illustrated by the ASCII art snippet taken from the source code:
 The name tag specifies the file name to use for reading in the
 triangulated surface description and the points file.  The
 triangulated surface (file\_name.tri) contains a list of integers
-describing the connectivities of points specified in file\_name.pts.
+describing the connectivity of points specified in file\_name.pts.
 Here is an excerpt from a tri file and a points file:
 
 \begin{Verbatim}[fontsize=\footnotesize]
@@ -464,7 +469,7 @@ The \tt <image> \normalfont section gives the name of the file, the resolution, 
 in the various coordinate directions, and threshold range.  Particles will be
 generated at voxels within the specified range.  The \tt <file> \normalfont
 section is the same as that described above.  A different preprocessing utility
-is provided when using image data (for the same reasons decribed previously).
+is provided when using image data (for the same reasons described previously).
 Usage is as follows:
 
 \begin{Verbatim}[fontsize=\footnotesize]
@@ -487,7 +492,7 @@ assignment of values over specific regions of the grid.  Each of the
 six faces of the grid is denoted by either the minus or plus side of
 the domain.
 
-The xml description of a particular boundary condition includes which
+The XML description of a particular boundary condition includes which
 side of the domain, the material id, what type of boundary condition
 (Dirichlet or Neumann) and which variable and the value assigned.  The
 following is a an MPM specification of a Dirichlet boundary condition
@@ -656,7 +661,7 @@ for what are frequently referred to as ``ghost-cells".
 
 %
 %__________________________________
-\section{Adapative Mesh Refinement}
+\section{Adaptive Mesh Refinement}
 - Describe refinement flags
 - Describe boundary layers
 - How is a cell flagged as needing to be refined
@@ -665,7 +670,7 @@ for what are frequently referred to as ``ghost-cells".
 \section{Regridder}
 
 The regridder creates a multilevel grid from the refinement flags.
-Each level will completely cover the refinement flags from the corser
+Each level will completely cover the refinement flags from the coarser
 level.  The primary regridder used in Uintah is the \TT{Tiled} regridder.
 The tiled regridder creates a set of evenly sized tiles across the domain
 that will become patches if refinement is required in the tiles region.
@@ -694,7 +699,7 @@ level basis as follows:
 \end{Verbatim}
 
 The \TT{cell\_stability\_dilation} tag specifies how many cells around
-the refinement flags are also gaurenteed to be refined.  The
+the refinement flags are also guaranteed to be refined.  The
 \TT{min\_boundary\_cells} tag specifies the size of the boundary layers. 
 The size of the tiles is specified using the \TT{min\_patch\_size} tag
 and can also be specified on a per level basis.
@@ -711,7 +716,7 @@ resizing of tiles set the tag \TT{dynamic\_size} to false.
 %__________________________________
 \section{Load Balancer}
 
-The load balancer assignes patches to processors such that work is 
+The load balancer assigns patches to processors such that work is 
 evenly distributed.  Uintah currently supports a wide array of 
 load balancing algorithms.  To specify a load balancing algorithm 
 add a block similar to the following:
@@ -749,7 +754,7 @@ To disable profiling add the tag
 This will cause the load balancer to use the cost model $W_p=N_pc_1+N_cc_2+c_3$ to 
 determine the weight of a patch, where $N_p$ is the number of particles 
 in the patch, $N_c$ is the number of cells on the patch, $c_1$ is the weight per
-particle, $c_2$ is the weight per cell, and $c_3$ is a constanct cost on the
+particle, $c_2$ is the weight per cell, and $c_3$ is a constant cost on the
 patch.  These constants can be specified with the following tags:
 
 \begin{Verbatim}[fontsize=\footnotesize]
@@ -777,7 +782,7 @@ can run without attempting to load balance.  The \TT{gainThreshold} tag specifie
 percent improvement that a load balance must provide over the old load balance in 
 order for the new load balance to be used.  Finally the \TT{outputNthProc} tag causes
 the data archive to be written to by every Nth processor instead of every processor.  
-This can allieviate problems caused by having to many processors attempting to write 
+This can alleviate problems caused by having to many processors attempting to write 
 to the same file system at the same time. 
 
 If the dynamic algorithm is set to \TT{Zoltan} then the user must also specify which
@@ -875,7 +880,7 @@ VisIt package from LLNL is general purpose visualization software that offers
 all of the usual capabilities for rendering scientific data.  It is still
 developed and maintained by LLNL staff, and its interface to Uintah data is
 supported by the Uintah team.  Manta offers volume rendering and particle
-visualizaton based on parallel (shared memory) ray tracing techniques.
+visualization based on parallel (shared memory) ray tracing techniques.
 While the capabilities of Manta are more limited, it is a fast way to
 interactively interrogate reasonably large datasets, provided the user has
 access to a reasonable shared memory resource, (e.g. an 8 core desktop system).
@@ -1079,7 +1084,7 @@ The second tab Opacity lets you specify a transfer function for the color table.
 \begin{figure}
   \center
   \includegraphics[width=.5\linewidth]{VisItTransferFunction.png}
-  \caption{The opacity trasfer function in the attributes window}
+  \caption{The opacity transfer function in the attributes window}
   \label{VisItTransferFunction}
 \end{figure}
 
@@ -1109,7 +1114,7 @@ c. Now double click on the variable name in Active plots list. This brings up th
   \label{VisItMoleculeAttributesPTemp1}
 \end{figure}
 
-We choose to visualize the particles as Sphere Imposters (doesn't runs the GPU out of memory, drawing as Spheres does). We also choose to scale the sphere radius by a Scalar Variable and specify that variable to be p.temperature/* itself (therefore the * appears). Since the temperature values are too high, we scale them all by a factor of 5.e-05 (on the basis of trial \& error).
+We choose to visualize the particles as Sphere Impostors (doesn't runs the GPU out of memory, drawing as Spheres does). We also choose to scale the sphere radius by a Scalar Variable and specify that variable to be p.temperature/* itself (therefore the * appears). Since the temperature values are too high, we scale them all by a factor of 5.e-05 (on the basis of trial \& error).
 
 Finally in Colors tab, we set the Color map for scalars as orangehot.
 
@@ -1124,7 +1129,7 @@ Combined with volume visualization, we get a visualization as shown in Figure~\r
 
 \subsection{Visualizing patch boundaries}
 %In order to generate an image, like the one shown in Figure~\ref{VisItSubsetPlot}, we use the Subset plot. As with other variables, we select the Subset plot and an associated variable. The variables have a prefix 'level/ patch'. There is a level/ patch variable associated with every kind of variable (Cell Centered, Node Centered, Face Centeerd) present in the dataset. In the figure~\ref{VisItSubsetPlotVariables}, we select one such variable.
-In order to visualize patch boundaries, we use the Subset plot. As with other variables, we select the Subset plot and an associated variable. The variables have a prefix 'level/ patch'. There is a level/ patch variable associated with every kind of variable (Cell Centered, Node Centered, Face Centeerd) present in the dataset. In the Figure~\ref{VisItSubsetPlotVariables}, we select one such variable.
+In order to visualize patch boundaries, we use the Subset plot. As with other variables, we select the Subset plot and an associated variable. The variables have a prefix 'level/ patch'. There is a level/ patch variable associated with every kind of variable (Cell Centered, Node Centered, Face Centered) present in the dataset. In the Figure~\ref{VisItSubsetPlotVariables}, we select one such variable.
 
 %\begin{figure}
 %  \center
@@ -1140,7 +1145,7 @@ In order to visualize patch boundaries, we use the Subset plot. As with other va
   \label{VisItSubsetPlotVariables}
 \end{figure}
 
-Next, we hit Draw. This produces a visualization as shown in Figure~\ref{VisItSubsetPlotViewer}. To generate a wireframe model, we double click on the Subset plot in the Active plots window. This pops up the Subset plot attributes window, where we check the Wireframe mode as shown in Figure`\ref{VisItSubsetPlotAttrib}. This would produce a visualization, similar to one shown in Figure~\ref{VisItSubsetPlotWireframe}.
+Next, we hit Draw. This produces a visualization as shown in Figure~\ref{VisItSubsetPlotViewer}. To generate a wire-frame model, we double click on the Subset plot in the Active plots window. This pops up the Subset plot attributes window, where we check the Wireframe mode as shown in Figure`\ref{VisItSubsetPlotAttrib}. This would produce a visualization, similar to one shown in Figure~\ref{VisItSubsetPlotWireframe}.
 
 \begin{figure}
   \center
@@ -1174,12 +1179,17 @@ The easiest way to draw iso-surfaces is to use the 'Contour' Plot. As with other
   \label{VisItContourPlot}
 \end{figure}
 
-Once the plot is selected, we hit 'Draw'. This would produce a visualization, similar to one shown in Figure~\ref{VisItContourPlotViewer}. You can then modify the attributes the plot attribute's by double clicking on the plot in the 'Active plots' window. This would pop up the 'Contour plot attributes window', as shown in Figure~\ref{VisItContourPlotAttrib}. 
+Once the plot is selected, we hit 'Draw'. This would produce a
+visualization, similar to one shown in
+Figure~\ref{VisItContourPlotViewer}. You can then modify the plot
+attributes by double clicking on the plot in the 'Active plots'
+window. This would pop up the 'Contour plot attributes window', as
+shown in Figure~\ref{VisItContourPlotAttrib}.
 
 \begin{figure}
   \center
   \includegraphics[scale=0.25]{VisItContourPlotViewer.png}
-  \caption{Iso-surface viualization}
+  \caption{Iso-surface visualization}
   \label{VisItContourPlotViewer}
 \end{figure}
 
@@ -1194,7 +1204,7 @@ The 'Select by' option can be changed to 'Value(s)' and 'Percent(s)'. When speci
 
 \subsection{Streamlines}
 
-The 'Streamlines' plot has issues with the current version of VisIt (1.11.2 and older). Howerver, these have been corrected in the trunk and should be out in version 2.0. The controls remain the same in all these version and the example below was implemented on the trunk version.
+The 'Streamlines' plot has issues with the current version of VisIt (1.11.2 and older). However, these have been corrected in the trunk and should be out in version 2.0. The controls remain the same in all these version and the example below was implemented on the trunk version.
 
 As shown in Figure~\ref{VisItStreamlinesPlot} we select the 'Streamlines' plot on a vector variable. We then double click on the plot itself, which pops up the 'Streamlines attributes window'. 
 
@@ -1205,7 +1215,7 @@ As shown in Figure~\ref{VisItStreamlinesPlot} we select the 'Streamlines' plot o
   \label{VisItStreamlinesPlot}
 \end{figure}
 
-We set the 'Distance' parameter such that it covers the entire computational domain. We set the  'Streamline direciton' as forward. In the 'Source' tab, Figure~\ref{VisItStreamlinesAttrib1}, we define the 'Source type' as 'Line'. We can select other options too, notably 'Single Point', 'Sphere' etc. We now define the line 'Start' and 'End' coordinates. In this specific case, we define them as [-0.1 -0.05 0] and [-0.1 0.05 0] respectively. This choice ensures that we cover the entire y axis and start at the leftmost corner of the computational domain.
+We set the 'Distance' parameter such that it covers the entire computational domain. We set the  'Streamline direction' as forward. In the 'Source' tab, Figure~\ref{VisItStreamlinesAttrib1}, we define the 'Source type' as 'Line'. We can select other options too, notably 'Single Point', 'Sphere' etc. We now define the line 'Start' and 'End' coordinates. In this specific case, we define them as [-0.1 -0.05 0] and [-0.1 0.05 0] respectively. This choice ensures that we cover the entire y axis and start at the leftmost corner of the computational domain.
 
 To ensure that our stream lines are smooth, we change the 'Maximum step length' in the in the 'Advanced' tab. In this case, we change it to 1.e-05. The thing to keep in mind is that this length should be order of magnitude smaller than the length of the computational domain. This is shown in Figure ~\ref{VisItStreamlinesAttrib2}.
 
@@ -1234,7 +1244,7 @@ Once these parameters are set, we hit 'Apply' and then click on the 'Draw' butto
 
 \subsection{Visualizing extra cells}
 
-For visualizaing extra cells we use the 'Inverse Ghost Zone' opearator ~\ref{VisItInverseGhostZoneOp} in conjunction with the 'Pseudocolor' plot. Since the plugin reads in extra cells as ghost cells, the usage of this operator make sense in this scenario.  
+For visualizing extra cells we use the 'Inverse Ghost Zone' operator ~\ref{VisItInverseGhostZoneOp} in conjunction with the 'Pseudocolor' plot. Since the plugin reads in extra cells as ghost cells, the usage of this operator make sense in this scenario.  
 
 \begin{figure}
   \center
@@ -1243,7 +1253,7 @@ For visualizaing extra cells we use the 'Inverse Ghost Zone' opearator ~\ref{Vis
   \label{VisItInverseGhostZoneOp}
 \end{figure}
 
-After the operator is applied to the 'Pseudocolor' plot, we double click on the opeator to change its attributes. We switch to 'Both ghost zones and real zones' in this window ~\ref{VisItInverseGhostZoneAttribs} and hit 'Apply'.
+After the operator is applied to the 'Pseudocolor' plot, we double click on the operator to change its attributes. We switch to 'Both ghost zones and real zones' in this window ~\ref{VisItInverseGhostZoneAttribs} and hit 'Apply'.
 
 \begin{figure}
   \center
@@ -1263,7 +1273,7 @@ We then hit 'Draw'. When combined with the 'Mesh' plot we get a visualization si
 
 \subsection{Picking on particles}
 
-The 'Node pick mode' on the visualization window can be used to pick particles and investigate particles attributes. After plotting particles using the 'Molecule' plot, the user can then select the 'Node pick mode' ~\ref{VisItNodePick} and select paricles (by clicking on them) of interest. 
+The 'Node pick mode' on the visualization window can be used to pick particles and investigate particles attributes. After plotting particles using the 'Molecule' plot, the user can then select the 'Node pick mode' ~\ref{VisItNodePick} and select particles (by clicking on them) of interest. 
 
 \begin{figure}
   \center
@@ -1277,12 +1287,11 @@ Once a particle is picked, the 'Pick' window pops up with the particle attribute
 \begin{figure}
   \center
   \includegraphics[scale=0.5]{VisItPickWindow.png}
-  \caption{The 'Pick'window }
+  \caption{The 'Pick' window }
   \label{VisItPickWindow}
 \end{figure}
 
 \chapter{Visualization Tools -- Manta}
->>>>>>> .r44338
 
 To run the C-SAFE scene: 
 \begin{Verbatim}[fontsize=\footnotesize]
@@ -1373,7 +1382,7 @@ Exporting transfer functions: You can export the transfer function currently dis
 
 You can import saved transfer functions from File->import Transfer Function. 
 
-The configuration file saves the data files used however if you would like to use the same configuration file for multiple sets of data you can select File->Export NrrdList.  This stores the data files as a list in ascii which can be imported to use with any configuration.  
+The configuration file saves the data files used however if you would like to use the same configuration file for multiple sets of data you can select File->Export NrrdList.  This stores the data files as a list in ASCII which can be imported to use with any configuration.  
 
 \section{Using the Transfer Function Editor}
 
@@ -1475,7 +1484,7 @@ are described below.
 \section{puda}
 
 The command line extraction utility \tt puda \normalfont
-(for ``parse uintah data archive") has a number of uses.  For example, it
+(for ``parse Uintah data archive") has a number of uses.  For example, it
 may be used to extract a subset of particle data from a UDA.  Once the
 extraction tools have been compiled, the puda executable will be located in 
 \tt opt/StandAlone/tools/puda/. \normalfont  If the executable is run with
@@ -1508,10 +1517,10 @@ Valid options are:
   -CCvar <double | float | point | vector>
   -verbose            (prints status of output)
   -timesteplow <int>  (only outputs timestep from int)
-  -timestephigh <int> (only outputs timesteps upto int)
+  -timestephigh <int> (only outputs timesteps up to int)
   -matl,mat <int>         (only outputs data for matl)
 *NOTE* to use -PTvar or -NVvar -rtdata must be used
-*NOTE* ptonly, patch, material, timesteplow, timestephigh are used in conjuntion with -PTvar.
+*NOTE* ptonly, patch, material, timesteplow, timestephigh are used in conjunction with -PTvar.
 \end{Verbatim}
 
 As an example of how to use \tt puda \normalfont, suppose that one wanted to know the locations of all particles at the last archived timestep for the 
@@ -1681,7 +1690,7 @@ The command usage is
 \end{Verbatim}
 %
 The utility allows for \TT{udas} that have different computational domains and different
-patch distributions to be compared.  The uda with the smallest compuational domain should
+patch distributions to be compared.  The uda with the smallest computational domain should
 always be specified first.
 %
 In order for the norms to be computed the physical times must satisfy 

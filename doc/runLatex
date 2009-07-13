@@ -42,7 +42,7 @@ if [ $user == "yes" ]; then
   echo "            User guide"
   echo "----------------------------------------"
   cd UserGuide
-  pdflatex  -file-line-error --halt-on-error  uintah.tex
+  pdflatex  -file-line-error --halt-on-error  user_guide.tex
 
 
   if [ $? -eq 0 ]; then
@@ -53,8 +53,8 @@ if [ $user == "yes" ]; then
     bibtex ice
     bibtex mpm
     bibtex mpmice
-    pdflatex -interaction=batchmode uintah.tex
-    pdflatex -interaction=batchmode uintah.tex
+    pdflatex -interaction=batchmode user_guide.tex
+    pdflatex -interaction=batchmode user_guide.tex
   fi
   cd ..
 fi
@@ -66,7 +66,8 @@ if [ $install == "yes" ]; then
    echo "            Installation guide"
    echo "----------------------------------------"
    cd InstallationGuide
-   pdflatex -file-line-error --halt-on-error installation.tex
+   pdflatex -file-line-error --halt-on-error installation_guide.tex
+   pdflatex installation_guide.tex
    cd ..
 fi
 
@@ -78,6 +79,7 @@ if [ $develop == "yes" ]; then
   echo "----------------------------------------"
   cd DeveloperGuide 
   pdflatex -file-line-error --halt-on-error UintahAPI.tex
+  pdflatex UintahAPI.tex
   cd ..
 fi
 
