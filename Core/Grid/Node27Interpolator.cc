@@ -115,7 +115,9 @@ void Node27Interpolator::findCellAndWeights(const Point& pos,
   double pz0 = cellpos.z() - (iz);
   double pz1 = cellpos.z() - (iz+1);
   double pz2 = cellpos.z() - (iz + nnz);
-  double fx[3], fy[3], fz[3];
+  double fx[3] = {DBL_MAX,DBL_MAX,DBL_MAX},
+         fy[3] = {DBL_MAX,DBL_MAX,DBL_MAX},
+         fz[3] = {DBL_MAX,DBL_MAX,DBL_MAX};
   
   if(px0 <= lx){
     fx[0] = 1. - (px0*px0 + (lx)*(lx))/(2*lx);
@@ -251,7 +253,12 @@ void Node27Interpolator::findCellAndShapeDerivatives(const Point& pos,
   double pz0 = cellpos.z() - (iz);
   double pz1 = cellpos.z() - (iz+1);
   double pz2 = cellpos.z() - (iz + nnz);
-  double fx[3], fy[3], fz[3], dfx[3], dfy[3], dfz[3];
+  double fx[3] = {DBL_MAX,DBL_MAX,DBL_MAX}, 
+         fy[3] = {DBL_MAX,DBL_MAX,DBL_MAX}, 
+         fz[3] = {DBL_MAX,DBL_MAX,DBL_MAX}, 
+         dfx[3] = {DBL_MAX,DBL_MAX,DBL_MAX}, 
+         dfy[3] = {DBL_MAX,DBL_MAX,DBL_MAX}, 
+         dfz[3] = {DBL_MAX,DBL_MAX,DBL_MAX};
   
   if(px0 <= lx){
     fx[0]  = 1. - (px0*px0 + (lx)*(lx))/(2.*lx);
@@ -418,7 +425,12 @@ Node27Interpolator::findCellAndWeightsAndShapeDerivatives(const Point& pos,
   double pz0 = cellpos.z() - (iz);
   double pz1 = cellpos.z() - (iz+1);
   double pz2 = cellpos.z() - (iz + nnz);
-  double fx[3], fy[3], fz[3], dfx[3], dfy[3], dfz[3];
+  double fx[3] = {DBL_MAX,DBL_MAX,DBL_MAX}, 
+         fy[3] = {DBL_MAX,DBL_MAX,DBL_MAX},
+         fz[3] = {DBL_MAX,DBL_MAX,DBL_MAX}, 
+         dfx[3] = {DBL_MAX,DBL_MAX,DBL_MAX}, 
+         dfy[3] = {DBL_MAX,DBL_MAX,DBL_MAX}, 
+         dfz[3] = {DBL_MAX,DBL_MAX,DBL_MAX};
   
   if(px0 <= lx){
     fx[0]  = 1. - (px0*px0 + (lx)*(lx))/(2.*lx);
