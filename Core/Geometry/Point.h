@@ -45,6 +45,7 @@
 
 #include <Core/Math/MinMax.h>
 #include <Core/Geometry/share.h>
+#include <float.h>
 
 #include   <string>
 #include   <iosfwd>
@@ -171,7 +172,7 @@ inline Point::Point(const Point& p)
     z_=p.z_;
 }
 
-inline Point::Point()
+inline Point::Point() : x_(DBL_MAX), y_(DBL_MAX), z_(DBL_MAX)
 {
 }
 
