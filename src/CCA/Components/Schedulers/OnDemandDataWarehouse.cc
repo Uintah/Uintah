@@ -307,88 +307,88 @@ OnDemandDataWarehouse::sendMPI(DependencyBatch* batch,
 
  d_lock.readLock();
   switch(label->typeDescription()->getType()){
-  case TypeDescription::ParticleVariable:
-    {
-      IntVector low = dep->low;
-      IntVector high = dep->high;
+    case TypeDescription::ParticleVariable:
+      {
+        IntVector low = dep->low;
+        IntVector high = dep->high;
 
-      if(!d_varDB.exists(label, matlIndex, patch)) {
-	SCI_THROW(UnknownVariable(label->getName(), getID(), patch, matlIndex,
-			      "in sendMPI", __FILE__, __LINE__));
-      }
-      ParticleVariableBase* var = dynamic_cast<ParticleVariableBase*>(d_varDB.get(label, matlIndex, patch));
-
-      int dest = batch->toTasks.front()->getAssignedResourceIndex();
-      ASSERTRANGE(dest, 0, d_myworld->size());
-
-      ParticleSubset* sendset = 0;
-      // first check to see if the receiving proc alrady has the (old) data
-      // if data is relocating (of a regrid or re-load-balance), then the other
-      // proc may already have it (since in most cases particle data comes from the old dw)
-      // if lb is non-null, that means the particle data is on the old dw
-      if (lb && lb->getOldProcessorAssignment(0, patch, 0) == dest) {
-        if (this == old_dw) {
-          // We don't need to know how many particles there are OR send any particle data...
-          return;
+        if(!d_varDB.exists(label, matlIndex, patch)) {
+          SCI_THROW(UnknownVariable(label->getName(), getID(), patch, matlIndex,
+                "in sendMPI", __FILE__, __LINE__));
         }
-        ASSERT(old_dw->haveParticleSubset(matlIndex, patch));
-        sendset = old_dw->getParticleSubset(matlIndex, patch);
-      }
-      else {
-        sendset = old_dw->ss_.find_sendset(dest, patch, matlIndex, low, high, old_dw->d_generation);
-      }
-      if (!sendset) {
-        // new dw send.  The NewDW doesn't yet know (on the first time) about this subset if it is on a different
-        // processor.  Go ahead and calculate it, but there is no need to send it, since the other proc
-        // already knows about it.
-        ASSERT(old_dw != this);
-        ParticleSubset* pset = var->getParticleSubset();
-        ssLock.lock();  // Dd: ??
-        sendset = scinew ParticleSubset(0, matlIndex, patch, low, high);
-        ssLock.unlock();  // Dd: ??
-        constParticleVariable<Point> pos;
-        old_dw->get(pos, pos_var, pset);
-        Box box=pset->getPatch()->getLevel()->getBox(low, high);
-        for(ParticleSubset::iterator iter = pset->begin();
-            iter != pset->end(); iter++){
-          particleIndex idx = *iter;
-          if(box.contains(pos[idx])) {
-            ssLock.lock();  // Dd: ??
-            sendset->addParticle(idx);
-            ssLock.unlock();  // Dd: ??
+        ParticleVariableBase* var = dynamic_cast<ParticleVariableBase*>(d_varDB.get(label, matlIndex, patch));
+
+        int dest = batch->toTasks.front()->getAssignedResourceIndex();
+        ASSERTRANGE(dest, 0, d_myworld->size());
+
+        ParticleSubset* sendset = 0;
+        // first check to see if the receiving proc alrady has the (old) data
+        // if data is relocating (of a regrid or re-load-balance), then the other
+        // proc may already have it (since in most cases particle data comes from the old dw)
+        // if lb is non-null, that means the particle data is on the old dw
+        if (lb && lb->getOldProcessorAssignment(0, patch, 0) == dest) {
+          if (this == old_dw) {
+            // We don't need to know how many particles there are OR send any particle data...
+            return;
           }
+          ASSERT(old_dw->haveParticleSubset(matlIndex, patch));
+          sendset = old_dw->getParticleSubset(matlIndex, patch);
         }
-        old_dw->ss_.add_sendset(sendset, dest, patch, matlIndex, low, high, old_dw->d_generation);
-        // cout << d_myworld->myrank() << "  NO SENDSET: " << patch->getID() << " matl " << matlIndex 
-        //      << " " << low << " " << high << "\n";
+        else {
+          sendset = old_dw->ss_.find_sendset(dest, patch, matlIndex, low, high, old_dw->d_generation);
+        }
+        if (!sendset) {
+          // new dw send.  The NewDW doesn't yet know (on the first time) about this subset if it is on a different
+          // processor.  Go ahead and calculate it, but there is no need to send it, since the other proc
+          // already knows about it.
+          ASSERT(old_dw != this);
+          ParticleSubset* pset = var->getParticleSubset();
+          ssLock.lock();  // Dd: ??
+          sendset = scinew ParticleSubset(0, matlIndex, patch, low, high);
+          ssLock.unlock();  // Dd: ??
+          constParticleVariable<Point> pos;
+          old_dw->get(pos, pos_var, pset);
+          Box box=pset->getPatch()->getLevel()->getBox(low, high);
+          for(ParticleSubset::iterator iter = pset->begin();
+              iter != pset->end(); iter++){
+            particleIndex idx = *iter;
+            if(box.contains(pos[idx])) {
+              ssLock.lock();  // Dd: ??
+              sendset->addParticle(idx);
+              ssLock.unlock();  // Dd: ??
+            }
+          }
+          old_dw->ss_.add_sendset(sendset, dest, patch, matlIndex, low, high, old_dw->d_generation);
+          // cout << d_myworld->myrank() << "  NO SENDSET: " << patch->getID() << " matl " << matlIndex 
+          //      << " " << low << " " << high << "\n";
+        }
+        ASSERT(sendset);
+        if( sendset->numParticles() > 0) {
+          var->getMPIBuffer(buffer, sendset);
+          buffer.addSendlist(var->getRefCounted());
+          buffer.addSendlist(var->getParticleSubset());
+        }
       }
-      ASSERT(sendset);
-      if( sendset->numParticles() > 0) {
-        var->getMPIBuffer(buffer, sendset);
+      break;
+    case TypeDescription::NCVariable:
+    case TypeDescription::CCVariable:
+    case TypeDescription::SFCXVariable:
+    case TypeDescription::SFCYVariable:
+    case TypeDescription::SFCZVariable:
+      {
+        if(!d_varDB.exists(label, matlIndex, patch)) {
+          cout << d_myworld->myrank() << "  Needed by " << *dep << " on task " << *dep->toTasks.front() << endl;
+          SCI_THROW(UnknownVariable(label->getName(), getID(), patch, matlIndex,
+                "in sendMPI", __FILE__, __LINE__));
+        }
+        GridVariableBase* var;
+        var = dynamic_cast<GridVariableBase*>(d_varDB.get(label, matlIndex, patch));
+        var->getMPIBuffer(buffer, dep->low, dep->high);
         buffer.addSendlist(var->getRefCounted());
-        buffer.addSendlist(var->getParticleSubset());
       }
-    }
-    break;
-  case TypeDescription::NCVariable:
-  case TypeDescription::CCVariable:
-  case TypeDescription::SFCXVariable:
-  case TypeDescription::SFCYVariable:
-  case TypeDescription::SFCZVariable:
-    {
-      if(!d_varDB.exists(label, matlIndex, patch)) {
-        cout << d_myworld->myrank() << "  Needed by " << *dep << " on task " << *dep->toTasks.front() << endl;
-        SCI_THROW(UnknownVariable(label->getName(), getID(), patch, matlIndex,
-          "in sendMPI", __FILE__, __LINE__));
-      }
-      GridVariableBase* var;
-      var = dynamic_cast<GridVariableBase*>(d_varDB.get(label, matlIndex, patch));
-      var->getMPIBuffer(buffer, dep->low, dep->high);
-      buffer.addSendlist(var->getRefCounted());
-    }
-    break;
-  default:
-    SCI_THROW(InternalError("sendMPI not implemented for "+label->getFullName(matlIndex, patch), __FILE__, __LINE__));
+      break;
+    default:
+      SCI_THROW(InternalError("sendMPI not implemented for "+label->getFullName(matlIndex, patch), __FILE__, __LINE__));
   } // end switch( label->getType() );
  d_lock.readUnlock();  
 }
@@ -622,37 +622,22 @@ OnDemandDataWarehouse::recvMPI(DependencyBatch* batch,
     }
     d_lock.readUnlock();
 
-    GridVariableBase* var=head;
-    //if (var !=NULL){
-      //  var->rewindow(dep->patchLow, dep->patchHigh);
-    for (var = head; var!=NULL; var = dynamic_cast<GridVariableBase*>(var->getNextvar())){
-      if (var->getBasePointer() == 0) {  // DW has an empty entry, expand it
-        var->rewindow(dep->patchLow, dep->patchHigh);
-        break;
-      } else if (Min(var->getLow(), dep->patchLow) == dep->patchLow &&       //var inside of dep, expend this var
-          Max(var->getHigh(), dep->patchHigh) == dep->patchHigh) { 
-         var->rewindow(dep->patchLow, dep->patchHigh);  
-        break;
-      } else if (Min(var->getLow(), dep->patchLow) == var->getLow() &&       //dep inside of var,  use this var
-          Max(var->getHigh(), dep->patchHigh) == var->getHigh()) { 
-        break;
-      }             
-    } //end for 
+    MALLOC_TRACE_TAG_SCOPE("OnDemandDataWarehouse::recvMPI(cell variable):" + label->getName());
+    //allocate the variable
+    GridVariableBase* var = dynamic_cast<GridVariableBase*>(label->typeDescription()->createInstance());
+    var->allocate(dep->low, dep->high);
+    
+    //add to linked list
+    var->setNextvar(head);  //append to the head of linked list
+    var->setForeign();
+    d_lock.writeLock();
 
-    if (var == NULL) {   // There was no place reserved to recv the data yet
-      MALLOC_TRACE_TAG_SCOPE("OnDemandDataWarehouse::recvMPI(cell variable):" + label->getName());
-      var = dynamic_cast<GridVariableBase*>(label->typeDescription()->createInstance());
-      var->allocate(dep->patchLow, dep->patchHigh);
-      var->setNextvar(head);  //append to the head of linked list
-      var->setForeign();
-      d_lock.writeLock();
-      d_varDB.put(label, matlIndex, patch, var); //put new var in data warehouse
-      d_lock.writeUnlock();
-    }
-    
-    ASSERTEQ(Min(var->getLow(), dep->patchLow), var->getLow());
-    ASSERTEQ(Max(var->getHigh(), dep->patchHigh), var->getHigh());
-    
+    //add the var to the dependency batch and set it as invalid.  The variable is now invalid because there is outstanding MPI pointing to the variable.
+    batch->addVar(var);
+    var->setInvalid();
+    d_varDB.putForeign(label, matlIndex, patch, var); //put new var in data warehouse
+    d_lock.writeUnlock();
+
     var->getMPIBuffer(buffer, dep->low, dep->high);
   }
   break;
@@ -1806,7 +1791,9 @@ OnDemandDataWarehouse::getRegion(constGridVariableBase& constVar,
     GridVariableBase* v;
 
     for (v = head; v!=NULL; v = dynamic_cast<GridVariableBase*>(v->getNextvar())){
-      if (Min(l, v->getLow()) == v->getLow()  &&  Max(h, v->getHigh()) == v->getHigh())  //find a completed region
+
+      //verify that the variable is valid and matches the dependencies requirements.
+      if (v->isValid() && Min(l, v->getLow()) == v->getLow()  &&  Max(h, v->getHigh()) == v->getHigh())  //find a completed region
         break;
     }
       // just like a "missing patch": got data on this patch, but it either corresponds to a different
@@ -2148,12 +2135,21 @@ getGridVar(GridVariableBase& var, const VarLabel* label, int matlIndex, const Pa
     GridVariableBase* srcvar = var.cloneType();
     GridVariableBase* v;
     for (v = head; v!=NULL; v = dynamic_cast<GridVariableBase*>(v->getNextvar())){
-      if(neighbor->isVirtual()){
-        if (Min(v->getLow(), low-neighbor->getVirtualOffset()) == v->getLow()  && Max(v->getHigh(),high-neighbor->getVirtualOffset()) == v->getHigh())  break;
-      } else {
-        if (Min(v->getLow(), low) == v->getLow()  && Max(v->getHigh(),high) == v->getHigh())  break;
+      //verify that the variable is valid and matches the depedencies requirements
+      if(v->isValid())
+      {
+        if(neighbor->isVirtual()){
+          if (Min(v->getLow(), low-neighbor->getVirtualOffset()) == v->getLow()  && Max(v->getHigh(),high-neighbor->getVirtualOffset()) == v->getHigh())  
+          {
+            break;
+          }
+        } else {
+          if (Min(v->getLow(), low) == v->getLow()  && Max(v->getHigh(),high) == v->getHigh())  
+          {
+            break;
+          }
+        }
       }
-
     } //end for vars
     if (v==NULL) {
      // cout << d_myworld->myrank()  << " cannot copy var " << *label << " from patch " << neighbor->getID()

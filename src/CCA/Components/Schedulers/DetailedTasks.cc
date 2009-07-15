@@ -1279,14 +1279,20 @@ void DependencyBatch::received(const ProcessorGroup * pg)
     cerrLock.unlock();
   }
 
-  list<DetailedTask*>::iterator iter;
-  for (iter = toTasks.begin(); iter != toTasks.end(); iter++) {
+  for (list<DetailedTask*>::iterator iter = toTasks.begin(); iter != toTasks.end(); iter++) {
     // if the count is 0, the task will add itself to the external ready queue
     //cout << pg->myrank() << "  Dec: " << *fromTask << " for " << *(*iter) << endl;
     (*iter)->decrementExternalDepCount();
     //cout << Parallel::getMPIRank() << "   task " << **(iter) << " received a message, remaining count " << (*iter)->getExternalDepCount() << endl;
     (*iter)->checkExternalDepCount();
   }
+ 
+  //set all the toVars to valid, meaning the mpi has been completed
+  for (vector<Variable*>::iterator iter = toVars.begin(); iter != toVars.end(); iter++) {
+    (*iter)->setValid();
+  }
+  //clear the variables that have outstanding MPI as they are completed now.
+  toVars.clear();
 
 #if 0
   if (!receiveListeners_.empty()) {
