@@ -777,6 +777,7 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
           hardMaxCost=currentProcCosts[i]+previousProcCosts[i];
       }
       double range=hardMaxCost-avgCost;
+      myStoredMax=hardMaxCost;
       myMaxCost=hardMaxCost-range/d_myworld->size()*d_myworld->myrank();
     }
 
