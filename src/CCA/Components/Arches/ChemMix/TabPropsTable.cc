@@ -33,7 +33,7 @@ DEALINGS IN THE SOFTWARE.
 // includes for Arches
 #include <CCA/Components/Arches/Arches.h>
 #include <CCA/Components/Arches/ArchesLabel.h>
-#include <CCA/Components/Arches/ChemMix/MixingRxnTable.h>
+#include <CCA/Components/Arches/ChemMix/MixingRxnModel.h>
 #include <CCA/Components/Arches/ChemMix/TabProps/StateTable.h>
 #include <CCA/Components/Arches/ChemMix/TabPropsTable.h>
 #include <CCA/Components/Arches/Properties.h>
@@ -184,9 +184,9 @@ TabPropsTable::problemSetup( const ProblemSpecP& propertiesParameters )
 // TabPropsTable verifyTable 
 //
 //****************************************************************************
-void
+void const 
 TabPropsTable::verifyTable(  bool diagnosticMode,
-                             bool strictMode ) const
+                             bool strictMode )
 {
   verifyIV(diagnosticMode, strictMode);
   verifyDV(diagnosticMode, strictMode);
@@ -197,8 +197,8 @@ TabPropsTable::verifyTable(  bool diagnosticMode,
 // TabPropsTable verifyDV
 //
 //****************************************************************************
-void
-TabPropsTable::verifyDV( bool diagnosticMode, bool strictMode ) const
+void const
+TabPropsTable::verifyDV( bool diagnosticMode, bool strictMode )
 {
   int numNegativeResults = 0;
   bool toggle;
@@ -259,8 +259,8 @@ TabPropsTable::verifyDV( bool diagnosticMode, bool strictMode ) const
 // TabPropsTable verifyIV
 //
 //****************************************************************************
-void
-TabPropsTable::verifyIV( bool diagnosticMode, bool strictMode ) const
+void const 
+TabPropsTable::verifyIV( bool diagnosticMode, bool strictMode ) 
 {
   int numNegativeResults = 0;
   bool toggle;

@@ -3,5 +3,5 @@
 SRCDIR := CCA/Components/Arches/ChemMix
 
 SRCS += \
-	$(SRCDIR)/MixingRxnTable.cc \
+	$(SRCDIR)/MixingRxnModel.cc \
   $(SRCDIR)/TabPropsTable.cc 
