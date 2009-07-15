@@ -34,28 +34,17 @@ DEALINGS IN THE SOFTWARE.
 #define Uintah_Component_Arches_TabPropsTable_h
 
 // includes for Arches
-#include <CCA/Components/Arches/Arches.h>
-#include <CCA/Components/Arches/ArchesLabel.h>
-#include <CCA/Components/Arches/ChemMix/MixingRxnTable.h>
 #include <CCA/Components/Arches/ChemMix/TabProps/StateTable.h>
-#include <CCA/Components/Arches/Properties.h>
-
-// includes for Uintah
-#include <Core/ProblemSpec/ProblemSpecP.h>
-#include <Core/ProblemSpec/ProblemSpec.h>
-#include <Core/Parallel/UintahParallelComponent.h>
-#include <Core/Grid/Patch.h>
-#include <Core/Grid/Variables/VarLabel.h>
 
 
-/***************************************************************************
-CLASS
-    TabPropsTable 
-       
-GENERAL INFORMATION
-    TabPropsTable.h - representation of reaction and mixing table
-    created using Dr. James Sutherland's TabProps program.  Dependent
-    variables are B-Splined, and spline coefficients are put into an
+/**
+ * @class  TabPropsTable
+ * @author Charles Reid
+ * @date   Nov 11, 2008
+ *
+ * @brief Table interface for those created with TabProps.
+ *
+    Dependent variables are B-Splined, and spline coefficients are put into an
     HDF5 formated file.  This class creates a TabProps StateTable object,
     reads datafrom a table into the StateTable object, and can query the
     StateTable object for the value of a dependent variable given values
@@ -66,85 +55,33 @@ GENERAL INFORMATION
     added to utilize the StateTable functions to convert the table data to
     a matlab file to easily investigate the results of the table creation.
 
-
-    Author: Charles Reid (charles.reid@utah.edu)
-    
-    Creation Date : 11-13-2008
-
-    C-SAFE
-    
-    Copyright U of U 2008
-
-KEYWORDS
-    Mixing Table 
-
-DESCRIPTION
-    TabPropsTable is a child class of MixingRxnTable.  Its methods are
-    specific to tables created using Dr. James Sutherland's TabProps
-    program.  While there are many programs available with which to create
-    tables (DARS, Cantera, Chemkin, etc.), each of these specific table
-    formats can be read into TabProps by writing a unique reader class
-    into TabProps (for example, TabProps/src/prepro/rxnmdl/JCSFlamelets.C,
-    which interfaces with the custom format of a flamelet code that
-    Dr. Sutherland also wrote), the data splined, and the spline
-    coefficients pushed into the HDF5 file.
-
-PATTERNS
-    None
-
-WARNINGS
-
-NOTES
-
-POSSIBLE REVISIONS
-
-***************************************************************************/
+ */
 
 namespace Uintah {
-class Properties;
-class StateTable;
-class TabPropsTable : public MixingRxnTable {
+class TabPropsTable : public MixingRxnModel {
 
 public:
 
-  // GROUP: Constructors:
-  // Constructs an instance of MixingRxnTable
   TabPropsTable();
 
-  // GROUP: Destructors :
-  // Destructor
   ~TabPropsTable();
 
-  // GROUP: typedefs
-  // Table interface maps for getState
-  typedef map<unsigned int, CCVariable<double>* > VarMap;
   typedef map<unsigned int, const VarLabel* > LabelMap;
   typedef map<unsigned int, bool> BoolMap;
 
-
-  // GROUP: Problem Setup
-  // Get independent and dependent variable names from table and input file, verify they match
-  // (And if so, load table into StateTable object statetbl)
+  //see MixingRxnModel.h
   void problemSetup( const ProblemSpecP& params );
-
-
-  // GROUP: Verification Methods
-  // Methods to verify table and input file match
   
-  // Compare dependent variables found in input file to dependent variables found in table file
-  void verifyDV( bool diagnosticMode, bool strictMode ) const;
+  /** @brief Compare dependent variables found in input file to dependent variables found in table file */
+  void const verifyDV( bool diagnosticMode, bool strictMode );
 
-  // Compare independent variables found in input file to independent variables found in table file
-  void verifyIV( bool diagnosticMode, bool strictMode ) const;
+  /** @brief Compare independent variables found in input file to independent variables found in table file */
+  void const verifyIV( bool diagnosticMode, bool strictMode );
 
-  // Run verification methods
-  void verifyTable( bool diagnosticMode, bool strictMode ) const;
+  //see MixingRxnModel.h
+  void const verifyTable( bool diagnosticMode, bool strictMode );
 
-
-  // GROUP: Actual Action Methods
-  // Actually obtain properties
-  
-  // Table lookup for list of dependent variables
+  //see MixingRxnModel.h
   void getState(VarMap ivVar, VarMap dvVar, const Patch* patch);
 
   // Load list of dependent variables from the table
