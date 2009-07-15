@@ -90,6 +90,12 @@ public:
     return d_foreign;
   }
 
+  //marks a variable as invalid (for example, it is in the process of receiving mpi)
+  void setValid() { d_valid=true;} 
+  void setInvalid() { d_valid=false;} 
+  //returns if a variable is marked valid or invalid
+  bool isValid() const {return d_valid;}
+
   /*This linked list of vars is to store foreign Gridvariables
    * from same patch but with different ranges*/
   void setNextvar(Variable* var);
@@ -133,6 +139,8 @@ private:
   // other one.
   std::string* gzipCompress(std::string* pUncompressed, std::string* pBuffer);
   bool d_foreign;
+  //signals of the variable is valid, an mpi variable is not valid until mpi has been recieved
+  bool d_valid;
   Variable* d_nextvar;
 };
 

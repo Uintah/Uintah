@@ -61,6 +61,7 @@ using namespace Uintah;
 Variable::Variable()
 {
    d_foreign = false;
+   d_valid = true;
    d_nextvar = NULL;
 }
 
