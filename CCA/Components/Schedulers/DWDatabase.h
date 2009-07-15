@@ -34,6 +34,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/UnknownVariable.h>
 #include <Core/Grid/Variables/VarLabel.h>
 #include <CCA/Components/Schedulers/MemoryLog.h>
+#include <CCA/Components/Schedulers/DetailedTasks.h>
 #include <Core/Grid/Variables/VarLabelMatl.h>
 #include <Core/Grid/Variables/ScrubItem.h>
 
@@ -96,7 +97,7 @@ using SCIRun::FastHashTable;
    bool exists(const VarLabel* label, int matlIndex, const DomainType* dom) const;
    void put(const VarLabel* label, int matlindex, const DomainType* dom,
 	    Variable* var, bool replace);
-   void put(const VarLabel* label, int matlindex, const DomainType* dom,
+   void putForeign(const VarLabel* label, int matlindex, const DomainType* dom,
 	    Variable* var);
    void get(const VarLabel* label, int matlindex, const DomainType* dom,
 	    Variable& var) const;
@@ -195,6 +196,8 @@ DWDatabase<DomainType>::cleanForeign()
       while (nextvar != NULL){   // clean all foreign vars under this label
         Variable* delvar = nextvar;
         nextvar = delvar->getNextvar();
+        //Verify that there is no outstanding MPI pointing to this variable
+        ASSERT(delvar->isValid());
         delete delvar;
       }
       delete var;
@@ -318,13 +321,13 @@ DWDatabase<DomainType>::put( const VarLabel* label, int matlIndex,const DomainTy
     ASSERT(di.var != var);
     delete di.var;
   }
-  di.var = var;      
+  di.var = var; 
 }
 
 
 template<class DomainType>
 void
-DWDatabase<DomainType>::put( const VarLabel* label, int matlIndex,const DomainType* dom,
+DWDatabase<DomainType>::putForeign( const VarLabel* label, int matlIndex,const DomainType* dom,
 				      Variable* var)
 {
   ASSERT(matlIndex >= -1);
@@ -356,6 +359,8 @@ DWDatabase<DomainType>::get( const VarLabel* label, int matlIndex, const DomainT
 {
   const DataItem& dataItem = getDataItem(label, matlIndex, dom);
   ASSERT(dataItem.var != 0); // should have thrown an exception before
+  //Verify the variable has not been marked invalid
+  ASSERT(dataItem.var->isValid())
   return dataItem.var;
 }
 

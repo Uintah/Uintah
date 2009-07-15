@@ -137,6 +137,13 @@ namespace Uintah {
     // so that it can receive again.
     void reset();
 
+    //Add invalid variables to the dependency batch.  These variables will be marked
+    //as valid when MPI completes. 
+    void addVar(Variable *var)
+    {
+      toVars.push_back(var);
+    }
+
     void addReceiveListener(int mpiSignal);
     
     //DependencyBatch* req_next;
@@ -155,6 +162,8 @@ namespace Uintah {
 
     DependencyBatch(const DependencyBatch&);
     DependencyBatch& operator=(const DependencyBatch&);
+    
+    vector<Variable*> toVars;
   };
 
   struct InternalDependency {
