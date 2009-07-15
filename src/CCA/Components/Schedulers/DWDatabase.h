@@ -359,8 +359,6 @@ DWDatabase<DomainType>::get( const VarLabel* label, int matlIndex, const DomainT
 {
   const DataItem& dataItem = getDataItem(label, matlIndex, dom);
   ASSERT(dataItem.var != 0); // should have thrown an exception before
-  //Verify the variable has not been marked invalid
-  ASSERT(dataItem.var->isValid())
   return dataItem.var;
 }
 
