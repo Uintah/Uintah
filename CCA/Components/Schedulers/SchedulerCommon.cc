@@ -1358,6 +1358,7 @@ SchedulerCommon::copyDataToNewGrid(const ProcessorGroup*, const PatchSubset* pat
                 if(v->isForeign()) {        //for foreign vars, just copy what the var has instead of the whole patch 
                   srclow =  Max(copyLowIndex, v->getLow());
                   srchigh = Min(copyHighIndex, v->getHigh());
+                  if (srclow.x() >= srchigh.x() || srclow.y() >= srchigh.y() || srclow.z() >= srchigh.z()) continue;
                 }
 
                 if ( !newDataWarehouse->exists(label, matl, newPatch) ) {
@@ -1373,7 +1374,7 @@ SchedulerCommon::copyDataToNewGrid(const ProcessorGroup*, const PatchSubset* pat
                   if (oldPatch->isVirtual()) {
                     // it can happen where the old patch was virtual and this is not
                     GridVariableBase* tmpVar = newVariable->cloneType();
-                    oldDataWarehouse->d_varDB.get(label, matl, oldPatch, *tmpVar);
+                    tmpVar->copyPointer(*v);
                     tmpVar->offset(oldPatch->getVirtualOffset());
                     newVariable->copyPatch( tmpVar, srclow, srchigh );
                     delete tmpVar;
