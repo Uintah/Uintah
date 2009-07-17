@@ -611,24 +611,12 @@ OnDemandDataWarehouse::recvMPI(DependencyBatch* batch,
   case TypeDescription::SFCYVariable:
   case TypeDescription::SFCZVariable:
   {
-    d_lock.readLock();
-    GridVariableBase* head = NULL;
-   // GridVariableBase* last = NULL;
-    if (d_varDB.exists(label, matlIndex, patch)) {
-      head = dynamic_cast<GridVariableBase*>(d_varDB.get(label, matlIndex, patch));
-      // use to indicate that it will be receiving (foreign) data and should
-      // not be replaced.
-      head->setForeign();
-    }
-    d_lock.readUnlock();
-
     MALLOC_TRACE_TAG_SCOPE("OnDemandDataWarehouse::recvMPI(cell variable):" + label->getName());
     //allocate the variable
     GridVariableBase* var = dynamic_cast<GridVariableBase*>(label->typeDescription()->createInstance());
     var->allocate(dep->low, dep->high);
-    
-    //add to linked list
-    var->setNextvar(head);  //append to the head of linked list
+
+    //set the var as foreign
     var->setForeign();
     d_lock.writeLock();
 
@@ -1786,12 +1774,12 @@ OnDemandDataWarehouse::getRegion(constGridVariableBase& constVar,
       missing_patches.push_back(patch->getRealPatch());
       continue;
     }
-    GridVariableBase* head = dynamic_cast<GridVariableBase*>(d_varDB.get(label, matlIndex, patch));
-    GridVariableBase* tmpVar = var->cloneType();
-    GridVariableBase* v;
 
-    for (v = head; v!=NULL; v = dynamic_cast<GridVariableBase*>(v->getNextvar())){
-
+    vector<Variable*> varlist;
+    d_varDB.getForeign(label, matlIndex, patch, varlist);
+    GridVariableBase* v=NULL;
+    for (unsigned int i = varlist.size() -1 ; i >=0; --i) {
+      v = dynamic_cast<GridVariableBase*>(varlist[i]);
       //verify that the variable is valid and matches the dependencies requirements.
       if (v->isValid() && Min(l, v->getLow()) == v->getLow()  &&  Max(h, v->getHigh()) == v->getHigh())  //find a completed region
         break;
@@ -1803,6 +1791,7 @@ OnDemandDataWarehouse::getRegion(constGridVariableBase& constVar,
       continue;
     }
     
+    GridVariableBase* tmpVar = var->cloneType();
     tmpVar->copyPointer(*v);
     
     if (patch->isVirtual()) {
@@ -2130,11 +2119,13 @@ getGridVar(GridVariableBase& var, const VarLabel* label, int matlIndex, const Pa
 			  	    matlIndex, neighbor == patch?
 				      "on patch":"on neighbor", __FILE__, __LINE__));
     }
+    
+    vector<Variable*> varlist;
+    d_varDB.getForeign(label, matlIndex, neighbor, varlist);
+    GridVariableBase* v=NULL;
 
-    GridVariableBase* head = dynamic_cast<GridVariableBase*>(d_varDB.get(label, matlIndex, neighbor));
-    GridVariableBase* srcvar = var.cloneType();
-    GridVariableBase* v;
-    for (v = head; v!=NULL; v = dynamic_cast<GridVariableBase*>(v->getNextvar())){
+    for (unsigned int i = varlist.size() -1 ; i >=0; --i) {
+      v = dynamic_cast<GridVariableBase*>(varlist[i]);
       //verify that the variable is valid and matches the depedencies requirements
       if(v->isValid())
       {
@@ -2159,6 +2150,7 @@ getGridVar(GridVariableBase& var, const VarLabel* label, int matlIndex, const Pa
 				      "on patch":"on neighbor", __FILE__, __LINE__));
     }
   	  
+    GridVariableBase* srcvar = var.cloneType();
     srcvar->copyPointer(*v);
 
     if(neighbor->isVirtual())
