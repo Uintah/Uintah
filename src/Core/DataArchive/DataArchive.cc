@@ -87,7 +87,7 @@ DataArchive::DataArchive(const std::string& filebase,
 
   string index = d_filebase + "/index.xml";
   if( verbose && processor == 0) {
-    cerr << "Parsing " << index << "\n";
+    // cerr << "Parsing " << index << "\n";
   }
 
   d_indexDoc = ProblemSpecReader().readInputFile( index );
@@ -720,8 +720,8 @@ void DataArchive::queryRegion(Variable& var, const string& name, int matlIndex,
     }
     IntVector l, h;
 
-    l = Max(patch->getLowIndex(basis), low);
-    h = Min(patch->getHighIndex(basis), high);
+    l = Max(patch->getExtraLowIndex(basis, IntVector(0, 0, 0)), low);
+    h = Min(patch->getExtraHighIndex(basis, IntVector(0, 0, 0)), high);
     if (l.x() >= h.x() || l.y() >= h.y() || l.z() >= h.z())
       continue;
     GridVariableBase* tmpVar = gridvar->cloneType();
