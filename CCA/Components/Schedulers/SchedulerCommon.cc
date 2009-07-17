@@ -1349,39 +1349,36 @@ SchedulerCommon::copyDataToNewGrid(const ProcessorGroup*, const PatchSubset* pat
                 SCI_THROW(UnknownVariable(label->getName(), oldDataWarehouse->getID(), oldPatch, matl,
                       "in copyDataTo GridVariableBase", __FILE__, __LINE__));
               GridVariableBase* v = dynamic_cast<GridVariableBase*>(oldDataWarehouse->d_varDB.get(label, matl, oldPatch));
-              IntVector srclow = copyLowIndex;
-              IntVector srchigh = copyHighIndex;
 
-              for (; v!=NULL ; v = dynamic_cast<GridVariableBase*>(v->getNextvar())){
-                ASSERT(v->getBasePointer() !=0);
+              ASSERT(v->getBasePointer() !=0);
 
-                if(v->isForeign()) {        //for foreign vars, just copy what the var has instead of the whole patch 
-                  srclow =  Max(copyLowIndex, v->getLow());
-                  srchigh = Min(copyHighIndex, v->getHigh());
-                  if (srclow.x() >= srchigh.x() || srclow.y() >= srchigh.y() || srclow.z() >= srchigh.z()) continue;
+              if(v->isForeign()) {        //for foreign vars, just copy what the var has instead of the whole patch 
+                copyLowIndex =  Max(copyLowIndex, v->getLow());
+                copyHighIndex = Min(copyHighIndex, v->getHigh());
+                if (copyLowIndex.x() >= copyHighIndex.x() || copyLowIndex.y() >= copyHighIndex.y() || copyLowIndex.z() >= copyHighIndex.z())
+              continue;
+              }
+
+              if ( !newDataWarehouse->exists(label, matl, newPatch) ) {
+                GridVariableBase* newVariable = v->cloneType();
+                newVariable->rewindow( newLowIndex, newHighIndex );
+                newVariable->copyPatch( v, copyLowIndex, copyHighIndex );
+                newDataWarehouse->d_varDB.put(label, matl, newPatch, newVariable, false);
+              } else {
+                GridVariableBase* newVariable = 
+                  dynamic_cast<GridVariableBase*>(newDataWarehouse->d_varDB.get(label, matl, newPatch ));
+                // make sure it exists in the right region (it might be ghost data)
+                newVariable->rewindow(newLowIndex, newHighIndex);
+                if (oldPatch->isVirtual()) {
+                  // it can happen where the old patch was virtual and this is not
+                  GridVariableBase* tmpVar = newVariable->cloneType();
+                  tmpVar->copyPointer(*v);
+                  tmpVar->offset(oldPatch->getVirtualOffset());
+                  newVariable->copyPatch( tmpVar, copyLowIndex, copyHighIndex );
+                  delete tmpVar;
                 }
-
-                if ( !newDataWarehouse->exists(label, matl, newPatch) ) {
-                  GridVariableBase* newVariable = v->cloneType();
-                  newVariable->rewindow( newLowIndex, newHighIndex );
-                  newVariable->copyPatch( v, srclow, srchigh);
-                  newDataWarehouse->d_varDB.put(label, matl, newPatch, newVariable, false);
-                } else {
-                  GridVariableBase* newVariable = 
-                    dynamic_cast<GridVariableBase*>(newDataWarehouse->d_varDB.get(label, matl, newPatch ));
-                  // make sure it exists in the right region (it might be ghost data)
-                  newVariable->rewindow(newLowIndex, newHighIndex);
-                  if (oldPatch->isVirtual()) {
-                    // it can happen where the old patch was virtual and this is not
-                    GridVariableBase* tmpVar = newVariable->cloneType();
-                    tmpVar->copyPointer(*v);
-                    tmpVar->offset(oldPatch->getVirtualOffset());
-                    newVariable->copyPatch( tmpVar, srclow, srchigh );
-                    delete tmpVar;
-                  }
-                  else
-                    newVariable->copyPatch( v, srclow, srchigh );
-                }
+                else
+                  newVariable->copyPatch( v, copyLowIndex, copyHighIndex );
               }
             }
             break;

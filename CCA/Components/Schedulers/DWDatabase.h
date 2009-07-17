@@ -101,6 +101,8 @@ using SCIRun::FastHashTable;
 	    Variable* var);
    void get(const VarLabel* label, int matlindex, const DomainType* dom,
 	    Variable& var) const;
+   void getForeign( const VarLabel* label, int matlIndex, const DomainType* dom,
+       vector<Variable*>& varlist ) const;
    inline Variable* get(const VarLabel* label, int matlindex,
 		const DomainType* dom) const;
    void print(ostream&, int rank) const;
@@ -141,7 +143,7 @@ private:
    const DataItem& getDataItem(const VarLabel* label, int matlindex,
 			       const DomainType* dom) const;
     
-   typedef map<VarLabelMatl<DomainType>, DataItem> varDBtype;
+   typedef multimap<VarLabelMatl<DomainType>, DataItem> varDBtype;
    varDBtype vars;
 
    DWDatabase(const DWDatabase&);
@@ -162,7 +164,6 @@ DWDatabase<DomainType>::~DWDatabase()
 template<class DomainType>
 void DWDatabase<DomainType>::clear()
 {
-  cleanForeign();  //clean all foreign vars first
   for(typename varDBtype::iterator iter = vars.begin();
       iter != vars.end(); iter++){
 
@@ -192,16 +193,7 @@ DWDatabase<DomainType>::cleanForeign()
       iter != vars.end();){
     const Variable* var = iter->second.var;
     if(var && var->isForeign()){
-      Variable* nextvar = var->getNextvar();
-      while (nextvar != NULL){   // clean all foreign vars under this label
-        Variable* delvar = nextvar;
-        nextvar = delvar->getNextvar();
-        //Verify that there is no outstanding MPI pointing to this variable
-        ASSERT(delvar->isValid());
-        delete delvar;
-      }
       delete var;
-      iter->second.var=0;
       typename varDBtype::iterator deliter = iter;
       iter++;
       vars.erase(deliter);
@@ -313,15 +305,17 @@ DWDatabase<DomainType>::put( const VarLabel* label, int matlIndex,const DomainTy
   ASSERT(matlIndex >= -1);
   
   VarLabelMatl<DomainType> v(label, matlIndex, getRealDomain(dom));
-  DataItem& di = vars[v]; 
-  if (di.var) {
+  typename varDBtype::iterator iter = vars.find(v);
+  if(iter != vars.end()){
     if (!replace) {
       SCI_THROW(InternalError("Put replacing old variable", __FILE__, __LINE__));
     }
-    ASSERT(di.var != var);
-    delete di.var;
+    ASSERT(iter->second.var != var);
+    delete iter->second.var;
+  } else {
+    iter = vars.insert(pair<VarLabelMatl<DomainType>, DataItem>(v, DataItem()));
   }
-  di.var = var; 
+  iter->second.var=var; 
 }
 
 
@@ -333,8 +327,8 @@ DWDatabase<DomainType>::putForeign( const VarLabel* label, int matlIndex,const D
   ASSERT(matlIndex >= -1);
   
   VarLabelMatl<DomainType> v(label, matlIndex, getRealDomain(dom));
-  DataItem& di = vars[v]; 
-  di.var = var;      
+  typename varDBtype::iterator iter = vars.insert(pair<VarLabelMatl<DomainType>, DataItem>(v, DataItem()));
+  iter->second.var=var; 
 }
 
 template<class DomainType>
@@ -371,6 +365,25 @@ DWDatabase<DomainType>::get( const VarLabel* label,
 {
   Variable* tmp = get(label, matlIndex, dom);
   var.copyPointer(*tmp);
+}
+
+template<class DomainType>
+void
+DWDatabase<DomainType>::getForeign( const VarLabel* label,
+				      int matlIndex,
+				      const DomainType* dom,
+				      vector<Variable*>& varlist ) const
+{
+  VarLabelMatl<DomainType> v(label, matlIndex, getRealDomain(dom));
+  pair<typename varDBtype::const_iterator, typename varDBtype::const_iterator> ret;
+  ret = vars.equal_range(v);
+  for (typename varDBtype::const_iterator iter=ret.first; iter!=ret.second; ++iter)
+    varlist.push_back(iter->second.var);
+
+  if(varlist.size() == 0)
+    SCI_THROW(UnknownVariable(label->getName(), -99, dom, matlIndex,
+			      "DWDatabase::getForeign", __FILE__, __LINE__));
+
 }
 
 template<class DomainType>
