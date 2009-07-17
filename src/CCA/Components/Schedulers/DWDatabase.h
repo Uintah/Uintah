@@ -101,7 +101,7 @@ using SCIRun::FastHashTable;
 	    Variable* var);
    void get(const VarLabel* label, int matlindex, const DomainType* dom,
 	    Variable& var) const;
-   void getForeign( const VarLabel* label, int matlIndex, const DomainType* dom,
+   void getlist( const VarLabel* label, int matlIndex, const DomainType* dom,
        vector<Variable*>& varlist ) const;
    inline Variable* get(const VarLabel* label, int matlindex,
 		const DomainType* dom) const;
@@ -369,7 +369,7 @@ DWDatabase<DomainType>::get( const VarLabel* label,
 
 template<class DomainType>
 void
-DWDatabase<DomainType>::getForeign( const VarLabel* label,
+DWDatabase<DomainType>::getlist( const VarLabel* label,
 				      int matlIndex,
 				      const DomainType* dom,
 				      vector<Variable*>& varlist ) const
@@ -382,7 +382,7 @@ DWDatabase<DomainType>::getForeign( const VarLabel* label,
 
   if(varlist.size() == 0)
     SCI_THROW(UnknownVariable(label->getName(), -99, dom, matlIndex,
-			      "DWDatabase::getForeign", __FILE__, __LINE__));
+			      "DWDatabase::getlist", __FILE__, __LINE__));
 
 }
 
