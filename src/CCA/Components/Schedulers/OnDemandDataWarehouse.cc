@@ -618,12 +618,13 @@ OnDemandDataWarehouse::recvMPI(DependencyBatch* batch,
 
     //set the var as foreign
     var->setForeign();
+    var->setInvalid();
     d_lock.writeLock();
 
     //add the var to the dependency batch and set it as invalid.  The variable is now invalid because there is outstanding MPI pointing to the variable.
     batch->addVar(var);
-    var->setInvalid();
     d_varDB.putForeign(label, matlIndex, patch, var); //put new var in data warehouse
+
     d_lock.writeUnlock();
 
     var->getMPIBuffer(buffer, dep->low, dep->high);
