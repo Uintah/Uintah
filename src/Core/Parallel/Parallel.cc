@@ -267,6 +267,7 @@ Parallel::initializeManager(int& argc, char**& argv, const string & scheduler)
 	    << provided << "\n";
 #endif
      }
+     //MPI_Errhandler_set(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
    } else {
      worldRank = 0;
      rootContext = scinew ProcessorGroup(0,0, false, 0, 1);
