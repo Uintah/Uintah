@@ -495,8 +495,7 @@ getPatchIndex(const string& input_uda_name, int timeStepNo, int levelNo, int pat
 	  const Patch* patch = level->getPatch(j);
 
 	  if (remove_boundary) { // this needs to be kept outside the loop, same check again and again
-	    if((varType.find("CC")   != string::npos) /*||
-	       (varType.find("SFCX") != string::npos)*/) {
+	    if(varType.find("CC") != string::npos) {
 	      patch_lo = patch->getCellLowIndex__New();
 	      patch_hi = patch->getCellHighIndex__New();
 	    } 
@@ -519,15 +518,15 @@ getPatchIndex(const string& input_uda_name, int timeStepNo, int levelNo, int pat
 		patch_hi = patch->getHighIndex(Patch::ZFaceBased);
 	      else if(varType.find("NC") != string::npos) {
 		patch_hi = patch_lo + (patch->getCellHighIndex__New() - patch->getCellLowIndex__New()) + IntVector(1, 1, 1);
-		if (!(patch_hi.x() == hi.x())) {
+		/*if (!(patch_hi.x() == hi.x())) {
 		  patch_hi = IntVector(patch_hi.x() - 1, patch_hi.y(), patch_hi.z());
-		}  
-		if (!(patch_hi.y() == hi.y())) {
+		}*/  
+		/*if (!(patch_hi.y() == hi.y())) {
 		  patch_hi = IntVector(patch_hi.x(), patch_hi.y() - 1, patch_hi.z());
-		}  
-		if (!(patch_hi.z() == hi.z())) {
+		}*/  
+		/*if (!(patch_hi.z() == hi.z())) {
 		  patch_hi = IntVector(patch_hi.x(), patch_hi.y(), patch_hi.z() - 1);
-		}  
+		}*/  
 		// patch_hi = patch->getNodeHighIndex__New();
 	      }
 	    }
@@ -756,7 +755,7 @@ getPatchIndex(const string& input_uda_name, int timeStepNo, int levelNo, int pat
 	int matlNo, 
 	bool matlClassfication, 
 	const string& varSelected,
-	int patchNo) // patchNo not required anymore, should remove it
+        int patchNo) 
     {
       /*
        * Default values
@@ -1149,27 +1148,41 @@ getPatchIndex(const string& input_uda_name, int timeStepNo, int levelNo, int pat
 	    level->findInteriorIndexRange(low, hi);
 	    level->getInteriorSpatialRange(box);
 	  } else {
-	    level->findIndexRange(low, hi);
-	    level->getSpatialRange(box);
+	    // level->findIndexRange(low, hi);
+	    // level->getSpatialRange(box);
 
-	    // const Patch* patch = level->getPatch(patchNo);
+	    const Patch* patch = level->getPatch(patchNo);
 
-	    // Point min = patch->getExtraBox().lower();
-	    // Point max = patch->getExtraBox().upper();
+	    Point min = patch->getExtraBox().lower();
+	    Point max = patch->getExtraBox().upper();
 
+	    IntVector extraCells = patch->getExtraCells();
+	    IntVector noCells = patch->getCellHighIndex__New() - patch->getCellLowIndex__New();
+
+	    // cout << noCells << endl;
+
+	    box = BBox(min, max);
+
+	    // low = patch->getCellLowIndex__New() - extraCells;
+	    // hi = patch->getCellHighIndex__New() + extraCells;
+
+	    low = patch->getNodeLowIndex__New() - extraCells;
+	    hi = patch->getNodeLowIndex__New() + noCells + extraCells + IntVector(1, 1, 1);
+	    
+	    // Point min = level->getBox(low, hi).lower(); 
+	    // Point max = level->getBox(low, hi).upper(); 
+	    
 	    // box = BBox(min, max);
-
-	    // patch_low = patch->getLowIndex();
-	    // patch_hi = patch->getHighIndex();
-
-	    // patch_low = patch->getExtraCellLowIndex__New();
-	    // patch_hi = patch->getExtraCellHighIndex__New();
+	  
+	    // cout << "Min/Max: " << min << " --- " << max << endl;
 	  }
 
 	  // this is a hack to make things work, substantiated in build_multi_level_field()
 	  range = hi - low /*+ IntVector(1, 1, 1)*/;
 
-	  if (qinfo.type->getType() == Uintah::TypeDescription::CCVariable) {
+	  // cout << "Low/hi/range: " << low << " " << hi << " " << range << endl;
+
+	  /*if (qinfo.type->getType() == Uintah::TypeDescription::CCVariable) {
 	    IntVector cellLo, cellHi;
 	    if( args.remove_boundary ) {
 	      level->findInteriorCellIndexRange(cellLo, cellHi);
@@ -1182,7 +1195,7 @@ getPatchIndex(const string& input_uda_name, int timeStepNo, int levelNo, int pat
 	      get_periodic_bcs_range(cellHi, hi, range, newrange);
 	      range = newrange;
 	    }
-	  }
+	  }*/
 
 	  // Adjust the range for using all levels
 	  if( args.use_all_levels && grid->numLevels() > 0 ){
