@@ -329,14 +329,14 @@ handlePatchData( QueryInfo& qinfo, IntVector& offset,
 
   IntVector patch_low, patch_high;
   VarT patch_data;
-  try {
 
+  /*try {
     int material = *qinfo.materials.begin();
+    // if( !args.quiet ) { 
+      // cout << "  Extracting data for material " << material << ".\n"; 
+    // }
 
-    if( !args.quiet ) { 
-      cout << "  Extracting data for material " << material << ".\n"; 
-    }
-
+    // double start = Time::currentSeconds();
     qinfo.archive->query(patch_data, qinfo.varname, material, patch,
 	qinfo.timestep);
   } catch (Exception& e) {
@@ -344,6 +344,17 @@ handlePatchData( QueryInfo& qinfo, IntVector& offset,
     cerr << "handlePatchData::error in query function\n";
     cerr << e.message()<<"\n";
     return;
+  }*/
+
+  IntVector extraCells = patch->getExtraCells();
+  IntVector noCells = patch->getCellHighIndex__New() - patch->getCellLowIndex__New();
+     
+  static IntVector hi, lo;
+  static int currLevel = -1;
+
+  if (currLevel != qinfo.level->getIndex()) {
+    currLevel = qinfo.level->getIndex();
+    qinfo.level->findNodeIndexRange(lo, hi);
   }
 
   if ( args.remove_boundary ) {
@@ -372,11 +383,15 @@ handlePatchData( QueryInfo& qinfo, IntVector& offset,
       } 
     }
   } else { // Don't remove the boundary
-    if( sfield->basis_order() == 0){
-      patch_low = patch->getExtraCellLowIndex__New();
-      patch_high = patch->getExtraCellHighIndex__New();
+    if(sfield->basis_order() == 0){
+      patch_low = patch->getCellLowIndex__New()   - extraCells;
+      patch_high = patch->getCellHighIndex__New() + extraCells;
+
+      // patch_low = patch->getExtraCellLowIndex__New();
+      // patch_high = patch->getExtraCellHighIndex__New();
     } else {
-      patch_low = patch->getExtraNodeLowIndex__New();
+      // patch_low = patch->getExtraNodeLowIndex__New();
+      patch_low = patch->getNodeLowIndex__New() - extraCells;
       switch (qinfo.type->getType()) {
 	case Uintah::TypeDescription::SFCXVariable:
 	  patch_high = patch->getSFCXHighIndex__New();
@@ -388,8 +403,8 @@ handlePatchData( QueryInfo& qinfo, IntVector& offset,
 	  patch_high = patch->getSFCZHighIndex__New();
 	  break;
 	case Uintah::TypeDescription::NCVariable:
-	  patch_high = patch->getExtraNodeHighIndex__New();   
-	  // patch_high = patch->getNodeHighIndex__New();
+	  patch_high = patch->getNodeLowIndex__New() + noCells + extraCells + IntVector(1, 1, 1);
+	  // patch_high = patch->getExtraNodeHighIndex__New();   
 	  break;
 	default:
 	  cerr << "build_field::unknown variable.\n";
@@ -397,6 +412,47 @@ handlePatchData( QueryInfo& qinfo, IntVector& offset,
       }
     }
   } // if (remove_boundary)
+
+  // necessary check - useful with periodic boundaries
+  for (int i = 0; i < 3; i++) {
+    if (patch_high(i) > hi(i)) {
+      patch_high(i) = hi(i);
+    }
+  }
+  
+  // cout << patch_low << " " << patch_high << endl;
+
+  try {
+    int material = *qinfo.materials.begin();
+    // qinfo.archive->query(patch_data, qinfo.varname, material, patch,
+    // 	                 qinfo.timestep, Ghost::AroundNodes, 1);
+
+    // cout << "looking for " << qinfo.varname << ", mat: " << material << ", level: " 
+    //      << patch->getLevel()->getIndex() << ", low: "
+    //      << patch_low << ", high: " << patch_high << "\n";
+
+    qinfo.archive->queryRegion(patch_data, qinfo.varname, material, patch->getLevel(), qinfo.timestep, patch_low, patch_high);
+  } catch (Exception& e) {
+    cerr << "handlePatchData::error in query function\n";
+    cerr << e.message()<<"\n";
+    return;
+  }
+      
+  /*typename Uintah::Array3<T>::iterator vit( &patch_data, patch_low );
+  double theMin = DBL_MAX, theMax = DBL_MIN;
+
+  for( ; vit != patch_data.end(); vit++ ) {
+    double theData = toDouble( *vit );
+    if ( theData < theMin )
+      theMin = theData;
+    if ( theData > theMax )
+      theMax = theData;
+  }*/
+
+  // cout << patch->getExtraNodeLowIndex__New() << " " << patch->getExtraNodeHighIndex__New() << endl;
+  // cout << patch_low << " " << patch_high << " " << patch_data.size() << endl;
+
+  // cout << "Patch Id: " << patch->getID() << ", ts: " << qinfo.timestep << ", Max: " << theMax << ", min: " << theMin << "\n";
 
   // Rewindow the data if we need only a subset.  This should never
   // get bigger (thus requiring reallocation).

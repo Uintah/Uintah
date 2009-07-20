@@ -68,15 +68,15 @@ build_field( QueryInfo &qinfo,
   sfield->fdata().initialize(T(0));
 
   // Loop over each patch and get the data from the data archive.
-  for( Level::const_patchIterator patch_it = qinfo.level->patchesBegin();
-       patch_it != qinfo.level->patchesEnd(); ++patch_it){
+  /*for( Level::const_patchIterator patch_it = qinfo.level->patchesBegin();
+       patch_it != qinfo.level->patchesEnd(); ++patch_it){*/
 	   
-	const Patch* patch = *patch_it;
-	// const Patch* patch = qinfo.level->getPatch(patchNo);
-	
-    // This gets the data
-    handlePatchData<T, VarT, FIELD>(qinfo, offset, sfield, patch, args);
-  }
+	// const Patch* patch = *patch_it;
+	const Patch* patch = qinfo.level->getPatch(patchNo);
+		
+      // This gets the data
+      handlePatchData<T, VarT, FIELD>(qinfo, offset, sfield, patch, args);
+  // }
 }
 
 /////////////////////////////////////////////////////////////////////
