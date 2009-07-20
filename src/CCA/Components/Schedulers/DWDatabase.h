@@ -179,7 +179,8 @@ void DWDatabase<DomainType>::clear()
       SCI_THROW(InternalError(msgstr.str(), __FILE__, __LINE__));
     }
 #endif
-    delete iter->second.var;
+    if (iter->second.var)
+      delete iter->second.var;
     iter->second.var=0;
   }
   vars.clear();
@@ -191,9 +192,9 @@ DWDatabase<DomainType>::cleanForeign()
 {
   for(typename varDBtype::iterator iter = vars.begin();
       iter != vars.end();){
-    const Variable* var = iter->second.var;
-    if(var && var->isForeign()){
-      delete var;
+    if(iter->second.var && iter->second.var->isForeign()){
+      delete iter->second.var;
+      iter->second.var=0;
       typename varDBtype::iterator deliter = iter;
       iter++;
       vars.erase(deliter);
@@ -303,19 +304,26 @@ DWDatabase<DomainType>::put( const VarLabel* label, int matlIndex,const DomainTy
 				      Variable* var, bool replace )
 {
   ASSERT(matlIndex >= -1);
-  
+
   VarLabelMatl<DomainType> v(label, matlIndex, getRealDomain(dom));
-  typename varDBtype::iterator iter = vars.find(v);
-  if(iter != vars.end()){
-    if (!replace) {
-      SCI_THROW(InternalError("Put replacing old variable", __FILE__, __LINE__));
-    }
-    ASSERT(iter->second.var != var);
-    delete iter->second.var;
-  } else {
-    iter = vars.insert(pair<VarLabelMatl<DomainType>, DataItem>(v, DataItem()));
+  unsigned int count=vars.count(v);
+  if (count >1 ) 
+    SCI_THROW(InternalError("More than one vars on this label", __FILE__, __LINE__));
+  if (count == 1) {
+    typename varDBtype::iterator iter = vars.find(v);
+    if (!replace && iter->second.var) 
+      SCI_THROW(InternalError("Put replacing old vars", __FILE__, __LINE__));
+    else {
+      ASSERT(iter->second.var != var);
+      if (iter->second.var)
+        delete iter->second.var;
+      iter->second.var=var; 
+    } 
   }
-  iter->second.var=var; 
+  if (count ==0){
+    typename varDBtype::iterator iter = vars.insert(pair<VarLabelMatl<DomainType>, DataItem>(v, DataItem()));
+    iter->second.var=var; 
+  }
 }
 
 
