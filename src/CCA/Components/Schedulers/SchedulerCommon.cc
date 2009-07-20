@@ -1359,12 +1359,11 @@ SchedulerCommon::copyDataToNewGrid(const ProcessorGroup*, const PatchSubset* pat
                 v = dynamic_cast<GridVariableBase*>(varlist[i]);
 
                 ASSERT(v->getBasePointer()!=0);
-                
-                if(v->isForeign()) {        //for foreign vars, just copy what the var has instead of the whole patch 
-                  srclow =  Max(copyLowIndex, v->getLow());
-                  srchigh = Min(copyHighIndex, v->getHigh());
-                  if (srclow.x() >= srchigh.x() || srclow.y() >= srchigh.y() || srclow.z() >= srchigh.z()) continue;
-                }
+
+                //restrict copy to data range
+                srclow =  Max(copyLowIndex, v->getLow());
+                srchigh = Min(copyHighIndex, v->getHigh());
+                if (srclow.x() >= srchigh.x() || srclow.y() >= srchigh.y() || srclow.z() >= srchigh.z()) continue;
 
                 if ( !newDataWarehouse->exists(label, matl, newPatch) ) {
                   GridVariableBase* newVariable = v->cloneType();
