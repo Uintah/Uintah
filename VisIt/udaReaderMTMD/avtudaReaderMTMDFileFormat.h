@@ -170,6 +170,7 @@ protected:
   int*             (*getNumLevels)(const std::string&, int);
 
   virtual void     PopulateDatabaseMetaData(avtDatabaseMetaData *, int);
+  void             InitializeReader(avtDatabaseMetaData *, int);
   // virtual void     RegisterVariableList(const char *,
   // const vector<CharStrRef> &);
   virtual void     *GetAuxiliaryData(const char *var, int,
