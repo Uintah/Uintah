@@ -234,6 +234,7 @@
                 </FlowInlet>
 
                 <FlowInlet>
+                <!-- cross wind -->
 	            <ramping_inlet_flowrate>false</ramping_inlet_flowrate>
                     <InletVelocity>1.02</InletVelocity>
                     <mixture_fraction>0.0</mixture_fraction>

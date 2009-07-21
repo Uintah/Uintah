@@ -268,7 +268,8 @@
           </parameters>
         </PressureSolver>
 
-        <restartOnNegativeDensityGuess  spec="OPTIONAL BOOLEAN" /> <!-- FIXME: what is default? -->
+        <restartOnNegativeDensityGuess  spec="OPTIONAL BOOLEAN" /> <!--default = false-->
+        <NoisyDensityGuess              spec="OPTIONAL BOOLEAN" /> <!--default = false-->
         <timeIntegratorType             spec="REQUIRED STRING 'RK2SSP, FE'" />
         <turbModelCalcForAllRKSteps     spec="OPTIONAL BOOLEAN" />
         <turbModelCalcFreq              spec="OPTIONAL INTEGER" />
