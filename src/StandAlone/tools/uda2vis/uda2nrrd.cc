@@ -903,7 +903,8 @@ getPatchIndex(const string& input_uda_name, int timeStepNo, int levelNo, int pat
 	if( do_particles ) {
 	  unsigned int vi = 0;
 	  for( ; vi < vars.size(); vi++ ) {
-	    if( vars[vi][0] == 'p' && vars[vi][1] == '.' ) { // starts with "p."
+	    // if( vars[vi][0] == 'p' && vars[vi][1] == '.' ) { // starts with "p."
+	    if ( types[vi]->getType() == Uintah::TypeDescription::ParticleVariable ) { 
 	      // It is a particle variable
 	      var_indices.push_back( vi );
 	    }
