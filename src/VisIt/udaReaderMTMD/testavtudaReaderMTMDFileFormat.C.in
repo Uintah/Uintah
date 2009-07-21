@@ -531,7 +531,7 @@ avtudaReaderMTMDFileFormat::InitializeReader(avtDatabaseMetaData *md, int timeSt
   debug5 << "Variables: " << udaVarsObj.size() << endl;
 
   for (int i = 0; i < udaVarsObj.size(); i++) {
-    if (udaVarsObj[i].find("p.") == string::npos) {
+    if (udaVarsObj[i].find("ParticleVariable") == string::npos) {
       char tmpArray[128];
       string varname = udaVarsObj[i];
       size_t found = varname.find("/");
@@ -714,7 +714,7 @@ avtudaReaderMTMDFileFormat::InitializeReader(avtDatabaseMetaData *md, int timeSt
 
   // Nothing needs to be modifed for particle data, as they exist only on a single level
   for (int i = 0; i < udaVarsObj.size(); i++) {
-    if (udaVarsObj[i].find("p.") != string::npos /*&& udaVarsObj[i].find("p.x") == string::npos*/) {
+    if (udaVarsObj[i].find("ParticleVariable") != string::npos /*&& udaVarsObj[i].find("p.x") == string::npos*/) {
       string varname = udaVarsObj[i];
       size_t found = varname.find("/");
 
@@ -766,7 +766,7 @@ avtudaReaderMTMDFileFormat::InitializeReader(avtDatabaseMetaData *md, int timeSt
     }   
   }
 
-  // cout << "Out PopulateDatabaseMetaData\n";
+  // debug5 << "Out PopulateDatabaseMetaData\n";
 }
 
 
@@ -789,7 +789,7 @@ avtudaReaderMTMDFileFormat::PopulateDatabaseMetaData(avtDatabaseMetaData *md, in
   //
   // CODE TO ADD A MESH
   //
-  // cout << "\nIn PopulateDatabaseMetaData\n";
+  // debug5 << "\nIn PopulateDatabaseMetaData\n";
 
 #ifdef PARALLEL
   int numProcs, rank;
@@ -799,7 +799,7 @@ avtudaReaderMTMDFileFormat::PopulateDatabaseMetaData(avtDatabaseMetaData *md, in
   MPI_Comm_size(VISIT_MPI_COMM, &numProcs);
   MPI_Comm_rank(VISIT_MPI_COMM, &rank);
 
-  cout << "Proc: " << rank << " sent to mdserver" << endl;  
+  debug5 << "Proc: " << rank << " sent to mdserver" << endl;  
 
   if (rank == 0) {
     InitializeReader(md, timeState);
@@ -1059,7 +1059,7 @@ avtudaReaderMTMDFileFormat::PopulateDatabaseMetaData(avtDatabaseMetaData *md, in
     }   
   }*/
 
-  // cout << "Out PopulateDatabaseMetaData\n";
+  // debug5 << "Out PopulateDatabaseMetaData\n";
 }
 
 
@@ -1756,8 +1756,8 @@ avtudaReaderMTMDFileFormat::GetMesh(int timestate, int domain, const char *meshn
     // indexRangeNC[1] = hiLoArr[4] - hiLoArr[1] - 1;
     // indexRangeNC[2] = hiLoArr[5] - hiLoArr[2] - 1;
 
-    // cout << indexArr[0] << " " << indexArr[1] << " " << indexArr[2] << " "; 
-    // cout << indexArr[3] << " " << indexArr[4] << " " << indexArr[5] << endl; 
+    // debug5 << indexArr[0] << " " << indexArr[1] << " " << indexArr[2] << " "; 
+    // debug5 << indexArr[3] << " " << indexArr[4] << " " << indexArr[5] << endl; 
 
     int ndims = 3; 
     int dims[3] = {cellValColln_x + 1, cellValColln_y + 1, cellValColln_z + 1}; // for node centered -> remove +1
@@ -2703,8 +2703,8 @@ avtudaReaderMTMDFileFormat::GetVar(int timestate, int domain, const char *varnam
     if (matl.compare("*") != 0)
       matlNo = atoi(matl.c_str());
 
-    // debug5 << varName << endl;
-    // debug5 << matlNo << endl;
+    debug5 << varName << endl;
+    debug5 << matlNo << endl;
 
     strcpy(arr2d[0], "uda2nrrd"); // anything will do
     strcpy(arr2d[1], "-uda");
@@ -2750,11 +2750,11 @@ avtudaReaderMTMDFileFormat::GetVar(int timestate, int domain, const char *varnam
 
       // debug5 << dataRef.size() << endl;
 
-      // bool varFound = false;
+      bool varFound = false;
 
       for (int j = 0;  j < dataRef.size(); j++) {
 	if (strcmp(varName.c_str(), dataRef[j].name.c_str()) == 0)
-	  // varFound = true;
+	  varFound = true;
 	  rv->SetTuple1(i, dataRef[j].value);  // you must determine value for ith entry.
       }
 
