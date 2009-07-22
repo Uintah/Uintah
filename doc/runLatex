@@ -46,7 +46,7 @@ if [ $user == "yes" ]; then
   echo "            User guide"
   echo "----------------------------------------"
   cd UserGuide
-  pdflatex  -file-line-error --halt-on-error  user_guide.tex
+  pdflatex  -file-line-error -halt-on-error  user_guide.tex
 
 
   if [ $? -eq 0 ]; then
@@ -73,7 +73,7 @@ if [ $install == "yes" ]; then
    echo "            Installation guide"
    echo "----------------------------------------"
    cd InstallationGuide
-   pdflatex -file-line-error --halt-on-error installation_guide.tex
+   pdflatex -file-line-error -halt-on-error installation_guide.tex
    pdflatex installation_guide.tex
    if [ $? -ne 0 ]; then 
       install_error=1
@@ -90,7 +90,7 @@ if [ $develop == "yes" ]; then
   echo "            Developer guide"
   echo "----------------------------------------"
   cd DeveloperGuide 
-  pdflatex -file-line-error --halt-on-error UintahAPI.tex
+  pdflatex -file-line-error -halt-on-error UintahAPI.tex
   pdflatex UintahAPI.tex
   if [ $? -ne 0 ]; then
      develop_error=1
