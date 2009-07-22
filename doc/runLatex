@@ -37,6 +37,10 @@ while [ "$#" -gt 0 ]; do
      shift
 done
 
+user_error=0
+install_error=0
+develop_error=0
+
 if [ $user == "yes" ]; then
   echo "----------------------------------------"
   echo "            User guide"
@@ -55,9 +59,12 @@ if [ $user == "yes" ]; then
     bibtex mpmice
     pdflatex -interaction=batchmode user_guide.tex
     pdflatex -interaction=batchmode user_guide.tex
+  else
+       user_error=1
   fi
   cd ..
 fi
+
 
 if [ $install == "yes" ]; then
    echo
@@ -68,6 +75,11 @@ if [ $install == "yes" ]; then
    cd InstallationGuide
    pdflatex -file-line-error --halt-on-error installation_guide.tex
    pdflatex installation_guide.tex
+   if [ $? -ne 0 ]; then 
+      install_error=1
+   else
+      install_error=0
+   fi
    cd ..
 fi
 
@@ -80,6 +92,11 @@ if [ $develop == "yes" ]; then
   cd DeveloperGuide 
   pdflatex -file-line-error --halt-on-error UintahAPI.tex
   pdflatex UintahAPI.tex
+  if [ $? -ne 0 ]; then
+     develop_error=1
+  else
+     develop_error=0
+  fi
   cd ..
 fi
 
@@ -89,4 +106,10 @@ echo "now cleaning up"
 find . -name "*.out" -exec /bin/rm -f {} \;
 find . -name "*.aux" -exec /bin/rm -f {} \;
 find . -name "*.log" -exec /bin/rm -r {} \;
+
+echo "User error = " ${user_error}
+echo "Install error = " ${install_error}
+echo "Develop error = " ${develop_error}
+
+exit $user_error || $install_error || $develop_error
 
