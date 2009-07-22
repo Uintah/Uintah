@@ -62,7 +62,6 @@ Variable::Variable()
 {
    d_foreign = false;
    d_valid = true;
-   d_nextvar = NULL;
 }
 
 Variable::~Variable()
@@ -73,12 +72,6 @@ void
 Variable::setForeign()
 {
    d_foreign = true;
-}
-
-void
-Variable::setNextvar(Variable* var)
-{
-   d_nextvar = var;
 }
 
 void
