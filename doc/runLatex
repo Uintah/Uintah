@@ -53,7 +53,7 @@ if [ $user == "yes" ]; then
     echo "------------------"
     echo "Now running bibtex"
     echo "------------------"
-    #bibtex arches
+    bibtex arches
     bibtex ice
     bibtex mpm
     bibtex mpmice

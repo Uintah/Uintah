@@ -269,16 +269,15 @@ With these implementation practices, the dynamic model is generally robust. The 
 
 \subsection{LES Algorithm}
 %
-The set of filtered equations (Equations \ref{eqn:filtered_mass_balance}-\ref{eqn:filtered_heat_balance}) are discretized in space and time and solved on a staggered, finite volume mesh.  The staggering scheme consists of four offset grids. One grid stores the scalar quantities and the remaining three grids store each component of the velocity vector. The velocity components are situated so that the center of their control volume is located on the face centers of the scalar grid in their respective direction.  
-%Figure \ref{fig:staggered_grid} shows an example of a two-dimensional grid and the staggering arrangement.
+The set of filtered equations (Equations \ref{eqn:filtered_mass_balance}-\ref{eqn:filtered_heat_balance}) are discretized in space and time and solved on a staggered, finite volume mesh.  The staggering scheme consists of four offset grids. One grid stores the scalar quantities and the remaining three grids store each component of the velocity vector. The velocity components are situated so that the center of their control volume is located on the face centers of the scalar grid in their respective direction.  Figure \ref{fig:staggered_grid} shows an example of a two-dimensional grid and the staggering arrangement.
 %
 %% Staggered Grid
-%\begin{figure}
- % \begin{center}
-%    \scalebox{.85}{\includegraphics{figs/LES_pool_fire/staggered_grid.png}}
- %   \caption{Staggered grid arrangement in two dimensions with u and v velocity cell centers located on the face centers of the scalar cells.}\label{fig:staggered_grid}
-%   \end{center}
-%\end{figure}
+\begin{figure}
+ \begin{center}
+    \scalebox{.85}{\includegraphics{staggered_grid.png}}
+   \caption{Staggered grid arrangement in two dimensions with u and v velocity cell centers located on the face centers of the scalar cells.}\label{fig:staggered_grid}
+   \end{center}
+\end{figure}
 %
 
 The staggering arrangement is advantageous for computing low-Mach LES reacting flows.  First, since a pressure projection algorithm is used, the velocities are exactly projected without interpolation error because the location of the pressure gradient coincides directly with the location of the velocity storage location. Second, Morinishi et al. \cite{morinishi98} showed that kinetic energy is exactly conserved when using a central differencing scheme on the convection and diffusion terms without a subgrid model and in combination with a staggered grid.  Having a spatial scheme that conserves kinetic energy is advantageous because it limits artificial dissipation that arises from the differencing scheme.  These conservation properties make the staggered grid a prime choice for LES reacting flow simulation.
@@ -352,15 +351,12 @@ than or equal to one.
 
 A higher order, multistep method is derived by letting $m > 1$ and choosing appropriate constants for $\alpha$ and $\beta$. For this study, two step and three step, strong stability preserving (SSP) coefficients were chosen from Gottlieb et al. \cite{Gottlieb75}.  The coefficients for SSP-RK 2 and SSP-RK 3 are optimal in the sense that the scheme is stable when $c=1$ if the forward-Euler time step is stable for hyperbolic problems.  In practice, for the Navier-Stokes equations, the value of $c$ is taken less than one.
 
-%Jennifer edited
 Choosing an explicit time stepping scheme, rather than an implict one, creates a challenge for solving the set of equations.  The density at the $n+1$ timestep, which is required to determine the cardinal variables,  requires an estimation.  Taking the estimated density for  $\overline{\rho}^{n+1}$ to be $\overline{\rho}^*$, the estimation can be as simple as $\overline{\rho}^* = \overline{\rho}^n$.  Note that the 2d and 3d filter distinction is dropped for the remainder of this discussion for the sake of simplicity.  A slightly more complicated procedure involves a forward-Euler step of the continuity equation to obtain $\overline{\rho}^*$.  This is written as,  
 %
 \begin{equation}\label{eqn:rho_update}
 \overline{\rho}^{ *} = \overline{\rho}^{ n} - \Delta t \frac{S_k}{V} n_{kj} \left(  \overline{\rho} \widetilde{u_j} \right) \; .
 \end{equation}
 %
-%Jennifer edited
-%Jeremy: removed and moved "however"
 Ideally, one would like to know $\overline{\rho}^{n+1}$ rather than an estimate.  While more details will be discussed in Section \ref{sec:combust_react_models}, one recognizes that $\rho$ is a function of the same variables that are being updated in time, namely, the mixture fraction, $f$, and enthalpy, $h$.  This quandary is a result of the explicit time stepping method will not be resolved for variable density flows without using a fully implicit method.  Explicit methods, however, do have advantages, especially for large scale parallel computations.  Specifically, explicit methods are easier to load balance because the amount of work required for each processor is readily determined a priori, which makes for an efficient parallel computation.  Explicit methods are also easier to code into a computer and to debug.  For these reasons, the current algorithm discussion is limited to explicit methods only. 
 
 The explicit algorithm for solving the set of filtered equations is shown in Algorithm \ref{alg:LES_algorithm}.  
@@ -413,3 +409,7 @@ The explicit algorithm for solving the set of filtered equations is shown in Alg
 
 
 %\subsection{References}
+
+\section{References}
+\bibliographystyle{plain}
+\bibliography{arches}
