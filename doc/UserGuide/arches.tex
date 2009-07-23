@@ -361,27 +361,35 @@ Ideally, one would like to know $\overline{\rho}^{n+1}$ rather than an estimate.
 
 The explicit algorithm for solving the set of filtered equations is shown in Algorithm \ref{alg:LES_algorithm}.  
 %
-\begin{algorithm}[t]
-\caption{Explicit LES algorithm.}\label{alg:LES_algorithm}
+\begin{lstlisting}[float, caption = Explicit LES algorithm, label=alg:LES_algorithm]
+for t:=t_{min} to t_{max} do 
+fill in later..
+for $RK_{step}$:=1 to $N$
+end;
+end; 
+\end{lstlisting}
 %
-\begin{algorithmic}[] %add [1] for #'s
-\FOR{$t = t_{min}...t_{max}$}
-\FOR{$RK_{step} = 1$...$N$} 
-\STATE 	Solve for scalars products $(\overline{\rho} \widetilde{f})^{n+1}$ and $(\overline{\rho} \widetilde{h})^{n+1}$.
-\STATE	Estimate $\overline{\rho}^* = \overline{\rho}^{n+1}$ from Equation \ref{eqn:rho_update}
-\IF{$\overline{\rho}^* < \overline{\rho}_{min}$ or $ \overline{\rho}^* > \overline{\rho}_{max}$}
-\STATE $\overline{\rho}^* = \overline{\rho}^{n}$
-\ENDIF
-\STATE Compute $\widetilde{f}^{n+1} = (\overline{\rho}\widetilde{f})^{n+1}/{\overline{\rho}^*}$ and $\widetilde{h}^{n+1} = (\overline{\rho}\widetilde{h})^{n+1}/{\overline{\rho}^*}$ 
-\STATE Compute $\overline{\rho}^{n+1} = f(\widetilde{f}^{n+1}, \widetilde{h}^{n+1})$
-\STATE Compute $\widetilde{\mathbf{u}}^*$, the unprojected velocities
-\STATE Perform RK averaging if needed
-\STATE Compute correct pressure from pressure poisson equation
-\STATE Project velocities with correct pressure to get $\widetilde{\mathbf{u}}^{n+1}$ 
-\ENDFOR
-\ENDFOR
-\end{algorithmic}
-\end{algorithm}
+%\begin{algorithm}[t]
+%\caption{Explicit LES algorithm.}\label{alg:LES_algorithm}
+%
+%\begin{algorithmic}[] %add [1] for #'s
+%\FOR{$t = t_{min}...t_{max}$}
+%\FOR{$RK_{step} = 1$...$N$} 
+%\STATE 	Solve for scalars products $(\overline{\rho} \widetilde{f})^{n+1}$ and $(\overline{\rho} \widetilde{h})^{n+1}$.
+%\STATE	Estimate $\overline{\rho}^* = \overline{\rho}^{n+1}$ from Equation \ref{eqn:rho_update}
+%\IF{$\overline{\rho}^* < \overline{\rho}_{min}$ or $ \overline{\rho}^* > \overline{\rho}_{max}$}
+%\STATE $\overline{\rho}^* = \overline{\rho}^{n}$
+%\ENDIF
+%\STATE Compute $\widetilde{f}^{n+1} = (\overline{\rho}\widetilde{f})^{n+1}/{\overline{\rho}^*}$ and $\widetilde{h}^{n+1} = (\overline{\rho}\widetilde{h})^{n+1}/{\overline{\rho}^*}$ 
+%\STATE Compute $\overline{\rho}^{n+1} = f(\widetilde{f}^{n+1}, \widetilde{h}^{n+1})$
+%\STATE Compute $\widetilde{\mathbf{u}}^*$, the unprojected velocities
+%\STATE Perform RK averaging if needed
+%\STATE Compute correct pressure from pressure poisson equation
+%\STATE Project velocities with correct pressure to get $\widetilde{\mathbf{u}}^{n+1}$ 
+%\ENDFOR
+%\ENDFOR
+%\end{algorithmic}
+%\end{algorithm}
 
 %FIXME
 %\subsection{Uintah Specification}
