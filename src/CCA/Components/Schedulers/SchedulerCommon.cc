@@ -1114,7 +1114,7 @@ SchedulerCommon::scheduleAndDoDataCopy(const GridP& grid, SimulationInterface* s
 
   for (int i = 0; i < grid->numLevels(); i++) {
     LevelP newLevel = grid->getLevel(i);
-
+    //const PatchSubset  *patches = getLoadBalancer()->getPerProcessorPatchSet(newLevel)->getSubset(d_myworld->myrank());
     if (i > 0) {
       if (i >= oldGrid->numLevels()) {
         // new level - refine everywhere
@@ -1144,7 +1144,8 @@ SchedulerCommon::scheduleAndDoDataCopy(const GridP& grid, SimulationInterface* s
           int sum = 0;
           Patch::selectType oldPatches;
           oldLevel->selectPatches(lowIndex, highIndex, oldPatches);
-          
+         
+          //compute volume of overlapping regions
           for (int old = 0; old < oldPatches.size(); old++) {
             const Patch* oldPatch = oldPatches[old];
             IntVector oldLow = oldPatch->getCellLowIndex__New();
@@ -1169,16 +1170,16 @@ SchedulerCommon::scheduleAndDoDataCopy(const GridP& grid, SimulationInterface* s
 
     // find the patches that you don't refine
     Handle<PatchSubset> temp = scinew PatchSubset; // temp only to show empty set.  Don't pass into computes
-    constHandle<PatchSubset> modset, levelset, compset, diffset, intersection;
-    
+    constHandle<PatchSubset> modset, levelset, compset; 
     if (refineSets[i])
       modset = refineSets[i]->getUnion();
     else {
       modset = temp;
     }
     levelset = newLevel->eachPatch()->getUnion();
+    //levelset = patches;
     
-    PatchSubset::intersectionAndDifferences(levelset, modset, intersection, compset, diffset);
+    PatchSubset::difference(levelset, modset, compset);
 
     dataTasks.push_back(scinew Task("SchedulerCommon::copyDataToNewGrid", this,                          
                                      &SchedulerCommon::copyDataToNewGrid));
@@ -1197,6 +1198,7 @@ SchedulerCommon::scheduleAndDoDataCopy(const GridP& grid, SimulationInterface* s
       }
     }
     addTask(dataTasks[i], newLevel->eachPatch(), d_sharedState->allMaterials());
+    //addTask(dataTasks[i], patches, d_sharedState->allMaterials());
     if (i > 0) {
       sim->scheduleRefineInterface(newLevel, sched, 0, 1);
     }
