@@ -947,6 +947,12 @@ TaskGraph::createDetailedDependencies()
 void TaskGraph::remembercomps(DetailedTask* task, Task::Dependency* comp,
 			      CompTable& ct)
 {
+  //calling getPatchesUnderDomain can get expensive on large processors.  Thus we 
+  //cache results and use them on the next call.  This works well because comps
+  //are added in order and they share the same patches under the domain
+  const PatchSubset *cached_task_patches=0, *cached_comp_patches=0;
+  constHandle <PatchSubset> cached_patches;
+
   for(;comp != 0; comp = comp->next){
     if (comp->var->typeDescription()->isReductionVariable()){
       //if(task->getTask()->getType() == Task::Reduction || comp->deptype == Task::Modifies) {
@@ -954,8 +960,23 @@ void TaskGraph::remembercomps(DetailedTask* task, Task::Dependency* comp,
 	    ct.remembercomp(task, comp, 0, comp->matls, d_myworld);
     } else {
       // Normal tasks
-      constHandle<PatchSubset> patches =
-	      comp->getPatchesUnderDomain(task->patches);
+      constHandle<PatchSubset> patches;
+
+      //if the patch pointer on both the dep and the task have not changed then use the 
+      //cached result
+      if(task->patches==cached_task_patches && comp->patches==cached_comp_patches)
+      {
+        patches=cached_patches;
+      }
+      else
+      {
+        //compute the intersection 
+        patches=comp->getPatchesUnderDomain(task->patches);
+        //cache the result for the next iteration
+        cached_patches=patches;
+        cached_task_patches=task->patches;
+        cached_comp_patches=comp->patches;
+      }
       constHandle<MaterialSubset> matls =
 	      comp->getMaterialsUnderDomain(task->matls);
       if(!patches->empty() && !matls->empty()) {
