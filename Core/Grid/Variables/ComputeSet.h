@@ -166,21 +166,34 @@ namespace Uintah {
             intersection =
               intersectionAndMaybeDifferences<true>(A, B, AminusB, BminusA);
           }
+        
+        static void 
+          difference(const constHandle< ComputeSubset<T> >& A,
+              const constHandle< ComputeSubset<T> >& B,
+              constHandle< ComputeSubset<T> >& diff)
+          {
+            diff=difference(A,B);
+          }
 
+        
         static bool overlaps(const ComputeSubset<T>* s1,
             const ComputeSubset<T>* s2);
 
         static bool compareElems(T e1, T e2);
       private:
+        
         // May pass back Handles to same sets that came in.
-
         template <bool passBackDifferences>
           static constHandle< ComputeSubset<T> >
           intersectionAndMaybeDifferences(const constHandle< ComputeSubset<T> >& s1,
               const constHandle< ComputeSubset<T> >& s2,
               constHandle< ComputeSubset<T> >& setDifference1,
               constHandle< ComputeSubset<T> >& setDifference2);
-
+        
+        static constHandle< ComputeSubset<T> >
+          difference(const constHandle< ComputeSubset<T> >& A,
+              const constHandle< ComputeSubset<T> >& B);
+        
         vector<T> items;
 
         ComputeSubset(const ComputeSubset&);
@@ -518,6 +531,69 @@ namespace Uintah {
       else {
         return intersection;
       }
+    }
+  
+  template<class T>
+    constHandle< ComputeSubset<T> > ComputeSubset<T>::
+    difference(const constHandle< ComputeSubset<T> >& s1,
+        const constHandle< ComputeSubset<T> >& s2)
+    {
+      if (s1 == s2 || !s1 || !s2) {
+        // for efficiency -- expedite when s1 and s2 point to the same thing or are null
+        return Handle< ComputeSubset<T> >(scinew ComputeSubset<T>);
+      }
+
+      if (s1->size() == 0 || s1->size()==0 || s2->size()==0) 
+      {
+        return s1;  // return s1
+      }
+
+#if SCI_ASSERTION_LEVEL>0
+      if (!s1->is_sorted()) {
+        SCI_THROW(InternalError("ComputeSubset s1 not sorted in ComputeSubset<T>::intersectionAndMaybeDifference", __FILE__, __LINE__));
+      }
+      if (!s2->is_sorted()) {
+        SCI_THROW(InternalError("ComputeSubset s2 not sorted in ComputeSubset<T>::intersectionAndMaybeDifference", __FILE__, __LINE__));
+      }
+
+      T el2 = s2->get(0);
+      for(int i=1;i<s2->size();i++){
+        T el = s2->get(i);
+        if(!compareElems(el2, el)) {
+          ostringstream msgstr;
+          msgstr << "Set not sorted: " << el2 << ", " << el;
+          SCI_THROW(InternalError(msgstr.str(), __FILE__, __LINE__)); 
+        }
+        el2=el;
+      }
+#endif
+      
+      Handle< ComputeSubset<T> > diff = scinew ComputeSubset<T>;
+
+      int i1=0;
+      int i2=0;
+      for(;;){
+        if(s1->get(i1) == s2->get(i2)){
+          //in both s1 and s2
+          i1++; i2++;
+        } else if(compareElems(s1->get(i1), s2->get(i2))){
+          //in s1 but not s2
+          diff->add(s1->get(i1)); // alters setDifference1
+          i1++;
+        } else {
+          //in s2 but not s1
+          i2++;
+        }
+        if(i1 == s1->size() || i2 == s2->size())
+          break;
+      }
+
+      // get the rest of s1 that wasn't finished (if any)
+      for (; i1 != s1->size(); i1++) {
+        diff->add(s1->get(i1)); // alters setDifference1
+      }
+
+      return diff;
     }
 
 
