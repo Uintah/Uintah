@@ -434,7 +434,26 @@ void CompNeoHookPlas::computeStressTensor(const PatchSubset* patches,
       deformationGradientInc = deformationGradient_new[idx]
                               *deformationGradient[idx].Inverse();
 
+      // get the volumetric part of the deformation
       Jinc = deformationGradientInc.Determinant();
+      J = deformationGradient_new[idx].Determinant();
+
+      // Check 1: Look at Jacobian
+      if (!(J > 0.0)) {
+        cerr << getpid() ;
+        constParticleVariable<long64> pParticleID;
+        old_dw->get(pParticleID, lb->pParticleIDLabel, pset);
+        cerr << "**ERROR** Negative Jacobian of deformation gradient"
+             << " in particle " << pParticleID[idx] << endl;
+        cerr << "F_old = " << deformationGradient[idx] << endl;
+        cerr << "F_inc = " << deformationGradientInc << endl;
+        cerr << "F_new = " << deformationGradient_new[idx] << endl;
+        cerr << "J = " << J << endl;
+//        deformationGradient_new[idx]=Identity;
+//        deformationGradientInc=Identity;
+//        J=1.;
+//        Jinc=1.;
+      }
 
       // get the volume preserving part of the deformation gradient increment
       fbar = deformationGradientInc/cbrt(Jinc);
@@ -446,9 +465,6 @@ void CompNeoHookPlas::computeStressTensor(const PatchSubset* patches,
 
       // shearTrial is equal to the shear modulus times dev(bElBar)
       shearTrial = (bElBarTrial - Identity*IEl)*shear;
-
-      // get the volumetric part of the deformation
-      J = deformationGradient_new[idx].Determinant();
 
       // Compute the deformed volume and the local sound speed
       double rho_cur = rho_orig/J;
