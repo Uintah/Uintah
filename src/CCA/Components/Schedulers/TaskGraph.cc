@@ -1150,6 +1150,12 @@ TaskGraph::createDetailedDependencies(DetailedTask* task,
 
         for(int i=0;i<neighbors.size();i++){
           const Patch* neighbor=neighbors[i];
+
+          //if the neighbor is not in our neighborhood, continue on because 
+          //it's dependencies do not matter to this processor.
+          if(!lb->inNeighborhood(neighbor))
+            continue;
+
           Patch::selectType fromNeighbors;
           IntVector l = Max(neighbor->getExtraLowIndex(basis, req->var->getBoundaryLayer()), low);
           IntVector h = Min(neighbor->getExtraHighIndex(basis, req->var->getBoundaryLayer()), high);
@@ -1172,10 +1178,8 @@ TaskGraph::createDetailedDependencies(DetailedTask* task,
 
           for (int j = 0; j < fromNeighbors.size(); j++) {
             const Patch* fromNeighbor = fromNeighbors[j];
-
-            //only add the requirments both patches are in my neighborhood, old logic kept here for reference
-            //if(!(lb->inNeighborhood(neighbor) || (neighbor != fromNeighbor && lb->inNeighborhood(fromNeighbor))))
-            if( !lb->inNeighborhood(neighbor) || !lb->inNeighborhood(fromNeighbor))
+            //only add the requirments the fromNeighbor is in my neighborhood
+            if(!lb->inNeighborhood(fromNeighbor))
               continue;
 
             IntVector from_l;
