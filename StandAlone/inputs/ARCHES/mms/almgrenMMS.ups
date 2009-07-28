@@ -69,7 +69,7 @@
         </almgrenMMS>
       </MMS>
 
-      <init_dt>1</init_dt>
+      <initial_dt>1</initial_dt>
       <variable_dt>true</variable_dt>
       <nonlinear_solver>explicit</nonlinear_solver>
       <turbulence_model>smagorinsky</turbulence_model>
