@@ -2269,7 +2269,7 @@ avtudaReaderMTMDFileFormat::GetVar(int timestate, int domain, const char *varnam
     }
   }
 
-  // debug5 << isParticleVar << endl;
+  cout << isParticleVar << endl;
 
   vtkFloatArray *rv = vtkFloatArray::New();
 
@@ -2703,8 +2703,8 @@ avtudaReaderMTMDFileFormat::GetVar(int timestate, int domain, const char *varnam
     if (matl.compare("*") != 0)
       matlNo = atoi(matl.c_str());
 
-    debug5 << varName << endl;
-    debug5 << matlNo << endl;
+    cout << varName << endl;
+    cout << matlNo << endl;
 
     strcpy(arr2d[0], "uda2nrrd"); // anything will do
     strcpy(arr2d[1], "-uda");
@@ -2750,12 +2750,13 @@ avtudaReaderMTMDFileFormat::GetVar(int timestate, int domain, const char *varnam
 
       // debug5 << dataRef.size() << endl;
 
-      bool varFound = false;
+      // bool varFound = false;
 
       for (int j = 0;  j < dataRef.size(); j++) {
-	if (strcmp(varName.c_str(), dataRef[j].name.c_str()) == 0)
-	  varFound = true;
+	if (strcmp(varName.c_str(), dataRef[j].name.c_str()) == 0) {
+	  // varFound = true;
 	  rv->SetTuple1(i, dataRef[j].value);  // you must determine value for ith entry.
+        }
       }
 
       /*if (!varFound) {
