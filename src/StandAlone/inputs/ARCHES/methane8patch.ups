@@ -70,7 +70,7 @@
         <!-- ARCHES specification -->
 
         <ARCHES>
-            <grow_dt>0.05</grow_dt>
+            <init_dt>0.05</init_dt>
             <variable_dt>true</variable_dt>
             <nonlinear_solver>explicit</nonlinear_solver>
             <turbulence_model>compdynamicprocedure</turbulence_model>

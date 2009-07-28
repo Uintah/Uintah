@@ -169,7 +169,7 @@ Arches::problemSetup(const ProblemSpecP& params,
   sharedState->registerArchesMaterial(mat);
   ProblemSpecP db = params->findBlock("CFD")->findBlock("ARCHES");
   // not sure, do we need to reduce and put in datawarehouse
-  db->require("grow_dt", d_deltaT);
+  db->require("initial_dt", d_init_dt);
   db->require("variable_dt", d_variableTimeStep);
   db->require("transport_mixture_fraction", d_calcScalar);
   if (!d_calcScalar)
@@ -1119,7 +1119,7 @@ Arches::computeStableTimeStep(const ProcessorGroup* ,
       indexHigh = indexHigh + IntVector(0,0,1);
     }
 
-    double delta_t = d_deltaT; // max value allowed
+    double delta_t = d_init_dt; // max value allowed
     double small_num = 1e-30;
     double delta_t2 = delta_t;
 
