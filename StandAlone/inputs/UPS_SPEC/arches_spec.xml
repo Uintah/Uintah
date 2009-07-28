@@ -86,6 +86,7 @@
           <soot_precursors              spec="OPTIONAL BOOLEAN" />
           <sulfur_chem                  spec="OPTIONAL BOOLEAN" />
           <tabulated_soot               spec="OPTIONAL BOOLEAN" />
+          <loud_heatloss_warning        spec="OPTIONAL BOOLEAN" />
         </NewStaticMixingTable>
 
         <optically_thin_model_opl      spec="OPTIONAL DOUBLE" />
