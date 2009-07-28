@@ -81,8 +81,6 @@
         <NewStaticMixingTable           spec="OPTIONAL NO_DATA" >
           <co_output                    spec="OPTIONAL BOOLEAN" />
           <inputfile                    spec="REQUIRED STRING" />
-          <h_fuel                       spec="REQUIRED DOUBLE" />
-          <h_air                        spec="REQUIRED DOUBLE" />
           <soot_precursors              spec="OPTIONAL BOOLEAN" />
           <sulfur_chem                  spec="OPTIONAL BOOLEAN" />
           <tabulated_soot               spec="OPTIONAL BOOLEAN" />
