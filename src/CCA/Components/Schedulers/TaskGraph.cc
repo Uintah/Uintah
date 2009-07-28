@@ -1149,10 +1149,10 @@ TaskGraph::createDetailedDependencies(DetailedTask* task,
 
 
         for(int i=0;i<neighbors.size();i++){
-          const Patch* neighbor=neighbors[i]->getRealPatch();
+          const Patch* neighbor=neighbors[i];
             
           //if neighbor is not in my neighborhood just continue as its dependencies are not important to this processor
-          if(!lb->inNeighborhood(neighbor))
+          if(!lb->inNeighborhood(neighbor->getRealPatch()))
             continue;
 
           Patch::selectType fromNeighbors;
@@ -1161,6 +1161,7 @@ TaskGraph::createDetailedDependencies(DetailedTask* task,
           if (neighbor->isVirtual()) {
             l -= neighbor->getVirtualOffset();
             h -= neighbor->getVirtualOffset();	    
+            neighbor=neighbor->getRealPatch();
           }
           if (req->patches_dom == Task::OtherGridDomain) {
             // this is when we are copying data between two grids (currently between timesteps)
