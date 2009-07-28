@@ -3,7 +3,7 @@
 
   <CFD>
     <ARCHES                             spec="OPTIONAL NO_DATA" >
-      <grow_dt                          spec="REQUIRED DOUBLE 'positive'" />
+      <initial_dt                       spec="REQUIRED DOUBLE 'positive'" />
       <variable_dt                      spec="REQUIRED BOOLEAN" />
       <nonlinear_solver                 spec="REQUIRED STRING 'explicit,
                                                                picard'" />

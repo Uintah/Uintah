@@ -179,7 +179,7 @@
 
 	<ARCHES>
 
-	    <grow_dt>0.01</grow_dt>
+	    <init_dt>0.01</init_dt>
 	    <variable_dt>true</variable_dt>
    	    <nonlinear_solver>explicit</nonlinear_solver>
     	    <turbulence_model>compdynamicprocedure</turbulence_model>

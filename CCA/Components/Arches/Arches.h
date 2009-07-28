@@ -313,7 +313,7 @@ private:
 
 
 
-      double d_deltaT;
+      double d_init_dt;
       bool d_variableTimeStep;
       bool d_calcScalar;
       bool d_calcReactingScalar;

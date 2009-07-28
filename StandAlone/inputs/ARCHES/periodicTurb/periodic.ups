@@ -51,7 +51,7 @@
 <!--__________________________________-->
 <CFD>
   <ARCHES>
-    <grow_dt>                   1           </grow_dt>
+    <init_dt>                   1           </init_dt>
     <variable_dt>               true        </variable_dt>
     <set_initial_condition>     true        </set_initial_condition>
     <init_cond_input_file>      inputs/ARCHES/periodicTurb/iso_ini_32.dat</init_cond_input_file>
