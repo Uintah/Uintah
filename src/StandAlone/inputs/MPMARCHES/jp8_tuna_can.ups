@@ -201,8 +201,6 @@
 	        <mixing_model>NewStaticMixingTable</mixing_model>
 	        <NewStaticMixingTable>
                   <inputfile>inputs/ARCHES/NewStaticMixingTables/jp8/jp8_equil_clipped.mxn</inputfile>
-                  <h_fuel>-1322280.0</h_fuel>
-                  <h_air>-118.456</h_air>
                   <co_output>false</co_output>
                   <sulfur_chem>false</sulfur_chem>
                   <soot_precursors>false</soot_precursors>
