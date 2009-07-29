@@ -58,7 +58,6 @@
 
     <!-- ARCHES specification -->
     <ARCHES>
-      <doMMS>true</doMMS>
       <MMS whichMMS="almgrenMMS" >
         <mmsErrorType>L2</mmsErrorType>
         <almgrenMMS>

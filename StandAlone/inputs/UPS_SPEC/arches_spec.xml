@@ -11,17 +11,11 @@
       <model_mixture_fraction_variance  spec="REQUIRED BOOLEAN" />
       <set_initial_condition             spec="OPTIONAL NO_DATA"
                                         attribute1="inputfile REQUIRED STRING"/>
-      <turnonMixedModel                 spec="OPTIONAL BOOLEAN" />
+      <turnonMixedModel                 spec="OPTIONAL BOOLEAN" /> <!-- not sure what this model is-->
       <recompileTaskgraph               spec="OPTIONAL BOOLEAN" />
       <scalarUnderflowCheck             spec="OPTIONAL BOOLEAN" />
       <EKTCorrection                    spec="OPTIONAL BOOLEAN" />
-      <doMMS                            spec="OPTIONAL BOOLEAN" /> <!-- IF TRUE, then requires MMS block-->
-      <!--Should change requirements on this MMS block if doMMS is
-           true...  FIXME: Actually, shouldn't the pressense of an
-           <MMS> block implie doMMS, and the absence imply not doing
-           MMS?  We could also add doMMS as an attribute to the MMS
-           block, and then key required/optional off of that...
-      -->
+
       <MMS                              spec="OPTIONAL NO_DATA"
                                           attribute1="whichMMS REQUIRED STRING 'constantMMS, almgrenMMS'" >
         <mmsErrorType                   spec="REQUIRED STRING 'Linf, L2'" />  <!-- FIXME: is 'L' valid (almgrenMMS.ups)? -->
@@ -38,6 +32,7 @@
           <viscosity                    spec="REQUIRED DOUBLE" />
         </almgrenMMS>
       </MMS>
+
       <Turbulence                       spec="REQUIRED NO_DATA"
                                         attribute1="model REQUIRED STRING 'compdynamicprocedure, dynamicprocedure, smagorinsky'" >
 
@@ -55,6 +50,7 @@
 
         <var_const                      spec="OPTIONAL DOUBLE" /> <!-- FIXME: What is this? Does it have a range? -->
       </Turbulence>
+
       <Properties                       spec="REQUIRED NO_DATA"
                                           children1="ONE_OF(CHILD ColdflowMixingModel, NewStaticMixingTable, TabPropsTable)" >
 

@@ -60,7 +60,6 @@
 
     <!-- ARCHES specification -->
     <ARCHES>
-      <doMMS>true</doMMS>
       <MMS whichMMS="constantMMS" >
         <mmsErrorType>Linf</mmsErrorType>
         <constantMMS>
