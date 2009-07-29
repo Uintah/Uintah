@@ -266,25 +266,24 @@ Arches::problemSetup(const ProblemSpecP& params,
   d_props->setSulfurBalanceES(d_sulfur_balance_es);
 
   ProblemSpecP turb_db = db->findBlock("Turbulence");
-  string whichTurbModel; 
-  turb_db->getAttribute("model", whichTurbModel); 
+  turb_db->getAttribute("model", d_whichTurbModel); 
 
   //db->require("turbulence_model", turbModel);
-  if ( whichTurbModel == "smagorinsky"){ 
+  if ( d_whichTurbModel == "smagorinsky"){ 
     d_turbModel = scinew SmagorinskyModel(d_lab, d_MAlab, d_physicalConsts,
                                           d_boundaryCondition);
-  }else  if ( whichTurbModel == "dynamicprocedure"){ 
+  }else  if ( d_whichTurbModel == "dynamicprocedure"){ 
     d_turbModel = scinew IncDynamicProcedure(d_lab, d_MAlab, d_physicalConsts,
                                           d_boundaryCondition);
-  }else if ( whichTurbModel == "compdynamicprocedure"){
+  }else if ( d_whichTurbModel == "compdynamicprocedure"){
     d_turbModel = scinew CompDynamicProcedure(d_lab, d_MAlab, d_physicalConsts,
                                           d_boundaryCondition);
-  }else if ( whichTurbModel == "complocaldynamicprocedure") {
+  }else if ( d_whichTurbModel == "complocaldynamicprocedure") {
     d_initTurb = scinew CompLocalDynamicProcedure(d_lab, d_MAlab, d_physicalConsts, d_boundaryCondition); 
     d_turbModel = scinew CompLocalDynamicProcedure(d_lab, d_MAlab, d_physicalConsts, d_boundaryCondition);
   }
   else {
-    throw InvalidValue("Turbulence Model not supported" + whichTurbModel, __FILE__, __LINE__);
+    throw InvalidValue("Turbulence Model not supported" + d_whichTurbModel, __FILE__, __LINE__);
   }
 
 //  if (d_turbModel)
