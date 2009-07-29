@@ -171,9 +171,11 @@ Arches::problemSetup(const ProblemSpecP& params,
   // not sure, do we need to reduce and put in datawarehouse
   db->require("initial_dt", d_init_dt);
   db->require("variable_dt", d_variableTimeStep);
-  db->require("transport_mixture_fraction", d_calcScalar);
+  if (db->findBlock("ExplicitSolver")->findBlock("MixtureFractionSolver")){
+    d_calcScalar = true;
+  }
   if (!d_calcScalar)
-    throw InvalidValue("Density being independent variable or equivalently mixture fraction transport disabled is not supported in current implementation. This option has been left available for input file uniformity.", __FILE__, __LINE__);
+    throw InvalidValue("Density being independent variable or equivalently mixture fraction transport disabled is not supported in current implementation. Please include the <MixtureFractionSolver> section as a child of <Arches>.", __FILE__, __LINE__);
   db->getWithDefault("set_initial_condition",d_set_initial_condition,false);
   if (d_set_initial_condition)
     db->require("init_cond_input_file", d_init_inputfile);
@@ -223,7 +225,6 @@ Arches::problemSetup(const ProblemSpecP& params,
   //d_physicalConsts->problemSetup(params);
   d_physicalConsts->problemSetup(db);
 
-  d_calcExtraScalars = false;
   if (db->findBlock("ExtraScalars")) {
     d_calcExtraScalars = true; 
     ProblemSpecP extra_sc_db = db->findBlock("ExtraScalars");
