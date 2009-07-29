@@ -181,7 +181,8 @@ Arches::problemSetup(const ProblemSpecP& params,
     db->require("init_cond_input_file", d_init_inputfile);
   if (d_calcScalar) {
     db->getWithDefault("transport_reacting_scalar", d_calcReactingScalar,false);
-    db->require("transport_enthalpy", d_calcEnthalpy);
+    if (db->findBlock("ExplicitSolver")->findBlock("EnthalpySolver"))
+      d_calcEnthalpy = true; 
     db->require("model_mixture_fraction_variance", d_calcVariance);
   }
   db->getWithDefault("turnonMixedModel",    d_mixedModel,false);
