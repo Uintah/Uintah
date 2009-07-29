@@ -181,6 +181,11 @@ Arches::problemSetup(const ProblemSpecP& params,
     db->require("init_cond_input_file", d_init_inputfile);
   if (d_calcScalar) {
     db->getWithDefault("transport_reacting_scalar", d_calcReactingScalar,false);
+    if (d_calcReactingScalar) {
+      throw InvalidValue("Transport of reacting scalar is being phased out.  Please email j.thornock@utah.edu if you have questions.", __FILE__, __LINE__);
+      d_calcReactingScalar = false; 
+    }
+
     if (db->findBlock("ExplicitSolver")->findBlock("EnthalpySolver"))
       d_calcEnthalpy = true; 
     db->require("model_mixture_fraction_variance", d_calcVariance);
@@ -392,8 +397,6 @@ Arches::problemSetup(const ProblemSpecP& params,
     //create a time integrator.
     d_timeIntegrator = scinew ExplicitTimeInt(d_lab);
     d_timeIntegrator->problemSetup(time_db);
-  } else {
-    proc0cout << "WARNING: If you are trying to do DQMOM you need to add the <TimeIntegrator> section!\n"; 
   }
 
   //register all source terms
@@ -449,6 +452,8 @@ Arches::problemSetup(const ProblemSpecP& params,
 
   ProblemSpecP dqmom_db = db->findBlock("DQMOM"); 
   if (dqmom_db) {
+
+    proc0cout << "WARNING: If you are trying to do DQMOM make sure you added the <TimeIntegrator> section!\n"; 
 
     d_doDQMOM = true; 
 
