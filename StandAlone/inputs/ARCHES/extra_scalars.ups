@@ -77,7 +77,6 @@
             <nonlinear_solver>explicit</nonlinear_solver>
             <transport_mixture_fraction>true</transport_mixture_fraction>
             <transport_enthalpy>true</transport_enthalpy>        
-            <transport_extra_scalars>true</transport_extra_scalars>        
             <model_mixture_fraction_variance>true</model_mixture_fraction_variance>
             <Turbulence model="compdynamicprocedure">
                 <variance_coefficient>0.1</variance_coefficient>
