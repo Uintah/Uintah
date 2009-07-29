@@ -8,7 +8,6 @@
       <nonlinear_solver                 spec="REQUIRED STRING 'explicit,
                                                                picard'" />
 
-      <transport_enthalpy               spec="REQUIRED BOOLEAN" />
       <transport_reacting_scalar        spec="OPTIONAL BOOLEAN" />
 
       <model_mixture_fraction_variance  spec="REQUIRED BOOLEAN" />
