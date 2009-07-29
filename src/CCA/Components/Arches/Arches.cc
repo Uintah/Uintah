@@ -247,10 +247,8 @@ Arches::problemSetup(const ProblemSpecP& params,
   }
   
   d_props->problemSetup(db);
-  // read turbulence mode
-  // read turbulence model
 
-  // read boundary
+  // read boundary condition information 
   d_boundaryCondition = scinew BoundaryCondition(d_lab, d_MAlab, d_physicalConsts,
                                                  d_props, d_calcReactingScalar,
                                                  d_calcEnthalpy, d_calcVariance);
@@ -267,22 +265,26 @@ Arches::problemSetup(const ProblemSpecP& params,
   d_props->setCarbonBalanceES(d_carbon_balance_es);        
   d_props->setSulfurBalanceES(d_sulfur_balance_es);
 
-  db->require("turbulence_model", turbModel);
-  if (turbModel == "smagorinsky"){ 
+  ProblemSpecP turb_db = db->findBlock("Turbulence");
+  string whichTurbModel; 
+  turb_db->getAttribute("model", whichTurbModel); 
+
+  //db->require("turbulence_model", turbModel);
+  if ( whichTurbModel == "smagorinsky"){ 
     d_turbModel = scinew SmagorinskyModel(d_lab, d_MAlab, d_physicalConsts,
                                           d_boundaryCondition);
-  }else  if (turbModel == "dynamicprocedure"){ 
+  }else  if ( whichTurbModel == "dynamicprocedure"){ 
     d_turbModel = scinew IncDynamicProcedure(d_lab, d_MAlab, d_physicalConsts,
                                           d_boundaryCondition);
-  }else if (turbModel == "compdynamicprocedure"){
+  }else if ( whichTurbModel == "compdynamicprocedure"){
     d_turbModel = scinew CompDynamicProcedure(d_lab, d_MAlab, d_physicalConsts,
                                           d_boundaryCondition);
-  }else if (turbModel == "complocaldynamicprocedure") {
+  }else if ( whichTurbModel == "complocaldynamicprocedure") {
     d_initTurb = scinew CompLocalDynamicProcedure(d_lab, d_MAlab, d_physicalConsts, d_boundaryCondition); 
     d_turbModel = scinew CompLocalDynamicProcedure(d_lab, d_MAlab, d_physicalConsts, d_boundaryCondition);
   }
   else {
-    throw InvalidValue("Turbulence Model not supported" + turbModel, __FILE__, __LINE__);
+    throw InvalidValue("Turbulence Model not supported" + whichTurbModel, __FILE__, __LINE__);
   }
 
 //  if (d_turbModel)
@@ -633,7 +635,7 @@ Arches::scheduleInitialize(const LevelP& level,
                                                             init_timelabel);
     }
 
-    if (turbModel == "complocaldynamicprocedure")
+    if (d_whichTurbModel == "complocaldynamicprocedure")
       d_initTurb->sched_initializeSmagCoeff(sched, patches, matls, init_timelabel);
     else
       d_turbModel->sched_reComputeTurbSubmodel(sched, patches, matls, init_timelabel);

@@ -76,13 +76,12 @@
       <initial_dt>1</initial_dt>
       <variable_dt>true</variable_dt>
       <nonlinear_solver>explicit</nonlinear_solver>
-      <turbulence_model>smagorinsky</turbulence_model>
       <transport_mixture_fraction>true</transport_mixture_fraction>
       <transport_enthalpy>false</transport_enthalpy>
       <model_mixture_fraction_variance>false</model_mixture_fraction_variance>
       <transport_extra_scalars>true</transport_extra_scalars>
       
-      <Turbulence>
+      <Turbulence model = "smagorinsky">
         <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
         <cf>0.0</cf>
         <fac_mesh>1.0</fac_mesh>
