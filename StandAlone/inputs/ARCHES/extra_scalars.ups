@@ -75,7 +75,6 @@
             <initial_dt>0.05</initial_dt>
             <variable_dt>true</variable_dt>
             <nonlinear_solver>explicit</nonlinear_solver>
-            <transport_mixture_fraction>true</transport_mixture_fraction>
             <transport_enthalpy>true</transport_enthalpy>        
             <model_mixture_fraction_variance>true</model_mixture_fraction_variance>
             <Turbulence model="compdynamicprocedure">
