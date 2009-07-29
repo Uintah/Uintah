@@ -313,8 +313,9 @@ private:
 
 
 
-      double d_init_dt;
+      double d_init_dt; // The initial dt from input file. 
       bool d_variableTimeStep;
+      string d_whichTurbModel; 
       bool d_calcScalar;
       bool d_calcReactingScalar;
       bool d_calcEnthalpy;
@@ -323,7 +324,6 @@ private:
       bool d_doMMS;
       bool d_extraProjection;
       bool d_EKTCorrection;
-      string turbModel;
       ScaleSimilarityModel* d_scaleSimilarityModel;
       CompLocalDynamicProcedure* d_initTurb;
       PhysicalConstants* d_physicalConsts;

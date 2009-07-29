@@ -7,7 +7,6 @@
       <variable_dt                      spec="REQUIRED BOOLEAN" />
       <nonlinear_solver                 spec="REQUIRED STRING 'explicit,
                                                                picard'" />
-      <turbulence_model                 spec="REQUIRED STRING 'compdynamicprocedure, dynamicprocedure, smagorinsky'" />
       <transport_mixture_fraction       spec="REQUIRED BOOLEAN" />
       <transport_enthalpy               spec="REQUIRED BOOLEAN" />
       <transport_reacting_scalar        spec="OPTIONAL BOOLEAN" />
@@ -42,7 +41,8 @@
           <viscosity                    spec="REQUIRED DOUBLE" />
         </almgrenMMS>
       </MMS>
-      <Turbulence                       spec="REQUIRED NO_DATA" >
+      <Turbulence                       spec="REQUIRED NO_DATA"
+                                        attribute1="model REQUIRED STRING 'compdynamicprocedure, dynamicprocedure, smagorinsky'" >
 
         <variance_coefficient           spec="OPTIONAL DOUBLE" />
         <!--smagorinsky -->
