@@ -350,7 +350,6 @@
             </ExplicitSolver>
 
             <set_initial_condition>false</set_initial_condition>
-            <transport_reacting_scalar>false</transport_reacting_scalar>
             <turnonMixedModel>false</turnonMixedModel>
             <recompileTaskgraph>false</recompileTaskgraph>
             <doMMS>false</doMMS>

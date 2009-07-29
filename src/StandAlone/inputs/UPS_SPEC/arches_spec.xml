@@ -8,8 +8,6 @@
       <nonlinear_solver                 spec="REQUIRED STRING 'explicit,
                                                                picard'" />
 
-      <transport_reacting_scalar        spec="OPTIONAL BOOLEAN" />
-
       <model_mixture_fraction_variance  spec="REQUIRED BOOLEAN" />
       <set_initial_condition            spec="OPTIONAL BOOLEAN" /> <!-- IF TRUE, then requires init_cond_input_file-->
       <init_cond_input_file             spec="OPTIONAL STRING" /> <!-- Should be required if set_intial_condition is true-->
