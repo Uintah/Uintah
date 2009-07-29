@@ -121,6 +121,7 @@ Arches::Arches(const ProcessorGroup* myworld) :
   d_analysisModule = false;
   d_calcExtraScalars = false;
   d_extraScalarSolver = 0;
+  d_set_initial_condition = false;
 
   DQMOMEqnFactory& dqmomfactory = DQMOMEqnFactory::self(); 
   dqmomfactory.set_quad_nodes(0);
@@ -180,11 +181,17 @@ Arches::problemSetup(const ProblemSpecP& params,
   }
   if (!d_calcScalar)
     throw InvalidValue("Density being independent variable or equivalently mixture fraction transport disabled is not supported in current implementation. Please include the <MixtureFractionSolver> section as a child of <Arches>.", __FILE__, __LINE__);
-  db->getWithDefault("set_initial_condition",d_set_initial_condition,false);
-  if (d_set_initial_condition)
-    db->require("init_cond_input_file", d_init_inputfile);
+
+  if (db->findBlock("set_initial_condition")) {
+    d_set_initial_condition = true;
+    db->findBlock("set_initial_condition")->getAttribute("inputfile",d_init_inputfile);
+  }
+
+//  db->getWithDefault("set_initial_condition",d_set_initial_condition,false);
+//  if (d_set_initial_condition)
+//    db->require("init_cond_input_file", d_init_inputfile);
+//
   if (d_calcScalar) {
-    db->getWithDefault("transport_reacting_scalar", d_calcReactingScalar,false);
     if (d_calcReactingScalar) {
       throw InvalidValue("Transport of reacting scalar is being phased out.  Please email j.thornock@utah.edu if you have questions.", __FILE__, __LINE__);
       d_calcReactingScalar = false; 

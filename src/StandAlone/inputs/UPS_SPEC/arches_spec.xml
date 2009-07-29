@@ -9,8 +9,8 @@
                                                                picard'" />
 
       <model_mixture_fraction_variance  spec="REQUIRED BOOLEAN" />
-      <set_initial_condition            spec="OPTIONAL BOOLEAN" /> <!-- IF TRUE, then requires init_cond_input_file-->
-      <init_cond_input_file             spec="OPTIONAL STRING" /> <!-- Should be required if set_intial_condition is true-->
+      <set_initial_condition             spec="OPTIONAL NO_DATA"
+                                        attribute1="inputfile REQUIRED STRING"/>
       <turnonMixedModel                 spec="OPTIONAL BOOLEAN" />
       <recompileTaskgraph               spec="OPTIONAL BOOLEAN" />
       <scalarUnderflowCheck             spec="OPTIONAL BOOLEAN" />
