@@ -79,7 +79,6 @@
       <transport_mixture_fraction>true</transport_mixture_fraction>
       <transport_enthalpy>false</transport_enthalpy>
       <model_mixture_fraction_variance>false</model_mixture_fraction_variance>
-      <transport_extra_scalars>true</transport_extra_scalars>
       
       <Turbulence model = "smagorinsky">
         <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>

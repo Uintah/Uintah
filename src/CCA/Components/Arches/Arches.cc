@@ -181,7 +181,6 @@ Arches::problemSetup(const ProblemSpecP& params,
     db->getWithDefault("transport_reacting_scalar", d_calcReactingScalar,false);
     db->require("transport_enthalpy", d_calcEnthalpy);
     db->require("model_mixture_fraction_variance", d_calcVariance);
-    db->getWithDefault("transport_extra_scalars", d_calcExtraScalars, false);
   }
   db->getWithDefault("turnonMixedModel",    d_mixedModel,false);
   db->getWithDefault("recompileTaskgraph",  d_recompile,false);
@@ -224,7 +223,9 @@ Arches::problemSetup(const ProblemSpecP& params,
   //d_physicalConsts->problemSetup(params);
   d_physicalConsts->problemSetup(db);
 
-  if (d_calcExtraScalars) {
+  d_calcExtraScalars = false;
+  if (db->findBlock("ExtraScalars")) {
+    d_calcExtraScalars = true; 
     ProblemSpecP extra_sc_db = db->findBlock("ExtraScalars");
     for (ProblemSpecP scalar_db = extra_sc_db->findBlock("scalar");
          scalar_db != 0; scalar_db = scalar_db->findNextBlock("scalar")) {
