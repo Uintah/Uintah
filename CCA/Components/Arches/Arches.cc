@@ -171,8 +171,12 @@ Arches::problemSetup(const ProblemSpecP& params,
   // not sure, do we need to reduce and put in datawarehouse
   db->require("initial_dt", d_init_dt);
   db->require("variable_dt", d_variableTimeStep);
-  if (db->findBlock("ExplicitSolver")->findBlock("MixtureFractionSolver")){
-    d_calcScalar = true;
+  if (db->findBlock("ExplicitSolver")){
+    if (db->findBlock("ExplicitSolver")->findBlock("MixtureFractionSolver"))
+      d_calcScalar = true;
+  } else if (db->findBlock("PicardSolver")){
+    if (db->findBlock("PicardSolver")->findBlock("MixtureFractionSolver"))
+      d_calcScalar = true;
   }
   if (!d_calcScalar)
     throw InvalidValue("Density being independent variable or equivalently mixture fraction transport disabled is not supported in current implementation. Please include the <MixtureFractionSolver> section as a child of <Arches>.", __FILE__, __LINE__);
@@ -186,8 +190,13 @@ Arches::problemSetup(const ProblemSpecP& params,
       d_calcReactingScalar = false; 
     }
 
-    if (db->findBlock("ExplicitSolver")->findBlock("EnthalpySolver"))
-      d_calcEnthalpy = true; 
+    if (db->findBlock("ExplicitSolver")){
+      if (db->findBlock("ExplicitSolver")->findBlock("EnthalpySolver"))
+        d_calcEnthalpy = true; 
+    } else if (db->findBlock("PicardSolver")) {
+      if (db->findBlock("PicardSolver")->findBlock("EnthalpySolver"))
+        d_calcEnthalpy = true;
+    }
     db->require("model_mixture_fraction_variance", d_calcVariance);
   }
   db->getWithDefault("turnonMixedModel",    d_mixedModel,false);
