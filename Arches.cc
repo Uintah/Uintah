@@ -126,6 +126,7 @@ Arches::Arches(const ProcessorGroup* myworld) :
   DQMOMEqnFactory& dqmomfactory = DQMOMEqnFactory::self(); 
   dqmomfactory.set_quad_nodes(0);
   d_doDQMOM = false; 
+  d_doMMS = false;
   
 }
 
@@ -212,8 +213,8 @@ Arches::problemSetup(const ProblemSpecP& params,
   db->getWithDefault("extraProjection",     d_extraProjection,false);  
   db->getWithDefault("EKTCorrection",       d_EKTCorrection,false);  
 
-  db->getWithDefault("doMMS", d_doMMS, false);
-  if(d_doMMS) {
+  if(db->findBlock("MMS")) {
+    d_doMMS = true;
     ProblemSpecP db_mms = db->findBlock("MMS");
     if( !db_mms->getAttribute( "whichMMS", d_mms ) ) {
       throw ProblemSetupException( "whichMMS not specified", __FILE__, __LINE__);      
