@@ -48,6 +48,13 @@
   </Level>
 </Grid>
 
+
+<PhysicalConstants>
+  <gravity>   [0,0,0]   </gravity>
+  <reference_point> [0,0,0]   </reference_point>
+  <viscosity> 0.000020  </viscosity>
+</PhysicalConstants>
+
 <!--__________________________________-->
 <CFD>
   <ARCHES>
@@ -77,11 +84,6 @@
     <BoundaryConditions>
     </BoundaryConditions>
 
-    <PhysicalConstants>
-      <gravity>   [0,0,0]   </gravity>
-      <ref_point> [0,0,0]   </ref_point>
-      <viscosity> 0.000020  </viscosity>
-    </PhysicalConstants>
 
     <ExplicitSolver>
       <timeIntegratorType>  RK2SSP  </timeIntegratorType>

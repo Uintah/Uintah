@@ -56,6 +56,12 @@
     </Level>
   </Grid>
 
+  <PhysicalConstants>
+    <gravity>[0,0,0]</gravity>
+    <reference_point>[0,0,0]</reference_point>
+    <viscosity>0.0</viscosity>
+  </PhysicalConstants>
+
   <CFD>
 
     <!-- ARCHES specification -->
@@ -104,12 +110,6 @@
       </BoundaryConditions>
 -->
 
-      <PhysicalConstants>
-        <gravity>[0,0,0]</gravity>
-        <ref_point>[0,0,0]</ref_point>
-        <pressure>0.0</pressure>
-        <viscosity>0.0</viscosity>
-      </PhysicalConstants>
 
       <ExtraScalars>
         <scalar label="test1">
