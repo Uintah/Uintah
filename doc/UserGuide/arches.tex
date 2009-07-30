@@ -267,7 +267,7 @@ The angled brackets in Equation \ref{eqn:cs_eqn} conceptually represent averagin
 %%
 With these implementation practices, the dynamic model is generally robust. The implementation can be made more efficient by computing the constant roughly every 10 time steps (based on the advective CFL), and only for the first Runge-Kutta step.
 
-\subsection{LES Algorithm}
+\subsection{LES Algorithm}\label{Sec:LES_Algorithm}
 %
 The set of filtered equations (Equations \ref{eqn:filtered_mass_balance}-\ref{eqn:filtered_heat_balance}) are discretized in space and time and solved on a staggered, finite volume mesh.  The staggering scheme consists of four offset grids. One grid stores the scalar quantities and the remaining three grids store each component of the velocity vector. The velocity components are situated so that the center of their control volume is located on the face centers of the scalar grid in their respective direction.  Figure \ref{fig:staggered_grid} shows an example of a two-dimensional grid and the staggering arrangement.
 %
@@ -391,11 +391,55 @@ end;
 %\end{algorithmic}
 %\end{algorithm}
 
-%FIXME
-%\subsection{Uintah Specification}
+\section{Uintah Specification}
+%
+\subsection{Basic Inputs}
+%
+In order to run the the Arches component, the correct specification must be made for the simulation controller using the {\it SimulationComponent} tag.  In this case (similar to the other Uintah components) the Arches component is specified as
+%
+\begin{Verbatim}[fontsize=\footnotesize]
+<SimulationComponent type="arches" />
+\end{Verbatim}
+%
+as a child of the {\it Uintah\_specification} section.  
+
+Most other Arches specifications are located in the {\it CFD$\rightarrow$ARCHES} section of the input file.  Unless otherwise specified, the system of units for all Arches input parameters are SGI. 
+
+ \subsection{Time Integrator}
+ % 
+ \subsubsection{Explicit Time Integrator}
+ Arches is commonly run in a fully explicit time-stepping mode.  That is, the update in time for any variable $\phi$ is expressed as
+ %
+ \begin{equation}
+ \phi^{t+\Delta t} = \frac{1}{\rho^*}\left( (\rho\phi)^t +  \Delta tRHS^t) \right) \;,
+ \end{equation}
+ %
+where  $RHS$ represents all forcing terms in the transport equation for $\phi$.  For the purposes of this discussion, we have dealt with the implicit nature of the density term by simply assuming we have a density approximation that suits the current update, called $\rho^*$ (for details of the $\rho$ issue, see Section  \ref{Sec:LES_Algorithm}).  
+
+The explicit time integrator is activated (as a child of {\it CFD$\rightarrow$ARCHES}) by setting the required nonlinear solver parameter, 
+%
+\begin{Verbatim}[fontsize=\footnotesize]
+<nonlinear_solver>explicit</nonlinear_solver>
+\end{Verbatim}
+%
+The explicit solver can be stepped forward in time by using a fixed time step or letting the code estimate a time step via a CFL condition (see Section \ref{Sec:LES_Algorithm}).  In either case, an initial time step must be specified as 
+%
+\begin{Verbatim}[fontsize=\footnotesize]
+<initial_dt>0.1</initial_dt>
+\end{Verbatim}
+%
+where in this case, an initial time step of $0.1$ was used.  If one wishes to use a time step computed by local velocity information (recommended) then set
+%
+\begin{Verbatim}[fontsize=\footnotesize]
+<variable_dt>true</variable_dt>
+\end{Verbatim}
+%
+
+\subsubsection{Implicit Time Integrator}
+%
+Currently the implicit time integrator is not supported. Please check back in subsequent releases. 
 
 
-%\subsubsection{Basic Inputs}
 
 
 %\subsubsection{Turbulence}
