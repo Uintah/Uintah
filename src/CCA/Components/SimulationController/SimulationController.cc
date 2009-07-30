@@ -690,7 +690,7 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
   
   // output timestep statistics
 
-    if (istats.active() && d_myworld->size() > 1) {
+    if (istats.active()) {
       for (unsigned i = 1; i < statLabels.size(); i++) { // index 0 is memuse
         if (toReduce[i] > 0)
           istats << "rank: " << d_myworld->myrank() << " " << statLabels[i] << " avg: " << toReduce[i] << "\n";
