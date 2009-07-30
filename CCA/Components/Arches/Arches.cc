@@ -238,15 +238,9 @@ Arches::problemSetup(const ProblemSpecP& params,
   }
 
   // physical constant
-  // physical constants
   d_physicalConsts = scinew PhysicalConstants();
-
-  // ** BB 5/19/2000 ** For now read the Physical constants from the
-  // ** BB 5/19/2000 ** For now read the Physical constants from the 
-  // CFD-ARCHES block
-  // for gravity, read it from shared state 
-  //d_physicalConsts->problemSetup(params);
-  d_physicalConsts->problemSetup(db);
+  const ProblemSpecP db_root = db->getRootNode();
+  d_physicalConsts->problemSetup(db_root);
 
   if (db->findBlock("ExtraScalars")) {
     d_calcExtraScalars = true; 

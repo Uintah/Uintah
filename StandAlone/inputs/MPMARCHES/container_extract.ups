@@ -53,9 +53,6 @@
     <compression>gzip</compression>
   </DataArchiver>
 
-  <PhysicalConstants>
-    <gravity>[0,0,0]</gravity>
-  </PhysicalConstants>
   <MPM>
     <time_integrator>explicit</time_integrator>
     <interpolator>linear</interpolator>
@@ -159,6 +156,11 @@
     </Level>
   </Grid>
 
+  <PhysicalConstants>
+    <gravity>[-9.8,0,0]</gravity>
+    <reference_point>[-1,-1,-1]</reference_point>
+    <viscosity>0.000020</viscosity>
+  </PhysicalConstants>
 
   <CFD>
     <!-- ARCHES specification -->
@@ -235,11 +237,6 @@
         </OutletBC>
       </BoundaryConditions>
 
-      <PhysicalConstants>
-        <gravity>[-9.8,0,0]</gravity>
-        <ref_point>[-1,-1,-1]</ref_point>
-        <viscosity>0.000020</viscosity>
-      </PhysicalConstants>
 
       <ExplicitSolver>
         <timeIntegratorType>RK2SSP</timeIntegratorType>

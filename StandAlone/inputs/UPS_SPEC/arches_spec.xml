@@ -3,22 +3,25 @@
 
   <CFD>
     <ARCHES                             spec="OPTIONAL NO_DATA" >
+
       <initial_dt                       spec="REQUIRED DOUBLE 'positive'" />
       <variable_dt                      spec="REQUIRED BOOLEAN" />
       <nonlinear_solver                 spec="REQUIRED STRING 'explicit,
                                                                picard'" />
-
       <model_mixture_fraction_variance  spec="REQUIRED BOOLEAN" />
+
       <set_initial_condition             spec="OPTIONAL NO_DATA"
                                         attribute1="inputfile REQUIRED STRING"/>
       <turnonMixedModel                 spec="OPTIONAL BOOLEAN" /> <!-- not sure what this model is-->
       <recompileTaskgraph               spec="OPTIONAL BOOLEAN" />
       <scalarUnderflowCheck             spec="OPTIONAL BOOLEAN" />
       <EKTCorrection                    spec="OPTIONAL BOOLEAN" />
+      <extraProjection                  spec="OPTIONAL BOOLEAN" />
 
       <MMS                              spec="OPTIONAL NO_DATA"
-                                          attribute1="whichMMS REQUIRED STRING 'constantMMS, almgrenMMS'" >
-        <mmsErrorType                   spec="REQUIRED STRING 'Linf, L2'" />  <!-- FIXME: is 'L' valid (almgrenMMS.ups)? -->
+                                          attribute1="whichMMS REQUIRED STRING 'constantMMS, almgrenMMS'" 
+                                          children1="ONE_OF(CHILD constantMMS, almgrenMMS)">
+        <mmsErrorType                   spec="REQUIRED STRING 'Linf, L2'" />  
         <constantMMS                    spec="OPTIONAL NO_DATA" need_applies_to="whichMMS constantMMS" >
           <cu                           spec="REQUIRED DOUBLE" />
           <cv                           spec="REQUIRED DOUBLE" />
@@ -55,9 +58,9 @@
                                           children1="ONE_OF(CHILD ColdflowMixingModel, NewStaticMixingTable, TabPropsTable)" >
 
         <empirical_soot                 spec="OPTIONAL BOOLEAN" />
-        <filter_drhodt   spec="OPTIONAL BOOLEAN" />
-        <first_order_drhodt   spec="OPTIONAL BOOLEAN" />
-        <inverse_density_average   spec="OPTIONAL BOOLEAN" />
+        <filter_drhodt                  spec="OPTIONAL BOOLEAN" />
+        <first_order_drhodt             spec="OPTIONAL BOOLEAN" />
+        <inverse_density_average        spec="OPTIONAL BOOLEAN" />
         <mixing_model                   spec="REQUIRED STRING 'coldFlowMixingModel, NewStaticMixingTable, TabPropsTable'" />
         <independent_variable           spec="MULTIPLE NO_DATA" 
                                             attribute1="active OPTIONAL STRING 'yes, true, no, false'"
@@ -160,14 +163,6 @@
         </WallBC>
       </BoundaryConditions>
 
-      <!-- FIXME: What is the different between this and the other PhysicalConstants? -->
-      <PhysicalConstants                spec="REQUIRED NO_DATA" >
-        <gravity                        spec="REQUIRED VECTOR" />
-        <pressure                       spec="OPTIONAL DOUBLE" />
-        <ref_point                      spec="REQUIRED VECTOR" />
-        <viscosity                      spec="REQUIRED DOUBLE" />
-      </PhysicalConstants>
-
       <ExtraScalars                     spec="OPTIONAL NO_DATA" >
         <scalar                         spec="MULTIPLE NO_DATA"
                                           attribute1="label REQUIRED STRING" >
@@ -267,7 +262,6 @@
         <turbModelCalcFreq              spec="OPTIONAL INTEGER" />
       </ExplicitSolver>
 
-      <extraProjection                  spec="OPTIONAL BOOLEAN" />
     </ARCHES>
   </CFD>
 
