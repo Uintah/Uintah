@@ -479,7 +479,7 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
 {
   unsigned long memuse, highwater, maxMemUse;
   d_scheduler->checkMemoryUse( memuse, highwater, maxMemUse );
-  
+
   // get memory stats for each proc if MALLOC_PERPROC is in the environent
   if ( getenv( "MALLOC_PERPROC" ) ) {
     ostream* mallocPerProcStream = NULL;
@@ -515,8 +515,8 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
       delete mallocPerProcStream;
     }
   }
-  
-  
+
+
   // with the sum reduces, use double, since with memory it is possible that
   // it will overflow
   double avg_memuse = memuse;
@@ -524,7 +524,7 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
   int max_memuse_loc = -1;
   double avg_highwater = highwater;
   unsigned long max_highwater = highwater;
-  
+
   // a little ugly, but do it anyway so we only have to do one reduce for sum and
   // one reduce for max
   std::vector<double> toReduce, avgReduce;
@@ -533,47 +533,47 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
   std::vector<const char*> statLabels;
   int rank=d_myworld->myrank();
   double total_time=0, overhead_time=0, percent_overhead=0;
+  toReduce.push_back(memuse);
+  toReduceMax.push_back(double_int(memuse,rank));
+  toReduce.push_back(d_sharedState->compilationTime);
+  toReduceMax.push_back(double_int(d_sharedState->compilationTime,rank));
+  toReduce.push_back(d_sharedState->regriddingTime);
+  toReduceMax.push_back(double_int(d_sharedState->regriddingTime,rank));
+  toReduce.push_back(d_sharedState->regriddingCompilationTime);
+  toReduceMax.push_back(double_int(d_sharedState->regriddingCompilationTime,rank));
+  toReduce.push_back(d_sharedState->regriddingCopyDataTime);
+  toReduceMax.push_back(double_int(d_sharedState->regriddingCopyDataTime,rank));
+  toReduce.push_back(d_sharedState->loadbalancerTime);
+  toReduceMax.push_back(double_int(d_sharedState->loadbalancerTime,rank));
+  toReduce.push_back(d_sharedState->taskExecTime);
+  toReduceMax.push_back(double_int(d_sharedState->taskExecTime,rank));
+  toReduce.push_back(d_sharedState->taskGlobalCommTime);
+  toReduceMax.push_back(double_int(d_sharedState->taskGlobalCommTime,rank));
+  toReduce.push_back(d_sharedState->taskLocalCommTime);
+  toReduceMax.push_back(double_int(d_sharedState->taskLocalCommTime,rank));
+  toReduce.push_back(d_sharedState->taskWaitCommTime);
+  toReduceMax.push_back(double_int(d_sharedState->taskWaitCommTime,rank));
+  toReduce.push_back(d_sharedState->outputTime);
+  toReduceMax.push_back(double_int(d_sharedState->outputTime,rank));
+  statLabels.push_back("Mem usage");
+  statLabels.push_back("Recompile");
+  statLabels.push_back("Regridding");
+  statLabels.push_back("Regrid-schedule");
+  statLabels.push_back("Regrid-copydata");
+  statLabels.push_back("LoadBalance");
+  statLabels.push_back("TaskExec");
+  statLabels.push_back("TaskGlobalComm");
+  statLabels.push_back("TaskLocalComm");
+  statLabels.push_back("TaskWaitCommTime");
+  statLabels.push_back("Output");
+
+  if (highwater) // add highwater to the end so we know where everything else is (as highwater is conditional)
+    toReduce.push_back(highwater);
+  avgReduce.resize(toReduce.size());
+  maxReduce.resize(toReduce.size());
+
+
   if (d_myworld->size() > 1) {
-    toReduce.push_back(memuse);
-    toReduceMax.push_back(double_int(memuse,rank));
-    toReduce.push_back(d_sharedState->compilationTime);
-    toReduceMax.push_back(double_int(d_sharedState->compilationTime,rank));
-    toReduce.push_back(d_sharedState->regriddingTime);
-    toReduceMax.push_back(double_int(d_sharedState->regriddingTime,rank));
-    toReduce.push_back(d_sharedState->regriddingCompilationTime);
-    toReduceMax.push_back(double_int(d_sharedState->regriddingCompilationTime,rank));
-    toReduce.push_back(d_sharedState->regriddingCopyDataTime);
-    toReduceMax.push_back(double_int(d_sharedState->regriddingCopyDataTime,rank));
-    toReduce.push_back(d_sharedState->loadbalancerTime);
-    toReduceMax.push_back(double_int(d_sharedState->loadbalancerTime,rank));
-    toReduce.push_back(d_sharedState->taskExecTime);
-    toReduceMax.push_back(double_int(d_sharedState->taskExecTime,rank));
-    toReduce.push_back(d_sharedState->taskGlobalCommTime);
-    toReduceMax.push_back(double_int(d_sharedState->taskGlobalCommTime,rank));
-    toReduce.push_back(d_sharedState->taskLocalCommTime);
-    toReduceMax.push_back(double_int(d_sharedState->taskLocalCommTime,rank));
-    toReduce.push_back(d_sharedState->taskWaitCommTime);
-    toReduceMax.push_back(double_int(d_sharedState->taskWaitCommTime,rank));
-    toReduce.push_back(d_sharedState->outputTime);
-    toReduceMax.push_back(double_int(d_sharedState->outputTime,rank));
-    statLabels.push_back("Mem usage");
-    statLabels.push_back("Recompile");
-    statLabels.push_back("Regridding");
-    statLabels.push_back("Regrid-schedule");
-    statLabels.push_back("Regrid-copydata");
-    statLabels.push_back("LoadBalance");
-    statLabels.push_back("TaskExec");
-    statLabels.push_back("TaskGlobalComm");
-    statLabels.push_back("TaskLocalComm");
-    statLabels.push_back("TaskWaitCommTime");
-    statLabels.push_back("Output");
-    
-    if (highwater) // add highwater to the end so we know where everything else is (as highwater is conditional)
-      toReduce.push_back(highwater);
-    avgReduce.resize(toReduce.size());
-    maxReduce.resize(toReduce.size());
-    
-    
     //if AMR and using dynamic dilation use an allreduce
     if(d_regridder && d_regridder->useDynamicDilation())
     {
@@ -583,9 +583,9 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
     else
     {
       MPI_Reduce(&toReduce[0], &avgReduce[0], toReduce.size(), MPI_DOUBLE, MPI_SUM, 0,
-                 d_myworld->getComm());
+          d_myworld->getComm());
       MPI_Reduce(&toReduceMax[0], &maxReduce[0], toReduceMax.size(), MPI_DOUBLE_INT, MPI_MAXLOC, 0,
-                 d_myworld->getComm());
+          d_myworld->getComm());
     }
 
     // make sums averages
@@ -597,7 +597,7 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
     avg_memuse = avgReduce[0];
     max_memuse = maxReduce[0].val;
     max_memuse_loc = maxReduce[0].loc;
-    
+
     if(highwater){
       avg_highwater = avgReduce[avgReduce.size()-1];
       max_highwater = maxReduce[maxReduce.size()-1].val;
@@ -609,7 +609,7 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
     //sum up the average time for overhead related components
     for(int i=1;i<6;i++)
       overhead_time+=avgReduce[i];
-    
+
     //calculate percentage of time spent in overhead
     percent_overhead=overhead_time/total_time;
   }
@@ -617,25 +617,25 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
   {
     //sum up the times for simulation components
     total_time=d_sharedState->compilationTime
-              +d_sharedState->regriddingTime
-              +d_sharedState->regriddingCompilationTime
-              +d_sharedState->regriddingCopyDataTime
-              +d_sharedState->loadbalancerTime
-              +d_sharedState->taskExecTime
-              +d_sharedState->taskGlobalCommTime
-              +d_sharedState->taskLocalCommTime
-              +d_sharedState->taskWaitCommTime;
-    
+      +d_sharedState->regriddingTime
+      +d_sharedState->regriddingCompilationTime
+      +d_sharedState->regriddingCopyDataTime
+      +d_sharedState->loadbalancerTime
+      +d_sharedState->taskExecTime
+      +d_sharedState->taskGlobalCommTime
+      +d_sharedState->taskLocalCommTime
+      +d_sharedState->taskWaitCommTime;
+
     //sum up the average time for overhead related components
     overhead_time=d_sharedState->compilationTime
-              +d_sharedState->regriddingTime
-              +d_sharedState->regriddingCompilationTime
-              +d_sharedState->regriddingCopyDataTime
-              +d_sharedState->loadbalancerTime;
-    
+      +d_sharedState->regriddingTime
+      +d_sharedState->regriddingCompilationTime
+      +d_sharedState->regriddingCopyDataTime
+      +d_sharedState->loadbalancerTime;
+
     //calculate percentage of time spent in overhead
     percent_overhead=overhead_time/total_time;
-    
+
   }
 
   //set the overhead sample
@@ -643,7 +643,7 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
   {
     d_sharedState->overhead[d_sharedState->overheadIndex]=percent_overhead;
     //increment the overhead index
-      
+
     double overhead=0;
     double weight=0;
 
@@ -655,7 +655,7 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
       weight+=d_sharedState->overheadWeights[i];
     }
     d_sharedState->overheadAvg=overhead/weight; 
-    
+
     d_sharedState->overheadIndex=(d_sharedState->overheadIndex+1)%OVERHEAD_WINDOW;
     //increase overhead size if needed
   } 
@@ -665,7 +665,7 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
   //double stdDev = 0;
   double mean = 0;
   double walltime = d_wallTime-d_prevWallTime;
-  
+
   if (d_n > 2) { // ignore times 0,1,2
     //walltimes.push_back();
     //d_sumOfWallTimes += (walltime);
@@ -678,125 +678,134 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
 
   }
   /*
-  if (d_n > 3) {
-    // divide by n-2 and not n, because we wait till n>2 to keep track
-    // of our stats
-    stdDev = stdDeviation(d_sumOfWallTimes, d_sumOfWallTimeSquares, d_n-2);
-    //mean = d_sumOfWallTimes / (d_n-2);
-    //         ofstream timefile("avg_elapsed_wallTime.txt");
-    //         timefile << mean << " +- " << stdDev << "\n";
-  }
-  */
-  
-  // output timestep statistics
+     if (d_n > 3) {
+// divide by n-2 and not n, because we wait till n>2 to keep track
+// of our stats
+stdDev = stdDeviation(d_sumOfWallTimes, d_sumOfWallTimeSquares, d_n-2);
+//mean = d_sumOfWallTimes / (d_n-2);
+//         ofstream timefile("avg_elapsed_wallTime.txt");
+//         timefile << mean << " +- " << stdDev << "\n";
+}
+*/
 
-    if (istats.active()) {
+// output timestep statistics
+
+if (istats.active()) {
+  for (unsigned i = 1; i < statLabels.size(); i++) { // index 0 is memuse
+    if (toReduce[i] > 0)
+      istats << "rank: " << d_myworld->myrank() << " " << statLabels[i] << " avg: " << toReduce[i] << "\n";
+  }
+} 
+
+if(d_myworld->myrank() == 0){
+  char walltime[96];
+  if (d_n > 3) {
+    //sprintf(walltime, ", elap T = %.2lf, mean: %.2lf +- %.3lf", d_wallTime, mean, stdDev);
+    sprintf(walltime, ", elap T = %.2lf, mean: %.2lf", d_wallTime, mean);
+  }
+  else {
+    sprintf(walltime, ", elap T = %.2lf", d_wallTime);
+  }
+  ostringstream message;
+
+  message << "Time="         << time
+    << " (timestep "  << timestep 
+    << "), delT="     << delt
+    << walltime;
+#ifndef _WIN32
+  message << ", Mem Use (MB)= ";
+  if (avg_memuse == max_memuse && avg_highwater == max_highwater) {
+    message << toHumanUnits((unsigned long) avg_memuse);
+    if(avg_highwater) {
+      message << "/" << toHumanUnits((unsigned long) avg_highwater);
+    }
+  } else {
+    message << toHumanUnits((unsigned long) avg_memuse);
+    if(avg_highwater) {
+      message << "/" << toHumanUnits((unsigned long)avg_highwater);
+    }
+    message << " (avg), " << toHumanUnits(max_memuse);
+    if(max_highwater) {
+      message << "/" << toHumanUnits(max_highwater);
+    }
+    message << " (max on rank:" << max_memuse_loc << ")";
+  }
+
+#endif
+  dbg << message.str() << "\n";
+  dbg.flush();
+  cout.flush();
+
+  if (stats.active()) {
+    if(d_myworld->size()>1)
+    {
+      for (unsigned i = 1; i < statLabels.size(); i++) { // index 0 is memuse
+        if (maxReduce[i].val > 0)
+          stats << statLabels[i] << " avg: " << avgReduce[i] << " max: " << maxReduce[i].val << " maxloc:" << maxReduce[i].loc
+            << " LIB%: " << 1-(avgReduce[i]/maxReduce[i].val) << "\n";
+      }
+    }
+    else //runing in serial
+    {
       for (unsigned i = 1; i < statLabels.size(); i++) { // index 0 is memuse
         if (toReduce[i] > 0)
-          istats << "rank: " << d_myworld->myrank() << " " << statLabels[i] << " avg: " << toReduce[i] << "\n";
+          stats << statLabels[i] << " avg: " << toReduce[i] << " max: " << toReduce[i] << " maxloc:" << 0
+            << " LIB%: " << 0 << "\n";
       }
-    } 
-  
-  if(d_myworld->myrank() == 0){
-    char walltime[96];
-    if (d_n > 3) {
-      //sprintf(walltime, ", elap T = %.2lf, mean: %.2lf +- %.3lf", d_wallTime, mean, stdDev);
-      sprintf(walltime, ", elap T = %.2lf, mean: %.2lf", d_wallTime, mean);
-    }
-    else {
-      sprintf(walltime, ", elap T = %.2lf", d_wallTime);
-    }
-    ostringstream message;
 
-    message << "Time="         << time
-        << " (timestep "  << timestep 
-        << "), delT="     << delt
-        << walltime;
-#ifndef _WIN32
-    message << ", Mem Use (MB)= ";
-    if (avg_memuse == max_memuse && avg_highwater == max_highwater) {
-      message << toHumanUnits((unsigned long) avg_memuse);
-      if(avg_highwater) {
-        message << "/" << toHumanUnits((unsigned long) avg_highwater);
-      }
+    }
+    if(d_n>2 && !isnan(d_sharedState->overheadAvg))
+      stats << "Percent Time in overhead:" << d_sharedState->overheadAvg*100 <<  "\n";
+  } 
+
+
+  if ( d_n > 0 ) {
+    double realSecondsNow = (d_wallTime - d_prevWallTime)/delt;
+    double realSecondsAvg = (d_wallTime - d_startTime)/(time-d_startSimTime);
+
+    dbgTime << "1 sim second takes ";
+
+    dbgTime << left << showpoint << setprecision(3) << setw(4);
+
+    if (realSecondsNow < SECONDS_PER_MINUTE) {
+      dbgTime << realSecondsNow << " seconds (now), ";
+    } else if ( realSecondsNow < SECONDS_PER_HOUR ) {
+      dbgTime << realSecondsNow/SECONDS_PER_MINUTE << " minutes (now), ";
+    } else if ( realSecondsNow < SECONDS_PER_DAY  ) {
+      dbgTime << realSecondsNow/SECONDS_PER_HOUR << " hours (now), ";
+    } else if ( realSecondsNow < SECONDS_PER_WEEK ) {
+      dbgTime << realSecondsNow/SECONDS_PER_DAY << " days (now), ";
+    } else if ( realSecondsNow < SECONDS_PER_YEAR ) {
+      dbgTime << realSecondsNow/SECONDS_PER_WEEK << " weeks (now), ";
     } else {
-      message << toHumanUnits((unsigned long) avg_memuse);
-      if(avg_highwater) {
-        message << "/" << toHumanUnits((unsigned long)avg_highwater);
-      }
-      message << " (avg), " << toHumanUnits(max_memuse);
-      if(max_highwater) {
-        message << "/" << toHumanUnits(max_highwater);
-      }
-      message << " (max on rank:" << max_memuse_loc << ")";
+      dbgTime << realSecondsNow/SECONDS_PER_YEAR << " years (now), ";
     }
-    
-#endif
-    dbg << message.str() << "\n";
-    dbg.flush();
-    cout.flush();
 
-    if (stats.active()) {
-      if(d_myworld->size()>1)
-      {
-        for (unsigned i = 1; i < statLabels.size(); i++) { // index 0 is memuse
-          if (maxReduce[i].val > 0)
-            stats << statLabels[i] << " avg: " << avgReduce[i] << " max: " << maxReduce[i].val << " maxloc:" << maxReduce[i].loc
-                  << " LIB%: " << 1-(avgReduce[i]/maxReduce[i].val) << "\n";
-        }
-      }
-      if(d_n>2 && !isnan(d_sharedState->overheadAvg))
-        stats << "Percent Time in overhead:" << d_sharedState->overheadAvg*100 <<  "\n";
-    } 
+    dbgTime << setw(4);
 
-
-    if ( d_n > 0 ) {
-      double realSecondsNow = (d_wallTime - d_prevWallTime)/delt;
-      double realSecondsAvg = (d_wallTime - d_startTime)/(time-d_startSimTime);
-      
-      dbgTime << "1 sim second takes ";
-      
-      dbgTime << left << showpoint << setprecision(3) << setw(4);
-      
-      if (realSecondsNow < SECONDS_PER_MINUTE) {
-        dbgTime << realSecondsNow << " seconds (now), ";
-      } else if ( realSecondsNow < SECONDS_PER_HOUR ) {
-        dbgTime << realSecondsNow/SECONDS_PER_MINUTE << " minutes (now), ";
-      } else if ( realSecondsNow < SECONDS_PER_DAY  ) {
-        dbgTime << realSecondsNow/SECONDS_PER_HOUR << " hours (now), ";
-      } else if ( realSecondsNow < SECONDS_PER_WEEK ) {
-        dbgTime << realSecondsNow/SECONDS_PER_DAY << " days (now), ";
-      } else if ( realSecondsNow < SECONDS_PER_YEAR ) {
-        dbgTime << realSecondsNow/SECONDS_PER_WEEK << " weeks (now), ";
-      } else {
-        dbgTime << realSecondsNow/SECONDS_PER_YEAR << " years (now), ";
-      }
-      
-      dbgTime << setw(4);
-      
-      if (realSecondsAvg < SECONDS_PER_MINUTE) {
-        dbgTime << realSecondsAvg << " seconds (avg) ";
-      } else if ( realSecondsAvg < SECONDS_PER_HOUR ) {
-        dbgTime << realSecondsAvg/SECONDS_PER_MINUTE << " minutes (avg) ";
-      } else if ( realSecondsAvg < SECONDS_PER_DAY  ) {
-        dbgTime << realSecondsAvg/SECONDS_PER_HOUR << " hours (avg) ";
-      } else if ( realSecondsAvg < SECONDS_PER_WEEK ) {
-        dbgTime << realSecondsAvg/SECONDS_PER_DAY << " days (avg) ";
-      } else if ( realSecondsAvg < SECONDS_PER_YEAR ) {
-        dbgTime << realSecondsAvg/SECONDS_PER_WEEK << " weeks (avg) ";
-      } else {
-        dbgTime << realSecondsAvg/SECONDS_PER_YEAR << " years (avg) ";
-      }
-      
-      dbgTime << "to calculate." << "\n";
+    if (realSecondsAvg < SECONDS_PER_MINUTE) {
+      dbgTime << realSecondsAvg << " seconds (avg) ";
+    } else if ( realSecondsAvg < SECONDS_PER_HOUR ) {
+      dbgTime << realSecondsAvg/SECONDS_PER_MINUTE << " minutes (avg) ";
+    } else if ( realSecondsAvg < SECONDS_PER_DAY  ) {
+      dbgTime << realSecondsAvg/SECONDS_PER_HOUR << " hours (avg) ";
+    } else if ( realSecondsAvg < SECONDS_PER_WEEK ) {
+      dbgTime << realSecondsAvg/SECONDS_PER_DAY << " days (avg) ";
+    } else if ( realSecondsAvg < SECONDS_PER_YEAR ) {
+      dbgTime << realSecondsAvg/SECONDS_PER_WEEK << " weeks (avg) ";
+    } else {
+      dbgTime << realSecondsAvg/SECONDS_PER_YEAR << " years (avg) ";
     }
- 
-    d_prevWallTime = d_wallTime;
+
+    dbgTime << "to calculate." << "\n";
   }
-  d_n++;
 
-  // Reset mem use tracking variable for next iteration
-  d_scheduler->resetMaxMemValue();
+  d_prevWallTime = d_wallTime;
+}
+d_n++;
+
+// Reset mem use tracking variable for next iteration
+d_scheduler->resetMaxMemValue();
 
 } // end printSimulationStats()
   
