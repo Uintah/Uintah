@@ -1,4 +1,4 @@
-#!/bin/csh
+#!/bin/csh -f
 
 if( $#argv != 2 ) then
   echo " ERROR: "
@@ -9,6 +9,7 @@ endif
 
 set uda        = "$argv[1]"
 set master_uda = "$argv[2]" 
+set here       = `pwd`
 
 if( ! -e $uda || ! -e $master_uda ) then
   echo " usage:  cat_on_the_fly  <uda> <master_uda>"
@@ -23,15 +24,14 @@ echo "working on $uda"
 cd $uda
 set these = (`find . -maxdepth 3 -name "i[0-9]*" -printf "%p\n" | sed s/"\ "/"@@@"/g`)
 set dirs  = (`find . -maxdepth 3 -name "i[0-9]*" -printf "%h\n" | sed s/"\ "/"@@@"/g`)
-cd ..
+cd "$here/$master_uda"
 
 # make the directory structure in the master uda
 foreach i ( $dirs[*]:q )
   set X = `echo $i | sed s/"@@@"/"\ "/g`
-
-  if( ! -e "$master_uda/$X" ) then
-    mkdir -p "$master_uda/$X"
-    echo "now creating the directory $master_uda/$X"
+  if( ! -e "$X" ) then
+    mkdir -p "$X"
+    echo "now creating the directory $X"
   endif
 end 
 
@@ -42,19 +42,23 @@ foreach i ( $these[*]:q )
   if( -e "$uda/$X" ) then
   
     echo " Now concatenating $X"
-    cp -fp "$master_uda/$X" "$master_uda/$X.tmp"
-
-    cat "$uda/$X" >> "$master_uda/$X.tmp"
+    
+    if (-e "$X" ) then
+      cp -fp "$X" "$X.tmp"
+    endif
+    
+    cat "$uda/$X" >> "$X.tmp"
     
     # remove the header from the temporary file
-    set header = `head -n1 "$master_uda/$X.tmp"`
-    sed -i /"X_CC"/d "$master_uda/$X.tmp"
+    set header = `head -n1 "$X.tmp"`
+    sed -i /"X_CC"/d "$X.tmp"
     
     # now reconstruct the file and remove duplicate lines
-    echo $header > "$master_uda/$X"
-    sort -u "$master_uda/$X.tmp" >> "$master_uda/$X"
+    # sort the file by time
+    echo $header > "$X"
+    sort -k4 -g "$X.tmp"|uniq >> "$X"
 
-    /bin/rm "$master_uda/$X.tmp"
+    /bin/rm "$X.tmp"
   endif
 end
 
