@@ -414,7 +414,7 @@ Most other Arches specifications are located in the {\it CFD$\rightarrow$ARCHES}
  \phi^{t+\Delta t} = \frac{1}{\rho^*}\left( (\rho\phi)^t +  \Delta tRHS^t) \right) \;,
  \end{equation}
  %
-where  $RHS$ represents all forcing terms in the transport equation for $\phi$.  For the purposes of this discussion, we have dealt with the implicit nature of the density term by simply assuming we have a density approximation that suits the current update, called $\rho^*$ (for details of the $\rho$ issue, see Section  \ref{Sec:LES_Algorithm}).  
+where  $RHS$ represents all forcing terms in the transport equation for $\phi$ at time level $t$.  For the purposes of this discussion, we have dealt with the implicit nature of the density term by simply assuming we have a density approximation, called $\rho^*$, that suits the current update (for details of the $\rho$ issue, see Section  \ref{Sec:LES_Algorithm}).  
 
 The explicit time integrator is activated (as a child of {\it CFD$\rightarrow$ARCHES}) by setting the required nonlinear solver parameter, 
 %
@@ -422,22 +422,65 @@ The explicit time integrator is activated (as a child of {\it CFD$\rightarrow$AR
 <nonlinear_solver>explicit</nonlinear_solver>
 \end{Verbatim}
 %
-The explicit solver can be stepped forward in time by using a fixed time step or letting the code estimate a time step via a CFL condition (see Section \ref{Sec:LES_Algorithm}).  In either case, an initial time step must be specified as 
+The explicit solver can be stepped forward in time by using a fixed time step or letting the code estimate a time step via a CFL condition (see Section \ref{Sec:LES_Algorithm}).  In either case, an initial time step must be specified (in seconds) as 
 %
 \begin{Verbatim}[fontsize=\footnotesize]
 <initial_dt>0.1</initial_dt>
 \end{Verbatim}
 %
-where in this case, an initial time step of $0.1$ was used.  If one wishes to use a time step computed by local velocity information (recommended) then set
+where in this case, an initial time step of $0.1$ seconds was used.  If one wishes to use a time step computed by local velocity information (recommended) then set
 %
 \begin{Verbatim}[fontsize=\footnotesize]
-<variable_dt>true</variable_dt>
+<variable_dt>true</variable_dt>.
 \end{Verbatim}
 %
+It is recommended that one use the {\it variable\_dt} option as it helps maintain stability during the time integration.
+
+The explicit time integrator also requires a {\it Arches$\rightarrow$ExplicitSolver} section.  Within this section the other solvers for the various transport equations will be defined along with a few other parameters.  The general structure will look something like this:
+%
+\begin{Verbatim}[fontsize=\footnotesize]
+<ExplicitSolver>
+	<MomentumSolver>
+	...
+	</MomentumSolver>
+	
+	<PressureSolver>
+	...
+	</PressureSolver>
+	
+	<MixtureFractionSolver>
+	...
+	</MixtureFractionSolver>
+	
+	<EnthalpySolver>
+	...
+	</EnthalpySolver>
+	
+	<!-- Other additional options-->
+</ExplicitSolver>
+\end{Verbatim}  
+%
+The various options for individual transport equations will be detailed below.  
+
+Additional options for the $<$ExplicitSolver$>$ section include:
+\begin{enumerate}
+\item The time integration order, $<$timeIntegratorType$>$, expects a string.  Current options include one of the following: \\ \\
+ FE, 1st order Forward-Euler \\
+ RK2SSP, Second Order, Strong-Stability Preserving Runge-Kutta \\
+ RK3SSP, Third Order, Strong-Stability Preserving Runge-Kutta 
+\item Stability option for the density guess, $<$restartOnNegativeDensityGuess$>$, expects a {\it true} or {\it false} boolean. \\ \\
+This parameter restarts a time step, regardless of the time integrator order, is the predicted density guess (see Section \ref{Sec:LES_Algorithm}) from the continuity equation is negative and therefore unphysical.  If this option is true, the time step is reduced by half and the time step is restarted with the new, smaller time step.  The process with repeat until a) the density guess is physical or b) the code goes unstable.  If b) occurs, it is advised to set this option to {\it false}.  By default this option is {\it false} and is not required. 
+\item Message control on density guess, $<$NoisyDensityGuess$>$, expects a {\it true} or {\it false} boolean. \\ \\
+The negative density guess warning prints for every cell with a negative density guess.  One may want to suppress the warning and may do so with this option.  If this option is used, a warning is printed for every patch.  By default this option is {\it false} and is not required.  
+\item
+
+\end{enumerate}
 
 \subsubsection{Implicit Time Integrator}
 %
-Currently the implicit time integrator is not supported. Please check back in subsequent releases. 
+Currently the implicit time integrator is not supported. Please check back in subsequent releases.
+
+\subsubsection{Initial and Boundary Conditions} 
 
 
 
