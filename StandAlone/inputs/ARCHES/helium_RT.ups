@@ -2,7 +2,6 @@
 <Uintah_specification>
 
    <Meta>
-        <title>Arches Helium Plume with EKT turned on</title>
    </Meta>
 
    <SimulationComponent type="arches" />
@@ -54,7 +53,6 @@
         <initial_dt>0.05</initial_dt>
         <variable_dt>true</variable_dt>
         <nonlinear_solver>                explicit  </nonlinear_solver>
-        <EKTCorrection>                   true      </EKTCorrection>
 
         <Turbulence model = "compdynamicprocedure">
           <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
@@ -136,6 +134,8 @@
 
         <ExplicitSolver>
           <timeIntegratorType>  RK2SSP      </timeIntegratorType>              
+
+          <EKTCorrection>       true      </EKTCorrection>
 
           <PressureSolver>                                             
             <linear_solver>hypre</linear_solver>                     

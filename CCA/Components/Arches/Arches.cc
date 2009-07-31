@@ -211,9 +211,16 @@ Arches::problemSetup(const ProblemSpecP& params,
   }
   db->getWithDefault("turnonMixedModel",    d_mixedModel,false);
   db->getWithDefault("recompileTaskgraph",  d_recompile,false);
-  db->getWithDefault("scalarUnderflowCheck",d_underflow,false);
-  db->getWithDefault("extraProjection",     d_extraProjection,false);  
-  db->getWithDefault("EKTCorrection",       d_EKTCorrection,false);  
+
+  if (db->findBlock("ExplicitSolver")){
+    db->findBlock("ExplicitSolver")->getWithDefault("EKTCorrection", d_EKTCorrection,false);  
+    db->findBlock("ExplicitSolver")->getWithDefault("scalarUnderflowCheck",d_underflow,false);
+    db->findBlock("ExplicitSolver")->getWithDefault("extraProjection",     d_extraProjection,false);  
+  } else if (db->findBlock("PicardSolver")){
+    db->findBlock("PicardSolver")->getWithDefault("EKTCorrection", d_EKTCorrection,false);  
+    db->findBlock("PicardSolver")->getWithDefault("scalarUnderflowCheck",d_underflow,false);
+    db->findBlock("PicardSolver")->getWithDefault("extraProjection",     d_extraProjection,false);  
+  }
 
   if(db->findBlock("MMS")) {
     d_doMMS = true;

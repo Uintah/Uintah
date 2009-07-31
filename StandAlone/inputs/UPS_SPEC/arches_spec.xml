@@ -13,9 +13,6 @@
                                         attribute1="inputfile REQUIRED STRING"/>
       <turnonMixedModel                 spec="OPTIONAL BOOLEAN" /> <!-- Move to Properties? not sure what this model is-->
       <recompileTaskgraph               spec="OPTIONAL BOOLEAN" />
-      <scalarUnderflowCheck             spec="OPTIONAL BOOLEAN" /> <!-- Move to MixtureFraction Solver -->
-      <EKTCorrection                    spec="OPTIONAL BOOLEAN" /> <!-- Move to explicit Solver -->
-      <extraProjection                  spec="OPTIONAL BOOLEAN" /> <!-- Move to Momentum Solver --> 
 
       <MMS                              spec="OPTIONAL NO_DATA"
                                           attribute1="whichMMS REQUIRED STRING 'constantMMS, almgrenMMS'" 
@@ -184,6 +181,10 @@
       </ExtraScalars>
 
       <ExplicitSolver                   spec="REQUIRED NO_DATA" >
+
+        <EKTCorrection                  spec="OPTIONAL BOOLEAN" /> 
+        <scalarUnderflowCheck           spec="OPTIONAL BOOLEAN" /> 
+        <extraProjection                spec="OPTIONAL BOOLEAN" /> 
         <do_standalone_RMCRT            spec="OPTIONAL BOOLEAN" />
         <RMCRTRadiationModel            spec="OPTIONAL NO_DATA" >
             <opl                        spec="REQUIRED DOUBLE" />
