@@ -68,7 +68,7 @@ ColdflowMixingModel::problemSetup(const ProblemSpecP& params)
   if (d_calcReactingScalar||d_calcEnthalpy||d_calcVariance)
     throw InvalidValue("ColdflowMixingModel can only be a function of mixture fraction",
                        __FILE__, __LINE__ );
-  ProblemSpecP db = params->findBlock("ColdflowMixingModel");
+  ProblemSpecP db = params->findBlock("ColdFlowMixingModel");
 
   // Read the mixing variable streams, total is noofStreams 0 
   d_numMixingVars = 0;

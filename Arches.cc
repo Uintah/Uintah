@@ -205,7 +205,9 @@ Arches::problemSetup(const ProblemSpecP& params,
       if (db->findBlock("PicardSolver")->findBlock("EnthalpySolver"))
         d_calcEnthalpy = true;
     }
-    db->require("model_mixture_fraction_variance", d_calcVariance);
+    // Moved model_mixture_fraction_variance to properties
+    db->findBlock("Properties")->require("use_mixing_model", d_calcVariance);
+    // db->require("model_mixture_fraction_variance", d_calcVariance);
   }
   db->getWithDefault("turnonMixedModel",    d_mixedModel,false);
   db->getWithDefault("recompileTaskgraph",  d_recompile,false);
