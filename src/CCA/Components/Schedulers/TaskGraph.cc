@@ -1042,6 +1042,8 @@ TaskGraph::createDetailedDependencies(DetailedTask* task,
   int me = d_myworld->myrank();
 
   for( ; req != 0; req = req->next){
+    if(req->var->typeDescription()->isReductionVariable())
+      continue;
     if(dbg.active())
       dbg << d_myworld->myrank() << "  req: " << *req << '\n';
 
