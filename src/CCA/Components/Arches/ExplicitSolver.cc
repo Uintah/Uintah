@@ -238,8 +238,10 @@ ExplicitSolver::problemSetup(const ProblemSpecP& params)
     throw ProblemSetupException("Integrator type is not defined "+d_timeIntegratorType,
                                 __FILE__, __LINE__);
   }
+
   db->getWithDefault("turbModelCalcFreq",d_turbModelCalcFreq,1);
   db->getWithDefault("turbModelCalcForAllRKSteps",d_turbModelRKsteps,true);
+
   db->getWithDefault("restartOnNegativeDensityGuess",
                      d_restart_on_negative_density_guess,false);
   db->getWithDefault("NoisyDensityGuess", 

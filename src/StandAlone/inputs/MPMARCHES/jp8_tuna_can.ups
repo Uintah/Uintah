@@ -184,7 +184,6 @@
 	    <initial_dt>0.01</initial_dt>
 	    <variable_dt>true</variable_dt>
    	    <nonlinear_solver>explicit</nonlinear_solver>
-            <model_mixture_fraction_variance>true</model_mixture_fraction_variance>
             <scalarUnderflowCheck>true</scalarUnderflowCheck>
 
             <Turbulence model="compdynamicprocedure">
@@ -196,8 +195,8 @@
             </Turbulence>
 
 	    <Properties>
+          <use_mixing_model>true</use_mixing_model>
 	        <empirical_soot>true</empirical_soot>
-	        <mixing_model>NewStaticMixingTable</mixing_model>
 	        <NewStaticMixingTable>
                   <inputfile>inputs/ARCHES/NewStaticMixingTables/jp8/jp8_equil_clipped.mxn</inputfile>
                   <co_output>false</co_output>
