@@ -1039,16 +1039,19 @@ TaskGraph::createDetailedDependencies(DetailedTask* task,
 				      Task::Dependency* req, CompTable& ct,
 				      bool modifies)
 {
+  TAU_PROFILE("TaskGraph::createDetailedDependencies", " ", TAU_USER); 
   int me = d_myworld->myrank();
 
   for( ; req != 0; req = req->next){
+    
     if(req->var->typeDescription()->isReductionVariable())
       continue;
-    if(dbg.active())
-      dbg << d_myworld->myrank() << "  req: " << *req << '\n';
 
     if(sc->isOldDW(req->mapDataWarehouse()) && !sc->isNewDW(req->mapDataWarehouse()+1))
       continue;
+    
+    if(dbg.active())
+      dbg << d_myworld->myrank() << "  req: " << *req << '\n';
 
     constHandle<PatchSubset> patches =
       req->getPatchesUnderDomain(task->patches);

@@ -712,6 +712,7 @@ DetailedTasks::possiblyCreateDependency(DetailedTask* from,
     const IntVector& high,
     DetailedDep::CommCondition cond)
 { 
+  TAU_PROFILE("DetailedTasks::possiblyCreateDependency", " ", TAU_USER); 
   ASSERTRANGE(from->getAssignedResourceIndex(), 0, d_myworld->size());
   ASSERTRANGE(to->getAssignedResourceIndex(), 0, d_myworld->size());
 
