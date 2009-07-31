@@ -739,11 +739,9 @@ DetailedTasks::possiblyCreateDependency(DetailedTask* from,
     to->addInternalDependency(from, req->var);
     return;
   }
-  
-  //if the dependency is a reduction variable then don't create a dependency
-  if( req->var->typeDescription()->isReductionVariable() )
-    return;
-
+ 
+  //this should have been pruned out earlier
+  ASSERT(!req->var->typeDescription()->isReductionVariable())
   
   // if neither task talks to this processor, return
   if (fromresource != d_myworld->myrank() && toresource != d_myworld->myrank()) {
