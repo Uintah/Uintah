@@ -8,15 +8,14 @@
       <variable_dt                      spec="REQUIRED BOOLEAN" />
       <nonlinear_solver                 spec="REQUIRED STRING 'explicit,
                                                                picard'" />
-      <model_mixture_fraction_variance  spec="REQUIRED BOOLEAN" />
 
       <set_initial_condition             spec="OPTIONAL NO_DATA"
                                         attribute1="inputfile REQUIRED STRING"/>
-      <turnonMixedModel                 spec="OPTIONAL BOOLEAN" /> <!-- not sure what this model is-->
+      <turnonMixedModel                 spec="OPTIONAL BOOLEAN" /> <!-- Move to Properties? not sure what this model is-->
       <recompileTaskgraph               spec="OPTIONAL BOOLEAN" />
-      <scalarUnderflowCheck             spec="OPTIONAL BOOLEAN" />
-      <EKTCorrection                    spec="OPTIONAL BOOLEAN" />
-      <extraProjection                  spec="OPTIONAL BOOLEAN" />
+      <scalarUnderflowCheck             spec="OPTIONAL BOOLEAN" /> <!-- Move to MixtureFraction Solver -->
+      <EKTCorrection                    spec="OPTIONAL BOOLEAN" /> <!-- Move to explicit Solver -->
+      <extraProjection                  spec="OPTIONAL BOOLEAN" /> <!-- Move to Momentum Solver --> 
 
       <MMS                              spec="OPTIONAL NO_DATA"
                                           attribute1="whichMMS REQUIRED STRING 'constantMMS, almgrenMMS'" 
@@ -55,24 +54,24 @@
       </Turbulence>
 
       <Properties                       spec="REQUIRED NO_DATA"
-                                          children1="ONE_OF(CHILD ColdflowMixingModel, NewStaticMixingTable, TabPropsTable)" >
+                                          children1="ONE_OF(CHILD ColdFlowMixingModel, NewStaticMixingTable, TabPropsTable)" >
 
+        <use_mixing_model               spec="REQUIRED BOOLEAN" /> 
         <empirical_soot                 spec="OPTIONAL BOOLEAN" />
         <filter_drhodt                  spec="OPTIONAL BOOLEAN" />
         <first_order_drhodt             spec="OPTIONAL BOOLEAN" />
         <inverse_density_average        spec="OPTIONAL BOOLEAN" />
-        <mixing_model                   spec="REQUIRED STRING 'coldFlowMixingModel, NewStaticMixingTable, TabPropsTable'" />
         <independent_variable           spec="MULTIPLE NO_DATA" 
                                             attribute1="active OPTIONAL STRING 'yes, true, no, false'"
                                             attribute2="name   REQUIRED STRING"
                                             attribute3="value  OPTIONAL DOUBLE" /> <!-- Default value for "active" is true, default value for "value" is 0; 
                                                                                         You can put as many independent variable tags as you want -->
-        <ColdflowMixingModel            spec="OPTIONAL NO_DATA" >
+        <ColdFlowMixingModel            spec="OPTIONAL NO_DATA" >
           <Stream                       spec="MULTIPLE NO_DATA" >
             <density                    spec="REQUIRED DOUBLE 'positive'" />
             <temperature                spec="REQUIRED DOUBLE" />
           </Stream>
-        </ColdflowMixingModel>
+        </ColdFlowMixingModel>
 
         <NewStaticMixingTable           spec="OPTIONAL NO_DATA" >
           <co_output                    spec="OPTIONAL BOOLEAN" />

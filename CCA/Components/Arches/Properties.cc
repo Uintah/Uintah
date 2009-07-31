@@ -137,8 +137,20 @@ Properties::problemSetup(const ProblemSpecP& params)
   // read type of mixing model
   string mixModel;
 
-  db->require("mixing_model",mixModel);
-  if (mixModel == "coldFlowMixingModel") {
+  if (db->findBlock("NewStaticMixingTable"))
+    mixModel = "NewStaticMixingTable"; 
+  else if (db->findBlock("ColdFlowMixingModel"))
+    mixModel = "ColdFlowMixingModel"; 
+  else if (db->findBlock("StandardTable"))
+    mixModel = "StandardTable"; 
+  else if (db->findBlock("MOMColdFlowMixingModel"))
+    mixModel = "MOMcoldFlowMixingModel"; 
+  else if (db->findBlock("TabPropsTable"))
+    mixModel = "TabPropsTable";
+  else
+    throw("ERROR!: No mixing/reaction table specified!",__FILE__,__LINE__);
+
+  if (mixModel == "ColdFlowMixingModel") {
     d_mixingModel = scinew ColdflowMixingModel(d_calcReactingScalar,
                                                d_calcEnthalpy,
                                                d_calcVariance);
@@ -158,7 +170,7 @@ Properties::problemSetup(const ProblemSpecP& params)
                                          d_calcEnthalpy,
                                          d_calcVariance);
   }
-  else if (mixModel == "MOMcoldFlowMixingModel"){
+  else if (mixModel == "MOMColdFlowMixingModel"){
     d_mixingModel = scinew MOMColdflowMixingModel(d_calcReactingScalar,
                                                   d_calcEnthalpy,
                                                   d_calcVariance);

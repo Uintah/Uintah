@@ -168,14 +168,13 @@
             <initial_dt>0.05</initial_dt>
             <variable_dt>true</variable_dt>
             <nonlinear_solver>explicit</nonlinear_solver>
-            <model_mixture_fraction_variance>true</model_mixture_fraction_variance>
             <Turbulence model = "compdynamicprocedure">
                 <variance_coefficient>0.1</variance_coefficient>
                 <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
             </Turbulence>
 
             <Properties>
-                <mixing_model>NewStaticMixingTable</mixing_model>
+                <use_mixing_model>true</use_mixing_model>
                 <NewStaticMixingTable>
                   <inputfile>inputs/ARCHES/NewStaticMixingTables/methane/CH4_equil_clipped.mxn.gz</inputfile>
                 </NewStaticMixingTable>

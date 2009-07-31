@@ -62,14 +62,13 @@
     <variable_dt>               true        </variable_dt>
     <set_initial_condition inputfile="inputs/ARCHES/periodicTurb/iso_ini_32.dat"/>
     <nonlinear_solver>          explicit    </nonlinear_solver>
-    <model_mixture_fraction_variance>false</model_mixture_fraction_variance>
     <Turbulence model = "compdynamicprocedure">
         <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
     </Turbulence>
 
     <Properties>
-      <mixing_model>coldFlowMixingModel</mixing_model>
-      <ColdflowMixingModel>
+      <use_mixing_model>false</use_mixing_model>
+      <ColdFlowMixingModel>
         <Stream>
           <density>     0.133   </density>
           <temperature> 298     </temperature>
@@ -78,7 +77,7 @@
           <density>     1.184344</density>
           <temperature> 298     </temperature>
         </Stream>
-      </ColdflowMixingModel>
+      </ColdFlowMixingModel>
     </Properties>
 
     <BoundaryConditions>
