@@ -714,7 +714,7 @@ DetailedTasks::possiblyCreateDependency(DetailedTask* from,
 { 
   ASSERTRANGE(from->getAssignedResourceIndex(), 0, d_myworld->size());
   ASSERTRANGE(to->getAssignedResourceIndex(), 0, d_myworld->size());
-  
+ 
   if(dbg.active()) {
     dbg << d_myworld->myrank() << "          " << *to << " depends on " << *from << "\n";
     if(comp)
@@ -726,6 +726,11 @@ DetailedTasks::possiblyCreateDependency(DetailedTask* from,
 
   int toresource = to->getAssignedResourceIndex();
   int fromresource = from->getAssignedResourceIndex();
+  
+  // if neither task talks to this processor, return
+  if (fromresource != d_myworld->myrank() && toresource != d_myworld->myrank()) {
+    return;
+  }
   
   if ((toresource == d_myworld->myrank() || 
        (req->patches_dom != Task::NormalDomain && fromresource == d_myworld->myrank())) && 
@@ -743,10 +748,6 @@ DetailedTasks::possiblyCreateDependency(DetailedTask* from,
   //this should have been pruned out earlier
   ASSERT(!req->var->typeDescription()->isReductionVariable())
   
-  // if neither task talks to this processor, return
-  if (fromresource != d_myworld->myrank() && toresource != d_myworld->myrank()) {
-    return;
-  }
   
   //get dependancy batch
   DependencyBatch* batch = from->getComputes();
