@@ -171,8 +171,6 @@ Arches::problemSetup(const ProblemSpecP& params,
   sharedState->registerArchesMaterial(mat);
   ProblemSpecP db = params->findBlock("CFD")->findBlock("ARCHES");
   // not sure, do we need to reduce and put in datawarehouse
-  db->require("initial_dt", d_init_dt);
-  db->require("variable_dt", d_variableTimeStep);
   if (db->findBlock("ExplicitSolver")){
     if (db->findBlock("ExplicitSolver")->findBlock("MixtureFractionSolver"))
       d_calcScalar = true;
@@ -212,14 +210,22 @@ Arches::problemSetup(const ProblemSpecP& params,
   db->getWithDefault("turnonMixedModel",    d_mixedModel,false);
   db->getWithDefault("recompileTaskgraph",  d_recompile,false);
 
+  string nlSolver;
   if (db->findBlock("ExplicitSolver")){
+    nlSolver = "explicit";
     db->findBlock("ExplicitSolver")->getWithDefault("EKTCorrection", d_EKTCorrection,false);  
     db->findBlock("ExplicitSolver")->getWithDefault("scalarUnderflowCheck",d_underflow,false);
     db->findBlock("ExplicitSolver")->getWithDefault("extraProjection",     d_extraProjection,false);  
+    db->findBlock("ExplicitSolver")->require("initial_dt", d_init_dt);
+    db->findBlock("ExplicitSolver")->require("variable_dt", d_variableTimeStep);
+    
   } else if (db->findBlock("PicardSolver")){
+    nlSolver = "picard";
     db->findBlock("PicardSolver")->getWithDefault("EKTCorrection", d_EKTCorrection,false);  
     db->findBlock("PicardSolver")->getWithDefault("scalarUnderflowCheck",d_underflow,false);
     db->findBlock("PicardSolver")->getWithDefault("extraProjection",     d_extraProjection,false);  
+    db->findBlock("PicardSolver")->require("initial_dt", d_init_dt);
+    db->findBlock("PicardSolver")->require("variable_dt", d_variableTimeStep);
   }
 
   if(db->findBlock("MMS")) {
@@ -349,8 +355,7 @@ Arches::problemSetup(const ProblemSpecP& params,
       d_extraScalars[i]->setBoundaryCondition(d_boundaryCondition);
     }
   }
-  string nlSolver;
-  db->require("nonlinear_solver", nlSolver);
+
   if(nlSolver == "picard") {
     d_nlSolver = scinew PicardNonlinearSolver(d_lab, d_MAlab, d_props, 
                                               d_boundaryCondition,

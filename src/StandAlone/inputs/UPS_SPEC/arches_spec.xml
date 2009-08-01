@@ -4,10 +4,6 @@
   <CFD>
     <ARCHES                             spec="OPTIONAL NO_DATA" >
 
-      <initial_dt                       spec="REQUIRED DOUBLE 'positive'" />
-      <variable_dt                      spec="REQUIRED BOOLEAN" />
-      <nonlinear_solver                 spec="REQUIRED STRING 'explicit,
-                                                               picard'" />
 
       <set_initial_condition             spec="OPTIONAL NO_DATA"
                                         attribute1="inputfile REQUIRED STRING"/>
@@ -182,6 +178,8 @@
 
       <ExplicitSolver                   spec="REQUIRED NO_DATA" >
 
+        <initial_dt                     spec="REQUIRED DOUBLE 'positive'" />
+        <variable_dt                    spec="REQUIRED BOOLEAN" />
         <EKTCorrection                  spec="OPTIONAL BOOLEAN" /> 
         <scalarUnderflowCheck           spec="OPTIONAL BOOLEAN" /> 
         <extraProjection                spec="OPTIONAL BOOLEAN" /> 

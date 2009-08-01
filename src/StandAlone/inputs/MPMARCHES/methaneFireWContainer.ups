@@ -165,9 +165,6 @@
         <!-- ARCHES specification -->
 
         <ARCHES>
-            <initial_dt>0.05</initial_dt>
-            <variable_dt>true</variable_dt>
-            <nonlinear_solver>explicit</nonlinear_solver>
             <Turbulence model = "compdynamicprocedure">
                 <variance_coefficient>0.1</variance_coefficient>
                 <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
@@ -237,6 +234,9 @@
 
 
             <ExplicitSolver>
+
+            <initial_dt>0.05</initial_dt>
+            <variable_dt>true</variable_dt>
                 <timeIntegratorType>RK2SSP</timeIntegratorType>
 
                 <PressureSolver>

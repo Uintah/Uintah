@@ -160,9 +160,6 @@
         <!-- ARCHES specification -->
 
         <ARCHES>
-            <initial_dt>0.05</initial_dt>
-            <variable_dt>true</variable_dt>
-            <nonlinear_solver>explicit</nonlinear_solver>
             <Turbulence model = "smagorinsky">
                 <variance_coefficient>0.1</variance_coefficient>
                 <cf>0.17</cf>
@@ -256,6 +253,10 @@
             </BoundaryConditions>
             
             <ExplicitSolver>
+
+
+            <initial_dt>0.05</initial_dt>
+            <variable_dt>true</variable_dt>
                 <timeIntegratorType>RK2SSP</timeIntegratorType>
                 <restartOnNegativeDensityGuess>true</restartOnNegativeDensityGuess>
                 

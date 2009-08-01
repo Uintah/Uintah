@@ -78,9 +78,6 @@
         </constantMMS>
       </MMS>
 
-      <initial_dt>1</initial_dt>
-      <variable_dt>true</variable_dt>
-      <nonlinear_solver>explicit</nonlinear_solver>
       
       <Turbulence model = "smagorinsky">
         <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
@@ -124,6 +121,9 @@
       </ExtraScalars>
   
       <ExplicitSolver>
+
+      <initial_dt>1</initial_dt>
+      <variable_dt>true</variable_dt>
         <timeIntegratorType>FE</timeIntegratorType> 
 
         <PressureSolver>

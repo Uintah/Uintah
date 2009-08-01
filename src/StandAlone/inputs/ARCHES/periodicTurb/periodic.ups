@@ -58,10 +58,7 @@
 <!--__________________________________-->
 <CFD>
   <ARCHES>
-    <initial_dt>                   1           </initial_dt>
-    <variable_dt>               true        </variable_dt>
     <set_initial_condition inputfile="inputs/ARCHES/periodicTurb/iso_ini_32.dat"/>
-    <nonlinear_solver>          explicit    </nonlinear_solver>
     <Turbulence model = "compdynamicprocedure">
         <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
     </Turbulence>
@@ -86,6 +83,9 @@
 
     <ExplicitSolver>
       <timeIntegratorType>  RK2SSP  </timeIntegratorType>
+
+    <initial_dt>                   1           </initial_dt>
+    <variable_dt>               true        </variable_dt>
       <kineticEnergy_fromFC>true    </kineticEnergy_fromFC>
 
       <PressureSolver>
