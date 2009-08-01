@@ -416,30 +416,15 @@ Most other Arches specifications are located in the {\it CFD$\rightarrow$ARCHES}
  %
 where  $RHS$ represents all forcing terms in the transport equation for $\phi$ at time level $t$.  For the purposes of this discussion, we have dealt with the implicit nature of the density term by simply assuming we have a density approximation, called $\rho^*$, that suits the current update (for details of the $\rho$ issue, see Section  \ref{Sec:LES_Algorithm}).  
 
-The explicit time integrator is activated (as a child of {\it CFD$\rightarrow$ARCHES}) by setting the required nonlinear solver parameter, 
-%
-\begin{Verbatim}[fontsize=\footnotesize]
-<nonlinear_solver>explicit</nonlinear_solver>
-\end{Verbatim}
-%
-The explicit solver can be stepped forward in time by using a fixed time step or letting the code estimate a time step via a CFL condition (see Section \ref{Sec:LES_Algorithm}).  In either case, an initial time step must be specified (in seconds) as 
-%
-\begin{Verbatim}[fontsize=\footnotesize]
-<initial_dt>0.1</initial_dt>
-\end{Verbatim}
-%
-where in this case, an initial time step of $0.1$ seconds was used.  If one wishes to use a time step computed by local velocity information (recommended) then set
-%
-\begin{Verbatim}[fontsize=\footnotesize]
-<variable_dt>true</variable_dt>.
-\end{Verbatim}
-%
-It is recommended that one use the {\it variable\_dt} option as it helps maintain stability during the time integration.
-
-The explicit time integrator also requires a {\it Arches$\rightarrow$ExplicitSolver} section.  Within this section the other solvers for the various transport equations will be defined along with a few other parameters.  The general structure will look something like this:
+The explicit time integrator is activated (as a child node of {\it CFD$\rightarrow$ARCHES}) by simply inserting the $<$ExplicitIntegrator$>$ node.  Within this node,  the other solvers for the various transport equations will be defined along with a few parameters.  The general structure will look something like this:
 %
 \begin{Verbatim}[fontsize=\footnotesize]
 <ExplicitSolver>
+	   <!--Solver Options-->
+	   <option-1/>
+	   <option-2/>
+	   ....
+	   <!--Transport Equations-->
 	<MomentumSolver>
 	...
 	</MomentumSolver>
@@ -455,32 +440,99 @@ The explicit time integrator also requires a {\it Arches$\rightarrow$ExplicitSol
 	<EnthalpySolver>
 	...
 	</EnthalpySolver>
-	
-	<!-- Other additional options-->
 </ExplicitSolver>
 \end{Verbatim}  
 %
-The various options for individual transport equations will be detailed below.  
+The options for each transport equation will be described in Section \ref{Sec:Eqns_options}. 
 
-Additional options for the $<$ExplicitSolver$>$ section include:
+Options for the $<$ExplicitSolver$>$ section include:
 \begin{enumerate}
-\item The time integration order, $<$timeIntegratorType$>$, expects a string.  Current options include one of the following: \\ \\
- FE, 1st order Forward-Euler \\
- RK2SSP, Second Order, Strong-Stability Preserving Runge-Kutta \\
- RK3SSP, Third Order, Strong-Stability Preserving Runge-Kutta 
-\item Stability option for the density guess, $<$restartOnNegativeDensityGuess$>$, expects a {\it true} or {\it false} boolean. \\ \\
-This parameter restarts a time step, regardless of the time integrator order, is the predicted density guess (see Section \ref{Sec:LES_Algorithm}) from the continuity equation is negative and therefore unphysical.  If this option is true, the time step is reduced by half and the time step is restarted with the new, smaller time step.  The process with repeat until a) the density guess is physical or b) the code goes unstable.  If b) occurs, it is advised to set this option to {\it false}.  By default this option is {\it false} and is not required. 
-\item Message control on density guess, $<$NoisyDensityGuess$>$, expects a {\it true} or {\it false} boolean. \\ \\
-The negative density guess warning prints for every cell with a negative density guess.  One may want to suppress the warning and may do so with this option.  If this option is used, a warning is printed for every patch.  By default this option is {\it false} and is not required.  
-\item
-
-\end{enumerate}
+%
+\item {\bf Initial time step}: $<$initial\_dt$>$ \\
+{\bf Input type}: {\it Required, double} \\
+{\bf Default}: {\it NA } \\ 
+{\bf Description}: The explicit solver can be stepped forward in time by using a fixed time step or letting the code estimate a time step via a CFL condition (see Section \ref{Sec:LES_Algorithm}).  In either case, an initial time step must be specified. 
+%
+\item {\bf Variable time step}: $<$variable\_dt$>$ \\
+{\bf Input type}: {\it Required, boolean} \\
+{\bf Default}: {\it NA } \\ 
+{\bf Description}: One may either step at a fixed time step with $\Delta t$ equal to the {\it intial\_dt} tag or let the code guess a stable time step according to a CFL condition. It is recommended that one sets the {\it variable\_dt} to {\it true}  as it helps maintain stability during the time integration.
+%
+\item {\bf Time integration order}: $<$timeIntegratorType$>$ \\
+ {\bf Input type}: {\it Required, string} \\
+ {\bf Default}: {\it FE}  \\  
+ {\bf Description}: Current options include one of the following: \\ 
+ \begin{itemize}
+  \item FE, 1st order Forward-Euler 
+  \item RK2SSP, Second Order, Strong-Stability Preserving Runge-Kutta 
+  \item RK3SSP, Third Order, Strong-Stability Preserving Runge-Kutta 
+ \end{itemize}
+ See Section \ref{Sec:LES_Algorithm} for full details.
+ % 
+\item {\bf Stability option for the density guess}: $<$restartOnNegativeDensityGuess$>$ \\
+ {\bf Input type}: {\it Optional, boolean} \\
+ {\bf Default}: {\it false} \\
+ {\bf Description}: This parameter restarts a time step, regardless of the time integrator order, if the predicted density guess (see Section \ref{Sec:LES_Algorithm}) from the continuity equation is  negative and therefore unphysical.  If this option is true, the time step is reduced by half and the time step is restarted with the new, smaller time step.  The process with repeat until a) the density guess is physical or b) the code goes unstable.  Instability usually will occur in the implicit pressure projection.  If b) occurs, it is advised to set this option to {\it false}.  By default this option is {\it false} and is not required.  Note that in cases where this parameter is {\it false} and a negative density guess occurs, the density from the previous time step is used.   
+ %
+\item {\bf  Message control on density guess}: $<$NoisyDensityGuess$>$ \\
+{\bf Input type}: {\it Optional, boolean} \\
+{\bf Default}: {\it true} \\
+{\bf Description }: The negative density guess warning prints for every cell with a negative density guess.  One may want to suppress the warning and can do so with this option.  When used, a warning is printed for every patch rather than every cell.  
+\item {\bf Turbulence model calculation frequency}: $<$turbModelCalcFreq$>$ \\
+{\bf Input type}: {\it Optional, integer} \\
+{\bf Default}: {\it 1} \\ 
+{\bf Description}: This parameter allows one to control the frequency of the execution of the turbulence model.  One may want to decrease the frequency for efficiency reasons.  
+\item {\bf Turbulence model calculation frequency on time integrator sub-steps}: \newline $<$turbModelCalcForAllRKSteps$>$ \\
+{\bf Input type}: {\it Optional, boolean} \\
+{\bf Default}: {\it true } \\ 
+{\bf Description}: If {\it false}, the turbulence closure will only be computed for the first time sub-step and then applied for all subsequent time sub-steps.  By default, this parameter is {\it true}.  
+\item {\bf Additional time step constraint}: $<$scalarUnderflowCheck$>$ \\
+{\bf Input type}: {\it Optional, boolean} \\
+{\bf Default}: {\it false}   \\ 
+{\bf Description}: Guaranteeing stability for a problem with large length and time scales is difficult.  As previously mentioned, a guess at a stable time step is made using a CFL condition.  The scalar underflow check option uses additional information about the local flow information to compute an additional time step guess.  The minimum of this estimation and the CFL condition is used to step the equations forward in time.  Here, a time step is computed from the inverse of the continuity equation by considering outward mass fluxes only.  In other words, given the local velocity state, there is a limit to the amount of mass that can leave any given cell.  This limit is computed from
+\[
+\frac{\partial \rho}{\partial t} = -\nabla \cdot (\rho U)|_{+}
+\]
+when only outward facing fluxes are considered (as indicated by the $|_+$ symbol).  Thus one can rearrange this equation to give an estimate for $\Delta t$ as, 
+\[ 
+\Delta t \approx \partial t =  \frac{\partial \rho}{  \nabla \cdot (\rho U)|_{+}}
+\] 
+This option is often helpful in helping with stability if your simulation is experiencing underflow ($<1.0$) or overflow ($>1.0$) errors from the mixture fraction scalar.  
+%
+\item {\bf Extra pressure projection option}: $<$extraProjection$>$ \\
+{\bf Input type}: {\it Optional, boolean} \\
+{\bf Default}: {\it false}   \\ 
+{\bf Description}: This option performs a second pressure solve and projection step.  In general, this option is not needed. By default the value is {\it false}.   
+ \end{enumerate}
 
 \subsubsection{Implicit Time Integrator}
 %
 Currently the implicit time integrator is not supported. Please check back in subsequent releases.
 
-\subsubsection{Initial and Boundary Conditions} 
+\subsection{Equation Options}\label{Sec:Eqns_options}
+
+\subsubsection{Momentum Solver}
+
+\subsubsection{Pressure Solver}
+
+\subsubsection{Mixture Fraction Solver}
+
+\subsubsection{Enthalpy Solver}
+
+\subsection{Initial and Boundary Conditions} 
+
+\subsection{Turbulence Models}
+
+\subsection{Properties, Reaction and Sub-Grid Mixing}
+
+\subsection{Extra Scalar Solvers}
+This section and all options will soon be replaced with Section \ref{Sec:AddTransEqn}. 
+
+\subsection{Additional Transport Equations}\label{Sec:AddTransEqn}
+
+\subsection{Direct Quadrature Method of Moments (DQMOM)}
+
+
 
 
 
