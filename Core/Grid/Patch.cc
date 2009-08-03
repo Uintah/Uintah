@@ -1448,6 +1448,7 @@ IntVector Patch::getGhostCellHighIndex(int numGC) const
 void Patch::cullIntersection(VariableBasis basis, IntVector bl, const Patch* neighbor,
                              IntVector& region_low, IntVector& region_high) const
 {
+  TAU_PROFILE("Patch::cullIntersection", " ", TAU_USER); 
   // on certain AMR grid configurations, with extra cells, patches can overlap
   // such that the extra cell of one patch overlaps a normal cell of another
   // in such conditions, we shall exclude that extra cell from MPI communication
