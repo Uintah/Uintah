@@ -1043,6 +1043,7 @@ TaskGraph::createDetailedDependencies(DetailedTask* task,
   int me = d_myworld->myrank();
 
   for( ; req != 0; req = req->next){
+    TAU_PROFILE("SchedulerCommon::compile()-req loop", " ", TAU_USER); 
     
     if(req->var->typeDescription()->isReductionVariable())
       continue;
@@ -1105,6 +1106,7 @@ TaskGraph::createDetailedDependencies(DetailedTask* task,
 
     if(patches && !patches->empty() && matls && !matls->empty()){
       for(int i=0;i<patches->size();i++){
+        TAU_PROFILE("SchedulerCommon::compile()-patch loop", " ", TAU_USER); 
         const Patch* patch = patches->get(i);
 
         Patch::selectType neighbors;
@@ -1154,6 +1156,7 @@ TaskGraph::createDetailedDependencies(DetailedTask* task,
 
 
         for(int i=0;i<neighbors.size();i++){
+          TAU_PROFILE("SchedulerCommon::compile()-neighbor loop", " ", TAU_USER); 
           const Patch* neighbor=neighbors[i];
             
           //if neighbor is not in my neighborhood just continue as its dependencies are not important to this processor
@@ -1181,6 +1184,7 @@ TaskGraph::createDetailedDependencies(DetailedTask* task,
             fromNeighbors.push_back(neighbor);
 
           for (int j = 0; j < fromNeighbors.size(); j++) {
+            TAU_PROFILE("SchedulerCommon::compile()-fromNeighbor loop", " ", TAU_USER); 
             const Patch* fromNeighbor = fromNeighbors[j];
 
             //only add the requirments both fromNeighbor is in my neighborhood
@@ -1196,8 +1200,14 @@ TaskGraph::createDetailedDependencies(DetailedTask* task,
               from_h = Min(fromNeighbor->getHighIndexWithDomainLayer(basis), h);
             }
             else {
-              from_l = Max(fromNeighbor->getExtraLowIndex(basis, req->var->getBoundaryLayer()), l);
-              from_h = Min(fromNeighbor->getExtraHighIndex(basis, req->var->getBoundaryLayer()), h);
+              //This intersection should not be needed
+              //from_l = Max(fromNeighbor->getExtraLowIndex(basis, req->var->getBoundaryLayer()), l);
+              //from_h = Min(fromNeighbor->getExtraHighIndex(basis, req->var->getBoundaryLayer()), h);
+              from_l = l;
+              from_h = h;
+              //verify in debug mode that the intersection is unneeded
+              ASSERT( Max(fromNeighbor->getExtraLowIndex(basis, req->var->getBoundaryLayer()), l)==l);
+              ASSERT(Min(fromNeighbor->getExtraHighIndex(basis, req->var->getBoundaryLayer()), h)==h);
             }
             if (patch->getLevel()->getIndex() > 0 && patch != fromNeighbor && req->patches_dom == Task::NormalDomain) {
               // cull annoying overlapping AMR patch dependencies
@@ -1208,6 +1218,7 @@ TaskGraph::createDetailedDependencies(DetailedTask* task,
             }
 
             for(int m=0;m<matls->size();m++){
+              TAU_PROFILE("SchedulerCommon::compile()-matl loop", " ", TAU_USER); 
               int matl = matls->get(m);
 
               // creator is the task that performs the original compute.
@@ -1260,6 +1271,7 @@ TaskGraph::createDetailedDependencies(DetailedTask* task,
                 for (reqTaskIter = requireBeforeModifiedTasks.begin();
                     reqTaskIter != requireBeforeModifiedTasks.end();
                     ++reqTaskIter) {
+                  TAU_PROFILE("SchedulerCommon::compile()-requireBeforeModified loop", " ", TAU_USER); 
                   DetailedTask* prevReqTask = *reqTaskIter;
                   if (prevReqTask == task)
                     continue;
@@ -1301,6 +1313,7 @@ TaskGraph::createDetailedDependencies(DetailedTask* task,
                         req_patch->getLevel()->selectPatches(low, high, n);
                         bool found = false;
                         for (int i = 0; i < n.size(); i++) {
+                          TAU_PROFILE("SchedulerCommon::compile()-n loop", " ", TAU_USER); 
                           if (n[i]->getID() == p->getID()) {
                             found = true;
                             break;
@@ -1338,6 +1351,7 @@ TaskGraph::createDetailedDependencies(DetailedTask* task,
       }
     }
     else if (!patches && matls && !matls->empty()) {
+      TAU_PROFILE("SchedulerCommon::compile()-reduction segment", " ", TAU_USER); 
       // requiring reduction variables
       for (int m=0;m<matls->size();m++){
         int matl = matls->get(m);
