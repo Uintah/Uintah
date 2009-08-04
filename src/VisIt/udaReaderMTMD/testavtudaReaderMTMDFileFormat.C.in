@@ -211,6 +211,10 @@ avtudaReaderMTMDFileFormat::avtudaReaderMTMDFileFormat(const char *filename) :
   if((error = dlerror()) != NULL) {
     EXCEPTION1(InvalidDBTypeException, "The function getExtraCells could not be located in the library!!!");
   }                                                                                                                                                                         
+  *(void **)(&getPVarLevelAndPatches) = dlsym(libHandle, "getPVarLevelAndPatches");
+  if((error = dlerror()) != NULL) {
+    EXCEPTION1(InvalidDBTypeException, "The function getPVarLevelAndPatches could not be located in the library!!!");
+  }                                                                                                                                                                         
 
   // Check to see if the file could be opened should be here
   // fileOpened should be set if the file could be opened
@@ -559,10 +563,7 @@ avtudaReaderMTMDFileFormat::InitializeReader(avtDatabaseMetaData *md, int timeSt
 	else if (vartype.find("SFCZ") != string::npos)		
 	  mesh_for_this_var.assign("SFCZ_Mesh");
       }  
-
-      // mesh_for_this_var.append("mesh_");
-      // mesh_for_this_var.append(newVarname);
-
+      
       // debug5 << newVarname << " " << mesh_for_this_var << endl;
 
       bool addMeshToMetadata = false;
@@ -632,67 +633,6 @@ avtudaReaderMTMDFileFormat::InitializeReader(avtDatabaseMetaData *md, int timeSt
 	newVarname.append("/");
 	newVarname.append(buffer);
 
-	// string mesh_for_this_var;
-
-	// mt = AVT_AMR_MESH;
-	// topological_dimension = 3;
-
-	/*if (vartype.find("NC") != string::npos) {
-	  cent = AVT_NODECENT;
-	  mesh_for_this_var.assign("NC"); 
-	  }  
-	  else if (vartype.find("CC") != string::npos) {  
-	  cent = AVT_ZONECENT;
-	  mesh_for_this_var.assign("CC"); 
-	  }
-	  else if (vartype.find("SFC") != string::npos) { 
-	  cent = AVT_ZONECENT;
-
-	  if (vartype.find("SFCX") != string::npos)             
-	  mesh_for_this_var.assign("SFCX");
-	  else if (vartype.find("SFCY") != string::npos)                
-	  mesh_for_this_var.assign("SFCY");
-	  else if (vartype.find("SFCZ") != string::npos)                
-	  mesh_for_this_var.assign("SFCZ");
-	  }  
-
-	  mesh_for_this_var.append("mesh_");
-	  mesh_for_this_var.append(newVarname);*/
-
-	// debug5 << newVarname << " " << mesh_for_this_var << endl;
-
-	/*AddMeshToMetaData(md, mesh_for_this_var, mt, extents, totalPatches, 1,
-	  3, topological_dimension);*/
-
-	// strcpy(buffer, mesh_for_this_var.c_str());
-
-	/*avtMeshMetaData *mesh = new avtMeshMetaData;
-
-	  mesh->name = buffer;
-	  mesh->meshType = AVT_AMR_MESH;
-	  mesh->topologicalDimension = 3;
-	  mesh->spatialDimension = 3;
-	  mesh->blockOrigin = 0;
-
-	  mesh->numBlocks = totalPatches;
-	  mesh->blockTitle = "patches";
-	  mesh->blockPieceName = "patch";
-	  mesh->numGroups = numLevels;
-	  mesh->groupTitle = "levels";
-	  mesh->groupPieceName = "level";
-
-	  mesh->hasSpatialExtents = true; 
-	  mesh->minSpatialExtents[0] = minMaxArr[0];
-	  mesh->maxSpatialExtents[0] = minMaxArr[3];
-	  mesh->minSpatialExtents[1] = minMaxArr[1];
-	  mesh->maxSpatialExtents[1] = minMaxArr[4];
-	  mesh->minSpatialExtents[2] = minMaxArr[2];
-	  mesh->maxSpatialExtents[2] = minMaxArr[5];
-
-	  mesh->blockNames = pieceNames;
-
-	  md->Add(mesh); */
-
 	if (vartype.find("Vector") != string::npos) 
 	  AddVectorVarToMetaData(md, newVarname, mesh_for_this_var, cent, 3); // 3 -> vector dimension
 	else if (vartype.find("Matrix3") != string::npos)
@@ -708,13 +648,11 @@ avtudaReaderMTMDFileFormat::InitializeReader(avtDatabaseMetaData *md, int timeSt
   sfcxMesh = false;
   sfcyMesh = false;
   sfczMesh = false;
-
-  md->AddGroupInformation(numLevels, totalPatches, groupIds);
-  md->AddDefaultSILRestrictionDescription(std::string("!TurnOnAll"));
-
+  
   // Nothing needs to be modifed for particle data, as they exist only on a single level
   for (int i = 0; i < udaVarsObj.size(); i++) {
     if (udaVarsObj[i].find("ParticleVariable") != string::npos /*&& udaVarsObj[i].find("p.x") == string::npos*/) {
+      char tmpArray[128];
       string varname = udaVarsObj[i];
       size_t found = varname.find("/");
 
@@ -723,6 +661,8 @@ avtudaReaderMTMDFileFormat::InitializeReader(avtDatabaseMetaData *md, int timeSt
 
       varMatls* varMatlsPtr = (*getMaterials)(folder, varname, timeState);
       varMatls& varMatlsObj = *(varMatlsPtr);
+
+      int* levelAndPatches = (*getPVarLevelAndPatches)(folder, varname, timeState);
 
       debug5 << "Querying variable " << varname << " with " << varMatlsObj.size() << " materials" << endl;
 
@@ -747,11 +687,39 @@ avtudaReaderMTMDFileFormat::InitializeReader(avtDatabaseMetaData *md, int timeSt
 	mesh_for_this_var.append(newVarname);
 
 	debug5 << newVarname << " " << mesh_for_this_var << endl;
+      
+        // if (addMeshToMetadata) {
+	  strcpy(tmpArray, mesh_for_this_var.c_str());
+	  avtMeshMetaData *mesh = new avtMeshMetaData;
 
-	mt = AVT_POINT_MESH;
-	topological_dimension = 0;
-	AddMeshToMetaData(md, mesh_for_this_var, mt, extents, nblocks, block_origin,
-	    spatial_dimension, topological_dimension);
+	  mesh->name = tmpArray;
+	  mesh->meshType = AVT_POINT_MESH;
+	  mesh->topologicalDimension = 0;
+	  mesh->spatialDimension = 3;
+
+	  mesh->numBlocks = levelAndPatches[1];
+	  mesh->blockTitle = "patches";
+	  mesh->blockPieceName = "patch";
+	  // mesh->numGroups = 1; // since particles are on a single level
+	  // mesh->groupTitle = "levels";
+	  // mesh->groupPieceName = "level";
+	  // mesh->blockNames = pieceNames;
+
+	  mesh->hasSpatialExtents = true; 
+	  mesh->minSpatialExtents[0] = minMaxArr[0];
+	  mesh->maxSpatialExtents[0] = minMaxArr[3];
+	  mesh->minSpatialExtents[1] = minMaxArr[1];
+	  mesh->maxSpatialExtents[1] = minMaxArr[4];
+	  mesh->minSpatialExtents[2] = minMaxArr[2];
+	  mesh->maxSpatialExtents[2] = minMaxArr[5];
+
+	  md->Add(mesh); 
+        // }
+
+	// mt = AVT_POINT_MESH;
+	// topological_dimension = 0;
+	// AddMeshToMetaData(md, mesh_for_this_var, mt, extents, nblocks, block_origin,
+	//     spatial_dimension, topological_dimension);
 
 	cent = AVT_NODECENT;
 
@@ -765,6 +733,9 @@ avtudaReaderMTMDFileFormat::InitializeReader(avtDatabaseMetaData *md, int timeSt
       }
     }   
   }
+  
+  md->AddGroupInformation(numLevels, totalPatches, groupIds);
+  md->AddDefaultSILRestrictionDescription(std::string("!TurnOnAll"));
 
   // debug5 << "Out PopulateDatabaseMetaData\n";
 }
@@ -2110,11 +2081,11 @@ avtudaReaderMTMDFileFormat::GetMesh(int timestate, int domain, const char *meshn
 
     // not removing the boundary with particle data
     if (matl.compare("*") == 0) {
-      timeStepObjPtr = (*processData)(7, arr2d, timestate, false, matlNo, false, vars, 0); 
+      timeStepObjPtr = (*processData)(7, arr2d, timestate, false, matlNo, false, vars, domain); 
       debug5 << "All data\n";
     }
     else {
-      timeStepObjPtr = (*processData)(7, arr2d, timestate, false, matlNo, true, vars, 0);
+      timeStepObjPtr = (*processData)(7, arr2d, timestate, false, matlNo, true, vars, domain);
       debug5 << "Some data\n";
     }  
 
@@ -2269,7 +2240,7 @@ avtudaReaderMTMDFileFormat::GetVar(int timestate, int domain, const char *varnam
     }
   }
 
-  cout << isParticleVar << endl;
+  // debug5 << isParticleVar << endl;
 
   vtkFloatArray *rv = vtkFloatArray::New();
 
@@ -2348,7 +2319,7 @@ avtudaReaderMTMDFileFormat::GetVar(int timestate, int domain, const char *varnam
 	    MPI_Send(&msg, 1, MPI_INT, rank + 1, tag, VISIT_MPI_COMM);
 	  }
       } 
-#else      
+#else
       timeStepObjPtr = (*processData)(12, arr2d, timestate, true, 0, false, string("null"), local_patch);
 #endif
 
@@ -2703,8 +2674,8 @@ avtudaReaderMTMDFileFormat::GetVar(int timestate, int domain, const char *varnam
     if (matl.compare("*") != 0)
       matlNo = atoi(matl.c_str());
 
-    cout << varName << endl;
-    cout << matlNo << endl;
+    debug5 << varName << endl;
+    debug5 << matlNo << endl;
 
     strcpy(arr2d[0], "uda2nrrd"); // anything will do
     strcpy(arr2d[1], "-uda");
@@ -2717,11 +2688,11 @@ avtudaReaderMTMDFileFormat::GetVar(int timestate, int domain, const char *varnam
     timeStep *timeStepObjPtr;
 
     if (matl.compare("*") == 0) {
-      timeStepObjPtr = (*processData)(7, arr2d, timestate, false, matlNo, false, varName, 0); 
+      timeStepObjPtr = (*processData)(7, arr2d, timestate, false, matlNo, false, varName, domain); 
       debug5 << "All data\n";
     }  
     else { 
-      timeStepObjPtr = (*processData)(7, arr2d, timestate, false, matlNo, true, varName, 0);
+      timeStepObjPtr = (*processData)(7, arr2d, timestate, false, matlNo, true, varName, domain);
       debug5 << "Some data\n";
     }  
 
@@ -2753,10 +2724,9 @@ avtudaReaderMTMDFileFormat::GetVar(int timestate, int domain, const char *varnam
       // bool varFound = false;
 
       for (int j = 0;  j < dataRef.size(); j++) {
-	if (strcmp(varName.c_str(), dataRef[j].name.c_str()) == 0) {
+	if (strcmp(varName.c_str(), dataRef[j].name.c_str()) == 0)
 	  // varFound = true;
 	  rv->SetTuple1(i, dataRef[j].value);  // you must determine value for ith entry.
-        }
       }
 
       /*if (!varFound) {
@@ -3333,11 +3303,11 @@ avtudaReaderMTMDFileFormat::GetVectorVar(int timestate, int domain,const char *v
     timeStep *timeStepObjPtr;
 
     if (matl.compare("*") == 0) {
-      timeStepObjPtr = (*processData)(7, arr2d, timestate, false, matlNo, false, varName, 0); 
+      timeStepObjPtr = (*processData)(7, arr2d, timestate, false, matlNo, false, varName, domain); 
       debug5 << "All data\n";
     }  
     else { 
-      timeStepObjPtr = (*processData)(7, arr2d, timestate, false, matlNo, true, varName, 0);
+      timeStepObjPtr = (*processData)(7, arr2d, timestate, false, matlNo, true, varName, domain);
       debug5 << "Some data\n";
     }  
 

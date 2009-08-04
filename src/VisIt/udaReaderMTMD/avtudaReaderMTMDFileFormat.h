@@ -168,6 +168,7 @@ protected:
   int*             (*getPeriodicBoundaries)(const std::string&, int, int);
   int*             (*getExtraCells)(const std::string&, int, int);
   int*             (*getNumLevels)(const std::string&, int);
+  int*             (*getPVarLevelAndPatches)(const std::string&, const std::string&, int); 
 
   virtual void     PopulateDatabaseMetaData(avtDatabaseMetaData *, int);
   void             InitializeReader(avtDatabaseMetaData *, int);
