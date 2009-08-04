@@ -97,7 +97,9 @@ private:
   const ArchesLabel* d_fieldLabels;
   int d_timeSubStep;
 
-  const VarLabel* d_normBLabel; 
+  const VarLabel* d_normRLabel; 
+
+  double d_maxResNorm; 
 
 }; // end class DQMOM
 
