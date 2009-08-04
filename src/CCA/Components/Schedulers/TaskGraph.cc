@@ -1109,7 +1109,10 @@ TaskGraph::createDetailedDependencies(DetailedTask* task,
         TAU_PROFILE("SchedulerCommon::compile()-patch loop", " ", TAU_USER); 
         const Patch* patch = patches->get(i);
 
-        Patch::selectType neighbors;
+        //only allocate once
+        static Patch::selectType neighbors;
+        neighbors.resize(0);
+
         IntVector low, high;
 
         Patch::VariableBasis basis = Patch::translateTypeToBasis(req->var->typeDescription()->getType(),
@@ -1124,13 +1127,16 @@ TaskGraph::createDetailedDependencies(DetailedTask* task,
           // make sure the bounds of the dep are limited to the original patch's (see above)
           // also limit to current patch, as patches already loops over all patches
           IntVector origlow = low, orighigh = high;
-          low = Max(low, otherLevelLow);
           if (req->patches_dom == Task::FineLevel) {
             // don't coarsen the extra cells
             low = patch->getLowIndex(basis);
             high = patch->getHighIndex(basis);
           }
-          high = Min(high, otherLevelHigh);
+          else
+          {
+            low = Max(low, otherLevelLow);
+            high = Min(high, otherLevelHigh);
+          }
 
           if (high.x() <= low.x() || high.y() <= low.y() || high.z() <= low.z()) {
             continue;
@@ -1163,7 +1169,9 @@ TaskGraph::createDetailedDependencies(DetailedTask* task,
           if(!lb->inNeighborhood(neighbor->getRealPatch()))
             continue;
 
-          Patch::selectType fromNeighbors;
+          static Patch::selectType fromNeighbors;
+          fromNeighbors.resize(0);
+
           IntVector l = Max(neighbor->getExtraLowIndex(basis, req->var->getBoundaryLayer()), low);
           IntVector h = Min(neighbor->getExtraHighIndex(basis, req->var->getBoundaryLayer()), high);
           if (neighbor->isVirtual()) {
@@ -1355,7 +1363,8 @@ TaskGraph::createDetailedDependencies(DetailedTask* task,
       // requiring reduction variables
       for (int m=0;m<matls->size();m++){
         int matl = matls->get(m);
-        vector<DetailedTask*> creators;
+        static vector<DetailedTask*> creators;
+        creators.resize(0);
 
 #if 0
         if (type_ == Scheduler::IntermediateTaskGraph && req->lookInOldTG && sc->isNewDW(req->mapDataWarehouse())) {
