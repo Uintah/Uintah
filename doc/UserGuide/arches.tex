@@ -551,11 +551,186 @@ This section and all options will soon be replaced with Section \ref{Sec:AddTran
 
 %\subsubsection{Solvers}
 
+\newpage
+\section{Examples}
 
-%\subsection{Examples}
+The following ARCHES examples illustrate the diverse set of problems that can be solved using the ARCHES component of Uintah code.  The first two examples exemplify techniques used to verify various ARCHES algorithms that were implemented in the code.  The following three [or more] examples illustrate the kinds of problems that ARCHES can solve.  The input files used here can be used as templates to build similar input files for similar problems. 
+Due to the complexity of ARCHES simulations, exact solutions (with the exception of MMS) do not exist.  Hence the emphasis on model validation, or the comparison of simulation with experimental results.  Model validation provides a framework that allows the simulation scientist to be confident in his or her results in the absence of analytical solutions.  All modeling should be accompanied by some form of validation analysis.
 
 
-%\subsection{References}
+\subsection*{\center Almgren MMS}
+\addcontentsline{toc}{subsection}{Almgren MMS}
+\subsubsection*{\underline{Problem Description}}
+
+Methods of Manufactured Solutions (MMS) are verification tools that are used with computer codes such as ARCHES that seek to solve the Navier-Stokes Equations.  They are extremely useful for finding programming errors and ensuring expected behavior of the computer code.   The Almgren MMS is especially easy to implement because of the absence of source terms that must be added to the transport equations.
+ARCHES uses a second-order spatial discretization scheme and a first-order scheme in the temporal direction.  Therefore, if the Almgren MMS problem is run in Arches at different mesh resolutions and the normalized error plotted on a semilog plot, the slope of the line should be 2.  To facilitate this exercise, a shell script has been written to perform this analysis \bf{[not done yet....]}  test %COMPLETE ME
+
+\subsubsection*{\underline{Simulation Specifics}}
+\begin{description} 
+\footnotesize
+\item [Component used:] \hfill ARCHES
+\item [Input file name:] \hfill \TT{almgrenMMS.ups}\\
+\item [Command used to run input file:]\hfill \\
+
+% Write .sh script to run almgrenMMS.ups 4 times at different resolutions [32,32,8], [24,24,8]. [12,12,8], and [8,8,8] and then extract L2norms to a .dat file that can easily be plotted in Excel or Matlab.
+\TT{./runAlmgren.sh }
+
+If you examine the shell script you will see the following line of code:
+\TT{mpirun -np 1 sus  inputs/UintahRelease/ARCHES/almgrenMMS.ups}
+This is call to run the ARCHES via sus.
+
+\item [Simulation Domain:]\hfill    1.0 x 1.0 x 3.0 m
+\item [Cell Spacing:]\hfill \\ 
+0.3125 x 0.3125 x 0.275 m
+
+\item [Example Runtimes:] \hfill \\
+113.2 seconds (1 processor, 2.4 GHz Intel Core 2)
+
+\item [Physical time simulated:] \hfill 1.0 sec.
+\end{description}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Figure showing plot of error as a function of spatial discretization
+ %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+ 
+ %--------------------------------------------------------------
+ \newpage
+\subsection*{\center Periodic Box Problem}
+\addcontentsline{toc}{subsection}{Periodic Box Problem}
+\subsubsection*{\underline{Problem Description}}
+
+The Periodic Box Problem indicates how well ARCHES is modeling the kinetic energy contained in the turbulence modeled on the grid and at a sub-grid level.  The LES algorithm transfers kinetic energy from cell to cell in the ARCHES structured grid. Turbulence models such as "compdynamicprocedure," "dynamicprocedure," and "smagorinsky" are used to model kinetic energy at the sub-grid level.  Ideally, there would be a seamless transition between the resolved turbulence and sub-grid models at the Nyquist limit.  \bf{SHOW SAMPLE PLOT}  Experience has shown that this is not normally the case.   By plotting the kinetic energy as a function of the wave number, it is possible to determine how well the kinetic energy dissipation is being modeled by the code.  The Periodic Box problem is initialized with a kinetic energy (turbulence) profile from Direct Numerical Simulation (DNS).  As the simulation proceeds that energy is dissipated.  
+ % COMPLETE ME
+
+\subsubsection*{\underline{Simulation Specifics}}
+\begin{description} 
+\footnotesize
+\item [Component used:] \hfill ARCHES
+\item [Input file name:] \hfill \TT{periodic.ups}\\
+ 
+\item [Command used to run input file:]\hfill \\
+This simulation, like many ARCHES simulations, requires another file, in addition to the input file called by sus.  That file is the initial condition called upon in periodic.ups by %<set\_initial\_condition inputfile\="iso\_ini\_32.dat"/>
+
+\TT{mpirun -np 1 sus  inputs/UintahRelease/ARCHES/periodic.ups  }  % I am using the periodic.ups file found in the tree
+
+\item [Simulation Domain:]\hfill    0.565 x 0.565 x 0.565 m
+\item [Cell Spacing:]\hfill \\ 
+0.0177 x 0.0177 x 0.0177 m  %[32]^3
+
+\item [Example Runtimes:] \hfill \\
+2 minutes   (1 processor, 2.4 GHz Intel Core 2 )
+
+\item [Physical time simulated:] \hfill 0.1 sec.  % Is this time long enough???
+\end{description}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Figure showing plot of kinetic energy as a function of the wave number
+%
+% +  Discussion
+%
+ %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+ %--------------------------------------------------------------
+\newpage
+\subsection*{\center Helium Plume}
+\addcontentsline{toc}{subsection}{Helium Plume}
+\subsubsection*{\underline{Problem Description}}
+Helium plumes are classical experiments that allow for the easy capture of turbulent mixing data that can be used to validate the turbulent mixing models used in LES algorithms such as Arches.  The non-reacting nature of the plume makes it easy to capture experimental data without damaging expensive equipment.  Reacting flows require special mixing tables that contain temperature, pressure and composition as a function of the transported scalars in Arches.  The coldFlowMixingModel is used to determine the mixing of \bf{isothermal?} streams.  After the mixing model is specific in the .ups file, the temperature and densities of the two mixing streams are specified.
+
+\subsubsection*{\underline{Simulation Specifics}}
+\begin{description} 
+\footnotesize
+\item [Component used:] \hfill ARCHES
+\item [Input file name:] \hfill \TT{helium\_1m.ups}\\
+ 
+\item [Command used to run input file:]\hfill \\
+\TT{mpirun -np 8 sus  inputs/UintahRelease/ARCHES/helium\_1m.ups  }
+
+\item [Simulation Domain:]\hfill    3.0 x 3.0 x 3.0 m
+\item [Cell Spacing:]\hfill \\ 
+0.06 x 0.06 x 0.0.6 m
+
+\item [Example Runtimes:] \hfill \\
+ 54 minutes   (8 processors, 2.8 GHz Xeon)
+
+\item [Physical time simulated:] \hfill 5.0 sec.
+\end{description}
+
+\subsubsection*{\underline{Results}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Image from [300]^3 simulation
+%
+% Plot from Diem's work with the Sandia Helium Plume dataset
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+ %--------------------------------------------------------------
+\newpage
+\subsection*{\center Methane Plume}
+\addcontentsline{toc}{subsection}{Methane Plume}
+\subsubsection*{\underline{Problem Description}}
+This methane plume is geometrically identical to the Helium Plume problem.  The difference is the addition of chemistry.  Instead of unreacting, isothermal fluids mixing, a fuel is reacting to combustion products inside of the computational domain.  This chemistry is captured via a mixing table.  The input file is pointed to the mixing table which contains state variables and species mass fractions as a function of mixture fraction, heat loss, and mixture fraction variance.   
+
+\subsubsection*{\underline{Simulation Specifics}}
+\begin{description} 
+\footnotesize
+\item [Component used:] \hfill ARCHES
+\item [Input file name:] \hfill \TT{helium\_1m.ups}\\
+Note that the input file is pointed to the mixing table (inputs/UintahRelease/ARCHES/CH4\_equil\_clipped.mxn.gz)
+ 
+\item [Command used to run input file:]\hfill \\
+\TT{mpirun -np 8 sus  inputs/UintahRelease/ARCHES/helium\_1m.ups  }
+
+\item [Simulation Domain:]\hfill    3.0 x 3.0 x 3.0 m
+\item [Cell Spacing:]\hfill \\ 
+0.06 x 0.06 x 0.0.6 m
+
+\item [Example Runtimes:] \hfill \\
+ 2 hours 10 minutes   (8 processors, 2.8 GHz Xeon)
+
+\item [Physical time simulated:] \hfill 5.0 sec.
+\end{description}
+
+\subsubsection*{\underline{Results}}
+% Discussion of ...?
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Nifty manta image with realistic looking flame
+% Specify characteristics of simulation
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+ %--------------------------------------------------------------
+\newpage
+\subsection*{\center Fast Cookoff}
+\addcontentsline{toc}{subsection}{Fast Cookoff}
+\subsubsection*{\underline{Problem Description}}
+The Fast Cookoff test is a procedure used for hazard classification of energetic materials.  The object is immersed over a jet fuel pool fire and the reaction, if any, is observed.  Current protocol requires that the full size article must be subjected to this test, making such procedures prohibitively expensive and unfeasible for articles such as solid rocket motors.  An alternative procedure has been proposed, combining sub-scale experiments with computer simulation.  Through validation and uncertainty quantification procedures, the computer simulation tool (ARCHES) can be used as a surrogate for full-scale experimental testing.  This Fast Cookoff problem includes a reacting flow as well as an MPMARCHES object.  After performing the simulation, the incident heat flux to the cylinder can be extracted.  
+
+\subsubsection*{\underline{Simulation Specifics}}
+\begin{description} 
+\footnotesize
+\item [Component used:] \hfill MPMARCHES
+
+\item [Input file name:] \hfill \TT{fastcookoff.ups}\\
+
+\item [Command used to run input file:]\hfill \\
+Note that the input file is pointed to the mixing table (inputs/UintahRelease/ARCHES/sandia\_jp8\_flmlt\_cg.mxn)
+
+\TT{mpirun -np 64 sus  inputs/UintahRelease/ARCHES/fastcookoff.ups  }
+To extract the incident heat flux to the cylinder, use the faceextract and timeextract utilities.  <How to do this>
+
+\item [Simulation Domain:]\hfill    24.0 x 24.0 x 24.0 m
+\item [Cell Spacing:]\hfill \\ 
+0.24 x 0.24 x 0.24 m
+
+\item [Example Runtimes:] \hfill \\
+7 hours 27 minutes   (64 processors, 2.8 GHz Xeon)  % UDA at /scratch/uintah/hinckley/ARCHES_examples
+
+\item [Physical time simulated:] \hfill 10.0 sec.
+\end{description}
+
+\subsubsection*{\underline{Results}}
+
 
 \section{References}
 \bibliographystyle{plain}
