@@ -143,7 +143,7 @@ private:
    const DataItem& getDataItem(const VarLabel* label, int matlindex,
 			       const DomainType* dom) const;
     
-   typedef multimap<VarLabelMatl<DomainType>, DataItem> varDBtype;
+   typedef hash_multimap<VarLabelMatl<DomainType>, DataItem>  varDBtype;
    varDBtype vars;
 
    DWDatabase(const DWDatabase&);
@@ -307,7 +307,7 @@ DWDatabase<DomainType>::put( const VarLabel* label, int matlIndex,const DomainTy
 
   VarLabelMatl<DomainType> v(label, matlIndex, getRealDomain(dom));
   unsigned int count=vars.count(v);
-  if (count >1 ) 
+  if (count > 1 ) 
     SCI_THROW(InternalError("More than one vars on this label", __FILE__, __LINE__));
   if (count == 1) {
     typename varDBtype::iterator iter = vars.find(v);
@@ -320,7 +320,7 @@ DWDatabase<DomainType>::put( const VarLabel* label, int matlIndex,const DomainTy
       iter->second.var=var; 
     } 
   }
-  if (count ==0){
+  if (count == 0) {
     typename varDBtype::iterator iter = vars.insert(pair<VarLabelMatl<DomainType>, DataItem>(v, DataItem()));
     iter->second.var=var; 
   }
@@ -439,5 +439,23 @@ DWDatabase<DomainType>::getVarLabelMatlTriples( vector<VarLabelMatl<DomainType> 
 }
 
 } // End namespace Uintah
+
+//Hash function for VarLabelMatl
+namespace std { 
+  namespace tr1 {
+    using Uintah::DWDatabase;
+    using Uintah::VarLabelMatl;
+    template <class DomainType>
+      struct hash<VarLabelMatl<DomainType> > : public unary_function<VarLabelMatl<DomainType>, size_t>
+      {
+        size_t operator()(const VarLabelMatl<DomainType>& v) const
+        {
+          return ( ( ((size_t)v.label_) << (sizeof(size_t)/2) ^ ((size_t)v.label_) >> (sizeof(size_t)/2) ) 
+              ^ (size_t)v.domain_ ^ (size_t)v.matlIndex_ );
+        }
+      };
+  }
+} // End namespace std
+
 
 #endif
