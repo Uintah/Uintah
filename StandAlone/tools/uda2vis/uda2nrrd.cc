@@ -745,7 +745,53 @@ getPatchIndex(const string& input_uda_name, int timeStepNo, int levelNo, int pat
       delete archive;
       return udaVarList;
     } 
+  
+  
+  /////////////////////////////////////////////////////////////////////
+  extern "C"
+    int*
+    getPVarLevelAndPatches(const string& input_uda_name,
+                           const string& varName,
+			   int timeStepNo) {
+      DataArchive* archive = scinew DataArchive(input_uda_name);
+            
+      vector<int> index;
+      vector<double> times;
 
+      // query time info from dataarchive
+      // This is needed here (it sets a member variable), without this queryGrid won't work
+      archive->queryTimesteps(index, times);
+      GridP grid = archive->queryGrid(timeStepNo);
+      
+      int* levelAndPatches = new int(2);
+      	      
+      bool found_particle_level = false;
+      for( int lev = 0; lev < grid->numLevels(); lev++ ) {
+        LevelP particleLevel = grid->getLevel( lev );
+	const Patch* patch = *(particleLevel->patchesBegin());
+        ConsecutiveRangeSet matls = archive->queryMaterials(varName, patch, timeStepNo);
+	if( matls.size() > 0 ) {
+	  if( found_particle_level ) {
+	    // Ut oh... found particles on more than one level... don't know how 
+	    // to handle this yet...
+	    cout << "\n";
+	    cout << "Error: uda2nrrd currently can only handle particles on only a single level.  Goodbye.\n";
+	    cout << "\n";
+	    exit(1);
+	  }
+	  // The particles are on this level...
+	  found_particle_level = true;
+	  levelAndPatches[0] = lev;
+	  levelAndPatches[1] = particleLevel->numPatches();
+	  // cout << "Found the PARTICLES on level " << lev << ".\n";
+	}
+      }
+      
+      delete archive;
+      return levelAndPatches;
+    } 
+  
+ 
   /////////////////////////////////////////////////////////////////////
   extern "C"
     timeStep*
@@ -987,7 +1033,7 @@ getPatchIndex(const string& input_uda_name, int timeStepNo, int levelNo, int pat
 	  }
 	}
 
-	// Create a vector of clas timeStep. This is where we store all time step data.
+	// Create a vector of class timeStep. This is where we store all time step data.
 	// udaData *dataBank = new udaData(); // No longer needed
 
 	////////////////////////////////////////////////////////
@@ -1228,25 +1274,25 @@ getPatchIndex(const string& input_uda_name, int timeStepNo, int levelNo, int pat
 
 	    switch (subtype->getType()) {
 	      case Uintah::TypeDescription::double_type:
-		/*data =*/ handleParticleData<double>( qinfo, matlNo, matlClassfication, data, varSelected );
+		/*data =*/ handleParticleData<double>( qinfo, matlNo, matlClassfication, data, varSelected, patchNo );
 		break;
 	      case Uintah::TypeDescription::float_type:
-		/*data =*/ handleParticleData<float>( qinfo, matlNo, matlClassfication, data, varSelected );
+		/*data =*/ handleParticleData<float>( qinfo, matlNo, matlClassfication, data, varSelected, patchNo );
 		break;
 	      case Uintah::TypeDescription::int_type:
-		/*data =*/ handleParticleData<int>( qinfo, matlNo, matlClassfication, data, varSelected  );
+		/*data =*/ handleParticleData<int>( qinfo, matlNo, matlClassfication, data, varSelected, patchNo );
 		break;
 	      case Uintah::TypeDescription::long64_type:
-		/*data =*/ handleParticleData<long64>( qinfo, matlNo, matlClassfication, data, varSelected  );
+		/*data =*/ handleParticleData<long64>( qinfo, matlNo, matlClassfication, data, varSelected, patchNo );
 		break;
 	      case Uintah::TypeDescription::Point:
-		/*data =*/ handleParticleData<Point>( qinfo, matlNo, matlClassfication, data, varSelected  );
+		/*data =*/ handleParticleData<Point>( qinfo, matlNo, matlClassfication, data, varSelected, patchNo );
 		break;
 	      case Uintah::TypeDescription::Vector:
-		/*data =*/ handleParticleData<Vector>( qinfo, matlNo, matlClassfication, data, varSelected  );
+		/*data =*/ handleParticleData<Vector>( qinfo, matlNo, matlClassfication, data, varSelected, patchNo );
 		break;
 	      case Uintah::TypeDescription::Matrix3:
-		/*data =*/ handleParticleData<Matrix3>( qinfo, matlNo, matlClassfication, data, varSelected  );
+		/*data =*/ handleParticleData<Matrix3>( qinfo, matlNo, matlClassfication, data, varSelected, patchNo );
 		break;
 	      default:
 		cerr << "Unknown subtype for particle data: " << subtype->getName() << "\n";

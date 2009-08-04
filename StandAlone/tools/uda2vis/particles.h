@@ -119,7 +119,7 @@ public:
 
 template<class PartT>
 void
-handleParticleData( QueryInfo & qinfo, int matlNo, bool matlClassfication, ParticleDataContainer& result, string varSelected );
+handleParticleData( QueryInfo & qinfo, int matlNo, bool matlClassfication, ParticleDataContainer& result, string varSelected, int patchNo );
 
 void
 saveParticleData( std::vector<ParticleDataContainer> & data,
