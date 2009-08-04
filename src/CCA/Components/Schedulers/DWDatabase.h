@@ -138,6 +138,7 @@ private:
        : var(0), scrubCount(0) {}
      Variable* var;
      int scrubCount;
+     unsigned int version; 
    };
   
    const DataItem& getDataItem(const VarLabel* label, int matlindex,
@@ -337,6 +338,7 @@ DWDatabase<DomainType>::putForeign( const VarLabel* label, int matlIndex,const D
   VarLabelMatl<DomainType> v(label, matlIndex, getRealDomain(dom));
   typename varDBtype::iterator iter = vars.insert(pair<VarLabelMatl<DomainType>, DataItem>(v, DataItem()));
   iter->second.var=var; 
+  iter->second.version=vars.count(v)-1;
 }
 
 template<class DomainType>
@@ -385,8 +387,9 @@ DWDatabase<DomainType>::getlist( const VarLabel* label,
   VarLabelMatl<DomainType> v(label, matlIndex, getRealDomain(dom));
   pair<typename varDBtype::const_iterator, typename varDBtype::const_iterator> ret;
   ret = vars.equal_range(v);
+  varlist.resize(vars.count(v));
   for (typename varDBtype::const_iterator iter=ret.first; iter!=ret.second; ++iter)
-    varlist.push_back(iter->second.var);
+    varlist[iter->second.version] = iter->second.var;
 
   if(varlist.size() == 0)
     SCI_THROW(UnknownVariable(label->getName(), -99, dom, matlIndex,
