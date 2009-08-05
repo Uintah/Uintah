@@ -251,8 +251,8 @@ DWDatabase<DomainType>::scrub(const VarLabel* label, int matlIndex, const Domain
   ret = vars.equal_range(v);
   for (typename varDBtype::const_iterator iter=ret.first; iter!=ret.second; ++iter){
     delete iter->second.var;
-    vars.erase(iter);
   }
+  vars.erase(ret.first,ret.second);
 
 }
 
