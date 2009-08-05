@@ -168,16 +168,15 @@ void DWDatabase<DomainType>::clear()
   for(typename varDBtype::iterator iter = vars.begin();
       iter != vars.end(); iter++){
 
-#ifdef DEBUG
+#if 0
     // This can happen in some normal cases (especially at program
     // shutdown), but catching it is useful for debugging the scrubbing
     // stuff...
-    if (iter->first->typeDescription() != 0
-	&& iter->first->typeDescription()->getType() != TypeDescription::ReductionVariable) {
-      ostringstream msgstr;
-      msgstr << "Failed to scrub: " << iter->first->getName()
-	     << " completely";
-      SCI_THROW(InternalError(msgstr.str(), __FILE__, __LINE__));
+    if ( iter->first.label_ != 0 && iter->first.label_->typeDescription() != 0
+	&& iter->first.label_->typeDescription()->getType() != TypeDescription::ReductionVariable) {
+      cout << "Failed to scrub: " << iter->first.label_->getName()
+	     << " completely.  scrub count: " << iter->second.scrubCount;
+      //SCI_THROW(InternalError("Scubbing Failed"), __FILE__, __LINE__);
     }
 #endif
     if (iter->second.var)
