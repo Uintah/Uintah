@@ -236,25 +236,25 @@ setScrubCount(const VarLabel* label, int matlIndex, const DomainType* dom, int c
 
 template<class DomainType>
 void
-DWDatabase<DomainType>::scrub(const VarLabel* var, int matlIndex, const DomainType* dom)
+DWDatabase<DomainType>::scrub(const VarLabel* label, int matlIndex, const DomainType* dom)
 {
   ASSERT(matlIndex >= -1);
-  VarLabelMatl<DomainType> vlm(var, matlIndex, getRealDomain(dom));
-  typename varDBtype::iterator iter = vars.find(vlm);
-  if (iter != vars.end()) {
-    ASSERTEQ(iter->second.scrubCount, 0);
-    delete iter->second.var;
-    vars.erase(iter);
-    return; // found and scrubbed
-  }
-
-  // scrub not found
+  VarLabelMatl<DomainType> v(label, matlIndex, getRealDomain(dom));
+  if (vars.count(v)==0){ // scrub not found
   ostringstream msgstr;
-  msgstr << var->getName() << ", matl " << matlIndex
+  msgstr << label->getName() << ", matl " << matlIndex
 	 << ", patch/level " << dom->getID()
 	 << " not found for scrubbing.";
-
   SCI_THROW(InternalError(msgstr.str(), __FILE__, __LINE__));
+  }
+
+  pair<typename varDBtype::const_iterator, typename varDBtype::const_iterator> ret;
+  ret = vars.equal_range(v);
+  for (typename varDBtype::const_iterator iter=ret.first; iter!=ret.second; ++iter){
+    delete iter->second.var;
+    vars.erase(iter);
+  }
+
 }
 
 template<class DomainType>
@@ -346,14 +346,16 @@ const typename DWDatabase<DomainType>::DataItem&
 DWDatabase<DomainType>::getDataItem( const VarLabel* label, int matlIndex, const DomainType* dom ) const
 {
   ASSERT(matlIndex >= -1);
-    
   VarLabelMatl<DomainType> v(label, matlIndex, getRealDomain(dom));
-  typename varDBtype::const_iterator iter = vars.find(v);
-  if(iter == vars.end())
-    SCI_THROW(UnknownVariable(label->getName(), -99, dom, matlIndex,
+  pair<typename varDBtype::const_iterator, typename varDBtype::const_iterator> ret;
+  ret = vars.equal_range(v);
+  for (typename varDBtype::const_iterator iter=ret.first; iter!=ret.second; ++iter){
+    if (iter->second.version == 0 ) {
+      return iter->second;
+    }
+  }
+  SCI_THROW(UnknownVariable(label->getName(), -99, dom, matlIndex,
 			      "DWDatabase::getDataItem", __FILE__, __LINE__));
-
-  return iter->second;
 }
 
 template<class DomainType>
