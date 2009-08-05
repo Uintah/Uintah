@@ -135,7 +135,7 @@ using SCIRun::FastHashTable;
 private:
    struct DataItem {
      DataItem()
-       : var(0), scrubCount(0) {}
+       : var(0), scrubCount(0), version(0) {}
      Variable* var;
      int scrubCount;
      unsigned int version; 
