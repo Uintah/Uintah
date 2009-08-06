@@ -174,6 +174,7 @@ Arches::problemSetup(const ProblemSpecP& params,
   if (db->findBlock("ExplicitSolver")){
     if (db->findBlock("ExplicitSolver")->findBlock("MixtureFractionSolver"))
       d_calcScalar = true;
+      db->findBlock("ExplicitSolver")->findBlock("MixtureFractionSolver")->getWithDefault("initial_value",d_init_mix_frac,0.0); 
   } else if (db->findBlock("PicardSolver")){
     if (db->findBlock("PicardSolver")->findBlock("MixtureFractionSolver"))
       d_calcScalar = true;
@@ -1025,7 +1026,7 @@ Arches::paramInit(const ProcessorGroup* pg,
         reactScalarDiffusivity.initialize(visVal/0.4);
       }
     }
-    scalar.initialize(0.0);
+    scalar.initialize(d_init_mix_frac);
 
 /*    for (CellIterator iter=patch->getCellIterator__New(); 
          !iter.done(); iter++){
