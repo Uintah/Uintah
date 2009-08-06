@@ -51,6 +51,7 @@ DEALINGS IN THE SOFTWARE.
 #include <list>
 #include <sstream>
 
+#include <sci_hash_map.h>
 namespace Uintah {
 
 using std::vector;
