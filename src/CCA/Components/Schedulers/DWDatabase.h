@@ -253,7 +253,7 @@ DWDatabase<DomainType>::scrub(const VarLabel* label, int matlIndex, const Domain
   for (typename varDBtype::const_iterator iter=ret.first; iter!=ret.second; ++iter){
     delete iter->second.var;
   }
-  vars.erase(ret.first,ret.second);
+  vars.erase(v);
 
 }
 
@@ -446,6 +446,22 @@ DWDatabase<DomainType>::getVarLabelMatlTriples( vector<VarLabelMatl<DomainType> 
 } // End namespace Uintah
 
 //Hash function for VarLabelMatl
+#ifdef HAVE_GNU_HASHMAP
+namespace __gnu_cxx
+{
+  using Uintah::DWDatabase;
+  using Uintah::VarLabelMatl;
+  template <class DomainType>
+  struct hash<VarLabelMatl<DomainType> > : public unary_function<VarLabelMatl<DomainType>, size_t>
+  {
+    size_t operator()(const VarLabelMatl<DomainType>& v) const
+    {
+      return ( ( ((size_t)v.label_) << (sizeof(size_t)/2) ^ ((size_t)v.label_) >> (sizeof(size_t)/2) ) 
+          ^ (size_t)v.domain_ ^ (size_t)v.matlIndex_ );
+    }
+  };
+}
+#else
 namespace std { 
   namespace tr1 {
     using Uintah::DWDatabase;
@@ -461,6 +477,6 @@ namespace std {
       };
   }
 } // End namespace std
-
+#endif
 
 #endif
