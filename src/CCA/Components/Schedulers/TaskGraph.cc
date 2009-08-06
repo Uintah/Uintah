@@ -1045,8 +1045,8 @@ TaskGraph::createDetailedDependencies(DetailedTask* task,
   for( ; req != 0; req = req->next){
     TAU_PROFILE("SchedulerCommon::compile()-req loop", " ", TAU_USER); 
     
-    if(req->var->typeDescription()->isReductionVariable())
-      continue;
+    //if(req->var->typeDescription()->isReductionVariable())
+    //  continue;
 
     if(sc->isOldDW(req->mapDataWarehouse()) && !sc->isNewDW(req->mapDataWarehouse()+1))
       continue;
