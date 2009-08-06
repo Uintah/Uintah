@@ -395,6 +395,17 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
 
       normRes[c] = A.getNorm( &Res[0], 2 ); //normRes contains L-2 norm of residual ( B - AX )
 
+      // Computing the norm of the solution vector:
+      double normX = 0.0;
+      for (int xi=0; xi < A.getDimension(); xi++){
+        normX += X[xi]*X[xi]; 
+      }
+      normX = pow( normX, 1.0/2.0 ); 
+      // now normalize the b-Ax residual
+      double small = 1e-10; 
+      normRes[c] = normRes[c]/( normX + small ); 
+
+
       /*
       // Print out cell-by-cell matrix information
       // (Make sure and change your domain to have a small # of cells!)
