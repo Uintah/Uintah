@@ -1026,7 +1026,13 @@ Arches::paramInit(const ProcessorGroup* pg,
         reactScalarDiffusivity.initialize(visVal/0.4);
       }
     }
-    scalar.initialize(d_init_mix_frac);
+    scalar.initialize(0.0);
+    if (d_init_mix_frac > 0.0) {
+      for (CellIterator iter=patch->getCellIterator__New(); 
+           !iter.done(); iter++){
+        scalar[*iter] = d_init_mix_frac; 
+      }
+    }
 
 /*    for (CellIterator iter=patch->getCellIterator__New(); 
          !iter.done(); iter++){
