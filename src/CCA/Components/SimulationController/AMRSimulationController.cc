@@ -842,7 +842,8 @@ AMRSimulationController::executeTimestep(double t, double& delt, GridP& currentG
       d_scheduler->get_dw(0)->setScrubbing(DataWarehouse::ScrubComplete);
     
     for(int i=0;i<=totalFine;i++) {
-      if ((d_doAMR && !d_sharedState->isLockstepAMR()) || d_lb->getNthProc() > 1 || d_lb->isDynamic() || d_reduceUda)
+      //if ((d_doAMR && !d_sharedState->isLockstepAMR()) || d_lb->getNthProc() > 1 || d_lb->isDynamic() || d_reduceUda)
+      if (d_lb->getNthProc() > 1 || d_reduceUda)
         d_scheduler->get_dw(i)->setScrubbing(DataWarehouse::ScrubNone);
       else {
         d_scheduler->get_dw(1)->setScrubbing(DataWarehouse::ScrubNonPermanent);
