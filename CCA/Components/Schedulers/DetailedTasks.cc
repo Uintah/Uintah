@@ -746,8 +746,13 @@ DetailedTasks::possiblyCreateDependency(DetailedTask* from,
     return;
   }
 
+
+  //if the dependency is a reduction variable then don't create a dependency
+  if( req->var->typeDescription()->isReductionVariable() )
+    return;
+  
   //this should have been pruned out earlier
-  ASSERT(!req->var->typeDescription()->isReductionVariable())
+  //ASSERT(!req->var->typeDescription()->isReductionVariable())
 
 
     //get dependancy batch
