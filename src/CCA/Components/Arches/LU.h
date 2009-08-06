@@ -152,8 +152,9 @@ class LU{
       // L_p norm
       // || x ||_p   [=]   ( sum( |x_i|^p ) )^(1/p)
       for (int z = 0; z < dim_; ++z) {
-        TheNorm += pow( pow(fabs( (double)a[z] ),(int)type) , 1.0/type );
+        TheNorm += pow(fabs( (double)a[z] ),(int)type);
       }
+      TheNorm = pow( TheNorm, 1.0/type );  
     } 
     return TheNorm;
   }
