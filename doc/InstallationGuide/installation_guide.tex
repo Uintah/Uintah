@@ -127,7 +127,8 @@ required for \textbf{Uintah} are satisfied:
 
 \begin{verbatim} 
 sudo aptitude install subversion libhypre-dev petsc-dev \ 
-libxml2-dev zlib1g-dev liblapack-dev cmake cmake-curses-gui
+libxml2-dev zlib1g-dev liblapack-dev cmake libglew1.5-dev \
+libglui-dev libxmu-dev
 \end{verbatim}
 
 Once these libraries are installed, Teem and VisIt can be installed
@@ -325,7 +326,7 @@ You can also use the following command on the terminal (from most
 Linux boxes), to download the file directly,
 
 \begin{verbatim}
-wget https://wci.llnl.gov/codes/visit/1.11.1/build_visit
+wget https://wci.llnl.gov/codes/visit/1.11.2/build_visit
 chmod +x build_visit
 \end{verbatim}
 The chmod is used to set execute permissions on the file.
