@@ -99,7 +99,7 @@ private:
 
   const VarLabel* d_normBLabel; 
   const VarLabel* d_normXLabel; 
-  cosnt VarLabel* d_normResLabel;
+  const VarLabel* d_normResLabel;
 
 }; // end class DQMOM
 
