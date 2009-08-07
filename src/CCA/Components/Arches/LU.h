@@ -90,7 +90,7 @@ class LU{
       * @returns    Result is returned in vector Z */
     template <typename T1, typename T2> 
     void 
-    LU::multiply( T1* Y, T2* Z )
+    multiply( T1* Y, T2* Z )
     {
       int i,j;
       T2 rowsum;
@@ -114,7 +114,7 @@ class LU{
       * @returns    Residual is returned in residual vector */
     template <typename T1, typename T2, typename T3> 
     void
-    LU::getResidual( T1* rhs, T2* soln, T3* res)
+    getResidual( T1* rhs, T2* soln, T3* res)
     {
         // multiply A by X and put the result in Res
         multiply( soln, res );
