@@ -19,6 +19,7 @@
 #include <Core/Exceptions/InvalidValue.h>
 #include <CCA/Components/Arches/DQMOM.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
+#include <Core/Parallel/Parallel.h>
 
 //===========================================================================
 
@@ -121,7 +122,7 @@ void DQMOM::problemSetup(const ProblemSpecP& params)
   // Check to make sure number of total moments specified in input file is correct
   if ( moments != (N_xi+1)*N_ ) {
     proc0cout << "ERROR:DQMOM:ProblemSetup: You specified " << moments << " moments, but you need " << (N_xi+1)*N_ << " moments." << endl;
-    throw InvalidValue( "ERROR:DQMOM:ProblemSetup: The number of moments specified was incorrect! Need ",__FILE__,__LINE__);
+    throw InvalidValue( "ERROR:DQMOM:ProblemSetup: The number of moments specified was incorrect!",__FILE__,__LINE__);
   }
 
   // Check to make sure number of moment indices matches the number of internal coordinates
@@ -432,7 +433,7 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
 
       // Find the residual of the solution vector
       A.getResidual( &B[0], &Xlong[0], &Resid[0] );
-      normResid[c] = A.getNorm( &Resid[0], 2 );
+      normRes[c] = A.getNorm( &Resid[0], 2 );
 
       double maxResidMag = 10;
       unsigned int z = 0;
