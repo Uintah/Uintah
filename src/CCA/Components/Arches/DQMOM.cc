@@ -52,6 +52,8 @@ void DQMOM::problemSetup(const ProblemSpecP& params)
   unsigned int index_length = 0;
   moments = 0;
 
+  db->getWithDefault("solver_tolerance",d_solver_tolerance,10e6); 
+
   // obtain moment index vectors
   vector<int> temp_moment_index;
   for ( ProblemSpecP db_moments = db->findBlock("Moment");
@@ -121,6 +123,8 @@ void DQMOM::problemSetup(const ProblemSpecP& params)
     proc0cout << "ERROR:DQMOM:ProblemSetup: You specified " << index_length << " moment indices, but there are " << N_xi << " internal coordinates." << endl;
     throw InvalidValue( "ERROR:DQMOM:ProblemSetup: The number of moment indices specified was incorrect! Need ",__FILE__,__LINE__);
   }
+
+
 
 }
 
@@ -454,7 +458,10 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
           new_dw->allocateAndPut(tempCCVar, source_label, matlIndex, patch);
         }
 
-        tempCCVar[c] = B[z];
+        if ( normRes[c] < d_solver_tolerance )
+          tempCCVar[c] = B[z];
+        else 
+          tempCCVar[c] = 0.0; 
         
         ++z;
       }
@@ -469,8 +476,11 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
           new_dw->allocateAndPut(tempCCVar, source_label, matlIndex, patch);
         }
 
-        tempCCVar[c] = B[z];
-        
+        if ( normRes[c] < d_solver_tolerance )
+          tempCCVar[c] = B[z];
+        else
+          tempCCVar[c] = 0.0; 
+
         ++z;
       }
 
