@@ -101,6 +101,8 @@ private:
   const VarLabel* d_normXLabel;         /// Label for the norm of X
   const VarLabel* d_normResLabel;       /// Label for the norm of the AX-B residual
 
+  double d_solver_tolerance;            /// Solver tolerance 
+
 }; // end class DQMOM
 
 } // end namespace Uintah
