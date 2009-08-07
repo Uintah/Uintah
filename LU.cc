@@ -234,10 +234,10 @@ LU::iterative_refinement( double* rhs, double* soln, long double* refined_soln )
 {
   if (!isDecomposed_) {
     string err_msg = "ERROR:LU:iterative_refinement(): This method cannot be called until LU::decompose() has been executed.\n";
-    throw InvalidValue( err_msg );
+    throw InvalidValue(err_msg,__FILE__,__LINE__);
   } else if (isRefined_) {
     string err_msg = "ERROR:LU:iterative_refinement(): This method cannot be called twice!\n";
-    throw InvalidValue( err_msg );
+    throw InvalidValue(err_msg,__FILE__,__LINE__);
   }
 
   vector<double> dX_ip1(dim_, 0.0);        /// dX for iteration i+1 (curr. iter)

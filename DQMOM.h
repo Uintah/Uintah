@@ -97,6 +97,8 @@ private:
   const ArchesLabel* d_fieldLabels;
   int d_timeSubStep;
 
+  double d_solver_tolerance;
+
   const VarLabel* d_normBLabel; 
   const VarLabel* d_normXLabel; 
   const VarLabel* d_normResLabel;
