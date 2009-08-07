@@ -19,7 +19,6 @@
 #include <Core/Exceptions/InvalidValue.h>
 #include <CCA/Components/Arches/DQMOM.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
-#include <Core/Parallel/Parallel.h>
 
 //===========================================================================
 
@@ -29,15 +28,22 @@ DQMOM::DQMOM(const ArchesLabel* fieldLabels):
 d_fieldLabels(fieldLabels)
 {
 
-  string varname = "normX";
+  string varname = "normB";
+  d_normBLabel = VarLabel::create(varname, 
+            CCVariable<double>::getTypeDescription());
+
+  varname = "normX";
   d_normXLabel = VarLabel::create(varname, 
             CCVariable<double>::getTypeDescription());
+
   varname = "normRes";
-  d_normResLabel = VarLabel::create(varname, CCVariable<double>::getTypeDescription() );
+  d_normResLabel = VarLabel::create(varname, 
+            CCVariable<double>::getTypeDescription());
 }
 
 DQMOM::~DQMOM()
 {
+  VarLabel::destroy(d_normBLabel); 
   VarLabel::destroy(d_normXLabel); 
   VarLabel::destroy(d_normResLabel);
 }
@@ -115,7 +121,7 @@ void DQMOM::problemSetup(const ProblemSpecP& params)
   // Check to make sure number of total moments specified in input file is correct
   if ( moments != (N_xi+1)*N_ ) {
     proc0cout << "ERROR:DQMOM:ProblemSetup: You specified " << moments << " moments, but you need " << (N_xi+1)*N_ << " moments." << endl;
-    throw InvalidValue( "ERROR:DQMOM:ProblemSetup: The number of moments specified was incorrect!",__FILE__,__LINE__);
+    throw InvalidValue( "ERROR:DQMOM:ProblemSetup: The number of moments specified was incorrect! Need ",__FILE__,__LINE__);
   }
 
   // Check to make sure number of moment indices matches the number of internal coordinates
@@ -123,8 +129,6 @@ void DQMOM::problemSetup(const ProblemSpecP& params)
     proc0cout << "ERROR:DQMOM:ProblemSetup: You specified " << index_length << " moment indices, but there are " << N_xi << " internal coordinates." << endl;
     throw InvalidValue( "ERROR:DQMOM:ProblemSetup: The number of moment indices specified was incorrect! Need ",__FILE__,__LINE__);
   }
-
-
 
 }
 
@@ -140,13 +144,16 @@ DQMOM::sched_solveLinearSystem( const LevelP& level, SchedulerP& sched, int time
   ModelFactory& model_factory = ModelFactory::self();
 
   if (timeSubStep == 0) {
-    proc0cout << "Asking for normX label " << endl; 
-    tsk->computes(d_normXLabel); 
+    proc0cout << "Asking for norm labels" << endl; 
+    tsk->computes(d_normBLabel); 
+    tsk->computes(d_normXLabel);
     tsk->computes(d_normResLabel);
   } else {
-    tsk->modifies(d_normXLabel); 
+    tsk->modifies(d_normBLabel); 
+    tsk->modifies(d_normXLabel);
     tsk->modifies(d_normResLabel);
   }
+
 
   for (vector<DQMOMEqn*>::iterator iEqn = weightEqns.begin(); iEqn != weightEqns.end(); ++iEqn) {
     const VarLabel* tempLabel;
@@ -219,6 +226,16 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
 
     ModelFactory& model_factory = ModelFactory::self();
 
+    // get/allocate normB label
+    CCVariable<double> normB; 
+    if (new_dw->exists(d_normBLabel, matlIndex, patch)) { 
+      new_dw->getModifiable(normB, d_normBLabel, matlIndex, patch);
+    } else {
+      new_dw->allocateAndPut(normB, d_normBLabel, matlIndex, patch);
+    }
+    normB.initialize(0.0);
+
+    // get/allocate normX label
     CCVariable<double> normX; 
     if (new_dw->exists(d_normXLabel, matlIndex, patch)) { 
       new_dw->getModifiable(normX, d_normXLabel, matlIndex, patch);
@@ -227,14 +244,16 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
     }
     normX.initialize(0.0);
 
+    // get/allocate normRes label
     CCVariable<double> normRes;
-    if (new_dw->exists(d_normResLabel, matlIndex, patch)) {
-      new_dw->getModifiable(normRes, d_normResLabel, matlIndex, patch);
+    if( new_dw->exists(d_normResLabel, matlIndex, patch) ) {
+      new_dw->getModifiable( normRes, d_normResLabel, matlIndex, patch );
     } else {
-      new_dw->allocateAndPut(normRes, d_normResLabel, matlIndex, patch);
+      new_dw->allocateAndPut( normRes, d_normResLabel, matlIndex, patch );
     }
     normRes.initialize(0.0);
 
+    // get/allocate weight labels
     for (vector<DQMOMEqn*>::iterator iEqn = weightEqns.begin();
          iEqn != weightEqns.end(); iEqn++) {
       const VarLabel* source_label = (*iEqn)->getSourceLabel();
@@ -247,6 +266,7 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
       tempCCVar.initialize(0.0);
     }
   
+    // get/allocate weighted abscissa labels
     for (vector<DQMOMEqn*>::iterator iEqn = weightedAbscissaEqns.begin();
          iEqn != weightedAbscissaEqns.end(); ++iEqn) {
       const VarLabel* source_label = (*iEqn)->getSourceLabel();
@@ -263,16 +283,18 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
     for ( CellIterator iter = patch->getCellIterator__New();
           !iter.done(); ++iter) {
   
-      LU A( (N_xi+1)*N_, 1); // bandwidth doesn't matter b/c A is being stored densely
+      LU A( (N_xi+1)*N_ );
       vector<double> B( A.getDimension(), 0.0 );
-      vector<double> X( A.getDimension(), 0.0 );
+      vector<double> Xdoub( A.getDimension(), 0.0 );
+      vector<long double> Xlong( A.getDimension(), 0.0 );
+      vector<double> Resid( A.getDimension(), 0.0 );
       IntVector c = *iter;
 
       vector<double> weights;
       vector<double> weightedAbscissas;
       vector<double> models;
 
-      // store weights
+      // get weights from data warehouse
       for (vector<DQMOMEqn*>::iterator iEqn = weightEqns.begin(); 
            iEqn != weightEqns.end(); ++iEqn) {
         constCCVariable<double> temp;
@@ -281,7 +303,7 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
         weights.push_back(temp[c]);
       }
 
-      // store abscissas
+      // get weighted abscissas from data warehouse 
       for (vector<DQMOMEqn*>::iterator iEqn = weightedAbscissaEqns.begin();
            iEqn != weightedAbscissaEqns.end(); ++iEqn) {
         const VarLabel* equation_label = (*iEqn)->getTransportEqnLabel();
@@ -382,72 +404,39 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
         B[k] = totalsumS;
       } // end moments
 
-      // save a copy of the original A as Aorig
+      // save original A before decomposition into LU
       LU Aorig( A );
-      
-      // don't do the iterative solution loop for now
-      A.solve( &B[0], &X[0], false );
 
-      // calculate norm of solution vector
-      normX[c] = 0;
+      // decompose into LU
+      A.decompose();
+
+      // forward- then back-substitution
+      A.back_subs( &B[0], &Xdoub[0] );
+
+      // iterative refinement
+      bool do_iterative_refinement = true;
+      bool is_badly_conditioned = false;
+      double condition_number_estimate;
+      if( do_iterative_refinement ) {
+        A.iterative_refinement( &B[0], &Xdoub[0], &Xlong[0] );
+        condition_number_estimate = A.getConvergenceRate();
+        if( condition_number_estimate > 10e10 ) {
+            is_badly_conditioned = true;
+        }
+      }
+
+      // Find the L-2 norm of the RHS and solution vectors
+      normB[c] = A.getNorm( &B[0], 2 );
+      normX[c] = A.getNorm( &Xlong[0], 2 );
+      double maxNormMag = 10000; 
+
+      // Find the residual of the solution vector
+      A.getResidual( &B[0], &Xlong[0], &Resid[0] );
+      normResid[c] = A.getNorm( &Resid[0], 2 );
+
+      double maxResidMag = 10;
       unsigned int z = 0;
-
-      // calculate the norm of the residual (AX-B) vector
-      normRes[c] = 0;
-      vector<double> Res( A.getDimension(), 0.0 );
-      A.getResidual( &X[0], &B[0], &Res[0] );  // <-- should this be the decomposed A or the original A?
-
-      normRes[c] = A.getNorm( &Res[0], 2 ); //normRes contains L-2 norm of residual ( B - AX )
-
-      // Computing the norm of the solution vector:
-      double normX = 0.0;
-      for (int xi=0; xi < A.getDimension(); xi++){
-        normX += X[xi]*X[xi]; 
-      }
-      normX = pow( normX, 1.0/2.0 ); 
-      // now normalize the b-Ax residual
-      double small = 1e-10; 
-      normRes[c] = normRes[c]/( normX + small ); 
-
-
-      /*
-      // Print out cell-by-cell matrix information
-      // (Make sure and change your domain to have a small # of cells!)
-      proc0cout << "Cell " << c << endl;
-      proc0cout << endl;
-
-      // ---------------- coefficient matrix (A) -------------
-      proc0cout << "A matrix:" << endl;
-      Aorig.dump();
-      proc0cout << endl;
-
-      // ---------------- RHS vector (B) ---------------------
-      proc0cout << "B matrix:" << endl;
-      for ( vector<double>::iterator iB = B.begin(); 
-            iB != B.end(); ++iB) {
-        proc0cout << (*iB) << endl;
-      }
-      proc0cout << endl;
-
-      // -------------- solution vector (X) ------------------
-      proc0cout << "X matrix:" << endl;
-      for ( vector<double>::iterator iX = X.begin(); 
-            iX != X.end(); ++iX) {
-        proc0cout << (*iX) << endl;
-      }
-      proc0cout << endl;
-       
-      // -------------- residual vector AX-B -----------------
-      proc0cout << "Residual vector:" << endl;
-      for (vector<double>::iterator iRes = Res.begin(); iRes != Res.end(); ++iRes) {
-        proc0cout << (*iRes) << endl;
-      }
-      proc0cout << endl;
-      */
-
-
-      // set weight/weighted abscissa transport eqn source terms equal to results
-      z = 0;
+      // set weight transport eqn source terms equal to results
       for (vector<DQMOMEqn*>::iterator iEqn = weightEqns.begin();
            iEqn != weightEqns.end(); iEqn++) {
         const VarLabel* source_label = (*iEqn)->getSourceLabel();
@@ -458,14 +447,21 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
           new_dw->allocateAndPut(tempCCVar, source_label, matlIndex, patch);
         }
 
-        if ( normRes[c] < d_solver_tolerance )
-          tempCCVar[c] = B[z];
-        else 
-          tempCCVar[c] = 0.0; 
-        
-        ++z;
+        // Make sure several critera are met for an acceptable solution!
+        if(  fabs(  normB[c]) > maxNormMag 
+          || fabs(  normX[c]) > maxNormMag 
+          || fabs(normRes[c]) > maxResidMag ) {
+            // the norm is too big! set the weight = 0
+            tempCCVar[c] = 0;
+        } else if( is_badly_conditioned ) {
+            // the approximate condition number is too large!
+            tempCCVar[c] = 0;
+        } else {
+          tempCCVar[c] = Xlong[z];
+        }
       }
   
+      // set weighted abscissa transport eqn source terms equal to results
       for (vector<DQMOMEqn*>::iterator iEqn = weightedAbscissaEqns.begin();
            iEqn != weightedAbscissaEqns.end(); ++iEqn) {
         const VarLabel* source_label = (*iEqn)->getSourceLabel();
@@ -476,14 +472,47 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
           new_dw->allocateAndPut(tempCCVar, source_label, matlIndex, patch);
         }
 
-        if ( normRes[c] < d_solver_tolerance )
-          tempCCVar[c] = B[z];
-        else
-          tempCCVar[c] = 0.0; 
+        // Make sure several critera are met for an acceptable solution!
+        if( fabs(normB[c]) > maxNormMag || fabs(normX[c]) > maxNormMag ) {
+            // the norm is too big!
+            tempCCVar[c] = 0;
+        //} else if( fabs(MeanResid[c]) > maxResidMag ) {
+        //    // the residual is too big!
+        //    tempCCVar[c] = 0;
+        } else if( is_badly_conditioned ) {
+            // the approximate condition number is too large!
+            tempCCVar[c] = 0;
+        } else {
+          tempCCVar[c] = Xlong[z];
+        }
 
-        ++z;
       }
 
+
+
+/* 
+      // Print out cell-by-cell matrix information
+      // (Make sure and change your domain to have a small # of cells!)
+      cout << "Cell " << c << endl;
+      cout << endl;
+
+      cout << "A matrix:" << endl;
+      A.dump();
+      cout << endl;
+
+      cout << "B matrix:" << endl;
+      for (vector<double>::iterator iB = B.begin(); iB != B.end(); ++iB) {
+        cout << (*iB) << endl;
+      }
+      cout << endl;
+
+      cout << "X matrix:" << endl;
+      for (vector<double>::iterator iB = B.begin(); iB != B.end(); ++iB) {
+        cout << (*iB) << endl;
+      }
+      cout << endl;
+*/
+   
      
     }//end for cells
 

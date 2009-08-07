@@ -2,10 +2,10 @@
 #include <Core/Parallel/Parallel.h>
 #include <Core/Exceptions/InvalidValue.h>
 #include <float.h>
-//#include <cmath>
-//#include <iostream>
-//#include <iomanip>
-//#include <stdexcept>
+#include <cmath>
+#include <iostream>
+#include <iomanip>
+#include <stdexcept>
 
 using namespace std;
 using namespace Uintah;
@@ -14,27 +14,27 @@ using namespace Uintah;
 // Constructors/destructors
 
 // Default constructor
-LU::LU( const int dim, const int bandwidth )
+LU::LU( const int dim )
   : dim_( dim ),
-    AA_( dim, bandwidth )
+    AA_( dim )
 {
-  isDecomposed_ = false;
-  isRefined_ = false;
+    isDecomposed_ = false;
+    isRefined_ = false;
 }
 
 // Copy constructor for LU object
 LU::LU( LU &CopyThis ) : dim_( CopyThis.getDimension() ), 
-                         AA_( CopyThis.getDimension(), CopyThis.getDimension() )
+                         AA_( CopyThis.getDimension() )
 {
-  const int CopyThisDim = CopyThis.getDimension();
-  for (int i=0; i < CopyThisDim; ++i) {
-    for (int j=0; j < CopyThisDim; ++j) {
-      AA_(i,j) = CopyThis(i,j);
+    const int CopyThisDim = CopyThis.getDimension();
+    for (int i=0; i < CopyThisDim; ++i) {
+        for (int j=0; j < CopyThisDim; ++j) {
+            AA_(i,j) = CopyThis(i,j);
+        }
     }
-  }
 
-  isDecomposed_ = false;
-  isRefined_ = false;
+    isDecomposed_ = false;
+    isRefined_ = false;
 }
 
 // Default destructor
@@ -46,99 +46,18 @@ LU::~LU()
 
 
 
-//=========================================================
-// Solution functions
-
-/** @details    The solve() method calls the
-  *             appropriate (private) methods 
-  *             after it decides whether or not to
-  *             use iterative refinement to solve AX=B.   \n
-  */
-void 
-LU::solve( double* rhs, double* soln, bool doIterativeSolve )
-{
-  decompose();
-  back_subs( &rhs[0], &soln[0] );
-  if (doIterativeSolve) {
-    iterative_refinement( &rhs[0], &soln[0] );
-  }
-}
-
-//========================================================
-
-
-
-//========================================================
-// Utility functions
-
-/* -------------- not used ---------------------
-double
-LU::getNorm( double* a, unsigned int type )
-{
-  double TheNorm = 0;
-  
-  // Norm types:
-  // 0 - L_infty norm
-  // 1 - L1/Manhattan/taxicab norm
-  // 2 - L2 norm
-  //  ...
-  // p - Lp norm
-  if (type > 5) {
-    proc0cout << "You want WHAT kind of norm???" << endl;
-    proc0cout << "I will assume you just want an L_infty norm." << endl;
-    type = 0;
-  }
-
-  if (type == 0) {
-    // L_infty norm
-    for (int z = 0; z < dim_; ++z) {
-      if (abs(a[z]) > TheNorm) {
-        TheNorm = abs(a[z]);
-      }
-    }
-  } else if (type <= 5) {
-    // L_p norm
-    // || x ||_p   [=]   ( sum( |x_i|^p ) )^(1/p)
-    for (int z = 0; z < dim_; ++z) {
-      TheNorm += pow( pow(abs(a[z]),(int)type) , 1.0/type );
-    }
-  } 
-  
-  return TheNorm;
-}
-*/
-
-void
-LU::dump()
-{
-  for( int i=0; i<dim_; i++ ){
-    for( int j=0; j<dim_; j++ ){
-      proc0cout << std::setw(9) << std::setprecision(4) << AA_(i,j) << "  ";
-    }
-    proc0cout << endl;
-  }
-  proc0cout << "-----------------------------------------------------" << endl;
-}
-
-//========================================================
-
-
-
 //========================================================
 // LU Decomposition & Back-Substitution via Crout's Method
-
 void
 LU::decompose()
 {
-
-  // Algorithm from Numerical Recipes in C, by Press et al
-
   int i, imax, j, k;
   double big, dum, sum, temp;
   double tiny = 1e-10;
   vector<double> vv;
 
   isSingular_ = false;
+  isDecomposed_ = false;
 
   // loop over rows to get the implicit scaling information
   for (i=1; i<=dim_; ++i) {
@@ -150,15 +69,12 @@ LU::decompose()
       }
     }
     if (big == 0.0) {
-      // A matrix contains all-zero row, so it is singular; set solution vector equal to 0
       isSingular_ = true;
-      isDecomposed_ = true;
       return;
     }
     // save the scaling
     vv.push_back(1.0/big);
   }
-  //cout << endl;
 
   // Loop over columns for Crout's method
   for (j=1; j<=dim_; ++j) {
@@ -188,15 +104,17 @@ LU::decompose()
       }
       dum = vv[i-1]*fabs(sum);
       if ( dum >= big ) {
+
         // is the figure of merit for the pivot better than the best so far?
         big = dum;
         imax = i;
+      } else {
       }
     }
 
     // Inner loop 3: check if you need to interchange rows
     if (j != imax) {
-      // yes, you do
+
       for (k=1; k<=dim_; ++k) {
         dum = AA_(imax-1,k-1);
         AA_(imax-1,k-1) = AA_(j-1,k-1);
@@ -204,6 +122,7 @@ LU::decompose()
       }
       // interchange scale factor too
       vv[imax-1]=vv[j-1];
+    } else {
     }
 
     indx.push_back(imax);
@@ -238,9 +157,10 @@ LU::back_subs( double* rhs, double* soln )
 {
   if( ! isDecomposed_ ) {
     string err_msg = "ERROR:LU:back_subs(): This method cannot be called until LU::decompose() has been executed.\n";
-    throw InvalidValue(err_msg,__FILE__,__LINE__);
+    throw std::runtime_error( err_msg );
   } 
 
+  // FIXME:
   // Pointers of type double* are actually pointing to the first element of an array
   // So... I have no idea how to get the size of these vectors
   // We have to assume the user is passing vectors of the right size.
@@ -262,8 +182,18 @@ LU::back_subs( double* rhs, double* soln )
 
   // Algorithm from Numerical Recipes (C):
 
-  int i, j, ii=0, ip=0;
-  float sum;
+  int i, j, ii=0, ip;
+  double sum;
+
+  // Check size here
+  // FIXME: I can't figure out how to get the size of an array from a pointer to its first element
+  //if( rhs->size() != dim_ || soln->size() != dim_ ) {
+    // Throw error:
+    // LU::decompose(): Bad vector sizes
+    // dim_     = ___
+    // X.size() = ___
+    // B.size() = ___
+  //}
 
   // forward substitution
   for (i=1; i<=dim_; ++i) {
@@ -282,6 +212,7 @@ LU::back_subs( double* rhs, double* soln )
     soln[i-1] = sum;
   }
 
+
   // back-substitution
   for (i=dim_; i>=1; i--) {
     sum = soln[i-1];
@@ -298,36 +229,39 @@ LU::back_subs( double* rhs, double* soln )
 
 
 
-// ===============================================
-// Iterative Refinement
-vector<long double>
-LU::iterative_refinement( double* rhs, double* soln )
+void
+LU::iterative_refinement( double* rhs, double* soln, long double* refined_soln )
 {
   if (!isDecomposed_) {
     string err_msg = "ERROR:LU:iterative_refinement(): This method cannot be called until LU::decompose() has been executed.\n";
-    throw InvalidValue(err_msg,__FILE__,__LINE__);
+    throw InvalidValue( err_msg );
   } else if (isRefined_) {
     string err_msg = "ERROR:LU:iterative_refinement(): This method cannot be called twice!\n";
-    throw InvalidValue(err_msg,__FILE__,__LINE__);
-  }
-  
-  vector<long double> X_i(dim_);      /// Refined solution vector for iteration i
-  vector<long double> res(dim_);      /// Residual matrix, double working precision (long doubles)
-  vector<double> dX_ip1(dim_);        /// dX for iteration i+1 (curr. iter)
-  vector<double> dX_i(dim_);          /// dX for iteration i (prev. iter)
-  
-  if( isSingular_ ) {
-    for (int i=0; i<dim_; ++i) {
-      X_i[i] = 0;
-    }
-    return X_i;
+    throw InvalidValue( err_msg );
   }
 
+  vector<double> dX_ip1(dim_, 0.0);        /// dX for iteration i+1 (curr. iter)
+  vector<double> dX_i(dim_, 0.0);          /// dX for iteration i (prev. iter)
+  
+  vector<long double> res(dim_, 0.0);      /// Residual matrix, double working precision (long doubles)
+
+  if( isSingular_ ) {
+    for (int i=0; i<dim_; ++i) {
+      refined_soln[i] = 0;
+    }
+    return;
+  }
 
   // put X_1 (soln passed as parameter) into X_i for first iteration
   for (int z = 0; z < dim_; ++z) {
-    X_i[z] = soln[z];
+    long double temp;
+    temp = soln[z];
+    
+    //X_i[z] = temp;
+    //charles[z] = temp; //FIXME
+    refined_soln[z] = temp;
   }
+
 
   // initialize relative norms
   double relnorm_dX_i    = 10^20; /// Relative L_infty norm of dX at previous iteration
@@ -357,7 +291,8 @@ LU::iterative_refinement( double* rhs, double* soln )
     // solve AdX(i+1) = r(i) using normal precision
     back_subs( &rhs[0], &dX_ip1[0] );
 
-    relnorm_X_i = getNorm( &X_i[0], 0);
+    relnorm_X_i = getNorm( &refined_soln[0], 0 );
+
     relnorm_dX_ip1 = getNorm( &dX_ip1[0], 0 );
 
     // update x_state based on various stopping criteria
@@ -369,18 +304,17 @@ LU::iterative_refinement( double* rhs, double* soln )
 
     //update X_ip1 (update X_i in place)
     for (int z = 0; z < dim_; ++z) {
-      X_i[z] = X_i[z] - dX_ip1[z];
+      refined_soln[z] = refined_soln[z] - dX_ip1[z];
     }
 
   }
   
-  // only update the final relative norm after last step if x_stae = working
+  // only update the final relative norm after last step if x_state = working
   if (x_state == 0 ) {
     final_rel_norm = relnorm_dX_ip1/relnorm_X_i;
   }
   
   isRefined_ = true;
-  return X_i;
 }
 
 
@@ -393,10 +327,10 @@ LU::update_xstate( double norm_X_i,
 {
    if (!isDecomposed_) {
     string err_msg = "ERROR:LU:update_xstate(): This method cannot be called until LU::decompose() has been executed.\n";
-    throw InvalidValue(err_msg,__FILE__,__LINE__);
+    throw InvalidValue( err_msg, __FILE__, __LINE__ );
   } else if (isRefined_) {
     string err_msg = "ERROR:LU:update_xstate(): This method cannot be called beause iterative refinement has already taken place!\n";
-    throw InvalidValue(err_msg,__FILE__,__LINE__);
+    throw InvalidValue( err_msg, __FILE__, __LINE__ );
   }
   
   if (norm_dX_ip1/norm_X_i <= DBL_EPSILON) {
@@ -419,28 +353,123 @@ LU::update_xstate( double norm_X_i,
 
 
 
+//========================================================
+// Utility functions
+void
+LU::dump()
+{
+  cout << "-----------------------------------------------------" << endl;
+  AA_.dump();
+  cout << "-----------------------------------------------------" << endl;
+}
+
+double
+LU::getNorm( double* a, int type ) {
+    double TheNorm = 0;
+  	 
+    if (type > 5) {
+      type = 0;
+    }
+    if (type == 0) {
+    // L_infty norm = max(abs(z)) 
+      for (int z = 0; z < dim_; ++z) {
+    	  if (abs(a[z]) > TheNorm) {
+    	    TheNorm = abs(a[z]);
+    	  }
+    	}
+    } else if( type < 0 ) {
+    // L_negative_infty norm = min(abs(z))
+        TheNorm = a[0];
+        for( int z=1; z<dim_; ++z ) {
+          if( abs(a[z]) < TheNorm ) {
+            TheNorm = abs(a[z]);
+          }
+        }
+    } else if (type <= 5) {
+    // L_p norm = 
+    // || x ||_p   [=]   ( sum( |x_i|^p ) )^(1/p)
+      for (int z = 0; z < dim_; ++z) {
+        double rhs = pow( abs(a[z]), type );
+        TheNorm += rhs;
+      }
+      TheNorm = pow( TheNorm, 1.0/type );
+    } 
+    return TheNorm;
+}
+
+double
+LU::getNorm( long double* a, int type ) {
+    double TheNorm = 0;
+  	 
+    if (type > 5) {
+      type = 0;
+    }
+    if (type == 0) {
+    // L_infty norm = max(abs(z)) 
+      for (int z = 0; z < dim_; ++z) {
+    	  if (abs(a[z]) > TheNorm) {
+    	    TheNorm = abs(a[z]);
+    	  }
+    	}
+    } else if( type < 0 ) {
+    // L_negative_infty norm = min(abs(z))
+        TheNorm = a[0];
+        for( int z=1; z<dim_; ++z ) {
+          if( abs(a[z]) < TheNorm ) {
+            TheNorm = abs(a[z]);
+          }
+        }
+    } else if (type <= 5) {
+    // L_p norm = 
+    // || x ||_p   [=]   ( sum( |x_i|^p ) )^(1/p)
+      for (int z = 0; z < dim_; ++z) {
+        double rhs = pow( abs(a[z]), type );
+        TheNorm += rhs;
+      }
+      TheNorm = pow( TheNorm, 1.0/type );
+    } 
+    return TheNorm;
+}
+
+//========================================================
+
+
+
+
+
 // ===============================================
 // Sparse Matrix class
 
-LU::SparseMatrix::SparseMatrix( const int dim,
-				const int bandwidth )
-  : dim_( dim ),
-    band_( bandwidth )
+// Default constructor
+LU::DenseMatrix::DenseMatrix( const int dim ) : dim_( dim )
 {
-  // for now, store densely
-  AA_ = new double*[dim];
-  for( int i=0; i<dim; i++ ){
-    AA_[i] = new double[dim];
-    for( int j=0; j<dim; j++ )  AA_[i][j]=0.0;
-  }
+    AA_ = new double*[dim];
+    for( int i=0; i < dim; ++i ) {
+        AA_[i] = new double[dim];
+        for( int j=0; j<dim; ++j ) {
+            AA_[i][j] = 0.0;
+        }
+    }
 }
 
-LU::SparseMatrix::~SparseMatrix()
+LU::DenseMatrix::~DenseMatrix()
 {
   for( int i=0; i<dim_; i++ ) delete [] AA_[i];
   delete [] AA_;
 }
-//--------------------------------------------------------------------
 
 
+
+void
+LU::DenseMatrix::dump()
+{
+  for( int i=0; i<dim_; ++i ) {
+    for( int j=0; j<dim_; ++j ) {
+      cout << std::setw(9) << std::setprecision(4) << AA_[i][j] << "  ";
+    }
+    cout << endl;
+  }
+}
+
+// ===============================================
 
