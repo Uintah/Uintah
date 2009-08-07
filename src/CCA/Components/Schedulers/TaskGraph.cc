@@ -1105,6 +1105,8 @@ TaskGraph::createDetailedDependencies(DetailedTask* task,
     }
 
     if(patches && !patches->empty() && matls && !matls->empty()){
+      if(req->var->typeDescription()->isReductionVariable())
+        continue;
       for(int i=0;i<patches->size();i++){
         TAU_PROFILE("SchedulerCommon::compile()-patch loop", " ", TAU_USER); 
         const Patch* patch = patches->get(i);
