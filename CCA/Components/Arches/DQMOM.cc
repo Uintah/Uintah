@@ -40,6 +40,10 @@ d_fieldLabels(fieldLabels)
   varname = "normRes";
   d_normResLabel = VarLabel::create(varname, 
             CCVariable<double>::getTypeDescription());
+
+  varname = "normResNormalized";
+  d_normResNormalizedLabel = VarLabel::create(varname,
+            CCVariable<double>::getTypeDescription());
 }
 
 DQMOM::~DQMOM()
@@ -47,6 +51,7 @@ DQMOM::~DQMOM()
   VarLabel::destroy(d_normBLabel); 
   VarLabel::destroy(d_normXLabel); 
   VarLabel::destroy(d_normResLabel);
+  VarLabel::destroy(d_normResNormalizedLabel);
 }
 //---------------------------------------------------------------------------
 // Method: Problem setup
@@ -149,10 +154,12 @@ DQMOM::sched_solveLinearSystem( const LevelP& level, SchedulerP& sched, int time
     tsk->computes(d_normBLabel); 
     tsk->computes(d_normXLabel);
     tsk->computes(d_normResLabel);
+    tsk->computes(d_normResNormalizedLabel);
   } else {
     tsk->modifies(d_normBLabel); 
     tsk->modifies(d_normXLabel);
     tsk->modifies(d_normResLabel);
+    tsk->modifies(d_normResNormalizedLabel);
   }
 
 
@@ -253,6 +260,15 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
       new_dw->allocateAndPut( normRes, d_normResLabel, matlIndex, patch );
     }
     normRes.initialize(0.0);
+
+    // get/allocate normResNormalized label
+    CCVariable<double> normResNormalized;
+    if( new_dw->exists(d_normResNormalizedLabel, matlIndex, patch) ) {
+      new_dw->getModifiable( normResNormalized, d_normResNormalizedLabel, matlIndex, patch );
+    } else {
+      new_dw->allocateAndPut( normResNormalized, d_normResNormalizedLabel, matlIndex, patch );
+    }
+    normResNormalized.initialize(0.0);
 
     // get/allocate weight labels
     for (vector<DQMOMEqn*>::iterator iEqn = weightEqns.begin();
@@ -434,6 +450,7 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
       // Find the residual of the solution vector
       A.getResidual( &B[0], &Xlong[0], &Resid[0] );
       normRes[c] = A.getNorm( &Resid[0], 2 );
+      normResNormalized[c] = normRes[c]/normX[c];
 
       double maxResidMag = 10;
       unsigned int z = 0;
