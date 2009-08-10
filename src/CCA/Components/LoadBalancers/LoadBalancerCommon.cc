@@ -101,7 +101,7 @@ void LoadBalancerCommon::assignResources(DetailedTasks& graph)
           << idx << "\n";
         cerrLock.unlock();
       }
-
+#if SCI_ASSERTION_LEVEL>0
       ostringstream ostr;
       ostr << patch->getID() << ':' << idx;
 
@@ -118,6 +118,7 @@ void LoadBalancerCommon::assignResources(DetailedTasks& graph)
           cerrLock.unlock();
         }
       }
+#endif
     } else {
       if( Parallel::usingMPI() && task->getTask()->isReductionTask() ){
         task->assignResource( d_myworld->myrank() );
