@@ -21,6 +21,8 @@
   *           July 2009       Iterative Refinement, templated matrix operations
   */
 
+namespace Uintah {
+
 class LU{
   public:
     
@@ -258,4 +260,6 @@ class LU{
                                     /// ***This value is set by the user.
 
 };
+
+}
 #endif

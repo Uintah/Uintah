@@ -300,7 +300,7 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
     for ( CellIterator iter = patch->getCellIterator__New();
           !iter.done(); ++iter) {
   
-      LU A( (N_xi+1)*N_ );
+      LU A ( (N_xi+1)*N_ );
       vector<double> B( A.getDimension(), 0.0 );
       vector<double> Xdoub( A.getDimension(), 0.0 );
       vector<long double> Xlong( A.getDimension(), 0.0 );
@@ -430,28 +430,31 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
       // forward- then back-substitution
       A.back_subs( &B[0], &Xdoub[0] );
 
+
+
+
       // iterative refinement
       bool do_iterative_refinement = true;
       bool is_badly_conditioned = false;
-      double condition_number_estimate;
+      //double condition_number_estimate;
       if( do_iterative_refinement ) {
         A.iterative_refinement( &B[0], &Xdoub[0], &Xlong[0] );
-        condition_number_estimate = A.getConvergenceRate();
-        if( condition_number_estimate > 10e10 ) {
-            is_badly_conditioned = true;
-        }
+        //condition_number_estimate = A.getConvergenceRate();
+        //if( condition_number_estimate > 10e10 ) {
+        //    is_badly_conditioned = true;
+        //}
       }
 
       // Find the L-2 norm of the RHS and solution vectors
       normB[c] = A.getNorm( &B[0], 2 );
       normX[c] = A.getNorm( &Xlong[0], 2 );
-      double maxNormMag = 10000; 
 
       // Find the residual of the solution vector
       A.getResidual( &B[0], &Xlong[0], &Resid[0] );
       normRes[c] = A.getNorm( &Resid[0], 2 );
       normResNormalized[c] = normRes[c]/normX[c];
 
+      double maxNormMag = 10000; 
       double maxResidMag = 10;
       unsigned int z = 0;
       // set weight transport eqn source terms equal to results
@@ -504,6 +507,7 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
           tempCCVar[c] = Xlong[z];
         }
 
+      ++z;
       }
 
 
