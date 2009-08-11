@@ -1771,15 +1771,11 @@ OnDemandDataWarehouse::getRegion(constGridVariableBase& constVar,
     }
     if (l.x() >= h.x() || l.y() >= h.y() || l.z() >= h.z())
       continue;
-    if(!d_varDB.exists(label, matlIndex, patch->getRealPatch())) {
-      missing_patches.push_back(patch->getRealPatch());
-      continue;
-    }
 
     vector<Variable*> varlist;
-    d_varDB.getlist(label, matlIndex, patch, varlist);
+    d_varDB.getlist(label, matlIndex, patch->getRealPatch(), varlist);
     GridVariableBase* v=NULL;
-    for (unsigned int i = varlist.size() -1 ; i >=0; --i) {
+    for (int i = static_cast<int>(varlist.size()) -1 ; i >=0; --i) {
       v = dynamic_cast<GridVariableBase*>(varlist[i]);
       //verify that the variable is valid and matches the dependencies requirements.
       if (v->isValid() && Min(l, v->getLow()) == v->getLow()  &&  Max(h, v->getHigh()) == v->getHigh())  //find a completed region
@@ -1817,8 +1813,9 @@ OnDemandDataWarehouse::getRegion(constGridVariableBase& constVar,
   if (diff.x()*diff.y()*diff.z() > totalCells && missing_patches.size() > 0) {
     cout << d_myworld->myrank() << "  Unknown Variable " << *label << " matl " << matlIndex << " for patch(es): ";
     for (unsigned i = 0; i < missing_patches.size(); i++) 
-      cout << missing_patches[i]->getID() << " ";
-    cout << endl << " Original region: " << low << high << endl;
+      cout << *missing_patches[i] << " ";
+    cout << endl << " Original region: " << low << " " << high << endl;
+    cout << " copied cells: " << totalCells << " requested cells: " << diff.x()*diff.y()*diff.z() << endl;
     throw InternalError("Missing patches in getRegion", __FILE__, __LINE__);
   }
 
