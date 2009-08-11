@@ -108,7 +108,6 @@ LU::decompose()
         // is the figure of merit for the pivot better than the best so far?
         big = dum;
         imax = i;
-      } else {
       }
     }
 
@@ -122,7 +121,6 @@ LU::decompose()
       }
       // interchange scale factor too
       vv[imax-1]=vv[j-1];
-    } else {
     }
 
     indx.push_back(imax);
@@ -133,8 +131,7 @@ LU::decompose()
     }
 
     // Inner loop 5: divide by the pivot element
-    if (j != dim_)
-    {
+    if (j != dim_) {
       dum = 1.0/AA_(j-1,j-1);
       for (i=j+1; i<=dim_; ++i) {
         double temp = AA_(i-1,j-1) * dum;
@@ -149,15 +146,16 @@ LU::decompose()
   }
 
   isDecomposed_ = true;
+
 }
 
 
 void
 LU::back_subs( double* rhs, double* soln )
 {
-  if( ! isDecomposed_ ) {
+  if( ! isDecomposed_ && ! isSingular_ ) {
     string err_msg = "ERROR:LU:back_subs(): This method cannot be called until LU::decompose() has been executed.\n";
-    throw std::runtime_error( err_msg );
+    throw InvalidValue(err_msg,__FILE__,__LINE__);
   } 
 
   // FIXME:
@@ -194,7 +192,7 @@ LU::back_subs( double* rhs, double* soln )
     // X.size() = ___
     // B.size() = ___
   //}
-
+  
   // forward substitution
   for (i=1; i<=dim_; ++i) {
     ip = indx[i-1];
@@ -211,7 +209,6 @@ LU::back_subs( double* rhs, double* soln )
     }
     soln[i-1] = sum;
   }
-
 
   // back-substitution
   for (i=dim_; i>=1; i--) {
@@ -232,7 +229,7 @@ LU::back_subs( double* rhs, double* soln )
 void
 LU::iterative_refinement( double* rhs, double* soln, long double* refined_soln )
 {
-  if (!isDecomposed_) {
+  if (!isDecomposed_ && !isSingular_) {
     string err_msg = "ERROR:LU:iterative_refinement(): This method cannot be called until LU::decompose() has been executed.\n";
     throw InvalidValue(err_msg,__FILE__,__LINE__);
   } else if (isRefined_) {
