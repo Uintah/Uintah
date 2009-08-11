@@ -301,8 +301,9 @@ void TaskGraph::addDependencyEdges(Task* task, GraphSortInfoMap& sortinfo,
       // If DW is finalized, we assume that we already have it,
       // or that we will get it sent to us.  Otherwise, we set
       // up an edge to connect this req to a comp
-      pair<CompMap::iterator,CompMap::iterator> iters 
-        = comps.equal_range(req->var);
+
+      pair<CompMap::iterator,CompMap::iterator> iters
+        = comps.equal_range(static_cast<const Uintah::VarLabel*>(req->var));
       int count=0;
       for(CompMap::iterator compiter = iters.first;
           compiter != iters.second; ++compiter){
