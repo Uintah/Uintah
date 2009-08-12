@@ -566,6 +566,8 @@ void
 TaskGraph::addTask(Task* task, const PatchSet* patchset,
 		   const MaterialSet* matlset)
 {
+  if(task->getType()==Task::Output)
+     cout << d_myworld->myrank() << " creating task: " << *task << " on patches: " << *patchset << endl;
   task->setSets(patchset, matlset);
   if((patchset && patchset->totalsize() == 0)
       || (matlset && matlset->totalsize() == 0)){
@@ -631,15 +633,33 @@ TaskGraph::createDetailedTasks( bool useInternalDeps, DetailedTasks* first,
     const PatchSet* ps = task->getPatchSet();
     const MaterialSet* ms = task->getMaterialSet();
     if(ps && ms){
-      for(int p=0;p<ps->size();p++){
-        const PatchSubset* pss = ps->getSubset(p);
-
-        // don't make output tasks if there are no patches
-        if(lb->inNeighborhood(pss) && (pss->size() > 0 || task->getType() != Task::Output))
+      //only create OncePerProc tasks and output tasks once on each processor.
+      if(task->getType()==Task::OncePerProc || task->getType()==Task::Output)
+      {
+        //use this processors patch subset
+        const PatchSubset* pss = ps->getSubset(d_myworld->myrank());
+        //i don't think this check is correct but i'm leaving the code
+        //here for debugging purposes.
+        //if(pss->size()>0) 
         {
-          for(int m=0;m<ms->size();m++){
+          for(int m=0;m<ms->size();m++)
+          {
             const MaterialSubset* mss = ms->getSubset(m);
             createDetailedTask(task, pss, mss);
+          }
+        }
+      }
+      else
+      {
+        for(int p=0;p<ps->size();p++){
+          const PatchSubset* pss = ps->getSubset(p);
+          // don't make tasks that are not in our neighborhood or tasks that do not have patches
+          if(lb->inNeighborhood(pss) && pss->size() > 0)
+          {
+            for(int m=0;m<ms->size();m++){
+              const MaterialSubset* mss = ms->getSubset(m);
+              createDetailedTask(task, pss, mss);
+            }
           }
         }
       }
