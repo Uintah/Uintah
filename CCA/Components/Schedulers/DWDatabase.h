@@ -393,9 +393,10 @@ DWDatabase<DomainType>::getlist( const VarLabel* label,
   for (typename varDBtype::const_iterator iter=ret.first; iter!=ret.second; ++iter)
     varlist[iter->second.version] = iter->second.var;
 
-  if(varlist.size() == 0)
-    SCI_THROW(UnknownVariable(label->getName(), -99, dom, matlIndex,
-			      "DWDatabase::getlist", __FILE__, __LINE__));
+  //this function is allowed to return an empty list
+  //if(varlist.size() == 0)
+  //  SCI_THROW(UnknownVariable(label->getName(), -99, dom, matlIndex,
+	//		      "DWDatabase::getlist", __FILE__, __LINE__));
 
 }
 
