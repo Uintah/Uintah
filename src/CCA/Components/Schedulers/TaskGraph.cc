@@ -566,8 +566,6 @@ void
 TaskGraph::addTask(Task* task, const PatchSet* patchset,
 		   const MaterialSet* matlset)
 {
-  if(task->getType()==Task::Output)
-     cout << d_myworld->myrank() << " creating task: " << *task << " on patches: " << *patchset << endl;
   task->setSets(patchset, matlset);
   if((patchset && patchset->totalsize() == 0)
       || (matlset && matlset->totalsize() == 0)){
@@ -640,7 +638,7 @@ TaskGraph::createDetailedTasks( bool useInternalDeps, DetailedTasks* first,
         const PatchSubset* pss = ps->getSubset(d_myworld->myrank());
         //i don't think this check is correct but i'm leaving the code
         //here for debugging purposes.
-        //if(pss->size()>0) 
+        //if(pss->size()>0)
         {
           for(int m=0;m<ms->size();m++)
           {
@@ -1275,12 +1273,18 @@ TaskGraph::createDetailedDependencies(DetailedTask* task,
                     comp=0;
                   }
                   else {
+
+                   //if neither the patch or the neighbor are on this processor then the computing task doesn't exist so just continue 
+                    if(lb->getPatchwiseProcessorAssignment(patch)!=d_myworld->myrank() && lb->getPatchwiseProcessorAssignment(neighbor)!=d_myworld->myrank())
+                      continue;
+
                     cout << "Failure finding " << *req << " for " << *task
                       << "\n";
                     if (creator)
                       cout << "creator=" << *creator << '\n';
                     cout << "neighbor=" << *fromNeighbor << ", matl=" << matl << '\n';
                     cout << "me=" << me << '\n';
+                    WAIT_FOR_DEBUGGER();
                     SCI_THROW(InternalError("Failed to find comp for dep!", __FILE__, __LINE__));
                   }
                 }
