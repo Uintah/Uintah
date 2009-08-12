@@ -142,8 +142,6 @@ void LoadBalancerCommon::assignResources(DetailedTasks& graph)
             task->assignResource(i);
             lbDebug << d_myworld->myrank() << " OncePerProc Task " << *(task->getTask()) << " put on resource "
               << i << "\n";
-            cout << d_myworld->myrank() << " OncePerProc Task " << *(task->getTask()) << " put on resource "
-              << i << "\n";
           }
       } else {
         lbDebug << d_myworld->myrank() << " Unknown-type Task " << *(task->getTask()) << " put on resource "
