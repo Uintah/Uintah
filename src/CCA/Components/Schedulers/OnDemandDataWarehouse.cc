@@ -1773,7 +1773,7 @@ OnDemandDataWarehouse::getRegion(constGridVariableBase& constVar,
       continue;
 
     vector<Variable*> varlist;
-    d_varDB.getlist(label, matlIndex, patch->getRealPatch(), varlist);
+    d_varDB.getlist(label, matlIndex, patch, varlist);
     GridVariableBase* v=NULL;
     for (int i = static_cast<int>(varlist.size()) -1 ; i >=0; --i) {
       v = dynamic_cast<GridVariableBase*>(varlist[i]);
