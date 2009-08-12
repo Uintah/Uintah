@@ -120,7 +120,7 @@ for arg in $*; do
             echo; echo "Scheduling mpm, ice, and mpmice tests . . ."
             do_ice=1
             do_mpm=1
-            do_mpmf=1
+            do_mpmf=0
             do_mpmice=1
             do_models=1
             do_arches=1
@@ -524,7 +524,7 @@ run_case () {
 
 if test -n "$ALL"; then
    do_mpm=1
-   do_mpmf=1
+   do_mpmf=0
    do_ice=1
    do_ice_amr=1
    do_mpmice=1
