@@ -27,8 +27,7 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-
-
+#include <TauProfilerForSCIRun.h>
 #include <CCA/Components/LoadBalancers/LoadBalancerCommon.h>
 #include <CCA/Components/Schedulers/DetailedTasks.h>
 #include <Core/Parallel/Parallel.h>
@@ -142,6 +141,8 @@ void LoadBalancerCommon::assignResources(DetailedTasks& graph)
           if (patches == task->getTask()->getPatchSet()->getSubset(i)) {
             task->assignResource(i);
             lbDebug << d_myworld->myrank() << " OncePerProc Task " << *(task->getTask()) << " put on resource "
+              << i << "\n";
+            cout << d_myworld->myrank() << " OncePerProc Task " << *(task->getTask()) << " put on resource "
               << i << "\n";
           }
       } else {
