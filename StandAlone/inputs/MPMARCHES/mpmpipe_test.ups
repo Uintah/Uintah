@@ -26,10 +26,9 @@
         <save label = "netflowOUTBC"/>
         <save label = "totalKineticEnergy"/>
         <save label = "pressurePS"/>
-        <save label = "newCCUVelocity"/>  
-        <save label = "newCCVVelocity"/>  
-        <save label = "newCCWVelocity"/>  
-        <save label = "newCCVelocity"/>
+        <save label = "uVelocitySPBC"/>  
+        <save label = "vVelocitySPBC"/>  
+        <save label = "wVelocitySPBC"/>  
         <save label = "scalarSP"/>
         <save label = "densityCP"/>
         <save label = "viscosityCTS"/>
