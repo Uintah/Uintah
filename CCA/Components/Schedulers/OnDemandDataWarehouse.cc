@@ -1831,30 +1831,56 @@ void OnDemandDataWarehouse::emit(OutputContext& oc, const VarLabel* label,
                                  int matlIndex, const Patch* patch)
 {
   d_lock.readLock();
-   checkGetAccess(label, matlIndex, patch);
+  checkGetAccess(label, matlIndex, patch);
 
-   Variable* var = NULL;
-   if(patch && d_varDB.exists(label, matlIndex, patch))
-      var = d_varDB.get(label, matlIndex, patch);
-   else {
-     const Level* level = patch?patch->getLevel():0;
-     if(d_levelDB.exists(label, matlIndex, level))
-       var = d_levelDB.get(label, matlIndex, level);
-   }
-   IntVector l, h;
-   if(patch) {
-     // Save with the boundary layer, otherwise restarting from the DataArchive won't work.
-     patch->computeVariableExtents( label->typeDescription()->getType(),
-                                    label->getBoundaryLayer(), Ghost::None, 0,
-                                    l, h );
-   }
-   else
-     l=h=IntVector(-1,-1,-1);
-   if (var == NULL) {
-     SCI_THROW(UnknownVariable(label->getName(), getID(), patch, matlIndex, "on emit", __FILE__, __LINE__));
-   }
-   var->emit(oc, l, h, label->getCompressionMode());
-   
+  Variable* var = NULL;
+  IntVector l, h;
+  if(patch) {
+    // Save with the boundary layer, otherwise restarting from the DataArchive won't work.
+    patch->computeVariableExtents( label->typeDescription()->getType(),
+        label->getBoundaryLayer(), Ghost::None, 0,
+        l, h );
+    //get list
+    vector<Variable*> varlist;
+    d_varDB.getlist(label, matlIndex, patch, varlist);
+
+    GridVariableBase* v=NULL;
+    switch(label->typeDescription()->getType())
+    {
+      case TypeDescription::NCVariable:
+      case TypeDescription::CCVariable:
+      case TypeDescription::SFCXVariable:
+      case TypeDescription::SFCYVariable:
+      case TypeDescription::SFCZVariable:
+        for (int i = static_cast<int>(varlist.size()) -1 ; i >=0; --i) {
+          v = dynamic_cast<GridVariableBase*>(varlist[i]);
+          //verify that the variable is valid and matches the dependencies requirements.
+          if (v->isValid() && Min(l, v->getLow()) == v->getLow()  &&  Max(h, v->getHigh()) == v->getHigh())  //find a completed region
+            break;
+        }
+        var=v;
+        break;
+      default:
+        ASSERT(varlist.size()==1);
+        //set to first item in list
+        var = varlist[0];
+        break;
+    }
+  }
+  else
+  {
+    l=h=IntVector(-1,-1,-1);
+
+    const Level* level = patch?patch->getLevel():0;
+    if(d_levelDB.exists(label, matlIndex, level))
+      var = d_levelDB.get(label, matlIndex, level);
+  }
+
+  if (var == NULL) {
+    SCI_THROW(UnknownVariable(label->getName(), getID(), patch, matlIndex, "on emit", __FILE__, __LINE__));
+  }
+  var->emit(oc, l, h, label->getCompressionMode());
+
   d_lock.readUnlock();
 }
 
