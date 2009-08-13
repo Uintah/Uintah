@@ -452,7 +452,10 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
       // Find the residual of the solution vector
       A.getResidual( &B[0], &Xlong[0], &Resid[0] );
       normRes[c] = A.getNorm( &Resid[0], 2 );
-      normResNormalized[c] = normRes[c]/normX[c];
+      for ( int ii = 0; ii < A.getDimension(); ii ++ ){
+        Resid[ii] = Resid[ii] / Xdoub[ii]; // try normalizing component wise error
+      }
+      normResNormalized[c] = A.getNorm( &Resid[0], 10 );
 
       double maxNormMag = 10000; 
       double maxResidMag = 10;
