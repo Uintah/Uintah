@@ -632,13 +632,10 @@ TaskGraph::createDetailedTasks( bool useInternalDeps, DetailedTasks* first,
     const MaterialSet* ms = task->getMaterialSet();
     if(ps && ms){
       //only create OncePerProc tasks and output tasks once on each processor.
-      if(task->getType()==Task::OncePerProc || task->getType()==Task::Output)
+      if(task->getType()==Task::OncePerProc)
       {
         //use this processors patch subset
         const PatchSubset* pss = ps->getSubset(d_myworld->myrank());
-        //i don't think this check is correct but i'm leaving the code
-        //here for debugging purposes.
-        //if(pss->size()>0)
         {
           for(int m=0;m<ms->size();m++)
           {
@@ -646,6 +643,25 @@ TaskGraph::createDetailedTasks( bool useInternalDeps, DetailedTasks* first,
             createDetailedTask(task, pss, mss);
           }
         }
+      }
+      else if(task->getType()==Task::Output)
+      {
+        //compute subset that involves this rank
+        int subset=(d_myworld->myrank()/lb->getNthProc())*lb->getNthProc();
+        
+        //only schedule output task for the subset involving our rank
+        const PatchSubset* pss = ps->getSubset(subset);
+
+        //don't schedule if there are no patches
+        if(pss->size()>0)
+        {
+          for(int m=0;m<ms->size();m++)
+          {
+            const MaterialSubset* mss = ms->getSubset(m);
+            createDetailedTask(task, pss, mss);
+          }
+        }
+
       }
       else
       {
