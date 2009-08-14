@@ -457,7 +457,7 @@ namespace __gnu_cxx
   {
     size_t operator()(const VarLabelMatl<DomainType>& v) const
     {
-      size_t h;
+      size_t h=0;
       char *str =const_cast<char*> (v.label_->getName().data());
       while (int c = *str++) h = h*7+c;
       return (h ^ (size_t) (v.domain_? v.domain_->getID():0)^ (size_t)v.matlIndex_ );
@@ -474,7 +474,7 @@ namespace std {
       {
         size_t operator()(const VarLabelMatl<DomainType>& v) const
         {
-          size_t h;
+          size_t h=0;
           char *str =const_cast<char*> (v.label_->getName().data());
           while (int c = *str++) h = h*7+c;
           return (h ^ (size_t) (v.domain_? v.domain_->getID():0)^ (size_t)v.matlIndex_ );
