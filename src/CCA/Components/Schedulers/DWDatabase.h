@@ -145,7 +145,7 @@ private:
    const DataItem& getDataItem(const VarLabel* label, int matlindex,
 			       const DomainType* dom) const;
     
-   typedef hash_multimap<VarLabelMatl<DomainType>, DataItem>  varDBtype;
+   typedef multimap<VarLabelMatl<DomainType>, DataItem>  varDBtype;
    varDBtype vars;
 
    DWDatabase(const DWDatabase&);
