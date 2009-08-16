@@ -1580,10 +1580,6 @@ DynamicLoadBalancer::problemSetup(ProblemSpecP& pspec, GridP& grid,  SimulationS
     d_dynamicAlgorithm = patch_factor_lb;
   }
 
-  //Automatically disable collection of particles if we are profiling.
-  if(d_profile)
-    d_collectParticles=false;
-
   d_lbInterval = interval;
   d_lbTimestepInterval = timestepInterval;
   d_doSpaceCurve = spaceCurve;
