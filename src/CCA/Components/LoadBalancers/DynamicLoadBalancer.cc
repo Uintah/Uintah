@@ -62,7 +62,7 @@ static DebugStream times("LBTimes",false);
 double lbtimes[5]={0};
 
 DynamicLoadBalancer::DynamicLoadBalancer(const ProcessorGroup* myworld)
-  : LoadBalancerCommon(myworld), d_costProfiler(myworld,this), sfc(myworld)
+  : LoadBalancerCommon(myworld), d_costProfiler(0), sfc(myworld)
 {
   d_lbInterval = 0.0;
   d_lastLbTime = 0.0;
@@ -96,6 +96,11 @@ DynamicLoadBalancer::DynamicLoadBalancer(const ProcessorGroup* myworld)
 
 DynamicLoadBalancer::~DynamicLoadBalancer()
 {
+  if(d_costProfiler)
+  {
+    delete d_costProfiler;
+    d_costProfiler=0;
+  }
 #if defined( HAVE_ZOLTAN )
   delete zz;
 #endif
@@ -1356,14 +1361,14 @@ void DynamicLoadBalancer::getCosts(const Grid* grid, const vector<vector<Region>
   costs.clear();
   costs.resize(grid->numLevels());
 
-  if(d_profile && d_costProfiler.hasData())
+  if(d_profile && d_costProfiler->hasData())
   {
     if(during_regrid)
     {
       //for each level
       for (int l=0; l<(int)patches.size();l++) 
       {
-        d_costProfiler.getWeights(l,patches[l],costs[l]);
+        d_costProfiler->getWeights(l,patches[l],costs[l]);
       }
     }
     else
@@ -1379,7 +1384,7 @@ void DynamicLoadBalancer::getCosts(const Grid* grid, const vector<vector<Region>
           const Patch *patch=level->getPatch(p);
           patches[p]=Region(patch->getCellLowIndex__New(),patch->getCellHighIndex__New());
         }
-        d_costProfiler.getWeights(l,patches,costs[l]);
+        d_costProfiler->getWeights(l,patches,costs[l]);
       }
     }
   }
@@ -1513,7 +1518,8 @@ bool DynamicLoadBalancer::possiblyDynamicallyReallocate(const GridP& grid, int s
 
 void DynamicLoadBalancer::finalizeContributions(const GridP grid) 
 {
-  d_costProfiler.finalizeContributions(grid);
+  if(d_profile)
+    d_costProfiler->finalizeContributions(grid);
 }
 
 
@@ -1541,14 +1547,19 @@ DynamicLoadBalancer::problemSetup(ProblemSpecP& pspec, GridP& grid,  SimulationS
     p->getWithDefault("patchCost", d_patchCost, 16);
     p->getWithDefault("gainThreshold", threshold, 0.05);
     p->getWithDefault("doSpaceCurve", spaceCurve, true);
-    int timestepWindow;
-    p->getWithDefault("profileTimestepWindow",timestepWindow,10);
-    d_costProfiler.setTimestepWindow(timestepWindow);
     p->getWithDefault("doCostProfiling",d_profile,true);
+    if(d_profile)
+    {
+      int timestepWindow;
+      p->getWithDefault("profileTimestepWindow",timestepWindow,10);
+      d_costProfiler=scinew CostProfiler(d_myworld,this);
+      d_costProfiler->setTimestepWindow(timestepWindow);
+    }
     p->getWithDefault("levelIndependent",d_levelIndependent,true);
     p->getWithDefault("collectParticles",d_collectParticles,false);
   }
 
+  
   if(d_myworld->myrank()==0)
     cout << "Dynamic Algorithm: " << dynamicAlgo << endl;
 
@@ -1593,20 +1604,23 @@ DynamicLoadBalancer::problemSetup(ProblemSpecP& pspec, GridP& grid,  SimulationS
   sfc.SetMergeParameters(3000,500,2,.15);  //Should do this by profiling
 
   //set costProfiler mps
-  Regridder *regridder = dynamic_cast<Regridder*>(getPort("regridder"));
-  if(regridder)
+  if(d_profile)
   {
-    d_costProfiler.setMinPatchSize(regridder->getMinPatchSize());
-  }
-  else
-  {
-    //query mps from a patch
-    const Patch *patch=grid->getLevel(0)->getPatch(0);
+    Regridder *regridder = dynamic_cast<Regridder*>(getPort("regridder"));
+    if(regridder)
+    {
+      d_costProfiler->setMinPatchSize(regridder->getMinPatchSize());
+    }
+    else
+    {
+      //query mps from a patch
+      const Patch *patch=grid->getLevel(0)->getPatch(0);
 
-    vector<IntVector> mps;
-    mps.push_back(patch->getCellHighIndex__New()-patch->getCellLowIndex__New());
-    
-    d_costProfiler.setMinPatchSize(mps);
+      vector<IntVector> mps;
+      mps.push_back(patch->getCellHighIndex__New()-patch->getCellLowIndex__New());
+
+      d_costProfiler->setMinPatchSize(mps);
+    }
   }
 }
 
