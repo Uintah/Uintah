@@ -14,9 +14,9 @@
 % please fix....
 The ARCHES component was initially designed for predicting the potential hazard of an explosive device immersed in or near a pool fire of transportation fuel.  Since then, this component has been extended to solve many industrially relevant problems such as industrial flares, oxy-coal combustion processes, and fuel gasification.  
 
-Given the wide range of length and time scales that are present in these examples, ARCHES utilizes models for bridging the molecular (micro) scales to the full, large (macro) scales.  ...something here about philosophy of our approach...
+Given the wide range of length and time scales that are present in these examples, ARCHES utilizes models for bridging the molecular (micro) scales to the full, large (macro) scales.  More to come....
 
-The ARCHES component solves the conservative, finite volume, low-mach formulation of the Navier-Stokes equation with a pressure projection that includes the effect of variable density, reaction, and many modes of heat transfer including radiation.  etc etc...
+The ARCHES component solves the conservative, finite volume, low-mach formulation of the Navier-Stokes equation with a pressure projection that includes the effect of variable density, reaction, and many modes of heat transfer including radiation.  
 
 \section{Governing Equations}
 %
@@ -195,7 +195,7 @@ The hat defines an explicit test filter and the angled brackets in Equation \ref
 
 \subsection{Subgrid Momentum Dissipation}
 %%
-Addressing the momentum closure involves finding a suitable model for the subgrid scale stress tensor, $\tau^{sgs}_{ij}$.  For the intended use as shown in Figure \ref{fig:v_and_v_hierarchy}, two common LES turbulence closure models are examined: the constant coefficient Smagorinsky model and the dynamic coefficient Smagorinsky model.  
+Addressing the momentum closure involves finding a suitable model for the subgrid scale stress tensor, $\tau^{sgs}_{ij}$.  Two common LES turbulence closure models are examined: the constant coefficient Smagorinsky model and the dynamic coefficient Smagorinsky model.  
 %%
 In LES modeling, field variables are decomposed into a spatially filtered field and a residual component, $u = \overline{u} + u'$.  This decomposition is known as a Leonard decomposition.  While seemingly similar to a Reynolds decomposition used in Reynolds Averaged Navier-Stokes (RANS) models, the Leonard decomposition has the property that the filtered residual component is generally not equal to zero, $\overline{u'} \neq 0$.  As a result, the subgrid stress term contains several terms, 
 %%%
@@ -509,13 +509,79 @@ This option is often helpful in helping with stability if your simulation is exp
 %
 Currently the implicit time integrator is not supported. Please check back in subsequent releases.
 
-\subsection{Equation Options}\label{Sec:Eqns_options}
+\subsection{Transport Equation Options}\label{Sec:Eqns_options}
+In the current configuration of Arches, transport equations are activated by specifying the option for each equation in a equation-specific node under the {\it ExplicitSolver} node.  Currently, all equation nodes are required except for the enthalpy solver node.  
 
 \subsubsection{Momentum Solver}
+The moment solver refers to solution of $\rho \mathbf{U}$, where $\mathbf{U}$ is the vector quantity of velocity.  As mentioned above, the components are solved in a staggered, finite volume configuration. By default, the required $<$MomentumSolver$>$ node must be present in the $<$ExplicitSolver$>$ node.   
+
+The options for the moment solver include:
+\begin{enumerate}
+%
+\item {\bf The order of the convection scheme}: $<$convection\_scheme$>$ \\
+{\bf Input type}: {\it Required, string} \\
+{\bf Default}: {\it NA } \\ 
+{\bf Description}: The two options that currently are implemented for the convection term in the moment equation are first-order upwind (set as {\it upwind}) and second-order central difference (set as {\it central}).  Both types of discretization can be found in any common CFD text.  It is recommended that one use the {\it central} option as it has desirable energy conservation properties (see Moronishi [add reference] ).  
+%
+\item {\bf Filter the divergence of $\rho \mathbf{U}$}: $<$filter\_divergence\_constraint$>$ \\
+{\bf Input type}: {\it Optional, boolean} \\
+{\bf Default}: {\it false } \\ 
+{\bf Description}: This options turns on the filtering of the divergence constraint used in the pressure solver. When false, the divergence is unfiltered.  
+%
+\end{enumerate}
 
 \subsubsection{Pressure Solver}
+Arches is solved in an incompressible manner, in the sense that there is a degree of pressure-velocity decoupling which is resolved through an implicit pressure projection.  This results in the classic Poisson equation for pressure than requires solution.  By default, the required $<$PressureSolver$>$ node must be present in the $<$ExplicitSolver$>$ node.
+
+The options for the pressure solver include:
+%
+\begin{enumerate}
+%
+\item {\bf Perform only the last projection}: $<$do\_only\_last\_projection$>$ \\
+{\bf Input type}: {\it Optional, boolean} \\
+{\bf Default}: {\it false } \\ 
+{\bf Description}: For multi-step time schemes, only perform the projection on the last time sub-step. The result is that intermediate time steps do not conserve mass. 
+%
+\item {\bf Normalize the pressure with the reference pressure}: $<$normalize\_pressure$>$ \\
+{\bf Input type}: {\it Optional, boolean} \\
+{\bf Default}: {\it false } \\ 
+{\bf Description}: When true, this option subtracts the reference pressure, set in $<$PhysicalProperties$>$, from the current value of pressure for each time step.  
+%
+\item {\bf Solver choice for the pressure Poisson equation}: $<$linear\_solver$>$ \\
+{\bf Input type}: {\it Required, string} \\
+{\bf Default}: {\it NA } \\ 
+{\bf Description}: Arches uses external linear solver packages to solve the pressure Poisson equation.  Currently, there are two solver that have an interface to the pressure equation; {\it hypre} or {\it petsc}.  A solver must be specified and specifics of the solver follow in the $<$parameter$>$ section (detailed next).     
+%
+\item {\bf Solver parameters for the pressure Poisson equation}: $<$parameters$>$ \\
+{\bf Input type}: {\it Required, NA} \\
+{\bf Default}: {\it NA } \\ 
+{\bf Description}: The solver parameters, as children of the {\it parameters} node, include the following:
+ \begin{itemize}
+ \item $<$solver$>$, Required solver parameter.  Options include: {\it cg}.  
+ \item $<$max\_iter$>$, Required maximum iterations for the solver.
+ \item $<$preconditioner$>$, Required preconditioner.  Options include: {\it jacobi}, {\it pfmg}. 
+ \item $<$res\_tol$>$, Required tolerance of the residual ($res = b-Ax$).
+\end{itemize}  
+%
+\end{enumerate}   
+%
 
 \subsubsection{Mixture Fraction Solver}
+Arches has identified specific scalar variables that require specification, the mixture fraction being one of them.  The mixture fraction equation is a conserved scalar equation that is used as a parameter to map the thermo-chemical state of the gas.   By default, the required $<$MixtureFractionSolver$>$ node must be present in the $<$ExplicitSolver$>$ node.
+
+\begin{enumerate}
+%
+\item {\bf Initial value of of the mixture fraction in the domian}: $<$initial\_value$>$ \\
+{\bf Input type}: {\it Optional, double} \\
+{\bf Default}: {\it 0.0 } \\ 
+{\bf Description}: One may set the mixture fraction everywhere inside the domain to a constant value.  Boundary condition values are set elsewhere. 
+%
+\item {\bf Convection scheme}: $<$convection\_scheme$>$ \\
+{\bf Input type}: {\it Required, string} \\
+{\bf Default}: {\it central-upwind, flux-limited } \\ 
+{\bf Description}: 
+%
+\end{enumerate}
 
 \subsubsection{Enthalpy Solver}
 
