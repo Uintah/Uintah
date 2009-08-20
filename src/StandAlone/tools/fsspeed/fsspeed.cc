@@ -72,6 +72,7 @@ int main(int argc,char *argv[])
   MPI_Barrier(MPI_COMM_WORLD);
   start=MPI_Wtime();
   fout.write(buff,isize);
+  fout.flush();
   MPI_Barrier(MPI_COMM_WORLD);
   finish=MPI_Wtime();
   
