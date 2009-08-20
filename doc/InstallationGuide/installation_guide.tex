@@ -161,6 +161,15 @@ ln -s /usr/include/openmpi/1.2.4-gcc include
 ln -s /usr/lib64/openmpi/1.2.4-gcc lib
 \end{Verbatim}
 
+In the event that soft linking the libraries does not work, it may be
+required to actually copy the shared library to a suitable location
+and then performing the soft linking as in:
+
+\begin{Verbatim}
+cp /full/path/to/openmpi/lib/libmpi.so.0.0.0 .
+ln -s libmpi.so.0.0.0 libmpi.so
+\end{Verbatim}
+
 
 \subsection{CentOS 5 Dependencies}
 

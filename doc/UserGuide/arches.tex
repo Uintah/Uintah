@@ -12,7 +12,12 @@
 
 \section{Introduction}
 % please fix....
-The ARCHES component was initially designed for predicting the potential hazard of an explosive device immersed in or near a pool fire of transportation fuel.  Since then, this component has been extended to solve many industrially relevant problems such as industrial flares, oxy-coal combustion processes, and fuel gasification.  
+The ARCHES component was initially designed for predicting the
+potential hazard of an explosive device immersed in or near a pool
+fire of transportation fuel.  Since then, this component has been
+extended to solve many industrially relevant problems such as
+industrial flares, oxy-coal combustion processes, and fuel
+gasification.
 
 Given the wide range of length and time scales that are present in these examples, ARCHES utilizes models for bridging the molecular (micro) scales to the full, large (macro) scales.  More to come....
 
@@ -20,10 +25,10 @@ The ARCHES component solves the conservative, finite volume, low-mach formulatio
 
 \section{Governing Equations}
 %
-The essential governing equations for the Arches component, written
-in finite volume form, include the mass balance, momentum balance,
-mixture fraction balance, and energy balance equations. Using a bold-face
-symbol to represent a vector quantity, the equations are: 
+The essential governing equations for the Arches component, written in
+finite volume form, include the mass balance, momentum balance,
+mixture fraction balance, and energy balance equations. Using a
+bold-face symbol to represent a vector quantity, the equations are:
 \begin{enumerate}
 \item The mass balance, \begin{equation}
 \int_{V}\frac{\partial\rho}{\partial t}dV+\oint_{S}\rho\mathbf{u}\cdot d\mathbf{S}=0\;,\label{eqn:mass_balance}\end{equation}
@@ -191,13 +196,25 @@ and
 M_{ij} \equiv 2 \left( \widehat{ | \overline{S} | \overline{S} }_{ij} - \alpha^2 |\widehat{\overline{S}}|\widehat{\overline{S}}_{ij} \right) \; .
 \end{equation} 
 %
-The hat defines an explicit test filter and the angled brackets in Equation \ref{eqn:cs_eqn} conceptually represent an averaging over a homogeneous region of space that, experience has shown, is necessary for stability.  Experience has also shown that averaging over the test filter width is adequate and the filter width ratio, $\alpha = \widehat{\Delta}/\Delta$, is usually taken to be 2.
+The hat defines an explicit test filter and the angled brackets in
+Equation \ref{eqn:cs_eqn} conceptually represent an averaging over a
+homogeneous region of space that, experience has shown, is necessary
+for stability.  Experience has also shown that averaging over the test
+filter width is adequate and the filter width ratio, $\alpha =
+\widehat{\Delta}/\Delta$, is usually taken to be 2.
 
 \subsection{Subgrid Momentum Dissipation}
 %%
 Addressing the momentum closure involves finding a suitable model for the subgrid scale stress tensor, $\tau^{sgs}_{ij}$.  Two common LES turbulence closure models are examined: the constant coefficient Smagorinsky model and the dynamic coefficient Smagorinsky model.  
 %%
-In LES modeling, field variables are decomposed into a spatially filtered field and a residual component, $u = \overline{u} + u'$.  This decomposition is known as a Leonard decomposition.  While seemingly similar to a Reynolds decomposition used in Reynolds Averaged Navier-Stokes (RANS) models, the Leonard decomposition has the property that the filtered residual component is generally not equal to zero, $\overline{u'} \neq 0$.  As a result, the subgrid stress term contains several terms, 
+In LES modeling, field variables are decomposed into a spatially
+filtered field and a residual component, $u = \overline{u} + u'$.
+This decomposition is known as a Leonard decomposition.  While
+seemingly similar to a Reynolds decomposition used in Reynolds
+Averaged Navier-Stokes (RANS) models, the Leonard decomposition has
+the property that the filtered residual component is generally not
+equal to zero, $\overline{u'} \neq 0$.  As a result, the subgrid
+stress term contains several terms,
 %%%
 \begin{eqnarray}
 \tau_{ij}^{sgs} = \overline{ \left(\overline{u}_i + u_i' \right) \left(\overline{u}_i + u_i' \right)} - \overline{u}_i \overline{u}_j \; , \; \; \; \; \; \; \; \; \; \; \; \; \; \;  \; \; \nonumber \\
@@ -206,11 +223,25 @@ In LES modeling, field variables are decomposed into a spatially filtered field 
    \underbrace{ \overline{u_i' + u_j'} }_{R_{ij}} \; , 
 \end{eqnarray}
 %
-referred to as the Leonard stress, the cross stresses, and the Reynolds stress respectively.  
+referred to as the Leonard stress, the cross stresses, and the
+Reynolds stress respectively.
 
-It is useful to consider the physical interpretation of the various components of the stress. The Leonard term is responsible for filtering and projecting the nonlinear interactions of the resolved components back to the finite LES space.  This is a correction to the resolved advective term in accordance with the stated explicit filter used to derive the LES equations. It does not account for aliasing errors. The first cross term represents advection of the resolved field by turbulent fluctuations. The second cross term represents the advection of subgrid scales by the resolved field. The Reynolds stress is familiar from RANS and represents the advection of subgrid scales by turbulent fluctuations. 
+It is useful to consider the physical interpretation of the various
+components of the stress. The Leonard term is responsible for
+filtering and projecting the nonlinear interactions of the resolved
+components back to the finite LES space.  This is a correction to the
+resolved advective term in accordance with the stated explicit filter
+used to derive the LES equations. It does not account for aliasing
+errors. The first cross term represents advection of the resolved
+field by turbulent fluctuations. The second cross term represents the
+advection of subgrid scales by the resolved field. The Reynolds stress
+is familiar from RANS and represents the advection of subgrid scales
+by turbulent fluctuations.
 
-As with the scalar subgrid modeling terms, the eddy viscosity model is again invoked for $\tau^{sgs}_{ij}$.  The most common eddy viscosity model in LES is the Smagorinsky model \cite{Smagorinsky178}.  Defining the deviatoric subgrid stress tensor as, 
+As with the scalar subgrid modeling terms, the eddy viscosity model is
+again invoked for $\tau^{sgs}_{ij}$.  The most common eddy viscosity
+model in LES is the Smagorinsky model \cite{Smagorinsky178}.  Defining
+the deviatoric subgrid stress tensor as,
 %%
 \begin{equation}
 \tau^{d, sgs}_{ij} = \tau^{sgs}_{ij} - \frac{1}{3}\tau^{sgs}_{kk} \delta_{ij}, 
@@ -224,7 +255,14 @@ the subgrid stress is approximated by,
 %%
 where, $\Delta$ is the filter width, $\nu_t$ is the eddy viscosity, $|\overline{S}| \equiv (2\overline{S}_{ij}\overline{S}_{ij})^{1/2}$, and typically $C_s \approx 2$  depending on the filter type, numerical method, and flow configuration \cite{Pope179}. This model is basically identical to Prandtl's mixing length model with $l = C_s \Delta$.
 
-The dynamic procedure \cite{Germano74, Moin158} eliminates the need to specify the model constant, $C_s$, a priori, with the basic assumption that the constant is the same for two different filter scales. The smaller scale is historically referred to as the ``grid scale" (though the filter width need not equal the grid spacing, $\Delta \geq h$)), and the larger scale is referred to as the ``test scale".  Implicit in this assumption is the requirement that both scales lie within the inertial subrange. 
+The dynamic procedure \cite{Germano74, Moin158} eliminates the need to
+specify the model constant, $C_s$, a priori, with the basic assumption
+that the constant is the same for two different filter scales. The
+smaller scale is historically referred to as the ``grid scale" (though
+the filter width need not equal the grid spacing, $\Delta \geq h$)),
+and the larger scale is referred to as the ``test scale".  Implicit in
+this assumption is the requirement that both scales lie within the
+inertial subrange.
 
 Defining the deviatoric residual stress tensor as, 
 \begin{equation}
@@ -268,26 +306,63 @@ The angled brackets in Equation \ref{eqn:cs_eqn} conceptually represent averagin
 With these implementation practices, the dynamic model is generally robust. The implementation can be made more efficient by computing the constant roughly every 10 time steps (based on the advective CFL), and only for the first Runge-Kutta step.
 
 \subsection{LES Algorithm}\label{Sec:LES_Algorithm}
-%
-The set of filtered equations (Equations \ref{eqn:filtered_mass_balance}-\ref{eqn:filtered_heat_balance}) are discretized in space and time and solved on a staggered, finite volume mesh.  The staggering scheme consists of four offset grids. One grid stores the scalar quantities and the remaining three grids store each component of the velocity vector. The velocity components are situated so that the center of their control volume is located on the face centers of the scalar grid in their respective direction.  Figure \ref{fig:staggered_grid} shows an example of a two-dimensional grid and the staggering arrangement.
+
 %
 %% Staggered Grid
-\begin{figure}
+\begin{wrapfigure}{r}{.5\textwidth}
  \begin{center}
-    \scalebox{.85}{\includegraphics{staggered_grid.png}}
-   \caption{Staggered grid arrangement in two dimensions with u and v velocity cell centers located on the face centers of the scalar cells.}\label{fig:staggered_grid}
+   \vspace{-35pt}
+%   \scalebox{.85}{\includegraphics{staggered_grid.png}}
+   \includegraphics[width=.45\textwidth]{staggered_grid.png}
+   \caption{Staggered grid arrangement in two dimensions with u and v velocity cell centers located on the face centers of the scalar cells.}
+   \label{fig:staggered_grid}
    \end{center}
-\end{figure}
+   \vspace{-40pt}
+\end{wrapfigure}
 %
 
-The staggering arrangement is advantageous for computing low-Mach LES reacting flows.  First, since a pressure projection algorithm is used, the velocities are exactly projected without interpolation error because the location of the pressure gradient coincides directly with the location of the velocity storage location. Second, Morinishi et al. \cite{morinishi98} showed that kinetic energy is exactly conserved when using a central differencing scheme on the convection and diffusion terms without a subgrid model and in combination with a staggered grid.  Having a spatial scheme that conserves kinetic energy is advantageous because it limits artificial dissipation that arises from the differencing scheme.  These conservation properties make the staggered grid a prime choice for LES reacting flow simulation.
+%
+The set of filtered equations (Equations
+\ref{eqn:filtered_mass_balance}-\ref{eqn:filtered_heat_balance}) are
+discretized in space and time and solved on a staggered, finite volume
+mesh.  The staggering scheme consists of four offset grids. One grid
+stores the scalar quantities and the remaining three grids store each
+component of the velocity vector. The velocity components are situated
+so that the center of their control volume is located on the face
+centers of the scalar grid in their respective direction.  Figure
+\ref{fig:staggered_grid} shows an example of a two-dimensional grid
+and the staggering arrangement.
 
-For the spatial discretization of the LES scalar equations, flux limiting and upwind schemes for the convection operator are used.  These schemes are advantageous for ensuring that scalar values remain bounded.  For the momentum equation, a central differencing scheme for the convection operator is used.  All diffusion terms are computed with a second order approximation of the gradient.  
+The staggering arrangement is advantageous for computing low-Mach LES
+reacting flows.  First, since a pressure projection algorithm is used,
+the velocities are exactly projected without interpolation error
+because the location of the pressure gradient coincides directly with
+the location of the velocity storage location. Second, Morinishi et
+al. \cite{morinishi98} showed that kinetic energy is exactly conserved
+when using a central differencing scheme on the convection and
+diffusion terms without a subgrid model and in combination with a
+staggered grid.  Having a spatial scheme that conserves kinetic energy
+is advantageous because it limits artificial dissipation that arises
+from the differencing scheme.  These conservation properties make the
+staggered grid a prime choice for LES reacting flow simulation.
 
-When computing the 2d surface filtered field on the faces of the control volume, one is forced to use an interpolation from the 3d volume filtered field.  This approximation is tolerated because computing the 2d surface field is simply not possible with the given grid scheme. % This is a good example of how LES modeling issues and discrete numerics issue intertwine in applied LES modeling.     
+For the spatial discretization of the LES scalar equations, flux
+limiting and upwind schemes for the convection operator are used.
+These schemes are advantageous for ensuring that scalar values remain
+bounded.  For the momentum equation, a central differencing scheme for
+the convection operator is used.  All diffusion terms are computed
+with a second order approximation of the gradient.
+
+When computing the 2d surface filtered field on the faces of the
+control volume, one is forced to use an interpolation from the 3d
+volume filtered field.  This approximation is tolerated because
+computing the 2d surface field is simply not possible with the given
+grid
+scheme. % This is a good example of how LES modeling issues and discrete numerics issue intertwine in applied LES modeling.
 
 %Jennifer edited
-An explicit time stepping scheme is chosen.  A general, multistep explicit update for a variable, $\phi$, may be written as, 
+An explicit time stepping scheme is chosen.  A general, multistep
+explicit update for a variable, $\phi$, may be written as,
 %
 %===== Explicit Update =====
 \begin{eqnarray}\label{eqn:forward_euler}
@@ -357,7 +432,20 @@ Choosing an explicit time stepping scheme, rather than an implict one, creates a
 \overline{\rho}^{ *} = \overline{\rho}^{ n} - \Delta t \frac{S_k}{V} n_{kj} \left(  \overline{\rho} \widetilde{u_j} \right) \; .
 \end{equation}
 %
-Ideally, one would like to know $\overline{\rho}^{n+1}$ rather than an estimate.  While more details will be discussed in Section \ref{sec:combust_react_models}, one recognizes that $\rho$ is a function of the same variables that are being updated in time, namely, the mixture fraction, $f$, and enthalpy, $h$.  This quandary is a result of the explicit time stepping method will not be resolved for variable density flows without using a fully implicit method.  Explicit methods, however, do have advantages, especially for large scale parallel computations.  Specifically, explicit methods are easier to load balance because the amount of work required for each processor is readily determined a priori, which makes for an efficient parallel computation.  Explicit methods are also easier to code into a computer and to debug.  For these reasons, the current algorithm discussion is limited to explicit methods only. 
+Ideally, one would like to know $\overline{\rho}^{n+1}$ rather than an
+estimate.  While more details will be discussed in Section
+\ref{sec:combust_react_models}, one recognizes that $\rho$ is a
+function of the same variables that are being updated in time, namely,
+the mixture fraction, $f$, and enthalpy, $h$.  This quandary is a
+result of the explicit time stepping method will not be resolved for
+variable density flows without using a fully implicit method.
+Explicit methods, however, do have advantages, especially for large
+scale parallel computations.  Specifically, explicit methods are
+easier to load balance because the amount of work required for each
+processor is readily determined a priori, which makes for an efficient
+parallel computation.  Explicit methods are also easier to code into a
+computer and to debug.  For these reasons, the current algorithm
+discussion is limited to explicit methods only.
 
 The explicit algorithm for solving the set of filtered equations is shown in Algorithm \ref{alg:LES_algorithm}.  
 %
@@ -798,6 +886,6 @@ To extract the incident heat flux to the cylinder, use the faceextract and timee
 \subsubsection*{\underline{Results}}
 
 
-\section{References}
+%\section{References}
 \bibliographystyle{plain}
 \bibliography{arches}

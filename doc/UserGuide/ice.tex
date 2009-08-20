@@ -7,21 +7,23 @@
 
 
 \section{Introduction}
-The work presented here describes a multi-material CFD approach designed
-to solve ``full physics" simulations of dynamic fluid structure interactions
-involving large deformations and material transformations (e.g., phase change).
-``Full physics" refers to problems involving strong interactions between
-the fluid field and solid field temperatures and velocities, with a full
-Navier Stokes representation of fluid materials and the transient, nonlinear
-response of solid materials.  These interactions may include chemical or
-physical transformation between the solid and fluid fields.
+The work presented here describes a multi-material CFD approach
+designed to solve ``full physics" simulations of dynamic fluid
+structure interactions involving large deformations and material
+transformations (e.g., phase change).  ``Full physics" refers to
+problems involving strong interactions between the fluid field and
+solid field temperatures and velocities, with a full Navier Stokes
+representation of fluid materials and the transient, nonlinear
+response of solid materials.  These interactions may include chemical
+or physical transformation between the solid and fluid fields.
 
-The theoretical and algorithmic basis for the multi-material CFD algorithm
-presented here is based on a body of work of several investigators at Los
-Alamos National Laboratory, primarily Bryan Kashiwa, Rick Rauenzahn and Matt
-Lewis.  Several reports by these researchers are publicly available and are
-cited herein.  It is largely through our personal interactions that we have
-been able to bring these ideas to bear on the simulations described herein.
+The theoretical and algorithmic basis for the multi-material CFD
+algorithm presented here is based on a body of work of several
+investigators at Los Alamos National Laboratory, primarily Bryan
+Kashiwa, Rick Rauenzahn and Matt Lewis.  Several reports by these
+researchers are publicly available and are cited herein.  It is
+largely through our personal interactions that we have been able to
+bring these ideas to bear on the simulations described herein.
 
 
 An exposition of the governing equations is given in the next section,
@@ -948,6 +950,7 @@ plot shows the difference of the velocity $\|u - u_{exact}\|$.
 %
 \begin{figure}
   \includegraphics[scale=.85]{Couette-Poiseuille.png}
+  \vspace{-20pt}
   \caption{ Comparison of $u$ velocity $t = 15sec$}
   \label{fig:CombinedPoiseuille}
   \end{figure}
@@ -1030,6 +1033,7 @@ This Octave script will generate a postscript file shockTube\_AMR.ps
 Figure \ref{results.ST.AMR} shows a comparison of the exact versus simulated results at time $t = 5msec$.
 \begin{figure}
   \includegraphics[scale=.85]{shockTube_AMR.png}
+  \vspace{-10pt}
   \caption{Shock tube results at time $t = 5msec$}
   \label{results.ST.AMR}
   \end{figure}
@@ -1239,7 +1243,7 @@ reactant.  Note the curvature of the reaction zone.
 %\newpage
 
 
-\section{References}
+%\section{References}
 \bibliographystyle{plain}
 \bibliography{ice}
 

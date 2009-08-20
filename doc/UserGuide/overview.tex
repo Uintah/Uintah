@@ -24,11 +24,6 @@ materials.
 
 \subsubsection{Target Simulation}
 
-\begin{figure}
-  \includegraphics[scale=0.5]{fire-container-explosion-scirun.png}
-  \caption{Target Simulation - Fire-Container-Explosion.}
-  \label{Fig:fire-container-explosion}
-\end{figure}
 
 The Uintah software system was designed to support the solution of a
 wide range of highly dynamic physical processes using a large number
@@ -50,6 +45,15 @@ range in time and length scales from microseconds and microns to
 minutes and meters.  Uintah was designed as a general-purpose
 fluid-structure interaction code that can simulate not only this
 scenario but a wide range of related problems.
+
+%\begin{figure}
+\begin{wrapfigure}{r}{100mm}
+  \includegraphics[scale=0.5]{fire-container-explosion-scirun.png}
+  \caption{Target Simulation - Fire-Container-Explosion.}
+  \label{Fig:fire-container-explosion}
+\end{wrapfigure}
+%\end{figure}
+
 
 Complex simulations such as this require both immense computational
 power and complex software. Typical simulations include solvers for
@@ -118,7 +122,7 @@ components. Furthermore, components enable replacement of computation
 pieces without complex decision logic in the code itself.
 
 Please see the Developers Guide
-(\url{http://www.uintah.utah.edu/chrome/site/UintahAPI.pdf}) for more
+(\url{http://www.uintah.utah.edu/trac/chrome/site/UintahAPI.pdf}) for more
 information about the internal architecture of Uintah.
 
 \subsection{Software Ports}
