@@ -78,6 +78,10 @@ int main(int argc,char *argv[])
   char command[100];
   sprintf(command,"rm -f %s",filename);
 
+  if(fout.bad())
+  {
+    cout << rank << " error writting file\n";
+  }
 
   delete buff;
   if(rank==0)
