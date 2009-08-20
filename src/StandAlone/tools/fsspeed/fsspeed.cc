@@ -3,7 +3,10 @@
 #include <fstream>
 #include <sstream>
 #include <stdlib.h>
+#include <unistd.h>
 using namespace std;
+
+#define CSTYLE
 
 int main(int argc,char *argv[])
 {
@@ -58,11 +61,17 @@ int main(int argc,char *argv[])
   
   long long isize=(long long)size;
   char *buff=new char[isize];
+  for(int i=0;i<isize;i++)
+    buff[i]=0;
 
   char filename[100];
   sprintf(filename,".tmpfile.%d",rank);
 
+#ifdef CSTYLE
+   FILE* fout=fopen(filename,"w");
+#else
   ofstream fout(filename,ios::binary);
+#endif
   double start,finish;
 
   if(rank==0)
@@ -71,19 +80,21 @@ int main(int argc,char *argv[])
   }
   MPI_Barrier(MPI_COMM_WORLD);
   start=MPI_Wtime();
+#ifdef CSTYLE
+  fwrite(buff,sizeof(char),isize,fout);
+  fflush(fout);
+  fclose(fout);
+#else
   fout.write(buff,isize);
   fout.flush();
+  fout.close();
+#endif
   MPI_Barrier(MPI_COMM_WORLD);
   finish=MPI_Wtime();
   
   char command[100];
   sprintf(command,"rm -f %s",filename);
-
-  if(fout.bad())
-  {
-    cout << rank << " error writting file\n";
-  }
-
+  
   delete buff;
   if(rank==0)
   {
