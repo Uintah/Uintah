@@ -34,6 +34,12 @@ cd ../doc
 
 ./runLatex
 
+mv DeveloperGuide/UintahAPI.pdf .
+mv InstallationGuide/installation_guide.pdf .
+mv UserGuide/user_guide.pdf .
+
+rm -rf DeveloperGuide figures InstallationGuide UserGuide movies Other README runLatex
+
 cd ../..
 
 tar -X src/exclude.txt --exclude-vcs -cvf uintah-$VERSION.tar uintah-$VERSION
