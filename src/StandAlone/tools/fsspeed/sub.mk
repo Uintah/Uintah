@@ -30,55 +30,17 @@
 # 
 # Makefile fragment for this subdirectory
 
-SRCDIR := StandAlone/tools
+SRCDIR := StandAlone/tools/fsspeed
 
-SUBDIRS := \
-        $(SRCDIR)/compare_mms \
-        $(SRCDIR)/dumpfields  \
-        $(SRCDIR)/extractors  \
-        $(SRCDIR)/graphview   \
-        $(SRCDIR)/mpi_test    \
-        $(SRCDIR)/fsspeed     \
-        $(SRCDIR)/pfs         \
-        $(SRCDIR)/puda        \
-        $(SRCDIR)/tracker     
+##############################################
+# fsspeed.cc
 
-ifeq ($(HAVE_TEEM),yes)
-  SUBDIRS += $(SRCDIR)/uda2nrrd \
-             $(SRCDIR)/radiusMaker 
-endif 
+SRCS    := $(SRCDIR)/fsspeed.cc
+PROGRAM := $(SRCDIR)/fsspeed
+PSELIBS := Core/Parallel
 
-ifeq ($(BUILD_VISIT),yes)
-        ifeq ($(HAVE_TEEM),yes)
-                SUBDIRS += $(SRCDIR)/uda2vis
-        endif 
-endif
-
-########################################################
-# compute_Lnorm_udas
-
-ifeq ($(LARGESOS),yes)
-  PSELIBS := Packages/Uintah
-else
-
-  PSELIBS := \
-        Core/Exceptions   \
-        Core/Containers   \
-        Core/DataArchive  \
-	Core/Grid         \
-	Core/Math         \
-	Core/Thread       \
-	Core/Util         \
-        CCA/Components/DataArchiver         
-endif
-
-LIBS :=
-
-SRCS := $(SRCDIR)/compute_Lnorm_udas.cc 
-PROGRAM := $(SRCDIR)/compute_Lnorm_udas
+LIBS    := $(XML2_LIBRARY) $(M_LIBRARY) $(MPI_LIBRARY) $(F_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/program.mk
 
-compute_Lnorm_udas: prereqs StandAlone/tools/compute_Lnorm_udas
 
-include $(SCIRUN_SCRIPTS)/recurse.mk
