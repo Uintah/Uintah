@@ -56,7 +56,7 @@ int main(int argc,char *argv[])
     return 1;
   }
   
-  long long isize=size;
+  long long isize=(long long)size;
   char *buff=new char[isize];
 
   char filename[100];
@@ -86,12 +86,22 @@ int main(int argc,char *argv[])
   delete buff;
   if(rank==0)
   {
-    cout << "Total Time: " << finish-start << " seconds" << endl;
-    cout << "Throughput: " <<  (isize*processors/1048576.0)/(finish-start) << " MB/s" << endl;
+    cout << "Writing Total Time: " << finish-start << " seconds" << endl;
+    cout << "Writing Throughput: " <<  (isize*processors/1048576.0)/(finish-start) << " MB/s" << endl;
   
     cout << "Cleaning up datafiles\n";
   }
+  MPI_Barrier(MPI_COMM_WORLD);
+  start=MPI_Wtime();
   system(command);
+  MPI_Barrier(MPI_COMM_WORLD);
+  finish=MPI_Wtime();
+  if(rank==0)
+  {
+    cout << "Deleting Total Time: " << finish-start << " seconds" << endl;
+    cout << "Deleting Throughput: " <<  (isize*processors/1048576.0)/(finish-start) << " MB/s" << endl;
+  }
   MPI_Finalize();
+
   return 0;
 }
