@@ -116,7 +116,6 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
   // Need access to all velocity fields at once
   StaticArray<constNCVariable<double> >  gmass(numMatls);
   StaticArray<constNCVariable<double> >  gvolume(numMatls);
-  StaticArray<constNCVariable<double> >  numnearparticles(numMatls);
   StaticArray<NCVariable<Vector> >       gvelocity(numMatls);
   StaticArray<NCVariable<Vector> >       gsurfnorm(numMatls);
   StaticArray<NCVariable<double> >       frictionWork(numMatls);
@@ -129,6 +128,9 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
     Vector dx = patch->dCell();
     double cell_vol = dx.x()*dx.y()*dx.z();
+    constNCVariable<double> NC_CCweight;
+    NCVariable<double> NC_CCweight_new;
+    old_dw->get(NC_CCweight,         lb->NC_CCweightLabel,  0, patch, gnone, 0);
 
     ParticleInterpolator* interpolator = flag->d_interpolator->clone(patch);
     vector<IntVector> ni(interpolator->size());
@@ -144,8 +146,6 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
 
       new_dw->get(gmass[m],           lb->gMassLabel,  dwi, patch, gan,   1);
       new_dw->get(gvolume[m],         lb->gVolumeLabel,dwi, patch, gnone, 0);
-      new_dw->get(numnearparticles[m],lb->gNumNearParticlesLabel, 
-                  dwi, patch, gnone, 0);
       new_dw->getModifiable(gvelocity[m],  lb->gVelocityLabel,       dwi,patch);
       new_dw->allocateAndPut(gsurfnorm[m], lb->gSurfNormLabel,       dwi,patch);
       new_dw->getModifiable(frictionWork[m],lb->frictionalWorkLabel, dwi,patch);
@@ -242,14 +242,12 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
       Vector centerOfMassMom(0.,0.,0.);
       double centerOfMassMass=0.0; 
       double totalNodalVol=0.0; 
-      double totalNearParticles=0.0; 
       for(int n = 0; n < numMatls; n++){
         if(!d_matls.requested(n)) continue;
         double mass = gmass[n][c];
         centerOfMassMom+=gvelocity[n][c] * mass;
         centerOfMassMass+= mass; 
-        totalNodalVol+=gvolume[n][c];
-        totalNearParticles+=numnearparticles[n][c];
+        totalNodalVol+=gvolume[n][c]*8.0*NC_CCweight[c];
       }
 
       // Apply Coulomb friction contact
@@ -261,7 +259,8 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
         // two options:
 
         // 1. This option uses particle counting
-        if((totalNodalVol/cell_vol)*(64./totalNearParticles) > d_vol_const){
+//        if((totalNodalVol/cell_vol)*(64./totalNearParticles) > d_vol_const){
+        if((totalNodalVol/cell_vol) > d_vol_const){
           double scale_factor=1.0;
 
           // 2. This option uses only cell volumes.  The idea is that a cell 
@@ -394,7 +393,6 @@ void FrictionContact::exMomIntegrated(const ProcessorGroup*,
   // vectors of NCVariables
   StaticArray<constNCVariable<double> > gmass(numMatls);
   StaticArray<constNCVariable<double> > gvolume(numMatls);
-  StaticArray<constNCVariable<double> > numnearparticles(numMatls);
   StaticArray<NCVariable<Vector> >      gvelocity_star(numMatls);
   StaticArray<constNCVariable<double> > normtraction(numMatls);
   StaticArray<NCVariable<double> >      frictionWork(numMatls);
@@ -404,6 +402,11 @@ void FrictionContact::exMomIntegrated(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
     Vector dx = patch->dCell();
     double cell_vol = dx.x()*dx.y()*dx.z();
+    constNCVariable<double> NC_CCweight;
+    NCVariable<double> NC_CCweight_new;
+    old_dw->get(NC_CCweight,         lb->NC_CCweightLabel,  0, patch, gnone, 0);
+    new_dw->allocateAndPut(NC_CCweight_new, lb->NC_CCweightLabel,0,patch);
+    NC_CCweight_new.copyData(NC_CCweight);
 
     // Retrieve necessary data from DataWarehouse
     for(int m=0;m<matls->size();m++){
@@ -412,8 +415,6 @@ void FrictionContact::exMomIntegrated(const ProcessorGroup*,
       new_dw->get(normtraction[m],lb->gNormTractionLabel,dwi, patch, gnone, 0);
       new_dw->get(gsurfnorm[m],   lb->gSurfNormLabel,    dwi, patch, gnone, 0);
       new_dw->get(gvolume[m],     lb->gVolumeLabel,      dwi, patch, gnone, 0);
-      new_dw->get(numnearparticles[m],lb->gNumNearParticlesLabel, 
-                  dwi, patch, gnone, 0);
       new_dw->getModifiable(gvelocity_star[m], lb->gVelocityStarLabel,
                             dwi, patch);
       new_dw->getModifiable(frictionWork[m], lb->frictionalWorkLabel,
@@ -424,19 +425,17 @@ void FrictionContact::exMomIntegrated(const ProcessorGroup*,
     old_dw->get(delT, lb->delTLabel, getLevel(patches));
     double epsilon_max_max=0.0;
 
-    for(NodeIterator iter = patch->getNodeIterator__New(); !iter.done(); iter++){
+    for(NodeIterator iter = patch->getNodeIterator__New();!iter.done();iter++){
       IntVector c = *iter;
       Vector centerOfMassMom(0.,0.,0.);
       double centerOfMassMass=0.0; 
       double totalNodalVol=0.0; 
-      double totalNearParticles=0.0; 
       for(int  n = 0; n < numMatls; n++){
         if(!d_matls.requested(n)) continue;
         double mass = gmass[n][c];
         centerOfMassMom+=gvelocity_star[n][c] * mass;
         centerOfMassMass+= mass; 
-        totalNodalVol+=gvolume[n][c];
-        totalNearParticles+=numnearparticles[n][c];
+        totalNodalVol+=gvolume[n][c]*8.0*NC_CCweight[c];
       }
 
       // Apply Coulomb friction contact
@@ -447,8 +446,7 @@ void FrictionContact::exMomIntegrated(const ProcessorGroup*,
         // Only apply contact if the node is nearly "full".  There are
         // two options:
 
-        // 1. This option uses particle counting
-        if((totalNodalVol/cell_vol)*(64./totalNearParticles) > d_vol_const){
+        if((totalNodalVol/cell_vol) > d_vol_const){
           double scale_factor=1.0;
 
           // 2. This option uses only cell volumes.  The idea is that a cell 
@@ -596,6 +594,10 @@ void FrictionContact::addComputesAndRequiresInterpolated(SchedulerP & sched,
   Ghost::GhostType  gp;
   int ngc_p;
   d_sharedState->getParticleGhostLayer(gp, ngc_p);
+
+  MaterialSubset* z_matl = scinew MaterialSubset();
+  z_matl->add(0);
+  z_matl->addReference();
   
   const MaterialSubset* mss = ms->getUnion();
   t->requires(Task::OldDW, lb->delTLabel);
@@ -606,7 +608,7 @@ void FrictionContact::addComputesAndRequiresInterpolated(SchedulerP & sched,
   t->requires(Task::OldDW, lb->pSizeLabel,        gp, ngc_p);
   t->requires(Task::NewDW, lb->gMassLabel,        Ghost::AroundNodes, 1);
   t->requires(Task::NewDW, lb->gVolumeLabel,           Ghost::None);
-  t->requires(Task::NewDW, lb->gNumNearParticlesLabel, Ghost::None);
+  t->requires(Task::OldDW, lb->NC_CCweightLabel,z_matl,Ghost::None);
   t->computes(lb->gNormTractionLabel);
   t->computes(lb->gSurfNormLabel);
   t->computes(lb->gStressLabel);
@@ -622,16 +624,21 @@ void FrictionContact::addComputesAndRequiresIntegrated(SchedulerP & sched,
 {
   Task * t = scinew Task("Friction::exMomIntegrated", 
                       this, &FrictionContact::exMomIntegrated);
+
+  MaterialSubset* z_matl = scinew MaterialSubset();
+  z_matl->add(0);
+  z_matl->addReference();
   
   const MaterialSubset* mss = ms->getUnion();
   t->requires(Task::OldDW, lb->delTLabel);
+  t->requires(Task::OldDW, lb->NC_CCweightLabel,z_matl,Ghost::None);
   t->requires(Task::NewDW, lb->gNormTractionLabel,     Ghost::None);
   t->requires(Task::NewDW, lb->gSurfNormLabel,         Ghost::None);
   t->requires(Task::NewDW, lb->gMassLabel,             Ghost::None);
   t->requires(Task::NewDW, lb->gVolumeLabel,           Ghost::None);
-  t->requires(Task::NewDW, lb->gNumNearParticlesLabel, Ghost::None);
   t->modifies(             lb->gVelocityStarLabel,  mss);
   t->modifies(             lb->frictionalWorkLabel, mss);
+  t->computes(             lb->NC_CCweightLabel,    z_matl);
 
   sched->addTask(t, patches, ms);
 }
