@@ -188,8 +188,11 @@ WARNING
      typedef map< string, list<int> > VarLabelMaterialMap;
      void makeVarLabelMaterialMap(VarLabelMaterialMap* result);
    private:
-     typedef multimap<const VarLabel*, Task::Dependency*, VarLabel::Compare>
-       CompMap;
+#ifdef HAVE_GNU_HASHMAP
+     typedef multimap<const VarLabel*, Task::Dependency*> CompMap;
+#else
+     typedef hash_multimap<const VarLabel*, Task::Dependency*> CompMap;
+#endif
 
      typedef map<VarLabelMatl<Level>, Task*> ReductionTasksMap;
 

@@ -3,32 +3,17 @@
 
   <CFD>
     <ARCHES                             spec="OPTIONAL NO_DATA" >
-      <grow_dt                          spec="REQUIRED DOUBLE 'positive'" />
-      <variable_dt                      spec="REQUIRED BOOLEAN" />
-      <nonlinear_solver                 spec="REQUIRED STRING 'explicit,
-                                                               picard'" />
-      <turbulence_model                 spec="REQUIRED STRING 'compdynamicprocedure, dynamicprocedure, smagorinsky'" />
-      <transport_mixture_fraction       spec="REQUIRED BOOLEAN" />
-      <transport_enthalpy               spec="REQUIRED BOOLEAN" />
-      <transport_reacting_scalar        spec="OPTIONAL BOOLEAN" />
-      <transport_extra_scalars          spec="OPTIONAL BOOLEAN" /> <!-- IF TRUE, then requires an extra scalar block-->
-      <model_mixture_fraction_variance  spec="REQUIRED BOOLEAN" />
-      <set_initial_condition            spec="OPTIONAL BOOLEAN" /> <!-- IF TRUE, then requires init_cond_input_file-->
-      <init_cond_input_file             spec="OPTIONAL STRING" /> <!-- Should be required if set_intial_condition is true-->
-      <turnonMixedModel                 spec="OPTIONAL BOOLEAN" />
+
+
+      <set_initial_condition             spec="OPTIONAL NO_DATA"
+                                        attribute1="inputfile REQUIRED STRING"/>
+      <turnonMixedModel                 spec="OPTIONAL BOOLEAN" /> <!-- Move to Properties? not sure what this model is-->
       <recompileTaskgraph               spec="OPTIONAL BOOLEAN" />
-      <scalarUnderflowCheck             spec="OPTIONAL BOOLEAN" />
-      <EKTCorrection                    spec="OPTIONAL BOOLEAN" />
-      <doMMS                            spec="OPTIONAL BOOLEAN" /> <!-- IF TRUE, then requires MMS block-->
-      <!--Should change requirements on this MMS block if doMMS is
-           true...  FIXME: Actually, shouldn't the pressense of an
-           <MMS> block implie doMMS, and the absence imply not doing
-           MMS?  We could also add doMMS as an attribute to the MMS
-           block, and then key required/optional off of that...
-      -->
+
       <MMS                              spec="OPTIONAL NO_DATA"
-                                          attribute1="whichMMS REQUIRED STRING 'constantMMS, almgrenMMS'" >
-        <mmsErrorType                   spec="REQUIRED STRING 'Linf, L2'" />  <!-- FIXME: is 'L' valid (almgrenMMS.ups)? -->
+                                          attribute1="whichMMS REQUIRED STRING 'constantMMS, almgrenMMS'" 
+                                          children1="ONE_OF(CHILD constantMMS, almgrenMMS)">
+        <mmsErrorType                   spec="REQUIRED STRING 'Linf, L2'" />  
         <constantMMS                    spec="OPTIONAL NO_DATA" need_applies_to="whichMMS constantMMS" >
           <cu                           spec="REQUIRED DOUBLE" />
           <cv                           spec="REQUIRED DOUBLE" />
@@ -42,7 +27,9 @@
           <viscosity                    spec="REQUIRED DOUBLE" />
         </almgrenMMS>
       </MMS>
-      <Turbulence                       spec="REQUIRED NO_DATA" >
+
+      <Turbulence                       spec="REQUIRED NO_DATA"
+                                        attribute1="model REQUIRED STRING 'compdynamicprocedure, dynamicprocedure, smagorinsky'" >
 
         <variance_coefficient           spec="OPTIONAL DOUBLE" />
         <!--smagorinsky -->
@@ -58,34 +45,34 @@
 
         <var_const                      spec="OPTIONAL DOUBLE" /> <!-- FIXME: What is this? Does it have a range? -->
       </Turbulence>
-      <Properties                       spec="REQUIRED NO_DATA"
-                                          children1="ONE_OF(CHILD ColdflowMixingModel, NewStaticMixingTable, TabPropsTable)" >
 
+      <Properties                       spec="REQUIRED NO_DATA"
+                                          children1="ONE_OF(CHILD ColdFlowMixingModel, NewStaticMixingTable, TabPropsTable)" >
+
+        <use_mixing_model               spec="REQUIRED BOOLEAN" /> 
         <empirical_soot                 spec="OPTIONAL BOOLEAN" />
-        <filter_drhodt   spec="OPTIONAL BOOLEAN" />
-        <first_order_drhodt   spec="OPTIONAL BOOLEAN" />
-        <inverse_density_average   spec="OPTIONAL BOOLEAN" />
-        <mixing_model                   spec="REQUIRED STRING 'coldFlowMixingModel, NewStaticMixingTable, TabPropsTable'" />
+        <filter_drhodt                  spec="OPTIONAL BOOLEAN" />
+        <first_order_drhodt             spec="OPTIONAL BOOLEAN" />
+        <inverse_density_average        spec="OPTIONAL BOOLEAN" />
         <independent_variable           spec="MULTIPLE NO_DATA" 
                                             attribute1="active OPTIONAL STRING 'yes, true, no, false'"
                                             attribute2="name   REQUIRED STRING"
                                             attribute3="value  OPTIONAL DOUBLE" /> <!-- Default value for "active" is true, default value for "value" is 0; 
                                                                                         You can put as many independent variable tags as you want -->
-        <ColdflowMixingModel            spec="OPTIONAL NO_DATA" >
+        <ColdFlowMixingModel            spec="OPTIONAL NO_DATA" >
           <Stream                       spec="MULTIPLE NO_DATA" >
             <density                    spec="REQUIRED DOUBLE 'positive'" />
             <temperature                spec="REQUIRED DOUBLE" />
           </Stream>
-        </ColdflowMixingModel>
+        </ColdFlowMixingModel>
 
         <NewStaticMixingTable           spec="OPTIONAL NO_DATA" >
           <co_output                    spec="OPTIONAL BOOLEAN" />
           <inputfile                    spec="REQUIRED STRING" />
-          <h_fuel                       spec="REQUIRED DOUBLE" />
-          <h_air                        spec="REQUIRED DOUBLE" />
           <soot_precursors              spec="OPTIONAL BOOLEAN" />
           <sulfur_chem                  spec="OPTIONAL BOOLEAN" />
           <tabulated_soot               spec="OPTIONAL BOOLEAN" />
+          <loud_heatloss_warning        spec="OPTIONAL BOOLEAN" />
         </NewStaticMixingTable>
 
         <optically_thin_model_opl      spec="OPTIONAL DOUBLE" />
@@ -168,14 +155,6 @@
         </WallBC>
       </BoundaryConditions>
 
-      <!-- FIXME: What is the different between this and the other PhysicalConstants? -->
-      <PhysicalConstants                spec="REQUIRED NO_DATA" >
-        <gravity                        spec="REQUIRED VECTOR" />
-        <pressure                       spec="OPTIONAL DOUBLE" />
-        <ref_point                      spec="REQUIRED VECTOR" />
-        <viscosity                      spec="REQUIRED DOUBLE" />
-      </PhysicalConstants>
-
       <ExtraScalars                     spec="OPTIONAL NO_DATA" >
         <scalar                         spec="MULTIPLE NO_DATA"
                                           attribute1="label REQUIRED STRING" >
@@ -198,6 +177,12 @@
       </ExtraScalars>
 
       <ExplicitSolver                   spec="REQUIRED NO_DATA" >
+
+        <initial_dt                     spec="REQUIRED DOUBLE 'positive'" />
+        <variable_dt                    spec="REQUIRED BOOLEAN" />
+        <EKTCorrection                  spec="OPTIONAL BOOLEAN" /> 
+        <scalarUnderflowCheck           spec="OPTIONAL BOOLEAN" /> 
+        <extraProjection                spec="OPTIONAL BOOLEAN" /> 
         <do_standalone_RMCRT            spec="OPTIONAL BOOLEAN" />
         <RMCRTRadiationModel            spec="OPTIONAL NO_DATA" >
             <opl                        spec="REQUIRED DOUBLE" />
@@ -244,6 +229,7 @@
         <maxDensityLag                  spec="OPTIONAL DOUBLE" />
 
         <MixtureFractionSolver          spec="REQUIRED NO_DATA" >
+          <initial_value                spec="OPTIONAL DOUBLE" />
           <convection_scheme            spec="REQUIRED STRING 'central-upwind, flux_limited'" />
           <limiter_type                 spec="OPTIONAL STRING 'superbee, vanLeer, upwind, none'"/>
           <boundary_limiter_type        spec="OPTIONAL STRING 'central-upwind, upwind'" />
@@ -268,13 +254,13 @@
           </parameters>
         </PressureSolver>
 
-        <restartOnNegativeDensityGuess  spec="OPTIONAL BOOLEAN" /> <!-- FIXME: what is default? -->
-        <timeIntegratorType             spec="REQUIRED STRING 'RK2SSP, FE'" />
+        <restartOnNegativeDensityGuess  spec="OPTIONAL BOOLEAN" /> <!--default = false-->
+        <NoisyDensityGuess              spec="OPTIONAL BOOLEAN" /> <!--default = false-->
+        <timeIntegratorType             spec="REQUIRED STRING 'RK3SSP, RK2SSP, FE'" />
         <turbModelCalcForAllRKSteps     spec="OPTIONAL BOOLEAN" />
         <turbModelCalcFreq              spec="OPTIONAL INTEGER" />
       </ExplicitSolver>
 
-      <extraProjection                  spec="OPTIONAL BOOLEAN" />
     </ARCHES>
   </CFD>
 

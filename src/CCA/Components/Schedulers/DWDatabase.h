@@ -34,6 +34,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/UnknownVariable.h>
 #include <Core/Grid/Variables/VarLabel.h>
 #include <CCA/Components/Schedulers/MemoryLog.h>
+#include <CCA/Components/Schedulers/DetailedTasks.h>
 #include <Core/Grid/Variables/VarLabelMatl.h>
 #include <Core/Grid/Variables/ScrubItem.h>
 
@@ -50,6 +51,7 @@ DEALINGS IN THE SOFTWARE.
 #include <list>
 #include <sstream>
 
+#include <sci_hash_map.h>
 namespace Uintah {
 
 using std::vector;
@@ -96,10 +98,12 @@ using SCIRun::FastHashTable;
    bool exists(const VarLabel* label, int matlIndex, const DomainType* dom) const;
    void put(const VarLabel* label, int matlindex, const DomainType* dom,
 	    Variable* var, bool replace);
-   void put(const VarLabel* label, int matlindex, const DomainType* dom,
+   void putForeign(const VarLabel* label, int matlindex, const DomainType* dom,
 	    Variable* var);
    void get(const VarLabel* label, int matlindex, const DomainType* dom,
 	    Variable& var) const;
+   void getlist( const VarLabel* label, int matlIndex, const DomainType* dom,
+       vector<Variable*>& varlist ) const;
    inline Variable* get(const VarLabel* label, int matlindex,
 		const DomainType* dom) const;
    void print(ostream&, int rank) const;
@@ -132,15 +136,16 @@ using SCIRun::FastHashTable;
 private:
    struct DataItem {
      DataItem()
-       : var(0), scrubCount(0) {}
+       : var(0), scrubCount(0), version(0) {}
      Variable* var;
      int scrubCount;
+     unsigned int version; 
    };
   
    const DataItem& getDataItem(const VarLabel* label, int matlindex,
 			       const DomainType* dom) const;
     
-   typedef map<VarLabelMatl<DomainType>, DataItem> varDBtype;
+   typedef multimap<VarLabelMatl<DomainType>, DataItem>  varDBtype;
    varDBtype vars;
 
    DWDatabase(const DWDatabase&);
@@ -161,23 +166,23 @@ DWDatabase<DomainType>::~DWDatabase()
 template<class DomainType>
 void DWDatabase<DomainType>::clear()
 {
-  cleanForeign();  //clean all foreign vars first
   for(typename varDBtype::iterator iter = vars.begin();
       iter != vars.end(); iter++){
 
-#ifdef DEBUG
+#if 0
     // This can happen in some normal cases (especially at program
     // shutdown), but catching it is useful for debugging the scrubbing
     // stuff...
-    if (iter->first->typeDescription() != 0
-	&& iter->first->typeDescription()->getType() != TypeDescription::ReductionVariable) {
-      ostringstream msgstr;
-      msgstr << "Failed to scrub: " << iter->first->getName()
-	     << " completely";
-      SCI_THROW(InternalError(msgstr.str(), __FILE__, __LINE__));
+    if ( iter->first.label_ != 0 && iter->first.label_->typeDescription() != 0
+	&& iter->first.label_->typeDescription()->getType() != TypeDescription::ReductionVariable) {
+      cout << "Failed to scrub: " << iter->first.label_->getName()
+	     << " completely.  scrub count: " << iter->second.scrubCount << endl;
+      //SCI_THROW(InternalError("Scubbing Failed"), __FILE__, __LINE__);
     }
 #endif
-    delete iter->second.var;
+    if (iter->second.var)
+      delete iter->second.var;
+    iter->second.var=0;
   }
   vars.clear();
 }
@@ -188,15 +193,9 @@ DWDatabase<DomainType>::cleanForeign()
 {
   for(typename varDBtype::iterator iter = vars.begin();
       iter != vars.end();){
-    const Variable* var = iter->second.var;
-    if(var && var->isForeign()){
-      Variable* nextvar = var->getNextvar();
-      while (nextvar != NULL){   // clean all foreign vars under this label
-        Variable* delvar = nextvar;
-        nextvar = delvar->getNextvar();
-        delete delvar;
-      }
-      delete var;
+    if(iter->second.var && iter->second.var->isForeign()){
+      delete iter->second.var;
+      iter->second.var=0;
       typename varDBtype::iterator deliter = iter;
       iter++;
       vars.erase(deliter);
@@ -237,25 +236,25 @@ setScrubCount(const VarLabel* label, int matlIndex, const DomainType* dom, int c
 
 template<class DomainType>
 void
-DWDatabase<DomainType>::scrub(const VarLabel* var, int matlIndex, const DomainType* dom)
+DWDatabase<DomainType>::scrub(const VarLabel* label, int matlIndex, const DomainType* dom)
 {
   ASSERT(matlIndex >= -1);
-  VarLabelMatl<DomainType> vlm(var, matlIndex, getRealDomain(dom));
-  typename varDBtype::iterator iter = vars.find(vlm);
-  if (iter != vars.end()) {
-    ASSERTEQ(iter->second.scrubCount, 0);
-    delete iter->second.var;
-    vars.erase(iter);
-    return; // found and scrubbed
-  }
-
-  // scrub not found
+  VarLabelMatl<DomainType> v(label, matlIndex, getRealDomain(dom));
+  if (vars.count(v)==0){ // scrub not found
   ostringstream msgstr;
-  msgstr << var->getName() << ", matl " << matlIndex
+  msgstr << label->getName() << ", matl " << matlIndex
 	 << ", patch/level " << dom->getID()
 	 << " not found for scrubbing.";
-
   SCI_THROW(InternalError(msgstr.str(), __FILE__, __LINE__));
+  }
+
+  pair<typename varDBtype::const_iterator, typename varDBtype::const_iterator> ret;
+  ret = vars.equal_range(v);
+  for (typename varDBtype::const_iterator iter=ret.first; iter!=ret.second; ++iter){
+    delete iter->second.var;
+  }
+  vars.erase(v);
+
 }
 
 template<class DomainType>
@@ -306,30 +305,40 @@ DWDatabase<DomainType>::put( const VarLabel* label, int matlIndex,const DomainTy
 				      Variable* var, bool replace )
 {
   ASSERT(matlIndex >= -1);
-  
+
   VarLabelMatl<DomainType> v(label, matlIndex, getRealDomain(dom));
-  DataItem& di = vars[v]; 
-  if (di.var) {
-    if (!replace) {
-      SCI_THROW(InternalError("Put replacing old variable", __FILE__, __LINE__));
-    }
-    ASSERT(di.var != var);
-    delete di.var;
+  unsigned int count=vars.count(v);
+  if (count > 1 ) 
+    SCI_THROW(InternalError("More than one vars on this label", __FILE__, __LINE__));
+  if (count == 1) {
+    typename varDBtype::iterator iter = vars.find(v);
+    if (!replace && iter->second.var) 
+      SCI_THROW(InternalError("Put replacing old vars", __FILE__, __LINE__));
+    else {
+      ASSERT(iter->second.var != var);
+      if (iter->second.var)
+        delete iter->second.var;
+      iter->second.var=var; 
+    } 
   }
-  di.var = var;      
+  if (count == 0) {
+    typename varDBtype::iterator iter = vars.insert(pair<VarLabelMatl<DomainType>, DataItem>(v, DataItem()));
+    iter->second.var=var; 
+  }
 }
 
 
 template<class DomainType>
 void
-DWDatabase<DomainType>::put( const VarLabel* label, int matlIndex,const DomainType* dom,
+DWDatabase<DomainType>::putForeign( const VarLabel* label, int matlIndex,const DomainType* dom,
 				      Variable* var)
 {
   ASSERT(matlIndex >= -1);
   
   VarLabelMatl<DomainType> v(label, matlIndex, getRealDomain(dom));
-  DataItem& di = vars[v]; 
-  di.var = var;      
+  typename varDBtype::iterator iter = vars.insert(pair<VarLabelMatl<DomainType>, DataItem>(v, DataItem()));
+  iter->second.var=var; 
+  iter->second.version=vars.count(v)-1;
 }
 
 template<class DomainType>
@@ -337,14 +346,16 @@ const typename DWDatabase<DomainType>::DataItem&
 DWDatabase<DomainType>::getDataItem( const VarLabel* label, int matlIndex, const DomainType* dom ) const
 {
   ASSERT(matlIndex >= -1);
-    
   VarLabelMatl<DomainType> v(label, matlIndex, getRealDomain(dom));
-  typename varDBtype::const_iterator iter = vars.find(v);
-  if(iter == vars.end())
-    SCI_THROW(UnknownVariable(label->getName(), -99, dom, matlIndex,
+  pair<typename varDBtype::const_iterator, typename varDBtype::const_iterator> ret;
+  ret = vars.equal_range(v);
+  for (typename varDBtype::const_iterator iter=ret.first; iter!=ret.second; ++iter){
+    if (iter->second.version == 0 ) {
+      return iter->second;
+    }
+  }
+  SCI_THROW(UnknownVariable(label->getName(), -99, dom, matlIndex,
 			      "DWDatabase::getDataItem", __FILE__, __LINE__));
-
-  return iter->second;
 }
 
 template<class DomainType>
@@ -366,6 +377,27 @@ DWDatabase<DomainType>::get( const VarLabel* label,
 {
   Variable* tmp = get(label, matlIndex, dom);
   var.copyPointer(*tmp);
+}
+
+template<class DomainType>
+void
+DWDatabase<DomainType>::getlist( const VarLabel* label,
+				      int matlIndex,
+				      const DomainType* dom,
+				      vector<Variable*>& varlist ) const
+{
+  VarLabelMatl<DomainType> v(label, matlIndex, getRealDomain(dom));
+  pair<typename varDBtype::const_iterator, typename varDBtype::const_iterator> ret;
+  ret = vars.equal_range(v);
+  varlist.resize(vars.count(v));
+  for (typename varDBtype::const_iterator iter=ret.first; iter!=ret.second; ++iter)
+    varlist[iter->second.version] = iter->second.var;
+
+  //this function is allowed to return an empty list
+  //if(varlist.size() == 0)
+  //  SCI_THROW(UnknownVariable(label->getName(), -99, dom, matlIndex,
+	//		      "DWDatabase::getlist", __FILE__, __LINE__));
+
 }
 
 template<class DomainType>
@@ -413,5 +445,43 @@ DWDatabase<DomainType>::getVarLabelMatlTriples( vector<VarLabelMatl<DomainType> 
 }
 
 } // End namespace Uintah
+
+//Hash function for VarLabelMatl
+#ifdef HAVE_GNU_HASHMAP
+namespace __gnu_cxx
+{
+  using Uintah::DWDatabase;
+  using Uintah::VarLabelMatl;
+  template <class DomainType>
+  struct hash<VarLabelMatl<DomainType> > : public unary_function<VarLabelMatl<DomainType>, size_t>
+  {
+    size_t operator()(const VarLabelMatl<DomainType>& v) const
+    {
+      size_t h=0;
+      char *str =const_cast<char*> (v.label_->getName().data());
+      while (int c = *str++) h = h*7+c;
+      return (h ^ (size_t) (v.domain_? v.domain_->getID():0)^ (size_t)v.matlIndex_ );
+    }
+  };
+}
+#else
+namespace std { 
+  namespace tr1 {
+    using Uintah::DWDatabase;
+    using Uintah::VarLabelMatl;
+    template <class DomainType>
+      struct hash<VarLabelMatl<DomainType> > : public unary_function<VarLabelMatl<DomainType>, size_t>
+      {
+        size_t operator()(const VarLabelMatl<DomainType>& v) const
+        {
+          size_t h=0;
+          char *str =const_cast<char*> (v.label_->getName().data());
+          while (int c = *str++) h = h*7+c;
+          return (h ^ (size_t) (v.domain_? v.domain_->getID():0)^ (size_t)v.matlIndex_ );
+        }
+      };
+  }
+} // End namespace std
+#endif
 
 #endif

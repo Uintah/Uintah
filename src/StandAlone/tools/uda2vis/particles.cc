@@ -53,7 +53,7 @@ machineIsBigEndian()
 template<>
 void
 /*ParticleDataContainer*/
-handleParticleData<Point>( QueryInfo & qinfo, int matlNo, bool matlClassfication, ParticleDataContainer& result, string varSelected )
+handleParticleData<Point>( QueryInfo & qinfo, int matlNo, bool matlClassfication, ParticleDataContainer& result, string varSelected, int patchNo )
 {
   vector<float> dataX, dataY, dataZ;
 
@@ -68,8 +68,8 @@ handleParticleData<Point>( QueryInfo & qinfo, int matlNo, bool matlClassfication
   const Patch* pZero = *(qinfo.level->patchesBegin());
   ConsecutiveRangeSet matlsForVar = qinfo.archive->queryMaterials(varSelected, pZero, qinfo.timestep);
 
-  for( patch_it = qinfo.level->patchesBegin(); patch_it != qinfo.level->patchesEnd(); ++patch_it) {
-    const Patch* patch = *patch_it;
+  // for( patch_it = qinfo.level->patchesBegin(); patch_it != qinfo.level->patchesEnd(); ++patch_it) {
+    const Patch* patch = /* *patch_it */ qinfo.level->getPatch(patchNo);
 
     // not used anymore 
     // patchMap[patch->getID()] = *patch_it;
@@ -107,7 +107,7 @@ handleParticleData<Point>( QueryInfo & qinfo, int matlNo, bool matlClassfication
       patchMatlPart pObj(patch->getID(), matl, numParticles);
       mapA.push_back(pObj);
     } // end for materials
-  } // end for each Patch
+  // } // end for each Patch
 
   // float * floatArrayX = (float*)malloc(sizeof(float)*dataX.size());
   // float * floatArrayY = (float*)malloc(sizeof(float)*dataX.size());
@@ -208,9 +208,9 @@ return result;
 template<>
 void
 /*ParticleDataContainer*/
-handleParticleData<Vector>( QueryInfo & qinfo, int matlNo, bool matlClassfication, ParticleDataContainer& result, string varSelected)
+handleParticleData<Vector>( QueryInfo & qinfo, int matlNo, bool matlClassfication, ParticleDataContainer& result, string varSelected, int patchNo )
 {
-  cout << "In handleParticleData<Vector>\n";
+  // cout << "In handleParticleData<Vector>\n";
   vector<float> dataX, dataY, dataZ;
   vector<int> matlList;
     
@@ -311,7 +311,7 @@ handleParticleData<Vector>( QueryInfo & qinfo, int matlNo, bool matlClassficatio
   result.type = VECTOR;
   result.numParticles = dataX.size();
 
-  cout << "Out handleParticleData<Vector>\n";	
+  // cout << "Out handleParticleData<Vector>\n";	
 
   // return result;
 } // end handleParticleData<Vector>
@@ -319,9 +319,9 @@ handleParticleData<Vector>( QueryInfo & qinfo, int matlNo, bool matlClassficatio
 template<>
 void
 /*ParticleDataContainer*/
-handleParticleData<Matrix3>( QueryInfo & qinfo, int matlNo, bool matlClassfication, ParticleDataContainer& result, string varSelected)
+handleParticleData<Matrix3>( QueryInfo & qinfo, int matlNo, bool matlClassfication, ParticleDataContainer& result, string varSelected, int patchNo )
 {
-  cout << "In handleParticleData<Matrix3>\n";
+  // cout << "In handleParticleData<Matrix3>\n";
   vector<float> data;
   matrixVec matrixRep /*= new matrixVec()*/;
   vector<int> matlList;
@@ -429,7 +429,7 @@ handleParticleData<Matrix3>( QueryInfo & qinfo, int matlNo, bool matlClassficati
 
   // cout << result.matrixRep.size() << endl;
 
-  cout << "Out handleParticleData<Matrix3>\n";
+  // cout << "Out handleParticleData<Matrix3>\n";
 
   // return result;
 }
@@ -437,7 +437,7 @@ handleParticleData<Matrix3>( QueryInfo & qinfo, int matlNo, bool matlClassficati
 template<class PartT>
 void
 /*ParticleDataContainer*/
-handleParticleData( QueryInfo & qinfo, int matlNo, bool matlClassfication, ParticleDataContainer& result, string varSelected)
+handleParticleData( QueryInfo & qinfo, int matlNo, bool matlClassfication, ParticleDataContainer& result, string varSelected, int patchNo )
 {
   vector<float> data;
 
@@ -731,15 +731,16 @@ templateInstantiationForParticlesCC()
 {
   QueryInfo  * qinfo = NULL;
   int matlNo = 0;
+  int patchNo = 0;
   bool matlClassfication = false;
   ParticleDataContainer result;
   string varSelected = "null";
 
-  handleParticleData<int>    ( *qinfo, matlNo, matlClassfication, result, varSelected );
-  handleParticleData<long64> ( *qinfo, matlNo, matlClassfication, result, varSelected );
-  handleParticleData<float>  ( *qinfo, matlNo, matlClassfication, result, varSelected  );
-  handleParticleData<double> ( *qinfo, matlNo, matlClassfication, result, varSelected  );
-  handleParticleData<Point>  ( *qinfo, matlNo, matlClassfication, result, varSelected  );
-  handleParticleData<Vector> ( *qinfo, matlNo, matlClassfication, result, varSelected  );
-  handleParticleData<Matrix3>( *qinfo, matlNo, matlClassfication, result, varSelected  );
+  handleParticleData<int>    ( *qinfo, matlNo, matlClassfication, result, varSelected, patchNo );
+  handleParticleData<long64> ( *qinfo, matlNo, matlClassfication, result, varSelected, patchNo );
+  handleParticleData<float>  ( *qinfo, matlNo, matlClassfication, result, varSelected, patchNo );
+  handleParticleData<double> ( *qinfo, matlNo, matlClassfication, result, varSelected, patchNo );
+  handleParticleData<Point>  ( *qinfo, matlNo, matlClassfication, result, varSelected, patchNo );
+  handleParticleData<Vector> ( *qinfo, matlNo, matlClassfication, result, varSelected, patchNo );
+  handleParticleData<Matrix3>( *qinfo, matlNo, matlClassfication, result, varSelected, patchNo );
 }

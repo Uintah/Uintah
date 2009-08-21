@@ -485,18 +485,6 @@ getPatchIndex(const string& input_uda_name, int timeStepNo, int levelNo, int pat
 
 	if(remove_boundary) {
 	  level->findInteriorIndexRange(low, hi);
-	  if(varType.find("NC") != string::npos) {
-	    /*IntVector a = level->getPeriodicBoundaries();
-	    if (a.x() == 1) {
-	      hi = IntVector(hi.x() + 1, hi.y(), hi.z());
-	    }
-	    if (a.y() == 1) {
-	      hi = IntVector(hi.x(), hi.y() + 1, hi.z());
-	    }
-	    if (a.z() == 1) {
-	      hi = IntVector(hi.x(), hi.y(), hi.z() + 1);
-	    }*/
-	  }
 	} 
 	else {
 	  level->findIndexRange(low, hi);
@@ -513,23 +501,32 @@ getPatchIndex(const string& input_uda_name, int timeStepNo, int levelNo, int pat
 	    } 
 	    else {
 	      patch_lo = patch->getNodeLowIndex__New();
-	      if(varType.find("SFCX") != string::npos)
-		patch_hi = patch->getHighIndex(Patch::XFaceBased);
+	      if(varType.find("SFCX") != string::npos) {
+		// patch_hi = patch->getHighIndex(Patch::XFaceBased);
+		/*if (patch_hi.x() < hi.x()) {
+		  patch_hi = IntVector(patch_hi.x() + 1, patch_hi.y(), patch_hi.z());
+		}*/
+
+		patch_hi = patch_lo + (patch->getCellHighIndex__New() - patch->getCellLowIndex__New());
+		if (patch_hi.x() == (hi.x() - 1)) {
+		  patch_hi = IntVector(patch_hi.x() + 1, patch_hi.y(), patch_hi.z());
+		}
+              }		
 	      else if(varType.find("SFCY") != string::npos)
 		patch_hi = patch->getHighIndex(Patch::YFaceBased);
 	      else if(varType.find("SFCZ") != string::npos)
 		patch_hi = patch->getHighIndex(Patch::ZFaceBased);
 	      else if(varType.find("NC") != string::npos) {
 		patch_hi = patch_lo + (patch->getCellHighIndex__New() - patch->getCellLowIndex__New()) + IntVector(1, 1, 1);
-		if (!(patch_hi.x() == hi.x())) {
+		/*if (!(patch_hi.x() == hi.x())) {
 		  patch_hi = IntVector(patch_hi.x() - 1, patch_hi.y(), patch_hi.z());
-		}  
-		if (!(patch_hi.y() == hi.y())) {
+		}*/  
+		/*if (!(patch_hi.y() == hi.y())) {
 		  patch_hi = IntVector(patch_hi.x(), patch_hi.y() - 1, patch_hi.z());
-		}  
-		if (!(patch_hi.z() == hi.z())) {
+		}*/  
+		/*if (!(patch_hi.z() == hi.z())) {
 		  patch_hi = IntVector(patch_hi.x(), patch_hi.y(), patch_hi.z() - 1);
-		}  
+		}*/  
 		// patch_hi = patch->getNodeHighIndex__New();
 	      }
 	    }
@@ -551,6 +548,8 @@ getPatchIndex(const string& input_uda_name, int timeStepNo, int levelNo, int pat
 		patch_hi = patch->getExtraNodeHighIndex__New();
 	    }
 	  }
+
+	  // cout << patch->getID() << " " << patch_lo << " " << patch_hi << endl;
 
 	  /*if(remove_boundary) {
 	    level->findInteriorIndexRange(low, hi);
@@ -740,23 +739,69 @@ getPatchIndex(const string& input_uda_name, int timeStepNo, int levelNo, int pat
       for (unsigned int i = 0; i < vars.size(); i++) {
 	string nameType = vars[i] + "/" + types[i]->getName(); 
 	udaVarList->push_back(nameType);
-	cout << vars[i] << " " << types[i]->getName() << endl;
+	// cout << vars[i] << " " << types[i]->getName() << endl;
       }
 
       delete archive;
       return udaVarList;
     } 
+  
+  
+  /////////////////////////////////////////////////////////////////////
+  extern "C"
+    int*
+    getPVarLevelAndPatches(const string& input_uda_name,
+                           const string& varName,
+			   int timeStepNo) {
+      DataArchive* archive = scinew DataArchive(input_uda_name);
+            
+      vector<int> index;
+      vector<double> times;
 
+      // query time info from dataarchive
+      // This is needed here (it sets a member variable), without this queryGrid won't work
+      archive->queryTimesteps(index, times);
+      GridP grid = archive->queryGrid(timeStepNo);
+      
+      int* levelAndPatches = new int(2);
+      	      
+      bool found_particle_level = false;
+      for( int lev = 0; lev < grid->numLevels(); lev++ ) {
+        LevelP particleLevel = grid->getLevel( lev );
+	const Patch* patch = *(particleLevel->patchesBegin());
+        ConsecutiveRangeSet matls = archive->queryMaterials(varName, patch, timeStepNo);
+	if( matls.size() > 0 ) {
+	  if( found_particle_level ) {
+	    // Ut oh... found particles on more than one level... don't know how 
+	    // to handle this yet...
+	    cout << "\n";
+	    cout << "Error: uda2nrrd currently can only handle particles on only a single level.  Goodbye.\n";
+	    cout << "\n";
+	    exit(1);
+	  }
+	  // The particles are on this level...
+	  found_particle_level = true;
+	  levelAndPatches[0] = lev;
+	  levelAndPatches[1] = particleLevel->numPatches();
+	  // cout << "Found the PARTICLES on level " << lev << ".\n";
+	}
+      }
+      
+      delete archive;
+      return levelAndPatches;
+    } 
+  
+ 
   /////////////////////////////////////////////////////////////////////
   extern "C"
     timeStep*
     processData(int argc, char argv[][128], 
-                int timeStepNo, 
-		bool dataReq, 
-		int matlNo, 
-	        bool matlClassfication, 
-		const string& varSelected,
-		int patchNo) // patchNo not required anymore, should remove it
+	int timeStepNo, 
+	bool dataReq, 
+	int matlNo, 
+	bool matlClassfication, 
+	const string& varSelected,
+        int patchNo) 
     {
       /*
        * Default values
@@ -904,7 +949,8 @@ getPatchIndex(const string& input_uda_name, int timeStepNo, int levelNo, int pat
 	if( do_particles ) {
 	  unsigned int vi = 0;
 	  for( ; vi < vars.size(); vi++ ) {
-	    if( vars[vi][0] == 'p' && vars[vi][1] == '.' ) { // starts with "p."
+	    // if( vars[vi][0] == 'p' && vars[vi][1] == '.' ) { // starts with "p."
+	    if ( types[vi]->getType() == Uintah::TypeDescription::ParticleVariable ) { 
 	      // It is a particle variable
 	      var_indices.push_back( vi );
 	    }
@@ -987,7 +1033,7 @@ getPatchIndex(const string& input_uda_name, int timeStepNo, int levelNo, int pat
 	  }
 	}
 
-	// Create a vector of clas timeStep. This is where we store all time step data.
+	// Create a vector of class timeStep. This is where we store all time step data.
 	// udaData *dataBank = new udaData(); // No longer needed
 
 	////////////////////////////////////////////////////////
@@ -1149,27 +1195,41 @@ getPatchIndex(const string& input_uda_name, int timeStepNo, int levelNo, int pat
 	    level->findInteriorIndexRange(low, hi);
 	    level->getInteriorSpatialRange(box);
 	  } else {
-	    level->findIndexRange(low, hi);
-	    level->getSpatialRange(box);
+	    // level->findIndexRange(low, hi);
+	    // level->getSpatialRange(box);
 
-	    // const Patch* patch = level->getPatch(patchNo);
+	    const Patch* patch = level->getPatch(patchNo);
 
-	    // Point min = patch->getExtraBox().lower();
-	    // Point max = patch->getExtraBox().upper();
+	    Point min = patch->getExtraBox().lower();
+	    Point max = patch->getExtraBox().upper();
 
+	    IntVector extraCells = patch->getExtraCells();
+	    IntVector noCells = patch->getCellHighIndex__New() - patch->getCellLowIndex__New();
+
+	    // cout << noCells << endl;
+
+	    box = BBox(min, max);
+
+	    // low = patch->getCellLowIndex__New() - extraCells;
+	    // hi = patch->getCellHighIndex__New() + extraCells;
+
+	    low = patch->getNodeLowIndex__New() - extraCells;
+	    hi = patch->getNodeLowIndex__New() + noCells + extraCells + IntVector(1, 1, 1);
+	    
+	    // Point min = level->getBox(low, hi).lower(); 
+	    // Point max = level->getBox(low, hi).upper(); 
+	    
 	    // box = BBox(min, max);
-
-	    // patch_low = patch->getLowIndex();
-	    // patch_hi = patch->getHighIndex();
-
-	    // patch_low = patch->getExtraCellLowIndex__New();
-	    // patch_hi = patch->getExtraCellHighIndex__New();
+	  
+	    // cout << "Min/Max: " << min << " --- " << max << endl;
 	  }
 
 	  // this is a hack to make things work, substantiated in build_multi_level_field()
 	  range = hi - low /*+ IntVector(1, 1, 1)*/;
 
-	  if (qinfo.type->getType() == Uintah::TypeDescription::CCVariable) {
+	  // cout << "Low/hi/range: " << low << " " << hi << " " << range << endl;
+
+	  /*if (qinfo.type->getType() == Uintah::TypeDescription::CCVariable) {
 	    IntVector cellLo, cellHi;
 	    if( args.remove_boundary ) {
 	      level->findInteriorCellIndexRange(cellLo, cellHi);
@@ -1182,7 +1242,7 @@ getPatchIndex(const string& input_uda_name, int timeStepNo, int levelNo, int pat
 	      get_periodic_bcs_range(cellHi, hi, range, newrange);
 	      range = newrange;
 	    }
-	  }
+	  }*/
 
 	  // Adjust the range for using all levels
 	  if( args.use_all_levels && grid->numLevels() > 0 ){
@@ -1214,25 +1274,25 @@ getPatchIndex(const string& input_uda_name, int timeStepNo, int levelNo, int pat
 
 	    switch (subtype->getType()) {
 	      case Uintah::TypeDescription::double_type:
-		/*data =*/ handleParticleData<double>( qinfo, matlNo, matlClassfication, data, varSelected );
+		/*data =*/ handleParticleData<double>( qinfo, matlNo, matlClassfication, data, varSelected, patchNo );
 		break;
 	      case Uintah::TypeDescription::float_type:
-		/*data =*/ handleParticleData<float>( qinfo, matlNo, matlClassfication, data, varSelected );
+		/*data =*/ handleParticleData<float>( qinfo, matlNo, matlClassfication, data, varSelected, patchNo );
 		break;
 	      case Uintah::TypeDescription::int_type:
-		/*data =*/ handleParticleData<int>( qinfo, matlNo, matlClassfication, data, varSelected  );
+		/*data =*/ handleParticleData<int>( qinfo, matlNo, matlClassfication, data, varSelected, patchNo );
 		break;
 	      case Uintah::TypeDescription::long64_type:
-		/*data =*/ handleParticleData<long64>( qinfo, matlNo, matlClassfication, data, varSelected  );
+		/*data =*/ handleParticleData<long64>( qinfo, matlNo, matlClassfication, data, varSelected, patchNo );
 		break;
 	      case Uintah::TypeDescription::Point:
-		/*data =*/ handleParticleData<Point>( qinfo, matlNo, matlClassfication, data, varSelected  );
+		/*data =*/ handleParticleData<Point>( qinfo, matlNo, matlClassfication, data, varSelected, patchNo );
 		break;
 	      case Uintah::TypeDescription::Vector:
-		/*data =*/ handleParticleData<Vector>( qinfo, matlNo, matlClassfication, data, varSelected  );
+		/*data =*/ handleParticleData<Vector>( qinfo, matlNo, matlClassfication, data, varSelected, patchNo );
 		break;
 	      case Uintah::TypeDescription::Matrix3:
-		/*data =*/ handleParticleData<Matrix3>( qinfo, matlNo, matlClassfication, data, varSelected  );
+		/*data =*/ handleParticleData<Matrix3>( qinfo, matlNo, matlClassfication, data, varSelected, patchNo );
 		break;
 	      default:
 		cerr << "Unknown subtype for particle data: " << subtype->getName() << "\n";
@@ -1240,7 +1300,7 @@ getPatchIndex(const string& input_uda_name, int timeStepNo, int levelNo, int pat
 	    } // end switch( subtype )
 
 	    particleDataArray.push_back( data );
-            
+
 	  } else { // Handle Grid Variables
 
 	    switch (subtype->getType()) {
@@ -1290,7 +1350,7 @@ getPatchIndex(const string& input_uda_name, int timeStepNo, int levelNo, int pat
 	// dataBank->push_back(timeStepObj);
 
 	// particleDataArray.clear();
-        
+
 	delete archive;
 	return timeStepObjPtr;
 

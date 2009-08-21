@@ -2,7 +2,6 @@
 <Uintah_specification>
 
    <Meta>
-        <title>Arches Helium Plume with EKT turned on</title>
    </Meta>
 
    <SimulationComponent type="arches" />
@@ -43,25 +42,22 @@
       </Level>
     </Grid>
 
+   <PhysicalConstants>
+     <gravity>         [-9.8,0,0]    </gravity>
+     <reference_point>       [-1,-1,-1]    </reference_point>
+     <viscosity>       0.000020      </viscosity>
+   </PhysicalConstants>
 
    <CFD>
       <ARCHES>
-        <grow_dt>0.05</grow_dt>
-        <variable_dt>true</variable_dt>
-        <nonlinear_solver>                explicit  </nonlinear_solver>
-        <turbulence_model>                compdynamicprocedure</turbulence_model>
-        <transport_mixture_fraction>      true      </transport_mixture_fraction>
-        <transport_enthalpy>              false     </transport_enthalpy>        
-        <model_mixture_fraction_variance> false     </model_mixture_fraction_variance>
-        <EKTCorrection>                   true      </EKTCorrection>
 
-        <Turbulence>
+        <Turbulence model = "compdynamicprocedure">
           <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
         </Turbulence>
 
         <Properties>
-          <mixing_model>coldFlowMixingModel</mixing_model>
-          <ColdflowMixingModel>
+          <use_mixing_model> false     </use_mixing_model>
+          <ColdFlowMixingModel>
             <Stream>
               <density>       0.133       </density>
               <temperature>   298         </temperature>
@@ -70,7 +66,7 @@
               <density>       1.184344    </density>
               <temperature>   298         </temperature>
             </Stream>
-          </ColdflowMixingModel>
+          </ColdFlowMixingModel>
         </Properties>
 
         <!--__________________________________-->
@@ -132,14 +128,15 @@
         </BoundaryConditions>
         <!--__________________________________-->
         
-        <PhysicalConstants>
-          <gravity>         [-9.8,0,0]    </gravity>
-          <ref_point>       [-1,-1,-1]    </ref_point>
-          <viscosity>       0.000020      </viscosity>
-        </PhysicalConstants>
 
         <ExplicitSolver>
+
+          <initial_dt>0.05</initial_dt>
+          <variable_dt>true</variable_dt>
+
           <timeIntegratorType>  RK2SSP      </timeIntegratorType>              
+
+          <EKTCorrection>       true      </EKTCorrection>
 
           <PressureSolver>                                             
             <linear_solver>hypre</linear_solver>                     

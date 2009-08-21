@@ -414,11 +414,20 @@ void MPMPetscSolver::createMatrix(const ProcessorGroup* d_myworld,
     //the stash is used by nodes that neighbor my patches on the + faces.
     MatStashSetInitialSize(d_A,1000000,0);
     if(d_DOFsPerNode>=1){
+#if (PETSC_VERSION_MAJOR==3)
+      MatSetOption(d_A, MAT_USE_INODES, PETSC_TRUE);
+#else
       MatSetOption(d_A, MAT_USE_INODES);
+#endif
     }
     
+#if (PETSC_VERSION_MAJOR==3)
+    MatSetOption(d_A, MAT_KEEP_ZEROED_ROWS, PETSC_TRUE);
+    MatSetOption(d_A,MAT_IGNORE_ZERO_ENTRIES, PETSC_TRUE);
+#else
     MatSetOption(d_A, MAT_KEEP_ZEROED_ROWS);
     MatSetOption(d_A,MAT_IGNORE_ZERO_ENTRIES);
+#endif
 
     // Create vectors.  Note that we form 1 vector from scratch and
     // then duplicate as needed.
@@ -444,14 +453,13 @@ void MPMPetscSolver::destroyMatrix(bool recursion)
   if (recursion) {
     MatZeroEntries(d_A);
     PetscScalar zero = 0.;
-#if (PETSC_VERSION_MINOR == 2)
+#if (PETSC_VERSION_MAJOR == 2 && PETSC_VERSION_MINOR == 2)
       VecSet(&zero,d_B);
       VecSet(&zero,d_diagonal);
       VecSet(&zero,d_x);
       VecSet(&zero,d_t);
       VecSet(&zero,d_flux);
-#endif
-#if (PETSC_VERSION_MINOR == 3)
+#else 
       VecSet(d_B,zero);
       VecSet(d_diagonal,zero);
       VecSet(d_x,zero);
@@ -606,10 +614,9 @@ MPMPetscSolver::removeFixedDOF()
   ISCreateGeneral(PETSC_COMM_SELF,d_DOF.size(),indices,&is);
   delete[] indices;
 
-#if (PETSC_VERSION_MINOR == 2)
+#if (PETSC_VERSION_MAJOR == 2 && PETSC_VERSION_MINOR == 2)
   MatZeroRows(d_A,is,&one);
-#endif
-#if (PETSC_VERSION_MINOR == 3)
+#else
   MatZeroRowsIS(d_A,is,one);
 #endif
   ISDestroy(is);
@@ -687,10 +694,9 @@ void MPMPetscSolver::removeFixedDOFHeat()
   ISCreateGeneral(PETSC_COMM_SELF,d_DOF.size(),indices,&is);
        
   PetscScalar one = 1.0;
-#if (PETSC_VERSION_MINOR == 2)
+#if (PETSC_VERSION_MAJOR == 2 && PETSC_VERSION_MINOR == 2)
   MatZeroRows(d_A,is,&one);
-#endif
-#if (PETSC_VERSION_MINOR == 3)
+#else 
   MatZeroRowsIS(d_A,is,one);
 #endif
   ISDestroy(is);
@@ -709,12 +715,7 @@ void MPMPetscSolver::removeFixedDOFHeat()
   PetscScalar* y_flux = scinew PetscScalar[d_DOFFlux.size()];
 
   assembleFluxVector();
-#if (PETSC_VERSION_MINOR == 3)
-  VecScale(d_t,-1.);
-  VecGetValues(d_t,d_DOF.size(),indices,y);
-  VecGetValues(d_flux,d_DOFFlux.size(),indices_flux,y_flux);
-#endif
-#if (PETSC_VERSION_MINOR == 2)
+#if ( PETSC_VERSION_MAJOR==2 && PETSC_VERSION_MINOR == 2)
   PetscInt nlocal_t,nlocal_flux;
   PetscScalar minus_one = -1.;
   VecScale(&minus_one,d_t);
@@ -740,6 +741,10 @@ void MPMPetscSolver::removeFixedDOFHeat()
   VecRestoreArray(d_t,&d_t_tmp);
   VecRestoreArray(d_flux,&d_flux_tmp);
 
+#else
+  VecScale(d_t,-1.);
+  VecGetValues(d_t,d_DOF.size(),indices,y);
+  VecGetValues(d_flux,d_DOFFlux.size(),indices_flux,y_flux);
 #endif
   
   VecSetValues(d_B,d_DOF.size(),indices,y,INSERT_VALUES);

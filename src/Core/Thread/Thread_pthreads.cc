@@ -695,11 +695,17 @@ handle_abort_signals(int sig, SigContext ctx)
 #  endif
 #endif
   char* signam = Core_Thread_signal_name(sig, addr);
-  fprintf(stderr, "%c%c%cThread \"%s\"(pid %d) caught signal %s\n", 7,7,7,tname, getpid(), signam);
+  
+  //don't print if the signal was SIGINT because the signal likely came from MPI aborting 
+  //and the problem was likely on another processor
+  bool print=sig!=SIGINT;
+
+  if(print)
+    fprintf(stderr, "%c%c%cThread \"%s\"(pid %d) caught signal %s\n", 7,7,7,tname, getpid(), signam);
   
   //WAIT_FOR_DEBUGGER;
 
-  Thread::niceAbort();
+  Thread::niceAbort(NULL,print);
   
   action.sa_handler = (SIG_HANDLER_T)handle_abort_signals;
   action.sa_flags = 0;
@@ -769,9 +775,16 @@ handle_quit(int sig, SigContext /*ctx*/)
   // Kill all of the threads...
   char* signam = Core_Thread_signal_name(sig, 0);
   int pid = getpid();
-  fprintf(stderr, "Thread \"%s\"(pid %d) caught signal %s\n", tname, pid, signam);
+  
+  //don't print if the signal was SIGINT because the signal likely came from MPI aborting 
+  //and the problem was likely on another processor
+  bool print=sig!=SIGINT;
+
+  if(print)
+    fprintf(stderr, "Thread \"%s\"(pid %d) caught signal %s\n", tname, pid, signam);
+
   //WAIT_FOR_DEBUGGER;
-  Thread::niceAbort(); // Enter the monitor
+  Thread::niceAbort(NULL, print); // Enter the monitor
   control_c_sema.up();
 }
 

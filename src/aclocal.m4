@@ -670,7 +670,7 @@ if test "$9" = "specific"; then
        i=`echo $i | sed 's/-l//g'`
     fi
     if test ! -e $6/lib$i.so && test ! -e $6/lib$i.a && test ! -e $6/$i.lib; then
-     AC_MSG_ERROR(Specifically requested $1 library file '$6/$i' (.so or .a) was not found)
+     AC_MSG_ERROR(Specifically requested $1 library file '$6/lib$i' (.so or .a) was not found)
     fi
   done
 fi

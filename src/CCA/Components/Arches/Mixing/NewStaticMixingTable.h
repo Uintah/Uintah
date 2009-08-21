@@ -211,6 +211,8 @@ private:
   double d_f_stoich, d_carbon_fuel, d_carbon_air;
   bool d_calcExtraScalars;
   std::vector<ExtraScalarSolver*>* d_extraScalars;
+
+  bool d_loudHeatLossWarning; 
   
   const ProcessorGroup* d_myworld;
 }; // end class NewStaticMixingTable

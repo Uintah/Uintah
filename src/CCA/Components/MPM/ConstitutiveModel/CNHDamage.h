@@ -58,6 +58,7 @@ namespace Uintah {
       double std;       /*< Standard deviation of failure strain or Weibull modulus */
       double scale;     /*< Scale parameter for Weibull distribution*/
       std::string dist; /*< Failure strain distrinution */
+      int seed;         /*< seed for weibull distribution generator */
       bool failureByStress; /*<Failure by strain (default) or stress */
     };
 

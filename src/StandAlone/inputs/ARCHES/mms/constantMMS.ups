@@ -56,11 +56,16 @@
     </Level>
   </Grid>
 
+  <PhysicalConstants>
+    <gravity>[0,0,0]</gravity>
+    <reference_point>[0,0,0]</reference_point>
+    <viscosity>0.0</viscosity>
+  </PhysicalConstants>
+
   <CFD>
 
     <!-- ARCHES specification -->
     <ARCHES>
-      <doMMS>true</doMMS>
       <MMS whichMMS="constantMMS" >
         <mmsErrorType>Linf</mmsErrorType>
         <constantMMS>
@@ -73,16 +78,8 @@
         </constantMMS>
       </MMS>
 
-      <grow_dt>1</grow_dt>
-      <variable_dt>true</variable_dt>
-      <nonlinear_solver>explicit</nonlinear_solver>
-      <turbulence_model>smagorinsky</turbulence_model>
-      <transport_mixture_fraction>true</transport_mixture_fraction>
-      <transport_enthalpy>false</transport_enthalpy>
-      <model_mixture_fraction_variance>false</model_mixture_fraction_variance>
-      <transport_extra_scalars>true</transport_extra_scalars>
       
-      <Turbulence>
+      <Turbulence model = "smagorinsky">
         <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
         <cf>0.0</cf>
         <fac_mesh>1.0</fac_mesh>
@@ -91,8 +88,8 @@
       </Turbulence>
 
       <Properties>
-        <mixing_model>coldFlowMixingModel</mixing_model>
-        <ColdflowMixingModel>
+        <use_mixing_model>false</use_mixing_model>
+        <ColdFlowMixingModel>
           <Stream>
             <density>1.00</density>
             <temperature>298</temperature>
@@ -101,7 +98,7 @@
             <density>1.00</density>
             <temperature>298</temperature>
           </Stream>
-        </ColdflowMixingModel>
+        </ColdFlowMixingModel>
       </Properties>
 
 <!--
@@ -109,12 +106,6 @@
       </BoundaryConditions>
 -->
 
-      <PhysicalConstants>
-        <gravity>[0,0,0]</gravity>
-        <ref_point>[0,0,0]</ref_point>
-        <pressure>0.0</pressure>
-        <viscosity>0.0</viscosity>
-      </PhysicalConstants>
 
       <ExtraScalars>
         <scalar label="test1">
@@ -130,6 +121,9 @@
       </ExtraScalars>
   
       <ExplicitSolver>
+
+      <initial_dt>1</initial_dt>
+      <variable_dt>true</variable_dt>
         <timeIntegratorType>FE</timeIntegratorType> 
 
         <PressureSolver>

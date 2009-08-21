@@ -453,6 +453,7 @@ private:
   double d_H_air;
   bool d_doMMS;
   bool d_restart_on_negative_density_guess;
+  bool d_noisyDensityGuess; 
   string d_mms;
   string d_mmsErrorType;
   double d_airDensity, d_heDensity;

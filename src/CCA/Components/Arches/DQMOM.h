@@ -28,18 +28,26 @@ namespace Uintah {
 //-------------------------------------------------------
 
 /** 
-* @class DQMOM
-* @author Charles Reid (charlesreid1@gmail.com)
-* @date March 16, 2009
-*
-* @brief This class constructs and solves the AX=B linear system for DQMOM scalars.
-*
-*/
+  * @class    DQMOM
+  * @author   Charles Reid (charlesreid1@gmail.com)
+  * @date     March 16, 2009
+  *
+  * @brief    This class constructs and solves the AX=B linear system for DQMOM scalars.
+  *
+  * @details  Using the direct quadrature method of moments (DQMOM), the NDF transport equation is represented
+  *           by a set of delta functions times weights.  The moment transform of this NDF transport equation
+  *           yields a set of (closed) moment transport equations. These equations can be expressed in terms 
+  *           of the weights and abscissas of the quadrature approximation, and re-cast as a linear system,
+  *           \f$ \mathbf{AX} = \mathbf{B} \f$.  This class solves the linear system to yield the source terms
+  *           for the weight and weighted abscissa transport equations (the variables contained in \f$\mathbf{X}\f$.
+  *
+  */
 
 //-------------------------------------------------------
 class ArchesLabel; 
 class DQMOMEqn; 
 class ModelBase; 
+class LU;
 class DQMOM {
 
 public:
@@ -65,6 +73,12 @@ public:
                           const MaterialSubset *,
                           DataWarehouse        * old_dw,
                           DataWarehouse        * new_dw );
+  
+  /** @brief Use iterative refinement to improve the solution to AX=B. 
+    * @param A    A matrix - (decomposed) coefficients matrix (remains constant)
+    * @param B    B matrix - right-hand side vector (remains constant)
+    * @param X    X matrix - solution vector from initial factorization       */
+  void iterativeSolutionMethod(LU* A, vector<double>* B, vector<double>* X);
 
     /** @brief Destroy A, X, B, and solver object  
     */
@@ -79,25 +93,23 @@ private:
   vector<MomentVector> momentIndexes;
 
   // weights and weighted abscissa labels, IN SAME ORDER AS GIVEN IN INPUT FILE
-  //    vector weightEqns[1] = weight, quad node 1
-  //    vector weightEqns[2] = weight, quad node 2
-  //    vector weightedAbscissaEqns[(1-1)N + 1] = weighted abscissa 1, quad node 1
-  //    vector weightedAbscissaEqns[(1-1)N + 2] = weighted abscissa 1, quad node 2
-  //    vector weightedAbscissaEqns[(2-1)N + 1] = weighted abscissa 2, quad node 1
   std::vector<DQMOMEqn* > weightEqns;
   std::vector<DQMOMEqn* > weightedAbscissaEqns;
 
   vector< vector<ModelBase> > weightedAbscissaModels;
 
-  // # of internal coordinates
-  unsigned int N_xi;
-  // # of quadrature nodes
-  unsigned int N_;
+  unsigned int N_xi;  // # of internal coordinates
+  unsigned int N_;    // # of quadrature nodes
 
   const ArchesLabel* d_fieldLabels;
   int d_timeSubStep;
 
+  double d_solver_tolerance;
+
   const VarLabel* d_normBLabel; 
+  const VarLabel* d_normXLabel; 
+  const VarLabel* d_normResLabel;
+  const VarLabel* d_normResNormalizedLabel;
 
 }; // end class DQMOM
 

@@ -54,20 +54,29 @@ BufferInfo::~BufferInfo()
   if(free_datatype)
   {
     ASSERT(datatype!=MPI_DATATYPE_NULL);
+    ASSERT(datatype!=MPI_INT);
+    ASSERT(datatype!=MPI_DOUBLE);
     MPI_Type_free(&datatype);
+    datatype=MPI_DATATYPE_NULL;
   }
   for(int i=0;i<(int)datatypes.size();i++){
     if(free_datatypes[i])
     {
       ASSERT(datatypes[i]!=MPI_DATATYPE_NULL);
+      ASSERT(datatypes[i]!=MPI_INT);
+      ASSERT(datatypes[i]!=MPI_DOUBLE);
       MPI_Type_free(&datatypes[i]);
+      datatypes[i]=MPI_DATATYPE_NULL;
     }
   }
 
  MPITypeLock.unlock();
  
   if(sendlist)
+  {
     delete sendlist;
+    sendlist=0;
+  }
 }
 
 int
@@ -120,7 +129,10 @@ BufferInfo::get_type(void*& out_buf, int& out_count,
 Sendlist::~Sendlist()
 {
   if(obj && obj->removeReference())
+  {
     delete obj;
+    obj=0;
+  }
 
   // A little more complicated than normal, so that this doesn't need
   // to be recursive...

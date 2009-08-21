@@ -135,6 +135,7 @@ namespace Uintah {
     bool   d_removeParticles;
     bool   d_setStressToZero;
     bool   d_allowNoTension;
+    bool   d_usePolarDecompositionRMB; /*< use RMB's polar decomposition */
 
     YieldCondition*     d_yield;
     StabilityCheck*     d_stable;

@@ -27,8 +27,7 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-
-
+#include <TauProfilerForSCIRun.h>
 #include <CCA/Components/LoadBalancers/LoadBalancerCommon.h>
 #include <CCA/Components/Schedulers/DetailedTasks.h>
 #include <Core/Parallel/Parallel.h>
@@ -70,6 +69,7 @@ LoadBalancerCommon::~LoadBalancerCommon()
 
 void LoadBalancerCommon::assignResources(DetailedTasks& graph)
 {
+  TAU_PROFILE("LoadBalancerCommon::assignResources()", " ", TAU_USER);
   int nTasks = graph.numTasks();
 
   if( lbDebug.active() ) {
@@ -101,7 +101,7 @@ void LoadBalancerCommon::assignResources(DetailedTasks& graph)
           << idx << "\n";
         cerrLock.unlock();
       }
-
+#if SCI_ASSERTION_LEVEL>0
       ostringstream ostr;
       ostr << patch->getID() << ':' << idx;
 
@@ -118,6 +118,7 @@ void LoadBalancerCommon::assignResources(DetailedTasks& graph)
           cerrLock.unlock();
         }
       }
+#endif
     } else {
       if( Parallel::usingMPI() && task->getTask()->isReductionTask() ){
         task->assignResource( d_myworld->myrank() );

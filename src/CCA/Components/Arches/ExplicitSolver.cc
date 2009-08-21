@@ -238,10 +238,14 @@ ExplicitSolver::problemSetup(const ProblemSpecP& params)
     throw ProblemSetupException("Integrator type is not defined "+d_timeIntegratorType,
                                 __FILE__, __LINE__);
   }
+
   db->getWithDefault("turbModelCalcFreq",d_turbModelCalcFreq,1);
   db->getWithDefault("turbModelCalcForAllRKSteps",d_turbModelRKsteps,true);
+
   db->getWithDefault("restartOnNegativeDensityGuess",
                      d_restart_on_negative_density_guess,false);
+  db->getWithDefault("NoisyDensityGuess", 
+                     d_noisyDensityGuess, false);
   db->getWithDefault("kineticEnergy_fromFC",d_KE_fromFC,false);
   db->getWithDefault("maxDensityLag",d_maxDensityLag,0.0);
 
@@ -2439,6 +2443,7 @@ ExplicitSolver::getDensityGuess(const ProcessorGroup*,
 // Need to skip first timestep since we start with unprojected velocities
 //    int currentTimeStep=d_lab->d_sharedState->getCurrentTopLevelTimeStep();
 //    if (currentTimeStep > 1) {
+//
       IntVector idxLo = patch->getFortranCellLowIndex__New();
       IntVector idxHi = patch->getFortranCellHighIndex__New();
       for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
@@ -2463,13 +2468,20 @@ ExplicitSolver::getDensityGuess(const ProcessorGroup*,
             ((density[currCell]+density[zplusCell])*wVelocity[zplusCell] -
              (density[currCell]+density[zminusCell])*wVelocity[currCell]) /
             cellinfo->stb[colZ]);
-            if (densityGuess[currCell] < 0.0) {
-              cout << "got negative density guess at " << currCell << " , density guess value was " << densityGuess[currCell] << endl;
+
+            if (densityGuess[currCell] < 0.0 && d_noisyDensityGuess) {
+              cout << "Negative density guess occured at " << currCell << " with a value of " << densityGuess[currCell] << endl;
               negativeDensityGuess = 1.0;
-           }
+            }
+            else if (densityGuess[currCell] < 0.0 && !(d_noisyDensityGuess)) {
+              negativeDensityGuess = 1.0;
+            }
+
           }
         }
       } 
+
+      if (negativeDensityGuess == 1.0 && !(d_noisyDensityGuess)) cout << "NOTICE: Negative density guess occured on this patch.  Set <NoisyDensityGuess> to true to get full details." << endl;
 
       if (d_boundaryCondition->anyArchesPhysicalBC()) {
         bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
@@ -2688,13 +2700,13 @@ ExplicitSolver::checkDensityGuess(const ProcessorGroup* pc,
     if (negativeDensityGuess > 0.0) {
       if (d_restart_on_negative_density_guess) {
         if (pc->myrank() == 0)
-          cout << "WARNING: got negative density guess. Timestep restart has been requested under this condition by the user. Restarting timestep." << endl;
+          cout << "NOTICE: Negative density guess(es) occured. Timestep restart has been requested under this condition by the user. Restarting timestep." << endl;
         new_dw->abortTimestep();
         new_dw->restartTimestep();
       }
       else {
         if (pc->myrank() == 0)
-          cout << "WARNING: got negative density guess. Reverting to old density." << endl;
+          cout << "NOTICE: Negative density guess(es) occured. Reverting to old density." << endl;
         old_values_dw->copyOut(densityGuess, d_lab->d_densityCPLabel, indx, patch);
       }
     }   

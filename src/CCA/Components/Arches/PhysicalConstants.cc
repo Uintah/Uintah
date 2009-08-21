@@ -33,6 +33,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Arches/PhysicalConstants.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <CCA/Ports/DataWarehouse.h>
+#include <Core/Exceptions/InvalidValue.h>
 
 using namespace Uintah;
 
@@ -56,10 +57,14 @@ PhysicalConstants::~PhysicalConstants()
 //****************************************************************************
 void PhysicalConstants::problemSetup(const ProblemSpecP& params)
 {
-  ProblemSpecP db = params->findBlock("PhysicalConstants");
 
-  db->require("gravity", d_gravity); //Vector
-  db->require("ref_point", d_ref_point); //IntVector
-  db->require("viscosity", d_viscosity);
+  if (params->findBlock("PhysicalConstants")) {
+    ProblemSpecP db = params->findBlock("PhysicalConstants");
+
+    db->require("gravity", d_gravity); //Vector
+    db->require("reference_point", d_ref_point); //IntVector
+    db->require("viscosity", d_viscosity);
+  } else 
+    throw InvalidValue("Missing <PhysicalConstants> section in input file!",__FILE__,__LINE__);
 
 }

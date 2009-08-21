@@ -50,7 +50,7 @@ ifeq ($(BUILD_ICE),yes)
   ICE         := $(SRCDIR)/ICE
 endif
 ifeq ($(BUILD_ARCHES),yes)
-  ARCHES      := $(SRCDIR)/Arches $(ADIR)/TabProps $(ADIR)/fortran $(ADIR)/Mixing $(ADIR)/Radiation $(ADIR)/Radiation/fortran $(ADIR)/MCRT/ArchesRMCRT
+  ARCHES      := $(SRCDIR)/Arches $(ADIR)/ChemMix/TabProps $(ADIR)/fortran $(ADIR)/Mixing $(ADIR)/Radiation $(ADIR)/Radiation/fortran $(ADIR)/MCRT/ArchesRMCRT
   ifeq ($(BUILD_MPM),yes)
     MPMARCHES := $(SRCDIR)/MPMArches
   endif

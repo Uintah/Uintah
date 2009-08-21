@@ -207,7 +207,7 @@ void lapackeigen(double **H, int n, double *Er, double *Ei, double **Evecs)
 {
   char jobvl, jobvr;
   int lda,  ldvl, ldvr, lwork, info;
-  double *a, *vl, *vr, *work;
+  double *a, *vl=0, *vr=0, *work;
   
   jobvl = 'N'; /* V/N to calculate/not calculate the left eigenvectors
 		  of the matrix H.*/

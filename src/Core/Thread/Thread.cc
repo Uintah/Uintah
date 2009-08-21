@@ -311,21 +311,26 @@ Thread::handleCleanup()
 }
 
 void
-Thread::niceAbort(void* context /* = 0 */)
+Thread::niceAbort(void* context /* = 0 */, bool print /*= true */)
 {
-  fprintf(stderr, getStackTrace(context).c_str());
+  if(print)
+    fprintf(stderr, getStackTrace(context).c_str());
+
   const char* smode = getenv("SCI_SIGNALMODE");
   if (!smode)
     smode = defaultAbortMode; //"e"; 
 	
   Thread* s=Thread::self();
-  print_threads();
-  fprintf(stderr, "\n");
-  fprintf(stderr, "Abort signalled by pid: %d\n", getpid());
-  if(s)
-    fprintf(stderr, "Occured for thread: \"%s\"\n", s->threadname_);
-  else
-    fprintf(stderr, "With NULL thread pointer.\n");
+  if(print)
+  {
+    print_threads();
+    fprintf(stderr, "\n");
+    fprintf(stderr, "Abort signalled by pid: %d\n", getpid());
+    if(s)
+      fprintf(stderr, "Occured for thread: \"%s\"\n", s->threadname_);
+    else
+      fprintf(stderr, "With NULL thread pointer.\n");
+  }
 
   for (;;) {
     if (strcasecmp(smode, "ask") == 0) {

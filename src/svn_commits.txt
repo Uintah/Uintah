@@ -4,7 +4,7 @@ Create the 1.1 release based on revision 44340 of trunk.
 
 Release branch starts with revision 44341
 
-Releave revisions			Equivalent Trunk revisions
+Release revisions			Equivalent Trunk revisions
 
 Initial 44341				1-44340
 44362					44342-44357
@@ -17,3 +17,5 @@ Initial 44341				1-44340
 44365-44368,44380			44401
 44402					44389-44400
 44417					44403- 44416
+44418					Info about svn merges from trunk.
+44646					44418-44645

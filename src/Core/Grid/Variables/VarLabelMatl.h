@@ -95,6 +95,12 @@ template<class DomainType> struct VarLabelMatl {
       return comp(label_, other.label_);
     }
   };
+  
+  bool operator==(const VarLabelMatl<DomainType>& other) const
+  {
+    return ((label_->equals(other.label_)) && (matlIndex_ == other.matlIndex_) &&
+       !(domain_ < other.domain_) && !(other.domain_ < domain_));
+  };
  
   const VarLabel* label_;
   int matlIndex_;

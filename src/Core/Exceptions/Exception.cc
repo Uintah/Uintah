@@ -282,11 +282,13 @@ string getStackTrace(void* context /*=0*/)
       //Chop off the garbage from the raw symbol
       char *loc = strchr(names[i], '(');
       if (loc != NULL) *loc = '\0';
-      
+     
+      stacktrace << "**" << getpid() << "** ";
       stacktrace << i - 1 << ". " << names[i] << '\n';
       stacktrace << "  in " << demangled << '\n';
       free(demangled);
      } else { // Just output the raw symbol
+      stacktrace << "**" << getpid() << "** ";
       stacktrace << i - 1 << ". " << names[i] << '\n';
      }
     }

@@ -48,25 +48,24 @@
   </Level>
 </Grid>
 
+
+<PhysicalConstants>
+  <gravity>   [0,0,0]   </gravity>
+  <reference_point> [0,0,0]   </reference_point>
+  <viscosity> 0.000020  </viscosity>
+</PhysicalConstants>
+
 <!--__________________________________-->
 <CFD>
   <ARCHES>
-    <grow_dt>                   1           </grow_dt>
-    <variable_dt>               true        </variable_dt>
-    <set_initial_condition>     true        </set_initial_condition>
-    <init_cond_input_file>      inputs/ARCHES/periodicTurb/iso_ini_32.dat</init_cond_input_file>
-    <nonlinear_solver>          explicit    </nonlinear_solver>
-    <turbulence_model>          compdynamicprocedure</turbulence_model>
-    <transport_mixture_fraction>true        </transport_mixture_fraction>
-    <transport_enthalpy>        false       </transport_enthalpy>
-    <model_mixture_fraction_variance>false</model_mixture_fraction_variance>
-    <Turbulence>
+    <set_initial_condition inputfile="inputs/ARCHES/periodicTurb/iso_ini_32.dat"/>
+    <Turbulence model = "compdynamicprocedure">
         <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
     </Turbulence>
 
     <Properties>
-      <mixing_model>coldFlowMixingModel</mixing_model>
-      <ColdflowMixingModel>
+      <use_mixing_model>false</use_mixing_model>
+      <ColdFlowMixingModel>
         <Stream>
           <density>     0.133   </density>
           <temperature> 298     </temperature>
@@ -75,20 +74,18 @@
           <density>     1.184344</density>
           <temperature> 298     </temperature>
         </Stream>
-      </ColdflowMixingModel>
+      </ColdFlowMixingModel>
     </Properties>
 
     <BoundaryConditions>
     </BoundaryConditions>
 
-    <PhysicalConstants>
-      <gravity>   [0,0,0]   </gravity>
-      <ref_point> [0,0,0]   </ref_point>
-      <viscosity> 0.000020  </viscosity>
-    </PhysicalConstants>
 
     <ExplicitSolver>
       <timeIntegratorType>  RK2SSP  </timeIntegratorType>
+
+    <initial_dt>                   1           </initial_dt>
+    <variable_dt>               true        </variable_dt>
       <kineticEnergy_fromFC>true    </kineticEnergy_fromFC>
 
       <PressureSolver>

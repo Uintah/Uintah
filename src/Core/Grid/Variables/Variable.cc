@@ -61,7 +61,7 @@ using namespace Uintah;
 Variable::Variable()
 {
    d_foreign = false;
-   d_nextvar = NULL;
+   d_valid = true;
 }
 
 Variable::~Variable()
@@ -72,12 +72,6 @@ void
 Variable::setForeign()
 {
    d_foreign = true;
-}
-
-void
-Variable::setNextvar(Variable* var)
-{
-   d_nextvar = var;
 }
 
 void

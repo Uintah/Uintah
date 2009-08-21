@@ -106,6 +106,10 @@ ViscoPlastic::ViscoPlastic(ProblemSpecP& ps, MPMFlags* Mflag) :
   ps->get("allow_no_tension",d_allowNoTension);
   d_checkFailure = false;
   ps->get("check_failure", d_checkFailure);
+  d_usePolarDecompositionRMB = true;
+  ps->get("use_polar_decomposition_RMB", d_usePolarDecompositionRMB);
+
+
 
   // Get the failure variable data
   getFailureVariableData(ps);
@@ -219,6 +223,7 @@ void ViscoPlastic::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
   cm_ps->appendElement("remove_particles",d_removeParticles);
   cm_ps->appendElement("zero_stress_upon_failure",d_setStressToZero);
   cm_ps->appendElement("allow_no_tension",d_allowNoTension);
+  cm_ps->appendElement("use_polar_decomposition_RMB", d_usePolarDecompositionRMB);
 //   cm_ps->appendElement("evolve_porosity",d_evolvePorosity);
 //   cm_ps->appendElement("evolve_damage",d_evolveDamage);
 //   cm_ps->appendElement("check_TEPLA_failure_criterion",
@@ -779,13 +784,18 @@ ViscoPlastic::computeStressTensor(const PatchSubset* patches,
       // Calculate the current density and deformed volume
       double rho_cur = rho_0/J;
       pVolume_deformed[idx]=pMass[idx]/rho_cur;
+      if (d_usePolarDecompositionRMB) {
+          tensorF_new.polarDecompositionRMB(tensorV, tensorR);
+      } else {
+          tensorF_new.polarDecomposition(tensorV, tensorR, d_tol, false);
+      }
 
       //tensorF_new.polarDecomposition(tensorV, tensorR, d_tol, false);
 
       // Compute polar decomposition of F (F = RU) -
       // Note that tensorV is really tensorU, the right stretch
       // tensorV is never really used - should be deleted.
-      tensorF_new.polarDecompositionRMB(tensorV, tensorR);
+      //tensorF_new.polarDecompositionRMB(tensorV, tensorR);
 
       // Calculate rate of deformation tensor (D) and spin tensor (W)
       tensorD = (tensorL + tensorL.Transpose())*0.5;

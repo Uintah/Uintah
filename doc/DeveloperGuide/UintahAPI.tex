@@ -16,9 +16,7 @@
 
 \title{Uintah Application Development}
 
-\author{Jim Guilkey, Todd Harman, Justin Luitjens, John Schmidt,
-  Jeremy Thornock, \\
-  J. Davison de St. Germain, Siddharth Shankar, Carson Brownlee}
+\author{John Schmidt}
 
 \maketitle
 
@@ -134,7 +132,7 @@ variables, i.e. \texttt{variable1\_label}, and
 component with specifications about what patches and materials are
 associated with the actual computation.
 
-\begin{verbatim}
+\begin{Verbatim}[fontsize=\footnotesize]
 
 Task* task = scinew Task("Example::taskexample",this,
                          &Example::taskexample);
@@ -143,7 +141,7 @@ task->computes(variable1_label);
 task->computes(variable2_label);
 sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
 
-\end{verbatim}
+\end{Verbatim}
 
 For more complex problems involving multiple materials and
 multi-physics calculations, a subset of the materials may only be used
@@ -163,7 +161,7 @@ following virtual methods: \texttt{problemSetup},
 and \texttt{scheduleTimeAdvance}.  Here is an example of the typical
 *.h file that needs to be created for a new component.
 
-\begin{verbatim}
+\begin{Verbatim}[fontsize=\footnotesize]
 
 
 class Example : public UintahParallelComponent, public SimulationInterface {
@@ -207,7 +205,7 @@ class Example : public UintahParallelComponent, public SimulationInterface {
 }
 
 
-\end{verbatim}
+\end{Verbatim}
 
 
 Each new component inherits from the classes
@@ -303,7 +301,7 @@ of the methods are eliminated for readibility purposes.  Please refer
 to the actual source for a complete description of the arguments
 required for each method.
 
-\begin{verbatim}
+\begin{Verbatim}[fontsize=\footnotesize]
 class Poisson1 : public UintahParallelComponent, public SimulationInterface {
   public:
     Poisson1(const ProcessorGroup* myworld);
@@ -341,7 +339,7 @@ class Poisson1 : public UintahParallelComponent, public SimulationInterface {
     Poisson1(const Poisson1&);
     Poisson1& operator=(const Poisson1&);
 };
-\end{verbatim}
+\end{Verbatim}
 
 The private methods and data shown are the functions that are function
 pointers referred to in the task descriptions.  The \texttt{VarLabel}
@@ -372,7 +370,7 @@ processes that are actually being used.
 The actual implementation with descriptions are presented following
 the code snippets.
 
-\begin{verbatim}
+\begin{Verbatim}[fontsize=\footnotesize]
 Poisson1::Poisson1(const ProcessorGroup* myworld)
   : UintahParallelComponent(myworld)
 {
@@ -389,13 +387,13 @@ Poisson1::~Poisson1()
   VarLabel::destroy(residual_label);
 }
 
-\end{verbatim}
+\end{Verbatim}
 
 Typical constructor and destructor for simple examples where the data
 label names (\texttt{phi} and \texttt{residual}) are created for data
 wharehouse storage and retrieval.
 
-\begin{verbatim}
+\begin{Verbatim}[fontsize=\footnotesize]
 void Poisson1::problemSetup(const ProblemSpecP& params,
                             const ProblemSpecP& restart_prob_spec,
                             GridP& /*grid*/,
@@ -410,14 +408,14 @@ void Poisson1::problemSetup(const ProblemSpecP& params,
 
   sharedState->registerSimpleMaterial(mymat_);
 }
-\end{verbatim}
+\end{Verbatim}
 
 The \texttt{problemSetup} is based in a xml description of the input
 file.  The input file is parsed and the delt tag is set.  The
 \texttt{sharedState} is assigned and is used to register a material
 and store it for later use by the Uintah internals.
 
-\begin{verbatim}
+\begin{Verbatim}[fontsize=\footnotesize]
 void Poisson1::scheduleInitialize(const LevelP& level,
                                   SchedulerP& sched)
 {
@@ -428,7 +426,7 @@ void Poisson1::scheduleInitialize(const LevelP& level,
   task->computes(residual_label);
   sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
 }
-\end{verbatim}
+\end{Verbatim}
 
 A task is defined which contains a name and a function pointer,
 i.e. \texttt{initialize} which is described later in Poisson1.cc The
@@ -437,7 +435,7 @@ task defines two variables that are computed in the
 task is then added to the scheduler.  This task is only computed once
 at the beginning of the simulation.
 
-\begin{verbatim}
+\begin{Verbatim}[fontsize=\footnotesize]
 void Poisson1::scheduleComputeStableTimestep(const LevelP& level,
                                              SchedulerP& sched)
 {
@@ -449,14 +447,14 @@ void Poisson1::scheduleComputeStableTimestep(const LevelP& level,
   sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
 }
 
-\end{verbatim}
+\end{Verbatim}
 
 A task is defined for the computing the stable timestep and uses the
 function pointer, \texttt{computeStableTimestep} defined later in
 Poisson1.cc.  This requires data from the New DataWarehouse, and the
 next timestep size is computed and stored.
 
-\begin{verbatim}
+\begin{Verbatim}[fontsize=\footnotesize]
 void
 Poisson1::scheduleTimeAdvance( const LevelP& level,
                                SchedulerP& sched)
@@ -469,7 +467,7 @@ Poisson1::scheduleTimeAdvance( const LevelP& level,
   task->computes(residual_label);
   sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
 }
-\end{verbatim}
+\end{Verbatim}
 
 The \texttt{timeAdvance} function is the main function that describes
 the computational algorithm.  For simple examples, the entire
@@ -489,7 +487,7 @@ residual.
 
 \subsection{Description of Computational Functions}
 
-\begin{verbatim}
+\begin{Verbatim}[fontsize=\footnotesize]
 
 void Poisson1::computeStableTimestep(const ProcessorGroup* pg,
                                      const PatchSubset* /*patches*/,
@@ -505,7 +503,7 @@ void Poisson1::computeStableTimestep(const ProcessorGroup* pg,
   new_dw->put(delt_vartype(delt_), sharedState_->get_delt_label());
 }
 
-\end{verbatim}
+\end{Verbatim}
 
 In this particular example, no timestep is actually computed, instead
 the original timestep specified in the input file is used and stored
@@ -515,7 +513,7 @@ main \texttt{timeAdvance} function is retrieved from the data
 warehouse and printed out to standard error for only the processor
 with a rank of 0.
 
-\begin{verbatim}
+\begin{Verbatim}[fontsize=\footnotesize]
 void Poisson1::initialize(const ProcessorGroup*,
                           const PatchSubset* patches,
                           const MaterialSubset* matls,
@@ -525,18 +523,18 @@ void Poisson1::initialize(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
-\end{verbatim}
+\end{Verbatim}
 
 The node centered variable (\texttt{NCVariable<double> phi}) has space
 reserved in the DataWarehouse for the given patch and the given
 material (\texttt{int matl = 0;}).  The \texttt{phi} variable is
 initialized to 0 for every grid node on the patch.
 
-\begin{verbatim}
+\begin{Verbatim}[fontsize=\footnotesize]
     NCVariable<double> phi;
     new_dw->allocateAndPut(phi, phi_label, matl, patch);
     phi.initialize(0.);
-\end{verbatim}
+\end{Verbatim}
 
 The boundary faces on the xminus face of the computational domain are
 specified and set to a value of 1.  All other boundary values are set
@@ -547,7 +545,7 @@ addition, there are convenient looping constructs such as
 \texttt{NodeIterator} that alleviate the need to specify triply nested
 loops for visiting each node in the domain.
 
-\begin{verbatim}
+\begin{Verbatim}[fontsize=\footnotesize]
     if(patch->getBCType(Patch::xminus) != Patch::Neighbor){
        IntVector l,h;
        patch->getFaceNodes(Patch::xminus, 0, l, h);
@@ -561,7 +559,7 @@ loops for visiting each node in the domain.
   }
 }
 
-\end{verbatim}
+\end{Verbatim}
 
 The initial residual value of -1 is stored at the beginning of the
 simulation.
@@ -570,7 +568,7 @@ The main computational algorithm is defined in the
 \texttt{timeAdvance} function.  The overall algorithm is based on a
 simple Jacobi iteration step.
 
-\begin{verbatim}
+\begin{Verbatim}[fontsize=\footnotesize]
 void Poisson1::timeAdvance(const ProcessorGroup*,
                            const PatchSubset* patches,
                            const MaterialSubset* matls,
@@ -582,12 +580,12 @@ void Poisson1::timeAdvance(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
     constNCVariable<double> phi;
 
-\end{verbatim}
+\end{Verbatim}
 
 Data from the previous timestep is retrieved from the data warehouse
 and copied to the current timestep's phi variable (\texttt{newphi}).
 
-\begin{verbatim}
+\begin{Verbatim}[fontsize=\footnotesize]
 
     old_dw->get(phi, phi_label, matl, patch, Ghost::AroundNodes, 1);
     NCVariable<double> newphi;
@@ -595,7 +593,7 @@ and copied to the current timestep's phi variable (\texttt{newphi}).
     new_dw->allocateAndPut(newphi, phi_label, matl, patch);
     newphi.copyPatch(phi, newphi.getLowIndex(), newphi.getHighIndex());
 
-\end{verbatim}
+\end{Verbatim}
 
 The indices for the patch are obtained and altered depending on
 whether or not the patch's internal boundaries are on the coincident
@@ -608,7 +606,7 @@ points.
 %%% The implementation of more sensible boundary condition
 %%% specifications needs to be added here.
 
-\begin{verbatim}
+\begin{Verbatim}[fontsize=\footnotesize]
 
     double residual=0;
     IntVector l = patch->getNodeLowIndex__New();
@@ -621,13 +619,13 @@ points.
                    patch->getBCType(Patch::yplus)  == Patch::Neighbor?0:1,
                    patch->getBCType(Patch::zplus)  == Patch::Neighbor?0:1);
 
-\end{verbatim}
+\end{Verbatim}
 
 The Jacobi iteration step is applied at each internal grid node.  The
 residual is computed based on the old and new values and stored as a
 reduction variable (\texttt{sum\_vartype}) in the data warehouse.
 
-\begin{verbatim}
+\begin{Verbatim}[fontsize=\footnotesize]
     //__________________________________
     //  Stencil
     for(NodeIterator iter(l, h);!iter.done(); iter++){
@@ -645,7 +643,7 @@ reduction variable (\texttt{sum\_vartype}) in the data warehouse.
   }
 }
 
-\end{verbatim}
+\end{Verbatim}
 
 The input file that is used to run this example is given below and is
 given in
@@ -654,7 +652,7 @@ Relevant sections of the input file that can be modified are found in
 the \texttt{<Time>} section, and the \texttt{<Grid>} section,
 specifically, the number of patches and the grid resolution.
 
-\begin{verbatim}
+\begin{Verbatim}[fontsize=\footnotesize]
 <Uintah_specification>
 
   <Meta>
@@ -705,29 +703,29 @@ specifically, the number of patches and the grid resolution.
 
 </Uintah_specification>
 
-\end{verbatim}
+\end{Verbatim}
 
 
 \subsubsection{Running the Poisson1 Example}
 
 To run the poisson1.ups example, 
-\begin{verbatim}
+\begin{Verbatim}[fontsize=\footnotesize]
 
 	cd ~/SCIRun/dbg/Packages/Uintah/StandAlone/
-\end{verbatim}
+\end{Verbatim}
 
 create a symbolic link to the inputs directory:
-\begin{verbatim}
+\begin{Verbatim}[fontsize=\footnotesize]
 	ln -s ~/SCIRun/src/Packages/Uintah/StandAlone/inputs
-\end{verbatim}
+\end{Verbatim}
 For a single processor run type the following:
-\begin{verbatim}
+\begin{Verbatim}[fontsize=\footnotesize]
 	sus inputs/Examples/poisson1.ups
-\end{verbatim}
+\end{Verbatim}
 For a two processor run, type the following:
-\begin{verbatim}
+\begin{Verbatim}[fontsize=\footnotesize]
 	mpirun -np 2 sus -mpi inputs/Examples/poisson1.ups
-\end{verbatim}
+\end{Verbatim}
 Changing the number of patches in the poisson1.ups and the resolution,
 enables you to run a more refined problem on more processors.
 
@@ -750,7 +748,7 @@ The majority of the schedule and computational functions are similar
 to the \emph{Poisson1} example and are not repeated.  Only the revised
 code is presented with explanations about the new features of Uintah.
 
-\begin{verbatim}
+\begin{Verbatim}[fontsize=\footnotesize]
 
 void Poisson2::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
 {
@@ -765,7 +763,7 @@ void Poisson2::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
   sched->addTask(task, perproc_patches, sharedState_->allMaterials());
 }
 
-\end{verbatim}
+\end{Verbatim}
 
 Within this function, the task is specified with two additional
 arguments, the level and the scheduler \texttt{sched.get\_rep()}.  The
@@ -784,7 +782,7 @@ feature of the subscheduler shows the creation of a the
 \texttt{iterate} task within the subscheduler.  This task will perform
 the actual Jacobi iteration for a given timestep.
 
-\begin{verbatim}
+\begin{Verbatim}[fontsize=\footnotesize]
 void Poisson2::timeAdvance(const ProcessorGroup* pg,
 			const PatchSubset* patches,
 			const MaterialSubset* matls,
@@ -792,15 +790,15 @@ void Poisson2::timeAdvance(const ProcessorGroup* pg,
 			LevelP level, Scheduler* sched)
 {
 
-\end{verbatim}
+\end{Verbatim}
 
 The subscheduler is instantiated and initialized. 
 
-\begin{verbatim}
+\begin{Verbatim}[fontsize=\footnotesize]
   SchedulerP subsched = sched->createSubScheduler();
   subsched->initialize();
   GridP grid = level->getGrid();
-\end{verbatim}
+\end{Verbatim}
 
 An \texttt{iterate} task is created and added to the subscheduler.
 The typical computes and requires are specified for a 7 point stencil
@@ -814,7 +812,7 @@ that are only computed and used in an iterative step of an algorithm
 do not need to be added to the dependency specification for the top
 level task.
 
-\begin{verbatim}
+\begin{Verbatim}[fontsize=\footnotesize]
   // Create the tasks
   Task* task = scinew Task("iterate",
 			this, &Poisson2::iterate);
@@ -822,7 +820,7 @@ level task.
   task->computes(phi_label);
   task->computes(residual_label);
   subsched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
-\end{verbatim}
+\end{Verbatim}
 
 The subscheduler has its own data wharehouse that is separate from the
 top level's scheduler's data warehouse.  This data warehouse must be
@@ -830,7 +828,7 @@ initialized and any data from the top level's data warehouse must be
 passed to the subscheduler's version.  This data resides in the data
 warehouse position \texttt{NewDW}.
 
-\begin{verbatim}
+\begin{Verbatim}[fontsize=\footnotesize]
   // Compile the scheduler
   subsched->advanceDataWarehouse(grid);
   subsched->compile();
@@ -838,7 +836,7 @@ warehouse position \texttt{NewDW}.
   int count = 0;
   double residual;
   subsched->get_dw(1)->transferFrom(old_dw, phi_label, patches, matls);
-\end{verbatim}
+\end{Verbatim}
 
 Within each iteration, the following must occur for the subscheduler:
 the data warehouse's new data must be moved to the \texttt{OldDW}
@@ -850,7 +848,7 @@ to in the subscheduler via the \texttt{subsched->get\_dw(0)} and the
 met the tolerance, the data from the subscheduler is transferred to
 the scheduler's data warehouse.
 
-\begin{verbatim}
+\begin{Verbatim}[fontsize=\footnotesize]
   // Iterate
   do {
     subsched->advanceDataWarehouse(grid);
@@ -869,14 +867,14 @@ the scheduler's data warehouse.
   new_dw->transferFrom(subsched->get_dw(1), phi_label, patches, matls);
 }
 
-\end{verbatim}
+\end{Verbatim}
 
 The iteration cycle is identical to \textbf{Poisson1}'s
 \texttt{timeAdvance} algorithm using Jacobi iteration with a 7 point
 stencil.  Refer to the discussion about the algorithm implementation
 in the \textbf{Poisson1} description.
 
-\begin{verbatim}
+\begin{Verbatim}[fontsize=\footnotesize]
 void Poisson2::iterate(const ProcessorGroup*,
 		    const PatchSubset* patches,
 		    const MaterialSubset* matls,
@@ -913,7 +911,7 @@ void Poisson2::iterate(const ProcessorGroup*,
   }
 }
 
-\end{verbatim}
+\end{Verbatim}
 
 The input file
 \emph{~/SCIRun/src/Packages/Uintah/StandAlone/inputs/Examples/poisson2.ups}
@@ -924,24 +922,24 @@ the tolerance within the iteration performed in the subscheduler.
 To run the poisson2 input file execute the following in the
 \emph{~/SCIRun/dbg/Packages/Uintah/StandAlone} directory:
 
-\begin{verbatim}
+\begin{Verbatim}[fontsize=\footnotesize]
 	sus inputs/Examples/poisson2.ups
 
-\end{verbatim}
+\end{Verbatim}
 
 
 \section{Burger}
 
 In this example, the inviscid Burger's equation is solved in three dimensions:
-\begin{verbatim}
+\begin{Verbatim}[fontsize=\footnotesize]
 	du/dt = -u du/dx  
-\end{verbatim}
+\end{Verbatim}
 
 with the following initial conditions:
 
-\begin{verbatim}
+\begin{Verbatim}[fontsize=\footnotesize]
 	u = sin(pi x) + sin(2pi y) + sin(3pi z)
-\end{verbatim}
+\end{Verbatim}
 
 using Euler's method to advance in time.  The majority of the code is
 very similar to the Poisson1 example code with the differences shown
@@ -953,7 +951,7 @@ values for a given grid node is determined using the function,
 \texttt{patch->getNodePosition(n)}, where n is the nodal index in
 i,j,k space.
 
-\begin{verbatim}
+\begin{Verbatim}[fontsize=\footnotesize]
 void Burger::initialize(const ProcessorGroup*,
                         const PatchSubset* patches,
                         const MaterialSubset* matls,
@@ -980,13 +978,13 @@ void Burger::initialize(const ProcessorGroup*,
   }
 }
 
-\end{verbatim}
+\end{Verbatim}
 
 The \texttt{timeAdvance} function is quite similar to the Poisson1's
 \texttt{timeAdvance} routine.  The relavant differences are only
 shown.
 
-\begin{verbatim}
+\begin{Verbatim}[fontsize=\footnotesize]
 void Burger::timeAdvance(const ProcessorGroup*,
                          const PatchSubset* patches,
                          const MaterialSubset* matls,
@@ -999,11 +997,11 @@ void Burger::timeAdvance(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
     
   . . . . .
-\end{verbatim}
+\end{Verbatim}
 
 The grid spacing and timestep values are stored.
 
-\begin{verbatim}
+\begin{Verbatim}[fontsize=\footnotesize]
 
     // dt, dx
     Vector dx = patch->getLevel()->dCell();
@@ -1011,13 +1009,13 @@ The grid spacing and timestep values are stored.
     old_dw->get(dt, sharedState_->get_delt_label());
     
   . . . . .  
-\end{verbatim}
+\end{Verbatim}
 
 Refer to the description in \textbf{Poisson1} about the specification
 of the \texttt{NodeIterator} limits.  The Euler algorithm is applied to solve
 the ordinary differential equation in time.
 
-\begin{verbatim}                   
+\begin{Verbatim}[fontsize=\footnotesize]                   
     //Iterate through all the nodes
     for(NodeIterator iter(l, h);!iter.done(); iter++){    
       IntVector n = *iter;
@@ -1028,13 +1026,13 @@ the ordinary differential equation in time.
       new_u[n]= u[n] + du;
     }
 
-\end{verbatim}
+\end{Verbatim}
 
 Zero flux Neumann boundary conditions are applied to the node points
 on each of the grid faces.
 
 
-\begin{verbatim}
+\begin{Verbatim}[fontsize=\footnotesize]
     //__________________________________
     // Boundary conditions: Neumann
     // Iterate over the faces encompassing the domain
@@ -1064,7 +1062,7 @@ on each of the grid faces.
   }
 }
 
-\end{verbatim}
+\end{Verbatim}
 
 The input file for the Burger (\emph{burger.ups}) problem is very
 similar to the \emph{poisson1.ups} with the addition, that the
@@ -1074,9 +1072,9 @@ timestep increment used in the \texttt{timeAdvance} is quite small,
 To run the Burger input file execute the following in the
 \emph{~/SCIRun/dbg/Packages/Uintah/StandAlone} directory:
 
-\begin{verbatim}
+\begin{Verbatim}[fontsize=\footnotesize]
 	sus inputs/Examples/burger.ups
-\end{verbatim}
+\end{Verbatim}
 
 \section{HeatEquation}
 
@@ -1090,15 +1088,15 @@ equations.  In addition, this example will demonstrate how material
 properties can be specified within the input file and used in the
 simulation.
 
-\begin{verbatim}
+\begin{Verbatim}[fontsize=\footnotesize]
 	dT/dt = k d^2 T/dx^2  
-\end{verbatim}
+\end{Verbatim}
 
 Only the relevant sections of the HeatEquation.cc are shown that
 differ from the Poisson1/Poisson2 source files that highlight how
 timesteping with the subscheduler is achieved.
 
-\begin{verbatim}
+\begin{Verbatim}[fontsize=\footnotesize]
 void HeatEquation::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
 {
   Task* task = scinew Task("timeAdvance",
@@ -1112,7 +1110,7 @@ void HeatEquation::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
   sched->addTask(task, perproc_patches, sharedState_->allMaterials());
 }
 
-\end{verbatim}
+\end{Verbatim}
 
 \section{HeatEquation Using Petsc Solver Interface}
 
@@ -1134,7 +1132,7 @@ developer is free to use any tags to specify the data needed by the
 simulation.  The essential tags that are required by Uintah include
 the following:
 
-\begin{verbatim}
+\begin{Verbatim}[fontsize=\footnotesize]
 
 	<Uintah_specification>
 
@@ -1144,7 +1142,7 @@ the following:
 
 	<Grid>
 
-\end{verbatim}
+\end{Verbatim}
 
 \section{Output File Format}
 

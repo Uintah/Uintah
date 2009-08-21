@@ -42,7 +42,12 @@ description of the method.
 
 \section{HE Combustion Models}
 
-Three models exist for reaction of high explosive materials.  Each simulation using one of these models utilize MPMICE's material interactions as its foundation.  The components work by taking several material specific constants as well as a reactant and product material from the model input section of the .UPS file.  Following are brief descriptions of each model, as well as their input parameters.
+Three models exist for reaction of high explosive materials.  Each
+simulation using one of these models utilize MPMICE's material
+interactions as its foundation.  The components work by taking several
+material specific constants as well as a reactant and product material
+from the model input section of the .ups file.  Following are brief
+descriptions of each model, as well as their input parameters.
 
 \subsection{Simple Burn} \label{Sec:SimpleBurn}
 
@@ -231,9 +236,11 @@ The following table describes the input parameters for Unsteady Burn.
 \hline
   $<$BoundaryParticles$>$ & int & Max \# of particles a cell can have and be burning\\
 \hline
-  $<$BurnrateModCoef$>$ & double & not sure... \\
+  $<$BurnrateModCoef$>$ & double & if $\neq$1.0, scale unsteady rate with steady rate as $\dot{m}_u=\dot{m}_s\left(\frac{\displaystyle\dot{m}_u}{\displaystyle\dot{m}_s}\right)^{B_m}$\\
 \hline
-  $<$CondUnsteadyCoef$>$ & double & not sure... \\
+  $<$CondUnsteadyCoef$>$ & double & Coefficient for condensed phase pressure response relaxation \\
+\hline
+  $<$GasUnsteadyCoef$>$ & double & Coefficient for gas phase pressure response relaxation \\
 \hline
   $<$ThresholdPressure$>$ & double & Threshold pressure cell must be $\ge$ to burn mass\\
 \hline
@@ -244,7 +251,7 @@ The following table describes the input parameters for Unsteady Burn.
 
 \newpage
 
-\section{Examples}
+\section{Examples} \label {Sec:MPMICE_EXAMPLES}
 
 \subsection*{\center Mach 2 Wedge}
 \addcontentsline{toc}{subsection}{Mach 2 Wedge}
@@ -448,40 +455,62 @@ a cylinder.  For description of Simple Burn see \ref{Sec:SimpleBurn}.
 \newpage
 
 \section*{\underline{Results}}
-With the recession of mass comes a pressure increase that causes the case to expand outward. 
-A snapshot of pressure after the 0.4 milliseconds can be seen in Figure~\ref{figsimburn1}.  At this time
-pressure has increased to three-fold its initial value.  A later snapshot Figure~\ref{figsimburn2} shows
-the response of the steel cylinder to increased pressure.  Note that mass flux will scale according
-to \ref{simburneqn}.  Another interesting view of the simulation can be seen in Figure~\ref{figsimburn3}.
-On the left is the normal particle and pseudocolor map representing solid mass and pressure respectively.
-On the top right, change in pressure during the timestep can be seen (delP\_Dilatate).  The bottom shows
-change in pressure due to mass exchange (del\_MassX).  See table \ref{table:iceLabels} for description of
-these variables.
+With the recession of mass comes a pressure increase that causes the
+case to expand outward.  A snapshot of pressure after the 0.4
+milliseconds can be seen in Figure~\ref{figsimburn1}.  At this time
+pressure has increased to three-fold its initial value.  A later
+snapshot Figure~\ref{figsimburn2} shows the response of the steel
+cylinder to increased pressure.  Note that mass flux will scale
+according to \ref{simburneqn}.  Another interesting view of the
+simulation can be seen in Figure~\ref{figsimburn3}.  On the left is
+the normal particle and pseudocolor map representing solid mass and
+pressure respectively.  On the top right, change in pressure during
+the timestep can be seen (delP\_Dilatate).  The bottom shows change in
+pressure due to mass exchange (del\_MassX).  See table
+\ref{table:iceLabels} for description of these variables.
+
+
+% \begin{figure}
+%   \center
+%   \includegraphics[scale=.3]{SimpleBurn0000.png}
+
+%   \caption{Receding PBX9501 leads to pressure increase in cylindrical steel shell.}
+%   \label{figsimburn1}
+% \end{figure}
+
+% \begin{figure}
+%   \center
+%   \includegraphics[scale=.3]{SimpleBurn0001.png}
+
+%   \caption{Pressure increase causes cylinder to respond.}
+%   \label{figsimburn2}
+% \end{figure}
+
+% \begin{figure}
+%   \center
+%   \includegraphics[scale=.3]{SimpleBurn0002.png}
+
+%   \caption{The left half of the image represents particles as spheres colored according to mass and pressure as background color.  Top-right shows delP\_Dilatate and bottom-right shows delP\_MassX.}
+%   \label{figsimburn3}
+% \end{figure}
 
 
 \begin{figure}
-  \center
-  \includegraphics[scale=.3]{SimpleBurn0000.png}
-
-  \caption{Receding PBX9501 leads to pressure increase in cylinder.}
-  \label{figsimburn1}
+  \centering
+  \vspace{-60pt}
+  \subfloat[Receding PBX9501 leads to pressure increase in cylindrical steel shell]{\label{figsimburn1}
+    \includegraphics[width=.4\textwidth]{SimpleBurn0000.png}}
+  \hspace{10pt}
+  \subfloat[Pressure increase causes cylinder to respond]{\label{figsimburn2}
+    \includegraphics[width=.4\textwidth]{SimpleBurn0001.png}}
+  \hspace{10pt}
+  \subfloat[The left half of the image represents particles as spheres colored according to mass and pressure as background color.  Top-right shows delP\_Dilatate and bottom-right shows delP\_MassX]{\label{figsimburn3}
+    \includegraphics[width=.4\textwidth]{SimpleBurn0002.png}}
+  \caption{}
+  \label{}
+  \vspace{-20pt}
 \end{figure}
 
-\begin{figure}
-  \center
-  \includegraphics[scale=.3]{SimpleBurn0001.png}
-
-  \caption{Pressure increase causes cylinder to respond.}
-  \label{figsimburn2}
-\end{figure}
-
-\begin{figure}
-  \center
-  \includegraphics[scale=.3]{SimpleBurn0002.png}
-
-  \caption{The left half of the image represents particles as spheres colored according to mass and pressure as background color.  Top-right shows delP\_Dilatate and bottom-right shows delP\_MassX.}
-  \label{figsimburn3}
-\end{figure}
 
 \newpage
 
@@ -515,31 +544,58 @@ This problem consistes of a cylinder initially at 600 K causing burning.  Steady
 
 \section*{\underline{Results}}
 
-Figure~\ref{figsteadyburn1} shows a nice view of the cylinder as the PBX particles within is collapsing into the void, creating  more burnable surface area resulting in more violent explosion.  Figure ~\ref{figsteadyburn2} shows a view of the cylinder as the steel container begins to expand outward.  Arrows represent the speed at which the particles in the steel case are expanding outward.  Figure~\ref{figsteadyburn3} shows cell flaggeed as burning by Steady Burn.
+Figure~\ref{figsteadyburn1} shows a nice view of the cylinder as the
+PBX particles within is collapsing into the void, creating more
+burnable surface area resulting in more violent explosion.  Figure
+~\ref{figsteadyburn2} shows a view of the cylinder as the steel
+container begins to expand outward.  Arrows represent the speed at
+which the particles in the steel case are expanding outward.
+Figure~\ref{figsteadyburn3} shows cell flagged as burning by Steady
+Burn.
+
+% \begin{figure}
+%   \center
+%   \includegraphics[scale=.3]{SteadyBurn0000.png}
+
+%   \caption{Collapse of PBX into hollow bore of explosive device.}
+%   \label{figsteadyburn1}
+% \end{figure}
+
+% \begin{figure}
+%   \center
+%   \includegraphics[scale=.4]{SteadyBurn0001.png}
+
+%   \caption{Expansion of steel casing as explosion occurs--response to pressure build-up.}
+%   \label{figsteadyburn2}
+% \end{figure}
+
+% \begin{figure}
+%   \center
+%   \includegraphics[scale=.4]{SteadyBurn0002.png}
+
+%   \caption{Burning Cells denoted by red squares.}
+%   \label{figsteadyburn3}
+% \end{figure}
+
 
 \begin{figure}
-  \center
-  \includegraphics[scale=.3]{SteadyBurn0000.png}
+  \centering
+  \vspace{-40pt}
+  \subfloat[Collapse of PBX into hollow bore of explosive device]{\label{figsteadyburn1}
+    \includegraphics[width=.4\textwidth]{SteadyBurn0000.png}}
+  \hspace{10pt}
+  \subfloat[Expansion of steel casing as explosion occurs--response to pressure build-up]{\label{figsteadyburn2}
+    \includegraphics[width=.4\textwidth]{SteadyBurn0001.png}}
+  \hspace{10pt}
+  
+  \subfloat[Burning Cells denoted by red squares]{\label{figsteadyburn3}
+    \includegraphics[width=.4\textwidth]{SteadyBurn0002.png}}
+  \caption{}
+  \label{}
+  
 
-  \caption{Collapse of PBX into hollow bore of explosive device.}
-  \label{figsteadyburn1}
 \end{figure}
 
-\begin{figure}
-  \center
-  \includegraphics[scale=.4]{SteadyBurn0001.png}
-
-  \caption{Expansion of steel casing as explosion occurs.}
-  \label{figsteadyburn2}
-\end{figure}
-
-\begin{figure}
-  \center
-  \includegraphics[scale=.4]{SteadyBurn0002.png}
-
-  \caption{Burning Cells.}
-  \label{figsteadyburn3}
-\end{figure}
 
 \newpage
 %
@@ -575,42 +631,63 @@ Notes: \\
 \section*{\underline{Results}}
 
 Figure~\ref{figtburn1}, ~\ref{figtburn2} and ~\ref{figtburn3} show successive snapshots of the simulation.  Contour plot depicts pressure and represents the wave front as it oscillates between two sheets of burning PBX 9501.  Figure ~\ref{figtburnVel} shows velocities of gas cells.
-\begin{figure}
-  \center
-  \includegraphics[scale=.4]{TBurner0000.png}
+% \begin{figure}
+%   \center
+%   \includegraphics[scale=.4]{TBurner0000.png}
 
-  \caption{Time 1: Oscillatory behavior in the form of a pressure wave in a T-Burner.  Contour plot depicts pressure.}
-  \label{figtburn1}
+%   \caption{Time 1: Oscillatory behavior in the form of a pressure wave in a T-Burner.  Contour plot depicts pressure.}
+%   \label{figtburn1}
+% \end{figure}
+
+% \begin{figure}
+%   \center
+%   \includegraphics[scale=.4]{TBurner0001.png}
+
+%   \caption{Time 2: Oscillatory behavior in the form of a pressure wave in a T-Burner.  Contour plot depicts pressure.}
+%   \label{figtburn2}
+% \end{figure}
+% \begin{figure}
+%   \center
+%   \includegraphics[scale=.4]{TBurner0002.png}
+
+%   \caption{Time 3: Oscillatory behavior in the form of a pressure wave in a T-Burner.  Contour plot depicts pressure.}
+%   \label{figtburn3}
+% \end{figure}
+
+
+\begin{figure}[H]
+  \centering
+  \vspace{-80pt}
+  \subfloat[Time 1: Oscillatory behavior in the form of a pressure wave in a T-Burner.  Contour plot depicts pressure]{\label{figtburn1}
+  \includegraphics[scale=.4]{TBurner0000.png}}
+
+   \subfloat[Time 2: Oscillatory behavior in the form of a pressure wave in a T-Burner.  Contour plot depicts pressure]{\label{figtburn2}
+     \includegraphics[scale=.4]{TBurner0001.png}}
+
+   \subfloat[Time 3: Oscillatory behavior in the form of a pressure wave in a T-Burner.  Contour plot depicts pressure]{\label{figtburn3}
+     \includegraphics[scale=.4]{TBurner0002.png}}
+
+   \subfloat[Velocity vectors of cell material.  Shows how the pressure causes gas to move]{\label{figtburnVel}
+  \includegraphics[scale=.4]{TBurnerVel0000.png}}
+
+  \caption{}
+  \label{}
+  \vspace{-30pt}
 \end{figure}
 
-\begin{figure}
-  \center
-  \includegraphics[scale=.4]{TBurner0001.png}
-
-  \caption{Time 2: Oscillatory behavior in the form of a pressure wave in a T-Burner.  Contour plot depicts pressure.}
-  \label{figtburn2}
-\end{figure}
-\begin{figure}
-  \center
-  \includegraphics[scale=.4]{TBurner0002.png}
-
-  \caption{Time 3: Oscillatory behavior in the form of a pressure wave in a T-Burner.  Contour plot depicts pressure.}
-  \label{figtburn3}
-\end{figure}
 
 Figure~\ref{figtburnVel} shows a snapshot of the simulation at the same instant as the 
 previous figure.  The contour plot depicts pressure.  The arrows are vectors depicting
 the importance   
-\begin{figure}
-  \center
-  \includegraphics[scale=.4]{TBurnerVel0000.png}
+% \begin{figure}
+%   \center
+%   \includegraphics[scale=.4]{TBurnerVel0000.png}
 
-  \caption{Velocity vectors of cell material.  Shows how the pressure causes gas to move.}
-  \label{figtburnVel}
-\end{figure}
+%   \caption{Velocity vectors of cell material.  Shows how the pressure causes gas to move.}
+%   \label{figtburnVel}
+% \end{figure}
 
 %
 %__________________________________
-\subsection{References}
 \bibliographystyle{plain}
 \bibliography{ice}

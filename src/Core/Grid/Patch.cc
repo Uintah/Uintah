@@ -64,12 +64,12 @@ Patch::Patch(const Level* level,
 	     const IntVector& inLowIndex, const IntVector& inHighIndex, 
              unsigned int levelIndex,  int id)
   : d_lowIndex__New(inLowIndex), d_highIndex__New(inHighIndex), 
-    d_realPatch(0), d_level_index(-1),
+    d_grid(0), d_id(id) , d_realPatch(0), d_level_index(-1),
+    d_arrayBCS(0)
 #ifndef DELETE_OLD_INTERFACE
-    d_lowIndex(lowIndex),d_highIndex(highIndex),
-    d_inLowIndex(inLowIndex), d_inHighIndex(inHighIndex),
+    ,d_lowIndex(lowIndex),d_highIndex(highIndex),
+    d_inLowIndex(inLowIndex), d_inHighIndex(inHighIndex)
 #endif
-    d_grid(0),d_id( id ),d_arrayBCS(0)
 {
   
   if(d_id == -1){
@@ -104,16 +104,16 @@ Patch::Patch(const Patch* realPatch, const IntVector& virtualOffset)
     : 
       d_lowIndex__New(realPatch->getCellLowIndex__New()+virtualOffset),
       d_highIndex__New(realPatch->getCellHighIndex__New()+virtualOffset),
+      d_grid(realPatch->d_grid),
       d_realPatch(realPatch), d_level_index(realPatch->d_level_index),
+      d_arrayBCS(realPatch->d_arrayBCS)
 #ifndef DELETE_OLD_INTERFACE     
-      d_lowIndex(realPatch->d_lowIndex + virtualOffset), 
+      ,d_lowIndex(realPatch->d_lowIndex + virtualOffset), 
       d_highIndex(realPatch->d_highIndex + virtualOffset),
       d_inLowIndex(realPatch->d_inLowIndex + virtualOffset),
       d_inHighIndex(realPatch->d_inHighIndex + virtualOffset),
-      d_nodeHighIndex(realPatch->d_nodeHighIndex + virtualOffset),
+      d_nodeHighIndex(realPatch->d_nodeHighIndex + virtualOffset)
 #endif
-      d_arrayBCS(realPatch->d_arrayBCS),
-      d_grid(realPatch->d_grid)
 {
   //if(!ids){
   // make the id be -1000 * realPatch id - some first come, first serve index
@@ -1448,6 +1448,7 @@ IntVector Patch::getGhostCellHighIndex(int numGC) const
 void Patch::cullIntersection(VariableBasis basis, IntVector bl, const Patch* neighbor,
                              IntVector& region_low, IntVector& region_high) const
 {
+  TAU_PROFILE("Patch::cullIntersection", " ", TAU_USER); 
   // on certain AMR grid configurations, with extra cells, patches can overlap
   // such that the extra cell of one patch overlaps a normal cell of another
   // in such conditions, we shall exclude that extra cell from MPI communication

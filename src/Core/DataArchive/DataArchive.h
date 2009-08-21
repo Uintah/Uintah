@@ -269,8 +269,8 @@ public:
               const Patch* patch, int timeIndex,
               Ghost::GhostType, int ngc);
 
-  void queryRegion(Variable& var, const string& name, int matlIndex, 
-                   const Level* patch, int timeIndex, IntVector low, IntVector high);
+  void queryRegion( Variable& var, const string& name, int matlIndex, 
+                    const Level* level, int timeIndex, IntVector low, IntVector high );
   
   //////////
   // query the variable value for a particular particle  overtime;
