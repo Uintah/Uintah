@@ -180,15 +180,9 @@ TaskGraph::setupTaskConnections(GraphSortInfoMap& sortinfo)
   // While we are at it, ensure that we aren't producing anything
   // into an "old" data warehouse
   ReductionTasksMap reductionTasks;
-  int currblock=0;
-  int newblock=0;
   for( iter=d_tasks.begin(); iter != d_tasks.end(); iter++ ) {
-    currblock = currblock + newblock;
-    newblock = 0;
     Task* task = *iter;
-    task->Block = currblock;
     if (task->isReductionTask()){
-      newblock = 1;
       continue; // already a reduction task so skip it
     }
 
@@ -223,8 +217,6 @@ TaskGraph::setupTaskConnections(GraphSortInfoMap& sortinfo)
           taskname << "Reduction: " << comp->var->getName() 
             << ", level " << levelidx << ", dw " << dw;
           Task* newtask = scinew Task(taskname.str(), Task::Reduction);
-          newtask->Block = currblock;
-          newblock = 1;
 
           sortinfo[newtask] = GraphSortInfo();
 
@@ -309,8 +301,9 @@ void TaskGraph::addDependencyEdges(Task* task, GraphSortInfoMap& sortinfo,
       // If DW is finalized, we assume that we already have it,
       // or that we will get it sent to us.  Otherwise, we set
       // up an edge to connect this req to a comp
-      pair<CompMap::iterator,CompMap::iterator> iters 
-        = comps.equal_range(req->var);
+
+      pair<CompMap::iterator,CompMap::iterator> iters
+        = comps.equal_range(static_cast<const Uintah::VarLabel*>(req->var));
       int count=0;
       for(CompMap::iterator compiter = iters.first;
           compiter != iters.second; ++compiter){
@@ -638,15 +631,49 @@ TaskGraph::createDetailedTasks( bool useInternalDeps, DetailedTasks* first,
     const PatchSet* ps = task->getPatchSet();
     const MaterialSet* ms = task->getMaterialSet();
     if(ps && ms){
-      for(int p=0;p<ps->size();p++){
-        const PatchSubset* pss = ps->getSubset(p);
-
-        // don't make output tasks if there are no patches
-        if(lb->inNeighborhood(pss) && (pss->size() > 0 || task->getType() != Task::Output))
+      //only create OncePerProc tasks and output tasks once on each processor.
+      if(task->getType()==Task::OncePerProc)
+      {
+        //use this processors patch subset
+        const PatchSubset* pss = ps->getSubset(d_myworld->myrank());
         {
-          for(int m=0;m<ms->size();m++){
+          for(int m=0;m<ms->size();m++)
+          {
             const MaterialSubset* mss = ms->getSubset(m);
             createDetailedTask(task, pss, mss);
+          }
+        }
+      }
+      else if(task->getType()==Task::Output)
+      {
+        //compute subset that involves this rank
+        int subset=(d_myworld->myrank()/lb->getNthProc())*lb->getNthProc();
+        
+        //only schedule output task for the subset involving our rank
+        const PatchSubset* pss = ps->getSubset(subset);
+
+        //don't schedule if there are no patches
+        if(pss->size()>0)
+        {
+          for(int m=0;m<ms->size();m++)
+          {
+            const MaterialSubset* mss = ms->getSubset(m);
+            createDetailedTask(task, pss, mss);
+          }
+        }
+
+      }
+      else
+      {
+        for(int p=0;p<ps->size();p++){
+          const PatchSubset* pss = ps->getSubset(p);
+          // don't make tasks that are not in our neighborhood or tasks that do not have patches
+          if(lb->inNeighborhood(pss) && pss->size() > 0)
+          {
+            for(int m=0;m<ms->size();m++){
+              const MaterialSubset* mss = ms->getSubset(m);
+              createDetailedTask(task, pss, mss);
+            }
           }
         }
       }
@@ -912,12 +939,19 @@ TaskGraph::createDetailedDependencies()
   // Put internal links between the reduction tasks so a mixed thread/mpi
   // scheduler won't have out of order reduction problems.
   DetailedTask* lastReductionTask = 0;
+  int currphase=0;
   for(int i=0;i<dts_->numTasks();i++){
     DetailedTask* task = dts_->getTask(i);
+    task->task->d_phase=currphase;
+    //cout << d_myworld->myrank()  << " Task: " << *task << " phase: " << currphase << endl;
     if (task->task->getType() == Task::Reduction) {
       if (lastReductionTask != 0)
+      {
         task->addInternalDependency(lastReductionTask,
             task->task->getModifies()->var);
+      //  cout << d_myworld->myrank() << " reduction dependency:  making " << *lastReductionTask << " dependent on " << *task << " var:" << *task->task->getModifies()->var << endl;
+      }
+      currphase++;
       lastReductionTask = task;
     }
   }
@@ -948,6 +982,12 @@ TaskGraph::createDetailedDependencies()
 void TaskGraph::remembercomps(DetailedTask* task, Task::Dependency* comp,
 			      CompTable& ct)
 {
+  //calling getPatchesUnderDomain can get expensive on large processors.  Thus we 
+  //cache results and use them on the next call.  This works well because comps
+  //are added in order and they share the same patches under the domain
+  const PatchSubset *cached_task_patches=0, *cached_comp_patches=0;
+  constHandle <PatchSubset> cached_patches;
+
   for(;comp != 0; comp = comp->next){
     if (comp->var->typeDescription()->isReductionVariable()){
       //if(task->getTask()->getType() == Task::Reduction || comp->deptype == Task::Modifies) {
@@ -955,8 +995,23 @@ void TaskGraph::remembercomps(DetailedTask* task, Task::Dependency* comp,
 	    ct.remembercomp(task, comp, 0, comp->matls, d_myworld);
     } else {
       // Normal tasks
-      constHandle<PatchSubset> patches =
-	      comp->getPatchesUnderDomain(task->patches);
+      constHandle<PatchSubset> patches;
+
+      //if the patch pointer on both the dep and the task have not changed then use the 
+      //cached result
+      if(task->patches==cached_task_patches && comp->patches==cached_comp_patches)
+      {
+        patches=cached_patches;
+      }
+      else
+      {
+        //compute the intersection 
+        patches=comp->getPatchesUnderDomain(task->patches);
+        //cache the result for the next iteration
+        cached_patches=patches;
+        cached_task_patches=task->patches;
+        cached_comp_patches=comp->patches;
+      }
       constHandle<MaterialSubset> matls =
 	      comp->getMaterialsUnderDomain(task->matls);
       if(!patches->empty() && !matls->empty()) {
@@ -1019,14 +1074,20 @@ TaskGraph::createDetailedDependencies(DetailedTask* task,
 				      Task::Dependency* req, CompTable& ct,
 				      bool modifies)
 {
+  TAU_PROFILE("TaskGraph::createDetailedDependencies", " ", TAU_USER); 
   int me = d_myworld->myrank();
 
   for( ; req != 0; req = req->next){
-    if(dbg.active())
-      dbg << d_myworld->myrank() << "  req: " << *req << '\n';
+    TAU_PROFILE("SchedulerCommon::compile()-req loop", " ", TAU_USER); 
+    
+    //if(req->var->typeDescription()->isReductionVariable())
+    //  continue;
 
     if(sc->isOldDW(req->mapDataWarehouse()) && !sc->isNewDW(req->mapDataWarehouse()+1))
       continue;
+    
+    if(dbg.active())
+      dbg << d_myworld->myrank() << "  req: " << *req << '\n';
 
     constHandle<PatchSubset> patches =
       req->getPatchesUnderDomain(task->patches);
@@ -1079,10 +1140,16 @@ TaskGraph::createDetailedDependencies(DetailedTask* task,
     }
 
     if(patches && !patches->empty() && matls && !matls->empty()){
+      if(req->var->typeDescription()->isReductionVariable())
+        continue;
       for(int i=0;i<patches->size();i++){
+        TAU_PROFILE("SchedulerCommon::compile()-patch loop", " ", TAU_USER); 
         const Patch* patch = patches->get(i);
 
-        Patch::selectType neighbors;
+        //only allocate once
+        static Patch::selectType neighbors;
+        neighbors.resize(0);
+
         IntVector low, high;
 
         Patch::VariableBasis basis = Patch::translateTypeToBasis(req->var->typeDescription()->getType(),
@@ -1097,13 +1164,16 @@ TaskGraph::createDetailedDependencies(DetailedTask* task,
           // make sure the bounds of the dep are limited to the original patch's (see above)
           // also limit to current patch, as patches already loops over all patches
           IntVector origlow = low, orighigh = high;
-          low = Max(low, otherLevelLow);
           if (req->patches_dom == Task::FineLevel) {
             // don't coarsen the extra cells
             low = patch->getLowIndex(basis);
             high = patch->getHighIndex(basis);
           }
-          high = Min(high, otherLevelHigh);
+          else
+          {
+            low = Max(low, otherLevelLow);
+            high = Min(high, otherLevelHigh);
+          }
 
           if (high.x() <= low.x() || high.y() <= low.y() || high.z() <= low.z()) {
             continue;
@@ -1129,14 +1199,22 @@ TaskGraph::createDetailedDependencies(DetailedTask* task,
 
 
         for(int i=0;i<neighbors.size();i++){
+          TAU_PROFILE("SchedulerCommon::compile()-neighbor loop", " ", TAU_USER); 
           const Patch* neighbor=neighbors[i];
-          Patch::selectType fromNeighbors;
+            
+          //if neighbor is not in my neighborhood just continue as its dependencies are not important to this processor
+          if(!lb->inNeighborhood(neighbor->getRealPatch()))
+            continue;
+
+          static Patch::selectType fromNeighbors;
+          fromNeighbors.resize(0);
+
           IntVector l = Max(neighbor->getExtraLowIndex(basis, req->var->getBoundaryLayer()), low);
           IntVector h = Min(neighbor->getExtraHighIndex(basis, req->var->getBoundaryLayer()), high);
           if (neighbor->isVirtual()) {
             l -= neighbor->getVirtualOffset();
             h -= neighbor->getVirtualOffset();	    
-            neighbor = neighbor->getRealPatch();
+            neighbor=neighbor->getRealPatch();
           }
           if (req->patches_dom == Task::OtherGridDomain) {
             // this is when we are copying data between two grids (currently between timesteps)
@@ -1151,11 +1229,11 @@ TaskGraph::createDetailedDependencies(DetailedTask* task,
             fromNeighbors.push_back(neighbor);
 
           for (int j = 0; j < fromNeighbors.size(); j++) {
+            TAU_PROFILE("SchedulerCommon::compile()-fromNeighbor loop", " ", TAU_USER); 
             const Patch* fromNeighbor = fromNeighbors[j];
 
-            //only add the requirments both patches are in my neighborhood, old logic kept here for reference
-            //if(!(lb->inNeighborhood(neighbor) || (neighbor != fromNeighbor && lb->inNeighborhood(fromNeighbor))))
-            if( !lb->inNeighborhood(neighbor) || !lb->inNeighborhood(fromNeighbor))
+            //only add the requirments both fromNeighbor is in my neighborhood
+            if(!lb->inNeighborhood(fromNeighbor))
               continue;
 
             IntVector from_l;
@@ -1167,8 +1245,14 @@ TaskGraph::createDetailedDependencies(DetailedTask* task,
               from_h = Min(fromNeighbor->getHighIndexWithDomainLayer(basis), h);
             }
             else {
-              from_l = Max(fromNeighbor->getExtraLowIndex(basis, req->var->getBoundaryLayer()), l);
-              from_h = Min(fromNeighbor->getExtraHighIndex(basis, req->var->getBoundaryLayer()), h);
+              //This intersection should not be needed
+              //from_l = Max(fromNeighbor->getExtraLowIndex(basis, req->var->getBoundaryLayer()), l);
+              //from_h = Min(fromNeighbor->getExtraHighIndex(basis, req->var->getBoundaryLayer()), h);
+              from_l = l;
+              from_h = h;
+              //verify in debug mode that the intersection is unneeded
+              ASSERT( Max(fromNeighbor->getExtraLowIndex(basis, req->var->getBoundaryLayer()), l)==l);
+              ASSERT(Min(fromNeighbor->getExtraHighIndex(basis, req->var->getBoundaryLayer()), h)==h);
             }
             if (patch->getLevel()->getIndex() > 0 && patch != fromNeighbor && req->patches_dom == Task::NormalDomain) {
               // cull annoying overlapping AMR patch dependencies
@@ -1179,6 +1263,7 @@ TaskGraph::createDetailedDependencies(DetailedTask* task,
             }
 
             for(int m=0;m<matls->size();m++){
+              TAU_PROFILE("SchedulerCommon::compile()-matl loop", " ", TAU_USER); 
               int matl = matls->get(m);
 
               // creator is the task that performs the original compute.
@@ -1204,12 +1289,18 @@ TaskGraph::createDetailedDependencies(DetailedTask* task,
                     comp=0;
                   }
                   else {
+
+                   //if neither the patch or the neighbor are on this processor then the computing task doesn't exist so just continue 
+                    if(lb->getPatchwiseProcessorAssignment(patch)!=d_myworld->myrank() && lb->getPatchwiseProcessorAssignment(neighbor)!=d_myworld->myrank())
+                      continue;
+
                     cout << "Failure finding " << *req << " for " << *task
                       << "\n";
                     if (creator)
                       cout << "creator=" << *creator << '\n';
                     cout << "neighbor=" << *fromNeighbor << ", matl=" << matl << '\n';
                     cout << "me=" << me << '\n';
+                    WAIT_FOR_DEBUGGER();
                     SCI_THROW(InternalError("Failed to find comp for dep!", __FILE__, __LINE__));
                   }
                 }
@@ -1231,6 +1322,7 @@ TaskGraph::createDetailedDependencies(DetailedTask* task,
                 for (reqTaskIter = requireBeforeModifiedTasks.begin();
                     reqTaskIter != requireBeforeModifiedTasks.end();
                     ++reqTaskIter) {
+                  TAU_PROFILE("SchedulerCommon::compile()-requireBeforeModified loop", " ", TAU_USER); 
                   DetailedTask* prevReqTask = *reqTaskIter;
                   if (prevReqTask == task)
                     continue;
@@ -1272,6 +1364,7 @@ TaskGraph::createDetailedDependencies(DetailedTask* task,
                         req_patch->getLevel()->selectPatches(low, high, n);
                         bool found = false;
                         for (int i = 0; i < n.size(); i++) {
+                          TAU_PROFILE("SchedulerCommon::compile()-n loop", " ", TAU_USER); 
                           if (n[i]->getID() == p->getID()) {
                             found = true;
                             break;
@@ -1309,10 +1402,12 @@ TaskGraph::createDetailedDependencies(DetailedTask* task,
       }
     }
     else if (!patches && matls && !matls->empty()) {
+      TAU_PROFILE("SchedulerCommon::compile()-reduction segment", " ", TAU_USER); 
       // requiring reduction variables
       for (int m=0;m<matls->size();m++){
         int matl = matls->get(m);
-        vector<DetailedTask*> creators;
+        static vector<DetailedTask*> creators;
+        creators.resize(0);
 
 #if 0
         if (type_ == Scheduler::IntermediateTaskGraph && req->lookInOldTG && sc->isNewDW(req->mapDataWarehouse())) {

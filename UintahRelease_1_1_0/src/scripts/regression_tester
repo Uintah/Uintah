@@ -1,10 +1,10 @@
-#! /bin/sh
+#! /bin/bash
 
-if test "$GOLD_STANDARD" == "" ; then
+if test "$GOLD_STANDARD" = "" ; then
     echo "The variable GOLD_STANDARD has not been set.  Please set the GOLD_STANDARD"
     echo "variable to a valid directory (either in your environment or in this script."
     echo "Goodbye."
-    exit
+
 elif test -d ${GOLD_STANDARD}; then
     test_dir=${GOLD_STANDARD}
 fi
@@ -23,6 +23,7 @@ if test ! -x "sus"; then
    echo
    exit
 fi
+
 
 # Set the default TestData directory
 DIR=dbg
@@ -120,7 +121,7 @@ for arg in $*; do
             echo; echo "Scheduling mpm, ice, and mpmice tests . . ."
             do_ice=1
             do_mpm=1
-            do_mpmf=1
+            do_mpmf=0
             do_mpmice=1
             do_models=1
             do_arches=1
@@ -314,7 +315,7 @@ run_test () {
     if test $numproc -gt 1; then
         MPI="mpirun -np $numproc"
         opts="$opts -mpi"
-    elif test $MPI_RUN == "yes"; then
+    elif test $MPI_RUN = "yes"; then
         MPI="mpirun -np $numproc"
         opts="$opts -mpi"
     else
@@ -390,7 +391,7 @@ compare_results () {
         compare=false
     fi
     
-    if [ $compare == true ] ; then
+    if [ $compare = true ] ; then
         return 0
     else
         return 1
@@ -469,6 +470,7 @@ run_case () {
 
     test_case=$1
     tc=${test_case}_test_cases
+
     echo; echo "Testing ${!tc}"
 
     all_tests_pass=true
@@ -511,7 +513,7 @@ run_case () {
 
     cd ..
     
-    if [ $all_tests_pass == true ]; then
+    if [ $all_tests_pass = true ]; then
         echo "returning 0"
         return 0
     else
@@ -524,7 +526,7 @@ run_case () {
 
 if test -n "$ALL"; then
    do_mpm=1
-   do_mpmf=1
+   do_mpmf=0
    do_ice=1
    do_ice_amr=1
    do_mpmice=1
@@ -593,11 +595,15 @@ if test "$do_impm" -eq 1; then
     rt_value=$?
 fi
 if test "$do_arches" -eq 1; then
+
     MPI_RUN="yes"
     CASE=ARCHES
+
 #    opts=-arches
 #    arches_test
+
     run_case arches
+exit
     rt_value=$?
 fi
 if test "$do_mpmarches" -eq 1; then

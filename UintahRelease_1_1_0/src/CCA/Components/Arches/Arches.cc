@@ -121,10 +121,12 @@ Arches::Arches(const ProcessorGroup* myworld) :
   d_analysisModule = false;
   d_calcExtraScalars = false;
   d_extraScalarSolver = 0;
+  d_set_initial_condition = false;
 
   DQMOMEqnFactory& dqmomfactory = DQMOMEqnFactory::self(); 
   dqmomfactory.set_quad_nodes(0);
   d_doDQMOM = false; 
+  d_doMMS = false;
   
 }
 
@@ -169,28 +171,66 @@ Arches::problemSetup(const ProblemSpecP& params,
   sharedState->registerArchesMaterial(mat);
   ProblemSpecP db = params->findBlock("CFD")->findBlock("ARCHES");
   // not sure, do we need to reduce and put in datawarehouse
-  db->require("grow_dt", d_deltaT);
-  db->require("variable_dt", d_variableTimeStep);
-  db->require("transport_mixture_fraction", d_calcScalar);
+  if (db->findBlock("ExplicitSolver")){
+    if (db->findBlock("ExplicitSolver")->findBlock("MixtureFractionSolver"))
+      d_calcScalar = true;
+      db->findBlock("ExplicitSolver")->findBlock("MixtureFractionSolver")->getWithDefault("initial_value",d_init_mix_frac,0.0); 
+  } else if (db->findBlock("PicardSolver")){
+    if (db->findBlock("PicardSolver")->findBlock("MixtureFractionSolver"))
+      d_calcScalar = true;
+  }
   if (!d_calcScalar)
-    throw InvalidValue("Density being independent variable or equivalently mixture fraction transport disabled is not supported in current implementation. This option has been left available for input file uniformity.", __FILE__, __LINE__);
-  db->getWithDefault("set_initial_condition",d_set_initial_condition,false);
-  if (d_set_initial_condition)
-    db->require("init_cond_input_file", d_init_inputfile);
+    throw InvalidValue("Density being independent variable or equivalently mixture fraction transport disabled is not supported in current implementation. Please include the <MixtureFractionSolver> section as a child of <Arches>.", __FILE__, __LINE__);
+
+  if (db->findBlock("set_initial_condition")) {
+    d_set_initial_condition = true;
+    db->findBlock("set_initial_condition")->getAttribute("inputfile",d_init_inputfile);
+  }
+
+//  db->getWithDefault("set_initial_condition",d_set_initial_condition,false);
+//  if (d_set_initial_condition)
+//    db->require("init_cond_input_file", d_init_inputfile);
+//
   if (d_calcScalar) {
-    db->getWithDefault("transport_reacting_scalar", d_calcReactingScalar,false);
-    db->require("transport_enthalpy", d_calcEnthalpy);
-    db->require("model_mixture_fraction_variance", d_calcVariance);
-    db->getWithDefault("transport_extra_scalars", d_calcExtraScalars, false);
+    if (d_calcReactingScalar) {
+      throw InvalidValue("Transport of reacting scalar is being phased out.  Please email j.thornock@utah.edu if you have questions.", __FILE__, __LINE__);
+      d_calcReactingScalar = false; 
+    }
+
+    if (db->findBlock("ExplicitSolver")){
+      if (db->findBlock("ExplicitSolver")->findBlock("EnthalpySolver"))
+        d_calcEnthalpy = true; 
+    } else if (db->findBlock("PicardSolver")) {
+      if (db->findBlock("PicardSolver")->findBlock("EnthalpySolver"))
+        d_calcEnthalpy = true;
+    }
+    // Moved model_mixture_fraction_variance to properties
+    db->findBlock("Properties")->require("use_mixing_model", d_calcVariance);
+    // db->require("model_mixture_fraction_variance", d_calcVariance);
   }
   db->getWithDefault("turnonMixedModel",    d_mixedModel,false);
   db->getWithDefault("recompileTaskgraph",  d_recompile,false);
-  db->getWithDefault("scalarUnderflowCheck",d_underflow,false);
-  db->getWithDefault("extraProjection",     d_extraProjection,false);  
-  db->getWithDefault("EKTCorrection",       d_EKTCorrection,false);  
 
-  db->getWithDefault("doMMS", d_doMMS, false);
-  if(d_doMMS) {
+  string nlSolver;
+  if (db->findBlock("ExplicitSolver")){
+    nlSolver = "explicit";
+    db->findBlock("ExplicitSolver")->getWithDefault("EKTCorrection", d_EKTCorrection,false);  
+    db->findBlock("ExplicitSolver")->getWithDefault("scalarUnderflowCheck",d_underflow,false);
+    db->findBlock("ExplicitSolver")->getWithDefault("extraProjection",     d_extraProjection,false);  
+    db->findBlock("ExplicitSolver")->require("initial_dt", d_init_dt);
+    db->findBlock("ExplicitSolver")->require("variable_dt", d_variableTimeStep);
+    
+  } else if (db->findBlock("PicardSolver")){
+    nlSolver = "picard";
+    db->findBlock("PicardSolver")->getWithDefault("EKTCorrection", d_EKTCorrection,false);  
+    db->findBlock("PicardSolver")->getWithDefault("scalarUnderflowCheck",d_underflow,false);
+    db->findBlock("PicardSolver")->getWithDefault("extraProjection",     d_extraProjection,false);  
+    db->findBlock("PicardSolver")->require("initial_dt", d_init_dt);
+    db->findBlock("PicardSolver")->require("variable_dt", d_variableTimeStep);
+  }
+
+  if(db->findBlock("MMS")) {
+    d_doMMS = true;
     ProblemSpecP db_mms = db->findBlock("MMS");
     if( !db_mms->getAttribute( "whichMMS", d_mms ) ) {
       throw ProblemSetupException( "whichMMS not specified", __FILE__, __LINE__);      
@@ -214,17 +254,12 @@ Arches::problemSetup(const ProblemSpecP& params,
   }
 
   // physical constant
-  // physical constants
   d_physicalConsts = scinew PhysicalConstants();
+  const ProblemSpecP db_root = db->getRootNode();
+  d_physicalConsts->problemSetup(db_root);
 
-  // ** BB 5/19/2000 ** For now read the Physical constants from the
-  // ** BB 5/19/2000 ** For now read the Physical constants from the 
-  // CFD-ARCHES block
-  // for gravity, read it from shared state 
-  //d_physicalConsts->problemSetup(params);
-  d_physicalConsts->problemSetup(db);
-
-  if (d_calcExtraScalars) {
+  if (db->findBlock("ExtraScalars")) {
+    d_calcExtraScalars = true; 
     ProblemSpecP extra_sc_db = db->findBlock("ExtraScalars");
     for (ProblemSpecP scalar_db = extra_sc_db->findBlock("scalar");
          scalar_db != 0; scalar_db = scalar_db->findNextBlock("scalar")) {
@@ -247,10 +282,8 @@ Arches::problemSetup(const ProblemSpecP& params,
   }
   
   d_props->problemSetup(db);
-  // read turbulence mode
-  // read turbulence model
 
-  // read boundary
+  // read boundary condition information 
   d_boundaryCondition = scinew BoundaryCondition(d_lab, d_MAlab, d_physicalConsts,
                                                  d_props, d_calcReactingScalar,
                                                  d_calcEnthalpy, d_calcVariance);
@@ -267,22 +300,25 @@ Arches::problemSetup(const ProblemSpecP& params,
   d_props->setCarbonBalanceES(d_carbon_balance_es);        
   d_props->setSulfurBalanceES(d_sulfur_balance_es);
 
-  db->require("turbulence_model", turbModel);
-  if (turbModel == "smagorinsky"){ 
+  ProblemSpecP turb_db = db->findBlock("Turbulence");
+  turb_db->getAttribute("model", d_whichTurbModel); 
+
+  //db->require("turbulence_model", turbModel);
+  if ( d_whichTurbModel == "smagorinsky"){ 
     d_turbModel = scinew SmagorinskyModel(d_lab, d_MAlab, d_physicalConsts,
                                           d_boundaryCondition);
-  }else  if (turbModel == "dynamicprocedure"){ 
+  }else  if ( d_whichTurbModel == "dynamicprocedure"){ 
     d_turbModel = scinew IncDynamicProcedure(d_lab, d_MAlab, d_physicalConsts,
                                           d_boundaryCondition);
-  }else if (turbModel == "compdynamicprocedure"){
+  }else if ( d_whichTurbModel == "compdynamicprocedure"){
     d_turbModel = scinew CompDynamicProcedure(d_lab, d_MAlab, d_physicalConsts,
                                           d_boundaryCondition);
-  }else if (turbModel == "complocaldynamicprocedure") {
+  }else if ( d_whichTurbModel == "complocaldynamicprocedure") {
     d_initTurb = scinew CompLocalDynamicProcedure(d_lab, d_MAlab, d_physicalConsts, d_boundaryCondition); 
     d_turbModel = scinew CompLocalDynamicProcedure(d_lab, d_MAlab, d_physicalConsts, d_boundaryCondition);
   }
   else {
-    throw InvalidValue("Turbulence Model not supported" + turbModel, __FILE__, __LINE__);
+    throw InvalidValue("Turbulence Model not supported" + d_whichTurbModel, __FILE__, __LINE__);
   }
 
 //  if (d_turbModel)
@@ -320,8 +356,7 @@ Arches::problemSetup(const ProblemSpecP& params,
       d_extraScalars[i]->setBoundaryCondition(d_boundaryCondition);
     }
   }
-  string nlSolver;
-  db->require("nonlinear_solver", nlSolver);
+
   if(nlSolver == "picard") {
     d_nlSolver = scinew PicardNonlinearSolver(d_lab, d_MAlab, d_props, 
                                               d_boundaryCondition,
@@ -388,8 +423,6 @@ Arches::problemSetup(const ProblemSpecP& params,
     //create a time integrator.
     d_timeIntegrator = scinew ExplicitTimeInt(d_lab);
     d_timeIntegrator->problemSetup(time_db);
-  } else {
-    proc0cout << "WARNING: If you are trying to do DQMOM you need to add the <TimeIntegrator> section!\n"; 
   }
 
   //register all source terms
@@ -445,6 +478,8 @@ Arches::problemSetup(const ProblemSpecP& params,
 
   ProblemSpecP dqmom_db = db->findBlock("DQMOM"); 
   if (dqmom_db) {
+
+    proc0cout << "WARNING: If you are trying to do DQMOM make sure you added the <TimeIntegrator> section!\n"; 
 
     d_doDQMOM = true; 
 
@@ -633,7 +668,7 @@ Arches::scheduleInitialize(const LevelP& level,
                                                             init_timelabel);
     }
 
-    if (turbModel == "complocaldynamicprocedure")
+    if (d_whichTurbModel == "complocaldynamicprocedure")
       d_initTurb->sched_initializeSmagCoeff(sched, patches, matls, init_timelabel);
     else
       d_turbModel->sched_reComputeTurbSubmodel(sched, patches, matls, init_timelabel);
@@ -992,6 +1027,12 @@ Arches::paramInit(const ProcessorGroup* pg,
       }
     }
     scalar.initialize(0.0);
+    if (d_init_mix_frac > 0.0) {
+      for (CellIterator iter=patch->getCellIterator__New(); 
+           !iter.done(); iter++){
+        scalar[*iter] = d_init_mix_frac; 
+      }
+    }
 
 /*    for (CellIterator iter=patch->getCellIterator__New(); 
          !iter.done(); iter++){
@@ -1119,7 +1160,7 @@ Arches::computeStableTimeStep(const ProcessorGroup* ,
       indexHigh = indexHigh + IntVector(0,0,1);
     }
 
-    double delta_t = d_deltaT; // max value allowed
+    double delta_t = d_init_dt; // max value allowed
     double small_num = 1e-30;
     double delta_t2 = delta_t;
 

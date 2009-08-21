@@ -313,8 +313,10 @@ private:
 
 
 
-      double d_deltaT;
+      double d_init_dt; // The initial dt from input file. 
+      double d_init_mix_frac; // The initial value of mixture fraction in the domain (for paramInit)
       bool d_variableTimeStep;
+      string d_whichTurbModel; 
       bool d_calcScalar;
       bool d_calcReactingScalar;
       bool d_calcEnthalpy;
@@ -323,7 +325,6 @@ private:
       bool d_doMMS;
       bool d_extraProjection;
       bool d_EKTCorrection;
-      string turbModel;
       ScaleSimilarityModel* d_scaleSimilarityModel;
       CompLocalDynamicProcedure* d_initTurb;
       PhysicalConstants* d_physicalConsts;

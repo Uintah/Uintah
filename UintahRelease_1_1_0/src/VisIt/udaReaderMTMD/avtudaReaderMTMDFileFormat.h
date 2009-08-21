@@ -136,6 +136,7 @@ protected:
   levelPatchVec * levelPatchVecPtr;
   patchInfoVec  * patchInfoVecPtr;
   typeDouble* timeStepInfo;
+  udaVars* udaVarsPtr;
         
   double ***refMatrix; // scalars
   vecVal ***vecValMatrix;
@@ -167,10 +168,15 @@ protected:
   int*             (*getPeriodicBoundaries)(const std::string&, int, int);
   int*             (*getExtraCells)(const std::string&, int, int);
   int*             (*getNumLevels)(const std::string&, int);
+  int*             (*getPVarLevelAndPatches)(const std::string&, const std::string&, int); 
 
   virtual void     PopulateDatabaseMetaData(avtDatabaseMetaData *, int);
+  void             InitializeReader(avtDatabaseMetaData *, int);
   // virtual void     RegisterVariableList(const char *,
   // const vector<CharStrRef> &);
+  virtual void     *GetAuxiliaryData(const char *var, int,
+                                     const char *type, void *args,
+                                     DestructorFunction &);
 
   void             GetLevelAndLocalPatchNumber(int, int, int&, int&);
   void             CalculateDomainNesting(int);

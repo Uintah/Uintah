@@ -53,24 +53,31 @@ namespace SCIRun {
 
 class SCISHARE Weibull {
 public:
-  double mean_;
-  double sigma_;
-  double scale_;
+  double WeibMed_;
+  double WeibMod_;
+  double WeibRefVol_;
   MusilRNG *mr_;
-  Weibull(double mean=0, double sigma=1, double scale=1, int seed=0);
-  ~Weibull();
+  Weibull(double WeibMed=0,
+          double WeibMod=1,
+          double WeibRefVol=1,
+          int WeibSeed=0);
+          ~Weibull();
 
   // Equation taken from
   // "Theory and Results for Incorporating Aleatory Uncertainty and Scale
   // Effects in Damage Models for Failure and Fragmentation"
   // by R.M. Brannon and O.E. Strack, Sandia National Laboratories
-  inline double rand() {return mean_*pow(log((*mr_)())/(scale_*log(0.5)),1/sigma_);}
+  inline double rand(double PartVol) {
+ return WeibMed_*pow(log((*mr_)())/((PartVol/WeibRefVol_)*log(0.5)),1/WeibMod_);
+  }
 
   // Probability that x was picked from this Weibull distribution
   // found on http://www.weibull.com/LifeDataWeb/weibull_probability_density_function.htm
-  double prob(double x) {return (sigma_/scale_)*
-                                pow((x-mean_)/scale_,sigma_-1)*
-                                exp(-pow((x-mean_)/scale_,sigma_));}
+  double prob(double x, double PartVol) {
+   return (WeibMod_/(PartVol/WeibRefVol_))*
+           pow((x-WeibMed_)/(PartVol/WeibRefVol_),WeibMod_-1)*
+           exp(-pow((x-WeibMed_)/(PartVol/WeibRefVol_),WeibMod_));
+  }
 };
 
 } // End namespace SCIRun

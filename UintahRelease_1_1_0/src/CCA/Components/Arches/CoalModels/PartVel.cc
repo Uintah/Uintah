@@ -185,7 +185,10 @@ void PartVel::ComputePartVel( const ProcessorGroup* pc,
   
         IntVector c = *iter;
 
-        double length = d_wlo[iqn]/d_wo[iqn] * eqn.getScalingConstant();
+        //double length = d_wlo[iqn]/d_wo[iqn] * eqn.getScalingConstant();
+        double eps = 1e-10;
+        double length = wlength[c]/( weight[c] + eps ) * eqn.getScalingConstant(); 
+
         if ( length > d_highClip ) {
           length = d_highClip; 
         }

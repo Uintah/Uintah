@@ -49,7 +49,7 @@ namespace Uintah {
     PackedBuffer(int bytes)
       : buf((void*)(scinew char[bytes])), bufsize(bytes) {}
     ~PackedBuffer()
-    { delete[] (char*)buf; }
+    { delete[] (char*)buf; buf=0; }
     void* getBuffer() { return buf; }
     int getBufSize() { return bufsize; }
   private:

@@ -215,8 +215,11 @@ namespace Uintah {
     {
       if(d_data){
         delete[] d_data;
+        d_data=0;
         delete[] d_data3[0];
+        d_data3[0]=0;
         delete[] d_data3;
+        d_data3=0;
       }
     }
 

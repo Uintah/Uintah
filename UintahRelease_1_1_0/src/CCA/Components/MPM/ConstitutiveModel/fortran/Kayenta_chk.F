@@ -28,21 +28,21 @@ C
 C
 C 
 C 
-      SUBROUTINE GEOCHK ( UI, GC, DC)
+      SUBROUTINE KMMCHK ( UI, GC, DC)
 
       CHARACTER*6 IAM
-      PARAMETER( IAM = 'GEOCHK' )
+      PARAMETER( IAM = 'KMMCHK' )
 
       CALL LOGMES('This model is only available to licensees')
       CALL FATERR(IAM,'See Jim Guilkey for more information')
 
       END
 
-      SUBROUTINE GEORXV(UI,GC,DC,
+      SUBROUTINE KMMRXV(UI,GC,DC,
      &  NX, NAMEA, KEYA, RINIT, RDIM, IADVCT, ITYPE)
 
       CHARACTER*6 IAM
-      PARAMETER( IAM = 'GEORXV' )
+      PARAMETER( IAM = 'KMMRXV' )
 
       CALL LOGMES('This model is only available to licensees')
       CALL FATERR(IAM,'See Jim Guilkey for more information')

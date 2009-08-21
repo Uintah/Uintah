@@ -823,12 +823,12 @@ MPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
       initiateTask( dts->localTask(i), abort, abort_point, iteration );
   }
 #endif
-  int currblock=0;
-  map<int, int> blockTasks;
-  map<int, int> blockTasksDone;
+  int currphase=0;
+  map<int, int> phaseTasks;
+  map<int, int> phaseTasksDone;
   if (useExternalQueue_ && !d_sharedState->isCopyDataTimestep()) {
     for (int i = 0; i < ntasks; i++)
-      blockTasks[dts->localTask(i)->getTask()->Block]++;
+      phaseTasks[dts->localTask(i)->getTask()->d_phase]++;
   }
 
   set<DetailedTask*> pending_tasks;
@@ -928,7 +928,11 @@ MPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
       if (dts->numInternalReadyTasks() > 0) {
         DetailedTask * task = dts->getNextInternalReadyTask();
 
-        if (task->getTask()->getType() == Task::Reduction) reducetask = task;
+        if (task->getTask()->getType() == Task::Reduction) 
+        {
+          ASSERT(reducetask==0);
+          reducetask = task;
+        }
         else {
           initiateTask( task, abort, abort_point, iteration );
           task->markInitiated();
@@ -943,22 +947,68 @@ MPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
         // tasks get in this queue automatically when their receive count hits 0
         //   in DependencyBatch::received, which is called when a message is delivered.
         DetailedTask * task = dts->getNextExternalReadyTask();
+#ifdef USE_TAU_PROFILING
+      int id;
+      const PatchSubset* patches = task->getPatches();
+      id = create_tau_mapping( task->getTask()->getName(), patches );
+  
+      string phase_name = "no patches";
+      if (patches && patches->size() > 0) {
+        phase_name = "level";
+        for(int i=0;i<patches->size();i++) {
+      
+          ostringstream patch_num;
+          patch_num << patches->get(i)->getLevel()->getIndex();
+      
+          if (i == 0) {
+            phase_name = phase_name + " " + patch_num.str();
+          } else {
+            phase_name = phase_name + ", " + patch_num.str();
+          }
+        }
+      }
+
+      static map<string,int> phase_map;
+      static int unique_id = 99999;
+      int phase_id;
+      map<string,int>::iterator iter = phase_map.find( phase_name );
+      if( iter != phase_map.end() ) {
+        phase_id = (*iter).second;
+      } else {
+        TAU_MAPPING_CREATE( phase_name, "",
+			    (TauGroup_t) unique_id, "TAU_USER", 0 );
+        phase_map[ phase_name ] = unique_id;
+        phase_id = unique_id++;
+      }
+      // Task name
+      TAU_MAPPING_OBJECT(tautimer)
+      TAU_MAPPING_LINK(tautimer, (TauGroup_t)id);  // EXTERNAL ASSOCIATION
+      TAU_MAPPING_PROFILE_TIMER(doitprofiler, tautimer, 0)
+      TAU_MAPPING_PROFILE_START(doitprofiler,0);
+#endif
         taskdbg << d_myworld->myrank() << " Running task " << *task << "(" << dts->numExternalReadyTasks() <<"/"<< pending_tasks.size() <<" tasks in queue)"<<endl;
         pending_tasks.erase(pending_tasks.find(task));
         ASSERTEQ(task->getExternalDepCount(), 0);
         runTask(task, iteration);
         numTasksDone++;
-        blockTasksDone[task->getTask()->Block]++;
+        phaseTasksDone[task->getTask()->d_phase]++;
+        //cout << d_myworld->myrank() << " finished task(0) " << *task << " scheduled in phase: " << task->getTask()->d_phase << ", tasks finished in that phase: " <<  phaseTasksDone[task->getTask()->d_phase] << " current phase:" << currphase << endl; 
+#ifdef USE_TAU_PROFILING
+      TAU_MAPPING_PROFILE_STOP(doitprofiler);
+#endif
       } 
       }
-      if ((reducetask!=0) && (blockTasksDone[currblock] == blockTasks[currblock]-1)){
+      if ((reducetask!=0) && (phaseTasksDone[currphase] == phaseTasks[currphase]-1)){
             if(!abort) {
               taskdbg << d_myworld->myrank() << " Running task " << reducetask->getTask()->getName() << endl;
               initiateReduction(reducetask);
             }
+            ASSERT(reducetask->getTask()->d_phase==currphase);
+
             numTasksDone++;
-            blockTasksDone[reducetask->getTask()->Block]++;
-            currblock++;
+            phaseTasksDone[reducetask->getTask()->d_phase]++;
+            //cout << d_myworld->myrank() << " finished reduction task(1) " << *reducetask << " scheduled in phase: " << reducetask->getTask()->d_phase << ", tasks finished in that phase: " <<  phaseTasksDone[reducetask->getTask()->d_phase] << " current phase:" << currphase << endl; 
+            currphase++;
             reducetask=0;
       } else if (numTasksDone < ntasks){
         // we have nothing to do, so wait until we get something

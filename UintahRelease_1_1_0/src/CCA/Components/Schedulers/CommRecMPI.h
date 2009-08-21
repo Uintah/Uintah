@@ -48,7 +48,7 @@ class ProcessorGroup;
 class CommRecMPI {
 public:
   CommRecMPI()
-    : groupIDDefault_(0) {}
+    : groupIDDefault_(0), totalBytes_(0) {}
   
   // returns true while there are more tests to wait for.
   //bool waitsome(MPI_Comm comm, int me); // return false when all done
@@ -96,7 +96,7 @@ private:
   vector<MPI_Status> statii;
   vector<int> indices;
 
-  bool donesome(const ProcessorGroup * pg, int donecount, vector<MPI_Status> statii,
+  bool donesome(const ProcessorGroup * pg, int donecount, vector<MPI_Status> &statii,
 		list<int>* finishedGroups = 0);
 };
 
@@ -110,7 +110,12 @@ public:
   {}
 
   virtual ~ReceiveHandler()
-  { delete unpackHandler_; delete batchHandler_; }
+  { 
+    delete unpackHandler_;
+    unpackHandler_=0; 
+    delete batchHandler_; 
+    batchHandler_=0;
+  }
 
   virtual void finishedCommunication(const ProcessorGroup * pg, MPI_Status &status)
   {

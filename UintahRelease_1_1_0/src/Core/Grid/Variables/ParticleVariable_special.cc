@@ -107,8 +107,8 @@ using namespace SCIRun;
       if (srcPatch == 0 || !srcPatch->isVirtual()) {
 	for(ParticleSubset::iterator srciter = subset->begin();
 	    srciter != subset->end(); srciter++){
-	  const Point& p = (*this)[*dstiter] = src[*srciter];
-	  ASSERT(box.contains(p));	  
+	  (*this)[*dstiter] = src[*srciter];
+	  ASSERT(box.contains(src[*srciter]));	  
 	  dstiter++;
 	}
       }

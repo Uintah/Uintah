@@ -4476,7 +4476,7 @@ void MPMArches::computeAndIntegrateAcceleration(const ProcessorGroup* pg,
     const Patch* patch = patches->get(p);
 
     Ghost::GhostType  gnone = Ghost::None;
-    Vector gravity = d_sharedState->getGravity();
+//    Vector gravity = d_sharedState->getGravity();
     for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
@@ -4506,8 +4506,8 @@ void MPMArches::computeAndIntegrateAcceleration(const ProcessorGroup* pg,
           iter++){
          IntVector c = *iter;
          Vector acc(0.,0.,0.);
-         acc = (internalforce[c] + externalforce[c])/mass[c];
-         acceleration[c] = acc +  gravity;
+         acceleration[c] = (internalforce[c] + externalforce[c])/mass[c];
+//         acceleration[c] +=  gravity;
 	 acceleration[c] += AccArchesNC[c];
          velocity_star[c] = velocity[c] + acceleration[c] * delT;
       }

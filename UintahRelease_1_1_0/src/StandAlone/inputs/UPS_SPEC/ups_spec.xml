@@ -503,7 +503,7 @@
     <!--__________________________________-->
     
     <Level              spec="MULTIPLE NO_DATA">
-      <Box              spec="REQUIRED NO_DATA"
+      <Box              spec="MULTIPLE NO_DATA"
                           attribute1="label     OPTIONAL STRING" 
                           children1="ONE_OF(CHILD autoPatch,patches)">
         <autoPatch      spec="OPTIONAL INTEGER 'positive'" />
@@ -532,6 +532,8 @@
   <PhysicalConstants    spec="OPTIONAL NO_DATA"> <!-- FIXME: REALLY OPTIONAL??? -->
     <gravity            spec="REQUIRED VECTOR" /> <!-- THIS IS OPTIONAL IN ICE AND MPM, DEFAULT IS 0,0,0 -->
     <reference_pressure spec="OPTIONAL DOUBLE" />
+    <reference_point    spec="OPTIONAL VECTOR" />
+    <viscosity          spec="OPTIONAL DOUBLE" />
   </PhysicalConstants>
 
   <CFD                                  spec="OPTIONAL NO_DATA" >
@@ -656,7 +658,7 @@
   </Wave>
 
   <LoadBalancer            spec="OPTIONAL NO_DATA" 
-                             attribute1="type REQUIRED STRING 'DLB'" >
+                             attribute1="type REQUIRED STRING 'DLB SimpleLoadBalancer'" >
     <cellCost              spec="OPTIONAL DOUBLE 'positive'" /> <!--The weight per cell -->
     <cellFactor            spec="OPTIONAL DOUBLE" />  <!-- FIXME: What is this?  What is the default? -->
     <collectParticles      spec="OPTIONAL BOOLEAN" />

@@ -74,10 +74,6 @@
 	<time_integrator>explicit</time_integrator>
     </MPM>
 
-    <PhysicalConstants>
-        <gravity>[0.0,0.0,0.0]</gravity>
-    </PhysicalConstants>
-
     <MaterialProperties>
 	<MPM>
            <material name="Composite Cylinder">
@@ -174,21 +170,20 @@
 	</Level>
     </Grid>
 
+	    <PhysicalConstants>
+		<gravity>[-9.8,0,0]</gravity>
+                <reference_point>[-1,-1,-1]</reference_point>
+		<viscosity>0.000020</viscosity>
+	    </PhysicalConstants>
+
    <CFD>
 	<!-- ARCHES specification -->
 
 	<ARCHES>
 
-	    <grow_dt>0.01</grow_dt>
-	    <variable_dt>true</variable_dt>
-   	    <nonlinear_solver>explicit</nonlinear_solver>
-    	    <turbulence_model>compdynamicprocedure</turbulence_model>
-            <transport_mixture_fraction>true</transport_mixture_fraction>
-            <transport_enthalpy>true</transport_enthalpy>
-            <model_mixture_fraction_variance>true</model_mixture_fraction_variance>
             <scalarUnderflowCheck>true</scalarUnderflowCheck>
 
-            <Turbulence>
+            <Turbulence model="compdynamicprocedure">
 	        <variance_coefficient>0.1</variance_coefficient>
                 <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber> 
 	        <dynamicScalarModel>false</dynamicScalarModel>
@@ -197,12 +192,10 @@
             </Turbulence>
 
 	    <Properties>
+          <use_mixing_model>true</use_mixing_model>
 	        <empirical_soot>true</empirical_soot>
-	        <mixing_model>NewStaticMixingTable</mixing_model>
 	        <NewStaticMixingTable>
                   <inputfile>inputs/ARCHES/NewStaticMixingTables/jp8/jp8_equil_clipped.mxn</inputfile>
-                  <h_fuel>-1322280.0</h_fuel>
-                  <h_air>-118.456</h_air>
                   <co_output>false</co_output>
                   <sulfur_chem>false</sulfur_chem>
                   <soot_precursors>false</soot_precursors>
@@ -234,6 +227,7 @@
                 </FlowInlet>
 
                 <FlowInlet>
+                <!-- cross wind -->
 	            <ramping_inlet_flowrate>false</ramping_inlet_flowrate>
                     <InletVelocity>1.02</InletVelocity>
                     <mixture_fraction>0.0</mixture_fraction>
@@ -286,13 +280,11 @@
                 <carbon_balance>false</carbon_balance>
             </BoundaryConditions>
 
-	    <PhysicalConstants>
-		<gravity>[-9.8,0,0]</gravity>
-                <ref_point>[-1,-1,-1]</ref_point>
-		<viscosity>0.000020</viscosity>
-	    </PhysicalConstants>
 
 	    <ExplicitSolver>
+
+	    <initial_dt>0.01</initial_dt>
+	    <variable_dt>true</variable_dt>
 		<timeIntegratorType>RK2SSP</timeIntegratorType>	
                 <restartOnNegativeDensityGuess>true</restartOnNegativeDensityGuess>
  
@@ -354,7 +346,6 @@
             </ExplicitSolver>
 
             <set_initial_condition>false</set_initial_condition>
-            <transport_reacting_scalar>false</transport_reacting_scalar>
             <turnonMixedModel>false</turnonMixedModel>
             <recompileTaskgraph>false</recompileTaskgraph>
             <doMMS>false</doMMS>

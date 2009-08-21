@@ -50,8 +50,6 @@ SRCS += $(SRCDIR)/Arches.cc \
         $(SRCDIR)/PhysicalConstants.cc \
         $(SRCDIR)/PicardNonlinearSolver.cc \
         $(SRCDIR)/PressureSolver.cc \
-        $(SRCDIR)/MixingRxnTable.cc \
-        $(SRCDIR)/TabPropsTable.cc \
         $(SRCDIR)/Properties.cc \
         $(SRCDIR)/ReactiveScalarSolver.cc \
         $(SRCDIR)/RHSSolver.cc \
@@ -86,7 +84,7 @@ ifeq ($(HAVE_HYPRE),yes)
   SRCS += $(SRCDIR)/HypreSolver.cc
 endif
 
-SUBDIRS := $(SRCDIR)/CoalModels $(SRCDIR)/SourceTerms $(SRCDIR)/TransportEqns 
+SUBDIRS := $(SRCDIR)/CoalModels $(SRCDIR)/SourceTerms $(SRCDIR)/TransportEqns $(SRCDIR)/ChemMix
 include $(SCIRUN_SCRIPTS)/recurse.mk
 
 PSELIBS := \
@@ -100,7 +98,7 @@ PSELIBS := \
         CCA/Components/Arches/Mixing    \
         CCA/Components/Arches/MCRT/ArchesRMCRT  \
         CCA/Components/Arches/Radiation \
-        CCA/Components/Arches/TabProps  \
+        CCA/Components/Arches/ChemMix/TabProps  \
         CCA/Components/OnTheFlyAnalysis \
         CCA/Ports     \
         Core/Parallel \

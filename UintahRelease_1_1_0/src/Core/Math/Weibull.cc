@@ -46,8 +46,14 @@
 
 namespace SCIRun {
 
-Weibull::Weibull(double mean, double sigma, double scale, int seed) 
-  : mean_(mean), sigma_(sigma), scale_(scale), mr_(new MusilRNG(seed))
+Weibull::Weibull(double WeibMed,
+                 double WeibMod,
+                 double WeibRefVol,
+                 int WeibSeed) 
+  : WeibMed_(WeibMed),
+    WeibMod_(WeibMod),
+    WeibRefVol_(WeibRefVol),
+    mr_(new MusilRNG(WeibSeed))
 {
 }
 

@@ -26,10 +26,9 @@
         <save label = "netflowOUTBC"/>
         <save label = "totalKineticEnergy"/>
         <save label = "pressurePS"/>
-        <save label = "newCCUVelocity"/>  
-        <save label = "newCCVVelocity"/>  
-        <save label = "newCCWVelocity"/>  
-        <save label = "newCCVelocity"/>
+        <save label = "uVelocitySPBC"/>  
+        <save label = "vVelocitySPBC"/>  
+        <save label = "wVelocitySPBC"/>  
         <save label = "scalarSP"/>
         <save label = "densityCP"/>
         <save label = "viscosityCTS"/>
@@ -40,10 +39,6 @@
         <checkpoint cycle = "2" interval = "0.2"/>
         <compression>gzip</compression>
     </DataArchiver>
-    
-    <PhysicalConstants>
-        <gravity>[0,0,0]</gravity>
-    </PhysicalConstants>
     
     <MPM>
         <time_integrator>explicit</time_integrator>
@@ -149,23 +144,22 @@
                 <upper>[3,3,3]</upper>
                 <resolution>[30,30,30]</resolution>
                 <extraCells>[1,1,1]</extraCells>
-                <patches>[1,1,1]</patches>
+                <patches>[2,2,2]</patches>
             </Box>
         </Level>
     </Grid>
+
+   <PhysicalConstants>
+       <gravity>[-9.8,0,0]</gravity>
+       <reference_point>[-1,-1,-1]</reference_point>
+       <viscosity>0.000020</viscosity>
+   </PhysicalConstants>
     
     <CFD>
         <!-- ARCHES specification -->
 
         <ARCHES>
-            <grow_dt>0.05</grow_dt>
-            <variable_dt>true</variable_dt>
-            <nonlinear_solver>explicit</nonlinear_solver>
-            <turbulence_model>smagorinsky</turbulence_model>
-            <transport_mixture_fraction>true</transport_mixture_fraction>
-            <transport_enthalpy>false</transport_enthalpy>  
-            <model_mixture_fraction_variance>false</model_mixture_fraction_variance>
-            <Turbulence>
+            <Turbulence model = "smagorinsky">
                 <variance_coefficient>0.1</variance_coefficient>
                 <cf>0.17</cf>
                 <fac_mesh>1.0</fac_mesh>
@@ -174,8 +168,8 @@
             </Turbulence>
             
             <Properties>
-                <mixing_model>coldFlowMixingModel</mixing_model>
-                <ColdflowMixingModel>
+                <use_mixing_model>false</use_mixing_model>
+                <ColdFlowMixingModel>
                     <Stream>
                         <density>0.133</density>
                         <temperature>298</temperature>
@@ -184,7 +178,7 @@
                         <density>1.184344</density>
                         <temperature>298</temperature>
                     </Stream>
-                </ColdflowMixingModel>
+                </ColdFlowMixingModel>
             </Properties>
             
             <BoundaryConditions>
@@ -257,13 +251,11 @@
                 
             </BoundaryConditions>
             
-            <PhysicalConstants>
-                <gravity>[-9.8,0,0]</gravity>
-                <ref_point>[-1,-1,-1]</ref_point>
-                <viscosity>0.000020</viscosity>
-            </PhysicalConstants>
-            
             <ExplicitSolver>
+
+
+            <initial_dt>0.05</initial_dt>
+            <variable_dt>true</variable_dt>
                 <timeIntegratorType>RK2SSP</timeIntegratorType>
                 <restartOnNegativeDensityGuess>true</restartOnNegativeDensityGuess>
                 

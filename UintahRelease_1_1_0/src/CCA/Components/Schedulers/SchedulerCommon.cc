@@ -94,7 +94,7 @@ char * SchedulerCommon::start_addr = NULL;
 
 SchedulerCommon::SchedulerCommon(const ProcessorGroup* myworld, Output* oport)
   : UintahParallelComponent(myworld), m_outPort(oport),
-    d_maxMemUse( 0 ), m_graphDoc(NULL), m_nodes(NULL)
+    trackingVarsPrintLocation_(0), d_maxMemUse(0), m_graphDoc(NULL), m_nodes(NULL)
 {
   d_generation = 0;
   numOldDWs = 0;
@@ -1114,7 +1114,7 @@ SchedulerCommon::scheduleAndDoDataCopy(const GridP& grid, SimulationInterface* s
 
   for (int i = 0; i < grid->numLevels(); i++) {
     LevelP newLevel = grid->getLevel(i);
-
+    //const PatchSubset  *patches = getLoadBalancer()->getPerProcessorPatchSet(newLevel)->getSubset(d_myworld->myrank());
     if (i > 0) {
       if (i >= oldGrid->numLevels()) {
         // new level - refine everywhere
@@ -1144,7 +1144,8 @@ SchedulerCommon::scheduleAndDoDataCopy(const GridP& grid, SimulationInterface* s
           int sum = 0;
           Patch::selectType oldPatches;
           oldLevel->selectPatches(lowIndex, highIndex, oldPatches);
-          
+         
+          //compute volume of overlapping regions
           for (int old = 0; old < oldPatches.size(); old++) {
             const Patch* oldPatch = oldPatches[old];
             IntVector oldLow = oldPatch->getCellLowIndex__New();
@@ -1169,16 +1170,16 @@ SchedulerCommon::scheduleAndDoDataCopy(const GridP& grid, SimulationInterface* s
 
     // find the patches that you don't refine
     Handle<PatchSubset> temp = scinew PatchSubset; // temp only to show empty set.  Don't pass into computes
-    constHandle<PatchSubset> modset, levelset, compset, diffset, intersection;
-    
+    constHandle<PatchSubset> modset, levelset, compset; 
     if (refineSets[i])
       modset = refineSets[i]->getUnion();
     else {
       modset = temp;
     }
     levelset = newLevel->eachPatch()->getUnion();
+    //levelset = patches;
     
-    PatchSubset::intersectionAndDifferences(levelset, modset, intersection, compset, diffset);
+    PatchSubset::difference(levelset, modset, compset);
 
     dataTasks.push_back(scinew Task("SchedulerCommon::copyDataToNewGrid", this,                          
                                      &SchedulerCommon::copyDataToNewGrid));
@@ -1197,6 +1198,7 @@ SchedulerCommon::scheduleAndDoDataCopy(const GridP& grid, SimulationInterface* s
       }
     }
     addTask(dataTasks[i], newLevel->eachPatch(), d_sharedState->allMaterials());
+    //addTask(dataTasks[i], patches, d_sharedState->allMaterials());
     if (i > 0) {
       sim->scheduleRefineInterface(newLevel, sched, 0, 1);
     }
@@ -1347,29 +1349,45 @@ SchedulerCommon::copyDataToNewGrid(const ProcessorGroup*, const PatchSubset* pat
             {
               if(!oldDataWarehouse->exists(label, matl, oldPatch))
                 SCI_THROW(UnknownVariable(label->getName(), oldDataWarehouse->getID(), oldPatch, matl,
-                                          "in copyDataTo GridVariableBase", __FILE__, __LINE__));
-              GridVariableBase* v = dynamic_cast<GridVariableBase*>(oldDataWarehouse->d_varDB.get(label, matl, oldPatch));
-              
-              if ( !newDataWarehouse->exists(label, matl, newPatch) ) {
-                GridVariableBase* newVariable = v->cloneType();
-                newVariable->rewindow( newLowIndex, newHighIndex );
-                newVariable->copyPatch( v, copyLowIndex, copyHighIndex );
-                newDataWarehouse->d_varDB.put(label, matl, newPatch, newVariable, false);
-              } else {
-                GridVariableBase* newVariable = 
-                  dynamic_cast<GridVariableBase*>(newDataWarehouse->d_varDB.get(label, matl, newPatch ));
-                // make sure it exists in the right region (it might be ghost data)
-                newVariable->rewindow(newLowIndex, newHighIndex);
-                if (oldPatch->isVirtual()) {
-                  // it can happen where the old patch was virtual and this is not
-                  GridVariableBase* tmpVar = newVariable->cloneType();
-                  oldDataWarehouse->d_varDB.get(label, matl, oldPatch, *tmpVar);
-                  tmpVar->offset(oldPatch->getVirtualOffset());
-                  newVariable->copyPatch( tmpVar, copyLowIndex, copyHighIndex );
-                  delete tmpVar;
+                      "in copyDataTo GridVariableBase", __FILE__, __LINE__));
+              vector<Variable *> varlist;
+              oldDataWarehouse->d_varDB.getlist(label, matl, oldPatch, varlist);
+              GridVariableBase* v=NULL;
+
+              IntVector srclow = copyLowIndex;
+              IntVector srchigh = copyHighIndex;
+
+              for (unsigned int i = 0 ; i < varlist.size(); ++i) {
+                v = dynamic_cast<GridVariableBase*>(varlist[i]);
+
+                ASSERT(v->getBasePointer()!=0);
+
+                //restrict copy to data range
+                srclow =  Max(copyLowIndex, v->getLow());
+                srchigh = Min(copyHighIndex, v->getHigh());
+                if (srclow.x() >= srchigh.x() || srclow.y() >= srchigh.y() || srclow.z() >= srchigh.z()) continue;
+
+                if ( !newDataWarehouse->exists(label, matl, newPatch) ) {
+                  GridVariableBase* newVariable = v->cloneType();
+                  newVariable->rewindow( newLowIndex, newHighIndex );
+                  newVariable->copyPatch( v, srclow, srchigh);
+                  newDataWarehouse->d_varDB.put(label, matl, newPatch, newVariable, false);
+                } else {
+                  GridVariableBase* newVariable = 
+                    dynamic_cast<GridVariableBase*>(newDataWarehouse->d_varDB.get(label, matl, newPatch ));
+                  // make sure it exists in the right region (it might be ghost data)
+                  newVariable->rewindow(newLowIndex, newHighIndex);
+                  if (oldPatch->isVirtual()) {
+                    // it can happen where the old patch was virtual and this is not
+                    GridVariableBase* tmpVar = newVariable->cloneType();
+                    tmpVar->copyPointer(*v);
+                    tmpVar->offset(oldPatch->getVirtualOffset());
+                    newVariable->copyPatch( tmpVar, srclow, srchigh );
+                    delete tmpVar;
+                  }
+                  else
+                    newVariable->copyPatch( v, srclow, srchigh );
                 }
-                else
-                  newVariable->copyPatch( v, copyLowIndex, copyHighIndex );
               }
             }
             break;
