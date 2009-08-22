@@ -286,7 +286,7 @@ void MPMICE::scheduleInitialize(const LevelP& level,
   t->computes(Ilb->temp_CCLabel);
   t->computes(Ilb->sp_vol_CCLabel);
   t->computes(Ilb->speedSound_CCLabel); 
-  t->computes(MIlb->NC_CCweightLabel, one_matl);
+//  t->computes(MIlb->NC_CCweightLabel, one_matl);
   t->computes(Mlb->heatRate_CCLabel);
 
   if (d_switchCriteria) {
@@ -712,7 +712,7 @@ void MPMICE::scheduleInterpolateNCToCC_0(SchedulerP& sched,
     t->requires(Task::NewDW, Mlb->gVelocityBCLabel, Ghost::AroundCells, 1); 
     t->requires(Task::NewDW, Mlb->gTemperatureLabel,Ghost::AroundCells, 1);
     t->requires(Task::NewDW, Mlb->gSp_volLabel,     Ghost::AroundCells, 1);
-    t->requires(Task::OldDW, MIlb->NC_CCweightLabel,one_matl,
+    t->requires(Task::OldDW, Mlb->NC_CCweightLabel,one_matl,
                                                     Ghost::AroundCells, 1);
     t->requires(Task::OldDW, Ilb->sp_vol_CCLabel,   Ghost::None, 0); 
     t->requires(Task::OldDW, MIlb->temp_CCLabel,    Ghost::None, 0);
@@ -788,7 +788,7 @@ void MPMICE::scheduleComputeLagrangianValuesMPM(SchedulerP& sched,
     t->requires(Task::NewDW, Mlb->gVelocityStarLabel, mss, gac,1);
     t->requires(Task::NewDW, Mlb->gMassLabel,              gac,1);
     t->requires(Task::NewDW, Mlb->gTemperatureStarLabel,   gac,1);
-    t->requires(Task::OldDW, MIlb->NC_CCweightLabel,       one_matl, gac,1);
+    t->requires(Task::OldDW, Mlb->NC_CCweightLabel,       one_matl, gac,1);
     t->requires(Task::NewDW, MIlb->cMassLabel,             gn);
     t->requires(Task::NewDW, Ilb->int_eng_source_CCLabel,  gn);
     t->requires(Task::NewDW, Ilb->mom_source_CCLabel,      gn);
@@ -945,7 +945,7 @@ void MPMICE::scheduleComputePressure(SchedulerP& sched,
   t->requires(Task::NewDW,MIlb->cMassLabel,        mpm_matls, gn);  
 
   if(d_mpm->flags->doMPMOnLevel(L_indx,level->getGrid()->numLevels())) {
-    t->requires(Task::OldDW, MIlb->NC_CCweightLabel, press_matl,gac,1);
+    t->requires(Task::OldDW, Mlb->NC_CCweightLabel, press_matl,gac,1);
   }
  
  
@@ -973,7 +973,7 @@ void MPMICE::scheduleComputePressure(SchedulerP& sched,
   t->computes(Ilb->sp_vol_CCLabel,      ice_matls);
   t->computes(Ilb->rho_CCLabel,         ice_matls);
   if(d_mpm->flags->doMPMOnLevel(L_indx,level->getGrid()->numLevels())) {
-    t->computes(MIlb->NC_CCweightLabel,   press_matl);
+    t->computes(Mlb->NC_CCweightLabel,   press_matl);
   }
   
   computesRequires_CustomBCs(t, "EqPress", Ilb, ice_matls,
@@ -1002,6 +1002,8 @@ void MPMICE::actuallyInitialize(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
     printTask(patches, patch, "Doing actuallyInitialize \t\t\t\t");
 
+#if 0  // Now done in MPM::actuallyInitialize
+
     NCVariable<double> NC_CCweight;
     new_dw->allocateAndPut(NC_CCweight, MIlb->NC_CCweightLabel,    0, patch);
 
@@ -1021,6 +1023,7 @@ void MPMICE::actuallyInitialize(const ProcessorGroup*,
         }
       }
     }
+#endif
     //__________________________________
     //  Initialize CCVaribles for MPM Materials
     //  Even if mass = 0 in a cell you still need
@@ -1219,7 +1222,7 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
     Ghost::GhostType  gn = Ghost::None;
     
     constNCVariable<double> NC_CCweight;
-    old_dw->get(NC_CCweight, MIlb->NC_CCweightLabel,  0, patch, gac, 1);
+    old_dw->get(NC_CCweight, Mlb->NC_CCweightLabel,  0, patch, gac, 1);
 
     for(int m = 0; m < numMatls; m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
@@ -1372,7 +1375,7 @@ void MPMICE::computeLagrangianValuesMPM(const ProcessorGroup*,
     Ghost::GhostType  gac = Ghost::AroundCells;         
          
     constNCVariable<double> NC_CCweight;
-    old_dw->get(NC_CCweight,       MIlb->NC_CCweightLabel, 0,patch, gac, 1);
+    old_dw->get(NC_CCweight,       Mlb->NC_CCweightLabel, 0,patch, gac, 1);
     for(int m = 0; m < numMatls; m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int indx = mpm_matl->getDWIndex();
@@ -1758,7 +1761,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
     // Carry forward NC_CCweight here as this tsk is always called on all levels.
     //   but only do on the MPM level(s)
     if(d_mpm->flags->doMPMOnLevel(L_indx,level->getGrid()->numLevels())) {
-      new_dw->transferFrom(old_dw, MIlb->NC_CCweightLabel, patches, press_matl);
+      new_dw->transferFrom(old_dw, Mlb->NC_CCweightLabel, patches, press_matl);
     }
 
       StaticArray<MPMMaterial*> mpm_matl(numALLMatls);
@@ -2394,7 +2397,7 @@ void MPMICE::scheduleRefineInterface(const LevelP& fineLevel,
     const MaterialSet* all_matls   = d_sharedState->allMaterials();
     const MaterialSubset* one_matl = d_ice->d_press_matl;
 
-    task->modifies(MIlb->NC_CCweightLabel, one_matl);
+    task->modifies(Mlb->NC_CCweightLabel, one_matl);
 
     scheduler->addTask(task, fineLevel->eachPatch(), all_matls);
   }
@@ -2421,7 +2424,7 @@ void MPMICE::refineCoarseFineInterface(const ProcessorGroup*,
       //__________________________________
       //NC_CCweight
       NCVariable<double> NC_CCweight;
-      fine_new_dw->getModifiable(NC_CCweight, MIlb->NC_CCweightLabel, 0, patch);
+      fine_new_dw->getModifiable(NC_CCweight, Mlb->NC_CCweightLabel, 0, patch);
       //__________________________________
       // - Initialize NC_CCweight = 0.125
       // - Find the walls with symmetry BC and double NC_CCweight
