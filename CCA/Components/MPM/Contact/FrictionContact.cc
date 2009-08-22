@@ -616,6 +616,9 @@ void FrictionContact::addComputesAndRequiresInterpolated(SchedulerP & sched,
   t->modifies(lb->gVelocityLabel, mss);
   
   sched->addTask(t, patches, ms);
+
+  if (z_matl->removeReference())
+    delete z_matl; // shouln't happen, but...
 }
 
 void FrictionContact::addComputesAndRequiresIntegrated(SchedulerP & sched,
@@ -641,4 +644,7 @@ void FrictionContact::addComputesAndRequiresIntegrated(SchedulerP & sched,
   t->computes(             lb->NC_CCweightLabel,    z_matl);
 
   sched->addTask(t, patches, ms);
+
+  if (z_matl->removeReference())
+    delete z_matl; // shouln't happen, but...
 }
