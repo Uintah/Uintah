@@ -576,7 +576,6 @@ void ApproachContact::addComputesAndRequiresIntegrated(SchedulerP & sched,
   t->requires(Task::NewDW, lb->gVolumeLabel,           Ghost::None);
   t->modifies(             lb->gVelocityStarLabel,     mss);
   t->modifies(             lb->frictionalWorkLabel,    mss);
-  t->computes(             lb->NC_CCweightLabel,       z_matl);
 
   sched->addTask(t, patches, ms);
 
