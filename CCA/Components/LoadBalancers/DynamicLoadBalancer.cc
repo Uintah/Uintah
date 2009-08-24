@@ -504,27 +504,8 @@ bool DynamicLoadBalancer::assignPatchesZoltanSFC(const GridP& grid, bool force)
   vector< vector<double> > patch_costs;
 
   int num_procs = d_myworld->size();
-  DataWarehouse* olddw = d_scheduler->get_dw(0);
 
-  // treat as a 'regrid' setup (where we need to get particles from the old grid)
-  // IFF the old dw exists and the grids are unequal.
-  // Yes, this discounts the first initialization regrid, where there isn't an OLD DW, or particles on it yet.
-  bool on_regrid = olddw != 0 && grid.get_rep() != olddw->getGrid();
-  vector<vector<Region> > regions;
-  if (on_regrid) {
-    // prepare the list of regions
-    for (int l = 0; l < grid->numLevels(); l++) {
-      regions.push_back(vector<Region>());
-      for (int p = 0; p < grid->getLevel(l)->numPatches(); p++) {
-        const Patch* patch = grid->getLevel(l)->getPatch(p);
-        regions[l].push_back(Region(patch->getCellLowIndex__New(), patch->getCellHighIndex__New()));
-      }
-    }
-    getCosts(olddw->getGrid(), regions, patch_costs, on_regrid);
-  }
-  else {
-    getCosts(grid.get_rep(), regions, patch_costs, on_regrid);
-  }
+  getCosts(grid.get_rep(), patch_costs);
 
   int level_offset=0;
   
@@ -711,27 +692,8 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
     lbtimes[i]=0;
 
   int num_procs = d_myworld->size();
-  DataWarehouse* olddw = d_scheduler->get_dw(0);
 
-  // treat as a 'regrid' setup (where we need to get particles from the old grid)
-  // IFF the old dw exists and the grids are unequal.
-  // Yes, this discounts the first initialization regrid, where there isn't an OLD DW, or particles on it yet.
-  bool on_regrid = olddw != 0 && grid.get_rep() != olddw->getGrid();
-  vector<vector<Region> > regions;
-  if (on_regrid) {
-    // prepare the list of regions
-    for (int l = 0; l < grid->numLevels(); l++) {
-      regions.push_back(vector<Region>());
-      for (int p = 0; p < grid->getLevel(l)->numPatches(); p++) {
-        const Patch* patch = grid->getLevel(l)->getPatch(p);
-        regions[l].push_back(Region(patch->getCellLowIndex__New(), patch->getCellHighIndex__New()));
-      }
-    }
-    getCosts(olddw->getGrid(), regions, patch_costs, on_regrid);
-  }
-  else {
-    getCosts(grid.get_rep(), regions, patch_costs, on_regrid);
-  }
+  getCosts(grid.get_rep(),patch_costs);
 
   int level_offset=0;
 
@@ -1355,67 +1317,39 @@ DynamicLoadBalancer::restartInitialize( DataArchive* archive, int time_index, Pr
 }
 
 //if it is not a regrid the patch information is stored in grid, if it is during a regrid the patch information is stored in patches
-void DynamicLoadBalancer::getCosts(const Grid* grid, const vector<vector<Region> >&patches, vector<vector<double> >&costs,
-                                   bool during_regrid)
+void DynamicLoadBalancer::getCosts(const Grid* grid, vector<vector<double> >&costs)
 {
   costs.clear();
   costs.resize(grid->numLevels());
 
   if(d_profile && d_costProfiler->hasData())
   {
-    if(during_regrid)
+    //for each level
+    for (int l=0; l<grid->numLevels();l++) 
     {
-      //for each level
-      for (int l=0; l<(int)patches.size();l++) 
+      LevelP level=grid->getLevel(l);
+      vector<Region> patches(level->numPatches());
+
+      for(int p=0; p<level->numPatches();p++)
       {
-        d_costProfiler->getWeights(l,patches[l],costs[l]);
+        const Patch *patch=level->getPatch(p);
+        patches[p]=Region(patch->getCellLowIndex__New(),patch->getCellHighIndex__New());
       }
-    }
-    else
-    {
-      //for each level
-      for (int l=0; l<grid->numLevels();l++) 
-      {
-        LevelP level=grid->getLevel(l);
-        vector<Region> patches(level->numPatches());
-        
-        for(int p=0; p<level->numPatches();p++)
-        {
-          const Patch *patch=level->getPatch(p);
-          patches[p]=Region(patch->getCellLowIndex__New(),patch->getCellHighIndex__New());
-        }
-        d_costProfiler->getWeights(l,patches,costs[l]);
-      }
+      d_costProfiler->getWeights(l,patches,costs[l]);
     }
   }
   else
   {
-    if (during_regrid) {
-      costs.resize(patches.size());
-      for (unsigned l = 0; l < patches.size(); l++) 
+    for (int l = 0; l < grid->numLevels(); l++) 
+    {
+      for(int p = 0; p < grid->getLevel(l)->numPatches(); p++)
       {
-        for(vector<Region>::const_iterator patch=patches[l].begin();patch!=patches[l].end();patch++)
-        {
-          costs[l].push_back(d_patchCost+patch->getVolume()*d_cellCost);
-        }
-      }
-      if (d_collectParticles && d_scheduler->get_dw(0) != 0) 
-      {
-        collectParticlesForRegrid(grid, patches, costs);
+        costs[l].push_back(d_patchCost+grid->getLevel(l)->getPatch(p)->getNumExtraCells()*d_cellCost);
       }
     }
-    else {
-      for (int l = 0; l < grid->numLevels(); l++) 
-      {
-        for(int p = 0; p < grid->getLevel(l)->numPatches(); p++)
-        {
-          costs[l].push_back(d_patchCost+grid->getLevel(l)->getPatch(p)->getNumExtraCells()*d_cellCost);
-        }
-      }
-      if (d_collectParticles && d_scheduler->get_dw(0) != 0) 
-      {
-        collectParticles(grid, costs);
-      }
+    if (d_collectParticles && d_scheduler->get_dw(0) != 0) 
+    {
+      collectParticles(grid, costs);
     }
   }
   
