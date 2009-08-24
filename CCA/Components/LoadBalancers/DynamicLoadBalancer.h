@@ -187,7 +187,7 @@ namespace Uintah {
     bool assignPatchesZoltanSFC(const GridP& grid, bool force);
 
     /// Helper for assignPatchesFactor.  Collects each patch's particles
-    void collectParticles(const Grid* grid, vector<vector<double> >& costs);
+    void collectParticles(const Grid* grid, vector<vector<int> >& num_particles);
     // same, but can be called from both LB as a pre-existing grid, or from the Regridder as potential regions
     void collectParticlesForRegrid(const Grid* oldGrid, const vector<vector<Region> >& newGridRegions, vector<vector<double> >& costs);
 
