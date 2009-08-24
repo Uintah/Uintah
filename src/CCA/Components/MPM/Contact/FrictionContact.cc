@@ -129,7 +129,6 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
     Vector dx = patch->dCell();
     double cell_vol = dx.x()*dx.y()*dx.z();
     constNCVariable<double> NC_CCweight;
-    NCVariable<double> NC_CCweight_new;
     old_dw->get(NC_CCweight,         lb->NC_CCweightLabel,  0, patch, gnone, 0);
 
     ParticleInterpolator* interpolator = flag->d_interpolator->clone(patch);
@@ -403,10 +402,7 @@ void FrictionContact::exMomIntegrated(const ProcessorGroup*,
     Vector dx = patch->dCell();
     double cell_vol = dx.x()*dx.y()*dx.z();
     constNCVariable<double> NC_CCweight;
-    NCVariable<double> NC_CCweight_new;
     old_dw->get(NC_CCweight,         lb->NC_CCweightLabel,  0, patch, gnone, 0);
-    new_dw->allocateAndPut(NC_CCweight_new, lb->NC_CCweightLabel,0,patch);
-    NC_CCweight_new.copyData(NC_CCweight);
 
     // Retrieve necessary data from DataWarehouse
     for(int m=0;m<matls->size();m++){
@@ -641,7 +637,7 @@ void FrictionContact::addComputesAndRequiresIntegrated(SchedulerP & sched,
   t->requires(Task::NewDW, lb->gVolumeLabel,           Ghost::None);
   t->modifies(             lb->gVelocityStarLabel,  mss);
   t->modifies(             lb->frictionalWorkLabel, mss);
-  t->computes(             lb->NC_CCweightLabel,    z_matl);
+//  t->computes(             lb->NC_CCweightLabel,    z_matl);
 
   sched->addTask(t, patches, ms);
 

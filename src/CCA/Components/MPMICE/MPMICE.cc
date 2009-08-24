@@ -278,15 +278,11 @@ void MPMICE::scheduleInitialize(const LevelP& level,
   Task* t = scinew Task("MPMICE::actuallyInitialize",
                   this, &MPMICE::actuallyInitialize);
                   
-  MaterialSubset* one_matl = scinew MaterialSubset();
-  one_matl->add(0);
-  one_matl->addReference();
   t->computes(MIlb->vel_CCLabel);
   t->computes(Ilb->rho_CCLabel); 
   t->computes(Ilb->temp_CCLabel);
   t->computes(Ilb->sp_vol_CCLabel);
   t->computes(Ilb->speedSound_CCLabel); 
-//  t->computes(MIlb->NC_CCweightLabel, one_matl);
   t->computes(Mlb->heatRate_CCLabel);
 
   if (d_switchCriteria) {
@@ -294,9 +290,6 @@ void MPMICE::scheduleInitialize(const LevelP& level,
   }
     
   sched->addTask(t, level->eachPatch(), d_sharedState->allMPMMaterials());
-
-  if (one_matl->removeReference())
-    delete one_matl; // shouln't happen, but...  
 }
 
 void MPMICE::restartInitialize()
@@ -920,8 +913,6 @@ void MPMICE::scheduleComputePressure(SchedulerP& sched,
                                      const MaterialSubset* press_matl,
                                      const MaterialSet* all_matls)
 {
-  const Level* level = getLevel(patches);
-  int L_indx = level->getIndex();
   Task* t = NULL;
 
   printSchedule(patches, "MPMICE::scheduleComputeEquilibrationPressure\t\t\t");
@@ -930,7 +921,6 @@ void MPMICE::scheduleComputePressure(SchedulerP& sched,
             this, &MPMICE::computeEquilibrationPressure, press_matl);
                               // I C E
   Ghost::GhostType  gn  = Ghost::None;
-  Ghost::GhostType  gac = Ghost::AroundCells;
 
   t->requires(Task::OldDW,Ilb->temp_CCLabel,       ice_matls, gn);  
   t->requires(Task::OldDW,Ilb->rho_CCLabel,        ice_matls, gn);  
@@ -944,11 +934,6 @@ void MPMICE::scheduleComputePressure(SchedulerP& sched,
   t->requires(Task::NewDW,Ilb->sp_vol_CCLabel,     mpm_matls, gn);  
   t->requires(Task::NewDW,MIlb->cMassLabel,        mpm_matls, gn);  
 
-  if(d_mpm->flags->doMPMOnLevel(L_indx,level->getGrid()->numLevels())) {
-    t->requires(Task::OldDW, Mlb->NC_CCweightLabel, press_matl,gac,1);
-  }
- 
- 
   t->requires(Task::OldDW,Ilb->press_CCLabel,      press_matl, gn);
   t->requires(Task::OldDW,Ilb->vel_CCLabel,        ice_matls,  gn);
   t->requires(Task::NewDW,MIlb->vel_CCLabel,       mpm_matls,  gn);
@@ -972,9 +957,6 @@ void MPMICE::scheduleComputePressure(SchedulerP& sched,
   t->modifies(Ilb->rho_CCLabel,         mpm_matls); 
   t->computes(Ilb->sp_vol_CCLabel,      ice_matls);
   t->computes(Ilb->rho_CCLabel,         ice_matls);
-  if(d_mpm->flags->doMPMOnLevel(L_indx,level->getGrid()->numLevels())) {
-    t->computes(Mlb->NC_CCweightLabel,   press_matl);
-  }
   
   computesRequires_CustomBCs(t, "EqPress", Ilb, ice_matls,
                             d_ice->d_customBC_var_basket);
@@ -1002,28 +984,6 @@ void MPMICE::actuallyInitialize(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
     printTask(patches, patch, "Doing actuallyInitialize \t\t\t\t");
 
-#if 0  // Now done in MPM::actuallyInitialize
-
-    NCVariable<double> NC_CCweight;
-    new_dw->allocateAndPut(NC_CCweight, MIlb->NC_CCweightLabel,    0, patch);
-
-   //__________________________________
-   // - Initialize NC_CCweight = 0.125
-   // - Find the walls with symmetry BC and
-   //   double NC_CCweight
-   NC_CCweight.initialize(0.125);
-   for(Patch::FaceType face = Patch::startFace; face <= Patch::endFace;
-        face=Patch::nextFace(face)){
-      int mat_id = 0; 
-      
-      if (patch->haveBC(face,mat_id,"symmetry","Symmetric")) {
-        for(CellIterator iter = patch->getFaceIterator__New(face,Patch::FaceNodes); 
-                                                  !iter.done(); iter++) {
-          NC_CCweight[*iter] = 2.0*NC_CCweight[*iter];
-        }
-      }
-    }
-#endif
     //__________________________________
     //  Initialize CCVaribles for MPM Materials
     //  Even if mass = 0 in a cell you still need
@@ -1758,13 +1718,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
     
     sum_imp_delP.initialize(0.0);
 
-    // Carry forward NC_CCweight here as this tsk is always called on all levels.
-    //   but only do on the MPM level(s)
-    if(d_mpm->flags->doMPMOnLevel(L_indx,level->getGrid()->numLevels())) {
-      new_dw->transferFrom(old_dw, Mlb->NC_CCweightLabel, patches, press_matl);
-    }
-
-      StaticArray<MPMMaterial*> mpm_matl(numALLMatls);
+    StaticArray<MPMMaterial*> mpm_matl(numALLMatls);
     StaticArray<ICEMaterial*> ice_matl(numALLMatls);
     for (int m = 0; m < numALLMatls; m++) {
       Material* matl = d_sharedState->getMaterial( m );
@@ -2454,16 +2408,10 @@ void MPMICE::scheduleRefine(const PatchSet* patches,
   d_ice->scheduleRefine(patches, sched);
   d_mpm->scheduleRefine(patches, sched);
 
-  const Level* level = getLevel(patches);
-
   printSchedule(patches,"MPMICE::scheduleRefine\t\t\t\t");
 
   Task* task = scinew Task("MPMICE::refine", this, &MPMICE::refine);
   
-  if(d_mpm->flags->doMPMOnLevel(level->getIndex(),level->getGrid()->numLevels())) {
-    task->computes(MIlb->NC_CCweightLabel);
-  }
-
   task->computes(Mlb->heatRate_CCLabel);
   task->computes(Ilb->sp_vol_CCLabel);
   task->computes(MIlb->vel_CCLabel);
@@ -2622,39 +2570,12 @@ MPMICE::refine(const ProcessorGroup*,
                DataWarehouse*,
                DataWarehouse* new_dw)
 {
-  const Level* level = getLevel(patches);
   for (int p = 0; p<patches->size(); p++) {
     const Patch* patch = patches->get(p);
     printTask(patches,patch,"Doing refine\t\t\t\t\t");
      
     int numMPMMatls=d_sharedState->getNumMPMMatls();
     
-    if(d_mpm->flags->doMPMOnLevel(level->getIndex(),level->getGrid()->numLevels())) {
-      // First do NC_CCweight 
-      NCVariable<double> NC_CCweight;
-      new_dw->allocateAndPut(NC_CCweight, MIlb->NC_CCweightLabel,  0, patch);
-      //__________________________________
-      // - Initialize NC_CCweight = 0.125
-      // - Find the walls with symmetry BC and
-      //   double NC_CCweight
-      NC_CCweight.initialize(0.125);
-      vector<Patch::FaceType>::const_iterator iter;
-      vector<Patch::FaceType> bf;
-      patch->getBoundaryFaces(bf);
-      
-      for (iter  = bf.begin(); iter != bf.end(); ++iter){
-        Patch::FaceType face = *iter;
-        int mat_id = 0;
-        if (patch->haveBC(face,mat_id,"symmetry","Symmetric")) {
-        
-          for(CellIterator iter = patch->getFaceIterator__New(face,Patch::FaceNodes);
-              !iter.done(); iter++) {
-            NC_CCweight[*iter] = 2.0*NC_CCweight[*iter];
-          }
-        }
-      }
-    }
-
     for(int m = 0; m < numMPMMatls; m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();

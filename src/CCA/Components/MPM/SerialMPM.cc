@@ -1136,7 +1136,13 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
     t->requires(Task::OldDW, lb->pColorLabel,  Ghost::None);
     t->computes(lb->pColorLabel_preReloc);
   }
-  
+
+  MaterialSubset* z_matl = scinew MaterialSubset();
+  z_matl->add(0);
+  z_matl->addReference();
+  t->requires(Task::OldDW, lb->NC_CCweightLabel, z_matl, Ghost::None);
+  t->computes(             lb->NC_CCweightLabel, z_matl);
+
   sched->addTask(t, patches, matls);
 }
 
@@ -1188,6 +1194,7 @@ void SerialMPM::scheduleRefine(const PatchSet* patches,
   t->computes(lb->pStressLabel);
   t->computes(lb->pSizeLabel);
   t->computes(lb->pErosionLabel);
+  t->computes(lb->NC_CCweightLabel);
 
   // Debugging Scalar
   if (flags->d_with_color) {
@@ -2931,7 +2938,6 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       old_dw->get(px,           lb->pXLabel,                         pset);
       old_dw->get(pdisp,        lb->pDispLabel,                      pset);
       old_dw->get(pmass,        lb->pMassLabel,                      pset);
-      old_dw->get(pids,         lb->pParticleIDLabel,                pset);
       old_dw->get(pvelocity,    lb->pVelocityLabel,                  pset);
       old_dw->get(pTemperature, lb->pTemperatureLabel,               pset);
       new_dw->get(pErosion,     lb->pErosionLabel_preReloc,          pset);
@@ -2943,7 +2949,6 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       new_dw->allocateAndPut(pxx,          lb->pXXLabel,                  pset);
       new_dw->allocateAndPut(pdispnew,     lb->pDispLabel_preReloc,       pset);
       new_dw->allocateAndPut(pmassNew,     lb->pMassLabel_preReloc,       pset);
-      new_dw->allocateAndPut(pids_new,     lb->pParticleIDLabel_preReloc, pset);
       new_dw->allocateAndPut(pTempNew,     lb->pTemperatureLabel_preReloc,pset);
 
       // for thermal stress analysis
@@ -2951,10 +2956,23 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
       ParticleSubset* delset = scinew ParticleSubset(0, dwi, patch);
 
+      //Carry forward ParticleID
+      old_dw->get(pids,                lb->pParticleIDLabel,          pset);
+      new_dw->allocateAndPut(pids_new, lb->pParticleIDLabel_preReloc, pset);
       pids_new.copyData(pids);
-      old_dw->get(psize,               lb->pSizeLabel,                 pset);
-      new_dw->allocateAndPut(psizeNew, lb->pSizeLabel_preReloc,        pset);
+
+      //Carry forward ParticleSize
+      old_dw->get(psize,               lb->pSizeLabel,                pset);
+      new_dw->allocateAndPut(psizeNew, lb->pSizeLabel_preReloc,       pset);
       psizeNew.copyData(psize);
+
+      //Carry forward NC_CCweight
+      constNCVariable<double> NC_CCweight;
+      NCVariable<double> NC_CCweight_new;
+      Ghost::GhostType  gnone = Ghost::None;
+      old_dw->get(NC_CCweight,         lb->NC_CCweightLabel,  0, patch, gnone, 0);
+      new_dw->allocateAndPut(NC_CCweight_new, lb->NC_CCweightLabel,0,patch);
+      NC_CCweight_new.copyData(NC_CCweight);
 
       Ghost::GhostType  gac = Ghost::AroundCells;
       new_dw->get(gvelocity_star,  lb->gVelocityStarLabel,   dwi,patch,gac,NGP);
@@ -3269,11 +3287,38 @@ SerialMPM::refine(const ProcessorGroup*,
                   DataWarehouse* new_dw)
 {
   // just create a particle subset if one doesn't exist
+  // and initialize NC_CCweights
+
   for (int p = 0; p<patches->size(); p++) {
     const Patch* patch = patches->get(p);
     printTask(patches, patch,cout_doing,"Doing refine\t\t\t");
 
     int numMPMMatls=d_sharedState->getNumMPMMatls();
+
+    // First do NC_CCweight 
+    NCVariable<double> NC_CCweight;
+    new_dw->allocateAndPut(NC_CCweight, lb->NC_CCweightLabel,  0, patch);
+    //__________________________________
+    // - Initialize NC_CCweight = 0.125
+    // - Find the walls with symmetry BC and
+    //   double NC_CCweight
+    NC_CCweight.initialize(0.125);
+    vector<Patch::FaceType>::const_iterator iter;
+    vector<Patch::FaceType> bf;
+    patch->getBoundaryFaces(bf);
+
+    for (iter  = bf.begin(); iter != bf.end(); ++iter){
+      Patch::FaceType face = *iter;
+      int mat_id = 0;
+      if (patch->haveBC(face,mat_id,"symmetry","Symmetric")) {
+
+        for(CellIterator iter = patch->getFaceIterator__New(face,Patch::FaceNodes);
+            !iter.done(); iter++) {
+          NC_CCweight[*iter] = 2.0*NC_CCweight[*iter];
+        }
+      }
+    }
+
     for(int m = 0; m < numMPMMatls; m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
