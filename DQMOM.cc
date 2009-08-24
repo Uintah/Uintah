@@ -29,21 +29,22 @@ DQMOM::DQMOM(const ArchesLabel* fieldLabels):
 d_fieldLabels(fieldLabels)
 {
 
-  string varname = "normB";
-  d_normBLabel = VarLabel::create(varname, 
-            CCVariable<double>::getTypeDescription());
+  string varname;
+  
+  varname = "normB";
+  d_normBLabel = VarLabel::create(varname, CCVariable<double>::getTypeDescription());
 
   varname = "normX";
-  d_normXLabel = VarLabel::create(varname, 
-            CCVariable<double>::getTypeDescription());
+  d_normXLabel = VarLabel::create(varname, CCVariable<double>::getTypeDescription());
 
   varname = "normRes";
-  d_normResLabel = VarLabel::create(varname, 
-            CCVariable<double>::getTypeDescription());
+  d_normResLabel = VarLabel::create(varname, CCVariable<double>::getTypeDescription());
 
   varname = "normResNormalized";
-  d_normResNormalizedLabel = VarLabel::create(varname,
-            CCVariable<double>::getTypeDescription());
+  d_normResNormalizedLabel = VarLabel::create(varname, CCVariable<double>::getTypeDescription());
+
+  varname = "conditionEstimate";
+  d_conditionEstimateLabel = VarLabel::create(varname, CCVariable<double>::getTypeDescription());
 }
 
 DQMOM::~DQMOM()
@@ -52,6 +53,7 @@ DQMOM::~DQMOM()
   VarLabel::destroy(d_normXLabel); 
   VarLabel::destroy(d_normResLabel);
   VarLabel::destroy(d_normResNormalizedLabel);
+  VarLabel::destroy(d_conditionEstimateLabel);
 }
 //---------------------------------------------------------------------------
 // Method: Problem setup
@@ -63,8 +65,6 @@ void DQMOM::problemSetup(const ProblemSpecP& params)
   unsigned int moments = 0;
   unsigned int index_length = 0;
   moments = 0;
-
-  db->getWithDefault("solver_tolerance",d_solver_tolerance,10e6); 
 
   // obtain moment index vectors
   vector<int> temp_moment_index;
@@ -162,21 +162,23 @@ DQMOM::sched_solveLinearSystem( const LevelP& level, SchedulerP& sched, int time
     tsk->modifies(d_normResNormalizedLabel);
   }
 
+  if (timeSubStep == 0) {
+    tsk->computes(d_conditionEstimateLabel);
+  } else {
+    tsk->modifies(d_conditionEstimateLabel);
+  }
 
   for (vector<DQMOMEqn*>::iterator iEqn = weightEqns.begin(); iEqn != weightEqns.end(); ++iEqn) {
     const VarLabel* tempLabel;
     tempLabel = (*iEqn)->getTransportEqnLabel();
     
     // require weights
-    proc0cout << "The linear system requires weight " << *tempLabel << endl;
     tsk->requires( Task::NewDW, tempLabel, Ghost::None, 0 );
 
     const VarLabel* sourceterm_label = (*iEqn)->getSourceLabel();
     if (timeSubStep == 0) {
-      proc0cout << "The linear system computes source term " << *sourceterm_label << endl;
       tsk->computes(sourceterm_label);
     } else {
-      proc0cout << "The linear system modifies source term " << *sourceterm_label << endl;
       tsk->modifies(sourceterm_label);
     }
  
@@ -187,24 +189,19 @@ DQMOM::sched_solveLinearSystem( const LevelP& level, SchedulerP& sched, int time
     tempLabel = (*iEqn)->getTransportEqnLabel();
     
     // require weighted abscissas
-    proc0cout << "The linear system requires weighted abscissa " << *tempLabel << endl;
     tsk->requires(Task::NewDW, tempLabel, Ghost::None, 0);
 
     // compute or modify source terms
-    proc0cout << " current eqn  = " << (*iEqn)->getEqnName() << endl;
     const VarLabel* sourceterm_label = (*iEqn)->getSourceLabel();
     if (timeSubStep == 0) {
-      proc0cout << "The linear system computes source term " << *sourceterm_label << endl;
       tsk->computes(sourceterm_label);
     } else {
-      proc0cout << "The linear system modifies source term " << *sourceterm_label << endl;
       tsk->modifies(sourceterm_label);
     }
     
     // require model terms
     vector<string> modelsList = (*iEqn)->getModelsList();
     for ( vector<string>::iterator iModels = modelsList.begin(); iModels != modelsList.end(); ++iModels ) {
-      proc0cout << "looking for model: " << (*iModels) << endl;
       ModelBase& model_base = model_factory.retrieve_model(*iModels);
       const VarLabel* model_label = model_base.getModelLabel();
       tsk->requires( Task::NewDW, model_label, Ghost::AroundCells, 1 );
@@ -269,6 +266,14 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
       new_dw->allocateAndPut( normResNormalized, d_normResNormalizedLabel, matlIndex, patch );
     }
     normResNormalized.initialize(0.0);
+
+    // get/allocate conditionEstimate label
+    CCVariable<double> conditionEstimate;
+    if( new_dw->exists(d_conditionEstimateLabel, matlIndex, patch) ) {
+      new_dw->getModifiable( conditionEstimate, d_conditionEstimateLabel, matlIndex, patch );
+    } else {
+      new_dw->allocateAndPut( conditionEstimate, d_conditionEstimateLabel, matlIndex, patch );
+    }
 
     // get/allocate weight labels
     for (vector<DQMOMEqn*>::iterator iEqn = weightEqns.begin();
@@ -432,17 +437,26 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
 
 
 
+      // copy Xdoub into Xlong to begin with 
+      for( unsigned int j=0; j < Xdoub.size(); ++j ) {
+        Xlong[j] = Xdoub[j];
+      }
+
+
 
       // iterative refinement
       bool do_iterative_refinement = true;
       bool is_badly_conditioned = false;
-      //double condition_number_estimate;
+      double condition_number_estimate;
       if( do_iterative_refinement ) {
-        A.iterative_refinement( &B[0], &Xdoub[0], &Xlong[0] );
-        //condition_number_estimate = A.getConvergenceRate();
-        //if( condition_number_estimate > 10e10 ) {
-        //    is_badly_conditioned = true;
-        //}
+        if( A.isSingular() ) {
+          conditionEstimate[c] = 0;
+        } else {
+          A.iterative_refinement( Aorig, &B[0], &Xdoub[0], &Xlong[0] );
+          condition_number_estimate = A.getConvergenceRate();
+          conditionEstimate[c] = condition_number_estimate;
+          // poss. normalize the condition number estimate by a scaling constant
+        }
       }
 
       // Find the L-2 norm of the RHS and solution vectors
@@ -450,17 +464,19 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
       normX[c] = A.getNorm( &Xlong[0], 2 );
 
       // Find the residual of the solution vector
-      A.getResidual( &B[0], &Xlong[0], &Resid[0] );
-      normRes[c] = A.getNorm( &Resid[0], 2 );
-      for ( int ii = 0; ii < A.getDimension(); ii ++ ){
-        Resid[ii] = Resid[ii] / Xdoub[ii]; // try normalizing component wise error
+      Aorig.getResidual( &B[0], &Xlong[0], &Resid[0] );
+      double temp = A.getNorm( &Resid[0], 0 );
+      normRes[c] = temp;
+      for( int ii = 0; ii < A.getDimension(); ++ii ) {
+        Resid[ii] = Resid[ii] / Xlong[ii]; //try normalizing componentwise error
       }
-      normResNormalized[c] = A.getNorm( &Resid[0], 10 );
+      normResNormalized[c] = A.getNorm( &Resid[0], 0);
 
-      double maxNormMag = 10000; 
-      double maxResidMag = 10;
-      unsigned int z = 0;
+      double maxNormMag = 1e6;
+      double maxResidMag = 1;
+      
       // set weight transport eqn source terms equal to results
+      unsigned int z = 0;
       for (vector<DQMOMEqn*>::iterator iEqn = weightEqns.begin();
            iEqn != weightEqns.end(); iEqn++) {
         const VarLabel* source_label = (*iEqn)->getSourceLabel();
@@ -471,18 +487,18 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
           new_dw->allocateAndPut(tempCCVar, source_label, matlIndex, patch);
         }
 
-        // Make sure several critera are met for an acceptable solution!
+        // Make sure several critera are met for an acceptable solution
         if(  fabs(  normB[c]) > maxNormMag 
           || fabs(  normX[c]) > maxNormMag 
           || fabs(normRes[c]) > maxResidMag ) {
-            // the norm is too big! set the weight = 0
             tempCCVar[c] = 0;
         } else if( is_badly_conditioned ) {
-            // the approximate condition number is too large!
             tempCCVar[c] = 0;
         } else {
           tempCCVar[c] = Xlong[z];
         }
+
+        ++z;
       }
   
       // set weighted abscissa transport eqn source terms equal to results
@@ -496,24 +512,19 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
           new_dw->allocateAndPut(tempCCVar, source_label, matlIndex, patch);
         }
 
-        // Make sure several critera are met for an acceptable solution!
-        if( fabs(normB[c]) > maxNormMag || fabs(normX[c]) > maxNormMag ) {
-            // the norm is too big!
+        // Make sure several critera are met for an acceptable solution
+        if( fabs(  normB[c]) > maxNormMag 
+         || fabs(  normX[c]) > maxNormMag 
+         || fabs(normRes[c]) > maxResidMag ) {
             tempCCVar[c] = 0;
-        //} else if( fabs(MeanResid[c]) > maxResidMag ) {
-        //    // the residual is too big!
-        //    tempCCVar[c] = 0;
         } else if( is_badly_conditioned ) {
-            // the approximate condition number is too large!
             tempCCVar[c] = 0;
         } else {
           tempCCVar[c] = Xlong[z];
         }
 
-      ++z;
+        ++z;
       }
-
-
 
 /* 
       // Print out cell-by-cell matrix information

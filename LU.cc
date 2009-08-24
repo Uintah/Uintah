@@ -70,6 +70,7 @@ LU::decompose()
     }
     if (big == 0.0) {
       isSingular_ = true;
+      isDecomposed_ = true;
       return;
     }
     // save the scaling
@@ -210,6 +211,78 @@ LU::back_subs( double* rhs, double* soln )
     soln[i-1] = sum;
   }
 
+
+  // back-substitution
+  for (i=dim_; i>=1; i--) {
+    sum = soln[i-1];
+    for (j=i+1; j<=dim_; j++) {
+      sum -= AA_(i-1,j-1)*soln[j-1];
+    }
+    // store component of solution vector
+    soln[i-1] = sum/AA_(i-1,i-1);
+  }
+
+}
+
+
+
+
+void
+LU::back_subs( long double* rhs, double* soln )
+{
+  if( ! isDecomposed_ && !isSingular_ ) {
+    string err_msg = "ERROR:LU:back_subs(): This method cannot be called until LU::decompose() has been executed.\n";
+    throw std::runtime_error( err_msg );
+  } 
+
+  if( isSingular_ ) {
+    for (int i=0; i<dim_; ++i) {
+      soln[i] = 0;
+    }
+    return;
+  } else {
+    // Copy rhs vector into soln vector
+    for ( int counter=0; counter < dim_; ++counter) {
+      soln[counter] = static_cast<double>(rhs[counter]);
+    }
+  }
+
+  // AA_ now contains the LU-decomposition of the original "A" matrix.
+  // soln[0] is untouched for now since L(0,0) = 1.
+
+  // Algorithm from Numerical Recipes (C):
+
+  int i, j, ii=0, ip;
+  double sum;
+
+  // Check size here
+  // FIXME: I can't figure out how to get the size of an array from a pointer to its first element
+  //if( rhs->size() != dim_ || soln->size() != dim_ ) {
+    // Throw error:
+    // LU::decompose(): Bad vector sizes
+    // dim_     = ___
+    // X.size() = ___
+    // B.size() = ___
+  //}
+
+  // forward substitution
+  for (i=1; i<=dim_; ++i) {
+    ip = indx[i-1];
+    sum=soln[ip-1];
+    soln[ip-1]=soln[i-1];
+    if (ii) {
+      for (j=ii; j<=i-1; j++) {
+        sum -= AA_(i-1,j-1)*soln[j-1];
+      }
+    } else if (sum) {
+      // a nonzero element was encountered
+      // from now on, sum in above loop must be done
+      ii = i;
+    }
+    soln[i-1] = sum;
+  }
+
+
   // back-substitution
   for (i=dim_; i>=1; i--) {
     sum = soln[i-1];
@@ -227,7 +300,7 @@ LU::back_subs( double* rhs, double* soln )
 
 
 void
-LU::iterative_refinement( double* rhs, double* soln, long double* refined_soln )
+LU::iterative_refinement( LU Aoriginal, double* rhs, double* soln, long double* refined_soln )
 {
   if (!isDecomposed_ && !isSingular_) {
     string err_msg = "ERROR:LU:iterative_refinement(): This method cannot be called until LU::decompose() has been executed.\n";
@@ -235,65 +308,60 @@ LU::iterative_refinement( double* rhs, double* soln, long double* refined_soln )
   } else if (isRefined_) {
     string err_msg = "ERROR:LU:iterative_refinement(): This method cannot be called twice!\n";
     throw InvalidValue(err_msg,__FILE__,__LINE__);
-  }
-
-  vector<double> dX_ip1(dim_, 0.0);        /// dX for iteration i+1 (curr. iter)
-  vector<double> dX_i(dim_, 0.0);          /// dX for iteration i (prev. iter)
-  
-  vector<long double> res(dim_, 0.0);      /// Residual matrix, double working precision (long doubles)
-
-  if( isSingular_ ) {
+  } else if (isSingular_) {
     for (int i=0; i<dim_; ++i) {
       refined_soln[i] = 0;
     }
     return;
   }
 
-  // put X_1 (soln passed as parameter) into X_i for first iteration
+  vector<double> dX_ip1(dim_, 0.0);        /// dX for iteration i+1 (curr. iter)
+  vector<double> dX_i(dim_, 0.0);          /// dX for iteration i (prev. iter)
+  vector<long double> res(dim_, 0.0);      /// Residual matrix, double working precision (long doubles)
+
+  // copy coarse (passed) solution "soln" into refined (empty) solution "refined_soln" for 1st iteration
   for (int z = 0; z < dim_; ++z) {
-    long double temp;
-    temp = soln[z];
-    
-    //X_i[z] = temp;
-    //charles[z] = temp; //FIXME
-    refined_soln[z] = temp;
+    refined_soln[z] = static_cast<long double>(soln[z]);
   }
 
-
   // initialize relative norms
-  double relnorm_dX_i    = 10^20; /// Relative L_infty norm of dX at previous iteration
-  double relnorm_dX_ip1  = 10^20; /// Relative L_infty norm of dX at current iteration
-  double relnorm_X_i     = 10^20; /// Relative L_infty norm of X                        
-  final_rel_norm  = 10^20;
+  norm_dX_i     = 0; //L-infinity norm of dX at timestep i
+  norm_dX_ip1   = 0; //L-infinity norm of dX at timestep i+1
+  norm_dX_final = 0; //L-infinity norm of dX at LAST timestep
+  norm_X_i      = 0; //L-infinity norm of X at timestep i
   
   // initialize convergence rates
-  rho_thresh = 0.5;
+  rho_thresh = 0.5; // should be less than 1
   rho_max = 0; /// Maximum ratio of dX norms achieved
   
   // initialize solution state
-  int x_state;    /// State of X:         \n
-                  /// 0 = working         \n   
-                  /// 1 = converged       \n   
-                  /// 2 = no-progress
-  x_state = 0;    // set x-state = working
+  int x_state;    
+  x_state = 0;    // 0 = working 
+                  // 1 = converged 
+                  // 2 = no-progress 
 
-  // refinement iteration loop...  
   imax = 20;
+  // timestep i yields r(i), dx(i+1), x(i+1)
   for (int i = 0; i < imax; ++i) {
-    // compute residual with very high intermediate precision:
-    // does this mean A/X/B have to be very high interm. prec.?
-    // or is residual matrix only matrix that has to be high prec.?
-    getResidual(&soln[0], &rhs[0], &res[0]);
 
-    // solve AdX(i+1) = r(i) using normal precision
-    back_subs( &rhs[0], &dX_ip1[0] );
+    // get norm of X(i) (soln for previous iteration)
+    norm_X_i = getNorm( &refined_soln[0], 0 );
 
-    relnorm_X_i = getNorm( &refined_soln[0], 0 );
+    // compute the residual res(i) in high precision
+    // (note: use ORIGINAL A, because otherwise it's decomposed and RHS won't match!!!)
+    Aoriginal.getResidual(&rhs[0], &refined_soln[0], &res[0]);
 
-    relnorm_dX_ip1 = getNorm( &dX_ip1[0], 0 );
+    // solve A * dX(i+1) = res(i) using normal precision
+    back_subs( &res[0], &dX_ip1[0] );
 
-    // update x_state based on various stopping criteria
-    update_xstate( relnorm_X_i, relnorm_dX_i, relnorm_dX_ip1, &x_state );
+    // norm of dX(i+1)
+    norm_dX_ip1 = getNorm( &dX_ip1[0], 0 );
+
+    // we need i > 0 b/c we need a solution vector for current AND previous timestep
+    if( i > 0 ) {
+      // update x_state based on various stopping criteria
+      update_xstate( norm_X_i, norm_dX_i, norm_dX_ip1, &x_state );
+    }
  
     if (x_state != 0) {
       break; //terminate the loop
@@ -303,15 +371,25 @@ LU::iterative_refinement( double* rhs, double* soln, long double* refined_soln )
     for (int z = 0; z < dim_; ++z) {
       refined_soln[z] = refined_soln[z] - dX_ip1[z];
     }
+    norm_dX_i = norm_dX_ip1;
 
   }
   
   // only update the final relative norm after last step if x_state = working
+  // (otherwise it's already been done)
   if (x_state == 0 ) {
-    final_rel_norm = relnorm_dX_ip1/relnorm_X_i;
+    norm_dX_final = norm_dX_ip1/norm_X_i;
   }
-  
+
   isRefined_ = true;
+
+  // calculate condition number estimate
+  // L-infinity norm of error vector e(i):
+  if( rho_max != 1 ) {
+    condition_estimate = norm_dX_final/( 1 - rho_max );
+  } else {
+    condition_estimate = 0;
+  }
 }
 
 
@@ -322,7 +400,7 @@ LU::update_xstate( double norm_X_i,
                    double norm_dX_ip1,
                    int* x_state )
 {
-   if (!isDecomposed_) {
+   if (!isDecomposed_ && !isSingular_) {
     string err_msg = "ERROR:LU:update_xstate(): This method cannot be called until LU::decompose() has been executed.\n";
     throw InvalidValue( err_msg, __FILE__, __LINE__ );
   } else if (isRefined_) {
@@ -330,18 +408,21 @@ LU::update_xstate( double norm_X_i,
     throw InvalidValue( err_msg, __FILE__, __LINE__ );
   }
   
+  // stopping cirteria 1: correction dX(i+1) changes solution X(i) too little
   if (norm_dX_ip1/norm_X_i <= DBL_EPSILON) {
-    (*x_state) = 1; //converged: tiny dX stopping criterion
+    (*x_state) = 1; //converged
+
+  // stopping criteria 2: convergence slows down sufficiently
+  } else if ( (norm_dX_ip1/norm_dX_i) >= rho_thresh && (norm_dX_ip1/norm_dX_i) <= 1.0 ) {
+    (*x_state) = 2; //lack of progress
   
-  } else if ( (norm_dX_ip1 / norm_dX_i) < rho_thresh ) {
-    (*x_state) = 2; //no progress: lack of progress stopping criterion
-  
+  // stopping criteria 3 is imax...
   } else {
     rho_max = max(rho_max, norm_dX_ip1/norm_dX_i);
   }
   
   if (x_state != 0) { //not working
-    final_rel_norm = norm_dX_ip1/norm_X_i;
+    norm_dX_final = norm_dX_ip1/norm_X_i;
   }
 
 }
