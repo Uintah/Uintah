@@ -110,6 +110,7 @@ private:
   const VarLabel* d_normXLabel; 
   const VarLabel* d_normResLabel;
   const VarLabel* d_normResNormalizedLabel;
+  const VarLabel* d_conditionEstimateLabel;
 
 }; // end class DQMOM
 
