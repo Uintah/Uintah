@@ -50,14 +50,11 @@ class LU{
     /** @brief      Performs the LU decomposition/factorization using Crout's method with partial pivoting. */
     void decompose();
   
-    /** @brief      (Overloaded) Performs back-substitution of the LU system given a right-hand side; overwrites RHS with solution vector.
-      * @param rhs  Pointer to right-hand side vector. */
-    void back_subs( double* rhs );
-  
     /** @brief      (Overloaded) Performs back-substitution method for LU system; does not overwrite RHS vector
       * @param rhs  Pointer to right-hand side vector
       * @param soln Pointer to solution vector */
-    void back_subs( double* rhs, double* soln );
+    void back_subs( double* rhs,      double* soln );
+    void back_subs( long double* rhs, double* soln );
   
   
 
@@ -69,7 +66,7 @@ class LU{
       * @param rhs            Right-hand side vector B of AX=B
       * @param soln           Solution vector X of AX=B (single working precision, i.e. double precision)
       * @param refined_soln   Refined solution (double working precision, i.e. quadruple precision) */
-    void iterative_refinement( double* rhs, double* soln, long double* refined_soln );
+    void iterative_refinement( LU Aoriginal, double* rhs, double* soln, long double* refined_soln );
 
     /** @brief      Access function for final relative norm (error estimate)
       * @returns    final_relative_norm variable, which contains the relative norm of 
@@ -77,12 +74,19 @@ class LU{
       *             of iterative refinement   */
     double getConvergenceRate() {
       assert(isRefined_);
-      return rho_max; }
+      return condition_estimate;
+    }
   
   
   
     //========================================================
     // Utility functions
+
+    /** @brief      Check if matrix A is singular  */
+    bool isSingular() {
+      assert(isDecomposed_);
+      return isSingular_;
+    }
   
     /** @brief      Multiply the LU matrix by a vector: A*Y = Z (template class)
       *
@@ -240,20 +244,19 @@ class LU{
                                     /// number estimate).
                                     /// ***This value is set by the user.
 
-    double rho_max;                 /// Maimum convergence rate obtained during the 
+    double rho_max;                 /// Maximum convergence rate obtained during the 
                                     /// iterative refinement procedure.  This value 
                                     /// provides an estimate of the condition number:
                                     /// \f[ \rho^{(i)} = \epsilon*c_n*g*\text{cond}(A) \f]
                                     /// (not sure what c_n or g are...)
+    
+    double condition_estimate;      /// Estimate of condition number
 
-    double relnorm_dX_i;            /// Relative L_infty norm of dX at previous iteration
-    double relnorm_dX_ip1;          /// Relative L_infty norm of dX at current iteration
-    double relnorm_X_i;             /// Relative L_infty norm of X 
-    double final_rel_norm;          /// Relative L_infty norm of dX at last iteration
-  
-  
-  
-  
+    double norm_dX_i;               /// Relative L_infty norm of dX at previous iteration
+    double norm_dX_ip1;             /// Relative L_infty norm of dX at current iteration
+    double norm_dX_final;           /// Relative L_infty norm of dX at last iteration
+    double norm_X_i;                /// Relative L_infty norm of X 
+
     bool increase_precision;        /// Boolean switch: increase precision for X?
   
     int imax;                       /// Maximum number of iterations.
