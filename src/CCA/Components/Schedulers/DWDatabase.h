@@ -145,7 +145,7 @@ private:
    const DataItem& getDataItem(const VarLabel* label, int matlindex,
 			       const DomainType* dom) const;
     
-   typedef multimap<VarLabelMatl<DomainType>, DataItem>  varDBtype;
+   typedef hash_multimap<VarLabelMatl<DomainType>, DataItem>  varDBtype;
    varDBtype vars;
 
    DWDatabase(const DWDatabase&);
@@ -460,7 +460,8 @@ namespace __gnu_cxx
       size_t h=0;
       char *str =const_cast<char*> (v.label_->getName().data());
       while (int c = *str++) h = h*7+c;
-      return (h ^ (size_t) (v.domain_? v.domain_->getID():0)^ (size_t)v.matlIndex_ );
+      return ( ( ((size_t)v.label_) << (sizeof(size_t)/2) ^ ((size_t)v.label_) >> (sizeof(size_t)/2) )
+          ^ (size_t)v.domain_ ^ (size_t)v.matlIndex_ );
     }
   };
 }
@@ -477,7 +478,8 @@ namespace std {
           size_t h=0;
           char *str =const_cast<char*> (v.label_->getName().data());
           while (int c = *str++) h = h*7+c;
-          return (h ^ (size_t) (v.domain_? v.domain_->getID():0)^ (size_t)v.matlIndex_ );
+          return ( ( ((size_t)v.label_) << (sizeof(size_t)/2) ^ ((size_t)v.label_) >> (sizeof(size_t)/2) )
+              ^ (size_t)v.domain_ ^ (size_t)v.matlIndex_ );
         }
       };
   }
