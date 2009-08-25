@@ -1144,6 +1144,11 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->computes(             lb->NC_CCweightLabel, z_matl);
 
   sched->addTask(t, patches, matls);
+
+  // The task will have a reference to z_matl
+  if (z_matl->removeReference())
+    delete z_matl; // shouln't happen, but...
+
 }
 
 void SerialMPM::scheduleSetPrescribedMotion(SchedulerP& sched,
