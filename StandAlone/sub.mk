@@ -386,7 +386,7 @@ ifeq ($(IS_REDSTORM),yes)
 	@echo "Built sus"
 endif
 
-tools: puda dumpfields compare_uda uda2nrrd restart_merger partextract partvarRange selectpart async_mpi_test mpi_test extractV extractF extractS gambitFileReader slb pfs pfs2 timeextract faceextract lineextract compare_mms compare_scalar
+tools: puda dumpfields compare_uda restart_merger partextract partvarRange selectpart async_mpi_test mpi_test extractV extractF extractS gambitFileReader slb pfs pfs2 timeextract faceextract lineextract compare_mms compare_scalar fsspeed
 
 puda: prereqs StandAlone/tools/puda/puda
 
@@ -431,3 +431,5 @@ compare_mms: StandAlone/tools/compare_mms/compare_mms
 compare_scalar: StandAlone/tools/compare_mms/compare_scalar
 
 mpi_test: StandAlone/tools/mpi_test/mpi_test
+
+fsspeed: StandAlone/tools/fsspeed/fsspeed
