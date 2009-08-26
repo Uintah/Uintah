@@ -33,6 +33,7 @@ DEALINGS IN THE SOFTWARE.
 
 #include <CCA/Components/LoadBalancers/LoadBalancerCommon.h>
 
+#include <CCA/Components/LoadBalancers/CostForecasterBase.h>
 #include <CCA/Components/LoadBalancers/CostProfiler.h>
 #include <CCA/Ports/SFC.h>
 #include <Core/Grid/Grid.h>
@@ -159,7 +160,7 @@ namespace Uintah {
     void initializeWeights(const Grid* oldgrid, const Grid* newgrid) {
             if(d_profile) d_costProfiler->initializeWeights(oldgrid,newgrid); }
     //resets the profiler counters to zero
-    void resetCostProfiler() {if(d_profile) d_costProfiler->reset();}
+    void resetCostForecaster() {if(d_profile) d_costProfiler->reset();}
 
   private:
 
@@ -172,7 +173,7 @@ namespace Uintah {
     };
 
     vector<IntVector> d_minPatchSize;
-    CostProfiler *d_costProfiler;
+    CostForecasterBase *d_costProfiler;
     enum { static_lb, cyclic_lb, random_lb, patch_factor_lb, zoltan_sfc_lb };
 
     DynamicLoadBalancer(const DynamicLoadBalancer&);
