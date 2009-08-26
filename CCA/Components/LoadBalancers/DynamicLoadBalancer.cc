@@ -1186,14 +1186,14 @@ DynamicLoadBalancer::restartInitialize( DataArchive* archive, int time_index, Pr
 void DynamicLoadBalancer::getCosts(const Grid* grid, vector<vector<double> >&costs)
 {
   costs.clear();
-  costs.resize(grid->numLevels());
     
   vector<vector<int> > num_particles;
   collectParticles(grid, num_particles);
 
+  //check if the forecaster is ready, if it is use it
   if(d_costForecaster->hasData())
     d_costForecaster->getWeights(grid,num_particles,costs);
-  else
+  else //otherwise just use a simple cost model (this happens on the first timestep when profiling data doesn't exist)
     CostModeler(d_patchCost,d_cellCost,d_particleCost).getWeights(grid,num_particles,costs);
 
   if (dbg.active() && d_myworld->myrank() == 0) {
