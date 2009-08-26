@@ -168,8 +168,8 @@ WARNING
     virtual void finalizeContributions(const GridP currentgrid) {};
     //initializes the weights in regions in the new grid that are not in the old level
     virtual void initializeWeights(const Grid* oldgrid, const Grid* newgrid) {};
-    //resets counters to zero
-    virtual void resetCostProfiler() {};
+    //resets forecaster to the defaults
+    virtual void resetCostForecaster() {};
     
   private:
     LoadBalancer(const LoadBalancer&);

@@ -28,34 +28,22 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#ifndef UINTAH_HOMEBREW_CostProfiler_H
-#define UINTAH_HOMEBREW_CostProfiler_H
-
-#include <map>
-#include <vector>
-using namespace std;
+#ifndef UINTAH_HOMEBREW_CostForecasterBase_H
+#define UINTAH_HOMEBREW_CostForecasterBase_H
 
 #include <Core/Grid/Grid.h>
-#include <Core/Grid/Region.h>
-#include <Core/Grid/Patch.h>
-#include <Core/Grid/Level.h>
-#include <Core/Grid/Variables/CellIterator.h>
-#include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Parallel/ProcessorGroup.h>
-#include <CCA/Components/LoadBalancers/CostForecasterBase.h>
-#include <CCA/Components/LoadBalancers/ProfileDriver.h>
 namespace Uintah {
    /**************************************
      
      CLASS
-       CostProfiler 
+       CostForecasterBase 
       
-       Profiles the execution costs of regions of the domain for use by the 
-       DynamicLoadBalancer cost model
-      
+       Base class for cost forecasters used by the DynamicLoadBalancer.
+
      GENERAL INFORMATION
       
-       CostProfiler.h
+       CostForecasterBase.h
       
        Justin Luitjens
        Department of Computer Science
@@ -66,47 +54,37 @@ namespace Uintah {
        Copyright (C) 2000 SCI Group
       
      KEYWORDS
-       CostProfiler
+       CostForecasterBase
        DynamicLoadBalancer
       
      DESCRIPTION
-       Profiles the execution costs of regions of the domain for use by the 
-       DynamicLoadBalancer.  The domain is broken into square patches which
-       are use as sample points.  At every timestep the scheduler needs to 
-       update the execution costs using addContribution and then finalize the 
-       contributions at the end of the timestep using finalizeContribution.
+       This is a base class for cost forecasters.  Forecasters should be 
+       able to predict the costs of execution for each patch of the grid.
+       The dynamic load balancer will use these costs to help ensure
+       an even load balance.
 
-       The DLB uses the getWeights function to assign weights to regions which 
-       can then be used to load balance the calculation.
-      
      WARNING
       
      ****************************************/
 
-  class CostProfiler : public CostForecasterBase {
+  class CostForecasterBase {
   public:
-    CostProfiler(const ProcessorGroup* myworld, LoadBalancer *lb) : d_lb(lb), d_myworld(myworld), d_profiler(myworld,lb) {};
-    void setMinPatchSize(const vector<IntVector> &min_patch_size);
+    virtual void setMinPatchSize(const vector<IntVector> &min_patch_size) {};
     //add the contribution for region r on level l
-    void addContribution(DetailedTask *task, double cost);
+    virtual void addContribution(DetailedTask *task, double cost) {};
     //finalize the contributions for this timestep
-    void finalizeContributions(const GridP currentGrid);
-    //outputs the error associated with the profiler
-    void outputError(const GridP currentGrid);
+    virtual void finalizeContributions(const GridP currentGrid) {};
     //get the contribution for region r on level l
-    void getWeights(int l, const vector<Region> &regions, vector<double> &weights);
+    virtual void getWeights(int l, const vector<Region> &regions, vector<double> &weights) = 0;
     //sets the decay rate for the exponential average
-    void setTimestepWindow(int window) {d_profiler.setTimestepWindow(window);}
+    virtual void setTimestepWindow(int window) {};
     //initializes the regions in the new level that are not in the old level
-    void initializeWeights(const Grid* oldgrid, const Grid* newgrid);
+    virtual void initializeWeights(const Grid* oldgrid, const Grid* newgrid) {};
     //resets all counters to zero
-    void reset();
+    virtual void reset() {};
     //returns true if profiling data exists
-    bool hasData() {return d_profiler.hasData();}
+    virtual bool hasData() {return true;}
   private:
-    LoadBalancer *d_lb;
-    const ProcessorGroup* d_myworld;
-    ProfileDriver d_profiler;
 
   };
 } // End namespace Uintah
