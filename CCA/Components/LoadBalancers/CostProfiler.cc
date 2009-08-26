@@ -71,9 +71,21 @@ CostProfiler::finalizeContributions( const GridP currentGrid )
 }
 
 void
-CostProfiler::getWeights( int l, const vector<Region> & regions, vector<double> & weights )
+CostProfiler::getWeights(const Grid* grid, vector<vector<int> > num_particles, vector<vector<double> >&costs)
 {
-  d_profiler.getWeights( l, regions, weights );
+  //for each level
+  for (int l=0; l<grid->numLevels();l++)
+  {
+    LevelP level=grid->getLevel(l);
+    vector<Region> regions(level->numPatches());
+
+    for(int p=0; p<level->numPatches();p++)
+    {
+      const Patch *patch=level->getPatch(p);
+      regions[p]=Region(patch->getCellLowIndex__New(),patch->getCellHighIndex__New());
+    }
+    d_profiler.getWeights(l,regions,costs[l]);
+  }
 }
 
 void

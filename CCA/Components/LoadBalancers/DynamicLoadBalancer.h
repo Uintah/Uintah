@@ -153,14 +153,14 @@ namespace Uintah {
    
   //cost profiling functions
     //update the contribution for this patch
-    void addContribution(DetailedTask *task ,double cost) {if(d_profile) d_costProfiler->addContribution(task,cost);}
+    void addContribution(DetailedTask *task ,double cost) {d_costForecaster->addContribution(task,cost);}
     //finalize the contributions (updates the weight, should be called once per timestep)
     void finalizeContributions(const GridP currentGrid);
     //initializes the regions in the new level that are not in the old level
     void initializeWeights(const Grid* oldgrid, const Grid* newgrid) {
-            if(d_profile) d_costProfiler->initializeWeights(oldgrid,newgrid); }
+            d_costForecaster->initializeWeights(oldgrid,newgrid); }
     //resets the profiler counters to zero
-    void resetCostForecaster() {if(d_profile) d_costProfiler->reset();}
+    void resetCostForecaster() {d_costForecaster->reset();}
 
   private:
 
@@ -173,7 +173,7 @@ namespace Uintah {
     };
 
     vector<IntVector> d_minPatchSize;
-    CostForecasterBase *d_costProfiler;
+    CostForecasterBase *d_costForecaster;
     enum { static_lb, cyclic_lb, random_lb, patch_factor_lb, zoltan_sfc_lb };
 
     DynamicLoadBalancer(const DynamicLoadBalancer&);
@@ -227,7 +227,6 @@ namespace Uintah {
     bool d_doSpaceCurve;
     bool d_collectParticles;
     bool d_checkAfterRestart;
-    bool d_profile;
 
     SFC <double> sfc;
 
