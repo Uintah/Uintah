@@ -28,8 +28,8 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#ifndef UINTAH_HOMEBREW_CostProfiler_H
-#define UINTAH_HOMEBREW_CostProfiler_H
+#ifndef UINTAH_HOMEBREW_CostModeler_H
+#define UINTAH_HOMEBREW_CostModeler_H
 
 #include <map>
 #include <vector>
@@ -48,14 +48,14 @@ namespace Uintah {
    /**************************************
      
      CLASS
-       CostProfiler 
+       CostModeler 
       
-       Profiles the execution costs of regions of the domain for use by the 
-       DynamicLoadBalancer cost model
+       Computes weights of execution using a simple model based on the number
+       of cells and particles.
       
      GENERAL INFORMATION
       
-       CostProfiler.h
+       CostModeler.h
       
        Justin Luitjens
        Department of Computer Science
@@ -66,15 +66,12 @@ namespace Uintah {
        Copyright (C) 2000 SCI Group
       
      KEYWORDS
-       CostProfiler
+       CostModeler
        DynamicLoadBalancer
       
      DESCRIPTION
-       Profiles the execution costs of regions of the domain for use by the 
-       DynamicLoadBalancer.  The domain is broken into square patches which
-       are use as sample points.  At every timestep the scheduler needs to 
-       update the execution costs using addContribution and then finalize the 
-       contributions at the end of the timestep using finalizeContribution.
+       Computes the weights of execution for each patch in the grid based
+       on the number of cells and particles it has.  
 
        The DLB uses the getWeights function to assign weights to regions which 
        can then be used to load balance the calculation.
@@ -83,30 +80,36 @@ namespace Uintah {
       
      ****************************************/
 
-  class CostProfiler : public CostForecasterBase {
-  public:
-    CostProfiler(const ProcessorGroup* myworld, LoadBalancer *lb) : d_lb(lb), d_myworld(myworld), d_profiler(myworld,lb) {};
-    void setMinPatchSize(const vector<IntVector> &min_patch_size);
-    //add the contribution for region r on level l
-    void addContribution(DetailedTask *task, double cost);
-    //finalize the contributions for this timestep
-    void finalizeContributions(const GridP currentGrid);
-    //outputs the error associated with the profiler
-    void outputError(const GridP currentGrid);
-    //get the contributions for each patch, particles are ignored
-    void getWeights(const Grid* grid, vector<vector<int> > num_particles, vector<vector<double> >&costs);
-    //sets the decay rate for the exponential average
-    void setTimestepWindow(int window) {d_profiler.setTimestepWindow(window);}
-    //initializes the regions in the new level that are not in the old level
-    void initializeWeights(const Grid* oldgrid, const Grid* newgrid);
-    //resets all counters to zero
-    void reset();
-    //returns true if profiling data exists
-    bool hasData() {return d_profiler.hasData();}
-  private:
-    LoadBalancer *d_lb;
-    const ProcessorGroup* d_myworld;
-    ProfileDriver d_profiler;
+  class CostModeler : public CostForecasterBase {
+    public:
+      void getWeights(const Grid* grid, vector<vector<int> > num_particles, vector<vector<double> >&costs)
+      {
+        costs.resize(grid->numLevels());
+        //for each level
+        for (int l=0; l<grid->numLevels();l++)
+        {
+          LevelP level=grid->getLevel(l);
+          costs[l].resize(level->numPatches());
+          for(int p=0; p<level->numPatches();p++)
+          {
+            const Patch *patch=level->getPatch(p);
+            costs[l][p]=d_patchCost+patch->getNumExtraCells()*d_cellCost+num_particles[l][p]*d_particleCost;
+          }
+        }
+      }
+      void setCosts(double patchCost, double cellCost, double particleCost)
+      {
+        d_patchCost=patchCost;d_cellCost=cellCost;d_particleCost=particleCost;
+      }
+      void getCosts(double &patchCost, double &cellCost, double &particleCost)
+      {
+        patchCost=d_patchCost;cellCost=d_cellCost;particleCost=d_particleCost;
+      }
+
+
+      CostModeler(double patchCost, double cellCost, double particleCost) { setCosts(patchCost,cellCost,particleCost); };
+    private:
+      double d_patchCost, d_cellCost, d_particleCost;
 
   };
 } // End namespace Uintah

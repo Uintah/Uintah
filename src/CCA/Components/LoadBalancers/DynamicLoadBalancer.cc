@@ -47,6 +47,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Util/DebugStream.h>
 #include <Core/Thread/Time.h>
 #include <Core/Exceptions/InternalError.h>
+#include <CCA/Components/LoadBalancers/CostModeler.h>
 
 #include <iostream> // debug only
 #include <stack>
@@ -62,7 +63,7 @@ static DebugStream times("LBTimes",false);
 double lbtimes[5]={0};
 
 DynamicLoadBalancer::DynamicLoadBalancer(const ProcessorGroup* myworld)
-  : LoadBalancerCommon(myworld), d_costProfiler(0), sfc(myworld)
+  : LoadBalancerCommon(myworld), d_costForecaster(0), sfc(myworld)
 {
   d_lbInterval = 0.0;
   d_lastLbTime = 0.0;
@@ -96,10 +97,10 @@ DynamicLoadBalancer::DynamicLoadBalancer(const ProcessorGroup* myworld)
 
 DynamicLoadBalancer::~DynamicLoadBalancer()
 {
-  if(d_costProfiler)
+  if(d_costForecaster)
   {
-    delete d_costProfiler;
-    d_costProfiler=0;
+    delete d_costForecaster;
+    d_costForecaster=0;
   }
 #if defined( HAVE_ZOLTAN )
   delete zz;
@@ -1190,34 +1191,11 @@ void DynamicLoadBalancer::getCosts(const Grid* grid, vector<vector<double> >&cos
   vector<vector<int> > num_particles;
   collectParticles(grid, num_particles);
 
-  if(d_profile && d_costProfiler->hasData())
-  {
-    //for each level
-    for (int l=0; l<grid->numLevels();l++) 
-    {
-      LevelP level=grid->getLevel(l);
-      vector<Region> patches(level->numPatches());
-
-      for(int p=0; p<level->numPatches();p++)
-      {
-        const Patch *patch=level->getPatch(p);
-        patches[p]=Region(patch->getCellLowIndex__New(),patch->getCellHighIndex__New());
-      }
-      d_costProfiler->getWeights(l,patches,costs[l]);
-    }
-  }
+  if(d_costForecaster->hasData())
+    d_costForecaster->getWeights(grid,num_particles,costs);
   else
-  {
+    CostModeler(d_patchCost,d_cellCost,d_particleCost).getWeights(grid,num_particles,costs);
 
-    for (int l = 0; l < grid->numLevels(); l++) 
-    {
-      for(int p = 0; p < grid->getLevel(l)->numPatches(); p++)
-      {
-        costs[l].push_back(d_patchCost+grid->getLevel(l)->getPatch(p)->getNumExtraCells()*d_cellCost+num_particles[l][p]*d_particleCost);
-      }
-    }
-  }
-  
   if (dbg.active() && d_myworld->myrank() == 0) {
     for (unsigned l = 0; l < costs.size(); l++)
       for (unsigned p = 0; p < costs[l].size(); p++)
@@ -1317,8 +1295,7 @@ bool DynamicLoadBalancer::possiblyDynamicallyReallocate(const GridP& grid, int s
 
 void DynamicLoadBalancer::finalizeContributions(const GridP grid) 
 {
-  if(d_profile)
-    d_costProfiler->finalizeContributions(grid);
+    d_costForecaster->finalizeContributions(grid);
 }
 
 
@@ -1333,7 +1310,7 @@ DynamicLoadBalancer::problemSetup(ProblemSpecP& pspec, GridP& grid,  SimulationS
   int timestepInterval = 10;
   double threshold = 0.0;
   bool spaceCurve = false;
-  
+
   if (p != 0) {
     // if we have DLB, we know the entry exists in the input file...
     if(!p->get("timestepInterval", timestepInterval))
@@ -1346,19 +1323,26 @@ DynamicLoadBalancer::problemSetup(ProblemSpecP& pspec, GridP& grid,  SimulationS
     p->getWithDefault("patchCost", d_patchCost, 16);
     p->getWithDefault("gainThreshold", threshold, 0.05);
     p->getWithDefault("doSpaceCurve", spaceCurve, true);
-    p->getWithDefault("doCostProfiling",d_profile,true);
-    if(d_profile)
+    bool profile;
+    p->getWithDefault("doCostProfiling",profile,true);
+    if(profile)
     {
       int timestepWindow;
       p->getWithDefault("profileTimestepWindow",timestepWindow,10);
-      d_costProfiler=scinew CostProfiler(d_myworld,this);
-      d_costProfiler->setTimestepWindow(timestepWindow);
+      d_costForecaster=scinew CostProfiler(d_myworld,this);
+      d_costForecaster->setTimestepWindow(timestepWindow);
     }
+    else
+    {
+      //if were not profiling just use the simple cost model
+      d_costForecaster=scinew CostModeler(d_patchCost,d_particleCost,d_cellCost);
+    }
+
     p->getWithDefault("levelIndependent",d_levelIndependent,true);
     p->getWithDefault("collectParticles",d_collectParticles,false);
   }
 
-  
+
   if(d_myworld->myrank()==0)
     cout << "Dynamic Algorithm: " << dynamicAlgo << endl;
 
@@ -1384,9 +1368,9 @@ DynamicLoadBalancer::problemSetup(ProblemSpecP& pspec, GridP& grid,  SimulationS
 #endif
   else {
     if (d_myworld->myrank() == 0)
-     cout << "Invalid Load Balancer Algorithm: " << dynamicAlgo
-           << "\nPlease select 'cyclic', 'random', 'patchFactor' (default), or 'patchFactorParticles'\n"
-           << "\nUsing 'patchFactor' load balancer\n";
+      cout << "Invalid Load Balancer Algorithm: " << dynamicAlgo
+        << "\nPlease select 'cyclic', 'random', 'patchFactor' (default), or 'patchFactorParticles'\n"
+        << "\nUsing 'patchFactor' load balancer\n";
     d_dynamicAlgorithm = patch_factor_lb;
   }
 
@@ -1394,7 +1378,7 @@ DynamicLoadBalancer::problemSetup(ProblemSpecP& pspec, GridP& grid,  SimulationS
   d_lbTimestepInterval = timestepInterval;
   d_doSpaceCurve = spaceCurve;
   d_lbThreshold = threshold;
-  
+
   ASSERT(d_sharedState->getNumDims()>0 || d_sharedState->getNumDims()<4);
   //set curve parameters that do not change between timesteps
   sfc.SetNumDimensions(d_sharedState->getNumDims());
@@ -1403,23 +1387,20 @@ DynamicLoadBalancer::problemSetup(ProblemSpecP& pspec, GridP& grid,  SimulationS
   sfc.SetMergeParameters(3000,500,2,.15);  //Should do this by profiling
 
   //set costProfiler mps
-  if(d_profile)
+  Regridder *regridder = dynamic_cast<Regridder*>(getPort("regridder"));
+  if(regridder)
   {
-    Regridder *regridder = dynamic_cast<Regridder*>(getPort("regridder"));
-    if(regridder)
-    {
-      d_costProfiler->setMinPatchSize(regridder->getMinPatchSize());
-    }
-    else
-    {
-      //query mps from a patch
-      const Patch *patch=grid->getLevel(0)->getPatch(0);
+    d_costForecaster->setMinPatchSize(regridder->getMinPatchSize());
+  }
+  else
+  {
+    //query mps from a patch
+    const Patch *patch=grid->getLevel(0)->getPatch(0);
 
-      vector<IntVector> mps;
-      mps.push_back(patch->getCellHighIndex__New()-patch->getCellLowIndex__New());
+    vector<IntVector> mps;
+    mps.push_back(patch->getCellHighIndex__New()-patch->getCellLowIndex__New());
 
-      d_costProfiler->setMinPatchSize(mps);
-    }
+    d_costForecaster->setMinPatchSize(mps);
   }
 }
 

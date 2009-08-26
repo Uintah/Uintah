@@ -74,15 +74,15 @@ namespace Uintah {
     virtual void addContribution(DetailedTask *task, double cost) {};
     //finalize the contributions for this timestep
     virtual void finalizeContributions(const GridP currentGrid) {};
-    //get the contribution for region r on level l
-    virtual void getWeights(int l, const vector<Region> &regions, vector<double> &weights) = 0;
+    //compute the weights for all patches in the grid.  Particles are provided in the num_particles vectors.
+    virtual void getWeights(const Grid* grid, vector<vector<int> > num_particles, vector<vector<double> >&costs) = 0;
     //sets the decay rate for the exponential average
     virtual void setTimestepWindow(int window) {};
     //initializes the regions in the new level that are not in the old level
     virtual void initializeWeights(const Grid* oldgrid, const Grid* newgrid) {};
     //resets all counters to zero
     virtual void reset() {};
-    //returns true if profiling data exists
+    //returns true if the forecaster is ready to be used
     virtual bool hasData() {return true;}
   private:
 
