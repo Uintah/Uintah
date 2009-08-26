@@ -108,8 +108,18 @@ DynamicLoadBalancer::~DynamicLoadBalancer()
 
 void DynamicLoadBalancer::collectParticles(const Grid* grid, vector<vector<int> >& particles)
 {
+  particles.resize(grid->numLevels());
+  for(int l=0;l<grid->numLevels();l++)
+  {
+    particles[l].resize(grid->getLevel(l)->numPatches());
+    particles[l].assign(grid->getLevel(l)->numPatches(),0);
+  }
   if (d_processorAssignment.size() == 0)
     return; // if we haven't been through the LB yet, don't try this.
+
+  //if we are not supposed to collect particles just return
+  if(!d_collectParticles || !d_scheduler->get_dw(0))
+    return;
 
   if (d_myworld->myrank() == 0)
     dbg << " DLB::collectParticles\n";
@@ -197,10 +207,8 @@ void DynamicLoadBalancer::collectParticles(const Grid* grid, vector<vector<int> 
   }
 
   // add the number of particles to the particles array
-  particles.resize(grid->numLevels());
   for (int l = 0, i=0; l < grid->numLevels(); l++) {
     unsigned num_patches=grid->getLevel(l)->numPatches();
-    particles[l].resize(num_patches);
     for(unsigned p =0; p<num_patches; p++,i++)
     {
       particles[l][p]=num_particles[i];
@@ -1178,6 +1186,9 @@ void DynamicLoadBalancer::getCosts(const Grid* grid, vector<vector<double> >&cos
 {
   costs.clear();
   costs.resize(grid->numLevels());
+    
+  vector<vector<int> > num_particles;
+  collectParticles(grid, num_particles);
 
   if(d_profile && d_costProfiler->hasData())
   {
@@ -1202,19 +1213,7 @@ void DynamicLoadBalancer::getCosts(const Grid* grid, vector<vector<double> >&cos
     {
       for(int p = 0; p < grid->getLevel(l)->numPatches(); p++)
       {
-        costs[l].push_back(d_patchCost+grid->getLevel(l)->getPatch(p)->getNumExtraCells()*d_cellCost);
-      }
-    }
-    if (d_collectParticles && d_scheduler->get_dw(0) != 0) 
-    {
-      vector<vector<int> > particles;
-      collectParticles(grid, particles);
-      for (int l = 0; l < grid->numLevels(); l++) 
-      {
-        for(int p = 0; p < grid->getLevel(l)->numPatches(); p++)
-        {
-          costs[l][p]+=d_particleCost*particles[l][p];
-        }
+        costs[l].push_back(d_patchCost+grid->getLevel(l)->getPatch(p)->getNumExtraCells()*d_cellCost+num_particles[l][p]*d_particleCost);
       }
     }
   }
