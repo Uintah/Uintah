@@ -144,9 +144,6 @@ namespace Uintah {
     bool d_with_color;
     bool d_artificial_viscosity;
 
-    // for thermal stress 
-    double d_ref_temp;  // Thermal stress of the system is zero at d_ref_temp
-
     vector<const VarLabel* > particle_state, particle_state_preReloc;
     typedef map<pair<const Patch*,GeometryObject*>,vector<Point> > geompoints;
     geompoints d_object_points;
