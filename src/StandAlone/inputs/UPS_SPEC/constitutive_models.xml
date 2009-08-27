@@ -92,15 +92,15 @@
         <KIc                       spec="OPTIONAL DOUBLE" />
       </point>
     </fracture_toughness_curve>
-    <G                             spec="OPTIONAL DOUBLE" />    <!-- FIXME: what is this? -->
-    <G1                            spec="OPTIONAL DOUBLE" />    <!-- FIXME: what is this? -->
-    <G2                            spec="OPTIONAL DOUBLE" />    <!-- FIXME: what is this? -->
-    <G3                            spec="OPTIONAL DOUBLE" />    <!-- FIXME: what is this? -->
-    <G4                            spec="OPTIONAL DOUBLE" />    <!-- FIXME: what is this? -->
-    <G5                            spec="OPTIONAL DOUBLE" />    <!-- FIXME: what is this? -->
-    <Gamma                         spec="OPTIONAL DOUBLE" />    <!-- FIXME: what is this? -->
-    <gamma                         spec="OPTIONAL DOUBLE" />    <!-- FIXME: what is this? -->
-    <hardening_modulus             spec="OPTIONAL DOUBLE" />  <!-- FIXME: What is this?  What is the default? -->
+    <G                             spec="OPTIONAL DOUBLE" />
+    <G1                            spec="OPTIONAL DOUBLE" />
+    <G2                            spec="OPTIONAL DOUBLE" />
+    <G3                            spec="OPTIONAL DOUBLE" />
+    <G4                            spec="OPTIONAL DOUBLE" />
+    <G5                            spec="OPTIONAL DOUBLE" />
+    <Gamma                         spec="OPTIONAL DOUBLE" />
+    <gamma                         spec="OPTIONAL DOUBLE" />
+    <hardening_modulus             spec="OPTIONAL DOUBLE" />
     <he_constant_1                 spec="OPTIONAL DOUBLE 'positive'" />
     <he_constant_2                 spec="OPTIONAL DOUBLE 'positive'" />
     <he_PR                         spec="OPTIONAL DOUBLE 'positive'" />
@@ -117,8 +117,8 @@
     <meanstrain_nucleation         spec="OPTIONAL DOUBLE" />
     <melting_temp_model            spec="OPTIONAL NO_DATA"
                                      attribute1="type REQUIRED STRING 'constant_Tm, scg_Tm'" >
-      <a                           spec="OPTIONAL DOUBLE" />    <!-- FIXME: what is this? -->
-      <Gamma_0                     spec="OPTIONAL DOUBLE" />    <!-- FIXME: what is this? -->
+      <a                           spec="OPTIONAL DOUBLE" />
+      <Gamma_0                     spec="OPTIONAL DOUBLE" />
       <T_m0                        spec="OPTIONAL DOUBLE" />
     </melting_temp_model>
     <plasticity_model              spec="OPTIONAL NO_DATA"
@@ -239,7 +239,17 @@
     </shear_modulus_model>
     <specific_heat                 spec="OPTIONAL DOUBLE" />
     <specific_heat_model           spec="OPTIONAL NO_DATA" 
-                                     attribute1="type REQUIRED STRING 'constant_Cp, copper_Cp, steel_Cp'" />
+                                     attribute1="type REQUIRED STRING 'constant_Cp, copper_Cp, steel_Cp'">
+      <T_transition                spec="OPTIONAL DOUBLE" />
+      <A_LowT                spec="OPTIONAL DOUBLE" />
+      <B_LowT                spec="OPTIONAL DOUBLE" />
+      <C_LowT                spec="OPTIONAL DOUBLE" />
+      <n_LowT                spec="OPTIONAL DOUBLE" />
+      <A_HighT               spec="OPTIONAL DOUBLE" />
+      <B_HighT               spec="OPTIONAL DOUBLE" />
+      <C_HighT               spec="OPTIONAL DOUBLE" />
+      <n_HighT               spec="OPTIONAL DOUBLE" />
+    </specific_heat_model>
     <stability_check               spec="OPTIONAL NO_DATA"
                                      attribute1="type REQUIRED STRING 'acoustic, becker, drucker, drucker_becker, none'" />
     <stddevstrain_nucleation       spec="OPTIONAL DOUBLE" />
