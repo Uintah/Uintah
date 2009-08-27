@@ -63,7 +63,6 @@ ParticleCreator::ParticleCreator(MPMMaterial* matl,
   d_lb = scinew MPMLabel();
   d_useLoadCurves = flags->d_useLoadCurves;
   d_with_color = flags->d_with_color;
-  d_ref_temp = flags->d_ref_temp; // for thermal stress 
   d_artificial_viscosity = flags->d_artificial_viscosity;
 
   d_flags = flags;
@@ -592,8 +591,7 @@ ParticleCreator::initializeParticle(const Patch* patch,
     p_q[i] = 0.;
   }
   
-  // Assume that the correct d_ref_temp is specified in the input file
-  ptempPrevious[i]  = (d_ref_temp > 0.0) ? d_ref_temp : ptemperature[i];
+  ptempPrevious[i]  = ptemperature[i];
 
   Vector pExtForce(0,0,0);
   applyForceBC(dxpp, p, pmass[i], pExtForce);
