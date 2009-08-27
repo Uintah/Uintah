@@ -16,6 +16,7 @@
       <DoExplicitHeatConduction           spec="OPTIONAL BOOLEAN" />
       <DoPressureStabilization            spec="OPTIONAL BOOLEAN" />
       <DoThermalExpansion                 spec="OPTIONAL BOOLEAN" />  <!-- FIXME: default is? -->
+      <computeNodalHeatFlux               spec="OPTIONAL BOOLEAN" />
       <erosion                            spec="OPTIONAL NO_DATA"
                                             attribute1="algorithm REQUIRED STRING 'none, AllowNoTension, KeepStress, ZeroStress, RemoveMass, AllowNoShear'" />
       <ForceBC_force_increment_factor     spec="OPTIONAL DOUBLE" />  <!-- FIXME: default is? Default? -->
