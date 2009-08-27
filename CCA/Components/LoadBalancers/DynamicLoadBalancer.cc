@@ -1335,7 +1335,7 @@ DynamicLoadBalancer::problemSetup(ProblemSpecP& pspec, GridP& grid,  SimulationS
     else
     {
       //if were not profiling just use the simple cost model
-      d_costForecaster=scinew CostModeler(d_patchCost,d_particleCost,d_cellCost);
+      d_costForecaster=scinew CostModeler(d_patchCost,d_cellCost,d_particleCost);
     }
 
     p->getWithDefault("levelIndependent",d_levelIndependent,true);
