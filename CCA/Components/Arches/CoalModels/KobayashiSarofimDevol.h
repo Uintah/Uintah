@@ -76,6 +76,7 @@ private:
   const VarLabel* d_raw_coal_mass_fraction_label;
   const VarLabel* d_weight_label;
   const VarLabel* d_gasDevolRate; //gas devol rate for this qn only
+  const VarLabel* d_particle_temperature_label;
 
   double A1;
   double A2;
@@ -84,6 +85,8 @@ private:
   double E2;
   
   double R;
+  
+  bool compute_part_temp;
 
   double c_o;      // initial mass of raw coal
   double alpha_o;  // initial mass fraction of raw coal
@@ -95,8 +98,11 @@ private:
 
   double Y1_;
   double Y2_;
+  double k1;
+  double k2;
 
   double d_rc_scaling_factor;
+  double d_pt_scaling_factor;
   double d_w_scaling_factor; 
 
 }; // end ConstSrcTerm
