@@ -65,7 +65,6 @@ namespace Uintah {
     std::string d_interpolator_type; // Type of particle-grid interaction
     bool        d_AMR;  // Do AMR?
     bool        d_axisymmetric;  // Use axisymmetric?
-    double      d_ref_temp; // Reference temperature for thermal stress  
     std::string d_integrator_type; // Explicit or implicit time integration
     IntegratorType d_integrator;
 

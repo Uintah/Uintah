@@ -48,7 +48,6 @@ static DebugStream dbg("MPMFlags", false);
 MPMFlags::MPMFlags(const ProcessorGroup* myworld)
 {
   d_interpolator_type = "linear";
-  d_ref_temp = 0.0; // for thermal stress
   d_integrator_type = "explicit";
   d_integrator = Explicit;
   d_AMR = false;
@@ -131,7 +130,6 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps)
   mpm_flag_ps->get("interpolator", d_interpolator_type);
   mpm_flag_ps->get("AMR", d_AMR);
   mpm_flag_ps->get("axisymmetric", d_axisymmetric);
-  mpm_flag_ps->get("reference_temperature", d_ref_temp); // for thermal stress
   mpm_flag_ps->get("withColor",  d_with_color);
   mpm_flag_ps->get("artificial_damping_coeff", d_artificialDampCoeff);
   mpm_flag_ps->get("artificial_viscosity",     d_artificial_viscosity);
@@ -243,7 +241,6 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps)
     dbg << "---------------------------------------------------------\n";
     dbg << " Time Integration            = " << d_integrator_type << endl;
     dbg << " Interpolation type          = " << d_interpolator_type << endl;
-    dbg << " Reference temperature       = " << d_ref_temp << endl;  
     dbg << " With Color                  = " << d_with_color << endl;
     dbg << " Artificial Damping Coeff    = " << d_artificialDampCoeff << endl;
     dbg << " Artificial Viscosity On     = " << d_artificial_viscosity<< endl;
@@ -271,7 +268,6 @@ MPMFlags::outputProblemSpec(ProblemSpecP& ps)
   ps->appendElement("interpolator", d_interpolator_type);
   ps->appendElement("AMR", d_AMR);
   ps->appendElement("axisymmetric", d_axisymmetric);
-  ps->appendElement("reference_temperature", d_ref_temp);
   ps->appendElement("withColor",  d_with_color);
   ps->appendElement("artificial_damping_coeff", d_artificialDampCoeff);
   ps->appendElement("artificial_viscosity",     d_artificial_viscosity);
