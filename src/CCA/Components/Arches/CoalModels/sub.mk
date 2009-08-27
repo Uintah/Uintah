@@ -8,4 +8,5 @@ SRCS += \
   $(SRCDIR)/PartVel.cc \
   $(SRCDIR)/BadHawkDevol.cc \
   $(SRCDIR)/KobayashiSarofimDevol.cc \
-  $(SRCDIR)/ConstantModel.cc 
+  $(SRCDIR)/ConstantModel.cc  \
+  $(SRCDIR)/HeatTransfer.cc
