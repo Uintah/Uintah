@@ -73,12 +73,14 @@ CostProfiler::finalizeContributions( const GridP currentGrid )
 void
 CostProfiler::getWeights(const Grid* grid, vector<vector<int> > num_particles, vector<vector<double> >&costs)
 {
+  costs.resize(grid->numLevels());
   //for each level
   for (int l=0; l<grid->numLevels();l++)
   {
     LevelP level=grid->getLevel(l);
     vector<Region> regions(level->numPatches());
 
+    costs[l].resize(level->numPatches());
     for(int p=0; p<level->numPatches();p++)
     {
       const Patch *patch=level->getPatch(p);
