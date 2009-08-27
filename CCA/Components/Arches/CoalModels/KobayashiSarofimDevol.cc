@@ -54,6 +54,8 @@ KobayashiSarofimDevol::KobayashiSarofimDevol( std::string srcName, SimulationSta
   Y2_ = 0.4;
 
   d_quad_node = qn;
+  
+  compute_part_temp = false;
 }
 
 KobayashiSarofimDevol::~KobayashiSarofimDevol()
@@ -84,6 +86,9 @@ KobayashiSarofimDevol::problemSetup(const ProblemSpecP& params, int qn)
     // This way restricts what "roles" the user can specify (less flexible)
     if (role_name == "temperature" || role_name == "raw_coal_mass_fraction") {
       LabelToRoleMap[temp_label_name] = role_name;
+      } else if(role_name == "particle_temperature" ){  
+       LabelToRoleMap[temp_label_name] = role_name;
+       compute_part_temp = true;
     } else {
       std::string errmsg;
       errmsg = "Invalid variable role for Kobayashi Sarofim Devolatilization model: must be \"temperature\" or \"raw_coal_mass_fraction\", you specified \"" + role_name + "\".";
@@ -212,7 +217,30 @@ KobayashiSarofimDevol::sched_computeModel( const LevelP& level, SchedulerP& sche
         //tsk->requires(Task::OldDW, d_fieldLabels->d_tempINLabel, Ghost::AroundCells, 1);
 
         // Only require() variables found in equation factories (right now we're not tracking temperature this way)
-      } else if ( iMap->second == "raw_coal_mass_fraction") {
+      } 
+      else if ( iMap->second == "particle_temperature") {
+        // if it's a normal scalar
+        if ( eqn_factory.find_scalar_eqn(*iter) ) {
+          EqnBase& current_eqn = eqn_factory.retrieve_scalar_eqn(*iter);
+          d_particle_temperature_label = current_eqn.getTransportEqnLabel();
+          tsk->requires(Task::OldDW, d_particle_temperature_label, Ghost::None, 0);
+          // if it's a dqmom scalar
+        } else if (dqmom_eqn_factory.find_scalar_eqn(*iter) ) {
+          EqnBase& t_current_eqn = dqmom_eqn_factory.retrieve_scalar_eqn(*iter);
+          DQMOMEqn& current_eqn = dynamic_cast<DQMOMEqn&>(t_current_eqn);
+          d_particle_temperature_label = current_eqn.getTransportEqnLabel();
+          d_pt_scaling_factor = current_eqn.getScalingConstant();
+          tsk->requires(Task::OldDW, d_particle_temperature_label, Ghost::None, 0);
+        } else {
+          std::string errmsg = "ARCHES: HeatTransfer: Invalid variable given in <variable> tag for KobayashiSarofimDevol model";
+          errmsg += "\nCould not find given particle temperature variable \"";
+          errmsg += *iter;
+          errmsg += "\" in EqnFactory or in DQMOMEqnFactory.";
+          throw InvalidValue(errmsg,__FILE__,__LINE__);
+        }
+      } //else... we don't need that variable!!! 
+           
+      else if ( iMap->second == "raw_coal_mass_fraction") {
         // if it's a normal scalar
         if ( eqn_factory.find_scalar_eqn(*iter) ) {
           EqnBase& current_eqn = eqn_factory.retrieve_scalar_eqn(*iter);
@@ -284,7 +312,11 @@ KobayashiSarofimDevol::computeModel( const ProcessorGroup * pc,
     // - get all weights (for number density)
 
     constCCVariable<double> temperature;
+    constCCVariable<double> w_particle_temperature;
     old_dw->get( temperature, d_fieldLabels->d_dummyTLabel, matlIndex, patch, gac, 1 );
+    if (compute_part_temp) {
+    old_dw->get( w_particle_temperature, d_particle_temperature_label, matlIndex, patch, gn, 0 );
+    }
     //old_dw->get( temperature, d_fieldLabels->d_tempINLabel, matlIndex, patch, gac, 1 );
     constCCVariable<double> w_omegac;
     new_dw->get( w_omegac, d_raw_coal_mass_fraction_label, matlIndex, patch, gn, 0 );
@@ -294,19 +326,21 @@ KobayashiSarofimDevol::computeModel( const ProcessorGroup * pc,
     for (CellIterator iter=patch->getCellIterator__New(); !iter.done(); iter++){
       IntVector c = *iter; 
 
-      double k1 = A1*exp(E1/(R*temperature[c])); // 1/s
-      double k2 = A2*exp(E2/(R*temperature[c])); // 1/s
+      if (weight[c] < 1e-4 ) {
+		devol_rate[c] = 0.0;
+		gas_devol_rate[c] = 0.0;
+	} else {
+	
+	if(compute_part_temp) {
+	  double particle_temperature = w_particle_temperature[c]*d_pt_scaling_factor/weight[c];     
+          k1 = A1*exp(E1/(R*particle_temperature)); // 1/s
+          k2 = A2*exp(E2/(R*particle_temperature)); // 1/s     
+	} else{   
+          k1 = A1*exp(E1/(R*temperature[c])); // 1/s
+          k2 = A2*exp(E2/(R*temperature[c])); // 1/s
+        }
 
-      // clip abscissa values greater than 1
       double omegac = w_omegac[c] / weight[c];
-      if ( omegac > d_highClip ) {
-        omegac = d_highClip;
-      } else if ( omegac < d_lowClip ){
-        omegac = d_lowClip;
-      } else if ( weight[c] <= 0.0 ){
-        omegac = 0.0;
-      }
-
       double testVal = -1.0*(k1+k2)*(omegac);  
       if (testVal < 0.0)
         devol_rate[c] = -1.0*(k1+k2)*(omegac);  
@@ -320,6 +354,7 @@ KobayashiSarofimDevol::computeModel( const ProcessorGroup * pc,
       else 
         gas_devol_rate[c] = 0.0;
 
+    }
     }
   }
 }
