@@ -41,6 +41,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Arches/CoalModels/ConstantModel.h>
 #include <CCA/Components/Arches/CoalModels/BadHawkDevol.h>
 #include <CCA/Components/Arches/CoalModels/KobayashiSarofimDevol.h>
+#include <CCA/Components/Arches/CoalModels/HeatTransfer.h>
 #include <CCA/Components/Arches/TransportEqns/EqnFactory.h>
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqnFactory.h>
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqn.h>
@@ -2163,6 +2164,9 @@ void Arches::registerModels(ProblemSpecP& db)
         } else if ( model_type == "KobayashiSarofimDevol" ) {
           // Kobayashi Sarofim devolatilization model
           ModelBuilder* modelBuilder = scinew KobayashiSarofimDevolBuilder(temp_model_name, requiredIC_varLabels, d_lab, d_lab->d_sharedState, iqn);
+          model_factory.register_model( temp_model_name, modelBuilder );
+	} else if ( model_type == "HeatTransfer" ) {
+          ModelBuilder* modelBuilder = scinew HeatTransferBuilder(temp_model_name, requiredIC_varLabels, d_lab, d_lab->d_sharedState, iqn);
           model_factory.register_model( temp_model_name, modelBuilder );
         } else {
           proc0cout << "For model named: " << temp_model_name << endl;
