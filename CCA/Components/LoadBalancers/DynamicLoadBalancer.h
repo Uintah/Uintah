@@ -189,6 +189,8 @@ namespace Uintah {
 
     /// Helper for assignPatchesFactor.  Collects each patch's particles
     void collectParticles(const Grid* grid, vector<vector<int> >& num_particles);
+    // same, but can be called after a regrid when patches have not been load balanced yet
+    void collectParticlesForRegrid(const Grid* oldGrid, const vector<vector<Region> >& newGridRegions,  vector<vector<int> >& particles);
 
     // calls space-filling curve on level, and stores results in pre-allocated output
     void useSFC(const LevelP& level, int* output);

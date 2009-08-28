@@ -107,6 +107,144 @@ DynamicLoadBalancer::~DynamicLoadBalancer()
 #endif
 }
 
+void DynamicLoadBalancer::collectParticlesForRegrid(const Grid* oldGrid, const vector<vector<Region> >& newGridRegions, vector<vector<int> >& particles)
+{
+  // collect particles from the old grid's patches onto processor 0 and then distribute them
+  // (it's either this or do 2 consecutive load balances).  For now, it's safe to assume that
+  // if there is a new level or a new patch there are no particles there.
+
+  int num_procs = d_myworld->size();
+  int myrank = d_myworld->myrank();
+  int num_patches = 0;
+  particles.resize(newGridRegions.size());
+  for (unsigned i = 0; i < newGridRegions.size(); i++)
+  {
+    particles[i].resize(newGridRegions[i].size());
+    num_patches += newGridRegions[i].size();
+  }
+  vector<int> recvcounts(num_procs,0); // init the counts to 0
+  int totalsize = 0;
+
+  DataWarehouse* dw = d_scheduler->get_dw(0);
+  if (dw == 0)
+    return;
+
+  vector<PatchInfo> subpatchParticles;
+  unsigned grid_index = 0;
+  for(unsigned l=0;l<newGridRegions.size();l++){
+    const vector<Region>& level = newGridRegions[l];
+    for (unsigned r = 0; r < level.size(); r++, grid_index++) {
+      const Region& region = level[r];;
+
+      if (l >= (unsigned) oldGrid->numLevels()) {
+        // new patch - no particles yet
+        recvcounts[0]++;
+        totalsize++;
+        if (d_myworld->myrank() == 0) {
+          PatchInfo pi(grid_index, 0);
+          subpatchParticles.push_back(pi);
+        }
+        continue;
+      }
+
+      // find all the particles on old patches
+      const LevelP oldLevel = oldGrid->getLevel(l);
+      Level::selectType oldPatches;
+      oldLevel->selectPatches(region.getLow(), region.getHigh(), oldPatches);
+
+      if (oldPatches.size() == 0) {
+        recvcounts[0]++;
+        totalsize++;
+        if (d_myworld->myrank() == 0) {
+          PatchInfo pi(grid_index, 0);
+          subpatchParticles.push_back(pi);
+        }
+        continue;
+      }
+
+      for (int i = 0; i < oldPatches.size(); i++) {
+        const Patch* oldPatch = oldPatches[i];
+
+        recvcounts[d_processorAssignment[oldPatch->getGridIndex()]]++;
+        totalsize++;
+        if (d_processorAssignment[oldPatch->getGridIndex()] == myrank) {
+          IntVector low, high;
+          //loop through the materials and add up the particles
+          // the main difference between this and the above portion is that we need to grab the portion of the patch
+          // that is intersected by the other patch
+          low = Max(region.getLow(), oldPatch->getExtraCellLowIndex__New());
+          high = Min(region.getHigh(), oldPatch->getExtraCellHighIndex__New());
+
+          int thisPatchParticles = 0;
+          if (dw) {
+            //loop through the materials and add up the particles
+            //   go through all materials since getting an MPMMaterial correctly would depend on MPM
+            for (int m = 0; m < d_sharedState->getNumMatls(); m++) {
+              ParticleSubset* psubset = 0;
+              if (dw->haveParticleSubset(m, oldPatch, low, high))
+                psubset = dw->getParticleSubset(m, oldPatch, low, high);
+              if (psubset)
+                thisPatchParticles += psubset->numParticles();
+            }
+          }
+          PatchInfo p(grid_index, thisPatchParticles);
+          subpatchParticles.push_back(p);
+        }
+      }
+    }
+  }
+
+  vector<int> num_particles(num_patches, 0);
+
+  if (d_myworld->size() > 1) {
+    //construct a mpi datatype for the PatchInfo
+    MPI_Datatype particletype;
+    MPI_Type_contiguous(2, MPI_INT, &particletype);
+    MPI_Type_commit(&particletype);
+
+    vector<PatchInfo> recvbuf(totalsize);
+    vector<int> displs(num_procs,0);
+    for (unsigned i = 1; i < displs.size(); i++) {
+      displs[i] = displs[i-1]+recvcounts[i-1];
+    }
+
+    MPI_Gatherv(&subpatchParticles[0], recvcounts[d_myworld->myrank()], particletype, &recvbuf[0],
+                &recvcounts[0], &displs[0], particletype, 0, d_myworld->getComm());
+
+    if ( d_myworld->myrank() == 0) {
+      for (unsigned i = 0; i < recvbuf.size(); i++) {
+        PatchInfo& spi = recvbuf[i];
+        num_particles[spi.id] += spi.numParticles;
+      }
+    }
+    // combine all the subpatches results
+    MPI_Bcast(&num_particles[0], num_particles.size(), MPI_INT,0,d_myworld->getComm());
+    MPI_Type_free(&particletype);
+  }
+  else {
+    for (unsigned i = 0; i < subpatchParticles.size(); i++) {
+      PatchInfo& spi = subpatchParticles[i];
+      num_particles[spi.id] += spi.numParticles;
+    }
+  }
+
+  // add the number of particles to the particles array
+  for (int l = 0, i=0; l < oldGrid->numLevels(); l++) {
+    unsigned num_patches=oldGrid->getLevel(l)->numPatches();
+    for(unsigned p =0; p<num_patches; p++,i++)
+    {
+      particles[l][p]=num_particles[i];
+    }
+  }
+
+  if (dbg.active() && d_myworld->myrank() == 0) {
+    for (unsigned i = 0; i < num_particles.size(); i++) {
+      dbg << d_myworld->myrank() << "  Post gather index " << i << ": " << " numP : " << num_particles[i] << endl;
+    }
+  }
+
+}
+
 void DynamicLoadBalancer::collectParticles(const Grid* grid, vector<vector<int> >& particles)
 {
   particles.resize(grid->numLevels());
@@ -1188,7 +1326,27 @@ void DynamicLoadBalancer::getCosts(const Grid* grid, vector<vector<double> >&cos
   costs.clear();
     
   vector<vector<int> > num_particles;
-  collectParticles(grid, num_particles);
+
+  DataWarehouse* olddw = d_scheduler->get_dw(0);
+  bool on_regrid = olddw != 0 && grid != olddw->getGrid();
+
+  if(on_regrid)
+  {
+    vector<vector<Region> > regions;
+    // prepare the list of regions
+    for (int l = 0; l < grid->numLevels(); l++) {
+      regions.push_back(vector<Region>());
+      for (int p = 0; p < grid->getLevel(l)->numPatches(); p++) {
+        const Patch* patch = grid->getLevel(l)->getPatch(p);
+        regions[l].push_back(Region(patch->getCellLowIndex__New(), patch->getCellHighIndex__New()));
+      }
+    }
+    collectParticlesForRegrid(olddw->getGrid(),regions,num_particles);
+  }
+  else
+  {
+    collectParticles(grid, num_particles);
+  }
 
   //check if the forecaster is ready, if it is use it
   if(d_costForecaster->hasData())
