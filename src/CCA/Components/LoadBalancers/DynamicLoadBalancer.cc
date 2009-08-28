@@ -116,13 +116,14 @@ void DynamicLoadBalancer::collectParticlesForRegrid(const Grid* oldGrid, const v
   int num_procs = d_myworld->size();
   int myrank = d_myworld->myrank();
   int num_patches = 0;
+
   particles.resize(newGridRegions.size());
   for (unsigned i = 0; i < newGridRegions.size(); i++)
   {
     particles[i].resize(newGridRegions[i].size());
     num_patches += newGridRegions[i].size();
   }
-
+  
   if(!d_collectParticles)
     return;
 
@@ -213,7 +214,7 @@ void DynamicLoadBalancer::collectParticlesForRegrid(const Grid* oldGrid, const v
     }
 
     MPI_Gatherv(&subpatchParticles[0], recvcounts[d_myworld->myrank()], particletype, &recvbuf[0],
-                &recvcounts[0], &displs[0], particletype, 0, d_myworld->getComm());
+        &recvcounts[0], &displs[0], particletype, 0, d_myworld->getComm());
 
     if ( d_myworld->myrank() == 0) {
       for (unsigned i = 0; i < recvbuf.size(); i++) {
@@ -232,13 +233,16 @@ void DynamicLoadBalancer::collectParticlesForRegrid(const Grid* oldGrid, const v
     }
   }
 
-  // add the number of particles to the particles array
-  for (int l = 0, i=0; l < oldGrid->numLevels(); l++) {
-    unsigned num_patches=oldGrid->getLevel(l)->numPatches();
-    for(unsigned p =0; p<num_patches; p++,i++)
-    {
-      particles[l][p]=num_particles[i];
+  //add the number of particles to the cost array
+  unsigned level = 0;
+  unsigned index = 0;
+
+  for (unsigned i = 0; i < num_particles.size(); i++, index++) {
+    if (particles[level].size() <= index) {
+      index = 0;
+      level++;
     }
+    particles[level][index] += num_particles[i];
   }
 
   if (dbg.active() && d_myworld->myrank() == 0) {
