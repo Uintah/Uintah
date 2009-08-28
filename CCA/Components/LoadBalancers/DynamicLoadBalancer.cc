@@ -122,6 +122,10 @@ void DynamicLoadBalancer::collectParticlesForRegrid(const Grid* oldGrid, const v
     particles[i].resize(newGridRegions[i].size());
     num_patches += newGridRegions[i].size();
   }
+
+  if(!d_collectParticles)
+    return;
+
   vector<int> recvcounts(num_procs,0); // init the counts to 0
   int totalsize = 0;
 
