@@ -35,30 +35,32 @@ foreach i ( $dirs[*]:q )
   endif
 end 
 
+cd $here
+
 # concatenate each of the $uda/dat files to $master_uda/dat
 foreach i ( $these[*]:q )
   set X = `echo $i | sed s/"@@@"/"\ "/g`
   
   if( -e "$uda/$X" ) then
   
-    echo " Now concatenating $X"
+    echo " Now concatenating $uda/$X"
     
-    if (-e "$X" ) then
-      cp -fp "$X" "$X.tmp"
+    if (-e "$master_uda/$X" ) then
+      cp -fp "$master_uda/$X" "$master_uda/$X.tmp"
     endif
     
-    cat "$uda/$X" >> "$X.tmp"
+    cat "$uda/$X" >> "$master_uda/$X.tmp"
     
     # remove the header from the temporary file
-    set header = `head -n1 "$X.tmp"`
-    sed -i /"X_CC"/d "$X.tmp"
+    set header = `head -n1 "$master_uda/$X.tmp"`
+    sed -i /"X_CC"/d "$master_uda/$X.tmp"
     
     # now reconstruct the file and remove duplicate lines
     # sort the file by time
-    echo $header > "$X"
-    sort -k4 -g "$X.tmp"|uniq >> "$X"
+    echo $header > "$master_uda/$X"
+    sort -k4 -g "$master_uda/$X.tmp"|uniq >> "$master_uda/$X"
 
-    /bin/rm "$X.tmp"
+    /bin/rm "$master_uda/$X.tmp"
   endif
 end
 
