@@ -161,9 +161,15 @@ namespace Uintah {
             d_costForecaster->initializeWeights(oldgrid,newgrid); }
     //resets the profiler counters to zero
     void resetCostForecaster() {d_costForecaster->reset();}
+    
+    // Helper for assignPatchesFactor.  Collects each patch's particles
+    void collectParticles(const Grid* grid, vector<vector<int> >& num_particles);
+    // same, but can be called after a regrid when patches have not been load balanced yet
+    void collectParticlesForRegrid(const Grid* oldGrid, const vector<vector<Region> >& newGridRegions,  vector<vector<int> >& particles);
+
 
   private:
-
+    
     struct double_int
     {
       double val;
@@ -186,11 +192,6 @@ namespace Uintah {
     bool assignPatchesRandom(const GridP& grid, bool force);
     bool assignPatchesCyclic(const GridP& grid, bool force);
     bool assignPatchesZoltanSFC(const GridP& grid, bool force);
-
-    /// Helper for assignPatchesFactor.  Collects each patch's particles
-    void collectParticles(const Grid* grid, vector<vector<int> >& num_particles);
-    // same, but can be called after a regrid when patches have not been load balanced yet
-    void collectParticlesForRegrid(const Grid* oldGrid, const vector<vector<Region> >& newGridRegions,  vector<vector<int> >& particles);
 
     // calls space-filling curve on level, and stores results in pre-allocated output
     void useSFC(const LevelP& level, int* output);
