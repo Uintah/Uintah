@@ -259,8 +259,18 @@ void RigidMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
     t->requires(Task::OldDW, lb->pColorLabel,  Ghost::None);
     t->computes(lb->pColorLabel_preReloc);
   }
-  
+
+  MaterialSubset* z_matl = scinew MaterialSubset();
+  z_matl->add(0);
+  z_matl->addReference();
+  t->requires(Task::OldDW, lb->NC_CCweightLabel, z_matl, Ghost::None);
+  t->computes(             lb->NC_CCweightLabel, z_matl);
+
   sched->addTask(t, patches, matls);
+
+  // The task will have a reference to z_matl
+  if (z_matl->removeReference())
+    delete z_matl; // shouln't happen, but...
 }
 
 void RigidMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
@@ -346,6 +356,14 @@ void RigidMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       old_dw->get(psize,               lb->pSizeLabel,                 pset);
       new_dw->allocateAndPut(psizeNew, lb->pSizeLabel_preReloc,        pset);
       psizeNew.copyData(psize);
+
+      //Carry forward NC_CCweight
+      constNCVariable<double> NC_CCweight;
+      NCVariable<double> NC_CCweight_new;
+      Ghost::GhostType  gnone = Ghost::None;
+      old_dw->get(NC_CCweight,      lb->NC_CCweightLabel,  0, patch, gnone, 0);
+      new_dw->allocateAndPut(NC_CCweight_new, lb->NC_CCweightLabel,0,patch);
+      NC_CCweight_new.copyData(NC_CCweight);
 
       Ghost::GhostType  gac = Ghost::AroundCells;
       new_dw->get(gTemperatureRate,lb->gTemperatureRateLabel,dwi,patch,gac,NGP);
