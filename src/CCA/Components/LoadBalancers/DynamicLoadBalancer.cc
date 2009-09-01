@@ -48,6 +48,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Thread/Time.h>
 #include <Core/Exceptions/InternalError.h>
 #include <CCA/Components/LoadBalancers/CostModeler.h>
+#include <CCA/Components/LoadBalancers/CostModelForecaster.h>
 
 #include <iostream> // debug only
 #include <stack>
@@ -1503,6 +1504,14 @@ DynamicLoadBalancer::problemSetup(ProblemSpecP& pspec, GridP& grid,  SimulationS
       //if were not profiling just use the simple cost model
       d_costForecaster=scinew CostModeler(d_patchCost,d_cellCost,d_particleCost);
     }
+   
+#if 0
+    //////////////////////////////////////////////////////////////////////
+    //this is for temperary testing only and should not be on
+    delete d_costForecaster;
+    d_costForecaster= scinew CostModelForecaster(d_myworld,this,d_patchCost,d_cellCost,d_particleCost);
+    ///////////////////////////////////////////////////////////////////////
+#endif 
 
     p->getWithDefault("levelIndependent",d_levelIndependent,true);
     p->getWithDefault("collectParticles",d_collectParticles,false);

@@ -42,7 +42,9 @@ SRCS += \
 	$(SRCDIR)/SimpleLoadBalancer.cc \
 	$(SRCDIR)/SingleProcessorLoadBalancer.cc \
 	$(SRCDIR)/CostProfiler.cc \
-	$(SRCDIR)/ProfileDriver.cc
+	$(SRCDIR)/ProfileDriver.cc \
+	$(SRCDIR)/CostModelForecaster.cc
+
 
 PSELIBS := \
 	CCA/Components/ProblemSpecification \
@@ -59,7 +61,6 @@ PSELIBS := \
 	Core/Geometry                    \
 	Core/Thread                      \
 	Core/Util  \
-	\
 	Core/Math
 
 LIBS := $(XML2_LIBRARY) $(MPI_LIBRARY)
