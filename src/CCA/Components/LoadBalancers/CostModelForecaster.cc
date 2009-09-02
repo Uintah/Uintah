@@ -32,6 +32,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/LoadBalancers/DynamicLoadBalancer.h>
 #include <CCA/Components/Schedulers/DetailedTasks.h>
 #include <Core/Util/DebugStream.h>
+#include <Core/Math/Mat.h>
 using namespace Uintah;
 using namespace SCIRun;
    
@@ -89,7 +90,7 @@ void CostModelForecaster::collectPatchInfo(const GridP grid, vector<PatchInfo> &
       if(owner==d_myworld->myrank())
       {
         // add to patch list
-        PatchInfo pinfo(num_particles[l][p],patch->getNumExtraCells(),execTimes[patch->getID()]);
+        PatchInfo pinfo(num_particles[l][p],patch->getNumCells(),patch->getNumExtraCells()-patch->getNumCells(),execTimes[patch->getID()]);
         patchList.push_back(pinfo);
       }
     }
@@ -110,6 +111,127 @@ void CostModelForecaster::collectPatchInfo(const GridP grid, vector<PatchInfo> &
                     d_myworld->getComm());
 
 }
+
+//computes the least squares approximation to x given the NxM matrix A and the Nx1 vector b.
+void min_norm_least_sq(vector<vector<double> > &A, vector<double> &b, vector<double> &x)
+{
+  int rows=A.size();
+  int cols=A[0].size();
+
+  //compute A^T*A
+  static vector<vector<double> > ATA;
+  static vector<double> ATb;
+  //storing L in the bottom of the symmetric matrix ATA
+  static vector<vector<double> > &L=ATA;
+
+  //resize ATA to a MxM matrix 
+  ATA.resize(cols);
+  for(int i=0;i<cols;i++)
+  {
+    ATA[i].resize(cols);
+  }
+  ATb.resize(cols);
+
+  //initialize ATA and ATb to 0
+  for (int i=0; i<cols; i++) {
+    for (int j=0; j<cols; j++)
+      ATA[i][j]=0;
+    ATb[i]=0;
+  }
+
+  //compute the top half of the symmetric matrix ATA
+  for (int r=0; r<rows; r++) 
+  {
+    for (int i=0;i<cols;i++)
+      for (int j=0;j<=i;j++)
+        ATA[i][j]+=A[r][j]*A[r][i];
+  }
+
+#if 0
+  for (int i=0;i<cols;i++)
+  {
+    cout << "ATA " << i << ": ";
+    for (int j=0;j<cols;j++)
+    {
+      cout << ATA[i][j] << " ";
+    }
+    cout << endl;
+  }
+#endif
+
+  //compute ATb
+  for (int r=0; r<rows; r++)
+    for (int j=0; j<cols; j++)
+      ATb[j] += A[r][j]*b[r];
+
+#if 0
+  cout << " ATB: "; 
+  for(int j=0;j<cols; j++)
+    cout << ATb[j] << " ";
+  cout << endl;
+#endif
+
+  //solve ATA*x=ATb for x using cholesky's algorithm 
+  //to decompose ATA into L*LT
+
+  //LLT decomposition
+  for(int k=0;k<cols;k++)
+  {
+    double sum=0;
+    for(int s=0;s<k;s++)  //Dot Product
+      sum+=(L[k][s]*L[k][s]); 
+
+    L[k][k]=sqrt(ATA[k][k]-sum);
+    
+    for(int i=k+1;i<cols;i++)
+    {
+      sum=0;
+      for(int s=0;s<k;s++)
+        sum+=(L[i][s]*L[k][s]); //Dot Product
+
+      L[i][k]=((ATA[i][k]-sum)/L[k][k]);
+    }
+  }
+
+#if 0
+  for (int i=0;i<cols;i++)
+  {
+    cout << "L " << i << ": ";
+    for (int j=0;j<=i;j++)
+    {
+      cout << L[i][j] << " ";
+    }
+    cout << endl;
+  }
+#endif
+
+  //Solve using FSA then BSA algorithm 
+
+  static vector<double> y;
+  y.resize(cols);
+
+  //Forward Substitution algorithm
+  for(int i=0;i<cols;i++)
+  {
+    double sum=0;
+  
+    for(int j=0;j<i;j++)
+      sum+=(L[i][j]*y[j]);
+    
+    y[i]=(ATb[i]-sum)/L[i][i];
+  }
+  
+  //Backwards Substitution algorithm
+  for(int i=cols-1;i>=0;i--)
+  {
+    double sum=0;
+
+    for(int j=i+1;j<cols;j++)
+      sum+=(L[j][i]*x[j]);
+    
+    x[i]=(y[i]-sum)/L[i][i];
+  }
+}
 void
 CostModelForecaster::finalizeContributions( const GridP currentGrid )
 {
@@ -129,12 +251,53 @@ CostModelForecaster::finalizeContributions( const GridP currentGrid )
     {
       stats << j << " " << patch_info[i] << endl;
     }
+    j++;
   }
+
+  int rows=patch_info.size();
+  int cols=d_particles?4:3;
+
+  static vector<vector<double> > A;
+  static vector<double> b,x;
+
+  //resize vectors
+  b.resize(rows);
+  x.resize(cols);
+  //resize matrix
+  A.resize(rows);
+
+  //set b vector and A matrix
+  for(int i=0;i<rows;i++)
+  {
+    b[i]=patch_info[i].execTime;
+    A[i].resize(cols);
+    A[i][0]=1;
+    A[i][1]=patch_info[i].num_cells;
+    A[i][2]=patch_info[i].num_extraCells;
+  }
+  //add particles to matrix if they exist
+  //you don't want to add them if they don't exist
+  //because the matrix will become singular
+  if(d_particles)
+  {
+    for(int i=0;i<rows;i++)
+      A[i][3]=patch_info[i].num_particles;
+  }
+
   //compute least squares
+  min_norm_least_sq(A,b,x);
+#if 0
+  cout << " Coeficients: ";
+  for(int i=0;i<cols;i++)
+    cout << x[i] << " ";
+  cout << endl;
+#endif
+
 #endif
 
   //update coefficients
 
+  //compute error metrics RMS, MAPE, PME 
   execTimes.clear();
 }
 
@@ -146,7 +309,7 @@ CostModelForecaster::getWeights(const Grid* grid, vector<vector<int> > num_parti
   
 ostream& operator<<(ostream& out, const CostModelForecaster::PatchInfo &pi)
 {
-  out << pi.num_cells << " " << pi.num_particles << " " << pi.execTime ;
+  out << pi.num_cells << " " << pi.num_extraCells << " " << pi.num_particles << " " << pi.execTime ;
   return out;
 }
 }
