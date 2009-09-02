@@ -223,6 +223,7 @@ namespace Uintah {
     double d_lbThreshold; //< gain threshold to exceed to require lb'ing
     
     double d_cellCost;      //cost weight per cell 
+    double d_extraCellCost; //cost weight per extra cell
     double d_particleCost;  //cost weight per particle
     double d_patchCost;     //cost weight per patch
     

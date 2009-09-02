@@ -86,7 +86,7 @@ namespace Uintah {
 
   class CostModelForecaster : public CostModeler {
     public:
-      CostModelForecaster(const ProcessorGroup* myworld, DynamicLoadBalancer *lb, double patchCost, double cellCost, double particleCost ) : CostModeler(patchCost,cellCost,particleCost), d_lb(lb), d_myworld(myworld)
+      CostModelForecaster(const ProcessorGroup* myworld, DynamicLoadBalancer *lb, double patchCost, double cellCost, double extraCellCost, double particleCost ) : CostModeler(patchCost,cellCost,extraCellCost,particleCost), d_lb(lb), d_myworld(myworld)
         {
           setTimestepWindow(20);
           if(particleCost<=0)
@@ -100,7 +100,7 @@ namespace Uintah {
       //get the contributions for each patch, particles are ignored
       void getWeights(const Grid* grid, vector<vector<int> > num_particles, vector<vector<double> >&costs);
       //sets the decay rate for the exponential average
-      void setTimestepWindow(int window) { d_alpha=2.0/(window+1);}
+      void setTimestepWindow(int window) { d_timestepWindow=window;}
       
       struct PatchInfo
       {
@@ -115,10 +115,9 @@ namespace Uintah {
     private:
       DynamicLoadBalancer *d_lb;
       const ProcessorGroup* d_myworld;
-      double d_alpha;
+      double d_timestepWindow;
       bool d_particles;
       map<int,double> execTimes;
-      
       void collectPatchInfo(const GridP currentGrid, vector<PatchInfo> &patch_info);
   };
       

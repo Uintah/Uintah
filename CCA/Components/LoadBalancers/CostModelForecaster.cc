@@ -287,7 +287,7 @@ CostModelForecaster::finalizeContributions( const GridP currentGrid )
   //compute least squares
   min_norm_least_sq(A,b,x);
 #if 0
-  cout << " Coeficients: ";
+  cout << " Coefficients: ";
   for(int i=0;i<cols;i++)
     cout << x[i] << " ";
   cout << endl;
@@ -295,7 +295,13 @@ CostModelForecaster::finalizeContributions( const GridP currentGrid )
 
 #endif
 
-  //update coefficients
+  double alpha=2.0/(d_timestepWindow+1);
+  //update coefficients using fading memory filter
+  d_patchCost=x[0]*alpha+d_patchCost*(1-alpha);
+  d_cellCost=x[1]*alpha+d_cellCost*(1-alpha);
+  d_extraCellCost=x[2]*alpha+d_extraCellCost*(1-alpha);
+  if(d_particles)
+    d_particleCost=x[3]*alpha+d_particleCost*(1-alpha);
 
   //compute error metrics RMS, MAPE, PME 
   execTimes.clear();
