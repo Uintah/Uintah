@@ -86,7 +86,14 @@ namespace Uintah {
 
   class CostModelForecaster : public CostModeler {
     public:
-      CostModelForecaster(const ProcessorGroup* myworld, DynamicLoadBalancer *lb, double patchCost, double cellCost, double particleCost ) : CostModeler(patchCost,cellCost,particleCost), d_lb(lb), d_myworld(myworld){setTimestepWindow(20);};
+      CostModelForecaster(const ProcessorGroup* myworld, DynamicLoadBalancer *lb, double patchCost, double cellCost, double particleCost ) : CostModeler(patchCost,cellCost,particleCost), d_lb(lb), d_myworld(myworld)
+        {
+          setTimestepWindow(20);
+          if(particleCost<=0)
+            d_particles=false;
+          else
+            d_particles=true;
+        };
       void addContribution(DetailedTask *task, double cost);
       //finalize the contributions for this timestep
       void finalizeContributions(const GridP currentGrid);
@@ -98,21 +105,20 @@ namespace Uintah {
       struct PatchInfo
       {
         PatchInfo(){};
-        PatchInfo(int np,int nc, double et) : num_particles(np), num_cells(nc), execTime(et)
+        PatchInfo(int np,int nc, int nec, double et) : num_particles(np), num_cells(nc), num_extraCells(nec), execTime(et)
         {}
         int num_particles;
         int num_cells;
+        int num_extraCells;
         double execTime;
       };
     private:
       DynamicLoadBalancer *d_lb;
       const ProcessorGroup* d_myworld;
       double d_alpha;
-
+      bool d_particles;
       map<int,double> execTimes;
-
-
-
+      
       void collectPatchInfo(const GridP currentGrid, vector<PatchInfo> &patch_info);
   };
       

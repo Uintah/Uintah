@@ -1505,14 +1505,6 @@ DynamicLoadBalancer::problemSetup(ProblemSpecP& pspec, GridP& grid,  SimulationS
       d_costForecaster=scinew CostModeler(d_patchCost,d_cellCost,d_particleCost);
     }
    
-#if 0
-    //////////////////////////////////////////////////////////////////////
-    //this is for temperary testing only and should not be on
-    delete d_costForecaster;
-    d_costForecaster= scinew CostModelForecaster(d_myworld,this,d_patchCost,d_cellCost,d_particleCost);
-    ///////////////////////////////////////////////////////////////////////
-#endif 
-
     p->getWithDefault("levelIndependent",d_levelIndependent,true);
     p->getWithDefault("collectParticles",d_collectParticles,false);
   }
@@ -1560,6 +1552,16 @@ DynamicLoadBalancer::problemSetup(ProblemSpecP& pspec, GridP& grid,  SimulationS
   sfc.SetMergeMode(1);
   sfc.SetCleanup(BATCHERS);
   sfc.SetMergeParameters(3000,500,2,.15);  //Should do this by profiling
+
+#if 0
+    //////////////////////////////////////////////////////////////////////
+    //this is for temperary testing only and should not be on
+    delete d_costForecaster;
+    if(!d_collectParticles) 
+      d_particleCost=0;
+    d_costForecaster= scinew CostModelForecaster(d_myworld,this,d_patchCost,d_cellCost,d_particleCost);
+    ///////////////////////////////////////////////////////////////////////
+#endif 
 
   //set costProfiler mps
   Regridder *regridder = dynamic_cast<Regridder*>(getPort("regridder"));
