@@ -1361,7 +1361,7 @@ void DynamicLoadBalancer::getCosts(const Grid* grid, vector<vector<double> >&cos
   if(d_costForecaster->hasData())
     d_costForecaster->getWeights(grid,num_particles,costs);
   else //otherwise just use a simple cost model (this happens on the first timestep when profiling data doesn't exist)
-    CostModeler(d_patchCost,d_cellCost,d_particleCost).getWeights(grid,num_particles,costs);
+    CostModeler(d_patchCost,d_cellCost,d_extraCellCost,d_particleCost).getWeights(grid,num_particles,costs);
 
   if (dbg.active() && d_myworld->myrank() == 0) {
     for (unsigned l = 0; l < costs.size(); l++)
@@ -1486,6 +1486,7 @@ DynamicLoadBalancer::problemSetup(ProblemSpecP& pspec, GridP& grid,  SimulationS
       interval = 0.0; // default
     p->getWithDefault("dynamicAlgorithm", dynamicAlgo, "static");
     p->getWithDefault("cellCost", d_cellCost, 1);
+    p->getWithDefault("extraCellCost", d_extraCellCost, 1);
     p->getWithDefault("particleCost", d_particleCost, 1.25);
     p->getWithDefault("patchCost", d_patchCost, 16);
     p->getWithDefault("gainThreshold", threshold, 0.05);
@@ -1502,7 +1503,7 @@ DynamicLoadBalancer::problemSetup(ProblemSpecP& pspec, GridP& grid,  SimulationS
     else
     {
       //if were not profiling just use the simple cost model
-      d_costForecaster=scinew CostModeler(d_patchCost,d_cellCost,d_particleCost);
+      d_costForecaster=scinew CostModeler(d_patchCost,d_cellCost,d_extraCellCost,d_particleCost);
     }
    
     p->getWithDefault("levelIndependent",d_levelIndependent,true);

@@ -93,23 +93,18 @@ namespace Uintah {
           for(int p=0; p<level->numPatches();p++)
           {
             const Patch *patch=level->getPatch(p);
-            costs[l][p]=d_patchCost+patch->getNumExtraCells()*d_cellCost+num_particles[l][p]*d_particleCost;
+            costs[l][p]=d_patchCost+patch->getNumCells()*d_cellCost+(patch->getNumExtraCells()-patch->getNumCells())*d_extraCellCost+num_particles[l][p]*d_particleCost;
           }
         }
       }
-      void setCosts(double patchCost, double cellCost, double particleCost)
+      void setCosts(double patchCost, double cellCost, double extraCellCost, double particleCost)
       {
-        d_patchCost=patchCost;d_cellCost=cellCost;d_particleCost=particleCost;
-      }
-      void getCosts(double &patchCost, double &cellCost, double &particleCost)
-      {
-        patchCost=d_patchCost;cellCost=d_cellCost;particleCost=d_particleCost;
+        d_patchCost=patchCost;d_cellCost=cellCost;d_extraCellCost=extraCellCost;d_particleCost=particleCost;
       }
 
-
-      CostModeler(double patchCost, double cellCost, double particleCost) { setCosts(patchCost,cellCost,particleCost); };
-    private:
-      double d_patchCost, d_cellCost, d_particleCost;
+      CostModeler(double patchCost, double cellCost, double extraCellCost, double particleCost) { setCosts(patchCost,cellCost,extraCellCost,particleCost); };
+    protected:
+      double d_patchCost, d_cellCost, d_extraCellCost, d_particleCost;
 
   };
 } // End namespace Uintah
