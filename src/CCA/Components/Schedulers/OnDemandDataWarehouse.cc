@@ -1780,6 +1780,7 @@ OnDemandDataWarehouse::getRegion(constGridVariableBase& constVar,
       //verify that the variable is valid and matches the dependencies requirements.
       if (v->isValid() && Min(l, v->getLow()) == v->getLow()  &&  Max(h, v->getHigh()) == v->getHigh())  //find a completed region
         break;
+      if (i == 0) v = NULL;
     }
       // just like a "missing patch": got data on this patch, but it either corresponds to a different
       // region or is incomplete"
@@ -1857,6 +1858,7 @@ void OnDemandDataWarehouse::emit(OutputContext& oc, const VarLabel* label,
           //verify that the variable is valid and matches the dependencies requirements.
           if (v->isValid() && Min(l, v->getLow()) == v->getLow()  &&  Max(h, v->getHigh()) == v->getHigh())  //find a completed region
             break;
+          if (i == 0) v = NULL;
         }
         var=v;
         break;
@@ -2165,6 +2167,7 @@ getGridVar(GridVariableBase& var, const VarLabel* label, int matlIndex, const Pa
           }
         }
       }
+      if (i == 0) v = NULL;
     } //end for vars
     if (v==NULL) {
      // cout << d_myworld->myrank()  << " cannot copy var " << *label << " from patch " << neighbor->getID()
