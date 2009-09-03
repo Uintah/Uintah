@@ -88,15 +88,18 @@ namespace Uintah {
     public:
       CostModelForecaster(const ProcessorGroup* myworld, DynamicLoadBalancer *lb, double patchCost, double cellCost, double extraCellCost, double particleCost ) : CostModeler(patchCost,cellCost,extraCellCost,particleCost), d_lb(lb), d_myworld(myworld)
         {
+          d_x.push_back(cellCost);
+          d_x.push_back(extraCellCost);
+          d_x.push_back(particleCost);
+          d_x.push_back(patchCost);
+
           setTimestepWindow(20);
-          if(particleCost<=0)
-            d_particles=false;
-          else
-            d_particles=true;
         };
       void addContribution(DetailedTask *task, double cost);
       //finalize the contributions for this timestep
       void finalizeContributions(const GridP currentGrid);
+      //output standard error metrics of the prediction
+      void outputError(const GridP currentGrid);
       //get the contributions for each patch, particles are ignored
       void getWeights(const Grid* grid, vector<vector<int> > num_particles, vector<vector<double> >&costs);
       //sets the decay rate for the exponential average
@@ -111,14 +114,48 @@ namespace Uintah {
         int num_cells;
         int num_extraCells;
         double execTime;
+        int operator[](int index)
+        {
+          switch(index)
+          {
+            case 0:
+              return num_cells;
+            case 1:
+              return num_extraCells;
+            case 2:
+              return num_particles;
+            case 3:
+              return 1;
+            default:
+              throw InternalError("Invalid PatchInfo Index",__FILE__,__LINE__);
+              return -1;
+          }
+        }
+        static string type(int index)
+        {
+          switch(index)
+          {
+            case 0:
+              return "Cells";
+            case 1:
+              return "ExtraCells";
+            case 2:
+              return "Particles";
+            case 3:
+              return "Patch";
+            default:
+              throw InternalError("Invalid PatchInfo Index",__FILE__,__LINE__);
+              return "Bad Index\n";
+          }
+        }
       };
     private:
       DynamicLoadBalancer *d_lb;
       const ProcessorGroup* d_myworld;
-      double d_timestepWindow;
-      bool d_particles;
+      int d_timestepWindow;
       map<int,double> execTimes;
       void collectPatchInfo(const GridP currentGrid, vector<PatchInfo> &patch_info);
+      vector<double> d_x;
   };
       
   ostream& operator<<(ostream& out, const CostModelForecaster::PatchInfo &pi);

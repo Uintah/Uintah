@@ -1558,9 +1558,7 @@ DynamicLoadBalancer::problemSetup(ProblemSpecP& pspec, GridP& grid,  SimulationS
     //////////////////////////////////////////////////////////////////////
     //this is for temperary testing only and should not be on
     delete d_costForecaster;
-    if(!d_collectParticles) 
-      d_particleCost=0;
-    d_costForecaster= scinew CostModelForecaster(d_myworld,this,d_patchCost,d_cellCost,d_particleCost);
+    d_costForecaster= scinew CostModelForecaster(d_myworld,this,d_patchCost,d_cellCost,d_extraCellCost,d_particleCost);
     ///////////////////////////////////////////////////////////////////////
 #endif 
 

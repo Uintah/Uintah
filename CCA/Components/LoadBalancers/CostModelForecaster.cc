@@ -32,6 +32,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/LoadBalancers/DynamicLoadBalancer.h>
 #include <CCA/Components/Schedulers/DetailedTasks.h>
 #include <Core/Util/DebugStream.h>
+#include <Core/Parallel/Parallel.h>
 #include <Core/Math/Mat.h>
 using namespace Uintah;
 using namespace SCIRun;
@@ -66,6 +67,39 @@ CostModelForecaster::addContribution( DetailedTask *task, double cost )
   }
 }
 
+void CostModelForecaster::outputError(const GridP grid) 
+{
+  vector<vector<int> > num_particles;
+  vector<vector<double> > costs;
+  d_lb->collectParticles(grid.get_rep(),num_particles);
+  getWeights(grid.get_rep(), num_particles,costs);
+
+  double size=0;
+  double sum_error_local=0;
+  for(int l=0;l<grid->numLevels();l++)
+  {
+    LevelP level=grid->getLevel(l);
+    size+=level->numPatches();
+    for(int p=0;p<level->numPatches();p++)
+    {
+      const Patch* patch=level->getPatch(p);
+      
+      if(d_lb->getPatchwiseProcessorAssignment(patch)!=d_myworld->myrank())
+        continue;
+
+      //cout << d_myworld->myrank() << " patch:" << patch->getID() << " exectTime: " << execTimes[patch->getID()] << " cost: " << costs[l][p] << endl;
+      double diff=(execTimes[patch->getID()]-costs[l][p])/execTimes[patch->getID()];
+      sum_error_local+=fabs(diff);
+     }
+  }
+  double sum_error=0;
+  MPI_Reduce(&sum_error_local,&sum_error,1,MPI_DOUBLE,MPI_SUM,0,d_myworld->getComm());
+  if(d_myworld->myrank()==0)
+  {
+    sum_error/=size;
+    cout << "Forecast MAPE: " << sum_error << endl;
+  }
+}
 void CostModelForecaster::collectPatchInfo(const GridP grid, vector<PatchInfo> &patch_info) 
 {
 
@@ -148,14 +182,17 @@ void min_norm_least_sq(vector<vector<double> > &A, vector<double> &b, vector<dou
   }
 
 #if 0
-  for (int i=0;i<cols;i++)
+  if(Parallel::getMPIRank()==0)
   {
-    cout << "ATA " << i << ": ";
-    for (int j=0;j<cols;j++)
+    for (int i=0;i<cols;i++)
     {
-      cout << ATA[i][j] << " ";
+      cout << "ATA " << i << ": ";
+      for (int j=0;j<cols;j++)
+      {
+        cout << ATA[i][j] << " ";
+      }
+      cout << endl;
     }
-    cout << endl;
   }
 #endif
 
@@ -165,10 +202,13 @@ void min_norm_least_sq(vector<vector<double> > &A, vector<double> &b, vector<dou
       ATb[j] += A[r][j]*b[r];
 
 #if 0
-  cout << " ATB: "; 
-  for(int j=0;j<cols; j++)
-    cout << ATb[j] << " ";
-  cout << endl;
+  if(Parallel::getMPIRank()==0)
+  {
+    cout << " ATB: "; 
+    for(int j=0;j<cols; j++)
+      cout << ATb[j] << " ";
+    cout << endl;
+  }
 #endif
 
   //solve ATA*x=ATb for x using cholesky's algorithm 
@@ -182,7 +222,7 @@ void min_norm_least_sq(vector<vector<double> > &A, vector<double> &b, vector<dou
       sum+=(L[k][s]*L[k][s]); 
 
     L[k][k]=sqrt(ATA[k][k]-sum);
-    
+
     for(int i=k+1;i<cols;i++)
     {
       sum=0;
@@ -214,13 +254,13 @@ void min_norm_least_sq(vector<vector<double> > &A, vector<double> &b, vector<dou
   for(int i=0;i<cols;i++)
   {
     double sum=0;
-  
+
     for(int j=0;j<i;j++)
       sum+=(L[i][j]*y[j]);
-    
+
     y[i]=(ATb[i]-sum)/L[i][i];
   }
-  
+
   //Backwards Substitution algorithm
   for(int i=cols-1;i>=0;i--)
   {
@@ -228,7 +268,7 @@ void min_norm_least_sq(vector<vector<double> > &A, vector<double> &b, vector<dou
 
     for(int j=i+1;j<cols;j++)
       sum+=(L[j][i]*x[j]);
-    
+
     x[i]=(y[i]-sum)/L[i][i];
   }
 }
@@ -244,6 +284,7 @@ CostModelForecaster::finalizeContributions( const GridP currentGrid )
   vector<PatchInfo> patch_info;
   collectPatchInfo(currentGrid,patch_info);
 
+#if 1
   if(stats.active() && d_myworld->myrank()==0)
   {
     static int j=0;
@@ -253,9 +294,46 @@ CostModelForecaster::finalizeContributions( const GridP currentGrid )
     }
     j++;
   }
+#endif
+
+  outputError(currentGrid);
 
   int rows=patch_info.size();
-  int cols=d_particles?4:3;
+
+  vector<int> fields;
+  for(int i=0;i<3;i++)
+  {
+    //If a column would make the matrix singular remove it.
+    //this occurs if all patches have the same number of cells
+    //or all patches have the same number of particles, etc.
+    if(d_x[i]!=0) //if it has been previously detected as singualr then assume it will always be singular...
+    {
+      int first_val=patch_info[0][i];
+      size_t j;
+      for(j=0;j<patch_info.size();j++)
+      {
+        if(patch_info[j][i]!=first_val)
+        {
+          //cout << "patch_info[" << j << "][" << i <<"]:" << patch_info[j][i] << " first_val: " << first_val << endl;
+          //add this field
+          fields.push_back(i);
+          break;
+        }
+      }
+      if(j==patch_info.size())
+      {
+        //singular on this field, set its coefficent to 0
+        if(d_myworld->myrank()==0)
+          cout << "Removing profiling field '" << PatchInfo::type(i) << "' because it is singular\n";
+
+        d_x[i]=0;
+      }
+    }
+  }
+  //add patch overhead field
+  fields.push_back(3);
+
+  int cols=fields.size();
 
   static vector<vector<double> > A;
   static vector<double> b,x;
@@ -271,38 +349,37 @@ CostModelForecaster::finalizeContributions( const GridP currentGrid )
   {
     b[i]=patch_info[i].execTime;
     A[i].resize(cols);
-    A[i][0]=1;
-    A[i][1]=patch_info[i].num_cells;
-    A[i][2]=patch_info[i].num_extraCells;
-  }
-  //add particles to matrix if they exist
-  //you don't want to add them if they don't exist
-  //because the matrix will become singular
-  if(d_particles)
-  {
-    for(int i=0;i<rows;i++)
-      A[i][3]=patch_info[i].num_particles;
+    //add fields to matrix
+    for(size_t f=0;f<fields.size();f++)
+      A[i][f]=patch_info[i][fields[f]];
   }
 
   //compute least squares
   min_norm_least_sq(A,b,x);
-#if 0
-  cout << " Coefficients: ";
-  for(int i=0;i<cols;i++)
-    cout << x[i] << " ";
-  cout << endl;
+#if 1
+  if(d_myworld->myrank()==0)
+  {
+    cout << " Coefficients: ";
+    for(int i=0;i<cols;i++)
+      cout << x[i] << " ";
+    cout << endl;
+  }
 #endif
 
 #endif
 
-  double alpha=2.0/(d_timestepWindow+1);
+  static int iter=0;
+  iter++;
+  double alpha=2.0/(min(iter,d_timestepWindow)+1);
   //update coefficients using fading memory filter
-  d_patchCost=x[0]*alpha+d_patchCost*(1-alpha);
-  d_cellCost=x[1]*alpha+d_cellCost*(1-alpha);
-  d_extraCellCost=x[2]*alpha+d_extraCellCost*(1-alpha);
-  if(d_particles)
-    d_particleCost=x[3]*alpha+d_particleCost*(1-alpha);
+  for(size_t f=0;f<fields.size();f++)
+    d_x[fields[f]]=x[f]*alpha+d_x[fields[f]]*(1-alpha);
 
+  //update model coefficents
+  setCosts(d_x[3], d_x[0], d_x[1], d_x[2]);
+  
+  if(d_myworld->myrank()==0)
+    cout << "Update: patchCost: " << d_patchCost << " cellCost: " << d_cellCost << " d_extraCellCost: " << d_extraCellCost << " particleCost: " << d_particleCost << endl;
   //compute error metrics RMS, MAPE, PME 
   execTimes.clear();
 }
