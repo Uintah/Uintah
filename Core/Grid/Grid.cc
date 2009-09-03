@@ -418,6 +418,14 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
         // bulletproofing
         if(have_levelspacing || have_patchspacing){
           for(int dir = 0; dir<3; dir++){
+            if ((upper(dir)-lower(dir)) <= 0.0) {
+              ostringstream msg;
+              msg<< "\nComputational Domain Input Error: Level("<< levelIndex << ")"
+                 << " \n The computational domain " << lower<<", " << upper
+                 << " must have a positive distance in each coordinate direction  " << upper-lower << endl; 
+              throw ProblemSetupException(msg.str(), __FILE__, __LINE__);
+            }
+          
             if (spacing[dir] > (upper(dir)-lower(dir)) || spacing[dir] < 0){
               ostringstream msg;
               msg<< "\nComputational Domain Input Error: Level("<< levelIndex << ")"
