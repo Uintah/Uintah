@@ -182,27 +182,20 @@ void PartVel::ComputePartVel( const ProcessorGroup* pc,
 
       // now loop over all cells
       for (CellIterator iter=patch->getExtraCellIterator__New(0); !iter.done(); iter++){
-  
         IntVector c = *iter;
-	
-	double length;
-	
-	if (weight[c] < 1e-10) {
-	   length = 0;
-	   }
-	else {   
 
-        //double length = d_wlo[iqn]/d_wo[iqn] * eqn.getScalingConstant();
-	length = wlength[c]/weight[c] * eqn.getScalingConstant();
-	}
-	
-        if ( length > d_highClip ) {
-          length = d_highClip; 
+        double length;
+        if( weight[c] < 1e-6 ) {
+          length = 0;
+        } else {
+          length = (wlength[c]/weight[c])*eqn.getScalingConstant();
         }
-        else if ( length < d_lowClip ) {
-          length = d_lowClip; 
-	}
-	
+
+        if( length > d_highClip ) {
+          length = d_highClip;
+        } else if( length < d_lowClip ) {
+          length = d_lowClip;
+        }
 
         Vector sphGas = Vector(0.,0.,0.);
         Vector cartGas = gasVel[c]; 
@@ -223,8 +216,8 @@ void PartVel::ComputePartVel( const ProcessorGroup* pc,
         uk = pow(uk,1./3.);
 
         double newPartMag = sphGas.z() - uk*(2*rhoRatio+1)/36*(1-beta)/phi*pow(length/eta,2);
-	//if(newPartMag > 0) cout << "newPartMag "<< newPartMag << "  " << name << endl;
-	
+        //if(newPartMag > 0) cout << "newPartMag "<< newPartMag << "  " << name << endl;
+  
         sphPart = Vector(sphGas.x(), sphGas.y(), newPartMag);
 
         //cout << "SPHPART NEW " << sphPart << endl;
