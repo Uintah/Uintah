@@ -40,6 +40,7 @@ using namespace SCIRun;
 namespace Uintah
 {
 static DebugStream stats("ProfileStats", false);
+static DebugStream stats2("ProfileStats2", false);
 void
 CostModelForecaster::addContribution( DetailedTask *task, double cost )
 {
@@ -69,13 +70,15 @@ CostModelForecaster::addContribution( DetailedTask *task, double cost )
 
 void CostModelForecaster::outputError(const GridP grid) 
 {
+  static int iter=0;
+  iter++;
   vector<vector<int> > num_particles;
   vector<vector<double> > costs;
   d_lb->collectParticles(grid.get_rep(),num_particles);
   getWeights(grid.get_rep(), num_particles,costs);
 
   double size=0;
-  double sum_error_local=0;
+  double sum_error_local=0,max_error_local=0;
   for(int l=0;l<grid->numLevels();l++)
   {
     LevelP level=grid->getLevel(l);
@@ -89,15 +92,23 @@ void CostModelForecaster::outputError(const GridP grid)
 
       //cout << d_myworld->myrank() << " patch:" << patch->getID() << " exectTime: " << execTimes[patch->getID()] << " cost: " << costs[l][p] << endl;
       double diff=(execTimes[patch->getID()]-costs[l][p])/execTimes[patch->getID()];
+      IntVector low(patch->getCellLowIndex__New()), high(patch->getCellHighIndex__New());
+      if(stats2.active())
+        cout << "PROFILESTATS: " << iter << " " << diff << " " << l << " " 
+            << low[0] << " " << low[1] << " " << low[2] << " " << high[0] << " " << high[1] << " " << high[2] << endl;
+
+      if(diff>max_error_local)
+        max_error_local=diff;
       sum_error_local+=fabs(diff);
      }
   }
-  double sum_error=0;
+  double sum_error=0,max_error=0;
   MPI_Reduce(&sum_error_local,&sum_error,1,MPI_DOUBLE,MPI_SUM,0,d_myworld->getComm());
-  if(d_myworld->myrank()==0)
+  MPI_Reduce(&max_error_local,&max_error,1,MPI_DOUBLE,MPI_MAX,0,d_myworld->getComm());
+  if(d_myworld->myrank()==0 && stats.active())
   {
     sum_error/=size;
-    cout << "Forecast MAPE: " << sum_error << endl;
+    cout << "Forecast MAPE: " << sum_error << " MAXPE:" << max_error << endl;
   }
 }
 void CostModelForecaster::collectPatchInfo(const GridP grid, vector<PatchInfo> &patch_info) 
@@ -380,7 +391,6 @@ CostModelForecaster::finalizeContributions( const GridP currentGrid )
   
   if(d_myworld->myrank()==0)
     cout << "Update: patchCost: " << d_patchCost << " cellCost: " << d_cellCost << " d_extraCellCost: " << d_extraCellCost << " particleCost: " << d_particleCost << endl;
-  //compute error metrics RMS, MAPE, PME 
   execTimes.clear();
 }
 
