@@ -70,6 +70,7 @@ void BoundaryCondition_new::setScalarValueBC( const ProcessorGroup*,
   vector<Patch::FaceType>::const_iterator iter;
   vector<Patch::FaceType> bf;
   patch->getBoundaryFaces(bf);
+  Vector Dx = patch->dCell(); 
 
   //hard coded to zero for now (Arches only has one) 
   int mat_id = 0; 
@@ -138,6 +139,48 @@ void BoundaryCondition_new::setScalarValueBC( const ProcessorGroup*,
           }
 
         } else if (bc_kind == "Neumann") {
+          switch (face) {
+          case Patch::xminus:
+            for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
+              IntVector bp1(*bound_ptr - insideCellDir); 
+              scalar[*bound_ptr] = scalar[bp1] - Dx.x()*bc_value;
+            }
+          break;
+          case Patch::xplus:
+            for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
+              IntVector bp1(*bound_ptr - insideCellDir);
+              scalar[*bound_ptr] = Dx.x()*bc_value + scalar[bp1];
+            }
+          break;
+#ifdef YDIM
+          case Patch::yminus:
+            for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
+              IntVector bp1(*bound_ptr - insideCellDir); 
+              scalar[*bound_ptr] = scalar[bp1] - Dx.y()*bc_value;
+            }
+          break;
+          case Patch::yplus:
+            for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
+              IntVector bp1(*bound_ptr - insideCellDir);
+              scalar[*bound_ptr] = Dx.y()*bc_value + scalar[bp1];
+            }
+          break;
+#endif
+#ifdef ZDIM
+          case Patch::zminus:
+            for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
+              IntVector bp1(*bound_ptr - insideCellDir); 
+              scalar[*bound_ptr] = scalar[bp1] - Dx.z()*bc_value;
+            }
+          break;
+          case Patch::zplus:
+            for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
+              IntVector bp1(*bound_ptr - insideCellDir);
+              scalar[*bound_ptr] = Dx.z()*bc_value + scalar[bp1];
+            }
+          break;
+#endif
+          }
 
         }
       }

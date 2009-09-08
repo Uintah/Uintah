@@ -226,10 +226,18 @@ Properties::problemSetup(const ProblemSpecP& params)
     }
     db_enthalpy_solver = db_enthalpy_solver->findBlock("EnthalpySolver");
 
-    db_enthalpy_solver->require("radiation",d_radiationCalc);
+    if (db_enthalpy_solver->findBlock("DORadiationModel"))
+      d_radiationCalc = true; 
+    else 
+      cout << "ATTENTION: NO WORKING RADIATION MODEL TURNED ON!" << endl; 
+
     if (d_radiationCalc) {
-      db_enthalpy_solver->getWithDefault("discrete_ordinates",d_DORadiationCalc,true);
+
+      if (db_enthalpy_solver->findBlock("DORadiationModel"))
+        d_DORadiationCalc = true; 
+
       d_opl = 0.0;
+
       if (!d_DORadiationCalc)
         db->require("optically_thin_model_opl",d_opl);
       if (d_tabulated_soot) {
