@@ -420,7 +420,17 @@ Arches::problemSetup(const ProblemSpecP& params,
   // ----- NEW DQMOM STUFF:
   ProblemSpecP time_db = db->findBlock("TimeIntegrator");
   if (time_db) {
-    time_db->getWithDefault("tOrder",d_tOrder,1);
+    string time_order; 
+    time_db->findBlock("ExplicitIntegrator")->getAttribute("order", time_order); 
+    if (time_order == "first")
+      d_tOrder = 1;
+    else if (time_order == "second")
+      d_tOrder = 2; 
+    else if (time_order == "third")
+      d_tOrder = 3; 
+    else 
+      throw InvalidValue("Explicit time integrator must be one of: first, second, third!  Please fix input file",__FILE__,__LINE__);
+
     //create a time integrator.
     d_timeIntegrator = scinew ExplicitTimeInt(d_lab);
     d_timeIntegrator->problemSetup(time_db);
@@ -1027,6 +1037,7 @@ Arches::paramInit(const ProcessorGroup* pg,
         reactScalarDiffusivity.initialize(visVal/0.4);
       }
     }
+
     scalar.initialize(0.0);
     if (d_init_mix_frac > 0.0) {
       for (CellIterator iter=patch->getCellIterator__New(); 
@@ -1034,16 +1045,6 @@ Arches::paramInit(const ProcessorGroup* pg,
         scalar[*iter] = d_init_mix_frac; 
       }
     }
-
-/*    for (CellIterator iter=patch->getCellIterator__New(); 
-         !iter.done(); iter++){
-      Point pt = patch->cellPosition(*iter);
-      if (pt.x() > 0.25) 
-        scalar[*iter] = 1.0;
-
-    }
-*/
- 
 
     if (d_calcExtraScalars) {
 
@@ -1463,7 +1464,6 @@ Arches::scalarInit( const ProcessorGroup* ,
 
       //do Boundary conditions
       eqn->computeBCsSpecial( patch, eqn_name, tempVar ); 
-
 
   // TOTAL KLUDGE FOR REACTING COAL---------------------------
   // Keep commented out unless you know what you are doing!

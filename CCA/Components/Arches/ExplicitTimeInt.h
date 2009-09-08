@@ -87,6 +87,7 @@ private:
     for (CellIterator iter=patch->getCellIterator__New(); !iter.done(); iter++){
 
       double vol = dx.x()*dx.y()*dx.z();
+      IntVector c = *iter; 
 
       // (rho*phi)^{t+\Delta t} = (rho*phi)^{t} + RHS
       phi[*iter] = old_den[*iter]*phi[*iter] + dt/vol*(RHS[*iter]); 
@@ -105,11 +106,16 @@ private:
   {
   
 		for (CellIterator iter=patch->getCellIterator__New(); !iter.done(); iter++){
+
+      IntVector c = *iter; 
   
+
 			phi[*iter] = d_alpha[step]*old_phi[*iter] + d_beta[step]*phi[*iter];	
 
+          
+      }
+
 		}
-  }
 } //end namespace Uintah
     
 #endif

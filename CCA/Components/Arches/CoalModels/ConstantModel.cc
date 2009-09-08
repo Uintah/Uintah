@@ -48,6 +48,8 @@ ConstantModel::problemSetup(const ProblemSpecP& inputdb, int qn)
 
   ProblemSpecP db = inputdb; 
 
+  db->require("constant",d_constant); 
+
 }
 //---------------------------------------------------------------------------
 // Method: Schedule the calculation of the Model 
@@ -110,9 +112,7 @@ ConstantModel::computeModel( const ProcessorGroup* pc,
 
     for (CellIterator iter=patch->getCellIterator__New(); !iter.done(); iter++){
       IntVector c = *iter; 
-      model[c] =-1e-1;
-      //double A = 0.01;
-      //model[c] = A*sin(2*3.1416*time);
+      model[c] = d_constant;
     }
   }
 }

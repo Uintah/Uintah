@@ -54,6 +54,8 @@ public:
 
 private:
 
+  double d_constant; 
+
 }; // end ConstSrcTerm
 } // end namespace Uintah
 #endif

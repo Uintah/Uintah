@@ -9,1260 +9,1387 @@
 #include <Core/Grid/Variables/SFCXVariable.h>
 #include <Core/Grid/Variables/SFCYVariable.h>
 #include <Core/Grid/Variables/SFCZVariable.h>
+#include <Core/Exceptions/InvalidValue.h>
 
 #define YDIM
 #define ZDIM
 //==========================================================================
 
 /**
-* @class Discretization_new
-* @author Jeremy Thornock
-* @date Oct 16, 2008
-*
-* @brief A discretization toolbox.
-*       
-*
-*
-*/
+ * @class Discretization_new
+ * @author Jeremy Thornock
+ * @date Oct 16, 2008
+ *
+ * @brief A discretization toolbox.
+ *       
+ *
+ *
+ */
 
 namespace Uintah{
   class Discretization_new {
 
-  public:
+    public:
 
-    Discretization_new();
-    ~Discretization_new();
+      Discretization_new();
+      ~Discretization_new();
 
-    /** @brief Computes the convection term.  This method is overloaded.  */
-    template <class fT, class oldPhiT> void 
-    computeConv(const Patch* p, fT& Fconv, oldPhiT& oldPhi, 
-                constSFCXVariable<double>& uVel, constSFCYVariable<double>& vVel, 
-                constSFCZVariable<double>& wVel, constCCVariable<double>& den,
-                std::string convScheme);
+      /** @brief Computes the convection term.  This method is overloaded.  */
+      template <class fT, class oldPhiT> void 
+        computeConv(const Patch* p, fT& Fconv, oldPhiT& oldPhi, 
+            constSFCXVariable<double>& uVel, constSFCYVariable<double>& vVel, 
+            constSFCZVariable<double>& wVel, constCCVariable<double>& den,
+            std::string convScheme);
 
-    /** @brief Computes the convection term (no density term) */
-    template <class fT, class oldPhiT> void 
-    computeConv(const Patch* p, fT& Fconv, oldPhiT& oldPhi, 
-                constSFCXVariable<double>& uVel, constSFCYVariable<double>& vVel, 
-                constSFCZVariable<double>& wVel, 
-                std::string convScheme);
+      /** @brief Computes the convection term (no density term) */
+      template <class fT, class oldPhiT> void 
+        computeConv(const Patch* p, fT& Fconv, oldPhiT& oldPhi, 
+            constSFCXVariable<double>& uVel, constSFCYVariable<double>& vVel, 
+            constSFCZVariable<double>& wVel, 
+            std::string convScheme);
+
+      template <class fT, class oldPhiT> void 
+        computeConv(const Patch* p, fT& Fconv, oldPhiT& oldPhi, 
+            constSFCXVariable<double>& uVel, constSFCYVariable<double>& vVel, 
+            constSFCZVariable<double>& wVel, constCCVariable<Vector>& partVel, 
+            std::string convScheme);
+
+      inline CellIterator getInteriorCellIterator( const Patch* p ) const 
+      {
+
+        bool xminus = p->getBCType(Patch::xminus) == Patch::None;
+        bool xplus =  p->getBCType(Patch::xplus)  == Patch::None;
+        bool yminus = p->getBCType(Patch::yminus) == Patch::None;
+        bool yplus =  p->getBCType(Patch::yplus)  == Patch::None;
+        bool zminus = p->getBCType(Patch::zminus) == Patch::None;
+        bool zplus =  p->getBCType(Patch::zplus)  == Patch::None;
+
+        IntVector clow  = p->getCellLowIndex__New();
+        IntVector chigh = p->getCellHighIndex__New(); 
+        IntVector clow_mod = clow;
+        IntVector chigh_mod = chigh; 
+
+        if (xminus)
+          clow_mod = clow_mod + IntVector(1,0,0);
+        if (xplus)
+          chigh_mod = chigh_mod - IntVector(1,0,0); 
+        if (yminus)
+          clow_mod = clow_mod + IntVector(0,1,0);
+        if (yplus)
+          chigh_mod = chigh_mod - IntVector(0,1,0);
+        if (zminus)
+          clow_mod = clow_mod + IntVector(0,0,1);
+        if (zplus)
+          chigh_mod = chigh_mod - IntVector(0,0,1);
+
+        CellIterator the_iterator = CellIterator(clow_mod, chigh_mod); 
+
+        the_iterator.reset(); 
+        return the_iterator; 
+      }
+
+      inline CellIterator getInteriorBoundaryCellIterator( const Patch* p, const vector<Patch::FaceType>::const_iterator bf_iter ) const 
+      {
+
+        Patch::FaceType face = *bf_iter; 
+        IntVector l,h; 
+        p->getFaceCells( face, 0, l, h ); 
+
+        //dont want edge cells:
+        if ( face == Patch::xminus | face == Patch::xplus ){
+
+          bool yminus = p->getBCType(Patch::yminus) == Patch::None;
+          bool yplus =  p->getBCType(Patch::yplus)  == Patch::None;
+          bool zminus = p->getBCType(Patch::zminus) == Patch::None;
+          bool zplus =  p->getBCType(Patch::zplus)  == Patch::None;
+
+          if (yminus)
+            l[1] += 2;
+          if (yplus)
+            h[1] -= 2;
+          if (zminus)
+            l[2] += 2;
+          if (zplus)
+            h[2] -= 2;
+
+        } else if ( face == Patch::yminus | face == Patch::yplus ){
+
+          bool xminus = p->getBCType(Patch::xminus) == Patch::None;
+          bool xplus =  p->getBCType(Patch::xplus)  == Patch::None;
+          bool zminus = p->getBCType(Patch::zminus) == Patch::None;
+          bool zplus =  p->getBCType(Patch::zplus)  == Patch::None;
+
+          if (xminus)
+            l[0] += 2;
+          if (xplus)
+            h[0] -= 2;
+          if (zminus)
+            l[2] += 2;
+          if (zplus)
+            h[2] -= 2;
+        } else if ( face == Patch::zminus | face == Patch::zplus ){
+
+          bool yminus = p->getBCType(Patch::yminus) == Patch::None;
+          bool yplus =  p->getBCType(Patch::yplus)  == Patch::None;
+          bool xminus = p->getBCType(Patch::xminus) == Patch::None;
+          bool xplus =  p->getBCType(Patch::xplus)  == Patch::None;
+
+          if (yminus)
+            l[1] += 2;
+          if (yplus)
+            h[1] -= 2;
+          if (xminus)
+            l[0] += 2;
+          if (xplus)
+            h[0] -= 2;
+        }
+
+        CellIterator the_iterator = CellIterator( l, h ); 
+        return the_iterator; 
+
+      }
+
+
+      inline CellIterator getEdgeCellIterator( const Patch* p, const vector<Patch::FaceType>::const_iterator bf_iter ) const 
+      {
+        Patch::FaceType face = *bf_iter; 
+        IntVector l,h; 
+        p->getFaceCells( face, 0, l, h ); 
+
+      }
+
+      struct FaceBoundaryBool
+      { 
+        bool minus;
+        bool plus; 
+      };
+
+      inline FaceBoundaryBool checkFacesForBoundaries( const Patch* p, const IntVector c, const IntVector coord )
+      {
+
+        FaceBoundaryBool b;
+        b.minus = false; 
+        b.plus  = false; 
+
+        IntVector l = p->getCellLowIndex__New();
+        IntVector h = p->getCellHighIndex__New(); 
+
+        if ( coord[0] == 1 ) {
+
+          if ( l[0] == c[0] ) b.minus = true;
+          if ( h[0] == c[0] ) b.plus  = true; 
+
+        } else if ( coord[1] == 1 ) {
+
+          if ( l[1] == c[1] ) b.minus = true;
+          if ( h[1] == c[1] ) b.plus = true; 
+
+        } else if ( coord[2] == 1 ) {
+
+          if ( l[2] == c[2] ) b.minus = true; 
+          if ( h[2] == c[2] ) b.plus = true; 
+
+        }
+
+        return b; 
+      }
+
+      struct FaceData1D {
+        double minus; // minus face
+        double plus;  // plus face
+      };
+
+      inline double getFlux( const double area, FaceData1D den, FaceData1D vel, FaceData1D phi )
+      {
+        double F; 
+        return F = area * (  den.plus * vel.plus * phi.plus - den.minus * vel.minus * phi.minus ); 
+      }
+      inline double getFlux( const double area, FaceData1D vel, FaceData1D phi )
+      {
+        double F; 
+        return F = area * (  vel.plus * phi.plus - vel.minus * phi.minus ); 
+      }
+
+      inline FaceData1D getFaceVelocity( const IntVector c, const CCVariable<double>& F, constCCVariable<Vector> vel, const IntVector coord ){
+      
+        FaceData1D the_vel;
+
+        if (coord[0] == 1) {
+
+          IntVector cxm = c - IntVector(1,0,0);
+          IntVector cxp = c + IntVector(1,0,0); 
+
+          the_vel.minus = 0.5 * ( vel[c].x() + vel[cxm].x() ); 
+          the_vel.plus  = 0.5 * ( vel[c].x() + vel[cxp].x() ); 
+
+        } else if (coord[1] == 1) {
+
+          IntVector cym = c - IntVector(0,1,0);
+          IntVector cyp = c + IntVector(0,1,0); 
+
+          the_vel.minus = 0.5 * ( vel[c].y() + vel[cym].y() ); 
+          the_vel.plus  = 0.5 * ( vel[c].y() + vel[cyp].y() ); 
+
+        } else if (coord[2] == 1) {
+
+          IntVector czm = c - IntVector(0,0,1);
+          IntVector czp = c + IntVector(0,0,1); 
+
+          the_vel.minus = 0.5 * ( vel[c].z() + vel[czm].z() ); 
+          the_vel.plus  = 0.5 * ( vel[c].z() + vel[czp].z() ); 
+
+        }
+      }
+
+      inline FaceData1D getFaceVelocity( const IntVector c, const CCVariable<double>& F, constSFCXVariable<double> vel ){
+        // cell-centered, x-direction
+        FaceData1D the_vel; 
+        the_vel.minus = vel[c];
+        the_vel.plus  = vel[c + IntVector(1,0,0)];
+
+        return the_vel; 
+      }
+      inline FaceData1D getFaceVelocity( const IntVector c, const CCVariable<double>& F, constSFCYVariable<double> vel ){
+        // cell-centered, y-direction
+        FaceData1D the_vel; 
+        the_vel.minus = vel[c];
+        the_vel.plus  = vel[c + IntVector(0,1,0)];
+
+        return the_vel; 
+      }
+      inline FaceData1D getFaceVelocity( const IntVector c, const CCVariable<double>& F, constSFCZVariable<double> vel ){
+        // cell-centered, z-direction
+        FaceData1D the_vel; 
+        the_vel.minus = vel[c];
+        the_vel.plus  = vel[c + IntVector(0,0,1)];
+
+        return the_vel; 
+      }
+
+      template< class phiT > 
+        inline FaceData1D getDensityOnFace( const IntVector c, const IntVector coord, phiT& phi, constCCVariable<double>& den ){
+
+          FaceData1D face_values; 
+          face_values.minus = 0.0;
+          face_values.plus  = 0.0;
+
+          TypeDescription::Type type = phi.getTypeDescription()->getType(); 
+
+          if ( type == TypeDescription::CCVariable ) {
+            IntVector cxm = c - coord; 
+            IntVector cxp = c + coord; 
+
+            face_values.minus = 0.5 * (den[c] + den[cxm]); 
+            face_values.plus  = 0.5 * (den[c] + den[cxp]); 
+          } else {
+            // assume the only other type is a face type...
+            IntVector cxm = c - coord; 
+
+            face_values.minus = den[cxm];
+            face_values.plus  = den[c]; 
+          }
+
+          return face_values; 
+        }
+
+      template< class phiT >
+        inline FaceData1D centralInterp( const IntVector c, const IntVector coord, phiT& phi )
+        {
+          IntVector cxp = c + coord; 
+          IntVector cxm = c - coord; 
+
+          FaceData1D face_values; 
+
+          face_values.minus = 0.5 * ( phi[c] + phi[cxm] ); 
+          face_values.plus  = 0.5 * ( phi[c] + phi[cxp] ); 
+
+          return face_values; 
+
+        }
+
+      template< class phiT >
+        inline FaceData1D superBeeInterp( const IntVector c, const IntVector coord, phiT& phi, 
+            FaceData1D vel ) {
+
+          FaceData1D face_values;
+          face_values.plus  = 0.0;
+          face_values.minus = 0.0;
+
+          double r; 
+          double psi; 
+          double Sup;
+          double Sdn;
+
+          IntVector cxp  = c + coord; 
+          IntVector cxpp = c + coord + coord; 
+          IntVector cxm  = c - coord; 
+          IntVector cxmm = c - coord - coord; 
+
+          // - FACE
+          if ( vel.minus > 0.0 ) {
+            Sup = phi[cxm];
+            Sdn = phi[c];
+            r = ( phi[cxm] - phi[cxmm] ) / ( phi[c] - phi[cxm] ); 
+          } else if ( vel.minus < 0.0 ) {
+            Sup = phi[c];
+            Sdn = phi[cxm];
+            r = ( phi[cxp] - phi[c] ) / ( phi[c] - phi[cxm] );
+          } else { 
+            Sup = 0.0;
+            Sdn = 0.0; 
+            psi = 0.0;
+          }
+          psi = max( min(2.0*r, 1.0), min(r, 2.0) );
+          psi = max( 0.0, psi );
+
+          face_values.minus = Sup + 0.5*psi*( Sdn - Sup );
+
+          // + FACE
+          if ( vel.plus > 0.0 ) {
+            r = ( phi[c] - phi[cxm] ) / ( phi[cxp] - phi[c] );
+            Sup = phi[c];
+            Sdn = phi[cxp];
+          } else if ( vel.plus < 0.0 ) {
+            r = ( phi[cxpp] - phi[cxp] ) / ( phi[cxp] - phi[c] );
+            Sup = phi[cxp];
+            Sdn = phi[c]; 
+          } else {
+            Sup = 0.0;
+            Sdn = 0.0; 
+            psi = 0.0;
+          }
+          psi = max( min(2.0*r, 1.0), min(r, 2.0) );
+          psi = max( 0.0, psi );
+
+          face_values.plus = Sup + 0.5*psi*( Sdn - Sup );
+
+          return face_values; 
+        }
+      template< class phiT >
+        inline FaceData1D superBeeInterp( const IntVector c, const IntVector coord, phiT& phi, 
+            FaceData1D vel, FaceBoundaryBool isBoundary) {
+
+          FaceData1D face_values;
+          face_values.plus  = 0.0;
+          face_values.minus = 0.0;
+
+          double r; 
+          double psi; 
+          double Sup;
+          double Sdn;
+
+          IntVector cxp  = c + coord; 
+          IntVector cxpp = c + coord + coord; 
+          IntVector cxm  = c - coord; 
+          IntVector cxmm = c - coord - coord; 
+
+          // - FACE
+          if (isBoundary.minus) 
+            face_values.minus = 0.5*(phi[c]+phi[cxm]);
+          else { 
+            if ( vel.minus > 0.0 ) {
+              Sup = phi[cxm];
+              Sdn = phi[c];
+              r = ( phi[cxm] - phi[cxmm] ) / ( phi[c] - phi[cxm] ); 
+            } else if ( vel.minus < 0.0 ) {
+              Sup = phi[c];
+              Sdn = phi[cxm];
+              r = ( phi[cxp] - phi[c] ) / ( phi[c] - phi[cxm] );
+            } else { 
+              Sup = 0.0;
+              Sdn = 0.0; 
+              psi = 0.0;
+            }
+            psi = max( min(2.0*r, 1.0), min(r, 2.0) );
+            psi = max( 0.0, psi );
+
+            face_values.minus = Sup + 0.5*psi*( Sdn - Sup );
+          }
+
+          // + FACE
+          if (isBoundary.plus)
+            face_values.plus = 0.5*(phi[c] + phi[cxp]);
+          else { 
+            if ( vel.plus > 0.0 ) {
+              r = ( phi[c] - phi[cxm] ) / ( phi[cxp] - phi[c] );
+              Sup = phi[c];
+              Sdn = phi[cxp];
+            } else if ( vel.plus < 0.0 ) {
+              r = ( phi[cxpp] - phi[cxp] ) / ( phi[cxp] - phi[c] );
+              Sup = phi[cxp];
+              Sdn = phi[c]; 
+            } else {
+              Sup = 0.0;
+              Sdn = 0.0; 
+              psi = 0.0;
+            }
+            psi = max( min(2.0*r, 1.0), min(r, 2.0) );
+            psi = max( 0.0, psi );
+
+            face_values.plus = Sup + 0.5*psi*( Sdn - Sup );
+          }
+
+          return face_values; 
+        }
+
+      template< class phiT >
+        inline FaceData1D upwindInterp( const IntVector c, const IntVector coord, phiT& phi, 
+            FaceData1D vel) {
+
+          Discretization_new::FaceData1D face_values; 
+          face_values.minus = 0.0;
+          face_values.plus = 0.0;
+
+          IntVector cxp = c + coord; 
+          IntVector cxm = c - coord; 
+
+          // - FACE 
+          if ( vel.minus > 0.0 )
+            face_values.minus = phi[cxm];
+          else if ( vel.minus <= 0.0 )
+            face_values.minus = phi[c]; 
+
+          // + FACE 
+          if ( vel.plus >= 0.0 )
+            face_values.plus = phi[c]; 
+          else if ( vel.plus < 0.0 )
+            face_values.plus = phi[cxp]; 
+
+          return face_values; 
+
+        }
+      template< class phiT >
+        inline FaceData1D upwindInterp( const IntVector c, const IntVector coord, phiT& phi, 
+            FaceData1D vel, FaceBoundaryBool isBoundary ) {
+
+          Discretization_new::FaceData1D face_values; 
+          face_values.minus = 0.0;
+          face_values.plus = 0.0;
+
+          IntVector cxp = c + coord; 
+          IntVector cxm = c - coord; 
+
+          // - FACE 
+          if (isBoundary.minus)
+            face_values.minus = 0.5*(phi[c] + phi[cxm]);
+          else {
+            if ( vel.minus > 0.0 )
+              face_values.minus = phi[cxm];
+            else if ( vel.minus <= 0.0 )
+              face_values.minus = phi[c]; 
+          }
+
+          // + FACE 
+          if (isBoundary.plus)
+            face_values.plus = 0.5*(phi[c] + phi[cxp]);
+          else {
+            if ( vel.plus >= 0.0 )
+              face_values.plus = phi[c]; 
+            else if ( vel.plus < 0.0 )
+              face_values.plus = phi[cxp]; 
+          }
+
+          return face_values; 
+
+        }
+
+
   }; // class Discretization_new
 
   template<class T> 
-  struct FaceData {
-    // 0 = e, 1=w, 2=n, 3=s, 4=t, 5=b
-    //vector<T> values_[6];
-    T p; 
-    T e; 
-    T w; 
-    T n; 
-    T s;
-    T t;
-    T b;
+    struct FaceData {
+      // 0 = e, 1=w, 2=n, 3=s, 4=t, 5=b
+      //vector<T> values_[6];
+      T p; 
+      T e; 
+      T w; 
+      T n; 
+      T s;
+      T t;
+      T b;
+    };
+
+  struct FaceData1D {
+    double minus; // minus face
+    double plus;  // plus face
   };
 
-//---------------------------------------------------------------------------
-// Method: Compute the convection term
-//---------------------------------------------------------------------------
-template <class fT, class oldPhiT> void 
-Discretization_new::computeConv(const Patch* p, fT& Fconv, oldPhiT& oldPhi, 
-            constSFCXVariable<double>& uVel, constSFCYVariable<double>& vVel, 
-            constSFCZVariable<double>& wVel, constCCVariable<double>& den,
-            std::string convScheme ) 
-{
-  // This class computes convection without assumptions about the boundary conditions 
-  // (ie, it doens't adjust values of fluxes on the boundaries but assume you have 
-  // done so previously)
-  Vector Dx = p->dCell(); 
-  FaceData<double> F; // FACE value of phi
-  IntVector cLow  = p->getCellLowIndex__New(); 
-  IntVector cHigh = p->getCellHighIndex__New();  
+  //---------------------------------------------------------------------------
+  // Method: Compute the convection term (with Density) 
+  //---------------------------------------------------------------------------
+  template <class fT, class oldPhiT> void 
+    Discretization_new::computeConv(const Patch* p, fT& Fconv, oldPhiT& oldPhi, 
+        constSFCXVariable<double>& uVel, constSFCYVariable<double>& vVel, 
+        constSFCZVariable<double>& wVel, constCCVariable<double>& den,
+        std::string convScheme ) 
+    {
+      // This class computes convection without assumptions about the boundary conditions 
+      // (ie, it doens't adjust values of fluxes on the boundaries but assume you have 
+      // done so previously or that you will go back and repair them)
+      Vector Dx = p->dCell(); 
+      FaceData<double> F; // FACE value of phi
 
-  if (convScheme == "upwind") {
+      // get the cell interior iterator
+      CellIterator iIter  = Discretization_new::getInteriorCellIterator( p ); 
 
-    // ------ UPWIND ------
-    for (CellIterator iter=p->getCellIterator__New(); !iter.done(); iter++){
+      if (convScheme == "upwind") {
 
-      IntVector c = *iter;
-      IntVector cxp = *iter + IntVector(1,0,0);
-      IntVector cxm = *iter - IntVector(1,0,0);
-      IntVector cyp = *iter + IntVector(0,1,0);
-      IntVector cym = *iter - IntVector(0,1,0);
-      IntVector czp = *iter + IntVector(0,0,1);
-      IntVector czm = *iter - IntVector(0,0,1);
+        for (iIter.begin(); !iIter.done(); iIter++){
 
-      double xmVel = uVel[c];
-      double xpVel = uVel[cxp];
+          IntVector c   = *iIter;
+          IntVector cxp = c + IntVector(1,0,0);
+          IntVector cxm = c - IntVector(1,0,0);
+          IntVector cyp = c + IntVector(0,1,0);
+          IntVector cym = c - IntVector(0,1,0);
+          IntVector czp = c + IntVector(0,0,1);
+          IntVector czm = c - IntVector(0,0,1);
 
-      double xmDen = ( den[c] + den[cxm] ) / 2.0;
-      double xpDen = ( den[c] + den[cxp] ) / 2.0;
+          FaceData1D face_den;
+          FaceData1D face_phi; 
+          FaceData1D face_vel;
+          double area; 
+          IntVector coord; 
 
-      if ( xmVel > 0.0 )
-        F.w = oldPhi[cxm];
-      else if (xmVel < 0.0 )
-        F.w = oldPhi[c]; 
-      else 
-        F.w = 0.0;
+          //X-dimension
+          coord[0] = 1; coord[1] = 0; coord[2] = 0; 
+          area = Dx.y()*Dx.z(); 
 
-      if ( xpVel > 0.0 )
-        F.e = oldPhi[c];
-      else if ( xpVel < 0.0 )
-        F.e = oldPhi[cxp];
-      else 
-        F.e = 0.0;  
-
-      Fconv[c] = Dx.y()*Dx.z()*( F.e * xpDen * xpVel - F.w * xmDen * xmVel );
+          face_den       = getDensityOnFace( c, coord, Fconv, den ); 
+          face_vel       = getFaceVelocity( c, Fconv, uVel ); 
+          face_phi       = upwindInterp( c, coord, oldPhi, face_vel ); 
+          Fconv[c]       = getFlux( area, face_den, face_vel, face_phi ); 
 
 #ifdef YDIM
-      double ymVel = vVel[c];
-      double ypVel = vVel[cyp];
+          //Y-dimension
+          coord[0] = 0; coord[1] = 1; coord[2] = 0; 
+          area = Dx.x()*Dx.z(); 
 
-      double ymDen = ( den[c] + den[cym] ) / 2.0;
-      double ypDen = ( den[c] + den[cyp] ) / 2.0;
+          face_den       = getDensityOnFace( c, coord, Fconv, den ); 
+          face_vel       = getFaceVelocity( c, Fconv, vVel ); 
+          face_phi       = upwindInterp( c, coord, oldPhi, face_vel ); 
+          Fconv[c]      += getFlux( area, face_den, face_vel, face_phi ); 
 
-      if ( ymVel > 0.0 )
-        F.s = oldPhi[cym];
-      else if ( ymVel < 0.0 )
-        F.s = oldPhi[c]; 
-      else
-        F.s = 0.0;  
-
-
-      if ( ypVel > 0.0 )
-        F.n = oldPhi[c];
-      else if ( ypVel < 0.0 )
-        F.n = oldPhi[cyp];
-      else  
-        F.n = 0.0; 
-
-      Fconv[c] += Dx.x()*Dx.z()*( F.n * ypDen * ypVel - F.s * ymDen * ymVel ); 
-#endif
-#ifdef ZDIM
-      double zmVel = wVel[c];
-      double zpVel = wVel[czp];
-
-      double zmDen = ( den[c] + den[czm] ) / 2.0;
-      double zpDen = ( den[c] + den[czp] ) / 2.0;
-
-      if ( zmVel > 0.0 )
-        F.b = oldPhi[czm];
-      else if ( zmVel < 0.0 )
-        F.b = oldPhi[c]; 
-      else 
-        F.b = 0.0;   
-
-      if ( zpVel > 0.0 )
-        F.t = oldPhi[c];
-      else if ( zpVel < 0.0 )
-        F.t = oldPhi[czp];
-      else 
-        F.t = 0.0;  
-
-      Fconv[c] += Dx.x()*Dx.y()*( F.t * zpDen * zpVel - F.b * zmDen * zmVel ); 
 #endif 
-    }
-  } else if (convScheme == "super_bee") { 
-
-    // ------ SUPERBEE ------
-    bool xminus = p->getBCType(Patch::xminus) != Patch::Neighbor;
-    bool xplus =  p->getBCType(Patch::xplus) != Patch::Neighbor;
-    bool yminus = p->getBCType(Patch::yminus) != Patch::Neighbor;
-    bool yplus =  p->getBCType(Patch::yplus) != Patch::Neighbor;
-    bool zminus = p->getBCType(Patch::zminus) != Patch::Neighbor;
-    bool zplus =  p->getBCType(Patch::zplus) != Patch::Neighbor;
-
-    IntVector clow  = p->getCellLowIndex__New();
-    IntVector chigh = p->getCellHighIndex__New(); 
-    IntVector clow_mod;
-    IntVector chigh_mod; 
-
-    if (xminus)
-      clow_mod = clow + IntVector(1,0,0);
-    if (xplus)
-      chigh_mod = chigh - IntVector(1,0,0); 
-    if (yminus)
-      clow_mod = clow + IntVector(0,1,0);
-    if (yplus)
-      chigh_mod = chigh - IntVector(0,1,0);
-    if (zminus)
-      clow_mod = clow + IntVector(0,0,1);
-    if (zplus)
-      chigh_mod = chigh - IntVector(0,0,1);
-
-    for (int i = clow_mod.x(); i < chigh_mod.x(); i++){
-      for (int j = clow_mod.y(); j < chigh_mod.y(); j++){
-        for (int k = clow_mod.z(); k < chigh_mod.z(); k++){
-
-          IntVector c(i,j,k);
-          IntVector cxp = c + IntVector(1,0,0);
-          IntVector cxpp= c + IntVector(2,0,0);
-          IntVector cxm = c - IntVector(1,0,0);
-          IntVector cxmm= c - IntVector(2,0,0);
-          IntVector cyp = c + IntVector(0,1,0);
-          IntVector cypp= c + IntVector(0,2,0);
-          IntVector cym = c - IntVector(0,1,0);
-          IntVector cymm= c - IntVector(0,2,0);
-          IntVector czp = c + IntVector(0,0,1);
-          IntVector czpp= c + IntVector(0,0,2);
-          IntVector czm = c - IntVector(0,0,1);
-          IntVector czmm= c - IntVector(0,0,2);
-
-          double r; 
-          double psi; 
-          double Sup;
-          double Sdn;
-
-          double xmVel = uVel[c];
-          double xpVel = uVel[cxp];
-
-          double xmDen = ( den[c] + den[cxm] ) / 2.0;
-          double xpDen = ( den[c] + den[cxp] ) / 2.0;
-
-          // EAST
-          if ( xpVel > 0.0 ) {
-            r = ( oldPhi[c] - oldPhi[cxm] ) / ( oldPhi[cxp] - oldPhi[c] );
-            Sup = oldPhi[c];
-            Sdn = oldPhi[cxp];
-          } else if ( xpVel < 0.0 ) {
-            r = ( oldPhi[cxpp] - oldPhi[cxp] ) / ( oldPhi[cxp] - oldPhi[c] );
-            Sup = oldPhi[cxp];
-            Sdn = oldPhi[c]; 
-          } else {
-            Sup = 0.0;
-            Sdn = 0.0; 
-            psi = 0.0;
-          }
-          psi = max( min(2.0*r, 1.0), min(r, 2.0) );
-          psi = max( 0.0, psi );
-
-          F.e = Sup + 0.5*psi*( Sdn - Sup ); 
-
-          // WEST
-          if ( xmVel > 0.0 ) {
-            Sup = oldPhi[cxm];
-            Sdn = oldPhi[c];
-            r = ( oldPhi[cxm] - oldPhi[cxmm] ) / ( oldPhi[c] - oldPhi[cxm] ); 
-          } else if ( xmVel < 0.0 ) {
-            Sup = oldPhi[c];
-            Sdn = oldPhi[cxm];
-            r = ( oldPhi[cxp] - oldPhi[c] ) / ( oldPhi[c] - oldPhi[cxm] );
-          } else { 
-            Sup = 0.0;
-            Sdn = 0.0; 
-            psi = 0.0;
-          }
-          psi = max( min(2.0*r, 1.0), min(r, 2.0) );
-          psi = max( 0.0, psi );
-      
-          F.w = Sup + 0.5*psi*( Sdn - Sup ); 
-
-          Fconv[c] = Dx.y()*Dx.z()*( F.e * xpDen * xpVel - F.w * xmDen * xmVel );
-#ifdef YDIM
-          double ymVel = vVel[c];
-          double ypVel = vVel[cyp];
-
-          double ymDen = ( den[c] + den[cym] ) / 2.0;
-          double ypDen = ( den[c] + den[cyp] ) / 2.0;
-
-          // NORTH
-          if ( ypVel > 0.0 ) {
-            r = ( oldPhi[c] - oldPhi[cym] ) / ( oldPhi[cyp] - oldPhi[c] );
-            Sup = oldPhi[c];
-            Sdn = oldPhi[cyp];
-          } else if ( ypVel < 0.0 ) {
-            r = ( oldPhi[cypp] - oldPhi[cyp] ) / ( oldPhi[cyp] - oldPhi[c] );
-            Sup = oldPhi[cyp];
-            Sdn = oldPhi[c]; 
-          } else {
-            Sup = 0.0;
-            Sdn = 0.0; 
-            psi = 0.0;
-          } 
-          psi = max( min(2.0*r, 1.0), min(r, 2.0) );
-          psi = max( 0.0, psi );
-
-          F.n = Sup + 0.5*psi*( Sdn - Sup ); 
-          // SOUTH
-              
-          if ( ymVel > 0.0 ) {
-            Sup = oldPhi[cym];
-            Sdn = oldPhi[c];
-            r = ( oldPhi[cym] - oldPhi[cymm] ) / ( oldPhi[c] - oldPhi[cym] ); 
-          } else if ( ymVel > 0.0 ) {
-            Sup = oldPhi[c];
-            Sdn = oldPhi[cym];
-            r = ( oldPhi[cyp] - oldPhi[c] ) / ( oldPhi[c] - oldPhi[cym] ); 
-          } else {
-            Sup = 0.0;
-            Sdn = 0.0; 
-            psi = 0.0;
-          } 
-          psi = max( min(2.0*r, 1.0), min(r, 2.0) );
-          psi = max( 0.0, psi );
-
-          F.s = Sup + 0.5*psi*( Sdn - Sup ); 
-
-          Fconv[c] += Dx.x()*Dx.z()*( F.n * ypDen * ypVel - F.s * ymDen * ymVel ); 
-#endif          
 #ifdef ZDIM
-          double zmVel = wVel[c];
-          double zpVel = wVel[czp];
+          //Z-dimension
+          coord[0] = 0; coord[1] = 0; coord[2] = 1; 
+          area = Dx.x()*Dx.y(); 
 
-          double zmDen = ( den[c] + den[czm] ) / 2.0;
-          double zpDen = ( den[c] + den[czp] ) / 2.0;
+          face_den       = getDensityOnFace( c, coord, Fconv, den ); 
+          face_vel       = getFaceVelocity( c, Fconv, wVel ); 
+          face_phi       = upwindInterp( c, coord, oldPhi, face_vel ); 
+          Fconv[c]      += getFlux( area, face_den, face_vel, face_phi ); 
 
-          // TOP
-          if ( zpVel > 0.0 ) {
-            r = ( oldPhi[c] - oldPhi[czm] ) / ( oldPhi[czp] - oldPhi[c] );
-            Sup = oldPhi[c];
-            Sdn = oldPhi[czp];
-          } else if ( zpVel < 0.0 ) {
-            r = ( oldPhi[czpp] - oldPhi[czp] ) / ( oldPhi[czp] - oldPhi[c] );
-            Sup = oldPhi[czp];
-            Sdn = oldPhi[c]; 
-          } else { 
-            Sup = 0.0;
-            Sdn = 0.0; 
-            psi = 0.0;
-          }
-
-          psi = max( min(2.0*r, 1.0), min(r, 2.0) );
-          psi = max( 0.0, psi );
-
-          F.t = Sup + 0.5*psi*( Sdn - Sup ); 
-
-          // BOTTOM 
-          if ( zmVel > 0.0 ) {
-            Sup = oldPhi[czm];
-            Sdn = oldPhi[c];
-            r = ( oldPhi[czm] - oldPhi[czmm] ) / ( oldPhi[c] - oldPhi[czm] ); 
-          } else if ( zmVel > 0.0 ) {
-            Sup = oldPhi[c];
-            Sdn = oldPhi[czm];
-            r = ( oldPhi[czp] - oldPhi[c] ) / ( oldPhi[c] - oldPhi[czm] );
-          } else {  
-            Sup = 0.0;
-            Sdn = 0.0; 
-            psi = 0.0;
-          }
-          psi = max( min(2.0*r, 1.0), min(r, 2.0) );
-          psi = max( 0.0, psi );
-
-          F.b = Sup + 0.5*psi*( Sdn - Sup ); 
-
-          Fconv[c] += Dx.x()*Dx.y()*( F.t * zpDen * zpVel - F.b * zmDen * zmVel ); 
-#endif          
-        }
-      }
-    }
-
-    // ----- BOUNDARIES -----
-    // For patches with boundaries, do upwind along cells that abut the boundary 
-    if (xplus) {
-      double r; 
-      double psi; 
-      double Sup;
-      double Sdn;
-      // EAST BOUNDARY
-      int i = chigh.x();
-      for ( int j = clow.y(); j <= chigh.y(); j++ ){
-        for ( int k = clow.z(); k <= chigh.z(); k++ ){
-
-          IntVector c(i,j,k);
-          IntVector cxp = c + IntVector(1,0,0);
-          IntVector cxm = c - IntVector(1,0,0);
-          IntVector cxmm= c - IntVector(2,0,0);
-
-          double xmVel = uVel[c];
-          double xpVel = uVel[cxp];
-
-          double xmDen = ( den[c] + den[cxm] ) / 2.0;
-          double xpDen = ( den[c] + den[cxp] ) / 2.0;
-
-          if ( xmVel > 0.0 ) {
-            Sup = oldPhi[cxm];
-            Sdn = oldPhi[c];
-            r = ( oldPhi[cxm] - oldPhi[cxmm] ) / ( oldPhi[c] - oldPhi[cxm] ); 
-          } else if ( xmVel < 0.0 ) {
-            Sup = oldPhi[c];
-            Sdn = oldPhi[cxm];
-            r = ( oldPhi[cxp] - oldPhi[c] ) / ( oldPhi[c] - oldPhi[cxm] );
-          } else { 
-            Sup = 0.0;
-            Sdn = 0.0; 
-            psi = 0.0;
-          }
-          psi = max( min(2.0*r, 1.0), min(r, 2.0) );
-          psi = max( 0.0, psi );
-      
-          F.w = Sup + 0.5*psi*( Sdn - Sup ); 
-
-          if ( xpVel > 0.0 )
-            F.e = oldPhi[c];
-          else if ( xpVel < 0.0 )
-            F.e = oldPhi[cxp];
-          else 
-            F.e = 0.0;  
-
-          Fconv[c] = Dx.y()*Dx.z()*( F.e * xpDen * xpVel - F.w * xmDen * xmVel );
-
-        }
-      }
-    }
-    if (xminus) {
-      double r; 
-      double psi; 
-      double Sup;
-      double Sdn;
-
-      // WEST BOUNDARY
-      int i = clow.x();
-      for ( int j = clow.y(); j <= chigh.y(); j++ ){
-        for ( int k = clow.z(); k <= chigh.z(); k++ ){
-
-          IntVector c(i,j,k);
-          IntVector cxp = c + IntVector(1,0,0);
-          IntVector cxpp= c + IntVector(2,0,0);
-          IntVector cxm = c - IntVector(1,0,0);
-
-          double xmVel = uVel[c];
-          double xpVel = uVel[cxp];
-
-          double xmDen = ( den[c] + den[cxm] ) / 2.0;
-          double xpDen = ( den[c] + den[cxp] ) / 2.0;
-
-          if ( xmVel > 0.0 )
-            F.w = oldPhi[cxm];
-          else if (xmVel < 0.0 )
-            F.w = oldPhi[c]; 
-          else 
-            F.w = 0.0;
-
-          if ( xpVel > 0.0 ) {
-            r = ( oldPhi[c] - oldPhi[cxm] ) / ( oldPhi[cxp] - oldPhi[c] );
-            Sup = oldPhi[c];
-            Sdn = oldPhi[cxp];
-          } else if ( xpVel < 0.0 ) {
-            r = ( oldPhi[cxpp] - oldPhi[cxp] ) / ( oldPhi[cxp] - oldPhi[c] );
-            Sup = oldPhi[cxp];
-            Sdn = oldPhi[c]; 
-          } else {
-            Sup = 0.0;
-            Sdn = 0.0; 
-            psi = 0.0;
-          }
-          psi = max( min(2.0*r, 1.0), min(r, 2.0) );
-          psi = max( 0.0, psi );
-
-          F.e = Sup + 0.5*psi*( Sdn - Sup ); 
-
-          Fconv[c] = Dx.y()*Dx.z()*( F.e * xpDen * xpVel - F.w * xmDen * xmVel );
-
-        }
-      }
-    }
-#ifdef YDIM    
-    if (yplus) {
-      double r; 
-      double psi; 
-      double Sup;
-      double Sdn;
-
-      // NORTH BOUNDARY
-      int j = chigh.y();
-      for ( int i = clow.x(); i < chigh.x(); i++ ) {
-        for ( int k = chigh.z(); k < chigh.z(); k++ ) {
-
-          IntVector c(i,j,k);
-          IntVector cyp = c + IntVector(0,1,0);
-          IntVector cym = c - IntVector(0,1,0);
-          IntVector cymm= c - IntVector(0,2,0);
-
-          double ymVel = vVel[c];
-          double ypVel = vVel[cyp];
-
-          double ymDen = ( den[c] + den[cym] ) / 2.0;
-          double ypDen = ( den[c] + den[cyp] ) / 2.0;
-
-          if ( ymVel > 0.0 ) {
-            Sup = oldPhi[cym];
-            Sdn = oldPhi[c];
-            r = ( oldPhi[cym] - oldPhi[cymm] ) / ( oldPhi[c] - oldPhi[cym] ); 
-          } else if ( ymVel > 0.0 ) {
-            Sup = oldPhi[c];
-            Sdn = oldPhi[cym];
-            r = ( oldPhi[cyp] - oldPhi[c] ) / ( oldPhi[c] - oldPhi[cym] ); 
-          } else {
-            Sup = 0.0;
-            Sdn = 0.0; 
-            psi = 0.0;
-          } 
-          psi = max( min(2.0*r, 1.0), min(r, 2.0) );
-          psi = max( 0.0, psi );
-
-          F.s = Sup + 0.5*psi*( Sdn - Sup ); 
-
-          if ( ypVel > 0.0 )
-            F.n = oldPhi[c];
-          else if ( ypVel < 0.0 )
-            F.n = oldPhi[cyp];
-          else  
-            F.n = 0.0; 
-
-          Fconv[c] += Dx.x()*Dx.z()*( F.n * ypDen * ypVel - F.s * ymDen * ymVel ); 
-
-        }
-      }
-    }
-    if (yminus) {
-      double r; 
-      double psi; 
-      double Sup;
-      double Sdn;
-
-      // SOUTH BOUNDARY
-      int j = clow.y();
-      for ( int i = clow.x(); i < chigh.x(); i++ ) {
-        for ( int k = chigh.z(); k < chigh.z(); k++ ) {
-
-          IntVector c(i,j,k);
-          IntVector cyp = c + IntVector(0,1,0);
-          IntVector cypp= c + IntVector(0,2,0);
-          IntVector cym = c - IntVector(0,1,0);
-
-          double ymVel = vVel[c];
-          double ypVel = vVel[cyp];
-
-          double ymDen = ( den[c] + den[cym] ) / 2.0;
-          double ypDen = ( den[c] + den[cyp] ) / 2.0;
-
-          if ( ymVel > 0.0 )
-            F.s = oldPhi[cym];
-          else if ( ymVel < 0.0 )
-            F.s = oldPhi[c]; 
-          else
-            F.s = 0.0;  
-
-          if ( ypVel > 0.0 ) {
-            r = ( oldPhi[c] - oldPhi[cym] ) / ( oldPhi[cyp] - oldPhi[c] );
-            Sup = oldPhi[c];
-            Sdn = oldPhi[cyp];
-          } else if ( ypVel < 0.0 ) {
-            r = ( oldPhi[cypp] - oldPhi[cyp] ) / ( oldPhi[cyp] - oldPhi[c] );
-            Sup = oldPhi[cyp];
-            Sdn = oldPhi[c]; 
-          } else {
-            Sup = 0.0;
-            Sdn = 0.0; 
-            psi = 0.0;
-          } 
-          psi = max( min(2.0*r, 1.0), min(r, 2.0) );
-          psi = max( 0.0, psi );
-
-          F.n = Sup + 0.5*psi*( Sdn - Sup ); 
-          Fconv[c] += Dx.x()*Dx.z()*( F.n * ypDen * ypVel - F.s * ymDen * ymVel ); 
-
-        }
-      }
-    }
 #endif
-#ifdef ZDIM
-    if (zplus) {
-      double r; 
-      double psi; 
-      double Sup;
-      double Sdn;
-
-      // TOP BOUNDARY
-      int k = chigh.z(); 
-      for ( int i = clow.x(); i < chigh.x(); i++ ) {
-        for ( int j = clow.y(); j < chigh.y(); j++ ) {
-
-          IntVector c(i,j,k);
-          IntVector czp = c + IntVector(0,0,1);
-          IntVector czm = c - IntVector(0,0,1);
-          IntVector czmm= c - IntVector(0,0,2);
-
-          double zmVel = wVel[c];
-          double zpVel = wVel[czp];
-
-          double zmDen = ( den[c] + den[czm] ) / 2.0;
-          double zpDen = ( den[c] + den[czp] ) / 2.0;
-
-          if ( zpVel > 0.0 )
-            F.t = oldPhi[c];
-          else if ( zpVel < 0.0 )
-            F.t = oldPhi[czp];
-          else 
-            F.t = 0.0;  
-
-          if ( zmVel > 0.0 ) {
-            Sup = oldPhi[czm];
-            Sdn = oldPhi[c];
-            r = ( oldPhi[czm] - oldPhi[czmm] ) / ( oldPhi[c] - oldPhi[czm] ); 
-          } else if ( zmVel > 0.0 ) {
-            Sup = oldPhi[c];
-            Sdn = oldPhi[czm];
-            r = ( oldPhi[czp] - oldPhi[c] ) / ( oldPhi[c] - oldPhi[czm] );
-          } else {  
-            Sup = 0.0;
-            Sdn = 0.0; 
-            psi = 0.0;
-          }
-          psi = max( min(2.0*r, 1.0), min(r, 2.0) );
-          psi = max( 0.0, psi );
-
-          F.b = Sup + 0.5*psi*( Sdn - Sup ); 
-
-          Fconv[c] += Dx.x()*Dx.y()*( F.t * zpDen * zpVel - F.b * zmDen * zmVel ); 
-
-
         }
-      }
-    }
-    if (zminus) {
-      double r; 
-      double psi; 
-      double Sup;
-      double Sdn;
+        // Boundaries
+        vector<Patch::FaceType> bf;
+        vector<Patch::FaceType>::const_iterator bf_iter;
+        p->getBoundaryFaces(bf);
 
-      // BOTTOM BOUNDARY
-      int k = clow.z();
-      for ( int i = clow.x(); i < chigh.x(); i++ ) {
-        for ( int j = clow.y(); j < chigh.y(); j++ ) {
+        // Loop over all boundary faces on this patch
+        for (bf_iter = bf.begin(); bf_iter != bf.end(); bf_iter++){
 
-          IntVector c(i,j,k);
-          IntVector czp = c + IntVector(0,0,1);
-          IntVector czpp= c + IntVector(0,0,2);
-          IntVector czm = c - IntVector(0,0,1);
+          Patch::FaceType face = *bf_iter; 
+          IntVector inside = p->faceDirection(face); 
+          CellIterator c_iter = getInteriorBoundaryCellIterator( p, bf_iter ); 
+          FaceBoundaryBool fb; //face boundaries
+          FaceBoundaryBool faceIsBoundary; 
 
-          double zmVel = wVel[c];
-          double zpVel = wVel[czp];
+          for (c_iter.begin(); !c_iter.done(); c_iter++){
 
-          double zmDen = ( den[c] + den[czm] ) / 2.0;
-          double zpDen = ( den[c] + den[czp] ) / 2.0;
+            IntVector c = *c_iter - inside; 
+            IntVector cxp = c + IntVector(1,0,0);
+            IntVector cxm = c - IntVector(1,0,0); 
+            IntVector cyp = c + IntVector(0,1,0); 
+            IntVector cym = c - IntVector(0,1,0);
+            IntVector czp = c + IntVector(0,0,1);
+            IntVector czm = c - IntVector(0,0,1);
 
-          if ( zmVel > 0.0 )
-            F.b = oldPhi[czm];
-          else if ( zmVel < 0.0 )
-            F.b = oldPhi[c]; 
-          else 
-            F.b = 0.0;   
+            FaceData1D face_den;
+            FaceData1D face_phi; 
+            FaceData1D face_vel;
+            double area; 
+            IntVector coord; 
 
-          if ( zpVel > 0.0 ) {
-            r = ( oldPhi[c] - oldPhi[czm] ) / ( oldPhi[czp] - oldPhi[c] );
-            Sup = oldPhi[c];
-            Sdn = oldPhi[czp];
-          } else if ( zpVel < 0.0 ) {
-            r = ( oldPhi[czpp] - oldPhi[czp] ) / ( oldPhi[czp] - oldPhi[c] );
-            Sup = oldPhi[czp];
-            Sdn = oldPhi[c]; 
-          } else { 
-            Sup = 0.0;
-            Sdn = 0.0; 
-            psi = 0.0;
-          }
+            //X-dimension
+            coord[0] = 1; coord[1] = 0; coord[2] = 0; 
+            area = Dx.y()*Dx.z(); 
 
-          psi = max( min(2.0*r, 1.0), min(r, 2.0) );
-          psi = max( 0.0, psi );
-
-          F.t = Sup + 0.5*psi*( Sdn - Sup ); 
-
-          Fconv[c] += Dx.x()*Dx.y()*( F.t * zpDen * zpVel - F.b * zpDen * zmVel ); 
-        }
-      }
-    }
-
-#endif    
-  } else {
-
-    cout << "Convection scheme not supported! " << endl;
-
-  }
-}
-
-//---------------------------------------------------------------------------
-// Method: Compute the convection term (no density)
-//---------------------------------------------------------------------------
-template <class fT, class oldPhiT> void 
-Discretization_new::computeConv( const Patch* p, fT& Fconv, oldPhiT& oldPhi, 
-            constSFCXVariable<double>& uVel, constSFCYVariable<double>& vVel, 
-            constSFCZVariable<double>& wVel,
-            std::string convScheme ) 
-{
-  // This class computes convection without assumptions about the boundary conditions 
-  // (ie, it doens't adjust values of fluxes on the boundaries but assume you have 
-  // done so previously)
-  Vector Dx = p->dCell(); 
-  FaceData<double> F; // FACE value of phi
-  IntVector cLow  = p->getCellLowIndex__New(); 
-  IntVector cHigh = p->getCellHighIndex__New();  
-
-  if (convScheme == "upwind") {
-
-    // ------ UPWIND ------
-    for (CellIterator iter=p->getCellIterator__New(); !iter.done(); iter++){
-
-      IntVector c = *iter;
-      IntVector cxp = *iter + IntVector(1,0,0);
-      IntVector cxm = *iter - IntVector(1,0,0);
-      IntVector cyp = *iter + IntVector(0,1,0);
-      IntVector cym = *iter - IntVector(0,1,0);
-      IntVector czp = *iter + IntVector(0,0,1);
-      IntVector czm = *iter - IntVector(0,0,1);
-
-      double xmVel = uVel[c];
-      double xpVel = uVel[cxp];
-
-      if ( xmVel > 0.0 )
-        F.w = oldPhi[cxm];
-      else if (xmVel < 0.0 )
-        F.w = oldPhi[c]; 
-      else 
-        F.w = 0.0;
-
-      if ( xpVel > 0.0 )
-        F.e = oldPhi[c];
-      else if ( xpVel < 0.0 )
-        F.e = oldPhi[cxp];
-      else 
-        F.e = 0.0;  
-
-      Fconv[c] = Dx.y()*Dx.z()*( F.e * xpVel - F.w * xmVel );
+            faceIsBoundary = checkFacesForBoundaries( p, c, coord ); 
+            face_den       = getDensityOnFace( c, coord, Fconv, den ); 
+            face_vel       = getFaceVelocity( c, Fconv, uVel ); 
+            face_phi       = upwindInterp( c, coord, oldPhi, face_vel, faceIsBoundary ); 
+            Fconv[c]       = getFlux( area, face_den, face_vel, face_phi ); 
 
 #ifdef YDIM
-      double ymVel = vVel[c];
-      double ypVel = vVel[cyp];
+            //Y-dimension
+            coord[0] = 0; coord[1] = 1; coord[2] = 0; 
+            area = Dx.x()*Dx.z(); 
 
-      if ( ymVel > 0.0 )
-        F.s = oldPhi[cym];
-      else if ( ymVel < 0.0 )
-        F.s = oldPhi[c]; 
-      else
-        F.s = 0.0;  
+            faceIsBoundary = checkFacesForBoundaries( p, c, coord ); 
+            face_den       = getDensityOnFace( c, coord, Fconv, den ); 
+            face_vel       = getFaceVelocity( c, Fconv, vVel ); 
+            face_phi       = upwindInterp( c, coord, oldPhi, face_vel, faceIsBoundary ); 
+            Fconv[c]      += getFlux( area, face_den, face_vel, face_phi ); 
 
-
-      if ( ypVel > 0.0 )
-        F.n = oldPhi[c];
-      else if ( ypVel < 0.0 )
-        F.n = oldPhi[cyp];
-      else  
-        F.n = 0.0; 
-
-      Fconv[c] += Dx.x()*Dx.z()*( F.n * ypVel - F.s * ymVel ); 
-#endif
-#ifdef ZDIM
-      double zmVel = wVel[c];
-      double zpVel = wVel[czp];
-
-      if ( zmVel > 0.0 )
-        F.b = oldPhi[czm];
-      else if ( zmVel < 0.0 )
-        F.b = oldPhi[c]; 
-      else 
-        F.b = 0.0;   
-
-      if ( zpVel > 0.0 )
-        F.t = oldPhi[c];
-      else if ( zpVel < 0.0 )
-        F.t = oldPhi[czp];
-      else 
-        F.t = 0.0;  
-
-      Fconv[c] += Dx.x()*Dx.y()*( F.t * zpVel - F.b * zmVel ); 
 #endif 
-    }
-  } else if (convScheme == "super_bee") { 
-
-    // ------ SUPERBEE ------
-    bool xminus = p->getBCType(Patch::xminus) != Patch::Neighbor;
-    bool xplus =  p->getBCType(Patch::xplus) != Patch::Neighbor;
-    bool yminus = p->getBCType(Patch::yminus) != Patch::Neighbor;
-    bool yplus =  p->getBCType(Patch::yplus) != Patch::Neighbor;
-    bool zminus = p->getBCType(Patch::zminus) != Patch::Neighbor;
-    bool zplus =  p->getBCType(Patch::zplus) != Patch::Neighbor;
-
-    IntVector clow  = p->getCellLowIndex__New();
-    IntVector chigh = p->getCellHighIndex__New(); 
-    IntVector clow_mod;
-    IntVector chigh_mod; 
-
-    if (xminus)
-      clow_mod = clow + IntVector(1,0,0);
-    if (xplus)
-      chigh_mod = chigh - IntVector(1,0,0); 
-    if (yminus)
-      clow_mod = clow + IntVector(0,1,0);
-    if (yplus)
-      chigh_mod = chigh - IntVector(0,1,0);
-    if (zminus)
-      clow_mod = clow + IntVector(0,0,1);
-    if (zplus)
-      chigh_mod = chigh - IntVector(0,0,1);
-
-    for (int i = clow_mod.x(); i < chigh_mod.x(); i++){
-      for (int j = clow_mod.y(); j < chigh_mod.y(); j++){
-        for (int k = clow_mod.z(); k < chigh_mod.z(); k++){
-
-          IntVector c(i,j,k);
-          IntVector cxp = c + IntVector(1,0,0);
-          IntVector cxpp= c + IntVector(2,0,0);
-          IntVector cxm = c - IntVector(1,0,0);
-          IntVector cxmm= c - IntVector(2,0,0);
-          IntVector cyp = c + IntVector(0,1,0);
-          IntVector cypp= c + IntVector(0,2,0);
-          IntVector cym = c - IntVector(0,1,0);
-          IntVector cymm= c - IntVector(0,2,0);
-          IntVector czp = c + IntVector(0,0,1);
-          IntVector czpp= c + IntVector(0,0,2);
-          IntVector czm = c - IntVector(0,0,1);
-          IntVector czmm= c - IntVector(0,0,2);
-
-          double r; 
-          double psi; 
-          double Sup;
-          double Sdn;
-
-          double xmVel = uVel[c];
-          double xpVel = uVel[cxp];
-
-          // EAST
-          if ( xpVel > 0.0 ) {
-            r = ( oldPhi[c] - oldPhi[cxm] ) / ( oldPhi[cxp] - oldPhi[c] );
-            Sup = oldPhi[c];
-            Sdn = oldPhi[cxp];
-          } else if ( xpVel < 0.0 ) {
-            r = ( oldPhi[cxpp] - oldPhi[cxp] ) / ( oldPhi[cxp] - oldPhi[c] );
-            Sup = oldPhi[cxp];
-            Sdn = oldPhi[c]; 
-          } else {
-            Sup = 0.0;
-            Sdn = 0.0; 
-            psi = 0.0;
-          }
-          psi = max( min(2.0*r, 1.0), min(r, 2.0) );
-          psi = max( 0.0, psi );
-
-          F.e = Sup + 0.5*psi*( Sdn - Sup ); 
-
-          // WEST
-          if ( xmVel > 0.0 ) {
-            Sup = oldPhi[cxm];
-            Sdn = oldPhi[c];
-            r = ( oldPhi[cxm] - oldPhi[cxmm] ) / ( oldPhi[c] - oldPhi[cxm] ); 
-          } else if ( xmVel < 0.0 ) {
-            Sup = oldPhi[c];
-            Sdn = oldPhi[cxm];
-            r = ( oldPhi[cxp] - oldPhi[c] ) / ( oldPhi[c] - oldPhi[cxm] );
-          } else { 
-            Sup = 0.0;
-            Sdn = 0.0; 
-            psi = 0.0;
-          }
-          psi = max( min(2.0*r, 1.0), min(r, 2.0) );
-          psi = max( 0.0, psi );
-      
-          F.w = Sup + 0.5*psi*( Sdn - Sup ); 
-
-          Fconv[c] = Dx.y()*Dx.z()*( F.e * xpVel - F.w * xmVel );
-#ifdef YDIM
-          double ymVel = vVel[c];
-          double ypVel = vVel[cyp];
-
-          // NORTH
-          if ( ypVel > 0.0 ) {
-            r = ( oldPhi[c] - oldPhi[cym] ) / ( oldPhi[cyp] - oldPhi[c] );
-            Sup = oldPhi[c];
-            Sdn = oldPhi[cyp];
-          } else if ( ypVel < 0.0 ) {
-            r = ( oldPhi[cypp] - oldPhi[cyp] ) / ( oldPhi[cyp] - oldPhi[c] );
-            Sup = oldPhi[cyp];
-            Sdn = oldPhi[c]; 
-          } else {
-            Sup = 0.0;
-            Sdn = 0.0; 
-            psi = 0.0;
-          } 
-          psi = max( min(2.0*r, 1.0), min(r, 2.0) );
-          psi = max( 0.0, psi );
-
-          F.n = Sup + 0.5*psi*( Sdn - Sup ); 
-          // SOUTH
-              
-          if ( ymVel > 0.0 ) {
-            Sup = oldPhi[cym];
-            Sdn = oldPhi[c];
-            r = ( oldPhi[cym] - oldPhi[cymm] ) / ( oldPhi[c] - oldPhi[cym] ); 
-          } else if ( ymVel > 0.0 ) {
-            Sup = oldPhi[c];
-            Sdn = oldPhi[cym];
-            r = ( oldPhi[cyp] - oldPhi[c] ) / ( oldPhi[c] - oldPhi[cym] ); 
-          } else {
-            Sup = 0.0;
-            Sdn = 0.0; 
-            psi = 0.0;
-          } 
-          psi = max( min(2.0*r, 1.0), min(r, 2.0) );
-          psi = max( 0.0, psi );
-
-          F.s = Sup + 0.5*psi*( Sdn - Sup ); 
-
-          Fconv[c] += Dx.x()*Dx.z()*( F.n * ypVel - F.s * ymVel ); 
-#endif          
 #ifdef ZDIM
-          double zmVel = wVel[c];
-          double zpVel = wVel[czp];
+            //Z-dimension
+            coord[0] = 0; coord[1] = 0; coord[2] = 1; 
+            area = Dx.x()*Dx.y(); 
 
-          // TOP
-          if ( zpVel > 0.0 ) {
-            r = ( oldPhi[c] - oldPhi[czm] ) / ( oldPhi[czp] - oldPhi[c] );
-            Sup = oldPhi[c];
-            Sdn = oldPhi[czp];
-          } else if ( zpVel < 0.0 ) {
-            r = ( oldPhi[czpp] - oldPhi[czp] ) / ( oldPhi[czp] - oldPhi[c] );
-            Sup = oldPhi[czp];
-            Sdn = oldPhi[c]; 
-          } else { 
-            Sup = 0.0;
-            Sdn = 0.0; 
-            psi = 0.0;
-          }
+            faceIsBoundary = checkFacesForBoundaries( p, c, coord ); 
+            face_den       = getDensityOnFace( c, coord, Fconv, den ); 
+            face_vel       = getFaceVelocity( c, Fconv, wVel ); 
+            face_phi       = upwindInterp( c, coord, oldPhi, face_vel, faceIsBoundary ); 
+            Fconv[c]      += getFlux( area, face_den, face_vel, face_phi ); 
 
-          psi = max( min(2.0*r, 1.0), min(r, 2.0) );
-          psi = max( 0.0, psi );
-
-          F.t = Sup + 0.5*psi*( Sdn - Sup ); 
-
-          // BOTTOM 
-          if ( zmVel > 0.0 ) {
-            Sup = oldPhi[czm];
-            Sdn = oldPhi[c];
-            r = ( oldPhi[czm] - oldPhi[czmm] ) / ( oldPhi[c] - oldPhi[czm] ); 
-          } else if ( zmVel > 0.0 ) {
-            Sup = oldPhi[c];
-            Sdn = oldPhi[czm];
-            r = ( oldPhi[czp] - oldPhi[c] ) / ( oldPhi[c] - oldPhi[czm] );
-          } else {  
-            Sup = 0.0;
-            Sdn = 0.0; 
-            psi = 0.0;
-          }
-          psi = max( min(2.0*r, 1.0), min(r, 2.0) );
-          psi = max( 0.0, psi );
-
-          F.b = Sup + 0.5*psi*( Sdn - Sup ); 
-
-          Fconv[c] += Dx.x()*Dx.y()*( F.t * zpVel - F.b * zmVel ); 
-#endif          
-        }
-      }
-    }
-
-    // ----- BOUNDARIES -----
-    // For patches with boundaries, do upwind along cells that abut the boundary 
-    if (xplus) {
-      double r; 
-      double psi; 
-      double Sup;
-      double Sdn;
-      // EAST BOUNDARY
-      int i = chigh.x();
-      for ( int j = clow.y(); j <= chigh.y(); j++ ){
-        for ( int k = clow.z(); k <= chigh.z(); k++ ){
-
-          IntVector c(i,j,k);
-          IntVector cxp = c + IntVector(1,0,0);
-          IntVector cxm = c - IntVector(1,0,0);
-          IntVector cxmm= c - IntVector(2,0,0);
-
-          double xmVel = uVel[c];
-          double xpVel = uVel[cxp];
-
-          if ( xmVel > 0.0 ) {
-            Sup = oldPhi[cxm];
-            Sdn = oldPhi[c];
-            r = ( oldPhi[cxm] - oldPhi[cxmm] ) / ( oldPhi[c] - oldPhi[cxm] ); 
-          } else if ( xmVel < 0.0 ) {
-            Sup = oldPhi[c];
-            Sdn = oldPhi[cxm];
-            r = ( oldPhi[cxp] - oldPhi[c] ) / ( oldPhi[c] - oldPhi[cxm] );
-          } else { 
-            Sup = 0.0;
-            Sdn = 0.0; 
-            psi = 0.0;
-          }
-          psi = max( min(2.0*r, 1.0), min(r, 2.0) );
-          psi = max( 0.0, psi );
-      
-          F.w = Sup + 0.5*psi*( Sdn - Sup ); 
-
-          if ( xpVel > 0.0 )
-            F.e = oldPhi[c];
-          else if ( xpVel < 0.0 )
-            F.e = oldPhi[cxp];
-          else 
-            F.e = 0.0;  
-
-          Fconv[c] = Dx.y()*Dx.z()*( F.e * xpVel - F.w * xmVel );
-
-        }
-      }
-    }
-    if (xminus) {
-      double r; 
-      double psi; 
-      double Sup;
-      double Sdn;
-
-      // WEST BOUNDARY
-      int i = clow.x();
-      for ( int j = clow.y(); j <= chigh.y(); j++ ){
-        for ( int k = clow.z(); k <= chigh.z(); k++ ){
-
-          IntVector c(i,j,k);
-          IntVector cxp = c + IntVector(1,0,0);
-          IntVector cxpp= c + IntVector(2,0,0);
-          IntVector cxm = c - IntVector(1,0,0);
-
-          double xmVel = uVel[c];
-          double xpVel = uVel[cxp];
-
-          if ( xmVel > 0.0 )
-            F.w = oldPhi[cxm];
-          else if (xmVel < 0.0 )
-            F.w = oldPhi[c]; 
-          else 
-            F.w = 0.0;
-
-          if ( xpVel > 0.0 ) {
-            r = ( oldPhi[c] - oldPhi[cxm] ) / ( oldPhi[cxp] - oldPhi[c] );
-            Sup = oldPhi[c];
-            Sdn = oldPhi[cxp];
-          } else if ( xpVel < 0.0 ) {
-            r = ( oldPhi[cxpp] - oldPhi[cxp] ) / ( oldPhi[cxp] - oldPhi[c] );
-            Sup = oldPhi[cxp];
-            Sdn = oldPhi[c]; 
-          } else {
-            Sup = 0.0;
-            Sdn = 0.0; 
-            psi = 0.0;
-          }
-          psi = max( min(2.0*r, 1.0), min(r, 2.0) );
-          psi = max( 0.0, psi );
-
-          F.e = Sup + 0.5*psi*( Sdn - Sup ); 
-
-          Fconv[c] = Dx.y()*Dx.z()*( F.e * xpVel - F.w * xmVel );
-
-        }
-      }
-    }
-#ifdef YDIM    
-    if (yplus) {
-      double r; 
-      double psi; 
-      double Sup;
-      double Sdn;
-
-      // NORTH BOUNDARY
-      int j = chigh.y();
-      for ( int i = clow.x(); i < chigh.x(); i++ ) {
-        for ( int k = chigh.z(); k < chigh.z(); k++ ) {
-
-          IntVector c(i,j,k);
-          IntVector cyp = c + IntVector(0,1,0);
-          IntVector cym = c - IntVector(0,1,0);
-          IntVector cymm= c - IntVector(0,2,0);
-
-          double ymVel = vVel[c];
-          double ypVel = vVel[cyp];
-
-          if ( ymVel > 0.0 ) {
-            Sup = oldPhi[cym];
-            Sdn = oldPhi[c];
-            r = ( oldPhi[cym] - oldPhi[cymm] ) / ( oldPhi[c] - oldPhi[cym] ); 
-          } else if ( ymVel > 0.0 ) {
-            Sup = oldPhi[c];
-            Sdn = oldPhi[cym];
-            r = ( oldPhi[cyp] - oldPhi[c] ) / ( oldPhi[c] - oldPhi[cym] ); 
-          } else {
-            Sup = 0.0;
-            Sdn = 0.0; 
-            psi = 0.0;
-          } 
-          psi = max( min(2.0*r, 1.0), min(r, 2.0) );
-          psi = max( 0.0, psi );
-
-          F.s = Sup + 0.5*psi*( Sdn - Sup ); 
-
-          if ( ypVel > 0.0 )
-            F.n = oldPhi[c];
-          else if ( ypVel < 0.0 )
-            F.n = oldPhi[cyp];
-          else  
-            F.n = 0.0; 
-
-          Fconv[c] += Dx.x()*Dx.z()*( F.n * ypVel - F.s * ymVel ); 
-
-        }
-      }
-    }
-    if (yminus) {
-      double r; 
-      double psi; 
-      double Sup;
-      double Sdn;
-
-      // SOUTH BOUNDARY
-      int j = clow.y();
-      for ( int i = clow.x(); i < chigh.x(); i++ ) {
-        for ( int k = chigh.z(); k < chigh.z(); k++ ) {
-
-          IntVector c(i,j,k);
-          IntVector cyp = c + IntVector(0,1,0);
-          IntVector cypp= c + IntVector(0,2,0);
-          IntVector cym = c - IntVector(0,1,0);
-
-          double ymVel = vVel[c];
-          double ypVel = vVel[cyp];
-
-          if ( ymVel > 0.0 )
-            F.s = oldPhi[cym];
-          else if ( ymVel < 0.0 )
-            F.s = oldPhi[c]; 
-          else
-            F.s = 0.0;  
-
-          if ( ypVel > 0.0 ) {
-            r = ( oldPhi[c] - oldPhi[cym] ) / ( oldPhi[cyp] - oldPhi[c] );
-            Sup = oldPhi[c];
-            Sdn = oldPhi[cyp];
-          } else if ( ypVel < 0.0 ) {
-            r = ( oldPhi[cypp] - oldPhi[cyp] ) / ( oldPhi[cyp] - oldPhi[c] );
-            Sup = oldPhi[cyp];
-            Sdn = oldPhi[c]; 
-          } else {
-            Sup = 0.0;
-            Sdn = 0.0; 
-            psi = 0.0;
-          } 
-          psi = max( min(2.0*r, 1.0), min(r, 2.0) );
-          psi = max( 0.0, psi );
-
-          F.n = Sup + 0.5*psi*( Sdn - Sup ); 
-          Fconv[c] += Dx.x()*Dx.z()*( F.n * ypVel - F.s * ymVel ); 
-
-        }
-      }
-    }
 #endif
+          }
+        }
+
+      } else if (convScheme == "super_bee") { 
+
+        for (iIter.begin(); !iIter.done(); iIter++){
+
+          IntVector c   = *iIter;
+          IntVector cxp = c + IntVector(1,0,0);
+          IntVector cxm = c - IntVector(1,0,0);
+          IntVector cyp = c + IntVector(0,1,0);
+          IntVector cym = c - IntVector(0,1,0);
+          IntVector czp = c + IntVector(0,0,1);
+          IntVector czm = c - IntVector(0,0,1);
+
+          FaceData1D face_den;
+          FaceData1D face_phi; 
+          FaceData1D face_vel;
+          double area; 
+          IntVector coord; 
+
+          //X-dimension
+          coord[0] = 1; coord[1] = 0; coord[2] = 0; 
+          area = Dx.y()*Dx.z(); 
+
+          face_den       = getDensityOnFace( c, coord, Fconv, den ); 
+          face_vel       = getFaceVelocity( c, Fconv, uVel ); 
+          face_phi       = superBeeInterp( c, coord, oldPhi, face_vel ); 
+          Fconv[c]       = getFlux( area, face_den, face_vel, face_phi ); 
+
+#ifdef YDIM
+          //Y-dimension
+          coord[0] = 0; coord[1] = 1; coord[2] = 0; 
+          area = Dx.x()*Dx.z(); 
+
+          face_den       = getDensityOnFace( c, coord, Fconv, den ); 
+          face_vel       = getFaceVelocity( c, Fconv, vVel ); 
+          face_phi       = superBeeInterp( c, coord, oldPhi, face_vel ); 
+          Fconv[c]      += getFlux( area, face_den, face_vel, face_phi ); 
+#endif 
 #ifdef ZDIM
-    if (zplus) {
-      double r; 
-      double psi; 
-      double Sup;
-      double Sdn;
+          //Z-dimension
+          coord[0] = 0; coord[1] = 0; coord[2] = 1; 
+          area = Dx.x()*Dx.y(); 
 
-      // TOP BOUNDARY
-      int k = chigh.z(); 
-      for ( int i = clow.x(); i < chigh.x(); i++ ) {
-        for ( int j = clow.y(); j < chigh.y(); j++ ) {
+          face_den       = getDensityOnFace( c, coord, Fconv, den ); 
+          face_vel       = getFaceVelocity( c, Fconv, wVel ); 
+          face_phi       = superBeeInterp( c, coord, oldPhi, face_vel ); 
+          Fconv[c]      += getFlux( area, face_den, face_vel, face_phi ); 
+#endif
+        }
+        // Boundaries
+        vector<Patch::FaceType> bf;
+        vector<Patch::FaceType>::const_iterator bf_iter;
+        p->getBoundaryFaces(bf);
 
-          IntVector c(i,j,k);
+        // Loop over all boundary faces on this patch
+        for (bf_iter = bf.begin(); bf_iter != bf.end(); bf_iter++){
+
+          Patch::FaceType face = *bf_iter; 
+          IntVector inside = p->faceDirection(face); 
+          CellIterator c_iter = getInteriorBoundaryCellIterator( p, bf_iter ); 
+          FaceBoundaryBool fb; //face boundaries
+          FaceBoundaryBool faceIsBoundary; 
+
+          for (c_iter.begin(); !c_iter.done(); c_iter++){
+
+            IntVector c = *c_iter - inside; 
+            IntVector cxp = c + IntVector(1,0,0);
+            IntVector cxm = c - IntVector(1,0,0); 
+            IntVector cyp = c + IntVector(0,1,0); 
+            IntVector cym = c - IntVector(0,1,0);
+            IntVector czp = c + IntVector(0,0,1);
+            IntVector czm = c - IntVector(0,0,1);
+
+            FaceData1D face_den;
+            FaceData1D face_phi; 
+            FaceData1D face_vel;
+            double area; 
+            IntVector coord; 
+
+            //X-dimension
+            coord[0] = 1; coord[1] = 0; coord[2] = 0; 
+            area = Dx.y()*Dx.z(); 
+
+            faceIsBoundary = checkFacesForBoundaries( p, c, coord ); 
+            face_den       = getDensityOnFace( c, coord, Fconv, den ); 
+            face_vel       = getFaceVelocity( c, Fconv, uVel ); 
+            face_phi       = superBeeInterp( c, coord, oldPhi, face_vel, faceIsBoundary ); 
+            Fconv[c]       = getFlux( area, face_den, face_vel, face_phi ); 
+
+#ifdef YDIM
+            //Y-dimension
+            coord[0] = 0; coord[1] = 1; coord[2] = 0; 
+            area = Dx.x()*Dx.z(); 
+
+            faceIsBoundary = checkFacesForBoundaries( p, c, coord ); 
+            face_den       = getDensityOnFace( c, coord, Fconv, den ); 
+            face_vel       = getFaceVelocity( c, Fconv, vVel ); 
+            face_phi       = superBeeInterp( c, coord, oldPhi, face_vel, faceIsBoundary ); 
+            Fconv[c]      += getFlux( area, face_den, face_vel, face_phi ); 
+
+#endif 
+#ifdef ZDIM
+            //Z-dimension
+            coord[0] = 0; coord[1] = 0; coord[2] = 1; 
+            area = Dx.x()*Dx.y(); 
+
+            faceIsBoundary = checkFacesForBoundaries( p, c, coord ); 
+            face_den       = getDensityOnFace( c, coord, Fconv, den ); 
+            face_vel       = getFaceVelocity( c, Fconv, wVel ); 
+            face_phi       = superBeeInterp( c, coord, oldPhi, face_vel, faceIsBoundary ); 
+            Fconv[c]      += getFlux( area, face_den, face_vel, face_phi ); 
+
+#endif
+          }
+        }
+
+      } else if (convScheme == "central") {
+
+        for (CellIterator iter=p->getCellIterator__New(); !iter.done(); iter++){
+
+          IntVector c = *iter; 
+          IntVector cxp = c + IntVector(1,0,0);
+          IntVector cxm = c - IntVector(1,0,0);
+          IntVector cyp = c + IntVector(0,1,0);
+          IntVector cym = c - IntVector(0,1,0);
           IntVector czp = c + IntVector(0,0,1);
           IntVector czm = c - IntVector(0,0,1);
-          IntVector czmm= c - IntVector(0,0,2);
 
-          double zmVel = wVel[c];
-          double zpVel = wVel[czp];
+          IntVector coord; 
 
-          if ( zpVel > 0.0 )
-            F.t = oldPhi[c];
-          else if ( zpVel < 0.0 )
-            F.t = oldPhi[czp];
-          else 
-            F.t = 0.0;  
+          FaceData1D face_den;
+          FaceData1D face_phi; 
+          FaceData1D face_vel; 
+          double area; 
 
-          if ( zmVel > 0.0 ) {
-            Sup = oldPhi[czm];
-            Sdn = oldPhi[c];
-            r = ( oldPhi[czm] - oldPhi[czmm] ) / ( oldPhi[c] - oldPhi[czm] ); 
-          } else if ( zmVel > 0.0 ) {
-            Sup = oldPhi[c];
-            Sdn = oldPhi[czm];
-            r = ( oldPhi[czp] - oldPhi[c] ) / ( oldPhi[c] - oldPhi[czm] );
-          } else {  
-            Sup = 0.0;
-            Sdn = 0.0; 
-            psi = 0.0;
-          }
-          psi = max( min(2.0*r, 1.0), min(r, 2.0) );
-          psi = max( 0.0, psi );
+          //X-FACES
+          coord[0] = 1; coord[1] = 0; coord[2] = 0; 
+          area = Dx.y()*Dx.z();
 
-          F.b = Sup + 0.5*psi*( Sdn - Sup ); 
+          face_den = getDensityOnFace( c, coord, Fconv, den ); 
+          face_vel = getFaceVelocity( c, Fconv, uVel ); 
+          face_phi = centralInterp( c, coord, oldPhi ); 
 
-          Fconv[c] += Dx.x()*Dx.y()*( F.t * zpVel - F.b * zmVel ); 
+          Fconv[c] = getFlux( area, face_den, face_vel, face_phi );
+#ifdef YDIM
+          //Y-FACES
+          coord[0] = 0; coord[1] = 1; coord[2] = 0; 
+          area = Dx.x()*Dx.z();
 
+          face_den  = getDensityOnFace( c, coord, Fconv, den ); 
+          face_vel  = getFaceVelocity( c, Fconv, vVel ); 
+          face_phi  = centralInterp( c, coord, oldPhi ); 
 
+          Fconv[c] += getFlux( area, face_den, face_vel, face_phi );
+#endif
+
+#ifdef ZDIM
+          //Z-FACES
+          coord[0] = 0; coord[1] = 0; coord[2] = 1; 
+          area = Dx.x()*Dx.y();
+
+          face_den = getDensityOnFace( c, coord, Fconv, den ); 
+          face_vel = getFaceVelocity( c, Fconv, wVel ); 
+          face_phi = centralInterp( c, coord, oldPhi ); 
+
+          Fconv[c] += getFlux( area, face_den, face_vel, face_phi );
+#endif
         }
       }
     }
-    if (zminus) {
-      double r; 
-      double psi; 
-      double Sup;
-      double Sdn;
 
-      // BOTTOM BOUNDARY
-      int k = clow.z();
-      for ( int i = clow.x(); i < chigh.x(); i++ ) {
-        for ( int j = clow.y(); j < chigh.y(); j++ ) {
+  //---------------------------------------------------------------------------
+  // Method: Compute the convection term (no density)
+  //---------------------------------------------------------------------------
+  template <class fT, class oldPhiT> void 
+    Discretization_new::computeConv( const Patch* p, fT& Fconv, oldPhiT& oldPhi, 
+        constSFCXVariable<double>& uVel, constSFCYVariable<double>& vVel, 
+        constSFCZVariable<double>& wVel,
+        std::string convScheme ) 
+    {
+      // This class computes convection without assumptions about the boundary conditions 
+      // (ie, it doens't adjust values of fluxes on the boundaries but assume you have 
+      // done so previously)
+      Vector Dx = p->dCell(); 
+      FaceData<double> F; // FACE value of phi
 
-          IntVector c(i,j,k);
+      // get the cell interior iterator
+      CellIterator iIter  = Discretization_new::getInteriorCellIterator( p ); 
+
+      if (convScheme == "upwind") {
+
+        for (iIter.begin(); !iIter.done(); iIter++){
+
+          IntVector c   = *iIter;
+          IntVector cxp = c + IntVector(1,0,0);
+          IntVector cxm = c - IntVector(1,0,0);
+          IntVector cyp = c + IntVector(0,1,0);
+          IntVector cym = c - IntVector(0,1,0);
           IntVector czp = c + IntVector(0,0,1);
-          IntVector czpp= c + IntVector(0,0,2);
           IntVector czm = c - IntVector(0,0,1);
 
-          double zmVel = wVel[c];
-          double zpVel = wVel[czp];
+          FaceData1D face_phi; 
+          FaceData1D face_vel;
+          double area; 
+          IntVector coord; 
 
-          if ( zmVel > 0.0 )
-            F.b = oldPhi[czm];
-          else if ( zmVel < 0.0 )
-            F.b = oldPhi[c]; 
-          else 
-            F.b = 0.0;   
+          //X-dimension
+          coord[0] = 1; coord[1] = 0; coord[2] = 0; 
+          area = Dx.y()*Dx.z(); 
 
-          if ( zpVel > 0.0 ) {
-            r = ( oldPhi[c] - oldPhi[czm] ) / ( oldPhi[czp] - oldPhi[c] );
-            Sup = oldPhi[c];
-            Sdn = oldPhi[czp];
-          } else if ( zpVel < 0.0 ) {
-            r = ( oldPhi[czpp] - oldPhi[czp] ) / ( oldPhi[czp] - oldPhi[c] );
-            Sup = oldPhi[czp];
-            Sdn = oldPhi[c]; 
-          } else { 
-            Sup = 0.0;
-            Sdn = 0.0; 
-            psi = 0.0;
+          face_vel       = getFaceVelocity( c, Fconv, uVel ); 
+          face_phi       = upwindInterp( c, coord, oldPhi, face_vel ); 
+          Fconv[c]       = getFlux( area, face_vel, face_phi ); 
+
+#ifdef YDIM
+          //Y-dimension
+          coord[0] = 0; coord[1] = 1; coord[2] = 0; 
+          area = Dx.x()*Dx.z(); 
+
+          face_vel       = getFaceVelocity( c, Fconv, vVel ); 
+          face_phi       = upwindInterp( c, coord, oldPhi, face_vel ); 
+          Fconv[c]      += getFlux( area, face_vel, face_phi ); 
+
+#endif 
+#ifdef ZDIM
+          //Z-dimension
+          coord[0] = 0; coord[1] = 0; coord[2] = 1; 
+          area = Dx.x()*Dx.y(); 
+
+          face_vel       = getFaceVelocity( c, Fconv, wVel ); 
+          face_phi       = upwindInterp( c, coord, oldPhi, face_vel ); 
+          Fconv[c]      += getFlux( area, face_vel, face_phi ); 
+
+#endif
+        }
+        // Boundaries
+        vector<Patch::FaceType> bf;
+        vector<Patch::FaceType>::const_iterator bf_iter;
+        p->getBoundaryFaces(bf);
+
+        // Loop over all boundary faces on this patch
+        for (bf_iter = bf.begin(); bf_iter != bf.end(); bf_iter++){
+
+          Patch::FaceType face = *bf_iter; 
+          IntVector inside = p->faceDirection(face); 
+          CellIterator c_iter = getInteriorBoundaryCellIterator( p, bf_iter ); 
+          FaceBoundaryBool fb; //face boundaries
+          FaceBoundaryBool faceIsBoundary; 
+
+          for (c_iter.begin(); !c_iter.done(); c_iter++){
+
+            IntVector c = *c_iter - inside; 
+            IntVector cxp = c + IntVector(1,0,0);
+            IntVector cxm = c - IntVector(1,0,0); 
+            IntVector cyp = c + IntVector(0,1,0); 
+            IntVector cym = c - IntVector(0,1,0);
+            IntVector czp = c + IntVector(0,0,1);
+            IntVector czm = c - IntVector(0,0,1);
+
+            FaceData1D face_phi; 
+            FaceData1D face_vel;
+            double area; 
+            IntVector coord; 
+
+            //X-dimension
+            coord[0] = 1; coord[1] = 0; coord[2] = 0; 
+            area = Dx.y()*Dx.z(); 
+
+            faceIsBoundary = checkFacesForBoundaries( p, c, coord ); 
+            face_vel       = getFaceVelocity( c, Fconv, uVel ); 
+            face_phi       = upwindInterp( c, coord, oldPhi, face_vel, faceIsBoundary ); 
+            Fconv[c]       = getFlux( area, face_vel, face_phi ); 
+
+#ifdef YDIM
+            //Y-dimension
+            coord[0] = 0; coord[1] = 1; coord[2] = 0; 
+            area = Dx.x()*Dx.z(); 
+
+            faceIsBoundary = checkFacesForBoundaries( p, c, coord ); 
+            face_vel       = getFaceVelocity( c, Fconv, vVel ); 
+            face_phi       = upwindInterp( c, coord, oldPhi, face_vel, faceIsBoundary ); 
+            Fconv[c]      += getFlux( area, face_vel, face_phi ); 
+
+#endif 
+#ifdef ZDIM
+            //Z-dimension
+            coord[0] = 0; coord[1] = 0; coord[2] = 1; 
+            area = Dx.x()*Dx.y(); 
+
+            faceIsBoundary = checkFacesForBoundaries( p, c, coord ); 
+            face_vel       = getFaceVelocity( c, Fconv, wVel ); 
+            face_phi       = upwindInterp( c, coord, oldPhi, face_vel, faceIsBoundary ); 
+            Fconv[c]      += getFlux( area, face_vel, face_phi ); 
+
+#endif
           }
+        }
 
-          psi = max( min(2.0*r, 1.0), min(r, 2.0) );
-          psi = max( 0.0, psi );
+      } else if (convScheme == "super_bee") { 
 
-          F.t = Sup + 0.5*psi*( Sdn - Sup ); 
+        for (iIter.begin(); !iIter.done(); iIter++){
 
-          Fconv[c] += Dx.x()*Dx.y()*( F.t * zpVel - F.b * zmVel ); 
+          IntVector c   = *iIter;
+          IntVector cxp = c + IntVector(1,0,0);
+          IntVector cxm = c - IntVector(1,0,0);
+          IntVector cyp = c + IntVector(0,1,0);
+          IntVector cym = c - IntVector(0,1,0);
+          IntVector czp = c + IntVector(0,0,1);
+          IntVector czm = c - IntVector(0,0,1);
+
+          FaceData1D face_phi; 
+          FaceData1D face_vel;
+          double area; 
+          IntVector coord; 
+
+          //X-dimension
+          coord[0] = 1; coord[1] = 0; coord[2] = 0; 
+          area = Dx.y()*Dx.z(); 
+
+          face_vel       = getFaceVelocity( c, Fconv, uVel ); 
+          face_phi       = superBeeInterp( c, coord, oldPhi, face_vel ); 
+          Fconv[c]       = getFlux( area, face_vel, face_phi ); 
+
+#ifdef YDIM
+          //Y-dimension
+          coord[0] = 0; coord[1] = 1; coord[2] = 0; 
+          area = Dx.x()*Dx.z(); 
+
+          face_vel       = getFaceVelocity( c, Fconv, vVel ); 
+          face_phi       = superBeeInterp( c, coord, oldPhi, face_vel ); 
+          Fconv[c]      += getFlux( area, face_vel, face_phi ); 
+#endif 
+#ifdef ZDIM
+          //Z-dimension
+          coord[0] = 0; coord[1] = 0; coord[2] = 1; 
+          area = Dx.x()*Dx.y(); 
+
+          face_vel       = getFaceVelocity( c, Fconv, wVel ); 
+          face_phi       = superBeeInterp( c, coord, oldPhi, face_vel ); 
+          Fconv[c]      += getFlux( area, face_vel, face_phi ); 
+#endif
+        }
+        // Boundaries
+        vector<Patch::FaceType> bf;
+        vector<Patch::FaceType>::const_iterator bf_iter;
+        p->getBoundaryFaces(bf);
+
+        // Loop over all boundary faces on this patch
+        for (bf_iter = bf.begin(); bf_iter != bf.end(); bf_iter++){
+
+          Patch::FaceType face = *bf_iter; 
+          IntVector inside = p->faceDirection(face); 
+          CellIterator c_iter = getInteriorBoundaryCellIterator( p, bf_iter ); 
+          FaceBoundaryBool fb; //face boundaries
+          FaceBoundaryBool faceIsBoundary; 
+
+          for (c_iter.begin(); !c_iter.done(); c_iter++){
+
+            IntVector c = *c_iter - inside; 
+            IntVector cxp = c + IntVector(1,0,0);
+            IntVector cxm = c - IntVector(1,0,0); 
+            IntVector cyp = c + IntVector(0,1,0); 
+            IntVector cym = c - IntVector(0,1,0);
+            IntVector czp = c + IntVector(0,0,1);
+            IntVector czm = c - IntVector(0,0,1);
+
+            FaceData1D face_phi; 
+            FaceData1D face_vel;
+            double area; 
+            IntVector coord; 
+
+            //X-dimension
+            coord[0] = 1; coord[1] = 0; coord[2] = 0; 
+            area = Dx.y()*Dx.z(); 
+
+            faceIsBoundary = checkFacesForBoundaries( p, c, coord ); 
+            face_vel       = getFaceVelocity( c, Fconv, uVel ); 
+            face_phi       = superBeeInterp( c, coord, oldPhi, face_vel, faceIsBoundary ); 
+            Fconv[c]       = getFlux( area, face_vel, face_phi ); 
+
+#ifdef YDIM
+            //Y-dimension
+            coord[0] = 0; coord[1] = 1; coord[2] = 0; 
+            area = Dx.x()*Dx.z(); 
+
+            faceIsBoundary = checkFacesForBoundaries( p, c, coord ); 
+            face_vel       = getFaceVelocity( c, Fconv, vVel ); 
+            face_phi       = superBeeInterp( c, coord, oldPhi, face_vel, faceIsBoundary ); 
+            Fconv[c]      += getFlux( area, face_vel, face_phi ); 
+
+#endif 
+#ifdef ZDIM
+            //Z-dimension
+            coord[0] = 0; coord[1] = 0; coord[2] = 1; 
+            area = Dx.x()*Dx.y(); 
+
+            faceIsBoundary = checkFacesForBoundaries( p, c, coord ); 
+            face_vel       = getFaceVelocity( c, Fconv, wVel ); 
+            face_phi       = superBeeInterp( c, coord, oldPhi, face_vel, faceIsBoundary ); 
+            Fconv[c]      += getFlux( area, face_vel, face_phi ); 
+
+#endif
+          }
+        }
+
+      } else if (convScheme == "central") {
+
+        for (CellIterator iter=p->getCellIterator__New(); !iter.done(); iter++){
+
+          IntVector c = *iter; 
+          IntVector cxp = c + IntVector(1,0,0);
+          IntVector cxm = c - IntVector(1,0,0);
+          IntVector cyp = c + IntVector(0,1,0);
+          IntVector cym = c - IntVector(0,1,0);
+          IntVector czp = c + IntVector(0,0,1);
+          IntVector czm = c - IntVector(0,0,1);
+
+          IntVector coord; 
+
+          FaceData1D face_phi; 
+          FaceData1D face_vel; 
+          double area; 
+
+          //X-FACES
+          coord[0] = 1; coord[1] = 0; coord[2] = 0; 
+          area = Dx.y()*Dx.z();
+
+          face_vel = getFaceVelocity( c, Fconv, uVel ); 
+          face_phi = centralInterp( c, coord, oldPhi ); 
+
+          Fconv[c] = getFlux( area, face_vel, face_phi );
+#ifdef YDIM
+          //Y-FACES
+          coord[0] = 0; coord[1] = 1; coord[2] = 0; 
+          area = Dx.x()*Dx.z();
+
+          face_vel  = getFaceVelocity( c, Fconv, vVel ); 
+          face_phi  = centralInterp( c, coord, oldPhi ); 
+
+          Fconv[c] += getFlux( area, face_vel, face_phi );
+#endif
+
+#ifdef ZDIM
+          //Z-FACES
+          coord[0] = 0; coord[1] = 0; coord[2] = 1; 
+          area = Dx.x()*Dx.y();
+
+          face_vel = getFaceVelocity( c, Fconv, wVel ); 
+          face_phi = centralInterp( c, coord, oldPhi ); 
+
+          Fconv[c] += getFlux( area, face_vel, face_phi );
+#endif
         }
       }
     }
 
-#endif    
-  } else {
+  //---------------------------------------------------------------------------
+  // Method: Compute the convection term (no density)
+  // Specialized for DQMOM
+  //---------------------------------------------------------------------------
+  template <class fT, class oldPhiT> void 
+    Discretization_new::computeConv( const Patch* p, fT& Fconv, oldPhiT& oldPhi, 
+        constSFCXVariable<double>& uVel, constSFCYVariable<double>& vVel, 
+        constSFCZVariable<double>& wVel, constCCVariable<Vector>& partVel, 
+        std::string convScheme ) 
+    {
+      // This class computes convection without assumptions about the boundary conditions 
+      // (ie, it doens't adjust values of fluxes on the boundaries but assume you have 
+      // done so previously)
+      Vector Dx = p->dCell(); 
+      FaceData<double> F; // FACE value of phi
 
-    cout << "Convection Scheme not Supported! " << endl;
+      // get the cell interior iterator
+      CellIterator iIter  = Discretization_new::getInteriorCellIterator( p ); 
 
-  }
-}
+      if (convScheme == "upwind") {
+
+        for (iIter.begin(); !iIter.done(); iIter++){
+
+          IntVector c   = *iIter;
+          IntVector cxp = c + IntVector(1,0,0);
+          IntVector cxm = c - IntVector(1,0,0);
+          IntVector cyp = c + IntVector(0,1,0);
+          IntVector cym = c - IntVector(0,1,0);
+          IntVector czp = c + IntVector(0,0,1);
+          IntVector czm = c - IntVector(0,0,1);
+
+          FaceData1D face_phi; 
+          FaceData1D face_vel;
+          double area; 
+          IntVector coord; 
+
+          //X-dimension
+          coord[0] = 1; coord[1] = 0; coord[2] = 0; 
+          area = Dx.y()*Dx.z(); 
+
+          face_vel       = getFaceVelocity( c, Fconv, partVel, coord ); 
+          face_phi       = upwindInterp( c, coord, oldPhi, face_vel ); 
+          Fconv[c]       = getFlux( area, face_vel, face_phi ); 
+
+#ifdef YDIM
+          //Y-dimension
+          coord[0] = 0; coord[1] = 1; coord[2] = 0; 
+          area = Dx.x()*Dx.z(); 
+
+          face_vel       = getFaceVelocity( c, Fconv, partVel, coord ); 
+          face_phi       = upwindInterp( c, coord, oldPhi, face_vel ); 
+          Fconv[c]      += getFlux( area, face_vel, face_phi ); 
+
+#endif 
+#ifdef ZDIM
+          //Z-dimension
+          coord[0] = 0; coord[1] = 0; coord[2] = 1; 
+          area = Dx.x()*Dx.y(); 
+
+          face_vel       = getFaceVelocity( c, Fconv, partVel, coord ); 
+          face_phi       = upwindInterp( c, coord, oldPhi, face_vel ); 
+          Fconv[c]      += getFlux( area, face_vel, face_phi ); 
+
+#endif
+        }
+        // Boundaries
+        vector<Patch::FaceType> bf;
+        vector<Patch::FaceType>::const_iterator bf_iter;
+        p->getBoundaryFaces(bf);
+
+        // Loop over all boundary faces on this patch
+        for (bf_iter = bf.begin(); bf_iter != bf.end(); bf_iter++){
+
+          Patch::FaceType face = *bf_iter; 
+          IntVector inside = p->faceDirection(face); 
+          CellIterator c_iter = getInteriorBoundaryCellIterator( p, bf_iter ); 
+          FaceBoundaryBool fb; //face boundaries
+          FaceBoundaryBool faceIsBoundary; 
+
+          for (c_iter.begin(); !c_iter.done(); c_iter++){
+
+            IntVector c = *c_iter - inside; 
+            IntVector cxp = c + IntVector(1,0,0);
+            IntVector cxm = c - IntVector(1,0,0); 
+            IntVector cyp = c + IntVector(0,1,0); 
+            IntVector cym = c - IntVector(0,1,0);
+            IntVector czp = c + IntVector(0,0,1);
+            IntVector czm = c - IntVector(0,0,1);
+
+            FaceData1D face_phi; 
+            FaceData1D face_vel;
+            double area; 
+            IntVector coord; 
+
+            //X-dimension
+            coord[0] = 1; coord[1] = 0; coord[2] = 0; 
+            area = Dx.y()*Dx.z(); 
+
+            faceIsBoundary = checkFacesForBoundaries( p, c, coord ); 
+            face_vel       = getFaceVelocity( c, Fconv, partVel, coord ); 
+            face_phi       = upwindInterp( c, coord, oldPhi, face_vel, faceIsBoundary ); 
+            Fconv[c]       = getFlux( area, face_vel, face_phi ); 
+
+#ifdef YDIM
+            //Y-dimension
+            coord[0] = 0; coord[1] = 1; coord[2] = 0; 
+            area = Dx.x()*Dx.z(); 
+
+            faceIsBoundary = checkFacesForBoundaries( p, c, coord ); 
+            face_vel       = getFaceVelocity( c, Fconv, partVel, coord ); 
+            face_phi       = upwindInterp( c, coord, oldPhi, face_vel, faceIsBoundary ); 
+            Fconv[c]      += getFlux( area, face_vel, face_phi ); 
+
+#endif 
+#ifdef ZDIM
+            //Z-dimension
+            coord[0] = 0; coord[1] = 0; coord[2] = 1; 
+            area = Dx.x()*Dx.y(); 
+
+            faceIsBoundary = checkFacesForBoundaries( p, c, coord ); 
+            face_vel       = getFaceVelocity( c, Fconv, partVel, coord ); 
+            face_phi       = upwindInterp( c, coord, oldPhi, face_vel, faceIsBoundary ); 
+            Fconv[c]      += getFlux( area, face_vel, face_phi ); 
+
+#endif
+          }
+        }
+
+      } else if (convScheme == "super_bee") { 
+
+        for (iIter.begin(); !iIter.done(); iIter++){
+
+          IntVector c   = *iIter;
+          IntVector cxp = c + IntVector(1,0,0);
+          IntVector cxm = c - IntVector(1,0,0);
+          IntVector cyp = c + IntVector(0,1,0);
+          IntVector cym = c - IntVector(0,1,0);
+          IntVector czp = c + IntVector(0,0,1);
+          IntVector czm = c - IntVector(0,0,1);
+
+          FaceData1D face_phi; 
+          FaceData1D face_vel;
+          double area; 
+          IntVector coord; 
+
+          //X-dimension
+          coord[0] = 1; coord[1] = 0; coord[2] = 0; 
+          area = Dx.y()*Dx.z(); 
+
+          face_vel       = getFaceVelocity( c, Fconv, partVel, coord ); 
+          face_phi       = superBeeInterp( c, coord, oldPhi, face_vel ); 
+          Fconv[c]       = getFlux( area, face_vel, face_phi ); 
+
+#ifdef YDIM
+          //Y-dimension
+          coord[0] = 0; coord[1] = 1; coord[2] = 0; 
+          area = Dx.x()*Dx.z(); 
+
+          face_vel       = getFaceVelocity( c, Fconv, partVel, coord ); 
+          face_phi       = superBeeInterp( c, coord, oldPhi, face_vel ); 
+          Fconv[c]      += getFlux( area, face_vel, face_phi ); 
+#endif 
+#ifdef ZDIM
+          //Z-dimension
+          coord[0] = 0; coord[1] = 0; coord[2] = 1; 
+          area = Dx.x()*Dx.y(); 
+
+          face_vel       = getFaceVelocity( c, Fconv, partVel, coord ); 
+          face_phi       = superBeeInterp( c, coord, oldPhi, face_vel ); 
+          Fconv[c]      += getFlux( area, face_vel, face_phi ); 
+#endif
+        }
+        // Boundaries
+        vector<Patch::FaceType> bf;
+        vector<Patch::FaceType>::const_iterator bf_iter;
+        p->getBoundaryFaces(bf);
+
+        // Loop over all boundary faces on this patch
+        for (bf_iter = bf.begin(); bf_iter != bf.end(); bf_iter++){
+
+          Patch::FaceType face = *bf_iter; 
+          IntVector inside = p->faceDirection(face); 
+          CellIterator c_iter = getInteriorBoundaryCellIterator( p, bf_iter ); 
+          FaceBoundaryBool fb; //face boundaries
+          FaceBoundaryBool faceIsBoundary; 
+
+          for (c_iter.begin(); !c_iter.done(); c_iter++){
+
+            IntVector c = *c_iter - inside; 
+            IntVector cxp = c + IntVector(1,0,0);
+            IntVector cxm = c - IntVector(1,0,0); 
+            IntVector cyp = c + IntVector(0,1,0); 
+            IntVector cym = c - IntVector(0,1,0);
+            IntVector czp = c + IntVector(0,0,1);
+            IntVector czm = c - IntVector(0,0,1);
+
+            FaceData1D face_phi; 
+            FaceData1D face_vel;
+            double area; 
+            IntVector coord; 
+
+            //X-dimension
+            coord[0] = 1; coord[1] = 0; coord[2] = 0; 
+            area = Dx.y()*Dx.z(); 
+
+            faceIsBoundary = checkFacesForBoundaries( p, c, coord ); 
+            face_vel       = getFaceVelocity( c, Fconv, partVel, coord ); 
+            face_phi       = superBeeInterp( c, coord, oldPhi, face_vel, faceIsBoundary ); 
+            Fconv[c]       = getFlux( area, face_vel, face_phi ); 
+
+#ifdef YDIM
+            //Y-dimension
+            coord[0] = 0; coord[1] = 1; coord[2] = 0; 
+            area = Dx.x()*Dx.z(); 
+
+            faceIsBoundary = checkFacesForBoundaries( p, c, coord ); 
+            face_vel       = getFaceVelocity( c, Fconv, partVel, coord ); 
+            face_phi       = superBeeInterp( c, coord, oldPhi, face_vel, faceIsBoundary ); 
+            Fconv[c]      += getFlux( area, face_vel, face_phi ); 
+
+#endif 
+#ifdef ZDIM
+            //Z-dimension
+            coord[0] = 0; coord[1] = 0; coord[2] = 1; 
+            area = Dx.x()*Dx.y(); 
+
+            faceIsBoundary = checkFacesForBoundaries( p, c, coord ); 
+            face_vel       = getFaceVelocity( c, Fconv, partVel, coord ); 
+            face_phi       = superBeeInterp( c, coord, oldPhi, face_vel, faceIsBoundary ); 
+            Fconv[c]      += getFlux( area, face_vel, face_phi ); 
+
+#endif
+          }
+        }
+
+      } else if (convScheme == "central") {
+
+        for (CellIterator iter=p->getCellIterator__New(); !iter.done(); iter++){
+
+          IntVector c = *iter; 
+          IntVector cxp = c + IntVector(1,0,0);
+          IntVector cxm = c - IntVector(1,0,0);
+          IntVector cyp = c + IntVector(0,1,0);
+          IntVector cym = c - IntVector(0,1,0);
+          IntVector czp = c + IntVector(0,0,1);
+          IntVector czm = c - IntVector(0,0,1);
+
+          IntVector coord; 
+
+          FaceData1D face_phi; 
+          FaceData1D face_vel; 
+          double area; 
+
+          //X-FACES
+          coord[0] = 1; coord[1] = 0; coord[2] = 0; 
+          area = Dx.y()*Dx.z();
+
+          face_vel = getFaceVelocity( c, Fconv, uVel ); 
+          face_phi = centralInterp( c, coord, oldPhi ); 
+
+          Fconv[c] = getFlux( area, face_vel, face_phi );
+#ifdef YDIM
+          //Y-FACES
+          coord[0] = 0; coord[1] = 1; coord[2] = 0; 
+          area = Dx.x()*Dx.z();
+
+          face_vel  = getFaceVelocity( c, Fconv, vVel ); 
+          face_phi  = centralInterp( c, coord, oldPhi ); 
+
+          Fconv[c] += getFlux( area, face_vel, face_phi );
+#endif
+
+#ifdef ZDIM
+          //Z-FACES
+          coord[0] = 0; coord[1] = 0; coord[2] = 1; 
+          area = Dx.x()*Dx.y();
+
+          face_vel = getFaceVelocity( c, Fconv, wVel ); 
+          face_phi = centralInterp( c, coord, oldPhi ); 
+
+          Fconv[c] += getFlux( area, face_vel, face_phi );
+#endif
+        }
+      }
+    }
+
+
 } // namespace Uintah
 #endif
