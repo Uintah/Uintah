@@ -66,6 +66,8 @@ void DQMOM::problemSetup(const ProblemSpecP& params)
   unsigned int index_length = 0;
   moments = 0;
 
+  db->getWithDefault("LU_solver_tolerance", d_solver_tolerance, 1.0e-5);
+
   // obtain moment index vectors
   vector<int> temp_moment_index;
   for ( ProblemSpecP db_moments = db->findBlock("Moment");
@@ -83,7 +85,7 @@ void DQMOM::problemSetup(const ProblemSpecP& params)
   }
 
  
-  // This for block is not necessary if the map includes weighted abscissas/internal coordinats 
+  // This for block is not necessary if the map includes weighted abscissas/internal coordinates 
   // in the same order as is given in the input file (b/c of the moment indexes)
   // Reason: this block puts the labels in the same order as the input file, so the moment indexes match up OK
   
@@ -448,6 +450,7 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
       bool do_iterative_refinement = true;
       bool is_badly_conditioned = false;
       double condition_number_estimate;
+      //double condition_number_scaling_constant;
       if( do_iterative_refinement ) {
         if( A.isSingular() ) {
           conditionEstimate[c] = 0;
@@ -459,9 +462,9 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
         }
       }
 
-      // Find the L-2 norm of the RHS and solution vectors
-      normB[c] = A.getNorm( &B[0], 2 );
-      normX[c] = A.getNorm( &Xlong[0], 2 );
+      // Find the norm of the RHS and solution vectors
+      normB[c] = A.getNorm( &B[0], 0 );
+      normX[c] = A.getNorm( &Xlong[0], 0 );
 
       // Find the residual of the solution vector
       Aorig.getResidual( &B[0], &Xlong[0], &Resid[0] );
@@ -473,7 +476,6 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
       normResNormalized[c] = A.getNorm( &Resid[0], 0);
 
       double maxNormMag = 1e6;
-      double maxResidMag = 1;
       
       // set weight transport eqn source terms equal to results
       unsigned int z = 0;
@@ -490,7 +492,8 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
         // Make sure several critera are met for an acceptable solution
         if(  fabs(  normB[c]) > maxNormMag 
           || fabs(  normX[c]) > maxNormMag 
-          || fabs(normRes[c]) > maxResidMag ) {
+          || fabs(normRes[c]) > d_solver_tolerance
+          || fabs(normResNormalized[c]) > d_solver_tolerance ) {
             tempCCVar[c] = 0;
         } else if( is_badly_conditioned ) {
             tempCCVar[c] = 0;
@@ -513,9 +516,10 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
         }
 
         // Make sure several critera are met for an acceptable solution
-        if( fabs(  normB[c]) > maxNormMag 
-         || fabs(  normX[c]) > maxNormMag 
-         || fabs(normRes[c]) > maxResidMag ) {
+        if(  fabs(  normB[c]) > maxNormMag 
+          || fabs(  normX[c]) > maxNormMag 
+          || fabs(normRes[c]) > d_solver_tolerance
+          || fabs(normResNormalized[c]) > d_solver_tolerance ) {
             tempCCVar[c] = 0;
         } else if( is_badly_conditioned ) {
             tempCCVar[c] = 0;
