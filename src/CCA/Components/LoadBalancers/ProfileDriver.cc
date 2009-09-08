@@ -36,6 +36,7 @@ using namespace Uintah;
 using namespace SCIRun;
    
 static DebugStream stats("ProfileStats",false);
+static DebugStream stats2("ProfileStats2",false);
 
 void ProfileDriver::setMinPatchSize(const vector<IntVector> &min_patch_size)
 {
@@ -91,14 +92,19 @@ void ProfileDriver::addContribution(const PatchSubset* patches, double cost)
 
 void ProfileDriver::outputError(const GridP currentGrid)
 {
-
+  static int iter=0;
+  iter++;
   vector<double> proc_costsm(d_myworld->size(),0);
   vector<double> proc_costsp(d_myworld->size(),0);
   vector<vector<double> > predicted_sum(currentGrid->numLevels()), measured_sum(currentGrid->numLevels());
+
+  double mape=0,max_error=0;
+  int num_patches=0;
   //for each level
   for (int l=0; l<currentGrid->numLevels();l++)
   {
     LevelP level=currentGrid->getLevel(l);
+    num_patches+=level->numPatches();
     vector<Region> regions(level->numPatches());
 
     predicted_sum[l].assign(level->numPatches(),0);
@@ -148,6 +154,17 @@ void ProfileDriver::outputError(const GridP currentGrid)
       int proc=d_lb->getPatchwiseProcessorAssignment(patch);
       proc_costsm[proc]+=measured_sum[l][p];
       proc_costsp[proc]+=predicted_sum[l][p];
+      double error=abs((measured_sum[l][p]-predicted_sum[l][p])/measured_sum[l][p]);
+      if(error>max_error)
+        max_error=error;
+      mape+=error;
+
+      if(d_myworld->myrank()==0 && stats2.active())
+      {
+        IntVector low(patch->getCellLowIndex__New()), high(patch->getCellHighIndex__New());
+        stats2 << iter << " " << patch->getID() << " " << (measured_sum[l][p]-predicted_sum[l][p])/measured_sum[l][p] << " " << measured_sum[l][p] << " " << l << " " 
+          << low[0] << " " << low[1] << " " << low[2] << " " << high[0] << " " << high[1] << " " << high[2] << endl;
+      }
     }
 
     if(d_myworld->myrank()==0)
@@ -168,6 +185,10 @@ void ProfileDriver::outputError(const GridP currentGrid)
       stats << "Profile Error: " << l << " " << total_measured_error/regions.size() << " " << total_measured_percent_error/regions.size() << " " << total_measured << " " << total_predicted << endl;
     }
   }
+
+  mape/=num_patches;
+  if(d_myworld->myrank()==0 && stats.active())
+    cout << "MAPE: " << mape << " MAXPE: " << max_error << endl;
 
   double meanCostm=0, meanCostp=0;
   double maxCostm=proc_costsm[0], maxCostp=proc_costsp[0];
