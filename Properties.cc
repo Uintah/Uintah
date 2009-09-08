@@ -148,7 +148,7 @@ Properties::problemSetup(const ProblemSpecP& params)
   else if (db->findBlock("TabPropsTable"))
     mixModel = "TabPropsTable";
   else
-    throw("ERROR!: No mixing/reaction table specified!",__FILE__,__LINE__);
+    throw InvalidValue("ERROR!: No mixing/reaction table specified!",__FILE__,__LINE__);
 
   if (mixModel == "ColdFlowMixingModel") {
     d_mixingModel = scinew ColdflowMixingModel(d_calcReactingScalar,
