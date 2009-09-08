@@ -31,6 +31,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/LoadBalancers/ProfileDriver.h>
 #include <Core/Util/DebugStream.h>
 #include <sstream>
+#include <iomanip>
 using namespace std;
 using namespace Uintah;
 using namespace SCIRun;
@@ -328,8 +329,24 @@ void ProfileDriver::finalizeContributions(const GridP currentGrid)
       }
       else
       {
-        //update exponential averagea
+#if 1
+        //update exponential average
         data.weight=d_alpha*data.current+(1-d_alpha)*data.weight;
+#else
+        double m=data.p+phi;
+        double k=m/(m+r);
+        cout << setprecision(12);
+        data.p=(1-k)*m;
+
+        //if(it->first==IntVector( 23, 43, 0))
+        //  cout << d_myworld->myrank() << " key: " << it->first << " predicted: " << data.weight << " " << " measured: " << data.current << " m:" << m << " k: " << k << " p: " << data.p << " r: " << r << " updated prediction: ";
+        data.weight=data.weight+k*(data.current-data.weight);
+        //if(it->first==IntVector( 23, 43, 0))
+        //  cout << data.weight << endl;
+       
+#endif
+        
+
       }
       
       //reset current
