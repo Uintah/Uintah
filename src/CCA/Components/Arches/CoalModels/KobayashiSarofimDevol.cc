@@ -318,43 +318,43 @@ KobayashiSarofimDevol::computeModel( const ProcessorGroup * pc,
     old_dw->get( w_particle_temperature, d_particle_temperature_label, matlIndex, patch, gn, 0 );
     }
     //old_dw->get( temperature, d_fieldLabels->d_tempINLabel, matlIndex, patch, gac, 1 );
-    constCCVariable<double> w_omegac;
-    new_dw->get( w_omegac, d_raw_coal_mass_fraction_label, matlIndex, patch, gn, 0 );
+    constCCVariable<double> wa_raw_coal_mass;
+    new_dw->get( wa_raw_coal_mass, d_raw_coal_mass_fraction_label, matlIndex, patch, gn, 0 );
     constCCVariable<double> weight;
     new_dw->get( weight, d_weight_label, matlIndex, patch, gn, 0 );
 
     for (CellIterator iter=patch->getCellIterator__New(); !iter.done(); iter++){
+
       IntVector c = *iter; 
 
       if (weight[c] < 1e-4 ) {
-		devol_rate[c] = 0.0;
-		gas_devol_rate[c] = 0.0;
-	} else {
-	
-	if(compute_part_temp) {
-	  double particle_temperature = w_particle_temperature[c]*d_pt_scaling_factor/weight[c];     
+        devol_rate[c] = 0.0;
+        gas_devol_rate[c] = 0.0;
+      } else {
+        if(compute_part_temp) {
+	        double particle_temperature = w_particle_temperature[c]*d_pt_scaling_factor/weight[c];     
           k1 = A1*exp(E1/(R*particle_temperature)); // 1/s
           k2 = A2*exp(E2/(R*particle_temperature)); // 1/s     
-	} else{   
+        } else {   
           k1 = A1*exp(E1/(R*temperature[c])); // 1/s
           k2 = A2*exp(E2/(R*temperature[c])); // 1/s
         }
 
-      double omegac = w_omegac[c] / weight[c];
-      double testVal = -1.0*(k1+k2)*(omegac);  
-      if (testVal < 0.0)
-        devol_rate[c] = -1.0*(k1+k2)*(omegac);  
-      else 
-        devol_rate[c] = 0.0;
+        double raw_coal_mass = wa_raw_coal_mass[c] / weight[c];
+        double testVal = -1.0*(k1+k2)*(raw_coal_mass);  
+        if (testVal < 0.0)
+          devol_rate[c] = -1.0*(k1+k2)*(raw_coal_mass);  
+        else 
+          devol_rate[c] = 0.0;
 
-      testVal = (Y1_*k1 + Y2_*k2)*w_omegac[c]*d_rc_scaling_factor*d_w_scaling_factor; 
-      //testVal uses the weighted abscissa so the weight isn't needed in the gas source term
-      if (testVal > 0.0)
-        gas_devol_rate[c] = testVal; 
-      else 
-        gas_devol_rate[c] = 0.0;
+        testVal = (Y1_*k1 + Y2_*k2)*wa_raw_coal_mass[c]*d_rc_scaling_factor*d_w_scaling_factor; 
+        //testVal uses the weighted abscissa so the weight isn't needed in the gas source term
+        if (testVal > 0.0)
+          gas_devol_rate[c] = testVal; 
+        else 
+          gas_devol_rate[c] = 0.0;
 
-    }
+      }
     }
   }
 }
