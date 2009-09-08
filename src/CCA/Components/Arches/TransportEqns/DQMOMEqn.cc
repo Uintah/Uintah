@@ -391,6 +391,7 @@ DQMOMEqn::buildTransportEqn( const ProcessorGroup* pc,
     new_dw->getModifiable(Fdiff, d_FdiffLabel, matlIndex, patch);
     new_dw->getModifiable(Fconv, d_FconvLabel, matlIndex, patch); 
     new_dw->getModifiable(RHS, d_RHSLabel, matlIndex, patch);
+    RHS.initialize(0.0); 
 
     //----BOUNDARY CONDITIONS
     // Note: BC's are set here on phi (not phiOld) because phi will be 
@@ -400,7 +401,8 @@ DQMOMEqn::buildTransportEqn( const ProcessorGroup* pc,
 
     //----CONVECTION
     if (d_doConv)
-      computeConv( patch, Fconv, oldPhi, uVel, vVel, wVel, partVel );
+      d_disc->computeConv( patch, Fconv, oldPhi, uVel, vVel, wVel, partVel, d_convScheme ); 
+      //computeConv( patch, Fconv, oldPhi, uVel, vVel, wVel, partVel );
   
     //----DIFFUSION
     if (d_doDiff)

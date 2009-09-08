@@ -262,14 +262,11 @@
 
         <EnthalpySolver>
           <convection_scheme>central-upwind</convection_scheme>
-          <radiation>true</radiation>
           <radiationCalcFreq>5</radiationCalcFreq>
           <radCalcForAllRKSteps>false</radCalcForAllRKSteps>
-          <discrete_ordinates>true</discrete_ordinates>
           <DORadiationModel>
             <opl>3.0</opl>
-            <linear_solver>hypre</linear_solver>
-            <LinearSolver>
+            <LinearSolver type = "hypre">
               <res_tol>1.0e-10</res_tol>
               <ksptype>gmres</ksptype>
               <pctype>jacobi</pctype>

@@ -208,14 +208,11 @@
 
                 <EnthalpySolver>
                     <convection_scheme>central-upwind</convection_scheme>
-                    <radiation>true</radiation>
                     <radiationCalcFreq>5</radiationCalcFreq>
                     <radCalcForAllRKSteps>false</radCalcForAllRKSteps>
-                    <discrete_ordinates>true</discrete_ordinates>
                     <DORadiationModel>
                     <opl>3.0</opl>
-                    <linear_solver>petsc</linear_solver>
-                    <LinearSolver>
+                    <LinearSolver tyep = "petsc">
                         <res_tol>1.0e-10</res_tol>
                         <ksptype>gmres</ksptype>
                         <pctype>blockjacobi</pctype>

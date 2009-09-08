@@ -34,10 +34,42 @@ void ExplicitTimeInt::problemSetup(const ProblemSpecP& params)
 {
 	ProblemSpecP ex_db = params->findBlock("ExplicitIntegrator");
 
-	if (ex_db) {	
-		ex_db->require("beta",d_beta);
-		ex_db->require("alpha",d_alpha);
-	}
-	else
-	    throw InvalidValue("Must specify alpha and beta coeficients for Explicit integrator",__FILE__, __LINE__);		
+  string time_order; 
+  ex_db->getAttribute("order", time_order); 
+
+  if (time_order == "first"){
+    
+    d_alpha[0] = 0.0;
+    d_alpha[1] = 0.0;
+    d_alpha[2] = 0.0;
+
+    d_beta[0]  = 1.0;
+    d_beta[1]  = 0.0;
+    d_beta[2]  = 0.0;
+
+  }
+  else if (time_order == "second") {
+
+    d_alpha[0]= 0.0;
+    d_alpha[1]= 0.5;
+    d_alpha[2]= 0.0;
+
+    d_beta[0]  = 1.0;
+    d_beta[1]  = 0.5;
+    d_beta[2]  = 0.0;
+
+  }
+  else if (time_order == "third") {
+
+    d_alpha[0] = 0.0;
+    d_alpha[1] = 0.75;
+    d_alpha[2] = 1.0/3.0;
+
+    d_beta[0]  = 1.0;
+    d_beta[1]  = 0.25;
+    d_beta[2]  = 2.0/3.0;
+
+  }
+  else
+	    throw InvalidValue("Explicit time integration order must be one of: first, second, third!  Please fix input file.",__FILE__, __LINE__);		
 }

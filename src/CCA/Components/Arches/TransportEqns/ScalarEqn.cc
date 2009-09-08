@@ -343,6 +343,7 @@ ScalarEqn::buildTransportEqn( const ProcessorGroup* pc,
     new_dw->getModifiable(Fdiff, d_FdiffLabel, matlIndex, patch);
     new_dw->getModifiable(Fconv, d_FconvLabel, matlIndex, patch); 
     new_dw->getModifiable(RHS, d_RHSLabel, matlIndex, patch);
+    RHS.initialize(0.0); 
 
     //----BOUNDARY CONDITIONS
     computeBCs( patch, d_eqnName, phi );
@@ -350,7 +351,7 @@ ScalarEqn::buildTransportEqn( const ProcessorGroup* pc,
     //----CONVECTION
     if (d_doConv)
       d_disc->computeConv( patch, Fconv, oldPhi, uVel, vVel, wVel, den, d_convScheme ); 
-      //computeConv( patch, Fconv, oldPhi, uVel, vVel, wVel );
+      //computeConv( patch, Fconv, oldPhi, uVel, vVel, wVel ); //old code below
   
     //----DIFFUSION
     if (d_doDiff)
@@ -362,6 +363,7 @@ ScalarEqn::buildTransportEqn( const ProcessorGroup* pc,
 
       RHS[c] += Fdiff[c] - Fconv[c];
 
+      //-----ADD SOURCES
       if (d_addSources) {
         // Get the factory of source terms
         SourceTermFactory& src_factory = SourceTermFactory::self(); 

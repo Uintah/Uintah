@@ -163,7 +163,8 @@ DORadiationModel::problemSetup(const ProblemSpecP& params)
   // These have been copied from BoundaryCondition.cc
     
   string linear_sol;
-  db->getWithDefault("linear_solver",linear_sol,"petsc");
+  //db->getWithDefault("linear_solver",linear_sol,"petsc");
+  db->findBlock("LinearSolver")->getAttribute("type",linear_sol);
 
   if (linear_sol == "petsc"){ 
     d_linearSolver = scinew RadLinearSolver(d_myworld);

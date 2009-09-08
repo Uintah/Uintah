@@ -90,6 +90,8 @@ EnthalpySolver::EnthalpySolver(const ArchesLabel* label,
   d_DORadiation = 0;
   d_radCounter = -1; //to decide how often radiation calc is done
   d_radCalcFreq = 0; 
+  d_DORadiationCalc = false;
+  d_radiationCalc = false; 
 
 }
 
@@ -114,7 +116,11 @@ void
 EnthalpySolver::problemSetup(const ProblemSpecP& params)
 {
   ProblemSpecP db = params->findBlock("EnthalpySolver");
-  db->require("radiation",d_radiationCalc);
+  if (db->findBlock("DORadiationModel")) {
+    d_DORadiationCalc = true;
+    d_radiationCalc = true; 
+  }
+
   if (d_radiationCalc) {
     db->getWithDefault("radiationCalcFreq",         d_radCalcFreq,3);
     db->getWithDefault("radCalcForAllRKSteps",      d_radRKsteps,false);
@@ -123,7 +129,8 @@ EnthalpySolver::problemSetup(const ProblemSpecP& params)
 //      db->require("radiationCalcFreq",d_radCalcFreq);
 //    else
 //      d_radCalcFreq = 3; // default: radiation is computed every third time step
-    db->getWithDefault("discrete_ordinates",d_DORadiationCalc,true);
+//    db->getWithDefault("discrete_ordinates",d_DORadiationCalc,true);
+
 //    if (db->findBlock("discrete_ordinates"))
 //      db->require("discrete_ordinates", d_DORadiationCalc);
 //    else

@@ -5,8 +5,8 @@
 #include <Core/Grid/BoundaryConditions/BoundCond.h>
 
 #define XDIM
-//#define YDIM
-//#define ZDIM
+#define YDIM
+#define ZDIM
 
 //===========================================================================
 
