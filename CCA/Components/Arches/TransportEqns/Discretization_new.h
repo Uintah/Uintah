@@ -214,6 +214,8 @@ namespace Uintah{
       
         FaceData1D the_vel;
 
+        int coord_sum = coord[0] + coord[1] + coord[2]; 
+
         if (coord[0] == 1) {
 
           IntVector cxm = c - IntVector(1,0,0);
@@ -238,7 +240,19 @@ namespace Uintah{
           the_vel.minus = 0.5 * ( vel[c].z() + vel[czm].z() ); 
           the_vel.plus  = 0.5 * ( vel[c].z() + vel[czp].z() ); 
 
+        } else if (coord[0] == 0 && coord[1] == 0 && coord[2] == 0) {
+
+          // no coordinate specified
+          throw InternalError("ERROR! No coordinate specified for getFaceVelocity", __FILE__, __LINE__);
+
+        } else if (coord_sum > 1) {
+
+          // too many coordinates specified
+          throw InternalError("ERROR! Too many coordinates specified for getFaceVelocity", __FILE__, __LINE__);
+
         }
+
+        return the_vel; 
       }
 
       inline FaceData1D getFaceVelocity( const IntVector c, const CCVariable<double>& F, constSFCXVariable<double> vel ){
