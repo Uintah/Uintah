@@ -87,7 +87,7 @@ bool
 // wrap_copy( Vector* fdata, double*& datap, unsigned int size, Matrix_Op matrix_op ){
 wrap_copy( Vector* fdata, typeDouble* cellValVecPtr, unsigned int size, Matrix_Op matrix_op ){
 
-  cout << "Pushed in " << size << " elements\n"; 
+  // cout << "Pushed in " << size << " elements\n"; 
 
   // Copy the data
   for(unsigned int i = 0; i < size; i++) {
@@ -298,9 +298,9 @@ wrap_nrrd( FIELD * source, Matrix_Op matrix_op, bool verbose, cellVals& cellValC
 
     if (num_elements != prodXYZ)
       cout << "fdata().size() != prodXYZ\n";
-    else {
+    /*else {
       cout << num_elements << " = " << cellValColln.x << " * " << cellValColln.y << " * " << cellValColln.z << "\n";
-    }  
+    }*/  
 
     if (dataReq) {
       cellValVecPtr = new typeDouble();
