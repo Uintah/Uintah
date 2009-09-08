@@ -89,15 +89,17 @@ namespace Uintah {
       double current; //current contribution that has not been finalized
       double weight;  //current first order weight
       int timestep;  //last timestep this datapoint was updated
+      double p;
       Contribution ()
       {
         current=0;
         weight=0;
         timestep=0;
+        p=9999;  
       }
     };
   public:
-    ProfileDriver(const ProcessorGroup* myworld, LoadBalancer *lb) : d_lb(lb), d_myworld(myworld), d_timestepWindow(20), timesteps(0) {updateAlpha();};
+    ProfileDriver(const ProcessorGroup* myworld, LoadBalancer *lb) : d_lb(lb), d_myworld(myworld), d_timestepWindow(20), timesteps(0), r(1.7e-5) ,phi(.01) {updateAlpha();};
     void setMinPatchSize(const vector<IntVector> &min_patch_size);
     //add the contribution for region r on level l
     void addContribution(const PatchSubset* patches, double cost);
@@ -127,6 +129,9 @@ namespace Uintah {
 
     vector<map<IntVector, Contribution> > costs;
     int timesteps;
+    double r;
+    double phi;
+    
   };
 } // End namespace Uintah
 
