@@ -35,10 +35,10 @@ namespace Uintah{
       ~Discretization_new();
 
       /** @brief Computes the convection term.  This method is overloaded.  */
-      template <class fT, class oldPhiT> void 
+      template <class fT, class oldPhiT, class uT, class vT, class wT> void 
         computeConv(const Patch* p, fT& Fconv, oldPhiT& oldPhi, 
-            constSFCXVariable<double>& uVel, constSFCYVariable<double>& vVel, 
-            constSFCZVariable<double>& wVel, constCCVariable<double>& den,
+            uT& uVel, vT& vVel, 
+            wT& wVel, constCCVariable<double>& den,
             std::string convScheme);
 
       /** @brief Computes the convection term (no density term) */
@@ -146,15 +146,6 @@ namespace Uintah{
 
         CellIterator the_iterator = CellIterator( l, h ); 
         return the_iterator; 
-
-      }
-
-
-      inline CellIterator getEdgeCellIterator( const Patch* p, const vector<Patch::FaceType>::const_iterator bf_iter ) const 
-      {
-        Patch::FaceType face = *bf_iter; 
-        IntVector l,h; 
-        p->getFaceCells( face, 0, l, h ); 
 
       }
 
@@ -531,14 +522,14 @@ namespace Uintah{
   //---------------------------------------------------------------------------
   // Method: Compute the convection term (with Density) 
   //---------------------------------------------------------------------------
-  template <class fT, class oldPhiT> void 
+  template <class fT, class oldPhiT, class uT, class vT, class wT> void 
     Discretization_new::computeConv(const Patch* p, fT& Fconv, oldPhiT& oldPhi, 
-        constSFCXVariable<double>& uVel, constSFCYVariable<double>& vVel, 
-        constSFCZVariable<double>& wVel, constCCVariable<double>& den,
+        uT& uVel, vT& vVel, 
+        wT& wVel, constCCVariable<double>& den,
         std::string convScheme ) 
     {
       // This class computes convection without assumptions about the boundary conditions 
-      // (ie, it doens't adjust values of fluxes on the boundaries but assume you have 
+      // (ie, it doesn't adjust values of fluxes on the boundaries but assume you have 
       // done so previously or that you will go back and repair them)
       Vector Dx = p->dCell(); 
       FaceData<double> F; // FACE value of phi
