@@ -302,6 +302,7 @@
       <DQMOM                            spec="OPTIONAL NO_DATA">
         <number_quad_nodes              spec="REQUIRED INTEGER 'positive'"/>
         <LU_solver_tolerance            spec="OPTIONAL DOUBLE 'positive'"/>
+        <adiabGas_nonadiabPart          spec="OPTIONAL BOOLEAN"/>
 
         <VelModel                       spec="REQUIRED NO_DATA">
 
@@ -316,18 +317,25 @@
         
           <model                        spec="MULTIPLE NO_DATA"
                                         attribute1="label REQUIRED STRING"
-                                        attribute2="type REQUIRED STRING 'KobayashiSarofimDevol, ConstantModel'">
+                                        attribute2="type REQUIRED STRING 'KobayashiSarofimDevol, ConstantModel, HeatTransfer'">
 
             <!-- KobayashiSarofimDevol -->
+            <!-- & --> <!-- Heat Transfer Model -->
             <ICVars                     spec="OPTIONAL NO_DATA">
               <variable                 spec="MULTIPLE NO_DATA"
                                         attribute1="label REQUIRED STRING"
                                         attribute2="role REQUIRED STRING"/>
             </ICVars>
             <low_clip                   spec="OPTIONAL DOUBLE 'positive'"/>
+            <high_clip                  spec="OPTIONAL DOUBLE 'positive'"/>
+
+            <!-- Heat Transfer Model -->
+            <noRadiation                spec="OPTIONAL NO_DATA"/>
 
             <!-- Constant Model -->
             <constant                   spec="OPTIONAL DOUBLE"/>
+
+            
 
           </model>
         </Models>
