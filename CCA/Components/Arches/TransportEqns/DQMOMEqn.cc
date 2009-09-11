@@ -555,6 +555,9 @@ DQMOMEqn::getAbscissaValues( const ProcessorGroup* pc,
     const VarLabel* mywLabel = eqn.getTransportEqnLabel();  
     double smallWeight = eqn.getLowClip(); 
 
+    if ( smallWeight == 0.0 )
+      smallWeight = 1e-16; //to avoid numbers smaller than machine precision. 
+
     new_dw->get(w, mywLabel, matlIndex, patch, gn, 0); 
 
     // now loop over all cells
