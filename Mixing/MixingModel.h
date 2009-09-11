@@ -122,9 +122,17 @@ public:
       virtual void setCalcExtraScalars(bool calcExtraScalars) = 0; 
       virtual void setExtraScalars(std::vector<ExtraScalarSolver*>* extraScalars) = 0;  
 
+
+      inline void setNonAdiabPartBool( bool adiabGas_nonadiabPart ) {
+        d_adiabGas_nonadiabPart = adiabGas_nonadiabPart; 
+      }
+
 protected :
+  
+      bool d_adiabGas_nonadiabPart; 
 
 private:
+
 
 }; // end class MixingModel
 

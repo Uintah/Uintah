@@ -374,6 +374,9 @@ private:
       vector<string> indepVarNames;
       vector<string> depVarNames;
 
+      // for doing adiabatic gas with non-adiabatic particles
+      bool d_adiabGas_nonadiabPart;
+
 }; // end class Properties
 } // End namespace Uintah
 

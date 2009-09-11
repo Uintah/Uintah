@@ -149,6 +149,7 @@ public:
     d_extraScalars = extraScalars;
   }
 
+
 protected :
 
 private:
