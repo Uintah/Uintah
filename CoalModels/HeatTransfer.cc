@@ -54,6 +54,19 @@ HeatTransfer::problemSetup(const ProblemSpecP& params, int qn)
 {
   ProblemSpecP db = params; 
   ProblemSpecP db_icvars = params->findBlock("ICVars");
+  
+  const ProblemSpecP params_root = db->getRootNode(); 
+
+  // Check for radiation 
+  bool d_radiation = false;
+  if (params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ExplicitSolver")->findBlock("EnthalpySolver")->findBlock("DORadiationModel"))
+    d_radiation = true; // if gas phase radiation is turned on.  
+
+  //user can specifically turn off radiation heat transfer
+  if (db->findBlock("noRadiation"))
+    d_radiation = false; 
+
+
   for (ProblemSpecP variable = db_icvars->findBlock("variable"); variable != 0; variable = variable->findNextBlock("variable") ) {
     string label_name;
     string role_name;
@@ -75,7 +88,6 @@ HeatTransfer::problemSetup(const ProblemSpecP& params, int qn)
       LabelToRoleMap[temp_label_name] = role_name;
     } else if(role_name == "particle_temperature" ){  
        LabelToRoleMap[temp_label_name] = role_name;
-       db_icvars->getWithDefault("DOradiation", d_radiation, false);
     } else {
       std::string errmsg;
       errmsg = "Invalid variable role for Heat Transfer model";
