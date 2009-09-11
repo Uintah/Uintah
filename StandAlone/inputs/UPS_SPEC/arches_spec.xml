@@ -301,6 +301,7 @@
 
       <DQMOM                            spec="OPTIONAL NO_DATA">
         <number_quad_nodes              spec="REQUIRED INTEGER 'positive'"/>
+        <LU_solver_tolerance            spec="OPTIONAL DOUBLE 'positive'"/>
 
         <VelModel                       spec="REQUIRED NO_DATA">
 
