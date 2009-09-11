@@ -145,7 +145,7 @@ NewStaticMixingTable::computeProps(const InletStream& inStream,
   double adiab_enthalpy=0.0;
   // Sensible enthalpy
   double sensible_enthalpy=0.0;
-  if(d_calcEnthalpy){
+  if(d_calcEnthalpy && !d_adiabGas_nonadiabPart){
     sensible_enthalpy=tableLookUp(mixFrac, mixFracVars, zero_heat_loss, Hs_index);
     enthalpy=inStream.d_enthalpy;
     adiab_enthalpy = d_H_fuel*mixFrac+d_H_air*(1.0-mixFrac);

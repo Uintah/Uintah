@@ -134,6 +134,13 @@ Properties::problemSetup(const ProblemSpecP& params)
   db->getWithDefault("inverse_density_average",d_inverse_density_average,false);
   d_denRef = d_physicalConsts->getRefPoint();
   d_reactingFlow = true;
+  // check to see if gas is adiabatic and (if DQMOM) particles are not:
+  d_adiabGas_nonadiabPart = false; 
+  if (params->findBlock("DQMOM")) {
+    ProblemSpecP db_dqmom = params->findBlock("DQMOM");
+    db_dqmom->getWithDefault("adiabGas_nonadiabPart", d_adiabGas_nonadiabPart, false); 
+  }
+
   // read type of mixing model
   string mixModel;
 
@@ -164,6 +171,7 @@ Properties::problemSetup(const ProblemSpecP& params)
                                                 
     d_mixingModel->setCalcExtraScalars(d_calcExtraScalars);
     d_mixingModel->setExtraScalars(d_extraScalars);
+    d_mixingModel->setNonAdiabPartBool(d_adiabGas_nonadiabPart); 
   }
   else if (mixModel == "StandardTable"){
     d_mixingModel = scinew StandardTable(d_calcReactingScalar,
@@ -1199,7 +1207,6 @@ Properties::reComputeProps(const ProcessorGroup* pc,
           if (d_calcReactingScalar) {
             inStream.d_rxnVars[0] = reactScalar[currCell];
           }
-
 
           if (d_calcEnthalpy)
               //              &&(cellType[currCell] != d_bc->getIntrusionID()))
