@@ -108,7 +108,7 @@ void CostModelForecaster::outputError(const GridP grid)
   if(d_myworld->myrank()==0 && stats.active())
   {
     sum_error/=size;
-    cout << "Forecast MAPE: " << sum_error << " MAXPE:" << max_error << endl;
+    cout << "MAPE: " << sum_error << " MAXPE:" << max_error << endl;
   }
 }
 void CostModelForecaster::collectPatchInfo(const GridP grid, vector<PatchInfo> &patch_info) 
@@ -295,7 +295,7 @@ CostModelForecaster::finalizeContributions( const GridP currentGrid )
   vector<PatchInfo> patch_info;
   collectPatchInfo(currentGrid,patch_info);
 
-#if 1
+#if 0
   if(stats.active() && d_myworld->myrank()==0)
   {
     static int j=0;
@@ -367,7 +367,7 @@ CostModelForecaster::finalizeContributions( const GridP currentGrid )
 
   //compute least squares
   min_norm_least_sq(A,b,x);
-#if 1
+#if 0
   if(d_myworld->myrank()==0)
   {
     cout << " Coefficients: ";
