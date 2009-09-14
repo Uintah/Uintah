@@ -368,7 +368,7 @@ HeatTransfer::computeModel( const ProcessorGroup * pc,
     }
 
     constCCVariable<double> temperature;
-    old_dw->get( temperature, d_fieldLabels->d_dummyTLabel, matlIndex, patch, gac, 1 );
+    old_dw->get( temperature, d_fieldLabels->d_tempINLabel, matlIndex, patch, gac, 1 );
     constCCVariable<double> w_particle_temperature;
     old_dw->get( w_particle_temperature, d_particle_temperature_label, matlIndex, patch, gn, 0 );
     constCCVariable<double> w_particle_length;
