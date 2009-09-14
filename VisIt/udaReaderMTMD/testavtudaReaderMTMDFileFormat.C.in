@@ -2389,8 +2389,11 @@ avtudaReaderMTMDFileFormat::GetVar(int timestate, int domain, const char *varnam
 	    if (m == 0) { // x-axis 
 	      for (int i = extraXYZ[2]; i < (cellValColln.z + extraXYZ[2]); i++) {
 		for (int j = extraXYZ[1]; j < (cellValColln.y + extraXYZ[1]); j++) {
-		  refMatrix[0][j][i] = refMatrix[cellValColln.x + extraXYZ[0] - 1][j][i];
-		  refMatrix[cellValColln.x+extraXYZ[0]][j][i] = refMatrix[extraXYZ[0]][j][i];
+		  // refMatrix[0][j][i] = refMatrix[cellValColln.x + extraXYZ[0] - 1][j][i];
+		  // refMatrix[cellValColln.x+extraXYZ[0]][j][i] = refMatrix[extraXYZ[0]][j][i];
+		  
+                  refMatrix[0][j][i] = refMatrix[extraXYZ[0]][j][i];
+		  refMatrix[cellValColln.x + extraXYZ[0]][j][i] = refMatrix[cellValColln.x][j][i];
 		}
 	      }
 	    }
@@ -2410,8 +2413,11 @@ avtudaReaderMTMDFileFormat::GetVar(int timestate, int domain, const char *varnam
 
 	      for (int i = extraXYZ[2]; i < (cellValColln.z + extraXYZ[2]); i++) {
 		for (int k = loX; k < hiX; k++) {
-		  refMatrix[k][0][i] = refMatrix[k][cellValColln.y + extraXYZ[1] - 1][i];
-		  refMatrix[k][cellValColln.y+extraXYZ[1]][i] = refMatrix[k][extraXYZ[1]][i];
+		  // refMatrix[k][0][i] = refMatrix[k][cellValColln.y + extraXYZ[1] - 1][i];
+		  // refMatrix[k][cellValColln.y+extraXYZ[1]][i] = refMatrix[k][extraXYZ[1]][i];
+		  
+                  refMatrix[k][0][i] = refMatrix[k][extraXYZ[1]][i];
+		  refMatrix[k][cellValColln.y+extraXYZ[1]][i] = refMatrix[k][cellValColln.y][i];
 		}
 	      }
 	    }
@@ -2444,8 +2450,11 @@ avtudaReaderMTMDFileFormat::GetVar(int timestate, int domain, const char *varnam
 
 	      for (int j = loY; j < hiY; j++) {
 		for (int k = loX; k < hiX; k++) {
-		  refMatrix[k][j][0] = refMatrix[k][j][cellValColln.z + extraXYZ[2] - 1];
-		  refMatrix[k][j][cellValColln.z+extraXYZ[2]] = refMatrix[k][j][extraXYZ[2]];
+		  // refMatrix[k][j][0] = refMatrix[k][j][cellValColln.z + extraXYZ[2] - 1];
+		  // refMatrix[k][j][cellValColln.z+extraXYZ[2]] = refMatrix[k][j][extraXYZ[2]];
+		  
+                  refMatrix[k][j][0] = refMatrix[k][j][extraXYZ[2]];
+		  refMatrix[k][j][cellValColln.z+extraXYZ[2]] = refMatrix[k][j][cellValColln.z];
 		}
 	      }
 	    }
@@ -2971,12 +2980,18 @@ avtudaReaderMTMDFileFormat::GetVectorVar(int timestate, int domain,const char *v
 	      for (int i = extraXYZ[2]; i < (cellValColln.z + extraXYZ[2]); i++) {
 		for (int j = extraXYZ[1]; j < (cellValColln.y + extraXYZ[1]); j++) {
 		  if (ncomps == 3) {
-		    vecValMatrix[0][j][i] = vecValMatrix[cellValColln.x + extraXYZ[0] - 1][j][i];
-		    vecValMatrix[cellValColln.x+extraXYZ[0]][j][i] = vecValMatrix[extraXYZ[0]][j][i];
+		    // vecValMatrix[0][j][i] = vecValMatrix[cellValColln.x + extraXYZ[0] - 1][j][i];
+		    // vecValMatrix[cellValColln.x+extraXYZ[0]][j][i] = vecValMatrix[extraXYZ[0]][j][i];
+		    
+                    vecValMatrix[0][j][i] = vecValMatrix[extraXYZ[0]][j][i];
+		    vecValMatrix[cellValColln.x + extraXYZ[0]][j][i] = vecValMatrix[cellValColln.x][j][i];
 		  }
 		  else if (ncomps == 9) {
-		    tenValMatrix[0][j][i] = tenValMatrix[cellValColln.x + extraXYZ[0] - 1][j][i];
-		    tenValMatrix[cellValColln.x+extraXYZ[0]][j][i] = tenValMatrix[extraXYZ[0]][j][i];
+		    // tenValMatrix[0][j][i] = tenValMatrix[cellValColln.x + extraXYZ[0] - 1][j][i];
+		    // tenValMatrix[cellValColln.x+extraXYZ[0]][j][i] = tenValMatrix[extraXYZ[0]][j][i];
+		    
+                    tenValMatrix[0][j][i] = tenValMatrix[extraXYZ[0]][j][i];
+		    tenValMatrix[cellValColln.x + extraXYZ[0]][j][i] = tenValMatrix[cellValColln.x][j][i];
 		  }
 		}
 	      }
@@ -2998,12 +3013,18 @@ avtudaReaderMTMDFileFormat::GetVectorVar(int timestate, int domain,const char *v
 	      for (int i = extraXYZ[2]; i < (cellValColln.z + extraXYZ[2]); i++) {
 		for (int k = loX; k < hiX; k++) {
 		  if (ncomps == 3) {
-		    vecValMatrix[k][0][i] = vecValMatrix[k][cellValColln.y + extraXYZ[1] - 1][i];
-		    vecValMatrix[k][cellValColln.y+extraXYZ[1]][i] = vecValMatrix[k][extraXYZ[1]][i];
+		    // vecValMatrix[k][0][i] = vecValMatrix[k][cellValColln.y + extraXYZ[1] - 1][i];
+		    // vecValMatrix[k][cellValColln.y+extraXYZ[1]][i] = vecValMatrix[k][extraXYZ[1]][i];
+		    
+                    vecValMatrix[k][0][i] = vecValMatrix[k][extraXYZ[1]][i];
+		    vecValMatrix[k][cellValColln.y+extraXYZ[1]][i] = vecValMatrix[k][cellValColln.y][i];
 		  }
 		  else if (ncomps == 9) {
-		    tenValMatrix[k][0][i] = tenValMatrix[k][cellValColln.y + extraXYZ[1] - 1][i];
-		    tenValMatrix[k][cellValColln.y+extraXYZ[1]][i] = tenValMatrix[k][extraXYZ[1]][i];
+		    // tenValMatrix[k][0][i] = tenValMatrix[k][cellValColln.y + extraXYZ[1] - 1][i];
+		    // tenValMatrix[k][cellValColln.y+extraXYZ[1]][i] = tenValMatrix[k][extraXYZ[1]][i];
+		    
+                    tenValMatrix[k][0][i] = tenValMatrix[k][extraXYZ[1]][i];
+		    tenValMatrix[k][cellValColln.y+extraXYZ[1]][i] = tenValMatrix[k][cellValColln.y][i];
 		  }
 		}
 	      }
@@ -3038,12 +3059,18 @@ avtudaReaderMTMDFileFormat::GetVectorVar(int timestate, int domain,const char *v
 	      for (int j = loY; j < hiY; j++) {
 		for (int k = loX; k < hiX; k++) {
 		  if (ncomps == 3) {
-		    vecValMatrix[k][j][0] = vecValMatrix[k][j][cellValColln.z + extraXYZ[2] - 1];
-		    vecValMatrix[k][j][cellValColln.z+extraXYZ[2]] = vecValMatrix[k][j][extraXYZ[2]];
+		    // vecValMatrix[k][j][0] = vecValMatrix[k][j][cellValColln.z + extraXYZ[2] - 1];
+		    // vecValMatrix[k][j][cellValColln.z+extraXYZ[2]] = vecValMatrix[k][j][extraXYZ[2]];
+		    
+                    vecValMatrix[k][j][0] = vecValMatrix[k][j][extraXYZ[2]];
+		    vecValMatrix[k][j][cellValColln.z+extraXYZ[2]] = vecValMatrix[k][j][cellValColln.z];
 		  }
 		  else if (ncomps == 9) {
-		    tenValMatrix[k][j][0] = tenValMatrix[k][j][cellValColln.z + extraXYZ[2] - 1];
-		    tenValMatrix[k][j][cellValColln.z+extraXYZ[2]] = tenValMatrix[k][j][extraXYZ[2]];
+		    // tenValMatrix[k][j][0] = tenValMatrix[k][j][cellValColln.z + extraXYZ[2] - 1];
+		    // tenValMatrix[k][j][cellValColln.z+extraXYZ[2]] = tenValMatrix[k][j][extraXYZ[2]];
+		    
+                    tenValMatrix[k][j][0] = tenValMatrix[k][j][extraXYZ[2]];
+		    tenValMatrix[k][j][cellValColln.z+extraXYZ[2]] = tenValMatrix[k][j][cellValColln.z];
 		  }
 		}
 	      }
