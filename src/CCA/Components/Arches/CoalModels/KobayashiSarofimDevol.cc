@@ -84,14 +84,14 @@ KobayashiSarofimDevol::problemSetup(const ProblemSpecP& params, int qn)
     temp_label_name += node;
 
     // This way restricts what "roles" the user can specify (less flexible)
-    if (role_name == "temperature" || role_name == "raw_coal_mass_fraction") {
+    if (role_name == "gas_temperature" || role_name == "raw_coal_mass_fraction") {
       LabelToRoleMap[temp_label_name] = role_name;
       } else if(role_name == "particle_temperature" ){  
        LabelToRoleMap[temp_label_name] = role_name;
        compute_part_temp = true;
     } else {
       std::string errmsg;
-      errmsg = "Invalid variable role for Kobayashi Sarofim Devolatilization model: must be \"temperature\" or \"raw_coal_mass_fraction\", you specified \"" + role_name + "\".";
+      errmsg = "Invalid variable role for Kobayashi Sarofim Devolatilization model: must be \"gas_temperature\" or \"raw_coal_mass_fraction\", you specified \"" + role_name + "\".";
       throw InvalidValue(errmsg,__FILE__,__LINE__);
     }
 
@@ -211,7 +211,7 @@ KobayashiSarofimDevol::sched_computeModel( const LevelP& level, SchedulerP& sche
     map<string, string>::iterator iMap = LabelToRoleMap.find(*iter);
 
     if ( iMap != LabelToRoleMap.end() ) {
-      if ( iMap->second == "temperature") {
+      if ( iMap->second == "gas_temperature") {
         // automatically use Arches' temperature label if role="temperature"
         //tsk->requires(Task::OldDW, d_fieldLabels->d_dummyTLabel, Ghost::AroundCells, 1);
         tsk->requires(Task::OldDW, d_fieldLabels->d_tempINLabel, Ghost::AroundCells, 1);
