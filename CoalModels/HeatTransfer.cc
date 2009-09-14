@@ -83,7 +83,7 @@ HeatTransfer::problemSetup(const ProblemSpecP& params, int qn)
     temp_label_name += node;
 
     // This way restricts what "roles" the user can specify (less flexible)
-    if (role_name == "temperature"
+    if (role_name == "gas_temperature"
     || role_name == "particle_length" || role_name == "raw_coal_mass_fraction") {
       LabelToRoleMap[temp_label_name] = role_name;
     } else if(role_name == "particle_temperature" ){  
