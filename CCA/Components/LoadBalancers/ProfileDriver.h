@@ -88,18 +88,18 @@ namespace Uintah {
     {
       double current; //current contribution that has not been finalized
       double weight;  //current first order weight
-      int timestep;  //last timestep this datapoint was updated
-      double p;
+      int timestep;   //last timestep this datapoint was updated
+      double p;       //the covarience in the last prediction
       Contribution ()
       {
         current=0;
         weight=0;
         timestep=0;
-        p=9999;  
+        p=99999; //initial covarience - this specifies how accurate our initialization is
       }
     };
   public:
-    ProfileDriver(const ProcessorGroup* myworld, LoadBalancer *lb) : d_lb(lb), d_myworld(myworld), d_timestepWindow(20), timesteps(0), r(1.7e-5) ,phi(.01) {updateAlpha();};
+    ProfileDriver(const ProcessorGroup* myworld, LoadBalancer *lb) : d_lb(lb), d_myworld(myworld), d_timestepWindow(20), timesteps(0), r(4.5e-5) ,phi(.01) {updateAlpha();};
     void setMinPatchSize(const vector<IntVector> &min_patch_size);
     //add the contribution for region r on level l
     void addContribution(const PatchSubset* patches, double cost);
