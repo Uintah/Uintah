@@ -396,14 +396,6 @@ HeatTransfer::computeModel( const ProcessorGroup * pc,
 	      double length = w_particle_length[c]*d_pl_scaling_factor/weight[c];
 	      double particle_temperature = w_particle_temperature[c]*d_pt_scaling_factor/weight[c];
 
-	      if ( particle_temperature > 2980 ) {
-          particle_temperature = 2980;
-        } else if ( particle_temperature < 273 ){
-        	particle_temperature = 273;
-        } else if ( weight[c] <= 0.0 ){
-        	particle_temperature = 0.0;
-        }
-
 	      double Pr = 0.7;
 	      double blow = 1.0;
 	      double sigma = 5.67e-8;
