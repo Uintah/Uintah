@@ -230,9 +230,9 @@ HeatTransfer::sched_computeModel( const LevelP& level, SchedulerP& sched, int ti
     map<string, string>::iterator iMap = LabelToRoleMap.find(*iter);
 
    if ( iMap != LabelToRoleMap.end() ) {
-      if ( iMap->second == "temperature") {
+      if ( iMap->second == "gas_temperature") {
         // automatically use Arches' temperature label if role="temperature"
-        tsk->requires(Task::OldDW, d_fieldLabels->d_dummyTLabel, Ghost::AroundCells, 1);
+        tsk->requires(Task::OldDW, d_fieldLabels->d_tempINLabel, Ghost::AroundCells, 1);
 
         // Only require() variables found in equation factories (right now we're not tracking temperature this way)
       } 
@@ -366,7 +366,6 @@ HeatTransfer::computeModel( const ProcessorGroup * pc,
     old_dw->get(radiationSRCIN,   d_fieldLabels->d_radiationSRCINLabel,  matlIndex, patch,gn, 0);
     old_dw->get(abskgIN,   d_fieldLabels->d_abskgINLabel,  matlIndex, patch,gn, 0);
     }
-    
 
     constCCVariable<double> temperature;
     old_dw->get( temperature, d_fieldLabels->d_dummyTLabel, matlIndex, patch, gac, 1 );
@@ -391,57 +390,57 @@ HeatTransfer::computeModel( const ProcessorGroup * pc,
         sphPart = cart2sph( cartPart ); 
 	
         if (weight[c] < 1e-4 ) {
-		heat_rate[c] = 0.0;
-	} else {
+		      heat_rate[c] = 0.0;
+	      } else {
 	
-	double length = w_particle_length[c]*d_pl_scaling_factor/weight[c];
-	double particle_temperature = w_particle_temperature[c]*d_pt_scaling_factor/weight[c];
+	      double length = w_particle_length[c]*d_pl_scaling_factor/weight[c];
+	      double particle_temperature = w_particle_temperature[c]*d_pt_scaling_factor/weight[c];
 
-	if ( particle_temperature > 2980 ) {
-        	particle_temperature = 2980;
+	      if ( particle_temperature > 2980 ) {
+          particle_temperature = 2980;
         } else if ( particle_temperature < 273 ){
         	particle_temperature = 273;
         } else if ( weight[c] <= 0.0 ){
         	particle_temperature = 0.0;
         }
 
-	double Pr = 0.7;
-	double blow = 1.0;
-	double sigma = 5.67e-8;
+	      double Pr = 0.7;
+	      double blow = 1.0;
+	      double sigma = 5.67e-8;
 
-	double rkg = 0.03;
-	double visc = 2.0e-5;
-	double Re  = abs(sphGas.z() - sphPart.z())*length*den[c]/visc;
-	double Nu = 2.0 + 0.6*pow(Re,0.5)*pow(Pr,0.333);
-	double rhop = 1000.0;
-	double cp = 3000.0;
-	double alpha = rhop*(4/3*pi*pow(length/2,3));
-	double Qconv = Nu*pi*blow*rkg*length*(temperature[c]-particle_temperature);
+	      double rkg = 0.03;
+	      double visc = 2.0e-5;
+	      double Re  = abs(sphGas.z() - sphPart.z())*length*den[c]/visc;
+	      double Nu = 2.0 + 0.6*pow(Re,0.5)*pow(Pr,0.333);
+	      double rhop = 1000.0;
+	      double cp = 3000.0;
+	      double alpha = rhop*(4/3*pi*pow(length/2,3));
+	      double Qconv = Nu*pi*blow*rkg*length*(temperature[c]-particle_temperature);
 		
-	// Radiative transfer
-	double Qrad = 0.0;
+	      // Radiative transfer
+	      double Qrad = 0.0;
 	
-	if(d_radiation) {
-	if(abskgIN[c]<1e-6){
-	Qrad = 0;
-	}
-	else {
-	double Qabs = 0.8;
-	double Apsc = (pi/4)*Qabs*pow(length/2,2);
-	double Eb = 4.0*sigma*pow(particle_temperature,4);
-	double Eg = 4.0*sigma*abskgIN[c]*pow(temperature[c],4);
-	Qrad = Apsc*((radiationSRCIN[c]+ Eg)/abskgIN[c] - Eb);
-	
-	abskp[c] = pi/4*Qabs*weight[c]*pow(length,2);
-	}
-	}
+	      if(d_radiation) {
+	        if(abskgIN[c]<1e-6){
+
+	          Qrad = 0;
+
+	        } else {
+
+	          double Qabs = 0.8;
+	          double Apsc = (pi/4)*Qabs*pow(length/2,2);
+	          double Eb = 4.0*sigma*pow(particle_temperature,4);
+	          double Eg = 4.0*sigma*abskgIN[c]*pow(temperature[c],4);
+
+	          Qrad = Apsc*((radiationSRCIN[c]+ Eg)/abskgIN[c] - Eb);
+	          abskp[c] = pi/4*Qabs*weight[c]*pow(length,2);
+	        }
+	      }
 
         heat_rate[c] =(Qconv+Qrad)/(alpha*cp*d_pt_scaling_factor); 
 
         gas_heat_rate[c] = 0.0;
-	}
-	
-
+    	}
     }
   }
 }
