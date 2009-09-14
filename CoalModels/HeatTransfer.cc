@@ -378,6 +378,8 @@ HeatTransfer::computeModel( const ProcessorGroup * pc,
     constCCVariable<double> weight;
     old_dw->get( weight, d_weight_label, matlIndex, patch, gn, 0 );
 
+    double small = 1e-16; // for now... 
+
     for (CellIterator iter=patch->getCellIterator__New(); !iter.done(); iter++){
       IntVector c = *iter; 
 
@@ -393,8 +395,16 @@ HeatTransfer::computeModel( const ProcessorGroup * pc,
 		      heat_rate[c] = 0.0;
 	      } else {
 	
-	      double length = w_particle_length[c]*d_pl_scaling_factor/weight[c];
-	      double particle_temperature = w_particle_temperature[c]*d_pt_scaling_factor/weight[c];
+	      double length;
+	      double particle_temperature;
+
+        if ( weight[c] < small ) {
+          length = 0.0;
+          particle_temperature = 0.0;
+        } else {
+	        length = w_particle_length[c]*d_pl_scaling_factor/weight[c];
+	        particle_temperature = w_particle_temperature[c]*d_pt_scaling_factor/weight[c];
+        }
 
 	      double Pr = 0.7;
 	      double blow = 1.0;
