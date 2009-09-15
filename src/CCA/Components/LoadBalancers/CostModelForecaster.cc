@@ -91,7 +91,7 @@ void CostModelForecaster::outputError(const GridP grid)
         continue;
 
       //cout << d_myworld->myrank() << " patch:" << patch->getID() << " exectTime: " << execTimes[patch->getID()] << " cost: " << costs[l][p] << endl;
-      double diff=(execTimes[patch->getID()]-costs[l][p])/execTimes[patch->getID()];
+      double diff=(execTimes[patch->getID()]-costs[l][p])/(execTimes[patch->getID()]+costs[l][p]);
       IntVector low(patch->getCellLowIndex__New()), high(patch->getCellHighIndex__New());
       if(stats2.active())
         cout << "PROFILESTATS: " << iter << " " << diff << " " << l << " " 
@@ -108,7 +108,7 @@ void CostModelForecaster::outputError(const GridP grid)
   if(d_myworld->myrank()==0 && stats.active())
   {
     sum_error/=size;
-    cout << "MAPE: " << sum_error << " MAXPE:" << max_error << endl;
+    cout << "sMAPE: " << sum_error << " MAXsPE:" << max_error << endl;
   }
 }
 void CostModelForecaster::collectPatchInfo(const GridP grid, vector<PatchInfo> &patch_info) 

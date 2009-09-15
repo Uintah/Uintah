@@ -99,7 +99,7 @@ void ProfileDriver::outputError(const GridP currentGrid)
   vector<double> proc_costsp(d_myworld->size(),0);
   vector<vector<double> > predicted_sum(currentGrid->numLevels()), measured_sum(currentGrid->numLevels());
 
-  double mape=0,max_error=0;
+  double smape=0,max_error=0;
   int num_patches=0;
   //for each level
   for (int l=0; l<currentGrid->numLevels();l++)
@@ -155,10 +155,10 @@ void ProfileDriver::outputError(const GridP currentGrid)
       int proc=d_lb->getPatchwiseProcessorAssignment(patch);
       proc_costsm[proc]+=measured_sum[l][p];
       proc_costsp[proc]+=predicted_sum[l][p];
-      double error=abs((measured_sum[l][p]-predicted_sum[l][p])/measured_sum[l][p]);
+      double error=abs((measured_sum[l][p]-predicted_sum[l][p])/(measured_sum[l][p]+predicted_sum[l][p]));
       if(error>max_error)
         max_error=error;
-      mape+=error;
+      smape+=error;
 
       if(d_myworld->myrank()==0 && stats2.active())
       {
@@ -187,9 +187,9 @@ void ProfileDriver::outputError(const GridP currentGrid)
     }
   }
 
-  mape/=num_patches;
+  smape/=num_patches;
   if(d_myworld->myrank()==0 && stats.active())
-    cout << "MAPE: " << mape << " MAXPE: " << max_error << endl;
+    cout << "sMAPE: " << smape << " MAXsPE: " << max_error << endl;
 
   double meanCostm=0, meanCostp=0;
   double maxCostm=proc_costsm[0], maxCostp=proc_costsp[0];
