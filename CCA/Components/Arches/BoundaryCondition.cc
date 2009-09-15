@@ -6220,7 +6220,7 @@ BoundaryCondition::bcdummySolve( const ProcessorGroup*,
 {
 
   for (int p = 0; p < patches->size(); p++) {
-    int archIndex = 0; // only one arches material
+    //int archIndex = 0; // only one arches material
 
     for ( EfficiencyMap::iterator iter = d_effVars.begin(); iter != d_effVars.end(); iter++){
       new_dw->put(delt_vartype(0.0),iter->second.label);

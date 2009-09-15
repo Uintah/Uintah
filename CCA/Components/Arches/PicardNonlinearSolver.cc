@@ -617,7 +617,7 @@ PicardNonlinearSolver::recursiveSolver(const ProcessorGroup* pg,
   double scalar_clipped = 0.0;
   double reactscalar_clipped = 0.0;
   double norm;
-  double init_norm;
+  double init_norm = 0.0;
   int num_procs = d_myworld->size();
   
   if (dynamic_cast<const ScaleSimilarityModel*>(d_turbModel)) {

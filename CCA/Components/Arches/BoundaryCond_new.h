@@ -39,6 +39,21 @@ public:
                         const Patch* patch,
                         CCVariable<double>& scalar, 
                         string varname );
+  /** @brief This method set the boundary values of a vector to a 
+   * value such that the interpolation or gradient computed between the 
+   * interior cell and boundary cell match the boundary condition. */ 
+  void setVectorValueBC( const ProcessorGroup*,
+    const Patch* patch,
+    CCVariable<Vector>& vec, 
+    string varname );
+  /** @brief This method set the boundary values of a vector to a 
+   * value such that the interpolation or gradient computed between the 
+   * interior cell and boundary cell match the boundary condition. This is 
+   * a specialized case where the boundary value comes from some other vector */
+  void setVectorValueBC( const ProcessorGroup*,
+    const Patch* patch,
+    CCVariable<Vector>& vec, constCCVariable<Vector>& const_vec, 
+    string varname );
   /** @brief Actually set the boundary conditions.  I think this won't be used */ 
   void setBC( const ProcessorGroup* ,
 		          const PatchSubset* patches,
