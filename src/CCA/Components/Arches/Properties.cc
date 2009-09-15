@@ -471,7 +471,7 @@ Properties::sched_computeProps(SchedulerP& sched,
   Task* tsk = scinew Task(taskname, this,
                           &Properties::computeProps,
                           timelabels, modify_ref_density); 
-  Ghost::GhostType  gn = Ghost::None;
+  //Ghost::GhostType  gn = Ghost::None;
   
   if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First){
     //compute variables on the first time step

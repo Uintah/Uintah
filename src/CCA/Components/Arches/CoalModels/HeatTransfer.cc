@@ -321,7 +321,7 @@ HeatTransfer::computeModel( const ProcessorGroup * pc,
     DataWarehouse        * new_dw )
 {
   //cout << "computemodel start" << endl;
-  double pi = 3.14159265;
+  double pi = acos(-1.0);
   for( int p=0; p < patches->size(); p++ ) {  // Patch loop
 
     //Ghost::GhostType  gaf = Ghost::AroundFaces;
@@ -391,7 +391,7 @@ HeatTransfer::computeModel( const ProcessorGroup * pc,
         sphGas = cart2sph( cartGas ); 
         sphPart = cart2sph( cartPart ); 
 	
-        if (weight[c] < 1e-4 ) {
+        if (weight[c] < 1e-12 ) { //not sure if we need this
 		      heat_rate[c] = 0.0;
 	      } else {
 	
@@ -416,7 +416,7 @@ HeatTransfer::computeModel( const ProcessorGroup * pc,
 	      double Nu = 2.0 + 0.6*pow(Re,0.5)*pow(Pr,0.333);
 	      double rhop = 1000.0;
 	      double cp = 3000.0;
-	      double alpha = rhop*(4/3*pi*pow(length/2,3));
+        double alpha = rhop*4.0/3.0*pi*pow(length/2.0,3.0); 
 	      double Qconv = Nu*pi*blow*rkg*length*(temperature[c]-particle_temperature);
 		
 	      // Radiative transfer

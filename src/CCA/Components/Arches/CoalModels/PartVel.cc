@@ -42,6 +42,10 @@ void PartVel::problemSetup(const ProblemSpecP& inputdb)
 
   vel_db->getWithDefault( "upper_limit_multiplier", d_upLimMult, 2.0 ); // d_highClip set using this factor (below)
   vel_db->getWithDefault( "clip_low", d_lowClip, 0.0 ); 
+
+  vel_db->getWithDefault( "partvelBC_eq_gasvelBC", d_gasBC, true ); 
+
+  d_boundaryCond = scinew BoundaryCondition_new( d_fieldLabels ); 
 }
 
 //---------------------------------------------------------------------------
@@ -160,7 +164,7 @@ void PartVel::ComputePartVel( const ProcessorGroup* pc,
       const VarLabel* mylLabel = eqn.getTransportEqnLabel();  
       old_dw->get(wlength, mylLabel, matlIndex, patch, gn, 0); 
 
-      d_highClip = eqn.getScalingConstant()*d_upLimMult; // yes I could probably figure out how to do this once and only once...
+      d_highClip = eqn.getScalingConstant()*d_upLimMult; // should figure out how to do this once and only once...
 
       name = "w_qn"; 
       name += node; 
@@ -178,10 +182,18 @@ void PartVel::ComputePartVel( const ProcessorGroup* pc,
       else  
         new_dw->getModifiable( partVel, iter->second, matlIndex, patch ); 
       old_dw->get(old_partVel, iter->second, matlIndex, patch, gn, 0);
+
+      // set boundary conditions. 
+      name = "vel_qn";
+      name += node; 
+      if ( d_gasBC )  // assume gas vel =  part vel on boundary 
+        d_boundaryCond->setVectorValueBC( 0, patch, partVel, gasVel, name ); 
+      else           // part vel set by user.  
+        d_boundaryCond->setVectorValueBC( 0, patch, partVel, name );  
       
 
       // now loop over all cells
-      for (CellIterator iter=patch->getExtraCellIterator__New(0); !iter.done(); iter++){
+      for (CellIterator iter=patch->getCellIterator__New(0); !iter.done(); iter++){
         IntVector c = *iter;
 
         double length;

@@ -204,6 +204,8 @@ namespace Uintah{
       inline FaceData1D getFaceVelocity( const IntVector c, const CCVariable<double>& F, constCCVariable<Vector> vel, const IntVector coord ){
       
         FaceData1D the_vel;
+        the_vel.minus = 0.0;
+        the_vel.plus  = 0.0; 
 
         int coord_sum = coord[0] + coord[1] + coord[2]; 
 
@@ -598,7 +600,6 @@ namespace Uintah{
           Patch::FaceType face = *bf_iter; 
           IntVector inside = p->faceDirection(face); 
           CellIterator c_iter = getInteriorBoundaryCellIterator( p, bf_iter ); 
-          FaceBoundaryBool fb; //face boundaries
           FaceBoundaryBool faceIsBoundary; 
 
           for (c_iter.begin(); !c_iter.done(); c_iter++){
@@ -713,7 +714,6 @@ namespace Uintah{
           Patch::FaceType face = *bf_iter; 
           IntVector inside = p->faceDirection(face); 
           CellIterator c_iter = getInteriorBoundaryCellIterator( p, bf_iter ); 
-          FaceBoundaryBool fb; //face boundaries
           FaceBoundaryBool faceIsBoundary; 
 
           for (c_iter.begin(); !c_iter.done(); c_iter++){
@@ -899,7 +899,6 @@ namespace Uintah{
           Patch::FaceType face = *bf_iter; 
           IntVector inside = p->faceDirection(face); 
           CellIterator c_iter = getInteriorBoundaryCellIterator( p, bf_iter ); 
-          FaceBoundaryBool fb; //face boundaries
           FaceBoundaryBool faceIsBoundary; 
 
           for (c_iter.begin(); !c_iter.done(); c_iter++){
@@ -1006,7 +1005,6 @@ namespace Uintah{
           Patch::FaceType face = *bf_iter; 
           IntVector inside = p->faceDirection(face); 
           CellIterator c_iter = getInteriorBoundaryCellIterator( p, bf_iter ); 
-          FaceBoundaryBool fb; //face boundaries
           FaceBoundaryBool faceIsBoundary; 
 
           for (c_iter.begin(); !c_iter.done(); c_iter++){
@@ -1185,7 +1183,6 @@ namespace Uintah{
           Patch::FaceType face = *bf_iter; 
           IntVector inside = p->faceDirection(face); 
           CellIterator c_iter = getInteriorBoundaryCellIterator( p, bf_iter ); 
-          FaceBoundaryBool fb; //face boundaries
           FaceBoundaryBool faceIsBoundary; 
 
           for (c_iter.begin(); !c_iter.done(); c_iter++){
@@ -1292,7 +1289,6 @@ namespace Uintah{
           Patch::FaceType face = *bf_iter; 
           IntVector inside = p->faceDirection(face); 
           CellIterator c_iter = getInteriorBoundaryCellIterator( p, bf_iter ); 
-          FaceBoundaryBool fb; //face boundaries
           FaceBoundaryBool faceIsBoundary; 
 
           for (c_iter.begin(); !c_iter.done(); c_iter++){

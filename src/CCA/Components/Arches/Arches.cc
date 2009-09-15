@@ -579,9 +579,6 @@ Arches::problemSetup(const ProblemSpecP& params,
     d_nlSolver->setDQMOMSolver( d_dqmomSolver ); 
 
   } 
-
-
-
 }
 
 // ****************************************************************************

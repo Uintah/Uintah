@@ -5,6 +5,7 @@
 #include <Core/Util/Handle.h>
 #include <Core/Grid/SimulationStateP.h>
 #include <CCA/Ports/Scheduler.h>
+#include <CCA/Components/Arches/BoundaryCond_new.h>
 
 #include <map>
 #include <string>
@@ -34,6 +35,13 @@ public:
                        const MaterialSubset* matls, 
                        DataWarehouse* old_dw, 
                        DataWarehouse* new_dw, const int rkStep );
+  void computeBCs( const Patch* patch, 
+                   string varName, 
+                   CCVariable<Vector>& vel ){
+
+    d_boundaryCond->setVectorValueBC( 0, patch, vel, varName ); 
+
+  };
 
 private:
 
@@ -47,9 +55,12 @@ private:
   double kvisc; // fluid kinematic viscosity
   //int regime; // what is this??? 
   double d_upLimMult; // multiplies the upper limit of the scaling factor for upper bounds on ic. 
+  bool d_gasBC; 
 
   vector<double> d_wlo;
   vector<double> d_wo;
+
+  BoundaryCondition_new* d_boundaryCond; 
 
   Vector cart2sph( Vector X ) {
     // converts cartesean to spherical coords
