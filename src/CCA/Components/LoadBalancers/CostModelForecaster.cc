@@ -78,7 +78,7 @@ void CostModelForecaster::outputError(const GridP grid)
   getWeights(grid.get_rep(), num_particles,costs);
 
   double size=0;
-  double sum_error_local=0,max_error_local=0;
+  double sum_error_local=0,sum_aerror_local=0,max_error_local=0;
   for(int l=0;l<grid->numLevels();l++)
   {
     LevelP level=grid->getLevel(l);
@@ -91,24 +91,27 @@ void CostModelForecaster::outputError(const GridP grid)
         continue;
 
       //cout << d_myworld->myrank() << " patch:" << patch->getID() << " exectTime: " << execTimes[patch->getID()] << " cost: " << costs[l][p] << endl;
-      double diff=fabs(execTimes[patch->getID()]-costs[l][p])/(execTimes[patch->getID()]+costs[l][p]);
+      double error=(execTimes[patch->getID()]-costs[l][p])/(execTimes[patch->getID()]+costs[l][p]);
       IntVector low(patch->getCellLowIndex__New()), high(patch->getCellHighIndex__New());
       if(stats2.active())
-        cout << "PROFILESTATS: " << iter << " " << diff << " " << l << " " 
+        cout << "PROFILESTATS: " << iter << " " << fabs(error) << " " << l << " " 
             << low[0] << " " << low[1] << " " << low[2] << " " << high[0] << " " << high[1] << " " << high[2] << endl;
 
-      if(diff>max_error_local)
-        max_error_local=diff;
-      sum_error_local+=diff;
+      if(fabs(error)>max_error_local)
+        max_error_local=fabs(error);
+      sum_error_local+=error;
+      sum_aerror_local+=fabs(error);
      }
   }
-  double sum_error=0,max_error=0;
+  double sum_error=0,sum_aerror=0,max_error=0;
   MPI_Reduce(&sum_error_local,&sum_error,1,MPI_DOUBLE,MPI_SUM,0,d_myworld->getComm());
+  MPI_Reduce(&sum_aerror_local,&sum_aerror,1,MPI_DOUBLE,MPI_SUM,0,d_myworld->getComm());
   MPI_Reduce(&max_error_local,&max_error,1,MPI_DOUBLE,MPI_MAX,0,d_myworld->getComm());
   if(d_myworld->myrank()==0 && stats.active())
   {
     sum_error/=size;
-    cout << "sMAPE: " << sum_error << " MAXsPE:" << max_error << endl;
+    sum_aerror/=size;
+    cout << "sMPE: " << sum_error << " sMAPE: " << sum_aerror << " MAXsPE: " << max_error << endl;
   }
 }
 void CostModelForecaster::collectPatchInfo(const GridP grid, vector<PatchInfo> &patch_info) 
