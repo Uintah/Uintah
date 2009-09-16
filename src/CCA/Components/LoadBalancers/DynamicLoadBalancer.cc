@@ -368,10 +368,6 @@ void DynamicLoadBalancer::useSFC(const LevelP& level, int* order)
 {
   vector<DistributedIndex> indices; //output
   vector<double> positions;
-  double start=Time::currentSeconds();
-  
-  lbtimes[0]+=Time::currentSeconds()-start;
-  start=Time::currentSeconds();
 
   //this should be removed when dimensions in shared state is done
   int dim=d_sharedState->getNumDims();
@@ -440,14 +436,8 @@ void DynamicLoadBalancer::useSFC(const LevelP& level, int* order)
   sfc.SetLocations(&positions);
   sfc.SetOutputVector(&indices);
   
-  lbtimes[1]+=Time::currentSeconds()-start;
-  start=Time::currentSeconds();
-  
   sfc.GenerateCurve();
   
-  lbtimes[2]+=Time::currentSeconds()-start;
-  start=Time::currentSeconds();
-
   if(d_myworld->size()>1)  
   {
     vector<int> recvcounts(d_myworld->size(), 0);
@@ -468,8 +458,6 @@ void DynamicLoadBalancer::useSFC(const LevelP& level, int* order)
     indices.swap(rbuf);
   
   }
-  lbtimes[3]+=Time::currentSeconds()-start;
-  start=Time::currentSeconds();
 
   //convert distributed indices to normal indices
   for(unsigned int i=0;i<indices.size();i++)
@@ -477,8 +465,6 @@ void DynamicLoadBalancer::useSFC(const LevelP& level, int* order)
     DistributedIndex di=indices[i];
     order[i]=originalPatchStart[di.p]+di.i;
   }
-  lbtimes[4]+=Time::currentSeconds()-start;
-  start=Time::currentSeconds();
 
 #if 0
   cout << "SFC order: ";
@@ -703,9 +689,17 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
   for(int i=0;i<5;i++)
     lbtimes[i]=0;
 
+  double start=Time::currentSeconds();
+  
+  lbtimes[0]+=Time::currentSeconds()-start;
+  start=Time::currentSeconds();
+
   int num_procs = d_myworld->size();
 
   getCosts(grid.get_rep(),patch_costs);
+
+  lbtimes[1]+=Time::currentSeconds()-start;
+  start=Time::currentSeconds();
 
   int level_offset=0;
 
@@ -727,6 +721,9 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
       //cout << d_myworld->myrank() << "   Doing SFC level " << l << endl;
       useSFC(level, &order[0]);
     }
+    
+    lbtimes[2]+=Time::currentSeconds()-start;
+    start=Time::currentSeconds();
 
     //hard maximum cost for assigning a patch to a processor
     double avgCost = (total_cost+previous_total_cost) / num_procs;
@@ -875,6 +872,8 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
       iter++;
     }
 
+    lbtimes[3]+=Time::currentSeconds()-start;
+    start=Time::currentSeconds();
 
     if(minProcLoc!=-1 && num_procs>1)
     {
@@ -935,6 +934,8 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
     }  
 
     level_offset+=num_patches;
+    lbtimes[4]+=Time::currentSeconds()-start;
+    start=Time::currentSeconds();
   }
 
   if(stats.active() && d_myworld->myrank()==0)
