@@ -32,8 +32,33 @@ set xml_tag = `echo "$replacePattern" |awk -F"[<>]" '{print $2}'`
 
 #do a line replacement
 cp $f $f.tmp
+
+# bulletproofing
+grep -q "<$xml_tag>.*<\/$xml_tag>" $f.tmp
+
+if ($status != 0) then
+  echo ""
+  echo " Could not find the xml tags"
+  echo " <$xml_tag>.*</$xml_tag>"
+  echo " now exiting"
+  exit 1
+endif
+
+# perform the replacement
 sed s/"<$xml_tag>.*<\/$xml_tag>"/"$replacePattern"/g < $f.tmp >& $f
 
-/bin/rm $f.tmp 
 
-exit
+#bulletproofing
+if ($status != 0) then
+  echo ""
+  echo "Error:  there was a problem during the search and replace."
+  echo "        The original file has not been modified."
+  echo ""
+  mv $f.tmp $f
+  exit 1
+endif
+
+#clean up
+/bin/rm $f.tmp
+
+exit 0
