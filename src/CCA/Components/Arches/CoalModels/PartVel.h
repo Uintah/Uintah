@@ -110,6 +110,7 @@ private:
 
   double d_highClip; 
   double d_lowClip; 
+  double d_power; 
   
 
  }; //end class PartVel
