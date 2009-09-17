@@ -30,12 +30,21 @@ void PartVel::problemSetup(const ProblemSpecP& inputdb)
 
   ProblemSpecP vel_db = db->findBlock("VelModel");
   if (vel_db) {
+    int regime; 
     vel_db->getWithDefault("kinematic_viscosity",kvisc,1); 
     vel_db->getWithDefault("eta",eta,1); 
     vel_db->getWithDefault("rho_ratio",rhoRatio,0);
     beta = 3. / (2.*rhoRatio + 1.); 
     vel_db->getWithDefault("epsilon",epsilon,0);
-    //vel_db->getWithDefault("regime",regime,1);      
+    vel_db->getWithDefault("regime",regime,1);      
+
+    if (regime == 1)
+      d_power = 1;
+    else if (regime == 2) 
+      d_power = 0.5;
+    else if (regime == 3)
+      d_power = 1./3.;
+
   } else {
     throw InvalidValue( "A <VelModel> section is missing from your input file!",__FILE__,__LINE__);
   }
@@ -211,6 +220,7 @@ void PartVel::ComputePartVel( const ProcessorGroup* pc,
 
         Vector sphGas = Vector(0.,0.,0.);
         Vector cartGas = gasVel[c]; 
+        
         Vector sphPart = Vector(0.,0.,0.);
         Vector cartPart = old_partVel[c]; 
 
@@ -227,7 +237,9 @@ void PartVel::ComputePartVel( const ProcessorGroup* pc,
         double uk  = eta*epsilon; 
         uk = pow(uk,1./3.);
 
-        double newPartMag = sphGas.z() - uk*(2*rhoRatio+1)/36*(1-beta)/phi*pow(length/eta,2);
+        double t_p_by_t_k = (2*rhoRatio+1)/36*1.0/phi*pow(length/eta,2);
+
+        double newPartMag = sphGas.z() - uk*(1-beta)*pow(t_p_by_t_k, d_power);
         //if(newPartMag > 0) cout << "newPartMag "<< newPartMag << "  " << name << endl;
   
         sphPart = Vector(sphGas.x(), sphGas.y(), newPartMag);
