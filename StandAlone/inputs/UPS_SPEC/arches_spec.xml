@@ -310,6 +310,11 @@
           <eta                          spec="REQUIRED DOUBLE 'positive'"/>
           <rho_ratio                    spec="REQUIRED DOUBLE 'positive'"/>
           <epsilon                      spec="REQUIRED DOUBLE 'positive'"/>
+          <regime                       spec="REQUIRED INTEGER '1 3'"/>
+
+          <upper_limit_multiplier       spec="OPTIONAL DOUBLE"/>
+          <clip_low                     spec="OPTIONAL DOUBLE"/>
+          <partvelBC_eq_gasvelBC        spec="OPTIONAL BOOLEAN"/>
 
         </VelModel>
 
