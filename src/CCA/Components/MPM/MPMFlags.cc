@@ -73,8 +73,8 @@ MPMFlags::MPMFlags(const ProcessorGroup* myworld)
   d_forceIncrementFactor = 1.0;
   d_canAddMPMMaterial = false;
   d_interpolator = scinew LinearInterpolator(); 
-  d_do_contact_friction = true;
-  d_addFrictionWork = 1.0;  // don't do frictional heating by default
+  d_do_contact_friction = false;
+  d_addFrictionWork = 0.0;  // don't do frictional heating by default
 
   d_extraSolverFlushes = 0;  // Have PETSc do more flushes to save memory
   d_doImplicitHeatConduction = false;
@@ -165,6 +165,8 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps)
 
   mpm_flag_ps->get("do_contact_friction_heating", d_do_contact_friction);
   if (!d_do_contact_friction) d_addFrictionWork = 0.0;
+
+
   ProblemSpecP erosion_ps = mpm_flag_ps->findBlock("erosion");
   if (erosion_ps) {
     if (erosion_ps->getAttribute("algorithm", d_erosionAlgorithm)) {
