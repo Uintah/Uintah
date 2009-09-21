@@ -4038,6 +4038,7 @@ void ICE::accumulateEnergySourceSinks(const ProcessorGroup*,
     for(int m = 0; m < numMatls; m++) {
       Material* matl = d_sharedState->getMaterial( m );
       ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl); 
+      MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl); 
 
       int indx    = matl->getDWIndex();   
       CCVariable<double> int_eng_source;
@@ -4074,35 +4075,40 @@ void ICE::accumulateEnergySourceSinks(const ProcessorGroup*,
       //__________________________________
       //   Compute source from volume dilatation
       //   Exclude contribution from delP_MassX
-      bool includeFlowWork = matl->getIncludeFlowWork();
+      bool includeFlowWork = false;
+      if (ice_matl)
+        includeFlowWork = ice_matl->getIncludeFlowWork();
+      if (mpm_matl)
+        includeFlowWork = mpm_matl->getIncludeFlowWork();
       if(includeFlowWork){
         for(CellIterator iter = patch->getCellIterator__New(); !iter.done(); iter++){
           IntVector c = *iter;
-//          A = vol * vol_frac[c] * kappa[c] * press_CC[c];
+          //          A = vol * vol_frac[c] * kappa[c] * press_CC[c];
           A = TMV_CC[c] * vol_frac[c] * kappa[c] * press_CC[c];
           int_eng_source[c] += A * delP_Dilatate[c] + heatCond_src[c];
         }
       }
-
-      //__________________________________
-      //  User specified source/sink 
-      double Time= dataArchiver->getCurrentTime();  
-      if (  d_add_heat &&
-            Time >= d_add_heat_t_start && 
-            Time <= d_add_heat_t_final ) { 
-        for (int i = 0; i<(int) d_add_heat_matls.size(); i++) {
-          if(m == d_add_heat_matls[i] ){
-             for(CellIterator iter = patch->getCellIterator__New();!iter.done();
-                                                                      iter++){
-              IntVector c = *iter;
-              if ( vol_frac[c] > 0.001) {
-                int_eng_source[c] += d_add_heat_coeff[i]
-                                   * delT * rho_CC[c] * vol;
-              }
-            }  // iter loop
-          }  // if right matl
-        } 
-      }  // if add heat
+    
+    
+    //__________________________________
+    //  User specified source/sink 
+    double Time= dataArchiver->getCurrentTime();  
+    if (  d_add_heat &&
+          Time >= d_add_heat_t_start && 
+          Time <= d_add_heat_t_final ) { 
+      for (int i = 0; i<(int) d_add_heat_matls.size(); i++) {
+        if(m == d_add_heat_matls[i] ){
+          for(CellIterator iter = patch->getCellIterator__New();!iter.done();
+              iter++){
+            IntVector c = *iter;
+            if ( vol_frac[c] > 0.001) {
+              int_eng_source[c] += d_add_heat_coeff[i]
+                * delT * rho_CC[c] * vol;
+            }
+          }  // iter loop
+        }  // if right matl
+      } 
+    }  // if add heat
 
       //---- P R I N T   D A T A ------ 
       if (switchDebug_Source_Sink) {

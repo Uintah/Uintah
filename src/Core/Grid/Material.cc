@@ -128,7 +128,3 @@ double Material::getHeatTransferCoefficient() const
   return d_heatTransferCoefficient;
 }
 
-bool Material::getIncludeFlowWork() const
-{
-  return d_includeFlowWork;
-}
