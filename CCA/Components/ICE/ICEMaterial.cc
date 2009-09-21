@@ -171,6 +171,10 @@ double ICEMaterial::getSpecificHeat() const
   return d_specificHeat;
 }
 
+double ICEMaterial::getThermalConductivity() const
+{
+  return d_thermalConductivity;
+}
 
 /* --------------------------------------------------------------------- 
  Function~  ICEMaterial::initializeCells--
