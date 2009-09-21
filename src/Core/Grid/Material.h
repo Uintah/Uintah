@@ -101,8 +101,6 @@ WARNING
      
      virtual void registerParticleState(SimulationState* ss);
 
-     double getThermalConductivity() const;
-
      bool hasName() const {
        return haveName;
      }
@@ -116,7 +114,7 @@ WARNING
       // Index associated with this material's velocity field
       int d_vfindex;
       MaterialSubset* thismatl;
-      double d_thermalConductivity;
+
 
 
    private:

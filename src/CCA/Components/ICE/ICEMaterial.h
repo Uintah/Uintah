@@ -98,6 +98,7 @@ WARNING
    bool   isSurroundingMatl() const;
    bool getIncludeFlowWork() const;
    double getSpecificHeat() const;
+   double getThermalConductivity() const;
    
    void initializeCells(CCVariable<double>& rhom,
                      CCVariable<double>& rhC,
@@ -117,6 +118,7 @@ WARNING
    bool d_isSurroundingMatl; // defines which matl is the background matl.
    bool d_includeFlowWork;
    double d_specificHeat;
+   double d_thermalConductivity;
 
    std::vector<GeometryObject*> d_geom_objs;
 

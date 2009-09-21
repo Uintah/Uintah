@@ -298,6 +298,11 @@ double MPMMaterial::getSpecificHeat() const
   return d_specificHeat;
 }
 
+double MPMMaterial::getThermalConductivity() const
+{
+  return d_thermalConductivity;
+}
+
 
 /* --------------------------------------------------------------------- 
  Function~  MPMMaterial::initializeCells--
