@@ -97,6 +97,7 @@ WARNING
    double getSpeedOfSound() const;
    bool   isSurroundingMatl() const;
    bool getIncludeFlowWork() const;
+   double getSpecificHeat() const;
    
    void initializeCells(CCVariable<double>& rhom,
                      CCVariable<double>& rhC,
@@ -115,6 +116,7 @@ WARNING
    double d_gamma;
    bool d_isSurroundingMatl; // defines which matl is the background matl.
    bool d_includeFlowWork;
+   double d_specificHeat;
 
    std::vector<GeometryObject*> d_geom_objs;
 

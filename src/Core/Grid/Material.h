@@ -102,7 +102,6 @@ WARNING
      virtual void registerParticleState(SimulationState* ss);
 
      double getThermalConductivity() const;
-     double getSpecificHeat() const;
 
      bool hasName() const {
        return haveName;
@@ -118,7 +117,6 @@ WARNING
       int d_vfindex;
       MaterialSubset* thismatl;
       double d_thermalConductivity;
-      double d_specificHeat;
 
 
    private:

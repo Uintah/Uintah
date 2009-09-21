@@ -216,12 +216,13 @@ void TestModel::computeModelSources(const ProcessorGroup*,
     Ghost::GhostType  gn = Ghost::None;
    
     if(d_is_mpm_matl){
+      MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(d_matl);
       dw = new_dw;            // MPM  (Just grab it)
       constCCVariable<double> cmass;  
       dw->get(cmass,   MIlb->cMassLabel,    m0, patch, gn, 0); 
       mass_0.copyData(cmass);
    
-      cv.initialize(d_matl->getSpecificHeat());
+      cv.initialize(mpm_matl->getSpecificHeat());
     } else {
       dw = old_dw;            // ICE   (compute it from the density)
       constCCVariable<double> rho_tmp, cv_ice;
