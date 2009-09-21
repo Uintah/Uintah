@@ -10,6 +10,7 @@
 %  HardWired Variables  ( Tweak these)
 clear all;
 close all;
+setenv('LD_LIBRARY_PATH', ['/usr/lib']);
 
 uda      = sprintf('rayleigh.uda.001')
 viscosity = 0.01;

@@ -10,6 +10,7 @@
 clear all;
 clear functions;
 close all;
+setenv('LD_LIBRARY_PATH', ['/usr/lib']);
 
 %________________________________
 % define the uda dirctories here

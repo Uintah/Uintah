@@ -10,6 +10,7 @@
 close all;
 clear all;
 clear function;
+setenv('LD_LIBRARY_PATH', ['/usr/lib']);
 
 %________________________________
 % USER INPUTS

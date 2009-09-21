@@ -7,6 +7,8 @@
 
 clear all;
 close all;
+setenv('LD_LIBRARY_PATH', ['/usr/lib']);
+
 %_____________________________________________________________________
 % Problem specific variables
 uda           = sprintf('imp_pistonVal.uda');    % uda to compare against
