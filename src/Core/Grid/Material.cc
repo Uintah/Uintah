@@ -122,9 +122,3 @@ double Material::getSpecificHeat() const
 {
   return d_specificHeat;
 }
-
-double Material::getHeatTransferCoefficient() const
-{
-  return d_heatTransferCoefficient;
-}
-

@@ -103,7 +103,6 @@ WARNING
 
      double getThermalConductivity() const;
      double getSpecificHeat() const;
-     double getHeatTransferCoefficient() const;
 
      bool hasName() const {
        return haveName;
@@ -120,7 +119,6 @@ WARNING
       MaterialSubset* thismatl;
       double d_thermalConductivity;
       double d_specificHeat;
-      double d_heatTransferCoefficient;
 
 
    private:
