@@ -136,6 +136,8 @@ WARNING
 
    bool getIsRigid() const;
 
+   bool getIncludeFlowWork() const;
+
    int nullGeomObject() const;
 
 
@@ -162,6 +164,7 @@ WARNING
    ParticleCreator* d_particle_creator;
 
    double d_density;
+   bool d_includeFlowWork;
 
    // Specific heats at constant pressure and constant volume
    // (values at room temperature - [273.15 + 20] K)

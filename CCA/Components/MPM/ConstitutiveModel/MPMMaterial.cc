@@ -286,6 +286,13 @@ bool MPMMaterial::getIsRigid() const
 {
   return d_is_rigid;
 }
+
+
+bool MPMMaterial::getIncludeFlowWork() const
+{
+  return d_includeFlowWork;
+}
+
 /* --------------------------------------------------------------------- 
  Function~  MPMMaterial::initializeCells--
  Notes:  This function initializeCCVariables.  Reasonable values for 

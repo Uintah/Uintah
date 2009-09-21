@@ -96,6 +96,7 @@ WARNING
    double getViscosity() const;
    double getSpeedOfSound() const;
    bool   isSurroundingMatl() const;
+   bool getIncludeFlowWork() const;
    
    void initializeCells(CCVariable<double>& rhom,
                      CCVariable<double>& rhC,
@@ -113,7 +114,8 @@ WARNING
    double d_viscosity;
    double d_gamma;
    bool d_isSurroundingMatl; // defines which matl is the background matl.
-   
+   bool d_includeFlowWork;
+
    std::vector<GeometryObject*> d_geom_objs;
 
    ICELabel* lb;

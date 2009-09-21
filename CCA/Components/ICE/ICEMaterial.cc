@@ -161,6 +161,12 @@ bool ICEMaterial::isSurroundingMatl() const
   return d_isSurroundingMatl;
 }
 
+bool ICEMaterial::getIncludeFlowWork() const
+{
+  return d_includeFlowWork;
+}
+
+
 /* --------------------------------------------------------------------- 
  Function~  ICEMaterial::initializeCells--
  Purpose~ Initialize material dependent variables 
