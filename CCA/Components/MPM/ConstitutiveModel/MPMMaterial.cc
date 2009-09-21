@@ -293,6 +293,12 @@ bool MPMMaterial::getIncludeFlowWork() const
   return d_includeFlowWork;
 }
 
+double MPMMaterial::getSpecificHeat() const
+{
+  return d_specificHeat;
+}
+
+
 /* --------------------------------------------------------------------- 
  Function~  MPMMaterial::initializeCells--
  Notes:  This function initializeCCVariables.  Reasonable values for 

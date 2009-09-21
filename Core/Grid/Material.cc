@@ -117,8 +117,3 @@ double Material::getThermalConductivity() const
 {
   return d_thermalConductivity;
 }
-
-double Material::getSpecificHeat() const
-{
-  return d_specificHeat;
-}

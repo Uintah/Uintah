@@ -166,6 +166,11 @@ bool ICEMaterial::getIncludeFlowWork() const
   return d_includeFlowWork;
 }
 
+double ICEMaterial::getSpecificHeat() const
+{
+  return d_specificHeat;
+}
+
 
 /* --------------------------------------------------------------------- 
  Function~  ICEMaterial::initializeCells--

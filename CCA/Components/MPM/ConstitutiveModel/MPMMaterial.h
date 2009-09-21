@@ -137,6 +137,7 @@ WARNING
    bool getIsRigid() const;
 
    bool getIncludeFlowWork() const;
+   double getSpecificHeat() const;
 
    int nullGeomObject() const;
 
@@ -165,6 +166,7 @@ WARNING
 
    double d_density;
    bool d_includeFlowWork;
+   double d_specificHeat;
 
    // Specific heats at constant pressure and constant volume
    // (values at room temperature - [273.15 + 20] K)
