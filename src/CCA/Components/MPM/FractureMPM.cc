@@ -1984,7 +1984,7 @@ void FractureMPM::computeAndIntegrateAcceleration(const ProcessorGroup*,
   	         <<"\t\t\t MPM"<< endl;
     
     Ghost::GhostType  gnone = Ghost::None;
-    Vector gravity = getGravity();
+    Vector gravity = d_sharedState->getGravity();
     for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();

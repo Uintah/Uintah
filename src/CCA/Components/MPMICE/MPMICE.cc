@@ -991,7 +991,7 @@ void MPMICE::actuallyInitialize(const ProcessorGroup*,
     double junk=-9, tmp;
     int numALL_matls = d_sharedState->getNumMatls();
     int numMPM_matls = d_sharedState->getNumMPMMatls();
-    double p_ref = d_ice->getRefPress();
+    double p_ref = d_sharedState->getRefPress();
     for (int m = 0; m < numMPM_matls; m++ ) {
       CCVariable<double> rho_micro, sp_vol_CC, rho_CC, Temp_CC, speedSound;
       CCVariable<Vector> vel_CC;
@@ -1126,7 +1126,7 @@ void MPMICE::interpolatePAndGradP(const ProcessorGroup*,
     vector<IntVector> ni(interpolator->size());
     vector<double> S(interpolator->size());
 
-    double p_ref = d_ice->getRefPress();
+    double p_ref = d_sharedState->getRefPress();
     constNCVariable<double>   pressNC;    
     Ghost::GhostType  gac = Ghost::AroundCells;
     new_dw->get(pressNC, MIlb->press_NCLabel,  0, patch, gac, NGN);
@@ -1677,7 +1677,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
     double    converg_coeff = 100.;
     double    convergence_crit = converg_coeff * DBL_EPSILON;
     double    c_2;
-    double press_ref= d_ice->getRefPress();
+    double press_ref= d_sharedState->getRefPress();
     int numICEMatls = d_sharedState->getNumICEMatls();
     int numMPMMatls = d_sharedState->getNumMPMMatls();
     int numALLMatls = numICEMatls + numMPMMatls;
@@ -2266,7 +2266,7 @@ void MPMICE::actuallyInitializeAddedMPMMaterial(const ProcessorGroup*,
     double junk=-9, tmp;
     int m    = d_sharedState->getNumMPMMatls() - 1;
     int indx = d_sharedState->getNumMatls() - 1;
-    double p_ref = d_ice->getRefPress();
+    double p_ref = d_sharedState->getRefPress();
     CCVariable<double> rho_micro, sp_vol_CC, rho_CC, Temp_CC, speedSound;
     CCVariable<double>  heatRate_CC;
     CCVariable<Vector> vel_CC;

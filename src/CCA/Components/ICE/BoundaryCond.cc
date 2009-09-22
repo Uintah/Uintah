@@ -376,7 +376,7 @@ void get_rho_micro(StaticArray<CCVariable<double> >& rho_micro,
     throw InternalError("setBC (pressure): Invalid option for which_var", __FILE__, __LINE__);
   }
   
-  Vector gravity = custom_BC_basket->d_gravity;
+  Vector gravity = sharedState->getGravity(); 
 //  int timestep = sharedState->getCurrentTopLevelTimeStep();
   int numICEMatls  = sharedState->getNumICEMatls();
     
@@ -457,7 +457,7 @@ void setBC(CCVariable<double>& press_CC,
 
   int numALLMatls = sharedState->getNumMatls();
   int topLevelTimestep = sharedState->getCurrentTopLevelTimeStep();  
-  Vector gravity = custom_BC_basket->d_gravity;
+  Vector gravity = sharedState->getGravity();
   StaticArray<CCVariable<double> > rho_micro(numALLMatls);
   
   for (int m = 0; m < numALLMatls; m++) {
@@ -715,7 +715,7 @@ void setBC(CCVariable<double>& var_CC,
         // Temperature and Gravity and ICE Matls
         // -Ignore this during intialization phase,
         //  since we backout the temperature field
-        Vector gravity = custom_BC_basket->d_gravity;                             
+        Vector gravity = sharedState->getGravity();                             
         Material *matl = sharedState->getMaterial(mat_id);
         ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
         int P_dir =  patch->getFaceAxes(face)[0];  // principal direction

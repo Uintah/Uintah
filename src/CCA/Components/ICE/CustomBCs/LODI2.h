@@ -54,8 +54,6 @@ namespace Uintah {
   struct Lodi_variable_basket{
     double press_infinity;  
     double sigma;
-    double d_ref_press;
-    Vector d_gravity;
     int iceMatl_indx;
     vector<Patch::FaceType> LodiFaces;
     bool saveLiTerms;

@@ -497,13 +497,7 @@ protected:
                           DataWarehouse*,
                           DataWarehouse*);
                    
-  double getRefPress() const {
-    return d_ref_press;
-  }
 
-  Vector getGravity() const {
-    return d_gravity;
-  }
   
   SimulationStateP d_sharedState;
   MPMLabel* lb;
@@ -532,10 +526,6 @@ protected:
   MaterialSubset*  d_loadCurveIndex;
   
   AnalysisModule* d_analysisModule;
-
-  double d_ref_press;
-
-  Vector d_gravity;
 private:
 
   SerialMPM(const SerialMPM&);
