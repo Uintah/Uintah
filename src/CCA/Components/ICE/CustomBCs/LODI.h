@@ -51,6 +51,7 @@ namespace Uintah {
   struct Lodi_variable_basket{
     double press_infinity;  
     double sigma;
+    double d_ref_press;
   };
     
   //____________________________________________________________
@@ -85,6 +86,7 @@ namespace Uintah {
     StaticArray<constCCVariable<double> > gamma;
     bool usingLODI;
     bool setLodiBcs;                  
+    Lodi_variable_basket* var_basket;           
   };
 
   void lodi_bc_preprocess( const Patch* patch,

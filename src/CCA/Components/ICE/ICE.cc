@@ -231,10 +231,28 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec,
     throw InternalError("ICE:couldn't get solver port", __FILE__, __LINE__);
   }
 
+  d_ref_press = 0.0;
+  d_gravity = Vector(0.,0.,0.);
+
+  ProblemSpecP phys_cons_ps = prob_spec->findBlock("PhysicalConstants");
+  if(phys_cons_ps){
+    phys_cons_ps->require("gravity",d_gravity);
+    phys_cons_ps->get("reference_pressure",d_ref_press);
+  } else {
+    d_gravity=Vector(0,0,0);
+    d_ref_press=0;
+  }
+
+
   //__________________________________
   //  Custom BC setup
   d_customBC_var_basket->usingLodi = 
         read_LODI_BC_inputs(prob_spec,      d_customBC_var_basket->Lodi_var_basket);
+  if (d_customBC_var_basket->usingLodi) {
+    d_customBC_var_basket->Lodi_var_basket->d_ref_press = d_ref_press;
+    d_customBC_var_basket->Lodi_var_basket->d_gravity = d_gravity;
+  }
+
   d_customBC_var_basket->usingMicroSlipBCs =
         read_MicroSlip_BC_inputs(prob_spec, d_customBC_var_basket->Slip_var_basket);
   d_customBC_var_basket->using_MMS_BCs =
@@ -243,9 +261,19 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec,
         read_Sine_BC_inputs(prob_spec,       d_customBC_var_basket->sine_var_basket);  
   d_customBC_var_basket->sharedState    = sharedState;
 
+  d_customBC_var_basket->d_ref_press    = d_ref_press;
+  d_customBC_var_basket->d_gravity    = d_gravity;
+
+
   //__________________________________
   // read in all the printData switches
   printData_problemSetup( prob_spec);
+
+  // Get the physical constants that are shared between codes.
+  // For now it is just gravity.
+
+
+
 
   //__________________________________
   // Pull out from CFD-ICE section
@@ -254,6 +282,15 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec,
   d_canAddICEMaterial=false;
   cfd_ps->get("CanAddICEMaterial",d_canAddICEMaterial);
   ProblemSpecP cfd_ice_ps = cfd_ps->findBlock("ICE"); 
+  if(cfd_ice_ps && d_ref_press == 0.0){
+    throw ProblemSetupException(
+      "\n Could not find <reference_pressure> inside of <PhysicalConstants> \n"
+      " This pressure is used during the problem intialization and when\n"
+      " the pressure gradient is interpolated to the MPM particles \n"
+      " you must have it for all MPMICE and multimaterial ICE problems\n",
+       __FILE__, __LINE__);  
+    }
+
   
   cfd_ice_ps->get("max_iteration_equilibration",d_max_iter_equilibration);
   cfd_ice_ps->get("ClampSpecificVolume",d_clampSpecificVolume);
@@ -737,7 +774,7 @@ void ICE::scheduleInitialize(const LevelP& level,SchedulerP& sched)
   // Make adjustments to the hydrostatic pressure
   // and temperature fields.  You need to do this
   // after the models have initialized the flowfield
-  Vector grav = d_sharedState->getGravity();
+  Vector grav = d_gravity;
   const MaterialSet* ice_matls = d_sharedState->allICEMaterials();
   const MaterialSubset* ice_matls_sub = ice_matls->getUnion();
   if (grav.length() > 0 ) {
@@ -788,7 +825,7 @@ void ICE::restartInitialize()
   }
   
   // --------bulletproofing
-  Vector grav = d_sharedState->getGravity();
+  Vector grav = d_gravity;
   if (grav.length() >0.0 && d_surroundingMatl_indx == -9)  {
     throw ProblemSetupException("ERROR ICE::restartInitialize \n"
           "You must have \n" 
@@ -1951,7 +1988,7 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
         faceArea[2] = dx.x() * dx.y();        // Z
 
         double vol = dx.x() * dx.y() * dx.z();  
-        Vector grav = d_sharedState->getGravity();
+        Vector grav = d_gravity;
         double grav_vel =  Sqrt( dx.x() * fabs(grav.x()) + 
                                  dx.y() * fabs(grav.y()) + 
                                  dx.z() * fabs(grav.z()) ); 
@@ -2072,7 +2109,7 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
          << "\t\t\t\t ICE \tL-" <<L_indx<< endl;
     int numMatls    = d_sharedState->getNumICEMatls();
     int numALLMatls = d_sharedState->getNumMatls();
-    Vector grav     = d_sharedState->getGravity();
+    Vector grav     = d_gravity;
     StaticArray<constCCVariable<double> > placeHolder(0);
     StaticArray<CCVariable<double>   > rho_micro(max_indx);
     StaticArray<CCVariable<double>   > sp_vol_CC(max_indx);
@@ -2132,7 +2169,7 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
     }
 
     
-    double p_ref = d_sharedState->getRefPress();
+    double p_ref = getRefPress();
     press_CC.initialize(p_ref);
     for (int m = 0; m < numMatls; m++ ) {
       ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
@@ -2950,7 +2987,7 @@ void ICE::computeVel_FC(const ProcessorGroup*,
     int numMatls = d_sharedState->getNumMatls();
     
     Vector dx      = patch->dCell();
-    Vector gravity = d_sharedState->getGravity();
+    Vector gravity = d_gravity;
     
     constCCVariable<double> press_CC;
     Ghost::GhostType  gac = Ghost::AroundCells; 
@@ -3847,7 +3884,7 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
     old_dw->get(delT, d_sharedState->get_delt_label(),level);
  
     dx      = patch->dCell();
-    gravity = d_sharedState->getGravity();
+    gravity = d_gravity;
     vol     = dx.x() * dx.y() * dx.z();
     double areaX = dx.y() * dx.z();
     double areaY = dx.x() * dx.z();
@@ -5599,7 +5636,7 @@ void ICE::hydrostaticPressureAdjustment(const Patch* patch,
                                 const CCVariable<double>& rho_micro_CC,
                                 CCVariable<double>& press_CC)
 {
-  Vector gravity = d_sharedState->getGravity();
+  Vector gravity = d_gravity;
   // find the upper and lower point of the domain.
   const Level* level = patch->getLevel();
   GridP grid = level->getGrid();
