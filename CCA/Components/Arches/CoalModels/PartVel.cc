@@ -32,10 +32,11 @@ void PartVel::problemSetup(const ProblemSpecP& inputdb)
   if (vel_db) {
     int regime; 
     vel_db->getWithDefault("kinematic_viscosity",kvisc,1); 
-    vel_db->getWithDefault("eta",eta,1); 
+    vel_db->getWithDefault("iter", d_totIter, 15); 
+    vel_db->getWithDefault("tol",  d_tol, 1e-15); 
     vel_db->getWithDefault("rho_ratio",rhoRatio,0);
+    vel_db->getWithDefault("L",d_L, 1.0);
     beta = 3. / (2.*rhoRatio + 1.); 
-    vel_db->getWithDefault("epsilon",epsilon,0);
     vel_db->getWithDefault("regime",regime,1);      
 
     if (regime == 1)
@@ -204,6 +205,7 @@ void PartVel::ComputePartVel( const ProcessorGroup* pc,
       // now loop over all cells
       for (CellIterator iter=patch->getCellIterator__New(0); !iter.done(); iter++){
         IntVector c = *iter;
+        IntVector cxm = *iter - IntVector(1,0,0); 
 
         double length;
         if( weight[c] < 1e-6 ) {
@@ -224,32 +226,54 @@ void PartVel::ComputePartVel( const ProcessorGroup* pc,
         Vector sphPart = Vector(0.,0.,0.);
         Vector cartPart = old_partVel[c]; 
 
-        //cout << "carGas = " << cartGas << endl; 
-
         sphGas = cart2sph( cartGas ); 
         sphPart = cart2sph( cartPart ); 
 
-        //cout << "sphGas = " << sphGas << endl;
-        //cout << "old sphPart = " << sphPart << endl;
-         
-        double Re  = abs(sphGas.z() - sphPart.z())*length / kvisc;
-        double phi = 1. + .15*pow(Re, 0.687);
-        double uk  = eta*epsilon; 
-        uk = pow(uk,1./3.);
+        
+        double diff = sphGas.z() - sphPart.z(); 
+        double prev_diff = 0.0;
+        double newPartMag = 0.0;
+        double length_ratio = 0.0;
+        eta = 0;
 
-        double t_p_by_t_k = (2*rhoRatio+1)/36*1.0/phi*pow(length/eta,2);
+        epsilon =  pow(sphGas.z(),3.0);
+        epsilon /= d_L;
+        if (epsilon > 1e-16) { // in case vel = 0
+          eta  = pow(kvisc,3.0);
+          eta /= epsilon;
+          eta = pow(eta, .25);
 
-        double newPartMag = sphGas.z() - uk*(1-beta)*pow(t_p_by_t_k, d_power);
-        //if(newPartMag > 0) cout << "newPartMag "<< newPartMag << "  " << name << endl;
+          length_ratio = length / eta; 
+        }
+
+        double uk = pow(epsilon*eta, 1./3.);
+        diff = 0.0;
+
+
+        for ( int i = 0; i < d_totIter; i++) {
+
+          prev_diff = diff; 
+          double Re  = abs(diff)*length / kvisc;
+          double phi = 1. + .15*pow(Re, 0.687);
+          double t_p_by_t_k = (2*rhoRatio+1)/36*1.0/phi*pow(length_ratio,2);
+          diff = uk*(1-beta)*pow(t_p_by_t_k, d_power);
+
+          double error = abs(diff - prev_diff)/diff; 
+          if ( abs(diff) < 1e-16 )
+            error = 0.0;
+
+          if (abs(error) < d_tol)
+            break;
+
+        }
+
+        newPartMag = sphGas.z() - diff; 
   
         sphPart = Vector(sphGas.x(), sphGas.y(), newPartMag);
 
-        //cout << "SPHPART NEW " << sphPart << endl;
         // now convert back to cartesian
         Vector newcartPart = Vector(0.,0.,0.);
         newcartPart = sph2cart( sphPart ); 
-
-        //cout << "CARTPART = " << newcartPart << endl;
 
         partVel[c] = newcartPart; 
 

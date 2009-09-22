@@ -111,6 +111,9 @@ private:
   double d_highClip; 
   double d_lowClip; 
   double d_power; 
+  double d_L; 
+  int    d_totIter; 
+  double d_tol; 
   
 
  }; //end class PartVel
