@@ -95,7 +95,8 @@ ConstSrcTerm::computeSource( const ProcessorGroup* pc,
     Ghost::GhostType  gn  = Ghost::None;
 
     const Patch* patch = patches->get(p);
-    int matlIndex = 0;
+    int archIndex = 0;
+    int matlIndex = d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
 
     CCVariable<double> constSrc; 
     if ( new_dw->exists(d_srcLabel, matlIndex, patch ) ){

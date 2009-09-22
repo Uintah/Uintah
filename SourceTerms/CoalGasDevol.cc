@@ -61,8 +61,6 @@ CoalGasDevol::sched_computeSource( const LevelP& level, SchedulerP& sched, int t
   std::string taskname = "CoalGasDevol::eval";
   Task* tsk = scinew Task(taskname, this, &CoalGasDevol::computeSource, timeSubStep);
 
-  timeSubStep; 
-
   if (timeSubStep == 0 && !d_labelSchedInit) {
     // Every source term needs to set this flag after the varLabel is computed. 
     // transportEqn.cleanUp should reinitialize this flag at the end of the time step. 
@@ -91,13 +89,12 @@ CoalGasDevol::sched_computeSource( const LevelP& level, SchedulerP& sched, int t
     const VarLabel* tempLabel_w = eqn.getTransportEqnLabel();
     tsk->requires( Task::OldDW, tempLabel_w, Ghost::None, 0 ); 
 
-    ModelBase& temp_model = modelFactory.retrieve_model( model_name ); 
-    KobayashiSarofimDevol& model = dynamic_cast<KobayashiSarofimDevol&>(temp_model);
+    ModelBase& model = modelFactory.retrieve_model( model_name ); 
     
     const VarLabel* tempLabel_m = model.getModelLabel(); 
     tsk->requires( Task::OldDW, tempLabel_m, Ghost::None, 0 );
 
-    const VarLabel* tempgasLabel_m = model.getGasRateLabel();
+    const VarLabel* tempgasLabel_m = model.getGasphaseModelLabel();
     tsk->requires( Task::OldDW, tempgasLabel_m, Ghost::None, 0 );
 
   }
@@ -124,7 +121,8 @@ CoalGasDevol::computeSource( const ProcessorGroup* pc,
     Ghost::GhostType  gn  = Ghost::None;
 
     const Patch* patch = patches->get(p);
-    int matlIndex = 0;
+    int archIndex = 0;
+    int matlIndex = d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
 
     DQMOMEqnFactory& dqmomFactory  = DQMOMEqnFactory::self(); 
     ModelFactory& modelFactory = ModelFactory::self(); 
@@ -152,11 +150,11 @@ CoalGasDevol::computeSource( const ProcessorGroup* pc,
         model_name += "_qn";
         model_name += node;
 
-        ModelBase& temp_model = modelFactory.retrieve_model( model_name ); 
-        KobayashiSarofimDevol& model = dynamic_cast<KobayashiSarofimDevol&>(temp_model); 
+        ModelBase& model = modelFactory.retrieve_model( model_name ); 
 
         constCCVariable<double> qn_gas_devol;
-        const VarLabel* gasModelLabel = model.getGasRateLabel(); 
+        const VarLabel* gasModelLabel = model.getGasphaseModelLabel(); 
+ 
         old_dw->get( qn_gas_devol, gasModelLabel, matlIndex, patch, gn, 0 );
 
         devolSrc[c] += qn_gas_devol[c]; // All the work is performed in Kobayashi/Sarofim model

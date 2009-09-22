@@ -204,7 +204,8 @@ void ScalarEqn::initializeVariables( const ProcessorGroup* pc,
     Ghost::GhostType  gn  = Ghost::None;
 
     const Patch* patch = patches->get(p);
-    int matlIndex = 0;
+    int archIndex = 0;
+    int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
 
     CCVariable<double> newVar;
     CCVariable<double> rkoldVar; 
@@ -244,7 +245,6 @@ ScalarEqn::sched_computeSources( const LevelP& level, SchedulerP& sched, int tim
   for (vector<std::string>::iterator iter = d_sources.begin(); iter != d_sources.end(); iter++){
  
     SourceTermBase& temp_src = factory.retrieve_source_term( *iter ); 
-    cout << "source name  = " << *iter << endl;
    
     temp_src.sched_computeSource( level, sched, timeSubStep ); 
 
@@ -310,7 +310,9 @@ ScalarEqn::buildTransportEqn( const ProcessorGroup* pc,
     Ghost::GhostType  gn  = Ghost::None;
 
     const Patch* patch = patches->get(p);
-    int matlIndex = 0;
+    int archIndex = 0;
+    int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+
     Vector Dx = patch->dCell(); 
 
     constCCVariable<double> oldPhi;
@@ -417,7 +419,9 @@ ScalarEqn::solveTransportEqn( const ProcessorGroup* pc,
     Ghost::GhostType  gn  = Ghost::None;
 
     const Patch* patch = patches->get(p);
-    int matlIndex = 0;
+    int archIndex = 0;
+    int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+
     delt_vartype DT;
     old_dw->get(DT, d_fieldLabels->d_sharedState->get_delt_label());
     double dt = DT; 
@@ -791,4 +795,48 @@ ScalarEqn::clipPhi( const Patch* p,
   }
 }
 
+//---------------------------------------------------------------------------
+// Method: Schedule dummy initialization
+//---------------------------------------------------------------------------
+void
+ScalarEqn::sched_dummyInit( const LevelP& level, SchedulerP& sched )
+{
+  string taskname = "ScalarEqn::dummyInit"; 
+
+  Task* tsk = scinew Task(taskname, this, &ScalarEqn::dummyInit);
+
+  Ghost::GhostType  gn = Ghost::None;
+
+  tsk->requires(Task::OldDW, d_transportVarLabel, gn, 0); 
+  tsk->computes(d_transportVarLabel);
+  tsk->computes(d_oldtransportVarLabel); 
+
+
+  sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
+
+}
+void 
+ScalarEqn::dummyInit( const ProcessorGroup* pc, 
+                     const PatchSubset* patches, 
+                     const MaterialSubset* matls, 
+                     DataWarehouse* old_dw, 
+                     DataWarehouse* new_dw )
+{
+  //patch loop
+  for (int p=0; p < patches->size(); p++){
+
+    const Patch* patch = patches->get(p);
+    int archIndex = 0;
+    int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+
+    CCVariable<double> phi; 
+    CCVariable<double> old_phi;
+
+    new_dw->allocateAndPut( phi, d_transportVarLabel, matlIndex, patch ); 
+    new_dw->allocateAndPut( old_phi, d_oldtransportVarLabel, matlIndex, patch ); 
+
+    phi.copyData(old_phi);
+
+  }
+}
 

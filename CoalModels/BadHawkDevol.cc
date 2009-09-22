@@ -96,7 +96,8 @@ BadHawkDevol::computeModel( const ProcessorGroup* pc,
     //Ghost::GhostType  gn  = Ghost::None;
 
     const Patch* patch = patches->get(p);
-    int matlIndex = 0;
+    int archIndex = 0;
+    int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
 
     CCVariable<double> model; 
     if (new_dw->exists( d_modelLabel, matlIndex, patch )){

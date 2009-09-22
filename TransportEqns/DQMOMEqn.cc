@@ -253,7 +253,8 @@ void DQMOMEqn::initializeVariables( const ProcessorGroup* pc,
     Ghost::GhostType  gn  = Ghost::None;
 
     const Patch* patch = patches->get(p);
-    int matlIndex = 0;
+    int archIndex = 0;
+    int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
 
     CCVariable<double> newVar;
     CCVariable<double> rkoldVar; 
@@ -349,7 +350,8 @@ DQMOMEqn::buildTransportEqn( const ProcessorGroup* pc,
     Ghost::GhostType  gn  = Ghost::None;
 
     const Patch* patch = patches->get(p);
-    int matlIndex = 0;
+    int archIndex = 0;
+    int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
     Vector Dx = patch->dCell(); 
 
     constCCVariable<double> oldPhi;
@@ -456,7 +458,9 @@ DQMOMEqn::solveTransportEqn( const ProcessorGroup* pc,
     Ghost::GhostType  gn  = Ghost::None;
 
     const Patch* patch = patches->get(p);
-    int matlIndex = 0;
+    int archIndex = 0;
+    int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+
     delt_vartype DT;
     old_dw->get(DT, d_fieldLabels->d_sharedState->get_delt_label());
     double dt = DT; 
@@ -533,7 +537,8 @@ DQMOMEqn::getAbscissaValues( const ProcessorGroup* pc,
     Ghost::GhostType  gn  = Ghost::None;
 
     const Patch* patch = patches->get(p);
-    int matlIndex = 0;
+    int archIndex = 0;
+    int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
 
     CCVariable<double> wa;
     constCCVariable<double> w;  
@@ -1065,3 +1070,65 @@ DQMOMEqn::clipPhi( const Patch* p,
   }
 }
 
+//---------------------------------------------------------------------------
+// Method: Schedule dummy initialization
+//---------------------------------------------------------------------------
+void
+DQMOMEqn::sched_dummyInit( const LevelP& level, SchedulerP& sched )
+{
+  string taskname = "DQMOMEqn::dummyInit"; 
+
+  Task* tsk = scinew Task(taskname, this, &DQMOMEqn::dummyInit);
+
+  Ghost::GhostType  gn = Ghost::None;
+
+  tsk->requires(Task::OldDW, d_transportVarLabel, gn, 0);
+  tsk->requires(Task::OldDW, d_sourceLabel,       gn, 0);
+
+  tsk->computes(d_transportVarLabel);
+  tsk->computes(d_oldtransportVarLabel); 
+  tsk->computes(d_icLabel); 
+  ArchesLabel::PartVelMap::iterator iter = d_fieldLabels->partVel.find(d_quadNode);
+  if (d_weight) {
+    tsk->computes(iter->second);
+    tsk->requires(Task::OldDW, iter->second, gn, 0);
+  } 
+  tsk->computes(d_sourceLabel); 
+
+  sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
+
+}
+void 
+DQMOMEqn::dummyInit( const ProcessorGroup* pc, 
+                     const PatchSubset* patches, 
+                     const MaterialSubset* matls, 
+                     DataWarehouse* old_dw, 
+                     DataWarehouse* new_dw )
+{
+  //patch loop
+  for (int p=0; p < patches->size(); p++){
+
+    Ghost::GhostType  gn = Ghost::None;
+    const Patch* patch = patches->get(p);
+    int archIndex = 0;
+    int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+
+    CCVariable<double> phi; 
+    CCVariable<double> old_phi;
+    CCVariable<double> ic; 
+    CCVariable<Vector> pvel; 
+    CCVariable<double> src; 
+    constCCVariable<double> phi_oldDW; 
+
+    ArchesLabel::PartVelMap::iterator iter = d_fieldLabels->partVel.find(d_quadNode);
+
+    new_dw->allocateAndPut( phi, d_transportVarLabel, matlIndex, patch ); 
+    new_dw->allocateAndPut( old_phi, d_oldtransportVarLabel, matlIndex, patch ); 
+    new_dw->allocateAndPut( ic, d_icLabel, matlIndex, patch ); 
+    if (d_weight) new_dw->allocateAndPut( pvel, iter->second, matlIndex, patch ); 
+    new_dw->allocateAndPut( src, d_sourceLabel, matlIndex, patch ); 
+
+    old_dw->get(phi_oldDW, d_transportVarLabel, matlIndex, patch, gn, 0);
+
+  }
+}

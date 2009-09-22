@@ -31,6 +31,7 @@ DEALINGS IN THE SOFTWARE.
 //----- ExplicitSolver.cc ----------------------------------------------
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqnFactory.h>
 #include <CCA/Components/Arches/SourceTerms/SourceTermFactory.h>
+#include <CCA/Components/Arches/SourceTerms/SourceTermBase.h>
 #include <CCA/Components/Arches/TransportEqns/EqnFactory.h>
 #include <CCA/Components/Arches/TransportEqns/EqnBase.h>
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqn.h>
@@ -749,7 +750,54 @@ int ExplicitSolver::noSolve(const LevelP& level,
 
   d_pressSolver->sched_addHydrostaticTermtoPressure(      sched, patches, matls,
                                                           nosolve_timelabels);
+
+  // DQMOM and scalar transport init
  
+  // Get a reference to all the DQMOM equations
+  DQMOMEqnFactory& dqmomFactory  = DQMOMEqnFactory::self(); 
+  if (dqmomFactory.get_quad_nodes() > 0) 
+    d_doDQMOM = true; 
+  else 
+    d_doDQMOM = false; // probably need to sync this better with the bool being set in Arches
+
+  if (d_doDQMOM) {
+
+    DQMOMEqnFactory::EqnMap& dqmom_eqns = dqmomFactory.retrieve_all_eqns(); 
+   
+    for (DQMOMEqnFactory::EqnMap::iterator ieqn = dqmom_eqns.begin(); ieqn != dqmom_eqns.end(); ieqn++){
+      
+      std::string currname = ieqn->first; 
+      EqnBase* eqn = ieqn->second;
+      eqn->sched_dummyInit( level, sched ); 
+
+    }
+
+    ModelFactory& modelFactory = ModelFactory::self(); 
+    ModelFactory::ModelMap allModels = modelFactory.retrieve_all_models();
+    for (ModelFactory::ModelMap::iterator imodel = allModels.begin(); imodel != allModels.end(); imodel++){
+
+      imodel->second->sched_dummyInit( level, sched );  
+
+    }
+  }
+
+  EqnFactory& eqn_factory = EqnFactory::self();
+  EqnFactory::EqnMap& scalar_eqns = eqn_factory.retrieve_all_eqns(); 
+  for (EqnFactory::EqnMap::iterator iter = scalar_eqns.begin(); iter != scalar_eqns.end(); iter++){
+
+    EqnBase* eqn = iter->second; 
+    eqn->sched_dummyInit( level, sched ); 
+
+  }
+
+  SourceTermFactory& src_factory = SourceTermFactory::self();
+  SourceTermFactory::SourceMap& sources = src_factory.retrieve_all_sources(); 
+  for (SourceTermFactory::SourceMap::iterator iter = sources.begin(); iter != sources.end(); iter++){
+
+    SourceTermBase* src = iter->second; 
+    src->sched_dummyInit( level, sched ); 
+
+  }
   // Schedule an interpolation of the face centered velocity data 
   // to a cell centered vector for used by the viz tools
 
@@ -782,6 +830,7 @@ ExplicitSolver::sched_setInitialGuess(SchedulerP& sched,
   tsk->requires(Task::OldDW, d_lab->d_scalarSPLabel,      gn, 0);
   tsk->requires(Task::OldDW, d_lab->d_densityCPLabel,     gn, 0);
   tsk->requires(Task::OldDW, d_lab->d_viscosityCTSLabel,  gn, 0);
+  tsk->requires(Task::OldDW, d_lab->d_newCCVelocityLabel, gn, 0);
 
   tsk->computes(d_lab->d_cellTypeLabel);
   tsk->computes(d_lab->d_uVelocitySPBCLabel);
@@ -1820,6 +1869,7 @@ ExplicitSolver::setInitialGuess(const ProcessorGroup* ,
     constCCVariable<double> scalardiff;
     constCCVariable<double> enthalpydiff;
     constCCVariable<double> reactscalardiff;
+    constCCVariable<Vector> ccVel; 
     
     old_dw->get(uVelocity, d_lab->d_uVelocitySPBCLabel, indx, patch, gn, 0);
     old_dw->get(vVelocity, d_lab->d_vVelocitySPBCLabel, indx, patch, gn, 0);
@@ -1827,6 +1877,7 @@ ExplicitSolver::setInitialGuess(const ProcessorGroup* ,
     old_dw->get(scalar,    d_lab->d_scalarSPLabel,      indx, patch, gn, 0);
     old_dw->get(density,   d_lab->d_densityCPLabel,     indx, patch, gn, 0);
     old_dw->get(viscosity, d_lab->d_viscosityCTSLabel,  indx, patch, gn, 0);
+    old_dw->get(ccVel,     d_lab->d_newCCVelocityLabel, indx, patch, gn, 0);
     
     if (d_enthalpySolve){
       old_dw->get(enthalpy, d_lab->d_enthalpySPLabel, indx, patch, gn, 0);
