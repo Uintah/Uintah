@@ -5,6 +5,8 @@
 #include <Core/Grid/Variables/VarTypes.h>
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/SimulationState.h>
+#include <CCA/Components/Arches/ArchesMaterial.h>
 
 
 //===============================================================
@@ -50,6 +52,16 @@ public:
                              DataWarehouse* old_dw, 
                              DataWarehouse* new_dw ) = 0;
 
+  /** @brief Dummy initialization for MPMARCHES */
+  void sched_dummyInit( const LevelP& level, SchedulerP& sched );
+
+  void dummyInit( const ProcessorGroup* pc, 
+                      const PatchSubset* patches, 
+                      const MaterialSubset* matls, 
+                      DataWarehouse* old_dw, 
+                      DataWarehouse* new_dw );
+
+
   /** @brief reinitialize the flags that tells the scheduler if the varLabel needs a compute or a modifies. */
   // Note I need two of these flags; 1 for scheduling and 1 for actual execution.
   inline void reinitializeLabel(){ 
@@ -57,6 +69,9 @@ public:
 
   inline const VarLabel* getModelLabel(){
     return d_modelLabel; };
+
+  inline const VarLabel* getGasphaseModelLabel(){
+    return d_gasLabel; }; 
 
 protected:
   std::string d_modelName; 
@@ -66,6 +81,7 @@ protected:
   vector<string> d_icLabels; //All internal coordinate labels (from DQMOM factory) needed to compute this model
   vector<string> d_scalarLabels; // All scalar labels (from scalarFactory) needed to compute this model
   const VarLabel* d_modelLabel; //The label storing the value of this model
+  const VarLabel* d_gasLabel;   //Label for gas phase source term 
   int d_timeSubStep;
 
   bool d_labelSchedInit;

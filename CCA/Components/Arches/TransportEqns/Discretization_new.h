@@ -96,7 +96,7 @@ namespace Uintah{
         p->getFaceCells( face, 0, l, h ); 
 
         //dont want edge cells:
-        if ( face == Patch::xminus | face == Patch::xplus ){
+        if ( face == Patch::xminus || face == Patch::xplus ){
 
           bool yminus = p->getBCType(Patch::yminus) == Patch::None;
           bool yplus =  p->getBCType(Patch::yplus)  == Patch::None;
@@ -112,7 +112,7 @@ namespace Uintah{
           if (zplus)
             h[2] -= 2;
 
-        } else if ( face == Patch::yminus | face == Patch::yplus ){
+        } else if ( face == Patch::yminus || face == Patch::yplus ){
 
           bool xminus = p->getBCType(Patch::xminus) == Patch::None;
           bool xplus =  p->getBCType(Patch::xplus)  == Patch::None;
@@ -127,7 +127,7 @@ namespace Uintah{
             l[2] += 2;
           if (zplus)
             h[2] -= 2;
-        } else if ( face == Patch::zminus | face == Patch::zplus ){
+        } else if ( face == Patch::zminus || face == Patch::zplus ){
 
           bool yminus = p->getBCType(Patch::yminus) == Patch::None;
           bool yplus =  p->getBCType(Patch::yplus)  == Patch::None;

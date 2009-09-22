@@ -596,6 +596,7 @@ Arches::scheduleInitialize(const LevelP& level,
   // compute : [u,v,w]VelocityIN, pressureIN, scalarIN, densityIN,
   //           viscosityIN
   sched_paramInit(level, sched);
+
   if (d_set_initial_condition) {
     sched_readCCInitialCondition(level, sched);
     sched_interpInitialConditionToStaggeredGrid(level, sched);
@@ -1431,6 +1432,16 @@ Arches::sched_scalarInit( const LevelP& level,
     tsk->computes( oldtempVar ); 
   } 
 
+    SourceTermFactory& srcFactory = SourceTermFactory::self();
+    SourceTermFactory::SourceMap& sources = srcFactory.retrieve_all_sources();
+    for (SourceTermFactory::SourceMap::iterator isrc=sources.begin(); isrc !=sources.end(); isrc++){
+
+      SourceTermBase* src = isrc->second; 
+      string src_name = isrc->first; 
+      const VarLabel* srcVarLabel = src->getSrcLabel();
+      tsk->computes( srcVarLabel ); 
+
+    }
 
   // TOTAL KLUDGE FOR REACTING COAL---------------------------
   // Keep commented out unless you know what you are doing!
@@ -1451,8 +1462,9 @@ Arches::scalarInit( const ProcessorGroup* ,
                     DataWarehouse* new_dw )
 {
   for (int p = 0; p < patches->size(); p++){
-    //assume only one material for now.
-    int matlIndex = 0;
+    //assume only one material for now
+    int archIndex = 0;
+    int matlIndex = d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
     const Patch* patch=patches->get(p);
 
     EqnFactory& eqnFactory = EqnFactory::self(); 
@@ -1487,6 +1499,18 @@ Arches::scalarInit( const ProcessorGroup* ,
   //----------------------------------------------------------
 
     }
+    SourceTermFactory& srcFactory = SourceTermFactory::self();
+    SourceTermFactory::SourceMap& sources = srcFactory.retrieve_all_sources();
+    for (SourceTermFactory::SourceMap::iterator isrc=sources.begin(); isrc !=sources.end(); isrc++){
+      SourceTermBase* src = isrc->second; 
+      string src_name = isrc->first; 
+      const VarLabel* srcVarLabel = src->getSrcLabel();
+ 
+      CCVariable<double> tempSource; 
+      new_dw->allocateAndPut( tempSource, srcVarLabel, matlIndex, patch ); 
+      tempSource.initialize(0.0);
+
+    } 
   }
 }
 //___________________________________________________________________________
@@ -1523,8 +1547,13 @@ Arches::sched_dqmomInit( const LevelP& level,
   for ( ModelFactory::ModelMap::iterator imodel=models.begin(); imodel != models.end(); imodel++){
     ModelBase* model = imodel->second;
     const VarLabel* modelLabel = model->getModelLabel();
-    tsk->computes( modelLabel ); 
+    const VarLabel* gasmodelLabel = model->getGasphaseModelLabel(); 
+
+    tsk->computes( modelLabel );
+    tsk->computes( gasmodelLabel );  
+
     model->sched_initVars( level, sched ); 
+
   }
 
   sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
@@ -1538,7 +1567,8 @@ Arches::dqmomInit( const ProcessorGroup* ,
 {
   for (int p = 0; p < patches->size(); p++){
     //assume only one material for now.
-    int matlIndex = 0;
+    int archIndex = 0;
+    int matlIndex = d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
     const Patch* patch=patches->get(p);
 
     CCVariable<Vector> partVel; 
@@ -1603,6 +1633,12 @@ Arches::dqmomInit( const ProcessorGroup* ,
       CCVariable<double> model_value; 
       new_dw->allocateAndPut( model_value, modelLabel, matlIndex, patch ); 
       model_value.initialize(0.0);
+
+      const VarLabel* gasmodelLabel = model->getGasphaseModelLabel(); 
+      CCVariable<double> gas_source; 
+      new_dw->allocateAndPut( gas_source, gasmodelLabel, matlIndex, patch ); 
+      gas_source.initialize(0.0); 
+
     }
   }
 }
@@ -1902,6 +1938,7 @@ Arches::sched_getCCVelocities(const LevelP& level, SchedulerP& sched)
   tsk->modifies(d_lab->d_newCCUVelocityLabel);
   tsk->modifies(d_lab->d_newCCVVelocityLabel);
   tsk->modifies(d_lab->d_newCCWVelocityLabel);
+  tsk->modifies(d_lab->d_newCCVelocityLabel); 
       
   sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
 }
@@ -1927,6 +1964,7 @@ Arches::getCCVelocities(const ProcessorGroup* ,
     CCVariable<double> uvel_CC;
     CCVariable<double> vvel_CC;
     CCVariable<double> wvel_CC;
+    CCVariable<Vector> vel_CC; 
 
     IntVector idxLo = patch->getFortranCellLowIndex__New();
     IntVector idxHi = patch->getFortranCellHighIndex__New();
@@ -1948,9 +1986,12 @@ Arches::getCCVelocities(const ProcessorGroup* ,
     new_dw->getModifiable(uvel_CC, d_lab->d_newCCUVelocityLabel,indx, patch);
     new_dw->getModifiable(vvel_CC, d_lab->d_newCCVVelocityLabel,indx, patch);
     new_dw->getModifiable(wvel_CC, d_lab->d_newCCWVelocityLabel,indx, patch);
+    new_dw->getModifiable(vel_CC,  d_lab->d_newCCVelocityLabel, indx, patch); 
     uvel_CC.initialize(0.0);
     vvel_CC.initialize(0.0);
     wvel_CC.initialize(0.0);
+    vel_CC.initialize(Vector(0.0,0.0,0.0)); 
+   
     //__________________________________
     //  
     for(CellIterator iter=patch->getCellIterator__New(); !iter.done();iter++) {
@@ -1971,6 +2012,8 @@ Arches::getCCVelocities(const ProcessorGroup* ,
                      
       wvel_CC[c] = cellinfo->bfac[k] * wvel_FC[c] +
                    cellinfo->tfac[k] * wvel_FC[idxW];
+
+      vel_CC[c] = Vector(uvel_CC[c], vvel_CC[c], wvel_CC[c]); 
     }
     //__________________________________
     // Apply boundary conditions
@@ -2018,6 +2061,8 @@ Arches::getCCVelocities(const ProcessorGroup* ,
                       (cellinfo->bfac[k] * wvel_FC[c] +          
                        cellinfo->tfac[k] * wvel_FC[idxW] ) +     
                       (1.0 - one_or_zero.z()) * wvel_FC[idxW];   
+
+        vel_CC[c] = Vector( uvel_CC[c], vvel_CC[c], wvel_CC[c] ); 
       }                                                          
     }
   }

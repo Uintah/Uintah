@@ -7,6 +7,7 @@
 #include <CCA/Components/Arches/BoundaryCond_new.h>
 #include <CCA/Components/Arches/ExplicitTimeInt.h>
 #include <CCA/Components/Arches/TransportEqns/Discretization_new.h>
+#include <CCA/Components/Arches/ArchesMaterial.h>
 
 //========================================================================
 
@@ -49,6 +50,9 @@ public:
 
   /** @brief Solve the transport equation */
   virtual void sched_solveTransportEqn( const LevelP&, SchedulerP& sched, int timeSubStep ) = 0;
+
+  /** @brief Dummy init for MPMArches */ 
+  virtual void sched_dummyInit( const LevelP&, SchedulerP& sched ) = 0; 
 
   /** @brief Compute the convective terms */ 
   template <class fT, class oldPhiT>  

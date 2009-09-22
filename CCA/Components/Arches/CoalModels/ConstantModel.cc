@@ -98,7 +98,8 @@ ConstantModel::computeModel( const ProcessorGroup* pc,
     //Ghost::GhostType  gn  = Ghost::None;
 
     const Patch* patch = patches->get(p);
-    int matlIndex = 0;
+    int archIndex = 0;
+    int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
 
     double time = d_sharedState->getElapsedTime();
 

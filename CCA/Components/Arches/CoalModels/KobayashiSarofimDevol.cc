@@ -117,16 +117,6 @@ KobayashiSarofimDevol::problemSetup(const ProblemSpecP& params, int qn)
 
     std::replace( d_icLabels.begin(), d_icLabels.end(), temp_ic_name, temp_ic_name_full);
   }
-
-  std::string node; 
-  std::stringstream out; 
-  out << qn; 
-  node = out.str();
-  std::string gasDevolName = "gasDevolRate_qn";
-  gasDevolName += node; 
-  d_gasDevolRate = VarLabel::create(gasDevolName, CCVariable<double>::getTypeDescription());
-
-
 }
 //---------------------------------------------------------------------------
 // Method: Schedule the initialization of some variables 
@@ -138,8 +128,6 @@ KobayashiSarofimDevol::sched_initVars( const LevelP& level, SchedulerP& sched )
   std::string taskname = "KobayashiSarofimDevol::initVars";
   Task* tsk = scinew Task(taskname, this, &KobayashiSarofimDevol::initVars);
 
-  tsk->computes(d_gasDevolRate); 
-
   sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials()); 
 }
 void
@@ -150,18 +138,6 @@ KobayashiSarofimDevol::initVars( const ProcessorGroup * pc,
     DataWarehouse        * new_dw )
 {
   for( int p=0; p < patches->size(); p++ ) {  // Patch loop
-
-    //Ghost::GhostType  gaf = Ghost::AroundFaces;
-    //Ghost::GhostType  gac = Ghost::AroundCells;
-    //Ghost::GhostType  gn  = Ghost::None;
-
-    const Patch* patch = patches->get(p);
-    int matlIndex = 0;
-
-    CCVariable<double> gasDevolRate; 
-    new_dw->allocateAndPut( gasDevolRate, d_gasDevolRate, matlIndex, patch ); 
-    gasDevolRate.initialize(0.);
-
   }
 }
 //---------------------------------------------------------------------------
@@ -181,10 +157,10 @@ KobayashiSarofimDevol::sched_computeModel( const LevelP& level, SchedulerP& sche
     d_labelSchedInit = true;
 
     tsk->computes(d_modelLabel);
-    tsk->computes(d_gasDevolRate);
+    tsk->computes(d_gasLabel); 
   } else {
-    tsk->modifies(d_modelLabel); 
-    tsk->modifies(d_gasDevolRate);
+    tsk->modifies(d_modelLabel);
+    tsk->modifies(d_gasLabel);  
   }
 
   EqnFactory& eqn_factory = EqnFactory::self();
@@ -291,18 +267,19 @@ KobayashiSarofimDevol::computeModel( const ProcessorGroup * pc,
     Ghost::GhostType  gn  = Ghost::None;
 
     const Patch* patch = patches->get(p);
-    int matlIndex = 0;
+    int archIndex = 0;
+    int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
 
     CCVariable<double> devol_rate;
     CCVariable<double> gas_devol_rate; 
     if (new_dw->exists( d_modelLabel, matlIndex, patch )){
       new_dw->getModifiable( devol_rate, d_modelLabel, matlIndex, patch ); 
-      new_dw->getModifiable( gas_devol_rate, d_gasDevolRate, matlIndex, patch ); 
+      new_dw->getModifiable( gas_devol_rate, d_gasLabel, matlIndex, patch ); 
       devol_rate.initialize(0.0);
       gas_devol_rate.initialize(0.0);
     } else {
       new_dw->allocateAndPut( devol_rate, d_modelLabel, matlIndex, patch );
-      new_dw->allocateAndPut( gas_devol_rate, d_gasDevolRate, matlIndex, patch ); 
+      new_dw->allocateAndPut( gas_devol_rate, d_gasLabel, matlIndex, patch ); 
       devol_rate.initialize(0.0);
       gas_devol_rate.initialize(0.0);
     }

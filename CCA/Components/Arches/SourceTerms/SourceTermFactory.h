@@ -42,6 +42,7 @@ public:
    *  "scinew" operator.  Ownership is transfered.
    */
   virtual SourceTermBase* build() = 0;
+
 protected: 
   std::string d_srcName;
   vector<string> d_requiredLabels; 
@@ -99,10 +100,14 @@ public:
    */
   SourceTermBase& retrieve_source_term( const std::string name );
 
-private:
-
   typedef std::map< std::string, SourceTermBuilder* > BuildMap;
   typedef std::map< std::string, SourceTermBase*        > SourceMap;
+
+  // get all source terms
+  SourceMap& retrieve_all_sources(){
+    return sources_; }; 
+
+private:
 
   BuildMap builders_;
   SourceMap sources_;

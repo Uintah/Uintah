@@ -159,7 +159,8 @@ HeatTransfer::initVars( const ProcessorGroup * pc,
     //Ghost::GhostType  gn  = Ghost::None;
 
     const Patch* patch = patches->get(p);
-    int matlIndex = 0;
+    int archIndex = 0;
+    int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
 
     CCVariable<double> gasHeatRate; 
     new_dw->allocateAndPut( gasHeatRate, d_gasHeatRate, matlIndex, patch ); 
@@ -188,10 +189,12 @@ HeatTransfer::sched_computeModel( const LevelP& level, SchedulerP& sched, int ti
     d_labelSchedInit = true;
 
     tsk->computes(d_modelLabel);
+    tsk->computes(d_gasLabel); 
     tsk->computes(d_gasHeatRate);
     tsk->computes(d_abskp);
   } else {
-    tsk->modifies(d_modelLabel); 
+    tsk->modifies(d_modelLabel);
+    tsk->modifies(d_gasLabel);  
     tsk->modifies(d_gasHeatRate);
     tsk->modifies(d_abskp);
   }
@@ -329,24 +332,30 @@ HeatTransfer::computeModel( const ProcessorGroup * pc,
     Ghost::GhostType  gn  = Ghost::None;
 
     const Patch* patch = patches->get(p);
-    int matlIndex = 0;
+    int archIndex = 0;
+    int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
 
     CCVariable<double> heat_rate;
     CCVariable<double> gas_heat_rate; 
     CCVariable<double> abskp; 
+    CCVariable<double> gas_rate; 
     if (new_dw->exists( d_modelLabel, matlIndex, patch )){
       new_dw->getModifiable( heat_rate, d_modelLabel, matlIndex, patch ); 
+      new_dw->getModifiable( gas_rate,  d_gasLabel, matlIndex, patch ); 
       new_dw->getModifiable( gas_heat_rate, d_gasHeatRate, matlIndex, patch ); 
       new_dw->getModifiable( abskp, d_abskp, matlIndex, patch ); 
       heat_rate.initialize(0.0);
       gas_heat_rate.initialize(0.0);
       abskp.initialize(0.0);
+      gas_rate.initialize(0.0);
     } else {
       new_dw->allocateAndPut( heat_rate, d_modelLabel, matlIndex, patch );
+      new_dw->allocateAndPut( gas_rate, d_gasLabel, matlIndex, patch );
       new_dw->allocateAndPut( gas_heat_rate, d_gasHeatRate, matlIndex, patch );
       new_dw->allocateAndPut( abskp, d_abskp, matlIndex, patch );  
       heat_rate.initialize(0.0);
       gas_heat_rate.initialize(0.0);
+      gas_rate.initialize(0.0);
       abskp.initialize(0.0);
     }
     
