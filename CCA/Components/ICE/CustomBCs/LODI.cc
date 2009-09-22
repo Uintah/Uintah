@@ -1603,7 +1603,7 @@ void FacePress_LODI(const Patch* patch,
   StaticArray<constCCVariable<double> >& f_theta = lv->f_theta;
 
   //__________________________________  
-  double press_ref= sharedState->getRefPress();    
+  double press_ref= lv->var_basket->d_ref_press;    
      
   //__________________________________ 
   Patch::FaceIteratorType PEC = Patch::ExtraPlusEdgeCells;

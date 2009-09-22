@@ -168,6 +168,19 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec,
   else
     restart_mat_ps = prob_spec;
 
+  d_ref_press = 0.0;
+  d_gravity = Vector(0.,0.,0.);
+
+  ProblemSpecP phys_cons_ps = prob_spec->findBlock("PhysicalConstants");
+  if(phys_cons_ps){
+    phys_cons_ps->require("gravity",d_gravity);
+    phys_cons_ps->get("reference_pressure",d_ref_press);
+  } else {
+    d_gravity=Vector(0,0,0);
+    d_ref_press=0;
+  }
+
+
   ProblemSpecP mpm_soln_ps = restart_mat_ps->findBlock("MPM");
   if (!mpm_soln_ps){
     ostringstream warn;
@@ -2351,7 +2364,7 @@ void SerialMPM::computeAndIntegrateAcceleration(const ProcessorGroup*,
     printTask(patches, patch,cout_doing,"Doing computeAndIntegrateAcceleration\t\t\t");
 
     Ghost::GhostType  gnone = Ghost::None;
-    Vector gravity = d_sharedState->getGravity();
+    Vector gravity = getGravity();
     for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();

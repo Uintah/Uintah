@@ -751,7 +751,7 @@ void computeLi(StaticArray<CCVariable<Vector> >& L,
   GridP grid = level->getGrid();
   grid->getLength(domainLength, "minusExtraCells");
   
-  Vector grav = sharedState->getGravity();
+  Vector grav = user_inputs->d_gravity;
 
   for (int i = 1; i<= 5; i++ ) {           // don't initialize inside main loop
     L[i].initialize(Vector(0.0,0.0,0.0));  // you'll overwrite previously compute LI
