@@ -5,6 +5,8 @@
 #include <Core/Grid/Variables/VarTypes.h>
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/SimulationState.h>
+#include <CCA/Components/Arches/ArchesMaterial.h>
 
 //===============================================================
 
@@ -44,6 +46,14 @@ public:
                               DataWarehouse* old_dw, 
                               DataWarehouse* new_dw, 
                               int timeSubStep ) = 0;
+  /** @brief Get the labels for the MPMARCHES dummy solve. */
+  void sched_dummyInit( const LevelP& level, SchedulerP& sched );
+  void dummyInit( const ProcessorGroup* pc, 
+             const PatchSubset* patches, 
+             const MaterialSubset* matls, 
+             DataWarehouse* old_dw, 
+             DataWarehouse* new_dw );
+
 
   /** @brief reinitialize the flags that tells the scheduler if the varLabel needs a compute or a modifies. */
   // Note I need two of these flags; 1 for scheduling and 1 for actual execution.

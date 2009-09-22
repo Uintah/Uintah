@@ -229,7 +229,8 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
     const Patch* patch = patches->get(p);
 
     Ghost::GhostType  gn  = Ghost::None; 
-    int matlIndex = 0;
+    int archIndex = 0;
+    int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
 
     ModelFactory& model_factory = ModelFactory::self();
 

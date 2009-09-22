@@ -125,6 +125,7 @@ public:
                 DataWarehouse* old_dw, 
                 DataWarehouse* new_dw  ); 
 
+
   // Access functions:
   /** @brief Sets the time integrator. */ 
   inline void setTimeInt( ExplicitTimeInt* timeIntegrator ) {
@@ -147,6 +148,20 @@ public:
   /** @brief Take a gradient of a variable to result in a face value for a respective cv. */
   template <class phiT, class gradT> void
   gradPtoF( phiT& phi, const IntVector c, const Patch* p, gradT& G ); 
+
+  /** @brief dummy initialization for mpmArches */
+  void sched_dummyInit( const LevelP& level, SchedulerP& sched );
+  
+  void dummyInit( const ProcessorGroup* pc, 
+                     const PatchSubset* patches, 
+                     const MaterialSubset* matls, 
+                     DataWarehouse* old_dw, 
+                     DataWarehouse* new_dw );
+
+  /** @brief Compute the convective terms */ 
+  template <class fT, class oldPhiT>  
+  void computeConv( const Patch* patch, fT& Fdiff, 
+                         oldPhiT& oldPhi );
 
   inline const vector<string> getSourcesList(){
     return d_sources; };
