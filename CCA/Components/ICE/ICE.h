@@ -971,15 +971,6 @@ namespace Uintah {
                                  const string& message1,
                                  const string& message2, 
                                  const CCVariable<Vector>& q_CC);
-
-       double getRefPress() const {
-         return d_ref_press;
-       }
-
-       Vector getGravity() const {
-         return d_gravity;
-       }
-
                                  
       ICELabel* lb; 
       MPMICELabel* MIlb;
@@ -993,8 +984,6 @@ namespace Uintah {
       double d_CFL;
       double d_delT_knob;
       int d_max_iceMatl_indx;
-      double d_ref_press;
-      Vector d_gravity;
       
       //__________________________________
       // needed by printData

@@ -166,7 +166,9 @@ public:
   ICEMaterial* getICEMaterial(int idx) const {
     return ice_matls[idx];
   }
-
+  Vector getGravity() const {
+    return d_gravity;
+  }
   void setNeedAddMaterial(int nAM) {
     d_needAddMaterial += nAM;
   }
@@ -199,6 +201,11 @@ public:
   const MaterialSubset* refineFlagMaterials() const;
 
   void setOriginalMatlsFromRestart(MaterialSet* matls);
+  
+  double getRefPress() const {
+    return d_ref_press;
+  }
+
   double getElapsedTime() const { return d_elapsed_time; }
   void   setElapsedTime(double t) { d_elapsed_time = t; }
 
@@ -297,6 +304,8 @@ private:
 
   std::map<std::string, Material*> named_matls;
 
+  Vector d_gravity;
+
   MaterialSet    * all_mpm_matls;
   MaterialSet    * all_angio_matls;
   MaterialSet    * all_ice_matls;
@@ -309,6 +318,7 @@ private:
   MaterialSubset * refine_flag_matls;
   MaterialSubset * allInOneMatl;
 
+  double d_ref_press;
   int    d_needAddMaterial;
 
   // The time step that the top level (w.r.t. AMR) is at during a

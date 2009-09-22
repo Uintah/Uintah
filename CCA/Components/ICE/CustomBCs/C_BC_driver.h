@@ -75,8 +75,7 @@ namespace Uintah {
     sine_variable_basket* sine_var_basket;
     
     SimulationStateP sharedState;
-    double d_ref_press;
-    Vector d_gravity;
+
   };
   
   
