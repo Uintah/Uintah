@@ -59,9 +59,9 @@ SimpleLoadBalancer::~SimpleLoadBalancer()
 int
 SimpleLoadBalancer::getPatchwiseProcessorAssignment(const Patch* patch)
 {
-  int numProcs = d_myworld->size();
+  long long numProcs = d_myworld->size();
   const Patch* realPatch = patch->getRealPatch();
-  int proc = (realPatch->getLevelIndex()*numProcs)/realPatch->getLevel()->numPatches();
+  int proc = (realPatch->getLevelIndex()*numProcs)/(long long)realPatch->getLevel()->numPatches();
   ASSERTRANGE(proc, 0, d_myworld->size());
   return proc;
 }
