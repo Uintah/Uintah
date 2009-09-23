@@ -446,7 +446,11 @@ void DynamicLoadBalancer::useSFC(const LevelP& level, int* order)
     for (unsigned i = 0; i < recvcounts.size(); i++)
     {
       displs[i]=originalPatchStart[i]*sizeof(DistributedIndex);
+      if(displs[i]<0)
+        throw InternalError("Displacments < 0",__FILE__,__LINE__);
       recvcounts[i]=originalPatchCount[i]*sizeof(DistributedIndex);
+      if(recvcounts[i]<0)
+        throw InternalError("Recvcounts < 0",__FILE__,__LINE__);
     }
 
     vector<DistributedIndex> rbuf(level->numPatches());
@@ -728,7 +732,7 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
     //hard maximum cost for assigning a patch to a processor
     double avgCost = (total_cost+previous_total_cost) / num_procs;
     double hardMaxCost = total_cost;    
-    double myMaxCost =hardMaxCost-(hardMaxCost-avgCost)/d_myworld->size()*d_myworld->myrank();
+    double myMaxCost =hardMaxCost-(hardMaxCost-avgCost)/d_myworld->size()*(double)d_myworld->myrank();
     double myStoredMax=DBL_MAX;
     int minProcLoc = -1;
 
@@ -754,7 +758,7 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
       }
       double range=hardMaxCost-avgCost;
       myStoredMax=hardMaxCost;
-      myMaxCost=hardMaxCost-range/d_myworld->size()*d_myworld->myrank();
+      myMaxCost=hardMaxCost-range/d_myworld->size()*(double)d_myworld->myrank();
     }
 
     //temperary vector to assign the load balance in
@@ -868,7 +872,7 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
       double average=(total_cost+previous_total_cost)/num_procs;
       //set new myMax by having each processor search at even intervals in the range
       double range=hardMaxCost-average;
-      myMaxCost=hardMaxCost-range/d_myworld->size()*d_myworld->myrank();
+      myMaxCost=hardMaxCost-range/d_myworld->size()*(double)d_myworld->myrank();
       iter++;
     }
 
