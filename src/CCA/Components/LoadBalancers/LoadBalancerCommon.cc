@@ -230,7 +230,7 @@ LoadBalancerCommon::createOutputPatchSet(const LevelP& level)
     for(Level::const_patchIterator iter = level->patchesBegin();
         iter != level->patchesEnd(); iter++){
       const Patch* patch = *iter;
-      int proc = (getPatchwiseProcessorAssignment(patch) / d_outputNthProc) * d_outputNthProc;
+      int proc = (static_cast<long long>(getPatchwiseProcessorAssignment(patch)) / static_cast<long long>(d_outputNthProc)) * d_outputNthProc;
       ASSERTRANGE(proc, 0, d_myworld->size());
       PatchSubset* subset = patches->getSubset(proc);
       subset->add(patch);
@@ -267,7 +267,7 @@ LoadBalancerCommon::createNeighborhood(const GridP& grid, const GridP& oldGrid)
 
       // we also need to see if the output processor for patch is this proc,
       // in case it wouldn't otherwise have been in the neighborhood
-      int outputproc = (proc / d_outputNthProc)*d_outputNthProc;
+      int outputproc = (static_cast<long long>(proc) / static_cast<long long>(d_outputNthProc))*d_outputNthProc;
 
       if(proc == me || oldproc == me || outputproc == me) {
         // one for current level, coarse level, find level, old level
