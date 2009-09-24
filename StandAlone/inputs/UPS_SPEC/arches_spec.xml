@@ -310,10 +310,12 @@
           <L                            spec="REQUIRED DOUBLE 'positive'"/>
           <rho_ratio                    spec="REQUIRED DOUBLE 'positive'"/>
           <regime                       spec="REQUIRED INTEGER '1 3'"/>
+          <eta                          spec="REQUIRED DOUBLE 'positive'"/>
 
           <upper_limit_multiplier       spec="OPTIONAL DOUBLE"/>
           <clip_low                     spec="OPTIONAL DOUBLE"/>
           <partvelBC_eq_gasvelBC        spec="OPTIONAL BOOLEAN"/>
+          <min_vel_ratio                spec="OPTIONAL DOUBLE 'positive'"/>
 
           <iter                         spec="OPTIONAL INTEGER 'positive'"/>
           <tol                          spec="OPTIONAL DOUBLE  'positive'"/>
