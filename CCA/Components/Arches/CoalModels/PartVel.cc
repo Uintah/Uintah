@@ -31,13 +31,15 @@ void PartVel::problemSetup(const ProblemSpecP& inputdb)
   ProblemSpecP vel_db = db->findBlock("VelModel");
   if (vel_db) {
     int regime; 
-    vel_db->getWithDefault("kinematic_viscosity",kvisc,1); 
+    vel_db->getWithDefault("kinematic_viscosity",kvisc,1.e-5); 
     vel_db->getWithDefault("iter", d_totIter, 15); 
     vel_db->getWithDefault("tol",  d_tol, 1e-15); 
-    vel_db->getWithDefault("rho_ratio",rhoRatio,0);
+    vel_db->getWithDefault("rho_ratio",rhoRatio,1000);
     vel_db->getWithDefault("L",d_L, 1.0);
+    vel_db->getWithDefault("eta", d_eta, 1e-5); 
     beta = 3. / (2.*rhoRatio + 1.); 
     vel_db->getWithDefault("regime",regime,1);      
+    vel_db->getWithDefault("min_vel_ratio", d_min_vel_ratio, .1); 
 
     if (regime == 1)
       d_power = 1;
@@ -208,6 +210,9 @@ void PartVel::ComputePartVel( const ProcessorGroup* pc,
         IntVector c = *iter;
         IntVector cxm = *iter - IntVector(1,0,0); 
 
+        if (c.x() == 0 && c.y() == 7 && c.z() == 7)
+          cout << "HERE" << endl;
+
         double length;
         if( weight[c] < 1e-6 ) {
           length = 0;
@@ -235,21 +240,20 @@ void PartVel::ComputePartVel( const ProcessorGroup* pc,
         double prev_diff = 0.0;
         double newPartMag = 0.0;
         double length_ratio = 0.0;
-        eta = 0;
 
         epsilon =  pow(sphGas.z(),3.0);
         epsilon /= d_L;
-        if (epsilon > 1e-16) { // in case vel = 0
-          eta  = pow(kvisc,3.0);
-          eta /= epsilon;
-          eta = pow(eta, .25);
 
-          length_ratio = length / eta; 
+        length_ratio = length / d_eta;
+        double inv_length_ratio = 1.0/length_ratio; 
+        double uk = 0.0;
+       
+        if (length > 0.0) {
+          uk = pow(d_eta/d_L, 1./3.);
+          uk *= sphGas.z();
         }
 
-        double uk = pow(epsilon*eta, 1./3.);
         diff = 0.0;
-
 
         for ( int i = 0; i < d_totIter; i++) {
 
@@ -269,6 +273,11 @@ void PartVel::ComputePartVel( const ProcessorGroup* pc,
         }
 
         newPartMag = sphGas.z() - diff; 
+
+        double vel_ratio = newPartMag / sphGas.z(); 
+
+        if (vel_ratio < d_min_vel_ratio) 
+          newPartMag = sphGas.z() * d_min_vel_ratio; 
   
         sphPart = Vector(sphGas.x(), sphGas.y(), newPartMag);
 
