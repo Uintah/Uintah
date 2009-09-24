@@ -48,7 +48,7 @@ private:
   ArchesLabel* d_fieldLabels; 
   
   // velocity model paramters
-  double eta; // Kolmogorov scale
+  double d_eta; // Kolmogorov scale
   double rhoRatio; // density ratio
   double beta; // beta parameter
   double epsilon; // turbulence intensity
@@ -56,6 +56,7 @@ private:
   //int regime; // what is this??? 
   double d_upLimMult; // multiplies the upper limit of the scaling factor for upper bounds on ic. 
   bool d_gasBC; 
+  double d_min_vel_ratio; // min ratio allow for the velocity difference. 
 
   vector<double> d_wlo;
   vector<double> d_wo;
