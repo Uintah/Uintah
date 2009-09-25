@@ -1443,14 +1443,6 @@ Arches::sched_scalarInit( const LevelP& level,
 
     }
 
-  // TOTAL KLUDGE FOR REACTING COAL---------------------------
-  // Keep commented out unless you know what you are doing!
-  //SourceTermFactory& factory = SourceTermFactory::self();
-  //SourceTermBase& src = factory.retrieve_source_term( "eta_source" ); 
-  //const VarLabel* srcLabel = src.getSrcLabel();
-  //tsk->computes(srcLabel);
-  //----------------------------------------------------------
-
   sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
 
 }
@@ -1487,16 +1479,6 @@ Arches::scalarInit( const ProcessorGroup* ,
 
       //do Boundary conditions
       eqn->computeBCsSpecial( patch, eqn_name, tempVar ); 
-
-  // TOTAL KLUDGE FOR REACTING COAL---------------------------
-  // Keep commented out unless you know what you are doing!
-  //SourceTermFactory& factory = SourceTermFactory::self();
-  //SourceTermBase& src = factory.retrieve_source_term( "eta_source" ); 
-  //const VarLabel* srcLabel = src.getSrcLabel();
-  //CCVariable<double> srcVar;
-  //new_dw->allocateAndPut( srcVar, srcLabel, matlIndex, patch );
-  //srcVar.initialize(0.0);
-  //----------------------------------------------------------
 
     }
     SourceTermFactory& srcFactory = SourceTermFactory::self();
