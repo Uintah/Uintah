@@ -210,9 +210,6 @@ void PartVel::ComputePartVel( const ProcessorGroup* pc,
         IntVector c = *iter;
         IntVector cxm = *iter - IntVector(1,0,0); 
 
-        if (c.x() == 0 && c.y() == 7 && c.z() == 7)
-          cout << "HERE" << endl;
-
         double length;
         if( weight[c] < 1e-6 ) {
           length = 0;
