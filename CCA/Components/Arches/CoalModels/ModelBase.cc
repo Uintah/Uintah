@@ -14,11 +14,18 @@ ModelBase::ModelBase( std::string modelName, SimulationStateP& sharedState,
 d_modelName(modelName), d_sharedState( sharedState ), d_fieldLabels(fieldLabels), d_icLabels(icLabelNames), d_quadNode(qn)
 {
   //Create a label for this source term. 
-  d_modelLabel = VarLabel::create(modelName, CCVariable<double>::getTypeDescription()); 
+  if(modelName == "dragforce") {
+    d_modelLabel = VarLabel::create(modelName, CCVariable<Vector>::getTypeDescription());
+    std::string varname = modelName + "_gassSource"; 
+    d_gasLabel = VarLabel::create( varname, CCVariable<Vector>::getTypeDescription()); 
 
-  std::string varname = modelName + "_gassSource"; 
-  d_gasLabel = VarLabel::create( varname, CCVariable<double>::getTypeDescription()); 
+  } else {  
+    d_modelLabel = VarLabel::create(modelName, CCVariable<double>::getTypeDescription()); 
+    std::string varname = modelName + "_gassSource"; 
+    d_gasLabel = VarLabel::create( varname, CCVariable<double>::getTypeDescription()); 
+  }
 
+ 
   d_labelSchedInit  = false; 
 }
 
@@ -54,7 +61,7 @@ ModelBase::dummyInit( const ProcessorGroup* pc,
                       const PatchSubset* patches, 
                       const MaterialSubset* matls, 
                       DataWarehouse* old_dw, 
-                      DataWarehouse* new_dw )
+                      DataWarehouse* new_dw )		      
 {
   //patch loop
   for (int p=0; p < patches->size(); p++){
@@ -64,19 +71,30 @@ ModelBase::dummyInit( const ProcessorGroup* pc,
     int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
 
     Ghost::GhostType  gn = Ghost::None;
-
-    CCVariable<double> model;
-    CCVariable<double> gas_src; 
-    constCCVariable<double> old_model;
-    constCCVariable<double> old_gas_src;   
-
-    new_dw->allocateAndPut( model, d_modelLabel, matlIndex, patch ); 
-    new_dw->allocateAndPut( gas_src, d_gasLabel, matlIndex, patch ); 
-    old_dw->get(old_model, d_modelLabel, matlIndex, patch, gn, 0);
-    old_dw->get(old_gas_src, d_gasLabel, matlIndex, patch, gn, 0); 
-
-    model.copyData(old_model);
-    gas_src.copyData(old_gas_src);
+    
+     if(d_modelName == "dragforce") {
+      CCVariable<Vector> model;
+      CCVariable<Vector> gas_src; 
+      constCCVariable<Vector> old_model;
+      constCCVariable<Vector> old_gas_src;
+      new_dw->allocateAndPut( model, d_modelLabel, matlIndex, patch ); 
+      new_dw->allocateAndPut( gas_src, d_gasLabel, matlIndex, patch ); 
+      old_dw->get(old_model, d_modelLabel, matlIndex, patch, gn, 0);
+      old_dw->get(old_gas_src, d_gasLabel, matlIndex, patch, gn, 0);
+      model.copyData(old_model);
+      gas_src.copyData(old_gas_src);
+     } else {
+      CCVariable<double> model;
+      CCVariable<double> gas_src; 
+      constCCVariable<double> old_model;
+      constCCVariable<double> old_gas_src;
+      new_dw->allocateAndPut( model, d_modelLabel, matlIndex, patch ); 
+      new_dw->allocateAndPut( gas_src, d_gasLabel, matlIndex, patch ); 
+      old_dw->get(old_model, d_modelLabel, matlIndex, patch, gn, 0);
+      old_dw->get(old_gas_src, d_gasLabel, matlIndex, patch, gn, 0);
+      model.copyData(old_model);
+      gas_src.copyData(old_gas_src);
+     }     
 
   }
 }

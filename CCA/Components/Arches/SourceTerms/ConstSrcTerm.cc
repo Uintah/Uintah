@@ -43,7 +43,7 @@ ConstSrcTerm::problemSetup(const ProblemSpecP& inputdb)
 
   ProblemSpecP db = inputdb; 
 
-  db->getWithDefault("constant",d_constant, 0.0); 
+  db->getWithDefault("constant",d_constant, 0.1); 
 
 }
 //---------------------------------------------------------------------------

@@ -75,6 +75,5 @@ ModelFactory::retrieve_model( const std::string name )
   ModelBuilder* builder = ibuilder->second;
   ModelBase* model = builder->build();
   models_[name] = model;
-
   return *model;
 }

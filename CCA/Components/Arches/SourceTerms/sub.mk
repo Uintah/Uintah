@@ -6,7 +6,8 @@ SRCS += \
 	$(SRCDIR)/SourceTermFactory.cc \
 	$(SRCDIR)/SourceTermBase.cc \
 	$(SRCDIR)/CoalGasDevol.cc \
-	$(SRCDIR)/ConstSrcTerm.cc 
+	$(SRCDIR)/ConstSrcTerm.cc \
+	$(SRCDIR)/CoalGasMomentum.cc
 
 
 
