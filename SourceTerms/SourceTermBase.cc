@@ -11,8 +11,13 @@ SourceTermBase::SourceTermBase( std::string srcName, SimulationStateP& sharedSta
 d_srcName(srcName), d_sharedState( sharedState ), d_requiredLabels(reqLabelNames)
 {
   //Create a label for this source term. 
-  d_srcLabel = VarLabel::create(srcName, CCVariable<double>::getTypeDescription()); 
-
+  //d_srcLabel = VarLabel::create(srcName, CCVariable<double>::getTypeDescription()); 
+  if ( srcName == "coal_gas_momentum") {
+    d_srcLabel = VarLabel::create(srcName, CCVariable<Vector>::getTypeDescription()); 
+  }
+  else {
+    d_srcLabel = VarLabel::create(srcName, CCVariable<double>::getTypeDescription());
+  }
   d_labelSchedInit  = false; 
 }
 

@@ -354,6 +354,8 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
       // Compute the particle velocities
       d_partVel->schedComputePartVel( level, sched, curr_level ); 
 
+     
+
       // ---- schedule the solution of the transport equations ----
       
       // Perform the weight updates first.
@@ -400,6 +402,12 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
       for (ModelFactory::ModelMap::iterator imodel = allModels.begin(); imodel != allModels.end(); imodel++){
         imodel->second->sched_computeModel( level, sched, curr_level );  
       }
+
+      // Kluge
+      //SourceTermFactory& factory = SourceTermFactory::self();
+      //SourceTermBase& src = factory.retrieve_source_term( "coal_gas_momentum" ); 
+      //src.sched_computeSource(level, sched, curr_level );
+      // Kludge
 
       // schedule DQMOM linear solve
       d_dqmomSolver->sched_solveLinearSystem( level, sched, curr_level );
