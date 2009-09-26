@@ -34,6 +34,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Arches/SourceTerms/SourceTermBase.h>
 #include <CCA/Components/Arches/SourceTerms/ConstSrcTerm.h>
 #include <CCA/Components/Arches/SourceTerms/CoalGasDevol.h>
+#include <CCA/Components/Arches/SourceTerms/CoalGasMomentum.h>
 #include <CCA/Components/Arches/CoalModels/ModelFactory.h>
 #include <CCA/Components/Arches/CoalModels/ModelBase.h>
 #include <CCA/Components/Arches/TransportEqns/EqnBase.h>
@@ -42,6 +43,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Arches/CoalModels/BadHawkDevol.h>
 #include <CCA/Components/Arches/CoalModels/KobayashiSarofimDevol.h>
 #include <CCA/Components/Arches/CoalModels/HeatTransfer.h>
+#include <CCA/Components/Arches/CoalModels/DragModel.h>
 #include <CCA/Components/Arches/TransportEqns/EqnFactory.h>
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqnFactory.h>
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqn.h>
@@ -436,6 +438,17 @@ Arches::problemSetup(const ProblemSpecP& params,
     d_timeIntegrator->problemSetup(time_db);
   }
 
+  //register source terms for Particle-Gas phase coupling
+  ProblemSpecP coupling_db = db->findBlock("Coupling");
+  if (coupling_db) {
+    ProblemSpecP sources_db = coupling_db->findBlock("Sources");
+    if (sources_db)
+      Arches::registerSources(sources_db);
+  }
+  else
+    proc0cout << "No coupling between gas phase and particles" << endl;
+
+
   //register all source terms
   ProblemSpecP transportEqn_db = db->findBlock("TransportEqns");
   if (transportEqn_db) {
@@ -486,6 +499,27 @@ Arches::problemSetup(const ProblemSpecP& params,
       }
     }
   }
+
+  if (coupling_db) {
+
+    ProblemSpecP sources_db = coupling_db->findBlock("Sources");
+    if (sources_db) {
+      SourceTermFactory& src_factory = SourceTermFactory::self(); 
+      for (ProblemSpecP src_db = sources_db->findBlock("src"); 
+          src_db !=0; src_db = src_db->findNextBlock("src")){
+
+        std::string srcname; 
+        src_db->getAttribute("label", srcname);
+        if (srcname == "") {
+          throw InvalidValue( "The label attribute must be specified for the source terms!", __FILE__, __LINE__); 
+        }
+        SourceTermBase& a_src = src_factory.retrieve_source_term( srcname );
+        a_src.problemSetup( src_db );  
+      
+      }
+    }
+  }
+
 
   ProblemSpecP dqmom_db = db->findBlock("DQMOM"); 
   if (dqmom_db) {
@@ -2113,6 +2147,10 @@ void Arches::registerSources(ProblemSpecP& db)
         SourceTermBuilder* srcBuilder = scinew CoalGasDevolBuilder(src_name, required_varLabels, d_lab->d_sharedState);
         factory.register_source_term( src_name, srcBuilder ); 
 
+       } else if (src_type == "coal_gas_momentum"){
+        SourceTermBuilder* srcBuilder = scinew CoalGasMomentumBuilder(src_name, required_varLabels, d_lab->d_sharedState);
+        factory.register_source_term( src_name, srcBuilder ); 
+
       } else {
         proc0cout << "For source term named: " << src_name << endl;
         proc0cout << "with type: " << src_type << endl;
@@ -2205,6 +2243,9 @@ void Arches::registerModels(ProblemSpecP& db)
           model_factory.register_model( temp_model_name, modelBuilder );
 	} else if ( model_type == "HeatTransfer" ) {
           ModelBuilder* modelBuilder = scinew HeatTransferBuilder(temp_model_name, requiredIC_varLabels, d_lab, d_lab->d_sharedState, iqn);
+          model_factory.register_model( temp_model_name, modelBuilder );
+	} else if ( model_type == "dragforce" ) {
+          ModelBuilder* modelBuilder = scinew DragModelBuilder(temp_model_name, requiredIC_varLabels, d_lab, d_lab->d_sharedState, iqn);
           model_factory.register_model( temp_model_name, modelBuilder );
         } else {
           proc0cout << "For model named: " << temp_model_name << endl;

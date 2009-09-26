@@ -54,6 +54,9 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/Task.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
+#include <CCA/Components/Arches/SourceTerms/SourceTermFactory.h>
+#include <CCA/Components/Arches/SourceTerms/SourceTermBase.h>
+#include <CCA/Components/Arches/SourceTerms/ConstSrcTerm.h>
 using namespace Uintah;
 using namespace std;
 
@@ -467,8 +470,19 @@ MomentumSolver::sched_buildLinearMatrixVelHat(SchedulerP& sched,
     tsk->modifies(d_lab->d_vFmmsLabel);
     tsk->modifies(d_lab->d_wFmmsLabel);
   }
+
+  // TOTAL KLUDGE FOR REACTING COAL---------------------------
+    // Keep commented out unless you know what you are doing!
+    //SourceTermFactory& factory = SourceTermFactory::self();
+    //SourceTermBase& src = factory.retrieve_source_term( "coal_gas_momentum" ); 
+    //const VarLabel* srcLabel = src.getSrcLabel();
+    //tsk->requires(Task::NewDW, srcLabel, gn, 0);
+  // END KLUDGE ---------------------------------------------- 
+
   sched->addTask(tsk, patches, matls);
 }
+
+ 
 
 
 // ***********************************************************************
@@ -647,6 +661,14 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
       velocityVars.wFmms.initialize(0.0);
     }
 
+  // TOTAL KLUDGE FOR REACTING COAL---------------------------
+  // Keep commented out unless you know what you are doing!
+  //   SourceTermFactory& factory = SourceTermFactory::self();
+  //   SourceTermBase& src = factory.retrieve_source_term( "coal_gas_momentum" ); 
+  //   const VarLabel* srcLabel = src.getSrcLabel();
+  //   new_dw->get( velocityVars.otherVectorSource, srcLabel, indx, patch, Ghost::None, 0);
+  // END KLUDGE ----------------------------------------------    
+
     //__________________________________
     //  compute coefficients
     d_discretize->calculateVelocityCoeff(patch, 
@@ -804,6 +826,11 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
                                         &velocityVars, &constVelocityVars);
     }
 
+    //Kludge
+    //d_source->computeParticleSource(pc, patch, cellinfo,
+    //                                   &velocityVars, &constVelocityVars);
+    // end Kludge
+
     // Calculate the Velocity BCS
     //  inputs : densityCP, [u,v,w]VelocitySIVBC, [u,v,w]VelCoefPBLM
     //           [u,v,w]VelLinSrcPBLM, [u,v,w]VelNonLinSrcPBLM
@@ -832,6 +859,7 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
     if (d_MAlab){
       d_boundaryCondition->mmvelocityBC(patch, cellinfo,
                                         &velocityVars, &constVelocityVars);
+
     }
     // Modify Velocity Mass Source
     //  inputs : [u,v,w]VelocitySIVBC, [u,v,w]VelCoefPBLM, 
