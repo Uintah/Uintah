@@ -188,7 +188,6 @@ namespace Uintah {
 
       //KLUDGE FOR REACTING COAL ------
       //constCCVariable<double> otherSource;
-        constCCVariable<Vector> otherVectorSource;
       // END KLUDGE --------------------
 
     }; // End class ArchesVariables
