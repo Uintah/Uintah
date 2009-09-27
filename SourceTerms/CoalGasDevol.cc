@@ -157,7 +157,7 @@ CoalGasDevol::computeSource( const ProcessorGroup* pc,
  
         old_dw->get( qn_gas_devol, gasModelLabel, matlIndex, patch, gn, 0 );
 
-        devolSrc[c] += qn_gas_devol[c]; // All the work is performed in Drag model
+        devolSrc[c] += qn_gas_devol[c]; // All the work is performed in Devol model
       }
     }
   }
