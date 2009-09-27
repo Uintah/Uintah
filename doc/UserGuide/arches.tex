@@ -1,23 +1,9 @@
-%% LyX 1.6.2 created this file.  For more info, see http://www.lyx.org/.
-%% Do not edit unless you really know what you are doing.
-%\documentclass[english]{article}
-%\usepackage[T1]{fontenc}
-%\usepackage[latin9]{inputenc}
-
-%\usepackage{babel}
-
-%\begin{document}
 
 \chapter{Arches}
 
 \section{Introduction}
 % please fix....
-The ARCHES component was initially designed for predicting the
-potential hazard of an explosive device immersed in or near a pool
-fire of transportation fuel.  Since then, this component has been
-extended to solve many industrially relevant problems such as
-industrial flares, oxy-coal combustion processes, and fuel
-gasification.
+The ARCHES component was initially designed for predicting the potential hazard of an explosive device immersed in or near a pool fire of transportation fuel.  Since then, this component has been extended to solve many industrially relevant problems such as industrial flares, oxy-coal combustion processes, and fuel gasification.  
 
 Given the wide range of length and time scales that are present in these examples, ARCHES utilizes models for bridging the molecular (micro) scales to the full, large (macro) scales.  More to come....
 
@@ -25,10 +11,10 @@ The ARCHES component solves the conservative, finite volume, low-mach formulatio
 
 \section{Governing Equations}
 %
-The essential governing equations for the Arches component, written in
-finite volume form, include the mass balance, momentum balance,
-mixture fraction balance, and energy balance equations. Using a
-bold-face symbol to represent a vector quantity, the equations are:
+The essential governing equations for the Arches component, written
+in finite volume form, include the mass balance, momentum balance,
+mixture fraction balance, and energy balance equations. Using a bold-face
+symbol to represent a vector quantity, the equations are: 
 \begin{enumerate}
 \item The mass balance, \begin{equation}
 \int_{V}\frac{\partial\rho}{\partial t}dV+\oint_{S}\rho\mathbf{u}\cdot d\mathbf{S}=0\;,\label{eqn:mass_balance}\end{equation}
@@ -196,25 +182,13 @@ and
 M_{ij} \equiv 2 \left( \widehat{ | \overline{S} | \overline{S} }_{ij} - \alpha^2 |\widehat{\overline{S}}|\widehat{\overline{S}}_{ij} \right) \; .
 \end{equation} 
 %
-The hat defines an explicit test filter and the angled brackets in
-Equation \ref{eqn:cs_eqn} conceptually represent an averaging over a
-homogeneous region of space that, experience has shown, is necessary
-for stability.  Experience has also shown that averaging over the test
-filter width is adequate and the filter width ratio, $\alpha =
-\widehat{\Delta}/\Delta$, is usually taken to be 2.
+The hat defines an explicit test filter and the angled brackets in Equation \ref{eqn:cs_eqn} conceptually represent an averaging over a homogeneous region of space that, experience has shown, is necessary for stability.  Experience has also shown that averaging over the test filter width is adequate and the filter width ratio, $\alpha = \widehat{\Delta}/\Delta$, is usually taken to be 2.
 
 \subsection{Subgrid Momentum Dissipation}
 %%
 Addressing the momentum closure involves finding a suitable model for the subgrid scale stress tensor, $\tau^{sgs}_{ij}$.  Two common LES turbulence closure models are examined: the constant coefficient Smagorinsky model and the dynamic coefficient Smagorinsky model.  
 %%
-In LES modeling, field variables are decomposed into a spatially
-filtered field and a residual component, $u = \overline{u} + u'$.
-This decomposition is known as a Leonard decomposition.  While
-seemingly similar to a Reynolds decomposition used in Reynolds
-Averaged Navier-Stokes (RANS) models, the Leonard decomposition has
-the property that the filtered residual component is generally not
-equal to zero, $\overline{u'} \neq 0$.  As a result, the subgrid
-stress term contains several terms,
+In LES modeling, field variables are decomposed into a spatially filtered field and a residual component, $u = \overline{u} + u'$.  This decomposition is known as a Leonard decomposition.  While seemingly similar to a Reynolds decomposition used in Reynolds Averaged Navier-Stokes (RANS) models, the Leonard decomposition has the property that the filtered residual component is generally not equal to zero, $\overline{u'} \neq 0$.  As a result, the subgrid stress term contains several terms, 
 %%%
 \begin{eqnarray}
 \tau_{ij}^{sgs} = \overline{ \left(\overline{u}_i + u_i' \right) \left(\overline{u}_i + u_i' \right)} - \overline{u}_i \overline{u}_j \; , \; \; \; \; \; \; \; \; \; \; \; \; \; \;  \; \; \nonumber \\
@@ -223,25 +197,11 @@ stress term contains several terms,
    \underbrace{ \overline{u_i' + u_j'} }_{R_{ij}} \; , 
 \end{eqnarray}
 %
-referred to as the Leonard stress, the cross stresses, and the
-Reynolds stress respectively.
+referred to as the Leonard stress, the cross stresses, and the Reynolds stress respectively.  
 
-It is useful to consider the physical interpretation of the various
-components of the stress. The Leonard term is responsible for
-filtering and projecting the nonlinear interactions of the resolved
-components back to the finite LES space.  This is a correction to the
-resolved advective term in accordance with the stated explicit filter
-used to derive the LES equations. It does not account for aliasing
-errors. The first cross term represents advection of the resolved
-field by turbulent fluctuations. The second cross term represents the
-advection of subgrid scales by the resolved field. The Reynolds stress
-is familiar from RANS and represents the advection of subgrid scales
-by turbulent fluctuations.
+It is useful to consider the physical interpretation of the various components of the stress. The Leonard term is responsible for filtering and projecting the nonlinear interactions of the resolved components back to the finite LES space.  This is a correction to the resolved advective term in accordance with the stated explicit filter used to derive the LES equations. It does not account for aliasing errors. The first cross term represents advection of the resolved field by turbulent fluctuations. The second cross term represents the advection of subgrid scales by the resolved field. The Reynolds stress is familiar from RANS and represents the advection of subgrid scales by turbulent fluctuations. 
 
-As with the scalar subgrid modeling terms, the eddy viscosity model is
-again invoked for $\tau^{sgs}_{ij}$.  The most common eddy viscosity
-model in LES is the Smagorinsky model \cite{Smagorinsky178}.  Defining
-the deviatoric subgrid stress tensor as,
+As with the scalar subgrid modeling terms, the eddy viscosity model is again invoked for $\tau^{sgs}_{ij}$.  The most common eddy viscosity model in LES is the Smagorinsky model \cite{Smagorinsky178}.  Defining the deviatoric subgrid stress tensor as, 
 %%
 \begin{equation}
 \tau^{d, sgs}_{ij} = \tau^{sgs}_{ij} - \frac{1}{3}\tau^{sgs}_{kk} \delta_{ij}, 
@@ -255,14 +215,7 @@ the subgrid stress is approximated by,
 %%
 where, $\Delta$ is the filter width, $\nu_t$ is the eddy viscosity, $|\overline{S}| \equiv (2\overline{S}_{ij}\overline{S}_{ij})^{1/2}$, and typically $C_s \approx 2$  depending on the filter type, numerical method, and flow configuration \cite{Pope179}. This model is basically identical to Prandtl's mixing length model with $l = C_s \Delta$.
 
-The dynamic procedure \cite{Germano74, Moin158} eliminates the need to
-specify the model constant, $C_s$, a priori, with the basic assumption
-that the constant is the same for two different filter scales. The
-smaller scale is historically referred to as the ``grid scale" (though
-the filter width need not equal the grid spacing, $\Delta \geq h$)),
-and the larger scale is referred to as the ``test scale".  Implicit in
-this assumption is the requirement that both scales lie within the
-inertial subrange.
+The dynamic procedure \cite{Germano74, Moin158} eliminates the need to specify the model constant, $C_s$, a priori, with the basic assumption that the constant is the same for two different filter scales. The smaller scale is historically referred to as the ``grid scale" (though the filter width need not equal the grid spacing, $\Delta \geq h$)), and the larger scale is referred to as the ``test scale".  Implicit in this assumption is the requirement that both scales lie within the inertial subrange. 
 
 Defining the deviatoric residual stress tensor as, 
 \begin{equation}
@@ -306,63 +259,26 @@ The angled brackets in Equation \ref{eqn:cs_eqn} conceptually represent averagin
 With these implementation practices, the dynamic model is generally robust. The implementation can be made more efficient by computing the constant roughly every 10 time steps (based on the advective CFL), and only for the first Runge-Kutta step.
 
 \subsection{LES Algorithm}\label{Sec:LES_Algorithm}
-
+%
+The set of filtered equations (Equations \ref{eqn:filtered_mass_balance}-\ref{eqn:filtered_heat_balance}) are discretized in space and time and solved on a staggered, finite volume mesh.  The staggering scheme consists of four offset grids. One grid stores the scalar quantities and the remaining three grids store each component of the velocity vector. The velocity components are situated so that the center of their control volume is located on the face centers of the scalar grid in their respective direction.  Figure \ref{fig:staggered_grid} shows an example of a two-dimensional grid and the staggering arrangement.
 %
 %% Staggered Grid
-\begin{wrapfigure}{r}{.5\textwidth}
+\begin{figure}
  \begin{center}
-   \vspace{-35pt}
-%   \scalebox{.85}{\includegraphics{staggered_grid.png}}
-   \includegraphics[width=.45\textwidth]{staggered_grid.png}
-   \caption{Staggered grid arrangement in two dimensions with u and v velocity cell centers located on the face centers of the scalar cells.}
-   \label{fig:staggered_grid}
+    \scalebox{.85}{\includegraphics{staggered_grid.png}}
+   \caption{Staggered grid arrangement in two dimensions with u and v velocity cell centers located on the face centers of the scalar cells.}\label{fig:staggered_grid}
    \end{center}
-   \vspace{-40pt}
-\end{wrapfigure}
+\end{figure}
 %
 
-%
-The set of filtered equations (Equations
-\ref{eqn:filtered_mass_balance}-\ref{eqn:filtered_heat_balance}) are
-discretized in space and time and solved on a staggered, finite volume
-mesh.  The staggering scheme consists of four offset grids. One grid
-stores the scalar quantities and the remaining three grids store each
-component of the velocity vector. The velocity components are situated
-so that the center of their control volume is located on the face
-centers of the scalar grid in their respective direction.  Figure
-\ref{fig:staggered_grid} shows an example of a two-dimensional grid
-and the staggering arrangement.
+The staggering arrangement is advantageous for computing low-Mach LES reacting flows.  First, since a pressure projection algorithm is used, the velocities are exactly projected without interpolation error because the location of the pressure gradient coincides directly with the location of the velocity storage location. Second, Morinishi et al. \cite{morinishi98} showed that kinetic energy is exactly conserved when using a central differencing scheme on the convection and diffusion terms without a subgrid model and in combination with a staggered grid.  Having a spatial scheme that conserves kinetic energy is advantageous because it limits artificial dissipation that arises from the differencing scheme.  These conservation properties make the staggered grid a prime choice for LES reacting flow simulation.
 
-The staggering arrangement is advantageous for computing low-Mach LES
-reacting flows.  First, since a pressure projection algorithm is used,
-the velocities are exactly projected without interpolation error
-because the location of the pressure gradient coincides directly with
-the location of the velocity storage location. Second, Morinishi et
-al. \cite{morinishi98} showed that kinetic energy is exactly conserved
-when using a central differencing scheme on the convection and
-diffusion terms without a subgrid model and in combination with a
-staggered grid.  Having a spatial scheme that conserves kinetic energy
-is advantageous because it limits artificial dissipation that arises
-from the differencing scheme.  These conservation properties make the
-staggered grid a prime choice for LES reacting flow simulation.
+For the spatial discretization of the LES scalar equations, flux limiting and upwind schemes for the convection operator are used.  These schemes are advantageous for ensuring that scalar values remain bounded.  For the momentum equation, a central differencing scheme for the convection operator is used.  All diffusion terms are computed with a second order approximation of the gradient.  
 
-For the spatial discretization of the LES scalar equations, flux
-limiting and upwind schemes for the convection operator are used.
-These schemes are advantageous for ensuring that scalar values remain
-bounded.  For the momentum equation, a central differencing scheme for
-the convection operator is used.  All diffusion terms are computed
-with a second order approximation of the gradient.
-
-When computing the 2d surface filtered field on the faces of the
-control volume, one is forced to use an interpolation from the 3d
-volume filtered field.  This approximation is tolerated because
-computing the 2d surface field is simply not possible with the given
-grid
-scheme. % This is a good example of how LES modeling issues and discrete numerics issue intertwine in applied LES modeling.
+When computing the 2d surface filtered field on the faces of the control volume, one is forced to use an interpolation from the 3d volume filtered field.  This approximation is tolerated because computing the 2d surface field is simply not possible with the given grid scheme. % This is a good example of how LES modeling issues and discrete numerics issue intertwine in applied LES modeling.     
 
 %Jennifer edited
-An explicit time stepping scheme is chosen.  A general, multistep
-explicit update for a variable, $\phi$, may be written as,
+An explicit time stepping scheme is chosen.  A general, multistep explicit update for a variable, $\phi$, may be written as, 
 %
 %===== Explicit Update =====
 \begin{eqnarray}\label{eqn:forward_euler}
@@ -432,52 +348,39 @@ Choosing an explicit time stepping scheme, rather than an implict one, creates a
 \overline{\rho}^{ *} = \overline{\rho}^{ n} - \Delta t \frac{S_k}{V} n_{kj} \left(  \overline{\rho} \widetilde{u_j} \right) \; .
 \end{equation}
 %
-Ideally, one would like to know $\overline{\rho}^{n+1}$ rather than an
-estimate.  While more details will be discussed in Section
-\ref{sec:combust_react_models}, one recognizes that $\rho$ is a
-function of the same variables that are being updated in time, namely,
-the mixture fraction, $f$, and enthalpy, $h$.  This quandary is a
-result of the explicit time stepping method will not be resolved for
-variable density flows without using a fully implicit method.
-Explicit methods, however, do have advantages, especially for large
-scale parallel computations.  Specifically, explicit methods are
-easier to load balance because the amount of work required for each
-processor is readily determined a priori, which makes for an efficient
-parallel computation.  Explicit methods are also easier to code into a
-computer and to debug.  For these reasons, the current algorithm
-discussion is limited to explicit methods only.
+Ideally, one would like to know $\overline{\rho}^{n+1}$ rather than an estimate.  While more details will be discussed in Section \ref{sec:combust_react_models}, one recognizes that $\rho$ is a function of the same variables that are being updated in time, namely, the mixture fraction, $f$, and enthalpy, $h$.  This quandary is a result of the explicit time stepping method will not be resolved for variable density flows without using a fully implicit method.  Explicit methods, however, do have advantages, especially for large scale parallel computations.  Specifically, explicit methods are easier to load balance because the amount of work required for each processor is readily determined a priori, which makes for an efficient parallel computation.  Explicit methods are also easier to code into a computer and to debug.  For these reasons, the current algorithm discussion is limited to explicit methods only. 
 
 The explicit algorithm for solving the set of filtered equations is shown in Algorithm \ref{alg:LES_algorithm}.  
 %
-\begin{lstlisting}[float, caption = Explicit LES algorithm, label=alg:LES_algorithm]
-for t:=t_{min} to t_{max} do 
-fill in later..
-for $RK_{step}$:=1 to $N$
-end;
-end; 
-\end{lstlisting}
+%\begin{lstlisting}[float, caption = Explicit LES algorithm, label=alg:LES_algorithm]
+%for t:=t_{min} to t_{max} do 
+%fill in later..
+%for $RK_{step}$:=1 to $N$
+%end;
+%end; 
+%\end{lstlisting}
 %
-%\begin{algorithm}[t]
-%\caption{Explicit LES algorithm.}\label{alg:LES_algorithm}
+\begin{algorithm}[t]
+\caption{Explicit LES algorithm.}\label{alg:LES_algorithm}
 %
-%\begin{algorithmic}[] %add [1] for #'s
-%\FOR{$t = t_{min}...t_{max}$}
-%\FOR{$RK_{step} = 1$...$N$} 
-%\STATE 	Solve for scalars products $(\overline{\rho} \widetilde{f})^{n+1}$ and $(\overline{\rho} \widetilde{h})^{n+1}$.
-%\STATE	Estimate $\overline{\rho}^* = \overline{\rho}^{n+1}$ from Equation \ref{eqn:rho_update}
-%\IF{$\overline{\rho}^* < \overline{\rho}_{min}$ or $ \overline{\rho}^* > \overline{\rho}_{max}$}
-%\STATE $\overline{\rho}^* = \overline{\rho}^{n}$
-%\ENDIF
-%\STATE Compute $\widetilde{f}^{n+1} = (\overline{\rho}\widetilde{f})^{n+1}/{\overline{\rho}^*}$ and $\widetilde{h}^{n+1} = (\overline{\rho}\widetilde{h})^{n+1}/{\overline{\rho}^*}$ 
-%\STATE Compute $\overline{\rho}^{n+1} = f(\widetilde{f}^{n+1}, \widetilde{h}^{n+1})$
-%\STATE Compute $\widetilde{\mathbf{u}}^*$, the unprojected velocities
-%\STATE Perform RK averaging if needed
-%\STATE Compute correct pressure from pressure poisson equation
-%\STATE Project velocities with correct pressure to get $\widetilde{\mathbf{u}}^{n+1}$ 
-%\ENDFOR
-%\ENDFOR
-%\end{algorithmic}
-%\end{algorithm}
+\begin{algorithmic}[] %add [1] for #'s
+\FOR{$t = t_{min}...t_{max}$}
+\FOR{$RK_{step} = 1$...$N$} 
+\STATE 	Solve for scalars products $(\overline{\rho} \widetilde{f})^{n+1}$ and $(\overline{\rho} \widetilde{h})^{n+1}$.
+\STATE	Estimate $\overline{\rho}^* = \overline{\rho}^{n+1}$ from Equation \ref{eqn:rho_update}
+\IF{$\overline{\rho}^* < \overline{\rho}_{min}$ or $ \overline{\rho}^* > \overline{\rho}_{max}$}
+\STATE $\overline{\rho}^* = \overline{\rho}^{n}$
+\ENDIF
+\STATE Compute $\widetilde{f}^{n+1} = (\overline{\rho}\widetilde{f})^{n+1}/{\overline{\rho}^*}$ and $\widetilde{h}^{n+1} = (\overline{\rho}\widetilde{h})^{n+1}/{\overline{\rho}^*}$ 
+\STATE Compute $\overline{\rho}^{n+1} = f(\widetilde{f}^{n+1}, \widetilde{h}^{n+1})$
+\STATE Compute $\widetilde{\mathbf{u}}^*$, the unprojected velocities
+\STATE Perform RK averaging if needed
+\STATE Compute correct pressure from pressure poisson equation
+\STATE Project velocities with correct pressure to get $\widetilde{\mathbf{u}}^{n+1}$ 
+\ENDFOR
+\ENDFOR
+\end{algorithmic}
+\end{algorithm}
 
 \section{Uintah Specification}
 %
@@ -655,7 +558,11 @@ The options for the pressure solver include:
 %
 
 \subsubsection{Mixture Fraction Solver}
-Arches has identified specific scalar variables that require specification, the mixture fraction being one of them.  The mixture fraction equation is a conserved scalar equation that is used as a parameter to map the thermo-chemical state of the gas.   By default, the required $<$MixtureFractionSolver$>$ node must be present in the $<$ExplicitSolver$>$ node.
+In Arches current configuration, specific scalar variables that require specification.  The mixture fraction equation is one equation that requires definition in order to run any simulation.  This is true independent of the relation of the local density with the mixture fraction value.  
+
+In general, the mixture fraction equation is a conserved scalar equation that is used as a parameter to map the thermo-chemical state of the gas.   In its most simple form, the mixture fraction and density are related by a linear relationship (such as mixing of two non-reacting gasses with different densities).  More complicated state-space relationships are also available, which include subgrid reaction and turbulence mixing.  The role of the mixture fraction with both models is described in Section ADDSECTION.  
+
+By default, the required $<$MixtureFractionSolver$>$ node must be present in the $<$ExplicitSolver$>$ node.  Parameters within the mixture fraction node include; 
 
 \begin{enumerate}
 %
@@ -667,24 +574,98 @@ Arches has identified specific scalar variables that require specification, the 
 \item {\bf Convection scheme}: $<$convection\_scheme$>$ \\
 {\bf Input type}: {\it Required, string} \\
 {\bf Default}: {\it central-upwind, flux-limited } \\ 
-{\bf Description}: 
+{\bf Description}: The choice of the convection scheme can affect the stability of the algorithm.  The {\it central-upwind} option is the second upwind differencing scheme defined by Roache (ADD REFERENCE).  The {\it central-upwind} option is kept separate from the {\it flux\_limiter} option for historical reasons.  One may choose the type of limter for the {\it flux\_limited} specification by setting the  $<$limeter\_type$>$ option.  The currently available limiters include: 
+\begin{itemize}
+\item {\it superbee}
+\item {\it vanLeer}
+\item {\it upwind} - This option is the standard upwind scheme and is very stable, yet of low-order.
+\item {\it none} - This option uses central differencing and will add noise, and possibly cause instabilities, if used. 
+\end{itemize}
+The super-bee scheme is used if the limiter type is not specified.  
+
+One may also control the limiter type near boundary conditions by setting the $<$boundary\_limiter\_type$>$.  Options include:
+\begin{itemize}
+\item {\it central-upwind} The second upwind differencing scheme of Roache
+\item {\it upwind} First order upwind scheme
+\end{itemize}
+These options are necessary due to the wide stencil of some limiter types. 
 %
 \end{enumerate}
 
 \subsubsection{Enthalpy Solver}
+Arches solves a filtered enthalpy transport equation for tracking energy in the system.  Modes of heat transfer include convection, diffusion and radiative heat transfer.  The energy equation is activated by specifying the $<$EnthalpySolver$>$ section within the $<$ExplicitSolver$>$ node.  Note that by neglecting this node, isothermal flow is assumed.  
 
-\subsection{Initial and Boundary Conditions} 
+Current options for the enthalpy solver include:
+\begin{enumerate}
+%
+\item {\bf Convection scheme}: $<$convection\_scheme$>$ \\
+{\bf Input type}: {\it Required, string} \\
+{\bf Default}: {\it central-upwind, flux-limited } \\ 
+{\bf Description}: The choice of the convection scheme can affect the stability of the algorithm.  The {\it central-upwind} option is the second upwind differencing scheme defined by Roache (ADD REFERENCE).  The {\it central-upwind} option is kept separate from the {\it flux\_limiter} option for historical reasons.  One may choose the type of limter for the {\it flux\_limited} specification by setting the  $<$limeter\_type$>$ option.  The currently available limiters include: 
+\begin{itemize}
+\item {\it superbee}
+\item {\it vanLeer}
+\item {\it upwind} - This option is the standard upwind scheme and is very stable, yet of low-order.
+\item {\it none} - This option uses central differencing and will add noise, and possibly cause instabilities, if used. 
+\end{itemize}
+The super-bee scheme is used if the limiter type is not specified.  
 
-\subsection{Turbulence Models}
+One may also control the limiter type near boundary conditions by setting the $<$boundary\_limiter\_type$>$.  Options include:
+\begin{itemize}
+\item {\it central-upwind} The second upwind differencing scheme of Roache
+\item {\it upwind} First order upwind scheme
+\end{itemize}
+These options are necessary due to the wide stencil of some limiter types. 
+%
+\item Discrete Ordinates Radiation Model: $<$DORadiationModel$>$ \\
+{\bf Input type}: {\it NA} \\
+{\bf Default}: {\it NA } \\ 
+{\bf Description}: The discrete ordinates method is based on the numerical solution of the radiation transport equation (RTE) along specified directions. The total solid angle about a location is divided into a number of ordinate directions, each assumed to have uniform intensity. Each transport equation that is solved corresponds to an ordinate direction selected from an angular quadrature set that discretizes the unit sphere and describes the variation of directional intensity throughout the domain.
 
-\subsection{Properties, Reaction and Sub-Grid Mixing}
+If the $<$DORadiationModel$>$ section is found, the model is activated and the radiative source is automatically added to the transport equation.  If the section is absent, the calculation is assumed to have no radiative energy transport.  Options for the discrete radiation model include
+\begin{itemize}
+\item Optical path length: $<$opl$>$ \\
+{\bf Input type}: {\it Required, double} \\
+{\bf Default}: {\it NA } \\ 
+{\bf Description}: The optical path length for the radiation model. 
+\item Number of ordinate directions: $<$ordinates$>$ \\
+{\bf Input type}: {\it Optional, integer} \\
+{\bf Default}: {\it 2 } \\ 
+{\bf Description}: The discrete ordinates method uses quadrature methods to represent the divergence of the radiative heat flux.  The quadrature order is defined by the number of ordinate directions, $n$.  The number of equations to be solved depends directly on $n$.  The DO scheme is often referred to as an $Sn$ scheme where $n$ is the number of ordinate directions.
+%
+\item Property Model: $<$property\_model$>$ \\
+{\bf Input type}: {\it Optional, double} \\
+{\bf Default}: {\it radcoef } \\ 
+{\bf Description}:  This option defines the model for computing the radiation properties.  Options include:
+\begin{itemize}
+\item {\it radcoef} %need descriptions of these options
+\item {\it patchmean}
+\item {\it wsggm}
+\end{itemize}
+%
+\item Linear Solver: $<$linear\_solver$>$ \\
+{\bf Input type}: {\it Required, string} \\
+{\bf Default}: {\it NA } \\
+{\bf Description}: This options sets the linear solver for the radiation calculation.
 
-\subsection{Extra Scalar Solvers}
-This section and all options will soon be replaced with Section \ref{Sec:AddTransEqn}. 
+\end{itemize}  
 
-\subsection{Additional Transport Equations}\label{Sec:AddTransEqn}
+\end{enumerate}
 
-\subsection{Direct Quadrature Method of Moments (DQMOM)}
+%\subsection{Initial and Boundary Conditions} 
+
+%\subsection{Turbulence Models}
+
+%\subsection{Properties, Reaction and Sub-Grid Mixing}
+
+%\subsection{Extra Scalar Solvers}
+%This section and all options will soon be replaced with Section \ref{Sec:AddTransEqn}. 
+
+
+
+%\subsection{Additional Transport Equations}\label{Sec:AddTransEqn}
+
+%\subsection{Direct Quadrature Method of Moments (DQMOM)}
 
 
 
@@ -717,7 +698,7 @@ Due to the complexity of ARCHES simulations, exact solutions (with the exception
 \subsubsection*{\underline{Problem Description}}
 
 Methods of Manufactured Solutions (MMS) are verification tools that are used with computer codes such as ARCHES that seek to solve the Navier-Stokes Equations.  They are extremely useful for finding programming errors and ensuring expected behavior of the computer code.   The Almgren MMS is especially easy to implement because of the absence of source terms that must be added to the transport equations.
-ARCHES uses a second-order spatial discretization scheme and a first-order scheme in the temporal direction.  Therefore, if the Almgren MMS problem is run in Arches at different mesh resolutions and the normalized error plotted on a semilog plot, the slope of the line should be 2.  To facilitate this exercise, a shell script has been written to perform this analysis \bf{[not done yet....]}  %COMPLETE ME
+ARCHES uses a second-order spatial discretization scheme and a first-order scheme in the temporal direction.  Therefore, if the Almgren MMS problem is run in Arches at different mesh resolutions and the normalized error plotted on a semilog plot, the slope of the line should be 2.  To facilitate this exercise, a shell script has been written to perform this analysis \bf{[not done yet....]}  test %COMPLETE ME
 
 \subsubsection*{\underline{Simulation Specifics}}
 \begin{description} 
@@ -752,21 +733,8 @@ This is call to run the ARCHES via sus.
 \subsection*{\center Periodic Box Problem}
 \addcontentsline{toc}{subsection}{Periodic Box Problem}
 \subsubsection*{\underline{Problem Description}}
-\normalfont The Periodic Box Problem indicates how well ARCHES is
-modeling the kinetic energy contained in the turbulence modeled on the
-grid and at a sub-grid level.  The LES algorithm transfers kinetic
-energy from cell to cell in the ARCHES structured grid. Turbulence
-models such as "compdynamicprocedure," "dynamicprocedure," and
-"smagorinsky" are used to model kinetic energy at the sub-grid level.
-Ideally, there would be a seamless transition between the resolved
-turbulence and sub-grid models at the Nyquist limit.  \bf{SHOW SAMPLE
-  PLOT} \normalfont Experience has shown that this is not normally the
-case.  By plotting the kinetic energy as a function of the wave
-number, it is possible to determine how well the kinetic energy
-dissipation is being modeled by the code.  The Periodic Box problem is
-initialized with a kinetic energy (turbulence) profile from Direct
-Numerical Simulation (DNS).  As the simulation proceeds that energy is
-dissipated.
+
+The Periodic Box Problem indicates how well ARCHES is modeling the kinetic energy contained in the turbulence modeled on the grid and at a sub-grid level.  The LES algorithm transfers kinetic energy from cell to cell in the ARCHES structured grid. Turbulence models such as "compdynamicprocedure," "dynamicprocedure," and "smagorinsky" are used to model kinetic energy at the sub-grid level.  Ideally, there would be a seamless transition between the resolved turbulence and sub-grid models at the Nyquist limit.  \bf{SHOW SAMPLE PLOT}  Experience has shown that this is not normally the case.   By plotting the kinetic energy as a function of the wave number, it is possible to determine how well the kinetic energy dissipation is being modeled by the code.  The Periodic Box problem is initialized with a kinetic energy (turbulence) profile from Direct Numerical Simulation (DNS).  As the simulation proceeds that energy is dissipated.  
  % COMPLETE ME
 
 \subsubsection*{\underline{Simulation Specifics}}
@@ -802,7 +770,7 @@ This simulation, like many ARCHES simulations, requires another file, in additio
 \subsection*{\center Helium Plume}
 \addcontentsline{toc}{subsection}{Helium Plume}
 \subsubsection*{\underline{Problem Description}}
-Helium plumes are classical experiments that allow for the easy capture of turbulent mixing data that can be used to validate the turbulent mixing models used in LES algorithms such as Arches.  The non-reacting nature of the plume makes it easy to capture experimental data without damaging expensive equipment.  Reacting flows require special mixing tables that contain temperature, pressure and composition as a function of the transported scalars in Arches.  The coldFlowMixingModel is used to determine the mixing of \bf{isothermal?} streams. \normalfont After the mixing model is specific in the .ups file, the temperature and densities of the two mixing streams are specified.
+Helium plumes are classical experiments that allow for the easy capture of turbulent mixing data that can be used to validate the turbulent mixing models used in LES algorithms such as Arches.  The non-reacting nature of the plume makes it easy to capture experimental data without damaging expensive equipment.  Reacting flows require special mixing tables that contain temperature, pressure and composition as a function of the transported scalars in Arches.  The coldFlowMixingModel is used to determine the mixing of \bf{isothermal?} streams.  After the mixing model is specific in the .ups file, the temperature and densities of the two mixing streams are specified.
 
 \subsubsection*{\underline{Simulation Specifics}}
 \begin{description} 
@@ -899,6 +867,6 @@ To extract the incident heat flux to the cylinder, use the faceextract and timee
 \subsubsection*{\underline{Results}}
 
 
-%\section{References}
+\section{References}
 \bibliographystyle{plain}
 \bibliography{arches}
