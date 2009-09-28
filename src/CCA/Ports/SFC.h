@@ -64,7 +64,7 @@ enum CleanupType{BATCHERS,LINEAR};
 struct DistributedIndex
 {
   unsigned int i;
-  unsigned short p;
+  unsigned int p;
   DistributedIndex(int index, int processor)
   {
      i=index;
