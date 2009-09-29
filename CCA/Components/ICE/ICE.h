@@ -137,8 +137,7 @@ namespace Uintah {
                                       const MaterialSubset*,          
                                       const MaterialSubset*,          
                                       const MaterialSubset*,          
-                                      const MaterialSet*,
-                                      bool);            
+                                      const MaterialSet*);            
       
       void scheduleAddExchangeContributionToFCVel(SchedulerP&, 
                                             const PatchSet*,
@@ -384,8 +383,7 @@ namespace Uintah {
                          const PatchSubset*,                   
                          const MaterialSubset*,                
                          DataWarehouse*,                             
-                         DataWarehouse*,                   
-                         bool);  
+                         DataWarehouse*);  
                          
       void updateVel_FC(const ProcessorGroup*, 
                         const PatchSubset*,                   

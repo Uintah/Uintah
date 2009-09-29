@@ -107,8 +107,7 @@ ICE::scheduleLockstepTimeAdvance( const GridP& grid, SchedulerP& sched)
     scheduleComputeVel_FC(                   sched, patches,ice_matls_sub, 
                                                             mpm_matls_sub, 
                                                             d_press_matl,    
-                                                            all_matls,     
-                                                            false);        
+                                                            all_matls);        
 
     scheduleAddExchangeContributionToFCVel( sched, patches,ice_matls_sub,
                                                            all_matls,
