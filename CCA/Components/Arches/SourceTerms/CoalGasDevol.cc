@@ -73,6 +73,7 @@ CoalGasDevol::sched_computeSource( const LevelP& level, SchedulerP& sched, int t
 
   DQMOMEqnFactory& dqmomFactory  = DQMOMEqnFactory::self(); 
   ModelFactory& modelFactory = ModelFactory::self(); 
+
   for (int iqn = 0; iqn < dqmomFactory.get_quad_nodes(); iqn++){
     std::string wght_name = "w_qn";
     std::string model_name = d_devolModelName; 
@@ -94,7 +95,7 @@ CoalGasDevol::sched_computeSource( const LevelP& level, SchedulerP& sched, int t
     const VarLabel* tempLabel_m = model.getModelLabel(); 
     tsk->requires( Task::OldDW, tempLabel_m, Ghost::None, 0 );
 
-    const VarLabel* tempgasLabel_m = model.getGasphaseModelLabel();
+    const VarLabel* tempgasLabel_m = model.getGasSourceLabel();
     tsk->requires( Task::OldDW, tempgasLabel_m, Ghost::None, 0 );
 
   }
@@ -116,8 +117,8 @@ CoalGasDevol::computeSource( const ProcessorGroup* pc,
   //patch loop
   for (int p=0; p < patches->size(); p++){
 
-    Ghost::GhostType  gaf = Ghost::AroundFaces;
-    Ghost::GhostType  gac = Ghost::AroundCells;
+    //Ghost::GhostType  gaf = Ghost::AroundFaces;
+    //Ghost::GhostType  gac = Ghost::AroundCells;
     Ghost::GhostType  gn  = Ghost::None;
 
     const Patch* patch = patches->get(p);
@@ -153,7 +154,7 @@ CoalGasDevol::computeSource( const ProcessorGroup* pc,
         ModelBase& model = modelFactory.retrieve_model( model_name ); 
 
         constCCVariable<double> qn_gas_devol;
-        const VarLabel* gasModelLabel = model.getGasphaseModelLabel(); 
+        const VarLabel* gasModelLabel = model.getGasSourceLabel(); 
  
         old_dw->get( qn_gas_devol, gasModelLabel, matlIndex, patch, gn, 0 );
 

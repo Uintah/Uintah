@@ -193,6 +193,13 @@ public:
   inline double getLowClip(){
     return d_lowClip; };
 
+  /** @brief Get the small clipping value (for weights only...) */
+  inline double getSmallClip(){
+    if( weight() && getLowClip() < d_smallClip )
+      return d_smallClip;
+    else
+      return getLowClip(); }; 
+
   /** @brief Sets this equation as a weight.
    this seems a little dangerous.  Is there a better way? */
   inline void setAsWeight(){
@@ -227,6 +234,7 @@ private:
 
   double d_turbPrNo; 
   double d_lowClip; 
+  double d_smallClip;
   double d_highClip; 
   double d_scalingConstant; 
 
