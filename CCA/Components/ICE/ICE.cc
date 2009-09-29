@@ -2978,7 +2978,7 @@ void ICE::computeVel_FC(const ProcessorGroup*,
         old_dw->get(vel_CC, lb->vel_CCLabel, indx, patch, gac, 1); 
       } else {
         new_dw->get(rho_CC, lb->rho_CCLabel, indx, patch, gac, 1);
-        old_dw->get(vel_CC, lb->vel_CCLabel, indx, patch, gac, 1);
+        new_dw->get(vel_CC, lb->vel_CCLabel, indx, patch, gac, 1);
       }              
       new_dw->get(sp_vol_CC, lb->sp_vol_CCLabel,indx,patch, gac, 1);
               
