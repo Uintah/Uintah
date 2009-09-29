@@ -264,30 +264,9 @@ void ICE::scheduleRecomputeVel_FC(SchedulerP& sched,
   
   //__________________________________
   //  added exchange to 
-  cout_doing << d_myworld->myrank()<< " ICE::Implicit scheduleAddExchangeContributionToFCVel" 
-             << "\t\tL-"<< levelIndex<<endl;
-  Task* task = scinew Task("ICE::addExchangeContributionToFCVel",
-                     this, &ICE::addExchangeContributionToFCVel, recursion);
-
-//  task->requires(Task::ParentOldDW, lb->delTLabel);   AMR
-  task->requires(Task::ParentNewDW, lb->sp_vol_CCLabel,    gac,1);
-  task->requires(Task::ParentNewDW, lb->vol_frac_CCLabel,  gac,1);
-  task->requires(Task::NewDW,       lb->uvel_FCLabel,      gac,2);
-  task->requires(Task::NewDW,       lb->vvel_FCLabel,      gac,2);
-  task->requires(Task::NewDW,       lb->wvel_FCLabel,      gac,2);
-  
-  computesRequires_CustomBCs(task, "imp_velFC_Exchange", lb, ice_matls,
-                              d_customBC_var_basket);
-  
-  task->computes(lb->sp_volX_FCLabel);
-  task->computes(lb->sp_volY_FCLabel);
-  task->computes(lb->sp_volZ_FCLabel);
-   
-  task->computes(lb->uvel_FCMELabel);
-  task->computes(lb->vvel_FCMELabel);
-  task->computes(lb->wvel_FCMELabel);
-  
-  sched->addTask(task, patches, all_matls);
+  scheduleAddExchangeContributionToFCVel( sched, patches,ice_matls,
+                                                         all_matls,
+                                                         recursion);
 } 
 /*___________________________________________________________________
  Function~  ICE::scheduleComputeDel_P--
