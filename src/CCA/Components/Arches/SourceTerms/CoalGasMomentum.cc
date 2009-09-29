@@ -1,16 +1,18 @@
+#include <CCA/Components/Arches/SourceTerms/CoalGasMomentum.h>
+
+#include <CCA/Components/Arches/TransportEqns/DQMOMEqnFactory.h>
+#include <CCA/Components/Arches/TransportEqns/DQMOMEqn.h>
+#include <CCA/Components/Arches/TransportEqns/EqnBase.h>
+#include <CCA/Components/Arches/CoalModels/ModelFactory.h>
+#include <CCA/Components/Arches/CoalModels/ModelBase.h>
+#include <CCA/Components/Arches/CoalModels/DragModel.h>
+#include <CCA/Components/Arches/CoalModels/HeatTransfer.h>
+
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/Variables/CCVariable.h>
-#include <CCA/Components/Arches/SourceTerms/CoalGasMomentum.h>
-#include <CCA/Components/Arches/TransportEqns/DQMOMEqnFactory.h>
-#include <CCA/Components/Arches/CoalModels/ModelFactory.h>
-#include <CCA/Components/Arches/TransportEqns/EqnBase.h>
-#include <CCA/Components/Arches/CoalModels/ModelBase.h>
-#include <CCA/Components/Arches/CoalModels/DragModel.h>
-#include <CCA/Components/Arches/CoalModels/HeatTransfer.h>
-#include <CCA/Components/Arches/TransportEqns/DQMOMEqn.h>
 
 //===========================================================================
 
@@ -63,8 +65,6 @@ CoalGasMomentum::sched_computeSource( const LevelP& level, SchedulerP& sched, in
   std::string taskname = "CoalGasMomentum::eval";
   Task* tsk = scinew Task(taskname, this, &CoalGasMomentum::computeSource, timeSubStep);
 
-  timeSubStep; 
-
   if (timeSubStep == 0 && !d_labelSchedInit) {
     // Every source term needs to set this flag after the varLabel is computed. 
     // transportEqn.cleanUp should reinitialize this flag at the end of the time step. 
@@ -78,7 +78,7 @@ CoalGasMomentum::sched_computeSource( const LevelP& level, SchedulerP& sched, in
   DQMOMEqnFactory& dqmomFactory  = DQMOMEqnFactory::self(); 
   ModelFactory& modelFactory = ModelFactory::self(); 
   
-   for (int iqn = 0; iqn < dqmomFactory.get_quad_nodes(); iqn++){
+  for (int iqn = 0; iqn < dqmomFactory.get_quad_nodes(); iqn++){
     std::string wght_name = "w_qn";
     std::string model_name = d_dragModelName; 
     std::string node;  
@@ -90,10 +90,19 @@ CoalGasMomentum::sched_computeSource( const LevelP& level, SchedulerP& sched, in
     model_name += node; 
 
     EqnBase& eqn = dqmomFactory.retrieve_scalar_eqn( wght_name );
+
+    const VarLabel* tempLabel_w = eqn.getTransportEqnLabel();
+    tsk->requires( Task::OldDW, tempLabel_w, Ghost::None, 0 ); 
+
     ModelBase& model = modelFactory.retrieve_model( model_name ); 
-    const VarLabel* tempgasLabel_m = model.getGasphaseModelLabel();
-    tsk->requires( Task::NewDW, tempgasLabel_m, Ghost::None, 0 );
-    }
+
+    const VarLabel* tempLabel_m = model.getModelLabel(); 
+    tsk->requires( Task::OldDW, tempLabel_m, Ghost::None, 0 );
+
+    const VarLabel* tempgasLabel_m = model.getGasSourceLabel();
+    tsk->requires( Task::OldDW, tempgasLabel_m, Ghost::None, 0 );
+
+  }
   
   for (vector<std::string>::iterator iter = d_requiredLabels.begin(); 
        iter != d_requiredLabels.end(); iter++) { 
@@ -118,8 +127,8 @@ CoalGasMomentum::computeSource( const ProcessorGroup* pc,
   //patch loop
   for (int p=0; p < patches->size(); p++){
 
-    Ghost::GhostType  gaf = Ghost::AroundFaces;
-    Ghost::GhostType  gac = Ghost::AroundCells;
+    //Ghost::GhostType  gaf = Ghost::AroundFaces;
+    //Ghost::GhostType  gac = Ghost::AroundCells;
     Ghost::GhostType  gn  = Ghost::None;
 
     const Patch* patch = patches->get(p);
@@ -158,7 +167,7 @@ CoalGasMomentum::computeSource( const ProcessorGroup* pc,
         ModelBase& model = modelFactory.retrieve_model( model_name ); 
 
         constCCVariable<Vector> qn_gas_drag;
-        const VarLabel* DragGasLabel = model.getGasphaseModelLabel();  
+        const VarLabel* DragGasLabel = model.getGasSourceLabel();  
         new_dw->get( qn_gas_drag, DragGasLabel, matlIndex, patch, gn, 0 );
 
         dragSrc[c] += qn_gas_drag[c]; // All the work is performed in Drag model

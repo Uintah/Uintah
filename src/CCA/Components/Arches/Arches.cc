@@ -39,7 +39,6 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Arches/TransportEqns/EqnBase.h>
 #include <CCA/Components/Arches/CoalModels/PartVel.h>
 #include <CCA/Components/Arches/CoalModels/ConstantModel.h>
-#include <CCA/Components/Arches/CoalModels/BadHawkDevol.h>
 #include <CCA/Components/Arches/CoalModels/KobayashiSarofimDevol.h>
 #include <CCA/Components/Arches/CoalModels/HeatTransfer.h>
 #include <CCA/Components/Arches/TransportEqns/EqnFactory.h>
@@ -1529,7 +1528,7 @@ Arches::sched_dqmomInit( const LevelP& level,
   for ( ModelFactory::ModelMap::iterator imodel=models.begin(); imodel != models.end(); imodel++){
     ModelBase* model = imodel->second;
     const VarLabel* modelLabel = model->getModelLabel();
-    const VarLabel* gasmodelLabel = model->getGasphaseModelLabel(); 
+    const VarLabel* gasmodelLabel = model->getGasSourceLabel(); 
 
     tsk->computes( modelLabel );
     tsk->computes( gasmodelLabel );  
@@ -1616,7 +1615,7 @@ Arches::dqmomInit( const ProcessorGroup* ,
       new_dw->allocateAndPut( model_value, modelLabel, matlIndex, patch ); 
       model_value.initialize(0.0);
 
-      const VarLabel* gasmodelLabel = model->getGasphaseModelLabel(); 
+      const VarLabel* gasmodelLabel = model->getGasSourceLabel(); 
       CCVariable<double> gas_source; 
       new_dw->allocateAndPut( gas_source, gasmodelLabel, matlIndex, patch ); 
       gas_source.initialize(0.0); 
@@ -2147,8 +2146,15 @@ void Arches::registerModels(ProblemSpecP& db)
   // 3) standard flow variables
   // We want the model to have access to all three.  
   // Thus, for 1) you just set the internal coordinate name and the "_qn#" is attached.  This means the models are reproduced qn times
-  // for 2) you specify this in the <otherVars> tag
+  // for 2) you specify this in the <scalarVars> tag
   // for 3) you specify this in the implementation of the model itself (ie, no user input)
+
+  // perhaps we should have an <ArchesVars> tag... for variables in Arches but
+  // not in the DQMOM or Scalar equation factory
+  // (this would probably need some kind of error-checking for minor typos, 
+  //  like "tempin" instead of "tempIN"... 
+  //  which would require some way of searching label names in ArchesLabel.h... 
+  //  which would require some kind of map in ArchesLabel.h...)
 
   if (models_db) {
     for (ProblemSpecP model_db = models_db->findBlock("model"); model_db != 0; model_db = model_db->findNextBlock("model")){
@@ -2157,29 +2163,55 @@ void Arches::registerModels(ProblemSpecP& db)
       std::string model_type;
       model_db->getAttribute("type", model_type);
 
+      proc0cout << endl;
+      proc0cout << "Found  a model: " << model_name << endl;
+
       // The model must be reproduced for each quadrature node.
       const int numQuadNodes = dqmom_factory.get_quad_nodes();  
 
-      vector<string> requiredIC_varLabels;
+      vector<string> requiredICVarLabels;
       ProblemSpecP icvar_db = model_db->findBlock("ICVars"); 
 
-      proc0cout << " \n"; // white space for output 
-      proc0cout << "Found  a model: " << model_name << endl;
-      proc0cout << "Requires the following internal coordinates: " << endl;
-
       if ( icvar_db ) {
+        proc0cout << "Requires the following internal coordinates: " << endl;
         // These variables are only those that are specifically defined from the input file
-        for (ProblemSpecP var = icvar_db->findBlock("variable"); var !=0; var = var->findNextBlock("variable")){
+        for (ProblemSpecP var = icvar_db->findBlock("variable"); 
+             var !=0; var = var->findNextBlock("variable")){
 
           std::string label_name; 
           var->getAttribute("label", label_name);
 
           proc0cout << "label = " << label_name << endl; 
-          // This map hold the labels that are required to compute this source term. 
-          requiredIC_varLabels.push_back(label_name);  
+          // This map hold the labels that are required to compute this model term. 
+          requiredICVarLabels.push_back(label_name);  
         }
+      } else {
+        proc0cout << "Model does not require any internal coordinates. " << endl;
       }
+      
+      // This is not immediately useful...
+      // However, if we use the new TransportEqn mechanism to add extra scalars,
+      //  we could potentially track flow variables (temperature, mixture frac, etc.)
+      //  using the new TransportEqn mechanism, which would make it necessary to
+      // be able to make our models depend on these scalars
+      vector<string> requiredScalarVarLabels;
+      ProblemSpecP scalarvar_db = model_db->findBlock("scalarVars");
 
+      if ( scalarvar_db ) {
+        proc0cout << "Requires the following scalar variables: " << endl;
+        for (ProblemSpecP var = scalarvar_db->findBlock("variable");
+             var != 0; var = var->findNextBlock("variable") ) {
+          std::string label_name;
+          var->getAttribute("label", label_name);
+
+          proc0cout << "label = " << label_name << endl;
+          // This map holds the scalar labels required to compute this model term
+          requiredScalarVarLabels.push_back(label_name);
+        }
+      } else {
+        proc0cout << "Model does not require any scalar variables. " << endl;
+      }
+      
       // --- looping over quadrature nodes ---
       // This will make a model for each quadrature node. 
       for (int iqn = 0; iqn < numQuadNodes; iqn++){
@@ -2193,19 +2225,18 @@ void Arches::registerModels(ProblemSpecP& db)
 
         if ( model_type == "ConstantModel" ) {
           // Model term G = constant (G = 1)
-          ModelBuilder* modelBuilder = scinew ConstantModelBuilder(temp_model_name, requiredIC_varLabels, d_lab, d_lab->d_sharedState, iqn);
-          model_factory.register_model( temp_model_name, modelBuilder );
-        } else if ( model_type == "BadHawkDevol" ) {
-          //Badzioch and Hawksley 1st order Devol.
-          ModelBuilder* modelBuilder = scinew BadHawkDevolBuilder(temp_model_name, requiredIC_varLabels, d_lab, d_lab->d_sharedState, iqn);
+          ModelBuilder* modelBuilder = scinew ConstantModelBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
           model_factory.register_model( temp_model_name, modelBuilder );
         } else if ( model_type == "KobayashiSarofimDevol" ) {
           // Kobayashi Sarofim devolatilization model
-          ModelBuilder* modelBuilder = scinew KobayashiSarofimDevolBuilder(temp_model_name, requiredIC_varLabels, d_lab, d_lab->d_sharedState, iqn);
+          ModelBuilder* modelBuilder = scinew KobayashiSarofimDevolBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
           model_factory.register_model( temp_model_name, modelBuilder );
-	} else if ( model_type == "HeatTransfer" ) {
-          ModelBuilder* modelBuilder = scinew HeatTransferBuilder(temp_model_name, requiredIC_varLabels, d_lab, d_lab->d_sharedState, iqn);
+	      } else if ( model_type == "HeatTransfer" ) {
+          ModelBuilder* modelBuilder = scinew HeatTransferBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
           model_factory.register_model( temp_model_name, modelBuilder );
+        //} else if (model_type == "Drag" ) {
+        //  // NOTE: Jeremy reverted some of the DragModel-related changes in Arches.cc, so I'll hold off putting this in until I hear from him on that (Charles)
+        //  ModelBuilder* modelBuilder = scinew DragModelBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
         } else {
           proc0cout << "For model named: " << temp_model_name << endl;
           proc0cout << "with type: " << model_type << endl;
@@ -2253,7 +2284,7 @@ void Arches::registerTransportEqns(ProblemSpecP& db)
       // ADD OTHER OPTIONS HERE if ( eqn_type == ....
 
       } else {
-        proc0cout << "For eqnation named: " << eqn_name << endl;
+        proc0cout << "For equation named: " << eqn_name << endl;
         proc0cout << "with type: " << eqn_type << endl;
         throw InvalidValue("This equation type not recognized or not supported! ", __FILE__, __LINE__);
       }

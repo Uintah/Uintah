@@ -10,17 +10,29 @@
 
 //===========================================================================
 
+/**
+  * @class    DragModel
+  * @author   Julien Pedel
+  * @date     September 2009
+  *
+  * @brief    A class for calculating the two-way coupling between
+  *           particle velocities and the gas phase velocities.
+  *
+  */
+
 //---------------------------------------------------------------------------
 // Builder
 namespace Uintah{
 class DragModelBuilder: public ModelBuilder
 {
 public: 
-  DragModelBuilder( const std::string         & modelName, 
-                        const vector<std::string> & reqLabelNames, 
-                        const ArchesLabel         * fieldLabels,
-                        SimulationStateP          & sharedState,
-                        int                         qn );
+  DragModelBuilder( const std::string          & modelName, 
+                    const vector<std::string>  & reqICLabelNames,
+                    const vector<std::string>  & reqScalarLabelNames,
+                    const ArchesLabel          * fieldLabels,
+                    SimulationStateP           & sharedState,
+                    int qn );
+
   ~DragModelBuilder(); 
 
   ModelBase* build(); 
@@ -34,19 +46,25 @@ private:
 class DragModel: public ModelBase {
 public: 
 
-  DragModel( std::string modelName, SimulationStateP& shared_state, 
-                const ArchesLabel* fieldLabels,
-                vector<std::string> reqLabelNames, int qn );
+  DragModel( std::string modelName, 
+             SimulationStateP& shared_state, 
+             const ArchesLabel* fieldLabels,
+             vector<std::string> reqICLabelNames, 
+             vector<std::string> reqScalarLabelNames,
+             int qn );
 
   ~DragModel();
+
   /** @brief Interface for the inputfile and set constants */ 
   void problemSetup(const ProblemSpecP& db, int qn);
+
   /** @brief Schedule the calculation of the source term */ 
   void sched_computeModel( const LevelP& level, SchedulerP& sched, 
                             int timeSubStep );
-   /** @brief Schedule the initialization of some special/local vars */ 
+   /** @brief Schedule the initialization of some special/local variables */ 
   void sched_initVars( const LevelP& level, SchedulerP& sched );
 
+  /** @brief  Actually initialize special/local variables */
   void initVars( const ProcessorGroup * pc, 
     const PatchSubset    * patches, 
     const MaterialSubset * matls, 
@@ -60,11 +78,23 @@ public:
                      DataWarehouse* old_dw, 
                      DataWarehouse* new_dw );
 
-  inline const VarLabel* getDragGasLabel(){
-    return d_gasLabel; };
+  /** @brief  Schedule the dummy solve for MPMArches - see ExplicitSolver::noSolve */
+  void sched_dummyInit( const LevelP& level, SchedulerP& sched );
+
+  /** @brief  Actually do dummy solve */
+  void dummyInit( const ProcessorGroup* pc, 
+                  const PatchSubset* patches, 
+                  const MaterialSubset* matls, 
+                  DataWarehouse* old_dw, 
+                  DataWarehouse* new_dw );
+
+// use getGasSourceLabel() instead (defined in ModelBase)
+//  inline const VarLabel* getDragGasLabel(){
+//    return d_gasLabel; };
+
 private:
 
-  //const ArchesLabel* d_fieldLabels; 
+  const ArchesLabel* d_fieldLabels; 
   
   map<string, string> LabelToRoleMap;
 
@@ -74,11 +104,17 @@ private:
   const VarLabel* d_weight_label;
 
   int d_quad_node;   // store which quad node this model is for
-  double d_lowClip; 
-  double d_highClip; 
+
+  double d_lowModelClip; 
+  double d_highModelClip; 
   double d_pl_scaling_factor;
+  double d_pv_scaling_factor;
   double d_w_scaling_factor;
-    Vector cart2sph( Vector X ) {
+  double d_w_small; // "small" clip value for zero weights
+
+  double pi;
+
+  Vector cart2sph( Vector X ) {
     // converts cartesean to spherical coords
     double mag   = pow( X.x(), 2.0 );
     double magxy = mag;  

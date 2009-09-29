@@ -153,6 +153,9 @@ DQMOMEqn::problemSetup(const ProblemSpecP& inputdb, int qn)
     
     db_clipping->getWithDefault("low", d_lowClip,  clip_default);
     db_clipping->getWithDefault("high",d_highClip, clip_default);
+    if( d_weight ) {
+      db_clipping->getWithDefault("small", d_smallClip, 1e-16);
+    }
 
     if ( d_lowClip != clip_default ) 
       d_doLowClip = true; 
@@ -558,7 +561,7 @@ DQMOMEqn::getAbscissaValues( const ProcessorGroup* pc,
     EqnBase& temp_eqn = dqmomFactory.retrieve_scalar_eqn( name );
     DQMOMEqn& eqn = dynamic_cast<DQMOMEqn&>(temp_eqn);
     const VarLabel* mywLabel = eqn.getTransportEqnLabel();  
-    double smallWeight = eqn.getLowClip(); 
+    double smallWeight = eqn.getSmallClip(); 
 
     if ( smallWeight == 0.0 )
       smallWeight = 1e-16; //to avoid numbers smaller than machine precision. 

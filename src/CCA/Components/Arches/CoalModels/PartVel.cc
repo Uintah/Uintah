@@ -242,7 +242,6 @@ void PartVel::ComputePartVel( const ProcessorGroup* pc,
         epsilon /= d_L;
 
         length_ratio = length / d_eta;
-        double inv_length_ratio = 1.0/length_ratio; 
         double uk = 0.0;
        
         if (length > 0.0) {

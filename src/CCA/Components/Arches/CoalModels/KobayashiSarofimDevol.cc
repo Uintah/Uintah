@@ -1,8 +1,8 @@
 #include <CCA/Components/Arches/CoalModels/KobayashiSarofimDevol.h>
 #include <CCA/Components/Arches/TransportEqns/EqnFactory.h>
-#include <CCA/Components/Arches/TransportEqns/EqnFactory.h>
 #include <CCA/Components/Arches/TransportEqns/EqnBase.h>
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqn.h>
+#include <CCA/Components/Arches/ArchesLabel.h>
 
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <CCA/Ports/Scheduler.h>
@@ -10,6 +10,7 @@
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Exceptions/InvalidValue.h>
+#include <Core/Parallel/Parallel.h>
 
 //===========================================================================
 
@@ -19,36 +20,41 @@ using namespace Uintah;
 //---------------------------------------------------------------------------
 // Builder:
 KobayashiSarofimDevolBuilder::KobayashiSarofimDevolBuilder( const std::string         & modelName,
-    const vector<std::string> & reqLabelNames,
-    const ArchesLabel              * fieldLabels,
-    SimulationStateP          & sharedState,
-    int qn ) :
-  ModelBuilder( modelName, fieldLabels, reqLabelNames, sharedState, qn )
-{}
+                                                            const vector<std::string> & reqICLabelNames,
+                                                            const vector<std::string> & reqScalarLabelNames,
+                                                            const ArchesLabel         * fieldLabels,
+                                                            SimulationStateP          & sharedState,
+                                                            int qn ) :
+  ModelBuilder( modelName, fieldLabels, reqICLabelNames, reqScalarLabelNames, sharedState, qn )
+{
+}
 
 KobayashiSarofimDevolBuilder::~KobayashiSarofimDevolBuilder(){}
 
-ModelBase*
-KobayashiSarofimDevolBuilder::build(){
-  return scinew KobayashiSarofimDevol( d_modelName, d_sharedState, d_fieldLabels, d_icLabels, d_quadNode );
+ModelBase* KobayashiSarofimDevolBuilder::build() {
+  return scinew KobayashiSarofimDevol( d_modelName, d_sharedState, d_fieldLabels, d_icLabels, d_scalarLabels, d_quadNode );
 }
 // End Builder
 //---------------------------------------------------------------------------
 
-KobayashiSarofimDevol::KobayashiSarofimDevol( std::string srcName, SimulationStateP& sharedState,
-    const ArchesLabel* fieldLabels,
-    vector<std::string> icLabelNames, int qn ) 
-: ModelBase(srcName, sharedState, fieldLabels, icLabelNames, qn),d_fieldLabels(fieldLabels)
+KobayashiSarofimDevol::KobayashiSarofimDevol( std::string modelName, 
+                                              SimulationStateP& sharedState,
+                                              const ArchesLabel* fieldLabels,
+                                              vector<std::string> icLabelNames, 
+                                              vector<std::string> scalarLabelNames,
+                                              int qn ) 
+: ModelBase(modelName, sharedState, fieldLabels, icLabelNames, scalarLabelNames, qn), 
+  d_fieldLabels(fieldLabels)
 {
   A1  =  2.0e5;       // k1 pre-exponential factor
   A2  =  1.3e7;       // k1 activation energy
-  E1  =  -25000;       // k2 pre-exponential factor
-  E2  =  -40000;       // k2 activation energy
+  E1  =  -25000;      // k2 pre-exponential factor
+  E2  =  -40000;      // k2 activation energy
 
   R   =  1.987;       // ideal gas constant
 
-  alpha_o = 0.91;      // initial mass fraction of raw coal
-  c_o     = 3.90e-11;  // initial mass of raw coal
+  alpha_o = 0.91;     // initial mass fraction of raw coal
+  c_o     = 3.90e-11; // initial mass of raw coal
 
   Y1_ = 1.0;
   Y2_ = 0.4;
@@ -56,10 +62,18 @@ KobayashiSarofimDevol::KobayashiSarofimDevol( std::string srcName, SimulationSta
   d_quad_node = qn;
   
   compute_part_temp = false;
+
+  // Create a label for this model
+  d_modelLabel = VarLabel::create( modelName, CCVariable<double>::getTypeDescription() );
+
+  // Create the gas phase source term associated with this model
+  std::string gasSourceName = modelName + "_gasSource";
+  d_gasLabel = VarLabel::create( gasSourceName, CCVariable<double>::getTypeDescription() );
 }
 
 KobayashiSarofimDevol::~KobayashiSarofimDevol()
 {}
+
 //---------------------------------------------------------------------------
 // Method: Problem Setup
 //---------------------------------------------------------------------------
@@ -67,44 +81,98 @@ KobayashiSarofimDevol::~KobayashiSarofimDevol()
 KobayashiSarofimDevol::problemSetup(const ProblemSpecP& params, int qn)
 {
   ProblemSpecP db = params; 
+
+  // Look for required internal coordinates
   ProblemSpecP db_icvars = params->findBlock("ICVars");
   for (ProblemSpecP variable = db_icvars->findBlock("variable"); variable != 0; variable = variable->findNextBlock("variable") ) {
+
     string label_name;
     string role_name;
+    string temp_label_name;
 
     variable->getAttribute("label",label_name);
-    variable->getAttribute("role",role_name);
+    variable->getAttribute("role", role_name);
 
-    std::string temp_label_name = label_name;
-    std::string node;
+    temp_label_name = label_name;
+    
+    string node;
     std::stringstream out;
     out << qn;
     node = out.str();
     temp_label_name += "_qn";
     temp_label_name += node;
 
-    // This way restricts what "roles" the user can specify (less flexible)
-    if (role_name == "gas_temperature" || role_name == "raw_coal_mass_fraction") {
+    // user specifies "role" of each internal coordinate
+    // if it isn't an internal coordinate or a scalar, it's required explicitly
+    // ( see comments in Arches::registerModels() for details )
+    if ( role_name == "raw_coal_mass_fraction") {
       LabelToRoleMap[temp_label_name] = role_name;
-      } else if(role_name == "particle_temperature" ){  
-       LabelToRoleMap[temp_label_name] = role_name;
-       compute_part_temp = true;
+    } else if( role_name == "particle_temperature" ) {  
+      LabelToRoleMap[temp_label_name] = role_name;
+      compute_part_temp = true;
+    } else if( role_name == "gas_temperature" ) {
+      // don't do anything, because tempIN will be required explicitly
+      compute_part_temp = false;
     } else {
       std::string errmsg;
       errmsg = "Invalid variable role for Kobayashi Sarofim Devolatilization model: must be \"gas_temperature\" or \"raw_coal_mass_fraction\", you specified \"" + role_name + "\".";
       throw InvalidValue(errmsg,__FILE__,__LINE__);
     }
 
-    //This way does not restrict what "roles" the user can specify (more flexible)
-    //LabelToRoleMap[label_name] = role_name;
+    // set model clipping (not used yet...)
+    db->getWithDefault( "low_clip",  d_lowModelClip,  1.0e-6 );
+    db->getWithDefault( "high_clip", d_highModelClip, 999999 );
 
-    db->getWithDefault( "low_clip", d_lowClip, 1.e-6 );
-    db->getWithDefault( "high_clip", d_highClip, 1 );  
- 
   }
 
-  // now fix the d_icLabels to point to the correct quadrature node (since there is 1 model per quad node)
-  for ( vector<std::string>::iterator iString = d_icLabels.begin(); iString != d_icLabels.end(); ++iString) {
+  // Look for required scalars
+  //   ( Kobayashi-Sarofim model doesn't use any extra scalars (yet)
+  //     but if it did, this "for" loop would have to be un-commented )
+  /*
+  ProblemSpecP db_scalarvars = params->findBlock("scalarVars");
+  for( ProblemSpecP variable = db_scalarvars->findBlock("variable");
+       variable != 0; variable = variable->findNextBlock("variable") ) {
+
+    string label_name;
+    string role_name;
+    string temp_label_name;
+
+    variable->getAttribute("label", label_name);
+    variable->getAttribute("role",  role_name);
+
+    temp_label_name = label_name;
+
+    string node;
+    std::stringstream out;
+    out << qn;
+    node = out.str();
+    temp_label_name += "_qn";
+    temp_label_name += node;
+
+    // user specifies "role" of each scalar
+    // if it isn't an internal coordinate or a scalar, it's required explicitly
+    // ( see comments in Arches::registerModels() for details )
+    if ( role_name == "raw_coal_mass_fraction") {
+      LabelToRoleMap[temp_label_name] = role_name;
+    } else if( role_name == "particle_temperature" ) {  
+      LabelToRoleMap[temp_label_name] = role_name;
+      compute_part_temp = true;
+    } else if( role_name == "gas_temperature" ) {
+      // don't do anything, because tempIN will be required explicitly
+      compute_part_temp = false;
+    } else {
+      std::string errmsg;
+      errmsg = "Invalid variable role for Kobayashi Sarofim Devolatilization model: must be \"gas_temperature\" or \"raw_coal_mass_fraction\", you specified \"" + role_name + "\".";
+      throw InvalidValue(errmsg,__FILE__,__LINE__);
+    }
+
+  }
+  */
+
+
+  // fix the d_icLabels to point to the correct quadrature node (since there is 1 model per quad node)
+  for ( vector<std::string>::iterator iString = d_icLabels.begin(); 
+        iString != d_icLabels.end(); ++iString) {
     std::string temp_ic_name        = (*iString);
     std::string temp_ic_name_full   = temp_ic_name;
 
@@ -117,7 +185,92 @@ KobayashiSarofimDevol::problemSetup(const ProblemSpecP& params, int qn)
 
     std::replace( d_icLabels.begin(), d_icLabels.end(), temp_ic_name, temp_ic_name_full);
   }
+
+  // fix the d_scalarLabels to point to the correct quadrature node (since there is 1 model per quad node)
+  // (Not needed for KobayashiSarofim model (yet)... If it is, uncomment the block below)
+  /*
+  for ( vector<std::string>::iterator iString = d_scalarLabels.begin(); 
+        iString != d_scalarLabels.end(); ++iString) {
+    temp_ic_name      = (*iString);
+    temp_ic_name_full = temp_ic_name;
+
+    out << qn;
+    node = out.str();
+    temp_ic_name_full += "_qn";
+    temp_ic_name_full += node;
+
+    std::replace( d_scalarLabels.begin(), d_scalarLabels.end(), temp_ic_name, temp_ic_name_full);
+  }
+  */
+  
 }
+
+//---------------------------------------------------------------------------
+// Method: Schedule dummy initialization
+//---------------------------------------------------------------------------
+void
+KobayashiSarofimDevol::sched_dummyInit( const LevelP& level, SchedulerP& sched ) 
+{
+  string taskname = "KobayashiSarofimDevol::dummyInit"; 
+
+  Ghost::GhostType  gn = Ghost::None;
+
+  Task* tsk = scinew Task(taskname, this, &KobayashiSarofimDevol::dummyInit);
+
+  tsk->computes(d_modelLabel);
+  tsk->computes(d_gasLabel); 
+
+  tsk->requires( Task::OldDW, d_modelLabel, gn, 0);
+  tsk->requires( Task::OldDW, d_gasLabel,   gn, 0);
+
+  sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
+}
+
+//-------------------------------------------------------------------------
+// Method: Actually do the dummy initialization
+//-------------------------------------------------------------------------
+/** @details
+This is called from ExplicitSolver::noSolve(), which skips the first timestep
+ so that the initial conditions are correct.
+
+This method was originally in ModelBase, but it requires creating CCVariables
+ for the model and gas source terms, and the CCVariable type (double, Vector, &c.)
+ is model-dependent.  Putting the method here eliminates if statements in 
+ ModelBase and keeps the ModelBase class as generic as possible.
+ */
+void
+KobayashiSarofimDevol::dummyInit( const ProcessorGroup* pc,
+                                  const PatchSubset* patches, 
+                                  const MaterialSubset* matls, 
+                                  DataWarehouse* old_dw, 
+                                  DataWarehouse* new_dw )
+{
+  for( int p=0; p < patches->size(); ++p ) {
+
+    Ghost::GhostType  gn = Ghost::None;
+
+    const Patch* patch = patches->get(p);
+    int archIndex = 0;
+    int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+
+    CCVariable<double> model;
+    CCVariable<double> gasSource;
+    
+    constCCVariable<double> oldModel;
+    constCCVariable<double> oldGasSource;
+
+    new_dw->allocateAndPut( model,       d_modelLabel, matlIndex, patch );
+    new_dw->allocateAndPut( gasSource,   d_gasLabel,   matlIndex, patch ); 
+
+    old_dw->get( oldModel,       d_modelLabel, matlIndex, patch, gn, 0 );
+    old_dw->get( oldGasSource,   d_gasLabel,   matlIndex, patch, gn, 0 );
+
+    model.copyData(oldModel);
+    gasSource.copyData(oldGasSource);
+
+  }
+}
+
 //---------------------------------------------------------------------------
 // Method: Schedule the initialization of some variables 
 //---------------------------------------------------------------------------
@@ -130,24 +283,32 @@ KobayashiSarofimDevol::sched_initVars( const LevelP& level, SchedulerP& sched )
 
   sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials()); 
 }
+
+//-------------------------------------------------------------------------
+// Method: Initialize variables
+//-------------------------------------------------------------------------
 void
 KobayashiSarofimDevol::initVars( const ProcessorGroup * pc, 
-    const PatchSubset    * patches, 
-    const MaterialSubset * matls, 
-    DataWarehouse        * old_dw, 
-    DataWarehouse        * new_dw )
+                                 const PatchSubset    * patches, 
+                                 const MaterialSubset * matls, 
+                                 DataWarehouse        * old_dw, 
+                                 DataWarehouse        * new_dw )
 {
+  // No special local variables for this model...
   for( int p=0; p < patches->size(); p++ ) {  // Patch loop
   }
 }
+
 //---------------------------------------------------------------------------
 // Method: Schedule the calculation of the Model 
 //---------------------------------------------------------------------------
-  void 
+void 
 KobayashiSarofimDevol::sched_computeModel( const LevelP& level, SchedulerP& sched, int timeSubStep )
 {
   std::string taskname = "KobayashiSarofimDevol::computeModel";
   Task* tsk = scinew Task(taskname, this, &KobayashiSarofimDevol::computeModel);
+
+  Ghost::GhostType gn = Ghost::None;
 
   d_timeSubStep = timeSubStep; 
 
@@ -163,7 +324,7 @@ KobayashiSarofimDevol::sched_computeModel( const LevelP& level, SchedulerP& sche
     tsk->modifies(d_gasLabel);  
   }
 
-  EqnFactory& eqn_factory = EqnFactory::self();
+  //EqnFactory& eqn_factory = EqnFactory::self();
   DQMOMEqnFactory& dqmom_eqn_factory = DQMOMEqnFactory::self();
 
   // construct the weight label corresponding to this quad node
@@ -176,11 +337,20 @@ KobayashiSarofimDevol::sched_computeModel( const LevelP& level, SchedulerP& sche
   EqnBase& t_weight_eqn = dqmom_eqn_factory.retrieve_scalar_eqn( temp_weight_name );
   DQMOMEqn& weight_eqn = dynamic_cast<DQMOMEqn&>(t_weight_eqn);
   d_weight_label = weight_eqn.getTransportEqnLabel();
+  d_w_small = weight_eqn.getSmallClip();
   d_w_scaling_factor = weight_eqn.getScalingConstant();
-  tsk->requires(Task::OldDW, d_weight_label, Ghost::None, 0);
+  tsk->requires(Task::OldDW, d_weight_label, gn, 0);
 
-  // For each required variable, determine if it plays the role of temperature or mass fraction;
-  //  if it plays the role of mass fraction, then look for it in equation factories
+  // require gas temperature
+  tsk->requires(Task::OldDW, d_fieldLabels->d_tempINLabel, Ghost::AroundCells, 1);
+
+  // For each required variable, determine what role it plays
+  // - "gas_temperature" - require the "tempIN" label
+  // - "particle_temperature" - look in DQMOMEqnFactory
+  // - "raw_coal_mass_fraction" - look in DQMOMEqnFactory
+
+
+  // for each required internal coordinate:
   for (vector<std::string>::iterator iter = d_icLabels.begin(); 
       iter != d_icLabels.end(); iter++) { 
 
@@ -189,41 +359,23 @@ KobayashiSarofimDevol::sched_computeModel( const LevelP& level, SchedulerP& sche
     if ( iMap != LabelToRoleMap.end() ) {
       if ( iMap->second == "gas_temperature") {
         // automatically use Arches' temperature label if role="temperature"
-        //tsk->requires(Task::OldDW, d_fieldLabels->d_dummyTLabel, Ghost::AroundCells, 1);
-        tsk->requires(Task::OldDW, d_fieldLabels->d_tempINLabel, Ghost::AroundCells, 1);
-
-        // Only require() variables found in equation factories (right now we're not tracking temperature this way)
-      } 
-      else if ( iMap->second == "particle_temperature") {
-        // if it's a normal scalar
-        if ( eqn_factory.find_scalar_eqn(*iter) ) {
-          EqnBase& current_eqn = eqn_factory.retrieve_scalar_eqn(*iter);
-          d_particle_temperature_label = current_eqn.getTransportEqnLabel();
-          tsk->requires(Task::OldDW, d_particle_temperature_label, Ghost::None, 0);
-          // if it's a dqmom scalar
-        } else if (dqmom_eqn_factory.find_scalar_eqn(*iter) ) {
+      } else if ( iMap->second == "particle_temperature") {
+        if (dqmom_eqn_factory.find_scalar_eqn(*iter) ) {
           EqnBase& t_current_eqn = dqmom_eqn_factory.retrieve_scalar_eqn(*iter);
           DQMOMEqn& current_eqn = dynamic_cast<DQMOMEqn&>(t_current_eqn);
           d_particle_temperature_label = current_eqn.getTransportEqnLabel();
           d_pt_scaling_factor = current_eqn.getScalingConstant();
           tsk->requires(Task::OldDW, d_particle_temperature_label, Ghost::None, 0);
         } else {
-          std::string errmsg = "ARCHES: HeatTransfer: Invalid variable given in <variable> tag for KobayashiSarofimDevol model";
+          std::string errmsg = "ARCHES: KobayashiSarofimDevol: Invalid variable given in <variable> tag for KobayashiSarofimDevol model";
           errmsg += "\nCould not find given particle temperature variable \"";
           errmsg += *iter;
           errmsg += "\" in EqnFactory or in DQMOMEqnFactory.";
           throw InvalidValue(errmsg,__FILE__,__LINE__);
         }
-      } //else... we don't need that variable!!! 
-           
-      else if ( iMap->second == "raw_coal_mass_fraction") {
-        // if it's a normal scalar
-        if ( eqn_factory.find_scalar_eqn(*iter) ) {
-          EqnBase& current_eqn = eqn_factory.retrieve_scalar_eqn(*iter);
-          d_raw_coal_mass_fraction_label = current_eqn.getTransportEqnLabel();
-          tsk->requires(Task::OldDW, d_raw_coal_mass_fraction_label, Ghost::None, 0);
-          // if it's a dqmom scalar
-        } else if (dqmom_eqn_factory.find_scalar_eqn(*iter) ) {
+
+      } else if ( iMap->second == "raw_coal_mass_fraction") {
+        if (dqmom_eqn_factory.find_scalar_eqn(*iter) ) {
           EqnBase& t_current_eqn = dqmom_eqn_factory.retrieve_scalar_eqn(*iter);
           DQMOMEqn& current_eqn = dynamic_cast<DQMOMEqn&>(t_current_eqn);
           d_raw_coal_mass_fraction_label = current_eqn.getTransportEqnLabel();
@@ -236,13 +388,46 @@ KobayashiSarofimDevol::sched_computeModel( const LevelP& level, SchedulerP& sche
           errmsg += "\" in EqnFactory or in DQMOMEqnFactory.";
           throw InvalidValue(errmsg,__FILE__,__LINE__);
         }
-      } //else... we don't need that variable!!!
+      } //else... we don't need that variable!
+
     } else {
-      // can't find it in the labels-to-roles map!
-      std::string errmsg = "ARCHES: KobayashiSarofimDevol: Could not find role for given variable \"" + *iter + "\".";
-      throw InvalidValue(errmsg,__FILE__,__LINE__);
+      // can't find this required variable in the labels-to-roles map!
+      std::string errmsg = "ARCHES: KobayashiSarofimDevol: You specified that the variable \"" + *iter + 
+                           "\" was required, but you did not specify a role for it!\n";
+      throw InvalidValue( errmsg, __FILE__, __LINE__);
     }
   }
+  
+  // for each required scalar variable:
+  //  (but no scalar equation variables should be required for the KobayashiSarofimDevol model, at least not for now...)
+  /*
+  for( vector<std::string>::iterator iter = d_scalarLabels.begin();
+       iter != d_scalarLabels.end(); ++iter) {
+    map<string, string>::iterator iMap = LabelToRoleMap.find(*iter);
+    
+    if( iMap != LabelToRoleMap.end() ) {
+      if( iMap->second == <insert role name here> ) {
+        if( eqn_factory.find_scalar_eqn(*iter) ) {
+          EqnBase& current_eqn = eqn_factory.retrieve_scalar_eqn(*iter);
+          d_<insert role name here>_label = current_eqn.getTransportEqnLabel();
+          tsk->requires(Task::OldDW, d_<insert role name here>_label, Ghost::None, 0);
+        } else {
+          std::string errmsg = "ARCHES: KobayashiSarofimDevol: Invalid variable given in <scalarVars> block for <variable> tag for KobayashiSarofimDevol model.";
+          errmsg += "\nCould not find given <insert role name here> variable \"";
+          errmsg += *iter;
+          errmsg += "\" in EqnFactory.";
+          throw InvalidValue(errmsg,__FILE__,__LINE__);
+        }
+      }
+    } else {
+      // can't find this required variable in the labels-to-roles map!
+      std::string errmsg = "ARCHES: KobayashiSarofimDevol: You specified that the variable \"" + *iter + 
+                           "\" was required, but you did not specify a role for it!\n";
+      throw InvalidValue( errmsg, __FILE__, __LINE__);
+    }
+
+  } //end for
+  */
 
   // also need to track coal gas mixture fraction for visualization
   // "modify" source term for coal gas mixture fraction here...
@@ -250,10 +435,11 @@ KobayashiSarofimDevol::sched_computeModel( const LevelP& level, SchedulerP& sche
   sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials()); 
 
 }
+
 //---------------------------------------------------------------------------
 // Method: Actually compute the source term 
 //---------------------------------------------------------------------------
-  void
+void
 KobayashiSarofimDevol::computeModel( const ProcessorGroup * pc, 
     const PatchSubset    * patches, 
     const MaterialSubset * matls, 
@@ -271,32 +457,33 @@ KobayashiSarofimDevol::computeModel( const ProcessorGroup * pc,
     int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
 
     CCVariable<double> devol_rate;
-    CCVariable<double> gas_devol_rate; 
-    if (new_dw->exists( d_modelLabel, matlIndex, patch )){
+    if( new_dw->exists( d_modelLabel, matlIndex, patch ) ) {
       new_dw->getModifiable( devol_rate, d_modelLabel, matlIndex, patch ); 
-      new_dw->getModifiable( gas_devol_rate, d_gasLabel, matlIndex, patch ); 
-      devol_rate.initialize(0.0);
-      gas_devol_rate.initialize(0.0);
     } else {
       new_dw->allocateAndPut( devol_rate, d_modelLabel, matlIndex, patch );
-      new_dw->allocateAndPut( gas_devol_rate, d_gasLabel, matlIndex, patch ); 
       devol_rate.initialize(0.0);
-      gas_devol_rate.initialize(0.0);
     }
 
-    // to add:
-    // - getModifiable/allocateAndPut coal gas mixture fraction source term
-    // - get all weights (for number density)
+    CCVariable<double> gas_devol_rate; 
+    if (new_dw->exists( d_gasLabel, matlIndex, patch )){
+      new_dw->getModifiable( gas_devol_rate, d_gasLabel, matlIndex, patch ); 
+    } else {
+      new_dw->allocateAndPut( gas_devol_rate, d_gasLabel, matlIndex, patch ); 
+      gas_devol_rate.initialize(0.0);
+
+    }
 
     constCCVariable<double> temperature;
-    constCCVariable<double> w_particle_temperature;
-    //old_dw->get( temperature, d_fieldLabels->d_dummyTLabel, matlIndex, patch, gac, 1 );
     old_dw->get( temperature, d_fieldLabels->d_tempINLabel, matlIndex, patch, gac, 1 );
+
+    constCCVariable<double> w_particle_temperature;
     if (compute_part_temp) {
       old_dw->get( w_particle_temperature, d_particle_temperature_label, matlIndex, patch, gn, 0 );
     }
+    
     constCCVariable<double> wa_raw_coal_mass;
     new_dw->get( wa_raw_coal_mass, d_raw_coal_mass_fraction_label, matlIndex, patch, gn, 0 );
+
     constCCVariable<double> weight;
     new_dw->get( weight, d_weight_label, matlIndex, patch, gn, 0 );
 
@@ -304,7 +491,7 @@ KobayashiSarofimDevol::computeModel( const ProcessorGroup * pc,
 
       IntVector c = *iter; 
 
-      if (weight[c] < 1e-4 ) {
+      if (weight[c] < d_w_small ) {
         devol_rate[c] = 0.0;
         gas_devol_rate[c] = 0.0;
       } else {
@@ -325,7 +512,7 @@ KobayashiSarofimDevol::computeModel( const ProcessorGroup * pc,
           devol_rate[c] = 0.0;
 
         testVal = (Y1_*k1 + Y2_*k2)*wa_raw_coal_mass[c]*d_rc_scaling_factor*d_w_scaling_factor; 
-        //testVal uses the weighted abscissa so the weight isn't needed in the gas source term
+        //testVal uses the weighted abscissa so that the gas source is from all (total) particles
         if (testVal > 0.0)
           gas_devol_rate[c] = testVal; 
         else 
@@ -345,5 +532,11 @@ KobayashiSarofimDevol::computeModel( const ProcessorGroup * pc,
 //char_model[c] = (0.622*k1)*alpha[c];                            // track char mass fraction so it is bounded from 0 to 1 (This uses Julien's proximate analysis idea - 0.388 instead of 0.3)
 
 // QUESTION: if we're tracking coal gas mixture fraction, why have source term as TOTAL MASS source term?
+
+// This was the whole reason we wanted to track raw coal MASS as an internal coordinate,
+// rather than raw coal MASS FRACTION... so that we knew how much mass was coming into the gas phase.
+// It's possible to back out coal gas mixture fraction from total mass,
+// but it's impossible to to the reverse. (Charles)
+
 //coalgas_source[c] = (0.388*k1 + k2)*alphac[c]*m_total_particles; // multiply by mass_p_total to get total amount of volatile gases
 

@@ -36,10 +36,12 @@ public:
   ModelBuilder( const std::string   & model_name, 
                 const ArchesLabel   * fieldLabels,
                 vector<std::string>   icLabelNames, 
+                vector<std::string>   scalarLabelNames, 
                 SimulationStateP    & sharedState,
                 int                   qn ) : 
     d_modelName( model_name ), 
     d_icLabels( icLabelNames ), 
+    d_scalarLabels( scalarLabelNames ), 
     d_fieldLabels( fieldLabels ), 
     d_sharedState( sharedState ), d_quadNode( qn ) {}
 
@@ -53,6 +55,7 @@ public:
 protected: 
   std::string        d_modelName;
   vector<string>     d_icLabels;
+  vector<string>     d_scalarLabels;
   const ArchesLabel* d_fieldLabels;
   SimulationStateP & d_sharedState; 
   int                d_quadNode; 
