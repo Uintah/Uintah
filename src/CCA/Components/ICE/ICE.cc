@@ -888,8 +888,7 @@ ICE::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
   scheduleComputeVel_FC(                   sched, patches,ice_matls_sub, 
                                                           mpm_matls_sub, 
                                                           d_press_matl,    
-                                                          all_matls,     
-                                                          false);        
+                                                          all_matls);        
 
   scheduleAddExchangeContributionToFCVel( sched, patches,ice_matls_sub,
                                                          all_matls,
@@ -1122,8 +1121,7 @@ void ICE::scheduleComputeVel_FC(SchedulerP& sched,
                                 const MaterialSubset* ice_matls,
                                 const MaterialSubset* mpm_matls,
                                 const MaterialSubset* press_matl,
-                                const MaterialSet* all_matls,
-                                bool recursion)
+                                const MaterialSet* all_matls)
 { 
   int levelIndex = getLevel(patches)->getIndex();
   Task* t = 0;
@@ -1132,7 +1130,7 @@ void ICE::scheduleComputeVel_FC(SchedulerP& sched,
              << "\t\t\t\t\tL-" << levelIndex<< endl;
 
   t = scinew Task("ICE::computeVel_FC",
-            this, &ICE::computeVel_FC, recursion);
+            this, &ICE::computeVel_FC);
 
   Ghost::GhostType  gac = Ghost::AroundCells;
   Task::DomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
@@ -2946,8 +2944,7 @@ void ICE::computeVel_FC(const ProcessorGroup*,
                         const PatchSubset* patches,                
                         const MaterialSubset* /*matls*/,           
                         DataWarehouse* old_dw,                     
-                        DataWarehouse* new_dw,
-                        bool recursion)                     
+                        DataWarehouse* new_dw)                     
 {
   const Level* level = getLevel(patches);
   
@@ -2964,23 +2961,10 @@ void ICE::computeVel_FC(const ProcessorGroup*,
     
     constCCVariable<double> press_CC;
     Ghost::GhostType  gac = Ghost::AroundCells; 
-    //__________________________________
-    // define parent DW -- not used but keep this around
-    DataWarehouse* pNewDW;
-    DataWarehouse* pOldDW;
-
-    if(recursion) {
-      pNewDW  = new_dw->getOtherDataWarehouse(Task::ParentNewDW);
-      pOldDW  = new_dw->getOtherDataWarehouse(Task::ParentOldDW); 
-    } else {
-      pNewDW  = new_dw;
-      pOldDW  = old_dw;
-    }
-     
     new_dw->get(press_CC,lb->press_equil_CCLabel, 0, patch,gac, 1);
     
     delt_vartype delT;
-    pOldDW->get(delT, d_sharedState->get_delt_label(),level);   
+    old_dw->get(delT, d_sharedState->get_delt_label(),level);   
      
     // Compute the face centered velocities
     for(int m = 0; m < numMatls; m++) {
@@ -2990,13 +2974,13 @@ void ICE::computeVel_FC(const ProcessorGroup*,
       constCCVariable<double> rho_CC, sp_vol_CC;
       constCCVariable<Vector> vel_CC;
       if(ice_matl){
-        pNewDW->get(rho_CC, lb->rho_CCLabel, indx, patch, gac, 1);
-        pOldDW->get(vel_CC, lb->vel_CCLabel, indx, patch, gac, 1); 
+        new_dw->get(rho_CC, lb->rho_CCLabel, indx, patch, gac, 1);
+        old_dw->get(vel_CC, lb->vel_CCLabel, indx, patch, gac, 1); 
       } else {
-        pNewDW->get(rho_CC, lb->rho_CCLabel, indx, patch, gac, 1);
-        pNewDW->get(vel_CC, lb->vel_CCLabel, indx, patch, gac, 1);
+        new_dw->get(rho_CC, lb->rho_CCLabel, indx, patch, gac, 1);
+        old_dw->get(vel_CC, lb->vel_CCLabel, indx, patch, gac, 1);
       }              
-      pNewDW->get(sp_vol_CC, lb->sp_vol_CCLabel,indx,patch, gac, 1);
+      new_dw->get(sp_vol_CC, lb->sp_vol_CCLabel,indx,patch, gac, 1);
               
       //---- P R I N T   D A T A ------
   #if 1
@@ -3107,11 +3091,11 @@ template<class T> void ICE::updateVelFace(int dir, CellIterator it,
 //______________________________________________________________________
 //                       
 void ICE::updateVel_FC(const ProcessorGroup*,  
-                        const PatchSubset* patches,                
-                        const MaterialSubset* /*matls*/,           
-                        DataWarehouse* old_dw,                     
-                        DataWarehouse* new_dw,
-                        bool recursion)                     
+                       const PatchSubset* patches,                
+                       const MaterialSubset* /*matls*/,           
+                       DataWarehouse* old_dw,                     
+                       DataWarehouse* new_dw,
+                       bool recursion)                     
 {
   const Level* level = getLevel(patches);
   

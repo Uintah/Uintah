@@ -248,7 +248,14 @@ void ICE::scheduleRecomputeVel_FC(SchedulerP& sched,
   Task::DomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.               
 //  t->requires(Task::ParentOldDW,lb->delTLabel);  AMR
 
-  t->requires(Task::ParentNewDW,lb->sp_vol_CCLabel, /*all_matls*/ gac,1);        
+  //__________________________________
+  // define parent data warehouse
+  Task::WhichDW pNewDW = Task::NewDW;
+  if(recursion) {
+    pNewDW  = Task::ParentNewDW;
+  }
+
+  t->requires(pNewDW,           lb->sp_vol_CCLabel, /*all_matls*/ gac,1);        
   t->requires(Task::NewDW,      lb->imp_delPLabel,   press_matl, oims, gac,1);      
   t->requires(Task::OldDW,      lb->uvel_FCLabel,                gn,0);     
   t->requires(Task::OldDW,      lb->vvel_FCLabel,                gn,0);     
