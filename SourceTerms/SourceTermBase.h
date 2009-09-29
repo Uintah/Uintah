@@ -27,7 +27,7 @@ class SourceTermBase{
 public: 
 
   SourceTermBase( std::string srcName, SimulationStateP& sharedState, 
-              vector<std::string> reqLabelNames );
+                  vector<std::string> reqLabelNames );
   virtual ~SourceTermBase();
 
   /** @brief Input file interface */
@@ -65,7 +65,7 @@ public:
 
 protected:
   std::string d_srcName; 
-  vector<string> d_requiredLabels; //All labels needed to compute this source term  
+  vector<std::string> d_requiredLabels; //All labels needed to compute this source term  
   const VarLabel* d_srcLabel; //The label storing the value of this source term
   SimulationStateP& d_sharedState; 
 

@@ -28,9 +28,12 @@ class ModelBase{
 
 public: 
 
-  ModelBase( std::string modelName, SimulationStateP& sharedState, 
+  ModelBase( std::string modelName, 
+             SimulationStateP& sharedState, 
              const ArchesLabel* fieldLabels,
-             vector<std::string> reqLabelNames, int qn );
+             vector<std::string> icLabelNames, 
+             vector<std::string> scalarLabelNames, 
+             int qn );
   virtual ~ModelBase();
 
   /** @brief Input file interface */
@@ -67,10 +70,10 @@ public:
   inline void reinitializeLabel(){ 
     d_labelSchedInit  = false; };
 
-  inline const VarLabel* getModelLabel(){
+  inline const VarLabel* getModelLabel() {
     return d_modelLabel; };
 
-  inline const VarLabel* getGasphaseModelLabel(){
+  inline const VarLabel* getGasSourceLabel() {
     return d_gasLabel; }; 
 
 protected:
@@ -78,10 +81,10 @@ protected:
   
   SimulationStateP& d_sharedState; 
   const ArchesLabel* d_fieldLabels;
-  vector<string> d_icLabels; //All internal coordinate labels (from DQMOM factory) needed to compute this model
-  vector<string> d_scalarLabels; // All scalar labels (from scalarFactory) needed to compute this model
-  const VarLabel* d_modelLabel; //The label storing the value of this model
-  const VarLabel* d_gasLabel;   //Label for gas phase source term 
+  vector<string> d_icLabels;     // All required internal coordinate labels (from DQMOM factory) needed to compute this model
+  vector<string> d_scalarLabels; // All required scalar labels (from scalarFactory) needed to compute this model
+  const VarLabel* d_modelLabel;  // Label storing the value of this model
+  const VarLabel* d_gasLabel;    // Label for gas phase source term 
   int d_timeSubStep;
 
   bool d_labelSchedInit;

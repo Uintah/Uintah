@@ -1,4 +1,3 @@
-
 #include <CCA/Components/Arches/CoalModels/ModelBase.h>
 #include <CCA/Components/Arches/CoalModels/ModelFactory.h>
 #include <CCA/Components/Arches/ArchesLabel.h>
@@ -8,23 +7,20 @@ using namespace std;
 using namespace Uintah; 
 
 
-ModelBase::ModelBase( std::string modelName, SimulationStateP& sharedState,
+ModelBase::ModelBase( std::string modelName, 
+                      SimulationStateP& sharedState,
                       const ArchesLabel* fieldLabels,
-                      vector<std::string> icLabelNames, int qn ) : 
-d_modelName(modelName), d_sharedState( sharedState ), d_fieldLabels(fieldLabels), d_icLabels(icLabelNames), d_quadNode(qn)
+                      vector<std::string> reqICLabelNames, 
+                      vector<std::string> reqScalarLabelNames,
+                      int qn ) : 
+            d_modelName(modelName),  d_sharedState( sharedState ), d_fieldLabels(fieldLabels), 
+            d_icLabels(reqICLabelNames), d_scalarLabels(reqScalarLabelNames), d_quadNode(qn)
 {
-  //Create a label for this source term. 
-  if(modelName == "dragforce") {
-    d_modelLabel = VarLabel::create(modelName, CCVariable<Vector>::getTypeDescription());
-    std::string varname = modelName + "_gassSource"; 
-    d_gasLabel = VarLabel::create( varname, CCVariable<Vector>::getTypeDescription()); 
-
-  } else {  
-    d_modelLabel = VarLabel::create(modelName, CCVariable<double>::getTypeDescription()); 
-    std::string varname = modelName + "_gassSource"; 
-    d_gasLabel = VarLabel::create( varname, CCVariable<double>::getTypeDescription()); 
-  }
-
+  // The type and number of d_modelLabel and d_gasLabel
+  // is model-dependent, so the creation of these labels 
+  // go in the model class constructor.
+  // (Note that the labels themselves are still defined in 
+  //  the parent class...)
  
   d_labelSchedInit  = false; 
 }
@@ -63,39 +59,8 @@ ModelBase::dummyInit( const ProcessorGroup* pc,
                       DataWarehouse* old_dw, 
                       DataWarehouse* new_dw )		      
 {
-  //patch loop
-  for (int p=0; p < patches->size(); p++){
-
-    const Patch* patch = patches->get(p);
-    int archIndex = 0;
-    int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
-
-    Ghost::GhostType  gn = Ghost::None;
-    
-     if(d_modelName == "dragforce") {
-      CCVariable<Vector> model;
-      CCVariable<Vector> gas_src; 
-      constCCVariable<Vector> old_model;
-      constCCVariable<Vector> old_gas_src;
-      new_dw->allocateAndPut( model, d_modelLabel, matlIndex, patch ); 
-      new_dw->allocateAndPut( gas_src, d_gasLabel, matlIndex, patch ); 
-      old_dw->get(old_model, d_modelLabel, matlIndex, patch, gn, 0);
-      old_dw->get(old_gas_src, d_gasLabel, matlIndex, patch, gn, 0);
-      model.copyData(old_model);
-      gas_src.copyData(old_gas_src);
-     } else {
-      CCVariable<double> model;
-      CCVariable<double> gas_src; 
-      constCCVariable<double> old_model;
-      constCCVariable<double> old_gas_src;
-      new_dw->allocateAndPut( model, d_modelLabel, matlIndex, patch ); 
-      new_dw->allocateAndPut( gas_src, d_gasLabel, matlIndex, patch ); 
-      old_dw->get(old_model, d_modelLabel, matlIndex, patch, gn, 0);
-      old_dw->get(old_gas_src, d_gasLabel, matlIndex, patch, gn, 0);
-      model.copyData(old_model);
-      gas_src.copyData(old_gas_src);
-     }     
-
-  }
+  // As before, the variable type of d_modelLabel and d_gasLabel are
+  // model-dependent, so the new_dw->allocateAndPut/old_dw->get statements
+  // must be in specific models' ModelName::initVars() method.
 }
 

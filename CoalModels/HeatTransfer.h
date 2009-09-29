@@ -19,10 +19,11 @@ class HeatTransferBuilder: public ModelBuilder
 {
 public: 
   HeatTransferBuilder( const std::string          & modelName,
-                                const vector<std::string>  & reqLabelNames,
-                                const ArchesLabel          * fieldLabels,
-                                SimulationStateP           & sharedState,
-                                int qn );
+                       const vector<std::string>  & reqICLabelNames,
+                       const vector<std::string>  & reqScalarLabelNames,
+                       const ArchesLabel          * fieldLabels,
+                       SimulationStateP           & sharedState,
+                       int qn );
   ~HeatTransferBuilder(); 
 
   ModelBase* build(); 
@@ -36,19 +37,31 @@ private:
 class HeatTransfer: public ModelBase {
 public: 
 
-  HeatTransfer( std::string modelName, SimulationStateP& shared_state, 
+  HeatTransfer( std::string modelName, 
+                SimulationStateP& shared_state, 
                 const ArchesLabel* fieldLabels,
-                vector<std::string> reqLabelNames, int qn );
+                vector<std::string> reqICLabelNames, 
+                vector<std::string> reqScalarLabelNames, 
+                int qn );
 
   ~HeatTransfer();
+
   /** @brief Interface for the inputfile and set constants */ 
   void problemSetup(const ProblemSpecP& db, int qn);
+
   /** @brief Schedule the calculation of the source term */ 
   void sched_computeModel( const LevelP& level, SchedulerP& sched, 
                             int timeSubStep );
 
-  /** @brief Schedule the initialization of some special/local vars */ 
+  /** @brief Schedule the initialization of some special/local variables */ 
   void sched_initVars( const LevelP& level, SchedulerP& sched );
+
+  /** @brief  Actually initialize some special/local variables */
+  void initVars( const ProcessorGroup * pc, 
+    const PatchSubset    * patches, 
+    const MaterialSubset * matls, 
+    DataWarehouse        * old_dw, 
+    DataWarehouse        * new_dw );
 
   /** @brief Actually compute the source term */ 
   void computeModel( const ProcessorGroup* pc, 
@@ -57,17 +70,26 @@ public:
                      DataWarehouse* old_dw, 
                      DataWarehouse* new_dw );
 
-  void initVars( const ProcessorGroup * pc, 
-    const PatchSubset    * patches, 
-    const MaterialSubset * matls, 
-    DataWarehouse        * old_dw, 
-    DataWarehouse        * new_dw );
+  /** @brief  Schedule the dummy solve for MPMArches - see ExplicitSolver::noSolve */
+  void sched_dummyInit( const LevelP& level, SchedulerP& sched );
 
-  inline const VarLabel* getGasHeatLabel(){
-    return d_gasHeatRate; };
+  /** @brief  Actually do dummy solve */
+  void dummyInit( const ProcessorGroup* pc, 
+                  const PatchSubset* patches, 
+                  const MaterialSubset* matls, 
+                  DataWarehouse* old_dw, 
+                  DataWarehouse* new_dw );
+
+// use getGasSourceLabel() instead (defined in ModelBase)
+//  inline const VarLabel* getGasHeatLabel(){
+//    return d_gasLabel; };
+
+  /** @brief  Access function for thermal conductivity (of particles, I think???) */
   inline const VarLabel* getabskp(){
     return d_abskp; };  
-  inline const bool getd_radiation(){
+  
+  /** @brief  Access function for radiation flag (on/off) */
+  inline const bool getRadiationFlag(){
     return d_radiation; };   
 
 private:
@@ -76,13 +98,14 @@ private:
   
   map<string, string> LabelToRoleMap;
 
-  //const VarLabel* d_temperature_label;
-  const VarLabel* d_raw_coal_mass_fraction_label;
-  const VarLabel* d_particle_temperature_label;
-  const VarLabel* d_particle_length_label;
-  const VarLabel* d_weight_label;
-  const VarLabel* d_gasHeatRate; 
-  const VarLabel* d_abskp; 
+  const VarLabel* d_raw_coal_mass_fraction_label;// label for raw coal mass fraction
+  const VarLabel* d_particle_temperature_label;  // label for particle temperature
+  const VarLabel* d_particle_length_label;       // label for particle length
+  const VarLabel* d_weight_label; // label for DQMOM weight
+
+  const VarLabel* d_abskp; // label for thermal conductivity (of the particles, I think???)
+  const VarLabel* d_smoothTfield; // temperature field: particle temperature where there are particles,
+                                  //                    gas temperature where there are no particles
 
   double c_o;      // initial mass of raw coal
   double alpha_o;  // initial mass fraction of raw coal
@@ -90,14 +113,15 @@ private:
   bool d_radiation;
   int d_quad_node;   // store which quad node this model is for
 
-  double d_lowClip; 
-  double d_highClip; 
+  double d_lowModelClip; 
+  double d_highModelClip; 
 
   double d_rc_scaling_factor;
   double d_pl_scaling_factor;
   double d_pt_scaling_factor;
   double d_w_scaling_factor;
-  
+  double d_w_small; // "small" clip value for zero weights
+
   Vector cart2sph( Vector X ) {
     // converts cartesean to spherical coords
     double mag   = pow( X.x(), 2.0 );

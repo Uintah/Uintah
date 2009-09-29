@@ -55,8 +55,6 @@ ConstSrcTerm::sched_computeSource( const LevelP& level, SchedulerP& sched, int t
   std::string taskname = "ConstSrcTerm::eval";
   Task* tsk = scinew Task(taskname, this, &ConstSrcTerm::computeSource, timeSubStep);
 
-  timeSubStep; 
-
   if (timeSubStep == 0 && !d_labelSchedInit) {
     // Every source term needs to set this flag after the varLabel is computed. 
     // transportEqn.cleanUp should reinitialize this flag at the end of the time step. 
@@ -89,10 +87,6 @@ ConstSrcTerm::computeSource( const ProcessorGroup* pc,
 {
   //patch loop
   for (int p=0; p < patches->size(); p++){
-
-    Ghost::GhostType  gaf = Ghost::AroundFaces;
-    Ghost::GhostType  gac = Ghost::AroundCells;
-    Ghost::GhostType  gn  = Ghost::None;
 
     const Patch* patch = patches->get(p);
     int archIndex = 0;
