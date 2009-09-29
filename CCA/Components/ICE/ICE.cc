@@ -1168,8 +1168,18 @@ void ICE::scheduleAddExchangeContributionToFCVel(SchedulerP& sched,
 
 //  task->requires(Task::OldDW, lb->delTLabel);    FOR AMR 
   Ghost::GhostType  gac = Ghost::AroundCells;
-  task->requires(Task::NewDW,lb->sp_vol_CCLabel,    /*all_matls*/gac,1);
-  task->requires(Task::NewDW,lb->vol_frac_CCLabel,  /*all_matls*/gac,1);
+  
+  //__________________________________
+  // define parent data warehouse
+  // change the definition of parent(old/new)DW
+  // when using semi-implicit pressure solve
+  Task::WhichDW pNewDW = Task::NewDW;
+  if(recursion) {
+    pNewDW  = Task::ParentNewDW;
+  }  
+  
+  task->requires(pNewDW,     lb->sp_vol_CCLabel,    /*all_matls*/gac,1);
+  task->requires(pNewDW,     lb->vol_frac_CCLabel,  /*all_matls*/gac,1);
   task->requires(Task::NewDW,lb->uvel_FCLabel,      /*all_matls*/gac,2);
   task->requires(Task::NewDW,lb->vvel_FCLabel,      /*all_matls*/gac,2);
   task->requires(Task::NewDW,lb->wvel_FCLabel,      /*all_matls*/gac,2);
@@ -3120,7 +3130,7 @@ void ICE::updateVel_FC(const ProcessorGroup*,
     DataWarehouse* pOldDW;
     
     //__________________________________
-    // define parent data warehouse -- not used but keep this around
+    // define parent data warehouse
     if(recursion) {
       pNewDW  = new_dw->getOtherDataWarehouse(Task::ParentNewDW);
       pOldDW  = new_dw->getOtherDataWarehouse(Task::ParentOldDW); 
