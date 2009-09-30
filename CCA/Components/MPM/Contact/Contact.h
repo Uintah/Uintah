@@ -82,42 +82,42 @@ WARNING
          // Constructor
          Contact(const ProcessorGroup* myworld, MPMLabel* Mlb, MPMFlags* MFlag,
                  ProblemSpecP ps);
-	 virtual ~Contact();
+         virtual ~Contact();
 
          virtual void outputProblemSpec(ProblemSpecP& ps) = 0;
 
-	 // Basic contact methods
-	 virtual void exMomInterpolated(const ProcessorGroup*,
-					const PatchSubset* patches,
-					const MaterialSubset* matls,
-					DataWarehouse* old_dw,
-					DataWarehouse* new_dw) = 0;
-	 
-	 virtual void exMomIntegrated(const ProcessorGroup*,
-				      const PatchSubset* patches,
-				      const MaterialSubset* matls,
-				      DataWarehouse* old_dw,
-				      DataWarehouse* new_dw) = 0;
+         // Basic contact methods
+         virtual void exMomInterpolated(const ProcessorGroup*,
+                                        const PatchSubset* patches,
+                                        const MaterialSubset* matls,
+                                        DataWarehouse* old_dw,
+                                        DataWarehouse* new_dw) = 0;
+         
+         virtual void exMomIntegrated(const ProcessorGroup*,
+                                      const PatchSubset* patches,
+                                      const MaterialSubset* matls,
+                                      DataWarehouse* old_dw,
+                                      DataWarehouse* new_dw) = 0;
          
          virtual void addComputesAndRequiresInterpolated(SchedulerP & sched,
                                       const PatchSet* patches,
                                       const MaterialSet* matls) = 0;
-	 
+         
          virtual void addComputesAndRequiresIntegrated(SchedulerP & sched,
-				      const PatchSet* patches,
-				      const MaterialSet* matls) = 0;
+                                      const PatchSet* patches,
+                                      const MaterialSet* matls) = 0;
          
       protected:
-	 MPMLabel* lb;
-	 MPMFlags* flag;
-	 
+         MPMLabel* lb;
+         MPMFlags* flag;
+         
          ContactMaterialSpec d_matls;
       };
       
       inline bool compare(double num1, double num2) {
-	    double EPSILON=1.e-14;
-	    
-	    return (fabs(num1-num2) <= EPSILON);
+            double EPSILON=1.e-14;
+            
+            return (fabs(num1-num2) <= EPSILON);
       }
 
 } // End namespace Uintah

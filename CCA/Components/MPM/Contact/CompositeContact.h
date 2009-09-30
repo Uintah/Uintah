@@ -66,7 +66,7 @@ WARNING
          // Constructor
          CompositeContact(const ProcessorGroup* myworld, MPMLabel* Mlb, 
                           MPMFlags* MFlag);
-	 virtual ~CompositeContact();
+         virtual ~CompositeContact();
 
          virtual void outputProblemSpec(ProblemSpecP& ps);
          
@@ -76,14 +76,14 @@ WARNING
          // how many 
          size_t size() const { return d_m.size(); }
          
-	 // Basic contact methods
-	 void exMomInterpolated(const ProcessorGroup*,
+         // Basic contact methods
+         void exMomInterpolated(const ProcessorGroup*,
                                 const PatchSubset* patches,
                                 const MaterialSubset* matls,
                                 DataWarehouse* old_dw,
                                 DataWarehouse* new_dw);
-	 
-	 void exMomIntegrated(const ProcessorGroup*,
+         
+         void exMomIntegrated(const ProcessorGroup*,
                               const PatchSubset* patches,
                               const MaterialSubset* matls,
                               DataWarehouse* old_dw,
@@ -92,7 +92,7 @@ WARNING
          void addComputesAndRequiresInterpolated(SchedulerP & sched,
                                                  const PatchSet* patches,
                                                  const MaterialSet* matls);
-	 
+         
          void addComputesAndRequiresIntegrated(SchedulerP & sched,
                                                const PatchSet* patches,
                                                const MaterialSet* matls);

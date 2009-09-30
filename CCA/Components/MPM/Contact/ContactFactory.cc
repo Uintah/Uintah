@@ -48,7 +48,7 @@ using namespace Uintah;
 
 Contact* ContactFactory::create(const ProcessorGroup* myworld,
                                 const ProblemSpecP& ps, SimulationStateP &ss,
-				MPMLabel* lb, MPMFlags* flag)
+                                MPMLabel* lb, MPMFlags* flag)
 {
 
    ProblemSpecP mpm_ps = 
@@ -63,7 +63,7 @@ Contact* ContactFactory::create(const ProcessorGroup* myworld,
    CompositeContact * contact_list = scinew CompositeContact(myworld, lb, flag);
    
    for (ProblemSpecP child = mpm_ps->findBlock("contact"); child != 0;
-	child = child->findNextBlock("contact")) {
+        child = child->findNextBlock("contact")) {
      
      std::string con_type;
      child->getWithDefault("type",con_type, "null");
