@@ -20,18 +20,20 @@ set these = `find . -type f -name "*.cc" -or -name "*.h"`
 # display the tabs in the files
 foreach X ($these[*])
   echo "File $X"
-  cat -v -t -e $X |grep '\^I'
+  cat -v -t -e $X |grep  '\^I'
 end
 
 
 #__________________________________
 # convert the tabs to spaces
+echo "--------------------------------------------$convert"
 if ($convert == "y" ) then
   foreach X ($these[*])
     echo "File $X"
-    cat -v -t -e $X |grep -q '\^I'
-
-    if ($status == "0") then
+    
+    set nTabs = `cat -v -t -e $X |grep -c '\^I'` 
+    
+    if ( $nTabs > 0 ) then
       echo "Now converting tabs to spaces in file $X"
       expand $X >& $X.tmp
       mv $X.tmp  $X
