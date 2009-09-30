@@ -106,26 +106,26 @@ void SimpleSolver::createLocalToGlobalMapping(const ProcessorGroup* d_myworld,
       IntVector high= Min(highIndex, phigh);
       
       if( ( high.x() < low.x() ) || ( high.y() < low.y() ) 
-	  || ( high.z() < low.z() ) )
-	throw InternalError("Patch doesn't overlap?", __FILE__, __LINE__);
+          || ( high.z() < low.z() ) )
+        throw InternalError("Patch doesn't overlap?", __FILE__, __LINE__);
       
       int petscglobalIndex = d_petscGlobalStart[neighbor];
       IntVector dnodes = phigh-plow;
       IntVector start = low-plow;
       petscglobalIndex += start.z()*dnodes.x()*dnodes.y()*DOFsPerNode
-	+start.y()*dnodes.x()*(DOFsPerNode-1) + start.x();
+        +start.y()*dnodes.x()*(DOFsPerNode-1) + start.x();
       for (int colZ = low.z(); colZ < high.z(); colZ ++) {
-	int idx_slab = petscglobalIndex;
-	petscglobalIndex += dnodes.x()*dnodes.y()*DOFsPerNode;
-	
-	for (int colY = low.y(); colY < high.y(); colY ++) {
-	  int idx = idx_slab;
-	  idx_slab += dnodes.x()*DOFsPerNode;
-	  for (int colX = low.x(); colX < high.x(); colX ++) {
-	    l2g[IntVector(colX, colY, colZ)] = idx;
-	    idx += DOFsPerNode;
-	  }
-	}
+        int idx_slab = petscglobalIndex;
+        petscglobalIndex += dnodes.x()*dnodes.y()*DOFsPerNode;
+        
+        for (int colY = low.y(); colY < high.y(); colY ++) {
+          int idx = idx_slab;
+          idx_slab += dnodes.x()*DOFsPerNode;
+          for (int colX = low.x(); colX < high.x(); colX ++) {
+            l2g[IntVector(colX, colY, colZ)] = idx;
+            idx += DOFsPerNode;
+          }
+        }
       }
       IntVector d = high-low;
       totalNodes+=d.x()*d.y()*d.z()*DOFsPerNode;
@@ -166,7 +166,7 @@ void SimpleSolver::solve(vector<double>& guess)
 }
 
 void SimpleSolver::createMatrix(const ProcessorGroup* d_myworld,
-				const map<int,int>& diag)
+                                const map<int,int>& diag)
 {
   int globalrows = (int)d_totalNodes;
   int globalcolumns = (int)d_totalNodes;
@@ -264,13 +264,13 @@ void SimpleSolver::removeFixedDOFHeat()
     if (find_itr_j != d_DOF.end()) {
       Q[j] = 0.;
       if (i == j) {
-	KKK[i][j] = 1.;
+        KKK[i][j] = 1.;
       }
     }
     else if (find_itr_i != d_DOF.end()) {
       Q[i] = 0.;
       if (i == j) {
-	KKK[i][j] = 1.;
+        KKK[i][j] = 1.;
       }
     }
     else {
@@ -324,13 +324,13 @@ void SimpleSolver::removeFixedDOF()
     if (find_itr_j != d_DOF.end()) {
       Q[j] = 0.;
       if (i == j) {
-	KKK[i][j] = 1.;
+        KKK[i][j] = 1.;
       }
     }
     else if (find_itr_i != d_DOF.end()) {
       Q[i] = 0.;
       if (i == j) {
-	KKK[i][j] = 1.;
+        KKK[i][j] = 1.;
       }
     }
     else {

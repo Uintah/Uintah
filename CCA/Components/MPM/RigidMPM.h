@@ -89,7 +89,7 @@ public:
   virtual void problemSetup(const ProblemSpecP& params, 
                             const ProblemSpecP& restart_prob_spec, 
                             GridP& grid, SimulationStateP&);
-	 
+         
   //////////
   // Insert Documentation Here:
   friend class MPMICE;
@@ -98,10 +98,10 @@ public:
   //////////
   // Insert Documentation Here:
   void computeStressTensor(const ProcessorGroup*,
-			   const PatchSubset* patches,
-			   const MaterialSubset* matls,
-			   DataWarehouse* old_dw,
-			   DataWarehouse* new_dw);
+                           const PatchSubset* patches,
+                           const MaterialSubset* matls,
+                           DataWarehouse* old_dw,
+                           DataWarehouse* new_dw);
 
   //////////
   // Insert Documentation Here:
@@ -110,10 +110,10 @@ public:
 
 
   void computeInternalForce(const ProcessorGroup*,
-			    const PatchSubset* patches,
-			    const MaterialSubset* matls,
-			    DataWarehouse* old_dw,
-			    DataWarehouse* new_dw);
+                            const PatchSubset* patches,
+                            const MaterialSubset* matls,
+                            DataWarehouse* old_dw,
+                            DataWarehouse* new_dw);
 
   void scheduleComputeAndIntegrateAcceleration(SchedulerP&, const PatchSet*,
                                                const MaterialSet*);

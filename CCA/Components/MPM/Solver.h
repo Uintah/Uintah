@@ -63,7 +63,7 @@ namespace Uintah {
     virtual void solve(vector<double>& guess) = 0;
 
     virtual void createMatrix(const ProcessorGroup* pg, 
-			      const map<int,int>& diag) = 0;
+                              const map<int,int>& diag) = 0;
 
     virtual void destroyMatrix(bool recursion) = 0;
     

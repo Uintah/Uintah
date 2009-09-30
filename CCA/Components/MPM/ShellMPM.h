@@ -72,7 +72,7 @@ public:
   virtual void problemSetup(const ProblemSpecP& params, 
                             const ProblemSpecP& restart_prob_spec, 
                             GridP& grid,SimulationStateP&);
-	 
+         
 protected:
 
   ///////////////////////////////////////////////////////////////////////////
@@ -81,17 +81,17 @@ protected:
   //
   ///////////////////////////////////////////////////////////////////////////
   virtual void materialProblemSetup(const ProblemSpecP& prob_spec, 
-				    SimulationStateP& sharedState,
-				    MPMLabel* lb, MPMFlags* flags);
-	 
+                                    SimulationStateP& sharedState,
+                                    MPMLabel* lb, MPMFlags* flags);
+         
   ///////////////////////////////////////////////////////////////////////////
   //
   /*! Schedule interpolation from particles to the grid */
   //
   ///////////////////////////////////////////////////////////////////////////
   virtual void scheduleInterpolateParticlesToGrid(SchedulerP& sched,
-						  const PatchSet* patches,
-						  const MaterialSet* matls);
+                                                  const PatchSet* patches,
+                                                  const MaterialSet* matls);
 
   ///////////////////////////////////////////////////////////////////////////
   //
@@ -99,8 +99,8 @@ protected:
   //
   ///////////////////////////////////////////////////////////////////////////
   void schedInterpolateParticleRotToGrid(SchedulerP& sched,
-					 const PatchSet* patches,
-					 const MaterialSet* matls);
+                                         const PatchSet* patches,
+                                         const MaterialSet* matls);
 
   ///////////////////////////////////////////////////////////////////////////
   //
@@ -108,10 +108,10 @@ protected:
   //
   ///////////////////////////////////////////////////////////////////////////
   void interpolateParticleRotToGrid(const ProcessorGroup*,
-				    const PatchSubset* patches,
-				    const MaterialSubset* ,
-				    DataWarehouse* old_dw,
-				    DataWarehouse* new_dw);
+                                    const PatchSubset* patches,
+                                    const MaterialSubset* ,
+                                    DataWarehouse* old_dw,
+                                    DataWarehouse* new_dw);
 
   ///////////////////////////////////////////////////////////////////////////
   //
@@ -119,8 +119,8 @@ protected:
   //
   ///////////////////////////////////////////////////////////////////////////
   virtual void scheduleComputeInternalForce(SchedulerP& sched,
-					    const PatchSet* patches,
-					    const MaterialSet* matls);
+                                            const PatchSet* patches,
+                                            const MaterialSet* matls);
 
   ///////////////////////////////////////////////////////////////////////////
   //
@@ -128,8 +128,8 @@ protected:
   //
   ///////////////////////////////////////////////////////////////////////////
   void schedComputeRotInternalMoment(SchedulerP& sched,
-				     const PatchSet* patches,
-				     const MaterialSet* matls);
+                                     const PatchSet* patches,
+                                     const MaterialSet* matls);
 
   ///////////////////////////////////////////////////////////////////////////
   //
@@ -137,62 +137,62 @@ protected:
   //
   ///////////////////////////////////////////////////////////////////////////
   void computeRotInternalMoment(const ProcessorGroup*,
-				const PatchSubset* patches,
-				const MaterialSubset* ,
-				DataWarehouse* old_dw,
-				DataWarehouse* new_dw);
+                                const PatchSubset* patches,
+                                const MaterialSubset* ,
+                                DataWarehouse* old_dw,
+                                DataWarehouse* new_dw);
 
   ///////////////////////////////////////////////////////////////////////////
   //
   /*! Schedule Calculation of acceleration */
   //
   virtual void scheduleComputeAndIntegrateAcceleration(SchedulerP& sched,
-					    const PatchSet* patches,
-					    const MaterialSet* matls);
+                                            const PatchSet* patches,
+                                            const MaterialSet* matls);
 
   ///////////////////////////////////////////////////////////////////////////
   //
   /*! Schedule calculation of rotational acceleration of shell normal */
   //
   void schedComputeRotAcceleration(SchedulerP& sched,
-				   const PatchSet* patches,
-				   const MaterialSet* matls);
+                                   const PatchSet* patches,
+                                   const MaterialSet* matls);
 
   ///////////////////////////////////////////////////////////////////////////
   //
   /*! Actually calculate of rotational acceleration of shell normal */
   //
   void computeRotAcceleration(const ProcessorGroup*,
-			      const PatchSubset* patches,
-			      const MaterialSubset*,
-			      DataWarehouse* old_dw,
-			      DataWarehouse* new_dw);
+                              const PatchSubset* patches,
+                              const MaterialSubset*,
+                              DataWarehouse* old_dw,
+                              DataWarehouse* new_dw);
 
   ///////////////////////////////////////////////////////////////////////////
   //
   /*! Schedule interpolation from grid to particles and update */
   //
   virtual void scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
-					       const PatchSet* patches,
-					       const MaterialSet* matls);
+                                               const PatchSet* patches,
+                                               const MaterialSet* matls);
 
   ///////////////////////////////////////////////////////////////////////////
   //
   /*! Schedule update of the particle normal rotation rate */
   //
   void schedParticleNormalRotRateUpdate(SchedulerP& sched,
-					const PatchSet* patches,
-					const MaterialSet* matls);
+                                        const PatchSet* patches,
+                                        const MaterialSet* matls);
 
   ///////////////////////////////////////////////////////////////////////////
   //
   /*! Actually update the particle normal rotation rate */
   //
   void particleNormalRotRateUpdate(const ProcessorGroup*,
-				   const PatchSubset* patches,
-				   const MaterialSubset* ,
-				   DataWarehouse* old_dw,
-				   DataWarehouse* new_dw);
+                                   const PatchSubset* patches,
+                                   const MaterialSubset* ,
+                                   DataWarehouse* old_dw,
+                                   DataWarehouse* new_dw);
 private:
 
   ///////////////////////////////////////////////////////////////////////////
@@ -201,7 +201,7 @@ private:
   //
   ShellMPM(const ShellMPM&);
   ShellMPM& operator=(const ShellMPM&);
-	 
+         
 };
       
 } // end namespace Uintah

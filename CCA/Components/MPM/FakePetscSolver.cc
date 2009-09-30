@@ -59,8 +59,8 @@ void MPMPetscSolver::initialize()
 
 void 
 MPMPetscSolver::createLocalToGlobalMapping(const ProcessorGroup* d_myworld,
-					   const PatchSet* perproc_patches,
-					   const PatchSubset* patches,
+                                           const PatchSet* perproc_patches,
+                                           const PatchSubset* patches,
                                            const int DOFsPerNode,
                                            const int n8or27)
 {
@@ -73,7 +73,7 @@ void MPMPetscSolver::solve(vector<double>& guess)
 }
 
 void MPMPetscSolver::createMatrix(const ProcessorGroup* d_myworld,
-				  const map<int,int>& dof_diag)
+                                  const map<int,int>& dof_diag)
 {
   throw InternalError( "Don't have PETSc so shouldn't be calling MPMPetscSolver::createMatrix()!", __FILE__, __LINE__ );
 }
