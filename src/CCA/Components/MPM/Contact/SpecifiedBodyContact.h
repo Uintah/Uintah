@@ -137,12 +137,12 @@ DESCRIPTION
   
   class SpecifiedBodyContact : public Contact {
   private:
-	 
+         
     // Prevent copying of this class
     // copy constructor
     SpecifiedBodyContact(const SpecifiedBodyContact &con);
     SpecifiedBodyContact& operator=(const SpecifiedBodyContact &con);
-	 
+         
     Vector findVelFromProfile(double t) const;
     
     SimulationStateP d_sharedState;
@@ -157,7 +157,7 @@ DESCRIPTION
     // Constructor
     SpecifiedBodyContact(const ProcessorGroup* myworld,
                          ProblemSpecP& ps,SimulationStateP& d_sS,MPMLabel* lb,MPMFlags*flag);
-	 
+         
     // Destructor
     virtual ~SpecifiedBodyContact();
 
@@ -169,7 +169,7 @@ DESCRIPTION
                                    const MaterialSubset* matls,
                                    DataWarehouse* old_dw,
                                    DataWarehouse* new_dw);
-	 
+         
     virtual void exMomIntegrated(const ProcessorGroup*,
                                  const PatchSubset* patches,
                                  const MaterialSubset* matls,

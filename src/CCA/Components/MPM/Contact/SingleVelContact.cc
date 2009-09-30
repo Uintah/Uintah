@@ -63,7 +63,7 @@ using std::vector;
 
 SingleVelContact::SingleVelContact(const ProcessorGroup* myworld,
                                    ProblemSpecP& ps, SimulationStateP& d_sS, 
-				   MPMLabel* Mlb,MPMFlags* MFlag)
+                                   MPMLabel* Mlb,MPMFlags* MFlag)
   : Contact(myworld, Mlb, MFlag, ps)
 {
   // Constructor
@@ -84,10 +84,10 @@ void SingleVelContact::outputProblemSpec(ProblemSpecP& ps)
 }
 
 void SingleVelContact::exMomInterpolated(const ProcessorGroup*,
-					 const PatchSubset* patches,
-					 const MaterialSubset* matls,
-					 DataWarehouse*,
-					 DataWarehouse* new_dw)
+                                         const PatchSubset* patches,
+                                         const MaterialSubset* matls,
+                                         DataWarehouse*,
+                                         DataWarehouse* new_dw)
 {
   int numMatls = d_sharedState->getNumMPMMatls();
   ASSERTEQ(numMatls, matls->size());
@@ -129,10 +129,10 @@ void SingleVelContact::exMomInterpolated(const ProcessorGroup*,
 }
 
 void SingleVelContact::exMomIntegrated(const ProcessorGroup*,
-				       const PatchSubset* patches,
-				       const MaterialSubset* matls,
-				       DataWarehouse* old_dw,
-				       DataWarehouse* new_dw)
+                                       const PatchSubset* patches,
+                                       const MaterialSubset* matls,
+                                       DataWarehouse* old_dw,
+                                       DataWarehouse* new_dw)
 {
   int numMatls = d_sharedState->getNumMPMMatls();
   ASSERTEQ(numMatls, matls->size());
@@ -183,8 +183,8 @@ void SingleVelContact::exMomIntegrated(const ProcessorGroup*,
 }
 
 void SingleVelContact::addComputesAndRequiresInterpolated(SchedulerP & sched,
-						  const PatchSet* patches,
-				     		  const MaterialSet* ms)
+                                                  const PatchSet* patches,
+                                                  const MaterialSet* ms)
 {
   Task * t = scinew Task("SingleVelContact::exMomInterpolated", 
                       this, &SingleVelContact::exMomInterpolated);
@@ -198,8 +198,8 @@ void SingleVelContact::addComputesAndRequiresInterpolated(SchedulerP & sched,
 }
 
 void SingleVelContact::addComputesAndRequiresIntegrated(SchedulerP & sched,
-					     const PatchSet* patches,
-					     const MaterialSet* ms) 
+                                             const PatchSet* patches,
+                                             const MaterialSet* ms) 
 {
   Task * t = scinew Task("SingleVelContact::exMomIntegrated", 
                       this, &SingleVelContact::exMomIntegrated);

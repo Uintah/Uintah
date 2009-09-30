@@ -87,7 +87,7 @@ WARNING
       // Constructor
       NullContact(const ProcessorGroup* myworld,
                   SimulationStateP& ss, MPMLabel* lb,
-		  MPMFlags* MFlag);
+                  MPMFlags* MFlag);
       
       // Destructor
       virtual ~NullContact();
@@ -96,25 +96,25 @@ WARNING
 
       // Basic contact methods
       virtual void exMomInterpolated(const ProcessorGroup*,
-				     const PatchSubset* patches,
-				     const MaterialSubset* matls,
-				     DataWarehouse* old_dw,
-				     DataWarehouse* new_dw);
+                                     const PatchSubset* patches,
+                                     const MaterialSubset* matls,
+                                     DataWarehouse* old_dw,
+                                     DataWarehouse* new_dw);
       
 
       virtual void exMomIntegrated(const ProcessorGroup*,
-				   const PatchSubset* patches,
-				   const MaterialSubset* matls,
-				   DataWarehouse* old_dw,
-				   DataWarehouse* new_dw);
+                                   const PatchSubset* patches,
+                                   const MaterialSubset* matls,
+                                   DataWarehouse* old_dw,
+                                   DataWarehouse* new_dw);
       
       virtual void addComputesAndRequiresInterpolated(SchedulerP & sched,
-					     const PatchSet* patches,
-					     const MaterialSet* matls);
+                                             const PatchSet* patches,
+                                             const MaterialSet* matls);
 
       virtual void addComputesAndRequiresIntegrated(SchedulerP & sched,
-					     const PatchSet* patches,
-					     const MaterialSet* matls);
+                                             const PatchSet* patches,
+                                             const MaterialSet* matls);
 
     };
 } // End namespace Uintah

@@ -97,10 +97,10 @@ void ApproachContact::outputProblemSpec(ProblemSpecP& ps)
 
 
 void ApproachContact::exMomInterpolated(const ProcessorGroup*,
-					const PatchSubset* patches,
-					const MaterialSubset* matls,
-					DataWarehouse* old_dw,
-					DataWarehouse* new_dw)
+                                        const PatchSubset* patches,
+                                        const MaterialSubset* matls,
+                                        DataWarehouse* old_dw,
+                                        DataWarehouse* new_dw)
 { 
   Ghost::GhostType  gan   = Ghost::AroundNodes;
   Ghost::GhostType  gnone = Ghost::None;
@@ -224,7 +224,7 @@ void ApproachContact::exMomInterpolated(const ProcessorGroup*,
 
 //       if((totalNodalVol/cell_vol)*(64./totalNearParticles) > d_vol_const){
        if((totalNodalVol/cell_vol) > d_vol_const){
-	 double scale_factor=1.0;
+         double scale_factor=1.0;
 
        // 2. This option uses only cell volumes.  The idea is that a cell is full
        // if totalNodalVol/cell_vol .ge. 1.0, and the contraint should only be
@@ -235,18 +235,18 @@ void ApproachContact::exMomInterpolated(const ProcessorGroup*,
        // help remove a "switching" instability.  A good value seems to be
        // d_vol_const=.05
 
-	 //	 double scale_factor=0.0;
-	 //	 if(d_vol_const > 0.0){
-	 //	   scale_factor=(totalNodalVol/cell_vol-1.+d_vol_const)/d_vol_const;
-	 //	   scale_factor=Max(0.0,scale_factor);
-	 //	 }
-	 //	 else if(totalNodalVol/cell_vol > 1.0){
-	 //	   scale_factor=1.0;
-	 //	 }
+         //      double scale_factor=0.0;
+         //      if(d_vol_const > 0.0){
+         //        scale_factor=(totalNodalVol/cell_vol-1.+d_vol_const)/d_vol_const;
+         //        scale_factor=Max(0.0,scale_factor);
+         //      }
+         //      else if(totalNodalVol/cell_vol > 1.0){
+         //        scale_factor=1.0;
+         //      }
 
-	 //	 if(scale_factor > 0.0){
-	 //	   scale_factor=Min(1.0,scale_factor);
-	 //       }
+         //      if(scale_factor > 0.0){
+         //        scale_factor=Min(1.0,scale_factor);
+         //       }
 
         // Loop over velocity fields.  Only proceed if velocity field mass
         // is nonzero (not numerical noise) and the difference from
@@ -262,7 +262,7 @@ void ApproachContact::exMomInterpolated(const ProcessorGroup*,
             // OR the surface is stress free and approaching.
             // Otherwise apply free surface conditions (do nothing).
             double normalDeltaVel=Dot(deltaVelocity,gsurfnorm[n][c]);
-	    Vector Dv(0.,0.,0.);
+            Vector Dv(0.,0.,0.);
             if(normalDeltaVel>0.0){
 
                 // Simplify algorithm in case where approach velocity
@@ -270,61 +270,61 @@ void ApproachContact::exMomInterpolated(const ProcessorGroup*,
                 if(compare( (deltaVelocity
                         -gsurfnorm[n][c]*normalDeltaVel).length(),0.0)){
 
-		  // Calculate velocity change needed to enforce contact
+                  // Calculate velocity change needed to enforce contact
                   Dv=-gsurfnorm[n][c]*normalDeltaVel;
-		}
+                }
 
                 // General algorithm, including frictional slip.  The
-		// contact velocity change and frictional work are both
-		// zero if normalDeltaVel is zero.
-	        else if(!compare(fabs(normalDeltaVel),0.0)){
+                // contact velocity change and frictional work are both
+                // zero if normalDeltaVel is zero.
+                else if(!compare(fabs(normalDeltaVel),0.0)){
                   Vector surfaceTangent=
-		  (deltaVelocity-gsurfnorm[n][c]*normalDeltaVel)/
+                  (deltaVelocity-gsurfnorm[n][c]*normalDeltaVel)/
                   (deltaVelocity-gsurfnorm[n][c]*normalDeltaVel).length();
                   double tangentDeltaVelocity=Dot(deltaVelocity,surfaceTangent);
                   double frictionCoefficient=
                     Min(d_mu,tangentDeltaVelocity/fabs(normalDeltaVel));
 
-		  // Calculate velocity change needed to enforce contact
+                  // Calculate velocity change needed to enforce contact
                   Dv= -gsurfnorm[n][c]*normalDeltaVel
-		      -surfaceTangent*frictionCoefficient*fabs(normalDeltaVel);
+                      -surfaceTangent*frictionCoefficient*fabs(normalDeltaVel);
 
                   // Calculate work done by the frictional force (only) if
                   // contact slips.  Because the frictional force opposes motion
                   // it is dissipative and should always be negative per the
                   // conventional definition.  However, here it is calculated
                   // as positive (Work=-force*distance).
-		  if(compare(frictionCoefficient,d_mu)){
-		    if (flag->d_fracture)
-		      frictionWork[n][c] += gmass[n][c]*frictionCoefficient
-			* (normalDeltaVel*normalDeltaVel) *
-			(tangentDeltaVelocity/fabs(normalDeltaVel)-
-			 frictionCoefficient);
-		    else
-		      frictionWork[n][c] = gmass[n][c]*frictionCoefficient
-			* (normalDeltaVel*normalDeltaVel) *
-			(tangentDeltaVelocity/fabs(normalDeltaVel)-
-			 frictionCoefficient);
-		  }
-	        }
+                  if(compare(frictionCoefficient,d_mu)){
+                    if (flag->d_fracture)
+                      frictionWork[n][c] += gmass[n][c]*frictionCoefficient
+                        * (normalDeltaVel*normalDeltaVel) *
+                        (tangentDeltaVelocity/fabs(normalDeltaVel)-
+                         frictionCoefficient);
+                    else
+                      frictionWork[n][c] = gmass[n][c]*frictionCoefficient
+                        * (normalDeltaVel*normalDeltaVel) *
+                        (tangentDeltaVelocity/fabs(normalDeltaVel)-
+                         frictionCoefficient);
+                  }
+                }
 
-		// Define contact algorithm imposed strain, find maximum
-	        Vector epsilon=(Dv/dx)*delT;
-	        double epsilon_max=
-		  Max(fabs(epsilon.x()),fabs(epsilon.y()),fabs(epsilon.z()));
-	        if(!compare(epsilon_max,0.0)){
-		  epsilon_max=epsilon_max*Max(1.0,
-			    gmass[n][c]/(centerOfMassMass-gmass[n][c]));
+                // Define contact algorithm imposed strain, find maximum
+                Vector epsilon=(Dv/dx)*delT;
+                double epsilon_max=
+                  Max(fabs(epsilon.x()),fabs(epsilon.y()),fabs(epsilon.z()));
+                if(!compare(epsilon_max,0.0)){
+                  epsilon_max=epsilon_max*Max(1.0,
+                            gmass[n][c]/(centerOfMassMass-gmass[n][c]));
 
-		  // Scale velocity change if contact algorithm
+                  // Scale velocity change if contact algorithm
                   // imposed strain is too large.
-		  double ff=Min(epsilon_max,.5)/epsilon_max;
-		  Dv=Dv*ff;
-	        }
-		Dv=scale_factor*Dv;
-	        gvelocity[n][c]+=Dv;
+                  double ff=Min(epsilon_max,.5)/epsilon_max;
+                  Dv=Dv*ff;
+                }
+                Dv=scale_factor*Dv;
+                gvelocity[n][c]+=Dv;
             }  // if approaching
-	  }    // if !compare && !compare
+          }    // if !compare && !compare
         }      // matls
        }       // if (volume constraint)
       }        // if(!compare(centerOfMassMass,0.0))
@@ -334,10 +334,10 @@ void ApproachContact::exMomInterpolated(const ProcessorGroup*,
 }
 
 void ApproachContact::exMomIntegrated(const ProcessorGroup*,
-				      const PatchSubset* patches,
-				      const MaterialSubset* matls,
-				      DataWarehouse* old_dw,
-				      DataWarehouse* new_dw)
+                                      const PatchSubset* patches,
+                                      const MaterialSubset* matls,
+                                      DataWarehouse* old_dw,
+                                      DataWarehouse* new_dw)
 {
   Ghost::GhostType  gnone = Ghost::None;
 
@@ -400,7 +400,7 @@ void ApproachContact::exMomIntegrated(const ProcessorGroup*,
 
 //       if((totalNodalVol/cell_vol)*(64./totalNearParticles) > d_vol_const){
        if((totalNodalVol/cell_vol) > d_vol_const){
-	 double scale_factor=1.0;
+         double scale_factor=1.0;
 
        // 2. This option uses only cell volumes. The idea is that a cell is full
        // if totalNodalVol/cell_vol .ge. 1.0, and the contraint should only be
@@ -411,18 +411,18 @@ void ApproachContact::exMomIntegrated(const ProcessorGroup*,
        // help remove a "switching" instability.  A good value seems to be
        // d_vol_const=.05
 
-	 //	 double scale_factor=0.0;
-	 //	 if(d_vol_const > 0.0){
-	 //	   scale_factor=(totalNodalVol/cell_vol-1.+d_vol_const)/d_vol_const;
-	 //	   scale_factor=Max(0.0,scale_factor);
-	 //	 }
-	 //	 else if(totalNodalVol/cell_vol > 1.0){
-	 //	   scale_factor=1.0;
-	 //	 }
+         //      double scale_factor=0.0;
+         //      if(d_vol_const > 0.0){
+         //        scale_factor=(totalNodalVol/cell_vol-1.+d_vol_const)/d_vol_const;
+         //        scale_factor=Max(0.0,scale_factor);
+         //      }
+         //      else if(totalNodalVol/cell_vol > 1.0){
+         //        scale_factor=1.0;
+         //      }
 
-	 //	 if(scale_factor > 0.0){
-	 //	   scale_factor=Min(1.0,scale_factor);
-	 //       }
+         //      if(scale_factor > 0.0){
+         //        scale_factor=Min(1.0,scale_factor);
+         //       }
 
         // Loop over velocity fields.  Only proceed if velocity field mass
         // is nonzero (not numerical noise) and the difference from
@@ -439,64 +439,64 @@ void ApproachContact::exMomIntegrated(const ProcessorGroup*,
             // Otherwise apply free surface conditions (do nothing).
             double normalDeltaVel=Dot(deltaVelocity,gsurfnorm[n][c]);
 
-	    Vector Dv(0.,0.,0.);
+            Vector Dv(0.,0.,0.);
             if(normalDeltaVel>0.0){
 
-	      // Simplify algorithm in case where approach velocity
-	      // is in direction of surface normal (no slip).
-	      if(compare( (deltaVelocity
-		   -gsurfnorm[n][c]*normalDeltaVel).length(),0.0)){
+              // Simplify algorithm in case where approach velocity
+              // is in direction of surface normal (no slip).
+              if(compare( (deltaVelocity
+                   -gsurfnorm[n][c]*normalDeltaVel).length(),0.0)){
 
-		// Calculate velocity change needed to enforce contact
-	        Dv=-gsurfnorm[n][c]*normalDeltaVel;
-	      }
+                // Calculate velocity change needed to enforce contact
+                Dv=-gsurfnorm[n][c]*normalDeltaVel;
+              }
 
-	      // General algorithm, including frictional slip.  The
-	      // contact velocity change and frictional work are both
-	      // zero if normalDeltaVel is zero.
-	      else if(!compare(fabs(normalDeltaVel),0.0)){
-	        Vector surfaceTangent=
-	         (deltaVelocity-gsurfnorm[n][c]*normalDeltaVel)/
+              // General algorithm, including frictional slip.  The
+              // contact velocity change and frictional work are both
+              // zero if normalDeltaVel is zero.
+              else if(!compare(fabs(normalDeltaVel),0.0)){
+                Vector surfaceTangent=
+                 (deltaVelocity-gsurfnorm[n][c]*normalDeltaVel)/
                  (deltaVelocity-gsurfnorm[n][c]*normalDeltaVel).length();
-	        double tangentDeltaVelocity=Dot(deltaVelocity,surfaceTangent);
-	        double frictionCoefficient=
-		  Min(d_mu,tangentDeltaVelocity/fabs(normalDeltaVel));
+                double tangentDeltaVelocity=Dot(deltaVelocity,surfaceTangent);
+                double frictionCoefficient=
+                  Min(d_mu,tangentDeltaVelocity/fabs(normalDeltaVel));
 
-		// Calculate velocity change needed to enforce contact
-	        Dv=
-		  -gsurfnorm[n][c]*normalDeltaVel
-		  -surfaceTangent*frictionCoefficient*fabs(normalDeltaVel);
+                // Calculate velocity change needed to enforce contact
+                Dv=
+                  -gsurfnorm[n][c]*normalDeltaVel
+                  -surfaceTangent*frictionCoefficient*fabs(normalDeltaVel);
 
                 // Calculate work done by the frictional force (only) if
                 // contact slips.  Because the frictional force opposes motion
                 // it is dissipative and should always be negative per the
                 // conventional definition.  However, here it is calculated
                 // as positive (Work=-force*distance).
-		if(compare(frictionCoefficient,d_mu)){
-		  frictionWork[n][c] += gmass[n][c]*frictionCoefficient
-					  * (normalDeltaVel*normalDeltaVel) *
-		(tangentDeltaVelocity/fabs(normalDeltaVel)-frictionCoefficient);
-		}
-	      }
+                if(compare(frictionCoefficient,d_mu)){
+                  frictionWork[n][c] += gmass[n][c]*frictionCoefficient
+                                          * (normalDeltaVel*normalDeltaVel) *
+                (tangentDeltaVelocity/fabs(normalDeltaVel)-frictionCoefficient);
+                }
+              }
 
-	      // Define contact algorithm imposed strain, find maximum
-	      Vector epsilon=(Dv/dx)*delT;
-	      double epsilon_max=
-	        Max(fabs(epsilon.x()),fabs(epsilon.y()),fabs(epsilon.z()));
-	      epsilon_max_max=max(epsilon_max,epsilon_max_max);
-	      if(!compare(epsilon_max,0.0)){
-	        epsilon_max=epsilon_max*Max(1.0,
-			  gmass[n][c]/(centerOfMassMass-gmass[n][c]));
+              // Define contact algorithm imposed strain, find maximum
+              Vector epsilon=(Dv/dx)*delT;
+              double epsilon_max=
+                Max(fabs(epsilon.x()),fabs(epsilon.y()),fabs(epsilon.z()));
+              epsilon_max_max=max(epsilon_max,epsilon_max_max);
+              if(!compare(epsilon_max,0.0)){
+                epsilon_max=epsilon_max*Max(1.0,
+                          gmass[n][c]/(centerOfMassMass-gmass[n][c]));
 
-		// Scale velocity change if contact algorithm imposed strain
+                // Scale velocity change if contact algorithm imposed strain
                 // is too large.
-	        double ff=Min(epsilon_max,.5)/epsilon_max;
-	        Dv=Dv*ff;
-	      }
-	      Dv=scale_factor*Dv;
-	      gvelocity_star[n][c]+=Dv;
+                double ff=Min(epsilon_max,.5)/epsilon_max;
+                Dv=Dv*ff;
+              }
+              Dv=scale_factor*Dv;
+              gvelocity_star[n][c]+=Dv;
             } // if approaching
-	  }   // if !compare && !compare
+          }   // if !compare && !compare
         }     // for numMatls
        }      // volume constraint
       }       // if centerofmass > 0
@@ -516,10 +516,10 @@ void ApproachContact::exMomIntegrated(const ProcessorGroup*,
       double c_v = mpm_matl->getSpecificHeat();
       for(NodeIterator iter = patch->getNodeIterator__New(); !iter.done(); iter++){
         IntVector c = *iter;
-       	frictionWork[m][c] /= (c_v * gmass[m][c] * delT);
+        frictionWork[m][c] /= (c_v * gmass[m][c] * delT);
         if(frictionWork[m][c]<0.0){
-	  cout << "dT/dt is negative: " << frictionWork[m][c] << endl;
-	}
+          cout << "dT/dt is negative: " << frictionWork[m][c] << endl;
+        }
       }
     }
 
@@ -527,8 +527,8 @@ void ApproachContact::exMomIntegrated(const ProcessorGroup*,
 }
 
 void ApproachContact::addComputesAndRequiresInterpolated(SchedulerP & sched,
-					     const PatchSet* patches,
-					     const MaterialSet* ms) 
+                                             const PatchSet* patches,
+                                             const MaterialSet* ms) 
 {
   Task * t = scinew Task("ApproachContact::exMomInterpolated", 
                       this, &ApproachContact::exMomInterpolated);
@@ -558,8 +558,8 @@ void ApproachContact::addComputesAndRequiresInterpolated(SchedulerP & sched,
 }
 
 void ApproachContact::addComputesAndRequiresIntegrated(SchedulerP & sched,
-					     const PatchSet* patches,
-					     const MaterialSet* ms) 
+                                             const PatchSet* patches,
+                                             const MaterialSet* ms) 
 {
   Task * t = scinew Task("ApproachContact::exMomIntegrated", 
                       this, &ApproachContact::exMomIntegrated);

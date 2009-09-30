@@ -78,13 +78,13 @@ WARNING
 
       class ApproachContact : public Contact {
       private:
-	 
-	 // Prevent copying of this class
-	 // copy constructor
-	 ApproachContact(const ApproachContact &con);
-	 ApproachContact& operator=(const ApproachContact &con);
-	 
-	 SimulationStateP    d_sharedState;
+         
+         // Prevent copying of this class
+         // copy constructor
+         ApproachContact(const ApproachContact &con);
+         ApproachContact& operator=(const ApproachContact &con);
+         
+         SimulationStateP    d_sharedState;
          
          // Coefficient of friction
          double d_mu;
@@ -95,36 +95,36 @@ WARNING
          int NGN;
 
       public:
-	 // Constructor
-	 ApproachContact(const ProcessorGroup* myworld,
+         // Constructor
+         ApproachContact(const ProcessorGroup* myworld,
                          ProblemSpecP& ps, SimulationStateP& d_sS,MPMLabel* lb,
-			 MPMFlags* Mflag);
-	 
-	 // Destructor
-	 virtual ~ApproachContact();
+                         MPMFlags* Mflag);
+         
+         // Destructor
+         virtual ~ApproachContact();
 
          virtual void outputProblemSpec(ProblemSpecP& ps);
 
-	 // Basic contact methods
-	 virtual void exMomInterpolated(const ProcessorGroup*,
-					const PatchSubset* patches,
-					const MaterialSubset* matls,
-					DataWarehouse* old_dw,
-					DataWarehouse* new_dw);
-	 
-	 virtual void exMomIntegrated(const ProcessorGroup*,
-				      const PatchSubset* patches,
-				      const MaterialSubset* matls,
-				      DataWarehouse* old_dw,
-				      DataWarehouse* new_dw);
-	 
+         // Basic contact methods
+         virtual void exMomInterpolated(const ProcessorGroup*,
+                                        const PatchSubset* patches,
+                                        const MaterialSubset* matls,
+                                        DataWarehouse* old_dw,
+                                        DataWarehouse* new_dw);
+         
+         virtual void exMomIntegrated(const ProcessorGroup*,
+                                      const PatchSubset* patches,
+                                      const MaterialSubset* matls,
+                                      DataWarehouse* old_dw,
+                                      DataWarehouse* new_dw);
+         
          virtual void addComputesAndRequiresInterpolated(SchedulerP & sched,
-					     const PatchSet* patches,
-					     const MaterialSet* matls);
+                                             const PatchSet* patches,
+                                             const MaterialSet* matls);
 
          virtual void addComputesAndRequiresIntegrated(SchedulerP & sched,
-					     const PatchSet* patches,
-					     const MaterialSet* matls);
+                                             const PatchSet* patches,
+                                             const MaterialSet* matls);
       };
 } // End namespace Uintah
       

@@ -53,7 +53,7 @@ using namespace Uintah;
 
 NullContact::NullContact(const ProcessorGroup* myworld,
                          SimulationStateP& d_sS,
-			 MPMLabel* Mlb,MPMFlags* MFlags)
+                         MPMLabel* Mlb,MPMFlags* MFlags)
   : Contact(myworld, Mlb, MFlags, 0)
 {
   // Constructor
@@ -76,24 +76,24 @@ void NullContact::outputProblemSpec(ProblemSpecP& ps)
 
 
 void NullContact::exMomInterpolated(const ProcessorGroup*,
-				    const PatchSubset* patches,
-				    const MaterialSubset* matls,
-				    DataWarehouse* /*old_dw*/,
-				    DataWarehouse* new_dw)
+                                    const PatchSubset* patches,
+                                    const MaterialSubset* matls,
+                                    DataWarehouse* /*old_dw*/,
+                                    DataWarehouse* new_dw)
 {
 }
 
 void NullContact::exMomIntegrated(const ProcessorGroup*,
-				    const PatchSubset* patches,
-				    const MaterialSubset* matls,
-				    DataWarehouse* /*old_dw*/,
-				    DataWarehouse* new_dw)
+                                    const PatchSubset* patches,
+                                    const MaterialSubset* matls,
+                                    DataWarehouse* /*old_dw*/,
+                                    DataWarehouse* new_dw)
 {
 }
 
 void NullContact::addComputesAndRequiresInterpolated(SchedulerP & sched,
-						const PatchSet* patches,
-						const MaterialSet* ms)
+                                                const PatchSet* patches,
+                                                const MaterialSet* ms)
 {
   Task * t = scinew Task("NullContact::exMomInterpolated", this, &NullContact::exMomInterpolated);
   
@@ -101,8 +101,8 @@ void NullContact::addComputesAndRequiresInterpolated(SchedulerP & sched,
 }
 
 void NullContact::addComputesAndRequiresIntegrated(SchedulerP & sched,
-					     const PatchSet* patches,
-					     const MaterialSet* ms) 
+                                             const PatchSet* patches,
+                                             const MaterialSet* ms) 
 {
   Task * t = scinew Task("NullContact::exMomIntegrated", this, &NullContact::exMomIntegrated);
   
