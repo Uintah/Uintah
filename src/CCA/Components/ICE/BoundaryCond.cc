@@ -167,7 +167,7 @@ void ImplicitMatrixBC( CCVariable<Stencil7>& A,
              <<"\t child " << child  <<" NumChildren "<<numChildren 
              <<"\t BC kind "<< bc_kind
              <<"\t bound limits = "<< *bound_ptr.begin()<< " "<< *(bound_ptr.end()-1)
-	      << endl;
+              << endl;
         #endif
       } // if (bc_kind !=notSet)
     } // child loop
@@ -288,7 +288,7 @@ void set_imp_DelP_BC( CCVariable<double>& imp_delP,
                <<"\t child " << child  <<" NumChildren "<<numChildren
                <<"\t BC kind "<< bc_kind <<" \tBC value "<< bc_value
                <<"\t bound limits = "<< bound_ptr.begin()<< " "<< bound_ptr.end()
-	        << endl;
+                << endl;
         }
       } // if(foundIterator)
     } // child loop
@@ -509,7 +509,7 @@ void setBC(CCVariable<double>& press_CC,
       
       bool foundIterator = 
         getIteratorBCValueBCKind<double>( patch, face, child, kind, mat_id,
-					       bc_value, bound_ptr,bc_kind); 
+                                               bc_value, bound_ptr,bc_kind); 
                                    
       if(foundIterator && bc_kind != "LODI") {
         // define what a symmetric  pressure BC means
@@ -518,8 +518,8 @@ void setBC(CCVariable<double>& press_CC,
         }
 
         IveSetBC = setNeumanDirichletBC<double>(patch, face, press_CC,bound_ptr, 
-						  bc_kind, bc_value, cell_dx,
-						  mat_id,child);
+                                                  bc_kind, bc_value, cell_dx,
+                                                  mat_id,child);
                                           
         //__________________________________
         //  method of manufactured solutions
@@ -608,7 +608,7 @@ void setBC(CCVariable<double>& press_CC,
                <<"\t child " << child  <<" NumChildren "<<numChildren 
                <<"\t BC kind "<< bc_kind <<" \tBC value "<< bc_value
                <<"\t bound limits = "<< bound_ptr.begin()<< " "<< bound_ptr.end()
-	        << endl;
+                << endl;
         }
       }  // if bcKind != notSet
     }  // child loop
@@ -676,7 +676,7 @@ void setBC(CCVariable<double>& var_CC,
 
       bool foundIterator = 
         getIteratorBCValueBCKind<double>( patch, face, child, desc, mat_id,
-					       bc_value, bound_ptr,bc_kind); 
+                                               bc_value, bound_ptr,bc_kind); 
                                                 
       if (foundIterator && bc_kind != "LODI") {
         //__________________________________
@@ -692,7 +692,7 @@ void setBC(CCVariable<double>& var_CC,
         //__________________________________
         // Apply the boundary condition
         IveSetBC =  setNeumanDirichletBC<double>
-	  (patch, face, var_CC,bound_ptr, bc_kind, bc_value, cell_dx,mat_id,child);
+          (patch, face, var_CC,bound_ptr, bc_kind, bc_value, cell_dx,mat_id,child);
         
         if ( desc == "Temperature" &&custom_BC_basket->setMicroSlipBcs) {
           set_MicroSlipTemperature_BC(patch,face,var_CC,
@@ -733,7 +733,7 @@ void setBC(CCVariable<double>& var_CC,
                <<"\t child " << child  <<" NumChildren "<<numChildren 
                <<"\t BC kind "<< bc_kind <<" \tBC value "<< bc_value
                <<"\t bound limits = "<< bound_ptr.begin()<< " "<< bound_ptr.end()
-	        << endl;
+                << endl;
         }
       }  // if bc_kind != notSet  
     }  // child loop
@@ -794,13 +794,13 @@ void setBC(CCVariable<Vector>& var_CC,
       
       bool foundIterator = 
           getIteratorBCValueBCKind<Vector>(patch, face, child, desc, mat_id,
-				                bc_value, bound_ptr ,bc_kind);
+                                                bc_value, bound_ptr ,bc_kind);
      
       if (foundIterator && bc_kind != "LODI") {
  
         IveSetBC = setNeumanDirichletBC<Vector>(patch, face, var_CC, bound_ptr, 
-						bc_kind, bc_value, cell_dx,
-						mat_id,child);
+                                                bc_kind, bc_value, cell_dx,
+                                                mat_id,child);
         //__________________________________
         //  Custom Boundary Conditions
         if ( custom_BC_basket->setMicroSlipBcs) {
@@ -847,7 +847,7 @@ void setBC(CCVariable<Vector>& var_CC,
                <<"\t child " << child  <<" NumChildren "<<numChildren 
                <<"\t BC kind "<< bc_kind <<" \tBC value "<< bc_value
                  <<"\t bound limits = " <<bound_ptr.begin()<<" "<< bound_ptr.end()
-	        << endl;
+                << endl;
         }
       }  // if (bcKind != "notSet") 
     }  // child loop
@@ -891,7 +891,7 @@ void setSpecificVolBC(CCVariable<double>& sp_vol_CC,
       
       bool foundIterator = 
         getIteratorBCValueBCKind<double>( patch, face, child, kind, mat_id,
-					       bc_value, bound_ptr,bc_kind); 
+                                               bc_value, bound_ptr,bc_kind); 
                                    
       if(foundIterator) {
         if( bc_kind == "symmetric"){
@@ -899,8 +899,8 @@ void setSpecificVolBC(CCVariable<double>& sp_vol_CC,
         }
        
         IveSetBC = setNeumanDirichletBC<double>(patch, face, sp_vol_CC, bound_ptr, 
-						  bc_kind, bc_value, cell_dx,
-						  mat_id,child);
+                                                  bc_kind, bc_value, cell_dx,
+                                                  mat_id,child);
 
         if(bc_kind == "computeFromDensity"){
         
@@ -925,7 +925,7 @@ void setSpecificVolBC(CCVariable<double>& sp_vol_CC,
                <<"\t child " << child  <<" NumChildren "<<numChildren 
                <<"\t BC kind "<< bc_kind <<" \tBC value "<< bc_value
                <<"\t bound limits = "<< bound_ptr.begin()<< " "<< bound_ptr.end()
-	        << endl;
+                << endl;
         }
       }  // if iterator found
     }  // child loop

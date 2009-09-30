@@ -1293,7 +1293,7 @@ void ICE::scheduleComputeDelPressAndUpdatePressCC(SchedulerP& sched,
                                             const PatchSet* patches,
                                             const MaterialSubset* press_matl,
                                             const MaterialSubset* ice_matls,
-					    const MaterialSubset* /*mpm_matls*/,
+                                            const MaterialSubset* /*mpm_matls*/,
                                             const MaterialSet* matls)
 {
   int levelIndex = getLevel(patches)->getIndex();
@@ -1368,11 +1368,11 @@ void ICE::scheduleComputePressFC(SchedulerP& sched,
 _____________________________________________________________________*/
 void
 ICE::scheduleAccumulateMomentumSourceSinks(SchedulerP& sched,
-					   const PatchSet* patches,
-					   const MaterialSubset* press_matl,
-					   const MaterialSubset* ice_matls,
-					   const MaterialSubset* /*mpm_matls_sub*/,
-					   const MaterialSet* matls)
+                                           const PatchSet* patches,
+                                           const MaterialSubset* press_matl,
+                                           const MaterialSubset* ice_matls,
+                                           const MaterialSubset* /*mpm_matls_sub*/,
+                                           const MaterialSet* matls)
 {
   int levelIndex = getLevel(patches)->getIndex();
   Task* t;
@@ -2291,8 +2291,8 @@ void ICE::initializeSubTask_hydrostaticAdj(const ProcessorGroup*,
  
       Patch::FaceType dummy = Patch::invalidFace; // This is a dummy variable
       ice_matl->getEOS()->computeTempCC( patch, "WholeDomain",
-					 press_CC, gamma, cv,
-					 rho_micro, Temp, dummy );
+                                         press_CC, gamma, cv,
+                                         rho_micro, Temp, dummy );
 
       //__________________________________
       //  Print Data
@@ -3262,7 +3262,7 @@ template<class V, class T>
     //  - Form RHS (b) 
     for(int m = 0; m < numMatls; m++)  {
       b_sp_vol[m] = 2.0 * (sp_vol_CC[m][adj] * sp_vol_CC[m][c])/
-	(sp_vol_CC[m][adj] + sp_vol_CC[m][c]);
+        (sp_vol_CC[m][adj] + sp_vol_CC[m][c]);
       tmp[m] = -0.5 * delT * (vol_frac_CC[m][adj] + vol_frac_CC[m][c]);
       vel[m] = vel_FC[m][c];
     }
@@ -3275,8 +3275,8 @@ template<class V, class T>
       for(int n = 0; n < numMatls; n++)  {
         double b = bm * tmp[n] * K(n,m);
         a(m,n)    = b;
-	betasum -= b;
-	bsum -= b * (vel[n] - vm);
+        betasum -= b;
+        bsum -= b * (vel[n] - vm);
       }
       a(m,m) = betasum;
       b[m] = bsum;
@@ -3765,12 +3765,12 @@ void ICE::zeroModelSources(const ProcessorGroup*,
       for(vector<TransportedVariable*>::iterator
                                     iter = d_modelSetup->tvars.begin();
                                     iter != d_modelSetup->tvars.end(); iter++){
-	TransportedVariable* tvar = *iter;
-	if(tvar->src){
-	  CCVariable<double> model_src;
-	  new_dw->allocateAndPut(model_src, tvar->src, matl, patch);
-	  model_src.initialize(0.0);
-	}
+        TransportedVariable* tvar = *iter;
+        if(tvar->src){
+          CCVariable<double> model_src;
+          new_dw->allocateAndPut(model_src, tvar->src, matl, patch);
+          model_src.initialize(0.0);
+        }
       }
     }
   }
@@ -5746,19 +5746,19 @@ void ICE::getVariableExchangeCoefficients( FastMatrix& ,
       // 1e5  is the lower limit clamp
       // 1e12 is the upper limit clamp
       if (massRatioSqr < 1e-12){
-	H(n,m) = H(m,n) = 1e12;
+        H(n,m) = H(m,n) = 1e12;
       }
       else if (massRatioSqr >= 1e-12 && massRatioSqr < 1e-5){
-	H(n,m) = H(m,n) = 1./massRatioSqr;
+        H(n,m) = H(m,n) = 1./massRatioSqr;
       }
       else if (massRatioSqr >= 1e-5 && massRatioSqr < 1e5){
-	H(n,m) = H(m,n) = 1e5;
+        H(n,m) = H(m,n) = 1e5;
       }
       else if (massRatioSqr >= 1e5 && massRatioSqr < 1e12){
-	H(n,m) = H(m,n) = massRatioSqr;
+        H(n,m) = H(m,n) = massRatioSqr;
       }
       else if (massRatioSqr >= 1e12){
-	H(n,m) = H(m,n) = 1e12;
+        H(n,m) = H(m,n) = 1e12;
       }
 
     }
@@ -5842,8 +5842,8 @@ ICE::ICEModelSetup::~ICEModelSetup()
 }
 
 void ICE::ICEModelSetup::registerTransportedVariable(const MaterialSubset* matls,
-						     const VarLabel* var,
-						     const VarLabel* src)
+                                                     const VarLabel* var,
+                                                     const VarLabel* src)
 {
   TransportedVariable* t = scinew TransportedVariable;
   t->matls = matls;
@@ -5859,7 +5859,7 @@ void ICE::ICEModelSetup::registerTransportedVariable(const MaterialSubset* matls
 //  by the AMR refluxing task.  We're actually
 //  creating the varLabels and putting them is a vector
 void ICE::ICEModelSetup::registerAMR_RefluxVariable(const MaterialSubset* matls,
-						          const VarLabel* var)
+                                                          const VarLabel* var)
 {
   AMR_refluxVariable* t = scinew AMR_refluxVariable;
   t->matls = matls;
@@ -5897,38 +5897,38 @@ ICE::addRefineDependencies( Task*, const VarLabel*, int , int )
 
 void
 ICE::refineBoundaries(const Patch*, CCVariable<double>&,
-			    DataWarehouse*, const VarLabel*,
-			    int, double)
+                            DataWarehouse*, const VarLabel*,
+                            int, double)
 {
   throw InternalError("trying to do AMR iwth the non-AMR component!", __FILE__, __LINE__);
 }
 void
 ICE::refineBoundaries(const Patch*, CCVariable<Vector>&,
-			    DataWarehouse*, const VarLabel*,
-			    int, double)
+                            DataWarehouse*, const VarLabel*,
+                            int, double)
 {
   throw InternalError("trying to do AMR iwth the non-AMR component!", __FILE__, __LINE__);
 }
 void
 ICE::refineBoundaries(const Patch*, SFCXVariable<double>&,
-			    DataWarehouse*, const VarLabel*,
-			    int, double)
+                            DataWarehouse*, const VarLabel*,
+                            int, double)
 {
   throw InternalError("trying to do AMR iwth the non-AMR component!", __FILE__, __LINE__);
 }
 
 void
 ICE::refineBoundaries(const Patch*, SFCYVariable<double>&,
-			    DataWarehouse*, const VarLabel*,
-			    int, double)
+                            DataWarehouse*, const VarLabel*,
+                            int, double)
 {
   throw InternalError("trying to do AMR iwth the non-AMR component!", __FILE__, __LINE__);
 }
 
 void
 ICE::refineBoundaries(const Patch*, SFCZVariable<double>&,
-			    DataWarehouse*, const VarLabel*,
-			    int, double)
+                            DataWarehouse*, const VarLabel*,
+                            int, double)
 {
   throw InternalError("trying to do AMR iwth the non-AMR component!", __FILE__, __LINE__);
 }

@@ -111,7 +111,7 @@ double JWL::computeRhoMicro(double press, double,
       rhoM += delta_new;
       
       if(fabs(delta_new/rhoM)<epsilon){
-	return rhoM;
+        return rhoM;
       }
       
       if(iter>=100){
@@ -125,7 +125,7 @@ double JWL::computeRhoMicro(double press, double,
       }
       
       if(rhoM<IL || rhoM>IR || fabs(delta_new)>fabs(delta_old*0.7)){
-	break;
+        break;
       }
       
       f = func(rhoM);

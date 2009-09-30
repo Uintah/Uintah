@@ -422,9 +422,9 @@ void ICE::setupMatrix(const ProcessorGroup*,
     DataWarehouse* whichDW = old_dw;
 
     DataWarehouse* parent_old_dw = 
-	  new_dw->getOtherDataWarehouse(Task::ParentOldDW); 
+          new_dw->getOtherDataWarehouse(Task::ParentOldDW); 
     DataWarehouse* parent_new_dw = 
-	  new_dw->getOtherDataWarehouse(Task::ParentNewDW);
+          new_dw->getOtherDataWarehouse(Task::ParentNewDW);
             
     delt_vartype delT;
     parent_old_dw->get(delT, d_sharedState->get_delt_label(),level);
@@ -819,9 +819,9 @@ void ICE::updatePressure(const ProcessorGroup*,
 
    // define parent_dw
     DataWarehouse* parent_new_dw = 
-	  new_dw->getOtherDataWarehouse(Task::ParentNewDW); 
+          new_dw->getOtherDataWarehouse(Task::ParentNewDW); 
     DataWarehouse* parent_old_dw = 
-	  new_dw->getOtherDataWarehouse(Task::ParentOldDW);
+          new_dw->getOtherDataWarehouse(Task::ParentOldDW);
                     
     int numMatls  = d_sharedState->getNumMatls(); 
     Ghost::GhostType  gn = Ghost::None;

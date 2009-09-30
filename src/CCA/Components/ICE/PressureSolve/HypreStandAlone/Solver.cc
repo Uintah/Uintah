@@ -615,8 +615,8 @@ Solver::makeGraph(const Hierarchy& hier,
 
 void 
 Solver::makeUnderlyingIdentity(const Counter level,
-			       const HYPRE_SStructStencil& stencil,
-			       const Box& coarseUnderFine)
+                               const HYPRE_SStructStencil& stencil,
+                               const Box& coarseUnderFine)
   // Replace the matrix equations for the underlying coarse box
   // with the identity matrix.
 {
@@ -660,14 +660,14 @@ Solver::makeUnderlyingIdentity(const Counter level,
   Box box(coarseUnderFine);
   dbg0 << "Calling HYPRE_SStructMatrixSetBoxValues A" << "\n";
   HYPRE_SStructMatrixSetBoxValues(_A, level,
-				  box.get(Left).getData(),
-				  box.get(Right).getData(),
-				  0, stencilSize, entries, values);
+                                  box.get(Left).getData(),
+                                  box.get(Right).getData(),
+                                  0, stencilSize, entries, values);
   dbg0 << "Calling HYPRE_SStructVectorSetBoxValues b" << "\n";
   HYPRE_SStructVectorSetBoxValues(_b, level, 
-				  box.get(Left).getData(),
-				  box.get(Right).getData(),
-				  0, rhsValues);
+                                  box.get(Left).getData(),
+                                  box.get(Right).getData(),
+                                  0, rhsValues);
   delete[] values;
   delete[] rhsValues;
   delete[] entries;
@@ -828,14 +828,14 @@ Solver::makeInteriorEquations(const Counter level,
         } // end for s
       } // end for d
 
-	//======== BEGIN GOOD DEBUGGING CHECK =========
-	// This will set the diagonal entry of this cell's equation
-	// to cell so that we can compare our cell numbering with
-	// Hypre's cell numbering within each patch.
-	// Hypre does it like we do: first loop over x, then over y,
-	// then over z.
-	//        values[offsetValues] = cell;
-	//======== END GOOD DEBUGGING CHECK =========
+        //======== BEGIN GOOD DEBUGGING CHECK =========
+        // This will set the diagonal entry of this cell's equation
+        // to cell so that we can compare our cell numbering with
+        // Hypre's cell numbering within each patch.
+        // Hypre does it like we do: first loop over x, then over y,
+        // then over z.
+        //        values[offsetValues] = cell;
+        //======== END GOOD DEBUGGING CHECK =========
 
     } // end for cell
       
@@ -874,8 +874,8 @@ Solver::makeInteriorEquations(const Counter level,
 
 void
 Solver::makeLinearSystem(const Hierarchy& hier,
-			 const HYPRE_SStructGrid& grid,
-			 const HYPRE_SStructStencil& stencil)
+                         const HYPRE_SStructGrid& grid,
+                         const HYPRE_SStructStencil& stencil)
   //_____________________________________________________________________
   // Function Solver::makeLinearSystem~
   // Initialize the linear system: set up the values on the links of the
