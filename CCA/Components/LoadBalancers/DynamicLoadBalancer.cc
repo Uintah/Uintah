@@ -61,6 +61,7 @@ static DebugStream lb("DynamicLoadBalancer_lb", false);
 static DebugStream dbg("DynamicLoadBalancer", false);
 static DebugStream stats("LBStats",false);
 static DebugStream times("LBTimes",false);
+static DebugStream lbout("LBOut",false);
 double lbtimes[5]={0};
 
 DynamicLoadBalancer::DynamicLoadBalancer(const ProcessorGroup* myworld)
@@ -692,11 +693,15 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
   double time = Time::currentSeconds();
   for(int i=0;i<5;i++)
     lbtimes[i]=0;
+      
 
   double start=Time::currentSeconds();
   
   lbtimes[0]+=Time::currentSeconds()-start;
   start=Time::currentSeconds();
+
+  static int lbiter=-1; //counter to identify which regrid
+  lbiter++;
 
   int num_procs = d_myworld->size();
 
@@ -937,6 +942,24 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
       stats << "LoadBalance Stats level(" << l << "):"  << " Mean:" << meanCost << " Min:" << minCost << " Max:" << maxCost << " Imb:" << 1-meanCost/maxCost << " max on:" << maxProc << endl;
     }  
 
+    if(lbout.active() && d_myworld->myrank()==0)
+    {
+      for(int p=0;p<num_patches;p++)
+      {
+        int index; //compute order index
+        if (d_doSpaceCurve) {
+          index = order[p];
+        }
+        else {
+          // not attempting space-filling curve
+          index = p;
+        }
+
+        //output load balance information
+        lbout << lbiter << " " << l << " " << index << " " << d_tempAssignment[level_offset+index] << " " <<  patch_costs[l][index] << endl;
+      }
+    }
+    
     level_offset+=num_patches;
     lbtimes[4]+=Time::currentSeconds()-start;
     start=Time::currentSeconds();
@@ -992,6 +1015,7 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
   }
   bool doLoadBalancing = force || thresholdExceeded(patch_costs);
   time = Time::currentSeconds() - time;
+ 
   if (d_myworld->myrank() == 0)
     dbg << " Time to LB: " << time << endl;
   doing << d_myworld->myrank() << "   APF END\n";
@@ -1364,9 +1388,13 @@ void DynamicLoadBalancer::getCosts(const Grid* grid, vector<vector<double> >&cos
 
   //check if the forecaster is ready, if it is use it
   if(d_costForecaster->hasData())
+  {
     d_costForecaster->getWeights(grid,num_particles,costs);
+  }
   else //otherwise just use a simple cost model (this happens on the first timestep when profiling data doesn't exist)
+  {
     CostModeler(d_patchCost,d_cellCost,d_extraCellCost,d_particleCost).getWeights(grid,num_particles,costs);
+  }
 
   if (dbg.active() && d_myworld->myrank() == 0) {
     for (unsigned l = 0; l < costs.size(); l++)
