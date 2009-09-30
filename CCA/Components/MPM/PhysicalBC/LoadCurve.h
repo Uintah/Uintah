@@ -103,7 +103,7 @@ WARNING
       // Get the load at time t
       inline T getLoad(double t) {
 
-	int ntimes = static_cast<int>(d_time.size());
+        int ntimes = static_cast<int>(d_time.size());
          if (t >= d_time[ntimes-1]) return d_load[ntimes-1];
 
          for (int ii = 1; ii < ntimes; ++ii) {
