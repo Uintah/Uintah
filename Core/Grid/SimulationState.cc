@@ -71,16 +71,6 @@ SimulationState::SimulationState(ProblemSpecP &ps)
    d_elapsed_time = 0.0;
    d_needAddMaterial = 0;
 
-  // Get the physical constants that are shared between codes.
-  // For now it is just gravity.
-
-  ProblemSpecP phys_cons_ps = ps->findBlock("PhysicalConstants");
-  if(phys_cons_ps){
-    phys_cons_ps->require("gravity",d_gravity);
-  } else {
-    d_gravity=Vector(0,0,0);
-  }
-
   d_lockstepAMR = false;
   ProblemSpecP amr = ps->findBlock("AMR");
   if (amr)

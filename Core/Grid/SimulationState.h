@@ -166,9 +166,7 @@ public:
   ICEMaterial* getICEMaterial(int idx) const {
     return ice_matls[idx];
   }
-  Vector getGravity() const {
-    return d_gravity;
-  }
+
   void setNeedAddMaterial(int nAM) {
     d_needAddMaterial += nAM;
   }
@@ -299,8 +297,6 @@ private:
   std::vector<Material*> old_matls;
 
   std::map<std::string, Material*> named_matls;
-
-  Vector d_gravity;
 
   MaterialSet    * all_mpm_matls;
   MaterialSet    * all_angio_matls;

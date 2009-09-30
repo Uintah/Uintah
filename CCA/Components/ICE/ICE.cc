@@ -236,13 +236,18 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec,
   ProblemSpecP phys_cons_ps = prob_spec->findBlock("PhysicalConstants");
   if(phys_cons_ps){
     phys_cons_ps->get("reference_pressure",d_ref_press);
+    phys_cons_ps->require("gravity",d_gravity);
   } else {
     d_ref_press=0.;
+    d_gravity=Vector(0,0,0);
   }
 
 
   //__________________________________
   //  Custom BC setup
+
+  d_customBC_var_basket->d_gravity = d_gravity;
+
   d_customBC_var_basket->usingLodi = 
         read_LODI_BC_inputs(prob_spec,      d_customBC_var_basket->Lodi_var_basket);
   d_customBC_var_basket->usingMicroSlipBCs =
@@ -762,7 +767,7 @@ void ICE::scheduleInitialize(const LevelP& level,SchedulerP& sched)
   // Make adjustments to the hydrostatic pressure
   // and temperature fields.  You need to do this
   // after the models have initialized the flowfield
-  Vector grav = d_sharedState->getGravity();
+  Vector grav = getGravity();
   const MaterialSet* ice_matls = d_sharedState->allICEMaterials();
   const MaterialSubset* ice_matls_sub = ice_matls->getUnion();
   if (grav.length() > 0 ) {
@@ -813,7 +818,7 @@ void ICE::restartInitialize()
   }
   
   // --------bulletproofing
-  Vector grav = d_sharedState->getGravity();
+  Vector grav = getGravity();
   if (grav.length() >0.0 && d_surroundingMatl_indx == -9)  {
     throw ProblemSetupException("ERROR ICE::restartInitialize \n"
           "You must have \n" 
@@ -1984,7 +1989,7 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
         faceArea[2] = dx.x() * dx.y();        // Z
 
         double vol = dx.x() * dx.y() * dx.z();  
-        Vector grav = d_sharedState->getGravity();
+        Vector grav = getGravity();
         double grav_vel =  Sqrt( dx.x() * fabs(grav.x()) + 
                                  dx.y() * fabs(grav.y()) + 
                                  dx.z() * fabs(grav.z()) ); 
@@ -2105,7 +2110,7 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
          << "\t\t\t\t ICE \tL-" <<L_indx<< endl;
     int numMatls    = d_sharedState->getNumICEMatls();
     int numALLMatls = d_sharedState->getNumMatls();
-    Vector grav     = d_sharedState->getGravity();
+    Vector grav     = getGravity();
     StaticArray<constCCVariable<double> > placeHolder(0);
     StaticArray<CCVariable<double>   > rho_micro(max_indx);
     StaticArray<CCVariable<double>   > sp_vol_CC(max_indx);
@@ -2982,7 +2987,7 @@ void ICE::computeVel_FC(const ProcessorGroup*,
     int numMatls = d_sharedState->getNumMatls();
     
     Vector dx      = patch->dCell();
-    Vector gravity = d_sharedState->getGravity();
+    Vector gravity = getGravity();
     
     constCCVariable<double> press_CC;
     Ghost::GhostType  gac = Ghost::AroundCells; 
@@ -3866,7 +3871,7 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
     old_dw->get(delT, d_sharedState->get_delt_label(),level);
  
     dx      = patch->dCell();
-    gravity = d_sharedState->getGravity();
+    gravity = getGravity();
     vol     = dx.x() * dx.y() * dx.z();
     double areaX = dx.y() * dx.z();
     double areaY = dx.x() * dx.z();
@@ -5618,7 +5623,7 @@ void ICE::hydrostaticPressureAdjustment(const Patch* patch,
                                 const CCVariable<double>& rho_micro_CC,
                                 CCVariable<double>& press_CC)
 {
-  Vector gravity = d_sharedState->getGravity();
+  Vector gravity = getGravity();
   // find the upper and lower point of the domain.
   const Level* level = patch->getLevel();
   GridP grid = level->getGrid();

@@ -832,6 +832,9 @@ namespace Uintah {
         return d_ref_press;
       }
 
+      Vector getGravity() const {
+        return d_gravity;
+      }
                                  
       // Debugging switches
       bool switchDebug_Initialize;
@@ -989,7 +992,8 @@ namespace Uintah {
       double d_CFL;
       double d_delT_knob;
       int d_max_iceMatl_indx;
-      
+      Vector d_gravity;
+
       //__________________________________
       // needed by printData
       double d_dbgTime; 

@@ -47,6 +47,7 @@ static DebugStream dbg("MPMFlags", false);
 
 MPMFlags::MPMFlags(const ProcessorGroup* myworld)
 {
+  d_gravity = Vector(0.,0.,0.);
   d_interpolator_type = "linear";
   d_integrator_type = "explicit";
   d_integrator = Explicit;
@@ -103,6 +104,14 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps)
 {
   ProblemSpecP root = ps->getRootNode();
   ProblemSpecP mpm_flag_ps = root->findBlock("MPM");
+  ProblemSpecP phys_cons_ps = root->findBlock("PhysicalConstants");
+
+  if(phys_cons_ps){
+    phys_cons_ps->require("gravity",d_gravity);
+  } else {
+    d_gravity=Vector(0,0,0);
+  }
+
 
   if (!mpm_flag_ps)
     return;

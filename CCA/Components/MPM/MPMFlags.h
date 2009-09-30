@@ -61,6 +61,7 @@ namespace Uintah {
       Fracture
     };
 
+    Vector      d_gravity;
     int         d_8or27;// Number of nodes a particle can interact with
     std::string d_interpolator_type; // Type of particle-grid interaction
     bool        d_AMR;  // Do AMR?

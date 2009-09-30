@@ -65,6 +65,15 @@ bool read_LODI_BC_inputs(const ProblemSpecP& prob_spec,
   //__________________________________
   // search the BoundaryConditions problem spec
   // determine if LODI bcs are specified
+
+
+  ProblemSpecP phys_cons_ps = prob_spec->findBlock("PhysicalConstants");
+  if(phys_cons_ps){
+    phys_cons_ps->require("gravity",vb->d_gravity);
+  } else {
+    vb->d_gravity=Vector(0,0,0);
+  }
+
   ProblemSpecP grid_ps= prob_spec->findBlock("Grid");
   ProblemSpecP bc_ps  = grid_ps->findBlock("BoundaryConditions");
  
@@ -751,7 +760,7 @@ void computeLi(StaticArray<CCVariable<Vector> >& L,
   GridP grid = level->getGrid();
   grid->getLength(domainLength, "minusExtraCells");
   
-  Vector grav = sharedState->getGravity();
+  Vector grav = user_inputs->d_gravity;
 
   for (int i = 1; i<= 5; i++ ) {           // don't initialize inside main loop
     L[i].initialize(Vector(0.0,0.0,0.0));  // you'll overwrite previously compute LI
