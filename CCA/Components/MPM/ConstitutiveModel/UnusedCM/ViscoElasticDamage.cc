@@ -36,24 +36,24 @@ DEALINGS IN THE SOFTWARE.
 //    Mechanics (CDM) with following assumptions:
 //      i.   Standard solid type of viscoelastic behavior with linear rate
 //           equation.
-//	ii.  Free energy equation is uncoupled as volumetric and deviatoric
-//	     parts and the equation is the same as Neo-Hookean model (refer:
-//	     CompNeoHook.h and CompNeoHook.cc).
-//	iii. The damage mechanism is associated with maximum distortional
-//	     energy and is independent of hydrostatic pressure.
-//	iv.  The damage criterion is only function of equivalent strain. 
-//	v.   The damage process character function has exponential form.
+//      ii.  Free energy equation is uncoupled as volumetric and deviatoric
+//           parts and the equation is the same as Neo-Hookean model (refer:
+//           CompNeoHook.h and CompNeoHook.cc).
+//      iii. The damage mechanism is associated with maximum distortional
+//           energy and is independent of hydrostatic pressure.
+//      iv.  The damage criterion is only function of equivalent strain. 
+//      v.   The damage process character function has exponential form.
 //    Material property constants:
-//	Elasticity: Young's modulus, Poisson's ratio;
-//	Damage parameters: alpha[0, infinity), beta[0, 1].
+//      Elasticity: Young's modulus, Poisson's ratio;
+//      Damage parameters: alpha[0, infinity), beta[0, 1].
 //      Visco properties: tau[0,infinity) -- relaxation time,
 //                        gamma[0,1) -- stiffness ratio.
 //  Reference: "ON A FULLY THREE-DIMENSIONAL FINITE-STRAIN VISCOELASTIC
-//		DAMAGE MODEL: FORMULATION AND COMPUTATIONAL ASPECTS", by
-//		J.C.Simo, Computer Methods in Applied Mechanics and
-//		Engineering 60 (1987) 153-173.
-//		"COMPUTATIONAL INELASTICITY" by J.C.Simo & T.J.R.Hughes,
-//		Springer, 1997.
+//              DAMAGE MODEL: FORMULATION AND COMPUTATIONAL ASPECTS", by
+//              J.C.Simo, Computer Methods in Applied Mechanics and
+//              Engineering 60 (1987) 153-173.
+//              "COMPUTATIONAL INELASTICITY" by J.C.Simo & T.J.R.Hughes,
+//              Springer, 1997.
 //    Features:
 //      Usage:
 
@@ -82,7 +82,7 @@ ViscoElasticDamage::ViscoElasticDamage(ProblemSpecP& ps)
 
   deformationGradient.Identity();
   bElBar.Identity();
-  damageG = 1.0;	// No damage at beginning
+  damageG = 1.0;        // No damage at beginning
   E_bar.set(0.0);
   // initialization PI function at time=0
   func_PI_n.set(0.0);
@@ -92,14 +92,14 @@ ViscoElasticDamage::ViscoElasticDamage(ProblemSpecP& ps)
 }
 
 void ViscoElasticDamage::addParticleState(std::vector<const VarLabel*>& from,
-				   std::vector<const VarLabel*>& to)
+                                   std::vector<const VarLabel*>& to)
 {
    throw InternalError("ViscoElasticDamage won't work");
 }
 
 ViscoElasticDamage::ViscoElasticDamage(double bulk, double shear,
-       				double alpha, double beta, 
-				double tau, double gamma, double strainmax): 
+                                double alpha, double beta, 
+                                double tau, double gamma, double strainmax): 
   d_Bulk(bulk),d_Shear(shear),d_Alpha(alpha),d_Beta(beta),
   d_Tau(tau),d_Gamma(gamma), maxEquivStrain(strainmax)
 {
@@ -108,7 +108,7 @@ ViscoElasticDamage::ViscoElasticDamage(double bulk, double shear,
 
   deformationGradient.Identity();
   bElBar.Identity();
-  damageG = 1.0;	// No damage at beginning
+  damageG = 1.0;        // No damage at beginning
   E_bar.set(0.0);
   // initialization PI function at time=0
   func_PI_n.set(0.0);
@@ -236,9 +236,9 @@ std::vector<double> ViscoElasticDamage::getMechProps() const
 }
 
 void ViscoElasticDamage::computeStressTensor(const PatchSubset* patches,
-					     const MPMMaterial* matl,
-					     DataWarehouse* old_dw,
-					     DataWarehouse* new_dw)
+                                             const MPMMaterial* matl,
+                                             DataWarehouse* old_dw,
+                                             DataWarehouse* new_dw)
 {
 #ifdef WONT_COMPILE_YET
   Matrix3 bElBarTrial,shearTrial,fbar,F_bar,C_bar,C_nn;
@@ -266,7 +266,7 @@ void ViscoElasticDamage::computeStressTensor(const PatchSubset* patches,
   deformationGradient = deformationGradientInc * deformationGradient;
 
   fbar = deformationGradientInc *
-			pow(deformationGradientInc.Determinant(),-onethird);
+                        pow(deformationGradientInc.Determinant(),-onethird);
 
   F_bar = deformationGradient*pow(deformationGradient.Determinant(),-onethird);
 
@@ -279,13 +279,13 @@ void ViscoElasticDamage::computeStressTensor(const PatchSubset* patches,
   // Calculate equivalent strain
   equiv_strain = sqrt(d_Shear*(C_bar.Trace() - 3.0));
   maxEquivStrain = (maxEquivStrain > equiv_strain) ? 
-				maxEquivStrain : equiv_strain;
+                                maxEquivStrain : equiv_strain;
 
   // Normal of the damage surface
   damage_normal = Identity * d_Shear / (2.0*equiv_strain);
 
   // Check damage criterion
-  if ( equiv_strain == maxEquivStrain && maxEquivStrain != 0.0)	
+  if ( equiv_strain == maxEquivStrain && maxEquivStrain != 0.0) 
   // on damage surface
   {
     Ebar_increament = current_E_bar - E_bar;
@@ -295,19 +295,19 @@ void ViscoElasticDamage::computeStressTensor(const PatchSubset* patches,
           damage_flag += damage_normal(damage_i, damage_j) *
                         Ebar_increament(damage_i, damage_j);
 
-       if (damage_flag > 0.0)	// loading: further damage 
-     	  damageG = d_Beta + (1-d_Beta) * (1-exp(-maxEquivStrain/d_Alpha))
-    			/ (maxEquivStrain/d_Alpha);
+       if (damage_flag > 0.0)   // loading: further damage 
+          damageG = d_Beta + (1-d_Beta) * (1-exp(-maxEquivStrain/d_Alpha))
+                        / (maxEquivStrain/d_Alpha);
   } // end if
   E_bar = current_E_bar;
 
   Matrix3 temp_matrix3;
   temp_matrix3 = Identity*d_Shear/2.0 - C_nn.Inverse()*
-					C_nn.Trace()*d_Shear/6.0;
+                                        C_nn.Trace()*d_Shear/6.0;
   func_PI_nn =  temp_matrix3 * damageG;
   dt_tau = time_step/d_Tau;
   func_Hbar_nn = func_Hbar_n * exp(-dt_tau) + 
-		 (func_PI_nn - func_PI_n) * (1.0-exp(-dt_tau))/dt_tau;
+                 (func_PI_nn - func_PI_n) * (1.0-exp(-dt_tau))/dt_tau;
   func_PI_n = func_PI_nn;
   func_Hbar_n = func_Hbar_nn;
   
@@ -315,11 +315,11 @@ void ViscoElasticDamage::computeStressTensor(const PatchSubset* patches,
   double temp_double = 0.0; 
   for( int damage_i=1; damage_i<=3; damage_i++)
        for( int damage_j=1; damage_j<=3; damage_j++)
-	  temp_double += temp_par(damage_i, damage_j) * 
-					C_nn(damage_i, damage_j); 
+          temp_double += temp_par(damage_i, damage_j) * 
+                                        C_nn(damage_i, damage_j); 
 
   dev_Snn = (temp_par - C_nn.Inverse() * temp_double/3.0) *
-		pow(deformationGradient.Determinant(),-2.0/3.0);
+                pow(deformationGradient.Determinant(),-2.0/3.0);
 
   shearTrial = deformationGradient*dev_Snn*deformationGradient.Transpose();
 
@@ -338,8 +338,8 @@ void ViscoElasticDamage::computeStressTensor(const PatchSubset* patches,
 }
 
 double ViscoElasticDamage::computeStrainEnergy(const Patch* patch,
-					       const MPMMaterial* matl,
-					       DataWarehouse* new_dw)
+                                               const MPMMaterial* matl,
+                                               DataWarehouse* new_dw)
 {
 #ifdef WONT_COMPILE_YET
 
@@ -351,8 +351,8 @@ double ViscoElasticDamage::computeStrainEnergy(const Patch* patch,
 }
 
 void ViscoElasticDamage::initializeCMData(const Patch* patch,
-		      const MPMMaterial* matl,
-		      DataWarehouse* new_dw)
+                      const MPMMaterial* matl,
+                      DataWarehouse* new_dw)
 {
 }
 
@@ -440,7 +440,7 @@ ConstitutiveModel* ViscoElasticDamage::readRestartParametersAndCreate(ProblemSpe
 ConstitutiveModel* ViscoElasticDamage::create(double *p_array)
 {
   return(scinew ViscoElasticDamage(p_array[0],p_array[1],p_array[2],p_array[3],
-		p_array[4],p_array[5],p_array[6]));
+                p_array[4],p_array[5],p_array[6]));
 }
 
 int ViscoElasticDamage::getType() const
@@ -470,8 +470,8 @@ void ViscoElasticDamage::printParameterNames(ofstream& out) const
 }
 
 void ViscoElasticDamage::addComputesAndRequires(Task* task,
-					     const MPMMaterial* matl,
-					     const PatchSet* patches) const
+                                             const MPMMaterial* matl,
+                                             const PatchSet* patches) const
 
 {
    cerr << "ViscoElasticDamage::addComputesAndRequires needs to be filled in\n";

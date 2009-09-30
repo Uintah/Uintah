@@ -182,59 +182,59 @@ WARNING
 
     // compute stable timestep for this patch
     virtual void computeStableTimestep(const Patch* patch,
-				       const MPMMaterial* matl,
-				       DataWarehouse* new_dw);
+                                       const MPMMaterial* matl,
+                                       DataWarehouse* new_dw);
 
     // compute stress at each particle in the patch
     virtual void computeStressTensor(const PatchSubset* patches,
-				     const MPMMaterial* matl,
-				     DataWarehouse* old_dw,
-				     DataWarehouse* new_dw);
+                                     const MPMMaterial* matl,
+                                     DataWarehouse* old_dw,
+                                     DataWarehouse* new_dw);
 
     // initialize  each particle's constitutive model data
     virtual void initializeCMData(const Patch* patch,
-				  const MPMMaterial* matl,
-				  DataWarehouse* new_dw);
+                                  const MPMMaterial* matl,
+                                  DataWarehouse* new_dw);
 
 
     virtual void allocateCMDataAddRequires(Task* task, const MPMMaterial* matl,
-					   const PatchSet* patch, 
-					   MPMLabel* lb) const;
+                                           const PatchSet* patch, 
+                                           MPMLabel* lb) const;
 
     virtual void allocateCMDataAdd(DataWarehouse* new_dw,
-				   ParticleSubset* subset,
-				   map<const VarLabel*, ParticleVariableBase*>* newState,
-				   ParticleSubset* delset,
-				   DataWarehouse* old_dw);
+                                   ParticleSubset* subset,
+                                   map<const VarLabel*, ParticleVariableBase*>* newState,
+                                   ParticleSubset* delset,
+                                   DataWarehouse* old_dw);
 
 
     virtual void addInitialComputesAndRequires(Task* task,
-					       const MPMMaterial* matl,
-					       const PatchSet* patches) const;
+                                               const MPMMaterial* matl,
+                                               const PatchSet* patches) const;
 
     virtual void addComputesAndRequires(Task* task,
-					const MPMMaterial* matl,
-					const PatchSet* patches) const;
+                                        const MPMMaterial* matl,
+                                        const PatchSet* patches) const;
 
     virtual void addComputesAndRequires(Task* task,
-					const MPMMaterial* matl,
-					const PatchSet* patches,
-					const bool recursion) const;
+                                        const MPMMaterial* matl,
+                                        const PatchSet* patches,
+                                        const bool recursion) const;
 
     virtual double computeRhoMicroCM(double pressure,
-				     const double p_ref,
-				     const MPMMaterial* matl);
+                                     const double p_ref,
+                                     const MPMMaterial* matl);
 
     virtual void computePressEOSCM(double rho_m, double& press_eos,
-				   double p_ref,
-				   double& dp_drho, double& ss_new,
-				   const MPMMaterial* matl);
+                                   double p_ref,
+                                   double& dp_drho, double& ss_new,
+                                   const MPMMaterial* matl);
 
     virtual double getCompressibility();
 
 
     virtual void addParticleState(std::vector<const VarLabel*>& from,
-				  std::vector<const VarLabel*>& to);
+                                  std::vector<const VarLabel*>& to);
 
     const VarLabel* pStatedataLabel;
     const VarLabel* pStatedataLabel_preReloc;
@@ -245,11 +245,11 @@ WARNING
     double doRungeKuttaForCrack(double (ViscoScramForBinder::*fptr)(double, 
                                                                     double, 
                                                                     double),
-				double  y, 
+                                double  y, 
                                 double  h,
-				double  K0, 
+                                double  K0, 
                                 double  sigma,
-				double* kk) ;
+                                double* kk) ;
     // Crack growth equations
     double crackGrowthEqn1(double c, double K0, double sigma) ;
     double crackGrowthEqn2(double c, double K0, double sigma) ;
@@ -259,73 +259,73 @@ WARNING
                                                                  double, 
                                                                  double*, 
                                                                  double*, 
-				                                 Matrix3&, 
+                                                                 Matrix3&, 
                                                                  double, 
                                                                  Matrix3*), 
-			       Matrix3* y_n, 
+                               Matrix3* y_n, 
                                double   h, 
-			       double*  rkc, 
+                               double*  rkc, 
                                double   c,
-			       double*  G_n, 
+                               double*  G_n, 
                                double*  Tau_n, 
-			       Matrix3& eDot, 
+                               Matrix3& eDot, 
                                double   cDot,
-			       Matrix3* y_rk);
+                               Matrix3* y_rk);
 
     // Deviatoric stress equations
     void stressEqnWithCrack(Matrix3* S_n, 
                             double   c,
-			    double*  G_n, 
+                            double*  G_n, 
                             double*  Tau_n,
-			    Matrix3& eDot, 
+                            Matrix3& eDot, 
                             double   cDot, 
                             Matrix3* k_n);
 
     void stressEqnWithoutCrack(Matrix3* S_n, 
                                double   c,
-		               double*  G_n, 
+                               double*  G_n, 
                                double*  Tau_n,
-		               Matrix3& eDot, 
+                               Matrix3& eDot, 
                                double   cDot, 
                                Matrix3* k_n);
 
     // Solve the stress equation using a fourth-order Runge-Kutta scheme
     void doRungeKuttaForStressAlt(void (ViscoScramForBinder::*fptr)
-				       (int, Matrix3&, double, double, 
-				        Matrix3&, Matrix3&, double,
-				        double, Matrix3&, double, 
-				        Matrix3&), 
-				  Matrix3* y_n,
-				  double h, 
-				  double* rkc, 
-				  double c,
-				  double* G_n, 
-				  double* RTau_n, 
-				  Matrix3& DPrime,
-				  double cDot,
-				  Matrix3* y_rk);
+                                       (int, Matrix3&, double, double, 
+                                        Matrix3&, Matrix3&, double,
+                                        double, Matrix3&, double, 
+                                        Matrix3&), 
+                                  Matrix3* y_n,
+                                  double h, 
+                                  double* rkc, 
+                                  double c,
+                                  double* G_n, 
+                                  double* RTau_n, 
+                                  Matrix3& DPrime,
+                                  double cDot,
+                                  Matrix3* y_rk);
       void stressEqnWithCrack(int index,
-			      Matrix3& S_n,
-			      double c,
-			      double G,
-			      Matrix3& sumS_nOverTau_n,
-			      Matrix3& S,
-			      double G_n,
-			      double RTau_n,
-			      Matrix3& DPrime,
-			      double cDot,
-			      Matrix3& k_n);
+                              Matrix3& S_n,
+                              double c,
+                              double G,
+                              Matrix3& sumS_nOverTau_n,
+                              Matrix3& S,
+                              double G_n,
+                              double RTau_n,
+                              Matrix3& DPrime,
+                              double cDot,
+                              Matrix3& k_n);
       void stressEqnWithoutCrack(int index,
-				 Matrix3& S_n,
-				 double ,
-				 double ,
-				 Matrix3& ,
-				 Matrix3& ,
-				 double G_n,
-				 double RTau_n,
-				 Matrix3& DPrime,
-				 double ,
-				 Matrix3& k_n);
+                                 Matrix3& S_n,
+                                 double ,
+                                 double ,
+                                 Matrix3& ,
+                                 Matrix3& ,
+                                 double G_n,
+                                 double RTau_n,
+                                 Matrix3& DPrime,
+                                 double ,
+                                 Matrix3& k_n);
   };
 
 } // End namespace Uintah

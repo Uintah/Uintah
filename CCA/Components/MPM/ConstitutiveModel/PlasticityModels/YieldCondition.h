@@ -56,7 +56,7 @@ namespace Uintah {
   class YieldCondition {
 
   public:
-	 
+         
     //! Construct a yield condition.  
     /*! This is an abstract base class. */
     YieldCondition();
@@ -66,7 +66,7 @@ namespace Uintah {
     virtual ~YieldCondition();
 
     virtual void outputProblemSpec(ProblemSpecP& ps) = 0;
-	 
+         
     /////////////////////////////////////////////////////////////////////////
     /*! 
       \brief Evaluate the yield function \f$(\Phi)\f$.
@@ -108,9 +108,9 @@ namespace Uintah {
     */
     /////////////////////////////////////////////////////////////////////////
     virtual void evalDevDerivOfYieldFunction(const Matrix3& stress,
-					     const double flowStress,
-					     const double porosity,
-					     Matrix3& derivative) = 0;
+                                             const double flowStress,
+                                             const double porosity,
+                                             Matrix3& derivative) = 0;
 
     /*! Evaluate the yield condition - \f$ sigma \f$ is the Cauchy stress
     and \f$ \beta \f$ is the back stress */
@@ -159,19 +159,19 @@ namespace Uintah {
     */
     /////////////////////////////////////////////////////////////////////////
     virtual void computeElasPlasTangentModulus(const TangentModulusTensor& Ce,
-					       const Matrix3& sigma, 
-					       double sigY,
-					       double dsigYdV,
-					       double porosity,
-					       double voidNuclFac,
-					       TangentModulusTensor& Cep) = 0;
+                                               const Matrix3& sigma, 
+                                               double sigY,
+                                               double dsigYdV,
+                                               double porosity,
+                                               double voidNuclFac,
+                                               TangentModulusTensor& Cep) = 0;
 
     /*! Compute continuum elastic-plastic tangent modulus.
        df_dsigma = r */ 
     virtual void computeElasPlasTangentModulus(const Matrix3& r, 
-					       const Matrix3& df_ds, 
+                                               const Matrix3& df_ds, 
                                                const Matrix3& h_beta,
-					       const Matrix3& df_dbeta, 
+                                               const Matrix3& df_dbeta, 
                                                const double& h_alpha,             
                                                const double& df_dep,
                                                const double& h_phi,             
@@ -179,7 +179,7 @@ namespace Uintah {
                                                const double& J,
                                                const double& dp_dJ,
                                                const PlasticityState* state,
-					       TangentModulusTensor& Cep);
+                                               TangentModulusTensor& Cep);
 
   };
 } // End namespace Uintah

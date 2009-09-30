@@ -50,7 +50,7 @@ namespace Uintah {
     ConstantCp& operator=(const ConstantCp &smm);
 
   public:
-	 
+         
     /*! Construct a constant specfic heat model. */
     ConstantCp();
     ConstantCp(ProblemSpecP& ps);
@@ -60,9 +60,9 @@ namespace Uintah {
 
     /*! Destructor of constant specfic heat model.   */
     virtual ~ConstantCp();
-	 
+         
     virtual void outputProblemSpec(ProblemSpecP& ps);
-	 
+         
     /*! Compute the specfic heat */
     double computeSpecificHeat(const PlasticityState* state);
   };

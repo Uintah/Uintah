@@ -323,7 +323,7 @@ void Kayenta::allocateCMDataAdd(DataWarehouse* new_dw,
 
   ParticleSubset::iterator o,n = addset->begin();
   for (o=delset->begin(); o != delset->end(); o++, n++) {
-	  peakI1IDist[*n] = o_peakI1IDist[*o];
+          peakI1IDist[*n] = o_peakI1IDist[*o];
   }
   (*newState)[peakI1IDistLabel]=peakI1IDist.clone();
 
@@ -453,7 +453,7 @@ void Kayenta::computeStressTensor(const PatchSubset* patches,
                            lb->pDeformationMeasureLabel_preReloc,        pset);
     new_dw->allocateAndPut(peakI1IDist_new, peakI1IDistLabel_preReloc,    pset);
 
-	peakI1IDist_new.copyData(peakI1IDist);
+        peakI1IDist_new.copyData(peakI1IDist);
 
     StaticArray<ParticleVariable<double> > ISVs_new(d_NINSV+1);
     for(int i=0;i<d_NINSV;i++){
@@ -560,19 +560,19 @@ void Kayenta::computeStressTensor(const PatchSubset* patches,
         svarg[i]=ISVs[i][idx];
       }
 
-	  // 'Hijack' UI[42] with perturbed value if desired
-	  // put real value of UI[42] in tmp var just in case
-	  if (wdist.Perturb){
-		  double tempVar = UI[42];
-		  UI[42] = peakI1IDist[idx];
+          // 'Hijack' UI[42] with perturbed value if desired
+          // put real value of UI[42] in tmp var just in case
+          if (wdist.Perturb){
+                  double tempVar = UI[42];
+                  UI[42] = peakI1IDist[idx];
 
           KAYENTA_CALC(nblk, d_NINSV, dt, UI, sigarg,
                                      Darray, svarg, USM);
-		  UI[42]=tempVar;
-	  } else {
+                  UI[42]=tempVar;
+          } else {
           KAYENTA_CALC(nblk, d_NINSV, dt, UI, sigarg,
                                      Darray, svarg, USM);
-	  }
+          }
 
       // Unload ISVs from 1D array into ISVs_new 
       for(int i=0;i<d_NINSV;i++){
@@ -650,10 +650,10 @@ void Kayenta::carryForward(const PatchSubset* patches,
     constParticleVariable<double> peakI1IDist;
     ParticleVariable<double> peakI1IDist_new;
 
-	old_dw->get(peakI1IDist, peakI1IDistLabel, pset);
-	new_dw->allocateAndPut(peakI1IDist_new,
-		                   peakI1IDistLabel_preReloc, pset);
-	peakI1IDist_new.copyData(peakI1IDist);
+        old_dw->get(peakI1IDist, peakI1IDistLabel, pset);
+        new_dw->allocateAndPut(peakI1IDist_new,
+                                   peakI1IDistLabel_preReloc, pset);
+        peakI1IDist_new.copyData(peakI1IDist);
 
     // Carry forward the data common to all constitutive models 
     // when using RigidMPM.
@@ -896,9 +896,9 @@ Kayenta::initializeLocalMPMLabels()
                           ParticleVariable<double>::getTypeDescription()));
   }
   peakI1IDistLabel = VarLabel::create("p.peakI1IDist",
-	             ParticleVariable<double>::getTypeDescription());
+                     ParticleVariable<double>::getTypeDescription());
   peakI1IDistLabel_preReloc = VarLabel::create("p.peakI1IDist+",
-	             ParticleVariable<double>::getTypeDescription());
+                     ParticleVariable<double>::getTypeDescription());
 }
 
 

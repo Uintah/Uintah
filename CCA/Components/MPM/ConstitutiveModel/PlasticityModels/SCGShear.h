@@ -56,7 +56,7 @@ namespace Uintah {
     SCGShear& operator=(const SCGShear &smm);
 
   public:
-	 
+         
     /*! Construct a constant shear modulus model. */
     SCGShear(ProblemSpecP& ps);
 
@@ -67,7 +67,7 @@ namespace Uintah {
     virtual ~SCGShear();
 
     virtual void outputProblemSpec(ProblemSpecP& ps);
-	 
+         
     /*! Compute the shear modulus */
     double computeShearModulus(const PlasticityState* state);
   };

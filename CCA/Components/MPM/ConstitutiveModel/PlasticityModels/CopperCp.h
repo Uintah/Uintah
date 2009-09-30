@@ -79,7 +79,7 @@ namespace Uintah {
     CopperCp& operator=(const CopperCp &smm);
 
   public:
-	 
+         
     /*! Construct a copper specific heat model. */
     CopperCp(ProblemSpecP& ps);
 
@@ -88,9 +88,9 @@ namespace Uintah {
 
     /*! Destructor of copper specific heat model.   */
     virtual ~CopperCp();
-	 
+         
     virtual void outputProblemSpec(ProblemSpecP& ps);
-	 
+         
     /*! Compute the specific heat */
     double computeSpecificHeat(const PlasticityState* state);
   };

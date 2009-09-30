@@ -79,7 +79,7 @@ WARNING
   private:
     CMData d_initialData;
     double slope[9];
-	 
+         
     // Prevent copying of this class
     // copy constructor
     //SoilFoam(const SoilFoam &cm);
@@ -89,7 +89,7 @@ WARNING
     // constructor
     SoilFoam(ProblemSpecP& ps, MPMFlags* flag);
     SoilFoam(const SoilFoam* cm);
-	 
+         
     // destructor 
     virtual ~SoilFoam();
 
@@ -98,17 +98,17 @@ WARNING
     // clone
 
     SoilFoam* clone();
-	 
+         
     // compute stable timestep for this patch
     virtual void computeStableTimestep(const Patch* patch,
-				       const MPMMaterial* matl,
-				       DataWarehouse* new_dw);
-	 
+                                       const MPMMaterial* matl,
+                                       DataWarehouse* new_dw);
+         
     // compute stress at each particle in the patch
     virtual void computeStressTensor(const PatchSubset* patches,
-				     const MPMMaterial* matl,
-				     DataWarehouse* old_dw,
-				     DataWarehouse* new_dw);
+                                     const MPMMaterial* matl,
+                                     DataWarehouse* old_dw,
+                                     DataWarehouse* new_dw);
 
     // carry forward CM data for RigidMPM
     virtual void carryForward(const PatchSubset* patches,
@@ -117,47 +117,47 @@ WARNING
                               DataWarehouse* new_dw);
 
     virtual double computeRhoMicroCM(double pressure,
-				     const double p_ref,
-				     const MPMMaterial* matl);
+                                     const double p_ref,
+                                     const MPMMaterial* matl);
 
     virtual void computePressEOSCM(double rho_m, double& press_eos,
-				   double p_ref,
-				   double& dp_drho, double& ss_new,
-				   const MPMMaterial* matl);
-	 
+                                   double p_ref,
+                                   double& dp_drho, double& ss_new,
+                                   const MPMMaterial* matl);
+         
     virtual double getCompressibility();
 
     // initialize  each particle's constitutive model data
     virtual void initializeCMData(const Patch* patch,
-				  const MPMMaterial* matl,
-				  DataWarehouse* new_dw);
+                                  const MPMMaterial* matl,
+                                  DataWarehouse* new_dw);
 
     virtual void allocateCMDataAddRequires(Task* task, const MPMMaterial* matl,
-					   const PatchSet* patch, 
-					   MPMLabel* lb) const;
+                                           const PatchSet* patch, 
+                                           MPMLabel* lb) const;
 
     virtual void allocateCMDataAdd(DataWarehouse* new_dw,
-				   ParticleSubset* addset,
-				   map<const VarLabel*, ParticleVariableBase*>* newState,
-				   ParticleSubset* delset,
-				   DataWarehouse* old_dw);
+                                   ParticleSubset* addset,
+                                   map<const VarLabel*, ParticleVariableBase*>* newState,
+                                   ParticleSubset* delset,
+                                   DataWarehouse* old_dw);
 
-	 
+         
     virtual void addInitialComputesAndRequires(Task* task,
                                                const MPMMaterial* matl,
                                                const PatchSet* patches) const;
 
     virtual void addComputesAndRequires(Task* task,
-					const MPMMaterial* matl,
-					const PatchSet* patches) const;
+                                        const MPMMaterial* matl,
+                                        const PatchSet* patches) const;
 
     virtual void addComputesAndRequires(Task* task,
-					const MPMMaterial* matl,
-					const PatchSet* patches,
-					const bool recursion) const;
+                                        const MPMMaterial* matl,
+                                        const PatchSet* patches,
+                                        const bool recursion) const;
 
     virtual void addParticleState(std::vector<const VarLabel*>& from,
-				  std::vector<const VarLabel*>& to);
+                                  std::vector<const VarLabel*>& to);
 
     const VarLabel *sv_minLabel,          *p_sv_minLabel;
     const VarLabel *sv_minLabel_preReloc, *p_sv_minLabel_preReloc;

@@ -59,7 +59,7 @@ void NoneCheck::outputProblemSpec(ProblemSpecP& ps)
   stability_ps->setAttribute("type","none");
 
 }
-	 
+         
 bool 
 NoneCheck::checkStability(const Matrix3& ,
                           const Matrix3& ,

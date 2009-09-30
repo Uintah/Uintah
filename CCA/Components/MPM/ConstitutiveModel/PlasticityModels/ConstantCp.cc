@@ -31,7 +31,7 @@ DEALINGS IN THE SOFTWARE.
 #include "ConstantCp.h"
 
 using namespace Uintah;
-	 
+         
 // Construct a specific heat model.  
 ConstantCp::ConstantCp()
 {
@@ -50,7 +50,7 @@ ConstantCp::ConstantCp(const ConstantCp* )
 ConstantCp::~ConstantCp()
 {
 }
-	 
+         
 void ConstantCp::outputProblemSpec(ProblemSpecP& ps)
 {
   ProblemSpecP cm_ps = ps->appendChild("specific_heat_model");

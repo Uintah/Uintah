@@ -46,7 +46,7 @@ KinematicHardeningModel::~KinematicHardeningModel()
   VarLabel::destroy(pBackStressLabel);
   VarLabel::destroy(pBackStressLabel_preReloc);
 }
-	 
+         
 void 
 KinematicHardeningModel::getBackStress(const particleIndex idx,
                                        Matrix3& backStress)

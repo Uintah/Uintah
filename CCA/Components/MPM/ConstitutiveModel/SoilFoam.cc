@@ -420,7 +420,7 @@ void SoilFoam::computeStressTensor(const PatchSubset* patches,
          pres = p_sv_min[idx] - bulk*(vol_strain - sv_min[idx]);
          p_sv_min_new[idx] = p_sv_min[idx];
          sv_min_new[idx] = sv_min[idx];
-	 //cout <<" unload "<<vol_strain<<" "<<sv_min[idx]<<" "<<pres<<endl;
+         //cout <<" unload "<<vol_strain<<" "<<sv_min[idx]<<" "<<pres<<endl;
 
          // Compute the local sound speed
          c_dil = sqrt((bulk + 4.*G/3.)/rho_cur);
@@ -431,7 +431,7 @@ void SoilFoam::computeStressTensor(const PatchSubset* patches,
             if(vol_strain<d_initialData.eps[i]) i1 = i;
          }
          pres = d_initialData.p[i1] + slope[i1]*(vol_strain - d_initialData.eps[i1]);
-	 //cout <<" load "<<vol_strain<<" "<<sv_min[idx]<<" "<<pres<<endl;
+         //cout <<" load "<<vol_strain<<" "<<sv_min[idx]<<" "<<pres<<endl;
          p_sv_min_new[idx] = pres;
          sv_min_new[idx] = vol_strain;
          // Compute the local sound speed

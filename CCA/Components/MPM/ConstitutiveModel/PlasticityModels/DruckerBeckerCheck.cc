@@ -57,12 +57,12 @@ void DruckerBeckerCheck::outputProblemSpec(ProblemSpecP& ps)
 }
 
 
-	 
+         
 bool 
 DruckerBeckerCheck::checkStability(const Matrix3& stress,
-				   const Matrix3& deformRate ,
-				   const TangentModulusTensor& M ,
-				   Vector& )
+                                   const Matrix3& deformRate ,
+                                   const TangentModulusTensor& M ,
+                                   Vector& )
 {
   // Do the Drucker stability check
   Matrix3 stressRate(0.0);

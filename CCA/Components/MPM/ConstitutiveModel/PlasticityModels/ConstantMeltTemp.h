@@ -50,7 +50,7 @@ namespace Uintah {
     ConstantMeltTemp& operator=(const ConstantMeltTemp &mtm);
 
   public:
-	 
+         
     /*! Construct a constant melt temp model. */
     ConstantMeltTemp();
     ConstantMeltTemp(ProblemSpecP& ps);
@@ -60,7 +60,7 @@ namespace Uintah {
 
     /*! Destructor of constant melt temp model.   */
     virtual ~ConstantMeltTemp();
-	 
+         
     virtual void outputProblemSpec(ProblemSpecP& ps);
 
     /*! Compute the melt temp */

@@ -32,7 +32,7 @@ DEALINGS IN THE SOFTWARE.
 #define __NULL_DAMAGE_MODEL_H__
 
 
-#include "DamageModel.h"	
+#include "DamageModel.h"        
 #include <Core/ProblemSpec/ProblemSpecP.h>
 
 namespace Uintah {
@@ -64,12 +64,12 @@ namespace Uintah {
     NullDamage(); 
     NullDamage(ProblemSpecP& ps); 
     NullDamage(const NullDamage* cm);
-	 
+         
     // destructor 
     virtual ~NullDamage();
 
     virtual void outputProblemSpec(ProblemSpecP& ps);
-	 
+         
     //////////////////////////////////////////////////////////////////////////
     /*! 
       Initialize the damage parameter in the calling function
@@ -87,12 +87,12 @@ namespace Uintah {
     //////////
     // Calculate the scalar damage parameter 
     virtual double computeScalarDamage(const double& plasticStrainRate,
-				       const Matrix3& stress,
-				       const double& temperature,
-				       const double& delT,
-				       const MPMMaterial* matl,
-				       const double& tolerance,
-				       const double& damage_old);
+                                       const Matrix3& stress,
+                                       const double& temperature,
+                                       const double& delT,
+                                       const MPMMaterial* matl,
+                                       const double& tolerance,
+                                       const double& damage_old);
   
   };
 

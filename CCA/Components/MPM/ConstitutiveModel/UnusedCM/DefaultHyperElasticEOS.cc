@@ -29,7 +29,7 @@ DEALINGS IN THE SOFTWARE.
 
 
 
-#include "DefaultHyperElasticEOS.h"	
+#include "DefaultHyperElasticEOS.h"     
 #include <cmath>
 
 using namespace Uintah;
@@ -38,24 +38,24 @@ using namespace SCIRun;
 DefaultHyperElasticEOS::DefaultHyperElasticEOS(ProblemSpecP&)
 {
 } 
-	 
+         
 DefaultHyperElasticEOS::DefaultHyperElasticEOS(const DefaultHyperElasticEOS*)
 {
 } 
-	 
+         
 DefaultHyperElasticEOS::~DefaultHyperElasticEOS()
 {
 }
-	 
+         
 
 //////////
 // Calculate the pressure using the elastic constitutive equation
 double 
 DefaultHyperElasticEOS::computePressure(const MPMMaterial* ,
-					const PlasticityState* state,
-					const Matrix3& deformGrad,
-					const Matrix3& ,
-					const double& )
+                                        const PlasticityState* state,
+                                        const Matrix3& deformGrad,
+                                        const Matrix3& ,
+                                        const double& )
 {
   // Get the state data
   double K = state->bulkModulus;

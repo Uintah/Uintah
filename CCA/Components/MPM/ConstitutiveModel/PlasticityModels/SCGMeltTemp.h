@@ -56,7 +56,7 @@ namespace Uintah {
     SCGMeltTemp& operator=(const SCGMeltTemp &mtm);
 
   public:
-	 
+         
     /*! Construct a constant melt temp model. */
     SCGMeltTemp(ProblemSpecP& ps);
 
@@ -67,7 +67,7 @@ namespace Uintah {
     virtual ~SCGMeltTemp();
 
     virtual void outputProblemSpec(ProblemSpecP& ps);
-	 
+         
     /*! Compute the melt temp */
     double computeMeltingTemp(const PlasticityState* state);
   };

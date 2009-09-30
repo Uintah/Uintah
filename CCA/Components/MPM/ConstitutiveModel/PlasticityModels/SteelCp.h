@@ -85,7 +85,7 @@ namespace Uintah {
     SteelCp& operator=(const SteelCp &smm);
 
   public:
-	 
+         
     /*! Construct a steel specific heat model. */
     SteelCp(ProblemSpecP& ps);
 
@@ -94,9 +94,9 @@ namespace Uintah {
 
     /*! Destructor of steel specific heat model.   */
     virtual ~SteelCp();
-	 
+         
     virtual void outputProblemSpec(ProblemSpecP& ps);
-	 
+         
     /*! Compute the specific heat */
     double computeSpecificHeat(const PlasticityState* state);
   };

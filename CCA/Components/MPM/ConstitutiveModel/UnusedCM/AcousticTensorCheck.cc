@@ -89,16 +89,16 @@ AcousticTensorCheck::AcousticTensorCheck(const AcousticTensorCheck* cm)
 AcousticTensorCheck::~AcousticTensorCheck()
 {
 }
-	 
+         
 /*! Check stability 
   \return true if unstable
   \return false if stable
 */
 bool 
 AcousticTensorCheck::checkStability(const Matrix3& ,
-				    const Matrix3& ,
-				    const TangentModulusTensor& tangentModulus,
-				    Vector& direction)
+                                    const Matrix3& ,
+                                    const TangentModulusTensor& tangentModulus,
+                                    Vector& direction)
 {
   return isLocalized(tangentModulus, direction);
 }
@@ -108,7 +108,7 @@ AcousticTensorCheck::checkStability(const Matrix3& ,
 //  phi   =  Polar angle 
 bool 
 AcousticTensorCheck::isLocalized(const TangentModulusTensor& C,
-				 Vector& normal)
+                                 Vector& normal)
 {
   // Constants
   Vector zero(0.0,0.0,0.0);
@@ -147,54 +147,54 @@ AcousticTensorCheck::isLocalized(const TangentModulusTensor& C,
     for (int jj = 0 ; jj < d_numPhi; jj++) {
       if (localMin[ii][jj] ==1) {
 
-	/* form starting approximate normal */
-	double theta = M_PI/180.0*d_sweepInc*ii;
-	double phi = M_PI/180.0*d_sweepInc*jj;
-	normal[0] = cos(theta)*cos(phi);
-	normal[1] = sin(theta)*cos(phi);
-	normal[2] = sin(phi);
+        /* form starting approximate normal */
+        double theta = M_PI/180.0*d_sweepInc*ii;
+        double phi = M_PI/180.0*d_sweepInc*jj;
+        normal[0] = cos(theta)*cos(phi);
+        normal[1] = sin(theta)*cos(phi);
+        normal[2] = sin(phi);
 
-	/* Iteration to refine normal */
-	Vector prevNormal(zero);
-	int newtonCounter=0;      
-	while (!normalCompare(normal, prevNormal, normalTol) && 
-	       newtonCounter <= 100 ) {
-	  newtonCounter++;
-	  ASSERT(!(newtonCounter > 100));
-	  prevNormal=normal;
+        /* Iteration to refine normal */
+        Vector prevNormal(zero);
+        int newtonCounter=0;      
+        while (!normalCompare(normal, prevNormal, normalTol) && 
+               newtonCounter <= 100 ) {
+          newtonCounter++;
+          ASSERT(!(newtonCounter > 100));
+          prevNormal=normal;
 
-	  // Form acoustic tensor A and store determinant and inverse
-	  Matrix3 A(0.0);
-	  formAcousticTensor(normal, C, A);
-	  detA[ii][jj] = A.Determinant();
-	  Matrix3 AInv = A.Inverse();
+          // Form acoustic tensor A and store determinant and inverse
+          Matrix3 A(0.0);
+          formAcousticTensor(normal, C, A);
+          detA[ii][jj] = A.Determinant();
+          Matrix3 AInv = A.Inverse();
 
-	  // Form Jmn=det(A)*Cmkln*(A^-1)lk
-	  Matrix3 J(0.0);
-	  for (int mm = 0; mm < 3; mm++) {
-	    for (int nn = 0; nn < 3; nn++) {
-	      for (int kk = 0; kk < 3; kk++) {
-		for (int ll = 0; ll < 3; ll++) {
-		  J(mm,nn) += detA[ii][jj]*C(mm,kk,ll,nn)*AInv(ll,kk);
-		}
-	      }
-	    }
-	  }
-	  // find least eigenvector of J, the next approx normal
-	  normal = chooseNewNormal(prevNormal, J);        
-	} //end while statement
+          // Form Jmn=det(A)*Cmkln*(A^-1)lk
+          Matrix3 J(0.0);
+          for (int mm = 0; mm < 3; mm++) {
+            for (int nn = 0; nn < 3; nn++) {
+              for (int kk = 0; kk < 3; kk++) {
+                for (int ll = 0; ll < 3; ll++) {
+                  J(mm,nn) += detA[ii][jj]*C(mm,kk,ll,nn)*AInv(ll,kk);
+                }
+              }
+            }
+          }
+          // find least eigenvector of J, the next approx normal
+          normal = chooseNewNormal(prevNormal, J);        
+        } //end while statement
 
-	// Determine which normals have least value of DetA and record
-	// them. Typically, there are two distinct normals which produce
-	// the same minimum value. Choose between these later
+        // Determine which normals have least value of DetA and record
+        // them. Typically, there are two distinct normals which produce
+        // the same minimum value. Choose between these later
 
-	if ((fabs(detA[ii][jj]-leastMin) < setTol) || 
+        if ((fabs(detA[ii][jj]-leastMin) < setTol) || 
             (fabs((detA[ii][jj]-leastMin)/leastMin) < setTol)) {
 
-	  // add normal to auto array and reset leastMin
-	  normalSet.push_back(normal);
-	  leastMin = detA[ii][jj];
-	}
+          // add normal to auto array and reset leastMin
+          normalSet.push_back(normal);
+          leastMin = detA[ii][jj];
+        }
       } //end if localMin  
     } //end j         
   } //end i
@@ -255,36 +255,36 @@ AcousticTensorCheck::findApproxLocalMins(double** detA,
 
       if (jj == d_numPhi-1) {
         // Pole, checks only vs. points around it
-	if (ii == 0) {
-	  localMin[ii][jj] = 1;
-	  for (int kk = 0; kk < d_numTheta; kk++) {
-	    if (detA[ii][jj] > detA[kk][jj-1]) {
-	      localMin[ii][jj] = 0;
-	      break;
-	    }
-	  }
-	}
+        if (ii == 0) {
+          localMin[ii][jj] = 1;
+          for (int kk = 0; kk < d_numTheta; kk++) {
+            if (detA[ii][jj] > detA[kk][jj-1]) {
+              localMin[ii][jj] = 0;
+              break;
+            }
+          }
+        }
       } else {
         int ll = (ii-1)%d_numTheta; 
         int mm = (ii+1)%d_numTheta; 
-	if (detA[ii][jj] < detA[ll][jj]) {
-	  if (detA[ii][jj] <= detA[mm][jj]) {
-	    if (detA[ii][jj] < detA[ii][jj+1]) {
-	      if (jj == 0) {
-		// check against normal across sphere
-		// only need to check to 180 degrees, rest are opposite
-		// of already tested, speeds up plane strain problems 
-		int mid = d_numTheta/2;
-		if (ii < mid) { 
-		  if (detA[ii][jj] <= detA[ii+mid][jj+1]) localMin[ii][jj] = 1;
-		}
-	      } else {
-		//standard case
-		if (detA[ii][jj] <= detA[ii][jj-1]) localMin[ii][jj] = 1;
-	      }
-	    }
-	  }
-	}
+        if (detA[ii][jj] < detA[ll][jj]) {
+          if (detA[ii][jj] <= detA[mm][jj]) {
+            if (detA[ii][jj] < detA[ii][jj+1]) {
+              if (jj == 0) {
+                // check against normal across sphere
+                // only need to check to 180 degrees, rest are opposite
+                // of already tested, speeds up plane strain problems 
+                int mid = d_numTheta/2;
+                if (ii < mid) { 
+                  if (detA[ii][jj] <= detA[ii+mid][jj+1]) localMin[ii][jj] = 1;
+                }
+              } else {
+                //standard case
+                if (detA[ii][jj] <= detA[ii][jj-1]) localMin[ii][jj] = 1;
+              }
+            }
+          }
+        }
       }
     } //end j, end i   
   }
@@ -301,10 +301,10 @@ AcousticTensorCheck::formAcousticTensor(const Vector& normal,
     for (int kk = 0; kk < 3; ++kk) {
       A(ii,kk) = 0.0;
       for (int jj = 0; jj < 3; ++jj) {
-	for (int ll = 0; ll < 3; ++ll) {
+        for (int ll = 0; ll < 3; ++ll) {
            double cc = C(ii,jj,kk,ll);
            A(ii,kk) += cc*normal[jj]*normal[ll];
-	}
+        }
       }
     }
   }

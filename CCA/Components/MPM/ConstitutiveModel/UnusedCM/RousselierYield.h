@@ -31,7 +31,7 @@ DEALINGS IN THE SOFTWARE.
 #ifndef __ROUSSELIER_YIELD_MODEL_H__
 #define __ROUSSELIER_YIELD_MODEL_H__
 
-#include "YieldCondition.h"	
+#include "YieldCondition.h"     
 #include <Core/ProblemSpec/ProblemSpecP.h>
 
 namespace Uintah {
@@ -95,15 +95,15 @@ namespace Uintah {
     /*! Creates a Rousselier Yield Function object */
     RousselierYield(ProblemSpecP& ps);
     RousselierYield(const RousselierYield* cm);
-	 
+         
     //! Destructor 
     ~RousselierYield();
-	 
+         
     //! Evaluate the yield function.
     double evalYieldCondition(const double equivStress,
-			      const double flowStress,
-			      const double traceOfCauchyStress,
-			      const double porosity,
+                              const double flowStress,
+                              const double traceOfCauchyStress,
+                              const double porosity,
                               double& sig);
 
     /////////////////////////////////////////////////////////////////////////
@@ -115,9 +115,9 @@ namespace Uintah {
     */
     /////////////////////////////////////////////////////////////////////////
     void evalDerivOfYieldFunction(const Matrix3& stress,
-				  const double flowStress,
-				  const double porosity,
-				  Matrix3& derivative);
+                                  const double flowStress,
+                                  const double porosity,
+                                  Matrix3& derivative);
 
     /////////////////////////////////////////////////////////////////////////
     /*! 
@@ -129,9 +129,9 @@ namespace Uintah {
     */
     /////////////////////////////////////////////////////////////////////////
     void evalDevDerivOfYieldFunction(const Matrix3& stress,
-				     const double flowStress,
-				     const double porosity,
-				     Matrix3& derivative);
+                                     const double flowStress,
+                                     const double porosity,
+                                     Matrix3& derivative);
 
     /////////////////////////////////////////////////////////////////////////
     /*!
@@ -144,9 +144,9 @@ namespace Uintah {
     */
     /////////////////////////////////////////////////////////////////////////
     double evalDerivativeWRTPlasticityScalar(double trSig,
-				             double porosity,
-				             double sigY,
-				             double dsigYdV);
+                                             double porosity,
+                                             double sigY,
+                                             double dsigYdV);
 
     /////////////////////////////////////////////////////////////////////////
     /*!
@@ -159,8 +159,8 @@ namespace Uintah {
     */
     /////////////////////////////////////////////////////////////////////////
     double evalDerivativeWRTPorosity(double trSig,
-				     double porosity,
-				     double sigY);
+                                     double porosity,
+                                     double sigY);
 
     /////////////////////////////////////////////////////////////////////////
     /*!
@@ -174,10 +174,10 @@ namespace Uintah {
     */
     /////////////////////////////////////////////////////////////////////////
     double computePorosityFactor_h1(double sigma_f_sigma,
-				    double tr_f_sigma,
-				    double porosity,
-				    double sigma_Y,
-				    double A);
+                                    double tr_f_sigma,
+                                    double porosity,
+                                    double sigma_Y,
+                                    double A);
  
     /////////////////////////////////////////////////////////////////////////
     /*!
@@ -191,8 +191,8 @@ namespace Uintah {
     */
     /////////////////////////////////////////////////////////////////////////
     double computePlasticStrainFactor_h2(double sigma_f_sigma,
-					 double porosity,
-					 double sigma_Y);
+                                         double porosity,
+                                         double sigma_Y);
 
     /////////////////////////////////////////////////////////////////////////
     /*!
@@ -208,12 +208,12 @@ namespace Uintah {
     */
     /////////////////////////////////////////////////////////////////////////
     void computeTangentModulus(const TangentModulusTensor& Ce,
-			       const Matrix3& f_sigma, 
-			       double f_q1, 
-			       double f_q2,
-			       double h_q1,
-			       double h_q2,
-			       TangentModulusTensor& Cep);
+                               const Matrix3& f_sigma, 
+                               double f_q1, 
+                               double f_q2,
+                               double h_q1,
+                               double h_q2,
+                               TangentModulusTensor& Cep);
 
     /////////////////////////////////////////////////////////////////////////
     /*! 
@@ -221,12 +221,12 @@ namespace Uintah {
     */
     /////////////////////////////////////////////////////////////////////////
     void computeElasPlasTangentModulus(const TangentModulusTensor& Ce,
-				       const Matrix3& sigma, 
-				       double sigY,
-				       double dsigYdV,
-				       double porosity,
-				       double voidNuclFac,
-				       TangentModulusTensor& Cep);
+                                       const Matrix3& sigma, 
+                                       double sigY,
+                                       double dsigYdV,
+                                       double porosity,
+                                       double voidNuclFac,
+                                       TangentModulusTensor& Cep);
   };
 
 } // End namespace Uintah

@@ -45,7 +45,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <CCA/Components/MPM/MPMLabel.h>
 
-#include <CCA/Components/MPM/Util/Matrix.cc> // for bounded array multiplier	
+#include <CCA/Components/MPM/Util/Matrix.cc> // for bounded array multiplier    
 #include <fstream>
 #include <iostream>
 using namespace std;
@@ -56,14 +56,14 @@ ElasticConstitutiveModel::ElasticConstitutiveModel(ProblemSpecP &ps)
   ps->require("youngs_modulus",d_initialData.YngMod);
   ps->require("poissons_ratio",d_initialData.PoiRat); 
   p_cmdata_label = VarLabel::create("p.cmdata",
-				ParticleVariable<CMData>::getTypeDescription());
+                                ParticleVariable<CMData>::getTypeDescription());
   p_cmdata_label_preReloc = VarLabel::create("p.cmdata+",
-				ParticleVariable<CMData>::getTypeDescription());
+                                ParticleVariable<CMData>::getTypeDescription());
 
 }
 
 void ElasticConstitutiveModel::addParticleState(std::vector<const VarLabel*>& from,
-						std::vector<const VarLabel*>& to)
+                                                std::vector<const VarLabel*>& to)
 {
    from.push_back(p_cmdata_label);
    to.push_back(p_cmdata_label_preReloc);
@@ -219,10 +219,10 @@ void ElasticConstitutiveModel::computeRotationIncrement(Matrix3 defInc)
   double tempc = p * (1. + fn*p/(fd*fd)*(3.-2.*p/fd));
   tempc = sqrt(tempc);
   if(tracea>=0.0){
-		tempc = fabs(tempc);
+                tempc = fabs(tempc);
   }
   else {
-		tempc = -fabs(tempc);
+                tempc = -fabs(tempc);
   }
 
   //  Get sin(thetaa)/2/sqrt(q) 
@@ -242,7 +242,7 @@ void ElasticConstitutiveModel::computeRotationIncrement(Matrix3 defInc)
      tempc2 =1.0/8.0+q/32.0/pow(p,2.0)*(pow(p,2.0)-12.0*p+12.0) 
       +pow(q,2.0)/64.0/pow(p,3.0)*(p-2.0)*(pow(p,2.0)-10.0*p+32.0)
       +pow(q,3.0)/512.0/pow(p,4.0)*(1104.0-992.0*p+376.0*pow(p,2.0)
-				    -72.0*pow(p,3.0)+5.0*pow(p,4.0));
+                                    -72.0*pow(p,3.0)+5.0*pow(p,4.0));
   }
 
  
@@ -298,24 +298,24 @@ void ElasticConstitutiveModel::computeStressIncrement()
 #endif
 
 void ElasticConstitutiveModel::computeStressTensor(const PatchSubset* /*patches*/,
-						   const MPMMaterial* /*matl*/,
-						   DataWarehouse* /*new_dw*/,
-						   DataWarehouse* /*old_dw*/)
+                                                   const MPMMaterial* /*matl*/,
+                                                   DataWarehouse* /*new_dw*/,
+                                                   DataWarehouse* /*old_dw*/)
 {
   cerr << "computeStressTensor not finished\n";
 }
 
 double ElasticConstitutiveModel::computeStrainEnergy(const Patch* /*patch*/,
-						     const MPMMaterial* /*matl*/,
-						     DataWarehouse* /*new_dw*/)
+                                                     const MPMMaterial* /*matl*/,
+                                                     DataWarehouse* /*new_dw*/)
 {
   cerr << "computeStrainEnergy not finished\n";
   return -1;
 }
 
 void ElasticConstitutiveModel::initializeCMData(const Patch* patch,
-						const MPMMaterial* matl,
-						DataWarehouse* new_dw)
+                                                const MPMMaterial* matl,
+                                                DataWarehouse* new_dw)
 {
   //   const MPMLabel* lb = MPMLabel::getLabels();
    ParticleSubset* pset = new_dw->getParticleSubset(matl->getDWIndex(), patch);
@@ -335,7 +335,7 @@ double ElasticConstitutiveModel::computeStrainEnergy()
 
   se = ((1.0/(2.0*YngMod))*
        (pow(stressTensor(1,1),2.0)+pow(stressTensor(2,2),2.0)+
-	 				 pow(stressTensor(3,3),2.0) -
+                                         pow(stressTensor(3,3),2.0) -
        2.0*PoiRat*(stressTensor(1,1)*stressTensor(2,2)+
        stressTensor(2,2)*stressTensor(3,3)+stressTensor(3,3)*stressTensor(1,1)))+
        (1.0/(2.0*YngMod/(2.*(1. + PoiRat))))*
@@ -347,7 +347,7 @@ double ElasticConstitutiveModel::computeStrainEnergy()
 }
 
 void ElasticConstitutiveModel::computeStressTensor
-			(Matrix3 velocityGradient, double time_step)
+                        (Matrix3 velocityGradient, double time_step)
 {
 
   // Calculate the stress Tensor (Symmetric 3 x 3 matrix) given the
@@ -385,8 +385,8 @@ void ElasticConstitutiveModel::computeStressTensor
 #endif
 
 void ElasticConstitutiveModel::addComputesAndRequires(Task* task,
-						      const MPMMaterial* /*matl*/,
-						      const PatchSet* patches) const
+                                                      const MPMMaterial* /*matl*/,
+                                                      const PatchSet* patches) const
 {
    cerr << "ElasticConsitutive::addComputesAndRequires needs to be filled in\n";
 }

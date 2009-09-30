@@ -78,7 +78,7 @@ namespace Uintah {
 
     // Create datatype for storing model parameters
   public:
-    // Create datatype for storing state variable parameters	  
+    // Create datatype for storing state variable parameters      
     struct StateVariableData {
       double ba1;     /*< coefficient of backstress evol [MPa]  */
       double bq;      /*< exponent of backstress evol */
@@ -196,18 +196,18 @@ namespace Uintah {
 //                                      const double& tolerance,
 //                                      const MPMMaterial* matl,
 //                                      const particleIndex idx);
-				     
+                                     
 //     virtual double computeFlowStress(const PlasticityState* state,
 //                                      const double& delT,
 //                                      const double& tolerance,
 //                                      const MPMMaterial* matl,
 //                                      const particleIndex idx,
-// 				     const Matrix3 pStress);
+//                                   const Matrix3 pStress);
 
     virtual double computeFlowStress(const particleIndex idx,
-				     const Matrix3 pStress,
-				     const Matrix3 tensorR,
-				     const int implicitFlag);
+                                     const Matrix3 pStress,
+                                     const Matrix3 tensorR,
+                                     const int implicitFlag);
 
     ///////////////////////////////////////////////////////////////////////////
     /*!
@@ -222,31 +222,31 @@ namespace Uintah {
     */
     ///////////////////////////////////////////////////////////////////////////
     double computeMeltingTemp(const PlasticityState* state);
-    	    
+            
 
    protected:
 
    void computeNij(Matrix3& nij, 
-   			    Matrix3& reducedEta, 
-			    double& xae, 
-			    const particleIndex idx,
-			    const Matrix3 pStress,
-			    const Matrix3 tensorR,
-			    const int implicitFlag);
-			    
+                            Matrix3& reducedEta, 
+                            double& xae, 
+                            const particleIndex idx,
+                            const Matrix3 pStress,
+                            const Matrix3 tensorR,
+                            const int implicitFlag);
+                            
    void computeStressIncTangent(double& epdot,
-				Matrix3& stressRate, 
-				TangentModulusTensor& Cep,
-				const double delT,
-				const particleIndex idx, 
-				const TangentModulusTensor Ce,
-				const Matrix3 tensorD,
-				const Matrix3 pStress,
-				const int implicitFlag,
-				const Matrix3 tensorR);
-				
+                                Matrix3& stressRate, 
+                                TangentModulusTensor& Cep,
+                                const double delT,
+                                const particleIndex idx, 
+                                const TangentModulusTensor Ce,
+                                const Matrix3 tensorD,
+                                const Matrix3 pStress,
+                                const int implicitFlag,
+                                const Matrix3 tensorR);
+                                
    bool checkFailureMaxTensileStress(const Matrix3 pStress);
-					 
+                                         
 
    };
 } // End namespace Uintah

@@ -53,21 +53,21 @@ namespace Uintah {
   class MPMEquationOfState {
 
   public:
-	 
+         
     MPMEquationOfState();
     virtual ~MPMEquationOfState();
 
     virtual void outputProblemSpec(ProblemSpecP& ps) = 0;
-	 
+         
     ////////////////////////////////////////////////////////////////////////
     /*! Calculate the hydrostatic component of stress (pressure)
         using an equation of state */
     ////////////////////////////////////////////////////////////////////////
     virtual double computePressure(const MPMMaterial* matl,
                                    const PlasticityState* state,
-				   const Matrix3& deformGrad,
-				   const Matrix3& rateOfDeformation,
-				   const double& delT) = 0;
+                                   const Matrix3& deformGrad,
+                                   const Matrix3& rateOfDeformation,
+                                   const double& delT) = 0;
 
    /*! Calculate the derivative of \f$p(J)\f$ wrt \f$J\f$ 
        where \f$J = det(F) = rho_0/rho\f$ */

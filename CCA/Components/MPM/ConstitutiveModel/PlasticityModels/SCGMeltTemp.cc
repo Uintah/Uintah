@@ -70,7 +70,7 @@ void SCGMeltTemp::outputProblemSpec(ProblemSpecP& ps)
   temp_ps->appendElement("T_m0",d_Tm0);
 }
 
-	 
+         
 // Compute the melt temp
 double 
 SCGMeltTemp::computeMeltingTemp(const PlasticityState* state)

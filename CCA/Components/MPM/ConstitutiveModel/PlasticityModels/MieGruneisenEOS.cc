@@ -41,18 +41,18 @@ MieGruneisenEOS::MieGruneisenEOS(ProblemSpecP& ps)
   ps->require("Gamma_0",d_const.Gamma_0);
   ps->require("S_alpha",d_const.S_alpha);
 } 
-	 
+         
 MieGruneisenEOS::MieGruneisenEOS(const MieGruneisenEOS* cm)
 {
   d_const.C_0 = cm->d_const.C_0;
   d_const.Gamma_0 = cm->d_const.Gamma_0;
   d_const.S_alpha = cm->d_const.S_alpha;
 } 
-	 
+         
 MieGruneisenEOS::~MieGruneisenEOS()
 {
 }
-	 
+         
 void MieGruneisenEOS::outputProblemSpec(ProblemSpecP& ps)
 {
   ProblemSpecP eos_ps = ps->appendChild("equation_of_state");

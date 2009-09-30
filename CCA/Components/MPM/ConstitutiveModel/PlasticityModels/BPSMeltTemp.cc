@@ -77,7 +77,7 @@ BPSMeltTemp::BPSMeltTemp(const BPSMeltTemp* mtm)
 BPSMeltTemp::~BPSMeltTemp()
 {
 }
-	 
+         
 void BPSMeltTemp::outputProblemSpec(ProblemSpecP& ps)
 {
   ProblemSpecP temp_ps = ps->appendChild("melting_temp_model");

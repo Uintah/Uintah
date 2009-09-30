@@ -28,7 +28,7 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include "GursonYield.h"	
+#include "GursonYield.h"        
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <iostream>
 #include <cmath>
@@ -48,7 +48,7 @@ GursonYield::GursonYield(ProblemSpecP& ps)
   ps->require("k",d_CM.k);
   ps->require("f_c",d_CM.f_c);
 }
-	 
+         
 GursonYield::GursonYield(const GursonYield* cm)
 {
   d_CM.q1 = cm->d_CM.q1;
@@ -57,7 +57,7 @@ GursonYield::GursonYield(const GursonYield* cm)
   d_CM.k = cm->d_CM.k;
   d_CM.f_c = cm->d_CM.f_c;
 }
-	 
+         
 GursonYield::~GursonYield()
 {
 }
@@ -73,12 +73,12 @@ void GursonYield::outputProblemSpec(ProblemSpecP& ps)
   yield_ps->appendElement("f_c",d_CM.f_c);
 
 }
-	 
+         
 double 
 GursonYield::evalYieldCondition(const double sigEqv,
-				const double sigFlow,
-				const double traceSig,
-				const double porosity,
+                                const double sigFlow,
+                                const double traceSig,
+                                const double porosity,
                                 double& sig)
 {
   double q1 = d_CM.q1;
@@ -112,9 +112,9 @@ GursonYield::evalYieldCondition(const double sigEqv,
 
 void 
 GursonYield::evalDerivOfYieldFunction(const Matrix3& sig,
-				      const double sigY,
-				      const double f,
-				      Matrix3& derivative)
+                                      const double sigY,
+                                      const double f,
+                                      Matrix3& derivative)
 {
   Matrix3 I; I.Identity();
   double trSig = sig.Trace();
@@ -133,9 +133,9 @@ GursonYield::evalDerivOfYieldFunction(const Matrix3& sig,
 
 void 
 GursonYield::evalDevDerivOfYieldFunction(const Matrix3& sig,
-					 const double ,
-					 const double ,
-					 Matrix3& derivative)
+                                         const double ,
+                                         const double ,
+                                         Matrix3& derivative)
 {
   Matrix3 I; I.Identity();
   double trSig = sig.Trace();
@@ -173,8 +173,8 @@ GursonYield::evalDerivativeWRTPlasticityScalar(double trSig,
 
 double
 GursonYield::evalDerivativeWRTPorosity(double trSig,
-				       double porosity,
-				       double sigY)
+                                       double porosity,
+                                       double sigY)
 {
   double fStar = porosity;
   double dfStar_df = 1.0;
@@ -432,7 +432,7 @@ GursonYield::computeTangentModulus(const TangentModulusTensor& Ce,
       Cr(ii,jj) = 0.0;
       rC(ii,jj) = 0.0;
       for (int kk = 0; kk < 3; ++kk) {
-	for (int ll = 0; ll < 3; ++ll) {
+        for (int ll = 0; ll < 3; ++ll) {
           double Ce1 = Ce(ii,jj,kk,ll);
           double Ce2 = Ce(kk,ll,ii,jj);
           double fs = f_sigma(kk,ll);
@@ -447,10 +447,10 @@ GursonYield::computeTangentModulus(const TangentModulusTensor& Ce,
   for (int ii = 0; ii < 3; ++ii) {
     for (int jj = 0; jj < 3; ++jj) {
       for (int kk = 0; kk < 3; ++kk) {
-	for (int ll = 0; ll < 3; ++ll) {
+        for (int ll = 0; ll < 3; ++ll) {
           Cep(ii,jj,kk,ll) = Ce(ii,jj,kk,ll) - 
-	    Cr(ii,jj)*rC(kk,ll)/rCr_fqhq;
-	}  
+            Cr(ii,jj)*rC(kk,ll)/rCr_fqhq;
+        }  
       }  
     }  
   }  
@@ -458,12 +458,12 @@ GursonYield::computeTangentModulus(const TangentModulusTensor& Ce,
 
 void 
 GursonYield::computeElasPlasTangentModulus(const TangentModulusTensor& Ce,
-					   const Matrix3& sigma, 
-					   double sigY,
-					   double dsigYdep,
-					   double porosity,
-					   double voidNuclFac,
-					   TangentModulusTensor& Cep)
+                                           const Matrix3& sigma, 
+                                           double sigY,
+                                           double dsigYdep,
+                                           double porosity,
+                                           double voidNuclFac,
+                                           TangentModulusTensor& Cep)
 {
   // Calculate the derivative of the yield function wrt sigma
   Matrix3 f_sigma(0.0);

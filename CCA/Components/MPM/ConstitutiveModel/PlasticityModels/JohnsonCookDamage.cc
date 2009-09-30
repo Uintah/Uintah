@@ -48,7 +48,7 @@ JohnsonCookDamage::JohnsonCookDamage(ProblemSpecP& ps)
   ps->get("Dc",d_initialData.Dc);
   d_initialData.spallStress = 8.0;
 } 
-	 
+         
 JohnsonCookDamage::JohnsonCookDamage(const JohnsonCookDamage* cm)
 {
   d_initialData.D1 = cm->d_initialData.D1;
@@ -60,7 +60,7 @@ JohnsonCookDamage::JohnsonCookDamage(const JohnsonCookDamage* cm)
   d_initialData.Dc = cm->d_initialData.Dc;
   d_initialData.spallStress = cm->d_initialData.spallStress;
 } 
-	 
+         
 JohnsonCookDamage::~JohnsonCookDamage()
 {
 }
@@ -79,7 +79,7 @@ void JohnsonCookDamage::outputProblemSpec(ProblemSpecP& ps)
   damage_ps->appendElement("Dc",d_initialData.Dc);
 }
 
-	 
+         
 inline double 
 JohnsonCookDamage::initialize()
 {

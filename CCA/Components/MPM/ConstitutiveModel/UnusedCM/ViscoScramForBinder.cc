@@ -111,10 +111,10 @@ ViscoScramForBinder::ViscoScramForBinder(ProblemSpecP& ps,
   // State data
   pStatedataLabel = 
     VarLabel::create("p.statedata_vsb",
-		     ParticleVariable<Statedata>::getTypeDescription());
+                     ParticleVariable<Statedata>::getTypeDescription());
   pStatedataLabel_preReloc = 
     VarLabel::create("p.statedata_vsb+",
-		     ParticleVariable<Statedata>::getTypeDescription());
+                     ParticleVariable<Statedata>::getTypeDescription());
 
   // Interpolation range
   d_8or27 = n8or27;
@@ -160,10 +160,10 @@ ViscoScramForBinder::ViscoScramForBinder(const ViscoScramForBinder* cm)
   // State data
   pStatedataLabel = 
     VarLabel::create("p.statedata_vsb",
-		     ParticleVariable<Statedata>::getTypeDescription());
+                     ParticleVariable<Statedata>::getTypeDescription());
   pStatedataLabel_preReloc = 
     VarLabel::create("p.statedata_vsb+",
-		     ParticleVariable<Statedata>::getTypeDescription());
+                     ParticleVariable<Statedata>::getTypeDescription());
 }
 
 ViscoScramForBinder::~ViscoScramForBinder()
@@ -178,8 +178,8 @@ ViscoScramForBinder::~ViscoScramForBinder()
 
 void 
 ViscoScramForBinder::initializeCMData(const Patch* patch,
-				      const MPMMaterial* matl,
-				      DataWarehouse* new_dw)
+                                      const MPMMaterial* matl,
+                                      DataWarehouse* new_dw)
 {
   // Put stuff in here to initialize each particle's
   // constitutive model parameters and deformationMeasure
@@ -190,7 +190,7 @@ ViscoScramForBinder::initializeCMData(const Patch* patch,
   new_dw->allocateAndPut(pStatedata, pStatedataLabel, pset);
   ParticleVariable<Matrix3> deformationGradient, pstress;
   new_dw->allocateAndPut(deformationGradient,lb->pDeformationMeasureLabel,
-			 pset);
+                         pset);
   new_dw->allocateAndPut(pstress,lb->pStressLabel, pset);
   
   if (d_doCrack) {
@@ -217,9 +217,9 @@ ViscoScramForBinder::initializeCMData(const Patch* patch,
 
 void 
 ViscoScramForBinder::allocateCMDataAddRequires(Task* task,
-					       const MPMMaterial* matl,
-					       const PatchSet* patch,
-					       MPMLabel* lb) const
+                                               const MPMMaterial* matl,
+                                               const PatchSet* patch,
+                                               MPMLabel* lb) const
 {
   //const MaterialSubset* matlset = matl->thisMaterial();  <- Unused
   task->requires(Task::OldDW,pStatedataLabel, Ghost::None);
@@ -232,10 +232,10 @@ ViscoScramForBinder::allocateCMDataAddRequires(Task* task,
 
 void 
 ViscoScramForBinder::allocateCMDataAdd(DataWarehouse* new_dw,
-				       ParticleSubset* addset,
-				       map<const VarLabel*, ParticleVariableBase*>* newState,
-				       ParticleSubset* delset,
-				       DataWarehouse* old_dw)
+                                       ParticleSubset* addset,
+                                       map<const VarLabel*, ParticleVariableBase*>* newState,
+                                       ParticleSubset* delset,
+                                       DataWarehouse* old_dw)
 {
   // Put stuff in here to initialize each particle's
   // constitutive model parameters and deformationMeasure
@@ -287,7 +287,7 @@ ViscoScramForBinder::allocateCMDataAdd(DataWarehouse* new_dw,
 
 void 
 ViscoScramForBinder::addParticleState(std::vector<const VarLabel*>& from,
-				      std::vector<const VarLabel*>& to)
+                                      std::vector<const VarLabel*>& to)
 {
   from.push_back(pStatedataLabel);
   from.push_back(lb->pDeformationMeasureLabel);
@@ -305,8 +305,8 @@ ViscoScramForBinder::addParticleState(std::vector<const VarLabel*>& from,
 
 void 
 ViscoScramForBinder::computeStableTimestep(const Patch* patch,
-					   const MPMMaterial* matl,
-					   DataWarehouse* new_dw)
+                                           const MPMMaterial* matl,
+                                           DataWarehouse* new_dw)
 {
   // This is only called for the initial timestep - all other timesteps
   // are computed as a side-effect of computeStressTensor
@@ -335,8 +335,8 @@ ViscoScramForBinder::computeStableTimestep(const Patch* patch,
 
     double c_dil = sqrt((k + 4.*G/3.)*pvolume[idx]/pmass[idx]);
     WaveSpeed=Vector(Max(c_dil+fabs(pvelocity[idx].x()),WaveSpeed.x()),
-		     Max(c_dil+fabs(pvelocity[idx].y()),WaveSpeed.y()),
-		     Max(c_dil+fabs(pvelocity[idx].z()),WaveSpeed.z()));
+                     Max(c_dil+fabs(pvelocity[idx].y()),WaveSpeed.y()),
+                     Max(c_dil+fabs(pvelocity[idx].z()),WaveSpeed.z()));
   }
   WaveSpeed = dx/WaveSpeed;
 
@@ -346,9 +346,9 @@ ViscoScramForBinder::computeStableTimestep(const Patch* patch,
 
 void 
 ViscoScramForBinder::computeStressTensor(const PatchSubset* patches,
-					 const MPMMaterial* matl,
-					 DataWarehouse* old_dw,
-					 DataWarehouse* new_dw)
+                                         const MPMMaterial* matl,
+                                         DataWarehouse* old_dw,
+                                         DataWarehouse* new_dw)
 {
   // Constants
   double onethird = (1.0/3.0);
@@ -425,7 +425,7 @@ ViscoScramForBinder::computeStressTensor(const PatchSubset* patches,
     // Allocate and make ready for put into datawarehouse
     new_dw->allocateAndPut(pVolume_new, lb->pVolumeDeformedLabel, pset);
     new_dw->allocateAndPut(pDefGrad_new, 
-			   lb->pDeformationMeasureLabel_preReloc, pset);
+                           lb->pDeformationMeasureLabel_preReloc, pset);
     new_dw->allocateAndPut(pStress_new, lb->pStressLabel_preReloc, pset);
 
     // Copy state data
@@ -437,7 +437,7 @@ ViscoScramForBinder::computeStressTensor(const PatchSubset* patches,
     if (d_doCrack) {
       old_dw->get(pCrackRadius, lb->pCrackRadiusLabel, pset);
       new_dw->allocateAndPut(pCrackRadius_new, 
-			     lb->pCrackRadiusLabel_preReloc, pset);
+                             lb->pCrackRadiusLabel_preReloc, pset);
     }
 
 #ifdef FRACTURE
@@ -461,25 +461,25 @@ ViscoScramForBinder::computeStressTensor(const PatchSubset* patches,
       IntVector ni[MAX_BASIS];
       Vector d_S[MAX_BASIS];
       if (d_8or27 == 27)
-	patch->findCellAndShapeDerivatives27(pX[idx], ni, d_S, pSize[idx]);
+        patch->findCellAndShapeDerivatives27(pX[idx], ni, d_S, pSize[idx]);
       else
-	patch->findCellAndShapeDerivatives(pX[idx], ni, d_S);
+        patch->findCellAndShapeDerivatives(pX[idx], ni, d_S);
 
       Vector gvel;
       velGrad.set(0.0);
       for(int k = 0; k < d_8or27; k++) {
 #ifdef FRACTURE
-	if(pgCode[idx][k]==1) gvel = gVelocity[ni[k]];
-	if(pgCode[idx][k]==2) gvel = Gvelocity[ni[k]];
+        if(pgCode[idx][k]==1) gvel = gVelocity[ni[k]];
+        if(pgCode[idx][k]==2) gvel = Gvelocity[ni[k]];
 #else
-	gvel = gVelocity[ni[k]];
+        gvel = gVelocity[ni[k]];
 #endif
-	for (int j = 0; j<3; j++){
-	  double temp = d_S[k][j] * oodx[j];
-	  for (int i = 0; i<3; i++) {
-	    velGrad(i,j)+=gvel[i] * temp;
-	  }
-	}
+        for (int j = 0; j<3; j++){
+          double temp = d_S[k][j] * oodx[j];
+          for (int i = 0; i<3; i++) {
+            velGrad(i,j)+=gvel[i] * temp;
+          }
+        }
       }
 
       // Calculate rate of deformation D, deviatoric rate DPrime,
@@ -540,17 +540,17 @@ ViscoScramForBinder::computeStressTensor(const PatchSubset* patches,
       if (d_doCrack) {
 
         // Calculate updated crack radius
-	// Decide tension or compression (tension +ve) and calculate the
-	// effective stress
-	int compflag = (p < 0.0) ? -1 : 0;
-	double sigma = sqrt(sigPrime.NormSquared() - compflag*(3*p*p));
+        // Decide tension or compression (tension +ve) and calculate the
+        // effective stress
+        int compflag = (p < 0.0) ? -1 : 0;
+        double sigma = sqrt(sigPrime.NormSquared() - compflag*(3*p*p));
 
-	// Modification to include friction on crack faces
-//	double xmup   = (1 + compflag)*
+        // Modification to include friction on crack faces
+//      double xmup   = (1 + compflag)*
 //                        sqrt(45.0/(2.0*(3.0 - 2.0*mu_s*mu_s)))*mu_s;
-//	double a      = xmup*p*sqrt(pCrackRadius[idx]);
-//	double b      = 1.0 + a/K0;
-//	double termm  = sqrt(1.0 + (M_PI*a*b)/K0);
+//      double a      = xmup*p*sqrt(pCrackRadius[idx]);
+//      double b      = 1.0 + a/K0;
+//      double termm  = sqrt(1.0 + (M_PI*a*b)/K0);
 
         // Calculate crack growth rate and new crack radius
         // using fourth-order Runge-Kutta
@@ -580,8 +580,8 @@ ViscoScramForBinder::computeStressTensor(const PatchSubset* patches,
 
         // Deviatoric stress integration
         doRungeKuttaForStressAlt(&ViscoScramForBinder::stressEqnWithCrack,
-			      S_n, (double) delT, rkc, cc,
-			      G_n, RTau_n, DPrime, cDot, S_n_new); 
+                              S_n, (double) delT, rkc, cc,
+                              G_n, RTau_n, DPrime, cDot, S_n_new); 
         delete[] rkc;
 
       } else {
@@ -590,8 +590,8 @@ ViscoScramForBinder::computeStressTensor(const PatchSubset* patches,
         //double* rkc = scinew double[4];
         //for (int ii = 0; ii < 4; ++ii) rkc[ii] = 0.0;
         //doRungeKuttaForStressAlt(&ViscoScramForBinder::stressEqnWithoutCrack,
-	//		      S_n, (double) delT, rkc, 0.0,
-	//		      G_n, RTau_n, DPrime, 0.0, S_n_new); 
+        //                    S_n, (double) delT, rkc, 0.0,
+        //                    G_n, RTau_n, DPrime, 0.0, S_n_new); 
         //delete[] rkc;
 
         // Forward Euler for stress
@@ -648,16 +648,16 @@ ViscoScramForBinder::computeStressTensor(const PatchSubset* patches,
       // Compute the strain energy for all the particles
       Matrix3 sigAv = (pStress_new[idx]+pStress[idx])*0.5;
       strainEnergy += (DD(0,0)*sigAv(0,0) + DD(1,1)*sigAv(1,1) +
-	               DD(2,2)*sigAv(2,2) + 2.*(DD(0,1)*sigAv(0,1) +
-		       DD(0,2)*sigAv(0,2) + DD(1,2)*sigAv(1,2))) * 
+                       DD(2,2)*sigAv(2,2) + 2.*(DD(0,1)*sigAv(0,1) +
+                       DD(0,2)*sigAv(0,2) + DD(1,2)*sigAv(1,2))) * 
                       pVolume_new[idx]*delT;
 
       // Compute wave speed at each particle, store the maximum
       Vector pVelocity_idx = pVelocity[idx];
       double c_dil = sqrt((kk + 4.*GG/3.)*pVolume_new[idx]/pMass[idx]);
       WaveSpeed=Vector(Max(c_dil+fabs(pVelocity_idx.x()),WaveSpeed.x()),
-		       Max(c_dil+fabs(pVelocity_idx.y()),WaveSpeed.y()),
-		       Max(c_dil+fabs(pVelocity_idx.z()),WaveSpeed.z()));
+                       Max(c_dil+fabs(pVelocity_idx.y()),WaveSpeed.y()),
+                       Max(c_dil+fabs(pVelocity_idx.z()),WaveSpeed.z()));
     }
 
     WaveSpeed = dx/WaveSpeed;
@@ -714,7 +714,7 @@ ViscoScramForBinder::crackGrowthEqn2(double c, double K0, double sigma)
   double K0overK = K0/K;
   return vmax*(1.0-K0overK*K0overK);
 }
-	 
+         
 // Solve the stress equation using a fourth-order Runge-Kutta scheme
 void
 ViscoScramForBinder::doRungeKuttaForStress(void (ViscoScramForBinder::*fptr)
@@ -722,13 +722,13 @@ ViscoScramForBinder::doRungeKuttaForStress(void (ViscoScramForBinder::*fptr)
                                                  double*, Matrix3&, double, 
                                                  Matrix3*), 
                                            Matrix3* y_n,
-					   double h, 
-					   double* rkc, 
+                                           double h, 
+                                           double* rkc, 
                                            double c,
-					   double* G_n, 
-					   double* RTau_n, 
+                                           double* G_n, 
+                                           double* RTau_n, 
                                            Matrix3& DPrime,
-					   double cDot,
+                                           double cDot,
                                            Matrix3* y_rk)
 {
   int n = d_initialData.numMaxwellElements;
@@ -793,12 +793,12 @@ ViscoScramForBinder::stressEqnWithCrack(Matrix3* S_n,
  
 void
 ViscoScramForBinder::stressEqnWithoutCrack(Matrix3* S_n,
-					   double ,
-					   double* G_n,
-					   double* RTau_n,
-					   Matrix3& DPrime,
-					   double ,
-					   Matrix3* k_n)
+                                           double ,
+                                           double* G_n,
+                                           double* RTau_n,
+                                           Matrix3& DPrime,
+                                           double ,
+                                           Matrix3* k_n)
 {
   int n = d_initialData.numMaxwellElements;
   for (int ii = 0; ii < n; ++ii) {
@@ -828,13 +828,13 @@ ViscoScramForBinder::doRungeKuttaForStressAlt(void (ViscoScramForBinder::*fptr)
                                                  double, Matrix3&, double, 
                                                  Matrix3&), 
                                            Matrix3* y_n,
-					   double h, 
-					   double* rkc, 
+                                           double h, 
+                                           double* rkc, 
                                            double c,
-					   double* G_n, 
-					   double* RTau_n, 
+                                           double* G_n, 
+                                           double* RTau_n, 
                                            Matrix3& DPrime,
-					   double cDot,
+                                           double cDot,
                                            Matrix3* y_rk)
 {
   int n = d_initialData.numMaxwellElements;
@@ -857,8 +857,8 @@ ViscoScramForBinder::doRungeKuttaForStressAlt(void (ViscoScramForBinder::*fptr)
       Matrix3 SOverTau(0.0);
       Matrix3 S(0.0);
       for (int jj = 0; jj < n; ++jj) {
-	SOverTau += y_rk[jj]*RTau_n[jj];
-	S += y_rk[jj];
+        SOverTau += y_rk[jj]*RTau_n[jj];
+        S += y_rk[jj];
       }
 
       ((this->*fptr)(ii, yy, cc, G, SOverTau, S, G_n[ii], RTau_n[ii], DPrime, 
@@ -876,8 +876,8 @@ ViscoScramForBinder::doRungeKuttaForStressAlt(void (ViscoScramForBinder::*fptr)
       Matrix3 temp = k1*hOver2;
       for (int jj = 0; jj < n; ++jj) {
         Matrix3 yn = y_rk[jj]+temp;
-	SOverTau += yn*RTau_n[jj];
-	S += yn;
+        SOverTau += yn*RTau_n[jj];
+        S += yn;
       }
 
       ((this->*fptr)(ii, yy, cc, G, SOverTau, S, G_n[ii], RTau_n[ii], DPrime, 
@@ -895,8 +895,8 @@ ViscoScramForBinder::doRungeKuttaForStressAlt(void (ViscoScramForBinder::*fptr)
       Matrix3 temp = k2*hOver2;
       for (int jj = 0; jj < n; ++jj) {
         Matrix3 yn = y_rk[jj]+temp;
-	SOverTau += yn*RTau_n[jj];
-	S += yn;
+        SOverTau += yn*RTau_n[jj];
+        S += yn;
       }
 
       ((this->*fptr)(ii, yy, cc, G, SOverTau, S, G_n[ii], RTau_n[ii], DPrime, 
@@ -914,8 +914,8 @@ ViscoScramForBinder::doRungeKuttaForStressAlt(void (ViscoScramForBinder::*fptr)
       Matrix3 temp = k3*h;
       for (int jj = 0; jj < n; ++jj) {
         Matrix3 yn = y_rk[jj]+temp;
-	SOverTau += yn*RTau_n[jj];
-	S += yn;
+        SOverTau += yn*RTau_n[jj];
+        S += yn;
       }
 
       ((this->*fptr)(ii, yy, cc, G, SOverTau, S, G_n[ii], RTau_n[ii], DPrime, 
@@ -986,8 +986,8 @@ ViscoScramForBinder::addInitialComputesAndRequires(Task* task,
 
 void 
 ViscoScramForBinder::addComputesAndRequires(Task* task,
-					const MPMMaterial* matl,
-					const PatchSet*) const
+                                        const MPMMaterial* matl,
+                                        const PatchSet*) const
 {
   Ghost::GhostType  gac   = Ghost::AroundCells;
   const MaterialSubset* matlset = matl->thisMaterial();
@@ -1024,12 +1024,12 @@ ViscoScramForBinder::addComputesAndRequires(Task* task,
 
 void 
 ViscoScramForBinder::addComputesAndRequires(Task* ,
-					const MPMMaterial* ,
-					const PatchSet*,
-					const bool ) const
+                                        const MPMMaterial* ,
+                                        const PatchSet*,
+                                        const bool ) const
 {
 }
-	 
+         
 double 
 ViscoScramForBinder::computeRhoMicroCM(double pressure,
                                      const double p_ref,
@@ -1103,7 +1103,7 @@ fun_getTypeDescription(ViscoScramForBinder::Statedata*)
    static Uintah::TypeDescription* td = 0;
    if(!td){
       td = scinew Uintah::TypeDescription(TypeDescription::Other,
-	"ViscoScramForBinder::Statedata", true, &makeMPI_CMData);
+        "ViscoScramForBinder::Statedata", true, &makeMPI_CMData);
    }
    return td;
 }

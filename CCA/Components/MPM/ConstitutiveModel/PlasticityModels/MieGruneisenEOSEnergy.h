@@ -32,7 +32,7 @@ DEALINGS IN THE SOFTWARE.
 #define __MIE_GRUNEISEN_EOS_ENERGY_MODEL_H__
 
 
-#include "MPMEquationOfState.h"	
+#include "MPMEquationOfState.h" 
 #include <Core/ProblemSpec/ProblemSpecP.h>
 
 namespace Uintah {
@@ -88,12 +88,12 @@ namespace Uintah {
       double S_1;
       double S_2;
       double S_3;
-    };	 
+    };   
 
   private:
 
     CMData d_const;
-	 
+         
     // Prevent copying of this class
     // copy constructor
     MieGruneisenEOSEnergy& operator=(const MieGruneisenEOSEnergy &cm);
@@ -102,20 +102,20 @@ namespace Uintah {
     // constructors
     MieGruneisenEOSEnergy(ProblemSpecP& ps); 
     MieGruneisenEOSEnergy(const MieGruneisenEOSEnergy* cm);
-	 
+         
     // destructor 
     virtual ~MieGruneisenEOSEnergy();
 
     virtual void outputProblemSpec(ProblemSpecP& ps);
-	 
+         
     /////////////////////////////////////////////////////////////////////////
     /*! Calculate the pressure using a equation of state */
     /////////////////////////////////////////////////////////////////////////
     virtual double computePressure(const MPMMaterial* matl,
-				   const PlasticityState* state,
-				   const Matrix3& deformGrad,
-				   const Matrix3& rateOfDeformation,
-				   const double& delT);
+                                   const PlasticityState* state,
+                                   const Matrix3& deformGrad,
+                                   const Matrix3& rateOfDeformation,
+                                   const double& delT);
 
     // Calculate rate of temperature change due to compression/expansion
     double computeIsentropicTemperatureRate(const double T,

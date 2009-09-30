@@ -42,22 +42,22 @@ RousselierYield::RousselierYield(ProblemSpecP& ps)
   ps->require("D",d_constant.D);
   ps->require("sig_1",d_constant.sig_1);
 }
-	 
+         
 RousselierYield::RousselierYield(const RousselierYield* cm)
 {
   d_constant.D = cm->d_constant.D;
   d_constant.sig_1 = cm->d_constant.sig_1;
 }
-	 
+         
 RousselierYield::~RousselierYield()
 {
 }
-	 
+         
 double 
 RousselierYield::evalYieldCondition(const double sigEqv,
-				    const double sigFlow,
-				    const double traceSig,
-				    const double porosity,
+                                    const double sigFlow,
+                                    const double traceSig,
+                                    const double porosity,
                                     double& sig)
 {
   double D = d_constant.D;
@@ -74,9 +74,9 @@ RousselierYield::evalYieldCondition(const double sigEqv,
 
 void 
 RousselierYield::evalDerivOfYieldFunction(const Matrix3& sig,
-					  const double sigFlow,
-					  const double f,
-					  Matrix3& derivative)
+                                          const double sigFlow,
+                                          const double f,
+                                          Matrix3& derivative)
 {
   Matrix3 I; I.Identity();
   double trSig = sig.Trace();
@@ -95,9 +95,9 @@ RousselierYield::evalDerivOfYieldFunction(const Matrix3& sig,
   to be more generalized if possible. */
 void 
 RousselierYield::evalDevDerivOfYieldFunction(const Matrix3& sig,
-					     const double ,
-					     const double ,
-					     Matrix3& derivative)
+                                             const double ,
+                                             const double ,
+                                             Matrix3& derivative)
 {
   Matrix3 I; I.Identity();
   double trSig = sig.Trace();
@@ -109,9 +109,9 @@ RousselierYield::evalDevDerivOfYieldFunction(const Matrix3& sig,
 
 double
 RousselierYield::evalDerivativeWRTPlasticityScalar(double trSig,
-						   double porosity,
-						   double sigY,
-						   double dsigYdV)
+                                                   double porosity,
+                                                   double sigY,
+                                                   double dsigYdV)
 {
   ostringstream desc;
   desc << "Rousselier Yield::evalDerivativeWRTPlasticityScalar not yet "
@@ -123,8 +123,8 @@ RousselierYield::evalDerivativeWRTPlasticityScalar(double trSig,
 
 double
 RousselierYield::evalDerivativeWRTPorosity(double trSig,
-					   double porosity,
-					   double sigY)
+                                           double porosity,
+                                           double sigY)
 {
   ostringstream desc;
   desc << "Rousselier Yield::evalDerivativeWRTPorosity not yet implemented"
@@ -135,18 +135,18 @@ RousselierYield::evalDerivativeWRTPorosity(double trSig,
 
 inline double
 RousselierYield::computePorosityFactor_h1(double sigma_f_sigma,
-					  double tr_f_sigma,
-					  double porosity,
-					  double sigma_Y,
-					  double A)
+                                          double tr_f_sigma,
+                                          double porosity,
+                                          double sigma_Y,
+                                          double A)
 {
   return (1.0-porosity)*tr_f_sigma + A*sigma_f_sigma/((1.0-porosity)*sigma_Y);
 }
 
 inline double
 RousselierYield::computePlasticStrainFactor_h2(double sigma_f_sigma,
-					       double porosity,
-					       double sigma_Y)
+                                               double porosity,
+                                               double sigma_Y)
 {
   return sigma_f_sigma/((1.0-porosity)*sigma_Y);
 }
@@ -154,12 +154,12 @@ RousselierYield::computePlasticStrainFactor_h2(double sigma_f_sigma,
 
 void 
 RousselierYield::computeTangentModulus(const TangentModulusTensor& Ce,
-				       const Matrix3& f_sigma, 
-				       double f_q1, 
-				       double f_q2,
-				       double h_q1,
-				       double h_q2,
-				       TangentModulusTensor& Cep)
+                                       const Matrix3& f_sigma, 
+                                       double f_q1, 
+                                       double f_q2,
+                                       double h_q1,
+                                       double h_q2,
+                                       TangentModulusTensor& Cep)
 {
   double fqhq = f_q1*h_q1 + f_q2*h_q2;
   Matrix3 Cr(0.0), rC(0.0);
@@ -169,7 +169,7 @@ RousselierYield::computeTangentModulus(const TangentModulusTensor& Ce,
       Cr(ii,jj) = 0.0;
       rC(ii,jj) = 0.0;
       for (int kk = 0; kk < 3; ++kk) {
-	for (int ll = 0; ll < 3; ++ll) {
+        for (int ll = 0; ll < 3; ++ll) {
           Cr(ii,jj) += Ce(ii,jj,kk,ll)*f_sigma(kk,ll);
           rC(ii,jj) += f_sigma(kk,ll)*Ce(kk,ll,ii,jj);
         }
@@ -180,10 +180,10 @@ RousselierYield::computeTangentModulus(const TangentModulusTensor& Ce,
   for (int ii = 0; ii < 3; ++ii) {
     for (int jj = 0; jj < 3; ++jj) {
       for (int kk = 0; kk < 3; ++kk) {
-	for (int ll = 0; ll < 3; ++ll) {
+        for (int ll = 0; ll < 3; ++ll) {
           Cep(ii,jj,kk,ll) = Ce(ii,jj,kk,ll) - 
-	    Cr(ii,jj)*rC(kk,ll)/(-fqhq + rCr);
-	}  
+            Cr(ii,jj)*rC(kk,ll)/(-fqhq + rCr);
+        }  
       }  
     }  
   }  
@@ -191,12 +191,12 @@ RousselierYield::computeTangentModulus(const TangentModulusTensor& Ce,
 
 void 
 RousselierYield::computeElasPlasTangentModulus(const TangentModulusTensor& Ce,
-					       const Matrix3& sigma, 
-					       double sigY,
-					       double dsigYdep,
-					       double porosity,
-					       double voidNuclFac,
-					       TangentModulusTensor& Cep)
+                                               const Matrix3& sigma, 
+                                               double sigY,
+                                               double dsigYdep,
+                                               double porosity,
+                                               double voidNuclFac,
+                                               TangentModulusTensor& Cep)
 {
   // Calculate the derivative of the yield function wrt sigma
   Matrix3 f_sigma;

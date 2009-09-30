@@ -69,7 +69,7 @@ ZerilliArmstrongPlastic::ZerilliArmstrongPlastic(ProblemSpecP& ps)
 }
          
 ZerilliArmstrongPlastic::ZerilliArmstrongPlastic(const 
-						 ZerilliArmstrongPlastic* cm)
+                                                 ZerilliArmstrongPlastic* cm)
 {
   d_CM.bcc_or_fcc = cm->d_CM.bcc_or_fcc;
   d_CM.c1 = cm->d_CM.c1;
@@ -159,7 +159,7 @@ ZerilliArmstrongPlastic::updateElastic(const particleIndex )
 
 void
 ZerilliArmstrongPlastic::updatePlastic(const particleIndex , 
-				       const double& )
+                                       const double& )
 {
 }
 
@@ -191,7 +191,7 @@ ZerilliArmstrongPlastic::computeFlowStress(const PlasticityState* state,
     flowStress = d_CM.c1*exp(-d_CM.c3*T + d_CM.c4*T*log(epdot)) + 
                  d_CM.c5*pow(ep,d_CM.n) + 65.0e6; 
   }
-  cout << "Flowstress is" << flowStress <<  endl;					     
+  cout << "Flowstress is" << flowStress <<  endl;                                            
   return flowStress;
   
 }
@@ -249,9 +249,9 @@ ZerilliArmstrongPlastic::computeTangentModulus(const Matrix3& stress,
 
 void
 ZerilliArmstrongPlastic::evalDerivativeWRTScalarVars(
-						const PlasticityState* state,
-						const particleIndex idx,
-						Vector& derivs)
+                                                const PlasticityState* state,
+                                                const particleIndex idx,
+                                                Vector& derivs)
 {
   derivs[0] = evalDerivativeWRTStrainRate(state, idx);
   derivs[1] = evalDerivativeWRTTemperature(state, idx);
@@ -261,8 +261,8 @@ ZerilliArmstrongPlastic::evalDerivativeWRTScalarVars(
 
 double
 ZerilliArmstrongPlastic::evalDerivativeWRTPlasticStrain(
-						const PlasticityState* state,
-						const particleIndex idx)
+                                                const PlasticityState* state,
+                                                const particleIndex idx)
 {
   // Get the state data
   double ep = state->plasticStrain;
@@ -272,7 +272,7 @@ ZerilliArmstrongPlastic::evalDerivativeWRTPlasticStrain(
   if (d_CM.bcc_or_fcc == "fcc")
   {
     deriv = (0.5*d_CM.c2*exp(-d_CM.c3*T + 
-				  d_CM.c4*T*log(epdot)))/sqrt(ep);  
+                                  d_CM.c4*T*log(epdot)))/sqrt(ep);  
   }
   else
   {
@@ -302,7 +302,7 @@ ZerilliArmstrongPlastic::computeMeltingTemp(const PlasticityState* state)
 
 double
 ZerilliArmstrongPlastic::evalDerivativeWRTTemperature(
-						const PlasticityState* state,
+                                                const PlasticityState* state,
                                                 const particleIndex idx)
 {
   // Get the state data
@@ -314,7 +314,7 @@ ZerilliArmstrongPlastic::evalDerivativeWRTTemperature(
   if (d_CM.bcc_or_fcc == "fcc")
   {
     deriv = d_CM.c2*sqrt(ep)*exp(-d_CM.c3*T + 
-		 d_CM.c4*T*log(epdot))*(-d_CM.c3 + d_CM.c4*log(epdot));    
+                 d_CM.c4*T*log(epdot))*(-d_CM.c3 + d_CM.c4*log(epdot));    
   }
   else
   {
@@ -327,7 +327,7 @@ ZerilliArmstrongPlastic::evalDerivativeWRTTemperature(
 
 double
 ZerilliArmstrongPlastic::evalDerivativeWRTStrainRate(
-						const PlasticityState* state,
+                                                const PlasticityState* state,
                                                 const particleIndex idx)
 {
   // Get the state data
@@ -339,12 +339,12 @@ ZerilliArmstrongPlastic::evalDerivativeWRTStrainRate(
   if (d_CM.bcc_or_fcc == "fcc")
   {
     deriv = (d_CM.c2*d_CM.c4*T*sqrt(ep)*exp(-d_CM.c3*T + 
-		   d_CM.c4*T*log(epdot)))/epdot;  
+                   d_CM.c4*T*log(epdot)))/epdot;  
   }
   else
   {
     deriv = (d_CM.c1*d_CM.c4*T*exp(-d_CM.c3*T + 
-					  d_CM.c4*T*log(epdot)))/epdot;    
+                                          d_CM.c4*T*log(epdot)))/epdot;    
 
   }
   

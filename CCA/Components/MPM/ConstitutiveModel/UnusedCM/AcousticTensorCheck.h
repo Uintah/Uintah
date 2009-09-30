@@ -31,7 +31,7 @@ DEALINGS IN THE SOFTWARE.
 #ifndef __ACOUSTICTENSOR_CHECK_H__
 #define __ACOUSTICTENSOR_CHECK_H__
 
-#include "StabilityCheck.h"	
+#include "StabilityCheck.h"     
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/Math/FastMatrix.h>
 #include <Core/Math/TangentModulusTensor.h>
@@ -61,14 +61,14 @@ namespace Uintah {
   class AcousticTensorCheck : public StabilityCheck {
 
   public:
-	 
+         
     //! Construct an object that can be used to check stability
     AcousticTensorCheck(ProblemSpecP& ps);
     AcousticTensorCheck(const AcousticTensorCheck* atc);
 
     //! Destructor of stability check
     ~AcousticTensorCheck();
-	 
+         
     /*! Check the stability and return the direction of instability
       if any */
     bool checkStability(const Matrix3& cauchyStress,

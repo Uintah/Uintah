@@ -55,34 +55,34 @@ namespace Uintah {
         public ImplicitCM {
       private:
          // Create datatype for storing model parameters
-	  bool d_useModifiedEOS; 
+          bool d_useModifiedEOS; 
           double d_active;
           string d_StrainEnergy;
-	  public:
-	  struct CMData {   //______________________________modified here
-	  	double Bulk;
-      		double c1;
-      		double c2;
-      		double c3;
-      		double c4;
-      		double c5;
-      		double lambda_star;
-      		Vector a0;
-		double failure;
-      		double crit_shear;
-      		double crit_stretch;
-		double y1;//visco properties
-      		double y2;
-      		double y3;
-      		double y4;
-      		double y5;
-      		double y6;
-      		double t1;
-      		double t2;
-      		double t3;
-      		double t4;
-      		double t5;
-      		double t6;
+          public:
+          struct CMData {   //______________________________modified here
+                double Bulk;
+                double c1;
+                double c2;
+                double c3;
+                double c4;
+                double c5;
+                double lambda_star;
+                Vector a0;
+                double failure;
+                double crit_shear;
+                double crit_stretch;
+                double y1;//visco properties
+                double y2;
+                double y3;
+                double y4;
+                double y5;
+                double y6;
+                double t1;
+                double t2;
+                double t3;
+                double t4;
+                double t5;
+                double t6;
           };
     
     const VarLabel* pStretchLabel;  // For diagnostic
@@ -140,46 +140,46 @@ namespace Uintah {
                                             DataWarehouse* new_dw);
 
          virtual void computeStressTensor(const PatchSubset* patches,
-					  const MPMMaterial* matl,
-					  DataWarehouse* old_dw,
-					  DataWarehouse* new_dw,
+                                          const MPMMaterial* matl,
+                                          DataWarehouse* old_dw,
+                                          DataWarehouse* new_dw,
                                           Solver* solver,
-					  const bool recursion);
+                                          const bool recursion);
 
          virtual void computeStressTensor(const PatchSubset* patches,
-					  const MPMMaterial* matl,
-					  DataWarehouse* old_dw,
-					  DataWarehouse* new_dw);
+                                          const MPMMaterial* matl,
+                                          DataWarehouse* old_dw,
+                                          DataWarehouse* new_dw);
 
          // initialize  each particle's constitutive model data
          virtual void initializeCMData(const Patch* patch,
                                        const MPMMaterial* matl,
                                        DataWarehouse* new_dw);
 
-	 virtual void allocateCMDataAddRequires(Task* task, 
-						const MPMMaterial* matl,
-						const PatchSet* patch, 
-						MPMLabel* lb) const;
+         virtual void allocateCMDataAddRequires(Task* task, 
+                                                const MPMMaterial* matl,
+                                                const PatchSet* patch, 
+                                                MPMLabel* lb) const;
 
 
-	 virtual void allocateCMDataAdd(DataWarehouse* new_dw,
-					ParticleSubset* subset,
-					map<const VarLabel*, ParticleVariableBase*>* newState,
-					ParticleSubset* delset,
-					DataWarehouse* old_dw);
+         virtual void allocateCMDataAdd(DataWarehouse* new_dw,
+                                        ParticleSubset* subset,
+                                        map<const VarLabel*, ParticleVariableBase*>* newState,
+                                        ParticleSubset* delset,
+                                        DataWarehouse* old_dw);
 
-	 /*virtual void addInitialComputesAndRequires(Task* task,
+         /*virtual void addInitialComputesAndRequires(Task* task,
                                                const MPMMaterial* matl,
                                                const PatchSet*) const;*/
 
          virtual void addComputesAndRequires(Task* task,
                                              const MPMMaterial* matl,
                                              const PatchSet* patches,
-					     const bool recursion) const;
+                                             const bool recursion) const;
 
          virtual void addComputesAndRequires(Task* task,
                                              const MPMMaterial* matl,
-					     const PatchSet* patches) const;
+                                             const PatchSet* patches) const;
 
 
          virtual double computeRhoMicroCM(double pressure,
@@ -192,14 +192,14 @@ namespace Uintah {
                                         const MPMMaterial* matl);
 
          virtual double getCompressibility();
-	 
-	 virtual Vector getInitialFiberDir();
+         
+         virtual Vector getInitialFiberDir();
 
-	 virtual void addParticleState(std::vector<const VarLabel*>& from,
-				       std::vector<const VarLabel*>& to);
+         virtual void addParticleState(std::vector<const VarLabel*>& from,
+                                       std::vector<const VarLabel*>& to);
 
-	//const VarLabel* bElBarLabel;
-	//const VarLabel* bElBarLabel_preReloc;
+        //const VarLabel* bElBarLabel;
+        //const VarLabel* bElBarLabel_preReloc;
 
       };
 } // End namespace Uintah

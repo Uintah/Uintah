@@ -65,7 +65,7 @@ namespace Uintah {
     BPSMeltTemp& operator=(const BPSMeltTemp &mtm);
 
   public:
-	 
+         
     /*! Construct a constant melt temp model. */
     BPSMeltTemp(ProblemSpecP& ps);
 
@@ -74,7 +74,7 @@ namespace Uintah {
 
     /*! Destructor of constant melt temp model.   */
     virtual ~BPSMeltTemp();
-	 
+         
     virtual void outputProblemSpec(ProblemSpecP& ps);
 
     /*! Compute the melt temp */

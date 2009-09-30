@@ -33,7 +33,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/ProblemSpec/ProblemSpec.h>
 
 using namespace Uintah;
-	 
+         
 // Construct a specific heat model.  
 CopperCp::CopperCp(ProblemSpecP& ps)
 {
@@ -69,7 +69,7 @@ CopperCp::CopperCp(const CopperCp* ccp)
 CopperCp::~CopperCp()
 {
 }
-	 
+         
 void CopperCp::outputProblemSpec(ProblemSpecP& ps)
 {
   ProblemSpecP cm_ps = ps->appendChild("specific_heat_model");

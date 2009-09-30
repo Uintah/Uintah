@@ -382,7 +382,7 @@ CNHDamage::computeStressTensor(const PatchSubset* patches,
     old_dw->get(pFailed,                  pFailedLabel,                 pset);
     old_dw->get(pFailureStrain,           pFailureStrainLabel,          pset);
     old_dw->get(pErosion,                 lb->pErosionLabel,            pset);
-    old_dw->get(pParticleID, 		  lb->pParticleIDLabel,         pset);
+    old_dw->get(pParticleID,              lb->pParticleIDLabel,         pset);
 
     // Get Grid info
     new_dw->get(gVelocity,   lb->gVelocityStarLabel, dwi, patch, gac, NGN);
@@ -626,7 +626,7 @@ CNHDamage::updateFailedParticlesAndModifyStress(const Matrix3& FF,
 
   if (d_epsf.failureByStress) {
       pStress_new.eigen(eigval, eigvec);
-  } else {			//failure by strain
+  } else {                      //failure by strain
       ee.eigen(eigval, eigvec);
   }
 
@@ -713,7 +713,7 @@ CNHDamage::computeStressTensorImplicit(const PatchSubset* patches,
     old_dw->get(pBeBar,                   bElBarLabel,                  pset);
     old_dw->get(pFailed,                  pFailedLabel,                 pset);
     old_dw->get(pFailureStrain,           pFailureStrainLabel,          pset);
-    old_dw->get(pParticleID,  		  lb->pParticleIDLabel,         pset);
+    old_dw->get(pParticleID,              lb->pParticleIDLabel,         pset);
 
     // Get Grid info
     new_dw->get(gDisp, lb->dispNewLabel, dwi, patch, gac, 1);

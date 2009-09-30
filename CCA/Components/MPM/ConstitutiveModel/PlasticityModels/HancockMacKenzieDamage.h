@@ -32,7 +32,7 @@ DEALINGS IN THE SOFTWARE.
 #define __HANCOCKMACKENZIE_DAMAGE_MODEL_H__
 
 
-#include "DamageModel.h"	
+#include "DamageModel.h"        
 #include <Core/ProblemSpec/ProblemSpecP.h>
 
 namespace Uintah {
@@ -69,12 +69,12 @@ namespace Uintah {
     struct CMData {
       double D0; /*< Initial damage */
       double Dc; /*< Critical damage */
-    };	 
+    };   
 
   private:
 
     CMData d_initialData;
-	 
+         
     // Prevent copying of this class
     // copy constructor
     //HancockMacKenzieDamage(const HancockMacKenzieDamage &cm);
@@ -84,12 +84,12 @@ namespace Uintah {
     // constructors
     HancockMacKenzieDamage(ProblemSpecP& ps); 
     HancockMacKenzieDamage(const HancockMacKenzieDamage* cm);
-	 
+         
     // destructor 
     virtual ~HancockMacKenzieDamage();
 
     virtual void outputProblemSpec(ProblemSpecP& ps);
-	 
+         
     //////////////////////////////////////////////////////////////////////////
     /*! 
       Initialize the damage parameter in the calling function
@@ -107,12 +107,12 @@ namespace Uintah {
     //////////
     // Calculate the scalar damage parameter 
     virtual double computeScalarDamage(const double& plasticStrainRate,
-				       const Matrix3& stress,
-				       const double& temperature,
-				       const double& delT,
-				       const MPMMaterial* matl,
-				       const double& tolerance,
-				       const double& damage_old);
+                                       const Matrix3& stress,
+                                       const double& temperature,
+                                       const double& delT,
+                                       const MPMMaterial* matl,
+                                       const double& tolerance,
+                                       const double& damage_old);
   };
 
 } // End namespace Uintah

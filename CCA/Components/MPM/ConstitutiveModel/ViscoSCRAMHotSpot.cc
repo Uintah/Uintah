@@ -451,7 +451,7 @@ ViscoSCRAMHotSpot::computeStressTensor(const PatchSubset* patches,
       pStrainRate_new[idx] = pDefRate.Norm();
 
       if (dbg.active())
-	dbg << "Total strain rate = " << pStrainRate_new[idx] << endl;
+        dbg << "Total strain rate = " << pStrainRate_new[idx] << endl;
 
       pDefRateDev = pDefRate - Id*(onethird*pDefRate.Trace());
       double edotnorm = sqrtopf*pDefRateDev.Norm();
@@ -541,7 +541,7 @@ ViscoSCRAMHotSpot::computeStressTensor(const PatchSubset* patches,
                                                pDefRateDev, sigDev_new, 
                                                Gmw, cdot_new);
       if (dbg.active())
-	dbg << "rhoCv = " << rhoCv << endl;
+        dbg << "rhoCv = " << rhoCv << endl;
 
       // Compute bulk chemical heating rate
       double qdot_ch = computeChemicalHeatRate(rho_cur, T_old);
@@ -553,7 +553,7 @@ ViscoSCRAMHotSpot::computeStressTensor(const PatchSubset* patches,
       double crHeatRate = wdot_cr*fac;
 
       if (dbg.active())
-	dbg << "pCrHeatRate = " << crHeatRate << endl;
+        dbg << "pCrHeatRate = " << crHeatRate << endl;
 
       double chHeatRate = d_matConst.vfHE*qdot_ch;
       pVolHeatRate_new[idx] = volHeatRate;

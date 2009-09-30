@@ -49,7 +49,7 @@ namespace Uintah {
   class ShearModulusModel {
 
   public:
-	 
+         
     //! Construct a shear modulus model.  
     /*! This is an abstract base class. */
     ShearModulusModel();
@@ -59,7 +59,7 @@ namespace Uintah {
     virtual ~ShearModulusModel();
 
     virtual void outputProblemSpec(ProblemSpecP& ps) = 0;
-	 
+         
     /////////////////////////////////////////////////////////////////////////
     /*! 
       \brief Compute the shear modulus

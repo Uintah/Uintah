@@ -34,24 +34,24 @@ DEALINGS IN THE SOFTWARE.
 //  information for the FLIP technique:
 //    This constitutive model is based on theorem of Continuum Damage 
 //    Mechanics (CDM) with following assumptions:
-//	i.   Free energy equation is uncoupled as volumetric and deviatoric
-//	     parts and the equation is the same as Neo-Hookean model (refer:
-//	     CompNeoHook.h and CompNeoHook.cc).
-//	ii.  The damage mechanism is associated with maximum distortional
-//	     energy and is independent of hydrostatic pressure.
-//	iii. The damage criterion is only function of equivalent strain. 
-//	iv.  The damage process character function has exponential form.
+//      i.   Free energy equation is uncoupled as volumetric and deviatoric
+//           parts and the equation is the same as Neo-Hookean model (refer:
+//           CompNeoHook.h and CompNeoHook.cc).
+//      ii.  The damage mechanism is associated with maximum distortional
+//           energy and is independent of hydrostatic pressure.
+//      iii. The damage criterion is only function of equivalent strain. 
+//      iv.  The damage process character function has exponential form.
 //    Material property constants:
-//	Young's modulus, Poisson's ratio;
-//	Damage parameters: alpha[0, infinite), beta[0, 1].
+//      Young's modulus, Poisson's ratio;
+//      Damage parameters: alpha[0, infinite), beta[0, 1].
 //      Maximum equivalent strain: strainmax -- there will be no damage
 //                                 when strain is less than this value.
 //  Reference: "ON A FULLY THREE-DIMENSIONAL FINITE-STRAIN VISCOELASTIC
-//		DAMAGE MODEL: FORMULATION AND COMPUTATIONAL ASPECTS", by
-//		J.C.Simo, Computer Methods in Applied Mechanics and
-//		Engineering 60 (1987) 153-173.
-//		"COMPUTATIONAL INELASTICITY" by J.C.Simo & T.J.R.Hughes,
-//		Springer, 1997.
+//              DAMAGE MODEL: FORMULATION AND COMPUTATIONAL ASPECTS", by
+//              J.C.Simo, Computer Methods in Applied Mechanics and
+//              Engineering 60 (1987) 153-173.
+//              "COMPUTATIONAL INELASTICITY" by J.C.Simo & T.J.R.Hughes,
+//              Springer, 1997.
 //    Features:
 //      Usage:
 
@@ -78,13 +78,13 @@ HyperElasticDamage::HyperElasticDamage(ProblemSpecP& ps)
 
   deformationGradient.Identity();
   bElBar.Identity();
-  damageG = 1.0;		// No damage at beginning
+  damageG = 1.0;                // No damage at beginning
   E_bar.set(0.0);
  
 }
 
 HyperElasticDamage::HyperElasticDamage(double bulk, double shear,
-			       double alpha, double beta, double strainmax): 
+                               double alpha, double beta, double strainmax): 
   d_Bulk(bulk),d_Shear(shear),d_Alpha(alpha),d_Beta(beta),maxEquivStrain(strainmax)
 {
   // Main constructor
@@ -92,7 +92,7 @@ HyperElasticDamage::HyperElasticDamage(double bulk, double shear,
 
   deformationGradient.Identity();
   bElBar.Identity();
-  damageG = 1.0;		// No damage at beginning
+  damageG = 1.0;                // No damage at beginning
   E_bar.set(0.0);
 
 }
@@ -201,15 +201,15 @@ std::vector<double> HyperElasticDamage::getMechProps() const
 
 
 void HyperElasticDamage::addParticleState(std::vector<const VarLabel*>& from,
-					std::vector<const VarLabel*>& to)
+                                        std::vector<const VarLabel*>& to)
 {
    throw InternalError("HyperElasticDamage won't work");
 }
 
 void HyperElasticDamage::computeStressTensor(const PatchSubset* patches,
-					     const MPMMaterial* matl,
-					     DataWarehouse* old_dw,
-					     DataWarehouse* new_dw)
+                                             const MPMMaterial* matl,
+                                             DataWarehouse* old_dw,
+                                             DataWarehouse* new_dw)
 {
 
 #ifdef WONT_COMPILE_YET
@@ -237,7 +237,7 @@ void HyperElasticDamage::computeStressTensor(const PatchSubset* patches,
   deformationGradient = deformationGradientInc * deformationGradient;
 
   fbar = deformationGradientInc*pow(deformationGradientInc.Determinant(),
-					-onethird);
+                                        -onethird);
 
   F_bar = deformationGradient*pow(deformationGradient.Determinant(),-onethird);
 
@@ -249,7 +249,7 @@ void HyperElasticDamage::computeStressTensor(const PatchSubset* patches,
   // Calculate equivalent strain
   equiv_strain = sqrt(d_Shear*(C_bar.Trace() - 3.0));
   maxEquivStrain = (maxEquivStrain > equiv_strain) ? 
-				maxEquivStrain : equiv_strain;
+                                maxEquivStrain : equiv_strain;
 
   // Normal of the damage surface
   damage_normal = Identity * d_Shear / (2.0*equiv_strain);
@@ -262,12 +262,12 @@ void HyperElasticDamage::computeStressTensor(const PatchSubset* patches,
 
     for( int damage_i=1; damage_i<=3; damage_i++) 
        for( int damage_j=1; damage_j<=3; damage_j++)
-     	  damage_flag += damage_normal(damage_i, damage_j) * 
-			Ebar_increament(damage_i, damage_j);
+          damage_flag += damage_normal(damage_i, damage_j) * 
+                        Ebar_increament(damage_i, damage_j);
 
-  if (damage_flag > 0.0)	// loading: further damage 
+  if (damage_flag > 0.0)        // loading: further damage 
      damageG = d_Beta + (1-d_Beta) * (1-exp(-maxEquivStrain/d_Alpha))
-    			/ (maxEquivStrain/d_Alpha);
+                        / (maxEquivStrain/d_Alpha);
 
   } // end if
   E_bar = current_E_bar;
@@ -277,7 +277,7 @@ void HyperElasticDamage::computeStressTensor(const PatchSubset* patches,
   // shearTrial is equal to the shear modulus times dev(bElBar)
 
   shearTrial = (bElBarTrial - Identity*onethird*bElBarTrial.Trace())
-     		* d_Shear * damageG;
+                * d_Shear * damageG;
 
   // get the volumetric part of the deformation
   J = deformationGradient.Determinant();
@@ -294,8 +294,8 @@ void HyperElasticDamage::computeStressTensor(const PatchSubset* patches,
 }
 
 double HyperElasticDamage::computeStrainEnergy(const Patch* patch,
-					       const MPMMaterial* matl,
-					       DataWarehouse* new_dw)
+                                               const MPMMaterial* matl,
+                                               DataWarehouse* new_dw)
 {
 #ifdef WONT_COMPILE_YET
   double strainenergy = 1;
@@ -305,16 +305,16 @@ double HyperElasticDamage::computeStrainEnergy(const Patch* patch,
 }
 
 void HyperElasticDamage::initializeCMData(const Patch* patch,
-					  const MPMMaterial* matl,
-					  DataWarehouse* new_dw)
+                                          const MPMMaterial* matl,
+                                          DataWarehouse* new_dw)
 {
 
 }
 
 
 void HyperElasticDamage::addComputesAndRequires(Task* task,
-					     const MPMMaterial* matl,
-					     const PatchSet* patches) const
+                                             const MPMMaterial* matl,
+                                             const PatchSet* patches) const
 {
    cerr << "HyperElasticDamage::addComputesAndRequires needs to be filled in\n";
 }
@@ -399,7 +399,7 @@ ConstitutiveModel* HyperElasticDamage::readRestartParametersAndCreate(ProblemSpe
 ConstitutiveModel* HyperElasticDamage::create(double *p_array)
 {
   return(scinew HyperElasticDamage(p_array[0],p_array[1],p_array[2],
-				p_array[3],p_array[4]));
+                                p_array[3],p_array[4]));
 }
 
 int HyperElasticDamage::getType() const

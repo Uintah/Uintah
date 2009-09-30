@@ -50,7 +50,7 @@ namespace Uintah {
   class MeltingTempModel {
 
   public:
-	 
+         
     //! Construct a melting temp model.  
     /*! This is an abstract base class. */
     MeltingTempModel();
@@ -60,7 +60,7 @@ namespace Uintah {
     virtual ~MeltingTempModel();
 
     virtual void outputProblemSpec(ProblemSpecP& ps) = 0;
-	 
+         
     /////////////////////////////////////////////////////////////////////////
     /*! 
       \brief Compute the melting temperature

@@ -42,11 +42,11 @@ HyperElasticEOS::HyperElasticEOS()
 HyperElasticEOS::HyperElasticEOS(ProblemSpecP&)
 {
 } 
-	 
+         
 HyperElasticEOS::HyperElasticEOS(const HyperElasticEOS*)
 {
 } 
-	 
+         
 HyperElasticEOS::~HyperElasticEOS()
 {
 }
@@ -57,16 +57,16 @@ void HyperElasticEOS::outputProblemSpec(ProblemSpecP& ps)
   ProblemSpecP eos_ps = ps->appendChild("equation_of_state");
   eos_ps->setAttribute("type","default_hyper");
 }
-	 
+         
 
 //////////
 // Calculate the pressure using the elastic constitutive equation
 double 
 HyperElasticEOS::computePressure(const MPMMaterial* matl,
-				       const PlasticityState* state,
-				       const Matrix3& ,
-				       const Matrix3& rateOfDeformation,
-				       const double& delT)
+                                       const PlasticityState* state,
+                                       const Matrix3& ,
+                                       const Matrix3& rateOfDeformation,
+                                       const double& delT)
 {
   double rho_0 = matl->getInitialDensity();
   double rho = state->density;

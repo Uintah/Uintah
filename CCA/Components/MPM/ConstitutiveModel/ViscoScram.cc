@@ -777,14 +777,14 @@ ViscoScram::computeStressTensor(const PatchSubset* patches,
       double delTinv = 1.0/delT;
       for(int imw=0;imw<5;imw++){
 
-	// If the relaxation time is smaller than delT, assume that
-	// the deviatoric stress in the Maxwell element is zero
+        // If the relaxation time is smaller than delT, assume that
+        // the deviatoric stress in the Maxwell element is zero
         if (d_doTimeTemperature) {
-	  if (RTau[imw] > 0.1*delTinv) {
+          if (RTau[imw] > 0.1*delTinv) {
             pStatedata[idx].DevStress[imw] = zero;
-	    continue;
-	  }
-	}
+            continue;
+          }
+        }
 
         // First Runga-Kutta Term
         double crad_rk = crad;
@@ -946,14 +946,14 @@ ViscoScram::computeStressTensor(const PatchSubset* patches,
       for(int imw=0;imw<5;imw++){
         svedot += pStatedata[idx].DevStress[imw].NormSquared()/(2.*Gmw[imw])
                   *RTau[imw] ;
-	/*
-	if (pTemperature[idx] > 450.0) {
+        /*
+        if (pTemperature[idx] > 450.0) {
           cout << "\tidx = " << idx << " j = " << imw 
-	       << "\n\t\t S_j:S_j = " << pStatedata[idx].DevStress[imw].NormSquared()
-	       << " mu_j = " << Gmw[imw] << " tau_j = " << RTau[imw] 
-	       << " wdot_j = " << svedot << endl;
-	}
-	*/
+               << "\n\t\t S_j:S_j = " << pStatedata[idx].DevStress[imw].NormSquared()
+               << " mu_j = " << Gmw[imw] << " tau_j = " << RTau[imw] 
+               << " wdot_j = " << svedot << endl;
+        }
+        */
       }
       pVeHeatRate_new[idx] = svedot/rhoCv;
 
@@ -994,7 +994,7 @@ ViscoScram::computeStressTensor(const PatchSubset* patches,
       /*
       if (pTemperature[idx] > 450.0) {
       cout << "\t idx = " << idx << "\n\t\t qdot_v = " << pVolHeatRate_new[idx]
-	               << " T = " << pTemperature[idx] << " Tr(edot) = " << ekkdot
+                       << " T = " << pTemperature[idx] << " Tr(edot) = " << ekkdot
                        << "\n\t\t qdot_ve = " << pVeHeatRate_new[idx]
                        << "\n\t\t qdot_cr = " << pCrHeatRate_new[idx]
                        << "\n\t\t qdot = " << pdTdt[idx] << endl;
