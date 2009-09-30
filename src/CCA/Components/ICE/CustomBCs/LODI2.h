@@ -57,6 +57,7 @@ namespace Uintah {
     int iceMatl_indx;
     vector<Patch::FaceType> LodiFaces;
     bool saveLiTerms;
+    Vector d_gravity;
   };    
   //____________________________________________________________
   // This struct contains the additional variables required to 

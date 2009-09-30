@@ -398,7 +398,7 @@ bool getIteratorBCValueBCKind( const Patch* patch,
 
 /* --------------------------------------------------------------------- 
  Function~  setBC--      
- Purpose~   Takes care of face centered velocities
+ Purpose~   Takes capre of face centered velocities
  Note:      Neumann BC values are only set on the transverse faces, 
             The normal components are computed in 
             AddExchangeContributionToFCVel.

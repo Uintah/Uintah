@@ -1199,7 +1199,7 @@ void AMRMPM::computeAndIntegrateAcceleration(const ProcessorGroup*,
     printTask(patches, patch,cout_doing,"Doing computeAndIntegrateAcceleration\t\t\t\t");
 
     Ghost::GhostType  gnone = Ghost::None;
-    Vector gravity = d_sharedState->getGravity();
+    Vector gravity = flags->d_gravity;
     for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
