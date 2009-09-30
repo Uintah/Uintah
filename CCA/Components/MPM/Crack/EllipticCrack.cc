@@ -74,7 +74,7 @@ void EllipticCrack::outputInitialCrackPlane(int i)
        << " cells on the circumference." << endl;
   if(CrkFrtSegID==-1)
     cout << "    crack front: on the ellipse circumference" << endl;
-  else	  
+  else    
     cout << "    crack front segment ID: " << CrkFrtSegID
          << endl;
   cout << "    end point on axis1: " << vertices[0] << endl;

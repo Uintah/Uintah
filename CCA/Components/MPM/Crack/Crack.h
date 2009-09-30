@@ -296,9 +296,9 @@ class Crack
     void   DiscretizeQuadCracks(const int&,int&);
     void   DiscretizeCurvedQuadCracks(const int&,int&);
     void   GetGlobalCoordinatesQuad(const int&, const int&,const int&, 
-	                            const double&, const double&, Point&);
+                                    const double&, const double&, Point&);
     void   GetGlobalCoordinatesTriangle(const int&, const int&,const int&,
-			                const double&, const double&, Point&);
+                                        const double&, const double&, Point&);
     void   DiscretizeTriangularCracks(const int&,int&);
     void   DiscretizeArcCracks(const int&,int&);
     void   DiscretizeEllipticCracks(const int&,int&);
@@ -324,15 +324,15 @@ class Crack
            // Private methods in ParticleNodePairVelocityField.cc
     IntVector CellOffset(const Point&, const Point&, Vector);    
     short  ParticleNodeCrackPLaneRelation(const Point&,const Point&,
-	 	            const Point&,const Point&,const Point&);	    
+                            const Point&,const Point&,const Point&);        
     double Volume(const Point&,const Point&,const Point&,const Point&);
     
            // Private methods in FractureParametersCalculation.cc
     void   DetectIfDoingFractureAnalysisAtThisTimeStep(double);
     void   FindJIntegralPath(const Point&,const Vector&,const Vector&,
-	  	             const Vector&,double []);    
+                             const Vector&,double []);    
     bool   FindIntersectionJPathAndCrackPlane(const int&,const double& r,
-		                              const double [],Point&);    
+                                              const double [],Point&);    
     void   FindPlaneEquation(const Point&,const Point&,const Point&,
                              double&,double&,double&,double&);
     short  PointInTriangle(const Point&,const Point&,const Point&,const Point&); 

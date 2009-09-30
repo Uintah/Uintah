@@ -137,7 +137,7 @@ void Crack::ParticleVelocityField(const ProcessorGroup*,
         } 
       } // End of if(...)
       else { // For materials with crack(s)
-	      
+              
         // Step 1: Detect if nodes are in crack zone
        
         Ghost::GhostType  gac = Ghost::AroundCells;
