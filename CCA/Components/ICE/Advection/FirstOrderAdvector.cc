@@ -241,12 +241,12 @@ void FirstOrderAdvector::advectQ(const CCVariable<double>& q_CC,
                                  SFCXVariable<double>& q_XFC,
                                  SFCYVariable<double>& q_YFC,
                                  SFCZVariable<double>& q_ZFC,
-				     DataWarehouse* /*new_dw*/)
+                                     DataWarehouse* /*new_dw*/)
 {
   advectSlabs<double>(q_CC,patch,q_advected,  
                       q_XFC, q_YFC, q_ZFC, save_q_FC());
                       
-  // fluxes on faces at the coarse fine interfaces		      
+  // fluxes on faces at the coarse fine interfaces                    
   q_FC_PlusFaces( q_CC, patch, q_XFC, q_YFC, q_ZFC); 
   
   // fluxes on faces at the coarse fine interfaces                    
@@ -318,10 +318,10 @@ template <class T, typename F>
 _____________________________________________________________________*/
 template<class T>
 void FirstOrderAdvector::q_FC_operator(CellIterator iter, 
-                		       IntVector adj_offset,
-                		       const int face,
-                		       const CCVariable<double>& q_CC,
-                		       T& q_FC)
+                                       IntVector adj_offset,
+                                       const int face,
+                                       const CCVariable<double>& q_CC,
+                                       T& q_FC)
 {
   for(;!iter.done(); iter++){
     IntVector R = *iter;      
@@ -348,7 +348,7 @@ void FirstOrderAdvector::q_FC_operator(CellIterator iter,
  and the interior domain only on the x+, y+, z+ patch faces 
 _____________________________________________________________________*/
 void FirstOrderAdvector::q_FC_PlusFaces(
-      	      	      	      	       const CCVariable<double>& q_CC,
+                                       const CCVariable<double>& q_CC,
                                    const Patch* patch,
                                    SFCXVariable<double>& q_XFC,
                                    SFCYVariable<double>& q_YFC,
@@ -387,10 +387,10 @@ void FirstOrderAdvector::q_FC_PlusFaces(
 _____________________________________________________________________*/
 template<class T, class V>
 void FirstOrderAdvector::q_FC_flux_operator(CellIterator iter, 
-                		          IntVector adj_offset,
-                		          const int face,
-                		          const CCVariable<V>& q_CC,
-                		          T& q_FC_flux)
+                                          IntVector adj_offset,
+                                          const int face,
+                                          const CCVariable<V>& q_CC,
+                                          T& q_FC_flux)
 {
   int out_indx = OF_slab[face]; //LEFT,   BOTTOM,   BACK 
   int in_indx  = IF_slab[face]; //RIGHT,  TOP,      FRONT

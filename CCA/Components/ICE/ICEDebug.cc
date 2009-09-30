@@ -220,7 +220,7 @@ void    ICE::printVector(int matl,
                          int include_EC,
                          const string&    message1,       
                          const string&    message2,
-	                  int   component,
+                          int   component,
                          const CCVariable<Vector>& q_CC)
 {
   if(d_dbgSymmetryTest){  // symmetry test
@@ -424,7 +424,7 @@ void    ICE::printVector_driver(int matl,
                                 int include_EC,
                                 const string&    message1,       
                                 const string&    message2,
-	                         int   /*component*/,  /*  x = 0,y = 1, z = 1  */
+                                 int   /*component*/,  /*  x = 0,y = 1, z = 1  */
                                 const CCVariable<Vector>& q_CC)
 {
 
