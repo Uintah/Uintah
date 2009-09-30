@@ -67,7 +67,7 @@ SimulationState::SimulationState(ProblemSpecP &ps)
 				       PerPatch<int>::getTypeDescription());
    switch_label = VarLabel::create("switchFlag", 
                                    max_vartype::getTypeDescription());
-   d_ref_press = 0.0;
+
    d_elapsed_time = 0.0;
    d_needAddMaterial = 0;
 
@@ -77,24 +77,8 @@ SimulationState::SimulationState(ProblemSpecP &ps)
   ProblemSpecP phys_cons_ps = ps->findBlock("PhysicalConstants");
   if(phys_cons_ps){
     phys_cons_ps->require("gravity",d_gravity);
-    phys_cons_ps->get("reference_pressure",d_ref_press);
   } else {
     d_gravity=Vector(0,0,0);
-    d_ref_press=0;
-  }
-  //__________________________________
-  // with ICE or MPMICE you must a reference pressure
-  ProblemSpecP cfd_ps = ps->findBlock("CFD");
-  if(cfd_ps){
-    ProblemSpecP ice_ps=cfd_ps->findBlock("ICE");
-    if(ice_ps && d_ref_press == 0.0){
-      throw ProblemSetupException(
-       "\n Could not find <reference_pressure> inside of <PhysicalConstants> \n"
-       " This pressure is used during the problem intialization and when\n"
-       " the pressure gradient is interpolated to the MPM particles \n"
-       " you must have it for all MPMICE and multimaterial ICE problems\n",
-       __FILE__, __LINE__);  
-    }
   }
 
   d_lockstepAMR = false;

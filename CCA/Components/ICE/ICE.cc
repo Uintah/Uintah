@@ -231,6 +231,16 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec,
     throw InternalError("ICE:couldn't get solver port", __FILE__, __LINE__);
   }
 
+   d_ref_press = 0.0;
+
+  ProblemSpecP phys_cons_ps = prob_spec->findBlock("PhysicalConstants");
+  if(phys_cons_ps){
+    phys_cons_ps->get("reference_pressure",d_ref_press);
+  } else {
+    d_ref_press=0.;
+  }
+
+
   //__________________________________
   //  Custom BC setup
   d_customBC_var_basket->usingLodi = 
@@ -249,7 +259,22 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec,
 
   //__________________________________
   // Pull out from CFD-ICE section
+  //__________________________________
+  // with ICE or MPMICE you must a reference pressure
   ProblemSpecP cfd_ps = prob_spec->findBlock("CFD");
+
+  if(cfd_ps){
+    ProblemSpecP ice_ps=cfd_ps->findBlock("ICE");
+    if(ice_ps && d_ref_press == 0.0){
+      throw ProblemSetupException(
+       "\n Could not find <reference_pressure> inside of <PhysicalConstants> \n"
+       " This pressure is used during the problem intialization and when\n"
+       " the pressure gradient is interpolated to the MPM particles \n"
+       " you must have it for all MPMICE and multimaterial ICE problems\n",
+       __FILE__, __LINE__);  
+    }
+  }
+
   cfd_ps->require("cfl",d_CFL);
   d_canAddICEMaterial=false;
   cfd_ps->get("CanAddICEMaterial",d_canAddICEMaterial);
@@ -2140,7 +2165,7 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
     }
 
     
-    double p_ref = d_sharedState->getRefPress();
+    double p_ref = getRefPress();
     press_CC.initialize(p_ref);
     for (int m = 0; m < numMatls; m++ ) {
       ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);

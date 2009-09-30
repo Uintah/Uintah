@@ -827,6 +827,11 @@ namespace Uintah {
 
       virtual bool needRecompile(double time, double dt,
                                  const GridP& grid);
+
+      double getRefPress() const {
+        return d_ref_press;
+      }
+
                                  
       // Debugging switches
       bool switchDebug_Initialize;
@@ -878,6 +883,8 @@ namespace Uintah {
       vector<double> d_add_heat_coeff;
       double         d_add_heat_t_start, d_add_heat_t_final;
       bool           d_add_heat;
+      
+      double d_ref_press;
       
 // For AMR staff
 
