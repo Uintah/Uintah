@@ -98,7 +98,7 @@ void LightTime::outputProblemSpec(ProblemSpecP& ps)
 }
 //__________________________________
 void LightTime::problemSetup(GridP&, SimulationStateP& sharedState,
-			     ModelSetup*)
+                             ModelSetup*)
 {
   d_sharedState = sharedState;
   matl0 = sharedState->parseAndLookupMaterial(params, "fromMaterial");
@@ -258,7 +258,7 @@ void LightTime::computeModelSources(const ProcessorGroup*,
     constCCVariable<Vector> rctvel_CC;
     CCVariable<double> Fr;
     CCVariable<double> delF;
-	    
+            
     Vector dx = patch->dCell();
     double cell_vol = dx.x()*dx.y()*dx.z();
     Ghost::GhostType  gn  = Ghost::None;    
@@ -392,10 +392,10 @@ void LightTime::scheduleErrorEstimate(const LevelP& coarseLevel,
  Function~  PassiveScalar::errorEstimate--
 ______________________________________________________________________*/
 void LightTime::errorEstimate(const ProcessorGroup*,
-			         const PatchSubset* patches,
-			         const MaterialSubset*,
-			         DataWarehouse*,
-			         DataWarehouse* new_dw)
+                                 const PatchSubset* patches,
+                                 const MaterialSubset*,
+                                 DataWarehouse*,
+                                 DataWarehouse* new_dw)
 {
   cout_doing << "Doing errorEstimate \t\t\t\t\t LightTime"<< endl;
   for(int p=0;p<patches->size();p++){

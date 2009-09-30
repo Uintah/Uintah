@@ -77,8 +77,8 @@ WARNING
     virtual void setup(const bool cerrSwitch) = 0;
     
     virtual void interpolate(int index, CCVariable<double>& result,
-			     const CellIterator&,
-			     vector<constCCVariable<double> >& independents) = 0;
+                             const CellIterator&,
+                             vector<constCCVariable<double> >& independents) = 0;
     virtual double interpolate(int index, vector<double>& independents) = 0;
 
   private:

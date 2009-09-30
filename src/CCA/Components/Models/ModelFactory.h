@@ -86,7 +86,7 @@ WARNING
     ModelFactory& operator=(const ModelFactory&);
 
     std::vector<ModelInterface*> d_models;
-	 
+         
   };
 }
 

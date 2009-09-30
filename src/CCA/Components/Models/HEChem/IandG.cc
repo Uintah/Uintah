@@ -83,7 +83,7 @@ IandG::~IandG()
 }
 
 void IandG::problemSetup(GridP&, SimulationStateP& sharedState,
-			     ModelSetup*)
+                             ModelSetup*)
 {
   ProblemSpecP IG_ps = params->findBlock("IandG");
   d_sharedState = sharedState;
@@ -262,7 +262,7 @@ void IandG::computeModelSources(const ProcessorGroup*,
     constCCVariable<Vector> rctvel_CC;
     CCVariable<double> Fr;
     CCVariable<double> term1,term2,term3;
-	    
+            
     Vector dx = patch->dCell();
     double cell_vol = dx.x()*dx.y()*dx.z();
     Ghost::GhostType  gn  = Ghost::None;    

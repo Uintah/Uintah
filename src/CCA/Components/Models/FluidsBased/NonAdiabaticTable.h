@@ -80,21 +80,21 @@ WARNING
     virtual ~NonAdiabaticTable();
     
     virtual void problemSetup(GridP& grid, SimulationStateP& sharedState,
-			      ModelSetup* setup);
+                              ModelSetup* setup);
     
     virtual void scheduleInitialize(SchedulerP&,
-				    const LevelP& level,
-				    const ModelInfo*);
+                                    const LevelP& level,
+                                    const ModelInfo*);
 
     virtual void restartInitialize() {}
       
     virtual void scheduleComputeStableTimestep(SchedulerP&,
-					       const LevelP& level,
-					       const ModelInfo*);
+                                               const LevelP& level,
+                                               const ModelInfo*);
                                   
     virtual void scheduleComputeModelSources(SchedulerP&,
-						   const LevelP& level,
-						   const ModelInfo*);
+                                                   const LevelP& level,
+                                                   const ModelInfo*);
                                             
    virtual void scheduleModifyThermoTransportProperties(SchedulerP&,
                                                 const LevelP&,
