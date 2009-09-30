@@ -188,7 +188,7 @@ void Crack::RecollectCrackFrontSegments(const ProcessorGroup*,
 
       if(d_doCrackPropagation) {
 
-	      
+              
         // Task 1: Detect if crack-front nodes are inside the material
         
         vector<short> cfSegNodesInMat;
@@ -208,7 +208,7 @@ void Crack::RecollectCrackFrontSegments(const ProcessorGroup*,
               Point pt=cx[m][node];
               inMat[j]=YES;
 
-	      interpolator->findCellAndWeights(pt, ni, S, psize[j]);
+              interpolator->findCellAndWeights(pt, ni, S, psize[j]);
 
               for(int k = 0; k < n8or27; k++) {
                 double totalMass=gmass[ni[k]]+Gmass[ni[k]];
@@ -231,9 +231,9 @@ void Crack::RecollectCrackFrontSegments(const ProcessorGroup*,
 
         MPI_Barrier(mpi_crack_comm);
 
-	
+        
         // Task 2: Detect if the centers of crack-front segments
-	//         are inside the material
+        //         are inside the material
        
         vector<short> cfSegCenterInMat;
         cfSegCenterInMat.resize(cfSegNodes[m].size()/2);
@@ -249,11 +249,11 @@ void Crack::RecollectCrackFrontSegments(const ProcessorGroup*,
             for(int j=0; j<num; j++) {
               int idx=cfsset[m][i][j];
               int node1=cfSegNodes[m][2*idx];
-	      int node2=cfSegNodes[m][2*idx+1];
+              int node2=cfSegNodes[m][2*idx+1];
               Point cent=cx[m][node1]+(cx[m][node2]-cx[m][node1])/2.;
               inMat[j]=YES;
 
-	      interpolator->findCellAndWeights(cent, ni, S, psize[j]);
+              interpolator->findCellAndWeights(cent, ni, S, psize[j]);
 
               for(int k = 0; k < n8or27; k++) {
                 double totalMass=gmass[ni[k]]+Gmass[ni[k]];
@@ -276,10 +276,10 @@ void Crack::RecollectCrackFrontSegments(const ProcessorGroup*,
 
         MPI_Barrier(mpi_crack_comm);
 
-	
+        
         // Task 3: Recollect crack-front segments, discarding the 
-	//         dead ones. A segment is regarded dead if both
-	//	   ends of it are outside the material 
+        //         dead ones. A segment is regarded dead if both
+        //         ends of it are outside the material 
        
         // Store crack-front parameters in temporary arraies
         int old_size=(int)cfSegNodes[m].size();
@@ -294,9 +294,9 @@ void Crack::RecollectCrackFrontSegments(const ProcessorGroup*,
           int nd2=copyData[2*i+1];
 
           short thisSegActive=NO;
-	  if(cfSegNodesInMat[2*i] || cfSegNodesInMat[2*i+1] || cfSegCenterInMat[i])
-	    thisSegActive=YES;
-	  
+          if(cfSegNodesInMat[2*i] || cfSegNodesInMat[2*i+1] || cfSegCenterInMat[i])
+            thisSegActive=YES;
+          
           if(thisSegActive) { 
             cfSegNodes[m].push_back(nd1);
             cfSegNodes[m].push_back(nd2);
@@ -304,7 +304,7 @@ void Crack::RecollectCrackFrontSegments(const ProcessorGroup*,
         } 
         delete [] copyData;
 
-	if(cfSegNodes[m].size()>0) { // New crack front is still in material
+        if(cfSegNodes[m].size()>0) { // New crack front is still in material
           // Seek the start crack point (sIdx), re-arrange crack-front nodes 
           int node0=cfSegNodes[m][0];
           int segs[2];
@@ -334,15 +334,15 @@ void Crack::RecollectCrackFrontSegments(const ProcessorGroup*,
             delete [] copyData;
           }
        
-	  
+          
           // Task 4: Get previous index, and minimum & maximum indexes 
           //         for crack-front nodes
          
           FindCrackFrontNodeIndexes(m);
     
          
-	  // Task 5: Calculate outer normals, tangential normals and binormals
-	  //         of crack plane at crack-front nodes  
+          // Task 5: Calculate outer normals, tangential normals and binormals
+          //         of crack plane at crack-front nodes  
                   
           if(smoothCrackFront) { 
             short smoothSuccessfully=SmoothCrackFrontAndCalculateNormals(m);
@@ -352,14 +352,14 @@ void Crack::RecollectCrackFrontSegments(const ProcessorGroup*,
             CalculateCrackFrontNormals(m);
           }
         } // End if(cfSegNodes[m].size()>0)
-	
-	else { // Crack has penetrated the material
+        
+        else { // Crack has penetrated the material
           // If all crack-front segments dead, the material is broken.
-          if(ce[m].size()>0) { // for the material with crack(s) initially		
-	    if(pid==0) cout << "!!! Material " << m << " is broken." << endl;
-	  }  
-	}
-	
+          if(ce[m].size()>0) { // for the material with crack(s) initially              
+            if(pid==0) cout << "!!! Material " << m << " is broken." << endl;
+          }  
+        }
+        
       } // End of if(d_doCrackPropagation!="false")
 
       // Save crack elements, crack nodes and crack-front nodes

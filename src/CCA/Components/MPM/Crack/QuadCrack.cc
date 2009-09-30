@@ -154,7 +154,7 @@ void QuadCrack::discretize(int& nstart0,vector<Point>& cx,
     vector<vector<bool> > nodeOnEdge;
     for(i=0; i<num; i++) {
       for(j=0; j<4; j++) nodeOnEdge[i].push_back(false);
-    }	    
+    }       
     
     // Generate crack nodes
     int count = -1;
@@ -168,7 +168,7 @@ void QuadCrack::discretize(int& nstart0,vector<Point>& cx,
         if (i==0) nodeOnEdge[count][3]=true;
         // Intrinsic coordinates
         ksi=-1.0+(float)(2*i)/ni;
-        eta=-1.0+(float)(2*j)/nj;	
+        eta=-1.0+(float)(2*j)/nj;       
         GetGlobalCoordinates(l,ksi,eta,pt);
         cx.push_back(pt);
       }
@@ -177,8 +177,8 @@ void QuadCrack::discretize(int& nstart0,vector<Point>& cx,
           count++;
           // intrinsic coordinates
           ksi=-1.0+(float)(2*i+1)/ni;
-          eta=-1.0+(float)(2*j+1)/nj;	  
-          // Global coordinates		 
+          eta=-1.0+(float)(2*j+1)/nj;     
+          // Global coordinates          
           GetGlobalCoordinates(l,ksi,eta,pt);
           cx.push_back(pt);
         }

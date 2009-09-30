@@ -144,7 +144,7 @@ void CurvedQuadCrack::outputInitialCrackPlane(int i)
     cout << "    The quad is repeated by " << Repetition
          << " times with the offset " << Offset << "." << endl;
   }   
-	
+        
 }
 
 void CurvedQuadCrack::discretize(int& nstart0,vector<Point>& cx,
@@ -173,11 +173,11 @@ void CurvedQuadCrack::discretize(int& nstart0,vector<Point>& cx,
   for(int l=2; l<2*nj; l+=2) {
     p_s2[l]=PtsSide2[l/2-1];
     p_s4[l]=PtsSide4[l/2-1];
-  } 	
+  }     
   for(int l=1; l<2*nj; l+=2) {
     p_s2[l]=p_s2[l-1]+(p_s2[l+1]-p_s2[l-1])/2.;
     p_s4[l]=p_s4[l-1]+(p_s4[l+1]-p_s4[l-1])/2.; 
-  }	
+  }     
   
   // Generate crack nodes
   for(j=0; j<=nj; j++) {
@@ -225,7 +225,7 @@ void CurvedQuadCrack::discretize(int& nstart0,vector<Point>& cx,
   }
   
   for(int l=0; l<4; l++) { // Loop over sides of the quad
-    // Find the side index of the crack front "j"	    
+    // Find the side index of the crack front "j"           
     j=seg0+l;   
     if(j>3) j-=4;
     if(AtFront[j]) { 
@@ -250,7 +250,7 @@ void CurvedQuadCrack::discretize(int& nstart0,vector<Point>& cx,
         }
       } // End of loop over i
     }
-  } // End of loop over l		  
+  } // End of loop over l                 
   
   
 }
