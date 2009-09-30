@@ -133,17 +133,17 @@ void RigidMPM::scheduleComputeInternalForce(SchedulerP& sched,
 }
 
 void RigidMPM::computeInternalForce(const ProcessorGroup*,
-				    const PatchSubset* patches,
-				    const MaterialSubset* ,
-				    DataWarehouse*,
-				    DataWarehouse*)
+                                    const PatchSubset* patches,
+                                    const MaterialSubset* ,
+                                    DataWarehouse*,
+                                    DataWarehouse*)
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
     if (cout_doing.active()) {
       cout_doing <<"Doing computeInternalForce on patch " << patch->getID()
-		 <<"\t\t\t RigidMPM"<< endl;
+                 <<"\t\t\t RigidMPM"<< endl;
     }
 
   }
@@ -284,7 +284,7 @@ void RigidMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
     if (cout_doing.active()) {
       cout_doing <<"Doing interpolateToParticlesAndUpdate on patch " 
-		 << patch->getID() << "\t MPM"<< endl;
+                 << patch->getID() << "\t MPM"<< endl;
     }
 
     ParticleInterpolator* interpolator = flags->d_interpolator->clone(patch);
@@ -393,8 +393,8 @@ void RigidMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         particleIndex idx = *iter;
 
         // Get the node indices that surround the cell
-	interpolator->findCellAndWeightsAndShapeDerivatives(px[idx],ni,S,d_S,
-							    psize[idx]);
+        interpolator->findCellAndWeightsAndShapeDerivatives(px[idx],ni,S,d_S,
+                                                            psize[idx]);
 
         double tempRate = 0.0;
         Vector acc(0.0,0.0,0.0);

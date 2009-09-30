@@ -118,7 +118,7 @@ FractureMPM::~FractureMPM()
 
 void FractureMPM::problemSetup(const ProblemSpecP& prob_spec, 
                                const ProblemSpecP& restart_prob_spec,GridP& grid,
-			       SimulationStateP& sharedState)
+                               SimulationStateP& sharedState)
 {
   SerialMPM::problemSetup(prob_spec,restart_prob_spec,grid,sharedState);
 
@@ -155,10 +155,10 @@ FractureMPM::materialProblemSetup(const ProblemSpecP& prob_spec,
 }
 
 void FractureMPM::scheduleInitialize(const LevelP& level,
-  				     SchedulerP& sched)
+                                     SchedulerP& sched)
 {
   Task* t = scinew Task("FractureMPM::actuallyInitialize",
-			this, &FractureMPM::actuallyInitialize);
+                        this, &FractureMPM::actuallyInitialize);
 
   MaterialSubset* zeroth_matl = scinew MaterialSubset();
   zeroth_matl->add(0);
@@ -312,7 +312,7 @@ void FractureMPM::scheduleInitializePressureBCs(const LevelP& level,
 }
 
 void FractureMPM::scheduleComputeStableTimestep(const LevelP&,
-					      SchedulerP&)
+                                              SchedulerP&)
 {
    // Nothing to do here - delt is computed as a by-product of the
    // consitutive model
@@ -366,10 +366,10 @@ FractureMPM::scheduleTimeAdvance(const LevelP & level,
   }
 
   sched->scheduleParticleRelocation(level, lb->pXLabel_preReloc,
-				    d_sharedState->d_particleState_preReloc,
-				    lb->pXLabel, 
+                                    d_sharedState->d_particleState_preReloc,
+                                    lb->pXLabel, 
                                     d_sharedState->d_particleState,
-				    lb->pParticleIDLabel, matls);
+                                    lb->pParticleIDLabel, matls);
 }
 
 void FractureMPM::scheduleApplyExternalLoads(SchedulerP& sched,
@@ -409,8 +409,8 @@ void FractureMPM::scheduleParticleVelocityField(SchedulerP& sched,
 }
 
 void FractureMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
-						   const PatchSet* patches,
-						   const MaterialSet* matls)
+                                                   const PatchSet* patches,
+                                                   const MaterialSet* matls)
 {
   /* interpolateParticlesToGrid
    *   in(P.MASS, P.VELOCITY, P.NAT_X)
@@ -420,7 +420,7 @@ void FractureMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
 
 
   Task* t = scinew Task("FractureMPM::interpolateParticlesToGrid",
-			this,&FractureMPM::interpolateParticlesToGrid);
+                        this,&FractureMPM::interpolateParticlesToGrid);
   Ghost::GhostType  gan = Ghost::AroundNodes;
   t->requires(Task::OldDW, lb->pMassLabel,             gan,NGP);
   t->requires(Task::OldDW, lb->pVolumeLabel,           gan,NGP);
@@ -433,13 +433,13 @@ void FractureMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
 
   t->computes(lb->gMassLabel);
   t->computes(lb->gMassLabel,        d_sharedState->getAllInOneMatl(),
-	      Task::OutOfDomain);
+              Task::OutOfDomain);
   t->computes(lb->gTemperatureLabel, d_sharedState->getAllInOneMatl(),
-	      Task::OutOfDomain);
+              Task::OutOfDomain);
   t->computes(lb->gVolumeLabel, d_sharedState->getAllInOneMatl(),
-	      Task::OutOfDomain);  
+              Task::OutOfDomain);  
   t->computes(lb->gVelocityLabel,    d_sharedState->getAllInOneMatl(),
-	      Task::OutOfDomain);
+              Task::OutOfDomain);
   t->computes(lb->gSp_volLabel);
   t->computes(lb->gVolumeLabel);
   t->computes(lb->gVelocityLabel);
@@ -470,8 +470,8 @@ void FractureMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
 }
 
 void FractureMPM::scheduleComputeHeatExchange(SchedulerP& sched,
-					    const PatchSet* patches,
-					    const MaterialSet* matls)
+                                            const PatchSet* patches,
+                                            const MaterialSet* matls)
 {
  /* computeHeatExchange
   *   in(G.MASS, G.TEMPERATURE, G.EXTERNAL_HEAT_RATE)
@@ -484,8 +484,8 @@ void FractureMPM::scheduleComputeHeatExchange(SchedulerP& sched,
     cout_doing << getpid() << " Doing FractureMPM::ThermalContact::computeHeatExchange " << endl;
 
   Task* t = scinew Task("ThermalContact::computeHeatExchange",
-		        thermalContactModel,
-		        &ThermalContact::computeHeatExchange);
+                        thermalContactModel,
+                        &ThermalContact::computeHeatExchange);
 
   thermalContactModel->addComputesAndRequires(t, patches, matls);
   sched->addTask(t, patches, matls);
@@ -505,8 +505,8 @@ void FractureMPM::scheduleAdjustCrackContactInterpolated(SchedulerP& sched,
 }
 
 void FractureMPM::scheduleExMomInterpolated(SchedulerP& sched,
-					  const PatchSet* patches,
-					  const MaterialSet* matls)
+                                          const PatchSet* patches,
+                                          const MaterialSet* matls)
 {
   contactModel->addComputesAndRequiresInterpolated(sched, patches, matls);
 }
@@ -517,15 +517,15 @@ void FractureMPM::scheduleExMomInterpolated(SchedulerP& sched,
  *               is computed here */
 /////////////////////////////////////////////////////////////////////////
 void FractureMPM::scheduleComputeStressTensor(SchedulerP& sched,
-					    const PatchSet* patches,
-					    const MaterialSet* matls)
+                                            const PatchSet* patches,
+                                            const MaterialSet* matls)
 {
   // for thermal stress analysis
   scheduleComputeParticleTempFromGrid(sched, patches, matls);
 
   int numMatls = d_sharedState->getNumMPMMatls();
   Task* t = scinew Task("FractureMPM::computeStressTensor",
-		    this, &FractureMPM::computeStressTensor);
+                    this, &FractureMPM::computeStressTensor);
   for(int m = 0; m < numMatls; m++){
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
     ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
@@ -580,7 +580,7 @@ void FractureMPM::scheduleComputeArtificialViscosity(SchedulerP& sched,
                                                    const MaterialSet* matls)
 {
   Task* t = scinew Task("FractureMPM::computeArtificialViscosity",
-		    this, &FractureMPM::computeArtificialViscosity);
+                    this, &FractureMPM::computeArtificialViscosity);
 
   Ghost::GhostType  gac = Ghost::AroundCells;
   t->requires(Task::OldDW, lb->pXLabel,                 Ghost::None);
@@ -617,8 +617,8 @@ void FractureMPM::scheduleComputeContactArea(SchedulerP& sched,
 }
 
 void FractureMPM::scheduleComputeInternalForce(SchedulerP& sched,
-					     const PatchSet* patches,
-					     const MaterialSet* matls)
+                                             const PatchSet* patches,
+                                             const MaterialSet* matls)
 {
  /*
   * computeInternalForce
@@ -629,13 +629,13 @@ void FractureMPM::scheduleComputeInternalForce(SchedulerP& sched,
   * out(G.F_INTERNAL) */
 
   Task* t = scinew Task("FractureMPM::computeInternalForce",
-		    this, &FractureMPM::computeInternalForce);
+                    this, &FractureMPM::computeInternalForce);
 
   Ghost::GhostType  gan   = Ghost::AroundNodes;
   Ghost::GhostType  gnone = Ghost::None;
   t->requires(Task::NewDW,lb->gMassLabel, gnone);
   t->requires(Task::NewDW,lb->gMassLabel, d_sharedState->getAllInOneMatl(),
-  	      Task::OutOfDomain, gnone);
+              Task::OutOfDomain, gnone);
   t->requires(Task::OldDW,lb->pStressLabel,               gan,NGP);
   t->requires(Task::OldDW,lb->pVolumeLabel,               gan,NGP);
   t->requires(Task::OldDW,lb->pXLabel,                    gan,NGP);
@@ -674,15 +674,15 @@ void FractureMPM::scheduleComputeInternalForce(SchedulerP& sched,
 }
 
 void FractureMPM::scheduleComputeInternalHeatRate(SchedulerP& sched,
-						const PatchSet* patches,
-						const MaterialSet* matls)
+                                                const PatchSet* patches,
+                                                const MaterialSet* matls)
 { 
   heatConductionModel->scheduleComputeInternalHeatRate(sched,patches,matls);
 }
 
 void FractureMPM::scheduleSolveHeatEquations(SchedulerP& sched,
-					   const PatchSet* patches,
-					   const MaterialSet* matls)
+                                           const PatchSet* patches,
+                                           const MaterialSet* matls)
 {
   heatConductionModel->scheduleSolveHeatEquations(sched,patches,matls);
 }
@@ -721,8 +721,8 @@ void FractureMPM::scheduleComputeAndIntegrateAcceleration(SchedulerP& sched,
 }
 
 void FractureMPM::scheduleIntegrateTemperatureRate(SchedulerP& sched,
-						 const PatchSet* patches,
-						 const MaterialSet* matls)
+                                                 const PatchSet* patches,
+                                                 const MaterialSet* matls)
 {
   heatConductionModel->scheduleIntegrateTemperatureRate(sched,patches,matls);
 }
@@ -741,19 +741,19 @@ void FractureMPM::scheduleAdjustCrackContactIntegrated(SchedulerP& sched,
 }
 
 void FractureMPM::scheduleExMomIntegrated(SchedulerP& sched,
-					const PatchSet* patches,
-					const MaterialSet* matls)
+                                        const PatchSet* patches,
+                                        const MaterialSet* matls)
 {
   contactModel->addComputesAndRequiresIntegrated(sched, patches, matls);
 }
 
 void FractureMPM::scheduleSetGridBoundaryConditions(SchedulerP& sched,
-						       const PatchSet* patches,
-						       const MaterialSet* matls)
+                                                       const PatchSet* patches,
+                                                       const MaterialSet* matls)
 
 {
   Task* t=scinew Task("FractureMPM::setGridBoundaryConditions",
-		    this, &FractureMPM::setGridBoundaryConditions);
+                    this, &FractureMPM::setGridBoundaryConditions);
                   
   const MaterialSubset* mss = matls->getUnion();
   t->requires(Task::OldDW, d_sharedState->get_delt_label() );
@@ -846,8 +846,8 @@ void FractureMPM::scheduleConvertLocalizedParticles(SchedulerP& sched,
 }
 
 void FractureMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
-  						         const PatchSet* patches,
-						         const MaterialSet* matls)
+                                                         const PatchSet* patches,
+                                                         const MaterialSet* matls)
 
 {
  /*
@@ -858,7 +858,7 @@ void FractureMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   * out(P.VELOCITY, P.X, P.NAT_X) */
 
   Task* t=scinew Task("FractureMPM::interpolateToParticlesAndUpdate",
- 		      this, &FractureMPM::interpolateToParticlesAndUpdate);
+                      this, &FractureMPM::interpolateToParticlesAndUpdate);
 
 
   t->requires(Task::OldDW, d_sharedState->get_delt_label() );
@@ -1200,10 +1200,10 @@ void FractureMPM::initializePressureBC(const ProcessorGroup*,
 }
 
 void FractureMPM::actuallyInitialize(const ProcessorGroup*,
-				   const PatchSubset* patches,
-				   const MaterialSubset* matls,
-				   DataWarehouse*,
-				   DataWarehouse* new_dw)
+                                   const PatchSubset* patches,
+                                   const MaterialSubset* matls,
+                                   DataWarehouse*,
+                                   DataWarehouse* new_dw)
 {
   particleIndex totalParticles=0;
   for(int p=0;p<patches->size();p++){
@@ -1211,7 +1211,7 @@ void FractureMPM::actuallyInitialize(const ProcessorGroup*,
 
     if (cout_doing.active())
       cout_doing <<"Doing actuallyInitialize on patch " << patch->getID()
-  	         <<"\t\t\t MPM"<< endl;
+                 <<"\t\t\t MPM"<< endl;
 
     CCVariable<short int> cellNAPID;
     new_dw->allocateAndPut(cellNAPID, lb->pCellNAPIDLabel, 0, patch);
@@ -1228,8 +1228,8 @@ void FractureMPM::actuallyInitialize(const ProcessorGroup*,
       mpm_matl->createParticles(numParticles, cellNAPID, patch, new_dw);
 
       mpm_matl->getConstitutiveModel()->initializeCMData(patch,
-							 mpm_matl,
-							 new_dw);
+                                                         mpm_matl,
+                                                         new_dw);
       // scalar used for debugging
       if(flags->d_with_color) {
         ParticleVariable<double> pcolor;
@@ -1278,18 +1278,18 @@ void FractureMPM::actuallyInitializeAddedMaterial(const ProcessorGroup*,
 
 
 void FractureMPM::actuallyComputeStableTimestep(const ProcessorGroup*,
-					      const PatchSubset*,
-					      const MaterialSubset*,
-					      DataWarehouse*,
-					      DataWarehouse*)
+                                              const PatchSubset*,
+                                              const MaterialSubset*,
+                                              DataWarehouse*,
+                                              DataWarehouse*)
 {
 }
 
 void FractureMPM::interpolateParticlesToGrid(const ProcessorGroup*,
-					   const PatchSubset* patches,
-					   const MaterialSubset* ,
-					   DataWarehouse* old_dw,
-					   DataWarehouse* new_dw)
+                                           const PatchSubset* patches,
+                                           const MaterialSubset* ,
+                                           DataWarehouse* old_dw,
+                                           DataWarehouse* new_dw)
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
@@ -1306,13 +1306,13 @@ void FractureMPM::interpolateParticlesToGrid(const ProcessorGroup*,
     NCVariable<double> gmassglobal,gtempglobal,gvolumeglobal;
     NCVariable<Vector> gvelglobal;
     new_dw->allocateAndPut(gmassglobal, lb->gMassLabel,
-			   d_sharedState->getAllInOneMatl()->get(0), patch);
+                           d_sharedState->getAllInOneMatl()->get(0), patch);
     new_dw->allocateAndPut(gtempglobal, lb->gTemperatureLabel,
-			   d_sharedState->getAllInOneMatl()->get(0), patch);
+                           d_sharedState->getAllInOneMatl()->get(0), patch);
     new_dw->allocateAndPut(gvolumeglobal, lb->gVolumeLabel,
-		           d_sharedState->getAllInOneMatl()->get(0), patch);    
+                           d_sharedState->getAllInOneMatl()->get(0), patch);    
     new_dw->allocateAndPut(gvelglobal, lb->gVelocityLabel,
-			   d_sharedState->getAllInOneMatl()->get(0), patch);
+                           d_sharedState->getAllInOneMatl()->get(0), patch);
     gmassglobal.initialize(d_SMALL_NUM_MPM);
     gvolumeglobal.initialize(d_SMALL_NUM_MPM);
     gtempglobal.initialize(0.0);
@@ -1362,15 +1362,15 @@ void FractureMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       new_dw->allocateAndPut(gvelocity,        lb->gVelocityLabel,   dwi,patch);
       new_dw->allocateAndPut(gTemperature,     lb->gTemperatureLabel,dwi,patch);
       new_dw->allocateAndPut(gTemperatureNoBC, lb->gTemperatureNoBCLabel,
-			     dwi,patch);
+                             dwi,patch);
       new_dw->allocateAndPut(gTemperatureRate, lb->gTemperatureRateLabel,
                              dwi,patch);
       new_dw->allocateAndPut(gexternalforce,   lb->gExternalForceLabel,
-			     dwi,patch);
+                             dwi,patch);
       new_dw->allocateAndPut(gexternalheatrate,lb->gExternalHeatRateLabel,
-			     dwi,patch);
+                             dwi,patch);
       new_dw->allocateAndPut(gnumnearparticles,lb->gNumNearParticlesLabel,
-			     dwi,patch);
+                             dwi,patch);
 
       gmass.initialize(d_SMALL_NUM_MPM);
       gvolume.initialize(d_SMALL_NUM_MPM);
@@ -1435,18 +1435,18 @@ void FractureMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       for (ParticleSubset::iterator iter = pset->begin();
                                     iter != pset->end(); 
                                     iter++){
-	particleIndex idx = *iter;
+        particleIndex idx = *iter;
 
-	// Get the node indices that surround the cell
-	interpolator->findCellAndWeights(px[idx],ni,S,psize[idx]);
+        // Get the node indices that surround the cell
+        interpolator->findCellAndWeights(px[idx],ni,S,psize[idx]);
 
-	pmom = pvelocity[idx]*pmass[idx];
-	total_mom += pvelocity[idx]*pmass[idx];
+        pmom = pvelocity[idx]*pmass[idx];
+        total_mom += pvelocity[idx]*pmass[idx];
 
-	// Add each particles contribution to the local mass & velocity 
-	// Must use the node indices
-	for(int k = 0; k < flags->d_8or27; k++) {
-	  if(patch->containsNode(ni[k])) {
+        // Add each particles contribution to the local mass & velocity 
+        // Must use the node indices
+        for(int k = 0; k < flags->d_8or27; k++) {
+          if(patch->containsNode(ni[k])) {
             if(pgCode[idx][k]==1) {   // above crack
               gmass[ni[k]]          += pmass[idx]                     * S[k];
               gvelocity[ni[k]]      += pmom                           * S[k];
@@ -1460,16 +1460,16 @@ void FractureMPM::interpolateParticlesToGrid(const ProcessorGroup*,
             }
             else if(pgCode[idx][k]==2) {  // below crack
               Gmass[ni[k]]          += pmass[idx]                     * S[k];
-	      Gvelocity[ni[k]]      += pmom                           * S[k];
+              Gvelocity[ni[k]]      += pmom                           * S[k];
               Gvolume[ni[k]]        += pvolume[idx]                   * S[k];
               Gexternalforce[ni[k]] += pexternalforce[idx]            * S[k];
               GTemperature[ni[k]]   += pTemperature[idx] * pmass[idx] * S[k];
               //Gexternalheatrate[ni[k]] += pexternalheatrate[idx]      * S[k];
               GSp_vol[ni[k]]        += pSp_vol * pmass[idx]           * S[k];
               Gdisplacement[ni[k]]  += pdisp[idx] * pmass[idx]        * S[k];
-	    }
-	  }
-	} // End of loop over k
+            }
+          }
+        } // End of loop over k
       } // End of loop over iter
 
       string interp_type = flags->d_interpolator_type;
@@ -1495,7 +1495,7 @@ void FractureMPM::interpolateParticlesToGrid(const ProcessorGroup*,
         GSp_vol[c]         /= Gmass[c];
         Gdisplacement[c]   /= Gmass[c];
         GTemperatureNoBC[c] = GTemperature[c];
-	
+        
       }
 
       // Apply grid boundary conditions to the velocity before storing the data
@@ -1523,13 +1523,13 @@ void FractureMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 }
 
 void FractureMPM::computeStressTensor(const ProcessorGroup*,
-				      const PatchSubset* patches,
-				      const MaterialSubset* ,
-				      DataWarehouse* old_dw,
-				      DataWarehouse* new_dw)
+                                      const PatchSubset* patches,
+                                      const MaterialSubset* ,
+                                      DataWarehouse* old_dw,
+                                      DataWarehouse* new_dw)
 {
   if (cout_doing.active())
-      cout_doing <<"Doing computeStressTensor:FractureMPM: \n" ;	  
+      cout_doing <<"Doing computeStressTensor:FractureMPM: \n" ;          
 
   for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
 
@@ -1552,7 +1552,7 @@ void FractureMPM::computeStressTensor(const ProcessorGroup*,
     cm->computeStressTensor(patches, mpm_matl, old_dw, new_dw);
 
     if (cout_dbg.active())
-	      cout_dbg << " Exit\n" ;    
+              cout_dbg << " Exit\n" ;    
 
   }
 }
@@ -1564,13 +1564,13 @@ void FractureMPM::computeArtificialViscosity(const ProcessorGroup*,
                                              DataWarehouse* new_dw)
 {
   double C0 = flags->d_artificialViscCoeff1;  
-  double C1 = flags->d_artificialViscCoeff2;	
+  double C1 = flags->d_artificialViscCoeff2;    
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
     if (cout_doing.active())    
     cout_doing <<"Doing computeArtificialViscosity on patch " << patch->getID()
-	       <<"\t\t MPM"<< endl;
+               <<"\t\t MPM"<< endl;
     
 
     // The following scheme for removing ringing behind a shock comes from:
@@ -1618,35 +1618,35 @@ void FractureMPM::computeArtificialViscosity(const ProcessorGroup*,
 
       for(ParticleSubset::iterator iter = pset->begin();
           iter != pset->end(); iter++){
-	particleIndex idx = *iter;
+        particleIndex idx = *iter;
 
-	// Get the node indices that surround the cell
-	interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx]);
+        // Get the node indices that surround the cell
+        interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx]);
 
         // get particle's velocity gradients 
         Vector gvel;
-	velGrad.set(0.0);
-	for(int k = 0; k < flags->d_8or27; k++) {
+        velGrad.set(0.0);
+        for(int k = 0; k < flags->d_8or27; k++) {
           if(pgCode[idx][k]==1) gvel = gvelocity[ni[k]];
           if(pgCode[idx][k]==2) gvel = Gvelocity[ni[k]];
-	  for(int j = 0; j<3; j++){
+          for(int j = 0; j<3; j++){
             double d_SXoodx = d_S[k][j] * oodx[j];
             for(int i = 0; i<3; i++) {
-	      velGrad(i,j) += gvel[i] * d_SXoodx;
+              velGrad(i,j) += gvel[i] * d_SXoodx;
             }
-	  }
-	}
+          }
+        }
 
-	Matrix3 D = (velGrad + velGrad.Transpose())*.5;
+        Matrix3 D = (velGrad + velGrad.Transpose())*.5;
 
-	double DTrace = D.Trace();
-	p_q[idx] = 0.0;
-	if(DTrace<0.){
+        double DTrace = D.Trace();
+        p_q[idx] = 0.0;
+        if(DTrace<0.){
           c_dil = sqrt(K*pvol[idx]/pmass[idx]);
           p_q[idx] = (C0*fabs(c_dil*DTrace*dx_ave) +
                       C1*(DTrace*DTrace*dx_ave*dx_ave))*
-                      (pmass[idx]/pvol[idx]);	       
-	}
+                      (pmass[idx]/pvol[idx]);          
+        }
 
       }
     }
@@ -1663,77 +1663,77 @@ void FractureMPM::computeContactArea(const ProcessorGroup*,
 {
   // six indices for each of the faces
   double bndyCArea[6] = {0,0,0,0,0,0};
-	
+        
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-	
+        
     if (cout_doing.active())
       cout_doing <<"Doing computeContactArea on patch " << patch->getID() <<"\t\t\t MPM"<< endl;
-	
-	
+        
+        
     Vector dx = patch->dCell();
     double cellvol = dx.x()*dx.y()*dx.z();
-	
+        
     int numMPMMatls = d_sharedState->getNumMPMMatls();
-	
+        
     for(int m = 0; m < numMPMMatls; m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
       constNCVariable<double> gvolume,Gvolume;
-	
+        
       new_dw->get(gvolume, lb->gVolumeLabel, dwi, patch, Ghost::None, 0);
       new_dw->get(Gvolume, lb->GVolumeLabel, dwi, patch, Ghost::None, 0); // for FractureMPM
-	
+        
       for(list<Patch::FaceType>::const_iterator fit(d_bndy_traction_faces.begin()); 
-	fit!=d_bndy_traction_faces.end();fit++) {
-	Patch::FaceType face = *fit;
-	int iface = (int)(face);
+        fit!=d_bndy_traction_faces.end();fit++) {
+        Patch::FaceType face = *fit;
+        int iface = (int)(face);
 
         // Check if the face is on an external boundary
-	if(patch->getBCType(face)==Patch::Neighbor)
-	  continue;
-	
-	// We are on the boundary, i.e. not on an interior patch
-	// boundary, and also on the correct side, 
-	// so do the traction accumulation . . .
-	// loop cells to find boundary areas
-	IntVector projlow, projhigh;
-	patch->getFaceCells(face, 0, projlow, projhigh);
-	// Vector norm = face_norm(face);
-	
-	for (int i = projlow.x(); i<projhigh.x(); i++) {
-	  for (int j = projlow.y(); j<projhigh.y(); j++) {
-	    for (int k = projlow.z(); k<projhigh.z(); k++) {
-	      IntVector ijk(i,j,k);
-	      double nodevol = gvolume[ijk]+Gvolume[ijk];
-	      if(nodevol>0) // FIXME: uses node index to get node volume ...
-	        {
-	          const double celldepth  = dx[iface/2];
-	          bndyCArea[iface] += cellvol/celldepth;
-	        }
-	    }
-	  }
-	}
-	
+        if(patch->getBCType(face)==Patch::Neighbor)
+          continue;
+        
+        // We are on the boundary, i.e. not on an interior patch
+        // boundary, and also on the correct side, 
+        // so do the traction accumulation . . .
+        // loop cells to find boundary areas
+        IntVector projlow, projhigh;
+        patch->getFaceCells(face, 0, projlow, projhigh);
+        // Vector norm = face_norm(face);
+        
+        for (int i = projlow.x(); i<projhigh.x(); i++) {
+          for (int j = projlow.y(); j<projhigh.y(); j++) {
+            for (int k = projlow.z(); k<projhigh.z(); k++) {
+              IntVector ijk(i,j,k);
+              double nodevol = gvolume[ijk]+Gvolume[ijk];
+              if(nodevol>0) // FIXME: uses node index to get node volume ...
+                {
+                  const double celldepth  = dx[iface/2];
+                  bndyCArea[iface] += cellvol/celldepth;
+                }
+            }
+          }
+        }
+        
       } // faces
     } // materials
   } // patches
-	
+        
   // be careful only to put the fields that we have built
   // that way if the user asks to output a field that has not been built
   // it will fail early rather than just giving zeros.
   for(std::list<Patch::FaceType>::const_iterator ftit(d_bndy_traction_faces.begin());
-	ftit!=d_bndy_traction_faces.end();ftit++) {
+        ftit!=d_bndy_traction_faces.end();ftit++) {
     int iface = (int)(*ftit);
     new_dw->put(sum_vartype(bndyCArea[iface]),lb->BndyContactCellAreaLabel[iface]);
   }
-}	
+}       
 
 void FractureMPM::computeInternalForce(const ProcessorGroup*,
- 				       const PatchSubset* patches,
-				       const MaterialSubset* ,
-				       DataWarehouse* old_dw,
-				       DataWarehouse* new_dw)
+                                       const PatchSubset* patches,
+                                       const MaterialSubset* ,
+                                       DataWarehouse* old_dw,
+                                       DataWarehouse* new_dw)
 {
   // node based forces
   Vector bndyForce[6];
@@ -1743,13 +1743,13 @@ void FractureMPM::computeInternalForce(const ProcessorGroup*,
     bndyTraction[iface]  = Vector(0.);
   }
   double partvoldef = 0.;
-	
+        
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
     if (cout_doing.active())
       cout_doing <<"Doing computeInternalForce on patch " << patch->getID()
-	         <<"\t\t\t MPM"<< endl;
+                 <<"\t\t\t MPM"<< endl;
 
     
     Vector dx = patch->dCell();
@@ -1772,9 +1772,9 @@ void FractureMPM::computeInternalForce(const ProcessorGroup*,
     NCVariable<Matrix3>       gstressglobal;
     constNCVariable<double>   gmassglobal;
     new_dw->get(gmassglobal,  lb->gMassLabel,
-		d_sharedState->getAllInOneMatl()->get(0), patch, Ghost::None,0);
+                d_sharedState->getAllInOneMatl()->get(0), patch, Ghost::None,0);
     new_dw->allocateAndPut(gstressglobal, lb->gStressForSavingLabel, 
-			   d_sharedState->getAllInOneMatl()->get(0), patch);
+                           d_sharedState->getAllInOneMatl()->get(0), patch);
     //gstressglobal.initialize(Matrix3(0.));
 
     for(int m = 0; m < numMPMMatls; m++){
@@ -1793,8 +1793,8 @@ void FractureMPM::computeInternalForce(const ProcessorGroup*,
       constNCVariable<double>        gmass;
 
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch,
-						       Ghost::AroundNodes, NGP,
-						       lb->pXLabel);
+                                                       Ghost::AroundNodes, NGP,
+                                                       lb->pXLabel);
 
       old_dw->get(px,      lb->pXLabel,                      pset);
       old_dw->get(pmass,   lb->pMassLabel,                   pset);
@@ -1819,24 +1819,24 @@ void FractureMPM::computeInternalForce(const ProcessorGroup*,
         new_dw->get(p_pressure,lb->pPressureLabel, pset);
       }
       else {
-	ParticleVariable<double>  p_pressure_create;
-	new_dw->allocateTemporary(p_pressure_create,  pset);
-	for(ParticleSubset::iterator it = pset->begin();it != pset->end();it++){
-	  p_pressure_create[*it]=0.0;
-	}
-	p_pressure = p_pressure_create; // reference created data
+        ParticleVariable<double>  p_pressure_create;
+        new_dw->allocateTemporary(p_pressure_create,  pset);
+        for(ParticleSubset::iterator it = pset->begin();it != pset->end();it++){
+          p_pressure_create[*it]=0.0;
+        }
+        p_pressure = p_pressure_create; // reference created data
       }
 
       if(flags->d_artificial_viscosity){
         old_dw->get(p_q,lb->p_qLabel, pset);
       }
       else {
-	ParticleVariable<double>  p_q_create;
-	new_dw->allocateTemporary(p_q_create,  pset);
-	for(ParticleSubset::iterator it = pset->begin();it != pset->end();it++){
-	  p_q_create[*it]=0.0;
-	}
-	p_q = p_q_create; // reference created data
+        ParticleVariable<double>  p_q_create;
+        new_dw->allocateTemporary(p_q_create,  pset);
+        for(ParticleSubset::iterator it = pset->begin();it != pset->end();it++){
+          p_q_create[*it]=0.0;
+        }
+        p_q = p_q_create; // reference created data
       }
 
       internalforce.initialize(Vector(0,0,0));
@@ -1848,21 +1848,21 @@ void FractureMPM::computeInternalForce(const ProcessorGroup*,
       for (ParticleSubset::iterator iter = pset->begin();
            iter != pset->end(); 
            iter++){
-	particleIndex idx = *iter;
+        particleIndex idx = *iter;
   
-	// Get the node indices that surround the cell
-	interpolator->findCellAndWeightsAndShapeDerivatives(px[idx],ni,S,d_S,
-							    psize[idx]);
+        // Get the node indices that surround the cell
+        interpolator->findCellAndWeightsAndShapeDerivatives(px[idx],ni,S,d_S,
+                                                            psize[idx]);
 
-	stressmass  = pstress[idx]*pmass[idx];
+        stressmass  = pstress[idx]*pmass[idx];
         //stresspress = pstress[idx] + Id*p_pressure[idx];
-	stresspress = pstress[idx] + Id*p_pressure[idx] - Id*p_q[idx];
+        stresspress = pstress[idx] + Id*p_pressure[idx] - Id*p_q[idx];
         partvoldef += pvol[idx];
 
-	for (int k = 0; k < flags->d_8or27; k++){
-	  if(patch->containsNode(ni[k])){
-	    Vector div(d_S[k].x()*oodx[0],d_S[k].y()*oodx[1],
-		       d_S[k].z()*oodx[2]);
+        for (int k = 0; k < flags->d_8or27; k++){
+          if(patch->containsNode(ni[k])){
+            Vector div(d_S[k].x()*oodx[0],d_S[k].y()*oodx[1],
+                       d_S[k].z()*oodx[2]);
             if(pgCode[idx][k]==1) {
               internalforce[ni[k]] -= (div * stresspress) * pvol[idx];
             }
@@ -1870,8 +1870,8 @@ void FractureMPM::computeInternalForce(const ProcessorGroup*,
               Ginternalforce[ni[k]] -=(div * stresspress) * pvol[idx];
             }
             gstress[ni[k]] += stressmass * S[k];
-	  }
-	}
+          }
+        }
       }
 
       for(NodeIterator iter = patch->getNodeIterator__New(); !iter.done(); iter++) {
@@ -1912,14 +1912,14 @@ void FractureMPM::computeInternalForce(const ProcessorGroup*,
         
         patch->getFaceCells(face, 0, projlow, projhigh);
         for (int i = projlow.x(); i<projhigh.x(); i++) { 
-	  for (int j = projlow.y(); j<projhigh.y(); j++) { 
-	    for (int k = projlow.z(); k<projhigh.z(); k++) {
-	      IntVector ijk(i,j,k);
+          for (int j = projlow.y(); j<projhigh.y(); j++) { 
+            for (int k = projlow.z(); k<projhigh.z(); k++) {
+              IntVector ijk(i,j,k);
 
-	      double celldepth  = dx[iface/2]; // length in direction perpendicular to boundary
-	      double dA_c       = cellvol/celldepth; // cell based volume
+              double celldepth  = dx[iface/2]; // length in direction perpendicular to boundary
+              double dA_c       = cellvol/celldepth; // cell based volume
 
-	      for(int ic=0;ic<3;ic++) for(int jc=0;jc<3;jc++) {
+              for(int ic=0;ic<3;ic++) for(int jc=0;jc<3;jc++) {
                 bndyTraction[iface][ic] += gstress[ijk](ic,jc)*norm[jc]*dA_c;
               }
 
@@ -1981,7 +1981,7 @@ void FractureMPM::computeAndIntegrateAcceleration(const ProcessorGroup*,
 
     if (cout_doing.active())
       cout_doing <<"Doing integrateAcceleration on patch " << patch->getID()
-  	         <<"\t\t\t MPM"<< endl;
+                 <<"\t\t\t MPM"<< endl;
     
     Ghost::GhostType  gnone = Ghost::None;
     Vector gravity = d_sharedState->getGravity();
@@ -2031,7 +2031,7 @@ void FractureMPM::computeAndIntegrateAcceleration(const ProcessorGroup*,
 
       string interp_type = flags->d_interpolator_type;
       for(NodeIterator iter=patch->getExtraNodeIterator__New();
-		       !iter.done(); iter++){
+                       !iter.done(); iter++){
         IntVector c = *iter;
         // above crack
         acceleration[c]=(internalforce[c]+externalforce[c])/mass[c]+gravity;
@@ -2047,17 +2047,17 @@ void FractureMPM::computeAndIntegrateAcceleration(const ProcessorGroup*,
 }
 
 void FractureMPM::setGridBoundaryConditions(const ProcessorGroup*,
-				 	    const PatchSubset* patches,
-					    const MaterialSubset* ,
-					    DataWarehouse* old_dw,
-					    DataWarehouse* new_dw)
+                                            const PatchSubset* patches,
+                                            const MaterialSubset* ,
+                                            DataWarehouse* old_dw,
+                                            DataWarehouse* new_dw)
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
     if (cout_doing.active())
       cout_doing <<"Doing setGridBoundaryConditions on patch " << patch->getID()
-	         <<"\t\t MPM"<< endl;
+                 <<"\t\t MPM"<< endl;
 
 
     int numMPMMatls=d_sharedState->getNumMPMMatls();
@@ -2125,13 +2125,13 @@ void FractureMPM::applyExternalLoads(const ProcessorGroup* ,
       string bcs_type = MPMPhysicalBCFactory::mpmPhysicalBCs[ii]->getType();
       if (bcs_type == "Pressure") {
 
-	// Get the material points per load curve
-	PressureBC* pbc = 
+        // Get the material points per load curve
+        PressureBC* pbc = 
           dynamic_cast<PressureBC*>(MPMPhysicalBCFactory::mpmPhysicalBCs[ii]);
-	pbcP.push_back(pbc);
+        pbcP.push_back(pbc);
 
-	// Calculate the force per particle at current time
-	forcePerPart.push_back(pbc->forcePerParticle(time));
+        // Calculate the force per particle at current time
+        forcePerPart.push_back(pbc->forcePerParticle(time));
       } 
     }
   }
@@ -2142,7 +2142,7 @@ void FractureMPM::applyExternalLoads(const ProcessorGroup* ,
 
     if (cout_doing.active())
       cout_doing <<"Doing applyExternalLoads on patch " 
-  	         << patch->getID() << "\t MPM"<< endl;
+                 << patch->getID() << "\t MPM"<< endl;
 
     
     // Place for user defined loading scenarios to be defined,
@@ -2164,69 +2164,69 @@ void FractureMPM::applyExternalLoads(const ProcessorGroup* ,
             do_PressureBCs=true;
           }
         }
-	if(do_PressureBCs){
-      	  // Get the particle position data
-	  constParticleVariable<Point>  px;
-	  old_dw->get(px, lb->pXLabel, pset);
+        if(do_PressureBCs){
+          // Get the particle position data
+          constParticleVariable<Point>  px;
+          old_dw->get(px, lb->pXLabel, pset);
 
-	  // Get the load curve data
-	  constParticleVariable<int> pLoadCurveID;
-	  old_dw->get(pLoadCurveID, lb->pLoadCurveIDLabel, pset);
+          // Get the load curve data
+          constParticleVariable<int> pLoadCurveID;
+          old_dw->get(pLoadCurveID, lb->pLoadCurveIDLabel, pset);
 
-	  // Get the external force data and allocate new space for
-	  // external force
-	  ParticleVariable<Vector> pExternalForce;
-	  ParticleVariable<Vector> pExternalForce_new;
-	  old_dw->getModifiable(pExternalForce, lb->pExternalForceLabel, pset);
- 	  new_dw->allocateAndPut(pExternalForce_new, 
-			       lb->pExtForceLabel_preReloc,  pset);
+          // Get the external force data and allocate new space for
+          // external force
+          ParticleVariable<Vector> pExternalForce;
+          ParticleVariable<Vector> pExternalForce_new;
+          old_dw->getModifiable(pExternalForce, lb->pExternalForceLabel, pset);
+          new_dw->allocateAndPut(pExternalForce_new, 
+                               lb->pExtForceLabel_preReloc,  pset);
 
-	  // Iterate over the particles
-	  ParticleSubset::iterator iter = pset->begin();
-	  for(;iter != pset->end(); iter++){
-	    particleIndex idx = *iter;
-	    int loadCurveID = pLoadCurveID[idx]-1;
-	    if (loadCurveID < 0) {
-	      pExternalForce_new[idx] = pExternalForce[idx];
-	    } else {
-	      PressureBC* pbc = pbcP[loadCurveID];
-	      double force = forcePerPart[loadCurveID];
-	      pExternalForce_new[idx] = pbc->getForceVector(px[idx], force);
-	    }
-	  }
+          // Iterate over the particles
+          ParticleSubset::iterator iter = pset->begin();
+          for(;iter != pset->end(); iter++){
+            particleIndex idx = *iter;
+            int loadCurveID = pLoadCurveID[idx]-1;
+            if (loadCurveID < 0) {
+              pExternalForce_new[idx] = pExternalForce[idx];
+            } else {
+              PressureBC* pbc = pbcP[loadCurveID];
+              double force = forcePerPart[loadCurveID];
+              pExternalForce_new[idx] = pbc->getForceVector(px[idx], force);
+            }
+          }
 
-	  // Recycle the loadCurveIDs
-	  ParticleVariable<int> pLoadCurveID_new;
-	  new_dw->allocateAndPut(pLoadCurveID_new, 
-	  		         lb->pLoadCurveIDLabel_preReloc, pset);
-	  pLoadCurveID_new.copyData(pLoadCurveID);
+          // Recycle the loadCurveIDs
+          ParticleVariable<int> pLoadCurveID_new;
+          new_dw->allocateAndPut(pLoadCurveID_new, 
+                                 lb->pLoadCurveIDLabel_preReloc, pset);
+          pLoadCurveID_new.copyData(pLoadCurveID);
         }
       } else {  // Carry forward the old pEF, scale by d_forceIncrementFactor
-	// Get the external force data and allocate new space for
-	// external force and copy the data
-	constParticleVariable<Vector> pExternalForce;
-	ParticleVariable<Vector> pExternalForce_new;
-	old_dw->get(pExternalForce, lb->pExternalForceLabel, pset);
-	new_dw->allocateAndPut(pExternalForce_new, 
-	                      lb->pExtForceLabel_preReloc,  pset);
+        // Get the external force data and allocate new space for
+        // external force and copy the data
+        constParticleVariable<Vector> pExternalForce;
+        ParticleVariable<Vector> pExternalForce_new;
+        old_dw->get(pExternalForce, lb->pExternalForceLabel, pset);
+        new_dw->allocateAndPut(pExternalForce_new, 
+                              lb->pExtForceLabel_preReloc,  pset);
         
-	// Iterate over the particles 
-	ParticleSubset::iterator iter = pset->begin();
-	for(;iter != pset->end(); iter++){
- 	  particleIndex idx = *iter;
-	  pExternalForce_new[idx] = 
-	          pExternalForce[idx]*flags->d_forceIncrementFactor;
-	}
+        // Iterate over the particles 
+        ParticleSubset::iterator iter = pset->begin();
+        for(;iter != pset->end(); iter++){
+          particleIndex idx = *iter;
+          pExternalForce_new[idx] = 
+                  pExternalForce[idx]*flags->d_forceIncrementFactor;
+        }
       }
     } // matl loop
   }  // patch loop
 }
 
 void FractureMPM::addNewParticles(const ProcessorGroup*,
-	                          const PatchSubset* patches,
-                 	          const MaterialSubset* ,
-	                          DataWarehouse* old_dw,
-	                          DataWarehouse* new_dw)
+                                  const PatchSubset* patches,
+                                  const MaterialSubset* ,
+                                  DataWarehouse* old_dw,
+                                  DataWarehouse* new_dw)
 {
   for (int p = 0; p<patches->size(); p++) {
     const Patch* patch = patches->get(p);
@@ -2279,10 +2279,10 @@ void FractureMPM::addNewParticles(const ProcessorGroup*,
       for (ParticleSubset::iterator iter = pset->begin(); iter != pset->end();
                                     iter++) {
         if (damage[*iter]) {
-		
+                
           if (cout_dbg.active())
             cout_dbg << "damage[" << *iter << "]=" << damage[*iter] << endl;
-	  
+          
           delset->addParticle(*iter);
         }
       }
@@ -2302,66 +2302,66 @@ void FractureMPM::addNewParticles(const ProcessorGroup*,
         if (cout_dbg.active())
           cout_dbg << "Deleted " << numparticles << " particles" << endl;
 
-	ParticleCreator* particle_creator = null_matl->getParticleCreator();
-	ParticleSubset* addset = scinew ParticleSubset(numparticles,null_dwi,patch);
+        ParticleCreator* particle_creator = null_matl->getParticleCreator();
+        ParticleSubset* addset = scinew ParticleSubset(numparticles,null_dwi,patch);
 
-	if (cout_dbg.active()) {
-	  cout_dbg << "Address of delset = " << delset << endl;
-	  cout_dbg << "Address of pset = " << pset << endl;
-	  cout_dbg << "Address of addset = " << addset << endl;
-	}
+        if (cout_dbg.active()) {
+          cout_dbg << "Address of delset = " << delset << endl;
+          cout_dbg << "Address of pset = " << pset << endl;
+          cout_dbg << "Address of addset = " << addset << endl;
+        }
 
 
         map<const VarLabel*, ParticleVariableBase*>* newState
           = scinew map<const VarLabel*, ParticleVariableBase*>;
 
         if (cout_dbg.active()) {
-	  cout_dbg << "Address of newState = " << newState << endl;
-	  cout_dbg << "Null Material" << endl;
-	}
+          cout_dbg << "Address of newState = " << newState << endl;
+          cout_dbg << "Null Material" << endl;
+        }
 
         //vector<const VarLabel* > particle_labels = 
-	//  particle_creator->returnParticleState();
-	
-	//printParticleLabels(particle_labels, old_dw, null_dwi,patch);
-	
-	if (cout_dbg.active())
-	  cout_dbg << "MPM Material" << endl;
-	
-	//vector<const VarLabel* > mpm_particle_labels = 
-	//  mpm_matl->getParticleCreator()->returnParticleState();
-	//printParticleLabels(mpm_particle_labels, old_dw, dwi,patch);
-	
-	particle_creator->allocateVariablesAdd(new_dw,addset,newState,
-	                                       delset,old_dw);	
+        //  particle_creator->returnParticleState();
+        
+        //printParticleLabels(particle_labels, old_dw, null_dwi,patch);
+        
+        if (cout_dbg.active())
+          cout_dbg << "MPM Material" << endl;
+        
+        //vector<const VarLabel* > mpm_particle_labels = 
+        //  mpm_matl->getParticleCreator()->returnParticleState();
+        //printParticleLabels(mpm_particle_labels, old_dw, dwi,patch);
+        
+        particle_creator->allocateVariablesAdd(new_dw,addset,newState,
+                                               delset,old_dw);  
 
-	// Need to do the constitutive models particle variables;
-	
-	null_matl->getConstitutiveModel()->allocateCMDataAdd(new_dw,addset,
-	                                                     newState,delset,
-	                                                     old_dw);
-	
-	// Need to carry forward the cellNAPID for each time step;
-	// Move the particle variable declarations in ParticleCreator.h to one
-	// of the functions to save on memory;
-	
-	if (cout_dbg.active()){
-	  cout_dbg << "addset num particles = " << addset->numParticles()
-	           << " for material " << addset->getMatlIndex() << endl;
-	}
-	
-	new_dw->addParticles(patch,null_dwi,newState);
-	
-	if (cout_dbg.active())
- 	  cout_dbg << "Calling deleteParticles for material: " << dwi << endl;
-	
-	new_dw->deleteParticles(delset);
-	
+        // Need to do the constitutive models particle variables;
+        
+        null_matl->getConstitutiveModel()->allocateCMDataAdd(new_dw,addset,
+                                                             newState,delset,
+                                                             old_dw);
+        
+        // Need to carry forward the cellNAPID for each time step;
+        // Move the particle variable declarations in ParticleCreator.h to one
+        // of the functions to save on memory;
+        
+        if (cout_dbg.active()){
+          cout_dbg << "addset num particles = " << addset->numParticles()
+                   << " for material " << addset->getMatlIndex() << endl;
+        }
+        
+        new_dw->addParticles(patch,null_dwi,newState);
+        
+        if (cout_dbg.active())
+          cout_dbg << "Calling deleteParticles for material: " << dwi << endl;
+        
+        new_dw->deleteParticles(delset);
+        
       } else
-	delete delset;
+        delete delset;
     }
   }
-	
+        
 }
 
 /* Convert the localized particles of material "i" into particles of 
@@ -2378,32 +2378,32 @@ void FractureMPM::convertLocalizedParticles(const ProcessorGroup*,
   // material are converted.
   for (int p = 0; p<patches->size(); p++) {
     const Patch* patch = patches->get(p);
-	
+        
     if (cout_doing.active())
       cout_doing <<"Doing convertLocalizedParticles on patch " << patch->getID() << "\t MPM"<< endl;
-	
-	
+        
+        
     int numMPMMatls=d_sharedState->getNumMPMMatls();
-	
+        
     if (cout_convert.active()) {
       cout_convert << "FractureMPM::convertLocalizeParticles:: on patch"
                    << patch->getID() << " numMPMMaterials = " << numMPMMatls
- 	           << endl;
+                   << endl;
     }
-	
+        
     for(int m = 0; m < numMPMMatls; m+=2){
-	
+        
       if (cout_convert.active())
-	cout_convert << " material # = " << m << endl;
-	
-	
+        cout_convert << " material # = " << m << endl;
+        
+        
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
-	
+        
       if (cout_convert.active()) {
-	cout_convert << " mpm_matl* = " << mpm_matl
- 	             << " dwi = " << dwi << " pset* = " << pset << endl;
+        cout_convert << " mpm_matl* = " << mpm_matl
+                     << " dwi = " << dwi << " pset* = " << pset << endl;
       }
 
       
@@ -2447,11 +2447,11 @@ void FractureMPM::convertLocalizedParticles(const ProcessorGroup*,
 
       if (numparticles != 0) {
 
-	if (cout_convert.active()) {
+        if (cout_convert.active()) {
           cout_convert << " Converting "
-	               << numparticles << " particles of material "
-		       <<  m  << " into particles of material " << (m+1)
-		       << " in patch " << p << endl;
+                       << numparticles << " particles of material "
+                       <<  m  << " into particles of material " << (m+1)
+                       << " in patch " << p << endl;
         }
 
 
@@ -2468,27 +2468,27 @@ void FractureMPM::convertLocalizedParticles(const ProcessorGroup*,
           cout_convert << "New Material" << endl;
 
         //vector<const VarLabel* > particle_labels = 
-	//  particle_creator->returnParticleState();
-	//printParticleLabels(particle_labels, old_dw, conv_dwi,patch);
-	
-	if (cout_convert.active())
-	  cout_convert << "MPM Material" << endl;
-	
-	//vector<const VarLabel* > mpm_particle_labels = 
-	//  mpm_matl->getParticleCreator()->returnParticleState();
-	//printParticleLabels(mpm_particle_labels, old_dw, dwi,patch);
-	
-	particle_creator->allocateVariablesAdd(new_dw, addset, newState,
-	                                       delset, old_dw);
-	
-	conv_matl->getConstitutiveModel()->allocateCMDataAdd(new_dw, addset,
-	                                                     newState, delset,
-	                                                     old_dw);
+        //  particle_creator->returnParticleState();
+        //printParticleLabels(particle_labels, old_dw, conv_dwi,patch);
+        
+        if (cout_convert.active())
+          cout_convert << "MPM Material" << endl;
+        
+        //vector<const VarLabel* > mpm_particle_labels = 
+        //  mpm_matl->getParticleCreator()->returnParticleState();
+        //printParticleLabels(mpm_particle_labels, old_dw, dwi,patch);
+        
+        particle_creator->allocateVariablesAdd(new_dw, addset, newState,
+                                               delset, old_dw);
+        
+        conv_matl->getConstitutiveModel()->allocateCMDataAdd(new_dw, addset,
+                                                             newState, delset,
+                                                             old_dw);
 
         if (cout_convert.active()) {
-	  cout_convert << "addset num particles = " << addset->numParticles()
+          cout_convert << "addset num particles = " << addset->numParticles()
                        << " for material " << addset->getMatlIndex() << endl;
-	}
+        }
 
         new_dw->addParticles(patch, conv_dwi, newState);
         new_dw->deleteParticles(delset);
@@ -2497,19 +2497,19 @@ void FractureMPM::convertLocalizedParticles(const ProcessorGroup*,
       }
       else delete delset;
     }
-	
+        
     if (cout_convert.active()) {
       cout_convert <<"Done convertLocalizedParticles on patch "
-	           << patch->getID() << "\t MPM"<< endl;
+                   << patch->getID() << "\t MPM"<< endl;
     }
-	
+        
   }
-	
+        
   if (cout_convert.active())
     cout_convert << "Completed convertLocalizedParticles " << endl;
 
 }
-	
+        
 // for thermal stress analysis
 void FractureMPM::computeParticleTempFromGrid(const ProcessorGroup*,
                                               const PatchSubset* patches,
@@ -2547,7 +2547,7 @@ void FractureMPM::computeParticleTempFromGrid(const ProcessorGroup*,
             
       ParticleVariable<double> pTempCur;
       new_dw->allocateAndPut(pTempCur,lb->pTempCurrentLabel,pset);
-	    
+            
       // Loop over particles
       for(ParticleSubset::iterator iter = pset->begin();
                                    iter != pset->end(); iter++) {
@@ -2555,37 +2555,37 @@ void FractureMPM::computeParticleTempFromGrid(const ProcessorGroup*,
         double pTemp=0.0;
 
         // Get the node indices that surround the cell
-	interpolator->findCellAndWeightsAndShapeDerivatives(px[idx],ni,S,d_S,
-	                                                    psize[idx]);
-	// Accumulate the contribution from each surrounding vertex
-	for (int k = 0; k < flags->d_8or27; k++) {
-	  IntVector node = ni[k];
-	  if(pgCode[idx][k]==1) {
-	    pTemp += gTemperature[node] * S[k];
-	  }
-	  else if(pgCode[idx][k]==2) {
+        interpolator->findCellAndWeightsAndShapeDerivatives(px[idx],ni,S,d_S,
+                                                            psize[idx]);
+        // Accumulate the contribution from each surrounding vertex
+        for (int k = 0; k < flags->d_8or27; k++) {
+          IntVector node = ni[k];
+          if(pgCode[idx][k]==1) {
+            pTemp += gTemperature[node] * S[k];
+          }
+          else if(pgCode[idx][k]==2) {
             pTemp += GTemperature[node] * S[k];
-	  }   
-	}
-	pTempCur[idx]=pTemp;
+          }   
+        }
+        pTempCur[idx]=pTemp;
       } // End of loop over iter        
     } // End of loop over m
     delete interpolator;
   } // End of loop over p 
-}	
-	
+}       
+        
 void FractureMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
-						const PatchSubset* patches,
-						const MaterialSubset* ,
-						DataWarehouse* old_dw,
-						DataWarehouse* new_dw)
+                                                const PatchSubset* patches,
+                                                const MaterialSubset* ,
+                                                DataWarehouse* old_dw,
+                                                DataWarehouse* new_dw)
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
     if (cout_doing.active()) {
       cout_doing <<"Doing interpolateToParticlesAndUpdate on patch " 
-	         << patch->getID() << "\t MPM"<< endl;
+                 << patch->getID() << "\t MPM"<< endl;
     }
     
 
@@ -2693,17 +2693,17 @@ void FractureMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       new_dw->get(GTemperatureNoBC, lb->GTemperatureNoBCLabel,dwi,patch,gac,NGP);
 
       if(flags->d_with_ice){
-	new_dw->get(dTdt,            lb->dTdt_NCLabel,         dwi,patch,gac,NGP);
-	new_dw->get(massBurnFrac,    lb->massBurnFractionLabel,dwi,patch,gac,NGP);
+        new_dw->get(dTdt,            lb->dTdt_NCLabel,         dwi,patch,gac,NGP);
+        new_dw->get(massBurnFrac,    lb->massBurnFractionLabel,dwi,patch,gac,NGP);
       }
       else{
-	NCVariable<double> dTdt_create,massBurnFrac_create;
-	new_dw->allocateTemporary(dTdt_create,                     patch,gac,NGP);
-	new_dw->allocateTemporary(massBurnFrac_create,             patch,gac,NGP);
-	dTdt_create.initialize(0.);
-	massBurnFrac_create.initialize(0.);
-	dTdt = dTdt_create;                         // reference created data
- 	massBurnFrac = massBurnFrac_create;         // reference created data
+        NCVariable<double> dTdt_create,massBurnFrac_create;
+        new_dw->allocateTemporary(dTdt_create,                     patch,gac,NGP);
+        new_dw->allocateTemporary(massBurnFrac_create,             patch,gac,NGP);
+        dTdt_create.initialize(0.);
+        massBurnFrac_create.initialize(0.);
+        dTdt = dTdt_create;                         // reference created data
+        massBurnFrac = massBurnFrac_create;         // reference created data
       }
 
       double Cp=mpm_matl->getSpecificHeat();
@@ -2715,23 +2715,23 @@ void FractureMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
       // Loop over particles
       for(ParticleSubset::iterator iter = pset->begin();
-	                           iter != pset->end(); iter++){
-	particleIndex idx = *iter;
+                                   iter != pset->end(); iter++){
+        particleIndex idx = *iter;
 
-	// Get the node indices that surround the cell
-	interpolator->findCellAndWeightsAndShapeDerivatives(px[idx],ni,S,d_S,
-							    psize[idx]);
+        // Get the node indices that surround the cell
+        interpolator->findCellAndWeightsAndShapeDerivatives(px[idx],ni,S,d_S,
+                                                            psize[idx]);
 
-	Vector vel(0.0,0.0,0.0);
-	Vector acc(0.0,0.0,0.0);
-	double fricTempRate = 0.0;
-	double tempRate = 0;
-	double burnFraction = 0;
+        Vector vel(0.0,0.0,0.0);
+        Vector acc(0.0,0.0,0.0);
+        double fricTempRate = 0.0;
+        double tempRate = 0;
+        double burnFraction = 0;
 
-	// Accumulate the contribution from each surrounding vertex
-	for (int k = 0; k < flags->d_8or27; k++) {
+        // Accumulate the contribution from each surrounding vertex
+        for (int k = 0; k < flags->d_8or27; k++) {
           IntVector node = ni[k];
-	  fricTempRate = frictionTempRate[node]*flags->d_addFrictionWork;
+          fricTempRate = frictionTempRate[node]*flags->d_addFrictionWork;
           if(pgCode[idx][k]==1) {
              vel      += gvelocity_star[node]  * S[k];
              acc      += gacceleration[node]   * S[k];
@@ -2744,41 +2744,41 @@ void FractureMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
              tempRate += (GTemperatureRate[node]+dTdt[node]+fricTempRate)*S[k];
              burnFraction += massBurnFrac[node] * S[k];
           }
-	}
+        }
 
-	// Update the particle's position and velocity
-	pxnew[idx]           = px[idx] + vel*delT*move_particles;
+        // Update the particle's position and velocity
+        pxnew[idx]           = px[idx] + vel*delT*move_particles;
         pdispnew[idx]        = pdisp[idx] + vel*delT;
-	pvelocitynew[idx]    = pvelocity[idx] + acc*delT;
+        pvelocitynew[idx]    = pvelocity[idx] + acc*delT;
         // pxx is only useful if we're not in normal grid resetting mode.
-	pxx[idx]             = px[idx]    + pdispnew[idx];	
-	pTempNew[idx]        = pTemperature[idx] + tempRate*delT;
+        pxx[idx]             = px[idx]    + pdispnew[idx];      
+        pTempNew[idx]        = pTemperature[idx] + tempRate*delT;
         pTempPreNew[idx]     = pTempCurrent[idx]; // for thermal stress
 
         if (cout_heat.active()) {
-	  cout_heat << "FractureMPM::Particle = " << idx
-	            << " T_old = " << pTemperature[idx]
-	            << " Tdot = " << tempRate
-	            << " dT = " << (tempRate*delT)
-	            << " T_new = " << pTempNew[idx] << endl;
+          cout_heat << "FractureMPM::Particle = " << idx
+                    << " T_old = " << pTemperature[idx]
+                    << " Tdot = " << tempRate
+                    << " dT = " << (tempRate*delT)
+                    << " T_new = " << pTempNew[idx] << endl;
         }
-	
+        
 
-	double rho;
-	if(pvolume[idx] > 0.){
-	  rho = pmass[idx]/pvolume[idx];
-	}
-	else{
-	  rho = rho_init;
-	}
+        double rho;
+        if(pvolume[idx] > 0.){
+          rho = pmass[idx]/pvolume[idx];
+        }
+        else{
+          rho = rho_init;
+        }
         pkineticEnergyDensity[idx]=0.5*rho*pvelocitynew[idx].length2();
-	pmassNew[idx]   = Max(pmass[idx]*(1.-burnFraction),0.);
-	pvolume[idx]    = pmassNew[idx]/rho;
-	    
-	thermal_energy += pTemperature[idx] * pmass[idx] * Cp;
-	ke += .5*pmass[idx]*pvelocitynew[idx].length2();
-	CMX = CMX + (pxnew[idx]*pmass[idx]).asVector();
-	totalMom += pvelocitynew[idx]*pmass[idx];
+        pmassNew[idx]   = Max(pmass[idx]*(1.-burnFraction),0.);
+        pvolume[idx]    = pmassNew[idx]/rho;
+            
+        thermal_energy += pTemperature[idx] * pmass[idx] * Cp;
+        ke += .5*pmass[idx]*pvelocitynew[idx].length2();
+        CMX = CMX + (pxnew[idx]*pmass[idx]).asVector();
+        totalMom += pvelocitynew[idx]*pmass[idx];
       }
 
       // Delete particles whose mass is too small (due to combustion)
@@ -2825,10 +2825,10 @@ void FractureMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       
 void
 FractureMPM::initialErrorEstimate(const ProcessorGroup*,
-	                          const PatchSubset* patches,
-	                          const MaterialSubset* /*matls*/,
-	                          DataWarehouse*,
-	                          DataWarehouse* new_dw)
+                                  const PatchSubset* patches,
+                                  const MaterialSubset* /*matls*/,
+                                  DataWarehouse*,
+                                  DataWarehouse* new_dw)
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
@@ -2865,10 +2865,10 @@ FractureMPM::initialErrorEstimate(const ProcessorGroup*,
 
 void
 FractureMPM::errorEstimate(const ProcessorGroup* group,
-	                   const PatchSubset* patches,
-	                   const MaterialSubset* matls,
-	                   DataWarehouse* old_dw,
-	                   DataWarehouse* new_dw)
+                           const PatchSubset* patches,
+                           const MaterialSubset* matls,
+                           DataWarehouse* old_dw,
+                           DataWarehouse* new_dw)
 {
   // coarsen the errorflag.
   
@@ -2882,25 +2882,25 @@ FractureMPM::errorEstimate(const ProcessorGroup* group,
   }
   else {
     const Level* fineLevel = level->getFinerLevel().get_rep();
-	
+        
     for(int p=0;p<patches->size();p++){
       const Patch* coarsePatch = patches->get(p);
-	
+        
       if (amr_doing.active())
         amr_doing << "Doing FractureMPM::errorEstimate on patch " << coarsePatch->getID() << endl;
-	
+        
       // Find the overlapping regions...
-	
+        
       CCVariable<int> refineFlag;
       PerPatch<PatchFlagP> refinePatchFlag;
 
       new_dw->getModifiable(refineFlag, d_sharedState->get_refineFlag_label(),
-   	                    0, coarsePatch);
+                            0, coarsePatch);
       new_dw->get(refinePatchFlag, d_sharedState->get_refinePatchFlag_label(),
-	          0, coarsePatch);
-	
+                  0, coarsePatch);
+        
       PatchFlag* refinePatch = refinePatchFlag.get().get_rep();
-	
+        
       Level::selectType finePatches;
       coarsePatch->getFineLevelPatches(finePatches);
 
@@ -2910,7 +2910,7 @@ FractureMPM::errorEstimate(const ProcessorGroup* group,
         // Get the particle data
         constCCVariable<int> fineErrorFlag;
         new_dw->get(fineErrorFlag, d_sharedState->get_refineFlag_label(), 0,
-		    finePatch, Ghost::None, 0);
+                    finePatch, Ghost::None, 0);
 
         IntVector fl(finePatch->getExtraCellLowIndex__New());
         IntVector fh(finePatch->getExtraCellHighIndex__New());
@@ -2937,10 +2937,10 @@ FractureMPM::errorEstimate(const ProcessorGroup* group,
 
 void
 FractureMPM::refine(const ProcessorGroup*,
-	            const PatchSubset* patches,
-	            const MaterialSubset* /*matls*/,
-	            DataWarehouse*,
-	            DataWarehouse* new_dw)
+                    const PatchSubset* patches,
+                    const MaterialSubset* /*matls*/,
+                    DataWarehouse*,
+                    DataWarehouse* new_dw)
 {
   // just create a particle subset if one doesn't exist
   for (int p = 0; p<patches->size(); p++) {
@@ -2950,23 +2950,23 @@ FractureMPM::refine(const ProcessorGroup*,
     for(int m = 0; m < numMPMMatls; m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
-	
+        
       if (cout_doing.active()) {
-	cout_doing <<"Doing refine on patch "
-	<< patch->getID() << " material # = " << dwi << endl;
+        cout_doing <<"Doing refine on patch "
+        << patch->getID() << " material # = " << dwi << endl;
       }
-	
+        
       // this is a new patch, so create empty particle variables.
       if (!new_dw->haveParticleSubset(dwi, patch)) {
-	ParticleSubset* pset = new_dw->createParticleSubset(0, dwi, patch);
-	
-	// Create arrays for the particle data
-	ParticleVariable<Point>  px;
-	ParticleVariable<double> pmass, pvolume, pTemperature;
-	ParticleVariable<Vector> pvelocity, pexternalforce, psize, pdisp;
-	ParticleVariable<int>    pLoadCurve;
-	ParticleVariable<long64> pID;
-	ParticleVariable<Matrix3> pdeform, pstress;
+        ParticleSubset* pset = new_dw->createParticleSubset(0, dwi, patch);
+        
+        // Create arrays for the particle data
+        ParticleVariable<Point>  px;
+        ParticleVariable<double> pmass, pvolume, pTemperature;
+        ParticleVariable<Vector> pvelocity, pexternalforce, psize, pdisp;
+        ParticleVariable<int>    pLoadCurve;
+        ParticleVariable<long64> pID;
+        ParticleVariable<Matrix3> pdeform, pstress;
 
         new_dw->allocateAndPut(px,             lb->pXLabel,             pset);
         new_dw->allocateAndPut(pmass,          lb->pMassLabel,          pset);
@@ -2979,7 +2979,7 @@ FractureMPM::refine(const ProcessorGroup*,
         new_dw->allocateAndPut(pdeform,        lb->pDeformationMeasureLabel, pset);
         new_dw->allocateAndPut(pstress,        lb->pStressLabel,        pset);
         if (flags->d_useLoadCurves)
-	          new_dw->allocateAndPut(pLoadCurve,   lb->pLoadCurveIDLabel,   pset);
+                  new_dw->allocateAndPut(pLoadCurve,   lb->pLoadCurveIDLabel,   pset);
         new_dw->allocateAndPut(psize,          lb->pSizeLabel,          pset);
 
       }

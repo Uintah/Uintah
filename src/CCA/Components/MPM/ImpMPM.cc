@@ -1603,7 +1603,7 @@ void ImpMPM::iterate(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
     if (cout_doing.active()) {
       cout_doing <<"Doing iterate on patch " << patch->getID()
-		 <<"\t\t\t\t IMPM"<< "\n" << "\n";
+                 <<"\t\t\t\t IMPM"<< "\n" << "\n";
     }
 
     for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
@@ -1704,7 +1704,7 @@ void ImpMPM::iterate(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
     if (cout_doing.active()) {
       cout_doing <<"Getting the recursive data on patch " << patch->getID()
-		 <<"\t\t\t IMPM"<< "\n" << "\n";
+                 <<"\t\t\t IMPM"<< "\n" << "\n";
     }
 
     Ghost::GhostType  gnone = Ghost::None;
@@ -2493,7 +2493,7 @@ void ImpMPM::createMatrix(const ProcessorGroup*,
     const Patch* patch = patches->get(pp);
     if (cout_doing.active()) {
       cout_doing <<"Doing createMatrix on patch " << patch->getID() 
-		 << "\t\t\t\t IMPM"    << "\n" << "\n";
+                 << "\t\t\t\t IMPM"    << "\n" << "\n";
     }
 
     IntVector lowIndex,highIndex;
@@ -2702,7 +2702,7 @@ void ImpMPM::computeContact(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
     if (cout_doing.active()) {
       cout_doing <<"Doing computeContact on patch " << patch->getID()
-		 <<"\t\t\t\t IMPM"<< "\n" << "\n";
+                 <<"\t\t\t\t IMPM"<< "\n" << "\n";
     }
 
     delt_vartype dt;
@@ -2773,7 +2773,7 @@ void ImpMPM::findFixedDOF(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
     if (cout_doing.active()) {
       cout_doing <<"Doing findFixedDOF on patch " << patch->getID()
-		 <<"\t\t\t\t IMPM"<< "\n" << "\n";
+                 <<"\t\t\t\t IMPM"<< "\n" << "\n";
     }
 
     IntVector lowIndex,highIndex;
@@ -2856,7 +2856,7 @@ void ImpMPM::formStiffnessMatrix(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
     if (cout_doing.active()) {
       cout_doing <<"Doing formStiffnessMatrix " << patch->getID()
-		 <<"\t\t\t\t IMPM"<< "\n" << "\n";
+                 <<"\t\t\t\t IMPM"<< "\n" << "\n";
     }
 
     IntVector lowIndex,highIndex;
@@ -2917,7 +2917,7 @@ void ImpMPM::computeInternalForce(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
     if (cout_doing.active()) {
       cout_doing <<"Doing computeInternalForce on patch " << patch->getID()
-		 <<"\t\t\t IMPM"<< "\n" << "\n";
+                 <<"\t\t\t IMPM"<< "\n" << "\n";
     }
     
     ParticleInterpolator* interpolator = flags->d_interpolator->clone(patch);
@@ -3010,7 +3010,7 @@ void ImpMPM::formQ(const ProcessorGroup*, const PatchSubset* patches,
     const Patch* patch = patches->get(p);
     if (cout_doing.active()) {
       cout_doing <<"Doing formQ on patch " << patch->getID()
-		 <<"\t\t\t\t\t IMPM"<< "\n" << "\n";
+                 <<"\t\t\t\t\t IMPM"<< "\n" << "\n";
     }
 
     IntVector lowIndex,highIndex;
@@ -3101,7 +3101,7 @@ void ImpMPM::solveForDuCG(const ProcessorGroup* /*pg*/,
     for(int p = 0; p<patches->size();p++) {
       const Patch* patch = patches->get(p);
       cout_doing <<"Doing solveForDuCG on patch " << patch->getID()
-		  <<"\t\t\t\t IMPM"<< "\n" << "\n";
+                  <<"\t\t\t\t IMPM"<< "\n" << "\n";
     }
   }
 
@@ -3130,7 +3130,7 @@ void ImpMPM::getDisplacementIncrement(const ProcessorGroup* /*pg*/,
     const Patch* patch = patches->get(p);
     if (cout_doing.active()) {
       cout_doing <<"Doing getDisplacementIncrement on patch " << patch->getID()
-		 <<"\t\t\t\t IMPM"<< "\n" << "\n";
+                 <<"\t\t\t\t IMPM"<< "\n" << "\n";
     }
 
     IntVector lowIndex,highIndex;
@@ -3177,7 +3177,7 @@ void ImpMPM::updateGridKinematics(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
     if (cout_doing.active()) {
       cout_doing <<"Doing updateGridKinematics on patch " << patch->getID()
-		 <<"\t\t\t IMPM"<< "\n" << "\n";
+                 <<"\t\t\t IMPM"<< "\n" << "\n";
     }
 
     Ghost::GhostType  gnone = Ghost::None;
@@ -3277,7 +3277,7 @@ void ImpMPM::checkConvergence(const ProcessorGroup*,
    const Patch* patch = patches->get(p);
    if (cout_doing.active()) {
      cout_doing <<"Doing checkConvergence on patch " << patch->getID()
-		<<"\t\t\t IMPM"<< "\n" << "\n";
+                <<"\t\t\t IMPM"<< "\n" << "\n";
    }
 
    IntVector lowIndex,highIndex;
@@ -3378,7 +3378,7 @@ void ImpMPM::updateTotalDisplacement(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
     if (cout_doing.active()) {
       cout_doing <<"Doing updateTotalDisplacement on patch " << patch->getID()
-		 <<"\t\t\t IMPM"<< "\n" << "\n";
+                 <<"\t\t\t IMPM"<< "\n" << "\n";
     }
 
     Ghost::GhostType  gnone = Ghost::None;
@@ -3412,7 +3412,7 @@ void ImpMPM::computeAcceleration(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
     if (cout_doing.active()) {
       cout_doing <<"Doing computeAcceleration on patch " << patch->getID()
-		 <<"\t\t\t IMPM"<< "\n" << "\n";
+                 <<"\t\t\t IMPM"<< "\n" << "\n";
     }
 
     Ghost::GhostType  gnone = Ghost::None;
@@ -3451,7 +3451,7 @@ void ImpMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
     if (cout_doing.active()) {
       cout_doing <<"Doing interpolateToParticlesAndUpdate on patch " 
-		 << patch->getID() <<"\t IMPM"<< "\n" << "\n";
+                 << patch->getID() <<"\t IMPM"<< "\n" << "\n";
     }
 
     Ghost::GhostType  gac = Ghost::AroundCells;
@@ -3638,7 +3638,7 @@ void ImpMPM::interpolateStressToGrid(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
     if (cout_doing.active()) {
       cout_doing <<"Doing interpolateStressToGrid on patch " << patch->getID()
-		 <<"\t\t IMPM"<< "\n" << "\n";
+                 <<"\t\t IMPM"<< "\n" << "\n";
     }
 
     ParticleInterpolator* interpolator = flags->d_interpolator->clone(patch);
@@ -3859,7 +3859,7 @@ void ImpMPM::actuallyComputeStableTimestep(const ProcessorGroup*,
    const Patch* patch = patches->get(p);
    if (cout_doing.active()) {
      cout_doing <<"Doing actuallyComputeStableTimestep on patch "
-		<< patch->getID() <<"\t IMPM"<< "\n" << "\n";
+                << patch->getID() <<"\t IMPM"<< "\n" << "\n";
    }
 
    if(d_numIterations==0){
