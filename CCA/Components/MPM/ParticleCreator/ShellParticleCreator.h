@@ -77,7 +77,7 @@ WARNING
     // Constructor and destructor
     //
     ShellParticleCreator(MPMMaterial* matl, 
-			 MPMFlags* flags);
+                         MPMFlags* flags);
 
     virtual ~ShellParticleCreator();
 
@@ -86,27 +86,27 @@ WARNING
     // Actually create particles using geometry
     //
     virtual ParticleSubset* createParticles(MPMMaterial* matl, 
-					    particleIndex numParticles,
-					    CCVariable<short int>& cellNAPID,
-					    const Patch*, 
-					    DataWarehouse* new_dw,
-					    vector<GeometryObject*>&);
+                                            particleIndex numParticles,
+                                            CCVariable<short int>& cellNAPID,
+                                            const Patch*, 
+                                            DataWarehouse* new_dw,
+                                            vector<GeometryObject*>&);
 
     /////////////////////////////////////////////////////////////////////////
     //
     // Count particles in a patch
     //
     virtual particleIndex countParticles(const Patch*,
-					 std::vector<GeometryObject*>&) ;
+                                         std::vector<GeometryObject*>&) ;
     virtual particleIndex countAndCreateParticles(const Patch*,
-						  GeometryObject* obj) ;
+                                                  GeometryObject* obj) ;
 
     /////////////////////////////////////////////////////////////////////////
     //
     // Make sure data is copied when particles cross patch boundaries
     //
     virtual void registerPermanentParticleState(MPMMaterial* matl);
-						
+                                                
 
   };
 
