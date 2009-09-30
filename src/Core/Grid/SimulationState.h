@@ -202,10 +202,6 @@ public:
 
   void setOriginalMatlsFromRestart(MaterialSet* matls);
   
-  double getRefPress() const {
-    return d_ref_press;
-  }
-
   double getElapsedTime() const { return d_elapsed_time; }
   void   setElapsedTime(double t) { d_elapsed_time = t; }
 
@@ -318,7 +314,6 @@ private:
   MaterialSubset * refine_flag_matls;
   MaterialSubset * allInOneMatl;
 
-  double d_ref_press;
   int    d_needAddMaterial;
 
   // The time step that the top level (w.r.t. AMR) is at during a
