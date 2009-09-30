@@ -90,14 +90,14 @@ WARNING
                            const MaterialSubset* matls,
                            DataWarehouse* old_dw,
                            DataWarehouse* new_dw) = 0;
-	 
+         
     virtual void initializeThermalContact(const Patch* patch,
-				int vfindex,
-				DataWarehouse* new_dw) = 0;
+                                int vfindex,
+                                DataWarehouse* new_dw) = 0;
 
     virtual void addComputesAndRequires(Task* task,
                               const PatchSet* patches,
-			      const MaterialSet* matls) const = 0;
+                              const MaterialSet* matls) const = 0;
 
     virtual void outputProblemSpec(ProblemSpecP& ps) = 0;
 

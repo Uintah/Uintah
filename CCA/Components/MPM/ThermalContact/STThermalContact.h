@@ -84,7 +84,7 @@ WARNING
     public:
     // Constructor
     STThermalContact(ProblemSpecP& ps,SimulationStateP& d_sS, MPMLabel* lb,
-		     MPMFlags* flag);
+                     MPMFlags* flag);
 
     // Destructor
     virtual ~STThermalContact();
@@ -94,14 +94,14 @@ WARNING
                            const MaterialSubset* matls,
                            DataWarehouse* old_dw,
                            DataWarehouse* new_dw);
-	 
+         
     virtual void initializeThermalContact(const Patch* patch,
-				int vfindex,
-				DataWarehouse* new_dw);
+                                int vfindex,
+                                DataWarehouse* new_dw);
 
     virtual void addComputesAndRequires(Task* task,
                               const PatchSet* patches,
-			      const MaterialSet* matls) const;
+                              const MaterialSet* matls) const;
 
     virtual void outputProblemSpec(ProblemSpecP& ps);
 
