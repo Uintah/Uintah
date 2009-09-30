@@ -102,7 +102,7 @@ Simple_Burn::~Simple_Burn()
 }
 
 void Simple_Burn::problemSetup(GridP&, SimulationStateP& sharedState,
-			     ModelSetup*)
+                             ModelSetup*)
 {
   d_sharedState = sharedState;
   bool defaultActive=true;
@@ -188,7 +188,7 @@ void Simple_Burn::outputProblemSpec(ProblemSpecP& ps)
 //______________________________________________________________________
 //
 void Simple_Burn::activateModel(GridP&, SimulationStateP& sharedState,
-			        ModelSetup*)
+                                ModelSetup*)
 {
   d_active=true;
   matl1 = sharedState->parseAndLookupMaterial(d_params, "toMaterial");
@@ -222,16 +222,16 @@ void Simple_Burn::activateModel(GridP&, SimulationStateP& sharedState,
 //______________________________________________________________________
 //     
 void Simple_Burn::scheduleInitialize(SchedulerP&,
-				     const LevelP&,
-				     const ModelInfo*)
+                                     const LevelP&,
+                                     const ModelInfo*)
 {
   // None necessary...
 }
 //______________________________________________________________________
 //      
 void Simple_Burn::scheduleComputeStableTimestep(SchedulerP&,
-					      const LevelP&,
-					      const ModelInfo*)
+                                              const LevelP&,
+                                              const ModelInfo*)
 {
   // None necessary...
 }
@@ -239,8 +239,8 @@ void Simple_Burn::scheduleComputeStableTimestep(SchedulerP&,
 //______________________________________________________________________
 //     
 void Simple_Burn::scheduleComputeModelSources(SchedulerP& sched,
-				                  const LevelP& level,
-				                  const ModelInfo* mi)
+                                                  const LevelP& level,
+                                                  const ModelInfo* mi)
 {
  if(d_active){
  
@@ -306,11 +306,11 @@ void Simple_Burn::scheduleComputeModelSources(SchedulerP& sched,
 //______________________________________________________________________
 //
 void Simple_Burn::computeModelSources(const ProcessorGroup*, 
-			                 const PatchSubset* patches,
-			                 const MaterialSubset*,
-			                 DataWarehouse* old_dw,
-			                 DataWarehouse* new_dw,
-			                 const ModelInfo* mi)
+                                         const PatchSubset* patches,
+                                         const MaterialSubset*,
+                                         DataWarehouse* old_dw,
+                                         DataWarehouse* new_dw,
+                                         const ModelInfo* mi)
 {
   delt_vartype delT;
   old_dw->get(delT, mi->delT_Label,getLevel(patches));

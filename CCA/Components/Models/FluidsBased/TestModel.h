@@ -75,21 +75,21 @@ WARNING
     virtual void outputProblemSpec(ProblemSpecP& ps);
 
     virtual void problemSetup(GridP& grid, SimulationStateP& sharedState,
-			      ModelSetup* setup);
+                              ModelSetup* setup);
       
     virtual void scheduleInitialize(SchedulerP&,
-				        const LevelP& level,
-				        const ModelInfo*);
+                                        const LevelP& level,
+                                        const ModelInfo*);
 
     virtual void restartInitialize() {}
       
     virtual void scheduleComputeStableTimestep(SchedulerP&,
-					           const LevelP& level,
-					           const ModelInfo*);
+                                                   const LevelP& level,
+                                                   const ModelInfo*);
       
     virtual void scheduleComputeModelSources(SchedulerP&,
-				                const LevelP& level,
-				                const ModelInfo*);
+                                                const LevelP& level,
+                                                const ModelInfo*);
                                              
     virtual void scheduleModifyThermoTransportProperties(SchedulerP&,
                                                          const LevelP&,
@@ -110,9 +110,9 @@ WARNING
   private:    
     void computeModelSources(const ProcessorGroup*, 
                              const PatchSubset* patches,
-		               const MaterialSubset* matls, 
+                               const MaterialSubset* matls, 
                              DataWarehouse*, 
-		               DataWarehouse* new_dw, 
+                               DataWarehouse* new_dw, 
                              const ModelInfo*);
 
     TestModel(const TestModel&);

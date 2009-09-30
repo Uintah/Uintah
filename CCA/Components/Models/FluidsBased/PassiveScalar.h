@@ -81,21 +81,21 @@ WARNING
     virtual void outputProblemSpec(ProblemSpecP& ps);
     
     virtual void problemSetup(GridP& grid, SimulationStateP& sharedState,
-			      ModelSetup* setup);
+                              ModelSetup* setup);
     
     virtual void scheduleInitialize(SchedulerP&,
-				    const LevelP& level,
-				    const ModelInfo*);
+                                    const LevelP& level,
+                                    const ModelInfo*);
 
     virtual void restartInitialize() {}
       
     virtual void scheduleComputeStableTimestep(SchedulerP&,
-					       const LevelP& level,
-					       const ModelInfo*);
+                                               const LevelP& level,
+                                               const ModelInfo*);
                                   
     virtual void scheduleComputeModelSources(SchedulerP&,
-						   const LevelP& level,
-						   const ModelInfo*);
+                                                   const LevelP& level,
+                                                   const ModelInfo*);
                                             
    virtual void scheduleModifyThermoTransportProperties(SchedulerP&,
                                                 const LevelP&,
@@ -124,9 +124,9 @@ WARNING
    
     void initialize(const ProcessorGroup*, 
                     const PatchSubset* patches,
-		      const MaterialSubset* matls, 
+                      const MaterialSubset* matls, 
                     DataWarehouse*, 
-		      DataWarehouse* new_dw);
+                      DataWarehouse* new_dw);
                                    
     void computeModelSources(const ProcessorGroup*, 
                              const PatchSubset* patches,
@@ -143,10 +143,10 @@ WARNING
                           const ModelInfo* mi);
                                                        
     void errorEstimate(const ProcessorGroup* pg,
-    		         const PatchSubset* patches,
-			  const MaterialSubset* matl,
-			  DataWarehouse* old_dw,
-			  DataWarehouse* new_dw,
+                         const PatchSubset* patches,
+                          const MaterialSubset* matl,
+                          DataWarehouse* old_dw,
+                          DataWarehouse* new_dw,
                        bool initial);
 
     PassiveScalar(const PassiveScalar&);

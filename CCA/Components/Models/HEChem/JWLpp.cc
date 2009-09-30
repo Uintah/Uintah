@@ -77,7 +77,7 @@ JWLpp::~JWLpp()
 }
 
 void JWLpp::problemSetup(GridP&, SimulationStateP& sharedState,
-			     ModelSetup*)
+                             ModelSetup*)
 {
   d_sharedState = sharedState;
   bool defaultActive=true;
@@ -339,7 +339,7 @@ void JWLpp::computeModelSources(const ProcessorGroup*,
     constCCVariable<Vector> rctvel_CC;
     CCVariable<double> Fr;
     CCVariable<double> delF;
-	    
+            
     Vector dx = patch->dCell();
     double cell_vol = dx.x()*dx.y()*dx.z();
     Ghost::GhostType  gn  = Ghost::None;    

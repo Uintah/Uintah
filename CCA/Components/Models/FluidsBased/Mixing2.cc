@@ -81,7 +81,7 @@ Mixing2::~Mixing2()
     VarLabel::destroy(stream->massFraction_CCLabel);
     VarLabel::destroy(stream->massFraction_source_CCLabel);
     for(vector<Region*>::iterator iter = stream->regions.begin();
-	iter != stream->regions.end(); iter++){
+        iter != stream->regions.end(); iter++){
       Region* region = *iter;
       delete region->piece;
       delete region;
@@ -98,7 +98,7 @@ Mixing2::Region::Region(GeometryPiece* piece, ProblemSpecP& ps)
 }
 
 void Mixing2::problemSetup(GridP&, SimulationStateP& in_state,
-			   ModelSetup* setup)
+                           ModelSetup* setup)
 {
   sharedState = in_state;
   matl = sharedState->parseAndLookupMaterial(params, "material");
@@ -146,8 +146,8 @@ void Mixing2::problemSetup(GridP&, SimulationStateP& in_state,
       stream->massFraction_source_CCLabel = VarLabel::create(mfsname, CCVariable<double>::getTypeDescription());
       
       setup->registerTransportedVariable(mymatls->getSubset(0),
-					 stream->massFraction_CCLabel,
-					 stream->massFraction_source_CCLabel);
+                                         stream->massFraction_CCLabel,
+                                         stream->massFraction_source_CCLabel);
       streams.push_back(stream);
       names[stream->name] = stream;
     }
@@ -171,19 +171,19 @@ void Mixing2::problemSetup(GridP&, SimulationStateP& in_state,
       throw ProblemSetupException("Stream "+name+" species not found", __FILE__, __LINE__);
     Stream* stream = iter->second;
     for (ProblemSpecP geom_obj_ps = child->findBlock("geom_object");
-	 geom_obj_ps != 0;
-	 geom_obj_ps = geom_obj_ps->findNextBlock("geom_object") ) {
+         geom_obj_ps != 0;
+         geom_obj_ps = geom_obj_ps->findNextBlock("geom_object") ) {
       
       vector<GeometryPiece*> pieces;
       GeometryPieceFactory::create(geom_obj_ps, pieces);
       
       GeometryPiece* mainpiece;
       if(pieces.size() == 0){
-	throw ParameterNotFound("No piece specified in geom_object", __FILE__, __LINE__);
+        throw ParameterNotFound("No piece specified in geom_object", __FILE__, __LINE__);
       } else if(pieces.size() > 1){
-	mainpiece = scinew UnionGeometryPiece(pieces);
+        mainpiece = scinew UnionGeometryPiece(pieces);
       } else {
-	mainpiece = pieces[0];
+        mainpiece = pieces[0];
       }
 
       stream->regions.push_back(scinew Region(mainpiece, geom_obj_ps));
@@ -232,9 +232,9 @@ void Mixing2::problemSetup(GridP&, SimulationStateP& in_state,
     ofstream out2("temp0.dat");
     for(double t = 0;t<max;t+=dt){
       if(t != 0)
-	r.advance(t);
+        r.advance(t);
       if(t != 0)
-	r2.advance(t);
+        r2.advance(t);
       out1 << t << " " << gas->pressure() << " " << gas2->pressure() << '\n';
       out2 << t << " " << gas->temperature() << " " << gas2->temperature() << '\n';
     }
@@ -248,11 +248,11 @@ void Mixing2::problemSetup(GridP&, SimulationStateP& in_state,
 }
 
 void Mixing2::scheduleInitialize(SchedulerP& sched,
-				const LevelP& level,
-				const ModelInfo*)
+                                const LevelP& level,
+                                const ModelInfo*)
 {
   Task* t = scinew Task("Mixing2::initialize",
-			this, &Mixing2::initialize);
+                        this, &Mixing2::initialize);
   for(vector<Stream*>::iterator iter = streams.begin();
       iter != streams.end(); iter++){
     Stream* stream = *iter;
@@ -262,10 +262,10 @@ void Mixing2::scheduleInitialize(SchedulerP& sched,
 }
 
 void Mixing2::initialize(const ProcessorGroup*, 
-			const PatchSubset* patches,
-			const MaterialSubset* matls,
-			DataWarehouse*,
-			DataWarehouse* new_dw)
+                        const PatchSubset* patches,
+                        const MaterialSubset* matls,
+                        DataWarehouse*,
+                        DataWarehouse* new_dw)
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
@@ -275,54 +275,54 @@ void Mixing2::initialize(const ProcessorGroup*,
       new_dw->allocateTemporary(sum, patch);
       sum.initialize(0);
       for(vector<Stream*>::iterator iter = streams.begin();
-	  iter != streams.end(); iter++){
-	Stream* stream = *iter;
-	CCVariable<double> mf;
-	new_dw->allocateAndPut(mf, stream->massFraction_CCLabel, matl, patch);
-	mf.initialize(0);
-	for(vector<Region*>::iterator iter = stream->regions.begin();
-	    iter != stream->regions.end(); iter++){
-	  Region* region = *iter;
-	  Box b1 = region->piece->getBoundingBox();
-	  Box b2 = patch->getBox();
-	  Box b = b1.intersect(b2);
+          iter != streams.end(); iter++){
+        Stream* stream = *iter;
+        CCVariable<double> mf;
+        new_dw->allocateAndPut(mf, stream->massFraction_CCLabel, matl, patch);
+        mf.initialize(0);
+        for(vector<Region*>::iterator iter = stream->regions.begin();
+            iter != stream->regions.end(); iter++){
+          Region* region = *iter;
+          Box b1 = region->piece->getBoundingBox();
+          Box b2 = patch->getBox();
+          Box b = b1.intersect(b2);
    
-	  for(CellIterator iter = patch->getExtraCellIterator__New();
-	      !iter.done(); iter++){
+          for(CellIterator iter = patch->getExtraCellIterator__New();
+              !iter.done(); iter++){
  
-	    Point p = patch->cellPosition(*iter);
-	    if(region->piece->inside(p))
-	      mf[*iter] = region->initialMassFraction;
-	  } // Over cells
-	} // Over regions
-	for(CellIterator iter = patch->getExtraCellIterator__New();
-	    !iter.done(); iter++)
-	  sum[*iter] += mf[*iter];
+            Point p = patch->cellPosition(*iter);
+            if(region->piece->inside(p))
+              mf[*iter] = region->initialMassFraction;
+          } // Over cells
+        } // Over regions
+        for(CellIterator iter = patch->getExtraCellIterator__New();
+            !iter.done(); iter++)
+          sum[*iter] += mf[*iter];
       } // Over streams
       for(CellIterator iter = patch->getExtraCellIterator__New();
-	  !iter.done(); iter++){
-	if(sum[*iter] != 1.0){
-	  ostringstream msg;
-	  msg << "Initial massFraction != 1.0: value=";
-	  msg << sum[*iter] << " at " << *iter;
-	  throw ProblemSetupException(msg.str(), __FILE__, __LINE__);
-	}
+          !iter.done(); iter++){
+        if(sum[*iter] != 1.0){
+          ostringstream msg;
+          msg << "Initial massFraction != 1.0: value=";
+          msg << sum[*iter] << " at " << *iter;
+          throw ProblemSetupException(msg.str(), __FILE__, __LINE__);
+        }
       } // Over cells
     } // Over matls
   }
 }
       
 void Mixing2::scheduleComputeStableTimestep(SchedulerP&,
-					   const LevelP&,
-					   const ModelInfo*)
+                                           const LevelP&,
+                                           const ModelInfo*)
 {
   // None necessary...
 }
       
 
 void Mixing2::scheduleComputeModelSources(SchedulerP& sched,
-					       const LevelP& level,
-					       const ModelInfo* mi)
+                                               const LevelP& level,
+                                               const ModelInfo* mi)
 {
   Task* t = scinew Task("Mixing2::computeModelSources",this, 
                         &Mixing2::computeModelSources, mi);
@@ -345,11 +345,11 @@ void Mixing2::scheduleComputeModelSources(SchedulerP& sched,
 }
 
 void Mixing2::computeModelSources(const ProcessorGroup*, 
-		                    const PatchSubset* patches,
-		                    const MaterialSubset* matls,
-		                    DataWarehouse* old_dw,
-		                    DataWarehouse* new_dw,
-		                    const ModelInfo* mi)
+                                    const PatchSubset* patches,
+                                    const MaterialSubset* matls,
+                                    DataWarehouse* old_dw,
+                                    DataWarehouse* new_dw,
+                                    const ModelInfo* mi)
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
@@ -369,7 +369,7 @@ void Mixing2::computeModelSources(const ProcessorGroup*,
         
       CCVariable<double> energySource;
       new_dw->getModifiable(energySource,   mi->modelEng_srcLabel,
-			    matl, patch);
+                            matl, patch);
 
       Vector dx = patch->dCell();
       double volume = dx.x()*dx.y()*dx.z();
@@ -385,73 +385,73 @@ void Mixing2::computeModelSources(const ProcessorGroup*,
       double* tmp_mf =scinew double[numSpecies];
       double* new_mf =scinew double[numSpecies];
       for(vector<Stream*>::iterator iter = streams.begin();
-	  iter != streams.end(); iter++, index++){
-	Stream* stream = *iter;
-	constCCVariable<double> species_mf;
-	old_dw->get(species_mf, stream->massFraction_CCLabel, matl, patch, Ghost::None, 0);
-	mf[index] = species_mf;
+          iter != streams.end(); iter++, index++){
+        Stream* stream = *iter;
+        constCCVariable<double> species_mf;
+        old_dw->get(species_mf, stream->massFraction_CCLabel, matl, patch, Ghost::None, 0);
+        mf[index] = species_mf;
 
-	new_dw->allocateAndPut(mfsource[index], stream->massFraction_source_CCLabel,
-			       matl, patch, Ghost::None, 0);
+        new_dw->allocateAndPut(mfsource[index], stream->massFraction_source_CCLabel,
+                               matl, patch, Ghost::None, 0);
       }
 
       Reactor r;
       double etotal = 0;
       for(CellIterator iter = patch->getCellIterator__New(); !iter.done(); iter++){
-	IntVector idx = *iter;
-	double mass = density[idx]*volume;
-	
-	for(int i = 0; i< numSpecies; i++)
-	  tmp_mf[i] = mf[i][*iter];
+        IntVector idx = *iter;
+        double mass = density[idx]*volume;
+        
+        for(int i = 0; i< numSpecies; i++)
+          tmp_mf[i] = mf[i][*iter];
 
 #if 0
-	double sum = 0;
-	for(int i=0;i<numSpecies;i++){
-	  //ASSERT(tmp_mf[i] >= 0 && tmp_mf[i] <= 1);
-	  if(tmp_mf[i] < -1.e-8)
-	    cerr << "mf[" << i << "]=" << tmp_mf[i] << '\n';
-	  if(tmp_mf[i] > 1+1.e-8)
-	    cerr << "mf[" << i << "]=" << tmp_mf[i] << '\n';
-	  sum += tmp_mf[i];
-	}
-	if(sum < 1-1.e-8 || sum > 1+1.e-8){
-	  cerr << "mf sum" << idx << "=" << sum << '\n';
-	}
+        double sum = 0;
+        for(int i=0;i<numSpecies;i++){
+          //ASSERT(tmp_mf[i] >= 0 && tmp_mf[i] <= 1);
+          if(tmp_mf[i] < -1.e-8)
+            cerr << "mf[" << i << "]=" << tmp_mf[i] << '\n';
+          if(tmp_mf[i] > 1+1.e-8)
+            cerr << "mf[" << i << "]=" << tmp_mf[i] << '\n';
+          sum += tmp_mf[i];
+        }
+        if(sum < 1-1.e-8 || sum > 1+1.e-8){
+          cerr << "mf sum" << idx << "=" << sum << '\n';
+        }
 #endif
-	
-	double temp = temperature[*iter];
-	double press = pressure[*iter];
-	gas->setState_TPY(temp, press, tmp_mf);
+        
+        double temp = temperature[*iter];
+        double press = pressure[*iter];
+        gas->setState_TPY(temp, press, tmp_mf);
 #if 0
-	cerr << "Cp=" << gas->cp_mass() << '\n';
-	cerr << "Cv=" << gas->cv_mass() << '\n';
-	cerr << "gamma=" << gas->cp_mass()/gas->cv_mass() << '\n';
+        cerr << "Cp=" << gas->cp_mass() << '\n';
+        cerr << "Cv=" << gas->cv_mass() << '\n';
+        cerr << "gamma=" << gas->cp_mass()/gas->cv_mass() << '\n';
 #endif
-	
-	// create a reactor
-	  
-	// specify the thermodynamic property and kinetics managers
-	r.setThermoMgr(*gas);
-	r.setKineticsMgr(*gas);
-	r.initialize();
-	r.advance(dt);
-	double dtemp = gas->temperature()-temp;
-	double energyx = dtemp*cv[*iter]*mass;
-	energySource[idx] += energyx;
-	etotal += energyx;
-	gas->getMassFractions(new_mf);
-	for(int i = 0; i< numSpecies; i++)
-	  mfsource[i][*iter] += new_mf[i]-tmp_mf[i];
+        
+        // create a reactor
+          
+        // specify the thermodynamic property and kinetics managers
+        r.setThermoMgr(*gas);
+        r.setKineticsMgr(*gas);
+        r.initialize();
+        r.advance(dt);
+        double dtemp = gas->temperature()-temp;
+        double energyx = dtemp*cv[*iter]*mass;
+        energySource[idx] += energyx;
+        etotal += energyx;
+        gas->getMassFractions(new_mf);
+        for(int i = 0; i< numSpecies; i++)
+          mfsource[i][*iter] += new_mf[i]-tmp_mf[i];
       }
       cerr << "Mixing2 total energy: " << etotal << ", release rate=" << etotal/dt << '\n';
 #if 0
       {
-	static ofstream outt("temp.dat");
-	outt << sharedState->getElapsedTime() << " " << temperature[IntVector(2,2,0)] << " " << temperature[IntVector(3,2,0)] << " " << temperature[IntVector(3,3,0)] << '\n';
-	outt.flush();
-	static ofstream outp("press.dat");
-	outp << sharedState->getElapsedTime() << " " << pressure[IntVector(2,2,0)] << " " << pressure[IntVector(3,2,0)] << " " << pressure[IntVector(3,3,0)] << '\n';
-	outp.flush();
+        static ofstream outt("temp.dat");
+        outt << sharedState->getElapsedTime() << " " << temperature[IntVector(2,2,0)] << " " << temperature[IntVector(3,2,0)] << " " << temperature[IntVector(3,3,0)] << '\n';
+        outt.flush();
+        static ofstream outp("press.dat");
+        outp << sharedState->getElapsedTime() << " " << pressure[IntVector(2,2,0)] << " " << pressure[IntVector(3,2,0)] << " " << pressure[IntVector(3,3,0)] << '\n';
+        outp.flush();
       }
 #endif
       delete[] tmp_mf;

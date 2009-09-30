@@ -72,7 +72,7 @@ TestModel::~TestModel()
 
 //______________________________________________________________________
 void TestModel::problemSetup(GridP&, SimulationStateP& sharedState,
-			     ModelSetup* )
+                             ModelSetup* )
 {
   matl0 = sharedState->parseAndLookupMaterial(params, "fromMaterial");
   matl1 = sharedState->parseAndLookupMaterial(params, "toMaterial");
@@ -120,24 +120,24 @@ void TestModel::outputProblemSpec(ProblemSpecP& ps)
  
 //______________________________________________________________________
 void TestModel::scheduleInitialize(SchedulerP&,
-				   const LevelP& level,
-				   const ModelInfo*)
+                                   const LevelP& level,
+                                   const ModelInfo*)
 {
   // None necessary...
 }
 
 //______________________________________________________________________     
 void TestModel::scheduleComputeStableTimestep(SchedulerP&,
-					      const LevelP&,
-					      const ModelInfo*)
+                                              const LevelP&,
+                                              const ModelInfo*)
 {
   // None necessary...
 }
 
 //__________________________________      
 void TestModel::scheduleComputeModelSources(SchedulerP& sched,
-				                const LevelP& level,
-				                const ModelInfo* mi)
+                                                const LevelP& level,
+                                                const ModelInfo* mi)
 {
   Task* t = scinew Task("TestModel::computeModelSources",this, 
                         &TestModel::computeModelSources, mi);
@@ -171,11 +171,11 @@ void TestModel::scheduleComputeModelSources(SchedulerP& sched,
 
 //__________________________________
 void TestModel::computeModelSources(const ProcessorGroup*, 
-			               const PatchSubset* patches,
-			               const MaterialSubset* matls,
-			               DataWarehouse* old_dw,
-			               DataWarehouse* new_dw,
-			               const ModelInfo* mi)
+                                       const PatchSubset* patches,
+                                       const MaterialSubset* matls,
+                                       DataWarehouse* old_dw,
+                                       DataWarehouse* new_dw,
+                                       const ModelInfo* mi)
 {
   delt_vartype delT;
   old_dw->get(delT, mi->delT_Label);
