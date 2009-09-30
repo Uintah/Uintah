@@ -1276,10 +1276,10 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
       //---- P R I N T   D A T A ------
       if(switchDebug_InterpolateNCToCC_0) {
         ostringstream desc;
-	desc<< "BOT_MPMICE::interpolateNCToCC_0_Mat_"<< indx <<"_patch_"
-	    <<  patch->getID();
-	d_ice->printData(   indx, patch, 1,desc.str(), "sp_vol",    sp_vol_CC); 
-	d_ice->printData(   indx, patch, 1,desc.str(), "cmass",     cmass);
+        desc<< "BOT_MPMICE::interpolateNCToCC_0_Mat_"<< indx <<"_patch_"
+            <<  patch->getID();
+        d_ice->printData(   indx, patch, 1,desc.str(), "sp_vol",    sp_vol_CC); 
+        d_ice->printData(   indx, patch, 1,desc.str(), "cmass",     cmass);
         d_ice->printData(   indx, patch, 1,desc.str(), "Temp_CC",   Temp_CC);
         d_ice->printData(   indx, patch, 1,desc.str(), "rho_CC",    rho_CC);
         d_ice->printVector( indx, patch, 1,desc.str(), "vel_CC", 0, vel_CC);
