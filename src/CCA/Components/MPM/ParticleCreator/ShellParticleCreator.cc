@@ -49,7 +49,7 @@ using namespace Uintah;
 // Constructor
 //
 ShellParticleCreator::ShellParticleCreator(MPMMaterial* matl,
-					   MPMFlags* flags)
+                                           MPMFlags* flags)
   : ParticleCreator(matl,flags)
 {
 }
@@ -68,11 +68,11 @@ ShellParticleCreator::~ShellParticleCreator()
 //
 ParticleSubset* 
 ShellParticleCreator::createParticles(MPMMaterial* matl, 
-				      particleIndex numParticles,
-				      CCVariable<short int>& cellNAPID,
-				      const Patch* patch,
-				      DataWarehouse* new_dw,
-				      vector<GeometryObject*>& d_geom_objs)
+                                      particleIndex numParticles,
+                                      CCVariable<short int>& cellNAPID,
+                                      const Patch* patch,
+                                      DataWarehouse* new_dw,
+                                      vector<GeometryObject*>& d_geom_objs)
 {
   // Print the physical boundary conditions
   printPhysicalBCs();
@@ -82,8 +82,8 @@ ShellParticleCreator::createParticles(MPMMaterial* matl,
 
   // Create a particle subset for the patch
   ParticleSubset* subset = ParticleCreator::allocateVariables(numParticles,
-							      dwi, patch,
-							      new_dw);
+                                                              dwi, patch,
+                                                              new_dw);
   // Create the variables that go with each shell particle
   ParticleVariable<double>  pThickTop0, pThickBot0, pThickTop, pThickBot;
   ParticleVariable<Vector>  pNormal0, pNormal;
@@ -119,7 +119,7 @@ ShellParticleCreator::createParticles(MPMMaterial* matl,
     Vector dxpp = patch->dCell()/(*obj)->getNumParticlesPerCell();
     Vector dcorner = dxpp*0.5;
     Vector size(1./((double) ppc.x()), 1./((double) ppc.y()),
-		1./((double) ppc.z()));
+                1./((double) ppc.z()));
     
     // If the geometry object is a shell perform special 
     // operations else just treat the geom object in the standard
@@ -139,15 +139,15 @@ ShellParticleCreator::createParticles(MPMMaterial* matl,
       // (declared in the ParticleCreator class)
       for (int idx = 0; idx < numP; idx++) {
         particleIndex pidx = start+idx;
-	pvelocity[pidx]=(*obj)->getInitialVelocity();
-	ptemperature[pidx]=(*obj)->getInitialData("temperature");
+        pvelocity[pidx]=(*obj)->getInitialVelocity();
+        ptemperature[pidx]=(*obj)->getInitialData("temperature");
         pdisp[pidx] = Vector(0.,0.,0.);
         pfiberdir[pidx] = Vector(0.0,0.0,0.0);
         perosion[pidx] = 1.0;
 
         // Calculate particle mass
-	double partMass = matl->getInitialDensity()*pvolume[pidx];
-	pmass[pidx] = partMass;
+        double partMass = matl->getInitialDensity()*pvolume[pidx];
+        pmass[pidx] = partMass;
 
         // The particle can be tagged as a surface particle.
         // If there is a physical BC attached to it then mark with the 
@@ -155,32 +155,32 @@ ShellParticleCreator::createParticles(MPMMaterial* matl,
         if (d_useLoadCurves) 
           pLoadCurveID[pidx] = getLoadCurveID(position[pidx], dxpp);
 
-	// Apply the force BC if applicable
-	Vector pExtForce(0,0,0);
-	ParticleCreator::applyForceBC(dxpp, position[pidx], partMass, 
+        // Apply the force BC if applicable
+        Vector pExtForce(0,0,0);
+        ParticleCreator::applyForceBC(dxpp, position[pidx], partMass, 
                                       pExtForce);
-	pexternalforce[pidx] = pExtForce;
-		
-	// Assign a particle id
-	IntVector cell_idx;
-	if (patch->findCell(position[pidx],cell_idx)) {
-	  long64 cellID = ((long64)cell_idx.x() << 16) |
-	    ((long64)cell_idx.y() << 32) |
-	    ((long64)cell_idx.z() << 48);
-	  short int& myCellNAPID = cellNAPID[cell_idx];
-	  ASSERT(myCellNAPID < 0x7fff);
-	  myCellNAPID++;
-	  pparticleID[pidx] = cellID | (long64)myCellNAPID;
-	} else {
+        pexternalforce[pidx] = pExtForce;
+                
+        // Assign a particle id
+        IntVector cell_idx;
+        if (patch->findCell(position[pidx],cell_idx)) {
+          long64 cellID = ((long64)cell_idx.x() << 16) |
+            ((long64)cell_idx.y() << 32) |
+            ((long64)cell_idx.z() << 48);
+          short int& myCellNAPID = cellNAPID[cell_idx];
+          ASSERT(myCellNAPID < 0x7fff);
+          myCellNAPID++;
+          pparticleID[pidx] = cellID | (long64)myCellNAPID;
+        } else {
           double x = position[pidx].x();
           double y = position[pidx].y();
           double z = position[pidx].z();
           if (fabs(x) < 1.0e-15) x = 0.0;
           if (fabs(y) < 1.0e-15) y = 0.0;
           if (fabs(z) < 1.0e-15) z = 0.0;
-	  double px = patch->getExtraBox().upper().x();
-	  double py = patch->getExtraBox().upper().y();
-	  double pz = patch->getExtraBox().upper().z();
+          double px = patch->getExtraBox().upper().x();
+          double py = patch->getExtraBox().upper().y();
+          double pz = patch->getExtraBox().upper().z();
           if (fabs(px) < 1.0e-15) px = 0.0;
           if (fabs(py) < 1.0e-15) py = 0.0;
           if (fabs(pz) < 1.0e-15) pz = 0.0;
@@ -188,24 +188,24 @@ ShellParticleCreator::createParticles(MPMMaterial* matl,
           if (y == py) y -= 1.0e-10;
           if (z == pz) z -= 1.0e-10;
           position[pidx] = Point(x,y,z);
-	  if (!patch->findCell(position[pidx],cell_idx)) {
-	    cerr << "Pidx = " << pidx << " Pos = " << position[pidx]
+          if (!patch->findCell(position[pidx],cell_idx)) {
+            cerr << "Pidx = " << pidx << " Pos = " << position[pidx]
                  << " patch BBox = " << patch->getExtraBox()
                  << " cell_idx = " << cell_idx
                  << " low = " << patch->getExtraCellLowIndex__New()
                  << " high = " << patch->getExtraCellHighIndex__New()
                  << " : Particle not in any cell." << endl;
-	    pparticleID[pidx] = 0;
+            pparticleID[pidx] = 0;
           } else {
-	    long64 cellID = ((long64)cell_idx.x() << 16) |
-	      ((long64)cell_idx.y() << 32) |
-	      ((long64)cell_idx.z() << 48);
-	    short int& myCellNAPID = cellNAPID[cell_idx];
-	    ASSERT(myCellNAPID < 0x7fff);
-	    myCellNAPID++;
-	    pparticleID[pidx] = cellID | (long64)myCellNAPID;
+            long64 cellID = ((long64)cell_idx.x() << 16) |
+              ((long64)cell_idx.y() << 32) |
+              ((long64)cell_idx.z() << 48);
+            short int& myCellNAPID = cellNAPID[cell_idx];
+            ASSERT(myCellNAPID < 0x7fff);
+            myCellNAPID++;
+            pparticleID[pidx] = cellID | (long64)myCellNAPID;
           }
-	}
+        }
 
         // The shell specific variables
         pThickTop0[pidx]  = pThickTop[pidx]; 
@@ -218,60 +218,60 @@ ShellParticleCreator::createParticles(MPMMaterial* matl,
      
       // Loop thru cells and assign particles
       for(CellIterator iter = patch->getCellIterator__New(); !iter.done(); iter++){
-	Point lower = patch->nodePosition(*iter) + dcorner;
-	for(int ix=0;ix < ppc.x(); ix++){
-	  for(int iy=0;iy < ppc.y(); iy++){
-	    for(int iz=0;iz < ppc.z(); iz++){
-	      IntVector idx(ix, iy, iz);
-	      Point p = lower + dxpp*idx;
-	      IntVector cell_idx = *iter;
-	      // If the assertion fails then we may just need to change
-	      // the format of particle ids such that the cell indices
-	      // have more bits.
-	      ASSERT(cell_idx.x() <= 0xffff && cell_idx.y() <= 0xffff
-		     && cell_idx.z() <= 0xffff);
-	      long64 cellID = ((long64)cell_idx.x() << 16) |
-		((long64)cell_idx.y() << 32) |
-		((long64)cell_idx.z() << 48);
-	      if(piece->inside(p)){
+        Point lower = patch->nodePosition(*iter) + dcorner;
+        for(int ix=0;ix < ppc.x(); ix++){
+          for(int iy=0;iy < ppc.y(); iy++){
+            for(int iz=0;iz < ppc.z(); iz++){
+              IntVector idx(ix, iy, iz);
+              Point p = lower + dxpp*idx;
+              IntVector cell_idx = *iter;
+              // If the assertion fails then we may just need to change
+              // the format of particle ids such that the cell indices
+              // have more bits.
+              ASSERT(cell_idx.x() <= 0xffff && cell_idx.y() <= 0xffff
+                     && cell_idx.z() <= 0xffff);
+              long64 cellID = ((long64)cell_idx.x() << 16) |
+                ((long64)cell_idx.y() << 32) |
+                ((long64)cell_idx.z() << 48);
+              if(piece->inside(p)){
                 particleIndex pidx = start+count; 
-		position[pidx]=p;
+                position[pidx]=p;
                 pdisp[pidx] = Vector(0.,0.,0.);
-		pvolume[pidx]=dxpp.x()*dxpp.y()*dxpp.z();
-		pvelocity[pidx]=(*obj)->getInitialVelocity();
-		ptemperature[pidx]=(*obj)->getInitialData("temperature");
-	        psp_vol[pidx]=1.0/matl->getInitialDensity(); 
+                pvolume[pidx]=dxpp.x()*dxpp.y()*dxpp.z();
+                pvelocity[pidx]=(*obj)->getInitialVelocity();
+                ptemperature[pidx]=(*obj)->getInitialData("temperature");
+                psp_vol[pidx]=1.0/matl->getInitialDensity(); 
                 perosion[pidx] = 1.0;
                 pfiberdir[pidx] = Vector(0.0,0.0,0.0);
 
-		// Calculate particle mass
-		double partMass =matl->getInitialDensity()*pvolume[pidx];
-		pmass[pidx] = partMass;
-		
+                // Calculate particle mass
+                double partMass =matl->getInitialDensity()*pvolume[pidx];
+                pmass[pidx] = partMass;
+                
                 // If the particle is on the surface and if there is
                 // a physical BC attached to it then mark with the 
                 // physical BC pointer
                 if (d_useLoadCurves) {
-		  if (checkForSurface(piece,p,dxpp)) {
-		    pLoadCurveID[pidx] = getLoadCurveID(p, dxpp);
-		  } else {
-		    pLoadCurveID[pidx] = 0;
-		  }
+                  if (checkForSurface(piece,p,dxpp)) {
+                    pLoadCurveID[pidx] = getLoadCurveID(p, dxpp);
+                  } else {
+                    pLoadCurveID[pidx] = 0;
+                  }
                 }
 
-		// Apply the force BC if applicable
-		Vector pExtForce(0,0,0);
-		ParticleCreator::applyForceBC(dxpp, p, partMass, pExtForce);
-		pexternalforce[pidx] = pExtForce;
-		
-		// Assign particle id
-		short int& myCellNAPID = cellNAPID[cell_idx];
-		pparticleID[pidx] = cellID | (long64)myCellNAPID;
-		psize[pidx] = size;
-		ASSERT(myCellNAPID < 0x7fff);
-		myCellNAPID++;
-		count++;
-		
+                // Apply the force BC if applicable
+                Vector pExtForce(0,0,0);
+                ParticleCreator::applyForceBC(dxpp, p, partMass, pExtForce);
+                pexternalforce[pidx] = pExtForce;
+                
+                // Assign particle id
+                short int& myCellNAPID = cellNAPID[cell_idx];
+                pparticleID[pidx] = cellID | (long64)myCellNAPID;
+                psize[pidx] = size;
+                ASSERT(myCellNAPID < 0x7fff);
+                myCellNAPID++;
+                count++;
+                
                 // Assign dummy values to shell-specific variables
                 pThickTop[pidx]   = 1.0;
                 pThickTop0[pidx]  = 1.0;
@@ -279,10 +279,10 @@ ShellParticleCreator::createParticles(MPMMaterial* matl,
                 pThickBot0[pidx]  = 1.0;
                 pNormal[pidx]     = Vector(0,1,0);
                 pNormal0[pidx]    = Vector(0,1,0);
-	      }  // if inside
-	    }  // loop in z
-	  }  // loop in y
-	}  // loop in x
+              }  // if inside
+            }  // loop in z
+          }  // loop in y
+        }  // loop in x
       } // for
     } // end of else
     start += count; 
@@ -297,7 +297,7 @@ ShellParticleCreator::createParticles(MPMMaterial* matl,
 //
 particleIndex 
 ShellParticleCreator::countParticles(const Patch* patch,
-				     vector<GeometryObject*>& d_geom_objs) 
+                                     vector<GeometryObject*>& d_geom_objs) 
 {
   return ParticleCreator::countParticles(patch,d_geom_objs);
 }
@@ -308,7 +308,7 @@ ShellParticleCreator::countParticles(const Patch* patch,
 //
 particleIndex 
 ShellParticleCreator::countAndCreateParticles(const Patch* patch,
-					      GeometryObject* obj) 
+                                              GeometryObject* obj) 
 {
 
   GeometryPieceP piece = obj->getPiece();

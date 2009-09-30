@@ -45,7 +45,7 @@ DEALINGS IN THE SOFTWARE.
 using namespace Uintah;
 
 MembraneParticleCreator::MembraneParticleCreator(MPMMaterial* matl,
-						 MPMFlags* flags)
+                                                 MPMFlags* flags)
                                
   :  ParticleCreator(matl,flags)
 {
@@ -81,17 +81,17 @@ MembraneParticleCreator::~MembraneParticleCreator()
 
 
 ParticleSubset* MembraneParticleCreator::createParticles(MPMMaterial* matl, 
-					      particleIndex numParticles,
-					      CCVariable<short int>& cellNAPID,
-					      const Patch* patch,
-					      DataWarehouse* new_dw,
-					      vector<GeometryObject*>& d_geom_objs)
+                                              particleIndex numParticles,
+                                              CCVariable<short int>& cellNAPID,
+                                              const Patch* patch,
+                                              DataWarehouse* new_dw,
+                                              vector<GeometryObject*>& d_geom_objs)
 {
   int dwi = matl->getDWIndex();
 
   ParticleSubset* subset =  allocateVariables(numParticles,
-					      dwi,patch,
-					      new_dw);
+                                              dwi,patch,
+                                              new_dw);
 
   
   particleIndex start = 0;
@@ -111,85 +111,85 @@ ParticleSubset* MembraneParticleCreator::createParticles(MPMMaterial* matl,
     Vector dcorner = dxpp*0.5;
     // Size as a fraction of the cell size
     Vector size(1./((double) ppc.x()),
-		1./((double) ppc.y()),
-		1./((double) ppc.z()));
+                1./((double) ppc.y()),
+                1./((double) ppc.z()));
     
 
     SphereMembraneGeometryPiece* SMGP =
       dynamic_cast<SphereMembraneGeometryPiece*>(piece.get_rep());
     if(SMGP){
       int numP = SMGP->createParticles(patch, position, pvolume,
-				       pTang1, pTang2, pNorm, psize, start);
+                                       pTang1, pTang2, pNorm, psize, start);
       for(int idx=0;idx<(start+numP);idx++){
-	pvelocity[start+idx]=(*obj)->getInitialVelocity();
-	ptemperature[start+idx]=(*obj)->getInitialData("temperature");
+        pvelocity[start+idx]=(*obj)->getInitialVelocity();
+        ptemperature[start+idx]=(*obj)->getInitialData("temperature");
        psp_vol[start+idx]=1.0/matl->getInitialDensity();
-	pmass[start+idx]=matl->getInitialDensity() * pvolume[start+idx];
-	// Determine if particle is on the surface
-	pexternalforce[start+idx]=Vector(0,0,0); // for now
-	IntVector cell_idx;
-	if(patch->findCell(position[start+idx],cell_idx)){
-	  long64 cellID = ((long64)cell_idx.x() << 16) |
-	    ((long64)cell_idx.y() << 32) |
-	    ((long64)cell_idx.z() << 48);
-	  short int& myCellNAPID = cellNAPID[cell_idx];
-	  ASSERT(myCellNAPID < 0x7fff);
-	  myCellNAPID++;
-	  pparticleID[start+idx] = cellID | (long64)myCellNAPID;
-	}
-	else{
-	  cerr << "cellID is not right" << endl;
-	}
+        pmass[start+idx]=matl->getInitialDensity() * pvolume[start+idx];
+        // Determine if particle is on the surface
+        pexternalforce[start+idx]=Vector(0,0,0); // for now
+        IntVector cell_idx;
+        if(patch->findCell(position[start+idx],cell_idx)){
+          long64 cellID = ((long64)cell_idx.x() << 16) |
+            ((long64)cell_idx.y() << 32) |
+            ((long64)cell_idx.z() << 48);
+          short int& myCellNAPID = cellNAPID[cell_idx];
+          ASSERT(myCellNAPID < 0x7fff);
+          myCellNAPID++;
+          pparticleID[start+idx] = cellID | (long64)myCellNAPID;
+        }
+        else{
+          cerr << "cellID is not right" << endl;
+        }
       }
     }
     else{
       for(CellIterator iter = patch->getCellIterator__New(); !iter.done(); iter++){
-	Point lower = patch->nodePosition(*iter) + dcorner;
-	for(int ix=0;ix < ppc.x(); ix++){
-	  for(int iy=0;iy < ppc.y(); iy++){
-	    for(int iz=0;iz < ppc.z(); iz++){
-	      IntVector idx(ix, iy, iz);
-	      Point p = lower + dxpp*idx;
-	      IntVector cell_idx = *iter;
-	      // If the assertion fails then we may just need to change
-	      // the format of particle ids such that the cell indices
-	      // have more bits.
-	      ASSERT(cell_idx.x() <= 0xffff && cell_idx.y() <= 0xffff
-		     && cell_idx.z() <= 0xffff);
-	      long64 cellID = ((long64)cell_idx.x() << 16) |
-		((long64)cell_idx.y() << 32) |
-		((long64)cell_idx.z() << 48);
-	      if(piece->inside(p)){
-		position[start+count]=p;
-		pvolume[start+count]=dxpp.x()*dxpp.y()*dxpp.z();
-		pvelocity[start+count]=(*obj)->getInitialVelocity();
-		ptemperature[start+count]=(*obj)->getInitialData("temperature");
+        Point lower = patch->nodePosition(*iter) + dcorner;
+        for(int ix=0;ix < ppc.x(); ix++){
+          for(int iy=0;iy < ppc.y(); iy++){
+            for(int iz=0;iz < ppc.z(); iz++){
+              IntVector idx(ix, iy, iz);
+              Point p = lower + dxpp*idx;
+              IntVector cell_idx = *iter;
+              // If the assertion fails then we may just need to change
+              // the format of particle ids such that the cell indices
+              // have more bits.
+              ASSERT(cell_idx.x() <= 0xffff && cell_idx.y() <= 0xffff
+                     && cell_idx.z() <= 0xffff);
+              long64 cellID = ((long64)cell_idx.x() << 16) |
+                ((long64)cell_idx.y() << 32) |
+                ((long64)cell_idx.z() << 48);
+              if(piece->inside(p)){
+                position[start+count]=p;
+                pvolume[start+count]=dxpp.x()*dxpp.y()*dxpp.z();
+                pvelocity[start+count]=(*obj)->getInitialVelocity();
+                ptemperature[start+count]=(*obj)->getInitialData("temperature");
               psp_vol[start+count]     =1.0/matl->getInitialDensity();
                 // Calculate particle mass
                 double partMass = matl->getInitialDensity()*pvolume[start+count];
-	        pmass[start+count] = partMass;
+                pmass[start+count] = partMass;
 
                 // Apply the force BC if applicable
                 Vector pExtForce(0,0,0);
                 ParticleCreator::applyForceBC(dxpp, p, partMass, pExtForce);
-	        pexternalforce[start+count] = pExtForce;
+                pexternalforce[start+count] = pExtForce;
 
-		// Determine if particle is on the surface
-		psize[start+count] = size;
-		pTang1[start+count] = Vector(1,0,0);
-		pTang2[start+count] = Vector(0,0,1);
-		pNorm[start+count]  = Vector(0,1,0);
-		short int& myCellNAPID = cellNAPID[cell_idx];
-		pparticleID[start+count] = cellID | (long64)myCellNAPID;
-		ASSERT(myCellNAPID < 0x7fff);
-		myCellNAPID++;
-		
-		count++;
-		
-	      }  // if inside
-	    }  // loop in z
-	  }  // loop in y
-	}  // loop in x
+                // Determine if particle is on the surface
+                psize[start+count] = size;
+                pTang1[start+count] = Vector(1,0,0);
+                pTang2[start+count] = Vector(0,0,1);
+                pNorm[start+count]  = Vector(0,1,0);
+                short int& myCellNAPID = cellNAPID[cell_idx];
+                pparticleID[start+count] = cellID | (long64)myCellNAPID;
+                ASSERT(myCellNAPID < 0x7fff);
+                myCellNAPID++;
+                
+                count++;
+                
+              }  // if inside
+            }  // loop in z
+          }  // loop in y
+        }  // loop in x
       } // for
     } // else
     start += count; 
@@ -200,14 +200,14 @@ ParticleSubset* MembraneParticleCreator::createParticles(MPMMaterial* matl,
 }
 
 particleIndex MembraneParticleCreator::countParticles(const Patch* patch,
-						      vector<GeometryObject*>& d_geom_objs) 
+                                                      vector<GeometryObject*>& d_geom_objs) 
 {
   return ParticleCreator::countParticles(patch,d_geom_objs);
 }
 
 particleIndex 
 MembraneParticleCreator::countAndCreateParticles(const Patch* patch,
-						 GeometryObject* obj) 
+                                                 GeometryObject* obj) 
 {
 
   GeometryPieceP piece = obj->getPiece();
@@ -226,13 +226,13 @@ MembraneParticleCreator::countAndCreateParticles(const Patch* patch,
 
 ParticleSubset* 
 MembraneParticleCreator::allocateVariables(particleIndex numParticles, 
-					   int dwi,const Patch* patch,
-					   DataWarehouse* new_dw)
+                                           int dwi,const Patch* patch,
+                                           DataWarehouse* new_dw)
 {
 
   ParticleSubset* subset = ParticleCreator::allocateVariables(numParticles,
-							      dwi,patch,
-							      new_dw);
+                                                              dwi,patch,
+                                                              new_dw);
 
   new_dw->allocateAndPut(pTang1, pTang1Label, subset);
   new_dw->allocateAndPut(pTang2, pTang2Label, subset);

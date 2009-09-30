@@ -63,33 +63,33 @@ namespace Uintah {
 
 
     virtual ParticleSubset* createParticles(MPMMaterial* matl,
-					    particleIndex numParticles,
-					    CCVariable<short int>& cellNAPID,
-					    const Patch*,DataWarehouse* new_dw,
+                                            particleIndex numParticles,
+                                            CCVariable<short int>& cellNAPID,
+                                            const Patch*,DataWarehouse* new_dw,
                                             vector<GeometryObject*>&);
 
 
     virtual ParticleSubset* allocateVariables(particleIndex numParticles,
-					      int dwi, const Patch* patch,
-					      DataWarehouse* new_dw);
+                                              int dwi, const Patch* patch,
+                                              DataWarehouse* new_dw);
 
     virtual void allocateVariablesAddRequires(Task* task, 
-					      const MPMMaterial* matl,
-					      const PatchSet* patch) const;
+                                              const MPMMaterial* matl,
+                                              const PatchSet* patch) const;
 
     virtual void allocateVariablesAdd(DataWarehouse* new_dw,
-				      ParticleSubset* addset,
-				      map<const VarLabel*,ParticleVariableBase*>* newState,
-				      ParticleSubset* delset,
-				      DataWarehouse* old_dw);
+                                      ParticleSubset* addset,
+                                      map<const VarLabel*,ParticleVariableBase*>* newState,
+                                      ParticleSubset* delset,
+                                      DataWarehouse* old_dw);
 
     virtual void registerPermanentParticleState(MPMMaterial* matl);
 
     virtual particleIndex countParticles(const Patch*,
-					 std::vector<GeometryObject*>&);
+                                         std::vector<GeometryObject*>&);
 
     virtual particleIndex countAndCreateParticles(const Patch*,
-						  GeometryObject* obj);
+                                                  GeometryObject* obj);
 
     vector<const VarLabel* > returnParticleState();
     vector<const VarLabel* > returnParticleStatePreReloc();
@@ -101,11 +101,11 @@ namespace Uintah {
 
 
     virtual void initializeParticle(const Patch* patch,
-				    vector<GeometryObject*>::const_iterator obj,
-				    MPMMaterial* matl,
-				    Point p, IntVector cell_idx,
-				    particleIndex i,
-				    CCVariable<short int>& cellNAPI);
+                                    vector<GeometryObject*>::const_iterator obj,
+                                    MPMMaterial* matl,
+                                    Point p, IntVector cell_idx,
+                                    particleIndex i,
+                                    CCVariable<short int>& cellNAPI);
     
     //////////////////////////////////////////////////////////////////////////
     /*! Get the LoadCurveID applicable for this material point */
