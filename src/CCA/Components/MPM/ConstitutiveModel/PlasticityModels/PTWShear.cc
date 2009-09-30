@@ -73,7 +73,7 @@ void PTWShear::outputProblemSpec(ProblemSpecP& ps)
   shear_ps->appendElement("slope_mu_p_over_mu0",d_slope_mu_p_over_mu0);
 }
 
-	 
+         
 // Compute the shear modulus
 double 
 PTWShear::computeShearModulus(const PlasticityState* state)

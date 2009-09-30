@@ -50,7 +50,7 @@ namespace Uintah {
     ConstantShear& operator=(const ConstantShear &smm);
 
   public:
-	 
+         
     /*! Construct a constant shear modulus model. */
     ConstantShear();
     ConstantShear(ProblemSpecP& ps);
@@ -60,7 +60,7 @@ namespace Uintah {
 
     /*! Destructor of constant shear modulus model.   */
     virtual ~ConstantShear();
-	 
+         
     virtual void outputProblemSpec(ProblemSpecP& ps);
 
     /*! Compute the shear modulus */

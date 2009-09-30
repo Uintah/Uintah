@@ -76,7 +76,7 @@ namespace Uintah {
     // Erosion algorithms
     bool d_setStressToZero;  /*<set stress tensor to zero*/
     bool d_allowNoTension;   /*<retain compressive mean stress after failue*/
-    bool d_removeMass;	     /*<effectively remove mass after failure*/
+    bool d_removeMass;       /*<effectively remove mass after failure*/
     bool d_allowNoShear;     /*<retain mean stress after failure - no deviatoric stress */
 
   private:

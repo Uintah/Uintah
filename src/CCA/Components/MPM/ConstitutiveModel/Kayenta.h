@@ -41,7 +41,7 @@ DEALINGS IN THE SOFTWARE.
 #define __KAYENTA_H__
 
 #include <cmath>
-#include "ConstitutiveModel.h"	
+#include "ConstitutiveModel.h"  
 #include <Core/Math/Matrix3.h>
 #include <vector>
 #include <Core/Grid/Variables/VarLabel.h>
@@ -95,14 +95,14 @@ namespace Uintah {
 
     // compute stable timestep for this patch
     virtual void computeStableTimestep(const Patch* patch,
-				       const MPMMaterial* matl,
-				       DataWarehouse* new_dw);
+                                       const MPMMaterial* matl,
+                                       DataWarehouse* new_dw);
 
     // compute stress at each particle in the patch
     virtual void computeStressTensor(const PatchSubset* patches,
-				     const MPMMaterial* matl,
-				     DataWarehouse* old_dw,
-				     DataWarehouse* new_dw);
+                                     const MPMMaterial* matl,
+                                     DataWarehouse* old_dw,
+                                     DataWarehouse* new_dw);
 
 
     // carry forward CM data for RigidMPM
@@ -113,48 +113,48 @@ namespace Uintah {
 
     // initialize  each particle's constitutive model data
     virtual void initializeCMData(const Patch* patch,
-				  const MPMMaterial* matl,
-				  DataWarehouse* new_dw);
+                                  const MPMMaterial* matl,
+                                  DataWarehouse* new_dw);
 
     virtual void allocateCMDataAddRequires(Task* task, const MPMMaterial* matl,
-					   const PatchSet* patch, 
-					   MPMLabel* lb) const;
+                                           const PatchSet* patch, 
+                                           MPMLabel* lb) const;
 
 
     virtual void allocateCMDataAdd(DataWarehouse* new_dw,
-				   ParticleSubset* subset,
-				   map<const VarLabel*,
+                                   ParticleSubset* subset,
+                                   map<const VarLabel*,
                                    ParticleVariableBase*>* newState,
-				   ParticleSubset* delset,
-				   DataWarehouse* old_dw);
+                                   ParticleSubset* delset,
+                                   DataWarehouse* old_dw);
 
     virtual void addInitialComputesAndRequires(Task* task,
                                                const MPMMaterial* matl,
                                                const PatchSet* patches) const;
 
     virtual void addComputesAndRequires(Task* task,
-					const MPMMaterial* matl,
-					const PatchSet* patches) const;
+                                        const MPMMaterial* matl,
+                                        const PatchSet* patches) const;
 
     virtual void addComputesAndRequires(Task* task,
-					const MPMMaterial* matl,
-					const PatchSet* patches,
-					const bool recursion) const;
+                                        const MPMMaterial* matl,
+                                        const PatchSet* patches,
+                                        const bool recursion) const;
 
     virtual double computeRhoMicroCM(double pressure,
-				     const double p_ref,
-				     const MPMMaterial* matl);
+                                     const double p_ref,
+                                     const MPMMaterial* matl);
 
     virtual void computePressEOSCM(double rho_m, double& press_eos,
-				   double p_ref,
-				   double& dp_drho, double& ss_new,
-				   const MPMMaterial* matl);
+                                   double p_ref,
+                                   double& dp_drho, double& ss_new,
+                                   const MPMMaterial* matl);
 
     virtual double getCompressibility();
 
 
     virtual void addParticleState(std::vector<const VarLabel*>& from,
-				  std::vector<const VarLabel*>& to);
+                                  std::vector<const VarLabel*>& to);
 
     // Weibull input parser that accepts a structure of input
     // parameters defined as:

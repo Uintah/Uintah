@@ -190,9 +190,9 @@ void SuvicI::outputProblemSpec(ProblemSpecP& ps)
   plastic_ps->appendElement("coeff_dragstress_evol",         d_SV.xai);
   
   plastic_ps->appendElement("coeff_stress_saturation",       d_SV.s0);
-  plastic_ps->appendElement("initial_yield",       	d_SV.initial_yield);
-  plastic_ps->appendElement("initial_drag",       	d_SV.initial_drag);
-  plastic_ps->appendElement("integration_parameter_theta",       	d_SV.theta);
+  plastic_ps->appendElement("initial_yield",            d_SV.initial_yield);
+  plastic_ps->appendElement("initial_drag",             d_SV.initial_drag);
+  plastic_ps->appendElement("integration_parameter_theta",              d_SV.theta);
 
 }
          
@@ -361,12 +361,12 @@ SuvicI::updateElastic(const particleIndex idx)
 //calculate deviatoric stress and the direction of the reduced stress 
 void
 SuvicI::computeNij(Matrix3& nij, 
-			Matrix3& reducedEta, 
-			double& xae, 
-			const particleIndex idx, 
-			const Matrix3 pStress, 
-			const Matrix3 tensorR,
-			const int implicitFlag)
+                        Matrix3& reducedEta, 
+                        double& xae, 
+                        const particleIndex idx, 
+                        const Matrix3 pStress, 
+                        const Matrix3 tensorR,
+                        const int implicitFlag)
 {
   Matrix3 one; one.Identity();
   Matrix3 tensorEta, rotatedBack;
@@ -387,9 +387,9 @@ SuvicI::computeNij(Matrix3& nij,
 
 double 
 SuvicI::computeFlowStress(const particleIndex idx,
-		          const Matrix3 pStress,
-			  const Matrix3 tensorR,
-			  const int implicitFlag)
+                          const Matrix3 pStress,
+                          const Matrix3 tensorR,
+                          const int implicitFlag)
 {
   Matrix3 one; one.Identity();
   Matrix3 rotatedBack;
@@ -414,10 +414,10 @@ SuvicI::computeStressIncTangent(double& epdot,
                                    const double delT,
                                    const particleIndex idx,
                                    const TangentModulusTensor Ce,
-				   const Matrix3 tensorD,
-				   const Matrix3 pStress,
-				   const int implicitFlag,
-				   const Matrix3 tensorR)
+                                   const Matrix3 tensorD,
+                                   const Matrix3 pStress,
+                                   const int implicitFlag,
+                                   const Matrix3 tensorR)
 {
   
   //implicitFlag=1, tensorD is increment, not rate
@@ -504,10 +504,10 @@ SuvicI::computeStressIncTangent(double& epdot,
   
 //   pPlasticStrain_new[idx]=pPlasticStrain[idx]+diedt;
 
-	pBackStress_new[idx]=pBackStress[idx]+\
-	one*(delT*2.0/3.0*d_SV.ba1)*plasticStrainRateTensor-\
-	one*(delT*(d_SV.ba1/bep*epdot))*pBackStress[idx];
-	
+        pBackStress_new[idx]=pBackStress[idx]+\
+        one*(delT*2.0/3.0*d_SV.ba1)*plasticStrainRateTensor-\
+        one*(delT*(d_SV.ba1/bep*epdot))*pBackStress[idx];
+        
  if (implicitFlag ==0)
         pBackStress_new[idx] = (tensorR*pBackStress_new[idx])*(tensorR.Transpose());
   

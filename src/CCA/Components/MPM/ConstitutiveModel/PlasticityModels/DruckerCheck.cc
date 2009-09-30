@@ -54,12 +54,12 @@ void DruckerCheck::outputProblemSpec(ProblemSpecP& ps)
   ProblemSpecP stability_ps = ps->appendChild("stability_check");
   stability_ps->setAttribute("type","drucker");
 }
-	 
+         
 bool 
 DruckerCheck::checkStability(const Matrix3& ,
-			     const Matrix3& deformRate ,
-			     const TangentModulusTensor& Cep ,
-			     Vector& )
+                             const Matrix3& deformRate ,
+                             const TangentModulusTensor& Cep ,
+                             Vector& )
 {
   // Calculate the stress rate
   Matrix3 stressRate(0.0);

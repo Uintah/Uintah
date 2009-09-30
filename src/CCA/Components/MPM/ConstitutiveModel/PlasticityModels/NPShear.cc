@@ -89,7 +89,7 @@ void NPShear::outputProblemSpec(ProblemSpecP& ps)
   shear_ps->appendElement("m",d_m);
 }
 
-	 
+         
 // Compute the shear modulus
 double 
 NPShear::computeShearModulus(const PlasticityState* state)

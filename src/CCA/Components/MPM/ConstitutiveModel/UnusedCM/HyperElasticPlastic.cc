@@ -71,8 +71,8 @@ HyperElasticPlastic::HyperElasticPlastic(ProblemSpecP& ps,
   if(!d_plasticity){
     ostringstream desc;
     desc << "An error occured in the PlasticityModelFactory that has \n"
-	 << " slipped through the existing bullet proofing. Please tell \n"
-	 << " Biswajit.  "<< endl;
+         << " slipped through the existing bullet proofing. Please tell \n"
+         << " Biswajit.  "<< endl;
     throw ParameterNotFound(desc.str());
   }
 
@@ -80,8 +80,8 @@ HyperElasticPlastic::HyperElasticPlastic(ProblemSpecP& ps,
   if(!d_damage){
     ostringstream desc;
     desc << "An error occured in the DamageModelFactory that has \n"
-	 << " slipped through the existing bullet proofing. Please tell \n"
-	 << " Biswajit.  "<< endl;
+         << " slipped through the existing bullet proofing. Please tell \n"
+         << " Biswajit.  "<< endl;
     throw ParameterNotFound(desc.str());
   }
   
@@ -89,8 +89,8 @@ HyperElasticPlastic::HyperElasticPlastic(ProblemSpecP& ps,
   if(!d_eos){
     ostringstream desc;
     desc << "An error occured in the EquationOfStateFactory that has \n"
-	 << " slipped through the existing bullet proofing. Please tell \n"
-	 << " Biswajit.  "<< endl;
+         << " slipped through the existing bullet proofing. Please tell \n"
+         << " Biswajit.  "<< endl;
     throw ParameterNotFound(desc.str());
   }
 
@@ -105,18 +105,18 @@ HyperElasticPlastic::HyperElasticPlastic(ProblemSpecP& ps,
   }
 
   pBbarElasticLabel = VarLabel::create("p.bbarElastic",
-	ParticleVariable<Matrix3>::getTypeDescription());
+        ParticleVariable<Matrix3>::getTypeDescription());
   pPlasticStrainLabel = VarLabel::create("p.plasticStrain",
-	ParticleVariable<double>::getTypeDescription());
+        ParticleVariable<double>::getTypeDescription());
   pDamageLabel = VarLabel::create("p.damage",
-	ParticleVariable<double>::getTypeDescription());
+        ParticleVariable<double>::getTypeDescription());
 
   pBbarElasticLabel_preReloc = VarLabel::create("p.bbarElastic+",
-	ParticleVariable<Matrix3>::getTypeDescription());
+        ParticleVariable<Matrix3>::getTypeDescription());
   pPlasticStrainLabel_preReloc = VarLabel::create("p.plasticStrain+",
-	ParticleVariable<double>::getTypeDescription());
+        ParticleVariable<double>::getTypeDescription());
   pDamageLabel_preReloc = VarLabel::create("p.damage+",
-	ParticleVariable<double>::getTypeDescription());
+        ParticleVariable<double>::getTypeDescription());
 
 }
 
@@ -135,18 +135,18 @@ HyperElasticPlastic::HyperElasticPlastic(const HyperElasticPlastic* cm)
   d_eos = MPMEquationOfStateFactory::createCopy(cm->d_eos);
 
   pBbarElasticLabel = VarLabel::create("p.bbarElastic",
-	ParticleVariable<Matrix3>::getTypeDescription());
+        ParticleVariable<Matrix3>::getTypeDescription());
   pPlasticStrainLabel = VarLabel::create("p.plasticStrain",
-	ParticleVariable<double>::getTypeDescription());
+        ParticleVariable<double>::getTypeDescription());
   pDamageLabel = VarLabel::create("p.damage",
-	ParticleVariable<double>::getTypeDescription());
+        ParticleVariable<double>::getTypeDescription());
 
   pBbarElasticLabel_preReloc = VarLabel::create("p.bbarElastic+",
-	ParticleVariable<Matrix3>::getTypeDescription());
+        ParticleVariable<Matrix3>::getTypeDescription());
   pPlasticStrainLabel_preReloc = VarLabel::create("p.plasticStrain+",
-	ParticleVariable<double>::getTypeDescription());
+        ParticleVariable<double>::getTypeDescription());
   pDamageLabel_preReloc = VarLabel::create("p.damage+",
-	ParticleVariable<double>::getTypeDescription());
+        ParticleVariable<double>::getTypeDescription());
 
 }
 
@@ -168,7 +168,7 @@ HyperElasticPlastic::~HyperElasticPlastic()
 
 void 
 HyperElasticPlastic::addParticleState(std::vector<const VarLabel*>& from,
-				      std::vector<const VarLabel*>& to)
+                                      std::vector<const VarLabel*>& to)
 {
   from.push_back(lb->pDeformationMeasureLabel);
   from.push_back(lb->pStressLabel);
@@ -197,8 +197,8 @@ HyperElasticPlastic::addParticleState(std::vector<const VarLabel*>& from,
 
 void 
 HyperElasticPlastic::initializeCMData(const Patch* patch,
-				      const MPMMaterial* matl,
-				      DataWarehouse* new_dw)
+                                      const MPMMaterial* matl,
+                                      DataWarehouse* new_dw)
 {
   // Put stuff in here to initialize each particle's
   // constitutive model parameters and deformationMeasure
@@ -237,9 +237,9 @@ HyperElasticPlastic::initializeCMData(const Patch* patch,
 }
 
 void HyperElasticPlastic::allocateCMDataAddRequires(Task* task,
-						   const MPMMaterial* matl,
-						   const PatchSet* patch,
-						   MPMLabel* lb) const
+                                                   const MPMMaterial* matl,
+                                                   const PatchSet* patch,
+                                                   MPMLabel* lb) const
 {
   //const MaterialSubset* matlset = matl->thisMaterial();
   task->requires(Task::OldDW, lb->pDeformationMeasureLabel, Ghost::None);
@@ -254,10 +254,10 @@ void HyperElasticPlastic::allocateCMDataAddRequires(Task* task,
 
 void 
 HyperElasticPlastic::allocateCMDataAdd(DataWarehouse* new_dw,
-				       ParticleSubset* addset,
-				       map<const VarLabel*, ParticleVariableBase*>* newState,
-				       ParticleSubset* delset,
-				       DataWarehouse* old_dw)
+                                       ParticleSubset* addset,
+                                       map<const VarLabel*, ParticleVariableBase*>* newState,
+                                       ParticleSubset* delset,
+                                       DataWarehouse* old_dw)
 {
   // Put stuff in here to initialize each particle's
   // constitutive model parameters and deformationMeasure
@@ -308,8 +308,8 @@ HyperElasticPlastic::allocateCMDataAdd(DataWarehouse* new_dw,
 
 void 
 HyperElasticPlastic::computeStableTimestep(const Patch* patch,
-					   const MPMMaterial* matl,
-					   DataWarehouse* new_dw)
+                                           const MPMMaterial* matl,
+                                           DataWarehouse* new_dw)
 {
   // This is only called for the initial timestep - all other timesteps
   // are computed as a side-effect of computeStressTensor
@@ -346,8 +346,8 @@ HyperElasticPlastic::computeStableTimestep(const Patch* patch,
       pVel = Vector(0.0,0.0,0.0);
     }
     WaveSpeed=Vector(Max(c_dil+fabs(pVel.x()),WaveSpeed.x()),
-		     Max(c_dil+fabs(pVel.y()),WaveSpeed.y()),
-		     Max(c_dil+fabs(pVel.z()),WaveSpeed.z()));
+                     Max(c_dil+fabs(pVel.y()),WaveSpeed.y()),
+                     Max(c_dil+fabs(pVel.z()),WaveSpeed.z()));
   }
 
   WaveSpeed = dx/WaveSpeed;
@@ -357,9 +357,9 @@ HyperElasticPlastic::computeStableTimestep(const Patch* patch,
 
 void 
 HyperElasticPlastic::computeStressTensor(const PatchSubset* patches,
-					 const MPMMaterial* matl,
-					 DataWarehouse* old_dw,
-					 DataWarehouse* new_dw)
+                                         const MPMMaterial* matl,
+                                         DataWarehouse* old_dw,
+                                         DataWarehouse* new_dw)
 {
   // General stuff
   Matrix3 one, zero(0.0); one.Identity(); 
@@ -488,8 +488,8 @@ HyperElasticPlastic::computeStressTensor(const PatchSubset* patches,
          double c_dil = sqrt((bulk + 4.0*shear/3.0)*
                               pVolume_new[idx]/pMass[idx]);
          WaveSpeed=Vector(Max(c_dil+fabs(pVel.x()),WaveSpeed.x()),
-		       Max(c_dil+fabs(pVel.y()),WaveSpeed.y()),
-		       Max(c_dil+fabs(pVel.z()),WaveSpeed.z()));
+                       Max(c_dil+fabs(pVel.y()),WaveSpeed.y()),
+                       Max(c_dil+fabs(pVel.z()),WaveSpeed.z()));
          continue;
       }
 
@@ -599,23 +599,23 @@ HyperElasticPlastic::computeStressTensor(const PatchSubset* patches,
       // Check for plastic loading
       if(trialSNorm > flowStress){
 
-	// Plastic case
+        // Plastic case
         // Calculate delGamma
         double Ielastic = oneThird*traceBbarElastic;
         double muBar = mu_cur*Ielastic;
-	double delGamma = (trialSNorm - flowStress)/(2.0*muBar);
+        double delGamma = (trialSNorm - flowStress)/(2.0*muBar);
         //cout << "Ie = " << Ielastic << " mubar = " << muBar 
         //     << " delgamma = " << delGamma << endl;
 
         // Calculate normal
-	normal = trialS/trialSNorm;
+        normal = trialS/trialSNorm;
         //cout << " Normal = \n" << normal << endl;
 
         // The actual deviatoric stress
-	tensorS = trialS - normal*2.0*muBar*delGamma;
+        tensorS = trialS - normal*2.0*muBar*delGamma;
 
-	// Update deviatoric part of elastic left Cauchy-Green tensor
-	pBbarElastic_new[idx] = tensorS/mu_cur + one*Ielastic;
+        // Update deviatoric part of elastic left Cauchy-Green tensor
+        pBbarElastic_new[idx] = tensorS/mu_cur + one*Ielastic;
 
         // Update the plastic strain
         pPlasticStrain_new[idx] = plasticStrain;
@@ -632,11 +632,11 @@ HyperElasticPlastic::computeStressTensor(const PatchSubset* patches,
 
       } else {
 
-	// Elastic case
-	tensorS = trialS;
+        // Elastic case
+        tensorS = trialS;
 
-	// Update deviatoric part of elastic left Cauchy-Green tensor
-	pBbarElastic_new[idx] = trialBbarElastic;
+        // Update deviatoric part of elastic left Cauchy-Green tensor
+        pBbarElastic_new[idx] = trialBbarElastic;
 
         // Update the plastic strain
         pPlasticStrain_new[idx] = pPlasticStrain[idx];
@@ -669,8 +669,8 @@ HyperElasticPlastic::computeStressTensor(const PatchSubset* patches,
       Vector pVel = pVelocity[idx];
       double c_dil = sqrt((bulk + 4.*mu_cur/3.)*pVolume_new[idx]/pMass[idx]);
       WaveSpeed=Vector(Max(c_dil+fabs(pVel.x()),WaveSpeed.x()),
-		       Max(c_dil+fabs(pVel.y()),WaveSpeed.y()),
-		       Max(c_dil+fabs(pVel.z()),WaveSpeed.z()));
+                       Max(c_dil+fabs(pVel.y()),WaveSpeed.y()),
+                       Max(c_dil+fabs(pVel.z()),WaveSpeed.z()));
     }
     WaveSpeed = dx/WaveSpeed;
     double delT_new = WaveSpeed.minComponent();
@@ -745,8 +745,8 @@ void HyperElasticPlastic::carryForward(const PatchSubset* patches,
 
 void 
 HyperElasticPlastic::addInitialComputesAndRequires(Task* task,
-						   const MPMMaterial* matl,
-						   const PatchSet* patch) const
+                                                   const MPMMaterial* matl,
+                                                   const PatchSet* patch) const
 {
   const MaterialSubset* matlset = matl->thisMaterial();
   task->computes(pBbarElasticLabel,   matlset);
@@ -759,8 +759,8 @@ HyperElasticPlastic::addInitialComputesAndRequires(Task* task,
 
 void 
 HyperElasticPlastic::addComputesAndRequires(Task* task,
-					    const MPMMaterial* matl,
-					    const PatchSet* patch) const
+                                            const MPMMaterial* matl,
+                                            const PatchSet* patch) const
 {
   Ghost::GhostType  gac   = Ghost::AroundCells;
   const MaterialSubset* matlset = matl->thisMaterial();
@@ -800,9 +800,9 @@ HyperElasticPlastic::addComputesAndRequires(Task* task,
 
 void 
 HyperElasticPlastic::addComputesAndRequires(Task* ,
-					    const MPMMaterial* ,
-					    const PatchSet* ,
-					    const bool ) const
+                                            const MPMMaterial* ,
+                                            const PatchSet* ,
+                                            const bool ) const
 {
 }
 
@@ -811,7 +811,7 @@ HyperElasticPlastic::addComputesAndRequires(Task* ,
 double 
 HyperElasticPlastic::computeRhoMicroCM(double pressure,
                                        const double p_ref,
-				       const MPMMaterial* matl)
+                                       const MPMMaterial* matl)
 {
   double bulk = d_initialData.Bulk;
   double rho_orig = matl->getInitialDensity();
@@ -831,9 +831,9 @@ HyperElasticPlastic::computeRhoMicroCM(double pressure,
 // Needed by MPMICE
 void 
 HyperElasticPlastic::computePressEOSCM(double rho_cur,double& pressure,
-				       double p_ref,  
-				       double& dp_drho, double& C0_sq,
-				       const MPMMaterial* matl)
+                                       double p_ref,  
+                                       double& dp_drho, double& C0_sq,
+                                       const MPMMaterial* matl)
 {
   double rho_orig = matl->getInitialDensity();
   double bulk = d_initialData.Bulk;

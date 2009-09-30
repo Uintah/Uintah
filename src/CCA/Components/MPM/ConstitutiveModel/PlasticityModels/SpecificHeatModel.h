@@ -49,7 +49,7 @@ namespace Uintah {
   class SpecificHeatModel {
 
   public:
-	 
+         
     //! Construct a specific heat model.  
     /*! This is an abstract base class. */
     SpecificHeatModel();
@@ -57,9 +57,9 @@ namespace Uintah {
     //! Destructor of specific heat model.  
     /*! Virtual to ensure correct behavior */
     virtual ~SpecificHeatModel();
-	 
+         
     virtual void outputProblemSpec(ProblemSpecP& ps) = 0;
-	 
+         
     /////////////////////////////////////////////////////////////////////////
     /*! 
       \brief Compute the specific heat

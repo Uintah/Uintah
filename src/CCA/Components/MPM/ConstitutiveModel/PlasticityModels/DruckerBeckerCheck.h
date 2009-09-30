@@ -31,7 +31,7 @@ DEALINGS IN THE SOFTWARE.
 #ifndef __DRUCKERBECKER_CHECK_H__
 #define __DRUCKERBECKER_CHECK_H__
 
-#include "StabilityCheck.h"	
+#include "StabilityCheck.h"     
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/Math/FastMatrix.h>
 #include <Core/Math/TangentModulusTensor.h>
@@ -49,7 +49,7 @@ namespace Uintah {
   class DruckerBeckerCheck : public StabilityCheck {
 
   public:
-	 
+         
     //! Construct an object that can be used to check stability
     DruckerBeckerCheck(ProblemSpecP& ps);
     DruckerBeckerCheck(const DruckerBeckerCheck* cm);
@@ -58,7 +58,7 @@ namespace Uintah {
     ~DruckerBeckerCheck();
 
     virtual void outputProblemSpec(ProblemSpecP& ps);
-	 
+         
     /*! Check the stability.
 
     \return true if unstable

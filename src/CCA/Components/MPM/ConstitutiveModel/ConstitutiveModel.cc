@@ -341,7 +341,7 @@ ConstitutiveModel::computePressEOS(double rhoM, double gamma,
 // Convert J-integral into stress intensity (for FRACTURE)
 void 
 ConstitutiveModel::ConvertJToK(const MPMMaterial*,
-		               const string&,
+                               const string&,
                                const Vector&,
                                const double&,
                                const Vector&,
@@ -409,7 +409,7 @@ ConstitutiveModel::computeDeformationGradientFromDisplacement(
     if (!(J > 0)) {
       ostringstream warn;
       warn << "**ERROR** CompNeoHook: Negative or zero determinant of Jacobian."
-	     << " Particle has inverted." << endl;
+             << " Particle has inverted." << endl;
       warn << "     Particle = " << idx << " J = " << J << " position = " << endl;
       warn << "          Disp Grad = " << dispGrad << endl; 
       warn << "          F_new = " << Fnew[idx] << endl; 
@@ -457,12 +457,12 @@ ConstitutiveModel::computeDeformationGradientFromVelocity(
       if (!(J > 0)) {
         ostringstream warn;
         warn << "**ERROR** CompNeoHook: Negative or zero determinant of Jacobian."
-	     << " Particle has inverted." << endl;
+             << " Particle has inverted." << endl;
         warn << "     Particle = " << idx << " J = " << J << " position = " << endl;
-	warn << "          Vel Grad = " << velGrad << endl; 
-	warn << "          F_inc = " << deformationGradientInc << endl; 
-	warn << "          F_old = " << Fold[idx] << endl; 
-	warn << "          F_new = " << Fnew[idx] << endl; 
+        warn << "          Vel Grad = " << velGrad << endl; 
+        warn << "          F_inc = " << deformationGradientInc << endl; 
+        warn << "          F_old = " << Fold[idx] << endl; 
+        warn << "          F_new = " << Fnew[idx] << endl; 
         throw InvalidValue(warn.str(), __FILE__, __LINE__);
       }
 

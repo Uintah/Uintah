@@ -421,7 +421,7 @@ TransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
                          /(lambda_tilde*lambda_tilde*lambda_tilde*lambda_tilde);
         }
 
-	//_________________________________stiffness and stress vars.
+        //_________________________________stiffness and stress vars.
         double matrix_failed,fiber_failed;
 
         double cc1 = d2WdI4tilde2*I4tilde*I4tilde;
@@ -515,7 +515,7 @@ TransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
         //_______________________________Cauchy stress
         pstress[idx] = pressure + deviatoric_stress + fiber_stress;
 
-	//________________________________STIFFNESS
+        //________________________________STIFFNESS
         //________________________________________________________vol. term
         double cvol[6][6];//failure already recorded into p
         double K = Bulk;
@@ -543,7 +543,7 @@ TransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
 
         //________________________________________________________Mooney-Rivlin term
         double cMR[6][6];
-	if (fail[idx] == 1.0 || fail[idx] == 3.0) {
+        if (fail[idx] == 1.0 || fail[idx] == 3.0) {
          cMR[0][0] = 0;
          cMR[0][1] = 0;
          cMR[0][2] = 0;
@@ -565,9 +565,9 @@ TransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
          cMR[4][4] = 0;
          cMR[4][5] = 0;
          cMR[5][5] = 0;
-	}
-	else {
-	 cMR[0][0] = (4./J)*c2*RB(0,0)*RB(0,0)-(4./J)*c2*(RB(0,0)*RB(0,0)
+        }
+        else {
+         cMR[0][0] = (4./J)*c2*RB(0,0)*RB(0,0)-(4./J)*c2*(RB(0,0)*RB(0,0)
                    +RB(0,0)*RB(0,0))
                    +(2./3.)*cc2MR+(4./9.)*(1./J)*2*c2*I2tilde+devsMR(0,0)
                    +devsMR(0,0)
@@ -618,11 +618,11 @@ TransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
 
          cMR[5][5] = (4./J)*c2*RB(2,0)*RB(2,0)-(4./J)*c2*(RB(2,2)*RB(0,0)+RB(2,0)*RB(0,2))
                         +(1./2.)*cc2MR+(4./9.)*(1./J)*2*c2*I2tilde;
-	};
+        };
         //_______________________________________fiber contribution term
 
         double cFC[6][6];
-	if (fail[idx] == 2.0 || fail[idx] == 3.0) {
+        if (fail[idx] == 2.0 || fail[idx] == 3.0) {
          cFC[0][0] = 0;
          cFC[0][1] = 0;
          cFC[0][2] = 0;
@@ -644,8 +644,8 @@ TransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
          cFC[4][4] = 0;
          cFC[4][5] = 0;
          cFC[5][5] = 0;
-	}
-	else {
+        }
+        else {
          cFC[0][0] = (2./3.)*cc2FC+(4./9.)*(1./J)*cc1+devsFC(0,0)+devsFC(0,0)
                         +(-4./3.)*(1./J)*cc1*(DY(0,0)+DY(0,0))+(4./J)*cc1*DY(0,0)*DY(0,0);
          cFC[0][1] = (-1./3.)*cc2FC+devsFC(0,0)+devsFC(1,1)
@@ -673,7 +673,7 @@ TransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
          cFC[4][4] = (1./2.)*cc2FC+(4./9.)*(1./J)*cc1+(4./J)*cc1*DY(1,2)*DY(1,2);
          cFC[4][5] = (4./J)*cc1*DY(1,2)*DY(2,0);
          cFC[5][5] = (1./2.)*cc2FC+(4./9.)*(1./J)*cc1+(4./J)*cc1*DY(2,0)*DY(2,0);
-	}
+        }
 
         //________________________________________________________the STIFFNESS
         for(int i=0;i<6;i++){

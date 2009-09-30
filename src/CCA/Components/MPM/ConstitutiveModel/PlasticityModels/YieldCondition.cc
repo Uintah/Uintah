@@ -41,7 +41,7 @@ YieldCondition::YieldCondition()
 YieldCondition::~YieldCondition()
 {
 }
-	 
+         
 
 /*! Compute continuum elastic-plastic tangent modulus.
        df_dsigma = r.  There may be a lack of symmetry

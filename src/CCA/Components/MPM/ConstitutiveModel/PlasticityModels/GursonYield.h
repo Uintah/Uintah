@@ -31,7 +31,7 @@ DEALINGS IN THE SOFTWARE.
 #ifndef __GURSON_YIELD_MODEL_H__
 #define __GURSON_YIELD_MODEL_H__
 
-#include "YieldCondition.h"	
+#include "YieldCondition.h"     
 #include <Core/ProblemSpec/ProblemSpecP.h>
 
 namespace Uintah {
@@ -109,17 +109,17 @@ namespace Uintah {
       Creates a Gurson Yield Function object */
     GursonYield(ProblemSpecP& ps);
     GursonYield(const GursonYield* cm);
-	 
+         
     //! Destructor 
     virtual ~GursonYield();
-	 
+         
     virtual void outputProblemSpec(ProblemSpecP& ps);
 
     //! Evaluate the yield function.
     double evalYieldCondition(const double equivStress,
-			      const double flowStress,
-			      const double traceOfCauchyStress,
-			      const double porosity,
+                              const double flowStress,
+                              const double traceOfCauchyStress,
+                              const double porosity,
                               double& sig);
 
     double evalYieldCondition(const Matrix3& xi,
@@ -134,9 +134,9 @@ namespace Uintah {
     */
     /////////////////////////////////////////////////////////////////////////
     void evalDerivOfYieldFunction(const Matrix3& stress,
-				  const double flowStress,
-				  const double porosity,
-				  Matrix3& derivative);
+                                  const double flowStress,
+                                  const double porosity,
+                                  Matrix3& derivative);
 
     /////////////////////////////////////////////////////////////////////////
     /*! 
@@ -148,9 +148,9 @@ namespace Uintah {
     */
     /////////////////////////////////////////////////////////////////////////
     void evalDevDerivOfYieldFunction(const Matrix3& stress,
-				     const double flowStress,
-				     const double porosity,
-				     Matrix3& derivative);
+                                     const double flowStress,
+                                     const double porosity,
+                                     Matrix3& derivative);
 
     /////////////////////////////////////////////////////////////////////////
     /*!
@@ -173,9 +173,9 @@ namespace Uintah {
     */
     /////////////////////////////////////////////////////////////////////////
     double evalDerivativeWRTPlasticityScalar(double trSig,
-				             double porosity,
-				             double sigY,
-				             double dsigYdV);
+                                             double porosity,
+                                             double sigY,
+                                             double dsigYdV);
 
     /////////////////////////////////////////////////////////////////////////
     /*!
@@ -192,8 +192,8 @@ namespace Uintah {
     */
     /////////////////////////////////////////////////////////////////////////
     double evalDerivativeWRTPorosity(double trSig,
-				     double porosity,
-				     double sigY);
+                                     double porosity,
+                                     double sigY);
 
     /////////////////////////////////////////////////////////////////////////
     /*!
@@ -207,10 +207,10 @@ namespace Uintah {
     */
     /////////////////////////////////////////////////////////////////////////
     double computePorosityFactor_h1(double sigma_f_sigma,
-				    double tr_f_sigma,
-				    double porosity,
-				    double sigma_Y,
-				    double A);
+                                    double tr_f_sigma,
+                                    double porosity,
+                                    double sigma_Y,
+                                    double A);
  
     /////////////////////////////////////////////////////////////////////////
     /*!
@@ -224,8 +224,8 @@ namespace Uintah {
     */
     /////////////////////////////////////////////////////////////////////////
     double computePlasticStrainFactor_h2(double sigma_f_sigma,
-					 double porosity,
-					 double sigma_Y);
+                                         double porosity,
+                                         double sigma_Y);
 
     /*! Derivative with respect to the Cauchy stress (\f$\sigma \f$)*/
     void eval_df_dsigma(const Matrix3& xi,
@@ -277,12 +277,12 @@ namespace Uintah {
     */
     /////////////////////////////////////////////////////////////////////////
     void computeTangentModulus(const TangentModulusTensor& Ce,
-			       const Matrix3& f_sigma, 
-			       double f_q1, 
-			       double f_q2,
-			       double h_q1,
-			       double h_q2,
-			       TangentModulusTensor& Cep);
+                               const Matrix3& f_sigma, 
+                               double f_q1, 
+                               double f_q2,
+                               double h_q1,
+                               double h_q2,
+                               TangentModulusTensor& Cep);
 
     /////////////////////////////////////////////////////////////////////////
     /*! 
@@ -290,12 +290,12 @@ namespace Uintah {
     */
     /////////////////////////////////////////////////////////////////////////
     void computeElasPlasTangentModulus(const TangentModulusTensor& Ce,
-				       const Matrix3& sigma, 
-				       double sigY,
-				       double dsigYdV,
-				       double porosity,
-				       double voidNuclFac,
-				       TangentModulusTensor& Cep);
+                                       const Matrix3& sigma, 
+                                       double sigY,
+                                       double dsigYdV,
+                                       double porosity,
+                                       double voidNuclFac,
+                                       TangentModulusTensor& Cep);
 
   };
 

@@ -31,7 +31,7 @@ DEALINGS IN THE SOFTWARE.
 #include "ConstantMeltTemp.h"
 
 using namespace Uintah;
-	 
+         
 // Construct a melt temp model.  
 ConstantMeltTemp::ConstantMeltTemp( )
 {
@@ -57,7 +57,7 @@ void ConstantMeltTemp::outputProblemSpec(ProblemSpecP& ps)
   temp_ps->setAttribute("type","constant_Tm");
 }
 
-	 
+         
 // Compute the melt temp
 double 
 ConstantMeltTemp::computeMeltingTemp(const PlasticityState* state)

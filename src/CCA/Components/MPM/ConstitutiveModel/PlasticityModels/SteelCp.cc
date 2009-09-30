@@ -33,7 +33,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/ProblemSpec/ProblemSpec.h>
 
 using namespace Uintah;
-	 
+         
 // Construct a specific heat model.  
 SteelCp::SteelCp(ProblemSpecP& ps)
 {
@@ -75,7 +75,7 @@ SteelCp::SteelCp(const SteelCp* ccp)
 SteelCp::~SteelCp()
 {
 }
-	 
+         
 void SteelCp::outputProblemSpec(ProblemSpecP& ps)
 {
   ProblemSpecP cm_ps = ps->appendChild("specific_heat_model");

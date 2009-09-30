@@ -31,7 +31,7 @@ DEALINGS IN THE SOFTWARE.
 #ifndef __NONE_CHECK_H__
 #define __NONE_CHECK_H__
 
-#include "StabilityCheck.h"	
+#include "StabilityCheck.h"     
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/Math/FastMatrix.h>
 #include <Core/Math/TangentModulusTensor.h>
@@ -49,7 +49,7 @@ namespace Uintah {
   class NoneCheck : public StabilityCheck {
 
   public:
-	 
+         
     //! Construct an object that can be used to check stability
     NoneCheck();
     NoneCheck(ProblemSpecP& ps);
@@ -63,7 +63,7 @@ namespace Uintah {
     virtual bool doIt() {
       return false;
     };
-	 
+         
     /*! Check the stability.
 
       \return true if unstable

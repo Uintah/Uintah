@@ -205,12 +205,12 @@ JohnsonCookPlastic::computeFlowStress(const PlasticityState* state,
   double sigy = strainPart*strainRatePart*tempPart;
   if (isnan(sigy)) {
     cout << "**ERROR** JohnsonCook: sig_y == nan " 
-	 << " Particle = " << idx << " epdot = " << epdot
-	 << " ep = " << ep << " T = " << T 
-	 << " strainPart = " << strainPart 
-	 << " strainRatePart = " << strainRatePart 
-	 << " Tstar = " << Tstar 
-	 << " tempPart = " << tempPart << endl; 
+         << " Particle = " << idx << " epdot = " << epdot
+         << " ep = " << ep << " T = " << T 
+         << " strainPart = " << strainPart 
+         << " strainRatePart = " << strainRatePart 
+         << " Tstar = " << Tstar 
+         << " tempPart = " << tempPart << endl; 
   }
   return sigy;
 }

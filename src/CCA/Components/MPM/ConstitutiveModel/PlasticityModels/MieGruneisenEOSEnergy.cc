@@ -43,7 +43,7 @@ MieGruneisenEOSEnergy::MieGruneisenEOSEnergy(ProblemSpecP& ps)
   ps->getWithDefault("S_2",d_const.S_2,0.0);
   ps->getWithDefault("S_3",d_const.S_3,0.0);
 } 
-	 
+         
 MieGruneisenEOSEnergy::MieGruneisenEOSEnergy(const MieGruneisenEOSEnergy* cm)
 {
   d_const.C_0 = cm->d_const.C_0;
@@ -52,11 +52,11 @@ MieGruneisenEOSEnergy::MieGruneisenEOSEnergy(const MieGruneisenEOSEnergy* cm)
   d_const.S_2 = cm->d_const.S_2;
   d_const.S_3 = cm->d_const.S_3;
 } 
-	 
+         
 MieGruneisenEOSEnergy::~MieGruneisenEOSEnergy()
 {
 }
-	 
+         
 void MieGruneisenEOSEnergy::outputProblemSpec(ProblemSpecP& ps)
 {
   ProblemSpecP eos_ps = ps->appendChild("equation_of_state");

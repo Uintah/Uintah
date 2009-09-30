@@ -31,7 +31,7 @@ DEALINGS IN THE SOFTWARE.
 #ifndef __BECKER_CHECK_H__
 #define __BECKER_CHECK_H__
 
-#include "StabilityCheck.h"	
+#include "StabilityCheck.h"     
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/Math/FastMatrix.h>
 #include <Core/Math/TangentModulusTensor.h>
@@ -108,7 +108,7 @@ namespace Uintah {
   class BeckerCheck : public StabilityCheck {
 
   public:
-	 
+         
     //! Construct an object that can be used to check stability
     BeckerCheck(ProblemSpecP& ps);
     BeckerCheck(const BeckerCheck* bc);
@@ -117,7 +117,7 @@ namespace Uintah {
     ~BeckerCheck();
 
     virtual void outputProblemSpec(ProblemSpecP& ps);
-	 
+         
     /*! Check the stability and return the direction of instability.
 
         \return true if unstable; 

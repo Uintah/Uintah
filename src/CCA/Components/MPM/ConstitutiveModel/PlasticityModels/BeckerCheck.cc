@@ -56,15 +56,15 @@ void BeckerCheck::outputProblemSpec(ProblemSpecP& ps)
   ProblemSpecP stability_ps = ps->appendChild("stability_check");
   stability_ps->setAttribute("type","becker");
 }
-	 
+         
 bool 
 BeckerCheck::checkStability(const Matrix3& stress ,
-			    const Matrix3& ,
-			    const TangentModulusTensor& M,
-			    Vector& )
+                            const Matrix3& ,
+                            const TangentModulusTensor& M,
+                            Vector& )
 {
   // Find the magnitudes and directions of the principal stresses
-	
+        
   SymmMatrix3 sigma(stress);
   Vector sig(0.0,0.0,0.0);
   Matrix3 evec;

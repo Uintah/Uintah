@@ -90,13 +90,13 @@ namespace Uintah {
 
     /*! Schedule compute of type - the rest come from ShellMaterial */
     virtual void addInitialComputesAndRequires(Task* task,
-					       const MPMMaterial* matl,
-					       const PatchSet* patches) const;
+                                               const MPMMaterial* matl,
+                                               const PatchSet* patches) const;
 
     /*! initialize each GUV particle's constitutive model data */
     virtual void initializeCMData(const Patch* patch,
-				  const MPMMaterial* matl,
-				  DataWarehouse* new_dw);
+                                  const MPMMaterial* matl,
+                                  DataWarehouse* new_dw);
 
     virtual void allocateCMDataAddRequires(Task* task, const MPMMaterial* matl,
                                            const PatchSet* patch, 
@@ -113,8 +113,8 @@ namespace Uintah {
          
     // compute stable timestep for this patch
     virtual void computeStableTimestep(const Patch* patch,
-				       const MPMMaterial* matl,
-				       DataWarehouse* new_dw);
+                                       const MPMMaterial* matl,
+                                       DataWarehouse* new_dw);
 
     virtual void addComputesAndRequires(Task* task,
                                         const MPMMaterial* matl,
@@ -122,9 +122,9 @@ namespace Uintah {
 
     // compute stress at each particle in the patch
     virtual void computeStressTensor(const PatchSubset* patches,
-				     const MPMMaterial* matl,
-				     DataWarehouse* old_dw,
-				     DataWarehouse* new_dw);
+                                     const MPMMaterial* matl,
+                                     DataWarehouse* old_dw,
+                                     DataWarehouse* new_dw);
 
     ///////////////////////////////////////////////////////////////////////////
     //
@@ -139,18 +139,18 @@ namespace Uintah {
     /*! Actually update rotation rate */
     //
     virtual void particleNormalRotRateUpdate(const PatchSubset* patches,
-				             const MPMMaterial* matl,
-				             DataWarehouse* old_dw,
-				             DataWarehouse* new_dw);
+                                             const MPMMaterial* matl,
+                                             DataWarehouse* old_dw,
+                                             DataWarehouse* new_dw);
 
     virtual double computeRhoMicroCM(double pressure,
-				     const double p_ref,
-				     const MPMMaterial* matl);
+                                     const double p_ref,
+                                     const MPMMaterial* matl);
 
     virtual void computePressEOSCM(double rho_m, double& press_eos,
-				   double p_ref,
-				   double& dp_drho, double& ss_new,
-				   const MPMMaterial* matl);
+                                   double p_ref,
+                                   double& dp_drho, double& ss_new,
+                                   const MPMMaterial* matl);
 
     virtual double getCompressibility();
 

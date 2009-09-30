@@ -611,7 +611,7 @@ ViscoTransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
                                         -2.*dWdI4tilde*lambda_tilde);
         }
 
-	//_________________________________stiffness and stress vars.
+        //_________________________________stiffness and stress vars.
         Matrix3 RB = leftCauchyGreentilde_new;
         Matrix3 RB2 = leftCauchyGreentilde_new*leftCauchyGreentilde_new;
         Matrix3 I = Identity;
@@ -619,7 +619,7 @@ ViscoTransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
                        + RB2*(-dWdI2)+I*(dWdI1*I1tilde+2*dWdI2*I2tilde))*(2./J)*(-2./3.);
         Matrix3 devsFC = (DY-I*(1./3.))*dWdI4tilde*I4tilde*(2./J)*(-2./3.);
         Matrix3 termMR = RB*(1./J)*dWdI2*I1tilde-RB2*(1./J)*dWdI2;
-	
+        
         deviatoric_stress = (leftCauchyGreentilde_new*(dWdI1+dWdI2*I1tilde)
              - leftCauchyGreentilde_new*leftCauchyGreentilde_new*dWdI2
              - Identity*(1./3.)*(dWdI1*I1tilde+2.*dWdI2*I2tilde))*2./J;
@@ -787,19 +787,19 @@ ViscoTransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
                      ch3*bts6*bts6 + ch4*bt3*bt1 + tangc*ax*az*ax*az  );
 
 
-	//_________________________________viscoelastic terms
+        //_________________________________viscoelastic terms
         double fac1=0.,fac2=0.,fac3=0.,fac4=0.,fac5=0.,fac6=0.,fac=1.;
         double exp1=0.,exp2=0.,exp3=0.,exp4=0.,exp5=0.,exp6=0.;
         if (t1 > 0.){
           exp1 = exp(-delT/t1);
           fac1 = (1. - exp1)*t1/delT;
           history1[idx] = history1_old[idx]*exp1+
-        	         (ElasticStress[idx]-ElasticStress_old[idx])*fac1;
+                         (ElasticStress[idx]-ElasticStress_old[idx])*fac1;
           if (t2 > 0.){
            exp2 = exp(-delT/t2);
            fac2 = (1. - exp2)*t2/delT;
            history2[idx] = history2_old[idx]*exp2+
-          		(ElasticStress[idx]-ElasticStress_old[idx])*fac2;
+                        (ElasticStress[idx]-ElasticStress_old[idx])*fac2;
           }
           else{
            history2[idx]= Zero;
@@ -808,7 +808,7 @@ ViscoTransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
            exp3 = exp(-delT/t3);
            fac3 = (1. - exp3)*t3/delT;
            history3[idx] = history3_old[idx]*exp3+
-         		(ElasticStress[idx]-ElasticStress_old[idx])*fac3;
+                        (ElasticStress[idx]-ElasticStress_old[idx])*fac3;
           }
           else{
            history3[idx]= Zero;
@@ -817,7 +817,7 @@ ViscoTransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
            exp4 = exp(-delT/t4);
            fac4 = (1. - exp4)*t4/delT;
            history4[idx] = history4_old[idx]*exp4+
-          		(ElasticStress[idx]-ElasticStress_old[idx])*fac4;
+                        (ElasticStress[idx]-ElasticStress_old[idx])*fac4;
           }
           else{
            history4[idx]= Zero;
@@ -826,7 +826,7 @@ ViscoTransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
            exp5 = exp(-delT/t5);
            fac5 = (1. - exp5)*t5/delT;
            history5[idx] = history5_old[idx]*exp5+
-          		(ElasticStress[idx]-ElasticStress_old[idx])*fac5;
+                        (ElasticStress[idx]-ElasticStress_old[idx])*fac5;
           }
           else{
            history5[idx]= Zero;
@@ -835,7 +835,7 @@ ViscoTransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
            exp6 = exp(-delT/t6);
            fac6 = (1. - exp6)*t6/delT;
            history6[idx] = history6_old[idx]*exp6+
-          		(ElasticStress[idx]-ElasticStress_old[idx])*fac6;
+                        (ElasticStress[idx]-ElasticStress_old[idx])*fac6;
         }
         else{
          history6[idx]= Zero;
@@ -1099,12 +1099,12 @@ ViscoTransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
           exp1 = exp(-delT/t1);
           fac1 = (1. - exp1)*t1/delT;
           history1[idx] = history1_old[idx]*exp1+
-       	                (ElasticStress[idx]-ElasticStress_old[idx])*fac1;
+                        (ElasticStress[idx]-ElasticStress_old[idx])*fac1;
           if (t2 > 0.){
            exp2 = exp(-delT/t2);
            fac2 = (1. - exp2)*t2/delT;
            history2[idx] = history2_old[idx]*exp2+
-          		(ElasticStress[idx]-ElasticStress_old[idx])*fac2;
+                        (ElasticStress[idx]-ElasticStress_old[idx])*fac2;
           }
           else{
            history2[idx]= Zero;
@@ -1113,7 +1113,7 @@ ViscoTransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
            exp3 = exp(-delT/t3);
            fac3 = (1. - exp3)*t3/delT;
            history3[idx] = history3_old[idx]*exp3+
-         		(ElasticStress[idx]-ElasticStress_old[idx])*fac3;
+                        (ElasticStress[idx]-ElasticStress_old[idx])*fac3;
           }
           else{
            history3[idx]= Zero;
@@ -1122,7 +1122,7 @@ ViscoTransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
            exp4 = exp(-delT/t4);
            fac4 = (1. - exp4)*t4/delT;
            history4[idx] = history4_old[idx]*exp4+
-          		(ElasticStress[idx]-ElasticStress_old[idx])*fac4;
+                        (ElasticStress[idx]-ElasticStress_old[idx])*fac4;
           }
           else{
            history4[idx]= Zero;
@@ -1131,7 +1131,7 @@ ViscoTransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
            exp5 = exp(-delT/t5);
            fac5 = (1. - exp5)*t5/delT;
            history5[idx] = history5_old[idx]*exp5+
-          		(ElasticStress[idx]-ElasticStress_old[idx])*fac5;
+                        (ElasticStress[idx]-ElasticStress_old[idx])*fac5;
           }
           else{
            history5[idx]= Zero;
@@ -1140,7 +1140,7 @@ ViscoTransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
            exp6 = exp(-delT/t6);
            fac6 = (1. - exp6)*t6/delT;
            history6[idx] = history6_old[idx]*exp6+
-          		(ElasticStress[idx]-ElasticStress_old[idx])*fac6;
+                        (ElasticStress[idx]-ElasticStress_old[idx])*fac6;
           }
           else{
            history6[idx]= Zero;

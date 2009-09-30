@@ -57,7 +57,7 @@ namespace Uintah {
     PTWShear& operator=(const PTWShear &smm);
 
   public:
-	 
+         
     /*! Construct a constant shear modulus model. */
     PTWShear(ProblemSpecP& ps);
 
@@ -68,7 +68,7 @@ namespace Uintah {
     virtual ~PTWShear();
 
     virtual void outputProblemSpec(ProblemSpecP& ps);
-	 
+         
     /*! Compute the shear modulus */
     double computeShearModulus(const PlasticityState* state);
   };

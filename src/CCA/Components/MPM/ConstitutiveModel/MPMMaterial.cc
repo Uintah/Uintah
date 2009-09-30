@@ -94,8 +94,8 @@ MPMMaterial::standardInitialization(ProblemSpecP& ps, MPMFlags* flags)
   if(!d_cm){
     ostringstream desc;
     desc << "An error occured in the ConstitutiveModelFactory that has \n" 
-	 << " slipped through the existing bullet proofing. Please tell \n"
-	 << " either Jim, John or Todd "<< endl; 
+         << " slipped through the existing bullet proofing. Please tell \n"
+         << " either Jim, John or Todd "<< endl; 
     throw ParameterNotFound(desc.str(), __FILE__, __LINE__);
   }
 
@@ -231,12 +231,12 @@ particleIndex MPMMaterial::countParticles(const Patch* patch)
 }
 
 void MPMMaterial::createParticles(particleIndex numParticles,
-				  CCVariable<short int>& cellNAPID,
-				  const Patch* patch,
-				  DataWarehouse* new_dw)
+                                  CCVariable<short int>& cellNAPID,
+                                  const Patch* patch,
+                                  DataWarehouse* new_dw)
 {
   d_particle_creator->createParticles(this,numParticles,cellNAPID,
-				      patch,new_dw,d_geom_objs);
+                                      patch,new_dw,d_geom_objs);
 }
 
 ParticleCreator* MPMMaterial::getParticleCreator()

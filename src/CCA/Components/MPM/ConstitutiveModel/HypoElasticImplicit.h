@@ -43,7 +43,7 @@ DEALINGS IN THE SOFTWARE.
 
 
 #include <cmath>
-#include "ConstitutiveModel.h"	
+#include "ConstitutiveModel.h"  
 #include "ImplicitCM.h"
 #include <Core/Math/Matrix3.h>
 #include <vector>
@@ -54,7 +54,7 @@ namespace Uintah {
       class HypoElasticImplicit : public ConstitutiveModel, public ImplicitCM {
       private:
          // Create datatype for storing model parameters
-	  bool d_useModifiedEOS; 
+          bool d_useModifiedEOS; 
       public:
          struct CMData {
             double G;
@@ -88,16 +88,16 @@ namespace Uintah {
                                             DataWarehouse* new_dw);
 
          virtual void computeStressTensor(const PatchSubset* patches,
-	     			          const MPMMaterial* matl,
-				          DataWarehouse* old_dw,
-				          DataWarehouse* new_dw,
+                                          const MPMMaterial* matl,
+                                          DataWarehouse* old_dw,
+                                          DataWarehouse* new_dw,
                                           Solver* solver,
-				          const bool recursion);
+                                          const bool recursion);
 
          virtual void computeStressTensor(const PatchSubset* patches,
-					  const MPMMaterial* matl,
-					  DataWarehouse* old_dw,
-					  DataWarehouse* new_dw);
+                                          const MPMMaterial* matl,
+                                          DataWarehouse* old_dw,
+                                          DataWarehouse* new_dw);
 
          // initialize  each particle's constitutive model data
          virtual void initializeCMData(const Patch* patch,
@@ -105,17 +105,17 @@ namespace Uintah {
                                        DataWarehouse* new_dw);
 
 
-	 virtual void allocateCMDataAddRequires(Task* task, 
-						const MPMMaterial* matl,
-						const PatchSet* patch, 
-						MPMLabel* lb) const;
+         virtual void allocateCMDataAddRequires(Task* task, 
+                                                const MPMMaterial* matl,
+                                                const PatchSet* patch, 
+                                                MPMLabel* lb) const;
 
 
-	 virtual void allocateCMDataAdd(DataWarehouse* new_dw,
-					ParticleSubset* subset,
-					map<const VarLabel*, ParticleVariableBase*>* newState,
-					ParticleSubset* delset,
-					DataWarehouse* old_dw);
+         virtual void allocateCMDataAdd(DataWarehouse* new_dw,
+                                        ParticleSubset* subset,
+                                        map<const VarLabel*, ParticleVariableBase*>* newState,
+                                        ParticleSubset* delset,
+                                        DataWarehouse* old_dw);
 
 
          virtual void addInitialComputesAndRequires(Task* task,
@@ -125,11 +125,11 @@ namespace Uintah {
          virtual void addComputesAndRequires(Task* task,
                                              const MPMMaterial* matl,
                                              const PatchSet* patches,
-					     const bool recursion) const;
+                                             const bool recursion) const;
 
          virtual void addComputesAndRequires(Task* task,
                                              const MPMMaterial* matl,
-					     const PatchSet* patches) const;
+                                             const PatchSet* patches) const;
 
 
          virtual double computeRhoMicroCM(double pressure,
@@ -144,8 +144,8 @@ namespace Uintah {
          virtual double getCompressibility();
 
 
-	 virtual void addParticleState(std::vector<const VarLabel*>& from,
-				       std::vector<const VarLabel*>& to);
+         virtual void addParticleState(std::vector<const VarLabel*>& from,
+                                       std::vector<const VarLabel*>& to);
 
       };
 } // End namespace Uintah

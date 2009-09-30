@@ -70,7 +70,7 @@ void MTSShear::outputProblemSpec(ProblemSpecP& ps)
   shear_ps->appendElement("T_0",d_T0);
 }
 
-	 
+         
 // Compute the shear modulus
 double 
 MTSShear::computeShearModulus(const PlasticityState* state)

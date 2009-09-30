@@ -70,7 +70,7 @@ void SCGShear::outputProblemSpec(ProblemSpecP& ps)
   shear_ps->appendElement("B",d_B);
 }
 
-	 
+         
 // Compute the shear modulus
 double 
 SCGShear::computeShearModulus(const PlasticityState* state)

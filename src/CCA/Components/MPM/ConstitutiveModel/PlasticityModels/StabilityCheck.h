@@ -54,7 +54,7 @@ namespace Uintah {
   class StabilityCheck {
 
   public:
-	 
+         
     //! Construct an object that can be used to check stability
     StabilityCheck();
 
@@ -69,13 +69,13 @@ namespace Uintah {
     virtual bool doIt() {
       return true;
     }
-	 
+         
     /*! Check the stability and return the direction of instability
       if any */
     virtual bool checkStability(const Matrix3& cauchyStress,
-				const Matrix3& deformRate,
-				const TangentModulusTensor& tangentModulus,
-				Vector& direction) = 0;
+                                const Matrix3& deformRate,
+                                const TangentModulusTensor& tangentModulus,
+                                Vector& direction) = 0;
   };
 } // End namespace Uintah
       

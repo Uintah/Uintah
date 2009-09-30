@@ -240,7 +240,7 @@ void ViscoPlastic::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
 
 
 //  cm_ps->appendElement("check_failure_max_tensile_stress",
-//	  d_checkFailureMaxTensileStress);
+//        d_checkFailureMaxTensileStress);
 
 //   d_yield->outputProblemSpec(cm_ps);
   d_stable->outputProblemSpec(cm_ps);
@@ -549,7 +549,7 @@ ViscoPlastic::computeStressTensor(const PatchSubset* patches,
     computeStressTensorImplicit(patches, matl, old_dw, new_dw);
     return;
   }
-	  
+          
   //if ((patches->get(0))->getID() == 19)
   //  cout_CST << getpid() 
   //           << "ComputeStressTensor: In : Matl = " << matl << " id = " 
@@ -905,7 +905,7 @@ ViscoPlastic::computeStressTensor(const PatchSubset* patches,
 
      // Calculate flow stress at beginning of time step
       double flowStress = d_plastic->computeFlowStress(idx,
-				pStress[idx], tensorR,implicitFlag);
+                                pStress[idx], tensorR,implicitFlag);
 
       //already localized; copy the old values to new
       if (pLocalized[idx]==1) {
@@ -955,7 +955,7 @@ ViscoPlastic::computeStressTensor(const PatchSubset* patches,
         // Save the updated data
         pStress_new[idx] = tensorSig;
         pPlasticStrain_new[idx] = pPlasticStrain[idx];
-// 	cout << "elastic stress=" << pStress_new[idx] << "\n";
+//      cout << "elastic stress=" << pStress_new[idx] << "\n";
         
         // Update the internal variables
         d_plastic->updateElastic(idx);
@@ -971,30 +971,30 @@ ViscoPlastic::computeStressTensor(const PatchSubset* patches,
       // plastic
       } else {
 
-	//plastic strain rate, plastic strain; back,drag,yield stresses updated
-	TangentModulusTensor Ce, Cep;
-	computeElasticTangentModulus(bulk, shear, Ce);
+        //plastic strain rate, plastic strain; back,drag,yield stresses updated
+        TangentModulusTensor Ce, Cep;
+        computeElasticTangentModulus(bulk, shear, Ce);
         d_plastic->computeStressIncTangent(epdot,stressRate,Cep,delT,idx,Ce,
-	      tensorD,pStress[idx],implicitFlag, tensorR);
+              tensorD,pStress[idx],implicitFlag, tensorR);
 //         cout << "epInc=" << epdot*delT << "\n";
-	
+        
         // Calculate total stress
         tensorSig = pStress[idx]+stressRate*delT;
-	
+        
         state->plasticStrainRate = epdot;
-	pPlasticStrain_new[idx]=pPlasticStrain[idx]+epdot*delT;
-        state->plasticStrain = pPlasticStrain_new[idx];	
-	
-// 	cout << "plasticStrain= " << pPlasticStrain_new[idx] << " \n";
+        pPlasticStrain_new[idx]=pPlasticStrain[idx]+epdot*delT;
+        state->plasticStrain = pPlasticStrain_new[idx]; 
+        
+//      cout << "plasticStrain= " << pPlasticStrain_new[idx] << " \n";
         // Calculate rate of temperature increase due to plastic strain
         double taylorQuinney = 0.9;
 
-        // Alternative approach	
-	devTrialStress = tensorSig - one*(tensorSig.Trace()/3.0);
+        // Alternative approach 
+        devTrialStress = tensorSig - one*(tensorSig.Trace()/3.0);
       
         // Calculate the equivalent stress
         double equivStress = sqrt((devTrialStress.NormSquared())*1.5);
-	
+        
         double Tdot = equivStress*epdot*taylorQuinney/(rho_cur*C_p);
         pdTdt[idx] = Tdot;
         double dT = Tdot*delT;
@@ -1020,7 +1020,7 @@ ViscoPlastic::computeStressTensor(const PatchSubset* patches,
         if (isLocalized) {
           d_plastic->updateElastic(idx);
         } 
-// 	cout << "pStress= " << pStress_new[idx] << " \n";
+//      cout << "pStress= " << pStress_new[idx] << " \n";
 
       } // end plastic
    }  // end pLocalized
@@ -1105,7 +1105,7 @@ ViscoPlastic::computeStressTensorImplicit(const PatchSubset* patches,
                                  pPlasticTemp_new, pPlasticTempInc_new,
                                  pdTdt,  pFailureVariable_new;
 
- constParticleVariable<long64> 	 pParticleID;
+ constParticleVariable<long64>   pParticleID;
 
 
 //   Local variables
@@ -1330,7 +1330,7 @@ ViscoPlastic::computeStressTensorImplicit(const PatchSubset* patches,
 
 //       Calculate flow stress (strain driven problem)
       double flowStress = d_plastic->computeFlowStress(idx,
-	      				pStress[idx], Rotation, implicitFlag);
+                                        pStress[idx], Rotation, implicitFlag);
 
       //already localized; copy the old values to new
       if (pLocalized[idx]==1) {
@@ -1372,17 +1372,17 @@ ViscoPlastic::computeStressTensorImplicit(const PatchSubset* patches,
       } else {
       
         // back,drag,yield stresses updated
-	double epdot;
-	Matrix3 stressRate;
+        double epdot;
+        Matrix3 stressRate;
         TangentModulusTensor Ce, Cep;
         computeElasticTangentModulus(bulk, shear, Ce);
         d_plastic->computeStressIncTangent(epdot,stressRate,Cep,delT,idx,Ce,
-	      incStrain,pStress[idx],implicitFlag, Rotation);
+              incStrain,pStress[idx],implicitFlag, Rotation);
 
         // Calculate total stress
         pStress_new[idx] = pStress[idx]+stressRate*delT;
-	
-	pPlasticStrain_new[idx]=pPlasticStrain[idx]+epdot*delT;
+        
+        pPlasticStrain_new[idx]=pPlasticStrain[idx]+epdot*delT;
 
         state->plasticStrainRate = epdot;
         state->plasticStrain = pPlasticStrain_new[idx];
@@ -1414,7 +1414,7 @@ ViscoPlastic::computeStressTensorImplicit(const PatchSubset* patches,
         if (isLocalized) {
           d_plastic->updateElastic(idx);
         } 
-	
+        
       } // end if plastic or elastic
    } //end pLocalized
 
@@ -1495,7 +1495,7 @@ ViscoPlastic::computeStressTensor(const PatchSubset* patches,
                                  pPlasticStrain, pPorosity;
 
   constParticleVariable<Point>   px;
-  constParticleVariable<Vector>  psize;	  
+  constParticleVariable<Vector>  psize;   
   constParticleVariable<Matrix3> pDeformGrad, pStress;
   constNCVariable<Vector>        gDisp;
 
@@ -1700,7 +1700,7 @@ ViscoPlastic::computeStressTensor(const PatchSubset* patches,
 
       // Calculate flow stress (strain driven problem) - Zero is fake Rotation
       double flowStress = d_plastic->computeFlowStress(idx,
-	      			 pStress[idx], Zero, implicitFlag);
+                                 pStress[idx], Zero, implicitFlag);
 
       // Compute the deviatoric stress
       if (flowStress <= 0.0) {
@@ -1718,17 +1718,17 @@ ViscoPlastic::computeStressTensor(const PatchSubset* patches,
 
         //plastic strain rate, plastic strain; back,drag,yield stresses updated
         double epdot;
-	Matrix3 stressRate;
-	TangentModulusTensor Ce, Cep;
+        Matrix3 stressRate;
+        TangentModulusTensor Ce, Cep;
         computeElasticTangentModulus(bulk, shear, Ce);
-	
+        
         d_plastic->computeStressIncTangent(epdot,stressRate,Cep,delT,idx,Ce,
-	      incStrain,pStress[idx],implicitFlag,Zero);
-	convertToVoigtForm(Ce,D);
+              incStrain,pStress[idx],implicitFlag,Zero);
+        convertToVoigtForm(Ce,D);
 
         // Calculate total stress
         pStress_new[idx] = pStress[idx]+stressRate*delT;
-	pPlasticStrain_new[idx]=pPlasticStrain[idx]+epdot*delT;
+        pPlasticStrain_new[idx]=pPlasticStrain[idx]+epdot*delT;
 
         state->plasticStrainRate = epdot;
         state->plasticStrain = pPlasticStrain_new[idx];
@@ -3088,7 +3088,7 @@ if (!d_varf.failureByStress) {  //failure by strain only
   if (d_varf.failureByStress) {
       pStress_new.eigen(eigval, eigvec);  //principal stress
   } else if (!d_varf.failureByPressure) { //failure by strain
-      ee.eigen(eigval, eigvec);		 //principal strain 
+      ee.eigen(eigval, eigvec);          //principal strain 
   }
 
 double epsMax;

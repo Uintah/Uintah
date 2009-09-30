@@ -52,12 +52,12 @@ namespace Uintah {
 
   class DamageModel {
   public:
-	 
+         
     DamageModel();
     virtual ~DamageModel();
 
     virtual void outputProblemSpec(ProblemSpecP& ps) = 0;
-	 
+         
     //////////////////////////////////////////////////////////////////////////
     /*! 
       Initialize the damage parameter in the calling function
@@ -78,12 +78,12 @@ namespace Uintah {
     */
     //////////////////////////////////////////////////////////////////////////
     virtual double computeScalarDamage(const double& plasticStrainRate,
-				       const Matrix3& stress,
-				       const double& temperature,
-				       const double& delT,
-				       const MPMMaterial* matl,
-				       const double& tolerance,
-				       const double& damage_old) = 0;
+                                       const Matrix3& stress,
+                                       const double& temperature,
+                                       const double& delT,
+                                       const MPMMaterial* matl,
+                                       const double& tolerance,
+                                       const double& damage_old) = 0;
 
   };
 } // End namespace Uintah

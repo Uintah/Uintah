@@ -114,9 +114,9 @@ namespace Uintah {
 
     virtual double computeFlowStress(
                                      const particleIndex idx,
-				     const Matrix3 pStress,
-				     const Matrix3 tensorR,
-				     const int implicitFlag) = 0;
+                                     const Matrix3 pStress,
+                                     const Matrix3 tensorR,
+                                     const int implicitFlag) = 0;
 
     ///////////////////////////////////////////////////////////////////////////
     /*!
@@ -133,23 +133,23 @@ namespace Uintah {
     virtual double computeMeltingTemp(const PlasticityState* state) = 0;
     
 //    virtual void computeNij(Matrix3& nij, 
-//    			    Matrix3& reducedEta, 
-// 			    double& xae, 
-// 			    const particleIndex idx,
-// 			    const Matrix3 pStress);
-// 			    
+//                          Matrix3& reducedEta, 
+//                          double& xae, 
+//                          const particleIndex idx,
+//                          const Matrix3 pStress);
+//                          
    virtual void computeStressIncTangent(double& epdot,
-   					 Matrix3& stressRate, 
+                                         Matrix3& stressRate, 
                                          TangentModulusTensor& Cep,
-				  	 const double delT,
-                                  	 const particleIndex idx, 
-                                   	 const TangentModulusTensor Ce,
-					 const Matrix3 tensorD,
-					 const Matrix3 pStress,
-					 const int implicitFlag,
-					 const Matrix3 tensorR)=0;
-					 
-   //returns true if maximum tensile stress is exceeded					 
+                                         const double delT,
+                                         const particleIndex idx, 
+                                         const TangentModulusTensor Ce,
+                                         const Matrix3 tensorD,
+                                         const Matrix3 pStress,
+                                         const int implicitFlag,
+                                         const Matrix3 tensorR)=0;
+                                         
+   //returns true if maximum tensile stress is exceeded                                  
    virtual bool checkFailureMaxTensileStress(const Matrix3 pStress)=0;
    
   };

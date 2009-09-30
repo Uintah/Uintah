@@ -32,7 +32,7 @@ DEALINGS IN THE SOFTWARE.
 #define __MIE_GRUNEISEN_EOS_MODEL_H__
 
 
-#include "MPMEquationOfState.h"	
+#include "MPMEquationOfState.h" 
 #include <Core/ProblemSpec/ProblemSpecP.h>
 
 namespace Uintah {
@@ -83,12 +83,12 @@ namespace Uintah {
       double C_0;
       double Gamma_0;
       double S_alpha;
-    };	 
+    };   
 
   private:
 
     CMData d_const;
-	 
+         
     // Prevent copying of this class
     // copy constructor
     //MieGruneisenEOS(const MieGruneisenEOS &cm);
@@ -98,20 +98,20 @@ namespace Uintah {
     // constructors
     MieGruneisenEOS(ProblemSpecP& ps); 
     MieGruneisenEOS(const MieGruneisenEOS* cm);
-	 
+         
     // destructor 
     virtual ~MieGruneisenEOS();
 
     virtual void outputProblemSpec(ProblemSpecP& ps);
-	 
+         
     /////////////////////////////////////////////////////////////////////////
     /*! Calculate the pressure using a equation of state */
     /////////////////////////////////////////////////////////////////////////
     virtual double computePressure(const MPMMaterial* matl,
-				   const PlasticityState* state,
-				   const Matrix3& deformGrad,
-				   const Matrix3& rateOfDeformation,
-				   const double& delT);
+                                   const PlasticityState* state,
+                                   const Matrix3& deformGrad,
+                                   const Matrix3& rateOfDeformation,
+                                   const double& delT);
   
     double eval_dp_dJ(const MPMMaterial* matl,
                       const double& delF,

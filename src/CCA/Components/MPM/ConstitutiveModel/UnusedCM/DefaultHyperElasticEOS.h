@@ -32,7 +32,7 @@ DEALINGS IN THE SOFTWARE.
 #define __DEFAULT_HYPERELASTIC_EOS_MODEL_H__
 
 
-#include "MPMEquationOfState.h"	
+#include "MPMEquationOfState.h" 
 #include <Core/ProblemSpec/ProblemSpecP.h>
 
 namespace Uintah {
@@ -73,17 +73,17 @@ namespace Uintah {
     // constructors
     DefaultHyperElasticEOS(ProblemSpecP& ps); 
     DefaultHyperElasticEOS(const DefaultHyperElasticEOS* cm);
-	 
+         
     // destructor 
     virtual ~DefaultHyperElasticEOS();
-	 
+         
     //////////
     // Calculate the pressure using a equation of state
     double computePressure(const MPMMaterial* matl,
-			   const PlasticityState* state,
-			   const Matrix3& deformGrad,
-			   const Matrix3& rateOfDeformation,
-			   const double& delT);
+                           const PlasticityState* state,
+                           const Matrix3& deformGrad,
+                           const Matrix3& rateOfDeformation,
+                           const double& delT);
   
   };
 

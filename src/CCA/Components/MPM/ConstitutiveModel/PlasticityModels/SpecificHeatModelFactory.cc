@@ -51,17 +51,17 @@ SpecificHeatModel* SpecificHeatModelFactory::create(ProblemSpecP& ps)
     return(scinew ConstantCp());
     //ostringstream desc;
     //desc << "**Error in Input UPS File: " 
-	// << "MPM:SpecificHeatModel:  "
-	// << "No specific_heat_model tag found in input file." << endl;
+        // << "MPM:SpecificHeatModel:  "
+        // << "No specific_heat_model tag found in input file." << endl;
     //throw ProblemSetupException(desc.str(), __FILE__, __LINE__);
   }
   string mat_type;
   if(!child->getAttribute("type", mat_type)) {
     ostringstream desc;
     desc << "**Error in Input UPS File: " 
-	 << "MPM:SpecificHeatModel:  "
-	 << "No specific_heat_model type tag found in input file. " << endl 
-	 << "Types include constant_Cp, copper_Cp, and steel_Cp." << endl;
+         << "MPM:SpecificHeatModel:  "
+         << "No specific_heat_model type tag found in input file. " << endl 
+         << "Types include constant_Cp, copper_Cp, and steel_Cp." << endl;
     throw ProblemSetupException(desc.str(), __FILE__, __LINE__);
   }
    
@@ -76,11 +76,11 @@ SpecificHeatModel* SpecificHeatModelFactory::create(ProblemSpecP& ps)
     return(scinew ConstantCp(child));
     //ostringstream desc;
     //desc << "**Error in Input UPS File: " 
-	 //<< "MPM:SpecificHeatModel:  "
-	 //<< "Incorrect specific_heat_model type (" << mat_type 
-	 //<< ") found in input file. " << endl 
-	 //<< "Correct type tags include constant_Cp, copper_Cp, and steel_Cp." 
-	 //<< endl;
+         //<< "MPM:SpecificHeatModel:  "
+         //<< "Incorrect specific_heat_model type (" << mat_type 
+         //<< ") found in input file. " << endl 
+         //<< "Correct type tags include constant_Cp, copper_Cp, and steel_Cp." 
+         //<< endl;
     //throw ProblemSetupException(desc.str(), __FILE__, __LINE__);
   }
 }
@@ -99,9 +99,9 @@ SpecificHeatModelFactory::createCopy(const SpecificHeatModel* smm)
     return(scinew ConstantCp(dynamic_cast<const ConstantCp*>(smm)));
     //ostringstream desc;
     //desc << "**Error in Material Copying: " 
-	// << "MPM:SpecificHeatModel:  "
+        // << "MPM:SpecificHeatModel:  "
         // << "Cannot create copy of unknown specific heat model"
-	// << endl;
+        // << endl;
     //throw ProblemSetupException(desc.str(), __FILE__, __LINE__);
   }
 }
