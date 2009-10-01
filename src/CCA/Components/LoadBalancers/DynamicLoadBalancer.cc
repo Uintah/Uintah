@@ -938,7 +938,6 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
       }
       //if(d_myworld->myrank()==0)
       //  stats << endl;
-
       stats << "LoadBalance Stats level(" << l << "):"  << " Mean:" << meanCost << " Min:" << minCost << " Max:" << maxCost << " Imb:" << 1-meanCost/maxCost << " max on:" << maxProc << endl;
     }  
 
@@ -955,8 +954,11 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
           index = p;
         }
 
+        IntVector sum=(level->getPatch(index)->getCellLowIndex()+level->getPatch(index)->getCellHighIndex());
+
+        Vector loc(sum.x()/2.0,sum.y()/2.0,sum.z()/2.0);
         //output load balance information
-        lbout << lbiter << " " << l << " " << index << " " << d_tempAssignment[level_offset+index] << " " <<  patch_costs[l][index] << endl;
+        lbout << lbiter << " " << l << " " << index << " " << d_tempAssignment[level_offset+index] << " " <<  patch_costs[l][index] << " " << loc.x() << " " << loc.y() << " " << loc.z() << endl;
       }
     }
     
