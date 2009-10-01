@@ -98,7 +98,7 @@ private:
   
   map<string, string> LabelToRoleMap;
 
-  const VarLabel* d_raw_coal_mass_fraction_label;// label for raw coal mass fraction
+  const VarLabel* d_raw_coal_mass_label;// label for raw coal mass fraction
   const VarLabel* d_particle_temperature_label;  // label for particle temperature
   const VarLabel* d_particle_length_label;       // label for particle length
   const VarLabel* d_weight_label; // label for DQMOM weight

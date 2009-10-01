@@ -107,7 +107,7 @@ HeatTransfer::problemSetup(const ProblemSpecP& params, int qn)
     if( role_name == "gas_temperature" ) {
       // tempIN will be required explicitly
     } else if ( role_name == "particle_length" 
-             || role_name == "raw_coal_mass_fraction"
+             || role_name == "raw_coal_mass"
              || role_name == "particle_temperature" ) {
       LabelToRoleMap[temp_label_name] = role_name;
     } else {
@@ -349,7 +349,7 @@ HeatTransfer::sched_computeModel( const LevelP& level, SchedulerP& sched, int ti
   // - "gas_temperature" - require the "tempIN" label
   // - "particle_temperature" - look in DQMOMEqnFactory
   // - "particle_length" - look in DQMOMEqnFactory
-  // - "raw_coal_mass_fraction" - look in DQMOMEqnFactory
+  // - "raw_coal_mass" - look in DQMOMEqnFactory
 
   // for each required internal coordinate:
   for (vector<std::string>::iterator iter = d_icLabels.begin(); 
@@ -392,13 +392,13 @@ HeatTransfer::sched_computeModel( const LevelP& level, SchedulerP& sched, int ti
           throw InvalidValue(errmsg,__FILE__,__LINE__);
         }
 
-      } else if ( iMap->second == "raw_coal_mass_fraction") {
+      } else if ( iMap->second == "raw_coal_mass") {
         if (dqmom_eqn_factory.find_scalar_eqn(*iter) ) {
           EqnBase& t_current_eqn = dqmom_eqn_factory.retrieve_scalar_eqn(*iter);
           DQMOMEqn& current_eqn = dynamic_cast<DQMOMEqn&>(t_current_eqn);
-          d_raw_coal_mass_fraction_label = current_eqn.getTransportEqnLabel();
+          d_raw_coal_mass_label = current_eqn.getTransportEqnLabel();
           d_rc_scaling_factor = current_eqn.getScalingConstant();
-          tsk->requires(Task::OldDW, d_raw_coal_mass_fraction_label, Ghost::None, 0);
+          tsk->requires(Task::OldDW, d_raw_coal_mass_label, Ghost::None, 0);
         } else {
           std::string errmsg = "ARCHES: HeatTransfer: Invalid variable given in <ICVars> block, for <variable> tag for HeatTransfer model.";
           errmsg += "\nCould not find given coal mass fraction variable \"";
@@ -534,7 +534,7 @@ HeatTransfer::computeModel( const ProcessorGroup * pc,
     old_dw->get( temperature, d_fieldLabels->d_tempINLabel, matlIndex, patch, gac, 1 );
     old_dw->get( w_particle_temperature, d_particle_temperature_label, matlIndex, patch, gn, 0 );
     old_dw->get( w_particle_length, d_particle_length_label, matlIndex, patch, gn, 0 );
-    //old_dw->get( w_mass_raw_coal, d_raw_coal_mass_fraction_label, matlIndex, patch, gn, 0 );
+    //old_dw->get( w_mass_raw_coal, d_raw_coal_mass_label, matlIndex, patch, gn, 0 );
     old_dw->get( weight, d_weight_label, matlIndex, patch, gn, 0 );
 
     for (CellIterator iter=patch->getCellIterator__New(); !iter.done(); iter++){
