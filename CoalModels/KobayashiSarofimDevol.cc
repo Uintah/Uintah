@@ -81,6 +81,7 @@ KobayashiSarofimDevol::~KobayashiSarofimDevol()
 KobayashiSarofimDevol::problemSetup(const ProblemSpecP& params, int qn)
 {
   ProblemSpecP db = params; 
+  compute_part_temp = false;
 
   // Look for required internal coordinates
   ProblemSpecP db_icvars = params->findBlock("ICVars");
@@ -105,18 +106,14 @@ KobayashiSarofimDevol::problemSetup(const ProblemSpecP& params, int qn)
     // user specifies "role" of each internal coordinate
     // if it isn't an internal coordinate or a scalar, it's required explicitly
     // ( see comments in Arches::registerModels() for details )
-    if ( role_name == "raw_coal_mass_fraction") {
+    if ( role_name == "raw_coal_mass" ) {
       LabelToRoleMap[temp_label_name] = role_name;
     } else if( role_name == "particle_temperature" ) {  
       LabelToRoleMap[temp_label_name] = role_name;
       compute_part_temp = true;
-    } else if( role_name == "gas_temperature" ) {
-      // don't do anything, because tempIN will be required explicitly
-      LabelToRoleMap[temp_label_name] = role_name;
-      compute_part_temp = false;
     } else {
       std::string errmsg;
-      errmsg = "Invalid variable role for Kobayashi Sarofim Devolatilization model: must be \"gas_temperature\" or \"raw_coal_mass_fraction\", you specified \"" + role_name + "\".";
+      errmsg = "Invalid variable role for Kobayashi Sarofim Devolatilization model: must be \"particle_temperature\" or \"raw_coal_mass\", you specified \"" + role_name + "\".";
       throw InvalidValue(errmsg,__FILE__,__LINE__);
     }
 
@@ -153,17 +150,14 @@ KobayashiSarofimDevol::problemSetup(const ProblemSpecP& params, int qn)
     // user specifies "role" of each scalar
     // if it isn't an internal coordinate or a scalar, it's required explicitly
     // ( see comments in Arches::registerModels() for details )
-    if ( role_name == "raw_coal_mass_fraction") {
+    if ( role_name == "raw_coal_mass") {
       LabelToRoleMap[temp_label_name] = role_name;
     } else if( role_name == "particle_temperature" ) {  
       LabelToRoleMap[temp_label_name] = role_name;
       compute_part_temp = true;
-    } else if( role_name == "gas_temperature" ) {
-      // don't do anything, because tempIN will be required explicitly
-      compute_part_temp = false;
     } else {
       std::string errmsg;
-      errmsg = "Invalid variable role for Kobayashi Sarofim Devolatilization model: must be \"gas_temperature\" or \"raw_coal_mass_fraction\", you specified \"" + role_name + "\".";
+      errmsg = "Invalid variable role for Kobayashi Sarofim Devolatilization model: must be \"particle_temperature\" or \"raw_coal_mass\", you specified \"" + role_name + "\".";
       throw InvalidValue(errmsg,__FILE__,__LINE__);
     }
 
@@ -348,7 +342,7 @@ KobayashiSarofimDevol::sched_computeModel( const LevelP& level, SchedulerP& sche
   // For each required variable, determine what role it plays
   // - "gas_temperature" - require the "tempIN" label
   // - "particle_temperature" - look in DQMOMEqnFactory
-  // - "raw_coal_mass_fraction" - look in DQMOMEqnFactory
+  // - "raw_coal_mass" - look in DQMOMEqnFactory
 
 
   // for each required internal coordinate:
@@ -358,9 +352,7 @@ KobayashiSarofimDevol::sched_computeModel( const LevelP& level, SchedulerP& sche
     map<string, string>::iterator iMap = LabelToRoleMap.find(*iter);
 
     if ( iMap != LabelToRoleMap.end() ) {
-      if ( iMap->second == "gas_temperature") {
-        // automatically use Arches' temperature label if role="temperature"
-      } else if ( iMap->second == "particle_temperature") {
+      if ( iMap->second == "particle_temperature") {
         if (dqmom_eqn_factory.find_scalar_eqn(*iter) ) {
           EqnBase& t_current_eqn = dqmom_eqn_factory.retrieve_scalar_eqn(*iter);
           DQMOMEqn& current_eqn = dynamic_cast<DQMOMEqn&>(t_current_eqn);
@@ -375,16 +367,16 @@ KobayashiSarofimDevol::sched_computeModel( const LevelP& level, SchedulerP& sche
           throw InvalidValue(errmsg,__FILE__,__LINE__);
         }
 
-      } else if ( iMap->second == "raw_coal_mass_fraction") {
+      } else if ( iMap->second == "raw_coal_mass") {
         if (dqmom_eqn_factory.find_scalar_eqn(*iter) ) {
           EqnBase& t_current_eqn = dqmom_eqn_factory.retrieve_scalar_eqn(*iter);
           DQMOMEqn& current_eqn = dynamic_cast<DQMOMEqn&>(t_current_eqn);
-          d_raw_coal_mass_fraction_label = current_eqn.getTransportEqnLabel();
+          d_raw_coal_mass_label = current_eqn.getTransportEqnLabel();
           d_rc_scaling_factor = current_eqn.getScalingConstant();
-          tsk->requires(Task::OldDW, d_raw_coal_mass_fraction_label, Ghost::None, 0);
+          tsk->requires(Task::OldDW, d_raw_coal_mass_label, Ghost::None, 0);
         } else {
           std::string errmsg = "ARCHES: KobayashiSarofimDevol: Invalid variable given in <variable> tag for KobayashiSarofimDevol model";
-          errmsg += "\nCould not find given coal mass fraction variable \"";
+          errmsg += "\nCould not find given raw coal mass variable \"";
           errmsg += *iter;
           errmsg += "\" in EqnFactory or in DQMOMEqnFactory.";
           throw InvalidValue(errmsg,__FILE__,__LINE__);
@@ -475,15 +467,14 @@ KobayashiSarofimDevol::computeModel( const ProcessorGroup * pc,
     }
 
     constCCVariable<double> temperature;
-    old_dw->get( temperature, d_fieldLabels->d_tempINLabel, matlIndex, patch, gac, 1 );
-
-    constCCVariable<double> w_particle_temperature;
     if (compute_part_temp) {
-      old_dw->get( w_particle_temperature, d_particle_temperature_label, matlIndex, patch, gn, 0 );
+      old_dw->get( temperature, d_particle_temperature_label, matlIndex, patch, gn, 0 );
+    } else {
+      old_dw->get( temperature, d_fieldLabels->d_tempINLabel, matlIndex, patch, gac, 1 );
     }
     
     constCCVariable<double> wa_raw_coal_mass;
-    new_dw->get( wa_raw_coal_mass, d_raw_coal_mass_fraction_label, matlIndex, patch, gn, 0 );
+    new_dw->get( wa_raw_coal_mass, d_raw_coal_mass_label, matlIndex, patch, gn, 0 );
 
     constCCVariable<double> weight;
     new_dw->get( weight, d_weight_label, matlIndex, patch, gn, 0 );
@@ -497,7 +488,7 @@ KobayashiSarofimDevol::computeModel( const ProcessorGroup * pc,
         gas_devol_rate[c] = 0.0;
       } else {
         if(compute_part_temp) {
-	        double particle_temperature = w_particle_temperature[c]*d_pt_scaling_factor/weight[c];     
+	        double particle_temperature = temperature[c]*d_pt_scaling_factor/weight[c];     
           k1 = A1*exp(E1/(R*particle_temperature)); // 1/s
           k2 = A2*exp(E2/(R*particle_temperature)); // 1/s     
         } else {   
