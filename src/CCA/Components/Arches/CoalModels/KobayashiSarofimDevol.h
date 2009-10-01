@@ -101,7 +101,7 @@ private:
   
   map<string, string> LabelToRoleMap;
 
-  const VarLabel* d_raw_coal_mass_fraction_label;
+  const VarLabel* d_raw_coal_mass_label;
   const VarLabel* d_weight_label;
   const VarLabel* d_particle_temperature_label;
 
