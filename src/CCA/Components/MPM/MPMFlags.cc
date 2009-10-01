@@ -108,7 +108,9 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps)
 
   if(phys_cons_ps){
     phys_cons_ps->require("gravity",d_gravity);
-  } else {
+  } else if (mpm_flag_ps) {
+    mpm_flag_ps->require("gravity",d_gravity);
+  } else{
     d_gravity=Vector(0,0,0);
   }
 
@@ -274,6 +276,7 @@ void
 MPMFlags::outputProblemSpec(ProblemSpecP& ps)
 {
 
+  ps->appendElement("gravity", d_gravity);
   ps->appendElement("time_integrator", d_integrator_type);
 
   ps->appendElement("interpolator", d_interpolator_type);
