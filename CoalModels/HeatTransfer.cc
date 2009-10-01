@@ -73,9 +73,9 @@ HeatTransfer::problemSetup(const ProblemSpecP& params, int qn)
   const ProblemSpecP params_root = db->getRootNode(); 
 
   // Check for radiation 
-  bool d_radiation = false;
+  d_radiation = false;
   if (params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ExplicitSolver")->findBlock("EnthalpySolver")->findBlock("DORadiationModel"))
-    d_radiation = true; // if gas phase radiation is turned on.  
+    d_radiation = false; // if gas phase radiation is turned on.  
 
   //user can specifically turn off radiation heat transfer
   if (db->findBlock("noRadiation"))
@@ -339,7 +339,7 @@ HeatTransfer::sched_computeModel( const LevelP& level, SchedulerP& sched, int ti
   tsk->requires(Task::OldDW, iQuad->second, Ghost::None, 0);
   tsk->requires( Task::OldDW, d_fieldLabels->d_newCCVelocityLabel, Ghost::None, 0);
   tsk->requires(Task::OldDW, d_fieldLabels->d_densityCPLabel, Ghost::None, 0);
-  
+ 
   if(d_radiation){
     tsk->requires(Task::OldDW, d_fieldLabels->d_radiationSRCINLabel,  Ghost::None, 0);
     tsk->requires(Task::OldDW, d_fieldLabels->d_abskgINLabel,  Ghost::None, 0);   
