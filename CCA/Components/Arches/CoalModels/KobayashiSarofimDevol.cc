@@ -46,10 +46,10 @@ KobayashiSarofimDevol::KobayashiSarofimDevol( std::string modelName,
 : ModelBase(modelName, sharedState, fieldLabels, icLabelNames, scalarLabelNames, qn), 
   d_fieldLabels(fieldLabels)
 {
-  A1  =  2.0e5;       // k1 pre-exponential factor
-  A2  =  1.3e7;       // k1 activation energy
-  E1  =  -25000;      // k2 pre-exponential factor
-  E2  =  -40000;      // k2 activation energy
+  A1  =  3.7e5;       // k1 pre-exponential factor
+  A2  =  1.46e13;       // k1 activation energy
+  E1  =  -17600;      // k2 pre-exponential factor
+  E2  =  -60000;      // k2 activation energy
 
   R   =  1.987;       // ideal gas constant
 
@@ -112,6 +112,7 @@ KobayashiSarofimDevol::problemSetup(const ProblemSpecP& params, int qn)
       compute_part_temp = true;
     } else if( role_name == "gas_temperature" ) {
       // don't do anything, because tempIN will be required explicitly
+      LabelToRoleMap[temp_label_name] = role_name;
       compute_part_temp = false;
     } else {
       std::string errmsg;
