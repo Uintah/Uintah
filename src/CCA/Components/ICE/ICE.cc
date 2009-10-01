@@ -1515,12 +1515,15 @@ void ICE::scheduleComputeLagrangianSpecificVolume(SchedulerP& sched,
   t->requires(Task::NewDW, lb->sp_vol_CCLabel,            gn);    
   t->requires(Task::NewDW, lb->Tdot_CCLabel,              gn);  
   t->requires(Task::NewDW, lb->f_theta_CCLabel,           gn);
+  t->requires(Task::NewDW, lb->compressibilityLabel,      gn);  
   t->requires(Task::NewDW, lb->vol_frac_CCLabel,          gac,1);
+  
   t->requires(Task::OldDW, lb->temp_CCLabel,        ice_matls, gn);
-  t->requires(Task::NewDW, lb->temp_CCLabel,        mpm_matls, gn); 
-  t->requires(Task::NewDW, lb->compressibilityLabel,            gn);
   t->requires(Task::NewDW, lb->specific_heatLabel,  ice_matls, gn);
+  t->requires(Task::NewDW, lb->temp_CCLabel,        mpm_matls, gn); 
+
   t->requires(Task::NewDW, lb->delP_DilatateLabel,  press_matl,oims,gn);
+  t->requires(Task::NewDW, lb->press_CCLabel,       press_matl,oims,gn);
   if(d_with_mpm){
    t->requires(Task::NewDW,lb->TMV_CCLabel,       press_matl,oims, gn);
   }
