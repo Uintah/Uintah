@@ -75,7 +75,7 @@ HeatTransfer::problemSetup(const ProblemSpecP& params, int qn)
   // Check for radiation 
   d_radiation = false;
   if (params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ExplicitSolver")->findBlock("EnthalpySolver")->findBlock("DORadiationModel"))
-    d_radiation = false; // if gas phase radiation is turned on.  
+    d_radiation = true; // if gas phase radiation is turned on.  
 
   //user can specifically turn off radiation heat transfer
   if (db->findBlock("noRadiation"))
