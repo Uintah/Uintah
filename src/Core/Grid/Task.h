@@ -307,8 +307,8 @@ WARNING
   public: // class Task
     
     enum WhichDW {
-      OldDW, NewDW, CoarseOldDW, CoarseNewDW, ParentOldDW, ParentNewDW, 
-      TotalDWs
+      OldDW=0, NewDW=1, CoarseOldDW=2, CoarseNewDW=3, ParentOldDW=4, ParentNewDW=5, 
+      TotalDWs=6
     };
     enum {
       NoDW = -1, InvalidDW = -2
