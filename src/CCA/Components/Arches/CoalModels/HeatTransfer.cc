@@ -48,7 +48,7 @@ HeatTransfer::HeatTransfer( std::string modelName,
 : ModelBase(modelName, sharedState, fieldLabels, icLabelNames, scalarLabelNames, qn),
   d_fieldLabels(fieldLabels)
 {
-  d_radiation = false;
+  //d_radiation = false;
   d_quad_node = qn;
 
   // Create a label for this model
@@ -356,11 +356,12 @@ HeatTransfer::sched_computeModel( const LevelP& level, SchedulerP& sched, int ti
        iter != d_icLabels.end(); ++iter) { 
 
     map<string, string>::iterator iMap = LabelToRoleMap.find(*iter);
+    
+    tsk->requires(Task::OldDW, d_fieldLabels->d_tempINLabel, Ghost::AroundCells, 1);
 
     if( iMap != LabelToRoleMap.end() ) {
       if( iMap->second == "gas_temperature") {
         // automatically use Arches' temperature label if role="temperature"
-        tsk->requires(Task::OldDW, d_fieldLabels->d_tempINLabel, Ghost::AroundCells, 1);
       } else if ( iMap->second == "particle_temperature") {
         if( dqmom_eqn_factory.find_scalar_eqn(*iter) ) {
           EqnBase& t_current_eqn = dqmom_eqn_factory.retrieve_scalar_eqn(*iter);
@@ -370,7 +371,7 @@ HeatTransfer::sched_computeModel( const LevelP& level, SchedulerP& sched, int ti
           tsk->requires(Task::OldDW, d_particle_temperature_label, Ghost::None, 0);
         } else {
           std::string errmsg = "ARCHES: HeatTransfer: Invalid variable given in <ICVars> block, for <variable> tag for HeatTransfer model.";
-          errmsg += "\nCould not find given coal mass fraction variable \"";
+          errmsg += "\nCould not find given particle temperature variable \"";
           errmsg += *iter;
           errmsg += "\" in DQMOMEqnFactory.";
           throw InvalidValue(errmsg,__FILE__,__LINE__);
@@ -385,7 +386,7 @@ HeatTransfer::sched_computeModel( const LevelP& level, SchedulerP& sched, int ti
           tsk->requires(Task::OldDW, d_particle_length_label, Ghost::None, 0);
         } else {
           std::string errmsg = "ARCHES: HeatTransfer: Invalid variable given in <ICVars> block, for <variable> tag for HeatTransfer model.";
-          errmsg += "\nCould not find given coal mass fraction variable \"";
+          errmsg += "\nCould not find given particle length variable \"";
           errmsg += *iter;
           errmsg += "\" in DQMOMEqnFactory.";
           throw InvalidValue(errmsg,__FILE__,__LINE__);
@@ -550,7 +551,7 @@ HeatTransfer::computeModel( const ProcessorGroup * pc,
 	    double length;
 	    double particle_temperature;
 
-      if (weight[c] < d_w_small ) { //not sure if we need this
+      if (weight[c] < d_w_small ) { 
         heat_rate[c] = 0.0;
         length = 0.0;
         particle_temperature = 0.0;

@@ -107,9 +107,6 @@ private:
   const VarLabel* d_smoothTfield; // temperature field: particle temperature where there are particles,
                                   //                    gas temperature where there are no particles
 
-  double c_o;      // initial mass of raw coal
-  double alpha_o;  // initial mass fraction of raw coal
-
   bool d_radiation;
   int d_quad_node;   // store which quad node this model is for
 
