@@ -1142,6 +1142,7 @@ void ImpMPM::scheduleComputeInternalForce(SchedulerP& sched,
                          this, &ImpMPM::computeInternalForce);
 
   t->requires(Task::ParentOldDW,lb->pXLabel,              Ghost::AroundNodes,1);
+  t->requires(Task::ParentOldDW,lb->pSizeLabel,          Ghost::AroundNodes,1);
   t->requires(Task::NewDW,      lb->pStressLabel_preReloc,Ghost::AroundNodes,1);
   t->requires(Task::NewDW,      lb->pVolumeDeformedLabel, Ghost::AroundNodes,1);
 
@@ -1525,6 +1526,7 @@ void ImpMPM::scheduleInterpolateStressToGrid(SchedulerP& sched,
   // This task is done for visualization only
 
   t->requires(Task::OldDW,lb->pXLabel,              Ghost::AroundNodes,1);
+  t->requires(Task::OldDW,lb->pSizeLabel,           Ghost::AroundNodes,1);
   t->requires(Task::NewDW,lb->pVolumeDeformedLabel, Ghost::AroundNodes,1);
   t->requires(Task::NewDW,lb->pStressLabel_preReloc,Ghost::AroundNodes,1);
   t->requires(Task::NewDW,lb->gVolumeLabel,         Ghost::None);
