@@ -13,6 +13,7 @@
 
 #define YDIM
 #define ZDIM
+
 //==========================================================================
 
 /**
@@ -534,7 +535,6 @@ namespace Uintah{
       // (ie, it doesn't adjust values of fluxes on the boundaries but assume you have 
       // done so previously or that you will go back and repair them)
       Vector Dx = p->dCell(); 
-      FaceData<double> F; // FACE value of phi
 
       // get the cell interior iterator
       CellIterator iIter  = Discretization_new::getInteriorCellIterator( p ); 
@@ -837,7 +837,6 @@ namespace Uintah{
       // (ie, it doens't adjust values of fluxes on the boundaries but assume you have 
       // done so previously)
       Vector Dx = p->dCell(); 
-      FaceData<double> F; // FACE value of phi
 
       // get the cell interior iterator
       CellIterator iIter  = Discretization_new::getInteriorCellIterator( p ); 
@@ -1121,7 +1120,6 @@ namespace Uintah{
       // (ie, it doens't adjust values of fluxes on the boundaries but assume you have 
       // done so previously)
       Vector Dx = p->dCell(); 
-      FaceData<double> F; // FACE value of phi
 
       // get the cell interior iterator
       CellIterator iIter  = Discretization_new::getInteriorCellIterator( p ); 
