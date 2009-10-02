@@ -88,12 +88,6 @@ int Material::getDWIndex() const
   return d_dwindex;
 }
 
-int Material::getVFIndex() const
-{
-  // Return this material's index for velocity field
-  return d_vfindex;
-}
-
 void Material::setDWIndex(int idx)
 {
    d_dwindex = idx;
@@ -102,11 +96,6 @@ void Material::setDWIndex(int idx)
                                        
    thismatl->addReference();
    thismatl->add(idx);
-}
-
-void Material::setVFIndex(int idx)
-{
-   d_vfindex = idx;
 }
 
 void Material::registerParticleState(SimulationState* ss)

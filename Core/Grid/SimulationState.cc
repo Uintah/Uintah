@@ -277,14 +277,6 @@ void SimulationState::finalizeMaterials()
   }
 }
 
-int SimulationState::getNumVelFields() const {
-  int num_vf=0;
-  for (int i = 0; i < (int)matls.size(); i++) {
-    num_vf = Max(num_vf,matls[i]->getVFIndex());
-  }
-  return num_vf+1;
-}
-
 void SimulationState::clearMaterials()
 {
   for (int i = 0; i < (int)matls.size(); i++)

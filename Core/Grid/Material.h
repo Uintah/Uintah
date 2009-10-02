@@ -87,13 +87,7 @@ WARNING
       // location in the data warehouse
       int getDWIndex() const;
       
-      //////////
-      // Return index associated with this material's
-      // velocity field
-      int getVFIndex() const;
-
       void setDWIndex(int);
-      void setVFIndex(int);
 
      const MaterialSubset* thisMaterial() const {
        return thismatl;
@@ -111,8 +105,6 @@ WARNING
 
       // Index associated with this material's spot in the DW
       int d_dwindex;
-      // Index associated with this material's velocity field
-      int d_vfindex;
       MaterialSubset* thismatl;
 
 
