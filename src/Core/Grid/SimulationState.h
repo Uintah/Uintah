@@ -123,7 +123,6 @@ public:
   void registerSpatialOpsMaterial(SpatialOpsMaterial*);
   void registerICEMaterial(ICEMaterial*);
   void registerICEMaterial(ICEMaterial*,unsigned int index);
-  int getNumVelFields() const;
 
   int getNumMatls() const {
     return (int)matls.size();
