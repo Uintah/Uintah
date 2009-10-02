@@ -29,9 +29,6 @@ public:
   ~BoundaryCondition_new();
   /** @brief Interface for the input file and set constants */ 
   void problemSetup();
-  /** @brief Schedular for setting the boundary condition */ 
-  int scheduleSetBC( const LevelP& level,
-			                SchedulerP& sched );
   /** @brief This method sets the boundary value of a scalar to 
              a value such that the interpolated value on the face results
              in the actual boundary condition. */   
@@ -54,12 +51,6 @@ public:
     const Patch* patch,
     CCVariable<Vector>& vec, constCCVariable<Vector>& const_vec, 
     string varname );
-  /** @brief Actually set the boundary conditions.  I think this won't be used */ 
-  void setBC( const ProcessorGroup* ,
-		          const PatchSubset* patches,
-		          const MaterialSubset*,
-              DataWarehouse* old_dw,
-  	          DataWarehouse* new_dw );
 
   // The stuff below needs better commenting when I have this figured out. 
   /* --------------------------------------------------------------------- 

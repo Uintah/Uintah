@@ -26,38 +26,6 @@ BoundaryCondition_new::~BoundaryCondition_new()
 void BoundaryCondition_new::problemSetup()
 {}
 //---------------------------------------------------------------------------
-// Method: Schedule the assignment of boundary conditions 
-//---------------------------------------------------------------------------
-int BoundaryCondition_new::scheduleSetBC( const LevelP& level,
-    SchedulerP& sched )
-{
-  string taskname = "BoundaryCondition_new::setBC"; 
-  Task* tsk = scinew Task(taskname, this, &BoundaryCondition_new::setBC);
-
-  sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
-
-}
-//---------------------------------------------------------------------------
-// Method: Actually set the boundary condition 
-//---------------------------------------------------------------------------
-void BoundaryCondition_new::setBC( const ProcessorGroup* pc,
-    const PatchSubset* patches,
-    const MaterialSubset*,
-    DataWarehouse* old_dw,
-    DataWarehouse* new_dw)
-{
-  //patch loop 
-  for (int p = 0; p < patches->size(); p++) {
-
-    const Patch* patch = patches->get(p);
-    int matlIndex = 0; //d_fieldLabels->d_sharedState->getArchesMaterial(0)->getDWIndex(); 
-
-    //string varname = "temperature";
-    //setScalarValueBC( pc, patch, temperature, varname );
-
-  }
-}
-//---------------------------------------------------------------------------
 // Method: Set Scalar BC values 
 //---------------------------------------------------------------------------
 void BoundaryCondition_new::setScalarValueBC( const ProcessorGroup*,
