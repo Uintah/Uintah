@@ -99,30 +99,6 @@ ConstantModel::initVars( const ProcessorGroup * pc,
                          DataWarehouse        * new_dw )
 {
   for( int p=0; p < patches->size(); p++ ) {  // Patch loop
-    
-    //Ghost::GhostType  gaf = Ghost::AroundFaces;
-    //Ghost::GhostType  gac = Ghost::AroundCells;
-    Ghost::GhostType  gn  = Ghost::None;
-
-    const Patch* patch = patches->get(p);
-    int archIndex = 0;
-    int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
-
-    CCVariable<double> model;
-    CCVariable<double> gasSource;
-    
-    constCCVariable<double> oldModel;
-    constCCVariable<double> oldGasSource;
-
-    new_dw->allocateAndPut( model,     d_modelLabel, matlIndex, patch );
-    new_dw->allocateAndPut( gasSource, d_gasLabel,   matlIndex, patch ); 
-
-    old_dw->get( oldModel,     d_modelLabel, matlIndex, patch, gn, 0 );
-    old_dw->get( oldGasSource, d_gasLabel,   matlIndex, patch, gn, 0 );
-    
-    model.copyData(oldModel);
-    gasSource.copyData(oldGasSource);
-
   }
 }
 

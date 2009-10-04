@@ -56,8 +56,9 @@ KobayashiSarofimDevol::KobayashiSarofimDevol( std::string modelName,
   alpha_o = 0.91;     // initial mass fraction of raw coal
   c_o     = 3.90e-11; // initial mass of raw coal
 
-  Y1_ = 1.0;
-  Y2_ = 0.4;
+  // aren't these backwards? (descriptions are from LES_Coal document)
+  Y1_ = 1.0; // volatile fraction from proximate analysis
+  Y2_ = 0.4; // fraction devolatilized at higher temperatures (often near unity)
 
   d_quad_node = qn;
   
@@ -378,10 +379,10 @@ KobayashiSarofimDevol::sched_computeModel( const LevelP& level, SchedulerP& sche
           std::string errmsg = "ARCHES: KobayashiSarofimDevol: Invalid variable given in <variable> tag for KobayashiSarofimDevol model";
           errmsg += "\nCould not find given raw coal mass variable \"";
           errmsg += *iter;
-          errmsg += "\" in EqnFactory or in DQMOMEqnFactory.";
+          errmsg += "\" in DQMOMEqnFactory.";
           throw InvalidValue(errmsg,__FILE__,__LINE__);
         }
-      } //else... we don't need that variable!
+      }
 
     } else {
       // can't find this required variable in the labels-to-roles map!
@@ -421,9 +422,6 @@ KobayashiSarofimDevol::sched_computeModel( const LevelP& level, SchedulerP& sche
 
   } //end for
   */
-
-  // also need to track coal gas mixture fraction for visualization
-  // "modify" source term for coal gas mixture fraction here...
 
   sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials()); 
 
@@ -474,10 +472,10 @@ KobayashiSarofimDevol::computeModel( const ProcessorGroup * pc,
     }
     
     constCCVariable<double> wa_raw_coal_mass;
-    new_dw->get( wa_raw_coal_mass, d_raw_coal_mass_label, matlIndex, patch, gn, 0 );
+    old_dw->get( wa_raw_coal_mass, d_raw_coal_mass_label, matlIndex, patch, gn, 0 );
 
     constCCVariable<double> weight;
-    new_dw->get( weight, d_weight_label, matlIndex, patch, gn, 0 );
+    old_dw->get( weight, d_weight_label, matlIndex, patch, gn, 0 );
 
     for (CellIterator iter=patch->getCellIterator__New(); !iter.done(); iter++){
 
@@ -498,14 +496,14 @@ KobayashiSarofimDevol::computeModel( const ProcessorGroup * pc,
 
         double raw_coal_mass = wa_raw_coal_mass[c] / weight[c];
         double testVal = -1.0*(k1+k2)*(raw_coal_mass);  
-        if (testVal < 0.0)
+        if (testVal < -1.0e-16 )
           devol_rate[c] = -1.0*(k1+k2)*(raw_coal_mass);  
         else 
           devol_rate[c] = 0.0;
 
         testVal = (Y1_*k1 + Y2_*k2)*wa_raw_coal_mass[c]*d_rc_scaling_factor*d_w_scaling_factor; 
         //testVal uses the weighted abscissa so that the gas source is from all (total) particles
-        if (testVal > 0.0)
+        if (testVal > 1.0e-16 )
           gas_devol_rate[c] = testVal; 
         else 
           gas_devol_rate[c] = 0.0;

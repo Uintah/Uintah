@@ -104,9 +104,7 @@ HeatTransfer::problemSetup(const ProblemSpecP& params, int qn)
     // user specifies "role" of each internal coordinate
     // if it isn't an internal coordinate or a scalar, it's required explicitly
     // ( see comments in Arches::registerModels() for details )
-    if( role_name == "gas_temperature" ) {
-      // tempIN will be required explicitly
-    } else if ( role_name == "particle_length" 
+    if ( role_name == "particle_length" 
              || role_name == "raw_coal_mass"
              || role_name == "particle_temperature" ) {
       LabelToRoleMap[temp_label_name] = role_name;
@@ -120,6 +118,49 @@ HeatTransfer::problemSetup(const ProblemSpecP& params, int qn)
     db->getWithDefault( "high_clip", d_highModelClip, 999999 );
  
   }
+
+
+  // Look for required scalars
+  //   ( Kobayashi-Sarofim model doesn't use any extra scalars (yet)
+  //     but if it did, this "for" loop would have to be un-commented )
+  /*
+  ProblemSpecP db_scalarvars = params->findBlock("scalarVars");
+  for( ProblemSpecP variable = db_scalarvars->findBlock("variable");
+       variable != 0; variable = variable->findNextBlock("variable") ) {
+
+    string label_name;
+    string role_name;
+    string temp_label_name;
+
+    variable->getAttribute("label", label_name);
+    variable->getAttribute("role",  role_name);
+
+    temp_label_name = label_name;
+
+    string node;
+    std::stringstream out;
+    out << qn;
+    node = out.str();
+    temp_label_name += "_qn";
+    temp_label_name += node;
+
+    // user specifies "role" of each scalar
+    // if it isn't an internal coordinate or a scalar, it's required explicitly
+    // ( see comments in Arches::registerModels() for details )
+    if ( role_name == "raw_coal_mass") {
+      LabelToRoleMap[temp_label_name] = role_name;
+    } else if( role_name == "particle_temperature" ) {  
+      LabelToRoleMap[temp_label_name] = role_name;
+      compute_part_temp = true;
+    } else {
+      std::string errmsg;
+      errmsg = "Invalid variable role for Kobayashi Sarofim Devolatilization model: must be \"particle_temperature\" or \"raw_coal_mass\", you specified \"" + role_name + "\".";
+      throw InvalidValue(errmsg,__FILE__,__LINE__);
+    }
+
+  }
+  */
+
 
   // fix the d_icLabels to point to the correct quadrature node (since there is 1 model per quad node)
   for ( vector<std::string>::iterator iString = d_icLabels.begin(); 
@@ -334,11 +375,12 @@ HeatTransfer::sched_computeModel( const LevelP& level, SchedulerP& sched, int ti
   d_w_scaling_factor = weight_eqn.getScalingConstant();
   tsk->requires(Task::OldDW, d_weight_label, Ghost::None, 0);
   
-  // also require paticle velocity, gas velocity, and density
+  // also require paticle velocity, gas velocity, gas temperature, and density
   ArchesLabel::PartVelMap::const_iterator iQuad = d_fieldLabels->partVel.find(d_quad_node);
   tsk->requires(Task::OldDW, iQuad->second, Ghost::None, 0);
   tsk->requires( Task::OldDW, d_fieldLabels->d_newCCVelocityLabel, Ghost::None, 0);
   tsk->requires(Task::OldDW, d_fieldLabels->d_densityCPLabel, Ghost::None, 0);
+    tsk->requires(Task::OldDW, d_fieldLabels->d_tempINLabel, Ghost::AroundCells, 1);
  
   if(d_radiation){
     tsk->requires(Task::OldDW, d_fieldLabels->d_radiationSRCINLabel,  Ghost::None, 0);
@@ -357,12 +399,8 @@ HeatTransfer::sched_computeModel( const LevelP& level, SchedulerP& sched, int ti
 
     map<string, string>::iterator iMap = LabelToRoleMap.find(*iter);
     
-    tsk->requires(Task::OldDW, d_fieldLabels->d_tempINLabel, Ghost::AroundCells, 1);
-
     if( iMap != LabelToRoleMap.end() ) {
-      if( iMap->second == "gas_temperature") {
-        // automatically use Arches' temperature label if role="temperature"
-      } else if ( iMap->second == "particle_temperature") {
+      if ( iMap->second == "particle_temperature") {
         if( dqmom_eqn_factory.find_scalar_eqn(*iter) ) {
           EqnBase& t_current_eqn = dqmom_eqn_factory.retrieve_scalar_eqn(*iter);
           DQMOMEqn& current_eqn = dynamic_cast<DQMOMEqn&>(t_current_eqn);
@@ -401,7 +439,7 @@ HeatTransfer::sched_computeModel( const LevelP& level, SchedulerP& sched, int ti
           tsk->requires(Task::OldDW, d_raw_coal_mass_label, Ghost::None, 0);
         } else {
           std::string errmsg = "ARCHES: HeatTransfer: Invalid variable given in <ICVars> block, for <variable> tag for HeatTransfer model.";
-          errmsg += "\nCould not find given coal mass fraction variable \"";
+          errmsg += "\nCould not find given raw coal mass variable \"";
           errmsg += *iter;
           errmsg += "\" in DQMOMEqnFactory.";
           throw InvalidValue(errmsg,__FILE__,__LINE__);
@@ -518,7 +556,7 @@ HeatTransfer::computeModel( const ProcessorGroup * pc,
  
     constCCVariable<double> radiationSRCIN;
     constCCVariable<double> abskgIN;
-    CCVariable<double> enthNonLinSrc;
+    //CCVariable<double> enthNonLinSrc;
 
     if(d_radiation){
       old_dw->get(radiationSRCIN, d_fieldLabels->d_radiationSRCINLabel, matlIndex, patch, gn, 0);
@@ -526,15 +564,18 @@ HeatTransfer::computeModel( const ProcessorGroup * pc,
     }
 
     constCCVariable<double> temperature;
-    constCCVariable<double> w_particle_temperature;
-    constCCVariable<double> w_particle_length;
-    //constCCVariable<double> w_mass_raw_coal;
-    constCCVariable<double> weight;
-
     old_dw->get( temperature, d_fieldLabels->d_tempINLabel, matlIndex, patch, gac, 1 );
+
+    constCCVariable<double> w_particle_temperature;
     old_dw->get( w_particle_temperature, d_particle_temperature_label, matlIndex, patch, gn, 0 );
+
+    constCCVariable<double> w_particle_length;
     old_dw->get( w_particle_length, d_particle_length_label, matlIndex, patch, gn, 0 );
+
+    //constCCVariable<double> w_mass_raw_coal;
     //old_dw->get( w_mass_raw_coal, d_raw_coal_mass_label, matlIndex, patch, gn, 0 );
+
+    constCCVariable<double> weight;
     old_dw->get( weight, d_weight_label, matlIndex, patch, gn, 0 );
 
     for (CellIterator iter=patch->getCellIterator__New(); !iter.done(); iter++){
@@ -551,7 +592,13 @@ HeatTransfer::computeModel( const ProcessorGroup * pc,
 	    double length;
 	    double particle_temperature;
 
-      if (weight[c] < d_w_small ) { 
+// ****** ARCHES KLUDGE ******  inserted 10/03/2009
+
+      //if (weight[c] < d_w_small ) {  // if you use this one, temperature blows up everywhere
+                                       // (the smaller d_w_small, the bigger the blow-up)
+      if( weight[c] < 1e-4 ) {
+
+//  ****** END KLUDGE ******
         heat_rate[c] = 0.0;
         length = 0.0;
         particle_temperature = 0.0;
@@ -571,7 +618,9 @@ HeatTransfer::computeModel( const ProcessorGroup * pc,
         double Re  = abs(sphGas.z() - sphPart.z())*length*den[c]/visc;
 
         double Nu = 2.0 + 0.6*pow(Re,0.5)*pow(Pr,0.333); // Nusselt number
+// ****** FIXME ******
         double rhop = 1000.0; // [=] kg/m^3 : Density of particle
+// ****** END FIXME ******
         double cp = 3000.0; // [=] J/(kg-K) : heat capacity
         double m_p = rhop*4.0/3.0*pi*pow(length/2.0,3.0); // [=] kg : mass of particle
         double Qconv = Nu*pi*blow*rkg*length*(temperature[c]-particle_temperature);
