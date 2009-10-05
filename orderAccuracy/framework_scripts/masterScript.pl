@@ -127,8 +127,8 @@ system("which sus") == 0 ||  die("Cannot find the command sus $@");
      if (! -e $fw_path."/".$upsFile || 
          ! -e $fw_path."/".$tstFile ){
        print "\n \nERROR:setupFrameWork:\n";
-       print "The ups file: \n \t $fw_path."/".upsFile \n"; 
-       print "or the tst file: \n \t $fw_path."/".$tstFile \n";
+       print "The ups file: \n \t $fw_path/$upsFile \n"; 
+       print "or the tst file: \n \t $fw_path/$tstFile \n";
        print "doesn't exist.  Now exiting\n";
        exit
      }
