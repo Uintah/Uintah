@@ -15,7 +15,6 @@
 //===========================================================================
 
 /* NOTE: abskp is thermal conductivity */
-
 using namespace std;
 using namespace Uintah; 
 
@@ -165,7 +164,6 @@ HeatTransfer::problemSetup(const ProblemSpecP& params, int qn)
   // fix the d_icLabels to point to the correct quadrature node (since there is 1 model per quad node)
   for ( vector<std::string>::iterator iString = d_icLabels.begin(); 
         iString != d_icLabels.end(); ++iString) {
-    
     string temp_ic_name;
     string temp_ic_name_full;
 
@@ -378,14 +376,15 @@ HeatTransfer::sched_computeModel( const LevelP& level, SchedulerP& sched, int ti
   // also require paticle velocity, gas velocity, gas temperature, and density
   ArchesLabel::PartVelMap::const_iterator iQuad = d_fieldLabels->partVel.find(d_quad_node);
   tsk->requires(Task::OldDW, iQuad->second, Ghost::None, 0);
-  tsk->requires( Task::OldDW, d_fieldLabels->d_newCCVelocityLabel, Ghost::None, 0);
+  tsk->requires(Task::OldDW, d_fieldLabels->d_newCCVelocityLabel, Ghost::None, 0);
   tsk->requires(Task::OldDW, d_fieldLabels->d_densityCPLabel, Ghost::None, 0);
-    tsk->requires(Task::OldDW, d_fieldLabels->d_tempINLabel, Ghost::AroundCells, 1);
+  tsk->requires(Task::OldDW, d_fieldLabels->d_tempINLabel, Ghost::AroundCells, 1);
  
   if(d_radiation){
     tsk->requires(Task::OldDW, d_fieldLabels->d_radiationSRCINLabel,  Ghost::None, 0);
     tsk->requires(Task::OldDW, d_fieldLabels->d_abskgINLabel,  Ghost::None, 0);   
   }
+
 
   // For each required variable, determine what role it plays
   // - "gas_temperature" - require the "tempIN" label
@@ -510,7 +509,7 @@ HeatTransfer::computeModel( const ProcessorGroup * pc,
     int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
 
     CCVariable<double> heat_rate;
-    if ( new_dw->exists( d_modelLabel, matlIndex, patch) ) {
+    if( new_dw->exists( d_modelLabel, matlIndex, patch) ) {
       new_dw->getModifiable( heat_rate, d_modelLabel, matlIndex, patch ); 
     } else {
       new_dw->allocateAndPut( heat_rate, d_modelLabel, matlIndex, patch );
@@ -563,8 +562,8 @@ HeatTransfer::computeModel( const ProcessorGroup * pc,
       old_dw->get(abskgIN,        d_fieldLabels->d_abskgINLabel,        matlIndex, patch, gn, 0);
     }
 
-    constCCVariable<double> temperature;
-    old_dw->get( temperature, d_fieldLabels->d_tempINLabel, matlIndex, patch, gac, 1 );
+    constCCVariable<double> gas_temperature;
+    old_dw->get( gas_temperature, d_fieldLabels->d_tempINLabel, matlIndex, patch, gac, 1 );
 
     constCCVariable<double> w_particle_temperature;
     old_dw->get( w_particle_temperature, d_particle_temperature_label, matlIndex, patch, gn, 0 );
@@ -602,7 +601,7 @@ HeatTransfer::computeModel( const ProcessorGroup * pc,
         heat_rate[c] = 0.0;
         length = 0.0;
         particle_temperature = 0.0;
-        smoothTfield[c] = temperature[c];
+        smoothTfield[c] = gas_temperature[c];
       } else {
 	      length = w_particle_length[c]*d_pl_scaling_factor/weight[c];
 	      particle_temperature = w_particle_temperature[c]*d_pt_scaling_factor/weight[c];
@@ -612,7 +611,17 @@ HeatTransfer::computeModel( const ProcessorGroup * pc,
         double blow = 1.0;
         double sigma = 5.67e-8; // [=] J/(s-m^2-K^4) : Stefan-Boltzmann constant from white book p. 354
 
-        double rkg = 0.03; // [=] J/(s-m^2-K) : thermal conductivity of gas
+        double rkg; // [=] W/(m-K) : thermal conductivity of gas 
+                    // (values are from Yos 1963, "Transport properties of nitrogen, hydrogen, oxygen, and air to 30,000 K", p.49 and p.68)
+        if( gas_temperature[c] < 1500 ) {
+          rkg = 0.0690;
+        } else if( gas_temperature[c] >= 1500 && gas_temperature[c] < 2500 ) {
+          rkg = 0.121;
+        } else if( gas_temperature[c] >= 2500 ) {
+          rkg = 0.383;
+        } else {
+          rkg = 0.0;
+        }
         double visc = 2.0e-5; // [=] m^2/s : viscosity of gas
 
         double Re  = abs(sphGas.z() - sphPart.z())*length*den[c]/visc;
@@ -621,9 +630,11 @@ HeatTransfer::computeModel( const ProcessorGroup * pc,
 // ****** FIXME ******
         double rhop = 1000.0; // [=] kg/m^3 : Density of particle
 // ****** END FIXME ******
-        double cp = 3000.0; // [=] J/(kg-K) : heat capacity
+        
+        //double cp = 3000.0; // [=] J/(kg-K) : heat capacity
+        double cp = 1500.0; // [=] J/(kg-K) : heat capacity (new value of 1500 recommended by Julien as more realistic)
         double m_p = rhop*4.0/3.0*pi*pow(length/2.0,3.0); // [=] kg : mass of particle
-        double Qconv = Nu*pi*blow*rkg*length*(temperature[c]-particle_temperature);
+        double Qconv = Nu*pi*blow*rkg*length*(gas_temperature[c]-particle_temperature);
 
 	      // Radiative transfer
 	      double Qrad = 0.0;
@@ -638,7 +649,7 @@ HeatTransfer::computeModel( const ProcessorGroup * pc,
 	          double Qabs = 0.8;
 	          double Apsc = (pi/4)*Qabs*pow(length/2,2);
 	          double Eb = 4.0*sigma*pow(particle_temperature,4);
-	          double Eg = 4.0*sigma*abskgIN[c]*pow(temperature[c],4);
+	          double Eg = 4.0*sigma*abskgIN[c]*pow(gas_temperature[c],4);
 
 	          Qrad = Apsc*((radiationSRCIN[c]+ Eg)/abskgIN[c] - Eb);
 	          abskp[c] = pi/4*Qabs*weight[c]*pow(length,2);
