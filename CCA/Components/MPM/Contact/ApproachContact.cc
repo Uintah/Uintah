@@ -120,7 +120,6 @@ void ApproachContact::exMomInterpolated(const ProcessorGroup*,
     Vector dx = patch->dCell();
     double cell_vol = dx.x()*dx.y()*dx.z();
     constNCVariable<double> NC_CCweight;
-    NCVariable<double> NC_CCweight_new;
     old_dw->get(NC_CCweight,         lb->NC_CCweightLabel,  0, patch, gnone, 0);
 
     ParticleInterpolator* interpolator = flag->d_interpolator->clone(patch);
@@ -357,10 +356,7 @@ void ApproachContact::exMomIntegrated(const ProcessorGroup*,
     Vector dx = patch->dCell();
     double cell_vol = dx.x()*dx.y()*dx.z();
     constNCVariable<double> NC_CCweight;
-    NCVariable<double> NC_CCweight_new;
     old_dw->get(NC_CCweight,         lb->NC_CCweightLabel,  0, patch, gnone, 0);
-    new_dw->allocateAndPut(NC_CCweight_new, lb->NC_CCweightLabel,0,patch);
-    NC_CCweight_new.copyData(NC_CCweight);
 
     // Retrieve necessary data from DataWarehouse
     for(int m=0;m<matls->size();m++){

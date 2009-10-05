@@ -235,7 +235,7 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
       }
     }  // loop over matls
 
-#if 1
+#if 0
     for(NodeIterator iter = patch->getNodeIterator__New(); !iter.done();iter++){
       IntVector c = *iter;
       Vector centerOfMassMom(0.,0.,0.);
@@ -531,7 +531,8 @@ void FrictionContact::exMomIntegrated(const ProcessorGroup*,
                 Vector epsilon=(Dv/dx)*delT;
                 double epsilon_max=
                   Max(fabs(epsilon.x()),fabs(epsilon.y()),fabs(epsilon.z()));
-                epsilon_max_max=max(epsilon_max,epsilon_max_max);
+//                epsilon_max_max=max(epsilon_max,epsilon_max_max);
+#if 1
                 if(!compare(epsilon_max,0.0)){
                   epsilon_max *=Max(1.0, mass/(centerOfMassMass-mass));
 
@@ -540,9 +541,10 @@ void FrictionContact::exMomIntegrated(const ProcessorGroup*,
                   double ff=Min(epsilon_max,.5)/epsilon_max;
                   Dv=Dv*ff;
                 }
+#endif
                 Dv=scale_factor*Dv;
                 gvelocity_star[n][c]+=Dv;
-                Dv=Dv/delT;
+//                Dv=Dv/delT;
               } // traction
             }   // if !compare && !compare
           }     // for numMatls
