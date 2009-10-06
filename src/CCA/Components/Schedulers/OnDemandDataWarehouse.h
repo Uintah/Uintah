@@ -327,6 +327,7 @@ private:
            Ghost::GhostType gtype, int numGhostCells);
 
 
+  inline Task::WhichDW getWhichDW();
   // These will throw an exception if access is not allowed for the
   // curent task.
   inline void checkGetAccess(const VarLabel* label, int matlIndex,
