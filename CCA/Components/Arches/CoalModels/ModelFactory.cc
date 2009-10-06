@@ -1,5 +1,6 @@
 #include <CCA/Components/Arches/CoalModels/ModelFactory.h>
 #include <CCA/Components/Arches/CoalModels/ModelBase.h> 
+#include <Core/Exceptions/InvalidValue.h>
 #include <sstream>
 #include <iostream>
 #include <stdexcept>
@@ -48,10 +49,9 @@ ModelFactory::register_model( const std::string name,
     i = builders_.insert( std::make_pair(name,builder) ).first;
   }
   else{
-    std::ostringstream errmsg;
-    std::cout << "ERROR: A duplicate ModelBuilder object was loaded: " << std::endl
-     << "       " << name << ".  This is forbidden." << std::endl;
-    throw std::runtime_error( errmsg.str() );
+    std::string errmsg = "ERROR: Arches: ModelFactory: A duplicate ModelBuilder object was loaded:\n";
+    errmsg += "\t\t" + name + ". This is forbidden.\n";
+    throw InvalidValue(errmsg,__FILE__,__LINE__);
   }
 }
 //---------------------------------------------------------------------------
@@ -67,9 +67,8 @@ ModelFactory::retrieve_model( const std::string name )
   const BuildMap::iterator ibuilder = builders_.find( name );
 
   if( ibuilder == builders_.end() ){
-    std::ostringstream errmsg;
-    errmsg << "ERROR: No model registered for " << name << std::endl;
-    throw std::runtime_error( errmsg.str() );
+    std::string errmsg = "ERROR: Arches: ModelFactory: No model registered for " + name + "\n";
+    throw InvalidValue(errmsg,__FILE__,__LINE__);
   }
 
   ModelBuilder* builder = ibuilder->second;
