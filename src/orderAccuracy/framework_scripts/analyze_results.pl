@@ -67,8 +67,13 @@ for ($k = $startLoop; $k<=$endLoop; $k++){
   #__________________________________
   # bulletproofing
   my @stripped_cmd = split(/ /,$compUtil_cmd[$k]);  # remove command options
-  system("which $stripped_cmd[0] >& /dev/null")==0 or die("ERROR(analyze_Analysis.pl): \tThe comparison script/command ($compUtil_cmd) could not be found\n");
-
+  if (! -e $stripped_cmd[0] ){
+    print "\n\n__________________________________\n";
+    print "ERROR:analyze_results:\n";
+    print "The comparison utility: $stripped_cmd[0]";
+    print " doesn't exist.  Now exiting\n\n\n";
+    die
+  }
   #__________________________________
   # Run the comparison tests
   my $comp_output = "out.$x[$k].cmp";
