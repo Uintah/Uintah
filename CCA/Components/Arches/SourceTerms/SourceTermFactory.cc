@@ -1,5 +1,6 @@
 #include <CCA/Components/Arches/SourceTerms/SourceTermFactory.h>
 #include <CCA/Components/Arches/SourceTerms/SourceTermBase.h> 
+#include <Core/Exceptions/InvalidValue.h>
 #include <sstream>
 #include <iostream>
 #include <stdexcept>
@@ -48,10 +49,9 @@ SourceTermFactory::register_source_term( const std::string name,
     i = builders_.insert( std::make_pair(name,builder) ).first;
   }
   else{
-    std::ostringstream errmsg;
-    std::cout << "ERROR: A duplicate SourceTermBuilder object was loaded: " << std::endl
-     << "       " << name << ".  This is forbidden." << std::endl;
-    throw std::runtime_error( errmsg.str() );
+    string errmsg = "ERROR: Arches: SourceTermBuilder: A duplicate SourceTermBuilder object was loaded on equation\n";
+    errmsg += "\t\t " + name + ". This is forbidden.\n";
+    throw InvalidValue(errmsg,__FILE__,__LINE__);
   }
 }
 //---------------------------------------------------------------------------
@@ -67,9 +67,8 @@ SourceTermFactory::retrieve_source_term( const std::string name )
   const BuildMap::iterator ibuilder = builders_.find( name );
 
   if( ibuilder == builders_.end() ){
-    std::ostringstream errmsg;
-    errmsg << "ERROR: No source term registered for " << name << std::endl;
-    throw std::runtime_error( errmsg.str() );
+    string errmsg = "ERROR: Arches: SourceTermBuilder: No source term registered for " + name + "\n";
+    throw InvalidValue(errmsg,__FILE__,__LINE__);
   }
 
   SourceTermBuilder* builder = ibuilder->second;
