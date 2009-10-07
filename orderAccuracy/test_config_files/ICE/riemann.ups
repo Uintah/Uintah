@@ -6,7 +6,7 @@
 <!--Please use a consistent set of units, (mks, cgs,...)-->
 
    <Meta>
-       <title>shock tube</title>
+       <title>test1</title>
    </Meta>    
 
    <SimulationComponent type="ice" />
@@ -15,11 +15,11 @@
     <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
    <Time>
-       <maxTime>            0.0005      </maxTime>
+       <maxTime>            0.2      </maxTime>
        <initTime>           0.0         </initTime>
        <delt_min>           0.0         </delt_min>
        <delt_max>           1.0         </delt_max>
-       <delt_init>          1.0e-6      </delt_init>
+       <delt_init>          1.0e-8      </delt_init>
        <timestep_multiplier>1.0         </timestep_multiplier>
        <end_on_max_time_exactly>true</end_on_max_time_exactly>
    </Time>
@@ -32,7 +32,7 @@
         <BCType id = "0"   label = "Pressure"     var = "Neumann">
                               <value> 0. </value>
         </BCType>
-        <BCType id = "0"   label = "Velocity"     var = "Dirichlet">
+        <BCType id = "0"   label = "Velocity"     var = "Neumann">
                               <value> [0.,0.,0.] </value>
         </BCType>
         <BCType id = "0"   label = "Temperature"  var = "Neumann">
@@ -93,8 +93,8 @@
     <!--      O  U  P  U  T     V  A  R  I  A  B  L  E  S                   -->
     <!--____________________________________________________________________-->
     <DataArchiver>
-      <filebase>shockTube.uda</filebase>
-      <outputInterval> 0.0005 </outputInterval>
+      <filebase>test1.uda</filebase>
+      <outputInterval> 0.1 </outputInterval>
       <save label="delP_Dilatate"/>
       <save label="press_CC"/>
       <save label="rho_CC"/>
@@ -107,9 +107,9 @@
     <!--    I  C  E     P  A  R  A  M  E  T  E  R  S                        -->
     <!--____________________________________________________________________-->
     <CFD>
-       <cfl>0.25</cfl>
+       <cfl>0.2</cfl>
        <ICE>
-        <advection type = "SecondOrder" />
+        <advection type = "FirstOrder" />
       </ICE>        
     </CFD>
     <!--____________________________________________________________________-->
@@ -129,7 +129,7 @@
            <EOS type = "ideal_gas">                     </EOS>
            <dynamic_viscosity>      0.0                 </dynamic_viscosity>
            <thermal_conductivity>   0.0                 </thermal_conductivity>
-           <specific_heat>          717.5               </specific_heat>
+           <specific_heat>          1                   </specific_heat>
            <gamma>                  1.4                  </gamma>
            <geom_object>
              <difference>
@@ -139,15 +139,15 @@
                 </box> 
                 
                 <box label="rightpartition">          
-                    <min>           [ 0.5,-1.0, -1.0 ]   </min>
+                    <min>           [ 0.3,-1.0, -1.0 ]   </min>
                     <max>           [ 2.0, 2.0,  2.0 ]   </max>
                 </box>
               </difference>
                <res>                  [2,2,2]            </res>
-               <velocity>       [0.0,0.0,0.0]           </velocity>
-               <temperature>    300.0                   </temperature>
-               <density>        1.1768292682926831000   </density>
-               <pressure>       101325.0                </pressure>
+               <velocity>       [0.75,0.0,0.0]           </velocity>
+               <temperature>    2.5                      </temperature>
+               <density>        1.0                      </density>
+               <pressure>       1.0                      </pressure>
            </geom_object>
            
            
@@ -155,9 +155,9 @@
                 <box label="rightpartition">            </box>
                 <res>           [2,2,2]                 </res>
                <velocity>       [0.0,0.0,0.0]           </velocity>
-               <temperature>    300.0                   </temperature>
-               <density>        .11768292682926831000   </density>
-               <pressure>       10132.50                </pressure>
+               <temperature>    2.0                     </temperature>
+               <density>        0.125                    </density>
+               <pressure>       0.1                     </pressure>
            </geom_object>
          </material>
       </ICE>       

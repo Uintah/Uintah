@@ -4,7 +4,7 @@
 
 <gnuplot>
   <script>plotScript.gp</script>s
-  <title>ICE:Riemann Problem X dir</title>
+  <title>ICE:Riemann Problem (test 1) X dir</title>
   <ylabel>Error</ylabel>
   <xlabel>Resolution</xlabel>
 </gnuplot>
@@ -41,18 +41,18 @@
       <resolution>   [400,1,1]          </resolution>
     </replace_lines>
 </Test>
-<!--
+
 <Test>
     <Title>800</Title>
     <sus_cmd>sus </sus_cmd>
     <Study>Res.Study</Study>
-    <compare_cmd>compare_Riemann2.m -test 1 -pDir 1 -var press_CC -mat 0</compare_cmd>
+    <compare_cmd>compare_Riemann.m -test 1 -pDir 1 -var press_CC -mat 0</compare_cmd>
     <x>800</x>
     <replace_lines>
       <resolution>   [800,1,1]          </resolution>
     </replace_lines>
 </Test>
-
+<!--
 <Test>
     <Title>1600</Title>
     <sus_cmd>sus </sus_cmd>
