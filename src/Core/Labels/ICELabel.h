@@ -44,7 +44,6 @@ namespace Uintah {
       ~ICELabel();
 
     const VarLabel* delTLabel;
-    const VarLabel* doMechLabel;
     const VarLabel* NeedAddIceMaterialLabel;
 
     // Cell centered variables
