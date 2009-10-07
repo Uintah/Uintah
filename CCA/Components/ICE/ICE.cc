@@ -1885,12 +1885,15 @@ void ICE::scheduleTestConservation(SchedulerP& sched,
  Function~  ICE::actuallyComputeStableTimestep--
 _____________________________________________________________________*/
 void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,  
-                                    const PatchSubset* patches,
-                                    const MaterialSubset* /*matls*/,
-                                    DataWarehouse* /*old_dw*/,
-                                    DataWarehouse* new_dw)
+                                        const PatchSubset* patches,
+                                        const MaterialSubset* /*matls*/,
+                                        DataWarehouse* /*old_dw*/,
+                                        DataWarehouse* new_dw)
 {
+  double delt;
+  delt = 1000;
   const Level* level = getLevel(patches);
+  
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     cout_doing << d_myworld->myrank() << " Doing Compute Stable Timestep on patch " << patch->getID() 
@@ -1902,7 +1905,6 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
     double delZ = dx.z();
     double delt_CFL;
     double delt_diff;
-    double delt;
     double inv_sum_invDelx_sqr = 1.0/( 1.0/(delX * delX) 
                                      + 1.0/(delY * delY) 
                                      + 1.0/(delZ * delZ) );
@@ -1913,10 +1915,8 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
     Ghost::GhostType  gac = Ghost::AroundCells;
 
     IntVector badCell(0,0,0);
-    double dCFL = d_CFL;
     delt_CFL  = 1000.0; 
     delt_diff = 1000;
-    delt      = 1000;
 
     for (int m = 0; m < d_sharedState->getNumICEMatls(); m++) {
       Material* matl = d_sharedState->getICEMaterial(m);
@@ -1934,11 +1934,11 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
         for(CellIterator iter=patch->getCellIterator__New(); !iter.done(); iter++){
           IntVector c = *iter;
           double speed_Sound = d_delT_knob * speedSound[c];
-          double A = dCFL*delX/(speed_Sound + 
+          double A = d_CFL*delX/(speed_Sound + 
                                        fabs(vel_CC[c].x())+d_SMALL_NUM);
-          double B = dCFL*delY/(speed_Sound + 
+          double B = d_CFL*delY/(speed_Sound + 
                                        fabs(vel_CC[c].y())+d_SMALL_NUM);
-          double C = dCFL*delZ/(speed_Sound + 
+          double C = d_CFL*delZ/(speed_Sound + 
                                        fabs(vel_CC[c].z())+d_SMALL_NUM);
           delt_CFL = std::min(A, delt_CFL);
           delt_CFL = std::min(B, delt_CFL);
@@ -2055,7 +2055,6 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
       }  
     }  // matl loop   
 
-    const Level* level = getLevel(patches);
     //__________________________________
     //  Bullet proofing
     if(delt < 1e-20) { 
@@ -2064,8 +2063,8 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
            << "):ComputeStableTimestep: delT < 1e-20 on cell " << badCell;
       throw InvalidValue(warn.str(), __FILE__, __LINE__);
     }
-    new_dw->put(delt_vartype(delt), lb->delTLabel, level);
   }  // patch loop
+  new_dw->put(delt_vartype(delt), lb->delTLabel, level);
 }
 
 /* _____________________________________________________________________ 
