@@ -109,34 +109,42 @@ system("which sus") == 0 ||  die("Cannot find the command sus $@");
    #   - copy config_files_path_pathig & input files
    my @tests = @{$whatToRun->{test}};
    my $i=0;
+   my $otherFiles = "";
    
    for($i = 0; $i<=$#tests; $i++){
      my $test     = $tests[$i];
      my $testName = $test->{name}[0];
      my $upsFile  = $test->{ups}[0];
      my $tstFile  = $test->{tst}[0];
+     
+     
+     if($test->{otherFilesToCopy}[0] ){ 
+        $otherFiles= $test->{otherFilesToCopy}[0];
+     }
     
      mkdir($testName) || die "ERROR:masterScript.pl:cannot mkdir($testName) $!";
      chdir($testName);
      
      print "\n\n=======================================================================================\n";
-     print "Test Name: $testName, ups File : $upsFile, tst File: $tstFile\n";
+     print "Test Name: $testName, ups File : $upsFile, tst File: $tstFile other Files: $otherFiles\n";
      print "=======================================================================================\n";
      # bulletproofing
      # do these files exist
      if (! -e $fw_path."/".$upsFile || 
-         ! -e $fw_path."/".$tstFile ){
+         ! -e $fw_path."/".$tstFile ||
+         ! -e $fw_path."/".$otherFiles ){
        print "\n \nERROR:setupFrameWork:\n";
        print "The ups file: \n \t $fw_path/$upsFile \n"; 
        print "or the tst file: \n \t $fw_path/$tstFile \n";
-       print "doesn't exist.  Now exiting\n";
+       print "or the other file(s) \n \t $fw_path/$otherFiles \n";
+       print "do not exist.  Now exiting\n";
        exit
      }
      
      # copy the config files to the testing directory
      my $testing_path = $curr_path."/".$component."/".$testName;
      chdir($fw_path);
-     system("cp -f $upsFile $tstFile $testing_path");
+     system("cp -f $upsFile $tstFile $otherFiles $testing_path");
           
      chdir($testing_path);
      
