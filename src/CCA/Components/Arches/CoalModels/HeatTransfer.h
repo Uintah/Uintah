@@ -92,13 +92,19 @@ public:
   inline const bool getRadiationFlag(){
     return d_radiation; };   
 
+  double g1( double z);
+  double heatcp(double Tp, double yelem[5]);
+  double heatap(double Tp);
+  double props(double Tg, double Tp);
+
 private:
 
   const ArchesLabel* d_fieldLabels; 
   
   map<string, string> LabelToRoleMap;
 
-  const VarLabel* d_raw_coal_mass_label;// label for raw coal mass fraction
+  const VarLabel* d_raw_coal_mass_label;// label for raw coal mass
+  const VarLabel* d_ash_mass_label;// label for raw coal mass
   const VarLabel* d_particle_temperature_label;  // label for particle temperature
   const VarLabel* d_particle_length_label;       // label for particle length
   const VarLabel* d_weight_label; // label for DQMOM weight
@@ -108,12 +114,17 @@ private:
                                   //                    gas temperature where there are no particles
 
   bool d_radiation;
+  bool d_ash;
   int d_quad_node;   // store which quad node this model is for
 
   double d_lowModelClip; 
   double d_highModelClip; 
 
+  double visc;
+  double yelem[5];
+  double rhop;
   double d_rc_scaling_factor;
+  double d_ash_scaling_factor;
   double d_pl_scaling_factor;
   double d_pt_scaling_factor;
   double d_w_scaling_factor;
