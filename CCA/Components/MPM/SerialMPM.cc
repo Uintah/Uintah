@@ -337,7 +337,7 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
   t->computes(lb->pStressLabel);
   t->computes(lb->pSizeLabel);
   t->computes(lb->pErosionLabel);
-  t->computes(d_sharedState->get_delt_label());
+  t->computes(d_sharedState->get_delt_label(),level.get_rep());
   t->computes(lb->pCellNAPIDLabel,zeroth_matl);
   t->computes(lb->NC_CCweightLabel,zeroth_matl);
 
@@ -740,7 +740,7 @@ void SerialMPM::scheduleComputeStressTensor(SchedulerP& sched,
     }
   }
 
-  t->computes(d_sharedState->get_delt_label());
+  t->computes(d_sharedState->get_delt_label(),getLevel(patches));
   t->computes(lb->StrainEnergyLabel);
 
   sched->addTask(t, patches, matls);

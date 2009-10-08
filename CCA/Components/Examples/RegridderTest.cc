@@ -117,7 +117,7 @@ namespace Uintah
   void RegridderTest::scheduleComputeStableTimestep ( const LevelP& level, SchedulerP& scheduler )
   {
     Task* task = scinew Task( "computeStableTimestep", this, &RegridderTest::computeStableTimestep );
-    task->computes( d_sharedState->get_delt_label() );
+    task->computes( d_sharedState->get_delt_label(),level.get_rep() );
     scheduler->addTask( task, level->eachPatch(), d_sharedState->allMaterials() );
   }
 

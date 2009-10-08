@@ -112,7 +112,7 @@ void SolverTest1::scheduleComputeStableTimestep(const LevelP& level,
 {
   Task* task = scinew Task("computeStableTimestep",
 			   this, &SolverTest1::computeStableTimestep);
-  task->computes(sharedState_->get_delt_label());
+  task->computes(sharedState_->get_delt_label(),level.get_rep());
   sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
 }
 //__________________________________
@@ -134,11 +134,11 @@ SolverTest1::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
 //__________________________________
 //
 void SolverTest1::computeStableTimestep(const ProcessorGroup*,
-				  const PatchSubset*,
+				  const PatchSubset* pss,
 				  const MaterialSubset*,
 				  DataWarehouse*, DataWarehouse* new_dw)
 {
-  new_dw->put(delt_vartype(delt_), sharedState_->get_delt_label());
+  new_dw->put(delt_vartype(delt_), sharedState_->get_delt_label(),getLevel(pss));
 }
 //__________________________________
 //

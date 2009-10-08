@@ -904,13 +904,21 @@ AMRSimulationController::scheduleComputeStableTimestep( const GridP& grid,
                                                         SchedulerP& sched )
 {
   MALLOC_TRACE_TAG_SCOPE("AMRSimulationController::scheduleComputeStableTimestep()");
+
   for (int i = 0; i < grid->numLevels(); i++) {
     d_sim->scheduleComputeStableTimestep(grid->getLevel(i), sched);
   }
-  Task* task = scinew Task("coarsenDelt", this,
-                           &AMRSimulationController::coarsenDelt);
 
-  task->modifies(d_sharedState->get_delt_label());
+  Task* task = scinew Task("coarsenDelt", this,
+      &AMRSimulationController::coarsenDelt);
+
+  for (int i = 0; i < grid->numLevels(); i++) {
+    //coarsen delt requires each levels delt varaible
+    task->requires(Task::NewDW,d_sharedState->get_delt_label(),grid->getLevel(i).get_rep());
+  }
+
+  //coarse delt computes the global delt variable
+  task->computes(d_sharedState->get_delt_label());
   task->setType(Task::OncePerProc);
   sched->addTask(task, d_lb->getPerProcessorPatchSet(grid), d_sharedState->allMaterials());
 }

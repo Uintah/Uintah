@@ -372,7 +372,7 @@ void ImpMPM::scheduleInitialize(const LevelP& level, SchedulerP& sched)
   if(flags->d_artificial_viscosity){
     t->computes(lb->p_qLabel);        //  only used for imp -> exp transition
   }
-  t->computes(d_sharedState->get_delt_label());
+  t->computes(d_sharedState->get_delt_label(),level.get_rep());
 
   t->computes(lb->pExternalHeatFluxLabel);
 
@@ -785,7 +785,7 @@ void ImpMPM::scheduleComputeStableTimestep(const LevelP& lev,SchedulerP& sched)
   const MaterialSet* matls = d_sharedState->allMPMMaterials();
   t->requires(Task::OldDW,d_sharedState->get_delt_label());
   t->requires(Task::NewDW, lb->pVelocityLabel,   Ghost::None);
-  t->computes(            d_sharedState->get_delt_label());
+  t->computes(            d_sharedState->get_delt_label(),lev.get_rep());
 
   sched->addTask(t,lev->eachPatch(), matls);
 }
@@ -1440,7 +1440,7 @@ void ImpMPM::scheduleRefine(const PatchSet* patches,
   t->computes(lb->pStressLabel);
   t->computes(lb->pCellNAPIDLabel);
   t->computes(lb->pErosionLabel);  //  only used for imp -> exp transition
-  t->computes(d_sharedState->get_delt_label());
+  t->computes(d_sharedState->get_delt_label(),getLevel(patches));
 
   t->computes(lb->pExternalHeatFluxLabel);
 

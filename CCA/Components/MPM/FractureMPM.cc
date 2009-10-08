@@ -178,7 +178,7 @@ void FractureMPM::scheduleInitialize(const LevelP& level,
   t->computes(lb->pDeformationMeasureLabel);
   t->computes(lb->pStressLabel);
   t->computes(lb->pSizeLabel);
-  t->computes(d_sharedState->get_delt_label());
+  t->computes(d_sharedState->get_delt_label(),level.get_rep());
   t->computes(lb->pCellNAPIDLabel,zeroth_matl);
 
   // Debugging Scalar
@@ -532,7 +532,7 @@ void FractureMPM::scheduleComputeStressTensor(SchedulerP& sched,
     cm->addComputesAndRequires(t, mpm_matl, patches);
   }
 
-  t->computes(d_sharedState->get_delt_label());
+  t->computes(d_sharedState->get_delt_label(),getLevel(patches));
   t->computes(lb->StrainEnergyLabel);
 
   sched->addTask(t, patches, matls);

@@ -453,7 +453,7 @@ SpatialOps::scheduleComputeStableTimestep(const LevelP& level,
 
   Task* tsk = scinew Task("SpatialOps::computeStableTimestep",
               this, &SpatialOps::computeStableTimestep);
-  tsk->computes(d_sharedState->get_delt_label());
+  tsk->computes(d_sharedState->get_delt_label(),level.get_rep());
 
   tsk->requires( Task::NewDW, d_fieldLabels->velocityLabels.ccVelocity, Ghost::None, 0 );  
 
@@ -499,7 +499,7 @@ SpatialOps::computeStableTimestep(const ProcessorGroup* ,
     //deltat = 0.1*dx.x()*dx.x()/d_initlambda;
   }
 
-  new_dw->put(delt_vartype(deltat), d_sharedState->get_delt_label());
+  new_dw->put(delt_vartype(deltat), d_sharedState->get_delt_label(),getLevel(patches));
 }
 //---------------------------------------------------------------------------
 // Method: Schedule Time Advance

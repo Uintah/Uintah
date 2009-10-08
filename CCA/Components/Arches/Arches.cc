@@ -813,7 +813,7 @@ Arches::paramInit(const ProcessorGroup* pg,
                   DataWarehouse* new_dw)
 {
     double old_delta_t = 0.0;
-    new_dw->put(delt_vartype(old_delta_t), d_lab->d_oldDeltaTLabel);
+    new_dw->put(delt_vartype(old_delta_t), d_lab->d_oldDeltaTLabel,getLevel(patches));
 
   // ....but will only compute for computational domain
   for (int p = 0; p < patches->size(); p++) {
@@ -1091,7 +1091,7 @@ Arches::scheduleComputeStableTimestep(const LevelP& level,
   tsk->requires(Task::NewDW, d_lab->d_viscosityCTSLabel,  gn,  0);
   tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,      gac, 1);
 
-  tsk->computes(d_sharedState->get_delt_label());
+  tsk->computes(d_sharedState->get_delt_label(),level.get_rep());
   sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
 }
 
@@ -1286,7 +1286,7 @@ Arches::computeStableTimeStep(const ProcessorGroup* ,
     }
 
     //    proc0cout << "time step used: " << delta_t << endl;
-    new_dw->put(delt_vartype(delta_t),  d_sharedState->get_delt_label()); 
+    new_dw->put(delt_vartype(delta_t),  d_sharedState->get_delt_label(),getLevel(patches)); 
   }
 }
 

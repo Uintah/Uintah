@@ -91,7 +91,7 @@ void ParticleTest1::scheduleComputeStableTimestep(const LevelP& level,
 {
   Task* task = scinew Task("computeStableTimestep",
 			   this, &ParticleTest1::computeStableTimestep);
-  task->computes(sharedState_->get_delt_label());
+  task->computes(sharedState_->get_delt_label(),level.get_rep());
   sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
 
 }
@@ -151,12 +151,12 @@ ParticleTest1::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
 }
 
 void ParticleTest1::computeStableTimestep(const ProcessorGroup* /*pg*/,
-				     const PatchSubset* /*patches*/,
+				     const PatchSubset* patches,
 				     const MaterialSubset* /*matls*/,
 				     DataWarehouse*,
 				     DataWarehouse* new_dw)
 {
-  new_dw->put(delt_vartype(1), sharedState_->get_delt_label());
+  new_dw->put(delt_vartype(1), sharedState_->get_delt_label(),getLevel(patches));
 }
 
 void ParticleTest1::initialize(const ProcessorGroup*,
