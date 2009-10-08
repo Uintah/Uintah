@@ -90,7 +90,7 @@ void Burger::scheduleComputeStableTimestep(const LevelP& level,
   Task* task = scinew Task("Burger::computeStableTimestep",
                      this, &Burger::computeStableTimestep);
                      
-  task->computes(sharedState_->get_delt_label());
+  task->computes(sharedState_->get_delt_label(),level.get_rep());
   sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
 }
 //______________________________________________________________________
@@ -111,12 +111,12 @@ void  Burger::scheduleTimeAdvance( const LevelP& level,
 //______________________________________________________________________
 //
 void Burger::computeStableTimestep(const ProcessorGroup*,
-                                   const PatchSubset*,
+                                   const PatchSubset* patches,
                                    const MaterialSubset*,
                                    DataWarehouse*, 
                                    DataWarehouse* new_dw)
 {
-  new_dw->put(delt_vartype(delt_), sharedState_->get_delt_label());
+  new_dw->put(delt_vartype(delt_), sharedState_->get_delt_label(),getLevel(patches));
 }
 
 //______________________________________________________________________

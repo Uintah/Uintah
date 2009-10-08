@@ -852,7 +852,7 @@ void ICE::scheduleComputeStableTimestep(const LevelP& level,
   t->requires(Task::NewDW, lb->sp_vol_CCLabel,   gn,  0, true);   
   t->requires(Task::NewDW, lb->viscosityLabel,   gn,  0, true);        
   
-  t->computes(d_sharedState->get_delt_label());
+  t->computes(d_sharedState->get_delt_label(),level.get_rep());
   sched->addTask(t,level->eachPatch(), ice_matls); 
   
   //__________________________________

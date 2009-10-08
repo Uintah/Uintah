@@ -139,7 +139,7 @@ void Wave::scheduleComputeStableTimestep(const LevelP& level,
 {
   Task* task = scinew Task("computeStableTimestep",
 			   this, &Wave::computeStableTimestep);
-  task->computes(sharedState_->get_delt_label());
+  task->computes(sharedState_->get_delt_label(),level.get_rep());
   sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
 }
 

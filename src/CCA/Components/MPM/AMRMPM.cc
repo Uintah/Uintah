@@ -230,7 +230,7 @@ void AMRMPM::scheduleInitialize(const LevelP& level, SchedulerP& sched)
   t->computes(lb->pStressLabel);
   t->computes(lb->pSizeLabel);
   t->computes(lb->pErosionLabel);
-  t->computes(d_sharedState->get_delt_label());
+  t->computes(d_sharedState->get_delt_label(),level.get_rep());
   t->computes(lb->pCellNAPIDLabel,zeroth_matl);
 
   if(!flags->d_doGridReset){
@@ -503,7 +503,7 @@ void AMRMPM::scheduleComputeStressTensor(SchedulerP& sched,
     }
   }
 
-  t->computes(d_sharedState->get_delt_label());
+  t->computes(d_sharedState->get_delt_label(),getLevel(patches));
   t->computes(lb->StrainEnergyLabel);
 
   sched->addTask(t, patches, matls);
