@@ -254,7 +254,16 @@ while t<tfinal
       p=input('hit return');
      end
     end
-
+    
+    % bulletproofing
+    % particles can't leave the domain
+    for ip=1:NP
+      if(xp(ip) >= domain) 
+        t = tfinal;
+        fprintf('\nparticle(%g) position is outside the domain: %g \n',ip,xp(ip))
+        fprintf('now exiting the time integration loop\n\n') 
+      end
+    end
 end
 
 close all;
