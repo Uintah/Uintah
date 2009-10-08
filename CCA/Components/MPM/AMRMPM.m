@@ -4,7 +4,7 @@ function KK=amrmpm(problem_type,CFL,NN)
 % bulletproofing
 
 if (~strcmp(problem_type, 'impulsiveBar')  && ...
-    ~strcmp(problem_type, 'oscilator') && ...
+    ~strcmp(problem_type, 'oscillator') && ...
     ~strcmp(problem_type, 'collidingBars') )
   fprintf('ERROR, the problem type is invalid\n');
   fprintf('     The valid types are impulsiveBar, oscillator, collidingBars\n');
@@ -12,7 +12,7 @@ if (~strcmp(problem_type, 'impulsiveBar')  && ...
   return;
 end
 
-PPC =2;
+PPC =1;
 E   =1e8;
 density = 1000.;
 
@@ -27,44 +27,20 @@ volP       =dx/PPC;
 dt=CFL*(1./40.)/c;
 
 %__________________________________
-% Problem dependent parameters
-
-if strcmp(problem_type, 'impulsiveBar')  %impulsively loaded bar
-  period   = sqrt(16.*bar_length*bar_length*density/E);
-  TipForce = 10.;
-  D        = TipForce*bar_length/(area*E);
-  M        = 4.*D/period;
-end
-
-if strcmp(problem_type, 'oscillator')    %simple oscillator
-  Mass  = 10000.;
-  period= 2.*3.14159/sqrt(E/Mass);
-  v0    = 1.0;
-  Amp   = v0/(2.*3.14159/period);
-end
-
-if strcmp(problem_type, 'collidingBars')  % colliding bars
-  period = 4.0*dx/100.;
-end
-
-tfinal=1.0*period;
-
-%__________________________________
 % create particles
 ip=1;
+xp(1)=dx/(2.*PPC);
 
 if ~strcmp(problem_type, 'collidingBars')
-  xp(ip)=dx/(2.*PPC);
-
   while xp(ip)+dx/PPC < bar_length
     ip = ip+1;
     xp(ip)=xp(ip-1)+dx/PPC;
+    fprintf(' i: %g, xp: %g \n',ip, xp(ip))
   end
 end
 
 if strcmp(problem_type, 'collidingBars')
-  xp(ip)=dx/(2.*PPC);
-  
+  %left bar
   while xp(ip)+dx/PPC < (bar_length/2. - dx)
     ip=ip+1;
     xp(ip)=xp(ip-1)+dx/PPC;
@@ -73,12 +49,13 @@ if strcmp(problem_type, 'collidingBars')
   ip=ip+1;
   xp(ip)=domain-dx/(2.*PPC);
   
+  % right bar
   while xp(ip)-dx/PPC > (bar_length/2. + dx)
     ip=ip+1;
     xp(ip)=xp(ip-1)-dx/PPC;
   end
 end
- 
+
 NP=ip  % Particle count
 
 %__________________________________
@@ -108,30 +85,42 @@ for ip=1:NP
   Fp(ip)    = 1.;
 end
 
+%__________________________________
+% Problem dependent parameters
 if strcmp(problem_type, 'impulsiveBar')
+  period        = sqrt(16.*bar_length*bar_length*density/E);
+  TipForce      = 10.;
+  D             = TipForce*bar_length/(area*E);
+  M             = 4.*D/period;
   extForceP(NP) = TipForce;
 end
 
 if strcmp(problem_type, 'oscillator')
-  massP(NP) = Mass;
-  velP(NP) = v0;
+  Mass      = 10000.;
+  period    = 2.*3.14159/sqrt(E/Mass);
+  v0        = 1;
+  Amp       = v0/(2.*3.14159/period);
+  massP(NP) = Mass;                    % last particle masss
+  velP(NP)  = v0;                      % last particle velocity
 end
 
 if strcmp(problem_type, 'collidingBars')
+  period = 4.0*dx/100.;
   for ip=1:NP
-    if xp(ip) < .5*bar_length
-      velP(ip) =100.0;
-    end
+    velP(ip) =100.0;
+    
     if xp(ip) > .5*bar_length
-      velP(ip) =-100.0;
+      velP(ip) = -100.0;
     end
   end
   
   close all;
-  plot(xp,massP,'bx');
+  plot(xp,velP,'bx');
   hold on;
   p=input('hit return');
 end
+
+tfinal=1.0*period;
 
 % create array of nodal locations, only used in plotting
 for(ig=1:NN)
@@ -157,6 +146,7 @@ tstep = 0;
 while t<tfinal
   tstep = tstep + 1;
   t = t + dt;
+  fprintf('timestep %g, dt = %g, time %g \n',tstep, dt, t)
 
   % initialize arrays to be zero
   for ig=1:NN
@@ -226,7 +216,7 @@ while t<tfinal
     xp(ip)   = xp(ip) + dxp;
     dp(ip)   = dp(ip) + dxp;
   end
-
+  
   DX_tip(tstep)=dp(NP);
   T=t; %-dt;
 
@@ -273,6 +263,16 @@ while t<tfinal
      p=input('hit return');
     end
   end
+  
+  % bulletproofing
+  % particles can't leave the domain
+  for ip=1:NP
+    if(xp(ip) >= domain) 
+      t = tfinal;
+      fprintf('\nparticle(%g) position is outside the domain: %g \n',ip,xp(ip))
+      fprintf('now exiting the time integration loop\n\n') 
+    end
+  end
 
 end
 %__________________________________
@@ -308,6 +308,7 @@ length(TIME)
 %__________________________________
 %  write the results out to files
 fid = fopen('particleData.dat', 'w');
+fprintf(fid,'%s, PPC: %g, NN %g\n',problem_type, PPC, NN);
 fprintf(fid,'p, massP, velP, stressP, extForceP, Fp\n');
 for ip=1:NP
   fprintf(fid,'%g, %g, %g, %g, %g, %g\n',ip, massP(ip), velP(ip), stressP(ip), extForceP(ip), Fp(ip));
@@ -315,6 +316,7 @@ end
 fclose(fid);
 
 fid = fopen('gridData.dat', 'w');
+fprintf(fid,'%s, PPC: %g, NN %g\n',problem_type, PPC, NN);
 fprintf(fid,'g, xG, massG, velG, extForceG, intForceG, accl_G\n');
 for ig=1:NN
   fprintf(fid,'%g, %g, %g, %g, %g, %g %g\n',ig, xG(ig), massG(ig), velG(ig), extForceG(ig), intForceG(ig), accl_G(ig));
@@ -329,10 +331,10 @@ function [nodes,Ss]=findNodesAndWeights(xp,dx);
 % find the nodes that surround the given location and
 % the values of the shape functions for those nodes
 % Assume the grid starts at x=0.
- 
+
 node = xp/dx;
 node = floor(node)+1;
- 
+  
 nodes(1)= node;
 nodes(2)= nodes(1)+1;
  
