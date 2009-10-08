@@ -27,7 +27,15 @@
           <viscosity                    spec="REQUIRED DOUBLE" />
         </almgrenMMS>
       </MMS>
-
+      
+      <Coal_Properties                  spec="OPTIONAL NO_DATA">
+        <C                              spec="REQUIRED DOUBLE" />
+	<H                              spec="REQUIRED DOUBLE" />
+	<N                              spec="REQUIRED DOUBLE" />
+	<O                              spec="REQUIRED DOUBLE" />
+	<S                              spec="REQUIRED DOUBLE" />
+      </Coal_Properties>
+      
       <Turbulence                       spec="REQUIRED NO_DATA"
                                         attribute1="model REQUIRED STRING 'compdynamicprocedure, dynamicprocedure, smagorinsky'" >
 
