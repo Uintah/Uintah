@@ -518,6 +518,9 @@ run_case () {
         return 0
     else
         echo "returning 1"
+        da=`date +%m%d%Y%H%M`
+        `tar cvf ${results}_${test_case}_$da.tar ${results}`
+        gzip ${results}_${test_case}_$da.tar
         return 1
     fi
 
