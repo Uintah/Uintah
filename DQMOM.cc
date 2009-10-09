@@ -1,7 +1,7 @@
 #include <CCA/Components/Arches/ArchesLabel.h>
 #include <CCA/Components/Arches/SourceTerms/SourceTermBase.h>
 #include <CCA/Components/Arches/LU.h>
-#include <CCA/Components/Arches/CoalModels/ModelFactory.h>
+#include <CCA/Components/Arches/CoalModels/CoalModelFactory.h>
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqn.h>
 #include <CCA/Components/Arches/CoalModels/ModelBase.h>
 #include <Core/Grid/Variables/VarLabel.h>
@@ -90,7 +90,7 @@ void DQMOM::problemSetup(const ProblemSpecP& params)
   // Reason: this block puts the labels in the same order as the input file, so the moment indexes match up OK
   
   DQMOMEqnFactory & eqn_factory = DQMOMEqnFactory::self();
-  //ModelFactory & model_factory = ModelFactory::self();
+  //CoalModelFactory & model_factory = CoalModelFactory::self();
   N_ = eqn_factory.get_quad_nodes();
  
   for( unsigned int alpha = 0; alpha < N_; ++alpha ) {
@@ -149,7 +149,7 @@ DQMOM::sched_solveLinearSystem( const LevelP& level, SchedulerP& sched, int time
   string taskname = "DQMOM::solveLinearSystem";
   Task* tsk = scinew Task(taskname, this, &DQMOM::solveLinearSystem);
 
-  ModelFactory& model_factory = ModelFactory::self();
+  CoalModelFactory& model_factory = CoalModelFactory::self();
 
   if (timeSubStep == 0) {
     proc0cout << "Asking for norm labels" << endl; 
@@ -232,7 +232,7 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
     int archIndex = 0;
     int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
 
-    ModelFactory& model_factory = ModelFactory::self();
+    CoalModelFactory& model_factory = CoalModelFactory::self();
 
     // get/allocate normB label
     CCVariable<double> normB; 

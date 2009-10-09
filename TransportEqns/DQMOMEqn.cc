@@ -103,22 +103,21 @@ DQMOMEqn::problemSetup(const ProblemSpecP& inputdb, int qn)
     double myValue = atof(s_myValue.c_str());
     if (temp_qn == d_quadNode) 
       d_initValue = myValue/d_scalingConstant;
+  } 
 
-    // if this is an IC, then multiply by the weight.
-    if (!d_weight) {
-      DQMOMEqnFactory& dqmomFactory  = DQMOMEqnFactory::self(); 
-      string name = "w_qn"; 
-      string node; 
-      std::stringstream out; 
-      out << d_quadNode; 
-      node = out.str(); 
-      name += node;
-      EqnBase& t_w = dqmomFactory.retrieve_scalar_eqn( name );
-      DQMOMEqn& w = dynamic_cast<DQMOMEqn&>(t_w);
+  // if this is an IC, then multiply by the weight.
+  if (!d_weight) {
+    DQMOMEqnFactory& dqmomFactory  = DQMOMEqnFactory::self(); 
+    string name = "w_qn"; 
+    string node; 
+    std::stringstream out; 
+    out << d_quadNode; 
+    node = out.str(); 
+    name += node;
+    EqnBase& t_w = dqmomFactory.retrieve_scalar_eqn( name );
+    DQMOMEqn& w = dynamic_cast<DQMOMEqn&>(t_w);
 
-      d_initValue *= w.getInitValue(); 
-
-    } 
+    d_initValue *= w.getInitValue(); 
   } 
 
   // Set some things:
@@ -508,17 +507,19 @@ DQMOMEqn::sched_getAbscissaValues( const LevelP& level, SchedulerP& sched )
   tsk->modifies(d_icLabel);
   tsk->modifies(d_transportVarLabel); 
 
-  string name = "w_qn"; 
-  string node; 
-  std::stringstream out; 
-  out << d_quadNode; 
-  node = out.str(); 
-  name += node; 
-
-  EqnBase& eqn = dqmomFactory.retrieve_scalar_eqn( name ); 
-  const VarLabel* weightLabel = eqn.getTransportEqnLabel(); 
+  if( !d_weight ) {
+    string name = "w_qn"; 
+    string node; 
+    std::stringstream out; 
+    out << d_quadNode; 
+    node = out.str(); 
+    name += node; 
   
-  tsk->requires( Task::NewDW, weightLabel, gn, 0 ); 
+    EqnBase& eqn = dqmomFactory.retrieve_scalar_eqn( name ); 
+    const VarLabel* weightLabel = eqn.getTransportEqnLabel(); 
+  
+    tsk->requires( Task::NewDW, weightLabel, gn, 0 ); 
+  }
  
   sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
 
