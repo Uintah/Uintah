@@ -933,6 +933,8 @@ RadiationDriver::scheduleComputeProps(const LevelP&        level,
   t->modifies(esrcg_CCLabel,   mss_G);
   t->modifies(shgamma_CCLabel, mss_G);
 
+  t->computes(d_cellInfoLabel);
+
   sched->addTask(t, patches, matls_set_GS);
 }
 
@@ -1169,6 +1171,8 @@ RadiationDriver::scheduleIntensitySolve(const LevelP& level,
   Ghost::GhostType  gac = Ghost::AroundCells;
   Ghost::GhostType  gn  = Ghost::None;
   
+  t->requires(Task::OldDW, mi->delT_Label,level.get_rep()); 
+  t->requires(Task::NewDW, d_cellInfoLabel,gn);
   // why are we using gac 1????
   
   t->requires(Task::NewDW, radCO2_CCLabel,       mss_G, gac, 1);
