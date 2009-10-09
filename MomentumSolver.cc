@@ -192,6 +192,7 @@ MomentumSolver::sched_buildLinearMatrix(SchedulerP& sched,
   tsk->requires(Task::NewDW,   d_lab->d_vVelRhoHatLabel,  gaf, 1);
   tsk->requires(Task::NewDW,   d_lab->d_wVelRhoHatLabel,  gaf, 1);
   
+  tsk->requires(Task::NewDW, d_lab->d_cellInfoLabel, Ghost::None);
   if ((extraProjection)||(doing_EKT_now)){
     tsk->requires(Task::NewDW, d_lab->d_pressureExtraProjectionLabel,gac, 1);
   }else{
@@ -375,6 +376,7 @@ MomentumSolver::sched_buildLinearMatrixVelHat(SchedulerP& sched,
   Task::DomainSpec oams = Task::OutOfDomain;  //outside of arches matlSet.
   
   tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, gac, 2);
+  tsk->requires(Task::NewDW, d_lab->d_cellInfoLabel, gn);
 
   if (timelabels->multiple_steps){
     tsk->requires(Task::NewDW, d_lab->d_densityTempLabel,gac, 2);

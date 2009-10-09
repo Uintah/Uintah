@@ -320,6 +320,8 @@ EnthalpySolver::sched_buildLinearMatrix(const LevelP& level,
   }
   tsk->requires(old_values_dw, d_lab->d_enthalpySPLabel,  gn, 0);
   tsk->requires(old_values_dw, d_lab->d_densityCPLabel,   gn, 0);
+  
+  tsk->requires(Task::NewDW, d_lab->d_cellInfoLabel, gn);
 
   if (d_dynScalarModel)
     tsk->requires(Task::NewDW, d_lab->d_enthalpyDiffusivityLabel, gac, 2);
@@ -924,6 +926,8 @@ EnthalpySolver::sched_enthalpyLinearSolve(SchedulerP& sched,
   tsk->requires(parent_old_dw, d_lab->d_sharedState->get_delt_label());
   tsk->requires(Task::NewDW,   d_lab->d_cellTypeLabel,     gac, 1);
   tsk->requires(Task::NewDW,   d_lab->d_densityGuessLabel, gn, 0);
+  
+  tsk->requires(Task::NewDW, d_lab->d_cellInfoLabel, gn);
 
   if (timelabels->multiple_steps){
     tsk->requires(Task::NewDW, d_lab->d_enthalpyTempLabel, gac, 1);

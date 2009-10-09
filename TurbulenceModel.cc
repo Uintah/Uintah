@@ -76,6 +76,7 @@ TurbulenceModel::sched_initFilterMatrix(const LevelP& level,
                           &TurbulenceModel::initFilterMatrix);
                                               
   tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, Ghost::AroundCells, 1);
+  tsk->requires(Task::NewDW, d_lab->d_cellInfoLabel, Ghost::None);
   sched->addTask(tsk, patches, matls);
 }
 //______________________________________________________________________

@@ -709,6 +709,8 @@ Arches::sched_paramInit(const LevelP& level,
     // primitive variable initialization
     Task* tsk = scinew Task( "Arches::paramInit",
                        this, &Arches::paramInit);
+
+    tsk->computes(d_lab->d_cellInfoLabel);
     tsk->computes(d_lab->d_uVelocitySPBCLabel);
     tsk->computes(d_lab->d_vVelocitySPBCLabel);
     tsk->computes(d_lab->d_wVelocitySPBCLabel);
@@ -1090,6 +1092,7 @@ Arches::scheduleComputeStableTimestep(const LevelP& level,
   tsk->requires(Task::NewDW, d_lab->d_densityCPLabel,     gac, 1);
   tsk->requires(Task::NewDW, d_lab->d_viscosityCTSLabel,  gn,  0);
   tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,      gac, 1);
+  tsk->requires(Task::NewDW, d_lab->d_cellInfoLabel, gn);
 
   tsk->computes(d_sharedState->get_delt_label(),level.get_rep());
   sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
@@ -1915,6 +1918,7 @@ Arches::sched_getCCVelocities(const LevelP& level, SchedulerP& sched)
   tsk->requires(Task::NewDW, d_lab->d_uVelocitySPBCLabel, gaf, 1);
   tsk->requires(Task::NewDW, d_lab->d_vVelocitySPBCLabel, gaf, 1);
   tsk->requires(Task::NewDW, d_lab->d_wVelocitySPBCLabel, gaf, 1);
+  tsk->requires(Task::NewDW, d_lab->d_cellInfoLabel, Ghost::None);
 
   tsk->modifies(d_lab->d_newCCUVelocityLabel);
   tsk->modifies(d_lab->d_newCCVVelocityLabel);

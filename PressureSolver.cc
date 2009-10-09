@@ -190,6 +190,7 @@ PressureSolver::sched_buildLinearMatrix(SchedulerP& sched,
   
   tsk->requires(parent_old_dw, d_lab->d_sharedState->get_delt_label());
   tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,       gac, 1);
+  tsk->requires(Task::NewDW, d_lab->d_cellInfoLabel, gn);
 
   if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First){
     tsk->requires(Task::OldDW, timelabels->pressure_guess, gn, 0);
