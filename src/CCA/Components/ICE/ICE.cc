@@ -840,6 +840,7 @@ void ICE::scheduleComputeStableTimestep(const LevelP& level,
   t = scinew Task("ICE::actuallyComputeStableTimestep",
                    this, &ICE::actuallyComputeStableTimestep);
 
+  
   Ghost::GhostType  gac = Ghost::AroundCells;
   Ghost::GhostType  gn = Ghost::None;
   const MaterialSet* ice_matls = d_sharedState->allICEMaterials();
@@ -1164,7 +1165,7 @@ void ICE::scheduleComputeVel_FC(SchedulerP& sched,
 
   Ghost::GhostType  gac = Ghost::AroundCells;
   Task::DomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
-//  t->requires(Task::OldDW, lb->delTLabel);    For AMR
+  t->requires(Task::OldDW, lb->delTLabel, getLevel(patches));  
   t->requires(Task::NewDW, lb->press_equil_CCLabel, press_matl, oims, gac,1);
   t->requires(Task::NewDW,lb->sp_vol_CCLabel,    /*all_matls*/ gac,1);
   t->requires(Task::NewDW,lb->rho_CCLabel,       /*all_matls*/ gac,1);
@@ -1194,7 +1195,7 @@ void ICE::scheduleAddExchangeContributionToFCVel(SchedulerP& sched,
   Task* task = scinew Task("ICE::addExchangeContributionToFCVel",
                      this, &ICE::addExchangeContributionToFCVel, recursion);
 
-//  task->requires(Task::OldDW, lb->delTLabel);    FOR AMR 
+  task->requires(Task::OldDW, lb->delTLabel,getLevel(patches));
   Ghost::GhostType  gac = Ghost::AroundCells;
   
   //__________________________________
@@ -1309,7 +1310,7 @@ void ICE::scheduleComputeDelPressAndUpdatePressCC(SchedulerP& sched,
   Ghost::GhostType  gac = Ghost::AroundCells;
   Ghost::GhostType  gn = Ghost::None;  
   Task::DomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
-//  task->requires( Task::OldDW, lb->delTLabel);    FOR AMR
+  task->requires( Task::OldDW, lb->delTLabel,getLevel(patches));   
   task->requires( Task::NewDW, lb->vol_frac_CCLabel,   gac,2);
   task->requires( Task::NewDW, lb->uvel_FCMELabel,     gac,2);
   task->requires( Task::NewDW, lb->vvel_FCMELabel,     gac,2);
@@ -1388,7 +1389,7 @@ ICE::scheduleAccumulateMomentumSourceSinks(SchedulerP& sched,
             this, &ICE::accumulateMomentumSourceSinks);
 
                        // EQ  & RATE FORM     
-//  t->requires(Task::OldDW, lb->delTLabel);  FOR AMR
+  t->requires(Task::OldDW, lb->delTLabel,getLevel(patches));  
   Ghost::GhostType  gac = Ghost::AroundCells;
   Task::DomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
   
@@ -1435,7 +1436,7 @@ void ICE::scheduleAccumulateEnergySourceSinks(SchedulerP& sched,
   Ghost::GhostType  gac = Ghost::AroundCells;
   Ghost::GhostType  gn  = Ghost::None;
   Task::DomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
-//  t->requires(Task::OldDW, lb->delTLabel);  FOR AMR
+  t->requires(Task::OldDW, lb->delTLabel,getLevel(patches));  
   t->requires(Task::NewDW, lb->press_CCLabel,     press_matl,oims, gn);
   t->requires(Task::NewDW, lb->delP_DilatateLabel,press_matl,oims, gn);
   t->requires(Task::NewDW, lb->compressibilityLabel,               gn);
@@ -1510,7 +1511,7 @@ void ICE::scheduleComputeLagrangianSpecificVolume(SchedulerP& sched,
   Ghost::GhostType  gac = Ghost::AroundCells;
   Task::DomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
 
-//  t->requires(Task::OldDW, lb->delTLabel);  for AMR                         
+  t->requires(Task::OldDW, lb->delTLabel,getLevel(patches));  
   t->requires(Task::NewDW, lb->rho_CCLabel,               gn);
   t->requires(Task::NewDW, lb->sp_vol_CCLabel,            gn);    
   t->requires(Task::NewDW, lb->Tdot_CCLabel,              gn);  
@@ -1596,7 +1597,7 @@ void ICE::scheduleAddExchangeToMomentumAndEnergy(SchedulerP& sched,
 
   Ghost::GhostType  gn  = Ghost::None;
 //  Task::DomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
-//  t->requires(Task::OldDW, d_sharedState->get_delt_label()); for AMR
+  t->requires(Task::OldDW, lb->delTLabel,getLevel(patches)); 
  
   if(d_exchCoeff->convective()){
     Ghost::GhostType  gac  = Ghost::AroundCells; 
@@ -1712,7 +1713,7 @@ void ICE::scheduleAdvectAndAdvanceInTime(SchedulerP& sched,
              
   Task* task = scinew Task("ICE::advectAndAdvanceInTime",
                            this, &ICE::advectAndAdvanceInTime);
-//  task->requires(Task::OldDW, lb->delTLabel);     for AMR
+  task->requires(Task::OldDW, lb->delTLabel,getLevel(patch_set));
   Ghost::GhostType  gac  = Ghost::AroundCells;
   task->requires(Task::NewDW, lb->uvel_FCMELabel,      gac,2);
   task->requires(Task::NewDW, lb->vvel_FCMELabel,      gac,2);
@@ -1780,7 +1781,7 @@ void ICE::scheduleConservedtoPrimitive_Vars(SchedulerP& sched,
   string name = "ICE::conservedtoPrimitive_Vars:" + where;
 
   Task* task = scinew Task(name, this, &ICE::conservedtoPrimitive_Vars);
-//  task->requires(Task::OldDW, lb->delTLabel);     for AMR
+  task->requires(Task::OldDW, lb->delTLabel,getLevel(patch_set));     
   Ghost::GhostType  gn   = Ghost::None;
   task->requires(Task::NewDW, lb->mass_advLabel,      gn,0);
   task->requires(Task::NewDW, lb->mom_advLabel,       gn,0);
@@ -1846,7 +1847,7 @@ void ICE::scheduleTestConservation(SchedulerP& sched,
                    this, &ICE::TestConservation);
 
     Ghost::GhostType  gn  = Ghost::None;
-//  t->requires(Task::OldDW, lb->delTLabel);     for AMR                  
+    t->requires(Task::OldDW, lb->delTLabel,getLevel(patches)); 
     t->requires(Task::NewDW,lb->rho_CCLabel,        ice_matls, gn);
     t->requires(Task::NewDW,lb->vel_CCLabel,        ice_matls, gn);
     t->requires(Task::NewDW,lb->temp_CCLabel,       ice_matls, gn);
