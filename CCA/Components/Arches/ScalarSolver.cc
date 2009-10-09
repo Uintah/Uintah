@@ -266,7 +266,9 @@ ScalarSolver::sched_buildLinearMatrix(SchedulerP& sched,
   }
   tsk->requires(old_values_dw, d_lab->d_scalarSPLabel,  gn, 0);
   tsk->requires(old_values_dw, d_lab->d_densityCPLabel, gn, 0);
-
+  
+  tsk->requires(Task::NewDW, d_lab->d_cellInfoLabel, gn);
+  
   if (d_dynScalarModel){
     tsk->requires(Task::NewDW, d_lab->d_scalarDiffusivityLabel,gac, 2);
   }else{
@@ -665,6 +667,8 @@ ScalarSolver::sched_scalarLinearSolve(SchedulerP& sched,
   tsk->requires(parent_old_dw, d_lab->d_sharedState->get_delt_label());
   tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,     gac, 1);
   tsk->requires(Task::NewDW, d_lab->d_densityGuessLabel, gn,  0);
+  
+  tsk->requires(Task::NewDW, d_lab->d_cellInfoLabel, gn);
   
   if (timelabels->multiple_steps){
     tsk->requires(Task::NewDW, d_lab->d_scalarTempLabel, gac, 1);

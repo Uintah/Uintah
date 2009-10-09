@@ -158,6 +158,7 @@ CompDynamicProcedure::sched_reComputeTurbSubmodel(SchedulerP& sched,
     tsk->requires(Task::NewDW, d_lab->d_wVelocitySPBCLabel, gaf, 1);
     tsk->requires(Task::NewDW, d_lab->d_densityCPLabel,     gac, 2);
     tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,      gac, 2);
+    tsk->requires(Task::NewDW, d_lab->d_cellInfoLabel, gn);
     //__________________________________
     if (d_dynScalarModel) {
       if (d_calcScalar){
@@ -229,6 +230,7 @@ CompDynamicProcedure::sched_reComputeTurbSubmodel(SchedulerP& sched,
     tsk->requires(Task::NewDW, d_lab->d_filterRhoVLabel,    gaf, 1);
     tsk->requires(Task::NewDW, d_lab->d_filterRhoWLabel,    gaf, 1);
     tsk->requires(Task::NewDW, d_lab->d_filterRhoLabel,     gac, 1);
+    tsk->requires(Task::NewDW, d_lab->d_cellInfoLabel, gn);
     
     if (d_dynScalarModel) {
       if (d_calcScalar) {
@@ -319,6 +321,7 @@ CompDynamicProcedure::sched_reComputeTurbSubmodel(SchedulerP& sched,
     tsk->requires(Task::NewDW, d_lab->d_newCCWVelocityLabel, gac, 1);
     tsk->requires(Task::NewDW, d_lab->d_densityCPLabel,      gac, 1);
     tsk->requires(Task::NewDW, d_lab->d_filterRhoLabel,      gac, 1);
+    tsk->requires(Task::NewDW, d_lab->d_cellInfoLabel, gn);
 
     tsk->requires(Task::NewDW, d_lab->d_strainTensorCompLabel,
                   d_lab->d_symTensorMatl, oams,gac, 1);
@@ -414,6 +417,7 @@ CompDynamicProcedure::sched_reComputeTurbSubmodel(SchedulerP& sched,
     tsk->requires(Task::NewDW, d_lab->d_strainMagnitudeMLLabel, gac, 1);
     tsk->requires(Task::NewDW, d_lab->d_strainMagnitudeMMLabel, gac, 1);
     tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,          gac, 1);
+    tsk->requires(Task::NewDW, d_lab->d_cellInfoLabel, gn);
 
     if (d_dynScalarModel) {
       if (d_calcScalar) {
@@ -2827,6 +2831,8 @@ CompDynamicProcedure::sched_computeScalarDissipation(SchedulerP& sched,
     tsk->requires(Task::NewDW, d_lab->d_viscosityCTSLabel,      gac, 1);
   }
   tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,            gac, 1);
+  
+  tsk->requires(Task::NewDW, d_lab->d_cellInfoLabel, Ghost::None);
 
   // Computes
   if ((timelabels->integrator_step_number == TimeIntegratorStepNumber::First) 

@@ -1060,6 +1060,7 @@ BoundaryCondition::sched_calculateArea(SchedulerP& sched,
                            &BoundaryCondition::computeInletFlowArea);
 
   tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, Ghost::None, 0);
+  tsk->requires(Task::NewDW, d_lab->d_cellInfoLabel, Ghost::None);
   // ***warning checkpointing
   //      tsk->computes(old_dw, d_lab->d_cellInfoLabel, indx, patch);
   for (int ii = 0; ii < d_numInlets; ii++){ 
@@ -4270,6 +4271,7 @@ BoundaryCondition::sched_getFlowINOUT(SchedulerP& sched,
   tsk->requires(Task::NewDW, d_lab->d_filterdrhodtLabel,gn, 0);
   tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,    gac, 1);
 
+  tsk->requires(Task::NewDW, d_lab->d_cellInfoLabel, gn);
   tsk->requires(Task::NewDW, d_lab->d_densityCPLabel,     gn, 0);
   tsk->requires(Task::NewDW, d_lab->d_uVelocitySPBCLabel, gn, 0);
   tsk->requires(Task::NewDW, d_lab->d_vVelocitySPBCLabel, gn, 0);
@@ -4708,6 +4710,7 @@ BoundaryCondition::sched_getScalarFlowRate(SchedulerP& sched,
   Ghost::GhostType  gac = Ghost::AroundCells;
   Ghost::GhostType  gn = Ghost::None;
   
+  tsk->requires(Task::NewDW, d_lab->d_cellInfoLabel, gn);
   tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,      gac, 1);
   tsk->requires(Task::NewDW, d_lab->d_densityCPLabel,     gn, 0);
   tsk->requires(Task::NewDW, d_lab->d_uVelocitySPBCLabel, gn, 0);

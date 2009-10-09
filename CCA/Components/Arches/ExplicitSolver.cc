@@ -833,6 +833,7 @@ ExplicitSolver::sched_setInitialGuess(SchedulerP& sched,
   tsk->requires(Task::OldDW, d_lab->d_viscosityCTSLabel,  gn, 0);
   tsk->requires(Task::OldDW, d_lab->d_newCCVelocityLabel, gn, 0);
 
+  tsk->computes(d_lab->d_cellInfoLabel);
   tsk->computes(d_lab->d_cellTypeLabel);
   tsk->computes(d_lab->d_uVelocitySPBCLabel);
   tsk->computes(d_lab->d_vVelocitySPBCLabel);
@@ -941,6 +942,7 @@ ExplicitSolver::sched_interpolateFromFCToCC(SchedulerP& sched,
     Ghost::GhostType  gaf = Ghost::AroundFaces;
     Ghost::GhostType  gn = Ghost::None;
     
+    tsk->requires(Task::NewDW, d_lab->d_cellInfoLabel, gn);
     if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
       tsk->requires(Task::OldDW, d_lab->d_uVelocitySPBCLabel, gaf, 1);
       tsk->requires(Task::OldDW, d_lab->d_vVelocitySPBCLabel, gaf, 1);
@@ -1000,6 +1002,7 @@ ExplicitSolver::sched_interpolateFromFCToCC(SchedulerP& sched,
 
     Ghost::GhostType  gac = Ghost::AroundCells;
     
+    tsk->requires(Task::NewDW, d_lab->d_cellInfoLabel, Ghost::None);
     tsk->requires(Task::NewDW, d_lab->d_newCCUVelocityLabel,  gac, 1);
     tsk->requires(Task::NewDW, d_lab->d_newCCVVelocityLabel,  gac, 1);
     tsk->requires(Task::NewDW, d_lab->d_newCCWVelocityLabel,  gac, 1);
@@ -2396,6 +2399,9 @@ ExplicitSolver::sched_getDensityGuess(SchedulerP& sched,
   tsk->requires(Task::NewDW, d_lab->d_vVelocitySPBCLabel, gaf, 1);
   tsk->requires(Task::NewDW, d_lab->d_wVelocitySPBCLabel, gaf, 1);
   tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,      gn, 0);
+    
+  
+  tsk->requires(Task::NewDW, d_lab->d_cellInfoLabel, gn);
 
   if ((EKTCorrection)&&(!(doing_EKT_now))){
     tsk->requires(Task::NewDW, d_lab->d_densityEKTLabel,  gn, 0);
