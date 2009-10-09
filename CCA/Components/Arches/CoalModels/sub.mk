@@ -3,7 +3,7 @@
 SRCDIR := CCA/Components/Arches/CoalModels
 
 SRCS += \
-  $(SRCDIR)/ModelFactory.cc \
+  $(SRCDIR)/CoalModelFactory.cc \
   $(SRCDIR)/ModelBase.cc \
   $(SRCDIR)/PartVel.cc \
   $(SRCDIR)/KobayashiSarofimDevol.cc \

@@ -36,7 +36,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Arches/TransportEqns/EqnBase.h>
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqn.h>
 #include <CCA/Components/Arches/CoalModels/PartVel.h>
-#include <CCA/Components/Arches/CoalModels/ModelFactory.h>
+#include <CCA/Components/Arches/CoalModels/CoalModelFactory.h>
 #include <CCA/Components/Arches/CoalModels/ModelBase.h>
 #include <CCA/Components/Arches/DQMOM.h>
 
@@ -348,7 +348,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
     if (d_doDQMOM) {
 
-      ModelFactory& modelFactory = ModelFactory::self(); 
+      CoalModelFactory& modelFactory = CoalModelFactory::self(); 
       DQMOMEqnFactory::EqnMap& dqmom_eqns = dqmomFactory.retrieve_all_eqns(); 
 
       // Compute the particle velocities
@@ -396,8 +396,8 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
       }
 
       // schedule the models for evaluation
-      ModelFactory::ModelMap allModels = modelFactory.retrieve_all_models();
-      for (ModelFactory::ModelMap::iterator imodel = allModels.begin(); imodel != allModels.end(); imodel++){
+      CoalModelFactory::ModelMap allModels = modelFactory.retrieve_all_models();
+      for (CoalModelFactory::ModelMap::iterator imodel = allModels.begin(); imodel != allModels.end(); imodel++){
         imodel->second->sched_computeModel( level, sched, curr_level );  
       }
 
@@ -772,9 +772,9 @@ int ExplicitSolver::noSolve(const LevelP& level,
 
     }
 
-    ModelFactory& modelFactory = ModelFactory::self(); 
-    ModelFactory::ModelMap allModels = modelFactory.retrieve_all_models();
-    for (ModelFactory::ModelMap::iterator imodel = allModels.begin(); imodel != allModels.end(); imodel++){
+    CoalModelFactory& modelFactory = CoalModelFactory::self(); 
+    CoalModelFactory::ModelMap allModels = modelFactory.retrieve_all_models();
+    for (CoalModelFactory::ModelMap::iterator imodel = allModels.begin(); imodel != allModels.end(); imodel++){
 
       imodel->second->sched_dummyInit( level, sched );  
 

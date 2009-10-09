@@ -34,7 +34,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Arches/SourceTerms/SourceTermBase.h>
 #include <CCA/Components/Arches/SourceTerms/ConstSrcTerm.h>
 #include <CCA/Components/Arches/SourceTerms/CoalGasDevol.h>
-#include <CCA/Components/Arches/CoalModels/ModelFactory.h>
+#include <CCA/Components/Arches/CoalModels/CoalModelFactory.h>
 #include <CCA/Components/Arches/CoalModels/ModelBase.h>
 #include <CCA/Components/Arches/TransportEqns/EqnBase.h>
 #include <CCA/Components/Arches/CoalModels/PartVel.h>
@@ -523,7 +523,7 @@ Arches::problemSetup(const ProblemSpecP& params,
       EqnBase& a_weight = eqn_factory.retrieve_scalar_eqn( wght_name );
       DQMOMEqn& weight = dynamic_cast<DQMOMEqn&>(a_weight);
       weight.setAsWeight(); 
-      weight.problemSetup( w_db, iqn );  //don't know what db to pass it here
+      weight.problemSetup( w_db, iqn );
 
     }
     
@@ -550,7 +550,7 @@ Arches::problemSetup(const ProblemSpecP& params,
     // their respective problemSetup
     ProblemSpecP models_db = dqmom_db->findBlock("Models"); 
     if (models_db) { 
-      ModelFactory& model_factory = ModelFactory::self();
+      CoalModelFactory& model_factory = CoalModelFactory::self();
       for (ProblemSpecP m_db = models_db->findBlock("model"); m_db != 0; m_db = m_db->findNextBlock("model")){
         std::string model_name; 
         m_db->getAttribute("label", model_name); 
@@ -1523,9 +1523,9 @@ Arches::sched_dqmomInit( const LevelP& level,
   }
 
   // Models
-  ModelFactory& modelFactory = ModelFactory::self();
-  ModelFactory::ModelMap models = modelFactory.retrieve_all_models();
-  for ( ModelFactory::ModelMap::iterator imodel=models.begin(); imodel != models.end(); imodel++){
+  CoalModelFactory& modelFactory = CoalModelFactory::self();
+  CoalModelFactory::ModelMap models = modelFactory.retrieve_all_models();
+  for ( CoalModelFactory::ModelMap::iterator imodel=models.begin(); imodel != models.end(); imodel++){
     ModelBase* model = imodel->second;
     const VarLabel* modelLabel = model->getModelLabel();
     const VarLabel* gasmodelLabel = model->getGasSourceLabel(); 
@@ -1604,9 +1604,9 @@ Arches::dqmomInit( const ProcessorGroup* ,
 
 
     // --- MODELS VALUES
-    ModelFactory& modelFactory = ModelFactory::self();
-    ModelFactory::ModelMap models = modelFactory.retrieve_all_models();
-    for ( ModelFactory::ModelMap::iterator imodel=models.begin(); 
+    CoalModelFactory& modelFactory = CoalModelFactory::self();
+    CoalModelFactory::ModelMap models = modelFactory.retrieve_all_models();
+    for ( CoalModelFactory::ModelMap::iterator imodel=models.begin(); 
           imodel != models.end(); imodel++){
 
       ModelBase* model = imodel->second;
@@ -2133,7 +2133,7 @@ void Arches::registerModels(ProblemSpecP& db)
   ProblemSpecP models_db = db->findBlock("Models");
 
   // Get reference to the model factory
-  ModelFactory& model_factory = ModelFactory::self();
+  CoalModelFactory& model_factory = CoalModelFactory::self();
   // Get reference to the dqmom factory
   DQMOMEqnFactory& dqmom_factory = DQMOMEqnFactory::self(); 
 
