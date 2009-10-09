@@ -78,6 +78,8 @@ DEALINGS IN THE SOFTWARE.
 #endif
 
 #include <cmath>
+#include <ios>
+#include <iomanip>
 
 using namespace Uintah;
 
@@ -2381,19 +2383,19 @@ ExplicitSolver::sched_getDensityGuess(SchedulerP& sched,
   }
   tsk->requires(parent_old_dw, d_lab->d_sharedState->get_delt_label());
 
+  Ghost::GhostType  gac = Ghost::AroundCells;
+  Ghost::GhostType  gaf = Ghost::AroundFaces;
+  Ghost::GhostType  gn = Ghost::None;
+
   Task::WhichDW old_values_dw;
   if (timelabels->use_old_values){
     old_values_dw = parent_old_dw;
+    tsk->requires(old_values_dw, d_lab->d_densityCPLabel,gn, 0);
   }else{ 
     old_values_dw = Task::NewDW;
   }
   
-  Ghost::GhostType  gac = Ghost::AroundCells;
-  Ghost::GhostType  gaf = Ghost::AroundFaces;
-  Ghost::GhostType  gn = Ghost::None;
   
-  tsk->requires(old_values_dw, d_lab->d_densityCPLabel,gn, 0);
-
   tsk->requires(Task::NewDW, d_lab->d_densityCPLabel,     gac, 1);
   tsk->requires(Task::NewDW, d_lab->d_uVelocitySPBCLabel, gaf, 1);
   tsk->requires(Task::NewDW, d_lab->d_vVelocitySPBCLabel, gaf, 1);

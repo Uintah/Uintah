@@ -388,6 +388,9 @@ MomentumSolver::sched_buildLinearMatrixVelHat(SchedulerP& sched,
   if (timelabels->use_old_values) {
     old_values_dw = parent_old_dw;
     tsk->requires(old_values_dw, d_lab->d_densityCPLabel,   gac, 1);
+    tsk->requires(old_values_dw, d_lab->d_uVelocitySPBCLabel, gn, 0);
+    tsk->requires(old_values_dw, d_lab->d_vVelocitySPBCLabel, gn, 0);
+    tsk->requires(old_values_dw, d_lab->d_wVelocitySPBCLabel, gn, 0);
   }else {
     old_values_dw = Task::NewDW;
     tsk->requires(Task::NewDW,   d_lab->d_densityTempLabel, gac, 1);
@@ -396,9 +399,6 @@ MomentumSolver::sched_buildLinearMatrixVelHat(SchedulerP& sched,
   if (d_EKTCorrection){
     old_values_dw = Task::NewDW;
   }
-  tsk->requires(old_values_dw, d_lab->d_uVelocitySPBCLabel, gn, 0);
-  tsk->requires(old_values_dw, d_lab->d_vVelocitySPBCLabel, gn, 0);
-  tsk->requires(old_values_dw, d_lab->d_wVelocitySPBCLabel, gn, 0);
 
   tsk->requires(Task::NewDW, d_lab->d_densityCPLabel,     gac, 1);
   tsk->requires(Task::NewDW, d_lab->d_denRefArrayLabel,   gac, 1);
