@@ -71,6 +71,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Parallel/ProcessorGroup.h>
+#include <Core/Parallel/Parallel.h>
 #include <Core/Math/MiscMath.h>
 #ifdef PetscFilter
 #include <CCA/Components/Arches/Filter.h>
@@ -1909,7 +1910,7 @@ ExplicitSolver::setInitialGuess(const ProcessorGroup* ,
         old_dw->get(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
       else {
         cellInfoP.setData(scinew CellInformation(patch));
-        //cout << "cellInfo INIT" << endl;
+        //proc0cout << "cellInfo INIT" << endl;
       }
       new_dw->put(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
     }
@@ -2153,7 +2154,7 @@ ExplicitSolver::dummySolve(const ProcessorGroup* ,
     new_dw->allocateAndPut(pressureNLSource, d_lab->d_presNonLinSrcPBLMLabel, indx, patch);
     pressureNLSource.initialize(0.0);
 
-    cout << "ExplicitSolver.cc: DOING DUMMY SOLVE " << endl;
+    proc0cout << "ExplicitSolver.cc: DOING DUMMY SOLVE " << endl;
 
     double uvwout = 0.0;
     double flowIN = 0.0;
@@ -2521,7 +2522,7 @@ ExplicitSolver::getDensityGuess(const ProcessorGroup*,
             cellinfo->stb[colZ]);
 
             if (densityGuess[currCell] < 0.0 && d_noisyDensityGuess) {
-              cout << "Negative density guess occured at " << currCell << " with a value of " << densityGuess[currCell] << endl;
+              proc0cout << "Negative density guess occured at " << currCell << " with a value of " << densityGuess[currCell] << endl;
               negativeDensityGuess = 1.0;
             }
             else if (densityGuess[currCell] < 0.0 && !(d_noisyDensityGuess)) {
@@ -2532,7 +2533,7 @@ ExplicitSolver::getDensityGuess(const ProcessorGroup*,
         }
       } 
 
-      if (negativeDensityGuess == 1.0 && !(d_noisyDensityGuess)) cout << "NOTICE: Negative density guess occured on this patch.  Set <NoisyDensityGuess> to true to get full details." << endl;
+      if (negativeDensityGuess == 1.0 && !(d_noisyDensityGuess)) proc0cout << "NOTICE: Negative density guess occured on this patch.  Set <NoisyDensityGuess> to true to get full details." << endl;
 
       if (d_boundaryCondition->anyArchesPhysicalBC()) {
         bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
@@ -2751,13 +2752,13 @@ ExplicitSolver::checkDensityGuess(const ProcessorGroup* pc,
     if (negativeDensityGuess > 0.0) {
       if (d_restart_on_negative_density_guess) {
         if (pc->myrank() == 0)
-          cout << "NOTICE: Negative density guess(es) occured. Timestep restart has been requested under this condition by the user. Restarting timestep." << endl;
+          proc0cout << "NOTICE: Negative density guess(es) occured. Timestep restart has been requested under this condition by the user. Restarting timestep." << endl;
         new_dw->abortTimestep();
         new_dw->restartTimestep();
       }
       else {
         if (pc->myrank() == 0)
-          cout << "NOTICE: Negative density guess(es) occured. Reverting to old density." << endl;
+          proc0cout << "NOTICE: Negative density guess(es) occured. Reverting to old density." << endl;
         old_values_dw->copyOut(densityGuess, d_lab->d_densityCPLabel, indx, patch);
       }
     }   
@@ -3040,8 +3041,8 @@ ExplicitSolver::computeMMSError(const ProcessorGroup*,
                                 const TimeIntegratorLabel* timelabels)
 {
 
-  cout << "***START of MMS ERROR CALC***" << endl;
-  cout << "  Using Error norm = "  << d_mmsErrorType << endl;
+  proc0cout << "***START of MMS ERROR CALC***" << endl;
+  proc0cout << "  Using Error norm = "  << d_mmsErrorType << endl;
 
   for (int p = 0; p < patches->size(); p++) {
 
@@ -3118,7 +3119,7 @@ ExplicitSolver::computeMMSError(const ProcessorGroup*,
     double time=d_lab->d_sharedState->getElapsedTime();
     time = time + delT;
 
-    cout << "THE CURRENT TIME IN ERROR CALC IS: " << time << endl;
+    proc0cout << "THE CURRENT TIME IN ERROR CALC IS: " << time << endl;
 
     double pi = acos(-1.0);
 
@@ -3288,7 +3289,7 @@ ExplicitSolver::computeMMSError(const ProcessorGroup*,
     if (d_mmsErrorType == "L2"){
       new_dw->put(sum_vartype(snumeratordiff), timelabels->smmsLnError); 
       new_dw->put(sum_vartype(unumeratordiff), timelabels->ummsLnError);
-      cout << "putting vnum =" << vnumeratordiff << "into vmmsLnError" << endl;
+      proc0cout << "putting vnum =" << vnumeratordiff << "into vmmsLnError" << endl;
       new_dw->put(sum_vartype(vnumeratordiff), timelabels->vmmsLnError);
       new_dw->put(sum_vartype(wnumeratordiff), timelabels->wmmsLnError); 
       
@@ -3449,7 +3450,7 @@ ExplicitSolver::checkDensityLag(const ProcessorGroup* pc,
 
     if (densityLag > d_maxDensityLag) {
         if (pc->myrank() == 0)
-          cout << "WARNING: density lag " << densityLag 
+          proc0cout << "WARNING: density lag " << densityLag 
                << " exceeding maximium "<< d_maxDensityLag
                << " specified. Restarting timestep." << endl;
         new_dw->abortTimestep();
