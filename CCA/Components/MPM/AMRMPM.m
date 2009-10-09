@@ -1,4 +1,4 @@
-function KK=amrmpm(problem_type,CFL,NN)
+function KK=amrmpm(problem_type,CFL,R1_dx)
 
 % One dimensional MPM
 % bulletproofing
@@ -8,7 +8,7 @@ if (~strcmp(problem_type, 'impulsiveBar')  && ...
     ~strcmp(problem_type, 'collidingBars') )
   fprintf('ERROR, the problem type is invalid\n');
   fprintf('     The valid types are impulsiveBar, oscillator, collidingBars\n');
-  fprintf('usage:  amrmpm(problem type, cfl, NN)\n');
+  fprintf('usage:  amrmpm(problem type, cfl, R1_dx)\n');
   return;
 end
 %__________________________________
@@ -22,119 +22,132 @@ c = sqrt(E/density);
 bar_length =1.;
 domain     =1.;
 area       =1.;
-dx         =domain/(NN-1)
-volP       =dx/PPC;
+plotSwitch = 0;
 
-dt=CFL*dx/c;
+% HARD WIRED FOR TESTING
+NN          = 16
+R1_dx       =domain/(NN-1)
+
+if (mod(domain,R1_dx) ~= 0)
+  fprintf('ERROR, the dx in Region 1 does not divide into the domain evenly\n');
+  fprintf('usage:  amrmpm(problem type, cfl, R1_dx)\n');
+  return;
+end
 
 %__________________________________
-% region structure
-global numRegions;
-global Regions;  
-numRegions    = int8(1);               % partition the domain into numRegions
+% region structure 
+numRegions    = int8(3);               % partition the domain into numRegions
 Regions       = cell(numRegions,1);    % array that holds the individual region information
+
 R.min         = 0;                     % location of left point
-R.max         = 1.0;                   % location of right point
+R.max         = 1/3;                   % location of right point
 R.refineRatio = 1;
-R.dx          = dx
-R.NN          = (R.max - R.min)/R.dx
+R.dx          = R1_dx;
+R.volP        = R.dx/PPC;
+R.NN          = (R.max - R.min)/R.dx;
 Regions{1}    = R;
 
-R.min         = 0.3;                       
-R.max         = 0.6;
+R.min         = 1/3;                       
+R.max         = 2/3;
 R.refineRatio = 1;
-R.dx          = dx/R.refineRatio; 
-R.NN          = (R.max - R.min)/R.dx                   
+R.dx          = R1_dx/R.refineRatio;
+R.volP        = R.dx/PPC;
+R.NN          = (R.max - R.min)/R.dx;                  
 Regions{2}    = R;
 
-R.min         = 0.6;                       
+R.min         = 2/3;                       
 R.max         = domain;
 R.refineRatio = 1;
-R.dx          = dx/R.refineRatio; 
-R.NN          = (R.max - R.min)/R.dx       
+R.dx          = R1_dx/R.refineRatio; 
+R.volP        = R.dx/PPC;
+R.NN          = (R.max - R.min)/R.dx + 1;       
 Regions{3}    = R;
 
 NN = int8(0);
 dt = 9999;
+
 for r=1:numRegions
   R = Regions{r};
   NN = NN + R.NN;
   dt = min(dt, CFL*R.dx/c);
-  fprintf( 'region %g, min: %g, \t max: %g \t refineRatio: %g dx: %g, dt: %g \n',r, R.min, R.max, R.refineRatio, R.dx, dt)
+  fprintf( 'region %g, min: %g, \t max: %g \t refineRatio: %g dx: %g, dt: %g NN: %g\n',r, R.min, R.max, R.refineRatio, R.dx, dt, R.NN)
 end
-
-% initialize dx
-if(0)
-c = 1;
-for r=1:numRegions
-  R = Regions{r};
-  for ig=1:R.NN
-    dx(c) = R.dx;
-    c = c+1;
-  end
-end
-c
-end
-NN = NN +1
-
-
 
 %__________________________________
 % create particles
 ip=1;
-xp(1)=dx/(2.*PPC);
+xp(1)=R1_dx/(2.*PPC);
 
-if ~strcmp(problem_type, 'collidingBars')
-  while xp(ip)+dx/PPC < bar_length
-    ip = ip+1;
-    xp(ip)=xp(ip-1)+dx/PPC;
-  end
-end
-
-if strcmp(problem_type, 'collidingBars')
-  %left bar
-  while xp(ip)+dx/PPC < (bar_length/2. - dx)
-    ip=ip+1;
-    xp(ip)=xp(ip-1)+dx/PPC;
+for r=1:numRegions
+  R = Regions{r};
+  
+  dx_P = R.dx/PPC;                             % particle dx
+  
+  if ~strcmp(problem_type, 'collidingBars')    % Everything except the collingBar
+    while (xp(ip) + dx_P > R.min ) && ...
+          (xp(ip) + dx_P < R.max ) && ...
+          (xp(ip) + dx_P < bar_length)
+          
+      ip = ip+1;
+      xp(ip)=xp(ip-1) + dx_P;
+    end
   end
   
-  ip=ip+1;
-  xp(ip)=domain-dx/(2.*PPC);
-  
-  % right bar
-  while xp(ip)-dx/PPC > (bar_length/2. + dx)
-    ip=ip+1;
-    xp(ip)=xp(ip-1)-dx/PPC;
-  end
-end
+ % This needs to be fixed!!!                    % Colliding Bar
+  if strcmp(problem_type, 'collidingBars')
+    %left bar
+    while xp(ip) + dx_P < (bar_length/2. - R.dx)
+      ip=ip+1;
+      xp(ip)=xp(ip-1) + dx_P;
+    end
 
-NP=ip  % Particle count
+    ip=ip+1;
+    xp(ip)=domain - R.dx/(2.*PPC);
+
+    % right bar
+    while xp(ip) - dx_P > (bar_length/2. + R.dx)
+      ip=ip+1;
+      xp(ip)=xp(ip-1) - dx_P;
+    end
+  end
+end  % region
+
+NP=ip  % number of particles
 
 %__________________________________
-% preallocate variables for speed
+% pre-allocate variables for speed
 vol       = zeros(1,NP);
 massP     = zeros(1,NP);
 velP      = zeros(1,NP);
 dp        = zeros(1,NP);
 stressP   = zeros(1,NP);
 extForceP = zeros(1,NP);
-Fp        = zeros(1,NP);
+Fp        = zeros(1,NP);         
 
 xG        = zeros(1,NN);
 massG     = zeros(1,NN);
-momG      = zeros(1,NN);
 velG      = zeros(1,NN);
 vel_nobc_G= zeros(1,NN);
 accl_G    = zeros(1,NN);
 extForceG = zeros(1,NN);
 intForceG = zeros(1,NN);
 
+BigNum    = int8(1e4);
+KE        = zeros(1,BigNum);
+SE        = zeros(1,BigNum);
+TE        = zeros(1,BigNum);
+Exact_tip = zeros(1,BigNum);
+DX_tip    = zeros(1,BigNum);
+TIME      = zeros(1,BigNum);
+
+
 %__________________________________
 % initialize other particle variables
 for ip=1:NP
+  [volP]    = positionToVolP(xp(ip), numRegions, Regions);
   vol(ip)   = volP;
   massP(ip) = volP*density;
-  Fp(ip)    = 1.;
+  Fp(ip)    = 1.;                     % total deformation
 end
 
 %__________________________________
@@ -148,12 +161,12 @@ if strcmp(problem_type, 'impulsiveBar')
 end
 
 if strcmp(problem_type, 'oscillator')
-  Mass      = 10000.;
-  period    = 2.*3.14159/sqrt(E/Mass)
-  v0        = 0.5;
-  Amp       = v0/(2.*3.14159/period);
-  massP(NP) = Mass;                    % last particle masss
-  velP(NP)  = v0;                      % last particle velocity
+  Mass          = 10000.;
+  period        = 2.*3.14159/sqrt(E/Mass);
+  v0            = 0.5;
+  Amp           = v0/(2.*3.14159/period);
+  massP(NP)     = Mass;                    % last particle masss
+  velP(NP)      = v0;                      % last particle velocity
 end
 
 if strcmp(problem_type, 'collidingBars')
@@ -166,19 +179,19 @@ if strcmp(problem_type, 'collidingBars')
     end
   end
   
-  close all;
-  plot(xp,velP,'bx');
-  hold on;
-  p=input('hit return');
 end
 
 tfinal=1.0*period;
 
 % create array of nodal locations, only used in plotting
-for(ig=1:NN)
-  xG(ig) = (ig-1)*dx;
+ig = 1;
+for r=1:numRegions
+  R = Regions{r};
+  for  c=1:R.NN
+    xG(ig) = (ig-1)*R.dx;
+    ig = ig + 1;
+  end
 end
-
 % set up BCs
 numBCs=1;
 
@@ -193,12 +206,17 @@ BCValue(2) = 1.;
 
 t = 0.0;
 tstep = 0;
-%__________________________________
+
+%plot initial conditions
+%plotResults(t,xp,dp,velP)
+
+
+%==========================================================================
 % Main timstep loop
 while t<tfinal
   tstep = tstep + 1;
   t = t + dt;
-  fprintf('timestep %g, dt = %g, time %g \n',tstep, dt, t)
+  %fprintf('timestep %g, dt = %g, time %g \n',tstep, dt, t)
 
   % initialize arrays to be zero
   for ig=1:NN
@@ -212,7 +230,7 @@ while t<tfinal
   
   % project particle data to grid
   for ip=1:NP
-    [nodes,Ss]=findNodesAndWeights(xp(ip));
+    [nodes,Ss]=findNodesAndWeights(xp(ip), numRegions, Regions);
     for ig=1:2
       massG(nodes(ig))     = massG(nodes(ig))     + massP(ip) * Ss(ig);
       velG(nodes(ig))      = velG(nodes(ig))      + massP(ip) * velP(ip) * Ss(ig);
@@ -230,11 +248,11 @@ while t<tfinal
   end
 
   %compute particle stress
-  [stressP,vol,Fp]=computeStressFromVelocity(xp,dt,velG,E,Fp,volP,NP);
+  [stressP,vol,Fp]=computeStressFromVelocity(xp,dt,velG,E,Fp,NP,numRegions, Regions);
 
   %compute internal force
   for ip=1:NP
-    [nodes,Gs,dx]=findNodesAndWeightGradients(xp(ip));
+    [nodes,Gs,dx]=findNodesAndWeightGradients(xp(ip),numRegions, Regions);
     for ig=1:2
       intForceG(nodes(ig)) = intForceG(nodes(ig)) - (Gs(ig)/dx) * stressP(ip) * vol(ip);
     end
@@ -244,18 +262,19 @@ while t<tfinal
   accl_G    =(intForceG + extForceG)./massG;
   vel_new_G = velG + accl_G.*dt;
 
-  %set the velocity BC on the grid
+  %set velocity BC
   for ibc=1:numBCs
     vel_new_G(BCNode(ibc)) = BCValue(ibc);
   end
 
+  % compute the acceleration on the grid
   for ig=1:NN
     accl_G(ig)  = (vel_new_G(ig) - vel_nobc_G(ig))/dt;
   end
 
   %project changes back to particles
   for ip=1:NP
-    [nodes,Ss]=findNodesAndWeights(xp(ip));
+    [nodes,Ss]=findNodesAndWeights(xp(ip),numRegions, Regions);
     dvelP = 0.;
     dxp   = 0.;
     
@@ -286,7 +305,7 @@ while t<tfinal
   %__________________________________
   % compute the exact tip deflection
   if strcmp(problem_type, 'impulsiveBar')
-    if(T<=period/2.)
+    if(T <= period/2.)
       Exact_tip(tstep) = M*T;
     else
       Exact_tip(tstep) = 4.*D-M*T;
@@ -299,21 +318,8 @@ while t<tfinal
   TIME(tstep)=t;
   %__________________________________
   % plot intantaneous solution
-  if strcmp(problem_type, 'collidingBars')
-    if mod(tstep,100)
-     close all;
-     %% Create figure
-     figure1 = figure;
-
-     %% Create axes
-     axes1 = axes('Parent',figure1);
-     xlim(axes1,[0 1]);
-     box(axes1,'on');
-     hold(axes1,'all');
-     plot(xp,massP,'bx');
-     hold on;
-     p=input('hit return');
-    end
+  if (mod(tstep,100) == 0) && (plotSwitch == 1)
+    plotResults(t, xp,dp,velP)
   end
   
   % bulletproofing
@@ -327,35 +333,14 @@ while t<tfinal
   end
 
 end
-%__________________________________
+
+% compute on the error on the final timestep
+E_err=TE(1)-TE(tstep)                        % total energy
+err=abs(DX_tip(tstep)-Exact_tip(tstep))      % tip deflection
+
+%==========================================================================
 %  plot the results
-close all;
-set(gcf,'position',[100,100,900,900]);
-
-subplot(3,1,1),plot(TIME,DX_tip,'bx');
-
-hold on;
-subplot(3,1,1),plot(TIME,Exact_tip,'r-');
-
-tmp = sprintf('%s, ppc: %g, NN: %g',problem_type, PPC, NN);
-title(tmp);
-legend('Simulation','Exact')
-xlabel('Time [sec]');
-ylabel('Tip Deflection')
-
-subplot(3,1,2),plot(TIME,TE,'b-');
-ylabel('Total Energy');
-
-E_err=TE(1)-TE(tstep)
-
-% compute error
-err=abs(DX_tip-Exact_tip);
-
-subplot(3,1,3),plot(TIME,err,'b-');
-ylabel('Abs(error)')
-
-print ('-dpng', problem_type)
-length(TIME)
+plotFinalResults(TIME, DX_tip, Exact_tip, TE, problem_type, PPC, NN)
 
 %__________________________________
 %  write the results out to files
@@ -375,86 +360,146 @@ for ig=1:NN
 end
 fclose(fid);
 
-return;
+end
 
 
 %______________________________________________________________________
 % functions
-function[node, dx]=positionToNode(xp);
+function[node, dx]=positionToNode(xp, numRegions, Regions)
   dx = -9;
-  global numRegions
-  global Regions
   
   for r=1:numRegions
     R = Regions{r};
-    if (xp >= R.min & xp <= R.max)
+    if ((xp >= R.min) && (xp < R.max))
       dx = R.dx;
     end
   end
   
   node = xp/dx;
   node = floor(node) + 1;
-  
-return;
-
-%__________________________________
-function [nodes,Ss]=findNodesAndWeights(xp);
- 
-% find the nodes that surround the given location and
-% the values of the shape functions for those nodes
-% Assume the grid starts at x=0.
-
-%node = xp/dx;
-%node = floor(node)+1;
-  
-[node, dx]=positionToNode(xp);  
-  
-nodes(1)= node;
-nodes(2)= nodes(1)+1;
- 
-dnode = double(node);
- 
-locx  = (xp-dx*(dnode-1))/dx;
-Ss(1) = 1-locx;
-Ss(2) = locx;
- 
-return;
-
-%__________________________________
-function [nodes,Gs, dx]=findNodesAndWeightGradients(xp);
- 
-% find the nodes that surround the given location and
-% the values of the shape functions for those nodes
-% Assume the grid starts at x=0.
- 
-%node = xp/dx;
-%node = floor(node)+1;
- 
-[node, dx]=positionToNode(xp);
- 
-nodes(1) = node;
-nodes(2) = nodes(1)+1;
- 
-dnode = double(node);
- 
-%locx=(xp-dx*(dnode-1))/dx;
-Gs(1) = -1;
-Gs(2) = 1;
- 
-return;
-
-%__________________________________
-function [stressP,vol,Fp]=computeStressFromVelocity(xp,dt,velG,E,Fp,volP,NP);
-                                                                                
-for ip=1:NP
-  [nodes,Gs,dx]=findNodesAndWeightGradients(xp(ip));
-  gUp=0;
-  for ig=1:2
-    gUp = gUp + velG(nodes(ig)) * (Gs(ig)/dx);
-  end
-  
-  dF          =1. + gUp * dt;
-  Fp(ip)      = dF * Fp(ip);
-  stressP(ip) = E * (Fp(ip)-1);
-  vol(ip)     = volP * Fp(ip);
 end
+%__________________________________
+%
+function[volP]=positionToVolP(xp, numRegions, Regions)
+  volP = -9;
+ 
+  for r=1:numRegions
+    R = Regions{r};
+    if ((xp >= R.min) && (xp < R.max))
+      volP = R.dx;
+      return;
+    end
+  end
+end
+
+%__________________________________
+function [nodes,Ss]=findNodesAndWeights(xp, numRegions, Regions)
+ 
+  % find the nodes that surround the given location and
+  % the values of the shape functions for those nodes
+  % Assume the grid starts at x=0.
+
+  %node = xp/dx;
+  %node = floor(node)+1;
+
+  [node, dx]=positionToNode(xp, numRegions, Regions);  
+
+  nodes(1)= node;
+  nodes(2)= nodes(1)+1;
+
+  dnode = double(node);
+
+  locx  = (xp-dx*(dnode-1))/dx;
+  Ss(1) = 1-locx;
+  Ss(2) = locx;
+end
+
+%__________________________________
+function [nodes,Gs, dx]=findNodesAndWeightGradients(xp, numRegions, Regions);
+ 
+  % find the nodes that surround the given location and
+  % the values of the shape functions for those nodes
+  % Assume the grid starts at x=0.
+
+  %node = xp/dx;
+  %node = floor(node)+1;
+
+  [node, dx]=positionToNode(xp,numRegions, Regions);
+
+  nodes(1) = node;
+  nodes(2) = nodes(1)+1;
+
+  %dnode = double(node);
+
+  %locx=(xp-dx*(dnode-1))/dx;
+  Gs(1) = -1;
+  Gs(2) = 1;
+end
+%__________________________________
+function [stressP,vol,Fp]=computeStressFromVelocity(xp,dt,velG,E,Fp,NP, numRegions, Regions)
+                                                                                
+  for ip=1:NP
+    [nodes,Gs,dx] = findNodesAndWeightGradients(xp(ip), numRegions, Regions);
+    [volP]        = positionToVolP(xp(ip), numRegions, Regions);
+    gUp=0;
+    for ig=1:2
+      gUp = gUp + velG(nodes(ig)) * (Gs(ig)/dx);
+    end
+
+    dF          =1. + gUp * dt;
+    Fp(ip)      = dF * Fp(ip);
+    stressP(ip) = E * (Fp(ip)-1);
+    vol(ip)     = volP * Fp(ip);
+  end
+end
+
+%__________________________________
+function plotResults(t, xp, dp, velP)
+
+  close all;
+  set(gcf,'position',[100,100,900,900]);
+
+  % particle velocity vs position
+  subplot(2,1,1),plot(xp,velP,'bx');
+
+  tmp = sprintf('Time %g',t);
+  title(tmp);
+  xlabel('Particle Position');
+  ylabel('velocity')
+
+  % particle ???? vs position
+  subplot(2,1,2),plot(xp,dp,'b-');
+  ylabel('dp');
+  input('hit return');
+end
+
+%__________________________________
+function plotFinalResults(TIME, DX_tip, Exact_tip, TE, problem_type, PPC, NN)
+
+  close all;
+  set(gcf,'position',[100,100,900,900]);
+
+  % tip displacement vs time
+  subplot(3,1,1),plot(TIME,DX_tip,'bx');
+
+  hold on;
+  subplot(3,1,1),plot(TIME,Exact_tip,'r-');
+
+  tmp = sprintf('%s, ppc: %g, NN: %g',problem_type, PPC, NN);
+  title(tmp);
+  legend('Simulation','Exact')
+  xlabel('Time [sec]');
+  ylabel('Tip Deflection')
+
+  %total energy vs time
+  subplot(3,1,2),plot(TIME,TE,'b-');
+  ylabel('Total Energy');
+
+
+  % compute error
+  err=abs(DX_tip-Exact_tip);
+
+  subplot(3,1,3),plot(TIME,err,'b-');
+  ylabel('Abs(error)')
+end
+
