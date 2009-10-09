@@ -325,6 +325,7 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
   t->computes(lb->partCountLabel);
   t->computes(lb->pXLabel);
   t->computes(lb->pDispLabel);
+  t->computes(lb->pFiberDirLabel);
   t->computes(lb->pMassLabel);
   t->computes(lb->pVolumeLabel);
   t->computes(lb->pTemperatureLabel);
@@ -340,7 +341,7 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
   t->computes(d_sharedState->get_delt_label(),level.get_rep());
   t->computes(lb->pCellNAPIDLabel,zeroth_matl);
   t->computes(lb->NC_CCweightLabel,zeroth_matl);
-
+  
   if(!flags->d_doGridReset){
     t->computes(lb->gDisplacementLabel);
   }
