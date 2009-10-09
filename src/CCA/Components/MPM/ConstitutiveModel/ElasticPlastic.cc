@@ -206,6 +206,7 @@ ElasticPlastic::ElasticPlastic(const ElasticPlastic* cm) :
 
   d_setStressToZero = cm->d_setStressToZero;
   d_allowNoTension = cm->d_allowNoTension;
+  d_allowNoShear = cm->d_allowNoShear;
   d_removeMass = cm->d_removeMass;
 
   d_evolvePorosity = cm->d_evolvePorosity;
@@ -433,12 +434,15 @@ ElasticPlastic::setErosionAlgorithm()
 {
   d_setStressToZero = false;
   d_allowNoTension = false;
+  d_allowNoShear = false;
   d_removeMass = false;
   if (flag->d_doErosion) {
     if (flag->d_erosionAlgorithm == "RemoveMass") 
       d_removeMass = true;
     else if (flag->d_erosionAlgorithm == "AllowNoTension") 
       d_allowNoTension = true;
+    else if (flag->d_erosionAlgorithm == "AllowNoShear") 
+      d_allowNoShear = true;
     else if (flag->d_erosionAlgorithm == "ZeroStress") 
       d_setStressToZero = true;
   }
@@ -641,6 +645,7 @@ ElasticPlastic::addComputesAndRequires(Task* task,
   task->requires(Task::OldDW, pDamageLabel,           matlset, gnone);
   task->requires(Task::OldDW, pPorosityLabel,         matlset, gnone);
   task->requires(Task::OldDW, pLocalizedLabel,        matlset, gnone);
+  task->requires(Task::OldDW, lb->pParticleIDLabel,   matlset, gnone);
 
   task->computes(pRotationLabel_preReloc,       matlset);
   task->computes(pStrainRateLabel_preReloc,     matlset);
@@ -784,6 +789,10 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
     constParticleVariable<int> pLocalized;
     old_dw->get(pLocalized, pLocalizedLabel, pset);
 
+    // Get the particle IDs, useful in case a simulation goes belly up
+    constParticleVariable<long64> pParticleID; 
+    old_dw->get(pParticleID, lb->pParticleIDLabel, pset);
+
     // Create and allocate arrays for storing the updated information
     // GLOBAL
     ParticleVariable<Matrix3> pDeformGrad_new, pStress_new;
@@ -869,23 +878,28 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
       pDeformGrad_new[idx] = tensorF_new;
       double J = tensorF_new.Determinant();
 
-      if(d_setStressToZero && pLocalized[idx]){
-        pDeformGrad_new[idx] = pDeformGrad[idx];
-        J = pDeformGrad[idx].Determinant();
+      if(pLocalized[idx] && J <=0.0){
+        pDeformGrad_new[idx] = one;
+        tensorF_new = one;
+        J = 1.0;
+        cerr << " neg J in particle " << pParticleID[idx] << endl;
+        cerr << " reseting the deformation and moving on, " << endl;
+        cerr << " but the code is still probably going to crash soon." << endl;
       }
 
       // Check 1: Look at Jacobian
       if (!(J > 0.0)) {
-        cerr << getpid() ;
-        constParticleVariable<long64> pParticleID; 
-        old_dw->get(pParticleID, lb->pParticleIDLabel, pset);
         cerr << "**ERROR** Negative Jacobian of deformation gradient" 
              << " in particle " << pParticleID[idx] << endl;
         cerr << "l = " << tensorL << endl;
         cerr << "F_old = " << pDeformGrad[idx] << endl;
+        cerr << "J_old = " << pDeformGrad[idx].Determinant() << endl;
         cerr << "F_inc = " << tensorFinc << endl;
         cerr << "F_new = " << tensorF_new << endl;
         cerr << "J = " << J << endl;
+        cerr << "Temp = " << pTemperature[idx] << endl;
+        cerr << "Tm = " << Tm << endl;
+        cerr << "DWI = " << matl->getDWIndex() << endl;
         throw InternalError("Negative Jacobian",__FILE__,__LINE__);
       }
 
@@ -1126,11 +1140,8 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
                   doNewtonIterations = false;
 
                 } // end of epdot <= edot if
-        
               } // end of delGamma > 0 if
-
             } // end of gammdotplus > 0 if
-
           } // end of sqrtSxS == 0 if
 
           if (doNewtonIterations) {
@@ -1213,10 +1224,19 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
       if (flag->d_doErosion) {
         if (pLocalized[idx]) {
           if (d_allowNoTension) {
-            if (p > 0.0) tensorSig = zero;
-            else tensorSig = tensorHy;
+            if (p > 0.0){
+               tensorSig = zero;
+            }
+            else{
+               tensorSig = tensorHy;
+            }
           }
-          else if (d_setStressToZero) tensorSig = zero;
+          if(d_allowNoShear){
+            tensorSig = tensorHy;
+          }
+          else if (d_setStressToZero){
+             tensorSig = zero;
+          }
         }
       }
 
@@ -1345,29 +1365,35 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
           }
         }
 
-        // Use erosion algorithms to treat localized particles
+        // Use erosion algorithms to treat newly localized particles
         if (isLocalized) {
 
           // If the localized particles fail again then set their stress to zero
           if (pLocalized[idx]) {
             pDamage_new[idx] = 0.0;
             pPorosity_new[idx] = 0.0;
-            tensorSig = zero;
           } else {
-
             // set the particle localization flag to true  
             pLocalized_new[idx] = 1;
             pDamage_new[idx] = 0.0;
             pPorosity_new[idx] = 0.0;
 
             // Apply various erosion algorithms
-            if (d_allowNoTension) {
-              if (p > 0.0) tensorSig = zero;
-              else tensorSig = tensorHy;
+            if (d_allowNoTension){
+              if (p > 0.0){
+                tensorSig = zero;
+              }
+              else{
+                tensorSig = tensorHy;
+              }
             }
-            else if (d_setStressToZero) tensorSig = zero;
+            else if (d_allowNoShear){
+              tensorSig = tensorHy;
+            }
+            else if (d_setStressToZero){
+              tensorSig = zero;
+            }
           }
-
         }
       }
 
