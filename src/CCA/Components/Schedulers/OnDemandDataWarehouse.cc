@@ -2308,7 +2308,7 @@ OnDemandDataWarehouse::checkGetAccess(const VarLabel* label,
                                       int matlIndex, const Patch* patch,
                                       Ghost::GhostType gtype,int numGhostCells)
 {
-#if 0 
+#if 0
 #if SCI_ASSERTION_LEVEL >= 1
   list<RunningTaskInfo>* runningTasks = getRunningTasksInfo();
   if (runningTasks != 0) {
@@ -2348,8 +2348,9 @@ OnDemandDataWarehouse::checkGetAccess(const VarLabel* label,
           return;
         }
         if (runningTask == 0 ||
-            !((string(runningTask->getName()) == "Relocate::relocateParticles")||
-              (string(label->getName()) == "delT"))
+            !((string(runningTask->getName()) == "Relocate::relocateParticles") 
+             )
+              //|| (string(label->getName()) == "delT"))
            ){
           string has;
           switch (getWhichDW())
@@ -2379,12 +2380,15 @@ OnDemandDataWarehouse::checkGetAccess(const VarLabel* label,
             has += ghost_str.str();
           }     
           string needs = "task requires";
+#if 0
           SCI_THROW(DependencyException(runningTask, label, matlIndex, patch,
                 has, needs, __FILE__, __LINE__));
-          //if ( d_myworld->myrank()  == 0 )
-          //  cerr << DependencyException::makeMessage(runningTask, label, matlIndex, patch,
-          //     has, needs) << endl;
-          //WAIT_FOR_DEBUGGER();
+#else
+          if ( d_myworld->myrank()  == 0 )
+            cout << DependencyException::makeMessage(runningTask, label, matlIndex, patch,
+               has, needs) << endl;
+          WAIT_FOR_DEBUGGER();
+#endif
         }
       } else {
         // access granted
@@ -2452,18 +2456,22 @@ OnDemandDataWarehouse::checkPutAccess(const VarLabel* label, int matlIndex,
               has="UnknownDW";
           }
           if (replace) {
-            has += " datawarehouse modify";
-            needs = "task modifies";
+            has += " datawarehouse put";
+            needs = "task computes(replace)";
           }
           else {
             has += " datawarehouse put";
             needs = "task computes";
           }
-          //if ( d_myworld->myrank()  == 0 )
-          // cerr << DependencyException::makeMessage(runningTask, label, matlIndex, patch,
-          //   has, needs) << endl;
+#if 0
           SCI_THROW(DependencyException(runningTask, label, matlIndex,
                 patch, has, needs, __FILE__, __LINE__));
+#else
+          if ( d_myworld->myrank()  == 0 )
+           cout << DependencyException::makeMessage(runningTask, label, matlIndex, patch,
+             has, needs) << endl;
+          WAIT_FOR_DEBUGGER();
+#endif
         }
       }
       else {
@@ -2509,9 +2517,6 @@ bool OnDemandDataWarehouse::hasPutAccess(const Task* runningTask,
                                          const VarLabel* label, int matlIndex,
                                          const Patch* patch, bool replace)
 {
-  if (replace)
-    return runningTask->hasModifies(label, matlIndex, patch);
-  else
     return runningTask->hasComputes(label, matlIndex, patch);
 }
 
