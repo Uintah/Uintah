@@ -1,5 +1,5 @@
 #include <CCA/Components/Arches/CoalModels/ModelBase.h>
-#include <CCA/Components/Arches/CoalModels/ModelFactory.h>
+#include <CCA/Components/Arches/CoalModels/CoalModelFactory.h>
 #include <CCA/Components/Arches/ArchesLabel.h>
 #include <Core/Grid/Variables/CCVariable.h>
 

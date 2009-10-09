@@ -5,7 +5,7 @@
 #include <Core/Grid/Variables/CCVariable.h>
 #include <CCA/Components/Arches/SourceTerms/CoalGasDevol.h>
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqnFactory.h>
-#include <CCA/Components/Arches/CoalModels/ModelFactory.h>
+#include <CCA/Components/Arches/CoalModels/CoalModelFactory.h>
 #include <CCA/Components/Arches/TransportEqns/EqnBase.h>
 #include <CCA/Components/Arches/CoalModels/ModelBase.h>
 #include <CCA/Components/Arches/CoalModels/KobayashiSarofimDevol.h>
@@ -72,7 +72,7 @@ CoalGasDevol::sched_computeSource( const LevelP& level, SchedulerP& sched, int t
   }
 
   DQMOMEqnFactory& dqmomFactory  = DQMOMEqnFactory::self(); 
-  ModelFactory& modelFactory = ModelFactory::self(); 
+  CoalModelFactory& modelFactory = CoalModelFactory::self(); 
 
   for (int iqn = 0; iqn < dqmomFactory.get_quad_nodes(); iqn++){
     std::string wght_name = "w_qn";
@@ -126,7 +126,7 @@ CoalGasDevol::computeSource( const ProcessorGroup* pc,
     int matlIndex = d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
 
     DQMOMEqnFactory& dqmomFactory  = DQMOMEqnFactory::self(); 
-    ModelFactory& modelFactory = ModelFactory::self(); 
+    CoalModelFactory& modelFactory = CoalModelFactory::self(); 
 
     CCVariable<double> devolSrc; 
     if ( new_dw->exists(d_srcLabel, matlIndex, patch ) ){

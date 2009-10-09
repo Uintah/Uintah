@@ -1,5 +1,5 @@
-#ifndef UT_ModelFactory_h
-#define UT_ModelFactory_h
+#ifndef UT_CoalModelFactory_h
+#define UT_CoalModelFactory_h
 
 #include <CCA/Components/Arches/ArchesLabel.h>
 #include <Core/Grid/Variables/VarLabel.h>
@@ -18,7 +18,7 @@
  *
  *  @brief Abstract base class to support source term
  *  additions. Should be used in conjunction with the
- *  ModelFactory.
+ *  CoalModelFactory.
  *
  *  An arbitrary number of models may be associated to a transport
  *  equation.  The ModelBuilder object
@@ -65,7 +65,7 @@ private:
 //---------------------------------------------------------------------------
 
 /**
- *  @class  ModelFactory
+ *  @class  CoalModelFactory
  *  @author James C. Sutherland and Jeremy Thornock
  *  @date   November, 2006
  *  @brief  Factory for source term generation.
@@ -78,13 +78,13 @@ private:
  *
  *  Implemented as a singleton.
  */
-class ModelFactory
+class CoalModelFactory
 {
 public:
   /**
-   *  @brief obtain a reference to the ModelFactory.
+   *  @brief obtain a reference to the CoalModelFactory.
    */
-  static ModelFactory& self();
+  static CoalModelFactory& self();
 
   /**
    *  @brief Register a source term on the specified transport equation.
@@ -93,7 +93,7 @@ public:
    *  @param builder The ModelBuilder object to build the Model object.
    *
    *  ModelBuilder objects should be heap-allocated using "new".
-   *  Memory management will be transfered to the ModelFactory.
+   *  Memory management will be transfered to the CoalModelFactory.
    */
   void register_model( const std::string name,
                        ModelBuilder* builder );
@@ -124,8 +124,8 @@ private:
   BuildMap builders_;
   ModelMap models_;
 
-  ModelFactory();
-  ~ModelFactory();
-}; // class ModelFactory
+  CoalModelFactory();
+  ~CoalModelFactory();
+}; // class CoalModelFactory
 }  //Namespace Uintah
 #endif

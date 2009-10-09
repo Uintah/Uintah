@@ -1,4 +1,4 @@
-#include <CCA/Components/Arches/CoalModels/ModelFactory.h>
+#include <CCA/Components/Arches/CoalModels/CoalModelFactory.h>
 #include <CCA/Components/Arches/CoalModels/ModelBase.h> 
 #include <Core/Exceptions/InvalidValue.h>
 #include <sstream>
@@ -9,36 +9,36 @@
 
 using namespace Uintah;
 
-ModelFactory::ModelFactory()
+CoalModelFactory::CoalModelFactory()
 {}
 
-ModelFactory::~ModelFactory()
+CoalModelFactory::~CoalModelFactory()
 {
-  // delete the builders
-  for( BuildMap::iterator i=builders_.begin(); i!=builders_.end(); ++i ){
-    //delete *i;
-    }
-
-  // delete all constructed solvers
-  for( ModelMap::iterator i=models_.begin(); i!=models_.end(); ++i ){
-    //delete *i;
-  }
+//  // delete the builders
+//  for( BuildMap::iterator i=builders_.begin(); i!=builders_.end(); ++i ){
+//    //delete *i;
+//    }
+//
+//  // delete all constructed solvers
+//  for( ModelMap::iterator i=models_.begin(); i!=models_.end(); ++i ){
+//    //delete *i;
+//  }
 }
 
 //---------------------------------------------------------------------------
 // Method: Return a reference to itself. 
 //---------------------------------------------------------------------------
-ModelFactory&
-ModelFactory::self()
+CoalModelFactory&
+CoalModelFactory::self()
 {
-  static ModelFactory s;
+  static CoalModelFactory s;
   return s;
 }
 //---------------------------------------------------------------------------
 // Method: Register a model  
 //---------------------------------------------------------------------------
 void
-ModelFactory::register_model( const std::string name,
+CoalModelFactory::register_model( const std::string name,
                               ModelBuilder* builder )
 {
 
@@ -49,7 +49,7 @@ ModelFactory::register_model( const std::string name,
     i = builders_.insert( std::make_pair(name,builder) ).first;
   }
   else{
-    std::string errmsg = "ERROR: Arches: ModelFactory: A duplicate ModelBuilder object was loaded:\n";
+    std::string errmsg = "ERROR: Arches: CoalModelFactory: A duplicate ModelBuilder object was loaded:\n";
     errmsg += "\t\t" + name + ". This is forbidden.\n";
     throw InvalidValue(errmsg,__FILE__,__LINE__);
   }
@@ -58,7 +58,7 @@ ModelFactory::register_model( const std::string name,
 // Method: Retrieve a model from the map. 
 //---------------------------------------------------------------------------
 ModelBase&
-ModelFactory::retrieve_model( const std::string name )
+CoalModelFactory::retrieve_model( const std::string name )
 {
   const ModelMap::iterator imodel= models_.find( name );
 
@@ -67,7 +67,7 @@ ModelFactory::retrieve_model( const std::string name )
   const BuildMap::iterator ibuilder = builders_.find( name );
 
   if( ibuilder == builders_.end() ){
-    std::string errmsg = "ERROR: Arches: ModelFactory: No model registered for " + name + "\n";
+    std::string errmsg = "ERROR: Arches: CoalModelFactory: No model registered for " + name + "\n";
     throw InvalidValue(errmsg,__FILE__,__LINE__);
   }
 
