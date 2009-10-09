@@ -129,7 +129,7 @@ void ICE::scheduleSetupRHS(  SchedulerP& sched,
   }
  
   const MaterialSubset* press_matl = one_matl; 
-//  t->requires( pOldDW, lb->delTLabel);     AMR
+  t->requires( pOldDW, lb->delTLabel,getLevel(patches));     
   
   if(d_models.size() > 0){  
     t->requires(pNewDW, lb->modelMass_srcLabel,           gn,0);
@@ -205,6 +205,7 @@ void ICE::scheduleUpdatePressure(  SchedulerP& sched,
              << "\t\t\t\t\tL-" <<level->getIndex()<<endl;
   t = scinew Task("ICE::updatePressure", this, &ICE::updatePressure);
   t->requires(Task::ParentNewDW, lb->press_equil_CCLabel,press_matl,oims,gn);       
+  t->requires(Task::ParentNewDW, lb->sp_vol_CCLabel                     ,gn);
   t->requires(Task::OldDW,       lb->sum_imp_delPLabel,  press_matl,oims,gn);
   
   // for setting the boundary conditions
@@ -340,7 +341,7 @@ void ICE::scheduleImplicitPressureSolve(  SchedulerP& sched,
   // NewDW = ParentNewDW
   //__________________________________
   // common Variables
-//  t->requires( Task::OldDW, lb->delTLabel);    AMR
+  t->requires( Task::OldDW, lb->delTLabel,level.get_rep());
   t->requires( Task::NewDW, lb->vol_frac_CCLabel,   gac,2); 
   t->requires( Task::NewDW, lb->sp_vol_CCLabel,     gac,1);
   t->requires( Task::NewDW, lb->rhsLabel,            one_matl,   oims,gn,0);
@@ -1010,8 +1011,8 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
   //  Move data from parentOldDW to subSchedNewDW.
   delt_vartype dt;
   subNewDW = d_subsched->get_dw(3);
-  ParentOldDW->get(dt, d_sharedState->get_delt_label());
-  subNewDW->put(dt, d_sharedState->get_delt_label());
+  ParentOldDW->get(dt, d_sharedState->get_delt_label(),level.get_rep());
+  subNewDW->put(dt, d_sharedState->get_delt_label(),level.get_rep());
    
   max_vartype max_RHS_old;
   ParentNewDW->get(max_RHS_old, lb->max_RHSLabel);
