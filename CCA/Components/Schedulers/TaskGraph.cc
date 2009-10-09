@@ -297,7 +297,7 @@ void TaskGraph::addDependencyEdges(Task* task, GraphSortInfoMap& sortinfo,
   for(; req != 0; req=req->next){
     if (dbg.active())
       dbg << d_myworld->myrank() << "     Checking edge for req: " << *req << ", task: " << *req->task << ", domain: " << req->patches_dom << '\n';
-    if(sc->isNewDW(req->mapDataWarehouse())) {
+    if(req->whichdw==Task::NewDW) {
       // If DW is finalized, we assume that we already have it,
       // or that we will get it sent to us.  Otherwise, we set
       // up an edge to connect this req to a comp
@@ -494,7 +494,7 @@ void TaskGraph::processDependencies(Task* task, Task::Dependency* req,
   for(; req != 0; req=req->next){
     if (dbg.active())
       dbg << d_myworld->myrank() << " processDependencies for req: " << *req << '\n';
-    if(sc->isNewDW(req->mapDataWarehouse())){
+    if(req->whichdw==Task::NewDW) {
       Task::Edge* edge = req->comp_head;
       for (;edge != 0; edge = edge->compNext){
         Task* vtask = edge->comp->task;
