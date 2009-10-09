@@ -55,7 +55,6 @@ ScalarEqn::~ScalarEqn()
   VarLabel::destroy(d_FconvLabel); 
   VarLabel::destroy(d_RHSLabel);
   VarLabel::destroy(d_transportVarLabel);
-  VarLabel::destroy(d_transportVarLabel);
   VarLabel::destroy(d_oldtransportVarLabel);
 
 }
