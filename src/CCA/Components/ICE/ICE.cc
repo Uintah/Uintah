@@ -1093,6 +1093,7 @@ void ICE::scheduleComputePressure(SchedulerP& sched,
 
   Task::DomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
   Ghost::GhostType  gn = Ghost::None;
+  t->requires(Task::OldDW, lb->delTLabel, getLevel(patches));  
   t->requires(Task::OldDW,lb->press_CCLabel, press_matl, oims, gn);
   t->requires(Task::OldDW,lb->rho_CCLabel,               gn);
   t->requires(Task::OldDW,lb->temp_CCLabel,              gn); 
