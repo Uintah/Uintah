@@ -632,7 +632,7 @@ void AdiabaticTable::scheduleComputeModelSources(SchedulerP& sched,
                     
   Ghost::GhostType  gn = Ghost::None;  
   Ghost::GhostType  gac = Ghost::AroundCells;
-  //t->requires(Task::OldDW, mi->delT_Label); turn off for AMR 
+  t->requires(Task::OldDW, mi->delT_Label,level.get_rep()); 
  
   //t->requires(Task::NewDW, d_scalar->diffusionCoefLabel, gac,1);
   t->requires(Task::OldDW, d_scalar->scalar_CCLabel, gac,1); 
@@ -885,6 +885,7 @@ void AdiabaticTable::scheduleTestConservation(SchedulerP& sched,
     Task* t = scinew Task("AdiabaticTable::testConservation", 
                      this,&AdiabaticTable::testConservation, mi);
 
+    t->requires(Task::OldDW, mi->delT_Label,getLevel(patches)); 
     Ghost::GhostType  gn = Ghost::None;
     // compute sum(scalar_f * mass)
     t->requires(Task::NewDW, d_scalar->scalar_CCLabel, gn,0); 
