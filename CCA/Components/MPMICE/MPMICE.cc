@@ -834,7 +834,7 @@ void MPMICE::scheduleComputeCCVelAndTempRates(SchedulerP& sched,
 
   Ghost::GhostType  gn = Ghost::None;
 
-  t->requires(Task::OldDW, d_sharedState->get_delt_label());
+  t->requires(Task::OldDW, d_sharedState->get_delt_label(),getLevel(patches));
   t->requires(Task::NewDW, Ilb->mass_L_CCLabel,         gn);
   t->requires(Task::NewDW, Ilb->mom_L_CCLabel,          gn);  
   t->requires(Task::NewDW, Ilb->int_eng_L_CCLabel,      gn);  
@@ -884,7 +884,7 @@ void MPMICE::scheduleInterpolateCCToNC(SchedulerP& sched,
   Ghost::GhostType  gan = Ghost::AroundNodes;
   Ghost::GhostType  gac = Ghost::AroundCells;
                                                                                 
-  t->requires(Task::OldDW, d_sharedState->get_delt_label());
+  t->requires(Task::OldDW, d_sharedState->get_delt_label(),getLevel(patches));
   t->requires(Task::NewDW, Ilb->dVdt_CCLabel,       gan,1);
   t->requires(Task::NewDW, Ilb->dTdt_CCLabel,       gan,1);
   
@@ -918,6 +918,9 @@ void MPMICE::scheduleComputePressure(SchedulerP& sched,
 
   t = scinew Task("MPMICE::computeEquilibrationPressure",
             this, &MPMICE::computeEquilibrationPressure, press_matl);
+  
+  t->requires(Task::OldDW, d_sharedState->get_delt_label(),getLevel(patches));
+
                               // I C E
   Ghost::GhostType  gn  = Ghost::None;
 
