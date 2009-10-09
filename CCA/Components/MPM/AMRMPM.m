@@ -11,7 +11,8 @@ if (~strcmp(problem_type, 'impulsiveBar')  && ...
   fprintf('usage:  amrmpm(problem type, cfl, NN)\n');
   return;
 end
-
+%__________________________________
+% hard coded domain
 PPC =1;
 E   =1e8;
 density = 1000.;
@@ -21,10 +22,62 @@ c = sqrt(E/density);
 bar_length =1.;
 domain     =1.;
 area       =1.;
-dx         =domain/(NN-1);
+dx         =domain/(NN-1)
 volP       =dx/PPC;
 
-dt=CFL*(1./40.)/c;
+dt=CFL*dx/c;
+
+%__________________________________
+% region structure
+global numRegions;
+global Regions;  
+numRegions    = int8(1);               % partition the domain into numRegions
+Regions       = cell(numRegions,1);    % array that holds the individual region information
+R.min         = 0;                     % location of left point
+R.max         = 1.0;                   % location of right point
+R.refineRatio = 1;
+R.dx          = dx
+R.NN          = (R.max - R.min)/R.dx
+Regions{1}    = R;
+
+R.min         = 0.3;                       
+R.max         = 0.6;
+R.refineRatio = 1;
+R.dx          = dx/R.refineRatio; 
+R.NN          = (R.max - R.min)/R.dx                   
+Regions{2}    = R;
+
+R.min         = 0.6;                       
+R.max         = domain;
+R.refineRatio = 1;
+R.dx          = dx/R.refineRatio; 
+R.NN          = (R.max - R.min)/R.dx       
+Regions{3}    = R;
+
+NN = int8(0);
+dt = 9999;
+for r=1:numRegions
+  R = Regions{r};
+  NN = NN + R.NN;
+  dt = min(dt, CFL*R.dx/c);
+  fprintf( 'region %g, min: %g, \t max: %g \t refineRatio: %g dx: %g, dt: %g \n',r, R.min, R.max, R.refineRatio, R.dx, dt)
+end
+
+% initialize dx
+if(0)
+c = 1;
+for r=1:numRegions
+  R = Regions{r};
+  for ig=1:R.NN
+    dx(c) = R.dx;
+    c = c+1;
+  end
+end
+c
+end
+NN = NN +1
+
+
 
 %__________________________________
 % create particles
@@ -35,7 +88,6 @@ if ~strcmp(problem_type, 'collidingBars')
   while xp(ip)+dx/PPC < bar_length
     ip = ip+1;
     xp(ip)=xp(ip-1)+dx/PPC;
-    fprintf(' i: %g, xp: %g \n',ip, xp(ip))
   end
 end
 
@@ -97,8 +149,8 @@ end
 
 if strcmp(problem_type, 'oscillator')
   Mass      = 10000.;
-  period    = 2.*3.14159/sqrt(E/Mass);
-  v0        = 1;
+  period    = 2.*3.14159/sqrt(E/Mass)
+  v0        = 0.5;
   Amp       = v0/(2.*3.14159/period);
   massP(NP) = Mass;                    % last particle masss
   velP(NP)  = v0;                      % last particle velocity
@@ -160,7 +212,7 @@ while t<tfinal
   
   % project particle data to grid
   for ip=1:NP
-    [nodes,Ss]=findNodesAndWeights(xp(ip),dx);
+    [nodes,Ss]=findNodesAndWeights(xp(ip));
     for ig=1:2
       massG(nodes(ig))     = massG(nodes(ig))     + massP(ip) * Ss(ig);
       velG(nodes(ig))      = velG(nodes(ig))      + massP(ip) * velP(ip) * Ss(ig);
@@ -178,11 +230,11 @@ while t<tfinal
   end
 
   %compute particle stress
-  [stressP,vol,Fp]=computeStressFromVelocity(xp,dx,dt,velG,E,Fp,volP,NP);
+  [stressP,vol,Fp]=computeStressFromVelocity(xp,dt,velG,E,Fp,volP,NP);
 
   %compute internal force
   for ip=1:NP
-    [nodes,Gs]=findNodesAndWeightGradients(xp(ip),dx);
+    [nodes,Gs,dx]=findNodesAndWeightGradients(xp(ip));
     for ig=1:2
       intForceG(nodes(ig)) = intForceG(nodes(ig)) - (Gs(ig)/dx) * stressP(ip) * vol(ip);
     end
@@ -203,7 +255,7 @@ while t<tfinal
 
   %project changes back to particles
   for ip=1:NP
-    [nodes,Ss]=findNodesAndWeights(xp(ip),dx);
+    [nodes,Ss]=findNodesAndWeights(xp(ip));
     dvelP = 0.;
     dxp   = 0.;
     
@@ -325,15 +377,37 @@ fclose(fid);
 
 return;
 
+
 %______________________________________________________________________
-function [nodes,Ss]=findNodesAndWeights(xp,dx);
+% functions
+function[node, dx]=positionToNode(xp);
+  dx = -9;
+  global numRegions
+  global Regions
+  
+  for r=1:numRegions
+    R = Regions{r};
+    if (xp >= R.min & xp <= R.max)
+      dx = R.dx;
+    end
+  end
+  
+  node = xp/dx;
+  node = floor(node) + 1;
+  
+return;
+
+%__________________________________
+function [nodes,Ss]=findNodesAndWeights(xp);
  
 % find the nodes that surround the given location and
 % the values of the shape functions for those nodes
 % Assume the grid starts at x=0.
 
-node = xp/dx;
-node = floor(node)+1;
+%node = xp/dx;
+%node = floor(node)+1;
+  
+[node, dx]=positionToNode(xp);  
   
 nodes(1)= node;
 nodes(2)= nodes(1)+1;
@@ -347,14 +421,16 @@ Ss(2) = locx;
 return;
 
 %__________________________________
-function [nodes,Gs]=findNodesAndWeightGradients(xp,dx);
+function [nodes,Gs, dx]=findNodesAndWeightGradients(xp);
  
 % find the nodes that surround the given location and
 % the values of the shape functions for those nodes
 % Assume the grid starts at x=0.
  
-node = xp/dx;
-node = floor(node)+1;
+%node = xp/dx;
+%node = floor(node)+1;
+ 
+[node, dx]=positionToNode(xp);
  
 nodes(1) = node;
 nodes(2) = nodes(1)+1;
@@ -368,10 +444,10 @@ Gs(2) = 1;
 return;
 
 %__________________________________
-function [stressP,vol,Fp]=computeStressFromVelocity(xp,dx,dt,velG,E,Fp,volP,NP);
+function [stressP,vol,Fp]=computeStressFromVelocity(xp,dt,velG,E,Fp,volP,NP);
                                                                                 
 for ip=1:NP
-  [nodes,Gs]=findNodesAndWeightGradients(xp(ip),dx);
+  [nodes,Gs,dx]=findNodesAndWeightGradients(xp(ip));
   gUp=0;
   for ig=1:2
     gUp = gUp + velG(nodes(ig)) * (Gs(ig)/dx);
