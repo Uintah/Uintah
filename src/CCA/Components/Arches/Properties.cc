@@ -552,6 +552,9 @@ Properties::sched_reComputeProps(SchedulerP& sched,
                           d_EKTCorrection, doing_EKT_now);
 
   Ghost::GhostType  gn = Ghost::None;
+  
+  tsk->requires(Task::NewDW, d_lab->d_cellInfoLabel, gn);
+  
   if (doing_EKT_now){
     tsk->modifies(d_lab->d_scalarEKTLabel);
   }else{
@@ -2313,6 +2316,7 @@ Properties::sched_computeDrhodt(SchedulerP& sched,
   }
   
   Ghost::GhostType  gn = Ghost::None;
+  tsk->requires(Task::NewDW, d_lab->d_cellInfoLabel, gn);
   tsk->requires(parent_old_dw, d_lab->d_sharedState->get_delt_label());
   tsk->requires(parent_old_dw, d_lab->d_oldDeltaTLabel);
   tsk->requires(parent_old_dw, d_lab->d_densityOldOldLabel, gn,0);
