@@ -60,6 +60,9 @@ MPMLabel::MPMLabel()
   pPressureLabel  = VarLabel::create( "p.pressure",
 			ParticleVariable<double>::getTypeDescription() );
   
+  pLocalizedMPMLabel  = VarLabel::create( "p.localizedMPM",
+			ParticleVariable<int>::getTypeDescription() );
+  
   // for thermal stress
   pTempCurrentLabel = VarLabel::create( "p.tempCurrent",
                         ParticleVariable<double>::getTypeDescription() ); 
@@ -597,6 +600,7 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(pParticleIDLabel);
   VarLabel::destroy(pParticleIDLabel_preReloc);
   VarLabel::destroy(pPressureLabel);
+  VarLabel::destroy(pLocalizedMPMLabel);
   VarLabel::destroy(pSizeLabel);
   VarLabel::destroy(pSizeLabel_preReloc);
   VarLabel::destroy(pFiberDirLabel_preReloc);
