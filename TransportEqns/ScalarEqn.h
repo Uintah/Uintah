@@ -119,6 +119,7 @@ public:
              source term booleans so that the code can determine if the source
              term label should be allocated or just retrieved from the data 
              warehouse. */ 
+
   void cleanUp( const ProcessorGroup* pc, 
                 const PatchSubset* patches, 
                 const MaterialSubset* matls, 

@@ -1469,15 +1469,18 @@ Arches::scalarInit( const ProcessorGroup* ,
       std::string eqn_name = ieqn->first; 
       const VarLabel* tempVarLabel = eqn->getTransportEqnLabel(); 
       const VarLabel* oldtempVarLabel = eqn->getoldTransportEqnLabel(); 
-      double initValue = eqn->getInitValue(); 
+      //double initValue = eqn->getInitValue(); 
 
       CCVariable<double> tempVar; 
       CCVariable<double> oldtempVar; 
       new_dw->allocateAndPut( tempVar, tempVarLabel, matlIndex, patch ); 
       new_dw->allocateAndPut( oldtempVar, oldtempVarLabel, matlIndex, patch ); 
     
-      tempVar.initialize(initValue);
-      oldtempVar.initialize(initValue); 
+      tempVar.initialize(0.0);
+      oldtempVar.initialize(0.0); 
+
+      // initialize to something other than zero if desired. 
+      eqn->fcnInit( patch, tempVar ); 
 
       //do Boundary conditions
       eqn->computeBCsSpecial( patch, eqn_name, tempVar ); 
