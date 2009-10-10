@@ -287,7 +287,17 @@
           <src                          spec="MULTIPLE NO_DATA" 
                                         attribute1="label REQUIRED STRING"/>
           <initial_value                spec="OPTIONAL NO_DATA"
-                                        attribute1="value REQUIRED DOUBLE"/>                              
+                                        attribute1="value REQUIRED DOUBLE"/>
+          <initialization               spec="OPTIONAL NO_DATA"
+                                        attribute1="type REQUIRED STRING 'constant, step'">
+            <!-- constant value initialization -->
+            <constant                   spec="OPTIONAL DOUBLE"/>
+            <!-- step function initialization --> 
+            <step_direction             spec="OPTIONAL STRING 'x,y,z'"/>
+            <step_value                 spec="OPTIONAL DOUBLE"/>
+            <step_start                 spec="OPTIONAL DOUBLE"/>
+            <step_end                   spec="OPTIONAL DOUBLE"/>
+          </initialization>                              
         </Eqn>
 
         <Sources                        spec="OPTIONAL NO_DATA">
