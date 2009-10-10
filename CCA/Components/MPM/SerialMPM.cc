@@ -341,7 +341,7 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
   t->computes(d_sharedState->get_delt_label(),level.get_rep());
   t->computes(lb->pCellNAPIDLabel,zeroth_matl);
   t->computes(lb->NC_CCweightLabel,zeroth_matl);
-  
+
   if(!flags->d_doGridReset){
     t->computes(lb->gDisplacementLabel);
   }
@@ -768,6 +768,7 @@ void SerialMPM::scheduleUpdateErosionParameter(SchedulerP& sched,
   Task* t = scinew Task("MPM::updateErosionParameter",
                         this, &SerialMPM::updateErosionParameter);
   t->requires(Task::OldDW, lb->pErosionLabel,          Ghost::None);
+  t->requires(Task::OldDW, lb->pXLabel,                Ghost::None);
   int numMatls = d_sharedState->getNumMPMMatls();
   for(int m = 0; m < numMatls; m++){
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
@@ -775,6 +776,7 @@ void SerialMPM::scheduleUpdateErosionParameter(SchedulerP& sched,
     cm->addRequiresDamageParameter(t, mpm_matl, patches);
   }
   t->computes(lb->pErosionLabel_preReloc);
+  t->computes(lb->pLocalizedMPMLabel);
   sched->addTask(t, patches, matls);
 }
 
@@ -1121,6 +1123,7 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->requires(Task::OldDW, lb->pDispLabel,                      gnone);
   t->requires(Task::OldDW, lb->pSizeLabel,                      gnone);
   t->requires(Task::NewDW, lb->pdTdtLabel_preReloc,             gnone);
+  t->requires(Task::NewDW, lb->pLocalizedMPMLabel,              gnone);
   t->requires(Task::NewDW, lb->pErosionLabel_preReloc,          gnone);
   t->modifies(lb->pVolumeLabel_preReloc);
     
@@ -1990,9 +1993,12 @@ void SerialMPM::updateErosionParameter(const ProcessorGroup*,
 
       // Get the localization info
       ParticleVariable<int> isLocalized;
-      new_dw->allocateTemporary(isLocalized, pset);
+//      new_dw->allocateTemporary(isLocalized, pset);
+      new_dw->allocateAndPut(isLocalized, lb->pLocalizedMPMLabel, pset);
       ParticleSubset::iterator iter = pset->begin(); 
-      for (; iter != pset->end(); iter++) isLocalized[*iter] = 0;
+      for (; iter != pset->end(); iter++){
+        isLocalized[*iter] = 0;
+      }
       mpm_matl->getConstitutiveModel()->getDamageParameter(patch, isLocalized,
                                                            dwi, old_dw,new_dw);
 
@@ -2008,6 +2014,51 @@ void SerialMPM::updateErosionParameter(const ProcessorGroup*,
             pErosion_new[*iter] = 0.1*pErosion[*iter];
           } 
         } 
+      }
+
+      // The following looks for localized particles that are isolated
+      // either individually or in small groups
+      Ghost::GhostType  gac = Ghost::AroundCells;
+      CCVariable<int> numLocalizedInCell,numInCell;
+      new_dw->allocateTemporary(numLocalizedInCell, patch, gac, 1);
+      new_dw->allocateTemporary(numInCell, patch, gac, 1);
+      numLocalizedInCell.initialize(0);
+      numInCell.initialize(0);
+
+      constParticleVariable<Point> px;
+      old_dw->get(px, lb->pXLabel, pset);
+
+      // Count the number of localized particles in each cell
+      for (iter = pset->begin(); iter != pset->end(); iter++) {
+        IntVector c;
+        patch->findCell(px[*iter],c);
+        numInCell[c]++;
+        if (isLocalized[*iter]) {
+          numLocalizedInCell[c]++;
+        }
+      }
+
+      // Look at the number of localized particles in the current and
+      // surrounding cells
+      for (iter = pset->begin(); iter != pset->end(); iter++) {
+        if(isLocalized[*iter]==1){
+          IntVector c;
+          patch->findCell(px[*iter],c);
+          int totalInCells = 0;
+          for(int i=-1;i<2;i++){
+            for(int j=-1;j<2;j++){
+              for(int k=-1;k<2;k++){
+                IntVector cell = c + IntVector(i,j,k);
+                totalInCells += numInCell[cell];
+              }
+            }
+          }
+          // If the localized particles are sufficiently isolated, set
+          // a flag for deletion in interpolateToParticlesAndUpdate
+          if (numLocalizedInCell[c]<=3 && totalInCells<=3) {
+              isLocalized[*iter]=2;
+          }
+        }
       }
 
       if (cout_dbg.active())
@@ -3068,6 +3119,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       constParticleVariable<Vector> pdisp;
       ParticleVariable<Vector> pdispnew;
       constParticleVariable<double> pErosion;
+      constParticleVariable<int> pLocalized;
 
       // for thermal stress analysis
       ParticleVariable<double> pTempPreNew; 
@@ -3087,6 +3139,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       new_dw->get(pErosion,     lb->pErosionLabel_preReloc,          pset);
       new_dw->get(pdTdt,        lb->pdTdtLabel_preReloc,             pset);
       new_dw->getModifiable(pvolume,  lb->pVolumeLabel_preReloc,     pset);
+      new_dw->get(pLocalized,   lb->pLocalizedMPMLabel,              pset);
 
       new_dw->allocateAndPut(pvelocitynew, lb->pVelocityLabel_preReloc,   pset);
       new_dw->allocateAndPut(pxnew,        lb->pXLabel_preReloc,          pset);
@@ -3213,7 +3266,8 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       for(ParticleSubset::iterator iter  = pset->begin();
                                    iter != pset->end(); iter++){
         particleIndex idx = *iter;
-        if ((pmassNew[idx] <= flags->d_min_part_mass) || pTempNew[idx] < 0. ){
+        if ((pmassNew[idx] <= flags->d_min_part_mass) || pTempNew[idx] < 0. ||
+             (pLocalized[idx]==2)){
           delset->addParticle(idx);
 //        cout << "Material = " << m << " Deleted Particle = " << idx 
 //             << " xold = " << px[idx] << " xnew = " << pxnew[idx]
