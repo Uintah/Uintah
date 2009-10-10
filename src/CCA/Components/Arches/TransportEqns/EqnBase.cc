@@ -14,6 +14,16 @@ d_fieldLabels(fieldLabels), d_timeIntegrator(timeIntegrator), d_eqnName(eqnName)
 {
   d_boundaryCond = scinew BoundaryCondition_new( d_fieldLabels ); 
   d_disc = scinew Discretization_new(); 
+
+  // initialize some initialization parameters
+  // constant 
+  d_constant_init = 0.0;
+  // step 
+  d_step_dir   = "x";
+  d_step_start = 0.0;
+  d_step_end   = 0.0;
+  d_step_value = 0.0;  
+  
 }
 
 EqnBase::~EqnBase()
@@ -21,4 +31,3 @@ EqnBase::~EqnBase()
   delete(d_boundaryCond);
   delete(d_disc);
 }
- 

@@ -9,6 +9,9 @@
 #include <CCA/Components/Arches/TransportEqns/Discretization_new.h>
 #include <CCA/Components/Arches/ArchesMaterial.h>
 
+#define YDIM
+#define ZDIM
+
 //========================================================================
 
 /** 
@@ -71,6 +74,9 @@ public:
   // probably want to make this is a template
   template <class phiType> void computeBCs( const Patch* patch, string varName, phiType& phi );
 
+  /** @brief Set the initial value of the transported variable to some function */
+  template <class phiType> void fcnInit( const Patch* patch, phiType& phi ); 
+
   // Access functions:
   inline void setBoundaryCond( BoundaryCondition_new* boundaryCond ) {
   d_boundaryCond = boundaryCond; 
@@ -86,6 +92,8 @@ public:
     return d_eqnName; };
   inline const double getInitValue(){
     return d_initValue; };
+  inline const string getInitFcn(){
+    return d_initFcn; }; 
 
 
   template<class phiType> void
@@ -128,12 +136,83 @@ protected:
   Discretization_new* d_disc;  
 
   double d_initValue; // The initial value for this eqn. 
+  std::string d_initFcn; // A functional form for initial value.
+
+
+  // These parameters are for the functional initialization
+  // -- constant --
+  double d_constant_init; 
+
+  // -- step function -- 
+  std::string d_step_dir; 
+  double d_step_start; 
+  double d_step_end; 
+  double d_step_value; 
 
 private:
 
 
-
 }; // end EqnBase
+//---------------------------------------------------------------------------
+// Method: Phi initialization using a function 
+//---------------------------------------------------------------------------
+template <class phiType>  
+void EqnBase::fcnInit( const Patch* patch, phiType& phi ) 
+{
+  for (CellIterator iter=patch->getCellIterator__New(0); !iter.done(); iter++){
+
+    IntVector c = *iter; 
+    Vector Dx = patch->dCell(); 
+    double x,y,z; 
+    x = c[0]*Dx.x() + Dx.x()/2.;
+#ifdef YDIM
+    y = c[1]*Dx.y() + Dx.y()/2.; 
+#endif
+#ifdef ZDIM
+    z = c[2]*Dx.z() + Dx.z()/2.;
+#endif 
+
+    if (d_initFcn == "constant") {
+      // ========== CONSTANT VALUE INITIALIZATION ============
+      phi[c] = d_constant_init; 
+
+    } else if (d_initFcn == "step") {
+     // =========== STEP FUNCTION INITIALIZATION =============
+      if (d_step_dir == "x") {
+        if ( x > d_step_start && x < d_step_end )
+          phi[c] = d_step_value; 
+        else
+          phi[c] = 0.0;
+      } else if (d_step_dir == "y") {
+#ifdef YDIM
+        if ( y > d_step_start && y < d_step_end )
+          phi[c] = d_step_value; 
+        else
+          phi[c] = 0.0;
+#else
+        cout << "WARNING!! YDIM NOT TURNED ON (COMPILED) WITH THIS VERION OF CODE" << endl;
+        cout << "To get this to work, made sure YDIM is defined in ScalarEqn.h" << endl;
+        cout << "Cannot initialize your scalar in y-dim with step function" << endl;
+#endif
+
+      } else if (d_step_dir == "z") {
+#ifdef YDIM
+        if ( z > d_step_start && z < d_step_end )
+          phi[c] = d_step_value; 
+        else
+          phi[c] = 0.0;
+#else
+        cout << "WARNING!! YDIM NOT TURNED ON (COMPILED) WITH THIS VERION OF CODE" << endl;
+        cout << "To get this to work, made sure ZDIM is defined in ScalarEqn.h" << endl;
+        cout << "Cannot initialize your scalar in z-dim with step function" << endl;
+#endif
+      }
+    // ======= add others below here ======
+    } else {
+        cout << "WARNING!! Your initialization function wasn't found." << endl;
+    } 
+  }
+}
 } // end namespace Uintah
 
 #endif

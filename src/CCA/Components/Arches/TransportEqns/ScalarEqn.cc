@@ -110,12 +110,21 @@ ScalarEqn::problemSetup(const ProblemSpecP& inputdb)
    } 
 
   // initial value 
-  ProblemSpecP db_initialValue = db->findBlock("initial_value");
-  d_initValue = 0.0;
+  ProblemSpecP db_initialValue = db->findBlock("initialization");
   if (db_initialValue) {
-    string s_myValue; 
-    db_initialValue->getAttribute("value", s_myValue);
-    d_initValue = atof(s_myValue.c_str());
+
+    db_initialValue->getAttribute("type", d_initFcn); 
+
+    if (d_initFcn == "constant") {
+      db_initialValue->require("constant", d_constant_init); 
+    } else if (d_initFcn == "step") {
+      db_initialValue->require("step_direction", d_step_dir); 
+      db_initialValue->require("step_value", d_step_value); 
+      db_initialValue->require("step_start", d_step_start); 
+      db_initialValue->require("step_end"  , d_step_end); 
+    } else {
+      throw InvalidValue("Initialization function not supported!", __FILE__, __LINE__); 
+    }
   }
 }
 //---------------------------------------------------------------------------
@@ -838,4 +847,3 @@ ScalarEqn::dummyInit( const ProcessorGroup* pc,
 
   }
 }
-
