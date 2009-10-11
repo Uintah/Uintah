@@ -75,20 +75,36 @@ DQMOMEqn::problemSetup(const ProblemSpecP& inputdb, int qn)
   ProblemSpecP db = inputdb; 
   d_quadNode = qn; 
 
-  d_turbPrNo = 0.4; //for the turb diff model.  Need to set as input
+  db->getWithDefault("turbulentPrandtlNumber",d_turbPrNo,0.4);
 
-
-  // Now look for other things:
+  // Discretization information:
+  db->getWithDefault( "conv_scheme", d_convScheme, "upwind");
   db->getWithDefault( "doConv", d_doConv, false);
   db->getWithDefault( "doDiff", d_doDiff, false);
+  d_addSources = true; 
 
-  // convection scheme
-  db->getWithDefault( "conv_scheme", d_convScheme, "upwind");
-
-  // get normalization constant
+  // Scaling information:
   db->require( "scaling_const", d_scalingConstant ); 
 
-  // initial value blocks
+  // Initialization (new way):
+//  ProblemSpecP db_initialValue = db->findBlock("initialization");
+//  if( db_initialValue) {
+//
+//    db_initialValue->getAttribute("type", d_initFcn);
+//
+//    if( d_initFcn == "constant" ) {
+//      db_initialValue->require("constant", d_constant_init);
+//    } else if (d_initFcn == "step" ) {
+//      db_initialValue->require("step_direction",  d_step_dir);
+//      db_initialValue->require("step_value",      d_step_value);
+//      db_initialValue->require("step_start",      d_step_start);
+//      db_initialValue->require("step_end",        d_step_end);
+//    } else {
+//      throw InvalidValue( "Initialization function not supported!", __FILE__, __LINE__);
+//    }
+//  }
+
+  // Initialization (prior way):
   d_initValue = 0.0;
   for (ProblemSpecP db_initvals = db->findBlock("initial_value");
        db_initvals != 0; db_initvals = db_initvals->findNextBlock("initial_value") ) {
@@ -103,27 +119,26 @@ DQMOMEqn::problemSetup(const ProblemSpecP& inputdb, int qn)
     double myValue = atof(s_myValue.c_str());
     if (temp_qn == d_quadNode) 
       d_initValue = myValue/d_scalingConstant;
+
+    // if this is an IC, then multiply by the weight.
+    if (!d_weight) {
+      DQMOMEqnFactory& dqmomFactory  = DQMOMEqnFactory::self(); 
+      string name = "w_qn"; 
+      string node; 
+      std::stringstream out; 
+      out << d_quadNode; 
+      node = out.str(); 
+      name += node;
+      EqnBase& t_w = dqmomFactory.retrieve_scalar_eqn( name );
+      DQMOMEqn& w = dynamic_cast<DQMOMEqn&>(t_w);
+
+      d_initValue *= w.getInitValue(); 
+
+    } 
   } 
 
-  // if this is an IC, then multiply by the weight.
-  if (!d_weight) {
-    DQMOMEqnFactory& dqmomFactory  = DQMOMEqnFactory::self(); 
-    string name = "w_qn"; 
-    string node; 
-    std::stringstream out; 
-    out << d_quadNode; 
-    node = out.str(); 
-    name += node;
-    EqnBase& t_w = dqmomFactory.retrieve_scalar_eqn( name );
-    DQMOMEqn& w = dynamic_cast<DQMOMEqn&>(t_w);
 
-    d_initValue *= w.getInitValue(); 
-  } 
-
-  // Set some things:
-  d_addSources = true; 
-
-  // Get the list of models:
+  // Models (source terms):
   for (ProblemSpecP m_db = db->findBlock("model"); m_db !=0; m_db = m_db->findNextBlock("model")){
     string model_name; 
     m_db->getAttribute("label", model_name); 
@@ -139,13 +154,13 @@ DQMOMEqn::problemSetup(const ProblemSpecP& inputdb, int qn)
     d_models.push_back(model_name); 
   }  
 
-  // Check for clipping
+  // Clipping:
   d_doClipping = false; 
   ProblemSpecP db_clipping = db->findBlock("Clipping");
-  d_lowClip = 0.0; // initializing this to zero for getAbscissa values
-  double clip_default = -9999999999.0;
+
   if (db_clipping) {
     //This seems like a *safe* number to assume 
+    double clip_default = -9999999999.0;
     d_doLowClip = false; 
     d_doHighClip = false; 
     d_doClipping = true;
@@ -164,7 +179,8 @@ DQMOMEqn::problemSetup(const ProblemSpecP& inputdb, int qn)
 
     if ( !d_doHighClip && !d_doLowClip ) 
       throw InvalidValue("A low or high clipping must be specified if the <Clipping> section is activated!", __FILE__, __LINE__);
-   } 
+  } 
+
   if (d_weight) { 
     if (!d_doClipping) { 
       //By default, set the low value for this weight to 0 and run on low clipping
@@ -514,10 +530,10 @@ DQMOMEqn::sched_getAbscissaValues( const LevelP& level, SchedulerP& sched )
     out << d_quadNode; 
     node = out.str(); 
     name += node; 
-  
+
     EqnBase& eqn = dqmomFactory.retrieve_scalar_eqn( name ); 
     const VarLabel* weightLabel = eqn.getTransportEqnLabel(); 
-  
+    
     tsk->requires( Task::NewDW, weightLabel, gn, 0 ); 
   }
  
@@ -544,43 +560,61 @@ DQMOMEqn::getAbscissaValues( const ProcessorGroup* pc,
     int archIndex = 0;
     int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
 
-    CCVariable<double> wa;
-    constCCVariable<double> w;  
-    CCVariable<double> ic; 
 
-    new_dw->getModifiable(ic, d_icLabel, matlIndex, patch);
+    if( d_weight ) {
+      CCVariable<double> w;
+      CCVariable<double> w_actual;
 
-    new_dw->getModifiable(wa, d_transportVarLabel, matlIndex, patch); 
-    DQMOMEqnFactory& dqmomFactory  = DQMOMEqnFactory::self(); 
-    string name = "w_qn"; 
-    string node;
-    std::stringstream out;
-    out << d_quadNode;
-    node = out.str();
-    name += node;
-
-    EqnBase& temp_eqn = dqmomFactory.retrieve_scalar_eqn( name );
-    DQMOMEqn& eqn = dynamic_cast<DQMOMEqn&>(temp_eqn);
-    const VarLabel* mywLabel = eqn.getTransportEqnLabel();  
-    double smallWeight = eqn.getSmallClip(); 
-
-    if ( smallWeight == 0.0 )
-      smallWeight = 1e-16; //to avoid numbers smaller than machine precision. 
-
-    new_dw->get(w, mywLabel, matlIndex, patch, gn, 0); 
-
-    // now loop over all cells
-    for (CellIterator iter=patch->getCellIterator__New(0); !iter.done(); iter++){
-  
-      IntVector c = *iter;
-
-      if (w[c] > smallWeight)
-        ic[c] = wa[c]/w[c]*d_scalingConstant;
-      else {
-        ic[c] = 0.0;
-        wa[c] = 0.0; // if the weight is small (near zero) , then the product must also be small (near zero)
+      new_dw->getModifiable(w_actual, d_icLabel, matlIndex, patch);
+      new_dw->getModifiable(w, d_transportVarLabel, matlIndex, patch);
+      
+      // now loop over all cells
+      for (CellIterator iter=patch->getCellIterator__New(0); !iter.done(); iter++){
+        IntVector c = *iter;
+        w_actual[c] = w[c]*d_scalingConstant;
       }
-    }
+
+    } else {
+      CCVariable<double> wa;
+      constCCVariable<double> w;  
+      CCVariable<double> ic; 
+
+      new_dw->getModifiable(ic, d_icLabel, matlIndex, patch);
+
+      new_dw->getModifiable(wa, d_transportVarLabel, matlIndex, patch); 
+      DQMOMEqnFactory& dqmomFactory  = DQMOMEqnFactory::self(); 
+      string name = "w_qn"; 
+      string node;
+      std::stringstream out;
+      out << d_quadNode;
+      node = out.str();
+      name += node;
+
+      EqnBase& temp_eqn = dqmomFactory.retrieve_scalar_eqn( name );
+      DQMOMEqn& eqn = dynamic_cast<DQMOMEqn&>(temp_eqn);
+      const VarLabel* mywLabel = eqn.getTransportEqnLabel();  
+      double smallWeight = eqn.getSmallClip(); 
+
+      if ( smallWeight == 0.0 )
+        smallWeight = 1e-16; //to avoid numbers smaller than machine precision. 
+
+      new_dw->get(w, mywLabel, matlIndex, patch, gn, 0); 
+
+      // now loop over all cells
+      for (CellIterator iter=patch->getCellIterator__New(0); !iter.done(); iter++){
+  
+        IntVector c = *iter;
+
+        if (w[c] > smallWeight)
+          ic[c] = wa[c]/w[c]*d_scalingConstant;
+        else {
+          ic[c] = 0.0;
+          wa[c] = 0.0; // if the weight is small (near zero) , then the product must also be small (near zero)
+        }
+      }
+
+    } //end if weight
+
   }
 }
 
