@@ -1455,6 +1455,7 @@ Arches::scalarInit( const ProcessorGroup* ,
                     DataWarehouse* old_dw,
                     DataWarehouse* new_dw )
 {
+  proc0cout << "Initializing all scalar equations..." << endl;
   for (int p = 0; p < patches->size(); p++){
     //assume only one material for now
     int archIndex = 0;
@@ -1499,6 +1500,7 @@ Arches::scalarInit( const ProcessorGroup* ,
 
     } 
   }
+  proc0cout << endl;
 }
 //___________________________________________________________________________
 //
@@ -1552,6 +1554,7 @@ Arches::dqmomInit( const ProcessorGroup* ,
                    DataWarehouse* old_dw,
                    DataWarehouse* new_dw )
 {
+  proc0cout << "Initializing all DQMOM equations..." << endl;
   for (int p = 0; p < patches->size(); p++){
     //assume only one material for now.
     int archIndex = 0;
@@ -1628,6 +1631,7 @@ Arches::dqmomInit( const ProcessorGroup* ,
 
     }
   }
+  proc0cout << endl;
 }
 
 //______________________________________________________________________
