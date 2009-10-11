@@ -60,15 +60,11 @@ private:
                                              constphiT& RHS, 
                                              double dt )
   {
-
     Vector dx = patch->dCell();
-
     for (CellIterator iter=patch->getCellIterator__New(); !iter.done(); iter++){
-
+      IntVector c = *iter;
       double vol = dx.x()*dx.y()*dx.z();
-
-      phi[*iter] += dt/vol*(RHS[*iter]);
-
+      phi[c] += dt/vol*(RHS[c]);
     } 
   }
 

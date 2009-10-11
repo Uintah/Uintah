@@ -130,7 +130,7 @@ public:
   // Access functions:
   /** @brief Sets the time integrator. */ 
   inline void setTimeInt( ExplicitTimeInt* timeIntegrator ) {
-  d_timeIntegrator = timeIntegrator; 
+    d_timeIntegrator = timeIntegrator; 
   }
 
   struct FaceValues {
@@ -144,11 +144,12 @@ public:
   };  
 
   /** @brief Interpolate a point to face values for the respective cv. */
-  template <class phiT, class interpT> void
-  interpPtoF( phiT& phi, const IntVector c, interpT& F ); 
+  template <class phiT, class interpT> 
+  void interpPtoF( phiT& phi, const IntVector c, interpT& F ); 
+
   /** @brief Take a gradient of a variable to result in a face value for a respective cv. */
-  template <class phiT, class gradT> void
-  gradPtoF( phiT& phi, const IntVector c, const Patch* p, gradT& G ); 
+  template <class phiT, class gradT> 
+  void gradPtoF( phiT& phi, const IntVector c, const Patch* p, gradT& G ); 
 
   /** @brief dummy initialization for mpmArches */
   void sched_dummyInit( const LevelP& level, SchedulerP& sched );
@@ -168,8 +169,8 @@ public:
     return d_sources; };
 
 
-  template<class phiType> void
-  clipPhi( const Patch* p, 
+  template<class phiType>
+  void clipPhi( const Patch* p, 
            phiType& phi );
 
 private:
