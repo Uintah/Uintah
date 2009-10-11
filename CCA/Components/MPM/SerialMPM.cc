@@ -2016,6 +2016,7 @@ void SerialMPM::updateErosionParameter(const ProcessorGroup*,
         } 
       }
 
+#if 0
       // The following looks for localized particles that are isolated
       // either individually or in small groups
       Ghost::GhostType  gac = Ghost::AroundCells;
@@ -2060,6 +2061,7 @@ void SerialMPM::updateErosionParameter(const ProcessorGroup*,
           }
         }
       }
+#endif
 
       if (cout_dbg.active())
         cout_dbg << "updateErosionParameter:: Updated Erosion " << endl;
