@@ -43,12 +43,9 @@ EqnBase( fieldLabels, timeIntegrator, eqnName )
   varname = eqnName;
   d_transportVarLabel = VarLabel::create(varname,
             CCVariable<double>::getTypeDescription());
-  varname = eqnName+"_icv"; // icv = internal coordinate value
+  varname = eqnName+"_icv"; // icv = internal coordinate value (this is the unscaled/unweighted value)
   d_icLabel = VarLabel::create(varname, 
             CCVariable<double>::getTypeDescription());
-
-  // This is the source term:
-  // I just tagged "_src" to the end of the transport variable name
   varname = eqnName+"_src";
   d_sourceLabel = VarLabel::create(varname, 
             CCVariable<double>::getTypeDescription());
@@ -72,6 +69,7 @@ DQMOMEqn::~DQMOMEqn()
 void
 DQMOMEqn::problemSetup(const ProblemSpecP& inputdb, int qn)
 {
+  // NOTE: some of this may be better off in the EqnBase.cc class
   ProblemSpecP db = inputdb; 
   d_quadNode = qn; 
 
@@ -82,61 +80,6 @@ DQMOMEqn::problemSetup(const ProblemSpecP& inputdb, int qn)
   db->getWithDefault( "doConv", d_doConv, false);
   db->getWithDefault( "doDiff", d_doDiff, false);
   d_addSources = true; 
-
-  // Scaling information:
-  db->require( "scaling_const", d_scalingConstant ); 
-
-  // Initialization (new way):
-//  ProblemSpecP db_initialValue = db->findBlock("initialization");
-//  if( db_initialValue) {
-//
-//    db_initialValue->getAttribute("type", d_initFcn);
-//
-//    if( d_initFcn == "constant" ) {
-//      db_initialValue->require("constant", d_constant_init);
-//    } else if (d_initFcn == "step" ) {
-//      db_initialValue->require("step_direction",  d_step_dir);
-//      db_initialValue->require("step_value",      d_step_value);
-//      db_initialValue->require("step_start",      d_step_start);
-//      db_initialValue->require("step_end",        d_step_end);
-//    } else {
-//      throw InvalidValue( "Initialization function not supported!", __FILE__, __LINE__);
-//    }
-//  }
-
-  // Initialization (prior way):
-  d_initValue = 0.0;
-  for (ProblemSpecP db_initvals = db->findBlock("initial_value");
-       db_initvals != 0; db_initvals = db_initvals->findNextBlock("initial_value") ) {
-    
-    string tempQuadNode;
-    db_initvals->getAttribute("qn", tempQuadNode);
-
-    int temp_qn = atoi(tempQuadNode.c_str());
-
-    string s_myValue; 
-    db_initvals->getAttribute("value", s_myValue); 
-    double myValue = atof(s_myValue.c_str());
-    if (temp_qn == d_quadNode) 
-      d_initValue = myValue/d_scalingConstant;
-
-    // if this is an IC, then multiply by the weight.
-    if (!d_weight) {
-      DQMOMEqnFactory& dqmomFactory  = DQMOMEqnFactory::self(); 
-      string name = "w_qn"; 
-      string node; 
-      std::stringstream out; 
-      out << d_quadNode; 
-      node = out.str(); 
-      name += node;
-      EqnBase& t_w = dqmomFactory.retrieve_scalar_eqn( name );
-      DQMOMEqn& w = dynamic_cast<DQMOMEqn&>(t_w);
-
-      d_initValue *= w.getInitValue(); 
-
-    } 
-  } 
-
 
   // Models (source terms):
   for (ProblemSpecP m_db = db->findBlock("model"); m_db !=0; m_db = m_db->findNextBlock("model")){
@@ -167,6 +110,7 @@ DQMOMEqn::problemSetup(const ProblemSpecP& inputdb, int qn)
     
     db_clipping->getWithDefault("low", d_lowClip,  clip_default);
     db_clipping->getWithDefault("high",d_highClip, clip_default);
+
     if( d_weight ) {
       db_clipping->getWithDefault("small", d_smallClip, 1e-16);
     }
@@ -195,6 +139,100 @@ DQMOMEqn::problemSetup(const ProblemSpecP& inputdb, int qn)
       } 
     }
   } 
+
+  // Scaling information:
+  db->require( "scaling_const", d_scalingConstant ); 
+
+
+  // There should be some mechanism to make sure that when environment-specific
+  // initializaiton functions are used, ALL environments are specified
+  // (Maybe in Arches, not here, since here it would be repeated for every single equation)
+  // (Charles)
+
+
+  // Initialization (new way):
+  ProblemSpecP db_initialValue = db->findBlock("initialization");
+  if (db_initialValue) {
+
+    db_initialValue->getAttribute("type", d_initFunction); 
+
+
+    // ---------- Constant initialization function ------------------------
+    if (d_initFunction == "constant") {
+        // each quad node is initialized to the same thing!
+        db_initialValue->require("constant", d_constant_init); 
+
+
+    // -------- Environment constant initialization function --------------
+    } else if (d_initFunction == "env_constant" ) {
+      
+      for( ProblemSpecP db_env_constants = db_initialValue->findBlock("env_constant");
+           db_env_constants != 0; db_env_constants = db_env_constants->findNextBlock("env_constant") ) {
+        
+        // Is there a cleaner way to do this? (get int's/double's from getAttribute?) (Charles)
+        string s_tempQuadNode;
+        db_env_constants->getAttribute("qn", s_tempQuadNode);
+        int i_tempQuadNode = atoi( s_tempQuadNode.c_str() );
+
+        // Is there a cleaner way to do this? (get int's/double's from getAttribute?) (Charles)
+        string s_constant;
+        db_env_constants->getAttribute("value", s_constant);
+        double constantValue = atof( s_constant.c_str() );
+        if( i_tempQuadNode == d_quadNode )
+          d_constant_init = constantValue;
+      }
+ 
+
+    // ------- (Environment & Uniform) Step initialization function ------------
+    // NOTE: Right now the only environment-specific attribute of the step function
+    //       is the value.  This can be changed later, if someone wants to have
+    //       unique step function directions/start/stop for each environment.
+    //
+    //       Maybe one to check and ensure the tags and d_initFunciton match, e.g.
+    //       "constant" should not have "step_start"/"step_end" tags
+    // (Charles)
+    } else if (d_initFunction == "step" || d_initFunction == "env_step") {
+      
+      db_initialValue->require("step_direction", d_step_dir); 
+      
+      if( db_initialValue->findBlock("step_start") ) {
+        b_stepUsesPhysicalLocation = true;
+        db_initialValue->require("step_start", d_step_start); 
+        db_initialValue->require("step_end"  , d_step_end); 
+
+      } else if ( db_initialValue->findBlock("step_cell_start") ) {
+        b_stepUsesCellLocation = true;
+        db_initialValue->require("step_cellstart", d_step_cellstart);
+        db_initialValue->require("step_cellend", d_step_cellend);
+      }//end start/stop init.
+
+      if (d_initFunction == "step") {
+        db_initialValue->require("step_value", d_step_value); 
+      
+      } else if (d_initFunction == "env_step") {
+        for( ProblemSpecP db_env_step_value = db_initialValue->findBlock("env_step_value");
+             db_env_step_value != 0; db_env_step_value = db_env_step_value->findNextBlock("env_step_value") ) {
+          // Is there a cleaner way to do this? (get int's/double's from getAttribute?) (Charles)
+          string s_tempQuadNode;
+          db_env_step_value->getAttribute("qn", s_tempQuadNode);
+          int i_tempQuadNode = atoi( s_tempQuadNode.c_str() );
+        
+          // Is there a cleaner way to do this? (get int's/double's from getAttribute?) (Charles)
+          string s_step_value;
+          db_env_step_value->getAttribute("value", s_step_value);
+          double step_value = atof( s_step_value.c_str() );
+          if( i_tempQuadNode == d_quadNode )
+            d_step_value = step_value;
+        }
+      }//end step_value init.
+
+    // ------------ Other initialization function --------------------
+    } else {
+      throw InvalidValue("Initialization function not supported!", __FILE__, __LINE__); 
+    }
+
+  }
+
 }
 //---------------------------------------------------------------------------
 // Method: Schedule clean up. 
@@ -510,11 +548,11 @@ DQMOMEqn::solveTransportEqn( const ProcessorGroup* pc,
 // Method: Schedule the compute of the IC values
 //---------------------------------------------------------------------------
 void
-DQMOMEqn::sched_getAbscissaValues( const LevelP& level, SchedulerP& sched )
+DQMOMEqn::sched_getUnscaledValues( const LevelP& level, SchedulerP& sched )
 {
-  string taskname = "DQMOMEqn::getAbscissaValues"; 
+  string taskname = "DQMOMEqn::getUnscaledValues"; 
 
-  Task* tsk = scinew Task(taskname, this, &DQMOMEqn::getAbscissaValues);
+  Task* tsk = scinew Task(taskname, this, &DQMOMEqn::getUnscaledValues);
   
   Ghost::GhostType  gn  = Ghost::None;
   DQMOMEqnFactory& dqmomFactory  = DQMOMEqnFactory::self(); 
@@ -544,7 +582,7 @@ DQMOMEqn::sched_getAbscissaValues( const LevelP& level, SchedulerP& sched )
 // Method: Compute the IC vaues by dividing by the weights
 //---------------------------------------------------------------------------
 void 
-DQMOMEqn::getAbscissaValues( const ProcessorGroup* pc, 
+DQMOMEqn::getUnscaledValues( const ProcessorGroup* pc, 
                              const PatchSubset* patches, 
                              const MaterialSubset* matls, 
                              DataWarehouse* old_dw, 
@@ -631,6 +669,7 @@ DQMOMEqn::computeConv(const Patch* p, fT& Fconv, oldPhiT& oldPhi,
   IntVector cLow  = p->getCellLowIndex__New(); 
   IntVector cHigh = p->getCellHighIndex__New();  
 
+  // Why are these convection schemes defined twice??? (once in DQMOMEqn.cc and once in ScalarEqn.cc)
   if (d_convScheme == "upwind") {
 
     //bool xminus = p->getBCType(Patch::xminus) != Patch::Neighbor;
@@ -640,355 +679,353 @@ DQMOMEqn::computeConv(const Patch* p, fT& Fconv, oldPhiT& oldPhi,
     //bool zminus = p->getBCType(Patch::zminus) != Patch::Neighbor;
     //bool zplus =  p->getBCType(Patch::zplus) != Patch::Neighbor;
 
-  // UPWIND
-  for (CellIterator iter=p->getCellIterator__New(); !iter.done(); iter++){
-
-    IntVector c = *iter;
-    IntVector cxp = *iter + IntVector(1,0,0);
-    IntVector cxm = *iter - IntVector(1,0,0);
-    IntVector cyp = *iter + IntVector(0,1,0);
-    IntVector cym = *iter - IntVector(0,1,0);
-    IntVector czp = *iter + IntVector(0,0,1);
-    IntVector czm = *iter - IntVector(0,0,1);
-
-    double xmpVel = ( partVel[c].x() + partVel[cxm].x() )/2.0;
-    double xppVel = ( partVel[c].x() + partVel[cxp].x() )/2.0;
-
-    if ( xmpVel > 0.0 )
-      F.w = oldPhi[cxm];
-    else if (xmpVel < 0.0 )
-      F.w = oldPhi[c]; 
-    else 
-      F.w = 0.0;
-
-    if ( xppVel > 0.0 )
-      F.e = oldPhi[c];
-    else if ( xppVel < 0.0 )
-      F.e = oldPhi[cxp];
-    else 
-      F.e = 0.0;  
-
-    Fconv[c] = Dx.y()*Dx.z()*( F.e * xppVel - F.w * xmpVel );
-
+    // UPWIND
+    for (CellIterator iter=p->getCellIterator__New(); !iter.done(); iter++){
+  
+      IntVector c = *iter;
+      IntVector cxp = *iter + IntVector(1,0,0);
+      IntVector cxm = *iter - IntVector(1,0,0);
+      IntVector cyp = *iter + IntVector(0,1,0);
+      IntVector cym = *iter - IntVector(0,1,0);
+      IntVector czp = *iter + IntVector(0,0,1);
+      IntVector czm = *iter - IntVector(0,0,1);
+  
+      double xmpVel = ( partVel[c].x() + partVel[cxm].x() )/2.0;
+      double xppVel = ( partVel[c].x() + partVel[cxp].x() )/2.0;
+  
+      if ( xmpVel > 0.0 )
+        F.w = oldPhi[cxm];
+      else if (xmpVel < 0.0 )
+        F.w = oldPhi[c]; 
+      else 
+        F.w = 0.0;
+  
+      if ( xppVel > 0.0 )
+        F.e = oldPhi[c];
+      else if ( xppVel < 0.0 )
+        F.e = oldPhi[cxp];
+      else 
+        F.e = 0.0;  
+  
+      Fconv[c] = Dx.y()*Dx.z()*( F.e * xppVel - F.w * xmpVel );
+  
 #ifdef YDIM
-    double ympVel = ( partVel[c].y() + partVel[cym].y() )/2.0;
-    double yppVel = ( partVel[c].y() + partVel[cyp].y() )/2.0;
- 
-    if ( ympVel > 0.0 )
-      F.s = oldPhi[cym];
-    else if ( ympVel < 0.0 )
-      F.s = oldPhi[c]; 
-    else
-      F.s = 0.0;  
-
-
-    if ( yppVel > 0.0 )
-      F.n = oldPhi[c];
-    else if ( yppVel < 0.0 )
-      F.n = oldPhi[cyp];
-    else  
-      F.n = 0.0; 
-
-    Fconv[c] += Dx.x()*Dx.z()*( F.n * yppVel - F.s * ympVel ); 
+      double ympVel = ( partVel[c].y() + partVel[cym].y() )/2.0;
+      double yppVel = ( partVel[c].y() + partVel[cyp].y() )/2.0;
+   
+      if ( ympVel > 0.0 )
+        F.s = oldPhi[cym];
+      else if ( ympVel < 0.0 )
+        F.s = oldPhi[c]; 
+      else
+        F.s = 0.0;  
+  
+  
+      if ( yppVel > 0.0 )
+        F.n = oldPhi[c];
+      else if ( yppVel < 0.0 )
+        F.n = oldPhi[cyp];
+      else  
+        F.n = 0.0; 
+  
+      Fconv[c] += Dx.x()*Dx.z()*( F.n * yppVel - F.s * ympVel ); 
 #endif
 #ifdef ZDIM
-    double zmpVel = ( partVel[c].z() + partVel[czm].z() )/2.0;
-    double zppVel = ( partVel[c].z() + partVel[czp].z() )/2.0;
- 
-    if ( zmpVel > 0.0 )
-      F.b = oldPhi[czm];
-    else if ( zmpVel < 0.0 )
-      F.b = oldPhi[c]; 
-    else 
-      F.b = 0.0;   
-
-    if ( zppVel > 0.0 )
-      F.t = oldPhi[c];
-    else if ( zppVel < 0.0 )
-      F.t = oldPhi[czp];
-    else 
-      F.t = 0.0;  
-
-    Fconv[c] += Dx.x()*Dx.y()*( F.t * zppVel - F.b * zmpVel ); 
+      double zmpVel = ( partVel[c].z() + partVel[czm].z() )/2.0;
+      double zppVel = ( partVel[c].z() + partVel[czp].z() )/2.0;
+   
+      if ( zmpVel > 0.0 )
+        F.b = oldPhi[czm];
+      else if ( zmpVel < 0.0 )
+        F.b = oldPhi[c]; 
+      else 
+        F.b = 0.0;   
+  
+      if ( zppVel > 0.0 )
+        F.t = oldPhi[c];
+      else if ( zppVel < 0.0 )
+        F.t = oldPhi[czp];
+      else 
+        F.t = 0.0;  
+  
+      Fconv[c] += Dx.x()*Dx.y()*( F.t * zppVel - F.b * zmpVel ); 
 #endif 
-  }
+    }
   } else if (d_convScheme == "super_bee") { 
 
-  // SUPERBEE
-  for (CellIterator iter=p->getCellIterator__New(); !iter.done(); iter++){
-
-    bool xminus = p->getBCType(Patch::xminus) != Patch::Neighbor;
-    bool xplus =  p->getBCType(Patch::xplus) != Patch::Neighbor;
-    bool yminus = p->getBCType(Patch::yminus) != Patch::Neighbor;
-    bool yplus =  p->getBCType(Patch::yplus) != Patch::Neighbor;
-    bool zminus = p->getBCType(Patch::zminus) != Patch::Neighbor;
-    bool zplus =  p->getBCType(Patch::zplus) != Patch::Neighbor;
-
-    IntVector c = *iter;
-    IntVector cxp = *iter + IntVector(1,0,0);
-    IntVector cxpp= *iter + IntVector(2,0,0);
-    IntVector cxm = *iter - IntVector(1,0,0);
-    IntVector cxmm= *iter - IntVector(2,0,0);
-    IntVector cyp = *iter + IntVector(0,1,0);
-    IntVector cypp= *iter + IntVector(0,2,0);
-    IntVector cym = *iter - IntVector(0,1,0);
-    IntVector cymm= *iter - IntVector(0,2,0);
-    IntVector czp = *iter + IntVector(0,0,1);
-    IntVector czpp= *iter + IntVector(0,0,2);
-    IntVector czm = *iter - IntVector(0,0,1);
-    IntVector czmm= *iter - IntVector(0,0,2);
-
-    //interpPtoF( oldPhi, c, F ); 
-
-    double xmpVel = ( partVel[c].x() + partVel[cxm].x() )/2.0;
-    double xppVel = ( partVel[c].x() + partVel[cxp].x() )/2.0;
-
-    double r; 
-    double psi; 
-    double Sup;
-    double Sdn;
-
-    // EAST
-    if ( xplus && c.x() == cHigh.x() ) {
-      // Boundary condition 
-      // resorting to upwind @ boundary 
-      if ( xppVel > 0.0 ) { 
-        Sup = oldPhi[c]; 
-        Sdn = 0.0; 
-        psi = 0.0;  
-      } else if ( xppVel < 0.0 ) { 
-        Sup = oldPhi[cxp]; 
-        Sdn = 0.0; 
-        psi = 0.0; 
-      } else {
-        Sup = 0.0;
-        Sdn = 0.0; 
-        psi = 0.0;
-      } 
-    } else { 
-      if ( xppVel > 0.0 ) {
-        r = ( oldPhi[c] - oldPhi[cxm] ) / ( oldPhi[cxp] - oldPhi[c] );
-        Sup = oldPhi[c];
-        Sdn = oldPhi[cxp];
-      } else if ( xppVel < 0.0 ) {
-        r = ( oldPhi[cxpp] - oldPhi[cxp] ) / ( oldPhi[cxp] - oldPhi[c] );
-        Sup = oldPhi[cxp];
-        Sdn = oldPhi[c]; 
-      } else {
-        Sup = 0.0;
-        Sdn = 0.0; 
-        psi = 0.0;
-      }
-      psi = max( min(2.0*r, 1.0), min(r, 2.0) );
-      psi = max( 0.0, psi );
-    }
-
-    F.e = Sup + 0.5*psi*( Sdn - Sup ); 
-
-    // WEST 
-    if ( xminus && c.x() == cLow.x() ) { 
-      // Boundary condition 
-      // resorting to upwind @ boundary 
-      if ( xmpVel > 0.0 ) { 
-        Sup = oldPhi[cxm]; 
-        Sdn = 0.0; 
-        psi = 0.0;  
-      } else if ( xmpVel < 0.0 ) { 
-        Sup = oldPhi[c]; 
-        Sdn = 0.0; 
-        psi = 0.0; 
-      } else {
-        Sup = 0.0;
-        Sdn = 0.0; 
-        psi = 0.0;
-      } 
-    } else {
-      if ( xmpVel > 0.0 ) {
-        Sup = oldPhi[cxm];
-        Sdn = oldPhi[c];
-        r = ( oldPhi[cxm] - oldPhi[cxmm] ) / ( oldPhi[c] - oldPhi[cxm] ); 
-      } else if ( xmpVel < 0.0 ) {
-        Sup = oldPhi[c];
-        Sdn = oldPhi[cxm];
-        r = ( oldPhi[cxp] - oldPhi[c] ) / ( oldPhi[c] - oldPhi[cxm] );
-      } else { 
-        Sup = 0.0;
-        Sdn = 0.0; 
-        psi = 0.0;
-      }
-      psi = max( min(2.0*r, 1.0), min(r, 2.0) );
-      psi = max( 0.0, psi );
-    }
+    // SUPERBEE
+    for (CellIterator iter=p->getCellIterator__New(); !iter.done(); iter++){
   
-    F.w = Sup + 0.5*psi*( Sdn - Sup ); 
-
-    Fconv[c] = Dx.y()*Dx.z()*( F.e * xppVel - F.w * xmpVel );
-#ifdef YDIM
-    double ympVel = ( partVel[c].y() + partVel[cym].y() )/2.0;
-    double yppVel = ( partVel[c].y() + partVel[cyp].y() )/2.0;
-    // NORTH
-    if ( yplus && c.y() == cHigh.y() ) {
-      // Boundary condition 
-      // resorting to upwind @ boundary 
-      if ( yppVel > 0.0 ) { 
-        Sup = oldPhi[c]; 
-        Sdn = 0.0; 
-        psi = 0.0;  
-      } else if ( yppVel < 0.0 ) { 
-        Sup = oldPhi[cyp]; 
-        Sdn = 0.0; 
-        psi = 0.0; 
-      } else {
-        Sup = 0.0;
-        Sdn = 0.0; 
-        psi = 0.0;
+      bool xminus = p->getBCType(Patch::xminus) != Patch::Neighbor;
+      bool xplus =  p->getBCType(Patch::xplus) != Patch::Neighbor;
+      bool yminus = p->getBCType(Patch::yminus) != Patch::Neighbor;
+      bool yplus =  p->getBCType(Patch::yplus) != Patch::Neighbor;
+      bool zminus = p->getBCType(Patch::zminus) != Patch::Neighbor;
+      bool zplus =  p->getBCType(Patch::zplus) != Patch::Neighbor;
+  
+      IntVector c = *iter;
+      IntVector cxp = *iter + IntVector(1,0,0);
+      IntVector cxpp= *iter + IntVector(2,0,0);
+      IntVector cxm = *iter - IntVector(1,0,0);
+      IntVector cxmm= *iter - IntVector(2,0,0);
+      IntVector cyp = *iter + IntVector(0,1,0);
+      IntVector cypp= *iter + IntVector(0,2,0);
+      IntVector cym = *iter - IntVector(0,1,0);
+      IntVector cymm= *iter - IntVector(0,2,0);
+      IntVector czp = *iter + IntVector(0,0,1);
+      IntVector czpp= *iter + IntVector(0,0,2);
+      IntVector czm = *iter - IntVector(0,0,1);
+      IntVector czmm= *iter - IntVector(0,0,2);
+  
+      //interpPtoF( oldPhi, c, F ); 
+  
+      double xmpVel = ( partVel[c].x() + partVel[cxm].x() )/2.0;
+      double xppVel = ( partVel[c].x() + partVel[cxp].x() )/2.0;
+  
+      double r; 
+      double psi; 
+      double Sup;
+      double Sdn;
+  
+      // EAST
+      if ( xplus && c.x() == cHigh.x() ) {
+        // Boundary condition 
+        // resorting to upwind @ boundary 
+        if ( xppVel > 0.0 ) { 
+          Sup = oldPhi[c]; 
+          Sdn = 0.0; 
+          psi = 0.0;  
+        } else if ( xppVel < 0.0 ) { 
+          Sup = oldPhi[cxp]; 
+          Sdn = 0.0; 
+          psi = 0.0; 
+        } else {
+          Sup = 0.0;
+          Sdn = 0.0; 
+          psi = 0.0;
+        } 
+      } else { 
+        if ( xppVel > 0.0 ) {
+          r = ( oldPhi[c] - oldPhi[cxm] ) / ( oldPhi[cxp] - oldPhi[c] );
+          Sup = oldPhi[c];
+          Sdn = oldPhi[cxp];
+        } else if ( xppVel < 0.0 ) {
+          r = ( oldPhi[cxpp] - oldPhi[cxp] ) / ( oldPhi[cxp] - oldPhi[c] );
+          Sup = oldPhi[cxp];
+          Sdn = oldPhi[c]; 
+        } else {
+          Sup = 0.0;
+          Sdn = 0.0; 
+          psi = 0.0;
+        }
+        psi = max( min(2.0*r, 1.0), min(r, 2.0) );
+        psi = max( 0.0, psi );
       }
-    } else { 
-      if ( yppVel > 0.0 ) {
-        r = ( oldPhi[c] - oldPhi[cym] ) / ( oldPhi[cyp] - oldPhi[c] );
-        Sup = oldPhi[c];
-        Sdn = oldPhi[cyp];
-      } else if ( yppVel < 0.0 ) {
-        r = ( oldPhi[cypp] - oldPhi[cyp] ) / ( oldPhi[cyp] - oldPhi[c] );
-        Sup = oldPhi[cyp];
-        Sdn = oldPhi[c]; 
+  
+      F.e = Sup + 0.5*psi*( Sdn - Sup ); 
+  
+      // WEST 
+      if ( xminus && c.x() == cLow.x() ) { 
+        // Boundary condition 
+        // resorting to upwind @ boundary 
+        if ( xmpVel > 0.0 ) { 
+          Sup = oldPhi[cxm]; 
+          Sdn = 0.0; 
+          psi = 0.0;  
+        } else if ( xmpVel < 0.0 ) { 
+          Sup = oldPhi[c]; 
+          Sdn = 0.0; 
+          psi = 0.0; 
+        } else {
+          Sup = 0.0;
+          Sdn = 0.0; 
+          psi = 0.0;
+        } 
       } else {
-        Sup = 0.0;
-        Sdn = 0.0; 
-        psi = 0.0;
-      } 
-      psi = max( min(2.0*r, 1.0), min(r, 2.0) );
-      psi = max( 0.0, psi );
-    }
-
-    F.n = Sup + 0.5*psi*( Sdn - Sup ); 
-
-    // SOUTH 
-    if ( yminus && c.y() == cLow.y() ) {
-      // Boundary condition 
-      // resorting to upwind @ boundary 
-      if ( ympVel > 0.0 ) { 
-        Sup = oldPhi[cym]; 
-        Sdn = 0.0; 
-        psi = 0.0;  
-      } else if ( ympVel < 0.0 ) { 
-        Sup = oldPhi[c]; 
-        Sdn = 0.0; 
-        psi = 0.0; 
-      } else {
-        Sup = 0.0;
-        Sdn = 0.0; 
-        psi = 0.0;
-      } 
-    } else { 
-      if ( ympVel > 0.0 ) {
-        Sup = oldPhi[cym];
-        Sdn = oldPhi[c];
-        r = ( oldPhi[cym] - oldPhi[cymm] ) / ( oldPhi[c] - oldPhi[cym] ); 
-      } else if ( ympVel > 0.0 ) {
-        Sup = oldPhi[c];
-        Sdn = oldPhi[cym];
-        r = ( oldPhi[cyp] - oldPhi[c] ) / ( oldPhi[c] - oldPhi[cym] ); 
-      } else {
-        Sup = 0.0;
-        Sdn = 0.0; 
-        psi = 0.0;
-      } 
-      psi = max( min(2.0*r, 1.0), min(r, 2.0) );
-      psi = max( 0.0, psi );
-    }
-
-    F.s = Sup + 0.5*psi*( Sdn - Sup ); 
-
-    Fconv[c] += Dx.x()*Dx.z()*( F.n * yppVel - F.s * ympVel ); 
+        if ( xmpVel > 0.0 ) {
+          Sup = oldPhi[cxm];
+          Sdn = oldPhi[c];
+          r = ( oldPhi[cxm] - oldPhi[cxmm] ) / ( oldPhi[c] - oldPhi[cxm] ); 
+        } else if ( xmpVel < 0.0 ) {
+          Sup = oldPhi[c];
+          Sdn = oldPhi[cxm];
+          r = ( oldPhi[cxp] - oldPhi[c] ) / ( oldPhi[c] - oldPhi[cxm] );
+        } else { 
+          Sup = 0.0;
+          Sdn = 0.0; 
+          psi = 0.0;
+        }
+        psi = max( min(2.0*r, 1.0), min(r, 2.0) );
+        psi = max( 0.0, psi );
+      }
+    
+      F.w = Sup + 0.5*psi*( Sdn - Sup ); 
+  
+      Fconv[c] = Dx.y()*Dx.z()*( F.e * xppVel - F.w * xmpVel );
+#ifdef YDIM
+      double ympVel = ( partVel[c].y() + partVel[cym].y() )/2.0;
+      double yppVel = ( partVel[c].y() + partVel[cyp].y() )/2.0;
+      // NORTH
+      if ( yplus && c.y() == cHigh.y() ) {
+        // Boundary condition 
+        // resorting to upwind @ boundary 
+        if ( yppVel > 0.0 ) { 
+          Sup = oldPhi[c]; 
+          Sdn = 0.0; 
+          psi = 0.0;  
+        } else if ( yppVel < 0.0 ) { 
+          Sup = oldPhi[cyp]; 
+          Sdn = 0.0; 
+          psi = 0.0; 
+        } else {
+          Sup = 0.0;
+          Sdn = 0.0; 
+          psi = 0.0;
+        }
+      } else { 
+        if ( yppVel > 0.0 ) {
+          r = ( oldPhi[c] - oldPhi[cym] ) / ( oldPhi[cyp] - oldPhi[c] );
+          Sup = oldPhi[c];
+          Sdn = oldPhi[cyp];
+        } else if ( yppVel < 0.0 ) {
+          r = ( oldPhi[cypp] - oldPhi[cyp] ) / ( oldPhi[cyp] - oldPhi[c] );
+          Sup = oldPhi[cyp];
+          Sdn = oldPhi[c]; 
+        } else {
+          Sup = 0.0;
+          Sdn = 0.0; 
+          psi = 0.0;
+        } 
+        psi = max( min(2.0*r, 1.0), min(r, 2.0) );
+        psi = max( 0.0, psi );
+      }
+  
+      F.n = Sup + 0.5*psi*( Sdn - Sup ); 
+  
+      // SOUTH 
+      if ( yminus && c.y() == cLow.y() ) {
+        // Boundary condition 
+        // resorting to upwind @ boundary 
+        if ( ympVel > 0.0 ) { 
+          Sup = oldPhi[cym]; 
+          Sdn = 0.0; 
+          psi = 0.0;  
+        } else if ( ympVel < 0.0 ) { 
+          Sup = oldPhi[c]; 
+          Sdn = 0.0; 
+          psi = 0.0; 
+        } else {
+          Sup = 0.0;
+          Sdn = 0.0; 
+          psi = 0.0;
+        } 
+      } else { 
+        if ( ympVel > 0.0 ) {
+          Sup = oldPhi[cym];
+          Sdn = oldPhi[c];
+          r = ( oldPhi[cym] - oldPhi[cymm] ) / ( oldPhi[c] - oldPhi[cym] ); 
+        } else if ( ympVel > 0.0 ) {
+          Sup = oldPhi[c];
+          Sdn = oldPhi[cym];
+          r = ( oldPhi[cyp] - oldPhi[c] ) / ( oldPhi[c] - oldPhi[cym] ); 
+        } else {
+          Sup = 0.0;
+          Sdn = 0.0; 
+          psi = 0.0;
+        } 
+        psi = max( min(2.0*r, 1.0), min(r, 2.0) );
+        psi = max( 0.0, psi );
+      }
+  
+      F.s = Sup + 0.5*psi*( Sdn - Sup ); 
+  
+      Fconv[c] += Dx.x()*Dx.z()*( F.n * yppVel - F.s * ympVel ); 
 #endif
 #ifdef ZDIM
-    double zmpVel = ( partVel[c].z() + partVel[czm].z() )/2.0;
-    double zppVel = ( partVel[c].z() + partVel[czp].z() )/2.0;
-
-    // TOP
-    if ( zplus && c.z() == cHigh.z() ) { 
-      // Boundary condition 
-      // resorting to upwind @ boundary 
-      if ( zppVel > 0.0 ) { 
-        Sup = oldPhi[c]; 
-        Sdn = 0.0; 
-        psi = 0.0;  
-      } else if ( zppVel < 0.0 ) { 
-        Sup = oldPhi[czp]; 
-        Sdn = 0.0; 
-        psi = 0.0; 
-      } else {
-        Sup = 0.0;
-        Sdn = 0.0; 
-        psi = 0.0;
-      } 
-    } else { 
-      if ( zppVel > 0.0 ) {
-        r = ( oldPhi[c] - oldPhi[czm] ) / ( oldPhi[czp] - oldPhi[c] );
-        Sup = oldPhi[c];
-        Sdn = oldPhi[czp];
-      } else if ( zppVel < 0.0 ) {
-        r = ( oldPhi[czpp] - oldPhi[czp] ) / ( oldPhi[czp] - oldPhi[c] );
-        Sup = oldPhi[czp];
-        Sdn = oldPhi[c]; 
+      double zmpVel = ( partVel[c].z() + partVel[czm].z() )/2.0;
+      double zppVel = ( partVel[c].z() + partVel[czp].z() )/2.0;
+  
+      // TOP
+      if ( zplus && c.z() == cHigh.z() ) { 
+        // Boundary condition 
+        // resorting to upwind @ boundary 
+        if ( zppVel > 0.0 ) { 
+          Sup = oldPhi[c]; 
+          Sdn = 0.0; 
+          psi = 0.0;  
+        } else if ( zppVel < 0.0 ) { 
+          Sup = oldPhi[czp]; 
+          Sdn = 0.0; 
+          psi = 0.0; 
+        } else {
+          Sup = 0.0;
+          Sdn = 0.0; 
+          psi = 0.0;
+        } 
       } else { 
-        Sup = 0.0;
-        Sdn = 0.0; 
-        psi = 0.0;
+        if ( zppVel > 0.0 ) {
+          r = ( oldPhi[c] - oldPhi[czm] ) / ( oldPhi[czp] - oldPhi[c] );
+          Sup = oldPhi[c];
+          Sdn = oldPhi[czp];
+        } else if ( zppVel < 0.0 ) {
+          r = ( oldPhi[czpp] - oldPhi[czp] ) / ( oldPhi[czp] - oldPhi[c] );
+          Sup = oldPhi[czp];
+          Sdn = oldPhi[c]; 
+        } else { 
+          Sup = 0.0;
+          Sdn = 0.0; 
+          psi = 0.0;
+        }
+  
+        psi = max( min(2.0*r, 1.0), min(r, 2.0) );
+        psi = max( 0.0, psi );
       }
-
-      psi = max( min(2.0*r, 1.0), min(r, 2.0) );
-      psi = max( 0.0, psi );
-    }
-
-    F.t = Sup + 0.5*psi*( Sdn - Sup ); 
-
-    // BOTTOM 
-    if ( zminus && c.z() == cLow.z() ) { 
-      // Boundary condition 
-      // resorting to upwind @ boundary 
-      if ( zmpVel > 0.0 ) { 
-        Sup = oldPhi[czm]; 
-        Sdn = 0.0; 
-        psi = 0.0;  
-      } else if ( zmpVel < 0.0 ) { 
-        Sup = oldPhi[c]; 
-        Sdn = 0.0; 
-        psi = 0.0; 
-      } else {
-        Sup = 0.0;
-        Sdn = 0.0; 
-        psi = 0.0;
-      } 
-    } else { 
-      if ( zmpVel > 0.0 ) {
-        Sup = oldPhi[czm];
-        Sdn = oldPhi[c];
-        r = ( oldPhi[czm] - oldPhi[czmm] ) / ( oldPhi[c] - oldPhi[czm] ); 
-      } else if ( zmpVel > 0.0 ) {
-        Sup = oldPhi[c];
-        Sdn = oldPhi[czm];
-        r = ( oldPhi[czp] - oldPhi[c] ) / ( oldPhi[c] - oldPhi[czm] );
-      } else {  
-        Sup = 0.0;
-        Sdn = 0.0; 
-        psi = 0.0;
+  
+      F.t = Sup + 0.5*psi*( Sdn - Sup ); 
+  
+      // BOTTOM 
+      if ( zminus && c.z() == cLow.z() ) { 
+        // Boundary condition 
+        // resorting to upwind @ boundary 
+        if ( zmpVel > 0.0 ) { 
+          Sup = oldPhi[czm]; 
+          Sdn = 0.0; 
+          psi = 0.0;  
+        } else if ( zmpVel < 0.0 ) { 
+          Sup = oldPhi[c]; 
+          Sdn = 0.0; 
+          psi = 0.0; 
+        } else {
+          Sup = 0.0;
+          Sdn = 0.0; 
+          psi = 0.0;
+        } 
+      } else { 
+        if ( zmpVel > 0.0 ) {
+          Sup = oldPhi[czm];
+          Sdn = oldPhi[c];
+          r = ( oldPhi[czm] - oldPhi[czmm] ) / ( oldPhi[c] - oldPhi[czm] ); 
+        } else if ( zmpVel > 0.0 ) {
+          Sup = oldPhi[c];
+          Sdn = oldPhi[czm];
+          r = ( oldPhi[czp] - oldPhi[c] ) / ( oldPhi[c] - oldPhi[czm] );
+        } else {  
+          Sup = 0.0;
+          Sdn = 0.0; 
+          psi = 0.0;
+        }
+        psi = max( min(2.0*r, 1.0), min(r, 2.0) );
+        psi = max( 0.0, psi );
       }
-      psi = max( min(2.0*r, 1.0), min(r, 2.0) );
-      psi = max( 0.0, psi );
-    }
-
-    F.b = Sup + 0.5*psi*( Sdn - Sup ); 
-
-    Fconv[c] += Dx.x()*Dx.y()*( F.t * zppVel - F.b * zmpVel ); 
+  
+      F.b = Sup + 0.5*psi*( Sdn - Sup ); 
+  
+      Fconv[c] += Dx.x()*Dx.y()*( F.t * zppVel - F.b * zmpVel ); 
 #endif
-  }
+    }
 
   } else {
-
-    cout << "Convection scheme not supported! " << endl;
-
+    proc0cout << "Convection scheme " << d_convScheme << " not supported! " << endl;
   }
 }
 //---------------------------------------------------------------------------

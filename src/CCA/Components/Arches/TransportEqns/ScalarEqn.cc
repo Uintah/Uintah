@@ -1,11 +1,13 @@
-#include <Core/ProblemSpec/ProblemSpec.h>
-#include <CCA/Ports/Scheduler.h>
-#include <Core/Grid/SimulationState.h>
-#include <Core/Grid/Variables/VarTypes.h>
 #include <CCA/Components/Arches/TransportEqns/ScalarEqn.h>
 #include <CCA/Components/Arches/SourceTerms/SourceTermFactory.h>
 #include <CCA/Components/Arches/SourceTerms/SourceTermBase.h>
+#include <CCA/Ports/Scheduler.h>
+
+#include <Core/ProblemSpec/ProblemSpec.h>
+#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Exceptions/InvalidValue.h>
+#include <Core/Parallel/Parallel.h>
 
 using namespace std;
 using namespace Uintah;
@@ -66,8 +68,15 @@ ScalarEqn::problemSetup(const ProblemSpecP& inputdb)
 {
   ProblemSpecP db = inputdb; 
 
-  d_turbPrNo = 0.4; // put this as an input somewhere.
-  
+  db->getWithDefault("turbulentPrandtlNumber",d_turbPrNo,0.4);
+ 
+  // Discretization information
+  db->getWithDefault( "conv_scheme", d_convScheme, "upwind");
+  db->getWithDefault( "doConv", d_doConv, false);
+  db->getWithDefault( "doDiff", d_doDiff, false);
+  db->getWithDefault( "addSources", d_addSources, true); 
+
+  // Source terms:
   if (db->findBlock("src")){
     string srcname; 
     for (ProblemSpecP src_db = db->findBlock("src"); src_db != 0; src_db = src_db->findNextBlock("src")){
@@ -78,20 +87,14 @@ ScalarEqn::problemSetup(const ProblemSpecP& inputdb)
     }
   }
 
-  // Now look for other things:
-  // convection scheme
-  db->getWithDefault( "conv_scheme", d_convScheme, "upwind");
-  db->getWithDefault( "doConv", d_doConv, false);
-  db->getWithDefault( "doDiff", d_doDiff, false);
-  db->getWithDefault( "addSources", d_addSources, true); 
-
-  // Check for clipping
+  // Clipping:
   d_doClipping = false; 
   ProblemSpecP db_clipping = db->findBlock("Clipping");
-  d_lowClip = 0.0; // initializing this to zero for getAbscissa values
-  double clip_default = -9999999999.0;
+
   if (db_clipping) {
     //This seems like a *safe* number to assume 
+    double clip_default = -999999;
+
     d_doLowClip = false; 
     d_doHighClip = false; 
     d_doClipping = true;
@@ -107,24 +110,39 @@ ScalarEqn::problemSetup(const ProblemSpecP& inputdb)
 
     if ( !d_doHighClip && !d_doLowClip ) 
       throw InvalidValue("A low or high clipping must be specified if the <Clipping> section is activated!", __FILE__, __LINE__);
-   } 
+  } 
 
-  // initial value 
+  // Scaling information:
+  db->getWithDefault( "scaling_const", d_scalingConstant, 1.0 ); 
+
+  // Initialization (new way):
   ProblemSpecP db_initialValue = db->findBlock("initialization");
   if (db_initialValue) {
 
-    db_initialValue->getAttribute("type", d_initFcn); 
+    db_initialValue->getAttribute("type", d_initFunction); 
 
-    if (d_initFcn == "constant") {
+    if (d_initFunction == "constant") {
       db_initialValue->require("constant", d_constant_init); 
-    } else if (d_initFcn == "step") {
+
+    } else if (d_initFunction == "step") {
       db_initialValue->require("step_direction", d_step_dir); 
       db_initialValue->require("step_value", d_step_value); 
-      db_initialValue->require("step_start", d_step_start); 
-      db_initialValue->require("step_end"  , d_step_end); 
+
+      if( db_initialValue->findBlock("step_start") ) {
+        b_stepUsesPhysicalLocation = true;
+        db_initialValue->require("step_start", d_step_start); 
+        db_initialValue->require("step_end"  , d_step_end); 
+
+      } else if ( db_initialValue->findBlock("step_cellstart") ) {
+        b_stepUsesCellLocation = true;
+        db_initialValue->require("step_cellstart", d_step_cellstart);
+        db_initialValue->require("step_cellend", d_step_cellend);
+      }
+
     } else {
       throw InvalidValue("Initialization function not supported!", __FILE__, __LINE__); 
     }
+
   }
 }
 //---------------------------------------------------------------------------
@@ -458,6 +476,7 @@ ScalarEqn::solveTransportEqn( const ProcessorGroup* pc,
 
   }
 }
+
 //---------------------------------------------------------------------------
 // Method: Compute the convection term. 
 //---------------------------------------------------------------------------
@@ -471,221 +490,219 @@ ScalarEqn::computeConv(const Patch* p, fT& Fconv, oldPhiT& oldPhi,
 
   if (d_convScheme == "upwind") {
 
-  // UPWIND
-  for (CellIterator iter=p->getCellIterator__New(); !iter.done(); iter++){
-
-    IntVector c = *iter;
-    IntVector cxp = *iter + IntVector(1,0,0);
-    IntVector cxm = *iter - IntVector(1,0,0);
-    IntVector cyp = *iter + IntVector(0,1,0);
-    IntVector cym = *iter - IntVector(0,1,0);
-    IntVector czp = *iter + IntVector(0,0,1);
-    IntVector czm = *iter - IntVector(0,0,1);
-
-    double xmVel = uVel[c];
-    double xpVel = uVel[cxp];
-
-    if ( xmVel >= 0.0 )
-      F.w = oldPhi[cxm];
-    else
-      F.w = oldPhi[c]; 
-
-    if ( xpVel >= 0.0 )
-      F.e = oldPhi[c];
-    else
-      F.e = oldPhi[cxp];
-
-    Fconv[c] = Dx.y()*Dx.z()*( F.e * xpVel - F.w * xmVel );
-
+    // UPWIND
+    for (CellIterator iter=p->getCellIterator__New(); !iter.done(); iter++){
+  
+      IntVector c = *iter;
+      IntVector cxp = *iter + IntVector(1,0,0);
+      IntVector cxm = *iter - IntVector(1,0,0);
+      IntVector cyp = *iter + IntVector(0,1,0);
+      IntVector cym = *iter - IntVector(0,1,0);
+      IntVector czp = *iter + IntVector(0,0,1);
+      IntVector czm = *iter - IntVector(0,0,1);
+  
+      double xmVel = uVel[c];
+      double xpVel = uVel[cxp];
+  
+      if ( xmVel >= 0.0 )
+        F.w = oldPhi[cxm];
+      else
+        F.w = oldPhi[c]; 
+  
+      if ( xpVel >= 0.0 )
+        F.e = oldPhi[c];
+      else
+        F.e = oldPhi[cxp];
+  
+      Fconv[c] = Dx.y()*Dx.z()*( F.e * xpVel - F.w * xmVel );
+  
 #ifdef YDIM
-    double ymVel = vVel[c];
-    double ypVel = vVel[cyp];
- 
-    if ( ymVel >= 0.0 )
-      F.s = oldPhi[cym];
-    else
-      F.s = oldPhi[c]; 
-
-    if ( ypVel >= 0.0 )
-      F.n = oldPhi[c];
-    else
-      F.n = oldPhi[cyp];
-
-    Fconv[c] += Dx.x()*Dx.z()*( F.n * ypVel - F.s * ymVel ); 
+      double ymVel = vVel[c];
+      double ypVel = vVel[cyp];
+   
+      if ( ymVel >= 0.0 )
+        F.s = oldPhi[cym];
+      else
+        F.s = oldPhi[c]; 
+  
+      if ( ypVel >= 0.0 )
+        F.n = oldPhi[c];
+      else
+        F.n = oldPhi[cyp];
+  
+      Fconv[c] += Dx.x()*Dx.z()*( F.n * ypVel - F.s * ymVel ); 
 #endif
 #ifdef ZDIM
-    double zmVel = wVel[c];
-    double zpVel = wVel[czp];
- 
-    if ( zmVel >= 0.0 )
-      F.b = oldPhi[czm];
-    else
-      F.b = oldPhi[c]; 
-
-    if ( zpVel >= 0.0 )
-      F.t = oldPhi[c];
-    else
-      F.t = oldPhi[czp];
-
-    Fconv[c] += Dx.x()*Dx.y()*( F.t * zpVel - F.b * zmVel ); 
-#endif 
-  }
+      double zmVel = wVel[c];
+      double zpVel = wVel[czp];
+   
+      if ( zmVel >= 0.0 )
+        F.b = oldPhi[czm];
+      else
+        F.b = oldPhi[c]; 
+  
+      if ( zpVel >= 0.0 )
+        F.t = oldPhi[c];
+      else
+        F.t = oldPhi[czp];
+  
+      Fconv[c] += Dx.x()*Dx.y()*( F.t * zpVel - F.b * zmVel ); 
+  #endif 
+    }
   } else if (d_convScheme == "super_bee") { 
 
-  // SUPERBEE
-  for (CellIterator iter=p->getCellIterator__New(); !iter.done(); iter++){
-    IntVector c = *iter;
-    IntVector cxp = *iter + IntVector(1,0,0);
-    IntVector cxpp= *iter + IntVector(2,0,0);
-    IntVector cxm = *iter - IntVector(1,0,0);
-    IntVector cxmm= *iter - IntVector(2,0,0);
-    IntVector cyp = *iter + IntVector(0,1,0);
-    IntVector cypp= *iter + IntVector(0,2,0);
-    IntVector cym = *iter - IntVector(0,1,0);
-    IntVector cymm= *iter - IntVector(0,2,0);
-    IntVector czp = *iter + IntVector(0,0,1);
-    IntVector czpp= *iter + IntVector(0,0,2);
-    IntVector czm = *iter - IntVector(0,0,1);
-    IntVector czmm= *iter - IntVector(0,0,2);
-
-    interpPtoF( oldPhi, c, F ); 
-
-    double xmVel = uVel[c];
-    double xpVel = uVel[cxp];
-
-    double r; 
-    double psi; 
-    double Sup;
-    double Sdn;
-
-    // EAST
-    if ( xpVel >= 0.0 ) {
-      r = ( oldPhi[c] - oldPhi[cxm] ) / ( oldPhi[cxp] - oldPhi[c] );
-      Sup = oldPhi[c];
-      Sdn = oldPhi[cxp];
-    } else {
-      r = ( oldPhi[cxpp] - oldPhi[cxp] ) / ( oldPhi[cxp] - oldPhi[c] );
-      Sup = oldPhi[cxp];
-      Sdn = oldPhi[c]; 
-    }
-
-    psi = max( min(2.0*r, 1.0), min(r, 2.0) );
-    psi = max( 0.0, psi );
-    F.e = Sup + 0.5*psi*( Sdn - Sup ); 
-
-    // WEST 
-    if ( xmVel >= 0.0 ) {
-      Sup = oldPhi[cxm];
-      Sdn = oldPhi[c];
-      r = ( oldPhi[cxm] - oldPhi[cxmm] ) / ( oldPhi[c] - oldPhi[cxm] ); 
-    } else {
-      Sup = oldPhi[c];
-      Sdn = oldPhi[cxm];
-      r = ( oldPhi[cxp] - oldPhi[c] ) / ( oldPhi[c] - oldPhi[cxm] ); 
-    }
-
-    psi = max( min(2.0*r, 1.0), min(r, 2.0) );
-    psi = max( 0.0, psi );
-    F.w = Sup + 0.5*psi*( Sdn - Sup ); 
-
-    Fconv[c] = Dx.y()*Dx.z()*( F.e * xpVel - F.w * xmVel );
+    // SUPERBEE
+    for (CellIterator iter=p->getCellIterator__New(); !iter.done(); iter++){
+      IntVector c = *iter;
+      IntVector cxp = *iter + IntVector(1,0,0);
+      IntVector cxpp= *iter + IntVector(2,0,0);
+      IntVector cxm = *iter - IntVector(1,0,0);
+      IntVector cxmm= *iter - IntVector(2,0,0);
+      IntVector cyp = *iter + IntVector(0,1,0);
+      IntVector cypp= *iter + IntVector(0,2,0);
+      IntVector cym = *iter - IntVector(0,1,0);
+      IntVector cymm= *iter - IntVector(0,2,0);
+      IntVector czp = *iter + IntVector(0,0,1);
+      IntVector czpp= *iter + IntVector(0,0,2);
+      IntVector czm = *iter - IntVector(0,0,1);
+      IntVector czmm= *iter - IntVector(0,0,2);
+  
+      interpPtoF( oldPhi, c, F ); 
+  
+      double xmVel = uVel[c];
+      double xpVel = uVel[cxp];
+  
+      double r; 
+      double psi; 
+      double Sup;
+      double Sdn;
+  
+      // EAST
+      if ( xpVel >= 0.0 ) {
+        r = ( oldPhi[c] - oldPhi[cxm] ) / ( oldPhi[cxp] - oldPhi[c] );
+        Sup = oldPhi[c];
+        Sdn = oldPhi[cxp];
+      } else {
+        r = ( oldPhi[cxpp] - oldPhi[cxp] ) / ( oldPhi[cxp] - oldPhi[c] );
+        Sup = oldPhi[cxp];
+        Sdn = oldPhi[c]; 
+      }
+  
+      psi = max( min(2.0*r, 1.0), min(r, 2.0) );
+      psi = max( 0.0, psi );
+      F.e = Sup + 0.5*psi*( Sdn - Sup ); 
+  
+      // WEST 
+      if ( xmVel >= 0.0 ) {
+        Sup = oldPhi[cxm];
+        Sdn = oldPhi[c];
+        r = ( oldPhi[cxm] - oldPhi[cxmm] ) / ( oldPhi[c] - oldPhi[cxm] ); 
+      } else {
+        Sup = oldPhi[c];
+        Sdn = oldPhi[cxm];
+        r = ( oldPhi[cxp] - oldPhi[c] ) / ( oldPhi[c] - oldPhi[cxm] ); 
+      }
+  
+      psi = max( min(2.0*r, 1.0), min(r, 2.0) );
+      psi = max( 0.0, psi );
+      F.w = Sup + 0.5*psi*( Sdn - Sup ); 
+  
+      Fconv[c] = Dx.y()*Dx.z()*( F.e * xpVel - F.w * xmVel );
 #ifdef YDIM
-    double ymVel = vVel[c];
-    double ypVel = vVel[cyp];
-    // NORTH
-    if ( ypVel >= 0.0 ) {
-      r = ( oldPhi[c] - oldPhi[cym] ) / ( oldPhi[cyp] - oldPhi[c] );
-      Sup = oldPhi[c];
-      Sdn = oldPhi[cyp];
-    } else {
-      r = ( oldPhi[cypp] - oldPhi[cyp] ) / ( oldPhi[cyp] - oldPhi[c] );
-      Sup = oldPhi[cyp];
-      Sdn = oldPhi[c]; 
-    }
-
-    psi = max( min(2.0*r, 1.0), min(r, 2.0) );
-    psi = max( 0.0, psi );
-    F.n = Sup + 0.5*psi*( Sdn - Sup ); 
-
-    // SOUTH 
-    if ( ymVel >= 0.0 ) {
-      Sup = oldPhi[cym];
-      Sdn = oldPhi[c];
-      r = ( oldPhi[cym] - oldPhi[cymm] ) / ( oldPhi[c] - oldPhi[cym] ); 
-    } else {
-      Sup = oldPhi[c];
-      Sdn = oldPhi[cym];
-      r = ( oldPhi[cyp] - oldPhi[c] ) / ( oldPhi[c] - oldPhi[cym] ); 
-    }
-
-    psi = max( min(2.0*r, 1.0), min(r, 2.0) );
-    psi = max( 0.0, psi );
-    F.s = Sup + 0.5*psi*( Sdn - Sup ); 
-
-    Fconv[c] += Dx.x()*Dx.z()*( F.n * ypVel - F.s * ymVel ); 
+      double ymVel = vVel[c];
+      double ypVel = vVel[cyp];
+      // NORTH
+      if ( ypVel >= 0.0 ) {
+        r = ( oldPhi[c] - oldPhi[cym] ) / ( oldPhi[cyp] - oldPhi[c] );
+        Sup = oldPhi[c];
+        Sdn = oldPhi[cyp];
+      } else {
+        r = ( oldPhi[cypp] - oldPhi[cyp] ) / ( oldPhi[cyp] - oldPhi[c] );
+        Sup = oldPhi[cyp];
+        Sdn = oldPhi[c]; 
+      }
+  
+      psi = max( min(2.0*r, 1.0), min(r, 2.0) );
+      psi = max( 0.0, psi );
+      F.n = Sup + 0.5*psi*( Sdn - Sup ); 
+  
+      // SOUTH 
+      if ( ymVel >= 0.0 ) {
+        Sup = oldPhi[cym];
+        Sdn = oldPhi[c];
+        r = ( oldPhi[cym] - oldPhi[cymm] ) / ( oldPhi[c] - oldPhi[cym] ); 
+      } else {
+        Sup = oldPhi[c];
+        Sdn = oldPhi[cym];
+        r = ( oldPhi[cyp] - oldPhi[c] ) / ( oldPhi[c] - oldPhi[cym] ); 
+      }
+  
+      psi = max( min(2.0*r, 1.0), min(r, 2.0) );
+      psi = max( 0.0, psi );
+      F.s = Sup + 0.5*psi*( Sdn - Sup ); 
+  
+      Fconv[c] += Dx.x()*Dx.z()*( F.n * ypVel - F.s * ymVel ); 
 #endif
 #ifdef ZDIM
-    double zmVel = wVel[c];
-    double zpVel = wVel[czp];
-
-    // TOP
-    if ( zpVel >= 0.0 ) {
-      r = ( oldPhi[c] - oldPhi[czm] ) / ( oldPhi[czp] - oldPhi[c] );
-      Sup = oldPhi[c];
-      Sdn = oldPhi[czp];
-    } else {
-      r = ( oldPhi[czpp] - oldPhi[czp] ) / ( oldPhi[czp] - oldPhi[c] );
-      Sup = oldPhi[czp];
-      Sdn = oldPhi[c]; 
-    }
-
-    psi = max( min(2.0*r, 1.0), min(r, 2.0) );
-    psi = max( 0.0, psi );
-    F.t = Sup + 0.5*psi*( Sdn - Sup ); 
-
-    // BOTTOM 
-    if ( zmVel >= 0.0 ) {
-      Sup = oldPhi[czm];
-      Sdn = oldPhi[c];
-      r = ( oldPhi[czm] - oldPhi[czmm] ) / ( oldPhi[c] - oldPhi[czm] ); 
-    } else {
-      Sup = oldPhi[c];
-      Sdn = oldPhi[czm];
-      r = ( oldPhi[czp] - oldPhi[c] ) / ( oldPhi[c] - oldPhi[czm] ); 
-    }
-
-    psi = max( min(2.0*r, 1.0), min(r, 2.0) );
-    psi = max( 0.0, psi );
-    F.b = Sup + 0.5*psi*( Sdn - Sup ); 
-
-    Fconv[c] += Dx.x()*Dx.y()*( F.t * zpVel - F.b * zmVel ); 
+      double zmVel = wVel[c];
+      double zpVel = wVel[czp];
+  
+      // TOP
+      if ( zpVel >= 0.0 ) {
+        r = ( oldPhi[c] - oldPhi[czm] ) / ( oldPhi[czp] - oldPhi[c] );
+        Sup = oldPhi[c];
+        Sdn = oldPhi[czp];
+      } else {
+        r = ( oldPhi[czpp] - oldPhi[czp] ) / ( oldPhi[czp] - oldPhi[c] );
+        Sup = oldPhi[czp];
+        Sdn = oldPhi[c]; 
+      }
+  
+      psi = max( min(2.0*r, 1.0), min(r, 2.0) );
+      psi = max( 0.0, psi );
+      F.t = Sup + 0.5*psi*( Sdn - Sup ); 
+  
+      // BOTTOM 
+      if ( zmVel >= 0.0 ) {
+        Sup = oldPhi[czm];
+        Sdn = oldPhi[c];
+        r = ( oldPhi[czm] - oldPhi[czmm] ) / ( oldPhi[c] - oldPhi[czm] ); 
+      } else {
+        Sup = oldPhi[c];
+        Sdn = oldPhi[czm];
+        r = ( oldPhi[czp] - oldPhi[c] ) / ( oldPhi[c] - oldPhi[czm] ); 
+      }
+  
+      psi = max( min(2.0*r, 1.0), min(r, 2.0) );
+      psi = max( 0.0, psi );
+      F.b = Sup + 0.5*psi*( Sdn - Sup ); 
+  
+      Fconv[c] += Dx.x()*Dx.y()*( F.t * zpVel - F.b * zmVel ); 
 #endif
-  }
+    }
 
   } else if ( d_convScheme == "central") {
 
-  for (CellIterator iter=p->getCellIterator__New(); !iter.done(); iter++){
-
-    IntVector c = *iter;
-    IntVector cxp = *iter + IntVector(1,0,0);
-    IntVector cyp = *iter + IntVector(0,1,0);
-    IntVector czp = *iter + IntVector(0,0,1);
-
-    interpPtoF( oldPhi, c, F ); 
-
-    Fconv[c] = Dx.y()*Dx.z()*( F.e * uVel[cxp] - F.w * uVel[c] );
+    for (CellIterator iter=p->getCellIterator__New(); !iter.done(); iter++){
+  
+      IntVector c = *iter;
+      IntVector cxp = *iter + IntVector(1,0,0);
+      IntVector cyp = *iter + IntVector(0,1,0);
+      IntVector czp = *iter + IntVector(0,0,1);
+  
+      interpPtoF( oldPhi, c, F ); 
+  
+      Fconv[c] = Dx.y()*Dx.z()*( F.e * uVel[cxp] - F.w * uVel[c] );
 #ifdef YDIM
-    Fconv[c] += Dx.x()*Dx.z()*( F.n * vVel[cyp] - F.s * vVel[c] );
+      Fconv[c] += Dx.x()*Dx.z()*( F.n * vVel[cyp] - F.s * vVel[c] );
 #endif
 #ifdef ZDIM
-    Fconv[c] += Dx.x()*Dx.y()*( F.t * wVel[czp] - F.b * wVel[c] ); 
+      Fconv[c] += Dx.x()*Dx.y()*( F.t * wVel[czp] - F.b * wVel[c] ); 
 #endif
-  }
+    }
 
   } else {
-
-    cout << "Convection scheme not supported! " << endl;
-
+    proc0cout << "Convection scheme " << d_convScheme << " not supported! " << endl;
   }
 }
 //---------------------------------------------------------------------------

@@ -84,24 +84,21 @@ void DQMOM::problemSetup(const ProblemSpecP& params)
     index_length = temp_moment_index.size();
   }
 
- 
-  // This for block is not necessary if the map includes weighted abscissas/internal coordinates 
-  // in the same order as is given in the input file (b/c of the moment indexes)
-  // Reason: this block puts the labels in the same order as the input file, so the moment indexes match up OK
+  // This block puts the labels in the same order as the input file, so the moment indexes match up OK
   
   DQMOMEqnFactory & eqn_factory = DQMOMEqnFactory::self();
   //CoalModelFactory & model_factory = CoalModelFactory::self();
   N_ = eqn_factory.get_quad_nodes();
  
   for( unsigned int alpha = 0; alpha < N_; ++alpha ) {
-    string wght_name = "w_qn";
+    string weight_name = "w_qn";
     string node;
     stringstream out;
     out << alpha;
     node = out.str();
-    wght_name += node;
+    weight_name += node;
     // store equation:
-    EqnBase& temp_weightEqnE = eqn_factory.retrieve_scalar_eqn( wght_name );
+    EqnBase& temp_weightEqnE = eqn_factory.retrieve_scalar_eqn( weight_name );
     DQMOMEqn& temp_weightEqnD = dynamic_cast<DQMOMEqn&>(temp_weightEqnE);
     weightEqns.push_back( &temp_weightEqnD );
   }
@@ -349,7 +346,6 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
         
         models.push_back(runningsum);
       }
-
 
       // construct AX=B
       for ( unsigned int k = 0; k < momentIndexes.size(); ++k) {
