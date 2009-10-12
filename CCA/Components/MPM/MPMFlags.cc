@@ -55,6 +55,7 @@ MPMFlags::MPMFlags(const ProcessorGroup* myworld)
   d_axisymmetric = false;
 
   d_artificial_viscosity = false;
+  d_artificial_viscosity_heating = false;
   d_artificialViscCoeff1 = 0.2;
   d_artificialViscCoeff2 = 2.0;
   d_accStrainEnergy = false;
@@ -144,6 +145,7 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps)
   mpm_flag_ps->get("withColor",  d_with_color);
   mpm_flag_ps->get("artificial_damping_coeff", d_artificialDampCoeff);
   mpm_flag_ps->get("artificial_viscosity",     d_artificial_viscosity);
+  mpm_flag_ps->get("artificial_viscosity_heating",d_artificial_viscosity_heating);
   mpm_flag_ps->get("artificial_viscosity_coeff1", d_artificialViscCoeff1);
   mpm_flag_ps->get("artificial_viscosity_coeff2", d_artificialViscCoeff2);
   mpm_flag_ps->get("accumulate_strain_energy", d_accStrainEnergy);
@@ -154,6 +156,13 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps)
       cerr << "artificial viscosity is not implemented" << endl;
       cerr << "with implicit time integration" << endl;
     }
+  }
+
+  if(!d_artificial_viscosity && d_artificial_viscosity_heating){
+    ostringstream warn;
+    warn << "ERROR:MPM: You can't have heating due to artificial viscosity "
+         << "if artificial_viscosity is not enabled." << endl;
+    throw ProblemSetupException(warn.str(), __FILE__, __LINE__ );
   }
 
   mpm_flag_ps->get("ForceBC_force_increment_factor", d_forceIncrementFactor);
@@ -257,6 +266,7 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps)
     dbg << " With Color                  = " << d_with_color << endl;
     dbg << " Artificial Damping Coeff    = " << d_artificialDampCoeff << endl;
     dbg << " Artificial Viscosity On     = " << d_artificial_viscosity<< endl;
+    dbg << " Artificial Viscosity Htng   = " << d_artificial_viscosity_heating<< endl;
     dbg << " Artificial Viscosity Coeff1 = " << d_artificialViscCoeff1<< endl;
     dbg << " Artificial Viscosity Coeff2 = " << d_artificialViscCoeff2<< endl;
     dbg << " Accumulate Strain Energy    = " << d_accStrainEnergy << endl;
@@ -285,6 +295,7 @@ MPMFlags::outputProblemSpec(ProblemSpecP& ps)
   ps->appendElement("withColor",  d_with_color);
   ps->appendElement("artificial_damping_coeff", d_artificialDampCoeff);
   ps->appendElement("artificial_viscosity",     d_artificial_viscosity);
+  ps->appendElement("artificial_viscosity_heating", d_artificial_viscosity_heating);
   ps->appendElement("artificial_viscosity_coeff1", d_artificialViscCoeff1);
   ps->appendElement("artificial_viscosity_coeff2", d_artificialViscCoeff2);
   ps->appendElement("accumulate_strain_energy", d_accStrainEnergy);

@@ -6,6 +6,7 @@
       <accumulate_strain_energy           spec="OPTIONAL BOOLEAN" />
       <artificial_damping_coeff           spec="OPTIONAL DOUBLE 'positive'"/>
       <artificial_viscosity               spec="OPTIONAL BOOLEAN" />
+      <artificial_viscosity_heating       spec="OPTIONAL BOOLEAN" />
       <artificial_viscosity_coeff1        spec="OPTIONAL DOUBLE" />
       <artificial_viscosity_coeff2        spec="OPTIONAL DOUBLE" />
       <axisymmetric                       spec="OPTIONAL BOOLEAN" />
