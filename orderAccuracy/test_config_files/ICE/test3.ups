@@ -4,7 +4,11 @@
 
 <Uintah_specification> 
 <!--Please use a consistent set of units, (mks, cgs,...)-->
-
+    <!--____________________________________________________________________-->
+    <!--  Test 3 in table 6.2 of                                            -->
+    <!--  Eleuterio F. Toro, "Riemann Solvers and Numerical Methods for     -->
+    <!--  Fluid Dynamics",pg 213, Springer, 1997                            -->
+    <!--____________________________________________________________________-->    
    <Meta>
        <title>test1</title>
    </Meta>    
@@ -15,7 +19,7 @@
     <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
    <Time>
-       <maxTime>            0.2      </maxTime>
+       <maxTime>            0.012      </maxTime>
        <initTime>           0.0         </initTime>
        <delt_min>           0.0         </delt_min>
        <delt_max>           1.0         </delt_max>
@@ -93,8 +97,8 @@
     <!--      O  U  P  U  T     V  A  R  I  A  B  L  E  S                   -->
     <!--____________________________________________________________________-->
     <DataArchiver>
-      <filebase>test1.uda</filebase>
-      <outputInterval> 0.1 </outputInterval>
+      <filebase>test3.uda</filebase>
+      <outputInterval> 0.001 </outputInterval>
       <save label="delP_Dilatate"/>
       <save label="press_CC"/>
       <save label="rho_CC"/>
@@ -139,15 +143,15 @@
                 </box> 
                 
                 <box label="rightpartition">          
-                    <min>           [ 0.3,-1.0, -1.0 ]   </min>
+                    <min>           [ 0.5,-1.0, -1.0 ]   </min>
                     <max>           [ 2.0, 2.0,  2.0 ]   </max>
                 </box>
               </difference>
                <res>                  [2,2,2]            </res>
-               <velocity>       [0.75,0.0,0.0]           </velocity>
-               <temperature>    2.5                      </temperature>
+               <velocity>       [0.0,0.0,0.0]           </velocity>
+               <temperature>    2500.0                  </temperature>
                <density>        1.0                      </density>
-               <pressure>       1.0                      </pressure>
+               <pressure>       1000                     </pressure>
            </geom_object>
            
            
@@ -155,9 +159,9 @@
                 <box label="rightpartition">            </box>
                 <res>           [2,2,2]                 </res>
                <velocity>       [0.0,0.0,0.0]           </velocity>
-               <temperature>    2.0                     </temperature>
-               <density>        0.125                    </density>
-               <pressure>       0.1                     </pressure>
+               <temperature>    0.025                   </temperature>
+               <density>        1.0                     </density>
+               <pressure>       0.4                     </pressure>
            </geom_object>
          </material>
       </ICE>       
