@@ -429,6 +429,7 @@ void SerialMPM::scheduleInitializeAddedMaterial(const LevelP& level,
   t->computes(lb->pStressLabel,            add_matl);
   t->computes(lb->pSizeLabel,              add_matl);
   t->computes(lb->pErosionLabel,           add_matl);
+  t->computes(lb->pFiberDirLabel,          add_matl);
   if(!flags->d_doGridReset){
     t->computes(lb->gDisplacementLabel);
   }
