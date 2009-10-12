@@ -328,7 +328,7 @@ ExtraScalarSolver::sched_buildLinearMatrix(SchedulerP& sched,
   Ghost::GhostType  gac = Ghost::AroundCells;
   Ghost::GhostType  gaf = Ghost::AroundFaces;
   Task::DomainSpec oams = Task::OutOfDomain;  //outside of arches matlSet.
-  
+  tsk->requires(Task::NewDW, d_lab->d_cellInfoLabel, gn); 
   tsk->requires(parent_old_dw, d_lab->d_sharedState->get_delt_label());
 
   // This task requires scalar and density from old time step for transient
@@ -713,6 +713,7 @@ ExtraScalarSolver::sched_scalarLinearSolve(SchedulerP& sched,
   Ghost::GhostType  gac = Ghost::AroundCells;
   Task::DomainSpec oams = Task::OutOfDomain;  //outside of arches matlSet.
   
+  tsk->requires(Task::NewDW, d_lab->d_cellInfoLabel, gn); 
   tsk->requires(parent_old_dw, d_lab->d_sharedState->get_delt_label());
   tsk->requires(Task::NewDW,   d_lab->d_cellTypeLabel,     gac, 1);
 
