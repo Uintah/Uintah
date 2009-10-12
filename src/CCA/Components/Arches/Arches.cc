@@ -1487,8 +1487,8 @@ Arches::scalarInit( const ProcessorGroup* ,
 
     }
 
-    // Does this allocate and put DQMOM source terms too?
-    // (It shouldn't: that's done below in Arches::dqmomInit)
+    // DQMOM sources are not stored in this factory but rather by the DQMOMEqn itself
+    // so the DQMOM source initialization is performed in DQMOMinit. 
     SourceTermFactory& srcFactory = SourceTermFactory::self();
     SourceTermFactory::SourceMap& sources = srcFactory.retrieve_all_sources();
     for (SourceTermFactory::SourceMap::iterator isrc=sources.begin(); isrc !=sources.end(); isrc++){
@@ -1745,7 +1745,6 @@ Arches::sched_mmsInitialCondition(const LevelP& level,
   tsk->modifies(d_lab->d_wVelocitySPBCLabel);
   tsk->modifies(d_lab->d_pressurePSLabel);
   tsk->modifies(d_lab->d_scalarSPLabel);
-  tsk->requires(Task::NewDW, d_lab->d_cellInfoLabel, Ghost::None);
 
   if (d_calcExtraScalars){
     for (int i=0; i < static_cast<int>(d_extraScalars.size()); i++){

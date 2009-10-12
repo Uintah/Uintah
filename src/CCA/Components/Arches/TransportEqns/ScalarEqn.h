@@ -99,20 +99,7 @@ public:
   /** @brief Compute all source terms for this scalar eqn */
   void sched_computeSources( const LevelP& level, SchedulerP& sched, int timeSubStep);
 
-  /** @brief Compute the convective terms */ 
-  template <class fT, class oldPhiT>
-  void computeConv(const Patch* patch, 
-              fT& Fconv, oldPhiT& oldPhi, 
-              constSFCXVariable<double>& uVel, 
-              constSFCYVariable<double>& vVel, 
-              constSFCZVariable<double>& wVel);
-
-  /** @brief Compute the convective terms */ 
-  template <class fT, class oldPhiT>  
-  void computeConv( const Patch* patch, 
-                    fT& Fdiff, 
-                    oldPhiT& oldPhi );
-
+  /** @brief Return a list of all sources associated with this transport equation */ 
   inline const vector<string> getSourcesList(){
     return d_sources; };
 
@@ -122,8 +109,7 @@ public:
                     oldPhiT& oldPhi, lambdaT& lambda );
 
   /** @brief Apply boundary conditions */
-  template <class phiType> 
-  void computeBCs( const Patch* patch, string varName, phiType& phi );
+  template <class phiType> void computeBCs( const Patch* patch, string varName, phiType& phi );
 
   /** @brief Schedule the cleanup after this equation. */ 
   void sched_cleanUp( const LevelP&, SchedulerP& sched ); 
