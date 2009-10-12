@@ -413,6 +413,8 @@ void SerialMPM::scheduleInitializeAddedMaterial(const LevelP& level,
   cout << "Added Material = " << numALLMatls-1 << endl;
   add_matl->add(numALLMatls-1);
   add_matl->addReference();
+  
+  t->computes(d_sharedState->get_delt_label(),level.get_rep());
                                                                                 
   t->computes(lb->partCountLabel,          add_matl);
   t->computes(lb->pXLabel,                 add_matl);
@@ -1370,6 +1372,7 @@ void SerialMPM::scheduleRefine(const PatchSet* patches,
   t->computes(lb->pSizeLabel);
   t->computes(lb->pErosionLabel);
   t->computes(lb->NC_CCweightLabel);
+  t->computes(d_sharedState->get_delt_label(),getLevel(patches));
 
   // Debugging Scalar
   if (flags->d_with_color) {
