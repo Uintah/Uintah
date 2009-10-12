@@ -100,12 +100,6 @@ public:
   /** @brief Compute all source terms for this scalar eqn */
   void sched_computeSources( const LevelP& level, SchedulerP& sched);
 
-  /** @brief Compute the convective terms */ 
-  template <class fT, class oldPhiT> void
-  computeConv(const Patch* patch, fT& Fconv, oldPhiT& oldPhi, 
-              constSFCXVariable<double>& uVel, constSFCYVariable<double>& vVel, 
-              constSFCZVariable<double>& wVel, constCCVariable<Vector>& partVel);
-
   /** @brief Compute the diffusion terms */
   template <class fT, class oldPhiT, class lambdaT> 
   void computeDiff( const Patch* patch, fT& Fdiff, 
@@ -113,7 +107,6 @@ public:
 
   /** @brief Apply boundary conditions */
   template <class phiType> void computeBCs( const Patch* patch, string varName, phiType& phi ){
-    // this is different from ScalarEqn.h - should it be?
     d_boundaryCond->setScalarValueBC( 0, patch, phi, varName );
   };
 

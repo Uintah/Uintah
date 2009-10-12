@@ -9,6 +9,7 @@
 #include <CCA/Components/Arches/TransportEqns/Discretization_new.h>
 #include <CCA/Components/Arches/ArchesMaterial.h>
 #include <Core/Parallel/Parallel.h>
+#include <Core/Exceptions/InvalidValue.h>
 
 #define YDIM
 #define ZDIM
@@ -173,8 +174,8 @@ protected:
   std::string d_step_dir;           ///< For a step initialization function, direction in which step should occur
   double d_step_start;              ///< Physical location of step function start
   double d_step_end;                ///< Physical location of step function end
-  double d_step_cellstart;          ///< Cell location of step function start
-  double d_step_cellend;            ///< Cell location of step function end
+  int d_step_cellstart;          ///< Cell location of step function start
+  int d_step_cellend;            ///< Cell location of step function end
   double d_step_value;              ///< Step function steps from 0 to d_step_value
 
   // Other:
@@ -194,17 +195,16 @@ template <class phiType>
 void EqnBase::initializationFunction( const Patch* patch, phiType& phi ) 
 {
   proc0cout << "initializing scalar equation " << d_eqnName << endl;
-  if( d_initFunction == "constant" || d_initFunction == "env_constant" ) {
-    // don't do anything
-  } else if( d_initFunction == "step" ) {
 
+  // Initialization function bullet proofing 
+  if( d_initFunction == "step" ) {
     if( d_step_dir == "y" ) {
 #ifndef YDIM
       proc0cout << "WARNING: YDIM not turned on (compiled) with this version of the code, " << endl;
       proc0cout << "but you specified a step function that steps in the y-direction. " << endl;
       proc0cout << "To get this to work, made sure YDIM is defined in ScalarEqn.h" << endl;
       proc0cout << "Cannot initialize your scalar in y-dim with step function" << endl;
-      proc0cout << endl;
+      throw InvalidValue("Exiting...", __FILE__, __LINE__);
 #endif
       // otherwise do nothing
 
@@ -214,20 +214,18 @@ void EqnBase::initializationFunction( const Patch* patch, phiType& phi )
       proc0cout << "but you specified a step function that steps in the z-direction. " << endl;
       proc0cout << "To get this to work, made sure ZDIM is defined in ScalarEqn.h" << endl;
       proc0cout << "Cannot initialize your scalar in y-dim with step function" << endl;
-      proc0cout << endl;
+      throw InvalidValue("Exiting...", __FILE__, __LINE__);
 #endif
       // otherwise do nothing
     }
-  } else {
-    proc0cout << "WARNING: Your initialization function wasn't found." << endl;
   }
 
   for (CellIterator iter=patch->getCellIterator__New(0); !iter.done(); iter++){
     IntVector c = *iter; 
     Vector Dx = patch->dCell(); 
 
-    double x,y,z; 
-    double cellx, celly, cellz;
+    double x=0.0,y=0.0,z=0.0; 
+    int cellx=0, celly=0, cellz=0;
 
     if( b_stepUsesCellLocation ) {
       cellx = c[0];
@@ -253,7 +251,6 @@ void EqnBase::initializationFunction( const Patch* patch, phiType& phi )
 
     } else if (d_initFunction == "step" || d_initFunction == "env_step" ) {
       // =========== STEP FUNCTION INITIALIZATION =============
-      
       if (d_step_dir == "x") {
         if (  (b_stepUsesPhysicalLocation && x > d_step_start && x < d_step_end)
            || (b_stepUsesCellLocation && cellx > d_step_cellstart && x < d_step_cellend) ) {
@@ -263,32 +260,27 @@ void EqnBase::initializationFunction( const Patch* patch, phiType& phi )
         }
       
       } else if (d_step_dir == "y") {
-#ifdef YDIM
         if (  (b_stepUsesPhysicalLocation && y > d_step_start && y < d_step_end)
            || (b_stepUsesCellLocation && celly > d_step_cellstart && celly < d_step_cellend) ) {
           phi[c] = d_step_value/d_scalingConstant; 
         } else { 
           phi[c] = 0.0;
         }
-#else
-        phi[c] = 0.0;
-#endif
-
       } else if (d_step_dir == "z") {
-#ifdef ZDIM
         if (  (b_stepUsesPhysicalLocation && z > d_step_start && z < d_step_end)
            || (b_stepUsesCellLocation && cellz > d_step_cellstart && z < d_step_cellend) ) {
           phi[c] = d_step_value/d_scalingConstant; 
         } else {
           phi[c] = 0.0;
         }
-#else
-        phi[c] = 0.0;
-#endif
       }
+    // ======= add other initialization functions below here ======
+    } else {
+
+      throw InvalidValue("Error!: Your initialization function wasn't found.", __FILE__, __LINE__);
+
     }//end d_initFunction types
 
-    // ======= add other initialization functions here ======
 
   }
 }
