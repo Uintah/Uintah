@@ -145,6 +145,9 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps)
   mpm_flag_ps->get("withColor",  d_with_color);
   mpm_flag_ps->get("artificial_damping_coeff", d_artificialDampCoeff);
   mpm_flag_ps->get("artificial_viscosity",     d_artificial_viscosity);
+  if(d_artificial_viscosity){
+    d_artificial_viscosity_heating=true;
+  }
   mpm_flag_ps->get("artificial_viscosity_heating",d_artificial_viscosity_heating);
   mpm_flag_ps->get("artificial_viscosity_coeff1", d_artificialViscCoeff1);
   mpm_flag_ps->get("artificial_viscosity_coeff2", d_artificialViscCoeff2);
