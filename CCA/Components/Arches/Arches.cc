@@ -1745,6 +1745,7 @@ Arches::sched_mmsInitialCondition(const LevelP& level,
   tsk->modifies(d_lab->d_wVelocitySPBCLabel);
   tsk->modifies(d_lab->d_pressurePSLabel);
   tsk->modifies(d_lab->d_scalarSPLabel);
+  tsk->requires(Task::NewDW, d_lab->d_cellInfoLabel, Ghost::None);
 
   if (d_calcExtraScalars){
     for (int i=0; i < static_cast<int>(d_extraScalars.size()); i++){
