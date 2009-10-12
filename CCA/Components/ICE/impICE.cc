@@ -81,7 +81,7 @@ void ICE::scheduleSetupMatrix(  SchedulerP& sched,
   cout_doing << d_myworld->myrank()<< " ICE::scheduleSetupMatrix" 
             << "\t\t\t\t\tL-" << levelIndex<< endl;
   t = scinew Task("ICE::setupMatrix", this, &ICE::setupMatrix);
-//  t->requires( Task::ParentOldDW, lb->delTLabel);  for AMR
+  t->requires( Task::ParentOldDW, lb->delTLabel, getLevel(patches));
   t->requires( whichDW,   lb->sp_volX_FCLabel,    gac,1);        
   t->requires( whichDW,   lb->sp_volY_FCLabel,    gac,1);        
   t->requires( whichDW,   lb->sp_volZ_FCLabel,    gac,1);        
@@ -247,7 +247,7 @@ void ICE::scheduleRecomputeVel_FC(SchedulerP& sched,
   Ghost::GhostType  gac = Ghost::AroundCells;
   Ghost::GhostType  gn  = Ghost::None;
   Task::DomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.               
-//  t->requires(Task::ParentOldDW,lb->delTLabel);  AMR
+  t->requires(Task::ParentOldDW,lb->delTLabel,getLevel(patches));
 
   //__________________________________
   // define parent data warehouse

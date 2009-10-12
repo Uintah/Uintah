@@ -700,6 +700,7 @@ public:
     if(guess_label)
       task->requires(parent_which_guess_dw, guess_label, Around, 1);
 
+    task->computes(memref_label);
     task->computes(R_label);
     task->computes(X_label);
     task->computes(D_label);
