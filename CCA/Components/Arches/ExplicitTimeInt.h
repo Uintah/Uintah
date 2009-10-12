@@ -77,20 +77,16 @@ private:
                                              double dt )
  
   {
-
     Vector dx = patch->dCell();
-
     for (CellIterator iter=patch->getCellIterator__New(); !iter.done(); iter++){
-
-      double vol = dx.x()*dx.y()*dx.z();
       IntVector c = *iter; 
+      double vol = dx.x()*dx.y()*dx.z();
 
       // (rho*phi)^{t+\Delta t} = (rho*phi)^{t} + RHS
-      phi[*iter] = old_den[*iter]*phi[*iter] + dt/vol*(RHS[*iter]); 
+      phi[c] = old_den[c]*phi[c] + dt/vol*(RHS[c]); 
 
       // phi^{t+\Delta t} = ((rho*phi)^{t} + RHS) / rho^{t + \Delta t} 
-      phi[*iter] = phi[*iter] / new_den[*iter]; 
-
+      phi[c] = phi[c] / new_den[c]; 
     } 
   }
 
@@ -100,18 +96,13 @@ private:
                                     constphiT& old_phi, 
                                     int step, Vector alpha, Vector beta )
   {
-  
 		for (CellIterator iter=patch->getCellIterator__New(); !iter.done(); iter++){
-
       IntVector c = *iter; 
   
-
 			phi[*iter] = d_alpha[step]*old_phi[*iter] + d_beta[step]*phi[*iter];	
+    }
+  }
 
-          
-      }
-
-		}
 } //end namespace Uintah
     
 #endif

@@ -498,9 +498,6 @@ Arches::problemSetup(const ProblemSpecP& params,
     //register all models
     Arches::registerModels(dqmom_db); 
 
-    d_dqmomSolver = scinew DQMOM( d_lab );
-    d_dqmomSolver->problemSetup( dqmom_db ); 
-
     // Create a velocity model 
     d_partVel = scinew PartVel( d_lab ); 
     d_partVel->problemSetup( dqmom_db ); 
@@ -513,14 +510,14 @@ Arches::problemSetup(const ProblemSpecP& params,
 
     // do all weights
     for (int iqn = 0; iqn < numQuadNodes; iqn++){
-      std::string wght_name = "w_qn";
+      std::string weight_name = "w_qn";
       std::string node;  
       std::stringstream out; 
       out << iqn; 
       node = out.str(); 
-      wght_name += node; 
+      weight_name += node; 
 
-      EqnBase& a_weight = eqn_factory.retrieve_scalar_eqn( wght_name );
+      EqnBase& a_weight = eqn_factory.retrieve_scalar_eqn( weight_name );
       DQMOMEqn& weight = dynamic_cast<DQMOMEqn&>(a_weight);
       weight.setAsWeight(); 
       weight.problemSetup( w_db, iqn );
@@ -1448,6 +1445,9 @@ Arches::sched_scalarInit( const LevelP& level,
   sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
 
 }
+
+//______________________________________________________________________
+//
 void 
 Arches::scalarInit( const ProcessorGroup* ,
                     const PatchSubset* patches,
@@ -1468,34 +1468,39 @@ Arches::scalarInit( const ProcessorGroup* ,
 
       EqnBase* eqn = ieqn->second; 
       std::string eqn_name = ieqn->first; 
-      const VarLabel* tempVarLabel = eqn->getTransportEqnLabel(); 
-      const VarLabel* oldtempVarLabel = eqn->getoldTransportEqnLabel(); 
-      //double initValue = eqn->getInitValue(); 
+      const VarLabel* phiLabel = eqn->getTransportEqnLabel(); 
+      const VarLabel* oldPhiLabel = eqn->getoldTransportEqnLabel(); 
 
-      CCVariable<double> tempVar; 
-      CCVariable<double> oldtempVar; 
-      new_dw->allocateAndPut( tempVar, tempVarLabel, matlIndex, patch ); 
-      new_dw->allocateAndPut( oldtempVar, oldtempVarLabel, matlIndex, patch ); 
+      CCVariable<double> phi; 
+      CCVariable<double> oldPhi; 
+      new_dw->allocateAndPut( phi, phiLabel, matlIndex, patch ); 
+      new_dw->allocateAndPut( oldPhi, oldPhiLabel, matlIndex, patch ); 
     
-      tempVar.initialize(0.0);
-      oldtempVar.initialize(0.0); 
+      phi.initialize(0.0);
+      oldPhi.initialize(0.0); 
 
       // initialize to something other than zero if desired. 
-      eqn->fcnInit( patch, tempVar ); 
+      eqn->initializationFunction( patch, phi ); 
 
       //do Boundary conditions
-      eqn->computeBCsSpecial( patch, eqn_name, tempVar ); 
+      eqn->computeBCsSpecial( patch, eqn_name, phi ); 
 
     }
+
+    // Does this allocate and put DQMOM source terms too?
+    // (It shouldn't: that's done below in Arches::dqmomInit)
     SourceTermFactory& srcFactory = SourceTermFactory::self();
     SourceTermFactory::SourceMap& sources = srcFactory.retrieve_all_sources();
     for (SourceTermFactory::SourceMap::iterator isrc=sources.begin(); isrc !=sources.end(); isrc++){
       SourceTermBase* src = isrc->second; 
       string src_name = isrc->first; 
+
       const VarLabel* srcVarLabel = src->getSrcLabel();
  
       CCVariable<double> tempSource; 
+      
       new_dw->allocateAndPut( tempSource, srcVarLabel, matlIndex, patch ); 
+      
       tempSource.initialize(0.0);
 
     } 
@@ -1547,6 +1552,8 @@ Arches::sched_dqmomInit( const LevelP& level,
 
   sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
 }
+//______________________________________________________________________
+//
 void 
 Arches::dqmomInit( const ProcessorGroup* ,
                    const PatchSubset* patches,
@@ -1554,6 +1561,16 @@ Arches::dqmomInit( const ProcessorGroup* ,
                    DataWarehouse* old_dw,
                    DataWarehouse* new_dw )
 {
+  // ***************************************
+  // QUESTION: WHY DOES THIS FUNCTION GET CALLED ON THE FIRST TIMESTEP RATHER THAN THE ZEROTH TIMESTEP???
+  // This causes several problems:
+  // - The RHS/unweighted variables are unavailable until the first timestep
+  //      (not available at zeroth timestep because they're initialized here, and this isn't called until the first timestep)
+  // - DQMOM & other scalars are not initialized until the first timestep, so at the first timestep (if you output it) everything is 0.0!!!
+  //      (this means that if you initialize your scalar to be a step function, you never see the scalar as the actual step function;
+  //        at the zeroth timestep the scalar is 0.0 everywhere, and at the first timestep the step function has already been convected/diffused)
+  // ***************************************
+
   proc0cout << "Initializing all DQMOM equations..." << endl;
   for (int p = 0; p < patches->size(); p++){
     //assume only one material for now.
@@ -1572,26 +1589,33 @@ Arches::dqmomInit( const ProcessorGroup* ,
          ieqn != dqmom_eqns.end(); ieqn++){
     
       DQMOMEqn* eqn = dynamic_cast<DQMOMEqn*>(ieqn->second);
+      string eqn_name = ieqn->first;
       
-      const VarLabel* sourceLabel = eqn->getSourceLabel();
-      const VarLabel* phiLabel = eqn->getTransportEqnLabel(); 
-      const VarLabel* oldPhiLabel = eqn->getoldTransportEqnLabel(); 
-      double initValue = eqn->getInitValue(); 
+      const VarLabel* sourceLabel  = eqn->getSourceLabel();
+      const VarLabel* phiLabel     = eqn->getTransportEqnLabel(); 
+      const VarLabel* oldPhiLabel  = eqn->getoldTransportEqnLabel(); 
+      const VarLabel* phiLabel_icv = eqn->getUnscaledLabel();
+      //double initValue = eqn->getInitValue(); 
       
       CCVariable<double> source;
       CCVariable<double> phi; 
-      CCVariable<double> oldphi; 
+      CCVariable<double> oldPhi; 
+      CCVariable<double> phi_icv;
 
-      new_dw->allocateAndPut( source, sourceLabel, matlIndex, patch ); 
-      new_dw->allocateAndPut( phi,    phiLabel,    matlIndex, patch ); 
-      new_dw->allocateAndPut( oldphi, oldPhiLabel, matlIndex, patch ); 
-    
+      new_dw->allocateAndPut( source,  sourceLabel,  matlIndex, patch ); 
+      new_dw->allocateAndPut( phi,     phiLabel,     matlIndex, patch ); 
+      new_dw->allocateAndPut( oldPhi,  oldPhiLabel,  matlIndex, patch ); 
+      new_dw->allocateAndPut( phi_icv, phiLabel_icv, matlIndex, patch ); 
+ 
       source.initialize(0.0);
-      phi.initialize(initValue);
-      oldphi.initialize(initValue); 
+      phi.initialize(0.0);
+      oldPhi.initialize(0.0);
+      phi_icv.initialize(0.0);
+      
+      // initialize phi
+      eqn->initializationFunction( patch, phi );
 
-      std::string eqn_name = eqn->getEqnName();
-
+      // do boundary conditions
       eqn->computeBCs( patch, eqn_name, phi );
 
     }
@@ -1624,9 +1648,9 @@ Arches::dqmomInit( const ProcessorGroup* ,
       new_dw->allocateAndPut( model_value, modelLabel, matlIndex, patch ); 
       model_value.initialize(0.0);
 
-      const VarLabel* gasmodelLabel = model->getGasSourceLabel(); 
+      const VarLabel* gasModelLabel = model->getGasSourceLabel(); 
       CCVariable<double> gas_source; 
-      new_dw->allocateAndPut( gas_source, gasmodelLabel, matlIndex, patch ); 
+      new_dw->allocateAndPut( gas_source, gasModelLabel, matlIndex, patch ); 
       gas_source.initialize(0.0); 
 
     }
@@ -2326,17 +2350,17 @@ void Arches::registerDQMOMEqns(ProblemSpecP& db)
     // Make the weight transport equations
     for ( int iqn = 0; iqn < n_quad_nodes; iqn++) {
 
-      std::string wght_name = "w_qn";
+      std::string weight_name = "w_qn";
       std::string node;  
       std::stringstream out; 
       out << iqn; 
       node = out.str(); 
-      wght_name += node; 
+      weight_name += node; 
 
-      proc0cout << "creating a weight for: " << wght_name << endl;
+      proc0cout << "creating a weight for: " << weight_name << endl;
 
-      DQMOMEqnBuilderBase* eqnBuilder = scinew DQMOMEqnBuilder( d_lab, d_timeIntegrator, wght_name ); 
-      dqmom_eqnFactory.register_scalar_eqn( wght_name, eqnBuilder );     
+      DQMOMEqnBuilderBase* eqnBuilder = scinew DQMOMEqnBuilder( d_lab, d_timeIntegrator, weight_name ); 
+      dqmom_eqnFactory.register_scalar_eqn( weight_name, eqnBuilder );     
       
     }
     // Make the weighted abscissa 

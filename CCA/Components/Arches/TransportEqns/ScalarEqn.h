@@ -100,10 +100,21 @@ public:
   void sched_computeSources( const LevelP& level, SchedulerP& sched, int timeSubStep);
 
   /** @brief Compute the convective terms */ 
-  template <class fT, class oldPhiT> void
-  computeConv(const Patch* patch, fT& Fconv, oldPhiT& oldPhi, 
-              constSFCXVariable<double>& uVel, constSFCYVariable<double>& vVel, 
+  template <class fT, class oldPhiT>
+  void computeConv(const Patch* patch, 
+              fT& Fconv, oldPhiT& oldPhi, 
+              constSFCXVariable<double>& uVel, 
+              constSFCYVariable<double>& vVel, 
               constSFCZVariable<double>& wVel);
+
+  /** @brief Compute the convective terms */ 
+  template <class fT, class oldPhiT>  
+  void computeConv( const Patch* patch, 
+                    fT& Fdiff, 
+                    oldPhiT& oldPhi );
+
+  inline const vector<string> getSourcesList(){
+    return d_sources; };
 
   /** @brief Compute the diffusion terms */
   template <class fT, class oldPhiT, class lambdaT> 
@@ -111,7 +122,8 @@ public:
                     oldPhiT& oldPhi, lambdaT& lambda );
 
   /** @brief Apply boundary conditions */
-  template <class phiType> void computeBCs( const Patch* patch, string varName, phiType& phi );
+  template <class phiType> 
+  void computeBCs( const Patch* patch, string varName, phiType& phi );
 
   /** @brief Schedule the cleanup after this equation. */ 
   void sched_cleanUp( const LevelP&, SchedulerP& sched ); 
@@ -119,15 +131,15 @@ public:
              source term booleans so that the code can determine if the source
              term label should be allocated or just retrieved from the data 
              warehouse. */ 
-
   void cleanUp( const ProcessorGroup* pc, 
                 const PatchSubset* patches, 
                 const MaterialSubset* matls, 
                 DataWarehouse* old_dw, 
                 DataWarehouse* new_dw  ); 
 
-
+  // ---------------------------------
   // Access functions:
+
   /** @brief Sets the time integrator. */ 
   inline void setTimeInt( ExplicitTimeInt* timeIntegrator ) {
     d_timeIntegrator = timeIntegrator; 
@@ -143,32 +155,25 @@ public:
     double p; 
   };  
 
-  /** @brief Interpolate a point to face values for the respective cv. */
+  /** @brief Interpolate a point to face values for a given control volume. */
   template <class phiT, class interpT> 
   void interpPtoF( phiT& phi, const IntVector c, interpT& F ); 
 
-  /** @brief Take a gradient of a variable to result in a face value for a respective cv. */
+  /** @brief Take a gradient of a variable to result in a face value for a given control volume. */
   template <class phiT, class gradT> 
   void gradPtoF( phiT& phi, const IntVector c, const Patch* p, gradT& G ); 
 
-  /** @brief dummy initialization for mpmArches */
+  /** @brief Schedule dummy initialization for MPMArches */
   void sched_dummyInit( const LevelP& level, SchedulerP& sched );
   
+  /** @brief Do dummy initialization for MPMArches */
   void dummyInit( const ProcessorGroup* pc, 
                      const PatchSubset* patches, 
                      const MaterialSubset* matls, 
                      DataWarehouse* old_dw, 
                      DataWarehouse* new_dw );
 
-  /** @brief Compute the convective terms */ 
-  template <class fT, class oldPhiT>  
-  void computeConv( const Patch* patch, fT& Fdiff, 
-                         oldPhiT& oldPhi );
-
-  inline const vector<string> getSourcesList(){
-    return d_sources; };
-
-
+  /** @brief Clip values of phi that are too high or too low (after RK time averaging). */
   template<class phiType>
   void clipPhi( const Patch* p, 
            phiType& phi );
@@ -177,13 +182,6 @@ private:
 
   vector<std::string> d_sources;
 
-  double d_turbPrNo;
-  double d_lowClip; 
-  double d_highClip; 
-
-  bool d_doClipping; 
-  bool d_doLowClip;
-  bool d_doHighClip;  
 
 }; // class ScalarEqn
 } // namespace Uintah

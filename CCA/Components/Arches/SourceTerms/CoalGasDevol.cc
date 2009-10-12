@@ -75,17 +75,17 @@ CoalGasDevol::sched_computeSource( const LevelP& level, SchedulerP& sched, int t
   CoalModelFactory& modelFactory = CoalModelFactory::self(); 
 
   for (int iqn = 0; iqn < dqmomFactory.get_quad_nodes(); iqn++){
-    std::string wght_name = "w_qn";
+    std::string weight_name = "w_qn";
     std::string model_name = d_devolModelName; 
     std::string node;  
     std::stringstream out; 
     out << iqn; 
     node = out.str(); 
-    wght_name += node; 
+    weight_name += node; 
     model_name += "_qn";
     model_name += node; 
 
-    EqnBase& eqn = dqmomFactory.retrieve_scalar_eqn( wght_name );
+    EqnBase& eqn = dqmomFactory.retrieve_scalar_eqn( weight_name );
 
     const VarLabel* tempLabel_w = eqn.getTransportEqnLabel();
     tsk->requires( Task::OldDW, tempLabel_w, Ghost::None, 0 ); 

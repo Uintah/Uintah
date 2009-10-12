@@ -8,6 +8,7 @@
 #include <CCA/Components/Arches/ExplicitTimeInt.h>
 #include <CCA/Components/Arches/TransportEqns/Discretization_new.h>
 #include <CCA/Components/Arches/ArchesMaterial.h>
+#include <Core/Parallel/Parallel.h>
 
 #define YDIM
 #define ZDIM
@@ -75,27 +76,40 @@ public:
   template <class phiType> void computeBCs( const Patch* patch, string varName, phiType& phi );
 
   /** @brief Set the initial value of the transported variable to some function */
-  template <class phiType> void fcnInit( const Patch* patch, phiType& phi ); 
+  template <class phiType> void initializationFunction( const Patch* patch, phiType& phi ); 
 
   // Access functions:
+  /** @brief Set the boundary condition object associated with this transport equation object */
   inline void setBoundaryCond( BoundaryCondition_new* boundaryCond ) {
-  d_boundaryCond = boundaryCond; 
+    d_boundaryCond = boundaryCond; 
   }
+  
+  /** @brief Set the time integrator object associated with this transport equation object */
   inline void setTimeInt( ExplicitTimeInt* timeIntegrator ) {
-  d_timeIntegrator = timeIntegrator; 
+    d_timeIntegrator = timeIntegrator; 
   }
+  
+  /** @brief Return VarLabel for the scalar transported by this equation object, pointing to NEW data warehouse */
   inline const VarLabel* getTransportEqnLabel(){
     return d_transportVarLabel; };
+  
+  /** @brief Return VarLabel for the scalar transported by this equation object, pointing to OLD data warehouse */
   inline const VarLabel* getoldTransportEqnLabel(){
     return d_oldtransportVarLabel; };
+  
+  /** @brief Return a string containing the human-readable label for this equation object */
   inline const std::string getEqnName(){
     return d_eqnName; };
-  inline const double getInitValue(){
-    return d_initValue; };
+  
+  /** @brief Return a string containing the name of the initialization function being used (e.g. "constant") */ 
   inline const string getInitFcn(){
-    return d_initFcn; }; 
+    return d_initFunction; }; 
 
+  /** @brief Return the scaling constant for the given equation. */
+  inline const double getScalingConstant(){
+    return d_scalingConstant; };
 
+  /** @brief Compute the boundary conditions for this transport equation object */
   template<class phiType> void
   computeBCsSpecial( const Patch* patch, 
                        string varName,
@@ -119,100 +133,164 @@ protected:
     T b;
   };
 
-  ArchesLabel* d_fieldLabels;
-  const VarLabel* d_transportVarLabel;
-  const VarLabel* d_oldtransportVarLabel; 
-  std::string d_eqnName;  
-  bool d_doConv, d_doDiff, d_addSources;
+  ArchesLabel* d_fieldLabels; 
+  const VarLabel* d_transportVarLabel;    ///< Label for scalar being transported, in NEW data warehouse
+  const VarLabel* d_oldtransportVarLabel; ///< Label for scalar being transported, in OLD data warehouse
+  std::string d_eqnName;                  ///< Human-readable label for this equation
+  bool d_doConv;                          ///< Boolean: do convection for this equation object?
+  bool d_doDiff;                          ///< Boolean: do diffusion for this equation object?
+  bool d_addSources;                      ///< Boolean: add a right-hand side (i.e. convection, diffusion, source terms) to this equation object?
 
-  const VarLabel* d_FdiffLabel;
-  const VarLabel* d_FconvLabel; 
-  const VarLabel* d_RHSLabel;
+  const VarLabel* d_FdiffLabel;           ///< Label for diffusion term of this equation object
+  const VarLabel* d_FconvLabel;           ///< Label for convection term of this equation object
+  const VarLabel* d_RHSLabel;             ///< Label for RHS of this equation object
 
-  std::string d_convScheme; 
+  std::string d_convScheme;               ///< Convection scheme (superbee, upwind, etc.)
 
-  BoundaryCondition_new* d_boundaryCond;
-  ExplicitTimeInt* d_timeIntegrator; 
-  Discretization_new* d_disc;  
+  BoundaryCondition_new* d_boundaryCond;  ///< Boundary condition object associated with equation object
+  ExplicitTimeInt* d_timeIntegrator;      ///< Time integrator object associated with equation object
+  Discretization_new* d_disc;             ///< Discretization object associated with equation object
 
-  double d_initValue; // The initial value for this eqn. 
-  std::string d_initFcn; // A functional form for initial value.
+  std::string d_initFunction;             ///< A functional form for initial value.
 
+  // constant initialization function:
+  double d_constant_init;           ///< constant value for initialization
 
-  // These parameters are for the functional initialization
-  // -- constant --
-  double d_constant_init; 
+  // step initialization function:
+  std::string d_step_dir;           ///< For a step initialization function, direction in which step should occur
+  bool b_stepUsesPhysicalLocation;  ///< Boolean: is step function's physical location specified?
+  bool b_stepUsesCellLocation;      ///< Boolean: is step function's cell location specified?
+  double d_step_start;              ///< Physical location of step function start
+  double d_step_end;                ///< Physical location of step function end
+  double d_step_cellstart;          ///< Cell location of step function start
+  double d_step_cellend;            ///< Cell location of step function end
+  double d_step_value;              ///< Step function steps from 0 to d_step_value
 
-  // -- step function -- 
-  std::string d_step_dir; 
-  double d_step_start; 
-  double d_step_end; 
-  double d_step_value; 
+  // Clipping:
+  bool d_doClipping;                ///< Boolean: are values clipped?
+  bool d_doLowClip;                 ///< Boolean: are low values clipped?
+  bool d_doHighClip;                ///< Boolean: are high values clipped?
+
+  double d_lowClip;                 ///< Value of low clipping
+  double d_smallClip;               ///< Value of small clipping (used if scalar is a divisor, e.g. with DQMOM weights)
+  double d_highClip;                ///< Value of high clipping
+
+  // Other:
+  double d_turbPrNo;                ///< Turbulent Prandtl number (used for scalar diffusion)
+  double d_scalingConstant;         ///< Value by which to scale values 
 
 private:
 
 
 }; // end EqnBase
+
+
 //---------------------------------------------------------------------------
 // Method: Phi initialization using a function 
 //---------------------------------------------------------------------------
 template <class phiType>  
-void EqnBase::fcnInit( const Patch* patch, phiType& phi ) 
+void EqnBase::initializationFunction( const Patch* patch, phiType& phi ) 
 {
-  for (CellIterator iter=patch->getCellIterator__New(0); !iter.done(); iter++){
+  proc0cout << "initializing scalar equation " << d_eqnName << endl;
+  if( d_initFunction == "constant" || d_initFunction == "env_constant" ) {
+    // don't do anything
+  } else if( d_initFunction == "step" ) {
 
+    if( d_step_dir == "y" ) {
+#ifndef YDIM
+      proc0cout << "WARNING: YDIM not turned on (compiled) with this version of the code, " << endl;
+      proc0cout << "but you specified a step function that steps in the y-direction. " << endl;
+      proc0cout << "To get this to work, made sure YDIM is defined in ScalarEqn.h" << endl;
+      proc0cout << "Cannot initialize your scalar in y-dim with step function" << endl;
+      proc0cout << endl;
+#endif
+      // otherwise do nothing
+
+    } else if( d_step_dir == "z" ) {
+#ifndef ZDIM
+      proc0cout << "WARNING: ZDIM not turned on (compiled) with this version of the code, " << endl;
+      proc0cout << "but you specified a step function that steps in the z-direction. " << endl;
+      proc0cout << "To get this to work, made sure ZDIM is defined in ScalarEqn.h" << endl;
+      proc0cout << "Cannot initialize your scalar in y-dim with step function" << endl;
+      proc0cout << endl;
+#endif
+      // otherwise do nothing
+    }
+  } else {
+    proc0cout << "WARNING: Your initialization function wasn't found." << endl;
+  }
+
+  for (CellIterator iter=patch->getCellIterator__New(0); !iter.done(); iter++){
     IntVector c = *iter; 
     Vector Dx = patch->dCell(); 
+
     double x,y,z; 
-    x = c[0]*Dx.x() + Dx.x()/2.;
+    double cellx, celly, cellz;
+
+    if( b_stepUsesCellLocation ) {
+      cellx = c[0];
 #ifdef YDIM
-    y = c[1]*Dx.y() + Dx.y()/2.; 
+      celly = c[1];
 #endif
 #ifdef ZDIM
-    z = c[2]*Dx.z() + Dx.z()/2.;
+      cellz = c[2];
+#endif
+    } else if ( b_stepUsesPhysicalLocation ) {
+      x = c[0]*Dx.x() + Dx.x()/2.; // the +Dx/2 is because variable is cell-centered
+#ifdef YDIM
+      y = c[1]*Dx.y() + Dx.y()/2.; 
+#endif
+#ifdef ZDIM
+      z = c[2]*Dx.z() + Dx.z()/2.;
 #endif 
+    }
 
-    if (d_initFcn == "constant") {
+    if ( d_initFunction == "constant" || d_initFunction == "env_constant" ) {
       // ========== CONSTANT VALUE INITIALIZATION ============
-      phi[c] = d_constant_init; 
+      phi[c] = d_constant_init/d_scalingConstant; 
 
-    } else if (d_initFcn == "step") {
-     // =========== STEP FUNCTION INITIALIZATION =============
+    } else if (d_initFunction == "step" || d_initFunction == "env_step" ) {
+      // =========== STEP FUNCTION INITIALIZATION =============
+      
       if (d_step_dir == "x") {
-        if ( x > d_step_start && x < d_step_end )
-          phi[c] = d_step_value; 
-        else
+        if (  (b_stepUsesPhysicalLocation && x > d_step_start && x < d_step_end)
+           || (b_stepUsesCellLocation && cellx > d_step_cellstart && x < d_step_cellend) ) {
+          phi[c] = d_step_value/d_scalingConstant; 
+        } else {
           phi[c] = 0.0;
+        }
+      
       } else if (d_step_dir == "y") {
 #ifdef YDIM
-        if ( y > d_step_start && y < d_step_end )
-          phi[c] = d_step_value; 
-        else
+        if (  (b_stepUsesPhysicalLocation && y > d_step_start && y < d_step_end)
+           || (b_stepUsesCellLocation && celly > d_step_cellstart && celly < d_step_cellend) ) {
+          phi[c] = d_step_value/d_scalingConstant; 
+        } else { 
           phi[c] = 0.0;
+        }
 #else
-        cout << "WARNING!! YDIM NOT TURNED ON (COMPILED) WITH THIS VERION OF CODE" << endl;
-        cout << "To get this to work, made sure YDIM is defined in ScalarEqn.h" << endl;
-        cout << "Cannot initialize your scalar in y-dim with step function" << endl;
+        phi[c] = 0.0;
 #endif
 
       } else if (d_step_dir == "z") {
-#ifdef YDIM
-        if ( z > d_step_start && z < d_step_end )
-          phi[c] = d_step_value; 
-        else
+#ifdef ZDIM
+        if (  (b_stepUsesPhysicalLocation && z > d_step_start && z < d_step_end)
+           || (b_stepUsesCellLocation && cellz > d_step_cellstart && z < d_step_cellend) ) {
+          phi[c] = d_step_value/d_scalingConstant; 
+        } else {
           phi[c] = 0.0;
+        }
 #else
-        cout << "WARNING!! YDIM NOT TURNED ON (COMPILED) WITH THIS VERION OF CODE" << endl;
-        cout << "To get this to work, made sure ZDIM is defined in ScalarEqn.h" << endl;
-        cout << "Cannot initialize your scalar in z-dim with step function" << endl;
+        phi[c] = 0.0;
 #endif
       }
-    // ======= add others below here ======
-    } else {
-        cout << "WARNING!! Your initialization function wasn't found." << endl;
-    } 
+    }//end d_initFunction types
+
+    // ======= add other initialization functions here ======
+
   }
 }
+
 } // end namespace Uintah
 
 #endif
