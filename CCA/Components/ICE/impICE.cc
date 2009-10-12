@@ -204,6 +204,8 @@ void ICE::scheduleUpdatePressure(  SchedulerP& sched,
   cout_doing << d_myworld->myrank()<<" ICE::scheduleUpdatePressure" 
              << "\t\t\t\t\tL-" <<level->getIndex()<<endl;
   t = scinew Task("ICE::updatePressure", this, &ICE::updatePressure);
+  
+  t->requires( Task::ParentOldDW, lb->delTLabel, getLevel(patches));
   t->requires(Task::ParentNewDW, lb->press_equil_CCLabel,press_matl,oims,gn);       
   t->requires(Task::ParentNewDW, lb->sp_vol_CCLabel                     ,gn);
   t->requires(Task::OldDW,       lb->sum_imp_delPLabel,  press_matl,oims,gn);

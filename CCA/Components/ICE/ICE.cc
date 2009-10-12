@@ -1196,7 +1196,12 @@ void ICE::scheduleAddExchangeContributionToFCVel(SchedulerP& sched,
   Task* task = scinew Task("ICE::addExchangeContributionToFCVel",
                      this, &ICE::addExchangeContributionToFCVel, recursion);
 
-  task->requires(Task::OldDW, lb->delTLabel,getLevel(patches));
+  if(recursion) {
+    task->requires(Task::ParentOldDW, lb->delTLabel,getLevel(patches));
+  } else {
+    task->requires(Task::OldDW, lb->delTLabel,getLevel(patches));
+  }
+
   Ghost::GhostType  gac = Ghost::AroundCells;
   
   //__________________________________

@@ -762,6 +762,7 @@ public:
       task->computes(aden_label);
       task->computes(Q_label);
       task->computes(flop_label);
+      task->computes(memref_label);
       subsched->addTask(task, level->eachPatch(), matlset);
 
       //__________________________________
@@ -782,6 +783,7 @@ public:
       task->computes(d_label);
       task->computes(diag_label);
       task->computes(flop_label);
+      task->modifies(memref_label);
       if(params->norm != CGSolverParams::L1) {
         task->computes(err_label);
       }
@@ -792,7 +794,7 @@ public:
       // schedule
       // Step 3 - requires D(old), Q(new), d(new), d(old), computes D
       if(cout_doing.active())
-        cout_doing << "CGSolver::schedule Step 2" << endl;
+        cout_doing << "CGSolver::schedule Step 3" << endl;
       task = scinew Task("CGSolve step3", this, &CGStencil7<Types>::step3);
       task->requires(Task::OldDW, D_label, Ghost::None, 0);
       task->requires(Task::NewDW, Q_label, Ghost::None, 0);
@@ -800,6 +802,7 @@ public:
       task->requires(Task::OldDW, d_label);
       task->computes(D_label);
       task->computes(flop_label);
+      task->modifies(memref_label);
       subsched->addTask(task, level->eachPatch(), matlset);
       subsched->compile();
       
