@@ -769,6 +769,10 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
       new_dw->get(pgCode, lb->pgCodeLabel, pset);
       new_dw->get(GVelocity,lb->GVelocityStarLabel, dwi, patch, gac, NGN);
     }
+    double include_AV_heating=0.0;
+    if (flag->d_artificial_viscosity_heating) {
+      include_AV_heating=1.0;
+    }
 
     // GET LOCAL DATA 
 
@@ -1213,7 +1217,7 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
 
       // Calculate Tdot due to artificial viscosity
       double Tdot_AV = de_s/state->specificHeat;
-      pdTdt[idx] += Tdot_AV;
+      pdTdt[idx] += Tdot_AV*include_AV_heating;
 
       Matrix3 tensorHy = one*p;
    
