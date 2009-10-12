@@ -135,6 +135,7 @@ SmagorinskyModel::sched_reComputeTurbSubmodel(SchedulerP& sched,
   Ghost::GhostType  gaf = Ghost::AroundFaces;
   Ghost::GhostType  gn = Ghost::None; 
    
+  tsk->requires(Task::NewDW, d_lab->d_cellInfoLabel, gn);
   tsk->requires(Task::NewDW, d_lab->d_densityCPLabel,      gn, 0);
   tsk->requires(Task::NewDW, d_lab->d_uVelocitySPBCLabel,  gaf, 1);
   tsk->requires(Task::NewDW, d_lab->d_vVelocitySPBCLabel,  gaf, 1);

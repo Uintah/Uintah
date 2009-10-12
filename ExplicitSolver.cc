@@ -2980,6 +2980,9 @@ ExplicitSolver::sched_computeMMSError(SchedulerP& sched,
                           timelabels);
 
   Ghost::GhostType  gn = Ghost::None;
+  
+  tsk->requires(Task::NewDW, d_lab->d_cellInfoLabel, gn);
+  tsk->requires(Task::OldDW, d_lab->d_sharedState->get_delt_label());
   tsk->requires(Task::NewDW, d_lab->d_uVelocitySPBCLabel, gn, 0);
   tsk->requires(Task::NewDW, d_lab->d_vVelocitySPBCLabel, gn, 0);
   tsk->requires(Task::NewDW, d_lab->d_wVelocitySPBCLabel, gn, 0);
