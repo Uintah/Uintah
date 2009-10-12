@@ -2332,7 +2332,7 @@ OnDemandDataWarehouse::checkGetAccess(const VarLabel* label,
       findIter = runningTaskAccesses.find(VarLabelMatl<Patch>(label, matlIndex,
             patch));
 
-      if (!hasGetAccess(runningTask, label, matlIndex, patch, lowOffset,highOffset) &&
+      if (!hasGetAccess(runningTask, label, matlIndex, patch, lowOffset,highOffset,&runningTaskInfo) &&
           !hasPutAccess(runningTask, label, matlIndex, patch, true) &&
           !hasPutAccess(runningTask, label, matlIndex, patch, false)
          ) {
@@ -2348,12 +2348,10 @@ OnDemandDataWarehouse::checkGetAccess(const VarLabel* label,
           return;
         }
         if (runningTask == 0 ||
-            !((string(runningTask->getName()) == "Relocate::relocateParticles") 
-             )
-              //|| (string(label->getName()) == "delT"))
+            !(string(runningTask->getName()) == "Relocate::relocateParticles") 
            ){
           string has;
-          switch (getWhichDW())
+          switch (getWhichDW(&runningTaskInfo))
           {
             case Task::NewDW:
               has="Task::NewDW";
@@ -2438,7 +2436,7 @@ OnDemandDataWarehouse::checkPutAccess(const VarLabel* label, int matlIndex,
         if (string(runningTask->getName())
             != "Relocate::relocateParticles") {
           string has, needs;
-          switch (getWhichDW())
+          switch (getWhichDW(&runningTaskInfo))
           {
             case Task::NewDW:
               has="Task::NewDW";
@@ -2463,7 +2461,7 @@ OnDemandDataWarehouse::checkPutAccess(const VarLabel* label, int matlIndex,
             has += " datawarehouse put";
             needs = "task computes";
           }
-#if 0
+#if 1
           SCI_THROW(DependencyException(runningTask, label, matlIndex,
                 patch, has, needs, __FILE__, __LINE__));
 #else
@@ -2490,15 +2488,15 @@ OnDemandDataWarehouse::checkModifyAccess(const VarLabel* label, int matlIndex,
 
 
 inline 
-Task::WhichDW OnDemandDataWarehouse::getWhichDW()
+Task::WhichDW OnDemandDataWarehouse::getWhichDW(RunningTaskInfo *info)
 {
-  if (this == OnDemandDataWarehouse::getOtherDataWarehouse(Task::NewDW))
+  if (this == OnDemandDataWarehouse::getOtherDataWarehouse(Task::NewDW,info))
     return Task::NewDW;
-  if (this == OnDemandDataWarehouse::getOtherDataWarehouse(Task::OldDW))
+  if (this == OnDemandDataWarehouse::getOtherDataWarehouse(Task::OldDW,info))
     return Task::OldDW;
-  if (this == OnDemandDataWarehouse::getOtherDataWarehouse(Task::ParentNewDW))
+  if (this == OnDemandDataWarehouse::getOtherDataWarehouse(Task::ParentNewDW,info))
     return Task::ParentNewDW;
-  if (this == OnDemandDataWarehouse::getOtherDataWarehouse(Task::ParentOldDW))
+  if (this == OnDemandDataWarehouse::getOtherDataWarehouse(Task::ParentOldDW,info))
     return Task::ParentOldDW;
   throw InternalError("Unknown DW\n",__FILE__,__LINE__);
 }
@@ -2507,9 +2505,9 @@ inline bool
 OnDemandDataWarehouse::hasGetAccess(const Task* runningTask,
                                     const VarLabel* label, int matlIndex,
                                     const Patch* patch, IntVector lowOffset,
-                                    IntVector highOffset)
+                                    IntVector highOffset,RunningTaskInfo *info)
 { 
-  return runningTask->hasRequires(label, matlIndex, patch, lowOffset, highOffset, getWhichDW());
+  return runningTask->hasRequires(label, matlIndex, patch, lowOffset, highOffset, getWhichDW(info));
 }
 
 inline
@@ -2563,12 +2561,19 @@ OnDemandDataWarehouse::getCurrentTaskInfo()
 }
 
 DataWarehouse*
+OnDemandDataWarehouse::getOtherDataWarehouse(Task::WhichDW dw, RunningTaskInfo* info)
+{
+  int dwindex = info->d_task->mapDataWarehouse(dw);
+  DataWarehouse* result = (*info->dws)[dwindex].get_rep();
+  return result;
+}
+
+DataWarehouse*
 OnDemandDataWarehouse::getOtherDataWarehouse(Task::WhichDW dw)
 {
   RunningTaskInfo* info = getCurrentTaskInfo();
   int dwindex = info->d_task->mapDataWarehouse(dw);
   DataWarehouse* result = (*info->dws)[dwindex].get_rep();
-  ASSERT(result != 0);
   return result;
 }
 
