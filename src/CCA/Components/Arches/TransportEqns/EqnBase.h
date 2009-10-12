@@ -134,9 +134,13 @@ protected:
   };
 
   ArchesLabel* d_fieldLabels; 
+  BoundaryCondition_new* d_boundaryCond;  ///< Boundary condition object associated with equation object
+  ExplicitTimeInt* d_timeIntegrator;      ///< Time integrator object associated with equation object
+  Discretization_new* d_disc;             ///< Discretization object associated with equation object
+  std::string d_eqnName;                  ///< Human-readable label for this equation
+
   const VarLabel* d_transportVarLabel;    ///< Label for scalar being transported, in NEW data warehouse
   const VarLabel* d_oldtransportVarLabel; ///< Label for scalar being transported, in OLD data warehouse
-  std::string d_eqnName;                  ///< Human-readable label for this equation
   bool d_doConv;                          ///< Boolean: do convection for this equation object?
   bool d_doDiff;                          ///< Boolean: do diffusion for this equation object?
   bool d_addSources;                      ///< Boolean: add a right-hand side (i.e. convection, diffusion, source terms) to this equation object?
@@ -147,24 +151,7 @@ protected:
 
   std::string d_convScheme;               ///< Convection scheme (superbee, upwind, etc.)
 
-  BoundaryCondition_new* d_boundaryCond;  ///< Boundary condition object associated with equation object
-  ExplicitTimeInt* d_timeIntegrator;      ///< Time integrator object associated with equation object
-  Discretization_new* d_disc;             ///< Discretization object associated with equation object
-
   std::string d_initFunction;             ///< A functional form for initial value.
-
-  // constant initialization function:
-  double d_constant_init;           ///< constant value for initialization
-
-  // step initialization function:
-  std::string d_step_dir;           ///< For a step initialization function, direction in which step should occur
-  bool b_stepUsesPhysicalLocation;  ///< Boolean: is step function's physical location specified?
-  bool b_stepUsesCellLocation;      ///< Boolean: is step function's cell location specified?
-  double d_step_start;              ///< Physical location of step function start
-  double d_step_end;                ///< Physical location of step function end
-  double d_step_cellstart;          ///< Cell location of step function start
-  double d_step_cellend;            ///< Cell location of step function end
-  double d_step_value;              ///< Step function steps from 0 to d_step_value
 
   // Clipping:
   bool d_doClipping;                ///< Boolean: are values clipped?
@@ -172,8 +159,23 @@ protected:
   bool d_doHighClip;                ///< Boolean: are high values clipped?
 
   double d_lowClip;                 ///< Value of low clipping
-  double d_smallClip;               ///< Value of small clipping (used if scalar is a divisor, e.g. with DQMOM weights)
   double d_highClip;                ///< Value of high clipping
+  double d_smallClip;               ///< Value of small clipping (used if scalar is a divisor, e.g. with DQMOM weights)
+
+  // Initialization:
+  bool b_stepUsesCellLocation;      ///< Boolean: is step function's cell location specified?
+  bool b_stepUsesPhysicalLocation;  ///< Boolean: is step function's physical location specified?
+
+  // constant initialization function:
+  double d_constant_init;           ///< constant value for initialization
+
+  // step initialization function:
+  std::string d_step_dir;           ///< For a step initialization function, direction in which step should occur
+  double d_step_start;              ///< Physical location of step function start
+  double d_step_end;                ///< Physical location of step function end
+  double d_step_cellstart;          ///< Cell location of step function start
+  double d_step_cellend;            ///< Cell location of step function end
+  double d_step_value;              ///< Step function steps from 0 to d_step_value
 
   // Other:
   double d_turbPrNo;                ///< Turbulent Prandtl number (used for scalar diffusion)
