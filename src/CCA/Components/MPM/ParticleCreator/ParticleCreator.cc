@@ -376,7 +376,7 @@ void ParticleCreator::allocateVariablesAddRequires(Task* task,
   //task->requires(Task::OldDW,d_lb->pExternalForceLabel,   gn);
   task->requires(Task::NewDW,d_lb->pVolumeLabel_preReloc,   gn);
   //task->requires(Task::OldDW,d_lb->pVolumeLabel,    gn);
-  task->requires(Task::OldDW,d_lb->pErosionLabel,     gn);
+  task->requires(Task::OldDW,d_lb->pErosionLabel_preReloc,  gn);
   task->requires(Task::OldDW,d_lb->pSizeLabel,        gn);
   // for thermal stress
   task->requires(Task::OldDW,d_lb->pTempPreviousLabel, gn); 
