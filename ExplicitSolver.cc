@@ -359,42 +359,29 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
       // ---- schedule the solution of the transport equations ----
       
-      // Perform the weight updates first.
-      for(  int iqn = 0; iqn < dqmomFactory.get_quad_nodes(); iqn++ )
-      {
-        std::string wght_name = "w_qn";
-        std::string node;  
-        std::stringstream out; 
-        out << iqn; 
-        node = out.str(); 
-        wght_name += node; 
+      // Evaluate DQMOM equations
+      for ( DQMOMEqnFactory::EqnMap::iterator iEqn = dqmom_eqns.begin(); 
+            iEqn != dqmom_eqns.end(); iEqn++){
+        
+        std::string eqnname = iEqn->first; 
+        EqnBase* e_dqmom_eqn = iEqn->second; 
+        DQMOMEqn* dqmom_eqn = dynamic_cast<DQMOMEqn*>(e_dqmom_eqn);
 
-        EqnBase& w_eqn = dqmomFactory.retrieve_scalar_eqn(wght_name); 
-
-        w_eqn.sched_evalTransportEqn( level, sched, curr_level ); 
-
-        if (curr_level == numTimeIntegratorLevels-1){
-          //last time sub-step so cleanup.
-          w_eqn.sched_cleanUp( level, sched ); 
-        }
+        dqmom_eqn->sched_evalTransportEqn( level, sched, curr_level ); 
       }
      
-      // now do all the weighted abscissa values
-      for (DQMOMEqnFactory::EqnMap::iterator ieqn = dqmom_eqns.begin(); ieqn != dqmom_eqns.end(); ieqn++){
-        
-        std::string currname = ieqn->first; 
-        EqnBase* temp_eqn = ieqn->second; 
-        DQMOMEqn* wa_eqn = dynamic_cast<DQMOMEqn*>(temp_eqn);
+      // Clean up after DQMOM equation evaluations & calculate unscaled DQMOM scalar values 
+      // (also, putting this in its own separate loop makes sure you don't require() before you compute())
+      if (curr_level == numTimeIntegratorLevels-1){
+        for( DQMOMEqnFactory::EqnMap::iterator iEqn = dqmom_eqns.begin();
+             iEqn!=dqmom_eqns.end(); ++iEqn ) {
 
-        if (!wa_eqn->weight()) {
-          wa_eqn->sched_evalTransportEqn( level, sched, curr_level ); 
-        }
-      
-        if (curr_level == numTimeIntegratorLevels-1){
-          //last time sub-step so cleanup.
-          wa_eqn->sched_cleanUp( level, sched ); 
+          DQMOMEqn* dqmom_eqn = dynamic_cast<DQMOMEqn*>(iEqn->second);
+
+          // last time sub-step: so cleanup.
+          dqmom_eqn->sched_cleanUp( level, sched ); 
           //also get the abscissa values
-          wa_eqn->sched_getAbscissaValues( level, sched ); 
+          dqmom_eqn->sched_getUnscaledValues( level, sched ); 
         }
       }
 

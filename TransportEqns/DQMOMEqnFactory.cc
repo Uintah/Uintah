@@ -46,9 +46,8 @@ DQMOMEqnFactory::register_scalar_eqn( const std::string name, DQMOMEqnBuilderBas
 
   BuildMap::iterator i = builders_.find( name );
   if( i == builders_.end() ){
-    i = builders_.insert( std::make_pair(name,builder) ).first;
-  }
-  else{
+    builders_[name] = builder;
+  } else{
     std::string errmsg;
     errmsg = "ARCHES: DQMOMEqnFactory: A duplicate DQMOMEqnBuilderBase object was loaded on equation \"";
     errmsg += name + "\". " + "This is forbidden. \n";

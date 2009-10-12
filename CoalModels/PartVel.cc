@@ -74,6 +74,7 @@ PartVel::schedComputePartVel( const LevelP& level, SchedulerP& sched, const int 
 
   DQMOMEqnFactory& dqmomFactory  = DQMOMEqnFactory::self(); 
   int N = dqmomFactory.get_quad_nodes();  
+
   //--New
   // actual velocity we will compute
   for (ArchesLabel::PartVelMap::iterator i = d_fieldLabels->partVel.begin(); 
@@ -90,9 +91,7 @@ PartVel::schedComputePartVel( const LevelP& level, SchedulerP& sched, const int 
   // fluid velocity
   tsk->requires( Task::OldDW, d_fieldLabels->d_newCCVelocityLabel, gn, 0 );
 
-  // environments
-  // right now assume that the velocity is a function of length.
-  // requires that length be an ic (with that name)  
+  // requires weighted legnth and weight (to back out length)
   for (int i = 0; i < N; i++){
     std::string name = "length_qn"; 
     std::string node; 
@@ -105,11 +104,6 @@ PartVel::schedComputePartVel( const LevelP& level, SchedulerP& sched, const int 
     const VarLabel* myLabel = eqn.getTransportEqnLabel();  
     
     tsk->requires( Task::OldDW, myLabel, gn, 0 ); 
-
-    // get the initial value and store it. 
-    double initValue = eqn.getInitValue();
-    d_wlo.push_back(initValue);
-    
   }
 
   for (int i = 0; i < N; i++){
@@ -124,10 +118,6 @@ PartVel::schedComputePartVel( const LevelP& level, SchedulerP& sched, const int 
     const VarLabel* myLabel = eqn.getTransportEqnLabel(); 
   
     tsk->requires( Task::OldDW, myLabel, gn, 0 ); 
-    // get the initial value and store it. 
-    double initValue = eqn.getInitValue();
-    d_wo.push_back(initValue);
-
   }
 
   sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
