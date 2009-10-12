@@ -258,12 +258,19 @@ protected:
                                    DataWarehouse* old_dw,
                                    DataWarehouse* new_dw);
 
-  /*! Update the erosion parameter is mass is to be removed */
+  /*! Update the erosion parameter if mass is to be removed */
   void updateErosionParameter(const ProcessorGroup*,
                               const PatchSubset* patches,
                               const MaterialSubset* ,
                               DataWarehouse* old_dw,
                               DataWarehouse* new_dw);
+
+  /*! Find particles that should be deleted */
+  void findRogueParticles(const ProcessorGroup*,
+                          const PatchSubset* patches,
+                          const MaterialSubset* ,
+                          DataWarehouse* old_dw,
+                          DataWarehouse* new_dw);
 
   //////////
   // Compute Accumulated Strain Energy
@@ -377,6 +384,10 @@ protected:
   void scheduleUpdateErosionParameter(SchedulerP& sched,
                                       const PatchSet* patches,
                                       const MaterialSet* matls);
+
+  void scheduleFindRogueParticles(SchedulerP& sched,
+                                  const PatchSet* patches,
+                                  const MaterialSet* matls);
 
   void scheduleComputeAccStrainEnergy(SchedulerP&, const PatchSet*,
                                       const MaterialSet*);

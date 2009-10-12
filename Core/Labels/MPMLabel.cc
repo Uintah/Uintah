@@ -272,6 +272,12 @@ MPMLabel::MPMLabel()
   cVolumeLabel  = VarLabel::create( "c.volume",
                      CCVariable<double>::getTypeDescription() );
 
+  numLocInCellLabel  = VarLabel::create( "NumLocalizedInCell",
+                     CCVariable<int>::getTypeDescription() );
+
+  numInCellLabel  = VarLabel::create( "NumInCell",
+                     CCVariable<int>::getTypeDescription() );
+
   TotalVolumeDeformedLabel = VarLabel::create( "TotalVolumeDeformed",
 				 sum_vartype::getTypeDescription() );
   
@@ -636,6 +642,8 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(gVolumeLabel);
   VarLabel::destroy(gZOILabel);
   VarLabel::destroy(cVolumeLabel);
+  VarLabel::destroy(numLocInCellLabel);
+  VarLabel::destroy(numInCellLabel);
   VarLabel::destroy(gradPAccNCLabel);
   VarLabel::destroy(dTdt_NCLabel);
   VarLabel::destroy(massBurnFractionLabel);

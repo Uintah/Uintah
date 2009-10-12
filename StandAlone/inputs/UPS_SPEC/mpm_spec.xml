@@ -20,6 +20,7 @@
       <computeNodalHeatFlux               spec="OPTIONAL BOOLEAN" />
       <erosion                            spec="OPTIONAL NO_DATA"
                                             attribute1="algorithm REQUIRED STRING 'none, AllowNoTension, KeepStress, ZeroStress, RemoveMass, AllowNoShear'" />
+      <delete_rogue_particles               spec="OPTIONAL BOOLEAN" />
       <ForceBC_force_increment_factor     spec="OPTIONAL DOUBLE" />  <!-- FIXME: default is? Default? -->
       <manual_new_material                spec="OPTIONAL BOOLEAN" />  <!-- FIXME: default is? Default? -->
       <num_iters_to_decrease_delT         spec="OPTIONAL INTEGER" />

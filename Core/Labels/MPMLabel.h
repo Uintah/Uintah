@@ -127,6 +127,8 @@ using std::vector;
       const VarLabel* gVolumeLabel;
       const VarLabel* gZOILabel;
       const VarLabel* cVolumeLabel;
+      const VarLabel* numLocInCellLabel;
+      const VarLabel* numInCellLabel;
       const VarLabel* gradPAccNCLabel;
       const VarLabel* dTdt_NCLabel; //for heat conduction
       const VarLabel* massBurnFractionLabel; //for burn modeling
