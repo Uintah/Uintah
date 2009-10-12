@@ -322,12 +322,14 @@ private:
      std::vector<OnDemandDataWarehouseP>* dws;
      VarAccessMap d_accesses;
    };  
+   
+  virtual DataWarehouse* getOtherDataWarehouse(Task::WhichDW,RunningTaskInfo *info);
 
   void getGridVar(GridVariableBase& var, const VarLabel* label, int matlIndex, const Patch* patch,
            Ghost::GhostType gtype, int numGhostCells);
 
 
-  inline Task::WhichDW getWhichDW();
+  inline Task::WhichDW getWhichDW( RunningTaskInfo *info);
   // These will throw an exception if access is not allowed for the
   // curent task.
   inline void checkGetAccess(const VarLabel* label, int matlIndex,
@@ -343,7 +345,7 @@ private:
   // the current task.
   inline bool hasGetAccess(const Task* runningTask, const VarLabel* label,
 			   int matlIndex, const Patch* patch,
-			   IntVector lowOffset, IntVector highOffset);
+			   IntVector lowOffset, IntVector highOffset,RunningTaskInfo *info);
   inline bool hasPutAccess(const Task* runningTask, const VarLabel* label,
 			   int matlIndex, const Patch* patch, bool replace);
 
