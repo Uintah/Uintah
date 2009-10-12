@@ -24,7 +24,15 @@
   <ups>rayleigh.ups</ups>
   <tst>rayleigh_dy.tst</tst>
 </test>
+
 <!--
+<test>
+  <name>Test1</name>
+  <ups>riemann.ups</ups>
+  <tst>riemann_dx.tst</tst>
+  <otherFilesToCopy>test1.in</otherFilesToCopy>
+</test>
+
 <test>
   <name>MMS</name>
   <ups>mms_1.ups</ups>
