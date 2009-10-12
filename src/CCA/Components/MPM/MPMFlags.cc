@@ -68,6 +68,7 @@ MPMFlags::MPMFlags(const ProcessorGroup* myworld)
   d_maxGridLevel = 1000;
                       
   d_doErosion = false;
+  d_deleteRogueParticles = false;
   d_erosionAlgorithm = "none";
   d_doThermalExpansion = true;
 
@@ -197,6 +198,7 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps)
       else d_doErosion = true;
     }
   }
+  mpm_flag_ps->get("delete_rogue_particles",  d_deleteRogueParticles);
   
   // d_doComputeHeatFlux:
   // set to true if the label g.HeatFlux is saved or 
@@ -276,6 +278,7 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps)
     dbg << " Create New Particles        = " << d_createNewParticles << endl;
     dbg << " Add New Material            = " << d_addNewMaterial << endl;
     dbg << " Do Erosion ?                = " << d_doErosion << endl;
+    dbg << " Delete Rogue Particles?     = " << d_doErosion << endl;
     dbg << "  Erosion Algorithm          = " << d_erosionAlgorithm << endl;
     dbg << " Use Load Curves             = " << d_useLoadCurves << endl;
     dbg << " ForceBC increment factor    = " << d_forceIncrementFactor<< endl;
@@ -327,6 +330,8 @@ MPMFlags::outputProblemSpec(ProblemSpecP& ps)
   ProblemSpecP erosion_ps = ps->appendChild("erosion");
   erosion_ps->setAttribute("algorithm", d_erosionAlgorithm);
 
+  ps->appendElement("delete_rogue_particles",d_deleteRogueParticles);
+ 
   ps->appendElement("extra_solver_flushes", d_extraSolverFlushes);
 
   ps->appendElement("boundary_traction_faces", d_bndy_face_txt_list);
