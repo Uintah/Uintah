@@ -2348,7 +2348,10 @@ OnDemandDataWarehouse::checkGetAccess(const VarLabel* label,
           return;
         }
         if (runningTask == 0 ||
-            !(string(runningTask->getName()) == "Relocate::relocateParticles") 
+            !(
+              string(runningTask->getName()) == "Relocate::relocateParticles" ||
+              string(runningTask->getName()) == "SchedulerCommon::copyDataToNewGrid"
+             )
            ){
           string has;
           switch (getWhichDW(&runningTaskInfo))
@@ -2378,14 +2381,14 @@ OnDemandDataWarehouse::checkGetAccess(const VarLabel* label,
             has += ghost_str.str();
           }     
           string needs = "task requires";
-#if 0
+#if 1
           SCI_THROW(DependencyException(runningTask, label, matlIndex, patch,
                 has, needs, __FILE__, __LINE__));
 #else
           if ( d_myworld->myrank()  == 0 )
             cout << DependencyException::makeMessage(runningTask, label, matlIndex, patch,
                has, needs) << endl;
-          WAIT_FOR_DEBUGGER();
+          //WAIT_FOR_DEBUGGER();
 #endif
         }
       } else {
@@ -2468,7 +2471,7 @@ OnDemandDataWarehouse::checkPutAccess(const VarLabel* label, int matlIndex,
           if ( d_myworld->myrank()  == 0 )
            cout << DependencyException::makeMessage(runningTask, label, matlIndex, patch,
              has, needs) << endl;
-          WAIT_FOR_DEBUGGER();
+          //WAIT_FOR_DEBUGGER();
 #endif
         }
       }
