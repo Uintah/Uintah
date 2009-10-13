@@ -3,7 +3,7 @@
 <Study>Res.Study</Study>
 
 <gnuplot>
-  <script>plotScript.gp</script>s
+  <script>plotRiemannTests.gp</script>s
   <title>ICE: Toro's Test problem 2  X-direction</title>
   <ylabel>Error</ylabel>
   <xlabel>Resolution</xlabel>

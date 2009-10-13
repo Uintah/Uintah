@@ -52,7 +52,7 @@ for i = 1:2:nargin
   elseif (strcmp(option,"-plot") )
     makePlot = opt_value;
   elseif (strcmp(option,"-test") )
-    testNumber = opt_value;    
+    testNumber = str2num(opt_value);    
   elseif (strcmp(option,"-ts") )
     ts = str2num(opt_value);                  
   elseif (strcmp(option,"-o") )  
@@ -76,20 +76,6 @@ end
 
 
 %______________________________
-% mapping between variable name and column in exact solution data
-if( strcmp(variable, 'rho_CC'))
-  col = 2;
-elseif( strcmp(variable,'vel_CC') )
-  col = 3;
-elseif( strcmp(variable,'press_CC') )
-  col = 4;
-elseif( strcmp(variable,'temp_CC') )
-  col = 5;
-else
-  display('Error: unknown variable;')
-end
-
-%______________________________
 % hardwired variables for 1 level problem
 level = 0;
 L = 1;
@@ -111,30 +97,39 @@ t = physicalTime(ts);
 %________________________________
 %  extract initial conditions and grid information from the uda file
 c0 = sprintf('puda -gridstats %s >& tmp',uda); unix(c0);
-unix('grep -m1 dx: tmp| tr -d "dx:[]"');
-
+[s,r0] = unix('grep -m1 dx: tmp| tr -d "dx:[]"');
 [s,r1] = unix('grep -m1 -w "Total Number of Cells" tmp | tr -d "[:alpha:]:[],"');
 [s,r2] = unix('grep -m1 -w "Domain Length" tmp         | tr -d "[:alpha:]:[],"');
-
+dx           = str2num(r0);
 resolution   = str2num(r1);         % this returns a vector
 domainLength = str2num(r2);
 
-%______________________________
-% compute the exact solution
-%if( strcmp(testNumber,'1')
-  %inputFile = sprintf("test1.in")
-%endif
 
-c = sprintf('exactRiemann %s %s %i %g', 'test1.in', 'exactSol', resolution(pDir), t)
+%______________________________
+% compute the exact solution for each variable
+% The column format is
+%  X    Rho_CC    vel_CC    Press_CC    Temp_CC
+if( testNumber == 1 )
+  inputFile = sprintf("test1.in");
+elseif( testNumber == 2 )
+  inputFile = sprintf("test2.in");
+elseif( testNumber == 3 )
+  inputFile = sprintf("test3.in");
+elseif( testNumber == 4 )
+  inputFile = sprintf("test4.in");
+elseif( testNumber == 5 )
+  inputFile = sprintf("test5.in");
+endif
+
+c = sprintf('exactRiemann %s %s %i %g', inputFile, 'exactSol', resolution(pDir), t)
 
 [s, r] = unix(c);
-exactSol_tmp = load('exactSol');
-exactSol = exactSol_tmp(:,col);
-x_ex     = exactSol_tmp(:,1);
+exactSol = load('exactSol');
+x_ex     = exactSol(:,1);
 
 %______________________________
-% compute L2norm
-%   Load the solutaion from sus
+% Load the simulation solution into simSol
+
 if(pDir == 1)
   startEnd = sprintf('-istart 0 0 0 -iend %i 0 0',resolution(pDir)-1);
 elseif(pDir == 2)
@@ -143,16 +138,39 @@ elseif(pDir == 3)
   startEnd = sprintf('-istart 0 0 0 -iend 0 0 %i',resolution(pDir)-1);
 end
 
-c1 = sprintf('lineextract -v %s -l %i -cellCoords -timestep %i %s -o sim.dat -m %i  -uda %s >&/dev/null',...
-  variable,level,ts-1,startEnd,mat,uda);
-[s1, r1] = unix(c1);
+variables = { 'rho_CC' 'vel_CC' 'press_CC' 'temp_CC'};
 
-var{1,L} = load('sim.dat');
-x      = var{1,L}(:,pDir);
-susSol = var{1,L}(:,4);
+nrows = resolution(pDir);
+ncols = length(variables);
+susSol = zeros(nrows,ncols);
+x      = zeros(nrows);
+
+% loop over all the variables and load them into susSol
+for v=1:length(variables)
+  c1 = sprintf('lineextract -v %s -l %i -cellCoords -timestep %i %s -o sim.dat -m %i  -uda %s >&/dev/null',variables(v),level,ts-1,startEnd,mat,uda)
+  [s1, r1] = unix(c1);
+  
+  if ( strcmp(variables(v),'vel_CC'))         % for vel_CC
+    % rip out [] from velocity data
+    c2 = sprintf('cat sim.dat | tr -d "[]" > sim.dat2; mv sim.dat2 sim.dat');
+    [r2, r2]=unix(c2);
+    
+    var = load('sim.dat');
+    susSol(:,v) = var(:,3 + pDir);
+    
+  else                                        % all other variables
+  
+    var = load('sim.dat');
+    susSol(:,v) = var(:,4); 
+  endif
+  
+  x = var(:,pDir);
+end
+
+susSol;
 
 %cleanup tmp files
-unix('/bin/rm -f sim.dat tmp?.dat vel?.dat');
+unix('/bin/rm -f sim.dat');
 
 % bulletproofing
 test = sum (x - x_ex);
@@ -160,40 +178,61 @@ if(test > 1e-10)
   display('ERROR: compute_L2_norm: The results cannot be compared')
 end
 
-% compute the difference
-clear d;          % d is the difference
-d = 0; 
-for( i = 1:length(x))
-  d(i) = (susSol(i) - exactSol(i));
+
+% compute the difference/L-norm for each of the variables
+d = zeros(nrows,ncols);
+for v=1:length(variables)
+  d(:,v) = ( susSol(:,v) .- exactSol(:,v+1) );
+  L_norm(v) = dx(pDir) * sum( abs( d(:,v) ) );
 end
 
-L2_norm = sqrt( sum(d.^2)/length(d) )
-
-% write L2_norm to a file
+% write L_norm to a file
 nargv = length(output_file);
 if (nargv > 0)
   fid = fopen(output_file, 'w');
-  fprintf(fid,'%g\n',L2_norm);
+  for v=1:length(variables)
+    fprintf(fid,'%g ',L_norm(v));
+  end
+  fprintf(fid,'\n');
   fclose(fid);
 end
+
+%write simulation data to a file
+
+if (nargv > 0)
+  fn = sprintf('sim_%g.dat',resolution(pDir))
+  fid = fopen(fn, 'w');
+  for v=1:length(variables)
+    fprintf(fid,'%g, ',susSol(:,v));
+  end
+  fprintf(fid, '\n')
+  fclose(fid);
+end
+
+
+% write the data to a file
 %______________________________
 if(makePlot)
-  subplot(2,1,1), plot(x,susSol,symbol{L}, x_ex, exactSol,'r:;exact;');
-  xlabel('x')
-  ylabel(variable)
-  tmp = sprintf('Riemann (%s) L2 norm: %f', 'test1.in', L2_norm);
-  title(tmp);
-  grid on;
-  
-  subplot(2,1,2),plot(x,d, 'b:+');
-  hold on;
-  ylabel('Difference'); 
-  xlabel('x');
-  grid on;
+  for v=1:length(variables)
+    subplot(2,1,1), plot(x,susSol(:,v),symbol{L}, x_ex, exactSol(:,v+1),'r:;exact;');
+    xlabel('x')
+
+    tmp = sprintf('%s',variables(v));    
+    ylabel(tmp)
+    
+    tmp = sprintf('Toro Test (%s) L1 norm: %f, time: %f', inputFile, L_norm(v),t);
+    title(tmp);
+    grid on;
+
+    subplot(2,1,2),plot(x,d(:,v), 'b:+');
+    ylabel('Difference'); 
+    xlabel('x');
+    grid on;
+   % pause
+  end
   
   fname = sprintf('shockTube_%i.png',resolution(pDir));
   print ( fname, '-dpng');
-  %pause
   if(0)
     %______________________________
     % gradient of variable

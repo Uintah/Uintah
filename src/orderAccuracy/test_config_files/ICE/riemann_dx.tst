@@ -3,7 +3,7 @@
 <Study>Res.Study</Study>
 
 <gnuplot>
-  <script>plotScript.gp</script>s
+  <script>plotRiemannTests.gp</script>s
   <title>ICE:Riemann Problem (test 1) X dir</title>
   <ylabel>Error</ylabel>
   <xlabel>Resolution</xlabel>
