@@ -174,8 +174,8 @@ protected:
   std::string d_step_dir;           ///< For a step initialization function, direction in which step should occur
   double d_step_start;              ///< Physical location of step function start
   double d_step_end;                ///< Physical location of step function end
-  int d_step_cellstart;          ///< Cell location of step function start
-  int d_step_cellend;            ///< Cell location of step function end
+  int d_step_cellstart;             ///< Cell location of step function start
+  int d_step_cellend;               ///< Cell location of step function end
   double d_step_value;              ///< Step function steps from 0 to d_step_value
 
   // Other:
@@ -197,7 +197,7 @@ void EqnBase::initializationFunction( const Patch* patch, phiType& phi )
   proc0cout << "initializing scalar equation " << d_eqnName << endl;
 
   // Initialization function bullet proofing 
-  if( d_initFunction == "step" ) {
+  if( d_initFunction == "step" || d_initFunction == "env_step" ) {
     if( d_step_dir == "y" ) {
 #ifndef YDIM
       proc0cout << "WARNING: YDIM not turned on (compiled) with this version of the code, " << endl;
@@ -229,20 +229,12 @@ void EqnBase::initializationFunction( const Patch* patch, phiType& phi )
 
     if( b_stepUsesCellLocation ) {
       cellx = c[0];
-#ifdef YDIM
       celly = c[1];
-#endif
-#ifdef ZDIM
       cellz = c[2];
-#endif
     } else if ( b_stepUsesPhysicalLocation ) {
       x = c[0]*Dx.x() + Dx.x()/2.; // the +Dx/2 is because variable is cell-centered
-#ifdef YDIM
       y = c[1]*Dx.y() + Dx.y()/2.; 
-#endif
-#ifdef ZDIM
       z = c[2]*Dx.z() + Dx.z()/2.;
-#endif 
     }
 
     if ( d_initFunction == "constant" || d_initFunction == "env_constant" ) {
@@ -252,23 +244,23 @@ void EqnBase::initializationFunction( const Patch* patch, phiType& phi )
     } else if (d_initFunction == "step" || d_initFunction == "env_step" ) {
       // =========== STEP FUNCTION INITIALIZATION =============
       if (d_step_dir == "x") {
-        if (  (b_stepUsesPhysicalLocation && x > d_step_start && x < d_step_end)
-           || (b_stepUsesCellLocation && cellx > d_step_cellstart && x < d_step_cellend) ) {
+        if (  (b_stepUsesPhysicalLocation && x >= d_step_start && x <= d_step_end)
+           || (b_stepUsesCellLocation && cellx >= d_step_cellstart && x <= d_step_cellend) ) {
           phi[c] = d_step_value/d_scalingConstant; 
         } else {
           phi[c] = 0.0;
         }
       
       } else if (d_step_dir == "y") {
-        if (  (b_stepUsesPhysicalLocation && y > d_step_start && y < d_step_end)
-           || (b_stepUsesCellLocation && celly > d_step_cellstart && celly < d_step_cellend) ) {
+        if (  (b_stepUsesPhysicalLocation && y >= d_step_start && y <= d_step_end)
+           || (b_stepUsesCellLocation && celly >= d_step_cellstart && celly <= d_step_cellend) ) {
           phi[c] = d_step_value/d_scalingConstant; 
         } else { 
           phi[c] = 0.0;
         }
       } else if (d_step_dir == "z") {
-        if (  (b_stepUsesPhysicalLocation && z > d_step_start && z < d_step_end)
-           || (b_stepUsesCellLocation && cellz > d_step_cellstart && z < d_step_cellend) ) {
+        if (  (b_stepUsesPhysicalLocation && z >= d_step_start && z <= d_step_end)
+           || (b_stepUsesCellLocation && cellz >= d_step_cellstart && z <= d_step_cellend) ) {
           phi[c] = d_step_value/d_scalingConstant; 
         } else {
           phi[c] = 0.0;
