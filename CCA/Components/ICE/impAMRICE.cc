@@ -262,7 +262,7 @@ void ICE::scheduleMultiLevelPressureSolve(  SchedulerP& sched,
     const PatchSubset* patches = level->allPatches()->getUnion();
     //__________________________________
     // common Variables
-    //  t->requires( Task::OldDW, lb->delTLabel);    AMR
+    t->requires( Task::OldDW, lb->delTLabel, level.get_rep());  
     t->requires( Task::NewDW, lb->vol_frac_CCLabel,     patches,  gac,2); 
     t->requires( Task::NewDW, lb->sp_vol_CCLabel,       patches,  gac,1);
     t->requires( Task::NewDW, lb->rhsLabel,             patches, nd, one_matl,   oims,gn,0);
@@ -276,7 +276,7 @@ void ICE::scheduleMultiLevelPressureSolve(  SchedulerP& sched,
       t->requires(Task::NewDW,lb->modelMass_srcLabel, patches, gn,0);
     } 
     t->requires( Task::NewDW, lb->speedSound_CCLabel, patches, gn,0);
-    t->requires( Task::NewDW, lb->max_RHSLabel,       patches, gn,0);
+    t->requires( Task::NewDW, lb->max_RHSLabel,                gn,0);
     
     //__________________________________
     // setup Matrix
