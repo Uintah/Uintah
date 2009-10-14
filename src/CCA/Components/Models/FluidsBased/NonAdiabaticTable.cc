@@ -602,9 +602,9 @@ void NonAdiabaticTable::scheduleComputeModelSources(SchedulerP& sched,
                     
   Ghost::GhostType  gn = Ghost::None;  
   Ghost::GhostType  gac = Ghost::AroundCells;
-  //t->requires(Task::OldDW, mi->delT_Label); turn off for AMR 
  
   //t->requires(Task::NewDW, d_scalar->diffusionCoefLabel, gac,1);
+  t->requires(Task::OldDW, mi->delT_Label,           level.get_rep());
   t->requires(Task::OldDW, d_scalar->scalar_CCLabel, gac,1); 
   t->requires(Task::OldDW, mi->rho_CCLabel,          gn);
   t->requires(Task::OldDW, mi->temp_CCLabel,         gn);
@@ -847,6 +847,7 @@ void NonAdiabaticTable::scheduleTestConservation(SchedulerP& sched,
 
     Ghost::GhostType  gn = Ghost::None;
     // compute sum(scalar_f * mass)
+    t->requires(Task::OldDW, mi->delT_Label, getLevel(patches));
     t->requires(Task::NewDW, d_scalar->scalar_CCLabel, gn,0); 
     t->requires(Task::NewDW, mi->rho_CCLabel,          gn,0);
     t->requires(Task::NewDW, lb->uvel_FCMELabel,       gn,0); 

@@ -456,11 +456,12 @@ void SimpleRxn::scheduleComputeModelSources(SchedulerP& sched,
                      
   Ghost::GhostType  gn = Ghost::None;  
   Ghost::GhostType  gac = Ghost::AroundCells;
+  t->requires(Task::OldDW, mi->delT_Label, level.get_rep());
   t->requires(Task::NewDW, d_scalar->diffusionCoefLabel, gac,1);
   t->requires(Task::OldDW, d_scalar->scalar_CCLabel,     gac,1); 
   t->requires(Task::OldDW, mi->rho_CCLabel,    gn);
   t->requires(Task::OldDW, mi->temp_CCLabel,   gn);
-  //t->requires(Task::OldDW, mi->delT_Label);  turn off for AMR
+  
   
   t->modifies(mi->modelMom_srcLabel);
   t->modifies(mi->modelEng_srcLabel);
@@ -610,6 +611,7 @@ void SimpleRxn::scheduleTestConservation(SchedulerP& sched,
                      this,&SimpleRxn::testConservation, mi);
 
     Ghost::GhostType  gn = Ghost::None;
+    t->requires(Task::OldDW, mi->delT_Label, getLevel(patches) );
     t->requires(Task::NewDW, d_scalar->scalar_CCLabel, gn,0); 
     t->requires(Task::NewDW, mi->rho_CCLabel,          gn,0);
     t->requires(Task::NewDW, lb->uvel_FCMELabel,       gn,0); 

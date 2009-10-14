@@ -332,8 +332,8 @@ void Mixing2::scheduleComputeModelSources(SchedulerP& sched,
   t->requires(Task::OldDW, mi->temp_CCLabel,       Ghost::None);
   t->requires(Task::NewDW, mi->specific_heatLabel, Ghost::None);
   t->requires(Task::NewDW, mi->gammaLabel,         Ghost::None);
-    
-  t->requires(Task::OldDW, mi->delT_Label);
+  t->requires(Task::OldDW, mi->delT_Label,         level.get_rep());
+  
   for(vector<Stream*>::iterator iter = streams.begin();
       iter != streams.end(); iter++){
     Stream* stream = *iter;
@@ -375,7 +375,7 @@ void Mixing2::computeModelSources(const ProcessorGroup*,
       double volume = dx.x()*dx.y()*dx.z();
 
       delt_vartype delT;
-      old_dw->get(delT, mi->delT_Label);
+      old_dw->get(delT, mi->delT_Label, getLevel(patches));
       double dt = delT;
 
       int numSpecies = streams.size();
