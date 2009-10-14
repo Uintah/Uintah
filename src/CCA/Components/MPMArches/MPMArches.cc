@@ -246,6 +246,7 @@ void MPMArches::scheduleInitializeKStability(SchedulerP& sched,
 					     const PatchSet* patches,
 					     const MaterialSet* arches_matls)
 {
+  const MaterialSubset* mpm_matls = d_sharedState->allMPMMaterials()->getUnion();
   // set initial values for Stability factors due to drag
   Task* t = scinew Task("MPMArches::initializeKStability",
 			this, &MPMArches::initializeKStability);
@@ -260,6 +261,7 @@ void MPMArches::scheduleInitializeKStability(SchedulerP& sched,
 
   t->computes(d_Alab->d_mmcellTypeLabel);
   t->computes(d_MAlb->mmCellType_MPMLabel);
+  t->computes(d_MAlb->solid_fraction_CCLabel,mpm_matls);
 
   sched->addTask(t, patches, arches_matls);
 }
@@ -2271,7 +2273,8 @@ void MPMArches::scheduleMomExchange(SchedulerP& sched,
   // requires from Arches: celltype, pressure, velocity at cc.
   // also, from mpmarches, void fraction
   // use old_dw since using at the beginning of the time advance loop
-
+  
+  t->requires(Task::OldDW, d_Alab->d_cellInfoLabel, Ghost::None);
   // use modified celltype
 
   t->requires(Task::NewDW, d_Alab->d_mmcellTypeLabel, 
