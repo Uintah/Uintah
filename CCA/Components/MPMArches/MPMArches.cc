@@ -2275,7 +2275,7 @@ void MPMArches::scheduleMomExchange(SchedulerP& sched,
   // use old_dw since using at the beginning of the time advance loop
   
   t->requires(Task::OldDW, d_Alab->d_cellInfoLabel, Ghost::None);
-  t->computes(d_Alab->d_cellInfoLabel);
+  //t->computes(d_Alab->d_cellInfoLabel);
   // use modified celltype
 
   t->requires(Task::NewDW, d_Alab->d_mmcellTypeLabel, 
