@@ -252,7 +252,7 @@ void Simple_Burn::scheduleComputeModelSources(SchedulerP& sched,
                         &Simple_Burn::computeModelSources, mi);
                                             
   cout_doing << "SIMPLE_BURN::scheduleComputeModelSources "<<  endl;  
-  t->requires( Task::OldDW, mi->delT_Label);
+  
   Ghost::GhostType  gac = Ghost::AroundCells;  
   Ghost::GhostType  gn  = Ghost::None;
   const MaterialSubset* react_matl = matl0->thisMaterial();
@@ -262,6 +262,8 @@ void Simple_Burn::scheduleComputeModelSources(SchedulerP& sched,
   one_matl->addReference();
   MaterialSubset* press_matl   = one_matl;
   
+  
+  t->requires( Task::OldDW, mi->delT_Label,       level.get_rep());
   //__________________________________
   // Products
   t->requires(Task::OldDW,  Ilb->temp_CCLabel,    prod_matl, gn);       

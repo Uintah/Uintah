@@ -188,10 +188,12 @@ void LightTime::scheduleComputeModelSources(SchedulerP& sched,
   Task* t = scinew Task("LightTime::computeModelSources", this, 
                         &LightTime::computeModelSources, mi);
   cout_doing << "LightTime::scheduleComputeModelSources "<<  endl;  
-  //t->requires( Task::OldDW, mi->delT_Label);    AMR
+  
   Ghost::GhostType  gn  = Ghost::None;
   const MaterialSubset* react_matl = matl0->thisMaterial();
   const MaterialSubset* prod_matl  = matl1->thisMaterial();
+  
+  t->requires( Task::OldDW, mi->delT_Label,        level.get_rep());
   //__________________________________
   // Products
   t->requires(Task::NewDW,  Ilb->rho_CCLabel,      prod_matl, gn);

@@ -264,7 +264,6 @@ void Unsteady_Burn::scheduleComputeModelSources(SchedulerP& sched,
                         &Unsteady_Burn::computeModelSources, mi);
   
   printSchedule(level,"Unsteady_Burn::scheduleComputeModelSources\t\t\t");  
-  t->requires( Task::OldDW, mi->delT_Label);
 
   Ghost::GhostType gac = Ghost::AroundCells;  
   Ghost::GhostType gn  = Ghost::None;
@@ -281,7 +280,7 @@ void Unsteady_Burn::scheduleComputeModelSources(SchedulerP& sched,
     const MaterialSubset* ice_matls = d_sharedState->allICEMaterials()->getUnion();
     const MaterialSubset* mpm_matls = d_sharedState->allMPMMaterials()->getUnion();
   */
-  
+  t->requires(Task::OldDW, mi->delT_Label,        level.get_rep());
   t->requires(Task::OldDW, Ilb->temp_CCLabel,     gac,1);
   t->requires(Task::NewDW, Ilb->vol_frac_CCLabel, gac,1);
   /*     Products     */
