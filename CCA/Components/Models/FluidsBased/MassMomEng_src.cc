@@ -134,6 +134,8 @@ void MassMomEng_src::scheduleComputeModelSources(SchedulerP& sched,
   t->modifies(mi->modelMom_srcLabel);
   t->modifies(mi->modelEng_srcLabel);
   t->modifies(mi->modelVol_srcLabel);
+  
+  t->requires(Task::OldDW, mi->delT_Label,        level.get_rep());
   t->requires(Task::NewDW, Ilb->sp_vol_CCLabel,   Ghost::None,0);
   t->requires(Task::NewDW, Ilb->vol_frac_CCLabel, Ghost::None,0);
   
@@ -141,7 +143,7 @@ void MassMomEng_src::scheduleComputeModelSources(SchedulerP& sched,
   t->computes(MassMomEng_src::totalMom_srcLabel);
   t->computes(MassMomEng_src::totalEng_srcLabel);
   
-  //t->requires( Task::OldDW, mi->delT_Label);
+   
   sched->addTask(t, level->eachPatch(), mymatls);
 }
 

@@ -42,8 +42,10 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/GeometryPiece/GeometryPieceFactory.h>
 #include <Core/GeometryPiece/UnionGeometryPiece.h>
 #include <Core/Grid/Box.h>
+#include <Core/Grid/Level.h>
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Grid/Variables/PerPatch.h>
+
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Exceptions/ParameterNotFound.h>
@@ -525,6 +527,7 @@ void PassiveScalar::scheduleComputeModelSources(SchedulerP& sched,
                    this,&PassiveScalar::computeModelSources, mi);
                      
   Ghost::GhostType  gac = Ghost::AroundCells;
+  t->requires(Task::OldDW, mi->delT_Label, level.get_rep() );
   t->requires(Task::NewDW, d_scalar->diffusionCoefLabel, gac,1);
   t->requires(Task::OldDW, d_scalar->scalar_CCLabel,     gac,1); 
   t->modifies(d_scalar->scalar_source_CCLabel);
@@ -631,6 +634,7 @@ void PassiveScalar::scheduleTestConservation(SchedulerP& sched,
 
     Ghost::GhostType  gn = Ghost::None;
     // compute sum(scalar_f * mass)
+    t->requires(Task::OldDW, mi->delT_Label, getLevel(patches) );
     t->requires(Task::NewDW, d_scalar->scalar_CCLabel, gn,0); 
     t->requires(Task::NewDW, mi->rho_CCLabel,          gn,0);
     t->requires(Task::NewDW, lb->uvel_FCMELabel,       gn,0); 
