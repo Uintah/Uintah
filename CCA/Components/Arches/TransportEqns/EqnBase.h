@@ -260,7 +260,7 @@ void EqnBase::initializationFunction( const Patch* patch, phiType& phi )
         }
       } else if (d_step_dir == "z") {
         if (  (b_stepUsesPhysicalLocation && z >= d_step_start && z <= d_step_end)
-           || (b_stepUsesCellLocation && cellz >= d_step_cellstart && z <= d_step_cellend) ) {
+           || (b_stepUsesCellLocation && cellz >= d_step_cellstart && cellz <= d_step_cellend) ) {
           phi[c] = d_step_value/d_scalingConstant; 
         } else {
           phi[c] = 0.0;
