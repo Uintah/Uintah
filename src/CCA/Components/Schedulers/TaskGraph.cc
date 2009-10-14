@@ -1300,7 +1300,7 @@ TaskGraph::createDetailedDependencies(DetailedTask* task,
                       cout << "creator=" << *creator << '\n';
                     cout << "neighbor=" << *fromNeighbor << ", matl=" << matl << '\n';
                     cout << "me=" << me << '\n';
-                    WAIT_FOR_DEBUGGER();
+                    //WAIT_FOR_DEBUGGER();
                     SCI_THROW(InternalError("Failed to find comp for dep!", __FILE__, __LINE__));
                   }
                 }
