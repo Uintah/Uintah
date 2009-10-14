@@ -165,7 +165,7 @@ void TestModel::scheduleComputeModelSources(SchedulerP& sched,
   t->computes(TestModel::totalMassXLabel);
   t->computes(TestModel::totalIntEngXLabel);
   
-  t->requires( Task::OldDW, mi->delT_Label);
+  t->requires( Task::OldDW, mi->delT_Label, level.get_rep());
   sched->addTask(t, level->eachPatch(), mymatls);
 }
 
@@ -178,7 +178,7 @@ void TestModel::computeModelSources(const ProcessorGroup*,
                                        const ModelInfo* mi)
 {
   delt_vartype delT;
-  old_dw->get(delT, mi->delT_Label);
+  old_dw->get(delT, mi->delT_Label, getLevel(patches));
   double dt = delT;
 
   ASSERT(matls->size() == 2);

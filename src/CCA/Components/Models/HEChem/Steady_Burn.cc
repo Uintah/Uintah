@@ -241,12 +241,12 @@ void Steady_Burn::scheduleComputeModelSources(SchedulerP& sched,
   sched->addTask(t1, level->eachPatch(), mymatls);
 
 
-
+  //__________________________________
   Task* t = scinew Task("Steady_Burn::computeModelSources", this, 
                         &Steady_Burn::computeModelSources, mi);
 
   printSchedule(level,"Steady_Burn::scheduleComputeModelSources\t\t\t");  
-  t->requires( Task::OldDW, mi->delT_Label);
+  t->requires( Task::OldDW, mi->delT_Label, level.get_rep());
   
   // define material subsets  
   const MaterialSet* all_matls = d_sharedState->allMaterials();
@@ -291,14 +291,14 @@ void Steady_Burn::scheduleComputeModelSources(SchedulerP& sched,
     delete one_matl;
 }
 
-
+//__________________________________
 void Steady_Burn::scheduleModifyThermoTransportProperties(SchedulerP&, 
                                                           const LevelP&, 
                                                           const MaterialSet*){
   // do nothing      
 }
 
-
+//__________________________________
 void Steady_Burn::computeSpecificHeat(CCVariable<double>&, const Patch*, DataWarehouse*, const int){
   //do nothing
 }
@@ -345,6 +345,8 @@ void Steady_Burn::computeNumPPC(const ProcessorGroup*,
   }
  
 }
+//__________________________________
+//
 void Steady_Burn::computeModelSources(const ProcessorGroup*, 
                                       const PatchSubset* patches,
                                       const MaterialSubset* /*matls*/,

@@ -185,7 +185,7 @@ void IandG::scheduleComputeModelSources(SchedulerP& sched,
   Task* t = scinew Task("IandG::computeModelSources", this, 
                         &IandG::computeModelSources, mi);
   cout_doing << "IandG::scheduleComputeModelSources "<<  endl;  
-  t->requires( Task::OldDW, mi->delT_Label);
+  
   Ghost::GhostType  gn  = Ghost::None;
   const MaterialSubset* react_matl = matl0->thisMaterial();
   const MaterialSubset* prod_matl  = matl1->thisMaterial();
@@ -194,6 +194,7 @@ void IandG::scheduleComputeModelSources(SchedulerP& sched,
   one_matl->addReference();
   MaterialSubset* press_matl   = one_matl;
   
+  t->requires( Task::OldDW, mi->delT_Label,        level.get_rep());
   //__________________________________
   // Products
   t->requires(Task::NewDW,  Ilb->rho_CCLabel,      prod_matl, gn);
