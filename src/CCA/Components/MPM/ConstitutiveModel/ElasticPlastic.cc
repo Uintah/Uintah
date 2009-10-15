@@ -518,13 +518,13 @@ ElasticPlastic::initializeCMData(const Patch* patch,
                             pPlasticStrainRate, pStrainRate;
   ParticleVariable<int>     pLocalized;
 
-  new_dw->allocateAndPut(pRotation, pRotationLabel, pset);
-  new_dw->allocateAndPut(pStrainRate, pStrainRateLabel, pset);
-  new_dw->allocateAndPut(pPlasticStrain, pPlasticStrainLabel, pset);
+  new_dw->allocateAndPut(pRotation,          pRotationLabel, pset);
+  new_dw->allocateAndPut(pStrainRate,        pStrainRateLabel, pset);
+  new_dw->allocateAndPut(pPlasticStrain,     pPlasticStrainLabel, pset);
   new_dw->allocateAndPut(pPlasticStrainRate, pPlasticStrainRateLabel, pset);
-  new_dw->allocateAndPut(pDamage, pDamageLabel, pset);
-  new_dw->allocateAndPut(pLocalized, pLocalizedLabel, pset);
-  new_dw->allocateAndPut(pPorosity, pPorosityLabel, pset);
+  new_dw->allocateAndPut(pDamage,            pDamageLabel, pset);
+  new_dw->allocateAndPut(pLocalized,         pLocalizedLabel, pset);
+  new_dw->allocateAndPut(pPorosity,          pPorosityLabel, pset);
 
   for(ParticleSubset::iterator iter = pset->begin();iter != pset->end();iter++){
 

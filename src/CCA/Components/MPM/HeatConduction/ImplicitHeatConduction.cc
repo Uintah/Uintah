@@ -247,10 +247,11 @@ void ImplicitHeatConduction::scheduleGetTemperatureIncrement(SchedulerP& sched,
  if(do_IHC){
   Task* t = scinew Task("ImpMPM::getTemperatureIncrement", this,
                         &ImplicitHeatConduction::getTemperatureIncrement);
-                                                                                
+
+  t->requires(Task::OldDW,      d_sharedState->get_delt_label());
   t->requires(Task::NewDW, lb->gTemperatureLabel,one_matl,Ghost::None,0);
   t->computes(lb->gTemperatureRateLabel,one_matl);
-                                                                                
+
   t->setType(Task::OncePerProc);
   sched->addTask(t, patches, matls);
  }
