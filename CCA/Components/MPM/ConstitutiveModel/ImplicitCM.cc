@@ -75,10 +75,10 @@ ImplicitCM::initSharedDataForImplicit(const Patch* patch,
   Matrix3 zero(0.);
   ParticleSubset* pset = new_dw->getParticleSubset(matl->getDWIndex(), patch);
 
-  ParticleVariable<double>  pdTdt;
+//  ParticleVariable<double>  pdTdt;
   ParticleVariable<Matrix3> pDefGrad, pStress;
 
-  new_dw->allocateAndPut(pdTdt,       d_lb->pdTdtLabel,               pset);
+//  new_dw->allocateAndPut(pdTdt,       d_lb->pdTdtLabel,               pset);
   new_dw->allocateAndPut(pDefGrad,    d_lb->pDeformationMeasureLabel, pset);
   new_dw->allocateAndPut(pStress,     d_lb->pStressLabel,             pset);
 
@@ -87,7 +87,7 @@ ImplicitCM::initSharedDataForImplicit(const Patch* patch,
   ParticleSubset::iterator iter = pset->begin();
   for(; iter != pset->end(); iter++){
     particleIndex idx = *iter;
-    pdTdt[idx] = 0.0;
+//    pdTdt[idx] = 0.0;
     pDefGrad[idx] = I;
     pStress[idx] = zero;
   }

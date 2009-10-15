@@ -354,10 +354,15 @@ void ImpMPM::scheduleInitialize(const LevelP& level, SchedulerP& sched)
     return;
   Task* t = scinew Task("ImpMPM::actuallyInitialize",
                         this, &ImpMPM::actuallyInitialize);
+
+  const PatchSet* patches = level->eachPatch();
+
   t->computes(lb->partCountLabel);
   t->computes(lb->pXLabel);
+  t->computes(lb->pDispLabel);
   t->computes(lb->pMassLabel);
   t->computes(lb->pVolumeLabel);
+  t->computes(lb->pFiberDirLabel);
   t->computes(lb->pVelocityLabel);
   t->computes(lb->pAccelerationLabel);
   t->computes(lb->pExternalForceLabel);
@@ -383,6 +388,14 @@ void ImpMPM::scheduleInitialize(const LevelP& level, SchedulerP& sched)
 
   if (d_switchCriteria) {
     d_switchCriteria->scheduleInitialize(level,sched);
+  }
+
+  int numMPM = d_sharedState->getNumMPMMatls();
+
+  for(int m = 0; m < numMPM; m++){
+    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
+    ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
+    cm->addInitialComputesAndRequires(t, mpm_matl, patches);
   }
 
   if (flags->d_useLoadCurves) {
@@ -1101,6 +1114,7 @@ void ImpMPM::scheduleComputeStressTensor(SchedulerP& sched,
   Task* t = scinew Task("ImpMPM::computeStressTensor",
                     this, &ImpMPM::computeStressTensor,recursion);
 
+  t->requires(Task::ParentOldDW,d_sharedState->get_delt_label());
   for(int m = 0; m < numMatls; m++){
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
     ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
@@ -1286,6 +1300,8 @@ void ImpMPM::scheduleIterate(SchedulerP& sched,const LevelP& level,
   task->hasSubScheduler();
 
   task->requires(Task::OldDW,lb->pXLabel,                 Ghost::None,0);
+  task->requires(Task::OldDW,lb->pMassLabel,              Ghost::None,0);
+  task->requires(Task::OldDW,lb->pSizeLabel,              Ghost::None,0);
   task->requires(Task::OldDW,lb->pVolumeLabel,            Ghost::None,0);
   task->requires(Task::OldDW,lb->pDeformationMeasureLabel,Ghost::None,0);
 
