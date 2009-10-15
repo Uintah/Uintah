@@ -168,6 +168,7 @@ void FractureMPM::scheduleInitialize(const LevelP& level,
   t->computes(lb->pXLabel);
   t->computes(lb->pDispLabel);
   t->computes(lb->pMassLabel);
+  t->computes(lb->pFiberDirLabel);
   t->computes(lb->pVolumeLabel);
   t->computes(lb->pTemperatureLabel);
   t->computes(lb->pTempPreviousLabel); // for thermal stress
