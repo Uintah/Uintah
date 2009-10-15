@@ -52,13 +52,14 @@ fi
 in_file=
 
 # Set the test results directory
-results=TestResults
-if test ! -d $results; then
-    echo
-    echo "Creating 'TestResults' directory..."
-    echo
-    mkdir $results
-fi
+
+#results=TestResults
+#if test ! -d $results; then
+#    echo
+#    echo "Creating 'TestResults' directory..."
+#    echo
+#    mkdir $results
+#fi
 
 do_mpm=0
 do_mpmf=0
@@ -72,6 +73,7 @@ do_smpm=0
 do_arches=0
 do_mpmarches=0
 do_examples=0
+do_ucf=0
 do_remove=0
 do_restart=0
 do_mem=0
@@ -98,6 +100,7 @@ usage () {
     echo "  -mi            run the mpmice tests"
     echo "  -mpmice_amr    run the mpmice amr tests"
     echo "  -im            run the implicit mpm tests"
+    echo "  -ucf           run the UCF tests"
     echo "  -dbg           use the dbg (debug) TestData"
     echo "  -opt           use the opt (optimized) TestData"
     echo "  -nompi         do not use mpi"
@@ -169,6 +172,9 @@ for arg in $*; do
             echo "Scheduling the implicit mpm tests . . ."
             do_impm=1
             MPI_RUN="yes";;
+        -ucf)
+            echo "Scheduling the UCF tests . . ."
+            do_ucf=1;;
         -clean)
             echo "Removing *.out *.compare and *.uda files . . ."
             do_remove=1;;
@@ -220,6 +226,7 @@ impm_test_cases="billet.static adiCuJC01s296K adiCuMTS01s296K adiCuPTW01s296K ad
 arches_test_cases="constantMMS almgrenMMS periodic methane_explicit_table methane8patch"
 mpmarches_test_cases="mpmpipe_test methaneFireWContainer"
 examples_test_cases="poisson1"
+ucf_test_cases="LBwoRegrid icePerformanceTest mpmicePerformanceTest"
 
 # Check if the applications sus and compare_uda are available
 
@@ -233,10 +240,10 @@ if test ! -e inputs; then
     exit
 fi
 
-if test  -e $results; then
-   echo; echo "Cleaning out old '$results' directory"
-   rm -rf $results/*
-fi
+#if test  -e $results; then
+#   echo; echo "Cleaning out old '$results' directory"
+#   rm -rf $results/*
+#fi
 
 
 REMOVE () {
@@ -469,6 +476,10 @@ run_case () {
 ## in tc variable
 
     test_case=$1
+
+    rm -rf TestResults_${test_case}
+    mkdir -p TestResults_${test_case}
+    results=TestResults_${test_case}
     tc=${test_case}_test_cases
 
     echo; echo "Testing ${!tc}"
@@ -515,12 +526,13 @@ run_case () {
     
     if [ $all_tests_pass = true ]; then
         echo "returning 0"
+#        tar cf ${results}.tar ${results}/
+#        gzip ${results}.tar
         return 0
     else
         echo "returning 1"
-        da=`date +%m%d%Y%H%M`
-        `tar cvf ${results}_${test_case}_$da.tar ${results}`
-        gzip ${results}_${test_case}_$da.tar
+        tar cf ${results}.tar ${results}/
+        gzip ${results}.tar
         return 1
     fi
 
@@ -619,6 +631,11 @@ fi
 if test "$do_examples" -eq 1; then
     CASE=Examples
     run_case examples
+    rt_value=$?
+fi
+if test "$do_ucf" -eq 1; then
+    CASE=UCF
+    run_case ucf
     rt_value=$?
 fi
 if test "$do_remove" -eq 1; then
