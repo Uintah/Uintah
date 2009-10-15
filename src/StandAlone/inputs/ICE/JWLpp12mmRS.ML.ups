@@ -237,7 +237,7 @@
                <pressure>       101325.0                </pressure>
            </geom_object>
            <geom_object>
-               <cylinder label = "stick">
+               <cylinder label = "stick2">
                     <bottom>       [0.0,  0.0,0.0]   </bottom>
                     <top>          [0.006,0.0,0.0]   </top>
                     <radius>       0.012             </radius>
@@ -288,7 +288,7 @@
                    <min>           [-99.0, -99.0, -99.0 ]   </min>
                    <max>           [100.0, 100.0, 100.0 ]   </max>
                </box>
-               <cylinder label = "stick">
+               <cylinder label = "stick3">
                     <bottom>       [0.0,  0.0,0.0] </bottom>
                     <top>          [0.115,0.0,0.0] </top>
                     <radius>       0.012           </radius>

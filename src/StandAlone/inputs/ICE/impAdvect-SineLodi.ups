@@ -39,6 +39,8 @@
       <SINE_BC>
         <omega>    1000 </omega>
         <A>        800 </A>
+        <reference_pressure> 1.0132500000010138e+05 </reference_pressure>
+        <reference_velocity> [0., 0., 0.]  </reference_velocity>
       </SINE_BC>
       
       <Face side = "x-">
