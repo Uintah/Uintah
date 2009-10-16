@@ -66,6 +66,8 @@ void DQMOM::problemSetup(const ProblemSpecP& params)
   unsigned int index_length = 0;
   moments = 0;
 
+  d_small_B = 1e-10;
+
   db->getWithDefault("LU_solver_tolerance", d_solver_tolerance, 1.0e-5);
 
   // obtain moment index vectors
@@ -468,10 +470,14 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
       double temp = A.getNorm( &Resid[0], 0 );
       normRes[c] = temp;
       for( int ii = 0; ii < A.getDimension(); ++ii ) {
-        Resid[ii] = Resid[ii] / Xlong[ii]; //try normalizing componentwise error
+        if (abs(B[ii]) > d_small_B) 
+          Resid[ii] = Resid[ii] / B[ii]; //try normalizing componentwise error
+        // else B is zero so b - Ax should also be close to zero
+        // so keep residual = Ax 
       }
       normResNormalized[c] = A.getNorm( &Resid[0], 0);
 
+      // Julien and Jeremy don't understand this:
       double maxNormMag = 1e6;
       
       // set weight transport eqn source terms equal to results
@@ -487,10 +493,11 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
         }
 
         // Make sure several critera are met for an acceptable solution
-        if(  fabs(  normB[c]) > maxNormMag 
-          || fabs(  normX[c]) > maxNormMag 
-          || fabs(normRes[c]) > d_solver_tolerance
-          || fabs(normResNormalized[c]) > d_solver_tolerance ) {
+        //if(  fabs(  normB[c]) > maxNormMag 
+        //  || fabs(  normX[c]) > maxNormMag 
+        //  || fabs(normRes[c]) > d_solver_tolerance
+        //  || fabs(normResNormalized[c]) > d_solver_tolerance ) 
+        if(  fabs(normResNormalized[c]) > d_solver_tolerance ) {
             tempCCVar[c] = 0;
         } else if( is_badly_conditioned ) {
             tempCCVar[c] = 0;
@@ -513,10 +520,11 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
         }
 
         // Make sure several critera are met for an acceptable solution
-        if(  fabs(  normB[c]) > maxNormMag 
-          || fabs(  normX[c]) > maxNormMag 
-          || fabs(normRes[c]) > d_solver_tolerance
-          || fabs(normResNormalized[c]) > d_solver_tolerance ) {
+        //if(  fabs(  normB[c]) > maxNormMag 
+        //  || fabs(  normX[c]) > maxNormMag 
+        //  || fabs(normRes[c]) > d_solver_tolerance
+        //  || fabs(normResNormalized[c]) > d_solver_tolerance ) {
+        if(  fabs(normResNormalized[c]) > d_solver_tolerance ) {
             tempCCVar[c] = 0;
         } else if( is_badly_conditioned ) {
             tempCCVar[c] = 0;
