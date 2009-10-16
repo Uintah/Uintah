@@ -454,7 +454,6 @@ void FractureMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
   t->computes(lb->gExternalHeatRateLabel);
   t->computes(lb->gNumNearParticlesLabel);
   t->computes(lb->TotalMassLabel);
-  t->computes(lb->TotalVolumeDeformedLabel);
  
   // for FractureMPM
   t->requires(Task::OldDW, lb->pDispLabel,  gan, NGP);
@@ -650,6 +649,7 @@ void FractureMPM::scheduleComputeInternalForce(SchedulerP& sched,
   t->requires(Task::NewDW,lb->pgCodeLabel,                gan,NGP);
   t->requires(Task::NewDW,lb->GMassLabel, gnone); 
   t->computes(lb->GInternalForceLabel);
+  t->computes(lb->TotalVolumeDeformedLabel);
 
   if(flags->d_with_ice){
     t->requires(Task::NewDW, lb->pPressureLabel,          gan,NGP);
