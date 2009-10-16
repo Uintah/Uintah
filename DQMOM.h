@@ -112,6 +112,8 @@ private:
   const VarLabel* d_normResNormalizedLabel;
   const VarLabel* d_conditionEstimateLabel;
 
+  double d_small_B; 
+
 }; // end class DQMOM
 
 } // end namespace Uintah
