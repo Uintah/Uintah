@@ -207,11 +207,11 @@ void PartVel::ComputePartVel( const ProcessorGroup* pc,
           length = (wlength[c]/weight[c])*eqn.getScalingConstant();
         }
 
-        if( length > d_highClip ) {
-          length = d_highClip;
-        } else if( length < d_lowClip ) {
-          length = d_lowClip;
-        }
+        //if( length > d_highClip ) {
+        //  length = d_highClip;
+        //} else if( length < d_lowClip ) {
+        //  length = d_lowClip;
+        //}
 
         Vector sphGas = Vector(0.,0.,0.);
         Vector cartGas = gasVel[c]; 
