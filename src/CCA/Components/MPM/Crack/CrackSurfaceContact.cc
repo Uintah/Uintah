@@ -264,7 +264,7 @@ Crack::addComputesAndRequiresAdjustCrackContactIntegrated(Task* t,
   t->requires(Task::NewDW, lb->GNumPatlsLabel,      Ghost::None);
   t->requires(Task::NewDW, lb->GCrackNormLabel,     Ghost::None);
   t->requires(Task::NewDW, lb->GDisplacementLabel,  Ghost::None);
-  t->requires(Task::NewDW, lb->gVelocityLabel,      Ghost::None); 
+  t->requires(Task::NewDW, lb->GVelocityLabel,      Ghost::None); 
   t->modifies(             lb->GVelocityStarLabel,  mss);
   t->modifies(             lb->GAccelerationLabel,  mss);
   t->modifies(             lb->frictionalWorkLabel, mss);
