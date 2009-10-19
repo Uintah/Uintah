@@ -533,6 +533,8 @@ void FractureMPM::scheduleComputeStressTensor(SchedulerP& sched,
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
     ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
     cm->addComputesAndRequires(t, mpm_matl, patches);
+    const MaterialSubset* matlset = mpm_matl->thisMaterial();
+    t->computes(lb->p_qLabel_preReloc, matlset);
   }
 
   t->computes(d_sharedState->get_delt_label(),getLevel(patches));
@@ -558,6 +560,8 @@ void FractureMPM::scheduleComputeParticleTempFromGrid(SchedulerP& sched,
   Ghost::GhostType gan = Ghost::AroundNodes;
   Task* t = scinew Task("FractureMPM::computeParticleTempFromGrid",
                         this, &FractureMPM::computeParticleTempFromGrid);
+  t->requires(Task::OldDW, lb->pXLabel,           gan, NGP);
+  t->requires(Task::OldDW, lb->pSizeLabel,        gan, NGP);
   t->requires(Task::NewDW, lb->gTemperatureLabel, gac, NGN);
   t->requires(Task::NewDW, lb->GTemperatureLabel, gac, NGN);
   t->requires(Task::NewDW,lb->pgCodeLabel,        gan, NGP);
@@ -712,6 +716,7 @@ void FractureMPM::scheduleComputeAndIntegrateAcceleration(SchedulerP& sched,
   t->requires(Task::NewDW, lb->gVelocityLabel,          Ghost::None);
 
   t->requires(Task::NewDW, lb->GMassLabel,          Ghost::None);
+  t->requires(Task::NewDW, lb->GVelocityLabel,      Ghost::None);
   t->requires(Task::NewDW, lb->GInternalForceLabel, Ghost::None);
   t->requires(Task::NewDW, lb->GExternalForceLabel, Ghost::None);
 
