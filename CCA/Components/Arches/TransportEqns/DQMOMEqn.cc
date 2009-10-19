@@ -487,11 +487,14 @@ DQMOMEqn::sched_solveTransportEqn( const LevelP& level, SchedulerP& sched, int t
 
   Task* tsk = scinew Task(taskname, this, &DQMOMEqn::solveTransportEqn, timeSubStep);
 
-  //NEW
+  //New
   tsk->modifies(d_transportVarLabel);
   tsk->modifies(d_oldtransportVarLabel); 
   tsk->requires(Task::NewDW, d_RHSLabel, Ghost::None, 0);
+
+  //Old
   tsk->requires(Task::OldDW, d_transportVarLabel, Ghost::None, 0);
+  tsk->requires(Task::OldDW, d_fieldLabels->d_sharedState->get_delt_label(), Ghost::None, 0 );
 
   sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
 }
@@ -506,7 +509,6 @@ DQMOMEqn::solveTransportEqn( const ProcessorGroup* pc,
                              DataWarehouse* new_dw, 
                              int timeSubStep )
 {
-
   //patch loop
   for (int p=0; p < patches->size(); p++){
 
@@ -523,6 +525,8 @@ DQMOMEqn::solveTransportEqn( const ProcessorGroup* pc,
     CCVariable<double> phi;    // phi @ current sub-level 
     CCVariable<double> oldphi; // phi @ last update for rk substeps
     constCCVariable<double> RHS; 
+    // why isn't DQMOMEqn using variable-density update?
+    // (ScalarEqn is)
     constCCVariable<double> rk1_phi; // phi @ n for averaging 
 
     new_dw->getModifiable(phi, d_transportVarLabel, matlIndex, patch);
