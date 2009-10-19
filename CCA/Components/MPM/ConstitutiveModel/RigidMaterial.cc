@@ -152,7 +152,7 @@ RigidMaterial::computeStressTensorImplicit(const PatchSubset* patches,
     // when using RigidMPM.
     // This method is defined in the ConstitutiveModel base class.
     carryForwardSharedDataImplicit(pset, old_dw, new_dw, matl);
-    new_dw->put(sum_vartype(0.),     lb->StrainEnergyLabel);
+//    new_dw->put(sum_vartype(0.),     lb->StrainEnergyLabel);
   }
 }
 
@@ -180,10 +180,11 @@ void
 RigidMaterial::addComputesAndRequires(Task* task,
                                       const MPMMaterial* matl,
                                       const PatchSet* patches,
-                                      const bool recurse) const
+                                      const bool recurse,
+                                      const bool SchedParent) const
 {
   const MaterialSubset* matlset = matl->thisMaterial();
-  addSharedCRForImplicit(task, matlset, patches, recurse);
+  addSharedCRForImplicit(task, matlset, patches, recurse, SchedParent);
 }
 
 void 

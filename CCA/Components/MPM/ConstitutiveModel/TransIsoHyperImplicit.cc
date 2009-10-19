@@ -1110,16 +1110,22 @@ TransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
 void TransIsoHyperImplicit::addComputesAndRequires(Task* task,
                                                  const MPMMaterial* matl,
                                                  const PatchSet* ,
-                                                 const bool ) const
+                                                 const bool /*recurse*/,
+                                                 const bool SchedParent) const
 //________________________________corresponds to the 1st ComputeStressTensor
 {
   const MaterialSubset* matlset = matl->thisMaterial();
   bool reset = flag->d_doGridReset;
                                                                                 
-  addSharedCRForImplicit(task, matlset, reset, true);
+  addSharedCRForImplicit(task, matlset, reset, true,SchedParent);
 
-  task->requires(Task::ParentOldDW, lb->pFiberDirLabel, matlset,Ghost::None);
-  task->requires(Task::ParentOldDW, pFailureLabel,      matlset,Ghost::None);
+  if(SchedParent){
+    task->requires(Task::ParentOldDW, lb->pFiberDirLabel, matlset,Ghost::None);
+    task->requires(Task::ParentOldDW, pFailureLabel,      matlset,Ghost::None);
+  }else{
+    task->requires(Task::OldDW, lb->pFiberDirLabel, matlset,Ghost::None);
+    task->requires(Task::OldDW, pFailureLabel,      matlset,Ghost::None);
+  }
 
   task->computes(lb->pFiberDirLabel_preReloc,           matlset);
   task->computes(pStretchLabel_preReloc,                matlset);

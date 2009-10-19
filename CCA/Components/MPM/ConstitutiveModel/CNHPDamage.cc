@@ -604,13 +604,18 @@ void
 CNHPDamage::addComputesAndRequires(Task* task,
                                    const MPMMaterial* matl,
                                    const PatchSet* patches,
-                                   const bool recurse) const
+                                   const bool recurse,
+                                   const bool SchedParent) const
 {
-  CNHDamage::addComputesAndRequires(task, matl, patches, recurse);
+  CNHDamage::addComputesAndRequires(task, matl, patches, recurse,SchedParent);
 
   const MaterialSubset* matlset = matl->thisMaterial();
   Ghost::GhostType  gnone = Ghost::None;
-  task->requires(Task::ParentOldDW, pPlasticStrainLabel, matlset, gnone);
+  if(SchedParent){
+    task->requires(Task::ParentOldDW, pPlasticStrainLabel, matlset, gnone);
+  }else{
+    task->requires(Task::OldDW, pPlasticStrainLabel, matlset, gnone);
+  }
 }
 
 void 

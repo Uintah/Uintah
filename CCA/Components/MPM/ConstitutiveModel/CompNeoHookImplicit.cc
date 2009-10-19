@@ -527,12 +527,13 @@ CompNeoHookImplicit::computeStressTensor(const PatchSubset* patches,
 void CompNeoHookImplicit::addComputesAndRequires(Task* task,
                                                  const MPMMaterial* matl,
                                                  const PatchSet* ,
-                                                 const bool ) const
+                                                 const bool /*recurse*/,
+                                                 const bool SchedParent) const
 {
   const MaterialSubset* matlset = matl->thisMaterial();
   bool reset = flag->d_doGridReset;
 
-  addSharedCRForImplicit(task, matlset, reset, true);
+  addSharedCRForImplicit(task, matlset, reset, true, SchedParent);
 }
 
 void CompNeoHookImplicit::addComputesAndRequires(Task* task,

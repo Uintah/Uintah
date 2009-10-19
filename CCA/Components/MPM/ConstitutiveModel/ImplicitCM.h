@@ -146,12 +146,14 @@ namespace Uintah {
     void addSharedCRForImplicit(Task* task,
                                 const MaterialSubset* matlset,
                                 const bool reset,
-                                const bool recurse) const;
+                                const bool recurse,
+                                const bool SchedParent) const;
 
     void addSharedCRForImplicitHypo(Task* task,
                                     const MaterialSubset* matlset,
                                     const bool reset,
-                                    const bool recurse) const;
+                                    const bool recurse,
+                                    const bool SchedParent) const;
 
     MPMLabel* d_lb;
 

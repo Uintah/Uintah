@@ -490,12 +490,13 @@ void HypoElasticImplicit::addInitialComputesAndRequires(Task*,
 void HypoElasticImplicit::addComputesAndRequires(Task* task,
                                                  const MPMMaterial* matl,
                                                  const PatchSet* ,
-                                                 const bool ) const
+                                                 const bool /*recurse*/,
+                                                 const bool SchedParent) const
 {
   const MaterialSubset* matlset = matl->thisMaterial();
   bool reset = flag->d_doGridReset;
-                                                                                
-  addSharedCRForImplicitHypo(task, matlset, reset, true);
+
+  addSharedCRForImplicitHypo(task, matlset, reset, true, SchedParent);
 }
 
 void HypoElasticImplicit::addComputesAndRequires(Task* task,
