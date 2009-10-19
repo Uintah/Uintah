@@ -1931,6 +1931,10 @@ ElasticPlastic::addComputesAndRequires(Task* task,
     task->requires(Task::ParentOldDW, pPlasticStrainLabel,     matlset, gnone);
     task->requires(Task::ParentOldDW, pPlasticStrainRateLabel, matlset, gnone);
     task->requires(Task::ParentOldDW, pPorosityLabel,          matlset, gnone);
+
+    task->computes(pPlasticStrainLabel_preReloc,               matlset);
+    task->computes(pPlasticStrainRateLabel_preReloc,           matlset);
+    task->computes(pPorosityLabel_preReloc,                    matlset);
   }else{
     // For scheduleIterate
     task->requires(Task::OldDW, lb->pTempPreviousLabel,  matlset, gnone); 
@@ -1939,12 +1943,6 @@ ElasticPlastic::addComputesAndRequires(Task* task,
     task->requires(Task::OldDW, pPlasticStrainRateLabel, matlset, gnone);
     task->requires(Task::OldDW, pPorosityLabel,          matlset, gnone);
   } 
-//  task->computes(pPlasticStrainLabel_reloc,                    matlset);
-//  task->computes(pRotationLabel_preReloc,       matlset);
-//  task->computes(pStrainRateLabel_preReloc,     matlset);
-  task->computes(pPlasticStrainLabel_preReloc,  matlset);
-  task->computes(pPlasticStrainRateLabel_preReloc,  matlset);
-  task->computes(pPorosityLabel_preReloc,       matlset);
 
   // Add internal evolution variables computed by plasticity model
   d_plastic->addComputesAndRequires(task, matl, patches, recurse, SchedParent);
