@@ -1118,7 +1118,7 @@ void ImpMPM::scheduleComputeStressTensor(SchedulerP& sched,
   for(int m = 0; m < numMatls; m++){
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
     ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
-    cm->addComputesAndRequires(t, mpm_matl, patches,recursion);
+    cm->addComputesAndRequires(t, mpm_matl, patches, recursion, true);
   }
   t->setType(Task::OncePerProc);
   sched->addTask(t, patches, matls);
@@ -1291,7 +1291,7 @@ void ImpMPM::scheduleCheckConvergence(SchedulerP& sched,
 }
 
 void ImpMPM::scheduleIterate(SchedulerP& sched,const LevelP& level,
-                             const PatchSet*, const MaterialSet*)
+                             const PatchSet* patches, const MaterialSet*)
 {
   d_recompileSubsched = true;
   Task* task = scinew Task("ImpMPM::iterate", this, &ImpMPM::iterate,level,
@@ -1319,10 +1319,19 @@ void ImpMPM::scheduleIterate(SchedulerP& sched,const LevelP& level,
   task->requires(Task::NewDW,lb->gAccelerationLabel,   Ghost::None,0);
   task->requires(Task::NewDW,lb->gContactLabel,        Ghost::None,0);
 
+  if (flags->d_doMechanics) {
+    int numMatls = d_sharedState->getNumMPMMatls();
+    for(int m = 0; m < numMatls; m++){
+      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
+      ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
+      cm->addComputesAndRequires(task, mpm_matl, patches, true, false);
+    }
+  }
+
   task->requires(Task::OldDW,d_sharedState->get_delt_label());
 
   task->setType(Task::OncePerProc);
-  sched->addTask(task,d_perproc_patches,d_sharedState->allMaterials());
+  sched->addTask(task,patches,d_sharedState->allMaterials());
 }
 
 void ImpMPM::scheduleComputeStressTensor(SchedulerP& sched,
@@ -1353,6 +1362,7 @@ void ImpMPM::scheduleUpdateTotalDisplacement(SchedulerP& sched,
                               this, &ImpMPM::updateTotalDisplacement);
 
     t->requires(Task::OldDW, lb->gDisplacementLabel, Ghost::None);
+    t->requires(Task::NewDW, lb->dispNewLabel,       Ghost::None);
     t->modifies(lb->gDisplacementLabel);
 
     t->setType(Task::OncePerProc);
@@ -1594,11 +1604,11 @@ void ImpMPM::iterate(const ProcessorGroup*,
     scheduleDestroyMatrix(           d_subsched,d_perproc_patches,matls,true);
     
     if (flags->d_doMechanics) {
-      scheduleComputeStressTensor(   d_subsched,d_perproc_patches,matls,true);
+      scheduleComputeStressTensor(   d_subsched,d_perproc_patches,matls, true);
       scheduleFormStiffnessMatrix(   d_subsched,d_perproc_patches,matls);
       scheduleComputeInternalForce(  d_subsched,d_perproc_patches,matls);
       scheduleFormQ(                 d_subsched,d_perproc_patches,matls);
-      scheduleSolveForDuCG(          d_subsched,d_perproc_patches, matls);
+      scheduleSolveForDuCG(          d_subsched,d_perproc_patches,matls);
     }
     
     scheduleGetDisplacementIncrement(d_subsched,      d_perproc_patches,matls);
@@ -1752,7 +1762,7 @@ void ImpMPM::iterate(const ProcessorGroup*,
     }
   }
   old_dw->setScrubbing(old_dw_scrubmode);
-  new_dw->setScrubbing(new_dw_scrubmode);
+//  new_dw->setScrubbing(new_dw_scrubmode);
 }
 
 void ImpMPM::applyExternalLoads(const ProcessorGroup* ,

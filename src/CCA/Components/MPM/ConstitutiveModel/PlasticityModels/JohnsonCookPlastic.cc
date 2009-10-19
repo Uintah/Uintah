@@ -112,7 +112,8 @@ void
 JohnsonCookPlastic::addComputesAndRequires(Task* task,
                                    const MPMMaterial* matl,
                                    const PatchSet*,
-                                   bool ) const
+                                   bool /*recurse*/,
+                                   bool /*SchedParent*/) const
 {
 }
 

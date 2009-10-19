@@ -1908,7 +1908,7 @@ ElasticPlastic::computeStressTensorImplicit(const PatchSubset* patches,
 
       delete state;
     }
-    new_dw->put(sum_vartype(totalStrainEnergy), lb->StrainEnergyLabel);
+//    new_dw->put(sum_vartype(totalStrainEnergy), lb->StrainEnergyLabel);
     delete interpolator;
   }
 }
@@ -1917,21 +1917,37 @@ void
 ElasticPlastic::addComputesAndRequires(Task* task,
                                        const MPMMaterial* matl,
                                        const PatchSet* patches,
-                                       const bool recurse) const
+                                       const bool recurse,
+                                       const bool SchedParent) const
 {
   const MaterialSubset* matlset = matl->thisMaterial();
-  addSharedCRForImplicitHypo(task, matlset, true, recurse);
+  addSharedCRForImplicitHypo(task, matlset, true, recurse, SchedParent);
 
-  // Local stuff
   Ghost::GhostType  gnone = Ghost::None;
-  task->requires(Task::ParentOldDW, lb->pTempPreviousLabel,  matlset, gnone); 
-  task->requires(Task::ParentOldDW, lb->pTemperatureLabel,   matlset, gnone);
-  task->requires(Task::ParentOldDW, pPlasticStrainLabel,     matlset, gnone);
-  task->requires(Task::ParentOldDW, pPlasticStrainRateLabel, matlset, gnone);
-  task->requires(Task::ParentOldDW, pPorosityLabel,          matlset, gnone);
+  if(SchedParent){
+    // For subscheduler
+    task->requires(Task::ParentOldDW, lb->pTempPreviousLabel,  matlset, gnone); 
+    task->requires(Task::ParentOldDW, lb->pTemperatureLabel,   matlset, gnone);
+    task->requires(Task::ParentOldDW, pPlasticStrainLabel,     matlset, gnone);
+    task->requires(Task::ParentOldDW, pPlasticStrainRateLabel, matlset, gnone);
+    task->requires(Task::ParentOldDW, pPorosityLabel,          matlset, gnone);
+  }else{
+    // For scheduleIterate
+    task->requires(Task::OldDW, lb->pTempPreviousLabel,  matlset, gnone); 
+    task->requires(Task::OldDW, lb->pTemperatureLabel,   matlset, gnone);
+    task->requires(Task::OldDW, pPlasticStrainLabel,     matlset, gnone);
+    task->requires(Task::OldDW, pPlasticStrainRateLabel, matlset, gnone);
+    task->requires(Task::OldDW, pPorosityLabel,          matlset, gnone);
+  } 
+//  task->computes(pPlasticStrainLabel_reloc,                    matlset);
+//  task->computes(pRotationLabel_preReloc,       matlset);
+//  task->computes(pStrainRateLabel_preReloc,     matlset);
+  task->computes(pPlasticStrainLabel_preReloc,  matlset);
+  task->computes(pPlasticStrainRateLabel_preReloc,  matlset);
+  task->computes(pPorosityLabel_preReloc,       matlset);
 
   // Add internal evolution variables computed by plasticity model
-  d_plastic->addComputesAndRequires(task, matl, patches, recurse);
+  d_plastic->addComputesAndRequires(task, matl, patches, recurse, SchedParent);
 }
 
 void 
@@ -3413,5 +3429,3 @@ void ElasticPlastic::checkNeedAddMPMMaterial(const PatchSubset* patches,
 
   new_dw->put(sum_vartype(need_add),     lb->NeedAddMPMMaterialLabel);
 }
-
-

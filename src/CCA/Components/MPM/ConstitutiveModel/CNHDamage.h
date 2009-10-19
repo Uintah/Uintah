@@ -119,6 +119,7 @@ namespace Uintah {
     virtual void addComputesAndRequires(Task* task,
                                         const MPMMaterial* matl,
                                         const PatchSet* ,
+                                        const bool ,
                                         const bool ) const;
 
     virtual void computeStressTensor(const PatchSubset* patches,

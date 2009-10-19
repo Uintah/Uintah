@@ -187,6 +187,7 @@ void
 SCGPlastic::addComputesAndRequires(Task* task,
                                    const MPMMaterial* matl,
                                    const PatchSet*,
+                                   bool ,
                                    bool ) const
 {
 }

@@ -1170,23 +1170,36 @@ ViscoTransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
 void ViscoTransIsoHyperImplicit::addComputesAndRequires(Task* task,
                                                  const MPMMaterial* matl,
                                                  const PatchSet* ,
-                                                 const bool ) const
+                                                 const bool /*recurse*/,
+                                                 const bool SchedParent) const
 //________________________________corresponds to the 1st ComputeStressTensor
 {
   const MaterialSubset* matlset = matl->thisMaterial();
   bool reset = flag->d_doGridReset;
                                                                                 
-  addSharedCRForImplicit(task, matlset, reset, true);
+  addSharedCRForImplicit(task, matlset, reset, true,SchedParent);
 
-  task->requires(Task::ParentOldDW, lb->pFiberDirLabel, matlset,Ghost::None);
-  task->requires(Task::ParentOldDW, pFailureLabel,      matlset,Ghost::None);
-  task->requires(Task::ParentOldDW, pElasticStressLabel,matlset,Ghost::None);
-  task->requires(Task::ParentOldDW, pHistory1Label,     matlset,Ghost::None);
-  task->requires(Task::ParentOldDW, pHistory2Label,     matlset,Ghost::None);
-  task->requires(Task::ParentOldDW, pHistory3Label,     matlset,Ghost::None);
-  task->requires(Task::ParentOldDW, pHistory4Label,     matlset,Ghost::None);
-  task->requires(Task::ParentOldDW, pHistory5Label,     matlset,Ghost::None);
-  task->requires(Task::ParentOldDW, pHistory6Label,     matlset,Ghost::None);
+  if(SchedParent){
+    task->requires(Task::ParentOldDW, lb->pFiberDirLabel, matlset,Ghost::None);
+    task->requires(Task::ParentOldDW, pFailureLabel,      matlset,Ghost::None);
+    task->requires(Task::ParentOldDW, pElasticStressLabel,matlset,Ghost::None);
+    task->requires(Task::ParentOldDW, pHistory1Label,     matlset,Ghost::None);
+    task->requires(Task::ParentOldDW, pHistory2Label,     matlset,Ghost::None);
+    task->requires(Task::ParentOldDW, pHistory3Label,     matlset,Ghost::None);
+    task->requires(Task::ParentOldDW, pHistory4Label,     matlset,Ghost::None);
+    task->requires(Task::ParentOldDW, pHistory5Label,     matlset,Ghost::None);
+    task->requires(Task::ParentOldDW, pHistory6Label,     matlset,Ghost::None);
+  }else{
+    task->requires(Task::OldDW, lb->pFiberDirLabel, matlset,Ghost::None);
+    task->requires(Task::OldDW, pFailureLabel,      matlset,Ghost::None);
+    task->requires(Task::OldDW, pElasticStressLabel,matlset,Ghost::None);
+    task->requires(Task::OldDW, pHistory1Label,     matlset,Ghost::None);
+    task->requires(Task::OldDW, pHistory2Label,     matlset,Ghost::None);
+    task->requires(Task::OldDW, pHistory3Label,     matlset,Ghost::None);
+    task->requires(Task::OldDW, pHistory4Label,     matlset,Ghost::None);
+    task->requires(Task::OldDW, pHistory5Label,     matlset,Ghost::None);
+    task->requires(Task::OldDW, pHistory6Label,     matlset,Ghost::None);
+  }
   //
   task->computes(lb->pFiberDirLabel_preReloc,matlset);
   task->computes(pStretchLabel_preReloc,     matlset);

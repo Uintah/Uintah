@@ -144,24 +144,36 @@ void
 ImplicitCM::addSharedCRForImplicit(Task* task,
                                           const MaterialSubset* matlset,
                                           const bool reset,
-                                          const bool ) const
+                                          const bool /*recurse*/, 
+                                          const bool SchedParent) const
 {
   Ghost::GhostType  gnone = Ghost::None;
   Ghost::GhostType  gac   = Ghost::AroundCells;
 
-  task->requires(Task::ParentOldDW, d_lb->pXLabel,           matlset, gnone);
-  task->requires(Task::ParentOldDW, d_lb->pSizeLabel,        matlset, gnone);
-  task->requires(Task::ParentOldDW, d_lb->pMassLabel,        matlset, gnone);
-  task->requires(Task::ParentOldDW, d_lb->pVolumeLabel,      matlset, gnone);
-  task->requires(Task::ParentOldDW, d_lb->pTemperatureLabel, matlset, gnone);
-  task->requires(Task::ParentOldDW, d_lb->pDeformationMeasureLabel,
+  if(SchedParent){
+    // For subscheduler
+    task->requires(Task::ParentOldDW, d_lb->pXLabel,           matlset, gnone);
+    task->requires(Task::ParentOldDW, d_lb->pSizeLabel,        matlset, gnone);
+    task->requires(Task::ParentOldDW, d_lb->pMassLabel,        matlset, gnone);
+    task->requires(Task::ParentOldDW, d_lb->pVolumeLabel,      matlset, gnone);
+    task->requires(Task::ParentOldDW, d_lb->pTemperatureLabel, matlset, gnone);
+    task->requires(Task::ParentOldDW, d_lb->pDeformationMeasureLabel,
                                                              matlset, gnone);
+  }
+  else{
+    // For scheduleIterate
+    task->requires(Task::OldDW, d_lb->pXLabel,                  matlset, gnone);
+    task->requires(Task::OldDW, d_lb->pSizeLabel,               matlset, gnone);
+    task->requires(Task::OldDW, d_lb->pMassLabel,               matlset, gnone);
+    task->requires(Task::OldDW, d_lb->pVolumeLabel,             matlset, gnone);
+    task->requires(Task::OldDW, d_lb->pTemperatureLabel,        matlset, gnone);
+    task->requires(Task::OldDW, d_lb->pDeformationMeasureLabel, matlset, gnone);
+  }
   if(reset){
     task->requires(Task::OldDW,     d_lb->dispNewLabel,      matlset, gac,1);
   }else {
     task->requires(Task::OldDW,     d_lb->gDisplacementLabel,matlset, gac,1);
   }
-
 
   task->computes(d_lb->pStressLabel_preReloc,             matlset);  
   task->computes(d_lb->pDeformationMeasureLabel_preReloc, matlset);
@@ -173,10 +185,16 @@ void
 ImplicitCM::addSharedCRForImplicitHypo(Task* task,
                                        const MaterialSubset* matlset,
                                        const bool reset,
-                                       const bool ) const
+                                       const bool /*recurse*/,
+                                       const bool SchedParent) const
 {
-  addSharedCRForImplicit(task,matlset,reset,true);
-  task->requires(Task::ParentOldDW, d_lb->pStressLabel,   matlset, Ghost::None);
+  addSharedCRForImplicit(task,matlset,reset,true,SchedParent);
+  if(SchedParent){
+    // For subscheduler
+    task->requires(Task::ParentOldDW, d_lb->pStressLabel, matlset, Ghost::None);
+  }else{
+    task->requires(Task::OldDW,       d_lb->pStressLabel, matlset, Ghost::None);
+  }
 }
 
 void

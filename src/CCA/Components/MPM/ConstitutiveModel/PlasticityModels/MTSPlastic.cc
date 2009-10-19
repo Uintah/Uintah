@@ -199,6 +199,7 @@ void
 MTSPlastic::addComputesAndRequires(Task* ,
                                    const MPMMaterial* ,
                                    const PatchSet*,
+                                   bool ,
                                    bool ) const
 {
   //const MaterialSubset* matlset = matl->thisMaterial();

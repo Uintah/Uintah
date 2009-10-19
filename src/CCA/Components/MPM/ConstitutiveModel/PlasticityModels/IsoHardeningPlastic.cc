@@ -99,10 +99,15 @@ void
 IsoHardeningPlastic::addComputesAndRequires(Task* task,
                                    const MPMMaterial* matl,
                                    const PatchSet*,
-                                   bool ) const
+                                   bool /*recurse*/,
+                                   bool SchedParent) const
 {
   const MaterialSubset* matlset = matl->thisMaterial();
-  task->requires(Task::ParentOldDW, pAlphaLabel, matlset,Ghost::None);
+  if(SchedParent){
+    task->requires(Task::ParentOldDW, pAlphaLabel, matlset,Ghost::None);
+  }else{
+    task->requires(Task::OldDW, pAlphaLabel, matlset,Ghost::None);
+  }
 }
 
 void 

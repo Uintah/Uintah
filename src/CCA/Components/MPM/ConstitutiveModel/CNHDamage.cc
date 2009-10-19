@@ -804,10 +804,11 @@ void
 CNHDamage::addComputesAndRequires(Task* task,
                                   const MPMMaterial* matl,
                                   const PatchSet* patches,
-                                  const bool recurse) const
+                                  const bool recurse,
+                                  const bool SchedParent) const
 {
   const MaterialSubset* matlset = matl->thisMaterial();
-  addSharedCRForImplicit(task, matlset, patches, recurse);
+  addSharedCRForImplicit(task, matlset, patches, recurse,SchedParent);
 
   // Local stuff
   task->requires(Task::ParentOldDW, bElBarLabel, matlset, Ghost::None);
