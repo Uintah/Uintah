@@ -91,15 +91,16 @@ usage () {
     echo "  -all           run all tests (overrides other tests flags)"
     echo "  -arches        run the arches tests"
     echo "  -ice_amr       run the tests ice amr tests"
-    echo "  -e             run the example tests"
-    echo "  -m             run the mpm tests"
+    echo "  -examples      run the example tests"
+    echo "  -mpm           run the mpm tests"
+    echo "  -mpmf          run the mpm fracture tests"
     echo "  -models        run the Models tests"
     echo "  -mpmarches     run the mpmarches tests"
-    echo "  -sm            run the smpm tests"
-    echo "  -i             run the ice tests"
-    echo "  -mi            run the mpmice tests"
+    echo "  -smpm          run the smpm tests"
+    echo "  -ice           run the ice tests"
+    echo "  -mpmice        run the mpmice tests"
     echo "  -mpmice_amr    run the mpmice amr tests"
-    echo "  -im            run the implicit mpm tests"
+    echo "  -impm          run the implicit mpm tests"
     echo "  -ucf           run the UCF tests"
     echo "  -dbg           use the dbg (debug) TestData"
     echo "  -opt           use the opt (optimized) TestData"
@@ -139,16 +140,16 @@ for arg in $*; do
             echo "Scheduling the ICE AMR tests . . ."
             do_ice_amr=1
             MPI_RUN="yes";;
-        -e)
+        -examples)
             echo "Scheduling the examples tests . . ."
             do_examples=1;;
-        -i) 
+        -ice) 
             echo "Scheduling the ice tests . . ."
             do_ice=1;;
-        -m)
+        -mpm)
             echo "Scheduling the mpm tests . . ."
             do_mpm=1;;
-        -mf)
+        -mpmf)
             echo "Scheduling the mpmfracture tests . . ."
             do_mpmf=1;;
         -models)
@@ -159,16 +160,16 @@ for arg in $*; do
             echo "Scheduling the mpmarches tests . . ."
             do_mpmarches=1
             MPI_RUN="yes";;
-        -sm)
+        -smpm)
             echo "Scheduling the smpm tests . . ."
             do_smpm=1;;
-        -mi)
+        -mpmice)
             echo "Scheduling the mpmice tests . . ."
             do_mpmice=1;;
         -mpmice_amr)
             echo "Scheduling the MPMICE AMR tests . . ."
             do_mpmice_amr=1;;
-        -im)
+        -impm)
             echo "Scheduling the implicit mpm tests . . ."
             do_impm=1
             MPI_RUN="yes";;

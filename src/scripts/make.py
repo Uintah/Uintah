@@ -14,4 +14,6 @@ def build(num):
 
 build(sys.argv[1])
 
+os.system('make link_inputs')
+
 exit
