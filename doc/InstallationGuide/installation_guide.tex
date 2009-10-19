@@ -112,11 +112,12 @@ Required libraries:
 
 Useful libraries:
 \begin{itemize}
-\item hypre-2.4 (\url{https://computation.llnl.gov/casc/hypre/software.html})
-\item PETSc 3.0.0 (\url{http://www.mcs.anl.gov/petsc/petsc-as/download/index.html})
+\item Hypre v2.4 (\url{https://computation.llnl.gov/casc/hypre/software.html})
+\item PETSc v3.0 (\url{http://www.mcs.anl.gov/petsc/petsc-as/download/index.html})
 \end{itemize}
 
-
+Note, Uintah recently upgraded from using Hypre v2.0 and PETSc
+v2.3.3.  (July 22, 2009)
 
 \section{OS Version Dependencies}
 
@@ -194,7 +195,6 @@ Once MPI has been built, the other libraries can be installed:
 sudo yum install lapack-devel gcc-gfortran blas-devel gcc-c++ \
 libxml2-devel subversion make tar diffutils
 \end{verbatim}
-
 
 
 \section{PETSc Installation}
@@ -606,6 +606,14 @@ data.
 
 \subsection{Configure}
 
+The following information specifies how to run the ``configure''
+script to prepare for building the Uintah executable.  ``Configure''
+is a program that checks the computer's environment and looks for the
+location of libraries and header files, etc.  When it finishes
+running, it will create the \TT{configVars.mk} file which will include all
+the information it has determined about the computer.  The following
+lines show <b>generically</b> how to use ``configure''.
+
 cd to \TT{ \textasciitilde/uintah} and create the following directories:
 \TT{dbg} (debug) and \TT{opt} (optimized)
 
@@ -635,11 +643,16 @@ enter the following configure line:
 
 \begin{verbatim}
 ../src/configure                              \
-          '--enable-optimze=-03 -mfpmath=sse' \
+          '--enable-optimize=-03 -mfpmath=sse' \
           --enable-assertion-level=0          \
           --with-teem=/usr/local              \
           --with-visit=/home/user_name/Visit/visit1.11.2
 \end{verbatim}
+
+The debug/optimize flags do the following:  --enable-debug adds ``-g''
+to the compile line; --enable-optimize, if used without parameters,
+adds ``-O2'' to the compile line.  Otherwise it adds the parameters
+specified during configure.
 
 \subsubsection{Other configure options}
 
@@ -658,6 +671,14 @@ F77=gfortran-4.3               <= Specifies compilers (Fortran, C, C++).
 CC=/usr/bin/gcc-4.3
 CXX=/usr/bin/g++-4.3
 PETSC_ARCH=linux-gnu-c-real-opt <= Specifies PETSc architecture
+
+        --without-fortran     <= Turns off the use of Fortran (and the Arches/Radiation component.)
+
+        USE_ARCHES=no         <= Turn off the building of specific Uintah components.
+        USE_ICE=no
+        USE_MPM=no
+        USE_RADIATION=no
+
 \end{verbatim}
 
 
