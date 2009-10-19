@@ -269,7 +269,7 @@ void EqnBase::initializationFunction( const Patch* patch, phiType& phi )
     // ======= add other initialization functions below here ======
     } else {
 
-      throw InvalidValue("Error!: Your initialization function wasn't found.", __FILE__, __LINE__);
+      throw InvalidValue("Error!: Your initialization function for equation "+d_eqnName+" wasn't found.", __FILE__, __LINE__);
 
     }//end d_initFunction types
 

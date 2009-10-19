@@ -1521,12 +1521,16 @@ Arches::sched_dqmomInit( const LevelP& level,
   for (DQMOMEqnFactory::EqnMap::iterator ieqn=dqmom_eqns.begin(); ieqn != dqmom_eqns.end(); ieqn++){
     EqnBase* temp_eqn = ieqn->second; 
     DQMOMEqn* eqn = dynamic_cast<DQMOMEqn*>(temp_eqn);
-    const VarLabel* tempSource = eqn->getSourceLabel();
-    tsk->computes( tempSource ); 
+
     const VarLabel* tempVar = eqn->getTransportEqnLabel();
     const VarLabel* oldtempVar = eqn->getoldTransportEqnLabel();
+    const VarLabel* tempVar_icv = eqn->getUnscaledLabel();
+    const VarLabel* tempSource = eqn->getSourceLabel();
+
     tsk->computes( tempVar );  
     tsk->computes( oldtempVar ); 
+    tsk->computes( tempVar_icv );
+    tsk->computes( tempSource ); 
   } 
 
   // Particle Velocities
