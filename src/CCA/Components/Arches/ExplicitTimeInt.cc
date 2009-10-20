@@ -34,40 +34,52 @@ void ExplicitTimeInt::problemSetup(const ProblemSpecP& params)
 {
 	ProblemSpecP ex_db = params->findBlock("ExplicitIntegrator");
 
-  string time_order; 
-  ex_db->getAttribute("order", time_order); 
+  d_time_order; 
+  ex_db->getAttribute("order", d_time_order); 
 
-  if (time_order == "first"){
+  if (d_time_order == "first"){
     
-    d_alpha[0] = 0.0;
-    d_alpha[1] = 0.0;
-    d_alpha[2] = 0.0;
+    ssp_alpha[0] = 0.0;
+    ssp_alpha[1] = 0.0;
+    ssp_alpha[2] = 0.0;
 
-    d_beta[0]  = 1.0;
-    d_beta[1]  = 0.0;
-    d_beta[2]  = 0.0;
+    ssp_beta[0]  = 1.0;
+    ssp_beta[1]  = 0.0;
+    ssp_beta[2]  = 0.0;
 
-  }
-  else if (time_order == "second") {
-
-    d_alpha[0]= 0.0;
-    d_alpha[1]= 0.5;
-    d_alpha[2]= 0.0;
-
-    d_beta[0]  = 1.0;
-    d_beta[1]  = 0.5;
-    d_beta[2]  = 0.0;
+    time_factor[0] = 1.0;
+    time_factor[1] = 0.0;
+    time_factor[2] = 0.0; 
 
   }
-  else if (time_order == "third") {
+  else if (d_time_order == "second") {
 
-    d_alpha[0] = 0.0;
-    d_alpha[1] = 0.75;
-    d_alpha[2] = 1.0/3.0;
+    ssp_alpha[0]= 0.0;
+    ssp_alpha[1]= 0.5;
+    ssp_alpha[2]= 0.0;
 
-    d_beta[0]  = 1.0;
-    d_beta[1]  = 0.25;
-    d_beta[2]  = 2.0/3.0;
+    ssp_beta[0]  = 1.0;
+    ssp_beta[1]  = 0.5;
+    ssp_beta[2]  = 0.0;
+
+    time_factor[0] = 1.0;
+    time_factor[1] = 1.0;
+    time_factor[2] = 0.0; 
+
+  }
+  else if (d_time_order == "third") {
+
+    ssp_alpha[0] = 0.0;
+    ssp_alpha[1] = 0.75;
+    ssp_alpha[2] = 1.0/3.0;
+
+    ssp_beta[0]  = 1.0;
+    ssp_beta[1]  = 0.25;
+    ssp_beta[2]  = 2.0/3.0;
+
+    time_factor[0] = 1.0;
+    time_factor[1] = 0.5;
+    time_factor[2] = 1.0; 
 
   }
   else

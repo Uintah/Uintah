@@ -181,6 +181,8 @@ protected:
   // Other:
   double d_turbPrNo;                ///< Turbulent Prandtl number (used for scalar diffusion)
   double d_scalingConstant;         ///< Value by which to scale values 
+  double curr_ssp_time;             ///< Current value of time considering ssp averaging  
+  double curr_time;                 ///< "old" time (t)
 
 private:
 
