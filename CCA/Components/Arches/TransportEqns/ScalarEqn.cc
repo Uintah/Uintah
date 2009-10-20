@@ -258,6 +258,9 @@ void ScalarEqn::initializeVariables( const ProcessorGroup* pc,
     Fconv.initialize(0.0);
     RHS.initialize(0.0);
 
+    curr_time = d_fieldLabels->d_sharedState->getElapsedTime(); 
+    curr_ssp_time = curr_time; 
+
   }
 }
 //---------------------------------------------------------------------------
@@ -466,10 +469,10 @@ ScalarEqn::solveTransportEqn( const ProcessorGroup* pc,
     new_dw->get(new_den, d_fieldLabels->d_densityCPLabel, matlIndex, patch, gn, 0);
     old_dw->get(old_den, d_fieldLabels->d_densityCPLabel, matlIndex, patch, gn, 0);
 
-    d_timeIntegrator->singlePatchFEUpdate( patch, phi, old_den, new_den, RHS, dt );
-    Vector alpha = d_timeIntegrator->d_alpha; 
-    Vector beta  = d_timeIntegrator->d_beta; 
-    d_timeIntegrator->timeAvePhi( patch, phi, rk1_phi, timeSubStep, alpha, beta ); 
+    d_timeIntegrator->singlePatchFEUpdate( patch, phi, old_den, new_den, RHS, dt, curr_ssp_time, d_eqnName);
+    double factor = d_timeIntegrator->time_factor[timeSubStep]; 
+    curr_ssp_time = curr_time + factor * dt; 
+    d_timeIntegrator->timeAvePhi( patch, phi, rk1_phi, timeSubStep, curr_ssp_time ); 
     
     // copy averaged phi into oldphi
     oldphi.copyData(phi); 
