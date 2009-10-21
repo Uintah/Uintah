@@ -147,7 +147,7 @@ x      = zeros(nrows);
 
 % loop over all the variables and load them into susSol
 for v=1:length(variables)
-  c1 = sprintf('lineextract -v %s -l %i -cellCoords -timestep %i %s -o sim.dat -m %i  -uda %s >&/dev/null',variables(v),level,ts-1,startEnd,mat,uda)
+  c1 = sprintf('lineextract -v %s -l %i -cellCoords -timestep %i %s -o sim.dat -m %i  -uda %s >&/dev/null',variables(v),level,ts-1,startEnd,mat,uda);
   [s1, r1] = unix(c1);
   
   if ( strcmp(variables(v),'vel_CC'))         % for vel_CC
@@ -198,14 +198,18 @@ if (nargv > 0)
 end
 
 %write simulation data to a file
-
 if (nargv > 0)
-  fn = sprintf('sim_%g.dat',resolution(pDir))
+  fn = sprintf('sim_%g.dat',resolution(pDir));
   fid = fopen(fn, 'w');
-  for v=1:length(variables)
-    fprintf(fid,'%g, ',susSol(:,v));
+  
+  for c=1:length(x)
+    fprintf(fid,'%g, ',x(c))
+    for v=1:length(variables)
+      fprintf(fid,'%g, ',susSol(c,v));
+    end
+    fprintf(fid, '\n')
   end
-  fprintf(fid, '\n')
+  
   fclose(fid);
 end
 
@@ -228,11 +232,12 @@ if(makePlot)
     ylabel('Difference'); 
     xlabel('x');
     grid on;
+    fname = sprintf('%s_%i.eps',variables(v),resolution(pDir));
+    print ( fname, '-deps');
    % pause
   end
   
-  fname = sprintf('shockTube_%i.png',resolution(pDir));
-  print ( fname, '-dpng');
+  
   if(0)
     %______________________________
     % gradient of variable
