@@ -8,7 +8,7 @@
 #include <CCA/Ports/DataWarehouse.h>
 #include <Core/Grid/Variables/VarTypes.h>
 
-//#define VERIFY_TIMEINT
+//#define VERIFY_TIMEINT //ONLY UNCOMMENT for verification 
 
 //===========================================================================
 
