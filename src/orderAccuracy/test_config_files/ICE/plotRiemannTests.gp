@@ -4,9 +4,9 @@ set logscale x
 set logscale y
 set grid xtics ytics
 
-set title "ICE:Riemann Problem (test 1) X dir"
-set xlabel "Resolution"
-set ylabel "Error"
+#title
+#xlabel
+#ylabel
 set output "orderAccuracy.ps"
 
 # generate the curvefit
