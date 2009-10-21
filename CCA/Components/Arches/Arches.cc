@@ -689,7 +689,8 @@ Arches::scheduleInitialize(const LevelP& level,
   //DQMOM initialization 
   if(d_doDQMOM)
   {
-    sched_dqmomInit(level, sched);
+    sched_weightInit(level, sched);
+    sched_weightedAbsInit(level, sched);
   }
 
   sched_scalarInit(level, sched);
@@ -1510,27 +1511,134 @@ Arches::scalarInit( const ProcessorGroup* ,
 //___________________________________________________________________________
 //
 void 
-Arches::sched_dqmomInit( const LevelP& level, 
+Arches::sched_weightInit( const LevelP& level, 
                          SchedulerP& sched )
 {
-  Task* tsk = scinew Task( "Arches::dqmomInit", 
-                           this, &Arches::dqmomInit); 
-    // DQMOM transport vars
+  Task* tsk = scinew Task( "Arches::weightInit", 
+                           this, &Arches::weightInit); 
+  // DQMOM weight transport vars
   DQMOMEqnFactory& dqmomFactory = DQMOMEqnFactory::self(); 
   DQMOMEqnFactory::EqnMap& dqmom_eqns = dqmomFactory.retrieve_all_eqns(); 
   for (DQMOMEqnFactory::EqnMap::iterator ieqn=dqmom_eqns.begin(); ieqn != dqmom_eqns.end(); ieqn++){
     EqnBase* temp_eqn = ieqn->second; 
     DQMOMEqn* eqn = dynamic_cast<DQMOMEqn*>(temp_eqn);
 
-    const VarLabel* tempVar = eqn->getTransportEqnLabel();
-    const VarLabel* oldtempVar = eqn->getoldTransportEqnLabel();
-    const VarLabel* tempVar_icv = eqn->getUnscaledLabel();
-    const VarLabel* tempSource = eqn->getSourceLabel();
+    if (eqn->weight()){
+      const VarLabel* tempVar = eqn->getTransportEqnLabel();
+      const VarLabel* oldtempVar = eqn->getoldTransportEqnLabel();
+      const VarLabel* tempVar_icv = eqn->getUnscaledLabel();
+      const VarLabel* tempSource = eqn->getSourceLabel();
 
-    tsk->computes( tempVar );  
-    tsk->computes( oldtempVar ); 
-    tsk->computes( tempVar_icv );
-    tsk->computes( tempSource ); 
+      tsk->computes( tempVar );  
+      tsk->computes( oldtempVar ); 
+      tsk->computes( tempVar_icv );
+      tsk->computes( tempSource ); 
+    }
+  } 
+
+  sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
+}
+//______________________________________________________________________
+//
+void 
+Arches::weightInit( const ProcessorGroup* ,
+                   const PatchSubset* patches,
+                   const MaterialSubset*,
+                   DataWarehouse* old_dw,
+                   DataWarehouse* new_dw )
+{
+  // ***************************************
+  // QUESTION: WHY DOES THIS FUNCTION GET CALLED ON THE FIRST TIMESTEP RATHER THAN THE ZEROTH TIMESTEP???
+  // This causes several problems:
+  // - The RHS/unweighted variables are unavailable until the first timestep
+  //      (not available at zeroth timestep because they're initialized here, and this isn't called until the first timestep)
+  // - DQMOM & other scalars are not initialized until the first timestep, so at the first timestep (if you output it) everything is 0.0!!!
+  //      (this means that if you initialize your scalar to be a step function, you never see the scalar as the actual step function;
+  //        at the zeroth timestep the scalar is 0.0 everywhere, and at the first timestep the step function has already been convected/diffused)
+  // ***************************************
+
+  proc0cout << "Initializing all DQMOM weight equations..." << endl;
+  for (int p = 0; p < patches->size(); p++){
+    //assume only one material for now.
+    int archIndex = 0;
+    int matlIndex = d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    const Patch* patch=patches->get(p);
+
+    CCVariable<Vector> partVel; 
+
+    DQMOMEqnFactory& dqmomFactory = DQMOMEqnFactory::self(); 
+    DQMOMEqnFactory::EqnMap& dqmom_eqns = dqmomFactory.retrieve_all_eqns(); 
+
+    // --- DQMOM EQNS
+    // do only weights 
+    for (DQMOMEqnFactory::EqnMap::iterator ieqn=dqmom_eqns.begin(); 
+         ieqn != dqmom_eqns.end(); ieqn++){
+    
+      DQMOMEqn* eqn = dynamic_cast<DQMOMEqn*>(ieqn->second);
+      string eqn_name = ieqn->first;
+
+      if (eqn->weight()){ 
+        // This is a weight equation
+        const VarLabel* sourceLabel  = eqn->getSourceLabel();
+        const VarLabel* phiLabel     = eqn->getTransportEqnLabel(); 
+        const VarLabel* oldPhiLabel  = eqn->getoldTransportEqnLabel(); 
+        const VarLabel* phiLabel_icv = eqn->getUnscaledLabel();
+      
+        CCVariable<double> source;
+        CCVariable<double> phi; 
+        CCVariable<double> oldPhi; 
+        CCVariable<double> phi_icv;
+
+        new_dw->allocateAndPut( source,  sourceLabel,  matlIndex, patch ); 
+        new_dw->allocateAndPut( phi,     phiLabel,     matlIndex, patch ); 
+        new_dw->allocateAndPut( oldPhi,  oldPhiLabel,  matlIndex, patch ); 
+        new_dw->allocateAndPut( phi_icv, phiLabel_icv, matlIndex, patch ); 
+
+        source.initialize(0.0);
+        phi.initialize(0.0);
+        oldPhi.initialize(0.0);
+        phi_icv.initialize(0.0);
+      
+        // initialize phi
+        eqn->initializationFunction( patch, phi );
+
+        // do boundary conditions
+        eqn->computeBCs( patch, eqn_name, phi );
+      }
+    }
+  proc0cout << endl;
+  }
+}
+
+//___________________________________________________________________________
+//
+void 
+Arches::sched_weightedAbsInit( const LevelP& level, 
+                               SchedulerP& sched )
+{
+  Task* tsk = scinew Task( "Arches::weightedAbsInit", 
+                           this, &Arches::weightedAbsInit); 
+    // DQMOM transport vars
+  DQMOMEqnFactory& dqmomFactory = DQMOMEqnFactory::self(); 
+  DQMOMEqnFactory::EqnMap& dqmom_eqns = dqmomFactory.retrieve_all_eqns(); 
+  for (DQMOMEqnFactory::EqnMap::iterator ieqn=dqmom_eqns.begin(); ieqn != dqmom_eqns.end(); ieqn++){
+    EqnBase* temp_eqn = ieqn->second; 
+    DQMOMEqn* eqn = dynamic_cast<DQMOMEqn*>(temp_eqn);
+  
+    if (!eqn->weight()) {
+      const VarLabel* tempVar = eqn->getTransportEqnLabel();
+      const VarLabel* oldtempVar = eqn->getoldTransportEqnLabel();
+      const VarLabel* tempVar_icv = eqn->getUnscaledLabel();
+      const VarLabel* tempSource = eqn->getSourceLabel();
+
+      tsk->computes( tempVar );  
+      tsk->computes( oldtempVar ); 
+      tsk->computes( tempVar_icv );
+      tsk->computes( tempSource );
+    } else {
+      const VarLabel* tempVar = eqn->getTransportEqnLabel(); 
+      tsk->requires( Task::NewDW, tempVar, Ghost::None, 0 ); 
+    }  
   } 
 
   // Particle Velocities
@@ -1559,7 +1667,7 @@ Arches::sched_dqmomInit( const LevelP& level,
 //______________________________________________________________________
 //
 void 
-Arches::dqmomInit( const ProcessorGroup* ,
+Arches::weightedAbsInit( const ProcessorGroup* ,
                    const PatchSubset* patches,
                    const MaterialSubset*,
                    DataWarehouse* old_dw,
@@ -1575,53 +1683,69 @@ Arches::dqmomInit( const ProcessorGroup* ,
   //        at the zeroth timestep the scalar is 0.0 everywhere, and at the first timestep the step function has already been convected/diffused)
   // ***************************************
 
-  proc0cout << "Initializing all DQMOM equations..." << endl;
+  proc0cout << "Initializing all DQMOM weighted abscissa equations..." << endl;
   for (int p = 0; p < patches->size(); p++){
     //assume only one material for now.
     int archIndex = 0;
     int matlIndex = d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
     const Patch* patch=patches->get(p);
 
-    CCVariable<Vector> partVel; 
+    CCVariable<Vector> partVel;
+
+    Ghost::GhostType  gn = Ghost::None;
 
     DQMOMEqnFactory& dqmomFactory = DQMOMEqnFactory::self(); 
     DQMOMEqnFactory::EqnMap& dqmom_eqns = dqmomFactory.retrieve_all_eqns(); 
 
-
     // --- DQMOM EQNS
+    // do weights first because we need them later for the weighted abscissas
     for (DQMOMEqnFactory::EqnMap::iterator ieqn=dqmom_eqns.begin(); 
          ieqn != dqmom_eqns.end(); ieqn++){
     
       DQMOMEqn* eqn = dynamic_cast<DQMOMEqn*>(ieqn->second);
       string eqn_name = ieqn->first;
+      int qn = eqn->getQuadNode(); 
+  
+      if (!eqn->weight()) { 
+        // This is a weighted abscissa 
+        const VarLabel* sourceLabel  = eqn->getSourceLabel();
+        const VarLabel* phiLabel     = eqn->getTransportEqnLabel(); 
+        const VarLabel* oldPhiLabel  = eqn->getoldTransportEqnLabel(); 
+        const VarLabel* phiLabel_icv = eqn->getUnscaledLabel();
+        std::string weight_name;  
+        std::string node; 
+        std::stringstream out; 
+        out << qn; 
+        node = out.str(); 
+        weight_name = "w_qn";
+        weight_name += node; 
+        EqnBase& w_eqn = dqmomFactory.retrieve_scalar_eqn(weight_name); 
+        const VarLabel* weightLabel = w_eqn.getTransportEqnLabel(); 
       
-      const VarLabel* sourceLabel  = eqn->getSourceLabel();
-      const VarLabel* phiLabel     = eqn->getTransportEqnLabel(); 
-      const VarLabel* oldPhiLabel  = eqn->getoldTransportEqnLabel(); 
-      const VarLabel* phiLabel_icv = eqn->getUnscaledLabel();
-      //double initValue = eqn->getInitValue(); 
-      
-      CCVariable<double> source;
-      CCVariable<double> phi; 
-      CCVariable<double> oldPhi; 
-      CCVariable<double> phi_icv;
+        CCVariable<double> source;
+        CCVariable<double> phi; 
+        CCVariable<double> oldPhi; 
+        CCVariable<double> phi_icv;
+        constCCVariable<double> weight; 
 
-      new_dw->allocateAndPut( source,  sourceLabel,  matlIndex, patch ); 
-      new_dw->allocateAndPut( phi,     phiLabel,     matlIndex, patch ); 
-      new_dw->allocateAndPut( oldPhi,  oldPhiLabel,  matlIndex, patch ); 
-      new_dw->allocateAndPut( phi_icv, phiLabel_icv, matlIndex, patch ); 
+        new_dw->allocateAndPut( source,  sourceLabel,  matlIndex, patch ); 
+        new_dw->allocateAndPut( phi,     phiLabel,     matlIndex, patch ); 
+        new_dw->allocateAndPut( oldPhi,  oldPhiLabel,  matlIndex, patch ); 
+        new_dw->allocateAndPut( phi_icv, phiLabel_icv, matlIndex, patch ); 
+        new_dw->get( weight, weightLabel, matlIndex, patch, gn, 0 );
  
-      source.initialize(0.0);
-      phi.initialize(0.0);
-      oldPhi.initialize(0.0);
-      phi_icv.initialize(0.0);
+        source.initialize(0.0);
+        phi.initialize(0.0);
+        oldPhi.initialize(0.0);
+        phi_icv.initialize(0.0);
       
-      // initialize phi
-      eqn->initializationFunction( patch, phi );
+        // initialize phi
+        eqn->initializationFunction( patch, phi, weight );
 
-      // do boundary conditions
-      eqn->computeBCs( patch, eqn_name, phi );
+        // do boundary conditions
+        eqn->computeBCs( patch, eqn_name, phi );
 
+      }
     }
 
      // --- PARTICLE VELS
@@ -1661,7 +1785,6 @@ Arches::dqmomInit( const ProcessorGroup* ,
   }
   proc0cout << endl;
 }
-
 //______________________________________________________________________
 //
 void 

@@ -78,6 +78,10 @@ public:
 
   /** @brief Set the initial value of the transported variable to some function */
   template <class phiType> void initializationFunction( const Patch* patch, phiType& phi ); 
+  
+  /** @brief Set the initial value of the DQMOM transported variable to some function */
+  template <class phiType, class constPhiType>  
+  void initializationFunction( const Patch* patch, phiType& phi, constPhiType& weight  );
 
   // Access functions:
   /** @brief Set the boundary condition object associated with this transport equation object */
@@ -192,6 +196,96 @@ private:
 
 //---------------------------------------------------------------------------
 // Method: Phi initialization using a function 
+// DQMOM Scalar
+//---------------------------------------------------------------------------
+template <class phiType, class constPhiType>  
+void EqnBase::initializationFunction( const Patch* patch, phiType& phi, constPhiType& weight  ) 
+{
+  proc0cout << "initializing scalar equation " << d_eqnName << endl;
+
+  // Initialization function bullet proofing 
+  if( d_initFunction == "step" || d_initFunction == "env_step" ) {
+    if( d_step_dir == "y" ) {
+#ifndef YDIM
+      proc0cout << "WARNING: YDIM not turned on (compiled) with this version of the code, " << endl;
+      proc0cout << "but you specified a step function that steps in the y-direction. " << endl;
+      proc0cout << "To get this to work, made sure YDIM is defined in ScalarEqn.h" << endl;
+      proc0cout << "Cannot initialize your scalar in y-dim with step function" << endl;
+      throw InvalidValue("Exiting...", __FILE__, __LINE__);
+#endif
+      // otherwise do nothing
+
+    } else if( d_step_dir == "z" ) {
+#ifndef ZDIM
+      proc0cout << "WARNING: ZDIM not turned on (compiled) with this version of the code, " << endl;
+      proc0cout << "but you specified a step function that steps in the z-direction. " << endl;
+      proc0cout << "To get this to work, made sure ZDIM is defined in ScalarEqn.h" << endl;
+      proc0cout << "Cannot initialize your scalar in y-dim with step function" << endl;
+      throw InvalidValue("Exiting...", __FILE__, __LINE__);
+#endif
+      // otherwise do nothing
+    }
+  }
+
+  for (CellIterator iter=patch->getCellIterator__New(0); !iter.done(); iter++){
+    IntVector c = *iter; 
+    Vector Dx = patch->dCell(); 
+
+    double x=0.0,y=0.0,z=0.0; 
+    int cellx=0, celly=0, cellz=0;
+
+    if( b_stepUsesCellLocation ) {
+      cellx = c[0];
+      celly = c[1];
+      cellz = c[2];
+    } else if ( b_stepUsesPhysicalLocation ) {
+      x = c[0]*Dx.x() + Dx.x()/2.; // the +Dx/2 is because variable is cell-centered
+      y = c[1]*Dx.y() + Dx.y()/2.; 
+      z = c[2]*Dx.z() + Dx.z()/2.;
+    }
+
+    if ( d_initFunction == "constant" || d_initFunction == "env_constant" ) {
+      // ========== CONSTANT VALUE INITIALIZATION ============
+      phi[c] = d_constant_init * weight[c];
+
+    } else if (d_initFunction == "step" || d_initFunction == "env_step" ) {
+      // =========== STEP FUNCTION INITIALIZATION =============
+      if (d_step_dir == "x") {
+        if (  (b_stepUsesPhysicalLocation && x >= d_step_start && x <= d_step_end)
+           || (b_stepUsesCellLocation && cellx >= d_step_cellstart && x <= d_step_cellend) ) {
+          phi[c] = d_step_value * weight[c];
+        } else {
+          phi[c] = 0.0;
+        }
+      
+      } else if (d_step_dir == "y") {
+        if (  (b_stepUsesPhysicalLocation && y >= d_step_start && y <= d_step_end)
+           || (b_stepUsesCellLocation && celly >= d_step_cellstart && celly <= d_step_cellend) ) {
+          phi[c] = d_step_value * weight[c];
+        } else { 
+          phi[c] = 0.0;
+        }
+      } else if (d_step_dir == "z") {
+        if (  (b_stepUsesPhysicalLocation && z >= d_step_start && z <= d_step_end)
+           || (b_stepUsesCellLocation && cellz >= d_step_cellstart && cellz <= d_step_cellend) ) {
+          phi[c] = d_step_value * weight[c];
+        } else {
+          phi[c] = 0.0;
+        }
+      }
+    // ======= add other initialization functions below here ======
+    } else {
+
+      throw InvalidValue("Error!: Your initialization function for equation "+d_eqnName+" wasn't found.", __FILE__, __LINE__);
+
+    }//end d_initFunction types
+
+
+  }
+}
+//---------------------------------------------------------------------------
+// Method: Phi initialization using a function 
+// Standard Scalar
 //---------------------------------------------------------------------------
 template <class phiType>  
 void EqnBase::initializationFunction( const Patch* patch, phiType& phi ) 
@@ -241,14 +335,14 @@ void EqnBase::initializationFunction( const Patch* patch, phiType& phi )
 
     if ( d_initFunction == "constant" || d_initFunction == "env_constant" ) {
       // ========== CONSTANT VALUE INITIALIZATION ============
-      phi[c] = d_constant_init/d_scalingConstant; 
+      phi[c] = d_constant_init;
 
     } else if (d_initFunction == "step" || d_initFunction == "env_step" ) {
       // =========== STEP FUNCTION INITIALIZATION =============
       if (d_step_dir == "x") {
         if (  (b_stepUsesPhysicalLocation && x >= d_step_start && x <= d_step_end)
            || (b_stepUsesCellLocation && cellx >= d_step_cellstart && x <= d_step_cellend) ) {
-          phi[c] = d_step_value/d_scalingConstant; 
+          phi[c] = d_step_value;
         } else {
           phi[c] = 0.0;
         }
@@ -256,14 +350,14 @@ void EqnBase::initializationFunction( const Patch* patch, phiType& phi )
       } else if (d_step_dir == "y") {
         if (  (b_stepUsesPhysicalLocation && y >= d_step_start && y <= d_step_end)
            || (b_stepUsesCellLocation && celly >= d_step_cellstart && celly <= d_step_cellend) ) {
-          phi[c] = d_step_value/d_scalingConstant; 
+          phi[c] = d_step_value;
         } else { 
           phi[c] = 0.0;
         }
       } else if (d_step_dir == "z") {
         if (  (b_stepUsesPhysicalLocation && z >= d_step_start && z <= d_step_end)
            || (b_stepUsesCellLocation && cellz >= d_step_cellstart && cellz <= d_step_cellend) ) {
-          phi[c] = d_step_value/d_scalingConstant; 
+          phi[c] = d_step_value;
         } else {
           phi[c] = 0.0;
         }

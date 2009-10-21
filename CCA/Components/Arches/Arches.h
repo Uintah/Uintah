@@ -184,7 +184,9 @@ public:
                                          SchedulerP&);
   virtual void sched_blobInit(const LevelP& level,
                               SchedulerP&);
-  virtual void sched_dqmomInit( const LevelP& level, 
+  virtual void sched_weightInit( const LevelP& level, 
+                                SchedulerP& ); 
+  virtual void sched_weightedAbsInit( const LevelP& level, 
                                 SchedulerP& ); 
   virtual void sched_scalarInit( const LevelP& level, 
                                  SchedulerP& sched );
@@ -283,7 +285,12 @@ private:
                 DataWarehouse* ,
                 DataWarehouse* new_dw);
 
-  void dqmomInit( const ProcessorGroup*,
+  void weightInit( const ProcessorGroup*,
+                  const PatchSubset* patches,
+                  const MaterialSubset*,
+                  DataWarehouse* old_dw,
+                  DataWarehouse* new_dw);
+  void weightedAbsInit( const ProcessorGroup*,
                   const PatchSubset* patches,
                   const MaterialSubset*,
                   DataWarehouse* old_dw,
