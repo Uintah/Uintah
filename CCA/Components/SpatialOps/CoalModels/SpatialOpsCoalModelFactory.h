@@ -1,5 +1,5 @@
-#ifndef UT_ModelFactory_h
-#define UT_ModelFactory_h
+#ifndef UT_SpatialOpsCoalModelFactory_h
+#define UT_SpatialOpsCoalModelFactory_h
 
 #include <CCA/Components/SpatialOps/Fields.h>
 #include <Core/Grid/Variables/VarLabel.h>
@@ -18,7 +18,7 @@
  *
  *  @brief Abstract base class to support source term
  *  additions. Should be used in conjunction with the
- *  ModelFactory.
+ *  SpatialOpsCoalModelFactory.
  *
  *  An arbitrary number of models may be associated to a transport
  *  equation.  The ModelBuilder object
@@ -62,7 +62,7 @@ private:
 //---------------------------------------------------------------------------
 
 /**
- *  @class  ModelFactory
+ *  @class  SpatialOpsCoalModelFactory
  *  @author James C. Sutherland and Jeremy Thornock
  *  @date   November, 2006
  *  @brief  Factory for source term generation.
@@ -75,13 +75,13 @@ private:
  *
  *  Implemented as a singleton.
  */
-class ModelFactory
+class SpatialOpsCoalModelFactory
 {
 public:
   /**
-   *  @brief obtain a reference to the ModelFactory.
+   *  @brief obtain a reference to the SpatialOpsCoalModelFactory.
    */
-  static ModelFactory& self();
+  static SpatialOpsCoalModelFactory& self();
 
   /**
    *  @brief Register a source term on the specified transport equation.
@@ -90,7 +90,7 @@ public:
    *  @param builder The ModelBuilder object to build the Model object.
    *
    *  ModelBuilder objects should be heap-allocated using "new".
-   *  Memory management will be transfered to the ModelFactory.
+   *  Memory management will be transfered to the SpatialOpsCoalModelFactory.
    */
   void register_model( const std::string name,
                        ModelBuilder* builder );
@@ -121,8 +121,8 @@ private:
   BuildMap builders_;
   ModelMap models_;
 
-  ModelFactory();
-  ~ModelFactory();
-}; // class ModelFactory
+  SpatialOpsCoalModelFactory();
+  ~SpatialOpsCoalModelFactory();
+}; // class SpatialOpsCoalModelFactory
 }  //Namespace Uintah
 #endif

@@ -1,4 +1,4 @@
-#include <CCA/Components/SpatialOps/CoalModels/ModelFactory.h>
+#include <CCA/Components/SpatialOps/CoalModels/SpatialOpsCoalModelFactory.h>
 #include <CCA/Components/SpatialOps/CoalModels/ModelBase.h> 
 #include <sstream>
 #include <iostream>
@@ -8,10 +8,10 @@
 
 using namespace Uintah;
 
-ModelFactory::ModelFactory()
+SpatialOpsCoalModelFactory::SpatialOpsCoalModelFactory()
 {}
 
-ModelFactory::~ModelFactory()
+SpatialOpsCoalModelFactory::~SpatialOpsCoalModelFactory()
 {
   // delete the builders
   for( BuildMap::iterator i=builders_.begin(); i!=builders_.end(); ++i ){
@@ -27,17 +27,17 @@ ModelFactory::~ModelFactory()
 //---------------------------------------------------------------------------
 // Method: Return a reference to itself. 
 //---------------------------------------------------------------------------
-ModelFactory&
-ModelFactory::self()
+SpatialOpsCoalModelFactory&
+SpatialOpsCoalModelFactory::self()
 {
-  static ModelFactory s;
+  static SpatialOpsCoalModelFactory s;
   return s;
 }
 //---------------------------------------------------------------------------
 // Method: Register a model  
 //---------------------------------------------------------------------------
 void
-ModelFactory::register_model( const std::string name,
+SpatialOpsCoalModelFactory::register_model( const std::string name,
                               ModelBuilder* builder )
 {
 
@@ -58,7 +58,7 @@ ModelFactory::register_model( const std::string name,
 // Method: Retrieve a model from the map. 
 //---------------------------------------------------------------------------
 ModelBase&
-ModelFactory::retrieve_model( const std::string name )
+SpatialOpsCoalModelFactory::retrieve_model( const std::string name )
 {
   const ModelMap::iterator imodel= models_.find( name );
 
