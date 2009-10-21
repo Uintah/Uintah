@@ -1,7 +1,7 @@
 #include <CCA/Components/SpatialOps/Fields.h>
 #include <CCA/Components/SpatialOps/SourceTerms/SourceTermBase.h>
 #include <CCA/Components/SpatialOps/LU.h>
-#include <CCA/Components/SpatialOps/CoalModels/ModelFactory.h>
+#include <CCA/Components/SpatialOps/CoalModels/SpatialOpsCoalModelFactory.h>
 #include <CCA/Components/SpatialOps/SpatialOpsMaterial.h>
 #include <CCA/Components/SpatialOps/TransportEqns/DQMOMEqn.h>
 #include <CCA/Components/SpatialOps/CoalModels/ModelBase.h>
@@ -64,7 +64,7 @@ void DQMOM::problemSetup(const ProblemSpecP& params)
   // Reason: this block puts the labels in the same order as the input file, so the moment indexes match up OK
   
   DQMOMEqnFactory & eqn_factory = DQMOMEqnFactory::self();
-  //ModelFactory & model_factory = ModelFactory::self();
+  //SpatialOpsCoalModelFactory & model_factory = SpatialOpsCoalModelFactory::self();
   N_ = eqn_factory.get_quad_nodes();
  
   for( unsigned int alpha = 0; alpha < N_; ++alpha ) {
@@ -123,7 +123,7 @@ DQMOM::sched_solveLinearSystem( const LevelP& level, SchedulerP& sched, int time
   string taskname = "DQMOM::solveLinearSystem";
   Task* tsk = scinew Task(taskname, this, &DQMOM::solveLinearSystem);
 
-  ModelFactory& model_factory = ModelFactory::self();
+  SpatialOpsCoalModelFactory& model_factory = SpatialOpsCoalModelFactory::self();
 
   for (vector<DQMOMEqn*>::iterator iEqn = weightEqns.begin(); iEqn != weightEqns.end(); ++iEqn) {
     const VarLabel* tempLabel;
@@ -195,7 +195,7 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
     Ghost::GhostType  gn  = Ghost::None; 
     int matlIndex = 0;
 
-    ModelFactory& model_factory = ModelFactory::self();
+    SpatialOpsCoalModelFactory& model_factory = SpatialOpsCoalModelFactory::self();
 
     // Cell iterator
     for ( CellIterator iter = patch->getCellIterator__New();

@@ -3,7 +3,7 @@
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Grid/SimulationStateP.h>
 #include <CCA/Components/SpatialOps/CoalModels/ModelBase.h>
-#include <CCA/Components/SpatialOps/CoalModels/ModelFactory.h>
+#include <CCA/Components/SpatialOps/CoalModels/SpatialOpsCoalModelFactory.h>
 
 
 //===========================================================================

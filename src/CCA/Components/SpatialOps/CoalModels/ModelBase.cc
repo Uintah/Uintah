@@ -1,6 +1,6 @@
 
 #include <CCA/Components/SpatialOps/CoalModels/ModelBase.h>
-#include <CCA/Components/SpatialOps/CoalModels/ModelFactory.h>
+#include <CCA/Components/SpatialOps/CoalModels/SpatialOpsCoalModelFactory.h>
 #include <CCA/Components/SpatialOps/Fields.h>
 #include <Core/Grid/Variables/CCVariable.h>
 

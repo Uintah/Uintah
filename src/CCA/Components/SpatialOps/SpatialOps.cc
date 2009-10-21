@@ -1,6 +1,6 @@
 #include <CCA/Components/SpatialOps/SpatialOps.h>
 #include <CCA/Components/SpatialOps/SourceTerms/SourceTermFactory.h>
-#include <CCA/Components/SpatialOps/CoalModels/ModelFactory.h>
+#include <CCA/Components/SpatialOps/CoalModels/SpatialOpsCoalModelFactory.h>
 #include <CCA/Components/SpatialOps/CoalModels/ModelBase.h>
 #include <CCA/Components/SpatialOps/CoalModels/PartVel.h>
 #include <CCA/Components/SpatialOps/CoalModels/ConstantModel.h>
@@ -204,7 +204,7 @@ SpatialOps::problemSetup(const ProblemSpecP& params,
     // their respective problemSetup
     ProblemSpecP models_db = dqmom_db->findBlock("Models"); 
     if (models_db) { 
-      ModelFactory& model_factory = ModelFactory::self();
+      SpatialOpsCoalModelFactory& model_factory = SpatialOpsCoalModelFactory::self();
       for (ProblemSpecP m_db = models_db->findBlock("model"); m_db != 0; m_db = m_db->findNextBlock("model")){
         std::string model_name; 
         m_db->getAttribute("label", model_name); 
@@ -513,7 +513,7 @@ SpatialOps::scheduleTimeAdvance(const LevelP& level,
 
   EqnFactory&   scalarFactory = EqnFactory::self();
   DQMOMEqnFactory& dqmomFactory  = DQMOMEqnFactory::self(); 
-  ModelFactory& modelFactory = ModelFactory::self(); 
+  SpatialOpsCoalModelFactory& modelFactory = SpatialOpsCoalModelFactory::self(); 
 
   // Copy old data to new data
   d_fieldLabels->schedCopyOldToNew( level, sched ); 
@@ -564,8 +564,8 @@ SpatialOps::scheduleTimeAdvance(const LevelP& level,
     }
 
     // schedule the models for evaluation
-    ModelFactory::ModelMap allModels = modelFactory.retrieve_all_models();
-    for (ModelFactory::ModelMap::iterator imodel = allModels.begin(); imodel != allModels.end(); imodel++){
+    SpatialOpsCoalModelFactory::ModelMap allModels = modelFactory.retrieve_all_models();
+    for (SpatialOpsCoalModelFactory::ModelMap::iterator imodel = allModels.begin(); imodel != allModels.end(); imodel++){
       imodel->second->sched_computeModel( level, sched, i );  
     }
 
@@ -655,7 +655,7 @@ void SpatialOps::registerModels(ProblemSpecP& db)
   ProblemSpecP models_db = db->findBlock("Models");
 
   // Get reference to the model factory
-  ModelFactory& model_factory = ModelFactory::self();
+  SpatialOpsCoalModelFactory& model_factory = SpatialOpsCoalModelFactory::self();
   // Get reference to the dqmom factory
   DQMOMEqnFactory& dqmom_factory = DQMOMEqnFactory::self(); 
 
