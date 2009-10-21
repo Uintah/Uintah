@@ -52,7 +52,7 @@
       <resolution>   [800,1,1]          </resolution>
     </replace_lines>
 </Test>
-<!--
+
 <Test>
     <Title>1600</Title>
     <sus_cmd>sus </sus_cmd>
@@ -63,5 +63,5 @@
       <resolution>   [1600,1,1]          </resolution>
     </replace_lines>
 </Test>
--->
+
 </start>
