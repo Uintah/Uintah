@@ -92,9 +92,16 @@ public:
   inline const bool getRadiationFlag(){
     return d_radiation; };   
 
+  /** @brief  What does this do? The name isn't descriptive */
   double g1( double z);
+
+  /** @brief  Calculate heat capacity of particle (I think?) */
   double heatcp(double Tp, double yelem[5]);
+  
+  /** @brief  Calculate heat capacity of ash */
   double heatap(double Tp);
+
+  /** @brief  Calculate gas properties of N2 at atmospheric pressure (see Holman p. 505) */
   double props(double Tg, double Tp);
 
 private:

@@ -83,6 +83,8 @@ HeatTransfer::problemSetup(const ProblemSpecP& params, int qn)
     db_coal->require("S", yelem[4]);
   } else
     throw InvalidValue("Missing <Coal_Properties> section in input file!",__FILE__,__LINE__);
+
+  // Assume no ash (for now)
   d_ash = false;
   // Check for radiation 
   d_radiation = false;
@@ -133,6 +135,49 @@ HeatTransfer::problemSetup(const ProblemSpecP& params, int qn)
     db->getWithDefault( "high_clip", d_highModelClip, 999999 );
  
   }
+
+  // Look for required scalars
+  //   ( HeatTransfer model doesn't use any extra scalars (yet)
+  //     but if it did, this "for" loop would have to be un-commented )
+  /*
+  ProblemSpecP db_scalarvars = params->findBlock("scalarVars");
+  for( ProblemSpecP variable = db_scalarvars->findBlock("variable");
+       variable != 0; variable = variable->findNextBlock("variable") ) {
+
+    string label_name;
+    string role_name;
+    string temp_label_name;
+
+    variable->getAttribute("label", label_name);
+    variable->getAttribute("role",  role_name);
+
+    temp_label_name = label_name;
+
+    string node;
+    std::stringstream out;
+    out << qn;
+    node = out.str();
+    temp_label_name += "_qn";
+    temp_label_name += node;
+
+    // user specifies "role" of each scalar
+    // if it isn't an internal coordinate or a scalar, it's required explicitly
+    // ( see comments in Arches::registerModels() for details )
+    if ( role_name == "raw_coal_mass") {
+      LabelToRoleMap[temp_label_name] = role_name;
+    } else if( role_name == "particle_temperature" ) {  
+      LabelToRoleMap[temp_label_name] = role_name;
+      compute_part_temp = true;
+    } else {
+      std::string errmsg;
+      errmsg = "Invalid variable role for Kobayashi Sarofim Devolatilization model: must be \"particle_temperature\" or \"raw_coal_mass\", you specified \"" + role_name + "\".";
+      throw InvalidValue(errmsg,__FILE__,__LINE__);
+    }
+
+  }
+  */
+
+
 
   // fix the d_icLabels to point to the correct quadrature node (since there is 1 model per quad node)
   for ( vector<std::string>::iterator iString = d_icLabels.begin(); 
@@ -569,7 +614,8 @@ HeatTransfer::computeModel( const ProcessorGroup * pc,
     old_dw->get( w_particle_temperature, d_particle_temperature_label, matlIndex, patch, gn, 0 );
     old_dw->get( w_particle_length, d_particle_length_label, matlIndex, patch, gn, 0 );
     old_dw->get( w_mass_raw_coal, d_raw_coal_mass_label, matlIndex, patch, gn, 0 );
-    if (d_ash) old_dw->get( w_mass_ash, d_ash_mass_label, matlIndex, patch, gn, 0 );
+    if (d_ash) 
+      old_dw->get( w_mass_ash, d_ash_mass_label, matlIndex, patch, gn, 0 );
     old_dw->get( weight, d_weight_label, matlIndex, patch, gn, 0 );
 
     for (CellIterator iter=patch->getCellIterator__New(); !iter.done(); iter++){
@@ -593,8 +639,8 @@ HeatTransfer::computeModel( const ProcessorGroup * pc,
         gas_heat_rate[c] = 0.0;
         smoothTfield[c] = temperature[c];
       } else {
-	length = w_particle_length[c]*d_pl_scaling_factor/weight[c];
-	particle_temperature = w_particle_temperature[c]*d_pt_scaling_factor/weight[c];
+	      length = w_particle_length[c]*d_pl_scaling_factor/weight[c];
+	      particle_temperature = w_particle_temperature[c]*d_pt_scaling_factor/weight[c];
         rawcoal_mass = w_mass_raw_coal[c]*d_rc_scaling_factor/weight[c];
         smoothTfield[c] = particle_temperature;
         if(d_ash) {
@@ -620,19 +666,19 @@ HeatTransfer::computeModel( const ProcessorGroup * pc,
         double Qconv = Nu*pi*blow*rkg*length*(temperature[c]-particle_temperature);
 	      
         // Radiative transfer
-	double Qrad = 0.0;
-	if(d_radiation) {
-	  if(abskgIN[c]<1e-6){
-	    Qrad = 0;
-	  } else {
-	    double Qabs = 0.8;
-	    double Apsc = (pi/4)*Qabs*pow(length/2,2);
-	    double Eb = 4.0*sigma*pow(particle_temperature,4);
-	    double Eg = 4.0*sigma*abskgIN[c]*pow(temperature[c],4);
-	    Qrad = Apsc*((radiationSRCIN[c]+ Eg)/abskgIN[c] - Eb);
-	    abskp[c] = pi/4*Qabs*weight[c]*pow(length,2);
-	  }
-	}
+	      double Qrad = 0.0;
+        if(d_radiation) {
+	        if(abskgIN[c]<1e-6){
+	          Qrad = 0;
+	        } else {
+	          double Qabs = 0.8;
+	          double Apsc = (pi/4)*Qabs*pow(length/2,2);
+	          double Eb = 4.0*sigma*pow(particle_temperature,4);
+	          double Eg = 4.0*sigma*abskgIN[c]*pow(temperature[c],4);
+	          Qrad = Apsc*((radiationSRCIN[c]+ Eg)/abskgIN[c] - Eb);
+	          abskp[c] = pi/4*Qabs*weight[c]*pow(length,2);
+          }
+        }
 
         heat_rate[c] =(Qconv+Qrad)/(m_p*cp*d_pt_scaling_factor); 
 
@@ -642,9 +688,6 @@ HeatTransfer::computeModel( const ProcessorGroup * pc,
   }
 }
 
-///////////////////////////////////////////////////////////////////////////
-//  Calculating heat capacity using Merrick's correlation
-///////////////////////////////////////////////////////////////////////////
 
 double
 HeatTransfer::g1( double z){
@@ -669,7 +712,6 @@ HeatTransfer::heatcp(double Tp, double yelem[5]){
   return cp; // J/kg/K
 }
 
-// Heat capacity of ash
 
 double
 HeatTransfer::heatap(double Tp){
@@ -677,10 +719,6 @@ HeatTransfer::heatap(double Tp){
   return cpa;  // J/kg/K
 }
 
-
-////////////////////////////////////////////////////////////////////////////////
-// Calculation of gas properties of N2 at atmospheric pressure from Holman p505
-////////////////////////////////////////////////////////////////////////////////
 
 double
 HeatTransfer::props(double Tg, double Tp){
