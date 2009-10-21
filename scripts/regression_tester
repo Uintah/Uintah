@@ -531,9 +531,9 @@ run_case () {
     
     if [ $all_tests_pass = true ]; then
         echo "returning 0"
-        tar cf ${results}.tar ${results}/
-        gzip ${results}.tar
-        mv ${results}.tar.gz TestResults/
+#        tar cf ${results}.tar ${results}/
+#        gzip ${results}.tar
+#        mv ${results}.tar.gz TestResults/
         return 0
     else
         echo "returning 1"
