@@ -475,12 +475,16 @@ run_case () {
 
 ## Use indirect expansion to get the list of cases to run found 
 ## in tc variable
+    mkdir -p TestResults
 
     test_case=$1
-
-    rm -rf TestResults_${test_case}
-    mkdir -p TestResults_${test_case}
     results=TestResults_${test_case}
+
+    rm -rf ${results}*
+    rm -rf TestResults/${results}*
+
+    mkdir -p ${results}
+
     tc=${test_case}_test_cases
 
     echo; echo "Testing ${!tc}"
@@ -527,13 +531,15 @@ run_case () {
     
     if [ $all_tests_pass = true ]; then
         echo "returning 0"
-#        tar cf ${results}.tar ${results}/
-#        gzip ${results}.tar
+        tar cf ${results}.tar ${results}/
+        gzip ${results}.tar
+        mv ${results}.tar.gz TestResults/
         return 0
     else
         echo "returning 1"
         tar cf ${results}.tar ${results}/
         gzip ${results}.tar
+        mv ${results}.tar.gz TestResults/
         return 1
     fi
 
