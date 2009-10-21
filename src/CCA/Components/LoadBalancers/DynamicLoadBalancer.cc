@@ -64,6 +64,10 @@ static DebugStream times("LBTimes",false);
 static DebugStream lbout("LBOut",false);
 double lbtimes[5]={0};
 
+//if defined the space-filling curve will be computed in parallel, this may not be a good idea because the time to compute 
+//the space-filling curve is so small that it might not parallelize well.
+#define SFC_PARALLEL  
+
 DynamicLoadBalancer::DynamicLoadBalancer(const ProcessorGroup* myworld)
   : LoadBalancerCommon(myworld), d_costForecaster(0), sfc(myworld)
 {
@@ -379,8 +383,9 @@ void DynamicLoadBalancer::useSFC(const LevelP& level, int* order)
   // get the overall range in all dimensions from all patches
   IntVector high(INT_MIN,INT_MIN,INT_MIN);
   IntVector low(INT_MAX,INT_MAX,INT_MAX);
- 
+#ifdef SFC_PARALLEL 
   vector<int> originalPatchCount(d_myworld->size(),0); //store how many patches each patch has originally
+#endif
   for (Level::const_patchIterator iter = level->patchesBegin(); iter != level->patchesEnd(); iter++) 
   {
     const Patch* patch = *iter;
@@ -394,6 +399,8 @@ void DynamicLoadBalancer::useSFC(const LevelP& level, int* order)
     min_patch_size=min(min_patch_size,size);
     
     //create positions vector
+
+#ifdef SFC_PARALLEL
     //place in long longs to avoid overflows with large numbers of patches and processors
     long long pindex=patch->getLevelIndex();
     long long num_patches=d_myworld->size();
@@ -409,15 +416,25 @@ void DynamicLoadBalancer::useSFC(const LevelP& level, int* order)
       }
     }
     originalPatchCount[proc]++;
+#else
+    Vector point=(patch->getCellLowIndex__New()+patch->getCellHighIndex__New()).asVector()/2.0;
+    for(int d=0;d<dim;d++)
+    {
+      positions.push_back(point[dimensions[d]]);
+    }
+#endif
+
   }
 
+#ifdef SFC_PARALLEL
   //compute patch starting locations
   vector<int> originalPatchStart(d_myworld->size(),0);
   for(int p=1;p<d_myworld->size();p++)
   {
     originalPatchStart[p]=originalPatchStart[p-1]+originalPatchCount[p-1];
   }
-  
+#endif
+
   //patchset dimensions
   IntVector range = high-low;
   
@@ -430,15 +447,21 @@ void DynamicLoadBalancer::useSFC(const LevelP& level, int* order)
 
 
   //create SFC
-  sfc.SetLocalSize(originalPatchCount[d_myworld->myrank()]);
   sfc.SetDimensions(r);
   sfc.SetCenter(c);
   sfc.SetRefinementsByDelta(delta); 
   sfc.SetLocations(&positions);
   sfc.SetOutputVector(&indices);
   
+#ifdef SFC_PARALLEL
+  sfc.SetLocalSize(originalPatchCount[d_myworld->myrank()]);
   sfc.GenerateCurve();
+#else
+  sfc.SetLocalSize(level->numPatches());
+  sfc.GenerateCurve(SERIAL);
+#endif
   
+#ifdef SFC_PARALLEL
   if(d_myworld->size()>1)  
   {
     vector<int> recvcounts(d_myworld->size(), 0);
@@ -470,6 +493,13 @@ void DynamicLoadBalancer::useSFC(const LevelP& level, int* order)
     DistributedIndex di=indices[i];
     order[i]=originalPatchStart[di.p]+di.i;
   }
+#else
+  //write order array
+  for(unsigned int i=0;i<indices.size();i++)
+  {
+    order[i]=indices[i].i;
+  }
+#endif
 
 #if 0
   cout << "SFC order: ";
