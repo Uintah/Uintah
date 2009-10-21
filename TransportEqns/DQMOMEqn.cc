@@ -161,7 +161,7 @@ DQMOMEqn::problemSetup(const ProblemSpecP& inputdb, int qn)
     if (d_initFunction == "constant") {
         // each quad node is initialized to the same thing!
         db_initialValue->require("constant", d_constant_init); 
-
+        d_constant_init /= d_scalingConstant; 
 
     // -------- Environment constant initialization function --------------
     } else if (d_initFunction == "env_constant" ) {
@@ -169,17 +169,15 @@ DQMOMEqn::problemSetup(const ProblemSpecP& inputdb, int qn)
       for( ProblemSpecP db_env_constants = db_initialValue->findBlock("env_constant");
            db_env_constants != 0; db_env_constants = db_env_constants->findNextBlock("env_constant") ) {
         
-        // Is there a cleaner way to do this? (get int's/double's from getAttribute?) (Charles)
         string s_tempQuadNode;
         db_env_constants->getAttribute("qn", s_tempQuadNode);
         int i_tempQuadNode = atoi( s_tempQuadNode.c_str() );
 
-        // Is there a cleaner way to do this? (get int's/double's from getAttribute?) (Charles)
         string s_constant;
         db_env_constants->getAttribute("value", s_constant);
         double constantValue = atof( s_constant.c_str() );
         if( i_tempQuadNode == d_quadNode )
-          d_constant_init = constantValue;
+          d_constant_init = constantValue / d_scalingConstant;
       }
  
 
@@ -208,21 +206,21 @@ DQMOMEqn::problemSetup(const ProblemSpecP& inputdb, int qn)
 
       if (d_initFunction == "step") {
         db_initialValue->require("step_value", d_step_value); 
+        d_step_value /= d_scalingConstant; 
       
       } else if (d_initFunction == "env_step") {
         for( ProblemSpecP db_env_step_value = db_initialValue->findBlock("env_step_value");
              db_env_step_value != 0; db_env_step_value = db_env_step_value->findNextBlock("env_step_value") ) {
-          // Is there a cleaner way to do this? (get int's/double's from getAttribute?) (Charles)
+          
           string s_tempQuadNode;
           db_env_step_value->getAttribute("qn", s_tempQuadNode);
           int i_tempQuadNode = atoi( s_tempQuadNode.c_str() );
         
-          // Is there a cleaner way to do this? (get int's/double's from getAttribute?) (Charles)
           string s_step_value;
           db_env_step_value->getAttribute("value", s_step_value);
           double step_value = atof( s_step_value.c_str() );
-          if( i_tempQuadNode == d_quadNode )
-            d_step_value = step_value;
+          if( i_tempQuadNode == d_quadNode ) 
+            d_step_value = step_value / d_scalingConstant;
         }
       }//end step_value init.
 
