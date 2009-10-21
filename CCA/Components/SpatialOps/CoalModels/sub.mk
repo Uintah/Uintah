@@ -2,7 +2,7 @@
 
 SRCDIR   := CCA/Components/SpatialOps/CoalModels
 
-SRCS     += $(SRCDIR)/ModelFactory.cc \
+SRCS     += $(SRCDIR)/SpatialOpsCoalModelFactory.cc \
 	$(SRCDIR)/ModelBase.cc \
   $(SRCDIR)/PartVel.cc \
   $(SRCDIR)/ConstantModel.cc \
