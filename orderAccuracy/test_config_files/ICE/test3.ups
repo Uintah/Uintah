@@ -113,7 +113,7 @@
     <CFD>
        <cfl>0.2</cfl>
        <ICE>
-        <advection type = "SecondOrder" />
+        <advection type = "FirstOrder" />
       </ICE>        
     </CFD>
     <!--____________________________________________________________________-->
