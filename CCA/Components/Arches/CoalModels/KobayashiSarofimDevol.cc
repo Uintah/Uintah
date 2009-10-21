@@ -47,18 +47,14 @@ KobayashiSarofimDevol::KobayashiSarofimDevol( std::string modelName,
   d_fieldLabels(fieldLabels)
 {
   A1  =  3.7e5;       // k1 pre-exponential factor
-  A2  =  1.46e13;       // k1 activation energy
-  E1  =  -17600;      // k2 pre-exponential factor
+  A2  =  1.46e13;     // k2 pre-exponential factor
+  E1  =  -17600;      // k1 activation energy
   E2  =  -60000;      // k2 activation energy
 
   R   =  1.987;       // ideal gas constant
 
-  alpha_o = 0.91;     // initial mass fraction of raw coal
-  c_o     = 3.90e-11; // initial mass of raw coal
-
-  // aren't these backwards? (descriptions are from LES_Coal document)
-  Y1_ = 1.0; // volatile fraction from proximate analysis
-  Y2_ = 0.4; // fraction devolatilized at higher temperatures (often near unity)
+  Y1_ = 0.4; // volatile fraction from proximate analysis
+  Y2_ = 1.0; // fraction devolatilized at higher temperatures (often near unity)
 
   d_quad_node = qn;
   
