@@ -1,4 +1,4 @@
-set term png 
+set terminal postscript color solid "Times-Roman" 14
 set autoscale
 set logscale x
 set logscale y
@@ -7,7 +7,7 @@ set grid xtics ytics
 set title "ICE:Riemann Problem (test 1) X dir"
 set xlabel "Resolution"
 set ylabel "Error"
-set output "orderAccuracy.png"
+set output "orderAccuracy.ps"
 
 # generate the curvefit
 f1(x) = a1*x**b1                # define the function to be fit
@@ -24,6 +24,8 @@ fit f1(x) 'L2norm.dat' using 1:2 via a1, b1
 fit f2(x) 'L2norm.dat' using 1:3 via a2, b2
 fit f3(x) 'L2norm.dat' using 1:4 via a3, b3
 fit f4(x) 'L2norm.dat' using 1:5 via a4, b4
+set style line 1  lt 1 lw 0.3 lc 8
+
 
 set label 'Error = a * (Spatial Resolution)^ b' at screen 0.2,0.42
 
@@ -35,10 +37,10 @@ set label 'pressure    = %3.5g',b3      at screen 0.2,0.26
 set label 'Temperature = %3.5g',b4      at screen 0.2,0.22
 
 plot 'L2norm.dat' using 1:2 t 'Density' with linespoints,\
-      f1(x) title "",\
+      f1(x) with l ls 1 title "",\
       'L2norm.dat' using 1:3 t 'Velocity' with linespoints,\
-      f2(x) title "",\
+      f2(x) with l ls 1 title "",\
       'L2norm.dat' using 1:4 t 'Pressure' with linespoints,\
-      f3(x) title "",\
+      f3(x) with l ls 1 title "",\
       'L2norm.dat' using 1:5 t 'Temperature' with linespoints,\
-      f4(x) title ""
+      f4(x) with l ls 1 title ""
