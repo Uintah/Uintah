@@ -3,7 +3,7 @@
 <Study>Res.Study</Study>
 
 <gnuplot>
-  <script>plotRiemannTests.gp</script>s
+  <script>plotRiemannTests.gp</script>
   <title>ICE:Riemann Problem (test 1) X dir</title>
   <ylabel>Error</ylabel>
   <xlabel>Resolution</xlabel>
@@ -31,6 +31,7 @@
       <resolution>   [200,1,1]          </resolution>
     </replace_lines>
 </Test>
+
 <Test>
     <Title>400</Title>
     <sus_cmd>sus </sus_cmd>
@@ -52,7 +53,7 @@
       <resolution>   [800,1,1]          </resolution>
     </replace_lines>
 </Test>
-<!--
+
 <Test>
     <Title>1600</Title>
     <sus_cmd>sus </sus_cmd>
@@ -63,5 +64,6 @@
       <resolution>   [1600,1,1]          </resolution>
     </replace_lines>
 </Test>
--->
+
+
 </start>
