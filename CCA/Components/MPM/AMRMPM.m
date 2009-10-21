@@ -1,4 +1,19 @@
+%Reference:  Jin Ma, Honbing Lu,and Ranga Komanduri, "Structured Mesh
+% Refinement in Generalized Interpolation Material Point (GIMP) Method
+% for Simulation of Dynamic Problems," CMES, vol. 12, no.3, pp. 213-227, 2006
+
+%______________________________________________________________________
+
+
+
 function KK=amrmpm(problem_type,CFL,R1_dx)
+
+%  valid options:
+%  problem type:  impulsiveBar, oscillator, collidingBars
+%  CFL:            0 < cfl < 1, usually 0.2 or so.
+%  R1_dx:          cell spacing in region 1.
+
+
 
 % One dimensional MPM
 % bulletproofing
@@ -24,7 +39,7 @@ domain     =1.;
 area       =1.;
 plotSwitch = 0;
 
-% HARD WIRED FOR TESTING
+% HARDWIRED FOR TESTING
 NN          = 16
 R1_dx       =domain/(NN-1)
 
@@ -122,7 +137,10 @@ velP      = zeros(1,NP);
 dp        = zeros(1,NP);
 stressP   = zeros(1,NP);
 extForceP = zeros(1,NP);
-Fp        = zeros(1,NP);         
+Fp        = zeros(1,NP);
+nodes     = zeros(1,2);
+Gs        = zeros(1,2);
+Ss        = zeros(1,2);     
 
 xG        = zeros(1,NN);
 massG     = zeros(1,NN);
@@ -397,10 +415,59 @@ function [nodes,Ss]=findNodesAndWeights(xp, numRegions, Regions)
  
   % find the nodes that surround the given location and
   % the values of the shape functions for those nodes
-  % Assume the grid starts at x=0.
+  % Assume the grid starts at x=0.  This follows the numenclature
+  % of equation 12 of the reference
 
-  %node = xp/dx;
-  %node = floor(node)+1;
+  [node, dx]=positionToNode(xp, numRegions, Regions);  
+
+  nodes(1)= node;
+  nodes(2)= node+1;
+
+  dnode = double(node);
+  
+  node_pos = double(node-1) * dx;
+  
+  Lx = dx;
+  delX = xp - node_pos;
+    
+  if (delX <= -Lx)
+    Ss(1) = 0;
+    Ss(2) = 1;
+  elseif(-Lx <= delX && delX<= 0.0)
+    Ss(1) = 1.0 + delX/Lx;
+    Ss(2) = 1.0 - Ss(1);
+  elseif(  0 <= delX && delX<= Lx)
+    Ss(1) = 1.0 - delX/Lx;
+    Ss(2) = 1.0 - Ss(1);
+  elseif( Lx <= delX )
+    Ss(1) = 0;
+    Ss(2) = 1;
+  end
+
+  # old method of computing the shape function
+  locx  = (xp-dx*(dnode-1))/dx;
+  Ss_old_1 = 1-locx;
+  Ss_old_2 = locx;
+  
+  # bulletproofing
+  diff1 = abs(Ss(1) - Ss_old_1);
+  diff2 = abs(Ss(2) - Ss_old_2);
+  
+  if (diff1 > 1e-14  || diff2 > 1e-14)
+    fprintf('There is a problem with one of the shape functions, node %g, delX: %g \n',node, delX);
+    fprintf(' Ss(1):  %16.14f , Ss_old:  %16.14f, diff %16.14f \n', Ss(1), Ss_old_1, diff1);
+    fprintf(' Ss(2):  %16.14f , Ss_old:  %16.14f, diff %16.14f \n', Ss(2), Ss_old_2, diff1);
+  end
+  
+end
+
+
+%__________________________________
+function [nodes,Ss]=findNodesAndWeights_old(xp, numRegions, Regions)
+ 
+  % find the nodes that surround the given location and
+  % the values of the shape functions for those nodes
+  % Assume the grid starts at x=0.
 
   [node, dx]=positionToNode(xp, numRegions, Regions);  
 
