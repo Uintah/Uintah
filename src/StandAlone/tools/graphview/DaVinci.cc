@@ -66,7 +66,7 @@ bool DaVinci::doExclusion = false;
 DaVinci*
 DaVinci::run()
 {
-  static char* const DAVINCI_ARGS[] = {
+  static const char* const DAVINCI_ARGS[] = {
     "/bin/sh", "-c", "davinci -pipe || daVinci -pipe", 0
   };
   int pipes[2][2];
@@ -102,7 +102,7 @@ DaVinci::run()
     setbuf(stdin, 0);
     setbuf(stdout, 0);
 
-    if (execv("/bin/sh", DAVINCI_ARGS) == -1) {
+    if (execv("/bin/sh", const_cast<char* const*>(DAVINCI_ARGS)) == -1) {
       perror("execv() failed");
       if (errno == ENOENT) {
 	cerr << "\n******************************************\n"
