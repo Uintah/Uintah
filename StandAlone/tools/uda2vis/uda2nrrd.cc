@@ -1047,7 +1047,7 @@ getPatchIndex(const string& input_uda_name, int timeStepNo, int levelNo, int pat
 	// for( unsigned long time = time_step_lower; time <= time_step_upper; time += tinc ) {
 
 	unsigned long time = time_step_lower + timeStepNo * tinc;
-	unsigned long lastTime = time;
+	static unsigned long lastTime = ULONG_MAX;
 
 	/////////////////////////////
 	// Figure out the filename
@@ -1059,8 +1059,14 @@ getPatchIndex(const string& input_uda_name, int timeStepNo, int levelNo, int pat
 
 	// Check the level index
 	double current_time = times[time];
-	GridP grid = archive->queryGrid(time);
-	if (level_index >= grid->numLevels() || level_index < 0) {
+	
+  //store in a static variable so that the data is persistent across the calls.
+  static GridP grid = archive->queryGrid(time);
+  //if the timestep has changed then requery the grid
+  if(lastUda.compare(input_uda_name)!=0 || time!=lastTime)
+    grid = archive->queryGrid(time);
+	
+  if (level_index >= grid->numLevels() || level_index < 0) {
 	  cerr << "level index is bad ("<<level_index<<").  Should be between 0 and "<<grid->numLevels()<<".\n";
 	  cerr << "Trying next timestep.\n";
 	  exit(1); 
@@ -1161,7 +1167,7 @@ getPatchIndex(const string& input_uda_name, int timeStepNo, int levelNo, int pat
 	  const Patch* patch = *(level->patchesBegin());
           
 	  // variable name won't change till the uda isn't changed
-	  if ((lastTime != time) || (lastPatch != patch)) {
+	  if ((lastTime != time) || (lastPatch != patch) || lastUda.compare(input_uda_name)!=0 ) {
 	    /*ConsecutiveRangeSet matls*/ matlsArr[cnt] = archive->queryMaterials(variable_name, patch, time);
 	  }      
 
