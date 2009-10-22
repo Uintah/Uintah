@@ -214,8 +214,8 @@ RMCRTRadiationModel::sched_solve( const LevelP& level, SchedulerP& sched, const 
 
   //Variables needed from DW
   Ghost::GhostType  gac = Ghost::AroundCells;
-  Ghost::GhostType  gaf = Ghost::AroundFaces;
-  Ghost::GhostType  gn = Ghost::None;
+  //Ghost::GhostType  gaf = Ghost::AroundFaces;
+  //Ghost::GhostType  gn = Ghost::None;
   
   tsk->requires(Task::OldDW, d_lab->d_tempINLabel, gac, 1); // getting temperature w/1 ghost to use only (not to modify it)
   tsk->requires(Task::OldDW, d_lab->d_absorpINLabel, gac, 1); // getting absorption coef w/1 ghost
@@ -250,8 +250,8 @@ RMCRTRadiationModel::solve(  const ProcessorGroup* pc,
 
 {
   Ghost::GhostType  gac = Ghost::AroundCells;
-  Ghost::GhostType  gaf = Ghost::AroundFaces;
-  Ghost::GhostType  gn = Ghost::None;
+  //Ghost::GhostType  gaf = Ghost::AroundFaces;
+  //Ghost::GhostType  gn = Ghost::None;
 
   // need to pass in property, RR, stratified sampling para.
 
@@ -263,12 +263,13 @@ RMCRTRadiationModel::solve(  const ProcessorGroup* pc,
   // obRMCRT = RMCRTFactory::RMCRTModel(sample_sche);
   
   RMCRTRRSDStratified *obRMCRT;
+  obRMCRT=0;
 
   // patch loop 
   for ( int p = 0; p < patches->size(); p++ ) {
     const Patch* patch = patches->get(p); 
     int archIndex = 0; // only one arches material for now
-    int matlIndex = 0; 
+    //int matlIndex = 0; 
 
     // get temperature and absorption coefficient 
     constCCVariable<double> T; 
@@ -301,7 +302,7 @@ RMCRTRadiationModel::solve(  const ProcessorGroup* pc,
     Tfront = 0;
     Tback = 0;
     
-    int currI, currJ, currK;
+    int currI=0, currJ=0, currK=0;
     // emission coefficient on boundaries are CCVariable? or SFXVariable?
     // absorption coefficient on boundaries? define as what type?
     // rs, rd?

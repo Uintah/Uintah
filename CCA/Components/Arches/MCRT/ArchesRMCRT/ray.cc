@@ -98,8 +98,8 @@ ray::surfaceIntersect( const double *X,
   // s[2] = cos(theta)
   
   //  double xcheck, ycheck, zcheck;
-  double xlow, xup, ylow, yup, zlow, zup;
-  double cc;
+  //double xlow, xup, ylow, yup, zlow, zup;
+  //double cc;
 
   xx[0] = X[iIndex];
   xx[1] = X[iIndex+1];
@@ -452,7 +452,7 @@ void ray::TravelInMediumInten(MTRand &MTrng,
   
   // calculate the energy lost during absorption in this currentvIndex
   double kl_m, scat_m;
-  double random1, random2, random3, random;
+  //double random1, random2, random3, random;
   double sIncoming[3];
   double scat_len; // scatter length
   double sumScat; // the sum of all the zigzag path within this subregion
@@ -549,7 +549,7 @@ void ray::hitRealSurfaceInten(MTRand &MTrng,
   // PathIndex stores the index of the surface
   
   double alpha, rhos, rhod, ratio;
-  double alpha_other, rhos_other, rhod_other;
+  //double alpha_other, rhos_other, rhod_other;
   double spec_s[3];
 
   // dealing with the surface element

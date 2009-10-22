@@ -269,7 +269,7 @@ bool getIteratorBCValueBCKind( const Patch* patch,
    const BoundCond<double> *density_bcs = 
      dynamic_cast<const BoundCond<double> *>(bc);
    
-   double K;
+   double K=0.;
    if (density_bcs)
      K = density_bcs->getValue();
 

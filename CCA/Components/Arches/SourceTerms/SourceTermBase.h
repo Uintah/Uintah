@@ -65,9 +65,9 @@ public:
 
 protected:
   std::string d_srcName; 
-  vector<std::string> d_requiredLabels; //All labels needed to compute this source term  
   const VarLabel* d_srcLabel; //The label storing the value of this source term
   SimulationStateP& d_sharedState; 
+  vector<std::string> d_requiredLabels; //All labels needed to compute this source term  
 
   bool d_labelSchedInit;
 

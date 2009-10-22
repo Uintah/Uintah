@@ -32,9 +32,8 @@ ExplicitTimeInt::~ExplicitTimeInt()
 //---------------------------------------------------------------------------
 void ExplicitTimeInt::problemSetup(const ProblemSpecP& params)
 {
-	ProblemSpecP ex_db = params->findBlock("ExplicitIntegrator");
+  ProblemSpecP ex_db = params->findBlock("ExplicitIntegrator");
 
-  d_time_order; 
   ex_db->getAttribute("order", d_time_order); 
 
   if (d_time_order == "first"){

@@ -121,7 +121,8 @@ void RMCRTRadiationModel::interpCCTemperatureToFC( constCCVariable<int>& cellTyp
       
       Tf[c] = ( T[c] + T[cm1] ) / 2.0;
  
-    } else if ( cellType[c] != d_flowID | cellType[cm1] != d_flowID ) {
+      //    } else if ( cellType[c] != d_flowID | cellType[cm1] != d_flowID ) {
+    } else if ( (cellType[c] != d_flowID) || (cellType[cm1] != d_flowID) ) {
 
       if ( cellType[c] !=d_flowID ) {
         //current cell is a wall
@@ -137,12 +138,18 @@ void RMCRTRadiationModel::interpCCTemperatureToFC( constCCVariable<int>& cellTyp
 
     bool doBoundary=false; 
     // subtract 1 because of the "extra cells" used in Arches
-    if ( mydir == 0 ) 
-      if ( c.x() == highIdx.x() - 1) doBoundary = true; 
-    else if ( mydir == 1 )
-      if ( c.y() == highIdx.y() - 1) doBoundary = true; 
-    else if ( mydir == 2 )
-      if ( c.z() == highIdx.z() - 1) doBoundary = true; 
+    if ( mydir == 0 ) {
+      if ( c.x() == highIdx.x() - 1) 
+        doBoundary = true; 
+    }
+    else if ( mydir == 1 ) {
+      if ( c.y() == highIdx.y() - 1) 
+        doBoundary = true; 
+    }
+    else if ( mydir == 2 ) {
+      if ( c.z() == highIdx.z() - 1) 
+        doBoundary = true; 
+    }
     
     //do + boundary
     if ( doBoundary ) {

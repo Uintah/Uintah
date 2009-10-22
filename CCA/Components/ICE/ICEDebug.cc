@@ -44,6 +44,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/OS/Dir.h> // for MKDIR
 #include <iostream>
 #include <fstream>
+#include <iomanip>
 #include <sys/stat.h>
 #include <sys/types.h>
 #ifndef _WIN32
@@ -383,12 +384,17 @@ void    ICE::printData_driver( int matl,
     //__________________________________
     //  spew to gnuPlot data files
     if (d_dbgGnuPlot) {
-      FILE *fp;
+      //      FILE *fp;
       string path;
       createDirs(patch, message1, path);
         
       string filename = path + "/" + message2;
-      fp = fopen(filename.c_str(), "w");
+      //      fp = fopen(filename.c_str(), "w");
+      ofstream fp;
+      fp.open(filename.c_str());
+      fp.precision(15);
+      fp.width(16);
+      fp.setf(ios::scientific);
 
       double x, dx;
       find_gnuplot_origin_And_dx(variableType, patch, low, high, &dx, &x);   
@@ -398,12 +404,14 @@ void    ICE::printData_driver( int matl,
 
           for(int i = low.x(); i < high.x(); i++) {
             IntVector idx(i, j, k);
-            fprintf(fp, "%16.15E %16.15E\n", x, q_CC[idx]);
+            //    fprintf(fp, "%16.15E %16.15E\n", x, q_CC[idx]);
+            fp << x << " " <<  q_CC[idx] << endl;
             x+=dx;
           }
         }
       }
-      fclose(fp);
+      //      fclose(fp);
+      fp.close();
     } // gnuplot 
   }  // time to dump
   //__________________________________

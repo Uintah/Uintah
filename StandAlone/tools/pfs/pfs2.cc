@@ -104,6 +104,7 @@ int main(int argc, char *argv[])
     bool binmode = false;
     bool do_cylinder = false;
     CylinderGeometryPiece* cylinder;
+    cylinder = 0;
 
     //default cylinder
     double xb = 0.0, yb = 0.0, zb = 0.0; //coordinates of the bottom
