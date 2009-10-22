@@ -6,11 +6,9 @@ def build(num):
 	make=os.system(make_command)
 
 	if make > 0:
-		os.system('make cleanreally')
-		make=os.system(make_command)
-
-
-	return make
+               sys.exit(1) 
+               
+        return make
 
 build(sys.argv[1])
 
