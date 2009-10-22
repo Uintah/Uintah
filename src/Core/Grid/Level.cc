@@ -75,6 +75,8 @@ static AtomicCounter ids("Level ID counter",0);
 static Mutex ids_init("ID init");
 
 static DebugStream bcout("BCTypes", false);
+static DebugStream rgtimes("RGTimes",false);
+
 
 Level::Level(Grid* grid, const Point& anchor, const Vector& dcell, 
              int index, IntVector refinementRatio, int id /*=-1*/)
@@ -611,11 +613,16 @@ void Level::finalizeLevel(bool periodicX, bool periodicY, bool periodicZ)
 }
 void Level::setBCTypes()
 {
+  double rtimes[4]={0};
+  double start=Time::currentSeconds();
+
   MALLOC_TRACE_TAG_SCOPE("Level::setBCTypes");
   TAU_PROFILE("Level::setBCTypes", " ", TAU_USER);
   if (d_bvh != NULL)
     delete d_bvh;
   d_bvh = scinew PatchBVH(d_virtualAndRealPatches);
+  rtimes[0]+=Time::currentSeconds()-start;
+  start=Time::currentSeconds();
   patchIterator iter;
   
   ProcessorGroup *myworld=NULL;
@@ -725,6 +732,8 @@ void Level::setBCTypes()
   {
      bctypes.swap(mybctypes);
   }
+  rtimes[1]+=Time::currentSeconds()-start;
+  start=Time::currentSeconds();
   int i;
   //loop through patches
   for(iter=d_virtualAndRealPatches.begin(),i=0,idx=0;iter!=d_virtualAndRealPatches.end();iter++,i++)
@@ -775,6 +784,35 @@ void Level::setBCTypes()
   
   
   d_finalized=true;
+  
+  rtimes[2]+=Time::currentSeconds()-start;
+  start=Time::currentSeconds();
+  if(rgtimes.active())
+  {
+    double avg[3]={0};
+    MPI_Reduce(&rtimes,&avg,3,MPI_DOUBLE,MPI_SUM,0,myworld->getComm());
+    if(myworld->myrank()==0) {
+      cout << "SetBCType Avg Times: ";
+      for(int i=0;i<3;i++)
+      {
+        avg[i]/=myworld->size();
+        cout << avg[i] << " ";
+      }
+      cout << endl;
+    }
+    double max[3]={0};
+    MPI_Reduce(&rtimes,&max,3,MPI_DOUBLE,MPI_MAX,0,myworld->getComm());
+    if(myworld->myrank()==0) {
+      cout << "SetBCType Max Times: ";
+      for(int i=0;i<3;i++)
+      {
+        cout << max[i] << " ";
+      }
+      cout << endl;
+    }
+  }
+
+
 }
 
 void Level::assignBCS(const ProblemSpecP& grid_ps,LoadBalancer* lb)
