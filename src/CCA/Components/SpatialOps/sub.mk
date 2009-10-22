@@ -5,14 +5,10 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := CCA/Components/SpatialOps
 
 SRCS     += $(SRCDIR)/SpatialOps.cc \
-      $(SRCDIR)/Fields.cc \
-    $(SRCDIR)/ExplicitTimeInt.cc \
-    $(SRCDIR)/BoundaryCond.cc \
-    $(SRCDIR)/SpatialOpsMaterials.cc \
-    $(SRCDIR)/LU.cc \
-    $(SRCDIR)/DQMOM.cc
+            $(SRCDIR)/Fields.cc \
+            $(SRCDIR)/SpatialOpsMaterials.cc 
 
-SUBDIRS := $(SRCDIR)/CoalModels $(SRCDIR)/TransportEqns $(SRCDIR)/SourceTerms
+SUBDIRS := 
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
 
@@ -31,8 +27,7 @@ PSELIBS := \
         Core/Exceptions \
         Core/Geometry   \
         Core/Containers \
-	\
-	Core/Math
+	      Core/Math
 
 LIBS := $(LIBS) $(XML2_LIBRARY) $(F_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY)
 
