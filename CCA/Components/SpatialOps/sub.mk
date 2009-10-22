@@ -8,9 +8,9 @@ SRCS     += $(SRCDIR)/SpatialOps.cc \
             $(SRCDIR)/Fields.cc \
             $(SRCDIR)/SpatialOpsMaterials.cc 
 
-SUBDIRS := 
+# SUBDIRS := 
 
-include $(SCIRUN_SCRIPTS)/recurse.mk
+# include $(SCIRUN_SCRIPTS)/recurse.mk
 
 PSELIBS := \
         Core/ProblemSpec   \
@@ -20,6 +20,7 @@ PSELIBS := \
         Core/Disclosure    \
         Core/Exceptions    \
         CCA/Components/OnTheFlyAnalysis \
+        CCA/Components/Arches \
         CCA/Ports     \
         Core/Parallel \
         Core/Util       \
