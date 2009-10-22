@@ -179,7 +179,7 @@ bool RegridderCommon::needsToReGrid(const GridP &oldGrid)
     retval = false;
   } else if ( timeStepsSinceRegrid  > d_maxTimestepsBetweenRegrids ) {
     if(d_myworld->myrank()==0)
-      rreason << "Regridding because timesteps since regrid is less more than max timesteps between regrid\n";
+      rreason << "Regridding because timesteps since regrid is more than max timesteps between regrid\n";
     retval = true;
   }
   else //check if flags are contained within the finer levels patches
