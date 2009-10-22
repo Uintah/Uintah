@@ -157,7 +157,7 @@ NewStaticMixingTable::computeProps(const InletStream& inStream,
     else
       current_heat_loss=(adiab_enthalpy-enthalpy)/(sensible_enthalpy+small);
 
-    if(current_heat_loss < heatLoss[0] && d_loudHeatLossWarning || current_heat_loss > heatLoss[d_heatlosscount-1] && d_loudHeatLossWarning ){
+    if(((current_heat_loss < heatLoss[0]) && d_loudHeatLossWarning) || ((current_heat_loss > heatLoss[d_heatlosscount-1]) && d_loudHeatLossWarning) ){
       if (inStream.d_currentCell.x() == -2) {
         cout<< "Heat loss is exceeding the table bounds: "<<current_heat_loss 
             << " (at unknown cell) " << endl;

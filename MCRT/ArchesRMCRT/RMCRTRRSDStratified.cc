@@ -182,7 +182,7 @@ void rayfromSurf(SurfaceType &obSurface,
   // to get the same N-1 unbiased variance
   // Var(x) = ( sum(x_i^2) - N * <x>^2 ) / (N-1) otherwise,will produce negative Var(x)
   // use the first expression is better, it doesnot need to store x_i, just the summation of it
-  double sumVar, sumSD, sumSDave;
+  //double sumVar, sumSD, sumSDave;
   double R_theta, R_phi, R_xemiss, R_yemiss, R_zemiss;
   int sMx, sMy, sMz, sMtheta, sMphi, sMp;
   double tempV;
@@ -506,7 +506,7 @@ RMCRTsolver(const int& i_n, const int& j_n, const int& k_n,
   cout << "theta_n = " << theta_n << endl;
   cout << "phi_n = " << phi_n << endl;
   
-  int casePlates;
+  //int casePlates;
   //  cout << " Please enter plates case " << endl;
   //  cin >> casePlates;
 
@@ -1080,7 +1080,7 @@ RMCRTsolver(const int& i_n, const int& j_n, const int& k_n,
    double previousSum, currentSum;
    double SurLeft;
 
-   double theta, phi;
+   //double theta, phi;
    double s[3];
   
    double sumQsurface = 0;
@@ -1176,7 +1176,7 @@ RMCRTsolver(const int& i_n, const int& j_n, const int& k_n,
   int hitSurfaceIndex, hitSurfaceFlag;
   int surfaceFlag;
   int surfaceIndex;
-  int rayCounter;
+  //int rayCounter;
   MakeTableFunction obTable;
   
  //// =============================== Calculation starts ========================
@@ -1625,7 +1625,8 @@ RMCRTsolver(const int& i_n, const int& j_n, const int& k_n,
     int rayCounter, VolIndex;
     int sMx, sMy, sMz, sMp, sMtheta, sMphi, anotherSize;
     double IncomingIntenVol, R_theta, R_phi, R_xemiss, R_yemiss, R_zemiss;
-    double tempV, sumVar, sumSD, sumSDave, sumSDave_prv;
+    double tempV,  sumSDave;
+    //double tempV, sumVar, sumSD, sumSDave, sumSDave_prv;
     
     for ( int kVolIndex = 0; kVolIndex < Ncz; kVolIndex ++ ) {
       for ( int jVolIndex = 0 ; jVolIndex < Ncy; jVolIndex ++ ) {

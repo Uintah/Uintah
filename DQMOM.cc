@@ -478,7 +478,7 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
       normResNormalized[c] = A.getNorm( &Resid[0], 0);
 
       // Julien and Jeremy don't understand this:
-      double maxNormMag = 1e6;
+      //double maxNormMag = 1e6;
       
       // set weight transport eqn source terms equal to results
       unsigned int z = 0;
