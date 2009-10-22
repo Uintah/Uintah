@@ -818,7 +818,7 @@ void containerExtract::doAnalysis(const ProcessorGroup* pg,
                 case Uintah::TypeDescription::int_type:
                   for (i = 0; i < CC_integer_data.size(); i++)
                     if (exc->vl->getName() == cci_var_labels[i]->getName()) 
-                      fprintf(fp, "    %16E",CC_integer_data[i][c]);
+                      fprintf(fp, "    %16i",CC_integer_data[i][c]);
                   break; 
                 default:
                   throw InternalError("containerExtract: invalid data type", __FILE__, __LINE__); 

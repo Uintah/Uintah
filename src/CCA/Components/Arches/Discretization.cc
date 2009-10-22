@@ -752,7 +752,7 @@ Discretization::calculateScalarFluxLimitedConvection(
     z_end --;
   }
   }
-  double dZloc, dZup, r, temp1, temp2;
+  double dZloc=0., dZup=0., r=0., temp1, temp2;
 
   for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
     for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {

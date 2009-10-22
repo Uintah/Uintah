@@ -92,7 +92,7 @@ double JWL::computeRhoMicro(double press, double,
   double delta_old, delta_new;
 
   double rhoM = rho_guess <= rho_max ? rho_guess : rho_max/2.0;
-  double rhoM_start = rhoM;
+  //double rhoM_start = rhoM;
  
   int iter = 0;
   while(1){

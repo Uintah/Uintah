@@ -43,12 +43,20 @@ class Edge;
 class DaVinci {
 public:
   enum Orientation {TOP_DOWN, BOTTOM_UP, LEFT_RIGHT, RIGHT_LEFT};
+#if 0
   enum {
     EVT_DV_QUIT = 'DVQT',
     EVT_DV_SELECT_NODE = 'DVSN',
     EVT_DV_DOUBLE_CLICK_NODE = 'DVDN',
     EVT_DV_SELECT_EDGE = 'DVSE',
     EVT_DV_DOUBLE_CLICK_EDGE = 'DVDE'       
+  };
+#endif
+  enum {EVT_DV_QUIT, 
+        EVT_DV_SELECT_NODE, 
+        EVT_DV_DOUBLE_CLICK_NODE,
+        EVT_DV_SELECT_EDGE,
+        EVT_DV_DOUBLE_CLICK_EDGE
   };
 
   static DaVinci* run();

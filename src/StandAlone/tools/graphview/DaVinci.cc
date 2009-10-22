@@ -452,7 +452,8 @@ const char* getColor(float percent /* max incl path / critical path */,
     int red = adj_percent * 255;
     int green = (1-adj_percent) * 255;
     int blue = 0;
-    sprintf(col_str, "%02x%02x%02x\0", red, green, blue);
+    sprintf(col_str, "%02x%02x%02x", red, green, blue);
+    col_str[6]='\0';
   }
   else {
     strcpy(col_str, "0000FF"); // blue if out of range

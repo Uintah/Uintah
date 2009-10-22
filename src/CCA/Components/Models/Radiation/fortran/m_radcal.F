@@ -38,10 +38,10 @@ C      IMPLICIT NONE
       double precision PI,SIG,CTWO,PI1,PTOT,SDWEAK,UK, 
      &x,y,z,xxx,yyy,zzz,TEMP,ABSKP,FV,FACTOR,
      &MUONE,MUTWO,SUMONE,SUMTWO,FRACNONE,FRACNTWO,FRACN,twall,
-     &small,wavemin,wavemax,dom,omega,SDTOTAL,intervals,GDINV,
+     &small,wavemin,wavemax,dom,omega,SDTOTAL,GDINV,
      &GDDINV,XSTAR,XC,XD,YC,YD,YCD,scatcoef,phfunc,abskgtemp
 
-      Integer I,II,J,K,L,M
+      Integer I,II,J,K,L,M,intervals
 
       double precision DELTAX(idxlo(1)-1:idxhi(1)+1),
      &FRACNSUM(idxlo(1):idxhi(1),idxlo(2):idxhi(2),idxlo(3):idxhi(3)),

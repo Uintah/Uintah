@@ -924,9 +924,9 @@ void Angio::growAtTips(const ProcessorGroup*,
       pids_new.copyData(pids);
 
       Point x_new;
-      Vector growth_new;
+      Vector growth_new(0.,0.,0.);
       double l_new,rad_new,ang_new,t_new,r_b_new,pm_new,pv_new;
-      int pt0_new,pt1_new,par_new;
+      int pt0_new=0,pt1_new=0,par_new;
 
       vector<Point> vx_new;
       vector<Vector> vgrowth_new;

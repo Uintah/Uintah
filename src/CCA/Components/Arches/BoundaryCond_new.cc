@@ -104,6 +104,10 @@ void BoundaryCondition_new::setScalarValueBC( const ProcessorGroup*,
               }
               break;
 #endif
+          case Patch::numFaces:
+            break;
+          case Patch::invalidFace:
+            break;
           }
 
         } else if (bc_kind == "Neumann") {
@@ -148,6 +152,10 @@ void BoundaryCondition_new::setScalarValueBC( const ProcessorGroup*,
               }
               break;
 #endif
+          case Patch::numFaces:
+            break;
+          case Patch::invalidFace:
+            break;
           }
 
         }
@@ -263,6 +271,10 @@ void BoundaryCondition_new::setVectorValueBC( const ProcessorGroup*,
               }
               break;
 #endif
+          case Patch::numFaces:
+            break;
+          case Patch::invalidFace:
+            break;
           }
 
         }
@@ -395,6 +407,10 @@ void BoundaryCondition_new::setVectorValueBC( const ProcessorGroup*,
               }
               break;
 #endif
+          case Patch::numFaces:
+            break;
+          case Patch::invalidFace:
+            break;
           }
 
         }
