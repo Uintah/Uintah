@@ -12,7 +12,7 @@
 # Set Constants 
 flags=0
 checkDirectory="grr"
-defaultDir=$(pwd)
+defaultDir="../StandAlone/inputs"
 usage0="Run in '$defaultDir'"
 usage1="This utility checks each *ups file in the directories contained in the "
 usage2="current directory or optionally the specified directory.  It prints out"
