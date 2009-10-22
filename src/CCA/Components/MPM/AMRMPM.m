@@ -31,7 +31,7 @@ end
 PPC =1;
 E   =1e8;
 density = 1000.;
-
+BigNum  = int8(1e4);
 c = sqrt(E/density);
 
 bar_length =1.;
@@ -59,7 +59,7 @@ R.max         = 1/3;                   % location of right point
 R.refineRatio = 1;
 R.dx          = R1_dx;
 R.volP        = R.dx/PPC;
-R.NN          = (R.max - R.min)/R.dx;
+R.NN          = int8( (R.max - R.min)/R.dx );
 Regions{1}    = R;
 
 R.min         = 1/3;                       
@@ -67,7 +67,7 @@ R.max         = 2/3;
 R.refineRatio = 1;
 R.dx          = R1_dx/R.refineRatio;
 R.volP        = R.dx/PPC;
-R.NN          = (R.max - R.min)/R.dx;                  
+R.NN          = int8( (R.max - R.min)/R.dx );                  
 Regions{2}    = R;
 
 R.min         = 2/3;                       
@@ -75,7 +75,7 @@ R.max         = domain;
 R.refineRatio = 1;
 R.dx          = R1_dx/R.refineRatio; 
 R.volP        = R.dx/PPC;
-R.NN          = (R.max - R.min)/R.dx + 1;       
+R.NN          = int8( (R.max - R.min)/R.dx + 1);       
 Regions{3}    = R;
 
 NN = int8(0);
@@ -89,8 +89,59 @@ for r=1:numRegions
 end
 
 %__________________________________
+% compute the zone of influence
+% compute the positions of the nodes
+Lx      = zeros(NN,2);
+nodePos = zeros(NN,1);      % node Position
+nodeNum=1;
+
+nodePos(1) = 0.0;
+
+for r=1:numRegions
+  R = Regions{r};
+  
+  % determine dx_Right and dx_Left of this region
+  if(r == 1)               % leftmost region
+    dx_L = 0;
+    dx_R = Regions{r+1}.dx;
+  elseif(r == numRegions)  % rightmost region
+    dx_L = Regions{r-1}.dx;
+    dx_R = 0;
+  else                     % all other regions
+    dx_L = Regions{r-1}.dx;
+    dx_R = Regions{r+1}.dx;
+  end
+  
+  % loop over all nodes and set Lx minus/plus
+  for  n=1:R.NN
+    if(n == 1)
+      Lx(nodeNum,1) = dx_L;
+      Lx(nodeNum,2) = R.dx;
+    elseif(n == R.NN)
+      Lx(nodeNum,1) = R.dx;
+      Lx(nodeNum,2) = dx_R;
+    else
+      Lx(nodeNum,1) = R.dx;
+      Lx(nodeNum,2) = R.dx;
+    end
+    
+    if(nodeNum > 1)
+      nodePos(nodeNum) = nodePos(nodeNum-1) + R.dx;
+    end
+    
+    nodeNum = nodeNum + 1;
+    
+  end
+end
+
+nodePos
+Lx
+
+
+%__________________________________
 % create particles
 ip=1;
+xp   = zeros(1,BigNum);
 xp(1)=R1_dx/(2.*PPC);
 
 for r=1:numRegions
@@ -150,7 +201,7 @@ accl_G    = zeros(1,NN);
 extForceG = zeros(1,NN);
 intForceG = zeros(1,NN);
 
-BigNum    = int8(1e4);
+
 KE        = zeros(1,BigNum);
 SE        = zeros(1,BigNum);
 TE        = zeros(1,BigNum);
@@ -248,7 +299,7 @@ while t<tfinal
   
   % project particle data to grid
   for ip=1:NP
-    [nodes,Ss]=findNodesAndWeights(xp(ip), numRegions, Regions);
+    [nodes,Ss]=findNodesAndWeights(xp(ip), numRegions, Regions, nodePos, Lx);
     for ig=1:2
       massG(nodes(ig))     = massG(nodes(ig))     + massP(ip) * Ss(ig);
       velG(nodes(ig))      = velG(nodes(ig))      + massP(ip) * velP(ip) * Ss(ig);
@@ -272,7 +323,7 @@ while t<tfinal
   for ip=1:NP
     [nodes,Gs,dx]=findNodesAndWeightGradients(xp(ip),numRegions, Regions);
     for ig=1:2
-      intForceG(nodes(ig)) = intForceG(nodes(ig)) - (Gs(ig)/dx) * stressP(ip) * vol(ip);
+      intForceG(nodes(ig)) = intForceG(nodes(ig)) - Gs(ig) * stressP(ip) * vol(ip);
     end
   end
 
@@ -292,7 +343,7 @@ while t<tfinal
 
   %project changes back to particles
   for ip=1:NP
-    [nodes,Ss]=findNodesAndWeights(xp(ip),numRegions, Regions);
+    [nodes,Ss]=findNodesAndWeights(xp(ip),numRegions, Regions, nodePos, Lx);
     dvelP = 0.;
     dxp   = 0.;
     
@@ -410,8 +461,10 @@ function[volP]=positionToVolP(xp, numRegions, Regions)
   end
 end
 
+
+
 %__________________________________
-function [nodes,Ss]=findNodesAndWeights(xp, numRegions, Regions)
+function [nodes,Ss]=findNodesAndWeights(xp, numRegions, Regions, nodePos, Lx)
  
   % find the nodes that surround the given location and
   % the values of the shape functions for those nodes
@@ -425,31 +478,30 @@ function [nodes,Ss]=findNodesAndWeights(xp, numRegions, Regions)
 
   dnode = double(node);
   
-  node_pos = double(node-1) * dx;
-  
-  Lx = dx;
-  delX = xp - node_pos;
+  Lx_minus = Lx(node,1);
+  Lx_plus  = Lx(node,2);
+  delX = xp - nodePos(node);
     
-  if (delX <= -Lx)
+  if (delX <= -Lx_minus)
     Ss(1) = 0;
     Ss(2) = 1;
-  elseif(-Lx <= delX && delX<= 0.0)
-    Ss(1) = 1.0 + delX/Lx;
+  elseif(-Lx_minus <= delX && delX<= 0.0)
+    Ss(1) = 1.0 + delX/Lx_minus;
     Ss(2) = 1.0 - Ss(1);
-  elseif(  0 <= delX && delX<= Lx)
-    Ss(1) = 1.0 - delX/Lx;
+  elseif(  0 <= delX && delX<= Lx_plus)
+    Ss(1) = 1.0 - delX/Lx_plus;
     Ss(2) = 1.0 - Ss(1);
-  elseif( Lx <= delX )
+  elseif( Lx_plus <= delX )
     Ss(1) = 0;
     Ss(2) = 1;
   end
 
-  # old method of computing the shape function
+  % old method of computing the shape function
   locx  = (xp-dx*(dnode-1))/dx;
   Ss_old_1 = 1-locx;
   Ss_old_2 = locx;
   
-  # bulletproofing
+  % bulletproofing
   diff1 = abs(Ss(1) - Ss_old_1);
   diff2 = abs(Ss(2) - Ss_old_2);
   
@@ -463,7 +515,57 @@ end
 
 
 %__________________________________
-function [nodes,Ss]=findNodesAndWeights_old(xp, numRegions, Regions)
+function [nodes,Ss]=findNodesAndWeights_gimp(xp, numRegions, Regions, nodePos, Lx)
+ 
+  % find the nodes that surround the given location and
+  % the values of the shape functions for those nodes
+  % Assume the grid starts at x=0.  This follows the numenclature
+  % of equation 12 of the reference
+
+  [node, dx]=positionToNode(xp, numRegions, Regions);  
+
+  nodes(1)= node;
+  nodes(2)= node+1;
+  
+  Lx_minus = dx;
+  Lx_plus  = dx;
+  lp       = dx/2;          % hardwired for now
+  
+  delX = xp - nodePos(node);
+  A = delX - lp
+  B = delX + lp
+  a = max( A, -Lx_minus)
+  b = min( B,  Lx_plus)
+  
+    
+  if (B <= -Lx_minus || A >= Lx_plus)
+    Ss(1) = 0;
+    Ss(2) = 1;
+  elseif( b <= 0 )
+    t1 = b - a;
+    t2 = (b*b - a*a)/(2.0*Lx_minus);
+    
+    Ss(1) = (t1 + t2)/(2.0*lp);
+    Ss(2) = 1.0 - Ss(1);
+  elseif( a >= 0 )
+    t1 = b - a;
+    t2 = (b*b - a*a)/(2.0*Lx_plus);
+    
+    Ss(1) = (t1 + t2)/(2.0*lp);
+    Ss(2) = 1.0 - Ss(1);
+  else
+    t1 = b - a;
+    t2 = (a*a)/(2.0*Lx_minus);
+    t3 = (b*b)/(2.0*Lx_plus);
+    
+    Ss(1) = (t1 - t2 - t3)/(2*lp);
+    Ss(2) = 1.0 - Ss(1);
+  end
+  
+end
+
+%__________________________________
+function [nodes,Ss]=findNodesAndWeights_old(xp, numRegions, Regions, nodePos, Lx)
  
   % find the nodes that surround the given location and
   % the values of the shape functions for those nodes
@@ -485,22 +587,16 @@ end
 function [nodes,Gs, dx]=findNodesAndWeightGradients(xp, numRegions, Regions);
  
   % find the nodes that surround the given location and
-  % the values of the shape functions for those nodes
+  % the values of the gradients of the shape functions.
   % Assume the grid starts at x=0.
-
-  %node = xp/dx;
-  %node = floor(node)+1;
 
   [node, dx]=positionToNode(xp,numRegions, Regions);
 
   nodes(1) = node;
   nodes(2) = nodes(1)+1;
 
-  %dnode = double(node);
-
-  %locx=(xp-dx*(dnode-1))/dx;
-  Gs(1) = -1;
-  Gs(2) = 1;
+  Gs(1) = -1/dx;
+  Gs(2) = 1/dx;
 end
 %__________________________________
 function [stressP,vol,Fp]=computeStressFromVelocity(xp,dt,velG,E,Fp,NP, numRegions, Regions)
@@ -510,7 +606,7 @@ function [stressP,vol,Fp]=computeStressFromVelocity(xp,dt,velG,E,Fp,NP, numRegio
     [volP]        = positionToVolP(xp(ip), numRegions, Regions);
     gUp=0;
     for ig=1:2
-      gUp = gUp + velG(nodes(ig)) * (Gs(ig)/dx);
+      gUp = gUp + velG(nodes(ig)) * Gs(ig);
     end
 
     dF          =1. + gUp * dt;
