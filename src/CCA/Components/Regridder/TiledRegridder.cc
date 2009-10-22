@@ -323,7 +323,6 @@ Grid* TiledRegridder::regrid(Grid* oldGrid)
     delete newGrid;
     return oldGrid;
   }
-  cout << "newGrid!=oldGrid\n";
 
   //finalize the grid
   TAU_PROFILE_TIMER(finalizetimer, "TiledRegridder::finalize grid", "", TAU_USER);
