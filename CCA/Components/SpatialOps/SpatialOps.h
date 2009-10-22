@@ -39,6 +39,7 @@ class EqnBase;
 class EqnFactory;
 class PartVel; 
 class DQMOM; 
+class ArchesLabel; 
 class SpatialOps : public UintahParallelComponent, public SimulationInterface {
 
 public:
@@ -78,15 +79,16 @@ private:
                              DataWarehouse* new_dw);
 
   /** @brief Registers all possible source terms by instantiating a builder in the factory */     
-  void registerSources(ProblemSpecP& db);
+  //void registerSources(ProblemSpecP& db);
 
   /** @brief Registers all possible models for DQMOM */ 
-  void registerModels( ProblemSpecP& db ); 
+  //void registerModels( ProblemSpecP& db ); 
 
   /** @brief Registers all possible equations by instantiating a builder in the factory */     
-  void registerTransportEqns(ProblemSpecP& db);
+  //void registerTransportEqns(ProblemSpecP& db);
 
-  Fields* d_fieldLabels; 
+  //Fields* d_fieldLabels; 
+  ArchesLabel* d_fieldLabels; 
   CalcManual* d_manualSolver;
   ExplicitTimeInt* d_timeIntegrator;
   ScalarEqn* d_temperatureEqnMan; 
