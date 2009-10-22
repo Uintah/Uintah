@@ -922,7 +922,13 @@ getPatchIndex(const string& input_uda_name, int timeStepNo, int levelNo, int pat
       }
 
       try {
-	DataArchive* archive = scinew DataArchive(input_uda_name);
+	static DataArchive* archive = scinew DataArchive(input_uda_name);
+	static string lastUda = input_uda_name;
+
+	if (lastUda.compare(input_uda_name) != 0) {
+	    delete archive;
+	    archive = scinew DataArchive(input_uda_name);
+	}
 
 	////////////////////////////////////////////////////////
 	// Get the times and indices.
@@ -1041,6 +1047,7 @@ getPatchIndex(const string& input_uda_name, int timeStepNo, int levelNo, int pat
 	// for( unsigned long time = time_step_lower; time <= time_step_upper; time += tinc ) {
 
 	unsigned long time = time_step_lower + timeStepNo * tinc;
+	unsigned long lastTime = time;
 
 	/////////////////////////////
 	// Figure out the filename
@@ -1086,6 +1093,17 @@ getPatchIndex(const string& input_uda_name, int timeStepNo, int levelNo, int pat
 	    var_indices[varCount] = tmpIndex;
 	    break;
 	  }
+	}
+
+	static Patch* lastPatch = NULL;
+	static ConsecutiveRangeSet* matlsArr = new ConsecutiveRangeSet[var_indices.size()];
+
+	// static unsigned int numMatls = var_indices.size();
+	if (/*numMatls != var_indices.size()*/ lastUda.compare(input_uda_name) != 0) {
+	    // numMatls = var_indices.size();
+	    delete matlsArr;
+	    matlsArr = new ConsecutiveRangeSet[var_indices.size()];
+	    lastPatch = NULL; // to be on the safe side
 	}
 
 	for( unsigned int cnt = 0; cnt < var_indices.size(); cnt++ ) {
@@ -1139,14 +1157,19 @@ getPatchIndex(const string& input_uda_name, int timeStepNo, int levelNo, int pat
 	  ///////////////////////////////////////////////////
 	  // Check the material number.
 
+
 	  const Patch* patch = *(level->patchesBegin());
-	  ConsecutiveRangeSet matls = archive->queryMaterials(variable_name, patch, time);
+          
+	  // variable name won't change till the uda isn't changed
+	  if ((lastTime != time) || (lastPatch != patch)) {
+	    /*ConsecutiveRangeSet matls*/ matlsArr[cnt] = archive->queryMaterials(variable_name, patch, time);
+	  }      
 
 	  if( args.verbose ) {
 	    // Print out all the material indicies valid for this timestep
 	    cout << "Valid materials for " << variable_name << " at time[" << time << "](" << current_time << ") are:  ";
-	    for (ConsecutiveRangeSet::iterator matlIter = matls.begin();
-		matlIter != matls.end(); matlIter++) {
+	    for (ConsecutiveRangeSet::iterator matlIter = matlsArr[cnt].begin();
+		matlIter != matlsArr[cnt].end(); matlIter++) {
 	      cout << *matlIter << ", ";
 	    }
 	    cout << "\n";
@@ -1155,16 +1178,16 @@ getPatchIndex(const string& input_uda_name, int timeStepNo, int levelNo, int pat
 	  ConsecutiveRangeSet  materialsOfInterest;
 
 	  if( do_particles ) {
-	    materialsOfInterest = matls;
+	    materialsOfInterest = matlsArr[cnt];
 	  } else {
 	    if (material == -1) {
-	      materialsOfInterest.addInOrder( *(matls.begin()) ); // Default: only interested in first material.
+	      materialsOfInterest.addInOrder( *(matlsArr[cnt].begin()) ); // Default: only interested in first material.
 	    } else {
 	      unsigned int mat_index = 0;
 
-	      ConsecutiveRangeSet::iterator matlIter = matls.begin();
+	      ConsecutiveRangeSet::iterator matlIter = matlsArr[cnt].begin();
 
-	      for( ; matlIter != matls.end(); matlIter++ ){
+	      for( ; matlIter != matlsArr[cnt].end(); matlIter++ ){
 		int matl = *matlIter;
 		if (matl == material) {
 		  materialsOfInterest.addInOrder( matl );
@@ -1172,7 +1195,7 @@ getPatchIndex(const string& input_uda_name, int timeStepNo, int levelNo, int pat
 		}
 		mat_index++;
 	      }
-	      if( mat_index == matls.size() ) { // We didn't find the right material...
+	      if( mat_index == matlsArr[cnt].size() ) { // We didn't find the right material...
 		cerr << "Didn't find material " << material << " in the data.\n";
 		cerr << "Trying next timestep.\n";
 		continue;
@@ -1338,6 +1361,10 @@ getPatchIndex(const string& input_uda_name, int timeStepNo, int levelNo, int pat
 	  }
 	} // end variables loop
 
+	lastTime = time;
+	lastPatch = *(level->patchesBegin());
+	lastUda.assign(input_uda_name);
+
 	// Passing the 'variables', a vector member variable to the function. This is where all the particles, along with the variables, 
 	// get stored. 
 
@@ -1351,7 +1378,7 @@ getPatchIndex(const string& input_uda_name, int timeStepNo, int levelNo, int pat
 
 	// particleDataArray.clear();
 
-	delete archive;
+	// delete archive;
 	return timeStepObjPtr;
 
 	// } // end time step loop
