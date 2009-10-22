@@ -39,6 +39,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/Grid/PatchBVH/PatchBVH.h>
+#include <Core/Thread/Time.h>
 using namespace Uintah;
 
 #include <iomanip>
@@ -46,6 +47,7 @@ using namespace Uintah;
 using namespace std;
 
 static DebugStream grid_dbg("GridDBG",false);
+static DebugStream rgtimes("RGTimes",false);
 
 int Product(const IntVector &i)
 {
@@ -97,13 +99,21 @@ void TiledRegridder::ComputeTiles(vector<IntVector> &tiles, const LevelP level, 
     }
   }
 }
+double rtimes[10]={0};
+
 Grid* TiledRegridder::regrid(Grid* oldGrid)
 {
+  if(rgtimes.active())
+  {
+    for(int i=0;i<10;i++)
+      rtimes[i]=0;
+  }
+  double start=Time::currentSeconds();
   MALLOC_TRACE_TAG_SCOPE("TiledRegridder::regrid");
   TAU_PROFILE("TiledRegridder::regrid", " ", TAU_USER);
- 
+
   vector< vector<IntVector> > tiles(min(oldGrid->numLevels()+1,d_maxLevels));
-  
+
   //for each level fine to coarse 
   for(int l=min(oldGrid->numLevels()-1,d_maxLevels-2); l >= 0;l--)
   {
@@ -115,14 +125,18 @@ Grid* TiledRegridder::regrid(Grid* oldGrid)
     vector<IntVector> myoldtiles;
     IntVector old_tile_size=d_minTileSize[l+1];
 
+    rtimes[0]+=Time::currentSeconds()-start;
+    start=Time::currentSeconds();
     //compute volume using minimum tile size
     ComputeTiles(mytiles,level,d_minTileSize[l+1],d_cellRefinementRatio[l]);
+    rtimes[1]+=Time::currentSeconds()-start;
+    start=Time::currentSeconds();
 
     unsigned int num_patches=0;
     if(d_myworld->size()>1)
     {
       unsigned int mycount=mytiles.size();
-  
+
       //reduce the number of tiles on each processor
       MPI_Allreduce(&mycount,&num_patches,1,MPI_UNSIGNED,MPI_SUM,d_myworld->getComm());
     }
@@ -130,6 +144,8 @@ Grid* TiledRegridder::regrid(Grid* oldGrid)
     {
       num_patches=mytiles.size();
     }
+    rtimes[2]+=Time::currentSeconds()-start;
+    start=Time::currentSeconds();
 
     if(d_dynamic_size)
     {
@@ -243,11 +259,15 @@ Grid* TiledRegridder::regrid(Grid* oldGrid)
         cout << "Tile size on level:" << l+2 << " changed from " << original_tile_size << " to " << d_tileSize[l+1] << endl;
       }
     }
+
+    rtimes[3]+=Time::currentSeconds()-start;
+    start=Time::currentSeconds();
+
     if(d_myworld->size()>1)
     {
       unsigned int mycount=mytiles.size();
       vector<unsigned int> counts(d_myworld->size());
-      
+
       //gather the number of tiles on each processor
       MPI_Allgather(&mycount,1,MPI_UNSIGNED,&counts[0],1,MPI_UNSIGNED,d_myworld->getComm());
 
@@ -273,6 +293,8 @@ Grid* TiledRegridder::regrid(Grid* oldGrid)
     {
       tiles[l+1]=mytiles;
     }
+    rtimes[4]+=Time::currentSeconds()-start;
+    start=Time::currentSeconds();
 
 
     if(l>0) 
@@ -280,27 +302,34 @@ Grid* TiledRegridder::regrid(Grid* oldGrid)
       //add flags to the coarser level to ensure that boundary layers exist and that fine patches have a coarse patches above them.
       CoarsenFlags(oldGrid,l,tiles[l+1]);
     }
+    rtimes[5]+=Time::currentSeconds()-start;
+    start=Time::currentSeconds();
   }
-  
+
   //level 0 does not change so just copy the patches over.
   for (Level::const_patchIterator p = oldGrid->getLevel(0)->patchesBegin(); p != oldGrid->getLevel(0)->patchesEnd(); p++)
   {
     tiles[0].push_back((*p)->getCellLowIndex__New());
   }
- 
+
   //Create the grid
   Grid *newGrid = CreateGrid(oldGrid,tiles);
-  if(newGrid==oldGrid)
+
+  rtimes[6]+=Time::currentSeconds()-start;
+  start=Time::currentSeconds();
+
+  if(*newGrid==*oldGrid)
   {
     delete newGrid;
     return oldGrid;
   }
+  cout << "newGrid!=oldGrid\n";
 
   //finalize the grid
   TAU_PROFILE_TIMER(finalizetimer, "TiledRegridder::finalize grid", "", TAU_USER);
   TAU_PROFILE_START(finalizetimer);
   IntVector periodic = oldGrid->getLevel(0)->getPeriodicBoundaries();
-  
+
   for(int l=0;l<newGrid->numLevels();l++)
   {
     LevelP level= newGrid->getLevel(l);
@@ -308,21 +337,52 @@ Grid* TiledRegridder::regrid(Grid* oldGrid)
     //level->assignBCS(grid_ps_,0);
   }
   TAU_PROFILE_STOP(finalizetimer);
-  
+
   d_newGrid = true;
   d_lastRegridTimestep = d_sharedState->getCurrentTopLevelTimeStep();
-  
+
   OutputGridStats(newGrid);
+
+  rtimes[7]+=Time::currentSeconds()-start;
+  start=Time::currentSeconds();
 
   //initialize the weights on new patches
   lb_->initializeWeights(oldGrid,newGrid);
- 
+
 #if SCI_ASSERTION_LEVEL > 0
   if(!verifyGrid(newGrid))
   {
     throw InternalError("Grid is not consistent across processes",__FILE__,__LINE__);
   }
 #endif 
+  rtimes[8]+=Time::currentSeconds()-start;
+  start=Time::currentSeconds();
+
+
+  if(rgtimes.active())
+  {
+    double avg[10]={0};
+    MPI_Reduce(&rtimes,&avg,10,MPI_DOUBLE,MPI_SUM,0,d_myworld->getComm());
+    if(d_myworld->myrank()==0) {
+      cout << "Regrid Avg Times: ";
+      for(int i=0;i<10;i++)
+      {
+        avg[i]/=d_myworld->size();
+        cout << avg[i] << " ";
+      }
+      cout << endl;
+    }
+    double max[10]={0};
+    MPI_Reduce(&rtimes,&max,10,MPI_DOUBLE,MPI_MAX,0,d_myworld->getComm());
+    if(d_myworld->myrank()==0) {
+      cout << "Regrid Max Times: ";
+      for(int i=0;i<10;i++)
+      {
+        cout << max[i] << " ";
+      }
+      cout << endl;
+    }
+  }
 
   return newGrid;
 }
