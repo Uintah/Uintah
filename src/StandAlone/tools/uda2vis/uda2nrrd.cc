@@ -1085,6 +1085,11 @@ getPatchIndex(const string& input_uda_name, int timeStepNo, int levelNo, int pat
 	// Storing the time step name/ no.
 	timeStepObjPtr->name.assign(filename_num + 1);
 	timeStepObjPtr->no = index[time];
+  
+  if(lastUda.compare(input_uda_name)!=0 || time!=lastTime)
+  {
+    cout << "BLAH1\n";
+  }
 
 	LevelP level;
 
@@ -1104,19 +1109,33 @@ getPatchIndex(const string& input_uda_name, int timeStepNo, int levelNo, int pat
 	    break;
 	  }
 	}
+  if(lastUda.compare(input_uda_name)!=0 || time!=lastTime)
+  {
+    cout << "BLAH2\n";
+  }
 
 	static Patch* lastPatch = NULL;
 	static ConsecutiveRangeSet* matlsArr = new ConsecutiveRangeSet[var_indices.size()];
+  
+  if(lastUda.compare(input_uda_name)!=0 || time!=lastTime)
+  {
+    cout << "BEFORE ALLOCATE MATERIALS\n";
+  }
 
 	// static unsigned int numMatls = var_indices.size();
 	if (/*numMatls != var_indices.size()*/ lastUda.compare(input_uda_name) != 0) {
 	    // numMatls = var_indices.size();
-	    delete matlsArr;
+      cout << "Deleting matlsArray: " << matlsArr << endl;
+	    delete[] matlsArr;
       cout << "Allocating new materials for uda: " << input_uda_name << endl;
 	    matlsArr = new ConsecutiveRangeSet[var_indices.size()];
 	    lastPatch = NULL; // to be on the safe side
 	}
 
+  if(lastUda.compare(input_uda_name)!=0 || time!=lastTime)
+  {
+    cout << "AFTER ALLOCATE MATERIALS\n";
+  }
 	for( unsigned int cnt = 0; cnt < var_indices.size(); cnt++ ) {
 
 	  unsigned int var_index = var_indices[cnt];
@@ -1168,6 +1187,10 @@ getPatchIndex(const string& input_uda_name, int timeStepNo, int levelNo, int pat
 	  ///////////////////////////////////////////////////
 	  // Check the material number.
 
+  if(lastUda.compare(input_uda_name)!=0 || time!=lastTime)
+  {
+    cout << "BEFORE QUERY MATERIALS\n";
+  }
 
 	  const Patch* patch = *(level->patchesBegin());
           
@@ -1177,6 +1200,10 @@ getPatchIndex(const string& input_uda_name, int timeStepNo, int levelNo, int pat
 	    /*ConsecutiveRangeSet matls*/ matlsArr[cnt] = archive->queryMaterials(variable_name, patch, time);
 	  }      
 
+  if(lastUda.compare(input_uda_name)!=0 || time!=lastTime)
+  {
+    cout << "AFTER QUERY MATERIALS\n";
+  }
 	  if( args.verbose ) {
 	    // Print out all the material indicies valid for this timestep
 	    cout << "Valid materials for " << variable_name << " at time[" << time << "](" << current_time << ") are:  ";
