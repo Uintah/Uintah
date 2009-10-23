@@ -4,23 +4,19 @@
 
 %______________________________________________________________________
 
-
-
-function KK=amrmpm(problem_type,CFL,R1_dx)
+function KK=amrmpm(problem_type,CFL,NN)
 
 %  valid options:
 %  problem type:  impulsiveBar, oscillator, collidingBars
 %  CFL:            0 < cfl < 1, usually 0.2 or so.
 %  R1_dx:          cell spacing in region 1.
-
-
-
 % One dimensional MPM
 % bulletproofing
 
 if (~strcmp(problem_type, 'impulsiveBar')  && ...
-    ~strcmp(problem_type, 'oscillator') && ...
-    ~strcmp(problem_type, 'collidingBars') )
+    ~strcmp(problem_type, 'oscillator')    && ...
+    ~strcmp(problem_type, 'collidingBars') && ...
+    ~strcmp(problem_type, 'advectBlock') )
   fprintf('ERROR, the problem type is invalid\n');
   fprintf('     The valid types are impulsiveBar, oscillator, collidingBars\n');
   fprintf('usage:  amrmpm(problem type, cfl, R1_dx)\n');
@@ -34,13 +30,14 @@ density = 1000.;
 BigNum  = int8(1e4);
 c = sqrt(E/density);
 
-bar_length =1.;
+%bar_length =1.;
+bar_length = 0.3333;
 domain     =1.;
 area       =1.;
 plotSwitch = 0;
 
 % HARDWIRED FOR TESTING
-NN          = 16;
+%NN          = 16;
 R1_dx       =domain/(NN-1)
 
 if (mod(domain,R1_dx) ~= 0)
@@ -134,6 +131,7 @@ for r=1:numRegions
   end
 end
 
+% output the regions and the Lx
 nn = 1;
 for r=1:numRegions
   R = Regions{r};
@@ -201,7 +199,6 @@ nodes     = zeros(1,2);
 Gs        = zeros(1,2);
 Ss        = zeros(1,2);     
 
-xG        = zeros(NN,1);
 massG     = zeros(NN,1);
 velG      = zeros(NN,1);
 vel_nobc_G= zeros(NN,1);
@@ -217,6 +214,9 @@ totalMom  = zeros(BigNum,1);
 Exact_tip = zeros(BigNum,1);
 DX_tip    = zeros(BigNum,1);
 TIME      = zeros(BigNum,1);
+totalEng_err   = zeros(BigNum,1);
+totalMom_err   = zeros(BigNum,1);
+tipDeflect_err = zeros(BigNum,1);
 
 
 %__________________________________
@@ -228,27 +228,42 @@ for ip=1:NP
   Fp(ip)    = 1.;                     % total deformation
 end
 
-%__________________________________
-% Problem dependent parameters
+%______________________________________________________________________
+% problem specific 
+
+BCNode(1)  = 1;
+BCNode(2)  = NN;
+
 if strcmp(problem_type, 'impulsiveBar')
-  period        = sqrt(16.*bar_length*bar_length*density/E);
-  TipForce      = 10.;
-  D             = TipForce*bar_length/(area*E);
-  M             = 4.*D/period;
-  extForceP(NP) = TipForce;
+  period          = sqrt(16.*bar_length*bar_length*density/E);
+  tfinal          = period;
+  TipForce        = 10.;
+  D               = TipForce*bar_length/(area*E);
+  M               = 4.*D/period;
+  extForceP(NP)   = TipForce;
+  velG_BCValue(1) = 0.;
+  velG_BCValue(2) = 1.;
 end
 
 if strcmp(problem_type, 'oscillator')
-  Mass          = 10000.;
-  period        = 2.*3.14159/sqrt(E/Mass);
-  v0            = 0.5;
-  Amp           = v0/(2.*3.14159/period);
-  massP(NP)     = Mass;                    % last particle masss
-  velP(NP)      = v0;                      % last particle velocity
+  Mass            = 10000.;
+  period          = 2.*3.14159/sqrt(E/Mass);
+  tfinal          = period;
+  v0              = 0.5;
+  Amp             = v0/(2.*3.14159/period);
+  massP(NP)       = Mass;                    % last particle masss
+  velP(NP)        = v0;                      % last particle velocity
+  numBCs          = 1;
+  velG_BCValue(1) = 0.;
+  velG_BCValue(2) = 1.;
 end
 
 if strcmp(problem_type, 'collidingBars')
-  period = 4.0*dx/100.;
+  period           = 4.0*dx/100.;
+  tfinal           = period;
+  numBCs           = 0;
+  velG_BCValue(1)  = 0.;
+  velG_BCValue(2)  = 1.;
   for ip=1:NP
     velP(ip) =100.0;
     
@@ -256,34 +271,20 @@ if strcmp(problem_type, 'collidingBars')
       velP(ip) = -100.0;
     end
   end
-  
 end
 
-tfinal=1.0*period;
-
-% create array of nodal locations, only used in plotting
-ig = 1;
-for r=1:numRegions
-  R = Regions{r};
-  for  c=1:R.NN
-    xG(ig) = (ig-1)*R.dx;
-    ig = ig + 1;
+if strcmp(problem_type, 'advectBlock')
+  initVelocity    = 100;
+  tfinal          = 0.001;
+  numBCs          = 1;
+  velG_BCValue(1) = initVelocity;
+  velG_BCValue(2) = 1.;
+  for ip=1:NP
+    velP(ip)    = initVelocity;
+    initPos(ip) = xp(ip);
   end
 end
-% set up BCs
-numBCs=1;
 
-if strcmp(problem_type, 'collidingBars')
-  numBCs=0;
-end
-
-BCNode(1)  = 1;
-BCNode(2)  = NN;
-BCValue(1) = 0.;
-BCValue(2) = 1.;
-
-t = 0.0;
-tstep = 0;
 
 %plot initial conditions
 %plotResults(t,xp,dp,velP)
@@ -291,6 +292,10 @@ tstep = 0;
 
 %==========================================================================
 % Main timstep loop
+
+t = 0.0;
+tstep = 0;
+
 while t<tfinal
   tstep = tstep + 1;
   t = t + dt;
@@ -323,7 +328,7 @@ while t<tfinal
 
   % set velocity BC
   for ibc=1:numBCs
-    velG(BCNode(ibc)) = BCValue(ibc);
+    velG(BCNode(ibc)) = velG_BCValue(ibc);
   end
 
   %compute particle stress
@@ -343,7 +348,7 @@ while t<tfinal
 
   %set velocity BC
   for ibc=1:numBCs
-    vel_new_G(BCNode(ibc)) = BCValue(ibc);
+    vel_new_G(BCNode(ibc)) = velG_BCValue(ibc);
   end
 
   % compute the acceleration on the grid
@@ -385,7 +390,7 @@ while t<tfinal
   end
 
   %__________________________________
-  % compute the exact tip deflection
+  % compute the exact solutions
   if strcmp(problem_type, 'impulsiveBar')
     if(T <= period/2.)
       Exact_tip(tstep) = M*T;
@@ -393,8 +398,21 @@ while t<tfinal
       Exact_tip(tstep) = 4.*D-M*T;
     end
   end
+  
   if strcmp(problem_type, 'oscillator')
     Exact_tip(tstep) = Amp*sin(2. * 3.14159 * T/period);
+  end
+  
+  if strcmp(problem_type, 'advectBlock')
+    Exact_tip(tstep) = DX_tip(tstep);
+    
+    pos_error  = 0;          % position error
+    for ip=1:NP
+      exact_pos = (initPos(ip) + t * initVelocity);
+      pos_error = pos_error +  xp(ip) - exact_pos;
+      % fprintf('xp: %f  exact: %f error %f \n',xp(ip), exact_pos, xp(ip) - exact_pos)
+    end
+    pos_error
   end
 
   TIME(tstep)=t;
@@ -449,7 +467,7 @@ fid = fopen(fname2, 'w');
 fprintf(fid,'#%s, PPC: %g, NN %g\n',problem_type, PPC, NN);
 fprintf(fid,'#node, xG, massG, velG, extForceG, intForceG, accl_G\n');
 for ig=1:NN
-  fprintf(fid,'%16.15f, %16.15f, %16.15f, %16.15f, %16.15f, %16.15f %16.15f\n',ig, xG(ig), massG(ig), velG(ig), extForceG(ig), intForceG(ig), accl_G(ig));
+  fprintf(fid,'%16.15f, %16.15f, %16.15f, %16.15f, %16.15f, %16.15f %16.15f\n',ig, node_pos(ig), massG(ig), velG(ig), extForceG(ig), intForceG(ig), accl_G(ig));
 end
 fclose(fid);
 
@@ -482,7 +500,7 @@ end
 %______________________________________________________________________
 % functions
 function[node, dx]=positionToNode(xp, numRegions, Regions)
-  dx = -9;
+  dx = zeros(1,1);
   
   for r=1:numRegions
     R = Regions{r};
@@ -552,7 +570,7 @@ function [nodes,Ss]=findNodesAndWeights(xp, numRegions, Regions, nodePos, Lx)
   diff1 = abs(Ss(1) - Ss_old_1);
   diff2 = abs(Ss(2) - Ss_old_2);
   
-  if (diff1 > 1e-14  || diff2 > 1e-14)
+  if (diff1 > 1e-12  || diff2 > 1e-12)
     fprintf('There is a problem with one of the shape functions, node %g, delX: %g \n',node, delX);
     fprintf(' Ss(1):  %16.14f , Ss_old:  %16.14f, diff %16.14f \n', Ss(1), Ss_old_1, diff1);
     fprintf(' Ss(2):  %16.14f , Ss_old:  %16.14f, diff %16.14f \n', Ss(2), Ss_old_2, diff1);
