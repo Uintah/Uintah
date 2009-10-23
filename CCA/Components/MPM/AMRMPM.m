@@ -40,7 +40,7 @@ area       =1.;
 plotSwitch = 0;
 
 % HARDWIRED FOR TESTING
-NN          = 16
+NN          = 16;
 R1_dx       =domain/(NN-1)
 
 if (mod(domain,R1_dx) ~= 0)
@@ -87,7 +87,7 @@ for r=1:numRegions
   dt = min(dt, CFL*R.dx/c);
   fprintf( 'region %g, min: %g, \t max: %g \t refineRatio: %g dx: %g, dt: %g NN: %g\n',r, R.min, R.max, R.refineRatio, R.dx, dt, R.NN)
 end
-
+NN
 %__________________________________
 % compute the zone of influence
 % compute the positions of the nodes
@@ -134,8 +134,16 @@ for r=1:numRegions
   end
 end
 
-nodePos
-Lx
+nn = 1;
+for r=1:numRegions
+  R = Regions{r};
+  fprintf('-------------------------Region %g\n',r);
+  for n=1:R.NN
+    fprintf( 'Node:  %g, nodePos: %6.5f, \t Lx(1): %6.5f Lx(2): %6.5f\n',nn, nodePos(nn),Lx(nn,1), Lx(nn,2));
+    nn = nn + 1;
+  end
+end
+input('hit return')
 
 
 %__________________________________
@@ -182,32 +190,33 @@ NP=ip  % number of particles
 
 %__________________________________
 % pre-allocate variables for speed
-vol       = zeros(1,NP);
-massP     = zeros(1,NP);
-velP      = zeros(1,NP);
-dp        = zeros(1,NP);
-stressP   = zeros(1,NP);
-extForceP = zeros(1,NP);
-Fp        = zeros(1,NP);
+vol       = zeros(NP,1);
+massP     = zeros(NP,1);
+velP      = zeros(NP,1);
+dp        = zeros(NP,1);
+stressP   = zeros(NP,1);
+extForceP = zeros(NP,1);
+Fp        = zeros(NP,1);
 nodes     = zeros(1,2);
 Gs        = zeros(1,2);
 Ss        = zeros(1,2);     
 
-xG        = zeros(1,NN);
-massG     = zeros(1,NN);
-velG      = zeros(1,NN);
-vel_nobc_G= zeros(1,NN);
-accl_G    = zeros(1,NN);
-extForceG = zeros(1,NN);
-intForceG = zeros(1,NN);
+xG        = zeros(NN,1);
+massG     = zeros(NN,1);
+velG      = zeros(NN,1);
+vel_nobc_G= zeros(NN,1);
+accl_G    = zeros(NN,1);
+extForceG = zeros(NN,1);
+intForceG = zeros(NN,1);
 
 
-KE        = zeros(1,BigNum);
-SE        = zeros(1,BigNum);
-TE        = zeros(1,BigNum);
-Exact_tip = zeros(1,BigNum);
-DX_tip    = zeros(1,BigNum);
-TIME      = zeros(1,BigNum);
+KE        = zeros(BigNum,1);
+SE        = zeros(BigNum,1);
+TE        = zeros(BigNum,1);
+totalMom  = zeros(BigNum,1);
+Exact_tip = zeros(BigNum,1);
+DX_tip    = zeros(BigNum,1);
+TIME      = zeros(BigNum,1);
 
 
 %__________________________________
@@ -297,6 +306,7 @@ while t<tfinal
     intForceG(ig) =0.;
   end
   
+  %__________________________________
   % project particle data to grid
   for ip=1:NP
     [nodes,Ss]=findNodesAndWeights(xp(ip), numRegions, Regions, nodePos, Lx);
@@ -340,7 +350,8 @@ while t<tfinal
   for ig=1:NN
     accl_G(ig)  = (vel_new_G(ig) - vel_nobc_G(ig))/dt;
   end
-
+  
+  %__________________________________
   %project changes back to particles
   for ip=1:NP
     [nodes,Ss]=findNodesAndWeights(xp(ip),numRegions, Regions, nodePos, Lx);
@@ -364,8 +375,10 @@ while t<tfinal
   % compute kinetic, strain and total energy
   KE(tstep)=0.;
   SE(tstep)=0.;
+  totalMom(tstep) = 0;
   
   for ip=1:NP
+    totalMom(tstep) = totalMom(tstep) + massP(ip) * velP(ip);
     KE(tstep) = KE(tstep) + .5*massP(ip) * velP(ip) * velP(ip);
     SE(tstep) = SE(tstep) + .5*stressP(ip) * (Fp(ip)-1.) * vol(ip);
     TE(tstep) = KE(tstep) + SE(tstep);
@@ -391,6 +404,13 @@ while t<tfinal
     plotResults(t, xp,dp,velP)
   end
   
+  %__________________________________
+  % compute on the errors
+  totalEng_err(tstep)   =TE(1)-TE(tstep);                      % total energy
+  totalMom_err(tstep)   =totalMom(1) - totalMom(tstep);        % total momentum
+  tipDeflect_err(tstep) =abs(DX_tip(tstep)-Exact_tip(tstep));  % tip deflection  
+  
+  %__________________________________
   % bulletproofing
   % particles can't leave the domain
   for ip=1:NP
@@ -400,12 +420,12 @@ while t<tfinal
       fprintf('now exiting the time integration loop\n\n') 
     end
   end
+end  % main loop
 
-end
+totalEng_err(tstep)
+totalMom_err(tstep)
+tipDeflect_err(tstep)
 
-% compute on the error on the final timestep
-E_err=TE(1)-TE(tstep)                        % total energy
-err=abs(DX_tip(tstep)-Exact_tip(tstep))      % tip deflection
 
 %==========================================================================
 %  plot the results
@@ -413,21 +433,48 @@ plotFinalResults(TIME, DX_tip, Exact_tip, TE, problem_type, PPC, NN)
 
 %__________________________________
 %  write the results out to files
-fid = fopen('particleData.dat', 'w');
-fprintf(fid,'%s, PPC: %g, NN %g\n',problem_type, PPC, NN);
-fprintf(fid,'p, massP, velP, stressP, extForceP, Fp\n');
+% particle data
+fname1 = sprintf('particle_NN_%g_PPC_%g.dat',NN, PPC);
+fid = fopen(fname1, 'w');
+fprintf(fid,'#%s, PPC: %g, NN %g\n',problem_type, PPC, NN);
+fprintf(fid,'#p, xp, massP, velP, stressP, extForceP, Fp\n');
 for ip=1:NP
-  fprintf(fid,'%g, %g, %g, %g, %g, %g\n',ip, massP(ip), velP(ip), stressP(ip), extForceP(ip), Fp(ip));
+  fprintf(fid,'%g, %16.15f, %16.15f, %16.15f, %16.15f, %16.15f, %16.15f\n',ip, xp(ip),massP(ip), velP(ip), stressP(ip), extForceP(ip), Fp(ip));
 end
 fclose(fid);
 
-fid = fopen('gridData.dat', 'w');
-fprintf(fid,'%s, PPC: %g, NN %g\n',problem_type, PPC, NN);
-fprintf(fid,'g, xG, massG, velG, extForceG, intForceG, accl_G\n');
+% grid data
+fname2 = sprintf('grid_NN_%g_PPC_%g.dat',NN, PPC);
+fid = fopen(fname2, 'w');
+fprintf(fid,'#%s, PPC: %g, NN %g\n',problem_type, PPC, NN);
+fprintf(fid,'#node, xG, massG, velG, extForceG, intForceG, accl_G\n');
 for ig=1:NN
-  fprintf(fid,'%g, %g, %g, %g, %g, %g %g\n',ig, xG(ig), massG(ig), velG(ig), extForceG(ig), intForceG(ig), accl_G(ig));
+  fprintf(fid,'%16.15f, %16.15f, %16.15f, %16.15f, %16.15f, %16.15f %16.15f\n',ig, xG(ig), massG(ig), velG(ig), extForceG(ig), intForceG(ig), accl_G(ig));
 end
 fclose(fid);
+
+% conserved quantities
+fname3 = sprintf('conserved_NN_%g_PPC_%g.dat',NN, PPC);
+fid = fopen(fname3, 'w');
+fprintf(fid,'#%s, PPC: %g, NN %g\n',problem_type, PPC, NN);
+fprintf(fid,'timesetep, KE, SE, TE, totalMom\n');
+for t=1:length(TIME)
+  fprintf(fid,'%16.15f, %16.15f, %16.15f, %16.15f, %16.15f\n',TIME(t), KE(t), SE(t), TE(t), totalMom(t));
+end
+fclose(fid);
+
+% errors
+fname4 = sprintf('errors_NN_%g_PPC_%g.dat',NN, PPC);
+fid = fopen(fname4, 'w');
+fprintf(fid,'#%s, PPC: %g, NN %g\n',problem_type, PPC, NN);
+fprintf(fid,'#timesetep, totalEng_err, totalMom_err, tipDeflect_err\n');
+for t=1:length(TIME)
+  fprintf(fid,'%16.15f, %16.15f, %16.15f, %16.15f\n',TIME(t), totalEng_err(t), totalMom_err(t), tipDeflect_err(t));
+end
+fclose(fid);
+
+fprintf(' Writing out the data files \n\t %s \n\t %s \n\t %s \n\t %s \n',fname1, fname2, fname3,fname4);
+
 
 end
 
