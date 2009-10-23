@@ -28,7 +28,7 @@ DEALINGS IN THE SOFTWARE.
 */
 
 #include <CCA/Components/Arches/MCRT/ArchesRMCRT/Surface.h>
-#include <CCA/Components/Arches/MCRT/ArchesRMCRT/Consts.h>
+//#include <CCA/Components/Arches/MCRT/ArchesRMCRT/Consts.h>
 #include <cmath>
 
 Surface::Surface(){
@@ -38,6 +38,6 @@ Surface::~Surface(){
 }
 
 void Surface::set_phi(const double &random){
-  phi = 2 * pi * random;
+  phi = 2 * M_PI * random;
   
 }
