@@ -927,6 +927,7 @@ getPatchIndex(const string& input_uda_name, int timeStepNo, int levelNo, int pat
 
 	if (lastUda.compare(input_uda_name) != 0) {
 	    delete archive;
+      cout << "New DataArchive '" << input_uda_name << "'opened\n";
 	    archive = scinew DataArchive(input_uda_name);
 	}
 
@@ -1064,7 +1065,10 @@ getPatchIndex(const string& input_uda_name, int timeStepNo, int levelNo, int pat
   static GridP grid = archive->queryGrid(time);
   //if the timestep has changed then requery the grid
   if(lastUda.compare(input_uda_name)!=0 || time!=lastTime)
+  {
+    cout << "Opening new grid at time: " << time << " for archive: " << input_uda_name << endl;
     grid = archive->queryGrid(time);
+  }
 	
   if (level_index >= grid->numLevels() || level_index < 0) {
 	  cerr << "level index is bad ("<<level_index<<").  Should be between 0 and "<<grid->numLevels()<<".\n";
@@ -1108,6 +1112,7 @@ getPatchIndex(const string& input_uda_name, int timeStepNo, int levelNo, int pat
 	if (/*numMatls != var_indices.size()*/ lastUda.compare(input_uda_name) != 0) {
 	    // numMatls = var_indices.size();
 	    delete matlsArr;
+      cout << "Allocating new materials for uda: " << input_uda_name << endl;
 	    matlsArr = new ConsecutiveRangeSet[var_indices.size()];
 	    lastPatch = NULL; // to be on the safe side
 	}
@@ -1168,6 +1173,7 @@ getPatchIndex(const string& input_uda_name, int timeStepNo, int levelNo, int pat
           
 	  // variable name won't change till the uda isn't changed
 	  if ((lastTime != time) || (lastPatch != patch) || lastUda.compare(input_uda_name)!=0 ) {
+      cout << "Querying materials for " << input_uda_name << " at time: " << time << " on patch: " << patch << endl; 
 	    /*ConsecutiveRangeSet matls*/ matlsArr[cnt] = archive->queryMaterials(variable_name, patch, time);
 	  }      
 
