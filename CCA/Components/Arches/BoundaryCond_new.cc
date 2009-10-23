@@ -1,6 +1,7 @@
 #include <Core/Grid/BoundaryConditions/BCDataArray.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Parallel/ProcessorGroup.h>
+#include <Core/Exceptions/InvalidState.h>
 #include <Core/Grid/SimulationState.h>
 #include <CCA/Ports/SchedulerP.h>
 #include <CCA/Ports/Scheduler.h>
@@ -105,8 +106,10 @@ void BoundaryCondition_new::setScalarValueBC( const ProcessorGroup*,
               break;
 #endif
           case Patch::numFaces:
+            SCI_THROW(InvalidState("numFaces is not a valid face",__FILE__,__LINE__));
             break;
           case Patch::invalidFace:
+            SCI_THROW(InvalidState("invalidFace is not a valid face",__FILE__,__LINE__));
             break;
           }
 
@@ -153,8 +156,10 @@ void BoundaryCondition_new::setScalarValueBC( const ProcessorGroup*,
               break;
 #endif
           case Patch::numFaces:
+            SCI_THROW(InvalidState("numFaces is not a valid face",__FILE__,__LINE__));
             break;
           case Patch::invalidFace:
+            SCI_THROW(InvalidState("invalidFace is not a valid face",__FILE__,__LINE__));
             break;
           }
 

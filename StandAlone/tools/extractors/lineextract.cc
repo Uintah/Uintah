@@ -264,7 +264,7 @@ void printData(DataArchive* archive, string& variable_name, const Uintah::TypeDe
             continue;
           }
           
-          T val;
+          T val = T();
           Vector dx = patches[p]->dCell();
           Vector shift(0,0,0);  // shift the cellPosition if it's a (X,Y,Z)FC variable
           switch (variable_type->getType()) {

@@ -149,6 +149,7 @@ main( int argc, char *argv[] )
   int matl = 0;                         
   FILE *outFile = stdout;
   FILE *outDat;    
+  outDat=0;
   
   // read in commmand line arguments
   for(int i=1;i<argc;i++){
