@@ -521,6 +521,8 @@ HypreDriverSStruct::HyprePatch_CC::makeGraphConnections(HYPRE_SStructGraph& grap
   Level::selectType coarsePatches;
   const Level* fineLevel;
   const Level* coarseLevel;
+  fineLevel=0;
+  coarseLevel=0;
   
   if(viewpoint == DoingFineToCoarse){  // looking down
     const Patch* finePatch   = _patch;
