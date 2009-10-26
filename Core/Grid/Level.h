@@ -156,6 +156,8 @@ public:
       
   int numPatches() const;
   long totalCells() const;
+  inline IntVector getLevelLowIndex() const   {return d_lowIndex;};
+  inline IntVector getLevelHighIndex() const  {return d_highIndex;};
 
   void getSpatialRange(BBox& b) const;
   void getInteriorSpatialRange(BBox& b) const;
@@ -266,7 +268,10 @@ private:
   PatchSet* each_patch;
   PatchSet* all_patches;
 
+  long d_totalCells;
   IntVector d_extraCells;
+  IntVector d_lowIndex;
+  IntVector d_highIndex;
 
   std::vector<Patch*> d_realPatches; // only real patches
   std::vector<Patch*> d_virtualAndRealPatches; // real and virtual
