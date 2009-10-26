@@ -90,7 +90,8 @@ Level::Level(Grid* grid, const Point& anchor, const Vector& dcell,
   d_bvh = NULL;
   d_finalized=false;
   d_extraCells = IntVector(0,0,0);
-  
+  d_totalCells = 0;
+
   if(d_id == -1)
     d_id = ids++;
   else if(d_id >= ids)
@@ -320,10 +321,7 @@ void Level::getInteriorSpatialRange(BBox& b) const
 
 long Level::totalCells() const
 {
-  long total=0;
-  for(int i=0;i<(int)d_realPatches.size();i++)
-    total+=d_realPatches[i]->getNumExtraCells();
-  return total;
+  return d_totalCells;
 }
 
 void Level::setExtraCells(const IntVector& ec)
@@ -543,6 +541,17 @@ void Level::finalizeLevel()
   {
     (*iter)->finalizePatch();
   }
+
+  //compute the low and high indexes
+  d_lowIndex=d_realPatches[0]->getCellLowIndex__New();
+  d_highIndex=d_realPatches[0]->getCellHighIndex__New();
+  d_totalCells=d_realPatches[0]->getNumExtraCells();
+  for(int i=1;i<(int)d_realPatches.size();i++)
+  {
+    d_lowIndex=Min(d_lowIndex,d_realPatches[i]->getCellLowIndex__New());
+    d_highIndex=Max(d_highIndex,d_realPatches[i]->getCellHighIndex__New());
+    d_totalCells+=d_realPatches[i]->getNumExtraCells();
+  }
 }
 
 void Level::finalizeLevel(bool periodicX, bool periodicY, bool periodicZ)
@@ -609,6 +618,17 @@ void Level::finalizeLevel(bool periodicX, bool periodicY, bool periodicZ)
   for(patchIterator iter=d_virtualAndRealPatches.begin();iter!=d_virtualAndRealPatches.end();iter++)
   {
     (*iter)->finalizePatch();
+  }
+
+  //compute the low and high indexes
+  d_lowIndex=d_realPatches[0]->getCellLowIndex__New();
+  d_highIndex=d_realPatches[0]->getCellHighIndex__New();
+  d_totalCells=d_realPatches[0]->getNumExtraCells();
+  for(int i=1;i<(int)d_realPatches.size();i++)
+  {
+    d_lowIndex=Min(d_lowIndex,d_realPatches[i]->getCellLowIndex__New());
+    d_highIndex=Max(d_highIndex,d_realPatches[i]->getCellHighIndex__New());
+    d_totalCells+=d_realPatches[i]->getNumExtraCells();
   }
 }
 void Level::setBCTypes()
