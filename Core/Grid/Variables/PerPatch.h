@@ -78,6 +78,11 @@ WARNING
       virtual void copyPointer(Variable&);
       inline PerPatch(const PerPatch<T>& copy) : value(copy.value) {}
       virtual ~PerPatch();
+      // Implementing an empty emitNormal for this variable type 
+      //  so that the code can get past checkpointing for this 
+      //  type of variable. 
+      inline void emitNormal(ostream&, const IntVector&,
+                             const IntVector&, ProblemSpecP, bool){};
       
       static const TypeDescription* getTypeDescription();
       
