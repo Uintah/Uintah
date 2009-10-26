@@ -822,7 +822,11 @@ ExplicitSolver::sched_setInitialGuess(SchedulerP& sched,
   tsk->requires(Task::OldDW, d_lab->d_viscosityCTSLabel,  gn, 0);
   tsk->requires(Task::OldDW, d_lab->d_newCCVelocityLabel, gn, 0);
 
-  tsk->computes(d_lab->d_cellInfoLabel);
+  if (!(d_MAlab))
+    tsk->computes(d_lab->d_cellInfoLabel);
+  else 
+    tsk->requires(Task::OldDW, d_lab->d_cellInfoLabel, gn, 0); 
+
   tsk->computes(d_lab->d_cellTypeLabel);
   tsk->computes(d_lab->d_uVelocitySPBCLabel);
   tsk->computes(d_lab->d_vVelocitySPBCLabel);
@@ -1891,21 +1895,27 @@ ExplicitSolver::setInitialGuess(const ProcessorGroup* ,
     new_dw->allocateAndPut(cellType_new, d_lab->d_cellTypeLabel, indx, patch);
     cellType_new.copyData(cellType);
 
+    // Note: To get this to work with MPMArches I have commented out some lines here 
+    //       MPMArches in doMomExchange computes cellInfo so you don't need another compute
+    //       here unless you are just vanilla arches. Should clean this up later when regression 
+    //       is verified.  --Jeremy
+
     // Get the PerPatch CellInformation data from oldDW, initialize it if it is
     // not there
-    if (!(d_MAlab)) {
+    //if (!(d_MAlab)) {
       PerPatch<CellInformationP> cellInfoP;
-      if (new_dw->exists(d_lab->d_cellInfoLabel, indx, patch)) 
-        throw InvalidValue("cellInformation should not be initialized yet",
-                           __FILE__, __LINE__);
+      //if (new_dw->exists(d_lab->d_cellInfoLabel, indx, patch)) 
+      //  throw InvalidValue("cellInformation should not be initialized yet",
+      //                     __FILE__, __LINE__);
       if (old_dw->exists(d_lab->d_cellInfoLabel, indx, patch)) 
         old_dw->get(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
       else {
         cellInfoP.setData(scinew CellInformation(patch));
         //proc0cout << "cellInfo INIT" << endl;
       }
-      new_dw->put(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
-    }
+      if (!(new_dw->exists(d_lab->d_cellInfoLabel, indx, patch)))
+        new_dw->put(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
+    //}
 
     SFCXVariable<double> uVelocity_new;
     new_dw->allocateAndPut(uVelocity_new, d_lab->d_uVelocitySPBCLabel, indx, patch);
