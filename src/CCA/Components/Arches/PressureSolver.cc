@@ -572,6 +572,7 @@ PressureSolver::sched_addHydrostaticTermtoPressure(SchedulerP& sched,
   tsk->requires(Task::OldDW, d_lab->d_pressurePSLabel,    gn, 0);
   tsk->requires(Task::OldDW, d_lab->d_densityMicroLabel,  gn, 0);
   tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,      gn, 0);
+  tsk->requires(Task::NewDW, d_lab->d_cellInfoLabel, gn, 0 ); 
 
   if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First){
     tsk->computes(d_lab->d_pressPlusHydroLabel);
