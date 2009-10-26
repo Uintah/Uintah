@@ -24,17 +24,18 @@ if (~strcmp(problem_type, 'impulsiveBar')  && ...
 end
 %__________________________________
 % hard coded domain
-PPC =1;
-E   =1e8;
+PPC     =1;
+E       =1e8;
 density = 1000.;
 BigNum  = int8(1e4);
-c = sqrt(E/density);
+c       = sqrt(E/density);
 
 %bar_length =1.;
 bar_length = 0.3333;
 domain     =1.;
 area       =1.;
 plotSwitch = 0;
+max_tstep  = BigNum;
 
 % HARDWIRED FOR TESTING
 %NN          = 16;
@@ -148,7 +149,6 @@ input('hit return')
 %__________________________________
 % create particles
 ip=1;
-xp   = zeros(1,BigNum);
 xp(1)=R1_dx/(2.*PPC);
 
 for r=1:numRegions
@@ -297,7 +297,7 @@ end
 t = 0.0;
 tstep = 0;
 
-while t<tfinal
+while t<tfinal && tstep < max_tstep
 
   % compute the timestep
   dt = double(BigNum);
@@ -507,17 +507,21 @@ end
 %______________________________________________________________________
 % functions
 function[node, dx]=positionToNode(xp, numRegions, Regions)
-  dx = zeros(1,1);
+ 
+  n_offset = 0;
+  dx = double(0);
   
   for r=1:numRegions
     R = Regions{r};
+    
     if ((xp >= R.min) && (xp < R.max))
-      dx = R.dx;
+      n    = floor((xp - R.min)/R.dx) + 1;  % nodes from start of the current region
+      node = n + n_offset;                  % add an offset to the local node number
+      dx   = R.dx;
     end
+
+    n_offset = n_offset + R.NN;
   end
-  
-  node = xp/dx;
-  node = floor(node) + 1;
 end
 %__________________________________
 %
