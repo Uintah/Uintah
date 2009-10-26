@@ -542,14 +542,10 @@ void Level::finalizeLevel()
     (*iter)->finalizePatch();
   }
 
-  //compute the low and high indexes
-  d_lowIndex=d_realPatches[0]->getCellLowIndex__New();
-  d_highIndex=d_realPatches[0]->getCellHighIndex__New();
-  d_totalCells=d_realPatches[0]->getNumExtraCells();
-  for(int i=1;i<(int)d_realPatches.size();i++)
+  //compute the number of cells in the level
+  d_totalCells=0;
+  for(int i=0;i<(int)d_realPatches.size();i++)
   {
-    d_lowIndex=Min(d_lowIndex,d_realPatches[i]->getCellLowIndex__New());
-    d_highIndex=Max(d_highIndex,d_realPatches[i]->getCellHighIndex__New());
     d_totalCells+=d_realPatches[i]->getNumExtraCells();
   }
 }
@@ -620,14 +616,10 @@ void Level::finalizeLevel(bool periodicX, bool periodicY, bool periodicZ)
     (*iter)->finalizePatch();
   }
 
-  //compute the low and high indexes
-  d_lowIndex=d_realPatches[0]->getCellLowIndex__New();
-  d_highIndex=d_realPatches[0]->getCellHighIndex__New();
-  d_totalCells=d_realPatches[0]->getNumExtraCells();
-  for(int i=1;i<(int)d_realPatches.size();i++)
+  //compute the number of cells in the level
+  d_totalCells=0;
+  for(int i=0;i<(int)d_realPatches.size();i++)
   {
-    d_lowIndex=Min(d_lowIndex,d_realPatches[i]->getCellLowIndex__New());
-    d_highIndex=Max(d_highIndex,d_realPatches[i]->getCellHighIndex__New());
     d_totalCells+=d_realPatches[i]->getNumExtraCells();
   }
 }
