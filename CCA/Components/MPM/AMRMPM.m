@@ -61,10 +61,10 @@ Regions{1}    = R;
 
 R.min         = 1/3;                       
 R.max         = 2/3;
-R.refineRatio = 1;
+R.refineRatio = 2;
 R.dx          = R1_dx/R.refineRatio;
 R.volP        = R.dx/PPC;
-R.NN          = int8( (R.max - R.min)/R.dx );                  
+R.NN          = int8( (R.max - R.min)/R.dx );
 Regions{2}    = R;
 
 R.min         = 2/3;                       
@@ -76,21 +76,23 @@ R.NN          = int8( (R.max - R.min)/R.dx + 1);
 Regions{3}    = R;
 
 NN = int8(0);
-dt = 9999;
 
+%  find the number of nodes (NN) and the minimum dx
+dx_min = double(BigNum);
 for r=1:numRegions
   R = Regions{r};
   NN = NN + R.NN;
-  dt = min(dt, CFL*R.dx/c);
-  fprintf( 'region %g, min: %g, \t max: %g \t refineRatio: %g dx: %g, dt: %g NN: %g\n',r, R.min, R.max, R.refineRatio, R.dx, dt, R.NN)
+  dx_min = min(dx_min,R.dx);
+  fprintf( 'region %g, min: %g, \t max: %g \t refineRatio: %g dx: %g, NN: %g\n',r, R.min, R.max, R.refineRatio, R.dx, R.NN)
 end
+dx_min
 NN
 %__________________________________
 % compute the zone of influence
 % compute the positions of the nodes
 Lx      = zeros(NN,2);
 nodePos = zeros(NN,1);      % node Position
-nodeNum=1;
+nodeNum = int8(1);
 
 nodePos(1) = 0.0;
 
@@ -125,11 +127,10 @@ for r=1:numRegions
     if(nodeNum > 1)
       nodePos(nodeNum) = nodePos(nodeNum-1) + R.dx;
     end
-    
     nodeNum = nodeNum + 1;
-    
   end
 end
+
 
 % output the regions and the Lx
 nn = 1;
@@ -297,9 +298,16 @@ t = 0.0;
 tstep = 0;
 
 while t<tfinal
+
+  % compute the timestep
+  dt = double(BigNum);
+  for ip=1:NP
+    dt = min(dt, CFL*dx_min/(c + abs(velP(ip) ) ) );
+  end
+
   tstep = tstep + 1;
   t = t + dt;
-  %fprintf('timestep %g, dt = %g, time %g \n',tstep, dt, t)
+  fprintf('timestep %g, dt = %g, time %g \n',tstep, dt, t)
 
   % initialize arrays to be zero
   for ig=1:NN
@@ -412,7 +420,6 @@ while t<tfinal
       pos_error = pos_error +  xp(ip) - exact_pos;
       % fprintf('xp: %f  exact: %f error %f \n',xp(ip), exact_pos, xp(ip) - exact_pos)
     end
-    pos_error
   end
 
   TIME(tstep)=t;
@@ -467,7 +474,7 @@ fid = fopen(fname2, 'w');
 fprintf(fid,'#%s, PPC: %g, NN %g\n',problem_type, PPC, NN);
 fprintf(fid,'#node, xG, massG, velG, extForceG, intForceG, accl_G\n');
 for ig=1:NN
-  fprintf(fid,'%16.15f, %16.15f, %16.15f, %16.15f, %16.15f, %16.15f %16.15f\n',ig, node_pos(ig), massG(ig), velG(ig), extForceG(ig), intForceG(ig), accl_G(ig));
+  fprintf(fid,'%g, %16.15f, %16.15f, %16.15f, %16.15f, %16.15f %16.15f\n',ig, nodePos(ig), massG(ig), velG(ig), extForceG(ig), intForceG(ig), accl_G(ig));
 end
 fclose(fid);
 
@@ -561,6 +568,7 @@ function [nodes,Ss]=findNodesAndWeights(xp, numRegions, Regions, nodePos, Lx)
     Ss(2) = 1;
   end
 
+if(0)     % only works if the refinement ratio == 1
   % old method of computing the shape function
   locx  = (xp-dx*(dnode-1))/dx;
   Ss_old_1 = 1-locx;
@@ -575,7 +583,7 @@ function [nodes,Ss]=findNodesAndWeights(xp, numRegions, Regions, nodePos, Lx)
     fprintf(' Ss(1):  %16.14f , Ss_old:  %16.14f, diff %16.14f \n', Ss(1), Ss_old_1, diff1);
     fprintf(' Ss(2):  %16.14f , Ss_old:  %16.14f, diff %16.14f \n', Ss(2), Ss_old_2, diff1);
   end
-  
+end  
 end
 
 
