@@ -295,11 +295,7 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
     pressureVars.pressNonlinearSrc.initialize(0.0);   
 
     PerPatch<CellInformationP> cellInfoP;
-    if (new_dw->exists(d_lab->d_cellInfoLabel, indx, patch)){ 
-      new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
-    }else{ 
-      throw VariableNotFoundInGrid("cellInformation"," ", __FILE__, __LINE__);
-    }
+    new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
     CellInformation* cellinfo = cellInfoP.get().get_rep();
 
   
@@ -613,11 +609,7 @@ PressureSolver::addHydrostaticTermtoPressure(const ProcessorGroup*,
 
     // Get the PerPatch CellInformation data
     PerPatch<CellInformationP> cellInfoP;
-    if (new_dw->exists(d_lab->d_cellInfoLabel, indx, patch)){ 
-      new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
-    }else{ 
-      throw VariableNotFoundInGrid("cellInformation"," ", __FILE__, __LINE__);
-    }
+    new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
     CellInformation* cellinfo = cellInfoP.get().get_rep();
     
     Ghost::GhostType  gn = Ghost::None;

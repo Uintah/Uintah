@@ -3756,10 +3756,7 @@ void MPMArches::doEnergyExchange(const ProcessorGroup*,
     // patch geometry information
     
     PerPatch<CellInformationP> cellInfoP;
-    if (new_dw->exists(d_Alab->d_cellInfoLabel, matlIndex, patch)) 
-      new_dw->get(cellInfoP, d_Alab->d_cellInfoLabel, matlIndex, patch);
-    else 
-      throw VariableNotFoundInGrid("cellInformation"," ", __FILE__, __LINE__);
+    new_dw->get(cellInfoP, d_Alab->d_cellInfoLabel, matlIndex, patch);
     CellInformation* cellinfo = cellInfoP.get().get_rep();
 
     // memory for MPM

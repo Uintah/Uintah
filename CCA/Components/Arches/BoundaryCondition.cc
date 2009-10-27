@@ -987,11 +987,7 @@ BoundaryCondition::computeInletFlowArea(const ProcessorGroup*,
     
     // Get the PerPatch CellInformation data
     PerPatch<CellInformationP> cellInfoP;
-    if (new_dw->exists(d_lab->d_cellInfoLabel, indx, patch)){ 
-      new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
-    }else{ 
-      throw VariableNotFoundInGrid("cellInformation"," ", __FILE__, __LINE__);
-    }
+    new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
     CellInformation* cellinfo = cellInfoP.get().get_rep();
     
     // Get the low and high index for the variable and the patch
@@ -4315,11 +4311,7 @@ BoundaryCondition::getFlowINOUT(const ProcessorGroup*,
     new_dw->get(cellType,     d_lab->d_cellTypeLabel,     indx, patch, gac,1);
 
     PerPatch<CellInformationP> cellInfoP;
-    if (new_dw->exists(d_lab->d_cellInfoLabel, indx, patch)){ 
-      new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
-    }else{ 
-      throw VariableNotFoundInGrid("cellInformation"," ", __FILE__, __LINE__);
-    }
+    new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
     CellInformation* cellinfo = cellInfoP.get().get_rep();
 
     new_dw->get(density, d_lab->d_densityCPLabel,       indx, patch, gn, 0);
@@ -4785,11 +4777,7 @@ BoundaryCondition::getScalarFlowRate(const ProcessorGroup*,
     new_dw->get(constVars.cellType, d_lab->d_cellTypeLabel, indx, patch, gac,1);
 
     PerPatch<CellInformationP> cellInfoP;
-    if (new_dw->exists(d_lab->d_cellInfoLabel, indx, patch)){ 
-      new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
-    }else{ 
-      throw VariableNotFoundInGrid("cellInformation"," ", __FILE__, __LINE__);
-    }
+    new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
     CellInformation* cellinfo = cellInfoP.get().get_rep();
 
     new_dw->get(constVars.density,   d_lab->d_densityCPLabel,     indx, patch, gn, 0);

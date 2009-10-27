@@ -1131,11 +1131,8 @@ Arches::computeStableTimeStep(const ProcessorGroup* ,
     new_dw->get(cellType, d_lab->d_cellTypeLabel,       indx, patch, gac, 1);
   
     PerPatch<CellInformationP> cellInfoP;
-    if (new_dw->exists(d_lab->d_cellInfoLabel, indx, patch)){ 
-      new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
-    }else {
-      throw VariableNotFoundInGrid("cellInformation"," ", __FILE__, __LINE__);
-    }
+    new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
+    
     CellInformation* cellinfo = cellInfoP.get().get_rep();
 
     IntVector indexLow = patch->getFortranCellLowIndex__New();
@@ -1816,11 +1813,8 @@ Arches::blobInit(const ProcessorGroup* ,
     CCVariable<double> extrascalar;
 
     PerPatch<CellInformationP> cellInfoP;
-    if (new_dw->exists(d_lab->d_cellInfoLabel, indx, patch)){ 
-      new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
-    }else {
-      throw VariableNotFoundInGrid("cellInformation"," ", __FILE__, __LINE__);
-    }
+    new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
+    
     CellInformation* cellinfo = cellInfoP.get().get_rep();
 
 
@@ -1911,11 +1905,7 @@ Arches::mmsInitialCondition(const ProcessorGroup* ,
     new_dw->getModifiable(scalar,    d_lab->d_scalarSPLabel,      indx, patch);
    
     PerPatch<CellInformationP> cellInfoP;
-    if (new_dw->exists(d_lab->d_cellInfoLabel, indx, patch)){ 
-      new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
-    }else{ 
-      throw VariableNotFoundInGrid("cellInformation"," ", __FILE__, __LINE__);
-    }
+    new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
     
     CellInformation* cellinfo = cellInfoP.get().get_rep();
     double pi = acos(-1.0);
@@ -2115,10 +2105,7 @@ Arches::getCCVelocities(const ProcessorGroup* ,
 
     // Get the PerPatch CellInformation data
     PerPatch<CellInformationP> cellInfoP;
-    if (new_dw->exists(d_lab->d_cellInfoLabel, indx, patch)) 
-      new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
-    else 
-      throw VariableNotFoundInGrid("cellInformation"," ", __FILE__, __LINE__);
+    new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
       
     CellInformation* cellinfo = cellInfoP.get().get_rep();
 
