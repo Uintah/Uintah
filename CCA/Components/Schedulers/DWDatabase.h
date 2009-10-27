@@ -240,6 +240,7 @@ DWDatabase<DomainType>::scrub(const VarLabel* label, int matlIndex, const Domain
 {
   ASSERT(matlIndex >= -1);
   VarLabelMatl<DomainType> v(label, matlIndex, getRealDomain(dom));
+#if 0
   if (vars.count(v)==0){ // scrub not found
   ostringstream msgstr;
   msgstr << label->getName() << ", matl " << matlIndex
@@ -247,7 +248,7 @@ DWDatabase<DomainType>::scrub(const VarLabel* label, int matlIndex, const Domain
 	 << " not found for scrubbing.";
   SCI_THROW(InternalError(msgstr.str(), __FILE__, __LINE__));
   }
-
+#endif
   pair<typename varDBtype::const_iterator, typename varDBtype::const_iterator> ret;
   ret = vars.equal_range(v);
   for (typename varDBtype::const_iterator iter=ret.first; iter!=ret.second; ++iter){
