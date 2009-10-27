@@ -134,9 +134,8 @@ AMRSolver::scheduleSolve(const LevelP& level, SchedulerP& sched,
   cout_doing << "AMRSolver::scheduleSolve() BEGIN" << "\n";
   Task* task;
 
-  TypeDescription::Type domType = A->typeDescription()->getType();
-  ASSERTEQ(domType, x->typeDescription()->getType());
-  ASSERTEQ(domType, b->typeDescription()->getType());
+  ASSERTEQ(A->typeDescription()->getType(), x->typeDescription()->getType());
+  ASSERTEQ(A->typeDescription()->getType(), b->typeDescription()->getType());
   const HypreSolverParams* dparams = dynamic_cast<const HypreSolverParams*>(params);
   if(!dparams)
     throw InternalError("Wrong type of params passed to hypre solver!",
