@@ -30,10 +30,13 @@ DEALINGS IN THE SOFTWARE.
 
 //----- ExplicitSolver.cc ----------------------------------------------
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqnFactory.h>
+#include <CCA/Components/Arches/SourceTerms/SourceTermFactory.h>
+#include <CCA/Components/Arches/SourceTerms/SourceTermBase.h>
+#include <CCA/Components/Arches/TransportEqns/EqnFactory.h>
 #include <CCA/Components/Arches/TransportEqns/EqnBase.h>
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqn.h>
 #include <CCA/Components/Arches/CoalModels/PartVel.h>
-#include <CCA/Components/Arches/CoalModels/ModelFactory.h>
+#include <CCA/Components/Arches/CoalModels/CoalModelFactory.h>
 #include <CCA/Components/Arches/CoalModels/ModelBase.h>
 #include <CCA/Components/Arches/DQMOM.h>
 
@@ -68,12 +71,15 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Parallel/ProcessorGroup.h>
+#include <Core/Parallel/Parallel.h>
 #include <Core/Math/MiscMath.h>
 #ifdef PetscFilter
 #include <CCA/Components/Arches/Filter.h>
 #endif
 
 #include <cmath>
+#include <ios>
+#include <iomanip>
 
 using namespace Uintah;
 
@@ -236,10 +242,14 @@ ExplicitSolver::problemSetup(const ProblemSpecP& params)
     throw ProblemSetupException("Integrator type is not defined "+d_timeIntegratorType,
                                 __FILE__, __LINE__);
   }
+
   db->getWithDefault("turbModelCalcFreq",d_turbModelCalcFreq,1);
   db->getWithDefault("turbModelCalcForAllRKSteps",d_turbModelRKsteps,true);
+
   db->getWithDefault("restartOnNegativeDensityGuess",
                      d_restart_on_negative_density_guess,false);
+  db->getWithDefault("NoisyDensityGuess", 
+                     d_noisyDensityGuess, false);
   db->getWithDefault("kineticEnergy_fromFC",d_KE_fromFC,false);
   db->getWithDefault("maxDensityLag",d_maxDensityLag,0.0);
 
@@ -341,7 +351,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
     if (d_doDQMOM) {
 
-      ModelFactory& modelFactory = ModelFactory::self(); 
+      CoalModelFactory& modelFactory = CoalModelFactory::self(); 
       DQMOMEqnFactory::EqnMap& dqmom_eqns = dqmomFactory.retrieve_all_eqns(); 
 
       // Compute the particle velocities
@@ -349,48 +359,35 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
       // ---- schedule the solution of the transport equations ----
       
-      // Perform the weight updates first.
-      for(  int iqn = 0; iqn < dqmomFactory.get_quad_nodes(); iqn++ )
-      {
-        std::string wght_name = "w_qn";
-        std::string node;  
-        std::stringstream out; 
-        out << iqn; 
-        node = out.str(); 
-        wght_name += node; 
+      // Evaluate DQMOM equations
+      for ( DQMOMEqnFactory::EqnMap::iterator iEqn = dqmom_eqns.begin(); 
+            iEqn != dqmom_eqns.end(); iEqn++){
+        
+        std::string eqnname = iEqn->first; 
+        EqnBase* e_dqmom_eqn = iEqn->second; 
+        DQMOMEqn* dqmom_eqn = dynamic_cast<DQMOMEqn*>(e_dqmom_eqn);
 
-        EqnBase& w_eqn = dqmomFactory.retrieve_scalar_eqn(wght_name); 
-
-        w_eqn.sched_evalTransportEqn( level, sched, curr_level ); 
-
-        if (curr_level == numTimeIntegratorLevels-1){
-          //last time sub-step so cleanup.
-          w_eqn.sched_cleanUp( level, sched ); 
-        }
+        dqmom_eqn->sched_evalTransportEqn( level, sched, curr_level ); 
       }
      
-      // now do all the weighted abscissa values
-      for (DQMOMEqnFactory::EqnMap::iterator ieqn = dqmom_eqns.begin(); ieqn != dqmom_eqns.end(); ieqn++){
-        
-        std::string currname = ieqn->first; 
-        EqnBase* temp_eqn = ieqn->second; 
-        DQMOMEqn* wa_eqn = dynamic_cast<DQMOMEqn*>(temp_eqn);
+      // Clean up after DQMOM equation evaluations & calculate unscaled DQMOM scalar values 
+      // (also, putting this in its own separate loop makes sure you don't require() before you compute())
+      if (curr_level == numTimeIntegratorLevels-1){
+        for( DQMOMEqnFactory::EqnMap::iterator iEqn = dqmom_eqns.begin();
+             iEqn!=dqmom_eqns.end(); ++iEqn ) {
 
-        if (!wa_eqn->weight()) {
-          wa_eqn->sched_evalTransportEqn( level, sched, curr_level ); 
-        }
-      
-        if (curr_level == numTimeIntegratorLevels-1){
-          //last time sub-step so cleanup.
-          wa_eqn->sched_cleanUp( level, sched ); 
+          DQMOMEqn* dqmom_eqn = dynamic_cast<DQMOMEqn*>(iEqn->second);
+
+          // last time sub-step: so cleanup.
+          dqmom_eqn->sched_cleanUp( level, sched ); 
           //also get the abscissa values
-          wa_eqn->sched_getAbscissaValues( level, sched ); 
+          dqmom_eqn->sched_getUnscaledValues( level, sched ); 
         }
       }
 
       // schedule the models for evaluation
-      ModelFactory::ModelMap allModels = modelFactory.retrieve_all_models();
-      for (ModelFactory::ModelMap::iterator imodel = allModels.begin(); imodel != allModels.end(); imodel++){
+      CoalModelFactory::ModelMap allModels = modelFactory.retrieve_all_models();
+      for (CoalModelFactory::ModelMap::iterator imodel = allModels.begin(); imodel != allModels.end(); imodel++){
         imodel->second->sched_computeModel( level, sched, curr_level );  
       }
 
@@ -515,6 +512,14 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
                                   d_timeIntegratorLabels[curr_level],
                                   true, false,
                                   d_EKTCorrection, doing_EKT_now);
+
+    EqnFactory& eqn_factory = EqnFactory::self();
+    EqnFactory::EqnMap& scalar_eqns = eqn_factory.retrieve_all_eqns(); 
+    for (EqnFactory::EqnMap::iterator iter = scalar_eqns.begin(); iter != scalar_eqns.end(); iter++){
+      EqnBase* eqn = iter->second; 
+      eqn->sched_evalTransportEqn( level, sched, curr_level ); 
+    }
+
     if (d_standAloneRMCRT) { 
       d_RMCRTRadiationModel->sched_solve( level, sched, d_timeIntegratorLabels[curr_level] );  
     }
@@ -735,7 +740,54 @@ int ExplicitSolver::noSolve(const LevelP& level,
 
   d_pressSolver->sched_addHydrostaticTermtoPressure(      sched, patches, matls,
                                                           nosolve_timelabels);
+
+  // DQMOM and scalar transport init
  
+  // Get a reference to all the DQMOM equations
+  DQMOMEqnFactory& dqmomFactory  = DQMOMEqnFactory::self(); 
+  if (dqmomFactory.get_quad_nodes() > 0) 
+    d_doDQMOM = true; 
+  else 
+    d_doDQMOM = false; // probably need to sync this better with the bool being set in Arches
+
+  if (d_doDQMOM) {
+
+    DQMOMEqnFactory::EqnMap& dqmom_eqns = dqmomFactory.retrieve_all_eqns(); 
+   
+    for (DQMOMEqnFactory::EqnMap::iterator ieqn = dqmom_eqns.begin(); ieqn != dqmom_eqns.end(); ieqn++){
+      
+      std::string currname = ieqn->first; 
+      EqnBase* eqn = ieqn->second;
+      eqn->sched_dummyInit( level, sched ); 
+
+    }
+
+    CoalModelFactory& modelFactory = CoalModelFactory::self(); 
+    CoalModelFactory::ModelMap allModels = modelFactory.retrieve_all_models();
+    for (CoalModelFactory::ModelMap::iterator imodel = allModels.begin(); imodel != allModels.end(); imodel++){
+
+      imodel->second->sched_dummyInit( level, sched );  
+
+    }
+  }
+
+  EqnFactory& eqn_factory = EqnFactory::self();
+  EqnFactory::EqnMap& scalar_eqns = eqn_factory.retrieve_all_eqns(); 
+  for (EqnFactory::EqnMap::iterator iter = scalar_eqns.begin(); iter != scalar_eqns.end(); iter++){
+
+    EqnBase* eqn = iter->second; 
+    eqn->sched_dummyInit( level, sched ); 
+
+  }
+
+  SourceTermFactory& src_factory = SourceTermFactory::self();
+  SourceTermFactory::SourceMap& sources = src_factory.retrieve_all_sources(); 
+  for (SourceTermFactory::SourceMap::iterator iter = sources.begin(); iter != sources.end(); iter++){
+
+    SourceTermBase* src = iter->second; 
+    src->sched_dummyInit( level, sched ); 
+
+  }
   // Schedule an interpolation of the face centered velocity data 
   // to a cell centered vector for used by the viz tools
 
@@ -768,6 +820,12 @@ ExplicitSolver::sched_setInitialGuess(SchedulerP& sched,
   tsk->requires(Task::OldDW, d_lab->d_scalarSPLabel,      gn, 0);
   tsk->requires(Task::OldDW, d_lab->d_densityCPLabel,     gn, 0);
   tsk->requires(Task::OldDW, d_lab->d_viscosityCTSLabel,  gn, 0);
+  tsk->requires(Task::OldDW, d_lab->d_newCCVelocityLabel, gn, 0);
+
+  if (!(d_MAlab))
+    tsk->computes(d_lab->d_cellInfoLabel);
+  else 
+    tsk->requires(Task::NewDW, d_lab->d_cellInfoLabel, gn, 0); 
 
   tsk->computes(d_lab->d_cellTypeLabel);
   tsk->computes(d_lab->d_uVelocitySPBCLabel);
@@ -877,6 +935,7 @@ ExplicitSolver::sched_interpolateFromFCToCC(SchedulerP& sched,
     Ghost::GhostType  gaf = Ghost::AroundFaces;
     Ghost::GhostType  gn = Ghost::None;
     
+    tsk->requires(Task::NewDW, d_lab->d_cellInfoLabel, gn);
     if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
       tsk->requires(Task::OldDW, d_lab->d_uVelocitySPBCLabel, gaf, 1);
       tsk->requires(Task::OldDW, d_lab->d_vVelocitySPBCLabel, gaf, 1);
@@ -936,6 +995,7 @@ ExplicitSolver::sched_interpolateFromFCToCC(SchedulerP& sched,
 
     Ghost::GhostType  gac = Ghost::AroundCells;
     
+    tsk->requires(Task::NewDW, d_lab->d_cellInfoLabel, Ghost::None);
     tsk->requires(Task::NewDW, d_lab->d_newCCUVelocityLabel,  gac, 1);
     tsk->requires(Task::NewDW, d_lab->d_newCCVVelocityLabel,  gac, 1);
     tsk->requires(Task::NewDW, d_lab->d_newCCWVelocityLabel,  gac, 1);
@@ -1012,10 +1072,7 @@ ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
 
     // Get the PerPatch CellInformation data
     PerPatch<CellInformationP> cellInfoP;
-    if (new_dw->exists(d_lab->d_cellInfoLabel, indx, patch)) 
-      new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
-    else 
-      throw VariableNotFoundInGrid("cellInformation"," ", __FILE__, __LINE__);
+    new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
     CellInformation* cellinfo = cellInfoP.get().get_rep();
 
 
@@ -1554,10 +1611,7 @@ ExplicitSolver::computeVorticity(const ProcessorGroup* ,
 
     // Get the PerPatch CellInformation data
     PerPatch<CellInformationP> cellInfoP;
-    if (new_dw->exists(d_lab->d_cellInfoLabel, indx, patch)) 
-      new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
-    else 
-      throw VariableNotFoundInGrid("cellInformation"," ", __FILE__, __LINE__);
+    new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
     CellInformation* cellinfo = cellInfoP.get().get_rep();
     
     if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
@@ -1806,6 +1860,7 @@ ExplicitSolver::setInitialGuess(const ProcessorGroup* ,
     constCCVariable<double> scalardiff;
     constCCVariable<double> enthalpydiff;
     constCCVariable<double> reactscalardiff;
+    constCCVariable<Vector> ccVel; 
     
     old_dw->get(uVelocity, d_lab->d_uVelocitySPBCLabel, indx, patch, gn, 0);
     old_dw->get(vVelocity, d_lab->d_vVelocitySPBCLabel, indx, patch, gn, 0);
@@ -1813,6 +1868,7 @@ ExplicitSolver::setInitialGuess(const ProcessorGroup* ,
     old_dw->get(scalar,    d_lab->d_scalarSPLabel,      indx, patch, gn, 0);
     old_dw->get(density,   d_lab->d_densityCPLabel,     indx, patch, gn, 0);
     old_dw->get(viscosity, d_lab->d_viscosityCTSLabel,  indx, patch, gn, 0);
+    old_dw->get(ccVel,     d_lab->d_newCCVelocityLabel, indx, patch, gn, 0);
     
     if (d_enthalpySolve){
       old_dw->get(enthalpy, d_lab->d_enthalpySPLabel, indx, patch, gn, 0);
@@ -1832,21 +1888,16 @@ ExplicitSolver::setInitialGuess(const ProcessorGroup* ,
     CCVariable<int> cellType_new;
     new_dw->allocateAndPut(cellType_new, d_lab->d_cellTypeLabel, indx, patch);
     cellType_new.copyData(cellType);
-
-    // Get the PerPatch CellInformation data from oldDW, initialize it if it is
-    // not there
-    if (!(d_MAlab)) {
-      PerPatch<CellInformationP> cellInfoP;
-      if (new_dw->exists(d_lab->d_cellInfoLabel, indx, patch)) 
-        throw InvalidValue("cellInformation should not be initialized yet",
-                           __FILE__, __LINE__);
-      if (old_dw->exists(d_lab->d_cellInfoLabel, indx, patch)) 
-        old_dw->get(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
-      else {
-        cellInfoP.setData(scinew CellInformation(patch));
-        //cout << "cellInfo INIT" << endl;
-      }
-      new_dw->put(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
+  
+    PerPatch<CellInformationP> cellInfoP; 
+    if (!(d_MAlab))
+    {
+      cellInfoP.setData(scinew CellInformation(patch));
+      new_dw->put(cellInfoP, d_lab->d_cellInfoLabel, indx, patch); 
+    }
+    else 
+    {
+      new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
     }
 
     SFCXVariable<double> uVelocity_new;
@@ -2005,6 +2056,9 @@ ExplicitSolver::sched_dummySolve(SchedulerP& sched,
                                  const PatchSet* patches,
                                  const MaterialSet* matls)
 {
+
+  d_boundaryCondition->sched_bcdummySolve( sched, patches, matls ); 
+
   Task* tsk = scinew Task( "ExplicitSolver::dataCopy",this, 
                            &ExplicitSolver::dummySolve);
 
@@ -2085,7 +2139,7 @@ ExplicitSolver::dummySolve(const ProcessorGroup* ,
     new_dw->allocateAndPut(pressureNLSource, d_lab->d_presNonLinSrcPBLMLabel, indx, patch);
     pressureNLSource.initialize(0.0);
 
-    cout << "ExplicitSolver.cc: DOING DUMMY SOLVE " << endl;
+    proc0cout << "ExplicitSolver.cc: DOING DUMMY SOLVE " << endl;
 
     double uvwout = 0.0;
     double flowIN = 0.0;
@@ -2309,24 +2363,27 @@ ExplicitSolver::sched_getDensityGuess(SchedulerP& sched,
   }
   tsk->requires(parent_old_dw, d_lab->d_sharedState->get_delt_label());
 
+  Ghost::GhostType  gac = Ghost::AroundCells;
+  Ghost::GhostType  gaf = Ghost::AroundFaces;
+  Ghost::GhostType  gn = Ghost::None;
+
   Task::WhichDW old_values_dw;
   if (timelabels->use_old_values){
     old_values_dw = parent_old_dw;
+    tsk->requires(old_values_dw, d_lab->d_densityCPLabel,gn, 0);
   }else{ 
     old_values_dw = Task::NewDW;
   }
   
-  Ghost::GhostType  gac = Ghost::AroundCells;
-  Ghost::GhostType  gaf = Ghost::AroundFaces;
-  Ghost::GhostType  gn = Ghost::None;
   
-  tsk->requires(old_values_dw, d_lab->d_densityCPLabel,gn, 0);
-
   tsk->requires(Task::NewDW, d_lab->d_densityCPLabel,     gac, 1);
   tsk->requires(Task::NewDW, d_lab->d_uVelocitySPBCLabel, gaf, 1);
   tsk->requires(Task::NewDW, d_lab->d_vVelocitySPBCLabel, gaf, 1);
   tsk->requires(Task::NewDW, d_lab->d_wVelocitySPBCLabel, gaf, 1);
   tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,      gn, 0);
+    
+  
+  tsk->requires(Task::NewDW, d_lab->d_cellInfoLabel, gn);
 
   if ((EKTCorrection)&&(!(doing_EKT_now))){
     tsk->requires(Task::NewDW, d_lab->d_densityEKTLabel,  gn, 0);
@@ -2391,11 +2448,7 @@ ExplicitSolver::getDensityGuess(const ProcessorGroup*,
     constCCVariable<int> cellType;
 
     PerPatch<CellInformationP> cellInfoP;
-    if (new_dw->exists(d_lab->d_cellInfoLabel, indx, patch)){
-      new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
-    }else{ 
-      throw VariableNotFoundInGrid("cellInformation"," ", __FILE__, __LINE__);
-    }
+    new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
     CellInformation* cellinfo = cellInfoP.get().get_rep();
 
     DataWarehouse* old_values_dw;
@@ -2426,6 +2479,7 @@ ExplicitSolver::getDensityGuess(const ProcessorGroup*,
 // Need to skip first timestep since we start with unprojected velocities
 //    int currentTimeStep=d_lab->d_sharedState->getCurrentTopLevelTimeStep();
 //    if (currentTimeStep > 1) {
+//
       IntVector idxLo = patch->getFortranCellLowIndex__New();
       IntVector idxHi = patch->getFortranCellHighIndex__New();
       for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
@@ -2450,13 +2504,20 @@ ExplicitSolver::getDensityGuess(const ProcessorGroup*,
             ((density[currCell]+density[zplusCell])*wVelocity[zplusCell] -
              (density[currCell]+density[zminusCell])*wVelocity[currCell]) /
             cellinfo->stb[colZ]);
-            if (densityGuess[currCell] < 0.0) {
-              cout << "got negative density guess at " << currCell << " , density guess value was " << densityGuess[currCell] << endl;
+
+            if (densityGuess[currCell] < 0.0 && d_noisyDensityGuess) {
+              proc0cout << "Negative density guess occured at " << currCell << " with a value of " << densityGuess[currCell] << endl;
               negativeDensityGuess = 1.0;
-           }
+            }
+            else if (densityGuess[currCell] < 0.0 && !(d_noisyDensityGuess)) {
+              negativeDensityGuess = 1.0;
+            }
+
           }
         }
       } 
+
+      if (negativeDensityGuess == 1.0 && !(d_noisyDensityGuess)) proc0cout << "NOTICE: Negative density guess occured on this patch.  Set <NoisyDensityGuess> to true to get full details." << endl;
 
       if (d_boundaryCondition->anyArchesPhysicalBC()) {
         bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
@@ -2675,13 +2736,13 @@ ExplicitSolver::checkDensityGuess(const ProcessorGroup* pc,
     if (negativeDensityGuess > 0.0) {
       if (d_restart_on_negative_density_guess) {
         if (pc->myrank() == 0)
-          cout << "WARNING: got negative density guess. Timestep restart has been requested under this condition by the user. Restarting timestep." << endl;
+          proc0cout << "NOTICE: Negative density guess(es) occured. Timestep restart has been requested under this condition by the user. Restarting timestep." << endl;
         new_dw->abortTimestep();
         new_dw->restartTimestep();
       }
       else {
         if (pc->myrank() == 0)
-          cout << "WARNING: got negative density guess. Reverting to old density." << endl;
+          proc0cout << "NOTICE: Negative density guess(es) occured. Reverting to old density." << endl;
         old_values_dw->copyOut(densityGuess, d_lab->d_densityCPLabel, indx, patch);
       }
     }   
@@ -2908,6 +2969,9 @@ ExplicitSolver::sched_computeMMSError(SchedulerP& sched,
                           timelabels);
 
   Ghost::GhostType  gn = Ghost::None;
+  
+  tsk->requires(Task::NewDW, d_lab->d_cellInfoLabel, gn);
+  tsk->requires(Task::OldDW, d_lab->d_sharedState->get_delt_label());
   tsk->requires(Task::NewDW, d_lab->d_uVelocitySPBCLabel, gn, 0);
   tsk->requires(Task::NewDW, d_lab->d_vVelocitySPBCLabel, gn, 0);
   tsk->requires(Task::NewDW, d_lab->d_wVelocitySPBCLabel, gn, 0);
@@ -2964,8 +3028,8 @@ ExplicitSolver::computeMMSError(const ProcessorGroup*,
                                 const TimeIntegratorLabel* timelabels)
 {
 
-  cout << "***START of MMS ERROR CALC***" << endl;
-  cout << "  Using Error norm = "  << d_mmsErrorType << endl;
+  proc0cout << "***START of MMS ERROR CALC***" << endl;
+  proc0cout << "  Using Error norm = "  << d_mmsErrorType << endl;
 
   for (int p = 0; p < patches->size(); p++) {
 
@@ -3030,10 +3094,7 @@ ExplicitSolver::computeMMSError(const ProcessorGroup*,
     new_dw->get(wFmms,     d_lab->d_wFmmsLabel,         indx, patch, gn, 0);
 
     PerPatch<CellInformationP> cellInfoP;
-    if (new_dw->exists(d_lab->d_cellInfoLabel, indx, patch)) 
-      new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
-    else 
-      throw VariableNotFoundInGrid("cellInformation"," ", __FILE__, __LINE__);
+    new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
     CellInformation* cellinfo = cellInfoP.get().get_rep();
 
     //getting current time
@@ -3042,7 +3103,7 @@ ExplicitSolver::computeMMSError(const ProcessorGroup*,
     double time=d_lab->d_sharedState->getElapsedTime();
     time = time + delT;
 
-    cout << "THE CURRENT TIME IN ERROR CALC IS: " << time << endl;
+    proc0cout << "THE CURRENT TIME IN ERROR CALC IS: " << time << endl;
 
     double pi = acos(-1.0);
 
@@ -3212,7 +3273,7 @@ ExplicitSolver::computeMMSError(const ProcessorGroup*,
     if (d_mmsErrorType == "L2"){
       new_dw->put(sum_vartype(snumeratordiff), timelabels->smmsLnError); 
       new_dw->put(sum_vartype(unumeratordiff), timelabels->ummsLnError);
-      cout << "putting vnum =" << vnumeratordiff << "into vmmsLnError" << endl;
+      proc0cout << "putting vnum =" << vnumeratordiff << "into vmmsLnError" << endl;
       new_dw->put(sum_vartype(vnumeratordiff), timelabels->vmmsLnError);
       new_dw->put(sum_vartype(wnumeratordiff), timelabels->wmmsLnError); 
       
@@ -3373,7 +3434,7 @@ ExplicitSolver::checkDensityLag(const ProcessorGroup* pc,
 
     if (densityLag > d_maxDensityLag) {
         if (pc->myrank() == 0)
-          cout << "WARNING: density lag " << densityLag 
+          proc0cout << "WARNING: density lag " << densityLag 
                << " exceeding maximium "<< d_maxDensityLag
                << " specified. Restarting timestep." << endl;
         new_dw->abortTimestep();
