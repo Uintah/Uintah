@@ -1897,9 +1897,14 @@ ExplicitSolver::setInitialGuess(const ProcessorGroup* ,
   
     PerPatch<CellInformationP> cellInfoP; 
     if (!(d_MAlab))
+    {
+      cellInfoP.setData(scinew CellInformation(patch));
       new_dw->put(cellInfoP, d_lab->d_cellInfoLabel, indx, patch); 
+    }
     else 
+    {
       new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
+    }
 
     SFCXVariable<double> uVelocity_new;
     new_dw->allocateAndPut(uVelocity_new, d_lab->d_uVelocitySPBCLabel, indx, patch);
