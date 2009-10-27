@@ -267,7 +267,7 @@ ProblemSpec::checkForInputError( const string & stringValue,
         ostringstream warn;
         warn << "Bad Integer string: Found '"<< stringValue[pos]
              << "' in the string \""<< stringValue<< "\" at position " << pos << ".\n";
-        throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+        throw ProblemSetupException(warn.str(), __FILE__, __LINE__,true);
       }
     }
     break;
@@ -279,7 +279,7 @@ ProblemSpec::checkForInputError( const string & stringValue,
         ostringstream warn;
         warn << "Bad Float string: Found '"<< stringValue[pos]
              << "' inside of \""<< stringValue << "\" at position " << pos << "\n";
-        throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+        throw ProblemSetupException(warn.str(), __FILE__, __LINE__,true);
       }
       //__________________________________
       // check for two or more "."
@@ -289,7 +289,7 @@ ProblemSpec::checkForInputError( const string & stringValue,
         ostringstream warn;
         warn << "Input file error: I found two (..) "
              << "inside of "<< stringValue << "\n";
-        throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+        throw ProblemSetupException(warn.str(), __FILE__, __LINE__,true);
       }
     }
     break;

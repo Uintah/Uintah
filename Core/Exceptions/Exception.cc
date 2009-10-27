@@ -41,6 +41,8 @@
  */
 
 #include <Core/Exceptions/Exception.h>
+#include <Core/Exceptions/ProblemSetupException.h>
+#include <Core/Util/Assert.h>
 #include <cerrno>
 #include <cstdio>
 #include <cstdlib>
@@ -78,10 +80,15 @@
 namespace SCIRun {
 
 using namespace std;
+using namespace Uintah;
 
-Exception::Exception()
+bool Exception::wait_for_debugger=false;
+
+Exception::Exception(bool ignoreWait)
 {
   stacktrace_ = strdup(getStackTrace().c_str());
+  if(wait_for_debugger && !ignoreWait) 
+    WAIT_FOR_DEBUGGER();
 }
 
 Exception::~Exception()

@@ -127,6 +127,7 @@ extern UINTAHSHARE Mutex cerrLock;
 extern UINTAHSHARE DebugStream mixedDebug;
 extern UINTAHSHARE DebugStream fullDebug;
 static DebugStream stackDebug("ExceptionStack", true);
+static DebugStream dbgwait("WaitForDebugger", false);
 
 static
 void
@@ -411,6 +412,9 @@ main( int argc, char *argv[], char *env[] )
       }
     }
   }
+
+  if(dbgwait.active())
+    SCIRun::Exception::wait_for_debugger=true;
 
   if (restart || combine_patches || reduce_uda) {
     // check if state.xml is present

@@ -55,7 +55,7 @@ namespace Uintah {
 
    class UINTAHSHARE ProblemSetupException : public Exception {
    public:
-      ProblemSetupException(const std::string& msg, const char* file, int line);
+      ProblemSetupException(const std::string& msg, const char* file, int line, bool ignoreWait=false);
       ProblemSetupException(const ProblemSetupException&);
       virtual ~ProblemSetupException();
       virtual const char* message() const;
