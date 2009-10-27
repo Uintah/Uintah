@@ -17,7 +17,8 @@ SRCS     += $(SRCDIR)/RMCRTRadiationModel.cc \
 	    $(SRCDIR)/VirtualSurface.cc \
             $(SRCDIR)/ray.cc \
             $(SRCDIR)/VolElement.cc \
-            $(SRCDIR)/MakeTableFunction.cc
+            $(SRCDIR)/MakeTableFunction.cc \
+						$(SRCDIR)/Consts.cc
 
 
 # SUBDIRS := $(SRCDIR)/fortran 
