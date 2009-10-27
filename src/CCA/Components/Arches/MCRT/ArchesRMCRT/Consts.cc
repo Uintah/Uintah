@@ -27,30 +27,16 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-
-#include <cmath>
-
-const int ISOTROPIC = 0; // isotropic scattering, phase function = 1
-const int LINEAR_SCATTER = 1;
-const int EDDINGTON = 2;
-
-const int TOP = 0;
-const int BOTTOM = 1;
-const int FRONT = 2;
-const int BACK = 3;
-const int LEFT = 4;
-const int RIGHT = 5;
-const double pi=  4 * atan(1);
-const double SB = 5.669 * pow(10., -8);
-
 // all normal vectors pointing inward the volume
-extern const double n_top[3];
-extern const double n_bottom[3];
-extern const double n_front[3];
-extern const double n_back[3];
-extern const double n_left[3];
-extern const double n_right[3];
-extern const double *surface_n[6];
+const double n_top[3] = { 0, 0, -1};
+const double n_bottom[3] = {0, 0, 1};
+const double n_front[3] = {0, 1, 0};
+const double n_back[3] = {0, -1, 0};
+const double n_left[3] = {1, 0, 0};
+const double n_right[3] = {-1, 0, 0};;
+const double *surface_n[6] = { n_top, n_bottom,
+				      n_front, n_back,
+				      n_left, n_right};
 
   
 
