@@ -56,7 +56,7 @@
 namespace SCIRun {
   class SCISHARE Exception {
   public:
-    Exception();
+    Exception(bool ignoreWait=false);
     virtual ~Exception();
     virtual const char* message() const=0;
     virtual const char* type() const=0;
@@ -66,6 +66,7 @@ namespace SCIRun {
 
     static void sci_throw(const Exception& exc);
     static bool alwaysFalse();
+    static bool wait_for_debugger;
   protected:
     const char* stacktrace_;
   private:

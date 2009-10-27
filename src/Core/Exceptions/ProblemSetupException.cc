@@ -35,8 +35,8 @@ DEALINGS IN THE SOFTWARE.
 
 using namespace Uintah;
 
-ProblemSetupException::ProblemSetupException(const std::string& msg, const char* file, int line)
-    : d_msg(msg)
+ProblemSetupException::ProblemSetupException(const std::string& msg, const char* file, int line, bool ignoreWait)
+    : Exception(ignoreWait), d_msg(msg) 
 {
   std::ostringstream s;
   s << "ProblemSetupException thrown: " << file << ", line: " << line << "\n" << d_msg;
