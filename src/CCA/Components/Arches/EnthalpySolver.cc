@@ -517,10 +517,7 @@ void EnthalpySolver::buildLinearMatrix(const ProcessorGroup* pc,
     
     // Get the PerPatch CellInformation data
     PerPatch<CellInformationP> cellInfoP;
-    if (new_dw->exists(d_lab->d_cellInfoLabel, indx, patch)) 
-      new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
-    else 
-      throw VariableNotFoundInGrid("cellInformation"," ", __FILE__, __LINE__);
+    new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
     CellInformation* cellinfo = cellInfoP.get().get_rep();
 
     // from old_dw get PCELL, DENO, FO
@@ -988,11 +985,7 @@ EnthalpySolver::enthalpyLinearSolve(const ProcessorGroup* pc,
     ArchesConstVariables constEnthalpyVars;
 
     PerPatch<CellInformationP> cellInfoP;
-    if (new_dw->exists(d_lab->d_cellInfoLabel, indx, patch)){
-      new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
-    }else{ 
-      throw VariableNotFoundInGrid("cellInformation"," ", __FILE__, __LINE__);
-    }
+    new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
     CellInformation* cellinfo = cellInfoP.get().get_rep();
 
     new_dw->get(constEnthalpyVars.cellType,      d_lab->d_cellTypeLabel,     indx, patch, gac, 1);

@@ -261,11 +261,7 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
     
     // Get the PerPatch CellInformation data
     PerPatch<CellInformationP> cellInfoP;
-    if (new_dw->exists(d_lab->d_cellInfoLabel, indx, patch)){ 
-      new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
-    }else{ 
-      throw VariableNotFoundInGrid("cellInformation"," ", __FILE__, __LINE__);
-    }
+    new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
     CellInformation* cellinfo = cellInfoP.get().get_rep();
 
     if (d_MAlab) {
@@ -601,11 +597,7 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
                                              d_lab->d_wmomBoundarySrcLabel, indx, patch);
 
     PerPatch<CellInformationP> cellInfoP;
-    if (new_dw->exists(d_lab->d_cellInfoLabel, indx, patch)){
-      new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
-    }else {
-      throw VariableNotFoundInGrid("cellInformation"," ", __FILE__, __LINE__);
-    }
+    new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
     CellInformation* cellinfo = cellInfoP.get().get_rep();
     
     // get multimaterial momentum source terms

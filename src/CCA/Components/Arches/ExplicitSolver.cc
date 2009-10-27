@@ -1072,10 +1072,7 @@ ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
 
     // Get the PerPatch CellInformation data
     PerPatch<CellInformationP> cellInfoP;
-    if (new_dw->exists(d_lab->d_cellInfoLabel, indx, patch)) 
-      new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
-    else 
-      throw VariableNotFoundInGrid("cellInformation"," ", __FILE__, __LINE__);
+    new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
     CellInformation* cellinfo = cellInfoP.get().get_rep();
 
 
@@ -1614,10 +1611,7 @@ ExplicitSolver::computeVorticity(const ProcessorGroup* ,
 
     // Get the PerPatch CellInformation data
     PerPatch<CellInformationP> cellInfoP;
-    if (new_dw->exists(d_lab->d_cellInfoLabel, indx, patch)) 
-      new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
-    else 
-      throw VariableNotFoundInGrid("cellInformation"," ", __FILE__, __LINE__);
+    new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
     CellInformation* cellinfo = cellInfoP.get().get_rep();
     
     if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
@@ -2454,11 +2448,7 @@ ExplicitSolver::getDensityGuess(const ProcessorGroup*,
     constCCVariable<int> cellType;
 
     PerPatch<CellInformationP> cellInfoP;
-    if (new_dw->exists(d_lab->d_cellInfoLabel, indx, patch)){
-      new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
-    }else{ 
-      throw VariableNotFoundInGrid("cellInformation"," ", __FILE__, __LINE__);
-    }
+    new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
     CellInformation* cellinfo = cellInfoP.get().get_rep();
 
     DataWarehouse* old_values_dw;
@@ -3104,10 +3094,7 @@ ExplicitSolver::computeMMSError(const ProcessorGroup*,
     new_dw->get(wFmms,     d_lab->d_wFmmsLabel,         indx, patch, gn, 0);
 
     PerPatch<CellInformationP> cellInfoP;
-    if (new_dw->exists(d_lab->d_cellInfoLabel, indx, patch)) 
-      new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
-    else 
-      throw VariableNotFoundInGrid("cellInformation"," ", __FILE__, __LINE__);
+    new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
     CellInformation* cellinfo = cellInfoP.get().get_rep();
 
     //getting current time
