@@ -2674,8 +2674,8 @@ void MPMArches::doMomExchange(const ProcessorGroup*,
     if (new_dw->exists(d_Alab->d_cellInfoLabel, matlIndex, patch)) 
       throw InvalidValue("cellInformation should not be initialized yet",
 			 __FILE__, __LINE__);
-    if (old_dw->exists(d_Alab->d_cellInfoLabel, matlIndex, patch)) 
-      old_dw->get(cellInfoP, d_Alab->d_cellInfoLabel, matlIndex, patch);
+    if (old_dw->exists(d_Alab->d_cellInfoLabel, matlIndex, patch)) {
+      old_dw->get(cellInfoP, d_Alab->d_cellInfoLabel, matlIndex, patch); }
     else {
       cellInfoP.setData(scinew CellInformation(patch));
       //cout << "cellInfo MPMArches INIT" << endl;
