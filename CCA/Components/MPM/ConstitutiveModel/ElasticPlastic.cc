@@ -882,6 +882,11 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
       pDeformGrad_new[idx] = tensorF_new;
       double J = tensorF_new.Determinant();
 
+      if(d_setStressToZero && pLocalized[idx]){
+        pDeformGrad_new[idx] = pDeformGrad[idx];
+        J = pDeformGrad[idx].Determinant();
+      }
+
       if(pLocalized[idx] && J <=0.0){
         pDeformGrad_new[idx] = one;
         tensorF_new = one;
