@@ -82,12 +82,10 @@ namespace SCIRun {
 using namespace std;
 using namespace Uintah;
 
-bool Exception::wait_for_debugger=false;
-
 Exception::Exception(bool ignoreWait)
 {
   stacktrace_ = strdup(getStackTrace().c_str());
-  if(wait_for_debugger && !ignoreWait) 
+  if(!ignoreWait) 
     WAIT_FOR_DEBUGGER();
 }
 

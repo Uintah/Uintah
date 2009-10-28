@@ -66,7 +66,6 @@ namespace SCIRun {
 
     static void sci_throw(const Exception& exc);
     static bool alwaysFalse();
-    static bool wait_for_debugger;
   protected:
     const char* stacktrace_;
   private:

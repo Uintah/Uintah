@@ -79,7 +79,6 @@
 #include <Core/Thread/ThreadGroup.h>
 #include <Core/Thread/WorkQueue.h>
 #include <Core/Thread/Thread_unix.h>
-#include <Core/Exceptions/Exception.h>
 #include <Core/Util/Assert.h>
 #include <cerrno>
 extern "C" {
@@ -704,8 +703,7 @@ handle_abort_signals(int sig, SigContext ctx)
   if(print)
     fprintf(stderr, "%c%c%cThread \"%s\"(pid %d) caught signal %s\n", 7,7,7,tname, getpid(), signam);
   
-  if(SCIRun::Exception::wait_for_debugger)
-    WAIT_FOR_DEBUGGER();
+  WAIT_FOR_DEBUGGER();
 
   Thread::niceAbort(NULL,print);
   
@@ -785,8 +783,7 @@ handle_quit(int sig, SigContext /*ctx*/)
   if(print)
     fprintf(stderr, "Thread \"%s\"(pid %d) caught signal %s\n", tname, pid, signam);
 
-  if(SCIRun::Exception::wait_for_debugger)
-    WAIT_FOR_DEBUGGER();
+  WAIT_FOR_DEBUGGER();
   Thread::niceAbort(NULL, print); // Enter the monitor
   control_c_sema.up();
 }
