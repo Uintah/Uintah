@@ -58,24 +58,8 @@ endif
 # compute_Lnorm_udas
 
 ifeq ($(IS_STATIC_BUILD),yes)
-  PSELIBS := \
-    Core_DataArchive                    \
-    Core_Grid                           \
-    Core_ProblemSpec                    \
-    Core_GeometryPiece                  \
-    CCA_Components_ProblemSpecification \
-    CCA_Ports                           \
-    Core_Parallel                       \
-    Core_Math                           \
-    Core_Disclosure                     \
-    Core_Util                           \
-    Core_Thread                         \
-    Core_Persistent                     \
-    Core_Exceptions                     \
-    Core_Containers                     \
-    Core_Malloc                         \
-    Core_IO                             \
-    Core_OS                             
+
+  PSELIBS := $(CORE_STATIC_PSELIBS)
 
 else # Non-static build
 
@@ -97,18 +81,7 @@ endif
 
 ifeq ($(IS_STATIC_BUILD),yes)
   LIBS := \
-        $(TEEM_LIBRARY) \
-        $(XML2_LIBRARY) \
-        $(Z_LIBRARY) \
-        $(THREAD_LIBRARY) \
-        $(F_LIBRARY) \
-        $(PETSC_LIBRARY) \
-        $(HYPRE_LIBRARY) \
-        $(BLAS_LIBRARY) \
-        $(LAPACK_LIBRARY) \
-        $(MPI_LIBRARY) \
-        $(X_LIBRARY) \
-        $(M_LIBRARY)
+	$(CORE_STATIC_LIBS)
 else
   LIBS :=
 endif
