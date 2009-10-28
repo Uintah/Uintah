@@ -35,9 +35,11 @@ DEALINGS IN THE SOFTWARE.
 
 #include <Core/Parallel/uintahshare.h>
 
-// macro used by components to eliminate excess spew on 
-// large parallel runs
-#define proc0cout if(Parallel::getMPIRank()==0) cout
+// Macro used by components to eliminate excess spew on large parallel runs...
+//
+//   Make sure that MPI_Init is called before using 'proc0cout'...
+//
+#define proc0cout if( Uintah::Parallel::getMPIRank() == 0 ) cout
 
 namespace Uintah {
 
