@@ -50,21 +50,9 @@ else # Non-static build
 endif
 
 ifeq ($(IS_STATIC_BUILD),yes)
-  LIBS := \
-        $(TEEM_LIBRARY) \
-        $(XML2_LIBRARY) \
-        $(Z_LIBRARY) \
-        $(THREAD_LIBRARY) \
-        $(F_LIBRARY) \
-        $(PETSC_LIBRARY) \
-        $(HYPRE_LIBRARY) \
-        $(BLAS_LIBRARY) \
-        $(LAPACK_LIBRARY) \
-        $(MPI_LIBRARY) \
-        $(X_LIBRARY) \
-        $(M_LIBRARY)
+  LIBS := $(CORE_STATIC_LIBS)
 else
-  LIBS    := $(XML2_LIBRARY) $(M_LIBRARY) $(MPI_LIBRARY) $(F_LIBRARY)
+  LIBS := $(XML2_LIBRARY) $(M_LIBRARY) $(MPI_LIBRARY) $(F_LIBRARY)
 endif
 
 include $(SCIRUN_SCRIPTS)/program.mk
@@ -76,21 +64,9 @@ PROGRAM := $(SRCDIR)/mpi_test
 SRCS    := $(SRCDIR)/mpi_test.cc
 
 ifeq ($(IS_STATIC_BUILD),yes)
-  LIBS := \
-        $(TEEM_LIBRARY) \
-        $(XML2_LIBRARY) \
-        $(Z_LIBRARY) \
-        $(THREAD_LIBRARY) \
-        $(F_LIBRARY) \
-        $(PETSC_LIBRARY) \
-        $(HYPRE_LIBRARY) \
-        $(BLAS_LIBRARY) \
-        $(LAPACK_LIBRARY) \
-        $(MPI_LIBRARY) \
-        $(X_LIBRARY) \
-        $(M_LIBRARY)
+  LIBS  := $(CORE_STATIC_LIBS)
 else
-  LIBS    := $(MPI_LIBRARY) $(M_LIBRARY) 
+  LIBS  := $(MPI_LIBRARY) $(M_LIBRARY) 
 endif
 
 ifeq ($(IS_STATIC_BUILD),yes)
