@@ -43,10 +43,13 @@ SRCS := \
 	$(SRCDIR)/varsummary.cc  \
 	$(SRCDIR)/puda.cc
 
-ifeq ($(LARGESOS),yes)
-  PSELIBS := Datflow Packages/Uintah
-else
-  PSELIBS := \
+ifeq ($(IS_STATIC_BUILD),yes)
+  PSELIBS := $(CORE_STATIC_PSELIBS)
+else # Non-static build
+  ifeq ($(LARGESOS),yes)
+    PSELIBS := Datflow Packages/Uintah
+  else
+    PSELIBS := \
         CCA/Components/ProblemSpecification \
         CCA/Ports          \
         Core/DataArchive   \
@@ -64,10 +67,14 @@ else
         Core/Persistent  \
         Core/Thread      \
         Core/Util        
-
+  endif
 endif
 
-LIBS    := $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) $(Z_LIBRARY) $(TEEM_LIBRARY) $(F_LIBRARY)
+ifeq ($(IS_STATIC_BUILD),yes)
+  LIBS := $(CORE_STATIC_LIBS)
+else
+  LIBS    := $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) $(Z_LIBRARY) $(TEEM_LIBRARY) $(F_LIBRARY)
+endif
 
 include $(SCIRUN_SCRIPTS)/program.mk
 

@@ -36,16 +36,24 @@ SRCDIR := testprograms/PatchBVH
 PROGRAM := $(SRCDIR)/PatchBVHTest
 SRCS    := $(SRCDIR)/PatchBVHTest.cc
 
-PSELIBS := \
+ifeq ($(IS_STATIC_BUILD),yes)
+  PSELIBS := CCA/Components/Regridder $(CORE_STATIC_PSELIBS)
+else # Non-static build
+  PSELIBS := \
         Core/Exceptions          \
         Core/Geometry            \
         Core/Grid                \
         Core/Util                \
 	\
 	Core/Math
+endif
 
-LIBS := $(BLAS_LIBRARY) $(LAPACK_LIBRARY) $(THREAD_LIBRARY) $(Z_LIBRARY) $(MPI_LIBRARY) \
-        $(TEEM_LIBRARY) $(PNG_LIBRARY)
+ifeq ($(IS_STATIC_BUILD),yes)
+  LIBS := $(CORE_STATIC_LIBS)
+else
+  LIBS := $(BLAS_LIBRARY) $(LAPACK_LIBRARY) $(THREAD_LIBRARY) $(Z_LIBRARY) $(MPI_LIBRARY) \
+          $(TEEM_LIBRARY) $(PNG_LIBRARY)
+endif
 
 include $(SCIRUN_SCRIPTS)/program.mk
 

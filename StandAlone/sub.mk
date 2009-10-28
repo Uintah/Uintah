@@ -66,48 +66,67 @@ endif
 
 SRCS := $(SRCDIR)/sus.cc
 
-ifeq ($(IS_AIX),yes)
-  SET_AIX_LIB := yes
-endif
-
-ifeq ($(IS_REDSTORM),yes)
-  SET_AIX_LIB := yes
-endif
-
-ifeq ($(SET_AIX_LIB),yes)
-  AIX_LIBRARY := \
-        Core/Containers   \
-        Core/Malloc       \
-        Core/Math         \
-        Core/OS           \
-        Core/Persistent   \
-        Core/Thread       \
-        Core/IO                          \
-        Core/Math                        \
-        Core/GeometryPiece               \
-        CCA/Components/Parent            \
-        CCA/Components/SwitchingCriteria \
-        CCA/Components/OnTheFlyAnalysis  \
-        CCA/Components/Schedulers           \
-        CCA/Components/SimulationController \
-        CCA/Components/Solvers              \
-        CCA/Components/Examples          \
-        CCA/Components/Angio             \
-        $(ARCHES_LIBS)                                   \
-        $(MPMARCHES_LIB)                                 \
-        $(MPM_LIB)                                       \
-        $(ICE_LIB)                                       \
-        $(MPMICE_LIB)                                    \
-        CCA/Components/PatchCombiner     \
-        $(ARCHES_SUB_LIBS)
-endif
-
 PROGRAM := StandAlone/sus
 
-ifeq ($(LARGESOS),yes)
-  PSELIBS := Packages/Uintah
-else
+ifeq ($(IS_STATIC_BUILD),yes)
   PSELIBS := \
+    CCA_Components_Parent               \
+    CCA_Components_Solvers              \
+    CCA_Components_DataArchiver         \
+    CCA_Components_Schedulers           \
+    CCA_Components_SimulationController \
+    CCA_Components_Regridder            \
+    CCA_Components_LoadBalancers        \
+    CCA_Components_SwitchingCriteria    \
+    CCA_Components_Examples             \
+    CCA_Components_SpatialOps           \
+    CCA_Components_Angio                \
+    CCA_Components_MPMArches            \
+    CCA_Components_MPMICE               \
+    CCA_Components_ICE                  \
+    CCA_Components_MPM                  \
+    CCA_Components_OnTheFlyAnalysis     \
+    \
+    $(ARCHES_LIBS)                      \
+    $(ARCHES_SUB_LIBS)                  \
+    $(MPMARCHES_LIB)                    \
+    $(MPM_LIB)                          \
+    $(ICE_LIB)                          \
+    $(MPMICE_LIB)                       \
+    \
+    CCA_Components_Models               \
+    CCA/Components/PatchCombiner        \
+    \
+    CCA_Components_Arches_MCRT_ArchesRMCRT \
+    CCA_Components_Arches_ChemMix_TabProps \
+    \
+    Core_DataArchive                    \
+    Core_Grid                           \
+    Core_ProblemSpec                    \
+    Core_GeometryPiece                  \
+    Core_Tracker                        \
+    CCA_Components_ProblemSpecification \
+    CCA_Ports                           \
+    Core_Parallel                       \
+    Core_Labels                         \
+    Core_Math                           \
+    Core_Disclosure                     \
+    Core_Util                           \
+    Core_Thread                         \
+    Core_Persistent                     \
+    Core_Geometry                       \
+    Core_Exceptions                     \
+    Core_Containers                     \
+    Core_Malloc                         \
+    Core_IO                             \
+    Core_OS
+
+else
+
+  ifeq ($(LARGESOS),yes)
+    PSELIBS := Packages/Uintah
+  else
+    PSELIBS := \
         Core/Containers   \
         Core/Exceptions   \
         Core/Geometry     \
@@ -115,43 +134,31 @@ else
         Core/Persistent   \
         Core/Thread       \
         Core/Util         \
-        Core/DataArchive \
-        Core/Disclosure  \
-        Core/Exceptions  \
-        Core/Grid        \
-        Core/Labels      \
-        Core/Math        \
-        Core/Parallel    \
-        Core/Tracker     \
-        Core/Util        \
-        CCA/Ports        \
-        CCA/Components/Parent \
-        CCA/Components/Models \
-        CCA/Components/DataArchiver  \
-        CCA/Components/LoadBalancers \
-        CCA/Components/Regridder     \
-        Core/ProblemSpec             \
+        Core/DataArchive  \
+        Core/Disclosure   \
+        Core/Exceptions   \
+        Core/Grid         \
+        Core/Labels       \
+        Core/Math         \
+        Core/Parallel     \
+        Core/Tracker      \
+        Core/Util         \
+        CCA/Ports         \
+        CCA/Components/Parent               \
+        CCA/Components/Models               \
+        CCA/Components/DataArchiver         \
+        CCA/Components/LoadBalancers        \
+        CCA/Components/Regridder            \
+        Core/ProblemSpec                    \
         CCA/Components/SimulationController \
         CCA/Components/Schedulers           \
         CCA/Components/ProblemSpecification \
-        CCA/Components/Solvers              \
-        $(AIX_LIBRARY)
+        CCA/Components/Solvers              
+  endif
 endif
 
-ifeq ($(SET_AIX_LIB),yes)
-  LIBS := \
-        $(TEEM_LIBRARY) \
-        $(XML2_LIBRARY) \
-        $(Z_LIBRARY) \
-        $(THREAD_LIBRARY) \
-        $(F_LIBRARY) \
-        $(PETSC_LIBRARY) \
-        $(HYPRE_LIBRARY) \
-        $(BLAS_LIBRARY) \
-        $(LAPACK_LIBRARY) \
-        $(MPI_LIBRARY) \
-        $(X_LIBRARY) \
-        $(M_LIBRARY)
+ifeq ($(IS_STATIC_BUILD),yes)
+  LIBS := $(CORE_STATIC_LIBS)
 else
   LIBS := $(XML2_LIBRARY) $(F_LIBRARY) $(HYPRE_LIBRARY)      \
           $(CANTERA_LIBRARY) $(ZOLTAN_LIBRARY)               \
@@ -171,71 +178,10 @@ PROGRAM := StandAlone/partvarRange
 include $(SCIRUN_SCRIPTS)/program.mk
 
 ##############################################
-# selectpart
-
-SRCS := $(SRCDIR)/selectpart.cc
-PROGRAM := StandAlone/selectpart
-
-ifeq ($(LARGESOS),yes)
-  PSELIBS := Datflow Packages/Uintah
-else
-  PSELIBS := \
-        Core/Exceptions    \
-        Core/Grid          \
-        Core/Util          \
-        Core/Math          \
-        Core/Parallel      \
-        Core/Disclosure    \
-        Core/ProblemSpec   \
-        Core/Disclosure    \
-        Core/DataArchive   \
-        CCA/Ports          \
-        CCA/Components/ProblemSpecification \
-        Core/Containers  \
-        Core/Exceptions  \
-        Core/Geometry    \
-        Core/OS          \
-        Core/Persistent  \
-        Core/Thread      \
-        Core/Util        \
-
-endif
-
-LIBS := $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) $(Z_LIBRARY) \
-	$(TEEM_LIBRARY) $(F_LIBRARY)
-
-include $(SCIRUN_SCRIPTS)/program.mk
-
-##############################################
 # compare_uda
 
 SRCS    := $(SRCDIR)/compare_uda.cc
 PROGRAM := StandAlone/compare_uda
-
-ifeq ($(LARGESOS),yes)
-  PSELIBS := Datflow Packages/Uintah
-else
-  PSELIBS := \
-        Core/Exceptions    \
-        Core/Grid          \
-        Core/Util          \
-        Core/Parallel \
-        Core/Disclosure    \
-        Core/Math          \
-        Core/ProblemSpec   \
-        Core/DataArchive   \
-        CCA/Ports          \
-        CCA/Components/ProblemSpecification \
-        Core/Exceptions  \
-        Core/Containers  \
-        Core/Geometry    \
-        Core/OS          \
-        Core/Persistent  \
-        Core/Thread      \
-        Core/Util
-endif
-
-LIBS := $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) $(TEEM_LIBRARY) $(F_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/program.mk
 
@@ -245,58 +191,17 @@ include $(SCIRUN_SCRIPTS)/program.mk
 SRCS := $(SRCDIR)/slb.cc
 PROGRAM := StandAlone/slb
 
-ifeq ($(LARGESOS),yes)
-  PSELIBS := Datflow Packages/Uintah
-else
-  PSELIBS := \
-	Core/Grid \
-	Core/Util \
-	Core/GeometryPiece \
-	Core/Parallel \
-	Core/Exceptions \
-	Core/Math \
-	Core/ProblemSpec \
-	CCA/Ports \
-	CCA/Components/ProblemSpecification \
-	Core/Exceptions \
-        Core/Geometry
-endif
-
-LIBS    := $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) $(F_LIBRARY) $(TEEM_LIBRARY) $(PNG_LIBRARY)
-
 include $(SCIRUN_SCRIPTS)/program.mk
 
 ##############################################
 # restart_merger
 
+#ifeq ($(IS_STATIC_BUILD),yes)
+#  PSELIBS := CCA/Components/Parent $(CORE_STATIC_PSELIBS)
+#endif
+
 SRCS := $(SRCDIR)/restart_merger.cc
 PROGRAM := StandAlone/restart_merger
-
-ifeq ($(LARGESOS),yes)
-  PSELIBS := Datflow Packages/Uintah
-else
-  PSELIBS := \
-        Core/DataArchive   \
-        Core/Disclosure    \
-        Core/Exceptions    \
-        Core/GeometryPiece \
-        Core/Grid          \
-        Core/Parallel      \
-        Core/ProblemSpec   \
-        Core/Util          \
-        CCA/Components/DataArchiver         \
-        CCA/Components/Parent               \
-        CCA/Components/ProblemSpecification \
-        CCA/Components/SimulationController \
-        CCA/Ports          \
-        Core/Exceptions  \
-        Core/Geometry    \
-        Core/Thread      \
-        Core/Util        \
-        Core/OS          \
-        Core/Containers
-endif
-LIBS    := $(XML2_LIBRARY) $(M_LIBRARY) $(MPI_LIBRARY) $(F_LIBRARY) $(TEEM_LIBRARY) $(PNG_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/program.mk
 
@@ -305,6 +210,18 @@ include $(SCIRUN_SCRIPTS)/program.mk
 
 SRCS := $(SRCDIR)/gambitFileReader.cc
 PROGRAM := StandAlone/gambitFileReader
+
+include $(SCIRUN_SCRIPTS)/program.mk
+
+##############################################
+# selectpart
+
+SRCS := $(SRCDIR)/selectpart.cc
+PROGRAM := StandAlone/selectpart
+
+ifeq ($(IS_STATIC_BUILD),yes)
+  PSELIBS := Core/Tracker $(CORE_STATIC_PSELIBS)
+endif
 
 include $(SCIRUN_SCRIPTS)/program.mk
 

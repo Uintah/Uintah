@@ -72,7 +72,7 @@ AC_INIT([Uintah],[1.25],[csafe-homebrew@cs.utah.edu])
 ##
 ##     type "autoconf --version" to find out what version you have.
 ##
-AC_PREREQ(2.63)
+AC_PREREQ(2.61)
 
 AC_COPYRIGHT(
 ##
@@ -367,11 +367,16 @@ SCI_ARG_WITH(visit,
   [with_visit="$withval"],
   [with_visit=""])
 
+SCI_ARG_ENABLE(static,
+  AC_HELP_STRING(--enable-static,
+                 Build a statically linked version of Uintah),
+  [static="yes"],
+  [static="no"])
 SCI_ARG_ENABLE(verbosity,
   AC_HELP_STRING(--enable-verbosity,
                  Turn on verbose configure output),
-  [debugging="yes"],
-  [debugging="no"])
+  [verbosity="yes"],
+  [verbosity="no"])
 SCI_ARG_ENABLE(threads,
   AC_HELP_STRING(--enable-threads,
                  Specify a thread implementation (pthreads or irix)),
@@ -549,7 +554,6 @@ case $host in
   *-aix*)
     NUM_CPUS=4
     IS_AIX="yes"
-    MAKE_ARCHIVES="yes"
     ;;
   *-mingw*)
     NUM_CPUS=2
@@ -571,7 +575,6 @@ AC_SUBST(IS_OSX)
 AC_SUBST(DEF_OSX)
 AC_SUBST(IS_WIN)
 AC_SUBST(IS_AIX)
-AC_SUBST(MAKE_ARCHIVES)
 sci_defs_files="$sci_defs_files include/sci_defs/osx_testdefs.h"
 
 AC_MSG_CHECKING(physical processor count)
@@ -801,7 +804,6 @@ else
 fi
 
 
-AC_SUBST(SO_OR_ARCHIVE_EXTENSION)
 AC_SUBST(NOPRINTDIR)
 AC_SUBST(EXENAME)
 AC_SUBST(LARGESOS)
@@ -905,6 +907,27 @@ if test "$BUILD_ARCHES" = no -a "$BUILD_RADIATION" = no; then
   sci_required_fortran=no
 fi
 
+##  --  Handle static build stuff... ------------------------
+
+IS_STATIC_BUILD="no"
+
+# If --enable-static, or if lib extension already set to 'a' (eg: AIX):
+if test "$static" = "yes" -o "$SO_OR_ARCHIVE_EXTENSION" = "a"; then
+  AC_MSG_WARN( Building a statically linked version of Uintah! )
+  IS_STATIC_BUILD="yes"
+  SO_OR_ARCHIVE_EXTENSION=a
+  MAKE_ARCHIVES="yes"
+  STATIC_BUILD_DEF="#define STATIC_BUILD 1"
+else
+  SOFLAGS="-shared ${SOFLAGS}"
+fi
+
+AC_SUBST(STATIC_BUILD_DEF)
+AC_SUBST(MAKE_ARCHIVES)
+AC_SUBST(SOFLAGS)
+AC_SUBST(IS_STATIC_BUILD)
+AC_SUBST(SO_OR_ARCHIVE_EXTENSION)
+
 ##  --  search for MallocTrace ------------------------
 
 if test "$with_malloc_trace"; then
@@ -968,7 +991,7 @@ AC_SUBST(ZOLTAN_LIB_DIR_FLAG)
 
 sci_defs_files="$sci_defs_files include/sci_defs/uintah_testdefs.h"
 
-if test $sci_required_fortran = "yes"; then
+if test "$sci_required_fortran" = "yes"; then
   if test ! -e "`type $F77 | sed 's%^.* /%/%'`"; then
     SCI_MSG_ERROR(Could not find the specified Fortran compiler ($F77))
   fi
@@ -994,7 +1017,7 @@ case $host in
       CFLAGS="$CFLAGS -pthread"
       CXXFLAGS="$CXXFLAGS -pthread"
     fi
-    SOFLAGS="-shared -warning_unresolved -update_registry \$(LIBDIR)/so_locations"
+    SOFLAGS="-warning_unresolved -update_registry \$(LIBDIR)/so_locations"
     LDFLAGS=""
     LDRUN_PREFIX="-rpath "
     REPOSITORY_FLAGS="-ptr"
@@ -1021,7 +1044,6 @@ case $host in
 
     case $CXX in
       *g++*)
-         SOFLAGS="-shared ${SOFLAGS}"
          # bigtoc helps keep gcc from breaking...
          LDFLAGS="-Wl,-bbigtoc $LDFLAGS"
          ;;
@@ -1177,7 +1199,7 @@ case $host in
     CFLAGS="$CFLAGS $extra_cflags"
     CXXFLAGS="$CXXFLAGS $extra_cflags"
 
-    if test $sci_required_fortran = "yes"; then
+    if test "$sci_required_fortran" = "yes"; then
       SCI_CHECK_VERSION($F77,--version,0.5.25,,
         echo configure: error: wrong $F77 version.; exit)
       case $F77 in
@@ -1256,7 +1278,7 @@ case $host in
       SCI_CHECK_VERSION($CC,--version,2.95.3,,
         echo configure: error: wrong $CC version.; exit)
 
-      if test $sci_required_fortran = "yes"; then
+      if test "$sci_required_fortran" = "yes"; then
         SCI_CHECK_VERSION($F77,--version,0.5.25,,
           echo configure: error: wrong $F77 version.; exit)
       fi
@@ -1303,7 +1325,6 @@ case $host in
     esac
 
     CXXFLAGS="$CXXFLAGS $extra_cflags"
-    SOFLAGS="-shared ${SOFLAGS}"
     NEED_SONAME=yes
     ;;
 esac
@@ -1517,7 +1538,6 @@ AC_SUBST(CXXFLAGS)
 AC_SUBST(CPPFLAGS)
 AC_SUBST(FFLAGS)
 AC_SUBST(LDFLAGS)
-AC_SUBST(SOFLAGS)
 AC_SUBST(ASFLAGS)
 AC_SUBST(LDRUN_PREFIX)
 AC_SUBST(extra_cflags)
@@ -1544,10 +1564,6 @@ case $host in
   *-aix*)
 
     AC_MSG_WARN(AIX is not completely supported!)
-
-    # On AIX, don't automatically generate .so's.  Make .a's and then
-    # later we will make .so's from them.
-    SO_OR_ARCHIVE_EXTENSION=a
     no_optimize_flag=-O0
     case $CXX in
       *xlC*)

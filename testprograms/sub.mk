@@ -31,29 +31,36 @@
 
 SRCDIR := testprograms
 
-SUBDIRS := $(SRCDIR)/Malloc $(SRCDIR)/Thread \
-	$(SRCDIR)/TestSuite               \
+SUBDIRS := \
+        $(SRCDIR)/Malloc                  \
+        $(SRCDIR)/Thread                  \
+        $(SRCDIR)/TestSuite               \
         $(SRCDIR)/TestFastMatrix          \
         $(SRCDIR)/TestMatrix3             \
         $(SRCDIR)/TestConsecutiveRangeSet \
         $(SRCDIR)/TestRangeTree           \
         $(SRCDIR)/TestBoxGrouper          \
         $(SRCDIR)/BNRRegridder            \
-	$(SRCDIR)/IteratorTest            \
-	$(SRCDIR)/RegionTest            \
-	$(SRCDIR)/CubeRootTest            \
-	$(SRCDIR)/PatchBVH
-
-#       $(SRCDIR)/SFCTest \
-
+        $(SRCDIR)/IteratorTest            \
+        $(SRCDIR)/RegionTest              \
+        $(SRCDIR)/CubeRootTest            \
+        $(SRCDIR)/PatchBVH
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
 
 PROGRAM := $(SRCDIR)/RunTests
+SRCS     = $(SRCDIR)/RunTests.cc
 
-SRCS    = $(SRCDIR)/RunTests.cc
-
-PSELIBS := \
+ifeq ($(IS_STATIC_BUILD),yes)
+  PSELIBS := \
+        testprograms/TestSuite               \
+        testprograms/TestMatrix3             \
+        testprograms/TestConsecutiveRangeSet \
+        testprograms/TestRangeTree           \
+        testprograms/TestBoxGrouper          \
+        $(CORE_STATIC_PSELIBS)
+else # Non-static build
+  PSELIBS := \
         testprograms/TestSuite               \
         testprograms/TestMatrix3             \
         Core/Util                            \
@@ -62,8 +69,13 @@ PSELIBS := \
         testprograms/TestBoxGrouper \
 	\
 	Core/Math
+endif
 
-LIBS := $(M_LIBRARY) $(MPI_LIBRARY) $(F_LIBRARY) $(BLAS_LIBRARY) $(LAPACK_LIBRARY) $(THREAD_LIBRARY) $(Z_LIBRARY) \
-        $(TEEM_LIBRARY) $(PNG_LIBRARY)
+ifeq ($(IS_STATIC_BUILD),yes)
+  LIBS := $(CORE_STATIC_LIBS)
+else
+  LIBS := $(M_LIBRARY) $(MPI_LIBRARY) $(F_LIBRARY) $(BLAS_LIBRARY) $(LAPACK_LIBRARY) $(THREAD_LIBRARY) $(Z_LIBRARY) \
+          $(TEEM_LIBRARY) $(PNG_LIBRARY)
+endif
 
 include $(SCIRUN_SCRIPTS)/program.mk

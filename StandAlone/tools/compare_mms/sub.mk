@@ -33,11 +33,17 @@
 SRCDIR := StandAlone/tools/compare_mms
 
 
-ifeq ($(LARGESOS),yes)
-  PSELIBS := Packages/Uintah
-else
+ifeq ($(IS_STATIC_BUILD),yes)
 
-  PSELIBS := \
+  PSELIBS := $(CORE_STATIC_PSELIBS)
+
+else # Non-static build
+
+  ifeq ($(LARGESOS),yes)
+    PSELIBS := Packages/Uintah
+  else
+
+    PSELIBS := \
         Core/Containers   \
         Core/Exceptions   \
         Core/Geometry     \
@@ -54,21 +60,25 @@ else
         CCA/Components/Schedulers           \
         CCA/Components/ProblemSpecification \
         CCA/Components/PatchCombiner
+  endif
 endif
 
-LIBS := $(BLAS_LIBRARY) $(LAPACK_LIBRARY) $(THREAD_LIBRARY) $(Z_LIBRARY) $(TEEM_LIBRARY) $(PNG_LIBRARY)
+ifeq ($(IS_STATIC_BUILD),yes)
+  LIBS := $(CORE_STATIC_LIBS)
+else
+  LIBS := $(BLAS_LIBRARY) $(LAPACK_LIBRARY) $(THREAD_LIBRARY) $(Z_LIBRARY) $(TEEM_LIBRARY) $(PNG_LIBRARY)
+endif
 
 
 ########################################################
 # compare_mms
 
-SRCS := $(SRCDIR)/compare_mms.cc \
-        $(SRCDIR)/ExpMMS.cc \
-        $(SRCDIR)/LinearMMS.cc \
-        $(SRCDIR)/SineMMS.cc 
+SRCS    := $(SRCDIR)/compare_mms.cc \
+           $(SRCDIR)/ExpMMS.cc \
+           $(SRCDIR)/LinearMMS.cc \
+           $(SRCDIR)/SineMMS.cc 
 
 PROGRAM := $(SRCDIR)/compare_mms
-
 
 include $(SCIRUN_SCRIPTS)/program.mk
 
@@ -76,13 +86,12 @@ include $(SCIRUN_SCRIPTS)/program.mk
 ########################################################
 # compare_scalar
 
-SRCS := $(SRCDIR)/compare_scalar.cc 
+SRCS    := $(SRCDIR)/compare_scalar.cc 
 PROGRAM := $(SRCDIR)/compare_scalar
-
-
 
 include $(SCIRUN_SCRIPTS)/program.mk
 
+########################################################
 
 compare_mms: prereqs StandAlone/tools/compare_mms/compare_mms
 compare_scalar: prereqs StandAlone/tools/compare_mms/compare_scalar

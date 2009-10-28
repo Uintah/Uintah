@@ -34,10 +34,33 @@ SRCDIR := StandAlone/tools/graphview
 
 PROGRAM := $(SRCDIR)/graphview
 
-SRCS := $(SRCDIR)/graphview.cc	$(SRCDIR)/GV_TaskGraph.cc 	\
+SRCS := $(SRCDIR)/graphview.cc    \
+        $(SRCDIR)/GV_TaskGraph.cc \
 	$(SRCDIR)/DaVinci.cc
 
-PSELIBS := \
+ifeq ($(IS_STATIC_BUILD),yes)
+  PSELIBS := \
+    Core_DataArchive                    \
+    Core_Grid                           \
+    Core_ProblemSpec                    \
+    Core_GeometryPiece                  \
+    CCA_Components_ProblemSpecification \
+    CCA_Ports                           \
+    Core_Parallel                       \
+    Core_Math                           \
+    Core_Disclosure                     \
+    Core_Util                           \
+    Core_Thread                         \
+    Core_Persistent                     \
+    Core_Exceptions                     \
+    Core_Containers                     \
+    Core_Malloc                         \
+    Core_IO                             \
+    Core_OS                             
+
+else # Non-static build
+
+  PSELIBS := \
 	Core/DataArchive \
 	CCA/Components/ProblemSpecification \
 	Core/ProblemSpec \
@@ -45,8 +68,25 @@ PSELIBS := \
 	Core/Util \
 	Core/Exceptions  \
 	Core/Util  
+endif
 
-LIBS := $(XML2_LIBRARY) $(MPI_LIBRARY) $(TEEM_LIBRARY) $(PNG_LIBRARY)
+ifeq ($(IS_STATIC_BUILD),yes)
+  LIBS := \
+        $(TEEM_LIBRARY)   \
+        $(XML2_LIBRARY)   \
+        $(Z_LIBRARY)      \
+        $(THREAD_LIBRARY) \
+        $(F_LIBRARY)      \
+        $(PETSC_LIBRARY)  \
+        $(HYPRE_LIBRARY)  \
+        $(BLAS_LIBRARY)   \
+        $(LAPACK_LIBRARY) \
+        $(MPI_LIBRARY)    \
+        $(X_LIBRARY)      \
+        $(M_LIBRARY)      
+else
+  LIBS := $(XML2_LIBRARY) $(MPI_LIBRARY) $(TEEM_LIBRARY) $(PNG_LIBRARY)
+endif
 
 include $(SCIRUN_SCRIPTS)/program.mk
 

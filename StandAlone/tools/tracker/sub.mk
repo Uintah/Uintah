@@ -27,23 +27,30 @@
 # 
 # 
 # 
-# 
+
 SRCDIR  := StandAlone/tools/tracker
 PROGRAM := $(SRCDIR)/tracker
 
-ifeq ($(LARGESOS),yes)
-  PSELIBS := Datflow Packages/Uintah
-else
-  PSELIBS := \
-	Core/Util                     \
-        Core/Tracker
+ifeq ($(IS_STATIC_BUILD),yes)
+  PSELIBS := Core/Tracker $(CORE_STATIC_PSELIBS)
+else # Non-static build
+  ifeq ($(LARGESOS),yes)
+    PSELIBS := Datflow Packages/Uintah
+  else
+    PSELIBS := \
+	  Core/Util                     \
+          Core/Tracker
+  endif
 endif
 
 SRCS := \
 	$(SRCDIR)/TrackerProgram.cc                  
 
-
-LIBS := $(XML2_LIBRARY) $(TEEM_LIBRARY) $(PNG_LIBRARY) $(Z_LIBRARY) $(M_LIBRARY) $(MPI_LIBRARY) $(F_LIBRARY)
+ifeq ($(IS_STATIC_BUILD),yes)
+  LIBS := $(CORE_STATIC_LIBS)
+else
+  LIBS := $(XML2_LIBRARY) $(TEEM_LIBRARY) $(PNG_LIBRARY) $(Z_LIBRARY) $(M_LIBRARY) $(MPI_LIBRARY) $(F_LIBRARY)
+endif
 
 include $(SCIRUN_SCRIPTS)/program.mk
 

@@ -48,7 +48,7 @@ namespace SCIRun {
 
 using std::string;
 
-#if !defined(REDSTORM)
+#if !defined(STATIC_BUILD)
 template<> const string find_type_name(long64*)
 {
   static const string name = "long64";

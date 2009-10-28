@@ -42,22 +42,25 @@ DEALINGS IN THE SOFTWARE.
  * ADD MORE POPULATING METHODS ABOVE FOR OTHER TEST SUITES
  */
 
-#include "TestSuite/SuiteTree.h"
-#include "TestMatrix3/testmatrix3.h"
-#include "TestConsecutiveRangeSet/TestConsecutiveRangeSet.h"
-#include "TestRangeTree/TestRangeTree.h"
-#include "TestBoxGrouper/TestBoxGrouper.h"
+#include <testprograms/TestSuite/SuiteTree.h>
+#include <testprograms/TestMatrix3/testmatrix3.h>
+#include <testprograms/TestConsecutiveRangeSet/TestConsecutiveRangeSet.h>
+#include <testprograms/TestRangeTree/TestRangeTree.h>
+#include <testprograms/TestBoxGrouper/TestBoxGrouper.h>
+
 #include <cstdlib>
-#ifndef _WIN32
-#include <unistd.h>
-#else
-#include <process.h>
-#endif
 #include <iostream>
+
+#ifndef _WIN32
+#  include <unistd.h>
+#else
+#  include <process.h>
+#endif
 
 using namespace Uintah;
 
-void usage(char* prog_name)
+void
+usage(char* prog_name)
 {
   cerr << "usage: " << prog_name << " [-e|-a|-h]\n";
   cerr << "\t-e:  expands test suite tree even where all tests have passed\n";
@@ -66,7 +69,8 @@ void usage(char* prog_name)
   cerr << "\t-h:  lists this help information\n";
 }
 
-int main(int argc, char* argv[])
+int
+main(int argc, char* argv[])
 {
   bool expandAll = false;
   bool reportAll = false;

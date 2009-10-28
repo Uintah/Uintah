@@ -31,12 +31,17 @@
 
 SRCDIR := testprograms/Thread
 
-ifeq ($(LARGESOS),yes)
-PSELIBS := Core Core/Util
-else
-PSELIBS := Core/Thread Core/Util
+ifeq ($(IS_STATIC_BUILD),yes)
+  PSELIBS := $(CORE_STATIC_PSELIBS)
+else # Non-static build
+  PSELIBS := Core/Thread Core/Util
 endif
-LIBS := $(THREAD_LIBRARY) $(XML_LIBRARY)
+
+ifeq ($(IS_STATIC_BUILD),yes)
+  LIBS := $(CORE_STATIC_LIBS)
+else
+  LIBS := $(THREAD_LIBRARY) $(XML_LIBRARY)
+endif
 
 PROGRAM := $(SRCDIR)/bps
 SRCS := $(SRCDIR)/bps.cc

@@ -37,11 +37,35 @@ SRCDIR := StandAlone/tools/mpi_test
 
 SRCS    := $(SRCDIR)/async_mpi_test.cc
 PROGRAM := $(SRCDIR)/async_mpi_test
-PSELIBS := \
+
+ifeq ($(IS_STATIC_BUILD),yes)
+
+  PSELIBS := $(CORE_STATIC_PSELIBS)
+
+else # Non-static build
+
+  PSELIBS := \
         Core/Thread \
         Core/Parallel
+endif
 
-LIBS    := $(XML2_LIBRARY) $(M_LIBRARY) $(MPI_LIBRARY) $(F_LIBRARY)
+ifeq ($(IS_STATIC_BUILD),yes)
+  LIBS := \
+        $(TEEM_LIBRARY) \
+        $(XML2_LIBRARY) \
+        $(Z_LIBRARY) \
+        $(THREAD_LIBRARY) \
+        $(F_LIBRARY) \
+        $(PETSC_LIBRARY) \
+        $(HYPRE_LIBRARY) \
+        $(BLAS_LIBRARY) \
+        $(LAPACK_LIBRARY) \
+        $(MPI_LIBRARY) \
+        $(X_LIBRARY) \
+        $(M_LIBRARY)
+else
+  LIBS    := $(XML2_LIBRARY) $(M_LIBRARY) $(MPI_LIBRARY) $(F_LIBRARY)
+endif
 
 include $(SCIRUN_SCRIPTS)/program.mk
 
@@ -51,12 +75,36 @@ include $(SCIRUN_SCRIPTS)/program.mk
 PROGRAM := $(SRCDIR)/mpi_test
 SRCS    := $(SRCDIR)/mpi_test.cc
 
-LIBS    := $(MPI_LIBRARY) $(M_LIBRARY) 
-PSELIBS := \
+ifeq ($(IS_STATIC_BUILD),yes)
+  LIBS := \
+        $(TEEM_LIBRARY) \
+        $(XML2_LIBRARY) \
+        $(Z_LIBRARY) \
+        $(THREAD_LIBRARY) \
+        $(F_LIBRARY) \
+        $(PETSC_LIBRARY) \
+        $(HYPRE_LIBRARY) \
+        $(BLAS_LIBRARY) \
+        $(LAPACK_LIBRARY) \
+        $(MPI_LIBRARY) \
+        $(X_LIBRARY) \
+        $(M_LIBRARY)
+else
+  LIBS    := $(MPI_LIBRARY) $(M_LIBRARY) 
+endif
+
+ifeq ($(IS_STATIC_BUILD),yes)
+
+  PSELIBS := $(CORE_STATIC_PSELIBS)
+
+else # Non-static build
+
+  PSELIBS := \
 	Core/Containers \
 	Core/Exceptions \
 	Core/Util       \
 	Core/Thread
+endif
 
 include $(SCIRUN_SCRIPTS)/program.mk
 

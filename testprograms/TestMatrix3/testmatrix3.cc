@@ -28,16 +28,18 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include "testmatrix3.h"
+#include <testprograms/TestMatrix3/testmatrix3.h>
 #include <Core/Math/Matrix3.h>
+
 #include <cstdlib>
-#ifndef _WIN32
-#include <unistd.h>
-#else
-#include <process.h>
-#endif
 #include <cmath>
 #include <iostream>
+
+#ifndef _WIN32
+#  include <unistd.h>
+#else
+#  include <process.h>
+#endif
 
 using namespace std;
 using namespace Uintah;
@@ -71,6 +73,10 @@ Matrix3 randomMatrix();
 #define NEAR_ZERO 1e-7
 
 void displayEigen(Matrix3 M);
+
+#if 0
+
+// This is a library... can't have a main() function....
 
 int main()
 {
@@ -132,8 +138,8 @@ int main()
   }
 
   return 1;
-
 }
+#endif
 
 SuiteTree* matrix3TestTree()
 {

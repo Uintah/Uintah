@@ -32,10 +32,32 @@
 
 SRCDIR := StandAlone/tools/extractors
 
-ifeq ($(LARGESOS),yes)
-  PSELIBS := Packages/Uintah
-else
+ifeq ($(IS_STATIC_BUILD),yes)
   PSELIBS := \
+    Core_DataArchive                    \
+    Core_Grid                           \
+    Core_ProblemSpec                    \
+    Core_GeometryPiece                  \
+    CCA_Components_ProblemSpecification \
+    CCA_Ports                           \
+    Core_Parallel                       \
+    Core_Math                           \
+    Core_Disclosure                     \
+    Core_Util                           \
+    Core_Thread                         \
+    Core_Persistent                     \
+    Core_Exceptions                     \
+    Core_Containers                     \
+    Core_Malloc                         \
+    Core_IO                             \
+    Core_OS                             
+
+else # Non-static build
+
+  ifeq ($(LARGESOS),yes)
+    PSELIBS := Packages/Uintah
+  else
+    PSELIBS := \
         Core/Containers   \
         Core/Exceptions   \
         Core/Geometry     \
@@ -54,13 +76,12 @@ else
         CCA/Ports        \
         Core/ProblemSpec             \
         CCA/Components/ProblemSpecification
+  endif
 endif
 
-ifeq ($(IS_AIX),yes)
+ifeq ($(IS_STATIC_BUILD),yes)
   LIBS := \
-        $(TCL_LIBRARY)    \
         $(TEEM_LIBRARY)   \
-        $(PNG_LIBRARY)    \
         $(XML2_LIBRARY)   \
         $(Z_LIBRARY)      \
         $(THREAD_LIBRARY) \
@@ -71,8 +92,7 @@ ifeq ($(IS_AIX),yes)
         $(LAPACK_LIBRARY) \
         $(MPI_LIBRARY)    \
         $(X_LIBRARY)      \
-        $(M_LIBRARY)      \
-        -lld
+        $(M_LIBRARY)      
 else
   LIBS := $(XML2_LIBRARY) $(F_LIBRARY) $(HYPRE_LIBRARY) \
           $(CANTERA_LIBRARY) \
