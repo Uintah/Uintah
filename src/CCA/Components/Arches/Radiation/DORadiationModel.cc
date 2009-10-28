@@ -60,8 +60,8 @@ using namespace Uintah;
 using namespace SCIRun;
 
 #include <CCA/Components/Arches/Radiation/fortran/rordr_fort.h>
-#include <CCA/Components/Arches/Radiation/fortran/rordrss_fort.h>
-#include <CCA/Components/Arches/Radiation/fortran/rordrtn_fort.h>
+//#include <CCA/Components/Arches/Radiation/fortran/rordrss_fort.h>
+//#include <CCA/Components/Arches/Radiation/fortran/rordrtn_fort.h>
 #include <CCA/Components/Arches/Radiation/fortran/radarray_fort.h>
 #include <CCA/Components/Arches/Radiation/fortran/radcoef_fort.h>
 #include <CCA/Components/Arches/Radiation/fortran/radwsgg_fort.h>
@@ -70,7 +70,7 @@ using namespace SCIRun;
 #include <CCA/Components/Arches/Radiation/fortran/rdomsolve_fort.h>
 #include <CCA/Components/Arches/Radiation/fortran/rdomsrc_fort.h>
 #include <CCA/Components/Arches/Radiation/fortran/rdomflux_fort.h>
-#include <CCA/Components/Arches/Radiation/fortran/rdombmcalc_fort.h>
+//#include <CCA/Components/Arches/Radiation/fortran/rdombmcalc_fort.h>
 #include <CCA/Components/Arches/Radiation/fortran/rdomvolq_fort.h>
 #include <CCA/Components/Arches/Radiation/fortran/rshsolve_fort.h>
 #include <CCA/Components/Arches/Radiation/fortran/rshresults_fort.h>
@@ -214,7 +214,7 @@ DORadiationModel::computeOrdinatesOPL() {
    //   ord.initialize(0.0);
 
                    fort_rordr(d_sn, oxi, omu, oeta, wt);
-   //               fort_rordrss(d_sn, oxi, omu, oeta, wt);
+   //           fort_rordrss(d_sn, oxi, omu, oeta, wt);
    //           fort_rordrtn(d_sn, ord, oxi, omu, oeta, wt);
 }
 
