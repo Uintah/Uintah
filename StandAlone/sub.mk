@@ -137,6 +137,7 @@ else
         Core/DataArchive  \
         Core/Disclosure   \
         Core/Exceptions   \
+        Core/GeometryPiece\
         Core/Grid         \
         Core/Labels       \
         Core/Math         \
