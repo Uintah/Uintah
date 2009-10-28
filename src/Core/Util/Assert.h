@@ -108,7 +108,4 @@
 
 #define ASSERT(condition) ASSERTL2(condition)
 
-void WAIT_FOR_DEBUGGER();
-void TURN_ON_WAIT_FOR_DEBUGGER();
-void TURN_OFF_WAIT_FOR_DEBUGGER();
 #endif

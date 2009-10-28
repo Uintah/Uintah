@@ -54,6 +54,19 @@
 #include <Core/Exceptions/share.h>
 
 namespace SCIRun {
+
+  ///////////////////////////////////////////////////////////////////////////////////
+  // If "wait for debugger" is turned on, then anytime an exception is thrown,
+  // the code will 'pause', print out a hostname/PID, and wait until a debugger
+  // is attached.  (Defaults to off.)  
+
+  void TURN_ON_WAIT_FOR_DEBUGGER();
+  void TURN_OFF_WAIT_FOR_DEBUGGER();
+  void WAIT_FOR_DEBUGGER(); // Note, if turned off, this call does nothing!
+
+  //
+  ///////////////////////////////////////////////////////////////////////////////////
+
   class SCISHARE Exception {
   public:
     Exception(bool ignoreWait=false);
