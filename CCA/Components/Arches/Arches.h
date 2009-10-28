@@ -152,6 +152,8 @@ public:
   // Schedule initialization
   virtual void scheduleInitialize(const LevelP& level,
                                   SchedulerP&);
+
+  virtual void restartInitialize();
      
   ///////////////////////////////////////////////////////////////////////
   // Schedule parameter initialization
