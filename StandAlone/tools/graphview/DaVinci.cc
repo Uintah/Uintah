@@ -397,9 +397,13 @@ writeline(int fd, string str)
       //	  cerr << "write() error: " << errno << endl;
       throw ErrnoException("write() error", errno, __FILE__, __LINE__);
     else {
-      char buf[64];
-      sprintf(buf, "Unexpected write() return code %ld", len);
-      //	    cerr << buf << endl;
+      std::stringstream s;
+      s << "Unexpected write() return code " << len << endl;
+      std::string return_string = s.str();
+      const char* buf = return_string.c_str();
+      //char buf[64];
+      //sprintf(buf, "Unexpected write() return code %ld", len);
+      cerr << buf << endl;
       //throw InternalError(buf);
     }
   }
