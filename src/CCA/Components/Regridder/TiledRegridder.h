@@ -88,12 +88,19 @@ WARNING
     void CoarsenFlags(GridP oldGrid, int l, vector<IntVector> tiles); 
     void OutputGridStats(Grid* newGrid);
     void ComputeTiles(vector<IntVector> &tiles, const LevelP level, IntVector tile_size, IntVector cellRefinementRatio);
+    //maps a cell index to a tile index
+    IntVector computeTileIndex(const IntVector& cellIndex, const IntVector& numCells, const IntVector& tilesize);
+    //maps a tile index to the cell low index for that tile
+    IntVector computeCellLowIndex(const IntVector& tileIndex, const IntVector& numCells, const IntVector& tilesize);
+    //maps a tile index to the cell high index for that tile
+    IntVector computeCellHighIndex(const IntVector& tileIndex, const IntVector& numCells, const IntVector& tilesize);
       
 
     unsigned int target_patches_;   //Minimum number of patches the algorithm attempts to reach
    
     SizeList d_minTileSize;         //the minimum tile size 
     SizeList d_tileSize;            //the size of tiles on each level
+    SizeList d_numCells;            //the maximum number of cells in each dimension for each level
 
     bool     d_dynamic_size;        //dynamically grow or shrink the tile size
   };
