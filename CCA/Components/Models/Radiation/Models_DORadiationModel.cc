@@ -60,8 +60,8 @@ using namespace SCIRun;
 
 #ifndef _WIN32 //no fortran
 #include <CCA/Components/Models/Radiation/fortran/m_rordr_fort.h>
-#include <CCA/Components/Models/Radiation/fortran/m_rordrss_fort.h>
-#include <CCA/Components/Models/Radiation/fortran/m_rordrtn_fort.h>
+//#include <CCA/Components/Models/Radiation/fortran/m_rordrss_fort.h>
+//#include <CCA/Components/Models/Radiation/fortran/m_rordrtn_fort.h>
 #include <CCA/Components/Models/Radiation/fortran/m_radarray_fort.h>
 #include <CCA/Components/Models/Radiation/fortran/m_radcoef_fort.h>
 #include <CCA/Components/Models/Radiation/fortran/m_radwsgg_fort.h>
