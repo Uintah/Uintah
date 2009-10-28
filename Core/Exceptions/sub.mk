@@ -31,25 +31,26 @@
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-SRCDIR   := Core/Exceptions
+SRCDIR := Core/Exceptions
 
-SRCS     += $(SRCDIR)/ArrayIndexOutOfBounds.cc \
-	    $(SRCDIR)/AssertionFailed.cc \
-	    $(SRCDIR)/DimensionMismatch.cc \
-	    $(SRCDIR)/ErrnoException.cc \
-	    $(SRCDIR)/Exception.cc \
-	    $(SRCDIR)/FileNotFound.cc \
-	    $(SRCDIR)/InvalidState.cc \
-	    $(SRCDIR)/InternalError.cc \
-	$(SRCDIR)/ConvergenceFailure.cc     \
-	$(SRCDIR)/InvalidCompressionMode.cc \
-	$(SRCDIR)/InvalidGrid.cc            \
-	$(SRCDIR)/InvalidValue.cc           \
-	$(SRCDIR)/ParameterNotFound.cc      \
-	$(SRCDIR)/ProblemSetupException.cc  \
-	$(SRCDIR)/TypeMismatchException.cc  \
-	$(SRCDIR)/UintahPetscError.cc       \
-	$(SRCDIR)/VariableNotFoundInGrid.cc 
+SRCS   += \
+          $(SRCDIR)/ArrayIndexOutOfBounds.cc  \
+          $(SRCDIR)/AssertionFailed.cc        \
+          $(SRCDIR)/DimensionMismatch.cc      \
+          $(SRCDIR)/ErrnoException.cc         \
+          $(SRCDIR)/Exception.cc              \
+          $(SRCDIR)/FileNotFound.cc           \
+          $(SRCDIR)/InvalidState.cc           \
+          $(SRCDIR)/InternalError.cc          \
+          $(SRCDIR)/ConvergenceFailure.cc     \
+          $(SRCDIR)/InvalidCompressionMode.cc \
+          $(SRCDIR)/InvalidGrid.cc            \
+          $(SRCDIR)/InvalidValue.cc           \
+          $(SRCDIR)/ParameterNotFound.cc      \
+          $(SRCDIR)/ProblemSetupException.cc  \
+          $(SRCDIR)/TypeMismatchException.cc  \
+          $(SRCDIR)/UintahPetscError.cc       \
+          $(SRCDIR)/VariableNotFoundInGrid.cc 
 
 
 ifeq ($(IS_WIN),yes)
