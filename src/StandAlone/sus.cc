@@ -414,7 +414,7 @@ main( int argc, char *argv[], char *env[] )
   }
 
   if(dbgwait.active())
-    SCIRun::Exception::wait_for_debugger=true;
+    TURN_ON_WAIT_FOR_DEBUGGER();
 
   if (restart || combine_patches || reduce_uda) {
     // check if state.xml is present

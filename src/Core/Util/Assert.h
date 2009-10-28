@@ -108,7 +108,7 @@
 
 #define ASSERT(condition) ASSERTL2(condition)
 
-//#define WAIT_FOR_DEBUGGER { bool wait=true; char hostname[100]; gethostname(hostname,100); printf("%s:%d waiting for debugger\n",hostname,getpid()); while(wait); }
-
 void WAIT_FOR_DEBUGGER();
+void TURN_ON_WAIT_FOR_DEBUGGER();
+void TURN_OFF_WAIT_FOR_DEBUGGER();
 #endif
