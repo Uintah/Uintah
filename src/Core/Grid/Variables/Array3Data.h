@@ -77,8 +77,9 @@ namespace Uintah {
         return d_size;
       }
       void copy(const IntVector& ts, const IntVector& te,
-          const Array3Data<T>* from,
-          const IntVector& fs, const IntVector& fe);
+                const Array3Data<T>* from,
+                const IntVector& fs, const IntVector& fe);
+
       void initialize(const T& val, const IntVector& s, const IntVector& e);
       inline T& get(const IntVector& idx) {
         CHECKARRAYBOUNDS(idx.x(), 0, d_size.x());
@@ -144,10 +145,10 @@ namespace Uintah {
 
   template<class T>
     void Array3Data<T>::copy(const IntVector& to_lowIndex,
-        const IntVector& to_highIndex,
-        const Array3Data<T>* from,
-        const IntVector& from_lowIndex,
-        const IntVector& from_highIndex)
+                             const IntVector& to_highIndex,
+                             const Array3Data<T>* from,
+                             const IntVector& from_lowIndex,
+                             const IntVector& from_highIndex)
     {
       CHECKARRAYBOUNDS(to_lowIndex.x(), 0, d_size.x());
       CHECKARRAYBOUNDS(to_lowIndex.y(), 0, d_size.y());
