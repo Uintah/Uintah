@@ -380,6 +380,8 @@ void JWLpp::computeModelSources(const ProcessorGroup*,
         double rctMass = rctRho[c]*cell_vol;
         double prdMass = prodRho[c]*cell_vol;
         burnedMass = min(delF[c]*(prdMass+rctMass), rctMass);
+        // 20 % burned mass is a hard limit based p. 55 
+        //   "JWL++: A Simple Reactive Flow Code Package for Detonation"
         burnedMass = min(burnedMass, .2*d_rho0*cell_vol);
 
         //__________________________________
