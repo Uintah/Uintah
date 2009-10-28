@@ -220,7 +220,7 @@ mpmf_test_cases="regressionFMPM"
 ice_test_cases="advect riemann_sm impHotBlob hotBlob2mat hotBlob2mat_sym hotBlob2mat8patch"
 ice_amr_test_cases="hotBlob_AMR advect2matAMR"
 mpmice_test_cases="massX guni2dRT SteadyBurn_2dRT TBurner_2dRT TRWnoz testConvertMPMICEAdd advect_2L_MI"
-mpmice_amr_test_cases="advect_2L_MI"
+mpmice_amr_test_cases="advect_2L_MI explode2D_amr"
 model_test_cases="HePlume JP8_Radiation"
 smpm_test_cases="test_plane_shell_punch test_sphere_shell_compress"
 impm_test_cases="billet.static adiCuJC01s296K adiCuMTS01s296K adiCuPTW01s296K adiCuSCG01s296K adiCuZA01s296K"
@@ -315,10 +315,15 @@ run_test () {
 
     lam_status boot
 
-    cp $in_file .
 
-    num_proc
-    opts=""
+    if [ $n = "explode2D_amr" ]; then
+        numproc=8
+        opts="-restart -t 0 -copy"
+    else
+        cp $in_file .
+        num_proc
+        opts=""
+    fi
   
     if test $numproc -gt 1; then
         MPI="mpirun -np $numproc"
@@ -331,9 +336,13 @@ run_test () {
     fi
 
 
-
-    echo; echo "Running: $MPI sus $opts $n.ups"
-    $MPI ../sus $opts $n.ups &> $n.out
+    if [ $n = "explode2D_amr" ]; then
+        echo; echo "Running: $MPI sus $opts $GOLD_STANDARD/$DIR/$CASE/$n/$n.uda"
+        $MPI ../sus $opts $GOLD_STANDARD/$DIR/$CASE/$n/$n.uda &> $n.out
+    else
+        echo; echo "Running: $MPI sus $opts $n.ups"
+        $MPI ../sus $opts $n.ups &> $n.out
+    fi
 
     check_output
 
@@ -355,7 +364,9 @@ run_test () {
         fi
     fi
 
-    rm $n.ups
+    if [ $n != "explode2D_amr" ]; then
+        rm $n.ups
+    fi
 
     lam_status halt
 
@@ -498,8 +509,12 @@ run_case () {
     fi
 
     for n in ${!tc}; do
-	input_file inputs/$CASE $n
-        uda_name $in_file
+        if [ $n != "explode2D_amr" ]; then
+	    input_file inputs/$CASE $n
+            uda_name $in_file
+        else
+            uda="explode2D_amr.uda"
+        fi
 
         MPI=""
         
