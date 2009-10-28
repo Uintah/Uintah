@@ -52,6 +52,8 @@
 #  define PTHREAD_MUTEX_RECURSIVE PTHREAD_MUTEX_RECURSIVE_NP
 #endif
 
+#include <Core/Exceptions/Exception.h>
+
 //////////////////////////////////////////////////////
 // begin: Danger Will Robinson! Danger Will Robinson!
 
@@ -80,9 +82,10 @@
 #include <Core/Thread/WorkQueue.h>
 #include <Core/Thread/Thread_unix.h>
 #include <Core/Util/Assert.h>
+
 #include <cerrno>
 extern "C" {
-#include <semaphore.h>
+#  include <semaphore.h>
 }
 #include <signal.h>
 #include <cstdio>
@@ -145,14 +148,14 @@ extern "C" {
 // NOTE(boulos): This code is not currently used if __APPLE__ is
 // defined, so defining this function produces a "defined but not used
 // warning"
-#ifndef __APPLE__
+#  ifndef __APPLE__
 static int SEM_LOCK(sem_type* sem)
 {
   int returnValue = 0;
   while ( (returnValue = sem_wait(sem)) == -1 && (errno == EINTR) );
   return returnValue;
 }
-#endif
+#  endif
 
 #endif
 
@@ -166,9 +169,10 @@ typedef void (*SIG_HANDLER_T)(int);
  */
 
 #ifndef __ia64__
-#include <Core/Thread/Barrier_default.cc>
-#include <Core/Thread/AtomicCounter_default.cc>
+#  include <Core/Thread/Barrier_default.cc>
+#  include <Core/Thread/AtomicCounter_default.cc>
 #endif
+
 #include <Core/Thread/CrowdMonitor_default.cc>
 
 using SCIRun::ConditionVariable;
@@ -703,7 +707,7 @@ handle_abort_signals(int sig, SigContext ctx)
   if(print)
     fprintf(stderr, "%c%c%cThread \"%s\"(pid %d) caught signal %s\n", 7,7,7,tname, getpid(), signam);
   
-  WAIT_FOR_DEBUGGER();
+  SCIRun::WAIT_FOR_DEBUGGER();
 
   Thread::niceAbort(NULL,print);
   
@@ -783,7 +787,8 @@ handle_quit(int sig, SigContext /*ctx*/)
   if(print)
     fprintf(stderr, "Thread \"%s\"(pid %d) caught signal %s\n", tname, pid, signam);
 
-  WAIT_FOR_DEBUGGER();
+  SCIRun::WAIT_FOR_DEBUGGER();
+
   Thread::niceAbort(NULL, print); // Enter the monitor
   control_c_sema.up();
 }
