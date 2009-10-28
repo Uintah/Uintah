@@ -41,7 +41,8 @@ SUBDIRS := \
         $(SRCDIR)/fsspeed     \
         $(SRCDIR)/pfs         \
         $(SRCDIR)/puda        \
-        $(SRCDIR)/tracker     
+        $(SRCDIR)/tracker     \
+        $(SRCDIR)/update_uda
 
 ifeq ($(HAVE_TEEM),yes)
   SUBDIRS += $(SRCDIR)/uda2nrrd \
@@ -57,11 +58,33 @@ endif
 ########################################################
 # compute_Lnorm_udas
 
-ifeq ($(LARGESOS),yes)
-  PSELIBS := Packages/Uintah
-else
-
+ifeq ($(IS_STATIC_BUILD),yes)
   PSELIBS := \
+    Core_DataArchive                    \
+    Core_Grid                           \
+    Core_ProblemSpec                    \
+    Core_GeometryPiece                  \
+    CCA_Components_ProblemSpecification \
+    CCA_Ports                           \
+    Core_Parallel                       \
+    Core_Math                           \
+    Core_Disclosure                     \
+    Core_Util                           \
+    Core_Thread                         \
+    Core_Persistent                     \
+    Core_Exceptions                     \
+    Core_Containers                     \
+    Core_Malloc                         \
+    Core_IO                             \
+    Core_OS                             
+
+else # Non-static build
+
+  ifeq ($(LARGESOS),yes)
+    PSELIBS := Packages/Uintah
+  else
+
+    PSELIBS := \
         Core/Exceptions   \
         Core/Containers   \
         Core/DataArchive  \
@@ -70,9 +93,26 @@ else
 	Core/Thread       \
 	Core/Util         \
         CCA/Components/DataArchiver         
+  endif
 endif
 
-LIBS :=
+ifeq ($(IS_STATIC_BUILD),yes)
+  LIBS := \
+        $(TEEM_LIBRARY) \
+        $(XML2_LIBRARY) \
+        $(Z_LIBRARY) \
+        $(THREAD_LIBRARY) \
+        $(F_LIBRARY) \
+        $(PETSC_LIBRARY) \
+        $(HYPRE_LIBRARY) \
+        $(BLAS_LIBRARY) \
+        $(LAPACK_LIBRARY) \
+        $(MPI_LIBRARY) \
+        $(X_LIBRARY) \
+        $(M_LIBRARY)
+else
+  LIBS :=
+endif
 
 SRCS := $(SRCDIR)/compute_Lnorm_udas.cc 
 PROGRAM := $(SRCDIR)/compute_Lnorm_udas

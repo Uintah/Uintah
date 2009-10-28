@@ -31,6 +31,8 @@ DEALINGS IN THE SOFTWARE.
 #ifndef UINTAH_HOMEBREW_TypeUtils_H
 #define UINTAH_HOMEBREW_TypeUtils_H
 
+#include <sci_defs/compile_defs.h> // for STATIC_BUILD
+
 #ifndef _WIN32
 #  include <inttypes.h>
 #else
@@ -112,7 +114,7 @@ UINTAHSHARE void fun_getSmallValue(Vector*);
 #include <Core/Datatypes/TypeName.h>
 #include   <string>
 
-#if !defined( REDSTORM )
+#if !defined( STATIC_BUILD )
 // typename.h redefines UINTAHSHARE
 #include <Core/Disclosure/uintahshare.h>
 namespace SCIRun {
@@ -124,7 +126,7 @@ namespace SCIRun {
   UINTAHSHARE const TypeDescription* get_type_description(long64*);
 
 } // namespace SCIRun 
-#endif // REDSTORM
+#endif // STATIC_BUILD
 
 #endif
 

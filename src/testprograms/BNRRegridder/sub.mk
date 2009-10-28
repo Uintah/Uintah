@@ -36,7 +36,10 @@ SRCDIR := testprograms/BNRRegridder
 PROGRAM := $(SRCDIR)/bnrtest
 SRCS    := $(SRCDIR)/bnrtest.cc
 
-PSELIBS := \
+ifeq ($(IS_STATIC_BUILD),yes)
+  PSELIBS := CCA/Components/Regridder $(CORE_STATIC_PSELIBS)
+else # Non-static build
+  PSELIBS := \
         Core/Exceptions          \
         Core/Geometry            \
         Core/Thread              \
@@ -48,9 +51,14 @@ PSELIBS := \
         Core/Util                \
         CCA/Ports                \
         CCA/Components/Regridder
+endif
 
-LIBS := $(M_LIBRARY) $(MPI_LIBRARY) $(BLAS_LIBRARY) $(LAPACK_LIBRARY) $(THREAD_LIBRARY) $(Z_LIBRARY) \
-        $(TEEM_LIBRARY) $(PNG_LIBRARY)
+ifeq ($(IS_STATIC_BUILD),yes)
+  LIBS := $(CORE_STATIC_LIBS)
+else
+  LIBS := $(M_LIBRARY) $(MPI_LIBRARY) $(BLAS_LIBRARY) $(LAPACK_LIBRARY) $(THREAD_LIBRARY) $(Z_LIBRARY) \
+          $(TEEM_LIBRARY) $(PNG_LIBRARY)
+endif
 
 include $(SCIRUN_SCRIPTS)/program.mk
 

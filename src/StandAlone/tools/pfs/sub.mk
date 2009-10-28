@@ -37,10 +37,13 @@ SRCDIR := StandAlone/tools/pfs
 SRCS := $(SRCDIR)/pfs.cc
 PROGRAM := $(SRCDIR)/pfs
 
-ifeq ($(LARGESOS),yes)
-  PSELIBS := Datflow Packages/Uintah
-else
-  PSELIBS := \
+ifeq ($(IS_STATIC_BUILD),yes)
+  PSELIBS := $(CORE_STATIC_PSELIBS)
+else # Non-static build
+  ifeq ($(LARGESOS),yes)
+    PSELIBS := Datflow Packages/Uintah
+  else
+    PSELIBS := \
       Core/Grid \
       Core/Util \
       Core/Parallel \
@@ -52,63 +55,30 @@ else
       Core/GeometryPiece \
       Core/Exceptions \
       Core/Geometry 
+  endif
 endif
 
-LIBS    := $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) $(F_LIBRARY) $(TEEM_LIBRARY) $(PNG_LIBRARY)
+ifeq ($(IS_STATIC_BUILD),yes)
+  LIBS := $(CORE_STATIC_LIBS)
+else
+  LIBS := $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) $(F_LIBRARY) $(TEEM_LIBRARY) $(PNG_LIBRARY)
+endif
 
 include $(SCIRUN_SCRIPTS)/program.mk
 
 ###############################################
 # pfs 2 - Steve Maas' version
 
-SRCS := $(SRCDIR)/pfs2.cc
+SRCS    := $(SRCDIR)/pfs2.cc
 PROGRAM := $(SRCDIR)/pfs2
-
-ifeq ($(LARGESOS),yes)
-  PSELIBS := Datflow Packages/Uintah
-else
-  PSELIBS := \
-     Core/Grid \
-     Core/Util \
-     Core/Parallel \
-     Core/Exceptions \
-     Core/Math \
-     Core/ProblemSpec \
-     CCA/Ports \
-     CCA/Components/ProblemSpecification \
-     Core/GeometryPiece \
-     Core/Exceptions \
-     Core/Geometry
-endif
-
-LIBS    := $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) $(TEEM_LIBRARY) $(PNG_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/program.mk
 
 ###############################################
 # ImageFromGeom
 
-SRCS := $(SRCDIR)/ImageFromGeom.cc
+SRCS    := $(SRCDIR)/ImageFromGeom.cc
 PROGRAM := $(SRCDIR)/ImageFromGeom
-
-ifeq ($(LARGESOS),yes)
-  PSELIBS := Datflow Packages/Uintah
-else
-  PSELIBS := \
-     Core/Grid \
-     Core/Util \
-     Core/Parallel \
-     Core/Exceptions \
-     Core/Math \
-     Core/ProblemSpec \
-     CCA/Ports \
-     CCA/Components/ProblemSpecification \
-     Core/GeometryPiece \
-     Core/Exceptions \
-     Core/Geometry
-endif
-
-LIBS    := $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) $(TEEM_LIBRARY) $(PNG_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/program.mk
 

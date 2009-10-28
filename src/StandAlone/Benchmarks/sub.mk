@@ -48,10 +48,13 @@ SRCS    := $(SRCDIR)/SimpleMath.cc
 
 PROGRAM := $(SRCDIR)/SimpleMath
 
-ifeq ($(LARGESOS),yes)
-  PSELIBS := Datflow Packages/Uintah
-else
-  PSELIBS := \
+ifeq ($(IS_STATIC_BUILD),yes)
+  PSELIBS := Core/Tracker $(CORE_STATIC_PSELIBS)
+else # Non-static build
+  ifeq ($(LARGESOS),yes)
+    PSELIBS := Datflow Packages/Uintah
+  else
+    PSELIBS := \
         Core/Exceptions    \
         Core/Grid          \
         Core/Util          \
@@ -65,9 +68,14 @@ else
         Core/Util        \
         Core/Thread      \
         Core/Containers
+  endif
 endif
 
-LIBS    := $(XML2_LIBRARY) $(MPI_LIBRARY) $(Z_LIBRARY) $(F_LIBRARY) $(TEEM_LIBRARY) $(PNG_LIBRARY)
+ifeq ($(IS_STATIC_BUILD),yes)
+  LIBS := $(CORE_STATIC_LIBS)
+else
+  LIBS    := $(XML2_LIBRARY) $(MPI_LIBRARY) $(Z_LIBRARY) $(F_LIBRARY) $(TEEM_LIBRARY) $(PNG_LIBRARY)
+endif
 
 include $(SCIRUN_SCRIPTS)/program.mk
 

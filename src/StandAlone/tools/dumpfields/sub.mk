@@ -31,31 +31,52 @@
 # Makefile fragment for this subdirectory
 
 SRCDIR  := StandAlone/tools/dumpfields
-#PROGRAM := StandAlone/dumpfields
 PROGRAM := StandAlone/tools/dumpfields/dumpfields
 
 SRCS    := \
 	$(SRCDIR)/dumpfields.cc \
 	\
-	$(SRCDIR)/utils.h $(SRCDIR)/utils.cc \
-	$(SRCDIR)/Args.h  $(SRCDIR)/Args.cc \
-	$(SRCDIR)/FieldSelection.h $(SRCDIR)/FieldSelection.cc \
+	$(SRCDIR)/utils.cc \
+	$(SRCDIR)/Args.cc \
+	$(SRCDIR)/FieldSelection.cc \
 	\
-	$(SRCDIR)/FieldDiags.h $(SRCDIR)/FieldDiags.cc \
-	$(SRCDIR)/ScalarDiags.h $(SRCDIR)/ScalarDiags.cc \
-	$(SRCDIR)/VectorDiags.h $(SRCDIR)/VectorDiags.cc \
-	$(SRCDIR)/TensorDiags.h $(SRCDIR)/TensorDiags.cc \
+	$(SRCDIR)/FieldDiags.cc \
+	$(SRCDIR)/ScalarDiags.cc \
+	$(SRCDIR)/VectorDiags.cc \
+	$(SRCDIR)/TensorDiags.cc \
 	\
-	$(SRCDIR)/FieldDumper.h $(SRCDIR)/FieldDumper.cc \
-	$(SRCDIR)/TextDumper.h $(SRCDIR)/TextDumper.cc \
-	$(SRCDIR)/EnsightDumper.h $(SRCDIR)/EnsightDumper.cc \
-	$(SRCDIR)/InfoDumper.h $(SRCDIR)/InfoDumper.cc \
-	$(SRCDIR)/HistogramDumper.h $(SRCDIR)/HistogramDumper.cc 
+	$(SRCDIR)/FieldDumper.cc \
+	$(SRCDIR)/TextDumper.cc \
+	$(SRCDIR)/EnsightDumper.cc \
+	$(SRCDIR)/InfoDumper.cc \
+	$(SRCDIR)/HistogramDumper.cc 
 
-ifeq ($(LARGESOS),yes)
-  PSELIBS := Packages/Uintah
-else
+ifeq ($(IS_STATIC_BUILD),yes)
   PSELIBS := \
+    Core_DataArchive                    \
+    Core_Grid                           \
+    Core_ProblemSpec                    \
+    Core_GeometryPiece                  \
+    CCA_Components_ProblemSpecification \
+    CCA_Ports                           \
+    Core_Parallel                       \
+    Core_Math                           \
+    Core_Disclosure                     \
+    Core_Util                           \
+    Core_Thread                         \
+    Core_Persistent                     \
+    Core_Exceptions                     \
+    Core_Containers                     \
+    Core_Malloc                         \
+    Core_IO                             \
+    Core_OS                             
+
+else # Non-static build
+
+  ifeq ($(LARGESOS),yes)
+    PSELIBS := Packages/Uintah
+  else
+    PSELIBS := \
         Core/Exceptions    \
         Core/Grid          \
         Core/Util          \
@@ -74,10 +95,27 @@ else
         Core/Util        \
         Core/OS          \
         Core/Containers
+  endif
 endif
 
-LIBS := $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) $(Z_LIBRARY) $(F_LIBRARY) \
-        $(TEEM_LIBRARY) $(PNG_LIBRARY)
+ifeq ($(IS_STATIC_BUILD),yes)
+  LIBS := \
+        $(TEEM_LIBRARY) \
+        $(XML2_LIBRARY) \
+        $(Z_LIBRARY) \
+        $(THREAD_LIBRARY) \
+        $(F_LIBRARY) \
+        $(PETSC_LIBRARY) \
+        $(HYPRE_LIBRARY) \
+        $(BLAS_LIBRARY) \
+        $(LAPACK_LIBRARY) \
+        $(MPI_LIBRARY) \
+        $(X_LIBRARY) \
+        $(M_LIBRARY)
+else
+  LIBS := $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) $(Z_LIBRARY) $(F_LIBRARY) \
+          $(TEEM_LIBRARY) $(PNG_LIBRARY)
+endif
 
 include $(SCIRUN_SCRIPTS)/program.mk
 

@@ -32,7 +32,16 @@
 
 SRCDIR := testprograms/TestFastMatrix
 
-LIBS := \
+ifeq ($(IS_STATIC_BUILD),yes)
+  PSELIBS := $(CORE_STATIC_PSELIBS)
+else # Non-static build
+  PSELIBS := Core/Math Core/Thread
+endif
+
+ifeq ($(IS_STATIC_BUILD),yes)
+  LIBS := $(CORE_STATIC_LIBS)
+else
+  LIBS := \
         $(M_LIBRARY)                      \
         $(MPI_LIBRARY)                    \
         $(F_LIBRARY)                      \
@@ -40,13 +49,12 @@ LIBS := \
         $(THREAD_LIBRARY)                 \
 	$(TEEM_LIBRARY) $(PNG_LIBRARY)    \
         $(Z_LIBRARY)
+endif
 
 ##############################################3
 # test fast matrix
 
-SRCS := $(SRCDIR)/testfastmatrix.cc
-
-PSELIBS := Core/Math
+SRCS    := $(SRCDIR)/testfastmatrix.cc
 PROGRAM := $(SRCDIR)/testfastmatrix
 
 include $(SCIRUN_SCRIPTS)/program.mk
@@ -54,9 +62,7 @@ include $(SCIRUN_SCRIPTS)/program.mk
 ##############################################3
 # perf fast matrix
 
-SRCS := $(SRCDIR)/perffastmatrix.cc
-
-PSELIBS := Core/Math Core/Thread
+SRCS    := $(SRCDIR)/perffastmatrix.cc
 PROGRAM := $(SRCDIR)/perffastmatrix
 
 include $(SCIRUN_SCRIPTS)/program.mk
