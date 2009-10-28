@@ -30,8 +30,10 @@ density = 1000.;
 BigNum  = int8(1e4);
 c       = sqrt(E/density);
 
-%bar_length =1.;
-bar_length = 0.3333;
+bar_min     = 0.3;
+bar_max     = 0.31;
+
+bar_length = bar_max - bar_min;
 domain     =1.;
 area       =1.;
 plotSwitch = 0;
@@ -157,9 +159,10 @@ for r=1:numRegions
   dx_P = R.dx/PPC;                             % particle dx
   
   if ~strcmp(problem_type, 'collidingBars')    % Everything except the collingBar
-    while (xp(ip) + dx_P > R.min ) && ...
-          (xp(ip) + dx_P < R.max ) && ...
-          (xp(ip) + dx_P < bar_length)
+    while (xp(ip) + dx_P > R.min )   && ...
+          (xp(ip) + dx_P < R.max )   && ...
+          (xp(ip) + dx_P >= bar_min) && ...
+          (xp(ip) + dx_P <= bar_max)
           
       ip = ip+1;
       xp(ip)=xp(ip-1) + dx_P;
@@ -320,7 +323,7 @@ while t<tfinal && tstep < max_tstep
   end
   
   %__________________________________
-  % project particle data to grid
+  % project particle data to grid  
   for ip=1:NP
     [nodes,Ss]=findNodesAndWeights(xp(ip), numRegions, Regions, nodePos, Lx);
     for ig=1:2
@@ -418,7 +421,7 @@ while t<tfinal && tstep < max_tstep
     for ip=1:NP
       exact_pos = (initPos(ip) + t * initVelocity);
       pos_error = pos_error +  xp(ip) - exact_pos;
-      % fprintf('xp: %f  exact: %f error %f \n',xp(ip), exact_pos, xp(ip) - exact_pos)
+      %fprintf('xp: %f  exact: %f error %f \n',xp(ip), exact_pos, xp(ip) - exact_pos)
     end
   end
 
@@ -526,13 +529,12 @@ end
 %__________________________________
 %
 function[volP]=positionToVolP(xp, numRegions, Regions)
-  volP = -9;
+  volP = -9.0;
  
   for r=1:numRegions
     R = Regions{r};
-    if ((xp >= R.min) && (xp < R.max))
+    if ( (xp >= R.min) && (xp < R.max) )
       volP = R.dx;
-      return;
     end
   end
 end
@@ -681,14 +683,15 @@ function [stressP,vol,Fp]=computeStressFromVelocity(xp,dt,velG,E,Fp,NP, numRegio
   for ip=1:NP
     [nodes,Gs,dx] = findNodesAndWeightGradients(xp(ip), numRegions, Regions);
     [volP]        = positionToVolP(xp(ip), numRegions, Regions);
-    gUp=0;
+    
+    gUp=0.0;
     for ig=1:2
       gUp = gUp + velG(nodes(ig)) * Gs(ig);
     end
 
     dF          =1. + gUp * dt;
     Fp(ip)      = dF * Fp(ip);
-    stressP(ip) = E * (Fp(ip)-1);
+    stressP(ip) = E * (Fp(ip)-1.0);
     vol(ip)     = volP * Fp(ip);
   end
 end
