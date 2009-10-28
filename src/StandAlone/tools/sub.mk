@@ -41,8 +41,7 @@ SUBDIRS := \
         $(SRCDIR)/fsspeed     \
         $(SRCDIR)/pfs         \
         $(SRCDIR)/puda        \
-        $(SRCDIR)/tracker     \
-        $(SRCDIR)/update_uda
+        $(SRCDIR)/tracker     
 
 ifeq ($(HAVE_TEEM),yes)
   SUBDIRS += $(SRCDIR)/uda2nrrd \
