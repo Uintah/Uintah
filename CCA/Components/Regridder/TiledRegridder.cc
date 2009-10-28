@@ -394,8 +394,6 @@ void TiledRegridder::problemSetup(const ProblemSpecP& params,
 
   d_tileSize=d_minTileSize;
   
-  for(int l=0;l<d_maxLevels;l++)
-    cout<< " level " << l << " numCells: " << d_numCells[l] << " minPatchSize: " << d_tileSize[l] << endl;
   //set target patches
   if(d_myworld->size()==1)
   {
@@ -527,7 +525,6 @@ void TiledRegridder::CoarsenFlags(GridP oldGrid, int l, vector<IntVector> tiles)
       //intersect tile and coarse patch
       IntVector int_low = Max(patch->getExtraCellLowIndex__New(), low);
       IntVector int_high = Min(patch->getExtraCellHighIndex__New(), high);
-      cout << "     intersectin low: " << int_low << " high: " << int_high << endl;
       
       //cout << d_myworld->myrank() << "             int_low:" << int_low << " int_high:" << int_high << endl;
       //for each intesecting cells
