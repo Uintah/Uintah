@@ -1,8 +1,11 @@
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqn.h>
+#include <CCA/Components/Arches/SourceTerms/SourceTermFactory.h>
+#include <CCA/Components/Arches/SourceTerms/SourceTermBase.h>
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Exceptions/InvalidValue.h>
+#include <Core/Parallel/Parallel.h>
 
 using namespace std;
 using namespace Uintah;
@@ -28,16 +31,16 @@ DQMOMEqn::DQMOMEqn( ArchesLabel* fieldLabels, ExplicitTimeInt* timeIntegrator, s
 EqnBase( fieldLabels, timeIntegrator, eqnName )
 {
   
-  string varname = eqnName+"Fdiff"; 
+  string varname = eqnName+"_Fdiff"; 
   d_FdiffLabel = VarLabel::create(varname, 
             CCVariable<double>::getTypeDescription());
-  varname = eqnName+"Fconv"; 
+  varname = eqnName+"_Fconv"; 
   d_FconvLabel = VarLabel::create(varname, 
             CCVariable<double>::getTypeDescription());
-  varname = eqnName+"RHS";
+  varname = eqnName+"_RHS";
   d_RHSLabel = VarLabel::create(varname, 
             CCVariable<double>::getTypeDescription());
-  varname = eqnName+"old";
+  varname = eqnName+"_old";
   d_oldtransportVarLabel = VarLabel::create(varname,
             CCVariable<double>::getTypeDescription());
   varname = eqnName;
@@ -80,6 +83,7 @@ DQMOMEqn::problemSetup(const ProblemSpecP& inputdb, int qn)
   db->getWithDefault( "doConv", d_doConv, false);
   db->getWithDefault( "doDiff", d_doDiff, false);
   d_addSources = true; 
+  d_addExtraSources = false; 
 
   // Models (source terms):
   for (ProblemSpecP m_db = db->findBlock("model"); m_db !=0; m_db = m_db->findNextBlock("model")){
@@ -142,6 +146,19 @@ DQMOMEqn::problemSetup(const ProblemSpecP& inputdb, int qn)
 
   // Scaling information:
   db->require( "scaling_const", d_scalingConstant ); 
+
+
+  // Extra Source terms (for mms and other tests):
+  if (db->findBlock("src")){
+    string srcname; 
+    d_addExtraSources = true; 
+    for (ProblemSpecP src_db = db->findBlock("src"); src_db != 0; src_db = src_db->findNextBlock("src")){
+      src_db->getAttribute("label", srcname);
+      //which sources are turned on for this equation
+      d_sources.push_back( srcname ); 
+
+    }
+  }
 
 
   // There should be some mechanism to make sure that when environment-specific
@@ -224,6 +241,9 @@ DQMOMEqn::problemSetup(const ProblemSpecP& inputdb, int qn)
         }
       }//end step_value init.
 
+    } else if (d_initFunction == "mms1") {
+      //currently nothing to do here. 
+
     // ------------ Other initialization function --------------------
     } else {
       throw InvalidValue("Initialization function not supported!", __FILE__, __LINE__); 
@@ -264,6 +284,19 @@ DQMOMEqn::sched_evalTransportEqn( const LevelP& level,
 
   if (timeSubStep == 0) 
     sched_initializeVariables( level, sched );
+
+#ifdef VERIFY_DQMOM_TRANSPORT
+  if (d_addExtraSources) { 
+    proc0cout << endl;
+    proc0cout << endl;
+    proc0cout << "NOTICE: You have verification turned ON in your DQMOMEqn.h " << endl;
+    proc0cout << "Equation " << d_eqnName << " reporting" << endl;
+    proc0cout << endl;
+    proc0cout << endl;
+
+    sched_computeSources( level, sched, timeSubStep ); 
+  }
+#endif
 
   sched_buildTransportEqn( level, sched, timeSubStep );
 
@@ -347,8 +380,17 @@ void DQMOMEqn::initializeVariables( const ProcessorGroup* pc,
 // Probably not needed for DQMOM EQN
 //--------------------------------------------------------------------------- 
 void 
-DQMOMEqn::sched_computeSources( const LevelP& level, SchedulerP& sched )
+DQMOMEqn::sched_computeSources( const LevelP& level, SchedulerP& sched, int timeSubStep )
 {
+  // This scheduler only calls other schedulers
+  SourceTermFactory& factory = SourceTermFactory::self(); 
+  for (vector<std::string>::iterator iter = d_sources.begin(); iter != d_sources.end(); iter++){
+ 
+    SourceTermBase& temp_src = factory.retrieve_source_term( *iter ); 
+   
+    temp_src.sched_computeSource( level, sched, timeSubStep ); 
+
+  }
 }
 //---------------------------------------------------------------------------
 // Method: Schedule build the transport equation. 
@@ -379,6 +421,18 @@ DQMOMEqn::sched_buildTransportEqn( const LevelP& level, SchedulerP& sched, int t
 #ifdef ZDIM
   tsk->requires(Task::OldDW, d_fieldLabels->d_wVelocitySPBCLabel, Ghost::AroundCells, 1); 
 #endif
+
+  // extra srcs
+  if (d_addExtraSources) {
+    SourceTermFactory& src_factory = SourceTermFactory::self(); 
+    for (vector<std::string>::iterator iter = d_sources.begin(); 
+         iter != d_sources.end(); iter++){
+      SourceTermBase& temp_src = src_factory.retrieve_source_term( *iter ); 
+      const VarLabel* temp_varLabel; 
+      temp_varLabel = temp_src.getSrcLabel(); 
+      tsk->requires( Task::NewDW, temp_src.getSrcLabel(), Ghost::None, 0 ); 
+    }
+  }
 
   if (timeSubStep == 0) {
     tsk->requires(Task::OldDW, d_sourceLabel, Ghost::None, 0);
@@ -472,7 +526,26 @@ DQMOMEqn::buildTransportEqn( const ProcessorGroup* pc,
       RHS[c] += Fdiff[c] - Fconv[c];
 
       if (d_addSources) {
+
         RHS[c] += src[c]*vol;           
+
+#ifdef VERIFY_DQMOM_TRANSPORT
+        if (d_addExtraSources) { 
+          // Going to zero out the src from the Ax=b solver
+          // This assumes that you don't care about the solution (for verification). 
+          RHS[c] = 0.0;
+          // Get the factory of source terms
+          SourceTermFactory& src_factory = SourceTermFactory::self(); 
+          for (vector<std::string>::iterator src_iter = d_sources.begin(); src_iter != d_sources.end(); src_iter++){
+           constCCVariable<double> extra_src;  // Outside of this scope src is no longer available 
+           SourceTermBase& temp_src = src_factory.retrieve_source_term( *src_iter ); 
+           new_dw->get(extra_src, temp_src.getSrcLabel(), matlIndex, patch, gn, 0);
+           // Add to the RHS
+           RHS[c] += extra_src[c]*vol; 
+          }            
+        }
+#endif
+
       }
     } 
   }

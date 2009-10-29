@@ -33,6 +33,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Arches/SourceTerms/SourceTermFactory.h>
 #include <CCA/Components/Arches/SourceTerms/SourceTermBase.h>
 #include <CCA/Components/Arches/SourceTerms/ConstSrcTerm.h>
+#include <CCA/Components/Arches/SourceTerms/MMS1.h>
 #include <CCA/Components/Arches/SourceTerms/CoalGasDevol.h>
 #include <CCA/Components/Arches/CoalModels/CoalModelFactory.h>
 #include <CCA/Components/Arches/CoalModels/ModelBase.h>
@@ -489,6 +490,7 @@ Arches::problemSetup(const ProblemSpecP& params,
   ProblemSpecP dqmom_db = db->findBlock("DQMOM"); 
   if (dqmom_db) {
 
+    proc0cout << endl;
     proc0cout << "WARNING: If you are trying to do DQMOM make sure you added the <TimeIntegrator> section!\n"; 
 
     d_doDQMOM = true; 
@@ -1504,7 +1506,7 @@ Arches::scalarInit( const ProcessorGroup* ,
       CCVariable<double> tempSource; 
       
       new_dw->allocateAndPut( tempSource, srcVarLabel, matlIndex, patch ); 
-      
+    
       tempSource.initialize(0.0);
 
     } 
@@ -2254,7 +2256,7 @@ void Arches::registerSources(ProblemSpecP& db)
         }
       }
 
-     // Here we actually register the source terms based on their types.
+      // Here we actually register the source terms based on their types.
       // This is only done once and so the "if" statement is ok.
       // Source terms are then retrieved from the factory when needed. 
       // The keys are currently strings which might be something we want to change if this becomes inefficient  
@@ -2266,6 +2268,11 @@ void Arches::registerSources(ProblemSpecP& db)
       } else if (src_type == "coal_gas_devol"){
         // Sums up the devol. model terms * weights
         SourceTermBuilder* srcBuilder = scinew CoalGasDevolBuilder(src_name, required_varLabels, d_lab->d_sharedState);
+        factory.register_source_term( src_name, srcBuilder ); 
+      
+      } else if (src_type == "mms1"){
+        // MMS1 builder 
+        SourceTermBuilder* srcBuilder = scinew MMS1Builder(src_name, required_varLabels, d_lab->d_sharedState);
         factory.register_source_term( src_name, srcBuilder ); 
 
       } else {

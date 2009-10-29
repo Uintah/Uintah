@@ -14,6 +14,8 @@
 #define YDIM
 #define ZDIM
 
+// #define VERIFY_DQMOM_TRANSPORT // ONLY turn this on for verification of the DQMOM transport mechanism (conv, diff not Ax=b)
+
 //==========================================================================
 
 /**
@@ -98,7 +100,7 @@ public:
                               DataWarehouse* new_dw );
 
   /** @brief Compute all source terms for this scalar eqn */
-  void sched_computeSources( const LevelP& level, SchedulerP& sched);
+  void sched_computeSources( const LevelP& level, SchedulerP& schedi, int timeSubStep );
 
   /** @brief Compute the diffusion terms */
   template <class fT, class oldPhiT, class lambdaT> 
@@ -233,6 +235,8 @@ private:
   std::vector<string> d_models;   ///< This is the list of models for this internal coordinate
   int d_quadNode;                 ///< The quadrature node for this equation object 
   bool d_weight;                  ///< Boolean: is this equation object for a weight?
+  vector<std::string> d_sources;
+  bool d_addExtraSources; 
 
 
 
