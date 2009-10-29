@@ -24,16 +24,16 @@ if (~strcmp(problem_type, 'impulsiveBar')  && ...
 end
 %__________________________________
 % hard coded domain
-PPC     =1;
-E       =1e8;
+PPC     = 2;
+E       = 1e8;
 density = 1000.;
 c       = sqrt(E/density);
 
 BigNum     = int32(1e4);
 d_smallNum = double (1e-16);
 
-bar_min     = 0.01;
-bar_max     = 0.02 ;
+bar_min     = 0.;
+bar_max     = 0.25 ;
 
 bar_length = bar_max - bar_min;
 domain     = 0.96;
@@ -134,11 +134,10 @@ NN = int32(0);
 
 % bulletproofing:
 for r=1:numRegions
-  R = Regions{r}
-  d = (R.max - R.min) + 100* d_smallNum
+  R = Regions{r};
+  d = (R.max - R.min) + 100* d_smallNum;
   
   if( mod( d, R.dx ) > 1.0e-10 )
-    tst
     fprintf('ERROR, the dx: %g in Region %g does not divide into the domain (R.max:%g R.min:%g) evenly\n', R.dx,r,R.max,R.min);
     return;
   end
@@ -153,8 +152,7 @@ for r=1:numRegions
   dx_min = min(dx_min,R.dx);
   fprintf( 'region %g, min: %g, \t max: %g \t refineRatio: %g dx: %g, NN: %g\n',r, R.min, R.max, R.refineRatio, R.dx, R.NN)
 end
-dx_min
-NN
+
 %__________________________________
 % compute the zone of influence
 % compute the positions of the nodes
@@ -210,8 +208,6 @@ for r=1:numRegions
     nn = nn + 1;
   end
 end
-input('hit return')
-
 
 %__________________________________
 % create particles
@@ -253,7 +249,8 @@ for r=1:numRegions
   end
 end  % region
 
-NP=ip  % number of particles
+NP=ip;  % number of particles
+
 
 %__________________________________
 % pre-allocate variables for speed
@@ -347,7 +344,7 @@ if strcmp(problem_type, 'advectBlock')
   tfinal          = 0.01;
   numBCs          = 1;
   velG_BCValue(1) = initVelocity;
-  velG_BCValue(2) = 0.;
+  velG_BCValue(2) = initVelocity;
   for ip=1:NP
     velP(ip)    = initVelocity;
     initPos(ip) = xp(ip);
@@ -358,6 +355,8 @@ end
 %plot initial conditions
 %plotResults(t,xp,dp,velP)
 
+fprintf('NN: %g, NP: %g dx_min: %g \n',NN,NP,dx_min);
+input('hit return')
 
 %==========================================================================
 % Main timstep loop
@@ -387,20 +386,6 @@ while t<tfinal && tstep < max_tstep
     intForceG(ig) =0.;
   end
   
-  % plot initial position
-  if(mod(tstep,40) == 0)
-    set(gcf,'position',[50,100,700,500]);
-    figure(1)
-    subplot(5,1,1),plot(xp,velP,'rd');
-    xlabel('Particle Position');
-    ylabel('Particle velocity');
-    axis([0 1 99 101] )
-
-    subplot(5,1,2),plot(xp,massP,'rd');
-    axis([0 1 53 53.5] )
-    ylabel('Particle Mass');
-  end
-  
   %__________________________________
   % project particle data to grid  
   for ip=1:NP
@@ -410,17 +395,12 @@ while t<tfinal && tstep < max_tstep
       velG(nodes(ig))      = velG(nodes(ig))      + massP(ip) * velP(ip) * Ss(ig);
       extForceG(nodes(ig)) = extForceG(nodes(ig)) + extForceP(ip) * Ss(ig); 
       
-% debugging__________________________________
-  if(0)
-    fprintf( 'ip: %g xp: %g, nodes: %g, node_pos: %g massG: %g, massP: %g, Ss: %g,  prod: %g \n', ip, xp(ip), nodes(ig), nodePos(nodes(ig)), massG(nodes(ig)), massP(ip), Ss(ig), massP(ip) * Ss(ig) );
-    fprintf( '\t velG: %g,  velP:  %g,  prod: %g \n', velG(nodes(ig)), velP(ip), (massP(ip) * velP(ip) * Ss(ig) ) );
-  end 
-  
-  error = velG(nodes(ig)) - massG(nodes(ig)) * initVelocity;
-  if(  (abs(error) > 1e-8) && (massG(nodes(ig)) > 0) )
-    fprintf('interpolateParticlesToGrid: \t  node: %g, nodePos %g, error %g, massG %g \n', ig, nodePos(ig), error, massG(nodes(ig) ));
-  end
-% debugging__________________________________
+      % debugging__________________________________
+      if(0)
+        fprintf( 'ip: %g xp: %g, nodes: %g, node_pos: %g massG: %g, massP: %g, Ss: %g,  prod: %g \n', ip, xp(ip), nodes(ig), nodePos(nodes(ig)), massG(nodes(ig)), massP(ip), Ss(ig), massP(ip) * Ss(ig) );
+        fprintf( '\t velG: %g,  velP:  %g,  prod: %g \n', velG(nodes(ig)), velP(ip), (massP(ip) * velP(ip) * Ss(ig) ) );
+      end 
+      % debugging__________________________________
 
     end
   end
@@ -434,37 +414,14 @@ while t<tfinal && tstep < max_tstep
     velG(BCNode(ibc)) = velG_BCValue(ibc);
   end
 
-% debugging__________________________________
-if(mod(tstep,40) == 0)
-  subplot(5,1,3),plot(nodePos, velG,'bx');
-  xlabel('NodePos');
-  ylabel('grid Vel');
-  axis([0 1 0 110] )
-  
-  subplot(5,1,4),plot(nodePos, massG,'bx');
-  ylabel('gridMass');
-  axis([0 1 0 70] )
-  
-  momG = velG .* massG;
-  subplot(5,1,5),plot(nodePos, momG,'bx');
-  ylabel('gridMom');
-  axis([0 1 0 7000] )
-  
-  f_name = sprintf('%g.ppm',tstep-1)
-  F = getframe(gcf);
-  [X,map] = frame2im(F);
-  imwrite(X,f_name)
- %input('hit return');
-end
- 
-  
-for ig=1:NN
-  error = velG(ig) * massG(ig) - massG(ig) * initVelocity;
-  if(  (abs(error) > 1e-8) )
-    fprintf('interpolateParticlesToGrid after BC:  node: %g, nodePos %g, error %g, massG %g \n', ig, nodePos(ig), error, massG(ig) );
+  % debugging__________________________________ 
+  for ig=1:NN
+    error = velG(ig) * massG(ig) - massG(ig) * initVelocity;
+    if(  (abs(error) > 1e-8) )
+      fprintf('interpolateParticlesToGrid after BC:  node: %g, nodePos %g, error %g, massG %g \n', ig, nodePos(ig), error, massG(ig) );
+    end
   end
-end
-% debugging__________________________________
+  % debugging__________________________________
 
   %compute particle stress
   [stressP,vol,Fp]=computeStressFromVelocity(xp,dt,velG,E,Fp,NP,numRegions, Regions);
@@ -528,14 +485,44 @@ end
   end
   
   fprintf('sum(tmp): %9.8f \n',sum(tmp));
-if(0)  
-  set(gcf,'position',[200,100,900,900]);
-  figure(2)
-  subplot(1,1,1),plot(xp,tmp,'bx');
-  xlabel('Particle Position');
-  ylabel('dp');
-  input('hit return')
-end  
+  
+    % plot SimulationState
+  if(mod(tstep,4) == 0)
+    set(gcf,'position',[50,100,900,900]);
+    figure(1)
+    subplot(6,1,1),plot(xp,velP,'rd');
+    xlabel('Particle Position');
+    ylabel('Particle velocity');
+    axis([0 1 99 101] )
+
+    subplot(6,1,2),plot(xp,massP,'rd');
+    axis([0 1 53 53.5] )
+    ylabel('Particle Mass');
+    
+    subplot(6,1,3),plot(xp,stressP,'rd');
+    axis([0 1 -1 1] )
+    ylabel('Particle stress');
+
+    subplot(6,1,4),plot(nodePos, velG,'bx');
+    xlabel('NodePos');
+    ylabel('grid Vel');
+    %axis([0 1 0 110] )
+
+    subplot(6,1,5),plot(nodePos, massG,'bx');
+    ylabel('gridMass');
+    %axis([0 1 0 70] )
+
+    momG = velG .* massG;
+    subplot(6,1,6),plot(nodePos, momG,'bx');
+    ylabel('gridMom');
+    %axis([0 1 0 7000] )
+  
+    %f_name = sprintf('%g.ppm',tstep-1)
+    %F = getframe(gcf);
+    %[X,map] = frame2im(F);
+    %imwrite(X,f_name)
+    %input('hit return');
+  end
   
   DX_tip(tstep)=dp(NP);
   T=t; %-dt;
