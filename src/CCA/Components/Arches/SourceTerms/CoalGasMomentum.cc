@@ -170,7 +170,7 @@ CoalGasMomentum::computeSource( const ProcessorGroup* pc,
         const VarLabel* DragGasLabel = model.getGasSourceLabel();  
         new_dw->get( qn_gas_drag, DragGasLabel, matlIndex, patch, gn, 0 );
 
-        dragSrc[c] += qn_gas_drag[c]; // All the work is performed in Drag model
+        dragSrc[c] = qn_gas_drag[c]; // All the work is performed in Drag model
        }
     }
   }

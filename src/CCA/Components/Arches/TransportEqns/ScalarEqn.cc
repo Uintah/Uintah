@@ -33,19 +33,19 @@ ScalarEqn::ScalarEqn( ArchesLabel* fieldLabels, ExplicitTimeInt* timeIntegrator,
 EqnBase( fieldLabels, timeIntegrator, eqnName )
 {
   
-  std::string varname = eqnName+"Fdiff"; 
+  std::string varname = eqnName+"_Fdiff"; 
   d_FdiffLabel = VarLabel::create(varname, 
             CCVariable<double>::getTypeDescription());
-  varname = eqnName+"Fconv"; 
+  varname = eqnName+"_Fconv"; 
   d_FconvLabel = VarLabel::create(varname, 
             CCVariable<double>::getTypeDescription());
-  varname = eqnName+"RHS";
+  varname = eqnName+"_RHS";
   d_RHSLabel = VarLabel::create(varname, 
             CCVariable<double>::getTypeDescription());
   varname = eqnName;
   d_oldtransportVarLabel = VarLabel::create(varname,
             CCVariable<double>::getTypeDescription());
-  varname = eqnName+"old";
+  varname = eqnName+"_old";
   d_transportVarLabel = VarLabel::create(varname,
             CCVariable<double>::getTypeDescription());
 
@@ -139,6 +139,8 @@ ScalarEqn::problemSetup(const ProblemSpecP& inputdb)
         db_initialValue->require("step_cellend", d_step_cellend);
       }
 
+    } else if (d_initFunction == "mms1") {
+      //currently nothing to do here. 
     } else {
       throw InvalidValue("Initialization function not supported!", __FILE__, __LINE__); 
     }
@@ -298,13 +300,15 @@ ScalarEqn::sched_buildTransportEqn( const LevelP& level, SchedulerP& sched, int 
   tsk->requires(Task::NewDW, d_oldtransportVarLabel, Ghost::AroundCells, 2);
 
   // srcs
-  SourceTermFactory& src_factory = SourceTermFactory::self(); 
-  for (vector<std::string>::iterator iter = d_sources.begin(); 
-       iter != d_sources.end(); iter++){
-    SourceTermBase& temp_src = src_factory.retrieve_source_term( *iter ); 
-    const VarLabel* temp_varLabel; 
-    temp_varLabel = temp_src.getSrcLabel(); 
-    tsk->requires( Task::NewDW, temp_src.getSrcLabel(), Ghost::None, 0 ); 
+  if (d_addSources) {
+    SourceTermFactory& src_factory = SourceTermFactory::self(); 
+    for (vector<std::string>::iterator iter = d_sources.begin(); 
+         iter != d_sources.end(); iter++){
+      SourceTermBase& temp_src = src_factory.retrieve_source_term( *iter ); 
+      const VarLabel* temp_varLabel; 
+      temp_varLabel = temp_src.getSrcLabel(); 
+      tsk->requires( Task::NewDW, temp_src.getSrcLabel(), Ghost::None, 0 ); 
+    }
   }
   
   //-----OLD-----

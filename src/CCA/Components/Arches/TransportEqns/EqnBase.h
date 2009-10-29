@@ -227,6 +227,8 @@ void EqnBase::initializationFunction( const Patch* patch, phiType& phi, constPhi
     }
   }
 
+  double pi = acos(-1.0); 
+
   for (CellIterator iter=patch->getCellIterator__New(0); !iter.done(); iter++){
     IntVector c = *iter; 
     Vector Dx = patch->dCell(); 
@@ -234,15 +236,13 @@ void EqnBase::initializationFunction( const Patch* patch, phiType& phi, constPhi
     double x=0.0,y=0.0,z=0.0; 
     int cellx=0, celly=0, cellz=0;
 
-    if( b_stepUsesCellLocation ) {
-      cellx = c[0];
-      celly = c[1];
-      cellz = c[2];
-    } else if ( b_stepUsesPhysicalLocation ) {
-      x = c[0]*Dx.x() + Dx.x()/2.; // the +Dx/2 is because variable is cell-centered
-      y = c[1]*Dx.y() + Dx.y()/2.; 
-      z = c[2]*Dx.z() + Dx.z()/2.;
-    }
+    cellx = c[0];
+    celly = c[1];
+    cellz = c[2];
+
+    x = c[0]*Dx.x() + Dx.x()/2.; // the +Dx/2 is because variable is cell-centered
+    y = c[1]*Dx.y() + Dx.y()/2.; 
+    z = c[2]*Dx.z() + Dx.z()/2.;
 
     if ( d_initFunction == "constant" || d_initFunction == "env_constant" ) {
       // ========== CONSTANT VALUE INITIALIZATION ============
@@ -273,6 +273,10 @@ void EqnBase::initializationFunction( const Patch* patch, phiType& phi, constPhi
           phi[c] = 0.0;
         }
       }
+    } else if ( d_initFunction == "mms1" ) {
+      //======= an MMS with the function phi = sin(2*pi*x)cos(2*pi*y)tan(2*pi*z) ======
+      phi[c] = sin(2.0 * pi * x)*cos(2.0 * pi * y)* weight[c];
+
     // ======= add other initialization functions below here ======
     } else {
 
@@ -316,6 +320,8 @@ void EqnBase::initializationFunction( const Patch* patch, phiType& phi )
     }
   }
 
+  double pi = acos(-1.0); 
+
   for (CellIterator iter=patch->getCellIterator__New(0); !iter.done(); iter++){
     IntVector c = *iter; 
     Vector Dx = patch->dCell(); 
@@ -323,15 +329,13 @@ void EqnBase::initializationFunction( const Patch* patch, phiType& phi )
     double x=0.0,y=0.0,z=0.0; 
     int cellx=0, celly=0, cellz=0;
 
-    if( b_stepUsesCellLocation ) {
-      cellx = c[0];
-      celly = c[1];
-      cellz = c[2];
-    } else if ( b_stepUsesPhysicalLocation ) {
-      x = c[0]*Dx.x() + Dx.x()/2.; // the +Dx/2 is because variable is cell-centered
-      y = c[1]*Dx.y() + Dx.y()/2.; 
-      z = c[2]*Dx.z() + Dx.z()/2.;
-    }
+    cellx = c[0];
+    celly = c[1];
+    cellz = c[2];
+
+    x = c[0]*Dx.x() + Dx.x()/2.; // the +Dx/2 is because variable is cell-centered
+    y = c[1]*Dx.y() + Dx.y()/2.; 
+    z = c[2]*Dx.z() + Dx.z()/2.;
 
     if ( d_initFunction == "constant" || d_initFunction == "env_constant" ) {
       // ========== CONSTANT VALUE INITIALIZATION ============
@@ -362,6 +366,10 @@ void EqnBase::initializationFunction( const Patch* patch, phiType& phi )
           phi[c] = 0.0;
         }
       }
+    } else if ( d_initFunction == "mms1" ) {
+      //======= an MMS with the function phi = sin(2*pi*x)cos(2*pi*y) ======
+      phi[c] = sin(2.0 * pi * x)*cos(2.0 * pi * y);
+
     // ======= add other initialization functions below here ======
     } else {
 

@@ -110,7 +110,7 @@ ConstSrcTerm::computeSource( const ProcessorGroup* pc,
 
     for (CellIterator iter=patch->getCellIterator__New(); !iter.done(); iter++){
       IntVector c = *iter; 
-      constSrc[c] += d_constant; 
+      constSrc[c] = d_constant; 
     }
   }
 }
