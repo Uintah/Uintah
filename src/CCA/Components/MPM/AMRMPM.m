@@ -27,17 +27,19 @@ end
 PPC     =1;
 E       =1e8;
 density = 1000.;
-BigNum  = int8(1e4);
 c       = sqrt(E/density);
 
-bar_min     = 0.3;
-bar_max     = 0.31;
+BigNum     = int32(1e4);
+d_smallNum = double (1e-16);
+
+bar_min     = 0.01;
+bar_max     = 0.02 ;
 
 bar_length = bar_max - bar_min;
-domain     =1.;
-area       =1.;
+domain     = 0.96;
+area       = 1.;
 plotSwitch = 0;
-max_tstep  = BigNum;
+max_tstep  = BigNum
 
 % HARDWIRED FOR TESTING
 %NN          = 16;
@@ -51,34 +53,97 @@ end
 
 %__________________________________
 % region structure 
-numRegions    = int8(3);               % partition the domain into numRegions
+if(0)
+numRegions    = int32(3);               % partition the domain into numRegions
 Regions       = cell(numRegions,1);    % array that holds the individual region information
 
 R.min         = 0;                     % location of left point
-R.max         = 1/3;                   % location of right point
+R.max         = 0.32;                   % location of right point
 R.refineRatio = 1;
 R.dx          = R1_dx;
 R.volP        = R.dx/PPC;
-R.NN          = int8( (R.max - R.min)/R.dx );
+R.NN          = int32( (R.max - R.min)/R.dx +1 );
 Regions{1}    = R;
 
-R.min         = 1/3;                       
-R.max         = 2/3;
+R.min         = 0.32;                       
+R.max         = 0.64;
 R.refineRatio = 2;
 R.dx          = R1_dx/R.refineRatio;
 R.volP        = R.dx/PPC;
-R.NN          = int8( (R.max - R.min)/R.dx );
+R.NN          = int32( (R.max - R.min)/R.dx );
 Regions{2}    = R;
 
-R.min         = 2/3;                       
+R.min         = 0.64;                       
 R.max         = domain;
 R.refineRatio = 1;
 R.dx          = R1_dx/R.refineRatio; 
 R.volP        = R.dx/PPC;
-R.NN          = int8( (R.max - R.min)/R.dx + 1);       
+R.NN          = int32( (R.max - R.min)/R.dx);       
 Regions{3}    = R;
 
-NN = int8(0);
+end
+
+if(1)
+
+numRegions    = int32(5);               % partition the domain into numRegions
+Regions       = cell(numRegions,1);    % array that holds the individual region information
+
+R.min         = 0;                     % location of left point
+R.max         = 0.32;                   % location of right point
+R.refineRatio = 1;
+R.dx          = R1_dx;
+R.volP        = R.dx/PPC;
+R.NN          = int32( (R.max - R.min)/R.dx +1 );
+Regions{1}    = R;
+
+R.min         = 0.32;                       
+R.max         = 0.4;
+R.refineRatio = 4;
+R.dx          = R1_dx/double(R.refineRatio);
+R.volP        = R.dx/PPC;
+R.NN          = int32( (R.max - R.min)/R.dx );
+Regions{2}    = R;
+
+R.min         = 0.4;                       
+R.max         = 0.56;
+R.refineRatio = 16;
+R.dx          = R1_dx/double(R.refineRatio); 
+R.volP        = R.dx/PPC;
+R.NN          = int32( (R.max - R.min)/R.dx);       
+Regions{3}    = R;
+
+R.min         = 0.56;                       
+R.max         = 0.64;
+R.refineRatio = 4;
+R.dx          = R1_dx/double(R.refineRatio);
+R.volP        = R.dx/PPC;
+R.NN          = int32( (R.max - R.min)/R.dx );
+Regions{4}    = R;
+
+R.min         = 0.64;                       
+R.max         = domain;
+R.refineRatio = 1;
+R.dx          = R1_dx/R.refineRatio;
+R.volP        = R.dx/PPC;
+R.NN          = int32( (R.max - R.min)/R.dx );
+Regions{5}    = R;
+
+end
+
+NN = int32(0);
+
+% bulletproofing:
+for r=1:numRegions
+  R = Regions{r}
+  d = (R.max - R.min) + 100* d_smallNum
+  
+  if( mod( d, R.dx ) > 1.0e-10 )
+    tst
+    fprintf('ERROR, the dx: %g in Region %g does not divide into the domain (R.max:%g R.min:%g) evenly\n', R.dx,r,R.max,R.min);
+    return;
+  end
+end
+
 
 %  find the number of nodes (NN) and the minimum dx
 dx_min = double(BigNum);
@@ -95,7 +160,7 @@ NN
 % compute the positions of the nodes
 Lx      = zeros(NN,2);
 nodePos = zeros(NN,1);      % node Position
-nodeNum = int8(1);
+nodeNum = int32(1);
 
 nodePos(1) = 0.0;
 
@@ -151,7 +216,7 @@ input('hit return')
 %__________________________________
 % create particles
 ip=1;
-xp(1)=R1_dx/(2.*PPC);
+xp(1)=bar_min;
 
 for r=1:numRegions
   R = Regions{r};
@@ -279,10 +344,10 @@ end
 
 if strcmp(problem_type, 'advectBlock')
   initVelocity    = 100;
-  tfinal          = 0.001;
+  tfinal          = 0.01;
   numBCs          = 1;
   velG_BCValue(1) = initVelocity;
-  velG_BCValue(2) = 1.;
+  velG_BCValue(2) = 0.;
   for ip=1:NP
     velP(ip)    = initVelocity;
     initPos(ip) = xp(ip);
@@ -322,6 +387,20 @@ while t<tfinal && tstep < max_tstep
     intForceG(ig) =0.;
   end
   
+  % plot initial position
+  if(mod(tstep,40) == 0)
+    set(gcf,'position',[50,100,700,500]);
+    figure(1)
+    subplot(5,1,1),plot(xp,velP,'rd');
+    xlabel('Particle Position');
+    ylabel('Particle velocity');
+    axis([0 1 99 101] )
+
+    subplot(5,1,2),plot(xp,massP,'rd');
+    axis([0 1 53 53.5] )
+    ylabel('Particle Mass');
+  end
+  
   %__________________________________
   % project particle data to grid  
   for ip=1:NP
@@ -329,7 +408,20 @@ while t<tfinal && tstep < max_tstep
     for ig=1:2
       massG(nodes(ig))     = massG(nodes(ig))     + massP(ip) * Ss(ig);
       velG(nodes(ig))      = velG(nodes(ig))      + massP(ip) * velP(ip) * Ss(ig);
-      extForceG(nodes(ig)) = extForceG(nodes(ig)) + extForceP(ip) * Ss(ig);
+      extForceG(nodes(ig)) = extForceG(nodes(ig)) + extForceP(ip) * Ss(ig); 
+      
+% debugging__________________________________
+  if(0)
+    fprintf( 'ip: %g xp: %g, nodes: %g, node_pos: %g massG: %g, massP: %g, Ss: %g,  prod: %g \n', ip, xp(ip), nodes(ig), nodePos(nodes(ig)), massG(nodes(ig)), massP(ip), Ss(ig), massP(ip) * Ss(ig) );
+    fprintf( '\t velG: %g,  velP:  %g,  prod: %g \n', velG(nodes(ig)), velP(ip), (massP(ip) * velP(ip) * Ss(ig) ) );
+  end 
+  
+  error = velG(nodes(ig)) - massG(nodes(ig)) * initVelocity;
+  if(  (abs(error) > 1e-8) && (massG(nodes(ig)) > 0) )
+    fprintf('interpolateParticlesToGrid: \t  node: %g, nodePos %g, error %g, massG %g \n', ig, nodePos(ig), error, massG(nodes(ig) ));
+  end
+% debugging__________________________________
+
     end
   end
 
@@ -342,6 +434,38 @@ while t<tfinal && tstep < max_tstep
     velG(BCNode(ibc)) = velG_BCValue(ibc);
   end
 
+% debugging__________________________________
+if(mod(tstep,40) == 0)
+  subplot(5,1,3),plot(nodePos, velG,'bx');
+  xlabel('NodePos');
+  ylabel('grid Vel');
+  axis([0 1 0 110] )
+  
+  subplot(5,1,4),plot(nodePos, massG,'bx');
+  ylabel('gridMass');
+  axis([0 1 0 70] )
+  
+  momG = velG .* massG;
+  subplot(5,1,5),plot(nodePos, momG,'bx');
+  ylabel('gridMom');
+  axis([0 1 0 7000] )
+  
+  f_name = sprintf('%g.ppm',tstep-1)
+  F = getframe(gcf);
+  [X,map] = frame2im(F);
+  imwrite(X,f_name)
+ %input('hit return');
+end
+ 
+  
+for ig=1:NN
+  error = velG(ig) * massG(ig) - massG(ig) * initVelocity;
+  if(  (abs(error) > 1e-8) )
+    fprintf('interpolateParticlesToGrid after BC:  node: %g, nodePos %g, error %g, massG %g \n', ig, nodePos(ig), error, massG(ig) );
+  end
+end
+% debugging__________________________________
+
   %compute particle stress
   [stressP,vol,Fp]=computeStressFromVelocity(xp,dt,velG,E,Fp,NP,numRegions, Regions);
 
@@ -353,9 +477,17 @@ while t<tfinal && tstep < max_tstep
     end
   end
 
+% debugging__________________________________
+  if( abs(intForceG(nodes(ig))) > 1e-8 )
+    fprintf('internal Force: \t  node: %g, nodePos %g, intForce %g \n', nodes(ig), nodePos(nodes(ig)), intForceG(nodes(ig)) );
+    input('hit return')
+  end
+% debugging__________________________________
+
   %compute the acceleration and new velocity on the grid
   accl_G    =(intForceG + extForceG)./massG;
   vel_new_G = velG + accl_G.*dt;
+  
 
   %set velocity BC
   for ibc=1:numBCs
@@ -369,6 +501,7 @@ while t<tfinal && tstep < max_tstep
   
   %__________________________________
   %project changes back to particles
+  tmp = zeros(NP,1);
   for ip=1:NP
     [nodes,Ss]=findNodesAndWeights(xp(ip),numRegions, Regions, nodePos, Lx);
     dvelP = 0.;
@@ -377,12 +510,32 @@ while t<tfinal && tstep < max_tstep
     for ig=1:2
       dvelP = dvelP + accl_G(nodes(ig))    * dt * Ss(ig);
       dxp   = dxp   + vel_new_G(nodes(ig)) * dt * Ss(ig);
+      
+% debugging__________________________________
+  error = massG(nodes(ig)) * vel_new_G(nodes(ig)) - massG(nodes(ig)) * initVelocity;
+  if(  (abs(error) > 1e-8) && (massG(nodes(ig)) > 0) )
+    fprintf('project changes: \t  node: %g, nodePos %g, error %g, massG %g \n', nodes(ig), nodePos(nodes(ig)), error, massG(nodes(ig) ));
+    fprintf(' \t\t\t vel_new_G: %g  Ss(ig): %16.15f\n',vel_new_G(nodes(ig)), Ss(ig) );
+  end
+% debugging__________________________________
+    
     end
     
     velP(ip) = velP(ip) + dvelP;
     xp(ip)   = xp(ip) + dxp;
     dp(ip)   = dp(ip) + dxp;
+    tmp(ip)  = tmp(ip) + dxp;
   end
+  
+  fprintf('sum(tmp): %9.8f \n',sum(tmp));
+if(0)  
+  set(gcf,'position',[200,100,900,900]);
+  figure(2)
+  subplot(1,1,1),plot(xp,tmp,'bx');
+  xlabel('Particle Position');
+  ylabel('dp');
+  input('hit return')
+end  
   
   DX_tip(tstep)=dp(NP);
   T=t; %-dt;
@@ -423,6 +576,7 @@ while t<tfinal && tstep < max_tstep
       pos_error = pos_error +  xp(ip) - exact_pos;
       %fprintf('xp: %f  exact: %f error %f \n',xp(ip), exact_pos, xp(ip) - exact_pos)
     end
+    fprintf('sum position error %16.15f \n',sum(pos_error))
   end
 
   TIME(tstep)=t;
@@ -512,18 +666,22 @@ end
 function[node, dx]=positionToNode(xp, numRegions, Regions)
  
   n_offset = 0;
+  region1_offset = 1;                       % only needed for the first region
   dx = double(0);
   
   for r=1:numRegions
     R = Regions{r};
     
     if ((xp >= R.min) && (xp < R.max))
-      n    = floor((xp - R.min)/R.dx) + 1;  % nodes from start of the current region
-      node = n + n_offset;                  % add an offset to the local node number
+      n    = floor((xp - R.min)/R.dx);      % # of nodes from the start of the current region
+      node = n + n_offset + region1_offset; % add an offset to the local node number
       dx   = R.dx;
+      %fprintf( 'region: %g, n: %g, node:%g, xp: %g dx: %g R.min: %g, R.max: %g \n',r, n, node, xp, dx, R.min, R.max);
+      return;
     end
+    region1_offset = 0;                     % set to 0 after the first region
 
-    n_offset = n_offset + R.NN;
+    n_offset = (n_offset) + R.NN;           % increment the offset
   end
 end
 %__________________________________
@@ -693,6 +851,13 @@ function [stressP,vol,Fp]=computeStressFromVelocity(xp,dt,velG,E,Fp,NP, numRegio
     Fp(ip)      = dF * Fp(ip);
     stressP(ip) = E * (Fp(ip)-1.0);
     vol(ip)     = volP * Fp(ip);
+    
+    if(abs(stressP(ip)) > 1e-8) 
+      fprintf('computeStressFromVelocity: nodes_L: %g, nodes_R:%g, gUp: %g, dF: %g, stressP: %g \n',nodes(1),nodes(2), gUp, dF, stressP(ip) );
+      fprintf(' Gs_L: %g, Gs_R: %g\n', Gs(1), Gs(2) );
+      fprintf(' velG_L: %g, velG_R: %g\n', velG(nodes(1)), velG(nodes(2)) );
+      fprintf(' prod_L %g, prod_R: %g \n', velG(nodes(1)) * Gs(1), velG(nodes(2)) * Gs(2) );
+    end
   end
 end
 
