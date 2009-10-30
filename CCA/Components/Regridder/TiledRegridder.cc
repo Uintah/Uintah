@@ -111,13 +111,13 @@ void TiledRegridder::ComputeTiles(vector<IntVector> &tiles, const LevelP level, 
     }
   }
 }
-double rtimes[10]={0};
+double rtimes[20]={0};
 
 Grid* TiledRegridder::regrid(Grid* oldGrid)
 {
   if(rgtimes.active())
   {
-    for(int i=0;i<10;i++)
+    for(int i=0;i<20;i++)
       rtimes[i]=0;
   }
   double start=Time::currentSeconds();
@@ -129,6 +129,9 @@ Grid* TiledRegridder::regrid(Grid* oldGrid)
   //for each level fine to coarse 
   for(int l=min(oldGrid->numLevels()-1,d_maxLevels-2); l >= 0;l--)
   {
+    //MPI_Barrier(d_myworld->getComm());
+    rtimes[15+l]+=Time::currentSeconds()-start;
+    start=Time::currentSeconds();
     const LevelP level=oldGrid->getLevel(l);
 
     vector<IntVector> mytiles;
@@ -141,38 +144,7 @@ Grid* TiledRegridder::regrid(Grid* oldGrid)
     rtimes[1]+=Time::currentSeconds()-start;
     start=Time::currentSeconds();
 
-    if(d_myworld->size()>1)
-    {
-      unsigned int mycount=mytiles.size();
-      vector<unsigned int> counts(d_myworld->size());
-
-      //gather the number of tiles on each processor
-      MPI_Allgather(&mycount,1,MPI_UNSIGNED,&counts[0],1,MPI_UNSIGNED,d_myworld->getComm());
-
-
-      //compute the displacements and recieve counts for a gatherv
-      vector<int> displs(d_myworld->size());
-      vector<int> recvcounts(d_myworld->size());
-
-      int pos=0;
-      for(int p=0;p<d_myworld->size();p++)
-      {
-        displs[p]=pos;
-        recvcounts[p]=counts[p]*sizeof(IntVector);
-        pos+=recvcounts[p];
-      }
-
-      tiles[l+1].resize(pos/sizeof(IntVector));
-
-      //gatherv tiles
-      MPI_Allgatherv(&mytiles[0],recvcounts[d_myworld->myrank()],MPI_BYTE,&tiles[l+1][0],&recvcounts[0],&displs[0],MPI_BYTE,d_myworld->getComm());
-    }
-    else
-    {
-      tiles[l+1]=mytiles;
-    }
-    rtimes[4]+=Time::currentSeconds()-start;
-    start=Time::currentSeconds();
+    GatherTiles(mytiles,tiles[l+1]);
 
     set<IntVector> settiles;
     //tiles might not be unique so add them to a set to make them unique
@@ -187,7 +159,7 @@ Grid* TiledRegridder::regrid(Grid* oldGrid)
       //add flags to the coarser level to ensure that boundary layers exist and that fine patches have a coarse patches above them.
       CoarsenFlags(oldGrid,l,tiles[l+1]);
     }
-    rtimes[5]+=Time::currentSeconds()-start;
+    rtimes[6]+=Time::currentSeconds()-start;
     start=Time::currentSeconds();
   }
 
@@ -200,7 +172,7 @@ Grid* TiledRegridder::regrid(Grid* oldGrid)
   //Create the grid
   Grid *newGrid = CreateGrid(oldGrid,tiles);
 
-  rtimes[6]+=Time::currentSeconds()-start;
+  rtimes[7]+=Time::currentSeconds()-start;
   start=Time::currentSeconds();
 
   if(*newGrid==*oldGrid)
@@ -208,6 +180,8 @@ Grid* TiledRegridder::regrid(Grid* oldGrid)
     delete newGrid;
     return oldGrid;
   }
+  rtimes[8]+=Time::currentSeconds()-start;
+  start=Time::currentSeconds();
 
   //finalize the grid
   TAU_PROFILE_TIMER(finalizetimer, "TiledRegridder::finalize grid", "", TAU_USER);
@@ -220,6 +194,8 @@ Grid* TiledRegridder::regrid(Grid* oldGrid)
     level->finalizeLevel(periodic.x(), periodic.y(), periodic.z());
     //level->assignBCS(grid_ps_,0);
   }
+  rtimes[9]+=Time::currentSeconds()-start;
+  start=Time::currentSeconds();
   TAU_PROFILE_STOP(finalizetimer);
 
   d_newGrid = true;
@@ -227,42 +203,42 @@ Grid* TiledRegridder::regrid(Grid* oldGrid)
 
   OutputGridStats(newGrid);
 
-  rtimes[7]+=Time::currentSeconds()-start;
-  start=Time::currentSeconds();
 
   //initialize the weights on new patches
   lb_->initializeWeights(oldGrid,newGrid);
 
+  rtimes[10]+=Time::currentSeconds()-start;
+  start=Time::currentSeconds();
 #if SCI_ASSERTION_LEVEL > 0
   if(!verifyGrid(newGrid))
   {
     throw InternalError("Grid is not consistent across processes",__FILE__,__LINE__);
   }
 #endif 
-  rtimes[8]+=Time::currentSeconds()-start;
+  rtimes[11]+=Time::currentSeconds()-start;
   start=Time::currentSeconds();
 
 
   if(rgtimes.active())
   {
-    double avg[10]={0};
-    MPI_Reduce(&rtimes,&avg,10,MPI_DOUBLE,MPI_SUM,0,d_myworld->getComm());
+    double avg[20]={0};
+    MPI_Reduce(&rtimes,&avg,20,MPI_DOUBLE,MPI_SUM,0,d_myworld->getComm());
     if(d_myworld->myrank()==0) {
       cout << "Regrid Avg Times: ";
-      for(int i=0;i<10;i++)
+      for(int i=0;i<20;i++)
       {
         avg[i]/=d_myworld->size();
-        cout << avg[i] << " ";
+        cout << i << ":" << avg[i] << " ";
       }
       cout << endl;
     }
-    double max[10]={0};
-    MPI_Reduce(&rtimes,&max,10,MPI_DOUBLE,MPI_MAX,0,d_myworld->getComm());
+    double max[20]={0};
+    MPI_Reduce(&rtimes,&max,20,MPI_DOUBLE,MPI_MAX,0,d_myworld->getComm());
     if(d_myworld->myrank()==0) {
       cout << "Regrid Max Times: ";
-      for(int i=0;i<10;i++)
+      for(int i=0;i<20;i++)
       {
-        cout << max[i] << " ";
+        cout << i << ":" << max[i] << " ";
       }
       cout << endl;
     }
@@ -457,9 +433,13 @@ void TiledRegridder::problemSetup_BulletProofing(const int k)
       msg << "Problem Setup: Regridder: The overall number of cells on level " << k << "(" << d_cellNum[k] << ") is not divisible by the minimum patch size (" <<  d_minTileSize[k] << ")\n";
       throw ProblemSetupException(msg.str(), __FILE__, __LINE__);
     }
-
+    if(d_cellNum[k][dir]/d_minTileSize[k][dir]>10)
+    {
+      ostringstream msg;
+      msg << "Problem Setup: CompressedIntVector requires more than 10 bits, the size of the CompressedIntVector needs to be increased";
+      throw ProblemSetupException(msg.str(), __FILE__, __LINE__);
+    }
   }
-
 }
 
 //Create flags on level l-1 where ever tiles exist on level l+1 with boundary layers
@@ -629,4 +609,73 @@ IntVector TiledRegridder::computeCellLowIndex(const IntVector& tileIndex, const 
 IntVector TiledRegridder::computeCellHighIndex(const IntVector& tileIndex, const IntVector& numCells, const IntVector& tileSize)
 {
   return computeCellLowIndex(tileIndex+IntVector(1,1,1),numCells,tileSize);
+}
+
+struct CompressedIntVector
+{
+  int x : 10;
+  int y : 10;
+  int z : 10;
+  int operator[](int index)
+  {
+    switch (index)
+    {
+      case 0:
+        return x;
+      case 1:
+        return y;
+      case 2:
+        return z;
+      case 3:
+        throw InternalError("CompressedIntVector invalid index",__FILE__,__LINE__);
+    }
+  }
+};
+
+void TiledRegridder::GatherTiles(vector<IntVector>& mytiles, vector<IntVector> &gatheredTiles )
+{
+  if(d_myworld->size()>1)
+  {
+    unsigned int mycount=mytiles.size();
+    vector<unsigned int> counts(d_myworld->size());
+
+    vector<CompressedIntVector> tiles(mytiles.size()), gtiles;
+
+    //copy tiles into compressed data structure
+    for(size_t i=0; i<tiles.size();i++)
+    {
+      tiles[i].x=mytiles[i].x();
+      tiles[i].y=mytiles[i].y();
+      tiles[i].z=mytiles[i].z();
+    }
+   
+    //gather the number of tiles on each processor
+    MPI_Allgather(&mycount,1,MPI_UNSIGNED,&counts[0],1,MPI_UNSIGNED,d_myworld->getComm());
+
+    //compute the displacements and recieve counts for a gatherv
+    vector<int> displs(d_myworld->size());
+    vector<int> recvcounts(d_myworld->size());
+
+    int pos=0;
+    for(int p=0;p<d_myworld->size();p++)
+    {
+      displs[p]=pos;
+      recvcounts[p]=counts[p]*sizeof(CompressedIntVector);
+      pos+=recvcounts[p];
+    }
+
+    gtiles.resize(pos/sizeof(CompressedIntVector));
+
+    //gatherv tiles
+    MPI_Allgatherv(&mytiles[0],recvcounts[d_myworld->myrank()],MPI_BYTE,&gtiles[0],&recvcounts[0],&displs[0],MPI_BYTE,d_myworld->getComm());
+
+    //copy compressed tiles into uncompressed data structure
+    gatheredTiles.resize(gtiles.size());
+    for(size_t i=0;i<gtiles.size();i++)
+      gatheredTiles[i]=IntVector(gtiles[i].x,gtiles[i].y,gtiles[i].z);
+  }
+  else
+  {
+    gatheredTiles=mytiles;
+  }
 }
