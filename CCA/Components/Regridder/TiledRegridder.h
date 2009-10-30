@@ -88,6 +88,7 @@ WARNING
     void CoarsenFlags(GridP oldGrid, int l, vector<IntVector> tiles); 
     void OutputGridStats(Grid* newGrid);
     void ComputeTiles(vector<IntVector> &tiles, const LevelP level, IntVector tile_size, IntVector cellRefinementRatio);
+    void GatherTiles(vector<IntVector>& mytiles, vector<IntVector> &gatheredTiles );
     //maps a cell index to a tile index
     IntVector computeTileIndex(const IntVector& cellIndex, const IntVector& numCells, const IntVector& tilesize);
     //maps a tile index to the cell low index for that tile
