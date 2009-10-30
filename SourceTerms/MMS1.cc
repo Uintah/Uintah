@@ -3,7 +3,7 @@
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/Variables/CCVariable.h>
-#include <CCA/Components/Arches/SourceTerms/ConstSrcTerm.h>
+#include <CCA/Components/Arches/SourceTerms/MMS1.h>
 
 //===========================================================================
 
@@ -12,48 +12,46 @@ using namespace Uintah;
 
 //---------------------------------------------------------------------------
 // Builder:
-ConstSrcTermBuilder::ConstSrcTermBuilder(std::string srcName, 
+MMS1Builder::MMS1Builder(std::string srcName, 
                                          vector<std::string> reqLabelNames, 
                                          SimulationStateP& sharedState)
 : SourceTermBuilder(srcName, reqLabelNames, sharedState)
 {}
 
-ConstSrcTermBuilder::~ConstSrcTermBuilder(){}
+MMS1Builder::~MMS1Builder(){}
 
 SourceTermBase*
-ConstSrcTermBuilder::build(){
-  return scinew ConstSrcTerm( d_srcName, d_sharedState, d_requiredLabels );
+MMS1Builder::build(){
+  return scinew MMS1( d_srcName, d_sharedState, d_requiredLabels );
 }
 // End Builder
 //---------------------------------------------------------------------------
 
-ConstSrcTerm::ConstSrcTerm( std::string srcName, SimulationStateP& sharedState,
+MMS1::MMS1( std::string srcName, SimulationStateP& sharedState,
                             vector<std::string> reqLabelNames ) 
 : SourceTermBase(srcName, sharedState, reqLabelNames)
 {}
 
-ConstSrcTerm::~ConstSrcTerm()
+MMS1::~MMS1()
 {}
 //---------------------------------------------------------------------------
 // Method: Problem Setup
 //---------------------------------------------------------------------------
 void 
-ConstSrcTerm::problemSetup(const ProblemSpecP& inputdb)
+MMS1::problemSetup(const ProblemSpecP& inputdb)
 {
 
   ProblemSpecP db = inputdb; 
-
-  db->getWithDefault("constant",d_constant, 0.); 
 
 }
 //---------------------------------------------------------------------------
 // Method: Schedule the calculation of the source term 
 //---------------------------------------------------------------------------
 void 
-ConstSrcTerm::sched_computeSource( const LevelP& level, SchedulerP& sched, int timeSubStep )
+MMS1::sched_computeSource( const LevelP& level, SchedulerP& sched, int timeSubStep )
 {
-  std::string taskname = "ConstSrcTerm::eval";
-  Task* tsk = scinew Task(taskname, this, &ConstSrcTerm::computeSource, timeSubStep);
+  std::string taskname = "MMS1::eval";
+  Task* tsk = scinew Task(taskname, this, &MMS1::computeSource, timeSubStep);
 
   if (timeSubStep == 0 && !d_labelSchedInit) {
     // Every source term needs to set this flag after the varLabel is computed. 
@@ -78,7 +76,7 @@ ConstSrcTerm::sched_computeSource( const LevelP& level, SchedulerP& sched, int t
 // Method: Actually compute the source term 
 //---------------------------------------------------------------------------
 void
-ConstSrcTerm::computeSource( const ProcessorGroup* pc, 
+MMS1::computeSource( const ProcessorGroup* pc, 
                    const PatchSubset* patches, 
                    const MaterialSubset* matls, 
                    DataWarehouse* old_dw, 
@@ -91,14 +89,14 @@ ConstSrcTerm::computeSource( const ProcessorGroup* pc,
     const Patch* patch = patches->get(p);
     int archIndex = 0;
     int matlIndex = d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    Vector Dx = patch->dCell(); 
 
-    CCVariable<double> constSrc; 
+    CCVariable<double> mms1Src; 
     if ( new_dw->exists(d_srcLabel, matlIndex, patch ) ){
-      new_dw->getModifiable( constSrc, d_srcLabel, matlIndex, patch ); 
-      constSrc.initialize(0.0);
+      new_dw->getModifiable( mms1Src, d_srcLabel, matlIndex, patch ); 
     } else {
-      new_dw->allocateAndPut( constSrc, d_srcLabel, matlIndex, patch );
-      constSrc.initialize(0.0);
+      new_dw->allocateAndPut( mms1Src, d_srcLabel, matlIndex, patch );
+      mms1Src.initialize(0.0);
     } 
 
     for (vector<std::string>::iterator iter = d_requiredLabels.begin(); 
@@ -108,10 +106,16 @@ ConstSrcTerm::computeSource( const ProcessorGroup* pc,
     }
 
 
+    double pi = acos(-1.0); 
 
     for (CellIterator iter=patch->getCellIterator__New(); !iter.done(); iter++){
+      
       IntVector c = *iter; 
-      constSrc[c] += d_constant; 
+      double x = c[0]*Dx.x() + Dx.x()/2.; 
+      double y = c[1]*Dx.y() + Dx.y()/2.;
+      //double z = c[2]*Dx.z() + Dx.z()/2.;
+
+      mms1Src[c] = 2.*pi*cos(2.*pi*x)*cos(2.*pi*y) - 2.*pi*sin(2.*pi*x)*sin(2.*pi*y); 
     }
   }
 }
