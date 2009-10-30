@@ -66,7 +66,7 @@ double lbtimes[5]={0};
 
 //if defined the space-filling curve will be computed in parallel, this may not be a good idea because the time to compute 
 //the space-filling curve is so small that it might not parallelize well.
-#define SFC_PARALLEL  
+//#define SFC_PARALLEL  
 
 DynamicLoadBalancer::DynamicLoadBalancer(const ProcessorGroup* myworld)
   : LoadBalancerCommon(myworld), d_costForecaster(0), sfc(myworld)
