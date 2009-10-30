@@ -1759,13 +1759,12 @@ Arches::weightedAbsInit( const ProcessorGroup* ,
     
       CCVariable<Vector> partVel; 
       new_dw->allocateAndPut( partVel, i->second, matlIndex, patch );
-
-      for (CellIterator iter=patch->getCellIterator__New(); 
-           !iter.done(); iter++){
-        IntVector c = *iter; 
-        partVel[c] = Vector(0.,0.,0.);
-
-      }
+      partVel.initialize(Vector(0,0,0));
+      //for (CellIterator iter=patch->getCellIterator__New(); 
+      //     !iter.done(); iter++){
+      //  IntVector c = *iter; 
+        //partVel[c] = Vector(0.,0.,0.);
+      //}
     }
 
 
