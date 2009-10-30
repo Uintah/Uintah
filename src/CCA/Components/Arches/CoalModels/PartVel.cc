@@ -249,9 +249,6 @@ void PartVel::ComputePartVel( const ProcessorGroup* pc,
           double phi = 1. + .15*pow(Re, 0.687);
           double t_p_by_t_k = (2*rhoRatio+1)/36*1.0/phi*pow(length_ratio,2);
           diff = uk*(1-beta)*pow(t_p_by_t_k, d_power);
-          if(isnan(diff)){
-            //cout << " diff is NaN " << wlength[c]<< " " << weight[c] << " " << prev_diff << " " << length << endl;
-           }
           double error = abs(diff - prev_diff)/diff; 
           if ( abs(diff) < 1e-16 )
             error = 0.0;
