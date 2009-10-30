@@ -433,7 +433,7 @@ void TiledRegridder::problemSetup_BulletProofing(const int k)
       msg << "Problem Setup: Regridder: The overall number of cells on level " << k << "(" << d_cellNum[k] << ") is not divisible by the minimum patch size (" <<  d_minTileSize[k] << ")\n";
       throw ProblemSetupException(msg.str(), __FILE__, __LINE__);
     }
-    if(d_cellNum[k][dir]/d_minTileSize[k][dir]>10)
+    if(log(d_cellNum[k][dir]/d_minTileSize[k][dir])>10)
     {
       ostringstream msg;
       msg << "Problem Setup: CompressedIntVector requires more than 10 bits, the size of the CompressedIntVector needs to be increased";
@@ -613,9 +613,9 @@ IntVector TiledRegridder::computeCellHighIndex(const IntVector& tileIndex, const
 
 struct CompressedIntVector
 {
-  int x : 10;
-  int y : 10;
-  int z : 10;
+  unsigned int x : 10;
+  unsigned int y : 10;
+  unsigned int z : 10;
   int operator[](int index)
   {
     switch (index)
