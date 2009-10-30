@@ -501,6 +501,8 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
             tempCCVar[c] = 0;
         } else if( is_badly_conditioned ) {
             tempCCVar[c] = 0;
+        } else if(Xlong[z]!=Xlong[z]){
+            tempCCVar[c] = 0;
         } else {
           tempCCVar[c] = Xlong[z];
         }
@@ -527,6 +529,8 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
         if(  fabs(normResNormalized[c]) > d_solver_tolerance ) {
             tempCCVar[c] = 0;
         } else if( is_badly_conditioned ) {
+            tempCCVar[c] = 0;
+        } else if(Xlong[z]!=Xlong[z]){
             tempCCVar[c] = 0;
         } else {
           tempCCVar[c] = Xlong[z];
