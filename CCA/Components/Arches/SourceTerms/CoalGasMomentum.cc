@@ -141,6 +141,7 @@ CoalGasMomentum::computeSource( const ProcessorGroup* pc,
     CCVariable<Vector> dragSrc; 
     if ( new_dw->exists(d_srcLabel, matlIndex, patch ) ){
       new_dw->getModifiable( dragSrc, d_srcLabel, matlIndex, patch ); 
+      dragSrc.initialize(Vector(0.,0.,0.)); 
     } else {
       new_dw->allocateAndPut( dragSrc, d_srcLabel, matlIndex, patch );
       dragSrc.initialize(Vector(0.,0.,0.));
@@ -170,7 +171,7 @@ CoalGasMomentum::computeSource( const ProcessorGroup* pc,
         const VarLabel* DragGasLabel = model.getGasSourceLabel();  
         new_dw->get( qn_gas_drag, DragGasLabel, matlIndex, patch, gn, 0 );
 
-        dragSrc[c] = qn_gas_drag[c]; // All the work is performed in Drag model
+        dragSrc[c] += qn_gas_drag[c]; // All the work is performed in Drag model
        }
     }
   }
