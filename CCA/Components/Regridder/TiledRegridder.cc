@@ -667,7 +667,7 @@ void TiledRegridder::GatherTiles(vector<IntVector>& mytiles, vector<IntVector> &
     gtiles.resize(pos/sizeof(CompressedIntVector));
 
     //gatherv tiles
-    MPI_Allgatherv(&mytiles[0],recvcounts[d_myworld->myrank()],MPI_BYTE,&gtiles[0],&recvcounts[0],&displs[0],MPI_BYTE,d_myworld->getComm());
+    MPI_Allgatherv(&tiles[0],recvcounts[d_myworld->myrank()],MPI_BYTE,&gtiles[0],&recvcounts[0],&displs[0],MPI_BYTE,d_myworld->getComm());
 
     //copy compressed tiles into uncompressed data structure
     gatheredTiles.resize(gtiles.size());
