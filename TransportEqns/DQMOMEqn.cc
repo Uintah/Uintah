@@ -355,6 +355,7 @@ void DQMOMEqn::initializeVariables( const ProcessorGroup* pc,
     newVar.initialize(0.0);
     rkoldVar.initialize(0.0);
     icValue.initialize(0.0);
+
     // copy old into new
     newVar.copyData(oldVar);
     rkoldVar.copyData(oldVar); 
@@ -531,15 +532,17 @@ DQMOMEqn::buildTransportEqn( const ProcessorGroup* pc,
 
 #ifdef VERIFY_DQMOM_TRANSPORT
         if (d_addExtraSources) { 
-          // Going to zero out the src from the Ax=b solver
+          // Going to subtract out the src from the Ax=b solver
           // This assumes that you don't care about the solution (for verification). 
-          RHS[c] = 0.0;
+          RHS[c] -= src[c]*vol;
+
           // Get the factory of source terms
           SourceTermFactory& src_factory = SourceTermFactory::self(); 
           for (vector<std::string>::iterator src_iter = d_sources.begin(); src_iter != d_sources.end(); src_iter++){
            constCCVariable<double> extra_src;  // Outside of this scope src is no longer available 
            SourceTermBase& temp_src = src_factory.retrieve_source_term( *src_iter ); 
            new_dw->get(extra_src, temp_src.getSrcLabel(), matlIndex, patch, gn, 0);
+
            // Add to the RHS
            RHS[c] += extra_src[c]*vol; 
           }            
