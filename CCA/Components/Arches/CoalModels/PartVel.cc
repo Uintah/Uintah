@@ -187,6 +187,8 @@ void PartVel::ComputePartVel( const ProcessorGroup* pc,
       old_dw->get(old_partVel, iter->second, matlIndex, patch, gn, 0);
       partVel.initialize(Vector(0,0,0));
 
+      partVel.initialize(Vector(0.,0.,0.));
+
       // set boundary conditions. 
       name = "vel_qn";
       name += node; 

@@ -918,10 +918,7 @@ Arches::paramInit(const ProcessorGroup* pg,
     uVelocityCC.initialize(0.0);
     vVelocityCC.initialize(0.0);
     wVelocityCC.initialize(0.0);
-    for (CellIterator iter=patch->getCellIterator__New(); 
-         !iter.done(); iter++){
-      ccVelocity[*iter] = Vector(0,0,0);
-    }
+    ccVelocity.initialize(Vector(0.,0.,0.));
     
     new_dw->allocateAndPut(uVelocity, d_lab->d_uVelocitySPBCLabel, indx, patch);
     new_dw->allocateAndPut(vVelocity, d_lab->d_vVelocitySPBCLabel, indx, patch);
@@ -1488,6 +1485,8 @@ Arches::scalarInit( const ProcessorGroup* ,
       // initialize to something other than zero if desired. 
       eqn->initializationFunction( patch, phi ); 
 
+      oldPhi.copyData(phi);
+
       //do Boundary conditions
       eqn->computeBCsSpecial( patch, eqn_name, phi ); 
 
@@ -1651,6 +1650,7 @@ Arches::sched_weightedAbsInit( const LevelP& level,
         i != d_lab->partVel.end(); i++){
     tsk->computes( i->second );
   }
+  tsk->requires( Task::NewDW, d_lab->d_newCCWVelocityLabel, Ghost::None, 0 ); 
 
   // Models
   CoalModelFactory& modelFactory = CoalModelFactory::self();
@@ -1753,18 +1753,22 @@ Arches::weightedAbsInit( const ProcessorGroup* ,
       }
     }
 
+    constCCVariable<Vector> gasVel; 
+    new_dw->get( gasVel, d_lab->d_newCCVelocityLabel, matlIndex, patch, gn, 0 ); 
      // --- PARTICLE VELS
     for (ArchesLabel::PartVelMap::iterator i = d_lab->partVel.begin(); 
           i != d_lab->partVel.end(); i++){
     
       CCVariable<Vector> partVel; 
       new_dw->allocateAndPut( partVel, i->second, matlIndex, patch );
-      partVel.initialize(Vector(0,0,0));
-      //for (CellIterator iter=patch->getCellIterator__New(); 
-      //     !iter.done(); iter++){
-      //  IntVector c = *iter; 
-        //partVel[c] = Vector(0.,0.,0.);
-      //}
+      partVel.initialize(Vector(0.,0.,0.));
+
+      for (CellIterator iter=patch->getCellIterator__New(); 
+           !iter.done(); iter++){
+        IntVector c = *iter; 
+        partVel[c] = gasVel[c];
+
+      }
     }
 
 
