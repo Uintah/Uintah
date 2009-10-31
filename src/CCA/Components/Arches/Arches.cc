@@ -1650,7 +1650,7 @@ Arches::sched_weightedAbsInit( const LevelP& level,
         i != d_lab->partVel.end(); i++){
     tsk->computes( i->second );
   }
-  tsk->requires( Task::NewDW, d_lab->d_newCCWVelocityLabel, Ghost::None, 0 ); 
+  tsk->requires( Task::NewDW, d_lab->d_newCCVelocityLabel, Ghost::None, 0 ); 
 
   // Models
   CoalModelFactory& modelFactory = CoalModelFactory::self();
