@@ -73,8 +73,17 @@ class LU{
       *             \f$ \Vert dx \Vert_{\infty} / \Vert x \Vert_{\infty} \f$ for the last step 
       *             of iterative refinement   */
     double getConvergenceRate() {
-      assert(isRefined_);
-      return condition_estimate;
+      if(isRefined_)
+        return condition_estimate;
+      else
+        return -999999;
+    }
+
+    /** @brief      Access function for the determinant
+      * @returns    The determinant of dense matrix A */
+    double getDeterminant() {
+      assert(isDecomposed_);
+      return determinant;
     }
   
   
@@ -86,6 +95,11 @@ class LU{
     bool isSingular() {
       assert(isDecomposed_);
       return isSingular_;
+    }
+
+    /** @brief      Check if matrix A is decomposed */
+    bool isDecomposed() {
+      return isDecomposed_;
     }
   
     /** @brief      Multiply the LU matrix by a vector: A*Y = Z (template class)
@@ -145,7 +159,7 @@ class LU{
 
     /** @brief      Dumps the contents of the LU matrix to std::out. */
     void dump();
-  
+
   
   
     /** @brief      Returns dimension of the LU object
@@ -209,6 +223,7 @@ class LU{
       int getDimension() {
         return dim_; 
       };
+      double calculateDeterminant();
     private:
       DenseMatrix();
       double **AA_;
@@ -223,6 +238,9 @@ class LU{
     // Press:
     double d;
     std::vector<int> indx;
+    
+    // Determinant:
+    double determinant;
     
     const int dim_;                 /// Dimension of LU object
     DenseMatrix AA_;               /// Private instance of DenseMatrix 

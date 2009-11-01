@@ -23,6 +23,9 @@ extern "C" {
 }
 #endif
 
+// Uncomment for DQMOM verification:
+//#define VERIFY_DQMOM 1
+
 namespace Uintah {
 
 //-------------------------------------------------------
@@ -30,7 +33,7 @@ namespace Uintah {
 /** 
   * @class    DQMOM
   * @author   Charles Reid (charlesreid1@gmail.com)
-  * @date     March 16, 2009
+  * @date     March 2009
   *
   * @brief    This class constructs and solves the AX=B linear system for DQMOM scalars.
   *
@@ -39,7 +42,7 @@ namespace Uintah {
   *           yields a set of (closed) moment transport equations. These equations can be expressed in terms 
   *           of the weights and abscissas of the quadrature approximation, and re-cast as a linear system,
   *           \f$ \mathbf{AX} = \mathbf{B} \f$.  This class solves the linear system to yield the source terms
-  *           for the weight and weighted abscissa transport equations (the variables contained in \f$\mathbf{X}\f$.
+  *           for the weight and weighted abscissa transport equations (the variables contained in \f$\mathbf{X}\f$).
   *
   */
 
@@ -52,13 +55,19 @@ class DQMOM {
 
 public:
 
-  DQMOM( const ArchesLabel* fieldLabels );
+  DQMOM( ArchesLabel* fieldLabels );
 
   ~DQMOM();
+
+  typedef std::vector<int> MomentVector;
 
   /** @brief Obtain parameters from input file and process them, whatever that means 
    */
   void problemSetup( const ProblemSpecP& params );
+
+  /** @brief              Populate the map containing labels for each moment 
+      @param allMoments   Vector containing all moment indexes specified by user in <Moment> blocks within <DQMOM> block */
+  void populateMomentsMap( vector<MomentVector> allMoments );
 
   /** @brief Schedule creation of linear solver object, creation of AX=B system, and solution of linear system. 
   */
@@ -74,22 +83,34 @@ public:
                           DataWarehouse        * old_dw,
                           DataWarehouse        * new_dw );
   
-  /** @brief Use iterative refinement to improve the solution to AX=B. 
-    * @param A    A matrix - (decomposed) coefficients matrix (remains constant)
-    * @param B    B matrix - right-hand side vector (remains constant)
-    * @param X    X matrix - solution vector from initial factorization       */
-  void iterativeSolutionMethod(LU* A, vector<double>* B, vector<double>* X);
+  /** @brief Schedule calculation of all moments
+  */
+  void sched_calculateMoments( const LevelP & level,
+                               SchedulerP   & sched,
+                               int            timeSubStep );
+
+  /** @brief Calculate the value of the moments */
+  void calculateMoments( const ProcessorGroup *,
+                         const PatchSubset    * patches,
+                         const MaterialSubset *,
+                         DataWarehouse        * old_dw,
+                         DataWarehouse        * new_dw );
+
+
 
     /** @brief Destroy A, X, B, and solver object  
     */
     void destroyLinearSystem();
+
+    /** @brief Access function for boolean, whether to calculate/save moments */
+    bool getSaveMoments() {
+      return b_save_moments; }
 
 private:
 
   vector<string> InternalCoordinateEqnNames;
 
   // moment indexes
-  typedef vector<int> MomentVector;
   vector<MomentVector> momentIndexes;
 
   // weights and weighted abscissa labels, IN SAME ORDER AS GIVEN IN INPUT FILE
@@ -101,16 +122,23 @@ private:
   unsigned int N_xi;  // # of internal coordinates
   unsigned int N_;    // # of quadrature nodes
 
-  const ArchesLabel* d_fieldLabels;
+  ArchesLabel* d_fieldLabels; // this is no longer const because a modifiable instance of ArchesLabel is
+                              // required to populate (i.e. modify) the moments map contained in the ArchesLabel
+                              // class! (otherwise the compiler says "discards qualifiers"...)
+  
   int d_timeSubStep;
+  bool b_save_moments; // boolean - calculate & save moments?
 
   double d_solver_tolerance;
+  double d_w_small;
+  double d_weight_scaling_constant;
+  vector<double> d_weighted_abscissa_scaling_constants;
 
   const VarLabel* d_normBLabel; 
   const VarLabel* d_normXLabel; 
   const VarLabel* d_normResLabel;
   const VarLabel* d_normResNormalizedLabel;
-  const VarLabel* d_conditionEstimateLabel;
+  const VarLabel* d_determinantLabel;
 
   double d_small_B; 
 

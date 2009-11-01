@@ -502,11 +502,19 @@ namespace Uintah {
 
 
       // DQMOM Variables:
-      // -- particle velocity 
-      typedef std::map<int, const VarLabel* > PartVelMap;
-      PartVelMap partVel;  
-      
 
+      // Particle velocity map ( populated in Arches.cc::registerDQMOMEqns() )
+      typedef std::map<int, const VarLabel* > PartVelMap;
+      PartVelMap partVel;
+
+      // Particle masses ( populated in Arches.cc::registerDQMOMEqns() )
+      typedef std::map<int, const VarLabel* > ParticleMassMap;
+      ParticleMassMap particleMasses;
+
+      // DQMOM moments ( populated in Arches.cc::registerDQMOMEqns() )
+      typedef std::vector<int> MomentVector;
+      typedef std::map<const MomentVector, const VarLabel* > MomentMap;
+      MomentMap DQMOMMoments;
 
     }; // End class ArchesLabel
 } // End namespace Uintah

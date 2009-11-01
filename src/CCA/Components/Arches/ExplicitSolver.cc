@@ -78,8 +78,6 @@ DEALINGS IN THE SOFTWARE.
 #endif
 
 #include <cmath>
-#include <ios>
-#include <iomanip>
 
 using namespace Uintah;
 
@@ -393,6 +391,14 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
       // schedule DQMOM linear solve
       d_dqmomSolver->sched_solveLinearSystem( level, sched, curr_level );
+
+      // calculate the moments
+      bool saveMoments = d_dqmomSolver->getSaveMoments();
+      if( saveMoments ) {
+        // schedule DQMOM moment calculation
+        d_dqmomSolver->sched_calculateMoments( level, sched, curr_level );
+      }
+
     }
 
 
