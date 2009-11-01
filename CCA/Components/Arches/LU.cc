@@ -69,8 +69,8 @@ LU::decompose()
       }
     }
     if (big == 0.0) {
-      isSingular_ = true;
       isDecomposed_ = true;
+      isSingular_ = true;
       return;
     }
     // save the scaling
@@ -146,8 +146,12 @@ LU::decompose()
     AA_(dim_-1,dim_-1) = tiny;
   }
 
-  isDecomposed_ = true;
+  determinant = AA_.calculateDeterminant();
+  if( fabs(determinant) < 1e-16 ) {
+    isSingular_ = true;
+  }
 
+  isDecomposed_ = true;
 }
 
 
@@ -157,7 +161,12 @@ LU::back_subs( double* rhs, double* soln )
   if( ! isDecomposed_ && ! isSingular_ ) {
     string err_msg = "ERROR:LU:back_subs(): This method cannot be called until LU::decompose() has been executed.\n";
     throw InvalidValue(err_msg,__FILE__,__LINE__);
-  } 
+  } else if (isSingular_) {
+    for (int i=0; i<dim_; ++i) {
+      soln[i] = 0;
+    }
+    return;
+  }
 
   // FIXME:
   // Pointers of type double* are actually pointing to the first element of an array
@@ -169,12 +178,6 @@ LU::back_subs( double* rhs, double* soln )
     soln[counter] = rhs[counter];
   }
 
-  if( isSingular_ ) {
-    for (int i=0; i<dim_; ++i) {
-      soln[i] = 0;
-    }
-    return;
-  }
 
   // AA_ now contains the LU-decomposition of the original "A" matrix.
   // soln[0] is untouched for now since L(0,0) = 1.
@@ -363,7 +366,7 @@ LU::iterative_refinement( LU Aoriginal, double* rhs, double* soln, long double* 
       update_xstate( norm_X_i, norm_dX_i, norm_dX_ip1, &x_state );
     }
  
-    if (x_state != 0) {
+    if (x_state != 0 ) {
       break; //terminate the loop
     }
 
@@ -381,8 +384,6 @@ LU::iterative_refinement( LU Aoriginal, double* rhs, double* soln, long double* 
     norm_dX_final = norm_dX_ip1/norm_X_i;
   }
 
-  isRefined_ = true;
-
   // calculate condition number estimate
   // L-infinity norm of error vector e(i):
   if( rho_max != 1 ) {
@@ -390,6 +391,9 @@ LU::iterative_refinement( LU Aoriginal, double* rhs, double* soln, long double* 
   } else {
     condition_estimate = 0;
   }
+  
+  isRefined_ = true;
+
 }
 
 
@@ -413,8 +417,8 @@ LU::update_xstate( double norm_X_i,
     (*x_state) = 1; //converged
 
   // stopping criteria 2: convergence slows down sufficiently
-  } else if ( (norm_dX_ip1/norm_dX_i) >= rho_thresh && (norm_dX_ip1/norm_dX_i) <= 1.0 ) {
-    (*x_state) = 2; //lack of progress
+  //} else if ( (norm_dX_ip1/norm_dX_i) >= rho_thresh && (norm_dX_ip1/norm_dX_i) <= 1.0 ) {
+  //  (*x_state) = 2; //lack of progress
   
   // stopping criteria 3 is imax...
   } else {
@@ -548,6 +552,18 @@ LU::DenseMatrix::dump()
     cout << endl;
   }
 }
+
+
+double
+LU::DenseMatrix::calculateDeterminant()
+{
+  double det = 1;
+  for( int i = 0; i < dim_; ++i ) {
+    det *= AA_[i][i];
+  }
+  return det;
+}
+
 
 // ===============================================
 
