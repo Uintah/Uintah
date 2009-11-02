@@ -413,7 +413,7 @@
           <doConv                       spec="OPTIONAL BOOLEAN"/>
           <conv_scheme                  spec="OPTIONAL STRING 'upwind, super_bee'"/>
           <initialization               spec="OPTIONAL NO_DATA"
-                                        attribute1="type REQUIRED STRING 'env_constant, env_step'">
+                                        attribute1="type REQUIRED STRING 'env_constant, constant, env_step'">
             <!-- environment constant value initialization -->
             <env_constant               spec="MULTIPLE NO_DATA"
                                         attribute1="qn REQUIRED INTEGER 'positive'"
