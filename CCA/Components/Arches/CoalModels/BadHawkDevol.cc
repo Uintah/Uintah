@@ -1,4 +1,4 @@
-#include <CCA/Components/Arches/CoalModels/KobayashiSarofimDevol.h>
+#include <CCA/Components/Arches/CoalModels/BadHawkDevol.h>
 #include <CCA/Components/Arches/TransportEqns/EqnFactory.h>
 #include <CCA/Components/Arches/TransportEqns/EqnBase.h>
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqn.h>
@@ -19,58 +19,57 @@ using namespace Uintah;
 
 //---------------------------------------------------------------------------
 // Builder:
-KobayashiSarofimDevolBuilder::KobayashiSarofimDevolBuilder( const std::string         & modelName,
-                                                            const vector<std::string> & reqICLabelNames,
-                                                            const vector<std::string> & reqScalarLabelNames,
-                                                            const ArchesLabel         * fieldLabels,
-                                                            SimulationStateP          & sharedState,
-                                                            int qn ) :
-  ModelBuilder( modelName, reqICLabelNames, reqScalarLabelNames, fieldLabels, sharedState, qn )
+BadHawkDevolBuilder::BadHawkDevolBuilder( const std::string         & modelName,
+                                                  const vector<std::string> & reqICLabelNames,
+                                                  const vector<std::string> & reqScalarLabelNames,
+                                                  const ArchesLabel         * fieldLabels,
+                                                  SimulationStateP          & sharedState,
+                                                  int qn ) :
+  ModelBuilder( modelName, fieldLabels, reqICLabelNames, reqScalarLabelNames, sharedState, qn )
 {
 }
 
-KobayashiSarofimDevolBuilder::~KobayashiSarofimDevolBuilder(){}
+BadHawkDevolBuilder::~BadHawkDevolBuilder(){}
 
-ModelBase* KobayashiSarofimDevolBuilder::build() {
-  return scinew KobayashiSarofimDevol( d_modelName, d_sharedState, d_fieldLabels, d_icLabels, d_scalarLabels, d_quadNode );
+ModelBase* BadHawkDevolBuilder::build() {
+  return scinew BadHawkDevol( d_modelName, d_sharedState, d_fieldLabels, d_icLabels, d_scalarLabels, d_quadNode );
 }
 // End Builder
 //---------------------------------------------------------------------------
 
-KobayashiSarofimDevol::KobayashiSarofimDevol( std::string modelName, 
-                                              SimulationStateP& sharedState,
-                                              const ArchesLabel* fieldLabels,
-                                              vector<std::string> icLabelNames, 
-                                              vector<std::string> scalarLabelNames,
-                                              int qn ) 
-: Devolatilization(modelName, sharedState, fieldLabels, icLabelNames, scalarLabelNames, qn)
+BadHawkDevol::BadHawkDevol( std::string modelName, 
+                                    SimulationStateP& sharedState,
+                                    const ArchesLabel* fieldLabels,
+                                    vector<std::string> icLabelNames, 
+                                    vector<std::string> scalarLabelNames,
+                                    int qn ) 
+: ModelBase(modelName, sharedState, fieldLabels, icLabelNames, scalarLabelNames, qn), 
+  d_fieldLabels(fieldLabels)
 {
-  A1  =  3.7e5;       // k1 pre-exponential factor
-  A2  =  1.46e13;     // k2 pre-exponential factor
-  E1  =  -17600;      // k1 activation energy
-  E2  =  -60000;      // k2 activation energy
-
-  R   =  1.987;       // ideal gas constant
-
-  Y1_ = 0.4; // volatile fraction from proximate analysis
-  Y2_ = 1.0; // fraction devolatilized at higher temperatures (often near unity)
-
+  d_quad_node = qn;
+  
   compute_part_temp = false;
+
+  // Create a label for this model
+  d_modelLabel = VarLabel::create( modelName, CCVariable<double>::getTypeDescription() );
+
+  // Create the gas phase source term associated with this model
+  std::string gasSourceName = modelName + "_gasSource";
+  d_gasLabel = VarLabel::create( gasSourceName, CCVariable<double>::getTypeDescription() );
 }
 
-KobayashiSarofimDevol::~KobayashiSarofimDevol()
+BadHawkDevol::~BadHawkDevol()
 {}
 
 //---------------------------------------------------------------------------
 // Method: Problem Setup
 //---------------------------------------------------------------------------
   void 
-KobayashiSarofimDevol::problemSetup(const ProblemSpecP& params, int qn)
+BadHawkDevol::problemSetup(const ProblemSpecP& params, int qn)
 {
   ProblemSpecP db = params; 
   compute_part_temp = false;
 
-  // -----------------------------------------------------------------
   // Look for required internal coordinates
   ProblemSpecP db_icvars = params->findBlock("ICVars");
   for (ProblemSpecP variable = db_icvars->findBlock("variable"); variable != 0; variable = variable->findNextBlock("variable") ) {
@@ -101,32 +100,18 @@ KobayashiSarofimDevol::problemSetup(const ProblemSpecP& params, int qn)
       compute_part_temp = true;
     } else {
       std::string errmsg;
-      errmsg = "Invalid variable role for Kobayashi Sarofim Devolatilization model: must be \"particle_temperature\" or \"raw_coal_mass\", you specified \"" + role_name + "\".";
+      errmsg = "Invalid variable role for Badzioch Hawksley Devolatilization model: must be \"particle_temperature\" or \"raw_coal_mass\", you specified \"" + role_name + "\".";
       throw InvalidValue(errmsg,__FILE__,__LINE__);
     }
 
+    // set model clipping (not used yet...)
+    db->getWithDefault( "low_clip",  d_lowModelClip,  1.0e-6 );
+    db->getWithDefault( "high_clip", d_highModelClip, 999999 );
+
   }
 
-  // fix the d_icLabels to point to the correct quadrature node (since there is 1 model per quad node)
-  for ( vector<std::string>::iterator iString = d_icLabels.begin(); 
-        iString != d_icLabels.end(); ++iString) {
-    std::string temp_ic_name        = (*iString);
-    std::string temp_ic_name_full   = temp_ic_name;
-
-    std::string node;
-    std::stringstream out;
-    out << qn;
-    node = out.str();
-    temp_ic_name_full += "_qn";
-    temp_ic_name_full += node;
-
-    std::replace( d_icLabels.begin(), d_icLabels.end(), temp_ic_name, temp_ic_name_full);
-  }
-
-
-  // -----------------------------------------------------------------
   // Look for required scalars
-  //   ( Kobayashi-Sarofim model doesn't use any extra scalars (yet)
+  //   ( Badzioch Hawksley model doesn't use any extra scalars (yet)
   //     but if it did, this "for" loop would have to be un-commented )
   /*
   ProblemSpecP db_scalarvars = params->findBlock("scalarVars");
@@ -159,15 +144,32 @@ KobayashiSarofimDevol::problemSetup(const ProblemSpecP& params, int qn)
       compute_part_temp = true;
     } else {
       std::string errmsg;
-      errmsg = "Invalid variable role for Kobayashi Sarofim Devolatilization model: must be \"particle_temperature\" or \"raw_coal_mass\", you specified \"" + role_name + "\".";
+      errmsg = "Invalid variable role for Badzioch Hawksley Devolatilization model: must be \"particle_temperature\" or \"raw_coal_mass\", you specified \"" + role_name + "\".";
       throw InvalidValue(errmsg,__FILE__,__LINE__);
     }
 
   }
   */
 
+
+  // fix the d_icLabels to point to the correct quadrature node (since there is 1 model per quad node)
+  for ( vector<std::string>::iterator iString = d_icLabels.begin(); 
+        iString != d_icLabels.end(); ++iString) {
+    std::string temp_ic_name        = (*iString);
+    std::string temp_ic_name_full   = temp_ic_name;
+
+    std::string node;
+    std::stringstream out;
+    out << qn;
+    node = out.str();
+    temp_ic_name_full += "_qn";
+    temp_ic_name_full += node;
+
+    std::replace( d_icLabels.begin(), d_icLabels.end(), temp_ic_name, temp_ic_name_full);
+  }
+
   // fix the d_scalarLabels to point to the correct quadrature node (since there is 1 model per quad node)
-  // (Not needed for KobayashiSarofim model (yet)... If it is, uncomment the block below)
+  // (Not needed for BadHawkDevol model (yet)... If it is, uncomment the block below)
   /*
   for ( vector<std::string>::iterator iString = d_scalarLabels.begin(); 
         iString != d_scalarLabels.end(); ++iString) {
@@ -182,20 +184,20 @@ KobayashiSarofimDevol::problemSetup(const ProblemSpecP& params, int qn)
     std::replace( d_scalarLabels.begin(), d_scalarLabels.end(), temp_ic_name, temp_ic_name_full);
   }
   */
- 
+  
 }
 
 //---------------------------------------------------------------------------
 // Method: Schedule dummy initialization
 //---------------------------------------------------------------------------
 void
-KobayashiSarofimDevol::sched_dummyInit( const LevelP& level, SchedulerP& sched ) 
+BadHawkDevol::sched_dummyInit( const LevelP& level, SchedulerP& sched ) 
 {
-  string taskname = "KobayashiSarofimDevol::dummyInit"; 
+  string taskname = "BadHawkDevol::dummyInit"; 
 
   Ghost::GhostType  gn = Ghost::None;
 
-  Task* tsk = scinew Task(taskname, this, &KobayashiSarofimDevol::dummyInit);
+  Task* tsk = scinew Task(taskname, this, &BadHawkDevol::dummyInit);
 
   tsk->computes(d_modelLabel);
   tsk->computes(d_gasLabel); 
@@ -219,7 +221,7 @@ This method was originally in ModelBase, but it requires creating CCVariables
  ModelBase and keeps the ModelBase class as generic as possible.
  */
 void
-KobayashiSarofimDevol::dummyInit( const ProcessorGroup* pc,
+BadHawkDevol::dummyInit( const ProcessorGroup* pc,
                                   const PatchSubset* patches, 
                                   const MaterialSubset* matls, 
                                   DataWarehouse* old_dw, 
@@ -239,11 +241,11 @@ KobayashiSarofimDevol::dummyInit( const ProcessorGroup* pc,
     constCCVariable<double> oldModel;
     constCCVariable<double> oldGasSource;
 
-    new_dw->allocateAndPut( model,       d_modelLabel, matlIndex, patch );
-    new_dw->allocateAndPut( gasSource,   d_gasLabel,   matlIndex, patch ); 
+    new_dw->allocateAndPut( model,     d_modelLabel, matlIndex, patch );
+    new_dw->allocateAndPut( gasSource, d_gasLabel,   matlIndex, patch ); 
 
-    old_dw->get( oldModel,       d_modelLabel, matlIndex, patch, gn, 0 );
-    old_dw->get( oldGasSource,   d_gasLabel,   matlIndex, patch, gn, 0 );
+    old_dw->get( oldModel,     d_modelLabel, matlIndex, patch, gn, 0 );
+    old_dw->get( oldGasSource, d_gasLabel,   matlIndex, patch, gn, 0 );
 
     model.copyData(oldModel);
     gasSource.copyData(oldGasSource);
@@ -255,11 +257,11 @@ KobayashiSarofimDevol::dummyInit( const ProcessorGroup* pc,
 // Method: Schedule the initialization of some variables 
 //---------------------------------------------------------------------------
 void 
-KobayashiSarofimDevol::sched_initVars( const LevelP& level, SchedulerP& sched )
+BadHawkDevol::sched_initVars( const LevelP& level, SchedulerP& sched )
 {
 
-  std::string taskname = "KobayashiSarofimDevol::initVars";
-  Task* tsk = scinew Task(taskname, this, &KobayashiSarofimDevol::initVars);
+  std::string taskname = "BadHawkDevol::initVars";
+  Task* tsk = scinew Task(taskname, this, &BadHawkDevol::initVars);
 
   sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials()); 
 }
@@ -268,7 +270,7 @@ KobayashiSarofimDevol::sched_initVars( const LevelP& level, SchedulerP& sched )
 // Method: Initialize variables
 //-------------------------------------------------------------------------
 void
-KobayashiSarofimDevol::initVars( const ProcessorGroup * pc, 
+BadHawkDevol::initVars( const ProcessorGroup * pc, 
                                  const PatchSubset    * patches, 
                                  const MaterialSubset * matls, 
                                  DataWarehouse        * old_dw, 
@@ -283,10 +285,10 @@ KobayashiSarofimDevol::initVars( const ProcessorGroup * pc,
 // Method: Schedule the calculation of the Model 
 //---------------------------------------------------------------------------
 void 
-KobayashiSarofimDevol::sched_computeModel( const LevelP& level, SchedulerP& sched, int timeSubStep )
+BadHawkDevol::sched_computeModel( const LevelP& level, SchedulerP& sched, int timeSubStep )
 {
-  std::string taskname = "KobayashiSarofimDevol::computeModel";
-  Task* tsk = scinew Task(taskname, this, &KobayashiSarofimDevol::computeModel);
+  std::string taskname = "BadHawkDevol::computeModel";
+  Task* tsk = scinew Task(taskname, this, &BadHawkDevol::computeModel);
 
   Ghost::GhostType gn = Ghost::None;
 
@@ -311,12 +313,14 @@ KobayashiSarofimDevol::sched_computeModel( const LevelP& level, SchedulerP& sche
   std::string temp_weight_name = "w_qn";
   std::string node;
   std::stringstream out;
-  out << d_quadNode;
+  out << d_quad_node;
   node = out.str();
   temp_weight_name += node;
   EqnBase& t_weight_eqn = dqmom_eqn_factory.retrieve_scalar_eqn( temp_weight_name );
   DQMOMEqn& weight_eqn = dynamic_cast<DQMOMEqn&>(t_weight_eqn);
   d_weight_label = weight_eqn.getTransportEqnLabel();
+  d_w_small = weight_eqn.getSmallClip();
+  d_w_scaling_factor = weight_eqn.getScalingConstant();
   tsk->requires(Task::OldDW, d_weight_label, gn, 0);
 
   // require gas temperature
@@ -343,7 +347,7 @@ KobayashiSarofimDevol::sched_computeModel( const LevelP& level, SchedulerP& sche
           d_pt_scaling_factor = current_eqn.getScalingConstant();
           tsk->requires(Task::OldDW, d_particle_temperature_label, Ghost::None, 0);
         } else {
-          std::string errmsg = "ARCHES: KobayashiSarofimDevol: Invalid variable given in <variable> tag for KobayashiSarofimDevol model";
+          std::string errmsg = "ARCHES: BadHawkDevol: Invalid variable given in <variable> tag for BadHawkDevol model";
           errmsg += "\nCould not find given particle temperature variable \"";
           errmsg += *iter;
           errmsg += "\" in EqnFactory or in DQMOMEqnFactory.";
@@ -358,7 +362,7 @@ KobayashiSarofimDevol::sched_computeModel( const LevelP& level, SchedulerP& sche
           d_rc_scaling_factor = current_eqn.getScalingConstant();
           tsk->requires(Task::OldDW, d_raw_coal_mass_label, Ghost::None, 0);
         } else {
-          std::string errmsg = "ARCHES: KobayashiSarofimDevol: Invalid variable given in <variable> tag for KobayashiSarofimDevol model";
+          std::string errmsg = "ARCHES: BadHawkDevol: Invalid variable given in <variable> tag for BadHawkDevol model";
           errmsg += "\nCould not find given raw coal mass variable \"";
           errmsg += *iter;
           errmsg += "\" in DQMOMEqnFactory.";
@@ -368,14 +372,14 @@ KobayashiSarofimDevol::sched_computeModel( const LevelP& level, SchedulerP& sche
 
     } else {
       // can't find this required variable in the labels-to-roles map!
-      std::string errmsg = "ARCHES: KobayashiSarofimDevol: You specified that the variable \"" + *iter + 
+      std::string errmsg = "ARCHES: BadHawkDevol: You specified that the variable \"" + *iter + 
                            "\" was required, but you did not specify a role for it!\n";
       throw InvalidValue( errmsg, __FILE__, __LINE__);
     }
   }
   
   // for each required scalar variable:
-  //  (but no scalar equation variables should be required for the KobayashiSarofimDevol model, at least not for now...)
+  //  (but no scalar equation variables should be required for the BadHawkDevol model, at least not for now...)
   /*
   for( vector<std::string>::iterator iter = d_scalarLabels.begin();
        iter != d_scalarLabels.end(); ++iter) {
@@ -388,7 +392,7 @@ KobayashiSarofimDevol::sched_computeModel( const LevelP& level, SchedulerP& sche
           d_<insert role name here>_label = current_eqn.getTransportEqnLabel();
           tsk->requires(Task::OldDW, d_<insert role name here>_label, Ghost::None, 0);
         } else {
-          std::string errmsg = "ARCHES: KobayashiSarofimDevol: Invalid variable given in <scalarVars> block for <variable> tag for KobayashiSarofimDevol model.";
+          std::string errmsg = "ARCHES: BadHawkDevol: Invalid variable given in <scalarVars> block for <variable> tag for BadHawkDevol model.";
           errmsg += "\nCould not find given <insert role name here> variable \"";
           errmsg += *iter;
           errmsg += "\" in EqnFactory.";
@@ -397,7 +401,7 @@ KobayashiSarofimDevol::sched_computeModel( const LevelP& level, SchedulerP& sche
       }
     } else {
       // can't find this required variable in the labels-to-roles map!
-      std::string errmsg = "ARCHES: KobayashiSarofimDevol: You specified that the variable \"" + *iter + 
+      std::string errmsg = "ARCHES: BadHawkDevol: You specified that the variable \"" + *iter + 
                            "\" was required, but you did not specify a role for it!\n";
       throw InvalidValue( errmsg, __FILE__, __LINE__);
     }
@@ -413,7 +417,7 @@ KobayashiSarofimDevol::sched_computeModel( const LevelP& level, SchedulerP& sche
 // Method: Actually compute the source term 
 //---------------------------------------------------------------------------
 void
-KobayashiSarofimDevol::computeModel( const ProcessorGroup * pc, 
+BadHawkDevol::computeModel( const ProcessorGroup * pc, 
     const PatchSubset    * patches, 
     const MaterialSubset * matls, 
     DataWarehouse        * old_dw, 

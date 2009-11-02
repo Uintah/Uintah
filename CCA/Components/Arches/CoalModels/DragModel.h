@@ -20,9 +20,11 @@
   *
   */
 
+namespace Uintah{
+
 //---------------------------------------------------------------------------
 // Builder
-namespace Uintah{
+
 class DragModelBuilder: public ModelBuilder
 {
 public: 
@@ -40,6 +42,7 @@ public:
 private:
 
 }; 
+
 // End Builder
 //---------------------------------------------------------------------------
 
