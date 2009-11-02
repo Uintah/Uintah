@@ -418,6 +418,7 @@
             <env_constant               spec="MULTIPLE NO_DATA"
                                         attribute1="qn REQUIRED INTEGER 'positive'"
                                         attribute2="value REQUIRED DOUBLE" />
+            <constant                   spec="OPTIONAL DOUBLE"/>
             <!-- step function initialization --> 
             <step_direction             spec="OPTIONAL STRING 'x,y,z'"/> <!-- direction in which the step occurs -->
             <step_start                 spec="OPTIONAL DOUBLE"/>         <!-- physical location (in specified direction) at which the step should begin -->
