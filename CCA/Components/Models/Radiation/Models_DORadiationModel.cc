@@ -58,22 +58,22 @@ using namespace std;
 using namespace Uintah;
 using namespace SCIRun;
 
-#ifndef _WIN32 //no fortran
-#include <CCA/Components/Models/Radiation/fortran/m_rordr_fort.h>
-//#include <CCA/Components/Models/Radiation/fortran/m_rordrss_fort.h>
-//#include <CCA/Components/Models/Radiation/fortran/m_rordrtn_fort.h>
-#include <CCA/Components/Models/Radiation/fortran/m_radarray_fort.h>
-#include <CCA/Components/Models/Radiation/fortran/m_radcoef_fort.h>
-#include <CCA/Components/Models/Radiation/fortran/m_radwsgg_fort.h>
-#include <CCA/Components/Models/Radiation/fortran/m_radcal_fort.h>
-#include <CCA/Components/Models/Radiation/fortran/m_rdombc_fort.h>
-#include <CCA/Components/Models/Radiation/fortran/m_rdomsolve_fort.h>
-#include <CCA/Components/Models/Radiation/fortran/m_rdomsrc_fort.h>
-#include <CCA/Components/Models/Radiation/fortran/m_rdomflux_fort.h>
-#include <CCA/Components/Models/Radiation/fortran/m_rdombmcalc_fort.h>
-#include <CCA/Components/Models/Radiation/fortran/m_rdomvolq_fort.h>
-#include <CCA/Components/Models/Radiation/fortran/m_rshsolve_fort.h>
-#include <CCA/Components/Models/Radiation/fortran/m_rshresults_fort.h>
+#ifndef _WIN32
+#  include <CCA/Components/Models/Radiation/fortran/m_rordr_fort.h>
+//#  include <CCA/Components/Models/Radiation/fortran/m_rordrss_fort.h>
+//#  include <CCA/Components/Models/Radiation/fortran/m_rordrtn_fort.h>
+#  include <CCA/Components/Models/Radiation/fortran/m_radarray_fort.h>
+#  include <CCA/Components/Models/Radiation/fortran/m_radcoef_fort.h>
+#  include <CCA/Components/Models/Radiation/fortran/m_radwsgg_fort.h>
+#  include <CCA/Components/Models/Radiation/fortran/m_radcal_fort.h>
+#  include <CCA/Components/Models/Radiation/fortran/m_rdombc_fort.h>
+#  include <CCA/Components/Models/Radiation/fortran/m_rdomsolve_fort.h>
+#  include <CCA/Components/Models/Radiation/fortran/m_rdomsrc_fort.h>
+#  include <CCA/Components/Models/Radiation/fortran/m_rdomflux_fort.h>
+#  include <CCA/Components/Models/Radiation/fortran/m_rdombmcalc_fort.h>
+#  include <CCA/Components/Models/Radiation/fortran/m_rdomvolq_fort.h>
+#  include <CCA/Components/Models/Radiation/fortran/m_rshsolve_fort.h>
+#  include <CCA/Components/Models/Radiation/fortran/m_rshresults_fort.h>
 #endif
 //****************************************************************************
 // Default constructor for Models_DORadiationModel
