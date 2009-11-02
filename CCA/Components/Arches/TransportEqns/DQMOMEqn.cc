@@ -175,7 +175,7 @@ DQMOMEqn::problemSetup(const ProblemSpecP& inputdb, int qn)
 
     // ---------- Constant initialization function ------------------------
     if (d_initFunction == "constant") {
-        // each quad node is initialized to the same thing! not good if not weight
+        // each quad node is initialized to the same thing
         db_initialValue->require("constant", d_constant_init); 
         d_constant_init /= d_scalingConstant; 
 

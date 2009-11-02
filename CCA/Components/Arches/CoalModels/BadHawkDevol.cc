@@ -499,3 +499,20 @@ BadHawkDevol::computeModel( const ProcessorGroup * pc,
   }
 }
 
+// COMMENTS AND QUESTIONS:
+//
+//num_dens           = sum_over_omega( w_a );                       // number densiity - zeroth moment
+//m_particle         = alpha[c]*c_o + (1-alpha_o)*c_o;              // mass of particle = raw coal + mineral matter (WHAT ABOUT CHAR???)
+//m_total_particles  = num_dens*m_particle;                         // total mass of particles in the volume - from NDF
+// QUESTION: how to deal with 2 or more model terms? (e.g. raw coal and char)
+//char_model[c] = (0.622*k1)*alpha[c];                            // track char mass fraction so it is bounded from 0 to 1 (This uses Julien's proximate analysis idea - 0.388 instead of 0.3)
+
+// QUESTION: if we're tracking coal gas mixture fraction, why have source term as TOTAL MASS source term?
+
+// This was the whole reason we wanted to track raw coal MASS as an internal coordinate,
+// rather than raw coal MASS FRACTION... so that we knew how much mass was coming into the gas phase.
+// It's possible to back out coal gas mixture fraction from total mass,
+// but it's impossible to to the reverse. (Charles)
+
+//coalgas_source[c] = (0.388*k1 + k2)*alphac[c]*m_total_particles; // multiply by mass_p_total to get total amount of volatile gases
+

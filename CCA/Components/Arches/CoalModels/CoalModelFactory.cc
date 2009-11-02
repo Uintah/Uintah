@@ -76,33 +76,3 @@ CoalModelFactory::retrieve_model( const std::string name )
   models_[name] = model;
   return *model;
 }
-
-//---------------------------------------------------------------------------
-// Method: Schedule calculation of all models
-//---------------------------------------------------------------------------
-void
-CoalModelFactory::sched_coalParticleCalculation( const LevelP& level, 
-                                                 SchedulerP& sched, 
-                                                 int timeSubStep )
-{
-  for( ModelMap::iterator iModel = models_.begin(); iModel != models_.end(); ++iModel ) {
-    iModel->second->sched_computeModel( level, sched, timeSubStep );
-  }
-}
-//---------------------------------------------------------------------------
-// Method: Calculate all models
-//---------------------------------------------------------------------------
-void
-CoalModelFactory::coalParticleCalculation( const ProcessorGroup * pc, 
-                                           const PatchSubset    * patches, 
-                                           const MaterialSubset * matls, 
-                                           DataWarehouse        * old_dw, 
-                                           DataWarehouse        * new_dw )
-{
-  // Eventually this will contain an iterative option
-  for( ModelMap::iterator iModel = models_.begin(); iModel != models_.end(); ++iModel ) {
-    iModel->second->computeModel(pc, patches, matls, old_dw, new_dw );
-  }
-}
-
-

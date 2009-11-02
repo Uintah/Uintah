@@ -36,18 +36,6 @@ public:
              int qn );
   virtual ~ModelBase();
 
-  enum modelTypeEnum {
-    MODELBASE,
-      DEVOLATILIZATION,
-        KOBAYASHISAROFIMDEVOL,
-        BADZIOCHHAWKSLEY,
-      HEATTRANSFER,
-        SIMPLEHEATTRANSFER,
-      DRAGMODEL,
-        SIMPLEDRAGMODEL,
-      VELMODEL
-  };
-
   /** @brief Input file interface */
   virtual void problemSetup(const ProblemSpecP& db, int qn) = 0;  
 
@@ -88,23 +76,15 @@ public:
   inline const VarLabel* getGasSourceLabel() {
     return d_gasLabel; }; 
 
-  inline static const modelTypeEnum getTypeDescription() {
-    return MODELBASE; };
-
 protected:
-
   std::string d_modelName; 
   
   SimulationStateP& d_sharedState; 
-
   const ArchesLabel* d_fieldLabels;
-
-  vector<string> d_icLabels;          ///< All required internal coordinate labels (from DQMOM factory) needed to compute this model
-  vector<string> d_scalarLabels;      ///< All required scalar labels (from scalarFactory) needed to compute this model
-  map<string, string> LabelToRoleMap; ///< Map of internal coordinate or scalar labels to their role in the model
-
-  const VarLabel* d_modelLabel;       ///< Label storing the value of this model
-  const VarLabel* d_gasLabel;         ///< Label for gas phase source term 
+  vector<string> d_icLabels;     // All required internal coordinate labels (from DQMOM factory) needed to compute this model
+  vector<string> d_scalarLabels; // All required scalar labels (from scalarFactory) needed to compute this model
+  const VarLabel* d_modelLabel;  // Label storing the value of this model
+  const VarLabel* d_gasLabel;    // Label for gas phase source term 
   int d_timeSubStep;
 
   bool d_labelSchedInit;

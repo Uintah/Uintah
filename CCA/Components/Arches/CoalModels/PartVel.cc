@@ -55,7 +55,7 @@ void PartVel::problemSetup(const ProblemSpecP& inputdb)
   vel_db->getWithDefault( "upper_limit_multiplier", d_upLimMult, 2.0 ); // d_highClip set using this factor (below)
   vel_db->getWithDefault( "clip_low", d_lowClip, 0.0 ); 
 
-  vel_db->getWithDefault( "partvelBC_eq_gasvelBC", d_gasBC, true ); 
+  vel_db->getWithDefault( "partvelBC_eq_gasvelBC", d_gasBC, false ); 
 
   d_boundaryCond = scinew BoundaryCondition_new( d_fieldLabels ); 
 }
