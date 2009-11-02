@@ -51,6 +51,10 @@ SimpleHeatTransfer::SimpleHeatTransfer( std::string modelName,
   // Create the gas phase source term associated with this model
   std::string gasSourceName = modelName + "_gasSource";
   d_gasLabel = VarLabel::create( gasSourceName, CCVariable<double>::getTypeDescription() );
+
+  // Create smooth temperature field label
+  std::string smoothTfieldName = "smoothTfield";
+  d_smoothTfield = VarLabel::create( gasSourceName, CCVariable<double>::getTypeDescription() );
 }
 
 SimpleHeatTransfer::~SimpleHeatTransfer()
