@@ -253,37 +253,40 @@ DataArchiver::problemSetup(const ProblemSpecP& params,
    d_checkpointCycle = 2; /* 2 is the smallest number that is safe
                              (always keeping an older copy for backup) */
                           
-   string attrib_1= "", attrib_2= "", attrib_3= "";
-   string attrib_4= "", attrib_5= "";
    ProblemSpecP checkpoint = p->findBlock("checkpoint");
-   if (checkpoint != 0) {
-      attributes.clear();
-      checkpoint->getAttributes(attributes);
+   if( checkpoint != 0 ) {
+
+     string attrib_1, attrib_2, attrib_3, attrib_4, attrib_5;
+
+     attributes.clear();
+     checkpoint->getAttributes(attributes);
       
-      attrib_1 = attributes["interval"];
-      if (attrib_1 != "")
-        d_checkpointInterval = atof(attrib_1.c_str());
+     attrib_1 = attributes["interval"];
+     if (attrib_1 != "")
+       d_checkpointInterval = atof(attrib_1.c_str());
       
-      attrib_2 = attributes["timestepInterval"];
-      if (attrib_2 != "")
-        d_checkpointTimestepInterval = atoi(attrib_2.c_str());
+     attrib_2 = attributes["timestepInterval"];
+     if (attrib_2 != "")
+       d_checkpointTimestepInterval = atoi(attrib_2.c_str());
+     
+     attrib_3 = attributes["walltimeStart"];
+     if (attrib_3 != "")
+       d_checkpointWalltimeStart = atoi(attrib_3.c_str());
       
-      attrib_3 = attributes["walltimeStart"];
-      if (attrib_3 != "")
-        d_checkpointWalltimeStart = atoi(attrib_3.c_str());
-      
-      attrib_4 = attributes["walltimeInterval"];
-      if (attrib_4 != "")
-        d_checkpointWalltimeInterval = atoi(attrib_4.c_str());
+     attrib_4 = attributes["walltimeInterval"];
+     if (attrib_4 != "")
+       d_checkpointWalltimeInterval = atoi(attrib_4.c_str());
        
-      attrib_5 = attributes["cycle"];
-      if (attrib_5 != "")
-        d_checkpointCycle = atoi(attrib_5.c_str());
+     attrib_5 = attributes["cycle"];
+     if (attrib_5 != "")
+       d_checkpointCycle = atoi(attrib_5.c_str());
+
+     // Verify that an interval was specified:
+     if ( attrib_1 == "" && attrib_2 == "" && attrib_4 == "") {
+       throw ProblemSetupException("ERROR: \n In checkpointing: must specify either interval, timestepInterval, walltimeInterval",
+                                   __FILE__, __LINE__);
+     }
    }
-   // must specify something
-   if ( attrib_1 == "" && attrib_2 == "" && attrib_3 == "" && checkpoint != 0)
-     throw ProblemSetupException("ERROR: \n In checkpointing: must specify either interval, timestepInterval or walltimeStart",
-                                 __FILE__, __LINE__);
 
    // can't use both checkpointInterval and checkpointTimestepInterval
    if (d_checkpointInterval != 0.0 && d_checkpointTimestepInterval != 0)

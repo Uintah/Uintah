@@ -371,10 +371,10 @@
              then no data will be saved (and no .uda dir will be created). -->
   <DataArchiver         spec="REQUIRED NO_DATA"
                           children1="ONE_OF(CHILD outputInterval, outputTimestepInterval)" >
-      <!-- Checkpoint: interval         - How often (in simulation time) to save a checkpoint.
+      <!-- Checkpoint: interval         - How often (in simulation time - seconds) to save a checkpoint.
                        cycle            - How many check points to keep around before one is overwritten (to save disk space).
-                       walltimeStart    - Start check pointing after time much real time has elapsed (since beginning the simulation).
-                       walltimeInterval - How much real time must pass before the next check point is written.
+                       walltimeStart    - Start check pointing after this much real time (seconds) has elapsed (since beginning the simulation).
+                       walltimeInterval - How much real time (in seconds) must pass before the next check point is written.
       -->
       <checkpoint             spec="OPTIONAL NO_DATA"
                                 children1="ONE_OF(ATTRIBUTE interval, walltimeInterval, timestepInterval)"
