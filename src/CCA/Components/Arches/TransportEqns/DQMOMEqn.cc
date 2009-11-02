@@ -162,7 +162,7 @@ DQMOMEqn::problemSetup(const ProblemSpecP& inputdb, int qn)
 
 
   // There should be some mechanism to make sure that when environment-specific
-  // initializaiton functions are used, ALL environments are specified
+  // initialization functions are used, ALL environments are specified
   // (Maybe in Arches, not here, since here it would be repeated for every single equation)
   // (Charles)
 
@@ -173,10 +173,13 @@ DQMOMEqn::problemSetup(const ProblemSpecP& inputdb, int qn)
 
     db_initialValue->getAttribute("type", d_initFunction); 
 
-
     // ---------- Constant initialization function ------------------------
     if (d_initFunction == "constant") {
-        // each quad node is initialized to the same thing!
+        // each quad node is initialized to the same thing! not good if not weight
+        if( d_weight == false ) {
+          string err_msg = "ERROR: Arches: DQMOMEqn: You can't initialize all quadrature nodes for "+d_eqnName+" to the same constant value, your A matrix will be singular! Use 'env_constant' instead of 'constant' for your initialization type.\n";
+          throw InvalidValue(err_msg, __FILE__, __LINE__);
+        } 
         db_initialValue->require("constant", d_constant_init); 
         d_constant_init /= d_scalingConstant; 
 
@@ -207,6 +210,10 @@ DQMOMEqn::problemSetup(const ProblemSpecP& inputdb, int qn)
     //       "constant" should not have "step_start"/"step_end" tags
     // (Charles)
     } else if (d_initFunction == "step" || d_initFunction == "env_step") {
+      if( d_initFunction == "step" && d_weight == false ) {
+        string err_msg = "ERROR: Arches: DQMOMEqn: You can't initialize all quadrature nodes for "+d_eqnName+" to the same step function value, your A matrix will be singular! Use 'env_step' instead of 'step' for your initialization type.\n";
+        throw InvalidValue(err_msg, __FILE__, __LINE__);
+      }
       
       db_initialValue->require("step_direction", d_step_dir); 
       
