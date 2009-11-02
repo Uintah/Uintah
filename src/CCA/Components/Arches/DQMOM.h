@@ -108,26 +108,30 @@ public:
 
 private:
 
+  void constructLinearSystem( LU              &A,
+                              vector<double>  &B,
+                              vector<double>  &weights,
+                              vector<double>  &weightedAbscissas,
+                              vector<double>  &models);
+
   vector<string> InternalCoordinateEqnNames;
+  
+  vector<MomentVector> momentIndexes; ///< Vector containing all moment indexes
 
-  // moment indexes
-  vector<MomentVector> momentIndexes;
-
-  // weights and weighted abscissa labels, IN SAME ORDER AS GIVEN IN INPUT FILE
-  std::vector<DQMOMEqn* > weightEqns;
-  std::vector<DQMOMEqn* > weightedAbscissaEqns;
+  std::vector<DQMOMEqn* > weightEqns;           ///< Weight equation labels, IN SAME ORDER AS GIVEN IN INPUT FILE
+  std::vector<DQMOMEqn* > weightedAbscissaEqns; ///< Weighted abscissa equation labels, IN SAME ORDER AS GIVEN IN INPUT FILE
 
   vector< vector<ModelBase> > weightedAbscissaModels;
 
-  unsigned int N_xi;  // # of internal coordinates
-  unsigned int N_;    // # of quadrature nodes
+  unsigned int N_xi;  ///< Number of internal coordinates
+  unsigned int N_;    ///< Number of quadrature nodes
 
   ArchesLabel* d_fieldLabels; // this is no longer const because a modifiable instance of ArchesLabel is
                               // required to populate (i.e. modify) the moments map contained in the ArchesLabel
                               // class! (otherwise the compiler says "discards qualifiers"...)
   
   int d_timeSubStep;
-  bool b_save_moments; // boolean - calculate & save moments?
+  bool b_save_moments; ///< boolean - calculate & save moments?
 
   double d_solver_tolerance;
   double d_w_small;
