@@ -40,10 +40,8 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Arches/TransportEqns/EqnBase.h>
 #include <CCA/Components/Arches/CoalModels/PartVel.h>
 #include <CCA/Components/Arches/CoalModels/ConstantModel.h>
-#include <CCA/Components/Arches/CoalModels/Devolatilization.h>
 #include <CCA/Components/Arches/CoalModels/KobayashiSarofimDevol.h>
 #include <CCA/Components/Arches/CoalModels/HeatTransfer.h>
-#include <CCA/Components/Arches/CoalModels/SimpleHeatTransfer.h>
 #include <CCA/Components/Arches/TransportEqns/EqnFactory.h>
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqnFactory.h>
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqn.h>
@@ -2399,8 +2397,8 @@ void Arches::registerModels(ProblemSpecP& db)
           // Kobayashi Sarofim devolatilization model
           ModelBuilder* modelBuilder = scinew KobayashiSarofimDevolBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
           model_factory.register_model( temp_model_name, modelBuilder );
-	      } else if ( model_type == "SimpleHeatTransfer" ) {
-          ModelBuilder* modelBuilder = scinew SimpleHeatTransferBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
+	      } else if ( model_type == "HeatTransfer" ) {
+          ModelBuilder* modelBuilder = scinew HeatTransferBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
           model_factory.register_model( temp_model_name, modelBuilder );
         //} else if (model_type == "Drag" ) {
         //  // NOTE: Jeremy reverted some of the DragModel-related changes in Arches.cc, so I'll hold off putting this in until I hear from him on that (Charles)
