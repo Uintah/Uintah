@@ -1474,6 +1474,7 @@ void MPMICE::computeLagrangianValuesMPM(const ProcessorGroup*,
         ostringstream desc;
         desc<<"BOT_MPMICE::computeLagrangianValuesMPM_mat_"<<indx<<"_patch_"
             <<  patch->getID();
+        d_ice->printData(  indx,patch, 1,desc.str(), "mass_L",       mass_L);
         d_ice->printData(  indx,patch, 1,desc.str(), "int_eng_L_CC", int_eng_L);
         d_ice->printVector(indx,patch, 1,desc.str(), "mom_L_CC", 0,  cmomentum);
       }
