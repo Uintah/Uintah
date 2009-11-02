@@ -25,7 +25,7 @@ KobayashiSarofimDevolBuilder::KobayashiSarofimDevolBuilder( const std::string   
                                                             const ArchesLabel         * fieldLabels,
                                                             SimulationStateP          & sharedState,
                                                             int qn ) :
-  ModelBuilder( modelName, reqICLabelNames, reqScalarLabelNames, fieldLabels, sharedState, qn )
+  ModelBuilder( modelName, fieldLabels, reqICLabelNames, reqScalarLabelNames, sharedState, qn )
 {
 }
 
@@ -43,7 +43,8 @@ KobayashiSarofimDevol::KobayashiSarofimDevol( std::string modelName,
                                               vector<std::string> icLabelNames, 
                                               vector<std::string> scalarLabelNames,
                                               int qn ) 
-: Devolatilization(modelName, sharedState, fieldLabels, icLabelNames, scalarLabelNames, qn)
+: ModelBase(modelName, sharedState, fieldLabels, icLabelNames, scalarLabelNames, qn), 
+  d_fieldLabels(fieldLabels)
 {
   A1  =  3.7e5;       // k1 pre-exponential factor
   A2  =  1.46e13;     // k2 pre-exponential factor
@@ -55,7 +56,16 @@ KobayashiSarofimDevol::KobayashiSarofimDevol( std::string modelName,
   Y1_ = 0.4; // volatile fraction from proximate analysis
   Y2_ = 1.0; // fraction devolatilized at higher temperatures (often near unity)
 
+  d_quad_node = qn;
+  
   compute_part_temp = false;
+
+  // Create a label for this model
+  d_modelLabel = VarLabel::create( modelName, CCVariable<double>::getTypeDescription() );
+
+  // Create the gas phase source term associated with this model
+  std::string gasSourceName = modelName + "_gasSource";
+  d_gasLabel = VarLabel::create( gasSourceName, CCVariable<double>::getTypeDescription() );
 }
 
 KobayashiSarofimDevol::~KobayashiSarofimDevol()
@@ -70,7 +80,6 @@ KobayashiSarofimDevol::problemSetup(const ProblemSpecP& params, int qn)
   ProblemSpecP db = params; 
   compute_part_temp = false;
 
-  // -----------------------------------------------------------------
   // Look for required internal coordinates
   ProblemSpecP db_icvars = params->findBlock("ICVars");
   for (ProblemSpecP variable = db_icvars->findBlock("variable"); variable != 0; variable = variable->findNextBlock("variable") ) {
@@ -105,26 +114,12 @@ KobayashiSarofimDevol::problemSetup(const ProblemSpecP& params, int qn)
       throw InvalidValue(errmsg,__FILE__,__LINE__);
     }
 
+    // set model clipping (not used yet...)
+    db->getWithDefault( "low_clip",  d_lowModelClip,  1.0e-6 );
+    db->getWithDefault( "high_clip", d_highModelClip, 999999 );
+
   }
 
-  // fix the d_icLabels to point to the correct quadrature node (since there is 1 model per quad node)
-  for ( vector<std::string>::iterator iString = d_icLabels.begin(); 
-        iString != d_icLabels.end(); ++iString) {
-    std::string temp_ic_name        = (*iString);
-    std::string temp_ic_name_full   = temp_ic_name;
-
-    std::string node;
-    std::stringstream out;
-    out << qn;
-    node = out.str();
-    temp_ic_name_full += "_qn";
-    temp_ic_name_full += node;
-
-    std::replace( d_icLabels.begin(), d_icLabels.end(), temp_ic_name, temp_ic_name_full);
-  }
-
-
-  // -----------------------------------------------------------------
   // Look for required scalars
   //   ( Kobayashi-Sarofim model doesn't use any extra scalars (yet)
   //     but if it did, this "for" loop would have to be un-commented )
@@ -166,6 +161,23 @@ KobayashiSarofimDevol::problemSetup(const ProblemSpecP& params, int qn)
   }
   */
 
+
+  // fix the d_icLabels to point to the correct quadrature node (since there is 1 model per quad node)
+  for ( vector<std::string>::iterator iString = d_icLabels.begin(); 
+        iString != d_icLabels.end(); ++iString) {
+    std::string temp_ic_name        = (*iString);
+    std::string temp_ic_name_full   = temp_ic_name;
+
+    std::string node;
+    std::stringstream out;
+    out << qn;
+    node = out.str();
+    temp_ic_name_full += "_qn";
+    temp_ic_name_full += node;
+
+    std::replace( d_icLabels.begin(), d_icLabels.end(), temp_ic_name, temp_ic_name_full);
+  }
+
   // fix the d_scalarLabels to point to the correct quadrature node (since there is 1 model per quad node)
   // (Not needed for KobayashiSarofim model (yet)... If it is, uncomment the block below)
   /*
@@ -182,7 +194,7 @@ KobayashiSarofimDevol::problemSetup(const ProblemSpecP& params, int qn)
     std::replace( d_scalarLabels.begin(), d_scalarLabels.end(), temp_ic_name, temp_ic_name_full);
   }
   */
- 
+  
 }
 
 //---------------------------------------------------------------------------
@@ -311,12 +323,14 @@ KobayashiSarofimDevol::sched_computeModel( const LevelP& level, SchedulerP& sche
   std::string temp_weight_name = "w_qn";
   std::string node;
   std::stringstream out;
-  out << d_quadNode;
+  out << d_quad_node;
   node = out.str();
   temp_weight_name += node;
   EqnBase& t_weight_eqn = dqmom_eqn_factory.retrieve_scalar_eqn( temp_weight_name );
   DQMOMEqn& weight_eqn = dynamic_cast<DQMOMEqn&>(t_weight_eqn);
   d_weight_label = weight_eqn.getTransportEqnLabel();
+  d_w_small = weight_eqn.getSmallClip();
+  d_w_scaling_factor = weight_eqn.getScalingConstant();
   tsk->requires(Task::OldDW, d_weight_label, gn, 0);
 
   // require gas temperature

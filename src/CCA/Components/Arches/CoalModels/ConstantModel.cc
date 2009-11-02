@@ -18,14 +18,13 @@ using namespace Uintah;
 
 //---------------------------------------------------------------------------
 // Builder:
-
 ConstantModelBuilder::ConstantModelBuilder( const std::string         & modelName, 
                                             const vector<std::string> & reqICLabelNames,
                                             const vector<std::string> & reqScalarLabelNames,
                                             const ArchesLabel         * fieldLabels,
                                             SimulationStateP          & sharedState,
                                             int qn ) :
-  ModelBuilder( modelName, reqICLabelNames, reqScalarLabelNames, fieldLabels, sharedState, qn )
+  ModelBuilder( modelName, fieldLabels, reqICLabelNames, reqScalarLabelNames, sharedState, qn )
 {}
 
 ConstantModelBuilder::~ConstantModelBuilder(){}
@@ -33,7 +32,6 @@ ConstantModelBuilder::~ConstantModelBuilder(){}
 ModelBase* ConstantModelBuilder::build(){
   return scinew ConstantModel( d_modelName, d_sharedState, d_fieldLabels, d_icLabels, d_scalarLabels, d_quadNode );
 }
-
 // End Builder
 //---------------------------------------------------------------------------
 

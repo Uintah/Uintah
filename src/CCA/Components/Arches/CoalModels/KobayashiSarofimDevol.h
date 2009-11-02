@@ -2,7 +2,6 @@
 #define Uintah_Component_Arches_KobayashiSarofimDevol_h
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Grid/SimulationStateP.h>
-#include <CCA/Components/Arches/CoalModels/Devolatilization.h>
 #include <CCA/Components/Arches/CoalModels/ModelBase.h>
 #include <CCA/Components/Arches/CoalModels/CoalModelFactory.h>
 
@@ -29,9 +28,7 @@
 //---------------------------------------------------------------------------
 // Builder
 namespace Uintah{
-
-class ArchesLabel;
-class KobayashiSarofimDevolBuilder: public ModelBuilder 
+class KobayashiSarofimDevolBuilder: public ModelBuilder
 {
 public: 
   KobayashiSarofimDevolBuilder( const std::string          & modelName,
@@ -48,11 +45,10 @@ public:
 private:
 
 }; 
-
 // End Builder
 //---------------------------------------------------------------------------
 
-class KobayashiSarofimDevol: public Devolatilization {
+class KobayashiSarofimDevol: public ModelBase {
 public: 
 
   KobayashiSarofimDevol( std::string modelName, 
@@ -101,25 +97,41 @@ public:
 
 private:
 
+  const ArchesLabel* d_fieldLabels; 
+  
+  map<string, string> LabelToRoleMap;
+
   const VarLabel* d_raw_coal_mass_label;
   const VarLabel* d_weight_label;
   const VarLabel* d_particle_temperature_label;
 
   double A1;
   double A2;
+  
   double E1;
   double E2;
-  double Y1_;
-  double Y2_;
-  double k1;
-  double k2;
   
   double R;
   
   bool compute_part_temp;
 
+  double c_o;      // initial mass of raw coal
+  double alpha_o;  // initial mass fraction of raw coal
+
+  int d_quad_node;   // store which quad node this model is for
+
+  double d_lowModelClip; 
+  double d_highModelClip; 
+
+  double Y1_;
+  double Y2_;
+  double k1;
+  double k2;
+
   double d_rc_scaling_factor;
   double d_pt_scaling_factor;
+  double d_w_scaling_factor; 
+  double d_w_small; // "small" clip value for zero weights
 
 }; // end ConstSrcTerm
 } // end namespace Uintah

@@ -302,6 +302,7 @@ SimpleHeatTransfer::sched_initVars( const LevelP& level, SchedulerP& sched )
   Task* tsk = scinew Task(taskname, this, &SimpleHeatTransfer::initVars);
 
   tsk->computes(d_abskp);
+  tsk->computes(d_smoothTfield);
 
   sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials()); 
 }
@@ -326,6 +327,10 @@ SimpleHeatTransfer::initVars( const ProcessorGroup * pc,
     new_dw->allocateAndPut( abskp, d_abskp, matlIndex, patch ); 
     abskp.initialize(0.);
 
+    CCVariable<double> smoothTfield; 
+    new_dw->allocateAndPut( smoothTfield, d_smoothTfield, matlIndex, patch ); 
+    smoothTfield.initialize(0.);
+
   }
 }
 
@@ -348,10 +353,12 @@ SimpleHeatTransfer::sched_computeModel( const LevelP& level, SchedulerP& sched, 
     tsk->computes(d_modelLabel);
     tsk->computes(d_gasLabel); 
     tsk->computes(d_abskp);
+    tsk->computes(d_smoothTfield);
   } else {
     tsk->modifies(d_modelLabel);
     tsk->modifies(d_gasLabel);  
     tsk->modifies(d_abskp);
+    tsk->modifies(d_smoothTfield);
   }
 
   //EqnFactory& eqn_factory = EqnFactory::self();
@@ -550,6 +557,14 @@ SimpleHeatTransfer::computeModel( const ProcessorGroup * pc,
       abskp.initialize(0.0);
     }
     
+    CCVariable<double> smoothTfield;
+    if( new_dw->exists( d_smoothTfield, matlIndex, patch) ) {
+      new_dw->getModifiable( smoothTfield, d_smoothTfield, matlIndex, patch ); 
+    } else {
+      new_dw->allocateAndPut( smoothTfield, d_smoothTfield, matlIndex, patch );  
+      smoothTfield.initialize(0.0);
+    }
+   
 
     // get particle velocity used to calculate Reynolds number
     constCCVariable<Vector> partVel;  
@@ -608,10 +623,12 @@ SimpleHeatTransfer::computeModel( const ProcessorGroup * pc,
       if (weight[c] < d_w_small ) { 
         heat_rate[c] = 0.0;
         gas_heat_rate[c] = 0.0;
+        smoothTfield[c] = temperature[c];
       } else {
 	      length = w_particle_length[c]*d_pl_scaling_factor/weight[c];
 	      particle_temperature = w_particle_temperature[c]*d_pt_scaling_factor/weight[c];
         rawcoal_mass = w_mass_raw_coal[c]*d_rc_scaling_factor/weight[c];
+        smoothTfield[c] = particle_temperature;
         if(d_ash) {
           ash_mass = w_mass_ash[c]*d_ash_scaling_factor/weight[c];
         } else {

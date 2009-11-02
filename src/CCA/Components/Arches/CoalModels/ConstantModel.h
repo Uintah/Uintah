@@ -12,10 +12,9 @@
 
 //===========================================================================
 
-namespace Uintah{
-
 //---------------------------------------------------------------------------
 // Builder
+namespace Uintah{
 class ConstantModelBuilder: public ModelBuilder
 {
 public: 
