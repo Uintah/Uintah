@@ -27,6 +27,9 @@
 // Output matrices once per timestep (will cause a big slowdown)
 //#define DEBUG_MATRICES 1
 
+//#define VERIFY_LINEAR_SOLVER
+//#define VERIFY_AB_CONSTRUCTION
+
 //===========================================================================
 
 using namespace Uintah;
@@ -151,6 +154,26 @@ void DQMOM::problemSetup(const ProblemSpecP& params)
     proc0cout << "ERROR:DQMOM:ProblemSetup: You specified " << index_length << " moment indices, but there are " << N_xi << " internal coordinates." << endl;
     throw InvalidValue( "ERROR:DQMOM:ProblemSetup: The number of moment indices specified was incorrect! Need ",__FILE__,__LINE__);
   }
+
+#ifdef VERIFY_LINEAR_SOLVER
+  // grab the name of the file containing the test matrices
+  db_verify_linear_solver = db->findBlock("Verify_Linear_Solver");
+  string file_A, file_X, file_B;
+  db_verify_linear_solver->require("A", file_A);
+  db_verify_linear_solver->require("X", file_X);
+  db_verify_linear_solver->require("B", file_B);
+#endif
+
+#ifdef VERIFY_AB_CONSTRUCTION
+  // grab the name of the file containing the test matrices
+  db_verify_ab_construction = db->findBlock("Verify_AB_Construction");
+  string file_A, file_B, file_inputs;
+  db_verify_ab_construction->require("A", file_A);
+  db_verify_ab_construction->require("B", file_B);
+
+  // grab the name of the file containing the weights, weighted abscissas, and model terms to use
+  db_verify_ab_construction->require("inputs", file_inputs);
+#endif
 
 }
 
@@ -280,6 +303,16 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
   double total_FileWriteTime = 0.0;
   bool b_writeFile = true;
 #endif
+
+
+#if defined VERIFY_AB_CONSTRUCTION
+
+#endif
+
+#if defined VERIFY_LINEAR_SOLVER
+
+#endif
+
 
   // patch loop
   for (int p=0; p < patches->size(); ++p) {
@@ -413,84 +446,17 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
 
       double start_AXBConstructionTime = Time::currentSeconds();
 
-      // construct AX=B
-      for ( unsigned int k = 0; k < momentIndexes.size(); ++k) {
-        MomentVector thisMoment = momentIndexes[k];
-        
-        // weights
-        for ( unsigned int alpha = 0; alpha < N_; ++alpha) {
-          double prefixA = 1;
-          double productA = 1;
-          for ( unsigned int i = 0; i < thisMoment.size(); ++i) {
-            if (weights[alpha] != 0) {
-              // Appendix C, C.9 (A1 matrix)
-              prefixA = prefixA - (thisMoment[i]);
-              productA = productA*( pow((weightedAbscissas[i*(N_)+alpha]/weights[alpha]),thisMoment[i]) );
-            } else {
-              prefixA = 0;
-              productA = 0;
-            }
-          }
-          A(k,alpha)=prefixA*productA;
-        } //end weights sub-matrix
+      // construction of AX=B requires:
+      // = momentindexes
+      // = num quad nodes
+      // = num internal coordinates
+      // - A
+      // - B
+      // - weights[]
+      // - weightedAbscissas[]
+      // - models[]
 
-        // weighted abscissas
-        double totalsumS = 0;
-        for( unsigned int j = 0; j < N_xi; ++j ) {
-          double prefixA    = 1;
-          double productA   = 1;
-          
-          double prefixS    = 1;
-          double productS   = 1;
-          double modelsumS  = 0;
-          
-          double quadsumS = 0;
-          for( unsigned int alpha = 0; alpha < N_; ++alpha ) {
-            if (weights[alpha] == 0) {
-              prefixA = 0;
-              productA = 0;
-              productS = 0;
-            } else if ( weightedAbscissas[j*(N_)+alpha] == 0 && thisMoment[j] == 0) {
-              //FIXME:
-              // do something
-            } else {
-              // Appendix C, C.11 (A_j+1 matrix)
-              prefixA = (thisMoment[j])*( pow((weightedAbscissas[j*(N_)+alpha]/weights[alpha]),(thisMoment[j]-1)) );
-              productA = 1;
-
-              // Appendix C, C.16 (S matrix)
-              prefixS = -(thisMoment[j])*( pow((weightedAbscissas[j*(N_)+alpha]/weights[alpha]),(thisMoment[j]-1)));
-              productS = 1;
-
-              for (unsigned int n = 0; n < N_xi; ++n) {
-                if (n != j) {
-                  // if statements needed b/c only checking int coord j above
-                  if (weights[alpha] == 0) {
-                    productA = 0;
-                    productS = 0;
-                  } else if (weightedAbscissas[n*(N_)+alpha] == 0 && thisMoment[n] == 0) {
-                    productA = 0;
-                    productS = 0;
-                  } else {
-                    productA = productA*( pow( (weightedAbscissas[n*(N_)+alpha]/weights[alpha]), thisMoment[n] ));
-                    productS = productS*( pow( (weightedAbscissas[n*(N_)+alpha]/weights[alpha]), thisMoment[n] ));
-                  }//end divide by zero conditionals
-                }
-              }//end int coord n
-            }//end divide by zero conditionals
-            
-
-            modelsumS = - models[j*(N_)+alpha];
-
-            A(k,(j+1)*N_ + alpha)=prefixA*productA;
-            
-            quadsumS = quadsumS + weights[alpha]*modelsumS*prefixS*productS;
-          }//end quad nodes
-          totalsumS = totalsumS + quadsumS;
-        }//end int coords j sub-matrix
-        
-        B[k] = totalsumS;
-      } // end moments
+      constructLinearSystem(A, B, weights, weightedAbscissas, models);
 
       total_AXBConstructionTime += Time::currentSeconds() - start_AXBConstructionTime;
 
@@ -667,6 +633,15 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
       b_writeFile = false;
 #endif
 
+#ifdef VERIFY_AB_CONSTRUCTION
+      std::ifstream Astream( file_A );
+      LU A(dimension);
+
+      std::ifstream Bstream( file_B );
+      std::ifstream inputstream( file_inputs );
+#endif
+
+
     }//end for cells
 
   }//end per patch
@@ -679,6 +654,96 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
     proc0cout << "\t" << "Time for Crout's Method: " << total_CroutSolveTime << " seconds\n";
     proc0cout << "\t" << "Time for iterative refinement: " << total_IRSolveTime << " seconds\n";
   proc0cout << "Time in DQMOM::solveLinearSystem: " << Time::currentSeconds()-start_solveLinearSystemTime << " seconds \n";
+}
+
+// **********************************************
+// Construct A and B matrices for DQMOM
+// **********************************************
+void
+DQMOM::constructLinearSystem( LU             &A, 
+                              vector<double> &B, 
+                              vector<double> &weights, 
+                              vector<double> &weightedAbscissas,
+                              vector<double> &models)
+{
+  // construct AX=B
+  for ( unsigned int k = 0; k < momentIndexes.size(); ++k) {
+    MomentVector thisMoment = momentIndexes[k];
+ 
+    // weights
+    for ( unsigned int alpha = 0; alpha < N_; ++alpha) {
+      double prefixA = 1;
+      double productA = 1;
+      for ( unsigned int i = 0; i < thisMoment.size(); ++i) {
+        if (weights[alpha] != 0) {
+          // Appendix C, C.9 (A1 matrix)
+          prefixA = prefixA - (thisMoment[i]);
+          productA = productA*( pow((weightedAbscissas[i*(N_)+alpha]/weights[alpha]),thisMoment[i]) );
+        } else {
+          prefixA = 0;
+          productA = 0;
+        }
+      }
+      A(k,alpha)=prefixA*productA;
+    } //end weights sub-matrix
+
+    // weighted abscissas
+    double totalsumS = 0;
+    for( unsigned int j = 0; j < N_xi; ++j ) {
+      double prefixA    = 1;
+      double productA   = 1;
+      
+      double prefixS    = 1;
+      double productS   = 1;
+      double modelsumS  = 0;
+      
+      double quadsumS = 0;
+      for( unsigned int alpha = 0; alpha < N_; ++alpha ) {
+        if (weights[alpha] == 0) {
+          prefixA = 0;
+          productA = 0;
+          productS = 0;
+        } else if ( weightedAbscissas[j*(N_)+alpha] == 0 && thisMoment[j] == 0) {
+          //FIXME:
+          // do something
+        } else {
+          // Appendix C, C.11 (A_j+1 matrix)
+          prefixA = (thisMoment[j])*( pow((weightedAbscissas[j*(N_)+alpha]/weights[alpha]),(thisMoment[j]-1)) );
+          productA = 1;
+
+          // Appendix C, C.16 (S matrix)
+          prefixS = -(thisMoment[j])*( pow((weightedAbscissas[j*(N_)+alpha]/weights[alpha]),(thisMoment[j]-1)));
+          productS = 1;
+
+          for (unsigned int n = 0; n < N_xi; ++n) {
+            if (n != j) {
+              // if statements needed b/c only checking int coord j above
+              if (weights[alpha] == 0) {
+                productA = 0;
+                productS = 0;
+              } else if (weightedAbscissas[n*(N_)+alpha] == 0 && thisMoment[n] == 0) {
+                productA = 0;
+                productS = 0;
+              } else {
+                productA = productA*( pow( (weightedAbscissas[n*(N_)+alpha]/weights[alpha]), thisMoment[n] ));
+                productS = productS*( pow( (weightedAbscissas[n*(N_)+alpha]/weights[alpha]), thisMoment[n] ));
+              }//end divide by zero conditionals
+            }
+          }//end int coord n
+        }//end divide by zero conditionals
+        
+
+        modelsumS = - models[j*(N_)+alpha];
+
+        A(k,(j+1)*N_ + alpha)=prefixA*productA;
+        
+        quadsumS = quadsumS + weights[alpha]*modelsumS*prefixS*productS;
+      }//end quad nodes
+      totalsumS = totalsumS + quadsumS;
+    }//end int coords j sub-matrix
+    
+    B[k] = totalsumS;
+  } // end moments
 }
 
 // **********************************************
