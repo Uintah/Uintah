@@ -283,9 +283,9 @@ using std::pair;
       //! timestep restart.
       double d_tempElapsedTime; 
 
-      // only one of these should be nonzero - read from ups file.
-      double d_outputInterval;
-      int d_outputTimestepInterval;
+      // Only one of these should be non-zero.  The value is read from the .ups file.
+      double d_outputInterval;         // In seconds.
+      int d_outputTimestepInterval;    // Number of time steps.
      
       double d_nextOutputTime; // used when d_outputInterval != 0
       int d_nextOutputTimestep; // used when d_outputTimestepInterval != 0
@@ -331,15 +331,15 @@ using std::pair;
       vector< SaveItem > d_checkpointLabels;
       vector< SaveItem > d_checkpointReductionLabels;
 
-      // only one of these should be nonzero
-      double d_checkpointInterval;
-      int d_checkpointTimestepInterval;
+      // Only one of these should be non-zero.
+      double d_checkpointInterval;        // In seconds.
+      int d_checkpointTimestepInterval;   // In seconds.
 
-      // how much real time to pass (in seconds) to wait for checkpoint
-      // can be used with or without one of the above two
-      // walltimeStart cannot be used without walltimeInterval
-      int d_checkpointWalltimeStart;     //how long to wait before first 
-      int d_checkpointWalltimeInterval;
+      // How much real time (in seconds) to wait for checkpoint can be
+      // used with or without one of the above two.  WalltimeStart
+      // cannot be used without walltimeInterval.
+      int d_checkpointWalltimeStart;     // Amount of (real) time to wait before first checkpoint.
+      int d_checkpointWalltimeInterval;  // Amount of (real) time to between checkpoints.
       
       //! How many checkpoint dirs to keep around
       int d_checkpointCycle;
