@@ -1,10 +1,14 @@
 #ifndef UT_CoalModelFactory_h
 #define UT_CoalModelFactory_h
-
 #include <CCA/Components/Arches/ArchesLabel.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
+#include <Core/Grid/SimulationStateP.h>
 #include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Grid/Variables/VarTypes.h>
-#include <Core/Grid/SimulationStateP.h>
+//#include <Core/Grid/SimulationStateP.h>
+//#include <Core/Grid/SimulationState.h>
+#include <CCA/Components/Arches/ArchesVariables.h>
+#include <CCA/Ports/DataWarehouseP.h>
 #include <map>
 #include <vector>
 #include <string>
@@ -34,9 +38,9 @@ class ModelBuilder
 {
 public:
   ModelBuilder( const std::string   & model_name, 
-                const ArchesLabel   * fieldLabels,
                 vector<std::string>   icLabelNames, 
                 vector<std::string>   scalarLabelNames, 
+                const ArchesLabel   * fieldLabels,
                 SimulationStateP    & sharedState,
                 int                   qn ) : 
     d_modelName( model_name ), 
@@ -81,6 +85,9 @@ private:
 class CoalModelFactory
 {
 public:
+  
+  typedef std::map< std::string, ModelBase*> ModelMap;
+  
   /**
    *  @brief obtain a reference to the CoalModelFactory.
    */
@@ -98,8 +105,6 @@ public:
   void register_model( const std::string name,
                        ModelBuilder* builder );
 
-
-  typedef std::map< std::string, ModelBase*        > ModelMap;
   /**
    *  @brief Retrieve a vector of pointers to all Model
    *  objects that have been assigned to the transport equation with
@@ -111,8 +116,20 @@ public:
    */
   ModelBase& retrieve_model( const std::string name );
 
-  // get all models
-  ModelMap& retrieve_all_models(){
+  /** @brief  Schedule the calculation of all models */
+  void sched_coalParticleCalculation( const LevelP& level, 
+                                      SchedulerP& sched, 
+                                      int timeSubStep );
+
+  /** @brief  Actually calculate all of the models */
+  void coalParticleCalculation( const ProcessorGroup * pc, 
+                                const PatchSubset    * patches, 
+                                const MaterialSubset * matls, 
+                                DataWarehouse        * old_dw, 
+                                DataWarehouse        * new_dw );
+
+  /** @brief  Get all models in a ModelMap */
+  ModelMap& retrieve_all_models() {
     return models_; }; 
 
 
