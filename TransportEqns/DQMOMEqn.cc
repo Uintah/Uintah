@@ -176,10 +176,6 @@ DQMOMEqn::problemSetup(const ProblemSpecP& inputdb, int qn)
     // ---------- Constant initialization function ------------------------
     if (d_initFunction == "constant") {
         // each quad node is initialized to the same thing! not good if not weight
-        if( d_weight == false ) {
-          string err_msg = "ERROR: Arches: DQMOMEqn: You can't initialize all quadrature nodes for "+d_eqnName+" to the same constant value, your A matrix will be singular! Use 'env_constant' instead of 'constant' for your initialization type.\n";
-          throw InvalidValue(err_msg, __FILE__, __LINE__);
-        } 
         db_initialValue->require("constant", d_constant_init); 
         d_constant_init /= d_scalingConstant; 
 
