@@ -233,8 +233,8 @@ void EqnBase::initializationFunction( const Patch* patch, phiType& phi, constPhi
     IntVector c = *iter; 
     Vector Dx = patch->dCell(); 
 
-    double x=0.0,y=0.0,z=0.0; 
-    int cellx=0, celly=0, cellz=0;
+    double x = 0.0, y = 0.0, z = 0.0; 
+    int    cellx = 0, celly = 0, cellz = 0;
 
     cellx = c[0];
     celly = c[1];
@@ -376,7 +376,6 @@ void EqnBase::initializationFunction( const Patch* patch, phiType& phi )
       throw InvalidValue("Error!: Your initialization function for equation "+d_eqnName+" wasn't found.", __FILE__, __LINE__);
 
     }//end d_initFunction types
-
 
   }
 }
