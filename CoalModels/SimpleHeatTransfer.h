@@ -126,8 +126,6 @@ private:
   const VarLabel* d_particle_temperature_label; ///< Label for particle temperature
   const VarLabel* d_particle_length_label;      ///< Label for particle length
   const VarLabel* d_weight_label;               ///< Weight label
-  const VarLabel* smoothTfield;                 ///< Gas-particle temperature field
-                                                //   (Could be improved if it used moment 0 for weighting)
 
   const VarLabel* d_abskp; ///< Label for thermal conductivity (of the particles, I think???)
   bool d_ash;
