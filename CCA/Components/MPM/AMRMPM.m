@@ -4,7 +4,13 @@
 
 %______________________________________________________________________
 
+
+
 function KK=amrmpm(problem_type,CFL,NN)
+close all
+
+global d_debugging;
+d_debugging = problem_type
 
 %  valid options:
 %  problem type:  impulsiveBar, oscillator, collidingBars
@@ -16,6 +22,7 @@ function KK=amrmpm(problem_type,CFL,NN)
 if (~strcmp(problem_type, 'impulsiveBar')  && ...
     ~strcmp(problem_type, 'oscillator')    && ...
     ~strcmp(problem_type, 'collidingBars') && ...
+    ~strcmp(problem_type, 'compaction')    && ...
     ~strcmp(problem_type, 'advectBlock') )
   fprintf('ERROR, the problem type is invalid\n');
   fprintf('     The valid types are impulsiveBar, oscillator, collidingBars\n');
@@ -25,18 +32,21 @@ end
 %__________________________________
 % hard coded domain
 PPC     = 2;
-E       = 1e8;
-density = 1000.;
+E       = 1e6;
+density = 1.;
 c       = sqrt(E/density);
 
-BigNum     = int32(1e4);
+
+BigNum     = int32(1e5);
 d_smallNum = double (1e-16);
 
-bar_min     = 0.;
-bar_max     = 0.25 ;
+bar_min     = 0.0;
+bar_max     = 50 ;
 
-bar_length = bar_max - bar_min;
-domain     = 0.96;
+bar_length     = bar_max - bar_min;
+waveTansitTime = bar_length/c
+
+domain     = 52;
 area       = 1.;
 plotSwitch = 0;
 max_tstep  = BigNum
@@ -53,6 +63,31 @@ end
 
 %__________________________________
 % region structure 
+
+
+
+%____________
+% single level
+numRegions    = int32(2);               % partition the domain into numRegions
+Regions       = cell(numRegions,1);    % array that holds the individual region information
+R.min         = 0;                     % location of left point
+R.max         = domain/2;                   % location of right point
+R.refineRatio = 1;
+R.dx          = R1_dx;
+R.volP        = R.dx/PPC;
+R.NN          = int32( (R.max - R.min)/R.dx +1 );
+Regions{1}    = R;
+
+R.min         = domain/2;                       
+R.max         = domain;
+R.refineRatio = 1;
+R.dx          = R1_dx/R.refineRatio;
+R.volP        = R.dx/PPC;
+R.NN          = int32( (R.max - R.min)/R.dx );
+Regions{2}    = R;
+
+%____________
+% 2 level
 if(0)
 numRegions    = int32(3);               % partition the domain into numRegions
 Regions       = cell(numRegions,1);    % array that holds the individual region information
@@ -83,7 +118,9 @@ Regions{3}    = R;
 
 end
 
-if(1)
+%____________
+% 3 levels
+if(0)
 
 numRegions    = int32(5);               % partition the domain into numRegions
 Regions       = cell(numRegions,1);    % array that holds the individual region information
@@ -212,7 +249,7 @@ end
 %__________________________________
 % create particles
 ip=1;
-xp(1)=bar_min;
+xp(1)=bar_min + R1_dx/(2.0 * PPC);
 
 for r=1:numRegions
   R = Regions{r};
@@ -351,11 +388,20 @@ if strcmp(problem_type, 'advectBlock')
   end
 end
 
+if strcmp(problem_type, 'compaction')
+  initVelocity    = 0;
+  tfinal          = waveTansitTime * 40;
+  numBCs          = 1;
+  delta_0         = 50
+  velG_BCValue(1) = initVelocity;
+  velG_BCValue(2) = initVelocity;
+end
+
 
 %plot initial conditions
 %plotResults(t,xp,dp,velP)
 
-fprintf('NN: %g, NP: %g dx_min: %g \n',NN,NP,dx_min);
+fprintf('tfinal: %g, NN: %g, NP: %g dx_min: %g \n',tfinal, NN,NP,dx_min);
 input('hit return')
 
 %==========================================================================
@@ -363,6 +409,7 @@ input('hit return')
 
 t = 0.0;
 tstep = 0;
+bodyForce = 0;
 
 while t<tfinal && tstep < max_tstep
 
@@ -374,8 +421,10 @@ while t<tfinal && tstep < max_tstep
 
   tstep = tstep + 1;
   t = t + dt;
-  fprintf('timestep %g, dt = %g, time %g \n',tstep, dt, t)
-
+  if (mod(tstep,100) == 0)
+    fprintf('timestep %g, dt = %g, time %g \n',tstep, dt, t)
+  end
+  
   % initialize arrays to be zero
   for ig=1:NN
     massG(ig)     =1.e-100;
@@ -386,6 +435,29 @@ while t<tfinal && tstep < max_tstep
     intForceG(ig) =0.;
   end
   
+  
+  %__________________________________
+  % debugging
+  if (strcmp(problem_type, 'compaction'))
+    if(bodyForce > -200)
+      bodyForce = -t * 100;
+    end
+    
+    delta = delta_0 + (density*bodyForce/(2.0 * E) ) * (delta_0 * delta_0);  
+
+    displacement = delta - delta_0;
+    W = density * abs(bodyForce) * delta_0; 
+    
+    if (mod(tstep,100) == 0)
+      fprintf('Bodyforce: %g displacement:%g, W: %g\n',bodyForce, displacement/R1_dx, W);                                             
+    end
+    for ip=1:NP                                                                       
+       extForceP(ip) = bodyForce;                                                      
+    end                                                                               
+  end
+  %__________________________________
+  
+    
   %__________________________________
   % project particle data to grid  
   for ip=1:NP
@@ -398,7 +470,8 @@ while t<tfinal && tstep < max_tstep
       % debugging__________________________________
       if(0)
         fprintf( 'ip: %g xp: %g, nodes: %g, node_pos: %g massG: %g, massP: %g, Ss: %g,  prod: %g \n', ip, xp(ip), nodes(ig), nodePos(nodes(ig)), massG(nodes(ig)), massP(ip), Ss(ig), massP(ip) * Ss(ig) );
-        fprintf( '\t velG: %g,  velP:  %g,  prod: %g \n', velG(nodes(ig)), velP(ip), (massP(ip) * velP(ip) * Ss(ig) ) );
+        fprintf( '\t velG:      %g,  velP:       %g,  prod: %g \n', velG(nodes(ig)), velP(ip), (massP(ip) * velP(ip) * Ss(ig) ) );
+        fprintf( '\t extForceG: %g,  extForceP:  %g,  prod: %g \n', extForceG(nodes(ig)), extForceP(ip), extForceP(ip) * Ss(ig) );
       end 
       % debugging__________________________________
 
@@ -415,10 +488,12 @@ while t<tfinal && tstep < max_tstep
   end
 
   % debugging__________________________________ 
-  for ig=1:NN
-    error = velG(ig) * massG(ig) - massG(ig) * initVelocity;
-    if(  (abs(error) > 1e-8) )
-      fprintf('interpolateParticlesToGrid after BC:  node: %g, nodePos %g, error %g, massG %g \n', ig, nodePos(ig), error, massG(ig) );
+  if( strcmp(problem_type, 'advectBlock')  )
+    for ig=1:NN
+      error = velG(ig) * massG(ig) - massG(ig) * initVelocity;
+      if(  (abs(error) > 1e-8) )
+        fprintf('interpolateParticlesToGrid after BC:  node: %g, nodePos %g, error %g, massG %g \n', ig, nodePos(ig), error, massG(ig) );
+      end
     end
   end
   % debugging__________________________________
@@ -435,9 +510,11 @@ while t<tfinal && tstep < max_tstep
   end
 
 % debugging__________________________________
-  if( abs(intForceG(nodes(ig))) > 1e-8 )
-    fprintf('internal Force: \t  node: %g, nodePos %g, intForce %g \n', nodes(ig), nodePos(nodes(ig)), intForceG(nodes(ig)) );
-    input('hit return')
+  if( strcmp(problem_type, 'advectBlock')  )
+    if( abs(intForceG(nodes(ig))) > 1e-8 )
+      fprintf('internal Force: \t  node: %g, nodePos %g, intForce %g \n', nodes(ig), nodePos(nodes(ig)), intForceG(nodes(ig)) );
+      input('hit return')
+    end
   end
 % debugging__________________________________
 
@@ -450,6 +527,8 @@ while t<tfinal && tstep < max_tstep
   for ibc=1:numBCs
     vel_new_G(BCNode(ibc)) = velG_BCValue(ibc);
   end
+
+  momG = massG .* vel_new_G;
 
   % compute the acceleration on the grid
   for ig=1:NN
@@ -469,10 +548,12 @@ while t<tfinal && tstep < max_tstep
       dxp   = dxp   + vel_new_G(nodes(ig)) * dt * Ss(ig);
       
 % debugging__________________________________
-  error = massG(nodes(ig)) * vel_new_G(nodes(ig)) - massG(nodes(ig)) * initVelocity;
-  if(  (abs(error) > 1e-8) && (massG(nodes(ig)) > 0) )
-    fprintf('project changes: \t  node: %g, nodePos %g, error %g, massG %g \n', nodes(ig), nodePos(nodes(ig)), error, massG(nodes(ig) ));
-    fprintf(' \t\t\t vel_new_G: %g  Ss(ig): %16.15f\n',vel_new_G(nodes(ig)), Ss(ig) );
+  if( strcmp(problem_type, 'advectBlock')  )
+    error = massG(nodes(ig)) * vel_new_G(nodes(ig)) - massG(nodes(ig)) * initVelocity;
+    if(  (abs(error) > 1e-8) && (massG(nodes(ig)) > 0) )
+      fprintf('project changes: \t  node: %g, nodePos %g, error %g, massG %g \n', nodes(ig), nodePos(nodes(ig)), error, massG(nodes(ig) ));
+      fprintf(' \t\t\t vel_new_G: %g  Ss(ig): %16.15f\n',vel_new_G(nodes(ig)), Ss(ig) );
+    end
   end
 % debugging__________________________________
     
@@ -484,45 +565,9 @@ while t<tfinal && tstep < max_tstep
     tmp(ip)  = tmp(ip) + dxp;
   end
   
-  fprintf('sum(tmp): %9.8f \n',sum(tmp));
+  %fprintf('sum(tmp): %9.8f \n',sum(tmp));
   
-    % plot SimulationState
-  if(mod(tstep,4) == 0)
-    set(gcf,'position',[50,100,900,900]);
-    figure(1)
-    subplot(6,1,1),plot(xp,velP,'rd');
-    xlabel('Particle Position');
-    ylabel('Particle velocity');
-    axis([0 1 99 101] )
 
-    subplot(6,1,2),plot(xp,massP,'rd');
-    axis([0 1 53 53.5] )
-    ylabel('Particle Mass');
-    
-    subplot(6,1,3),plot(xp,stressP,'rd');
-    axis([0 1 -1 1] )
-    ylabel('Particle stress');
-
-    subplot(6,1,4),plot(nodePos, velG,'bx');
-    xlabel('NodePos');
-    ylabel('grid Vel');
-    %axis([0 1 0 110] )
-
-    subplot(6,1,5),plot(nodePos, massG,'bx');
-    ylabel('gridMass');
-    %axis([0 1 0 70] )
-
-    momG = velG .* massG;
-    subplot(6,1,6),plot(nodePos, momG,'bx');
-    ylabel('gridMom');
-    %axis([0 1 0 7000] )
-  
-    %f_name = sprintf('%g.ppm',tstep-1)
-    %F = getframe(gcf);
-    %[X,map] = frame2im(F);
-    %imwrite(X,f_name)
-    %input('hit return');
-  end
   
   DX_tip(tstep)=dp(NP);
   T=t; %-dt;
@@ -565,12 +610,51 @@ while t<tfinal && tstep < max_tstep
     end
     fprintf('sum position error %16.15f \n',sum(pos_error))
   end
+  
+  if strcmp(problem_type, 'compaction')
+    term1 = (2.0 * density * bodyForce)/E;
+    for ip=1:NP
+      term2 = term1 * (delta - xp(ip));
+      stressExact(ip) = E *  ( sqrt( term2 + 1.0 ) - 1.0);
+    end
+    
+    if (mod(tstep,100) == 0) 
+  
+      set(gcf,'position',[50,100,700,500]);
+      figure(1)
+      plot(xp,stressP,'rd', xp, stressExact, 'b');
+      axis([0 50 -10000 0])
+      title('Quasi-Static Compaction Problem, Single Level \Delta{x} = 1, PPC: 2, Cells: 50')
+      legend('Simulation','Exact')
+      xlabel('Position');
+      ylabel('Particle stress');
+
+      f_name = sprintf('%g.ppm',tstep-1);
+      F = getframe(gcf);
+      [X,map] = frame2im(F);
+      imwrite(X,f_name);
+      
+      d = abs(stressP - stressExact);
+      L2_norm = sqrt( sum(d.^2)/length(stressP) )
+      fid = fopen('L2norm.dat', 'a');
+      fprintf(fid,'%g %g\n',t, L2_norm);
+      fclose(fid)
+      
+    end
+  end
+  
 
   TIME(tstep)=t;
+  
+ 
+  
+  
+  
+  
   %__________________________________
   % plot intantaneous solution
-  if (mod(tstep,100) == 0) && (plotSwitch == 1)
-    plotResults(t, xp,dp,velP)
+  if (mod(tstep,10) == 0) && (plotSwitch == 1)
+    plotResults(t, xp, dp, massP, velP, stressP, nodePos, velG, massG, momG)
   end
   
   %__________________________________
@@ -598,7 +682,7 @@ tipDeflect_err(tstep)
 
 %==========================================================================
 %  plot the results
-plotFinalResults(TIME, DX_tip, Exact_tip, TE, problem_type, PPC, NN)
+%plotFinalResults(TIME, DX_tip, Exact_tip, TE, problem_type, PPC, NN)
 
 %__________________________________
 %  write the results out to files
@@ -719,22 +803,6 @@ function [nodes,Ss]=findNodesAndWeights(xp, numRegions, Regions, nodePos, Lx)
     Ss(2) = 1;
   end
 
-if(0)     % only works if the refinement ratio == 1
-  % old method of computing the shape function
-  locx  = (xp-dx*(dnode-1))/dx;
-  Ss_old_1 = 1-locx;
-  Ss_old_2 = locx;
-  
-  % bulletproofing
-  diff1 = abs(Ss(1) - Ss_old_1);
-  diff2 = abs(Ss(2) - Ss_old_2);
-  
-  if (diff1 > 1e-12  || diff2 > 1e-12)
-    fprintf('There is a problem with one of the shape functions, node %g, delX: %g \n',node, delX);
-    fprintf(' Ss(1):  %16.14f , Ss_old:  %16.14f, diff %16.14f \n', Ss(1), Ss_old_1, diff1);
-    fprintf(' Ss(2):  %16.14f , Ss_old:  %16.14f, diff %16.14f \n', Ss(2), Ss_old_2, diff1);
-  end
-end  
 end
 
 
@@ -789,25 +857,6 @@ function [nodes,Ss]=findNodesAndWeights_gimp(xp, numRegions, Regions, nodePos, L
 end
 
 %__________________________________
-function [nodes,Ss]=findNodesAndWeights_old(xp, numRegions, Regions, nodePos, Lx)
- 
-  % find the nodes that surround the given location and
-  % the values of the shape functions for those nodes
-  % Assume the grid starts at x=0.
-
-  [node, dx]=positionToNode(xp, numRegions, Regions);  
-
-  nodes(1)= node;
-  nodes(2)= nodes(1)+1;
-
-  dnode = double(node);
-
-  locx  = (xp-dx*(dnode-1))/dx;
-  Ss(1) = 1-locx;
-  Ss(2) = locx;
-end
-
-%__________________________________
 function [nodes,Gs, dx]=findNodesAndWeightGradients(xp, numRegions, Regions);
  
   % find the nodes that surround the given location and
@@ -824,6 +873,7 @@ function [nodes,Gs, dx]=findNodesAndWeightGradients(xp, numRegions, Regions);
 end
 %__________________________________
 function [stressP,vol,Fp]=computeStressFromVelocity(xp,dt,velG,E,Fp,NP, numRegions, Regions)
+  global d_debugging;
                                                                                 
   for ip=1:NP
     [nodes,Gs,dx] = findNodesAndWeightGradients(xp(ip), numRegions, Regions);
@@ -838,34 +888,55 @@ function [stressP,vol,Fp]=computeStressFromVelocity(xp,dt,velG,E,Fp,NP, numRegio
     Fp(ip)      = dF * Fp(ip);
     stressP(ip) = E * (Fp(ip)-1.0);
     vol(ip)     = volP * Fp(ip);
-    
-    if(abs(stressP(ip)) > 1e-8) 
+
+    if( strcmp(d_debugging, 'advectBlock') && abs(stressP(ip)) > 1e-8) 
       fprintf('computeStressFromVelocity: nodes_L: %g, nodes_R:%g, gUp: %g, dF: %g, stressP: %g \n',nodes(1),nodes(2), gUp, dF, stressP(ip) );
       fprintf(' Gs_L: %g, Gs_R: %g\n', Gs(1), Gs(2) );
       fprintf(' velG_L: %g, velG_R: %g\n', velG(nodes(1)), velG(nodes(2)) );
       fprintf(' prod_L %g, prod_R: %g \n', velG(nodes(1)) * Gs(1), velG(nodes(2)) * Gs(2) );
     end
+    
   end
 end
 
 %__________________________________
-function plotResults(t, xp, dp, velP)
-
-  close all;
-  set(gcf,'position',[100,100,900,900]);
-
-  % particle velocity vs position
-  subplot(2,1,1),plot(xp,velP,'bx');
-
-  tmp = sprintf('Time %g',t);
-  title(tmp);
+function plotResults(t, xp, dp, massP, velP, stressP, nodePos, velG, massG, momG)
+    % plot SimulationState
+  set(gcf,'position',[50,100,900,900]);
+  figure(1)
+  subplot(6,1,1),plot(xp,velP,'rd');
   xlabel('Particle Position');
-  ylabel('velocity')
+  ylabel('Particle velocity');
+  %axis([0 1 99 101] )
 
-  % particle ???? vs position
-  subplot(2,1,2),plot(xp,dp,'b-');
-  ylabel('dp');
-  input('hit return');
+  subplot(6,1,2),plot(xp,massP,'rd');
+  %axis([0 1 53 53.5] )
+  ylabel('Particle Mass');
+
+  subplot(6,1,3),plot(xp,stressP,'rd');
+  
+  %axis([0 1 -1 1] )
+  ylabel('Particle stress');
+
+  subplot(6,1,4),plot(nodePos, velG,'bx');
+  xlabel('NodePos');
+  ylabel('grid Vel');
+  %axis([0 1 0 110] )
+
+  subplot(6,1,5),plot(nodePos, massG,'bx');
+  ylabel('gridMass');
+  %axis([0 1 0 70] )
+
+  momG = velG .* massG;
+  subplot(6,1,6),plot(nodePos, momG,'bx');
+  ylabel('gridMom');
+  %axis([0 1 0 7000] )
+
+  %f_name = sprintf('%g.ppm',tstep-1)
+  %F = getframe(gcf);
+  %[X,map] = frame2im(F);
+  %imwrite(X,f_name)
+  %input('hit return');
 end
 
 %__________________________________
