@@ -130,10 +130,10 @@ public:
   // changed way PS's were stored from ghost info to low-high range.
   // we can still keep the getPS function API the same though to not annoy
   // everybody -- BJW, May 05
-  virtual ParticleSubset* createParticleSubset(particleIndex numParticles,
-					       int matlIndex, const Patch*,
-                                               IntVector low = IntVector(0,0,0),
-                                               IntVector high = IntVector(0,0,0)) = 0;
+  virtual ParticleSubset* createParticleSubset(  particleIndex numParticles,
+                                                 int matlIndex, const Patch*,
+                                                 IntVector low = IntVector(0,0,0),
+                                                 IntVector high = IntVector(0,0,0) ) = 0;
   virtual void saveParticleSubset(ParticleSubset* psubset, 
                                   int matlIndex, const Patch*,
                                   IntVector low = IntVector(0,0,0),
@@ -181,21 +181,22 @@ public:
 
   // Generic grid based variables
      
-  virtual void get(constGridVariableBase& var,
-                   const VarLabel* label, int matlIndex, const Patch* patch,
-                   Ghost::GhostType gtype, int numGhostCells) = 0;
+  virtual void get( constGridVariableBase& var,
+                    const VarLabel* label, int matlIndex, const Patch* patch,
+                    Ghost::GhostType gtype, int numGhostCells ) = 0;
+  
+  virtual void getModifiable( GridVariableBase& var,
+                              const VarLabel* label, int matlIndex, const Patch* patch ) = 0;
 
-  virtual void getModifiable(GridVariableBase& var,
-                   const VarLabel* label, int matlIndex, const Patch* patch) = 0;
+  virtual void allocateTemporary( GridVariableBase& var, const Patch* patch,
+                                  Ghost::GhostType gtype = Ghost::None, int numGhostCells = 0 ) = 0;
+//                                  const IntVector& boundaryLayer ) = 0;
+//                                const IntVector& boundaryLayer = IntVector(0,0,0)) = 0;
 
-  virtual void allocateTemporary(GridVariableBase& var, const Patch* patch,
-                          Ghost::GhostType gtype = Ghost::None, int numGhostCells = 0,
-                          const IntVector& boundaryLayer = IntVector(0,0,0)) = 0;
-
-  virtual void allocateAndPut(GridVariableBase& var,
-                              const VarLabel* label, int matlIndex,
-                              const Patch* patch, Ghost::GhostType gtype = Ghost::None,
-                              int numGhostCells = 0) = 0;
+  virtual void allocateAndPut( GridVariableBase& var,
+                               const VarLabel* label, int matlIndex,
+                               const Patch* patch, Ghost::GhostType gtype = Ghost::None,
+                               int numGhostCells = 0 ) = 0;
 
   virtual void put(GridVariableBase& var, const VarLabel* label, int matlIndex, const Patch* patch,
             bool replace = false) = 0;

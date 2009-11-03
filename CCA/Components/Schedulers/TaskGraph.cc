@@ -112,7 +112,7 @@ TaskGraph::initialize()
 }
 
 bool
-TaskGraph::overlaps(Task::Dependency* comp, Task::Dependency* req) const
+TaskGraph::overlaps( const Task::Dependency* comp, const Task::Dependency* req) const
 {
   constHandle<PatchSubset> saveHandle2;
   const PatchSubset* ps1 = comp->patches;
@@ -187,8 +187,7 @@ TaskGraph::setupTaskConnections(GraphSortInfoMap& sortinfo)
     }
 
 
-    for(Task::Dependency* comp = task->getComputes();
-        comp != 0; comp=comp->next){
+    for( Task::Dependency* comp = task->getComputes(); comp != 0; comp=comp->next ) {
       if(sc->isOldDW(comp->mapDataWarehouse())){
         if (dbg.active())
           dbg << d_myworld->myrank() << " which = " << comp->whichdw << ", mapped to " << comp->mapDataWarehouse() << '\n';
@@ -260,8 +259,7 @@ TaskGraph::setupTaskConnections(GraphSortInfoMap& sortinfo)
     Task* task = *iter;
     if (dbg.active())
       dbg << d_myworld->myrank() << " Gathering comps from task: " << *task << '\n';
-    for(Task::Dependency* comp = task->getComputes();
-        comp != 0; comp=comp->next){
+    for( Task::Dependency* comp = task->getComputes(); comp != 0; comp=comp->next ) {
       comps.insert(make_pair(comp->var, comp));
       if (dbg.active())
         dbg << d_myworld->myrank() << "   Added comp for: " << *comp << '\n';
@@ -273,10 +271,11 @@ TaskGraph::setupTaskConnections(GraphSortInfoMap& sortinfo)
   // so future modifies/requires find the modified var.  Also do a type check
   for( iter=d_tasks.begin(); iter != d_tasks.end(); iter++ ) {
     Task* task = *iter;
-    if(dbg.active())
+    if(dbg.active()) {
       dbg << d_myworld->myrank() << "   Looking at dependencies for task: " << *task << '\n';
-    addDependencyEdges(task, sortinfo, task->getRequires(), comps, reductionTasks, false);
-    addDependencyEdges(task, sortinfo, task->getModifies(), comps, reductionTasks, true);
+    }
+    addDependencyEdges( task, sortinfo, task->getRequires(), comps, reductionTasks, false );
+    addDependencyEdges( task, sortinfo, task->getModifies(), comps, reductionTasks, true );
     // Used here just to warn if a modifies comes before its computes
     // in the order that tasks were added to the graph.
     sortinfo.find(task)->second.visited = true;
@@ -290,9 +289,9 @@ TaskGraph::setupTaskConnections(GraphSortInfoMap& sortinfo)
   }
 } // end setupTaskConnections()
 
-void TaskGraph::addDependencyEdges(Task* task, GraphSortInfoMap& sortinfo,
-                                   Task::Dependency* req,
-                                   CompMap& comps, ReductionTasksMap& reductionTasks, bool modifies)
+void TaskGraph::addDependencyEdges( Task* task, GraphSortInfoMap& sortinfo,
+                                    Task::Dependency* req,
+                                    CompMap& comps, ReductionTasksMap& reductionTasks, bool modifies )
 {
   for(; req != 0; req=req->next){
     if (dbg.active())
@@ -333,10 +332,10 @@ void TaskGraph::addDependencyEdges(Task* task, GraphSortInfoMap& sortinfo,
           }
         }
 
-        if(!add)
-          if (dbg.active())
-            dbg << d_myworld->myrank() << "       did NOT create dependency\n";
-        if(add){
+        if( !add ) {
+          if (dbg.active()) { dbg << d_myworld->myrank() << "       did NOT create dependency\n"; }
+        }
+        else {
           Task::Dependency* comp;
           if (requiresReductionTask) {
             VarLabelMatl<Level> key(req->var, req->mapDataWarehouse(), req->reductionLevel);

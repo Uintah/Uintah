@@ -33,26 +33,28 @@
 namespace SCIRun {
 
 #if !defined( SCI_32BITS )
-void swapbytes(long long& i) { LONG_LONG_SWAP(i); }
+void swapbytes( long long& i ) { LONG_LONG_SWAP(i); }
 #endif
 
-void swapbytes(bool&) { }
-void swapbytes(int8_t&) { }
-void swapbytes(uint8_t&) { }
-void swapbytes(int16_t& i) { SWAP_2(i); }
-void swapbytes(uint16_t& i) { SWAP_2(i); }
-void swapbytes(int32_t& i) { SWAP_4(i); }
-void swapbytes(uint32_t& i) { SWAP_4(i); }
-void swapbytes(int64_t& i) { SWAP_8(i); }
-void swapbytes(uint64_t& i) { SWAP_8(i); }
-void swapbytes(float& i){SWAP_4(i);}
-void swapbytes(double& i){SWAP_8(i);}
-void swapbytes(Point &i){ // probably dangerous, but effective
-     double* p = (double *)(&i);
-     SWAP_8(*p); SWAP_8(*++p); SWAP_8(*++p); }
-void swapbytes(Vector &i){ // probably dangerous, but effective
-     double* p = (double *)(&i);
-     SWAP_8(*p); SWAP_8(*++p); SWAP_8(*++p); }
+void swapbytes( bool& )       { }
+void swapbytes( int8_t& )     { }
+void swapbytes( uint8_t& )    { }
+void swapbytes( int16_t& i )  { SWAP_2(i); }
+void swapbytes( uint16_t& i ) { SWAP_2(i); }
+void swapbytes( int32_t& i )  { SWAP_4(i); }
+void swapbytes( uint32_t& i ) { SWAP_4(i); }
+#if ALREADY_DEFINED_ON_APPLE
+void swapbytes( int64_t& i )  { SWAP_8(i); }
+#endif
+void swapbytes( uint64_t& i ) { SWAP_8(i); }
+void swapbytes( float& i )    { SWAP_4(i); }
+void swapbytes( double& i )   { SWAP_8(i); }
+void swapbytes( Point &i )    { // probably dangerous, but effective
+                              double* p = (double *)(&i);
+                              SWAP_8(*p); SWAP_8(*++p); SWAP_8(*++p); }
+void swapbytes( Vector &i )   { // probably dangerous, but effective
+                              double* p = (double *)(&i);
+                              SWAP_8(*p); SWAP_8(*++p); SWAP_8(*++p); }
 
 bool isBigEndian()
 {

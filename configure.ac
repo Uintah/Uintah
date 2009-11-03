@@ -64,13 +64,16 @@
 ##  initialize configure 
 AC_INIT([Uintah],[1.25],[csafe-homebrew@cs.utah.edu])
 
-##  require autoconf version 2.63
+##  require autoconf version 2.61
 ##     The reason to require the latest autoconf is to try and get everyone who
 ##     updates configure to use the same version.  By doing so, the SVN diffs
 ##     don't look completely different from minor changes.  (This happens
 ##     if people switch back and forth between different versions of autoconf.)
 ##
 ##     type "autoconf --version" to find out what version you have.
+##
+##     Note, 2.63+ is actually the latest, but many machines don't have it, so
+##     going to use 2.61 for now.
 ##
 AC_PREREQ(2.61)
 
@@ -1093,22 +1096,29 @@ case $host in
 #####
 # GCC_TEST
 #####
+    OS_VERSION=`uname -r | cut -f1 -d.`
+    if test "$OS_VERSION" = "10"; then
+        AC_MSG_WARN( Running under Snow Leopard )
+        DEF_OSX_SNOW_LEOPARD="#define OSX_SNOW_LEOPARD"
+        IS_OSX_SNOW_LEOPARD="yes"
+    fi
+
+    NO_LONG_DOUBLE="-Wno-long-double"
+    if test "$IS_OSX_SNOW_LEOPARD" = "yes"; then
+      NO_LONG_DOUBLE=
+    fi      
+
     SCI_CHECK_VERSION($CC,--version,4.0.0,GCC_VERSION=4.0,)
 
     if test "$GCC_VERSION" = "4.0"; then
-       CFLAGS="$CFLAGS $extra_cflags -fno-common -dynamic -Wno-long-double "
+       CFLAGS="$CFLAGS $extra_cflags -fno-common -dynamic $NO_LONG_DOUBLE"
     else
-       CFLAGS="$CFLAGS $extra_cflags -fno-common -dynamic -Wno-long-double -fcoalesce-templates"
+       CFLAGS="$CFLAGS $extra_cflags -fno-common -dynamic $NO_LONG_DOUBLE -fcoalesce-templates"
     fi   
     CXXFLAGS="$CXXFLAGS $CFLAGS"
 
-    if test $NEED_OSX_HACK = yes; then
-	SOFLAGS="-dynamiclib -init __ZNSt8ios_base4InitC4Ev \${LIBDIR}/../osx/osx_init.o  ${SOFLAGS}"
-        DEF_NEED_OSX_HACK="#define NEED_OSX_HACK 1"
-        DEF_THREAD="#define SCI_PTHREAD 1"
-    else
-	SOFLAGS="-dynamiclib"
-    fi
+    SOFLAGS="-dynamiclib"
+
     case $F77 in
       *g77*)
          # extra_fflags has array checking if in debug mode.
@@ -1331,13 +1341,9 @@ esac
 
 OBJEXT=$ac_objext
 
+AC_SUBST(DEF_OSX_SNOW_LEOPARD)
 AC_SUBST(NEED_OSX_SYSTEMSTUBS)
-AC_SUBST(NEED_OSX_HACK)
-AC_SUBST(DEF_NEED_OSX_HACK)
 AC_SUBST(OBJEXT)
-
-
-
 
 # now that we know which NBITS the user wants, we can save this info
 AC_SUBST(NBITS)
@@ -1364,7 +1370,7 @@ CC_DEPEND_EXT=unknown
 # Try -MDupdate
 for flag in -MDupdate; do
   if test $CC_DEPEND_MODE = unknown; then
-    AC_MSG_CHECKING( if depend mode flag '$flag' works)
+    AC_MSG_CHECKING( 1 - if depend mode flag '$flag' works for '$CXX')
     rm -f configure-test.o configure-test-dir/configure-test.o
     ac_try="$CXX $CFLAGS -c $flag configure-test-dir/configure-test.d -o configure-test-dir/configure-test.o configure-test-dir/configure-test.cc >/dev/null 2>conftest.out"
     (eval $ac_try) 2>&5
@@ -1372,8 +1378,12 @@ for flag in -MDupdate; do
       CC_DEPEND_MODE=normal
       CC_DEPEND_REGEN='-MDupdate $(dir $@)depend.mk'
       CC_DEPEND_EXT=depend.mk
-    else
+    else 
       AC_MSG_RESULT( no )
+#      echo "Test results: "  # <= Turn on to debug DEPEND flag issues...
+#      echo ""
+#      cat conftest.out
+#      echo ""
     fi
   fi
 done
@@ -1387,7 +1397,7 @@ rm -f configure-test-dir/configure-test.u
 if test $CC_DEPEND_MODE = unknown; then
   for flag in -MD -M; do
     for ext in d u o.d; do
-      AC_MSG_CHECKING( if depend mode flag '$flag' works)
+      AC_MSG_CHECKING( 2 - if depend mode flag '$flag' works )
       rm -f configure-test.o configure-test-dir/configure-test.o
       ac_try="$CXX $CFLAGS -c $flag configure-test-dir/configure-test.cc -o configure-test-dir/configure-test.o >/dev/null 2>conftest.out"
       (eval $ac_try) 2>&5
@@ -1420,7 +1430,7 @@ fi
 # Last resort, try one that spits out to stdout
 if test $CC_DEPEND_MODE = unknown; then
   for flag in -M; do
-    AC_MSG_CHECKING( if depend mode flag '$flag' works)
+    AC_MSG_CHECKING( 3 - if depend mode flag '$flag' works )
     rm -f configure-test.o configure-test-dir/configure-test.o
     ac_try="$CXX $CFLAGS -c $flag configure-test-dir/configure-test.cc >configure-test-dir/configure-test.d 2>conftest.out"
     (eval $ac_try) 2>&5

@@ -667,7 +667,7 @@ SchedulerCommon::addTask(Task* task, const PatchSet* patches,
   // need for checkpointing, switching, and the like.
   // In the case of treatAsOld Vars, we handle them because something external to the taskgraph
   // needs it that way (i.e., Regridding on a restart requires checkpointed refineFlags).
-  for (Task::Dependency* dep = task->getRequires(); dep != 0; dep = dep->next) {
+  for( const Task::Dependency* dep = task->getRequires(); dep != 0; dep = dep->next ) {
     if(isOldDW(dep->mapDataWarehouse()) || treatAsOldVars_.find(dep->var->getName()) != treatAsOldVars_.end()) {
       d_initRequires.push_back(dep);
       d_initRequiredVars.insert(dep->var);
@@ -691,7 +691,7 @@ SchedulerCommon::addTask(Task* task, const PatchSet* patches,
   // for the treat-as-old vars, go through the computes and add them.
   // we can (probably) safely assume that we'll avoid duplicates, since if they were inserted 
   // in the above, they wouldn't need to be marked as such
-  for (Task::Dependency* dep = task->getComputes(); dep != 0; dep = dep->next) {
+  for( const Task::Dependency* dep = task->getComputes(); dep != 0; dep = dep->next ) {
     d_computedVars.insert(dep->var);
     if(treatAsOldVars_.find(dep->var->getName()) != treatAsOldVars_.end()) {
       d_initRequires.push_back(dep);
@@ -1038,7 +1038,7 @@ SchedulerCommon::scheduleAndDoDataCopy(const GridP& grid, SimulationInterface* s
       Task* task = tg->getTask(i);
       if (task->getType() == Task::Output)
         continue;  
-      for(Task::Dependency* dep = task->getRequires(); dep != 0; dep=dep->next){
+      for( const Task::Dependency* dep = task->getRequires(); dep != 0; dep=dep->next ){
         bool copyThisVar = dep->whichdw == Task::OldDW;
         // override to manually copy a var
         if (!copyThisVar)

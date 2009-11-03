@@ -30,8 +30,8 @@
 #ifndef SCI_OSX_DEFS_H
 #define SCI_OSX_DEFS_H
 
-@DEF_NEED_OSX_HACK@
-
 @DEF_OSX@
+
+@DEF_OSX_SNOW_LEOPARD@
 
 #endif

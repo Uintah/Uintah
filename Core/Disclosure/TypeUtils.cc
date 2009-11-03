@@ -38,6 +38,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Malloc/Allocator.h>
 
 #include <sci_defs/bits_defs.h> // for SCI_32BITS
+#include <sci_defs/osx_defs.h>  // for OSX_SNOW_LEOPARD
 
 #include <cfloat>
 #include <climits>
@@ -137,7 +138,7 @@ const TypeDescription* fun_getTypeDescription(long64*)
 }
 
 
-#if !defined( SCI_32BITS )
+#if !defined( OSX_SNOW_LEOPARD ) &&  !defined( SCI_32BITS )
 const TypeDescription* fun_getTypeDescription(long long*)
 {
    static TypeDescription* td;
@@ -221,7 +222,7 @@ void fun_getSmallValue(bool* val)
   *val = false;
 }
 void fun_getZeroValue(  double  * val ) { *val = 0; }
-#if !defined( SCI_32BITS )
+#if !defined( SCI_32BITS ) && !defined( OSX_SNOW_LEOPARD )
 void fun_getZeroValue(  long long * val ) { *val = 0; }
 #endif
 void fun_getZeroValue(  bool    * val ) { *val = false; }
