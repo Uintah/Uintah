@@ -750,9 +750,8 @@ PATH_TO_PSDK
 PATH_TO_MSYS_BIN
 AS
 LD
+DEF_OSX_SNOW_LEOPARD
 NEED_OSX_SYSTEMSTUBS
-NEED_OSX_HACK
-DEF_NEED_OSX_HACK
 NBITS
 WIN_DLLFLAGS
 WIN_OTFFLAGS
@@ -2017,13 +2016,16 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
 
-##  require autoconf version 2.63
+##  require autoconf version 2.61
 ##     The reason to require the latest autoconf is to try and get everyone who
 ##     updates configure to use the same version.  By doing so, the SVN diffs
 ##     don't look completely different from minor changes.  (This happens
 ##     if people switch back and forth between different versions of autoconf.)
 ##
 ##     type "autoconf --version" to find out what version you have.
+##
+##     Note, 2.63+ is actually the latest, but many machines don't have it, so
+##     going to use 2.61 for now.
 ##
 
 
@@ -7366,6 +7368,19 @@ case $host in
 #####
 # GCC_TEST
 #####
+    OS_VERSION=`uname -r | cut -f1 -d.`
+    if test "$OS_VERSION" = "10"; then
+        { echo "$as_me:$LINENO: WARNING: Running under Snow Leopard " >&5
+echo "$as_me: WARNING: Running under Snow Leopard " >&2;}
+        DEF_OSX_SNOW_LEOPARD="#define OSX_SNOW_LEOPARD"
+        IS_OSX_SNOW_LEOPARD="yes"
+    fi
+
+    NO_LONG_DOUBLE="-Wno-long-double"
+    if test "$IS_OSX_SNOW_LEOPARD" = "yes"; then
+      NO_LONG_DOUBLE=
+    fi
+
 
     ##  SCI_CHECK_VERSION
     _SCI_CORRECT_='echo $echo_n "$echo_c"'
@@ -7427,19 +7442,14 @@ echo "${ECHO_T}no ($_SCI_REPORT_)" >&6; }
 
 
     if test "$GCC_VERSION" = "4.0"; then
-       CFLAGS="$CFLAGS $extra_cflags -fno-common -dynamic -Wno-long-double "
+       CFLAGS="$CFLAGS $extra_cflags -fno-common -dynamic $NO_LONG_DOUBLE"
     else
-       CFLAGS="$CFLAGS $extra_cflags -fno-common -dynamic -Wno-long-double -fcoalesce-templates"
+       CFLAGS="$CFLAGS $extra_cflags -fno-common -dynamic $NO_LONG_DOUBLE -fcoalesce-templates"
     fi
     CXXFLAGS="$CXXFLAGS $CFLAGS"
 
-    if test $NEED_OSX_HACK = yes; then
-	SOFLAGS="-dynamiclib -init __ZNSt8ios_base4InitC4Ev \${LIBDIR}/../osx/osx_init.o  ${SOFLAGS}"
-        DEF_NEED_OSX_HACK="#define NEED_OSX_HACK 1"
-        DEF_THREAD="#define SCI_PTHREAD 1"
-    else
-	SOFLAGS="-dynamiclib"
-    fi
+    SOFLAGS="-dynamiclib"
+
     case $F77 in
       *g77*)
          # extra_fflags has array checking if in debug mode.
@@ -9100,10 +9110,6 @@ OBJEXT=$ac_objext
 
 
 
-
-
-
-
 # now that we know which NBITS the user wants, we can save this info
 
 sci_defs_files="$sci_defs_files include/sci_defs/bits_testdefs.h"
@@ -9129,8 +9135,8 @@ CC_DEPEND_EXT=unknown
 # Try -MDupdate
 for flag in -MDupdate; do
   if test $CC_DEPEND_MODE = unknown; then
-    { echo "$as_me:$LINENO: checking if depend mode flag '$flag' works" >&5
-echo $ECHO_N "checking if depend mode flag '$flag' works... $ECHO_C" >&6; }
+    { echo "$as_me:$LINENO: checking 1 - if depend mode flag '$flag' works for '$CXX'" >&5
+echo $ECHO_N "checking 1 - if depend mode flag '$flag' works for '$CXX'... $ECHO_C" >&6; }
     rm -f configure-test.o configure-test-dir/configure-test.o
     ac_try="$CXX $CFLAGS -c $flag configure-test-dir/configure-test.d -o configure-test-dir/configure-test.o configure-test-dir/configure-test.cc >/dev/null 2>conftest.out"
     (eval $ac_try) 2>&5
@@ -9141,6 +9147,10 @@ echo $ECHO_N "checking if depend mode flag '$flag' works... $ECHO_C" >&6; }
     else
       { echo "$as_me:$LINENO: result: no " >&5
 echo "${ECHO_T}no " >&6; }
+#      echo "Test results: "  # <= Turn on to debug DEPEND flag issues...
+#      echo ""
+#      cat conftest.out
+#      echo ""
     fi
   fi
 done
@@ -9154,8 +9164,8 @@ rm -f configure-test-dir/configure-test.u
 if test $CC_DEPEND_MODE = unknown; then
   for flag in -MD -M; do
     for ext in d u o.d; do
-      { echo "$as_me:$LINENO: checking if depend mode flag '$flag' works" >&5
-echo $ECHO_N "checking if depend mode flag '$flag' works... $ECHO_C" >&6; }
+      { echo "$as_me:$LINENO: checking 2 - if depend mode flag '$flag' works " >&5
+echo $ECHO_N "checking 2 - if depend mode flag '$flag' works ... $ECHO_C" >&6; }
       rm -f configure-test.o configure-test-dir/configure-test.o
       ac_try="$CXX $CFLAGS -c $flag configure-test-dir/configure-test.cc -o configure-test-dir/configure-test.o >/dev/null 2>conftest.out"
       (eval $ac_try) 2>&5
@@ -9189,8 +9199,8 @@ fi
 # Last resort, try one that spits out to stdout
 if test $CC_DEPEND_MODE = unknown; then
   for flag in -M; do
-    { echo "$as_me:$LINENO: checking if depend mode flag '$flag' works" >&5
-echo $ECHO_N "checking if depend mode flag '$flag' works... $ECHO_C" >&6; }
+    { echo "$as_me:$LINENO: checking 3 - if depend mode flag '$flag' works " >&5
+echo $ECHO_N "checking 3 - if depend mode flag '$flag' works ... $ECHO_C" >&6; }
     rm -f configure-test.o configure-test-dir/configure-test.o
     ac_try="$CXX $CFLAGS -c $flag configure-test-dir/configure-test.cc >configure-test-dir/configure-test.d 2>conftest.out"
     (eval $ac_try) 2>&5
@@ -45731,9 +45741,8 @@ PATH_TO_PSDK!$PATH_TO_PSDK$ac_delim
 PATH_TO_MSYS_BIN!$PATH_TO_MSYS_BIN$ac_delim
 AS!$AS$ac_delim
 LD!$LD$ac_delim
+DEF_OSX_SNOW_LEOPARD!$DEF_OSX_SNOW_LEOPARD$ac_delim
 NEED_OSX_SYSTEMSTUBS!$NEED_OSX_SYSTEMSTUBS$ac_delim
-NEED_OSX_HACK!$NEED_OSX_HACK$ac_delim
-DEF_NEED_OSX_HACK!$DEF_NEED_OSX_HACK$ac_delim
 NBITS!$NBITS$ac_delim
 WIN_DLLFLAGS!$WIN_DLLFLAGS$ac_delim
 WIN_OTFFLAGS!$WIN_OTFFLAGS$ac_delim
@@ -45819,6 +45828,7 @@ BLAS_LIB_DIR_FLAG!$BLAS_LIB_DIR_FLAG$ac_delim
 DEF_BLAS!$DEF_BLAS$ac_delim
 DEF_CBLAS!$DEF_CBLAS$ac_delim
 HAVE_LAPACK!$HAVE_LAPACK$ac_delim
+DEF_LAPACK!$DEF_LAPACK$ac_delim
 _ACEOF
 
   if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 97; then
@@ -45860,7 +45870,6 @@ _ACEOF
 ac_delim='%!_!# '
 for ac_last_try in false false false false false :; do
   cat >conf$$subs.sed <<_ACEOF
-DEF_LAPACK!$DEF_LAPACK$ac_delim
 LAPACK_LIB_FLAG!$LAPACK_LIB_FLAG$ac_delim
 LAPACK_LIB_DIR_FLAG!$LAPACK_LIB_DIR_FLAG$ac_delim
 HAVE_LAPACKMP!$HAVE_LAPACKMP$ac_delim
@@ -45912,7 +45921,7 @@ LIBOBJS!$LIBOBJS$ac_delim
 LTLIBOBJS!$LTLIBOBJS$ac_delim
 _ACEOF
 
-  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 50; then
+  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 49; then
     break
   elif $ac_last_try; then
     { { echo "$as_me:$LINENO: error: could not make $CONFIG_STATUS" >&5
