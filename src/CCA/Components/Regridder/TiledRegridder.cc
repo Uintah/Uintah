@@ -707,6 +707,7 @@ void TiledRegridder::GatherTiles(vector<IntVector>& mytiles, vector<IntVector> &
     for(size_t i=0;i<gtiles.size();i++)
       settiles.insert(IntVector(gtiles[i].x,gtiles[i].y,gtiles[i].z));
 #endif
+    gtiles.clear();
   }
   else
   {

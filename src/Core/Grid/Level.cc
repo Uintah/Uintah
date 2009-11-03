@@ -738,7 +738,9 @@ void Level::setBCTypes()
   if(numProcs>1)
   {
 #ifdef AG_HACK
-    int max_size=div+mod;
+    int max_size=div;
+    if(mod!=0)
+      max_size++;
     //make temporary vectors
     vector<unsigned int> bctypes2(max_size*myworld->size());
     vector<unsigned int> mybctypes2(mybctypes);
@@ -757,6 +759,8 @@ void Level::setBCTypes()
       for(int i=start;i<end;i++)
         bctypes[j++]=bctypes2[i];
     }
+    mybctypes2.clear();
+    bctypes2.clear();
 #else
     //allgather bctypes
     if(mybctypes.size()==0)
