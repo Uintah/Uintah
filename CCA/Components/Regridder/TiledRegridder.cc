@@ -27,6 +27,12 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
+//Allgatherv currently performs poorly on Kraken.  
+//This hack changes the Allgatherv to an allgather 
+//by padding the digits
+//#define AG_HACK  
+
+
 
 #include <TauProfilerForSCIRun.h>
 #include <CCA/Components/Regridder/TiledRegridder.h>
@@ -145,14 +151,6 @@ Grid* TiledRegridder::regrid(Grid* oldGrid)
     start=Time::currentSeconds();
 
     GatherTiles(mytiles,tiles[l+1]);
-
-    set<IntVector> settiles;
-    //tiles might not be unique so add them to a set to make them unique
-    for(size_t i=0;i<tiles[l+1].size();i++)
-      settiles.insert(tiles[l+1][i]);
-    
-    //reassign to a vector
-    tiles[l+1].assign(settiles.begin(),settiles.end());
 
     if(l>0) 
     {
@@ -634,6 +632,7 @@ struct CompressedIntVector
 
 void TiledRegridder::GatherTiles(vector<IntVector>& mytiles, vector<IntVector> &gatheredTiles )
 {
+  set<IntVector> settiles;
   if(d_myworld->size()>1)
   {
     unsigned int mycount=mytiles.size();
@@ -661,21 +660,62 @@ void TiledRegridder::GatherTiles(vector<IntVector>& mytiles, vector<IntVector> &
     {
       displs[p]=pos;
       recvcounts[p]=counts[p]*sizeof(CompressedIntVector);
+      //cout << d_myworld->myrank() << " displs: " << displs[p] << " recvs: " << recvcounts[p] << endl;
       pos+=recvcounts[p];
     }
 
+
+#ifdef AG_HACK
+    //compute the maximum number on all processors
+    int max_s=0;
+    for(int p=0;p<d_myworld->size();p++)
+      if(recvcounts[p]>max_s)
+        max_s=recvcounts[p];
+
+    //cout << d_myworld->myrank() << " mysize: " << tiles.size() << endl;
+    //cout << d_myworld->myrank() << " Max: " << max_s << endl;
+
+    //resize the local vector
+    tiles.resize(max_s/sizeof(CompressedIntVector));
+    //resize the global vector
+    gtiles.resize(tiles.size()*d_myworld->size());
+
+
+    //cout << d_myworld->myrank() << " gathering size on each proc: " << max_s << endl;
+    //perform allgather
+    MPI_Allgather(&tiles[0],max_s,MPI_BYTE,&gtiles[0],max_s,MPI_BYTE,d_myworld->getComm());
+
+    //tiles might not be unique so add them to a set to make them unique
+    //copy compressed tiles into the tile set
+    for(int p=0;p<d_myworld->size();p++)
+    {
+      int start=tiles.size()*p;
+      int end=start+recvcounts[p]/sizeof(CompressedIntVector);
+      //cout << d_myworld->myrank() << " Adding " << start << " to " << end << endl;
+      for(int i=start;i<end;i++)
+        settiles.insert(IntVector(gtiles[i].x,gtiles[i].y,gtiles[i].z));
+    }
+
+#else
     gtiles.resize(pos/sizeof(CompressedIntVector));
 
     //gatherv tiles
     MPI_Allgatherv(&tiles[0],recvcounts[d_myworld->myrank()],MPI_BYTE,&gtiles[0],&recvcounts[0],&displs[0],MPI_BYTE,d_myworld->getComm());
-
-    //copy compressed tiles into uncompressed data structure
-    gatheredTiles.resize(gtiles.size());
+    
+    //tiles might not be unique so add them to a set to make them unique
+    //copy compressed tiles into the tile set
     for(size_t i=0;i<gtiles.size();i++)
-      gatheredTiles[i]=IntVector(gtiles[i].x,gtiles[i].y,gtiles[i].z);
+      settiles.insert(IntVector(gtiles[i].x,gtiles[i].y,gtiles[i].z));
+#endif
   }
   else
   {
-    gatheredTiles=mytiles;
+    //tiles might not be unique so add them to a set to make them unique
+    for(size_t i=0;i<mytiles.size();i++)
+      settiles.insert(mytiles[i]);
   }
+    
+  //reassign set to a vector
+  gatheredTiles.assign(settiles.begin(),settiles.end());
+
 }

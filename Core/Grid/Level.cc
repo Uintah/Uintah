@@ -27,6 +27,11 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
+//Allgatherv currently performs poorly on Kraken.  
+//This hack changes the Allgatherv to an allgather 
+//by padding the digits
+//#define AG_HACK  
+
 
 #include <TauProfilerForSCIRun.h>
 
@@ -732,6 +737,27 @@ void Level::setBCTypes()
   
   if(numProcs>1)
   {
+#ifdef AG_HACK
+    int max_size=div+mod;
+    //make temporary vectors
+    vector<unsigned int> bctypes2(max_size*myworld->size());
+    vector<unsigned int> mybctypes2(mybctypes);
+    mybctypes2.resize(max_size);
+
+    //gather bctypes
+    MPI_Allgather(&mybctypes2[0],max_size,MPI_UNSIGNED,&bctypes2[0],max_size,MPI_UNSIGNED,myworld->getComm());
+   
+    //displacements[p]=displacements[p-1]+recvcounts[p-1];
+    //write bctypes2 back into bctypes
+    int j=0;
+    for(int p=0;p<myworld->size();p++)
+    {
+      int start=max_size*p;
+      int end=start+recvcounts[p];
+      for(int i=start;i<end;i++)
+        bctypes[j++]=bctypes2[i];
+    }
+#else
     //allgather bctypes
     if(mybctypes.size()==0)
     {
@@ -739,6 +765,7 @@ void Level::setBCTypes()
     }
     else
       MPI_Allgatherv(&mybctypes[0],mybctypes.size(),MPI_UNSIGNED,&bctypes[0],&recvcounts[0],&displacements[0],MPI_UNSIGNED,myworld->getComm());
+#endif
   }
   else
   {
