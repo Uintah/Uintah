@@ -218,10 +218,16 @@ DQMOMEqn::problemSetup(const ProblemSpecP& inputdb, int qn)
         db_initialValue->require("step_start", d_step_start); 
         db_initialValue->require("step_end"  , d_step_end); 
 
-      } else if ( db_initialValue->findBlock("step_cell_start") ) {
+      } else if ( db_initialValue->findBlock("step_cellstart") ) {
         b_stepUsesCellLocation = true;
         db_initialValue->require("step_cellstart", d_step_cellstart);
         db_initialValue->require("step_cellend", d_step_cellend);
+        // swap if out of order
+        if(d_step_cellstart > d_step_cellend) {
+          double temp = d_step_cellstart;
+          d_step_cellstart = d_step_cellend;
+          d_step_cellend = temp;
+        }
       }//end start/stop init.
 
       if (d_initFunction == "step") {
@@ -355,9 +361,9 @@ void DQMOMEqn::initializeVariables( const ProcessorGroup* pc,
     new_dw->allocateAndPut( icValue , d_icLabel, matlIndex, patch );
     old_dw->get(oldVar, d_transportVarLabel, matlIndex, patch, gn, 0);
 
-    newVar.initialize(0.0);
+    newVar.initialize(  0.0);
     rkoldVar.initialize(0.0);
-    icValue.initialize(0.0);
+    icValue.initialize( 0.0);
 
     // copy old into new
     newVar.copyData(oldVar);

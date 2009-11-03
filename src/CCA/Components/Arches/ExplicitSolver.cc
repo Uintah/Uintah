@@ -361,9 +361,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
       for ( DQMOMEqnFactory::EqnMap::iterator iEqn = dqmom_eqns.begin(); 
             iEqn != dqmom_eqns.end(); iEqn++){
         
-        std::string eqnname = iEqn->first; 
-        EqnBase* e_dqmom_eqn = iEqn->second; 
-        DQMOMEqn* dqmom_eqn = dynamic_cast<DQMOMEqn*>(e_dqmom_eqn);
+        DQMOMEqn* dqmom_eqn = dynamic_cast<DQMOMEqn*>(iEqn->second);
 
         dqmom_eqn->sched_evalTransportEqn( level, sched, curr_level ); 
       }
