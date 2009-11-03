@@ -29,6 +29,7 @@
 #include <Core/Util/Endian.h>
 
 #include <sci_defs/bits_defs.h> // for SCI_32BITS
+#include <sci_defs/osx_defs.h>  // for OSX_SNOW_LEOPARD
 
 namespace SCIRun {
 
@@ -43,7 +44,7 @@ void swapbytes( int16_t& i )  { SWAP_2(i); }
 void swapbytes( uint16_t& i ) { SWAP_2(i); }
 void swapbytes( int32_t& i )  { SWAP_4(i); }
 void swapbytes( uint32_t& i ) { SWAP_4(i); }
-#if ALREADY_DEFINED_ON_APPLE
+#if !defined( OSX_SNOW_LEOPARD )
 void swapbytes( int64_t& i )  { SWAP_8(i); }
 #endif
 void swapbytes( uint64_t& i ) { SWAP_8(i); }
