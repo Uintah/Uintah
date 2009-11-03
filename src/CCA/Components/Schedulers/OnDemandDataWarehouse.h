@@ -187,8 +187,8 @@ public:
                       const Patch* patch);
 
    void allocateTemporary(GridVariableBase& var, const Patch* patch,
-                          Ghost::GhostType gtype, int numGhostCells,
-                          const IntVector& boundaryLayer);
+                          Ghost::GhostType gtype, int numGhostCells );
+//                          const IntVector& boundaryLayer);
 
    void allocateAndPut(GridVariableBase& var, const VarLabel* label, int matlIndex,
                        const Patch* patch, Ghost::GhostType gtype, int numGhostCells);

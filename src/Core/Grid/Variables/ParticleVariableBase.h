@@ -88,9 +88,9 @@ WARNING
 
       //////////
       // Insert Documentation Here:
-      virtual const ParticleVariableBase* clone() const = 0;
+//      virtual const ParticleVariableBase* clone() const = 0;
       virtual ParticleVariableBase* clone() = 0;     
-      virtual const ParticleVariableBase* cloneSubset(ParticleSubset*) const = 0;
+//      virtual const ParticleVariableBase* cloneSubset(ParticleSubset*) const = 0;
       virtual ParticleVariableBase* cloneSubset(ParticleSubset*) = 0;
 
       // Make a new default object of the base class.

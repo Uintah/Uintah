@@ -209,9 +209,9 @@ WARNING
      /// for the given task for each of the require (or modify) depencies in
      /// the list whose head is req.  If modifies is true then each found
      /// compute will be replaced by its modifying dependency on the CompMap.
-     void addDependencyEdges(Task* task, GraphSortInfoMap& sortinfo, 
-                             Task::Dependency* req, CompMap& comps,
-			     ReductionTasksMap& reductionTasks, bool modifies);
+     void addDependencyEdges( Task* task, GraphSortInfoMap& sortinfo, 
+                              Task::Dependency* req, CompMap& comps,
+                              ReductionTasksMap& reductionTasks, bool modifies );
 
      /// Used by (the public) createDetailedDependencies to store comps
      /// in a ComputeTable (See TaskGraph.cc).
@@ -240,7 +240,7 @@ WARNING
      TaskGraph(const TaskGraph&);
      TaskGraph& operator=(const TaskGraph&);
 
-     bool overlaps(Task::Dependency* comp, Task::Dependency* req) const;
+     bool overlaps( const Task::Dependency* comp, const Task::Dependency* req ) const;
 
      /// Adds edges in the TaskGraph between requires/modifies and their
      /// associated computes.  Uses addDependencyEdges as a helper

@@ -313,8 +313,9 @@ Thread::handleCleanup()
 void
 Thread::niceAbort(void* context /* = 0 */, bool print /*= true */)
 {
-  if(print)
-    fprintf(stderr, getStackTrace(context).c_str());
+  if(print) {
+    fprintf( stderr, "%s", getStackTrace(context).c_str() );
+  }
 
   const char* smode = getenv("SCI_SIGNALMODE");
   if (!smode)

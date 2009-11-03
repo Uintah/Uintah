@@ -1695,11 +1695,11 @@ WARNING
       /**
        * helper for computeVariableExtents but also used externally
        */
-      void computeExtents(VariableBasis basis,
-          const IntVector& boundaryLayer,
-          const IntVector& lowOffset,
-          const IntVector& highOffset,
-          IntVector& low, IntVector& high) const;
+      void computeExtents( VariableBasis basis,
+                           const IntVector& boundaryLayer,
+                           const IntVector& lowOffset,
+                           const IntVector& highOffset,
+                           IntVector& low, IntVector& high ) const;
 
       /**
        * Verifies that the patch is valid

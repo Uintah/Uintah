@@ -42,6 +42,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Containers/ConsecutiveRangeSet.h>
 
 #include <sci_defs/bits_defs.h>
+#include <sci_defs/osx_defs.h>  // For OSX_SNOW_LEOPARD
 
 #include <iostream>
 #include <vector>
@@ -53,9 +54,9 @@ using namespace std;
 
 namespace SCIRun {
 
-  // Need these min/max functions for Matrix3 in order for the templated findMinMax functions to work.
-  //
-#if defined(__PGI) || ( !defined(SCI_64BITS) && !defined(REDSTORM) )
+// Need these min/max functions for Matrix3 in order for the templated findMinMax functions to work.
+//
+#if defined(OSX_SNOW_LEOPARD) || defined(__PGI) || ( !defined(SCI_64BITS) && !defined(REDSTORM) )
   long64  Min( long64 l, long64 r) { return l < r ? l : r;  }
   long64  Max( long64 l, long64 r) { return l > r ? l : r;  }
 #endif

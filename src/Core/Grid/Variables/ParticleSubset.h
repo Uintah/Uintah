@@ -128,10 +128,10 @@ WARNING
       
     //////////
     // Insert Documentation Here:
-    const particleIndex* getPointer() const
-    {
-      return d_particles;
-    }
+    //    const particleIndex* getPointer() const
+    //    {
+    //      return d_particles;
+    //    }
       
     particleIndex* getPointer()
     {

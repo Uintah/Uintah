@@ -141,6 +141,7 @@ else
         Core/Grid         \
         Core/Labels       \
         Core/Math         \
+        Core/OS           \
         Core/Parallel     \
         Core/Tracker      \
         Core/Util         \

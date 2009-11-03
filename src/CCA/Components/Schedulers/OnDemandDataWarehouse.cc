@@ -1371,9 +1371,10 @@ OnDemandDataWarehouse::getModifiable(GridVariableBase& var,
 void
 OnDemandDataWarehouse::
 allocateTemporary(GridVariableBase& var, const Patch* patch,
-                  Ghost::GhostType gtype, int numGhostCells,
-		  const IntVector& boundaryLayer)
+                  Ghost::GhostType gtype, int numGhostCells )
 {
+  IntVector boundaryLayer(0, 0, 0); // Is this right?
+
   MALLOC_TRACE_TAG_SCOPE("OnDemandDataWarehouse::allocateTemporary(Grid Variable)");
   IntVector lowIndex, highIndex;
   IntVector lowOffset, highOffset;
