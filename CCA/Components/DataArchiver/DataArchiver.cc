@@ -1184,26 +1184,28 @@ DataArchiver::executedTimestep(double delt, const GridP& grid)
     if (d_outputInterval != 0.0) {
       // output timestep
       if(d_tempElapsedTime >= d_nextOutputTime)
-        d_nextOutputTime+=ceil((d_tempElapsedTime-d_nextOutputTime)/d_outputInterval)*d_outputInterval;
+        d_nextOutputTime+=floor((d_tempElapsedTime-d_nextOutputTime)/d_outputInterval)*d_outputInterval+d_outputInterval;
     }
     else if (d_outputTimestepInterval != 0) {
       if(timestep>=d_nextOutputTimestep)
-        d_nextOutputTimestep+=ceil((timestep-d_nextOutputTimestep)/d_outputTimestepInterval)*d_outputTimestepInterval;
+      {
+        d_nextOutputTimestep+=((timestep-d_nextOutputTimestep)/d_outputTimestepInterval)*d_outputTimestepInterval+d_outputTimestepInterval;
+      }
     }
   }
 
   if (d_isCheckpointTimestep) {
     if (d_checkpointInterval != 0.0) {
       if(d_tempElapsedTime >= d_nextCheckpointTime)
-        d_nextCheckpointTime+=ceil((d_tempElapsedTime-d_nextCheckpointTime)/d_checkpointInterval)*d_checkpointInterval;
+        d_nextCheckpointTime+=floor((d_tempElapsedTime-d_nextCheckpointTime)/d_checkpointInterval)*d_checkpointInterval+d_checkpointInterval;
     }
     else if (d_checkpointTimestepInterval != 0) {
       if(timestep >= d_nextCheckpointTimestep)
-        d_nextCheckpointTimestep+=ceil((timestep-d_nextCheckpointTimestep)/d_checkpointTimestepInterval)*d_checkpointTimestepInterval;
+        d_nextCheckpointTimestep+=((timestep-d_nextCheckpointTimestep)/d_checkpointTimestepInterval)*d_checkpointTimestepInterval+d_checkpointTimestepInterval;
     }
     if (d_checkpointWalltimeInterval != 0) {
       if(Time::currentSeconds() >= d_nextCheckpointWalltime)
-        d_nextCheckpointWalltime+=ceil((Time::currentSeconds()-d_nextCheckpointWalltime)/d_checkpointWalltimeInterval)*d_checkpointWalltimeInterval;
+        d_nextCheckpointWalltime+=floor((Time::currentSeconds()-d_nextCheckpointWalltime)/d_checkpointWalltimeInterval)*d_checkpointWalltimeInterval+d_checkpointWalltimeInterval;
     }
   }
 
