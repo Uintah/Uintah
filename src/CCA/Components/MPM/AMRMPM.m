@@ -31,7 +31,7 @@ if (~strcmp(problem_type, 'impulsiveBar')  && ...
 end
 %__________________________________
 % hard coded domain
-PPC     = 2;
+PPC     = 1;
 E       = 1e6;
 density = 1.;
 c       = sqrt(E/density);
@@ -41,10 +41,9 @@ BigNum     = int32(1e5);
 d_smallNum = double (1e-16);
 
 bar_min     = 0.0;
-bar_max     = 50 ;
+bar_max     = 50;
 
 bar_length     = bar_max - bar_min;
-waveTansitTime = bar_length/c
 
 domain     = 52;
 area       = 1.;
@@ -390,7 +389,8 @@ end
 
 if strcmp(problem_type, 'compaction')
   initVelocity    = 0;
-  tfinal          = waveTansitTime * 40;
+  waveTansitTime  = bar_length/c
+  tfinal          = waveTansitTime * 45;
   numBCs          = 1;
   delta_0         = 50
   velG_BCValue(1) = initVelocity;
@@ -452,7 +452,7 @@ while t<tfinal && tstep < max_tstep
       fprintf('Bodyforce: %g displacement:%g, W: %g\n',bodyForce, displacement/R1_dx, W);                                             
     end
     for ip=1:NP                                                                       
-       extForceP(ip) = bodyForce;                                                      
+       extForceP(ip) = bodyForce*massP(ip);                                                      
     end                                                                               
   end
   %__________________________________
@@ -618,13 +618,13 @@ while t<tfinal && tstep < max_tstep
       stressExact(ip) = E *  ( sqrt( term2 + 1.0 ) - 1.0);
     end
     
-    if (mod(tstep,100) == 0) 
+    if (mod(tstep,200) == 0) 
   
       set(gcf,'position',[50,100,700,500]);
       figure(1)
       plot(xp,stressP,'rd', xp, stressExact, 'b');
       axis([0 50 -10000 0])
-      title('Quasi-Static Compaction Problem, Single Level \Delta{x} = 1, PPC: 2, Cells: 50')
+      title('Quasi-Static Compaction Problem, Single Level \Delta{x} = 0.5, PPC: 1, Cells: 100')
       legend('Simulation','Exact')
       xlabel('Position');
       ylabel('Particle stress');
@@ -638,18 +638,13 @@ while t<tfinal && tstep < max_tstep
       L2_norm = sqrt( sum(d.^2)/length(stressP) )
       fid = fopen('L2norm.dat', 'a');
       fprintf(fid,'%g %g\n',t, L2_norm);
-      fclose(fid)
+      fclose(fid);
       
     end
   end
   
 
   TIME(tstep)=t;
-  
- 
-  
-  
-  
   
   %__________________________________
   % plot intantaneous solution
@@ -802,7 +797,24 @@ function [nodes,Ss]=findNodesAndWeights(xp, numRegions, Regions, nodePos, Lx)
     Ss(1) = 0;
     Ss(2) = 1;
   end
+  
+  if(0)
+    node = xp/dx;
+    node=floor(node)+1;
 
+    nodes(1)= node;
+    nodes(2)=nodes(1)+1;
+
+    dnode=double(node);
+
+    locx=(xp-dx*(dnode-1))/dx;
+    Ss_old(1)=1-locx;
+    Ss_old(2)=locx;
+
+    if ( ( Ss(1) ~= Ss_old(1)) || ( Ss(1) ~= Ss_old(1)) )
+      fprintf('SS(1): %g, Ss_old: %g     Ss(2):%g   Ss_old(2):%g \n',Ss(1), Ss_old(1), Ss(2), Ss_old(2));
+    end
+  end
 end
 
 
@@ -893,7 +905,7 @@ function [stressP,vol,Fp]=computeStressFromVelocity(xp,dt,velG,E,Fp,NP, numRegio
       fprintf('computeStressFromVelocity: nodes_L: %g, nodes_R:%g, gUp: %g, dF: %g, stressP: %g \n',nodes(1),nodes(2), gUp, dF, stressP(ip) );
       fprintf(' Gs_L: %g, Gs_R: %g\n', Gs(1), Gs(2) );
       fprintf(' velG_L: %g, velG_R: %g\n', velG(nodes(1)), velG(nodes(2)) );
-      fprintf(' prod_L %g, prod_R: %g \n', velG(nodes(1)) * Gs(1), velG(nodes(2)) * Gs(2) );
+      fprintf(' prod_L %g, prod_R: %g \n\n', velG(nodes(1)) * Gs(1), velG(nodes(2)) * Gs(2) );
     end
     
   end
