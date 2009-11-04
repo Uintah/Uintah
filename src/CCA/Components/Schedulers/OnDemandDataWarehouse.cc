@@ -653,7 +653,7 @@ OnDemandDataWarehouse::reduceMPI(const VarLabel* label,
   int nmatls = matls->size();
   int count=0;
   MPI_Op op = MPI_OP_NULL;
-  MPI_Datatype datatype = NULL;
+  MPI_Datatype datatype = MPI_DATATYPE_NULL;
 
   d_lock.readLock();
   for(int m=0;m<nmatls;m++){
@@ -684,7 +684,7 @@ OnDemandDataWarehouse::reduceMPI(const VarLabel* label,
       //				"on reduceMPI", __FILE__, __LINE__));
     }
     int sendcount;
-    MPI_Datatype senddatatype = NULL;
+    MPI_Datatype senddatatype = MPI_DATATYPE_NULL;
     MPI_Op sendop = MPI_OP_NULL;
     var->getMPIInfo(sendcount, senddatatype, sendop);
     if(m==0){
