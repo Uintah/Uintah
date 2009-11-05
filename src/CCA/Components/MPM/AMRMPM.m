@@ -10,6 +10,7 @@ function KK=amrmpm(problem_type,CFL,NN)
 close all
 
 global d_debugging;
+global PPC;
 d_debugging = problem_type
 
 %  valid options:
@@ -31,7 +32,7 @@ if (~strcmp(problem_type, 'impulsiveBar')  && ...
 end
 %__________________________________
 % hard coded domain
-PPC     = 1;
+PPC     = 2;
 E       = 1e6;
 density = 1.;
 c       = sqrt(E/density);
@@ -461,7 +462,7 @@ while t<tfinal && tstep < max_tstep
   %__________________________________
   % project particle data to grid  
   for ip=1:NP
-    [nodes,Ss]=findNodesAndWeights(xp(ip), numRegions, Regions, nodePos, Lx);
+    [nodes,Ss]=findNodesAndWeights_gimp(xp(ip), numRegions, Regions, nodePos, Lx);
     for ig=1:2
       massG(nodes(ig))     = massG(nodes(ig))     + massP(ip) * Ss(ig);
       velG(nodes(ig))      = velG(nodes(ig))      + massP(ip) * velP(ip) * Ss(ig);
@@ -499,11 +500,11 @@ while t<tfinal && tstep < max_tstep
   % debugging__________________________________
 
   %compute particle stress
-  [stressP,vol,Fp]=computeStressFromVelocity(xp,dt,velG,E,Fp,NP,numRegions, Regions);
+  [stressP,vol,Fp]=computeStressFromVelocity(xp,dt,velG,E,Fp,NP,numRegions, Regions, nodePos);
 
   %compute internal force
   for ip=1:NP
-    [nodes,Gs,dx]=findNodesAndWeightGradients(xp(ip),numRegions, Regions);
+    [nodes,Gs,dx]=findNodesAndWeightGradients_gimp(xp(ip),numRegions, Regions, nodePos);
     for ig=1:2
       intForceG(nodes(ig)) = intForceG(nodes(ig)) - Gs(ig) * stressP(ip) * vol(ip);
     end
@@ -539,7 +540,7 @@ while t<tfinal && tstep < max_tstep
   %project changes back to particles
   tmp = zeros(NP,1);
   for ip=1:NP
-    [nodes,Ss]=findNodesAndWeights(xp(ip),numRegions, Regions, nodePos, Lx);
+    [nodes,Ss]=findNodesAndWeights_gimp(xp(ip),numRegions, Regions, nodePos, Lx);
     dvelP = 0.;
     dxp   = 0.;
     
@@ -820,20 +821,67 @@ end
 
 %__________________________________
 function [nodes,Ss]=findNodesAndWeights_gimp(xp, numRegions, Regions, nodePos, Lx)
- 
+  global PPC;
   % find the nodes that surround the given location and
   % the values of the shape functions for those nodes
   % Assume the grid starts at x=0.  This follows the numenclature
-  % of equation 12 of the reference
+  % of equation 7.16 of the MPM documentation 
 
   [node, dx]=positionToNode(xp, numRegions, Regions);  
 
   nodes(1)= node;
   nodes(2)= node+1;
   
-  Lx_minus = dx;
-  Lx_plus  = dx;
-  lp       = dx/2;          % hardwired for now
+  L = dx;
+  lp= dx/(2 * PPC);          % This assumes that lp = lp_initial.
+  
+  for ig=1:2
+    Ss(ig) = -9;
+    delX = xp - nodePos(nodes(ig));
+
+    if ( ((-L-lp) < delX) && (delX <= -L+lp) )
+      
+      Ss(ig) = ( ( L + lp + delX)^2 )/ (4.0*L*lp);
+      
+    elseif( ((-L+lp) < delX) && (delX <= -lp) )
+      
+      Ss(ig) = 1 + delX/L;
+      
+    elseif( (-lp < delX) && (delX <= lp) )
+      
+      numerator = delX^2 + lp^2;
+      Ss(ig) =1.0 - (numerator/(2.0*L*lp));  
+    
+    elseif( (lp < delX) && (delX <= L-lp) )
+      
+      Ss(ig) = 1 - delX/L;
+            
+    elseif( (L-lp < delX) && (delX <= L+lp) )
+    
+      Ss(ig) = ( ( L + lp - delX)^2 )/ (4.0*L*lp);
+    
+    else
+      SS(ig) = 0;
+    end
+  end
+end
+
+%__________________________________
+function [nodes,Ss]=findNodesAndWeights_gimp2(xp, numRegions, Regions, nodePos, Lx)
+  global PPC;
+  % find the nodes that surround the given location and
+  % the values of the shape functions for those nodes
+  % Assume the grid starts at x=0.  This follows the numenclature
+  % of equation 15 of the reference
+
+  [node, dx]=positionToNode(xp, numRegions, Regions);  
+
+  nodes(1)= node;
+  nodes(2)= node+1;
+  
+  Lx_minus = Lx(node,1);
+  Lx_plus  = Lx(node,2);
+  lp       = dx/(2 * PPC);          % This assumes that lp = lp_initial.
   
   delX = xp - nodePos(node);
   A = delX - lp
@@ -855,7 +903,7 @@ function [nodes,Ss]=findNodesAndWeights_gimp(xp, numRegions, Regions, nodePos, L
     t1 = b - a;
     t2 = (b*b - a*a)/(2.0*Lx_plus);
     
-    Ss(1) = (t1 + t2)/(2.0*lp);
+    Ss(1) = (t1 - t2)/(2.0*lp);
     Ss(2) = 1.0 - Ss(1);
   else
     t1 = b - a;
@@ -869,7 +917,7 @@ function [nodes,Ss]=findNodesAndWeights_gimp(xp, numRegions, Regions, nodePos, L
 end
 
 %__________________________________
-function [nodes,Gs, dx]=findNodesAndWeightGradients(xp, numRegions, Regions);
+function [nodes,Gs, dx]=findNodesAndWeightGradients(xp, numRegions, Regions, nodePos);
  
   % find the nodes that surround the given location and
   % the values of the gradients of the shape functions.
@@ -883,12 +931,56 @@ function [nodes,Gs, dx]=findNodesAndWeightGradients(xp, numRegions, Regions);
   Gs(1) = -1/dx;
   Gs(2) = 1/dx;
 end
+
 %__________________________________
-function [stressP,vol,Fp]=computeStressFromVelocity(xp,dt,velG,E,Fp,NP, numRegions, Regions)
+function [nodes,Gs, dx]=findNodesAndWeightGradients_gimp(xp, numRegions, Regions, nodePos);
+  global PPC;
+  % find the nodes that surround the given location and
+  % the values of the gradients of the shape functions.
+  % Assume the grid starts at x=0.
+
+  [node, dx]=positionToNode(xp,numRegions, Regions);
+  nodes(1)= node;
+  nodes(2)= node+1;
+  
+  L  = dx;
+  lp = dx/(2 * PPC);          % This assumes that lp = lp_initial.
+  
+  for ig=1:2
+    Gs(ig) = -9;
+    delX = xp - nodePos(nodes(ig));
+
+    if ( ((-L-lp) < delX) && (delX <= -L+lp) )
+      
+      Gs(ig) = ( L + lp + delX )/ (2.0*L*lp);
+      
+    elseif( ((-L+lp) < delX) && (delX <= -lp) )
+      
+      Gs(ig) = 1/L;
+      
+    elseif( (-lp < delX) && (delX <= lp) )
+      
+      Gs(ig) =-delX/(L*lp);  
+    
+    elseif( (lp < delX) && (delX <= L-lp) )
+      
+      Gs(ig) = -1/L;
+            
+    elseif( (L-lp < delX) && (delX <= L+lp) )
+    
+      Gs(ig) = -( L + lp - delX )/ (2.0*L*lp);
+    
+    else
+      Gs(ig) = 0;
+    end
+  end
+end
+%__________________________________
+function [stressP,vol,Fp]=computeStressFromVelocity(xp,dt,velG,E,Fp,NP, numRegions, Regions, nodePos)
   global d_debugging;
                                                                                 
   for ip=1:NP
-    [nodes,Gs,dx] = findNodesAndWeightGradients(xp(ip), numRegions, Regions);
+    [nodes,Gs,dx] = findNodesAndWeightGradients_gimp(xp(ip), numRegions, Regions, nodePos);
     [volP]        = positionToVolP(xp(ip), numRegions, Regions);
     
     gUp=0.0;
@@ -980,4 +1072,3 @@ function plotFinalResults(TIME, DX_tip, Exact_tip, TE, problem_type, PPC, NN)
   subplot(3,1,3),plot(TIME,err,'b-');
   ylabel('Abs(error)')
 end
-
