@@ -77,7 +77,7 @@
           <failure_strain_std> 0.1 </failure_strain_std>
 
        <!-- choices are "constant" or "gauss" (for Gaussian distribution) -->
-         <failure_strain_distrib> "constant" </failure_strain_distrib>
+         <failure_strain_distrib>constant</failure_strain_distrib>
 
         <!-- choices are true or false (default) -->
           <failure_by_stress>true </failure_by_stress> 
