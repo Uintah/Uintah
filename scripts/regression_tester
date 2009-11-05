@@ -32,6 +32,9 @@ DIR=dbg
 MPI=''
 MPI_RUN="no"
 
+# Set up NICE
+NICE=''
+
 # Set the default inputs directory
 INPUTS=../../../../src/Packages/Uintah/StandAlone/inputs
 
@@ -110,6 +113,7 @@ usage () {
     echo "  -clean         remove the *.out *.compare and uda directories"
     echo "  -exact         perform an exact comparison (absolute/relative tolerance == 0)"
     echo "  -create_goldStandard create gold standard data for that test"
+    echo "  -nice          lower the priority of the running jobs"
     echo "  -h[elp]        display this help and exit"
     echo;
     exit
@@ -200,6 +204,9 @@ for arg in $*; do
         -create_goldStandard)
             echo; echo "Creating gold standard data"
             create_goldStandard=true;;
+        -nice)
+            echo; echo "Lowering the priority of the running jobs"
+            NICE='nice -n 16';;
         *)
             usage ;;
     esac
@@ -337,11 +344,11 @@ run_test () {
 
 
     if [ $n = "explode2D_amr" ]; then
-        echo; echo "Running: $MPI sus $opts $GOLD_STANDARD/$DIR/$CASE/$n/$n.uda"
-        $MPI ../sus $opts $GOLD_STANDARD/$DIR/$CASE/$n/$n.uda &> $n.out
+        echo; echo "Running: $MPI $NICE sus $opts $GOLD_STANDARD/$DIR/$CASE/$n/$n.uda"
+        $MPI $NICE ../sus $opts $GOLD_STANDARD/$DIR/$CASE/$n/$n.uda &> $n.out
     else
-        echo; echo "Running: $MPI sus $opts $n.ups"
-        $MPI ../sus $opts $n.ups &> $n.out
+        echo; echo "Running: $MPI $NICE sus $opts $n.ups"
+        $MPI $NICE ../sus $opts $n.ups &> $n.out
     fi
 
     check_output
@@ -426,8 +433,8 @@ run_restart () {
 	echo $PWD
         uda_new=`echo $uda | tr -d "/"`
         uda_new=`ls -d -1 $uda_new* | tail -n1`
-        echo; echo "Running: $MPI sus $opts -restart -t 0 -copy $uda_new"
-        $MPI ../sus $opts -restart -t 0 -copy $uda_new &> $n.out_restart
+        echo; echo "Running: $MPI $NICE sus $opts -restart -t 0 -copy $uda_new"
+        $MPI $NICE ../sus $opts -restart -t 0 -copy $uda_new &> $n.out_restart
         if [ $? -eq 0 ] ; then
             echo "Sus: going down successfully"
             echo
