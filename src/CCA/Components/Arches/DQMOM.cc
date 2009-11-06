@@ -135,7 +135,6 @@ void DQMOM::problemSetup(const ProblemSpecP& params)
   // This block puts the labels in the same order as the input file, so the moment indices match up OK
   
   DQMOMEqnFactory & eqn_factory = DQMOMEqnFactory::self();
-  CoalModelFactory & model_factory = CoalModelFactory::self();
   N_ = eqn_factory.get_quad_nodes();
  
   for( unsigned int alpha = 0; alpha < N_; ++alpha ) {
@@ -293,7 +292,7 @@ DQMOM::sched_solveLinearSystem( const LevelP& level, SchedulerP& sched, int time
     for ( vector<string>::iterator iModels = modelsList.begin(); iModels != modelsList.end(); ++iModels ) {
       ModelBase& model_base = model_factory.retrieve_model(*iModels);
       const VarLabel* model_label = model_base.getModelLabel();
-      tsk->requires( Task::NewDW, model_label, Ghost::None, 1 );
+      tsk->requires( Task::NewDW, model_label, Ghost::None, 0 );
     }
   }
 
