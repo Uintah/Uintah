@@ -30,10 +30,10 @@
       
       <Coal_Properties                  spec="OPTIONAL NO_DATA">
         <C                              spec="REQUIRED DOUBLE" />
-	<H                              spec="REQUIRED DOUBLE" />
-	<N                              spec="REQUIRED DOUBLE" />
-	<O                              spec="REQUIRED DOUBLE" />
-	<S                              spec="REQUIRED DOUBLE" />
+        <H                              spec="REQUIRED DOUBLE" />
+        <N                              spec="REQUIRED DOUBLE" />
+        <O                              spec="REQUIRED DOUBLE" />
+        <S                              spec="REQUIRED DOUBLE" />
       </Coal_Properties>
       
       <Turbulence                       spec="REQUIRED NO_DATA"
@@ -319,10 +319,35 @@
       </TransportEqns>
 
       <DQMOM                            spec="OPTIONAL NO_DATA">
+
+        <!-- Tags for verification of DQMOM AX=B solution procedure -->
+        <Verify_Linear_Solver           spec="OPTIONAL NO_DATA">
+            <A                          spec="REQUIRED STRING" />
+            <X                          spec="REQUIRED STRING" /> 
+            <B                          spec="REQUIRED STRING" /> 
+            <R                          spec="REQUIRED STRING" /> 
+            <normR                      spec="REQUIRED STRING" /> 
+            <norms                      spec="REQUIRED STRING" /> 
+            <dimension                  spec="REQUIRED INTEGER 'positive'" />
+            <tolerance                  spec="OPTIONAL DOUBLE 'positive'" />
+        </Verify_Linear_Solver>
+
+        <!-- Tags for verification of DQMOM A and B construction procedure -->
+        <Verify_AB_Construction         spec="OPTIONAL NO_DATA">
+            <A                          spec="REQUIRED STRING" />
+            <B                          spec="REQUIRED STRING" />
+            <inputs                     spec="REQUIRED STRING" />
+            <moments                    spec="REQUIRED STRING" />
+            <number_environments          spec="REQUIRED INTEGER 'positive'" />
+            <number_internal_coordinates  spec="REQUIRED INTEGER 'positive'" />
+            <tolerance                  spec="OPTIONAL DOUBLE 'positive'" />
+        </Verify_AB_Construction>
+
         <number_quad_nodes              spec="REQUIRED INTEGER 'positive'"/>
         <LU_solver_tolerance            spec="OPTIONAL DOUBLE 'positive'"/>
         <adiabGas_nonadiabPart          spec="OPTIONAL BOOLEAN"/>
         <save_moments                   spec="OPTIONAL BOOLEAN"/>
+
 
         <VelModel                       spec="REQUIRED NO_DATA">
 
