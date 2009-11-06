@@ -21,14 +21,12 @@
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/Thread/Time.h>
+#include <Core/Exceptions/FileNotFound.h>
+#include <Core/Exceptions/ProblemSetupException.h>
 
+#include <iostream>
+#include <sstream>
 #include <fstream>
-
-// Output matrices once per timestep (will cause a big slowdown)
-//#define DEBUG_MATRICES 1
-
-//#define VERIFY_LINEAR_SOLVER
-//#define VERIFY_AB_CONSTRUCTION
 
 //===========================================================================
 
@@ -54,7 +52,6 @@ d_fieldLabels(fieldLabels)
 
   varname = "determinant";
   d_determinantLabel = VarLabel::create(varname, CCVariable<double>::getTypeDescription());
-
 }
 
 DQMOM::~DQMOM()
@@ -70,8 +67,39 @@ DQMOM::~DQMOM()
 //---------------------------------------------------------------------------
 void DQMOM::problemSetup(const ProblemSpecP& params)
 {
-
   ProblemSpecP db = params; 
+
+#ifdef VERIFY_LINEAR_SOLVER
+  // grab the name of the file containing the test matrices
+  ProblemSpecP db_verify_linear_solver = db->findBlock("Verify_Linear_Solver");
+  if( !db_verify_linear_solver ) 
+    throw ProblemSetupException("ERROR: DQMOM: You turned on a compiler flag to perform verification of linear solver, but did not put the corresponding tags in your input file.",__FILE__,__LINE__);
+  db_verify_linear_solver->require("A", vls_file_A);
+  db_verify_linear_solver->require("X", vls_file_X);
+  db_verify_linear_solver->require("B", vls_file_B);
+  db_verify_linear_solver->require("R", vls_file_R);
+  db_verify_linear_solver->require("normR", vls_file_normR);
+  db_verify_linear_solver->require("norms", vls_file_norms); // contains determinant, normResid, normResidNormalized, normB, normX (in that order)
+  db_verify_linear_solver->require("dimension",  vls_dimension);
+  db_verify_linear_solver->getWithDefault("tolerance", vls_tol, 1);
+  b_have_vls_matrices_been_printed = false;
+#endif
+
+#ifdef VERIFY_AB_CONSTRUCTION
+  // grab the name of the file containing the test matrices
+  ProblemSpecP db_verify_ab_construction = db->findBlock("Verify_AB_Construction");
+  if( !db_verify_ab_construction ) 
+    throw ProblemSetupException("ERROR: DQMOM: You turned on a compiler flag to perform verification of A and B construction, but did not put the corresponding tags in your input file.",__FILE__,__LINE__);
+  db_verify_ab_construction->require("A", vab_file_A);
+  db_verify_ab_construction->require("B", vab_file_B);
+  db_verify_ab_construction->require("inputs", vab_file_inputs);
+  db_verify_ab_construction->require("moments",vab_file_moments);
+  db_verify_ab_construction->require("number_environments", vab_N);
+  db_verify_ab_construction->require("number_internal_coordinates", vab_N_xi);
+  db_verify_ab_construction->getWithDefault("tolerance", vab_tol, 1);
+  b_have_vab_matrices_been_printed;
+#endif
+
   unsigned int moments = 0;
   unsigned int index_length = 0;
   moments = 0;
@@ -87,7 +115,7 @@ void DQMOM::problemSetup(const ProblemSpecP& params)
     temp_moment_index.resize(0);
     db_moments->get("m", temp_moment_index);
     
-    // put moment index into vector of moment indexes:
+    // put moment index into vector of moment indices:
     momentIndexes.push_back(temp_moment_index);
     
     // keep track of total number of moments
@@ -97,14 +125,17 @@ void DQMOM::problemSetup(const ProblemSpecP& params)
   }
 
   db->getWithDefault("save_moments", b_save_moments, true);
+#if defined(VERIFY_AB_CONSTRUCTION) || defined(VERIFY_LINEAR_SOLVER)
+  b_save_moments = false;
+#endif
   if( b_save_moments ) {
     DQMOM::populateMomentsMap(momentIndexes);
   }
 
-  // This block puts the labels in the same order as the input file, so the moment indexes match up OK
+  // This block puts the labels in the same order as the input file, so the moment indices match up OK
   
   DQMOMEqnFactory & eqn_factory = DQMOMEqnFactory::self();
-  //CoalModelFactory & model_factory = CoalModelFactory::self();
+  CoalModelFactory & model_factory = CoalModelFactory::self();
   N_ = eqn_factory.get_quad_nodes();
  
   for( unsigned int alpha = 0; alpha < N_; ++alpha ) {
@@ -155,24 +186,9 @@ void DQMOM::problemSetup(const ProblemSpecP& params)
     throw InvalidValue( "ERROR:DQMOM:ProblemSetup: The number of moment indices specified was incorrect! Need ",__FILE__,__LINE__);
   }
 
-#ifdef VERIFY_LINEAR_SOLVER
-  // grab the name of the file containing the test matrices
-  db_verify_linear_solver = db->findBlock("Verify_Linear_Solver");
-  string file_A, file_X, file_B;
-  db_verify_linear_solver->require("A", file_A);
-  db_verify_linear_solver->require("X", file_X);
-  db_verify_linear_solver->require("B", file_B);
-#endif
-
-#ifdef VERIFY_AB_CONSTRUCTION
-  // grab the name of the file containing the test matrices
-  db_verify_ab_construction = db->findBlock("Verify_AB_Construction");
-  string file_A, file_B, file_inputs;
-  db_verify_ab_construction->require("A", file_A);
-  db_verify_ab_construction->require("B", file_B);
-
-  // grab the name of the file containing the weights, weighted abscissas, and model terms to use
-  db_verify_ab_construction->require("inputs", file_inputs);
+#if defined(VERIFY_AB_CONSTRUCTION)
+  N_ = vab_N;
+  N_xi = vab_N_xi;
 #endif
 
 }
@@ -277,7 +293,7 @@ DQMOM::sched_solveLinearSystem( const LevelP& level, SchedulerP& sched, int time
     for ( vector<string>::iterator iModels = modelsList.begin(); iModels != modelsList.end(); ++iModels ) {
       ModelBase& model_base = model_factory.retrieve_model(*iModels);
       const VarLabel* model_label = model_base.getModelLabel();
-      tsk->requires( Task::NewDW, model_label, Ghost::AroundCells, 1 );
+      tsk->requires( Task::NewDW, model_label, Ghost::None, 1 );
     }
   }
 
@@ -296,6 +312,7 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
                           DataWarehouse* new_dw )
 {
   double start_solveLinearSystemTime = Time::currentSeconds();
+#if !defined(VERIFY_LINEAR_SOLVER) && !defined(VERIFY_AB_CONSTRUCTION)
   double total_CroutSolveTime = 0.0;
   double total_IRSolveTime = 0.0;
   double total_AXBConstructionTime = 0.0;
@@ -303,26 +320,16 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
   double total_FileWriteTime = 0.0;
   bool b_writeFile = true;
 #endif
-
-
-#if defined VERIFY_AB_CONSTRUCTION
-
 #endif
 
-#if defined VERIFY_LINEAR_SOLVER
-
-#endif
-
+  CoalModelFactory& model_factory = CoalModelFactory::self();
 
   // patch loop
   for (int p=0; p < patches->size(); ++p) {
     const Patch* patch = patches->get(p);
 
-    Ghost::GhostType  gn  = Ghost::None; 
     int archIndex = 0;
     int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
-
-    CoalModelFactory& model_factory = CoalModelFactory::self();
 
     // get/allocate normB label
     CCVariable<double> normB; 
@@ -397,13 +404,13 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
     // Cell iterator
     for ( CellIterator iter = patch->getCellIterator__New();
           !iter.done(); ++iter) {
+      IntVector c = *iter;
 
       LU A ( (N_xi+1)*N_ );
       vector<double> B( A.getDimension(), 0.0 );
       vector<double> Xdoub( A.getDimension(), 0.0 );
       vector<long double> Xlong( A.getDimension(), 0.0 );
       vector<double> Resid( A.getDimension(), 0.0 );
-      IntVector c = *iter;
 
       vector<double> weights;
       vector<double> weightedAbscissas;
@@ -414,7 +421,7 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
            iEqn != weightEqns.end(); ++iEqn) {
         constCCVariable<double> temp;
         const VarLabel* equation_label = (*iEqn)->getTransportEqnLabel();
-        new_dw->get( temp, equation_label, matlIndex, patch, gn, 0);
+        new_dw->get( temp, equation_label, matlIndex, patch, Ghost::None, 0);
         weights.push_back(temp[c]);
       }
 
@@ -423,7 +430,7 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
            iEqn != weightedAbscissaEqns.end(); ++iEqn) {
         const VarLabel* equation_label = (*iEqn)->getTransportEqnLabel();
         constCCVariable<double> temp;
-        new_dw->get(temp, equation_label, matlIndex, patch, gn, 0);
+        new_dw->get(temp, equation_label, matlIndex, patch, Ghost::None, 0);
         weightedAbscissas.push_back(temp[c]);
 
         double runningsum = 0;
@@ -433,13 +440,14 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
           ModelBase& model_base = model_factory.retrieve_model(*iModels);
           const VarLabel* model_label = model_base.getModelLabel();
           constCCVariable<double> tempCCVar;
-          new_dw->get(tempCCVar, model_label, matlIndex, patch, gn, 0);
+          new_dw->get(tempCCVar, model_label, matlIndex, patch, Ghost::None, 0);
           runningsum = runningsum + tempCCVar[c];
         }
         
         models.push_back(runningsum);
       }
 
+#if !defined(VERIFY_LINEAR_SOLVER) && !defined(VERIFY_AB_CONSTRUCTION)
 
       // FIXME:
       // This construction process needs to be using d_w_small to check for small weights!
@@ -447,9 +455,9 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
       double start_AXBConstructionTime = Time::currentSeconds();
 
       // construction of AX=B requires:
-      // = momentindexes
-      // = num quad nodes
-      // = num internal coordinates
+      // - moment indices
+      // - num quad nodes
+      // - num internal coordinates
       // - A
       // - B
       // - weights[]
@@ -528,8 +536,6 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
       normB[c] = A.getNorm( &B[0], 0 );
       normX[c] = A.getNorm( &Xlong[0], 0 );
 
-
-
       // set weight transport eqn source terms equal to results
       unsigned int z = 0;
       for (vector<DQMOMEqn*>::iterator iEqn = weightEqns.begin();
@@ -575,7 +581,7 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
         ++z;
       }
 
-#ifdef DEBUG_MATRICES
+  #ifdef DEBUG_MATRICES
       if(b_writeFile) {
         char filename[28];
         int currentTimeStep = d_fieldLabels->d_sharedState->getCurrentTopLevelTimeStep();
@@ -631,30 +637,77 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
         total_FileWriteTime += Time::currentSeconds() - start_FileWriteTime;
       }
       b_writeFile = false;
+  #endif //debug matrices
+
+#else
+      normB[c] = 0.0;
+      normX[c] = 0.0;
+      normRes[c] = 0.0;
+      normResNormalized[c] = 0.0;
+      determinant[c] = 0.0;
+
+      // set weight transport eqn source terms equal to zero
+      for (vector<DQMOMEqn*>::iterator iEqn = weightEqns.begin();
+           iEqn != weightEqns.end(); iEqn++) {
+        const VarLabel* source_label = (*iEqn)->getSourceLabel();
+        CCVariable<double> tempCCVar;
+        if (new_dw->exists(source_label, matlIndex, patch)) {
+          new_dw->getModifiable(tempCCVar, source_label, matlIndex, patch);
+        } else {
+          new_dw->allocateAndPut(tempCCVar, source_label, matlIndex, patch);
+        }
+        tempCCVar[c] = 0.0;
+      }
+
+      // set weighted abscissa transport eqn source terms equal to results
+      for (vector<DQMOMEqn*>::iterator iEqn = weightedAbscissaEqns.begin();
+           iEqn != weightedAbscissaEqns.end(); ++iEqn) {
+        const VarLabel* source_label = (*iEqn)->getSourceLabel();
+        CCVariable<double> tempCCVar;
+        if (new_dw->exists(source_label, matlIndex, patch)) {
+          new_dw->getModifiable(tempCCVar, source_label, matlIndex, patch);
+        } else {
+          new_dw->allocateAndPut(tempCCVar, source_label, matlIndex, patch);
+        }
+        tempCCVar[c] = 0.0;
+      }
 #endif
-
-#ifdef VERIFY_AB_CONSTRUCTION
-      std::ifstream Astream( file_A );
-      LU A(dimension);
-
-      std::ifstream Bstream( file_B );
-      std::ifstream inputstream( file_inputs );
-#endif
-
 
     }//end for cells
 
   }//end per patch
 
-#ifdef DEBUG_MATRICES
+
+
+// ---------------------------------------------
+// Verification Procedure:
+// ---------------------------------------------
+
+#if defined(VERIFY_LINEAR_SOLVER)
+  verifyLinearSolver();
+#endif
+
+#if defined(VERIFY_AB_CONSTRUCTION)
+  verifyABConstruction();
+#endif
+
+// ---------------------------------------------
+
+
+
+#if !defined(VERIFY_AB_CONSTRUCTION) && !defined(VERIFY_LINEAR_SOLVER)
+#if defined(DEBUG_MATRICES)
   proc0cout << "Time for file write: " << total_FileWriteTime << " seconds\n";
 #endif
   proc0cout << "Time for AX=B construction: " << total_AXBConstructionTime << " seconds\n";
   proc0cout << "Time for LU solve: " << total_CroutSolveTime + total_IRSolveTime << " seconds\n";
-    proc0cout << "\t" << "Time for Crout's Method: " << total_CroutSolveTime << " seconds\n";
-    proc0cout << "\t" << "Time for iterative refinement: " << total_IRSolveTime << " seconds\n";
+  proc0cout << "        " << "Time for Crout's Method: " << total_CroutSolveTime << " seconds\n";
+  //proc0cout << "        " << "Time for iterative refinement: " << total_IRSolveTime << " seconds\n";
+#endif
   proc0cout << "Time in DQMOM::solveLinearSystem: " << Time::currentSeconds()-start_solveLinearSystemTime << " seconds \n";
 }
+
+
 
 // **********************************************
 // Construct A and B matrices for DQMOM
@@ -678,7 +731,10 @@ DQMOM::constructLinearSystem( LU             &A,
         if (weights[alpha] != 0) {
           // Appendix C, C.9 (A1 matrix)
           prefixA = prefixA - (thisMoment[i]);
-          productA = productA*( pow((weightedAbscissas[i*(N_)+alpha]/weights[alpha]),thisMoment[i]) );
+          double base = weightedAbscissas[i*(N_)+alpha] / weights[alpha];
+          double exponent = thisMoment[i];
+          //productA = productA*( pow((weightedAbscissas[i*(N_)+alpha]/weights[alpha]),thisMoment[i]) );
+          productA = productA*( pow(base, exponent) );
         } else {
           prefixA = 0;
           productA = 0;
@@ -701,32 +757,41 @@ DQMOM::constructLinearSystem( LU             &A,
       for( unsigned int alpha = 0; alpha < N_; ++alpha ) {
         if (weights[alpha] == 0) {
           prefixA = 0;
+          prefixS = 0;
           productA = 0;
           productS = 0;
         } else if ( weightedAbscissas[j*(N_)+alpha] == 0 && thisMoment[j] == 0) {
           //FIXME:
-          // do something
+          // both prefixes contain 0^(-1)
+          prefixA = 0;
+          prefixS = 0;
         } else {
           // Appendix C, C.11 (A_j+1 matrix)
-          prefixA = (thisMoment[j])*( pow((weightedAbscissas[j*(N_)+alpha]/weights[alpha]),(thisMoment[j]-1)) );
+          double base = weightedAbscissas[j*(N_)+alpha] / weights[alpha];
+          double exponent = thisMoment[j] - 1;
+          //prefixA = (thisMoment[j])*( pow((weightedAbscissas[j*(N_)+alpha]/weights[alpha]),(thisMoment[j]-1)) );
+          prefixA = (thisMoment[j])*(pow(base, exponent));
           productA = 1;
 
           // Appendix C, C.16 (S matrix)
-          prefixS = -(thisMoment[j])*( pow((weightedAbscissas[j*(N_)+alpha]/weights[alpha]),(thisMoment[j]-1)));
+          //prefixS = -(thisMoment[j])*( pow((weightedAbscissas[j*(N_)+alpha]/weights[alpha]),(thisMoment[j]-1)));
+          prefixS = -(thisMoment[j])*(pow(base, exponent));
           productS = 1;
 
+          // calculate product containing all internal coordinates except j
           for (unsigned int n = 0; n < N_xi; ++n) {
             if (n != j) {
-              // if statements needed b/c only checking int coord j above
+              // the if statements checking these same conditions (above) are only
+              // checking internal coordinate j, so we need them again for internal
+              // coordinate n
               if (weights[alpha] == 0) {
                 productA = 0;
                 productS = 0;
-              } else if (weightedAbscissas[n*(N_)+alpha] == 0 && thisMoment[n] == 0) {
-                productA = 0;
-                productS = 0;
               } else {
-                productA = productA*( pow( (weightedAbscissas[n*(N_)+alpha]/weights[alpha]), thisMoment[n] ));
-                productS = productS*( pow( (weightedAbscissas[n*(N_)+alpha]/weights[alpha]), thisMoment[n] ));
+                double base2 = weightedAbscissas[n*(N_)+alpha]/weights[alpha];
+                double exponent2 = thisMoment[n];
+                productA = productA*( pow(base2, exponent2));
+                productS = productS*( pow(base2, exponent2));
               }//end divide by zero conditionals
             }
           }//end int coord n
@@ -851,7 +916,7 @@ DQMOM::calculateMoments( const ProcessorGroup* pc,
             out << (*iMomentIndex);
             index += out.str();
           }
-          string errmsg = "ERROR: DQMOM: calculateMoments: could not find moment index " + index + " in DQMOMMoment map!\n";
+          string errmsg = "ERROR: DQMOM: calculateMoments: could not find moment index " + index + " in DQMOMMoment map!\nIf you are running verification, you must turn off calculation of moments using <calculate_moments>false</calculate_moments>";
           throw InvalidValue( errmsg,__FILE__,__LINE__);
           // FIXME:
           // could not find the moment in the moment map!  
@@ -899,3 +964,683 @@ DQMOM::calculateMoments( const ProcessorGroup* pc,
 }
 
 
+
+#if defined(VERIFY_LINEAR_SOLVER)
+// **********************************************
+// Verify linear solver
+// **********************************************
+void
+DQMOM::verifyLinearSolver()
+{
+  double tol = vls_tol;
+
+  // -----------------------------------
+  // Assemble verification objects
+
+  // assemble A
+  LU verification_A(vls_dimension);
+  getVectorFromFile( verification_A, vls_file_A );
+
+  // assemble B
+  vector<double> verification_B(vls_dimension);
+  getVectorFromFile( verification_B, vls_file_B );
+
+  // assemble actual solution
+  vector<double> verification_X(vls_dimension);
+  getVectorFromFile( verification_X, vls_file_X );
+
+  // assemble actual residual
+  vector<double> verification_R(vls_dimension);
+  getVectorFromFile( verification_R, vls_file_R );
+
+  // assemble actual normalized residual
+  vector<double> verification_normR(vls_dimension);
+  getVectorFromFile( verification_normR, vls_file_normR );
+
+  // assemble norms (determinant, normRes, normResNormalized, normX)
+  vector<double> verification_norms(5);
+  getVectorFromFile( verification_norms, vls_file_norms );
+  
+  vector<string> verification_normnames;
+  verification_normnames.push_back("determinant");
+  verification_normnames.push_back("normRes");
+  verification_normnames.push_back("normResNormalized");
+  verification_normnames.push_back("normB");
+  verification_normnames.push_back("normX");
+
+  
+  // ---------------------------------------------------------------------
+  // Print verification objects picked up by verifyLinearSolver() method
+  // (But only print them ONCE!)
+  if( !b_have_vls_matrices_been_printed ) {
+    // print A
+    proc0cout << endl << endl;
+    proc0cout << "***************************************************************************************" << endl;
+    proc0cout << "                      DUMPING LINEAR SOLVER VERIFICATION OBJECTS..." << endl;
+    proc0cout << endl << endl;
+
+    proc0cout << "Matrix A:" << endl;
+    proc0cout << "-----------------------------" << endl;
+    verification_A.dump();
+
+    proc0cout << endl << endl;
+
+    proc0cout << "RHS Vector B:" << endl;
+    proc0cout << "-----------------------------" << endl;
+    for(vector<double>::iterator iB = verification_B.begin();
+        iB != verification_B.end(); ++iB ) {
+      proc0cout << (*iB) << endl;
+    }
+
+    proc0cout << endl << endl;
+
+    proc0cout << "Solution Vector X:" << endl;
+    proc0cout << "-----------------------------" << endl;
+    for(vector<double>::iterator iX = verification_X.begin();
+        iX != verification_X.end(); ++iX ) {
+      proc0cout << (*iX) << endl;
+    }
+
+    proc0cout << endl << endl;
+
+    proc0cout << "Residual Vector R:" << endl;
+    proc0cout << "-----------------------------" << endl;
+    for(vector<double>::iterator iR = verification_R.begin();
+        iR != verification_R.end(); ++iR ) {
+      proc0cout << (*iR) << endl;
+    }
+
+    proc0cout << endl << endl;
+
+    proc0cout << "Normalized Residual Vector normR:" << endl;
+    proc0cout << "-----------------------------" << endl;
+    for(vector<double>::iterator iNR = verification_normR.begin();
+        iNR != verification_normR.end(); ++iNR ) {
+      proc0cout << (*iNR) << endl;
+    }
+
+    proc0cout << endl << endl;
+
+    proc0cout << "Determinant/Norms Vector Norms:" << endl;
+    proc0cout << "-------------------------------" << endl;
+    vector<string>::iterator iNN = verification_normnames.begin();
+    for(vector<double>::iterator iN = verification_norms.begin();
+        iN != verification_norms.end(); ++iN, ++iNN) {
+      proc0cout << (*iNN) << " = " << (*iN) << endl;
+    }
+
+    proc0cout << endl << endl;
+    proc0cout << "                     ENDING DUMP OF LINEAR SOLVER VERIFICATION OBJECTS..." << endl;
+    proc0cout << "***************************************************************************************" << endl;
+    proc0cout << endl;
+
+    b_have_vls_matrices_been_printed = true;
+
+  }
+
+
+  // --------------------------------------------------------------------
+  // Begin the actual verification procedure
+  proc0cout << endl;
+  proc0cout << endl;
+  proc0cout << "***************************************************************************************" << endl;
+  proc0cout << "                      BEGINNING VERIFICATION FOR LINEAR SOLVER..." << endl;
+  proc0cout << endl;
+  proc0cout << "Using verification procedure for DQMOM linear solver." << endl;
+  proc0cout << endl;
+  proc0cout << endl;
+
+  // --------------------------------------------------------------------
+  // 1. Decompose
+  // (For now, verify these as ONE step; 
+  //  these should be verified separately 
+  //  to make bugs easier to locate...)
+  proc0cout << "Step 1: LU decomposition          " << endl;
+  proc0cout << "Comparing decomposed A matrices..." << endl;
+  proc0cout << "----------------------------------" << endl;
+  
+  LU verification_A_original( verification_A );
+  verification_A.decompose(); 
+  //compare( verification_L_U, A, 1 );
+
+
+  // --------------------------------------------------------------------
+  // 2. Back-substitute - back-substitute the decomposed A using the RHS
+  //    vector from file. Store in a NEW solution vector.
+  proc0cout << endl;
+  proc0cout << endl;
+  proc0cout << "Step 2: LU back-substitution                             " << endl;
+  proc0cout << "Comparing calculated solution to verification solution..." << endl;
+  proc0cout << "---------------------------------------------------------" << endl;
+  
+  vector<double> X(vls_dimension);
+  verification_A.back_subs( &verification_B[0], &X[0] );
+  compare( verification_X, X, tol );
+
+
+  // --------------------------------------------------------------------
+  // 3. Get determinant - calculate determinant from LU class and compare
+  //    to determinant from file.
+  proc0cout << endl;
+  proc0cout << endl;
+  proc0cout << "Step 3: Verifying determinant calculation   " << endl;
+  proc0cout << "--------------------------------------------" << endl;
+  
+  double determinant = verification_A.getDeterminant();
+  compare( verification_norms[0], determinant, tol );
+
+  
+  // --------------------------------------------------------------------
+  // 4. Get residual - Calculate residual from A, B, X from file and 
+  //    compare to residual (from file).
+  proc0cout << endl;
+  proc0cout << endl;
+  proc0cout << "Step 4: Verifying residual calculation      " << endl;
+  proc0cout << "Comparing calculated residual to verification residual..." << endl;
+  proc0cout << "---------------------------------------------------------" << endl;
+
+  vector<double> R(vls_dimension);
+  verification_A_original.getResidual( &verification_B[0], &verification_X[0], &R[0] );
+  compare( verification_R, R, tol );
+
+
+  // ---------------------------------------------------------------------
+  // 5. Get norm of residual - compare calculated norm of (verification) 
+  //    residual to norm of residual (from file).
+  proc0cout << endl;
+  proc0cout << endl;
+  proc0cout << "Step 5: Verifying norm of residal " << endl;
+  proc0cout << "---------------------------------------------------" << endl;
+
+  double normRes = verification_A.getNorm( &verification_R[0], 0 );
+  compare( verification_norms[1], normRes, tol );
+
+
+  // -----------------------------------------------------------------
+  // 6. Normalize residual by B - compare calculated verification residual
+  //    normalized by RHS vector B to the same quantity from file.
+  proc0cout << endl;
+  proc0cout << endl;
+  proc0cout << "Step 6: Verifying normalization of residual      " << endl;
+  proc0cout << "Comparing residuals normalized by RHS vector B..." << endl;
+  proc0cout << "-------------------------------------------------" << endl;
+
+  vector<double> Rnormalized(vls_dimension);
+  for(vector<double>::iterator iR = R.begin(), iRN = Rnormalized.begin(), iB = verification_B.begin();
+      iR != R.end(); ++iR, ++iRN, ++iB) {
+    (*iRN) = (*iR)/(*iB);
+  }
+  compare( verification_normR, Rnormalized, tol );
+
+
+  // -------------------------------------------------------------------
+  // 7. Get norm of normalized residual vector
+  proc0cout << endl;
+  proc0cout << endl;
+  proc0cout << "Step 7: Verifying calculation of norm of " << endl;
+  proc0cout << "        normalized residual " << endl;
+  proc0cout << "---------------------------------------------------" << endl;
+
+  double normResNormalized = verification_A.getNorm( &verification_normR[0], 0 );
+  compare( verification_norms[2], normResNormalized, tol );
+
+
+  // -------------------------------------------------------------------
+  // 8. Get norm of RHS vector B
+  proc0cout << endl;
+  proc0cout << endl;
+  proc0cout << "Step 8: Verifying norm of RHS vector B  " << endl;
+  proc0cout << "----------------------------------------" << endl;
+
+  double normB = verification_A.getNorm( &verification_B[0], 0 );
+  compare( verification_norms[3], normB, tol );
+
+
+  // -------------------------------------------------------------------
+  // 9. Get norm of solution vector X
+  proc0cout << endl;
+  proc0cout << endl;
+  proc0cout << "Step 8: Verifying norm of solution vector X  " << endl;
+  proc0cout << "---------------------------------------------" << endl;
+
+  double normX = verification_A.getNorm( &verification_X[0], 0 );
+  compare( verification_norms[4], normB, tol );
+
+  proc0cout << endl;
+  proc0cout << endl;
+  proc0cout << "                      ENDING VERIFICATION FOR LINEAR SOLVER..." << endl;
+  proc0cout << "***************************************************************************************" << endl;
+  proc0cout << endl;
+  proc0cout << endl;
+}
+#endif
+
+
+
+#if defined(VERIFY_AB_CONSTRUCTION)
+// **********************************************
+// Verify construction of A and B
+// **********************************************
+void
+DQMOM::verifyABConstruction()
+{
+  vab_dimension = (vab_N_xi + 1)*vab_N;
+  double tol = vab_tol;
+
+  // assemble A
+  LU verification_A( vab_dimension );
+  getMatrixFromFile( verification_A, vab_file_A );
+
+  // assemble B
+  vector<double> verification_B(vab_dimension);
+  getVectorFromFile( verification_B, vab_file_B );
+
+  // assemble inputs 
+  ifstream vab_inputs( vab_file_inputs.c_str() );
+  if(vab_inputs.fail() ) {
+    ostringstream err_msg;
+    err_msg << "ERROR: DQMOM: Verification of A and B construction procedure could not find the file containing weight/weighted abscissa/model inputs: You specified " << vab_file_inputs << endl;
+    throw FileNotFound(err_msg.str(),__FILE__,__LINE__);
+  }
+  
+  // assemble weights
+  vector<double> weights(vab_N);
+  getVectorFromFile( weights, vab_inputs );
+
+  // assemble weighted abscissas
+  vector<double> weightedAbscissas(vab_N*vab_N_xi);
+  getVectorFromFile( weightedAbscissas, vab_inputs );
+  // weight the abscissas
+  for(unsigned int m=0; m<vab_N_xi; ++m) {
+    for(unsigned int n=0; n<vab_N; ++n) {
+      weightedAbscissas[m*(N_)+n] = weightedAbscissas[m*(N_)+n]*weights[n];
+    }
+  }
+
+  // assemble weighted abscissas
+  vector<double> models(vab_N*vab_N_xi);
+  getVectorFromFile( models, vab_inputs );
+
+  // assemble moment indices
+  momentIndexes.resize(0);// get rid of moment indices from file
+  momentIndexes.resize(vab_dimension);
+  getMomentsFromFile( momentIndexes, vab_file_moments );
+
+  // ---------------------------------------------------------------------
+  // Print verification objects picked up by verifyABConstruction() method
+  if( !b_have_vab_matrices_been_printed ) {
+    // print A
+    proc0cout << endl << endl;
+    proc0cout << "***************************************************************************************" << endl;
+    proc0cout << "                      DUMPING AB CONSTRUCTION VERIFICATION OBJECTS..." << endl;
+    proc0cout << endl << endl;
+
+    proc0cout << "Matrix A:" << endl;
+    proc0cout << "-----------------------------" << endl;
+    verification_A.dump();
+
+    proc0cout << endl << endl;
+
+    proc0cout << "RHS Vector B:" << endl;
+    proc0cout << "-----------------------------" << endl;
+    for(vector<double>::iterator iB = verification_B.begin();
+        iB != verification_B.end(); ++iB ) {
+      proc0cout << (*iB) << endl;
+    }
+
+    proc0cout << endl << endl;
+
+    proc0cout << "Input Weights:" << endl;
+    proc0cout << "-----------------------------" << endl;
+    for(vector<double>::iterator iW = weights.begin();
+        iW != weights.end(); ++iW ) {
+      proc0cout << (*iW) << endl;
+    }
+
+    proc0cout << endl << endl;
+
+    proc0cout << "Input Weighted Abscissas:" << endl;
+    proc0cout << "-----------------------------" << endl;
+    for(vector<double>::iterator iWA = weightedAbscissas.begin();
+        iWA != weightedAbscissas.end(); ++iWA ) {
+      proc0cout << (*iWA) << endl;
+    }
+
+    proc0cout << endl << endl;
+
+    proc0cout << "Input Models:" << endl;
+    proc0cout << "-----------------------------" << endl;
+    for(vector<double>::iterator iM = models.begin();
+        iM != models.end(); ++iM ) {
+      proc0cout << (*iM) << endl;
+    }
+
+    proc0cout << endl << endl;
+
+    proc0cout << "Input Moments:" << endl;
+    proc0cout << "------------------------------" << endl;
+    for(vector<MomentVector>::iterator iAllMoments = momentIndexes.begin();
+        iAllMoments != momentIndexes.end(); ++iAllMoments ) {
+      for(MomentVector::iterator iThisMoment = iAllMoments->begin(); 
+          iThisMoment != iAllMoments->end(); ++iThisMoment ) {
+        proc0cout << (*iThisMoment) << " ";
+      }
+      proc0cout << endl;
+    }
+
+    proc0cout << endl << endl;
+    proc0cout << "                     ENDING DUMP OF AB CONSTRUCTION VERIFICATION OBJECTS..." << endl;
+    proc0cout << "***************************************************************************************" << endl;
+    proc0cout << endl;
+
+    b_have_vab_matrices_been_printed = true;
+
+  }
+
+
+  // -------------------------------------------------------------
+  // Begin the actual verfication procedure
+
+  proc0cout << endl;
+  proc0cout << endl;
+  proc0cout << "***************************************************************************************" << endl;
+  proc0cout << "                      BEGINNING VERIFICATION FOR AB CONSTRUCTION..." << endl;
+  proc0cout << endl;
+  proc0cout << "Using verification procedure for DQMOM linear solver." << endl;
+  proc0cout << endl;
+
+
+  // construct A and B
+  LU A( vab_dimension );
+  vector<double> B( vab_dimension );
+  constructLinearSystem( A, B, weights, weightedAbscissas, models );
+
+  // --------------------------------------------------------------
+  // 1. Compare constructed A to verification A (from file)
+  proc0cout << endl;
+  proc0cout << endl;
+  proc0cout << "Step 1: Compare constructed A to assembled A (from file) " << endl;
+  proc0cout << "---------------------------------------------------------" << endl;
+  A.dump();
+  compare( verification_A, A, tol );
+
+
+  // --------------------------------------------------------------
+  // 2. Compare constructed B to verification B (from file)
+  proc0cout << endl;
+  proc0cout << endl;
+  proc0cout << "Step 2: Compare constructed B to assembled B (from file) " << endl;
+  proc0cout << "---------------------------------------------------------" << endl;
+  
+  compare( verification_B, B, tol );
+
+  proc0cout << endl;
+  proc0cout << endl;
+  proc0cout << "                      ENDING VERIFICATION FOR AB CONSTRUCTION..." << endl;
+  proc0cout << "***************************************************************************************" << endl;
+  proc0cout << endl;
+  proc0cout << endl;
+}
+#endif
+
+#if defined(VERIFY_LINEAR_SOLVER) || defined(VERIFY_AB_CONSTRUCTION)
+void
+DQMOM::compare( vector<double> vector1, vector<double> vector2, double tolerance )
+{
+  const int size1 = vector1.size();
+  const int size2 = vector2.size();
+  if( size1 != size2 ) {
+    proc0cout << "You specified vector 1 (length = " << size1 << ") and vector 2 (length = " << size2 << ")." << endl;
+    string err_msg = "ERROR: DQMOM: Compare: Cannot compare vectors of dissimilar size."; 
+    throw InvalidValue( err_msg,__FILE__,__LINE__);
+  }
+
+  proc0cout << " >>> " << endl;
+  int mismatches = 0;
+  int element = 0;
+  for(vector<double>::iterator ivec1 = vector1.begin(), ivec2 = vector2.begin(); 
+      ivec1 != vector1.end(); ++ivec1, ++ivec2, ++element) {
+    if( fabs( (*ivec1) - (*ivec2) ) > tolerance ) {
+      proc0cout << " >>> Element " << element << " mismatch: \tVector1 (Verif) = " << (*ivec1) << "\tVector2 (Calc) = " << (*ivec2) << endl;
+      ++mismatches;
+    }
+  }
+
+  proc0cout << " >>> " << endl;
+  if( mismatches > 0 )
+    proc0cout << " >>> !!! COMPARISON FAILED !!! " << endl;
+  
+  proc0cout << " >>> " << endl;
+  proc0cout << " >>> Summary of vector comparison: found " << mismatches << " mismatches in " << element << " elements." << endl;
+  proc0cout << " >>> " << endl;
+  proc0cout << endl;
+
+}
+
+void
+DQMOM::compare( LU matrix1, LU matrix2, double tolerance )
+{
+  const int size1 = matrix1.getDimension();
+  const int size2 = matrix2.getDimension();
+  if( size1 != size2 ) {
+    proc0cout << "You specified vector 1 (length = " << size1 << ") and vector 2 (length = " << size2 << ")." << endl;
+    string err_msg = "ERROR: DQMOM: Compare: Cannot compare vectors of dissimilar size."; 
+    throw InvalidValue( err_msg,__FILE__,__LINE__);
+  }
+
+  proc0cout << " >>> " << endl;
+  int mismatches = 0;
+  int element = 0;
+  for( int row=0; row < size1; ++row ) {
+    for( int col=0; col < size1; ++col ) {
+      if( (matrix1(row,col)-matrix2(row,col)) > tolerance ) {
+        proc0cout << " >>> Element (row " << setw(2) << row+1 << ", col " << setw(2) << col+1 << ") mismatch: \tMatrix 1 (Verif) = " << matrix1(row,col) << "\tMatrix 2 (Calc) = " << matrix2(row,col) << endl;
+        ++mismatches;
+      }
+      ++element;
+    }
+  }
+
+  proc0cout << " >>> " << endl;
+  if( mismatches > 0 )
+    proc0cout << " >>> !!! COMPARISON FAILED !!! " << endl;
+
+  proc0cout << " >>> " << endl;
+  proc0cout << " >>> Summary of matrix comparison: found " << mismatches << " mismatches in " << element << " elements." << endl;
+  proc0cout << " >>> " << endl;
+  proc0cout << endl;
+}
+
+void
+DQMOM::compare( double x1, double x2, double tolerance )
+{
+  proc0cout << " >>> " << endl;
+  int mismatches = 0;
+  
+  if( fabs( x1-x2 ) > tolerance ) {
+    proc0cout << " >>> Element mismatch: \tX1 (Verif) = " << x1 << "\tX2 (Calc) = " << x2 << endl;
+    ++mismatches;
+  }
+
+  proc0cout << " >>> " << endl;
+  if( mismatches > 0 )
+    proc0cout << " >>> !!! COMPARISON FAILED !!! " << endl;
+
+  proc0cout << " >>> " << endl;
+  proc0cout << " >>> Summary of scalar comparison: found " << mismatches << " mismatches." << endl;
+  proc0cout << " >>> " << endl;
+}
+
+void
+DQMOM::tokenizeInput( const string& str, vector<string>& tokens, const string& delimiters )
+{
+  // see http://oopweb.com/CPP/Documents/CPPHOWTO/Volume/C++Programming-HOWTO-7.html
+  // Skip delimiters at beginning.
+  string::size_type lastPos = str.find_first_not_of(delimiters, 0);
+  // Find first "non-delimiter".
+  string::size_type pos     = str.find_first_of(delimiters, lastPos);
+
+  while (string::npos != pos || string::npos != lastPos)
+  {
+    // Found a token, add it to the vector.
+    tokens.push_back(str.substr(lastPos, pos - lastPos));
+    // Skip delimiters.  Note the "not_of"
+    lastPos = str.find_first_not_of(delimiters, pos);
+    // Find next "non-delimiter"
+    pos = str.find_first_of(delimiters, lastPos);
+  }
+}
+
+void
+DQMOM::getMatrixFromFile( LU& matrix, string filename )
+{
+  ifstream ifile( filename.c_str() );
+  if( ifile.fail() ) {
+    ostringstream err_msg;
+    err_msg << "ERROR: DQMOM: getMatrixFromFile: Verification procedure could not find the file you specified: " << filename << endl;
+    throw FileNotFound(err_msg.str(),__FILE__,__LINE__);
+  }
+
+  for( int jj=0; jj<matrix.getDimension(); ++jj) {
+    string s1;
+
+    // grab entire row
+    do {
+      getline( ifile, s1 );
+    }
+    while( s1[0] == '\n' || s1[0] == '#' );
+
+    vector<string> elementsOfA;
+    tokenizeInput( s1, elementsOfA, " " );
+
+    if( elementsOfA.size() != matrix.getDimension() ) {
+      ostringstream err_msg;
+      err_msg << "ERROR: DQMOM: getMatrixFromFile: Verification procedure found incorrect number of elements in matrix, file " << filename << ": found " << elementsOfA.size() << " elements, needed " << matrix.getDimension() << " elements." << endl;
+      throw InvalidValue( err_msg.str(),__FILE__,__LINE__);
+    }
+
+    int kk = 0;
+    for( vector<string>::iterator iE = elementsOfA.begin();
+         iE != elementsOfA.end(); ++iE, ++kk ) {
+      double d = 0.0;
+      stringstream ss( (*iE) );
+      ss >> d;
+      matrix(jj,kk) = d;
+    }
+  }
+
+}
+
+/** @details  This method opens an ifstream to a file containing moment indices.
+  *           This allows for verification of the construction of A and B using the 
+  *           correct moment indices, independent of the moment indeces found in the 
+  *           input file.
+  *           This allows the verification procedure to be completely independent 
+  *           of the UPS input file, and depend only upon the verification input 
+  *           files.
+  *
+  *           The number of moment indices is equal to the number of elements 
+  *           in "moments".
+  */
+void
+DQMOM::getMomentsFromFile( vector<MomentVector>& moments, string filename )
+{
+  ifstream ifile( filename.c_str() );
+  if( ifile.fail() ) {
+    ostringstream err_msg;
+    err_msg << "ERROR: DQMOM: getMomentsFromFile: Verification procedure could not find file you specified: " << filename << endl;
+    throw FileNotFound(err_msg.str(),__FILE__,__LINE__);
+  }
+
+  for( vector<MomentVector>::iterator i1 = moments.begin(); i1 != moments.end(); ++i1 ) {
+    string s1;
+
+    // grab entire row
+    do {
+      getline( ifile, s1 );
+    }
+    while( s1[0] == '\n' || s1[0] == '#' );
+
+    vector<string>elementsOfA;
+    tokenizeInput( s1, elementsOfA, " " );
+
+    vector<int> temp_vector;
+    for( vector<string>::iterator iE = elementsOfA.begin();
+         iE != elementsOfA.end(); ++iE ) {
+      int d = 0.0;
+      stringstream ss( (*iE) );
+      ss >> d;
+      temp_vector.push_back(d);
+    }
+    (*i1) = temp_vector;
+  }
+}
+
+/** @details  This method opens an ifstream to file "filename", then reads the file
+  *           one line at a time.  Each line becomes an element of the vector "vec",
+  *           unless the line begins with a '#' character (indicates comment) or 
+  *           the line is empty.
+  *
+  *           The number of lines read is equal to the size of the vector "vec".
+  */
+void
+DQMOM::getVectorFromFile( vector<double>& vec, string filename )
+{
+  ifstream jfile( filename.c_str() );
+  if( jfile.fail() ) {
+    ostringstream err_msg;
+    err_msg << "ERROR: DQMOM: getVectorFromFile: Verification procedure could not find file you specified: " << filename << endl;
+    throw FileNotFound(err_msg.str(),__FILE__,__LINE__);
+  }
+
+  for( vector<double>::iterator iB = vec.begin();
+       iB != vec.end(); ++iB ) {
+    string s1;
+
+    do {
+      getline( jfile, s1 );
+    }
+    while( s1[0] == '\n' || s1[0] == '#' );
+
+    double d = 0.0;
+    stringstream ss(s1);
+    ss >> d;
+    (*iB) = d;
+  }
+}
+
+/** @details  This method uses an already open ifstream "filestream" and reads the 
+  *           file one line at a time.  The filestream is passed, rather than a file
+  *           name, in the case that one file contains multiple vectors.
+  *
+  *           This allows the "getVectorFromFile" method to be called several times
+  *           for the same file without the place in the file being lost.
+  *           (If you pass the same ifstream, the ifstream remembers its
+  *            current location in the file.)
+  *
+  *           Each line becomes an element of the vector "vec",
+  *           unless the line begins with a '#' character (indicates comment) or 
+  *           the line is empty.
+  *
+  *           The number of lines read is equal to the size of vector "vec".
+  */
+void
+DQMOM::getVectorFromFile( vector<double>& vec, ifstream& filestream )
+{
+  for( vector<double>::iterator iB = vec.begin();
+       iB != vec.end(); ++iB ) {
+    string s1;
+
+    do {
+      getline( filestream, s1 );
+    }
+    while( s1[0] == '\n' || s1[0] == '#' );
+
+    double d = 0.0;
+    stringstream ss(s1);
+    ss >> d;
+    (*iB) = d;
+  }
+}
+
+#endif

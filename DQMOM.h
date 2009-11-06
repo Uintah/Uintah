@@ -23,8 +23,12 @@ extern "C" {
 }
 #endif
 
-// Uncomment for DQMOM verification:
-//#define VERIFY_DQMOM 1
+// Output matrices once per timestep (will cause a big slowdown)
+//#define DEBUG_MATRICES
+
+//#define VERIFY_LINEAR_SOLVER
+//#define VERIFY_AB_CONSTRUCTION
+
 
 namespace Uintah {
 
@@ -66,7 +70,7 @@ public:
   void problemSetup( const ProblemSpecP& params );
 
   /** @brief              Populate the map containing labels for each moment 
-      @param allMoments   Vector containing all moment indexes specified by user in <Moment> blocks within <DQMOM> block */
+      @param allMoments   Vector containing all moment indices specified by user in <Moment> blocks within <DQMOM> block */
   void populateMomentsMap( vector<MomentVector> allMoments );
 
   /** @brief Schedule creation of linear solver object, creation of AX=B system, and solution of linear system. 
@@ -116,7 +120,7 @@ private:
 
   vector<string> InternalCoordinateEqnNames;
   
-  vector<MomentVector> momentIndexes; ///< Vector containing all moment indexes
+  vector<MomentVector> momentIndexes; ///< Vector containing all moment indices
 
   std::vector<DQMOMEqn* > weightEqns;           ///< Weight equation labels, IN SAME ORDER AS GIVEN IN INPUT FILE
   std::vector<DQMOMEqn* > weightedAbscissaEqns; ///< Weighted abscissa equation labels, IN SAME ORDER AS GIVEN IN INPUT FILE
@@ -145,6 +149,75 @@ private:
   const VarLabel* d_determinantLabel;
 
   double d_small_B; 
+
+#if defined(VERIFY_LINEAR_SOLVER)
+  /** @brief  Get an A and B matrix from a file, then solve the linear system
+              AX=B and compare the solution to the pre-determined solution.
+              This method verifies the AX=B solution procedure and linear solver.
+  */
+  void verifyLinearSolver();
+
+  string vls_file_A;      ///< Name of file containing A (matrix)
+  string vls_file_X;      ///< Name of file containing X (solution)
+  string vls_file_B;      ///< Name of file containing B (RHS)
+  string vls_file_R;      ///< Name of file containing R (residual)
+  string vls_file_normR;  ///< Name of file containing normR (residual normalized by B)
+  string vls_file_norms;  ///< Name of file containing norms (X, residuals)
+
+  int vls_dimension;      ///< Dimension of problem
+  double vls_tol;         ///< Tolerance for comparisons
+
+  bool b_have_vls_matrices_been_printed;
+#endif
+
+#if defined(VERIFY_AB_CONSTRUCTION)
+  /** @brief  Construct A and B using weights and weighted abscissas found in a file,
+              then compare the constructed A and B to the real A and B. 
+              This method verifies the A and B construction procedure.
+  */
+  void verifyABConstruction();
+
+  string vab_file_A;      ///< Name of file containing A
+  string vab_file_B;      ///< Name of file containing B
+  string vab_file_inputs; ///< Name of file contianing weight and weighted abscissa inputs
+  string vab_file_moments;///< Name of file containing moment indices
+
+  int vab_dimension;      ///< Dimension of the problem
+  int vab_N, vab_N_xi;    ///< Number of environments, internal coordinates of the problem
+  double vab_tol;         ///< Tolerance for comparisons
+
+  bool b_have_vab_matrices_been_printed;
+#endif
+
+#if defined(VERIFY_LINEAR_SOLVER) || defined(VERIFY_AB_CONSTRUCTION)
+  /** @brief  Compares the elements of two vectors; if elements are not within tolerance,
+              prints a message. */
+  void compare(vector<double> vector1, vector<double> vector2, double tolerance);
+
+  /** @brief  Compares the elements of two LU matrices; if elements are not within tolerance,
+              prints a message. */
+  void compare(LU matrix1, LU matrix2, double tolerance);
+
+  /** @brief  Compares two scalars; if elements are not within tolerance,
+              prints a message. */
+  void compare(double x1, double x2, double tolerance);
+
+  /** @brief  Take input divided up by white space, tokenize it, and put it into a vector of strings. */
+  void tokenizeInput( const string& str,
+                      vector<string>& tokens,
+                      const string& delimiters = " " );
+
+  /** @brief  Read a matrix from a file */
+  void getMatrixFromFile( LU& matrix, string filename );
+
+  /** @brief  Read moment indices from a file */
+  void getMomentsFromFile( vector<MomentVector>& moments, string filename );
+
+  /** @brief  Read a vector from a file */
+  void getVectorFromFile( vector<double>& vec, string filename );
+  void getVectorFromFile( vector<double>& vec, ifstream& filestream );
+
+#endif
 
 }; // end class DQMOM
 
