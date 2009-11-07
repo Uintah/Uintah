@@ -97,7 +97,7 @@ void DQMOM::problemSetup(const ProblemSpecP& params)
   db_verify_ab_construction->require("number_environments", vab_N);
   db_verify_ab_construction->require("number_internal_coordinates", vab_N_xi);
   db_verify_ab_construction->getWithDefault("tolerance", vab_tol, 1);
-  b_have_vab_matrices_been_printed;
+  b_have_vab_matrices_been_printed = false;
 #endif
 
   unsigned int moments = 0;
@@ -517,7 +517,7 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
 
         // Find the norm of the residual vector (B-AX)
         Aorig.getResidual( &B[0], &Xlong[0], &Resid[0] );
-        double temp = A.getNorm( &Resid[0], 0 );
+        double temp = A.getNorm( &Resid[0], 1 );
         normRes[c] = temp;
 
         // Find the norm of the (normalized) residual vector (B-AX)/(B)
@@ -528,12 +528,12 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
           // else B is zero so b - Ax should also be close to zero
           // so keep residual = Ax 
         }
-        normResNormalized[c] = A.getNorm( &Resid[0], 0);
+        normResNormalized[c] = A.getNorm( &Resid[0], 1);
       }
       
       // Find the norm of the RHS and solution vectors
       normB[c] = A.getNorm( &B[0], 0 );
-      normX[c] = A.getNorm( &Xlong[0], 0 );
+      normX[c] = A.getNorm( &Xlong[0], 1 );
 
       // set weight transport eqn source terms equal to results
       unsigned int z = 0;
@@ -978,7 +978,7 @@ DQMOM::verifyLinearSolver()
 
   // assemble A
   LU verification_A(vls_dimension);
-  getVectorFromFile( verification_A, vls_file_A );
+  getMatrixFromFile( verification_A, vls_file_A );
 
   // assemble B
   vector<double> verification_B(vls_dimension);
@@ -1151,7 +1151,7 @@ DQMOM::verifyLinearSolver()
   proc0cout << "Step 5: Verifying norm of residal " << endl;
   proc0cout << "---------------------------------------------------" << endl;
 
-  double normRes = verification_A.getNorm( &verification_R[0], 0 );
+  double normRes = verification_A.getNorm( &verification_R[0], 1 );
   compare( verification_norms[1], normRes, tol );
 
 
@@ -1180,7 +1180,7 @@ DQMOM::verifyLinearSolver()
   proc0cout << "        normalized residual " << endl;
   proc0cout << "---------------------------------------------------" << endl;
 
-  double normResNormalized = verification_A.getNorm( &verification_normR[0], 0 );
+  double normResNormalized = verification_A.getNorm( &verification_normR[0], 1 );
   compare( verification_norms[2], normResNormalized, tol );
 
 
@@ -1191,7 +1191,7 @@ DQMOM::verifyLinearSolver()
   proc0cout << "Step 8: Verifying norm of RHS vector B  " << endl;
   proc0cout << "----------------------------------------" << endl;
 
-  double normB = verification_A.getNorm( &verification_B[0], 0 );
+  double normB = verification_A.getNorm( &verification_B[0], 1 );
   compare( verification_norms[3], normB, tol );
 
 
@@ -1202,8 +1202,8 @@ DQMOM::verifyLinearSolver()
   proc0cout << "Step 8: Verifying norm of solution vector X  " << endl;
   proc0cout << "---------------------------------------------" << endl;
 
-  double normX = verification_A.getNorm( &verification_X[0], 0 );
-  compare( verification_norms[4], normB, tol );
+  double normX = verification_A.getNorm( &verification_X[0], 1 );
+  compare( verification_norms[4], normX, tol );
 
   proc0cout << endl;
   proc0cout << endl;
@@ -1250,8 +1250,8 @@ DQMOM::verifyABConstruction()
   vector<double> weightedAbscissas(vab_N*vab_N_xi);
   getVectorFromFile( weightedAbscissas, vab_inputs );
   // weight the abscissas
-  for(unsigned int m=0; m<vab_N_xi; ++m) {
-    for(unsigned int n=0; n<vab_N; ++n) {
+  for(int m=0; m<vab_N_xi; ++m) {
+    for(int n=0; n<vab_N; ++n) {
       weightedAbscissas[m*(N_)+n] = weightedAbscissas[m*(N_)+n]*weights[n];
     }
   }
@@ -1399,17 +1399,22 @@ DQMOM::compare( vector<double> vector1, vector<double> vector2, double tolerance
   int element = 0;
   for(vector<double>::iterator ivec1 = vector1.begin(), ivec2 = vector2.begin(); 
       ivec1 != vector1.end(); ++ivec1, ++ivec2, ++element) {
-    if( fabs( (*ivec1) - (*ivec2) ) > tolerance ) {
-      proc0cout << " >>> Element " << element << " mismatch: \tVector1 (Verif) = " << (*ivec1) << "\tVector2 (Calc) = " << (*ivec2) << endl;
+    double pdiff = fabs( ( (*ivec1)-(*ivec2) )/(*ivec1) );
+    if( pdiff > tolerance ) {
+      proc0cout << " >>> Element " << element << " mismatch: "
+                << "\tPercent Diff = "    << setw(3) << pdiff
+                << "\tVector1 (Verif) = " << setw(12) << (*ivec1) 
+                << "\tVector2 (Calc) = "  << setw(12) << (*ivec2) << endl;
       ++mismatches;
     }
   }
 
-  proc0cout << " >>> " << endl;
-  if( mismatches > 0 )
+  if( mismatches > 0 ) {
+    proc0cout << " >>> " << endl;
     proc0cout << " >>> !!! COMPARISON FAILED !!! " << endl;
+    proc0cout << " >>> " << endl;
+  }
   
-  proc0cout << " >>> " << endl;
   proc0cout << " >>> Summary of vector comparison: found " << mismatches << " mismatches in " << element << " elements." << endl;
   proc0cout << " >>> " << endl;
   proc0cout << endl;
@@ -1422,8 +1427,8 @@ DQMOM::compare( LU matrix1, LU matrix2, double tolerance )
   const int size1 = matrix1.getDimension();
   const int size2 = matrix2.getDimension();
   if( size1 != size2 ) {
-    proc0cout << "You specified vector 1 (length = " << size1 << ") and vector 2 (length = " << size2 << ")." << endl;
-    string err_msg = "ERROR: DQMOM: Compare: Cannot compare vectors of dissimilar size."; 
+    proc0cout << "You specified matrix 1 (length = " << size1 << ") and matrix 2 (length = " << size2 << ")." << endl;
+    string err_msg = "ERROR: DQMOM: Compare: Cannot compare matrices of dissimilar size."; 
     throw InvalidValue( err_msg,__FILE__,__LINE__);
   }
 
@@ -1432,19 +1437,24 @@ DQMOM::compare( LU matrix1, LU matrix2, double tolerance )
   int element = 0;
   for( int row=0; row < size1; ++row ) {
     for( int col=0; col < size1; ++col ) {
-      if( (matrix1(row,col)-matrix2(row,col)) > tolerance ) {
-        proc0cout << " >>> Element (row " << setw(2) << row+1 << ", col " << setw(2) << col+1 << ") mismatch: \tMatrix 1 (Verif) = " << matrix1(row,col) << "\tMatrix 2 (Calc) = " << matrix2(row,col) << endl;
+      double pdiff = fabs( (matrix1(row,col)-matrix2(row,col))/matrix1(row,col) );
+      if( pdiff > tolerance ) {
+        proc0cout << " >>> Element (row "    << setw(2) << row+1 << ", col " << setw(2) << col+1 << ") mismatch: "
+                  << "\tPercent Diff = "     << setw(3) << pdiff
+                  << "\tMatrix 1 (Verif) = " << setw(12) << matrix1(row,col) 
+                  << "\tMatrix 2 (Calc) = "  << setw(12) << matrix2(row,col) << endl;
         ++mismatches;
       }
       ++element;
     }
   }
 
-  proc0cout << " >>> " << endl;
-  if( mismatches > 0 )
+  if( mismatches > 0 ) {
+    proc0cout << " >>> " << endl;
     proc0cout << " >>> !!! COMPARISON FAILED !!! " << endl;
+    proc0cout << " >>> " << endl;
+  }
 
-  proc0cout << " >>> " << endl;
   proc0cout << " >>> Summary of matrix comparison: found " << mismatches << " mismatches in " << element << " elements." << endl;
   proc0cout << " >>> " << endl;
   proc0cout << endl;
@@ -1456,16 +1466,21 @@ DQMOM::compare( double x1, double x2, double tolerance )
   proc0cout << " >>> " << endl;
   int mismatches = 0;
   
-  if( fabs( x1-x2 ) > tolerance ) {
-    proc0cout << " >>> Element mismatch: \tX1 (Verif) = " << x1 << "\tX2 (Calc) = " << x2 << endl;
+  double pdiff = fabs( (x1-x2)/x1 );
+  if( pdiff > tolerance ) {
+    proc0cout << " >>> Element mismatch: "
+              << "\tPercent Diff = "  << setw(3) << pdiff
+              << "\tX1 (Verif) = "    << setw(12) << x1 
+              << "\tX2 (Calc) = "     << setw(12) << x2 << endl;
     ++mismatches;
   }
 
-  proc0cout << " >>> " << endl;
-  if( mismatches > 0 )
+  if( mismatches > 0 ) {
+    proc0cout << " >>> " << endl;
     proc0cout << " >>> !!! COMPARISON FAILED !!! " << endl;
+    proc0cout << " >>> " << endl;
+  }
 
-  proc0cout << " >>> " << endl;
   proc0cout << " >>> Summary of scalar comparison: found " << mismatches << " mismatches." << endl;
   proc0cout << " >>> " << endl;
 }
@@ -1500,7 +1515,7 @@ DQMOM::getMatrixFromFile( LU& matrix, string filename )
     throw FileNotFound(err_msg.str(),__FILE__,__LINE__);
   }
 
-  for( int jj=0; jj<matrix.getDimension(); ++jj) {
+  for( unsigned int jj=0; jj<matrix.getDimension(); ++jj) {
     string s1;
 
     // grab entire row
@@ -1566,7 +1581,7 @@ DQMOM::getMomentsFromFile( vector<MomentVector>& moments, string filename )
     vector<int> temp_vector;
     for( vector<string>::iterator iE = elementsOfA.begin();
          iE != elementsOfA.end(); ++iE ) {
-      int d = 0.0;
+      int d = 0;
       stringstream ss( (*iE) );
       ss >> d;
       temp_vector.push_back(d);
