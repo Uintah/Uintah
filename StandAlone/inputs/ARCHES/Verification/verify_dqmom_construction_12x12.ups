@@ -2,7 +2,7 @@
 <!-- @version: -->
 <Uintah_specification>
   <Meta>
-    <title>Arches "2D" Periodic Box Almgren MMS - DQMOM Verification</title>
+    <title>Arches DQMOM Verification - Construction Process, 3 ICs, 3 Environments (12 x 12 Matrix)</title>
   </Meta>
   <SimulationComponent type="arches" />
   <Time>

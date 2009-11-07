@@ -165,7 +165,7 @@ class LU{
     /** @brief      Returns dimension of the LU object
       * 
       * @returns    The dimension of the LU object */
-    const int getDimension() {
+    const unsigned int getDimension() {
       return dim_; };
   
   
@@ -175,7 +175,6 @@ class LU{
       * @param row        Row in LU object to access
       * @param col        Column in LU object to access */
     inline double& operator ()(const int row, const int col){
-      //std::cout << "Accessing A(" << row << "," << col << ") of a " << dim_ << "x" << dim_ << " matrix" << std::endl;
       assert( row < dim_ && row >= 0 );
       assert( col < dim_ && col >= 0 );
       return AA_(row,col);

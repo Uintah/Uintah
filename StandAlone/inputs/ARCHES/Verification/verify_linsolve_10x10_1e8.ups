@@ -2,7 +2,7 @@
 <!-- @version: -->
 <Uintah_specification>
   <Meta>
-    <title>Arches DQMOM Verification - Construction Process, 2 ICs, 2 Environments (6 x 6 Matrix)</title>
+    <title>Arches DQMOM Verification - Linear System, 10 x 10 Matrix, Condition Number = 10^8</title>
   </Meta>
   <SimulationComponent type="arches" />
   <Time>
@@ -109,7 +109,7 @@
         <upper>[1.0,1.0,1.0]</upper>
         <resolution>[4,4,4]</resolution>
         <extraCells>[0,0,0]</extraCells>
-        <patches>[1,1,1]</patches>
+        <patches>[2,2,2]</patches>
       </Box>
       <periodic>[1,1,1]</periodic>
     </Level>
@@ -195,15 +195,16 @@
 
       <DQMOM>
 
-        <Verify_AB_Construction>
-            <A>construction_verification_A_2ic_2env.dat</A>
-            <B>construction_verification_B_2ic_2env.dat</B>
-            <inputs>construction_verification_inputs_2ic_2env.dat</inputs>
-            <moments>construction_verification_moments_2ic_2env.dat</moments>
-            <number_environments>2</number_environments>
-            <number_internal_coordinates>2</number_internal_coordinates>
-            <tolerance>0.01</tolerance>
-        </Verify_AB_Construction>
+        <Verify_Linear_Solver>
+            <A>linear_solver_verification_A_10x10_1e8.dat</A>
+            <X>linear_solver_verification_X_10x10_1e8.dat</X>
+            <B>linear_solver_verification_B_10x10_1e8.dat</B>
+            <R>linear_solver_verification_R_10x10_1e8.dat</R>
+            <normR>linear_solver_verification_NormalizedR_10x10_1e8.dat</normR>
+            <norms>linear_solver_verification_norms_10x10_1e8.dat</norms>
+            <dimension>10</dimension>
+            <tolerance>0.1</tolerance>
+        </Verify_Linear_Solver>
 
         <number_quad_nodes>3</number_quad_nodes>
         <save_moments>true</save_moments>
