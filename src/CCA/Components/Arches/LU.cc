@@ -1,11 +1,10 @@
 #include <CCA/Components/Arches/LU.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/Exceptions/InvalidValue.h>
+
 #include <float.h>
-#include <cmath>
 #include <iostream>
 #include <iomanip>
-#include <stdexcept>
 
 using namespace std;
 using namespace Uintah;
@@ -235,7 +234,7 @@ LU::back_subs( long double* rhs, double* soln )
 {
   if( ! isDecomposed_ && !isSingular_ ) {
     string err_msg = "ERROR:LU:back_subs(): This method cannot be called until LU::decompose() has been executed.\n";
-    throw std::runtime_error( err_msg );
+    throw InvalidValue(err_msg,__FILE__,__LINE__);
   } 
 
   if( isSingular_ ) {
@@ -440,9 +439,7 @@ LU::update_xstate( double norm_X_i,
 void
 LU::dump()
 {
-  //cout << "-----------------------------------------------------" << endl;
   AA_.dump();
-  //cout << "-----------------------------------------------------" << endl;
 }
 
 double
@@ -537,7 +534,7 @@ LU::DenseMatrix::DenseMatrix( const int dim ) : dim_( dim )
 LU::DenseMatrix::~DenseMatrix()
 {
   for( int i=0; i<dim_; i++ ) delete [] AA_[i];
-  delete [] AA_;
+  delete[] AA_;
 }
 
 
@@ -547,9 +544,9 @@ LU::DenseMatrix::dump()
 {
   for( int i=0; i<dim_; ++i ) {
     for( int j=0; j<dim_; ++j ) {
-      cout << std::setw(9) << std::setprecision(4) << AA_[i][j] << "  ";
+      proc0cout << std::setw(9) << std::setprecision(4) << AA_[i][j] << "  ";
     }
-    cout << endl;
+    proc0cout << endl;
   }
 }
 
