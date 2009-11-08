@@ -8,13 +8,15 @@
 
 function KK=amrmpm(problem_type,CFL,NN)
 close all
+intwarning on
 
 global d_debugging;
 global PPC;
+global NSFN;               % number of shape function nodes
 d_debugging = problem_type
 
 %  valid options:
-%  problem type:  impulsiveBar, oscillator, collidingBars
+%  problem type:  impulsiveBar, oscillator, compaction advectBlock
 %  CFL:            0 < cfl < 1, usually 0.2 or so.
 %  R1_dx:          cell spacing in region 1.
 % One dimensional MPM
@@ -22,11 +24,10 @@ d_debugging = problem_type
 
 if (~strcmp(problem_type, 'impulsiveBar')  && ...
     ~strcmp(problem_type, 'oscillator')    && ...
-    ~strcmp(problem_type, 'collidingBars') && ...
     ~strcmp(problem_type, 'compaction')    && ...
     ~strcmp(problem_type, 'advectBlock') )
   fprintf('ERROR, the problem type is invalid\n');
-  fprintf('     The valid types are impulsiveBar, oscillator, collidingBars\n');
+  fprintf('     The valid types are impulsiveBar, oscillator, advectBlock, compaction\n');
   fprintf('usage:  amrmpm(problem type, cfl, R1_dx)\n');
   return;
 end
@@ -35,21 +36,29 @@ end
 PPC     = 2;
 E       = 1e6;
 density = 1.;
-c       = sqrt(E/density);
+interpolation = 'gimp';
 
+if( strcmp(interpolation,'gimp') )
+  NSFN    = 3;               % Number of shape function nodes Linear:2, GIMP:3
+  NBN     = 2;               % Number of boundary conditions nodes
+else
+  NSFN    = 2;              
+  NBN     = 0;
+end
 
 BigNum     = int32(1e5);
-d_smallNum = double (1e-16);
+d_smallNum = double(1e-16);
 
 bar_min     = 0.0;
 bar_max     = 50;
 
-bar_length     = bar_max - bar_min;
+bar_length  = bar_max - bar_min;
 
 domain     = 52;
 area       = 1.;
 plotSwitch = 0;
-max_tstep  = BigNum
+max_tstep  = 1;
+c          = sqrt(E/density);
 
 % HARDWIRED FOR TESTING
 %NN          = 16;
@@ -68,8 +77,8 @@ end
 
 %____________
 % single level
-numRegions    = int32(2);               % partition the domain into numRegions
-Regions       = cell(numRegions,1);    % array that holds the individual region information
+nRegions    = int32(2);               % partition the domain into nRegions
+Regions       = cell(nRegions,1);    % array that holds the individual region information
 R.min         = 0;                     % location of left point
 R.max         = domain/2;                   % location of right point
 R.refineRatio = 1;
@@ -89,8 +98,8 @@ Regions{2}    = R;
 %____________
 % 2 level
 if(0)
-numRegions    = int32(3);               % partition the domain into numRegions
-Regions       = cell(numRegions,1);    % array that holds the individual region information
+nRegions    = int32(3);               % partition the domain into nRegions
+Regions       = cell(nRegions,1);    % array that holds the individual region information
 
 R.min         = 0;                     % location of left point
 R.max         = 0.32;                   % location of right point
@@ -122,8 +131,8 @@ end
 % 3 levels
 if(0)
 
-numRegions    = int32(5);               % partition the domain into numRegions
-Regions       = cell(numRegions,1);    % array that holds the individual region information
+nRegions    = int32(5);               % partition the domain into nRegions
+Regions       = cell(nRegions,1);    % array that holds the individual region information
 
 R.min         = 0;                     % location of left point
 R.max         = 0.32;                   % location of right point
@@ -167,10 +176,18 @@ Regions{5}    = R;
 
 end
 
+% increase the number of nodes in the first and last region if using gimp.
+if(strcmp(interpolation,'gimp'))
+  Regions{1}.NN          = Regions{1}.NN + 1;
+  Regions{1}.min         = Regions{1}.min - Regions{1}.dx;
+  Regions{nRegions}.NN   = Regions{nRegions}.NN + 1;
+  Regions{nRegions}.max  = Regions{nRegions}.max - Regions{nRegions}.dx;
+end;
+
 NN = int32(0);
 
 % bulletproofing:
-for r=1:numRegions
+for r=1:nRegions
   R = Regions{r};
   d = (R.max - R.min) + 100* d_smallNum;
   
@@ -183,12 +200,14 @@ end
 
 %  find the number of nodes (NN) and the minimum dx
 dx_min = double(BigNum);
-for r=1:numRegions
+for r=1:nRegions
   R = Regions{r};
   NN = NN + R.NN;
   dx_min = min(dx_min,R.dx);
   fprintf( 'region %g, min: %g, \t max: %g \t refineRatio: %g dx: %g, NN: %g\n',r, R.min, R.max, R.refineRatio, R.dx, R.NN)
 end
+
+NN = NN + NBN;
 
 %__________________________________
 % compute the zone of influence
@@ -197,16 +216,20 @@ Lx      = zeros(NN,2);
 nodePos = zeros(NN,1);      % node Position
 nodeNum = int32(1);
 
-nodePos(1) = 0.0;
+if(strcmp(interpolation,'gimp'))    % Boundary condition Node
+  nodePos(1) = -R1_dx;
+else
+  nodePos(1) = 0.0;
+end;
 
-for r=1:numRegions
+for r=1:nRegions
   R = Regions{r};
   
   % determine dx_Right and dx_Left of this region
   if(r == 1)               % leftmost region
     dx_L = 0;
     dx_R = Regions{r+1}.dx;
-  elseif(r == numRegions)  % rightmost region
+  elseif(r == nRegions)  % rightmost region
     dx_L = Regions{r-1}.dx;
     dx_R = 0;
   else                     % all other regions
@@ -234,10 +257,9 @@ for r=1:numRegions
   end
 end
 
-
 % output the regions and the Lx
 nn = 1;
-for r=1:numRegions
+for r=1:nRegions
   R = Regions{r};
   fprintf('-------------------------Region %g\n',r);
   for n=1:R.NN
@@ -251,38 +273,19 @@ end
 ip=1;
 xp(1)=bar_min + R1_dx/(2.0 * PPC);
 
-for r=1:numRegions
+for r=1:nRegions
   R = Regions{r};
   
   dx_P = R.dx/PPC;                             % particle dx
   
-  if ~strcmp(problem_type, 'collidingBars')    % Everything except the collingBar
-    while (xp(ip) + dx_P > R.min )   && ...
-          (xp(ip) + dx_P < R.max )   && ...
-          (xp(ip) + dx_P >= bar_min) && ...
-          (xp(ip) + dx_P <= bar_max)
-          
-      ip = ip+1;
-      xp(ip)=xp(ip-1) + dx_P;
-    end
-  end
-  
- % This needs to be fixed!!!                    % Colliding Bar
-  if strcmp(problem_type, 'collidingBars')
-    %left bar
-    while xp(ip) + dx_P < (bar_length/2. - R.dx)
-      ip=ip+1;
-      xp(ip)=xp(ip-1) + dx_P;
-    end
+  while (xp(ip) + dx_P > R.min )   && ...
+        (xp(ip) + dx_P < R.max )   && ...
+        (xp(ip) + dx_P >= bar_min) && ...
+        (xp(ip) + dx_P <= bar_max)
 
-    ip=ip+1;
-    xp(ip)=domain - R.dx/(2.*PPC);
-
-    % right bar
-    while xp(ip) - dx_P > (bar_length/2. + R.dx)
-      ip=ip+1;
-      xp(ip)=xp(ip-1) - dx_P;
-    end
+    ip = ip+1;
+    xp(ip)=xp(ip-1) + dx_P;
+    fprintf('ip: %g xp %g \n',ip, xp(ip));
   end
 end  % region
 
@@ -298,9 +301,9 @@ dp        = zeros(NP,1);
 stressP   = zeros(NP,1);
 extForceP = zeros(NP,1);
 Fp        = zeros(NP,1);
-nodes     = zeros(1,2);
-Gs        = zeros(1,2);
-Ss        = zeros(1,2);     
+nodes     = zeros(1,NSFN);
+Gs        = zeros(1,NSFN);
+Ss        = zeros(1,NSFN);     
 
 massG     = zeros(NN,1);
 velG      = zeros(NN,1);
@@ -325,7 +328,7 @@ tipDeflect_err = zeros(BigNum,1);
 %__________________________________
 % initialize other particle variables
 for ip=1:NP
-  [volP]    = positionToVolP(xp(ip), numRegions, Regions);
+  [volP]    = positionToVolP(xp(ip), nRegions, Regions);
   vol(ip)   = volP;
   massP(ip) = volP*density;
   Fp(ip)    = 1.;                     % total deformation
@@ -361,21 +364,6 @@ if strcmp(problem_type, 'oscillator')
   velG_BCValue(2) = 1.;
 end
 
-if strcmp(problem_type, 'collidingBars')
-  period           = 4.0*dx/100.;
-  tfinal           = period;
-  numBCs           = 0;
-  velG_BCValue(1)  = 0.;
-  velG_BCValue(2)  = 1.;
-  for ip=1:NP
-    velP(ip) =100.0;
-    
-    if xp(ip) > .5*bar_length
-      velP(ip) = -100.0;
-    end
-  end
-end
-
 if strcmp(problem_type, 'advectBlock')
   initVelocity    = 100;
   tfinal          = 0.01;
@@ -393,7 +381,7 @@ if strcmp(problem_type, 'compaction')
   waveTansitTime  = bar_length/c
   tfinal          = waveTansitTime * 45;
   numBCs          = 1;
-  delta_0         = 50
+  delta_0         = 50;
   velG_BCValue(1) = initVelocity;
   velG_BCValue(2) = initVelocity;
 end
@@ -402,7 +390,7 @@ end
 %plot initial conditions
 %plotResults(t,xp,dp,velP)
 
-fprintf('tfinal: %g, NN: %g, NP: %g dx_min: %g \n',tfinal, NN,NP,dx_min);
+fprintf('tfinal: %g, interpolator: %s, NBN: %g, NN: %g, NP: %g dx_min: %g \n',tfinal,interpolation, NBN, NN,NP,dx_min);
 input('hit return')
 
 %==========================================================================
@@ -462,8 +450,8 @@ while t<tfinal && tstep < max_tstep
   %__________________________________
   % project particle data to grid  
   for ip=1:NP
-    [nodes,Ss]=findNodesAndWeights_gimp(xp(ip), numRegions, Regions, nodePos, Lx);
-    for ig=1:2
+    [nodes,Ss]=findNodesAndWeights_gimp(xp(ip), nRegions, Regions, nodePos, Lx);
+    for ig=1:NSFN
       massG(nodes(ig))     = massG(nodes(ig))     + massP(ip) * Ss(ig);
       velG(nodes(ig))      = velG(nodes(ig))      + massP(ip) * velP(ip) * Ss(ig);
       extForceG(nodes(ig)) = extForceG(nodes(ig)) + extForceP(ip) * Ss(ig); 
@@ -490,7 +478,7 @@ while t<tfinal && tstep < max_tstep
 
   % debugging__________________________________ 
   if( strcmp(problem_type, 'advectBlock')  )
-    for ig=1:NN
+    for ig=1:(NN - NBN)
       error = velG(ig) * massG(ig) - massG(ig) * initVelocity;
       if(  (abs(error) > 1e-8) )
         fprintf('interpolateParticlesToGrid after BC:  node: %g, nodePos %g, error %g, massG %g \n', ig, nodePos(ig), error, massG(ig) );
@@ -500,12 +488,12 @@ while t<tfinal && tstep < max_tstep
   % debugging__________________________________
 
   %compute particle stress
-  [stressP,vol,Fp]=computeStressFromVelocity(xp,dt,velG,E,Fp,NP,numRegions, Regions, nodePos);
+  [stressP,vol,Fp]=computeStressFromVelocity(xp,dt,velG,E,Fp,NP,nRegions, Regions, nodePos);
 
   %compute internal force
   for ip=1:NP
-    [nodes,Gs,dx]=findNodesAndWeightGradients_gimp(xp(ip),numRegions, Regions, nodePos);
-    for ig=1:2
+    [nodes,Gs,dx]=findNodesAndWeightGradients_gimp(xp(ip),nRegions, Regions, nodePos);
+    for ig=1:NSFN
       intForceG(nodes(ig)) = intForceG(nodes(ig)) - Gs(ig) * stressP(ip) * vol(ip);
     end
   end
@@ -540,35 +528,33 @@ while t<tfinal && tstep < max_tstep
   %project changes back to particles
   tmp = zeros(NP,1);
   for ip=1:NP
-    [nodes,Ss]=findNodesAndWeights_gimp(xp(ip),numRegions, Regions, nodePos, Lx);
+    [nodes,Ss]=findNodesAndWeights_gimp(xp(ip),nRegions, Regions, nodePos, Lx);
     dvelP = 0.;
     dxp   = 0.;
     
-    for ig=1:2
+    for ig=1:NSFN
       dvelP = dvelP + accl_G(nodes(ig))    * dt * Ss(ig);
       dxp   = dxp   + vel_new_G(nodes(ig)) * dt * Ss(ig);
       
-% debugging__________________________________
-  if( strcmp(problem_type, 'advectBlock')  )
-    error = massG(nodes(ig)) * vel_new_G(nodes(ig)) - massG(nodes(ig)) * initVelocity;
-    if(  (abs(error) > 1e-8) && (massG(nodes(ig)) > 0) )
-      fprintf('project changes: \t  node: %g, nodePos %g, error %g, massG %g \n', nodes(ig), nodePos(nodes(ig)), error, massG(nodes(ig) ));
-      fprintf(' \t\t\t vel_new_G: %g  Ss(ig): %16.15f\n',vel_new_G(nodes(ig)), Ss(ig) );
+      % debugging__________________________________
+      if strcmp(problem_type, 'advectBlock')  
+        error = massG(nodes(ig)) * vel_new_G(nodes(ig)) - massG(nodes(ig)) * initVelocity;
+        if(  (abs(error) > 1e-10) && (massG(nodes(ig)) > 0) )
+          fprintf('project changes: \t  node: %g, nodePos %g, error %g, massG %g \n', nodes(ig), nodePos(nodes(ig)), error, massG(nodes(ig) ));
+          fprintf(' \t\t\t vel_new_G: %g  Ss(ig): %16.15f\n',vel_new_G(nodes(ig)), Ss(ig) );
+          fprintf(' \t\t\t dxp: %g , dvelP: %g, sum(Ss): %g\n', dxp, dvelP, sum(Ss));
+        end
+      end
+      % debugging__________________________________
     end
-  end
-% debugging__________________________________
-    
-    end
-    
+
     velP(ip) = velP(ip) + dvelP;
-    xp(ip)   = xp(ip) + dxp;
+    xp(ip)   = xp(ip) + dxp; 
     dp(ip)   = dp(ip) + dxp;
     tmp(ip)  = tmp(ip) + dxp;
   end
   
   %fprintf('sum(tmp): %9.8f \n',sum(tmp));
-  
-
   
   DX_tip(tstep)=dp(NP);
   T=t; %-dt;
@@ -607,9 +593,9 @@ while t<tfinal && tstep < max_tstep
     for ip=1:NP
       exact_pos = (initPos(ip) + t * initVelocity);
       pos_error = pos_error +  xp(ip) - exact_pos;
-      %fprintf('xp: %f  exact: %f error %f \n',xp(ip), exact_pos, xp(ip) - exact_pos)
+      %fprintf('xp: %16.15f  exact: %16.15f error %16.15f \n',xp(ip), exact_pos, xp(ip) - exact_pos)
     end
-    fprintf('sum position error %16.15f \n',sum(pos_error))
+    fprintf('sum position error %E \n',sum(pos_error))
   end
   
   if strcmp(problem_type, 'compaction')
@@ -644,7 +630,6 @@ while t<tfinal && tstep < max_tstep
     end
   end
   
-
   TIME(tstep)=t;
   
   %__________________________________
@@ -730,20 +715,21 @@ end
 
 %______________________________________________________________________
 % functions
-function[node, dx]=positionToNode(xp, numRegions, Regions)
+function[node, dx]=positionToNode(xp, nRegions, Regions)
  
   n_offset = 0;
   region1_offset = 1;                       % only needed for the first region
   dx = double(0);
+  node = int32(-9);
   
-  for r=1:numRegions
+  for r=1:nRegions
     R = Regions{r};
     
     if ((xp >= R.min) && (xp < R.max))
       n    = floor((xp - R.min)/R.dx);      % # of nodes from the start of the current region
       node = n + n_offset + region1_offset; % add an offset to the local node number
       dx   = R.dx;
-      %fprintf( 'region: %g, n: %g, node:%g, xp: %g dx: %g R.min: %g, R.max: %g \n',r, n, node, xp, dx, R.min, R.max);
+      fprintf( 'region: %g, n: %g, node:%g, xp: %g dx: %g R.min: %g, R.max: %g \n',r, n, node, xp, dx, R.min, R.max);
       return;
     end
     region1_offset = 0;                     % set to 0 after the first region
@@ -753,10 +739,32 @@ function[node, dx]=positionToNode(xp, numRegions, Regions)
 end
 %__________________________________
 %
-function[volP]=positionToVolP(xp, numRegions, Regions)
+function[nodes,dx]=positionToClosestNodes(xp,nRegions,Regions, nodePos)
+  [node, dx]=positionToNode(xp, nRegions, Regions);
+  
+  relativePosition = (xp - nodePos(node))/dx;
+  
+  offset = int32(0);
+  if( relativePosition < 0.5)
+    offset = -1;
+  end
+  
+  if(relativePosition< 0)
+    fprintf( 'Node %g, offset :%g relative Position: %g, xp:%g, nodePos:%g \n',node, offset, relativePosition,xp, nodePos(node));
+    input('stop');
+  end
+  
+  nodes(1) = node + offset;
+  nodes(2) = nodes(1) + 1;
+  nodes(3) = nodes(2) + 1;
+  
+end
+%__________________________________
+%
+function[volP]=positionToVolP(xp, nRegions, Regions)
   volP = -9.0;
  
-  for r=1:numRegions
+  for r=1:nRegions
     R = Regions{r};
     if ( (xp >= R.min) && (xp < R.max) )
       volP = R.dx;
@@ -767,14 +775,14 @@ end
 
 
 %__________________________________
-function [nodes,Ss]=findNodesAndWeights(xp, numRegions, Regions, nodePos, Lx)
+function [nodes,Ss]=findNodesAndWeights(xp, nRegions, Regions, nodePos, Lx)
  
   % find the nodes that surround the given location and
   % the values of the shape functions for those nodes
   % Assume the grid starts at x=0.  This follows the numenclature
   % of equation 12 of the reference
 
-  [node, dx]=positionToNode(xp, numRegions, Regions);  
+  [node, dx]=positionToNode(xp, nRegions, Regions);  
 
   nodes(1)= node;
   nodes(2)= node+1;
@@ -820,23 +828,21 @@ end
 
 
 %__________________________________
-function [nodes,Ss]=findNodesAndWeights_gimp(xp, numRegions, Regions, nodePos, Lx)
+function [nodes,Ss]=findNodesAndWeights_gimp(xp, nRegions, Regions, nodePos, Lx)
   global PPC;
+  global NSFN;
   % find the nodes that surround the given location and
   % the values of the shape functions for those nodes
   % Assume the grid starts at x=0.  This follows the numenclature
   % of equation 7.16 of the MPM documentation 
 
-  [node, dx]=positionToNode(xp, numRegions, Regions);  
-
-  nodes(1)= node;
-  nodes(2)= node+1;
+ [nodes,dx]=positionToClosestNodes(xp,nRegions,Regions, nodePos);
   
   L = dx;
   lp= dx/(2 * PPC);          % This assumes that lp = lp_initial.
   
-  for ig=1:2
-    Ss(ig) = -9;
+  for ig=1:NSFN
+    Ss(ig) = double(-9);
     delX = xp - nodePos(nodes(ig));
 
     if ( ((-L-lp) < delX) && (delX <= -L+lp) )
@@ -867,14 +873,15 @@ function [nodes,Ss]=findNodesAndWeights_gimp(xp, numRegions, Regions, nodePos, L
 end
 
 %__________________________________
-function [nodes,Ss]=findNodesAndWeights_gimp2(xp, numRegions, Regions, nodePos, Lx)
+function [nodes,Ss]=findNodesAndWeights_gimp2(xp, nRegions, Regions, nodePos, Lx)
   global PPC;
+  global NSFN;
   % find the nodes that surround the given location and
   % the values of the shape functions for those nodes
   % Assume the grid starts at x=0.  This follows the numenclature
   % of equation 15 of the reference
 
-  [node, dx]=positionToNode(xp, numRegions, Regions);  
+  [node, dx]=positionToNode(xp, nRegions, Regions);  
 
   nodes(1)= node;
   nodes(2)= node+1;
@@ -917,13 +924,13 @@ function [nodes,Ss]=findNodesAndWeights_gimp2(xp, numRegions, Regions, nodePos, 
 end
 
 %__________________________________
-function [nodes,Gs, dx]=findNodesAndWeightGradients(xp, numRegions, Regions, nodePos);
+function [nodes,Gs, dx]=findNodesAndWeightGradients(xp, nRegions, Regions, nodePos)
  
   % find the nodes that surround the given location and
   % the values of the gradients of the shape functions.
   % Assume the grid starts at x=0.
 
-  [node, dx]=positionToNode(xp,numRegions, Regions);
+  [node, dx]=positionToNode(xp,nRegions, Regions);
 
   nodes(1) = node;
   nodes(2) = nodes(1)+1;
@@ -933,20 +940,18 @@ function [nodes,Gs, dx]=findNodesAndWeightGradients(xp, numRegions, Regions, nod
 end
 
 %__________________________________
-function [nodes,Gs, dx]=findNodesAndWeightGradients_gimp(xp, numRegions, Regions, nodePos);
+function [nodes,Gs, dx]=findNodesAndWeightGradients_gimp(xp, nRegions, Regions, nodePos)
   global PPC;
+  global NSFN;
   % find the nodes that surround the given location and
   % the values of the gradients of the shape functions.
   % Assume the grid starts at x=0.
-
-  [node, dx]=positionToNode(xp,numRegions, Regions);
-  nodes(1)= node;
-  nodes(2)= node+1;
+  [nodes,dx]=positionToClosestNodes(xp,nRegions,Regions, nodePos);
   
   L  = dx;
   lp = dx/(2 * PPC);          % This assumes that lp = lp_initial.
   
-  for ig=1:2
+  for ig=1:NSFN
     Gs(ig) = -9;
     delX = xp - nodePos(nodes(ig));
 
@@ -976,15 +981,16 @@ function [nodes,Gs, dx]=findNodesAndWeightGradients_gimp(xp, numRegions, Regions
   end
 end
 %__________________________________
-function [stressP,vol,Fp]=computeStressFromVelocity(xp,dt,velG,E,Fp,NP, numRegions, Regions, nodePos)
+function [stressP,vol,Fp]=computeStressFromVelocity(xp,dt,velG,E,Fp,NP, nRegions, Regions, nodePos)
   global d_debugging;
+  global NSFN;
                                                                                 
   for ip=1:NP
-    [nodes,Gs,dx] = findNodesAndWeightGradients_gimp(xp(ip), numRegions, Regions, nodePos);
-    [volP]        = positionToVolP(xp(ip), numRegions, Regions);
+    [nodes,Gs,dx] = findNodesAndWeightGradients_gimp(xp(ip), nRegions, Regions, nodePos);
+    [volP]        = positionToVolP(xp(ip), nRegions, Regions);
     
     gUp=0.0;
-    for ig=1:2
+    for ig=1:NSFN
       gUp = gUp + velG(nodes(ig)) * Gs(ig);
     end
 
