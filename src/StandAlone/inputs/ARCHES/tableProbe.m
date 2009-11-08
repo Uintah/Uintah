@@ -57,6 +57,9 @@ sv = textscan(line,'%n');sv = sv{1};
 %this line is blank
 line = fgetl(fid); %should be empty
 
+fprintf('Species in table:\n');
+speciesList{1}
+
 fprintf('Enter a species that you want plotted ...\n')
 whichsp = input('vs. Mixture fraction: (use single quote)');
 fprintf('a) Fixed Heat Loss \n');
