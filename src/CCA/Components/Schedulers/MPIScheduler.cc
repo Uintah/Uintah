@@ -82,10 +82,12 @@ extern DebugStream mixedDebug;
 
 static DebugStream dbg("MPIScheduler", false);
 static DebugStream timeout("MPIScheduler.timings", false);
+static DebugStream waitout("WaitTimes", false);
 DebugStream taskdbg("TaskDBG", false);
 DebugStream mpidbg("MPIDBG",false);
 static Mutex sendsLock( "sendsLock" );
 
+static double CurrentWaitTime=0;
 static
 void
 printTask( ostream& out, DetailedTask* task )
@@ -265,6 +267,11 @@ MPIScheduler::runTask( DetailedTask         * task, int iteration)
 {
   TAU_PROFILE("MPIScheduler::runTask()", " ", TAU_USER); 
 
+  if(waitout.active())
+  {
+    waitout << d_myworld->myrank() << ": TaskWaitTime: " << CurrentWaitTime << " DetailedTask:" << task->getName() << endl;
+    CurrentWaitTime=0;
+  }
 #ifdef USE_PERFEX_COUNTERS
   long long dummy, exec_flops, send_flops;
 #endif
@@ -720,6 +727,7 @@ MPIScheduler::processMPIRecvs(int how_much)
     mpidbg << d_myworld->myrank() << "  Done  waiting...\n";
   }
   mpi_info_.totalwaitmpi+=Time::currentSeconds()-start;
+  CurrentWaitTime+=Time::currentSeconds()-start;
 
 } // end processMPIRecvs()
 
