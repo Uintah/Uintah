@@ -521,7 +521,7 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
         normRes[c] = temp;
 
         // Find the norm of the (normalized) residual vector (B-AX)/(B)
-        for( int ii = 0; ii < A.getDimension(); ++ii ) {
+        for( unsigned int ii = 0; ii < A.getDimension(); ++ii ) {
           // Normalize by B (not by X)
           if (abs(B[ii]) > d_small_B) 
             Resid[ii] = Resid[ii] / B[ii]; //try normalizing componentwise error
