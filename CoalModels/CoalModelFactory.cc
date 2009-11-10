@@ -76,3 +76,17 @@ CoalModelFactory::retrieve_model( const std::string name )
   models_[name] = model;
   return *model;
 }
+
+//---------------------------------------------------------------------------
+// Method: Schedule calculation of all models
+//---------------------------------------------------------------------------
+void
+CoalModelFactory::sched_coalParticleCalculation( const LevelP& level, 
+                                                 SchedulerP& sched, 
+                                                 int timeSubStep )
+{
+  for( ModelMap::iterator iModel = models_.begin(); iModel != models_.end(); ++iModel ) {
+    iModel->second->sched_computeModel( level, sched, timeSubStep );
+  }
+}
+

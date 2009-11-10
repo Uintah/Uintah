@@ -12,7 +12,6 @@
 #include <Core/Exceptions/InvalidValue.h>
 #include <Core/Parallel/Parallel.h>
 
-//===========================================================================
 
 using namespace std;
 using namespace Uintah; 
@@ -59,9 +58,11 @@ SimpleHeatTransfer::~SimpleHeatTransfer()
 //---------------------------------------------------------------------------
 // Method: Problem Setup
 //---------------------------------------------------------------------------
-  void 
+void 
 SimpleHeatTransfer::problemSetup(const ProblemSpecP& params, int qn)
 {
+  HeatTransfer::problemSetup( params, qn );
+
   ProblemSpecP db = params; 
   
   // check for viscosity
@@ -217,105 +218,36 @@ SimpleHeatTransfer::problemSetup(const ProblemSpecP& params, int qn)
   out << qn; 
   node = out.str();
 
+  // thermal conductivity (of particles, I think???)
   std::string abskpName = "abskp_qn";
   abskpName += node; 
   d_abskp = VarLabel::create(abskpName, CCVariable<double>::getTypeDescription());
 
 }
 
-
-
 //---------------------------------------------------------------------------
-// Method: Schedule dummy initialization
-//---------------------------------------------------------------------------
-void
-SimpleHeatTransfer::sched_dummyInit( const LevelP& level, SchedulerP& sched ) 
-{
-  string taskname = "SimpleHeatTransfer::dummyInit"; 
-
-  Ghost::GhostType  gn = Ghost::None;
-
-  Task* tsk = scinew Task(taskname, this, &SimpleHeatTransfer::dummyInit);
-
-  tsk->computes(d_modelLabel);
-  tsk->computes(d_gasLabel); 
-
-  tsk->requires( Task::OldDW, d_modelLabel, gn, 0);
-  tsk->requires( Task::OldDW, d_gasLabel,   gn, 0);
-
-  sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
-}
-
-//-------------------------------------------------------------------------
-// Method: Actually do the dummy initialization
-//-------------------------------------------------------------------------
-/** @details
-This is called from ExplicitSolver::noSolve(), which skips the first timestep
- so that the initial conditions are correct.
-
-This method was originally in ModelBase, but it requires creating CCVariables
- for the model and gas source terms, and the CCVariable type (double, Vector, &c.)
- is model-dependent.  Putting the method here eliminates if statements in 
- ModelBase and keeps the ModelBase class as generic as possible.
- */
-void
-SimpleHeatTransfer::dummyInit( const ProcessorGroup* pc,
-                         const PatchSubset* patches, 
-                         const MaterialSubset* matls, 
-                         DataWarehouse* old_dw, 
-                         DataWarehouse* new_dw )
-{
-  for( int p=0; p < patches->size(); ++p ) {
-
-    Ghost::GhostType  gn = Ghost::None;
-
-    const Patch* patch = patches->get(p);
-    int archIndex = 0;
-    int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
-
-    CCVariable<double> model;
-    CCVariable<double> gasHeatRate;
-    
-    constCCVariable<double> oldModel;
-    constCCVariable<double> oldGasHeatRate;
-
-    new_dw->allocateAndPut( model,       d_modelLabel, matlIndex, patch );
-    new_dw->allocateAndPut( gasHeatRate, d_gasLabel,   matlIndex, patch ); 
-
-    old_dw->get( oldModel,       d_modelLabel, matlIndex, patch, gn, 0 );
-    old_dw->get( oldGasHeatRate, d_gasLabel,   matlIndex, patch, gn, 0 );
-    
-    model.copyData(oldModel);
-    gasHeatRate.copyData(oldGasHeatRate);
-
-  }
-}
-
-//---------------------------------------------------------------------------
-// Method: Schedule the initialization of some variables 
+// Method: Schedule the initialization of special variables unique to model
 //---------------------------------------------------------------------------
 void 
 SimpleHeatTransfer::sched_initVars( const LevelP& level, SchedulerP& sched )
 {
-
   std::string taskname = "SimpleHeatTransfer::initVars";
   Task* tsk = scinew Task(taskname, this, &SimpleHeatTransfer::initVars);
 
   tsk->computes(d_abskp);
-  tsk->computes(d_smoothTfield);
 
   sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials()); 
 }
 
 //-------------------------------------------------------------------------
-// Method: Initialize variables
+// Method: Initialize special variables unique to the model
 //-------------------------------------------------------------------------
 void
 SimpleHeatTransfer::initVars( const ProcessorGroup * pc, 
-                        const PatchSubset    * patches, 
-                        const MaterialSubset * matls, 
-                        DataWarehouse        * old_dw, 
-                        DataWarehouse        * new_dw )
+                              const PatchSubset    * patches, 
+                              const MaterialSubset * matls, 
+                              DataWarehouse        * old_dw, 
+                              DataWarehouse        * new_dw )
 {
   for( int p=0; p < patches->size(); p++ ) {  // Patch loop
 
@@ -325,11 +257,7 @@ SimpleHeatTransfer::initVars( const ProcessorGroup * pc,
 
     CCVariable<double> abskp; 
     new_dw->allocateAndPut( abskp, d_abskp, matlIndex, patch ); 
-    abskp.initialize(0.);
-
-    CCVariable<double> smoothTfield; 
-    new_dw->allocateAndPut( smoothTfield, d_smoothTfield, matlIndex, patch ); 
-    smoothTfield.initialize(0.);
+    abskp.initialize(0.0);
 
   }
 }
@@ -353,12 +281,10 @@ SimpleHeatTransfer::sched_computeModel( const LevelP& level, SchedulerP& sched, 
     tsk->computes(d_modelLabel);
     tsk->computes(d_gasLabel); 
     tsk->computes(d_abskp);
-    tsk->computes(d_smoothTfield);
   } else {
     tsk->modifies(d_modelLabel);
     tsk->modifies(d_gasLabel);  
     tsk->modifies(d_abskp);
-    tsk->modifies(d_smoothTfield);
   }
 
   //EqnFactory& eqn_factory = EqnFactory::self();
@@ -390,8 +316,10 @@ SimpleHeatTransfer::sched_computeModel( const LevelP& level, SchedulerP& sched, 
     tsk->requires(Task::OldDW, d_fieldLabels->d_abskgINLabel,  Ghost::None, 0);   
   }
 
+  // always require the gas-phase temperature
+  tsk->requires(Task::OldDW, d_fieldLabels->d_tempINLabel, Ghost::AroundCells, 1);
+
   // For each required variable, determine what role it plays
-  // - "gas_temperature" - require the "tempIN" label
   // - "particle_temperature" - look in DQMOMEqnFactory
   // - "particle_length" - look in DQMOMEqnFactory
   // - "raw_coal_mass_fraction" - look in DQMOMEqnFactory
@@ -401,13 +329,9 @@ SimpleHeatTransfer::sched_computeModel( const LevelP& level, SchedulerP& sched, 
        iter != d_icLabels.end(); ++iter) { 
 
     map<string, string>::iterator iMap = LabelToRoleMap.find(*iter);
-    
-    tsk->requires(Task::OldDW, d_fieldLabels->d_tempINLabel, Ghost::AroundCells, 1);
 
     if( iMap != LabelToRoleMap.end() ) {
-      if( iMap->second == "gas_temperature") {
-        // automatically use Arches' temperature label if role="temperature"
-      } else if ( iMap->second == "particle_temperature") {
+      if ( iMap->second == "particle_temperature") {
         if( dqmom_eqn_factory.find_scalar_eqn(*iter) ) {
           EqnBase& t_current_eqn = dqmom_eqn_factory.retrieve_scalar_eqn(*iter);
           DQMOMEqn& current_eqn = dynamic_cast<DQMOMEqn&>(t_current_eqn);
@@ -557,14 +481,6 @@ SimpleHeatTransfer::computeModel( const ProcessorGroup * pc,
       abskp.initialize(0.0);
     }
     
-    CCVariable<double> smoothTfield;
-    if( new_dw->exists( d_smoothTfield, matlIndex, patch) ) {
-      new_dw->getModifiable( smoothTfield, d_smoothTfield, matlIndex, patch ); 
-    } else {
-      new_dw->allocateAndPut( smoothTfield, d_smoothTfield, matlIndex, patch );  
-      smoothTfield.initialize(0.0);
-    }
-   
 
     // get particle velocity used to calculate Reynolds number
     constCCVariable<Vector> partVel;  
@@ -623,12 +539,10 @@ SimpleHeatTransfer::computeModel( const ProcessorGroup * pc,
       if (weight[c] < d_w_small ) { 
         heat_rate[c] = 0.0;
         gas_heat_rate[c] = 0.0;
-        smoothTfield[c] = temperature[c];
       } else {
 	      length = w_particle_length[c]*d_pl_scaling_factor/weight[c];
 	      particle_temperature = w_particle_temperature[c]*d_pt_scaling_factor/weight[c];
         rawcoal_mass = w_mass_raw_coal[c]*d_rc_scaling_factor/weight[c];
-        smoothTfield[c] = particle_temperature;
         if(d_ash) {
           ash_mass = w_mass_ash[c]*d_ash_scaling_factor/weight[c];
         } else {
@@ -674,6 +588,10 @@ SimpleHeatTransfer::computeModel( const ProcessorGroup * pc,
   }
 }
 
+
+
+// ********************************************************
+// Private methods:
 
 double
 SimpleHeatTransfer::g1( double z){

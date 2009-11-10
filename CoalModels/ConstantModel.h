@@ -12,13 +12,14 @@
 
 //===========================================================================
 
+namespace Uintah{
+
 //---------------------------------------------------------------------------
 // Builder
-namespace Uintah{
 class ConstantModelBuilder: public ModelBuilder
 {
 public: 
-  ConstantModelBuilder( const std::string         & modelName, 
+  ConstantModelBuilder( const std::string          & modelName, 
                         const vector<std::string>  & reqICLabelNames,
                         const vector<std::string>  & reqScalarLabelNames,
                         const ArchesLabel          * fieldLabels,
@@ -46,8 +47,31 @@ public:
 
   ~ConstantModel();
 
+  ///////////////////////////////////////////////
+  // Initialization stuff
+
   /** @brief Interface for the inputfile and set constants */ 
   void problemSetup(const ProblemSpecP& db, int qn);
+
+  /** @brief Schedule the initialization of special/local variables unique to model */
+  void sched_initVars( const LevelP& level, SchedulerP& sched );
+
+  /** @brief  Actually initialize special variables unique to model */
+  void initVars( const ProcessorGroup * pc, 
+                 const PatchSubset    * patches, 
+                 const MaterialSubset * matls, 
+                 DataWarehouse        * old_dw, 
+                 DataWarehouse        * new_dw );
+
+  /** @brief  Actually do dummy solve (sched_dummyInit is defined in ModelBase parent class) */
+  void dummyInit( const ProcessorGroup* pc, 
+                  const PatchSubset* patches, 
+                  const MaterialSubset* matls, 
+                  DataWarehouse* old_dw, 
+                  DataWarehouse* new_dw );
+
+  /////////////////////////////////////////////////
+  // Model computation
 
   /** @brief Schedule the calculation of the source term */ 
   void sched_computeModel( const LevelP& level, 
@@ -61,21 +85,12 @@ public:
                      DataWarehouse* old_dw, 
                      DataWarehouse* new_dw );
 
-  /** @brief  Schedule the initialization of some special/local vars */ 
-  void sched_initVars( const LevelP& level, SchedulerP& sched );
-
-  /** @brief  Actually initialize some special/local vars */
-  void initVars( const ProcessorGroup * pc, 
-                 const PatchSubset    * patches, 
-                 const MaterialSubset * matls, 
-                 DataWarehouse        * old_dw, 
-                 DataWarehouse        * new_dw );
+  ///////////////////////////////////////////////
+  // Access functions
 
 private:
 
   double d_constant; 
-  
-  const ArchesLabel* d_fieldLabels;
 
 }; // end ConstSrcTerm
 } // end namespace Uintah

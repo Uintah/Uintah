@@ -25,7 +25,7 @@ DragModelBuilder::DragModelBuilder( const std::string         & modelName,
                                     const ArchesLabel         * fieldLabels,
                                     SimulationStateP          & sharedState,
                                     int qn ) :
-  ModelBuilder( modelName, fieldLabels, reqICLabelNames, reqScalarLabelNames, sharedState, qn )
+  ModelBuilder( modelName, reqICLabelNames, reqScalarLabelNames, fieldLabels, sharedState, qn )
 {}
 
 DragModelBuilder::~DragModelBuilder(){}

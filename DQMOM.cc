@@ -786,6 +786,9 @@ DQMOM::constructLinearSystem( LU             &A,
               if (weights[alpha] == 0) {
                 productA = 0;
                 productS = 0;
+              //} else if ( weightedAbscissas[n*(N_)+alpha] == 0 && thisMoment[n] == 0) {
+              //  productA = 0;
+              //  productS = 0;
               } else {
                 double base2 = weightedAbscissas[n*(N_)+alpha]/weights[alpha];
                 double exponent2 = thisMoment[n];

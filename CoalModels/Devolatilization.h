@@ -17,36 +17,11 @@
   * @author   Charles Reid
   * @date     October 2009
   *
-  * @brief    A devolatilization model parent class 
+  * @brief    A parent class for devolatilization models
   *
   */
 
 namespace Uintah{
-
-//---------------------------------------------------------------------------
-// Builder
-
-//class ArchesLabel;
-//class DevolatilizationBuilder: public ModelBuilder
-//{
-//public: 
-//  DevolatilizationBuilder( const std::string          & modelName,
-//                           const vector<std::string>  & reqICLabelNames,
-//                           const vector<std::string>  & reqScalarLabelNames,
-//                           const ArchesLabel          * fieldLabels,
-//                           SimulationStateP           & sharedState,
-//                           int qn );
-//
-//  ~DevolatilizationBuilder(); 
-//
-//  // don't declare build() function as virtual, this will create virtual "thunk"-ing problems
-//
-//private:
-//
-//}; 
-
-// End Builder
-//---------------------------------------------------------------------------
 
 class Devolatilization: public ModelBase {
 public: 
@@ -60,20 +35,45 @@ public:
 
   virtual ~Devolatilization();
 
+  ///////////////////////////////////////////////
+  // Initialization stuff
+
   /** @brief  Grab model-independent devolatilization parameters */
   void problemSetup(const ProblemSpecP& db, int qn);
 
-  /** @brief  Get raw coal reaction rate */
-  double calcRawCoalReactionRate();
+  /** @brief Schedule the initialization of special/local variables unique to model; 
+             blank for Devolatilization parent class, intended to be re-defined by child classes if needed. */
+  void sched_initVars( const LevelP& level, SchedulerP& sched );
 
-  /** @brief  Get gas volatile production rate */
-  double calcGasDevolRate();
+  /** @brief  Actually initialize special variables unique to model; 
+              blank for Devolatilization parent class, intended to be re-defined by child classes if needed. */
+  void initVars( const ProcessorGroup * pc, 
+                 const PatchSubset    * patches, 
+                 const MaterialSubset * matls, 
+                 DataWarehouse        * old_dw, 
+                 DataWarehouse        * new_dw );
 
-  /** @brief  Get char production rate */
+  /** @brief  Actually do dummy initialization (sched_dummyInit is defined in ModelBase parent class) */
+  void dummyInit( const ProcessorGroup* pc, 
+                  const PatchSubset* patches, 
+                  const MaterialSubset* matls, 
+                  DataWarehouse* old_dw, 
+                  DataWarehouse* new_dw );
+
+  ////////////////////////////////////////////////
+  // Model computation
+
+  /** @brief  Get raw coal reaction rate (see Glacier) */
+  virtual double calcRawCoalReactionRate() = 0;
+
+  /** @brief  Get gas volatile production rate (see Glacier) */
+  virtual double calcGasDevolRate() = 0;
+
+  /** @brief  Get char production rate (see Glacier) */
   double calcCharProductionRate();
 
-  inline static const modelTypeEnum getTypeDescription() {
-    return DEVOLATILIZATION; };
+  ///////////////////////////////////////////////////
+  // Access functions
 
 protected:
 

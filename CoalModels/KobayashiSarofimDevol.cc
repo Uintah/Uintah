@@ -25,7 +25,7 @@ KobayashiSarofimDevolBuilder::KobayashiSarofimDevolBuilder( const std::string   
                                                             const ArchesLabel         * fieldLabels,
                                                             SimulationStateP          & sharedState,
                                                             int qn ) :
-  ModelBuilder( modelName, fieldLabels, reqICLabelNames, reqScalarLabelNames, sharedState, qn )
+  ModelBuilder( modelName, reqICLabelNames, reqScalarLabelNames, fieldLabels, sharedState, qn )
 {
 }
 
@@ -43,8 +43,7 @@ KobayashiSarofimDevol::KobayashiSarofimDevol( std::string modelName,
                                               vector<std::string> icLabelNames, 
                                               vector<std::string> scalarLabelNames,
                                               int qn ) 
-: ModelBase(modelName, sharedState, fieldLabels, icLabelNames, scalarLabelNames, qn), 
-  d_fieldLabels(fieldLabels)
+: Devolatilization(modelName, sharedState, fieldLabels, icLabelNames, scalarLabelNames, qn)
 {
   A1  =  3.7e5;       // k1 pre-exponential factor
   A2  =  1.46e13;     // k2 pre-exponential factor
@@ -56,16 +55,7 @@ KobayashiSarofimDevol::KobayashiSarofimDevol( std::string modelName,
   Y1_ = 0.4; // volatile fraction from proximate analysis
   Y2_ = 1.0; // fraction devolatilized at higher temperatures (often near unity)
 
-  d_quad_node = qn;
-  
   compute_part_temp = false;
-
-  // Create a label for this model
-  d_modelLabel = VarLabel::create( modelName, CCVariable<double>::getTypeDescription() );
-
-  // Create the gas phase source term associated with this model
-  std::string gasSourceName = modelName + "_gasSource";
-  d_gasLabel = VarLabel::create( gasSourceName, CCVariable<double>::getTypeDescription() );
 }
 
 KobayashiSarofimDevol::~KobayashiSarofimDevol()
@@ -77,9 +67,13 @@ KobayashiSarofimDevol::~KobayashiSarofimDevol()
   void 
 KobayashiSarofimDevol::problemSetup(const ProblemSpecP& params, int qn)
 {
+  // call parent's method first
+  Devolatilization::problemSetup(params, qn);
+
   ProblemSpecP db = params; 
   compute_part_temp = false;
 
+  // -----------------------------------------------------------------
   // Look for required internal coordinates
   ProblemSpecP db_icvars = params->findBlock("ICVars");
   for (ProblemSpecP variable = db_icvars->findBlock("variable"); variable != 0; variable = variable->findNextBlock("variable") ) {
@@ -114,12 +108,26 @@ KobayashiSarofimDevol::problemSetup(const ProblemSpecP& params, int qn)
       throw InvalidValue(errmsg,__FILE__,__LINE__);
     }
 
-    // set model clipping (not used yet...)
-    db->getWithDefault( "low_clip",  d_lowModelClip,  1.0e-6 );
-    db->getWithDefault( "high_clip", d_highModelClip, 999999 );
-
   }
 
+  // fix the d_icLabels to point to the correct quadrature node (since there is 1 model per quad node)
+  for ( vector<std::string>::iterator iString = d_icLabels.begin(); 
+        iString != d_icLabels.end(); ++iString) {
+    std::string temp_ic_name        = (*iString);
+    std::string temp_ic_name_full   = temp_ic_name;
+
+    std::string node;
+    std::stringstream out;
+    out << qn;
+    node = out.str();
+    temp_ic_name_full += "_qn";
+    temp_ic_name_full += node;
+
+    std::replace( d_icLabels.begin(), d_icLabels.end(), temp_ic_name, temp_ic_name_full);
+  }
+
+
+  // -----------------------------------------------------------------
   // Look for required scalars
   //   ( Kobayashi-Sarofim model doesn't use any extra scalars (yet)
   //     but if it did, this "for" loop would have to be un-commented )
@@ -161,23 +169,6 @@ KobayashiSarofimDevol::problemSetup(const ProblemSpecP& params, int qn)
   }
   */
 
-
-  // fix the d_icLabels to point to the correct quadrature node (since there is 1 model per quad node)
-  for ( vector<std::string>::iterator iString = d_icLabels.begin(); 
-        iString != d_icLabels.end(); ++iString) {
-    std::string temp_ic_name        = (*iString);
-    std::string temp_ic_name_full   = temp_ic_name;
-
-    std::string node;
-    std::stringstream out;
-    out << qn;
-    node = out.str();
-    temp_ic_name_full += "_qn";
-    temp_ic_name_full += node;
-
-    std::replace( d_icLabels.begin(), d_icLabels.end(), temp_ic_name, temp_ic_name_full);
-  }
-
   // fix the d_scalarLabels to point to the correct quadrature node (since there is 1 model per quad node)
   // (Not needed for KobayashiSarofim model (yet)... If it is, uncomment the block below)
   /*
@@ -194,101 +185,7 @@ KobayashiSarofimDevol::problemSetup(const ProblemSpecP& params, int qn)
     std::replace( d_scalarLabels.begin(), d_scalarLabels.end(), temp_ic_name, temp_ic_name_full);
   }
   */
-  
-}
-
-//---------------------------------------------------------------------------
-// Method: Schedule dummy initialization
-//---------------------------------------------------------------------------
-void
-KobayashiSarofimDevol::sched_dummyInit( const LevelP& level, SchedulerP& sched ) 
-{
-  string taskname = "KobayashiSarofimDevol::dummyInit"; 
-
-  Ghost::GhostType  gn = Ghost::None;
-
-  Task* tsk = scinew Task(taskname, this, &KobayashiSarofimDevol::dummyInit);
-
-  tsk->computes(d_modelLabel);
-  tsk->computes(d_gasLabel); 
-
-  tsk->requires( Task::OldDW, d_modelLabel, gn, 0);
-  tsk->requires( Task::OldDW, d_gasLabel,   gn, 0);
-
-  sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
-}
-
-//-------------------------------------------------------------------------
-// Method: Actually do the dummy initialization
-//-------------------------------------------------------------------------
-/** @details
-This is called from ExplicitSolver::noSolve(), which skips the first timestep
- so that the initial conditions are correct.
-
-This method was originally in ModelBase, but it requires creating CCVariables
- for the model and gas source terms, and the CCVariable type (double, Vector, &c.)
- is model-dependent.  Putting the method here eliminates if statements in 
- ModelBase and keeps the ModelBase class as generic as possible.
- */
-void
-KobayashiSarofimDevol::dummyInit( const ProcessorGroup* pc,
-                                  const PatchSubset* patches, 
-                                  const MaterialSubset* matls, 
-                                  DataWarehouse* old_dw, 
-                                  DataWarehouse* new_dw )
-{
-  for( int p=0; p < patches->size(); ++p ) {
-
-    Ghost::GhostType  gn = Ghost::None;
-
-    const Patch* patch = patches->get(p);
-    int archIndex = 0;
-    int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
-
-    CCVariable<double> model;
-    CCVariable<double> gasSource;
-    
-    constCCVariable<double> oldModel;
-    constCCVariable<double> oldGasSource;
-
-    new_dw->allocateAndPut( model,       d_modelLabel, matlIndex, patch );
-    new_dw->allocateAndPut( gasSource,   d_gasLabel,   matlIndex, patch ); 
-
-    old_dw->get( oldModel,       d_modelLabel, matlIndex, patch, gn, 0 );
-    old_dw->get( oldGasSource,   d_gasLabel,   matlIndex, patch, gn, 0 );
-
-    model.copyData(oldModel);
-    gasSource.copyData(oldGasSource);
-
-  }
-}
-
-//---------------------------------------------------------------------------
-// Method: Schedule the initialization of some variables 
-//---------------------------------------------------------------------------
-void 
-KobayashiSarofimDevol::sched_initVars( const LevelP& level, SchedulerP& sched )
-{
-
-  std::string taskname = "KobayashiSarofimDevol::initVars";
-  Task* tsk = scinew Task(taskname, this, &KobayashiSarofimDevol::initVars);
-
-  sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials()); 
-}
-
-//-------------------------------------------------------------------------
-// Method: Initialize variables
-//-------------------------------------------------------------------------
-void
-KobayashiSarofimDevol::initVars( const ProcessorGroup * pc, 
-                                 const PatchSubset    * patches, 
-                                 const MaterialSubset * matls, 
-                                 DataWarehouse        * old_dw, 
-                                 DataWarehouse        * new_dw )
-{
-  // No special local variables for this model...
-  for( int p=0; p < patches->size(); p++ ) {  // Patch loop
-  }
+ 
 }
 
 //---------------------------------------------------------------------------
@@ -323,24 +220,21 @@ KobayashiSarofimDevol::sched_computeModel( const LevelP& level, SchedulerP& sche
   std::string temp_weight_name = "w_qn";
   std::string node;
   std::stringstream out;
-  out << d_quad_node;
+  out << d_quadNode;
   node = out.str();
   temp_weight_name += node;
   EqnBase& t_weight_eqn = dqmom_eqn_factory.retrieve_scalar_eqn( temp_weight_name );
   DQMOMEqn& weight_eqn = dynamic_cast<DQMOMEqn&>(t_weight_eqn);
   d_weight_label = weight_eqn.getTransportEqnLabel();
-  d_w_small = weight_eqn.getSmallClip();
-  d_w_scaling_factor = weight_eqn.getScalingConstant();
   tsk->requires(Task::OldDW, d_weight_label, gn, 0);
 
-  // require gas temperature
+  // always require gas temperature
   tsk->requires(Task::OldDW, d_fieldLabels->d_tempINLabel, Ghost::AroundCells, 1);
 
   // For each required variable, determine what role it plays
   // - "gas_temperature" - require the "tempIN" label
   // - "particle_temperature" - look in DQMOMEqnFactory
   // - "raw_coal_mass" - look in DQMOMEqnFactory
-
 
   // for each required internal coordinate:
   for (vector<std::string>::iterator iter = d_icLabels.begin(); 
@@ -428,10 +322,10 @@ KobayashiSarofimDevol::sched_computeModel( const LevelP& level, SchedulerP& sche
 //---------------------------------------------------------------------------
 void
 KobayashiSarofimDevol::computeModel( const ProcessorGroup * pc, 
-    const PatchSubset    * patches, 
-    const MaterialSubset * matls, 
-    DataWarehouse        * old_dw, 
-    DataWarehouse        * new_dw )
+                                     const PatchSubset    * patches, 
+                                     const MaterialSubset * matls, 
+                                     DataWarehouse        * old_dw, 
+                                     DataWarehouse        * new_dw )
 {
   for( int p=0; p < patches->size(); p++ ) {  // Patch loop
 
@@ -460,7 +354,7 @@ KobayashiSarofimDevol::computeModel( const ProcessorGroup * pc,
 
     }
 
-    constCCVariable<double> temperature;
+    constCCVariable<double> temperature; // holds gas OR particle temperature...
     if (compute_part_temp) {
       old_dw->get( temperature, d_particle_temperature_label, matlIndex, patch, gn, 0 );
     } else {
@@ -493,36 +387,19 @@ KobayashiSarofimDevol::computeModel( const ProcessorGroup * pc,
         double raw_coal_mass = wa_raw_coal_mass[c] / weight[c];
         double testVal = -1.0*(k1+k2)*(raw_coal_mass);  
         if (testVal < -1.0e-16 )
-          devol_rate[c] = -1.0*(k1+k2)*(raw_coal_mass);  
+          devol_rate[c] = testVal;
         else 
           devol_rate[c] = 0.0;
 
         testVal = (Y1_*k1 + Y2_*k2)*wa_raw_coal_mass[c]*d_rc_scaling_factor*d_w_scaling_factor; 
         //testVal uses the weighted abscissa so that the gas source is from all (total) particles
-        if (testVal > 1.0e-16 )
+        if (testVal > 1.0e-16 ) {
           gas_devol_rate[c] = testVal; 
-        else 
+        } else {
           gas_devol_rate[c] = 0.0;
-
+        }
       }
     }
   }
 }
-
-// COMMENTS AND QUESTIONS:
-//
-//num_dens           = sum_over_omega( w_a );                       // number densiity - zeroth moment
-//m_particle         = alpha[c]*c_o + (1-alpha_o)*c_o;              // mass of particle = raw coal + mineral matter (WHAT ABOUT CHAR???)
-//m_total_particles  = num_dens*m_particle;                         // total mass of particles in the volume - from NDF
-// QUESTION: how to deal with 2 or more model terms? (e.g. raw coal and char)
-//char_model[c] = (0.622*k1)*alpha[c];                            // track char mass fraction so it is bounded from 0 to 1 (This uses Julien's proximate analysis idea - 0.388 instead of 0.3)
-
-// QUESTION: if we're tracking coal gas mixture fraction, why have source term as TOTAL MASS source term?
-
-// This was the whole reason we wanted to track raw coal MASS as an internal coordinate,
-// rather than raw coal MASS FRACTION... so that we knew how much mass was coming into the gas phase.
-// It's possible to back out coal gas mixture fraction from total mass,
-// but it's impossible to to the reverse. (Charles)
-
-//coalgas_source[c] = (0.388*k1 + k2)*alphac[c]*m_total_particles; // multiply by mass_p_total to get total amount of volatile gases
 
