@@ -1,10 +1,14 @@
 #ifndef UT_CoalModelFactory_h
 #define UT_CoalModelFactory_h
-
 #include <CCA/Components/Arches/ArchesLabel.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
+#include <Core/Grid/SimulationStateP.h>
 #include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Grid/Variables/VarTypes.h>
-#include <Core/Grid/SimulationStateP.h>
+//#include <Core/Grid/SimulationStateP.h>
+//#include <Core/Grid/SimulationState.h>
+#include <CCA/Components/Arches/ArchesVariables.h>
+#include <CCA/Ports/DataWarehouseP.h>
 #include <map>
 #include <vector>
 #include <string>
@@ -34,9 +38,9 @@ class ModelBuilder
 {
 public:
   ModelBuilder( const std::string   & model_name, 
-                const ArchesLabel   * fieldLabels,
                 vector<std::string>   icLabelNames, 
                 vector<std::string>   scalarLabelNames, 
+                const ArchesLabel   * fieldLabels,
                 SimulationStateP    & sharedState,
                 int                   qn ) : 
     d_modelName( model_name ), 
@@ -65,22 +69,27 @@ private:
 //---------------------------------------------------------------------------
 
 /**
- *  @class  CoalModelFactory
- *  @author James C. Sutherland and Jeremy Thornock
- *  @date   November, 2006
- *  @brief  Factory for source term generation.
- *
- *  Allows easy addition of models.
- *  Simply register the builder object for your Model with
- *  the factory and it will automatically be added to the requested
- *  TransportEquation.  Multiple source terms may be registered with a
- *  single transport equation.
- *
- *  Implemented as a singleton.
- */
+  *  @class  CoalModelFactory
+  *  @author James C. Sutherland and Jeremy Thornock
+  *  @date   November 2006, November 2009
+  *  @brief  Factory for DQMOM model term generation.
+  *
+  *  Allows easy addition of models.
+  *  Simply register the builder object for your Model with
+  *  the factory and it will automatically be added to the DQMOM RHS vector B.
+  *  Multiple models may be implemented for a single internal coordinate.
+  *
+  *  Currently each model is independent (no multiphysics coupling).
+  *  This will change in the near future.
+  *
+  *  Implemented as a singleton.
+  */
 class CoalModelFactory
 {
 public:
+  
+  typedef std::map< std::string, ModelBase*> ModelMap;
+  
   /**
    *  @brief obtain a reference to the CoalModelFactory.
    */
@@ -98,8 +107,6 @@ public:
   void register_model( const std::string name,
                        ModelBuilder* builder );
 
-
-  typedef std::map< std::string, ModelBase*        > ModelMap;
   /**
    *  @brief Retrieve a vector of pointers to all Model
    *  objects that have been assigned to the transport equation with
@@ -111,8 +118,13 @@ public:
    */
   ModelBase& retrieve_model( const std::string name );
 
-  // get all models
-  ModelMap& retrieve_all_models(){
+  /** @brief  Schedule the calculation of all models */
+  void sched_coalParticleCalculation( const LevelP& level, 
+                                      SchedulerP& sched, 
+                                      int timeSubStep );
+
+  /** @brief  Get all models in a ModelMap */
+  ModelMap& retrieve_all_models() {
     return models_; }; 
 
 

@@ -382,10 +382,11 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
       }
 
       // schedule the models for evaluation
-      CoalModelFactory::ModelMap allModels = modelFactory.retrieve_all_models();
-      for (CoalModelFactory::ModelMap::iterator imodel = allModels.begin(); imodel != allModels.end(); imodel++){
-        imodel->second->sched_computeModel( level, sched, curr_level );  
-      }
+      //CoalModelFactory::ModelMap allModels = modelFactory.retrieve_all_models();
+      //for (CoalModelFactory::ModelMap::iterator imodel = allModels.begin(); imodel != allModels.end(); imodel++){
+      //  imodel->second->sched_computeModel( level, sched, curr_level );  
+      //}
+      modelFactory.sched_coalParticleCalculation( level, sched, curr_level );
 
       // schedule DQMOM linear solve
       d_dqmomSolver->sched_solveLinearSystem( level, sched, curr_level );

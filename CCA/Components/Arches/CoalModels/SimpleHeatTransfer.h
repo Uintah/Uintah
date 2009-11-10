@@ -11,12 +11,11 @@
 #include <vector>
 #include <string>
 
-//===========================================================================
-
+// FIXME: more descriptive name
 /**
   * @class    SimpleHeatTransfer
   * @author   Julien Pedel, Jeremy Thornock, Charles Reid
-  * @date     October 2009
+  * @date     November 2009
   *
   * @brief    A simple heat transfer model for coal paticles.
   *           (This needs a more descriptive name)
@@ -61,22 +60,28 @@ public:
 
   ~SimpleHeatTransfer();
 
+  /////////////////////////////////////////
+  // Initialization stuff
+
   /** @brief Interface for the inputfile and set constants */ 
   void problemSetup(const ProblemSpecP& db, int qn);
 
-  /** @brief Schedule the calculation of the source term */ 
-  void sched_computeModel( const LevelP& level, SchedulerP& sched, 
-                            int timeSubStep );
-
-  /** @brief Schedule the initialization of some special/local variables */ 
+  /** @brief Schedule the initialization of some special/local variables */
   void sched_initVars( const LevelP& level, SchedulerP& sched );
 
   /** @brief  Actually initialize some special/local variables */
   void initVars( const ProcessorGroup * pc, 
-    const PatchSubset    * patches, 
-    const MaterialSubset * matls, 
-    DataWarehouse        * old_dw, 
-    DataWarehouse        * new_dw );
+                 const PatchSubset    * patches, 
+                 const MaterialSubset * matls, 
+                 DataWarehouse        * old_dw, 
+                 DataWarehouse        * new_dw );
+
+  /////////////////////////////////////////////
+  // Model computation
+
+  /** @brief Schedule the calculation of the source term */ 
+  void sched_computeModel( const LevelP& level, SchedulerP& sched, 
+                            int timeSubStep );
 
   /** @brief Actually compute the source term */ 
   void computeModel( const ProcessorGroup* pc, 
@@ -85,20 +90,41 @@ public:
                      DataWarehouse* old_dw, 
                      DataWarehouse* new_dw );
 
-  /** @brief  Schedule the dummy solve for MPMArches - see ExplicitSolver::noSolve */
-  void sched_dummyInit( const LevelP& level, SchedulerP& sched );
+  // FIXME: add Glacier computation methods
 
-  /** @brief  Actually do dummy solve */
-  void dummyInit( const ProcessorGroup* pc, 
-                  const PatchSubset* patches, 
-                  const MaterialSubset* matls, 
-                  DataWarehouse* old_dw, 
-                  DataWarehouse* new_dw );
+  /** @brief  Get the particle heating rate (see Glacier) */
+  double calcParticleHeatingRate() {
+    return 0; }
 
-// use getGasSourceLabel() instead (defined in ModelBase)
-//  inline const VarLabel* getGasHeatLabel(){
-//    return d_gasLabel; };
+  /** @brief  Get the gas heating rate (see Glacier) */
+  double calcGasHeatingRate() {
+    return 0; }
 
+  /** @brief  Get the particle temperature (see Glacier) */
+  double calcParticleTemperature() {
+    return 0; }
+
+  /** @brief  Get the particle heat capacity (see Glacier) */
+  double calcParticleHeatCapacity() {
+    return 0; }
+
+  /** @brief  Get the convective heat transfer coefficient (see Glacier) */
+  double calcConvectiveHeatXferCoeff() {
+    return 0; }
+
+  /** @brief  Calculate enthalpy of coal off-gas (see Glacier) */
+  double calcEnthalpyCoalOffGas() {
+    return 0; }
+
+  /** @brief  Calculate enthalpy change of the particle (see Glacier) */
+  double calcEnthalpyChangeParticle() {
+    return 0; }
+
+
+  /////////////////////////////////////////////////
+  // Access functions
+
+  // FIXME (description)
   /** @brief  Access function for thermal conductivity (of particles, I think???) */
   inline const VarLabel* getabskp(){
     return d_abskp; };  
@@ -107,19 +133,22 @@ public:
   inline const bool getRadiationFlag(){
     return d_radiation; };   
 
+private:
+
+  // FIXME (description)
   /** @brief  What does this do? The name isn't descriptive */
   double g1( double z);
 
-  /** @brief  Calculate heat capacity of particle (I think?) */
-  double heatcp(double Tp);
-  
   /** @brief  Calculate heat capacity of ash */
   double heatap(double Tp);
 
-  /** @brief  Calculate gas properties of N2 at atmospheric pressure (see Holman p. 505) */
+  /** @brief  Calculate gas properties of N2 at atmospheric pressure (see Holman, p. 505) */
   double props(double Tg, double Tp);
 
-private:
+  // FIXME (description)
+  /** @brief  Calculate heat capacity of particle (I think?) */
+  double heatcp(double Tp);
+
 
   const VarLabel* d_raw_coal_mass_label;        ///< Label for raw coal mass
   const VarLabel* d_ash_mass_label;             ///< Label for ash mass
@@ -127,15 +156,15 @@ private:
   const VarLabel* d_particle_length_label;      ///< Label for particle length
   const VarLabel* d_weight_label;               ///< Weight label
 
-  const VarLabel* d_abskp; ///< Label for thermal conductivity (of the particles, I think???)
-  bool d_ash;
+  const VarLabel* d_abskp;  ///< Label for thermal conductivity (of the particles, I think???)
+  bool d_ash;               ///< Boolean: is there ash in the particle?
 
   double d_lowModelClip; 
   double d_highModelClip; 
 
   double visc;
-  double yelem[5];
-  double rhop;
+  double yelem[5];              ///< Fractions of each element in coal (C, H, N, O, S)
+  double rhop;                  ///< Density of particle 
   double d_rc_scaling_factor;   ///< Scaling factor for raw coal
   double d_ash_scaling_factor;  ///< Scaling factor for ash mass
   double d_pl_scaling_factor;   ///< Scaling factor for particle size (length)
