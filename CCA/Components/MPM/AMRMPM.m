@@ -40,10 +40,8 @@ interpolation = 'gimp';
 
 if( strcmp(interpolation,'gimp') )
   NSFN    = 3;               % Number of shape function nodes Linear:2, GIMP:3
-  NBN     = 2;               % Number of boundary conditions nodes
 else
-  NSFN    = 2;              
-  NBN     = 0;
+  NSFN    = 2;        
 end
 
 BigNum     = int32(1e5);
@@ -397,7 +395,7 @@ end
 %plot initial conditions
 %plotResults(t,xp,dp,velP)
 
-fprintf('tfinal: %g, interpolator: %s, NBN: %g, NN: %g, NP: %g dx_min: %g \n',tfinal,interpolation, NBN, NN,NP,dx_min);
+fprintf('tfinal: %g, interpolator: %s, NN: %g, NP: %g dx_min: %g \n',tfinal,interpolation, NN,NP,dx_min);
 input('hit return')
 
 %==========================================================================
@@ -486,7 +484,7 @@ while t<tfinal && tstep < max_tstep
 
   % debugging__________________________________ 
   if( strcmp(problem_type, 'advectBlock')  )
-    for ig=1:(NN - NBN)
+    for ig=1:(NN)
       error = velG(ig) * massG(ig) - massG(ig) * initVelocity;
       if(  (abs(error) > 1e-8) )
         fprintf('interpolateParticlesToGrid after BC:  node: %g, nodePos %g, error %g, massG %g \n', ig, nodePos(ig), error, massG(ig) );
@@ -521,7 +519,7 @@ while t<tfinal && tstep < max_tstep
   
 
   %set velocity BC
-  for ibc=1:length(BCNodeL(ibc))
+  for ibc=1:length(BCNodeL)
     vel_new_G(BCNodeL(ibc)) = velG_BCValueL;
     vel_new_G(BCNodeR(ibc)) = velG_BCValueR;
   end
@@ -531,6 +529,13 @@ while t<tfinal && tstep < max_tstep
   % compute the acceleration on the grid
   for ig=1:NN
     accl_G(ig)  = (vel_new_G(ig) - vel_nobc_G(ig))/dt;
+  end
+  
+  
+  %set acceleration BC
+  for ibc=1:length(BCNodeL)
+    accl_G(BCNodeL(ibc)) = 0.0;
+    accl_G(BCNodeR(ibc)) = 0.0;
   end
   
   %__________________________________
@@ -619,7 +624,7 @@ while t<tfinal && tstep < max_tstep
       set(gcf,'position',[50,100,700,500]);
       figure(1)
       plot(xp,stressP,'rd', xp, stressExact, 'b');
-      %axis([0 50 -10000 0])
+      axis([0 50 -10000 0])
       title('Quasi-Static Compaction Problem, Single Level \Delta{x} = 0.5, PPC: 1, Cells: 100')
       legend('Simulation','Exact')
       xlabel('Position');
@@ -643,9 +648,9 @@ while t<tfinal && tstep < max_tstep
   
   %__________________________________
   % plot intantaneous solution
-  if (mod(tstep,10) == 0) && (plotSwitch == 1)
+  if (mod(tstep,200) == 0) && (plotSwitch == 1)
     plotResults(t, xp, dp, massP, velP, stressP, nodePos, velG, massG, momG)
-    input('hit return');
+    %input('hit return');
   end
   
   %__________________________________
