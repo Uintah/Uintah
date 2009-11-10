@@ -2,6 +2,7 @@
 #define Uintah_Component_Arches_KobayashiSarofimDevol_h
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Grid/SimulationStateP.h>
+#include <CCA/Components/Arches/CoalModels/Devolatilization.h>
 #include <CCA/Components/Arches/CoalModels/ModelBase.h>
 #include <CCA/Components/Arches/CoalModels/CoalModelFactory.h>
 
@@ -15,7 +16,7 @@
 /**
   * @class    KobayashiSarofimDevol
   * @author   Jeremy Thornock, Julien Pedel, Charles Reid
-  * @date     May 2009
+  * @date     May 2009, November 2009
   *
   * @brief    A class for calculating the DQMOM model term for the 
   *           Kobayashi-Sarofim coal devolatilization model.
@@ -28,7 +29,9 @@
 //---------------------------------------------------------------------------
 // Builder
 namespace Uintah{
-class KobayashiSarofimDevolBuilder: public ModelBuilder
+
+class ArchesLabel;
+class KobayashiSarofimDevolBuilder: public ModelBuilder 
 {
 public: 
   KobayashiSarofimDevolBuilder( const std::string          & modelName,
@@ -45,10 +48,11 @@ public:
 private:
 
 }; 
+
 // End Builder
 //---------------------------------------------------------------------------
 
-class KobayashiSarofimDevol: public ModelBase {
+class KobayashiSarofimDevol: public Devolatilization {
 public: 
 
   KobayashiSarofimDevol( std::string modelName, 
@@ -60,8 +64,16 @@ public:
 
   ~KobayashiSarofimDevol();
 
+  ////////////////////////////////////////////////
+  // Initialization stuff
+
   /** @brief Interface for the inputfile and set constants */ 
   void problemSetup(const ProblemSpecP& db, int qn);
+
+  // No initVars() method because no special variables needed
+
+  ////////////////////////////////////////////////
+  // Model computation
 
   /** @brief Schedule the calculation of the source term */ 
   void sched_computeModel( const LevelP& level, 
@@ -75,63 +87,42 @@ public:
                      DataWarehouse* old_dw, 
                      DataWarehouse* new_dw );
 
-  /** @brief  Schedule the initialization of some special/local vars */ 
-  void sched_initVars( const LevelP& level, SchedulerP& sched );
+  // FIXME: add Glacier computation methods
 
-  /** @brief  Actually initialize some special/local vars */
-  void initVars( const ProcessorGroup * pc, 
-                 const PatchSubset    * patches, 
-                 const MaterialSubset * matls, 
-                 DataWarehouse        * old_dw, 
-                 DataWarehouse        * new_dw );
+  /** @brief  Get raw coal reaction rate (see Glacier) */
+  double calcRawCoalReactionRate() {
+    return 0; }
 
-  /** @brief  Schedule the dummy solve for MPMArches - see ExplicitSolver::noSolve */
-  void sched_dummyInit( const LevelP& level, SchedulerP& sched );
+  /** @brief  Get gas volatile production rate (see Glacier) */
+  double calcGasDevolRate() {
+    return 0; }
 
-  /** @brief  Actually do dummy solve */
-  void dummyInit( const ProcessorGroup* pc, 
-                  const PatchSubset* patches, 
-                  const MaterialSubset* matls, 
-                  DataWarehouse* old_dw, 
-                  DataWarehouse* new_dw );
+  /** @brief  Get char production rate (see Glacier) */
+  double calcCharProductionRate() {
+    return 0; }
 
 private:
-
-  const ArchesLabel* d_fieldLabels; 
-  
-  map<string, string> LabelToRoleMap;
 
   const VarLabel* d_raw_coal_mass_label;
   const VarLabel* d_weight_label;
   const VarLabel* d_particle_temperature_label;
 
-  double A1;
-  double A2;
+  double A1;        ///< Pre-exponential factors for devolatilization rate constants
+  double A2;        ///< Pre-exponential factors for devolatilization rate constants
+  double E1;        ///< Activation energy for devolatilization rate constant
+  double E2;        ///< Activation energy for devolatilization rate constant
+  double Y1_;       ///< Volatile fraction from proximate analysis
+  double Y2_;       ///< Fraction devolatilized at higher temperatures (often near unity)
+  double k1;        ///< Rate constant for devolatilization reaction 1
+  double k2;        ///< Rate constant for devolatilization reaction 2
   
-  double E1;
-  double E2;
+  double R;         ///< Ideal gas constant
   
-  double R;
-  
-  bool compute_part_temp;
+  bool compute_part_temp; ///< Boolean: is particle temperature computed? 
+                          //   (if not, gas temp = particle temp)
 
-  double c_o;      // initial mass of raw coal
-  double alpha_o;  // initial mass fraction of raw coal
-
-  int d_quad_node;   // store which quad node this model is for
-
-  double d_lowModelClip; 
-  double d_highModelClip; 
-
-  double Y1_;
-  double Y2_;
-  double k1;
-  double k2;
-
-  double d_rc_scaling_factor;
-  double d_pt_scaling_factor;
-  double d_w_scaling_factor; 
-  double d_w_small; // "small" clip value for zero weights
+  double d_rc_scaling_factor;   ///< Scaling factor for raw coal internal coordinate
+  double d_pt_scaling_factor;   ///< Scaling factor for particle temperature internal coordinate
 
 }; // end ConstSrcTerm
 } // end namespace Uintah

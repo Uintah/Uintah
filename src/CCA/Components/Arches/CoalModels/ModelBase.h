@@ -12,14 +12,14 @@
 //===============================================================
 
 /** 
-* @class  ModelBase
-* @author Jeremy Thornock
-* @date   Nov, 5 2008
-* 
-* @brief A base class for models for a transport 
-*        equation. 
-* 
-*/ 
+  * @class  ModelBase
+  * @author Jeremy Thornock, Charles Reid
+  * @date   November 2008, November 2009
+  * 
+  * @brief A base class for models for a transport 
+  *        equation. 
+  * 
+  */ 
 
 namespace Uintah {
 
@@ -34,38 +34,48 @@ public:
              vector<std::string> icLabelNames, 
              vector<std::string> scalarLabelNames, 
              int qn );
+  
   virtual ~ModelBase();
 
-  /** @brief Input file interface */
+  /** @brief  Input file interface */
   virtual void problemSetup(const ProblemSpecP& db, int qn) = 0;  
 
-  /** @brief Returns a list of required variables from the DW for scheduling */
-  //virtual void getDwVariableList() = 0;
+  /** @brief  Pure virtual function: schedule computation of DQMOM model term. */
+  virtual void sched_computeModel(const LevelP& level, 
+                                  SchedulerP&   sched, 
+                                  int           timeSubStep ) = 0;
 
-  /** @brief Schedule the source for computation. */
-  virtual void sched_computeModel(const LevelP& level, SchedulerP& sched, int timeSubStep ) = 0;
+  /** @brief  Pure virtual function: actually compute the DQMOM model term. */
+  virtual void computeModel( const ProcessorGroup * pc,
+                             const PatchSubset    * patches,
+                             const MaterialSubset * matls, 
+                             DataWarehouse        * old_dw, 
+                             DataWarehouse        * new_dw ) = 0;
 
-  /** @brief Schedule the initialization of any special/local variables */ 
-  virtual void sched_initVars( const LevelP& level, SchedulerP& sched ) = 0;
+  /** @brief  Pure virtual function: schedule initialization of any special variables unique to the model. */ 
+  virtual void sched_initVars( const LevelP&  level, 
+                               SchedulerP&    sched ) = 0;
 
-  /** @brief Actually compute the source. */
-  virtual void computeModel( const ProcessorGroup* pc, 
-                             const PatchSubset* patches, 
-                             const MaterialSubset* matls, 
-                             DataWarehouse* old_dw, 
-                             DataWarehouse* new_dw ) = 0;
+  /** @brief  Pure virtual fucntion: actually initialize any special variables unique to the model. */
+  virtual void initVars( const ProcessorGroup * pc,
+                         const PatchSubset    * patches, 
+                         const MaterialSubset * matls, 
+                         DataWarehouse        * old_dw, 
+                         DataWarehouse        * new_dw ) = 0;
 
-  /** @brief Dummy initialization for MPMARCHES */
+  /** @brief  Schedule dummy initialization for MPMARCHES; the schedule task is the same for all models,
+              but the implementation must be done by each model, since knowledge of the model's data type is required.
+      @see    ExplicitSolver::noSolve() */
   void sched_dummyInit( const LevelP& level, SchedulerP& sched );
 
-  void dummyInit( const ProcessorGroup* pc, 
-                      const PatchSubset* patches, 
-                      const MaterialSubset* matls, 
-                      DataWarehouse* old_dw, 
-                      DataWarehouse* new_dw );
+  /** @breif  Pure virtual function: actually do the dummy initialization */
+  virtual void dummyInit( const ProcessorGroup * pc, 
+                          const PatchSubset    * patches, 
+                          const MaterialSubset * matls, 
+                          DataWarehouse        * old_dw, 
+                          DataWarehouse        * new_dw ) = 0;
 
-
-  /** @brief reinitialize the flags that tells the scheduler if the varLabel needs a compute or a modifies. */
+  /** @brief  Reinitialize the flags that tells the scheduler if the varLabel needs a compute or a modifies. */
   // Note I need two of these flags; 1 for scheduling and 1 for actual execution.
   inline void reinitializeLabel(){ 
     d_labelSchedInit  = false; };
@@ -77,14 +87,19 @@ public:
     return d_gasLabel; }; 
 
 protected:
+
   std::string d_modelName; 
   
   SimulationStateP& d_sharedState; 
+
   const ArchesLabel* d_fieldLabels;
-  vector<string> d_icLabels;     // All required internal coordinate labels (from DQMOM factory) needed to compute this model
-  vector<string> d_scalarLabels; // All required scalar labels (from scalarFactory) needed to compute this model
-  const VarLabel* d_modelLabel;  // Label storing the value of this model
-  const VarLabel* d_gasLabel;    // Label for gas phase source term 
+
+  vector<string> d_icLabels;          ///< All required internal coordinate labels (from DQMOM factory) needed to compute this model
+  vector<string> d_scalarLabels;      ///< All required scalar labels (from scalarFactory) needed to compute this model
+  map<string, string> LabelToRoleMap; ///< Map of internal coordinate or scalar labels to their role in the model
+
+  const VarLabel* d_modelLabel;       ///< Label storing the value of this model
+  const VarLabel* d_gasLabel;         ///< Label for gas phase source term 
   int d_timeSubStep;
 
   bool d_labelSchedInit;

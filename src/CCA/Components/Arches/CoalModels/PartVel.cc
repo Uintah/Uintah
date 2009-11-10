@@ -185,8 +185,18 @@ void PartVel::ComputePartVel( const ProcessorGroup* pc,
       else  
         new_dw->getModifiable( partVel, iter->second, matlIndex, patch ); 
       old_dw->get(old_partVel, iter->second, matlIndex, patch, gn, 0);
+      partVel.initialize(Vector(0,0,0));
 
       partVel.initialize(Vector(0.,0.,0.));
+
+      // set boundary conditions. 
+      name = "vel_qn";
+      name += node; 
+      if ( d_gasBC )  // assume gas vel =  part vel on boundary 
+        d_boundaryCond->setVectorValueBC( 0, patch, partVel, gasVel, name ); 
+      else           // part vel set by user.  
+        d_boundaryCond->setVectorValueBC( 0, patch, partVel, name );  
+      
 
       // now loop over all cells
       for (CellIterator iter=patch->getCellIterator__New(0); !iter.done(); iter++){
@@ -265,15 +275,6 @@ void PartVel::ComputePartVel( const ProcessorGroup* pc,
 
         partVel[c] = newcartPart; 
       }
-
-      // now set boundary conditions. 
-      name = "vel_qn";
-      name += node; 
-      if ( d_gasBC )  // assume gas vel =  part vel on boundary 
-        d_boundaryCond->setVectorValueBC( 0, patch, partVel, gasVel, name ); 
-      else           // part vel set by user.  
-        d_boundaryCond->setVectorValueBC( 0, patch, partVel, name );  
-
     }
   } 
 }

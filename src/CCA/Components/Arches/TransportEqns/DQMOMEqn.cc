@@ -126,7 +126,7 @@ DQMOMEqn::problemSetup(const ProblemSpecP& inputdb, int qn)
       d_doHighClip = true; 
 
     if ( !d_doHighClip && !d_doLowClip ) 
-      throw InvalidValue("A low or high clipping must be specified if the <Clipping> section is activated!", __FILE__, __LINE__);
+      throw ProblemSetupException("A low or high clipping must be specified if the <Clipping> section is activated!", __FILE__, __LINE__);
   } 
 
   if (d_weight) { 
@@ -175,9 +175,15 @@ DQMOMEqn::problemSetup(const ProblemSpecP& inputdb, int qn)
 
     // ---------- Constant initialization function ------------------------
     if (d_initFunction == "constant") {
-        // each quad node is initialized to the same thing
+        // each quad node is initialized to the same thing - not good if not zero!
         db_initialValue->require("constant", d_constant_init); 
-        d_constant_init /= d_scalingConstant; 
+        if( d_weight == false && d_constant_init != 0.0 ) {
+          string err_msg =  "ERROR: Arches: DQMOMEqn: You can't initialize abscissas of all environments for " + d_eqnName + " to the same non-zero constant value ";
+                 err_msg += d_constant_init + " : your A matrix will be singular!  Use 'env_constant' instead of 'constant' for your initialization type.\n";
+          throw ProblemSetupException(err_msg,__FILE__,__LINE__);
+        } else {
+          d_constant_init /= d_scalingConstant; 
+        }
 
     // -------- Environment constant initialization function --------------
     } else if (d_initFunction == "env_constant" ) {
@@ -208,7 +214,7 @@ DQMOMEqn::problemSetup(const ProblemSpecP& inputdb, int qn)
     } else if (d_initFunction == "step" || d_initFunction == "env_step") {
       if( d_initFunction == "step" && d_weight == false ) {
         string err_msg = "ERROR: Arches: DQMOMEqn: You can't initialize all quadrature nodes for "+d_eqnName+" to the same step function value, your A matrix will be singular! Use 'env_step' instead of 'step' for your initialization type.\n";
-        throw InvalidValue(err_msg, __FILE__, __LINE__);
+        throw ProblemSetupException(err_msg, __FILE__, __LINE__);
       }
       
       db_initialValue->require("step_direction", d_step_dir); 
@@ -255,7 +261,7 @@ DQMOMEqn::problemSetup(const ProblemSpecP& inputdb, int qn)
 
     // ------------ Other initialization function --------------------
     } else {
-      throw InvalidValue("Initialization function not supported!", __FILE__, __LINE__); 
+      throw ProblemSetupException("Initialization function not supported!", __FILE__, __LINE__); 
     }
 
   }

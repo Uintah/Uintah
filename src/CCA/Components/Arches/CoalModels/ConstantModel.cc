@@ -18,13 +18,14 @@ using namespace Uintah;
 
 //---------------------------------------------------------------------------
 // Builder:
+
 ConstantModelBuilder::ConstantModelBuilder( const std::string         & modelName, 
                                             const vector<std::string> & reqICLabelNames,
                                             const vector<std::string> & reqScalarLabelNames,
                                             const ArchesLabel         * fieldLabels,
                                             SimulationStateP          & sharedState,
                                             int qn ) :
-  ModelBuilder( modelName, fieldLabels, reqICLabelNames, reqScalarLabelNames, sharedState, qn )
+  ModelBuilder( modelName, reqICLabelNames, reqScalarLabelNames, fieldLabels, sharedState, qn )
 {}
 
 ConstantModelBuilder::~ConstantModelBuilder(){}
@@ -32,6 +33,7 @@ ConstantModelBuilder::~ConstantModelBuilder(){}
 ModelBase* ConstantModelBuilder::build(){
   return scinew ConstantModel( d_modelName, d_sharedState, d_fieldLabels, d_icLabels, d_scalarLabels, d_quadNode );
 }
+
 // End Builder
 //---------------------------------------------------------------------------
 
@@ -41,8 +43,7 @@ ConstantModel::ConstantModel( std::string           modelName,
                               vector<std::string>   icLabelNames, 
                               vector<std::string>   scalarLabelNames,
                               int qn ) 
-: ModelBase(modelName, sharedState, fieldLabels, icLabelNames, scalarLabelNames, qn), 
-  d_fieldLabels(fieldLabels)
+: ModelBase(modelName, sharedState, fieldLabels, icLabelNames, scalarLabelNames, qn)
 {
   // Create a label for this model
   d_modelLabel = VarLabel::create( modelName, CCVariable<double>::getTypeDescription() );
@@ -70,42 +71,95 @@ ConstantModel::problemSetup(const ProblemSpecP& inputdb, int qn)
 
 }
 
+//-------------------------------------------------------------------------
+// Method: Actually do the dummy initialization
+//-------------------------------------------------------------------------
+/** @details
+ This is called from ExplicitSolver::noSolve(), which skips the first timestep
+ so that the initial conditions are correct.
 
+This method was originally in ModelBase, but it requires creating CCVariables
+ for the model and gas source terms, and the CCVariable type (double, Vector, &c.)
+ is model-dependent.  Putting the method here eliminates if statements in 
+ ModelBase and keeps the ModelBase class as generic as possible.
+
+@see ExplicitSolver::noSolve()
+ */
+void
+ConstantModel::dummyInit( const ProcessorGroup* pc,
+                          const PatchSubset* patches, 
+                          const MaterialSubset* matls, 
+                          DataWarehouse* old_dw, 
+                          DataWarehouse* new_dw )
+{
+  for( int p=0; p < patches->size(); ++p ) {
+
+    Ghost::GhostType  gn = Ghost::None;
+
+    const Patch* patch = patches->get(p);
+    int archIndex = 0;
+    int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+
+    CCVariable<double> ModelTerm;
+    CCVariable<double> GasModelTerm;
+    
+    constCCVariable<double> oldModelTerm;
+    constCCVariable<double> oldGasModelTerm;
+
+    new_dw->allocateAndPut( ModelTerm,    d_modelLabel, matlIndex, patch );
+    new_dw->allocateAndPut( GasModelTerm, d_gasLabel,   matlIndex, patch ); 
+
+    old_dw->get( oldModelTerm,    d_modelLabel, matlIndex, patch, gn, 0 );
+    old_dw->get( oldGasModelTerm, d_gasLabel,   matlIndex, patch, gn, 0 );
+    
+    ModelTerm.copyData(oldModelTerm);
+    GasModelTerm.copyData(oldGasModelTerm);
+  }
+}
 
 //---------------------------------------------------------------------------
-// Method: Schedule the initialization of some variables 
+// Method: Schedule the initialization of special variables unique to model
 //---------------------------------------------------------------------------
 void 
 ConstantModel::sched_initVars( const LevelP& level, SchedulerP& sched )
 {
-
   std::string taskname = "ConstantModel::initVars";
   Task* tsk = scinew Task(taskname, this, &ConstantModel::initVars);
-
-  // d_modelLabel and d_gasLabel are "required" in the ModelBase class...
 
   sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials()); 
 }
 
-
 //-------------------------------------------------------------------------
-// Method: Initialize variables
+// Method: Initialize special variables unique to the model
 //-------------------------------------------------------------------------
-void 
+void
 ConstantModel::initVars( const ProcessorGroup * pc, 
-                         const PatchSubset    * patches, 
-                         const MaterialSubset * matls, 
-                         DataWarehouse        * old_dw, 
-                         DataWarehouse        * new_dw )
+                            const PatchSubset    * patches, 
+                            const MaterialSubset * matls, 
+                            DataWarehouse        * old_dw, 
+                            DataWarehouse        * new_dw )
 {
+  // This method left intentionally blank...
+  // It has the form:
+  /*
   for( int p=0; p < patches->size(); p++ ) {  // Patch loop
+
+    const Patch* patch = patches->get(p);
+    int archIndex = 0;
+    int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+
+    CCVariable<double> something; 
+    new_dw->allocateAndPut( something, d_something_label, matlIndex, patch ); 
+    something.initialize(0.0)
+
   }
+  */
 }
 
 
 
 //---------------------------------------------------------------------------
-// Method: Schedule the calculation of the Model 
+// Method: Schedule the calculation of the model 
 //---------------------------------------------------------------------------
 void 
 ConstantModel::sched_computeModel( const LevelP& level, SchedulerP& sched, int timeSubStep )

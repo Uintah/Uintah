@@ -12,27 +12,16 @@
 
 //===========================================================================
 
-//---------------------------------------------------------------------------
-// Builder
+/**
+  * @class    HeatTransfer
+  * @author   Charles Reid
+  * @date     November 2009
+  *
+  * @brief    A heat transfer model parent class 
+  *
+  */
+
 namespace Uintah{
-class HeatTransferBuilder: public ModelBuilder
-{
-public: 
-  HeatTransferBuilder( const std::string          & modelName,
-                       const vector<std::string>  & reqICLabelNames,
-                       const vector<std::string>  & reqScalarLabelNames,
-                       const ArchesLabel          * fieldLabels,
-                       SimulationStateP           & sharedState,
-                       int qn );
-  ~HeatTransferBuilder(); 
-
-  ModelBase* build(); 
-
-private:
-
-}; 
-// End Builder
-//---------------------------------------------------------------------------
 
 class HeatTransfer: public ModelBase {
 public: 
@@ -46,94 +35,69 @@ public:
 
   ~HeatTransfer();
 
+  ////////////////////////////////////////////////////
+  // Initialization stuff
+  
   /** @brief Interface for the inputfile and set constants */ 
   void problemSetup(const ProblemSpecP& db, int qn);
-
-  /** @brief Schedule the calculation of the source term */ 
-  void sched_computeModel( const LevelP& level, SchedulerP& sched, 
-                            int timeSubStep );
-
-  /** @brief Schedule the initialization of some special/local variables */ 
+  
+  /** @brief Schedule the initialization of special/local variables unique to model; 
+             blank for HeatTransfer parent class, intended to be re-defined by child classes if needed. */
   void sched_initVars( const LevelP& level, SchedulerP& sched );
 
-  /** @brief  Actually initialize some special/local variables */
+  /** @brief  Actually initialize special variables unique to model; 
+              blank for HeatTransfer parent class, intended to be re-defined by child classes if needed. */
   void initVars( const ProcessorGroup * pc, 
-    const PatchSubset    * patches, 
-    const MaterialSubset * matls, 
-    DataWarehouse        * old_dw, 
-    DataWarehouse        * new_dw );
+                 const PatchSubset    * patches, 
+                 const MaterialSubset * matls, 
+                 DataWarehouse        * old_dw, 
+                 DataWarehouse        * new_dw );
 
-  /** @brief Actually compute the source term */ 
-  void computeModel( const ProcessorGroup* pc, 
-                     const PatchSubset* patches, 
-                     const MaterialSubset* matls, 
-                     DataWarehouse* old_dw, 
-                     DataWarehouse* new_dw );
-
-  /** @brief  Schedule the dummy solve for MPMArches - see ExplicitSolver::noSolve */
-  void sched_dummyInit( const LevelP& level, SchedulerP& sched );
-
-  /** @brief  Actually do dummy solve */
+  /** @brief  Actually do dummy solve (sched_dummyInit is defined in ModelBase parent class) */
   void dummyInit( const ProcessorGroup* pc, 
                   const PatchSubset* patches, 
                   const MaterialSubset* matls, 
                   DataWarehouse* old_dw, 
                   DataWarehouse* new_dw );
 
-// use getGasSourceLabel() instead (defined in ModelBase)
-//  inline const VarLabel* getGasHeatLabel(){
-//    return d_gasLabel; };
+  ////////////////////////////////////////////////
+  // Model computation 
 
-  /** @brief  Access function for thermal conductivity (of particles, I think???) */
-  inline const VarLabel* getabskp(){
-    return d_abskp; };  
-  
+  /** @brief  Get the particle heating rate */
+  virtual double calcParticleHeatingRate() = 0;
+
+  /** @brief  Get the gas heating rate */
+  virtual double calcGasHeatingRate() = 0;
+
+  /** @brief  Get the particle temperature (see Glacier) */
+  virtual double calcParticleTemperature() = 0;
+
+  /** @brief  Get the particle heat capacity (see Glacier) */
+  virtual double calcParticleHeatCapacity() = 0;
+
+  /** @brief  Get the convective heat transfer coefficient (see Glacier) */
+  virtual double calcConvectiveHeatXferCoeff() = 0;
+
+  /** @brief  Calculate enthalpy of coal off-gas (see Glacier) */
+  virtual double calcEnthalpyCoalOffGas() = 0;
+
+  /** @brief  Calculate enthalpy change of the particle (see Glacier) */
+  virtual double calcEnthalpyChangeParticle() = 0;
+
+  //////////////////////////////////////////////////
+  // Access functions
+
   /** @brief  Access function for radiation flag (on/off) */
   inline const bool getRadiationFlag(){
     return d_radiation; };   
 
-  /** @brief  What does this do? The name isn't descriptive */
-  double g1( double z);
-
-  /** @brief  Calculate heat capacity of particle (I think?) */
-  double heatcp(double Tp, double yelem[5]);
-  
-  /** @brief  Calculate heat capacity of ash */
-  double heatap(double Tp);
-
-  /** @brief  Calculate gas properties of N2 at atmospheric pressure (see Holman p. 505) */
-  double props(double Tg, double Tp);
-
-private:
-
-  const ArchesLabel* d_fieldLabels; 
-  
-  map<string, string> LabelToRoleMap;
-
-  const VarLabel* d_raw_coal_mass_label;// label for raw coal mass
-  const VarLabel* d_ash_mass_label;// label for raw coal mass
-  const VarLabel* d_particle_temperature_label;  // label for particle temperature
-  const VarLabel* d_particle_length_label;       // label for particle length
-  const VarLabel* d_weight_label; // label for DQMOM weight
-
-  const VarLabel* d_abskp; // label for thermal conductivity (of the particles, I think???)
-  const VarLabel* d_smoothTfield; // temperature field: particle temperature where there are particles,
-                                  //                    gas temperature where there are no particles
+protected:
 
   bool d_radiation;
-  bool d_ash;
-  int d_quad_node;   // store which quad node this model is for
 
   double d_lowModelClip; 
   double d_highModelClip; 
 
-  double visc;
-  double yelem[5];
-  double rhop;
-  double d_rc_scaling_factor;
-  double d_ash_scaling_factor;
-  double d_pl_scaling_factor;
-  double d_pt_scaling_factor;
   double d_w_scaling_factor;
   double d_w_small; // "small" clip value for zero weights
 
@@ -183,6 +147,6 @@ private:
 
   };
 
-}; // end ConstSrcTerm
+}; // end HeatTransfer
 } // end namespace Uintah
 #endif
