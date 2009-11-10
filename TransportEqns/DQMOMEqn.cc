@@ -232,7 +232,7 @@ DQMOMEqn::problemSetup(const ProblemSpecP& inputdb, int qn)
         db_initialValue->require("step_cellend", d_step_cellend);
         // swap if out of order
         if(d_step_cellstart > d_step_cellend) {
-          double temp = d_step_cellstart;
+          int temp = d_step_cellstart;
           d_step_cellstart = d_step_cellend;
           d_step_cellend = temp;
         }
