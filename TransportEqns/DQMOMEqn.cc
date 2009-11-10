@@ -5,6 +5,7 @@
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Exceptions/InvalidValue.h>
+#include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Parallel/Parallel.h>
 
 using namespace std;
@@ -178,9 +179,10 @@ DQMOMEqn::problemSetup(const ProblemSpecP& inputdb, int qn)
         // each quad node is initialized to the same thing - not good if not zero!
         db_initialValue->require("constant", d_constant_init); 
         if( d_weight == false && d_constant_init != 0.0 ) {
-          string err_msg =  "ERROR: Arches: DQMOMEqn: You can't initialize abscissas of all environments for " + d_eqnName + " to the same non-zero constant value ";
-                 err_msg += d_constant_init + " : your A matrix will be singular!  Use 'env_constant' instead of 'constant' for your initialization type.\n";
-          throw ProblemSetupException(err_msg,__FILE__,__LINE__);
+          stringstream err_msg;
+          err_msg <<  "ERROR: Arches: DQMOMEqn: You can't initialize abscissas of all environments for " + d_eqnName + " to the same non-zero constant value ";
+                 err_msg << d_constant_init << " : your A matrix will be singular!  Use 'env_constant' instead of 'constant' for your initialization type.\n";
+          throw ProblemSetupException(err_msg.str(),__FILE__,__LINE__);
         } else {
           d_constant_init /= d_scalingConstant; 
         }
