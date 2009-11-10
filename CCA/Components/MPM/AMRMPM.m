@@ -33,7 +33,7 @@ if (~strcmp(problem_type, 'impulsiveBar')  && ...
 end
 %__________________________________
 % hard coded domain
-PPC     = 2;
+PPC     = 1;
 E       = 1e6;
 density = 1.;
 interpolation = 'gimp';
@@ -55,7 +55,7 @@ bar_length  = bar_max - bar_min;
 domain     = 52;
 area       = 1.;
 plotSwitch = 0;
-max_tstep  = 10000;
+max_tstep  = BigNum;
 c          = sqrt(E/density);
 
 % HARDWIRED FOR TESTING
@@ -455,7 +455,8 @@ while t<tfinal && tstep < max_tstep
   %__________________________________
   % project particle data to grid  
   for ip=1:NP
-    [nodes,Ss]=findNodesAndWeights_gimp(xp(ip), nRegions, Regions, nodePos, Lx);
+  
+    [nodes,Ss]=findNodesAndWeights_gimp2(xp(ip), nRegions, Regions, nodePos, Lx);
     for ig=1:NSFN
       massG(nodes(ig))     = massG(nodes(ig))     + massP(ip) * Ss(ig);
       velG(nodes(ig))      = velG(nodes(ig))      + massP(ip) * velP(ip) * Ss(ig);
@@ -542,7 +543,7 @@ while t<tfinal && tstep < max_tstep
   %project changes back to particles
   tmp = zeros(NP,1);
   for ip=1:NP
-    [nodes,Ss]=findNodesAndWeights_gimp(xp(ip),nRegions, Regions, nodePos, Lx);
+    [nodes,Ss]=findNodesAndWeights_gimp2(xp(ip),nRegions, Regions, nodePos, Lx);
     dvelP = 0.;
     dxp   = 0.;
     
@@ -625,7 +626,7 @@ while t<tfinal && tstep < max_tstep
       figure(1)
       plot(xp,stressP,'rd', xp, stressExact, 'b');
       axis([0 50 -10000 0])
-      title('Quasi-Static Compaction Problem, Single Level \Delta{x} = 0.5, PPC: 1, Cells: 100')
+      title('Quasi-Static Compaction Problem, Single Level \Delta{x} = 0.5, PPC: 2, Cells: 50, GIMP')
       legend('Simulation','Exact')
       xlabel('Position');
       ylabel('Particle stress');
@@ -941,47 +942,67 @@ function [nodes,Ss]=findNodesAndWeights_gimp2(xp, nRegions, Regions, nodePos, Lx
   % the values of the shape functions for those nodes
   % Assume the grid starts at x=0.  This follows the numenclature
   % of equation 15 of the reference
+  [nodes,dx]=positionToClosestNodes(xp,nRegions,Regions, nodePos);
+ 
+  for ig=1:NSFN
+    node = nodes(ig);
+    Lx_minus = Lx(node,1);
+    Lx_plus  = Lx(node,2);
+    lp       = dx/(2 * PPC);          % This assumes that lp = lp_initial.
 
-  [node, dx]=positionToNode(xp, nRegions, Regions);  
+    delX = xp - nodePos(node);
+    A = delX - lp;
+    B = delX + lp;
+    a = max( A, -Lx_minus);
+    b = min( B,  Lx_plus);
 
-  nodes(1)= node;
-  nodes(2)= node+1;
-  
-  Lx_minus = Lx(node,1);
-  Lx_plus  = Lx(node,2);
-  lp       = dx/(2 * PPC);          % This assumes that lp = lp_initial.
-  
-  delX = xp - nodePos(node);
-  A = delX - lp;
-  B = delX + lp;
-  a = max( A, -Lx_minus);
-  b = min( B,  Lx_plus);
-  
+    if (B <= -Lx_minus || A >= Lx_plus)
+      
+      Ss(ig) = 0;
     
-  if (B <= -Lx_minus || A >= Lx_plus)
-    Ss(1) = 0;
-    Ss(2) = 1;
-  elseif( b <= 0 )
-    t1 = b - a;
-    t2 = (b*b - a*a)/(2.0*Lx_minus);
+    elseif( b <= 0 )
     
-    Ss(1) = (t1 + t2)/(2.0*lp);
-    Ss(2) = 1.0 - Ss(1);
-  elseif( a >= 0 )
-    t1 = b - a;
-    t2 = (b*b - a*a)/(2.0*Lx_plus);
+      t1 = b - a;
+      t2 = (b*b - a*a)/(2.0*Lx_minus);
+      Ss(ig) = (t1 + t2)/(2.0*lp);
+      
+    elseif( a >= 0 )
+      
+      t1 = b - a;
+      t2 = (b*b - a*a)/(2.0*Lx_plus);
+      Ss(ig) = (t1 - t2)/(2.0*lp);
+    else
     
-    Ss(1) = (t1 - t2)/(2.0*lp);
-    Ss(2) = 1.0 - Ss(1);
-  else
-    t1 = b - a;
-    t2 = (a*a)/(2.0*Lx_minus);
-    t3 = (b*b)/(2.0*Lx_plus);
-    
-    Ss(1) = (t1 - t2 - t3)/(2*lp);
-    Ss(2) = 1.0 - Ss(1);
+      t1 = b - a;
+      t2 = (a*a)/(2.0*Lx_minus);
+      t3 = (b*b)/(2.0*Lx_plus);
+      Ss(ig) = (t1 - t2 - t3)/(2*lp);
+      
+    end
   end
   
+  %__________________________________
+  % bullet proofing
+  sum = double(0);
+  for ig=1:NSFN
+    sum = sum + Ss(ig);
+  end
+  if ( abs(sum-1.0) > 1e-10)
+    fprintf('node(1):%g, node(1):%g ,node(3):%g, xp:%g Ss(1): %g, Ss(2): %g, Ss(3): %g, sum: %g\n',nodes(1),nodes(2),nodes(3), xp, Ss(1), Ss(2), Ss(3), sum)
+    input('error: the shape functions dont sum to 1.0 \n');
+  end
+  
+  %__________________________________
+  % error checking
+  % Only turn this on with single resolution grids
+  [nodes,Ss_old]=findNodesAndWeights_gimp(xp, nRegions, Regions, nodePos, Lx);
+  for ig=1:NSFN
+    if ( abs(Ss_old(ig)-Ss(ig)) > 1e-10 )
+      fprintf(' The methods (old/new) for computing the shape functions dont match\n');
+      fprintf('Node: %g, Ss_old: %g, Ss_new: %g \n',node(ig), Ss_old(ig), Ss(ig));
+      input('error: shape functions dont match \n'); 
+    end
+  end
 end
 
 %__________________________________
