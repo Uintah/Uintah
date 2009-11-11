@@ -19,9 +19,9 @@ d_debugging = problem_type
 %  problem type:  impulsiveBar, oscillator, compaction advectBlock
 %  CFL:            0 < cfl < 1, usually 0.2 or so.
 %  R1_dx:          cell spacing in region 1.
-% One dimensional MPM
-% bulletproofing
 
+
+% bulletproofing
 if (~strcmp(problem_type, 'impulsiveBar')  && ...
     ~strcmp(problem_type, 'oscillator')    && ...
     ~strcmp(problem_type, 'compaction')    && ...
@@ -32,8 +32,8 @@ if (~strcmp(problem_type, 'impulsiveBar')  && ...
   return;
 end
 %__________________________________
-% hard coded domain
-PPC     = 1;
+% Global variables
+PPC     = 2;
 E       = 1e6;
 density = 1.;
 interpolation = 'gimp';
@@ -76,9 +76,9 @@ end
 %____________
 % single level
 nRegions    = int32(2);               % partition the domain into nRegions
-Regions       = cell(nRegions,1);    % array that holds the individual region information
-R.min         = 0;                     % location of left point
-R.max         = domain/2;                   % location of right point
+Regions       = cell(nRegions,1);     % array that holds the individual region information
+R.min         = 0;                    % location of left point
+R.max         = domain/2;             % location of right point
 R.refineRatio = 1;
 R.dx          = R1_dx;
 R.volP        = R.dx/PPC;
@@ -97,10 +97,10 @@ Regions{2}    = R;
 % 2 level
 if(0)
 nRegions    = int32(3);               % partition the domain into nRegions
-Regions       = cell(nRegions,1);    % array that holds the individual region information
+Regions       = cell(nRegions,1);     % array that holds the individual region information
 
-R.min         = 0;                     % location of left point
-R.max         = 0.32;                   % location of right point
+R.min         = 0;                    % location of left point
+R.max         = 0.32;                 % location of right point
 R.refineRatio = 1;
 R.dx          = R1_dx;
 R.volP        = R.dx/PPC;
@@ -130,10 +130,10 @@ end
 if(0)
 
 nRegions    = int32(5);               % partition the domain into nRegions
-Regions       = cell(nRegions,1);    % array that holds the individual region information
+Regions       = cell(nRegions,1);     % array that holds the individual region information
 
-R.min         = 0;                     % location of left point
-R.max         = 0.32;                   % location of right point
+R.min         = 0;                    % location of left point
+R.max         = 0.32;                 % location of right point
 R.refineRatio = 1;
 R.dx          = R1_dx;
 R.volP        = R.dx/PPC;
@@ -206,6 +206,7 @@ for r=1:nRegions
 end
 
 
+% define the boundary condition nodes
 BCNodeL(1)  = 1;
 BCNodeR(2)  = NN;
 
@@ -236,7 +237,7 @@ for r=1:nRegions
   if(r == 1)               % leftmost region
     dx_L = 0;
     dx_R = Regions{r+1}.dx;
-  elseif(r == nRegions)  % rightmost region
+  elseif(r == nRegions)    % rightmost region
     dx_L = Regions{r-1}.dx;
     dx_R = 0;
   else                     % all other regions
@@ -429,9 +430,7 @@ while t<tfinal && tstep < max_tstep
     intForceG(ig) =0.;
   end
   
-  
-  %__________________________________
-  % debugging
+  %debugging________________________
   if (strcmp(problem_type, 'compaction'))
     if(bodyForce > -200)
       bodyForce = -t * 100;
@@ -449,7 +448,7 @@ while t<tfinal && tstep < max_tstep
        extForceP(ip) = bodyForce*massP(ip);                                                      
     end                                                                               
   end
-  %__________________________________
+  %debugging________________________
   
     
   %__________________________________
@@ -727,8 +726,10 @@ fprintf(' Writing out the data files \n\t %s \n\t %s \n\t %s \n\t %s \n',fname1,
 
 
 end
+%______________________________________________________________________
+% functions
+%______________________________________________________________________
 
-%__________________________________
 function [stressP,vol,Fp]=computeStressFromVelocity(xp,dt,velG,E,Fp,NP, nRegions, Regions, nodePos)
   global d_debugging;
   global NSFN;
@@ -757,8 +758,8 @@ function [stressP,vol,Fp]=computeStressFromVelocity(xp,dt,velG,E,Fp,NP, nRegions
   end
 end
 
-%______________________________________________________________________
-% functions
+%__________________________________
+%
 function[node, dx]=positionToNode(xp, nRegions, Regions)
  
   n_offset = 0;
@@ -787,8 +788,9 @@ function[node, dx]=positionToNode(xp, nRegions, Regions)
   input('stop'); 
  end
 end
+
+
 %__________________________________
-%
 function[nodes,dx]=positionToClosestNodes(xp,nRegions,Regions, nodePos)
   [node, dx]=positionToNode(xp, nRegions, Regions);
   
@@ -811,7 +813,6 @@ function[nodes,dx]=positionToClosestNodes(xp,nRegions,Regions, nodePos)
   
 end
 %__________________________________
-%
 function[volP]=positionToVolP(xp, nRegions, Regions)
   volP = -9.0;
  
@@ -1060,6 +1061,101 @@ function [nodes,Gs, dx]=findNodesAndWeightGradients_gimp(xp, nRegions, Regions, 
     else
       Gs(ig) = 0;
     end
+  end
+  
+  %__________________________________
+  % bullet proofing
+  sum = double(0);
+  for ig=1:NSFN
+    sum = sum + Gs(ig);
+  end
+  if ( abs(sum) > 1e-10)
+    fprintf('node(1):%g, node(1):%g ,node(3):%g, xp:%g Gs(1): %g, Gs(2): %g, Gs(3): %g, sum: %g\n',nodes(1),nodes(2),nodes(3), xp, Gs(1), Gs(2), Gs(3), sum)
+    input('error: the gradient of the shape functions dont sum to 1.0 \n');
+  end
+end
+
+%__________________________________
+function [nodes,Gs, dx]=findNodesAndWeightGradients_gimp2(xp, nRegions, Regions, nodePos)
+  global PPC;
+  global NSFN;
+  % find the nodes that surround the given location and
+  % the values of the gradients of the shape functions.
+  % Assume the grid starts at x=0.
+  [nodes,dx]=positionToClosestNodes(xp,nRegions,Regions, nodePos);
+  
+  for ig=1:NSFN
+    Gs(ig) = -9;
+      
+    node = nodes(ig);                                                       
+    Lx_minus = Lx(node,1);                                                  
+    Lx_plus  = Lx(node,2);                                                  
+    lp       = dx/(2 * PPC);          % This assumes that lp = lp_initial.  
+
+    delX = xp - nodePos(node);                                              
+    A = delX - lp;                                                          
+    B = delX + lp;                                                          
+    a = max( A, -Lx_minus);                                                 
+    b = min( B,  Lx_plus);                                                  
+
+    if (B <= -Lx_minus || A >= Lx_plus)   %--------------------------     B<= -Lx- & A >= Lx+                                    
+
+      Gs(ig) = 0;                                                           
+
+    elseif( b <= 0 )                      %--------------------------     b <= 0                                                
+
+      if( (B < Lx_plus) && (A > -Lx_minus))
+
+        Gs(ig) = 1/Lx_minus;
+
+      elseif( (B >= Lx_plus) && (A > -Lx_minus) )
+
+        Gs(ig) = (Lx_minus + A)/ (2.0 * Lx_minus * lp);
+
+      elseif( (B < Lx_plus) && (A <= -Lx_minus) )
+
+        Gs(ig) = (Lx_minus + B)/ (2.0 * Lx_minus * lp);      
+
+      else
+        Gs(ig) = 0.0;
+      end                            
+
+    elseif( a >= 0 )                        %--------------------------    a >= 0                                          
+
+      if( (B < Lx_plus) && (A > -Lx_minus))
+
+        Gs(ig) = -1/Lx_plus;
+
+      elseif( (B >= Lx_plus) && (A > -Lx_minus) )
+
+        Gs(ig) = (-Lx_plus + A)/ (2.0 * Lx_plus * lp);
+
+      elseif( (B < Lx_plus) && (A <= -Lx_minus) )
+
+        Gs(ig) = (Lx_plus - B)/ (2.0 * Lx_plus * lp);      
+
+      else
+        Gs(ig) = 0.0;
+      end  
+
+    else                                      %--------------------------    other                                                    
+
+       if( (B < Lx_plus) && (A > -Lx_minus))
+
+        Gs(ig) = -A/(2.0 * Lx_minus * lp)  - B/(2.0 * Lx_plus * lp);
+
+      elseif( (B >= Lx_plus) && (A > -Lx_minus) )
+
+        Gs(ig) = (-Lx_minus - A)/(2.0 * Lx_minus * lp)
+
+      elseif( (B < Lx_plus) && (A <= -Lx_minus) )
+
+        Gs(ig) = (Lx_plus - B)/(2.0 * Lx_plus * lp)
+
+      else
+        Gs(ig) = 0.0;
+      end
+    end                                          
   end
   
   %__________________________________
