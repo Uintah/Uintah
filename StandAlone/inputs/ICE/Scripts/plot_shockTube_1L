@@ -54,17 +54,20 @@ set timeStep = $<
 
 #__________________________________
 # ExtractData from the data file
-lineextract -v temp_CC   -o temp.dat  -l 0 -cellCoords -timestep $timeStep -istart 0 0 0 -iend 10000 0 0 -m 0 -uda $uda
-lineextract -v vel_CC    -o vel.dat   -l 0 -cellCoords -timestep $timeStep -istart 0 0 0 -iend 10000 0 0 -m 0 -uda $uda
-lineextract -v press_CC  -o press.dat -l 0 -cellCoords -timestep $timeStep -istart 0 0 0 -iend 10000 0 0 -m 0 -uda $uda
-lineextract -v rho_CC    -o rho.dat   -l 0 -cellCoords -timestep $timeStep -istart 0 0 0 -iend 10000 0 0 -m 0 -uda $uda
+if( -e temp.dat  || -e vel.dat || -e press.dat || -e rho.dat ) then
+  /bin/rm -f temp.dat vel.dat press.dat rho.dat
+endif
+lineextract -v temp_CC   -o temp.dat  -l 0 -cellCoords -timestep $timeStep -istart -1 0 0 -iend 10000 0 0 -m 0 -uda $uda
+lineextract -v vel_CC    -o vel.dat   -l 0 -cellCoords -timestep $timeStep -istart -1 0 0 -iend 10000 0 0 -m 0 -uda $uda
+lineextract -v press_CC  -o press.dat -l 0 -cellCoords -timestep $timeStep -istart -1 0 0 -iend 10000 0 0 -m 0 -uda $uda
+lineextract -v rho_CC    -o rho.dat   -l 0 -cellCoords -timestep $timeStep -istart -1 0 0 -iend 10000 0 0 -m 0 -uda $uda
 
 inputs/ICE/Scripts/removeBraces vel.dat
 
 cp inputs/ICE/Scripts/riemann.dat $uda/exactSolution.dat
 mv *.dat $uda/.
 
-
+echo "set terminal x11 enhanced" > gp
 #__________________________________
 # if making a hardcopy
 if( $hardcopy == "y" || $hardcopy == "Y" ) then 
@@ -72,7 +75,6 @@ echo "Generating the postscript file shockTube.ps"
 rm -f gp
 
 cat > gp << fin
-set terminal x11 1
 set terminal postscript color solid "Times-Roman" 9 portrait
 set output "shockTube.ps"
 fin
@@ -134,9 +136,9 @@ pause -1 "Hit return to continue"
 fin
 #__________________________________
 # plot it up
-gnuplot gp
+gnuplot -geometry 900x900 gp
 
 
 #__________________________________
 # clean up
-rm -f gp 
+/bin/rm -f gp temp.dat vel.dat press.dat rho.dat
