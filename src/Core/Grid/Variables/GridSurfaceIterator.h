@@ -50,11 +50,11 @@ CLASS
    GridSurfaceIterator
    
    This iterator will iterate over cells that are on the 
-   surface of a grid which is specified by low and
-   high points of and interior and exterior grid.  The iterator
-   will touch all cells that are in the exterior grid but not 
-   in the interior grid exactly once.
-
+   surface of a grid.  The user must specify the grid low and high 
+   points along with an offset of the number of cells in each dimension 
+   they wish the iterator to touch.  This offset can be positive for
+   cells that are outside of the grid or negative for cells that are
+   inside of the grid.  Each cell is touch exactly once.
 
 GENERAL INFORMATION
 
@@ -72,7 +72,12 @@ KEYWORDS
    GridSurfaceIterator
 
 DESCRIPTION
-   Long description...
+   This iterator will iterate over cells that are on the 
+   surface of a grid.  The user must specify the grid low and high 
+   points along with an offset of the number of cells in each dimension 
+   they wish the iterator to touch.  This offset can be positive for
+   cells that are outside of the grid or negative for cells that are
+   inside of the grid.  Each cell is touch exactly once.
   
 WARNING
   
@@ -126,8 +131,15 @@ WARNING
        ASSERT(!d_done);
        return *d_iter;
      }
-     inline GridSurfaceIterator(const IntVector& int_low, const IntVector& int_high, const IntVector& ext_low, const IntVector& ext_high)
-       : d_int_low(int_low), d_int_high(int_high), d_ext_low(ext_low), d_ext_high(ext_high) {
+     inline GridSurfaceIterator(const IntVector& low, const IntVector& high, const IntVector& offset) {
+         //compute interior and exterior points
+         d_int_low=Max(low,low-offset);
+         d_ext_low=Min(low,low-offset);
+         d_int_high=Min(high,high+offset);
+         d_ext_high=Max(high,high+offset);
+
+         //cout << "Int: " << d_int_low << "->" << d_int_high << endl;
+         //cout << "Ext: " << d_ext_low << "->" << d_ext_high << endl;
          reset();
        }
      inline IntVector begin() const {
