@@ -37,6 +37,7 @@ SRCS += \
         $(SRCDIR)/CellIterator.cc               \
         $(SRCDIR)/NodeIterator.cc               \
         $(SRCDIR)/GridIterator.cc               \
+        $(SRCDIR)/GridSurfaceIterator.cc        \
         $(SRCDIR)/ListOfCellsIterator.cc        \
         $(SRCDIR)/DifferenceIterator.cc         \
         $(SRCDIR)/UnionIterator.cc              \
