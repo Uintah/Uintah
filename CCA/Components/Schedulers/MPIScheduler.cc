@@ -88,6 +88,8 @@ DebugStream mpidbg("MPIDBG",false);
 static Mutex sendsLock( "sendsLock" );
 
 static double CurrentWaitTime=0;
+map<string,double> waittimes;
+
 static
 void
 printTask( ostream& out, DetailedTask* task )
@@ -269,7 +271,7 @@ MPIScheduler::runTask( DetailedTask         * task, int iteration)
 
   if(waitout.active())
   {
-    waitout << d_myworld->myrank() << ": TaskWaitTime: " << CurrentWaitTime << " DetailedTask:" << task->getName() << endl;
+    waittimes[task->getTask()->getName()]+=CurrentWaitTime;
     CurrentWaitTime=0;
   }
 #ifdef USE_PERFEX_COUNTERS
@@ -1202,6 +1204,15 @@ MPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
     //        << total << '\n';
     //timeout << "MPIScheduler: time sum reduction (one processor only): " 
     //        << rtime << '\n';
+  }
+
+  if(waitout.active())
+  {
+    for(map<string,double>::iterator iter=waittimes.begin();iter!=waittimes.end();iter++)
+    {
+      waitout << d_myworld->myrank() << ": TaskWaitTime: " << iter->second << " Task:" << iter->first << endl;
+    }
+    waittimes.clear();
   }
 
   if( dbg.active()) {
