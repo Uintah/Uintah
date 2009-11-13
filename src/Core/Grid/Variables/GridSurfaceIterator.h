@@ -56,6 +56,9 @@ CLASS
    cells that are outside of the grid or negative for cells that are
    inside of the grid.  Each cell is touch exactly once.
 
+   You can also specify the iterator region by specifying both the interior
+   and exterior ranges.
+
 GENERAL INFORMATION
 
    GridSurfaceIterator.h
@@ -78,6 +81,9 @@ DESCRIPTION
    they wish the iterator to touch.  This offset can be positive for
    cells that are outside of the grid or negative for cells that are
    inside of the grid.  Each cell is touch exactly once.
+   
+   You can also specify the iterator region by specifying both the interior
+   and exterior ranges.
   
 WARNING
   
@@ -132,16 +138,20 @@ WARNING
        return *d_iter;
      }
      inline GridSurfaceIterator(const IntVector& low, const IntVector& high, const IntVector& offset) {
-         //compute interior and exterior points
-         d_int_low=Max(low,low-offset);
-         d_ext_low=Min(low,low-offset);
-         d_int_high=Min(high,high+offset);
-         d_ext_high=Max(high,high+offset);
+       //compute interior and exterior points
+       d_int_low=Max(low,low-offset);
+       d_ext_low=Min(low,low-offset);
+       d_int_high=Min(high,high+offset);
+       d_ext_high=Max(high,high+offset);
 
-         //cout << "Int: " << d_int_low << "->" << d_int_high << endl;
-         //cout << "Ext: " << d_ext_low << "->" << d_ext_high << endl;
+       //cout << "Int: " << d_int_low << "->" << d_int_high << endl;
+       //cout << "Ext: " << d_ext_low << "->" << d_ext_high << endl;
+       reset();
+     }
+     inline GridSurfaceIterator(const IntVector& int_low, const IntVector& int_high, const IntVector& ext_low, const IntVector& ext_high)
+       : d_int_low(int_low), d_int_high(int_high), d_ext_low(ext_low), d_ext_high(ext_high) {
          reset();
-       }
+     }
      inline IntVector begin() const {
        return d_ext_low;
      }
@@ -223,64 +233,64 @@ WARNING
        IntVector low,high;
        switch(curFace)
        {
-          case XMINUS:
-            low=d_ext_low;
-            high=d_ext_high;
-            //restrict to x face
-            high.modifiable_x()=d_int_low.x();
-            break;
-          case YMINUS:
-            low=d_ext_low;
-            high=d_ext_high;
-            //restrict to the y face
-            high.modifiable_y()=d_int_low.y();
-            //remove x face cells
-            low.modifiable_x()=d_int_low.x();
-            high.modifiable_x()=d_int_high.x();
-            break;
-          case ZMINUS:
-            low=d_ext_low;
-            high=d_ext_high;
-            //restrict to the z face
-            high.modifiable_z()=d_int_low.z();
-            //remove x face cells
-            low.modifiable_x()=d_int_low.x();
-            high.modifiable_x()=d_int_high.x();
-            //remove y face cells
-            low.modifiable_y()=d_int_low.y();
-            high.modifiable_y()=d_int_high.y();
-            break;
-          case XPLUS:
-            low=d_ext_low;
-            high=d_ext_high;
-            //restrict to x face
-            low.modifiable_x()=d_int_high.x();
-            break;
-          case YPLUS:
-            low=d_ext_low;
-            high=d_ext_high;
-            //restrict to y face
-            low.modifiable_y()=d_int_high.y();
-            //remove x face cells
-            low.modifiable_x()=d_int_low.x();
-            high.modifiable_x()=d_int_high.x();
-            break;
-          case ZPLUS:
-            low=d_ext_low;
-            high=d_ext_high;
-            //restrict to z face
-            low.modifiable_z()=d_int_high.z();
-            //remove x face cells
-            low.modifiable_x()=d_int_low.x();
-            high.modifiable_x()=d_int_high.x();
-            //remove y face cells
-            low.modifiable_y()=d_int_low.y();
-            high.modifiable_y()=d_int_high.y();
-            break;
-          default:
-            //return an empty iterator
-            low=IntVector(0,0,0),high=IntVector(0,0,0);
-    
+         case XMINUS:
+           low=d_ext_low;
+           high=d_ext_high;
+           //restrict to x face
+           high.modifiable_x()=d_int_low.x();
+           break;
+         case YMINUS:
+           low=d_ext_low;
+           high=d_ext_high;
+           //restrict to the y face
+           high.modifiable_y()=d_int_low.y();
+           //remove x face cells
+           low.modifiable_x()=d_int_low.x();
+           high.modifiable_x()=d_int_high.x();
+           break;
+         case ZMINUS:
+           low=d_ext_low;
+           high=d_ext_high;
+           //restrict to the z face
+           high.modifiable_z()=d_int_low.z();
+           //remove x face cells
+           low.modifiable_x()=d_int_low.x();
+           high.modifiable_x()=d_int_high.x();
+           //remove y face cells
+           low.modifiable_y()=d_int_low.y();
+           high.modifiable_y()=d_int_high.y();
+           break;
+         case XPLUS:
+           low=d_ext_low;
+           high=d_ext_high;
+           //restrict to x face
+           low.modifiable_x()=d_int_high.x();
+           break;
+         case YPLUS:
+           low=d_ext_low;
+           high=d_ext_high;
+           //restrict to y face
+           low.modifiable_y()=d_int_high.y();
+           //remove x face cells
+           low.modifiable_x()=d_int_low.x();
+           high.modifiable_x()=d_int_high.x();
+           break;
+         case ZPLUS:
+           low=d_ext_low;
+           high=d_ext_high;
+           //restrict to z face
+           low.modifiable_z()=d_int_high.z();
+           //remove x face cells
+           low.modifiable_x()=d_int_low.x();
+           high.modifiable_x()=d_int_high.x();
+           //remove y face cells
+           low.modifiable_y()=d_int_low.y();
+           high.modifiable_y()=d_int_high.y();
+           break;
+         default:
+           //return an empty iterator
+           low=IntVector(0,0,0),high=IntVector(0,0,0);
+
        }
        return GridIterator(low,high);
      }
