@@ -99,6 +99,9 @@ handleData( QueryInfo &    qinfo,
       cerr << "Cannot allocate memory for field\n";
       return;
     }
+    // cout << sf->fdata().dim3() \
+         << " " << sf->fdata().dim2() \
+         << " " << sf->fdata().dim1() << endl;
     if(qinfo.combine_levels){
       // this will only be called for all levels, combined
       build_combined_level_field<T, VarT, LVFieldCB, FLOC>( qinfo, low, sf, args );
@@ -276,6 +279,7 @@ handleVariable( QueryInfo &qinfo, IntVector &low, IntVector& hi,
   LVMeshHandle mesh_handle;
   switch( qinfo.type->getType() ) {
     case Uintah::TypeDescription::CCVariable:
+      // cout << "CCVariable: " << range << endl;
       mesh_handle = scinew LVMesh(range.x(), range.y(),
 	  range.z(), box.min(),
 	  box.max());
@@ -347,6 +351,14 @@ handlePatchData( QueryInfo& qinfo, IntVector& offset,
   }*/
 
   IntVector extraCells = patch->getExtraCells();
+  
+  // necessary check - useful with periodic boundaries
+  for (int i = 0; i < 3; i++) {
+    if (extraCells(i) == 0) {
+      extraCells(i) = 1;
+    }
+  }
+
   IntVector noCells = patch->getCellHighIndex__New() - patch->getCellLowIndex__New();
      
   static IntVector hi, lo;
@@ -394,7 +406,14 @@ handlePatchData( QueryInfo& qinfo, IntVector& offset,
       patch_low = patch->getNodeLowIndex__New() - extraCells;
       switch (qinfo.type->getType()) {
 	case Uintah::TypeDescription::SFCXVariable:
-	  patch_high = patch->getSFCXHighIndex__New();
+	  // patch_high = patch->getSFCXHighIndex__New();
+		
+	  patch_high = patch_low + noCells;
+	  // if (patch_high.x() == (hi.x() - 1)) {
+		  patch_high = IntVector(patch_high.x() + 1, patch_high.y(), patch_high.z());
+	  // } 
+
+	  patch_high = patch_high + extraCells;
 	  break;
 	case Uintah::TypeDescription::SFCYVariable:
 	  patch_high = patch->getSFCYHighIndex__New();
@@ -416,7 +435,13 @@ handlePatchData( QueryInfo& qinfo, IntVector& offset,
   // necessary check - useful with periodic boundaries
   for (int i = 0; i < 3; i++) {
     if (patch_high(i) > hi(i)) {
+      // cout << "boundary exceded..." << endl;	
       patch_high(i) = hi(i);
+    }
+
+    if (patch_low(i) < lo(i)) {
+      // cout << "boundary exceded..." << endl;	
+      patch_low(i) = lo(i);
     }
   }
   
@@ -457,6 +482,10 @@ handlePatchData( QueryInfo& qinfo, IntVector& offset,
   // Rewindow the data if we need only a subset.  This should never
   // get bigger (thus requiring reallocation).
   patch_data.rewindow( patch_low, patch_high );
+
+  // cout << "field dim: " << sfield->fdata().dim3() \
+       << " " << sfield->fdata().dim2() \
+       << " " << sfield->fdata().dim1() << endl;
 
   PatchToFieldThread<T, FIELD> *worker = 
     scinew PatchToFieldThread<T, FIELD>(sfield, &patch_data, offset,
