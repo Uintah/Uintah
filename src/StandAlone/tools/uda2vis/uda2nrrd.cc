@@ -1066,7 +1066,7 @@ getPatchIndex(const string& input_uda_name, int timeStepNo, int levelNo, int pat
   //if the timestep has changed then requery the grid
   if(lastUda.compare(input_uda_name)!=0 || time!=lastTime)
   {
-    cout << "Opening new grid at time: " << time << " for archive: " << input_uda_name << endl;
+    // cout << "Opening new grid at time: " << time << " for archive: " << input_uda_name << endl;
     grid = archive->queryGrid(time);
   }
 	
@@ -1086,10 +1086,10 @@ getPatchIndex(const string& input_uda_name, int timeStepNo, int levelNo, int pat
 	timeStepObjPtr->name.assign(filename_num + 1);
 	timeStepObjPtr->no = index[time];
   
-  if(lastUda.compare(input_uda_name)!=0 || time!=lastTime)
-  {
-    cout << "BLAH1\n";
-  }
+        /*if(lastUda.compare(input_uda_name)!=0 || time!=lastTime)
+        {
+	  cout << "BLAH1\n";
+        }*/
 
 	LevelP level;
 
@@ -1109,18 +1109,19 @@ getPatchIndex(const string& input_uda_name, int timeStepNo, int levelNo, int pat
 	    break;
 	  }
 	}
-  if(lastUda.compare(input_uda_name)!=0 || time!=lastTime)
-  {
-    cout << "BLAH2\n";
-  }
+
+        /*if(lastUda.compare(input_uda_name)!=0 || time!=lastTime)
+        {
+	  cout << "BLAH2\n";
+        }*/
 
 	static Patch* lastPatch = NULL;
 	static ConsecutiveRangeSet* matlsArr = new ConsecutiveRangeSet[var_indices.size()];
   
-  if(lastUda.compare(input_uda_name)!=0 || time!=lastTime)
-  {
-    cout << "BEFORE ALLOCATE MATERIALS\n";
-  }
+        /*if(lastUda.compare(input_uda_name)!=0 || time!=lastTime)
+        {
+	  cout << "BEFORE ALLOCATE MATERIALS\n";
+        }*/
 
 	// static unsigned int numMatls = var_indices.size();
 	if (/*numMatls != var_indices.size()*/ lastUda.compare(input_uda_name) != 0) {
@@ -1132,10 +1133,11 @@ getPatchIndex(const string& input_uda_name, int timeStepNo, int levelNo, int pat
 	    lastPatch = NULL; // to be on the safe side
 	}
 
-  if(lastUda.compare(input_uda_name)!=0 || time!=lastTime)
-  {
-    cout << "AFTER ALLOCATE MATERIALS\n";
-  }
+	/*if(lastUda.compare(input_uda_name)!=0 || time!=lastTime)
+	{
+	  cout << "AFTER ALLOCATE MATERIALS\n";
+	}*/
+
 	for( unsigned int cnt = 0; cnt < var_indices.size(); cnt++ ) {
 
 	  unsigned int var_index = var_indices[cnt];
@@ -1187,23 +1189,24 @@ getPatchIndex(const string& input_uda_name, int timeStepNo, int levelNo, int pat
 	  ///////////////////////////////////////////////////
 	  // Check the material number.
 
-  if(lastUda.compare(input_uda_name)!=0 || time!=lastTime)
-  {
-    cout << "BEFORE QUERY MATERIALS\n";
-  }
+	  /*if(lastUda.compare(input_uda_name)!=0 || time!=lastTime)
+	  {
+	    cout << "BEFORE QUERY MATERIALS\n";
+	  }*/
 
 	  const Patch* patch = *(level->patchesBegin());
           
 	  // variable name won't change till the uda isn't changed
 	  if ((lastTime != time) || (lastPatch != patch) || lastUda.compare(input_uda_name)!=0 ) {
-      cout << "Querying materials for " << input_uda_name << " at time: " << time << " on patch: " << patch << endl; 
+            // cout << "Querying materials for " << input_uda_name << " at time: " << time << " on patch: " << patch << endl; 
 	    /*ConsecutiveRangeSet matls*/ matlsArr[cnt] = archive->queryMaterials(variable_name, patch, time);
 	  }      
 
-  if(lastUda.compare(input_uda_name)!=0 || time!=lastTime)
-  {
-    cout << "AFTER QUERY MATERIALS\n";
-  }
+	  /*if(lastUda.compare(input_uda_name)!=0 || time!=lastTime)
+	  {
+	    cout << "AFTER QUERY MATERIALS\n";
+	  }*/
+
 	  if( args.verbose ) {
 	    // Print out all the material indicies valid for this timestep
 	    cout << "Valid materials for " << variable_name << " at time[" << time << "](" << current_time << ") are:  ";
@@ -1266,6 +1269,14 @@ getPatchIndex(const string& input_uda_name, int timeStepNo, int levelNo, int pat
 	    Point max = patch->getExtraBox().upper();
 
 	    IntVector extraCells = patch->getExtraCells();
+  
+	    // necessary check - useful with periodic boundaries
+	    for (int i = 0; i < 3; i++) {
+	      if (extraCells(i) == 0) {
+	        extraCells(i) = 1;
+	      }
+            }
+	    
 	    IntVector noCells = patch->getCellHighIndex__New() - patch->getCellLowIndex__New();
 
 	    // cout << noCells << endl;
@@ -1277,6 +1288,8 @@ getPatchIndex(const string& input_uda_name, int timeStepNo, int levelNo, int pat
 
 	    low = patch->getNodeLowIndex__New() - extraCells;
 	    hi = patch->getNodeLowIndex__New() + noCells + extraCells + IntVector(1, 1, 1);
+
+	    // cout << low << " " << hi << endl;
 	    
 	    // Point min = level->getBox(low, hi).lower(); 
 	    // Point max = level->getBox(low, hi).upper(); 
@@ -1326,6 +1339,8 @@ getPatchIndex(const string& input_uda_name, int timeStepNo, int levelNo, int pat
 		<< box.max()<<".\n";
 	    }
 	  }
+
+	  // cout << "range: " << range << endl;
 
 	  ///////////////////
 	  // Get the data...
