@@ -2326,6 +2326,38 @@ avtudaReaderMTMDFileFormat::GetVar(int timestate, int domain, const char *varnam
 #endif
 
       timeStep &timeStepObj = *timeStepObjPtr;
+    
+      patchInfoVec& patchInfoVecObj = *(patchInfoVecPtr);
+
+      int indexArr[6];
+      std::memcpy(indexArr, patchInfoVecObj[domain].indexArr, sizeof(int) * 6);
+      
+      int numGhosts[3];
+
+      for (int i = 0; i < 3; i++) {
+	if (boundaryExists[i]) {
+	  numGhosts[i] = 1;
+	}
+	else if (extraCells[i]) {
+	  numGhosts[i] = extraCells[i];
+	}
+	else {
+	  numGhosts[i] = 1;
+	}
+      }
+      
+      int cellValColln_x = indexArr[3] - indexArr[0] + 2 * numGhosts[0];
+      int cellValColln_y = indexArr[4] - indexArr[1] + 2 * numGhosts[1];
+      int cellValColln_z = indexArr[5] - indexArr[2] + 2 * numGhosts[2];
+
+      int* hiLoArr = patchInfoVecObj[domain].hiLoArr;
+
+      indexArr[0] = indexArr[0] - hiLoArr[0]; 
+      indexArr[1] = indexArr[1] - hiLoArr[1]; 
+      indexArr[2] = indexArr[2] - hiLoArr[2];
+      indexArr[3] = indexArr[3] - hiLoArr[0]; 
+      indexArr[4] = indexArr[4] - hiLoArr[1]; 
+      indexArr[5] = indexArr[5] - hiLoArr[2];
 
       if (timeStepObj.cellValColln != NULL) {
 	cellVals& cellValColln = *(timeStepObj.cellValColln);
@@ -2357,25 +2389,25 @@ avtudaReaderMTMDFileFormat::GetVar(int timestate, int domain, const char *varnam
 	// debug5 << extraXYZ[0] << " " << extraXYZ[1] << " " << extraXYZ[2] << endl;
 
 	// Allocating Matrix
-	refMatrix = (double***)malloc((cellValColln.x + 2 * extraXYZ[0]) * sizeof(double**));
+	refMatrix = (double***)malloc((cellValColln.x /*+ 2 * extraXYZ[0]*/) * sizeof(double**));
 	if (refMatrix == NULL) debug5 << "Error allocating refMatrix\n";
-	for(int i = 0; i < (cellValColln.x + 2 * extraXYZ[0]); i++) {
-	  refMatrix[i] = (double**)malloc((cellValColln.y + 2 * extraXYZ[1]) * sizeof(double*));
+	for(int i = 0; i < (cellValColln.x /*+ 2 * extraXYZ[0]*/); i++) {
+	  refMatrix[i] = (double**)malloc((cellValColln.y /*+ 2 * extraXYZ[1]*/) * sizeof(double*));
 	  if (refMatrix[i] == NULL) debug5 << "Error allocating refMatrix[" << i << "]\n";
-	  for(int j = 0; j < (cellValColln.y + 2 * extraXYZ[1]); j++) {
-	    refMatrix[i][j] = (double*)malloc((cellValColln.z + 2 * extraXYZ[2]) * sizeof(double));
+	  for(int j = 0; j < (cellValColln.y /*+ 2 * extraXYZ[1]*/); j++) {
+	    refMatrix[i][j] = (double*)malloc((cellValColln.z /*+ 2 * extraXYZ[2]*/) * sizeof(double));
 	    if (refMatrix[i][j] == NULL) debug5 << "Error allocating refMatrix[" << i << "][" << j << "]\n";
 	  }
 	}
 
-	refX = cellValColln.x + 2 * extraXYZ[0];
-	refY = cellValColln.y + 2 * extraXYZ[1];
-	refZ = cellValColln.z + 2 * extraXYZ[2];
+	refX = cellValColln.x /*+ 2 * extraXYZ[0]*/;
+	refY = cellValColln.y /*+ 2 * extraXYZ[1]*/;
+	refZ = cellValColln.z /*+ 2 * extraXYZ[2]*/;
 
 	// Reference matrix
-	for (int i = extraXYZ[2]; i < (cellValColln.z + extraXYZ[2]); i++) {
-	  for (int j = extraXYZ[1]; j < (cellValColln.y + extraXYZ[1]); j++) {
-	    for (int k = extraXYZ[0]; k < (cellValColln.x + extraXYZ[0]); k++) {    
+	for (int i = 0 /*extraXYZ[2]*/; i < (cellValColln.z /*+ extraXYZ[2]*/); i++) {
+	  for (int j = 0 /*extraXYZ[1]*/; j < (cellValColln.y /*+ extraXYZ[1]*/); j++) {
+	    for (int k = 0 /*extraXYZ[0]*/; k < (cellValColln.x /*+ extraXYZ[0]*/); k++) {    
 	      refMatrix[k][j][i] = cellValVec[count];
 	      count++;  
 	    }
@@ -2384,16 +2416,19 @@ avtudaReaderMTMDFileFormat::GetVar(int timestate, int domain, const char *varnam
 
 	// Re-sized matrix
 	for (int m = 0; m < 3; m++) {
-	  if (boundaryExists[m]) {
+	  if (boundaryExists[m] || (extraCells[m] == 0)) {
 	    // debug5 << boundaryExists[m] << endl;
 	    if (m == 0) { // x-axis 
-	      for (int i = extraXYZ[2]; i < (cellValColln.z + extraXYZ[2]); i++) {
-		for (int j = extraXYZ[1]; j < (cellValColln.y + extraXYZ[1]); j++) {
+	      for (int i = 0 /*extraXYZ[2]*/; i < (cellValColln.z /*- extraXYZ[2]*/); i++) {
+		for (int j = 0 /*extraXYZ[1]*/; j < (cellValColln.y /*- extraXYZ[1]*/); j++) {
 		  // refMatrix[0][j][i] = refMatrix[cellValColln.x + extraXYZ[0] - 1][j][i];
 		  // refMatrix[cellValColln.x+extraXYZ[0]][j][i] = refMatrix[extraXYZ[0]][j][i];
-		  
-                  refMatrix[0][j][i] = refMatrix[extraXYZ[0]][j][i];
-		  refMatrix[cellValColln.x + extraXYZ[0]][j][i] = refMatrix[cellValColln.x][j][i];
+		 
+		  if (indexArr[0] <= hiLoArr[0]) 
+                    refMatrix[0][j][i] = refMatrix[extraXYZ[0]][j][i];
+
+		  if ((indexArr[3] >= hiLoArr[3]) || ((indexArr[3] + 1) >= hiLoArr[3])) 
+		    refMatrix[cellValColln.x - extraXYZ[0]][j][i] = refMatrix[cellValColln.x - 2*extraXYZ[0]][j][i];
 		}
 	      }
 	    }
@@ -2404,20 +2439,23 @@ avtudaReaderMTMDFileFormat::GetVar(int timestate, int domain, const char *varnam
 	      // check the extents on the x-axis
 	      if (boundaryExists[0] || (extraCells[0] == 0)) { 
 		loX = 0;
-		hiX = cellValColln.x + extraXYZ[0] + 1;
+		hiX = cellValColln.x /*+ extraXYZ[0] + 1*/;
 	      }
 	      else {
 		loX = extraXYZ[0];
-		hiX = cellValColln.x + extraXYZ[0]; 
+		hiX = cellValColln.x - extraXYZ[0];
 	      }
 
-	      for (int i = extraXYZ[2]; i < (cellValColln.z + extraXYZ[2]); i++) {
+	      for (int i = 0 /*extraXYZ[2]*/; i < (cellValColln.z /*- extraXYZ[2]*/); i++) {
 		for (int k = loX; k < hiX; k++) {
 		  // refMatrix[k][0][i] = refMatrix[k][cellValColln.y + extraXYZ[1] - 1][i];
 		  // refMatrix[k][cellValColln.y+extraXYZ[1]][i] = refMatrix[k][extraXYZ[1]][i];
 		  
-                  refMatrix[k][0][i] = refMatrix[k][extraXYZ[1]][i];
-		  refMatrix[k][cellValColln.y+extraXYZ[1]][i] = refMatrix[k][cellValColln.y][i];
+		  if (indexArr[1] <= hiLoArr[1]) 
+                    refMatrix[k][0][i] = refMatrix[k][extraXYZ[1]][i];
+		  
+		  if ((indexArr[4] >= hiLoArr[4]) || ((indexArr[4] + 1) >= hiLoArr[4])) 
+		    refMatrix[k][cellValColln.y - extraXYZ[1]][i] = refMatrix[k][cellValColln.y - 2*extraXYZ[1]][i];
 		}
 	      }
 	    }
@@ -2428,21 +2466,21 @@ avtudaReaderMTMDFileFormat::GetVar(int timestate, int domain, const char *varnam
 	      // check the extents on the x-axis
 	      if (boundaryExists[0] || (extraCells[0] == 0)) {
 		loX = 0;
-		hiX = cellValColln.x + extraXYZ[0] + 1;
+		hiX = cellValColln.x /*+ extraXYZ[0] + 1*/;
 	      }
 	      else {
 		loX = extraXYZ[0];
-		hiX = cellValColln.x + extraXYZ[0]; 
+		hiX = cellValColln.x - extraXYZ[0]; 
 	      }
 
 	      // check the extents on the y-axis
 	      if (boundaryExists[1] || (extraCells[1] == 0)) {
 		loY = 0;
-		hiY = cellValColln.y + extraXYZ[1] + 1;
+		hiY = cellValColln.y /*+ extraXYZ[1] + 1*/;
 	      }
 	      else {
 		loY = extraXYZ[1];
-		hiY = cellValColln.y + extraXYZ[1]; 
+		hiY = cellValColln.y - extraXYZ[1]; 
 	      }
 
 	      // debug5 << loX << " " << hiX << endl;
@@ -2453,13 +2491,16 @@ avtudaReaderMTMDFileFormat::GetVar(int timestate, int domain, const char *varnam
 		  // refMatrix[k][j][0] = refMatrix[k][j][cellValColln.z + extraXYZ[2] - 1];
 		  // refMatrix[k][j][cellValColln.z+extraXYZ[2]] = refMatrix[k][j][extraXYZ[2]];
 		  
-                  refMatrix[k][j][0] = refMatrix[k][j][extraXYZ[2]];
-		  refMatrix[k][j][cellValColln.z+extraXYZ[2]] = refMatrix[k][j][cellValColln.z];
+		  if (indexArr[2] <= hiLoArr[2]) 
+                    refMatrix[k][j][0] = refMatrix[k][j][extraXYZ[2]];
+		  
+		  if ((indexArr[5] >= hiLoArr[5]) || ((indexArr[5] + 1) >= hiLoArr[5])) 
+		    refMatrix[k][j][cellValColln.z - extraXYZ[2]] = refMatrix[k][j][cellValColln.z - 2*extraXYZ[2]];
 		}
 	      }
 	    }
 	  }
-	  else if (extraCells[m] == 0) {
+	  /*else if (extraCells[m] == 0) {
 	    if (m == 0) { // x-axis 
 	      for (int i = extraXYZ[2]; i < (cellValColln.z + extraXYZ[2]); i++) {
 		for (int j = extraXYZ[1]; j < (cellValColln.y + extraXYZ[1]); j++) {
@@ -2523,7 +2564,7 @@ avtudaReaderMTMDFileFormat::GetVar(int timestate, int domain, const char *varnam
 		}
 	      }
 	    }
-	  }
+	  }*/
 	}
 
 	// debug5 << "refMatrix allocated\n";
@@ -2536,44 +2577,7 @@ avtudaReaderMTMDFileFormat::GetVar(int timestate, int domain, const char *varnam
       delete timeStepObjPtr;
     // }  
 
-    int numGhosts[3];
-
-    for (int i = 0; i < 3; i++) {
-      if (boundaryExists[i]) {
-	numGhosts[i] = 1;
-      }
-      else if (extraCells[i]) {
-	numGhosts[i] = extraCells[i];
-      }
-      else {
-	numGhosts[i] = 1;
-      }
-    }
-
-    patchInfoVec& patchInfoVecObj = *(patchInfoVecPtr);
-
-    int indexArr[6];
-    std::memcpy(indexArr, patchInfoVecObj[domain].indexArr, sizeof(int) * 6);
-
-    // debug5 << patchInfoVecObj[domain].numCells << endl;
-    // debug5 << indexArr[0] << " " << indexArr[1] << " " << indexArr[2] << endl;
-    // debug5 << indexArr[3] << " " << indexArr[4] << " " << indexArr[5] << endl;
-
-    int cellValColln_x = indexArr[3] - indexArr[0] + 2 * numGhosts[0];
-    int cellValColln_y = indexArr[4] - indexArr[1] + 2 * numGhosts[1];
-    int cellValColln_z = indexArr[5] - indexArr[2] + 2 * numGhosts[2];
-
-    int* hiLoArr = patchInfoVecObj[domain].hiLoArr;
-
-    // debug5 << hiLoArr[3] << " " << hiLoArr[4] << " " << hiLoArr[5] << endl;
-
-    indexArr[0] = indexArr[0] - hiLoArr[0]; 
-    indexArr[1] = indexArr[1] - hiLoArr[1]; 
-    indexArr[2] = indexArr[2] - hiLoArr[2];
-    indexArr[3] = indexArr[3] - hiLoArr[0]; 
-    indexArr[4] = indexArr[4] - hiLoArr[1]; 
-    indexArr[5] = indexArr[5] - hiLoArr[2];
-
+    
     // int indexRangeNC[3];
     int actualHiArr[3];
 
@@ -2608,21 +2612,21 @@ avtudaReaderMTMDFileFormat::GetVar(int timestate, int domain, const char *varnam
       if (currMesh.find("SFCX") != string::npos) { 
         if (actualHiArr[0] < (hiLoArr[3] - hiLoArr[0])) {
 	  cellValColln_x += 1;
-	  actualHiArr[0] += 1;
+	  // actualHiArr[0] += 1;
         }
       }
 
       if (currMesh.find("SFCY") != string::npos) { 
         if (actualHiArr[1] < (hiLoArr[4] - hiLoArr[1])) {
 	  cellValColln_y += 1;
-	  actualHiArr[1] += 1;
+	  // actualHiArr[1] += 1;
         }
       }
 
       if (currMesh.find("SFCZ") != string::npos) { 
         if (actualHiArr[2] < (hiLoArr[5] - hiLoArr[2])) {
 	  cellValColln_z += 1;
-	  actualHiArr[2] += 1;
+	  // actualHiArr[2] += 1;
         }
       }
     }
@@ -2858,6 +2862,38 @@ avtudaReaderMTMDFileFormat::GetVectorVar(int timestate, int domain,const char *v
 
       timeStep *timeStepObjPtr = (*processData)(12, arr2d, timestate, true, 0, false, string("null"), local_patch);
       timeStep &timeStepObj = *timeStepObjPtr;
+      
+      int numGhosts[3];
+
+      for (int i = 0; i < 3; i++) {
+	if (boundaryExists[i]) {
+	  numGhosts[i] = 1;
+	}
+	else if (extraCells[i]) {
+	  numGhosts[i] = extraCells[i];
+	}
+	else {
+	  numGhosts[i] = 1;
+	}
+      }
+
+      patchInfoVec& patchInfoVecObj = *(patchInfoVecPtr); 
+
+      int indexArr[6];
+      std::memcpy(indexArr, patchInfoVecObj[domain].indexArr, sizeof(int) * 6);
+
+      int cellValColln_x = indexArr[3] - indexArr[0] + 2 * numGhosts[0]; 
+      int cellValColln_y = indexArr[4] - indexArr[1] + 2 * numGhosts[1]; 
+      int cellValColln_z = indexArr[5] - indexArr[2] + 2 * numGhosts[2];
+
+      int* hiLoArr = patchInfoVecObj[domain].hiLoArr;
+
+      indexArr[0] = indexArr[0] - hiLoArr[0]; 
+      indexArr[1] = indexArr[1] - hiLoArr[1]; 
+      indexArr[2] = indexArr[2] - hiLoArr[2];
+      indexArr[3] = indexArr[3] - hiLoArr[0]; 
+      indexArr[4] = indexArr[4] - hiLoArr[1]; 
+      indexArr[5] = indexArr[5] - hiLoArr[2];
 
       if (timeStepObj.cellValColln != NULL) {
 	cellVals& cellValColln = *(timeStepObj.cellValColln);
@@ -2874,7 +2910,6 @@ avtudaReaderMTMDFileFormat::GetVectorVar(int timestate, int domain,const char *v
 	// ncomps = 1; // This case would lead to problem as it has not been added to meta data   
 
 	// ntuples = cellValVec.size() / ncomps; // this is the number of entries in the variable.        
-
 	if (vecValMatrix != NULL) {
 	  for (int i = 0; i < vecX; i++) {
 	    for (int j = 0; j < vecY; j++) {
@@ -2896,7 +2931,7 @@ avtudaReaderMTMDFileFormat::GetVectorVar(int timestate, int domain,const char *v
 	  free(tenValMatrix );
 	  tenValMatrix = NULL;
 	} 	 
-        
+	        
 	int extraXYZ[3] = {0, 0, 0};
 
 	// Expand the size of the the matrices
@@ -2911,25 +2946,25 @@ avtudaReaderMTMDFileFormat::GetVectorVar(int timestate, int domain,const char *v
 
 	if (ncomps == 3) { // Vectors
 	  // Allocating Matrix
-	  vecValMatrix = (vecVal***)malloc((cellValColln.x + 2 * extraXYZ[0]) * sizeof(vecVal**));
+	  vecValMatrix = (vecVal***)malloc((cellValColln.x /*+ 2 * extraXYZ[0]*/) * sizeof(vecVal**));
 	  if (vecValMatrix == NULL) debug5 << "Error allocating vecValMatrix\n";
-	  for(int i = 0; i < (cellValColln.x + 2 * extraXYZ[0]); i++) {
-	    vecValMatrix[i] = (vecVal**)malloc((cellValColln.y + 2 * extraXYZ[1]) * sizeof(vecVal*));
+	  for(int i = 0; i < (cellValColln.x /*+ 2 * extraXYZ[0]*/); i++) {
+	    vecValMatrix[i] = (vecVal**)malloc((cellValColln.y /*+ 2 * extraXYZ[1]*/) * sizeof(vecVal*));
 	    if (vecValMatrix[i] == NULL) debug5 << "Error allocating vecValMatrix[" << i << "]\n";
-	    for(int j = 0; j < (cellValColln.y + 2 * extraXYZ[1]); j++) {
-	      vecValMatrix[i][j] = (vecVal*)malloc((cellValColln.z + 2 * extraXYZ[2]) * sizeof(vecVal));
+	    for(int j = 0; j < (cellValColln.y /*+ 2 * extraXYZ[1]*/); j++) {
+	      vecValMatrix[i][j] = (vecVal*)malloc((cellValColln.z /*+ 2 * extraXYZ[2]*/) * sizeof(vecVal));
 	      if (vecValMatrix[i][j] == NULL) debug5 << "Error allocating vecValMatrix[" << i << "][" << j << "]\n";
 	    }
 	  }
 
-	  vecX = cellValColln.x + 2 * extraXYZ[0];
-	  vecY = cellValColln.y + 2 * extraXYZ[1];
-	  vecZ = cellValColln.z + 2 * extraXYZ[2];
+	  vecX = cellValColln.x /*+ 2 * extraXYZ[0]*/;
+	  vecY = cellValColln.y /*+ 2 * extraXYZ[1]*/;
+	  vecZ = cellValColln.z /*+ 2 * extraXYZ[2]*/;
 
 	  // Reference matrix
-	  for (int i = extraXYZ[2]; i < (cellValColln.z + extraXYZ[2]); i++) {
-	    for (int j = extraXYZ[1]; j < (cellValColln.y + extraXYZ[1]); j++) {
-	      for (int k = extraXYZ[0]; k < (cellValColln.x + extraXYZ[0]); k++) {    
+	  for (int i = 0 /*extraXYZ[2]*/; i < (cellValColln.z /*+ extraXYZ[2]*/); i++) {
+	    for (int j = 0 /*extraXYZ[1]*/; j < (cellValColln.y /*+ extraXYZ[1]*/); j++) {
+	      for (int k = 0 /*extraXYZ[0]*/; k < (cellValColln.x /*+ extraXYZ[0]*/); k++) {    
 		vecVal& vecValRef = vecValMatrix[k][j][i];
 		// vecValRef.name = varName;
 		vecValRef.x = cellValVec[count++];
@@ -2941,25 +2976,25 @@ avtudaReaderMTMDFileFormat::GetVectorVar(int timestate, int domain,const char *v
 	}
 	else if (ncomps == 9) { // Tensors
 	  // Allocating Matrix
-	  tenValMatrix = (tenVal***)malloc((cellValColln.x + 2 * extraXYZ[0]) * sizeof(tenVal**));
+	  tenValMatrix = (tenVal***)malloc((cellValColln.x /*+ 2 * extraXYZ[0]*/) * sizeof(tenVal**));
 	  if (tenValMatrix == NULL) debug5 << "Error allocating tenValMatrix\n";
-	  for(int i = 0; i < (cellValColln.x + 2 * extraXYZ[0]); i++) {
-	    tenValMatrix[i] = (tenVal**)malloc((cellValColln.y + 2 * extraXYZ[1]) * sizeof(tenVal*));
+	  for(int i = 0; i < (cellValColln.x /*+ 2 * extraXYZ[0]*/); i++) {
+	    tenValMatrix[i] = (tenVal**)malloc((cellValColln.y /*+ 2 * extraXYZ[1]*/) * sizeof(tenVal*));
 	    if (tenValMatrix[i] == NULL) debug5 << "Error allocating tenValMatrix[" << i << "]\n";
-	    for(int j = 0; j < (cellValColln.y + 2 * extraXYZ[1]); j++) {
-	      tenValMatrix[i][j] = (tenVal*)malloc((cellValColln.z + 2 * extraXYZ[2])* sizeof(tenVal));
+	    for(int j = 0; j < (cellValColln.y /*+ 2 * extraXYZ[1]*/); j++) {
+	      tenValMatrix[i][j] = (tenVal*)malloc((cellValColln.z /*+ 2 * extraXYZ[2]*/)* sizeof(tenVal));
 	      if (tenValMatrix[i][j] == NULL) debug5 << "Error allocating tenValMatrix[" << i << "][" << j << "]\n";
 	    }
 	  }
 
-	  tenX = cellValColln.x + 2 * extraXYZ[0];
-	  tenY = cellValColln.y + 2 * extraXYZ[1];
-	  tenZ = cellValColln.z + 2 * extraXYZ[2];
+	  tenX = cellValColln.x /*+ 2 * extraXYZ[0]*/;
+	  tenY = cellValColln.y /*+ 2 * extraXYZ[1]*/;
+	  tenZ = cellValColln.z /*+ 2 * extraXYZ[2]*/;
 
 	  // Reference matrix
-	  for (int i = extraXYZ[2]; i < (cellValColln.z + extraXYZ[2]); i++) {
-	    for (int j = extraXYZ[1]; j < (cellValColln.y + extraXYZ[1]); j++) {
-	      for (int k = extraXYZ[0]; k < (cellValColln.x + extraXYZ[0]); k++) {    
+	  for (int i = 0 /*extraXYZ[2*]*/; i < (cellValColln.z /*+ extraXYZ[2]*/); i++) {
+	    for (int j = 0 /*extraXYZ[1]*/; j < (cellValColln.y /*+ extraXYZ[1]*/); j++) {
+	      for (int k = 0 /*extraXYZ[0]*/; k < (cellValColln.x /*+ extraXYZ[0]*/); k++) {    
 		tenVal& tenValRef = tenValMatrix[k][j][i];
 		// tenValRef.name = varName;
 		for (int p = 0; p < 3; p++) {
@@ -2974,24 +3009,30 @@ avtudaReaderMTMDFileFormat::GetVectorVar(int timestate, int domain,const char *v
 
 	// Re-sized matrix
 	for (int m = 0; m < 3; m++) {
-	  if (boundaryExists[m]) {
+	  if (boundaryExists[m] || (extraCells[m] == 0)) {
 	    // debug5 << boundaryExists[m] << endl;
 	    if (m == 0) { // x-axis 
-	      for (int i = extraXYZ[2]; i < (cellValColln.z + extraXYZ[2]); i++) {
-		for (int j = extraXYZ[1]; j < (cellValColln.y + extraXYZ[1]); j++) {
+	      for (int i = 0 /*extraXYZ[2]*/; i < (cellValColln.z /*+ extraXYZ[2]*/); i++) {
+		for (int j = 0 /*extraXYZ[1]*/; j < (cellValColln.y /*+ extraXYZ[1]*/); j++) {
 		  if (ncomps == 3) {
 		    // vecValMatrix[0][j][i] = vecValMatrix[cellValColln.x + extraXYZ[0] - 1][j][i];
 		    // vecValMatrix[cellValColln.x+extraXYZ[0]][j][i] = vecValMatrix[extraXYZ[0]][j][i];
 		    
-                    vecValMatrix[0][j][i] = vecValMatrix[extraXYZ[0]][j][i];
-		    vecValMatrix[cellValColln.x + extraXYZ[0]][j][i] = vecValMatrix[cellValColln.x][j][i];
+		      if (indexArr[0] <= hiLoArr[0]) 
+                      vecValMatrix[0][j][i] = vecValMatrix[extraXYZ[0]][j][i];
+		  
+		    if ((indexArr[3] >= hiLoArr[3]) || ((indexArr[3] + 1) >= hiLoArr[3])) 
+		      vecValMatrix[cellValColln.x - extraXYZ[0]][j][i] = vecValMatrix[cellValColln.x - 2*extraXYZ[0]][j][i];
 		  }
 		  else if (ncomps == 9) {
 		    // tenValMatrix[0][j][i] = tenValMatrix[cellValColln.x + extraXYZ[0] - 1][j][i];
 		    // tenValMatrix[cellValColln.x+extraXYZ[0]][j][i] = tenValMatrix[extraXYZ[0]][j][i];
 		    
-                    tenValMatrix[0][j][i] = tenValMatrix[extraXYZ[0]][j][i];
-		    tenValMatrix[cellValColln.x + extraXYZ[0]][j][i] = tenValMatrix[cellValColln.x][j][i];
+		    if (indexArr[0] <= hiLoArr[0]) 
+                      tenValMatrix[0][j][i] = tenValMatrix[extraXYZ[0]][j][i];
+		    
+		    if ((indexArr[3] >= hiLoArr[3]) || ((indexArr[3] + 1) >= hiLoArr[3])) 
+		      tenValMatrix[cellValColln.x - extraXYZ[0]][j][i] = tenValMatrix[cellValColln.x - 2*extraXYZ[0]][j][i];
 		  }
 		}
 	      }
@@ -3003,28 +3044,34 @@ avtudaReaderMTMDFileFormat::GetVectorVar(int timestate, int domain,const char *v
 	      // check the extents on the x-axis
 	      if (boundaryExists[0] || (extraCells[0] == 0)) { 
 		loX = 0;
-		hiX = cellValColln.x + extraXYZ[0] + 1;
+		hiX = cellValColln.x /*+ extraXYZ[0] + 1*/;
 	      }
 	      else {
 		loX = extraXYZ[0];
-		hiX = cellValColln.x + extraXYZ[0]; 
+		hiX = cellValColln.x - extraXYZ[0]; 
 	      }
 
-	      for (int i = extraXYZ[2]; i < (cellValColln.z + extraXYZ[2]); i++) {
+	      for (int i = 0 /*extraXYZ[2]*/; i < (cellValColln.z /*+ extraXYZ[2]*/); i++) {
 		for (int k = loX; k < hiX; k++) {
 		  if (ncomps == 3) {
 		    // vecValMatrix[k][0][i] = vecValMatrix[k][cellValColln.y + extraXYZ[1] - 1][i];
 		    // vecValMatrix[k][cellValColln.y+extraXYZ[1]][i] = vecValMatrix[k][extraXYZ[1]][i];
+		  
+		    if (indexArr[1] <= hiLoArr[1]) 
+                      vecValMatrix[k][0][i] = vecValMatrix[k][extraXYZ[1]][i];
 		    
-                    vecValMatrix[k][0][i] = vecValMatrix[k][extraXYZ[1]][i];
-		    vecValMatrix[k][cellValColln.y+extraXYZ[1]][i] = vecValMatrix[k][cellValColln.y][i];
+		    if ((indexArr[4] >= hiLoArr[4]) || ((indexArr[4] + 1) >= hiLoArr[4])) 
+		      vecValMatrix[k][cellValColln.y - extraXYZ[1]][i] = vecValMatrix[k][cellValColln.y - 2*extraXYZ[1]][i];
 		  }
 		  else if (ncomps == 9) {
 		    // tenValMatrix[k][0][i] = tenValMatrix[k][cellValColln.y + extraXYZ[1] - 1][i];
 		    // tenValMatrix[k][cellValColln.y+extraXYZ[1]][i] = tenValMatrix[k][extraXYZ[1]][i];
 		    
-                    tenValMatrix[k][0][i] = tenValMatrix[k][extraXYZ[1]][i];
-		    tenValMatrix[k][cellValColln.y+extraXYZ[1]][i] = tenValMatrix[k][cellValColln.y][i];
+		    if (indexArr[1] <= hiLoArr[1]) 
+                      tenValMatrix[k][0][i] = tenValMatrix[k][extraXYZ[1]][i];
+		    
+		    if ((indexArr[4] >= hiLoArr[4]) || ((indexArr[4] + 1) >= hiLoArr[4])) 
+		      tenValMatrix[k][cellValColln.y - extraXYZ[1]][i] = tenValMatrix[k][cellValColln.y - 2*extraXYZ[1]][i];
 		  }
 		}
 	      }
@@ -3036,21 +3083,21 @@ avtudaReaderMTMDFileFormat::GetVectorVar(int timestate, int domain,const char *v
 	      // check the extents on the x-axis
 	      if (boundaryExists[0] || (extraCells[0] == 0)) {
 		loX = 0;
-		hiX = cellValColln.x + extraXYZ[0] + 1;
+		hiX = cellValColln.x /*+ extraXYZ[0] + 1*/;
 	      }
 	      else {
 		loX = extraXYZ[0];
-		hiX = cellValColln.x + extraXYZ[0]; 
+		hiX = cellValColln.x - extraXYZ[0]; 
 	      }
 
 	      // check the extents on the y-axis
 	      if (boundaryExists[1] || (extraCells[1] == 0)) {
 		loY = 0;
-		hiY = cellValColln.y + extraXYZ[1] + 1;
+		hiY = cellValColln.y /*+ extraXYZ[1] + 1*/;
 	      }
 	      else {
 		loY = extraXYZ[1];
-		hiY = cellValColln.y + extraXYZ[1]; 
+		hiY = cellValColln.y - extraXYZ[1]; 
 	      }
 
 	      // debug5 << loX << " " << hiX << endl;
@@ -3062,21 +3109,27 @@ avtudaReaderMTMDFileFormat::GetVectorVar(int timestate, int domain,const char *v
 		    // vecValMatrix[k][j][0] = vecValMatrix[k][j][cellValColln.z + extraXYZ[2] - 1];
 		    // vecValMatrix[k][j][cellValColln.z+extraXYZ[2]] = vecValMatrix[k][j][extraXYZ[2]];
 		    
-                    vecValMatrix[k][j][0] = vecValMatrix[k][j][extraXYZ[2]];
-		    vecValMatrix[k][j][cellValColln.z+extraXYZ[2]] = vecValMatrix[k][j][cellValColln.z];
+		    if (indexArr[2] <= hiLoArr[2]) 
+                      vecValMatrix[k][j][0] = vecValMatrix[k][j][extraXYZ[2]];
+		    
+		    if ((indexArr[5] >= hiLoArr[5]) || ((indexArr[5] + 1) >= hiLoArr[5])) 
+		      vecValMatrix[k][j][cellValColln.z - extraXYZ[2]] = vecValMatrix[k][j][cellValColln.z - 2*extraXYZ[2]];
 		  }
 		  else if (ncomps == 9) {
 		    // tenValMatrix[k][j][0] = tenValMatrix[k][j][cellValColln.z + extraXYZ[2] - 1];
 		    // tenValMatrix[k][j][cellValColln.z+extraXYZ[2]] = tenValMatrix[k][j][extraXYZ[2]];
 		    
-                    tenValMatrix[k][j][0] = tenValMatrix[k][j][extraXYZ[2]];
-		    tenValMatrix[k][j][cellValColln.z+extraXYZ[2]] = tenValMatrix[k][j][cellValColln.z];
+		    if (indexArr[2] <= hiLoArr[2]) 
+                      tenValMatrix[k][j][0] = tenValMatrix[k][j][extraXYZ[2]];
+		    
+		    if ((indexArr[5] >= hiLoArr[5]) || ((indexArr[5] + 1) >= hiLoArr[5])) 
+		      tenValMatrix[k][j][cellValColln.z - extraXYZ[2]] = tenValMatrix[k][j][cellValColln.z - 2*extraXYZ[2]];
 		  }
 		}
 	      }
 	    }
 	  }
-	  else if (extraCells[m] == 0) {
+	  /*else if (extraCells[m] == 0) {
 	    if (m == 0) { // x-axis 
 	      for (int i = extraXYZ[2]; i < (cellValColln.z + extraXYZ[2]); i++) {
 		for (int j = extraXYZ[1]; j < (cellValColln.y + extraXYZ[1]); j++) {
@@ -3158,7 +3211,7 @@ avtudaReaderMTMDFileFormat::GetVectorVar(int timestate, int domain,const char *v
 		}
 	      }
 	    }
-	  }
+	  }*/
 	}
 
 	// debug5 << "refMatrix allocated\n";
@@ -3172,48 +3225,16 @@ avtudaReaderMTMDFileFormat::GetVectorVar(int timestate, int domain,const char *v
       delete timeStepObjPtr;
     // }  
 
-    int numGhosts[3];
-
-    for (int i = 0; i < 3; i++) {
-      if (boundaryExists[i]) {
-	numGhosts[i] = 1;
-      }
-      else if (extraCells[i]) {
-	numGhosts[i] = extraCells[i];
-      }
-      else {
-	numGhosts[i] = 1;
-      }
-    }
-
-    patchInfoVec& patchInfoVecObj = *(patchInfoVecPtr); 
-
-    int indexArr[6];
-    std::memcpy(indexArr, patchInfoVecObj[domain].indexArr, sizeof(int) * 6);
-
-    int cellValColln_x = indexArr[3] - indexArr[0] + 2 * numGhosts[0]; 
-    int cellValColln_y = indexArr[4] - indexArr[1] + 2 * numGhosts[1]; 
-    int cellValColln_z = indexArr[5] - indexArr[2] + 2 * numGhosts[2];
-
-    int* hiLoArr = patchInfoVecObj[domain].hiLoArr;
-
-    indexArr[0] = indexArr[0] - hiLoArr[0]; 
-    indexArr[1] = indexArr[1] - hiLoArr[1]; 
-    indexArr[2] = indexArr[2] - hiLoArr[2];
-    indexArr[3] = indexArr[3] - hiLoArr[0]; 
-    indexArr[4] = indexArr[4] - hiLoArr[1]; 
-    indexArr[5] = indexArr[5] - hiLoArr[2];
-
     // int indexRangeNC[3];
-    int actualHiArr[3];
+    // int actualHiArr[3];
 
     // indexRangeNC[0] = hiLoArr[3] - hiLoArr[0] - 1;
     // indexRangeNC[1] = hiLoArr[4] - hiLoArr[1] - 1;
     // indexRangeNC[2] = hiLoArr[5] - hiLoArr[2] - 1;
 
-    actualHiArr[0] = indexArr[3];
-    actualHiArr[1] = indexArr[4];
-    actualHiArr[2] = indexArr[5];
+    // actualHiArr[0] = indexArr[3];
+    // actualHiArr[1] = indexArr[4];
+    // actualHiArr[2] = indexArr[5];
 
     /*if (currMesh.find("NC") != string::npos) {
       if (indexArr[3] < indexRangeNC[0]) {
