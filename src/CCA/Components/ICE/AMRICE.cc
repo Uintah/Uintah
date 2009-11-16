@@ -929,8 +929,8 @@ void AMRICE::iteratorTest(const Patch* finePatch,
 {
   Level::selectType coarsePatches;
   finePatch->getCoarseLevelPatches(coarsePatches); 
-  IntVector fl = finePatch->getExtraCellLowIndex__New();
-  IntVector fh = finePatch->getExtraCellHighIndex__New();
+  IntVector fl = finePatch->getExtraCellLowIndex();
+  IntVector fh = finePatch->getExtraCellHighIndex();
   
   CCVariable<double> hitCells;
   new_dw->allocateTemporary(hitCells, finePatch);
@@ -943,8 +943,8 @@ void AMRICE::iteratorTest(const Patch* finePatch,
     const Patch* coarsePatch = coarsePatches[i];
     // iterator should hit the cells over the intersection of the fine and coarse patches
 
-    IntVector cl = coarsePatch->getCellLowIndex__New();
-    IntVector ch = coarsePatch->getCellHighIndex__New();
+    IntVector cl = coarsePatch->getCellLowIndex();
+    IntVector ch = coarsePatch->getCellHighIndex();
          
     IntVector fl_tmp = coarseLevel->mapCellToFiner(cl);
     IntVector fh_tmp = coarseLevel->mapCellToFiner(ch);
@@ -1375,7 +1375,7 @@ void ICE::refluxCoarseLevelIterator(Patch::FaceType patchFace,
                                const string& whichTask)
 {
   Patch::FaceIteratorType IFC = Patch::InteriorFaceCells;
-  CellIterator f_iter=finePatch->getFaceIterator__New(patchFace, IFC);
+  CellIterator f_iter=finePatch->getFaceIterator(patchFace, IFC);
 
   ASSERT(whichTask == "computeRefluxCorrection" || whichTask == "applyRefluxCorrection" );
 
@@ -1422,8 +1422,8 @@ void ICE::refluxCoarseLevelIterator(Patch::FaceType patchFace,
     h += offset;
   }
 
-  IntVector coarse_Lo = coarsePatch->getExtraCellLowIndex__New(); 
-  IntVector coarse_Hi = coarsePatch->getExtraCellHighIndex__New();
+  IntVector coarse_Lo = coarsePatch->getExtraCellLowIndex(); 
+  IntVector coarse_Hi = coarsePatch->getExtraCellHighIndex();
   int y = dir[1];  // tangential directions
   int z = dir[2];  
   
@@ -1934,7 +1934,7 @@ void AMRICE::compute_Mag_gradient( constCCVariable<double>& q_CC,
                                     const Patch* patch) 
 {                  
   Vector dx = patch->dCell(); 
-  for(CellIterator iter = patch->getCellIterator__New();!iter.done();iter++){
+  for(CellIterator iter = patch->getCellIterator();!iter.done();iter++){
     IntVector c = *iter;
     Vector grad_q_CC;
     for(int dir = 0; dir <3; dir ++ ) { 
@@ -1957,7 +1957,7 @@ void AMRICE::compute_Mag_Divergence( constCCVariable<Vector>& q_CC,
   Vector dx = patch->dCell(); 
   
 
-  for(CellIterator iter = patch->getCellIterator__New();!iter.done();iter++){
+  for(CellIterator iter = patch->getCellIterator();!iter.done();iter++){
     IntVector c = *iter;
     Vector Divergence_q_CC;
     for(int dir = 0; dir <3; dir ++ ) { 
@@ -1981,7 +1981,7 @@ void AMRICE::set_refineFlags( constCCVariable<double>& mag_grad_q_CC,
                               const Patch* patch) 
 {                  
   PatchFlag* refinePatch = refinePatchFlag.get().get_rep();
-  for(CellIterator iter = patch->getCellIterator__New();!iter.done();iter++){
+  for(CellIterator iter = patch->getCellIterator();!iter.done();iter++){
     IntVector c = *iter;
     if( mag_grad_q_CC[c] > threshold){
       refineFlag[c] = true;

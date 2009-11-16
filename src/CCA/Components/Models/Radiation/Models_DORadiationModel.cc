@@ -251,8 +251,8 @@ Models_DORadiationModel::computeRadiationProps(const ProcessorGroup*,
                                         RadiationConstVariables* constvars)
 
 {
-  IntVector idxLo = patch->getCellFORTLowIndex();
-  IntVector idxHi = patch->getCellFORTHighIndex();
+  IntVector idxLo = patch->getFortranCellLowIndex();
+  IntVector idxHi = patch->getFortranCellHighIndex();
   IntVector domLo = patch->getCellLowIndex();
   IntVector domHi = patch->getCellHighIndex();
 
@@ -328,8 +328,8 @@ Models_DORadiationModel::boundaryCondition(const ProcessorGroup*,
 
     IntVector domLo = patch->getCellLowIndex();
     IntVector domHi = patch->getCellHighIndex();
-    IntVector idxLo = patch->getCellFORTLowIndex();
-    IntVector idxHi = patch->getCellFORTHighIndex();
+    IntVector idxLo = patch->getFortranCellLowIndex();
+    IntVector idxHi = patch->getFortranCellHighIndex();
 
     // I am retaining cellType here because we may need to have
     // cellType later for the integrated code, for first-order radiative
@@ -380,8 +380,8 @@ Models_DORadiationModel::intensitysolve(const ProcessorGroup* pg,
     fort_m_radarray(rgamma, sd15, sd, sd7, sd3);
   }
 
-  IntVector idxLo = patch->getCellFORTLowIndex();
-  IntVector idxHi = patch->getCellFORTHighIndex();
+  IntVector idxLo = patch->getFortranCellLowIndex();
+  IntVector idxHi = patch->getFortranCellHighIndex();
   IntVector domLo = patch->getCellLowIndex();
   IntVector domHi = patch->getCellHighIndex();
   

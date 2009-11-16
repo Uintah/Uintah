@@ -562,7 +562,7 @@ main(int argc, char** argv)
 			   << " to " << value.getHighIndex() << "\n";
 		      IntVector dx(value.getHighIndex()-value.getLowIndex());
 		      if(dx.x() && dx.y() && dx.z()){
-			NodeIterator iter = patch->getNodeIterator__New();
+			NodeIterator iter = patch->getNodeIterator();
 			for(;!iter.done(); iter++){
 			  partfile << (*iter).x() << " " << (*iter).y() << " " << (*iter).z()
 				   << " " << (value[*iter])(0,0) << " " << (value[*iter])(0,1) << " " 

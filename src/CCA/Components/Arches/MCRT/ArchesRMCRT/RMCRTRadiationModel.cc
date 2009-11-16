@@ -333,17 +333,17 @@ RMCRTRadiationModel::solve(  const ProcessorGroup* pc,
 
     // this is the interior's boundary indices
     // are these returning an array of indices???
-    IntVector idxLo = patch->getCellLowIndex__New();
-    IntVector idxHi = patch->getCellHighIndex__New();
+    IntVector idxLo = patch->getCellLowIndex();
+    IntVector idxHi = patch->getCellHighIndex();
 
     // this is the SFCY's boundary indices
     // what values are idxLos and idxHis??
     // an array of indices????
-    IntVector idxLos = patch->getSFCYLowIndex__New();
-    IntVector idxHis = patch->getSFCYHighIndex__New();
+    IntVector idxLos = patch->getSFCYLowIndex();
+    IntVector idxHis = patch->getSFCYHighIndex();
 
-    IntVector idxLoe = patch->getExtraCellLowIndex__New();
-    IntVector idxHie = patch->getExtraCellHighIndex__New();
+    IntVector idxLoe = patch->getExtraCellLowIndex();
+    IntVector idxHie = patch->getExtraCellHighIndex();
     
     cout << "Cell idxLo = " << idxLo << endl;
     cout << "cell idxHi = " << idxHi << endl;
@@ -353,7 +353,7 @@ RMCRTRadiationModel::solve(  const ProcessorGroup* pc,
     cout << "Extra idxHie = " << idxHie << endl;
     
     /*
-      for (CellIterator iter=patch->getCellIterator__New();!iter.done(); iter++){
+      for (CellIterator iter=patch->getCellIterator();!iter.done(); iter++){
       Point p = patch->cellPosition(*iter);
       Point p_xp = patch->cellPosition(*iter + IntVector(1,0,0));
       Point p_xm = patch->cellPosition(*iter - IntVector(1,0,0));
@@ -374,7 +374,7 @@ RMCRTRadiationModel::solve(  const ProcessorGroup* pc,
 	// because i just claim it myself, and it doesnot have the dimension
 	// it is supposed to have from datawarehouse???
 	
-    for (CellIterator iter=patch->getCellIterator__New(); !iter.done(); iter++){
+    for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
       IntVector currCell = *iter;
        cout << "i am in the patch" << endl;
        cout << "currCell = " << currCell << endl;
@@ -422,7 +422,7 @@ RMCRTRadiationModel::solve(  const ProcessorGroup* pc,
     // interpolate temperatures to FC
     // changed T to Ttest
     IntVector dir(1,0,0);
-    IntVector highIdx = patch->getCellHighIndex__New(); 
+    IntVector highIdx = patch->getCellHighIndex(); 
     interpCCTemperatureToFC( cellType, Tx, dir, highIdx, Ttest, patch ); 
     dir += IntVector(-1,1,0); 
     interpCCTemperatureToFC( cellType, Ty, dir, highIdx, Ttest, patch ); 

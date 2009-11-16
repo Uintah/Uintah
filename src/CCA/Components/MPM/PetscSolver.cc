@@ -180,11 +180,11 @@ MPMPetscSolver::createLocalToGlobalMapping(const ProcessorGroup* d_myworld,
       const Patch* patch = patchsub->get(ps);
       IntVector plowIndex,phighIndex;
       if(n8or27==8){
-        plowIndex = patch->getNodeLowIndex__New();
-        phighIndex = patch->getNodeHighIndex__New();
+        plowIndex = patch->getNodeLowIndex();
+        phighIndex = patch->getNodeHighIndex();
       } else if(n8or27==27){
-        plowIndex = patch->getExtraNodeLowIndex__New();
-        phighIndex = patch->getExtraNodeHighIndex__New();
+        plowIndex = patch->getExtraNodeLowIndex();
+        phighIndex = patch->getExtraNodeHighIndex();
       }
 
       long nn = (phighIndex[0]-plowIndex[0])*
@@ -202,11 +202,11 @@ MPMPetscSolver::createLocalToGlobalMapping(const ProcessorGroup* d_myworld,
     const Patch* patch=patches->get(p);
     IntVector lowIndex,highIndex;
     if(n8or27==8){
-        lowIndex = patch->getNodeLowIndex__New();
-        highIndex = patch->getNodeHighIndex__New() + IntVector(1,1,1);
+        lowIndex = patch->getNodeLowIndex();
+        highIndex = patch->getNodeHighIndex() + IntVector(1,1,1);
     } else if(n8or27==27){
-        lowIndex = patch->getExtraNodeLowIndex__New();
-        highIndex = patch->getExtraNodeHighIndex__New() + IntVector(1,1,1);
+        lowIndex = patch->getExtraNodeLowIndex();
+        highIndex = patch->getExtraNodeHighIndex() + IntVector(1,1,1);
     }
     Array3<int> l2g(lowIndex, highIndex);
     l2g.initialize(-1234);
@@ -220,11 +220,11 @@ MPMPetscSolver::createLocalToGlobalMapping(const ProcessorGroup* d_myworld,
       const Patch* neighbor = neighbors[i];
       IntVector plow,phigh;
       if(n8or27==8){
-        plow = neighbor->getNodeLowIndex__New();
-        phigh = neighbor->getNodeHighIndex__New();
+        plow = neighbor->getNodeLowIndex();
+        phigh = neighbor->getNodeHighIndex();
       } else if(n8or27==27){
-        plow = neighbor->getExtraNodeLowIndex__New();
-        phigh = neighbor->getExtraNodeHighIndex__New();
+        plow = neighbor->getExtraNodeLowIndex();
+        phigh = neighbor->getExtraNodeHighIndex();
       }
       //intersect my patch with my neighbor patch
       IntVector low = Max(lowIndex, plow);

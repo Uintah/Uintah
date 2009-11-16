@@ -434,7 +434,7 @@ void HypoElastic::computeStressTensor(const PatchSubset* patches,
     double press_stab=0.;
     if(flag->d_doPressureStabilization) {
       press_stab=1.;
-      for(CellIterator iter=patch->getCellIterator__New();!iter.done();iter++){
+      for(CellIterator iter=patch->getCellIterator();!iter.done();iter++){
          IntVector c = *iter;
          dvol_CC[c]/=vol_0_CC[c];
       }

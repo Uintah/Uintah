@@ -1482,7 +1482,7 @@ void FractureMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       } // End of loop over iter
 
       string interp_type = flags->d_interpolator_type;
-      for(NodeIterator iter=patch->getExtraNodeIterator__New();
+      for(NodeIterator iter=patch->getExtraNodeIterator();
                                            !iter.done();iter++){
         IntVector c = *iter; 
         totalmass      += (gmass[c]+Gmass[c]);
@@ -1522,7 +1522,7 @@ void FractureMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 
     }  // End loop over materials
 
-    for(NodeIterator iter = patch->getNodeIterator__New(); !iter.done();iter++){
+    for(NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
       IntVector c = *iter;
       gtempglobal[c] /= gmassglobal[c];
       gvelglobal[c]  /= gmassglobal[c];
@@ -1883,7 +1883,7 @@ void FractureMPM::computeInternalForce(const ProcessorGroup*,
         }
       }
 
-      for(NodeIterator iter = patch->getNodeIterator__New(); !iter.done(); iter++) {
+      for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++) {
         IntVector c = *iter;
         gstressglobal[c] += gstress[c];
         gstress[c] /= (gmass[c]+Gmass[c]); //add in addtional field
@@ -1948,7 +1948,7 @@ void FractureMPM::computeInternalForce(const ProcessorGroup*,
 #endif
     }      
       
-    for(NodeIterator iter = patch->getNodeIterator__New(); !iter.done(); iter++) {
+    for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++) {
       IntVector c = *iter;
       gstressglobal[c] /= gmassglobal[c];
     }
@@ -2039,7 +2039,7 @@ void FractureMPM::computeAndIntegrateAcceleration(const ProcessorGroup*,
       Gacceleration.initialize(Vector(0.,0.,0.));
 
       string interp_type = flags->d_interpolator_type;
-      for(NodeIterator iter=patch->getExtraNodeIterator__New();
+      for(NodeIterator iter=patch->getExtraNodeIterator();
                        !iter.done(); iter++){
         IntVector c = *iter;
         // above crack
@@ -2101,7 +2101,7 @@ void FractureMPM::setGridBoundaryConditions(const ProcessorGroup*,
 
       // Now recompute acceleration as the difference between the velocity
       // interpolated to the grid (no bcs applied) and the new velocity_star
-      for(NodeIterator iter = patch->getExtraNodeIterator__New(); !iter.done();
+      for(NodeIterator iter = patch->getExtraNodeIterator(); !iter.done();
                                                                iter++){
         IntVector c = *iter;
         gacceleration[c] = (gvelocity_star[c] - gvelocity[c])/delT;
@@ -2921,12 +2921,12 @@ FractureMPM::errorEstimate(const ProcessorGroup* group,
         new_dw->get(fineErrorFlag, d_sharedState->get_refineFlag_label(), 0,
                     finePatch, Ghost::None, 0);
 
-        IntVector fl(finePatch->getExtraCellLowIndex__New());
-        IntVector fh(finePatch->getExtraCellHighIndex__New());
+        IntVector fl(finePatch->getExtraCellLowIndex());
+        IntVector fh(finePatch->getExtraCellHighIndex());
         IntVector l(fineLevel->mapCellToCoarser(fl));
         IntVector h(fineLevel->mapCellToCoarser(fh));
-        l = Max(l, coarsePatch->getExtraCellLowIndex__New());
-        h = Min(h, coarsePatch->getExtraCellHighIndex__New());
+        l = Max(l, coarsePatch->getExtraCellLowIndex());
+        h = Min(h, coarsePatch->getExtraCellHighIndex());
 
         for(CellIterator iter(l, h); !iter.done(); iter++){
           IntVector fineStart(level->mapCellToFiner(*iter));

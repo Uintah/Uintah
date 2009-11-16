@@ -226,8 +226,8 @@ void Level::performConsistencyCheck() const
     Patch* r1 = d_virtualAndRealPatches[i];
     for(int j=i+1;j<(int)d_virtualAndRealPatches.size();j++){
       Patch* r2 = d_virtualAndRealPatches[j];
-      Box b1 = getBox(r1->getCellLowIndex__New(), r1->getCellHighIndex__New());
-      Box b2 = getBox(r2->getCellLowIndex__New(), r2->getCellHighIndex__New());
+      Box b1 = getBox(r1->getCellLowIndex(), r1->getCellHighIndex());
+      Box b2 = getBox(r2->getCellLowIndex(), r2->getCellHighIndex());
       if(b1.overlaps(b2)){
         cerr << "r1: " << *r1 << '\n';
         cerr << "r2: " << *r2 << '\n';
@@ -240,14 +240,14 @@ void Level::performConsistencyCheck() const
 
 void Level::findNodeIndexRange(IntVector& lowIndex,IntVector& highIndex) const
 {
-  lowIndex = d_realPatches[0]->getExtraNodeLowIndex__New();
-  highIndex = d_realPatches[0]->getExtraNodeHighIndex__New();
+  lowIndex = d_realPatches[0]->getExtraNodeLowIndex();
+  highIndex = d_realPatches[0]->getExtraNodeHighIndex();
   
   for(int p=1;p<(int)d_realPatches.size();p++)
   {
     Patch* patch = d_realPatches[p];
-    IntVector l( patch->getExtraNodeLowIndex__New() );
-    IntVector u( patch->getExtraNodeHighIndex__New() );
+    IntVector l( patch->getExtraNodeLowIndex() );
+    IntVector u( patch->getExtraNodeHighIndex() );
     for(int i=0;i<3;i++) {
       if( l(i) < lowIndex(i) ) lowIndex(i) = l(i);
       if( u(i) > highIndex(i) ) highIndex(i) = u(i);
@@ -257,14 +257,14 @@ void Level::findNodeIndexRange(IntVector& lowIndex,IntVector& highIndex) const
 
 void Level::findCellIndexRange(IntVector& lowIndex,IntVector& highIndex) const
 {
-  lowIndex = d_realPatches[0]->getExtraCellLowIndex__New();
-  highIndex = d_realPatches[0]->getExtraCellHighIndex__New();
+  lowIndex = d_realPatches[0]->getExtraCellLowIndex();
+  highIndex = d_realPatches[0]->getExtraCellHighIndex();
   
   for(int p=1;p<(int)d_realPatches.size();p++)
   {
     Patch* patch = d_realPatches[p];
-    IntVector l( patch->getExtraCellLowIndex__New() );
-    IntVector u( patch->getExtraCellHighIndex__New() );
+    IntVector l( patch->getExtraCellLowIndex() );
+    IntVector u( patch->getExtraCellHighIndex() );
     for(int i=0;i<3;i++) {
       if( l(i) < lowIndex(i) ) lowIndex(i) = l(i);
       if( u(i) > highIndex(i) ) highIndex(i) = u(i);
@@ -274,14 +274,14 @@ void Level::findCellIndexRange(IntVector& lowIndex,IntVector& highIndex) const
 
 void Level::findInteriorCellIndexRange(IntVector& lowIndex,IntVector& highIndex) const
 {
-  lowIndex = d_realPatches[0]->getCellLowIndex__New();
-  highIndex = d_realPatches[0]->getCellHighIndex__New();
+  lowIndex = d_realPatches[0]->getCellLowIndex();
+  highIndex = d_realPatches[0]->getCellHighIndex();
   
   for(int p=1;p<(int)d_realPatches.size();p++)
   {
     Patch* patch = d_realPatches[p];
-    IntVector l( patch->getCellLowIndex__New() );
-    IntVector u( patch->getCellHighIndex__New() );
+    IntVector l( patch->getCellLowIndex() );
+    IntVector u( patch->getCellHighIndex() );
     for(int i=0;i<3;i++) {
       if( l(i) < lowIndex(i) ) lowIndex(i) = l(i);
       if( u(i) > highIndex(i) ) highIndex(i) = u(i);
@@ -291,14 +291,14 @@ void Level::findInteriorCellIndexRange(IntVector& lowIndex,IntVector& highIndex)
 
 void Level::findInteriorNodeIndexRange(IntVector& lowIndex,IntVector& highIndex) const
 {
-  lowIndex = d_realPatches[0]->getNodeLowIndex__New();
-  highIndex = d_realPatches[0]->getNodeHighIndex__New();
+  lowIndex = d_realPatches[0]->getNodeLowIndex();
+  highIndex = d_realPatches[0]->getNodeHighIndex();
   
   for(int p=1;p<(int)d_realPatches.size();p++)
   {
     Patch* patch = d_realPatches[p];
-    IntVector l( patch->getNodeLowIndex__New() );
-    IntVector u( patch->getNodeHighIndex__New() );
+    IntVector l( patch->getNodeLowIndex() );
+    IntVector u( patch->getNodeHighIndex() );
     for(int i=0;i<3;i++) {
       if( l(i) < lowIndex(i) ) lowIndex(i) = l(i);
       if( u(i) > highIndex(i) ) highIndex(i) = u(i);
@@ -500,7 +500,7 @@ bool Level::containsPointInRealCells(const Point& p) const
    for(const_patchIterator iter=d_realPatches.begin();
        iter != d_realPatches.end(); iter++){
       const Patch* patch = *iter;
-      if(patch->containsPoint__New(p))
+      if(patch->containsPoint(p))
          return true;
    }
    return false;
@@ -597,8 +597,8 @@ void Level::finalizeLevel(bool periodicX, bool periodicY, bool periodicZ)
           if (offset == IntVector(0,0,0))
             continue;
           Box box =
-            getBox(tmp_patches[i]->getExtraCellLowIndex__New() + offset - IntVector(1,1,1),
-                   tmp_patches[i]->getExtraCellHighIndex__New() + offset + IntVector(1,1,1));
+            getBox(tmp_patches[i]->getExtraCellLowIndex() + offset - IntVector(1,1,1),
+                   tmp_patches[i]->getExtraCellHighIndex() + offset + IntVector(1,1,1));
           if (box.overlaps(domain)) {
             Patch* newPatch = tmp_patches[i]->createVirtualPatch(offset);
             d_virtualAndRealPatches.push_back(newPatch);

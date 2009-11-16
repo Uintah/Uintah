@@ -449,7 +449,7 @@ void ICE::setupMatrix(const ProcessorGroup*,
 
     //__________________________________
     //  Initialize A
-    for(CellIterator iter(patch->getExtraCellIterator__New()); !iter.done(); iter++){
+    for(CellIterator iter(patch->getExtraCellIterator()); !iter.done(); iter++){
       IntVector c = *iter;
       Stencil7&  A_tmp=A[c];
       A_tmp.p = 0.0; 
@@ -478,7 +478,7 @@ void ICE::setupMatrix(const ProcessorGroup*,
       // +x -x +y -y +z -z
       //  e, w, n, s, t, b
       
-      for(CellIterator iter=patch->getCellIterator__New(); !iter.done();iter++) { 
+      for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) { 
         IntVector c = *iter;
         Stencil7&  A_tmp=A[c];
         right  = c + IntVector(1,0,0);      left   = c;  
@@ -515,7 +515,7 @@ void ICE::setupMatrix(const ProcessorGroup*,
     double tmp_t_b = dx.x()*dx.y() * delT_2/dx.z();
 
         
-   for(CellIterator iter(patch->getCellIterator__New()); !iter.done(); iter++){ 
+   for(CellIterator iter(patch->getCellIterator()); !iter.done(); iter++){ 
       IntVector c = *iter;
       Stencil7&  A_tmp=A[c];
       A_tmp.e *= -tmp_e_w;
@@ -625,11 +625,11 @@ void ICE::setupRHS(const ProcessorGroup*,
       new_dw->allocateAndPut(vol_fracZ_FC, lb->vol_fracZ_FCLabel,  indx,patch);
       
       // lowIndex is the same for all vel_FC
-      IntVector lowIndex(patch->getExtraSFCXLowIndex__New());
+      IntVector lowIndex(patch->getExtraSFCXLowIndex());
       double nan= getNan();
-      vol_fracX_FC.initialize(nan, lowIndex,patch->getExtraSFCXHighIndex__New());
-      vol_fracY_FC.initialize(nan, lowIndex,patch->getExtraSFCYHighIndex__New());
-      vol_fracZ_FC.initialize(nan, lowIndex,patch->getExtraSFCZHighIndex__New());     
+      vol_fracX_FC.initialize(nan, lowIndex,patch->getExtraSFCXHighIndex());
+      vol_fracY_FC.initialize(nan, lowIndex,patch->getExtraSFCYHighIndex());
+      vol_fracZ_FC.initialize(nan, lowIndex,patch->getExtraSFCZHighIndex());     
       new_dw->get(uvel_FC,    lb->uvel_FCMELabel,     indx,patch,gac, 2);       
       new_dw->get(vvel_FC,    lb->vvel_FCMELabel,     indx,patch,gac, 2);       
       new_dw->get(wvel_FC,    lb->wvel_FCMELabel,     indx,patch,gac, 2);       
@@ -675,7 +675,7 @@ void ICE::setupRHS(const ProcessorGroup*,
       //__________________________________
       //  sum Advecton (<vol_frac> vel_FC )
       //  you need to multiply by vol
-      for(CellIterator iter=patch->getCellIterator__New(); !iter.done();iter++) {
+      for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) {
         IntVector c = *iter;
         sumAdvection[c] += q_advected[c] * vol;
       }
@@ -683,7 +683,7 @@ void ICE::setupRHS(const ProcessorGroup*,
       //  sum mass Exchange term
       if(d_models.size() > 0){
         pNewDW->get(burnedMass,lb->modelMass_srcLabel,indx,patch,gn,0);
-        for(CellIterator iter=patch->getCellIterator__New(); !iter.done();iter++) {
+        for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) {
           IntVector c = *iter;
           massExchTerm[c] += burnedMass[c] * sp_vol_CC[c];
         }
@@ -696,7 +696,7 @@ void ICE::setupRHS(const ProcessorGroup*,
     CCVariable<double> term1;
     new_dw->allocateTemporary(term1, patch);
     
-    for(CellIterator iter=patch->getCellIterator__New(); !iter.done();iter++) {
+    for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) {
       IntVector c = *iter;
       term1[c] = vol * sumKappa[c] * sum_imp_delP[c]; 
     }    
@@ -705,14 +705,14 @@ void ICE::setupRHS(const ProcessorGroup*,
     //  Form RHS
     // note:  massExchangeTerm has delT incorporated inside of it
     // We need to include the cell volume in rhs for AMR to be properly scaled
-    for(CellIterator iter=patch->getCellIterator__New(); !iter.done();iter++) {
+    for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) {
       IntVector c = *iter;
       rhs[c] = -term1[c] + massExchTerm[c] + sumAdvection[c];
     }
 
     // Renormalize massExchangeTerm to be consistent with the rest of ICE
     if(d_models.size() > 0){
-      for(CellIterator iter=patch->getCellIterator__New(); !iter.done();iter++) {
+      for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) {
         IntVector c = *iter;
         massExchTerm[c] /= vol;
       }
@@ -777,7 +777,7 @@ void ICE::compute_maxRHS(const ProcessorGroup*,
     constCCVariable<double> rhs;
     new_dw->get(rhs,lb->rhsLabel, 0,patch,Ghost::None,0); 
 
-    for(CellIterator iter=patch->getCellIterator__New(); !iter.done();iter++) {
+    for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) {
       IntVector c = *iter;
       rhs_max = Max(rhs_max, Abs(rhs[c]/vol));
     }
@@ -788,7 +788,7 @@ void ICE::compute_maxRHS(const ProcessorGroup*,
     if( cout_dbg.active() ) {
       rhs_max = 0.0;
       IntVector maxCell(0,0,0);
-      for(CellIterator iter=patch->getCellIterator__New(); !iter.done();iter++) {
+      for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) {
         IntVector c = *iter;
         if(Abs(rhs[c]/vol) > rhs_max){
           maxCell = c;
@@ -854,7 +854,7 @@ void ICE::updatePressure(const ProcessorGroup*,
     //__________________________________
     //  add delP to press_equil
     //  AMR:  hit the extra cells, you need to update the pressure in these cells
-    for(CellIterator iter = patch->getExtraCellIterator__New(); !iter.done(); iter++) { 
+    for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++) { 
       IntVector c = *iter;
       sum_imp_delP[c] = sum_imp_delP_old[c] + imp_delP[c];
       press_CC[c] = press_equil[c] + sum_imp_delP[c];
@@ -940,14 +940,14 @@ void ICE::computeDel_P(const ProcessorGroup*,
       new_dw->get(rho_CC,      lb->rho_CCLabel,    indx,patch,gn,0);
       //__________________________________
       //  compute sum_rho_CC used by press_FC
-      for(CellIterator iter=patch->getExtraCellIterator__New(); !iter.done();iter++){
+      for(CellIterator iter=patch->getExtraCellIterator(); !iter.done();iter++){
         IntVector c = *iter;
         sum_rho_CC[c] += rho_CC[c];
       } 
     }
     //__________________________________
     // backout delP_Dilatate and delP_MassX
-    for(CellIterator iter = patch->getCellIterator__New(); !iter.done(); iter++) { 
+    for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) { 
       IntVector c = *iter;
       delP_MassX[c]    = massExchTerm[c]/sumKappa[c];
       delP_Dilatate[c] = sum_imp_delP[c] - delP_MassX[c];

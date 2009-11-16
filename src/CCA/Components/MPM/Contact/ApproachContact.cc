@@ -190,7 +190,7 @@ void ApproachContact::exMomInterpolated(const ProcessorGroup*,
      MPMBoundCond bc;
      bc.setBoundaryCondition(patch,dwi,"Symmetric",  gsurfnorm[m],interp_type);
 
-     for(NodeIterator iter=patch->getExtraNodeIterator__New();
+     for(NodeIterator iter=patch->getExtraNodeIterator();
                        !iter.done();iter++){
           IntVector c = *iter;
           double length = gsurfnorm[m][c].length();
@@ -201,7 +201,7 @@ void ApproachContact::exMomInterpolated(const ProcessorGroup*,
     }
 
 #if 1
-    for(NodeIterator iter = patch->getNodeIterator__New(); !iter.done();iter++){
+    for(NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
       IntVector c = *iter;
 
       Vector centerOfMassMom(0.,0.,0.);
@@ -378,7 +378,7 @@ void ApproachContact::exMomIntegrated(const ProcessorGroup*,
     old_dw->get(delT, lb->delTLabel, getLevel(patches));
     double epsilon_max_max=0.0;
 
-    for(NodeIterator iter = patch->getNodeIterator__New(); !iter.done();iter++){
+    for(NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
       IntVector c = *iter;
       Vector centerOfMassMom(0.,0.,0.);
       double centerOfMassMass=0.0; 
@@ -515,7 +515,7 @@ void ApproachContact::exMomIntegrated(const ProcessorGroup*,
       if(!d_matls.requested(m)) continue;
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       double c_v = mpm_matl->getSpecificHeat();
-      for(NodeIterator iter = patch->getNodeIterator__New(); !iter.done(); iter++){
+      for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
         IntVector c = *iter;
         frictionWork[m][c] /= (c_v * gmass[m][c] * delT);
         if(frictionWork[m][c]<0.0){

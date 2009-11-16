@@ -403,7 +403,7 @@ void get_rho_micro(StaticArray<CCVariable<double> >& rho_micro,
       // We don't need to hit every  cell on the patch. 
       Patch::FaceIteratorType PEC = Patch::ExtraPlusEdgeCells;
       
-      CellIterator iter_tmp = patch->getFaceIterator__New(face, PEC);
+      CellIterator iter_tmp = patch->getFaceIterator(face, PEC);
       IntVector lo = iter_tmp.begin();
       IntVector hi = iter_tmp.end();
     

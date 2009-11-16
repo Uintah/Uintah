@@ -1135,8 +1135,8 @@ SchedulerCommon::scheduleAndDoDataCopy(const GridP& grid, SimulationInterface* s
           // get the low/high for what we'll need to get
           IntVector lowIndex, highIndex;
           //newPatch->computeVariableExtents(Patch::CellBased, IntVector(0,0,0), Ghost::None, 0, lowIndex, highIndex);
-          lowIndex = newPatch->getCellLowIndex__New();
-          highIndex = newPatch->getCellHighIndex__New();
+          lowIndex = newPatch->getCellLowIndex();
+          highIndex = newPatch->getCellHighIndex();
           
           // find if area on the new patch was not covered by the old patches
           IntVector dist = highIndex-lowIndex;
@@ -1148,8 +1148,8 @@ SchedulerCommon::scheduleAndDoDataCopy(const GridP& grid, SimulationInterface* s
           //compute volume of overlapping regions
           for (int old = 0; old < oldPatches.size(); old++) {
             const Patch* oldPatch = oldPatches[old];
-            IntVector oldLow = oldPatch->getCellLowIndex__New();
-            IntVector oldHigh = oldPatch->getCellHighIndex__New();
+            IntVector oldLow = oldPatch->getCellLowIndex();
+            IntVector oldHigh = oldPatch->getCellHighIndex();
 
             IntVector low = Max(oldLow, lowIndex);
             IntVector high = Min(oldHigh, highIndex);
@@ -1437,7 +1437,7 @@ SchedulerCommon::copyDataToNewGrid(const ProcessorGroup*, const PatchSubset* pat
 
             // reset the bounds of the old var's data so copyData doesn't complain
             ParticleSubset* tempset = scinew ParticleSubset(oldsub->numParticles(), matl, newPatch,
-                                                            newPatch->getExtraCellLowIndex__New(), newPatch->getExtraCellHighIndex__New());
+                                                            newPatch->getExtraCellLowIndex(), newPatch->getExtraCellHighIndex());
             const_cast<ParticleVariableBase*>(&var->getBaseRep())->setParticleSubset(tempset);
             newv->copyData(&var->getBaseRep());
             delete var; //pset and tempset are deleted with it.

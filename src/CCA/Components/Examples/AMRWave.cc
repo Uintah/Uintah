@@ -142,7 +142,7 @@ void AMRWave::errorEstimate(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     //if (patch->getLevel()->getIndex() > 0) cout << "  Doing errorEstimate on patch " << patch->getID() 
-    //                                           << " low " << patch->getCellLowIndex__New() << " hi " << patch->getCellHighIndex__New() 
+    //                                           << " low " << patch->getCellLowIndex() << " hi " << patch->getCellHighIndex() 
     //                                           << endl;
     CCVariable<int> refineFlag;
     PerPatch<PatchFlagP> refinePatchFlag;
@@ -167,11 +167,11 @@ void AMRWave::errorEstimate(const ProcessorGroup*,
       double sumdx2 = -2 / (dx.x()*dx.x()) -2/(dx.y()*dx.y()) - 2/(dx.z()*dx.z());
       Vector inv_dx2(1./(dx.x()*dx.x()), 1./(dx.y()*dx.y()), 1./(dx.z()*dx.z()));
       int numFlag = 0;
-      for(CellIterator iter = patch->getCellIterator__New(); !iter.done(); iter++){
+      for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
         const IntVector& c = *iter;
 
-        IntVector low = patch->getCellLowIndex__New();
-        IntVector high = patch->getCellHighIndex__New();
+        IntVector low = patch->getCellLowIndex();
+        IntVector high = patch->getCellHighIndex();
 
         // Compute curl
         double curlPhi = curl(phi, c, sumdx2, inv_dx2);
@@ -408,7 +408,7 @@ void AMRWave::refineFaces(const Patch* finePatch,
       IntVector coarseLow = fineLevel->mapCellToCoarser(low) - IntVector(1,1,1);
       IntVector coarseHigh = fineLevel->mapCellToCoarser(high) + IntVector(1,1,1);
 
-      amrwave << "    DOING AMRWave::RefineFaces on patch " << finePatch->getID() << ": " << finePatch->getCellLowIndex__New() << " " << finePatch->getCellHighIndex__New() << " face: " << fineLow << " " << fineHigh << endl;
+      amrwave << "    DOING AMRWave::RefineFaces on patch " << finePatch->getID() << ": " << finePatch->getCellLowIndex() << " " << finePatch->getCellHighIndex() << " face: " << fineLow << " " << fineHigh << endl;
 
       constCCVariable<double> coarse_old_var;
       constCCVariable<double> coarse_new_var;

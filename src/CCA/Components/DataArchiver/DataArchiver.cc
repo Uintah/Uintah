@@ -1396,12 +1396,12 @@ DataArchiver::executedTimestep(double delt, const GridP& grid)
           ProblemSpecP patchElem = levelElem->appendChild("Patch");
           patchElem->appendElement("id", patch->getID());
           patchElem->appendElement("proc", proc);
-          patchElem->appendElement("lowIndex", patch->getExtraCellLowIndex__New());
-          patchElem->appendElement("highIndex", patch->getExtraCellHighIndex__New());
-          if (patch->getExtraCellLowIndex__New() != patch->getCellLowIndex__New())
-            patchElem->appendElement("interiorLowIndex", patch->getCellLowIndex__New());
-          if (patch->getExtraCellHighIndex__New() != patch->getCellHighIndex__New())
-            patchElem->appendElement("interiorHighIndex", patch->getCellHighIndex__New());
+          patchElem->appendElement("lowIndex", patch->getExtraCellLowIndex());
+          patchElem->appendElement("highIndex", patch->getExtraCellHighIndex());
+          if (patch->getExtraCellLowIndex() != patch->getCellLowIndex())
+            patchElem->appendElement("interiorLowIndex", patch->getCellLowIndex());
+          if (patch->getExtraCellHighIndex() != patch->getCellHighIndex())
+            patchElem->appendElement("interiorHighIndex", patch->getCellHighIndex());
           patchElem->appendElement("nnodes", patch->getNumExtraNodes());
           patchElem->appendElement("lower", box.lower());
           patchElem->appendElement("upper", box.upper());

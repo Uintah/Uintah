@@ -252,7 +252,7 @@ Uintah::rtdata( DataArchive * da, CommandLineFlags & clf )
                     da->query(value, var, matl, patch, t);
                     IntVector dim(value.getHighIndex()-value.getLowIndex());
                     if(dim.x() && dim.y() && dim.z()){
-                      NodeIterator iter = patch->getNodeIterator__New();
+                      NodeIterator iter = patch->getNodeIterator();
                       min=max=value[*iter];
                       for(;!iter.done(); iter++){
                         min=Min(min, value[*iter]);
@@ -294,7 +294,7 @@ Uintah::rtdata( DataArchive * da, CommandLineFlags & clf )
                     da->query(value, var, matl, patch, t);
                     IntVector dim(value.getHighIndex()-value.getLowIndex());
                     if(dim.x() && dim.y() && dim.z()){
-                      NodeIterator iter = patch->getNodeIterator__New();
+                      NodeIterator iter = patch->getNodeIterator();
                       min=max=value[*iter];
                       for(;!iter.done(); iter++){
                         min=Min(min, value[*iter]);
@@ -364,7 +364,7 @@ Uintah::rtdata( DataArchive * da, CommandLineFlags & clf )
                     da->query(value, var, matl, patch, t);
                     IntVector dim(value.getHighIndex()-value.getLowIndex());
                     if(dim.x() && dim.y() && dim.z()){
-                      NodeIterator iter = patch->getNodeIterator__New();
+                      NodeIterator iter = patch->getNodeIterator();
                       min=max=value[*iter];
                       for(;!iter.done(); iter++){
                         min=Min(min, value[*iter]);
@@ -406,7 +406,7 @@ Uintah::rtdata( DataArchive * da, CommandLineFlags & clf )
                     da->query(value, var, matl, patch, t);
                     IntVector dim(value.getHighIndex()-value.getLowIndex());
                     if(dim.x() && dim.y() && dim.z()){
-                      NodeIterator iter = patch->getNodeIterator__New();
+                      NodeIterator iter = patch->getNodeIterator();
                       min=max=value[*iter];
                       for(;!iter.done(); iter++){
                         min=Min(min, value[*iter]);

@@ -483,7 +483,7 @@ void AMRICE::refine_CF_interfaceOperator(const Patch* finePatch,
   
   if(subCycleProgress_var > 1-1.e-10 ){  
     IntVector badCell;
-    CellIterator iter = finePatch->getExtraCellIterator__New();
+    CellIterator iter = finePatch->getExtraCellIterator();
     if( isEqual<varType>(varType(d_EVIL_NUM),iter,Q, badCell) ){
       ostringstream warn;
       warn <<"ERROR AMRICE::refine_CF_interfaceOperator "
@@ -535,7 +535,7 @@ void AMRICE::CoarseToFineOperator(CCVariable<T>& q_CC,
   bool tsr = new_dw->timestepRestarted();
   
   IntVector badCell;
-  CellIterator iter=finePatch->getCellIterator__New();
+  CellIterator iter=finePatch->getCellIterator();
   if( isEqual<T>(T(d_EVIL_NUM),iter,q_CC, badCell) && !tsr ){
     ostringstream warn;
     warn <<"ERROR AMRICE::Refine Task:CoarseToFineOperator "
@@ -656,8 +656,8 @@ void ICE::refluxOperator_computeCorrectionFluxes(
   IntVector xfl, xfh, yfl, yfh, zfl, zfh, ch;
   IntVector xcl, xch, ycl, ych, zcl, zch, fh;
 
-  xfl = yfl = zfl = finePatch->getCellLowIndex__New();
-  xcl = ycl = zcl = coarsePatch->getCellLowIndex__New();
+  xfl = yfl = zfl = finePatch->getCellLowIndex();
+  xcl = ycl = zcl = coarsePatch->getCellLowIndex();
   
   xfh = finePatch->getHighIndex(Patch::XFaceBased);
   yfh = finePatch->getHighIndex(Patch::YFaceBased);

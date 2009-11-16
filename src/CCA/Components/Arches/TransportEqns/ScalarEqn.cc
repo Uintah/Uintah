@@ -392,7 +392,7 @@ ScalarEqn::buildTransportEqn( const ProcessorGroup* pc,
       computeDiff( patch, Fdiff, oldPhi, mu_t );
  
     //----SUM UP RHS
-    for (CellIterator iter=patch->getCellIterator__New(); !iter.done(); iter++){
+    for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
       IntVector c = *iter; 
 
       RHS[c] += Fdiff[c] - Fconv[c];
@@ -499,7 +499,7 @@ ScalarEqn::computeDiff( const Patch* p, fT& Fdiff, oldPhiT& oldPhi, gammaT& gamm
   FaceData<double> F;
   FaceData<double> G;
 
-  for (CellIterator iter=p->getCellIterator__New(); !iter.done(); iter++){
+  for (CellIterator iter=p->getCellIterator(); !iter.done(); iter++){
 
     IntVector c = *iter; 
 
@@ -583,7 +583,7 @@ ScalarEqn::clipPhi( const Patch* p,
                        phiType& phi )
 {
   // probably should put these "if"s outside the loop   
-  for (CellIterator iter=p->getCellIterator__New(0); !iter.done(); iter++){
+  for (CellIterator iter=p->getCellIterator(0); !iter.done(); iter++){
 
     IntVector c = *iter; 
 

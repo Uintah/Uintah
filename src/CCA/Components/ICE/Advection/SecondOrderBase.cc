@@ -70,7 +70,7 @@ SecondOrderBase::mass_massVertex_ratio(const CCVariable<double>& mass_CC,
   double dz_2 = dx.z()/2.0;
   
   int NGC =1;  // number of ghostCells
-  for(CellIterator iter = patch->getCellIterator__New(NGC); !iter.done(); iter++) {
+  for(CellIterator iter = patch->getCellIterator(NGC); !iter.done(); iter++) {
     const IntVector& c = *iter;
     double xterm = mass_grad_x[c] * dx_2;
     double yterm = mass_grad_y[c] * dy_2;

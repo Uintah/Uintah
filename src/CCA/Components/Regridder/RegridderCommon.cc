@@ -504,15 +504,15 @@ void RegridderCommon::GetFlaggedCells ( const GridP& oldGrid, int levelIdx, Data
 
   LevelP level = oldGrid->getLevel(levelIdx);
 
-  IntVector minIdx = (*(level->patchesBegin()))->getExtraCellLowIndex__New();
-  IntVector maxIdx = (*(level->patchesBegin()))->getExtraCellHighIndex__New();
+  IntVector minIdx = (*(level->patchesBegin()))->getExtraCellLowIndex();
+  IntVector maxIdx = (*(level->patchesBegin()))->getExtraCellHighIndex();
 
   // This could be a problem because of extra cells.
   
   for ( Level::patchIterator patchIter = level->patchesBegin(); patchIter != level->patchesEnd(); patchIter++ ) {
     const Patch* patch = *patchIter;
-    minIdx = Min( minIdx, patch->getExtraCellLowIndex__New() );
-    maxIdx = Max( maxIdx, patch->getExtraCellHighIndex__New() );
+    minIdx = Min( minIdx, patch->getExtraCellLowIndex() );
+    maxIdx = Max( maxIdx, patch->getExtraCellHighIndex() );
   }
 
   d_flaggedCells[levelIdx] = scinew CCVariable<int>;
@@ -535,8 +535,8 @@ void RegridderCommon::GetFlaggedCells ( const GridP& oldGrid, int levelIdx, Data
 
   for ( Level::patchIterator patchIter = level->patchesBegin(); patchIter != level->patchesEnd(); patchIter++ ) {
     const Patch* patch = *patchIter;
-    IntVector l(patch->getExtraCellLowIndex__New());
-    IntVector h(patch->getExtraCellHighIndex__New());
+    IntVector l(patch->getExtraCellLowIndex());
+    IntVector h(patch->getExtraCellHighIndex());
 
     constCCVariable<int> refineFlag;
 
@@ -744,8 +744,8 @@ void RegridderCommon::Dilate(const ProcessorGroup*,
     new_dw->get(flaggedCells, to_get, 0, patch, Ghost::AroundCells, ngc);
     new_dw->allocateAndPut(dilatedFlaggedCells, to_put, 0, patch);
 
-    IntVector flagLow = patch->getExtraCellLowIndex__New();
-    IntVector flagHigh = patch->getExtraCellHighIndex__New();
+    IntVector flagLow = patch->getExtraCellLowIndex();
+    IntVector flagHigh = patch->getExtraCellHighIndex();
 
     if (patch->getLevel()->getIndex() > 0 && ((d_filterType == FILTER_STAR && ngc > 2) || ngc > 1)) {
       // if we go diagonally along a patch corner where there is no patch, we will need to initialize those cells
@@ -792,8 +792,8 @@ void RegridderCommon::Dilate(const ProcessorGroup*,
 
   rdbg << "G\n";
     if (dilate_dbg.active() && patch->getLevel()->getIndex() == 1) {
-      IntVector low  = patch->getCellLowIndex__New();
-      IntVector high = patch->getCellHighIndex__New();
+      IntVector low  = patch->getCellLowIndex();
+      IntVector high = patch->getCellHighIndex();
       
       dilate_dbg << "----------------------------------------------------------------" << endl;
       dilate_dbg << "FLAGGED CELLS " << low << " " << high << endl;

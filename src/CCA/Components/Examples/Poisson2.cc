@@ -224,8 +224,8 @@ void Poisson2::iterate(const ProcessorGroup*,
       new_dw->allocateAndPut(newphi, phi_label, matl, patch);
       newphi.copyPatch(phi, newphi.getLow(), newphi.getHigh());
       double residual=0;
-      IntVector l = patch->getNodeLowIndex__New();
-      IntVector h = patch->getNodeHighIndex__New(); 
+      IntVector l = patch->getNodeLowIndex();
+      IntVector h = patch->getNodeHighIndex(); 
       l += IntVector(patch->getBCType(Patch::xminus) == Patch::Neighbor?0:1,
 		     patch->getBCType(Patch::yminus) == Patch::Neighbor?0:1,
 		     patch->getBCType(Patch::zminus) == Patch::Neighbor?0:1);

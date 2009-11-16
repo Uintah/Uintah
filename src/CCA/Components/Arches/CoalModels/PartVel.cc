@@ -199,7 +199,7 @@ void PartVel::ComputePartVel( const ProcessorGroup* pc,
       
 
       // now loop over all cells
-      for (CellIterator iter=patch->getCellIterator__New(0); !iter.done(); iter++){
+      for (CellIterator iter=patch->getCellIterator(0); !iter.done(); iter++){
         IntVector c = *iter;
         IntVector cxm = *iter - IntVector(1,0,0); 
 

@@ -108,7 +108,7 @@ MMS1::computeSource( const ProcessorGroup* pc,
 
     double pi = acos(-1.0); 
 
-    for (CellIterator iter=patch->getCellIterator__New(); !iter.done(); iter++){
+    for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
       
       IntVector c = *iter; 
       double x = c[0]*Dx.x() + Dx.x()/2.; 

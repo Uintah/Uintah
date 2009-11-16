@@ -51,7 +51,7 @@ PatchRangeTree::PatchRangeTree(const std::vector<Patch*>& patches)
     pointList.push_back(&d_patchPoints[i]);
     
     dimensions =
-      patches[i]->getExtraNodeHighIndex__New() - patches[i]->getExtraNodeLowIndex__New();
+      patches[i]->getExtraNodeHighIndex() - patches[i]->getExtraNodeLowIndex();
 
     for (int j = 0; j < 3; j++) {
       if (dimensions[j] > d_maxPatchDimensions[j]) {
@@ -77,7 +77,7 @@ PatchRangeTree::PatchRangeTree(const std::vector<const Patch*>& patches)
     pointList.push_back(&d_patchPoints[i]);
     
     dimensions =
-      patches[i]->getExtraNodeHighIndex__New() - patches[i]->getExtraNodeLowIndex__New();
+      patches[i]->getExtraNodeHighIndex() - patches[i]->getExtraNodeLowIndex();
 
     for (int j = 0; j < 3; j++) {
       if (dimensions[j] > d_maxPatchDimensions[j]) {
@@ -125,8 +125,8 @@ void PatchRangeTree::query(const IntVector& low, const IntVector& high,
   for (list<PatchPoint*>::iterator it = foundPoints.begin();
        it != foundPoints.end(); it++) {    
     const Patch* patch = (*it)->getPatch();
-    IntVector l=Max(patch->getCellLowIndex__New(), low);
-    IntVector u=Min(patch->getCellHighIndex__New(), high);
+    IntVector l=Max(patch->getCellLowIndex(), low);
+    IntVector u=Min(patch->getCellHighIndex(), high);
     if (u.x() > l.x() && u.y() > l.y() && u.z() > l.z())
       foundPatches.push_back(patch);
   }

@@ -703,7 +703,7 @@ void Angio::actuallyInitialize(const ProcessorGroup*,
     dens_grad.initialize(Vector(0.));
 
     const double pi = 3.14159265359;
-    for(NodeIterator iter = patch->getNodeIterator__New(); !iter.done();iter++){
+    for(NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
       IntVector n = *iter;
       theta[n] = drand48()*2*pi - pi;
     }
@@ -1281,7 +1281,7 @@ void Angio::computeInternalForce(const ProcessorGroup*,
         }
       }
 
-      for(NodeIterator iter = patch->getNodeIterator__New(); !iter.done(); iter++) {
+      for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++) {
         IntVector c = *iter;
         gstressglobal[c] += gstress[c];
         gstress[c] /= gvolume[c];
@@ -1332,7 +1332,7 @@ void Angio::computeInternalForce(const ProcessorGroup*,
       bc.setBoundaryCondition(patch,dwi,"Symmetric",internalforce,interp_type);
     }
 
-    for(NodeIterator iter = patch->getNodeIterator__New(); !iter.done(); iter++) {
+    for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++) {
       IntVector c = *iter;
       gstressglobal[c] /= gvolumeglobal[c];
     }
@@ -1377,7 +1377,7 @@ void Angio::solveEquationsMotion(const ProcessorGroup*,
       new_dw->allocateAndPut(acceleration, lb->gAccelerationLabel, dwi, patch);
       acceleration.initialize(Vector(0.,0.,0.));
   
-      for(NodeIterator iter=patch->getExtraNodeIterator__New();
+      for(NodeIterator iter=patch->getExtraNodeIterator();
                        !iter.done();iter++){
         IntVector c = *iter;
         Vector acc(0.0,0.0,0.0);
@@ -1419,7 +1419,7 @@ void Angio::integrateAcceleration(const ProcessorGroup*,
       new_dw->allocateAndPut(velocity_star, lb->gVelocityStarLabel, dwi, patch);
       velocity_star.initialize(Vector(0,0,0));
 
-      for(NodeIterator iter=patch->getExtraNodeIterator__New();
+      for(NodeIterator iter=patch->getExtraNodeIterator();
                         !iter.done();iter++){
         IntVector c = *iter;
         velocity_star[c] = velocity[c] + acceleration[c] * delT;
@@ -1466,7 +1466,7 @@ void Angio::setGridBoundaryConditions(const ProcessorGroup*,
 
       // Now recompute acceleration as the difference between the velocity
       // interpolated to the grid (no bcs applied) and the new velocity_star
-      for(NodeIterator iter=patch->getExtraNodeIterator__New();!iter.done();
+      for(NodeIterator iter=patch->getExtraNodeIterator();!iter.done();
                                                                 iter++){
         IntVector c = *iter;
         gacceleration[c] = (gvelocity_star[c] - gvelocityInterp[c])/delT;
@@ -1478,7 +1478,7 @@ void Angio::setGridBoundaryConditions(const ProcessorGroup*,
         new_dw->allocateAndPut(displacement,lb->gDisplacementLabel,dwi,patch);
         old_dw->get(displacementOld,        lb->gDisplacementLabel,dwi,patch,
                                                                Ghost::None,0);
-        for(NodeIterator iter=patch->getExtraNodeIterator__New();
+        for(NodeIterator iter=patch->getExtraNodeIterator();
                          !iter.done();iter++){
            IntVector c = *iter;
            displacement[c] = displacementOld[c] + gvelocity_star[c] * delT;

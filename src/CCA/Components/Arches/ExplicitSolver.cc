@@ -1072,8 +1072,8 @@ ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
     bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
     bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
     
-    IntVector idxLo = patch->getFortranCellLowIndex__New();
-    IntVector idxHi = patch->getFortranCellHighIndex__New();
+    IntVector idxLo = patch->getFortranCellLowIndex();
+    IntVector idxHi = patch->getFortranCellHighIndex();
 
     // Get the PerPatch CellInformation data
     PerPatch<CellInformationP> cellInfoP;
@@ -1606,8 +1606,8 @@ ExplicitSolver::computeVorticity(const ProcessorGroup* ,
     constCCVariable<double> newCCVVel;
     constCCVariable<double> newCCWVel;
 
-    IntVector idxLo = patch->getFortranCellLowIndex__New();
-    IntVector idxHi = patch->getFortranCellHighIndex__New();
+    IntVector idxLo = patch->getFortranCellLowIndex();
+    IntVector idxHi = patch->getFortranCellHighIndex();
 
     Ghost::GhostType  gac = Ghost::AroundCells;
     new_dw->get(newCCUVel, d_lab->d_newCCUVelocityLabel, indx, patch, gac, 1);
@@ -2257,8 +2257,8 @@ ExplicitSolver::updatePressure(const ProcessorGroup* ,
       new_dw->get(pressure_guess, timelabels->pressure_guess, indx, patch, gn, 0);
     }
     
-    IntVector idxLo = patch->getFortranCellLowIndex__New();
-    IntVector idxHi = patch->getFortranCellHighIndex__New();
+    IntVector idxLo = patch->getFortranCellLowIndex();
+    IntVector idxHi = patch->getFortranCellHighIndex();
     for (int ColX = idxLo.x(); ColX <= idxHi.x(); ColX++) {
       for (int ColY = idxLo.y(); ColY <= idxHi.y(); ColY++) {
         for (int ColZ = idxLo.z(); ColZ <= idxHi.z(); ColZ++) {
@@ -2485,8 +2485,8 @@ ExplicitSolver::getDensityGuess(const ProcessorGroup*,
 //    int currentTimeStep=d_lab->d_sharedState->getCurrentTopLevelTimeStep();
 //    if (currentTimeStep > 1) {
 //
-      IntVector idxLo = patch->getFortranCellLowIndex__New();
-      IntVector idxHi = patch->getFortranCellHighIndex__New();
+      IntVector idxLo = patch->getFortranCellLowIndex();
+      IntVector idxHi = patch->getFortranCellHighIndex();
       for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
         for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
           for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
@@ -2623,8 +2623,8 @@ ExplicitSolver::getDensityGuess(const ProcessorGroup*,
       if ((EKTCorrection)&&(!(doing_EKT_now))) {
       new_dw->get(densityEKT, d_lab->d_densityEKTLabel, indx, patch, 
                   gn, 0);
-        idxLo = patch->getExtraCellLowIndex__New();
-        idxHi = patch->getExtraCellHighIndex__New();
+        idxLo = patch->getExtraCellLowIndex();
+        idxHi = patch->getExtraCellHighIndex();
         for (int colZ = idxLo.z(); colZ < idxHi.z(); colZ ++) {
           for (int colY = idxLo.y(); colY < idxHi.y(); colY ++) {
             for (int colX = idxLo.x(); colX < idxHi.x(); colX ++) {
@@ -2860,8 +2860,8 @@ ExplicitSolver::syncRhoF(const ProcessorGroup*,
       new_dw->getModifiable(enthalpy,    d_lab->d_enthalpySPLabel,    indx, patch);
     }
     
-    IntVector idxLo = patch->getExtraCellLowIndex__New();
-    IntVector idxHi = patch->getExtraCellHighIndex__New();
+    IntVector idxLo = patch->getExtraCellLowIndex();
+    IntVector idxHi = patch->getExtraCellHighIndex();
     for (int colZ = idxLo.z(); colZ < idxHi.z(); colZ ++) {
       for (int colY = idxLo.y(); colY < idxHi.y(); colY ++) {
         for (int colX = idxLo.x(); colX < idxHi.x(); colX ++) {
@@ -3117,7 +3117,7 @@ ExplicitSolver::computeMMSError(const ProcessorGroup*,
     double snumeratordiff = 0.0;
     double sdenomexact = 0.0;
 
-    for(CellIterator iter=patch->getCellIterator__New(); !iter.done(); iter++){
+    for(CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
       IntVector c = *iter;
 
       double mmsvalue = 0.0;
@@ -3155,7 +3155,7 @@ ExplicitSolver::computeMMSError(const ProcessorGroup*,
     double unumeratordiff = 0.0;
     double udenomexact = 0.0;
 
-    for (CellIterator iter=patch->getSFCXIterator__New(); !iter.done(); iter++){ 
+    for (CellIterator iter=patch->getSFCXIterator(); !iter.done(); iter++){ 
 
       IntVector c = *iter; 
       int colX = c.x();
@@ -3200,7 +3200,7 @@ ExplicitSolver::computeMMSError(const ProcessorGroup*,
     double vnumeratordiff = 0.0;
     double vdenomexact = 0.0;
 
-    for (CellIterator iter=patch->getSFCYIterator__New(); !iter.done(); iter++){ 
+    for (CellIterator iter=patch->getSFCYIterator(); !iter.done(); iter++){ 
 
       IntVector c = *iter; 
       int colX = c.x();
@@ -3241,7 +3241,7 @@ ExplicitSolver::computeMMSError(const ProcessorGroup*,
     double wnumeratordiff = 0.0;
     double wdenomexact = 0.0;
 
-    for (CellIterator iter=patch->getSFCZIterator__New(); !iter.done(); iter++){ 
+    for (CellIterator iter=patch->getSFCZIterator(); !iter.done(); iter++){ 
 
       IntVector c = *iter; 
       double mmsvalue  = 0.0;
@@ -3358,8 +3358,8 @@ ExplicitSolver::computeDensityLag(const ProcessorGroup*,
     new_dw->get(density, d_lab->d_densityCPLabel,         indx, patch, gn, 0);
 
     double densityLag = 0.0;
-    IntVector idxLo = patch->getExtraCellLowIndex__New();
-    IntVector idxHi = patch->getExtraCellHighIndex__New();
+    IntVector idxLo = patch->getExtraCellLowIndex();
+    IntVector idxHi = patch->getExtraCellHighIndex();
     for (int colZ = idxLo.z(); colZ < idxHi.z(); colZ ++) {
       for (int colY = idxLo.y(); colY < idxHi.y(); colY ++) {
         for (int colX = idxLo.x(); colX < idxHi.x(); colX ++) {

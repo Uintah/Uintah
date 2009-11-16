@@ -230,7 +230,7 @@ Discretization::computeDivergence(const ProcessorGroup* pc,
   new_dw->allocateTemporary(unfiltered_divergence, patch);
   constCCVariable<double>& scalar = constvars->scalar;
   
-  for(CellIterator iter=patch->getCellIterator__New(); !iter.done();iter++) { 
+  for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) { 
     IntVector c = *iter;
     
     IntVector E  = c + IntVector(1,0,0);   IntVector W  = c - IntVector(1,0,0); 
@@ -282,8 +282,8 @@ Discretization::calculateScalarCoeff(const Patch* patch,
                                      int conv_scheme)
 {
   // Get the domain size and the patch indices
-  IntVector idxLo = patch->getFortranCellLowIndex__New();
-  IntVector idxHi = patch->getFortranCellHighIndex__New();
+  IntVector idxLo = patch->getFortranCellLowIndex();
+  IntVector idxHi = patch->getFortranCellHighIndex();
   
   fort_scalcoef(idxLo, idxHi,
                 constcoeff_vars->density, constcoeff_vars->viscosity,
@@ -364,15 +364,15 @@ void
 Discretization::calculateVelDiagonal(const Patch* patch,
                                      ArchesVariables* coeff_vars)
 {
-  CellIterator iter = patch->getSFCXIterator__New();
+  CellIterator iter = patch->getSFCXIterator();
   compute_Ap_stencilMatrix<SFCXVariable<double> >(iter,coeff_vars->uVelocityCoeff,
                                                        coeff_vars->uVelLinearSrc);
 
-  iter = patch->getSFCYIterator__New();
+  iter = patch->getSFCYIterator();
   compute_Ap_stencilMatrix<SFCYVariable<double> >(iter,coeff_vars->vVelocityCoeff,
                                                        coeff_vars->vVelLinearSrc);
 
-  iter = patch->getSFCZIterator__New();
+  iter = patch->getSFCZIterator();
   compute_Ap_stencilMatrix<SFCZVariable<double> >(iter,coeff_vars->wVelocityCoeff,
                                                        coeff_vars->wVelLinearSrc);
 }
@@ -384,7 +384,7 @@ void
 Discretization::calculatePressDiagonal(const Patch* patch,
                                        ArchesVariables* coeff_vars) 
 {
-  CellIterator iter = patch->getCellIterator__New();
+  CellIterator iter = patch->getCellIterator();
   compute_Ap<CCVariable<double> >(iter,coeff_vars->pressCoeff,
                                        coeff_vars->pressLinearSrc);
 }
@@ -397,8 +397,8 @@ Discretization::calculateScalarDiagonal(const Patch* patch,
                                         ArchesVariables* coeff_vars)
 {
   // Get the domain size and the patch indices
-  IntVector idxLo = patch->getFortranCellLowIndex__New();
-  IntVector idxHi = patch->getFortranCellHighIndex__New();
+  IntVector idxLo = patch->getFortranCellLowIndex();
+  IntVector idxHi = patch->getFortranCellHighIndex();
   
   // This is the only function that uses fort_apcal_all
   
@@ -426,7 +426,7 @@ void Discretization::calculateScalarDiagonal__new(const Patch* patch,
                                         ArchesVariables* coeff_vars)
 {
 // --new stuff to be turned on when integrator is fixed -- 
-  CellIterator iter = patch->getCellIterator__New();
+  CellIterator iter = patch->getCellIterator();
   compute_Ap<CCVariable<double> >(iter, coeff_vars->scalarTotCoef, 
                                         coeff_vars->scalarLinearSrc); 
 
@@ -455,8 +455,8 @@ Discretization::calculateScalarFluxLimitedConvection(
   Array3<double> y_flux;
   Array3<double> z_flux;
 
-  IntVector idxLo = patch->getFortranCellLowIndex__New();
-  IntVector idxHi = patch->getFortranCellHighIndex__New();
+  IntVector idxLo = patch->getFortranCellLowIndex();
+  IntVector idxHi = patch->getFortranCellHighIndex();
 
   x_flux.resize(idxLo,idxHi+IntVector(2,1,1));
   y_flux.resize(idxLo,idxHi+IntVector(1,2,1));

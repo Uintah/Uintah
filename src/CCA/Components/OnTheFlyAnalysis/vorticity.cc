@@ -178,7 +178,7 @@ void vorticity::doAnalysis(const ProcessorGroup* pg,
     double delY = dx.y();
     double delZ = dx.z();    
     
-    for (CellIterator iter=patch->getCellIterator__New();!iter.done();iter++){
+    for (CellIterator iter=patch->getCellIterator();!iter.done();iter++){
       IntVector c = *iter;
       
       IntVector r   = c + IntVector(1,0,0);   // right

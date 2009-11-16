@@ -229,8 +229,8 @@ ScaleSimilarityModel::reComputeTurbSubmodel(const ProcessorGroup* pc,
     }
 
     int numGC = 1;
-    IntVector idxLo = patch->getExtraCellLowIndex__New(numGC);
-    IntVector idxHi = patch->getExtraCellHighIndex__New(numGC);
+    IntVector idxLo = patch->getExtraCellLowIndex(numGC);
+    IntVector idxHi = patch->getExtraCellHighIndex(numGC);
     Array3<double> denUU(idxLo, idxHi);
     denUU.initialize(0.0);
     Array3<double> denUV(idxLo, idxHi);
@@ -683,36 +683,36 @@ ScaleSimilarityModel::reComputeTurbSubmodel(const ProcessorGroup* pc,
     }        
 
 #endif
-    Array3<double> filterdenUU(patch->getExtraCellLowIndex__New(), patch->getExtraCellHighIndex__New());
+    Array3<double> filterdenUU(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex());
     filterdenUU.initialize(0.0);
-    Array3<double> filterdenUV(patch->getExtraCellLowIndex__New(), patch->getExtraCellHighIndex__New());
+    Array3<double> filterdenUV(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex());
     filterdenUV.initialize(0.0);
-    Array3<double> filterdenUW(patch->getExtraCellLowIndex__New(), patch->getExtraCellHighIndex__New());
+    Array3<double> filterdenUW(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex());
     filterdenUW.initialize(0.0);
-    Array3<double> filterdenVV(patch->getExtraCellLowIndex__New(), patch->getExtraCellHighIndex__New());
+    Array3<double> filterdenVV(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex());
     filterdenVV.initialize(0.0);
-    Array3<double> filterdenVW(patch->getExtraCellLowIndex__New(), patch->getExtraCellHighIndex__New());
+    Array3<double> filterdenVW(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex());
     filterdenVW.initialize(0.0);
-    Array3<double> filterdenWW(patch->getExtraCellLowIndex__New(), patch->getExtraCellHighIndex__New());
+    Array3<double> filterdenWW(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex());
     filterdenWW.initialize(0.0);
-    Array3<double> filterDen(patch->getExtraCellLowIndex__New(), patch->getExtraCellHighIndex__New());
+    Array3<double> filterDen(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex());
     filterDen.initialize(0.0);
-    Array3<double> filterUVel(patch->getExtraCellLowIndex__New(), patch->getExtraCellHighIndex__New());
+    Array3<double> filterUVel(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex());
     filterUVel.initialize(0.0);
-    Array3<double> filterVVel(patch->getExtraCellLowIndex__New(), patch->getExtraCellHighIndex__New());
+    Array3<double> filterVVel(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex());
     filterVVel.initialize(0.0);
-    Array3<double> filterWVel(patch->getExtraCellLowIndex__New(), patch->getExtraCellHighIndex__New());
+    Array3<double> filterWVel(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex());
     filterWVel.initialize(0.0);
-    Array3<double> filterPhi(patch->getExtraCellLowIndex__New(), patch->getExtraCellHighIndex__New());
+    Array3<double> filterPhi(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex());
     filterPhi.initialize(0.0);
-    Array3<double> filterdenPhiU(patch->getExtraCellLowIndex__New(), patch->getExtraCellHighIndex__New());
+    Array3<double> filterdenPhiU(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex());
     filterdenPhiU.initialize(0.0);
-    Array3<double> filterdenPhiV(patch->getExtraCellLowIndex__New(), patch->getExtraCellHighIndex__New());
+    Array3<double> filterdenPhiV(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex());
     filterdenPhiV.initialize(0.0);
-    Array3<double> filterdenPhiW(patch->getExtraCellLowIndex__New(), patch->getExtraCellHighIndex__New());
+    Array3<double> filterdenPhiW(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex());
     filterdenPhiW.initialize(0.0);
-    IntVector indexLow = patch->getFortranCellLowIndex__New();
-    IntVector indexHigh = patch->getFortranCellHighIndex__New();
+    IntVector indexLow = patch->getFortranCellLowIndex();
+    IntVector indexHigh = patch->getFortranCellHighIndex();
 #ifdef PetscFilter
     d_filter->applyFilter(pc, patch,uVel, filterUVel);
 #if 0
@@ -936,8 +936,8 @@ ScaleSimilarityModel::computeScalarVariance(const ProcessorGroup*,
     CellInformation* cellinfo = cellInfoP.get().get_rep();
     
     int numGC = 1;
-    IntVector idxLo = patch->getExtraCellLowIndex__New(numGC);
-    IntVector idxHi = patch->getExtraCellHighIndex__New(numGC);
+    IntVector idxLo = patch->getExtraCellLowIndex(numGC);
+    IntVector idxHi = patch->getExtraCellHighIndex(numGC);
     Array3<double> phiSqr(idxLo, idxHi);
 
     for (int colZ = idxLo.z(); colZ < idxHi.z(); colZ ++) {
@@ -950,13 +950,13 @@ ScaleSimilarityModel::computeScalarVariance(const ProcessorGroup*,
     }
 
     //__________________________________
-    Array3<double> filterPhi(  patch->getExtraCellLowIndex__New(), patch->getExtraCellHighIndex__New());
-    Array3<double> filterPhiSqr(patch->getExtraCellLowIndex__New(), patch->getExtraCellHighIndex__New());
+    Array3<double> filterPhi(  patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex());
+    Array3<double> filterPhiSqr(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex());
     filterPhi.initialize(0.0);
     filterPhiSqr.initialize(0.0);
 
-    IntVector indexLow = patch->getFortranCellLowIndex__New();
-    IntVector indexHigh = patch->getFortranCellHighIndex__New();
+    IntVector indexLow = patch->getFortranCellLowIndex();
+    IntVector indexHigh = patch->getFortranCellHighIndex();
     for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
       for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
         for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
@@ -1193,8 +1193,8 @@ ScaleSimilarityModel::computeScalarDissipation(const ProcessorGroup*,
     CellInformation* cellinfo = cellInfoP.get().get_rep();
     
     // compatible with fortran index
-    IntVector indexLow = patch->getFortranCellLowIndex__New();
-    IntVector indexHigh = patch->getFortranCellHighIndex__New();
+    IntVector indexLow = patch->getFortranCellLowIndex();
+    IntVector indexHigh = patch->getFortranCellHighIndex();
     for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
       for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
         for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
@@ -1230,8 +1230,8 @@ ScaleSimilarityModel::computeScalarDissipation(const ProcessorGroup*,
       }
     }
     // boundary conditions
-    IntVector idxLo = patch->getFortranCellLowIndex__New();
-    IntVector idxHi = patch->getFortranCellHighIndex__New();
+    IntVector idxLo = patch->getFortranCellLowIndex();
+    IntVector idxHi = patch->getFortranCellHighIndex();
     bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
     bool xplus =  patch->getBCType(Patch::xplus)  != Patch::Neighbor;
     bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;

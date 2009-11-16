@@ -628,7 +628,7 @@ PressureSolver::addHydrostaticTermtoPressure(const ProcessorGroup*,
 
     pPlusHydro.initialize(0.0);
 
-    for(CellIterator iter=patch->getCellIterator__New(); !iter.done();iter++) { 
+    for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) { 
       IntVector c = *iter;
       double xx = cellinfo->xx[c.x()];
       double yy = cellinfo->yy[c.y()];
@@ -649,7 +649,7 @@ PressureSolver::calculatePressureCoeff(const Patch* patch,
                                        ArchesVariables* coeff_vars,
                                        ArchesConstVariables* constcoeff_vars)
 {
-  for(CellIterator iter=patch->getCellIterator__New(); !iter.done();iter++) { 
+  for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) { 
     IntVector c = *iter;
     int i = c.x();
     int j = c.y();
@@ -675,8 +675,8 @@ PressureSolver::calculatePressureCoeff(const Patch* patch,
   }
 
 #ifdef divergenceconstraint
-  IntVector idxLo = patch->getFortranCellLowIndex__New();
-  IntVector idxHi = patch->getFortranCellHighIndex__New();
+  IntVector idxLo = patch->getFortranCellLowIndex();
+  IntVector idxHi = patch->getFortranCellHighIndex();
   
   fort_prescoef_var(idxLo, idxHi, constcoeff_vars->density,
                     coeff_vars->pressCoeff[Arches::AE],
@@ -704,7 +704,7 @@ PressureSolver::mmModifyPressureCoeffs(const Patch* patch,
 {
   constCCVariable<double>& voidFrac = constcoeff_vars->voidFraction;
 
-  for(CellIterator iter=patch->getCellIterator__New(); !iter.done();iter++) { 
+  for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) { 
     IntVector c = *iter;
     Stencil7& A = coeff_vars->pressCoeff[c];
     
@@ -730,7 +730,7 @@ PressureSolver::normPressure(const Patch* patch,
 {
   double pressref = vars->press_ref;
  
-  for(CellIterator iter=patch->getExtraCellIterator__New(); !iter.done(); iter++){
+  for(CellIterator iter=patch->getExtraCellIterator(); !iter.done(); iter++){
     IntVector c = *iter;
     vars->pressure[c] = vars->pressure[c] - pressref;
   } 
@@ -741,7 +741,7 @@ void
 PressureSolver::updatePressure(const Patch* patch,
                                ArchesVariables* vars)
 {
-  for(CellIterator iter=patch->getExtraCellIterator__New(); !iter.done(); iter++){
+  for(CellIterator iter=patch->getExtraCellIterator(); !iter.done(); iter++){
     IntVector c = *iter;
     vars->pressureNew[c] = vars->pressure[c];
   }

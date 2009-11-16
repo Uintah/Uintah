@@ -200,7 +200,7 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
      MPMBoundCond bc;
      bc.setBoundaryCondition(patch,dwi,"Symmetric",  gsurfnorm[m],interp_type);
 
-     for(NodeIterator iter=patch->getExtraNodeIterator__New();
+     for(NodeIterator iter=patch->getExtraNodeIterator();
                        !iter.done();iter++){
          IntVector c = *iter;
          double length = gsurfnorm[m][c].length();
@@ -228,7 +228,7 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
         }
       }
 
-      for(NodeIterator iter=patch->getNodeIterator__New();!iter.done();iter++){
+      for(NodeIterator iter=patch->getNodeIterator();!iter.done();iter++){
         IntVector c = *iter;
         Vector norm = gsurfnorm[m][c];
         gnormtraction[m][c]= Dot((norm*gstress[m][c]),norm);
@@ -236,7 +236,7 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
     }  // loop over matls
 
 #if 1
-    for(NodeIterator iter = patch->getNodeIterator__New(); !iter.done();iter++){
+    for(NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
       IntVector c = *iter;
       Vector centerOfMassMom(0.,0.,0.);
       double centerOfMassMass=0.0; 
@@ -421,7 +421,7 @@ void FrictionContact::exMomIntegrated(const ProcessorGroup*,
     old_dw->get(delT, lb->delTLabel, getLevel(patches));
     double epsilon_max_max=0.0;
 
-    for(NodeIterator iter = patch->getNodeIterator__New();!iter.done();iter++){
+    for(NodeIterator iter = patch->getNodeIterator();!iter.done();iter++){
       IntVector c = *iter;
       Vector centerOfMassMom(0.,0.,0.);
       double centerOfMassMass=0.0; 
@@ -562,12 +562,12 @@ void FrictionContact::exMomIntegrated(const ProcessorGroup*,
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
 
       if(!d_matls.requested(m)) {
-        for(NodeIterator iter = patch->getNodeIterator__New(); !iter.done(); iter++){
+        for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
           frictionWork[m][*iter] = 0;
         }  
       } else {
         double c_v = mpm_matl->getSpecificHeat();
-        for(NodeIterator iter = patch->getNodeIterator__New(); !iter.done(); iter++){
+        for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
           IntVector c = *iter;
           frictionWork[m][c] /= (c_v * gmass[m][c] * delT);
           if(frictionWork[m][c]<0.0){

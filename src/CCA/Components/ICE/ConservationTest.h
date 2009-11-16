@@ -61,7 +61,7 @@ void  conservationTest(const Patch* patch,
   T zero(0.0);
   T sum_interior(zero);
 
-  for(CellIterator iter = patch->getCellIterator__New(); !iter.done(); iter++) {
+  for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) {
     IntVector c = *iter;
     sum_interior += mass_q_CC[c];
   }
@@ -85,21 +85,21 @@ void  conservationTest(const Patch* patch,
     Patch::FaceIteratorType MEC = Patch::ExtraMinusEdgeCells;    
 
     if (face == Patch::xminus || face == Patch::xplus) {    // X faces
-      for(CellIterator iter=patch->getFaceIterator__New(face, MEC); 
+      for(CellIterator iter=patch->getFaceIterator(face, MEC); 
         !iter.done();iter++) {
         IntVector c = *iter;
         sum_fluxes -= plus_minus_one*uvel_FC[c]*mass_q_CC[c];
       }
     }
     if (face == Patch::yminus || face == Patch::yplus) {    // Y faces
-      for(CellIterator iter=patch->getFaceIterator__New(face, MEC);
+      for(CellIterator iter=patch->getFaceIterator(face, MEC);
         !iter.done();iter++) {
         IntVector c = *iter;
         sum_fluxes -= plus_minus_one*vvel_FC[c]*mass_q_CC[c];
       }
     }
     if (face == Patch::zminus || face == Patch::zplus) {    // Z faces
-      for(CellIterator iter=patch->getFaceIterator__New(face, MEC);
+      for(CellIterator iter=patch->getFaceIterator(face, MEC);
         !iter.done();iter++) {
         IntVector c = *iter;
         sum_fluxes -= plus_minus_one*wvel_FC[c]*mass_q_CC[c];

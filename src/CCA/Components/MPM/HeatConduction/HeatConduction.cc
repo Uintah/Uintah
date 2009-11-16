@@ -488,7 +488,7 @@ void HeatConduction::computeNodalHeatFlux(const ProcessorGroup*,
 
       // compute the nodal temperature gradient by dividing
       // gpdTdx by the grid mass
-      for(NodeIterator iter = patch->getNodeIterator__New(); !iter.done(); iter++) {
+      for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++) {
         IntVector n = *iter;
         gHeatFlux[n] = -kappa * gpdTdx[n]/gMass[n];
       }
@@ -548,7 +548,7 @@ void HeatConduction::solveHeatEquations(const ProcessorGroup*,
       NCVariable<double> tempRate, GtempRate;
       new_dw->getModifiable(tempRate, d_lb->gTemperatureRateLabel,dwi,patch);
 
-      for(NodeIterator iter=patch->getExtraNodeIterator__New();
+      for(NodeIterator iter=patch->getExtraNodeIterator();
                        !iter.done();iter++){
         IntVector c = *iter;
         tempRate[c] = gdTdt[c]*((mass[c]-1.e-200)/mass[c]) +
@@ -558,7 +558,7 @@ void HeatConduction::solveHeatEquations(const ProcessorGroup*,
       if(d_flag->d_fracture) { // for FractureMPM
         new_dw->allocateAndPut(GtempRate,d_lb->GTemperatureRateLabel,dwi,patch);
         GtempRate.initialize(0.0);
-        for(NodeIterator iter=patch->getExtraNodeIterator__New();
+        for(NodeIterator iter=patch->getExtraNodeIterator();
                        !iter.done();iter++){
         IntVector c = *iter;
           GtempRate[c]=GdTdt[c]*((Gmass[c]-1.e-200)/Gmass[c]) +
@@ -614,7 +614,7 @@ void HeatConduction::integrateTemperatureRate(const ProcessorGroup*,
       
       MPMBoundCond bc;
 
-      for(NodeIterator iter=patch->getExtraNodeIterator__New();
+      for(NodeIterator iter=patch->getExtraNodeIterator();
                        !iter.done();iter++){
         IntVector c = *iter;
         tempStar[c] = temp_old[c] + temp_rate[c] * delT;
@@ -623,7 +623,7 @@ void HeatConduction::integrateTemperatureRate(const ProcessorGroup*,
       bc.setBoundaryCondition(  patch,dwi,"Temperature",tempStar,interp_type);
 
       if(d_flag->d_fracture) { // for FractureMPM
-        for(NodeIterator iter=patch->getExtraNodeIterator__New();
+        for(NodeIterator iter=patch->getExtraNodeIterator();
                          !iter.done();iter++){
           IntVector c = *iter;
           GtempStar[c]=Gtemp_old[c] +Gtemp_rate[c] * delT;
@@ -634,14 +634,14 @@ void HeatConduction::integrateTemperatureRate(const ProcessorGroup*,
 
       // Now recompute temp_rate as the difference between the temperature
       // interpolated to the grid (no bcs applied) and the new tempStar
-      for(NodeIterator iter=patch->getExtraNodeIterator__New();
+      for(NodeIterator iter=patch->getExtraNodeIterator();
                        !iter.done();iter++){
         IntVector c = *iter;
         temp_rate[c] = (tempStar[c] - temp_oldNoBC[c]) / delT;
       }
 
       if(d_flag->d_fracture) { // for FractureMPM
-        for(NodeIterator iter=patch->getExtraNodeIterator__New();
+        for(NodeIterator iter=patch->getExtraNodeIterator();
                          !iter.done();iter++){
           IntVector c = *iter;
           Gtemp_rate[c]= (GtempStar[c]-Gtemp_oldNoBC[c]) / delT;

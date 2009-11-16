@@ -555,7 +555,7 @@ void ScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
       }
       
       double sue, suw, sun, sus, sut, sub;
-      for (CellIterator iter=patch->getCellIterator__New(); !iter.done(); iter++){
+      for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
         IntVector c = *iter;
         int i = c.x();
         int j = c.y();
@@ -791,7 +791,7 @@ ScalarSolver::scalarLinearSolve(const ProcessorGroup* pc,
     double scalar_clipped = 0.0;
     double epsilon = 1.0e-15;
 
-    for (CellIterator iter=patch->getCellIterator__New(); !iter.done(); iter++){
+    for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
       IntVector c = *iter;
 
       if (scalarVars.scalar[c] > 1.0) {
@@ -840,7 +840,7 @@ ScalarSolver::calculateScalarCoeff__new( const ProcessorGroup*,
                                         ArchesConstVariables* constvars,
                                         int conv_scheme)
 {
-  for (CellIterator iter=patch->getCellIterator__New(); !iter.done(); iter++){
+  for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
     IntVector curr = *iter; 
     double tiny = 1.0E-20; //needed?
 

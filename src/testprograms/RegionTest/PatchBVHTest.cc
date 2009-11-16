@@ -42,9 +42,9 @@ using namespace Uintah;
 
 bool compareEqual(const Patch* p1, const Patch* p2)
 {
-  if(p1->getExtraNodeLowIndex__New()!=p2->getExtraNodeLowIndex__New())
+  if(p1->getExtraNodeLowIndex()!=p2->getExtraNodeLowIndex())
     return false;
-  if(p1->getExtraNodeHighIndex__New()!=p2->getExtraNodeHighIndex__New())
+  if(p1->getExtraNodeHighIndex()!=p2->getExtraNodeHighIndex())
     return false;
   return true;
 }

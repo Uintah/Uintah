@@ -401,7 +401,7 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
     }
 
     // Cell iterator
-    for ( CellIterator iter = patch->getCellIterator__New();
+    for ( CellIterator iter = patch->getCellIterator();
           !iter.done(); ++iter) {
       IntVector c = *iter;
 
@@ -875,7 +875,7 @@ DQMOM::calculateMoments( const ProcessorGroup* pc,
     int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
 
     // Cell iterator
-    for ( CellIterator iter = patch->getCellIterator__New();
+    for ( CellIterator iter = patch->getCellIterator();
           !iter.done(); ++iter) {
       IntVector c = *iter;
       

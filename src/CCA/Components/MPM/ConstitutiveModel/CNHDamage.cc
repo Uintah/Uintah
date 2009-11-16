@@ -511,7 +511,7 @@ CNHDamage::computeStressTensor(const PatchSubset* patches,
         vol_0_CC[cell_index]+=pmass[idx]/rho_orig;
       }
 
-      for(CellIterator iter=patch->getCellIterator__New(); !iter.done();iter++){
+      for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++){
         IntVector c = *iter;
         J_CC[c]=vol_CC[c]/vol_0_CC[c];
       }
@@ -860,8 +860,8 @@ CNHDamage::computeStressTensor(const PatchSubset* patches,
     vector<IntVector> ni(interpolator->size());
     vector<Vector> d_S(interpolator->size());
 
-    IntVector lowIndex = patch->getNodeLowIndex__New();
-    IntVector highIndex = patch->getNodeHighIndex__New()+IntVector(1,1,1);
+    IntVector lowIndex = patch->getNodeLowIndex();
+    IntVector highIndex = patch->getNodeHighIndex()+IntVector(1,1,1);
     Array3<int> l2g(lowIndex,highIndex);
     solver->copyL2G(l2g,patch);
 

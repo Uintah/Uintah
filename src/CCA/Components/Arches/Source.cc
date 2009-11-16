@@ -181,7 +181,7 @@ Source::calculateVelocitySource(const Patch* patch,
 
   // ++ jeremy ++ 
   if (d_boundaryCondition->getNumSourceBndry() > 0){        
-    for (CellIterator iter=patch->getCellIterator__New(); !iter.done(); iter++){
+    for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
       vars->uVelNonlinearSrc[*iter] += vars->umomBoundarySrc[*iter];
       vars->vVelNonlinearSrc[*iter] += vars->vmomBoundarySrc[*iter];
       vars->wVelNonlinearSrc[*iter] += vars->wmomBoundarySrc[*iter];
@@ -205,8 +205,8 @@ Source::calculatePressureSourcePred(const ProcessorGroup* ,
 {
 
   // Get the patch and variable indices
-  IntVector idxLo = patch->getFortranCellLowIndex__New();
-  IntVector idxHi = patch->getFortranCellHighIndex__New();
+  IntVector idxLo = patch->getFortranCellLowIndex();
+  IntVector idxHi = patch->getFortranCellHighIndex();
   if (!(doing_EKT_now)) {
 #ifdef divergenceconstraint
   fort_pressrcpred_var(idxLo, idxHi, vars->pressNonlinearSrc,
@@ -221,7 +221,7 @@ Source::calculatePressureSourcePred(const ProcessorGroup* ,
 #endif
   }
   
-  for(CellIterator iter = patch->getCellIterator__New(); !iter.done(); iter++) {
+  for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) {
     IntVector c = *iter;
     vars->pressNonlinearSrc[c] -= constvars->filterdrhodt[c]/delta_t;
   }
@@ -241,11 +241,11 @@ Source::calculateScalarSource(const ProcessorGroup* pc,
 {
 
   // Get the patch and variable indices
-  IntVector idxLo = patch->getFortranCellLowIndex__New();
-  IntVector idxHi = patch->getFortranCellHighIndex__New();
+  IntVector idxLo = patch->getFortranCellLowIndex();
+  IntVector idxHi = patch->getFortranCellHighIndex();
 
   // 3-d array for volume - fortran uses it for temporary storage
-  // Array3<double> volume(patch->getExtraCellLowIndex__New(), patch->getExtraCellHighIndex__New());
+  // Array3<double> volume(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex());
   // computes remaining diffusion term and also computes 
   // source due to gravity...need to pass ipref, jpref and kpref
   fort_scalsrc(idxLo, idxHi, vars->scalarLinearSrc, vars->scalarNonlinearSrc,
@@ -254,7 +254,7 @@ Source::calculateScalarSource(const ProcessorGroup* pc,
 
   // TOTAL KLUDGE FOR REACTING COAL---------------------------
   // Keep commented out unless you know what you are doing!
-  //for (CellIterator iter=patch->getCellIterator__New(); !iter.done(); iter++){
+  //for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
   //  Vector Dx = patch->dCell();
   //  double volume = Dx.x()*Dx.y()*Dx.z();
   //  vars->scalarNonlinearSrc[*iter] += vars->otherSource[*iter]*volume;
@@ -263,7 +263,7 @@ Source::calculateScalarSource(const ProcessorGroup* pc,
 
 // Here we need to add the boundary source term if there are some.
   if (d_boundaryCondition->getNumSourceBndry() > 0){
-    for (CellIterator iter=patch->getCellIterator__New(); !iter.done(); iter++){
+    for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
       vars->scalarNonlinearSrc[*iter] += vars->scalarBoundarySrc[*iter];
     }
   }
@@ -286,7 +286,7 @@ Source::calculateScalarSource__new(const ProcessorGroup* pc,
   double vol = 0.0;
   double apo = 0.0; 
 
-  for (CellIterator iter=patch->getCellIterator__New(); !iter.done(); iter++){
+  for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
     IntVector curr = *iter; 
 
     vol = cellinfo->sew[curr.x()]*cellinfo->sns[curr.y()]*cellinfo->stb[curr.z()]; 
@@ -297,7 +297,7 @@ Source::calculateScalarSource__new(const ProcessorGroup* pc,
 
   // Here we need to add the boundary source term if there are some.
   if (d_boundaryCondition->getNumSourceBndry() > 0){
-    for (CellIterator iter=patch->getCellIterator__New(); !iter.done(); iter++){
+    for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
       vars->scalarNonlinearSrc[*iter] += vars->scalarBoundarySrc[*iter];
     }
   } 
@@ -316,11 +316,11 @@ Source::calculateExtraScalarSource(const ProcessorGroup* pc,
 {
 
   // Get the patch and variable indices
-  IntVector idxLo = patch->getFortranCellLowIndex__New();
-  IntVector idxHi = patch->getFortranCellHighIndex__New();
+  IntVector idxLo = patch->getFortranCellLowIndex();
+  IntVector idxHi = patch->getFortranCellHighIndex();
 
   // 3-d array for volume - fortran uses it for temporary storage
-  // Array3<double> volume(patch->getExtraCellLowIndex__New(), patch->getExtraCellHighIndex__New());
+  // Array3<double> volume(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex());
   // computes remaining diffusion term and also computes 
   // source due to gravity...need to pass ipref, jpref and kpref
   fort_scalsrc(idxLo, idxHi, vars->scalarLinearSrc, vars->scalarNonlinearSrc,
@@ -340,7 +340,7 @@ Source::addReactiveScalarSource(const ProcessorGroup*,
                                 ArchesVariables* vars,
                                 ArchesConstVariables* constvars) 
 {
-  for (CellIterator iter=patch->getCellIterator__New(); !iter.done(); iter++){
+  for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
     IntVector c = *iter;
     int i = c.x();
     int j = c.y();
@@ -364,11 +364,11 @@ Source::calculateEnthalpySource(const ProcessorGroup*,
 {
 
   // Get the patch and variable indices
-  IntVector idxLo = patch->getFortranCellLowIndex__New();
-  IntVector idxHi = patch->getFortranCellHighIndex__New();
+  IntVector idxLo = patch->getFortranCellLowIndex();
+  IntVector idxHi = patch->getFortranCellHighIndex();
 
   // 3-d array for volume - fortran uses it for temporary storage
-  // Array3<double> volume(patch->getExtraCellLowIndex__New(), patch->getExtraCellHighIndex__New());
+  // Array3<double> volume(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex());
   // computes remaining diffusion term and also computes 
   // source due to gravity...need to pass ipref, jpref and kpref
   fort_scalsrc(idxLo, idxHi, vars->scalarLinearSrc, vars->scalarNonlinearSrc,
@@ -377,7 +377,7 @@ Source::calculateEnthalpySource(const ProcessorGroup*,
 
 // ++ jeremy ++
   if (d_boundaryCondition->getNumSourceBndry() > 0) {
-    for (CellIterator iter=patch->getCellIterator__New(); !iter.done(); iter++){
+    for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
       vars->scalarNonlinearSrc[*iter] += vars->enthalpyBoundarySrc[*iter];
     }
   }
@@ -399,8 +399,8 @@ Source::computeEnthalpyRadThinSrc(const ProcessorGroup*,
 {
 
   // Get the patch and variable indices
-  IntVector idxLo = patch->getFortranCellLowIndex__New();
-  IntVector idxHi = patch->getFortranCellHighIndex__New();
+  IntVector idxLo = patch->getFortranCellLowIndex();
+  IntVector idxHi = patch->getFortranCellHighIndex();
   double tref = 298; // warning, read it in
   fort_enthalpyradthinsrc(idxLo, idxHi, vars->scalarNonlinearSrc,
                           vars->temperature, constvars->absorption,
@@ -492,8 +492,8 @@ Source::modifyScalarMassSource(const ProcessorGroup* ,
 {
   // Get the patch and variable indices
   // And call the fortran routine (MASCAL)
-  IntVector idxLo = patch->getFortranCellLowIndex__New();
-  IntVector idxHi = patch->getFortranCellHighIndex__New();
+  IntVector idxLo = patch->getFortranCellLowIndex();
+  IntVector idxHi = patch->getFortranCellHighIndex();
   fort_mascalscalar(idxLo, idxHi, constvars->scalar,
                     vars->scalarCoeff[Arches::AE],
                     vars->scalarCoeff[Arches::AW],
@@ -525,7 +525,7 @@ Source::modifyScalarMassSource__new(const ProcessorGroup* ,
                                     ArchesConstVariables* constvars,
                                     int conv_scheme)
 {
-  for (CellIterator iter=patch->getCellIterator__New(); !iter.done(); iter++){
+  for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
     IntVector curr = *iter; 
     
 //     div \cdot (\rho u)
@@ -549,8 +549,8 @@ Source::modifyEnthalpyMassSource(const ProcessorGroup* ,
 {
   // Get the patch and variable indices
   // And call the fortran routine (MASCAL)
-  IntVector idxLo = patch->getFortranCellLowIndex__New();
-  IntVector idxHi = patch->getFortranCellHighIndex__New();
+  IntVector idxLo = patch->getFortranCellLowIndex();
+  IntVector idxHi = patch->getFortranCellHighIndex();
   fort_mascalscalar(idxLo, idxHi, constvars->enthalpy,
                     vars->scalarCoeff[Arches::AE],
                     vars->scalarCoeff[Arches::AW],
@@ -581,7 +581,7 @@ Source::computemmMomentumSource(const ProcessorGroup*,
 {
   //__________________________________
   //    X dir
-  CellIterator iter = patch->getSFCXIterator__New(); 
+  CellIterator iter = patch->getSFCXIterator(); 
   for(; !iter.done();iter++) { 
     IntVector c = *iter;
     vars->uVelNonlinearSrc[c]  += constvars->mmuVelSu[c];
@@ -589,7 +589,7 @@ Source::computemmMomentumSource(const ProcessorGroup*,
   }
   //__________________________________
   //    Y dir
-  iter = patch->getSFCYIterator__New(); 
+  iter = patch->getSFCYIterator(); 
   for(; !iter.done();iter++) { 
     IntVector c = *iter;
     vars->vVelNonlinearSrc[c]  += constvars->mmvVelSu[c];
@@ -598,7 +598,7 @@ Source::computemmMomentumSource(const ProcessorGroup*,
 
   //__________________________________
   //    Z dir
-  iter = patch->getSFCZIterator__New(); 
+  iter = patch->getSFCZIterator(); 
   for(; !iter.done();iter++) { 
     IntVector c = *iter;
     vars->wVelNonlinearSrc[c]  += constvars->mmwVelSu[c];
@@ -617,8 +617,8 @@ Source::addMMEnthalpySource(const ProcessorGroup* ,
                             ArchesConstVariables* constvars)
 {
   // Get the low and high index for the patch
-  IntVector valid_lo = patch->getFortranCellLowIndex__New();
-  IntVector valid_hi = patch->getFortranCellHighIndex__New();
+  IntVector valid_lo = patch->getFortranCellLowIndex();
+  IntVector valid_hi = patch->getFortranCellHighIndex();
 
   fort_add_mm_enth_src(vars->scalarNonlinearSrc,
                        vars->scalarLinearSrc,
@@ -656,7 +656,7 @@ Source::calculateScalarMMSSource(const ProcessorGroup*,
 #if 0
   double rho0 = 0.0;
 
-  for (CellIterator iter=patch->getCellIterator__New(); !iter.done(); iter++){
+  for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
     //waiting for source terms...
   } 
 #endif
@@ -674,8 +674,8 @@ Source::calculatePressMMSSourcePred(const ProcessorGroup* ,
 {
   // Get the patch and variable indices
   double rho0 = 0.0;
-  IntVector idxLo = patch->getFortranCellLowIndex__New();
-  IntVector idxHi = patch->getFortranCellHighIndex__New();
+  IntVector idxLo = patch->getFortranCellLowIndex();
+  IntVector idxHi = patch->getFortranCellHighIndex();
   
   for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
     for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {

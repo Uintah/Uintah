@@ -235,7 +235,7 @@ void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
     }
 
     // First initialize all variables everywhere.
-    for(CellIterator iter = patch->getExtraCellIterator__New();!iter.done();iter++){
+    for(CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
       vol_frac_CC[*iter]= 1.0;
       press_CC[*iter]   = d_geom_objs[obj]->getInitialData("pressure");
       vel_CC[*iter]     = d_geom_objs[obj]->getInitialVelocity();
@@ -257,7 +257,7 @@ void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
       IveBeenHere[cell_idx]= obj;
     }
 
-    for(CellIterator iter = patch->getExtraCellIterator__New();!iter.done();iter++){
+    for(CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
       rho_CC[*iter]     = rho_micro[*iter] * vol_frac_CC[*iter] +
                           d_TINY_RHO*rho_micro[*iter];
     }
@@ -269,7 +269,7 @@ void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
     Vector dcorner = dxpp*0.5;
     double totalppc = ppc.x()*ppc.y()*ppc.z();
 
-    for(CellIterator iter = patch->getExtraCellIterator__New();!iter.done();iter++){
+    for(CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
       Point lower = patch->nodePosition(*iter) + dcorner;
       int count = 0;
       for(int ix=0;ix < ppc.x(); ix++){

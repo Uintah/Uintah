@@ -173,7 +173,7 @@ ParticleCreator::createParticles(MPMMaterial* matl,
       IntVector cell_idx;
       if (!patch->findCell(*itr,cell_idx)) continue;
 
-      if (!patch->containsPoint__New(*itr)) continue;
+      if (!patch->containsPoint(*itr)) continue;
       
       particleIndex pidx = start+count;      
       //cerr << "Point["<<pidx<<"]="<<*itr<<" Cell = "<<cell_idx<<endl;
@@ -522,7 +522,7 @@ void ParticleCreator::createPoints(const Patch* patch, GeometryObject* obj)
     fineLevel = (Level*) curLevel->getFinerLevel().get_rep();
   }
 
-  for(CellIterator iter = patch->getCellIterator__New(); !iter.done(); iter++){
+  for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
     Point lower = patch->nodePosition(*iter) + dcorner;
     IntVector c = *iter;
     
@@ -672,7 +672,7 @@ ParticleCreator::countAndCreateParticles(const Patch* patch,
     for (int ii = 0; ii < numPts; ++ii) {
       p = points->at(ii);
       if (patch->findCell(p,cell_idx)) {
-        if (patch->containsPoint__New(p)) {
+        if (patch->containsPoint(p)) {
           d_object_points[key].push_back(p);
           
           if (!vols->empty()) {

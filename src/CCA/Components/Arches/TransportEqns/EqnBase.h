@@ -229,7 +229,7 @@ void EqnBase::initializationFunction( const Patch* patch, phiType& phi, constPhi
 
   double pi = acos(-1.0); 
 
-  for (CellIterator iter=patch->getCellIterator__New(0); !iter.done(); iter++){
+  for (CellIterator iter=patch->getCellIterator(0); !iter.done(); iter++){
     IntVector c = *iter; 
     Vector Dx = patch->dCell(); 
 
@@ -322,7 +322,7 @@ void EqnBase::initializationFunction( const Patch* patch, phiType& phi )
 
   double pi = acos(-1.0); 
 
-  for (CellIterator iter=patch->getCellIterator__New(0); !iter.done(); iter++){
+  for (CellIterator iter=patch->getCellIterator(0); !iter.done(); iter++){
     IntVector c = *iter; 
     Vector Dx = patch->dCell(); 
 

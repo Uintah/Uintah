@@ -566,8 +566,8 @@ void    ICE::symmetryTest_driver( int matl,
 
   // This only works with an even number of cells in the patch interior
   IntVector low, high, ncell;
-  low   = patch->getCellLowIndex__New();
-  high  = patch->getCellHighIndex__New();
+  low   = patch->getCellLowIndex();
+  high  = patch->getCellHighIndex();
   IntVector nCells = high - low;
  
   if((nCells.x() % 2 !=0 && d_dbgSymPlanes.x()) ||
@@ -599,11 +599,11 @@ void    ICE::symmetryTest_driver( int matl,
     IntVector low, high, high_twk;
 
     if(cellShift != IntVector(0,0,0)){  // FC variables
-      low   = patch->getCellLowIndex__New();
-      high  = patch->getCellHighIndex__New();
+      low   = patch->getCellLowIndex();
+      high  = patch->getCellHighIndex();
     }else{                              // CC variable
-      low   = patch->getExtraCellLowIndex__New();
-      high  = patch->getExtraCellHighIndex__New();
+      low   = patch->getExtraCellLowIndex();
+      high  = patch->getExtraCellHighIndex();
     }
 
     bool is_FC_variable = false;
@@ -710,8 +710,8 @@ void    ICE::symmetryTest_Vector( int matl,
 
   // The patch interior can only have an even number of cells
   IntVector low, high, ncell;
-  low   = patch->getCellLowIndex__New();
-  high  = patch->getCellHighIndex__New();
+  low   = patch->getCellLowIndex();
+  high  = patch->getCellHighIndex();
   IntVector nCells = high - low;
   
   if((nCells.x() % 2 !=0 && d_dbgSymPlanes.x()) ||
@@ -741,8 +741,8 @@ void    ICE::symmetryTest_Vector( int matl,
   //__________________________________
   if ( onRightLevel && dumpThisMatl == true && d_dbgTime_to_printData ) { 
     IntVector low, high, high_twk;
-    low   = patch->getCellLowIndex__New();
-    high  = patch->getCellHighIndex__New();
+    low   = patch->getCellLowIndex();
+    high  = patch->getCellHighIndex();
 
     cerr.setf(ios::scientific,ios::floatfield);
     cerr.precision(5);
@@ -890,12 +890,12 @@ void  ICE::adjust_dbg_indices(  const int include_EC,
   // 
   IntVector lo, hi;
   if (include_EC == 1)  { 
-    low   = patch->getExtraCellLowIndex__New();
-    high  = patch->getExtraCellHighIndex__New();
+    low   = patch->getExtraCellLowIndex();
+    high  = patch->getExtraCellHighIndex();
   }
   if (include_EC == 0) {
-    low   = patch->getCellLowIndex__New();
-    high  = patch->getCellHighIndex__New();
+    low   = patch->getCellLowIndex();
+    high  = patch->getCellHighIndex();
   }
 
 
@@ -1009,12 +1009,12 @@ void    ICE::readData(const Patch* patch, int include_EC,
                                 __FILE__, __LINE__);
   
   if (include_EC == 1)  { 
-    lowIndex = patch->getExtraCellLowIndex__New();
-    hiIndex  = patch->getExtraCellHighIndex__New();
+    lowIndex = patch->getExtraCellLowIndex();
+    hiIndex  = patch->getExtraCellHighIndex();
   }
   if (include_EC == 0) {
-    lowIndex = patch->getCellLowIndex__New();
-    hiIndex  = patch->getCellHighIndex__New();
+    lowIndex = patch->getCellLowIndex();
+    hiIndex  = patch->getCellHighIndex();
   }
   xLo = lowIndex.x();
   yLo = lowIndex.y();

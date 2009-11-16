@@ -141,7 +141,7 @@ CO2RateSrc::addExtraScalarSrc(const ProcessorGroup* pc,
     constCCVariable<double> CO2rate;
     new_dw->get(CO2rate, d_lab->d_co2RateLabel, indx, patch, Ghost::None, 0);
 
-    for (CellIterator iter=patch->getCellIterator__New(); !iter.done(); iter++){
+    for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
       scalarNonlinSrc[*iter] += d_scaleFactor*CO2rate[*iter]*vol*44000; //44000 = conversion from mol/cm^3/s to kg/m^3/s
     }
   }

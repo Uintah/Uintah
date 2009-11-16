@@ -1628,7 +1628,7 @@ void SerialMPM::actuallyInitialize(const ProcessorGroup*,
       int mat_id = 0;
 
       if (patch->haveBC(face,mat_id,"symmetry","Symmetric")) {
-        for(CellIterator iter = patch->getFaceIterator__New(face,Patch::FaceNodes);
+        for(CellIterator iter = patch->getFaceIterator(face,Patch::FaceNodes);
                                                   !iter.done(); iter++) {
           NC_CCweight[*iter] = 2.0*NC_CCweight[*iter];
         }
@@ -1684,8 +1684,8 @@ void SerialMPM::actuallyInitialize(const ProcessorGroup*,
 
     // Only allow axisymmetric runs if the grid is one cell thick in the theta dir.
     if(flags->d_axisymmetric){
-      IntVector patchLowNode = patch->getNodeLowIndex__New();
-      IntVector patchHighNode = patch->getNodeHighIndex__New();
+      IntVector patchLowNode = patch->getNodeLowIndex();
+      IntVector patchHighNode = patch->getNodeHighIndex();
       int num_cells_in_theta = (patchHighNode.z() - patchLowNode.z()) - 1;
       if(num_cells_in_theta > 1){
         ostringstream msg;
@@ -1909,7 +1909,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
         }
       } // End of particle loop
 
-      for(NodeIterator iter=patch->getExtraNodeIterator__New();
+      for(NodeIterator iter=patch->getExtraNodeIterator();
                        !iter.done();iter++){
         IntVector c = *iter; 
         totalmass         += gmass[c];
@@ -1940,7 +1940,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       new_dw->put(sum_vartype(totalmass), lb->TotalMassLabel);
     }  // End loop over materials
 
-    for(NodeIterator iter = patch->getNodeIterator__New(); !iter.done();iter++){
+    for(NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
       IntVector c = *iter;
       gtempglobal[c] /= gmassglobal[c];
       gvelglobal[c] /= gmassglobal[c];
@@ -2369,7 +2369,7 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
         }
       }
 
-      for(NodeIterator iter =patch->getNodeIterator__New();!iter.done();iter++){
+      for(NodeIterator iter =patch->getNodeIterator();!iter.done();iter++){
         IntVector c = *iter;
         gstressglobal[c] += gstress[c];
         gstress[c] /= gvolume[c];
@@ -2420,7 +2420,7 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
       bc.setBoundaryCondition(patch,dwi,"Symmetric",internalforce,interp_type);
     }
 
-    for(NodeIterator iter = patch->getNodeIterator__New();!iter.done();iter++){
+    for(NodeIterator iter = patch->getNodeIterator();!iter.done();iter++){
       IntVector c = *iter;
       gstressglobal[c] /= gvolumeglobal[c];
     }
@@ -2493,7 +2493,7 @@ void SerialMPM::computeAndIntegrateAcceleration(const ProcessorGroup*,
       acceleration.initialize(Vector(0.,0.,0.));
       double damp_coef = flags->d_artificialDampCoeff;
 
-      for(NodeIterator iter=patch->getExtraNodeIterator__New();
+      for(NodeIterator iter=patch->getExtraNodeIterator();
                         !iter.done();iter++){
         IntVector c = *iter;
         Vector acc(0.,0.,0.);
@@ -2544,7 +2544,7 @@ void SerialMPM::setGridBoundaryConditions(const ProcessorGroup*,
 
       // Now recompute acceleration as the difference between the velocity
       // interpolated to the grid (no bcs applied) and the new velocity_star
-      for(NodeIterator iter=patch->getExtraNodeIterator__New();!iter.done();
+      for(NodeIterator iter=patch->getExtraNodeIterator();!iter.done();
                                                                 iter++){
         IntVector c = *iter;
         gacceleration[c] = (gvelocity_star[c] - gvelocity[c])/delT;
@@ -2556,7 +2556,7 @@ void SerialMPM::setGridBoundaryConditions(const ProcessorGroup*,
         new_dw->allocateAndPut(displacement,lb->gDisplacementLabel,dwi,patch);
         old_dw->get(displacementOld,        lb->gDisplacementLabel,dwi,patch,
                                                                Ghost::None,0);
-        for(NodeIterator iter=patch->getExtraNodeIterator__New();
+        for(NodeIterator iter=patch->getExtraNodeIterator();
                          !iter.done();iter++){
            IntVector c = *iter;
            displacement[c] = displacementOld[c] + gvelocity_star[c] * delT;
@@ -2688,7 +2688,7 @@ void SerialMPM::setPrescribedMotion(const ProcessorGroup*,
       Fdotstar = Qdot*Previous_Rotations*Ft + Qt*Previous_Rotations*Fdot;
       
       
-      for(NodeIterator iter=patch->getExtraNodeIterator__New();!iter.done();
+      for(NodeIterator iter=patch->getExtraNodeIterator();!iter.done();
                                                                 iter++){
         IntVector n = *iter;
 
@@ -2704,7 +2704,7 @@ void SerialMPM::setPrescribedMotion(const ProcessorGroup*,
         new_dw->allocateAndPut(displacement,lb->gDisplacementLabel,dwi,patch);
         old_dw->get(displacementOld,        lb->gDisplacementLabel,dwi,patch,
                                                                Ghost::None,0);
-        for(NodeIterator iter=patch->getExtraNodeIterator__New();
+        for(NodeIterator iter=patch->getExtraNodeIterator();
                          !iter.done();iter++){
            IntVector c = *iter;
            displacement[c] = displacementOld[c] + gvelocity_star[c] * delT;
@@ -3764,7 +3764,7 @@ void SerialMPM::interpolateParticleVelToGridMom(const ProcessorGroup*,
         }
       } // End of particle loop
 
-      for(NodeIterator iter=patch->getExtraNodeIterator__New();
+      for(NodeIterator iter=patch->getExtraNodeIterator();
                        !iter.done();iter++){
         IntVector c = *iter;
         gvelocity_star[c]      /= gmass[c];
@@ -3979,7 +3979,7 @@ SerialMPM::refine(const ProcessorGroup*,
       int mat_id = 0;
       if (patch->haveBC(face,mat_id,"symmetry","Symmetric")) {
 
-        for(CellIterator iter = patch->getFaceIterator__New(face,Patch::FaceNodes);
+        for(CellIterator iter = patch->getFaceIterator(face,Patch::FaceNodes);
             !iter.done(); iter++) {
           NC_CCweight[*iter] = 2.0*NC_CCweight[*iter];
         }

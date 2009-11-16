@@ -112,7 +112,7 @@ ZeroExtraScalarSrc::addExtraScalarSrc(const ProcessorGroup* pc,
     new_dw->getModifiable(zerosrcVar,     d_lab->d_zerosrcVarLabel,  indx, patch);
 
     //cout << "adding source for " << d_scalar_nonlin_src_label->getName() << endl;
-    for (CellIterator iter=patch->getCellIterator__New(); !iter.done(); iter++){
+    for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
       scalarNonlinSrc[*iter] += 0.0;
       zerosrcVar[*iter] += 0.0;
     }

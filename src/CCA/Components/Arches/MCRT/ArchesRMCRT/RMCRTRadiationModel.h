@@ -112,7 +112,7 @@ void RMCRTRadiationModel::interpCCTemperatureToFC( constCCVariable<int>& cellTyp
   else if ( dir.z() !=0 ) mydir = 2; 
   
    
-  for (CellIterator iter=p->getCellIterator__New(); !iter.done(); iter++){
+  for (CellIterator iter=p->getCellIterator(); !iter.done(); iter++){
     
     IntVector c = *iter; 
     IntVector cm1 = *iter - dir;

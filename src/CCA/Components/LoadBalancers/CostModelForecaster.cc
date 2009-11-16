@@ -92,7 +92,7 @@ void CostModelForecaster::outputError(const GridP grid)
 
       //cout << d_myworld->myrank() << " patch:" << patch->getID() << " exectTime: " << execTimes[patch->getID()] << " cost: " << costs[l][p] << endl;
       double error=(execTimes[patch->getID()]-costs[l][p])/(execTimes[patch->getID()]+costs[l][p]);
-      IntVector low(patch->getCellLowIndex__New()), high(patch->getCellHighIndex__New());
+      IntVector low(patch->getCellLowIndex()), high(patch->getCellHighIndex());
       if(stats2.active())
         cout << "PROFILESTATS: " << iter << " " << fabs(error) << " " << l << " " 
             << low[0] << " " << low[1] << " " << low[2] << " " << high[0] << " " << high[1] << " " << high[2] << endl;
