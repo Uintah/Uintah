@@ -1225,8 +1225,8 @@ PicardNonlinearSolver::interpolateFromFCToCC(const ProcessorGroup* ,
     bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
     bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
     
-    IntVector idxLo = patch->getFortranCellLowIndex__New();
-    IntVector idxHi = patch->getFortranCellHighIndex__New();
+    IntVector idxLo = patch->getFortranCellLowIndex();
+    IntVector idxHi = patch->getFortranCellHighIndex();
 
     // Get the PerPatch CellInformation data
     PerPatch<CellInformationP> cellInfoP;
@@ -2285,8 +2285,8 @@ PicardNonlinearSolver::updatePressure(const ProcessorGroup* ,
     new_dw->getModifiable(pressure, timelabels->pressure_out,   indx, patch);
     old_dw->get(pressure_guess,     timelabels->pressure_guess, indx, patch, gn, 0);
     
-    IntVector idxLo = patch->getFortranCellLowIndex__New();
-    IntVector idxHi = patch->getFortranCellHighIndex__New();
+    IntVector idxLo = patch->getFortranCellLowIndex();
+    IntVector idxHi = patch->getFortranCellHighIndex();
     for (int ColX = idxLo.x(); ColX <= idxHi.x(); ColX++) {
       for (int ColY = idxLo.y(); ColY <= idxHi.y(); ColY++) {
         for (int ColZ = idxLo.z(); ColZ <= idxHi.z(); ColZ++) {
@@ -2495,8 +2495,8 @@ PicardNonlinearSolver::getDensityGuess(const ProcessorGroup*,
 // Need to skip first timestep since we start with unprojected velocities
 //    int currentTimeStep=d_lab->d_sharedState->getCurrentTopLevelTimeStep();
 //    if (currentTimeStep > 1) {
-      IntVector idxLo = patch->getFortranCellLowIndex__New();
-      IntVector idxHi = patch->getFortranCellHighIndex__New();
+      IntVector idxLo = patch->getFortranCellLowIndex();
+      IntVector idxHi = patch->getFortranCellHighIndex();
       for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
         for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
           for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
@@ -2816,8 +2816,8 @@ PicardNonlinearSolver::syncRhoF(const ProcessorGroup*,
       new_dw->getModifiable(enthalpy,    d_lab->d_enthalpySPLabel,   indx, patch);
     }
     
-    IntVector idxLo = patch->getExtraCellLowIndex__New();
-    IntVector idxHi = patch->getExtraCellHighIndex__New();
+    IntVector idxLo = patch->getExtraCellLowIndex();
+    IntVector idxHi = patch->getExtraCellHighIndex();
     for (int colZ = idxLo.z(); colZ < idxHi.z(); colZ ++) {
       for (int colY = idxLo.y(); colY < idxHi.y(); colY ++) {
         for (int colX = idxLo.x(); colX < idxHi.x(); colX ++) {

@@ -435,7 +435,7 @@ void Steady_Burn::computeModelSources(const ProcessorGroup*,
 
     /* Cell Iteration */
     IntVector nodeIdx[8];
-    for (CellIterator iter = patch->getCellIterator__New();!iter.done();iter++){
+    for (CellIterator iter = patch->getCellIterator();!iter.done();iter++){
       IntVector c = *iter;
       patch->findNodesFromCell(*iter,nodeIdx);
 

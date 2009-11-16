@@ -198,7 +198,7 @@ void RigidMPM::computeAndIntegrateAcceleration(const ProcessorGroup*,
 
       acceleration.initialize(Vector(0.,0.,0.));
 
-      for(NodeIterator iter=patch->getExtraNodeIterator__New();
+      for(NodeIterator iter=patch->getExtraNodeIterator();
                         !iter.done();iter++){
         IntVector c = *iter;
         velocity_star[c] = velocity[c];

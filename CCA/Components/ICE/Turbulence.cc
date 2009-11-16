@@ -112,7 +112,7 @@ void Turbulence::callTurb(DataWarehouse* new_dw,
     
   setBC(turb_viscosity, "zeroNeumann",  patch, d_sharedState, indx, new_dw);
   // make copy of turb_viscosity for visualization.
-  for(CellIterator iter = patch->getExtraCellIterator__New(); !iter.done();iter++){
+  for(CellIterator iter = patch->getExtraCellIterator(); !iter.done();iter++){
     IntVector c = *iter;    
     turb_viscosity_copy[c] = turb_viscosity[c];         
   }
@@ -124,7 +124,7 @@ void Turbulence::callTurb(DataWarehouse* new_dw,
   double maxtot  = 0;
   
   int NGC =1;  // number of ghostCells
-  for(CellIterator iter = patch->getCellIterator__New(NGC); !iter.done(); iter++) { 
+  for(CellIterator iter = patch->getCellIterator(NGC); !iter.done(); iter++) { 
     IntVector c = *iter;    
     if(tot_viscosity[c] > maxvis)
       maxvis = tot_viscosity[c];

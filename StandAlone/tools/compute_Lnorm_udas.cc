@@ -162,11 +162,11 @@ GridIterator
 getIterator( const Uintah::TypeDescription * td, const Patch * patch, bool use_extra_cells ) 
 {
   switch( td->getType() ){
-    case Uintah::TypeDescription::NCVariable :    return GridIterator( patch->getNodeIterator__New() );
-    case Uintah::TypeDescription::CCVariable :    return GridIterator( patch->getCellIterator__New() );
-    case Uintah::TypeDescription::SFCXVariable :  return GridIterator( patch->getSFCXIterator__New() );
-    case Uintah::TypeDescription::SFCYVariable :  return GridIterator( patch->getSFCYIterator__New() );
-    case Uintah::TypeDescription::SFCZVariable :  return GridIterator( patch->getSFCZIterator__New() );
+    case Uintah::TypeDescription::NCVariable :    return GridIterator( patch->getNodeIterator() );
+    case Uintah::TypeDescription::CCVariable :    return GridIterator( patch->getCellIterator() );
+    case Uintah::TypeDescription::SFCXVariable :  return GridIterator( patch->getSFCXIterator() );
+    case Uintah::TypeDescription::SFCYVariable :  return GridIterator( patch->getSFCYIterator() );
+    case Uintah::TypeDescription::SFCZVariable :  return GridIterator( patch->getSFCZIterator() );
     default:
       cout << "ERROR: Don't know how to handle type: " << td->getName() << "\n";
       exit( 1 );
@@ -520,12 +520,12 @@ main(int argc, char** argv)
 
         for(int i=0;i<level1->numPatches();i++){
           const Patch* patch=level1->getPatch(i);
-          region1.push_back(Region(patch->getExtraCellLowIndex__New(),patch->getExtraCellHighIndex__New()));
+          region1.push_back(Region(patch->getExtraCellLowIndex(),patch->getExtraCellHighIndex()));
         }
 
         for(int i=0;i<level2->numPatches();i++){
           const Patch* patch=level2->getPatch(i);
-          region2.push_back(Region(patch->getExtraCellLowIndex__New(),patch->getExtraCellHighIndex__New()));
+          region2.push_back(Region(patch->getExtraCellLowIndex(),patch->getExtraCellHighIndex()));
         }
 
         difference1 = Region::difference(region1,region2);

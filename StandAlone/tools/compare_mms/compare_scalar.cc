@@ -229,8 +229,8 @@ main( int argc, char *argv[] )
       da1->query(initial_vel,    velocityName,  matl, patch, timeIndex);
       da1->query(scalarVar,      scalarName,    matl, patch, timeIndex);
       
-      IntVector patch_l = patch->getLowIndex();
-      IntVector patch_h = patch->getHighIndex();
+      IntVector patch_l = patch->getExtraCellLowIndex();
+      IntVector patch_h = patch->getExtraCellHighIndex();
       
       // translate the initial passive scalar concentration by(t_final * velocity/dx) cells
       for(CellIterator iter = patch->getCellIterator(); !iter.done();iter++) {

@@ -189,8 +189,8 @@ PetscSolver::matrixCreate(const PatchSet* perproc_patches,
     for(int ps=0;ps<patchsub->size();ps++){
       const Patch* patch = patchsub->get(ps);
       
-      IntVector plowIndex  = patch->getFortranCellLowIndex__New();
-      IntVector phighIndex = patch->getFortranCellHighIndex__New()+IntVector(1,1,1);
+      IntVector plowIndex  = patch->getFortranCellLowIndex();
+      IntVector phighIndex = patch->getFortranCellHighIndex()+IntVector(1,1,1);
 
       long nc = (phighIndex[0]-plowIndex[0])*
                 (phighIndex[1]-plowIndex[1])*
@@ -209,8 +209,8 @@ PetscSolver::matrixCreate(const PatchSet* perproc_patches,
     const Patch* patch=mypatches->get(p);
     
     int ngc = 1;
-    IntVector lowIndex   = patch->getExtraCellLowIndex__New(ngc);
-    IntVector highIndex  = patch->getExtraCellHighIndex__New(ngc);
+    IntVector lowIndex   = patch->getExtraCellLowIndex(ngc);
+    IntVector highIndex  = patch->getExtraCellHighIndex(ngc);
     
     Array3<int> l2g(lowIndex, highIndex);
     l2g.initialize(-1234);
@@ -226,8 +226,8 @@ PetscSolver::matrixCreate(const PatchSet* perproc_patches,
       const Patch* neighbor = neighbors[i];
 
       //intersect my patch with my neighbor patch
-      IntVector plow  = neighbor->getCellFORTLowIndex();
-      IntVector phigh = neighbor->getCellFORTHighIndex()+IntVector(1,1,1);
+      IntVector plow  = neighbor->getFortranCellLowIndex();
+      IntVector phigh = neighbor->getFortranCellHighIndex()+IntVector(1,1,1);
       IntVector low   = Max(lowIndex, plow);
       IntVector high  = Min(highIndex, phigh);
 
@@ -313,8 +313,8 @@ PetscSolver::setPressMatrix(const ProcessorGroup* ,
   double solve_start = Time::currentSeconds();
 
   // Get the patch bounds and the variable bounds
-  IntVector idxLo = patch->getFortranCellLowIndex__New();
-  IntVector idxHi = patch->getFortranCellHighIndex__New();
+  IntVector idxLo = patch->getFortranCellLowIndex();
+  IntVector idxHi = patch->getFortranCellHighIndex();
   /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
      Compute the matrix and right-hand-side vector that define
      the linear system, Ax = b.
@@ -341,8 +341,8 @@ PetscSolver::setPressMatrix(const ProcessorGroup* ,
   // fill matrix for internal patches
   // make sure that sizeof(d_petscIndex) is the last patch, i.e., appears last in the
   // petsc matrix
-  IntVector lowIndex = patch->getExtraCellLowIndex__New(Arches::ONEGHOSTCELL);
-  IntVector highIndex = patch->getExtraCellHighIndex__New(Arches::ONEGHOSTCELL);
+  IntVector lowIndex = patch->getExtraCellLowIndex(Arches::ONEGHOSTCELL);
+  IntVector highIndex = patch->getExtraCellHighIndex(Arches::ONEGHOSTCELL);
 
   Array3<int> l2g(lowIndex, highIndex);
   l2g.copy(d_petscLocalToGlobal[patch]);
@@ -618,8 +618,8 @@ void
 PetscSolver::copyPressSoln(const Patch* patch, ArchesVariables* vars)
 {
   // copy solution vector back into the array
-  IntVector idxLo = patch->getFortranCellLowIndex__New();
-  IntVector idxHi = patch->getFortranCellHighIndex__New();
+  IntVector idxLo = patch->getFortranCellLowIndex();
+  IntVector idxHi = patch->getFortranCellHighIndex();
   double* xvec;
   int ierr;
   PetscInt begin, end;

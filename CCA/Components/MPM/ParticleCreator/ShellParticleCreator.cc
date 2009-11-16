@@ -192,8 +192,8 @@ ShellParticleCreator::createParticles(MPMMaterial* matl,
             cerr << "Pidx = " << pidx << " Pos = " << position[pidx]
                  << " patch BBox = " << patch->getExtraBox()
                  << " cell_idx = " << cell_idx
-                 << " low = " << patch->getExtraCellLowIndex__New()
-                 << " high = " << patch->getExtraCellHighIndex__New()
+                 << " low = " << patch->getExtraCellLowIndex()
+                 << " high = " << patch->getExtraCellHighIndex()
                  << " : Particle not in any cell." << endl;
             pparticleID[pidx] = 0;
           } else {
@@ -217,7 +217,7 @@ ShellParticleCreator::createParticles(MPMMaterial* matl,
     } else {
      
       // Loop thru cells and assign particles
-      for(CellIterator iter = patch->getCellIterator__New(); !iter.done(); iter++){
+      for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
         Point lower = patch->nodePosition(*iter) + dcorner;
         for(int ix=0;ix < ppc.x(); ix++){
           for(int iy=0;iy < ppc.y(); iy++){

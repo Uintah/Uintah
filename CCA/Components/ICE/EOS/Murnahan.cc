@@ -97,7 +97,7 @@ void Murnahan::computeTempCC(const Patch* patch,
                              Patch::FaceType face)
 {
   if(comp_domain == "WholeDomain") {
-    for (CellIterator iter = patch->getExtraCellIterator__New();!iter.done();iter++){
+    for (CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
       IntVector c = *iter;
       Temp[c]= 300.0;
     }
@@ -106,7 +106,7 @@ void Murnahan::computeTempCC(const Patch* patch,
   // keep it around it could be useful
   if(comp_domain == "FaceCells") {   
    Patch::FaceIteratorType MEC = Patch::ExtraMinusEdgeCells;
-   for (CellIterator iter=patch->getFaceIterator__New(face,MEC);!iter.done();iter++){
+   for (CellIterator iter=patch->getFaceIterator(face,MEC);!iter.done();iter++){
       IntVector c = *iter;
       Temp[c]= 300.0;
    } 

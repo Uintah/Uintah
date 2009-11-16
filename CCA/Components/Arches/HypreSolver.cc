@@ -166,8 +166,8 @@ HypreSolver::gridSetup(const ProcessorGroup*,
 {
   int nx, ny, nz;
   int bx, by, bz;
-  IntVector idxLo = patch->getFortranCellLowIndex__New();
-  IntVector idxHi = patch->getFortranCellHighIndex__New();
+  IntVector idxLo = patch->getFortranCellLowIndex();
+  IntVector idxHi = patch->getFortranCellHighIndex();
 
   nx = idxHi.x() - idxLo.x() + 1;
   ny = idxHi.y() - idxLo.y() + 1;
@@ -326,7 +326,7 @@ HypreSolver::setPressMatrix(const ProcessorGroup* pc,
     d_stencilIndices[s] = s;
   }
   
-  for(CellIterator iter=patch->getCellIterator__New(); !iter.done(); iter++){
+  for(CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
     IntVector c = *iter;
     A[i]   = -constvars->pressCoeff[c].b; //[0,0,-1]
     A[i+1] = -constvars->pressCoeff[c].s; //[0,-1,0]
@@ -349,7 +349,7 @@ HypreSolver::setPressMatrix(const ProcessorGroup* pc,
 
   // X
   i = 0;
-  for(CellIterator iter=patch->getCellIterator__New(); !iter.done(); iter++){
+  for(CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
     IntVector c = *iter;
     B[i] = constvars->pressNonlinearSrc[c];
     i++;
@@ -361,7 +361,7 @@ HypreSolver::setPressMatrix(const ProcessorGroup* pc,
 
   // B
   i = 0;
-  for(CellIterator iter=patch->getCellIterator__New(); !iter.done(); iter++){
+  for(CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
     IntVector c = *iter;
     X[i] = vars->pressure[c];
     i++;
@@ -568,7 +568,7 @@ HypreSolver::copyPressSoln(const Patch* patch, ArchesVariables* vars)
   }
   
   int i = 0;
-  for(CellIterator iter=patch->getCellIterator__New(); !iter.done(); iter++){
+  for(CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
     IntVector c = *iter;
     vars->pressure[c] = xvec[i];
     i++;

@@ -359,7 +359,7 @@ handlePatchData( QueryInfo& qinfo, IntVector& offset,
     }
   }
 
-  IntVector noCells = patch->getCellHighIndex__New() - patch->getCellLowIndex__New();
+  IntVector noCells = patch->getCellHighIndex() - patch->getCellLowIndex();
      
   static IntVector hi, lo;
   static int currLevel = -1;
@@ -371,10 +371,10 @@ handlePatchData( QueryInfo& qinfo, IntVector& offset,
 
   if ( args.remove_boundary ) {
     if(sfield->basis_order() == 0){
-      patch_low = patch->getCellLowIndex__New();
-      patch_high = patch->getCellHighIndex__New();
+      patch_low = patch->getCellLowIndex();
+      patch_high = patch->getCellHighIndex();
     } else {
-      patch_low = patch->getNodeLowIndex__New();
+      patch_low = patch->getNodeLowIndex();
       switch (qinfo.type->getType()) {
 	case Uintah::TypeDescription::SFCXVariable:
 	  patch_high = patch->getHighIndex(Patch::XFaceBased);
@@ -386,8 +386,8 @@ handlePatchData( QueryInfo& qinfo, IntVector& offset,
 	  patch_high = patch->getHighIndex(Patch::ZFaceBased);
 	  break;
 	case Uintah::TypeDescription::NCVariable:
-	  patch_high = patch->getNodeHighIndex__New();
-	  // patch_high = patch->getExtraNodeHighIndex__New();   
+	  patch_high = patch->getNodeHighIndex();
+	  // patch_high = patch->getExtraNodeHighIndex();   
 	  break;
 	default:
 	  cerr << "build_field::unknown variable.\n";
@@ -396,17 +396,17 @@ handlePatchData( QueryInfo& qinfo, IntVector& offset,
     }
   } else { // Don't remove the boundary
     if(sfield->basis_order() == 0){
-      patch_low = patch->getCellLowIndex__New()   - extraCells;
-      patch_high = patch->getCellHighIndex__New() + extraCells;
+      patch_low = patch->getCellLowIndex()   - extraCells;
+      patch_high = patch->getCellHighIndex() + extraCells;
 
-      // patch_low = patch->getExtraCellLowIndex__New();
-      // patch_high = patch->getExtraCellHighIndex__New();
+      // patch_low = patch->getExtraCellLowIndex();
+      // patch_high = patch->getExtraCellHighIndex();
     } else {
-      // patch_low = patch->getExtraNodeLowIndex__New();
-      patch_low = patch->getNodeLowIndex__New() - extraCells;
+      // patch_low = patch->getExtraNodeLowIndex();
+      patch_low = patch->getNodeLowIndex() - extraCells;
       switch (qinfo.type->getType()) {
 	case Uintah::TypeDescription::SFCXVariable:
-	  // patch_high = patch->getSFCXHighIndex__New();
+	  // patch_high = patch->getSFCXHighIndex();
 		
 	  patch_high = patch_low + noCells;
 	  // if (patch_high.x() == (hi.x() - 1)) {
@@ -416,14 +416,14 @@ handlePatchData( QueryInfo& qinfo, IntVector& offset,
 	  patch_high = patch_high + extraCells;
 	  break;
 	case Uintah::TypeDescription::SFCYVariable:
-	  patch_high = patch->getSFCYHighIndex__New();
+	  patch_high = patch->getSFCYHighIndex();
 	  break;
 	case Uintah::TypeDescription::SFCZVariable:
-	  patch_high = patch->getSFCZHighIndex__New();
+	  patch_high = patch->getSFCZHighIndex();
 	  break;
 	case Uintah::TypeDescription::NCVariable:
-	  patch_high = patch->getNodeLowIndex__New() + noCells + extraCells + IntVector(1, 1, 1);
-	  // patch_high = patch->getExtraNodeHighIndex__New();   
+	  patch_high = patch->getNodeLowIndex() + noCells + extraCells + IntVector(1, 1, 1);
+	  // patch_high = patch->getExtraNodeHighIndex();   
 	  break;
 	default:
 	  cerr << "build_field::unknown variable.\n";
@@ -474,7 +474,7 @@ handlePatchData( QueryInfo& qinfo, IntVector& offset,
       theMax = theData;
   }*/
 
-  // cout << patch->getExtraNodeLowIndex__New() << " " << patch->getExtraNodeHighIndex__New() << endl;
+  // cout << patch->getExtraNodeLowIndex() << " " << patch->getExtraNodeHighIndex() << endl;
   // cout << patch_low << " " << patch_high << " " << patch_data.size() << endl;
 
   // cout << "Patch Id: " << patch->getID() << ", ts: " << qinfo.timestep << ", Max: " << theMax << ", min: " << theMin << "\n";

@@ -210,8 +210,8 @@ void Poisson3::timeAdvance(const ProcessorGroup*,
 	newphi.copyPatch(phi, newphi.getLowIndex(), newphi.getHighIndex());
       }
       double residual = 0;
-      IntVector l = patch->getNodeLowIndex__New();
-      IntVector h = patch->getNodeHighIndex__New(); 
+      IntVector l = patch->getNodeLowIndex();
+      IntVector h = patch->getNodeHighIndex(); 
       l += IntVector(patch->getBCType(Patch::xminus) == Patch::Neighbor?0:1,
 		     patch->getBCType(Patch::yminus) == Patch::Neighbor?0:1,
 		     patch->getBCType(Patch::zminus) == Patch::Neighbor?0:1);
@@ -272,8 +272,8 @@ void Poisson3::refine(const ProcessorGroup*,
   // For all patches
   for(int p = 0; p < finePatches->size(); p++){
     const Patch* finePatch = finePatches->get(p);
-    IntVector low = finePatch->getNodeLowIndex__New();
-    IntVector high = finePatch->getNodeHighIndex__New();
+    IntVector low = finePatch->getNodeLowIndex();
+    IntVector high = finePatch->getNodeHighIndex();
     // Find the overlapping regions...
     Patch::selectType coarsePatches;
     finePatch->getCoarseLevelPatches(coarsePatches);
@@ -290,10 +290,10 @@ void Poisson3::refine(const ProcessorGroup*,
 	newDW->get(coarsePhi, phi_label, matl, coarsePatch,
 		   Ghost::AroundCells, interpolator_.getMaxSupportRefine());
 
-	IntVector l = Max(coarseLevel->mapNodeToFiner(coarsePatch->getNodeLowIndex__New()),
-			  finePatch->getNodeLowIndex__New());
-	IntVector h = Min(coarseLevel->mapNodeToFiner(coarsePatch->getNodeHighIndex__New()),
-			  finePatch->getNodeHighIndex__New());
+	IntVector l = Max(coarseLevel->mapNodeToFiner(coarsePatch->getNodeLowIndex()),
+			  finePatch->getNodeLowIndex());
+	IntVector h = Min(coarseLevel->mapNodeToFiner(coarsePatch->getNodeHighIndex()),
+			  finePatch->getNodeHighIndex());
 	IntVector diff = h-l;
 	total_fine += diff.x()*diff.y()*diff.z();
 	// For all finegrid nodes
@@ -377,9 +377,9 @@ void Poisson3::refineInterface(const ProcessorGroup*,
 	  // For each coarse patch, compute the overlapped region and interpolate
 	  for(int i=0;i<coarsePatches.size();i++){
 	    const Patch* coarsePatch = coarsePatches[i];
-	    IntVector l = Max(coarseLevel->mapNodeToFiner(coarsePatch->getNodeLowIndex__New()),
+	    IntVector l = Max(coarseLevel->mapNodeToFiner(coarsePatch->getNodeLowIndex()),
 			      low);
-	    IntVector h = Min(coarseLevel->mapNodeToFiner(coarsePatch->getNodeHighIndex__New()),
+	    IntVector h = Min(coarseLevel->mapNodeToFiner(coarsePatch->getNodeHighIndex()),
 			      high);
 	    IntVector diff = h-l;
 	    total_fine += diff.x()*diff.y()*diff.z();
@@ -440,8 +440,8 @@ void Poisson3::coarsen(const ProcessorGroup*,
   // For all patches
   for(int p = 0; p < coarsePatches->size(); p++){
     const Patch* coarsePatch = coarsePatches->get(p);
-    IntVector low = coarsePatch->getNodeLowIndex__New();
-    IntVector high = coarsePatch->getNodeHighIndex__New();
+    IntVector low = coarsePatch->getNodeLowIndex();
+    IntVector high = coarsePatch->getNodeHighIndex();
     // Not Used: IntVector fine_low = coarseLevel->mapNodeToFiner(low);
     // Not Used: IntVector fine_high = coarseLevel->mapNodeToFiner(high);
 
@@ -461,10 +461,10 @@ void Poisson3::coarsen(const ProcessorGroup*,
 	constNCVariable<double> finePhi;
 	newDW->get(finePhi, phi_label, matl, finePatch,
 		   Ghost::AroundNodes, interpolator_.getMaxSupportCoarsen());
-	IntVector l = Max(fineLevel->mapNodeToCoarser(finePatch->getNodeLowIndex__New()),
-			  coarsePatch->getNodeLowIndex__New());
-	IntVector h = Min(fineLevel->mapNodeToCoarser(finePatch->getNodeHighIndex__New()),
-			  coarsePatch->getNodeHighIndex__New());
+	IntVector l = Max(fineLevel->mapNodeToCoarser(finePatch->getNodeLowIndex()),
+			  coarsePatch->getNodeLowIndex());
+	IntVector h = Min(fineLevel->mapNodeToCoarser(finePatch->getNodeHighIndex()),
+			  coarsePatch->getNodeHighIndex());
 	l += IntVector(finePatch->getBCType(Patch::xminus) == Patch::Neighbor?0:1,
 		       finePatch->getBCType(Patch::yminus) == Patch::Neighbor?0:1,
 		       finePatch->getBCType(Patch::zminus) == Patch::Neighbor?0:1);

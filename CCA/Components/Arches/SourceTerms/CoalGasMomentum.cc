@@ -153,7 +153,7 @@ CoalGasMomentum::computeSource( const ProcessorGroup* pc,
       //old_dw->get( *iter.... ); 
     }
 
-    for (CellIterator iter=patch->getCellIterator__New(); !iter.done(); iter++){
+    for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
       IntVector c = *iter; 
 
        for (int iqn = 0; iqn < dqmomFactory.get_quad_nodes(); iqn++){

@@ -66,7 +66,7 @@ FirstOrderAdvector::FirstOrderAdvector(DataWarehouse* new_dw,
   if(isNewGrid){   
     double EVILNUM = -9.99666999e30;
     int NGC =1;  // number of ghostCells
-    for(CellIterator iter = patch->getCellIterator__New(NGC); !iter.done(); iter++) {  
+    for(CellIterator iter = patch->getCellIterator(NGC); !iter.done(); iter++) {  
  
       const IntVector& c = *iter;
       for(int face = TOP; face <= BACK; face++ )  {
@@ -126,7 +126,7 @@ void FirstOrderAdvector::inFluxOutFluxVolume(
   bool error = false;
   
   int NGC =1;  // number of ghostCells
-  for(CellIterator iter = patch->getExtraCellIterator__New(NGC); !iter.done(); iter++) {  
+  for(CellIterator iter = patch->getExtraCellIterator(NGC); !iter.done(); iter++) {  
     const IntVector& c = *iter;
     
     delY_top    = std::max(0.0, (vvel_FC[c+IntVector(0,1,0)] * delT));
@@ -172,7 +172,7 @@ void FirstOrderAdvector::inFluxOutFluxVolume(
     vector<IntVector> badCells;
     vector<double>  badOutflux;
     
-    for(CellIterator iter = patch->getExtraCellIterator__New(NGC); !iter.done(); iter++) {
+    for(CellIterator iter = patch->getExtraCellIterator(NGC); !iter.done(); iter++) {
       IntVector c = *iter; 
       double total_fluxout = 0.0;
       for(int face = TOP; face <= BACK; face++ )  {
@@ -282,7 +282,7 @@ template <class T, typename F>
   Vector dx = patch->dCell();            
   double invvol = 1.0/(dx.x() * dx.y() * dx.z());                     
 
-  for(CellIterator iter = patch->getCellIterator__New(); !iter.done(); iter++) { 
+  for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) { 
     const IntVector& c = *iter;  
     
     T q_face_flux[6];
@@ -365,17 +365,17 @@ void FirstOrderAdvector::q_FC_PlusFaces(
   // only work on patches that are at the edge of the computational domain
   
   if (patchOnBoundary.x() == 1 ){
-    CellIterator Xiter=patch->getFaceIterator__New(Patch::xplus,MEC);
+    CellIterator Xiter=patch->getFaceIterator(Patch::xplus,MEC);
     q_FC_operator<SFCXVariable<double> >(Xiter, adj_offset[0], LEFT,  
                                          q_CC,q_XFC);
   } 
   if (patchOnBoundary.y() == 1 ){
-    CellIterator Yiter=patch->getFaceIterator__New(Patch::yplus,MEC);
+    CellIterator Yiter=patch->getFaceIterator(Patch::yplus,MEC);
     q_FC_operator<SFCYVariable<double> >(Yiter, adj_offset[1], BOTTOM,
                                          q_CC,q_YFC); 
   }
   if (patchOnBoundary.z() == 1 ){  
-    CellIterator Ziter=patch->getFaceIterator__New(Patch::zplus,MEC);
+    CellIterator Ziter=patch->getFaceIterator(Patch::zplus,MEC);
     q_FC_operator<SFCZVariable<double> >(Ziter, adj_offset[2], BACK,  
                                          q_CC,q_ZFC);  
   }
@@ -473,9 +473,9 @@ void FirstOrderAdvector::q_FC_fluxes( const CCVariable<T>& q_CC,
     adj_offset[1] = IntVector(0, -1, 0);    // Y faces
     adj_offset[2] = IntVector(0,  0, -1);   // Z faces
                        
-    CellIterator XFC_iter = patch->getSFCXIterator__New();
-    CellIterator YFC_iter = patch->getSFCYIterator__New();
-    CellIterator ZFC_iter = patch->getSFCZIterator__New();
+    CellIterator XFC_iter = patch->getSFCXIterator();
+    CellIterator YFC_iter = patch->getSFCYIterator();
+    CellIterator ZFC_iter = patch->getSFCZIterator();
     
     q_FC_flux_operator<SFCXVariable<T>, T>(XFC_iter, adj_offset[0],LEFT,
                                            q_CC,q_X_FC_flux); 
@@ -507,7 +507,7 @@ void FirstOrderAdvector::q_FC_fluxes( const CCVariable<T>& q_CC,
 
         Patch::FaceIteratorType IFC = Patch::InteriorFaceCells;
 
-        CellIterator iter =patch->getFaceIterator__New(patchFace, IFC);
+        CellIterator iter =patch->getFaceIterator(patchFace, IFC);
         IntVector begin = iter.begin() + shift;
         IntVector end   = iter.end() + shift;
 

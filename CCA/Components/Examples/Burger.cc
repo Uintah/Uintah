@@ -136,10 +136,10 @@ void Burger::initialize(const ProcessorGroup*,
     
     //Initialize
     // u = sin( pi*x ) + sin( pi*2*y ) + sin(pi*3z )
-    IntVector l = patch->getNodeLowIndex__New();
-    IntVector h = patch->getNodeHighIndex__New();
+    IntVector l = patch->getNodeLowIndex();
+    IntVector h = patch->getNodeHighIndex();
     
-    for( NodeIterator iter=patch->getNodeIterator__New(); !iter.done(); iter++ ){
+    for( NodeIterator iter=patch->getNodeIterator(); !iter.done(); iter++ ){
       IntVector n = *iter;
       Point p = patch->nodePosition(n);
       u[n] = sin( p.x() * 3.14159265358 ) + sin( p.y() * 2*3.14159265358)  +  sin( p.z() * 3*3.14159265358);
@@ -175,8 +175,8 @@ void Burger::timeAdvance(const ProcessorGroup*,
     new_dw->allocateAndPut(new_u, u_label, matl, patch);
     
     // define iterator range
-    IntVector l = patch->getNodeLowIndex__New();
-    IntVector h = patch->getNodeHighIndex__New();
+    IntVector l = patch->getNodeLowIndex();
+    IntVector h = patch->getNodeHighIndex();
 
     //offset to prevent accessing memory out-of-bounds
     l += IntVector(patch->getBCType(Patch::xminus) == Patch::Neighbor?0:1,
@@ -218,7 +218,7 @@ void Burger::timeAdvance(const ProcessorGroup*,
       }
 
       Patch::FaceIteratorType FN = Patch::FaceNodes;
-      for (CellIterator iter = patch->getFaceIterator__New(face,FN);!iter.done(); iter++){
+      for (CellIterator iter = patch->getFaceIterator(face,FN);!iter.done(); iter++){
         IntVector n = *iter;
         new_u[n] = new_u[n + offset];
       }

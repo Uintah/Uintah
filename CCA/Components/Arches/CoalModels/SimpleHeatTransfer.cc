@@ -520,7 +520,7 @@ SimpleHeatTransfer::computeModel( const ProcessorGroup * pc,
     if (d_ash) 
       old_dw->get( w_mass_ash, d_ash_mass_label, matlIndex, patch, gn, 0 );
 
-    for (CellIterator iter=patch->getCellIterator__New(); !iter.done(); iter++){
+    for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
       IntVector c = *iter; 
 
       Vector sphGas = Vector(0.,0.,0.);

@@ -1057,7 +1057,7 @@ Arches::paramInit(const ProcessorGroup* pg,
 
       init_enthalpy = calculatedStream.getEnthalpy(); 
 
-      for (CellIterator iter=patch->getCellIterator__New(); 
+      for (CellIterator iter=patch->getCellIterator(); 
            !iter.done(); iter++){
         scalar[*iter] = d_init_mix_frac; 
         //enthalpy[*iter] = init_enthalpy; 
@@ -1142,8 +1142,8 @@ Arches::computeStableTimeStep(const ProcessorGroup* ,
     
     CellInformation* cellinfo = cellInfoP.get().get_rep();
 
-    IntVector indexLow = patch->getFortranCellLowIndex__New();
-    IntVector indexHigh = patch->getFortranCellHighIndex__New();
+    IntVector indexLow = patch->getFortranCellLowIndex();
+    IntVector indexHigh = patch->getFortranCellHighIndex();
     bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
     bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
     bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
@@ -1248,8 +1248,8 @@ Arches::computeStableTimeStep(const ProcessorGroup* ,
     }
     
     if (d_underflow) {
-      indexLow = patch->getFortranCellLowIndex__New();
-      indexHigh = patch->getFortranCellHighIndex__New();
+      indexLow = patch->getFortranCellLowIndex();
+      indexHigh = patch->getFortranCellHighIndex();
 
       for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
         for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
@@ -1395,8 +1395,8 @@ Arches::readCCInitialCondition(const ProcessorGroup* ,
     fd >> tmp >> tmp >> tmp;
     fd >> tmp >> tmp >> tmp;
     double uvel,vvel,wvel,pres;
-    IntVector idxLo = patch->getFortranCellLowIndex__New();
-    IntVector idxHi = patch->getFortranCellHighIndex__New();
+    IntVector idxLo = patch->getFortranCellLowIndex();
+    IntVector idxHi = patch->getFortranCellHighIndex();
     for (int colZ = 1; colZ <= nz; colZ ++) {
       for (int colY = 1; colY <= ny; colY ++) {
         for (int colX = 1; colX <= nx; colX ++) {
@@ -1765,7 +1765,7 @@ Arches::weightedAbsInit( const ProcessorGroup* ,
       new_dw->allocateAndPut( partVel, i->second, matlIndex, patch );
       partVel.initialize(Vector(0.,0.,0.));
 
-      for (CellIterator iter=patch->getCellIterator__New(); 
+      for (CellIterator iter=patch->getCellIterator(); 
            !iter.done(); iter++){
         IntVector c = *iter; 
         partVel[c] = gasVel[c];
@@ -1837,8 +1837,8 @@ Arches::blobInit(const ProcessorGroup* ,
     proc0cout << "WARNING!  SETTING UP A BLOB IN YOUR DOMAIN!" << std::endl;
     proc0cout << "Turn off debug_mom in Arches.cc to stop this" << std::endl;
   
-    IntVector idxLo = patch->getFortranCellLowIndex__New();
-    IntVector idxHi = patch->getFortranCellHighIndex__New();
+    IntVector idxLo = patch->getFortranCellLowIndex();
+    IntVector idxHi = patch->getFortranCellHighIndex();
           
     for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
       for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
@@ -1924,7 +1924,7 @@ Arches::mmsInitialCondition(const ProcessorGroup* ,
     double pi = acos(-1.0);
 
     //CELL centered variables
-    for (CellIterator iter=patch->getCellIterator__New(); !iter.done(); iter++){
+    for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
       IntVector currCell = *iter; 
     
       if (d_mms == "constantMMS") { 
@@ -1947,7 +1947,7 @@ Arches::mmsInitialCondition(const ProcessorGroup* ,
     }
 
     //X-FACE centered variables 
-    for (CellIterator iter=patch->getSFCXIterator__New(); !iter.done(); iter++){
+    for (CellIterator iter=patch->getSFCXIterator(); !iter.done(); iter++){
       IntVector currCell = *iter; 
 
       if (d_mms == "constantMMS") { 
@@ -1960,7 +1960,7 @@ Arches::mmsInitialCondition(const ProcessorGroup* ,
     }
 
     //Y-FACE centered variables 
-    for (CellIterator iter=patch->getSFCYIterator__New(); !iter.done(); iter++){
+    for (CellIterator iter=patch->getSFCYIterator(); !iter.done(); iter++){
       IntVector currCell = *iter; 
 
       if (d_mms == "constantMMS") { 
@@ -1974,7 +1974,7 @@ Arches::mmsInitialCondition(const ProcessorGroup* ,
     }
 
     //Z-FACE centered variables 
-    for (CellIterator iter=patch->getSFCZIterator__New(); !iter.done(); iter++){
+    for (CellIterator iter=patch->getSFCZIterator(); !iter.done(); iter++){
 
       if (d_mms == "constantMMS") { 
         wVelocity[*iter] = d_cw; 
@@ -2048,19 +2048,19 @@ Arches::interpInitialConditionToStaggeredGrid(const ProcessorGroup* ,
     
     IntVector idxLo, idxHi;
 
-    for(CellIterator iter = patch->getSFCXIterator__New(); !iter.done(); iter++) {
+    for(CellIterator iter = patch->getSFCXIterator(); !iter.done(); iter++) {
       IntVector c = *iter;
       IntVector L = c - IntVector(1,0,0);
       uVelocity[c] = 0.5 * (uVelocityCC[c] + uVelocityCC[L]);
     }
     
-    for(CellIterator iter = patch->getSFCYIterator__New(); !iter.done(); iter++) {
+    for(CellIterator iter = patch->getSFCYIterator(); !iter.done(); iter++) {
       IntVector c = *iter;
       IntVector L = c - IntVector(0,1,0);
       vVelocity[c] = 0.5 * (vVelocityCC[c] + vVelocityCC[L]);
     }
     
-    for(CellIterator iter = patch->getSFCXIterator__New(); !iter.done(); iter++) {
+    for(CellIterator iter = patch->getSFCXIterator(); !iter.done(); iter++) {
       IntVector c = *iter;
       IntVector L = c - IntVector(0,0,1);
       wVelocity[c] = 0.5 * (wVelocityCC[c] + wVelocityCC[L]);
@@ -2113,8 +2113,8 @@ Arches::getCCVelocities(const ProcessorGroup* ,
     CCVariable<double> wvel_CC;
     CCVariable<Vector> vel_CC; 
 
-    IntVector idxLo = patch->getFortranCellLowIndex__New();
-    IntVector idxHi = patch->getFortranCellHighIndex__New();
+    IntVector idxLo = patch->getFortranCellLowIndex();
+    IntVector idxHi = patch->getFortranCellHighIndex();
 
     // Get the PerPatch CellInformation data
     PerPatch<CellInformationP> cellInfoP;
@@ -2138,7 +2138,7 @@ Arches::getCCVelocities(const ProcessorGroup* ,
    
     //__________________________________
     //  
-    for(CellIterator iter=patch->getCellIterator__New(); !iter.done();iter++) {
+    for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) {
       IntVector c = *iter;
       int i = c.x();
       int j = c.y();
@@ -2172,7 +2172,7 @@ Arches::getCCVelocities(const ProcessorGroup* ,
       IntVector f_dir = patch->getFaceDirection(face); 
 
       Patch::FaceIteratorType MEC = Patch::ExtraMinusEdgeCells;
-      CellIterator iter=patch->getFaceIterator__New(face, MEC);
+      CellIterator iter=patch->getFaceIterator(face, MEC);
       
       IntVector lo = iter.begin();
       int i = lo.x();

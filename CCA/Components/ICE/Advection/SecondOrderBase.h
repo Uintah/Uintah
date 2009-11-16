@@ -133,7 +133,7 @@ SecondOrderBase::gradQ( const CCVariable<T>& q_CC,
   // the computational footprint by one cell in ghostCells
 
   int NGC =1;  // numer of ghostCells
-  for(CellIterator iter = patch->getCellIterator__New(NGC); !iter.done(); iter++) {  
+  for(CellIterator iter = patch->getCellIterator(NGC); !iter.done(); iter++) {  
     const IntVector& c = *iter;
     
     IntVector r = c + IntVector( 1, 0, 0);
@@ -164,7 +164,7 @@ SecondOrderBase::gradQ( const CCVariable<T>& q_CC,
     offset[P_dir] = 1;
     
     Patch::FaceIteratorType PEC = Patch::ExtraPlusEdgeCells;
-    CellIterator faceCells =patch->getFaceIterator__New(face, PEC);
+    CellIterator faceCells =patch->getFaceIterator(face, PEC);
     for (CellIterator itr=faceCells; !itr.done(); itr++) {
       const IntVector& c = *itr;
       q_grad_x[c] = 0.0;
@@ -229,7 +229,7 @@ SecondOrderBase::q_CCMaxMin(const CCVariable<T>& q_CC,
                                CCVariable<T>& q_CC_min)
 {  
   int NGC =1;  // number of ghostCells
-  for(CellIterator iter = patch->getCellIterator__New(NGC); !iter.done(); iter++) {  
+  for(CellIterator iter = patch->getCellIterator(NGC); !iter.done(); iter++) {  
 
     const IntVector& c = *iter;
        
@@ -264,15 +264,15 @@ SecondOrderBase::q_CCMaxMin(const CCVariable<T>& q_CC,
   //Coarse fine interface faces
   vector<Patch::FaceType>  faces;
   patch->getCoarseFaces(faces);
-  IntVector cl = patch->getExtraCellLowIndex__New();
-  IntVector ch = patch->getExtraCellHighIndex__New() - IntVector(1,1,1);
+  IntVector cl = patch->getExtraCellLowIndex();
+  IntVector ch = patch->getExtraCellHighIndex() - IntVector(1,1,1);
   Patch::FaceIteratorType MEC = Patch::ExtraMinusEdgeCells;
   
   vector<Patch::FaceType>::const_iterator f_iter;   
   for (f_iter  = faces.begin(); f_iter != faces.end(); ++f_iter){
     Patch::FaceType face = *f_iter; 
   
-    for (CellIterator iter=patch->getFaceIterator__New(face, MEC); !iter.done(); iter++) {
+    for (CellIterator iter=patch->getFaceIterator(face, MEC); !iter.done(); iter++) {
       const IntVector& c = *iter;
       T max_tmp, min_tmp;
       
@@ -322,7 +322,7 @@ SecondOrderBase::Q_vertex( const bool usingCompatibleFluxes,
   int NGC =1;  // number of ghostCells
   
   if(!usingCompatibleFluxes) {        // non-compatible advection
-    for(CellIterator iter = patch->getCellIterator__New(NGC); !iter.done(); iter++) { 
+    for(CellIterator iter = patch->getCellIterator(NGC); !iter.done(); iter++) { 
       const IntVector& c = *iter;
 
       T xterm = q_grad_x[c] * dx_2;
@@ -342,7 +342,7 @@ SecondOrderBase::Q_vertex( const bool usingCompatibleFluxes,
     }
   }
   if(usingCompatibleFluxes) {         // compatible advection
-    for(CellIterator iter = patch->getCellIterator__New(NGC); !iter.done(); iter++) {  
+    for(CellIterator iter = patch->getCellIterator(NGC); !iter.done(); iter++) {  
       const IntVector& c = *iter;
       T xterm = q_grad_x[c] * dx_2;
       T yterm = q_grad_y[c] * dy_2;
@@ -388,7 +388,7 @@ SecondOrderBase::flux_to_primitive( const bool useCompatibleFluxes,
                 // compatible fluxes.
   if(useCompatibleFluxes && is_Q_mass_specific) { 
     int NGC =2;  // number of ghostCells
-    for(CellIterator iter = patch->getExtraCellIterator__New(NGC); !iter.done(); iter++) {  
+    for(CellIterator iter = patch->getExtraCellIterator(NGC); !iter.done(); iter++) {  
      
       const IntVector& c = *iter;
       q_CC[c] = A_CC[c]/mass[c];
@@ -440,7 +440,7 @@ void SecondOrderBase::limitedGradient(const CCVariable<T>& q_CC,
   //  At patch boundaries you need to extend
   // the computational footprint by one cell in ghostCells
   int NGC =1;  // number of ghostCells
-  for(CellIterator iter = patch->getCellIterator__New(NGC); !iter.done(); iter++) {  
+  for(CellIterator iter = patch->getCellIterator(NGC); !iter.done(); iter++) {  
     const IntVector& c = *iter;
 
     T q_vrtx_max, q_vrtx_min;

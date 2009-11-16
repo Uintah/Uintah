@@ -296,7 +296,7 @@ LoadBalancerCommon::createNeighborhood(const GridP& grid, const GridP& oldGrid)
             // on copy data timestep we need old patches that line up with this proc's patches,
             // get the other way around at the end
             const LevelP& oldLevel = oldGrid->getLevel(l);
-            oldLevel->selectPatches(patch->getExtraCellLowIndex__New()-ghost, patch->getExtraCellHighIndex__New()+ghost, old);
+            oldLevel->selectPatches(patch->getExtraCellLowIndex()-ghost, patch->getExtraCellHighIndex()+ghost, old);
             n.push_back(&old);
             for(int i=0;i<old.size();i++) //add owning processors (they are the old owners)
             { 
@@ -379,7 +379,7 @@ LoadBalancerCommon::createNeighborhood(const GridP& grid, const GridP& oldGrid)
         if (oldproc == me) {
           // don't get extra cells or ghost cells
           Patch::selectType n;
-          newLevel->selectPatches(oldPatch->getExtraCellLowIndex__New()-ghost, oldPatch->getExtraCellHighIndex__New()+ghost, n);
+          newLevel->selectPatches(oldPatch->getExtraCellLowIndex()-ghost, oldPatch->getExtraCellHighIndex()+ghost, n);
           d_neighbors.insert(oldPatch);
           
           int nproc=getPatchwiseProcessorAssignment(oldPatch);

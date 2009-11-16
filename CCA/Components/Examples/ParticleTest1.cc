@@ -166,8 +166,8 @@ void ParticleTest1::initialize(const ProcessorGroup*,
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    Point low = patch->cellPosition(patch->getCellLowIndex__New());
-    Point high = patch->cellPosition(patch->getCellHighIndex__New());
+    Point low = patch->cellPosition(patch->getCellLowIndex());
+    Point high = patch->cellPosition(patch->getCellHighIndex());
     for(int m = 0;m<matls->size();m++){
       srand(1);
       int numParticles = 10;

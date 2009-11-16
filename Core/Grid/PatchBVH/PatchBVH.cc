@@ -73,7 +73,7 @@ namespace Uintah {
       PatchKeyVal key;
 
       key.patch=*iter;
-      key.center2=(*iter)->getCellLowIndex__New()+(*iter)->getCellHighIndex__New();
+      key.center2=(*iter)->getCellLowIndex()+(*iter)->getCellHighIndex();
 
       patches_.push_back(key);
     }
@@ -101,7 +101,7 @@ namespace Uintah {
       PatchKeyVal key;
 
       key.patch=*iter;
-      key.center2=(*iter)->getCellLowIndex__New()+(*iter)->getCellHighIndex__New();
+      key.center2=(*iter)->getCellLowIndex()+(*iter)->getCellHighIndex();
 
       patches_.push_back(key);
     }

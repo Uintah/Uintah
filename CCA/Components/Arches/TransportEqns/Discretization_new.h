@@ -65,8 +65,8 @@ namespace Uintah{
         bool zminus = p->getBCType(Patch::zminus) == Patch::None;
         bool zplus =  p->getBCType(Patch::zplus)  == Patch::None;
 
-        IntVector clow  = p->getCellLowIndex__New();
-        IntVector chigh = p->getCellHighIndex__New(); 
+        IntVector clow  = p->getCellLowIndex();
+        IntVector chigh = p->getCellHighIndex(); 
         IntVector clow_mod = clow;
         IntVector chigh_mod = chigh; 
 
@@ -163,8 +163,8 @@ namespace Uintah{
         b.minus = false; 
         b.plus  = false; 
 
-        IntVector l = p->getCellLowIndex__New();
-        IntVector h = p->getCellHighIndex__New(); 
+        IntVector l = p->getCellLowIndex();
+        IntVector h = p->getCellHighIndex(); 
 
         if ( coord[0] == 1 ) {
 
@@ -771,7 +771,7 @@ namespace Uintah{
 
       } else if (convScheme == "central") {
 
-        for (CellIterator iter=p->getCellIterator__New(); !iter.done(); iter++){
+        for (CellIterator iter=p->getCellIterator(); !iter.done(); iter++){
 
           IntVector c = *iter; 
           IntVector cxp = c + IntVector(1,0,0);
@@ -1057,7 +1057,7 @@ namespace Uintah{
 
       } else if (convScheme == "central") {
 
-        for (CellIterator iter=p->getCellIterator__New(); !iter.done(); iter++){
+        for (CellIterator iter=p->getCellIterator(); !iter.done(); iter++){
 
           IntVector c = *iter; 
           IntVector cxp = c + IntVector(1,0,0);
@@ -1340,7 +1340,7 @@ namespace Uintah{
 
       } else if (convScheme == "central") {
 
-        for (CellIterator iter=p->getCellIterator__New(); !iter.done(); iter++){
+        for (CellIterator iter=p->getCellIterator(); !iter.done(); iter++){
 
           IntVector c = *iter; 
           IntVector cxp = c + IntVector(1,0,0);

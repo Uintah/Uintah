@@ -78,7 +78,7 @@ void scalarDiffusionOperator(DataWarehouse* new_dw,
   q_flux_allFaces( new_dw, patch, use_vol_frac, q_CC, diff_coeff,
                    vol_frac_CC, q_X_FC, q_Y_FC, q_Z_FC);
                    
-  for(CellIterator iter = patch->getCellIterator__New(); !iter.done(); iter++){
+  for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
     IntVector c = *iter;
     right  = c + IntVector(1,0,0);    left   = c ;    
     top    = c + IntVector(0,1,0);    bottom = c ;    
@@ -170,19 +170,19 @@ void q_flux_allFaces(DataWarehouse* new_dw,
   IntVector low,hi; 
   IntVector offset = IntVector(1,1,1) - patch->noNeighborsHigh();
        
-  low = patch->getSFCXIterator__New().begin();    // X Face iterator
-  hi  = patch->getSFCXIterator__New().end();
+  low = patch->getSFCXIterator().begin();    // X Face iterator
+  hi  = patch->getSFCXIterator().end();
   hi[0] += offset[0];
   CellIterator X_FC_iterLimits(low,hi);
          
-  low = patch->getSFCYIterator__New().begin();   // Y Face iterator
-  hi  = patch->getSFCYIterator__New().end();
+  low = patch->getSFCYIterator().begin();   // Y Face iterator
+  hi  = patch->getSFCYIterator().end();
   hi[1] += offset[1];
 
   CellIterator Y_FC_iterLimits(low,hi); 
         
-  low = patch->getSFCZIterator__New().begin();   // Z Face iterator
-  hi  = patch->getSFCZIterator__New().end();
+  low = patch->getSFCZIterator().begin();   // Z Face iterator
+  hi  = patch->getSFCZIterator().end();
   hi[2] += offset[2];
   
   CellIterator Z_FC_iterLimits(low,hi);            
@@ -233,7 +233,7 @@ void computeTauX( const Patch* patch,
   // on the left patches to include the right face
   // of the cell at the patch boundary. 
   // We compute tau_ZZ[right]-tau_XX[left] on each patch
-  CellIterator hi_lo = patch->getSFCXIterator__New();
+  CellIterator hi_lo = patch->getSFCXIterator();
   IntVector low,hi; 
   low = hi_lo.begin();
   hi  = hi_lo.end();
@@ -363,7 +363,7 @@ void computeTauY( const Patch* patch,
   // on the bottom patches to include the top face
   // of the cell at the patch boundary. 
   // We compute tau_YY[top]-tau_YY[bot] on each patch
-  CellIterator hi_lo = patch->getSFCYIterator__New();
+  CellIterator hi_lo = patch->getSFCYIterator();
   IntVector low,hi; 
   low = hi_lo.begin();
   hi  = hi_lo.end();
@@ -493,7 +493,7 @@ void computeTauZ( const Patch* patch,
   // on the back patches to include the front face
   // of the cell at the patch boundary. 
   // We compute tau_ZZ[front]-tau_ZZ[back] on each patch
-  CellIterator hi_lo = patch->getSFCZIterator__New();
+  CellIterator hi_lo = patch->getSFCZIterator();
   IntVector low,hi; 
   low = hi_lo.begin();
   hi  = hi_lo.end();

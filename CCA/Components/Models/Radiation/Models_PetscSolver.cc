@@ -164,8 +164,8 @@ Models_PetscSolver::matrixCreate(const PatchSet* allpatches,
     const PatchSubset* patches = allpatches->getSubset(s);
     for(int p=0;p<patches->size();p++){
       const Patch* patch = patches->get(p);
-      IntVector plowIndex = patch->getCellFORTLowIndex();
-      IntVector phighIndex = patch->getCellFORTHighIndex()+IntVector(1,1,1);
+      IntVector plowIndex = patch->getFortranCellLowIndex();
+      IntVector phighIndex = patch->getFortranCellHighIndex()+IntVector(1,1,1);
   
       long nc = (phighIndex[0]-plowIndex[0])*
         (phighIndex[1]-plowIndex[1])*
@@ -179,8 +179,8 @@ Models_PetscSolver::matrixCreate(const PatchSet* allpatches,
 
   for(int p=0;p<mypatches->size();p++){
     const Patch* patch=mypatches->get(p);
-    IntVector lowIndex = patch->getGhostCellLowIndex(1);
-    IntVector highIndex = patch->getGhostCellHighIndex(1);
+    IntVector lowIndex = patch->getExtraCellLowIndex(1);
+    IntVector highIndex = patch->getExtraCellHighIndex(1);
     Array3<int> l2g(lowIndex, highIndex);
     l2g.initialize(-1234);
     long totalCells=0;
@@ -190,8 +190,8 @@ Models_PetscSolver::matrixCreate(const PatchSet* allpatches,
     for(int i=0;i<neighbors.size();i++){
       const Patch* neighbor = neighbors[i];
 
-      IntVector plow = neighbor->getCellFORTLowIndex();
-      IntVector phigh = neighbor->getCellFORTHighIndex()+IntVector(1,1,1);
+      IntVector plow = neighbor->getFortranCellLowIndex();
+      IntVector phigh = neighbor->getFortranCellHighIndex()+IntVector(1,1,1);
       IntVector low = Max(lowIndex, plow);
       IntVector high= Min(highIndex, phigh);
 
@@ -330,8 +330,8 @@ Models_PetscSolver::setMatrix(const ProcessorGroup* ,
     throw UintahPetscError(ierr, "VecDuplicate(d_u)", __FILE__, __LINE__);
 
   // Get the patch bounds and the variable bounds
-  IntVector idxLo = patch->getCellFORTLowIndex();
-  IntVector idxHi = patch->getCellFORTHighIndex();
+  IntVector idxLo = patch->getFortranCellLowIndex();
+  IntVector idxHi = patch->getFortranCellHighIndex();
   /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
          Compute the matrix and right-hand-side vector that define
          the linear system, Ax = b.
@@ -362,8 +362,8 @@ Models_PetscSolver::setMatrix(const ProcessorGroup* ,
   // fill matrix for internal patches
   // make sure that sizeof(d_petscIndex) is the last patch, i.e., appears last in the
   // petsc matrix
-  IntVector lowIndex = patch->getGhostCellLowIndex(1);
-  IntVector highIndex = patch->getGhostCellHighIndex(1);
+  IntVector lowIndex = patch->getExtraCellLowIndex(1);
+  IntVector highIndex = patch->getExtraCellHighIndex(1);
 
   Array3<int> l2g(lowIndex, highIndex);
   l2g.copy(d_petscLocalToGlobal[patch]);
@@ -648,8 +648,8 @@ void
 Models_PetscSolver::copyRadSoln(const Patch* patch, RadiationVariables* vars)
 {
   // copy solution vector back into the array
-  IntVector idxLo = patch->getCellFORTLowIndex();
-  IntVector idxHi = patch->getCellFORTHighIndex();
+  IntVector idxLo = patch->getFortranCellLowIndex();
+  IntVector idxHi = patch->getFortranCellHighIndex();
   double* xvec;
   
   PetscInt begin, end;

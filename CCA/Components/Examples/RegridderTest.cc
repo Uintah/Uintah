@@ -193,7 +193,7 @@ namespace Uintah
 	int matl = matls->get(m);
 	CCVariable<double> density;
 	new_dw->allocateAndPut(density, d_densityLabel, matl, patch);
-	for ( CellIterator iter(patch->getCellIterator__New()); !iter.done(); iter++) {
+	for ( CellIterator iter(patch->getCellIterator()); !iter.done(); iter++) {
 	  IntVector idx(*iter);
 	  Vector whereThisCellIs( patch->cellPosition( idx ) );
 	  Vector distanceToCenterOfDomain = whereThisCellIs - d_centerOfBall;
@@ -241,7 +241,7 @@ namespace Uintah
         new_dw->allocateAndPut(oldDensity, d_oldDensityLabel, matl, patch);
 
 
-	for ( CellIterator iter(patch->getCellIterator__New()); !iter.done(); iter++) {
+	for ( CellIterator iter(patch->getCellIterator()); !iter.done(); iter++) {
 	  IntVector idx(*iter);
 	  Vector whereThisCellIs( patch->cellPosition( idx ) );
 	  Vector distanceToCenterOfDomain = whereThisCellIs - d_centerOfBall;
@@ -317,7 +317,7 @@ namespace Uintah
         if (!initial)
           new_dw->get( oldDensity, d_oldDensityLabel, matl, patch, Ghost::AroundCells, 1 );
 
-	for ( CellIterator iter(patch->getCellIterator__New()); !iter.done(); iter++) {
+	for ( CellIterator iter(patch->getCellIterator()); !iter.done(); iter++) {
 	  IntVector idx(*iter);
 
 	  if ( density[idx] <= d_radiusOfBall ) {
@@ -374,12 +374,12 @@ namespace Uintah
           new_dw->get(fine_den, d_densityLabel, matl, finePatch,
                       Ghost::None, 0);
           
-          IntVector fl(finePatch->getCellLowIndex__New());
-          IntVector fh(finePatch->getCellHighIndex__New());
+          IntVector fl(finePatch->getCellLowIndex());
+          IntVector fh(finePatch->getCellHighIndex());
           IntVector l(fineLevel->mapCellToCoarser(fl));
           IntVector h(fineLevel->mapCellToCoarser(fh));
-          l = Max(l, coarsePatch->getCellLowIndex__New());
-          h = Min(h, coarsePatch->getCellHighIndex__New());
+          l = Max(l, coarsePatch->getCellLowIndex());
+          h = Min(h, coarsePatch->getCellHighIndex());
           
           for(CellIterator iter(l, h); !iter.done(); iter++){
             double rho_tmp=0;
@@ -410,7 +410,7 @@ namespace Uintah
 	int matl = matls->get(m);
 	CCVariable<double> density;
 	new_dw->allocateAndPut(density, d_densityLabel, matl, patch);
-	for ( CellIterator iter(patch->getCellIterator__New()); !iter.done(); iter++) {
+	for ( CellIterator iter(patch->getCellIterator()); !iter.done(); iter++) {
 	  IntVector idx(*iter);
 	  Vector whereThisCellIs( patch->cellPosition( idx ) );
 	  Vector distanceToCenterOfDomain = whereThisCellIs - d_centerOfBall;

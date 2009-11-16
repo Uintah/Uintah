@@ -717,8 +717,8 @@ bool AMRSimulationController::doRegridding(GridP& currentGrid, bool initialTimes
             const Patch* patch = *patchIter;
             amrout << "(Patch " << patch->getID() << " proc " << d_lb->getPatchwiseProcessorAssignment(patch)
               << ": box=" << patch->getExtraBox()
-              << ", lowIndex=" << patch->getExtraCellLowIndex__New() << ", highIndex="
-              << patch->getExtraCellHighIndex__New() << ")" << endl;
+              << ", lowIndex=" << patch->getExtraCellLowIndex() << ", highIndex="
+              << patch->getExtraCellHighIndex() << ")" << endl;
           }
         }
       }

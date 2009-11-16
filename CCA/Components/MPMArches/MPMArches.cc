@@ -438,8 +438,8 @@ void MPMArches::initializeCutCells(const ProcessorGroup*,
     int jend;
     int kend;
     
-    IntVector dimLo = patch->getCellFORTLowIndex();
-    IntVector dimHi = patch->getCellFORTHighIndex();
+    IntVector dimLo = patch->getFortranCellLowIndex();
+    IntVector dimHi = patch->getFortranCellHighIndex();
 
     string s1,s2;
     
@@ -685,8 +685,8 @@ void MPMArches::initializeCutCells(const ProcessorGroup*,
 
       // Apply Boundary Conditions to Cut Cell Data
 
-      IntVector idxLo = patch->getCellFORTLowIndex();
-      IntVector idxHi = patch->getCellFORTHighIndex();
+      IntVector idxLo = patch->getFortranCellLowIndex();
+      IntVector idxHi = patch->getFortranCellHighIndex();
 
       bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
       bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
@@ -1389,7 +1389,7 @@ void MPMArches::interpolateCCToFC(const ProcessorGroup*,
 	    !iter.done(); iter++){
 	
 	  IntVector curcell = *iter;
-	  if (curcell.x() >= (patch->getInteriorCellLowIndex()).x()) {
+	  if (curcell.x() >= (patch->getCellLowIndex()).x()) {
 	  
 	    IntVector adjcell(curcell.x()-1,curcell.y(),curcell.z());
 	    mass = cmass[curcell] + cmass[adjcell];
@@ -1399,7 +1399,7 @@ void MPMArches::interpolateCCToFC(const ProcessorGroup*,
 	//_____________________________________
 	//   S O U T H   F A C E S (FCY Values)
 	
-	  if (curcell.y() >= (patch->getInteriorCellLowIndex()).y()) {
+	  if (curcell.y() >= (patch->getCellLowIndex()).y()) {
 	  
 	    IntVector adjcell(curcell.x(),curcell.y()-1,curcell.z());
 	    mass = cmass[curcell] + cmass[adjcell];
@@ -1409,7 +1409,7 @@ void MPMArches::interpolateCCToFC(const ProcessorGroup*,
 	//_______________________________________
 	//   B O T T O M   F A C E S (FCZ Values)
 	
-	  if (curcell.z() >= (patch->getInteriorCellLowIndex()).z()) {
+	  if (curcell.z() >= (patch->getCellLowIndex()).z()) {
 	  
 	    IntVector adjcell(curcell.x(),curcell.y(),curcell.z()-1);
 	    mass = cmass[curcell] + cmass[adjcell];
@@ -1432,7 +1432,7 @@ void MPMArches::interpolateCCToFC(const ProcessorGroup*,
 	//___________________________________
 	//   L E F T   F A C E S (FCX Values)
 	
-	  if (curcell.x() >= (patch->getInteriorCellLowIndex()).x()) {
+	  if (curcell.x() >= (patch->getCellLowIndex()).x()) {
 	  
 	    IntVector adjcell(curcell.x()-1,curcell.y(),curcell.z());
 	    mass = cmass[curcell] + cmass[adjcell];
@@ -1448,7 +1448,7 @@ void MPMArches::interpolateCCToFC(const ProcessorGroup*,
 	//_____________________________________
 	//   S O U T H   F A C E S (FCY Values)
 	
-	  if (curcell.y() >= (patch->getInteriorCellLowIndex()).y()) {
+	  if (curcell.y() >= (patch->getCellLowIndex()).y()) {
 	  
 	    IntVector adjcell(curcell.x(),curcell.y()-1,curcell.z());
 	    mass = cmass[curcell] + cmass[adjcell];
@@ -1464,7 +1464,7 @@ void MPMArches::interpolateCCToFC(const ProcessorGroup*,
 	//_______________________________________
 	//   B O T T O M   F A C E S (FCZ Values)
 	
-	  if (curcell.z() >= (patch->getInteriorCellLowIndex()).z()) {
+	  if (curcell.z() >= (patch->getCellLowIndex()).z()) {
 	    
 	    IntVector adjcell(curcell.x(),curcell.y(),curcell.z()-1);
 	    mass = cmass[curcell] + cmass[adjcell];
@@ -2865,8 +2865,8 @@ void MPMArches::doMomExchange(const ProcessorGroup*,
     
     for (int m = 0; m < numMPMMatls; m++) {
       
-      valid_lo = patch->getCellFORTLowIndex();
-      valid_hi = patch->getCellFORTHighIndex();
+      valid_lo = patch->getFortranCellLowIndex();
+      valid_hi = patch->getFortranCellHighIndex();
       
       // code for x-direction momentum exchange
       
@@ -2981,8 +2981,8 @@ void MPMArches::doMomExchange(const ProcessorGroup*,
 
       // code for pressure forces (direction-independent)
       
-      valid_lo = patch->getCellFORTLowIndex();
-      valid_hi = patch->getCellFORTHighIndex();
+      valid_lo = patch->getFortranCellLowIndex();
+      valid_hi = patch->getFortranCellHighIndex();
 
       fort_pressure_force(pressForceX[m], pressForceY[m], pressForceZ[m],
 			  gas_fraction_cc, solid_fraction_cc[m],
@@ -3887,23 +3887,23 @@ void MPMArches::doEnergyExchange(const ProcessorGroup*,
 		  matlIndex, patch, Ghost::AroundCells, numGhostCellsG);
     }
     else {
-      radfluxE.allocate(patch->getGhostCellLowIndex(numGhostCellsG), 
-			patch->getGhostCellHighIndex(numGhostCellsG));
+      radfluxE.allocate(patch->getExtraCellLowIndex(numGhostCellsG), 
+			patch->getExtraCellHighIndex(numGhostCellsG));
       radfluxE.initialize(0.);
-      radfluxW.allocate(patch->getGhostCellLowIndex(numGhostCellsG), 
-			patch->getGhostCellHighIndex(numGhostCellsG));
+      radfluxW.allocate(patch->getExtraCellLowIndex(numGhostCellsG), 
+			patch->getExtraCellHighIndex(numGhostCellsG));
       radfluxW.initialize(0.);
-      radfluxN.allocate(patch->getGhostCellLowIndex(numGhostCellsG), 
-			patch->getGhostCellHighIndex(numGhostCellsG));
+      radfluxN.allocate(patch->getExtraCellLowIndex(numGhostCellsG), 
+			patch->getExtraCellHighIndex(numGhostCellsG));
       radfluxN.initialize(0.);
-      radfluxS.allocate(patch->getGhostCellLowIndex(numGhostCellsG), 
-			patch->getGhostCellHighIndex(numGhostCellsG));
+      radfluxS.allocate(patch->getExtraCellLowIndex(numGhostCellsG), 
+			patch->getExtraCellHighIndex(numGhostCellsG));
       radfluxS.initialize(0.);
-      radfluxT.allocate(patch->getGhostCellLowIndex(numGhostCellsG), 
-			patch->getGhostCellHighIndex(numGhostCellsG));
+      radfluxT.allocate(patch->getExtraCellLowIndex(numGhostCellsG), 
+			patch->getExtraCellHighIndex(numGhostCellsG));
       radfluxT.initialize(0.);
-      radfluxB.allocate(patch->getGhostCellLowIndex(numGhostCellsG), 
-			patch->getGhostCellHighIndex(numGhostCellsG));
+      radfluxB.allocate(patch->getExtraCellLowIndex(numGhostCellsG), 
+			patch->getExtraCellHighIndex(numGhostCellsG));
       radfluxB.initialize(0.);
     }
 
@@ -3992,8 +3992,8 @@ void MPMArches::doEnergyExchange(const ProcessorGroup*,
     // csmag = d_arches->getTurbulenceModel()->getSmagorinskyConst();
     double csmag = 0.17;
 
-    IntVector valid_lo = patch->getCellFORTLowIndex();
-    IntVector valid_hi = patch->getCellFORTHighIndex();
+    IntVector valid_lo = patch->getFortranCellLowIndex();
+    IntVector valid_hi = patch->getFortranCellHighIndex();
 
     for (int m = 0; m < numMPMMatls; m++) {
 
@@ -4125,8 +4125,8 @@ void MPMArches::collectToCCGasEnergyExchSrcs(const ProcessorGroup*,
     new_dw->copyOut(sp_enth_cc, d_MAlb->d_enth_mmLinSrc_tmp_CCLabel,
 		matlIndex, patch, Ghost::AroundCells, numGhostCells);
 
-    IntVector valid_lo = patch->getCellFORTLowIndex();
-    IntVector valid_hi = patch->getCellFORTHighIndex();
+    IntVector valid_lo = patch->getFortranCellLowIndex();
+    IntVector valid_hi = patch->getFortranCellHighIndex();
 
     fort_collect_scalar_fctocc(
 			       su_enth_cc,  sp_enth_cc,
@@ -4282,17 +4282,17 @@ void MPMArches::putAllForcesOnCC(const ProcessorGroup*,
 	  IntVector curcell = *iter;
 	  double XCPF = 0.0, YCPF = 0.0, ZCPF = 0.0;
 
-	  if (curcell.x() >= (patch->getInteriorCellLowIndex()).x()) {
+	  if (curcell.x() >= (patch->getCellLowIndex()).x()) {
 	    IntVector adjcell(curcell.x()-1,curcell.y(),curcell.z());
 	    XCPF = .5*(PRX_FC[curcell] + PRX_FC[adjcell]);
 	  }
 
-	  if (curcell.y() >= (patch->getInteriorCellLowIndex()).y()) {
+	  if (curcell.y() >= (patch->getCellLowIndex()).y()) {
 	    IntVector adjcell(curcell.x(),curcell.y()-1,curcell.z());
 	    YCPF = .5*(PRY_FC[curcell] + PRY_FC[adjcell]);
 	  }
 
-	  if (curcell.z() >= (patch->getInteriorCellLowIndex()).z()) {
+	  if (curcell.z() >= (patch->getCellLowIndex()).z()) {
 	    IntVector adjcell(curcell.x(),curcell.y(),curcell.z()-1);
 	    ZCPF = .5*(PRZ_FC[curcell] + PRZ_FC[adjcell]);
 	  }
@@ -4314,21 +4314,21 @@ void MPMArches::putAllForcesOnCC(const ProcessorGroup*,
 
 	  IntVector curcell = *iter;
 
-	  if (curcell.x() >= (patch->getInteriorCellLowIndex()).x()) {
+	  if (curcell.x() >= (patch->getCellLowIndex()).x()) {
 
 	    IntVector adjcell(curcell.x()-1,curcell.y(),curcell.z());
 	    htrate_cc[curcell] = htrate_cc[curcell] + 
 	      .5*(htrate_fcx[curcell] + htrate_fcx[adjcell]);
 	  }
 
-	  if (curcell.y() >= (patch->getInteriorCellLowIndex()).y()) {
+	  if (curcell.y() >= (patch->getCellLowIndex()).y()) {
 
 	    IntVector adjcell(curcell.x(),curcell.y()-1,curcell.z());
 	    htrate_cc[curcell] = htrate_cc[curcell] + 
 	      .5*(htrate_fcy[curcell] + htrate_fcy[adjcell]);
 	  }
 
-	  if (curcell.z() >= (patch->getInteriorCellLowIndex()).z()) {
+	  if (curcell.z() >= (patch->getCellLowIndex()).z()) {
 	    IntVector adjcell(curcell.x(),curcell.y(),curcell.z()-1);
 	    htrate_cc[curcell] = htrate_cc[curcell] + 
 	      .5*(htrate_fcz[curcell] + htrate_fcz[adjcell]);
@@ -4504,7 +4504,7 @@ void MPMArches::computeAndIntegrateAcceleration(const ProcessorGroup* pg,
 
       acceleration.initialize(Vector(0.,0.,0.));
 
-      for(NodeIterator iter = patch->getNodeIterator("linear"); !iter.done();
+      for(NodeIterator iter = patch->getExtraNodeIterator(); !iter.done();
           iter++){
          IntVector c = *iter;
          Vector acc(0.,0.,0.);
@@ -4554,7 +4554,7 @@ void MPMArches::solveHeatEquations(const ProcessorGroup* pg,
       new_dw->get(htrate_gasNC,Mlb->heaTranSolid_NCLabel,dwi,patch,
 		  Ghost::None, 0);
       
-      for(NodeIterator iter = patch->getNodeIterator("linear");
+      for(NodeIterator iter = patch->getExtraNodeIterator();
 	  !iter.done();iter++)
 	tempRate[*iter] += htrate_gasNC[*iter]/(mass[*iter]*Cv);
     }

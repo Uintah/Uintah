@@ -187,8 +187,8 @@ void DynamicLoadBalancer::collectParticlesForRegrid(const Grid* oldGrid, const v
           //loop through the materials and add up the particles
           // the main difference between this and the above portion is that we need to grab the portion of the patch
           // that is intersected by the other patch
-          low = Max(region.getLow(), oldPatch->getExtraCellLowIndex__New());
-          high = Min(region.getHigh(), oldPatch->getExtraCellHighIndex__New());
+          low = Max(region.getLow(), oldPatch->getExtraCellLowIndex());
+          high = Min(region.getHigh(), oldPatch->getExtraCellHighIndex());
 
           int thisPatchParticles = 0;
           if (dw) {
@@ -425,11 +425,11 @@ void DynamicLoadBalancer::useSFC(const LevelP& level, int* order)
     const Patch* patch = *iter;
    
     //calculate patchset bounds
-    high = Max(high, patch->getCellHighIndex__New());
-    low = Min(low, patch->getCellLowIndex__New());
+    high = Max(high, patch->getCellHighIndex());
+    low = Min(low, patch->getCellLowIndex());
     
     //calculate minimum patch size
-    IntVector size=patch->getCellHighIndex__New()-patch->getCellLowIndex__New();
+    IntVector size=patch->getCellHighIndex()-patch->getCellLowIndex();
     min_patch_size=min(min_patch_size,size);
     
     //create positions vector
@@ -443,7 +443,7 @@ void DynamicLoadBalancer::useSFC(const LevelP& level, int* order)
     ASSERTRANGE(proc,0,d_myworld->size());
     if(d_myworld->myrank()==(int)proc)
     {
-      Vector point=(patch->getCellLowIndex__New()+patch->getCellHighIndex__New()).asVector()/2.0;
+      Vector point=(patch->getCellLowIndex()+patch->getCellHighIndex()).asVector()/2.0;
       for(int d=0;d<dim;d++)
       {
         positions.push_back(point[dimensions[d]]);
@@ -451,7 +451,7 @@ void DynamicLoadBalancer::useSFC(const LevelP& level, int* order)
     }
     originalPatchCount[proc]++;
 #else
-    Vector point=(patch->getCellLowIndex__New()+patch->getCellHighIndex__New()).asVector()/2.0;
+    Vector point=(patch->getCellLowIndex()+patch->getCellHighIndex()).asVector()/2.0;
     for(int d=0;d<dim;d++)
     {
       positions.push_back(point[dimensions[d]]);
@@ -602,7 +602,7 @@ bool DynamicLoadBalancer::assignPatchesZoltanSFC(const GridP& grid, bool force)
       
       if(d_myworld->myrank()==proc)
       {
-        Vector point=(patch->getCellLowIndex__New()+patch->getCellHighIndex__New()).asVector()/2.0;
+        Vector point=(patch->getCellLowIndex()+patch->getCellHighIndex()).asVector()/2.0;
 	my_costs.push_back(patch_costs[l][patch->getLevelIndex()]);
 	my_gids.push_back(patch->getLevelIndex());
         for(int d=0;d<dim;d++)
@@ -1442,7 +1442,7 @@ void DynamicLoadBalancer::getCosts(const Grid* grid, vector<vector<double> >&cos
       regions.push_back(vector<Region>());
       for (int p = 0; p < grid->getLevel(l)->numPatches(); p++) {
         const Patch* patch = grid->getLevel(l)->getPatch(p);
-        regions[l].push_back(Region(patch->getCellLowIndex__New(), patch->getCellHighIndex__New()));
+        regions[l].push_back(Region(patch->getCellLowIndex(), patch->getCellHighIndex()));
       }
     }
     collectParticlesForRegrid(olddw->getGrid(),regions,num_particles);
@@ -1540,8 +1540,8 @@ bool DynamicLoadBalancer::possiblyDynamicallyReallocate(const GridP& grid, int s
           Level::const_patchIterator iter = curLevel->patchesBegin();
           lb << "  Changing the Load Balance\n";
           for (unsigned int i = 0; i < d_processorAssignment.size(); i++) {
-            lb << myrank << " patch " << i << " (real " << (*iter)->getID() << ") -> proc " << d_processorAssignment[i] << " (old " << d_oldAssignment[i] << ") patch size: "  << (*iter)->getGridIndex() << " " << ((*iter)->getExtraCellHighIndex__New() - (*iter)->getExtraCellLowIndex__New()) << "\n";
-            IntVector range = ((*iter)->getExtraCellHighIndex__New() - (*iter)->getExtraCellLowIndex__New());
+            lb << myrank << " patch " << i << " (real " << (*iter)->getID() << ") -> proc " << d_processorAssignment[i] << " (old " << d_oldAssignment[i] << ") patch size: "  << (*iter)->getGridIndex() << " " << ((*iter)->getExtraCellHighIndex() - (*iter)->getExtraCellLowIndex()) << "\n";
+            IntVector range = ((*iter)->getExtraCellHighIndex() - (*iter)->getExtraCellLowIndex());
             iter++;
             if (iter == curLevel->patchesEnd() && i+1 < d_processorAssignment.size()) {
               curLevel = curLevel->getFinerLevel();
@@ -1673,7 +1673,7 @@ DynamicLoadBalancer::problemSetup(ProblemSpecP& pspec, GridP& grid,  SimulationS
     const Patch *patch=grid->getLevel(0)->getPatch(0);
 
     vector<IntVector> mps;
-    mps.push_back(patch->getCellHighIndex__New()-patch->getCellLowIndex__New());
+    mps.push_back(patch->getCellHighIndex()-patch->getCellLowIndex());
 
     d_costForecaster->setMinPatchSize(mps);
   }

@@ -298,11 +298,11 @@ void ImplicitHeatConduction::createHCMatrix(const ProcessorGroup* pg,
 
     IntVector lowIndex,highIndex;
     if(d_flag->d_8or27==8){
-      lowIndex = patch->getNodeLowIndex__New();
-      highIndex = patch->getNodeHighIndex__New()+IntVector(1,1,1);
+      lowIndex = patch->getNodeLowIndex();
+      highIndex = patch->getNodeHighIndex()+IntVector(1,1,1);
     } else if(d_flag->d_8or27==27){
-      lowIndex = patch->getExtraNodeLowIndex__New();
-      highIndex = patch->getExtraNodeHighIndex__New()+IntVector(1,1,1);
+      lowIndex = patch->getExtraNodeLowIndex();
+      highIndex = patch->getExtraNodeHighIndex()+IntVector(1,1,1);
     }
 
     Array3<int> l2g(lowIndex,highIndex);
@@ -398,11 +398,11 @@ void ImplicitHeatConduction::applyHCBoundaryConditions(const ProcessorGroup*,
     }
     IntVector lowIndex,highIndex;
     if(d_flag->d_8or27==8){
-      lowIndex = patch->getNodeLowIndex__New();
-      highIndex = patch->getNodeHighIndex__New()+IntVector(1,1,1);
+      lowIndex = patch->getNodeLowIndex();
+      highIndex = patch->getNodeHighIndex()+IntVector(1,1,1);
     } else if(d_flag->d_8or27==27){
-      lowIndex = patch->getExtraNodeLowIndex__New();
-      highIndex = patch->getExtraNodeHighIndex__New()+IntVector(1,1,1);
+      lowIndex = patch->getExtraNodeLowIndex();
+      highIndex = patch->getExtraNodeHighIndex()+IntVector(1,1,1);
     }
     Array3<int> l2g(lowIndex,highIndex);
                                                                                 
@@ -464,7 +464,7 @@ void ImplicitHeatConduction::applyHCBoundaryConditions(const ProcessorGroup*,
       new_dw->get(gheatflux, lb->gExternalHeatFluxLabel,matlindex,patch,
                   Ghost::None,0);
       
-      for (NodeIterator iter = patch->getNodeIterator__New(); !iter.done();iter++){
+      for (NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
         IntVector n = *iter;
         int dof = l2g[n];
         if (!compare(gheatflux[n],0.)) {
@@ -493,11 +493,11 @@ void ImplicitHeatConduction::findFixedHCDOF(const ProcessorGroup*,
                                                                                 
     IntVector lowIndex,highIndex;
     if(d_flag->d_8or27==8){
-      lowIndex = patch->getNodeLowIndex__New();
-      highIndex = patch->getNodeHighIndex__New()+IntVector(1,1,1);
+      lowIndex = patch->getNodeLowIndex();
+      highIndex = patch->getNodeHighIndex()+IntVector(1,1,1);
     } else if(d_flag->d_8or27==27){
-      lowIndex = patch->getExtraNodeLowIndex__New();
-      highIndex = patch->getExtraNodeHighIndex__New()+IntVector(1,1,1);
+      lowIndex = patch->getExtraNodeLowIndex();
+      highIndex = patch->getExtraNodeHighIndex()+IntVector(1,1,1);
     }
     Array3<int> l2g(lowIndex,highIndex);
                                                                                 
@@ -513,13 +513,13 @@ void ImplicitHeatConduction::findFixedHCDOF(const ProcessorGroup*,
       constNCVariable<double> gmass;
       new_dw->get(gmass,   lb->gMassLabel,matlindex,patch,Ghost::None,0);
 
-      for (NodeIterator iter = patch->getNodeIterator__New(); !iter.done();iter++){
+      for (NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
         IntVector n = *iter;
         GMASS[n] += gmass[n];
       }  
     }    
 
-    for (NodeIterator iter = patch->getNodeIterator__New(); !iter.done();iter++){
+    for (NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
       IntVector n = *iter;
       int dof = l2g[n];
       if (compare(GMASS[n],0.)){
@@ -549,11 +549,11 @@ void ImplicitHeatConduction::formHCStiffnessMatrix(const ProcessorGroup*,
 
     IntVector lowIndex,highIndex;
     if(d_flag->d_8or27==8){
-      lowIndex = patch->getNodeLowIndex__New();
-      highIndex = patch->getNodeHighIndex__New()+IntVector(1,1,1);
+      lowIndex = patch->getNodeLowIndex();
+      highIndex = patch->getNodeHighIndex()+IntVector(1,1,1);
     } else if(d_flag->d_8or27==27){
-      lowIndex = patch->getExtraNodeLowIndex__New();
-      highIndex = patch->getExtraNodeHighIndex__New()+IntVector(1,1,1);
+      lowIndex = patch->getExtraNodeLowIndex();
+      highIndex = patch->getExtraNodeHighIndex()+IntVector(1,1,1);
     }
     Array3<int> l2g(lowIndex,highIndex);
 
@@ -648,11 +648,11 @@ void ImplicitHeatConduction::formHCQ(const ProcessorGroup*,
                                                                                 
     IntVector lowIndex,highIndex;
     if(d_flag->d_8or27==8){
-      lowIndex = patch->getNodeLowIndex__New();
-      highIndex = patch->getNodeHighIndex__New()+IntVector(1,1,1);
+      lowIndex = patch->getNodeLowIndex();
+      highIndex = patch->getNodeHighIndex()+IntVector(1,1,1);
     } else if(d_flag->d_8or27==27){
-      lowIndex = patch->getExtraNodeLowIndex__New();
-      highIndex = patch->getExtraNodeHighIndex__New()+IntVector(1,1,1);
+      lowIndex = patch->getExtraNodeLowIndex();
+      highIndex = patch->getExtraNodeHighIndex()+IntVector(1,1,1);
     }
     Array3<int> l2g(lowIndex,highIndex);
 
@@ -663,7 +663,7 @@ void ImplicitHeatConduction::formHCQ(const ProcessorGroup*,
     new_dw->get(temperature,lb->gTemperatureLabel,0,patch,Ghost::AroundCells,1);
 
 #if 0
-    for (NodeIterator iter = patch->getNodeIterator__New(); !iter.done(); iter++){
+    for (NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
       IntVector n = *iter;
       cout << "temperature[" << n << "]= " << temperature[n] << endl;
     }
@@ -742,11 +742,11 @@ void ImplicitHeatConduction::adjustHCQAndHCKForBCs(const ProcessorGroup*,
     }
     IntVector lowIndex,highIndex;
     if(d_flag->d_8or27==8){
-      lowIndex = patch->getNodeLowIndex__New();
-      highIndex = patch->getNodeHighIndex__New()+IntVector(1,1,1);
+      lowIndex = patch->getNodeLowIndex();
+      highIndex = patch->getNodeHighIndex()+IntVector(1,1,1);
     } else if(d_flag->d_8or27==27){
-      lowIndex = patch->getExtraNodeLowIndex__New();
-      highIndex = patch->getExtraNodeHighIndex__New()+IntVector(1,1,1);
+      lowIndex = patch->getExtraNodeLowIndex();
+      highIndex = patch->getExtraNodeHighIndex()+IntVector(1,1,1);
     }
     Array3<int> l2g(lowIndex,highIndex);
 
@@ -762,7 +762,7 @@ void ImplicitHeatConduction::adjustHCQAndHCKForBCs(const ProcessorGroup*,
     
     new_dw->get(temperature, lb->gTemperatureStarLabel,dwi,patch,gnone,0);
     
-    for (NodeIterator iter = patch->getNodeIterator__New(); !iter.done(); iter++) {
+    for (NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++) {
       IntVector n = *iter;
       int dof[1];
       dof[0] = l2g[n];
@@ -792,15 +792,15 @@ void ImplicitHeatConduction::solveForTemp(const ProcessorGroup*,
     }
 
 #if 0
-    IntVector lowIndex = patch->getNodeLowIndex__New();
-    IntVector highIndex = patch->getNodeHighIndex__New()+IntVector(1,1,1);
+    IntVector lowIndex = patch->getNodeLowIndex();
+    IntVector highIndex = patch->getNodeHighIndex()+IntVector(1,1,1);
     Array3<int> l2g(lowIndex,highIndex);
 
     constNCVariable<double> temperature;
     int dwi = 0;
     new_dw->get(temperature,lb->gTemperatureLabel,dwi,patch,Ghost::None,0);
 
-    for (NodeIterator iter = patch->getNodeIterator__New();!iter.done();iter++){
+    for (NodeIterator iter = patch->getNodeIterator();!iter.done();iter++){
       guess.push_back(temperature[*iter]);
     }
 #endif
@@ -829,11 +829,11 @@ void ImplicitHeatConduction::getTemperatureIncrement(const ProcessorGroup*,
                                                                                 
     IntVector lowIndex,highIndex;
     if(d_flag->d_8or27==8){
-      lowIndex = patch->getNodeLowIndex__New();
-      highIndex = patch->getNodeHighIndex__New()+IntVector(1,1,1);
+      lowIndex = patch->getNodeLowIndex();
+      highIndex = patch->getNodeHighIndex()+IntVector(1,1,1);
     } else if(d_flag->d_8or27==27){
-      lowIndex = patch->getExtraNodeLowIndex__New();
-      highIndex = patch->getExtraNodeHighIndex__New()+IntVector(1,1,1);
+      lowIndex = patch->getExtraNodeLowIndex();
+      highIndex = patch->getExtraNodeHighIndex()+IntVector(1,1,1);
     }
     Array3<int> l2g(lowIndex,highIndex);
                                                                                 
@@ -852,7 +852,7 @@ void ImplicitHeatConduction::getTemperatureIncrement(const ProcessorGroup*,
     vector<double> x;
     int begin = d_HC_solver->getSolution(x);
 
-    for (NodeIterator iter = patch->getNodeIterator__New();!iter.done();iter++){
+    for (NodeIterator iter = patch->getNodeIterator();!iter.done();iter++){
       IntVector n = *iter;
       int dof = l2g[n] - begin;
       tempRate[n] = (x[dof] - temp[n])/dt;

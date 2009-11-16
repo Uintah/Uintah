@@ -75,8 +75,8 @@ HypreDriverSStruct::HyprePatch::HyprePatch(const Patch* patch,
   _patch(patch), 
   _matl(matl),
   _level(patch->getLevel()->getIndex()),
-  _low(patch->getCellLowIndex__New()),
-  _high(patch->getCellHighIndex__New()-IntVector(1,1,1))
+  _low(patch->getCellLowIndex()),
+  _high(patch->getCellHighIndex()-IntVector(1,1,1))
   // Note: we need to subtract (1,1,1) from high because our loops are
   // cell = low; cell <= high.
 {

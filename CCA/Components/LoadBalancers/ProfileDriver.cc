@@ -75,8 +75,8 @@ void ProfileDriver::addContribution(const PatchSubset* patches, double cost)
       int l=patch->getLevel()->getIndex();
 
       //coarsen region by minimum patch size
-      IntVector low=patch->getCellLowIndex__New()/d_minPatchSize[l];
-      IntVector high=patch->getCellHighIndex__New()/d_minPatchSize[l];
+      IntVector low=patch->getCellLowIndex()/d_minPatchSize[l];
+      IntVector high=patch->getCellHighIndex()/d_minPatchSize[l];
 
       //loop through datapoints
       for(CellIterator iter(low,high); !iter.done(); iter++)
@@ -118,7 +118,7 @@ void ProfileDriver::outputError(const GridP currentGrid)
     for(int p=0; p<level->numPatches();p++)
     {
       const Patch *patch=level->getPatch(p);
-      regions[p]=Region(patch->getCellLowIndex__New(),patch->getCellHighIndex__New());
+      regions[p]=Region(patch->getCellLowIndex(),patch->getCellHighIndex());
     }
 
     vector<double>  predicted(regions.size(),0), measured(regions.size(),0);
@@ -167,7 +167,7 @@ void ProfileDriver::outputError(const GridP currentGrid)
 
       if(d_myworld->myrank()==0 && stats2.active())
       {
-        IntVector low(patch->getCellLowIndex__New()), high(patch->getCellHighIndex__New());
+        IntVector low(patch->getCellLowIndex()), high(patch->getCellHighIndex());
         stats2 << iter << " " << patch->getID() << " " << (measured_sum[l][p]-predicted_sum[l][p])/measured_sum[l][p] << " " << measured_sum[l][p] << " " << l << " " 
           << low[0] << " " << low[1] << " " << low[2] << " " << high[0] << " " << high[1] << " " << high[2] << endl;
       }
@@ -240,7 +240,7 @@ void ProfileDriver::outputError(const GridP currentGrid)
       for(int p=0; p<level->numPatches();p++)
       {
         const Patch *patch=level->getPatch(p);
-        regions[p]=Region(patch->getCellLowIndex__New(),patch->getCellHighIndex__New());
+        regions[p]=Region(patch->getCellLowIndex(),patch->getCellHighIndex());
       }
 
       double maxError=0;
@@ -424,7 +424,7 @@ void ProfileDriver::initializeWeights(const Grid* oldgrid, const Grid* newgrid)
       for(int p=0; p<oldgrid->getLevel(l)->numPatches(); p++) 
       {
         const Patch* patch = oldgrid->getLevel(l)->getPatch(p);
-        old_level.push_back(Region(patch->getCellLowIndex__New(), patch->getCellHighIndex__New()));
+        old_level.push_back(Region(patch->getCellLowIndex(), patch->getCellHighIndex()));
       }
     }
     
@@ -459,7 +459,7 @@ void ProfileDriver::initializeWeights(const Grid* oldgrid, const Grid* newgrid)
       const Patch* patch = newgrid->getLevel(l)->getPatch(p);
       //distribute regions accross processors in order to parallelize the differencing operation
       if(p%d_myworld->size()==d_myworld->myrank())
-        dnew.push_back(Region(patch->getCellLowIndex__New(), patch->getCellHighIndex__New()));
+        dnew.push_back(Region(patch->getCellLowIndex(), patch->getCellHighIndex()));
     }
     
     //compute difference

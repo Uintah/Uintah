@@ -231,7 +231,7 @@ void TestModel::computeModelSources(const ProcessorGroup*,
       
       cv.copyData(cv_ice);    
       
-      for(CellIterator iter = patch->getExtraCellIterator__New(); !iter.done(); 
+      for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); 
                                                                 iter++){
         mass_0[*iter] = rho_tmp[*iter] * volume;
       }
@@ -250,7 +250,7 @@ void TestModel::computeModelSources(const ProcessorGroup*,
     }
     //__________________________________
     //  Do some work
-    for(CellIterator iter = patch->getExtraCellIterator__New(); !iter.done(); iter++){
+    for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++){
       IntVector c = *iter;
       double massx = mass_0[c]*trate;
       mass_src_0[c] -= massx;

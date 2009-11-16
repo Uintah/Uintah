@@ -184,7 +184,7 @@ void meanFreePath(DataWarehouse* new_dw,
       IntVector offset = patch->faceDirection(face);
       Patch::FaceIteratorType PEC = Patch::ExtraPlusEdgeCells;
        
-      for(CellIterator cIter=patch->getFaceIterator__New(face, PEC); !cIter.done(); cIter++) {
+      for(CellIterator cIter=patch->getFaceIterator(face, PEC); !cIter.done(); cIter++) {
         IntVector c = *cIter - offset;
         double A = sqrt(0.636620 * R * sv->Temp_CC[c]);
         sv->lamda[c] = sv->viscosity[c]/(sv->rho_CC[c] * A);

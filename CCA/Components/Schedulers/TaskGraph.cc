@@ -1120,8 +1120,8 @@ TaskGraph::createDetailedDependencies(DetailedTask* task,
 
         // manually set it, can't use computeVariableExtents since there might not be
         // a neighbor fine patch, and it would throw it off.  
-        otherLevelLow = origPatch->getExtraCellLowIndex__New() - ghost;
-        otherLevelHigh = origPatch->getExtraCellHighIndex__New() + ghost;
+        otherLevelLow = origPatch->getExtraCellLowIndex() - ghost;
+        otherLevelHigh = origPatch->getExtraCellHighIndex() + ghost;
 
         otherLevelLow = origLevel->mapCellToCoarser(otherLevelLow);
         otherLevelHigh = origLevel->mapCellToCoarser(otherLevelHigh) + 

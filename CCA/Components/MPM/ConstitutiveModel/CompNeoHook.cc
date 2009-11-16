@@ -302,7 +302,7 @@ void CompNeoHook::computeStressTensor(const PatchSubset* patches,
         vol_0_CC[cell_index]+=pmass[idx]/rho_orig;
       }
 
-      for(CellIterator iter=patch->getCellIterator__New(); !iter.done();iter++){
+      for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++){
         IntVector c = *iter;
         J_CC[c]=vol_CC[c]/vol_0_CC[c];
       }

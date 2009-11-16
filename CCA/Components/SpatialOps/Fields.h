@@ -86,7 +86,7 @@ public:
     //      just performs straight interpolation. 
     IntVector d(1,0,0); 
 
-    for (CellIterator iter = patch->getCellIterator__New(); !iter.done(); iter++){
+    for (CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
       IntVector c  = *iter;
       
       fcVar[*iter] = 0.5 * ( ccVar[*iter] + ccVar[*iter - d] );
@@ -102,7 +102,7 @@ public:
     //      just performs straight interpolation. 
     IntVector d(0,1,0); 
 
-    for (CellIterator iter = patch->getCellIterator__New(); !iter.done(); iter++){
+    for (CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
       IntVector c  = *iter;
       
       fcVar[*iter] = 0.5 * ( ccVar[*iter] + ccVar[*iter - d] );
@@ -118,7 +118,7 @@ public:
     //      just performs straight interpolation. 
     IntVector d(0,0,1); 
 
-    for (CellIterator iter = patch->getCellIterator__New(); !iter.done(); iter++){
+    for (CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
       IntVector c  = *iter;
       
       fcVar[*iter] = 0.5 * ( ccVar[*iter] + ccVar[*iter - d] );

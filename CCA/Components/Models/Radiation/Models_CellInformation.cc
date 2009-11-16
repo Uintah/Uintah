@@ -48,18 +48,18 @@ using namespace SCIRun;
 
 Models_CellInformation::Models_CellInformation(const Patch* patch)
 {
-  IntVector domLo = patch->getExtraCellLowIndex__New(1);
-  IntVector domHi = patch->getExtraCellHighIndex__New(1);
+  IntVector domLo = patch->getExtraCellLowIndex(1);
+  IntVector domHi = patch->getExtraCellHighIndex(1);
   
-  IntVector idxLo = patch->getFortranCellLowIndex__New();
-  IntVector idxHi = patch->getFortranCellHighIndex__New()+IntVector(1,1,1);
+  IntVector idxLo = patch->getFortranCellLowIndex();
+  IntVector idxHi = patch->getFortranCellHighIndex()+IntVector(1,1,1);
   
   IntVector idxLoU = patch->getSFCXFORTLowIndex__Old();
   IntVector idxHiU = patch->getSFCXFORTHighIndex__Old();
   IntVector idxLoV = patch->getSFCYFORTLowIndex__Old();
   IntVector idxHiV = patch->getSFCYFORTHighIndex__Old();
-  IntVector idxLoW = patch->getFortranCellLowIndex__New();
-  IntVector idxHiW = patch->getFortranCellHighIndex__New();
+  IntVector idxLoW = patch->getFortranCellLowIndex();
+  IntVector idxHiW = patch->getFortranCellHighIndex();
 
   // cell information
   xx.resize(domLo.x(), domHi.x());

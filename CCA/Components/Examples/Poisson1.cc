@@ -206,8 +206,8 @@ void Poisson1::timeAdvance(const ProcessorGroup*,
     newphi.copyPatch(phi, newphi.getLowIndex(), newphi.getHighIndex());
  
     double residual=0;
-    IntVector l = patch->getNodeLowIndex__New();
-    IntVector h = patch->getNodeHighIndex__New();
+    IntVector l = patch->getNodeLowIndex();
+    IntVector h = patch->getNodeHighIndex();
  
     l += IntVector(patch->getBCType(Patch::xminus) == Patch::Neighbor?0:1,
                    patch->getBCType(Patch::yminus) == Patch::Neighbor?0:1,

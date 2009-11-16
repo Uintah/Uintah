@@ -117,7 +117,7 @@ void customInitialization(const Patch* patch,
       double R_sqr = R * R;
       double p_ref  = 101325;        // assumed reference pressure
      
-      for(CellIterator iter=patch->getCellIterator__New(); !iter.done();iter++) {
+      for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) {
         IntVector c = *iter;
         Point pt = patch->cellPosition(c);
 
@@ -142,7 +142,7 @@ void customInitialization(const Patch* patch,
   //__________________________________
   //  hardwired for debugging
   if(cib->which == "hardWired"){
-    for(CellIterator iter=patch->getExtraCellIterator__New(); !iter.done();iter++) {
+    for(CellIterator iter=patch->getExtraCellIterator(); !iter.done();iter++) {
       IntVector c = *iter;
       Point pt = patch->cellPosition(c);
       double x = pt.x();
@@ -163,7 +163,7 @@ void customInitialization(const Patch* patch,
     double gamma = ice_matl->getGamma();
     double p_ref = 101325;
     
-    for(CellIterator iter=patch->getExtraCellIterator__New(); !iter.done();iter++) {
+    for(CellIterator iter=patch->getExtraCellIterator(); !iter.done();iter++) {
       IntVector c = *iter;
       Point pt = patch->cellPosition(c);
       double x = pt.x(); 
@@ -190,7 +190,7 @@ void customInitialization(const Patch* patch,
     double cv = ice_matl->getSpecificHeat();
     double gamma = ice_matl->getGamma();
     
-    for(CellIterator iter=patch->getExtraCellIterator__New(); !iter.done();iter++) {
+    for(CellIterator iter=patch->getExtraCellIterator(); !iter.done();iter++) {
       IntVector c = *iter;
       Point pt = patch->cellPosition(c);
       double x = pt.x(); 

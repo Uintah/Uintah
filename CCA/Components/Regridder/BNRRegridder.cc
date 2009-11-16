@@ -147,7 +147,7 @@ Grid* BNRRegridder::regrid(Grid* oldGrid)
   //add old level 0 to patch sets
   for (Level::const_patchIterator p = oldGrid->getLevel(0)->patchesBegin(); p != oldGrid->getLevel(0)->patchesEnd(); p++)
   {
-    patch_sets[0].push_back(Region((*p)->getCellLowIndex__New(),(*p)->getCellHighIndex__New()));
+    patch_sets[0].push_back(Region((*p)->getCellLowIndex(),(*p)->getCellHighIndex()));
   }
     
   int rank=d_myworld->myrank();
@@ -379,7 +379,7 @@ void BNRRegridder::CreateCoarseFlagSets(Grid *oldGrid, vector<set<IntVector> > &
       const Patch *patch=ps->get(p);
       constCCVariable<int> flags;
       dw->get(flags, d_dilatedCellsRegridLabel, 0, patch, Ghost::None, 0);
-      for (CellIterator ci(patch->getCellLowIndex__New(), patch->getCellHighIndex__New()); !ci.done(); ci++)
+      for (CellIterator ci(patch->getCellLowIndex(), patch->getCellHighIndex()); !ci.done(); ci++)
       {
         //cout << "Checking flag:" << *ci << " value is:" << flags[*ci] << endl;
         if (flags[*ci])
@@ -664,7 +664,7 @@ void BNRRegridder::problemSetup(const ProblemSpecP& params,
 
   for(Level::patchIterator patch=level->patchesBegin();patch<level->patchesEnd();patch++)
   {
-    IntVector size=(*patch)->getCellHighIndex__New()-(*patch)->getCellLowIndex__New();
+    IntVector size=(*patch)->getCellHighIndex()-(*patch)->getCellLowIndex();
     if(patch_size==IntVector(0,0,0))
       patch_size=size;
     if(size!=patch_size)
@@ -879,8 +879,8 @@ void BNRRegridder::AddSafetyLayer(const vector<Region> patches, set<IntVector> &
     {
       const Patch* patch = intersecting_patches[i];
 
-      IntVector int_low = Max(patch->getCellLowIndex__New(), low);
-      IntVector int_high = Min(patch->getCellHighIndex__New(), high);
+      IntVector int_low = Max(patch->getCellLowIndex(), low);
+      IntVector int_high = Min(patch->getCellHighIndex(), high);
       
       //convert to coarsened coordinates
         //multiply by refinement ratio to convert back to fine levels cell coordinates
@@ -939,8 +939,8 @@ bool BNRRegridder::verifyGrid(Grid *grid)
     {
       const Patch* patch = level->getPatch(p); 
       grid_dbg << d_myworld->myrank() << "    Level: " << i << " Patch " << p << ": " << *patch << endl;
-      Sum=Abs(patch->getCellHighIndex__New())+Abs(patch->getCellLowIndex__New());
-      Diff=Abs(patch->getCellHighIndex__New())-Abs(patch->getCellLowIndex__New());
+      Sum=Abs(patch->getCellHighIndex())+Abs(patch->getCellLowIndex());
+      Diff=Abs(patch->getCellHighIndex())-Abs(patch->getCellLowIndex());
       
       sum+=Sum[0]*Sum[1]*Sum[2]*(p+1);
       diff+=Diff[0]*Diff[1]*Diff[2]*(p+1000000);

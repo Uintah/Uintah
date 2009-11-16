@@ -399,27 +399,27 @@ getPatchIndex(const string& input_uda_name, int timeStepNo, int levelNo, int pat
   IntVector patch_lo, patch_hi, low, hi;
 
   if(varType.find("CC") != string::npos) {
-    patch_lo = patch->getExtraCellLowIndex__New();
-    patch_hi = patch->getExtraCellHighIndex__New();
+    patch_lo = patch->getExtraCellLowIndex();
+    patch_hi = patch->getExtraCellHighIndex();
   } 
   else {
-    patch_lo = patch->getExtraNodeLowIndex__New();
+    patch_lo = patch->getExtraNodeLowIndex();
     // switch (qinfo.type->getType()) {
     // case Uintah::TypeDescription::SFCXVariable:
     if(varType.find("SFCX") != string::npos)
-      patch_hi = patch->getSFCXHighIndex__New();
+      patch_hi = patch->getSFCXHighIndex();
     // break;
     // case Uintah::TypeDescription::SFCYVariable:
     else if(varType.find("SFCY") != string::npos)
-      patch_hi = patch->getSFCYHighIndex__New();
+      patch_hi = patch->getSFCYHighIndex();
     // break;
     // case Uintah::TypeDescription::SFCZVariable:
     else if(varType.find("SFCZ") != string::npos)
-      patch_hi = patch->getSFCZHighIndex__New();
+      patch_hi = patch->getSFCZHighIndex();
     // break;
     // case Uintah::TypeDescription::NCVariable:
     else if(varType.find("NC") != string::npos)
-      patch_hi = patch->getNodeHighIndex__New();
+      patch_hi = patch->getNodeHighIndex();
     // break;
     // default:
     // cerr << "build_field::unknown variable.\n";
@@ -436,8 +436,8 @@ getPatchIndex(const string& input_uda_name, int timeStepNo, int levelNo, int pat
 
   // cout << patch_lo << " " << patch_hi << endl;
 
-  patch_lo = patch->getExtraCellLowIndex__New() - low;
-  patch_hi = patch->getExtraCellHighIndex__New() - low;
+  patch_lo = patch->getExtraCellLowIndex() - low;
+  patch_hi = patch->getExtraCellHighIndex() - low;
 
   int *indexArr = new int[6];
 
@@ -496,18 +496,18 @@ getPatchIndex(const string& input_uda_name, int timeStepNo, int levelNo, int pat
 
 	  if (remove_boundary) { // this needs to be kept outside the loop, same check again and again
 	    if(varType.find("CC") != string::npos) {
-	      patch_lo = patch->getCellLowIndex__New();
-	      patch_hi = patch->getCellHighIndex__New();
+	      patch_lo = patch->getCellLowIndex();
+	      patch_hi = patch->getCellHighIndex();
 	    } 
 	    else {
-	      patch_lo = patch->getNodeLowIndex__New();
+	      patch_lo = patch->getNodeLowIndex();
 	      if(varType.find("SFCX") != string::npos) {
 		// patch_hi = patch->getHighIndex(Patch::XFaceBased);
 		/*if (patch_hi.x() < hi.x()) {
 		  patch_hi = IntVector(patch_hi.x() + 1, patch_hi.y(), patch_hi.z());
 		}*/
 
-		patch_hi = patch_lo + (patch->getCellHighIndex__New() - patch->getCellLowIndex__New());
+		patch_hi = patch_lo + (patch->getCellHighIndex() - patch->getCellLowIndex());
 		if (patch_hi.x() == (hi.x() - 1)) {
 		  patch_hi = IntVector(patch_hi.x() + 1, patch_hi.y(), patch_hi.z());
 		}
@@ -517,7 +517,7 @@ getPatchIndex(const string& input_uda_name, int timeStepNo, int levelNo, int pat
 	      else if(varType.find("SFCZ") != string::npos)
 		patch_hi = patch->getHighIndex(Patch::ZFaceBased);
 	      else if(varType.find("NC") != string::npos) {
-		patch_hi = patch_lo + (patch->getCellHighIndex__New() - patch->getCellLowIndex__New()) + IntVector(1, 1, 1);
+		patch_hi = patch_lo + (patch->getCellHighIndex() - patch->getCellLowIndex()) + IntVector(1, 1, 1);
 		/*if (!(patch_hi.x() == hi.x())) {
 		  patch_hi = IntVector(patch_hi.x() - 1, patch_hi.y(), patch_hi.z());
 		}*/  
@@ -527,25 +527,25 @@ getPatchIndex(const string& input_uda_name, int timeStepNo, int levelNo, int pat
 		/*if (!(patch_hi.z() == hi.z())) {
 		  patch_hi = IntVector(patch_hi.x(), patch_hi.y(), patch_hi.z() - 1);
 		}*/  
-		// patch_hi = patch->getNodeHighIndex__New();
+		// patch_hi = patch->getNodeHighIndex();
 	      }
 	    }
 	  }
 	  else { // don't remove the boundary
 	    if(varType.find("CC") != string::npos) {
-	      patch_lo = patch->getExtraCellLowIndex__New();
-	      patch_hi = patch->getExtraCellHighIndex__New();
+	      patch_lo = patch->getExtraCellLowIndex();
+	      patch_hi = patch->getExtraCellHighIndex();
 	    } 
 	    else {
-	      patch_lo = patch->getExtraNodeLowIndex__New();
+	      patch_lo = patch->getExtraNodeLowIndex();
 	      if(varType.find("SFCX") != string::npos)
-		patch_hi = patch->getSFCXHighIndex__New();
+		patch_hi = patch->getSFCXHighIndex();
 	      else if(varType.find("SFCY") != string::npos)
-		patch_hi = patch->getSFCYHighIndex__New();
+		patch_hi = patch->getSFCYHighIndex();
 	      else if(varType.find("SFCZ") != string::npos)
-		patch_hi = patch->getSFCZHighIndex__New();
+		patch_hi = patch->getSFCZHighIndex();
 	      else if(varType.find("NC") != string::npos)
-		patch_hi = patch->getExtraNodeHighIndex__New();
+		patch_hi = patch->getExtraNodeHighIndex();
 	    }
 	  }
 
@@ -592,7 +592,7 @@ getPatchIndex(const string& input_uda_name, int timeStepNo, int levelNo, int pat
 	  minMaxArr[0] = min.x(); minMaxArr[1] = min.y(); minMaxArr[2] = min.z();
 	  minMaxArr[3] = max.x(); minMaxArr[4] = max.y(); minMaxArr[5] = max.z();
 
-	  int nCells = (patch->getCellHighIndex__New() - patch->getCellLowIndex__New()).y();
+	  int nCells = (patch->getCellHighIndex() - patch->getCellLowIndex()).y();
 
 	  patchInfo patchInfoObj(indexArr, minMaxArr, hiLoArr, nCells);
 	  patchInfoVecPtr->push_back(patchInfoObj);
@@ -1277,17 +1277,17 @@ getPatchIndex(const string& input_uda_name, int timeStepNo, int levelNo, int pat
 	      }
             }
 	    
-	    IntVector noCells = patch->getCellHighIndex__New() - patch->getCellLowIndex__New();
+	    IntVector noCells = patch->getCellHighIndex() - patch->getCellLowIndex();
 
 	    // cout << noCells << endl;
 
 	    box = BBox(min, max);
 
-	    // low = patch->getCellLowIndex__New() - extraCells;
-	    // hi = patch->getCellHighIndex__New() + extraCells;
+	    // low = patch->getCellLowIndex() - extraCells;
+	    // hi = patch->getCellHighIndex() + extraCells;
 
-	    low = patch->getNodeLowIndex__New() - extraCells;
-	    hi = patch->getNodeLowIndex__New() + noCells + extraCells + IntVector(1, 1, 1);
+	    low = patch->getNodeLowIndex() - extraCells;
+	    hi = patch->getNodeLowIndex() + noCells + extraCells + IntVector(1, 1, 1);
 
 	    // cout << low << " " << hi << endl;
 	    

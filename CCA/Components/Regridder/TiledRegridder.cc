@@ -84,8 +84,8 @@ void TiledRegridder::ComputeTiles(vector<IntVector> &tiles, const LevelP level, 
     dw->get(flags, d_dilatedCellsRegridLabel, 0, patch, Ghost::None, 0);
     
     //compute patch extents
-    IntVector patchLow=patch->getCellLowIndex__New()*cellRefinementRatio;
-    IntVector patchHigh=patch->getCellHighIndex__New()*cellRefinementRatio;
+    IntVector patchLow=patch->getCellLowIndex()*cellRefinementRatio;
+    IntVector patchHigh=patch->getCellHighIndex()*cellRefinementRatio;
 
     //compute possible tile index's
     IntVector tileLow=computeTileIndex(patchLow,d_numCells[newLevelIndex],tile_size);
@@ -164,7 +164,7 @@ Grid* TiledRegridder::regrid(Grid* oldGrid)
   //level 0 does not change so just copy the patches over.
   for (Level::const_patchIterator p = oldGrid->getLevel(0)->patchesBegin(); p != oldGrid->getLevel(0)->patchesEnd(); p++)
   {
-    tiles[0].push_back(computeTileIndex((*p)->getCellLowIndex__New(),d_numCells[0],d_tileSize[0]));
+    tiles[0].push_back(computeTileIndex((*p)->getCellLowIndex(),d_numCells[0],d_tileSize[0]));
   }
 
   //Create the grid
@@ -360,7 +360,7 @@ void TiledRegridder::problemSetup(const ProblemSpecP& params,
 
   for(Level::patchIterator patch=level->patchesBegin();patch<level->patchesEnd();patch++)
   {
-    IntVector size=(*patch)->getCellHighIndex__New()-(*patch)->getCellLowIndex__New();
+    IntVector size=(*patch)->getCellHighIndex()-(*patch)->getCellLowIndex();
     if(patch_size==IntVector(0,0,0))
       patch_size=size;
   }
@@ -501,8 +501,8 @@ void TiledRegridder::CoarsenFlags(GridP oldGrid, int l, vector<IntVector> tiles)
       dw->getModifiable(flags, d_dilatedCellsRegridLabel, 0, patch);
 
       //intersect tile and coarse patch
-      IntVector int_low = Max(patch->getExtraCellLowIndex__New(), low);
-      IntVector int_high = Min(patch->getExtraCellHighIndex__New(), high);
+      IntVector int_low = Max(patch->getExtraCellLowIndex(), low);
+      IntVector int_high = Min(patch->getExtraCellHighIndex(), high);
       
       //cout << d_myworld->myrank() << "             int_low:" << int_low << " int_high:" << int_high << endl;
       //for each intesecting cells
@@ -559,8 +559,8 @@ bool TiledRegridder::verifyGrid(Grid *grid)
     {
       const Patch* patch = level->getPatch(p); 
       grid_dbg << d_myworld->myrank() << "    Level: " << i << " Patch " << p << ": " << *patch << endl;
-      Sum=Abs(patch->getCellHighIndex__New())+Abs(patch->getCellLowIndex__New());
-      Diff=Abs(patch->getCellHighIndex__New())-Abs(patch->getCellLowIndex__New());
+      Sum=Abs(patch->getCellHighIndex())+Abs(patch->getCellLowIndex());
+      Diff=Abs(patch->getCellHighIndex())-Abs(patch->getCellLowIndex());
       
       sum+=Sum[0]*Sum[1]*Sum[2]*(p+1);
       diff+=Diff[0]*Diff[1]*Diff[2]*(p+1000000);

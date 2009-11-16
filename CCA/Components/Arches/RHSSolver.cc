@@ -285,8 +285,8 @@ RHSSolver::scalarLisolve(const ProcessorGroup*,
                           CellInformation* cellinfo)
 {
   // Get the patch bounds and the variable bounds
-  IntVector idxLo = patch->getFortranCellLowIndex__New();
-  IntVector idxHi = patch->getFortranCellHighIndex__New();
+  IntVector idxLo = patch->getFortranCellLowIndex();
+  IntVector idxHi = patch->getFortranCellHighIndex();
 
     fort_explicit_scalar(idxLo, idxHi, vars->scalar, constvars->old_scalar,
                   constvars->scalarCoeff[Arches::AE], 
@@ -311,7 +311,7 @@ RHSSolver::scalarExplicitUpdate(const ProcessorGroup*,
                               CellInformation* cellinfo, 
                               bool doingMM, int intrusionVal)
 {
-  CellIterator iter = patch->getCellIterator__New();
+  CellIterator iter = patch->getCellIterator();
   explicitUpdate<constCCVariable<Stencil7>,CCVariable<double>,constCCVariable<double> >(iter,
                                                             constvars->scalarTotCoef, 
                                                             constvars->scalarNonlinearSrc, 
@@ -427,8 +427,8 @@ RHSSolver::enthalpyLisolve(const ProcessorGroup*,
                           CellInformation* cellinfo)
 {
   // Get the patch bounds and the variable bounds
-  IntVector idxLo = patch->getFortranCellLowIndex__New();
-  IntVector idxHi = patch->getFortranCellHighIndex__New();
+  IntVector idxLo = patch->getFortranCellLowIndex();
+  IntVector idxHi = patch->getFortranCellHighIndex();
 
     fort_explicit_scalar(idxLo, idxHi, vars->enthalpy, constvars->old_enthalpy,
                   constvars->scalarCoeff[Arches::AE], 

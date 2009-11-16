@@ -303,8 +303,8 @@ IncDynamicProcedure::reComputeTurbSubmodel(const ProcessorGroup*,
     bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
     bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
     bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
-    IntVector indexLow = patch->getFortranCellLowIndex__New();
-    IntVector indexHigh = patch->getFortranCellHighIndex__New();
+    IntVector indexLow = patch->getFortranCellLowIndex();
+    IntVector indexHigh = patch->getFortranCellHighIndex();
     int startZ = indexLow.z();
     int endZ = indexHigh.z()+1;
     int startY = indexLow.y();
@@ -747,8 +747,8 @@ IncDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
     StencilMatrix<Array3<double> > betaIJ;  //6 point tensor
     StencilMatrix<Array3<double> > betaHATIJ; //6 point tensor
 
-    IntVector idxLo = patch->getExtraCellLowIndex__New(Arches::ONEGHOSTCELL);
-    IntVector idxHi = patch->getExtraCellHighIndex__New(Arches::ONEGHOSTCELL);
+    IntVector idxLo = patch->getExtraCellLowIndex(Arches::ONEGHOSTCELL);
+    IntVector idxHi = patch->getExtraCellHighIndex(Arches::ONEGHOSTCELL);
 
     int tensorSize = 6; //  1-> 11, 2->22, 3->33, 4 ->12, 5->13, 6->23
     for (int ii = 0; ii < tensorSize; ii++) {
@@ -1350,26 +1350,26 @@ IncDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
       }
     }        
 #endif
-    Array3<double> filterUU(patch->getExtraCellLowIndex__New(), patch->getExtraCellHighIndex__New());
+    Array3<double> filterUU(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex());
     filterUU.initialize(0.0);
-    Array3<double> filterUV(patch->getExtraCellLowIndex__New(), patch->getExtraCellHighIndex__New());
+    Array3<double> filterUV(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex());
     filterUV.initialize(0.0);
-    Array3<double> filterUW(patch->getExtraCellLowIndex__New(), patch->getExtraCellHighIndex__New());
+    Array3<double> filterUW(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex());
     filterUW.initialize(0.0);
-    Array3<double> filterVV(patch->getExtraCellLowIndex__New(), patch->getExtraCellHighIndex__New());
+    Array3<double> filterVV(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex());
     filterVV.initialize(0.0);
-    Array3<double> filterVW(patch->getExtraCellLowIndex__New(), patch->getExtraCellHighIndex__New());
+    Array3<double> filterVW(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex());
     filterVW.initialize(0.0);
-    Array3<double> filterWW(patch->getExtraCellLowIndex__New(), patch->getExtraCellHighIndex__New());
+    Array3<double> filterWW(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex());
     filterWW.initialize(0.0);
-    Array3<double> filterUVel(patch->getExtraCellLowIndex__New(), patch->getExtraCellHighIndex__New());
+    Array3<double> filterUVel(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex());
     filterUVel.initialize(0.0);
-    Array3<double> filterVVel(patch->getExtraCellLowIndex__New(), patch->getExtraCellHighIndex__New());
+    Array3<double> filterVVel(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex());
     filterVVel.initialize(0.0);
-    Array3<double> filterWVel(patch->getExtraCellLowIndex__New(), patch->getExtraCellHighIndex__New());
+    Array3<double> filterWVel(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex());
     filterWVel.initialize(0.0);
-    IntVector indexLow = patch->getFortranCellLowIndex__New();
-    IntVector indexHigh = patch->getFortranCellHighIndex__New();
+    IntVector indexLow = patch->getFortranCellLowIndex();
+    IntVector indexHigh = patch->getFortranCellHighIndex();
     double start_turbTime = Time::currentSeconds();
 #ifdef PetscFilter
 #if 0
@@ -1844,12 +1844,12 @@ IncDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
     // (den*u*u, den*u*v, den*u*w, den*v*v,
     // den*v*w, den*w*w)
     // using a box filter, generalize it to use other filters such as Gaussian
-    Array3<double> MLHatI(patch->getExtraCellLowIndex__New(), patch->getExtraCellHighIndex__New()); // magnitude of strain rate
+    Array3<double> MLHatI(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex()); // magnitude of strain rate
     MLHatI.initialize(0.0);
-    Array3<double> MMHatI(patch->getExtraCellLowIndex__New(), patch->getExtraCellHighIndex__New()); // magnitude of test filter strain rate
+    Array3<double> MMHatI(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex()); // magnitude of test filter strain rate
     MMHatI.initialize(0.0);
-    IntVector indexLow = patch->getFortranCellLowIndex__New();
-    IntVector indexHigh = patch->getFortranCellHighIndex__New();
+    IntVector indexLow = patch->getFortranCellLowIndex();
+    IntVector indexHigh = patch->getFortranCellHighIndex();
 #ifdef PetscFilter
     d_filter->applyFilter(pc, patch, MLI, MLHatI);
     d_filter->applyFilter(pc, patch, MMI, MMHatI);
@@ -1883,7 +1883,7 @@ IncDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
     }
 #endif
     CCVariable<double> tempCs;
-    tempCs.allocate(patch->getExtraCellLowIndex__New(), patch->getExtraCellHighIndex__New());
+    tempCs.allocate(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex());
     tempCs.initialize(0.0);
           //     calculate the local Smagorinsky coefficient
           //     perform "clipping" in case MLij is negative...
@@ -2136,8 +2136,8 @@ IncDynamicProcedure::computeScalarVariance(const ProcessorGroup* pc,
 #endif
     
     int ngc = 1; // number of ghost cells
-    IntVector idxLo = patch->getExtraCellLowIndex__New(ngc);
-    IntVector idxHi = patch->getExtraCellHighIndex__New(ngc);
+    IntVector idxLo = patch->getExtraCellLowIndex(ngc);
+    IntVector idxHi = patch->getExtraCellHighIndex(ngc);
     Array3<double> phiSqr(idxLo, idxHi);
 
     for (int colZ = idxLo.z(); colZ < idxHi.z(); colZ ++) {
@@ -2149,13 +2149,13 @@ IncDynamicProcedure::computeScalarVariance(const ProcessorGroup* pc,
       }
     }
 
-    Array3<double> filterPhi(patch->getExtraCellLowIndex__New(), patch->getExtraCellHighIndex__New());
-    Array3<double> filterPhiSqr(patch->getExtraCellLowIndex__New(), patch->getExtraCellHighIndex__New());
+    Array3<double> filterPhi(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex());
+    Array3<double> filterPhiSqr(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex());
     filterPhi.initialize(0.0);
     filterPhiSqr.initialize(0.0);
 
-    IntVector indexLow = patch->getFortranCellLowIndex__New();
-    IntVector indexHigh = patch->getFortranCellHighIndex__New();
+    IntVector indexLow = patch->getFortranCellLowIndex();
+    IntVector indexHigh = patch->getFortranCellHighIndex();
 #ifdef PetscFilter
     d_filter->applyFilter(pc, patch,scalar, filterPhi);
     d_filter->applyFilter(pc, patch,phiSqr, filterPhiSqr);
@@ -2407,8 +2407,8 @@ IncDynamicProcedure::computeScalarDissipation(const ProcessorGroup*,
     CellInformation* cellinfo = cellInfoP.get().get_rep();
     
     // compatible with fortran index
-    IntVector idxLo = patch->getFortranCellLowIndex__New();
-    IntVector idxHi = patch->getFortranCellHighIndex__New();
+    IntVector idxLo = patch->getFortranCellLowIndex();
+    IntVector idxHi = patch->getFortranCellHighIndex();
     for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
       for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
         for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
