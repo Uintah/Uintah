@@ -161,11 +161,11 @@ Filter::matrixCreate(const PatchSet* allpatches,
 
       // #ifdef notincludeBdry
 #if 1
-      IntVector plowIndex = patch->getFortranCellLowIndex__New();
-      IntVector phighIndex = patch->getFortranCellHighIndex__New()+IntVector(1,1,1);
+      IntVector plowIndex = patch->getFortranCellLowIndex();
+      IntVector phighIndex = patch->getFortranCellHighIndex()+IntVector(1,1,1);
 #else
-      IntVector plowIndex = patch->getExtraCellLowIndex__New();
-      IntVector phighIndex = patch->getExtraCellHighIndex__New();
+      IntVector plowIndex = patch->getExtraCellLowIndex();
+      IntVector phighIndex = patch->getExtraCellHighIndex();
 #endif
       if (d_3d_periodic) {
         const Level* level = patch->getLevel();
@@ -191,8 +191,8 @@ Filter::matrixCreate(const PatchSet* allpatches,
 
   for(int p=0;p<mypatches->size();p++){
     const Patch* patch=mypatches->get(p);
-    IntVector lowIndex = patch->getExtraCellLowIndex__New(Arches::ONEGHOSTCELL);
-    IntVector highIndex = patch->getExtraCellHighIndex__New(Arches::ONEGHOSTCELL);
+    IntVector lowIndex = patch->getExtraCellLowIndex(Arches::ONEGHOSTCELL);
+    IntVector highIndex = patch->getExtraCellHighIndex(Arches::ONEGHOSTCELL);
     Array3<int> l2g(lowIndex, highIndex);
     l2g.initialize(-1234);
     const Level* level = patch->getLevel();
@@ -203,11 +203,11 @@ Filter::matrixCreate(const PatchSet* allpatches,
 
       // #ifdef notincludeBdry
 #if 1
-      IntVector plow = neighbor->getCellFORTLowIndex();
-      IntVector phigh = neighbor->getCellFORTHighIndex()+IntVector(1,1,1);
+      IntVector plow = neighbor->getFortranCellLowIndex();
+      IntVector phigh = neighbor->getFortranCellHighIndex()+IntVector(1,1,1);
 #else
-      IntVector plow = neighbor->getExtraCellLowIndex__New();
-      IntVector phigh = neighbor->getExtraCellHighIndex__New();
+      IntVector plow = neighbor->getExtraCellLowIndex();
+      IntVector phigh = neighbor->getExtraCellHighIndex();
 #endif
       if (d_3d_periodic) {
         const Level* level = patch->getLevel();
@@ -299,11 +299,11 @@ Filter::setFilterMatrix(const ProcessorGroup* ,
    if (!d_matrixInitialize) {
      // #ifdef notincludeBdry
 #if 1
-     IntVector idxLo = patch->getFortranCellLowIndex__New();
-     IntVector idxHi = patch->getFortranCellHighIndex__New();
+     IntVector idxLo = patch->getFortranCellLowIndex();
+     IntVector idxHi = patch->getFortranCellHighIndex();
 #else
-     IntVector idxLo = patch->getExtraCellLowIndex__New();
-     IntVector idxHi = patch->getExtraCellHighIndex__New()-IntVector(1,1,1);
+     IntVector idxLo = patch->getExtraCellLowIndex();
+     IntVector idxHi = patch->getExtraCellHighIndex()-IntVector(1,1,1);
 #endif
      /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
         Compute the matrix that defines the filter function Ax
@@ -330,8 +330,8 @@ Filter::setFilterMatrix(const ProcessorGroup* ,
      // fill matrix for internal patches
      // make sure that sizeof(d_petscIndex) is the last patch, i.e., appears last in the
      // petsc matrix
-     IntVector lowIndex = patch->getExtraCellLowIndex__New(Arches::ONEGHOSTCELL);
-     IntVector highIndex = patch->getExtraCellHighIndex__New(Arches::ONEGHOSTCELL);
+     IntVector lowIndex = patch->getExtraCellLowIndex(Arches::ONEGHOSTCELL);
+     IntVector highIndex = patch->getExtraCellHighIndex(Arches::ONEGHOSTCELL);
 
      Array3<int> l2g(lowIndex, highIndex);
      l2g.copy(d_petscLocalToGlobal[patch]);
@@ -424,19 +424,19 @@ Filter::applyFilter(const ProcessorGroup* ,
   // fill matrix for internal patches
   // make sure that sizeof(d_petscIndex) is the last patch, i.e., appears last in the
   // petsc matrix
-  IntVector lowIndex = patch->getExtraCellLowIndex__New(Arches::ONEGHOSTCELL);
-  IntVector highIndex = patch->getExtraCellHighIndex__New(Arches::ONEGHOSTCELL);
+  IntVector lowIndex = patch->getExtraCellLowIndex(Arches::ONEGHOSTCELL);
+  IntVector highIndex = patch->getExtraCellHighIndex(Arches::ONEGHOSTCELL);
 
   Array3<int> l2g(lowIndex, highIndex);
   l2g.copy(d_petscLocalToGlobal[patch]);
 
   // #ifdef notincludeBdry
 #if 1
-  IntVector idxLo = patch->getFortranCellLowIndex__New();
-  IntVector idxHi = patch->getFortranCellHighIndex__New();
+  IntVector idxLo = patch->getFortranCellLowIndex();
+  IntVector idxHi = patch->getFortranCellHighIndex();
 #else
-  IntVector idxLo = patch->getExtraCellLowIndex__New();
-  IntVector idxHi = patch->getExtraCellHighIndex__New()-IntVector(1,1,1);
+  IntVector idxLo = patch->getExtraCellLowIndex();
+  IntVector idxHi = patch->getExtraCellHighIndex()-IntVector(1,1,1);
 #endif
   IntVector inputLo = idxLo;
   IntVector inputHi = idxHi;
@@ -542,19 +542,19 @@ Filter::applyFilter(const ProcessorGroup* ,
   // fill matrix for internal patches
   // make sure that sizeof(d_petscIndex) is the last patch, i.e., appears last in the
   // petsc matrix
-  IntVector lowIndex = patch->getExtraCellLowIndex__New(Arches::ONEGHOSTCELL);
-  IntVector highIndex = patch->getExtraCellHighIndex__New(Arches::ONEGHOSTCELL);
+  IntVector lowIndex = patch->getExtraCellLowIndex(Arches::ONEGHOSTCELL);
+  IntVector highIndex = patch->getExtraCellHighIndex(Arches::ONEGHOSTCELL);
 
   Array3<int> l2g(lowIndex, highIndex);
   l2g.copy(d_petscLocalToGlobal[patch]);
 
   // #ifdef notincludeBdry
 #if 1
-  IntVector idxLo = patch->getFortranCellLowIndex__New();
-  IntVector idxHi = patch->getFortranCellHighIndex__New();
+  IntVector idxLo = patch->getFortranCellLowIndex();
+  IntVector idxHi = patch->getFortranCellHighIndex();
 #else
-  IntVector idxLo = patch->getExtraCellLowIndex__New();
-  IntVector idxHi = patch->getExtraCellHighIndex__New()-IntVector(1,1,1);
+  IntVector idxLo = patch->getExtraCellLowIndex();
+  IntVector idxHi = patch->getExtraCellHighIndex()-IntVector(1,1,1);
 #endif
   IntVector inputLo = idxLo;
   IntVector inputHi = idxHi;

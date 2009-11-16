@@ -138,7 +138,7 @@ CoalGasDevol::computeSource( const ProcessorGroup* pc,
     } 
 
 
-    for (CellIterator iter=patch->getCellIterator__New(); !iter.done(); iter++){
+    for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
       IntVector c = *iter;
 
 

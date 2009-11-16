@@ -538,7 +538,7 @@ DQMOMEqn::buildTransportEqn( const ProcessorGroup* pc,
       computeDiff( patch, Fdiff, oldPhi, mu_t );
  
     //----SUM UP RHS
-    for (CellIterator iter=patch->getCellIterator__New(); !iter.done(); iter++){
+    for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
       IntVector c = *iter; 
 
       RHS[c] += Fdiff[c] - Fconv[c];
@@ -703,7 +703,7 @@ DQMOMEqn::getUnscaledValues( const ProcessorGroup* pc,
       new_dw->getModifiable(w, d_transportVarLabel, matlIndex, patch);
       
       // now loop over all cells
-      for (CellIterator iter=patch->getCellIterator__New(0); !iter.done(); iter++){
+      for (CellIterator iter=patch->getCellIterator(0); !iter.done(); iter++){
         IntVector c = *iter;
         w_actual[c] = w[c]*d_scalingConstant;
       }
@@ -735,7 +735,7 @@ DQMOMEqn::getUnscaledValues( const ProcessorGroup* pc,
       new_dw->get(w, mywLabel, matlIndex, patch, gn, 0); 
 
       // now loop over all cells
-      for (CellIterator iter=patch->getCellIterator__New(0); !iter.done(); iter++){
+      for (CellIterator iter=patch->getCellIterator(0); !iter.done(); iter++){
   
         IntVector c = *iter;
 
@@ -766,7 +766,7 @@ DQMOMEqn::computeDiff( const Patch* p, fT& Fdiff, oldPhiT& oldPhi, gammaT& gamma
   FaceData<double> F;
   FaceData<double> G;
 
-  for (CellIterator iter=p->getCellIterator__New(); !iter.done(); iter++){
+  for (CellIterator iter=p->getCellIterator(); !iter.done(); iter++){
 
     IntVector c = *iter; 
 
@@ -845,7 +845,7 @@ DQMOMEqn::clipPhi( const Patch* p,
                        phiType& phi )
 {
   // probably should put these "if"s outside the loop   
-  for (CellIterator iter=p->getCellIterator__New(0); !iter.done(); iter++){
+  for (CellIterator iter=p->getCellIterator(0); !iter.done(); iter++){
 
     IntVector c = *iter; 
 

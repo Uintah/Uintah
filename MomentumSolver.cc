@@ -706,7 +706,7 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
       double sue, suw, sun, sus, sut, sub;
       //__________________________________
       //      u velocity
-      for(CellIterator iter = patch->getCellIterator__New(); !iter.done(); iter++) {
+      for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) {
         IntVector c = *iter;
         int colX = c.x();
         int colY = c.y();
@@ -742,7 +742,7 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
     
       //__________________________________
       //      v velocity
-      for(CellIterator iter = patch->getCellIterator__New(); !iter.done(); iter++) {
+      for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) {
         IntVector c = *iter;
         int colX = c.x();
         int colY = c.y();
@@ -778,7 +778,7 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
      
       //__________________________________
       //       w velocity
-      for(CellIterator iter = patch->getCellIterator__New(); !iter.done(); iter++) {
+      for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) {
         IntVector c = *iter;
         int colX = c.x();
         int colY = c.y();
@@ -917,8 +917,8 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
   if (d_pressure_correction) {
   int outlet_celltypeval = d_boundaryCondition->outletCellType();
   if (!(outlet_celltypeval==-10)) {
-  IntVector idxLo = patch->getFortranCellLowIndex__New();
-  IntVector idxHi = patch->getFortranCellHighIndex__New();
+  IntVector idxLo = patch->getFortranCellLowIndex();
+  IntVector idxHi = patch->getFortranCellHighIndex();
 
 
   bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
@@ -1065,7 +1065,7 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
     double factor_new = timelabels->factor_new;
     double factor_divide = timelabels->factor_divide;
     
-    for(CellIterator iter = patch->getCellIterator__New(); !iter.done(); iter++) {
+    for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) {
       const IntVector c = *iter;                                                                 
       velocityVars.divergence[c] = (factor_old*old_divergence[c]+                              
                                     factor_new*velocityVars.divergence[c])/factor_divide;      
@@ -1182,7 +1182,7 @@ MomentumSolver::averageRKHatVelocities(const ProcessorGroup*,
     
     //__________________________________
     //  X  (This includes the extra cells)
-    CellIterator SFCX_iter = patch->getSFCXIterator__New();
+    CellIterator SFCX_iter = patch->getSFCXIterator();
     
     for(; !SFCX_iter.done(); SFCX_iter++) {
       IntVector c = *SFCX_iter;
@@ -1197,7 +1197,7 @@ MomentumSolver::averageRKHatVelocities(const ProcessorGroup*,
     }
     //__________________________________
     // Y  (This includes the extra cells)
-    CellIterator SFCY_iter = patch->getSFCZIterator__New();
+    CellIterator SFCY_iter = patch->getSFCZIterator();
     
     for(; !SFCY_iter.done(); SFCY_iter++) {
       IntVector c = *SFCY_iter;
@@ -1212,7 +1212,7 @@ MomentumSolver::averageRKHatVelocities(const ProcessorGroup*,
     }
     //__________________________________
     // Z  (This includes the extra cells)
-    CellIterator SFCZ_iter = patch->getSFCZIterator__New();
+    CellIterator SFCZ_iter = patch->getSFCZIterator();
     
     for(; !SFCZ_iter.done(); SFCZ_iter++) {
       IntVector c = *SFCZ_iter;
@@ -1233,8 +1233,8 @@ MomentumSolver::averageRKHatVelocities(const ProcessorGroup*,
     if (d_boundaryCondition->anyArchesPhysicalBC()) {
       int outlet_celltypeval = d_boundaryCondition->outletCellType();
       int pressure_celltypeval = d_boundaryCondition->pressureCellType();
-      IntVector idxLo = patch->getFortranCellLowIndex__New();
-      IntVector idxHi = patch->getFortranCellHighIndex__New();
+      IntVector idxLo = patch->getFortranCellLowIndex();
+      IntVector idxHi = patch->getFortranCellHighIndex();
       bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
       bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
       bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;

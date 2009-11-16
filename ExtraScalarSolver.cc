@@ -585,8 +585,8 @@ void ExtraScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
                         d_lab->d_scalarFluxCompLabel, ii, patch,
                         gac, 1);
       }
-      IntVector indexLow = patch->getFortranCellLowIndex__New();
-      IntVector indexHigh = patch->getFortranCellHighIndex__New();
+      IntVector indexLow = patch->getFortranCellLowIndex();
+      IntVector indexHigh = patch->getFortranCellHighIndex();
       
       // set density for the whole domain
       
@@ -787,7 +787,7 @@ ExtraScalarSolver::scalarLinearSolve(const ProcessorGroup* pc,
     if (d_scalar_density_weighted){
       new_dw->get(constScalarVars.density_guess, d_lab->d_densityGuessLabel, indx, patch, gn, 0);
     }else {
-      const_density.allocate(patch->getExtraCellLowIndex__New(), patch->getExtraCellHighIndex__New());
+      const_density.allocate(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex());
       const_density.initialize(1.0);
       constScalarVars.density_guess = const_density;
     }
@@ -828,8 +828,8 @@ ExtraScalarSolver::scalarLinearSolve(const ProcessorGroup* pc,
   double scalar_clipped = 0.0;
   double epsilon = 1.0e-15;
   // Get the patch bounds and the variable bounds
-  IntVector idxLo = patch->getFortranCellLowIndex__New();
-  IntVector idxHi = patch->getFortranCellHighIndex__New();
+  IntVector idxLo = patch->getFortranCellLowIndex();
+  IntVector idxHi = patch->getFortranCellHighIndex();
   
   for (int ii = idxLo.x(); ii <= idxHi.x(); ii++) {
     for (int jj = idxLo.y(); jj <= idxHi.y(); jj++) {

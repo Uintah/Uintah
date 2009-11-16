@@ -87,7 +87,7 @@ private:
 
 
     Vector dx = patch->dCell();
-    for (CellIterator iter=patch->getCellIterator__New(); !iter.done(); iter++){
+    for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
       IntVector c = *iter;
       double vol = dx.x()*dx.y()*dx.z();
 
@@ -126,7 +126,7 @@ private:
 
 
     Vector dx = patch->dCell();
-    for (CellIterator iter=patch->getCellIterator__New(); !iter.done(); iter++){
+    for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
       IntVector c = *iter; 
       double vol = dx.x()*dx.y()*dx.z();
 
@@ -151,7 +151,7 @@ private:
                                     constphiT& old_phi, 
                                     int step, double time )
   {
-		for (CellIterator iter=patch->getCellIterator__New(); !iter.done(); iter++){
+		for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
       IntVector c = *iter; 
 			phi[*iter] = ssp_alpha[step]*old_phi[c] + ssp_beta[step]*phi[c];	
     }
@@ -172,7 +172,7 @@ private:
     double exact = 1./(2.*pi)*sin(2.*pi*time);
     d_LinfSol = max(d_LinfSol, exact); 
     exact *= dx.x()*dx.y()*dx.z(); 
-    for (CellIterator iter=patch->getCellIterator__New(); !iter.done(); iter++){
+    for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
       IntVector c = *iter; 
       d_LinfError = max(d_LinfError, abs(phi[c] - exact));
     }

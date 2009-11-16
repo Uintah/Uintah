@@ -217,8 +217,8 @@ SmagorinskyModel::reComputeTurbSubmodel(const ProcessorGroup*,
     
     // Get the patch and variable details
     // compatible with fortran index
-    IntVector idxLo = patch->getFortranCellLowIndex__New();
-    IntVector idxHi = patch->getFortranCellHighIndex__New();
+    IntVector idxLo = patch->getFortranCellLowIndex();
+    IntVector idxHi = patch->getFortranCellHighIndex();
     double CF = d_CF;
 #if 0
     if (time < 2.0 ) 
@@ -326,8 +326,8 @@ SmagorinskyModel::reComputeTurbSubmodel(const ProcessorGroup*,
     }
 
     if (d_MAlab) {
-      IntVector indexLow = patch->getExtraCellLowIndex__New();
-      IntVector indexHigh = patch->getExtraCellHighIndex__New();
+      IntVector indexLow = patch->getExtraCellLowIndex();
+      IntVector indexHigh = patch->getExtraCellHighIndex();
       for (int colZ = indexLow.z(); colZ < indexHigh.z(); colZ ++) {
         for (int colY = indexLow.y(); colY < indexHigh.y(); colY ++) {
           for (int colX = indexLow.x(); colX < indexHigh.x(); colX ++) {
@@ -437,8 +437,8 @@ SmagorinskyModel::computeScalarVariance(const ProcessorGroup*,
     CellInformation* cellinfo = cellInfoP.get().get_rep();
     
     // compatible with fortran index
-    IntVector idxLo = patch->getFortranCellLowIndex__New();
-    IntVector idxHi = patch->getFortranCellHighIndex__New();
+    IntVector idxLo = patch->getFortranCellLowIndex();
+    IntVector idxHi = patch->getFortranCellHighIndex();
     double CFVar = d_CFVar;
 #if 0
     if (time < 2.0 ) 
@@ -451,7 +451,7 @@ SmagorinskyModel::computeScalarVariance(const ProcessorGroup*,
 
     double small = 1.0e-10;
     double var_limit = 0.0;
-    for(CellIterator iter = patch->getCellIterator__New(); !iter.done(); iter++) {
+    for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) {
       IntVector c = *iter;
 
       // check variance bounds and normalize
@@ -671,7 +671,7 @@ SmagorinskyModel::computeScalarDissipation(const ProcessorGroup*,
     new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
     CellInformation* cellinfo = cellInfoP.get().get_rep();
     
-    for(CellIterator iter = patch->getCellIterator__New(); !iter.done(); iter++) {
+    for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) {
       IntVector c = *iter;
       int colX = c.x();
       int colY = c.y();
@@ -703,8 +703,8 @@ SmagorinskyModel::computeScalarDissipation(const ProcessorGroup*,
     int outlet_celltypeval = d_boundaryCondition->outletCellType();
     int pressure_celltypeval = d_boundaryCondition->pressureCellType();
     
-    IntVector idxLo = patch->getFortranCellLowIndex__New();
-    IntVector idxHi = patch->getFortranCellHighIndex__New();
+    IntVector idxLo = patch->getFortranCellLowIndex();
+    IntVector idxHi = patch->getFortranCellHighIndex();
     
     if (xminus) {
       int colX = idxLo.x();

@@ -602,7 +602,7 @@ ReactiveScalarSolver::reactscalarLinearSolve(const ProcessorGroup* pc,
     double epsilon = 1.0e-15;
         
         
-    for(CellIterator iter = patch->getCellIterator__New(); !iter.done(); iter++) {
+    for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) {
       IntVector c = *iter;
 
       if (reactscalarVars.scalar[c] > 1.0) {

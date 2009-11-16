@@ -46,11 +46,11 @@ using namespace SCIRun;
 
 CellInformation::CellInformation(const Patch* patch)
 {
-  IntVector domLo = patch->getExtraCellLowIndex__New(Arches::ONEGHOSTCELL);
-  IntVector domHi = patch->getExtraCellHighIndex__New(Arches::ONEGHOSTCELL);
+  IntVector domLo = patch->getExtraCellLowIndex(Arches::ONEGHOSTCELL);
+  IntVector domHi = patch->getExtraCellHighIndex(Arches::ONEGHOSTCELL);
 
-  IntVector locationLo = patch->getExtraCellLowIndex__New(Arches::THREEGHOSTCELLS);
-  IntVector locationHi = patch->getExtraCellHighIndex__New(Arches::THREEGHOSTCELLS);
+  IntVector locationLo = patch->getExtraCellLowIndex(Arches::THREEGHOSTCELLS);
+  IntVector locationHi = patch->getExtraCellHighIndex(Arches::THREEGHOSTCELLS);
 
   IntVector idxLoU = patch->getSFCXFORTLowIndex__Old();
   IntVector idxHiU = patch->getSFCXFORTHighIndex__Old();
@@ -59,8 +59,8 @@ CellInformation::CellInformation(const Patch* patch)
   IntVector idxLoW = patch->getSFCZFORTLowIndex__Old();
   IntVector idxHiW = patch->getSFCZFORTHighIndex__Old();
  
-  IntVector idxLo = patch->getFortranCellLowIndex__New();
-  IntVector idxHi = patch->getFortranCellHighIndex__New();
+  IntVector idxLo = patch->getFortranCellLowIndex();
+  IntVector idxHi = patch->getFortranCellHighIndex();
 
   // grid cell information
   xx.resize(locationLo.x(), locationHi.x());

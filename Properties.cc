@@ -1163,8 +1163,8 @@ Properties::reComputeProps(const ProcessorGroup* pc,
       }
     }
 
-    IntVector indexLow = patch->getExtraCellLowIndex__New();
-    IntVector indexHigh = patch->getExtraCellHighIndex__New();
+    IntVector indexLow = patch->getExtraCellLowIndex();
+    IntVector indexHigh = patch->getExtraCellHighIndex();
 
     TAU_PROFILE_STOP(input);
     TAU_PROFILE_START(compute);
@@ -1882,8 +1882,8 @@ Properties::computePropsFirst_mm(const ProcessorGroup*,
 
     // no need for if (d_MAlab),  since this routine is only 
     // called if d_MAlab
-    IntVector indexLow = patch->getExtraCellLowIndex__New();
-    IntVector indexHigh = patch->getExtraCellHighIndex__New();
+    IntVector indexLow = patch->getExtraCellLowIndex();
+    IntVector indexHigh = patch->getExtraCellHighIndex();
 
     // modify density for the whole domain by multiplying with
     // void fraction
@@ -2116,8 +2116,8 @@ Properties::averageRKProps(const ProcessorGroup*,
     factor_divide = timelabels->factor_divide;
     double epsilon = 1.0e-15;
 
-    IntVector indexLow  = patch->getExtraCellLowIndex__New();
-    IntVector indexHigh = patch->getExtraCellHighIndex__New();
+    IntVector indexLow  = patch->getExtraCellLowIndex();
+    IntVector indexHigh = patch->getExtraCellHighIndex();
 
     for (int colZ = indexLow.z(); colZ < indexHigh.z(); colZ ++) {
       for (int colY = indexLow.y(); colY < indexHigh.y(); colY ++) {
@@ -2434,10 +2434,10 @@ Properties::computeDrhodt(const ProcessorGroup* pc,
     filterdrhodt.initialize(0.0);
 
     // Get the patch and variable indices
-    IntVector idxLo = patch->getFortranCellLowIndex__New();
-    IntVector idxHi = patch->getFortranCellHighIndex__New();
+    IntVector idxLo = patch->getFortranCellLowIndex();
+    IntVector idxHi = patch->getFortranCellHighIndex();
     // compute drhodt and its filtered value
-    drhodt.allocate(patch->getExtraCellLowIndex__New(), patch->getExtraCellHighIndex__New());
+    drhodt.allocate(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex());
     drhodt.initialize(0.0);
 
     //__________________________________

@@ -1186,8 +1186,8 @@ BoundaryCondition::setProfile(const ProcessorGroup*,
       new_dw->getModifiable(enthalpy, d_lab->d_enthalpySPLabel, indx, patch);
     }
 
-    IntVector idxLo = patch->getFortranCellLowIndex__New();
-    IntVector idxHi = patch->getFortranCellHighIndex__New();
+    IntVector idxLo = patch->getFortranCellLowIndex();
+    IntVector idxHi = patch->getFortranCellHighIndex();
     bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
     bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
     bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
@@ -1486,7 +1486,7 @@ BoundaryCondition::pressureBC(const Patch* patch,
   //__________________________________
   //  intrusion Boundary Conditions
   if(d_intrusionBC){
-    for(CellIterator iter=patch->getCellIterator__New(); !iter.done(); iter++){
+    for(CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
       IntVector c = *iter;
       if(cellType[c] == wall_BC){
         A[c].p = 0.0;
@@ -1512,7 +1512,7 @@ BoundaryCondition::pressureBC(const Patch* patch,
     
     IntVector offset = patch->faceDirection(face);
     
-    CellIterator iter = patch->getFaceIterator__New(face, Patch::InteriorFaceCells);
+    CellIterator iter = patch->getFaceIterator(face, Patch::InteriorFaceCells);
     
     //face:       -x +x -y +y -z +z
     //Stencil 7   w, e, s, n, b, t;
@@ -1545,7 +1545,7 @@ BoundaryCondition::pressureBC(const Patch* patch,
 
       IntVector offset = patch->faceDirection(face);
 
-      CellIterator iter = patch->getFaceIterator__New(face, Patch::InteriorFaceCells);
+      CellIterator iter = patch->getFaceIterator(face, Patch::InteriorFaceCells);
 
       //face:       -x +x -y +y -z +z
       //Stencil 7   w, e, s, n, b, t;
@@ -1573,8 +1573,8 @@ BoundaryCondition::scalarBC(const Patch* patch,
                             ArchesConstVariables* constvars)
 {
   // Get the low and high index for the patch
-  IntVector idxLo = patch->getFortranCellLowIndex__New();
-  IntVector idxHi = patch->getFortranCellHighIndex__New();
+  IntVector idxLo = patch->getFortranCellLowIndex();
+  IntVector idxHi = patch->getFortranCellHighIndex();
 
   // Get the wall boundary and flow field codes
   int wall_celltypeval = wallCellType();
@@ -1626,7 +1626,7 @@ BoundaryCondition::scalarBC__new(const Patch* patch,
   int wall = wallCellType();
   bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
  
-  for (CellIterator iter=patch->getCellIterator__New(); !iter.done(); iter++){
+  for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
     IntVector curr = *iter;
 
     if (constvars->cellType[curr] == wall){
@@ -1677,8 +1677,8 @@ BoundaryCondition::intrusionTemperatureBC(const Patch* patch,
                                           constCCVariable<int>& cellType,
                                           CCVariable<double>& temperature)
 {
-  IntVector idxLo = patch->getFortranCellLowIndex__New();
-  IntVector idxHi = patch->getFortranCellHighIndex__New();
+  IntVector idxLo = patch->getFortranCellLowIndex();
+  IntVector idxHi = patch->getFortranCellHighIndex();
   for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
     for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
       for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
@@ -1699,8 +1699,8 @@ BoundaryCondition::mmWallTemperatureBC(const Patch* patch,
                                        CCVariable<double>& temperature,
                                        bool d_energyEx)
 {
-  IntVector idxLo = patch->getFortranCellLowIndex__New();
-  IntVector idxHi = patch->getFortranCellHighIndex__New();
+  IntVector idxLo = patch->getFortranCellLowIndex();
+  IntVector idxHi = patch->getFortranCellHighIndex();
 
   for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
     for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
@@ -1838,8 +1838,8 @@ BoundaryCondition::intrusionEnergyExBC(const Patch* patch,
                                        ArchesConstVariables* constvars)
 {
   // Get the low and high index for the patch and the variables
-  IntVector idxLo = patch->getFortranCellLowIndex__New();
-  IntVector idxHi = patch->getFortranCellHighIndex__New();
+  IntVector idxLo = patch->getFortranCellLowIndex();
+  IntVector idxHi = patch->getFortranCellHighIndex();
   double Viscos = d_physicalConsts->getMolecularViscosity();
   fort_mmbcenthalpy_energyex(idxLo, idxHi,
                              vars->scalarNonlinearSrc,
@@ -1863,8 +1863,8 @@ BoundaryCondition::intrusionScalarBC( const Patch* patch,
                                       ArchesConstVariables* constvars)
 {
   // Get the low and high index for the patch
-  IntVector idxLo = patch->getFortranCellLowIndex__New();
-  IntVector idxHi = patch->getFortranCellHighIndex__New();
+  IntVector idxLo = patch->getFortranCellLowIndex();
+  IntVector idxHi = patch->getFortranCellHighIndex();
   //fortran call
   fort_mmwallbc(idxLo, idxHi,
                 vars->scalarCoeff[Arches::AE], vars->scalarCoeff[Arches::AW],
@@ -1883,8 +1883,8 @@ BoundaryCondition::intrusionEnthalpyBC( const Patch* patch,
                                         ArchesConstVariables* constvars)
 {
   // Get the low and high index for the patch
-  IntVector idxLo = patch->getFortranCellLowIndex__New();
-  IntVector idxHi = patch->getFortranCellHighIndex__New();
+  IntVector idxLo = patch->getFortranCellLowIndex();
+  IntVector idxHi = patch->getFortranCellHighIndex();
   //fortran call
   fort_mmwallbc_trans(idxLo, idxHi,
                       vars->scalarCoeff[Arches::AE],
@@ -1974,8 +1974,8 @@ BoundaryCondition::mmpressureBC(DataWarehouse* new_dw,
                                 ArchesConstVariables* constvars)
 {
   // Get the low and high index for the patch
-  IntVector idxLo = patch->getFortranCellLowIndex__New();
-  IntVector idxHi = patch->getFortranCellHighIndex__New();
+  IntVector idxLo = patch->getFortranCellLowIndex();
+  IntVector idxHi = patch->getFortranCellHighIndex();
   IntVector domLong = vars->pressLinearSrc.getFortLowIndex();
   IntVector domHing = vars->pressLinearSrc.getFortHighIndex();
   ASSERTEQ(domLong,
@@ -1992,7 +1992,7 @@ BoundaryCondition::mmpressureBC(DataWarehouse* new_dw,
   CCVariable<double>AP, AE, AW, AN, AS, AT, AB;
   
   string direction = "copyInto";
-  CellIterator iter = patch->getExtraCellIterator__New();
+  CellIterator iter = patch->getExtraCellIterator();
   copy_stencil7<CCVariable<Stencil7>, CCVariable<double> >(new_dw, patch, direction, iter,
                 vars->pressCoeff, AP, AE, AW, AN, AS, AT, AB);
                 
@@ -2018,8 +2018,8 @@ BoundaryCondition::mmscalarWallBC( const Patch* patch,
                                    ArchesConstVariables* constvars)
 {
   // Get the low and high index for the patch
-  IntVector idxLo = patch->getFortranCellLowIndex__New();
-  IntVector idxHi = patch->getFortranCellHighIndex__New();
+  IntVector idxLo = patch->getFortranCellLowIndex();
+  IntVector idxHi = patch->getFortranCellHighIndex();
   //fortran call
   fort_mmwallbc(idxLo, idxHi,
                       vars->scalarConvectCoeff[Arches::AE], vars->scalarConvectCoeff[Arches::AW],
@@ -2047,7 +2047,7 @@ BoundaryCondition::mmscalarWallBC__new( const Patch* patch,
   // Why is there a special d_mmWallID? This isn't consistent with how wallid is handled
 
   // Get the wall boundary and flow field codes
-  for (CellIterator iter=patch->getCellIterator__New(); !iter.done(); iter++){
+  for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
     IntVector curr = *iter;
 
     if (constvars->cellType[curr] == d_mmWallID) {
@@ -2108,8 +2108,8 @@ BoundaryCondition::mmEnthalpyWallBC( const Patch* patch,
                                      ArchesConstVariables* constvars)
 {
   // Get the low and high index for the patch
-  IntVector idxLo = patch->getFortranCellLowIndex__New();
-  IntVector idxHi = patch->getFortranCellHighIndex__New();
+  IntVector idxLo = patch->getFortranCellLowIndex();
+  IntVector idxHi = patch->getFortranCellHighIndex();
   //fortran call
   fort_mmwallbc(idxLo, idxHi,
                 vars->scalarCoeff[Arches::AE], vars->scalarCoeff[Arches::AW],
@@ -2606,7 +2606,7 @@ BoundaryCondition::computeInletAreaBCSource(const ProcessorGroup*,
         if (!(b.degenerate()) && !(d_sourceBoundaryInfo[bp]->computedArea)){
           
           //iterator over cells and see if a boundary source needs adding.
-          for (CellIterator iter=patch->getCellIterator__New(); !iter.done(); iter++){
+          for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
           
             Point p = patch->cellPosition(*iter);
             Point p_xp = patch->cellPosition(*iter + IntVector(1,0,0));
@@ -2708,17 +2708,17 @@ BoundaryCondition::computeMomSourceTerm(const ProcessorGroup*,
     //assuming a uniform mesh!
     Vector dx = patch->dCell();
 
-    IntVector idxLo = patch->getCellLowIndex__New();
-    IntVector idxHi = patch->getCellHighIndex__New();
+    IntVector idxLo = patch->getCellLowIndex();
+    IntVector idxHi = patch->getCellHighIndex();
 
-    IntVector idxLos = patch->getSFCYLowIndex__New();
-    IntVector idxHis = patch->getSFCYHighIndex__New();
+    IntVector idxLos = patch->getSFCYLowIndex();
+    IntVector idxHis = patch->getSFCYHighIndex();
 
-    IntVector idxLof = patch->getFortranCellLowIndex__New();
-    IntVector idxHif = patch->getFortranCellHighIndex__New();
+    IntVector idxLof = patch->getFortranCellLowIndex();
+    IntVector idxHif = patch->getFortranCellHighIndex();
 
-    IntVector idxLoe = patch->getExtraCellLowIndex__New();
-    IntVector idxHie = patch->getExtraCellHighIndex__New();
+    IntVector idxLoe = patch->getExtraCellLowIndex();
+    IntVector idxHie = patch->getExtraCellHighIndex();
 
     int nofBoundaryPieces = (int)d_sourceBoundaryInfo.size();
 
@@ -2748,7 +2748,7 @@ BoundaryCondition::computeMomSourceTerm(const ProcessorGroup*,
         Box geomBox = piece->getBoundingBox();
         Box b = geomBox.intersect(patchInteriorBox);
         
-        for (CellIterator iter=patch->getCellIterator__New();!iter.done(); iter++){
+        for (CellIterator iter=patch->getCellIterator();!iter.done(); iter++){
           Point p = patch->cellPosition(*iter);
           Point p_xp = patch->cellPosition(*iter + IntVector(1,0,0));
           Point p_xm = patch->cellPosition(*iter - IntVector(1,0,0));
@@ -2993,8 +2993,8 @@ BoundaryCondition::computeScalarSourceTerm(const ProcessorGroup*,
     scalarBoundarySrc.initialize(0.0);
     enthalpyBoundarySrc.initialize(0.0);
 
-    IntVector idxLo = patch->getFortranCellLowIndex__New();
-    IntVector idxHi = patch->getFortranCellHighIndex__New();
+    IntVector idxLo = patch->getFortranCellLowIndex();
+    IntVector idxHi = patch->getFortranCellHighIndex();
 
     int nofBoundaryPieces = (int)d_sourceBoundaryInfo.size();
 
@@ -3011,7 +3011,7 @@ BoundaryCondition::computeScalarSourceTerm(const ProcessorGroup*,
         Box b = geomBox.intersect(patchInteriorBox);
         
         //iterator over all patch cells and see if a boundary source needs adding.
-        for (CellIterator iter=patch->getCellIterator__New(); 
+        for (CellIterator iter=patch->getCellIterator(); 
           !iter.done(); iter++){
         
           Point p = patch->cellPosition(*iter);
@@ -3350,8 +3350,8 @@ BoundaryCondition::scalarLisolve_mm(const Patch* patch,
                                     CellInformation* cellinfo)
 {
   // Get the patch bounds and the variable bounds
-  IntVector idxLo = patch->getFortranCellLowIndex__New();
-  IntVector idxHi = patch->getFortranCellHighIndex__New();
+  IntVector idxLo = patch->getFortranCellLowIndex();
+  IntVector idxHi = patch->getFortranCellHighIndex();
 
 
   fort_mm_explicit(idxLo, idxHi, vars->scalar, constvars->old_scalar,
@@ -3380,8 +3380,8 @@ BoundaryCondition::enthalpyLisolve_mm(const Patch* patch,
                                       CellInformation* cellinfo)
 {
   // Get the patch bounds and the variable bounds
-  IntVector idxLo = patch->getFortranCellLowIndex__New();
-  IntVector idxHi = patch->getFortranCellHighIndex__New();
+  IntVector idxLo = patch->getFortranCellLowIndex();
+  IntVector idxHi = patch->getFortranCellHighIndex();
 
   fort_mm_explicit_oldvalue(idxLo, idxHi, vars->enthalpy, constvars->old_enthalpy,
                             constvars->scalarCoeff[Arches::AE], 
@@ -3419,7 +3419,7 @@ BoundaryCondition::scalarOutletPressureBC(const Patch* patch,
     Patch::FaceType face = *itr;
     IntVector offset = patch->faceDirection(face);
     
-    for(CellIterator iter=patch->getFaceIterator__New(face, MEC); !iter.done();iter++) {
+    for(CellIterator iter=patch->getFaceIterator(face, MEC); !iter.done();iter++) {
       IntVector c = *iter;
       IntVector intCell = c - offset;    // interiorCell
       
@@ -3443,8 +3443,8 @@ BoundaryCondition::velRhoHatInletBC(const Patch* patch,
   double time = d_lab->d_sharedState->getElapsedTime();
   double current_time = time + time_shift;
   // Get the low and high index for the patch and the variables
-  IntVector idxLo = patch->getFortranCellLowIndex__New();
-  IntVector idxHi = patch->getFortranCellHighIndex__New();
+  IntVector idxLo = patch->getFortranCellLowIndex();
+  IntVector idxHi = patch->getFortranCellHighIndex();
   // stores cell type info for the patch with the ghost cell type
   for (int indx = 0; indx < d_numInlets; indx++) {
     // Get a copy of the current flow inlet
@@ -3477,8 +3477,8 @@ BoundaryCondition::velRhoHatOutletPressureBC(const Patch* patch,
                                              ArchesConstVariables* constvars)
 {
   // Get the low and high index for the patch
-  IntVector idxLo = patch->getFortranCellLowIndex__New();
-  IntVector idxHi = patch->getFortranCellHighIndex__New();
+  IntVector idxLo = patch->getFortranCellLowIndex();
+  IntVector idxHi = patch->getFortranCellHighIndex();
 
   int outlet_celltypeval = outletCellType();
   int pressure_celltypeval = pressureCellType();
@@ -3688,8 +3688,8 @@ BoundaryCondition::velocityOutletPressureTangentBC(const Patch* patch,
                                                    ArchesConstVariables* constvars)
 {
   // Get the low and high index for the patch
-  IntVector idxLo = patch->getFortranCellLowIndex__New();
-  IntVector idxHi = patch->getFortranCellHighIndex__New();
+  IntVector idxLo = patch->getFortranCellLowIndex();
+  IntVector idxHi = patch->getFortranCellHighIndex();
 
   int outlet_celltypeval = outletCellType();
   int pressure_celltypeval = pressureCellType();
@@ -4104,8 +4104,8 @@ BoundaryCondition::addPresGradVelocityOutletPressureBC(const Patch* patch,
                                                        ArchesConstVariables* constvars)
 {
   // Get the low and high index for the patch
-  IntVector idxLo = patch->getFortranCellLowIndex__New();
-  IntVector idxHi = patch->getFortranCellHighIndex__New();
+  IntVector idxLo = patch->getFortranCellLowIndex();
+  IntVector idxHi = patch->getFortranCellHighIndex();
 
   int outlet_celltypeval = outletCellType();
   int pressure_celltypeval = pressureCellType();
@@ -4320,8 +4320,8 @@ BoundaryCondition::getFlowINOUT(const ProcessorGroup*,
     new_dw->get(wVelocity, d_lab->d_wVelocitySPBCLabel, indx, patch, gn, 0);
 
     // Get the low and high index for the patch and the variables
-    IntVector idxLo = patch->getFortranCellLowIndex__New();
-    IntVector idxHi = patch->getFortranCellHighIndex__New();
+    IntVector idxLo = patch->getFortranCellLowIndex();
+    IntVector idxHi = patch->getFortranCellHighIndex();
 
     bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
     bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
@@ -4651,8 +4651,8 @@ BoundaryCondition::initInletBC(const ProcessorGroup*,
     new_dw->get(density, d_lab->d_densityCPLabel, indx, patch, Ghost::None, 0);
     new_dw->allocateAndPut(density_oldold, d_lab->d_densityOldOldLabel, indx, patch);
 
-    IntVector idxLo = patch->getFortranCellLowIndex__New();
-    IntVector idxHi = patch->getFortranCellHighIndex__New();
+    IntVector idxLo = patch->getFortranCellLowIndex();
+    IntVector idxHi = patch->getFortranCellHighIndex();
     bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
     bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
     bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
@@ -5109,8 +5109,8 @@ BoundaryCondition::getVariableFlowRate(const Patch* patch,
                                        double* varIN, double* varOUT) 
 {
     // Get the low and high index for the patch and the variables
-    IntVector idxLo = patch->getFortranCellLowIndex__New();
-    IntVector idxHi = patch->getFortranCellHighIndex__New();
+    IntVector idxLo = patch->getFortranCellLowIndex();
+    IntVector idxHi = patch->getFortranCellHighIndex();
 
     bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
     bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
@@ -5258,8 +5258,8 @@ BoundaryCondition::mmsuVelocityBC(const Patch* patch,
   int wall_celltypeval = wallCellType();
 
   // Get the low and high index for the patch and the variables
-  IntVector idxLo = patch->getFortranCellLowIndex__New();
-  IntVector idxHi = patch->getFortranCellHighIndex__New();
+  IntVector idxLo = patch->getFortranCellLowIndex();
+  IntVector idxHi = patch->getFortranCellHighIndex();
 
   // Check to see if patch borders a wall
   bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
@@ -5451,8 +5451,8 @@ BoundaryCondition::mmsvVelocityBC(const Patch* patch,
   int wall_celltypeval = wallCellType();
 
   // Get the low and high index for the patch and the variables
-  IntVector idxLo = patch->getFortranCellLowIndex__New();
-  IntVector idxHi = patch->getFortranCellHighIndex__New();
+  IntVector idxLo = patch->getFortranCellLowIndex();
+  IntVector idxHi = patch->getFortranCellHighIndex();
 
   // Check to see if patch borders a wall
   bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
@@ -5638,8 +5638,8 @@ BoundaryCondition::mmswVelocityBC(const Patch* patch,
   int wall_celltypeval = wallCellType();
 
   // Get the low and high index for the patch and the variables
-  IntVector idxLo = patch->getFortranCellLowIndex__New();
-  IntVector idxHi = patch->getFortranCellHighIndex__New();
+  IntVector idxLo = patch->getFortranCellLowIndex();
+  IntVector idxHi = patch->getFortranCellHighIndex();
 
   // Check to see if patch borders a wall
   bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
@@ -5807,8 +5807,8 @@ BoundaryCondition::mmsscalarBC(const Patch* patch,
                                double dt)
 {
   // Get the low and high index for the patch
-  IntVector idxLo = patch->getFortranCellLowIndex__New();
-  IntVector idxHi = patch->getFortranCellHighIndex__New();
+  IntVector idxLo = patch->getFortranCellLowIndex();
+  IntVector idxHi = patch->getFortranCellHighIndex();
 
   // Get the wall boundary and flow field codes
   int wall_celltypeval = wallCellType();

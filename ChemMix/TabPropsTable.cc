@@ -333,7 +333,7 @@ TabPropsTable::getState( VarMap ivVar, VarMap dvVar, const Patch* patch )
                         "table has been loaded. You must specify a table filename in your input file.",__FILE__,__LINE__);
   }
   
-  for (CellIterator iCell = patch->getCellIterator__New(); !iCell.done(); ++iCell) {
+  for (CellIterator iCell = patch->getCellIterator(); !iCell.done(); ++iCell) {
     IntVector currCell = *iCell;
     
     // loop over all independent variables to extract IV values at currCell

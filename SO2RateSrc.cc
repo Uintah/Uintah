@@ -142,7 +142,7 @@ SO2RateSrc::addExtraScalarSrc(const ProcessorGroup* pc,
     constCCVariable<double> SO2rate;
     new_dw->get(SO2rate, d_lab->d_so2RateLabel, indx, patch, Ghost::None, 0);
 
-    for (CellIterator iter=patch->getCellIterator__New(); !iter.done(); iter++){
+    for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
       scalarNonlinSrc[*iter] += SO2rate[*iter]*vol*64000; //64000 = conversion from mol/cm^3/s to kg/m^3/s
     }
   }
