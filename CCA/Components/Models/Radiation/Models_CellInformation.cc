@@ -48,17 +48,18 @@ using namespace SCIRun;
 
 Models_CellInformation::Models_CellInformation(const Patch* patch)
 {
-  IntVector domLo = patch->getGhostCellLowIndex(1);
-  IntVector domHi = patch->getGhostCellHighIndex(1);
-
-  IntVector idxLo = patch->getCellFORTLowIndex();
-  IntVector idxHi = patch->getCellFORTHighIndex()+IntVector(1,1,1);
-  IntVector idxLoU = patch->getSFCXFORTLowIndex();
-  IntVector idxHiU = patch->getSFCXFORTHighIndex();
-  IntVector idxLoV = patch->getSFCYFORTLowIndex();
-  IntVector idxHiV = patch->getSFCYFORTHighIndex();
-  IntVector idxLoW = patch->getCellFORTLowIndex();
-  IntVector idxHiW = patch->getCellFORTHighIndex();
+  IntVector domLo = patch->getExtraCellLowIndex__New(1);
+  IntVector domHi = patch->getExtraCellHighIndex__New(1);
+  
+  IntVector idxLo = patch->getFortranCellLowIndex__New();
+  IntVector idxHi = patch->getFortranCellHighIndex__New()+IntVector(1,1,1);
+  
+  IntVector idxLoU = patch->getSFCXFORTLowIndex__Old();
+  IntVector idxHiU = patch->getSFCXFORTHighIndex__Old();
+  IntVector idxLoV = patch->getSFCYFORTLowIndex__Old();
+  IntVector idxHiV = patch->getSFCYFORTHighIndex__Old();
+  IntVector idxLoW = patch->getFortranCellLowIndex__New();
+  IntVector idxHiW = patch->getFortranCellHighIndex__New();
 
   // cell information
   xx.resize(domLo.x(), domHi.x());

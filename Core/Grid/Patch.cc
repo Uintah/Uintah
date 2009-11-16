@@ -1022,6 +1022,62 @@ Patch::getNodeIterator(const Box& b) const
    return NodeIterator(low, high);
 }
 
+// if next to a boundary then lowIndex = 2+celllowindex in the flow dir
+IntVector Patch::getSFCXFORTLowIndex__Old() const
+{
+  IntVector h(getFortranExtraCellLowIndex__New()+
+	      IntVector(getBCType(xminus) == Neighbor?0:2, 
+			getBCType(yminus) == Neighbor?0:1,
+			getBCType(zminus) == Neighbor?0:1));
+  return h;
+}
+// if next to a boundary then highindex = cellhighindex - 1 - 1(coz of fortran)
+IntVector Patch::getSFCXFORTHighIndex__Old() const
+{
+   IntVector h(getFortranExtraCellHighIndex__New() -
+	       IntVector(getBCType(xplus) == Neighbor?0:1,
+			 getBCType(yplus) == Neighbor?0:1,
+			 getBCType(zplus) == Neighbor?0:1));
+   return h;
+}
+
+// if next to a boundary then lowIndex = 2+celllowindex
+IntVector Patch::getSFCYFORTLowIndex__Old() const
+{
+  IntVector h(getFortranExtraCellLowIndex__New()+
+	      IntVector(getBCType(xminus) == Neighbor?0:1, 
+			getBCType(yminus) == Neighbor?0:2,
+			getBCType(zminus) == Neighbor?0:1));
+  return h;
+}
+// if next to a boundary then highindex = cellhighindex - 1 - 1(coz of fortran)
+IntVector Patch::getSFCYFORTHighIndex__Old() const
+{
+   IntVector h(getFortranExtraCellHighIndex__New() - 
+	       IntVector(getBCType(xplus) == Neighbor?0:1,
+			 getBCType(yplus) == Neighbor?0:1,
+			 getBCType(zplus) == Neighbor?0:1));
+   return h;
+}
+
+// if next to a boundary then lowIndex = 2+celllowindex
+IntVector Patch::getSFCZFORTLowIndex__Old() const
+{
+  IntVector h(getFortranExtraCellLowIndex__New()+
+	      IntVector(getBCType(xminus) == Neighbor?0:1, 
+			getBCType(yminus) == Neighbor?0:1,
+			getBCType(zminus) == Neighbor?0:2));
+  return h;
+}
+// if next to a boundary then highindex = cellhighindex - 1 - 1(coz of fortran)
+IntVector Patch::getSFCZFORTHighIndex__Old() const
+{
+   IntVector h(getFortranExtraCellHighIndex__New() - 
+	       IntVector(getBCType(xplus) == Neighbor?0:1,
+			 getBCType(yplus) == Neighbor?0:1,
+			 getBCType(zplus) == Neighbor?0:1));
+   return h;
+}
 #ifndef DELETE_OLD_INTERFACE
 CellIterator
 Patch::getCellIterator(const IntVector gc) const
@@ -1347,62 +1403,6 @@ IntVector Patch::getSFCZHighIndex() const
 {
    IntVector h(d_highIndex+
 	       IntVector(0, 0, getBCType(zplus) == Neighbor?0:1));
-   return h;
-}
-// if next to a boundary then lowIndex = 2+celllowindex in the flow dir
-IntVector Patch::getSFCXFORTLowIndex() const
-{
-  IntVector h(d_lowIndex+
-	      IntVector(getBCType(xminus) == Neighbor?0:2, 
-			getBCType(yminus) == Neighbor?0:1,
-			getBCType(zminus) == Neighbor?0:1));
-  return h;
-}
-// if next to a boundary then highindex = cellhighindex - 1 - 1(coz of fortran)
-IntVector Patch::getSFCXFORTHighIndex() const
-{
-   IntVector h(d_highIndex - IntVector(1,1,1) - 
-	       IntVector(getBCType(xplus) == Neighbor?0:1,
-			 getBCType(yplus) == Neighbor?0:1,
-			 getBCType(zplus) == Neighbor?0:1));
-   return h;
-}
-
-// if next to a boundary then lowIndex = 2+celllowindex
-IntVector Patch::getSFCYFORTLowIndex() const
-{
-  IntVector h(d_lowIndex+
-	      IntVector(getBCType(xminus) == Neighbor?0:1, 
-			getBCType(yminus) == Neighbor?0:2,
-			getBCType(zminus) == Neighbor?0:1));
-  return h;
-}
-// if next to a boundary then highindex = cellhighindex - 1 - 1(coz of fortran)
-IntVector Patch::getSFCYFORTHighIndex() const
-{
-   IntVector h(d_highIndex - IntVector(1,1,1) - 
-	       IntVector(getBCType(xplus) == Neighbor?0:1,
-			 getBCType(yplus) == Neighbor?0:1,
-			 getBCType(zplus) == Neighbor?0:1));
-   return h;
-}
-
-// if next to a boundary then lowIndex = 2+celllowindex
-IntVector Patch::getSFCZFORTLowIndex() const
-{
-  IntVector h(d_lowIndex+
-	      IntVector(getBCType(xminus) == Neighbor?0:1, 
-			getBCType(yminus) == Neighbor?0:1,
-			getBCType(zminus) == Neighbor?0:2));
-  return h;
-}
-// if next to a boundary then highindex = cellhighindex - 1 - 1(coz of fortran)
-IntVector Patch::getSFCZFORTHighIndex() const
-{
-   IntVector h(d_highIndex - IntVector(1,1,1) - 
-	       IntVector(getBCType(xplus) == Neighbor?0:1,
-			 getBCType(yplus) == Neighbor?0:1,
-			 getBCType(zplus) == Neighbor?0:1));
    return h;
 }
   
@@ -1961,13 +1961,18 @@ void Patch::finalizePatch()
   ASSERT(d_extraCells!=IntVector(1,1,1) || getCellFORTLowIndex()==getFortranCellLowIndex__New());
   ASSERT(d_extraCells!=IntVector(1,1,1) ||getCellFORTHighIndex()==getFortranCellHighIndex__New());
 
-  //ASSERT(getSFCXFORTLowIndex()==getFortranZFC_ExtraCellLowIndex__New());
-  //ASSERT(getSFCXFORTHighIndex()==getFortranZFC_ExtraCellHighIndex__New());
-  //ASSERT(getSFCYFORTLowIndex()==getFortranZFC_ExtraCellLowIndex__New());
-  //ASSERT(getSFCYFORTHighIndex()==getFortranZFC_ExtraCellHighIndex__New());
-  //ASSERT(getSFCZFORTLowIndex()==getFortranZFC_ExtraCellLowIndex__New());
-  //ASSERT(getSFCZFORTHighIndex()==getFortranZFC_ExtraCellHighIndex__New());
-
+  cout << "LOW: " << d_lowIndex << "=?" << getFortranExtraCellLowIndex__New() << endl;
+  ASSERT(d_lowIndex==getFortranExtraCellLowIndex__New());
+  cout << "HIGH: " << d_highIndex-IntVector(1,1,1) << "=?" << getFortranExtraCellHighIndex__New() << endl;
+  ASSERT(d_highIndex-IntVector(1,1,1)==getFortranExtraCellHighIndex__New());
+ /*
+  ASSERT(getSFCXFORTLowIndex__Old()==getFortranSFCXLowIndex__New());
+  ASSERT(getSFCYFORTLowIndex__Old()==getFortranSFCYLowIndex__New());
+  ASSERT(getSFCZFORTLowIndex__Old()==getFortranSFCZLowIndex__New());
+  ASSERT(getSFCXFORTHighIndex__Old()==getFortranSFCXHighIndex__New());
+  ASSERT(getSFCYFORTHighIndex__Old()==getFortranSFCYHighIndex__New());
+  ASSERT(getSFCZFORTHighIndex__Old()==getFortranSFCZHighIndex__New());
+*/
   /*
   FaceType face=xplus;
   string domain1="NC_vars";

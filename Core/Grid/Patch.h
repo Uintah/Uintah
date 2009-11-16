@@ -1822,6 +1822,65 @@ WARNING
       int getFaceMark(int markType, FaceType face) const { return d_faceMarks[markType*numFaces + face]; }
 
       /*  End the section of unupdated functions */
+      /*  Bugged functions that are being kept around until fixed */
+      /**
+       * Replace with getFortranSFCXLowIndex__New()
+       * This does not line up with the old call and transferring must be donw
+       * with care.  The old versions of this function was bugged and faces on 
+       * the boundary of two patches were owned by the patch on the plus side of 
+       * the face where it should have belonged to the patch on the minus side of 
+       * the face.
+       */
+      IntVector getSFCXFORTLowIndex__Old() const;
+
+      /**
+       * Replace with getFortranSFCXHighIndex__New()
+       * This does not line up with the old call and transferring must be donw
+       * with care.  The old versions of this function was bugged and faces on 
+       * the boundary of two patches were owned by the patch on the plus side of 
+       * the face where it should have belonged to the patch on the minus side of 
+       * the face.
+       */
+      IntVector getSFCXFORTHighIndex__Old() const;
+
+      /**
+       * Replace with getFortranSFCYLowIndex__New()
+       * This does not line up with the old call and transferring must be donw
+       * with care.  The old versions of this function was bugged and faces on 
+       * the boundary of two patches were owned by the patch on the plus side of 
+       * the face where it should have belonged to the patch on the minus side of 
+       * the face.
+       */
+      IntVector getSFCYFORTLowIndex__Old() const;
+
+      /**
+       * Replace with getFortranSFCYHighIndex__New()
+       * This does not line up with the old call and transferring must be donw
+       * with care.  The old versions of this function was bugged and faces on 
+       * the boundary of two patches were owned by the patch on the plus side of 
+       * the face where it should have belonged to the patch on the minus side of 
+       * the face.
+       */
+      IntVector getSFCYFORTHighIndex__Old() const;
+
+      /**
+       * Replace with getFortranSFCZLowIndex__New()
+       * This does not line up with the old call and transferring must be donw
+       * with care.  The old versions of this function was bugged and faces on 
+       * the boundary of two patches were owned by the patch on the plus side of 
+       * the face where it should have belonged to the patch on the minus side of 
+       * the face.
+       */
+      IntVector getSFCZFORTLowIndex__Old() const;
+
+      /**
+       * Replace with getFortranSFCZHighIndex__New()
+       * This does not line up with the old call and transferring must be donw
+       * with care.  The old versions of this function was bugged and faces on 
+       * the boundary of two patches were owned by the patch on the plus side of 
+       * the face where it should have belonged to the patch on the minus side of 
+       * the face.
+       */
       
       /***********************Old Interface that is been implemented in new interface*******************************/
 #ifndef DELETE_OLD_INTERFACE
@@ -1974,65 +2033,7 @@ WARNING
        */
       CellIterator getSFCZIterator(const int offset = 0) const;
 
-      /**
-       * Replace with getFortranSFCXLowIndex__New()
-       * This does not line up with the old call and transferring must be donw
-       * with care.  The old versions of this function was bugged and faces on 
-       * the boundary of two patches were owned by the patch on the plus side of 
-       * the face where it should have belonged to the patch on the minus side of 
-       * the face.
-       */
-      IntVector getSFCXFORTLowIndex() const;
-
-      /**
-       * Replace with getFortranSFCXHighIndex__New()
-       * This does not line up with the old call and transferring must be donw
-       * with care.  The old versions of this function was bugged and faces on 
-       * the boundary of two patches were owned by the patch on the plus side of 
-       * the face where it should have belonged to the patch on the minus side of 
-       * the face.
-       */
-      IntVector getSFCXFORTHighIndex() const;
-
-      /**
-       * Replace with getFortranSFCYLowIndex__New()
-       * This does not line up with the old call and transferring must be donw
-       * with care.  The old versions of this function was bugged and faces on 
-       * the boundary of two patches were owned by the patch on the plus side of 
-       * the face where it should have belonged to the patch on the minus side of 
-       * the face.
-       */
-      IntVector getSFCYFORTLowIndex() const;
-
-      /**
-       * Replace with getFortranSFCYHighIndex__New()
-       * This does not line up with the old call and transferring must be donw
-       * with care.  The old versions of this function was bugged and faces on 
-       * the boundary of two patches were owned by the patch on the plus side of 
-       * the face where it should have belonged to the patch on the minus side of 
-       * the face.
-       */
-      IntVector getSFCYFORTHighIndex() const;
-
-      /**
-       * Replace with getFortranSFCZLowIndex__New()
-       * This does not line up with the old call and transferring must be donw
-       * with care.  The old versions of this function was bugged and faces on 
-       * the boundary of two patches were owned by the patch on the plus side of 
-       * the face where it should have belonged to the patch on the minus side of 
-       * the face.
-       */
-      IntVector getSFCZFORTLowIndex() const;
-
-      /**
-       * Replace with getFortranSFCZHighIndex__New()
-       * This does not line up with the old call and transferring must be donw
-       * with care.  The old versions of this function was bugged and faces on 
-       * the boundary of two patches were owned by the patch on the plus side of 
-       * the face where it should have belonged to the patch on the minus side of 
-       * the face.
-       */
-      IntVector getSFCZFORTHighIndex() const;
+      IntVector getSFCZFORTHighIndex__Old() const;
 
       /**
        * Replace with getFortranCellLowIndex__New()
