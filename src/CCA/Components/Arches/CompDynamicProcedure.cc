@@ -596,12 +596,12 @@ CompDynamicProcedure::reComputeTurbSubmodel(const ProcessorGroup* pc,
     bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
     bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
     
-    IntVector indexLowU = patch->getSFCXFORTLowIndex();
-    IntVector indexHighU = patch->getSFCXFORTHighIndex();
-    IntVector indexLowV = patch->getSFCYFORTLowIndex();
-    IntVector indexHighV = patch->getSFCYFORTHighIndex();
-    IntVector indexLowW = patch->getSFCZFORTLowIndex();
-    IntVector indexHighW = patch->getSFCZFORTHighIndex();
+    IntVector indexLowU = patch->getSFCXFORTLowIndex__Old();
+    IntVector indexHighU = patch->getSFCXFORTHighIndex__Old();
+    IntVector indexLowV = patch->getSFCYFORTLowIndex__Old();
+    IntVector indexHighV = patch->getSFCYFORTHighIndex__Old();
+    IntVector indexLowW = patch->getSFCZFORTLowIndex__Old();
+    IntVector indexHighW = patch->getSFCZFORTHighIndex__Old();
     
     if (xminus) indexLowU -= IntVector(1,0,0); 
     if (yminus) indexLowV -= IntVector(0,1,0); 

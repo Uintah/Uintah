@@ -1392,8 +1392,8 @@ BoundaryCondition::velocityBC(const Patch* patch,
   
   //__________________________________
   //    X Dir
-  IntVector idxLo = patch->getSFCXFORTLowIndex();
-  IntVector idxHi = patch->getSFCXFORTHighIndex();
+  IntVector idxLo = patch->getSFCXFORTLowIndex__Old();
+  IntVector idxHi = patch->getSFCXFORTHighIndex__Old();
   fort_bcuvel(idxLo, idxHi,
               vars->uVelocityCoeff[Arches::AE],
               vars->uVelocityCoeff[Arches::AW], 
@@ -1416,8 +1416,8 @@ BoundaryCondition::velocityBC(const Patch* patch,
 
   //__________________________________
   //    Y Dir
-  idxLo = patch->getSFCYFORTLowIndex();
-  idxHi = patch->getSFCYFORTHighIndex();
+  idxLo = patch->getSFCYFORTLowIndex__Old();
+  idxHi = patch->getSFCYFORTHighIndex__Old();
 
   fort_bcvvel(idxLo, idxHi,
               vars->vVelocityCoeff[Arches::AE],
@@ -1441,8 +1441,8 @@ BoundaryCondition::velocityBC(const Patch* patch,
 
   //__________________________________
   //    Z Dir
-  idxLo = patch->getSFCZFORTLowIndex();
-  idxHi = patch->getSFCZFORTHighIndex();
+  idxLo = patch->getSFCZFORTLowIndex__Old();
+  idxHi = patch->getSFCZFORTHighIndex__Old();
 
   fort_bcwvel(idxLo, idxHi,
               vars->wVelocityCoeff[Arches::AE],
@@ -1759,8 +1759,8 @@ BoundaryCondition::intrusionuVelMomExBC(const Patch* patch,
                                         ArchesConstVariables* constvars)
 {
   // Get the low and high index for the patch and the variables
-  IntVector idxLoU = patch->getSFCXFORTLowIndex();
-  IntVector idxHiU = patch->getSFCXFORTHighIndex();
+  IntVector idxLoU = patch->getSFCXFORTLowIndex__Old();
+  IntVector idxHiU = patch->getSFCXFORTHighIndex__Old();
   int ioff = 1;
   int joff = 0;
   int koff = 0;
@@ -1786,8 +1786,8 @@ BoundaryCondition::intrusionvVelMomExBC(const Patch* patch,
                                         ArchesConstVariables* constvars)
 {
   // Get the low and high index for the patch and the variables
-  IntVector idxLoU = patch->getSFCYFORTLowIndex();
-  IntVector idxHiU = patch->getSFCYFORTHighIndex();
+  IntVector idxLoU = patch->getSFCYFORTLowIndex__Old();
+  IntVector idxHiU = patch->getSFCYFORTHighIndex__Old();
   int ioff = 0;
   int joff = 1;
   int koff = 0;
@@ -1812,8 +1812,8 @@ BoundaryCondition::intrusionwVelMomExBC(const Patch* patch,
                                         ArchesConstVariables* constvars)
 {
   // Get the low and high index for the patch and the variables
-  IntVector idxLoU = patch->getSFCZFORTLowIndex();
-  IntVector idxHiU = patch->getSFCZFORTHighIndex();
+  IntVector idxLoU = patch->getSFCZFORTLowIndex__Old();
+  IntVector idxHiU = patch->getSFCZFORTHighIndex__Old();
   int ioff = 0;
   int joff = 0;
   int koff = 1;
@@ -1913,8 +1913,8 @@ BoundaryCondition::mmvelocityBC(const Patch* patch,
 {
   //__________________________________
   //    X dir
-  IntVector idxLoU = patch->getSFCXFORTLowIndex();
-  IntVector idxHiU = patch->getSFCXFORTHighIndex();
+  IntVector idxLoU = patch->getSFCXFORTLowIndex__Old();
+  IntVector idxHiU = patch->getSFCXFORTHighIndex__Old();
   int ioff = 1;
   int joff = 0;
   int koff = 0;
@@ -1930,8 +1930,8 @@ BoundaryCondition::mmvelocityBC(const Patch* patch,
                     constvars->cellType, d_mmWallID, ioff, joff, koff);
   //__________________________________
   //    Y dir
-  idxLoU = patch->getSFCYFORTLowIndex();
-  idxHiU = patch->getSFCYFORTHighIndex();
+  idxLoU = patch->getSFCYFORTLowIndex__Old();
+  idxHiU = patch->getSFCYFORTHighIndex__Old();
   
   ioff = 0;
   joff = 1;
@@ -1948,8 +1948,8 @@ BoundaryCondition::mmvelocityBC(const Patch* patch,
 
   //__________________________________
   //    Z dir
-  idxLoU = patch->getSFCZFORTLowIndex();
-  idxHiU = patch->getSFCZFORTHighIndex();
+  idxLoU = patch->getSFCZFORTLowIndex__Old();
+  idxHiU = patch->getSFCZFORTHighIndex__Old();
 
   ioff = 0;
   joff = 0;
@@ -3144,8 +3144,8 @@ BoundaryCondition::calculateIntrusionVel(const Patch* patch,
 
   case Arches::XDIR:
 
-    idxLoU = patch->getSFCXFORTLowIndex();
-    idxHiU = patch->getSFCXFORTHighIndex();
+    idxLoU = patch->getSFCXFORTLowIndex__Old();
+    idxHiU = patch->getSFCXFORTHighIndex__Old();
     ioff = 1; joff = 0; koff = 0;
 
     fort_intrusion_computevel(vars->uVelRhoHat,
@@ -3158,8 +3158,8 @@ BoundaryCondition::calculateIntrusionVel(const Patch* patch,
 
   case Arches::YDIR:
 
-    idxLoU = patch->getSFCYFORTLowIndex();
-    idxHiU = patch->getSFCYFORTHighIndex();
+    idxLoU = patch->getSFCYFORTLowIndex__Old();
+    idxHiU = patch->getSFCYFORTHighIndex__Old();
     ioff = 0; joff = 1; koff = 0;
 
     fort_intrusion_computevel(vars->vVelRhoHat,
@@ -3172,8 +3172,8 @@ BoundaryCondition::calculateIntrusionVel(const Patch* patch,
 
   case Arches::ZDIR:
 
-    idxLoU = patch->getSFCZFORTLowIndex();
-    idxHiU = patch->getSFCZFORTHighIndex();
+    idxLoU = patch->getSFCZFORTLowIndex__Old();
+    idxHiU = patch->getSFCZFORTHighIndex__Old();
 
     ioff = 0; joff = 0; koff = 1;
     
@@ -3206,8 +3206,8 @@ BoundaryCondition::calculateVelocityPred_mm(const Patch* patch,
   IntVector idxHiU;
 
   //__________________________________
-  idxLoU = patch->getSFCXFORTLowIndex();
-  idxHiU = patch->getSFCXFORTHighIndex();
+  idxLoU = patch->getSFCXFORTLowIndex__Old();
+  idxHiU = patch->getSFCXFORTHighIndex__Old();
   ioff = 1; joff = 0; koff = 0;
 
   fort_mm_computevel(
@@ -3223,8 +3223,8 @@ BoundaryCondition::calculateVelocityPred_mm(const Patch* patch,
                     d_mmWallID);
 
   //__________________________________
-  idxLoU = patch->getSFCYFORTLowIndex();
-  idxHiU = patch->getSFCYFORTHighIndex();
+  idxLoU = patch->getSFCYFORTLowIndex__Old();
+  idxHiU = patch->getSFCYFORTHighIndex__Old();
   ioff = 0; joff = 1; koff = 0;
 
   fort_mm_computevel(
@@ -3240,8 +3240,8 @@ BoundaryCondition::calculateVelocityPred_mm(const Patch* patch,
                     d_mmWallID);
 
   //__________________________________
-  idxLoU = patch->getSFCZFORTLowIndex();
-  idxHiU = patch->getSFCZFORTHighIndex();
+  idxLoU = patch->getSFCZFORTLowIndex__Old();
+  idxHiU = patch->getSFCZFORTHighIndex__Old();
 
   ioff = 0; joff = 0; koff = 1;
   fort_mm_computevel(
@@ -3272,8 +3272,8 @@ BoundaryCondition::calculateVelRhoHat_mm(const Patch* patch,
   int ioff, joff, koff;
   //__________________________________
   //    X dir
-  idxLo = patch->getSFCXFORTLowIndex();
-  idxHi = patch->getSFCXFORTHighIndex();
+  idxLo = patch->getSFCXFORTLowIndex__Old();
+  idxHi = patch->getSFCXFORTHighIndex__Old();
   ioff = 1; joff = 0; koff = 0;
 
   fort_mm_explicit_vel(idxLo, idxHi, 
@@ -3294,8 +3294,8 @@ BoundaryCondition::calculateVelRhoHat_mm(const Patch* patch,
                        d_mmWallID);
   //__________________________________
   //    Y dir
-  idxLo = patch->getSFCYFORTLowIndex();
-  idxHi = patch->getSFCYFORTHighIndex();
+  idxLo = patch->getSFCYFORTLowIndex__Old();
+  idxHi = patch->getSFCYFORTHighIndex__Old();
   ioff = 0; joff = 1; koff = 0;
 
   fort_mm_explicit_vel(idxLo, idxHi, 
@@ -3317,8 +3317,8 @@ BoundaryCondition::calculateVelRhoHat_mm(const Patch* patch,
 
   //__________________________________
   //     Z dir 
-  idxLo = patch->getSFCZFORTLowIndex();
-  idxHi = patch->getSFCZFORTHighIndex();
+  idxLo = patch->getSFCZFORTLowIndex__Old();
+  idxHi = patch->getSFCZFORTHighIndex__Old();
   ioff = 0; joff = 0; koff = 1;
 
   fort_mm_explicit_vel(idxLo, idxHi, 

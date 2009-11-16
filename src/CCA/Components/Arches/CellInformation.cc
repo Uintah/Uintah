@@ -52,12 +52,12 @@ CellInformation::CellInformation(const Patch* patch)
   IntVector locationLo = patch->getExtraCellLowIndex__New(Arches::THREEGHOSTCELLS);
   IntVector locationHi = patch->getExtraCellHighIndex__New(Arches::THREEGHOSTCELLS);
 
-  IntVector idxLoU = patch->getSFCXFORTLowIndex();
-  IntVector idxHiU = patch->getSFCXFORTHighIndex();
-  IntVector idxLoV = patch->getSFCYFORTLowIndex();
-  IntVector idxHiV = patch->getSFCYFORTHighIndex();
-  IntVector idxLoW = patch->getSFCZFORTLowIndex();
-  IntVector idxHiW = patch->getSFCZFORTHighIndex();
+  IntVector idxLoU = patch->getSFCXFORTLowIndex__Old();
+  IntVector idxHiU = patch->getSFCXFORTHighIndex__Old();
+  IntVector idxLoV = patch->getSFCYFORTLowIndex__Old();
+  IntVector idxHiV = patch->getSFCYFORTHighIndex__Old();
+  IntVector idxLoW = patch->getSFCZFORTLowIndex__Old();
+  IntVector idxHiW = patch->getSFCZFORTHighIndex__Old();
  
   IntVector idxLo = patch->getFortranCellLowIndex__New();
   IntVector idxHi = patch->getFortranCellHighIndex__New();

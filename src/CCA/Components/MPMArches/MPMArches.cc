@@ -3124,8 +3124,8 @@ void MPMArches::collectToCCGasMomExchSrcs(const ProcessorGroup*,
     
     // collect x-direction sources from face centers to cell center
     
-    valid_lo = patch->getSFCXFORTLowIndex();
-    valid_hi = patch->getSFCXFORTHighIndex();
+    valid_lo = patch->getSFCXFORTLowIndex__Old();
+    valid_hi = patch->getSFCXFORTHighIndex__Old();
     
     ioff = 1;
     joff = 0;
@@ -3147,8 +3147,8 @@ void MPMArches::collectToCCGasMomExchSrcs(const ProcessorGroup*,
     
     // collect y-direction sources from face centers to cell center
     
-    valid_lo = patch->getSFCYFORTLowIndex();
-    valid_hi = patch->getSFCYFORTHighIndex();
+    valid_lo = patch->getSFCYFORTLowIndex__Old();
+    valid_hi = patch->getSFCYFORTHighIndex__Old();
     
     ioff = 0;
     joff = 1;
@@ -3171,8 +3171,8 @@ void MPMArches::collectToCCGasMomExchSrcs(const ProcessorGroup*,
     
     // collect z-direction sources from face centers to cell center
     
-    valid_lo = patch->getSFCZFORTLowIndex();
-    valid_hi = patch->getSFCZFORTHighIndex();
+    valid_lo = patch->getSFCZFORTLowIndex__Old();
+    valid_hi = patch->getSFCZFORTHighIndex__Old();
     
     ioff = 0;
     joff = 0;
@@ -3288,8 +3288,8 @@ void MPMArches::interpolateCCToFCGasMomExchSrcs(const ProcessorGroup*,
     joff = 0;
     koff = 0;
     
-    valid_lo = patch->getSFCXFORTLowIndex();
-    valid_hi = patch->getSFCXFORTHighIndex();
+    valid_lo = patch->getSFCXFORTLowIndex__Old();
+    valid_hi = patch->getSFCXFORTHighIndex__Old();
     
     // nonlinear source
     
@@ -3311,8 +3311,8 @@ void MPMArches::interpolateCCToFCGasMomExchSrcs(const ProcessorGroup*,
     joff = 1;
     koff = 0;
     
-    valid_lo = patch->getSFCYFORTLowIndex();
-    valid_hi = patch->getSFCYFORTHighIndex();
+    valid_lo = patch->getSFCYFORTLowIndex__Old();
+    valid_hi = patch->getSFCYFORTHighIndex__Old();
     
     // nonlinear source
     
@@ -3334,8 +3334,8 @@ void MPMArches::interpolateCCToFCGasMomExchSrcs(const ProcessorGroup*,
     joff = 0;
     koff = 1;
     
-    valid_lo = patch->getSFCZFORTLowIndex();
-    valid_hi = patch->getSFCZFORTHighIndex();
+    valid_lo = patch->getSFCZFORTLowIndex__Old();
+    valid_hi = patch->getSFCZFORTHighIndex__Old();
     
     // nonlinear source
     
@@ -3413,8 +3413,8 @@ void MPMArches::redistributeDragForceFromCCtoFC(const ProcessorGroup*,
 
       // redistribute x-direction drag forces
 
-      valid_lo = patch->getSFCXFORTLowIndex();
-      valid_hi = patch->getSFCXFORTHighIndex();
+      valid_lo = patch->getSFCXFORTLowIndex__Old();
+      valid_hi = patch->getSFCXFORTHighIndex__Old();
 
       int ioff = 1;
       int joff = 0;
@@ -3427,8 +3427,8 @@ void MPMArches::redistributeDragForceFromCCtoFC(const ProcessorGroup*,
       
       // redistribute y-direction drag forces
       
-      valid_lo = patch->getSFCYFORTLowIndex();
-      valid_hi = patch->getSFCYFORTHighIndex();
+      valid_lo = patch->getSFCYFORTLowIndex__Old();
+      valid_hi = patch->getSFCYFORTHighIndex__Old();
       
       ioff = 0;
       joff = 1;
@@ -3441,8 +3441,8 @@ void MPMArches::redistributeDragForceFromCCtoFC(const ProcessorGroup*,
       
       // redistribute z-direction drag forces
       
-      valid_lo = patch->getSFCZFORTLowIndex();
-      valid_hi = patch->getSFCZFORTHighIndex();
+      valid_lo = patch->getSFCZFORTLowIndex__Old();
+      valid_hi = patch->getSFCZFORTHighIndex__Old();
       
       ioff = 0;
       joff = 0;
