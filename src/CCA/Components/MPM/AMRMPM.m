@@ -33,7 +33,7 @@ if (~strcmp(problem_type, 'impulsiveBar')  && ...
 end
 %__________________________________
 % Global variables
-PPC     = 2;
+PPC     = 1;
 E       = 1e6;
 density = 1.;
 interpolation = 'gimp';
@@ -72,7 +72,7 @@ end
 % region structure 
 
 
-
+if(0)
 %____________
 % single level
 nRegions    = int32(2);               % partition the domain into nRegions
@@ -83,6 +83,7 @@ R.refineRatio = 1;
 R.dx          = R1_dx;
 R.volP        = R.dx/PPC;
 R.NN          = int32( (R.max - R.min)/R.dx +1 );
+R.lp          = R.dx/(2 * PPC);
 Regions{1}    = R;
 
 R.min         = domain/2;                       
@@ -91,36 +92,40 @@ R.refineRatio = 1;
 R.dx          = R1_dx/R.refineRatio;
 R.volP        = R.dx/PPC;
 R.NN          = int32( (R.max - R.min)/R.dx );
+R.lp          = R.dx/(2 * PPC);
 Regions{2}    = R;
-
+end
 %____________
 % 2 level
-if(0)
+if(1)
 nRegions    = int32(3);               % partition the domain into nRegions
 Regions       = cell(nRegions,1);     % array that holds the individual region information
 
 R.min         = 0;                    % location of left point
-R.max         = 0.32;                 % location of right point
+R.max         = domain/3.0;             % location of right point
 R.refineRatio = 1;
 R.dx          = R1_dx;
 R.volP        = R.dx/PPC;
 R.NN          = int32( (R.max - R.min)/R.dx +1 );
+R.lp          = R.dx/(2 * PPC);
 Regions{1}    = R;
 
-R.min         = 0.32;                       
-R.max         = 0.64;
+R.min         = domain/3.0;                       
+R.max         = 2.0*domain/3.0;
 R.refineRatio = 2;
 R.dx          = R1_dx/R.refineRatio;
 R.volP        = R.dx/PPC;
 R.NN          = int32( (R.max - R.min)/R.dx );
+R.lp          = R.dx/(2 * PPC);
 Regions{2}    = R;
 
-R.min         = 0.64;                       
+R.min         = 2.0*domain/3.0;                       
 R.max         = domain;
 R.refineRatio = 1;
 R.dx          = R1_dx/R.refineRatio; 
 R.volP        = R.dx/PPC;
-R.NN          = int32( (R.max - R.min)/R.dx);       
+R.NN          = int32( (R.max - R.min)/R.dx); 
+R.lp          = R.dx/(2 * PPC);
 Regions{3}    = R;
 
 end
@@ -138,6 +143,7 @@ R.refineRatio = 1;
 R.dx          = R1_dx;
 R.volP        = R.dx/PPC;
 R.NN          = int32( (R.max - R.min)/R.dx +1 );
+R.lp          = R.dx/(2 * PPC);
 Regions{1}    = R;
 
 R.min         = 0.32;                       
@@ -146,6 +152,7 @@ R.refineRatio = 4;
 R.dx          = R1_dx/double(R.refineRatio);
 R.volP        = R.dx/PPC;
 R.NN          = int32( (R.max - R.min)/R.dx );
+R.lp          = R.dx/(2 * PPC);
 Regions{2}    = R;
 
 R.min         = 0.4;                       
@@ -153,7 +160,8 @@ R.max         = 0.56;
 R.refineRatio = 16;
 R.dx          = R1_dx/double(R.refineRatio); 
 R.volP        = R.dx/PPC;
-R.NN          = int32( (R.max - R.min)/R.dx);       
+R.NN          = int32( (R.max - R.min)/R.dx);
+R.lp          = R.dx/(2 * PPC); 
 Regions{3}    = R;
 
 R.min         = 0.56;                       
@@ -162,6 +170,7 @@ R.refineRatio = 4;
 R.dx          = R1_dx/double(R.refineRatio);
 R.volP        = R.dx/PPC;
 R.NN          = int32( (R.max - R.min)/R.dx );
+R.lp          = R.dx/(2 * PPC);
 Regions{4}    = R;
 
 R.min         = 0.64;                       
@@ -170,6 +179,7 @@ R.refineRatio = 1;
 R.dx          = R1_dx/R.refineRatio;
 R.volP        = R.dx/PPC;
 R.NN          = int32( (R.max - R.min)/R.dx );
+R.lp          = R.dx/(2 * PPC);
 Regions{5}    = R;
 
 end
@@ -232,37 +242,24 @@ end;
 
 for r=1:nRegions
   R = Regions{r};
-  
-  % determine dx_Right and dx_Left of this region
-  if(r == 1)               % leftmost region
-    dx_L = 0;
-    dx_R = Regions{r+1}.dx;
-  elseif(r == nRegions)    % rightmost region
-    dx_L = Regions{r-1}.dx;
-    dx_R = 0;
-  else                     % all other regions
-    dx_L = Regions{r-1}.dx;
-    dx_R = Regions{r+1}.dx;
-  end
-  
-  % loop over all nodes and set Lx minus/plus
-  for  n=1:R.NN
-    if(n == 1)
-      Lx(nodeNum,1) = dx_L;
-      Lx(nodeNum,2) = R.dx;
-    elseif(n == R.NN)
-      Lx(nodeNum,1) = R.dx;
-      Lx(nodeNum,2) = dx_R;
-    else
-      Lx(nodeNum,1) = R.dx;
-      Lx(nodeNum,2) = R.dx;
-    end
-    
+  % loop over all nodes and set the node position
+  for  n=1:R.NN  
     if(nodeNum > 1)
       nodePos(nodeNum) = nodePos(nodeNum-1) + R.dx;
     end
     nodeNum = nodeNum + 1;
   end
+end
+
+% compute the zone of influence
+Lx(1,1)  = 0.0;
+Lx(1,2)  = nodePos(2) - nodePos(1);
+Lx(NN,1) = nodePos(NN) - nodePos(NN-1);
+Lx(NN,2) = 0.0;
+
+for n=2:NN-1
+  Lx(n,1) = nodePos(n) - nodePos(n-1);
+  Lx(n,2) = nodePos(n+1) - nodePos(n);
 end
 
 % output the regions and the Lx
@@ -304,6 +301,7 @@ NP=ip;  % number of particles
 %__________________________________
 % pre-allocate variables for speed
 vol       = zeros(NP,1);
+lp        = zeros(NP,1);
 massP     = zeros(NP,1);
 velP      = zeros(NP,1);
 dp        = zeros(NP,1);
@@ -337,9 +335,11 @@ tipDeflect_err = zeros(BigNum,1);
 %__________________________________
 % initialize other particle variables
 for ip=1:NP
-  [volP]    = positionToVolP(xp(ip), nRegions, Regions);
-  vol(ip)   = volP;
-  massP(ip) = volP*density;
+  [volP_0, lp_0] = positionToVolP(xp(ip), nRegions, Regions);
+  
+  vol(ip)   = volP_0;
+  massP(ip) = volP_0*density;
+  lp(ip)    = lp_0;
   Fp(ip)    = 1.;                     % total deformation
 end
 
@@ -494,11 +494,11 @@ while t<tfinal && tstep < max_tstep
   % debugging__________________________________
 
   %compute particle stress
-  [stressP,vol,Fp]=computeStressFromVelocity(xp,dt,velG,E,Fp,NP,nRegions, Regions, nodePos);
+  [stressP,vol,Fp]=computeStressFromVelocity(xp,dt,velG,E,Fp,NP,nRegions, Regions, nodePos,Lx);
 
   %compute internal force
   for ip=1:NP
-    [nodes,Gs,dx]=findNodesAndWeightGradients_gimp(xp(ip),nRegions, Regions, nodePos);
+    [nodes,Gs,dx]=findNodesAndWeightGradients_gimp2(xp(ip),nRegions, Regions, nodePos,Lx);
     for ig=1:NSFN
       intForceG(nodes(ig)) = intForceG(nodes(ig)) - Gs(ig) * stressP(ip) * vol(ip);
     end
@@ -730,13 +730,13 @@ end
 % functions
 %______________________________________________________________________
 
-function [stressP,vol,Fp]=computeStressFromVelocity(xp,dt,velG,E,Fp,NP, nRegions, Regions, nodePos)
+function [stressP,vol,Fp]=computeStressFromVelocity(xp,dt,velG,E,Fp,NP, nRegions, Regions, nodePos,Lx)
   global d_debugging;
   global NSFN;
                                                                                 
   for ip=1:NP
-    [nodes,Gs,dx] = findNodesAndWeightGradients_gimp(xp(ip), nRegions, Regions, nodePos);
-    [volP]        = positionToVolP(xp(ip), nRegions, Regions);
+    [nodes,Gs,dx]  = findNodesAndWeightGradients_gimp2(xp(ip), nRegions, Regions, nodePos, Lx);
+    [volP_0, lp_0] = positionToVolP(xp(ip), nRegions, Regions);
     
     gUp=0.0;
     for ig=1:NSFN
@@ -746,7 +746,7 @@ function [stressP,vol,Fp]=computeStressFromVelocity(xp,dt,velG,E,Fp,NP, nRegions
     dF          =1. + gUp * dt;
     Fp(ip)      = dF * Fp(ip);
     stressP(ip) = E * (Fp(ip)-1.0);
-    vol(ip)     = volP * Fp(ip);
+    vol(ip)     = volP_0 * Fp(ip);
 
     if( strcmp(d_debugging, 'advectBlock') && abs(stressP(ip)) > 1e-8) 
       fprintf('computeStressFromVelocity: nodes_L: %g, nodes_R:%g, gUp: %g, dF: %g, stressP: %g \n',nodes(1),nodes(2), gUp, dF, stressP(ip) );
@@ -813,13 +813,16 @@ function[nodes,dx]=positionToClosestNodes(xp,nRegions,Regions, nodePos)
   
 end
 %__________________________________
-function[volP]=positionToVolP(xp, nRegions, Regions)
-  volP = -9.0;
+% returns the initial volP and lp
+function[volP_0, lp_0]=positionToVolP(xp, nRegions, Regions)
+  volP_0 = -9.0;
+  lp_0 = -9.0;
  
   for r=1:nRegions
     R = Regions{r};
     if ( (xp >= R.min) && (xp < R.max) )
-      volP = R.dx;
+      volP_0 = R.dx;
+      lp_0   = R.lp;
     end
   end
 end
@@ -929,7 +932,7 @@ function [nodes,Ss]=findNodesAndWeights_gimp(xp, nRegions, Regions, nodePos, Lx)
     sum = sum + Ss(ig);
   end
   if ( abs(sum-1.0) > 1e-10)
-    fprintf('node(1):%g, node(1):%g ,node(3):%g, xp:%g Ss(1): %g, Ss(2): %g, Ss(3): %g, sum: %g\n',nodes(1),nodes(2),nodes(3), xp, Ss(1), Ss(2), Ss(3), sum)
+    fprintf('node(1):%g, node(2):%g ,node(3):%g, xp:%g Ss(1): %g, Ss(2): %g, Ss(3): %g, sum: %g\n',nodes(1),nodes(2),nodes(3), xp, Ss(1), Ss(2), Ss(3), sum)
     input('error: the shape functions dont sum to 1.0 \n');
   end
   
@@ -956,22 +959,25 @@ function [nodes,Ss]=findNodesAndWeights_gimp2(xp, nRegions, Regions, nodePos, Lx
     B = delX + lp;
     a = max( A, -Lx_minus);
     b = min( B,  Lx_plus);
-
+    
     if (B <= -Lx_minus || A >= Lx_plus)
       
       Ss(ig) = 0;
-    
+      tmp = 0;
     elseif( b <= 0 )
     
       t1 = b - a;
       t2 = (b*b - a*a)/(2.0*Lx_minus);
       Ss(ig) = (t1 + t2)/(2.0*lp);
       
+      tmp = (b-a+(b*b-a*a)/2/Lx_minus)/2/lp;
     elseif( a >= 0 )
       
       t1 = b - a;
       t2 = (b*b - a*a)/(2.0*Lx_plus);
       Ss(ig) = (t1 - t2)/(2.0*lp);
+      
+      tmp = (b-a-(b*b-a*a)/2/Lx_plus)/2/lp;
     else
     
       t1 = b - a;
@@ -979,8 +985,21 @@ function [nodes,Ss]=findNodesAndWeights_gimp2(xp, nRegions, Regions, nodePos, Lx
       t3 = (b*b)/(2.0*Lx_plus);
       Ss(ig) = (t1 - t2 - t3)/(2*lp);
       
+      tmp = (-a-a*a/2/Lx_minus+b-b*b/2/Lx_plus)/2/lp;
+    end
+    
+    if( abs(tmp - Ss(ig)) > 1e-13)
+      fprintf(' Ss: %g  tmp: %g \n', Ss(ig), tmp);
+      fprintf( 'Node: %g xp: %g nodePos: %g\n', nodes(ig), xp, nodePos(node));
+      fprintf( 'A: %g B: %g, a: %g, b: %g Lx_minus: %g, Lx_plus: %g lp: %g\n', A, B, a, b, Lx_minus, Lx_plus,lp);
+      fprintf( '(B <= -Lx_minus || A >= Lx_plus) :%g \n',(B <= -Lx_minus || A >= Lx_plus));
+      fprintf( '( b <= 0 ) :%g \n',( b <= 0 ));
+      fprintf( '( a >= 0 ) :%g \n',( a >= 0 )); 
+      input('error shape functions dont match\n');
     end
   end
+  
+
   
   %__________________________________
   % bullet proofing
@@ -996,6 +1015,7 @@ function [nodes,Ss]=findNodesAndWeights_gimp2(xp, nRegions, Regions, nodePos, Lx
   %__________________________________
   % error checking
   % Only turn this on with single resolution grids
+  if(0)
   [nodes,Ss_old]=findNodesAndWeights_gimp(xp, nRegions, Regions, nodePos, Lx);
   for ig=1:NSFN
     if ( abs(Ss_old(ig)-Ss(ig)) > 1e-10 )
@@ -1003,6 +1023,7 @@ function [nodes,Ss]=findNodesAndWeights_gimp2(xp, nRegions, Regions, nodePos, Lx
       fprintf('Node: %g, Ss_old: %g, Ss_new: %g \n',node(ig), Ss_old(ig), Ss(ig));
       input('error: shape functions dont match \n'); 
     end
+  end
   end
 end
 
@@ -1023,7 +1044,7 @@ function [nodes,Gs, dx]=findNodesAndWeightGradients(xp, nRegions, Regions, nodeP
 end
 
 %__________________________________
-function [nodes,Gs, dx]=findNodesAndWeightGradients_gimp(xp, nRegions, Regions, nodePos)
+function [nodes,Gs, dx]=findNodesAndWeightGradients_gimp(xp, nRegions, Regions, nodePos,Lx)
   global PPC;
   global NSFN;
   % find the nodes that surround the given location and
@@ -1071,12 +1092,12 @@ function [nodes,Gs, dx]=findNodesAndWeightGradients_gimp(xp, nRegions, Regions, 
   end
   if ( abs(sum) > 1e-10)
     fprintf('node(1):%g, node(1):%g ,node(3):%g, xp:%g Gs(1): %g, Gs(2): %g, Gs(3): %g, sum: %g\n',nodes(1),nodes(2),nodes(3), xp, Gs(1), Gs(2), Gs(3), sum)
-    input('error: the gradient of the shape functions dont sum to 1.0 \n');
+    input('error: the gradient of the shape functions (gimp) dont sum to 1.0 \n');
   end
 end
 
 %__________________________________
-function [nodes,Gs, dx]=findNodesAndWeightGradients_gimp2(xp, nRegions, Regions, nodePos)
+function [nodes,Gs, dx]=findNodesAndWeightGradients_gimp2(xp, nRegions, Regions, nodePos,Lx)
   global PPC;
   global NSFN;
   % find the nodes that surround the given location and
@@ -1165,8 +1186,8 @@ function [nodes,Gs, dx]=findNodesAndWeightGradients_gimp2(xp, nRegions, Regions,
     sum = sum + Gs(ig);
   end
   if ( abs(sum) > 1e-10)
-    fprintf('node(1):%g, node(1):%g ,node(3):%g, xp:%g Gs(1): %g, Gs(2): %g, Gs(3): %g, sum: %g\n',nodes(1),nodes(2),nodes(3), xp, Gs(1), Gs(2), Gs(3), sum)
-    input('error: the gradient of the shape functions dont sum to 1.0 \n');
+    fprintf('node(1):%g, node(2):%g ,node(3):%g, xp:%g Gs(1): %g, Gs(2): %g, Gs(3): %g, sum: %g\n',nodes(1),nodes(2),nodes(3), xp, Gs(1), Gs(2), Gs(3), sum)
+    input('error: the gradient of the shape functions (gimp2) dont sum to 0.0 \n');
   end
 end
 
