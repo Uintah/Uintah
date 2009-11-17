@@ -122,7 +122,7 @@ v2.3.3.  (July 22, 2009)
 \section{OS Version Dependencies}
 
 \subsection{Debian Dependencies}
-
+\label{sec:debian_dependencies}
 The \textbf{Gnu/Debian} OS \url{http://www.debian.org} offers the vast majority of libraries necessary for
 installing \textbf{Uintah} with the exception of VisIt and Teem.
 
@@ -245,17 +245,19 @@ and libmpi.so, the configure line for hypre should look like this:
 \begin{verbatim}
 cd hypre-2.4.0/src
 
-./configure --enable-shared \
---with-MPI-include=/usr/local/openmpi/include/ \
---with-MPI-lib-dirs=/usr/local/openmpi/lib/ \
---with-MPI-libs="mpi pmpi util" \
---prefix=/usr/local/ CFLAGS=-DMPIPP_H CXXFLAGS=-DMPIPP_H
+./configure \
+  --enable-shared \
+  --with-MPI-include=/usr/local/openmpi/include \
+  --with-MPI-lib-dirs=/usr/local/openmpi/lib \
+  --with-MPI-libs="mpi pmpi util" \
+  --prefix=/usr/local/ CFLAGS=-DMPIPP_H CXXFLAGS=-DMPIPP_H
 
 make
 make install
 \end{verbatim}
 
- 
+\emph{Note, under Mac OSX, Hypre does not handle the "--enable-shared" configure
+  flag correctly.}
 
 \section{Installing Visualization Tools}
 
@@ -306,17 +308,46 @@ The Teem libraries and include files will be install in /usr/local hierarchy.
 
 \subsection{VisIt Installation}
 
-\subsubsection{Client/ Server}
+\subsubsection{Client/Server}
 \label{subsec:ClientServer}
 
-You would most likely will want to install a VisIt server on a
+You will most likely want to install a VisIt server on a
 multiprocessor machine. This requires you to build the server from
 source (as it is needed to compile the UDA reading plugin). You can
 then install any client on your local machine and attach to the
 server.
 
+\subsubsection{Caveats}
+\label{subsec:VisIt_Caveats}
+\begin{itemize}
+\item The official release of VisIt is version 1.12.  However, a
+  number of changes have been made to the VisIt trunk to support
+  Uintah data. To get these changes it is necessary to install version
+  2.0.  Make sure to use the v2.0 instructions below if this is the
+  version you wish to use.
+\item Before you install VisIt, a number of dependency files are
+  required.  These include X11, GL, GLU, GLX, and libz libraries (it is possible
+  that you will find these libraries in the following rpms:
+  libx11-dev, libxext-dev, libxt-dev, libglu, zlib-dev -- notice that
+  most of these are the 'development' rpm).  You can either install
+  these directly and hope you get them right, or you can install the
+  files listed here~\ref{sec:debian_dependencies} (which will
+  hopefully pull in all the libraries that you need).
+\item MPI must be installed and the MPI compilers (mpicc, etc) must be
+  in your path.
+\item The VisIt executable is not relocatable once it is built, so
+  make sure you specify the correct installation location in the
+  beginning.
+\item Building VisIt from scratch can take a while.  As mentioned
+  below, you can 'tail -f build_visit_log' to watch the progress.
+
+\end{itemize}
+
 \subsubsection{Prebuilt binaries}
 \label{subsec:PrebuiltBinaries}
+
+Warning, most of these binaries are for v1.12... If you need v2.x, then you
+will need to build from source.
 
 If you have a system that matches the prebuilt binaries, found at
 \url{https://wci.llnl.gov/codes/visit/executables.html}, you may want
@@ -324,8 +355,109 @@ to try one. In most cases you will want to build your own
 binaries. There are currently no universal binaries available for Mac
 OS X 10.5 (leopard).
 
-\subsubsection{Using the build script}
+\subsubsection{Building Version 2.0}
+\label{subsec:VisItVersion2_Build}
+
+The VisIt source code (the 'trunk') can be checked out from the
+repository maintained at NERSC:
+
+\begin{verbatim}
+mkdir ``new_visit_dir''
+cd ``new_visit_dir'' 
+svn co http://portal.nersc.gov/svn/visit/trunk/ .
+\end{verbatim}
+
+Create a new 'build' directory inside ''new_visit_dir'':
+
+\begin{verbatim}
+mkdir build
+cd build
+\end{verbatim}
+
+Copy the 'build_visit' script into the build directory:
+
+\begin{verbatim}
+cp ../src/svn_bin/build_visit .
+chmod +x build_visit
+\end{verbatim}
+
+Copy the dependencies into the build directory. The build_visit script
+normally fails when trying to download the dependencies.  Copying them
+skips the downloading phase.
+
+\begin{verbatim}
+cp ../third_party/*.tar.gz .
+\end{verbatim}
+
+Run the 'build_visit' script (in order to just build the dependencies):
+
+\begin{verbatim}
+./build_visit --makeflags -j# --no-visit
+\end{verbatim}
+
+Replace '#' with the no of processors you want to use.
+
+This would launch the normal dialog window, where you should select
+the ''Parallel'' option.  (Use the arrow keys and the space bar.)
+
+At the end of this process, a config file would be generated. It will
+be named ``your_machine_name''.conf. Copy this into the
+''../src/config-site'' folder,
+
+\begin{verbatim}
+cp ``your_machine_name''.conf ../src/config-site
+\end{verbatim}
+
+Change directory to the ''src'' folder and run configure,
+
+\begin{verbatim}
+cd ../src
+./configure --enable-parallel
+\end{verbatim}
+
+Before you run configure, check your ``your_machine_name''.conf
+file: Both The CFLAGS and the CXXFLAGS compiler flags should have the
+'-I/<your_open_mpi_path>/include' set. If not please set them on the
+''configure'' command, i.e. something like:
+
+\begin{verbatim}
+./configure --enable-parallel CXXFLAGS=-I/usr/local/openmpi/include CFLAGS=-I/usr/local/openmpi
+\end{verbatim}
+
+Note, you can alternatively set these in your .conf file.
+
+After the configure process is over, run make:  (See below for
+information on common errors that occur during the 'make' process.)
+
+\begin{verbatim}
+make -j#
+\end{verbatim}
+
+where '#' is the no of processors to use while building.
+
+As usual, cross your fingers. If everything goes fine, you can find
+the visit executable in the ''bin'' folder, which is inside the
+''src'' folder.
+
+P.S.: When you run 'make', you may encounter this error:
+
+\begin{verbatim}
+error: `VERSION' was not declared in this scope
+\end{verbatim}
+
+If so, add in the line:
+
+\begin{verbatim}
+#define VERSION ``2.0.0''
+\end{verbatim}
+
+to the file, ./include/visit-config.h and run make again.
+
+\subsubsection{Using the build script (Version 1.11) }
 \label{subsec:UsingTheBuildScript}
+
+Note, the following instructions are slightly different from the instructions
+for building version 2.x:
 
 We recommend that you first try the visit build script (WARNING, make
 sure you get the must recent version of this script. The build script
@@ -491,7 +623,7 @@ desktop (on Linux distributions),
 \begin{verbatim}
 
 
-traceroute -p 560[0-9] <remote machine> 
+traceroute -p 560[0-9] <remote machine>
 \end{verbatim}
 
 If the tunneling option doesn't works, try the option as shown in
@@ -536,11 +668,11 @@ data.
 
 %\begin{verbatim}
 
-%mkdir Visit
+%mkdir VisIt
 
-%cp build\_script Visit
+%cp build\_script VisIt
 
-%cd Visit
+%cd VisIt
 
 %./build\_script --makeflags '-j4'
 
@@ -550,8 +682,8 @@ data.
 %unselect the Optional and then scroll down to the Parallel option and
 %select that.  The GUI will determine the location of the MPI libraries
 %and then start the build process.  All source files will be downloaded
-%and installed in the ~/Visit/visit1.11.2 directory.  The \tt visit
-%\normalfont executable is found in ~/Visit/visit1.11.2/src/bin .
+%and installed in the ~/VisIt/visit1.11.2 directory.  The \tt visit
+%\normalfont executable is found in ~/VisIt/visit1.11.2/src/bin .
 
 % \subsection{Manta Installation}
 
@@ -630,7 +762,7 @@ then do NOT use the \TT{--with-team} and \TT{--with-visit} shown below!)
 ../src/configure                 \
           --enable-debug         \
           --with-teem=/usr/local \
-          --with-visit=/home/user_name/Visit/visit1.11.2
+          --with-visit=/home/user_name/VisIt/visit1.11.2
 \end{verbatim}
 
 If building on a 64bit platform, append \TT{--enable-64bit} to the
@@ -646,7 +778,7 @@ enter the following configure line:
           '--enable-optimize=-03 -mfpmath=sse' \
           --enable-assertion-level=0          \
           --with-teem=/usr/local              \
-          --with-visit=/home/user_name/Visit/visit1.11.2
+          --with-visit=/home/user_name/VisIt/visit1.11.2
 \end{verbatim}
 
 The debug/optimize flags do the following:  --enable-debug adds ``-g''
@@ -854,7 +986,7 @@ cd mac32opt
 The previous configure command is a template, and may need editing.
 Point each of the components to the proper places and it should
 configure just fine.  If you want to build Uintah with support for
-Visit, add --with-teem=/dir/to/teem/ and --with-visit=/dir/to/visit/
+VisIt, add --with-teem=/dir/to/teem/ and --with-visit=/dir/to/visit/
 Finish the process off with:
 
 \begin{verbatim}
@@ -868,16 +1000,16 @@ Extraction utilities that extract specific variables from UDA (Uintah
 Data Archive) can be found in
 \textasciitilde/Uintah/mac32opt/StandAlone/tools
 
-\subsection{Installing Visit and udaReader on Mac}
+\subsection{Installing VisIt and udaReader on Mac}
 
 A Mac binary distribution is available from LLNL at
 \url{https://wci.llnl.gov/codes/visit/executables.html}.  The main
 difficulty in installing Uintah with udaReader plugin has to do with
-actually finding the Visit installation executable.  Furthermore,
+actually finding the VisIt installation executable.  Furthermore,
 naming conventions are slightly different, and thus several links must
 be set up.
 
-Extract the mac install and create links by (substitute i386 and Visit
+Extract the mac install and create links by (substitute i386 and VisIt
 version where necessary):
 
 \begin{verbatim}
@@ -895,14 +1027,14 @@ Now that the links have been set up, configure Uintah with
 
 An easier solution is to download the VisIt directory from the Uintah
 source, and run xml2makefile from \$PATHTOVISIT/darwin-i386/bin on
-udareaderMTMD.xml within Visit/udaReaderMTMD/udaREaderMTMD.xml such
+udareaderMTMD.xml within VisIt/udaReaderMTMD/udaREaderMTMD.xml such
 as:
 
 \begin{verbatim}
 xml2makefile -clobber -private VisIt/udaReaderMTMD/udaReaderMTMD.xml
 \end{verbatim}
 
-To install Visit from source, see build notes for Mac inside source
+To install VisIt from source, see build notes for Mac inside source
 tarball.
 
 
