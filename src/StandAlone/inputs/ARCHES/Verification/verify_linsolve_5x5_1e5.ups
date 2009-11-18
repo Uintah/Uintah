@@ -15,7 +15,7 @@
   </Time>
 
   <DataArchiver>
-    <filebase>constantMMS_dqmom_verification.uda</filebase>
+    <filebase>DQMOM_Verification_Solver_5x5.uda</filebase>
     <outputInitTimestep />
     <!--outputInterval>0.01</outputInterval-->
     <outputTimestepInterval>1</outputTimestepInterval>
@@ -109,7 +109,7 @@
         <upper>[1.0,1.0,1.0]</upper>
         <resolution>[4,4,4]</resolution>
         <extraCells>[0,0,0]</extraCells>
-        <patches>[2,2,2]</patches>
+        <patches>[1,1,1]</patches>
       </Box>
       <periodic>[1,1,1]</periodic>
     </Level>

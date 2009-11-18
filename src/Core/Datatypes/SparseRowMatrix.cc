@@ -121,14 +121,14 @@ SparseRowMatrix::~SparseRowMatrix()
   {
     delete[] a;
   }
-  if (columns)
-  {
-    delete[] columns;
-  }
-  if (rows)
-  {
-    delete[] rows;
-  }
+  //if (columns)
+  //{
+  //  delete[] columns;
+  //}
+  //if (rows)
+  //{
+  //  delete[] rows;
+  //}
 }
 
 
