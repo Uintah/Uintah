@@ -111,5 +111,6 @@ echo "User error = " ${user_error}
 echo "Install error = " ${install_error}
 echo "Develop error = " ${develop_error}
 
-exit $user_error || $install_error || $develop_error
+
+exit $(( (( $user_error || $install_error )) ||  $develop_error ))
 
