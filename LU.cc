@@ -146,9 +146,10 @@ LU::decompose()
   }
 
   determinant = AA_.calculateDeterminant();
-  if( fabs(determinant) < 1e-16 ) {
-    isSingular_ = true;
-  }
+  //if( fabs(determinant) < 1e-16 ) {
+  //  proc0cout << "A is singular, determinant = " << determinant << "." << endl;
+  //  isSingular_ = true;
+  //}
 
   isDecomposed_ = true;
 }
@@ -167,9 +168,7 @@ LU::back_subs( double* rhs, double* soln )
     return;
   }
 
-  // FIXME:
-  // Pointers of type double* are actually pointing to the first element of an array
-  // So... I have no idea how to get the size of these vectors
+  // NOTE: it is impossible to determine the size of an array from an array pointer
   // We have to assume the user is passing vectors of the right size.
 
   // Copy rhs vector into soln vector
@@ -177,25 +176,12 @@ LU::back_subs( double* rhs, double* soln )
     soln[counter] = rhs[counter];
   }
 
-
   // AA_ now contains the LU-decomposition of the original "A" matrix.
   // soln[0] is untouched for now since L(0,0) = 1.
-
-  // Algorithm from Numerical Recipes (C):
 
   int i, j, ii=0, ip;
   double sum;
 
-  // Check size here
-  // FIXME: I can't figure out how to get the size of an array from a pointer to its first element
-  //if( rhs->size() != dim_ || soln->size() != dim_ ) {
-    // Throw error:
-    // LU::decompose(): Bad vector sizes
-    // dim_     = ___
-    // X.size() = ___
-    // B.size() = ___
-  //}
-  
   // forward substitution
   for (i=1; i<=dim_; ++i) {
     ip = indx[i-1];
@@ -223,9 +209,7 @@ LU::back_subs( double* rhs, double* soln )
     // store component of solution vector
     soln[i-1] = sum/AA_(i-1,i-1);
   }
-
 }
-
 
 
 

@@ -23,6 +23,12 @@
 #include <Core/Thread/Time.h>
 #include <Core/Exceptions/FileNotFound.h>
 #include <Core/Exceptions/ProblemSetupException.h>
+#include <Core/Datatypes/Matrix.h>
+
+#include <Core/Datatypes/DenseMatrix.h>
+#include <Core/Datatypes/ColumnMatrix.h>
+#include <Core/Datatypes/SparseRowMatrix.h>
+#include <Core/Datatypes/MatrixOperations.h>
 
 #include <iostream>
 #include <sstream>
@@ -31,6 +37,7 @@
 //===========================================================================
 
 using namespace Uintah;
+using namespace SCIRun;
 
 DQMOM::DQMOM(ArchesLabel* fieldLabels):
 d_fieldLabels(fieldLabels)
@@ -41,17 +48,20 @@ d_fieldLabels(fieldLabels)
   varname = "normB";
   d_normBLabel = VarLabel::create(varname, CCVariable<double>::getTypeDescription());
 
-  varname = "normX";
-  d_normXLabel = VarLabel::create(varname, CCVariable<double>::getTypeDescription());
-
   varname = "normRes";
   d_normResLabel = VarLabel::create(varname, CCVariable<double>::getTypeDescription());
 
-  varname = "normResNormalized";
-  d_normResNormalizedLabel = VarLabel::create(varname, CCVariable<double>::getTypeDescription());
+  varname = "normResNormalizedB";
+  d_normResNormalizedLabelB = VarLabel::create(varname, CCVariable<double>::getTypeDescription());
 
-  varname = "determinant";
-  d_determinantLabel = VarLabel::create(varname, CCVariable<double>::getTypeDescription());
+  varname = "normResNormalizedX";
+  d_normResNormalizedLabelX = VarLabel::create(varname, CCVariable<double>::getTypeDescription());
+  
+  varname = "normX";
+  d_normXLabel = VarLabel::create(varname, CCVariable<double>::getTypeDescription());
+
+  varname = "conditionNumber";
+  d_conditionNumberLabel = VarLabel::create(varname, CCVariable<double>::getTypeDescription());
 }
 
 DQMOM::~DQMOM()
@@ -59,8 +69,9 @@ DQMOM::~DQMOM()
   VarLabel::destroy(d_normBLabel); 
   VarLabel::destroy(d_normXLabel); 
   VarLabel::destroy(d_normResLabel);
-  VarLabel::destroy(d_normResNormalizedLabel);
-  VarLabel::destroy(d_determinantLabel);
+  VarLabel::destroy(d_normResNormalizedLabelB);
+  VarLabel::destroy(d_normResNormalizedLabelX);
+  VarLabel::destroy(d_conditionNumberLabel);
 }
 //---------------------------------------------------------------------------
 // Method: Problem setup
@@ -104,9 +115,27 @@ void DQMOM::problemSetup(const ProblemSpecP& params)
   unsigned int index_length = 0;
   moments = 0;
 
-  d_small_B = 1e-10;
+  d_small_normalizer = 1e-8;
 
-  db->getWithDefault("LU_solver_tolerance", d_solver_tolerance, 1.0e-5);
+  ProblemSpecP db_linear_solver = db->findBlock("LinearSolver");
+
+  db_linear_solver->getWithDefault("tolerance", d_solver_tolerance, 1.0e-5);
+
+  db_linear_solver->getWithDefault("type", d_solverType, "lu");
+  if( d_solverType == "Lapack" || d_solverType == "DenseMatrix" ) {
+    b_useLapack = true;
+  } else if( d_solverType == "LU" ) {
+    b_useLapack = false;
+  } else {
+    string err_msg = "ERROR: Arches: DQMOM: Unrecognized solver type "+d_solverType+": must be 'Lapack', 'DenseMatrix', or 'LU'.\n";
+    throw ProblemSetupException(err_msg,__FILE__,__LINE__);
+  }
+
+  db_linear_solver->getWithDefault("svd", b_calcSVD, false);
+  if( b_calcSVD == true && b_useLapack == false ) {
+    string err_msg = "ERROR: Arches: DQMOM: Cannot perform singular value decomposition without using Lapack!\n";
+    throw ProblemSetupException(err_msg,__FILE__,__LINE__);
+  }
 
   // obtain moment index vectors
   vector<int> temp_moment_index;
@@ -208,6 +237,7 @@ DQMOM::populateMomentsMap( std::vector<MomentVector> allMoments )
 { 
   proc0cout << endl;
   proc0cout << "******* Moment Registration ********" << endl;
+  proc0cout << endl;
 
   for( vector<MomentVector>::iterator iAllMoments = allMoments.begin();
        iAllMoments != allMoments.end(); ++iAllMoments ) {
@@ -228,6 +258,7 @@ DQMOM::populateMomentsMap( std::vector<MomentVector> allMoments )
     //d_fieldLabels->DQMOMMoments[tempMomentVector] = tempVarLabel;
     d_fieldLabels->DQMOMMoments[(*iAllMoments)] = tempVarLabel;
   }
+  proc0cout << endl;
 }
 
 // **********************************************
@@ -246,14 +277,16 @@ DQMOM::sched_solveLinearSystem( const LevelP& level, SchedulerP& sched, int time
     tsk->computes(d_normBLabel); 
     tsk->computes(d_normXLabel);
     tsk->computes(d_normResLabel);
-    tsk->computes(d_normResNormalizedLabel);
-    tsk->computes(d_determinantLabel);
+    tsk->computes(d_normResNormalizedLabelB);
+    tsk->computes(d_normResNormalizedLabelX);
+    tsk->computes(d_conditionNumberLabel);
   } else {
     tsk->modifies(d_normBLabel); 
     tsk->modifies(d_normXLabel);
     tsk->modifies(d_normResLabel);
-    tsk->modifies(d_normResNormalizedLabel);
-    tsk->modifies(d_determinantLabel);
+    tsk->modifies(d_normResNormalizedLabelB);
+    tsk->modifies(d_normResNormalizedLabelX);
+    tsk->modifies(d_conditionNumberLabel);
   }
 
   for (vector<DQMOMEqn*>::iterator iEqn = weightEqns.begin(); iEqn != weightEqns.end(); ++iEqn) {
@@ -312,12 +345,20 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
 {
   double start_solveLinearSystemTime = Time::currentSeconds();
 #if !defined(VERIFY_LINEAR_SOLVER) && !defined(VERIFY_AB_CONSTRUCTION)
+  double total_InvertSolveTime = 0.0;
+  double total_SVDTime = 0.0;
+
   double total_CroutSolveTime = 0.0;
   double total_IRSolveTime = 0.0;
   double total_AXBConstructionTime = 0.0;
+
+  double total_getTime = 0.0;
+  double total_assignSolutionTime = 0.0;
+  
+  bool do_iterative_refinement = false;
 #ifdef DEBUG_MATRICES
   double total_FileWriteTime = 0.0;
-  bool b_writeFile = true;
+  bool b_writefile = true;
 #endif
 #endif
 
@@ -329,6 +370,8 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
 
     int archIndex = 0;
     int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+
+    double start_getTime = Time::currentSeconds(); //timing
 
     // get/allocate normB label
     CCVariable<double> normB; 
@@ -357,22 +400,32 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
     }
     normRes.initialize(0.0);
 
-    // get/allocate normResNormalized label
-    CCVariable<double> normResNormalized;
-    if( new_dw->exists(d_normResNormalizedLabel, matlIndex, patch) ) {
-      new_dw->getModifiable( normResNormalized, d_normResNormalizedLabel, matlIndex, patch );
+    // get/allocate normResNormalizedB label
+    CCVariable<double> normResNormalizedB;
+    if( new_dw->exists(d_normResNormalizedLabelB, matlIndex, patch) ) {
+      new_dw->getModifiable( normResNormalizedB, d_normResNormalizedLabelB, matlIndex, patch );
     } else {
-      new_dw->allocateAndPut( normResNormalized, d_normResNormalizedLabel, matlIndex, patch );
+      new_dw->allocateAndPut( normResNormalizedB, d_normResNormalizedLabelB, matlIndex, patch );
     }
-    normResNormalized.initialize(0.0);
+    normResNormalizedB.initialize(0.0);
 
-    // get/allocate determinant label
-    CCVariable<double> determinant;
-    if( new_dw->exists(d_determinantLabel, matlIndex, patch) ) {
-      new_dw->getModifiable( determinant, d_determinantLabel, matlIndex, patch );
+    // get/allocate normResNormalizedX label
+    CCVariable<double> normResNormalizedX;
+    if( new_dw->exists(d_normResNormalizedLabelX, matlIndex, patch) ) {
+      new_dw->getModifiable( normResNormalizedX, d_normResNormalizedLabelX, matlIndex, patch );
     } else {
-      new_dw->allocateAndPut( determinant, d_determinantLabel, matlIndex, patch );
+      new_dw->allocateAndPut( normResNormalizedX, d_normResNormalizedLabelX, matlIndex, patch );
     }
+    normResNormalizedX.initialize(0.0);
+
+    // get/allocate condition number label
+    CCVariable<double> conditionNumber;
+    if( new_dw->exists(d_conditionNumberLabel, matlIndex, patch) ) {
+      new_dw->getModifiable( conditionNumber, d_conditionNumberLabel, matlIndex, patch );
+    } else {
+      new_dw->allocateAndPut( conditionNumber, d_conditionNumberLabel, matlIndex, patch );
+    }
+    conditionNumber.initialize(0.0);
 
     // get/allocate weight source term labels
     for (vector<DQMOMEqn*>::iterator iEqn = weightEqns.begin();
@@ -400,22 +453,20 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
       tempCCVar.initialize(0.0);
     }
 
+    total_getTime += ( Time::currentSeconds() - start_getTime );
+
     // Cell iterator
     for ( CellIterator iter = patch->getCellIterator();
           !iter.done(); ++iter) {
       IntVector c = *iter;
 
-      LU A ( (N_xi+1)*N_ );
-      vector<double> B( A.getDimension(), 0.0 );
-      vector<double> Xdoub( A.getDimension(), 0.0 );
-      vector<long double> Xlong( A.getDimension(), 0.0 );
-      vector<double> Resid( A.getDimension(), 0.0 );
-
       vector<double> weights;
       vector<double> weightedAbscissas;
       vector<double> models;
 
-      // get weights from data warehouse
+      start_getTime = Time::currentSeconds();
+
+      // get weights in current cell from data warehouse and store in a vector
       for (vector<DQMOMEqn*>::iterator iEqn = weightEqns.begin(); 
            iEqn != weightEqns.end(); ++iEqn) {
         constCCVariable<double> temp;
@@ -424,7 +475,7 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
         weights.push_back(temp[c]);
       }
 
-      // get weighted abscissas from data warehouse 
+      // get weighted abscissas in current cell from data warehouse and store in a vector
       for (vector<DQMOMEqn*>::iterator iEqn = weightedAbscissaEqns.begin();
            iEqn != weightedAbscissaEqns.end(); ++iEqn) {
         const VarLabel* equation_label = (*iEqn)->getTransportEqnLabel();
@@ -445,205 +496,503 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
         
         models.push_back(runningsum);
       }
+    
+      total_getTime += ( Time::currentSeconds() - start_getTime );
+
 
 #if !defined(VERIFY_LINEAR_SOLVER) && !defined(VERIFY_AB_CONSTRUCTION)
+      
+      int dimension = (N_xi+1)*N_;
+      
+      if( b_useLapack == false ) {
 
-      // FIXME:
-      // This construction process needs to be using d_w_small to check for small weights!
+        ///////////////////////////////////////////////////////
+        // Use the LU solver
 
-      double start_AXBConstructionTime = Time::currentSeconds();
-
-      // construction of AX=B requires:
-      // - moment indices
-      // - num quad nodes
-      // - num internal coordinates
-      // - A
-      // - B
-      // - weights[]
-      // - weightedAbscissas[]
-      // - models[]
-
-      constructLinearSystem(A, B, weights, weightedAbscissas, models);
-
-      total_AXBConstructionTime += Time::currentSeconds() - start_AXBConstructionTime;
-
-      double start_CroutSolveTime = Time::currentSeconds();
- 
-      // save original A before decomposition into LU
-      LU Aorig( A );
-
-      // decompose into LU
-      A.decompose();
-
-      // forward- then back-substitution
-      A.back_subs( &B[0], &Xdoub[0] );
-
-      total_CroutSolveTime += (Time::currentSeconds() - start_CroutSolveTime);
-
-      // copy Xdoub into Xlong to begin with 
-      for( unsigned int j=0; j < Xdoub.size(); ++j ) {
-        Xlong[j] = Xdoub[j];
-      }
-
-      determinant[c] = A.getDeterminant();
-
-      if( A.isSingular() ) {
-        //proc0cout << "WARNING: Arches: DQMOM: matrix A is singular at cell = " << c << ";" << endl;
-        //proc0cout << "\t\tDeterminant = " << A.getDeterminant() << endl;
-        //for( unsigned int alpha = 0; alpha < N_; ++alpha ) {
-        //  proc0cout << "\t\tWeight, qn" << alpha << " = " << weights[alpha] << endl;
-        //}
-
-        // Set solution vector = 0.0
-        for( vector<long double>::iterator iX = Xlong.begin(); iX != Xlong.end(); ++iX ) {
-          (*iX) = 0.0;
+        LU A ( dimension );
+        vector<double> B( dimension, 0.0 );
+        vector<double> Xdoub( dimension, 0.0 );
+        vector<long double> Xlong( dimension, 0.0 );
+        vector<double> Resid( dimension, 0.0 );
+  
+        double start_AXBConstructionTime = Time::currentSeconds();
+  
+        constructLinearSystem( A, B, weights, weightedAbscissas, models);
+  
+        total_AXBConstructionTime += Time::currentSeconds() - start_AXBConstructionTime;
+  
+        // Save original A before decomposition into LU
+        LU Aorig( A );
+  
+        double start_CroutSolveTime = Time::currentSeconds(); //timing
+  
+        // Solve linear system
+        A.decompose();
+        A.back_subs( &B[0], &Xdoub[0] );
+  
+        total_CroutSolveTime += (Time::currentSeconds() - start_CroutSolveTime); //timing
+  
+        for( unsigned int j=0; j < Xdoub.size(); ++j ) {
+          Xlong[j] = Xdoub[j];
         }
-        // Set residual vector = 0.0
-        for( vector<double>::iterator iR = Resid.begin(); iR != Resid.end(); ++iR ) {
-          (*iR) = 0.0;
+
+        conditionNumber[c] = 0.0;
+  
+        // --------------------------------------------
+        // If no solution to linear system...
+        if( A.isSingular() ) {
+          proc0cout << "WARNING: Arches: DQMOM: A is singular at cell c = " << c << endl;
+  
+          // set solution vector = 0
+          vector<double>::iterator iXd = Xdoub.begin();
+          for( vector<long double>::iterator iXl = Xlong.begin();
+               iXl != Xlong.end(); ++iXl, ++iXd ) {
+            (*iXl) = 0.0;
+            (*iXd) = 0.0;
+          }
+  
+          // set residual vector = 0
+          for( vector<double>::iterator iR = Resid.begin();
+               iR != Resid.end(); ++iR ) {
+            (*iR) = 0.0;
+          }
+          total_IRSolveTime = 0.0; //timing
+  
+        // -------------------------------------------------
+        // If there is a solution to linear system...
+        } else {
+          double start_IRSolveTime = Time::currentSeconds(); //timing
+          
+          if( do_iterative_refinement ) {
+            A.iterative_refinement( Aorig, &B[0], &Xdoub[0], &Xlong[0] );
+          }
+  
+          total_IRSolveTime = Time::currentSeconds() - start_IRSolveTime; //timing
+  
+          // get residual vector
+          Aorig.getResidual( &B[0], &Xlong[0], &Resid[0] );
+  
+          // find norm of residual
+          double the_normR = A.getNorm( &Resid[0], 0 );
+          normRes[c] = the_normR;
+  
+          // find norm of residual vector divided by the norm of B
+          // R = (B - AX)/(norm(B))
+          vector<double> ResidNormalizedB = Resid;
+          // FIXME: print ResidNormalizedB to make sure it is being initialized properly
+          for( int ii = 0; ii<dimension; ++ii ) {
+            if( fabs(B[ii]) > d_small_normalizer) {
+              ResidNormalizedB[ii] = Resid[ii] / B[ii];
+              // otherwise... well, we'll leave it alone otherwise
+            }
+          }
+          normResNormalizedB[c] = A.getNorm( &ResidNormalizedB[0], 0 );
+          
+          // find norm of residual vector divided by the norm of X
+          // R = (B - AX)/(norm(X))
+          vector<double> ResidNormalizedX = Resid;
+          // FIXME: print ResidNormalizedX to make sure it is being initialized properly
+          for( int ii=0; ii<dimension; ++ii ) {
+            if( fabs(Xlong[ii]) > d_small_normalizer ) {
+              ResidNormalizedX[ii] = fabs( Resid[ii] / Xlong[ii] );
+              // otherwise... we'll leave it alone
+            }
+          }
+          normResNormalizedX[c] = A.getNorm( &ResidNormalizedX[0], 0 );
+   
+          // find norm of RHS vector
+          normB[c] = A.getNorm( &B[0], 0 );
+  
+          // find norm of solution vector
+          normX[c] = A.getNorm( &Xlong[0], 0 );
+  
         }
-        total_IRSolveTime = 0.0;
+        
+        proc0cout << "A matrix:" << endl;
+        Aorig.dump();
+        
+    #ifdef DEBUG_MATRICES
+
+        if( b_writefile ) {
+          char filename[28];
+          int currentTimeStep = d_fieldLabels->d_sharedState->getCurrentTopLevelTimeStep();
+          int sizeofit;
+
+          double start_FileWriteTime = Time::currentSeconds();
+
+          ofstream oStream;
+
+          // write A matrix to file:
+          sizeofit = sprintf( filename, "A_%.2d.mat", currentTimeStep );
+          oStream.open(filename);
+          for( int iRow = 0; iRow < dimension; ++iRow ) {
+            for( int iCol = 0; iCol < dimension; ++iCol ) {
+              oStream << " " << Aorig(iRow,iCol); 
+            }
+            oStream << endl;
+          }
+          oStream.close();
+
+          // Write X (solution vector) to file:
+          sizeofit = sprintf( filename, "X_%.2d.mat", currentTimeStep );
+          oStream.open(filename);
+          for( vector<long double>::iterator iX = Xlong.begin();
+               iX != Xlong.end(); ++iX) {
+            oStream << (*iX) << endl;
+          }
+          oStream.close();
+
+          // write B matrix to file:
+          sizeofit = sprintf( filename, "B_%.2d.mat", currentTimeStep );
+          oStream.open(filename);
+          for( vector<double>::iterator iB = B.begin(); iB != B.end(); ++iB ) {
+            oStream << (*iB) << endl;
+          }
+          oStream.close();
+
+          // write Resid vector to file:
+          sizeofit = sprintf( filename, "R_%.2d.mat", currentTimeStep );
+          oStream.open(filename);
+          for( vector<double>::iterator iR = Resid.begin(); iR != Resid.end(); ++iR ) {
+            oStream << (*iR) << endl;
+          }
+          oStream.close();
+
+          total_FileWriteTime += Time::currentSeconds() - start_FileWriteTime;
+        }
+        b_writefile = false;
+
+    #endif //debug matrices
+
+        int z=0; // equation loop counter
+        
+        // check "acceptable solution" criteria, and assign solution values to source terms
+  
+        // Weight equations:
+        double start_assignSolutionTime = Time::currentSeconds(); //timing
+        for( vector<DQMOMEqn*>::iterator iEqn = weightEqns.begin(); 
+             iEqn != weightEqns.end(); ++iEqn ) {
+          const VarLabel* source_label = (*iEqn)->getSourceLabel();
+          CCVariable<double> tempCCVar;
+          if( new_dw->exists(source_label, matlIndex, patch) ) {
+            new_dw->getModifiable(tempCCVar, source_label, matlIndex, patch);
+          } else {
+            new_dw->allocateAndPut(tempCCVar, source_label, matlIndex, patch);
+          }
+
+          proc0cout << "Xlong[z] = " << Xlong[z] << ", normResNormalizedB[c] = " << normResNormalizedB[c] << ", normResNormalizedX[c] = " << normResNormalizedX[c] << endl;
+          if (z >= dimension ) {
+            stringstream err_msg;
+            err_msg << "ERROR: Arches: DQMOM: Trying to access solution of AX=B system, but had array out of bounds! Accessing element " << z << " of " << dimension << endl;
+            throw InvalidValue(err_msg.str(),__FILE__,__LINE__);
+          } else if( fabs(normResNormalizedX[c]) > d_solver_tolerance ) {
+            tempCCVar[c] = 0;
+          } else if( isnan( Xlong[z] ) ) {
+            tempCCVar[c] = 0;
+          } else {
+            tempCCVar[c] = Xlong[z];
+          }
+          ++z;
+        }
+  
+        // Weighted abscissa equations:
+        for( vector<DQMOMEqn*>::iterator iEqn = weightedAbscissaEqns.begin(); 
+             iEqn != weightedAbscissaEqns.end(); ++iEqn) {
+          const VarLabel* source_label = (*iEqn)->getSourceLabel();
+          CCVariable<double> tempCCVar;
+          if (new_dw->exists(source_label, matlIndex, patch)) {
+            new_dw->getModifiable(tempCCVar, source_label, matlIndex, patch);
+          } else {
+            new_dw->allocateAndPut(tempCCVar, source_label, matlIndex, patch);
+          }
+  
+          // Make sure several critera are met for an acceptable solution
+          if (z >= dimension ) {
+            stringstream err_msg;
+            err_msg << "ERROR: Arches: DQMOM: Trying to access solution of AX=B system, but had array out of bounds! Accessing element " << z << " of " << dimension << endl;
+            throw InvalidValue(err_msg.str(),__FILE__,__LINE__);
+          } else if(  fabs(normResNormalizedX[c]) > d_solver_tolerance ) {
+            tempCCVar[c] = 0;
+          } else if( isnan( Xlong[z] ) ){
+            tempCCVar[c] = 0;
+          } else {
+            tempCCVar[c] = Xlong[z];
+          }
+          ++z;
+        }
+        total_assignSolutionTime += ( Time::currentSeconds() - start_assignSolutionTime ); //time
+  
 
       } else {
 
-        double start_IRSolveTime = Time::currentSeconds();
-
-        // iterative refinement
-        bool do_iterative_refinement = false;
-        if( do_iterative_refinement )
-          A.iterative_refinement( Aorig, &B[0], &Xdoub[0], &Xlong[0] );
-
-        total_IRSolveTime += Time::currentSeconds() - start_IRSolveTime;
-
-        // Find the norm of the residual vector (B-AX)
-        Aorig.getResidual( &B[0], &Xlong[0], &Resid[0] );
-        double temp = A.getNorm( &Resid[0], 1 );
-        normRes[c] = temp;
-
-        // Find the norm of the (normalized) residual vector (B-AX)/(B)
-        for( unsigned int ii = 0; ii < A.getDimension(); ++ii ) {
-          // Normalize by B (not by X)
-          if (abs(B[ii]) > d_small_B) 
-            Resid[ii] = Resid[ii] / B[ii]; //try normalizing componentwise error
-          // else B is zero so b - Ax should also be close to zero
-          // so keep residual = Ax 
-        }
-        normResNormalized[c] = A.getNorm( &Resid[0], 1);
-      }
-      
-      // Find the norm of the RHS and solution vectors
-      normB[c] = A.getNorm( &B[0], 0 );
-      normX[c] = A.getNorm( &Xlong[0], 1 );
-
-      // set weight transport eqn source terms equal to results
-      unsigned int z = 0;
-      for (vector<DQMOMEqn*>::iterator iEqn = weightEqns.begin();
-           iEqn != weightEqns.end(); iEqn++) {
-        const VarLabel* source_label = (*iEqn)->getSourceLabel();
-        CCVariable<double> tempCCVar;
-        if (new_dw->exists(source_label, matlIndex, patch)) {
-          new_dw->getModifiable(tempCCVar, source_label, matlIndex, patch);
-        } else {
-          new_dw->allocateAndPut(tempCCVar, source_label, matlIndex, patch);
-        }
-
-        // Make sure several critera are met for an acceptable solution
-        if(  fabs(normResNormalized[c]) > d_solver_tolerance ) {
-            tempCCVar[c] = 0;
-        } else if( std::isnan(Xlong[z]) ) {
-            tempCCVar[c] = 0;
-        } else {
-          tempCCVar[c] = Xlong[z];
-        }
-        ++z;
-      }
+        ///////////////////////////////////////////////////////
+        // Use the DenseMatrix solver (which uses LAPACK)
   
-      // set weighted abscissa transport eqn source terms equal to results
-      for (vector<DQMOMEqn*>::iterator iEqn = weightedAbscissaEqns.begin();
-           iEqn != weightedAbscissaEqns.end(); ++iEqn) {
-        const VarLabel* source_label = (*iEqn)->getSourceLabel();
-        CCVariable<double> tempCCVar;
-        if (new_dw->exists(source_label, matlIndex, patch)) {
-          new_dw->getModifiable(tempCCVar, source_label, matlIndex, patch);
-        } else {
-          new_dw->allocateAndPut(tempCCVar, source_label, matlIndex, patch);
+        DenseMatrix* AA = scinew DenseMatrix( dimension, dimension );
+        ColumnMatrix* BB = scinew ColumnMatrix( dimension );               
+        ColumnMatrix* XX = scinew ColumnMatrix( dimension );               
+        ColumnMatrix* RR = scinew ColumnMatrix( dimension );               
+  
+        AA->zero();
+        BB->zero();
+  
+        do_iterative_refinement = false;
+  
+        double start_AXBConstructionTime = Time::currentSeconds(); //timing
+  
+        constructLinearSystem( AA, BB, weights, weightedAbscissas, models ); 
+  
+        total_AXBConstructionTime += Time::currentSeconds() - start_AXBConstructionTime; //timing
+  
+        // save original A before solving
+        DenseMatrix* AAorig = AA->clone();
+
+        if( b_calcSVD == true ) {
+
+          DenseMatrix* AAsvd = AA->clone();
+
+          //// create rr and cc for singular values SparseRowMatrix
+          int *cols = scinew int[dimension];
+          int *rows = scinew int[dimension+1];
+          double *a = scinew double[dimension];
+          //int rowcol[dimension];
+          //int* rowcol = NULL;
+          //rowcol = new int[dimension];
+          //for( int yy=0; yy<dimension; ++yy ) {
+          //  rowcol[yy] = yy;
+          //}
+
+          DenseMatrix* U = scinew DenseMatrix( dimension, dimension );
+          SparseRowMatrix* S = scinew SparseRowMatrix( dimension, dimension, rows, cols, dimension, a); // makes an identity matrix
+          DenseMatrix* V = scinew DenseMatrix( dimension, dimension );
+
+          double start_SVDTime = Time::currentSeconds(); //timing
+          AAsvd->svd( *U, *S, *V );
+          total_SVDTime += ( Time::currentSeconds() - start_SVDTime); //timing
+          conditionNumber[c] = (S->a[0]/S->a[dimension-1]);
+
+          //if( c == IntVector(1,1,1) ) {
+          //  proc0cout << "=====================================" << endl;
+          //  proc0cout << "Singular Value Decomposition values:" << endl;
+          //  for( int yy=0; yy<dimension; ++yy ) {
+          //    proc0cout << S->a[yy] << endl;
+          //  }
+          //  proc0cout << "Condition number is " << ( S->a[0] / S->a[dimension-1] ) << endl;
+          //}
+          
+          delete AAsvd;
+          delete U;
+          delete V;
+          delete S;
+          //delete[] rowcol;
+
         }
+  
+        // Solve linear system
+        double start_InvertSolveTime = Time::currentSeconds(); //timing
+        AA->invert();
+        Mult( *XX, *AA, *BB );
+        total_InvertSolveTime += (Time::currentSeconds() - start_InvertSolveTime); //timing
+  
+        // get residual vector
+        int t_flops, t_memrefs;
+        AAorig->mult( (*XX), (*RR), t_flops, t_memrefs );
 
-        // Make sure several critera are met for an acceptable solution
-        if(  fabs(normResNormalized[c]) > d_solver_tolerance ) {
-            tempCCVar[c] = 0;
-        } else if( std::isnan(Xlong[z]) ){
-            tempCCVar[c] = 0;
-        } else {
-          tempCCVar[c] = Xlong[z];
+        //Sub( (*RR), (*BB), (*RR) );
+        for( int yy=0; yy<dimension; ++yy ) {
+          double temp = (*RR)[yy] - (*BB)[yy];
+          (*RR)[yy] = temp;
         }
-        ++z;
-      }
-
-  #ifdef DEBUG_MATRICES
-      if(b_writeFile) {
-        char filename[28];
-        int currentTimeStep = d_fieldLabels->d_sharedState->getCurrentTopLevelTimeStep();
-        int dimension = A.getDimension();
-        int sizeofit;
-
-        double start_FileWriteTime = Time::currentSeconds();
-
-        ofstream oStream;
-
-        // write A matrix to file:
-        sizeofit = sprintf( filename, "A_%.2d.mat", currentTimeStep );
-        oStream.open(filename);
-        for( int iRow = 0; iRow < dimension; ++iRow ) {
-          for( int iCol = 0; iCol < dimension; ++iCol ) {
-            oStream << " " << Aorig(iRow,iCol); 
+ 
+        // find norm of residual
+        double this_normRes = 0;
+        for( int ii=0; ii<dimension; ++ii ) {
+          if( fabs((*RR)[ii]) > this_normRes ) {
+            this_normRes = fabs( (*RR)[ii] );
           }
-          oStream << endl;
         }
-        oStream.close();
-
-        // Write X (solution vector) to file:
-        sizeofit = sprintf( filename, "X_%.2d.mat", currentTimeStep );
-        oStream.open(filename);
-        for( vector<long double>::iterator iX = Xlong.begin();
-             iX != Xlong.end(); ++iX) {
-          oStream << (*iX) << endl;
+        normRes[c] = this_normRes;
+ 
+        // norm of residual divided by norm of B
+        //    Don't divide by small B's!
+        //    Otherwise you'll be dividing a small residual by a small B, so the norm will be large
+        //    This causes everything to have nonzero source terms, for no good reason
+        //    When B is small, just use the non-normalized residual.
+        double this_normResNormalizedB = 0;
+        for( int ii=0; ii<dimension; ++ii ) {
+          if( fabs( (*BB)[ii] ) > d_small_normalizer ) {
+            if( fabs( (*RR)[ii] / (*BB)[ii] ) > this_normResNormalizedB ) {
+              this_normResNormalizedB = fabs((*RR)[ii] / (*BB)[ii]);
+            }
+          } else {
+            if( fabs( (*RR)[ii] ) > this_normResNormalizedB ) {
+              this_normResNormalizedB = fabs((*RR)[ii]);
+            }
+          }
         }
-        oStream.close();
-
-        // write B matrix to file:
-        sizeofit = sprintf( filename, "B_%.2d.mat", currentTimeStep );
-        oStream.open(filename);
-        for( vector<double>::iterator iB = B.begin(); iB != B.end(); ++iB ) {
-          oStream << (*iB) << endl;
+        normResNormalizedB[c] = this_normResNormalizedB;
+ 
+        // norm of residual divided by norm of X
+        //    Don't divide by small X's!
+        //    Otherwise you'll be dividing a small residual by a small X, so the norm will be large
+        //    This causes everything to have nonzero source terms, for no good reason
+        //    When X is small, just use the non-normalized residual.
+        double this_normResNormalizedX = 0;
+        for( int ii=0; ii<dimension; ++ii ) {
+          if( fabs( (*XX)[ii] ) > d_small_normalizer ) {
+            if( fabs( (*RR)[ii] / (*XX)[ii] ) > this_normResNormalizedX ) {
+              this_normResNormalizedX = fabs((*RR)[ii] / (*XX)[ii]);
+            }
+          } else {
+            if( fabs( (*RR)[ii] ) > this_normResNormalizedX ) {
+              this_normResNormalizedX = fabs((*RR)[ii]);
+            }
+          }
         }
-        oStream.close();
-
-        // write Resid vector to file:
-        sizeofit = sprintf( filename, "R_%.2d.mat", currentTimeStep );
-        oStream.open(filename);
-        for( vector<double>::iterator iR = Resid.begin(); iR != Resid.end(); ++iR ) {
-          oStream << (*iR) << endl;
+        normResNormalizedX[c] = this_normResNormalizedX;
+ 
+        // norm of B
+        double this_normB = 0;
+        for( int ii=0; ii<dimension; ++ii ) {
+          if( fabs((*BB)[ii]) > this_normB ) {
+            this_normB = fabs( (*BB)[ii] );
+          }
         }
-        oStream.close();
+        normB[c] = this_normB;
+ 
+        // norm of X
+        double this_normX = 0;
+        for( int ii=0; ii<dimension; ++ii ) {
+          if( fabs((*XX)[ii]) > this_normX ) {
+            this_normX = fabs( (*XX)[ii] );
+          }
+        }
+        normX[c] = this_normX;
+  
+    #ifdef DEBUG_MATRICES
+  
+        if( b_writefile ) {
+          char filename[28];
+          int currentTimeStep = d_fieldLabels->d_sharedState->getCurrentTopLevelTimeStep();
+          int sizeofit;
+          
+          double start_FileWriteTime = Time::currentSeconds();
+  
+          ofstream oStream;
+  
+          // write A matrix to file
+          sizeofit = sprintf( filename, "A_%.2d.mat", currentTimeStep );
+          oStream.open(filename);
+          for( int iRow = 0; iRow < dimension; ++iRow ) {
+            for( int iCol = 0; iCol < dimension; ++iCol ) {
+              oStream << " " << (*AA)[iRow][iCol];
+            }
+            oStream << endl;
+          }
+          oStream.close();
+  
+          // write X vector to file
+          sizeofit = sprintf( filename, "X_%.2d.mat", currentTimeStep );
+          oStream.open(filename);
+          for( int iRow = 0; iRow < dimension; ++iRow ) {
+            oStream << (*XX)[iRow] << endl;
+          }
+          oStream.close();
+  
+          // write B vector to file
+          sizeofit = sprintf( filename, "B_%.2d.mat", currentTimeStep );
+          oStream.open(filename);
+          for( int iRow = 0; iRow < dimension; ++iRow ) {
+            oStream << (*BB)[iRow] << endl;
+          }
+          oStream.close();
+  
+          // write residual vector to file
+          sizeofit = sprintf( filename, "R_%.2d.mat", currentTimeStep );
+          oStream.open(filename);
+          for( int iRow = 0; iRow < dimension; ++iRow ) {
+            oStream << (*RR)[iRow] << endl;
+          }
+          oStream.close();
 
-        // write determinant of A to file:
-        sizeofit = sprintf( filename, "D_%.2d.mat", currentTimeStep );
-        oStream.open(filename);
-        oStream << A.getDeterminant() << endl;
-        oStream.close();
+          total_FileWriteTime += Time::currentSeconds() - start_FileWriteTime;
+        }
+        b_writefile = false;
+  
+    #endif
 
-        total_FileWriteTime += Time::currentSeconds() - start_FileWriteTime;
-      }
-      b_writeFile = false;
-  #endif //debug matrices
+        // check "acceptable solution" criteria, and assign solution values to source terms
+        
+        int z=0; // equation loop counter
+
+        // Weight equations:
+        for( vector<DQMOMEqn*>::iterator iEqn = weightEqns.begin(); 
+             iEqn != weightEqns.end(); ++iEqn ) {
+          const VarLabel* source_label = (*iEqn)->getSourceLabel();
+          CCVariable<double> tempCCVar;
+          if( new_dw->exists(source_label, matlIndex, patch) ) {
+            new_dw->getModifiable(tempCCVar, source_label, matlIndex, patch);
+          } else {
+            new_dw->allocateAndPut(tempCCVar, source_label, matlIndex, patch);
+          }
+
+          if (z >= dimension ) {
+            stringstream err_msg;
+            err_msg << "ERROR: Arches: DQMOM: Trying to access solution of AX=B system, but had array out of bounds! Accessing element " << z << " of " << dimension << endl;
+            throw InvalidValue(err_msg.str(),__FILE__,__LINE__);
+          } else if( fabs(normResNormalizedX[c]) > d_solver_tolerance ) {
+            tempCCVar[c] = 0;
+          } else if( isnan( (*XX)[z] ) ) {
+            tempCCVar[c] = 0;
+          } else {
+            tempCCVar[c] = (*XX)[z];
+          }
+          ++z;
+        }
+  
+        // Weighted abscissa equations:
+        for( vector<DQMOMEqn*>::iterator iEqn = weightedAbscissaEqns.begin(); 
+             iEqn != weightedAbscissaEqns.end(); ++iEqn) {
+          const VarLabel* source_label = (*iEqn)->getSourceLabel();
+          CCVariable<double> tempCCVar;
+          if (new_dw->exists(source_label, matlIndex, patch)) {
+            new_dw->getModifiable(tempCCVar, source_label, matlIndex, patch);
+          } else {
+            new_dw->allocateAndPut(tempCCVar, source_label, matlIndex, patch);
+          }
+  
+          // Make sure several critera are met for an acceptable solution
+          if (z >= dimension ) {
+            stringstream err_msg;
+            err_msg << "ERROR: Arches: DQMOM: Trying to access solution of AX=B system, but had array out of bounds! Accessing element " << z << " of " << dimension << endl;
+            throw InvalidValue(err_msg.str(),__FILE__,__LINE__);
+          } else if( fabs(normResNormalizedX[c]) > d_solver_tolerance ) {
+            tempCCVar[c] = 0;
+          } else if( isnan( (*XX)[z] ) ){
+            tempCCVar[c] = 0;
+          } else {
+            tempCCVar[c] = (*XX)[z];
+          }
+          ++z;
+        }
+  
+        delete AA;
+        delete BB;
+        delete XX;
+        delete RR;
+        delete AAorig;
+
+      }//end lapack/LU
 
 #else
+
+      // doing verification, so don't need to update transport equations (source terms = 0)
+
       normB[c] = 0.0;
       normX[c] = 0.0;
       normRes[c] = 0.0;
-      normResNormalized[c] = 0.0;
-      determinant[c] = 0.0;
+      normResNormalizedB[c] = 0.0;
+      normResNormalizedX[c] = 0.0;
 
       // set weight transport eqn source terms equal to zero
       for (vector<DQMOMEqn*>::iterator iEqn = weightEqns.begin();
@@ -670,7 +1019,8 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
         }
         tempCCVar[c] = 0.0;
       }
-#endif
+
+#endif //end if not verifying
 
     }//end for cells
 
@@ -678,32 +1028,41 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
 
 
 
-// ---------------------------------------------
-// Verification Procedure:
-// ---------------------------------------------
-
+  // ---------------------------------------------
+  // Verification Procedure:
+  // ---------------------------------------------
+  
 #if defined(VERIFY_LINEAR_SOLVER)
   verifyLinearSolver();
 #endif
-
+  
 #if defined(VERIFY_AB_CONSTRUCTION)
   verifyABConstruction();
 #endif
+  
+  // ---------------------------------------------
 
-// ---------------------------------------------
 
 
-
+  proc0cout << "Time in DQMOM::solveLinearSystem: " << Time::currentSeconds()-start_solveLinearSystemTime << " seconds \n";
 #if !defined(VERIFY_AB_CONSTRUCTION) && !defined(VERIFY_LINEAR_SOLVER)
 #if defined(DEBUG_MATRICES)
-  proc0cout << "Time for file write: " << total_FileWriteTime << " seconds\n";
+  proc0cout << "    Time for file write: " << total_FileWriteTime << " seconds\n";
 #endif
-  proc0cout << "Time for AX=B construction: " << total_AXBConstructionTime << " seconds\n";
-  proc0cout << "Time for LU solve: " << total_CroutSolveTime + total_IRSolveTime << " seconds\n";
-  proc0cout << "        " << "Time for Crout's Method: " << total_CroutSolveTime << " seconds\n";
-  //proc0cout << "        " << "Time for iterative refinement: " << total_IRSolveTime << " seconds\n";
+  proc0cout << "    Time for get() calls: " << total_getTime << " seconds\n";
+  proc0cout << "    Time for assigning solution: " << total_assignSolutionTime << " seconds\n";
+  proc0cout << "    Time for AX=B construction: " << total_AXBConstructionTime << " seconds\n";
+  if( b_useLapack == true ) {
+    proc0cout << "    Time for DenseMatrix invert-multiply: " << total_InvertSolveTime << " seconds\n";
+    //proc0cout << "    Time for DenseMatrix LU decomposition: " << total_DenseSolveTime << " seconds\n";
+    if( b_calcSVD )
+      proc0cout << "    Time for SVD: " << total_SVDTime << " seconds\n";
+  } else {
+    proc0cout << "    Time for LU solve: " << total_CroutSolveTime + total_IRSolveTime << " seconds\n";
+    proc0cout << "      Time for Crout's Method: " << total_CroutSolveTime << " seconds\n";
+    //proc0cout << "      Time for iterative refinement: " << total_IRSolveTime << " seconds\n";
+  }
 #endif
-  proc0cout << "Time in DQMOM::solveLinearSystem: " << Time::currentSeconds()-start_solveLinearSystemTime << " seconds \n";
 }
 
 
@@ -716,8 +1075,11 @@ DQMOM::constructLinearSystem( LU             &A,
                               vector<double> &B, 
                               vector<double> &weights, 
                               vector<double> &weightedAbscissas,
-                              vector<double> &models)
+                              vector<double> &models,
+                              int             verbosity)
 {
+      // FIXME:
+      // This construction process needs to be using d_w_small to check for small weights!
   // construct AX=B
   for ( unsigned int k = 0; k < momentIndexes.size(); ++k) {
     MomentVector thisMoment = momentIndexes[k];
@@ -732,7 +1094,6 @@ DQMOM::constructLinearSystem( LU             &A,
           prefixA = prefixA - (thisMoment[i]);
           double base = weightedAbscissas[i*(N_)+alpha] / weights[alpha];
           double exponent = thisMoment[i];
-          //productA = productA*( pow((weightedAbscissas[i*(N_)+alpha]/weights[alpha]),thisMoment[i]) );
           productA = productA*( pow(base, exponent) );
         } else {
           prefixA = 0;
@@ -740,6 +1101,8 @@ DQMOM::constructLinearSystem( LU             &A,
         }
       }
       A(k,alpha)=prefixA*productA;
+      if(verbosity == 1)
+        proc0cout << "Setting A(" << k << "," << alpha << ") = " << prefixA*productA << endl;
     } //end weights sub-matrix
 
     // weighted abscissas
@@ -802,7 +1165,10 @@ DQMOM::constructLinearSystem( LU             &A,
 
         modelsumS = - models[j*(N_)+alpha];
 
-        A(k,(j+1)*N_ + alpha)=prefixA*productA;
+        int col = (j+1)*N_ + alpha;
+        A(k,col)=prefixA*productA;
+        if(verbosity == 1)
+          proc0cout << "Setting A(" << k << "," << col << ") = " << prefixA*productA << endl;
         
         quadsumS = quadsumS + weights[alpha]*modelsumS*prefixS*productS;
       }//end quad nodes
@@ -812,6 +1178,121 @@ DQMOM::constructLinearSystem( LU             &A,
     B[k] = totalsumS;
   } // end moments
 }
+
+
+
+// **********************************************
+// Construct A and B matrices for DQMOM
+// **********************************************
+void
+DQMOM::constructLinearSystem( DenseMatrix*   &AA, 
+                              ColumnMatrix*  &BB, 
+                              vector<double> &weights, 
+                              vector<double> &weightedAbscissas,
+                              vector<double> &models,
+                              int             verbosity)
+{
+  // construct AX=B
+  for ( unsigned int k = 0; k < momentIndexes.size(); ++k) {
+    MomentVector thisMoment = momentIndexes[k];
+ 
+    // weights
+    for ( unsigned int alpha = 0; alpha < N_; ++alpha) {
+      double prefixA = 1;
+      double productA = 1;
+      for ( unsigned int i = 0; i < thisMoment.size(); ++i) {
+        if (weights[alpha] != 0) {
+          // Appendix C, C.9 (A1 matrix)
+          prefixA = prefixA - (thisMoment[i]);
+          double base = weightedAbscissas[i*(N_)+alpha] / weights[alpha];
+          double exponent = thisMoment[i];
+          //productA = productA*( pow((weightedAbscissas[i*(N_)+alpha]/weights[alpha]),thisMoment[i]) );
+          productA = productA*( pow(base, exponent) );
+        } else {
+          prefixA = 0;
+          productA = 0;
+        }
+      }
+      (*AA)[k][alpha] = prefixA*productA;
+      if(verbosity == 1)
+        proc0cout << "Setting A(" << k << "," << alpha << ") = " << prefixA*productA << endl;
+    } //end weights sub-matrix
+
+    // weighted abscissas
+    double totalsumS = 0;
+    for( unsigned int j = 0; j < N_xi; ++j ) {
+      double prefixA    = 1;
+      double productA   = 1;
+      
+      double prefixS    = 1;
+      double productS   = 1;
+      double modelsumS  = 0;
+      
+      double quadsumS = 0;
+      for( unsigned int alpha = 0; alpha < N_; ++alpha ) {
+        if (weights[alpha] == 0) {
+          prefixA = 0;
+          prefixS = 0;
+          productA = 0;
+          productS = 0;
+        } else if ( weightedAbscissas[j*(N_)+alpha] == 0 && thisMoment[j] == 0) {
+          //FIXME:
+          // both prefixes contain 0^(-1)
+          prefixA = 0;
+          prefixS = 0;
+        } else {
+          // Appendix C, C.11 (A_j+1 matrix)
+          double base = weightedAbscissas[j*(N_)+alpha] / weights[alpha];
+          double exponent = thisMoment[j] - 1;
+          //prefixA = (thisMoment[j])*( pow((weightedAbscissas[j*(N_)+alpha]/weights[alpha]),(thisMoment[j]-1)) );
+          prefixA = (thisMoment[j])*(pow(base, exponent));
+          productA = 1;
+
+          // Appendix C, C.16 (S matrix)
+          //prefixS = -(thisMoment[j])*( pow((weightedAbscissas[j*(N_)+alpha]/weights[alpha]),(thisMoment[j]-1)));
+          prefixS = -(thisMoment[j])*(pow(base, exponent));
+          productS = 1;
+
+          // calculate product containing all internal coordinates except j
+          for (unsigned int n = 0; n < N_xi; ++n) {
+            if (n != j) {
+              // the if statements checking these same conditions (above) are only
+              // checking internal coordinate j, so we need them again for internal
+              // coordinate n
+              if (weights[alpha] == 0) {
+                productA = 0;
+                productS = 0;
+              //} else if ( weightedAbscissas[n*(N_)+alpha] == 0 && thisMoment[n] == 0) {
+              //  productA = 0;
+              //  productS = 0;
+              } else {
+                double base2 = weightedAbscissas[n*(N_)+alpha]/weights[alpha];
+                double exponent2 = thisMoment[n];
+                productA = productA*( pow(base2, exponent2));
+                productS = productS*( pow(base2, exponent2));
+              }//end divide by zero conditionals
+            }
+          }//end int coord n
+        }//end divide by zero conditionals
+        
+
+        modelsumS = - models[j*(N_)+alpha];
+
+        int col = (j+1)*N_ + alpha;
+        (*AA)[k][col] = prefixA*productA;
+        if(verbosity == 1)
+          proc0cout << "Setting A(" << k << "," << col << ") = " << prefixA*productA << endl;
+        
+        quadsumS = quadsumS + weights[alpha]*modelsumS*prefixS*productS;
+      }//end quad nodes
+      totalsumS = totalsumS + quadsumS;
+    }//end int coords j sub-matrix
+    
+    (*BB)[k] = totalsumS;
+  } // end moments
+}
+
+
 
 // **********************************************
 // schedule the calculation of moments
@@ -983,21 +1464,36 @@ DQMOM::verifyLinearSolver()
   LU verification_A(vls_dimension);
   getMatrixFromFile( verification_A, vls_file_A );
 
+  DenseMatrix* verification_AA = scinew DenseMatrix( vls_dimension, vls_dimension );
+  getMatrixFromFile( verification_AA, vls_dimension, vls_file_A );
+
   // assemble B
   vector<double> verification_B(vls_dimension);
   getVectorFromFile( verification_B, vls_file_B );
+
+  ColumnMatrix* verification_BB = scinew ColumnMatrix( vls_dimension );
+  getVectorFromFile( verification_BB, vls_dimension, vls_file_B );
 
   // assemble actual solution
   vector<double> verification_X(vls_dimension);
   getVectorFromFile( verification_X, vls_file_X );
 
+  ColumnMatrix* verification_XX = scinew ColumnMatrix( vls_dimension );
+  getVectorFromFile( verification_XX, vls_dimension, vls_file_X );
+
   // assemble actual residual
   vector<double> verification_R(vls_dimension);
   getVectorFromFile( verification_R, vls_file_R );
 
+  ColumnMatrix* verification_RR = scinew ColumnMatrix( vls_dimension );
+  getVectorFromFile( verification_RR, vls_dimension, vls_file_R );
+
   // assemble actual normalized residual
   vector<double> verification_normR(vls_dimension);
   getVectorFromFile( verification_normR, vls_file_normR );
+
+  ColumnMatrix* verification_normalizedRR = scinew ColumnMatrix( vls_dimension );
+  getVectorFromFile( verification_normalizedRR, vls_dimension, vls_file_normR);
 
   // assemble norms (determinant, normRes, normResNormalized, normX)
   vector<double> verification_norms(5);
@@ -1019,41 +1515,72 @@ DQMOM::verifyLinearSolver()
     proc0cout << endl << endl;
     proc0cout << "***************************************************************************************" << endl;
     proc0cout << "                      DUMPING LINEAR SOLVER VERIFICATION OBJECTS..." << endl;
-    proc0cout << endl << endl;
 
-    proc0cout << "Matrix A:" << endl;
-    proc0cout << "-----------------------------" << endl;
+    proc0cout << endl << endl;
+    proc0cout << "Matrix Verification_A (LU):" << endl;
+    proc0cout << "---------------------------" << endl;
     verification_A.dump();
 
-    proc0cout << endl << endl;
 
-    proc0cout << "RHS Vector B:" << endl;
-    proc0cout << "-----------------------------" << endl;
+    proc0cout << endl << endl;
+    proc0cout << "Matrix Verification_AA (DenseMatrix):" << endl;
+    proc0cout << "-------------------------------------" << endl;
+    for( int yy=0; yy < vls_dimension; ++yy ) {
+      for( int zz=0; zz < vls_dimension; ++zz ) {
+        proc0cout << setw(9) << setprecision(4) << (*verification_AA)[yy][zz] << "  ";
+      }
+      proc0cout << endl;
+    }
+
+
+    proc0cout << endl << endl;
+    proc0cout << "RHS Vector Verification_B (vector<double>):" << endl;
+    proc0cout << "-------------------------------------------" << endl;
     for(vector<double>::iterator iB = verification_B.begin();
         iB != verification_B.end(); ++iB ) {
       proc0cout << (*iB) << endl;
     }
 
     proc0cout << endl << endl;
+    proc0cout << "RHS Vector Verification_BB (ColumnMatrix): " << endl;
+    proc0cout << "-------------------------------------------" << endl;
+    for( int yy=0; yy < vls_dimension; ++yy ) {
+      proc0cout << (*verification_BB)[yy] << endl;
+    }
 
-    proc0cout << "Solution Vector X:" << endl;
-    proc0cout << "-----------------------------" << endl;
+
+    proc0cout << endl << endl;
+    proc0cout << "Solution Vector Verification_X (vector<double>):" << endl;
+    proc0cout << "------------------------------------------------" << endl;
     for(vector<double>::iterator iX = verification_X.begin();
         iX != verification_X.end(); ++iX ) {
       proc0cout << (*iX) << endl;
     }
 
     proc0cout << endl << endl;
+    proc0cout << "Solution Vector Verification_XX (ColumnMatrix): " << endl;
+    proc0cout << "------------------------------------------------" << endl;
+    for( int yy=0; yy < vls_dimension; ++yy ) {
+      proc0cout << (*verification_XX)[yy] << endl;
+    }
 
-    proc0cout << "Residual Vector R:" << endl;
-    proc0cout << "-----------------------------" << endl;
+
+    proc0cout << endl << endl;
+    proc0cout << "Residual Vector Verification_R (vector<double>):" << endl;
+    proc0cout << "------------------------------------------------" << endl;
     for(vector<double>::iterator iR = verification_R.begin();
         iR != verification_R.end(); ++iR ) {
       proc0cout << (*iR) << endl;
     }
 
     proc0cout << endl << endl;
+    proc0cout << "Residual Vector Verification_RR (ColumnMatrix): " << endl;
+    proc0cout << "------------------------------------------------" << endl;
+    for( int yy=0; yy < vls_dimension; ++yy ) {
+      proc0cout << (*verification_RR)[yy] << endl;
+    }
 
+    proc0cout << endl << endl;
     proc0cout << "Normalized Residual Vector normR:" << endl;
     proc0cout << "-----------------------------" << endl;
     for(vector<double>::iterator iNR = verification_normR.begin();
@@ -1061,8 +1588,8 @@ DQMOM::verifyLinearSolver()
       proc0cout << (*iNR) << endl;
     }
 
-    proc0cout << endl << endl;
 
+    proc0cout << endl << endl;
     proc0cout << "Determinant/Norms Vector Norms:" << endl;
     proc0cout << "-------------------------------" << endl;
     vector<string>::iterator iNN = verification_normnames.begin();
@@ -1098,12 +1625,10 @@ DQMOM::verifyLinearSolver()
   //  these should be verified separately 
   //  to make bugs easier to locate...)
   proc0cout << "Step 1: LU decomposition          " << endl;
-  proc0cout << "Comparing decomposed A matrices..." << endl;
   proc0cout << "----------------------------------" << endl;
   
   LU verification_A_original( verification_A );
-  verification_A.decompose(); 
-  //compare( verification_L_U, A, 1 );
+  DenseMatrix* AAorig = verification_AA->clone();
 
 
   // --------------------------------------------------------------------
@@ -1111,13 +1636,22 @@ DQMOM::verifyLinearSolver()
   //    vector from file. Store in a NEW solution vector.
   proc0cout << endl;
   proc0cout << endl;
-  proc0cout << "Step 2: LU back-substitution                             " << endl;
+  proc0cout << "Step 2A: LU back-substitution                             " << endl;
   proc0cout << "Comparing calculated solution to verification solution..." << endl;
   proc0cout << "---------------------------------------------------------" << endl;
-  
   vector<double> X(vls_dimension);
+  verification_A.decompose(); 
   verification_A.back_subs( &verification_B[0], &X[0] );
   compare( verification_X, X, tol );
+
+  proc0cout << endl;
+  proc0cout << endl;
+  proc0cout << "Step 2B: DenseMatrix::solve()" << endl;
+  proc0cout << "Comparing calculated solution to verification solution..." << endl;
+  proc0cout << "---------------------------------------------------------" << endl;
+  ColumnMatrix* XX = scinew ColumnMatrix( vls_dimension );
+  verification_AA->solve( (*verification_BB), (*XX), 1 );
+  compare( verification_XX, XX, vls_dimension, tol );
 
 
   // --------------------------------------------------------------------
@@ -1127,7 +1661,6 @@ DQMOM::verifyLinearSolver()
   proc0cout << endl;
   proc0cout << "Step 3: Verifying determinant calculation   " << endl;
   proc0cout << "--------------------------------------------" << endl;
-  
   double determinant = verification_A.getDeterminant();
   compare( verification_norms[0], determinant, tol );
 
@@ -1137,13 +1670,23 @@ DQMOM::verifyLinearSolver()
   //    compare to residual (from file).
   proc0cout << endl;
   proc0cout << endl;
-  proc0cout << "Step 4: Verifying residual calculation      " << endl;
+  proc0cout << "Step 4A: Verifying LU residual calculation      " << endl;
   proc0cout << "Comparing calculated residual to verification residual..." << endl;
   proc0cout << "---------------------------------------------------------" << endl;
-
   vector<double> R(vls_dimension);
-  verification_A_original.getResidual( &verification_B[0], &verification_X[0], &R[0] );
+  verification_A_original.getResidual( &verification_B[0], &X[0], &R[0] );
   compare( verification_R, R, tol );
+  
+  proc0cout << endl;
+  proc0cout << endl;
+  proc0cout << "Step 4B: Verifying ColumnMatrix residual calculation      " << endl;
+  proc0cout << "Comparing calculated residual to verification residual..." << endl;
+  proc0cout << "---------------------------------------------------------" << endl;
+  ColumnMatrix* RR = scinew ColumnMatrix( vls_dimension );
+  int tflops, tmemrefs;
+  AAorig->mult( (*XX), (*RR), tflops, tmemrefs );
+  Sub( (*RR), (*verification_BB), (*RR) );
+  compare( verification_RR, RR, vls_dimension, tol );
 
 
   // ---------------------------------------------------------------------
@@ -1151,11 +1694,24 @@ DQMOM::verifyLinearSolver()
   //    residual to norm of residual (from file).
   proc0cout << endl;
   proc0cout << endl;
-  proc0cout << "Step 5: Verifying norm of residal " << endl;
+  proc0cout << "Step 5A: Verifying LU's norm of residal " << endl;
   proc0cout << "---------------------------------------------------" << endl;
-
   double normRes = verification_A.getNorm( &verification_R[0], 1 );
   compare( verification_norms[1], normRes, tol );
+
+  proc0cout << endl;
+  proc0cout << endl;
+  proc0cout << "Step 5B: Verifying ColumnMatrix norm of residal " << endl;
+  proc0cout << "---------------------------------------------------" << endl;
+  double this_normRes = 0;
+  // FIXME: This is calculating a 0 norm, but the verification procedure is for the 1 norm...
+  // Change the verification procedure to use the 0 norm!
+  for( int ii=0; ii<vls_dimension; ++ii ) {
+    if( fabs((*RR)[ii]) > this_normRes ) {
+      this_normRes = (*RR)[ii];
+    }
+  }
+  compare( verification_norms[1], this_normRes, tol );
 
 
   // -----------------------------------------------------------------
@@ -1163,10 +1719,8 @@ DQMOM::verifyLinearSolver()
   //    normalized by RHS vector B to the same quantity from file.
   proc0cout << endl;
   proc0cout << endl;
-  proc0cout << "Step 6: Verifying normalization of residual      " << endl;
-  proc0cout << "Comparing residuals normalized by RHS vector B..." << endl;
-  proc0cout << "-------------------------------------------------" << endl;
-
+  proc0cout << "Step 6: Verifying LU normalization of residual by B " << endl;
+  proc0cout << "-----------------------------------------------------" << endl;
   vector<double> Rnormalized(vls_dimension);
   for(vector<double>::iterator iR = R.begin(), iRN = Rnormalized.begin(), iB = verification_B.begin();
       iR != R.end(); ++iR, ++iRN, ++iB) {
@@ -1179,34 +1733,72 @@ DQMOM::verifyLinearSolver()
   // 7. Get norm of normalized residual vector
   proc0cout << endl;
   proc0cout << endl;
-  proc0cout << "Step 7: Verifying calculation of norm of " << endl;
-  proc0cout << "        normalized residual " << endl;
+  proc0cout << "Step 7A: Verifying LU calculation of norm of " << endl;
+  proc0cout << "         normalized residual " << endl;
   proc0cout << "---------------------------------------------------" << endl;
-
   double normResNormalized = verification_A.getNorm( &verification_normR[0], 1 );
   compare( verification_norms[2], normResNormalized, tol );
+
+  proc0cout << endl;
+  proc0cout << endl;
+  proc0cout << "Step 7B: Verifying ColumnMatrix calculation of norm of " << endl;
+  proc0cout << "         normalized residual " << endl;
+  proc0cout << "---------------------------------------------------" << endl;
+  double this_normResNormalizedB = 0;
+  for( int ii=0; ii<vls_dimension; ++ii ) {
+    if( fabs( (*RR)[ii] / (*verification_BB)[ii] ) > this_normResNormalizedB ) {
+      this_normResNormalizedB = ((*RR)[ii] / (*verification_BB)[ii]);
+    }
+  }
+  compare( verification_norms[2], this_normResNormalizedB, tol );
+
 
 
   // -------------------------------------------------------------------
   // 8. Get norm of RHS vector B
   proc0cout << endl;
   proc0cout << endl;
-  proc0cout << "Step 8: Verifying norm of RHS vector B  " << endl;
+  proc0cout << "Step 8A: Verifying LU norm of RHS vector B  " << endl;
   proc0cout << "----------------------------------------" << endl;
-
   double normB = verification_A.getNorm( &verification_B[0], 1 );
   compare( verification_norms[3], normB, tol );
+
+  proc0cout << endl;
+  proc0cout << endl;
+  proc0cout << "Step 8B: Verifying ColumnMatrix norm of RHS vector B  " << endl;
+  proc0cout << "----------------------------------------" << endl;
+  double this_normB = 0;
+  for( int ii=0; ii<vls_dimension; ++ii ) {
+    if( fabs((*verification_BB)[ii]) > this_normB ) {
+      this_normB = (*verification_BB)[ii];
+    }
+  }
+  compare( verification_norms[3], this_normB, tol );
 
 
   // -------------------------------------------------------------------
   // 9. Get norm of solution vector X
   proc0cout << endl;
   proc0cout << endl;
-  proc0cout << "Step 8: Verifying norm of solution vector X  " << endl;
-  proc0cout << "---------------------------------------------" << endl;
-
+  proc0cout << "Step 8A: Verifying norm of solution vector X  " << endl;
+  proc0cout << "----------------------------------------------" << endl;
   double normX = verification_A.getNorm( &verification_X[0], 1 );
   compare( verification_norms[4], normX, tol );
+
+  proc0cout << endl;
+  proc0cout << endl;
+  proc0cout << "Step 8B: Verifying norm of solution vector X  " << endl;
+  proc0cout << "----------------------------------------------" << endl;
+  double this_normX = 0;
+  for( int ii=0; ii<vls_dimension; ++ii ) {
+    if( fabs((*XX)[ii]) > this_normX ) {
+      this_normX = (*XX)[ii];
+    }
+  }
+  compare( verification_norms[4], this_normX, tol );
+
+
+
 
   proc0cout << endl;
   proc0cout << endl;
@@ -1214,6 +1806,15 @@ DQMOM::verifyLinearSolver()
   proc0cout << "***************************************************************************************" << endl;
   proc0cout << endl;
   proc0cout << endl;
+
+  delete verification_AA;
+  delete verification_BB;
+  delete verification_XX;
+  delete verification_RR;
+  delete verification_normalizedRR;
+  delete XX;
+  delete RR;
+
 }
 #endif
 
@@ -1233,9 +1834,15 @@ DQMOM::verifyABConstruction()
   LU verification_A( vab_dimension );
   getMatrixFromFile( verification_A, vab_file_A );
 
+  DenseMatrix* verification_AA = scinew DenseMatrix( vab_dimension, vab_dimension );
+  getMatrixFromFile( verification_AA, vab_dimension, vab_file_A );
+
   // assemble B
   vector<double> verification_B(vab_dimension);
   getVectorFromFile( verification_B, vab_file_B );
+
+  ColumnMatrix* verification_BB = scinew ColumnMatrix( vab_dimension );
+  getVectorFromFile( verification_BB, vab_dimension, vab_file_B );
 
   // assemble inputs 
   ifstream vab_inputs( vab_file_inputs.c_str() );
@@ -1357,24 +1964,56 @@ DQMOM::verifyABConstruction()
   vector<double> B( vab_dimension );
   constructLinearSystem( A, B, weights, weightedAbscissas, models );
 
+  DenseMatrix* AA = scinew DenseMatrix( vab_dimension, vab_dimension );
+  ColumnMatrix* BB = scinew ColumnMatrix( vab_dimension );
+  constructLinearSystem( AA, BB, weights, weightedAbscissas, models );
+
   // --------------------------------------------------------------
   // 1. Compare constructed A to verification A (from file)
   proc0cout << endl;
   proc0cout << endl;
-  proc0cout << "Step 1: Compare constructed A to assembled A (from file) " << endl;
+  proc0cout << "Step 1A: Compare constructed A to assembled A (from file) " << endl;
   proc0cout << "---------------------------------------------------------" << endl;
+  proc0cout << "Constructed LU A:" << endl;
   A.dump();
   compare( verification_A, A, tol );
+
+  proc0cout << endl;
+  proc0cout << endl;
+  proc0cout << "Step 1B: Compare constructed A to assembled A (from file) " << endl;
+  proc0cout << "---------------------------------------------------------" << endl;
+  proc0cout << "Constructed DenseMatrix A:" << endl;
+  for( int yy=0; yy < vab_dimension; ++yy ) {
+    for( int zz=0; zz < vab_dimension; ++zz ) {
+      proc0cout << setw(6) << setprecision(4) << (*AA)[yy][zz] << "\t";
+    }
+    proc0cout << endl;
+  }
+  proc0cout << endl;
+  compare( verification_AA, AA, vab_dimension, tol );
 
 
   // --------------------------------------------------------------
   // 2. Compare constructed B to verification B (from file)
   proc0cout << endl;
   proc0cout << endl;
-  proc0cout << "Step 2: Compare constructed B to assembled B (from file) " << endl;
+  proc0cout << "Step 2A: Compare constructed vector<double> B to assembled B (from file) " << endl;
   proc0cout << "---------------------------------------------------------" << endl;
-  
+  proc0cout << "Vector<double> B:" << endl;
+  for(vector<double>::iterator iB = B.begin(); iB != B.end(); ++iB ) {
+    proc0cout << (*iB) << endl;
+  }
   compare( verification_B, B, tol );
+
+  proc0cout << endl;
+  proc0cout << endl;
+  proc0cout << "Step 2B: Compare constructed ColumnMatrix B to assembled B (from file) " << endl;
+  proc0cout << "---------------------------------------------------------" << endl;
+  proc0cout << "ColumnMatrix B:" << endl;
+  for( int yy=0; yy < vab_dimension; ++yy ) {
+    proc0cout << (*BB)[yy] << endl;
+  }
+  compare( verification_BB, BB, vab_dimension, tol );
 
   proc0cout << endl;
   proc0cout << endl;
@@ -1382,6 +2021,11 @@ DQMOM::verifyABConstruction()
   proc0cout << "***************************************************************************************" << endl;
   proc0cout << endl;
   proc0cout << endl;
+
+  delete verification_AA;
+  delete verification_BB;
+  delete AA;
+  delete BB;
 }
 #endif
 
@@ -1405,9 +2049,9 @@ DQMOM::compare( vector<double> vector1, vector<double> vector2, double tolerance
     double pdiff = fabs( ( (*ivec1)-(*ivec2) )/(*ivec1) );
     if( pdiff > tolerance ) {
       proc0cout << " >>> Element " << element << " mismatch: "
-                << "\tPercent Diff = "    << setw(3) << pdiff
-                << "\tVector1 (Verif) = " << setw(12) << (*ivec1) 
-                << "\tVector2 (Calc) = "  << setw(12) << (*ivec2) << endl;
+                << "\tPercent Diff = "    << setw(3)  << setprecision(2) << pdiff
+                << "\tVector1 (Verif) = " << setw(12) << setprecision(4) << (*ivec1) 
+                << "\tVector2 (Calc) = "  << setw(12) << setprecision(4) << (*ivec2) << endl;
       ++mismatches;
     }
   }
@@ -1421,8 +2065,64 @@ DQMOM::compare( vector<double> vector1, vector<double> vector2, double tolerance
   proc0cout << " >>> Summary of vector comparison: found " << mismatches << " mismatches in " << element << " elements." << endl;
   proc0cout << " >>> " << endl;
   proc0cout << endl;
-
 }
+
+
+void
+DQMOM::compare( ColumnMatrix* &vector1, ColumnMatrix* &vector2, int dimension, double tolerance )
+{
+  proc0cout << " >>> " << endl;
+  int mismatches = 0;
+  int element = 0;
+  for( int yy=0; yy<dimension; ++yy ) {
+    double pdiff = fabs( ( (*vector1)[yy] - (*vector2)[yy] )/( (*vector1)[yy] ) );
+    if( pdiff > tolerance ) {
+      proc0cout << " >>> Element " << element << " mismatch: "
+                << "\tPercent Diff = "    << setw(3)  << setprecision(2) << pdiff
+                << "\tVector1 (Verif) = " << setw(12) << setprecision(4) << (*vector1)[yy]
+                << "\tVector2 (Calc) = "  << setw(12) << setprecision(4) << (*vector2)[yy] << endl;
+      ++mismatches;
+    }
+  }
+
+  if( mismatches > 0 ) {
+    proc0cout << " >>> " << endl;
+    proc0cout << " >>> !!! COMPARISON FAILED !!! " << endl;
+    proc0cout << " >>> " << endl;
+  }
+
+  proc0cout << " >>> Summary of vector comparison: found " << mismatches << " mismatches in " << element << " elements." << endl;
+  proc0cout << " >>> " << endl;
+  proc0cout << endl;
+}
+
+
+void
+DQMOM::compare( double x1, double x2, double tolerance )
+{
+  proc0cout << " >>> " << endl;
+  int mismatches = 0;
+  
+  double pdiff = fabs( (x1-x2)/x1 );
+  if( pdiff > tolerance ) {
+    proc0cout << " >>> Element mismatch: "
+              << "\tPercent Diff = "  << setw(3)  << setprecision(2) << pdiff
+              << "\tX1 (Verif) = "    << setw(12) << setprecision(4) << x1 
+              << "\tX2 (Calc) = "     << setw(12) << setprecision(4) << x2 << endl;
+    ++mismatches;
+  }
+
+  if( mismatches > 0 ) {
+    proc0cout << " >>> " << endl;
+    proc0cout << " >>> !!! COMPARISON FAILED !!! " << endl;
+    proc0cout << " >>> " << endl;
+  }
+
+  proc0cout << " >>> Summary of scalar comparison: found " << mismatches << " mismatches." << endl;
+  proc0cout << " >>> " << endl;
+}
+
+
 
 void
 DQMOM::compare( LU matrix1, LU matrix2, double tolerance )
@@ -1442,10 +2142,10 @@ DQMOM::compare( LU matrix1, LU matrix2, double tolerance )
     for( int col=0; col < size1; ++col ) {
       double pdiff = fabs( (matrix1(row,col)-matrix2(row,col))/matrix1(row,col) );
       if( pdiff > tolerance ) {
-        proc0cout << " >>> Element (row "    << setw(2) << row+1 << ", col " << setw(2) << col+1 << ") mismatch: "
-                  << "\tPercent Diff = "     << setw(3) << pdiff
-                  << "\tMatrix 1 (Verif) = " << setw(12) << matrix1(row,col) 
-                  << "\tMatrix 2 (Calc) = "  << setw(12) << matrix2(row,col) << endl;
+        proc0cout << " >>> Element (row "    << setw(2)  << setprecision(0) << row+1 << ", col " << setw(2) << setprecision(0) << col+1 << ") mismatch: "
+                  << "\tPercent Diff = "     << setw(3)  << setprecision(2) << pdiff
+                  << "\tMatrix 1 (Verif) = " << setw(12) << setprecision(4) << matrix1(row,col) 
+                  << "\tMatrix 2 (Calc) = "  << setw(12) << setprecision(4) << matrix2(row,col) << endl;
         ++mismatches;
       }
       ++element;
@@ -1463,19 +2163,25 @@ DQMOM::compare( LU matrix1, LU matrix2, double tolerance )
   proc0cout << endl;
 }
 
+
 void
-DQMOM::compare( double x1, double x2, double tolerance )
+DQMOM::compare( DenseMatrix* &matrix1, DenseMatrix* &matrix2, int dimension, double tolerance )
 {
   proc0cout << " >>> " << endl;
   int mismatches = 0;
-  
-  double pdiff = fabs( (x1-x2)/x1 );
-  if( pdiff > tolerance ) {
-    proc0cout << " >>> Element mismatch: "
-              << "\tPercent Diff = "  << setw(3) << pdiff
-              << "\tX1 (Verif) = "    << setw(12) << x1 
-              << "\tX2 (Calc) = "     << setw(12) << x2 << endl;
-    ++mismatches;
+  int element = 0;
+  for( int row=0; row < dimension; ++row ) {
+    for( int col=0; col < dimension; ++col ) {
+      double pdiff = fabs( ( (*matrix1)[row][col] - (*matrix2)[row][col] )/( (*matrix1)[row][col] ) );
+      if( pdiff > tolerance ) {
+        proc0cout << " >>> Element (row "    << setw(2)  << setprecision(0) << row+1 << ", col " << setw(2) << setprecision(0) << col+1 << ") mismatch: "
+                  << "\tPercent Diff = "     << setw(3)  << setprecision(2) << pdiff
+                  << "\tMatrix 1 (Verif) = " << setw(12) << setprecision(4) << (*matrix1)[row][col]
+                  << "\tMatrix 2 (Calc)  = " << setw(12) << setprecision(4) << (*matrix2)[row][col] << endl;
+        ++mismatches;
+      }
+      ++element;
+    }
   }
 
   if( mismatches > 0 ) {
@@ -1484,9 +2190,11 @@ DQMOM::compare( double x1, double x2, double tolerance )
     proc0cout << " >>> " << endl;
   }
 
-  proc0cout << " >>> Summary of scalar comparison: found " << mismatches << " mismatches." << endl;
+  proc0cout << " >>> Summary of matrix comparison: found " << mismatches << " mismatches in " << element << " elements." << endl;
   proc0cout << " >>> " << endl;
+  proc0cout << endl;
 }
+
 
 void
 DQMOM::tokenizeInput( const string& str, vector<string>& tokens, const string& delimiters )
@@ -1545,7 +2253,45 @@ DQMOM::getMatrixFromFile( LU& matrix, string filename )
       matrix(jj,kk) = d;
     }
   }
+}
 
+void
+DQMOM::getMatrixFromFile( DenseMatrix* &matrix, int dimension, string filename )
+{
+  ifstream ifile( filename.c_str() );
+  if( ifile.fail() ) {
+    ostringstream err_msg;
+    err_msg << "ERROR: DQMOM: getMatrixFromFile: Verification procedure could not find the file you specified: " << filename << endl;
+    throw FileNotFound(err_msg.str(),__FILE__,__LINE__);
+  }
+
+  for( unsigned int jj=0; jj<dimension; ++jj) {
+    string s1;
+
+    // grab entire row
+    do {
+      getline( ifile, s1 );
+    }
+    while( s1[0] == '\n' || s1[0] == '#' );
+
+    vector<string> elementsOfA;
+    tokenizeInput( s1, elementsOfA, " " );
+
+    if( elementsOfA.size() != dimension ) {
+      ostringstream err_msg;
+      err_msg << "ERROR: DQMOM: getMatrixFromFile: Verification procedure found incorect number of elements in matrix, file " << filename << ": found " << elementsOfA.size() << " elements, needed " << dimension << " elements." << endl;
+      throw InvalidValue( err_msg.str(),__FILE__,__LINE__);
+    }
+
+    int kk=0;
+    for( vector<string>::iterator iE = elementsOfA.begin();
+         iE != elementsOfA.end(); ++iE, ++kk ) {
+      double d = 0.0;
+      stringstream ss( (*iE) );
+      ss >> d;
+      (*matrix)[jj][kk] = d;
+    }
+  }
 }
 
 /** @details  This method opens an ifstream to a file containing moment indices.
@@ -1623,6 +2369,31 @@ DQMOM::getVectorFromFile( vector<double>& vec, string filename )
     stringstream ss(s1);
     ss >> d;
     (*iB) = d;
+  }
+}
+
+void
+DQMOM::getVectorFromFile( ColumnMatrix* &vec, int dimension, string filename )
+{
+  ifstream jfile( filename.c_str() );
+  if( jfile.fail() ) {
+    ostringstream err_msg;
+    err_msg << "ERROR: DQMOM: getVectorFromFile: Verification procedure could not find file you specified: " << filename << endl;
+    throw FileNotFound(err_msg.str(),__FILE__,__LINE__);
+  }
+
+  for( int yy=0; yy<dimension; ++yy ) {
+    string s1;
+
+    do {
+      getline( jfile, s1 );
+    }
+    while( s1[0] == '\n' || s1[0] == '#' );
+
+    double d = 0.0;
+    stringstream ss(s1);
+    ss >> d;
+    (*vec)[yy] = d;
   }
 }
 
