@@ -10,9 +10,7 @@
 #include <CCA/Components/Arches/ArchesMaterial.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/Exceptions/InvalidValue.h>
-
-#define YDIM
-#define ZDIM
+#include <CCA/Components/Arches/Directives.h>
 
 //========================================================================
 

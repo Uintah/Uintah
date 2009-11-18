@@ -4,15 +4,12 @@
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/Variables/VarTypes.h>
-
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Variables/SFCXVariable.h>
 #include <Core/Grid/Variables/SFCYVariable.h>
 #include <Core/Grid/Variables/SFCZVariable.h>
 #include <Core/Exceptions/InvalidValue.h>
-
-#define YDIM
-#define ZDIM
+#include <CCA/Components/Arches/Directives.h>
 
 //==========================================================================
 
