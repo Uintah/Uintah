@@ -653,7 +653,6 @@ if test "$CC" = ""; then
 
   case "$host" in 
      *)
-        #qwerty
         # Check to see if cc is actually gcc
         is_gcc=`$CC --version | grep -i gcc`
         if test "$is_gcc"; then
@@ -690,11 +689,6 @@ if test "$CXX" = ""; then
   esac
 fi
 
-
-if test "$F77" = ""; then
-  AC_PROG_F77()
-  AC_MSG_WARN(Fortran compiler not specified with 'F77' environment variable. Using default... $F77)
-fi
 
 # Most fortran compilers need an "_" for C function names.
 # Some have strange underscore needs.  This flag is used in the
@@ -908,6 +902,21 @@ AC_SUBST(DEF_RADIATION)
 
 if test "$BUILD_ARCHES" = no -a "$BUILD_RADIATION" = no; then
   sci_required_fortran=no
+else
+  if test "$with_fortran" != no; then
+    sci_required_fortran=yes
+    if test "$F77" = ""; then
+      AC_PROG_F77()
+      if test "$F77" = ""; then
+        AC_MSG_ERROR(Could not find a fortran compiler!  Please set the F77 environment variable to point to a fortran compiler.)
+      fi
+      AC_MSG_WARN(Fortran compiler not specified with 'F77' environment variable. Using default... $F77)
+    else
+      if test ! -e "`type $F77 | sed 's%^.* /%/%'`"; then
+        SCI_MSG_ERROR(Could not find the specified Fortran compiler: '$F77' )
+      fi
+    fi
+  fi
 fi
 
 ##  --  Handle static build stuff... ------------------------
@@ -993,12 +1002,6 @@ AC_SUBST(ZOLTAN_LIB_DIR_FLAG)
 ## -----------------------------------------------
 
 sci_defs_files="$sci_defs_files include/sci_defs/uintah_testdefs.h"
-
-if test "$sci_required_fortran" = "yes"; then
-  if test ! -e "`type $F77 | sed 's%^.* /%/%'`"; then
-    SCI_MSG_ERROR(Could not find the specified Fortran compiler ($F77))
-  fi
-fi
 
 # This flag is for the windows compiler - so it can generate correct
 # SHARE flags.
@@ -1265,6 +1268,7 @@ case $host in
     fi
 
     AC_MSG_CHECKING(if special 32/64 bits flags required)
+    echo "here: $enable_64bit, $enable_32bit, $NBITS"
     if test "$enable_32bit" = "yes" -a $NBITS = 64; then
        NBITS=32
        CFLAGS="-m32 $CFLAGS"
@@ -1380,7 +1384,10 @@ for flag in -MDupdate; do
       CC_DEPEND_EXT=depend.mk
     else 
       AC_MSG_RESULT( no )
-#      echo "Test results: "  # <= Turn on to debug DEPEND flag issues...
+      echo ""
+#      echo "ac_try: $ac_try"   # <= Turn on to debug DEPEND flag issues...
+#      echo ""
+#      echo "Test results: "
 #      echo ""
 #      cat conftest.out
 #      echo ""
