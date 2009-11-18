@@ -4,11 +4,9 @@
 #include <CCA/Ports/SimulationInterface.h>
 #include <Core/Grid/SimulationStateP.h>
 #include <Core/Grid/Variables/CCVariable.h>
-
 #include <CCA/Ports/DataWarehouse.h>
 #include <Core/Grid/Variables/VarTypes.h>
-
-//#define VERIFY_TIMEINT //ONLY UNCOMMENT for verification 
+#include <CCA/Components/Arches/Directives.h>
 
 //===========================================================================
 

@@ -3,10 +3,7 @@
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/BoundaryConditions/BoundCond.h>
-
-#define XDIM
-#define YDIM
-#define ZDIM
+#include <CCA/Components/Arches/Directives.h>
 
 //===========================================================================
 
