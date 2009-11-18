@@ -3,18 +3,13 @@
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/Variables/VarTypes.h>
-
 #include <CCA/Components/Arches/TransportEqns/EqnBase.h>
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqnFactory.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Variables/SFCXVariable.h>
 #include <Core/Grid/Variables/SFCYVariable.h>
 #include <Core/Grid/Variables/SFCZVariable.h>
-
-#define YDIM
-#define ZDIM
-
-// #define VERIFY_DQMOM_TRANSPORT // ONLY turn this on for verification of the DQMOM transport mechanism (conv, diff not Ax=b)
+#include <CCA/Components/Arches/Directives.h>
 
 //==========================================================================
 

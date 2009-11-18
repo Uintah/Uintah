@@ -24,11 +24,11 @@
 #include <Core/Exceptions/FileNotFound.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Datatypes/Matrix.h>
-
 #include <Core/Datatypes/DenseMatrix.h>
 #include <Core/Datatypes/ColumnMatrix.h>
 #include <Core/Datatypes/SparseRowMatrix.h>
 #include <Core/Datatypes/MatrixOperations.h>
+#include <CCA/Components/Arches/Directives.h>
 
 #include <iostream>
 #include <sstream>

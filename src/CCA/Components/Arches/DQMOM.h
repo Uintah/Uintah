@@ -10,26 +10,12 @@
 #include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/Patch.h>
-
 #include <Core/Datatypes/DenseMatrix.h>
 #include <Core/Datatypes/ColumnMatrix.h>
+#include <Core/Datatypes/ColumnMatrix.h>
+#include <CCA/Components/Arches/Directives.h>
 
 #include <map>
-#include <vector>
-#include <string>
-
-#include <sci_defs/lapack_defs.h>
-#include <sci_defs/blas_defs.h>
-#if defined(HAVE_LAPACK)
-#  include <Core/Math/sci_lapack.h>
-#endif
-
-// Output matrices once per timestep (will cause a big slowdown)
-//#define DEBUG_MATRICES
-
-//#define VERIFY_LINEAR_SOLVER
-//#define VERIFY_AB_CONSTRUCTION
-
 
 namespace Uintah {
 
