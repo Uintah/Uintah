@@ -27,7 +27,7 @@
 
  */
 
-
+#include <stdio.h>
 
 #include <StandAlone/tools/uda2vis/particles.h>
 
