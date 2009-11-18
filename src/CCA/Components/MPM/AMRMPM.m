@@ -36,7 +36,7 @@ end
 PPC     = 1;
 E       = 1e6;
 density = 1.;
-interpolation = 'gimp';
+interpolation = 'linear';
 
 if( strcmp(interpolation,'gimp') )
   NSFN    = 3;               % Number of shape function nodes Linear:2, GIMP:3
@@ -57,6 +57,7 @@ area       = 1.;
 plotSwitch = 0;
 max_tstep  = BigNum;
 c          = sqrt(E/density);
+titleStr(2) = {'Computational Domain[0:52], bar [0:50] Linear shape functions, PPC: 1'};
 
 % HARDWIRED FOR TESTING
 %NN          = 16;
@@ -70,7 +71,7 @@ end
 
 %__________________________________
 % region structure 
-
+titleStr(3)={'Uniform Resolution'}
 
 if(0)
 %____________
@@ -218,7 +219,7 @@ end
 
 % define the boundary condition nodes
 BCNodeL(1)  = 1;
-BCNodeR(2)  = NN;
+BCNodeR(1)  = NN;
 
 if(strcmp(interpolation,'gimp'))
   BCNodeL(1) = 1;
@@ -276,26 +277,24 @@ end
 
 %__________________________________
 % create particles
-ip=1;
-xp(1)=bar_min + R1_dx/(2.0 * PPC);
+fprintf('Particle Position\n');
+ip = 1;
 
-for r=1:nRegions
-  R = Regions{r};
+for n=1:NN-1  
+  dx_p = (nodePos(n+1) - nodePos(n) )/double(PPC + 1);
   
-  dx_P = R.dx/PPC;                             % particle dx
-  
-  while (xp(ip) + dx_P > R.min )   && ...
-        (xp(ip) + dx_P < R.max )   && ...
-        (xp(ip) + dx_P >= bar_min) && ...
-        (xp(ip) + dx_P <= bar_max)
-
-    ip = ip+1;
-    xp(ip)=xp(ip-1) + dx_P;
-    fprintf('ip: %g xp %g \n',ip, xp(ip));
+  for p = 1:PPC
+    if( (nodePos(n) + dx_p) >= bar_min && (nodePos(n) + dx_p) <= bar_max)
+      xp(ip) = nodePos(n) + double(p) * dx_p;
+      fprintf('xp(%g) %g \n',ip, xp(ip));
+      ip = ip + 1;
+      
+    end
   end
-end  % region
+end
 
-NP=ip;  % number of particles
+
+NP=ip-1;  % number of particles
 
 
 %__________________________________
@@ -308,6 +307,7 @@ dp        = zeros(NP,1);
 stressP   = zeros(NP,1);
 extForceP = zeros(NP,1);
 Fp        = zeros(NP,1);
+dF        = zeros(NP,1);
 nodes     = zeros(1,NSFN);
 Gs        = zeros(1,NSFN);
 Ss        = zeros(1,NSFN);     
@@ -372,7 +372,7 @@ end
 
 if strcmp(problem_type, 'advectBlock')
   initVelocity    = 100;
-  tfinal          = 0.1;
+  tfinal          = 0.5;
   numBCs          = 1;
   velG_BCValueL   = initVelocity;
   velG_BCValueR   = initVelocity;
@@ -390,6 +390,8 @@ if strcmp(problem_type, 'compaction')
   delta_0         = 50;
   velG_BCValueL   = initVelocity;
   velG_BCValueR   = initVelocity;
+  titleStr(1) = {'Quasi-Static Compaction Problem'};
+  
 end
 
 
@@ -455,7 +457,7 @@ while t<tfinal && tstep < max_tstep
   % project particle data to grid  
   for ip=1:NP
   
-    [nodes,Ss]=findNodesAndWeights_gimp2(xp(ip), nRegions, Regions, nodePos, Lx);
+    [nodes,Ss]=findNodesAndWeights(xp(ip), nRegions, Regions, nodePos, Lx);
     for ig=1:NSFN
       massG(nodes(ig))     = massG(nodes(ig))     + massP(ip) * Ss(ig);
       velG(nodes(ig))      = velG(nodes(ig))      + massP(ip) * velP(ip) * Ss(ig);
@@ -494,11 +496,11 @@ while t<tfinal && tstep < max_tstep
   % debugging__________________________________
 
   %compute particle stress
-  [stressP,vol,Fp]=computeStressFromVelocity(xp,dt,velG,E,Fp,NP,nRegions, Regions, nodePos,Lx);
+  [stressP,vol,Fp]=computeStressFromVelocity(xp,dt,velG,E,Fp,dF,NP,nRegions, Regions, nodePos,Lx);
 
   %compute internal force
   for ip=1:NP
-    [nodes,Gs,dx]=findNodesAndWeightGradients_gimp2(xp(ip),nRegions, Regions, nodePos,Lx);
+    [nodes,Gs,dx]=findNodesAndWeightGradients(xp(ip),nRegions, Regions, nodePos,Lx);
     for ig=1:NSFN
       intForceG(nodes(ig)) = intForceG(nodes(ig)) - Gs(ig) * stressP(ip) * vol(ip);
     end
@@ -542,7 +544,7 @@ while t<tfinal && tstep < max_tstep
   %project changes back to particles
   tmp = zeros(NP,1);
   for ip=1:NP
-    [nodes,Ss]=findNodesAndWeights_gimp2(xp(ip),nRegions, Regions, nodePos, Lx);
+    [nodes,Ss]=findNodesAndWeights(xp(ip),nRegions, Regions, nodePos, Lx);
     dvelP = 0.;
     dxp   = 0.;
     
@@ -609,7 +611,7 @@ while t<tfinal && tstep < max_tstep
       pos_error = pos_error +  xp(ip) - exact_pos;
       %fprintf('xp: %16.15f  exact: %16.15f error %16.15f \n',xp(ip), exact_pos, xp(ip) - exact_pos)
     end
-    fprintf('sum position error %E \n',sum(pos_error))
+    %fprintf('sum position error %E \n',sum(pos_error))
   end
   
   if strcmp(problem_type, 'compaction')
@@ -620,17 +622,18 @@ while t<tfinal && tstep < max_tstep
     end
     
     if (mod(tstep,200) == 0) 
-  
-      set(gcf,'position',[50,100,700,500]);
-      figure(1)
+      figure(2)
+      set(2,'position',[1000,100,700,700]);
+      
       plot(xp,stressP,'rd', xp, stressExact, 'b');
       axis([0 50 -10000 0])
-      title('Quasi-Static Compaction Problem, Single Level \Delta{x} = 0.5, PPC: 2, Cells: 50, GIMP')
+
+      title(titleStr)
       legend('Simulation','Exact')
       xlabel('Position');
       ylabel('Particle stress');
 
-      f_name = sprintf('%g.ppm',tstep-1);
+      f_name = sprintf('%g.2.ppm',tstep-1);
       F = getframe(gcf);
       [X,map] = frame2im(F);
       imwrite(X,f_name);
@@ -648,8 +651,8 @@ while t<tfinal && tstep < max_tstep
   
   %__________________________________
   % plot intantaneous solution
-  if (mod(tstep,200) == 0) && (plotSwitch == 1)
-    plotResults(t, xp, dp, massP, velP, stressP, nodePos, velG, massG, momG)
+  if (mod(tstep,100) == 0) && (plotSwitch == 1)
+    plotResults(titleStr, t, tstep, xp, dp, massP, Fp, velP, stressP, nodePos, velG, massG, momG)
     %input('hit return');
   end
   
@@ -730,12 +733,12 @@ end
 % functions
 %______________________________________________________________________
 
-function [stressP,vol,Fp]=computeStressFromVelocity(xp,dt,velG,E,Fp,NP, nRegions, Regions, nodePos,Lx)
+function [stressP,vol,Fp]=computeStressFromVelocity(xp,dt,velG,E,Fp,dF,NP, nRegions, Regions, nodePos,Lx)
   global d_debugging;
   global NSFN;
                                                                                 
   for ip=1:NP
-    [nodes,Gs,dx]  = findNodesAndWeightGradients_gimp2(xp(ip), nRegions, Regions, nodePos, Lx);
+    [nodes,Gs,dx]  = findNodesAndWeightGradients(xp(ip), nRegions, Regions, nodePos, Lx);
     [volP_0, lp_0] = positionToVolP(xp(ip), nRegions, Regions);
     
     gUp=0.0;
@@ -743,13 +746,13 @@ function [stressP,vol,Fp]=computeStressFromVelocity(xp,dt,velG,E,Fp,NP, nRegions
       gUp = gUp + velG(nodes(ig)) * Gs(ig);
     end
 
-    dF          =1. + gUp * dt;
-    Fp(ip)      = dF * Fp(ip);
+    dF(ip)          =1. + gUp * dt;
+    Fp(ip)      = dF(ip) * Fp(ip);
     stressP(ip) = E * (Fp(ip)-1.0);
     vol(ip)     = volP_0 * Fp(ip);
 
     if( strcmp(d_debugging, 'advectBlock') && abs(stressP(ip)) > 1e-8) 
-      fprintf('computeStressFromVelocity: nodes_L: %g, nodes_R:%g, gUp: %g, dF: %g, stressP: %g \n',nodes(1),nodes(2), gUp, dF, stressP(ip) );
+      fprintf('computeStressFromVelocity: nodes_L: %g, nodes_R:%g, gUp: %g, dF: %g, stressP: %g \n',nodes(1),nodes(2), gUp, dF(ip), stressP(ip) );
       fprintf(' Gs_L: %g, Gs_R: %g\n', Gs(1), Gs(2) );
       fprintf(' velG_L: %g, velG_R: %g\n', velG(nodes(1)), velG(nodes(2)) );
       fprintf(' prod_L %g, prod_R: %g \n\n', velG(nodes(1)) * Gs(1), velG(nodes(2)) * Gs(2) );
@@ -831,7 +834,7 @@ end
 
 %__________________________________
 function [nodes,Ss]=findNodesAndWeights(xp, nRegions, Regions, nodePos, Lx)
- 
+  global NSFN;
   % find the nodes that surround the given location and
   % the values of the shape functions for those nodes
   % Assume the grid starts at x=0.  This follows the numenclature
@@ -842,24 +845,34 @@ function [nodes,Ss]=findNodesAndWeights(xp, nRegions, Regions, nodePos, Lx)
   nodes(1)= node;
   nodes(2)= node+1;
   
-  Lx_minus = Lx(node,1);
-  Lx_plus  = Lx(node,2);
-  delX = xp - nodePos(node);
+  for ig=1:NSFN
+    Ss(ig) = -9;
     
-  if (delX <= -Lx_minus)
-    Ss(1) = 0;
-    Ss(2) = 1;
-  elseif(-Lx_minus <= delX && delX<= 0.0)
-    Ss(1) = 1.0 + delX/Lx_minus;
-    Ss(2) = 1.0 - Ss(1);
-  elseif(  0 <= delX && delX<= Lx_plus)
-    Ss(1) = 1.0 - delX/Lx_plus;
-    Ss(2) = 1.0 - Ss(1);
-  elseif( Lx_plus <= delX )
-    Ss(1) = 0;
-    Ss(2) = 1;
+    Lx_minus = Lx(nodes(ig),1);
+    Lx_plus  = Lx(nodes(ig),2);
+    delX = xp - nodePos(nodes(ig));
+
+    if (delX <= -Lx_minus)
+      Ss(ig) = 0;
+    elseif(-Lx_minus <= delX && delX<= 0.0)
+      Ss(ig) = 1.0 + delX/Lx_minus;
+    elseif(  0 <= delX && delX<= Lx_plus)
+      Ss(ig) = 1.0 - delX/Lx_plus;
+    elseif( Lx_plus <= delX )
+      Ss(ig) = 0;
+    end
   end
-  
+  %__________________________________
+  % bullet proofing
+  sum = double(0);
+  for ig=1:NSFN
+    sum = sum + Ss(ig);
+  end
+  if ( abs(sum-1.0) > 1e-10)
+    fprintf('node(1):%g, node(2):%g ,node(3):%g, xp:%g Ss(1): %g, Ss(2): %g, Ss(3): %g, sum: %g\n',nodes(1),nodes(2),nodes(3), xp, Ss(1), Ss(2), Ss(3), sum)
+    input('error: the shape functions (linear) dont sum to 1.0 \n');
+  end
+
   if(0)
     node = xp/dx;
     node=floor(node)+1;
@@ -1028,7 +1041,7 @@ function [nodes,Ss]=findNodesAndWeights_gimp2(xp, nRegions, Regions, nodePos, Lx
 end
 
 %__________________________________
-function [nodes,Gs, dx]=findNodesAndWeightGradients(xp, nRegions, Regions, nodePos)
+function [nodes,Gs, dx]=findNodesAndWeightGradients(xp, nRegions, Regions, nodePos, Lx)
  
   % find the nodes that surround the given location and
   % the values of the gradients of the linear shape functions.
@@ -1193,42 +1206,54 @@ end
 
 
 %__________________________________
-function plotResults(t, xp, dp, massP, velP, stressP, nodePos, velG, massG, momG)
+function plotResults(titleStr,t, tstep, xp, dp, massP, dF, velP, stressP, nodePos, velG, massG, momG)
+
     % plot SimulationState
-  set(gcf,'position',[50,100,900,900]);
   figure(1)
+  set(1,'position',[50,100,700,700]);
+  
   subplot(6,1,1),plot(xp,velP,'rd');
   xlabel('Particle Position');
   ylabel('Particle velocity');
-  %axis([0 1 99 101] )
+  title(titleStr);
+  %axis([0 50 99 101] )
 
-  subplot(6,1,2),plot(xp,massP,'rd');
-  %axis([0 1 53 53.5] )
-  ylabel('Particle Mass');
+  subplot(6,1,2),plot(xp,dF,'rd');
+  %axis([0 50 0 2] )
+  ylabel('dF');
 
   subplot(6,1,3),plot(xp,stressP,'rd');
-  
-  %axis([0 1 -1 1] )
+  %axis([0 50 -1 1] )
   ylabel('Particle stress');
 
   subplot(6,1,4),plot(nodePos, velG,'bx');
   xlabel('NodePos');
   ylabel('grid Vel');
-  %axis([0 1 0 110] )
+  %axis([0 50 0 101] )
 
-  subplot(6,1,5),plot(nodePos, massG,'bx');
-  ylabel('gridMass');
-  %axis([0 1 0 70] )
+  grad_velG = diff(velG);
+  grad_velG(length(velG)) = 0;
+  
+  for n=2:length(velG)
+    grad_velG(n) = grad_velG(n)/(nodePos(n) - nodePos(n-1) );
+  end
+  subplot(6,1,5),plot(nodePos, grad_velG,'bx');
+  ylabel('grad velG');
+  xlim([0,40])
+  
+  %subplot(6,1,5),plot(nodePos, massG,'bx');
+  %ylabel('gridMass');
+  %axis([0 50 0 1.1] )
 
   momG = velG .* massG;
   subplot(6,1,6),plot(nodePos, momG,'bx');
   ylabel('gridMom');
-  %axis([0 1 0 7000] )
+  %axis([0 50 0 101] )
 
-  %f_name = sprintf('%g.ppm',tstep-1)
-  %F = getframe(gcf);
-  %[X,map] = frame2im(F);
-  %imwrite(X,f_name)
+  f_name = sprintf('%g.ppm',tstep-1);
+  F = getframe(gcf);
+  [X,map] = frame2im(F);
+  imwrite(X,f_name)
   %input('hit return');
 end
 
