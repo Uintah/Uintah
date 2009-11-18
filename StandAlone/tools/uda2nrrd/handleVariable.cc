@@ -390,7 +390,9 @@ templateInstantiationForGetCCHelper()
   handlePatchData<T, CCVariable<T>,   LVFieldLB> ( *qinfo, hi, gfhb, patch, *args );
   handlePatchData<T, NCVariable<T>,   LVFieldLB> ( *qinfo, hi, gfhb, patch, *args );
 }
-#pragma GCC reset_options
+#if( ( __GNUC__ == 4  && __GNUC_MINOR__ >= 4 ) || ( __GNUC__ > 4 ) )
+#  pragma GCC reset_options
+#endif
 
 void
 templateInstantiationForGetCC()
