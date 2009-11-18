@@ -259,6 +259,10 @@ wrap_nrrd( FIELD * source, Matrix_Op matrix_op, bool verbose )
 // function is never called, but forces the instantiation of the
 // wrap_nrrd functions that are needed.
 
+// This pragma is used to force gcc to not optimize away the needed
+// function instantiations.
+#pragma GCC optimize "-O0"
+
 template <class T>
 static
 void
@@ -275,6 +279,7 @@ instHelper()
   wrap_nrrd( sf,  (Matrix_Op)0, false );
   wrap_nrrd( flb, (Matrix_Op)0, false );
 }
+#pragma GCC reset_options
 
 void
 templateInstantiationForWrapNrrdCC()

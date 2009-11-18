@@ -27,7 +27,19 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
+/////////////////////////////////////////////////////////////////////////////
+// GCC 4.4 is optimizing away template instantiations that are needed.
+// To force this not to happen, we have to turn off (using pragmas)
+// optimization for the template instantiation function (at bottom of
+// this file).  However, this is causing internal compiler errors.
+// Strangely enough, if you put these 'bogus' pragmas here (bogus because
+// while they change the opt level, they then put it right back), then
+// everything works as advertised...  sigh... don't ask me... (Dd)
+#pragma GCC optimize "-O0"
+#pragma GCC reset_options
+/////////////////////////////////////////////////////////////////////////////
 
+#include <stdio.h>
 
 #include <StandAlone/tools/uda2nrrd/particles.h>
 
@@ -445,6 +457,10 @@ saveParticleData( vector<ParticleDataContainer> & particleVars,
 // Instantiate some of the needed verisons of functions.  This
 // function is never called, but forces the compiler to instantiate
 // the needed templated functions.
+
+// This pragma is used to force gcc to not optimize away the needed
+// function instantiations.
+#pragma GCC optimize "-O0"
 
 void
 templateInstantiationForParticlesCC()
