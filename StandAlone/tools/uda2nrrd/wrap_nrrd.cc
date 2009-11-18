@@ -281,7 +281,9 @@ instHelper()
   wrap_nrrd( sf,  (Matrix_Op)0, false );
   wrap_nrrd( flb, (Matrix_Op)0, false );
 }
-#pragma GCC reset_options
+#if( ( __GNUC__ == 4  && __GNUC_MINOR__ >= 4 ) || ( __GNUC__ > 4 ) )
+#  pragma GCC reset_options
+#endif
 
 void
 templateInstantiationForWrapNrrdCC()
