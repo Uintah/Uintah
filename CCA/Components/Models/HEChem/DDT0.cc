@@ -57,7 +57,7 @@ static DebugStream cout_doing("MODELS_DOING_COUT", false);
 DDT0::DDT0(const ProcessorGroup* myworld,
                          ProblemSpecP& params,
                          const ProblemSpecP& prob_spec)
-  : ModelInterface(myworld), d_params(params), d_prob_spec(prob_spec)
+  : ModelInterface(myworld), d_prob_spec(prob_spec), d_params(params)
 {
   mymatls = 0;
   Ilb  = scinew ICELabel();
@@ -160,23 +160,23 @@ void DDT0::problemSetup(GridP&, SimulationStateP& sharedState,
       mymatls->addAll(m);
     }
     mymatls->addReference();
-  } else {               // else is extension from Simple Burn
-      int matl0_DWI = matl0->getDWIndex();
-      mymatls = scinew MaterialSet();            
-      if( matl0_DWI != 0){
-          vector<int> m(2);
-          m[0] = 0;    // needed for the pressure and NC_CCWeight 
-          m[1] = matl0_DWI;
-          mymatls->addAll(m);
-      }else{
-          vector<int> m(1);
-          m[0] = matl0_DWI;
-          mymatls->addAll(m);
-      }
-      mymatls->addReference();
+  }else{               // else is extension from Simple Burn
+    int matl0_DWI = matl0->getDWIndex();
+    mymatls = scinew MaterialSet();
+    if( matl0_DWI != 0){
+        vector<int> m(2);
+        m[0] = 0;    // needed for the pressure and NC_CCWeight 
+        m[1] = matl0_DWI;
+        mymatls->addAll(m);
+    }else{
+        vector<int> m(1);
+        m[0] = matl0_DWI;
+        mymatls->addAll(m);
+    }
+    mymatls->addReference();
   }
-    
-    
+ 
+
   //__________________________________
   //  Are we saving the total burned mass and total burned energy
   ProblemSpecP DA_ps = d_prob_spec->findBlock("DataArchiver");
