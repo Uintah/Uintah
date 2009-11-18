@@ -27,7 +27,17 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-
+/////////////////////////////////////////////////////////////////////////////
+// GCC 4.4 is optimizing away template instantiations that are needed.
+// To force this not to happen, we have to turn off (using pragmas)
+// optimization for the template instantiation function (at bottom of
+// this file).  However, this is causing internal compiler errors.
+// Strangely enough, if you put these 'bogus' pragmas here (bogus because
+// while they change the opt level, they then put it right back), then
+// everything works as advertised...  sigh... don't ask me... (Dd)
+#pragma GCC optimize "-O0"
+#pragma GCC reset_options
+/////////////////////////////////////////////////////////////////////////////
 
 /////////////////
 // Due to template instantiation ordering problems, these 2 includes must be first:
@@ -345,6 +355,10 @@ handlePatchData( QueryInfo& qinfo, IntVector& offset,
 // functions are never called, but force the compiler to instantiate the
 // handleVariable<Vector> function that is needed.
 
+// This pragma is used to force gcc to not optimize away the needed
+// function instantiations.
+#pragma GCC optimize "-O0"
+
 template <class T>
 void
 templateInstantiationForGetCCHelper()
@@ -372,6 +386,7 @@ templateInstantiationForGetCCHelper()
   handlePatchData<T, CCVariable<T>,   LVFieldLB> ( *qinfo, hi, gfhb, patch, *args );
   handlePatchData<T, NCVariable<T>,   LVFieldLB> ( *qinfo, hi, gfhb, patch, *args );
 }
+#pragma GCC reset_options
 
 void
 templateInstantiationForGetCC()
