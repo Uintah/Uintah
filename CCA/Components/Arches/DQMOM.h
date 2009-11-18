@@ -3,7 +3,6 @@
 #ifndef Uintah_Components_Arches_DQMOM_h
 #define Uintah_Components_Arches_DQMOM_h
 
-#include <sci_defs/petsc_defs.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <Core/Grid/Variables/PerPatch.h>
 #include <Core/Grid/Variables/CellIterator.h>
@@ -12,15 +11,17 @@
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/Patch.h>
 
+#include <Core/Datatypes/DenseMatrix.h>
+#include <Core/Datatypes/ColumnMatrix.h>
+
 #include <map>
 #include <vector>
 #include <string>
 
-
-#ifdef HAVE_PETSC
-extern "C" {
-#include "petscksp.h"
-}
+#include <sci_defs/lapack_defs.h>
+#include <sci_defs/blas_defs.h>
+#if defined(HAVE_LAPACK)
+#  include <Core/Math/sci_lapack.h>
 #endif
 
 // Output matrices once per timestep (will cause a big slowdown)
@@ -37,7 +38,9 @@ namespace Uintah {
 /** 
   * @class    DQMOM
   * @author   Charles Reid (charlesreid1@gmail.com)
-  * @date     March 2009
+  * @date     March 2009      "Initial" Arches version
+  *           July 2009       Iterative Refinement
+  *           November 2009   LAPACK (via DenseMatrix in Uintah framework)
   *
   * @brief    This class constructs and solves the AX=B linear system for DQMOM scalars.
   *
@@ -51,6 +54,7 @@ namespace Uintah {
   */
 
 //-------------------------------------------------------
+
 class ArchesLabel; 
 class DQMOMEqn; 
 class ModelBase; 
@@ -116,7 +120,15 @@ private:
                               vector<double>  &B,
                               vector<double>  &weights,
                               vector<double>  &weightedAbscissas,
-                              vector<double>  &models);
+                              vector<double>  &models,
+                              int              verbosity=0);
+
+  void constructLinearSystem( DenseMatrix*    &AA,
+                              ColumnMatrix*   &BB,
+                              vector<double>  &weights,
+                              vector<double>  &weightedAbscissas,
+                              vector<double>  &models,
+                              int              verbosity=0);
 
   vector<string> InternalCoordinateEqnNames;
   
@@ -130,9 +142,7 @@ private:
   unsigned int N_xi;  ///< Number of internal coordinates
   unsigned int N_;    ///< Number of quadrature nodes
 
-  ArchesLabel* d_fieldLabels; // this is no longer const because a modifiable instance of ArchesLabel is
-                              // required to populate (i.e. modify) the moments map contained in the ArchesLabel
-                              // class! (otherwise the compiler says "discards qualifiers"...)
+  ArchesLabel* d_fieldLabels; 
   
   int d_timeSubStep;
   bool b_save_moments; ///< boolean - calculate & save moments?
@@ -145,10 +155,14 @@ private:
   const VarLabel* d_normBLabel; 
   const VarLabel* d_normXLabel; 
   const VarLabel* d_normResLabel;
-  const VarLabel* d_normResNormalizedLabel;
-  const VarLabel* d_determinantLabel;
+  const VarLabel* d_normResNormalizedLabelB;
+  const VarLabel* d_normResNormalizedLabelX;
+  const VarLabel* d_conditionNumberLabel;
 
-  double d_small_B; 
+  double d_small_normalizer; ///< When X (or B) is smaller than this, don't normalize the residual by it
+  bool b_useLapack;
+  bool b_calcSVD;
+  string d_solverType;
 
 #if defined(VERIFY_LINEAR_SOLVER)
   /** @brief  Get an A and B matrix from a file, then solve the linear system
@@ -166,8 +180,8 @@ private:
 
   int vls_dimension;      ///< Dimension of problem
   double vls_tol;         ///< Tolerance for comparisons
-
   bool b_have_vls_matrices_been_printed;
+
 #endif
 
 #if defined(VERIFY_AB_CONSTRUCTION)
@@ -193,10 +207,12 @@ private:
   /** @brief  Compares the elements of two vectors; if elements are not within tolerance,
               prints a message. */
   void compare(vector<double> vector1, vector<double> vector2, double tolerance);
+  void compare(ColumnMatrix* &vector1, ColumnMatrix* &vector2, int dimension, double tolerance);
 
-  /** @brief  Compares the elements of two LU matrices; if elements are not within tolerance,
+  /** @brief  Compares the elements of two matrices; if elements are not within tolerance,
               prints a message. */
   void compare(LU matrix1, LU matrix2, double tolerance);
+  void compare(DenseMatrix* &matrix1, DenseMatrix* &matrix2, int dimension, double tolerance);
 
   /** @brief  Compares two scalars; if elements are not within tolerance,
               prints a message. */
@@ -209,13 +225,17 @@ private:
 
   /** @brief  Read a matrix from a file */
   void getMatrixFromFile( LU& matrix, string filename );
-
-  /** @brief  Read moment indices from a file */
-  void getMomentsFromFile( vector<MomentVector>& moments, string filename );
+  void getMatrixFromFile( DenseMatrix* &matrix, int dimension, string filename );
 
   /** @brief  Read a vector from a file */
   void getVectorFromFile( vector<double>& vec, string filename );
+  void getVectorFromFile( ColumnMatrix* &vec, int dimension, string filename );
+
+  /** @brief   Read a vector from an already-open filestream */
   void getVectorFromFile( vector<double>& vec, ifstream& filestream );
+  
+  /** @brief  Read moment indices from a file */
+  void getMomentsFromFile( vector<MomentVector>& moments, string filename );
 
 #endif
 

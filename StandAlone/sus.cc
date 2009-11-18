@@ -716,6 +716,7 @@ main( int argc, char *argv[], char *env[] )
 
 } // end main()
 
+/*
 #if !defined(REDSTORM)
 extern "C" {
   void dgesvd_() {
@@ -749,3 +750,5 @@ extern "C" {
   }
 }
 #endif
+*/
+

@@ -343,8 +343,12 @@
             <tolerance                  spec="OPTIONAL DOUBLE 'positive'" />
         </Verify_AB_Construction>
 
+        <LinearSolver                   spec="OPTIONAL NO_DATA">
+          <tolerance                    spec="OPTIONAL DOUBLE 'positive'" />
+          <type                         spec="OPTIONAL STRING 'Lapack, DenseMatrix, LU'" />
+        </LinearSolver>
+
         <number_quad_nodes              spec="REQUIRED INTEGER 'positive'"/>
-        <LU_solver_tolerance            spec="OPTIONAL DOUBLE 'positive'"/>
         <adiabGas_nonadiabPart          spec="OPTIONAL BOOLEAN"/>
         <save_moments                   spec="OPTIONAL BOOLEAN"/>
 

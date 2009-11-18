@@ -15,7 +15,7 @@
   </Time>
 
   <DataArchiver>
-    <filebase>constantMMS_dqmom_verification.uda</filebase>
+    <filebase>DQMOM_Verification_Solver_15x15.uda</filebase>
     <outputInitTimestep />
     <!--outputInterval>0.01</outputInterval-->
     <outputTimestepInterval>1</outputTimestepInterval>
@@ -206,9 +206,13 @@
             <tolerance>0.1</tolerance>
         </Verify_Linear_Solver>
 
+        <LinearSolver>
+            <tolerance>1e-5</tolerance>
+            <type>Lapack</type>
+        </LinearSolver>
+
         <number_quad_nodes>3</number_quad_nodes>
         <save_moments>true</save_moments>
-        <LU_solver_tolerance>1.0e-5</LU_solver_tolerance>
         <adiabGas_nonadiabPart>true</adiabGas_nonadiabPart>
 
         <VelModel>
