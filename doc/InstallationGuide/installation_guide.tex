@@ -339,7 +339,7 @@ server.
   make sure you specify the correct installation location in the
   beginning.
 \item Building VisIt from scratch can take a while.  As mentioned
-  below, you can 'tail -f build_visit_log' to watch the progress.
+  below, you can \begin{verbatim}tail -f build_visit_log\end{verbatim} to watch the progress.
 
 \end{itemize}
 
@@ -367,21 +367,21 @@ cd ``new_visit_dir''
 svn co http://portal.nersc.gov/svn/visit/trunk/ .
 \end{verbatim}
 
-Create a new 'build' directory inside ''new_visit_dir'':
+Create a new 'build' directory inside ''new\_visit\_dir'':
 
 \begin{verbatim}
 mkdir build
 cd build
 \end{verbatim}
 
-Copy the 'build_visit' script into the build directory:
+Copy the 'build\_visit' script into the build directory:
 
 \begin{verbatim}
 cp ../src/svn_bin/build_visit .
 chmod +x build_visit
 \end{verbatim}
 
-Copy the dependencies into the build directory. The build_visit script
+Copy the dependencies into the build directory. The build\_visit script
 normally fails when trying to download the dependencies.  Copying them
 skips the downloading phase.
 
@@ -389,19 +389,19 @@ skips the downloading phase.
 cp ../third_party/*.tar.gz .
 \end{verbatim}
 
-Run the 'build_visit' script (in order to just build the dependencies):
+Run the 'build\_visit' script (in order to just build the dependencies):
 
 \begin{verbatim}
 ./build_visit --makeflags -j# --no-visit
 \end{verbatim}
 
-Replace '#' with the no of processors you want to use.
+Replace '\#' with the no of processors you want to use.
 
 This would launch the normal dialog window, where you should select
 the ''Parallel'' option.  (Use the arrow keys and the space bar.)
 
 At the end of this process, a config file would be generated. It will
-be named ``your_machine_name''.conf. Copy this into the
+be named ``your\_machine\_name''.conf. Copy this into the
 ''../src/config-site'' folder,
 
 \begin{verbatim}
@@ -415,9 +415,9 @@ cd ../src
 ./configure --enable-parallel
 \end{verbatim}
 
-Before you run configure, check your ``your_machine_name''.conf
+Before you run configure, check your ``your\_machine\_name''.conf
 file: Both The CFLAGS and the CXXFLAGS compiler flags should have the
-'-I/<your_open_mpi_path>/include' set. If not please set them on the
+'-I/<your\_open\_mpi\_path>/include' set. If not please set them on the
 ''configure'' command, i.e. something like:
 
 \begin{verbatim}
@@ -433,7 +433,7 @@ information on common errors that occur during the 'make' process.)
 make -j#
 \end{verbatim}
 
-where '#' is the no of processors to use while building.
+where '\#' is the no of processors to use while building.
 
 As usual, cross your fingers. If everything goes fine, you can find
 the visit executable in the ''bin'' folder, which is inside the
