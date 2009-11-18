@@ -400,12 +400,12 @@ SCI_ARG_ENABLE(optimize,
 SCI_ARG_ENABLE(64bit, AC_HELP_STRING(--enable-64bit,
                  Compile in 64 bit mode),
   [enable_64bit="$enableval"],
-  [enable_64bit=$i{enable_64bit='no'}])
+  [enable_64bit='no'])
 SCI_ARG_ENABLE(32bit,
   AC_HELP_STRING(--enable-32bit,
                  Compile in 32 bit mode),
   [enable_32bit="$enableval"],
-  [enable_32bit=$i{enable_32bit='no'}])
+  [enable_32bit='no'])
 SCI_ARG_ENABLE(output-avg-walltime,
   AC_HELP_STRING(--enable-output-avg-walltime,
                  Output ellapsed wall-times),
@@ -713,6 +713,16 @@ else
   else
     MAKE_PARALLELISM=8
   fi
+fi
+
+# If the user did not specify the number of bits for build, then default
+# to machine default number of bits.
+if test "$enable_32bit" = "no" -a "$enable_64bit" = "no"; then
+   if test "$NBITS" = 64; then
+      enable_64bit="yes"
+   else
+      enable_32bit="yes"
+   fi
 fi
 
 AC_MSG_CHECKING(target build word length)
@@ -1268,7 +1278,6 @@ case $host in
     fi
 
     AC_MSG_CHECKING(if special 32/64 bits flags required)
-    echo "here: $enable_64bit, $enable_32bit, $NBITS"
     if test "$enable_32bit" = "yes" -a $NBITS = 64; then
        NBITS=32
        CFLAGS="-m32 $CFLAGS"
