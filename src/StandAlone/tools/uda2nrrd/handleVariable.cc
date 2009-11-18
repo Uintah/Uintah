@@ -35,8 +35,10 @@ DEALINGS IN THE SOFTWARE.
 // Strangely enough, if you put these 'bogus' pragmas here (bogus because
 // while they change the opt level, they then put it right back), then
 // everything works as advertised...  sigh... don't ask me... (Dd)
-#pragma GCC optimize "-O0"
-#pragma GCC reset_options
+#if( ( __GNUC__ == 4  && __GNUC_MINOR__ >= 4 ) || ( __GNUC__ > 4 ) )
+#  pragma GCC optimize "-O0"
+#  pragma GCC reset_options
+#endif
 /////////////////////////////////////////////////////////////////////////////
 
 /////////////////
@@ -357,7 +359,9 @@ handlePatchData( QueryInfo& qinfo, IntVector& offset,
 
 // This pragma is used to force gcc to not optimize away the needed
 // function instantiations.
-#pragma GCC optimize "-O0"
+#if( ( __GNUC__ == 4  && __GNUC_MINOR__ >= 4 ) || ( __GNUC__ > 4 ) )
+#  pragma GCC optimize "-O0"
+#endif
 
 template <class T>
 void
