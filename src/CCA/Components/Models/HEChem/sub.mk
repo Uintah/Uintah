@@ -38,4 +38,5 @@ SRCS	+= \
        $(SRCDIR)/Unsteady_Burn.cc \
        $(SRCDIR)/IandG.cc         \
        $(SRCDIR)/LightTime.cc     \
-       $(SRCDIR)/JWLpp.cc
+       $(SRCDIR)/JWLpp.cc         \
+       $(SRCDIR)/DDT0.cc
