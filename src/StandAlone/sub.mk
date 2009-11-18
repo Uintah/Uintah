@@ -100,6 +100,7 @@ ifeq ($(IS_STATIC_BUILD),yes)
     CCA_Components_Arches_MCRT_ArchesRMCRT \
     CCA_Components_Arches_ChemMix_TabProps \
     \
+    Core_Datatypes                      \
     Core_DataArchive                    \
     Core_Grid                           \
     Core_ProblemSpec                    \
