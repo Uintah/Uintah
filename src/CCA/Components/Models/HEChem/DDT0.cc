@@ -66,24 +66,24 @@ DDT0::DDT0(const ProcessorGroup* myworld,
   //__________________________________
   //  diagnostic labels JWL++
   reactedFractionLabel   = VarLabel::create("F",
-                     CCVariable<double>::getTypeDescription());
+                                      CCVariable<double>::getTypeDescription());
                      
   delFLabel   = VarLabel::create("delF",
-                     CCVariable<double>::getTypeDescription());
+                                      CCVariable<double>::getTypeDescription());
 
-  // detonatingLabel = VarLabel::create("detonating",
-  //                   CCVariable<double>::getTypeDescription());
+  detonatingLabel = VarLabel::create("detonating",
+                                      CCVariable<double>::getTypeDescription());
   //__________________________________
   //  diagnostic labels Simple Burn    
   d_saveConservedVars = scinew saveConservedVars();
   onSurfaceLabel   = VarLabel::create("DDT0::onSurface",
-                                      CCVariable<double>::getTypeDescription());
+                                       CCVariable<double>::getTypeDescription());
     
   surfaceTempLabel = VarLabel::create("DDT0::surfaceTemp",
                                        CCVariable<double>::getTypeDescription());
 
-  //burningLabel = VarLabel::create("burning",
-  //                   CCVariable<double>::getTypeDescription());
+  burningLabel = VarLabel::create("burning",
+                     CCVariable<double>::getTypeDescription());
     
   totalMassBurnedLabel  = VarLabel::create( "totalMassBurned",
                                              sum_vartype::getTypeDescription() );
@@ -102,15 +102,15 @@ DDT0::~DDT0()
   // JWL++
   VarLabel::destroy(reactedFractionLabel);
   VarLabel::destroy(delFLabel);
-  //VarLabel::destroy(detonatingLabel);
+  VarLabel::destroy(detonatingLabel);
   // Simple Burn
   VarLabel::destroy(surfaceTempLabel);
   VarLabel::destroy(onSurfaceLabel);
-  //VarLabel::destroy(burningLabel);
+  VarLabel::destroy(burningLabel);
   VarLabel::destroy(totalMassBurnedLabel);
   VarLabel::destroy(totalHeatReleasedLabel);
 
-    
+
   if(mymatls && mymatls->removeReference())
     delete mymatls;
 }
@@ -265,7 +265,7 @@ void DDT0::scheduleInitialize(SchedulerP& sched,
   Task* t = scinew Task("DDT0::initialize", this, &DDT0::initialize);
   const MaterialSubset* react_matl = matl0->thisMaterial();
   t->computes(reactedFractionLabel, react_matl);
-  //t->computes(burningLabel,         react_matl);
+  t->computes(burningLabel,         react_matl);
   sched->addTask(t, level->eachPatch(), mymatls);
 }
 
@@ -280,13 +280,14 @@ void DDT0::initialize(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++) {
     const Patch* patch = patches->get(p);
     cout_doing << "Doing Initialize on patch " << patch->getID()<< "\t\t\t STEADY_BURN" << endl;
-
+    
+    // This section is needed for outputting F and burn on each timestep
     CCVariable<double> F, burn;
     new_dw->allocateAndPut(F, reactedFractionLabel, m0, patch);
-    //new_dw->allocateAndPut(burn, burningLabel,      m0, patch);
+    new_dw->allocateAndPut(burn, burningLabel,      m0, patch);
 
     F.initialize(0.0);
-    //burn.initialize(0.0);
+    burn.initialize(0.0);
   }
 }
 
@@ -316,7 +317,6 @@ void DDT0::scheduleComputeModelSources(SchedulerP& sched,
     MaterialSubset* one_matl     = scinew MaterialSubset();
     one_matl->add(0);
     one_matl->addReference();
-    MaterialSubset* press_matl   = one_matl;
   
     //__________________________________
     // Requires
@@ -330,7 +330,7 @@ void DDT0::scheduleComputeModelSources(SchedulerP& sched,
     t->requires(Task::NewDW,  Ilb->TempX_FCLabel,   prod_matl, gac,2);    
     t->requires(Task::NewDW,  Ilb->TempY_FCLabel,   prod_matl, gac,2);    
     t->requires(Task::NewDW,  Ilb->TempZ_FCLabel,   prod_matl, gac,2);
-    t->requires(Task::NewDW,  Ilb->press_equil_CCLabel, press_matl,gn);
+    t->requires(Task::NewDW,  Ilb->press_equil_CCLabel, one_matl,  gn);
     t->requires(Task::OldDW,  MIlb->NC_CCweightLabel,   one_matl,  gac, 1);
       
     //__________________________________
@@ -344,14 +344,16 @@ void DDT0::scheduleComputeModelSources(SchedulerP& sched,
     t->requires(Task::NewDW, MIlb->cMassLabel,      react_matl, gn);
     t->requires(Task::NewDW, Mlb->gMassLabel,       react_matl, gac,1); 
     t->requires(Task::OldDW, reactedFractionLabel,  react_matl, gn); 
-//    t->requires(Task::OldDW, burningLabel,          react_matl, gn);
  
+    //__________________________________
+    // Computes
+    //__________________________________
     t->computes(reactedFractionLabel, react_matl);
     t->computes(delFLabel,            react_matl);
-//    t->computes(burningLabel,         react_matl);
-//    t->computes(detonatingLabel,      react_matl);
-    t->computes(DDT0::onSurfaceLabel,     one_matl);
-    t->computes(DDT0::surfaceTempLabel,   one_matl);
+    t->computes(burningLabel,         react_matl);
+    t->computes(detonatingLabel,      react_matl);
+    t->computes(DDT0::onSurfaceLabel,    one_matl);
+    t->computes(DDT0::surfaceTempLabel,  one_matl);
 
     //__________________________________
     // Conserved Variables
@@ -393,10 +395,10 @@ void DDT0::scheduleCheckNeedAddMaterial(SchedulerP& sched,
     one_matl->add(0);
     one_matl->addReference();
 
-    t->requires(Task::NewDW, Ilb->press_equil_CCLabel, one_matl,gn);
-    t->requires(Task::OldDW, MIlb->NC_CCweightLabel,one_matl,   gac,1);
-    t->requires(Task::NewDW, Mlb->gMassLabel,       react_matl, gac,1);
-    t->requires(Task::NewDW, MIlb->temp_CCLabel,    react_matl, gn);
+    t->requires(Task::NewDW, Ilb->press_equil_CCLabel, one_matl,   gn);
+    t->requires(Task::OldDW, MIlb->NC_CCweightLabel,   one_matl,   gac,1);
+    t->requires(Task::NewDW, Mlb->gMassLabel,          react_matl, gac,1);
+    t->requires(Task::NewDW, MIlb->temp_CCLabel,       react_matl, gn);
     
     t->computes(DDT0::surfaceTempLabel,   one_matl);
     t->computes(Ilb->NeedAddIceMaterialLabel);
@@ -522,6 +524,8 @@ void DDT0::computeModelSources(const ProcessorGroup*,
     
     cout_doing << "Doing computeModelSources on patch "<< patch->getID()
                <<"\t\t\t\t  DDT0" << endl;
+
+    // Variable to modify
     CCVariable<double> mass_src_0, mass_src_1, mass_0;
     CCVariable<Vector> momentum_src_0, momentum_src_1;
     CCVariable<double> energy_src_0, energy_src_1;
@@ -538,7 +542,8 @@ void DDT0::computeModelSources(const ProcessorGroup*,
     new_dw->getModifiable(energy_src_1,  mi->modelEng_srcLabel,   m1,patch);
     new_dw->getModifiable(sp_vol_src_1,  mi->modelVol_srcLabel,   m1,patch);
 
-    constCCVariable<double> press_CC, cv_reactant, gasTemp,gasVol_frac,solidTemp,solidMass,solidSp_vol;
+    // New Variables to store for this timestep
+    constCCVariable<double> press_CC, cv_reactant, gasTemp,gasVol_frac,solidTemp,solidMass;
     constCCVariable<double> rctTemp,rctRho,rctSpvol,prodRho, rctFr;
     constCCVariable<Vector> rctvel_CC;
     CCVariable<double> Fr;
@@ -582,12 +587,13 @@ void DDT0::computeModelSources(const ProcessorGroup*,
     //__________________________________
     //   Misc.
     new_dw->get(press_CC,         Ilb->press_equil_CCLabel,0,  patch,gn, 0);
-    old_dw->get(NC_CCweight,     MIlb->NC_CCweightLabel,  0,   patch,gac,1);   
+    old_dw->get(NC_CCweight,      MIlb->NC_CCweightLabel,  0,   patch,gac,1);   
     
-    //new_dw->allocateAndPut(burning,    burningLabel,           0, patch,gn,0);  
-    //new_dw->allocateAndPut(detonating, detonatingLabel,        0, patch);
-//    burning.initialize(0.);
-//    detonating.initialize(0.);
+    new_dw->allocateAndPut(burning,    burningLabel,           0, patch,gn,0);  
+    new_dw->allocateAndPut(detonating, detonatingLabel,        0, patch);
+    burning.initialize(0.);
+    detonating.initialize(0.);
+
     new_dw->allocateAndPut(onSurface,  DDT0::onSurfaceLabel,   0, patch);
     new_dw->allocateAndPut(surfaceTemp,DDT0::surfaceTempLabel, 0, patch);
 
@@ -605,7 +611,7 @@ void DDT0::computeModelSources(const ProcessorGroup*,
       // JWL++ Model For explosions
       if (press_CC[c] > d_threshold_pressure){
         // Flag for detonating
-//        detonating[c] = 1;
+        detonating[c] = 1;
 
         double burnedMass;
 
@@ -659,9 +665,6 @@ void DDT0::computeModelSources(const ProcessorGroup*,
             && (MaxMass-MinMass)/MaxMass < 1.0
             &&  MaxMass > d_TINY_RHO){
 
-            // Flag for burning
-//            burning[c] = 1;
-              
             //__________________________________
             //  Determine the temperature
             //  to use in burn model
@@ -686,6 +689,8 @@ void DDT0::computeModelSources(const ProcessorGroup*,
             //  Simple Burn Model
             double burnedMass = 0.0;
             if ((Temp > d_thresholdTemp) && (press_CC[c] > d_thresholdPress)) {
+                // Flag for burning
+                burning[c] = 1;
                 burnedMass = delT *surfArea * d_BurnCoeff 
                 * pow((press_CC[c]/d_refPress),0.778);
             }
