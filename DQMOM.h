@@ -8,6 +8,7 @@
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/Variables/VarLabel.h>
+#include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/Patch.h>
 #include <Core/Datatypes/DenseMatrix.h>
@@ -125,10 +126,10 @@ private:
 
   vector< vector<ModelBase> > weightedAbscissaModels;
 
+  ArchesLabel* d_fieldLabels; 
+  
   unsigned int N_xi;  ///< Number of internal coordinates
   unsigned int N_;    ///< Number of quadrature nodes
-
-  ArchesLabel* d_fieldLabels; 
   
   int d_timeSubStep;
   bool b_save_moments; ///< boolean - calculate & save moments?
@@ -149,6 +150,17 @@ private:
   bool b_useLapack;
   bool b_calcSVD;
   string d_solverType;
+
+  struct constCCVarWrapper {
+    constCCVariable<double> data;
+  };
+
+  typedef constCCVarWrapper constCCVarWrapperTypeDef;
+
+  struct constCCVarWrapper_withModels {
+    constCCVariable<double> data;
+    vector<constCCVarWrapperTypeDef> models;
+  };
 
 #if defined(VERIFY_LINEAR_SOLVER)
   /** @brief  Get an A and B matrix from a file, then solve the linear system
