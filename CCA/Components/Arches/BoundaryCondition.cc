@@ -36,6 +36,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/MPMArches/MPMArchesLabel.h>
 #include <CCA/Components/Arches/CellInformation.h>
 #include <CCA/Components/Arches/CellInformationP.h>
+#include <CCA/Components/Arches/BoundaryCond_new.h>
 
 #include <CCA/Components/Arches/ArchesVariables.h>
 #include <CCA/Components/Arches/ArchesConstVariables.h>
@@ -165,6 +166,9 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
   d_numInlets = 0;
   d_numSourceBoundaries = 0;
   int total_cellTypes = 0;
+
+  d_newBC = scinew BoundaryCondition_new( d_lab ); // need to declare a new boundary condition here 
+                                                   // while transition to new code is taking place
  
   if(db.get_rep()==0)
   {
@@ -725,6 +729,7 @@ BoundaryCondition::sched_mmWallCellTypeInit(SchedulerP& sched,
   tsk->requires(Task::OldDW, d_lab->d_mmgasVolFracLabel,   gn, 0);
   tsk->requires(Task::OldDW, d_lab->d_mmcellTypeLabel,     gn, 0);
   tsk->requires(Task::OldDW, d_MAlab->mmCellType_MPMLabel, gn, 0);
+  
   if (d_cutCells)
     tsk->requires(Task::OldDW, d_MAlab->mmCellType_CutCellLabel, gn, 0);
 
@@ -6222,5 +6227,44 @@ BoundaryCondition::bcdummySolve( const ProcessorGroup*,
     }
   }
 }
+void BoundaryCondition::sched_setAreaFraction(SchedulerP& sched, 
+                                     const PatchSet* patches, 
+                                     const MaterialSet* matls )
+{
+  Task* tsk = scinew Task( "BoundaryCondition::setAreaFraction",this, &BoundaryCondition::setAreaFraction);
 
+  tsk->modifies(d_lab->d_areaFractionLabel); 
+  tsk->requires( Task::NewDW, d_lab->d_cellTypeLabel, Ghost::None, 0 ); 
+ 
+  sched->addTask(tsk, patches, matls);
+}
+void 
+BoundaryCondition::setAreaFraction( const ProcessorGroup*,
+                               const PatchSubset* patches,
+                               const MaterialSubset*,
+                               DataWarehouse* old_dw,
+                               DataWarehouse* new_dw)
+{
+  for (int p = 0; p < patches->size(); p++) {
+    const Patch* patch = patches->get(p);
+    int archIndex = 0; // only one arches material
+    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
 
+    CCVariable<Vector>   areaFraction; 
+    constCCVariable<int> cellType; 
+
+    new_dw->get( cellType, d_lab->d_cellTypeLabel, indx, patch, Ghost::None, 0 ); 
+    new_dw->getModifiable( areaFraction, d_lab->d_areaFractionLabel, indx, patch );  
+
+    int flowType = -1; 
+    if (d_intrusionBoundary) 
+      d_newBC->setAreaFraction( patch, areaFraction, cellType, d_intrusionBC->d_cellTypeID, flowType ); 
+
+    if (d_MAlab)
+      d_newBC->setAreaFraction( patch, areaFraction, cellType, d_mmWallID, flowType ); 
+
+    if (d_wallBdry) 
+      d_newBC->setAreaFraction( patch, areaFraction, cellType, d_wallBdry->d_cellTypeID, flowType ); 
+
+  }
+}

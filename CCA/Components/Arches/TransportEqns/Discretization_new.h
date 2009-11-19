@@ -36,20 +36,24 @@ namespace Uintah{
       template <class fT, class oldPhiT, class uT, class vT, class wT> void 
         computeConv(const Patch* p, fT& Fconv, oldPhiT& oldPhi, 
             uT& uVel, vT& vVel, 
-            wT& wVel, constCCVariable<double>& den,
+            wT& wVel, constCCVariable<double>& den, constCCVariable<Vector>& areaFraction, 
             std::string convScheme);
 
       /** @brief Computes the convection term (no density term) */
       template <class fT, class oldPhiT> void 
         computeConv(const Patch* p, fT& Fconv, oldPhiT& oldPhi, 
             constSFCXVariable<double>& uVel, constSFCYVariable<double>& vVel, 
-            constSFCZVariable<double>& wVel, 
+            constSFCZVariable<double>& wVel, constCCVariable<Vector>& areaFraction, 
             std::string convScheme);
 
+      /** @brief Computes the convection term without density and using a special 
+       *         particle velocity vector (or any type of CC velocity vector) instead 
+       *         of the standard, face centered gas velocity.  */
       template <class fT, class oldPhiT> void 
         computeConv(const Patch* p, fT& Fconv, oldPhiT& oldPhi, 
             constSFCXVariable<double>& uVel, constSFCYVariable<double>& vVel, 
             constSFCZVariable<double>& wVel, constCCVariable<Vector>& partVel, 
+            constCCVariable<Vector>& areaFraction, 
             std::string convScheme);
 
       inline CellIterator getInteriorCellIterator( const Patch* p ) const 
@@ -188,15 +192,47 @@ namespace Uintah{
         double plus;  // plus face
       };
 
-      inline double getFlux( const double area, FaceData1D den, FaceData1D vel, FaceData1D phi )
+      inline double getFlux( const double area, FaceData1D den, FaceData1D vel, FaceData1D phi, constCCVariable<Vector> areaFraction, IntVector coord, IntVector c )
       {
         double F; 
-        return F = area * (  den.plus * vel.plus * phi.plus - den.minus * vel.minus * phi.minus ); 
+        FaceData1D areaFrac;
+        IntVector cp = c + coord; 
+        Vector curr_areaFrac = areaFraction[c]; 
+        Vector plus_areaFrac = areaFraction[cp]; 
+        // may want to just pass dim in for efficiency sake
+        int dim = 0; 
+        if (coord[0] == 1)
+          dim =0; 
+        else if (coord[1] == 1)
+          dim = 1; 
+        else 
+          dim = 2; 
+        areaFrac.plus  = plus_areaFrac[dim];
+        areaFrac.minus = curr_areaFrac[dim]; 
+
+        return F = area * (  areaFrac.plus * den.plus * vel.plus * phi.plus 
+                           - areaFrac.minus * den.minus * vel.minus * phi.minus ); 
       }
-      inline double getFlux( const double area, FaceData1D vel, FaceData1D phi )
+      inline double getFlux( const double area, FaceData1D vel, FaceData1D phi, constCCVariable<Vector> areaFraction, IntVector coord, IntVector c )
       {
         double F; 
-        return F = area * (  vel.plus * phi.plus - vel.minus * phi.minus ); 
+        FaceData1D areaFrac;
+        IntVector cp = c + coord; 
+        Vector curr_areaFrac = areaFraction[c]; 
+        Vector plus_areaFrac = areaFraction[cp]; 
+        // may want to just pass dim in for efficiency sake
+        int dim = 0; 
+        if (coord[0] == 1)
+          dim =0; 
+        else if (coord[1] == 1)
+          dim = 1; 
+        else 
+          dim = 2; 
+        areaFrac.plus  = plus_areaFrac[dim];
+        areaFrac.minus = curr_areaFrac[dim]; 
+
+        return F = area * (  areaFrac.plus * vel.plus * phi.plus 
+                           - areaFrac.minus * vel.minus * phi.minus ); 
       }
 
       inline FaceData1D getFaceVelocity( const IntVector c, const CCVariable<double>& F, constCCVariable<Vector> vel, const IntVector coord ){
@@ -525,7 +561,7 @@ namespace Uintah{
   template <class fT, class oldPhiT, class uT, class vT, class wT> void 
     Discretization_new::computeConv(const Patch* p, fT& Fconv, oldPhiT& oldPhi, 
         uT& uVel, vT& vVel, 
-        wT& wVel, constCCVariable<double>& den,
+        wT& wVel, constCCVariable<double>& den, constCCVariable<Vector>& areaFraction, 
         std::string convScheme ) 
     {
       // This class computes convection without assumptions about the boundary conditions 
@@ -556,12 +592,12 @@ namespace Uintah{
 
           //X-dimension
           coord[0] = 1; coord[1] = 0; coord[2] = 0; 
-          area = Dx.y()*Dx.z(); 
+          area = Dx.y()*Dx.z();
 
           face_den       = getDensityOnFace( c, coord, Fconv, den ); 
           face_vel       = getFaceVelocity( c, Fconv, uVel ); 
           face_phi       = upwindInterp( c, coord, oldPhi, face_vel ); 
-          Fconv[c]       = getFlux( area, face_den, face_vel, face_phi ); 
+          Fconv[c]       = getFlux( area, face_den, face_vel, face_phi, areaFraction, coord, c ); 
 
 #ifdef YDIM
           //Y-dimension
@@ -571,7 +607,7 @@ namespace Uintah{
           face_den       = getDensityOnFace( c, coord, Fconv, den ); 
           face_vel       = getFaceVelocity( c, Fconv, vVel ); 
           face_phi       = upwindInterp( c, coord, oldPhi, face_vel ); 
-          Fconv[c]      += getFlux( area, face_den, face_vel, face_phi ); 
+          Fconv[c]      += getFlux( area, face_den, face_vel, face_phi, areaFraction, coord, c ); 
 
 #endif 
 #ifdef ZDIM
@@ -582,7 +618,7 @@ namespace Uintah{
           face_den       = getDensityOnFace( c, coord, Fconv, den ); 
           face_vel       = getFaceVelocity( c, Fconv, wVel ); 
           face_phi       = upwindInterp( c, coord, oldPhi, face_vel ); 
-          Fconv[c]      += getFlux( area, face_den, face_vel, face_phi ); 
+          Fconv[c]      += getFlux( area, face_den, face_vel, face_phi, areaFraction, coord, c ); 
 
 #endif
         }
@@ -617,13 +653,13 @@ namespace Uintah{
 
             //X-dimension
             coord[0] = 1; coord[1] = 0; coord[2] = 0; 
-            area = Dx.y()*Dx.z(); 
+            area = Dx.y()*Dx.z();            
 
             faceIsBoundary = checkFacesForBoundaries( p, c, coord ); 
             face_den       = getDensityOnFace( c, coord, Fconv, den ); 
             face_vel       = getFaceVelocity( c, Fconv, uVel ); 
             face_phi       = upwindInterp( c, coord, oldPhi, face_vel, faceIsBoundary ); 
-            Fconv[c]       = getFlux( area, face_den, face_vel, face_phi ); 
+            Fconv[c]       = getFlux( area, face_den, face_vel, face_phi, areaFraction, coord, c ); 
 
 #ifdef YDIM
             //Y-dimension
@@ -634,7 +670,7 @@ namespace Uintah{
             face_den       = getDensityOnFace( c, coord, Fconv, den ); 
             face_vel       = getFaceVelocity( c, Fconv, vVel ); 
             face_phi       = upwindInterp( c, coord, oldPhi, face_vel, faceIsBoundary ); 
-            Fconv[c]      += getFlux( area, face_den, face_vel, face_phi ); 
+            Fconv[c]      += getFlux( area, face_den, face_vel, face_phi, areaFraction, coord, c ); 
 
 #endif 
 #ifdef ZDIM
@@ -646,7 +682,7 @@ namespace Uintah{
             face_den       = getDensityOnFace( c, coord, Fconv, den ); 
             face_vel       = getFaceVelocity( c, Fconv, wVel ); 
             face_phi       = upwindInterp( c, coord, oldPhi, face_vel, faceIsBoundary ); 
-            Fconv[c]      += getFlux( area, face_den, face_vel, face_phi ); 
+            Fconv[c]      += getFlux( area, face_den, face_vel, face_phi, areaFraction, coord, c ); 
 
 #endif
           }
@@ -677,7 +713,7 @@ namespace Uintah{
           face_den       = getDensityOnFace( c, coord, Fconv, den ); 
           face_vel       = getFaceVelocity( c, Fconv, uVel ); 
           face_phi       = superBeeInterp( c, coord, oldPhi, face_vel ); 
-          Fconv[c]       = getFlux( area, face_den, face_vel, face_phi ); 
+          Fconv[c]       = getFlux( area, face_den, face_vel, face_phi, areaFraction, coord, c ); 
 
 #ifdef YDIM
           //Y-dimension
@@ -687,7 +723,7 @@ namespace Uintah{
           face_den       = getDensityOnFace( c, coord, Fconv, den ); 
           face_vel       = getFaceVelocity( c, Fconv, vVel ); 
           face_phi       = superBeeInterp( c, coord, oldPhi, face_vel ); 
-          Fconv[c]      += getFlux( area, face_den, face_vel, face_phi ); 
+          Fconv[c]      += getFlux( area, face_den, face_vel, face_phi, areaFraction, coord, c ); 
 #endif 
 #ifdef ZDIM
           //Z-dimension
@@ -697,7 +733,7 @@ namespace Uintah{
           face_den       = getDensityOnFace( c, coord, Fconv, den ); 
           face_vel       = getFaceVelocity( c, Fconv, wVel ); 
           face_phi       = superBeeInterp( c, coord, oldPhi, face_vel ); 
-          Fconv[c]      += getFlux( area, face_den, face_vel, face_phi ); 
+          Fconv[c]      += getFlux( area, face_den, face_vel, face_phi, areaFraction, coord, c ); 
 #endif
         }
         // Boundaries
@@ -737,7 +773,7 @@ namespace Uintah{
             face_den       = getDensityOnFace( c, coord, Fconv, den ); 
             face_vel       = getFaceVelocity( c, Fconv, uVel ); 
             face_phi       = superBeeInterp( c, coord, oldPhi, face_vel, faceIsBoundary ); 
-            Fconv[c]       = getFlux( area, face_den, face_vel, face_phi ); 
+            Fconv[c]       = getFlux( area, face_den, face_vel, face_phi, areaFraction, coord, c ); 
 
 #ifdef YDIM
             //Y-dimension
@@ -748,7 +784,7 @@ namespace Uintah{
             face_den       = getDensityOnFace( c, coord, Fconv, den ); 
             face_vel       = getFaceVelocity( c, Fconv, vVel ); 
             face_phi       = superBeeInterp( c, coord, oldPhi, face_vel, faceIsBoundary ); 
-            Fconv[c]      += getFlux( area, face_den, face_vel, face_phi ); 
+            Fconv[c]      += getFlux( area, face_den, face_vel, face_phi, areaFraction, coord, c ); 
 
 #endif 
 #ifdef ZDIM
@@ -760,7 +796,7 @@ namespace Uintah{
             face_den       = getDensityOnFace( c, coord, Fconv, den ); 
             face_vel       = getFaceVelocity( c, Fconv, wVel ); 
             face_phi       = superBeeInterp( c, coord, oldPhi, face_vel, faceIsBoundary ); 
-            Fconv[c]      += getFlux( area, face_den, face_vel, face_phi ); 
+            Fconv[c]      += getFlux( area, face_den, face_vel, face_phi, areaFraction, coord, c ); 
 
 #endif
           }
@@ -793,7 +829,7 @@ namespace Uintah{
           face_vel = getFaceVelocity( c, Fconv, uVel ); 
           face_phi = centralInterp( c, coord, oldPhi ); 
 
-          Fconv[c] = getFlux( area, face_den, face_vel, face_phi );
+          Fconv[c] = getFlux( area, face_den, face_vel, face_phi, areaFraction, coord, c );
 #ifdef YDIM
           //Y-FACES
           coord[0] = 0; coord[1] = 1; coord[2] = 0; 
@@ -803,7 +839,7 @@ namespace Uintah{
           face_vel  = getFaceVelocity( c, Fconv, vVel ); 
           face_phi  = centralInterp( c, coord, oldPhi ); 
 
-          Fconv[c] += getFlux( area, face_den, face_vel, face_phi );
+          Fconv[c] += getFlux( area, face_den, face_vel, face_phi, areaFraction, coord, c );
 #endif
 
 #ifdef ZDIM
@@ -815,7 +851,7 @@ namespace Uintah{
           face_vel = getFaceVelocity( c, Fconv, wVel ); 
           face_phi = centralInterp( c, coord, oldPhi ); 
 
-          Fconv[c] += getFlux( area, face_den, face_vel, face_phi );
+          Fconv[c] += getFlux( area, face_den, face_vel, face_phi, areaFraction, coord, c );
 #endif
         }
       }
@@ -827,7 +863,7 @@ namespace Uintah{
   template <class fT, class oldPhiT> void 
     Discretization_new::computeConv( const Patch* p, fT& Fconv, oldPhiT& oldPhi, 
         constSFCXVariable<double>& uVel, constSFCYVariable<double>& vVel, 
-        constSFCZVariable<double>& wVel,
+        constSFCZVariable<double>& wVel, constCCVariable<Vector>& areaFraction, 
         std::string convScheme ) 
     {
       // This class computes convection without assumptions about the boundary conditions 
@@ -861,7 +897,7 @@ namespace Uintah{
 
           face_vel       = getFaceVelocity( c, Fconv, uVel ); 
           face_phi       = upwindInterp( c, coord, oldPhi, face_vel ); 
-          Fconv[c]       = getFlux( area, face_vel, face_phi ); 
+          Fconv[c]       = getFlux( area, face_vel, face_phi, areaFraction, coord, c ); 
 
 #ifdef YDIM
           //Y-dimension
@@ -870,7 +906,7 @@ namespace Uintah{
 
           face_vel       = getFaceVelocity( c, Fconv, vVel ); 
           face_phi       = upwindInterp( c, coord, oldPhi, face_vel ); 
-          Fconv[c]      += getFlux( area, face_vel, face_phi ); 
+          Fconv[c]      += getFlux( area, face_vel, face_phi, areaFraction, coord, c ); 
 
 #endif 
 #ifdef ZDIM
@@ -880,7 +916,7 @@ namespace Uintah{
 
           face_vel       = getFaceVelocity( c, Fconv, wVel ); 
           face_phi       = upwindInterp( c, coord, oldPhi, face_vel ); 
-          Fconv[c]      += getFlux( area, face_vel, face_phi ); 
+          Fconv[c]      += getFlux( area, face_vel, face_phi, areaFraction, coord, c ); 
 
 #endif
         }
@@ -919,7 +955,7 @@ namespace Uintah{
             faceIsBoundary = checkFacesForBoundaries( p, c, coord ); 
             face_vel       = getFaceVelocity( c, Fconv, uVel ); 
             face_phi       = upwindInterp( c, coord, oldPhi, face_vel, faceIsBoundary ); 
-            Fconv[c]       = getFlux( area, face_vel, face_phi ); 
+            Fconv[c]       = getFlux( area, face_vel, face_phi, areaFraction, coord, c ); 
 
 #ifdef YDIM
             //Y-dimension
@@ -929,7 +965,7 @@ namespace Uintah{
             faceIsBoundary = checkFacesForBoundaries( p, c, coord ); 
             face_vel       = getFaceVelocity( c, Fconv, vVel ); 
             face_phi       = upwindInterp( c, coord, oldPhi, face_vel, faceIsBoundary ); 
-            Fconv[c]      += getFlux( area, face_vel, face_phi ); 
+            Fconv[c]      += getFlux( area, face_vel, face_phi, areaFraction, coord, c ); 
 
 #endif 
 #ifdef ZDIM
@@ -940,7 +976,7 @@ namespace Uintah{
             faceIsBoundary = checkFacesForBoundaries( p, c, coord ); 
             face_vel       = getFaceVelocity( c, Fconv, wVel ); 
             face_phi       = upwindInterp( c, coord, oldPhi, face_vel, faceIsBoundary ); 
-            Fconv[c]      += getFlux( area, face_vel, face_phi ); 
+            Fconv[c]      += getFlux( area, face_vel, face_phi, areaFraction, coord, c ); 
 
 #endif
           }
@@ -969,7 +1005,7 @@ namespace Uintah{
 
           face_vel       = getFaceVelocity( c, Fconv, uVel ); 
           face_phi       = superBeeInterp( c, coord, oldPhi, face_vel ); 
-          Fconv[c]       = getFlux( area, face_vel, face_phi ); 
+          Fconv[c]       = getFlux( area, face_vel, face_phi, areaFraction, coord, c ); 
 
 #ifdef YDIM
           //Y-dimension
@@ -978,7 +1014,7 @@ namespace Uintah{
 
           face_vel       = getFaceVelocity( c, Fconv, vVel ); 
           face_phi       = superBeeInterp( c, coord, oldPhi, face_vel ); 
-          Fconv[c]      += getFlux( area, face_vel, face_phi ); 
+          Fconv[c]      += getFlux( area, face_vel, face_phi, areaFraction, coord, c ); 
 #endif 
 #ifdef ZDIM
           //Z-dimension
@@ -987,7 +1023,7 @@ namespace Uintah{
 
           face_vel       = getFaceVelocity( c, Fconv, wVel ); 
           face_phi       = superBeeInterp( c, coord, oldPhi, face_vel ); 
-          Fconv[c]      += getFlux( area, face_vel, face_phi ); 
+          Fconv[c]      += getFlux( area, face_vel, face_phi, areaFraction, coord, c  ); 
 #endif
         }
         // Boundaries
@@ -1025,7 +1061,7 @@ namespace Uintah{
             faceIsBoundary = checkFacesForBoundaries( p, c, coord ); 
             face_vel       = getFaceVelocity( c, Fconv, uVel ); 
             face_phi       = superBeeInterp( c, coord, oldPhi, face_vel, faceIsBoundary ); 
-            Fconv[c]       = getFlux( area, face_vel, face_phi ); 
+            Fconv[c]       = getFlux( area, face_vel, face_phi, areaFraction, coord, c ); 
 
 #ifdef YDIM
             //Y-dimension
@@ -1035,7 +1071,7 @@ namespace Uintah{
             faceIsBoundary = checkFacesForBoundaries( p, c, coord ); 
             face_vel       = getFaceVelocity( c, Fconv, vVel ); 
             face_phi       = superBeeInterp( c, coord, oldPhi, face_vel, faceIsBoundary ); 
-            Fconv[c]      += getFlux( area, face_vel, face_phi ); 
+            Fconv[c]      += getFlux( area, face_vel, face_phi, areaFraction, coord, c ); 
 
 #endif 
 #ifdef ZDIM
@@ -1046,7 +1082,7 @@ namespace Uintah{
             faceIsBoundary = checkFacesForBoundaries( p, c, coord ); 
             face_vel       = getFaceVelocity( c, Fconv, wVel ); 
             face_phi       = superBeeInterp( c, coord, oldPhi, face_vel, faceIsBoundary ); 
-            Fconv[c]      += getFlux( area, face_vel, face_phi ); 
+            Fconv[c]      += getFlux( area, face_vel, face_phi, areaFraction, coord, c  ); 
 
 #endif
           }
@@ -1068,6 +1104,7 @@ namespace Uintah{
 
           FaceData1D face_phi; 
           FaceData1D face_vel; 
+          FaceData1D face_af; 
           double area; 
 
           //X-FACES
@@ -1077,7 +1114,7 @@ namespace Uintah{
           face_vel = getFaceVelocity( c, Fconv, uVel ); 
           face_phi = centralInterp( c, coord, oldPhi ); 
 
-          Fconv[c] = getFlux( area, face_vel, face_phi );
+          Fconv[c] = getFlux( area, face_vel, face_phi, areaFraction, coord, c );
 #ifdef YDIM
           //Y-FACES
           coord[0] = 0; coord[1] = 1; coord[2] = 0; 
@@ -1086,7 +1123,7 @@ namespace Uintah{
           face_vel  = getFaceVelocity( c, Fconv, vVel ); 
           face_phi  = centralInterp( c, coord, oldPhi ); 
 
-          Fconv[c] += getFlux( area, face_vel, face_phi );
+          Fconv[c] += getFlux( area, face_vel, face_phi, areaFraction, coord, c );
 #endif
 
 #ifdef ZDIM
@@ -1097,7 +1134,7 @@ namespace Uintah{
           face_vel = getFaceVelocity( c, Fconv, wVel ); 
           face_phi = centralInterp( c, coord, oldPhi ); 
 
-          Fconv[c] += getFlux( area, face_vel, face_phi );
+          Fconv[c] += getFlux( area, face_vel, face_phi, areaFraction, coord, c );
 #endif
         }
       }
@@ -1111,6 +1148,7 @@ namespace Uintah{
     Discretization_new::computeConv( const Patch* p, fT& Fconv, oldPhiT& oldPhi, 
         constSFCXVariable<double>& uVel, constSFCYVariable<double>& vVel, 
         constSFCZVariable<double>& wVel, constCCVariable<Vector>& partVel, 
+        constCCVariable<Vector>& areaFraction, 
         std::string convScheme ) 
     {
       // This class computes convection without assumptions about the boundary conditions 
@@ -1144,7 +1182,7 @@ namespace Uintah{
 
           face_vel       = getFaceVelocity( c, Fconv, partVel, coord ); 
           face_phi       = upwindInterp( c, coord, oldPhi, face_vel ); 
-          Fconv[c]       = getFlux( area, face_vel, face_phi ); 
+          Fconv[c]       = getFlux( area, face_vel, face_phi, areaFraction, coord, c ); 
 
 #ifdef YDIM
           //Y-dimension
@@ -1153,7 +1191,7 @@ namespace Uintah{
 
           face_vel       = getFaceVelocity( c, Fconv, partVel, coord ); 
           face_phi       = upwindInterp( c, coord, oldPhi, face_vel ); 
-          Fconv[c]      += getFlux( area, face_vel, face_phi ); 
+          Fconv[c]      += getFlux( area, face_vel, face_phi, areaFraction, coord, c ); 
 
 #endif 
 #ifdef ZDIM
@@ -1163,7 +1201,7 @@ namespace Uintah{
 
           face_vel       = getFaceVelocity( c, Fconv, partVel, coord ); 
           face_phi       = upwindInterp( c, coord, oldPhi, face_vel ); 
-          Fconv[c]      += getFlux( area, face_vel, face_phi ); 
+          Fconv[c]      += getFlux( area, face_vel, face_phi, areaFraction, coord, c ); 
 
 #endif
         }
@@ -1202,7 +1240,7 @@ namespace Uintah{
             faceIsBoundary = checkFacesForBoundaries( p, c, coord ); 
             face_vel       = getFaceVelocity( c, Fconv, partVel, coord ); 
             face_phi       = upwindInterp( c, coord, oldPhi, face_vel, faceIsBoundary ); 
-            Fconv[c]       = getFlux( area, face_vel, face_phi ); 
+            Fconv[c]       = getFlux( area, face_vel, face_phi, areaFraction, coord, c ); 
 
 #ifdef YDIM
             //Y-dimension
@@ -1212,7 +1250,7 @@ namespace Uintah{
             faceIsBoundary = checkFacesForBoundaries( p, c, coord ); 
             face_vel       = getFaceVelocity( c, Fconv, partVel, coord ); 
             face_phi       = upwindInterp( c, coord, oldPhi, face_vel, faceIsBoundary ); 
-            Fconv[c]      += getFlux( area, face_vel, face_phi ); 
+            Fconv[c]      += getFlux( area, face_vel, face_phi, areaFraction, coord, c ); 
 
 #endif 
 #ifdef ZDIM
@@ -1223,7 +1261,7 @@ namespace Uintah{
             faceIsBoundary = checkFacesForBoundaries( p, c, coord ); 
             face_vel       = getFaceVelocity( c, Fconv, partVel, coord ); 
             face_phi       = upwindInterp( c, coord, oldPhi, face_vel, faceIsBoundary ); 
-            Fconv[c]      += getFlux( area, face_vel, face_phi ); 
+            Fconv[c]      += getFlux( area, face_vel, face_phi, areaFraction, coord, c ); 
 
 #endif
           }
@@ -1252,7 +1290,7 @@ namespace Uintah{
 
           face_vel       = getFaceVelocity( c, Fconv, partVel, coord ); 
           face_phi       = superBeeInterp( c, coord, oldPhi, face_vel ); 
-          Fconv[c]       = getFlux( area, face_vel, face_phi ); 
+          Fconv[c]       = getFlux( area, face_vel, face_phi, areaFraction, coord, c ); 
 
 #ifdef YDIM
           //Y-dimension
@@ -1261,7 +1299,7 @@ namespace Uintah{
 
           face_vel       = getFaceVelocity( c, Fconv, partVel, coord ); 
           face_phi       = superBeeInterp( c, coord, oldPhi, face_vel ); 
-          Fconv[c]      += getFlux( area, face_vel, face_phi ); 
+          Fconv[c]      += getFlux( area, face_vel, face_phi, areaFraction, coord, c ); 
 #endif 
 #ifdef ZDIM
           //Z-dimension
@@ -1270,7 +1308,7 @@ namespace Uintah{
 
           face_vel       = getFaceVelocity( c, Fconv, partVel, coord ); 
           face_phi       = superBeeInterp( c, coord, oldPhi, face_vel ); 
-          Fconv[c]      += getFlux( area, face_vel, face_phi ); 
+          Fconv[c]      += getFlux( area, face_vel, face_phi, areaFraction, coord, c ); 
 #endif
         }
         // Boundaries
@@ -1308,7 +1346,7 @@ namespace Uintah{
             faceIsBoundary = checkFacesForBoundaries( p, c, coord ); 
             face_vel       = getFaceVelocity( c, Fconv, partVel, coord ); 
             face_phi       = superBeeInterp( c, coord, oldPhi, face_vel, faceIsBoundary ); 
-            Fconv[c]       = getFlux( area, face_vel, face_phi ); 
+            Fconv[c]       = getFlux( area, face_vel, face_phi, areaFraction, coord, c ); 
 
 #ifdef YDIM
             //Y-dimension
@@ -1318,7 +1356,7 @@ namespace Uintah{
             faceIsBoundary = checkFacesForBoundaries( p, c, coord ); 
             face_vel       = getFaceVelocity( c, Fconv, partVel, coord ); 
             face_phi       = superBeeInterp( c, coord, oldPhi, face_vel, faceIsBoundary ); 
-            Fconv[c]      += getFlux( area, face_vel, face_phi ); 
+            Fconv[c]      += getFlux( area, face_vel, face_phi, areaFraction, coord, c ); 
 
 #endif 
 #ifdef ZDIM
@@ -1329,7 +1367,7 @@ namespace Uintah{
             faceIsBoundary = checkFacesForBoundaries( p, c, coord ); 
             face_vel       = getFaceVelocity( c, Fconv, partVel, coord ); 
             face_phi       = superBeeInterp( c, coord, oldPhi, face_vel, faceIsBoundary ); 
-            Fconv[c]      += getFlux( area, face_vel, face_phi ); 
+            Fconv[c]      += getFlux( area, face_vel, face_phi, areaFraction, coord, c ); 
 
 #endif
           }
@@ -1360,7 +1398,7 @@ namespace Uintah{
           face_vel = getFaceVelocity( c, Fconv, uVel ); 
           face_phi = centralInterp( c, coord, oldPhi ); 
 
-          Fconv[c] = getFlux( area, face_vel, face_phi );
+          Fconv[c] = getFlux( area, face_vel, face_phi, areaFraction, coord, c );
 #ifdef YDIM
           //Y-FACES
           coord[0] = 0; coord[1] = 1; coord[2] = 0; 
@@ -1369,7 +1407,7 @@ namespace Uintah{
           face_vel  = getFaceVelocity( c, Fconv, vVel ); 
           face_phi  = centralInterp( c, coord, oldPhi ); 
 
-          Fconv[c] += getFlux( area, face_vel, face_phi );
+          Fconv[c] += getFlux( area, face_vel, face_phi, areaFraction, coord, c );
 #endif
 
 #ifdef ZDIM
@@ -1380,7 +1418,7 @@ namespace Uintah{
           face_vel = getFaceVelocity( c, Fconv, wVel ); 
           face_phi = centralInterp( c, coord, oldPhi ); 
 
-          Fconv[c] += getFlux( area, face_vel, face_phi );
+          Fconv[c] += getFlux( area, face_vel, face_phi, areaFraction, coord, c );
 #endif
         }
       }
