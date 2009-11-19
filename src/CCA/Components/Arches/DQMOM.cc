@@ -302,7 +302,6 @@ DQMOM::sched_solveLinearSystem( const LevelP& level, SchedulerP& sched, int time
     } else {
       tsk->modifies(sourceterm_label);
     }
- 
   }
   
   for (vector<DQMOMEqn*>::iterator iEqn = weightedAbscissaEqns.begin(); iEqn != weightedAbscissaEqns.end(); ++iEqn) {
@@ -453,6 +452,52 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
       tempCCVar.initialize(0.0);
     }
 
+    // get weights from data warehouse and put into CCVariable
+    vector<constCCVarWrapper> weightCCVars;
+    for( vector<DQMOMEqn*>::iterator iEqn = weightEqns.begin(); 
+         iEqn != weightEqns.end(); ++iEqn ) {
+      const VarLabel* equation_label = (*iEqn)->getTransportEqnLabel();
+      
+      // instead of using a CCVariable, use a constCCVarWrapper struct
+      constCCVarWrapper tempWrapper;
+      new_dw->get( tempWrapper.data, equation_label, matlIndex, patch, Ghost::None, 0 );
+
+      // put the wrapper into a vector
+      weightCCVars.push_back(tempWrapper);
+    }
+
+    // get weighted abscissas from data warehouse and put into CCVariable
+    vector<constCCVarWrapper_withModels> weightedAbscissaCCVars;
+    for( vector<DQMOMEqn*>::iterator iEqn = weightedAbscissaEqns.begin();
+         iEqn != weightedAbscissaEqns.end(); ++iEqn ) {
+      const VarLabel* equation_label = (*iEqn)->getTransportEqnLabel();
+
+      // instead of using a CCVariable, use a constCCVarWrapper struct
+      constCCVarWrapper_withModels tempWrapper;
+      new_dw->get( tempWrapper.data, equation_label, matlIndex, patch, Ghost::None, 0 );
+
+      // for a given weighted abscissa, get models from data warehouse and put into vector of constCCVarWrapper
+      vector<constCCVarWrapper> modelCCVarsVec;
+      vector<string> modelsList = (*iEqn)->getModelsList();
+      for( vector<string>::iterator iModels = modelsList.begin();
+           iModels != modelsList.end(); ++iModels ) {
+        ModelBase& model_base = model_factory.retrieve_model(*iModels);
+        
+        // instead of using a CCVariable, use a constCCVarWrapper struct
+        constCCVarWrapper tempModelWrapper;
+        const VarLabel* model_label = model_base.getModelLabel();
+        new_dw->get( tempModelWrapper.data, model_label, matlIndex, patch, Ghost::None, 0);
+        modelCCVarsVec.push_back(tempModelWrapper);
+      }
+      
+      // put the vector into the constCCVarWrapper_withModels
+      tempWrapper.models = modelCCVarsVec;
+      
+      // put the wrapper into a vector
+      weightedAbscissaCCVars.push_back(tempWrapper);
+
+    }
+
     total_getTime += ( Time::currentSeconds() - start_getTime );
 
     // Cell iterator
@@ -466,37 +511,30 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
 
       start_getTime = Time::currentSeconds();
 
-      // get weights in current cell from data warehouse and store in a vector
-      for (vector<DQMOMEqn*>::iterator iEqn = weightEqns.begin(); 
-           iEqn != weightEqns.end(); ++iEqn) {
-        constCCVariable<double> temp;
-        const VarLabel* equation_label = (*iEqn)->getTransportEqnLabel();
-        new_dw->get( temp, equation_label, matlIndex, patch, Ghost::None, 0);
-        weights.push_back(temp[c]);
+      // get weights in current cell from CCVariable in constCCVarWrapper, store value in vector
+      for( vector<constCCVarWrapper>::iterator iter = weightCCVars.begin();
+           iter != weightCCVars.end(); ++iter ) {
+        double temp_value = (iter->data)[c];
+        weights.push_back(temp_value);
       }
 
-      // get weighted abscissas in current cell from data warehouse and store in a vector
-      for (vector<DQMOMEqn*>::iterator iEqn = weightedAbscissaEqns.begin();
-           iEqn != weightedAbscissaEqns.end(); ++iEqn) {
-        const VarLabel* equation_label = (*iEqn)->getTransportEqnLabel();
-        constCCVariable<double> temp;
-        new_dw->get(temp, equation_label, matlIndex, patch, Ghost::None, 0);
-        weightedAbscissas.push_back(temp[c]);
+      // get weighted abscissas in current cell from CCVariable in constCCVarWrapper, store value in vector
+      for( vector<constCCVarWrapper_withModels>::iterator iter = weightedAbscissaCCVars.begin();
+           iter != weightedAbscissaCCVars.end(); ++iter ) {
+        double temp_value = (iter->data)[c];
+        weightedAbscissas.push_back(temp_value);
 
+        // now sum the model terms for this weighted abscissa
         double runningsum = 0;
-        vector<string> modelsList = (*iEqn)->getModelsList();
-        for ( vector<string>::iterator iModels = modelsList.begin();
-              iModels != modelsList.end(); ++iModels) {
-          ModelBase& model_base = model_factory.retrieve_model(*iModels);
-          const VarLabel* model_label = model_base.getModelLabel();
-          constCCVariable<double> tempCCVar;
-          new_dw->get(tempCCVar, model_label, matlIndex, patch, Ghost::None, 0);
-          runningsum = runningsum + tempCCVar[c];
+        for( vector<constCCVarWrapper>::iterator iM = iter->models.begin();
+             iM != iter->models.end(); ++iM ) {
+          double temp_model_value = (iM->data)[c];
+          runningsum += temp_model_value;
         }
-        
+
         models.push_back(runningsum);
       }
-    
+
       total_getTime += ( Time::currentSeconds() - start_getTime );
 
 
