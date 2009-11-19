@@ -1199,13 +1199,13 @@ bool DynamicLoadBalancer::assignPatchesRandom(const GridP&, bool force)
 
   if (d_myworld->myrank() == 0)
     seed = (int) Time::currentSeconds();
-  
+ 
   MPI_Bcast(&seed, 1, MPI_INT,0,d_myworld->getComm());
 
   srand(seed);
 
   int num_procs = d_myworld->size();
-  int num_patches = (int)d_processorAssignment.size();
+  int num_patches = (int)d_tempAssignment.size();
 
   vector<int> proc_record(num_procs,0);
   int max_ppp = num_patches / num_procs;
@@ -1247,10 +1247,10 @@ int
 DynamicLoadBalancer::getPatchwiseProcessorAssignment(const Patch* patch)
 {
   // if on a copy-data timestep and we ask about an old patch, that could cause problems
-  if (d_sharedState->isCopyDataTimestep() && patch->getID() < d_assignmentBasePatch)
+  if (d_sharedState->isCopyDataTimestep() && patch->getRealPatch()->getID() < d_assignmentBasePatch)
     return -patch->getID();
  
-  ASSERTRANGE(patch->getID(), d_assignmentBasePatch, d_assignmentBasePatch + (int) d_processorAssignment.size());
+  ASSERTRANGE(patch->getRealPatch()->getID(), d_assignmentBasePatch, d_assignmentBasePatch + (int) d_processorAssignment.size());
   int proc = d_processorAssignment[patch->getRealPatch()->getGridIndex()];
 
   ASSERTRANGE(proc, 0, d_myworld->size());
@@ -1269,13 +1269,13 @@ DynamicLoadBalancer::getOldProcessorAssignment(const VarLabel* var,
 
   // on an initial-regrid-timestep, this will get called from createNeighborhood
   // and can have a patch with a higher index than we have
-  if ((int)patch->getID() < d_oldAssignmentBasePatch || patch->getID() >= d_oldAssignmentBasePatch + (int)d_oldAssignment.size())
-    return -patch->getID();
+  if ((int)patch->getRealPatch()->getID() < d_oldAssignmentBasePatch || patch->getRealPatch()->getID() >= d_oldAssignmentBasePatch + (int)d_oldAssignment.size())
+    return -9999;
   
   if (patch->getGridIndex() >= (int) d_oldAssignment.size())
     return -999;
 
-  int proc = d_oldAssignment[patch->getGridIndex()];
+  int proc = d_oldAssignment[patch->getRealPatch()->getGridIndex()];
   ASSERTRANGE(proc, 0, d_myworld->size());
   return proc;
 }
@@ -1305,8 +1305,8 @@ DynamicLoadBalancer::needRecompile(double /*time*/, double /*delt*/,
   }
 #endif
 
-  if (dbg.active() && d_myworld->myrank() == 0)
-    dbg << d_myworld->myrank() << " DLB::NeedRecompile: check=" << do_check << " ts: " << timestep << " " << d_lbTimestepInterval << " t " << time << " " << d_lbInterval << " last: " << d_lastLbTimestep << " " << d_lastLbTime << endl;
+//  if (dbg.active() && d_myworld->myrank() == 0)
+//    dbg << d_myworld->myrank() << " DLB::NeedRecompile: check=" << do_check << " ts: " << timestep << " " << d_lbTimestepInterval << " t " << time << " " << d_lbInterval << " last: " << d_lastLbTimestep << " " << d_lastLbTime << endl;
 
   // if it determines we need to re-load-balance, recompile
   if (do_check && possiblyDynamicallyReallocate(grid, check)) {
@@ -1507,8 +1507,6 @@ bool DynamicLoadBalancer::possiblyDynamicallyReallocate(const GridP& grid, int s
       }
     
       d_tempAssignment.resize(num_patches);
-      if (d_myworld->myrank() == 0)
-        doing << d_myworld->myrank() << "  Checking whether we need to LB\n";
       switch (d_dynamicAlgorithm) {
         case patch_factor_lb:  dynamicAllocate = assignPatchesFactor(grid, force); break;
         case cyclic_lb:        dynamicAllocate = assignPatchesCyclic(grid, force); break;
@@ -1540,7 +1538,7 @@ bool DynamicLoadBalancer::possiblyDynamicallyReallocate(const GridP& grid, int s
           Level::const_patchIterator iter = curLevel->patchesBegin();
           lb << "  Changing the Load Balance\n";
           for (unsigned int i = 0; i < d_processorAssignment.size(); i++) {
-            lb << myrank << " patch " << i << " (real " << (*iter)->getID() << ") -> proc " << d_processorAssignment[i] << " (old " << d_oldAssignment[i] << ") patch size: "  << (*iter)->getGridIndex() << " " << ((*iter)->getExtraCellHighIndex() - (*iter)->getExtraCellLowIndex()) << "\n";
+            lb << myrank << " patch " << i << " (real " << (*iter)->getID() << ") -> proc " << d_processorAssignment[i] << " (old " << d_oldAssignment[i] << ") patch size: "  << (*iter)->getNumExtraCells() << " low:" << (*iter)->getExtraCellLowIndex() << " high: " << (*iter)->getExtraCellHighIndex() <<"\n";
             IntVector range = ((*iter)->getExtraCellHighIndex() - (*iter)->getExtraCellLowIndex());
             iter++;
             if (iter == curLevel->patchesEnd() && i+1 < d_processorAssignment.size()) {
