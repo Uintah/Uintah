@@ -86,9 +86,9 @@ template<class DomainType> struct VarLabelMatl {
   {
     if (label_->equals(other.label_)) {
       if (matlIndex_ == other.matlIndex_)
-	return domain_ < other.domain_;
+        return domain_ < other.domain_;
       else
-	return matlIndex_ < other.matlIndex_;
+        return matlIndex_ < other.matlIndex_;
     }
     else {
       VarLabel::Compare comp;
