@@ -511,6 +511,9 @@ ArchesLabel::ArchesLabel()
   d_wmomBoundarySrcLabel      =  VarLabel::create("wmomBoundarySrc",      SFCZ_double);
 
   //DQMOM vars
+  
+  // Boundary condition variables
+  d_areaFractionLabel         = VarLabel::create("areaFraction", CC_Vector); 
 }
 
 //****************************************************************************
@@ -819,6 +822,8 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_tempFxLabel);
   VarLabel::destroy(d_tempFyLabel);
   VarLabel::destroy(d_tempFzLabel);
+
+  VarLabel::destroy(d_areaFractionLabel); 
   
 }           
 

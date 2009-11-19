@@ -516,6 +516,8 @@ namespace Uintah {
       typedef std::map<const MomentVector, const VarLabel* > MomentMap;
       MomentMap DQMOMMoments;
 
+      const VarLabel* d_areaFractionLabel; 
+
     }; // End class ArchesLabel
 } // End namespace Uintah
 

@@ -90,6 +90,7 @@ class ProcessorGroup;
 class DataWarehouse;
 class TimeIntegratorLabel;
 class ExtraScalarSolver;
+class BoundaryCondition_new; 
 
 class BoundaryCondition {
 
@@ -594,6 +595,10 @@ public:
                          const PatchSet* patches, 
                          const MaterialSet* matls );
 
+  void sched_setAreaFraction(SchedulerP& sched, 
+                             const PatchSet* patches, 
+                             const MaterialSet* matls );
+
 private:
 
   ////////////////////////////////////////////////////////////////////////
@@ -708,6 +713,13 @@ private:
                    const MaterialSubset*,
                    DataWarehouse* old_dw,
                    DataWarehouse* new_dw);
+
+  void setAreaFraction( const ProcessorGroup*,
+                     const PatchSubset* patches,
+                     const MaterialSubset*,
+                     DataWarehouse* old_dw,
+                     DataWarehouse* new_dw);
+
 
 private:
   // GROUP:  Local DataTypes :
@@ -965,6 +977,8 @@ private:
 
   typedef std::map<std::string, struct SpeciesEfficiencyInfo> SpeciesEffMap; // label string, molecular weight ratio 
   SpeciesEffMap d_speciesEffInfo;
+
+  BoundaryCondition_new* d_newBC; 
 
 }; // End of class BoundaryCondition
 } // End namespace Uintah

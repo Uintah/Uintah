@@ -49,6 +49,14 @@ public:
     CCVariable<Vector>& vec, constCCVariable<Vector>& const_vec, 
     string varname );
 
+  /** @brief Sets the area fraction for each minus face according to the boundaries */
+  void setAreaFraction( 
+    const Patch* patch,
+    CCVariable<Vector>& areaFraction, 
+    constCCVariable<int>& pcell, 
+    const int wallType, 
+    const int flowType );
+
   // The stuff below needs better commenting when I have this figured out. 
   /* --------------------------------------------------------------------- 
   Function~  getIteratorBCValueBCKind--
