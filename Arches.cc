@@ -698,6 +698,9 @@ Arches::scheduleInitialize(const LevelP& level,
   }
 
   sched_scalarInit(level, sched);
+
+  // compute the cell area fraction 
+  d_boundaryCondition->sched_setAreaFraction( sched, patches, matls ); 
     
 }
 
@@ -730,6 +733,7 @@ Arches::sched_paramInit(const LevelP& level,
     tsk->computes(d_lab->d_newCCVVelocityLabel);
     tsk->computes(d_lab->d_newCCWVelocityLabel);
     tsk->computes(d_lab->d_pressurePSLabel);
+    tsk->computes(d_lab->d_areaFractionLabel); 
     if ((d_extraProjection)||(d_EKTCorrection)){
       tsk->computes(d_lab->d_pressureExtraProjectionLabel);
     }
@@ -862,6 +866,10 @@ Arches::paramInit(const ProcessorGroup* pg,
     CCVariable<double> reactScalarDiffusivity;
     CCVariable<double> pPlusHydro;
     CCVariable<double> mmgasVolFrac;
+    CCVariable<Vector> areaFraction; 
+
+    new_dw->allocateAndPut( areaFraction, d_lab->d_areaFractionLabel, indx, patch ); 
+    areaFraction.initialize(Vector(1.,1.,1.)); 
    
     if (d_calcExtraScalars){
       if (d_carbon_balance_es){ 

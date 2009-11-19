@@ -424,3 +424,52 @@ void BoundaryCondition_new::setVectorValueBC( const ProcessorGroup*,
   }
 }
 
+//---------------------------------------------------------------------------
+// Method: Set the area fraction for all cells
+//---------------------------------------------------------------------------
+void BoundaryCondition_new::setAreaFraction( 
+    const Patch* patch,
+    CCVariable<Vector>& areaFraction, 
+    constCCVariable<int>& cellType, 
+    const int wallType, 
+    const int flowType )
+{
+
+  // areaFraction is a vector with:
+  // areaFraction.x = xminus area fraction
+  // areaFraction.y = yminus area fraction
+  // areaFraction.z = zminus area fraction 
+
+  for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
+    
+    IntVector c = *iter;
+    IntVector cxm = *iter - IntVector(1,0,0);
+    IntVector cym = *iter - IntVector(0,1,0);
+    IntVector czm = *iter - IntVector(0,0,1); 
+
+    // curr cell is a wall 
+    if ( cellType[c] == wallType )
+      areaFraction[c] = Vector(0.,0.,0.);
+
+    // x-minus is a wall but curr cell is flow 
+    if ( cellType[c] == flowType && cellType[cxm] == wallType ) {
+      Vector tempV = areaFraction[c]; 
+      tempV[0] = 0.;
+      areaFraction[c] = tempV;
+    }
+
+    // y-minus is a wall but curr cell is flow
+    if ( cellType[c] == flowType && cellType[cym] == wallType ) {
+      Vector tempV = areaFraction[c]; 
+      tempV[1] = 0.;
+      areaFraction[c] = tempV;
+    }
+
+    // z-minus is a wall but curr cell is flowType
+    if (cellType[c] == flowType && cellType[czm] == wallType ) {
+      Vector tempV = areaFraction[c]; 
+      tempV[2] = 0.;
+      areaFraction[c] = tempV;
+    }
+  }
+}

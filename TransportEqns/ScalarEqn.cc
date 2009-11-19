@@ -313,6 +313,7 @@ ScalarEqn::sched_buildTransportEqn( const LevelP& level, SchedulerP& sched, int 
   
   //-----OLD-----
   //tsk->requires(Task::OldDW, d_transportVarLabel, Ghost::AroundCells, 2);
+  tsk->requires(Task::OldDW, d_fieldLabels->d_areaFractionLabel, Ghost::None, 0); 
   tsk->requires(Task::OldDW, d_fieldLabels->d_densityCPLabel, Ghost::AroundCells, 1); 
   tsk->requires(Task::OldDW, d_fieldLabels->d_viscosityCTSLabel, Ghost::AroundCells, 1);
   tsk->requires(Task::OldDW, d_fieldLabels->d_uVelocitySPBCLabel, Ghost::AroundCells, 1);   
@@ -354,6 +355,7 @@ ScalarEqn::buildTransportEqn( const ProcessorGroup* pc,
     constSFCXVariable<double> uVel; 
     constSFCYVariable<double> vVel; 
     constSFCZVariable<double> wVel; 
+    constCCVariable<Vector> areaFraction; 
 
     CCVariable<double> phi;
     CCVariable<double> Fdiff; 
@@ -364,6 +366,7 @@ ScalarEqn::buildTransportEqn( const ProcessorGroup* pc,
     old_dw->get(den, d_fieldLabels->d_densityCPLabel, matlIndex, patch, gac, 1); 
     old_dw->get(mu_t, d_fieldLabels->d_viscosityCTSLabel, matlIndex, patch, gac, 1); 
     old_dw->get(uVel,   d_fieldLabels->d_uVelocitySPBCLabel, matlIndex, patch, gac, 1); 
+    old_dw->get(areaFraction, d_fieldLabels->d_areaFractionLabel, matlIndex, patch, gac, 0); 
     double vol = Dx.x();
 #ifdef YDIM
     old_dw->get(vVel,   d_fieldLabels->d_vVelocitySPBCLabel, matlIndex, patch, gac, 1); 
@@ -385,7 +388,7 @@ ScalarEqn::buildTransportEqn( const ProcessorGroup* pc,
 
     //----CONVECTION
     if (d_doConv)
-      d_disc->computeConv( patch, Fconv, oldPhi, uVel, vVel, wVel, den, d_convScheme ); 
+      d_disc->computeConv( patch, Fconv, oldPhi, uVel, vVel, wVel, den, areaFraction, d_convScheme ); 
   
     //----DIFFUSION
     if (d_doDiff)
