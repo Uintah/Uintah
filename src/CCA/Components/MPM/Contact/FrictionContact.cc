@@ -38,14 +38,14 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/Variables/NodeIterator.h>
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/SimulationStateP.h>
-#include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/Task.h>
+#include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Labels/MPMLabel.h>
 #include <Core/Containers/StaticArray.h>
+#include <CCA/Ports/DataWarehouse.h>
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <CCA/Components/MPM/Contact/FrictionContact.h>
 #include <CCA/Components/MPM/MPMBoundCond.h>
-#include <CCA/Ports/DataWarehouse.h>
 #include <vector>
 #include <iostream>
 #include <fstream>
@@ -60,8 +60,8 @@ using namespace std;
 
 FrictionContact::FrictionContact(const ProcessorGroup* myworld,
                                  ProblemSpecP& ps,SimulationStateP& d_sS,
-                                 MPMLabel* Mlb,MPMFlags* Mflag)
-  : Contact(myworld, Mlb, Mflag, ps)
+                                 MPMLabel* Mlb,MPMFlags* MFlag)
+  : Contact(myworld, Mlb, MFlag, ps)
 {
   // Constructor
   d_vol_const=0.;
@@ -70,9 +70,8 @@ FrictionContact::FrictionContact(const ProcessorGroup* myworld,
   ps->get("volume_constraint",d_vol_const);
 
   d_sharedState = d_sS;
-  lb = Mlb;
-  flag = Mflag;
-  if(flag->d_8or27){
+
+  if(flag->d_8or27==8){
     NGP=1;
     NGN=1;
   } else if(flag->d_8or27==27){
@@ -104,14 +103,9 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
 { 
   Ghost::GhostType  gan   = Ghost::AroundNodes;
   Ghost::GhostType  gnone = Ghost::None;
-  Matrix3 Zero(0.0);
 
   int numMatls = d_sharedState->getNumMPMMatls();
   ASSERTEQ(numMatls, matls->size());
-
-  // Get delT
-  delt_vartype delT;
-  old_dw->get(delT, lb->delTLabel, getLevel(patches));
 
   // Need access to all velocity fields at once
   StaticArray<constNCVariable<double> >  gmass(numMatls);
@@ -137,10 +131,12 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
     vector<Vector> d_S(interpolator->size());
     string interp_type = flag->d_interpolator_type;
 
+    delt_vartype delT;
+    old_dw->get(delT, lb->delTLabel, getLevel(patches));
+
     // First, calculate the gradient of the mass everywhere
     // normalize it, and stick it in surfNorm
-    Vector surnor(0.0,0.0,0.0);
-    for(int m=0;m<matls->size();m++){
+    for(int m=0;m<numMatls;m++){
       int dwi = matls->get(m);
 
       new_dw->get(gmass[m],           lb->gMassLabel,  dwi, patch, gan,   1);
@@ -243,9 +239,8 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
       double totalNodalVol=0.0; 
       for(int n = 0; n < numMatls; n++){
         if(!d_matls.requested(n)) continue;
-        double mass = gmass[n][c];
-        centerOfMassMom+=gvelocity[n][c] * mass;
-        centerOfMassMass+= mass; 
+        centerOfMassMom+=gvelocity[n][c] * gmass[n][c];
+        centerOfMassMass+= gmass[n][c]; 
         totalNodalVol+=gvolume[n][c]*8.0*NC_CCweight[c];
       }
 
@@ -292,8 +287,8 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
           // field is contributing to grid vertex).
           for(int n = 0; n < numMatls; n++){
             if(!d_matls.requested(n)) continue;
+            double mass=gmass[n][c];
             Vector deltaVelocity=gvelocity[n][c]-centerOfMassVelocity;
-            double mass = gmass[n][c];
             if(!compare(mass/centerOfMassMass,0.0)
             && !compare(mass-centerOfMassMass,0.0)){
 
@@ -382,7 +377,6 @@ void FrictionContact::exMomIntegrated(const ProcessorGroup*,
                                       DataWarehouse* old_dw,
                                       DataWarehouse* new_dw)
 {
-  IntVector onex(1,0,0), oney(0,1,0), onez(0,0,1);
   Ghost::GhostType  gnone = Ghost::None;
 
   int numMatls = d_sharedState->getNumMPMMatls();
@@ -542,7 +536,6 @@ void FrictionContact::exMomIntegrated(const ProcessorGroup*,
                 }
                 Dv=scale_factor*Dv;
                 gvelocity_star[n][c]+=Dv;
-                Dv=Dv/delT;
               } // traction
             }   // if !compare && !compare
           }     // for numMatls
@@ -637,7 +630,6 @@ void FrictionContact::addComputesAndRequiresIntegrated(SchedulerP & sched,
   t->requires(Task::NewDW, lb->gVolumeLabel,           Ghost::None);
   t->modifies(             lb->gVelocityStarLabel,  mss);
   t->modifies(             lb->frictionalWorkLabel, mss);
-//  t->computes(             lb->NC_CCweightLabel,    z_matl);
 
   sched->addTask(t, patches, ms);
 
