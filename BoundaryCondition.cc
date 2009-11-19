@@ -6234,7 +6234,7 @@ void BoundaryCondition::sched_setAreaFraction(SchedulerP& sched,
   Task* tsk = scinew Task( "BoundaryCondition::setAreaFraction",this, &BoundaryCondition::setAreaFraction);
 
   tsk->modifies(d_lab->d_areaFractionLabel); 
-  tsk->requires( Task::NewDW, d_lab->d_cellTypeLabel, Ghost::None, 0 ); 
+  tsk->requires( Task::NewDW, d_lab->d_cellTypeLabel, Ghost::AroundCells, 1 ); 
  
   sched->addTask(tsk, patches, matls);
 }
@@ -6253,7 +6253,7 @@ BoundaryCondition::setAreaFraction( const ProcessorGroup*,
     CCVariable<Vector>   areaFraction; 
     constCCVariable<int> cellType; 
 
-    new_dw->get( cellType, d_lab->d_cellTypeLabel, indx, patch, Ghost::None, 0 ); 
+    new_dw->get( cellType, d_lab->d_cellTypeLabel, indx, patch, Ghost::AroundCells, 1 ); 
     new_dw->getModifiable( areaFraction, d_lab->d_areaFractionLabel, indx, patch );  
 
     int flowType = -1; 
