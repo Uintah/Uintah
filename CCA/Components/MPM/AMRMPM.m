@@ -25,7 +25,8 @@ d_debugging = problem_type
 if (~strcmp(problem_type, 'impulsiveBar')  && ...
     ~strcmp(problem_type, 'oscillator')    && ...
     ~strcmp(problem_type, 'compaction')    && ...
-    ~strcmp(problem_type, 'advectBlock') )
+    ~strcmp(problem_type, 'advectBlock')   && ...
+    ~strcmp(problem_type, 'mms' ))
   fprintf('ERROR, the problem type is invalid\n');
   fprintf('     The valid types are impulsiveBar, oscillator, advectBlock, compaction\n');
   fprintf('usage:  amrmpm(problem type, cfl, R1_dx)\n');
@@ -33,10 +34,21 @@ if (~strcmp(problem_type, 'impulsiveBar')  && ...
 end
 %__________________________________
 % Global variables
+
 PPC     = 1;
-E       = 1e6;
-density = 1.;
-interpolation = 'linear';
+E       = 1e4;
+density = 1.0;
+speedSound = sqrt(E/density);
+
+Material = cell(1,1);     % structure that holds the state of the simulation
+mat.E           = E;
+mat.density     = density;
+mat.speedSound  = speedSound;
+Material{1} = mat;
+
+Material{1}.density
+
+interpolation = 'gimp';
 
 if( strcmp(interpolation,'gimp') )
   NSFN    = 3;               % Number of shape function nodes Linear:2, GIMP:3
@@ -48,16 +60,17 @@ BigNum     = int32(1e5);
 d_smallNum = double(1e-16);
 
 bar_min     = 0.0;
-bar_max     = 50;
+bar_max     = 1;
 
 bar_length  = bar_max - bar_min;
 
-domain     = 52;
+domain     = 1;
 area       = 1.;
 plotSwitch = 0;
 max_tstep  = BigNum;
-c          = sqrt(E/density);
-titleStr(2) = {'Computational Domain[0:52], bar [0:50] Linear shape functions, PPC: 1'};
+
+titleStr(2) = {'Computational Domain[0:52], bar [0:50]'};
+titleStr(3) = {'GIMP, PPC: 1'};
 
 % HARDWIRED FOR TESTING
 %NN          = 16;
@@ -71,7 +84,8 @@ end
 
 %__________________________________
 % region structure 
-titleStr(3)={'Uniform Resolution'}
+%titleStr(4)={'Variable Resolution, Center Region refinement ratio: 2'}
+titleStr(4)={'Constant resolution'}
 
 if(0)
 %____________
@@ -113,7 +127,7 @@ Regions{1}    = R;
 
 R.min         = domain/3.0;                       
 R.max         = 2.0*domain/3.0;
-R.refineRatio = 2;
+R.refineRatio = 1;
 R.dx          = R1_dx/R.refineRatio;
 R.volP        = R.dx/PPC;
 R.NN          = int32( (R.max - R.min)/R.dx );
@@ -344,7 +358,7 @@ for ip=1:NP
 end
 
 %______________________________________________________________________
-% problem specific 
+% problem specific parameters
 
 if strcmp(problem_type, 'impulsiveBar')
   period          = sqrt(16.*bar_length*bar_length*density/E);
@@ -384,13 +398,25 @@ end
 
 if strcmp(problem_type, 'compaction')
   initVelocity    = 0;
-  waveTansitTime  = bar_length/c
+  waveTansitTime  = bar_length/speedSound
   tfinal          = waveTansitTime * 45;
   numBCs          = 1;
   delta_0         = 50;
   velG_BCValueL   = initVelocity;
   velG_BCValueR   = initVelocity;
   titleStr(1) = {'Quasi-Static Compaction Problem'};
+  
+end
+
+if strcmp(problem_type, 'mms')
+  initVelocity    = 0;
+  waveTansitTime  = bar_length/speedSound
+  tfinal          = waveTansitTime * 1.0;
+  numBCs          = 1;
+  delta_0         = 0;
+  velG_BCValueL   = initVelocity;
+  velG_BCValueR   = initVelocity;
+  titleStr(1) = {'MMS Problem'};
   
 end
 
@@ -413,7 +439,7 @@ while t<tfinal && tstep < max_tstep
   % compute the timestep
   dt = double(BigNum);
   for ip=1:NP
-    dt = min(dt, CFL*dx_min/(c + abs(velP(ip) ) ) );
+    dt = min(dt, CFL*dx_min/(speedSound + abs(velP(ip) ) ) );
   end
 
   tstep = tstep + 1;
@@ -432,32 +458,14 @@ while t<tfinal && tstep < max_tstep
     intForceG(ig) =0.;
   end
   
-  %debugging________________________
-  if (strcmp(problem_type, 'compaction'))
-    if(bodyForce > -200)
-      bodyForce = -t * 100;
-    end
-    
-    delta = delta_0 + (density*bodyForce/(2.0 * E) ) * (delta_0 * delta_0);  
-
-    displacement = delta - delta_0;
-    W = density * abs(bodyForce) * delta_0; 
-    
-    if (mod(tstep,100) == 0)
-      fprintf('Bodyforce: %g displacement:%g, W: %g\n',bodyForce, displacement/R1_dx, W);                                             
-    end
-    for ip=1:NP                                                                       
-       extForceP(ip) = bodyForce*massP(ip);                                                      
-    end                                                                               
-  end
-  %debugging________________________
-  
+  % compute the problem specific external force.
+  [extForceP, delta] = ExternalForce(problem_type, delta_0, bodyForce, Material, xp, massP, t, tstep, NP, R1_dx);
     
   %__________________________________
   % project particle data to grid  
   for ip=1:NP
   
-    [nodes,Ss]=findNodesAndWeights(xp(ip), nRegions, Regions, nodePos, Lx);
+    [nodes,Ss]=findNodesAndWeights_gimp2(xp(ip), nRegions, Regions, nodePos, Lx);
     for ig=1:NSFN
       massG(nodes(ig))     = massG(nodes(ig))     + massP(ip) * Ss(ig);
       velG(nodes(ig))      = velG(nodes(ig))      + massP(ip) * velP(ip) * Ss(ig);
@@ -500,7 +508,7 @@ while t<tfinal && tstep < max_tstep
 
   %compute internal force
   for ip=1:NP
-    [nodes,Gs,dx]=findNodesAndWeightGradients(xp(ip),nRegions, Regions, nodePos,Lx);
+    [nodes,Gs,dx]=findNodesAndWeightGradients_gimp2(xp(ip),nRegions, Regions, nodePos,Lx);
     for ig=1:NSFN
       intForceG(nodes(ig)) = intForceG(nodes(ig)) - Gs(ig) * stressP(ip) * vol(ip);
     end
@@ -544,7 +552,7 @@ while t<tfinal && tstep < max_tstep
   %project changes back to particles
   tmp = zeros(NP,1);
   for ip=1:NP
-    [nodes,Ss]=findNodesAndWeights(xp(ip),nRegions, Regions, nodePos, Lx);
+    [nodes,Ss]=findNodesAndWeights_gimp2(xp(ip),nRegions, Regions, nodePos, Lx);
     dvelP = 0.;
     dxp   = 0.;
     
@@ -647,6 +655,25 @@ while t<tfinal && tstep < max_tstep
     end
   end
   
+  
+  if strcmp(problem_type, 'mms')
+    dp_exact = zeros(NP,1);
+    [dp_exact] = MMS_displacement(xp, t, NP, speedSound);
+    
+    figure(2)                                
+    set(2,'position',[1000,100,700,700]);    
+                                             
+    plot(xp,dp,'rd', xp, dp_exact,   'b');
+    %axis([0 50 -10000 0])                    
+
+    title(titleStr)                          
+    legend('Simulation','Exact')             
+    xlabel('Position');                      
+    ylabel('Particle stress');
+    %input('hit return');               
+  end
+  
+  
   TIME(tstep)=t;
   
   %__________________________________
@@ -738,7 +765,7 @@ function [stressP,vol,Fp]=computeStressFromVelocity(xp,dt,velG,E,Fp,dF,NP, nRegi
   global NSFN;
                                                                                 
   for ip=1:NP
-    [nodes,Gs,dx]  = findNodesAndWeightGradients(xp(ip), nRegions, Regions, nodePos, Lx);
+    [nodes,Gs,dx]  = findNodesAndWeightGradients_gimp2(xp(ip), nRegions, Regions, nodePos, Lx);
     [volP_0, lp_0] = positionToVolP(xp(ip), nRegions, Regions);
     
     gUp=0.0;
@@ -746,16 +773,19 @@ function [stressP,vol,Fp]=computeStressFromVelocity(xp,dt,velG,E,Fp,dF,NP, nRegi
       gUp = gUp + velG(nodes(ig)) * Gs(ig);
     end
 
-    dF(ip)          =1. + gUp * dt;
+    dF(ip)      = 1. + gUp * dt;
     Fp(ip)      = dF(ip) * Fp(ip);
-    stressP(ip) = E * (Fp(ip)-1.0);
+%    stressP(ip) = E * (Fp(ip)-1.0);
+    stressP(ip) = E/2.0 * ( Fp(ip) - 1.0/Fp(ip) );        % hardwired for the mms test  see eq 50
     vol(ip)     = volP_0 * Fp(ip);
-
-    if( strcmp(d_debugging, 'advectBlock') && abs(stressP(ip)) > 1e-8) 
-      fprintf('computeStressFromVelocity: nodes_L: %g, nodes_R:%g, gUp: %g, dF: %g, stressP: %g \n',nodes(1),nodes(2), gUp, dF(ip), stressP(ip) );
-      fprintf(' Gs_L: %g, Gs_R: %g\n', Gs(1), Gs(2) );
-      fprintf(' velG_L: %g, velG_R: %g\n', velG(nodes(1)), velG(nodes(2)) );
-      fprintf(' prod_L %g, prod_R: %g \n\n', velG(nodes(1)) * Gs(1), velG(nodes(2)) * Gs(2) );
+     
+    if(0) 
+      if( strcmp(d_debugging, 'advectBlock') && abs(stressP(ip)) > 1e-8) 
+        fprintf('computeStressFromVelocity: nodes_L: %g, nodes_R:%g, gUp: %g, dF: %g, stressP: %g \n',nodes(1),nodes(2), gUp, dF(ip), stressP(ip) );
+        fprintf(' Gs_L: %g, Gs_R: %g\n', Gs(1), Gs(2) );
+        fprintf(' velG_L: %g, velG_R: %g\n', velG(nodes(1)), velG(nodes(2)) );
+        fprintf(' prod_L %g, prod_R: %g \n\n', velG(nodes(1)) * Gs(1), velG(nodes(2)) * Gs(2) );
+      end
     end
     
   end
@@ -833,7 +863,9 @@ end
 
 
 %__________________________________
-function [nodes,Ss]=findNodesAndWeights(xp, nRegions, Regions, nodePos, Lx)
+%  Equation 14 of "Structured Mesh Refinement in Generalized Interpolation Material Point Method
+%  for Simulation of Dynamic Problems"
+function [nodes,Ss]=findNodesAndWeights_linear(xp, nRegions, Regions, nodePos, Lx)
   global NSFN;
   % find the nodes that surround the given location and
   % the values of the shape functions for those nodes
@@ -894,14 +926,10 @@ end
 
 
 %__________________________________
+%  Reference:  Uintah Documentation Chapter 7 MPM, Equation 7.14
 function [nodes,Ss]=findNodesAndWeights_gimp(xp, nRegions, Regions, nodePos, Lx)
   global PPC;
   global NSFN;
-  
-  % find the nodes that surround the given location and
-  % the values of the shape functions for those nodes
-  % Assume the grid starts at x=0.  This follows the numenclature
-  % of equation 7.16 of the MPM documentation 
 
  [nodes,dx]=positionToClosestNodes(xp,nRegions,Regions, nodePos);
   
@@ -952,6 +980,8 @@ function [nodes,Ss]=findNodesAndWeights_gimp(xp, nRegions, Regions, nodePos, Lx)
 end
 
 %__________________________________
+%  Equation 15 of "Structured Mesh Refinement in Generalized Interpolation Material Point Method
+%  for Simulation of Dynamic Problems"
 function [nodes,Ss]=findNodesAndWeights_gimp2(xp, nRegions, Regions, nodePos, Lx)
   global PPC;
   global NSFN;
@@ -1041,7 +1071,8 @@ function [nodes,Ss]=findNodesAndWeights_gimp2(xp, nRegions, Regions, nodePos, Lx
 end
 
 %__________________________________
-function [nodes,Gs, dx]=findNodesAndWeightGradients(xp, nRegions, Regions, nodePos, Lx)
+%  Reference:  Uintah Documentation Chapter 7 MPM, Equation 7.14
+function [nodes,Gs, dx]=findNodesAndWeightGradients_linear(xp, nRegions, Regions, nodePos, Lx)
  
   % find the nodes that surround the given location and
   % the values of the gradients of the linear shape functions.
@@ -1057,12 +1088,13 @@ function [nodes,Gs, dx]=findNodesAndWeightGradients(xp, nRegions, Regions, nodeP
 end
 
 %__________________________________
+%  Reference:  Uintah Documentation Chapter 7 MPM, Equation 7.17
 function [nodes,Gs, dx]=findNodesAndWeightGradients_gimp(xp, nRegions, Regions, nodePos,Lx)
   global PPC;
   global NSFN;
   % find the nodes that surround the given location and
   % the values of the gradients of the shape functions.
-  % Assume the grid starts at x=0.
+  % Assume the grid starts at x=0.  
   [nodes,dx]=positionToClosestNodes(xp,nRegions,Regions, nodePos);
   
   L  = dx;
@@ -1110,12 +1142,12 @@ function [nodes,Gs, dx]=findNodesAndWeightGradients_gimp(xp, nRegions, Regions, 
 end
 
 %__________________________________
+%  The equations for this function are derived in the hand written notes.  
+% The governing equations for the derivation come from equation 15.
 function [nodes,Gs, dx]=findNodesAndWeightGradients_gimp2(xp, nRegions, Regions, nodePos,Lx)
   global PPC;
   global NSFN;
-  % find the nodes that surround the given location and
-  % the values of the gradients of the shape functions.
-  % Assume the grid starts at x=0.
+  
   [nodes,dx]=positionToClosestNodes(xp,nRegions,Regions, nodePos);
   
   for ig=1:NSFN
@@ -1180,11 +1212,11 @@ function [nodes,Gs, dx]=findNodesAndWeightGradients_gimp2(xp, nRegions, Regions,
 
       elseif( (B >= Lx_plus) && (A > -Lx_minus) )
 
-        Gs(ig) = (-Lx_minus - A)/(2.0 * Lx_minus * lp)
+        Gs(ig) = (-Lx_minus - A)/(2.0 * Lx_minus * lp);
 
       elseif( (B < Lx_plus) && (A <= -Lx_minus) )
 
-        Gs(ig) = (Lx_plus - B)/(2.0 * Lx_plus * lp)
+        Gs(ig) = (Lx_plus - B)/(2.0 * Lx_plus * lp);
 
       else
         Gs(ig) = 0.0;
@@ -1285,4 +1317,78 @@ function plotFinalResults(TIME, DX_tip, Exact_tip, TE, problem_type, PPC, NN)
 
   subplot(3,1,3),plot(TIME,err,'b-');
   ylabel('Abs(error)')
+end
+
+%______________________________________________________________________
+%  The following MMS functions are described in 
+% M. Steffen, P.C. Wallstedt, J.E. Guilkey, R.M. Kirby, and M. Berzins 
+% "Examination and Analysis of Implementation Choices within the Material Point Method (MPM)
+% CMES, vol. 31, no. 2, pp. 107-127, 2008
+%__________________________________
+%  Equation 47
+function [dp] = MMS_displacement(xp, t, NP, speedSound)
+  A = 0.05;   % Hardwired
+
+  for ip=1:NP
+    dp(ip) = A * sin(2.0 * pi * xp(ip) ) * cos( speedSound * pi * t);
+  end  
+end  
+
+%__________________________________
+% Equation 48
+function [F] = MMS_deformationGradient(xp, t, NP,speedSound)
+  A = 0.05;   % Hardwired
+    
+  for ip=1:NP
+    F(ip) = 1.0 + 2.0 * A * pi * cos(2.0 * pi * xp(ip)) * cos( speedSound * pi * t);
+  end  
+end
+
+%__________________________________
+%  Equation 49
+function [b] = MMS_bodyForce(xp, t, NP, speedSound)
+   A = 0.05;   % Hardwired
+    
+  [dx] = MMS_displacement(xp, t, NP, speedSound);
+  [F]  = MMS_deformationGradient(xp, t, NP, speedSound);
+  
+  c1 = speedSound * speedSound * pi * pi;
+  for ip=1:NP
+    b(ip) = c1 * dx(ip) * ( 1.0 + 2.0/(F(ip) * F(ip)) );
+  end   
+
+end
+
+
+
+%__________________________________
+function [extForceP, delta] = ExternalForce(problem_type, delta_0, bodyForce, Material, xp, massP, t, tstep, NP, R1_dx)
+
+  density    = Material{1}.density;
+  E          = Material{1}.E;
+  speedSound = Material{1}.speedSound;
+  
+  delta = -9;
+  
+  if (strcmp(problem_type, 'compaction'))
+    if(bodyForce > -200)
+      bodyForce = -t * 100;
+    end
+    
+    delta = delta_0 + (density*bodyForce/(2.0 * E) ) * (delta_0 * delta_0);  
+
+    displacement = delta - delta_0;
+    W = density * abs(bodyForce) * delta_0; 
+    
+    if (mod(tstep,100) == 0)
+      fprintf('Bodyforce: %g displacement:%g, W: %g\n',bodyForce, displacement/R1_dx, W);                                             
+    end
+    for ip=1:NP                                                                       
+       extForceP(ip) = bodyForce*massP(ip);                                                      
+    end                                                                               
+  end
+  
+  if (strcmp(problem_type, 'mms'))
+    [extForceP] = MMS_bodyForce(xp, t, NP, speedSound);
+  end
 end
