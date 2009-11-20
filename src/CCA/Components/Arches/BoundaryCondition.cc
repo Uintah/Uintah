@@ -152,6 +152,8 @@ BoundaryCondition::~BoundaryCondition()
   for ( SpeciesEffMap::iterator iter = d_speciesEffInfo.begin(); iter != d_speciesEffInfo.end(); iter++){
     VarLabel::destroy(iter->second.flowRateLabel);
   }
+
+  delete d_newBC; 
 }
 
 //****************************************************************************
