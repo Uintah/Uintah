@@ -842,7 +842,7 @@ MPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
       phaseTasks[dts->localTask(i)->getTask()->d_phase]++;
   }
 
-  static map<int,int> histogram;
+  static vector<int> histogram;
   set<DetailedTask*> pending_tasks;
   DetailedTask * reducetask = 0; //task graph have already enforced 
                                  //that no reduce task can run at the same time
@@ -955,8 +955,12 @@ MPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
       }
       
       if(queuelength.active())
+      {
+        if((int)histogram.size()<dts->numExternalReadyTasks()+1)
+          histogram.resize(dts->numExternalReadyTasks()+1);
         histogram[dts->numExternalReadyTasks()]++;
-      
+      }
+     
       if (dts->numExternalReadyTasks() > 0) {
         // run a task that has its communication complete
         // tasks get in this queue automatically when their receive count hits 0
@@ -1062,9 +1066,9 @@ MPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
   if(queuelength.active() && d_myworld->myrank()==false)
   {
     cout << d_myworld->myrank() << " queue length histogram: ";
-    for(map<int,int>::iterator iter=histogram.begin();iter!=histogram.end();iter++)
+    for(vector<int>::iterator iter=histogram.begin();iter!=histogram.end();iter++)
     {
-      cout << iter->second << " ";
+      cout << *iter << " ";
       //cout << iter->first << ":" << iter->second << " ";
     }
     cout << endl;
