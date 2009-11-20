@@ -27,6 +27,20 @@
 
  */
 
+/////////////////////////////////////////////////////////////////////////////
+// GCC 4.4 is optimizing away template instantiations that are needed.
+// To force this not to happen, we have to turn off (using pragmas)
+// optimization for the template instantiation function (at bottom of
+// this file).  However, this is causing internal compiler errors.
+// Strangely enough, if you put these 'bogus' pragmas here (bogus because
+// while they change the opt level, they then put it right back), then
+// everything works as advertised...  sigh... don't ask me... (Dd)
+#if( ( __GNUC__ == 4  && __GNUC_MINOR__ >= 4 ) || ( __GNUC__ > 4 ) )
+#  pragma GCC optimize "-O0"
+#  pragma GCC reset_options
+#endif
+/////////////////////////////////////////////////////////////////////////////
+
 #include <stdio.h>
 
 #include <StandAlone/tools/uda2vis/particles.h>
@@ -726,7 +740,13 @@ saveParticleData( vector<ParticleDataContainer> & particleVars,
 // function is never called, but forces the compiler to instantiate
 // the needed templated functions.
 
-  void
+// This pragma is used to force gcc 4.4 to not optimize away the needed
+// function instantiations.
+#if( ( __GNUC__ == 4  && __GNUC_MINOR__ >= 4 ) || ( __GNUC__ > 4 ) )
+#  pragma GCC optimize "-O0"
+#endif
+
+void
 templateInstantiationForParticlesCC()
 {
   QueryInfo  * qinfo = NULL;

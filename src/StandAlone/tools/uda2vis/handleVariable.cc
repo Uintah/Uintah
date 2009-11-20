@@ -27,7 +27,19 @@
 
  */
 
-
+/////////////////////////////////////////////////////////////////////////////
+// GCC 4.4 is optimizing away template instantiations that are needed.
+// To force this not to happen, we have to turn off (using pragmas)
+// optimization for the template instantiation function (at bottom of
+// this file).  However, this is causing internal compiler errors.
+// Strangely enough, if you put these 'bogus' pragmas here (bogus because
+// while they change the opt level, they then put it right back), then
+// everything works as advertised...  sigh... don't ask me... (Dd)
+#if( ( __GNUC__ == 4  && __GNUC_MINOR__ >= 4 ) || ( __GNUC__ > 4 ) )
+#  pragma GCC optimize "-O0"
+#  pragma GCC reset_options
+#endif
+/////////////////////////////////////////////////////////////////////////////
 
 /////////////////
 // Due to template instantiation ordering problems, these 2 includes must be first:
@@ -99,9 +111,9 @@ handleData( QueryInfo &    qinfo,
       cerr << "Cannot allocate memory for field\n";
       return;
     }
-    // cout << sf->fdata().dim3() \
-         << " " << sf->fdata().dim2() \
-         << " " << sf->fdata().dim1() << endl;
+    // cout << sf->fdata().dim3()
+    //     << " " << sf->fdata().dim2()
+    //     << " " << sf->fdata().dim1() << endl;
     if(qinfo.combine_levels){
       // this will only be called for all levels, combined
       build_combined_level_field<T, VarT, LVFieldCB, FLOC>( qinfo, low, sf, args );
@@ -483,9 +495,9 @@ handlePatchData( QueryInfo& qinfo, IntVector& offset,
   // get bigger (thus requiring reallocation).
   patch_data.rewindow( patch_low, patch_high );
 
-  // cout << "field dim: " << sfield->fdata().dim3() \
-       << " " << sfield->fdata().dim2() \
-       << " " << sfield->fdata().dim1() << endl;
+  // cout << "field dim: " << sfield->fdata().dim3()
+  //     << " " << sfield->fdata().dim2()
+  //     << " " << sfield->fdata().dim1() << endl;
 
   PatchToFieldThread<T, FIELD> *worker = 
     scinew PatchToFieldThread<T, FIELD>(sfield, &patch_data, offset,
@@ -500,8 +512,14 @@ handlePatchData( QueryInfo& qinfo, IntVector& offset,
 // functions are never called, but force the compiler to instantiate the
 // handleVariable<Vector> function that is needed.
 
+// This pragma is used to force gcc to not optimize away the needed
+// function instantiations.
+#if( ( __GNUC__ == 4  && __GNUC_MINOR__ >= 4 ) || ( __GNUC__ > 4 ) )
+#  pragma GCC optimize "-O0"
+#endif
+
 template <class T>
-  void
+void
 templateInstantiationForGetCCHelper()
 {
   typedef LatVolMesh<HexTrilinearLgn<Point> > LVMesh;
@@ -527,8 +545,11 @@ templateInstantiationForGetCCHelper()
   handlePatchData<T, CCVariable<T>,   LVFieldLB> ( *qinfo, hi, gfhb, patch, *args );
   handlePatchData<T, NCVariable<T>,   LVFieldLB> ( *qinfo, hi, gfhb, patch, *args );
 }
+#if( ( __GNUC__ == 4  && __GNUC_MINOR__ >= 4 ) || ( __GNUC__ > 4 ) )
+#  pragma GCC reset_options
+#endif
 
-  void
+void
 templateInstantiationForGetCC()
 {
   IntVector    hi, low, range;

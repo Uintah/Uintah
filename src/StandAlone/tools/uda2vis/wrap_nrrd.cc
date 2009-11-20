@@ -374,9 +374,15 @@ wrap_nrrd( FIELD * source, Matrix_Op matrix_op, bool verbose, cellVals& cellValC
 // function is never called, but forces the instantiation of the
 // wrap_nrrd functions that are needed.
 
+// This pragma is used to force gcc v4.4 to not optimize away the needed
+// function instantiations.
+#if( ( __GNUC__ == 4  && __GNUC_MINOR__ >= 4 ) || ( __GNUC__ > 4 ) )
+#  pragma GCC optimize "-O0"
+#endif
+
 template <class T>
 static
-  void
+void
 instHelper()
 {
   typedef LatVolMesh<HexTrilinearLgn<Point> > LVMesh;
@@ -393,8 +399,11 @@ instHelper()
   wrap_nrrd( sf,  (Matrix_Op)0, false, *cellVallColln, dataReq );
   wrap_nrrd( flb, (Matrix_Op)0, false, *cellVallColln, dataReq );
 }
+#if( ( __GNUC__ == 4  && __GNUC_MINOR__ >= 4 ) || ( __GNUC__ > 4 ) )
+#  pragma GCC reset_options
+#endif
 
-  void
+void
 templateInstantiationForWrapNrrdCC()
 {
   instHelper<double>();
