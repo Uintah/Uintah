@@ -2352,6 +2352,9 @@ case $host in
       *ifort*)
         SCI_TRY_LINK(F,fortran libraries,,,ifcore,$_sci_lib,,,$_sci_optional)
         ;;
+      *ftn*)
+        SCI_TRY_LINK(F,fortran libraries,,,,$_sci_lib,,,$_sci_optional)
+        ;;
       *)
         SCI_TRY_LINK(F,fortran libraries,,,g2c,$_sci_lib,,,$_sci_optional)
         ;;
