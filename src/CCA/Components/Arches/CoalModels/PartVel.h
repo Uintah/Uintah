@@ -6,15 +6,18 @@
 #include <Core/Grid/SimulationStateP.h>
 #include <CCA/Ports/Scheduler.h>
 #include <CCA/Components/Arches/BoundaryCond_new.h>
-
-#include <map>
-#include <string>
+#include <CCA/Components/Arches/Directives.h>
 #include <iostream>
 
-#define YDIM
-#define ZDIM
-
 //===========================================================================
+
+/** @class    PartVel
+  * @author   Jeremy Thornock
+  *
+  * @brief    This model calculates a particle velocity, given information about
+  *           the particle, using the fast equilibirum Eulerian approximation 
+  *           detailed in Balachandar (2008) and Ferry and Balachandar (2001, 2003).
+  */
 
 namespace Uintah {
 class ArchesLabel; 
@@ -25,46 +28,32 @@ public:
   PartVel(ArchesLabel* fieldLabels);
  
   ~PartVel();
+  
   /** @brief Interface to the input file */
   void problemSetup( const ProblemSpecP& inputdb ); 
+  
   /** @brief Schedules the calculation of the particle velocities */
   void schedComputePartVel( const LevelP& level, SchedulerP& sched, const int rkStep );
+  
   /** @brief Actually computes the particle velocities */ 
   void ComputePartVel( const ProcessorGroup* pc, 
                        const PatchSubset* patches, 
                        const MaterialSubset* matls, 
                        DataWarehouse* old_dw, 
                        DataWarehouse* new_dw, const int rkStep );
+
+  /** @brief  Sets the velocity vector boundary condtions */
   void computeBCs( const Patch* patch, 
                    string varName, 
                    CCVariable<Vector>& vel ){
-
     d_boundaryCond->setVectorValueBC( 0, patch, vel, varName ); 
-
   };
 
-private:
+  //////////////////////////////////////////////////////
+  // Velocity calculation methods 
 
-  ArchesLabel* d_fieldLabels; 
-  
-  // velocity model paramters
-  double d_eta; // Kolmogorov scale
-  double rhoRatio; // density ratio
-  double beta; // beta parameter
-  double epsilon; // turbulence intensity
-  double kvisc; // fluid kinematic viscosity
-  //int regime; // what is this??? 
-  double d_upLimMult; // multiplies the upper limit of the scaling factor for upper bounds on ic. 
-  bool d_gasBC; 
-  double d_min_vel_ratio; // min ratio allow for the velocity difference. 
-
-  vector<double> d_wlo;
-  vector<double> d_wo;
-
-  BoundaryCondition_new* d_boundaryCond; 
-
-  Vector cart2sph( Vector X ) {
-    // converts cartesean to spherical coords
+  /** @brief  Static method to convert cartesian coordinates to spherical coordinates */
+  static Vector cart2sph( Vector X ) {
     double mag   = pow( X.x(), 2.0 );
     double magxy = mag;  
     double z = 0; 
@@ -90,8 +79,8 @@ private:
 
   };
 
-  Vector sph2cart( Vector X ) {
-    // converts spherical to cartesian coords
+  /** @brief  Static method to convert Cartesian coorinates to spherical coordinates */
+  static Vector sph2cart( Vector X ) {
     double x = 0.;
     double y = 0.;
     double z = 0.;
@@ -109,13 +98,37 @@ private:
 
   };
 
+
+private:
+
+  ArchesLabel* d_fieldLabels; 
+  
+  // velocity model paramters
+  double d_eta;           ///< Kolmogorov scale
+  double rhoRatio;        ///< Density ratio
+  double beta;            ///< Beta parameter
+  double epsilon;         ///< Turbulence intensity
+  double kvisc;           ///< Fluid kinematic viscosity
+  //int regime;           ///< Particle regime (I, II, or III - see Balachandar paper for details)
+                          // Regime I is particles whose timescales are smaller than the Kolmogorov time scale
+                          // Regime II is particles whose timescales are between the Kolmogorov time scale and the large eddy time scale
+                          // Regime III is particles whose timescales are larger than the large eddy timescale
+  double d_upLimMult;     ///< Multiplies the upper limit of the scaling factor for upper bounds on ic. 
+  bool d_gasBC;           ///< Boolean: Use gas velocity boundary conditions for particle velocity boundary conditions?
+  double d_min_vel_ratio; ///< Min ratio allow for the velocity difference. 
+
+  vector<double> d_wlo;   ///< Initial value of weighted abscissa for length internal coordinate
+  vector<double> d_wo;    ///< Initial value of weight
+
+  BoundaryCondition_new* d_boundaryCond; 
+
   double d_highClip; 
   double d_lowClip; 
   double d_power; 
   double d_L; 
   int    d_totIter; 
   double d_tol; 
-  
+
 
  }; //end class PartVel
 

@@ -1,17 +1,16 @@
 #ifndef UT_CoalModelFactory_h
 #define UT_CoalModelFactory_h
 #include <CCA/Components/Arches/ArchesLabel.h>
+#include <CCA/Components/Arches/ArchesVariables.h>
+#include <CCA/Ports/DataWarehouseP.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Grid/SimulationStateP.h>
 #include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Grid/Variables/VarTypes.h>
-//#include <Core/Grid/SimulationStateP.h>
-//#include <Core/Grid/SimulationState.h>
-#include <CCA/Components/Arches/ArchesVariables.h>
-#include <CCA/Ports/DataWarehouseP.h>
+#include <Core/Parallel/Parallel.h>
+#include <Core/Exceptions/ProblemSetupException.h>
+#include <Core/Exceptions/InvalidValue.h>
 #include <map>
-#include <vector>
-#include <string>
 
 //====================================================================
 
@@ -84,17 +83,19 @@ private:
   *
   *  Implemented as a singleton.
   */
+
 class CoalModelFactory
 {
 public:
   
   typedef std::map< std::string, ModelBase*> ModelMap;
   
-  /**
-   *  @brief obtain a reference to the CoalModelFactory.
-   */
+  /** @brief	Obtain a reference to the CoalModelFactory. */
   static CoalModelFactory& self();
 
+	/** @brief	Grab input parameters from the ups file. */
+	void problemSetup( const ProblemSpecP & params);
+		
   /**
    *  @brief Register a source term on the specified transport equation.
    *
@@ -123,10 +124,28 @@ public:
                                       SchedulerP& sched, 
                                       int timeSubStep );
 
+  void coalParticleCalculation( const ProcessorGroup * pc, 
+                                const PatchSubset    * patches, 
+                                const MaterialSubset * matls, 
+                                DataWarehouse        * old_dw, 
+                                DataWarehouse        * new_dw );
+
+	////////////////////////////////////////////////
+	// Get/set methods
+
   /** @brief  Get all models in a ModelMap */
   ModelMap& retrieve_all_models() {
     return models_; }; 
 
+	/** @brief	Get the initial composition vector for the coal particles */
+	vector<double> getInitialCoalComposition() {
+		return yelem; };
+
+  /** @brief  Set the ArchesLabel class so that CoalModelFactory can use field labels from Arches */
+  void setArchesLabel( ArchesLabel * fieldLabels ) {
+    d_fieldLabels = fieldLabels;
+    b_labelSet = true;
+  }
 
 
 private:
@@ -136,8 +155,60 @@ private:
   BuildMap builders_;
   ModelMap models_;
 
+	bool b_coupled_physics;		///< Boolean: use coupled physics and iterative procedure?
+  bool b_labelSet;          ///< Boolean: has the ArchesLabel been set using setArchesLabel()?
+
+  vector<double> yelem;			///< Vector containing initial composition of coal particle
+  ArchesLabel* d_fieldLabels;
+  
+  // If using coupled physics, specific internal coordinates are needed.
+  string s_LengthName;
+  VarLabel* d_Length_ICLabel;
+  VarLabel* d_Length_GasLabel;
+
+  string s_RawCoalName;
+  VarLabel* d_RawCoal_ICLabel;
+  VarLabel* d_RawCoal_GasLabel;
+
+  string s_CharName;
+  VarLabel* d_Char_ICLabel;
+  VarLabel* d_Char_GasLabel;
+
+  bool b_useParticleTemperature;
+  string s_ParticleTemperatureName;
+  VarLabel* d_ParticleTemperature_ICLabel;
+  VarLabel* d_ParticleTemperature_GasLabel;
+
+  bool b_useParticleEnthalpy;
+  string s_ParticleEnthalpyName;
+  VarLabel* d_ParticleEnthalpy_ICLabel;
+  VarLabel* d_ParticleEnthalpy_GasLabel;
+
+  bool b_useMoisture;
+  string s_MoistureName;
+  VarLabel* d_Moisture_ICLabel;
+  VarLabel* d_Moisture_GasLabel;
+
+  bool b_useAsh;
+  string s_AshName;
+  VarLabel* d_Ash_ICLabel;
+  VarLabel* d_Ash_GasLabel;
+
+  // Model pointers to corresponding models are also needed for coupled physics.
+  ModelBase* LengthModel;
+  ModelBase* DevolModel;
+  ModelBase* HeatModel;
+  ModelBase* CharModel;
+
+  // If using separable physics, no specific internal coordinates are needed.
+  // Use the existing framework of using tag
+  // <Models>
+  //    <model label="..." type="...">
+  // which is used to construct a model of type "..." by Arches
+ 
   CoalModelFactory();
   ~CoalModelFactory();
+	
 }; // class CoalModelFactory
 }  //Namespace Uintah
 #endif

@@ -80,6 +80,8 @@ void DQMOM::problemSetup(const ProblemSpecP& params)
 {
   ProblemSpecP db = params; 
 
+  proc0cout << "In DQMOM problem setup." << endl; //dbgprint
+
 #ifdef VERIFY_LINEAR_SOLVER
   // grab the name of the file containing the test matrices
   ProblemSpecP db_verify_linear_solver = db->findBlock("Verify_Linear_Solver");
@@ -118,22 +120,28 @@ void DQMOM::problemSetup(const ProblemSpecP& params)
   d_small_normalizer = 1e-8;
 
   ProblemSpecP db_linear_solver = db->findBlock("LinearSolver");
+  if( db_linear_solver ) {
 
-  db_linear_solver->getWithDefault("tolerance", d_solver_tolerance, 1.0e-5);
+    db_linear_solver->getWithDefault("tolerance", d_solver_tolerance, 1.0e-5);
 
-  db_linear_solver->getWithDefault("type", d_solverType, "lu");
-  if( d_solverType == "Lapack" || d_solverType == "DenseMatrix" ) {
-    b_useLapack = true;
-  } else if( d_solverType == "LU" ) {
-    b_useLapack = false;
+    db_linear_solver->getWithDefault("type", d_solverType, "lu");
+    if( d_solverType == "Lapack" || d_solverType == "DenseMatrix" ) {
+      b_useLapack = true;
+    } else if( d_solverType == "LU" ) {
+      b_useLapack = false;
+    } else {
+      string err_msg = "ERROR: Arches: DQMOM: Unrecognized solver type "+d_solverType+": must be 'Lapack', 'DenseMatrix', or 'LU'.\n";
+      throw ProblemSetupException(err_msg,__FILE__,__LINE__);
+    }
+
+    db_linear_solver->getWithDefault("svd", b_calcSVD, false);
+    if( b_calcSVD == true && b_useLapack == false ) {
+      string err_msg = "ERROR: Arches: DQMOM: Cannot perform singular value decomposition without using Lapack!\n";
+      throw ProblemSetupException(err_msg,__FILE__,__LINE__);
+    }
+
   } else {
-    string err_msg = "ERROR: Arches: DQMOM: Unrecognized solver type "+d_solverType+": must be 'Lapack', 'DenseMatrix', or 'LU'.\n";
-    throw ProblemSetupException(err_msg,__FILE__,__LINE__);
-  }
-
-  db_linear_solver->getWithDefault("svd", b_calcSVD, false);
-  if( b_calcSVD == true && b_useLapack == false ) {
-    string err_msg = "ERROR: Arches: DQMOM: Cannot perform singular value decomposition without using Lapack!\n";
+    string err_msg = "ERROR: Arches: DQMOM: Could not find block '<LinearSolver>': this block is required for DQMOM. \n";
     throw ProblemSetupException(err_msg,__FILE__,__LINE__);
   }
 
@@ -351,9 +359,6 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
   double total_IRSolveTime = 0.0;
   double total_AXBConstructionTime = 0.0;
 
-  double total_getTime = 0.0;
-  double total_assignSolutionTime = 0.0;
-  
   bool do_iterative_refinement = false;
 #ifdef DEBUG_MATRICES
   double total_FileWriteTime = 0.0;
@@ -369,8 +374,6 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
 
     int archIndex = 0;
     int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
-
-    double start_getTime = Time::currentSeconds(); //timing
 
     // get/allocate normB label
     CCVariable<double> normB; 
@@ -498,8 +501,6 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
 
     }
 
-    total_getTime += ( Time::currentSeconds() - start_getTime );
-
     // Cell iterator
     for ( CellIterator iter = patch->getCellIterator();
           !iter.done(); ++iter) {
@@ -508,8 +509,6 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
       vector<double> weights;
       vector<double> weightedAbscissas;
       vector<double> models;
-
-      start_getTime = Time::currentSeconds();
 
       // get weights in current cell from CCVariable in constCCVarWrapper, store value in vector
       for( vector<constCCVarWrapper>::iterator iter = weightCCVars.begin();
@@ -534,9 +533,6 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
 
         models.push_back(runningsum);
       }
-
-      total_getTime += ( Time::currentSeconds() - start_getTime );
-
 
 #if !defined(VERIFY_LINEAR_SOLVER) && !defined(VERIFY_AB_CONSTRUCTION)
       
@@ -707,7 +703,6 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
         // check "acceptable solution" criteria, and assign solution values to source terms
   
         // Weight equations:
-        double start_assignSolutionTime = Time::currentSeconds(); //timing
         for( vector<DQMOMEqn*>::iterator iEqn = weightEqns.begin(); 
              iEqn != weightEqns.end(); ++iEqn ) {
           const VarLabel* source_label = (*iEqn)->getSourceLabel();
@@ -758,7 +753,6 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
           }
           ++z;
         }
-        total_assignSolutionTime += ( Time::currentSeconds() - start_assignSolutionTime ); //time
   
 
       } else {
@@ -1087,8 +1081,6 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
 #if defined(DEBUG_MATRICES)
   proc0cout << "    Time for file write: " << total_FileWriteTime << " seconds\n";
 #endif
-  proc0cout << "    Time for get() calls: " << total_getTime << " seconds\n";
-  proc0cout << "    Time for assigning solution: " << total_assignSolutionTime << " seconds\n";
   proc0cout << "    Time for AX=B construction: " << total_AXBConstructionTime << " seconds\n";
   if( b_useLapack == true ) {
     proc0cout << "    Time for DenseMatrix invert-multiply: " << total_InvertSolveTime << " seconds\n";

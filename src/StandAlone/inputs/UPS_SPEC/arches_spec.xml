@@ -346,7 +346,19 @@
         <LinearSolver                   spec="OPTIONAL NO_DATA">
           <tolerance                    spec="OPTIONAL DOUBLE 'positive'" />
           <type                         spec="OPTIONAL STRING 'Lapack, DenseMatrix, LU'" />
+          <svd                          spec="OPTIONAL BOOLEAN" />
         </LinearSolver>
+
+        <coalParticleCalculation        spec="REQUIRED NO_DATA"
+                                        attribute1="type REQUIRED STRING 'coupled, separable'" >
+            <Length                     spec="OPTIONAL STRING" />
+            <RawCoal                    spec="OPTIONAL STRING" />
+            <Char                       spec="OPTIONAL STRING" />
+            <ParticleTemperature        spec="OPTIONAL STRING" />
+            <ParticleEnthalpy           spec="OPTIONAL STRING" />
+            <Moisture                   spec="OPTIONAL STRING" />
+            <Ash                        spec="OPTIONAL STRING" />
+        </coalParticleCalculation>
 
         <number_quad_nodes              spec="REQUIRED INTEGER 'positive'"/>
         <adiabGas_nonadiabPart          spec="OPTIONAL BOOLEAN"/>

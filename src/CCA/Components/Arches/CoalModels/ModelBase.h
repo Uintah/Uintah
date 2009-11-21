@@ -37,20 +37,11 @@ public:
   
   virtual ~ModelBase();
 
+  ///////////////////////////////////////////////
+  // Initialization methods
+
   /** @brief  Input file interface */
   virtual void problemSetup(const ProblemSpecP& db, int qn) = 0;  
-
-  /** @brief  Pure virtual function: schedule computation of DQMOM model term. */
-  virtual void sched_computeModel(const LevelP& level, 
-                                  SchedulerP&   sched, 
-                                  int           timeSubStep ) = 0;
-
-  /** @brief  Pure virtual function: actually compute the DQMOM model term. */
-  virtual void computeModel( const ProcessorGroup * pc,
-                             const PatchSubset    * patches,
-                             const MaterialSubset * matls, 
-                             DataWarehouse        * old_dw, 
-                             DataWarehouse        * new_dw ) = 0;
 
   /** @brief  Pure virtual function: schedule initialization of any special variables unique to the model. */ 
   virtual void sched_initVars( const LevelP&  level, 
@@ -62,6 +53,7 @@ public:
                          const MaterialSubset * matls, 
                          DataWarehouse        * old_dw, 
                          DataWarehouse        * new_dw ) = 0;
+
 
   /** @brief  Schedule dummy initialization for MPMARCHES; the schedule task is the same for all models,
               but the implementation must be done by each model, since knowledge of the model's data type is required.
@@ -80,11 +72,35 @@ public:
   inline void reinitializeLabel(){ 
     d_labelSchedInit  = false; };
 
+  ////////////////////////////////////////////////
+  // Model computation methods
+
+  /** @brief  Pure virtual function: schedule computation of DQMOM model term. */
+  virtual void sched_computeModel(const LevelP& level, 
+                                  SchedulerP&   sched, 
+                                  int           timeSubStep ) = 0;
+
+  /** @brief  Pure virtual function: actually compute the DQMOM model term. */
+  virtual void computeModel( const ProcessorGroup * pc,
+                             const PatchSubset    * patches,
+                             const MaterialSubset * matls, 
+                             DataWarehouse        * old_dw, 
+                             DataWarehouse        * new_dw ) = 0;
+
+  ///////////////////////////////////////////////////
+  // Access methods
+
+  /** @brief  Return a string containing the model type (pure virtual) */
+  virtual string getType() = 0;
+
+  /** @brief  Return the VarLabel for the model term for particle */
   inline const VarLabel* getModelLabel() {
     return d_modelLabel; };
 
+  /** @brief  Return the VarLabel for the model term for gas */
   inline const VarLabel* getGasSourceLabel() {
     return d_gasLabel; }; 
+
 
 protected:
 
@@ -101,6 +117,9 @@ protected:
   const VarLabel* d_modelLabel;       ///< Label storing the value of this model
   const VarLabel* d_gasLabel;         ///< Label for gas phase source term 
   int d_timeSubStep;
+
+  double d_lowModelClip;              ///< All models should have capability of clipping low values
+  double d_highModelClip;             ///< All models should have capability of clipping high values
 
   bool d_labelSchedInit;
   bool d_labelActualInit;   
