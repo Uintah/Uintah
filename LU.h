@@ -79,7 +79,7 @@ class LU{
     /** @brief      Access function for the determinant
       * @returns    The determinant of dense matrix A */
     double getDeterminant() {
-      assert(isDecomposed_);
+      ASSERT(isDecomposed_);
       return determinant;
     }
   
@@ -90,7 +90,7 @@ class LU{
 
     /** @brief      Check if matrix A is singular  */
     bool isSingular() {
-      assert(isDecomposed_);
+      ASSERT(isDecomposed_);
       return isSingular_;
     }
 
@@ -172,8 +172,8 @@ class LU{
       * @param row        Row in LU object to access
       * @param col        Column in LU object to access */
     inline double& operator ()(const int row, const int col){
-      assert( row < dim_ && row >= 0 );
-      assert( col < dim_ && col >= 0 );
+      ASSERT( row < dim_ && row >= 0 );
+      ASSERT( col < dim_ && col >= 0 );
       return AA_(row,col);
     };
   
