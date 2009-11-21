@@ -5,18 +5,16 @@
 #include <CCA/Components/Arches/CoalModels/Devolatilization.h>
 #include <CCA/Components/Arches/CoalModels/ModelBase.h>
 #include <CCA/Components/Arches/CoalModels/CoalModelFactory.h>
-
 #include <CCA/Components/Arches/ArchesVariables.h>
-
-#include <vector>
-#include <string>
+#include <CCA/Components/Arches/Directives.h>
 
 //===========================================================================
 
 /**
   * @class    KobayashiSarofimDevol
   * @author   Jeremy Thornock, Julien Pedel, Charles Reid
-  * @date     May 2009, November 2009
+  * @date     May 2009        Check-in of initial version
+  *           November 2009   Verification
   *
   * @brief    A class for calculating the DQMOM model term for the 
   *           Kobayashi-Sarofim coal devolatilization model.
@@ -65,7 +63,7 @@ public:
   ~KobayashiSarofimDevol();
 
   ////////////////////////////////////////////////
-  // Initialization stuff
+  // Initialization method
 
   /** @brief Interface for the inputfile and set constants */ 
   void problemSetup(const ProblemSpecP& db, int qn);
@@ -73,7 +71,7 @@ public:
   // No initVars() method because no special variables needed
 
   ////////////////////////////////////////////////
-  // Model computation
+  // Model computation method
 
   /** @brief Schedule the calculation of the source term */ 
   void sched_computeModel( const LevelP& level, 
@@ -100,6 +98,11 @@ public:
   /** @brief  Get char production rate (see Glacier) */
   double calcCharProductionRate() {
     return 0; }
+
+  ///////////////////////////////////////////////////
+  // Get/set methods
+
+  /* getType method is defined in parent class... */
 
 private:
 

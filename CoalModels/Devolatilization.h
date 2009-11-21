@@ -36,7 +36,7 @@ public:
   virtual ~Devolatilization();
 
   ///////////////////////////////////////////////
-  // Initialization stuff
+  // Initialization methods
 
   /** @brief  Grab model-independent devolatilization parameters */
   void problemSetup(const ProblemSpecP& db, int qn);
@@ -61,7 +61,7 @@ public:
                   DataWarehouse* new_dw );
 
   ////////////////////////////////////////////////
-  // Model computation
+  // Model computation methods
 
   /** @brief  Get raw coal reaction rate (see Glacier) */
   virtual double calcRawCoalReactionRate() = 0;
@@ -70,15 +70,17 @@ public:
   virtual double calcGasDevolRate() = 0;
 
   /** @brief  Get char production rate (see Glacier) */
-  double calcCharProductionRate();
+  virtual double calcCharProductionRate() = 0;
 
   ///////////////////////////////////////////////////
-  // Access functions
+  // Access methods
+
+  /** @brief  Return a string containing the model type ("Devolatilization") */
+  inline string getType() {
+    return "Devolatilization"; }
+
 
 protected:
-
-  double d_lowModelClip; 
-  double d_highModelClip; 
 
   double d_w_scaling_factor; 
   double d_w_small; // "small" clip value for zero weights

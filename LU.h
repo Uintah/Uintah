@@ -2,9 +2,6 @@
 #define Uintah_Components_Arches_LU_h
 
 #include <Core/Grid/Variables/VarTypes.h>
-#include <assert.h>
-#include <vector>
-//#include <string>
 #include <iostream>
 #include <iomanip>
 

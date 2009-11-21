@@ -1,9 +1,9 @@
 #include <CCA/Components/Arches/CoalModels/SimpleHeatTransfer.h>
+#include <CCA/Components/Arches/CoalModels/PartVel.h>
 #include <CCA/Components/Arches/TransportEqns/EqnFactory.h>
 #include <CCA/Components/Arches/TransportEqns/EqnBase.h>
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqn.h>
 #include <CCA/Components/Arches/ArchesLabel.h>
-
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Grid/SimulationState.h>
@@ -11,7 +11,8 @@
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Exceptions/InvalidValue.h>
 #include <Core/Parallel/Parallel.h>
-
+#include <iostream>
+#include <iomanip>
 
 using namespace std;
 using namespace Uintah; 
@@ -19,11 +20,11 @@ using namespace Uintah;
 //---------------------------------------------------------------------------
 // Builder:
 SimpleHeatTransferBuilder::SimpleHeatTransferBuilder( const std::string         & modelName,
-                                                            const vector<std::string> & reqICLabelNames,
-                                                            const vector<std::string> & reqScalarLabelNames,
-                                                            const ArchesLabel         * fieldLabels,
-                                                            SimulationStateP          & sharedState,
-                                                            int qn ) :
+                                                      const vector<std::string> & reqICLabelNames,
+                                                      const vector<std::string> & reqScalarLabelNames,
+                                                      const ArchesLabel         * fieldLabels,
+                                                      SimulationStateP          & sharedState,
+                                                      int qn ) :
   ModelBuilder( modelName, reqICLabelNames, reqScalarLabelNames, fieldLabels, sharedState, qn )
 {
 }
@@ -50,6 +51,14 @@ SimpleHeatTransfer::SimpleHeatTransfer( std::string modelName,
   // Create the gas phase source term associated with this model
   std::string gasSourceName = modelName + "_gasSource";
   d_gasLabel = VarLabel::create( gasSourceName, CCVariable<double>::getTypeDescription() );
+
+  // Set constants
+  Pr = 0.7;
+  blow = 1.0;
+  sigma = 5.67e-8;   // [=] J/s/m^2/K^4 : Stefan-Boltzmann constant (from white book)
+  //rkg = 0.03;        // [=] J/s/m/K : thermal conductivity of gas
+
+  pi = 3.14159265358979; 
 }
 
 SimpleHeatTransfer::~SimpleHeatTransfer()
@@ -70,8 +79,9 @@ SimpleHeatTransfer::problemSetup(const ProblemSpecP& params, int qn)
   if (params_root->findBlock("PhysicalConstants")) {
     ProblemSpecP db_phys = params_root->findBlock("PhysicalConstants");
     db_phys->require("viscosity", visc);
-  } else
+  } else {
     throw InvalidValue("Missing <PhysicalConstants> section in input file!",__FILE__,__LINE__);
+  }
 
   if (params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("Coal_Properties")) {
     ProblemSpecP db_coal = params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("Coal_Properties");
@@ -80,110 +90,104 @@ SimpleHeatTransfer::problemSetup(const ProblemSpecP& params, int qn)
     db_coal->require("N", yelem[2]);
     db_coal->require("O", yelem[3]);
     db_coal->require("S", yelem[4]);
-  } else
+  } else {
     throw InvalidValue("Missing <Coal_Properties> section in input file!",__FILE__,__LINE__);
+  }
 
   // Assume no ash (for now)
   d_ash = false;
 
+  string label_name;
+  string role_name;
+  string temp_label_name;
+
+  string temp_ic_name;
+  string temp_ic_name_full;
+
   // Look for required internal coordinates
   ProblemSpecP db_icvars = params->findBlock("ICVars");
-  for (ProblemSpecP variable = db_icvars->findBlock("variable"); variable != 0; variable = variable->findNextBlock("variable") ) {
-  
-    string label_name;
-    string role_name;
-    string temp_label_name;
+  if (db_icvars) {
+    for (ProblemSpecP variable = db_icvars->findBlock("variable"); variable != 0; variable = variable->findNextBlock("variable") ) {
     
-    variable->getAttribute("label",label_name);
-    variable->getAttribute("role",role_name);
+      variable->getAttribute("label",label_name);
+      variable->getAttribute("role",role_name);
 
-    temp_label_name = label_name;
-    
-    string node;
-    std::stringstream out;
-    out << qn;
-    node = out.str();
-    temp_label_name += "_qn";
-    temp_label_name += node;
+      temp_label_name = label_name;
+      
+      std::stringstream out;
+      out << qn;
+      string node = out.str();
+      temp_label_name += "_qn";
+      temp_label_name += node;
 
-    // user specifies "role" of each internal coordinate
-    // if it isn't an internal coordinate or a scalar, it's required explicitly
-    // ( see comments in Arches::registerModels() for details )
-    if( role_name == "gas_temperature" ) {
-      // tempIN will be required explicitly
-    } else if ( role_name == "particle_length" 
-             || role_name == "raw_coal_mass"
-             || role_name == "ash_mass"
-             || role_name == "particle_temperature" ) {
-      LabelToRoleMap[temp_label_name] = role_name;
-    } else {
-      std::string errmsg = "Invalid variable role for Simple Heat Transfer model!";
-      throw InvalidValue(errmsg,__FILE__,__LINE__);
+      // user specifies "role" of each internal coordinate
+      // if it isn't an internal coordinate or a scalar, it's required explicitly
+      // ( see comments in Arches::registerModels() for details )
+      if( role_name == "gas_temperature" ) {
+        // tempIN will be required explicitly
+      } else if ( role_name == "particle_length" 
+               || role_name == "raw_coal_mass"
+               || role_name == "ash_mass"
+               || role_name == "particle_temperature" ) {
+        LabelToRoleMap[temp_label_name] = role_name;
+      } else {
+        std::string errmsg = "Invalid variable role for Simple Heat Transfer model!";
+        throw InvalidValue(errmsg,__FILE__,__LINE__);
+      }
+
+      // set model clipping
+      db->getWithDefault( "low_clip",  d_lowModelClip,  1.0e-6 );
+      db->getWithDefault( "high_clip", d_highModelClip, 999999 );
     }
-
-    // set model clipping
-    db->getWithDefault( "low_clip",  d_lowModelClip,  1.0e-6 );
-    db->getWithDefault( "high_clip", d_highModelClip, 999999 );
- 
   }
 
   // Look for required scalars
   //   ( SimpleHeatTransfer model doesn't use any extra scalars (yet)
   //     but if it did, this "for" loop would have to be un-commented )
-  /*
   ProblemSpecP db_scalarvars = params->findBlock("scalarVars");
-  for( ProblemSpecP variable = db_scalarvars->findBlock("variable");
-       variable != 0; variable = variable->findNextBlock("variable") ) {
+  if (db_scalarvars) {
+    for( ProblemSpecP variable = db_scalarvars->findBlock("variable");
+         variable != 0; variable = variable->findNextBlock("variable") ) {
 
-    string label_name;
-    string role_name;
-    string temp_label_name;
+      variable->getAttribute("label", label_name);
+      variable->getAttribute("role",  role_name);
 
-    variable->getAttribute("label", label_name);
-    variable->getAttribute("role",  role_name);
+      temp_label_name = label_name;
 
-    temp_label_name = label_name;
+      std::stringstream out;
+      out << qn;
+      string node = out.str();
+      temp_label_name += "_qn";
+      temp_label_name += node;
 
-    string node;
-    std::stringstream out;
-    out << qn;
-    node = out.str();
-    temp_label_name += "_qn";
-    temp_label_name += node;
-
-    // user specifies "role" of each scalar
-    // if it isn't an internal coordinate or a scalar, it's required explicitly
-    // ( see comments in Arches::registerModels() for details )
-    if ( role_name == "raw_coal_mass") {
-      LabelToRoleMap[temp_label_name] = role_name;
-    } else if( role_name == "particle_temperature" ) {  
-      LabelToRoleMap[temp_label_name] = role_name;
-      compute_part_temp = true;
-    } else {
-      std::string errmsg;
-      errmsg = "Invalid variable role for Simple Heat Transfer model: must be \"particle_temperature\" or \"raw_coal_mass\", you specified \"" + role_name + "\".";
-      throw InvalidValue(errmsg,__FILE__,__LINE__);
+      // user specifies "role" of each scalar
+      // if it isn't an internal coordinate or a scalar, it's required explicitly
+      // ( see comments in Arches::registerModels() for details )
+      /*
+      if ( role_name == "raw_coal_mass") {
+        LabelToRoleMap[temp_label_name] = role_name;
+      } else if( role_name == "particle_temperature" ) {  
+        LabelToRoleMap[temp_label_name] = role_name;
+        compute_part_temp = true;
+      } else {
+        std::string errmsg;
+        errmsg = "Invalid variable role for Simple Heat Transfer model: must be \"particle_temperature\" or \"raw_coal_mass\", you specified \"" + role_name + "\".";
+        throw InvalidValue(errmsg,__FILE__,__LINE__);
+      }
+      */
     }
-
   }
-  */
-
-
 
   // fix the d_icLabels to point to the correct quadrature node (since there is 1 model per quad node)
   for ( vector<std::string>::iterator iString = d_icLabels.begin(); 
         iString != d_icLabels.end(); ++iString) {
     
-    string temp_ic_name;
-    string temp_ic_name_full;
-
     temp_ic_name      = (*iString);
     temp_ic_name_full = temp_ic_name;
 
-    string node;
     std::stringstream out;
     out << qn;
-    node = out.str();
+    string node = out.str();
     temp_ic_name_full += "_qn";
     temp_ic_name_full += node;
 
@@ -191,32 +195,24 @@ SimpleHeatTransfer::problemSetup(const ProblemSpecP& params, int qn)
   }
 
   // fix the d_scalarLabels to point to the correct quadrature node (since there is 1 model per quad node)
-  // (Not needed for SimpleHeatTransfer model (yet)... If it is, uncomment the block below)
-  /*
   for ( vector<std::string>::iterator iString = d_scalarLabels.begin(); 
         iString != d_scalarLabels.end(); ++iString) {
-
-    string temp_ic_name;
-    string temp_ic_name_full;
 
     temp_ic_name      = (*iString);
     temp_ic_name_full = temp_ic_name;
 
-    string node;
     std::stringstream out;
     out << qn;
-    node = out.str();
+    string node = out.str();
     temp_ic_name_full += "_qn";
     temp_ic_name_full += node;
 
     std::replace( d_scalarLabels.begin(), d_scalarLabels.end(), temp_ic_name, temp_ic_name_full);
   }
-  */
 
-  string node;
   std::stringstream out;
   out << qn; 
-  node = out.str();
+  string node = out.str();
 
   // thermal conductivity (of particles, I think???)
   std::string abskpName = "abskp_qn";
@@ -300,8 +296,6 @@ SimpleHeatTransfer::sched_computeModel( const LevelP& level, SchedulerP& sched, 
   EqnBase& t_weight_eqn = dqmom_eqn_factory.retrieve_scalar_eqn( temp_weight_name );
   DQMOMEqn& weight_eqn = dynamic_cast<DQMOMEqn&>(t_weight_eqn);
   d_weight_label = weight_eqn.getTransportEqnLabel();
-  d_w_small = weight_eqn.getSmallClip();
-  d_w_scaling_factor = weight_eqn.getScalingConstant();
   tsk->requires(Task::OldDW, d_weight_label, Ghost::None, 0);
   
   // also require paticle velocity, gas velocity, and density
@@ -311,7 +305,7 @@ SimpleHeatTransfer::sched_computeModel( const LevelP& level, SchedulerP& sched, 
   tsk->requires(Task::OldDW, d_fieldLabels->d_densityCPLabel, Ghost::None, 0);
   tsk->requires(Task::OldDW, d_fieldLabels->d_cpINLabel, Ghost::None, 0);
  
-  if(d_radiation){
+  if(b_radiation){
     tsk->requires(Task::OldDW, d_fieldLabels->d_radiationSRCINLabel,  Ghost::None, 0);
     tsk->requires(Task::OldDW, d_fieldLabels->d_abskgINLabel,  Ghost::None, 0);   
   }
@@ -336,7 +330,7 @@ SimpleHeatTransfer::sched_computeModel( const LevelP& level, SchedulerP& sched, 
           EqnBase& t_current_eqn = dqmom_eqn_factory.retrieve_scalar_eqn(*iter);
           DQMOMEqn& current_eqn = dynamic_cast<DQMOMEqn&>(t_current_eqn);
           d_particle_temperature_label = current_eqn.getTransportEqnLabel();
-          d_pt_scaling_factor = current_eqn.getScalingConstant();
+          d_pt_scaling_constant = current_eqn.getScalingConstant();
           tsk->requires(Task::OldDW, d_particle_temperature_label, Ghost::None, 0);
         } else {
           std::string errmsg = "ARCHES: SimpleHeatTransfer: Invalid variable given in <ICVars> block, for <variable> tag for SimpleHeatTransfer model.";
@@ -351,7 +345,7 @@ SimpleHeatTransfer::sched_computeModel( const LevelP& level, SchedulerP& sched, 
           EqnBase& t_current_eqn = dqmom_eqn_factory.retrieve_scalar_eqn(*iter);
           DQMOMEqn& current_eqn = dynamic_cast<DQMOMEqn&>(t_current_eqn);
           d_particle_length_label = current_eqn.getTransportEqnLabel();
-          d_pl_scaling_factor = current_eqn.getScalingConstant();
+          d_pl_scaling_constant = current_eqn.getScalingConstant();
           tsk->requires(Task::OldDW, d_particle_length_label, Ghost::None, 0);
         } else {
           std::string errmsg = "ARCHES: SimpleHeatTransfer: Invalid variable given in <ICVars> block, for <variable> tag for SimpleHeatTransfer model.";
@@ -366,7 +360,7 @@ SimpleHeatTransfer::sched_computeModel( const LevelP& level, SchedulerP& sched, 
           EqnBase& t_current_eqn = dqmom_eqn_factory.retrieve_scalar_eqn(*iter);
           DQMOMEqn& current_eqn = dynamic_cast<DQMOMEqn&>(t_current_eqn);
           d_raw_coal_mass_label = current_eqn.getTransportEqnLabel();
-          d_rc_scaling_factor = current_eqn.getScalingConstant();
+          d_rc_scaling_constant = current_eqn.getScalingConstant();
           tsk->requires(Task::OldDW, d_raw_coal_mass_label, Ghost::None, 0);
         } else {
           std::string errmsg = "ARCHES: SimpleHeatTransfer: Invalid variable given in <ICVars> block, for <variable> tag for SimpleHeatTransfer model.";
@@ -380,7 +374,7 @@ SimpleHeatTransfer::sched_computeModel( const LevelP& level, SchedulerP& sched, 
           EqnBase& t_current_eqn = dqmom_eqn_factory.retrieve_scalar_eqn(*iter);
           DQMOMEqn& current_eqn = dynamic_cast<DQMOMEqn&>(t_current_eqn);
           d_ash_mass_label = current_eqn.getTransportEqnLabel();
-          d_ash_scaling_factor = current_eqn.getScalingConstant();
+          d_ash_scaling_constant = current_eqn.getScalingConstant();
           d_ash = true;
           tsk->requires(Task::OldDW, d_ash_mass_label, Ghost::None, 0);
         } else {
@@ -402,12 +396,11 @@ SimpleHeatTransfer::sched_computeModel( const LevelP& level, SchedulerP& sched, 
   }
 
   // for each required scalar variable:
-  //  (but no scalar equation variables should be required for the SimpleHeatTransfer model, at least not for now...)
-  /*
   for( vector<std::string>::iterator iter = d_scalarLabels.begin();
        iter != d_scalarLabels.end(); ++iter) {
     map<string, string>::iterator iMap = LabelToRoleMap.find(*iter);
     
+    /*
     if( iMap != LabelToRoleMap.end() ) {
       if( iMap->second == <insert role name here> ) {
         if( eqn_factory.find_scalar_eqn(*iter) ) {
@@ -428,9 +421,9 @@ SimpleHeatTransfer::sched_computeModel( const LevelP& level, SchedulerP& sched, 
                            "\" was required, but you did not specify a role for it!\n";
       throw InvalidValue( errmsg, __FILE__, __LINE__);
     }
+    */
 
   } //end for
-  */
 
   sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials()); 
 
@@ -446,7 +439,6 @@ SimpleHeatTransfer::computeModel( const ProcessorGroup * pc,
                                   DataWarehouse        * old_dw, 
                                   DataWarehouse        * new_dw )
 {
-  double pi = acos(-1.0);
   for( int p=0; p < patches->size(); p++ ) {  // Patch loop
 
     //Ghost::GhostType  gaf = Ghost::AroundFaces;
@@ -500,7 +492,7 @@ SimpleHeatTransfer::computeModel( const ProcessorGroup * pc,
     constCCVariable<double> abskgIN;
     CCVariable<double> enthNonLinSrc;
 
-    if(d_radiation){
+    if(b_radiation){
       old_dw->get(radiationSRCIN, d_fieldLabels->d_radiationSRCINLabel, matlIndex, patch, gn, 0);
       old_dw->get(abskgIN,        d_fieldLabels->d_abskgINLabel,        matlIndex, patch, gn, 0);
     }
@@ -508,84 +500,294 @@ SimpleHeatTransfer::computeModel( const ProcessorGroup * pc,
     constCCVariable<double> temperature;
     constCCVariable<double> w_particle_temperature;
     constCCVariable<double> w_particle_length;
-    constCCVariable<double> w_mass_raw_coal;
-    constCCVariable<double> w_mass_ash;
+    constCCVariable<double> w_raw_coal_mass;
+    constCCVariable<double> w_ash_mass;
     constCCVariable<double> weight;
 
     old_dw->get( temperature, d_fieldLabels->d_tempINLabel, matlIndex, patch, gn, 0 );
     old_dw->get( w_particle_temperature, d_particle_temperature_label, matlIndex, patch, gn, 0 );
     old_dw->get( w_particle_length, d_particle_length_label, matlIndex, patch, gn, 0 );
-    old_dw->get( w_mass_raw_coal, d_raw_coal_mass_label, matlIndex, patch, gn, 0 );
+    old_dw->get( w_raw_coal_mass, d_raw_coal_mass_label, matlIndex, patch, gn, 0 );
     old_dw->get( weight, d_weight_label, matlIndex, patch, gn, 0 );
-    if (d_ash) 
-      old_dw->get( w_mass_ash, d_ash_mass_label, matlIndex, patch, gn, 0 );
+
+    if (d_ash) {
+      old_dw->get( w_ash_mass, d_ash_mass_label, matlIndex, patch, gn, 0 );
+    }
+
+#if !defined(VERIFY_SIMPLEHEATTRANSFER_MODEL)
 
     for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
       IntVector c = *iter; 
 
-      Vector sphGas = Vector(0.,0.,0.);
-      Vector cartGas = gasVel[c]; 
-      Vector sphPart = Vector(0.,0.,0.);
-      Vector cartPart = partVel[c]; 
+      // define variables specific for non-verification runs:
 
-      sphGas = cart2sph( cartGas ); 
-      sphPart = cart2sph( cartPart ); 
-	
-      double length;
-      double particle_temperature;
-      double rawcoal_mass;
-      double ash_mass;
+      // velocities
+      Vector gas_velocity = gasVel[c];
+      Vector particle_velocity = partVel[c];
 
-      if (weight[c] < d_w_small ) { 
-        heat_rate[c] = 0.0;
-        gas_heat_rate[c] = 0.0;
+      // weight - check if small
+      bool weight_is_small = (weight[c] < d_w_small);
+
+      double scaled_weight;
+      double unscaled_weight;
+      if (weight_is_small) {
+        scaled_weight = 0.0;
+        unscaled_weight = 0.0;
       } else {
-	      length = w_particle_length[c]*d_pl_scaling_factor/weight[c];
-	      particle_temperature = w_particle_temperature[c]*d_pt_scaling_factor/weight[c];
-        rawcoal_mass = w_mass_raw_coal[c]*d_rc_scaling_factor/weight[c];
-        if(d_ash) {
-          ash_mass = w_mass_ash[c]*d_ash_scaling_factor/weight[c];
-        } else {
-          ash_mass = 0.0;
+        scaled_weight = weight[c];
+        unscaled_weight = weight[c]*d_w_scaling_constant;
+      }
+
+      // temperature - particle
+      double scaled_particle_temperature;
+      double unscaled_particle_temperature;
+      if (weight_is_small) {
+        scaled_particle_temperature = 0.0;
+        unscaled_particle_temperature = 0.0;
+      } else {
+        scaled_particle_temperature = (w_particle_temperature[c])/scaled_weight;
+        unscaled_particle_temperature = (w_particle_temperature[c]*d_pt_scaling_constant)/scaled_weight;
+      }
+
+      // temperature - gas
+      double gas_temperature = temperature[c];
+
+      // paticle length
+      double scaled_length;
+      double unscaled_length;
+      if (weight_is_small) {
+        scaled_length = 0.0;
+        unscaled_length = 0.0;
+      } else {
+        scaled_length = w_particle_length[c]/scaled_weight;
+        unscaled_length = (w_particle_length[c]*d_pl_scaling_constant)/scaled_weight;
+      }
+
+      // particle raw coal mass
+      double scaled_raw_coal_mass;
+      double unscaled_raw_coal_mass;
+      if (weight_is_small) {
+        scaled_raw_coal_mass = 0.0;
+        unscaled_raw_coal_mass = 0.0;
+      } else {
+        scaled_raw_coal_mass = w_raw_coal_mass[c]/scaled_weight;
+        unscaled_raw_coal_mass = (w_raw_coal_mass[c]*d_rc_scaling_constant)/scaled_weight;
+      }
+
+      // particle ash mass
+      double scaled_ash_mass;
+      double unscaled_ash_mass;
+      if (weight_is_small) {
+        scaled_ash_mass = 0.0;
+        unscaled_ash_mass = 0.0;
+      } else if (d_ash) {
+        scaled_ash_mass = w_ash_mass[c]/scaled_weight;
+        unscaled_ash_mass = (w_ash_mass[c]*d_ash_scaling_constant)/scaled_weight;
+      } else {
+        scaled_ash_mass = 0.0;
+        unscaled_ash_mass = 0.0;
+      }
+
+      double density = den[c];
+      // viscosity should be grabbed from data warehouse... right now it's constant
+
+      double FSum = 0.0;
+      double abskg = 0.0;
+
+      double heat_rate_;
+      double gas_heat_rate_;
+      double abskp_;
+
+#else
+      Vector gas_velocity       = Vector(3.0);
+      Vector particle_velocity  = Vector(1.0);
+
+      bool weight_is_small = false;
+
+      double unscaled_weight = 1.0e6;
+      double scaled_weight = unscaled_weight;
+
+      double unscaled_particle_temperature = 2000.0;
+      double scaled_particle_temperature = unscaled_particle_temperature;
+      double d_pt_scaling_constant = 1.0;
+
+      double gas_temperature = 2050;
+
+      double unscaled_length = 1.0e-5;
+      double scaled_length = unscaled_length;
+
+      double unscaled_raw_coal_mass = 1.0e-8;
+      double scaled_raw_coal_mass = unscaled_raw_coal_mass;
+
+      double unscaled_ash_mass = 1.0e-9;
+      double scaled_ash_mass = unscaled_ash_mass;
+
+      double density = 1;
+      visc = 1.0e-5;
+
+      // redefine composition array
+      yelem[0] = 0.75; // C
+      yelem[1] = 0.05; // H
+      yelem[2] = 0.00; // N
+      yelem[3] = 0.20; // O
+      yelem[4] = 0.00; // S
+
+      double FSum = 0.0;
+      double abskg = 0.0;
+
+      double heat_rate_;
+      double gas_heat_rate_;
+      double abskp_;
+
+#endif
+
+      // intermediate calculation values
+      double Re;
+      double Nu;
+      double Cpc;
+      double Cpa; 
+      double mp_Cp;
+      double rkg;
+      double Q_convection;
+      double Q_radiation;
+
+      if (weight_is_small) {
+        heat_rate_ = 0.0;
+        gas_heat_rate_ = 0.0;
+      } else {
+
+        // Convection part: -----------------------
+
+        // Reynolds number
+        Re = abs(gas_velocity.length() - particle_velocity.length())*unscaled_length*density/visc;
+
+        // Nusselt number
+        Nu = 2.0 + 0.65*pow(Re,0.50)*pow(Pr,(1.0/3.0));
+
+        // Heat capacity of raw coal
+        Cpc = heatcp( unscaled_particle_temperature );
+
+        // Heat capacity of ash
+        Cpa = heatap( unscaled_particle_temperature );
+
+        // Heat capacity
+        mp_Cp = (Cpc*unscaled_raw_coal_mass + Cpa*unscaled_ash_mass);
+
+        // Gas thermal conductivity
+        rkg = props(gas_temperature, unscaled_particle_temperature); // [=] J/s/m/K
+
+        // Q_convection (see Section 5.4 of LES_Coal document)
+        Q_convection = Nu*pi*blow*rkg*unscaled_length*(gas_temperature - unscaled_particle_temperature);
+
+        // Radiation part: -------------------------
+        b_radiation = false;
+        Q_radiation = 0.0;
+        if (b_radiation) {
+          // This will be verified after it is fixed up
+          double Qabs = 0.8;
+	        double Apsc = (pi/4)*Qabs*pow(unscaled_length,2);
+	        double Eb = 4.0*sigma*pow(unscaled_particle_temperature,4);
+	        Q_radiation = Apsc*(FSum - Eb);
+	        abskp_ = pi/4*Qabs*unscaled_weight*pow(unscaled_length,2); 
         }
 
-        double Pr = 0.7; // Prandtl number
-        double blow = 1.0;
-        double sigma = 5.67e-8; // [=] J/(s-m^2-K^4) : Stefan-Boltzmann constant from white book p. 354
-        double rkg = 0.03; // [=] J/(s-m-K) : thermal conductivity of gas
-        double Re  = abs(sphGas.z() - sphPart.z())*length*den[c]/visc;
-        double Nu = 2.0 + 0.6*pow(Re,0.5)*pow(Pr,0.333); // Nusselt number
+        heat_rate_ = (Q_convection + Q_radiation)/(mp_Cp*d_pt_scaling_constant);
 
-        // Calculate thermal conductivity
-        rkg = props(temperature[c],particle_temperature);
-        double cpc = heatcp(particle_temperature);
-        double cpa = heatap(particle_temperature);
-        double m_p = rawcoal_mass + ash_mass;
-        double cp = (cpc*rawcoal_mass + cpa*ash_mass)/m_p;
-        //cout << "heat capacities " << cpc << " " << cp << " " << rkg << " " <<  weight[c] << "ash " << ash_mass << endl;
-        double Qconv = Nu*pi*blow*rkg*length*(temperature[c]-particle_temperature);
+        gas_heat_rate_ = 0.0;
+ 
+      }
 
-        // Radiative transfer
-	      double Qrad = 0.0;
-        if(d_radiation) {
-	        if(abskgIN[c]<1e-6){
-	          Qrad = 0;
-	        } else {
-	          double Qabs = 0.8;
-	          double Apsc = (pi/4)*Qabs*pow(length/2,2);
-	          double Eb = 4.0*sigma*pow(particle_temperature,4);
-	          double Eg = 4.0*sigma*abskgIN[c]*pow(temperature[c],4);
-	          Qrad = Apsc*((radiationSRCIN[c]+ Eg)/abskgIN[c] - Eb);
-	          abskp[c] = pi/4*Qabs*weight[c]*pow(length,2);
-          }
-        }
 
-        heat_rate[c] =(Qconv+Qrad)/(m_p*cp*d_pt_scaling_factor); 
+#if defined(VERIFY_SIMPLEHEATTRANSFER_MODEL)
+      proc0cout << "****************************************************************" << endl;
+      proc0cout << "Verification error, Simple Heat Trasnfer model: " << endl;
+      proc0cout << endl;
 
-        gas_heat_rate[c] = 0.0; // change this to get two-way coupling...
-    	}
-    }
-  }
+      double error; 
+      double verification_value;
+      
+      verification_value = 2979.4;
+      error = ( (verification_value)-(Cpc) )/(verification_value);
+      if( fabs(error) < 0.01 ) {
+        proc0cout << "Verification for raw coal heat capacity successful:" << endl;
+        proc0cout << "    Percent error = " << setw(4) << fabs(error)*100 << " \%, which is less than 1 percent." << endl;
+      } else {
+        proc0cout << "WARNING: VERIFICATION FOR RAW COAL HEAT CAPACITY FAILED!!! " << endl;
+        proc0cout << "    Verification value  = " << verification_value << endl;
+        proc0cout << "    Calculated value    = " << Cpc << endl;
+        proc0cout << "    Percent error = " << setw(4) << setprecision(4) << fabs(error)*100 << " \%, which is greater than 1 percent." << endl;
+      }
+
+      proc0cout << endl;
+
+      verification_value = 1765.00;
+      error = ( (verification_value)-(Cpa) )/(verification_value);
+      if( fabs(error) < 0.01 ) {
+        proc0cout << "Verification for ash heat capacity successful:" << endl;
+        proc0cout << "    Percent error = " << setw(4) << setprecision(4) << fabs(error)*100 << " \%, which is less than 1 percent." << endl;
+      } else {
+        proc0cout << "WARNING: VERIFICATION FOR ASH HEAT CAPACITY FAILED!!! " << endl;
+        proc0cout << "    Verification value  = " << verification_value << endl;
+        proc0cout << "    Calculated value    = " << Cpa << endl;
+        proc0cout << "    Percent error = " << setw(4) << setprecision(4) << fabs(error)*100 << " \%, which is greater than 1 percent." << endl;
+      }
+
+      proc0cout << endl;
+      
+      verification_value = 4.6985e-4;
+      error = ( (verification_value)-(Q_convection) )/(verification_value);
+      if( fabs(error) < 0.01 ) {
+        proc0cout << "Verification for convection heat transfer term successful:" << endl;
+        proc0cout << "    Percent error = " << setw(4) << setprecision(4) << fabs(error)*100 << " \%, which is less than 1 percent." << endl;
+      } else {
+        proc0cout << "WARNING: VERIFICATION FOR CONVECTION HEAT TRANSFER TERM FAILED!!! " << endl;
+        proc0cout << "    Verification value  = " << verification_value << endl;
+        proc0cout << "    Calculated value    = " << Q_convection << endl;
+        proc0cout << "    Percent error = " << setw(4) << setprecision(4) << fabs(error)*100 << " \%, which is greater than 1 percent." << endl;
+      }
+
+      proc0cout << endl;
+
+      verification_value = 0.097312;
+      error = ( (verification_value)-(rkg) )/(verification_value);
+      if( fabs(error) < 0.01 ) {
+        proc0cout << "Verification for gas thermal conductivity successful:" << endl;
+        proc0cout << "    Percent error = " << setw(5) << setprecision(4) << fabs(error)*100 << " \%, which is less than 1 percent." << endl;
+      } else {
+        proc0cout << "WARNING: VERIFICATION FOR GAS THERMAL CONDUCTIVITY FAILED!!! " << endl;
+        proc0cout << "    Verification value  = " << verification_value << endl;
+        proc0cout << "    Calculated value    = " << rkg << endl;
+        proc0cout << "    Percent error = " << setw(5) << setprecision(4) << fabs(error)*100 << " \%, which is greater than 1 percent." << endl;
+      }
+
+      proc0cout << endl;
+      
+      verification_value = 14.888;
+      error = ( (verification_value)-(heat_rate_) )/(verification_value);
+      if( fabs(error) < 0.01 ) {
+        proc0cout << "Verification for particle heating rate term successful:" << endl;
+        proc0cout << "    Percent error = " << setw(5) << setprecision(4) << fabs(error)*100 << " \%, which is less than 1 percent." << endl;
+      } else {
+        proc0cout << "WARNING: VERIFICATION FOR PARTICLE HEATING RATE TERM FAILED!!! " << endl;
+        proc0cout << "    Verification value  = " << verification_value << endl;
+        proc0cout << "    Calculated value    = " << heat_rate_ << endl;
+        proc0cout << "    Percent error = " << setw(5) << setprecision(4) << fabs(error)*100 << " \%, which is greater than 1 percent." << endl;
+      }
+
+      proc0cout << endl;
+      proc0cout << "****************************************************************" << endl;
+
+      proc0cout << endl << endl;
+
+#else
+      heat_rate[c] = heat_rate_;
+      gas_heat_rate[c] = gas_heat_rate_;
+      abskp[c] = abskp_;
+ 
+    }//end cell loop
+#endif
+
+  }//end patch loop
 }
 
 
@@ -603,23 +805,26 @@ SimpleHeatTransfer::g1( double z){
 
 double
 SimpleHeatTransfer::heatcp(double Tp){
-  double u [5] = { 12., 1., 14., 16., 32.}; // Atomic weight of elements (C,H,N,O,S)
-  double rgas = 8314.3; // J/kg/K
-  double a = 0.0; // Mean atomic weight
+  double MW [5] = { 12., 1., 14., 16., 32.}; // Atomic weight of elements (C,H,N,O,S)
+  double Rgas = 8314.3; // J/kg/K
+
+  double MW_avg = 0.0; // Mean atomic weight of coal
   for(int i=0;i<5;i++){
-    a += yelem[i]/u[i];
+    MW_avg += yelem[i]/MW[i];
   }
-  a = 1/a;
-  double f1 = 380./Tp;
-  double f2 = 1800./Tp;
-  double cp = rgas/a*(g1(f1)+2*g1(f2));
+  MW_avg = 1/MW_avg;
+
+  double z1 = 380.0/Tp;
+  double z2 = 1800.0/Tp;
+  double cp = (Rgas/MW_avg)*(g1(z1)+2.0*g1(z2));
   return cp; // J/kg/K
 }
 
 
 double
 SimpleHeatTransfer::heatap(double Tp){
-  double cpa = (754.+.586*(Tp-273));
+  // c.f. PCGC2
+  double cpa = 593.0 + 0.586*Tp;
   return cpa;  // J/kg/K
 }
 
@@ -627,23 +832,32 @@ SimpleHeatTransfer::heatap(double Tp){
 double
 SimpleHeatTransfer::props(double Tg, double Tp){
 
-  double tg0[10] = {300.,400.,500.,600.,700.,800.,900.,1000.,1100.,1200.};
-  double kg0[10] = {.0262,.03335,.03984,.0458,.0512,.0561,.0607,.0648,.0685,.07184};
+  double tg0[10] = {300.,  400.,   500.,   600.,  700.,  800.,  900.,  1000., 1100., 1200. };
+  double kg0[10] = {.0262, .03335, .03984, .0458, .0512, .0561, .0607, .0648, .0685, .07184};
   double T = (Tp+Tg)/2; // Film temperature
+
 //   CALCULATE UG AND KG FROM INTERPOLATION OF TABLE VALUES FROM HOLMAN
 //   FIND INTERVAL WHERE TEMPERATURE LIES. 
-  double kg = 0.03; 
-  if(T>1200.){
-    kg = kg0[9]*pow(T/tg0[9],.58);
-  } else if (T<300){
+
+  double kg = 0.0;
+
+  if( T > 1200.0 ) {
+    kg = kg0[9] * pow( T/tg0[9], 0.58);
+
+  } else if ( T < 300 ) {
     kg = kg0[0];
+  
   } else {
     int J = -1;
-    for(int I=0;I<9;I++){
-      if(T>tg0[I]) J=J+1;
+    for ( int I=0; I < 9; I++ ) {
+      if ( T > tg0[I] ) {
+        J = J + 1;
+      }
     }
-    double FAC = (tg0[J]-T)/(tg0[J]-tg0[J+1]);
-    kg = (-FAC*(kg0[J]-kg0[J+1]) + kg0[J]);
+    double FAC = ( tg0[J] - T ) / ( tg0[J] - tg0[J+1] );
+    kg = ( -FAC*( kg0[J] - kg0[J+1] ) + kg0[J] );
   }
- return kg; 
+
+  return kg; // I believe this is in J/s/m/K, but not sure
 }
+
