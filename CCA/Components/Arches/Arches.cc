@@ -419,7 +419,7 @@ Arches::problemSetup(const ProblemSpecP& params,
     d_analysisModule->problemSetup(params, grid, sharedState);
   }
 
-  // ----- NEW DQMOM STUFF:
+  // ----- DQMOM STUFF:
   ProblemSpecP time_db = db->findBlock("TimeIntegrator");
   if (time_db) {
     string time_order; 
@@ -510,6 +510,10 @@ Arches::problemSetup(const ProblemSpecP& params,
     DQMOMEqnFactory& eqn_factory = DQMOMEqnFactory::self(); 
     const int numQuadNodes = eqn_factory.get_quad_nodes();  
 
+    CoalModelFactory& model_factory = CoalModelFactory::self();
+		model_factory.problemSetup(dqmom_db);
+    model_factory.setArchesLabel( d_lab ); 
+
     ProblemSpecP w_db = dqmom_db->findBlock("Weights");
 
     // do all weights
@@ -527,7 +531,7 @@ Arches::problemSetup(const ProblemSpecP& params,
       weight.problemSetup( w_db, iqn );
 
     }
-    
+
     // loop for all ic's
     for (ProblemSpecP ic_db = dqmom_db->findBlock("Ic"); ic_db != 0; ic_db = ic_db->findNextBlock("Ic")){
       std::string ic_name;
@@ -547,11 +551,11 @@ Arches::problemSetup(const ProblemSpecP& params,
 
       }
     }
+    
     // Now go through models and initialize all defined models and call 
     // their respective problemSetup
     ProblemSpecP models_db = dqmom_db->findBlock("Models"); 
     if (models_db) { 
-      CoalModelFactory& model_factory = CoalModelFactory::self();
       for (ProblemSpecP m_db = models_db->findBlock("model"); m_db != 0; m_db = m_db->findNextBlock("model")){
         std::string model_name; 
         m_db->getAttribute("label", model_name); 
@@ -566,7 +570,6 @@ Arches::problemSetup(const ProblemSpecP& params,
 
           ModelBase& a_model = model_factory.retrieve_model( temp_model_name ); 
           a_model.problemSetup( m_db, iqn ); 
-
         }
       } 
     }
@@ -574,7 +577,7 @@ Arches::problemSetup(const ProblemSpecP& params,
     // set up the linear solver:
     d_dqmomSolver = scinew DQMOM(d_lab);
     d_dqmomSolver->problemSetup( dqmom_db ); 
-
+    
     // now pass it off to the nonlinear solver:
     d_nlSolver->setDQMOMSolver( d_dqmomSolver ); 
 

@@ -6,6 +6,7 @@
 #include <CCA/Components/Arches/CoalModels/CoalModelFactory.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <CCA/Components/Arches/ArchesVariables.h>
+#include <CCA/Components/Arches/Directives.h>
 
 #include <vector>
 #include <string>
@@ -36,7 +37,7 @@ public:
   ~HeatTransfer();
 
   ////////////////////////////////////////////////////
-  // Initialization stuff
+  // Initialization methods
   
   /** @brief Interface for the inputfile and set constants */ 
   void problemSetup(const ProblemSpecP& db, int qn);
@@ -61,7 +62,7 @@ public:
                   DataWarehouse* new_dw );
 
   ////////////////////////////////////////////////
-  // Model computation 
+  // Model computation methods
 
   /** @brief  Get the particle heating rate */
   virtual double calcParticleHeatingRate() = 0;
@@ -85,67 +86,22 @@ public:
   virtual double calcEnthalpyChangeParticle() = 0;
 
   //////////////////////////////////////////////////
-  // Access functions
+  // Access methods
+
+  /** @brief  Return a string containing the model type ("HeatTransfer") */
+  inline string getType() {
+    return "HeatTransfer"; }
 
   /** @brief  Access function for radiation flag (on/off) */
   inline const bool getRadiationFlag(){
-    return d_radiation; };   
+    return b_radiation; };   
 
 protected:
 
-  bool d_radiation;
+  bool b_radiation;
 
-  double d_lowModelClip; 
-  double d_highModelClip; 
-
-  double d_w_scaling_factor;
+  double d_w_scaling_constant;
   double d_w_small; // "small" clip value for zero weights
-
-  Vector cart2sph( Vector X ) {
-    // converts cartesean to spherical coords
-    double mag   = pow( X.x(), 2.0 );
-    double magxy = mag;  
-    double z = 0; 
-    double y = 0;
-#ifdef YDIM
-    mag   += pow( X.y(), 2.0 );
-    magxy = mag; 
-    y = X.y(); 
-#endif 
-#ifdef ZDIM
-    mag += pow( X.z(), 2.0 );
-    z = X.z(); 
-#endif
-
-    mag   = pow(mag, 1./2.);
-    magxy = pow(magxy, 1./2.);
-
-    double elev = atan2( z, magxy );
-    double az   = atan2( y, X.x() );  
-
-    Vector answer(az, elev, mag);
-    return answer; 
-
-  };
-
-  Vector sph2cart( Vector X ) {
-    // converts spherical to cartesian coords
-    double x = 0.;
-    double y = 0.;
-    double z = 0.;
-
-    double rcoselev = X.z() * cos(X.y());
-    x = rcoselev * cos(X.x());
-#ifdef YDIM
-    y = rcoselev * sin(X.x());
-#endif
-#ifdef ZDIM
-    z = X.z()*sin(X.y());
-#endif
-    Vector answer(x,y,z);
-    return answer; 
-
-  };
 
 }; // end HeatTransfer
 } // end namespace Uintah

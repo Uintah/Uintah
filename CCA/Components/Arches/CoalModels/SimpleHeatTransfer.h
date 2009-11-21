@@ -7,6 +7,7 @@
 #include <CCA/Components/Arches/CoalModels/CoalModelFactory.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <CCA/Components/Arches/ArchesVariables.h>
+#include <CCA/Components/Arches/Directives.h>
 
 #include <vector>
 #include <string>
@@ -61,7 +62,7 @@ public:
   ~SimpleHeatTransfer();
 
   /////////////////////////////////////////
-  // Initialization stuff
+  // Initialization methods
 
   /** @brief Interface for the inputfile and set constants */ 
   void problemSetup(const ProblemSpecP& db, int qn);
@@ -77,7 +78,7 @@ public:
                  DataWarehouse        * new_dw );
 
   /////////////////////////////////////////////
-  // Model computation
+  // Model computation methods
 
   /** @brief Schedule the calculation of the source term */ 
   void sched_computeModel( const LevelP& level, SchedulerP& sched, 
@@ -122,21 +123,23 @@ public:
 
 
   /////////////////////////////////////////////////
-  // Access functions
+  // Access methods
 
-  // FIXME (description)
-  /** @brief  Access function for thermal conductivity (of particles, I think???) */
+  /** @brief  Access function for thermal conductivity of particles */
   inline const VarLabel* getabskp(){
     return d_abskp; };  
   
   /** @brief  Access function for radiation flag (on/off) */
   inline const bool getRadiationFlag(){
-    return d_radiation; };   
+    return b_radiation; };   
+
 
 private:
 
-  // FIXME (description)
-  /** @brief  What does this do? The name isn't descriptive */
+  //////////////////////////////////////////////////
+  // Private methods for calculation
+
+  /** @brief  Funtion for calculation of heat capacity (from Merrick) */
   double g1( double z);
 
   /** @brief  Calculate heat capacity of ash */
@@ -145,11 +148,10 @@ private:
   /** @brief  Calculate gas properties of N2 at atmospheric pressure (see Holman, p. 505) */
   double props(double Tg, double Tp);
 
-  // FIXME (description)
-  /** @brief  Calculate heat capacity of particle (I think?) */
+  /** @brief  Calculate heat capacity of particle */
   double heatcp(double Tp);
 
-
+  
   const VarLabel* d_raw_coal_mass_label;        ///< Label for raw coal mass
   const VarLabel* d_ash_mass_label;             ///< Label for ash mass
   const VarLabel* d_particle_temperature_label; ///< Label for particle temperature
@@ -159,16 +161,19 @@ private:
   const VarLabel* d_abskp;  ///< Label for thermal conductivity (of the particles, I think???)
   bool d_ash;               ///< Boolean: is there ash in the particle?
 
-  double d_lowModelClip; 
-  double d_highModelClip; 
-
   double visc;
-  double yelem[5];              ///< Fractions of each element in coal (C, H, N, O, S)
+  double yelem[5];              ///< Fractions of each element in coal (C, H, N, O, S respectively)
   double rhop;                  ///< Density of particle 
-  double d_rc_scaling_factor;   ///< Scaling factor for raw coal
-  double d_ash_scaling_factor;  ///< Scaling factor for ash mass
-  double d_pl_scaling_factor;   ///< Scaling factor for particle size (length)
-  double d_pt_scaling_factor;   ///< Scaling factor for particle temperature
+
+  double Pr;
+  double blow;
+  double sigma;
+  double pi;
+
+  double d_rc_scaling_constant;   ///< Scaling factor for raw coal
+  double d_ash_scaling_constant;  ///< Scaling factor for ash mass
+  double d_pl_scaling_constant;   ///< Scaling factor for particle size (length)
+  double d_pt_scaling_constant;   ///< Scaling factor for particle temperature
 
 }; // end SimpleHeatTransfer
 } // end namespace Uintah

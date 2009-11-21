@@ -48,7 +48,7 @@ public:
   ~ConstantModel();
 
   ///////////////////////////////////////////////
-  // Initialization stuff
+  // Initialization methods
 
   /** @brief Interface for the inputfile and set constants */ 
   void problemSetup(const ProblemSpecP& db, int qn);
@@ -71,7 +71,7 @@ public:
                   DataWarehouse* new_dw );
 
   /////////////////////////////////////////////////
-  // Model computation
+  // Model computation methods
 
   /** @brief Schedule the calculation of the source term */ 
   void sched_computeModel( const LevelP& level, 
@@ -86,7 +86,11 @@ public:
                      DataWarehouse* new_dw );
 
   ///////////////////////////////////////////////
-  // Access functions
+  // Access methods
+
+  inline string getType() {
+    return "Constant"; }
+
 
 private:
 

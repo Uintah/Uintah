@@ -120,14 +120,6 @@ private:
 
   int d_quad_node;   // store which quad node this model is for
 
-  double d_lowModelClip; 
-  double d_highModelClip; 
-
-  double Y1_;
-  double Y2_;
-  double k1;
-  double k2;
-
   double d_rc_scaling_factor;
   double d_pt_scaling_factor;
   double d_w_scaling_factor; 

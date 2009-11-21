@@ -46,7 +46,7 @@ DragModel::DragModel( std::string modelName,
   d_fieldLabels(fieldLabels)
 {
   pi = 3.141592653589793;
-  d_quad_node = qn;
+  d_quadNode = qn;
   
   // Create a label for this model
   d_modelLabel = VarLabel::create( modelName, CCVariable<Vector>::getTypeDescription() );
@@ -324,7 +324,7 @@ DragModel::sched_computeModel( const LevelP& level, SchedulerP& sched, int timeS
   std::string temp_weight_name = "w_qn";
   std::string node;
   std::stringstream out;
-  out << d_quad_node;
+  out << d_quadNode;
   node = out.str();
   temp_weight_name += node;
   EqnBase& t_weight_eqn = dqmom_eqn_factory.retrieve_scalar_eqn( temp_weight_name );
@@ -338,7 +338,7 @@ DragModel::sched_computeModel( const LevelP& level, SchedulerP& sched, int timeS
   tsk->requires( Task::OldDW, d_fieldLabels->d_newCCVelocityLabel, gn, 0 );
 
   // require particle velocity
-  ArchesLabel::PartVelMap::const_iterator i = d_fieldLabels->partVel.find(d_quad_node);
+  ArchesLabel::PartVelMap::const_iterator i = d_fieldLabels->partVel.find(d_quadNode);
   tsk->requires( Task::OldDW, i->second, gn, 0 );
 
   // For each required variable, determine what role it plays
@@ -474,7 +474,7 @@ DragModel::computeModel( const ProcessorGroup* pc,
     old_dw->get( gasVel, d_fieldLabels->d_newCCVelocityLabel, matlIndex, patch, gn, 0 );
 
     constCCVariable<Vector> partVel; 
-    ArchesLabel::PartVelMap::const_iterator iter = d_fieldLabels->partVel.find(d_quad_node);
+    ArchesLabel::PartVelMap::const_iterator iter = d_fieldLabels->partVel.find(d_quadNode);
     old_dw->get(partVel, iter->second, matlIndex, patch, gn, 0);
 
     constCCVariable<double> w_particle_length; 
@@ -498,8 +498,8 @@ DragModel::computeModel( const ProcessorGroup* pc,
         Vector sphPart = Vector(0.,0.,0.);
         Vector cartPart = partVel[c]; 
 
-        sphGas = cart2sph( cartGas ); 
-        sphPart = cart2sph( cartPart ); 
+        sphGas = PartVel::cart2sph( cartGas ); 
+        sphPart = PartVel::cart2sph( cartPart ); 
         double kvisc = 2.0e-5; 
         double rhop = 1000.0;
         double diff = sphGas.z() - sphPart.z(); 
@@ -513,13 +513,13 @@ DragModel::computeModel( const ProcessorGroup* pc,
         double t_p = rhop/(18*kvisc)*pow(length,2); 
         double part_src_mag = phi/t_p*diff;
         sphPart = Vector(sphPart.x(), sphPart.y(), part_src_mag);
-        drag_part[c] = sph2cart(sphPart);
+        drag_part[c] = PartVel::sph2cart(sphPart);
         double gas_src_mag = -weight[c]*d_w_scaling_factor*rhop*4/3*pi*phi/t_p*diff*pow(length,3);
         sphGas = Vector(sphGas.x(), sphGas.y(), gas_src_mag);
-        drag_gas[c] = sph2cart(sphGas);
+        drag_gas[c] = PartVel::sph2cart(sphGas);
 
         /*
-        cout << "quad_node " << d_quad_node << endl;
+        cout << "quad_node " << d_quadNode << endl;
         cout << "drag source " << drag_gas[c] << endl;
         cout << "partvel " << partVel[c] << endl;
         cout << "length " << length << endl;

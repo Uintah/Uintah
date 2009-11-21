@@ -4,9 +4,7 @@
 #include <Core/Grid/SimulationStateP.h>
 #include <CCA/Components/Arches/CoalModels/ModelBase.h>
 #include <CCA/Components/Arches/CoalModels/CoalModelFactory.h>
-
-#define YDIM
-#define ZDIM
+#include <CCA/Components/Arches/Directives.h>
 
 //===========================================================================
 
@@ -58,28 +56,22 @@ public:
 
   ~DragModel();
 
+  ////////////////////////////////////////////////////
+  // Initialization stuff
+
   /** @brief Interface for the inputfile and set constants */ 
   void problemSetup(const ProblemSpecP& db, int qn);
 
-  /** @brief Schedule the calculation of the source term */ 
-  void sched_computeModel( const LevelP& level, SchedulerP& sched, 
-                            int timeSubStep );
    /** @brief Schedule the initialization of some special/local variables */ 
   void sched_initVars( const LevelP& level, SchedulerP& sched );
 
   /** @brief  Actually initialize special/local variables */
   void initVars( const ProcessorGroup * pc, 
-    const PatchSubset    * patches, 
-    const MaterialSubset * matls, 
-    DataWarehouse        * old_dw, 
-    DataWarehouse        * new_dw );
-  
-  /** @brief Actually compute the source term */ 
-  void computeModel( const ProcessorGroup* pc, 
-                     const PatchSubset* patches, 
-                     const MaterialSubset* matls, 
-                     DataWarehouse* old_dw, 
-                     DataWarehouse* new_dw );
+                 const PatchSubset    * patches, 
+                 const MaterialSubset * matls, 
+                 DataWarehouse        * old_dw, 
+                 DataWarehouse        * new_dw );
+
 
   /** @brief  Schedule the dummy solve for MPMArches - see ExplicitSolver::noSolve */
   void sched_dummyInit( const LevelP& level, SchedulerP& sched );
@@ -91,9 +83,25 @@ public:
                   DataWarehouse* old_dw, 
                   DataWarehouse* new_dw );
 
-// use getGasSourceLabel() instead (defined in ModelBase)
-//  inline const VarLabel* getDragGasLabel(){
-//    return d_gasLabel; };
+  ////////////////////////////////////////////////
+  // Model computation 
+
+  /** @brief Schedule the calculation of the source term */ 
+  void sched_computeModel( const LevelP& level, SchedulerP& sched, 
+                            int timeSubStep );
+  
+  /** @brief Actually compute the source term */ 
+  void computeModel( const ProcessorGroup* pc, 
+                     const PatchSubset* patches, 
+                     const MaterialSubset* matls, 
+                     DataWarehouse* old_dw, 
+                     DataWarehouse* new_dw );
+
+  //////////////////////////////////////////////////
+  // Access functions
+
+  inline string getType() {
+    return "Drag"; }
 
 private:
 
@@ -106,61 +114,12 @@ private:
   const VarLabel* d_gas_velocity_label;
   const VarLabel* d_weight_label;
 
-  int d_quad_node;   // store which quad node this model is for
-
-  double d_lowModelClip; 
-  double d_highModelClip; 
   double d_pl_scaling_factor;
   double d_pv_scaling_factor;
   double d_w_scaling_factor;
   double d_w_small; // "small" clip value for zero weights
 
   double pi;
-
-  Vector cart2sph( Vector X ) {
-    // converts cartesean to spherical coords
-    double mag   = pow( X.x(), 2.0 );
-    double magxy = mag;  
-    double z = 0; 
-    double y = 0;
-#ifdef YDIM
-    mag   += pow( X.y(), 2.0 );
-    magxy = mag; 
-    y = X.y(); 
-#endif 
-#ifdef ZDIM
-    mag += pow( X.z(), 2.0 );
-    z = X.z(); 
-#endif
-
-    mag   = pow(mag, 1./2.);
-    magxy = pow(magxy, 1./2.);
-
-    double elev = atan2( z, magxy );
-    double az   = atan2( y, X.x() );  
-
-    Vector answer(az, elev, mag);
-    return answer; 
-
-  };
-
-  Vector sph2cart( Vector X ) {
-    // converts spherical to cartesian coords
-    double x = 0.;
-    double y = 0.;
-    double z = 0.;
-
-    double rcoselev = X.z() * cos(X.y());
-    x = rcoselev * cos(X.x());
-#ifdef YDIM
-    y = rcoselev * sin(X.x());
-#endif
-#ifdef ZDIM
-    z = X.z()*sin(X.y());
-#endif
-    Vector answer(x,y,z);
-    return answer; 
-  };
 
 };
 } // end namespace Uintah
