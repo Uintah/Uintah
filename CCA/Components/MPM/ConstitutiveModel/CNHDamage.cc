@@ -128,7 +128,7 @@ CNHDamage::initializeLocalMPMLabels()
                         ParticleVariable<Matrix3>::getTypeDescription());
   pFailureStrainLabel = VarLabel::create("p.epsf",
                         ParticleVariable<double>::getTypeDescription());
-  pLocalizedLabel     = VarLabel::create("p.failed",
+  pLocalizedLabel     = VarLabel::create("p.localized",
                         ParticleVariable<int>::getTypeDescription());
   pDeformRateLabel    = VarLabel::create("p.deformRate",
                         ParticleVariable<Matrix3>::getTypeDescription());
@@ -137,7 +137,7 @@ CNHDamage::initializeLocalMPMLabels()
                          ParticleVariable<Matrix3>::getTypeDescription());
   pFailureStrainLabel_preReloc = VarLabel::create("p.epsf+",
                          ParticleVariable<double>::getTypeDescription());
-  pLocalizedLabel_preReloc     = VarLabel::create("p.failed+",
+  pLocalizedLabel_preReloc     = VarLabel::create("p.localized+",
                          ParticleVariable<int>::getTypeDescription());
   pDeformRateLabel_preReloc    = VarLabel::create("p.deformRate+",
                          ParticleVariable<Matrix3>::getTypeDescription());
