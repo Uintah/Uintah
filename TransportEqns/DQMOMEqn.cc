@@ -176,7 +176,8 @@ DQMOMEqn::problemSetup(const ProblemSpecP& inputdb, int qn)
 
     // ---------- Constant initialization function ------------------------
     if (d_initFunction == "constant") {
-        // each quad node is initialized to the same thing - not good if not zero!
+        
+        // Constant: prevent weighted abscissas from being both the same and nonzero
         db_initialValue->require("constant", d_constant_init); 
         if( d_weight == false && d_constant_init != 0.0 ) {
           stringstream err_msg;
@@ -190,6 +191,12 @@ DQMOMEqn::problemSetup(const ProblemSpecP& inputdb, int qn)
     // -------- Environment constant initialization function --------------
     } else if (d_initFunction == "env_constant" ) {
       
+      if ( !db_initialValue->findBlock("env_constant") ) {
+        string err_msg = "ERROR: Arches: DQMOMEqn: Could not initialize equation "+d_eqnName+": You specified an 'env_constant' initialization function but did not include any 'env_constant' tags! \n";
+        throw ProblemSetupException(err_msg,__FILE__,__LINE__);
+      }
+
+      // Environment constant: get the value of the constants
       for( ProblemSpecP db_env_constants = db_initialValue->findBlock("env_constant");
            db_env_constants != 0; db_env_constants = db_env_constants->findNextBlock("env_constant") ) {
         
@@ -209,23 +216,23 @@ DQMOMEqn::problemSetup(const ProblemSpecP& inputdb, int qn)
     // NOTE: Right now the only environment-specific attribute of the step function
     //       is the value.  This can be changed later, if someone wants to have
     //       unique step function directions/start/stop for each environment.
-    //
-    //       Maybe one to check and ensure the tags and d_initFunciton match, e.g.
-    //       "constant" should not have "step_start"/"step_end" tags
     // (Charles)
     } else if (d_initFunction == "step" || d_initFunction == "env_step") {
+
+      // Step functions: prevent uniform steps for abscissa values
       if( d_initFunction == "step" && d_weight == false ) {
         string err_msg = "ERROR: Arches: DQMOMEqn: You can't initialize all quadrature nodes for "+d_eqnName+" to the same step function value, your A matrix will be singular! Use 'env_step' instead of 'step' for your initialization type.\n";
         throw ProblemSetupException(err_msg, __FILE__, __LINE__);
       }
-      
+
+      // Step functions: get step direction
       db_initialValue->require("step_direction", d_step_dir); 
-      
+
+      // Step functions: find start/stop location
       if( db_initialValue->findBlock("step_start") ) {
         b_stepUsesPhysicalLocation = true;
         db_initialValue->require("step_start", d_step_start); 
         db_initialValue->require("step_end"  , d_step_end); 
-
       } else if ( db_initialValue->findBlock("step_cellstart") ) {
         b_stepUsesCellLocation = true;
         db_initialValue->require("step_cellstart", d_step_cellstart);
@@ -236,13 +243,22 @@ DQMOMEqn::problemSetup(const ProblemSpecP& inputdb, int qn)
           d_step_cellstart = d_step_cellend;
           d_step_cellend = temp;
         }
+      } else {
+        string err_msg = "ERROR: Arches: DQMOMEqn: Could not initialize 'env_step' for equation "+d_eqnName+": You did not specify a starting or stopping point!  Add <step_cellstart> and <step_cellend>, or <step_cellstart> and <step_cellend>! \n";
+        throw ProblemSetupException(err_msg,__FILE__,__LINE__);
       }//end start/stop init.
 
+      // Step functions: get step values
       if (d_initFunction == "step") {
         db_initialValue->require("step_value", d_step_value); 
         d_step_value /= d_scalingConstant; 
       
       } else if (d_initFunction == "env_step") {
+        
+        if( !(db_initialValue->findBlock("env_step_value")) ) {
+          string err_msg = "ERROR: Arches: DQMOMEqn: Could not initialize 'evn_step' for equation "+d_eqnName+": You did not specify any <env_step_value>! \n";
+          throw ProblemSetupException(err_msg,__FILE__,__LINE__);
+        }
         for( ProblemSpecP db_env_step_value = db_initialValue->findBlock("env_step_value");
              db_env_step_value != 0; db_env_step_value = db_env_step_value->findNextBlock("env_step_value") ) {
           

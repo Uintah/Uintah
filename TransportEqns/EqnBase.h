@@ -194,7 +194,7 @@ private:
 
 //---------------------------------------------------------------------------
 // Method: Phi initialization using a function 
-// DQMOM Scalar
+// DQMOM Weighted Abscissa
 //---------------------------------------------------------------------------
 template <class phiType, class constPhiType>  
 void EqnBase::initializationFunction( const Patch* patch, phiType& phi, constPhiType& weight  ) 
@@ -287,7 +287,7 @@ void EqnBase::initializationFunction( const Patch* patch, phiType& phi, constPhi
 }
 //---------------------------------------------------------------------------
 // Method: Phi initialization using a function 
-// Standard Scalar
+// Standard Scalar, DQMOM Weight
 //---------------------------------------------------------------------------
 template <class phiType>  
 void EqnBase::initializationFunction( const Patch* patch, phiType& phi ) 

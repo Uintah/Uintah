@@ -251,8 +251,9 @@ DQMOM::populateMomentsMap( std::vector<MomentVector> allMoments )
        iAllMoments != allMoments.end(); ++iAllMoments ) {
     string name = "moment_";
     std::stringstream out;
-    for( MomentVector::iterator iMomentIndex = (*iAllMoments).begin();
-         iMomentIndex != (*iAllMoments).end(); ++iMomentIndex ) {
+    MomentVector thisMoment = (*iAllMoments);
+    for( MomentVector::iterator iMomentIndex = thisMoment.begin();
+         iMomentIndex != thisMoment.end(); ++iMomentIndex ) {
       out << (*iMomentIndex);
     }
     name += out.str();
@@ -264,7 +265,7 @@ DQMOM::populateMomentsMap( std::vector<MomentVector> allMoments )
     // actually populate the DQMOMMoments map with moment names
     // e.g. moment_001 &c.
     //d_fieldLabels->DQMOMMoments[tempMomentVector] = tempVarLabel;
-    d_fieldLabels->DQMOMMoments[(*iAllMoments)] = tempVarLabel;
+    d_fieldLabels->DQMOMMoments[thisMoment] = tempVarLabel;
   }
   proc0cout << endl;
 }
@@ -1381,9 +1382,36 @@ DQMOM::calculateMoments( const ProcessorGroup* pc,
   for( int p=0; p < patches->size(); ++p ) {
     const Patch* patch = patches->get(p);
 
-    Ghost::GhostType  gn  = Ghost::None; 
     int archIndex = 0;
     int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+
+    // get weights from data warehouse and store their corresponding CCVariables
+    vector<constCCVarWrapper> weightCCVars;
+    for( vector<DQMOMEqn*>::iterator iEqn = weightEqns.begin();
+         iEqn != weightEqns.end(); ++iEqn ) {
+      const VarLabel* equation_label = (*iEqn)->getTransportEqnLabel();
+
+      // instead of using a CCVariable, use a constCCVarWrapper struct
+      constCCVarWrapper tempWrapper;
+      new_dw->get( tempWrapper.data, equation_label, matlIndex, patch, Ghost::None, 0 );
+
+      // put the wrapper into a vector
+      weightCCVars.push_back(tempWrapper);
+    }
+
+    // get weighted abscissas from data warehouse and store their corresponding CCVariables
+    vector<constCCVarWrapper> weightedAbscissaCCVars;
+    for( vector<DQMOMEqn*>::iterator iEqn = weightedAbscissaEqns.begin();
+         iEqn != weightedAbscissaEqns.end(); ++iEqn ) {
+      const VarLabel* equation_label = (*iEqn)->getTransportEqnLabel();
+
+      // instead of using a CCVariable, use a constCCVarWrapper struct
+      constCCVarWrapper tempWrapper;
+      new_dw->get( tempWrapper.data, equation_label, matlIndex, patch, Ghost::None, 0 );
+
+      // put the wrapper into vector
+      weightedAbscissaCCVars.push_back(tempWrapper);
+    }
 
     // Cell iterator
     for ( CellIterator iter = patch->getCellIterator();
@@ -1393,21 +1421,18 @@ DQMOM::calculateMoments( const ProcessorGroup* pc,
       vector<double> weights;
       vector<double> weightedAbscissas;
 
-      // get weights from data warehouse
-      for (vector<DQMOMEqn*>::iterator iEqn = weightEqns.begin(); 
-           iEqn != weightEqns.end(); ++iEqn) {
-        constCCVariable<double> temp;
-        const VarLabel* equation_label = (*iEqn)->getTransportEqnLabel();
-        new_dw->get( temp, equation_label, matlIndex, patch, gn, 0);
-        weights.push_back(temp[c]);
+      // get weights in current cell from CCVariable in constCCVarWrapper, store value in vector
+      for( vector<constCCVarWrapper>::iterator iter = weightCCVars.begin();
+           iter != weightCCVars.end(); ++iter ) {
+        double temp_value = (iter->data)[c];
+        weights.push_back(temp_value);
       }
-      // get weighted abscissas from data warehouse 
-      for (vector<DQMOMEqn*>::iterator iEqn = weightedAbscissaEqns.begin();
-           iEqn != weightedAbscissaEqns.end(); ++iEqn) {
-        const VarLabel* equation_label = (*iEqn)->getTransportEqnLabel();
-        constCCVariable<double> temp;
-        new_dw->get(temp, equation_label, matlIndex, patch, gn, 0);
-        weightedAbscissas.push_back(temp[c]);
+
+      // get weighted abscissas in current cell from CCVariable in constCCVarWrapper, store value in vector
+      for( vector<constCCVarWrapper>::iterator iter = weightedAbscissaCCVars.begin();
+           iter != weightedAbscissaCCVars.end(); ++iter ) {
+        double temp_value = (iter->data)[c];
+        weightedAbscissas.push_back(temp_value);
       }
 
       // moment index k = {k1, k2, k3, ...}
@@ -1415,17 +1440,19 @@ DQMOM::calculateMoments( const ProcessorGroup* pc,
       for( vector<MomentVector>::iterator iAllMoments = momentIndexes.begin();
            iAllMoments != momentIndexes.end(); ++iAllMoments ) {
 
+        MomentVector thisMoment = (*iAllMoments);
+
         // Grab the corresponding moment from the DQMOMMoment map (to get the VarLabel associated with this moment)
         const VarLabel* moment_label;
-        ArchesLabel::MomentMap::iterator iMoment = d_fieldLabels->DQMOMMoments.find( (*iAllMoments) );
+        ArchesLabel::MomentMap::iterator iMoment = d_fieldLabels->DQMOMMoments.find( thisMoment );
         if( iMoment != d_fieldLabels->DQMOMMoments.end() ) {
           // grab the corresponding label
           moment_label = iMoment->second;
         } else {
           string index;
           std::stringstream out;
-          for( MomentVector::iterator iMomentIndex = (*iAllMoments).begin();
-               iMomentIndex != (*iAllMoments).end(); ++iMomentIndex ) {
+          for( MomentVector::iterator iMomentIndex = thisMoment.begin();
+               iMomentIndex != thisMoment.end(); ++iMomentIndex ) {
             out << (*iMomentIndex);
             index += out.str();
           }
@@ -1451,24 +1478,39 @@ DQMOM::calculateMoments( const ProcessorGroup* pc,
         double running_weights_sum = 0.0; // this is the denominator of p_alpha
         double running_product = 0.0; // this is w_alpha * xi_1_alpha^k1 * xi_2_alpha^k2 * ...
 
-        MomentVector thisMoment = (*iAllMoments);
+        bool is_zeroth_moment = true;
+        for( MomentVector::iterator iM = thisMoment.begin(); iM != thisMoment.end(); ++iM ) {
+          if ( (*iM) != 0 ) {
+            is_zeroth_moment = false;
+            break;
+          }
+        }
 
         for( unsigned int alpha = 0; alpha < N_; ++alpha ) {
           if( weights[alpha] < d_w_small ) {
-            temp_moment_k = 0.0;
+            running_product = 0.0;
           } else {
             double weight = weights[alpha]*d_weight_scaling_constant;
             running_weights_sum += weight;
             running_product = weight;
             for( unsigned int j = 0; j < N_xi; ++j ) {
-              running_product *= pow( (weightedAbscissas[j*(N_)+alpha]/weights[alpha])*(d_weighted_abscissa_scaling_constants[j]/d_weight_scaling_constant), thisMoment[j] );
+              double base = (weightedAbscissas[j*(N_)+alpha]/weights[alpha])*(d_weighted_abscissa_scaling_constants[j*(N_)+alpha]); // don't need 1/d_weight_scaling_constant 
+                                                                                                                                    // because it's already in the weighted abscissa!
+              double exponent = thisMoment[j];
+              running_product *= pow( base, exponent );
             }
           }
           temp_moment_k += running_product;
           running_product = 0.0;
         }
 
-        moment_k[c] = temp_moment_k/running_weights_sum; // normalize environment weight to get environment probability
+        if (running_weights_sum == 0) {
+          moment_k[c] = 0.0;
+        } else if (is_zeroth_moment) {
+          moment_k[c] = temp_moment_k; // don't normalize zeroth moment! otherwise it's always 1...
+        } else {
+          moment_k[c] = temp_moment_k/running_weights_sum; // normalize environment weight to get environment probability
+        }
 
       }//end all moments
 
