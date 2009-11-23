@@ -194,7 +194,7 @@ CNHPDamage::computeStressTensor(const PatchSubset* patches,
 
   // Particle and grid data
   constParticleVariable<Short27> pgCode;
-  constParticleVariable<int>     pFailed;
+  constParticleVariable<int>     pLocalized;
   constParticleVariable<double>  pFailureStrain, pErosion;
   constParticleVariable<double>  pMass, pPlasticStrain;
   constParticleVariable<Point>   pX;
@@ -202,7 +202,7 @@ CNHPDamage::computeStressTensor(const PatchSubset* patches,
   constParticleVariable<Matrix3> pDefGrad, pBeBar;
   constNCVariable<Vector>        gVelocity;
   constNCVariable<Vector>        GVelocity; 
-  ParticleVariable<int>          pFailed_new;
+  ParticleVariable<int>          pLocalized_new;
   ParticleVariable<double>       pFailureStrain_new;
   ParticleVariable<double>       pVol_new, pdTdt, pPlasticStrain_new, p_q;
   ParticleVariable<Matrix3>      pDefGrad_new, pBeBar_new, pStress_new;
@@ -243,7 +243,7 @@ CNHPDamage::computeStressTensor(const PatchSubset* patches,
     old_dw->get(pVelocity,                lb->pVelocityLabel,           pset);
     old_dw->get(pDefGrad,                 lb->pDeformationMeasureLabel, pset);
     old_dw->get(pBeBar,                   bElBarLabel,                  pset);
-    old_dw->get(pFailed,                  pFailedLabel,                 pset);
+    old_dw->get(pLocalized,               pLocalizedLabel,              pset);
     old_dw->get(pFailureStrain,           pFailureStrainLabel,          pset);
     old_dw->get(pErosion,                 lb->pErosionLabel,            pset);
     old_dw->get(pParticleID,              lb->pParticleIDLabel,         pset);
@@ -268,8 +268,8 @@ CNHPDamage::computeStressTensor(const PatchSubset* patches,
                            bElBarLabel_preReloc,                  pset);
     new_dw->allocateAndPut(pStress_new,        
                            lb->pStressLabel_preReloc,             pset);
-    new_dw->allocateAndPut(pFailed_new, 
-                           pFailedLabel_preReloc,                 pset);
+    new_dw->allocateAndPut(pLocalized_new, 
+                           pLocalizedLabel_preReloc,              pset);
     new_dw->allocateAndPut(pFailureStrain_new, 
                            pFailureStrainLabel_preReloc,          pset);
     new_dw->allocateAndPut(pDeformRate, 
@@ -378,7 +378,7 @@ CNHPDamage::computeStressTensor(const PatchSubset* patches,
 
       // Modify the stress if particle has failed
       updateFailedParticlesAndModifyStress(defGrad, pFailureStrain[idx], 
-                                           pFailed[idx], pFailed_new[idx], 
+                                           pLocalized[idx], pLocalized_new[idx],
                                            pStress_new[idx], pParticleID[idx]);
 
       // Compute the strain energy for all the particles
@@ -438,14 +438,14 @@ CNHPDamage::computeStressTensorImplicit(const PatchSubset* patches,
   int dwi = matl->getDWIndex();
 
   // Particle and grid data
-  constParticleVariable<int>     pFailed;
+  constParticleVariable<int>     pLocalized;
   constParticleVariable<double>  pFailureStrain;
   constParticleVariable<double>  pMass, pPlasticStrain;
   constParticleVariable<Point>   pX;
   constParticleVariable<Vector>  pSize;
   constParticleVariable<Matrix3> pDefGrad, pBeBar;
   constNCVariable<Vector>        gDisp;
-  ParticleVariable<int>          pFailed_new;
+  ParticleVariable<int>          pLocalized_new;
   ParticleVariable<double>       pFailureStrain_new;
   ParticleVariable<double>       pVol_new, pdTdt, pPlasticStrain_new;
   ParticleVariable<Matrix3>      pDefGrad_new, pBeBar_new, pStress_new;
@@ -479,7 +479,7 @@ CNHPDamage::computeStressTensorImplicit(const PatchSubset* patches,
     old_dw->get(pSize,                    lb->pSizeLabel,               pset);
     old_dw->get(pDefGrad,                 lb->pDeformationMeasureLabel, pset);
     old_dw->get(pBeBar,                   bElBarLabel,                  pset);
-    old_dw->get(pFailed,                  pFailedLabel,                 pset);
+    old_dw->get(pLocalized,               pLocalizedLabel,              pset);
     old_dw->get(pFailureStrain,           pFailureStrainLabel,          pset);
 
     // Get Grid info
@@ -498,8 +498,8 @@ CNHPDamage::computeStressTensorImplicit(const PatchSubset* patches,
                            bElBarLabel_preReloc,                  pset);
     new_dw->allocateAndPut(pStress_new,        
                            lb->pStressLabel_preReloc,             pset);
-    new_dw->allocateAndPut(pFailed_new, 
-                           pFailedLabel_preReloc,                 pset);
+    new_dw->allocateAndPut(pLocalized_new,
+                           pLocalizedLabel_preReloc,              pset);
     new_dw->allocateAndPut(pFailureStrain_new, 
                            pFailureStrainLabel_preReloc,          pset);
 
@@ -586,8 +586,8 @@ CNHPDamage::computeStressTensorImplicit(const PatchSubset* patches,
 
       // Modify the stress if particle has failed
       updateFailedParticlesAndModifyStress(defGrad, pFailureStrain[idx], 
-                                           pFailed[idx], pFailed_new[idx], 
-                                           pStress_new[idx],idx);
+                                           pLocalized[idx], pLocalized_new[idx],
+                                           pStress_new[idx], idx);
 
       // Compute the strain energy for all the particles
       double U = .5*bulk*(.5*(J*J - 1.0) - log(J));

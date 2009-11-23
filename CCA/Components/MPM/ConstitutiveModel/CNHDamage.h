@@ -63,10 +63,10 @@ namespace Uintah {
     };
 
     const VarLabel* pFailureStrainLabel;
-    const VarLabel* pFailedLabel;
+    const VarLabel* pLocalizedLabel;
     const VarLabel* pDeformRateLabel;
     const VarLabel* pFailureStrainLabel_preReloc;
-    const VarLabel* pFailedLabel_preReloc;
+    const VarLabel* pLocalizedLabel_preReloc;
     const VarLabel* pDeformRateLabel_preReloc;
 
   protected:
@@ -183,8 +183,8 @@ namespace Uintah {
     // Modify the stress if particle has failed
     void updateFailedParticlesAndModifyStress(const Matrix3& bb, 
                                               const double& pFailureStrain, 
-                                              const int& pFailed,
-                                              int& pFailed_new, 
+                                              const int& pLocalized,
+                                              int& pLocalized_new, 
                                               Matrix3& pStress_new,
                                               const long64 particleID);
 

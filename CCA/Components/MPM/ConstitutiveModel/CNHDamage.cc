@@ -65,7 +65,7 @@ CNHDamage::CNHDamage(ProblemSpecP& ps, MPMFlags* Mflag)
   // Initialize local VarLabels
   initializeLocalMPMLabels();
 
-  // Get the failure strain data
+  // Get the failure stress/strain data
   getFailureStrainData(ps);
 
   // Set the erosion algorithm
@@ -90,10 +90,10 @@ CNHDamage::~CNHDamage()
   VarLabel::destroy(bElBarLabel_preReloc);
 
   VarLabel::destroy(pFailureStrainLabel);
-  VarLabel::destroy(pFailedLabel);
+  VarLabel::destroy(pLocalizedLabel);
   VarLabel::destroy(pDeformRateLabel);
   VarLabel::destroy(pFailureStrainLabel_preReloc);
-  VarLabel::destroy(pFailedLabel_preReloc);
+  VarLabel::destroy(pLocalizedLabel_preReloc);
   VarLabel::destroy(pDeformRateLabel_preReloc);
 }
 
@@ -128,7 +128,7 @@ CNHDamage::initializeLocalMPMLabels()
                         ParticleVariable<Matrix3>::getTypeDescription());
   pFailureStrainLabel = VarLabel::create("p.epsf",
                         ParticleVariable<double>::getTypeDescription());
-  pFailedLabel        = VarLabel::create("p.failed",
+  pLocalizedLabel     = VarLabel::create("p.failed",
                         ParticleVariable<int>::getTypeDescription());
   pDeformRateLabel    = VarLabel::create("p.deformRate",
                         ParticleVariable<Matrix3>::getTypeDescription());
@@ -137,7 +137,7 @@ CNHDamage::initializeLocalMPMLabels()
                          ParticleVariable<Matrix3>::getTypeDescription());
   pFailureStrainLabel_preReloc = VarLabel::create("p.epsf+",
                          ParticleVariable<double>::getTypeDescription());
-  pFailedLabel_preReloc        = VarLabel::create("p.failed+",
+  pLocalizedLabel_preReloc     = VarLabel::create("p.failed+",
                          ParticleVariable<int>::getTypeDescription());
   pDeformRateLabel_preReloc    = VarLabel::create("p.deformRate+",
                          ParticleVariable<Matrix3>::getTypeDescription());
@@ -207,7 +207,7 @@ CNHDamage::addInitialComputesAndRequires(Task* task,
   const MaterialSubset* matlset = matl->thisMaterial();
   task->computes(bElBarLabel,         matlset);
   task->computes(pFailureStrainLabel, matlset);
-  task->computes(pFailedLabel,        matlset);
+  task->computes(pLocalizedLabel,     matlset);
   if (flag->d_integrator != MPMFlags::Implicit) {
     task->computes(pDeformRateLabel,  matlset);
   }
@@ -233,13 +233,13 @@ CNHDamage::initializeCMData(const Patch* patch,
 
   ParticleVariable<Matrix3> pBeBar;
   ParticleVariable<double>  pFailureStrain;
-  ParticleVariable<int>     pFailed;
+  ParticleVariable<int>     pLocalized;
   constParticleVariable<double> pVolume;
 
   new_dw->get(pVolume, lb->pVolumeLabel, pset);
   new_dw->allocateAndPut(pBeBar,         bElBarLabel,         pset);
   new_dw->allocateAndPut(pFailureStrain, pFailureStrainLabel, pset);
-  new_dw->allocateAndPut(pFailed,        pFailedLabel,        pset);
+  new_dw->allocateAndPut(pLocalized,     pLocalizedLabel,     pset);
 
   ParticleSubset::iterator iter = pset->begin();
 
@@ -250,7 +250,7 @@ CNHDamage::initializeCMData(const Patch* patch,
     for(;iter != pset->end();iter++){
       pBeBar[*iter] = Id;
       pFailureStrain[*iter] = fabs(gaussGen.rand());
-      pFailed[*iter] = 0;
+      pLocalized[*iter] = 0;
     }
   } else if (d_epsf.dist == "weibull"){
     // Initialize a weibull random number generator
@@ -259,13 +259,13 @@ CNHDamage::initializeCMData(const Patch* patch,
     for(;iter != pset->end();iter++){
       pBeBar[*iter] = Id;
       pFailureStrain[*iter] = weibGen.rand(pVolume[*iter]);
-      pFailed[*iter] = 0;
+      pLocalized[*iter] = 0;
     }
   } else if (d_epsf.dist == "constant") {
     for(;iter != pset->end();iter++){
       pBeBar[*iter] = Id;
       pFailureStrain[*iter] = d_epsf.mean;
-      pFailed[*iter] = 0;
+      pLocalized[*iter] = 0;
     }
   }
 
@@ -300,11 +300,11 @@ CNHDamage::addComputesAndRequires(Task* task,
   // Other constitutive model and input dependent computes and requires
   task->requires(Task::OldDW, bElBarLabel,           matlset, gnone);
   task->requires(Task::OldDW, pFailureStrainLabel,   matlset, gnone);
-  task->requires(Task::OldDW, pFailedLabel,          matlset, gnone);
+  task->requires(Task::OldDW, pLocalizedLabel,       matlset, gnone);
 
   task->computes(bElBarLabel_preReloc,               matlset);
   task->computes(pFailureStrainLabel_preReloc,       matlset);
-  task->computes(pFailedLabel_preReloc,              matlset);
+  task->computes(pLocalizedLabel_preReloc,           matlset);
 }
 
 void 
@@ -358,7 +358,7 @@ CNHDamage::computeStressTensor(const PatchSubset* patches,
 
     // Particle and grid data
     constParticleVariable<Short27> pgCode;
-    constParticleVariable<int>     pFailed;
+    constParticleVariable<int>     pLocalized;
     constParticleVariable<double>  pmass, pFailureStrain, pErosion;
     constParticleVariable<Point>   pX;
     constParticleVariable<Vector>  pSize, pVelocity;
@@ -366,7 +366,7 @@ CNHDamage::computeStressTensor(const PatchSubset* patches,
     constNCVariable<Vector>        gDisp;
     constNCVariable<Vector>        gVelocity;
     constNCVariable<Vector>        GVelocity; 
-    ParticleVariable<int>          pFailed_new;
+    ParticleVariable<int>          pLocalized_new;
     ParticleVariable<double>       pvolume_new, pdTdt, pFailureStrain_new,p_q;
     ParticleVariable<Matrix3>      pDefGrad_new, pBeBar_new, pStress_new;
     ParticleVariable<Matrix3>      pDeformRate;
@@ -379,7 +379,7 @@ CNHDamage::computeStressTensor(const PatchSubset* patches,
     old_dw->get(pVelocity,                lb->pVelocityLabel,           pset);
     old_dw->get(pDefGrad,                 lb->pDeformationMeasureLabel, pset);
     old_dw->get(pBeBar,                   bElBarLabel,                  pset);
-    old_dw->get(pFailed,                  pFailedLabel,                 pset);
+    old_dw->get(pLocalized,               pLocalizedLabel,              pset);
     old_dw->get(pFailureStrain,           pFailureStrainLabel,          pset);
     old_dw->get(pErosion,                 lb->pErosionLabel,            pset);
     old_dw->get(pParticleID,              lb->pParticleIDLabel,         pset);
@@ -402,8 +402,8 @@ CNHDamage::computeStressTensor(const PatchSubset* patches,
                            bElBarLabel_preReloc,                  pset);
     new_dw->allocateAndPut(pStress_new,        
                            lb->pStressLabel_preReloc,             pset);
-    new_dw->allocateAndPut(pFailed_new, 
-                           pFailedLabel_preReloc,                 pset);
+    new_dw->allocateAndPut(pLocalized_new, 
+                           pLocalizedLabel_preReloc,              pset);
     new_dw->allocateAndPut(pFailureStrain_new, 
                            pFailureStrainLabel_preReloc,          pset);
     new_dw->allocateAndPut(pDeformRate, 
@@ -460,7 +460,7 @@ CNHDamage::computeStressTensor(const PatchSubset* patches,
       FF = pDefGradInc*pDefGrad[idx];
 
       // if already failed, use previous FF
-      if(d_setStressToZero && pFailed[idx]){
+      if(d_setStressToZero && pLocalized[idx]){
         FF = pDefGrad[idx];
       }
 
@@ -562,7 +562,7 @@ CNHDamage::computeStressTensor(const PatchSubset* patches,
 
       // Modify the stress if particle has failed
       updateFailedParticlesAndModifyStress(FF, pFailureStrain[idx], 
-               pFailed[idx], pFailed_new[idx], 
+               pLocalized[idx], pLocalized_new[idx], 
                pStress_new[idx], pParticleID[idx]);
 
       // Compute the strain energy for all the particles
@@ -604,8 +604,8 @@ CNHDamage::computeStressTensor(const PatchSubset* patches,
 void
 CNHDamage::updateFailedParticlesAndModifyStress(const Matrix3& FF, 
                                                 const double& pFailureStrain, 
-                                                const int& pFailed,
-                                                int& pFailed_new, 
+                                                const int& pLocalized,
+                                                int& pLocalized_new, 
                                                 Matrix3& pStress_new,
                                                 const long64 particleID)
 {
@@ -637,16 +637,16 @@ CNHDamage::updateFailedParticlesAndModifyStress(const Matrix3& FF,
   double epsMax = Max(Max(eigval[0],eigval[1]), eigval[2]);
 
   // Find if the particle has failed
-  pFailed_new = pFailed;
-  if (epsMax > pFailureStrain) pFailed_new = 1;
-  if (pFailed != pFailed_new) {
+  pLocalized_new = pLocalized;
+  if (epsMax > pFailureStrain) pLocalized_new = 1;
+  if (pLocalized != pLocalized_new) {
      cout << "Particle " << particleID << " has failed : eps = " << epsMax 
           << " eps_f = " << pFailureStrain << endl;
   }
 
   // If the particle has failed, apply various erosion algorithms
   if (flag->d_doErosion) {
-    if (pFailed || pFailed_new) {
+    if (pLocalized || pLocalized_new) {
       if (d_allowNoTension) {
         if (pressure > 0.0) pStress_new = zero;
         else pStress_new = Identity*pressure;
@@ -672,13 +672,13 @@ CNHDamage::computeStressTensorImplicit(const PatchSubset* patches,
   double rho_orig = matl->getInitialDensity();
 
   // Particle and grid data
-  constParticleVariable<int>     pFailed;
+  constParticleVariable<int>     pLocalized;
   constParticleVariable<double>  pmass, pFailureStrain;
   constParticleVariable<Point>   pX;
   constParticleVariable<Vector>  pSize;
   constParticleVariable<Matrix3> pDefGrad, pBeBar;
   constNCVariable<Vector>        gDisp;
-  ParticleVariable<int>          pFailed_new;
+  ParticleVariable<int>          pLocalized_new;
   ParticleVariable<double>       pVol_new, pdTdt, pFailureStrain_new;
   ParticleVariable<Matrix3>      pDefGrad_new, pBeBar_new, pStress_new;
 
@@ -711,7 +711,7 @@ CNHDamage::computeStressTensorImplicit(const PatchSubset* patches,
     old_dw->get(pSize,                    lb->pSizeLabel,               pset);
     old_dw->get(pDefGrad,                 lb->pDeformationMeasureLabel, pset);
     old_dw->get(pBeBar,                   bElBarLabel,                  pset);
-    old_dw->get(pFailed,                  pFailedLabel,                 pset);
+    old_dw->get(pLocalized,               pLocalizedLabel,              pset);
     old_dw->get(pFailureStrain,           pFailureStrainLabel,          pset);
     old_dw->get(pParticleID,              lb->pParticleIDLabel,         pset);
 
@@ -730,8 +730,8 @@ CNHDamage::computeStressTensorImplicit(const PatchSubset* patches,
     new_dw->allocateAndPut(pStress_new,        
                            lb->pStressLabel_preReloc,             pset);
 
-    new_dw->allocateAndPut(pFailed_new, 
-                           pFailedLabel_preReloc,                 pset);
+    new_dw->allocateAndPut(pLocalized_new, 
+                           pLocalizedLabel_preReloc,              pset);
     new_dw->allocateAndPut(pFailureStrain_new, 
                            pFailureStrainLabel_preReloc,          pset);
 
@@ -784,8 +784,8 @@ CNHDamage::computeStressTensorImplicit(const PatchSubset* patches,
 
       // Modify the stress if particle has failed
       updateFailedParticlesAndModifyStress(FF, pFailureStrain[idx], 
-                                           pFailed[idx], pFailed_new[idx], 
-                                   pStress_new[idx], pParticleID[idx]);
+                                           pLocalized[idx],pLocalized_new[idx], 
+                                           pStress_new[idx], pParticleID[idx]);
 
       // Compute the strain energy for all the particles
       U = .5*bulk*(.5*(J*J - 1.0) - log(J));
@@ -1062,10 +1062,10 @@ CNHDamage::carryForward(const PatchSubset* patches,
 
   constParticleVariable<Matrix3> pBeBar;
   constParticleVariable<double>  pFailureStrain;
-  constParticleVariable<int>     pFailed;
+  constParticleVariable<int>     pLocalized;
   ParticleVariable<Matrix3>      pBeBar_new;
   ParticleVariable<double>       pFailureStrain_new;
-  ParticleVariable<int>          pFailed_new;
+  ParticleVariable<int>          pLocalized_new;
 
   // Loop thru patches
   for(int p=0;p<patches->size();p++){
@@ -1074,18 +1074,18 @@ CNHDamage::carryForward(const PatchSubset* patches,
 
     old_dw->get(pBeBar,         bElBarLabel,             pset);
     old_dw->get(pFailureStrain, pFailureStrainLabel,     pset);
-    old_dw->get(pFailed,        pFailedLabel,            pset);
+    old_dw->get(pLocalized,        pLocalizedLabel,         pset);
 
     new_dw->allocateAndPut(pBeBar_new, 
                            bElBarLabel_preReloc,         pset);
     new_dw->allocateAndPut(pFailureStrain_new,    
                            pFailureStrainLabel_preReloc, pset);
-    new_dw->allocateAndPut(pFailed_new,      
-                           pFailedLabel_preReloc,        pset);
+    new_dw->allocateAndPut(pLocalized_new,      
+                           pLocalizedLabel_preReloc,     pset);
 
     pBeBar_new.copyData(pBeBar);
     pFailureStrain_new.copyData(pFailureStrain);
-    pFailed_new.copyData(pFailed);
+    pLocalized_new.copyData(pLocalized);
 
     if (flag->d_integrator != MPMFlags::Implicit) {
       ParticleVariable<Matrix3> pDeformRate;
@@ -1102,7 +1102,7 @@ CNHDamage::addRequiresDamageParameter(Task* task,
                                       const PatchSet* ) const
 {
   const MaterialSubset* matlset = matl->thisMaterial();
-  task->requires(Task::NewDW, pFailedLabel_preReloc, matlset, Ghost::None);
+  task->requires(Task::NewDW, pLocalizedLabel_preReloc, matlset, Ghost::None);
 }
 
 void 
@@ -1113,12 +1113,12 @@ CNHDamage::getDamageParameter(const Patch* patch,
                               DataWarehouse* new_dw)
 {
   ParticleSubset* pset = old_dw->getParticleSubset(dwi,patch);
-  constParticleVariable<int> pFailed;
-  new_dw->get(pFailed, pFailedLabel_preReloc, pset);
+  constParticleVariable<int> pLocalized;
+  new_dw->get(pLocalized, pLocalizedLabel_preReloc, pset);
 
   ParticleSubset::iterator iter;
   for (iter = pset->begin(); iter != pset->end(); iter++) {
-    damage[*iter] = pFailed[*iter];
+    damage[*iter] = pLocalized[*iter];
   }
 }
          
@@ -1136,7 +1136,7 @@ CNHDamage::allocateCMDataAddRequires(Task* task,
                  Ghost::None);
   task->requires(Task::NewDW, pFailureStrainLabel_preReloc, matlset, 
                  Ghost::None);
-  task->requires(Task::NewDW, pFailedLabel_preReloc,        matlset, 
+  task->requires(Task::NewDW, pLocalizedLabel_preReloc,     matlset, 
                  Ghost::None);
   if (flag->d_integrator != MPMFlags::Implicit) {
     task->requires(Task::NewDW, pDeformRateLabel_preReloc,  matlset, 
@@ -1159,27 +1159,27 @@ CNHDamage::allocateCMDataAdd(DataWarehouse* new_dw,
   // be deleted to the particles to be added
   constParticleVariable<Matrix3> o_pBeBar;
   constParticleVariable<double>  o_pFailureStrain;
-  constParticleVariable<int>     o_pFailed;
+  constParticleVariable<int>     o_pLocalized;
   new_dw->get(o_pBeBar,         bElBarLabel_preReloc,         delset);
   new_dw->get(o_pFailureStrain, pFailureStrainLabel_preReloc, delset);
-  new_dw->get(o_pFailed,        pFailedLabel_preReloc,        delset);
+  new_dw->get(o_pLocalized,        pLocalizedLabel_preReloc,     delset);
 
   ParticleVariable<Matrix3> pBeBar;
   ParticleVariable<double>  pFailureStrain;
-  ParticleVariable<int>     pFailed;
+  ParticleVariable<int>     pLocalized;
   new_dw->allocateTemporary(pBeBar,         addset);
   new_dw->allocateTemporary(pFailureStrain, addset);
-  new_dw->allocateTemporary(pFailed,        addset);
+  new_dw->allocateTemporary(pLocalized,        addset);
 
   ParticleSubset::iterator o,n = addset->begin();
   for (o=delset->begin(); o != delset->end(); o++, n++) {
     pBeBar[*n] = o_pBeBar[*o];
     pFailureStrain[*n] = o_pFailureStrain[*o];
-    pFailed[*n] = o_pFailed[*o];
+    pLocalized[*n] = o_pLocalized[*o];
   }
   (*newState)[bElBarLabel] = pBeBar.clone();
   (*newState)[pFailureStrainLabel] = pFailureStrain.clone();
-  (*newState)[pFailedLabel] = pFailed.clone();
+  (*newState)[pLocalizedLabel] = pLocalized.clone();
 
   if (flag->d_integrator != MPMFlags::Implicit) {
     constParticleVariable<Matrix3> o_pDeformRate;
@@ -1204,10 +1204,10 @@ CNHDamage::addParticleState(std::vector<const VarLabel*>& from,
   // Add the local particle state data for this constitutive model.
   from.push_back(bElBarLabel);
   from.push_back(pFailureStrainLabel);
-  from.push_back(pFailedLabel);
+  from.push_back(pLocalizedLabel);
   to.push_back(bElBarLabel_preReloc);
   to.push_back(pFailureStrainLabel_preReloc);
-  to.push_back(pFailedLabel_preReloc);
+  to.push_back(pLocalizedLabel_preReloc);
   if (flag->d_integrator != MPMFlags::Implicit) {
     from.push_back(pDeformRateLabel);
     to.push_back(pDeformRateLabel_preReloc);
