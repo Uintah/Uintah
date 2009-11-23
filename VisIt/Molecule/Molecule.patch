@@ -1,0 +1,365 @@
+Index: Molecule.xml
+===================================================================
+--- Molecule.xml	(revision 9032)
++++ Molecule.xml	(working copy)
+@@ -5,6 +5,7 @@
+     </CXXFLAGS>
+     <Files components="V">
+       avtMoleculeRenderer.C
++      ParticleInstancingRenderer.C	
+       avtOpenGLMoleculeRenderer.C
+       avtMesaMoleculeRenderer.C
+       avtOpenGLAtomTexturer.C
+@@ -17,6 +18,7 @@
+     </LIBS>
+     <Files components="E">
+       avtMoleculeRenderer.C
++      ParticleInstancingRenderer.C	
+       avtOpenGLMoleculeRenderer.C
+       avtMesaMoleculeRenderer.C
+       avtOpenGLAtomTexturer.C
+Index: avtOpenGLMoleculeRenderer.C
+===================================================================
+--- avtOpenGLMoleculeRenderer.C	(revision 9032)
++++ avtOpenGLMoleculeRenderer.C	(working copy)
+@@ -69,6 +69,7 @@
+ 
+ #include <avtLookupTable.h>
+ #include "avtOpenGLAtomTexturer.h"
++#include "ParticleInstancingRenderer.h"
+ 
+ #include <DebugStream.h>
+ #include "matrix.c"
+@@ -106,6 +107,35 @@
+     9,
+     17
+ };
++
++
++static GLboolean CheckExtension( char *extName )
++{
++    /*
++     ** Search for extName in the extensions string.  Use of strstr()
++     ** is not sufficient because extension names can be prefixes of
++     ** other extension names.  Could use strtok() but the constant
++     ** string returned by glGetString can be in read-only memory.
++     */
++
++    debug1 << "testing for extension: " << string(extName) << endl;
++
++    char *p = (char *) glGetString(GL_EXTENSIONS);
++    char *end;
++    int extNameLen;
++
++    extNameLen = strlen(extName);
++    end = p + strlen(p);
++
++    while (p < end) {
++	int n = strcspn(p, " ");
++	if ((extNameLen == n) && (strncmp(extName, p, n) == 0)) {
++	    return GL_TRUE;
++	}
++	p += (n + 1);
++    }
++    return GL_FALSE;
++}
+  
+ 
+ // ****************************************************************************
+@@ -383,101 +413,208 @@
+             matrix_mul_point(ptOffsets[3], ptOffsets[3], imv);
+         }
+     }
++    
++    static bool checkForExtensions = true;
++    static bool extensionsSupported = false;
+ 
+-    glBegin(GL_QUADS);
+-    for (int i=0; i<data->GetNumberOfPoints(); i++)
+-    {
+-        int element_number = 0;
+-        if (element)
+-            element_number = int(elementnos[i]);
++    if (checkForExtensions) {
++	char extnName[128];
++        strcpy(extnName, "GL_EXT_gpu_shader4"); 
+ 
+-        if (element_number < 0 || element_number > MAX_ELEMENT_NUMBER)
+-            element_number = 0;
++        GLboolean extnA = CheckExtension(extnName);
++        if (extnA) {
++            debug1 << "Extension GL_EXT_gpu_shader4 supported" << endl;
++	}
++        else {
++            debug1 << "Extension GL_EXT_gpu_shader4 not supported" << endl;
++	}
++        
++	strcpy(extnName, "GL_EXT_texture_buffer_object"); 
+ 
+-        // Determine radius
+-        float radius = atts.GetRadiusFixed();
+-        if (element && sbar)
+-            radius = atomic_radius[element_number] * radiusscale;
+-        else if (element && sbcr)
+-            radius = covalent_radius[element_number] * radiusscale;
+-        else if (radiusvar && sbv)
+-            radius = radiusvar[i] * radiusscale;
++        GLboolean extnB = CheckExtension(extnName);
++        if (extnB) {
++            debug1 << "Extension GL_EXT_texture_buffer_object supported" << endl;
++	}
++        else {
++            debug1 << "Extension GL_EXT_texture_buffer_object not supported" << endl;
++	}
+ 
+-        // Determine color
+-        if (color_by_element)
+-        {
+-            int level = element_number % numcolors;
+-            SetColor3ubv(&colors[4*level]);
+-        }
+-        else if (color_by_levels)
+-        {
+-            int level = int(scalar[i]) - (primary_is_resseq ? 1 : 0);
+-            if(levelsLUT != 0)
+-            {
+-                const unsigned char *rgb = 
+-                    levelsLUT->GetLookupTable()->MapValue(level);
+-                SetColor3ubv(rgb);
+-            }
+-            else
+-            {
+-                level = level % numcolors;
+-                SetColor3ubv(&colors[4*level]);
+-            }
+-        }
+-        else
+-        {
+-            float alpha;
+-            if (varmax == varmin)
+-                alpha = 0.5;
+-            else
+-                alpha = (scalar[i] - varmin) / (varmax - varmin);
+-            
+-            int color = int((float(numcolors)-.01) * alpha);
+-            if (color < 0)
+-                color = 0;
+-            if (color > numcolors-1)
+-                color = numcolors-1;
+-            SetColor3ubv(&colors[4*color]);
+-        }
++	if (extnA && extnB)
++	    extensionsSupported = true;
+ 
+-        if(vmode == 2)
+-        {
+-            // Plot squares. Use the same point for each of the vertices;
+-            // a vertex program will figure out the real coordinates.
+-            glNormal3f(radius, radius, radius);
+-            for(int j = 0; j < 4; ++j)
+-            {
+-                glVertex3dv(points->GetPoint(i));
+-                glTexCoord2fv(texCoords[j]);
+-            }
+-        }
+-        else if(vmode == 1)
+-        {
+-            // Plot squares
+-            for(int j = 0; j < 4; ++j)
+-            {
+-                double *pt = points->GetPoint(i);
+-                float vert[3];
+-                vert[0] = pt[0] + ptOffsets[j][0] * radius;
+-                vert[1] = pt[1] + ptOffsets[j][1] * radius;
+-                vert[2] = pt[2] + ptOffsets[j][2] * radius;
+-                glVertex3fv(vert);
+-                glTexCoord2fv(texCoords[j]);
+-            }
+-        }
+-        else
+-        {
+-            // Plot spheres
+-            double *pt = points->GetPoint(i);
+-            DrawSphereAsQuads(pt[0],
+-                              pt[1],
+-                              pt[2],
+-                              radius,
+-                              atts.GetAtomSphereQuality());
+-        }
++	checkForExtensions = false;
+     }
+-    glEnd();
+ 
++    if (vmode == 1 || vmode == 2 || (!extensionsSupported)) { // if drawing as imposters
++	glBegin(GL_QUADS);
++	for (int i=0; i<data->GetNumberOfPoints(); i++)
++	{
++	    int element_number = 0;
++	    if (element)
++		element_number = int(elementnos[i]);
++
++	    if (element_number < 0 || element_number > MAX_ELEMENT_NUMBER)
++		element_number = 0;
++
++	    // Determine radius
++	    float radius = atts.GetRadiusFixed();
++	    if (element && sbar)
++		radius = atomic_radius[element_number] * radiusscale;
++	    else if (element && sbcr)
++		radius = covalent_radius[element_number] * radiusscale;
++	    else if (radiusvar && sbv)
++		radius = radiusvar[i] * radiusscale;
++
++	    // Determine color
++	    if (color_by_element)
++	    {
++		int level = element_number % numcolors;
++		SetColor3ubv(&colors[4*level]);
++	    }
++	    else if (color_by_levels)
++	    {
++		int level = int(scalar[i]) - (primary_is_resseq ? 1 : 0);
++		if(levelsLUT != 0)
++		{
++		    const unsigned char *rgb = 
++			levelsLUT->GetLookupTable()->MapValue(level);
++		    SetColor3ubv(rgb);
++		}
++		else
++		{
++		    level = level % numcolors;
++		    SetColor3ubv(&colors[4*level]);
++		}
++	    }
++	    else
++	    {
++		float alpha;
++		if (varmax == varmin)
++		    alpha = 0.5;
++		else
++		    alpha = (scalar[i] - varmin) / (varmax - varmin);
++		
++		int color = int((float(numcolors)-.01) * alpha);
++		if (color < 0)
++		    color = 0;
++		if (color > numcolors-1)
++		    color = numcolors-1;
++		SetColor3ubv(&colors[4*color]);
++	    }
++
++	    if(vmode == 2)
++	    {
++		// Plot squares. Use the same point for each of the vertices;
++		// a vertex program will figure out the real coordinates.
++		glNormal3f(radius, radius, radius);
++		for(int j = 0; j < 4; ++j)
++		{
++		    glVertex3dv(points->GetPoint(i));
++		    glTexCoord2fv(texCoords[j]);
++		}
++	    }
++	    else if(vmode == 1)
++	    {
++		// Plot squares
++		for(int j = 0; j < 4; ++j)
++		{
++		    double *pt = points->GetPoint(i);
++		    float vert[3];
++		    vert[0] = pt[0] + ptOffsets[j][0] * radius;
++		    vert[1] = pt[1] + ptOffsets[j][1] * radius;
++		    vert[2] = pt[2] + ptOffsets[j][2] * radius;
++		    glVertex3fv(vert);
++		    glTexCoord2fv(texCoords[j]);
++		}
++	    }
++	    else
++	    {
++		// Plot spheres
++		double *pt = points->GetPoint(i);
++		DrawSphereAsQuads(pt[0],
++				  pt[1],
++				  pt[2],
++				  radius,
++				  atts.GetAtomSphereQuality());
++	    }
++	}
++	glEnd();
++    }
++    else { // drawing as "real" spheres
++        static ParticleInstancingRenderer pirObject;
++	// bool needsRecalculation = true;
++
++	pirObject.SetLiveQualityLevel(atts.GetAtomSphereQuality());
++
++	// if (needsRecalculation) {
++	    pirObject.CleanUp();
++
++	    for (int i=0; i<data->GetNumberOfPoints(); i++)
++	    {
++		int element_number = 0;
++		if (element)
++		    element_number = int(elementnos[i]);
++
++		if (element_number < 0 || element_number > MAX_ELEMENT_NUMBER)
++		    element_number = 0;
++
++		// Determine radius
++		float radius = atts.GetRadiusFixed();
++		if (element && sbar)
++		    radius = atomic_radius[element_number] * radiusscale;
++		else if (element && sbcr)
++		    radius = covalent_radius[element_number] * radiusscale;
++		else if (radiusvar && sbv)
++		    radius = radiusvar[i] * radiusscale;
++
++		unsigned char colorArr[3];
++
++		// Determine color
++		if (color_by_element)
++		{
++		    int level = element_number % numcolors;
++		    memcpy(colorArr, &colors[4*level], 3); 
++		}
++		else if (color_by_levels)
++		{
++		    int level = int(scalar[i]) - (primary_is_resseq ? 1 : 0);
++		    if(levelsLUT != 0)
++		    {
++			const unsigned char *rgb = 
++			    levelsLUT->GetLookupTable()->MapValue(level);
++			memcpy(colorArr, rgb, 3);
++		    }
++		    else
++		    {
++			level = level % numcolors;
++			memcpy(colorArr, &colors[4*level], 3); 
++		    }
++		}
++		else
++		{
++		    float alpha;
++		    if (varmax == varmin)
++			alpha = 0.5;
++		    else
++			alpha = (scalar[i] - varmin) / (varmax - varmin);
++		    
++		    int color = int((float(numcolors)-.01) * alpha);
++		    if (color < 0)
++			color = 0;
++		    if (color > numcolors-1)
++			color = numcolors-1;
++		    
++		    memcpy(colorArr, &colors[4*color], 3); 
++		}
++
++		double *pt = points->GetPoint(i);
++	        pirObject.AddInstancesData(pt, radius, colorArr);  		      
++	    }
++	// }
++
++	pirObject.RenderBatchedInstancing();
++    }
++
+     // If we're imposter rendering then enable lighting once more and turn
+     // off sphere texturing.
+     if(imposter)
