@@ -592,7 +592,6 @@ SimpleHeatTransfer::computeModel( const ProcessorGroup * pc,
       // viscosity should be grabbed from data warehouse... right now it's constant
 
       double FSum = 0.0;
-      double abskg = 0.0;
 
       double heat_rate_;
       double gas_heat_rate_;
@@ -633,7 +632,6 @@ SimpleHeatTransfer::computeModel( const ProcessorGroup * pc,
       yelem[4] = 0.00; // S
 
       double FSum = 0.0;
-      double abskg = 0.0;
 
       double heat_rate_;
       double gas_heat_rate_;
