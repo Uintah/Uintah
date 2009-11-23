@@ -343,27 +343,34 @@
             <tolerance                  spec="OPTIONAL DOUBLE 'positive'" />
         </Verify_AB_Construction>
 
+        <!-- Block of tags for specifying the linear solver used for DQMOM -->
         <LinearSolver                   spec="OPTIONAL NO_DATA">
           <tolerance                    spec="OPTIONAL DOUBLE 'positive'" />
           <type                         spec="OPTIONAL STRING 'Lapack, DenseMatrix, LU'" />
           <svd                          spec="OPTIONAL BOOLEAN" />
         </LinearSolver>
 
-        <coalParticleCalculation        spec="REQUIRED NO_DATA"
+        <!-- This block is (will be) used for coupled multiphysics coal calculations.
+             It allows the CoalModelFactory to determine which internal coordinates correspond
+             to which physical roles.  It may (should) replace the <Model> tags currently used
+             (but only for coupled coal particle calculations, and only after a way of
+             indicating models is added to this block!)
+        -->
+        <coalParticleCalculation        spec="OPTIONAL NO_DATA"
                                         attribute1="type REQUIRED STRING 'coupled, separable'" >
-            <Length                     spec="OPTIONAL STRING" />
-            <RawCoal                    spec="OPTIONAL STRING" />
-            <Char                       spec="OPTIONAL STRING" />
-            <ParticleTemperature        spec="OPTIONAL STRING" />
-            <ParticleEnthalpy           spec="OPTIONAL STRING" />
-            <Moisture                   spec="OPTIONAL STRING" />
-            <Ash                        spec="OPTIONAL STRING" />
+            <Length                     spec="OPTIONAL STRING" /> <!-- Particle length internal coordinate label -->
+            <RawCoal                    spec="OPTIONAL STRING" /> <!-- Particle raw coal internal coordinate label -->
+            <Char                       spec="OPTIONAL STRING" /> <!-- Particle char internal coordinate label -->
+            <ParticleTemperature        spec="OPTIONAL STRING" /> <!-- Particle temperature internal coordinate label -->
+            <ParticleEnthalpy           spec="OPTIONAL STRING" /> <!-- Particle enthalpy internal coordinate label -->
+            <Moisture                   spec="OPTIONAL STRING" /> <!-- Particle moisture internal coordinate label -->
+            <Ash                        spec="OPTIONAL STRING" /> <!-- Particle ash internal coordinate label -->
+            <!-- A method for indicating the combination of multiphysics models to use still needs to be added -->
         </coalParticleCalculation>
 
         <number_quad_nodes              spec="REQUIRED INTEGER 'positive'"/>
         <adiabGas_nonadiabPart          spec="OPTIONAL BOOLEAN"/>
-        <save_moments                   spec="OPTIONAL BOOLEAN"/>
-
+        <save_moments                   spec="OPTIONAL BOOLEAN"/> <!-- Allows saving any moments being used for DQMOM -->
 
         <VelModel                       spec="REQUIRED NO_DATA">
 
