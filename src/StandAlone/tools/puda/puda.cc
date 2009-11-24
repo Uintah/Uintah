@@ -449,6 +449,7 @@ main(int argc, char** argv)
     //              V A R S U M M A R Y   O P T I O N
     if(clf.do_varsummary){
       varsummary( da, clf, mat );
+      displayGlobalMinMax();
     }
 
     if( clf.do_jim1 ){

@@ -75,9 +75,158 @@ namespace SCIRun {
 bool operator < (const Matrix3 & l, const Matrix3 & r) { return l.Norm() < r.Norm(); }
 bool operator > (const Matrix3 & l, const Matrix3 & r) { return l.Norm() > r.Norm(); }
 
+////////////////////////////////////////////////////////////////////////////////////
+
+class MinMaxInfoBase {
+
+public:
+
+  // Prints out the min/max values for each level.
+  virtual void display() = 0;
+
+};
+
+template<class T>
+class MinMaxInfo : public MinMaxInfoBase {
+
+public:
+
+  void initializeMinMax( int startingIndex );
+
+  // Makes sure that our storage vector<> is large enough to hold the data for the current level.
+  void verifyNumberOfLevels( unsigned int levelIndex )
+  {
+    unsigned int numLevels = levelIndex + 1;
+    if( min_.size() < numLevels ) {
+
+      min_.resize( numLevels );
+      max_.resize( numLevels );
+
+      initializeMinMax( levelIndex );
+    }
+  }
+
+  // Updates the stored min_/max_ values based on the passed in min/max.
+  void updateMinMax( int levelIndex, T & min, T & max );
+
+  virtual void display();
+
+private:
+  vector<T> min_, max_; // One per level of the variable.  
+};
+
+/////////////////////////////////////////////////////////////////////
+// display()
+
+template<class Type>
+void
+MinMaxInfo<Type>::display()
+{
+  for( unsigned int level = 0; level < min_.size(); level++ ) {
+    cout << "Level " << level << ": Min/Max: " << min_[0] << ", " << max_[0] << "\n";
+  }
+}
+
+template<>
+void
+MinMaxInfo<Matrix3>::display()
+{
+  for( unsigned int level = 0; level < min_.size(); level++ ) {
+    cout << "Level " << level << ": Min/Max: " << min_[0].Norm() << ", " << max_[0].Norm() << "\n";
+  }
+}
+
+/////////////////////////////////////////////////////////////////////
+// updateMinMax()
+
+template<>
+void
+MinMaxInfo<Point>::updateMinMax( int levelIndex, Point & min, Point & max )
+{
+  min_[ levelIndex ] = Min( min_[ levelIndex ], min );
+  max_[ levelIndex ] = Max( max_[ levelIndex ], max );
+}
+
+template<class Type>
+void
+MinMaxInfo<Type>::updateMinMax( int levelIndex, Type & min, Type & max ) 
+{
+  min_[ levelIndex ] = Min( min_[ levelIndex ], min );
+  max_[ levelIndex ] = Max( max_[ levelIndex ], max );
+}
+
+/////////////////////////////////////////////////////////////////////
+// initializeMinMax()
+
+template<>
+void
+MinMaxInfo<Point>::initializeMinMax( int startingIndex )
+{
+  Point min, max;
+  for( unsigned int level = startingIndex; level < min_.size(); level++ ) { // Loop through different levels.
+    min_[ level ] = Point(  DBL_MAX,  DBL_MAX,  DBL_MAX );
+    max_[ level ] = Point( -DBL_MAX, -DBL_MAX, -DBL_MAX );
+  }
+}
+
+template<>
+void
+MinMaxInfo<Vector>::initializeMinMax( int startingIndex )
+{
+  for( unsigned int level = startingIndex; level < min_.size(); level++ ) {
+    min_[ level ] = Vector(  DBL_MAX,  DBL_MAX,  DBL_MAX );
+    max_[ level ] = Vector( -DBL_MAX, -DBL_MAX, -DBL_MAX );
+  }
+}
+
+template<>
+void
+MinMaxInfo<Matrix3>::initializeMinMax( int startingIndex )
+{
+  for( unsigned int level = startingIndex; level < min_.size(); level++ ) {
+    min_[ level ] = Matrix3( DBL_MAX, DBL_MAX, DBL_MAX,    DBL_MAX, DBL_MAX, DBL_MAX,   DBL_MAX, DBL_MAX, DBL_MAX );
+    max_[ level ] = Matrix3(  0, 0, 0,   0, 0, 0,   0, 0, 0 );
+  }
+}
+
+template<class Type>
+void
+MinMaxInfo<Type>::initializeMinMax( int startingIndex )
+{
+  for( unsigned int level = startingIndex; level < min_.size(); level++ ) {
+    min_[ level ] =  INT_MAX;
+    max_[ level ] = -INT_MAX;
+  }
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+//
+// This variable is used to store the global min/max values.
+//
+//  * Map of string ("variable_name malt#") to min/max info
+//
+map< string, MinMaxInfoBase * > globalMinMax;
+
+void
+Uintah::displayGlobalMinMax()
+{
+  cout << "Global Min/Max are:\n\n";
+
+  for( map< string, MinMaxInfoBase * >::iterator iter = globalMinMax.begin(); iter != globalMinMax.end(); iter++ ) {
+
+    cout << iter->first << ": ";
+    iter->second->display();
+  }
+}
+
+////////////////////////////////////////////////////////////////////////////////////
+
 template <class Type>
 void
-printMinMax( const Uintah::TypeDescription * td,
+printMinMax( const string &    var,
+             int               matl,
+             const Patch *     patch,
+             const Uintah::TypeDescription * td,
              Type            * min,
              Type            * max,
              IntVector       * c_min = NULL,
@@ -85,6 +234,21 @@ printMinMax( const Uintah::TypeDescription * td,
              int               minCnt = -1, 
              int               maxCnt = -1 )
 {
+  stringstream ss;
+  ss << var << " (matl: " << matl << ")";
+
+  MinMaxInfoBase   * mmBase = globalMinMax[ ss.str() ];
+  MinMaxInfo<Type> * mmInfo = dynamic_cast< MinMaxInfo<Type> *>( mmBase );
+  if( mmInfo == NULL ) {
+    cout << "Creating new data store for " << var << ", malt: " << matl << " for Type: " << td->getName() << "\n";
+    mmInfo = new MinMaxInfo<Type>();
+    globalMinMax[ ss.str() ] = mmInfo;
+
+  }
+  mmInfo->verifyNumberOfLevels( patch->getLevel()->getIndex() );
+
+  //cout << "Min max for '" << var << "' matl " << matl << " on level " << patch->getLevel()->getIndex() << " is:\n";
+
   // In order to print out the values in a type-unique way, we have
   // to do the following switch(), and then cast the variables to
   // what they really are.
@@ -92,8 +256,19 @@ printMinMax( const Uintah::TypeDescription * td,
   switch( td->getType() ) {
   case( Uintah::TypeDescription::Matrix3 ) :
     {
-      cout << "\t\t\t\tMin Norm: " << ((Matrix3*)(min))->Norm() << "\n";
-      cout << "\t\t\t\tMax Norm: " << ((Matrix3*)(max))->Norm() << "\n";
+      double patchMin = ((Matrix3*)(min))->Norm();
+      double patchMax = ((Matrix3*)(max))->Norm();
+      cout << "\t\t\t\tMin Norm: " << patchMin << "\n";
+      cout << "\t\t\t\tMax Norm: " << patchMax << "\n";
+
+      // Have to cast to 'what it already is' so that compiler won't
+      // complain when instantiating this function for other types.
+      // (Note: When this function if instantiated for, say, a Point,
+      // (ie: another type), this line won't be called, so the cast is
+      // ok.)
+
+      ((MinMaxInfo<Matrix3>*) mmInfo)->updateMinMax( patch->getLevel()->getIndex(), *(Matrix3*)min, *(Matrix3*)max );
+
       break;
     }
   case( Uintah::TypeDescription::Vector ) :
@@ -115,6 +290,8 @@ printMinMax( const Uintah::TypeDescription * td,
         maxCnt = cntTemp;
       }
 
+      ((MinMaxInfo<Vector>*) mmInfo)->updateMinMax( patch->getLevel()->getIndex(), *(Vector*)min, *(Vector*)max );
+
       cout << "\t\t\t\tmin magnitude: " << minMagnitude << "\n";
       cout << "\t\t\t\tmax magnitude: " << maxMagnitude << "\n";
       break;
@@ -123,6 +300,7 @@ printMinMax( const Uintah::TypeDescription * td,
     {
       cout << "\t\t\t\tmin value: " << *min << "\n";
       cout << "\t\t\t\tmax value: " << *max << "\n";
+      mmInfo->updateMinMax( patch->getLevel()->getIndex(), *min, *max );
     }
   }
   if( c_min != NULL ) {
@@ -132,7 +310,8 @@ printMinMax( const Uintah::TypeDescription * td,
     cout << "\t\t\t\tmax location: " << *c_max << " (Occurrences: ~" << maxCnt << ")\n";
   }
 
-}
+} // end printMinMax()
+
 
 ////////////////////////////////////////////////////////////////////////////////////
 // Returns the appropriate iterator depending on the type (td) of the variable.
@@ -214,7 +393,7 @@ findMinMax( DataArchive *         da,
       max = Max(max, val);
     }
 
-    printMinMax( td->getSubType(), &min, &max, &c_min, &c_max, minCnt, maxCnt );
+    printMinMax<Ttype>( var, matl, patch, td->getSubType(), &min, &max, &c_min, &c_max, minCnt, maxCnt );
 
   } // end if( dx dy dz )
 
@@ -251,7 +430,7 @@ findMinMaxPV( DataArchive*          da,
     }
     //IntVector c_min, c_max;
     //int       minCnt = -1, maxCnt = -1;
-    printMinMax( td->getSubType(), &min, &max );
+    printMinMax<Ttype>( var, matl, patch, td->getSubType(), &min, &max );
   }
 }
 
