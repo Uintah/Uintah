@@ -643,9 +643,6 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
   
         }
         
-        proc0cout << "A matrix:" << endl;
-        Aorig.dump();
-        
     #ifdef DEBUG_MATRICES
 
         if( b_writefile ) {
@@ -714,7 +711,6 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
             new_dw->allocateAndPut(tempCCVar, source_label, matlIndex, patch);
           }
 
-          proc0cout << "Xlong[z] = " << Xlong[z] << ", normResNormalizedB[c] = " << normResNormalizedB[c] << ", normResNormalizedX[c] = " << normResNormalizedX[c] << endl;
           if (z >= dimension ) {
             stringstream err_msg;
             err_msg << "ERROR: Arches: DQMOM: Trying to access solution of AX=B system, but had array out of bounds! Accessing element " << z << " of " << dimension << endl;
@@ -780,20 +776,15 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
         // save original A before solving
         DenseMatrix* AAorig = AA->clone();
 
+        double conditionNumber_ = 0.0;
         if( b_calcSVD == true ) {
 
           DenseMatrix* AAsvd = AA->clone();
 
-          //// create rr and cc for singular values SparseRowMatrix
+          // create rr and cc for singular values SparseRowMatrix
           int *cols = scinew int[dimension];
           int *rows = scinew int[dimension+1];
           double *a = scinew double[dimension];
-          //int rowcol[dimension];
-          //int* rowcol = NULL;
-          //rowcol = new int[dimension];
-          //for( int yy=0; yy<dimension; ++yy ) {
-          //  rowcol[yy] = yy;
-          //}
 
           DenseMatrix* U = scinew DenseMatrix( dimension, dimension );
           SparseRowMatrix* S = scinew SparseRowMatrix( dimension, dimension, rows, cols, dimension, a); // makes an identity matrix
@@ -802,36 +793,32 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
           double start_SVDTime = Time::currentSeconds(); //timing
           AAsvd->svd( *U, *S, *V );
           total_SVDTime += ( Time::currentSeconds() - start_SVDTime); //timing
-          conditionNumber[c] = (S->a[0]/S->a[dimension-1]);
+          conditionNumber_ = (S->a[0]/S->a[dimension-1]);
 
-          //if( c == IntVector(1,1,1) ) {
-          //  proc0cout << "=====================================" << endl;
-          //  proc0cout << "Singular Value Decomposition values:" << endl;
-          //  for( int yy=0; yy<dimension; ++yy ) {
-          //    proc0cout << S->a[yy] << endl;
-          //  }
-          //  proc0cout << "Condition number is " << ( S->a[0] / S->a[dimension-1] ) << endl;
-          //}
-          
           delete AAsvd;
+          delete cols;
+          delete rows;
+
           delete U;
           delete V;
           delete S;
-          //delete[] rowcol;
-
         }
+
+        conditionNumber[c] = conditionNumber_;
   
         // Solve linear system
         double start_InvertSolveTime = Time::currentSeconds(); //timing
-        AA->invert();
-        Mult( *XX, *AA, *BB );
+        bool success = AA->invert();
+        if (!success) {
+          proc0cout << "WARNING: Arches: DQMOM: A is singular at cell c = " << c << endl;
+        }
+        Mult( (*XX), (*AA), (*BB) );
         total_InvertSolveTime += (Time::currentSeconds() - start_InvertSolveTime); //timing
   
         // get residual vector
         int t_flops, t_memrefs;
         AAorig->mult( (*XX), (*RR), t_flops, t_memrefs );
 
-        //Sub( (*RR), (*BB), (*RR) );
         for( int yy=0; yy<dimension; ++yy ) {
           double temp = (*RR)[yy] - (*BB)[yy];
           (*RR)[yy] = temp;
