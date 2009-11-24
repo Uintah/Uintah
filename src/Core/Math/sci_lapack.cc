@@ -94,7 +94,7 @@ void sort_eigens(double *Er, double *Ei, int N, double **Evecs=0)
       }
     }
 
-  delete E2;
+  delete [] E2;
 }
 
 #if defined(HAVE_LAPACK)
@@ -135,7 +135,8 @@ bool lapackinvert(double *A, int n)
   DGETRF(&n, &n, A, &lda, P, &info);  
   dgetri_(&n, A, &lda, P, work, &lwork, &info); 
 
-  delete work;
+  delete [] work;
+  delete [] P;
 
   if(info == 0)
     return true;
@@ -152,7 +153,8 @@ void lapacksvd(double **A, int m, int n, double *S, double **U, double **VT)
 
   int minmn, maxmn;
 
-  jobu = 'A'; /* Specifies options for computing U.
+  jobu = 'A'; 
+  /* Specifies options for computing U.
 		 A: all M columns of U are returned in array U;
 		 S: the first min(m,n) columns of U (the left
 		    singular vectors) are returned in the array U;
@@ -161,7 +163,8 @@ void lapacksvd(double **A, int m, int n, double *S, double **U, double **VT)
 		 N: no columns of U (no left singular vectors) are
 		    computed. */
 
-  jobvt = 'A'; /* Specifies options for computing VT.
+  jobvt = 'A'; 
+  /* Specifies options for computing VT.
 		  A: all N rows of V**T are returned in the array
 		     VT;
 		  S: the first min(m,n) rows of V**T (the right
@@ -172,8 +175,8 @@ void lapacksvd(double **A, int m, int n, double *S, double **U, double **VT)
 		     computed. */
 
   lda = m; // The leading dimension of the matrix a.
-  a = ctof(A, m, n); /* Convert the matrix A from double pointer
-			  C form to single pointer Fortran form. */
+  a = ctof(A, m, n); // Convert the matrix A from double pointer
+			                 // C form to single pointer Fortran form.
 
 
   /* Since A is not a square matrix, we have to make some decisions
@@ -195,11 +198,11 @@ void lapacksvd(double **A, int m, int n, double *S, double **U, double **VT)
 
   ftoc(u, U, ldu, m);
   ftoc(vt, VT, ldvt, n);
-  
-  delete a;
-  delete u;
-  delete vt;
-  delete work;
+
+  delete [] a;
+  delete [] u;
+  delete [] vt;
+  delete [] work;
 }
 
 
@@ -244,9 +247,9 @@ void lapackeigen(double **H, int n, double *Er, double *Ei, double **Evecs)
     sort_eigens(Er, Ei, n);
   }
 
-  delete a;
-  if (Evecs) delete vr;
-  delete work;
+  delete [] a;
+  if (Evecs) delete [] vr;
+  delete [] work;
 }
 
 #else
