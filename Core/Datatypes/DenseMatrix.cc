@@ -789,8 +789,7 @@ DenseMatrix::invert()
 {
   if (nrows_ != ncols_) return false;
 #if defined(HAVE_LAPACK)
-  lapackinvert(dataptr_, nrows_);
-  return true;
+  return lapackinvert(dataptr_, nrows_);
 #else
   double** newdata=scinew double*[nrows_];
   double* tmp=scinew double[nrows_ * ncols_];
