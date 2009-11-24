@@ -240,7 +240,7 @@ printMinMax( const string &    var,
   MinMaxInfoBase   * mmBase = globalMinMax[ ss.str() ];
   MinMaxInfo<Type> * mmInfo = dynamic_cast< MinMaxInfo<Type> *>( mmBase );
   if( mmInfo == NULL ) {
-    cout << "Creating new data store for " << var << ", malt: " << matl << " for Type: " << td->getName() << "\n";
+    // cout << "Creating new data store for " << var << ", malt: " << matl << " for Type: " << td->getName() << "\n";
     mmInfo = new MinMaxInfo<Type>();
     globalMinMax[ ss.str() ] = mmInfo;
 
