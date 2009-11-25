@@ -351,6 +351,14 @@ protected:
                                    DataWarehouse* old_dw,
                                    DataWarehouse* new_dw);
 
+  //////////
+  // Allow blocks of particles to be moved according to a prescribed schedule:
+  virtual void insertParticles(const ProcessorGroup*,
+                               const PatchSubset* patches,
+                               const MaterialSubset* matls,
+                               DataWarehouse* old_dw,
+                               DataWarehouse* new_dw);
+
   void refine(const ProcessorGroup*,
               const PatchSubset* patches,
               const MaterialSubset* matls,
@@ -451,6 +459,10 @@ protected:
   virtual void scheduleInterpolateToParticlesAndUpdateMom2(SchedulerP&, 
                                                            const PatchSet*,
                                                            const MaterialSet*);
+
+  virtual void scheduleInsertParticles(SchedulerP&, 
+                                       const PatchSet*,
+                                       const MaterialSet*);
 
   //////////
   // Insert Documentation Here:

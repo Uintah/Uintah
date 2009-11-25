@@ -571,6 +571,7 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
   scheduleComputeStressTensor(                sched, patches, matls);
   scheduleInterpolateToParticlesAndUpdateMom2(sched, patches, matls);
 #endif
+//  scheduleInsertParticles(                    sched, patches, matls);
 
   if(flags->d_canAddMPMMaterial){
     //  This checks to see if the model on THIS patch says that it's
@@ -1296,6 +1297,28 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdateMom2(SchedulerP& sched,
   if (z_matl->removeReference())
     delete z_matl; // shouln't happen, but...
 
+}
+
+void SerialMPM::scheduleInsertParticles(SchedulerP& sched,
+                                        const PatchSet* patches,
+                                        const MaterialSet* matls)
+
+{
+  if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(),
+                           getLevel(patches)->getGrid()->numLevels()))
+    return;
+
+  printSchedule(patches,cout_doing,"MPM::scheduleInsertParticles\t\t\t");
+
+  Task* t=scinew Task("MPM::insertParticles",this, &SerialMPM::insertParticles);
+
+  t->requires(Task::OldDW, d_sharedState->get_delt_label() );
+
+  t->modifies(lb->pXLabel_preReloc);
+  t->modifies(lb->pVelocityLabel_preReloc);
+  t->requires(Task::OldDW, lb->pColorLabel,  Ghost::None);
+
+  sched->addTask(t, patches, matls);
 }
 
 void SerialMPM::scheduleInterpolateParticleVelToGridMom(SchedulerP& sched,
@@ -2688,8 +2711,7 @@ void SerialMPM::setPrescribedMotion(const ProcessorGroup*,
       Fdotstar = Qdot*Previous_Rotations*Ft + Qt*Previous_Rotations*Fdot;
       
       
-      for(NodeIterator iter=patch->getExtraNodeIterator();!iter.done();
-                                                                iter++){
+      for(NodeIterator iter=patch->getExtraNodeIterator();!iter.done(); iter++){
         IntVector n = *iter;
 
         Vector NodePosition = patch->getNodePosition(n).asVector();
@@ -3694,6 +3716,70 @@ void SerialMPM::interpolateToParticlesAndUpdateMom2(const ProcessorGroup*,
     new_dw->put(sum_vartype(thermal_energy), lb->ThermalEnergyLabel);
 
     delete interpolator;
+  }
+}
+
+void SerialMPM::insertParticles(const ProcessorGroup*,
+                                const PatchSubset* patches,
+                                const MaterialSubset* ,
+                                DataWarehouse* old_dw,
+                                DataWarehouse* new_dw)
+{
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    printTask(patches, patch,cout_doing,
+              "Doing insertParticles\t\t\t");
+
+    // Create arrays of time, color, velocity, translation and vel_new
+    double time_array[6]={0.0,3.2236e-7,6.509e-7, 1.0e-6,1.3523e-6,1.715e-6};
+    double color_array[6]={1.0,2.0,3.0,4.0,5.0,6.0};
+    double translation[6]={0.0,2.5125e-3,5.05050125e-3,7.613e-3,1.02e-2,1.2816e-2};
+    double vel_new[6]={7755.3,7685.553,7615.10853,7543.9596153,7472.09921145,7399.52020357};
+
+    double time = d_sharedState->getElapsedTime();
+
+    int index = -999;
+    static int last_index=-1111;
+
+    for(int i = 0; i<6; i++){
+       if(i > last_index && time > time_array[i]){
+         index = i;
+         last_index=i;
+       }
+    }
+
+//    cout << "time = " << time  << endl;
+//    cout << "index = " << index  << endl;
+//    cout << "last_index = " << last_index  << endl;
+
+    if(index>0){
+      int numMPMMatls=d_sharedState->getNumMPMMatls();
+      for(int m = 0; m < numMPMMatls; m++){
+        MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+        int dwi = mpm_matl->getDWIndex();
+        ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
+
+        // Get the arrays of particle values to be changed
+        ParticleVariable<Point> px;
+        ParticleVariable<Vector> pvelocity;
+        constParticleVariable<double> pcolor;
+
+        old_dw->get(pcolor,               lb->pColorLabel,              pset);
+        new_dw->getModifiable(px,         lb->pXLabel_preReloc,         pset);
+        new_dw->getModifiable(pvelocity,  lb->pVelocityLabel_preReloc,  pset);
+
+        // Loop over particles here
+        for(ParticleSubset::iterator iter  = pset->begin();
+                                     iter != pset->end(); iter++){
+          particleIndex idx = *iter;
+           if(pcolor[idx]==color_array[index]){
+             pvelocity[idx]=Vector(0.0,vel_new[index],0.0);
+             px[idx] = px[idx] + Vector(0.0,translation[index],0.0);
+           }
+        }
+
+      }
+    }
   }
 }
 
