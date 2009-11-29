@@ -576,7 +576,7 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
         // --------------------------------------------
         // If no solution to linear system...
         if( A.isSingular() ) {
-          proc0cout << "WARNING: Arches: DQMOM: A is singular at cell c = " << c << endl;
+          //proc0cout << "WARNING: Arches: DQMOM: A is singular at cell c = " << c << endl;
   
           // set solution vector = 0
           vector<double>::iterator iXd = Xdoub.begin();
@@ -810,7 +810,7 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
         double start_InvertSolveTime = Time::currentSeconds(); //timing
         bool success = AA->invert();
         if (!success) {
-          proc0cout << "WARNING: Arches: DQMOM: A is singular at cell c = " << c << endl;
+          //proc0cout << "WARNING: Arches: DQMOM: A is singular at cell c = " << c << endl;
         }
         Mult( (*XX), (*AA), (*BB) );
         total_InvertSolveTime += (Time::currentSeconds() - start_InvertSolveTime); //timing
