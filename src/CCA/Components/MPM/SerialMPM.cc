@@ -230,6 +230,9 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec,
   if (flags->d_prescribeDeformation){
     readPrescribedDeformations(flags->d_prescribedDeformationFile);
   }
+  if (flags->d_insertParticles){
+    readInsertParticlesFile(flags->d_insertParticlesFile);
+  }
 
   d_sharedState->setParticleGhostLayer(Ghost::AroundNodes, NGP);
 
@@ -571,7 +574,7 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
   scheduleComputeStressTensor(                sched, patches, matls);
   scheduleInterpolateToParticlesAndUpdateMom2(sched, patches, matls);
 #endif
-//  scheduleInsertParticles(                    sched, patches, matls);
+  scheduleInsertParticles(                    sched, patches, matls);
 
   if(flags->d_canAddMPMMaterial){
     //  This checks to see if the model on THIS patch says that it's
@@ -1308,17 +1311,20 @@ void SerialMPM::scheduleInsertParticles(SchedulerP& sched,
                            getLevel(patches)->getGrid()->numLevels()))
     return;
 
-  printSchedule(patches,cout_doing,"MPM::scheduleInsertParticles\t\t\t");
+  if(flags->d_insertParticles){
+    printSchedule(patches,cout_doing,"MPM::scheduleInsertParticles\t\t\t");
 
-  Task* t=scinew Task("MPM::insertParticles",this, &SerialMPM::insertParticles);
+    Task* t=scinew Task("MPM::insertParticles",this,
+                  &SerialMPM::insertParticles);
 
-  t->requires(Task::OldDW, d_sharedState->get_delt_label() );
+    t->requires(Task::OldDW, d_sharedState->get_delt_label() );
 
-  t->modifies(lb->pXLabel_preReloc);
-  t->modifies(lb->pVelocityLabel_preReloc);
-  t->requires(Task::OldDW, lb->pColorLabel,  Ghost::None);
+    t->modifies(lb->pXLabel_preReloc);
+    t->modifies(lb->pVelocityLabel_preReloc);
+    t->requires(Task::OldDW, lb->pColorLabel,  Ghost::None);
 
-  sched->addTask(t, patches, matls);
+    sched->addTask(t, patches, matls);
+  }
 }
 
 void SerialMPM::scheduleInterpolateParticleVelToGridMom(SchedulerP& sched,
@@ -1759,7 +1765,33 @@ void SerialMPM::readPrescribedDeformations(string filename)
   }
 }
 
+void SerialMPM::readInsertParticlesFile(string filename)
+{
+ 
+ if(filename!="") {
+    std::ifstream is(filename.c_str());
+    if (!is ){
+      throw ProblemSetupException("ERROR Opening prescribed deformation file '"+filename+"'\n",
+                                  __FILE__, __LINE__);
+    }
 
+    double t0(-1.e9);
+    while(is) {
+        double t1,color,transx,transy,transz,v_new_x,v_new_y,v_new_z;
+        is >> t1 >> color >> transx >> transy >> transz >> v_new_x >> v_new_y >> v_new_z;
+        if(is) {
+            if(t1<=t0){
+              throw ProblemSetupException("ERROR: Time in insertParticleFile is not monotomically increasing", __FILE__, __LINE__);
+            }
+            d_IPTimes.push_back(t1);
+            d_IPColor.push_back(color);
+            d_IPTranslate.push_back(Vector(transx,transy,transz));
+            d_IPVelNew.push_back(Vector(v_new_x,v_new_y,v_new_z));
+        }
+        t0 = t1;
+    }
+  }
+}
 
 void SerialMPM::actuallyInitializeAddedMaterial(const ProcessorGroup*,
                                                 const PatchSubset* patches,
@@ -3730,27 +3762,18 @@ void SerialMPM::insertParticles(const ProcessorGroup*,
     printTask(patches, patch,cout_doing,
               "Doing insertParticles\t\t\t");
 
-    // Create arrays of time, color, velocity, translation and vel_new
-    double time_array[6]={0.0,3.2236e-7,6.509e-7, 1.0e-6,1.3523e-6,1.715e-6};
-    double color_array[6]={1.0,2.0,3.0,4.0,5.0,6.0};
-    double translation[6]={0.0,2.5125e-3,5.05050125e-3,7.613e-3,1.02e-2,1.2816e-2};
-    double vel_new[6]={7755.3,7685.553,7615.10853,7543.9596153,7472.09921145,7399.52020357};
-
+    // Get current time 
     double time = d_sharedState->getElapsedTime();
 
     int index = -999;
     static int last_index=-1111;
 
-    for(int i = 0; i<6; i++){
-       if(i > last_index && time > time_array[i]){
+    for(int i = 0; i<d_IPTimes.size(); i++){
+       if(i > last_index && time > d_IPTimes[i]){
          index = i;
          last_index=i;
        }
     }
-
-//    cout << "time = " << time  << endl;
-//    cout << "index = " << index  << endl;
-//    cout << "last_index = " << last_index  << endl;
 
     if(index>0){
       int numMPMMatls=d_sharedState->getNumMPMMatls();
@@ -3772,12 +3795,11 @@ void SerialMPM::insertParticles(const ProcessorGroup*,
         for(ParticleSubset::iterator iter  = pset->begin();
                                      iter != pset->end(); iter++){
           particleIndex idx = *iter;
-           if(pcolor[idx]==color_array[index]){
-             pvelocity[idx]=Vector(0.0,vel_new[index],0.0);
-             px[idx] = px[idx] + Vector(0.0,translation[index],0.0);
+           if(pcolor[idx]==d_IPColor[index]){
+             pvelocity[idx]=d_IPVelNew[index];
+             px[idx] = px[idx] + d_IPTranslate[index];
            }
         }
-
       }
     }
   }
