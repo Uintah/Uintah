@@ -86,7 +86,7 @@ Exception::Exception(bool ignoreWait)
 {
   stacktrace_ = strdup(getStackTrace().c_str());
   if(!ignoreWait) 
-    WAIT_FOR_DEBUGGER();
+    WAIT_FOR_DEBUGGER(true);
 }
 
 Exception::~Exception()
@@ -321,9 +321,9 @@ TURN_OFF_WAIT_FOR_DEBUGGER()
 }
 
 void
-WAIT_FOR_DEBUGGER()
+WAIT_FOR_DEBUGGER(bool useFlag)
 { 
-  if( !wait_for_debugger ) {
+  if(useFlag && !wait_for_debugger ) {
     return;
   }
   bool wait=true; 
