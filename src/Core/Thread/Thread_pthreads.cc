@@ -707,7 +707,7 @@ handle_abort_signals(int sig, SigContext ctx)
   if(print)
     fprintf(stderr, "%c%c%cThread \"%s\"(pid %d) caught signal %s\n", 7,7,7,tname, getpid(), signam);
   
-  SCIRun::WAIT_FOR_DEBUGGER();
+  SCIRun::WAIT_FOR_DEBUGGER(true);
 
   Thread::niceAbort(NULL,print);
   
@@ -787,7 +787,7 @@ handle_quit(int sig, SigContext /*ctx*/)
   if(print)
     fprintf(stderr, "Thread \"%s\"(pid %d) caught signal %s\n", tname, pid, signam);
 
-  SCIRun::WAIT_FOR_DEBUGGER();
+  SCIRun::WAIT_FOR_DEBUGGER(true);
 
   Thread::niceAbort(NULL, print); // Enter the monitor
   control_c_sema.up();

@@ -62,7 +62,7 @@ namespace SCIRun {
 
   void TURN_ON_WAIT_FOR_DEBUGGER();
   void TURN_OFF_WAIT_FOR_DEBUGGER();
-  void WAIT_FOR_DEBUGGER(); // Note, if turned off, this call does nothing!
+  void WAIT_FOR_DEBUGGER(bool useFlag=false); // Note, if turned off, this call does nothing!
 
   //
   ///////////////////////////////////////////////////////////////////////////////////
