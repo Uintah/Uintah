@@ -57,6 +57,7 @@ while y > Ymin:
 	        outputfile.write('      <origin>[0.0,'+str(y)+',0.0]</origin> \n')
 	        outputfile.write('      <radius>'+str(Rsphere)+'</radius> \n')
 	        outputfile.write('    </sphere> \n')
+	        outputfile.write('    <color>'+str(Nspheres)+'</color> \n')
 	        outputfile.write('    <res>[2,2,2]</res> \n')
 	        outputfile.write('    <velocity>[0.0,'+str(yvelocity)+',0.0]</velocity> \n')
 	        outputfile.write('    <temperature>'+str(Temp)+'</temperature> \n')
