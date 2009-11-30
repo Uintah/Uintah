@@ -38,7 +38,6 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Malloc/Allocator.h>
 #include <Core/Grid/uintahshare.h>
 #include <Core/Grid/Variables/GridIterator.h>
-
 namespace Uintah {
 
 using SCIRun::IntVector;
@@ -113,8 +112,10 @@ WARNING
        }
 
        //set done flag
-       d_done=d_iter.done();
+       d_done= d_curFace==NULLFACE || d_iter.done();
 
+       //if(!d_done)
+       // cout << " GSI face: " << d_curFace << " iter: " << d_iter << endl;
        return *this;
      }
 
@@ -159,7 +160,7 @@ WARNING
        return d_ext_high;
      }
      inline GridSurfaceIterator(const GridSurfaceIterator& copy)
-       : d_int_low(copy.d_int_low), d_int_high(copy.d_int_high), d_ext_low(copy.d_ext_low), d_ext_high(copy.d_ext_high), d_iter(copy.d_iter), d_done(copy.d_done) {
+       : d_int_low(copy.d_int_low), d_int_high(copy.d_int_high), d_ext_low(copy.d_ext_low), d_ext_high(copy.d_ext_high), d_curFace(copy.d_curFace), d_iter(copy.d_iter), d_done(copy.d_done) {
        }
 
      inline GridSurfaceIterator& operator=( const GridSurfaceIterator& copy ) {
@@ -196,14 +197,16 @@ WARNING
      {
        d_curFace=XMINUS;
        d_iter=getFaceIterator(d_curFace);
+       //cout << "reset called xdone: " << d_iter.done() << endl;
        //increment face iterator if necessary
        while(d_iter.done() && d_curFace<NULLFACE)
        {
+         //cout << "reset new face needed\n";
          d_curFace=getNextFace(d_curFace);
          d_iter=getFaceIterator(d_curFace);
        }
 
-       d_done=d_iter.done();
+       d_done= d_curFace==NULLFACE || d_iter.done();
      }
 
      ostream& limits(ostream& out) const
@@ -307,9 +310,10 @@ WARNING
            break;
          default:
            //return an empty iterator
-           low=IntVector(0,0,0),high=IntVector(-1,-1,-1);
+           low=IntVector(0,0,0),high=IntVector(0,0,0);
 
        }
+       //cout << "New Face Iterator, face: " << curFace << " low: " << low << " high: " << high << endl;
        return GridIterator(low,high);
      }
 
