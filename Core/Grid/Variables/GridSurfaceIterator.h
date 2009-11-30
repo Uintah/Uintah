@@ -106,9 +106,9 @@ WARNING
        d_iter++;
 
        //increment face iterator if necessary
-       while(d_iter.done() && d_curFace<NUMFACES)
+       while(d_iter.done() && d_curFace!=NULLFACE)
        {
-         d_curFace=Face(static_cast<int>(d_curFace)+1);
+         d_curFace=getNextFace(d_curFace);
          d_iter=getFaceIterator(d_curFace);
        }
 
@@ -197,9 +197,9 @@ WARNING
        d_curFace=XMINUS;
        d_iter=getFaceIterator(d_curFace);
        //increment face iterator if necessary
-       while(d_iter.done() && d_curFace<NUMFACES)
+       while(d_iter.done() && d_curFace<NULLFACE)
        {
-         d_curFace=Face(static_cast<int>(d_curFace)+1);
+         d_curFace=getNextFace(d_curFace);
          d_iter=getFaceIterator(d_curFace);
        }
 
@@ -226,8 +226,26 @@ WARNING
        return out;
      }
 
-     enum Face {XMINUS=0,YMINUS=1,ZMINUS=2,XPLUS=3,YPLUS=4,ZPLUS=5,NUMFACES=6};
+     enum Face {XMINUS=0,YMINUS=1,ZMINUS=2,XPLUS=3,YPLUS=4,ZPLUS=5,NULLFACE=6};
 
+     Face getNextFace(const Face face)
+     {
+       switch(face)
+       {
+         case XMINUS:
+           return YMINUS;
+         case YMINUS:
+           return ZMINUS;
+         case ZMINUS:
+           return XPLUS;
+         case XPLUS:
+           return YPLUS;
+         case YPLUS:
+           return ZPLUS;
+         default:
+           return NULLFACE;
+       }
+     }
      GridIterator getFaceIterator(Face curFace)
      {
        IntVector low,high;
@@ -289,7 +307,7 @@ WARNING
            break;
          default:
            //return an empty iterator
-           low=IntVector(0,0,0),high=IntVector(0,0,0);
+           low=IntVector(0,0,0),high=IntVector(-1,-1,-1);
 
        }
        return GridIterator(low,high);
