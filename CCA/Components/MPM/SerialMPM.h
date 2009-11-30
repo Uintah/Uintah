@@ -511,7 +511,8 @@ protected:
                      const GridP& grid);
 
   void readPrescribedDeformations(string filename);
-  
+
+  void readInsertParticlesFile(string filename);
   
   virtual void scheduleSwitchTest(const LevelP& level, SchedulerP& sched);
   
@@ -541,6 +542,12 @@ protected:
   vector<double>  d_prescribedAngle;  // d_prescribeDeformation
   vector<Vector>  d_prescribedRotationAxis; // is "true".  It is "false" by default.
   vector<Matrix3>  d_prescribedF;
+
+  // The following are used iff the d_insertParticles flag is true.
+  vector<double> d_IPTimes;
+  vector<double> d_IPColor;
+  vector<Vector> d_IPTranslate;
+  vector<Vector> d_IPVelNew;
 
 
 

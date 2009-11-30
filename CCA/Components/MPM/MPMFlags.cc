@@ -87,6 +87,7 @@ MPMFlags::MPMFlags(const ProcessorGroup* myworld)
   d_doTransientImplicitHeatConduction = true;
   d_prescribeDeformation = false;
   d_prescribedDeformationFile = "time_defgrad_rotation";
+  d_insertParticles = false;
   d_doGridReset = true;
   d_min_part_mass = 3.e-15;
   d_min_mass_for_acceleration = 0;// Min mass to allow division by in computing acceleration
@@ -185,6 +186,11 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps)
   mpm_flag_ps->get("UsePrescribedDeformation",d_prescribeDeformation);
   if(d_prescribeDeformation){
     mpm_flag_ps->get("PresribedDeformationFile",d_prescribedDeformationFile);
+  }
+
+  mpm_flag_ps->get("InsertParticles",d_insertParticles);
+  if(d_insertParticles){
+    mpm_flag_ps->require("InsertParticlesFile",d_insertParticlesFile);
   }
 
   mpm_flag_ps->get("do_contact_friction_heating", d_do_contact_friction);
