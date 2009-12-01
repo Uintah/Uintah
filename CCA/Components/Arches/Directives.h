@@ -18,7 +18,7 @@
 // DQMOM
 //#define VERIFY_LINEAR_SOLVER
 //#define VERIFY_AB_CONSTRUCTION
-#define DEBUG_MATRICES
+//#define DEBUG_MATRICES
 
 // used by:
 // ExplicitTimeInt
