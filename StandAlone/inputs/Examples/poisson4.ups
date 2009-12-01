@@ -1,10 +1,10 @@
 <Uintah_specification>
 
   <Meta>
-      <title>Poisson1 test</title>
+      <title>Poisson4 test</title>
   </Meta>
 
-  <SimulationComponent type="poisson1" />
+  <SimulationComponent type="poisson4" />
   <!--__________________________________-->
   <Time>
     <maxTime>       1.0       </maxTime>

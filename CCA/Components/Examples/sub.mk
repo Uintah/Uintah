@@ -39,6 +39,7 @@ SRCS     += \
 	$(SRCDIR)/Wave.cc \
 	$(SRCDIR)/Poisson1.cc \
 	$(SRCDIR)/Poisson2.cc \
+	$(SRCDIR)/Poisson4.cc \
 	$(SRCDIR)/Burger.cc \
 	$(SRCDIR)/HeatEquation.cc \
 	$(SRCDIR)/Poisson3.cc \
