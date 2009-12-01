@@ -20,6 +20,7 @@
 #include <CCA/Components/Arches/DQMOM.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Parallel/Parallel.h>
+#include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Thread/Time.h>
 #include <Core/Exceptions/FileNotFound.h>
 #include <Core/Exceptions/ProblemSetupException.h>
@@ -890,7 +891,7 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
         normX[c] = this_normX;
   
     #ifdef DEBUG_MATRICES
-  
+ 
         if( b_writefile ) {
           char filename[28];
           int currentTimeStep = d_fieldLabels->d_sharedState->getCurrentTopLevelTimeStep();
@@ -905,7 +906,7 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
           oStream.open(filename);
           for( int iRow = 0; iRow < dimension; ++iRow ) {
             for( int iCol = 0; iCol < dimension; ++iCol ) {
-              oStream << " " << (*AA)[iRow][iCol];
+              oStream << " " << (*AAorig)[iRow][iCol];
             }
             oStream << endl;
           }
