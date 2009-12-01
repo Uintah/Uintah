@@ -69,7 +69,7 @@ bar_length  = bar_max - bar_min;
 domain     = 1.0;
 area       = 1.;
 plotSwitch = 0;
-max_tstep  = 1;
+max_tstep  = BigNum;
 
 % HARDWIRED FOR TESTING
 %NN          = 16;
@@ -536,7 +536,7 @@ while t<tfinal && tstep < max_tstep
   % debugging__________________________________
 
   %compute particle stress
-  [stressP,vol,Fp]=computeStressFromVelocity(xp,lp,dt,velG,E,Fp,dF,NP,nRegions, Regions, nodePos,Lx);
+  [stressP,vol,lp,Fp]=computeStressFromVelocity(xp,lp,dt,velG,E,Fp,dF,NP,nRegions, Regions, nodePos,Lx);
 
   %compute internal force
   for ip=1:NP
@@ -820,7 +820,7 @@ end
 % functions
 %______________________________________________________________________
 
-function [stressP,vol,Fp]=computeStressFromVelocity(xp,lp,dt,velG,E,Fp,dF,NP, nRegions, Regions, nodePos,Lx)
+function [stressP,vol,lp,Fp]=computeStressFromVelocity(xp,lp,dt,velG,E,Fp,dF,NP, nRegions, Regions, nodePos,Lx)
   global d_debugging;
   global NSFN;
                                                                                 
