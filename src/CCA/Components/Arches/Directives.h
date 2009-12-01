@@ -14,20 +14,29 @@
 // used by: 
 // DQMOMEqn
 #define VERIFY_DQMOM_TRANSPORT
+*/
 
+/*
 // used by:
 // DQMOM
 #define VERIFY_LINEAR_SOLVER
 #define VERIFY_AB_CONSTRUCTION
+#define DEBUG_MATRICES
+*/
 
+/*
 // used by:
 // ExplicitTimeInt
 #define VERIFY_TIMEINT
+*/
 
+/*
 // used by:
 // KobayashiSarofimDevol
 #define VERIFY_KOBAYASHI_MODEL
+*/
 
+/*
 // used by:
 // SimpleHeatTransfer
 #define VERIFY_SIMPLEHEATTRANSFER_MODEL
