@@ -128,14 +128,18 @@ void DQMOM::problemSetup(const ProblemSpecP& params)
     db_linear_solver->getWithDefault("type", d_solverType, "lu");
     if( d_solverType == "Lapack" || d_solverType == "DenseMatrix" ) {
       b_useLapack = true;
+      b_calcSVD = false;
     } else if( d_solverType == "LU" ) {
       b_useLapack = false;
+      b_calcSVD = false;
+    } else if( d_solverType == "SVD" ) {
+      b_useLapack = true;
+      b_calcSVD = true;
     } else {
-      string err_msg = "ERROR: Arches: DQMOM: Unrecognized solver type "+d_solverType+": must be 'Lapack', 'DenseMatrix', or 'LU'.\n";
+      string err_msg = "ERROR: Arches: DQMOM: Unrecognized solver type "+d_solverType+": must be 'Lapack', 'DenseMatrix', 'SVD' or 'LU'.\n";
       throw ProblemSetupException(err_msg,__FILE__,__LINE__);
     }
 
-    db_linear_solver->getWithDefault("svd", b_calcSVD, false);
     if( b_calcSVD == true && b_useLapack == false ) {
       string err_msg = "ERROR: Arches: DQMOM: Cannot perform singular value decomposition without using Lapack!\n";
       throw ProblemSetupException(err_msg,__FILE__,__LINE__);
@@ -791,31 +795,58 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
           SparseRowMatrix* S = scinew SparseRowMatrix( dimension, dimension, rows, cols, dimension, a); // makes an identity matrix
           DenseMatrix* V = scinew DenseMatrix( dimension, dimension );
 
+          DenseMatrix* Ut = scinew DenseMatrix( dimension, dimension );
+          DenseMatrix* Sinv = scinew DenseMatrix( dimension, dimension );
+          DenseMatrix* Vt = scinew DenseMatrix( dimension, dimension );
+          ColumnMatrix* XXsvd = scinew ColumnMatrix( dimension );
+          ColumnMatrix* XXsvd2 = scinew ColumnMatrix( dimension );
+          Sinv->zero();
+
           double start_SVDTime = Time::currentSeconds(); //timing
           AAsvd->svd( *U, *S, *V );
           total_SVDTime += ( Time::currentSeconds() - start_SVDTime); //timing
           conditionNumber_ = (S->a[0]/S->a[dimension-1]);
 
+          for(int kk=0;kk<dimension;kk++){
+            if(S->a[kk] > 1e-20) {
+            Sinv->put(kk,kk,1./S->a[kk]);
+            } else {
+            Sinv->put(kk,kk,0.);
+            }
+          }
+
+          U->gettranspose(*Ut);
+          V->gettranspose(*Vt);
+
+          Mult( *XXsvd, *Ut, *BB );
+          Mult( *XXsvd2, *Sinv, *XXsvd );
+          Mult( *XX, *Vt, *XXsvd2 );
+
           delete AAsvd;
           delete cols;
           delete rows;
-
           delete U;
           delete V;
           delete S;
-        }
+          delete Ut;
+          delete Sinv;
+          delete Vt;
+          delete XXsvd;
+          delete XXsvd2;
+
+        } else {
+          // Solve linear system
+          double start_InvertSolveTime = Time::currentSeconds(); //timing
+          bool success = AA->invert();
+          if (!success) {
+            //proc0cout << "WARNING: Arches: DQMOM: A is singular at cell c = " << c << endl;
+          }
+          Mult( (*XX), (*AA), (*BB) );
+          total_InvertSolveTime += (Time::currentSeconds() - start_InvertSolveTime); //timing
+        } 
 
         conditionNumber[c] = conditionNumber_;
-  
-        // Solve linear system
-        double start_InvertSolveTime = Time::currentSeconds(); //timing
-        bool success = AA->invert();
-        if (!success) {
-          //proc0cout << "WARNING: Arches: DQMOM: A is singular at cell c = " << c << endl;
-        }
-        Mult( (*XX), (*AA), (*BB) );
-        total_InvertSolveTime += (Time::currentSeconds() - start_InvertSolveTime); //timing
-  
+
         // get residual vector
         int t_flops, t_memrefs;
         AAorig->mult( (*XX), (*RR), t_flops, t_memrefs );
