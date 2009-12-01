@@ -89,6 +89,7 @@ public:
                                        int *&cols, double *&vals);
 
   virtual DenseMatrix* transpose();
+  void gettranspose( DenseMatrix& out);
   virtual void    mult(const ColumnMatrix& x, ColumnMatrix& b,
 		       int& flops, int& memrefs, int beg=-1, int end=-1, 
 		       int spVec=0) const;
