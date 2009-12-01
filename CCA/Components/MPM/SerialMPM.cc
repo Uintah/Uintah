@@ -3768,7 +3768,7 @@ void SerialMPM::insertParticles(const ProcessorGroup*,
     int index = -999;
     static int last_index=-1111;
 
-    for(int i = 0; i<d_IPTimes.size(); i++){
+    for(int i = 0; i<(int) d_IPTimes.size(); i++){
        if(i > last_index && time > d_IPTimes[i]){
          index = i;
          last_index=i;
