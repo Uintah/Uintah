@@ -346,7 +346,8 @@
         <!-- Block of tags for specifying the linear solver used for DQMOM -->
         <LinearSolver                   spec="OPTIONAL NO_DATA">
           <tolerance                    spec="OPTIONAL DOUBLE 'positive'" />
-          <type                         spec="OPTIONAL STRING 'Lapack, DenseMatrix, LU, SVD'" />
+          <type                         spec="OPTIONAL STRING 'Lapack, Lapack-svd, DenseMatrix, LU, SVD'" />
+          <!-- Lapack-svd uses svd to compute a condition number-->
         </LinearSolver>
 
         <!-- This block is (will be) used for coupled multiphysics coal calculations.
