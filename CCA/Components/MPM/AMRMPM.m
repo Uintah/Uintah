@@ -34,7 +34,7 @@ end
 %__________________________________
 % Global variables
 
-PPC     = 4;
+PPC     = 2;
 E       = 1.0e4;
 density = 1.0;
 speedSound = sqrt(E/density);
@@ -69,7 +69,7 @@ bar_length  = bar_max - bar_min;
 domain     = 1.0;
 area       = 1.;
 plotSwitch = 0;
-max_tstep  = BigNum;
+max_tstep  = 1;
 
 % HARDWIRED FOR TESTING
 %NN          = 16;
@@ -320,6 +320,7 @@ end
 
 NP=ip-1;  % number of particles
 
+xp = reshape(xp, NP,1);
 
 %__________________________________
 % pre-allocate variables for speed
@@ -434,7 +435,10 @@ if strcmp(problem_type, 'mms')
   [Fp]   = MMS_deformationGradient(xp_initial, t, NP,speedSound);
   [dp]   = MMS_displacement(xp_initial, t, NP, speedSound);
   [velP] = MMS_velocity(xp_initial, t, NP, speedSound);
-%  xp =  xp_initial + dp;
+  
+  lp  = lp .* Fp;
+  vol = vol .* Fp;
+  xp =  xp_initial + dp;
   
 end
 
@@ -450,10 +454,17 @@ plotResults(titleStr, t, tstep, xp, dp, massP, Fp, velP, stressP, nodePos, velG,
 fprintf('tfinal: %g, interpolator: %s, NN: %g, NP: %g dx_min: %g \n',tfinal,interpolation, NN,NP,dx_min);
 input('hit return')
 
+fn = sprintf('initialConditions.dat',NN, PPC);
+fid = fopen(fn, 'w');
+%fprintf(fid,'#%s, PPC: %g, NN %g\n',problem_type, PPC, NN);
+fprintf(fid,'#p, xp, velP, Fp, stressP extForceP\n');
+for ip=1:NP
+  fprintf(fid,'%g %16.15E %16.15E %16.15E %16.15E %16.15E\n',ip, xp(ip),velP(ip),Fp(ip), stressP(ip), extForceP(ip));
+end
+fclose(fid);
+
 %==========================================================================
 % Main timstep loop
-
-
 
 while t<tfinal && tstep < max_tstep
 
@@ -462,11 +473,10 @@ while t<tfinal && tstep < max_tstep
   for ip=1:NP
     dt = min(dt, CFL*dx_min/(speedSound + abs(velP(ip) ) ) );
   end
-  dt = 1e-20;
 
   tstep = tstep + 1;
   t = t + dt;
-  if (mod(tstep,100) == 0)
+  if (mod(tstep,1) == 0)
     fprintf('timestep %g, dt = %g, time %g \n',tstep, dt, t)
   end
   
@@ -679,23 +689,17 @@ while t<tfinal && tstep < max_tstep
   end
   
   
-  if (strcmp(problem_type, 'mms') &&(mod(tstep,1) == 0) )
-    dpExact = zeros(NP,1);
-    velExact = zeros(NP,1);
+  if (strcmp(problem_type, 'mms') &&(mod(tstep,10) == 0) )
     xpExact  = zeros(NP,1);
-    s=zeros(NP,1);
-    for ip=2:NP
-      s(ip) = s(ip-1) + 1.0;
-    end
       
     [dpExact] = MMS_displacement(xp_initial, t, NP, speedSound);
     [velExact] = MMS_velocity(xp_initial, t, NP, speedSound);
     xpExact = xp_initial + dpExact;
     
     figure(2)                                
-    set(2,'position',[1000,100,900,900]);    
+    set(2,'position',[1000,100,700,700]);    
                                              
-    subplot(4,1,1),plot(xp,dp,'rd', xp_initial, dpExact,'b');
+    subplot(3,1,1),plot(xp,dp,'rd', xp, dpExact,'b');
     %axis([0 50 -10000 0])           
     ylim([-0.05 0.05]);         
 
@@ -703,16 +707,12 @@ while t<tfinal && tstep < max_tstep
     legend('Simulation','Exact')             
     xlabel('Position');                      
     ylabel('Particle displacement');
-
-
-    subplot(4,1,2),plot(s,xp,'rd',s,xpExact,'b');
-    ylabel('Particle position')
         
-    subplot(4,1,3),plot(xp,velP,'rd', xp_initial, velExact,'b');
-   % ylim([-150 150])
+    subplot(3,1,2),plot(xp,velP,'rd', xp, velExact,'b');
+    ylim([-20 20])
     ylabel('Particle Velocity');    
     
-    subplot(4,1,4),plot(xp_initial,extForceP);
+    subplot(3,1,3),plot(xp_initial,extForceP);
    % ylim([-150 150])
     ylabel('externalForce');
     
@@ -720,12 +720,14 @@ while t<tfinal && tstep < max_tstep
     F = getframe(gcf);
     [X,map] = frame2im(F);
     imwrite(X,f_name);
-    input('hit return');
+%    input('hit return');
     
     % compute L2Norm
-    d = abs(xp - xpExact);
+    d = abs(dp - dpExact);
     
-    L2_norm = sqrt( sum(d.^2)/length(xpExact) )
+    L2_norm = sqrt( sum(d.^2)/length(dpExact) )
+    maxError = max(d)
+    
     fid = fopen('L2norm.dat', 'a');
     fprintf(fid,'%g %g\n',t, L2_norm);
     fclose(fid);         
@@ -773,10 +775,10 @@ tipDeflect_err(tstep)
 % particle data
 fname1 = sprintf('particle_NN_%g_PPC_%g.dat',NN, PPC);
 fid = fopen(fname1, 'w');
-fprintf(fid,'#%s, PPC: %g, NN %g\n',problem_type, PPC, NN);
-fprintf(fid,'#p, xp, massP, velP, stressP, extForceP, Fp\n');
+%fprintf(fid,'#%s, PPC: %g, NN %g\n',problem_type, PPC, NN);
+fprintf(fid,'#p, xp, velP, Fp, stressP, time\n');
 for ip=1:NP
-  fprintf(fid,'%g, %16.15f, %16.15f, %16.15f, %16.15f, %16.15f, %16.15f\n',ip, xp(ip),massP(ip), velP(ip), stressP(ip), extForceP(ip), Fp(ip));
+  fprintf(fid,'%g %16.15E %16.15E %16.15E %16.15E %16.15E\n',ip, xp(ip),velP(ip),Fp(ip), stressP(ip), t);
 end
 fclose(fid);
 
@@ -1386,6 +1388,7 @@ end
 %__________________________________
 %  Equation 47
 function [dp] = MMS_displacement(xp_initial, t, NP, speedSound)
+  dp  = zeros(NP,1);
   A = 0.05;   % Hardwired
 
   for ip=1:NP
@@ -1396,6 +1399,7 @@ end
 %__________________________________
 % Equation 48
 function [F] = MMS_deformationGradient(xp_initial, t, NP,speedSound)
+  F  = zeros(NP,1);
   A = 0.05;   % Hardwired
     
   for ip=1:NP
@@ -1404,6 +1408,7 @@ function [F] = MMS_deformationGradient(xp_initial, t, NP,speedSound)
 end
 %__________________________________
 function [velExact] = MMS_velocity(xp_initial, t, NP, speedSound);
+  velExact  = zeros(NP,1);
   A = 0.05;   % Hardwired
 
   c1 = -speedSound * pi * A;
@@ -1416,9 +1421,7 @@ end
 %__________________________________
 %  Equation 49
 function [b] = MMS_bodyForce(xp_initial, massP, t, NP, speedSound)
-   
-   dp = zeros(NP,1);
-   F  = zeros(NP,1);
+   b = zeros(NP,1);
     
   [dp] = MMS_displacement(xp_initial, t, NP, speedSound);
   [F]  = MMS_deformationGradient(xp_initial, t, NP, speedSound);
@@ -1427,18 +1430,7 @@ function [b] = MMS_bodyForce(xp_initial, massP, t, NP, speedSound)
   for ip=1:NP
     bf    = c1 * dp(ip) * (1.0 + 2.0/( F(ip) * F(ip)));
     b(ip) =  massP(ip) * bf;
-  end 
-  
-  if(0)
-    figure(3)                                
-    set(3,'position',[100,100,900,900]);    
-                                             
-    subplot( 3,1,1),plot( xp_initial, b,'b');
-    subplot( 3,1,2),plot( xp_initial, dp,'b');
-    subplot( 3,1,3),plot( xp_initial, F,'b');
-    %input('hit return')
-  end
-  
+  end  
 end
 
 
