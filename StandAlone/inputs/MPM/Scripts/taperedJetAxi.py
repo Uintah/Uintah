@@ -22,6 +22,8 @@ volume = zeros(Nmats+1,dtype='f')
 mass = zeros(Nmats+1,dtype='f') 
 TotVol=0.0
 TotMass=0.0
+Time=0.0
+Trans=0.0
 
 outputfile=open('jet.txt','w')
 outputfile.write('Jet Length = '+str(Ljet)+'m \n')
@@ -40,6 +42,10 @@ while i <= Nmats:
 	outputfile.write("<Uintah_Include> \n")
 	outputfile.close()
 	i+=1
+
+        outputfile='outputfile'+str(i)
+        outputfile=open('InsertParticle.dat','w')
+        outputfile.close()
 
 while y > Ymin:
 	i=1
@@ -62,7 +68,11 @@ while y > Ymin:
 	        outputfile.write('    <velocity>[0.0,'+str(yvelocity)+',0.0]</velocity> \n')
 	        outputfile.write('    <temperature>'+str(Temp)+'</temperature> \n')
 	        outputfile.write('  </geom_object> \n')
+                outputfile.close()
 	        y = y - (Rsphere + gap/2.0)
+                outputfile='outputfile'+str(i)
+		outputfile=open('InsertParticle.dat','a')
+                outputfile.write(str(Time)+'  '+str(Nspheres)+'  '+str(Trans)+'  '+str(yvelocity)+'\n')
 		Nspheres +=1
 		i +=1
 i=1
