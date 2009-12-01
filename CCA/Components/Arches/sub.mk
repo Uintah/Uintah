@@ -91,6 +91,8 @@ PSELIBS := \
         Core/ProblemSpec   \
         Core/GeometryPiece \
         Core/Grid          \
+        Core/Datatypes     \
+        Core/Math          \
         Core/Util          \
         Core/Disclosure    \
         Core/Datatypes     \

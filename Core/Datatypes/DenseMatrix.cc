@@ -286,6 +286,17 @@ DenseMatrix::transpose()
   return m;
 }
 
+void
+DenseMatrix::gettranspose(DenseMatrix& out)
+{
+  //DenseMatrix *m = scinew DenseMatrix(ncols_, nrows_);
+  //out->zero();
+  for (int c=0; c<ncols_; c++)
+    for (int r=0; r<nrows_; r++)
+      out[c][r] = data[r][c];
+  //return m;
+}
+
 
 void
 DenseMatrix::getRowNonzeros(int r, Array1<int>& idx, Array1<double>& val)

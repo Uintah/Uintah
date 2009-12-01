@@ -719,10 +719,10 @@ main( int argc, char *argv[], char *env[] )
 /*
 #if !defined(REDSTORM)
 extern "C" {
-  void dgesvd_() {
-    cerr << "Error: dgesvd called!\n";
-    Thread::exitAll(1);
-  }
+//  void dgesvd_() {
+//    cerr << "Error: dgesvd called!\n";
+//    Thread::exitAll(1);
+//  }
 
   void dpotrf_() {
     cerr << "Error: dpotrf called!\n";
