@@ -71,9 +71,8 @@
       <Box label = "1">                              
          <lower>     [0,0,0]        </lower>         
          <upper>     [1.0,1.0,1.0]  </upper>         
-         <resolution>[40,40,40]     </resolution>    
-         <extraCells>[1,1,1]        </extraCells>
-         <patches>   [1,1,1]        </patches>       
+         <resolution>[50,50,50]     </resolution>    
+         <patches>   [2,1,1]        </patches>       
       </Box>                                         
     </Level>
   </Grid>
