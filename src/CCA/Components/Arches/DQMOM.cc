@@ -129,6 +129,9 @@ void DQMOM::problemSetup(const ProblemSpecP& params)
     if( d_solverType == "Lapack" || d_solverType == "DenseMatrix" ) {
       b_useLapack = true;
       b_calcSVD = false;
+    } else if( d_solverType == "Lapack-svd" ){
+      b_useLapack = true; 
+      b_calcSVD = true; 
     } else if( d_solverType == "LU" ) {
       b_useLapack = false;
       b_calcSVD = false;
