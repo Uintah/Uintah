@@ -58,7 +58,7 @@
 
    <PhysicalConstants>
        <gravity>[-9.8,0,0]</gravity>
-       <ref_point>[-1,-1,-1]</ref_point>
+       <reference_point>[-1,-1,-1]</reference_point>
        <viscosity>0.000020</viscosity>
    </PhysicalConstants>
 
