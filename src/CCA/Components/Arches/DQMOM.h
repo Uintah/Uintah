@@ -135,6 +135,7 @@ private:
   bool b_save_moments; ///< boolean - calculate & save moments?
 
   double d_solver_tolerance;
+  double d_maxConditionNumber;
   double d_w_small;
   double d_weight_scaling_constant;
   vector<double> d_weighted_abscissa_scaling_constants;
@@ -148,7 +149,7 @@ private:
 
   double d_small_normalizer; ///< When X (or B) is smaller than this, don't normalize the residual by it
   bool b_useLapack;
-  bool b_calcSVD;
+  bool b_calcConditionNumber;
   string d_solverType;
 
   struct constCCVarWrapper {
@@ -235,6 +236,10 @@ private:
   /** @brief  Read moment indices from a file */
   void getMomentsFromFile( vector<MomentVector>& moments, string filename );
 
+#endif
+
+#if defined(DEBUG_MATRICES)
+  bool b_isFirstTimeStep;
 #endif
 
 }; // end class DQMOM

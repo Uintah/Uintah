@@ -347,8 +347,10 @@
         <!-- Block of tags for specifying the linear solver used for DQMOM -->
         <LinearSolver                   spec="OPTIONAL NO_DATA">
           <tolerance                    spec="OPTIONAL DOUBLE 'positive'" />
-          <type                         spec="OPTIONAL STRING 'Lapack, Lapack-svd, DenseMatrix, LU, SVD'" />
-          <!-- Lapack-svd uses svd to compute a condition number-->
+          <type                         spec="OPTIONAL STRING 'Lapack-invert, Lapack-svd, LU'" />
+          <maxConditionNumber           spec="OPTIONAL DOUBLE 'positive'" />
+          <calcConditionNumber          spec="OPTIONAL BOOLEAN" /> <!-- this tag can be added if the linear solver you choose doesn't do an SVD, but you still want a condition number -->
+                                                                   <!-- NOTE: this doesn't actually do anything if you're using a linear solver that uses SVD -->
         </LinearSolver>
 
         <!-- This block is (will be) used for coupled multiphysics coal calculations.
@@ -370,7 +372,7 @@
         </coalParticleCalculation>
 
         <number_quad_nodes              spec="REQUIRED INTEGER 'positive'"/>
-        <adiabGas_nonadiabPart          spec="OPTIONAL BOOLEAN"/>
+        <adiabGas_nonadiabPart          spec="OPTIONAL BOOLEAN"/> <!-- FIXME: What is this for? -->
         <save_moments                   spec="OPTIONAL BOOLEAN"/> <!-- Allows saving any moments being used for DQMOM -->
 
         <VelModel                       spec="REQUIRED NO_DATA">

@@ -1,4 +1,4 @@
-#LyX 1.6.4.2 created this file. For more info see http://www.lyx.org/
+#LyX 1.6.4.1 created this file. For more info see http://www.lyx.org/
 \lyxformat 345
 \begin_document
 \begin_header
@@ -35,6 +35,7 @@
 \paperpagestyle default
 \tracking_changes false
 \output_changes false
+\author "" 
 \author "" 
 \end_header
 
@@ -451,7 +452,7 @@ Periodic/Almgren Velocity
 \begin_inset Text
 
 \begin_layout Plain Layout
-SVD
+Lapack-invert
 \end_layout
 
 \end_inset
@@ -525,7 +526,7 @@ Periodic/Almgren Velocity
 \begin_inset Text
 
 \begin_layout Plain Layout
-SVD
+Lapack-svd
 \end_layout
 
 \end_inset
@@ -734,8 +735,8 @@ name "tab:Regression_tests1"
 Test 1 tests the basic scalar transport for DQMOM and the scalars.
  Tests 2a-2b test the solvers currently available.
  Tests 3-5 are higher dimensional problems.
- Note that Test 3 seems to require SVD as the solver to obtain a converged
- solution.
+ Note that Test 3 seems to require Lapack-svd as the solver to obtain a
+ converged solution.
  
 \end_layout
 

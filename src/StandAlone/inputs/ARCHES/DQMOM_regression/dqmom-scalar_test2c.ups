@@ -132,7 +132,8 @@
 
         <LinearSolver>
           <tolerance>1.0e-10</tolerance>
-          <type>SVD</type>
+          <type>Lapack-invert</type>
+          <calcConditionNumber>true</calcConditionNumber>
         </LinearSolver>
 
         <!-- particle models --> 
