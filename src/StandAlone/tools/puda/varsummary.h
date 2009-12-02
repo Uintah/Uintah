@@ -37,8 +37,4 @@ namespace Uintah {
 
   void varsummary( DataArchive * da, CommandLineFlags & clf, int matl );
 
-  // Must be called after varsummary.  Will print out a list of the global min/max for each variable
-  // that was parsed in varsummary().
-  void displayGlobalMinMax();
-
 }

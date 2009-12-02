@@ -125,6 +125,7 @@ usage( const std::string& badarg, const std::string& progname )
   cerr << "  -gridstats\n";
   cerr << "  -listvariables\n";
   cerr << "  -varsummary\n";
+  cerr << "  -brief - Makes varsummary print out a subset of information.\n";
   cerr << "  -jim1\n";
   cerr << "  -jim2\n";
   cerr << "  -AA_MMS\n";
@@ -273,15 +274,17 @@ main(int argc, char** argv)
     } else if(s == "-varsummary" ||
               s == "-varSummary" ||
               s == "-var_summary"){
-      clf.do_varsummary=true;
+      clf.do_varsummary = true;
+    } else if(s == "-brief" ) {
+      clf.be_brief = true;
     } else if(s == "-jim1"){
-      clf.do_jim1=true;
+      clf.do_jim1 = true;
     } else if(s == "-jim2"){
-      clf.do_jim2=true;
+      clf.do_jim2 = true;
     } else if(s == "-AA_MMS"){
-      clf.do_AA_MMS=true;
+      clf.do_AA_MMS = true;
     } else if(s == "-partvar"){
-      clf.do_partvar=true;
+      clf.do_partvar = true;
       clf.particleVariable = argv[++i]; 
       if (clf.particleVariable[0] == '-') {
         usage("-partvar <particle variable name>", argv[0]);
@@ -449,7 +452,6 @@ main(int argc, char** argv)
     //              V A R S U M M A R Y   O P T I O N
     if(clf.do_varsummary){
       varsummary( da, clf, mat );
-      displayGlobalMinMax();
     }
 
     if( clf.do_jim1 ){
