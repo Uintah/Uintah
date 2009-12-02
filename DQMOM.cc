@@ -83,7 +83,7 @@ void DQMOM::problemSetup(const ProblemSpecP& params)
 
   proc0cout << "In DQMOM problem setup." << endl; //dbgprint
 
-#ifdef VERIFY_LINEAR_SOLVER
+#if defined(VERIFY_LINEAR_SOLVER)
   // grab the name of the file containing the test matrices
   ProblemSpecP db_verify_linear_solver = db->findBlock("Verify_Linear_Solver");
   if( !db_verify_linear_solver ) 
@@ -99,7 +99,7 @@ void DQMOM::problemSetup(const ProblemSpecP& params)
   b_have_vls_matrices_been_printed = false;
 #endif
 
-#ifdef VERIFY_AB_CONSTRUCTION
+#if defined(VERIFY_AB_CONSTRUCTION)
   // grab the name of the file containing the test matrices
   ProblemSpecP db_verify_ab_construction = db->findBlock("Verify_AB_Construction");
   if( !db_verify_ab_construction ) 
@@ -114,36 +114,39 @@ void DQMOM::problemSetup(const ProblemSpecP& params)
   b_have_vab_matrices_been_printed = false;
 #endif
 
+#if defined(DEBUG_MATRICES)
+  b_isFirstTimeStep = true;
+#endif
+
   unsigned int moments = 0;
   unsigned int index_length = 0;
   moments = 0;
 
-  d_small_normalizer = 1e-8;
+  d_small_normalizer = 1e-8; // "small" number limit for denominator of norm calculations
 
   ProblemSpecP db_linear_solver = db->findBlock("LinearSolver");
   if( db_linear_solver ) {
 
     db_linear_solver->getWithDefault("tolerance", d_solver_tolerance, 1.0e-5);
 
-    db_linear_solver->getWithDefault("type", d_solverType, "lu");
-    if( d_solverType == "Lapack" || d_solverType == "DenseMatrix" ) {
+    db_linear_solver->getWithDefault("maxConditionNumber", d_maxConditionNumber, 1.0e16);
+    
+    db_linear_solver->getWithDefault("calcConditionNumber", b_calcConditionNumber, false);
+
+    db_linear_solver->getWithDefault("type", d_solverType, "LU");
+    if( d_solverType == "Lapack-invert" ) {
       b_useLapack = true;
-      b_calcSVD = false;
     } else if( d_solverType == "Lapack-svd" ){
       b_useLapack = true; 
-      b_calcSVD = true; 
+      b_calcConditionNumber = true;
     } else if( d_solverType == "LU" ) {
       b_useLapack = false;
-      b_calcSVD = false;
-    } else if( d_solverType == "SVD" ) {
-      b_useLapack = true;
-      b_calcSVD = true;
     } else {
-      string err_msg = "ERROR: Arches: DQMOM: Unrecognized solver type "+d_solverType+": must be 'Lapack', 'DenseMatrix', 'SVD' or 'LU'.\n";
+      string err_msg = "ERROR: Arches: DQMOM: Unrecognized solver type "+d_solverType+": must be 'Lapack-invert', 'Lapack-svd', or 'LU'.\n";
       throw ProblemSetupException(err_msg,__FILE__,__LINE__);
     }
 
-    if( b_calcSVD == true && b_useLapack == false ) {
+    if( b_calcConditionNumber == true && b_useLapack == false ) {
       string err_msg = "ERROR: Arches: DQMOM: Cannot perform singular value decomposition without using Lapack!\n";
       throw ProblemSetupException(err_msg,__FILE__,__LINE__);
     }
@@ -361,15 +364,12 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
 {
   double start_solveLinearSystemTime = Time::currentSeconds();
 #if !defined(VERIFY_LINEAR_SOLVER) && !defined(VERIFY_AB_CONSTRUCTION)
-  double total_InvertSolveTime = 0.0;
+  double total_SolveTime = 0.0;
   double total_SVDTime = 0.0;
-
-  double total_CroutSolveTime = 0.0;
-  double total_IRSolveTime = 0.0;
   double total_AXBConstructionTime = 0.0;
 
   bool do_iterative_refinement = false;
-#ifdef DEBUG_MATRICES
+#if defined(DEBUG_MATRICES)
   double total_FileWriteTime = 0.0;
   bool b_writefile = true;
 #endif
@@ -567,13 +567,13 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
         // Save original A before decomposition into LU
         LU Aorig( A );
   
-        double start_CroutSolveTime = Time::currentSeconds(); //timing
+        double start_SolveTime = Time::currentSeconds(); //timing
   
         // Solve linear system
         A.decompose();
         A.back_subs( &B[0], &Xdoub[0] );
   
-        total_CroutSolveTime += (Time::currentSeconds() - start_CroutSolveTime); //timing
+        total_SolveTime += (Time::currentSeconds() - start_SolveTime); //timing
   
         for( unsigned int j=0; j < Xdoub.size(); ++j ) {
           Xlong[j] = Xdoub[j];
@@ -599,18 +599,17 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
                iR != Resid.end(); ++iR ) {
             (*iR) = 0.0;
           }
-          total_IRSolveTime = 0.0; //timing
   
         // -------------------------------------------------
         // If there is a solution to linear system...
         } else {
-          double start_IRSolveTime = Time::currentSeconds(); //timing
+          double start_SolveTime = Time::currentSeconds(); //timing
           
           if( do_iterative_refinement ) {
             A.iterative_refinement( Aorig, &B[0], &Xdoub[0], &Xlong[0] );
           }
   
-          total_IRSolveTime = Time::currentSeconds() - start_IRSolveTime; //timing
+          total_SolveTime += Time::currentSeconds() - start_SolveTime; //timing
   
           // get residual vector
           Aorig.getResidual( &B[0], &Xlong[0], &Resid[0] );
@@ -622,7 +621,6 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
           // find norm of residual vector divided by the norm of B
           // R = (B - AX)/(norm(B))
           vector<double> ResidNormalizedB = Resid;
-          // FIXME: print ResidNormalizedB to make sure it is being initialized properly
           for( int ii = 0; ii<dimension; ++ii ) {
             if( fabs(B[ii]) > d_small_normalizer) {
               ResidNormalizedB[ii] = Resid[ii] / B[ii];
@@ -634,7 +632,6 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
           // find norm of residual vector divided by the norm of X
           // R = (B - AX)/(norm(X))
           vector<double> ResidNormalizedX = Resid;
-          // FIXME: print ResidNormalizedX to make sure it is being initialized properly
           for( int ii=0; ii<dimension; ++ii ) {
             if( fabs(Xlong[ii]) > d_small_normalizer ) {
               ResidNormalizedX[ii] = fabs( Resid[ii] / Xlong[ii] );
@@ -651,58 +648,63 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
   
         }
         
-    #ifdef DEBUG_MATRICES
-
-        if( b_writefile ) {
-          char filename[28];
-          int currentTimeStep = d_fieldLabels->d_sharedState->getCurrentTopLevelTimeStep();
-          int sizeofit;
-
-          double start_FileWriteTime = Time::currentSeconds();
-
-          ofstream oStream;
-
-          // write A matrix to file:
-          sizeofit = sprintf( filename, "A_%.2d.mat", currentTimeStep );
-          oStream.open(filename);
-          for( int iRow = 0; iRow < dimension; ++iRow ) {
-            for( int iCol = 0; iCol < dimension; ++iCol ) {
-              oStream << " " << Aorig(iRow,iCol); 
+#if defined(DEBUG_MATRICES)
+        if( pc->myrank() == 0 ) {
+          if( b_writefile ) {
+            char filename[28];
+            int currentTimeStep;
+            if( b_isFirstTimeStep ) {
+              currentTimeStep = 0;
+            } else { 
+              currentTimeStep = d_fieldLabels->d_sharedState->getCurrentTopLevelTimeStep();
             }
-            oStream << endl;
-          }
-          oStream.close();
+            int sizeofit;
+            ofstream oStream;
 
-          // Write X (solution vector) to file:
-          sizeofit = sprintf( filename, "X_%.2d.mat", currentTimeStep );
-          oStream.open(filename);
-          for( vector<long double>::iterator iX = Xlong.begin();
-               iX != Xlong.end(); ++iX) {
-            oStream << (*iX) << endl;
-          }
-          oStream.close();
+            double start_FileWriteTime = Time::currentSeconds();
 
-          // write B matrix to file:
-          sizeofit = sprintf( filename, "B_%.2d.mat", currentTimeStep );
-          oStream.open(filename);
-          for( vector<double>::iterator iB = B.begin(); iB != B.end(); ++iB ) {
-            oStream << (*iB) << endl;
-          }
-          oStream.close();
+            // write A matrix to file:
+            sizeofit = sprintf( filename, "A_%.2d.mat", currentTimeStep );
+            oStream.open(filename);
+            for( int iRow = 0; iRow < dimension; ++iRow ) {
+              for( int iCol = 0; iCol < dimension; ++iCol ) {
+                oStream << " " << Aorig(iRow,iCol); 
+              }
+              oStream << endl;
+            }
+            oStream.close();
 
-          // write Resid vector to file:
-          sizeofit = sprintf( filename, "R_%.2d.mat", currentTimeStep );
-          oStream.open(filename);
-          for( vector<double>::iterator iR = Resid.begin(); iR != Resid.end(); ++iR ) {
-            oStream << (*iR) << endl;
-          }
-          oStream.close();
+            // Write X (solution vector) to file:
+            sizeofit = sprintf( filename, "X_%.2d.mat", currentTimeStep );
+            oStream.open(filename);
+            for( vector<long double>::iterator iX = Xlong.begin();
+                 iX != Xlong.end(); ++iX) {
+              oStream << (*iX) << endl;
+            }
+            oStream.close();
 
-          total_FileWriteTime += Time::currentSeconds() - start_FileWriteTime;
+            // write B matrix to file:
+            sizeofit = sprintf( filename, "B_%.2d.mat", currentTimeStep );
+            oStream.open(filename);
+            for( vector<double>::iterator iB = B.begin(); iB != B.end(); ++iB ) {
+              oStream << (*iB) << endl;
+            }
+            oStream.close();
+
+            // write Resid vector to file:
+            sizeofit = sprintf( filename, "R_%.2d.mat", currentTimeStep );
+            oStream.open(filename);
+            for( vector<double>::iterator iR = Resid.begin(); iR != Resid.end(); ++iR ) {
+              oStream << (*iR) << endl;
+            }
+            oStream.close();
+
+            total_FileWriteTime += Time::currentSeconds() - start_FileWriteTime;
+          }
+          b_writefile = false;
         }
-        b_writefile = false;
 
-    #endif //debug matrices
+#endif //debug matrices
 
         int z=0; // equation loop counter
         
@@ -724,9 +726,11 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
             err_msg << "ERROR: Arches: DQMOM: Trying to access solution of AX=B system, but had array out of bounds! Accessing element " << z << " of " << dimension << endl;
             throw InvalidValue(err_msg.str(),__FILE__,__LINE__);
           } else if( fabs(normResNormalizedX[c]) > d_solver_tolerance ) {
-            tempCCVar[c] = 0;
+            tempCCVar[c] = 0.0;
           } else if( isnan( Xlong[z] ) ) {
-            tempCCVar[c] = 0;
+            tempCCVar[c] = 0.0;
+          } else if( b_calcConditionNumber == true && conditionNumber[c] > d_maxConditionNumber ) {
+            tempCCVar[c] = 0.0;
           } else {
             tempCCVar[c] = Xlong[z];
           }
@@ -750,9 +754,11 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
             err_msg << "ERROR: Arches: DQMOM: Trying to access solution of AX=B system, but had array out of bounds! Accessing element " << z << " of " << dimension << endl;
             throw InvalidValue(err_msg.str(),__FILE__,__LINE__);
           } else if(  fabs(normResNormalizedX[c]) > d_solver_tolerance ) {
-            tempCCVar[c] = 0;
+            tempCCVar[c] = 0.0;
           } else if( isnan( Xlong[z] ) ){
-            tempCCVar[c] = 0;
+            tempCCVar[c] = 0.0;
+          } else if( b_calcConditionNumber == true && conditionNumber[c] > d_maxConditionNumber ) {
+            tempCCVar[c] = 0.0;
           } else {
             tempCCVar[c] = Xlong[z];
           }
@@ -785,7 +791,8 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
         DenseMatrix* AAorig = AA->clone();
 
         double conditionNumber_ = 0.0;
-        if( b_calcSVD == true ) {
+
+        if( d_solverType == "Lapack-svd" ) {
 
           DenseMatrix* AAsvd = AA->clone();
 
@@ -805,16 +812,16 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
           ColumnMatrix* XXsvd2 = scinew ColumnMatrix( dimension );
           Sinv->zero();
 
-          double start_SVDTime = Time::currentSeconds(); //timing
+          double start_SolveTime = Time::currentSeconds(); //timing
           AAsvd->svd( *U, *S, *V );
-          total_SVDTime += ( Time::currentSeconds() - start_SVDTime); //timing
+          total_SolveTime += ( Time::currentSeconds() - start_SolveTime); //timing
           conditionNumber_ = (S->a[0]/S->a[dimension-1]);
 
           for(int kk=0;kk<dimension;kk++){
             if(S->a[kk] > 1e-20) {
-            Sinv->put(kk,kk,1./S->a[kk]);
+              Sinv->put(kk,kk,1./S->a[kk]);
             } else {
-            Sinv->put(kk,kk,0.);
+              Sinv->put(kk,kk,0.);
             }
           }
 
@@ -825,27 +832,104 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
           Mult( *XXsvd2, *Sinv, *XXsvd );
           Mult( *XX, *Vt, *XXsvd2 );
 
+#if defined(DEBUG_MATRICES)
+          if( pc->myrank() == 0 ) {
+            if( b_writefile ) {
+              char filename[28];
+              int currentTimeStep;
+              if( b_isFirstTimeStep ) {
+                currentTimeStep = 0;
+              } else {
+                currentTimeStep = d_fieldLabels->d_sharedState->getCurrentTopLevelTimeStep();
+              }
+              int sizeofit;
+              ofstream oStream;
+            
+              double start_FileWriteTime = Time::currentSeconds();
+
+              // write U, S, and V matrices to file
+              sizeofit = sprintf( filename, "U_%.2d.mat", currentTimeStep );
+              oStream.open(filename);
+              for( int iRow = 0; iRow < dimension; ++iRow ) {
+                for( int iCol = 0; iCol < dimension; ++iCol ) {
+                  oStream << scientific << setw(20) << setprecision(20) << " " << (*U)[iRow][iCol];
+                }
+                oStream << endl;
+              }
+              oStream.close();
+
+              sizeofit = sprintf( filename, "V_%.2d.mat", currentTimeStep );
+              oStream.open(filename);
+              for( int iRow = 0; iRow < dimension; ++iRow ) {
+                for( int iCol = 0; iCol < dimension; ++iCol ) {
+                  oStream << scientific << setw(20) << setprecision(20) << " " << (*V)[iRow][iCol];
+                }
+                oStream << endl;
+              }
+              oStream.close();
+
+              sizeofit = sprintf( filename, "S_%.2d.mat", currentTimeStep );
+              oStream.open(filename);
+              for( int iRow = 0; iRow < dimension; ++iRow ) {
+                oStream << scientific << setw(20) << setprecision(20) << " " << S->a[iRow] << endl;
+              }
+              oStream.close();
+            
+              total_FileWriteTime += Time::currentSeconds() - start_FileWriteTime;
+            }
+          }
+#endif
+
           delete AAsvd;
           delete cols;
           delete rows;
+
           delete U;
           delete V;
           delete S;
+
           delete Ut;
           delete Sinv;
           delete Vt;
           delete XXsvd;
           delete XXsvd2;
 
-        } else {
+        } else if (d_solverType == "Lapack-invert") {
+
+          if( b_calcConditionNumber ) {
+            DenseMatrix* AAsvd = AA->clone();
+
+            // create rr and cc for singular values SparseRowMatrix
+            int *cols = scinew int[dimension];
+            int *rows = scinew int[dimension+1];
+            double *a = scinew double[dimension];
+
+            DenseMatrix* U = scinew DenseMatrix( dimension, dimension );
+            SparseRowMatrix* S = scinew SparseRowMatrix( dimension, dimension, rows, cols, dimension, a); // makes an identity matrix
+            DenseMatrix* V = scinew DenseMatrix( dimension, dimension );
+
+            double start_SVDTime = Time::currentSeconds(); //timing
+            AAsvd->svd( *U, *S, *V );
+            total_SVDTime += ( Time::currentSeconds() - start_SVDTime); //timing
+            conditionNumber_ = (S->a[0]/S->a[dimension-1]);
+
+            delete AAsvd;
+            delete cols;
+            delete rows;
+
+            delete U;
+            delete V;
+            delete S;
+          }
+
           // Solve linear system
-          double start_InvertSolveTime = Time::currentSeconds(); //timing
+          double start_SolveTime = Time::currentSeconds(); //timing
           bool success = AA->invert();
           if (!success) {
             //proc0cout << "WARNING: Arches: DQMOM: A is singular at cell c = " << c << endl;
           }
           Mult( (*XX), (*AA), (*BB) );
-          total_InvertSolveTime += (Time::currentSeconds() - start_InvertSolveTime); //timing
+          total_SolveTime += (Time::currentSeconds() - start_SolveTime); //timing
         } 
 
         conditionNumber[c] = conditionNumber_;
@@ -924,57 +1008,74 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
         }
         normX[c] = this_normX;
   
-    #ifdef DEBUG_MATRICES
- 
-        if( b_writefile ) {
-          char filename[28];
-          int currentTimeStep = d_fieldLabels->d_sharedState->getCurrentTopLevelTimeStep();
-          int sizeofit;
-          
-          double start_FileWriteTime = Time::currentSeconds();
-  
-          ofstream oStream;
-  
-          // write A matrix to file
-          sizeofit = sprintf( filename, "A_%.2d.mat", currentTimeStep );
-          oStream.open(filename);
-          for( int iRow = 0; iRow < dimension; ++iRow ) {
-            for( int iCol = 0; iCol < dimension; ++iCol ) {
-              oStream << " " << (*AAorig)[iRow][iCol];
+#if defined(DEBUG_MATRICES)
+        if( pc->myrank() == 0 ) {
+          if( b_writefile ) {
+            char filename[28];
+            int currentTimeStep;
+            if( b_isFirstTimeStep ) {
+              currentTimeStep = 0;
+            } else {
+              currentTimeStep = d_fieldLabels->d_sharedState->getCurrentTopLevelTimeStep();
             }
-            oStream << endl;
-          }
-          oStream.close();
+            int sizeofit;
+            ofstream oStream;
+            
+            double start_FileWriteTime = Time::currentSeconds();
   
-          // write X vector to file
-          sizeofit = sprintf( filename, "X_%.2d.mat", currentTimeStep );
-          oStream.open(filename);
-          for( int iRow = 0; iRow < dimension; ++iRow ) {
-            oStream << (*XX)[iRow] << endl;
-          }
-          oStream.close();
-  
-          // write B vector to file
-          sizeofit = sprintf( filename, "B_%.2d.mat", currentTimeStep );
-          oStream.open(filename);
-          for( int iRow = 0; iRow < dimension; ++iRow ) {
-            oStream << (*BB)[iRow] << endl;
-          }
-          oStream.close();
-  
-          // write residual vector to file
-          sizeofit = sprintf( filename, "R_%.2d.mat", currentTimeStep );
-          oStream.open(filename);
-          for( int iRow = 0; iRow < dimension; ++iRow ) {
-            oStream << (*RR)[iRow] << endl;
-          }
-          oStream.close();
+            // write A matrix to file
+            sizeofit = sprintf( filename, "A_%.2d.mat", currentTimeStep );
+            oStream.open(filename);
+            for( int iRow = 0; iRow < dimension; ++iRow ) {
+              for( int iCol = 0; iCol < dimension; ++iCol ) {
+                oStream << scientific << setw(20) << setprecision(20) << " " << (*AAorig)[iRow][iCol];
+              }
+              oStream << endl;
+            }
+            oStream.close();
 
-          total_FileWriteTime += Time::currentSeconds() - start_FileWriteTime;
-        }
-        b_writefile = false;
+            if( d_solverType == "Lapack-invert" ) {
+              // write inv(A) matrix to file
+              sizeofit = sprintf( filename, "Ainv_%.2d.mat", currentTimeStep );
+              oStream.open(filename);
+              for( int iRow = 0; iRow < dimension; ++iRow ) {
+                for( int iCol = 0; iCol < dimension; ++iCol ) {
+                  oStream << scientific << setw(20) << setprecision(20) << " " << (*AA)[iRow][iCol];
+                }
+                oStream << endl;
+              }
+              oStream.close();
+            }
   
-    #endif
+            // write X vector to file
+            sizeofit = sprintf( filename, "X_%.2d.mat", currentTimeStep );
+            oStream.open(filename);
+            for( int iRow = 0; iRow < dimension; ++iRow ) {
+              oStream << scientific << setw(20) << setprecision(20) << (*XX)[iRow] << endl;
+            }
+            oStream.close();
+  
+            // write B vector to file
+            sizeofit = sprintf( filename, "B_%.2d.mat", currentTimeStep );
+            oStream.open(filename);
+            for( int iRow = 0; iRow < dimension; ++iRow ) {
+              oStream << scientific << setw(20) << setprecision(20) << (*BB)[iRow] << endl;
+            }
+            oStream.close();
+  
+            // write residual vector to file
+            sizeofit = sprintf( filename, "R_%.2d.mat", currentTimeStep );
+            oStream.open(filename);
+            for( int iRow = 0; iRow < dimension; ++iRow ) {
+              oStream << scientific << setw(20) << setprecision(20) << (*RR)[iRow] << endl;
+            }
+            oStream.close();
+
+            total_FileWriteTime += Time::currentSeconds() - start_FileWriteTime;
+          }
+          b_writefile = false;
+        }
+#endif
 
         // check "acceptable solution" criteria, and assign solution values to source terms
         
@@ -996,9 +1097,11 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
             err_msg << "ERROR: Arches: DQMOM: Trying to access solution of AX=B system, but had array out of bounds! Accessing element " << z << " of " << dimension << endl;
             throw InvalidValue(err_msg.str(),__FILE__,__LINE__);
           } else if( fabs(normResNormalizedX[c]) > d_solver_tolerance ) {
-            tempCCVar[c] = 0;
+            tempCCVar[c] = 0.0;
           } else if( isnan( (*XX)[z] ) ) {
-            tempCCVar[c] = 0;
+            tempCCVar[c] = 0.0;
+          } else if( b_calcConditionNumber == true && conditionNumber[c] > d_maxConditionNumber ) {
+            tempCCVar[c] = 0.0;
           } else {
             tempCCVar[c] = (*XX)[z];
           }
@@ -1025,6 +1128,8 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
             tempCCVar[c] = 0;
           } else if( isnan( (*XX)[z] ) ){
             tempCCVar[c] = 0;
+          } else if( b_calcConditionNumber == true && conditionNumber[c] > d_maxConditionNumber ) {
+            tempCCVar[c] = 0.0;
           } else {
             tempCCVar[c] = (*XX)[z];
           }
@@ -1097,24 +1202,34 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
   
   // ---------------------------------------------
 
+#if defined(DEBUG_MATRICES)
+  b_isFirstTimeStep = false;
+#endif
 
 
   proc0cout << "Time in DQMOM::solveLinearSystem: " << Time::currentSeconds()-start_solveLinearSystemTime << " seconds \n";
+
 #if !defined(VERIFY_AB_CONSTRUCTION) && !defined(VERIFY_LINEAR_SOLVER)
 #if defined(DEBUG_MATRICES)
   proc0cout << "    Time for file write: " << total_FileWriteTime << " seconds\n";
 #endif
+
   proc0cout << "    Time for AX=B construction: " << total_AXBConstructionTime << " seconds\n";
-  if( b_useLapack == true ) {
-    proc0cout << "    Time for DenseMatrix invert-multiply: " << total_InvertSolveTime << " seconds\n";
-    //proc0cout << "    Time for DenseMatrix LU decomposition: " << total_DenseSolveTime << " seconds\n";
-    if( b_calcSVD )
-      proc0cout << "    Time for SVD: " << total_SVDTime << " seconds\n";
-  } else {
-    proc0cout << "    Time for LU solve: " << total_CroutSolveTime + total_IRSolveTime << " seconds\n";
-    proc0cout << "      Time for Crout's Method: " << total_CroutSolveTime << " seconds\n";
-    //proc0cout << "      Time for iterative refinement: " << total_IRSolveTime << " seconds\n";
+
+  if( d_solverType == "Lapack-invert" ) { 
+    proc0cout << "    Time for Lapack inversion-multiplication: " << total_SolveTime << " seconds\n";
+    if( b_calcConditionNumber ) {
+      proc0cout << "    Time for calculation of condition number: " << total_SVDTime << " seconds\n";
+    }
+
+  } else if( d_solverType == "Lapack-svd" ) {
+    proc0cout << "    Time for Lapack singular value decomposition and solution: " << total_SolveTime << " seconds\n";
+
+  } else if( d_solverType == "LU" ) {
+    proc0cout << "    Time for Crout's Method solution: " << total_SolveTime << " seconds\n";
+
   }
+
 #endif
 }
 
@@ -1480,8 +1595,6 @@ DQMOM::calculateMoments( const ProcessorGroup* pc,
           }
           string errmsg = "ERROR: DQMOM: calculateMoments: could not find moment index " + index + " in DQMOMMoment map!\nIf you are running verification, you must turn off calculation of moments using <calculate_moments>false</calculate_moments>";
           throw InvalidValue( errmsg,__FILE__,__LINE__);
-          // FIXME:
-          // could not find the moment in the moment map!  
         }
 
         // Associate a CCVariable<double> with this moment 
@@ -1798,8 +1911,6 @@ DQMOM::verifyLinearSolver()
   proc0cout << "Step 5B: Verifying ColumnMatrix norm of residal " << endl;
   proc0cout << "---------------------------------------------------" << endl;
   double this_normRes = 0;
-  // FIXME: This is calculating a 0 norm, but the verification procedure is for the 1 norm...
-  // Change the verification procedure to use the 0 norm!
   for( int ii=0; ii<vls_dimension; ++ii ) {
     if( fabs((*RR)[ii]) > this_normRes ) {
       this_normRes = (*RR)[ii];

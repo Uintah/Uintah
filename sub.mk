@@ -95,7 +95,6 @@ PSELIBS := \
         Core/Math          \
         Core/Util          \
         Core/Disclosure    \
-        Core/Datatypes     \
         Core/Exceptions    \
         CCA/Components/Arches/fortran   \
         CCA/Components/Arches/Mixing    \
