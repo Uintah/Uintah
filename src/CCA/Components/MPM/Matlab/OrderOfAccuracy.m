@@ -16,9 +16,9 @@ function KK=OrderOfAccuracy
   for n=1:nTests
     fprintf('Test: %g  NN: %g\n',n, NN(n));
     
-    [L2norm(n),maxError(n)] = amrmpm('mms', 0.1, NN(n));
+    [L2norm(n),maxError(n), nn, NP] = amrmpm('mms', 0.1, NN(n));
     
-    fprintf(fid,'%g %15.16E %15.16E\n',NN(n), L2norm(n), maxError(n));
+    fprintf(fid,'%g %g %15.16E %15.16E\n',nn, NP, L2norm(n), maxError(n));
   end
   
   fclose(fid);

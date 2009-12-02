@@ -4,7 +4,7 @@
 %______________________________________________________________________
 
 
-function [L2_norm,maxError]=amrmpm(problem_type,CFL,NN)
+function [L2_norm,maxError,NN,NP]=amrmpm(problem_type,CFL,NN)
 close all
 intwarning on
 
@@ -318,7 +318,7 @@ titleStr(4) ={sprintf('Constant resolution, #cells %g', NN)};
 %plot initial conditions
 if(plotSwitch == 1)
   plotResults(titleStr, t, tstep, xp, dp, massP, Fp, velP, stressP, nodePos, velG, massG, momG)
-endif
+end
 fprintf('tfinal: %g, interpolator: %s, NN: %g, NP: %g dx_min: %g \n',tfinal,interpolation, NN,NP,dx_min);
 %input('hit return')
 
@@ -390,11 +390,6 @@ while t<tfinal && tstep < max_tstep
     velG(BCNodeL(ibc)) = velG_BCValueL;
     velG(BCNodeR(ibc)) = velG_BCValueR;
   end
-
-  %compute particle stress
-  [Fp, dF,vol,lp] = computeDeformationGradient(xp,lp,dt,velG,Fp,dF,NP, nRegions, Regions, nodePos,Lx);
-  [stressP]       = computeStress(E,Fp,NP);
-
   
   %compute internal force
   for ip=1:NP
@@ -430,6 +425,10 @@ while t<tfinal && tstep < max_tstep
     accl_G(BCNodeL(ibc)) = 0.0;
     accl_G(BCNodeR(ibc)) = 0.0;
   end
+  
+  %compute particle stress
+  [Fp, dF,vol,lp] = computeDeformationGradient(xp,lp,dt,vel_new_G,Fp,NP, nRegions, Regions, nodePos,Lx);
+  [stressP]       = computeStress(E,Fp,NP);
   
   %__________________________________
   %project changes back to particles
@@ -1238,7 +1237,7 @@ function [F] = MMS_deformationGradient(xp_initial, t, NP,speedSound)
   end  
 end
 %__________________________________
-function [velExact] = MMS_velocity(xp_initial, t, NP, speedSound);
+function [velExact] = MMS_velocity(xp_initial, t, NP, speedSound)
   velExact  = zeros(NP,1);
   A = 0.05;   % Hardwired
 
