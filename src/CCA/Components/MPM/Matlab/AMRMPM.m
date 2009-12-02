@@ -389,7 +389,8 @@ while t<tfinal && tstep < max_tstep
   end
 
   %compute particle stress
-  [stressP,vol,lp,Fp]=computeStressFromVelocity(xp,lp,dt,velG,E,Fp,dF,NP,nRegions, Regions, nodePos,Lx);
+  [Fp, dF,vol,lp] = computeDeformationGradient(xp,lp,dt,velG,Fp,dF,NP, nRegions, Regions, nodePos,Lx);
+  [stressP]       = computeStress(E,Fp,NP);
 
   
   %compute internal force
@@ -649,15 +650,13 @@ end
 %______________________________________________________________________
 % functions
 %______________________________________________________________________
-
-function [stressP,vol,lp,Fp]=computeStressFromVelocity(xp,lp,dt,velG,E,Fp,dF,NP, nRegions, Regions, nodePos,Lx)
-  global d_debugging;
+function [Fp, dF, vol, lp] = computeDeformationGradient(xp,lp,dt,velG,Fp,dF,NP, nRegions, Regions, nodePos,Lx)
   global NSFN;
-                                                                                
+  
   for ip=1:NP
     [nodes,Gs,dx]  = findNodesAndWeightGradients_gimp2(xp(ip), lp(ip), nRegions, Regions, nodePos, Lx);
     [volP_0, lp_0] = positionToVolP(xp(ip), nRegions, Regions);
-    
+
     gUp=0.0;
     for ig=1:NSFN
       gUp = gUp + velG(nodes(ig)) * Gs(ig);
@@ -665,10 +664,19 @@ function [stressP,vol,lp,Fp]=computeStressFromVelocity(xp,lp,dt,velG,E,Fp,dF,NP,
 
     dF(ip)      = 1. + gUp * dt;
     Fp(ip)      = dF(ip) * Fp(ip);
-%    stressP(ip) = E * (Fp(ip)-1.0);
-    stressP(ip) = (E/2.0) * ( Fp(ip) - 1.0/Fp(ip) );        % hardwired for the mms test  see eq 50
     vol(ip)     = volP_0 * Fp(ip);
     lp(ip)      = lp_0 * Fp(ip);
+  end
+end
+
+
+%__________________________________
+function [stressP]=computeStress(E,Fp,NP)
+                                                                                
+  for ip=1:NP
+%    stressP(ip) = E * (Fp(ip)-1.0);
+    stressP(ip) = (E/2.0) * ( Fp(ip) - 1.0/Fp(ip) );        % hardwired for the mms test  see eq 50
+
       
   end
 end
