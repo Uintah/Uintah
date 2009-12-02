@@ -1,7 +1,6 @@
-%Reference:  Jin Ma, Honbing Lu,and Ranga Komanduri, "Structured Mesh
+% Reference:  Jin Ma, Honbing Lu,and Ranga Komanduri, "Structured Mesh
 % Refinement in Generalized Interpolation Material Point (GIMP) Method
 % for Simulation of Dynamic Problems," CMES, vol. 12, no.3, pp. 213-227, 2006
-
 %______________________________________________________________________
 
 
@@ -15,10 +14,8 @@ global NSFN;               % number of shape function nodes
 d_debugging = problem_type;
 
 %  valid options:
-%  problem type:  impulsiveBar, oscillator, compaction advectBlock
+%  problem type:  impulsiveBar, oscillator, compaction advectBlock, mms
 %  CFL:            0 < cfl < 1, usually 0.2 or so.
-%  R1_dx:          cell spacing in region 1.
-
 
 % bulletproofing
 if (~strcmp(problem_type, 'impulsiveBar')  && ...
@@ -39,7 +36,7 @@ E       = 1.0e4;
 density = 1.0;
 speedSound = sqrt(E/density);
 
-Material = cell(1,1);     % structure that holds the state of the simulation
+Material = cell(1,1);     % structure that holds material properties
 mat.E           = E;
 mat.density     = density;
 mat.speedSound  = speedSound;
@@ -69,6 +66,7 @@ bar_length  = bar_max - bar_min;
 domain     = 1.0;
 area       = 1.;
 plotSwitch = 0;
+writeData  = 0;
 max_tstep  = BigNum;
 
 % HARDWIRED FOR TESTING
@@ -81,141 +79,7 @@ if (mod(domain,R1_dx) ~= 0)
   return;
 end
 
-%__________________________________
-% region structure 
-
-if(0)
-%____________
-% single level
-nRegions    = int32(2);               % partition the domain into nRegions
-Regions       = cell(nRegions,1);     % array that holds the individual region information
-R.min         = 0;                    % location of left point
-R.max         = domain/2;             % location of right point
-R.refineRatio = 1;
-R.dx          = R1_dx;
-R.volP        = R.dx/PPC;
-R.NN          = int32( (R.max - R.min)/R.dx +1 );
-R.lp          = R.dx/(2 * PPC);
-Regions{1}    = R;
-
-R.min         = domain/2;                       
-R.max         = domain;
-R.refineRatio = 1;
-R.dx          = R1_dx/R.refineRatio;
-R.volP        = R.dx/PPC;
-R.NN          = int32( (R.max - R.min)/R.dx );
-R.lp          = R.dx/(2 * PPC);
-Regions{2}    = R;
-end
-%____________
-% 2 level
-if(1)
-nRegions    = int32(3);               % partition the domain into nRegions
-Regions       = cell(nRegions,1);     % array that holds the individual region information
-
-R.min         = 0;                    % location of left point
-R.max         = domain/3.0;             % location of right point
-R.refineRatio = 1;
-R.dx          = R1_dx;
-R.volP        = R.dx/PPC;
-R.NN          = int32( (R.max - R.min)/R.dx +1 );
-R.lp          = R.dx/(2 * PPC);
-Regions{1}    = R;
-
-R.min         = domain/3.0;                       
-R.max         = 2.0*domain/3.0;
-R.refineRatio = 1;
-R.dx          = R1_dx/R.refineRatio;
-R.volP        = R.dx/PPC;
-R.NN          = int32( (R.max - R.min)/R.dx );
-R.lp          = R.dx/(2 * PPC);
-Regions{2}    = R;
-
-R.min         = 2.0*domain/3.0;                       
-R.max         = domain;
-R.refineRatio = 1;
-R.dx          = R1_dx/R.refineRatio; 
-R.volP        = R.dx/PPC;
-R.NN          = int32( (R.max - R.min)/R.dx); 
-R.lp          = R.dx/(2 * PPC);
-Regions{3}    = R;
-
-end
-
-%____________
-% 3 levels
-if(0)
-
-nRegions    = int32(5);               % partition the domain into nRegions
-Regions       = cell(nRegions,1);     % array that holds the individual region information
-
-R.min         = 0;                    % location of left point
-R.max         = 0.32;                 % location of right point
-R.refineRatio = 1;
-R.dx          = R1_dx;
-R.volP        = R.dx/PPC;
-R.NN          = int32( (R.max - R.min)/R.dx +1 );
-R.lp          = R.dx/(2 * PPC);
-Regions{1}    = R;
-
-R.min         = 0.32;                       
-R.max         = 0.4;
-R.refineRatio = 4;
-R.dx          = R1_dx/double(R.refineRatio);
-R.volP        = R.dx/PPC;
-R.NN          = int32( (R.max - R.min)/R.dx );
-R.lp          = R.dx/(2 * PPC);
-Regions{2}    = R;
-
-R.min         = 0.4;                       
-R.max         = 0.56;
-R.refineRatio = 16;
-R.dx          = R1_dx/double(R.refineRatio); 
-R.volP        = R.dx/PPC;
-R.NN          = int32( (R.max - R.min)/R.dx);
-R.lp          = R.dx/(2 * PPC); 
-Regions{3}    = R;
-
-R.min         = 0.56;                       
-R.max         = 0.64;
-R.refineRatio = 4;
-R.dx          = R1_dx/double(R.refineRatio);
-R.volP        = R.dx/PPC;
-R.NN          = int32( (R.max - R.min)/R.dx );
-R.lp          = R.dx/(2 * PPC);
-Regions{4}    = R;
-
-R.min         = 0.64;                       
-R.max         = domain;
-R.refineRatio = 1;
-R.dx          = R1_dx/R.refineRatio;
-R.volP        = R.dx/PPC;
-R.NN          = int32( (R.max - R.min)/R.dx );
-R.lp          = R.dx/(2 * PPC);
-Regions{5}    = R;
-
-end
-
-% increase the number of nodes in the first and last region if using gimp.
-if(strcmp(interpolation,'GIMP'))
-  Regions{1}.NN          = Regions{1}.NN + 1;
-  Regions{1}.min         = Regions{1}.min - Regions{1}.dx;
-  Regions{nRegions}.NN   = Regions{nRegions}.NN + 1;
-  Regions{nRegions}.max  = Regions{nRegions}.max + Regions{nRegions}.dx;
-end;
-
-NN = int32(0);
-
-% bulletproofing:
-for r=1:nRegions
-  R = Regions{r};
-  d = (R.max - R.min) + 100* d_smallNum;
-  
-  if( mod( d, R.dx ) > 1.0e-10 )
-    fprintf('ERROR, the dx: %g in Region %g does not divide into the domain (R.max:%g R.min:%g) evenly\n', R.dx,r,R.max,R.min);
-    return;
-  end
-end
+[Regions, nRegions,NN] = initializeRegions(domain,PPC,R1_dx,interpolation, d_smallNum);
 
 
 %  find the number of nodes (NN) and the minimum dx
@@ -442,6 +306,7 @@ if strcmp(problem_type, 'mms')
   
 end
 
+%__________________________________
 titleStr(2) = {sprintf('Computational Domain 0,%g, MPM bar %g,%g',domain,bar_min, bar_max)};
 titleStr(3) = {sprintf('%s, PPC: %g',interpolation, PPC)};
 %titleStr(4)={'Variable Resolution, Center Region refinement ratio: 2'}
@@ -454,9 +319,8 @@ plotResults(titleStr, t, tstep, xp, dp, massP, Fp, velP, stressP, nodePos, velG,
 fprintf('tfinal: %g, interpolator: %s, NN: %g, NP: %g dx_min: %g \n',tfinal,interpolation, NN,NP,dx_min);
 %input('hit return')
 
-fn = sprintf('initialConditions.dat',NN, PPC);
+fn = sprintf('initialConditions.dat');
 fid = fopen(fn, 'w');
-%fprintf(fid,'#%s, PPC: %g, NN %g\n',problem_type, PPC, NN);
 fprintf(fid,'#p, xp, velP, Fp, stressP extForceP\n');
 for ip=1:NP
   fprintf(fid,'%g %16.15E %16.15E %16.15E %16.15E %16.15E\n',ip, xp(ip),velP(ip),Fp(ip), stressP(ip), extForceP(ip));
@@ -524,20 +388,10 @@ while t<tfinal && tstep < max_tstep
     velG(BCNodeR(ibc)) = velG_BCValueR;
   end
 
-  % debugging__________________________________ 
-  if( strcmp(problem_type, 'advectBlock')  )
-    for ig=1:(NN)
-      error = velG(ig) * massG(ig) - massG(ig) * initVelocity;
-      if(  (abs(error) > 1e-8) )
-        fprintf('interpolateParticlesToGrid after BC:  node: %g, nodePos %g, error %g, massG %g \n', ig, nodePos(ig), error, massG(ig) );
-      end
-    end
-  end
-  % debugging__________________________________
-
   %compute particle stress
   [stressP,vol,lp,Fp]=computeStressFromVelocity(xp,lp,dt,velG,E,Fp,dF,NP,nRegions, Regions, nodePos,Lx);
 
+  
   %compute internal force
   for ip=1:NP
     [nodes,Gs,dx]=findNodesAndWeightGradients_gimp2(xp(ip), lp(ip), nRegions, Regions, nodePos,Lx);
@@ -546,15 +400,7 @@ while t<tfinal && tstep < max_tstep
     end
   end
 
-% debugging__________________________________
-  if( strcmp(problem_type, 'advectBlock')  )
-    if( abs(intForceG(nodes(ig))) > 1e-8 )
-      fprintf('internal Force: \t  node: %g, nodePos %g, intForce %g \n', nodes(ig), nodePos(nodes(ig)), intForceG(nodes(ig)) );
-      input('hit return')
-    end
-  end
-% debugging__________________________________
-
+  %__________________________________
   %compute the acceleration and new velocity on the grid
   accl_G    =(intForceG + extForceG)./massG;
   vel_new_G = velG + accl_G.*dt;
@@ -568,6 +414,7 @@ while t<tfinal && tstep < max_tstep
 
   momG = massG .* vel_new_G;
 
+  %__________________________________
   % compute the acceleration on the grid
   for ig=1:NN
     accl_G(ig)  = (vel_new_G(ig) - vel_nobc_G(ig))/dt;
@@ -591,17 +438,6 @@ while t<tfinal && tstep < max_tstep
     for ig=1:NSFN
       dvelP = dvelP + accl_G(nodes(ig))    * dt * Ss(ig);
       dxp   = dxp   + vel_new_G(nodes(ig)) * dt * Ss(ig);
-      
-      % debugging__________________________________
-      if strcmp(problem_type, 'advectBlock')  
-        error = massG(nodes(ig)) * vel_new_G(nodes(ig)) - massG(nodes(ig)) * initVelocity;
-        if(  (abs(error) > 1e-10) && (massG(nodes(ig)) > 0) )
-          fprintf('project changes: \t  node: %g, nodePos %g, error %g, massG %g \n', nodes(ig), nodePos(nodes(ig)), error, massG(nodes(ig) ));
-          fprintf(' \t\t\t vel_new_G: %g  Ss(ig): %16.15f\n',vel_new_G(nodes(ig)), Ss(ig) );
-          fprintf(' \t\t\t dxp: %g , dvelP: %g, sum(Ss): %g\n', dxp, dvelP, sum(Ss));
-        end
-      end
-      % debugging__________________________________
     end
 
     velP(ip) = velP(ip) + dvelP;
@@ -764,46 +600,49 @@ tipDeflect_err(tstep)
 %__________________________________
 %  write the results out to files
 % particle data
-fname1 = sprintf('particle_NN_%g_PPC_%g.dat',NN, PPC);
-fid = fopen(fname1, 'w');
-%fprintf(fid,'#%s, PPC: %g, NN %g\n',problem_type, PPC, NN);
-fprintf(fid,'#p, xp, velP, Fp, stressP, time\n');
-for ip=1:NP
-  fprintf(fid,'%g %16.15E %16.15E %16.15E %16.15E %16.15E\n',ip, xp(ip),velP(ip),Fp(ip), stressP(ip), t);
-end
-fclose(fid);
 
-% grid data
-fname2 = sprintf('grid_NN_%g_PPC_%g.dat',NN, PPC);
-fid = fopen(fname2, 'w');
-fprintf(fid,'#%s, PPC: %g, NN %g\n',problem_type, PPC, NN);
-fprintf(fid,'#node, xG, massG, velG, extForceG, intForceG, accl_G\n');
-for ig=1:NN
-  fprintf(fid,'%g, %16.15f, %16.15f, %16.15f, %16.15f, %16.15f %16.15f\n',ig, nodePos(ig), massG(ig), velG(ig), extForceG(ig), intForceG(ig), accl_G(ig));
-end
-fclose(fid);
+if (writeData == 1)
+  fname1 = sprintf('particle_NN_%g_PPC_%g.dat',NN, PPC);
+  fid = fopen(fname1, 'w');
+  fprintf(fid,'#%s, PPC: %g, NN %g\n',problem_type, PPC, NN);
+  fprintf(fid,'#p, xp, velP, Fp, stressP, time\n');
+  for ip=1:NP
+    fprintf(fid,'%g %16.15E %16.15E %16.15E %16.15E %16.15E\n',ip, xp(ip),velP(ip),Fp(ip), stressP(ip), t);
+  end
+  fclose(fid);
 
-% conserved quantities
-fname3 = sprintf('conserved_NN_%g_PPC_%g.dat',NN, PPC);
-fid = fopen(fname3, 'w');
-fprintf(fid,'#%s, PPC: %g, NN %g\n',problem_type, PPC, NN);
-fprintf(fid,'timesetep, KE, SE, TE, totalMom\n');
-for t=1:length(TIME)
-  fprintf(fid,'%16.15f, %16.15f, %16.15f, %16.15f, %16.15f\n',TIME(t), KE(t), SE(t), TE(t), totalMom(t));
-end
-fclose(fid);
+  % grid data
+  fname2 = sprintf('grid_NN_%g_PPC_%g.dat',NN, PPC);
+  fid = fopen(fname2, 'w');
+  fprintf(fid,'#%s, PPC: %g, NN %g\n',problem_type, PPC, NN);
+  fprintf(fid,'#node, xG, massG, velG, extForceG, intForceG, accl_G\n');
+  for ig=1:NN
+    fprintf(fid,'%g, %16.15f, %16.15f, %16.15f, %16.15f, %16.15f %16.15f\n',ig, nodePos(ig), massG(ig), velG(ig), extForceG(ig), intForceG(ig), accl_G(ig));
+  end
+  fclose(fid);
 
-% errors
-fname4 = sprintf('errors_NN_%g_PPC_%g.dat',NN, PPC);
-fid = fopen(fname4, 'w');
-fprintf(fid,'#%s, PPC: %g, NN %g\n',problem_type, PPC, NN);
-fprintf(fid,'#timesetep, totalEng_err, totalMom_err, tipDeflect_err\n');
-for t=1:length(TIME)
-  fprintf(fid,'%16.15f, %16.15f, %16.15f, %16.15f\n',TIME(t), totalEng_err(t), totalMom_err(t), tipDeflect_err(t));
-end
-fclose(fid);
+  % conserved quantities
+  fname3 = sprintf('conserved_NN_%g_PPC_%g.dat',NN, PPC);
+  fid = fopen(fname3, 'w');
+  fprintf(fid,'#%s, PPC: %g, NN %g\n',problem_type, PPC, NN);
+  fprintf(fid,'timesetep, KE, SE, TE, totalMom\n');
+  for t=1:length(TIME)
+    fprintf(fid,'%16.15f, %16.15f, %16.15f, %16.15f, %16.15f\n',TIME(t), KE(t), SE(t), TE(t), totalMom(t));
+  end
+  fclose(fid);
 
-fprintf(' Writing out the data files \n\t %s \n\t %s \n\t %s \n\t %s \n',fname1, fname2, fname3,fname4);
+  % errors
+  fname4 = sprintf('errors_NN_%g_PPC_%g.dat',NN, PPC);
+  fid = fopen(fname4, 'w');
+  fprintf(fid,'#%s, PPC: %g, NN %g\n',problem_type, PPC, NN);
+  fprintf(fid,'#timesetep, totalEng_err, totalMom_err, tipDeflect_err\n');
+  for t=1:length(TIME)
+    fprintf(fid,'%16.15f, %16.15f, %16.15f, %16.15f\n',TIME(t), totalEng_err(t), totalMom_err(t), tipDeflect_err(t));
+  end
+  fclose(fid);
+
+  fprintf(' Writing out the data files \n\t %s \n\t %s \n\t %s \n\t %s \n',fname1, fname2, fname3,fname4);
+end
 
 
 end
@@ -830,16 +669,7 @@ function [stressP,vol,lp,Fp]=computeStressFromVelocity(xp,lp,dt,velG,E,Fp,dF,NP,
     stressP(ip) = (E/2.0) * ( Fp(ip) - 1.0/Fp(ip) );        % hardwired for the mms test  see eq 50
     vol(ip)     = volP_0 * Fp(ip);
     lp(ip)      = lp_0 * Fp(ip);
-     
-    if(0) 
-      if( strcmp(d_debugging, 'advectBlock') && abs(stressP(ip)) > 1e-8) 
-        fprintf('computeStressFromVelocity: nodes_L: %g, nodes_R:%g, gUp: %g, dF: %g, stressP: %g \n',nodes(1),nodes(2), gUp, dF(ip), stressP(ip) );
-        fprintf(' Gs_L: %g, Gs_R: %g\n', Gs(1), Gs(2) );
-        fprintf(' velG_L: %g, velG_R: %g\n', velG(nodes(1)), velG(nodes(2)) );
-        fprintf(' prod_L %g, prod_R: %g \n\n', velG(nodes(1)) * Gs(1), velG(nodes(2)) * Gs(2) );
-      end
-    end
-    
+      
   end
 end
 
