@@ -17,7 +17,7 @@ f4(x) = a4*x**b4
 
 a1 = 0.1; b1 = 0.01;            # initial guess
 a2 = 0.1; b2 = 0.01;
-a3 = 0.1; b2 = 0.01;
+a3 = 0.1; b3 = 0.01;
 a4 = 0.1; b4 = 0.01;
 
 fit f1(x) 'L2norm.dat' using 1:2 via a1, b1
