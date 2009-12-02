@@ -81,8 +81,6 @@ void DQMOM::problemSetup(const ProblemSpecP& params)
 {
   ProblemSpecP db = params; 
 
-  proc0cout << "In DQMOM problem setup." << endl; //dbgprint
-
 #if defined(VERIFY_LINEAR_SOLVER)
   // grab the name of the file containing the test matrices
   ProblemSpecP db_verify_linear_solver = db->findBlock("Verify_Linear_Solver");
