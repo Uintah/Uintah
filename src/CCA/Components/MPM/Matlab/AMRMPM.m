@@ -296,13 +296,15 @@ if strcmp(problem_type, 'mms')
   
   xp_initial = zeros(NP,1);
   xp_initial = xp;
-  [Fp]   = MMS_deformationGradient(xp_initial, t, NP,speedSound);
-  [dp]   = MMS_displacement(xp_initial, t, NP, speedSound);
-  [velP] = MMS_velocity(xp_initial, t, NP, speedSound);
+  [Fp]      = MMS_deformationGradient(xp_initial, t, NP,speedSound);
+  [dp]      = MMS_displacement(xp_initial, t, NP, speedSound);
+  [velP]    = MMS_velocity(xp_initial, t, NP, speedSound);
+  [stressP] = computeStress(E,Fp,NP);
   
   lp  = lp .* Fp;
   vol = vol .* Fp;
-  xp =  xp_initial + dp;
+  xp  =  xp_initial + dp;
+  
   
 end
 
@@ -314,8 +316,9 @@ titleStr(4) ={sprintf('Constant resolution, #cells %g', NN)};
 
 
 %plot initial conditions
-plotResults(titleStr, t, tstep, xp, dp, massP, Fp, velP, stressP, nodePos, velG, massG, momG)
-
+if(plotSwitch == 1)
+  plotResults(titleStr, t, tstep, xp, dp, massP, Fp, velP, stressP, nodePos, velG, massG, momG)
+endif
 fprintf('tfinal: %g, interpolator: %s, NN: %g, NP: %g dx_min: %g \n',tfinal,interpolation, NN,NP,dx_min);
 %input('hit return')
 
@@ -447,7 +450,8 @@ while t<tfinal && tstep < max_tstep
     tmp(ip)  = tmp(ip) + dxp;
   end
   
-  %fprintf('sum(tmp): %9.8f \n',sum(tmp));
+  
+
   
   DX_tip(tstep)=dp(NP);
   T=t; %-dt;
@@ -650,7 +654,7 @@ end
 %______________________________________________________________________
 % functions
 %______________________________________________________________________
-function [Fp, dF, vol, lp] = computeDeformationGradient(xp,lp,dt,velG,Fp,dF,NP, nRegions, Regions, nodePos,Lx)
+function [Fp, dF, vol, lp] = computeDeformationGradient(xp,lp,dt,velG,Fp,NP, nRegions, Regions, nodePos,Lx)
   global NSFN;
   
   for ip=1:NP
@@ -676,8 +680,6 @@ function [stressP]=computeStress(E,Fp,NP)
   for ip=1:NP
 %    stressP(ip) = E * (Fp(ip)-1.0);
     stressP(ip) = (E/2.0) * ( Fp(ip) - 1.0/Fp(ip) );        % hardwired for the mms test  see eq 50
-
-      
   end
 end
 
