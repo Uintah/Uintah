@@ -101,11 +101,6 @@ public:
   inline const vector<string> getSourcesList(){
     return d_sources; };
 
-  /** @brief Compute the diffusion terms */
-  template <class fT, class oldPhiT, class lambdaT> 
-  void computeDiff( const Patch* patch, fT& Fdiff, 
-                    oldPhiT& oldPhi, lambdaT& lambda );
-
   /** @brief Apply boundary conditions */
   template <class phiType> void computeBCs( const Patch* patch, string varName, phiType& phi );
 
@@ -128,24 +123,6 @@ public:
   inline void setTimeInt( ExplicitTimeInt* timeIntegrator ) {
     d_timeIntegrator = timeIntegrator; 
   }
-
-  struct FaceValues {
-    double e; 
-    double w; 
-    double n; 
-    double s; 
-    double t; 
-    double b; 
-    double p; 
-  };  
-
-  /** @brief Interpolate a point to face values for a given control volume. */
-  template <class phiT, class interpT> 
-  void interpPtoF( phiT& phi, const IntVector c, interpT& F ); 
-
-  /** @brief Take a gradient of a variable to result in a face value for a given control volume. */
-  template <class phiT, class gradT> 
-  void gradPtoF( phiT& phi, const IntVector c, const Patch* p, gradT& G ); 
 
   /** @brief Schedule dummy initialization for MPMArches */
   void sched_dummyInit( const LevelP& level, SchedulerP& sched );
