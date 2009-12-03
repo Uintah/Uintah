@@ -97,11 +97,6 @@ public:
   /** @brief Compute all source terms for this scalar eqn */
   void sched_computeSources( const LevelP& level, SchedulerP& schedi, int timeSubStep );
 
-  /** @brief Compute the diffusion terms */
-  template <class fT, class oldPhiT, class lambdaT> 
-  void computeDiff( const Patch* patch, fT& Fdiff, 
-                    oldPhiT& oldPhi, lambdaT& lambda );
-
   /** @brief Apply boundary conditions */
   template <class phiType> void computeBCs( const Patch* patch, string varName, phiType& phi ){
     d_boundaryCond->setScalarValueBC( 0, patch, phi, varName );
@@ -141,24 +136,6 @@ public:
                      const MaterialSubset* matls, 
                      DataWarehouse* old_dw, 
                      DataWarehouse* new_dw );
-
-  struct FaceValues {
-    double e; 
-    double w; 
-    double n; 
-    double s; 
-    double t; 
-    double b; 
-    double p; 
-  };  
-
-  /** @brief Interpolate a point to face values for the respective cv. */
-  template <class phiT, class interpT>
-  void interpPtoF( phiT& phi, const IntVector c, interpT& F ); 
-
-  /** @brief Take a gradient of a variable to result in a face value for a respective cv. */
-  template <class phiT, class gradT>
-  void gradPtoF( phiT& phi, const IntVector c, const Patch* p, gradT& G ); 
 
   /** @brief Clip values of phi that are too high or too low (after RK time averaging). */
   template<class phiType>
