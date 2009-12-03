@@ -63,11 +63,12 @@ bar_max     = 1;
 
 bar_length  = bar_max - bar_min;
 
-domain     = 1.0;
-area       = 1.;
-plotSwitch = 0;
-writeData  = 0;
-max_tstep  = BigNum;
+domain       = 1.0;
+area         = 1.;
+plotSwitch   = 1;
+plotInterval = 10;
+writeData    = 0;
+max_tstep    = BigNum;
 
 % HARDWIRED FOR TESTING
 %NN          = 16;
@@ -155,19 +156,24 @@ end
 fprintf('Particle Position\n');
 ip = 1;
 
-for n=1:NN-1
+startNode = 1;
+if( strcmp(interpolation,'GIMP') )
+  startNode = 2;
+end
+
+for n=startNode:NN-1
   dx_p = (nodePos(n+1) - nodePos(n) )/double(PPC);
   
   offset = dx_p/2.0;
   
   for p = 1:PPC
-    xp_new = nodePos(n) + double(p) * dx_p + offset;
+    xp_new = nodePos(n) + double(p-1) * dx_p + offset;
     
     if( xp_new >= bar_min && xp_new <= bar_max)
     
-      xp(ip) = nodePos(n) + double(p) * dx_p + offset;
+      xp(ip) = xp_new;
       
-      fprintf('xp(%g) %g ',ip, xp(ip));
+      fprintf('nodePos: %4.5e \t xp(%g) %g \t dx_p: %g \t offset: %g',nodePos(n),ip, xp(ip),dx_p,offset);
       
       if(ip > 1)
         fprintf( '\t \tdx: %g \n',(xp(ip) - xp(ip-1)));
@@ -494,7 +500,7 @@ while t<tfinal && tstep < max_tstep
     %fprintf('sum position error %E \n',sum(pos_error))
   end
   
-  if( strcmp(problem_type, 'compaction') && (mod(tstep,200) == 0) && (plotSwitch == 1) )
+  if( strcmp(problem_type, 'compaction') && (mod(tstep,plotInterval) == 0) && (plotSwitch == 1) )
     term1 = (2.0 * density * bodyForce)/E;
     for ip=1:NP
       term2 = term1 * (delta - xp(ip));
@@ -523,14 +529,21 @@ while t<tfinal && tstep < max_tstep
   end
   
   
-  if (strcmp(problem_type, 'mms') && (mod(tstep,1) == 0) )
+  if (strcmp(problem_type, 'mms'))
     xpExact  = zeros(NP,1);
       
-    [dpExact] = MMS_displacement(xp_initial, t, NP, speedSound);
-    [velExact] = MMS_velocity(xp_initial, t, NP, speedSound);
+    [dpExact]  = MMS_displacement(       xp_initial, t, NP, speedSound);
+    [velExact] = MMS_velocity(           xp_initial, t, NP, speedSound);
+    [FpExact]  = MMS_deformationGradient(xp_initial, t, NP, speedSound);
     xpExact = xp_initial + dpExact;
     
-    if(plotSwitch == 1)
+    % compute L2Norm
+    d = abs(dp - dpExact);
+    
+    L2_norm = sqrt( sum(d.^2)/length(dpExact) );
+    maxError = max(d);
+    
+    if( (plotSwitch == 1) && (mod(tstep,plotInterval) == 0))
       figure(2)                                
       set(2,'position',[1000,100,700,700]);    
 
@@ -542,14 +555,25 @@ while t<tfinal && tstep < max_tstep
       legend('Simulation','Exact')             
       xlabel('Position');                      
       ylabel('Particle displacement');
+      
+      vel_G_exact = interp1(xp,velExact,nodePos);
+      e = ones(size(nodePos));
+      e(:) = 1e100;
 
       subplot(3,1,2),plot(xp,velP,'rd', xp, velExact,'b');
       ylim([-20 20])
-      ylabel('Particle Velocity');    
+      ylabel('Particle Velocity'); 
+      hold on
+      errorbar(nodePos,vel_G_exact, e,'LineStyle','none','Color',[0.8314 0.8157 0.7843]);
+      hold off
 
-      subplot(3,1,3),plot(xp_initial,extForceP);
+      subplot(3,1,3),plot(xp,extForceP);
      % ylim([-150 150])
       ylabel('externalForce');
+      
+      subplot(3,1,3),plot(xp,Fp,'rd',xp,FpExact,'b');
+     % ylim([-150 150])
+      ylabel('Fp');
 
       f_name = sprintf('%g.2.ppm',tstep-1);
       F = getframe(gcf);
@@ -557,11 +581,7 @@ while t<tfinal && tstep < max_tstep
       imwrite(X,f_name);
   %    input('hit return');
     end
-    % compute L2Norm
-    d = abs(dp - dpExact);
-    
-    L2_norm = sqrt( sum(d.^2)/length(dpExact) );
-    maxError = max(d);      
+      
   end
   
   
@@ -569,7 +589,7 @@ while t<tfinal && tstep < max_tstep
   
   %__________________________________
   % plot intantaneous solution
-  if (mod(tstep,100) == 0) && (plotSwitch == 1)
+  if (mod(tstep,plotInterval) == 0) && (plotSwitch == 1)
     plotResults(titleStr, t, tstep, xp, dp, massP, Fp, velP, stressP, nodePos, velG, massG, momG)
     %input('hit return');
   end
@@ -819,13 +839,11 @@ end
 %__________________________________
 %  Reference:  Uintah Documentation Chapter 7 MPM, Equation 7.14
 function [nodes,Ss]=findNodesAndWeights_gimp(xp, lp, nRegions, Regions, nodePos, Lx)
-  global PPC;
   global NSFN;
 
  [nodes,dx]=positionToClosestNodes(xp,nRegions,Regions, nodePos);
   
   L = dx;
-%  lp= dx/(2 * PPC);          % This assumes that lp = lp_initial.
   
   for ig=1:NSFN
     Ss(ig) = double(-9);
@@ -874,7 +892,7 @@ end
 %  Equation 15 of "Structured Mesh Refinement in Generalized Interpolation Material Point Method
 %  for Simulation of Dynamic Problems"
 function [nodes,Ss]=findNodesAndWeights_gimp2(xp, lp, nRegions, Regions, nodePos, Lx)
-  global PPC;
+
   global NSFN;
   % find the nodes that surround the given location and
   % the values of the shape functions for those nodes
@@ -886,7 +904,6 @@ function [nodes,Ss]=findNodesAndWeights_gimp2(xp, lp, nRegions, Regions, nodePos
     node = nodes(ig);
     Lx_minus = Lx(node,1);
     Lx_plus  = Lx(node,2);
-%    lp       = dx/(2 * PPC);          % This assumes that lp = lp_initial.
 
     delX = xp - nodePos(node);
     A = delX - lp;
@@ -981,7 +998,7 @@ end
 %__________________________________
 %  Reference:  Uintah Documentation Chapter 7 MPM, Equation 7.17
 function [nodes,Gs, dx]=findNodesAndWeightGradients_gimp(xp, lp, nRegions, Regions, nodePos,Lx)
-  global PPC;
+
   global NSFN;
   % find the nodes that surround the given location and
   % the values of the gradients of the shape functions.
@@ -989,7 +1006,6 @@ function [nodes,Gs, dx]=findNodesAndWeightGradients_gimp(xp, lp, nRegions, Regio
   [nodes,dx]=positionToClosestNodes(xp,nRegions,Regions, nodePos);
   
   L  = dx;
-%  lp = dx/(2 * PPC);          % This assumes that lp = lp_initial.
   
   for ig=1:NSFN
     Gs(ig) = -9;
@@ -1036,7 +1052,7 @@ end
 %  The equations for this function are derived in the hand written notes.  
 % The governing equations for the derivation come from equation 15.
 function [nodes,Gs, dx]=findNodesAndWeightGradients_gimp2(xp, lp, nRegions, Regions, nodePos,Lx)
-  global PPC;
+
   global NSFN;
   
   [nodes,dx]=positionToClosestNodes(xp,nRegions,Regions, nodePos);
@@ -1047,7 +1063,6 @@ function [nodes,Gs, dx]=findNodesAndWeightGradients_gimp2(xp, lp, nRegions, Regi
     node = nodes(ig);                                                       
     Lx_minus = Lx(node,1);                                                  
     Lx_plus  = Lx(node,2);                                                  
-%    lp       = dx/(2 * PPC);          % This assumes that lp = lp_initial.  
 
     delX = xp - nodePos(node);                                              
     A = delX - lp;                                                          
@@ -1129,26 +1144,36 @@ end
 
 
 %__________________________________
-function plotResults(titleStr,t, tstep, xp, dp, massP, dF, velP, stressP, nodePos, velG, massG, momG)
+function plotResults(titleStr,t, tstep, xp, dp, massP, Fp, velP, stressP, nodePos, velG, massG, momG)
 
     % plot SimulationState
   figure(1)
   set(1,'position',[50,100,700,700]);
   
-  subplot(6,1,1),plot(xp,velP,'rd');
+  vel_G_inter = interp1(xp,velP,nodePos);
+  e = ones(size(nodePos));
+  e(:) = 1e100;
+  
+  subplot(3,1,1),plot(xp,velP,'rd');
+  ylim([min(1.1*velP - 1e-3) max(1.1*velP + 1e-3)])
   xlabel('Particle Position');
   ylabel('Particle velocity');
   title(titleStr);
+  hold on
+  errorbar(nodePos,vel_G_inter, e,'LineStyle','none','Color',[0.8314 0.8157 0.7843]);
+  hold off
   %axis([0 50 99 101] )
 
-  subplot(6,1,2),plot(xp,dF,'rd');
+  subplot(3,1,2),plot(xp,Fp,'rd');
   %axis([0 50 0 2] )
-  ylabel('dF');
+  ylabel('Fp');
 
-  subplot(6,1,3),plot(xp,stressP,'rd');
+  subplot(3,1,3),plot(xp,stressP,'rd');
   %axis([0 50 -1 1] )
   ylabel('Particle stress');
-
+  
+  
+if(0)
   subplot(6,1,4),plot(nodePos, velG,'bx');
   xlabel('NodePos');
   ylabel('grid Vel');
@@ -1178,6 +1203,7 @@ function plotResults(titleStr,t, tstep, xp, dp, massP, dF, velP, stressP, nodePo
   [X,map] = frame2im(F);
   imwrite(X,f_name)
   %input('hit return');
+end
 end
 
 %__________________________________
