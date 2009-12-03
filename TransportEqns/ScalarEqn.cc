@@ -391,7 +391,7 @@ ScalarEqn::buildTransportEqn( const ProcessorGroup* pc,
   
     //----DIFFUSION
     if (d_doDiff)
-      computeDiff( patch, Fdiff, oldPhi, mu_t );
+      d_disc->computeDiff( patch, Fdiff, oldPhi, mu_t, areaFraction, d_turbPrNo );
  
     //----SUM UP RHS
     for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
@@ -487,39 +487,6 @@ ScalarEqn::solveTransportEqn( const ProcessorGroup* pc,
 }
 
 //---------------------------------------------------------------------------
-// Method: Compute the diffusion term. 
-// I was templating this to see if I could produce a computeDiff that
-// worked for all data types. Note sure if it works yet. But it does at least work for 
-// a cc scalar. 
-//---------------------------------------------------------------------------
-template <class fT, class oldPhiT, class gammaT > void
-ScalarEqn::computeDiff( const Patch* p, fT& Fdiff, oldPhiT& oldPhi, gammaT& gamma )
-{
-  // --- compute diffusion term ---
-  Vector Dx = p->dCell();
-
-  FaceData<double> F;
-  FaceData<double> G;
-
-  for (CellIterator iter=p->getCellIterator(); !iter.done(); iter++){
-
-    IntVector c = *iter; 
-
-    // Get gradient and interpolated diffusion coef.     
-    interpPtoF( gamma, c, F ); 
-    gradPtoF( oldPhi, c, p, G ); 
-
-    Fdiff[c] = Dx.y()*Dx.z()*(F.e*G.e - F.w*G.w)/d_turbPrNo;           
-#ifdef YDIM
-    Fdiff[c] += Dx.x()*Dx.z()*(F.n*G.n - F.s*G.s)/d_turbPrNo;      
-#endif  
-#ifdef ZDIM 
-    Fdiff[c] += Dx.y()*Dx.z()*(F.t*G.t - F.b*G.b)/d_turbPrNo;      
-#endif
-  } 
-
-}
-//---------------------------------------------------------------------------
 // Method: Compute the boundary conditions. 
 //---------------------------------------------------------------------------
 template<class phiType> void
@@ -529,54 +496,6 @@ ScalarEqn::computeBCs( const Patch* patch,
 {
   d_boundaryCond->setScalarValueBC( 0, patch, phi, varName ); 
 }
-//---------------------------------------------------------------------------
-// Method: Interpolate a variable to the face of its respective cv
-//---------------------------------------------------------------------------
-template <class phiT, class interpT > void
-ScalarEqn::interpPtoF( phiT& phi, const IntVector c, interpT& F )
-{
-  IntVector xd(1,0,0);
-  IntVector yd(0,1,0);
-  IntVector zd(0,0,1);
-  
-  F.p = phi[c]; 
-
-  F.e = 0.5 * ( phi[c] + phi[c + xd] );
-  F.w = 0.5 * ( phi[c] + phi[c - xd] );
-#ifdef YDIM
-  F.n = 0.5 * ( phi[c] + phi[c + yd] ); 
-  F.s = 0.5 * ( phi[c] + phi[c - yd] ); 
-#endif
-#ifdef ZDIM
-  F.t = 0.5 * ( phi[c] + phi[c + zd] ); 
-  F.b = 0.5 * ( phi[c] - phi[c - zd] ); 
-#endif
-} 
-//---------------------------------------------------------------------------
-// Method: Gradient a variable to the face of its respective cv
-//---------------------------------------------------------------------------
-template <class phiT, class gradT> void
-ScalarEqn::gradPtoF( phiT& phi, const IntVector c, const Patch* p, gradT& G )
-{
-  IntVector xd(1,0,0);
-  IntVector yd(0,1,0);
-  IntVector zd(0,0,1);
-  
-  Vector Dx = p->dCell();
-  
-  G.p = phi[c]; 
-
-  G.e =  ( phi[c + xd] - phi[c] ) / Dx.x();
-  G.w =  ( phi[c] - phi[c - xd] ) / Dx.y();
-#ifdef YDIM
-  G.n =  ( phi[c + yd] - phi[c] ) / Dx.y(); 
-  G.s =  ( phi[c] - phi[c - yd] ) / Dx.y(); 
-#endif
-#ifdef ZDIM
-  G.t =  ( phi[c + zd] - phi[c] ) / Dx.z(); 
-  G.b =  ( phi[c] - phi[c - zd] ) / Dx.z(); 
-#endif
-} 
 //---------------------------------------------------------------------------
 // Method: Clip the scalar 
 //---------------------------------------------------------------------------
