@@ -429,6 +429,7 @@
           <doDiff                       spec="OPTIONAL BOOLEAN"/>
           <doConv                       spec="OPTIONAL BOOLEAN"/>
           <conv_scheme                  spec="OPTIONAL STRING 'upwind, super_bee'"/>
+          <turbulentPrandtlNumber       spec="OPTIONAL DOUBLE" />
           <initialization               spec="OPTIONAL NO_DATA"
                                         attribute1="type REQUIRED STRING 'env_constant, constant, env_step, step'">
             <!-- constant value initialization -->
@@ -464,6 +465,7 @@
           <doDiff                       spec="OPTIONAL BOOLEAN"/>
           <doConv                       spec="OPTIONAL BOOLEAN"/>
           <conv_scheme                  spec="OPTIONAL STRING 'upwind, super_bee'"/>
+          <turbulentPrandtlNumber       spec="OPTIONAL DOUBLE" />
           <initialization               spec="OPTIONAL NO_DATA"
                                         attribute1="type REQUIRED STRING 'env_constant, constant, env_step'">
             <!-- environment constant value initialization -->
