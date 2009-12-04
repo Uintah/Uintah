@@ -4,7 +4,7 @@
   <constitutive_model              spec="REQUIRED NO_DATA"
                                            attribute1="type REQUIRED STRING 'comp_mooney_rivlin, comp_neo_hook, comp_neo_hook_plastic,
                                                                         elastic_plastic, hypo_elastic, hypoelastic_plastic, elastic_plastic_hp, 
-                                                                        ideal_gas, membrane, mw_visco_elastic, rigid, shell_CNH, 
+                                                                        ideal_gas, membrane, murnahanMPM, mw_visco_elastic, rigid, shell_CNH, 
                                                                         small_strain_plastic, trans_iso_hyper, visco_plastic, 
                                                                         visco_scram, visco_trans_iso_hyper, water, kayenta, cnh_mms cnh_damage cnhp_damage'">
     <allow_no_tension              spec="OPTIONAL BOOLEAN" />
@@ -215,10 +215,12 @@
       <initial_yield               spec="OPTIONAL DOUBLE" />
       <integration_parameter_theta spec="OPTIONAL DOUBLE" />
     </visco_plasticity_model>
+    <pressure                      spec="OPTIONAL DOUBLE" />
     <PR                            spec="OPTIONAL DOUBLE" />
     <remove_particles              spec="OPTIONAL BOOLEAN" />
     <randomize_parameters          spec="OPTIONAL BOOLEAN" />
     <reduction_factor              spec="OPTIONAL DOUBLE" />
+    <rho0                          spec="OPTIONAL DOUBLE" />
     <RTau1                         spec="OPTIONAL DOUBLE" />
     <RTau2                         spec="OPTIONAL DOUBLE" />
     <RTau3                         spec="OPTIONAL DOUBLE" />
