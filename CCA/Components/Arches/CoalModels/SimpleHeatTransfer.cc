@@ -687,6 +687,8 @@ SimpleHeatTransfer::computeModel( const ProcessorGroup * pc,
 	        double Eb = 4.0*sigma*pow(unscaled_particle_temperature,4);
 	        Q_radiation = Apsc*(FSum - Eb);
 	        abskp_ = pi/4*Qabs*unscaled_weight*pow(unscaled_length,2); 
+        } else {
+          abskp_ = 0.0;
         }
 
         heat_rate_ = (Q_convection + Q_radiation)/(mp_Cp*d_pt_scaling_constant);
@@ -803,19 +805,24 @@ SimpleHeatTransfer::g1( double z){
 
 double
 SimpleHeatTransfer::heatcp(double Tp){
-  double MW [5] = { 12., 1., 14., 16., 32.}; // Atomic weight of elements (C,H,N,O,S)
-  double Rgas = 8314.3; // J/kg/K
+  if (Tp < 273) {
+    // correlation is not valid
+    return 0.0;
+  } else {
+    double MW [5] = { 12., 1., 14., 16., 32.}; // Atomic weight of elements (C,H,N,O,S)
+    double Rgas = 8314.3; // J/kg/K
 
-  double MW_avg = 0.0; // Mean atomic weight of coal
-  for(int i=0;i<5;i++){
-    MW_avg += yelem[i]/MW[i];
+    double MW_avg = 0.0; // Mean atomic weight of coal
+    for(int i=0;i<5;i++){
+      MW_avg += yelem[i]/MW[i];
+    }
+    MW_avg = 1/MW_avg;
+
+    double z1 = 380.0/Tp;
+    double z2 = 1800.0/Tp;
+    double cp = (Rgas/MW_avg)*(g1(z1)+2.0*g1(z2));
+    return cp; // J/kg/K
   }
-  MW_avg = 1/MW_avg;
-
-  double z1 = 380.0/Tp;
-  double z2 = 1800.0/Tp;
-  double cp = (Rgas/MW_avg)*(g1(z1)+2.0*g1(z2));
-  return cp; // J/kg/K
 }
 
 
