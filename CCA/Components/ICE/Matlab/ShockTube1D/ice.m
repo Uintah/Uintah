@@ -2,7 +2,7 @@
 %
 %   This script tests full ICE time-stepping algorithm for Sod's Shocktube
 %   problem in one space dimension.
-%   We solve the compressible Euler equations for density (rho), veclocity
+%   We solve the compressible Euler equations for density (rho), velocity
 %   (u), temperature (T) and pressure (p). Internal energy is also used in
 %   parts of the timestep (but is linearly related to the temperature).
 %
@@ -21,7 +21,7 @@
 clear all;
 close all;
 globalParams;                                       % Load global parameters
-
+setenv('LD_LIBRARY_PATH', ['/usr/lib']);
 %______________________________________________________________________
 %     Problem Setup
 
@@ -38,8 +38,8 @@ P.extraCells        = 1;                            % Number of ghost cells in e
 % Time-stepping
 P.maxTime           = 5e-4;                         % Maximum simulation time [sec]
 P.initTime          = 0.0;                          % Initial simulation time [sec]
-P.delt_init         = 1e-6;                         % First timestep [sec]
-P.maxTimeSteps      = 1000;                          % Maximum number of timesteps [dimensionless]
+P.delt_init         = 1e-7;                         % First timestep [sec]
+P.maxTimeSteps      = 1;                          % Maximum number of timesteps [dimensionless]
 P.CFL               = 0.25;                         % Courant number (~velocity*delT/delX) [dimensionless]
 P.advectionOrder    = 1;                            % 1=1st-order advection operator; 2=possibly-limited-2nd-order
 
@@ -49,7 +49,7 @@ P.gamma             = 1.4;                          % gamma coefficient in the E
 
 %================ ICE Interal Parameters, Debugging Flags ================
 % Debug flags
-P.compareUintah     = 0;                            % Compares vs. Uintah ICE and plots results
+P.compareUintah     = 1;                            % Compares vs. Uintah ICE and plots results
 P.debugSteps        = 1;                            % Debug printout of steps (tasks) within timestep
 P.debugAdvectRho    = 0;                            % Debug printouts in advectRho()
 P.debugAdvectQ      = 0;                            % Debug printouts in advectQ()
@@ -136,6 +136,7 @@ mass_vrtx_2     = zeros(1,totNodes);            % --------//-------  (for advect
 %================ Useful constants ================
 
 d_SMALL_NUM = 1e-100;                           % A small number (for bullet-proofing
+d_TINY_RHO  = 1.0e-12
 delT        = P.delt_init;                      % Init timestep
 
 if (P.compareUintah)                            % Don't make more than 2 timsteps when comparing to Uintah
@@ -153,13 +154,11 @@ end
 
 for r = 1:numRegions                                    % Init each region, assuming they are a non-overlapping all-covering partition of the domain
   R       = Region{r};
-  first   = max(G.first_CC,...
-            floor(R.min./G.delX - 0.5 + G.first_CC));
-  last    = min(G.last_CC,...
-            floor(R.max./G.delX - 0.5 + G.first_CC));
+  first   = max(G.first_CC,floor(R.min./G.delX  + G.first_CC));
+  last    = min(G.last_CC, floor(R.max./G.delX  + G.first_CC));
 
   for j = first:last
-     rho_CC(j)           = R.density;
+     rho_CC(j)   = R.density + d_TINY_RHO * R.density;
     %rho_CC(j)    = 1.2 + 0.5*exp(-((x_CC(j)- 0.5)^2)/.01);
     xvel_CC(j)   = R.velocity;
     temp_CC(j)   = R.temperature;
@@ -211,8 +210,8 @@ end
 %     Time integration loop
 t = P.initTime + delT;
 tstep = 0;
-%for tstep = 1:P.maxTimeSteps
-while (tstep <= P.maxTimeSteps & t <= P.maxTime)
+for tstep = 1:P.maxTimeSteps
+%while (tstep <= P.maxTimeSteps & t <= P.maxTime)
   tstep = tstep + 1;
   fprintf('\n_____________________________________tstep=%d, t=%e, prev. delT=%e\n', tstep, t, delT);
 
@@ -423,6 +422,7 @@ while (tstep <= P.maxTimeSteps & t <= P.maxTime)
     A           = P.CFL*G.delX/(speed_Sound + abs(xvel_CC(j)));
     delt_CFL    = min(A, delt_CFL);
   end
+  
   if (P.debugSteps)
     fprintf('Aggressive delT Based on currant number CFL = %.3e\n',delt_CFL);
   end
@@ -437,6 +437,7 @@ while (tstep <= P.maxTimeSteps & t <= P.maxTime)
   %================ Various breaks ================
 
   delT    = delt_CFL;                                             % Compute delT - "agressively" small
+  delT    = 1e-7;
   t       = t + delT;                                             % Advance time
   if (t >= P.maxTime)
     fprintf('Reached maximum time\n');
