@@ -388,8 +388,8 @@ DWDatabase<DomainType>::getlist( const VarLabel* label,
 				      vector<Variable*>& varlist ) const
 {
   VarLabelMatl<DomainType> v(label, matlIndex, getRealDomain(dom));
-  pair<typename varDBtype::const_iterator, typename varDBtype::const_iterator> ret;
-  ret = vars.equal_range(v);
+  pair<typename varDBtype::const_iterator, typename varDBtype::const_iterator> ret = vars.equal_range(v);
+
   varlist.resize(vars.count(v));
   for (typename varDBtype::const_iterator iter=ret.first; iter!=ret.second; ++iter)
     varlist[iter->second.version] = iter->second.var;
