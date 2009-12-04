@@ -347,8 +347,7 @@ DWDatabase<DomainType>::getDataItem( const VarLabel* label, int matlIndex, const
 {
   ASSERT(matlIndex >= -1);
   VarLabelMatl<DomainType> v(label, matlIndex, getRealDomain(dom));
-  pair<typename varDBtype::const_iterator, typename varDBtype::const_iterator> ret;
-  ret = vars.equal_range(v);
+  pair<typename varDBtype::const_iterator, typename varDBtype::const_iterator> ret = vars.equal_range(v);
   for (typename varDBtype::const_iterator iter=ret.first; iter!=ret.second; ++iter){
     if (iter->second.version == 0 ) {
       return iter->second;
