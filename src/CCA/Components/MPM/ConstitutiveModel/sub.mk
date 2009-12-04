@@ -66,6 +66,7 @@ SRCS   += \
         $(SRCDIR)/Water.cc                      \
         $(SRCDIR)/ViscoPlastic.cc               \
         $(SRCDIR)/Kayenta.cc                    \
+        $(SRCDIR)/MurnahanMPM.cc                \
         $(SRCDIR)/SoilFoam.cc
 
 SUBDIRS := \
