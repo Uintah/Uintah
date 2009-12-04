@@ -249,8 +249,7 @@ DWDatabase<DomainType>::scrub(const VarLabel* label, int matlIndex, const Domain
   SCI_THROW(InternalError(msgstr.str(), __FILE__, __LINE__));
   }
 #endif
-  pair<typename varDBtype::const_iterator, typename varDBtype::const_iterator> ret;
-  ret = vars.equal_range(v);
+  pair<typename varDBtype::const_iterator, typename varDBtype::const_iterator> ret = vars.equal_range(v);
   for (typename varDBtype::const_iterator iter=ret.first; iter!=ret.second; ++iter){
     delete iter->second.var;
   }
