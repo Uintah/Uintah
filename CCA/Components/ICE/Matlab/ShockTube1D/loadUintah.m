@@ -7,8 +7,8 @@
 %
 %   See also ICE, PLOTRESULTS.
 
-cd /scratch/SCIRun_Fresh/linux32dbg/Packages/Uintah/StandAlone;
-uda = 'shockTube.uda.000';
+%cd /scratch/SCIRun_Fresh/linux32dbg/Packages/Uintah/StandAlone;
+uda = '/data/Builds/071009SCIRun/opt_Linux/StandAlone/shockTube.uda.002';
 delX = 0.01;
 
 %  extract the physical time for each dump
@@ -24,14 +24,14 @@ if (tstep > 1)
 end
 
 ts = tstep -1;
-startEnd = '-istart 0 0 0 -iend 1000 0 0';
-c1 = sprintf('lineextract -v rho_CC        -timestep %i %s -o rho      -m 0 -uda %s',ts,startEnd,uda);
-c2 = sprintf('lineextract -v vel_CC        -timestep %i %s -o vel_tmp  -m 0 -uda %s',ts,startEnd,uda);
-c3 = sprintf('lineextract -v temp_CC       -timestep %i %s -o temp     -m 0 -uda %s',ts,startEnd,uda);
-c4 = sprintf('lineextract -v press_CC      -timestep %i %s -o press    -m 0 -uda %s',ts,startEnd,uda);
-c5 = sprintf('lineextract -v delP_Dilatate -timestep %i %s -o delP     -m 0 -uda %s',ts,startEnd,uda);
-c6 = sprintf('lineextract -v speedSound_CC -timestep %i %s -o Ssound   -m 0 -uda %s',ts,startEnd,uda);
-c7 = sprintf('lineextract -v uvel_FCME     -timestep %i %s -o uvelFC   -m 0 -uda %s',ts,startEnd,uda);
+startEnd = '-istart -1 0 0 -iend 1000 0 0';
+c1 = sprintf('lineextract -v rho_CC         -cellCoords -timestep %i %s -o rho      -m 0 -uda %s',ts,startEnd,uda);
+c2 = sprintf('lineextract -v vel_CC         -cellCoords -timestep %i %s -o vel_tmp  -m 0 -uda %s',ts,startEnd,uda);
+c3 = sprintf('lineextract -v temp_CC        -cellCoords -timestep %i %s -o temp     -m 0 -uda %s',ts,startEnd,uda);
+c4 = sprintf('lineextract -v press_CC       -cellCoords -timestep %i %s -o press    -m 0 -uda %s',ts,startEnd,uda);
+c5 = sprintf('lineextract -v delP_Dilatate  -cellCoords -timestep %i %s -o delP     -m 0 -uda %s',ts,startEnd,uda);
+c6 = sprintf('lineextract -v press_equil_CC -cellCoords -timestep %i %s -o press_eq -m 0 -uda %s',ts,startEnd,uda);
+c7 = sprintf('lineextract -v uvel_FCME      -cellCoords -timestep %i %s -o uvelFC   -m 0 -uda %s',ts,startEnd,uda);
 
 [status1, result1]=unix(c1);
 [status2, result2]=unix(c2);
@@ -45,15 +45,24 @@ c7 = sprintf('lineextract -v uvel_FCME     -timestep %i %s -o uvelFC   -m 0 -uda
 c8 = sprintf('sed ''s/\\[//g'' vel_tmp | sed ''s/\\]//g'' >vel');
 [status8, result8]=unix(c8);
 
-delP_ice    = importdata('delP');
-press_ice   = importdata('press');
-temp_ice    = importdata('temp');
-rho_ice     = importdata('rho');
-vel_ice     = importdata('vel');
-Ssound_ice  = importdata('Ssound');
-uvel_FC_ice = importdata('uvelFC');
-x           = press_ice(:,1) .* delX;
+delP_ice      = importdata('delP');
+press_ice     = importdata('press');
+temp_ice      = importdata('temp');
+rho_ice       = importdata('rho');
+vel_ice       = importdata('vel');
+press_eq_ice  = importdata('press_eq');
+uvel_FC_ice   = importdata('uvelFC');
+x_ice         = press_ice(:,1);
 
-unix('/bin/rm delP press temp rho vel Ssound uvelFC vel_tmp');
+Ncells = length(x_ice);
 
-cd /scratch/SCIRun_Fresh/src/Packages/Uintah/CCA/Components/ICE/Matlab_1dShockTube
+x_ice         = reshape(x_ice,      1,length(x_ice));
+rho_ice       = reshape(rho_ice(:,4) , 1, Ncells);
+vel_ice       = reshape(vel_ice(:,4) , 1, Ncells);
+temp_ice      = reshape(temp_ice(:,4) , 1, Ncells);
+press_ice     = reshape(press_ice(:,4) , 1, Ncells);
+delP_ice      = reshape(delP_ice(:,4) , 1, Ncells);
+press_eq_ice  = reshape(press_eq_ice(:,4) , 1, Ncells);
+uvel_FC_ice    = reshape(uvel_FC_ice(:,4) , 1, Ncells);
+
+%unix('/bin/rm delP press temp rho vel Ssound uvelFC vel_tmp');

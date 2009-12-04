@@ -8,60 +8,63 @@
 %   See also ICE, LOADUINTAH.
 
 if (P.compareUintah)
-
+  
+  err = sum(x_CC - x_ice)
   %================ Plot results ================
   figure(1);
-  set(gcf,'position',[100,600,400,400]);
-  rangeMatlab = 1:length(rho_CC)-1;
+  set(gcf,'position',[100,600,700,700]);
+  rangeMatlab = 1:length(rho_CC);
+  xlo = 0.48;
+  xhi = 0.52;
 
-  subplot(2,2,1), plot(x ,rho_CC(rangeMatlab)', x, rho_ice(:,4));
-  xlim([P.boxLower(1) P.boxUpper(1)]);
+  subplot(2,2,1), plot(x_CC ,rho_CC, x_ice, rho_ice);
+  xlim([xlo xhi]);
   legend('\rho', 'rho Uintah',2);
   grid on;
 
-  subplot(2,2,2), plot(x ,xvel_CC(rangeMatlab)', x, vel_ice(:,4));
-  xlim([P.boxLower(1) P.boxUpper(1)]);
+  subplot(2,2,2), plot(x_CC ,xvel_CC, x_ice, vel_ice);
+  xlim([xlo xhi]);
   legend('u_1', 'u Uintah',2);
   grid on;
 
-  subplot(2,2,3), plot(x ,temp_CC(rangeMatlab)', x, temp_ice(:,4));
-  xlim([P.boxLower(1) P.boxUpper(1)]);
+  subplot(2,2,3), plot(x_CC ,temp_CC, x_ice, temp_ice);
+  xlim([xlo xhi]);
   legend('T', 'T Uintah',2);
   grid on;
 
-  subplot(2,2,4), plot(x ,press_CC(rangeMatlab)', x, press_ice(:,4));
-  xlim([P.boxLower(1) P.boxUpper(1)]);
+  subplot(2,2,4), plot(x_CC ,press_CC, x_ice, press_ice);
+  xlim([xlo xhi]);
   legend('p', 'p Uintah',2);
   grid on;
 
   figure(2);
-  set(gcf,'position',[100,100,400,400]);
+  set(gcf,'position',[100,100,700,700]);
 
-  subplot(2,2,1), plot(x ,delPDilatate(rangeMatlab)', x, delP_ice(:,4));
-  xlim([P.boxLower(1) P.boxUpper(1)]);
+  subplot(2,1,1), plot(x_CC ,delPDilatate, x_ice, delP_ice);
+  xlim([xlo xhi]);
   legend('delP','delP Uintah',2);
   grid on;
-
-  subplot(2,2,2), plot(x, speedSound_CC(rangeMatlab)', x, Ssound_ice(:,4));
-  xlim([P.boxLower(1) P.boxUpper(1)]);
-  legend('speedSound','speedSound Uintah',2);
-  grid on;
+ 
+   subplot(2,1,2), plot(x_CC, press_eq_CC, x_ice, press_eq_ice);
+  xlim([xlo xhi]);
+  legend('press_eq','press_eq Uintah',2);
+  grid on; 
 
   %================ Print relative errors matlab/Uintah ================
 
-  errorRho    = max(abs(rho_CC(rangeMatlab)'- rho_ice(:,4)))./max(abs(rho_ice(:,4) + eps));
-  errorXvel   = max(abs(xvel_CC(rangeMatlab)'- vel_ice(:,4)))./max(abs(rho_ice(:,4) + eps));
-  errorPress  = max(abs(press_CC(rangeMatlab)'- press_ice(:,4)))./max(abs(press_ice(:,4) + eps));
-  errorTemp   = max(abs(temp_CC(rangeMatlab)'- temp_ice(:,4)))./max(abs(temp_ice(:,4) + eps));
-  errordelP   = max(abs(delPDilatate(rangeMatlab)'- delP_ice(:,4)))./max(abs(delP_ice(:,4) + eps));
-  errorSSound = max(abs(speedSound_CC(rangeMatlab)'- Ssound_ice(:,4)))./max(abs(Ssound_ice(:,4) + eps));
+  errorRho    = max(abs(rho_CC(rangeMatlab)           - rho_ice))      ./max(abs(rho_ice + eps));
+  errorXvel   = max(abs(xvel_CC(rangeMatlab)          - vel_ice))      ./max(abs(vel_ice + eps));
+  errorPress  = max(abs(press_CC(rangeMatlab)         - press_ice))    ./max(abs(press_ice + eps));
+  errorTemp   = max(abs(temp_CC(rangeMatlab)          - temp_ice))     ./max(abs(temp_ice + eps));
+  errordelP   = max(abs(delPDilatate(rangeMatlab)     - delP_ice))     ./max(abs(delP_ice + eps));
+  errorpress_eq = max(abs(press_eq_CC(rangeMatlab)    - press_eq_ice)) ./max(abs(press_eq_ice + eps));
   fprintf('Relative differences between Uintah and matlab results:\n');
-  fprintf('rho    : %e\n',errorRho);
-  fprintf('xvel   : %e\n',errorXvel);
-  fprintf('press  : %e\n',errorPress);
-  fprintf('temp   : %e\n',errorTemp);
-  fprintf('delP   : %e\n',errordelP);
-  fprintf('SSound : %e\n',errorSSound);
+  fprintf('press_eq: %e\n',errorpress_eq);
+  fprintf('rho     : %e\n',errorRho);    
+  fprintf('xvel    : %e\n',errorXvel);   
+  fprintf('press   : %e\n',errorPress);  
+  fprintf('temp    : %e\n',errorTemp);   
+  fprintf('delP    : %e\n',errordelP);   
 
 else
   %if (1)
