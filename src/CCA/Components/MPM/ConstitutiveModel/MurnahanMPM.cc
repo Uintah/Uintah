@@ -89,7 +89,7 @@ void MurnahanMPM::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
   cm_ps->appendElement("bulk_modulus",d_initialData.d_Bulk);
   cm_ps->appendElement("gamma",       d_initialData.d_Gamma);
   cm_ps->appendElement("pressure",    d_initialData.d_P0);
-  cm_ps->appendElement("viscosity",   d_initialData.Viscosity);
+  cm_ps->appendElement("viscosity",   d_initialData.d_Viscosity);
   cm_ps->appendElement("rho0",        d_initialData.d_rho0);
 }
 
