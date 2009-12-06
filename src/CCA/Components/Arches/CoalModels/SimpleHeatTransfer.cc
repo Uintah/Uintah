@@ -652,6 +652,7 @@ SimpleHeatTransfer::computeModel( const ProcessorGroup * pc,
       if (weight_is_small) {
         heat_rate_ = 0.0;
         gas_heat_rate_ = 0.0;
+        abskp_ = 0.0;
       } else {
 
         // Convection part: -----------------------
