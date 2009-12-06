@@ -10,4 +10,8 @@ fi
 
 pump make -j38 CXX="distcc $VERSION"
 
+if [ $? -gt 0 ]; then
+	pump make -j38 CXX="distcc $VERSION"
+fi
+
 exit
