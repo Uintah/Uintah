@@ -82,6 +82,7 @@ class MinMaxInfoBase {
 public:
 
   // Prints out the min/max values for each level.
+  virtual ~MinMaxInfoBase() {};
   virtual void display() = 0;
 
 };
