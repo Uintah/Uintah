@@ -103,11 +103,11 @@ int main(int argc, char *argv[])
   // Loop over spheres
   for(unsigned int ns = 0; ns<xcen.size(); ns++){
     // find the cell that contains the sphere center
-    int ic = xcen[ns]/dx;
-    int jc = ycen[ns]/dy;
-    int kc = zcen[ns]/dz;
+    int ic = static_cast<int>(xcen[ns]/dx);
+    int jc = static_cast<int>(ycen[ns]/dy);
+    int kc = static_cast<int>(zcen[ns]/dz);
     // find a conservative estimate of how many cells make up the sphere radius
-    int rc = rad[ns]/dx+2;
+    int rc = static_cast<int>(rad[ns]/dx)+2;
     // determine the bounding box that contains the sphere
     int bbx_min = max(0,ic-rc);
     int bbx_max = min(res[0],ic+rc);
