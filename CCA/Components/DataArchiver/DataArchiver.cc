@@ -1205,7 +1205,7 @@ DataArchiver::executedTimestep(double delt, const GridP& grid)
     }
     if (d_checkpointWalltimeInterval != 0) {
       if(Time::currentSeconds() >= d_nextCheckpointWalltime)
-        d_nextCheckpointWalltime+=floor((Time::currentSeconds()-d_nextCheckpointWalltime)/d_checkpointWalltimeInterval)*d_checkpointWalltimeInterval+d_checkpointWalltimeInterval;
+        d_nextCheckpointWalltime+=static_cast<int>(floor((Time::currentSeconds()-d_nextCheckpointWalltime)/d_checkpointWalltimeInterval)*d_checkpointWalltimeInterval+d_checkpointWalltimeInterval);
     }
   }
 
