@@ -174,7 +174,7 @@ Grid* BNRRegridder::regrid(Grid* oldGrid)
     
     //Calculate the number of stages to reduce
     //this is a guess based on the coarsening factor and the number of processors
-    int stages=log((float)coarsen_factor)/log(2.0) + log((float)procs)/log(2.0)/4;
+    int stages=static_cast<int>(log((float)coarsen_factor)/log(2.0) + log((float)procs)/log(2.0)/4);
     int stride=1;
     MPI_Status status;
     //consoldate flags along a hypercube sending the shortest distance first
