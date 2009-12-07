@@ -287,6 +287,13 @@
           <addSources                   spec="OPTIONAL BOOLEAN"/>
           <conv_scheme                  spec="OPTIONAL STRING 'upwind, super_bee, central'"/> 
           <scaling_const                spec="OPTIONAL DOUBLE"/>                              
+          <Clipping                     spec="OPTIONAL NO_DATA">
+
+            <low                        spec="OPTIONAL DOUBLE"/>
+            <small                      spec="OPTIONAL DOUBLE"/> <!-- this defaults to 1e-16, and is probably best left alone (but it can be changed, just in case) -->
+            <high                       spec="OPTIONAL DOUBLE"/>
+
+          </Clipping>
           <src                          spec="MULTIPLE NO_DATA" 
                                         attribute1="label REQUIRED STRING"/>
           <initialization               spec="OPTIONAL NO_DATA"
