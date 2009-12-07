@@ -339,7 +339,7 @@ void compute_ave(ParticleVariable<T>& var,
   IntVector lo = patch->getExtraCellLowIndex();
   IntVector hi = patch->getExtraCellHighIndex();
   ave.allocate(lo,hi);
-  T zero(0.0);
+  T zero(0);
   ave.initialize(zero);
   
   CCVariable<double> count;
