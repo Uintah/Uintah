@@ -149,7 +149,7 @@ CNHDamage::getFailureStrainData(ProblemSpecP& ps)
   d_epsf.mean   = 10.0; // Mean failure strain
   d_epsf.std    = 0.0;  // STD failure strain
   d_epsf.scale  = 1.0; // Scale Parameter for Weibull Distribution
-  d_epsf.seed   = 0.0; // seed for weibull distribution generator
+  d_epsf.seed   = 0; // seed for weibull distribution generator
   d_epsf.dist   = "constant";
   d_epsf.failureByStress = false; // failure by strain default
   ps->get("failure_strain_mean",    d_epsf.mean);
@@ -166,7 +166,7 @@ CNHDamage::setFailureStrainData(const CNHDamage* cm)
   d_epsf.mean = cm->d_epsf.mean;
   d_epsf.std = cm->d_epsf.std;
   d_epsf.scale = cm->d_epsf.scale;
-  d_epsf.seed  = cm->d_epsf.scale;
+  d_epsf.seed  = cm->d_epsf.seed;
   d_epsf.dist = cm->d_epsf.dist;
   d_epsf.failureByStress = cm->d_epsf.failureByStress;
 }
