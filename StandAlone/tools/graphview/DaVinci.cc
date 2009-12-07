@@ -453,8 +453,8 @@ const char* getColor(float percent /* max incl path / critical path */,
     adj_percent = (percent == 1) ? 1 : -1;
 
   if (adj_percent >= 0 && adj_percent <= 1) {
-    int red = adj_percent * 255;
-    int green = (1-adj_percent) * 255;
+    int red = static_cast<int>(adj_percent * 255);
+    int green = static_cast<int>((1-adj_percent) * 255);
     int blue = 0;
     sprintf(col_str, "%02x%02x%02x", red, green, blue);
     col_str[6]='\0';
