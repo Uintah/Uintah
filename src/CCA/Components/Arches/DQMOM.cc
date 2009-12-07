@@ -879,8 +879,8 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
 #endif
 
           delete AAsvd;
-          delete cols;
-          delete rows;
+          delete[] cols;
+          delete[] rows;
 
           delete U;
           delete V;
@@ -912,8 +912,8 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
             conditionNumber_ = (S->a[0]/S->a[dimension-1]);
 
             delete AAsvd;
-            delete cols;
-            delete rows;
+            delete[] cols;
+            delete[] rows;
 
             delete U;
             delete V;
