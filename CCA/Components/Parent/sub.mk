@@ -32,39 +32,43 @@
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-SRCDIR  := CCA/Components/Parent
+SRCDIR     := CCA/Components/Parent
 COMPONENTS := CCA/Components
 
-SRCS    := $(SRCDIR)/Switcher.cc \
-	   $(SRCDIR)/ComponentFactory.cc 
+SRCS := $(SRCDIR)/Switcher.cc \
+        $(SRCDIR)/ComponentFactory.cc 
+
+ifeq ($(BUILD_ARCHES),yes)
+  MORE_LIBS := $(COMPONENTS)/SpatialOps
+endif
 
 # ARCHES et. al. should have been seen by CCA/Components/sub.mk
 PSELIBS := \
-	Core/Containers \
-	Core/Exceptions \
-	Core/Util \
-	Core/Geometry \
-        CCA/Ports        \
-	Core/Disclosure  \
+        Core/Containers  \
         Core/Exceptions  \
-	Core/Grid        \
-	Core/Math	 \
+        Core/Util        \
+        Core/Geometry    \
+        CCA/Ports        \
+        Core/Disclosure  \
+        Core/Exceptions  \
+        Core/Grid        \
+        Core/Math        \
         Core/Parallel    \
         Core/ProblemSpec \
         Core/Util        \
-        $(ARCHES) \
-        $(MPMARCHES) \
-        $(ICE)    \
-        $(MPM)    \
-        $(MPMICE) \
-	$(COMPONENTS)/SpatialOps           \
+        $(ARCHES)        \
+        $(MPMARCHES)     \
+        $(ICE)           \
+        $(MPM)           \
+        $(MPMICE)        \
         $(COMPONENTS)/Examples             \
         $(COMPONENTS)/Angio                \
-	$(COMPONENTS)/PatchCombiner        \
-	$(COMPONENTS)/ProblemSpecification \
-	$(COMPONENTS)/Solvers              \
-	$(COMPONENTS)/SwitchingCriteria
+        $(COMPONENTS)/PatchCombiner        \
+        $(COMPONENTS)/ProblemSpecification \
+        $(COMPONENTS)/Solvers              \
+        $(COMPONENTS)/SwitchingCriteria    \
+        $(MORE_LIBS)
 
-LIBS    := $(XML2_LIBRARY) $(MPI_LIBRARY)
+LIBS := $(XML2_LIBRARY) $(MPI_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk

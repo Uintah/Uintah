@@ -51,7 +51,10 @@ ifeq ($(BUILD_ARCHES),yes)
   ifeq ($(BUILD_MPM),yes)
     MPMARCHES_LIB    = $(COMPONENTS)/MPMArches
   endif
-  ARCHES_LIBS        = $(COMPONENTS)/Arches
+  ARCHES_LIBS        = $(COMPONENTS)/Arches                  \
+                       $(COMPONENTS)/Arches/MCRT/ArchesRMCRT \
+                       $(COMPONENTS)/Arches/ChemMix/TabProps \
+                       $(COMPONENTS)/SpatialOps
 endif
 ifeq ($(BUILD_MPM),yes)
   MPM_LIB            = CCA/Components/MPM
@@ -70,22 +73,20 @@ PROGRAM := StandAlone/sus
 
 ifeq ($(IS_STATIC_BUILD),yes)
   PSELIBS := \
-    CCA_Components_Parent               \
-    CCA_Components_Solvers              \
-    CCA_Components_DataArchiver         \
-    CCA_Components_Schedulers           \
-    CCA_Components_SimulationController \
-    CCA_Components_Regridder            \
-    CCA_Components_LoadBalancers        \
-    CCA_Components_SwitchingCriteria    \
-    CCA_Components_Examples             \
-    CCA_Components_SpatialOps           \
-    CCA_Components_Angio                \
-    CCA_Components_MPMArches            \
-    CCA_Components_MPMICE               \
-    CCA_Components_ICE                  \
-    CCA_Components_MPM                  \
-    CCA_Components_OnTheFlyAnalysis     \
+    CCA/Components/Parent               \
+    CCA/Components/Solvers              \
+    CCA/Components/DataArchiver         \
+    CCA/Components/Schedulers           \
+    CCA/Components/SimulationController \
+    CCA/Components/Regridder            \
+    CCA/Components/LoadBalancers        \
+    CCA/Components/SwitchingCriteria    \
+    CCA/Components/Examples             \
+    CCA/Components/Angio                \
+    CCA/Components/MPMICE               \
+    CCA/Components/ICE                  \
+    CCA/Components/MPM                  \
+    CCA/Components/OnTheFlyAnalysis     \
     \
     $(ARCHES_LIBS)                      \
     $(ARCHES_SUB_LIBS)                  \
@@ -94,33 +95,30 @@ ifeq ($(IS_STATIC_BUILD),yes)
     $(ICE_LIB)                          \
     $(MPMICE_LIB)                       \
     \
-    CCA_Components_Models               \
+    CCA/Components/Models               \
     CCA/Components/PatchCombiner        \
     \
-    CCA_Components_Arches_MCRT_ArchesRMCRT \
-    CCA_Components_Arches_ChemMix_TabProps \
-    \
-    Core_Datatypes                      \
-    Core_DataArchive                    \
-    Core_Grid                           \
-    Core_ProblemSpec                    \
-    Core_GeometryPiece                  \
-    Core_Tracker                        \
-    CCA_Components_ProblemSpecification \
-    CCA_Ports                           \
-    Core_Parallel                       \
-    Core_Labels                         \
-    Core_Math                           \
-    Core_Disclosure                     \
-    Core_Util                           \
-    Core_Thread                         \
-    Core_Persistent                     \
-    Core_Geometry                       \
-    Core_Exceptions                     \
-    Core_Containers                     \
-    Core_Malloc                         \
-    Core_IO                             \
-    Core_OS
+    Core/Datatypes                      \
+    Core/DataArchive                    \
+    Core/Grid                           \
+    Core/ProblemSpec                    \
+    Core/GeometryPiece                  \
+    Core/Tracker                        \
+    CCA/Components/ProblemSpecification \
+    CCA/Ports                           \
+    Core/Parallel                       \
+    Core/Labels                         \
+    Core/Math                           \
+    Core/Disclosure                     \
+    Core/Util                           \
+    Core/Thread                         \
+    Core/Persistent                     \
+    Core/Geometry                       \
+    Core/Exceptions                     \
+    Core/Containers                     \
+    Core/Malloc                         \
+    Core/IO                             \
+    Core/OS
 
 else
 

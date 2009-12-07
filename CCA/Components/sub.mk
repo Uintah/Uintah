@@ -41,16 +41,19 @@ ADIR = $(SRCDIR)/Arches
 #
 
 ifeq ($(BUILD_MPM),yes)
-  MPM         := $(SRCDIR)/MPM
+  MPM      := $(SRCDIR)/MPM
   ifeq ($(BUILD_ICE),yes)
-    MPMICE    := $(SRCDIR)/MPMICE
+    MPMICE := $(SRCDIR)/MPMICE
   endif
 endif
 ifeq ($(BUILD_ICE),yes)
-  ICE         := $(SRCDIR)/ICE
+  ICE      := $(SRCDIR)/ICE
 endif
 ifeq ($(BUILD_ARCHES),yes)
-  ARCHES      := $(SRCDIR)/Arches $(ADIR)/ChemMix/TabProps $(ADIR)/fortran $(ADIR)/Mixing $(ADIR)/Radiation $(ADIR)/Radiation/fortran $(ADIR)/MCRT/ArchesRMCRT
+  ARCHES   := $(SRCDIR)/Arches \
+	      $(ADIR)/ChemMix/TabProps $(ADIR)/fortran           $(ADIR)/Mixing \
+	      $(ADIR)/Radiation        $(ADIR)/Radiation/fortran $(ADIR)/MCRT/ArchesRMCRT \
+              $(SRCDIR)/SpatialOps 
   ifeq ($(BUILD_MPM),yes)
     MPMARCHES := $(SRCDIR)/MPMArches
   endif
@@ -70,7 +73,6 @@ SUBDIRS := \
         $(ARCHES)         \
         $(MPMARCHES)      \
         $(SRCDIR)/Angio   \
-        $(SRCDIR)/SpatialOps   \
         $(SRCDIR)/ProblemSpecification \
         $(SRCDIR)/PatchCombiner \
         $(SRCDIR)/Solvers \
