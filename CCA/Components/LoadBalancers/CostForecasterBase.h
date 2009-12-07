@@ -69,6 +69,7 @@ namespace Uintah {
 
   class CostForecasterBase {
   public:
+    virtual ~CostForecasterBase() {};
     virtual void setMinPatchSize(const vector<IntVector> &min_patch_size) {};
     //add the contribution for region r on level l
     virtual void addContribution(DetailedTask *task, double cost) {};
