@@ -8,7 +8,7 @@
 %   See also ICE, PLOTRESULTS.
 
 %cd /scratch/SCIRun_Fresh/linux32dbg/Packages/Uintah/StandAlone;
-uda = '/data/Builds/071009SCIRun/opt_Linux/StandAlone/shockTube.uda.002';
+uda = '/data/Builds/071009SCIRun/opt_Linux/StandAlone/shockTube.uda';
 delX = 0.01;
 
 %  extract the physical time for each dump
@@ -50,18 +50,22 @@ press_ice     = importdata('press');
 temp_ice      = importdata('temp');
 rho_ice       = importdata('rho');
 vel_ice       = importdata('vel');
+uvel_FC_ice   = importdata('uvelFC');
 press_eq_ice  = importdata('press_eq');
 uvel_FC_ice   = importdata('uvelFC');
 x_ice         = press_ice(:,1);
+x_FC_ice      = uvel_FC_ice(:,1);
 
-Ncells = length(x_ice);
+Ncells     = length(x_ice);
+N_FC_cells = length(x_FC_ice);
 
-x_ice         = reshape(x_ice,      1,length(x_ice));
-rho_ice       = reshape(rho_ice(:,4) , 1, Ncells);
-vel_ice       = reshape(vel_ice(:,4) , 1, Ncells);
-temp_ice      = reshape(temp_ice(:,4) , 1, Ncells);
-press_ice     = reshape(press_ice(:,4) , 1, Ncells);
-delP_ice      = reshape(delP_ice(:,4) , 1, Ncells);
+x_ice         = reshape(x_ice,              1, Ncells);
+x_FC_ice      = reshape(x_FC_ice,           1, N_FC_cells);
+rho_ice       = reshape(rho_ice(:,4) ,      1, Ncells);
+vel_ice       = reshape(vel_ice(:,4) ,      1, Ncells);
+temp_ice      = reshape(temp_ice(:,4) ,     1, Ncells);
+press_ice     = reshape(press_ice(:,4) ,    1, Ncells);
+delP_ice      = reshape(delP_ice(:,4) ,     1, Ncells);
 press_eq_ice  = reshape(press_eq_ice(:,4) , 1, Ncells);
 uvel_FC_ice    = reshape(uvel_FC_ice(:,4) , 1, Ncells);
 
