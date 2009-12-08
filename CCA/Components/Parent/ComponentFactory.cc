@@ -63,13 +63,12 @@ DEALINGS IN THE SOFTWARE.
 #endif
 
 #include <iosfwd>
+#include <string>
 
 #include <sci_defs/uintah_defs.h>
 
-using std::cerr;
-using std::endl;
-
 using namespace Uintah;
+using namespace std;
 
 UintahParallelComponent *
 ComponentFactory::create( ProblemSpecP& ps, const ProcessorGroup* world, 
@@ -92,6 +91,8 @@ ComponentFactory::create( ProblemSpecP& ps, const ProcessorGroup* world,
 
   proc0cout << "Simulation Component: \t'" << sim_comp << "'\n";
 
+  string turned_off_options;
+
 #ifndef NO_MPM
   if (sim_comp == "mpm" || sim_comp == "MPM") {
     return scinew SerialMPM(world);
@@ -111,6 +112,8 @@ ComponentFactory::create( ProblemSpecP& ps, const ProcessorGroup* world,
   if (sim_comp == "impm" || sim_comp == "IMPM") {
     return scinew ImpMPM(world);
   } 
+#else
+  turned_off_options += "MPM ";
 #endif
 #ifndef NO_ICE
   if (sim_comp == "ice" || sim_comp == "ICE") {
@@ -119,6 +122,8 @@ ComponentFactory::create( ProblemSpecP& ps, const ProcessorGroup* world,
     else
       return scinew ICE(world);
   } 
+#else
+  turned_off_options += "ICE ";
 #endif
 #if !defined(NO_MPM) && !defined(NO_ICE)
   if (sim_comp == "mpmice" || sim_comp == "MPMICE") {
@@ -130,6 +135,8 @@ ComponentFactory::create( ProblemSpecP& ps, const ProcessorGroup* world,
   if (sim_comp == "rmpmice" || sim_comp == "rigidmpmice" || sim_comp == "RIGIDMPMICE") {
     return scinew MPMICE(world,RIGID_MPMICE, doAMR);
   } 
+#else
+  turned_off_options += "MPMICE ";
 #endif
 #ifndef NO_ARCHES
   if (sim_comp == "arches" || sim_comp == "ARCHES") {
@@ -138,11 +145,15 @@ ComponentFactory::create( ProblemSpecP& ps, const ProcessorGroup* world,
     }
     return scinew Arches(world);
   } 
+#else
+  turned_off_options += "ARCHES ";
 #endif
 #if !defined(NO_MPM) && !defined(NO_ARCHES)
   if (sim_comp == "mpmarches" || sim_comp == "MPMARCHES") {
     return scinew MPMArches(world);
   } 
+#else
+  turned_off_options += "MPMARCHES ";
 #endif
   if (sim_comp == "burger" || sim_comp == "BURGER") {
     return scinew Burger(world);
@@ -192,6 +203,7 @@ ComponentFactory::create( ProblemSpecP& ps, const ProcessorGroup* world,
   }
 #endif
   throw ProblemSetupException("Unknown simulationComponent ('" + sim_comp + "'). Must specify -arches, -ice, -mpm, "
-                              "-impm, -mpmice, -mpmarches, -burger, -wave, -poisson1, -poisson2, -poisson3 or -angio"
-                              "\nMake sure that component is supported in this build", __FILE__, __LINE__);
+                              "-impm, -mpmice, -mpmarches, -burger, -wave, -poisson1, -poisson2, -poisson3 or -angio.\n"
+                              "Note: the following components were turned off at configure time: " + turned_off_options + "\n"
+                              "Make sure that the requested component is supported in this build.", __FILE__, __LINE__);
 }
