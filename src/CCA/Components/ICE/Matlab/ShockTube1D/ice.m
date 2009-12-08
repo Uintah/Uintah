@@ -38,8 +38,9 @@ P.extraCells        = 1;                            % Number of ghost cells in e
 % Time-stepping
 P.maxTime           = 5e-4;                         % Maximum simulation time [sec]
 P.initTime          = 0.0;                          % Initial simulation time [sec]
+P.writeData         = 1;                            % output the final timestep to a .dat file
 P.delt_init         = 1e-7;                         % First timestep [sec]
-P.maxTimeSteps      = 1;                          % Maximum number of timesteps [dimensionless]
+P.maxTimeSteps      = 10000;                          % Maximum number of timesteps [dimensionless]
 P.CFL               = 0.25;                         % Courant number (~velocity*delT/delX) [dimensionless]
 P.advectionOrder    = 1;                            % 1=1st-order advection operator; 2=possibly-limited-2nd-order
 
@@ -49,8 +50,8 @@ P.gamma             = 1.4;                          % gamma coefficient in the E
 
 %================ ICE Interal Parameters, Debugging Flags ================
 % Debug flags
-P.compareUintah     = 1;                            % Compares vs. Uintah ICE and plots results
-P.debugSteps        = 1;                            % Debug printout of steps (tasks) within timestep
+P.compareUintah     = 0;                            % Compares vs. Uintah ICE and plots results
+P.debugSteps        = 0;                            % Debug printout of steps (tasks) within timestep
 P.debugAdvectRho    = 0;                            % Debug printouts in advectRho()
 P.debugAdvectQ      = 0;                            % Debug printouts in advectQ()
 P.printRange        = [48:56];                      % Range of indices to be printed out (around the shock front at the first timestep, for testing)
@@ -63,7 +64,7 @@ G.delX        = (P.boxUpper-P.boxLower)./G.nCells;  % Cell length
 G.ghost_Left  = 1;                                  % Index of left ghost cell
 G.ghost_Right = G.nCells+2*P.extraCells;            % Index of right ghost cell
 G.first_CC    = 2;                                  % Index of first interior cell
-G.first_FC    = 2;                                  % Index of first xminus face
+G.first_FC    = 2;                                  % Index of first interior xminus face
 G.last_CC     = G.nCells+1;                         % Index of last interior cell
 G.last_FC     = G.ghost_Right;                      % index of last xminus face
 
@@ -120,10 +121,10 @@ mom_L           = zeros(G.ghost_Left,G.ghost_Right);      % Momentum ( = mass * 
 eng_L           = zeros(G.ghost_Left,G.ghost_Right);      % Energy (= mass * internal energy = mass * cv * temperature)
 
 %================ Face Centered (FC) ================
-x_FC            = zeros(G.first_FC,G.last_FC);            % Face centers locations (x-component)
-xvel_FC         = zeros(G.first_FC,G.last_FC);            % Velocity u (x-component)
-press_FC        = zeros(G.first_FC,G.last_FC);            % Pressure p
-speedSound_FC   = zeros(G.first_FC,G.last_FC);            % c^*
+x_FC            = zeros(G.ghost_Left,G.last_FC);            % Face centers locations (x-component)
+xvel_FC         = zeros(G.ghost_Left,G.last_FC);            % Velocity u (x-component)
+press_FC        = zeros(G.ghost_Left,G.last_FC);            % Pressure p
+speedSound_FC   = zeros(G.ghost_Left,G.last_FC);            % c^*
 
 %================ Node Centered (NC) ================
 totNodes        = P.nCells + 1;                 % Array size for NC vars
@@ -139,17 +140,14 @@ d_SMALL_NUM = 1e-100;                           % A small number (for bullet-pro
 d_TINY_RHO  = 1.0e-12
 delT        = P.delt_init;                      % Init timestep
 
-if (P.compareUintah)                            % Don't make more than 2 timsteps when comparing to Uintah
-  P.maxTimeSteps = min(P.maxTimeSteps,2);
-end
-
 %================ Initialize interior cells ================
 % Initial data at t=0 in the interior domain.
 
 x_CC    = ([G.ghost_Left:G.ghost_Right]-1-0.5).*G.delX; % Cell centers coordinates (note the "1-based" matlab index array)
 
+x_FC(1) = -G.delX;
 for j = G.first_FC:G.last_FC   % Loop over all xminus cell faces
-  x_FC(j) = (j-1).*G.delX;  
+  x_FC(j) = (j-G.first_FC).*G.delX;  
 end
 
 for r = 1:numRegions                                    % Init each region, assuming they are a non-overlapping all-covering partition of the domain
@@ -212,7 +210,7 @@ t = P.initTime + delT;
 tstep = 0;
 for tstep = 1:P.maxTimeSteps
 %while (tstep <= P.maxTimeSteps & t <= P.maxTime)
-  tstep = tstep + 1;
+  %tstep = tstep + 1;
   fprintf('\n_____________________________________tstep=%d, t=%e, prev. delT=%e\n', tstep, t, delT);
 
   %_____________________________________________________
@@ -437,13 +435,37 @@ for tstep = 1:P.maxTimeSteps
   %================ Various breaks ================
 
   delT    = delt_CFL;                                             % Compute delT - "agressively" small
-  delT    = 1e-7;
   t       = t + delT;                                             % Advance time
   if (t >= P.maxTime)
     fprintf('Reached maximum time\n');
     break;
   end
+
 end
+
+
+if (P.writeData == 1)
+  fname = sprintf('matlab_CC_%g.dat', P.nCells);
+  fid = fopen(fname, 'w');
+  fprintf(fid,'time %15.16E\n',t-delT)
+  fprintf(fid,'X_CC \t press_eq \t delP \t press_CC \t xvel_CC \t temp_CC \t rho_CC\n');
+
+  for c=1:length(x_CC)
+    fprintf(fid,'%16.15E %16.15E %16.15E %16.15E %16.15E %16.15E %16.15E\n',x_CC(c), press_eq_CC(c), delPDilatate(c), press_CC(c), xvel_CC(c), temp_CC(c), rho_CC(c));
+  end
+  fclose(fid);
+  
+  fname = sprintf('matlab_FC_%g.dat', P.nCells);
+  fid = fopen(fname, 'w');
+  fprintf(fid,'time %15.16E\n',t-delT)
+  fprintf(fid,'X_FC \t xvel_FC \t press_FC\n');
+
+  for c=1:length(x_FC)
+    fprintf(fid,'%16.15E %16.15E %16.15E \n',x_FC(c), xvel_FC(c), press_FC(c) );
+  end
+  fclose(fid);
+end
+
 figure(1);
 print -depsc iceResult1.eps
 figure(2);
