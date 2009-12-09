@@ -69,4 +69,4 @@ delP_ice      = reshape(delP_ice(:,4) ,     1, Ncells);
 press_eq_ice  = reshape(press_eq_ice(:,4) , 1, Ncells);
 uvel_FC_ice    = reshape(uvel_FC_ice(:,4) , 1, Ncells);
 
-%unix('/bin/rm delP press temp rho vel Ssound uvelFC vel_tmp');
+unix('/bin/rm delP press temp rho vel uvelFC vel_tmp');
