@@ -3,13 +3,14 @@ function KK=OrderOfAccuracy
 %______________________________________________________________________
 %  This matlab script computes the order of accuracy
 
-  Ncells = [22, 46, 64, 130, 262, 514]
+  Ncells = [100, 200, 400, 800, 1600]
   nTests = length(Ncells);
 
   Lnorm   = zeros(1, nTests);
 
+  %__________________________________
   % loop through all ofthe tests 
-  % compute the Lnorm and max error
+  % compute the Lnorm
   fid = fopen('OofA.dat', 'w');
   
   for n=1:nTests
@@ -28,7 +29,6 @@ function KK=OrderOfAccuracy
   close all;
   
   Lnorm
-  maxError
 
   %__________________________________
   % curve fit the Lnorm error
@@ -38,15 +38,17 @@ function KK=OrderOfAccuracy
   figure(1)
   set(1,'position',[50,100,700,700]);
   
-  subplot(2,1,1),loglog(Ncells, Lnorm,'*', Ncells, FittedCurve,'r')
+  loglog(Ncells, Lnorm,'*', Ncells, FittedCurve,'r')
   xlabel('Number of Nodes')
-  ylabel('L norm (Particle Displacement)')
+  ylabel('L norm (Press_CC)')
   grid on
 
   str1 = sprintf('Error = %g * Ncells ^{%g}',coeff(1), coeff(2));
   xpos = ( max(Ncells) - min(Ncells) )/3.0  + min(Ncells);
   ypos = ( max(Lnorm) - min(Lnorm) )/2.0 + min(Lnorm);
   text(xpos, ypos, str1)
+  
+  print ( 'OofA.png', '-dpng');
 end
 
 %__________________________________

@@ -8,15 +8,10 @@ function [Lnorm] = compare_Riemann(Ncells, t, dx, x_CC, rho_CC, vel_CC, press_CC
   close all;
   format short e;
 
-  extraCells = 1;
-
   %__________________________________
   % default user inputs
-  symbol   = {'b:+;computed;','*r','xg'}; 
-  variable    = 'press_CC';
   makePlot    = true;
   output_file = 'L2norm';
-
 
   %______________________________
   % compute the exact solution for each variable
@@ -66,8 +61,35 @@ function [Lnorm] = compare_Riemann(Ncells, t, dx, x_CC, rho_CC, vel_CC, press_CC
     L_norm(v) = dx * sum( abs( d(:,v) ) );
   end
   
-  Lnorm = L_norm(3);
+  Lnorm = L_norm(3);       % Set the output Lnorm to be Lnorm(pressure)
 
+  % Plots 
+  %______________________________
+  if(makePlot)
+    for v=1:length(variables)
+      subplot(2,1,1), plot(x_CC,ML_sol(:,v),'b+', x_ex, exactSol(:,v+1),'r', 'MarkerSize',2.5);
+      xlabel('x')
+      legend('exact','computed')
+   
+      ylabel(variables{v})
+
+      tmp = sprintf('Toro Test (%s) L1 norm: %f, time: %f', inputFile, L_norm(v),t);
+      title(tmp);
+      grid on;
+
+      subplot(2,1,2),plot(x_ex,d(:,v), 'b:+');
+      ylabel('Difference'); 
+      xlabel('x');
+      grid on;
+      fname = sprintf('%g_%s.png',Ncells,variables{v});
+      print ( fname, '-dpng');
+      % pause
+    end
+  end
+  
+  %__________________________________
+  % 
+if (0)
   % write L_norm to a file
   nargv = length(output_file);
   if (nargv > 0)
@@ -92,30 +114,7 @@ function [Lnorm] = compare_Riemann(Ncells, t, dx, x_CC, rho_CC, vel_CC, press_CC
   end
 
   fclose(fid);
+end
 
-
-  % Make a plot of 
-  %______________________________
-  if(makePlot)
-    for v=1:length(variables)
-      subplot(2,1,1), plot(x_CC,ML_sol(:,v),'b+', x_ex, exactSol(:,v+1),'r');
-      xlabel('x')
-      legend('exact','computed')
-   
-      ylabel(variables{v})
-
-      tmp = sprintf('Toro Test (%s) L1 norm: %f, time: %f', inputFile, L_norm(v),t);
-      title(tmp);
-      grid on;
-
-      subplot(2,1,2),plot(x_ex,d(:,v), 'b:+');
-      ylabel('Difference'); 
-      xlabel('x');
-      grid on;
-      fname = sprintf('%g_%s.eps',Ncells,variables{v});
-      print ( fname, '-deps');
-      % pause
-    end
-  end
 
 end
