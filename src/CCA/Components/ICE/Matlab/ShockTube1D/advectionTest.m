@@ -3,58 +3,106 @@
 % This script tests the algoritm for the advection operator used in ICE.  
 % The density and internal energy are being advected.
 %
-% Velocity:    u = 1.0 (Uniform)
-% Density:     inverse top hat distribution
-% Temperature: top hat distribution.
+% Velocity:       u = 1.0 (Uniform)
+% Density:       inverse top hat distribution
+% passiveScalar: top hat distribution.
 %
 % reference:  "CompatibleFluxes for van Leer Advection", VanderHeyden,
 %             Kashiwa, JCP, 146, 1-28, 1998
 clear all;
 close all;
+globalParams;                                       % Load global parameters
+
+setenv('LD_LIBRARY_PATH', ['/usr/lib']);
 set(0,'DefaultFigurePosition',[0,0,1024,768]);
 %______________________________________________________________________
 %     Problem Setup
 
 % Set Parameters
-nCells      = 100;                      % Number of cells
-delX        = 1.0;                      % Cell length
-CFL         = 0.999;                    % sigma
-velocity    = 1.0;                      % Uniform velocity (u)
-cv          = 1.0;                      % Specific heat
-delT        = CFL * delX / velocity;    % From sigma = u*delT/delX
+CFL         = 0.999;                                 % sigma
+velocity    = 1.0;                                   % Uniform velocity (u)
 
-% Allocate arrays - Cell Centered (CC)
-gradLim     = zeros(1,nCells);          % Gradient Limiter 
-grad_x      = zeros(1,nCells);          % Gradient of rho
-q           = zeros(1,nCells);          % Quantity to be advected (rho/A=rho*T)
-q_advected  = zeros(1,nCells);          % Advected flux of quantity
-rho         = zeros(1,nCells);          % Density
-temp        = zeros(1,nCells);          % Temperature T
-rho_L       = zeros(1,nCells);          % Density (Lagrangian)
-int_eng_L   = zeros(1,nCells);          % Internal Energy (Lagrangian)
-rho_slab    = zeros(1,nCells);          % Density in slab
+% Geometry
+P.boxLower          = 0;                            % Location of lower-left corner of domain
+P.boxUpper          = 1;                            % Location of upper-right corner of domain
 
-% Allocate arrays - Face Centered (FC)
-xvel_FC     = zeros(1,nCells+1);        % Face-centered vel (u)
+% Grid
+P.nCells            =100;                           % Number of cells in each direction
+P.extraCells        = 1;                            % Number of ghost cells in each direction
 
-% Allocate arrays - Node (vertex) Centered (NC)
-rho_vrtx_1  = zeros(1,nCells+1);        % Density at vertices
-rho_vrtx_2  = zeros(1,nCells+1);        % --------//-------
+
+%================ Grid Struct (G) ======= ================
+G.nCells            = P.nCells ;                    % # interior cells
+G.delX              = 1;                            % Cell length
+G.ghost_Left        = 1;                            % Index of left ghost cell
+G.ghost_Right       = G.nCells+2*P.extraCells;      % Index of right ghost cell
+G.first_CC          = 2;                            % Index of first interior cell
+G.first_FC          = 2;                            % Index of first interior xminus face
+G.last_CC           = G.nCells+1;                   % Index of last interior cell
+G.last_FC           = G.ghost_Right;                % index of last xminus face
+
+%================ ICE Interal Parameters, Debugging Flags ================
+% Debug flags
+P.compareUintah     = 0;                            % Compares vs. Uintah ICE and plots results
+P.debugSteps        = 0;                            % Debug printout of steps (tasks) within timestep
+P.debugAdvectRho    = 0;                            % Debug printouts in advectRho()
+P.debugAdvectQ      = 0;                            % Debug printouts in advectQ()
+P.printRange        = [48:56];                      % Range of indices to be printed out (around the shock front at the first timestep, for testing)
+P.plotInitialData   = 1;                            % Plots initial data
+P.advectionOrder    = 1;                            % 1=1st-order advection operator; 2=possibly-limited-2nd-order
+P.writeData         = 1;
+%______________________________________________________________________
+%     Allocate arrays
+
+totCells        = P.nCells + 2*P.extraCells;              % Array size for CC vars
+x_CC            = zeros(G.ghost_Left,G.ghost_Right);      % Cell centers locations (x-component)
+mass_CC         = zeros(G.ghost_Left,G.ghost_Right);      % Density mass
+xvel_CC         = zeros(G.ghost_Left,G.ghost_Right);      % Velocity u (x-component)
+f_CC            = zeros(G.ghost_Left,G.ghost_Right);      % Pressure increment due to dilatation
+
+mass_L_CC       = zeros(G.ghost_Left,G.ghost_Right);      % Mass ( = mass * cell volume )
+f_L_CC          = zeros(G.ghost_Left,G.ghost_Right);      % Momentum ( = mass * velocity )
+
+x_FC            = zeros(G.ghost_Left,G.last_FC);          % Face centers locations (x-component)  
+xvel_FC         = zeros(G.ghost_Left,G.last_FC);          % Velocity u (x-component)              
+
+% Node Centered (NC) 
+totNodes        = P.nCells + 1;                           % Array size for NC vars
+mass_vrtx_1     = zeros(1,totNodes);                      % Mass at vertices (for advection)
+mass_vrtx_2     = zeros(1,totNodes);                      % --------//-------  (for advection)
+
+
+delT        = CFL * G.delX /velocity;                     % From sigma = u*delT/delX
 
 %______________________________________________________________________
 %     Initialization    
-figure(1);
-for j = 1:nCells
-    xvel_FC(j)    = velocity;
-    rho(j)        = 0.5;
-    temp(j)       = 0.0;
-    if ((j > 10) & (j < 30))
-        rho(j)      = 0.001;
-        temp(j)     = 1.0;
-    end
-end
-xvel_FC(nCells+1) = velocity;
+d_SMALL_NUM = 1e-100;                                     % A small number (for bullet-proofing
+d_TINY_RHO  = 1.0e-12
 
+x_CC    = ([G.ghost_Left:G.ghost_Right]-1-0.5).*G.delX; % Cell centers coordinates (note the "1-based" matlab index array)
+
+x_FC(1) = -G.delX;
+for j = G.first_FC:G.last_FC   % Loop over all xminus cell faces
+  x_FC(j) = (j-G.first_FC).*G.delX;  
+end
+
+figure(1);
+for j = G.ghost_Left:G.ghost_Right
+  xvel_CC(j)    = velocity;
+  xvel_FC(j)    = velocity;    
+  mass_CC(j)    = 0.5;      
+     
+  f_CC(j)       = 0.0; 
+          
+  if ((j > 10) && (j < 30))       % top-hat
+    mass_CC(j)   = 0.001;     
+    f_CC(j)     = 1.0;       
+  end
+end
+xvel_FC(G.nCells+1) = velocity;
+
+ plot(x_CC, f_CC);
+input('hit return')
 %______________________________________________________________________
 %     Time integration loop
 for t = 1:25
@@ -62,58 +110,53 @@ for t = 1:25
     
     %__________________________________
     % Compute Lagrangian Values
-    for j = 1:nCells
-        rho_L(j)     = rho(j);
-        temp_L(j)    = temp(j);
-        int_eng_L(j) = rho_L(j) * temp_L(j) * cv;
-    end
+    mass_L_CC  = mass_CC;                      
+    f_L_CC     = mass_L_CC .* f_CC;
     
     %__________________________________
     % Advect and advance in time 
     % compute the outflux volumes
-    [ofs, rx] = OutFluxVol(xvel_FC, delT, delX, nCells);
+    [ofs, rx] = OutFluxVol(xvel_CC, xvel_FC, delT, G);
     
     %__________________________________
     % D E N S I T Y  
     % Uses van Leer limiter
     fprintf ('density \n');
-    [q_advected, gradLim, grad_x, rho_slab, rho_vrtx_1, rho_vrtx_2] = ...
-        advectRho(rho_L, ofs, rx, xvel_FC, delX, nCells);  
+    [q_advected, gradLim, grad_x, mass_slab, mass_vrtx_1, mass_vrtx_2] = ...
+        advectRho(mass_L_CC, ofs, rx, xvel_FC, G);  
     
-    for j = 1:nCells
-        rho(j) = rho_L(j) + q_advected(j);
-    end
+
+    mass_CC = mass_L_CC + q_advected;
     
-    % Plot rho results
-    subplot(4,1,1), plot(rho,     '-r');
+    % Plot mass results
+    subplot(4,1,1), plot(x_CC, mass_CC, '-r');
     xlim([0 100]);
-    legend('rho');
+    legend('mass');
     grid on;
     
-    subplot(4,1,2), plot(gradLim, '-r');
+    subplot(4,1,2), plot(x_CC, gradLim, '-r');
     xlim([0 100]);
-    legend('gradLim rho')
+    legend('gradLim mass')
     grid on;
     
     %__________________________________
-    % I N T E R N A L   E N E R G Y
+    %  P A S S I V E   S C A L A R
     % Uses compatible flux limiter
-    fprintf ('InternalEnergy \n');
+    fprintf ('passive scalar \n');
+    
     [q_advected, gradLim, grad_x] = ...
-        advectQ(int_eng_L, rho_L, rho_slab, rho_vrtx_1, rho_vrtx_2, ofs, rx, xvel_FC, delX, nCells);
+        advectQ(f_L_CC, mass_L_CC, mass_slab, mass_vrtx_1, mass_vrtx_2, ofs, rx, xvel_FC, G);
     
-    for j = 1:nCells
-        temp(j) = (int_eng_L(j) + q_advected(j))/(rho(j) + 1e-100);
-    end
+    f_CC = (f_L_CC + q_advected) ./ (mass_CC + d_SMALL_NUM);
     
-    % Plot temp results
-    subplot(4,1,3), plot(temp);
+    % Plot f results
+    subplot(4,1,3), plot(x_CC, f_CC);
     xlim([0 100]);
-    legend('temp');
+    legend('f');
     
-    subplot(4,1,4), plot(gradLim);
+    subplot(4,1,4), plot(x_CC, gradLim);
     xlim([0 100]);
-    legend('gradLim int eng');
+    legend('gradLim f');
     grid on;
     
     M(t) = getframe(gcf);
