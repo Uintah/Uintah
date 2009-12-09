@@ -28,8 +28,8 @@ if (P.debugSteps)
   fprintf('gradientLimiter()\n');
 end
 
-gradLim     = zeros(G.first_CC,G.last_CC);
-grad_x      = zeros(G.first_CC,G.last_CC);
+gradLim     = zeros(G.ghost_Left, G.ghost_Right);
+grad_x      = zeros(G.ghost_Left, G.ghost_Right);
 q_vrtx_1    = zeros(G.ghost_Left, G.ghost_Right);
 q_vrtx_2    = zeros(G.ghost_Left, G.ghost_Right);
 dx          = G.delX;
