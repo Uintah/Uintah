@@ -19,7 +19,7 @@
 %   See also SETBOUNDARYCONDITIONS, ADVECTRHO, ADVECTQ.
 
 
-function [tfinal, rho_CC, xvel_CC, press_CC, temp_CC]=ice(nCells)
+function [tfinal, x_CC, delX, rho_CC, xvel_CC, press_CC, temp_CC]=ice(nCells)
 
 
 close all;
@@ -446,6 +446,7 @@ for tstep = 1:P.maxTimeSteps
 end
 
 tfinal = t - delT;
+delX   = G.delX;
 
 if (P.writeData == 1)
   fname = sprintf('matlab_CC_%g.dat', P.nCells);
