@@ -78,7 +78,9 @@ if (P.compareUintah)
     fprintf('vel_FC  : %e\n',erroruvel_FC);   
   %  input('hit return to continue')
   end
-else
+  
+  
+if(P.plotResults)
   %if (1)
   if ((mod(tstep,10) == 0) | (tstep == P.maxTimeSteps))
     %================ Plot results ================
@@ -128,6 +130,7 @@ else
     legend('p^*',2);
     grid on;
   end
+end
 end
 
 %M(tstep) = getframe(gcf);                          % Save frame for a movie

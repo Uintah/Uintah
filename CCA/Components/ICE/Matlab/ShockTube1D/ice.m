@@ -18,7 +18,10 @@
 %
 %   See also SETBOUNDARYCONDITIONS, ADVECTRHO, ADVECTQ.
 
-clear all;
+
+function [tfinal, rho_CC, xvel_CC, press_CC, temp_CC]=ice(nCells)
+
+
 close all;
 globalParams;                                       % Load global parameters
 setenv('LD_LIBRARY_PATH', ['/usr/lib']);
@@ -32,7 +35,7 @@ P.boxLower          = 0;                            % Location of lower-left cor
 P.boxUpper          = 1;                            % Location of upper-right corner of domain
 
 % Grid
-P.nCells            =200;                          % Number of cells in each direction
+P.nCells            = nCells;                        % Number of cells in each direction
 P.extraCells        = 1;                            % Number of ghost cells in each direction
 
 % Time-stepping
@@ -43,7 +46,6 @@ P.delt_init         = 1e-7;                         % First timestep [sec]
 P.maxTimeSteps      = 10000;                          % Maximum number of timesteps [dimensionless]
 P.CFL               = 0.25;                         % Courant number (~velocity*delT/delX) [dimensionless]
 P.advectionOrder    = 1;                            % 1=1st-order advection operator; 2=possibly-limited-2nd-order
-
 % Material properties (ideal gas)
 P.cv                = 717.5;                        % Specific_heat
 P.gamma             = 1.4;                          % gamma coefficient in the Equation of State (EOS)
@@ -55,8 +57,8 @@ P.debugSteps        = 0;                            % Debug printout of steps (t
 P.debugAdvectRho    = 0;                            % Debug printouts in advectRho()
 P.debugAdvectQ      = 0;                            % Debug printouts in advectQ()
 P.printRange        = [48:56];                      % Range of indices to be printed out (around the shock front at the first timestep, for testing)
-P.plotInitialData   = 1;                            % Plots initial data
-
+P.plotInitialData   = 0;                            % Plots initial data
+P.plotResults       = 0;                            % plot intermediate data
 
 %================ Grid Struct (G) ======= ================
 G.nCells      = P.nCells;                           % # interior cells
@@ -443,6 +445,7 @@ for tstep = 1:P.maxTimeSteps
 
 end
 
+tfinal = t - delT;
 
 if (P.writeData == 1)
   fname = sprintf('matlab_CC_%g.dat', P.nCells);
@@ -466,11 +469,12 @@ if (P.writeData == 1)
   fclose(fid);
 end
 
-figure(1);
-print -depsc iceResult1.eps
-figure(2);
-print -depsc iceResult2.eps
-
+if(P.plotResults)
+  figure(1);
+  print -depsc iceResult1.eps
+  figure(2);
+  print -depsc iceResult2.eps
+end
 % Show a movie of the results
 %hFig = figure(2);
 %movie(hFig,M,1,10)
