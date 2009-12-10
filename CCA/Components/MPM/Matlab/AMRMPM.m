@@ -2,9 +2,12 @@
 % Refinement in Generalized Interpolation Material Point (GIMP) Method
 % for Simulation of Dynamic Problems," CMES, vol. 12, no.3, pp. 213-227, 2006
 %______________________________________________________________________
-
+                                                         
+   
+   
 
 function [L2_norm,maxError,NN,NP]=amrmpm(problem_type,CFL,NN)
+
 close all
 intwarning on
 
@@ -12,6 +15,8 @@ global d_debugging;
 global PPC;
 global NSFN;               % number of shape function nodes
 d_debugging = problem_type;
+
+[mms] = MMS;                % load mms functions
 
 %  valid options:
 %  problem type:  impulsiveBar, oscillator, compaction advectBlock, mms
@@ -66,7 +71,7 @@ bar_length  = bar_max - bar_min;
 domain       = 1.0;
 area         = 1.;
 plotSwitch   = 1;
-plotInterval = 10;
+plotInterval = 1;
 writeData    = 0;
 max_tstep    = BigNum;
 
@@ -200,12 +205,13 @@ massP     = zeros(NP,1);
 velP      = zeros(NP,1);
 dp        = zeros(NP,1);
 stressP   = zeros(NP,1);
-extForceP = zeros(NP,1);
 Fp        = zeros(NP,1);
 dF        = zeros(NP,1);
+accl_extForceP = zeros(NP,1);
+
 nodes     = zeros(1,NSFN);
 Gs        = zeros(1,NSFN);
-Ss        = zeros(1,NSFN);     
+Ss        = zeros(1,NSFN);
 
 massG     = zeros(NN,1);
 momG      = zeros(NN,1);
@@ -248,7 +254,7 @@ if strcmp(problem_type, 'impulsiveBar')
   TipForce        = 10.;
   D               = TipForce*bar_length/(area*E);
   M               = 4.*D/period;
-  extForceP(NP)   = TipForce;
+  accl_extForceP(NP)   = TipForce;
   velG_BCValue(1) = 0.;
   velG_BCValue(2) = 1.;
 end
@@ -302,9 +308,9 @@ if strcmp(problem_type, 'mms')
   
   xp_initial = zeros(NP,1);
   xp_initial = xp;
-  [Fp]      = MMS_deformationGradient(xp_initial, t, NP,speedSound, bar_length);
-  [dp]      = MMS_displacement(       xp_initial, t, NP, speedSound, bar_length);
-  [velP]    = MMS_velocity(           xp_initial, t, NP, speedSound, bar_length);
+  [Fp]      = mms.deformationGradient(xp_initial, t, NP,speedSound, bar_length);
+  [dp]      = mms.displacement(       xp_initial, t, NP, speedSound, bar_length);
+  [velP]    = mms.velocity(           xp_initial, t, NP, speedSound, bar_length);
   [stressP] = computeStress(E,Fp,NP);
   
   lp  = lp .* Fp;
@@ -328,9 +334,9 @@ fprintf('tfinal: %g, interpolator: %s, NN: %g, NP: %g dx_min: %g \n',tfinal,inte
 
 fn = sprintf('initialConditions.dat');
 fid = fopen(fn, 'w');
-fprintf(fid,'#p, xp, velP, Fp, stressP extForceP\n');
+fprintf(fid,'#p, xp, velP, Fp, stressP accl_extForceP\n');
 for ip=1:NP
-  fprintf(fid,'%g %16.15E %16.15E %16.15E %16.15E %16.15E\n',ip, xp(ip),velP(ip),Fp(ip), stressP(ip), extForceP(ip));
+  fprintf(fid,'%g %16.15E %16.15E %16.15E %16.15E %16.15E\n',ip, xp(ip),velP(ip),Fp(ip), stressP(ip), accl_extForceP(ip));
 end
 fclose(fid);
 
@@ -361,8 +367,8 @@ while t<tfinal && tstep < max_tstep
     intForceG(ig) =0.;
   end
   
-  % compute the problem specific external force.
-  [extForceP, delta] = ExternalForce(problem_type, delta_0, bodyForce, Material, xp, xp_initial, t, tstep, NP, R1_dx, bar_length);
+  % compute the problem specific external force acceleration.
+  [accl_extForceP, delta] = ExternalForceAccl(problem_type, delta_0, bodyForce, Material, xp, xp_initial, t, tstep, NP, R1_dx, bar_length);
     
   %__________________________________
   % project particle data to grid  
@@ -372,13 +378,13 @@ while t<tfinal && tstep < max_tstep
     for ig=1:NSFN
       massG(nodes(ig))     = massG(nodes(ig))     + massP(ip) * Ss(ig);
       velG(nodes(ig))      = velG(nodes(ig))      + massP(ip) * velP(ip) * Ss(ig);
-      extForceG(nodes(ig)) = extForceG(nodes(ig)) + massP(ip) * extForceP(ip) * Ss(ig); 
+      extForceG(nodes(ig)) = extForceG(nodes(ig)) + massP(ip) * accl_extForceP(ip) * Ss(ig); 
       
       % debugging__________________________________
       if(0)
         fprintf( 'ip: %g xp: %g, nodes: %g, node_pos: %g massG: %g, massP: %g, Ss: %g,  prod: %g \n', ip, xp(ip), nodes(ig), nodePos(nodes(ig)), massG(nodes(ig)), massP(ip), Ss(ig), massP(ip) * Ss(ig) );
         fprintf( '\t velG:      %g,  velP:       %g,  prod: %g \n', velG(nodes(ig)), velP(ip), (massP(ip) * velP(ip) * Ss(ig) ) );
-        fprintf( '\t extForceG: %g,  extForceP:  %g,  prod: %g \n', extForceG(nodes(ig)), extForceP(ip), extForceP(ip) * Ss(ig) );
+        fprintf( '\t extForceG: %g,  accl_extForceP:  %g,  prod: %g \n', extForceG(nodes(ig)), accl_extForceP(ip), accl_extForceP(ip) * Ss(ig) );
       end 
       % debugging__________________________________
 
@@ -394,19 +400,7 @@ while t<tfinal && tstep < max_tstep
     velG(BCNodeL(ibc)) = velG_BCValueL;
     velG(BCNodeR(ibc)) = velG_BCValueR;
   end
-%---------------------------------
-% debugging  
-if(0)
-  figure
-  subplot(3,1,1),plot(nodePos, velG)
-  ylabel('velG')
-  subplot(3,1,2),plot(nodePos, (extForceG./massG))
-  ylabel('extForceG')
-  subplot(3,1,3),plot(nodePos, (massG))
-  ylabel('massG')
-  input('hit return')
-end
-%__________________________________
+
   
   %compute internal force
   for ip=1:NP
@@ -443,6 +437,29 @@ end
     accl_G(BCNodeR(ibc)) = 0.0;
   end
   
+%---------------------------------
+% debugging  
+if(1)
+
+  [stressExact] = mms.stress(xp_initial, t, NP, speedSound, bar_length, E);
+  figure
+  subplot(5,1,1),plot(nodePos, velG, nodePos, vel_new_G)
+  legend('velG','vel_newG');
+  ylabel('velG')
+  subplot(5,1,2),plot(nodePos, (extForceG./massG))
+  ylabel('extForceG')
+  subplot(5,1,3),plot(nodePos, (massG))
+  ylabel('massG')
+  subplot(5,1,4),plot(nodePos, (accl_G), nodePos, intForceG./massG, nodePos,extForceG./massG)
+  legend('acclG','intForceG/massG','extForceG/massG');
+  ylim([-1e5 1e5])
+  subplot(5,1,5),plot(xp, (stressP), xp_initial, stressExact)
+  legend('stressP','stressExact');
+  ylabel('stress')
+  input('hit return')
+end
+%__________________________________  
+  
   %compute particle stress
   [Fp, dF,vol,lp] = computeDeformationGradient(xp,lp,dt,vel_new_G,Fp,NP, nRegions, Regions, nodePos,Lx);
   [stressP]       = computeStress(E,Fp,NP);
@@ -466,8 +483,7 @@ end
     tmp(ip)  = tmp(ip) + dxp;
   end
   
-  
-
+ 
   
   DX_tip(tstep)=dp(NP);
   T=t; %-dt;
@@ -485,6 +501,23 @@ end
     TE(tstep) = KE(tstep) + SE(tstep);
   end
 
+  %__________________________________
+  % Place data into structures
+  G.nodePos   = nodePos;  % Grid based Variables
+  
+  P.velP      = velP;     % particle variables
+  P.Fp        = Fp;
+  P.xp        = xp;
+  P.dp        = dp;
+  P.extForceP = accl_extForceP;
+  
+  OV.speedSound = speedSound;    % Other Variables
+  OV.NP         = NP;
+  OV.E          = E;
+  OV.t          = t;
+  OV.tstep      = tstep;
+  OV.bar_length = bar_length;
+  
   %__________________________________
   % compute the exact solutions
   if strcmp(problem_type, 'impulsiveBar')
@@ -541,59 +574,7 @@ end
   
   
   if (strcmp(problem_type, 'mms'))
-    xpExact  = zeros(NP,1);
-      
-    [dpExact]  = MMS_displacement(       xp_initial, t, NP, speedSound, bar_length);
-    [velExact] = MMS_velocity(           xp_initial, t, NP, speedSound, bar_length);
-    [FpExact]  = MMS_deformationGradient(xp_initial, t, NP, speedSound, bar_length);
-    xpExact = xp_initial + dpExact;
-    
-    % compute L2Norm
-    d = abs(dp - dpExact);
-    
-    L2_norm = sqrt( sum(d.^2)/length(dpExact) );
-    maxError = max(d);
-    
-    if( (plotSwitch == 1) && (mod(tstep,plotInterval) == 0))
-      figure(2)                                
-      set(2,'position',[1000,100,700,700]);    
-
-      subplot(4,1,1),plot(xp,dp,'rd', xp, dpExact,'b');
-      %axis([0 50 -10000 0])           
-      ylim([-0.05 0.05]);         
-
-      title(titleStr)                          
-      legend('Simulation','Exact')             
-      xlabel('Position');                      
-      ylabel('Particle displacement');
-      
-      vel_G_exact = interp1(xp,velExact,nodePos);
-      e = ones(size(nodePos));
-      e(:) = 1e100;
-
-      subplot(4,1,2),plot(xp,velP,'rd', xp, velExact,'b');
-      % ylim([1.1*min(velP) 1.1*max(velP)])
-      ylim([-20 20])
-      ylabel('Particle Velocity'); 
-      hold on
-      errorbar(nodePos,vel_G_exact, e,'LineStyle','none','Color',[0.8314 0.8157 0.7843]);
-      hold off
-
-      subplot(4,1,3),plot(xp_initial,extForceP);
-      ylim([-2e4 2e4])
-      ylabel('externalForce');
-      
-      subplot(4,1,4),plot(xp,Fp,'rd',xp,FpExact,'b');
-      ylim([0.5 1.5])
-      ylabel('Fp');
-
-      f_name = sprintf('%g.2.ppm',tstep-1);
-      F = getframe(gcf);
-      [X,map] = frame2im(F);
-      imwrite(X,f_name);
- %     input('hit return');
-    end
-      
+    [L2_norm, maxError] = mms.plotResults(titleStr, plotSwitch, plotInterval, xp_initial, OV, P, G);
   end
   
   
@@ -1252,75 +1233,9 @@ function plotFinalResults(TIME, DX_tip, Exact_tip, TE, problem_type, PPC, NN)
   ylabel('Abs(error)')
 end
 
-%______________________________________________________________________
-%  The following MMS functions are described in 
-% M. Steffen, P.C. Wallstedt, J.E. Guilkey, R.M. Kirby, and M. Berzins 
-% "Examination and Analysis of Implementation Choices within the Material Point Method (MPM)
-% CMES, vol. 31, no. 2, pp. 107-127, 2008
-%__________________________________
-%  Equation 47
-function [dp] = MMS_displacement(xp_initial, t, NP, speedSound, h)
-  dp  = zeros(NP,1);
-  A = 0.05;   % Hardwired
-
-  for ip=1:NP
-    dp(ip) = A * sin(2.0 * pi * xp_initial(ip)/h ) * cos( speedSound * pi * t/h);
-  end  
-end  
 
 %__________________________________
-% Equation 48
-function [F] = MMS_deformationGradient(xp_initial, t, NP,speedSound, h)
-  F  = zeros(NP,1);
-  A = 0.05;   % Hardwired
-    
-  for ip=1:NP
-    F(ip) = 1.0 + (2.0 * A * pi * cos(2.0 * pi * xp_initial(ip)/h) * cos( speedSound * pi * t/h) )/h;
-  end  
-end
-%__________________________________
-function [velExact] = MMS_velocity(xp_initial, t, NP, speedSound, h)
-  velExact  = zeros(NP,1);
-  A = 0.05;   % Hardwired
-
-  c1 = -speedSound * pi * A/h;
-  
-  for ip=1:NP
-    velExact(ip)    = c1 * sin( 2.0 * pi * xp_initial(ip))*sin( speedSound * pi * t);
-  end
-end
-
-%__________________________________
-%  Equation 49
-function [b] = MMS_bodyForce(xp_initial, t, NP, speedSound,h)
-   b = zeros(NP,1);
-    
-  [dp] = MMS_displacement(       xp_initial, t, NP, speedSound, h);
-  [F]  = MMS_deformationGradient(xp_initial, t, NP, speedSound, h);
-  
-  c1 = speedSound * speedSound * pi * pi/ (h * h);
-  for ip=1:NP
-    b(ip)    = c1 * dp(ip) * (1.0 + 2.0/( F(ip) * F(ip)));
-  end  
-  
-  % debugging  
-  if(0)  
-    subplot(4,1,1),plot(xp_initial, dp)
-    ylabel('dp')
-    subplot(4,1,2),plot(xp_initial, F)
-    ylabel('F')
-    subplot(4,1,3),plot(xp_initial, massP)
-    ylabel('massP')
-    subplot(4,1,4),plot(xp_initial, b)
-    ylabel('b')
-  end  
-end
-
-
-
-
-%__________________________________
-function [extForceP, delta] = ExternalForce(problem_type, delta_0, bodyForce, Material, xp, xp_initial, t, tstep, NP, R1_dx, bar_length)
+function [accl_extForceP, delta] = ExternalForceAccl(problem_type, delta_0, bodyForce, Material, xp, xp_initial, t, tstep, NP, R1_dx, bar_length)
 
   density    = Material{1}.density;
   E          = Material{1}.E;
@@ -1342,11 +1257,12 @@ function [extForceP, delta] = ExternalForce(problem_type, delta_0, bodyForce, Ma
       fprintf('Bodyforce: %g displacement:%g, W: %g\n',bodyForce, displacement/R1_dx, W);                                             
     end
     for ip=1:NP                                                                       
-       extForceP(ip) = bodyForce;                                                      
+       accl_extForceP(ip) = bodyForce;                                                      
     end                                                                               
   end
   
   if (strcmp(problem_type, 'mms'))
-    [extForceP] = MMS_bodyForce(xp_initial,t, NP, speedSound, bar_length);
+    [mms] = MMS;                % load mms functions
+    [accl_extForceP] = mms.accl_bodyForce(xp_initial,t, NP, speedSound, bar_length);
   end
 end
