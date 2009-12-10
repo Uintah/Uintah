@@ -27,9 +27,10 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-
-
 #include <StandAlone/tools/puda/util.h>
+
+#include <Core/Thread/Thread.h>
+
 #include <cstdlib>
 #include <iostream>
 
@@ -46,14 +47,18 @@ Uintah::findTimestep_loopLimits( const bool tslow_set,
     time_step_lower = 0;
   }
   else if( time_step_lower >= times.size() ) {
-    cerr << "timesteplow must be between 0 and " << times.size()-1 << "\n";
-    abort();
+    cerr << "\n";
+    cerr << "ERROR: 'timesteplow' must be between 0 and " << times.size()-1 << ".  You had " << time_step_lower << ".\n";
+    cerr << "\n";
+    SCIRun::Thread::exitAll( 2 );
   }
   if( !tsup_set ) {
     time_step_upper = times.size() - 1;
   }
   else if( time_step_upper >= times.size() ) {
-    cerr << "timestephigh must be between 0 and " << times.size()-1 << "\n";
-    abort();
+    cerr << "\n";
+    cerr << "Error: 'timestephigh' must be between 0 and " << times.size()-1 << ".  You had " << time_step_upper << ".\n";
+    cerr << "\n";
+    SCIRun::Thread::exitAll( 2 );
   }
 }
