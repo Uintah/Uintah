@@ -123,8 +123,9 @@ template<class Type>
 void
 MinMaxInfo<Type>::display()
 {
+  cout << "\n";
   for( unsigned int level = 0; level < min_.size(); level++ ) {
-    cout << "Level " << level << ": Min/Max: " << min_[0] << ", " << max_[0] << "\n";
+    cout << "   Level " << level << ": Min/Max: " << min_[level] << ", " << max_[level] << "\n";
   }
 }
 
