@@ -595,12 +595,12 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
 
     // get specific values - pop front since we don't know if there is a highwater
     avg_memuse = avgReduce[0];
-    max_memuse = maxReduce[0].val;
+    max_memuse = static_cast<unsigned long>(maxReduce[0].val);
     max_memuse_loc = maxReduce[0].loc;
 
     if(highwater){
       avg_highwater = avgReduce[avgReduce.size()-1];
-      max_highwater = maxReduce[maxReduce.size()-1].val;
+      max_highwater = static_cast<unsigned long>(maxReduce[maxReduce.size()-1].val);
     }
     //sum up the average times for simulation components
     total_time=0;

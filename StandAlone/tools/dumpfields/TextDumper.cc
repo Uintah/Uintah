@@ -92,7 +92,8 @@ namespace Uintah {
     FieldDumper::Step(tsdir, timestep, time, index),
     da_(da), opts_(opts), flds_(flds)
   {
-    GridP grid = da_->queryGrid(time);
+    //    GridP grid = da_->queryGrid(time);
+    GridP grid = da_->queryGrid(timestep);
   }
 
   static
