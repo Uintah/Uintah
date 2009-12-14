@@ -36,26 +36,10 @@ PROGRAM := $(SRCDIR)/uda2nrrd
     PSELIBS := Datflow Packages/Uintah
   else
     PSELIBS := \
-        CCA/Components/ProblemSpecification \
-        CCA/Ports          \
-        Core/DataArchive   \
-        Core/Disclosure    \
-        Core/Exceptions    \
-        Core/Grid          \
-        Core/Math          \
-        Core/Parallel      \
-        Core/ProblemSpec   \
-        Core/Util          \
-        Core/Basis        \
-        Core/Containers   \
-        Core/Datatypes    \
-        Core/Exceptions   \
-        Core/Geometry     \
-        Core/Math         \
-        Core/Persistent   \
-        Core/Thread       \
-        Core/Util         \
-
+        Core/Datatypes                      \
+        Core/Basis                          \
+        $(CORE_STATIC_PSELIBS)              \
+        CCA/Components/ProblemSpecification 
   endif
 
   SRCS := \
