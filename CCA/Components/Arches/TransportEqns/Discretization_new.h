@@ -208,18 +208,18 @@ namespace Uintah{
 
         if ( coord[0] == 1 ) {
 
-          if ( l[0] == c[0] ) b.minus = true;
-          if ( h[0] == c[0] ) b.plus  = true; 
+          if ( c[0] == l[0] ) b.minus = true;
+          if ( c[0] == h[0] - 1 ) b.plus  = true; 
 
         } else if ( coord[1] == 1 ) {
 
-          if ( l[1] == c[1] ) b.minus = true;
-          if ( h[1] == c[1] ) b.plus = true; 
+          if ( c[1] == l[1] ) b.minus = true;
+          if ( c[1] == h[1] - 1 ) b.plus  = true; 
 
         } else if ( coord[2] == 1 ) {
 
-          if ( l[2] == c[2] ) b.minus = true; 
-          if ( h[2] == c[2] ) b.plus = true; 
+          if ( c[2] == l[2] ) b.minus = true;
+          if ( c[2] == h[2] - 1 ) b.plus  = true; 
 
         }
 
@@ -650,7 +650,7 @@ namespace Uintah{
   //========================= Convection ======================================
 
   //---------------------------------------------------------------------------
-  // Method: Compute the convection term (with Density) 
+  // Method: Compute the convection term (with explicit Density interpolation) 
   //---------------------------------------------------------------------------
   template <class fT, class oldPhiT, class uT, class vT, class wT> void 
     Discretization_new::computeConv(const Patch* p, fT& Fconv, oldPhiT& oldPhi, 
@@ -952,7 +952,7 @@ namespace Uintah{
     }
 
   //---------------------------------------------------------------------------
-  // Method: Compute the convection term (no density)
+  // Method: Compute the convection term (no explicit density)
   //---------------------------------------------------------------------------
   template <class fT, class oldPhiT> void 
     Discretization_new::computeConv( const Patch* p, fT& Fconv, oldPhiT& oldPhi, 
