@@ -2687,6 +2687,8 @@ void MPMICE::refineVariableCC(const ProcessorGroup*,
 template<typename T>
 void MPMICE::coarsenDriver_std(IntVector cl, 
                                IntVector ch,
+                               IntVector fl,
+                               IntVector fh,
                                IntVector refinementRatio,
                                double ratio,
                                const Level* coarseLevel,
@@ -2704,7 +2706,11 @@ void MPMICE::coarsenDriver_std(IntVector cl,
     for(CellIterator inside(IntVector(0,0,0),refinementRatio );
         !inside.done(); inside++){
       IntVector fc = fineStart + *inside;
-      q_CC_tmp += fine_q_CC[fc];
+      
+      if( fc.x() >= fl.x() && fc.y() >= fl.y() && fc.z() >= fl.z() &&
+          fc.x() <= fh.x() && fc.y() <= fh.y() && fc.z() <= fh.z() ) {
+        q_CC_tmp += fine_q_CC[fc];
+      }
     }
     coarse_q_CC[c] =q_CC_tmp*ratio;
   }
@@ -2760,6 +2766,8 @@ void MPMICE::coarsenDriver_stdNC(IntVector cl,
 template<typename T>
 void MPMICE::coarsenDriver_massWeighted(IntVector cl, 
                                         IntVector ch,
+                                        IntVector fl,
+                                        IntVector fh,
                                         IntVector refinementRatio,
                                         const Level* coarseLevel,
                                         constCCVariable<double>& cMass,
@@ -2778,8 +2786,13 @@ void MPMICE::coarsenDriver_massWeighted(IntVector cl,
     for(CellIterator inside(IntVector(0,0,0),refinementRatio );
         !inside.done(); inside++){
       IntVector fc = fineStart + *inside;
-      q_CC_tmp += fine_q_CC[fc]*cMass[fc];
-      mass_CC_tmp += cMass[fc];
+      
+      if( fc.x() >= fl.x() && fc.y() >= fl.y() && fc.z() >= fl.z() &&
+          fc.x() <= fh.x() && fc.y() <= fh.y() && fc.z() <= fh.z() ) {
+        q_CC_tmp += fine_q_CC[fc]*cMass[fc];
+        mass_CC_tmp += cMass[fc];
+      }
+      
     }
     coarse_q_CC[c] =q_CC_tmp/mass_CC_tmp;
   }
@@ -2840,19 +2853,19 @@ void MPMICE::coarsenVariableCC(const ProcessorGroup*,
         ASSERT((coarsenMethod=="std" || coarsenMethod=="sum" 
                                      || coarsenMethod=="massWeighted"));
         if(coarsenMethod == "std"){
-          coarsenDriver_std(cl, ch, refineRatio,ratio, coarseLevel, 
+          coarsenDriver_std(cl, ch, fl, fh, refineRatio,ratio, coarseLevel, 
                             fine_q_CC, coarse_q_CC);
         }
         if(coarsenMethod =="sum"){
           ratio = 1.0;
-          coarsenDriver_std(cl, ch, refineRatio,ratio, coarseLevel, 
+          coarsenDriver_std(cl, ch, fl, fh, refineRatio,ratio, coarseLevel, 
                             fine_q_CC, coarse_q_CC);
         }
         if(coarsenMethod == "massWeighted"){
           constCCVariable<double> cMass;
           new_dw->getRegion(cMass,  MIlb->cMassLabel, indx, fineLevel, fl, fh, false);
           
-          coarsenDriver_massWeighted(cl,ch,refineRatio,coarseLevel,
+          coarsenDriver_massWeighted(cl,ch, fl, fh, refineRatio,coarseLevel,
                                      cMass, fine_q_CC, coarse_q_CC );
         }
       }  // fine patches

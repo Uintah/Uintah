@@ -599,7 +599,11 @@ void AMRICE::fineToCoarseOperator(CCVariable<T>& q_CC,
       for(CellIterator inside(IntVector(0,0,0),r_Ratio );
                                           !inside.done(); inside++){
         IntVector fc = fineStart + *inside;        
-        q_CC_tmp += fine_q_CC[fc];
+        
+        if( fc.x() >= fl.x() && fc.y() >= fl.y() && fc.z() >= fl.z() &&
+            fc.x() <= fh.x() && fc.y() <= fh.y() && fc.z() <= fh.z() ) {
+          q_CC_tmp += fine_q_CC[fc];
+        }
       }
                          
       q_CC[c] =q_CC_tmp * inv_RR;
