@@ -3988,23 +3988,23 @@ SerialMPM::initialErrorEstimate(const ProcessorGroup*,
 //______________________________________________________________________
 void
 SerialMPM::errorEstimate(const ProcessorGroup* group,
-                         const PatchSubset* patches,
+                         const PatchSubset* coarsePatches,
                          const MaterialSubset* matls,
                          DataWarehouse* old_dw,
                          DataWarehouse* new_dw)
 {
-  const Level* level = getLevel(patches);
-  if (level->getIndex() == level->getGrid()->numLevels()-1) {
+  const Level* coarseLevel = getLevel(coarsePatches);
+  if (coarseLevel->getIndex() == coarseLevel->getGrid()->numLevels()-1) {
     // on finest level, we do the same thing as initialErrorEstimate, so call it
-    initialErrorEstimate(group, patches, matls, old_dw, new_dw);
+    initialErrorEstimate(group, coarsePatches, matls, old_dw, new_dw);
   }
   else {
     // coarsen the errorflag.
-    const Level* fineLevel = level->getFinerLevel().get_rep();
+    const Level* fineLevel = coarseLevel->getFinerLevel().get_rep();
   
-    for(int p=0;p<patches->size();p++){  
-      const Patch* coarsePatch = patches->get(p);
-      printTask(patches, coarsePatch,cout_doing,
+    for(int p=0;p<coarsePatches->size();p++){  
+      const Patch* coarsePatch = coarsePatches->get(p);
+      printTask(coarsePatches, coarsePatch,cout_doing,
                 "Doing errorEstimate\t\t\t\t\t");
      
       CCVariable<int> refineFlag;
@@ -4026,6 +4026,7 @@ SerialMPM::errorEstimate(const ProcessorGroup* group,
  
         IntVector cl, ch, fl, fh;
         getFineLevelRange(coarsePatch, finePatch, cl, ch, fl, fh);
+        
         if (fh.x() <= fl.x() || fh.y() <= fl.y() || fh.z() <= fl.z()) {
           continue;
         }
@@ -4033,22 +4034,19 @@ SerialMPM::errorEstimate(const ProcessorGroup* group,
         new_dw->getRegion(fineErrorFlag, 
                           d_sharedState->get_refineFlag_label(), 0, 
                           fineLevel,fl, fh, false);
-        
+
         //__________________________________
         //if the fine level flag has been set
         // then set the corrsponding coarse level flag
-        for(CellIterator iter(cl, ch); !iter.done(); iter++){
-          IntVector fineStart(level->mapCellToFiner(*iter));
-          
-          for(CellIterator inside(IntVector(0,0,0), 
-               fineLevel->getRefinementRatio()); !inside.done(); inside++){
-               
-            if (fineErrorFlag[fineStart+*inside]) {
-              refineFlag[*iter] = 1;
-              refinePatch->set();
-            }
+        for(CellIterator iter(fl, fh); !iter.done(); iter++){
+
+          IntVector coarseCell(fineLevel->mapCellToCoarser(*iter));
+
+          if (fineErrorFlag[*iter]) {
+            refineFlag[coarseCell] = 1;
+            refinePatch->set();
           }
-        }  // coarse patch iterator
+        }
       }  // fine patch loop
     } // coarse patch loop 
   }

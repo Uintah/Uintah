@@ -374,6 +374,8 @@ public:
   template<typename T>                                 
     void coarsenDriver_std(IntVector cl, 
                            IntVector ch,
+                           IntVector fl,
+                           IntVector fh,
                            IntVector refinementRatio,
                            double ratio,
                            const Level* coarseLevel,
@@ -391,6 +393,8 @@ public:
   template<typename T>
     void coarsenDriver_massWeighted(IntVector cl, 
                                     IntVector ch,
+                                    IntVector fl,
+                                    IntVector fh,
                                     IntVector refinementRatio,
                                     const Level* coarseLevel,
                                     constCCVariable<double>& cMass,
