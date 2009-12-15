@@ -119,6 +119,10 @@ void ApproachContact::exMomInterpolated(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
     Vector dx = patch->dCell();
     double cell_vol = dx.x()*dx.y()*dx.z();
+    double oodx[3];
+    oodx[0] = 1.0/dx.x();
+    oodx[1] = 1.0/dx.y();
+    oodx[2] = 1.0/dx.z();
     constNCVariable<double> NC_CCweight;
     old_dw->get(NC_CCweight,         lb->NC_CCweightLabel,  0, patch, gnone, 0);
 
@@ -181,7 +185,11 @@ void ApproachContact::exMomInterpolated(const ProcessorGroup*,
 
            for(int k = 0; k < flag->d_8or27; k++) {
              if (patch->containsNode(ni[k])){
-               gsurfnorm[m][ni[k]] += pmass[idx] * d_S[k];
+               Vector grad(d_S[k].x()*oodx[0],d_S[k].y()*oodx[1],
+                           d_S[k].z()*oodx[2]);
+//               gsurfnorm[m][ni[k]] += pmass[idx] * d_S[k];
+               gsurfnorm[m][ni[k]] += pmass[idx] * grad;
+
              }
            }
         }
