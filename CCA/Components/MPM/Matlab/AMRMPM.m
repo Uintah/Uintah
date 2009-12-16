@@ -56,7 +56,7 @@ else
   NSFN    = 2;        
 end
 
-t         = 0.0;              % physical time
+t_initial  = 0.0;              % physical time
 tstep     = 0;                % timestep
 bodyForce = 0;
 
@@ -70,8 +70,8 @@ bar_length  = bar_max - bar_min;
 
 domain       = 1.0;
 area         = 1.;
-plotSwitch   = 1;
-plotInterval = 1;
+plotSwitch   = 0;
+plotInterval = 100;
 writeData    = 0;
 max_tstep    = BigNum;
 
@@ -250,7 +250,7 @@ end
 
 if strcmp(problem_type, 'impulsiveBar')
   period          = sqrt(16.*bar_length*bar_length*density/E);
-  tfinal          = period;
+  t_final          = period;
   TipForce        = 10.;
   D               = TipForce*bar_length/(area*E);
   M               = 4.*D/period;
@@ -262,7 +262,7 @@ end
 if strcmp(problem_type, 'oscillator')
   Mass            = 10000.;
   period          = 2.*3.14159/sqrt(E/Mass);
-  tfinal          = period;
+  t_final          = period;
   v0              = 0.5;
   Amp             = v0/(2.*3.14159/period);
   massP(NP)       = Mass;                    % last particle masss
@@ -274,7 +274,7 @@ end
 
 if strcmp(problem_type, 'advectBlock')
   initVelocity    = 100;
-  tfinal          = 0.5;
+  t_final          = 0.5;
   numBCs          = 1;
   velG_BCValueL   = initVelocity;
   velG_BCValueR   = initVelocity;
@@ -287,7 +287,7 @@ end
 if strcmp(problem_type, 'compaction')
   initVelocity    = 0;
   waveTansitTime  = bar_length/speedSound
-  tfinal          = waveTansitTime * 45;
+  t_final          = waveTansitTime * 45;
   numBCs          = 1;
   delta_0         = 50;
   velG_BCValueL   = initVelocity;
@@ -299,7 +299,8 @@ end
 if strcmp(problem_type, 'mms')
   initVelocity    = 0;
   waveTansitTime  = bar_length/speedSound
-  tfinal          = waveTansitTime * 1.0;
+  t_initial       = 1.0/(2.0 * speedSound) 
+  t_final          = t_initial + waveTansitTime * 1.0;
   numBCs          = 1;
   delta_0         = 0;
   velG_BCValueL   = initVelocity;
@@ -308,9 +309,9 @@ if strcmp(problem_type, 'mms')
   
   xp_initial = zeros(NP,1);
   xp_initial = xp;
-  [Fp]      = mms.deformationGradient(xp_initial, t, NP,speedSound, bar_length);
-  [dp]      = mms.displacement(       xp_initial, t, NP, speedSound, bar_length);
-  [velP]    = mms.velocity(           xp_initial, t, NP, speedSound, bar_length);
+  [Fp]      = mms.deformationGradient(xp_initial, t_initial, NP,speedSound, bar_length);
+  [dp]      = mms.displacement(       xp_initial, t_initial, NP, speedSound, bar_length);
+  [velP]    = mms.velocity(           xp_initial, t_initial, NP, speedSound, bar_length);
   [stressP] = computeStress(E,Fp,NP);
   
   lp  = lp .* Fp;
@@ -327,9 +328,9 @@ titleStr(4) ={sprintf('Constant resolution, #cells %g', NN)};
 
 %plot initial conditions
 if(plotSwitch == 1)
-  plotResults(titleStr, t, tstep, xp, dp, massP, Fp, velP, stressP, nodePos, velG, massG, momG)
+  plotResults(titleStr, t_initial, tstep, xp, dp, massP, Fp, velP, stressP, nodePos, velG, massG, momG)
 end
-fprintf('tfinal: %g, interpolator: %s, NN: %g, NP: %g dx_min: %g \n',tfinal,interpolation, NN,NP,dx_min);
+fprintf('t_final: %g, interpolator: %s, NN: %g, NP: %g dx_min: %g \n',t_final,interpolation, NN,NP,dx_min);
 %input('hit return')
 
 fn = sprintf('initialConditions.dat');
@@ -342,8 +343,8 @@ fclose(fid);
 
 %==========================================================================
 % Main timstep loop
-
-while t<tfinal && tstep < max_tstep
+t = t_initial;
+while t<t_final && tstep < max_tstep
 
   % compute the timestep
   dt = double(BigNum);
@@ -436,29 +437,7 @@ while t<tfinal && tstep < max_tstep
     accl_G(BCNodeL(ibc)) = 0.0;
     accl_G(BCNodeR(ibc)) = 0.0;
   end
-  
-%---------------------------------
-% debugging  
-if(1)
-
-  [stressExact] = mms.stress(xp_initial, t, NP, speedSound, bar_length, E);
-  figure
-  subplot(5,1,1),plot(nodePos, velG, nodePos, vel_new_G)
-  legend('velG','vel_newG');
-  ylabel('velG')
-  subplot(5,1,2),plot(nodePos, (extForceG./massG))
-  ylabel('extForceG')
-  subplot(5,1,3),plot(nodePos, (massG))
-  ylabel('massG')
-  subplot(5,1,4),plot(nodePos, (accl_G), nodePos, intForceG./massG, nodePos,extForceG./massG)
-  legend('acclG','intForceG/massG','extForceG/massG');
-  ylim([-1e5 1e5])
-  subplot(5,1,5),plot(xp, (stressP), xp_initial, stressExact)
-  legend('stressP','stressExact');
-  ylabel('stress')
-  input('hit return')
-end
-%__________________________________  
+ 
   
   %compute particle stress
   [Fp, dF,vol,lp] = computeDeformationGradient(xp,lp,dt,vel_new_G,Fp,NP, nRegions, Regions, nodePos,Lx);
@@ -598,7 +577,7 @@ end
   % particles can't leave the domain
   for ip=1:NP
     if(xp(ip) >= domain) 
-      t = tfinal;
+      t = t_final;
       fprintf('\nparticle(%g) position is outside the domain: %g \n',ip,xp(ip))
       fprintf('now exiting the time integration loop\n\n') 
     end
@@ -769,7 +748,7 @@ end
 %__________________________________
 %  Equation 14 of "Structured Mesh Refinement in Generalized Interpolation Material Point Method
 %  for Simulation of Dynamic Problems"
-function [nodes,Ss]=findNodesAndWeights_linear(xp, nRegions, Regions, nodePos, Lx)
+function [nodes,Ss]=findNodesAndWeights_linear(xp, notused, nRegions, Regions, nodePos, Lx)
   global NSFN;
   % find the nodes that surround the given location and
   % the values of the shape functions for those nodes
@@ -973,7 +952,7 @@ end
 
 %__________________________________
 %  Reference:  Uintah Documentation Chapter 7 MPM, Equation 7.14
-function [nodes,Gs, dx]=findNodesAndWeightGradients_linear(xp, nRegions, Regions, nodePos, Lx)
+function [nodes,Gs, dx]=findNodesAndWeightGradients_linear(xp, notUsed, nRegions, Regions, nodePos, Lx)
  
   % find the nodes that surround the given location and
   % the values of the gradients of the linear shape functions.
