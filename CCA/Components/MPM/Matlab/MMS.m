@@ -7,6 +7,8 @@ function [s] = MMS()
   s.accl_bodyForce      = @MMS_accl_bodyForce;
   s.stress              = @MMS_stress;
   s.plotResults         = @MMS_plotResults;
+  s.acceleration        = @MMS_acceleration;
+  s.divergenceStress    = @MMS_divergenceStress;
 
   %______________________________________________________________________
   %  The following MMS functions are described in 
@@ -17,7 +19,7 @@ function [s] = MMS()
   %  Equation 47
   function [dp] = MMS_displacement(xp_initial, t, NP, speedSound, h)
     dp  = zeros(NP,1);
-    A = 0.05;   % Hardwired
+    A = 0.001;   % Hardwired
 
     for ip=1:NP
       dp(ip) = A * sin(2.0 * pi * xp_initial(ip)/h ) * cos( speedSound * pi * t/h);
@@ -28,7 +30,7 @@ function [s] = MMS()
   % Equation 48
   function [F] = MMS_deformationGradient(xp_initial, t, NP,speedSound, h)
     F  = zeros(NP,1);
-    A = 0.05;   % Hardwired
+    A = 0.001;   % Hardwired
 
     for ip=1:NP
       F(ip) = 1.0 + (2.0 * A * pi * cos(2.0 * pi * xp_initial(ip)/h) * cos( speedSound * pi * t/h) )/h;
@@ -37,7 +39,7 @@ function [s] = MMS()
   %__________________________________
   function [velExact] = MMS_velocity(xp_initial, t, NP, speedSound, h)
     velExact  = zeros(NP,1);
-    A = 0.05;   % Hardwired
+    A = 0.001;   % Hardwired
 
     c1 = -speedSound * pi * A/h;
 
@@ -56,6 +58,43 @@ function [s] = MMS()
       stressExact(ip)  = .5 * E * (F(ip) - 1.0 / F(ip));
     end
   end
+
+  %__________________________________
+  function [acclExact_G] = MMS_acceleration(nodePos, t, NN, speedSound, h)
+    acclExact_G  = zeros(NN,1);
+
+    A = 0.001;   % Hardwired
+
+    c1 = -A * speedSound * speedSound * pi * pi * A/h;
+
+    for ig=1:NN
+      acclExact_G(ig) = c1 * sin( 2.0 * pi * nodePos(ig)) * cos( speedSound * pi * t);
+    end
+  end
+  
+  %__________________________________
+  function [dFdx] = MMS_dFdx(x, t, N, speedSound, h, E)
+    dFdx  = zeros(N,1);
+  
+    A = 0.001; 
+  
+    for c=1:N
+      dFdx(c)  = -4.0 * A * pi * pi * sin(2 * pi * x(c)) * cos( speedSound * pi * t);
+    end
+  end
+  
+  %__________________________________
+  function [divStressExact] = MMS_divergenceStress(x, t, N, speedSound, h, E)
+    divStressExact  = zeros(N,1);
+
+    [F] = MMS_deformationGradient(x, t, N,speedSound, h);
+    
+    [dFdx] = MMS_dFdx(x, t, N, speedSound, h, E);
+
+    for c=1:N
+      divStressExact(c)  = .5 * E * (1.0 + 1.0/(F(c) * F(c)) ) * dFdx(c);
+    end
+  end  
 
   %__________________________________
   %  Equation 49
@@ -105,7 +144,7 @@ function [s] = MMS()
 
       subplot(4,1,1),plot(P.xp, P.dp,'rd', P.xp, dpExact,'b');
       %axis([0 50 -10000 0])           
-      ylim([-0.05 0.05]);         
+      ylim([-0.001 0.001]);         
 
       title(titleStr)                          
       legend('Simulation','Exact')             
@@ -118,7 +157,7 @@ function [s] = MMS()
 
       subplot(4,1,2),plot(P.xp, P.velP,'rd', P.xp, velExact,'b');
       % ylim([1.1*min(velP) 1.1*max(velP)])
-      ylim([-20 20])
+      ylim([-2 2])
       ylabel('Particle Velocity'); 
       hold on
       errorbar(G.nodePos,vel_G_exact, e,'LineStyle','none','Color',[0.8314 0.8157 0.7843]);
