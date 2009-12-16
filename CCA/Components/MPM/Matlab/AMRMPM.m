@@ -13,10 +13,12 @@ intwarning on
 
 global d_debugging;
 global PPC;
+global sf;
 global NSFN;               % number of shape function nodes
 d_debugging = problem_type;
 
 [mms] = MMS;                % load mms functions
+[sf]  = shapeFunctions;     % load all the shape functions
 
 %  valid options:
 %  problem type:  impulsiveBar, oscillator, compaction advectBlock, mms
@@ -237,7 +239,7 @@ tipDeflect_err = zeros(BigNum,1);
 %__________________________________
 % initialize other particle variables
 for ip=1:NP
-  [volP_0, lp_0] = positionToVolP(xp(ip), nRegions, Regions);
+  [volP_0, lp_0] = sf.positionToVolP(xp(ip), nRegions, Regions);
   
   vol(ip)   = volP_0;
   massP(ip) = volP_0*density;
@@ -375,7 +377,7 @@ while t<t_final && tstep < max_tstep
   % project particle data to grid  
   for ip=1:NP
   
-    [nodes,Ss]=findNodesAndWeights_gimp2(xp(ip), lp(ip), nRegions, Regions, nodePos, Lx);
+    [nodes,Ss]=sf.findNodesAndWeights_gimp2(xp(ip), lp(ip), nRegions, Regions, nodePos, Lx);
     for ig=1:NSFN
       massG(nodes(ig))     = massG(nodes(ig))     + massP(ip) * Ss(ig);
       velG(nodes(ig))      = velG(nodes(ig))      + massP(ip) * velP(ip) * Ss(ig);
@@ -405,7 +407,7 @@ while t<t_final && tstep < max_tstep
   
   %compute internal force
   for ip=1:NP
-    [nodes,Gs,dx]=findNodesAndWeightGradients_gimp2(xp(ip), lp(ip), nRegions, Regions, nodePos,Lx);
+    [nodes,Gs,dx]=sf.findNodesAndWeightGradients_gimp2(xp(ip), lp(ip), nRegions, Regions, nodePos,Lx);
     for ig=1:NSFN
       intForceG(nodes(ig)) = intForceG(nodes(ig)) - Gs(ig) * stressP(ip) * vol(ip);
     end
@@ -447,7 +449,7 @@ while t<t_final && tstep < max_tstep
   %project changes back to particles
   tmp = zeros(NP,1);
   for ip=1:NP
-    [nodes,Ss]=findNodesAndWeights_gimp2(xp(ip), lp(ip), nRegions, Regions, nodePos, Lx);
+    [nodes,Ss]=sf.findNodesAndWeights_gimp2(xp(ip), lp(ip), nRegions, Regions, nodePos, Lx);
     dvelP = 0.;
     dxp   = 0.;
     
@@ -647,10 +649,11 @@ end
 %______________________________________________________________________
 function [Fp, dF, vol, lp] = computeDeformationGradient(xp,lp,dt,velG,Fp,NP, nRegions, Regions, nodePos,Lx)
   global NSFN;
+  global sf;
   
   for ip=1:NP
-    [nodes,Gs,dx]  = findNodesAndWeightGradients_gimp2(xp(ip), lp(ip), nRegions, Regions, nodePos, Lx);
-    [volP_0, lp_0] = positionToVolP(xp(ip), nRegions, Regions);
+    [nodes,Gs,dx]  = sf.findNodesAndWeightGradients_gimp2(xp(ip), lp(ip), nRegions, Regions, nodePos, Lx);
+    [volP_0, lp_0] = sf.positionToVolP(xp(ip), nRegions, Regions);
 
     gUp=0.0;
     for ig=1:NSFN
@@ -674,445 +677,7 @@ function [stressP]=computeStress(E,Fp,NP)
   end
 end
 
-%__________________________________
-%
-function[node, dx]=positionToNode(xp, nRegions, Regions)
- 
-  n_offset = 0;
-  region1_offset = 1;                       % only needed for the first region
-  dx = double(0);
-  node = int32(-9);
-  
-  for r=1:nRegions
-    R = Regions{r};
-    
-    if ((xp >= R.min) && (xp < R.max))
-      n    = floor((xp - R.min)/R.dx);      % # of nodes from the start of the current region
-      node = n + n_offset + region1_offset; % add an offset to the local node number
-      dx   = R.dx;
-      %fprintf( 'region: %g, n: %g, node:%g, xp: %g dx: %g R.min: %g, R.max: %g \n',r, n, node, xp, dx, R.min, R.max);
-      return;
-    end
-    region1_offset = 0;                     % set to 0 after the first region
 
-    n_offset = (n_offset) + R.NN;           % increment the offset
-  end
-  
-  %bulletproofing
- if( xp < Regions{1}.min || xp > Regions{nRegions}.max)
-  fprintf( 'ERROR: positionToNode(), the particle (xp: %g) is outside the computational domain( %g, %g )\n',xp,Regions{1}.min,Regions{nRegions}.max  );
-  input('stop'); 
- end
-end
-
-
-%__________________________________
-function[nodes,dx]=positionToClosestNodes(xp,nRegions,Regions, nodePos)
-  [node, dx]=positionToNode(xp, nRegions, Regions);
-  
-  relativePosition = (xp - nodePos(node))/dx;
-  
-  offset = int32(0);
-  if( relativePosition < 0.5)
-    offset = -1;
-  end
-  
-  % bulletproofing
-  if(relativePosition< 0)
-    fprintf( 'Node %g, offset :%g relative Position: %g, xp:%g, nodePos:%g \n',node, offset, relativePosition,xp, nodePos(node));
-    input('stop');
-  end
-  
-  nodes(1) = node + offset;
-  nodes(2) = nodes(1) + 1;
-  nodes(3) = nodes(2) + 1;
-  
-end
-%__________________________________
-% returns the initial volP and lp
-function[volP_0, lp_0]=positionToVolP(xp, nRegions, Regions)
-  volP_0 = -9.0;
-  lp_0 = -9.0;
- 
-  for r=1:nRegions
-    R = Regions{r};
-    if ( (xp >= R.min) && (xp < R.max) )
-      volP_0 = R.dx;
-      lp_0   = R.lp;
-    end
-  end
-end
-
-
-
-%__________________________________
-%  Equation 14 of "Structured Mesh Refinement in Generalized Interpolation Material Point Method
-%  for Simulation of Dynamic Problems"
-function [nodes,Ss]=findNodesAndWeights_linear(xp, notused, nRegions, Regions, nodePos, Lx)
-  global NSFN;
-  % find the nodes that surround the given location and
-  % the values of the shape functions for those nodes
-  % Assume the grid starts at x=0.  This follows the numenclature
-  % of equation 12 of the reference
-
-  [node, dx]=positionToNode(xp, nRegions, Regions);  
-
-  nodes(1)= node;
-  nodes(2)= node+1;
-  
-  for ig=1:NSFN
-    Ss(ig) = -9;
-    
-    Lx_minus = Lx(nodes(ig),1);
-    Lx_plus  = Lx(nodes(ig),2);
-    delX = xp - nodePos(nodes(ig));
-
-    if (delX <= -Lx_minus)
-      Ss(ig) = 0;
-    elseif(-Lx_minus <= delX && delX<= 0.0)
-      Ss(ig) = 1.0 + delX/Lx_minus;
-    elseif(  0 <= delX && delX<= Lx_plus)
-      Ss(ig) = 1.0 - delX/Lx_plus;
-    elseif( Lx_plus <= delX )
-      Ss(ig) = 0;
-    end
-  end
-  %__________________________________
-  % bullet proofing
-  sum = double(0);
-  for ig=1:NSFN
-    sum = sum + Ss(ig);
-  end
-  if ( abs(sum-1.0) > 1e-10)
-    fprintf('node(1):%g, node(2):%g ,node(3):%g, xp:%g Ss(1): %g, Ss(2): %g, Ss(3): %g, sum: %g\n',nodes(1),nodes(2),nodes(3), xp, Ss(1), Ss(2), Ss(3), sum)
-    input('error: the shape functions (linear) dont sum to 1.0 \n');
-  end
-
-  if(0)
-    node = xp/dx;
-    node=floor(node)+1;
-
-    nodes(1)= node;
-    nodes(2)=nodes(1)+1;
-
-    dnode=double(node);
-
-    locx=(xp-dx*(dnode-1))/dx;
-    Ss_old(1)=1-locx;
-    Ss_old(2)=locx;
-
-    if ( ( Ss(1) ~= Ss_old(1)) || ( Ss(1) ~= Ss_old(1)) )
-      fprintf('Ss(1): %g, Ss_old: %g     Ss(2):%g   Ss_old(2):%g \n',Ss(1), Ss_old(1), Ss(2), Ss_old(2));
-    end
-  end
-end
-
-
-%__________________________________
-%  Reference:  Uintah Documentation Chapter 7 MPM, Equation 7.14
-function [nodes,Ss]=findNodesAndWeights_gimp(xp, lp, nRegions, Regions, nodePos, Lx)
-  global NSFN;
-
- [nodes,dx]=positionToClosestNodes(xp,nRegions,Regions, nodePos);
-  
-  L = dx;
-  
-  for ig=1:NSFN
-    Ss(ig) = double(-9);
-    delX = xp - nodePos(nodes(ig));
-
-    if ( ((-L-lp) < delX) && (delX <= (-L+lp)) )
-      
-      Ss(ig) = ( ( L + lp + delX)^2 )/ (4.0*L*lp);
-      
-    elseif( ((-L+lp) < delX) && (delX <= -lp) )
-      
-      Ss(ig) = 1 + delX/L;
-      
-    elseif( (-lp < delX) && (delX <= lp) )
-      
-      numerator = delX^2 + lp^2;
-      Ss(ig) =1.0 - (numerator/(2.0*L*lp));  
-    
-    elseif( (lp < delX) && (delX <= (L-lp)) )
-      
-      Ss(ig) = 1 - delX/L;
-            
-    elseif( ((L-lp) < delX) && (delX <= (L+lp)) )
-    
-      Ss(ig) = ( ( L + lp - delX)^2 )/ (4.0*L*lp);
-    
-    else
-      Ss(ig) = 0;
-    end
-  end
-  
-  %__________________________________
-  % bullet proofing
-  sum = double(0);
-  for ig=1:NSFN
-    sum = sum + Ss(ig);
-  end
-  if ( abs(sum-1.0) > 1e-10)
-    fprintf('node(1):%g, node(2):%g ,node(3):%g, xp:%g Ss(1): %g, Ss(2): %g, Ss(3): %g, sum: %g\n',nodes(1),nodes(2),nodes(3), xp, Ss(1), Ss(2), Ss(3), sum)
-    input('error: the shape functions dont sum to 1.0 \n');
-  end
-  
-end
-
-%__________________________________
-%  Equation 15 of "Structured Mesh Refinement in Generalized Interpolation Material Point Method
-%  for Simulation of Dynamic Problems"
-function [nodes,Ss]=findNodesAndWeights_gimp2(xp, lp, nRegions, Regions, nodePos, Lx)
-
-  global NSFN;
-  % find the nodes that surround the given location and
-  % the values of the shape functions for those nodes
-  % Assume the grid starts at x=0.  This follows the numenclature
-  % of equation 15 of the reference
-  [nodes,dx]=positionToClosestNodes(xp,nRegions,Regions, nodePos);
- 
-  for ig=1:NSFN
-    node = nodes(ig);
-    Lx_minus = Lx(node,1);
-    Lx_plus  = Lx(node,2);
-
-    delX = xp - nodePos(node);
-    A = delX - lp;
-    B = delX + lp;
-    a = max( A, -Lx_minus);
-    b = min( B,  Lx_plus);
-    
-    if (B <= -Lx_minus || A >= Lx_plus)
-      
-      Ss(ig) = 0;
-      tmp = 0;
-    elseif( b <= 0 )
-    
-      t1 = b - a;
-      t2 = (b*b - a*a)/(2.0*Lx_minus);
-      Ss(ig) = (t1 + t2)/(2.0*lp);
-      
-      tmp = (b-a+(b*b-a*a)/2/Lx_minus)/2/lp;
-    elseif( a >= 0 )
-      
-      t1 = b - a;
-      t2 = (b*b - a*a)/(2.0*Lx_plus);
-      Ss(ig) = (t1 - t2)/(2.0*lp);
-      
-      tmp = (b-a-(b*b-a*a)/2/Lx_plus)/2/lp;
-    else
-    
-      t1 = b - a;
-      t2 = (a*a)/(2.0*Lx_minus);
-      t3 = (b*b)/(2.0*Lx_plus);
-      Ss(ig) = (t1 - t2 - t3)/(2*lp);
-      
-      tmp = (-a-a*a/2/Lx_minus+b-b*b/2/Lx_plus)/2/lp;
-    end
-    
-    if( abs(tmp - Ss(ig)) > 1e-13)
-      fprintf(' Ss: %g  tmp: %g \n', Ss(ig), tmp);
-      fprintf( 'Node: %g xp: %g nodePos: %g\n', nodes(ig), xp, nodePos(node));
-      fprintf( 'A: %g B: %g, a: %g, b: %g Lx_minus: %g, Lx_plus: %g lp: %g\n', A, B, a, b, Lx_minus, Lx_plus,lp);
-      fprintf( '(B <= -Lx_minus || A >= Lx_plus) :%g \n',(B <= -Lx_minus || A >= Lx_plus));
-      fprintf( '( b <= 0 ) :%g \n',( b <= 0 ));
-      fprintf( '( a >= 0 ) :%g \n',( a >= 0 )); 
-      input('error shape functions dont match\n');
-    end
-  end
-  
-
-  
-  %__________________________________
-  % bullet proofing
-  sum = double(0);
-  for ig=1:NSFN
-    sum = sum + Ss(ig);
-  end
-  if ( abs(sum-1.0) > 1e-10)
-    fprintf('node(1):%g, node(1):%g ,node(3):%g, xp:%g Ss(1): %g, Ss(2): %g, Ss(3): %g, sum: %g\n',nodes(1),nodes(2),nodes(3), xp, Ss(1), Ss(2), Ss(3), sum)
-    input('error: the shape functions dont sum to 1.0 \n');
-  end
-  
-  %__________________________________
-  % error checking
-  % Only turn this on with single resolution grids
-  if(0)
-  [nodes,Ss_old]=findNodesAndWeights_gimp(xp, nRegions, Regions, nodePos, Lx);
-  for ig=1:NSFN
-    if ( abs(Ss_old(ig)-Ss(ig)) > 1e-10 )
-      fprintf(' The methods (old/new) for computing the shape functions dont match\n');
-      fprintf('Node: %g, Ss_old: %g, Ss_new: %g \n',node(ig), Ss_old(ig), Ss(ig));
-      input('error: shape functions dont match \n'); 
-    end
-  end
-  end
-end
-
-%__________________________________
-%  Reference:  Uintah Documentation Chapter 7 MPM, Equation 7.14
-function [nodes,Gs, dx]=findNodesAndWeightGradients_linear(xp, notUsed, nRegions, Regions, nodePos, Lx)
- 
-  % find the nodes that surround the given location and
-  % the values of the gradients of the linear shape functions.
-  % Assume the grid starts at x=0.
-
-  [node, dx]=positionToNode(xp,nRegions, Regions);
-
-  nodes(1) = node;
-  nodes(2) = nodes(1)+1;
-
-  Gs(1) = -1/dx;
-  Gs(2) = 1/dx;
-end
-
-%__________________________________
-%  Reference:  Uintah Documentation Chapter 7 MPM, Equation 7.17
-function [nodes,Gs, dx]=findNodesAndWeightGradients_gimp(xp, lp, nRegions, Regions, nodePos,Lx)
-
-  global NSFN;
-  % find the nodes that surround the given location and
-  % the values of the gradients of the shape functions.
-  % Assume the grid starts at x=0.  
-  [nodes,dx]=positionToClosestNodes(xp,nRegions,Regions, nodePos);
-  
-  L  = dx;
-  
-  for ig=1:NSFN
-    Gs(ig) = -9;
-    delX = xp - nodePos(nodes(ig));
-
-    if ( ((-L-lp) < delX) && (delX <= (-L+lp)) )
-      
-      Gs(ig) = ( L + lp + delX )/ (2.0*L*lp);
-      
-    elseif( ((-L+lp) < delX) && (delX <= -lp) )
-      
-      Gs(ig) = 1/L;
-      
-    elseif( (-lp < delX) && (delX <= lp) )
-      
-      Gs(ig) =-delX/(L*lp);  
-    
-    elseif( (lp < delX) && (delX <= (L-lp)) )
-      
-      Gs(ig) = -1/L;
-            
-    elseif( ( (L-lp) < delX) && (delX <= (L+lp)) )
-    
-      Gs(ig) = -( L + lp - delX )/ (2.0*L*lp);
-    
-    else
-      Gs(ig) = 0;
-    end
-  end
-  
-  %__________________________________
-  % bullet proofing
-  sum = double(0);
-  for ig=1:NSFN
-    sum = sum + Gs(ig);
-  end
-  if ( abs(sum) > 1e-10)
-    fprintf('node(1):%g, node(1):%g ,node(3):%g, xp:%g Gs(1): %g, Gs(2): %g, Gs(3): %g, sum: %g\n',nodes(1),nodes(2),nodes(3), xp, Gs(1), Gs(2), Gs(3), sum)
-    input('error: the gradient of the shape functions (gimp) dont sum to 1.0 \n');
-  end
-end
-
-%__________________________________
-%  The equations for this function are derived in the hand written notes.  
-% The governing equations for the derivation come from equation 15.
-function [nodes,Gs, dx]=findNodesAndWeightGradients_gimp2(xp, lp, nRegions, Regions, nodePos,Lx)
-
-  global NSFN;
-  
-  [nodes,dx]=positionToClosestNodes(xp,nRegions,Regions, nodePos);
-  
-  for ig=1:NSFN
-    Gs(ig) = -9;
-      
-    node = nodes(ig);                                                       
-    Lx_minus = Lx(node,1);                                                  
-    Lx_plus  = Lx(node,2);                                                  
-
-    delX = xp - nodePos(node);                                              
-    A = delX - lp;                                                          
-    B = delX + lp;                                                          
-    a = max( A, -Lx_minus);                                                 
-    b = min( B,  Lx_plus);                                                  
-
-    if (B <= -Lx_minus || A >= Lx_plus)   %--------------------------     B<= -Lx- & A >= Lx+                                    
-
-      Gs(ig) = 0;                                                           
-
-    elseif( b <= 0 )                      %--------------------------     b <= 0                                                
-
-      if( (B < Lx_plus) && (A > -Lx_minus))
-
-        Gs(ig) = 1/Lx_minus;
-
-      elseif( (B >= Lx_plus) && (A > -Lx_minus) )
-
-        Gs(ig) = (Lx_minus + A)/ (2.0 * Lx_minus * lp);
-
-      elseif( (B < Lx_plus) && (A <= -Lx_minus) )
-
-        Gs(ig) = (Lx_minus + B)/ (2.0 * Lx_minus * lp);      
-
-      else
-        Gs(ig) = 0.0;
-      end                            
-
-    elseif( a >= 0 )                        %--------------------------    a >= 0                                          
-
-      if( (B < Lx_plus) && (A > -Lx_minus))
-
-        Gs(ig) = -1/Lx_plus;
-
-      elseif( (B >= Lx_plus) && (A > -Lx_minus) )
-
-        Gs(ig) = (-Lx_plus + A)/ (2.0 * Lx_plus * lp);
-
-      elseif( (B < Lx_plus) && (A <= -Lx_minus) )
-
-        Gs(ig) = (Lx_plus - B)/ (2.0 * Lx_plus * lp);      
-
-      else
-        Gs(ig) = 0.0;
-      end  
-
-    else                                      %--------------------------    other                                                    
-
-       if( (B < Lx_plus) && (A > -Lx_minus))
-
-        Gs(ig) = -A/(2.0 * Lx_minus * lp)  - B/(2.0 * Lx_plus * lp);
-
-      elseif( (B >= Lx_plus) && (A > -Lx_minus) )
-
-        Gs(ig) = (-Lx_minus - A)/(2.0 * Lx_minus * lp);
-
-      elseif( (B < Lx_plus) && (A <= -Lx_minus) )
-
-        Gs(ig) = (Lx_plus - B)/(2.0 * Lx_plus * lp);
-
-      else
-        Gs(ig) = 0.0;
-      end
-    end                                          
-  end
-  
-  %__________________________________
-  % bullet proofing
-  sum = double(0);
-  for ig=1:NSFN
-    sum = sum + Gs(ig);
-  end
-  if ( abs(sum) > 1e-10)
-    fprintf('node(1):%g, node(2):%g ,node(3):%g, xp:%g Gs(1): %g, Gs(2): %g, Gs(3): %g, sum: %g\n',nodes(1),nodes(2),nodes(3), xp, Gs(1), Gs(2), Gs(3), sum)
-    input('error: the gradient of the shape functions (gimp2) dont sum to 0.0 \n');
-  end
-end
 
 
 %__________________________________
