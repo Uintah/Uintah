@@ -170,7 +170,6 @@ Kayenta::~Kayenta()
    }
    VarLabel::destroy(peakI1IDistLabel);
    VarLabel::destroy(peakI1IDistLabel_preReloc);
-
 }
 
 void Kayenta::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
@@ -239,17 +238,121 @@ void Kayenta::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
   cm_ps->appendElement("JOBFAIL",UI[47]);//
   cm_ps->appendElement("FSLOPEF",UI[48]);//
   cm_ps->appendElement("FAILSTAT",UI[49]);//
-  cm_ps->appendElement("FREE01",UI[50]);//
-  cm_ps->appendElement("FREE02",UI[51]);//
-  cm_ps->appendElement("FREE03",UI[52]);//
-  cm_ps->appendElement("FREE04",UI[53]);//
-  cm_ps->appendElement("FREE05",UI[54]);//
-  cm_ps->appendElement("FREE06",UI[55]);//
-  cm_ps->appendElement("FREE07",UI[56]);//
-  cm_ps->appendElement("FREE08",UI[57]);//
+  cm_ps->appendElement("EOSID",UI[50]);//
+  cm_ps->appendElement("USEHOSTEOS",UI[51]);//
+  cm_ps->appendElement("FREE01",UI[52]);//
+  cm_ps->appendElement("FREE02",UI[53]);//
+  cm_ps->appendElement("FREE03",UI[54]);//
+  cm_ps->appendElement("FREE04",UI[55]);//
+  cm_ps->appendElement("FREE05",UI[56]);//
+  cm_ps->appendElement("FREE06",UI[57]);//
   cm_ps->appendElement("YSLOPEI",UI[58]);//
   cm_ps->appendElement("YSLOPEF",UI[59]);//
-  
+
+//     Pointers vary from this point forward depending on which
+//     features have been enabled.  If there are no joints, then the
+//     next parameters after those listed above are the ones for thermo.
+//
+   int JJNT=d_NBASICINPUTS-1;  //JJNT equals 60
+
+#ifdef KMM_ORTHOTROPIC
+//    The orthotropic option requires 12 parameters (four per joint)
+  cm_ps->appendElement("CKN01",     UI[JJNT+1]); //Init jnt normal stiffness (stress/length)
+  cm_ps->appendElement("CKN02",     UI[JJNT+2]); //Init jnt normal stiffness (stress/length)
+  cm_ps->appendElement("CKN03",     UI[JJNT+3]); //Init jnt normal stiffness (stress/length)
+  cm_ps->appendElement("VMAX1",     UI[JJNT+4]); //Maximum joint closure(length)
+  cm_ps->appendElement("VMAX2",     UI[JJNT+5]); //Maximum joint closure(length)
+  cm_ps->appendElement("VMAX3",     UI[JJNT+6]); //Maximum joint closure(length)
+  cm_ps->appendElement("SPACE1",    UI[JJNT+7]); //Spacing of joints in a set (length)
+  cm_ps->appendElement("SPACE2",    UI[JJNT+8]); //Spacing of joints in a set (length)
+  cm_ps->appendElement("SPACE3",    UI[JJNT+9]); //Spacing of joints in a set (length)
+  cm_ps->appendElement("SHRSTIFF1", UI[JJNT+10]); //Init joint shr stiffness (stress/length)
+  cm_ps->appendElement("SHRSTIFF2", UI[JJNT+11]); //Init jnt shr stiffness (stress/length)
+  cm_ps->appendElement("SHRSTIFF3", UI[JJNT+d_NUMJOINTINPUTS]); //Init jnt shr stiff
+#elif KMM_ANISOTROPIC
+  cm_ps->appendElement("STRIKE1",   UI[JJNT+ 1]); //strike for joint #1(degrees)
+  cm_ps->appendElement("DIP1",      UI[JJNT+ 2]); //dip for joint #1 (degrees)
+  cm_ps->appendElement("CKN01",     UI[JJNT+ 3]); //Init jnt nrmal stiffness (stress/length)
+  cm_ps->appendElement("VMAX1",     UI[JJNT+ 4]); //Maximum joint closure(lngth)
+  cm_ps->appendElement("SPACE1",    UI[JJNT+ 5]); //Spacing of joints (length)
+  cm_ps->appendElement("SHRSTIFF1", UI[JJNT+ 6]); //Init jnt shear stiffness (stress/length)
+  cm_ps->appendElement("STRIKE2",   UI[JJNT+ 7]); //same, but for joint #2
+  cm_ps->appendElement("DIP2",      UI[JJNT+ 8]); //same, but for joint #2
+  cm_ps->appendElement("CKN02",     UI[JJNT+ 9]); //same, but for joint #2
+  cm_ps->appendElement("VMAX2",     UI[JJNT+10]); //same, but for joint #2
+  cm_ps->appendElement("SPACE2",    UI[JJNT+11]); //same, but for joint #2
+  cm_ps->appendElement("SHRSTIFF2", UI[JJNT+12]); //same, but for joint #2
+  cm_ps->appendElement("STRIKE3",   UI[JJNT+13]); //same,but for joint#3
+  cm_ps->appendElement("DIP3",      UI[JJNT+14]); //same,but for joint#3
+  cm_ps->appendElement("CKN03",     UI[JJNT+15]); //same,but for joint#3
+  cm_ps->appendElement("VMAX3",     UI[JJNT+16]); //same,but for joint#3
+  cm_ps->appendElement("SPACE3",    UI[JJNT+17]); //same,but for joint#3
+  cm_ps->appendElement("SHRSTIFF3", UI[JJNT+18]); //same,but for joint#3
+  cm_ps->appendElement("STRIKE4",   UI[JJNT+19]); //joint #4
+  cm_ps->appendElement("DIP4",      UI[JJNT+20]); //joint #4
+  cm_ps->appendElement("CKN04",     UI[JJNT+21]); //joint #4
+  cm_ps->appendElement("VMAX4",     UI[JJNT+22]); //joint #4
+  cm_ps->appendElement("SPACE4",    UI[JJNT+23]); //joint #4
+  cm_ps->appendElement("SHRSTIFF4", UI[JJNT+d_NUMJOINTINPUTS]);
+#endif
+//     ________________________________________________________________________
+//     EOSMG inputs
+  int IJTHERMPAR = JJNT+d_NUMJOINTINPUTS;
+
+  cm_ps->appendElement("TMPRXP",  UI[IJTHERMPAR + 1]);
+  cm_ps->appendElement("THERM01", UI[IJTHERMPAR + 2]);
+  cm_ps->appendElement("THERM02", UI[IJTHERMPAR + 3]);
+  cm_ps->appendElement("THERM03", UI[IJTHERMPAR + 4]);
+  cm_ps->appendElement("THERM04", UI[IJTHERMPAR + 5]);
+
+  d_IEOSMGCT     = IJTHERMPAR+d_NTHERMOPLAST;
+  cm_ps->appendElement("RHO0",    UI[d_IEOSMGCT +  1]);
+  cm_ps->appendElement("TMPR0",   UI[d_IEOSMGCT +  2]);
+  cm_ps->appendElement("SNDSP0",  UI[d_IEOSMGCT +  3]);
+  cm_ps->appendElement("S1MG",    UI[d_IEOSMGCT +  4]);
+  cm_ps->appendElement("GRPAR",   UI[d_IEOSMGCT +  5]);
+  cm_ps->appendElement("CV",      UI[d_IEOSMGCT +  6]);
+  cm_ps->appendElement("ESFT",    UI[d_IEOSMGCT +  7]);
+  cm_ps->appendElement("RP",      UI[d_IEOSMGCT +  8]);
+  cm_ps->appendElement("PS",      UI[d_IEOSMGCT +  9]);
+  cm_ps->appendElement("PE",      UI[d_IEOSMGCT + 10]);
+  cm_ps->appendElement("CE",      UI[d_IEOSMGCT + 11]);
+  cm_ps->appendElement("NSUB",    UI[d_IEOSMGCT + 12]);
+  cm_ps->appendElement("S2MG",    UI[d_IEOSMGCT + 13]);
+  cm_ps->appendElement("TYP",     UI[d_IEOSMGCT + 14]);
+  cm_ps->appendElement("RO",      UI[d_IEOSMGCT + 15]);
+  cm_ps->appendElement("TO",      UI[d_IEOSMGCT + 16]);
+  cm_ps->appendElement("S",       UI[d_IEOSMGCT + 17]);
+  cm_ps->appendElement("GRPARO",  UI[d_IEOSMGCT + 18]);
+  cm_ps->appendElement("B",       UI[d_IEOSMGCT + 19]);
+  cm_ps->appendElement("XB",      UI[d_IEOSMGCT + 20]);
+  cm_ps->appendElement("NB",      UI[d_IEOSMGCT + 21]);
+  cm_ps->appendElement("PWR",     UI[d_IEOSMGCT + d_NUIEOSMG]);
+//    ________________________________________________________________________
+//    EOSMG derived constants
+  int IDCEOSMGCT=d_IEOSMGCT+d_NUIEOSMG;
+  cm_ps->appendElement("A1MG", UI[IDCEOSMGCT +  1]);
+  cm_ps->appendElement("A2MG", UI[IDCEOSMGCT +  2]);
+  cm_ps->appendElement("A3MG", UI[IDCEOSMGCT +  3]);
+  cm_ps->appendElement("A4MG", UI[IDCEOSMGCT +  4]);
+  cm_ps->appendElement("A5MG", UI[IDCEOSMGCT +  5]);
+  cm_ps->appendElement("A0MG", UI[IDCEOSMGCT +  6]);
+  cm_ps->appendElement("AEMG", UI[IDCEOSMGCT +  7]);
+  cm_ps->appendElement("FK0",  UI[IDCEOSMGCT +  8]);
+  cm_ps->appendElement("AF",   UI[IDCEOSMGCT +  9]);
+  cm_ps->appendElement("PF",   UI[IDCEOSMGCT + 10]);
+  cm_ps->appendElement("XF",   UI[IDCEOSMGCT + 11]);
+  cm_ps->appendElement("CF",   UI[IDCEOSMGCT + 12]);
+  cm_ps->appendElement("RMX",  UI[IDCEOSMGCT + d_NDCEOSMG]);
+//    ________________________________________________________________________
+//    EOSMG VI
+  int IVIEOSMGCT=IDCEOSMGCT+d_NDCEOSMG;
+  cm_ps->appendElement("VI1MG", UI[IVIEOSMGCT +  1]);
+  cm_ps->appendElement("VI2MG", UI[IVIEOSMGCT +  2]);
+  cm_ps->appendElement("VI3MG", UI[IVIEOSMGCT +  3]);
+  cm_ps->appendElement("VI4MG", UI[IVIEOSMGCT +  4]);
+  cm_ps->appendElement("VI5MG", UI[IVIEOSMGCT +  d_NVIEOSMG]);
+
   cm_ps->appendElement("peakI1IPerturb", wdist.Perturb);
   cm_ps->appendElement("peakI1IMed",     wdist.WeibMed);
   cm_ps->appendElement("peakI1IMod",     wdist.WeibMod);
@@ -293,7 +396,6 @@ void Kayenta::initializeCMData(const Patch* patch,
        << "\nSeed:            " << wdist.WeibSeed
        << "\nPerturb?:        " << wdist.Perturb << std::endl;
   if ( wdist.Perturb){
-  //SCIRun::Weibull weibGen(wdist.WeibMed, wdist.WeibMod, wdist.WeibScale, 0);
     SCIRun::Weibull weibGen(wdist.WeibMed,wdist.WeibMod,wdist.WeibRefVol,wdist.WeibSeed);
     constParticleVariable<double>pVolume;
     new_dw->get(pVolume, lb->pVolumeLabel, pset);
@@ -590,19 +692,17 @@ void Kayenta::computeStressTensor(const PatchSubset* patches,
         svarg[i]=ISVs[i][idx];
       }
 
-          // 'Hijack' UI[42] with perturbed value if desired
-          // put real value of UI[42] in tmp var just in case
-          if (wdist.Perturb){
-                  double tempVar = UI[42];
-                  UI[42] = peakI1IDist[idx];
+      // 'Hijack' UI[42] with perturbed value if desired
+      // put real value of UI[42] in tmp var just in case
+      if (wdist.Perturb){
+          double tempVar = UI[42];
+          UI[42] = peakI1IDist[idx];
 
-          KAYENTA_CALC(nblk, d_NINSV, dt, UI, sigarg,
-                                     Darray, svarg, USM);
-                  UI[42]=tempVar;
-          } else {
-          KAYENTA_CALC(nblk, d_NINSV, dt, UI, sigarg,
-                                     Darray, svarg, USM);
-          }
+          KAYENTA_CALC(nblk, d_NINSV, dt, UI, sigarg, Darray, svarg, USM);
+          UI[42]=tempVar;
+      } else {
+          KAYENTA_CALC(nblk, d_NINSV, dt, UI, sigarg, Darray, svarg, USM);
+      }
 
       // Unload ISVs from 1D array into ISVs_new 
       for(int i=0;i<d_NINSV;i++){
@@ -720,7 +820,6 @@ void Kayenta::addInitialComputesAndRequires(Task* task,
 
   // Other constitutive model and input dependent computes and requires
   for(int i=0;i<d_NINSV;i++){
-//    task->computes(ISVLabels_preReloc[i], matlset);
     task->computes(ISVLabels[i], matlset);
   }
   task->computes(peakI1IDistLabel, matlset);
@@ -1158,5 +1257,4 @@ Kayenta::WeibullParser(WeibParameters &iP)
     iP.WeibSeed   = atoi(weibSeed.c_str());
     
   } // End if (iP.Perturb)
-
 }
