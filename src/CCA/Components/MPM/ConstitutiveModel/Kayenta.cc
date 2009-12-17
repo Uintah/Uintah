@@ -78,6 +78,11 @@ extern "C"{
 #  define KMMRXV kmmrxv
 #endif
 
+//#define KMM_ORTHOTROPIC
+//#undef KMM_ORTHOTROPIC
+//#define KMM_ANISOTROPIC
+//#undef KMM_ANISOTROPIC
+
    void KMMCHK( double UI[], double UJ[], double UK[] );
    void KAYENTA_CALC( int &nblk, int &ninsv, double &dt,
                                     double UI[], double stress[], double D[],
@@ -94,8 +99,27 @@ using std::cerr; using namespace Uintah; using namespace SCIRun;
 Kayenta::Kayenta(ProblemSpecP& ps,MPMFlags* Mflag)
   : ConstitutiveModel(Mflag)
 {
+  // See Kayenta_pnt.Blk to see where these numbers come from
+  d_NBASICINPUTS=60;
+#ifdef KMM_ORTHOTROPIC
+  d_NUMJNTS=3;
+  d_NUMJOINTINPUTS=4*d_NUMJNTS;
+#elif KMM_ANISOTROPIC
+  d_NUMJNTS=4;
+  d_NUMJOINTINPUTS=6*d_NUMJNTS;
+#else
+  d_NUMJNTS=0;
+  d_NUMJOINTINPUTS=0*d_NUMJNTS;
+#endif
+
+  d_NUIEOSMG=22;d_NDCEOSMG=13;d_NVIEOSMG=5;d_NTHERMOPLAST=5;
+  d_NUMEOSINPUTS=d_NUIEOSMG+d_NDCEOSMG+d_NVIEOSMG+d_NTHERMOPLAST;
+
+// Total number of properties
+   d_NKMMPROP=d_NBASICINPUTS+d_NUMJOINTINPUTS+d_NUMEOSINPUTS;
+
   // pre-initialize all of the user inputs to zero.
-  for(int i = 0; i<90; i++){
+  for(int i = 0; i<d_NKMMPROP; i++){
      UI[i] = 0.;
   }
   // Read model parameters from the input file
@@ -116,15 +140,15 @@ Kayenta::Kayenta(ProblemSpecP& ps,MPMFlags* Mflag)
   
   KMMRXV( UI, UI, UI, nx, namea, keya, rinit, rdim, iadvct, itype );
 
-  cout << "nx = " << nx << endl;
   d_NINSV=nx;
+  cout << "d_NINSV = " << d_NINSV << endl;
 
   initializeLocalMPMLabels();
 }
 
 Kayenta::Kayenta(const Kayenta* cm) : ConstitutiveModel(cm)
 {
-  for(int i=0;i<90;i++){
+  for(int i=0;i<d_NKMMPROP;i++){
     UI[i] = cm->UI[i];
   }
 
@@ -251,6 +275,7 @@ void Kayenta::initializeCMData(const Patch* patch,
 
   StaticArray<ParticleVariable<double> > ISVs(d_NINSV+1);
 
+  cout << "In initializeCMData" << endl;
   for(int i=0;i<d_NINSV;i++){
     new_dw->allocateAndPut(ISVs[i],ISVLabels[i], pset);
     ParticleSubset::iterator iter = pset->begin();
@@ -380,10 +405,15 @@ void Kayenta::computeStableTimestep(const Patch* patch,
      WaveSpeed=Vector(Max(c_dil+fabs(pvelocity[idx].x()),WaveSpeed.x()),
                       Max(c_dil+fabs(pvelocity[idx].y()),WaveSpeed.y()),
                       Max(c_dil+fabs(pvelocity[idx].z()),WaveSpeed.z()));
-    }
-    WaveSpeed = dx/WaveSpeed;
-    double delT_new = WaveSpeed.minComponent();
-    new_dw->put(delt_vartype(delT_new), lb->delTLabel, patch->getLevel());
+  }
+  UI[d_IEOSMGCT +  1]=matl->getInitialDensity();
+  UI[d_IEOSMGCT +  2]=matl->getRoomTemperature();
+  UI[d_IEOSMGCT +  3]=matl->bulk/getInitialDensity();
+  UI[d_IEOSMGCT +  6]=matl->getInitialCv();
+
+  WaveSpeed = dx/WaveSpeed;
+  double delT_new = WaveSpeed.minComponent();
+  new_dw->put(delt_vartype(delT_new), lb->delTLabel, patch->getLevel());
 }
 
 void Kayenta::computeStressTensor(const PatchSubset* patches,
@@ -650,10 +680,10 @@ void Kayenta::carryForward(const PatchSubset* patches,
     constParticleVariable<double> peakI1IDist;
     ParticleVariable<double> peakI1IDist_new;
 
-        old_dw->get(peakI1IDist, peakI1IDistLabel, pset);
-        new_dw->allocateAndPut(peakI1IDist_new,
-                                   peakI1IDistLabel_preReloc, pset);
-        peakI1IDist_new.copyData(peakI1IDist);
+    old_dw->get(peakI1IDist, peakI1IDistLabel, pset);
+    new_dw->allocateAndPut(peakI1IDist_new,
+                                 peakI1IDistLabel_preReloc, pset);
+    peakI1IDist_new.copyData(peakI1IDist);
 
     // Carry forward the data common to all constitutive models 
     // when using RigidMPM.
@@ -664,7 +694,7 @@ void Kayenta::carryForward(const PatchSubset* patches,
     StaticArray<constParticleVariable<double> > ISVs(d_NINSV+1);
     StaticArray<ParticleVariable<double> > ISVs_new(d_NINSV+1);
 
-    for(int i=1;i<d_NINSV;i++){
+    for(int i=0;i<d_NINSV;i++){
       old_dw->get(ISVs[i],ISVLabels[i], pset);
       new_dw->allocateAndPut(ISVs_new[i],ISVLabels_preReloc[i], pset);
       ISVs_new[i].copyData(ISVs[i]);
@@ -686,9 +716,12 @@ void Kayenta::addInitialComputesAndRequires(Task* task,
   // base class.
   const MaterialSubset* matlset = matl->thisMaterial();
 
+  cout << "In add InitialComputesAnd" << endl;
+
   // Other constitutive model and input dependent computes and requires
   for(int i=0;i<d_NINSV;i++){
-    task->computes(ISVLabels_preReloc[i], matlset);
+//    task->computes(ISVLabels_preReloc[i], matlset);
+    task->computes(ISVLabels[i], matlset);
   }
   task->computes(peakI1IDistLabel, matlset);
 }
@@ -825,16 +858,120 @@ Kayenta::getInputParameters(ProblemSpecP& ps)
   ps->getWithDefault("JOBFAIL",UI[47],0.0);//
   ps->getWithDefault("FSLOPEF",UI[48],0.0);//
   ps->getWithDefault("FAILSTAT",UI[49],0.0);//
-  ps->getWithDefault("FREE01",UI[50],0.0);//
-  ps->getWithDefault("FREE02",UI[51],0.0);//
-  ps->getWithDefault("FREE03",UI[52],0.0);//
-  ps->getWithDefault("FREE04",UI[53],0.0);//
-  ps->getWithDefault("FREE05",UI[54],0.0);//
-  ps->getWithDefault("FREE06",UI[55],0.0);//
-  ps->getWithDefault("FREE07",UI[56],0.0);//
-  ps->getWithDefault("FREE08",UI[57],0.0);//
+  ps->getWithDefault("EOSID",UI[50],0.0);//
+  ps->getWithDefault("USEHOSTEOS",UI[51],0.0);//
+  ps->getWithDefault("FREE01",UI[52],0.0);//
+  ps->getWithDefault("FREE02",UI[53],0.0);//
+  ps->getWithDefault("FREE03",UI[54],0.0);//
+  ps->getWithDefault("FREE04",UI[55],0.0);//
+  ps->getWithDefault("FREE05",UI[56],0.0);//
+  ps->getWithDefault("FREE06",UI[57],0.0);//
   ps->getWithDefault("YSLOPEI",UI[58],0.0);//
   ps->getWithDefault("YSLOPEF",UI[59],0.0);//
+
+//     Pointers vary from this point forward depending on which
+//     features have been enabled.  If there are no joints, then the
+//     next parameters after those listed above are the ones for thermo.
+//
+   int JJNT=d_NBASICINPUTS-1;  //JJNT equals 60
+
+#ifdef KMM_ORTHOTROPIC
+//    The orthotropic option requires 12 parameters (four per joint)
+      ps->getWithDefault("CKN01",     UI[JJNT+1],0.0); //Init jnt normal stiffness (stress/length)
+      ps->getWithDefault("CKN02",     UI[JJNT+2],0.0); //Init jnt normal stiffness (stress/length)
+      ps->getWithDefault("CKN03",     UI[JJNT+3],0.0); //Init jnt normal stiffness (stress/length)
+      ps->getWithDefault("VMAX1",     UI[JJNT+4],0.0); //Maximum joint closure (length)
+      ps->getWithDefault("VMAX2",     UI[JJNT+5],0.0); //Maximum joint closure (length)
+      ps->getWithDefault("VMAX3",     UI[JJNT+6],0.0); //Maximum joint closure (length)
+      ps->getWithDefault("SPACE1",    UI[JJNT+7],0.0); //Spacing of joints in a set (length)
+      ps->getWithDefault("SPACE2",    UI[JJNT+8],0.0); //Spacing of joints in a set (length)
+      ps->getWithDefault("SPACE3",    UI[JJNT+9],0.0); //Spacing of joints in a set (length)
+      ps->getWithDefault("SHRSTIFF1", UI[JJNT+10],0.0); //Init joint shr stiffness (stress/length)
+      ps->getWithDefault("SHRSTIFF2", UI[JJNT+11],0.0); //Init jnt shr stiffness (stress/length)
+      ps->getWithDefault("SHRSTIFF3", UI[JJNT+d_NUMJOINTINPUTS],0.0); //Init jnt shr stiff
+#elif KMM_ANISOTROPIC
+      ps->getWithDefault("STRIKE1",   UI[JJNT+ 1],0.0); //strike for joint #1 (degrees)
+      ps->getWithDefault("DIP1",      UI[JJNT+ 2],0.0); //dip for joint #1 (degrees)
+      ps->getWithDefault("CKN01",     UI[JJNT+ 3],0.0); //Init jnt nrmal stiffness (stress/length)
+      ps->getWithDefault("VMAX1",     UI[JJNT+ 4],0.0); //Maximum joint closure (length)
+      ps->getWithDefault("SPACE1",    UI[JJNT+ 5],0.0); //Spacing of joints (length)
+      ps->getWithDefault("SHRSTIFF1", UI[JJNT+ 6],0.0); //Init jnt shear stiffness (stress/length)
+      ps->getWithDefault("STRIKE2",   UI[JJNT+ 7],0.0); //same as above, but for joint #2
+      ps->getWithDefault("DIP2",      UI[JJNT+ 8],0.0); //same as above, but for joint #2
+      ps->getWithDefault("CKN02",     UI[JJNT+ 9],0.0); //same as above, but for joint #2
+      ps->getWithDefault("VMAX2",     UI[JJNT+10],0.0); //same as above, but for joint #2
+      ps->getWithDefault("SPACE2",    UI[JJNT+11],0.0); //same as above, but for joint #2
+      ps->getWithDefault("SHRSTIFF2", UI[JJNT+12],0.0); //same as above, but for joint #2
+      ps->getWithDefault("STRIKE3",   UI[JJNT+13],0.0); //same,but for joint#3
+      ps->getWithDefault("DIP3",      UI[JJNT+14],0.0); //same,but for joint#3
+      ps->getWithDefault("CKN03",     UI[JJNT+15],0.0); //same,but for joint#3
+      ps->getWithDefault("VMAX3",     UI[JJNT+16],0.0); //same,but for joint#3
+      ps->getWithDefault("SPACE3",    UI[JJNT+17],0.0); //same,but for joint#3
+      ps->getWithDefault("SHRSTIFF3", UI[JJNT+18],0.0); //same,but for joint#3
+      ps->getWithDefault("STRIKE4",   UI[JJNT+19],0.0); //joint #4
+      ps->getWithDefault("DIP4",      UI[JJNT+20],0.0); //joint #4
+      ps->getWithDefault("CKN04",     UI[JJNT+21],0.0); //joint #4
+      ps->getWithDefault("VMAX4",     UI[JJNT+22],0.0); //joint #4
+      ps->getWithDefault("SPACE4",    UI[JJNT+23],0.0); //joint #4
+      ps->getWithDefault("SHRSTIFF4", UI[JJNT+d_NUMJOINTINPUTS],0.0);
+#endif
+//     ________________________________________________________________________
+//     EOSMG inputs
+      int IJTHERMPAR = JJNT+d_NUMJOINTINPUTS;
+
+      ps->getWithDefault("TMPRXP",  UI[IJTHERMPAR + 1],0.0);
+      ps->getWithDefault("THERM01", UI[IJTHERMPAR + 2],0.0);
+      ps->getWithDefault("THERM02", UI[IJTHERMPAR + 3],0.0);
+      ps->getWithDefault("THERM03", UI[IJTHERMPAR + 4],0.0);
+      ps->getWithDefault("THERM04", UI[IJTHERMPAR + 5],0.0);
+
+      d_IEOSMGCT     = IJTHERMPAR+d_NTHERMOPLAST;
+      ps->getWithDefault("RHO0",    UI[d_IEOSMGCT +  1],0.0);
+      ps->getWithDefault("TMPR0",   UI[d_IEOSMGCT +  2],0.0);
+      ps->getWithDefault("SNDSP0",  UI[d_IEOSMGCT +  3],0.0);
+      ps->getWithDefault("S1MG",    UI[d_IEOSMGCT +  4],0.0);
+      ps->getWithDefault("GRPAR",   UI[d_IEOSMGCT +  5],0.0);
+      ps->getWithDefault("CV",      UI[d_IEOSMGCT +  6],0.0);
+      ps->getWithDefault("ESFT",    UI[d_IEOSMGCT +  7],0.0);
+      ps->getWithDefault("RP",      UI[d_IEOSMGCT +  8],0.0);
+      ps->getWithDefault("PS",      UI[d_IEOSMGCT +  9],0.0);
+      ps->getWithDefault("PE",      UI[d_IEOSMGCT + 10],0.0);
+      ps->getWithDefault("CE",      UI[d_IEOSMGCT + 11],0.0);
+      ps->getWithDefault("NSUB",    UI[d_IEOSMGCT + 12],0.0);
+      ps->getWithDefault("S2MG",    UI[d_IEOSMGCT + 13],0.0);
+      ps->getWithDefault("TYP",     UI[d_IEOSMGCT + 14],0.0);
+      ps->getWithDefault("RO",      UI[d_IEOSMGCT + 15],0.0);
+      ps->getWithDefault("TO",      UI[d_IEOSMGCT + 16],0.0);
+      ps->getWithDefault("S",       UI[d_IEOSMGCT + 17],0.0);
+      ps->getWithDefault("GRPARO",  UI[d_IEOSMGCT + 18],0.0);
+      ps->getWithDefault("B",       UI[d_IEOSMGCT + 19],0.0);
+      ps->getWithDefault("XB",      UI[d_IEOSMGCT + 20],0.0);
+      ps->getWithDefault("NB",      UI[d_IEOSMGCT + 21],0.0);
+      ps->getWithDefault("PWR",     UI[d_IEOSMGCT + d_NUIEOSMG],0.0);
+//    ________________________________________________________________________
+//    EOSMG derived constants
+      int IDCEOSMGCT=d_IEOSMGCT+d_NUIEOSMG;
+      ps->getWithDefault("A1MG", UI[IDCEOSMGCT +  1],0.0);
+      ps->getWithDefault("A2MG", UI[IDCEOSMGCT +  2],0.0);
+      ps->getWithDefault("A3MG", UI[IDCEOSMGCT +  3],0.0);
+      ps->getWithDefault("A4MG", UI[IDCEOSMGCT +  4],0.0);
+      ps->getWithDefault("A5MG", UI[IDCEOSMGCT +  5],0.0);
+      ps->getWithDefault("A0MG", UI[IDCEOSMGCT +  6],0.0);
+      ps->getWithDefault("AEMG", UI[IDCEOSMGCT +  7],0.0);
+      ps->getWithDefault("FK0",  UI[IDCEOSMGCT +  8],0.0);
+      ps->getWithDefault("AF",   UI[IDCEOSMGCT +  9],0.0);
+      ps->getWithDefault("PF",   UI[IDCEOSMGCT + 10],0.0);
+      ps->getWithDefault("XF",   UI[IDCEOSMGCT + 11],0.0);
+      ps->getWithDefault("CF",   UI[IDCEOSMGCT + 12],0.0);
+      ps->getWithDefault("RMX",  UI[IDCEOSMGCT + d_NDCEOSMG],0.0);
+//    ________________________________________________________________________
+//    EOSMG VI
+      int IVIEOSMGCT=IDCEOSMGCT+d_NDCEOSMG;
+      ps->getWithDefault("VI1MG", UI[IVIEOSMGCT +  1],0.0);
+      ps->getWithDefault("VI2MG", UI[IVIEOSMGCT +  2],0.0);
+      ps->getWithDefault("VI3MG", UI[IVIEOSMGCT +  3],0.0);
+      ps->getWithDefault("VI4MG", UI[IVIEOSMGCT +  4],0.0);
+      ps->getWithDefault("VI5MG", UI[IVIEOSMGCT +  d_NVIEOSMG],0.0);
 
   ps->get("PEAKI1IDIST",wdist.WeibDist);
   WeibullParser(wdist);
@@ -854,7 +991,7 @@ Kayenta::initializeLocalMPMLabels()
   ISVNames.push_back("INDEX");
   ISVNames.push_back("EQDOT");
   ISVNames.push_back("I1");
-  ISVNames.push_back("p.ROOTJ2");
+  ISVNames.push_back("ROOTJ2");
   ISVNames.push_back("ALXX");
   ISVNames.push_back("ALYY");
   ISVNames.push_back("ALZZ");
@@ -871,7 +1008,7 @@ Kayenta::initializeLocalMPMLabels()
   ISVNames.push_back("CRACK");
   ISVNames.push_back("SHEAR");
   ISVNames.push_back("YIELD");
-  ISVNames.push_back("p.LODE");
+  ISVNames.push_back("LODE");
   ISVNames.push_back("QSSIGXX");
   ISVNames.push_back("QSSIGYY");
   ISVNames.push_back("QSSIGZZ");
@@ -886,18 +1023,29 @@ Kayenta::initializeLocalMPMLabels()
   ISVNames.push_back("QSBSXY");
   ISVNames.push_back("QSBSYZ");
   ISVNames.push_back("QSBSXZ");
-  ISVNames.push_back("p.TGROW");
-  ISVNames.push_back("p.COHER");
+  ISVNames.push_back("TGROW");
+  ISVNames.push_back("COHER");
+  ISVNames.push_back("TMPR");  //KTMPR  - Temperature
+  ISVNames.push_back("TMPRM");  //KTMPR  - Temperature
+  ISVNames.push_back("SNDSP");  //KSNDSP - Soundspeed
+  ISVNames.push_back("RHO");  //KRHO   - Density
+  ISVNames.push_back("ENRGY");  //KENRGY - Internal energy
+  ISVNames.push_back("ALPHAMG");  //Free place for EOS ISV
+  ISVNames.push_back("EOS1");  //Free place for EOS ISV
+  ISVNames.push_back("EOS2");  //Free place for EOS ISV
+  ISVNames.push_back("EOS3");  //Free place for EOS ISV
+  ISVNames.push_back("EOS4");  //Free place for EOS ISV
 
+  
   for(int i=0;i<d_NINSV;i++){
     ISVLabels.push_back(VarLabel::create(ISVNames[i],
                           ParticleVariable<double>::getTypeDescription()));
     ISVLabels_preReloc.push_back(VarLabel::create(ISVNames[i]+"+",
                           ParticleVariable<double>::getTypeDescription()));
   }
-  peakI1IDistLabel = VarLabel::create("p.peakI1IDist",
+  peakI1IDistLabel = VarLabel::create("peakI1IDist",
                      ParticleVariable<double>::getTypeDescription());
-  peakI1IDistLabel_preReloc = VarLabel::create("p.peakI1IDist+",
+  peakI1IDistLabel_preReloc = VarLabel::create("peakI1IDist+",
                      ParticleVariable<double>::getTypeDescription());
 }
 
