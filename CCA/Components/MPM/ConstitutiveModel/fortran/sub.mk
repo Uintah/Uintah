@@ -32,13 +32,12 @@
 
 SRCDIR   := CCA/Components/MPM/ConstitutiveModel/fortran
 
-FFLAGS += -DNOEOSMOD -DGEO_MBF_BETA
-
+#FFLAGS += -DNOEOSMOD -DGEO_MBF_BETA
+# REMOVED FOR TESTING 
 SRCS     += \
 	$(SRCDIR)/Hooke.F	\
         $(SRCDIR)/Kayenta_chk.F   \
 	$(SRCDIR)/Kayenta_init.F	\
 	$(SRCDIR)/Kayenta_calcs.F	\
-	$(SRCDIR)/Kayenta_calcNew.F	\
 	$(SRCDIR)/MIGUtilsF.F	\
 	$(SRCDIR)/MIGUtils.cc

@@ -61,7 +61,18 @@ namespace Uintah {
       std::string WeibDist;   // String for Distribution
     };
 
-    double UI[90];
+    int d_NKMMPROP;
+    int d_NBASICINPUTS;
+    int d_NUMJNTS;
+    int d_NUMJOINTINPUTS;
+    int d_NUIEOSMG;
+    int d_NDCEOSMG;
+    int d_NVIEOSMG;
+    int d_NTHERMOPLAST;
+    int d_NUMEOSINPUTS;
+    int d_IEOSMGCT;
+
+    double UI[190];
     // weibull parameter set
     WeibParameters wdist;
     
