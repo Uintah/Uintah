@@ -408,7 +408,7 @@ void Kayenta::computeStableTimestep(const Patch* patch,
   }
   UI[d_IEOSMGCT +  1]=matl->getInitialDensity();
   UI[d_IEOSMGCT +  2]=matl->getRoomTemperature();
-  UI[d_IEOSMGCT +  3]=matl->bulk/getInitialDensity();
+  UI[d_IEOSMGCT +  3]=bulk/matl->getInitialDensity();
   UI[d_IEOSMGCT +  6]=matl->getInitialCv();
 
   WaveSpeed = dx/WaveSpeed;
