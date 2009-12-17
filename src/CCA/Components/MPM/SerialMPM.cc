@@ -1370,6 +1370,7 @@ void SerialMPM::scheduleSetPrescribedMotion(SchedulerP& sched,
     const MaterialSubset* mss = matls->getUnion();
     t->modifies(             lb->gAccelerationLabel,     mss);
     t->modifies(             lb->gVelocityStarLabel,     mss);
+    t->requires(Task::OldDW, d_sharedState->get_delt_label() );
     if(!flags->d_doGridReset){
       t->requires(Task::OldDW, lb->gDisplacementLabel,    Ghost::None);
       t->modifies(lb->gDisplacementLabel, mss);
