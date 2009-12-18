@@ -228,6 +228,7 @@ ArchesLabel::ArchesLabel()
   d_coINLabel      =  VarLabel::create("coIN",      CC_double);
   d_c2h2INLabel    =  VarLabel::create("c2h2IN",    CC_double);
   d_ch4INLabel     =  VarLabel::create("ch4IN",     CC_double);
+  d_mixMWLabel     =  VarLabel::create("mixMW",     CC_double); 
 
   // Array containing the reference density multiplied by the void fraction
   // used for correct reference density subtraction in the multimaterial
@@ -631,6 +632,7 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_coINLabel);
   VarLabel::destroy(d_c2h2INLabel);
   VarLabel::destroy(d_ch4INLabel);
+  VarLabel::destroy(d_mixMWLabel); 
   VarLabel::destroy(d_denRefArrayLabel);
   VarLabel::destroy(d_densityMicroLabel);
   VarLabel::destroy(d_densityMicroINLabel);

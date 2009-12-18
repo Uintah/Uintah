@@ -320,6 +320,8 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
   sched_setInitialGuess(sched, patches, matls);
 
+  d_boundaryCondition->sched_setAreaFraction(sched, patches, matls); 
+
   // Start the iterations
 
   // check if filter is defined...

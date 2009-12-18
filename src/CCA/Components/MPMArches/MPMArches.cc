@@ -1053,7 +1053,6 @@ MPMArches::scheduleTimeAdvance( const LevelP & level,
   // the difference in the celltypes that we get from the two methods.
 
   d_arches->getBoundaryCondition()->sched_mmWallCellTypeInit(sched, patches, arches_matls, fixCellType);
-  d_arches->getBoundaryCondition()->sched_setAreaFraction( sched, patches, arches_matls ); 
 
   // for explicit calculation, exchange will be at the beginning
 

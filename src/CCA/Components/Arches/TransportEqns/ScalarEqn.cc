@@ -41,10 +41,10 @@ EqnBase( fieldLabels, timeIntegrator, eqnName )
   varname = eqnName+"_RHS";
   d_RHSLabel = VarLabel::create(varname, 
             CCVariable<double>::getTypeDescription());
-  varname = eqnName;
+  varname = eqnName+"_old";
   d_oldtransportVarLabel = VarLabel::create(varname,
             CCVariable<double>::getTypeDescription());
-  varname = eqnName+"_old";
+  varname = eqnName;
   d_transportVarLabel = VarLabel::create(varname,
             CCVariable<double>::getTypeDescription());
 
@@ -381,6 +381,8 @@ ScalarEqn::buildTransportEqn( const ProcessorGroup* pc,
     new_dw->getModifiable(Fconv, d_FconvLabel, matlIndex, patch); 
     new_dw->getModifiable(RHS, d_RHSLabel, matlIndex, patch);
     RHS.initialize(0.0); 
+    Fconv.initialize(0.0); 
+    Fdiff.initialize(0.0);
 
     //----BOUNDARY CONDITIONS
     computeBCs( patch, d_eqnName, phi );
@@ -411,7 +413,7 @@ ScalarEqn::buildTransportEqn( const ProcessorGroup* pc,
           RHS[c] += src[c]*vol; 
         }            
       }
-    } 
+    }
   }
 }
 //---------------------------------------------------------------------------
@@ -479,6 +481,9 @@ ScalarEqn::solveTransportEqn( const ProcessorGroup* pc,
     double factor = d_timeIntegrator->time_factor[timeSubStep]; 
     curr_ssp_time = curr_time + factor * dt; 
     d_timeIntegrator->timeAvePhi( patch, phi, rk1_phi, timeSubStep, curr_ssp_time ); 
+
+    if (d_doClipping) 
+      clipPhi( patch, phi ); 
     
     // copy averaged phi into oldphi
     oldphi.copyData(phi); 
@@ -535,7 +540,9 @@ ScalarEqn::sched_dummyInit( const LevelP& level, SchedulerP& sched )
   tsk->requires(Task::OldDW, d_transportVarLabel, gn, 0); 
   tsk->computes(d_transportVarLabel);
   tsk->computes(d_oldtransportVarLabel); 
-
+  tsk->computes(d_FconvLabel); 
+  tsk->computes(d_FdiffLabel); 
+  tsk->computes(d_RHSLabel); 
 
   sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
 
@@ -555,10 +562,25 @@ ScalarEqn::dummyInit( const ProcessorGroup* pc,
     int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
 
     CCVariable<double> phi; 
-    CCVariable<double> old_phi;
+    CCVariable<double> rkold_phi;
+    CCVariable<double> RHS; 
+    CCVariable<double> Fconv; 
+    CCVariable<double> Fdiff; 
+    constCCVariable<double> old_phi; 
 
     new_dw->allocateAndPut( phi, d_transportVarLabel, matlIndex, patch ); 
-    new_dw->allocateAndPut( old_phi, d_oldtransportVarLabel, matlIndex, patch ); 
+    new_dw->allocateAndPut( rkold_phi, d_oldtransportVarLabel, matlIndex, patch ); 
+    new_dw->allocateAndPut( RHS, d_RHSLabel, matlIndex, patch); 
+    new_dw->allocateAndPut( Fconv, d_FconvLabel, matlIndex, patch); 
+    new_dw->allocateAndPut( Fdiff, d_FdiffLabel, matlIndex, patch); 
+
+    old_dw->get( old_phi, d_transportVarLabel, matlIndex, patch, Ghost::None, 0); 
+
+    Fconv.initialize(0.0); 
+    Fdiff.initialize(0.0); 
+    RHS.initialize(0.0);
+    phi.initialize(0.0); 
+    rkold_phi.initialize(0.0); 
 
     phi.copyData(old_phi);
 

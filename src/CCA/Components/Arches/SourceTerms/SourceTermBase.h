@@ -46,14 +46,9 @@ public:
                               DataWarehouse* old_dw, 
                               DataWarehouse* new_dw, 
                               int timeSubStep ) = 0;
-  /** @brief Get the labels for the MPMARCHES dummy solve. */
-  void sched_dummyInit( const LevelP& level, SchedulerP& sched );
-  void dummyInit( const ProcessorGroup* pc, 
-             const PatchSubset* patches, 
-             const MaterialSubset* matls, 
-             DataWarehouse* old_dw, 
-             DataWarehouse* new_dw );
 
+  /** @brief Get the labels for the MPMARCHES dummy solve. */
+  virtual void sched_dummyInit( const LevelP& level, SchedulerP& sched ) = 0;
 
   /** @brief reinitialize the flags that tells the scheduler if the varLabel needs a compute or a modifies. */
   // Note I need two of these flags; 1 for scheduling and 1 for actual execution.
@@ -63,11 +58,16 @@ public:
   inline const VarLabel* getSrcLabel(){
     return d_srcLabel; };
 
+  inline const vector<const VarLabel*> getExtraLocalLabels(){
+    return d_extraLocalLabels; }; 
+
 protected:
   std::string d_srcName; 
   const VarLabel* d_srcLabel; //The label storing the value of this source term
   SimulationStateP& d_sharedState; 
-  vector<std::string> d_requiredLabels; //All labels needed to compute this source term  
+  vector<std::string> d_requiredLabels;   //All labels needed to compute this source term  
+  vector<const VarLabel*> d_extraLocalLabels; //This array will hold local labels to the specific source term 
+                                          // and will be used to obtain vars from the DW for initialization 
 
   bool d_labelSchedInit;
 

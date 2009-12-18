@@ -7,6 +7,7 @@
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Grid/Task.h>
 #include <CCA/Components/Arches/ArchesLabel.h>
+#include <CCA/Components/Arches/ArchesMaterial.h>
 #include <CCA/Components/Arches/BoundaryCond_new.h>
 
 //===========================================================================
@@ -41,8 +42,8 @@ void BoundaryCondition_new::setScalarValueBC( const ProcessorGroup*,
   patch->getBoundaryFaces(bf);
   Vector Dx = patch->dCell(); 
 
-  //hard coded to zero for now (Arches only has one) 
-  int mat_id = 0; 
+  int archIndex = 0; 
+  int mat_id = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
 
   for (iter = bf.begin(); iter !=bf.end(); iter++){
     Patch::FaceType face = *iter;
@@ -184,8 +185,8 @@ void BoundaryCondition_new::setVectorValueBC( const ProcessorGroup*,
   patch->getBoundaryFaces(bf);
   Vector Dx = patch->dCell(); 
 
-  //hard coded to zero for now (Arches only has one) 
-  int mat_id = 0; 
+  int archIndex = 0; 
+  int mat_id = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
 
   for (iter = bf.begin(); iter !=bf.end(); iter++){
     Patch::FaceType face = *iter;
@@ -304,8 +305,8 @@ void BoundaryCondition_new::setVectorValueBC( const ProcessorGroup*,
   patch->getBoundaryFaces(bf);
   Vector Dx = patch->dCell(); 
 
-  //hard coded to zero for now (Arches only has one) 
-  int mat_id = 0; 
+  int archIndex = 0; 
+  int mat_id = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
 
   for (iter = bf.begin(); iter !=bf.end(); iter++){
     Patch::FaceType face = *iter;

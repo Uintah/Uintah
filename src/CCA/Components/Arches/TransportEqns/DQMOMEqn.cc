@@ -541,6 +541,8 @@ DQMOMEqn::buildTransportEqn( const ProcessorGroup* pc,
     new_dw->getModifiable(Fconv, d_FconvLabel, matlIndex, patch); 
     new_dw->getModifiable(RHS, d_RHSLabel, matlIndex, patch);
     RHS.initialize(0.0); 
+    Fconv.initialize(0.0);
+    Fdiff.initialize(0.0); 
 
     //----BOUNDARY CONDITIONS
     // Note: BC's are set here on phi (not phiOld) because phi will be 
@@ -687,7 +689,7 @@ DQMOMEqn::sched_getUnscaledValues( const LevelP& level, SchedulerP& sched )
     EqnBase& eqn = dqmomFactory.retrieve_scalar_eqn( name ); 
     const VarLabel* weightLabel = eqn.getTransportEqnLabel(); 
     
-    tsk->requires( Task::NewDW, weightLabel, gn, 0 ); 
+    tsk->modifies( weightLabel ); 
   }
  
   sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
@@ -729,7 +731,7 @@ DQMOMEqn::getUnscaledValues( const ProcessorGroup* pc,
 
     } else {
       CCVariable<double> wa;
-      constCCVariable<double> w;  
+      CCVariable<double> w;  
       CCVariable<double> ic; 
 
       new_dw->getModifiable(ic, d_icLabel, matlIndex, patch);
@@ -751,10 +753,10 @@ DQMOMEqn::getUnscaledValues( const ProcessorGroup* pc,
       if ( smallWeight == 0.0 )
         smallWeight = 1e-16; //to avoid numbers smaller than machine precision. 
 
-      new_dw->get(w, mywLabel, matlIndex, patch, gn, 0); 
+      new_dw->getModifiable(w, mywLabel, matlIndex, patch ); 
 
       // now loop over all cells
-      for (CellIterator iter=patch->getCellIterator(0); !iter.done(); iter++){
+      for (CellIterator iter=patch->getExtraCellIterator(0); !iter.done(); iter++){
   
         IntVector c = *iter;
 
@@ -763,6 +765,7 @@ DQMOMEqn::getUnscaledValues( const ProcessorGroup* pc,
         else {
           ic[c] = 0.0;
           wa[c] = 0.0; // if the weight is small (near zero) , then the product must also be small (near zero)
+          //w[c] = 0.0; 
         }
       }
 

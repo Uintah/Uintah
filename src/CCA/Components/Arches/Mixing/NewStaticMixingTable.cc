@@ -233,6 +233,9 @@ NewStaticMixingTable::computeProps(const InletStream& inStream,
   if (so2rate_index != -1){
      outStream.d_so2rate=tableLookUp(mixFrac, mixFracVars, current_heat_loss, so2rate_index);
   }
+  if (mixmolweight_index != -1){
+     outStream.d_mixmw=tableLookUp(mixFrac, mixFracVars, current_heat_loss, mixmolweight_index); 
+  }
 }
 
 double
@@ -463,6 +466,8 @@ NewStaticMixingTable::readMixingTable( const string & inputfile )
   co2rate_index = -1;
   so2rate_index = -1;
 
+  mixmolweight_index = -1;  
+
   for (int ii = 0; ii < d_varscount; ii++) {
     vars_names[ii] = getString( gzFp );
     if(     vars_names[ii] == "density")
@@ -509,6 +514,8 @@ NewStaticMixingTable::readMixingTable( const string & inputfile )
 
     else if(vars_names[ii] == "rate_CO2") co2rate_index   = ii;
     else if(vars_names[ii] == "rate_SO2") so2rate_index   = ii;
+
+    else if(vars_names[ii] == "mixture_molecular_weight") mixmolweight_index = ii; 
 
     else if(vars_names[ii] == "CO")
       co_index = ii;
@@ -655,6 +662,7 @@ NewStaticMixingTable::readMixingTable( const string & inputfile )
     cout << "C2H2 index is " << c2h2_index << endl;
     cout << "CH4 index is "  << ch4_index  << endl;
     cout << "sootFV index is "  << soot_index  << endl;
+    cout << "mixture molecular weight index is " << mixmolweight_index << endl;
 
     if (co2rate_index != -1) {
           cout << "CO2 rxn rate index is " << co2rate_index << endl;

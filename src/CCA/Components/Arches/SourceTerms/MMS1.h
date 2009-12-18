@@ -45,6 +45,13 @@ public:
                       DataWarehouse* old_dw, 
                       DataWarehouse* new_dw, 
                       int timeSubStep );
+  /** @brief Schedule a dummy initialization */ 
+  void sched_dummyInit( const LevelP& level, SchedulerP& sched );
+  void dummyInit( const ProcessorGroup* pc, 
+                  const PatchSubset* patches, 
+                  const MaterialSubset* matls, 
+                  DataWarehouse* old_dw, 
+                  DataWarehouse* new_dw );
 
 private:
 
