@@ -94,7 +94,6 @@ end
 dx_min = double(BigNum);
 for r=1:nRegions
   R = Regions{r};
-  NN = NN + R.NN;
   dx_min = min(dx_min,R.dx);
   fprintf( 'region %g, min: %g, \t max: %g \t refineRatio: %g dx: %g, NN: %g\n',r, R.min, R.max, R.refineRatio, R.dx, R.NN)
 end
