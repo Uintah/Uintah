@@ -14,18 +14,18 @@ function [sf] = shapeFunction()
 function[node, dx]=positionToNode(xp, nRegions, Regions)
  
   n_offset = 0;
-  region1_offset = 1;                       % only needed for the first region
-  dx = double(0);
   node = int32(-9);
+  region1_offset = 1;
   
   for r=1:nRegions
     R = Regions{r};
+    dx = R.dx;
     
     if ((xp >= R.min) && (xp < R.max))
       n    = floor((xp - R.min)/R.dx);      % # of nodes from the start of the current region
-      node = n + n_offset + region1_offset; % add an offset to the local node number
-      dx   = R.dx;
-      %fprintf( 'region: %g, n: %g, node:%g, xp: %g dx: %g R.min: %g, R.max: %g \n',r, n, node, xp, dx, R.min, R.max);
+      node = n + n_offset + region1_offset;             % add an offset to the local node number
+
+      %fprintf( 'region: %g, n: %g, node:%g, xp: %g dx: %g R.min: %g, R.max: %g n_offset: %g EC:%g\n',r, n, node, xp, dx, R.min, R.max,n_offset, EC);
       return;
     end
     region1_offset = 0;                     % set to 0 after the first region
@@ -34,10 +34,14 @@ function[node, dx]=positionToNode(xp, nRegions, Regions)
   end
   
   %bulletproofing
- if( xp < Regions{1}.min || xp > Regions{nRegions}.max)
-  fprintf( 'ERROR: positionToNode(), the particle (xp: %g) is outside the computational domain( %g, %g )\n',xp,Regions{1}.min,Regions{nRegions}.max  );
-  input('stop'); 
- end
+  if( xp < Regions{1}.min || xp > Regions{nRegions}.max)
+    fprintf( 'ERROR: positionToNode(), the particle (xp: %g) is outside the computational domain( %g, %g )\n',xp,Regions{1}.min,Regions{nRegions}.max  );
+    input('stop'); 
+  end
+ 
+  if( node == 0)
+    fprintf( 'ERROR: positionToNode(): node index must be > 0 \n');
+  end
 end
 
 
@@ -45,7 +49,7 @@ end
 function[nodes,dx]=positionToClosestNodes(xp,nRegions,Regions, nodePos)
   [node, dx]=positionToNode(xp, nRegions, Regions);
   
-  relativePosition = (xp - nodePos(node))/dx;
+  relativePosition = abs((xp) - nodePos(node))/dx;
   
   offset = int32(0);
   if( relativePosition < 0.5)
@@ -53,7 +57,8 @@ function[nodes,dx]=positionToClosestNodes(xp,nRegions,Regions, nodePos)
   end
   
   % bulletproofing
-  if(relativePosition< 0)
+  if(relativePosition< 0 )
+    fprintf('ERROR: positionToClosestNodes, relative position < 0 \n');
     fprintf( 'Node %g, offset :%g relative Position: %g, xp:%g, nodePos:%g \n',node, offset, relativePosition,xp, nodePos(node));
     input('stop');
   end
@@ -61,7 +66,7 @@ function[nodes,dx]=positionToClosestNodes(xp,nRegions,Regions, nodePos)
   nodes(1) = node + offset;
   nodes(2) = nodes(1) + 1;
   nodes(3) = nodes(2) + 1;
-  
+  %fprintf( 'xp:%g, node(1):%g, node(2):%g, node(3):%g relativePosition:%g\n',xp, nodes(1), nodes(2), nodes(3), relativePosition);
 end
 %__________________________________
 % returns the initial volP and lp
@@ -145,8 +150,8 @@ end
 
 
 %__________________________________
-%  Reference:  Uintah Documentation Chapter 7 MPM, Equation 7.14
-function [nodes,Ss]=findNodesAndWeights_gimp(xp, lp, nRegions, Regions, nodePos, Lx)
+%  Reference:  Uintah Documentation Chapter 7 MPM, Equation 7.16
+function [nodes,Ss]=findNodesAndWeights_gimp(xp, lp, nRegions, Regions, nodePos, notUsed)
   global NSFN;
 
  [nodes,dx]=positionToClosestNodes(xp,nRegions,Regions, nodePos);
@@ -191,7 +196,7 @@ function [nodes,Ss]=findNodesAndWeights_gimp(xp, lp, nRegions, Regions, nodePos,
   end
   if ( abs(sum-1.0) > 1e-10)
     fprintf('findNodesAndWeights_gimp\n');
-    fprintf('node(1):%g, node(2):%g ,node(3):%g, xp:%g Ss(1): %g, Ss(2): %g, Ss(3): %g, sum: %g\n',nodes(1),nodes(2),nodes(3), xp, Ss(1), Ss(2), Ss(3), sum)
+    fprintf('delX: %g, node(1):%g, node(2):%g ,node(3):%g, xp:%g Ss(1): %g, Ss(2): %g, Ss(3): %g, sum: %g\n',delX,nodes(1),nodes(2),nodes(3), xp, Ss(1), Ss(2), Ss(3), sum)
     input('error: the shape functions dont sum to 1.0 \n');
   end
   
@@ -290,7 +295,7 @@ end
 
 %__________________________________
 %  Reference:  Uintah Documentation Chapter 7 MPM, Equation 7.14
-function [nodes,Gs, dx]=findNodesAndWeightGradients_linear(xp, notUsed, nRegions, Regions, nodePos, Lx)
+function [nodes,Gs, dx]=findNodesAndWeightGradients_linear(xp, notUsed, nRegions, Regions, nodePos, notUsed2)
  
   % find the nodes that surround the given location and
   % the values of the gradients of the linear shape functions.
@@ -307,7 +312,7 @@ end
 
 %__________________________________
 %  Reference:  Uintah Documentation Chapter 7 MPM, Equation 7.17
-function [nodes,Gs, dx]=findNodesAndWeightGradients_gimp(xp, lp, nRegions, Regions, nodePos,Lx)
+function [nodes,Gs, dx]=findNodesAndWeightGradients_gimp(xp, lp, nRegions, Regions, nodePos,notUsed)
 
   global NSFN;
   % find the nodes that surround the given location and
@@ -354,7 +359,7 @@ function [nodes,Gs, dx]=findNodesAndWeightGradients_gimp(xp, lp, nRegions, Regio
   end
   if ( abs(sum) > 1e-10)
     fprintf('findNodesAndWeightGradients_gimp \n');
-    fprintf('node(1):%g, node(1):%g ,node(3):%g, xp:%g Gs(1): %g, Gs(2): %g, Gs(3): %g, sum: %g\n',nodes(1),nodes(2),nodes(3), xp, Gs(1), Gs(2), Gs(3), sum)
+    fprintf('delX:%g node(1):%g, node(1):%g ,node(3):%g, xp:%g Gs(1): %g, Gs(2): %g, Gs(3): %g, sum: %g\n',delX,nodes(1),nodes(2),nodes(3), xp, Gs(1), Gs(2), Gs(3), sum)
     input('error: the gradient of the shape functions (gimp) dont sum to 1.0 \n');
   end
 end
