@@ -57,7 +57,7 @@ function [Regions, nRegions,NN] = initializeRegions(domain,PPC,R1_dx,interpolati
 
   R.min         = domain/3.0;                       
   R.max         = 2.0*domain/3.0;
-  R.refineRatio = 2;
+  R.refineRatio = 1;
   R.dx          = R1_dx/R.refineRatio;
   R.volP        = R.dx/PPC;
   R.NN          = int32( (R.max - R.min)/R.dx );
