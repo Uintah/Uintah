@@ -630,6 +630,7 @@ Properties::sched_reComputeProps(SchedulerP& sched,
       tsk->computes(d_lab->d_h2oINLabel);
       tsk->computes(d_lab->d_heatLossLabel);
       tsk->computes(d_lab->d_enthalpyRXNLabel);
+      tsk->computes(d_lab->d_mixMWLabel); 
       if (d_calcReactingScalar)
         tsk->computes(d_lab->d_reactscalarSRCINLabel);
     }
@@ -695,6 +696,7 @@ Properties::sched_reComputeProps(SchedulerP& sched,
       tsk->modifies(d_lab->d_h2oINLabel);
       tsk->modifies(d_lab->d_heatLossLabel);
       tsk->modifies(d_lab->d_enthalpyRXNLabel);
+      tsk->modifies(d_lab->d_mixMWLabel); 
       if (d_calcReactingScalar)
         tsk->modifies(d_lab->d_reactscalarSRCINLabel);
     }
@@ -809,6 +811,7 @@ Properties::reComputeProps(const ProcessorGroup* pc,
     CCVariable<double> new_density;
     CCVariable<double> dummytemperature;
     CCVariable<double> temperature;
+    CCVariable<double> mixMW; 
     CCVariable<double> cp;
     CCVariable<double> co2;
     CCVariable<double> h2o;
@@ -962,6 +965,7 @@ Properties::reComputeProps(const ProcessorGroup* pc,
         new_dw->allocateAndPut(h2o,         d_lab->d_h2oINLabel,      indx, patch);
         new_dw->allocateAndPut(heatLoss,    d_lab->d_heatLossLabel,   indx, patch);
         new_dw->allocateAndPut(enthalpyRXN, d_lab->d_enthalpyRXNLabel,indx, patch);
+        new_dw->allocateAndPut(mixMW,       d_lab->d_mixMWLabel,      indx, patch); 
         if (d_calcReactingScalar){
           new_dw->allocateAndPut(reactscalarSRC, d_lab->d_reactscalarSRCINLabel,
                                                                       indx, patch);
@@ -1029,6 +1033,7 @@ Properties::reComputeProps(const ProcessorGroup* pc,
         new_dw->getModifiable(h2o,         d_lab->d_h2oINLabel,       indx, patch);
         new_dw->getModifiable(heatLoss,    d_lab->d_heatLossLabel,    indx, patch);
         new_dw->getModifiable(enthalpyRXN, d_lab->d_enthalpyRXNLabel, indx, patch);
+        new_dw->getModifiable(mixMW,       d_lab->d_mixMWLabel,       indx, patch); 
         if (d_calcReactingScalar)
           new_dw->getModifiable(reactscalarSRC, d_lab->d_reactscalarSRCINLabel,
                                                                       indx, patch);
@@ -1094,6 +1099,7 @@ Properties::reComputeProps(const ProcessorGroup* pc,
       h2o.initialize(0.0);
       heatLoss.initialize(0.0);
       enthalpyRXN.initialize(0.0);
+      mixMW.initialize(0.0); 
       if (d_calcReactingScalar){
         reactscalarSRC.initialize(0.0);
       }
@@ -1281,6 +1287,7 @@ Properties::reComputeProps(const ProcessorGroup* pc,
             h2o[currCell]           = outStream.getH2O();
             heatLoss[currCell]      = outStream.getheatLoss();
             enthalpyRXN[currCell]   = outStream.getEnthalpy();
+            mixMW[currCell]         = outStream.getMixMW(); 
 // Uncomment the next line to check enthalpy transport in adiabatic case
             if (d_calcEnthalpy){
               enthalpyRXN[currCell] -= enthalpy[currCell];
@@ -1402,6 +1409,7 @@ Properties::sched_computePropsFirst_mm(SchedulerP& sched,
     tsk->requires(Task::OldDW, d_lab->d_cpINLabel,     gn, 0);
     tsk->requires(Task::OldDW, d_lab->d_co2INLabel,    gn, 0);
     tsk->requires(Task::OldDW, d_lab->d_heatLossLabel, gn, 0);
+    tsk->requires(Task::OldDW, d_lab->d_mixMWLabel,    gn, 0); 
     /*
     tsk->requires(Task::OldDW, d_lab->d_enthalpyRXNLabel, gn, 0);
     */
@@ -1439,6 +1447,7 @@ Properties::sched_computePropsFirst_mm(SchedulerP& sched,
     tsk->computes(d_lab->d_co2INLabel);
     tsk->computes(d_lab->d_heatLossLabel);
     tsk->computes(d_lab->d_enthalpyRXNLabel);
+    tsk->computes(d_lab->d_mixMWLabel); 
     if (d_calcReactingScalar){
       tsk->computes(d_lab->d_reactscalarSRCINLabel);
     }
@@ -1574,6 +1583,7 @@ Properties::computePropsFirst_mm(const ProcessorGroup*,
     constCCVariable<double> cpIN;
     constCCVariable<double> co2IN;
     constCCVariable<double> heatLoss;
+    constCCVariable<double> mixMW; 
 
     constCCVariable<double> coIN;
 
@@ -1646,6 +1656,7 @@ Properties::computePropsFirst_mm(const ProcessorGroup*,
     CCVariable<double> heatLoss_new;
     CCVariable<double> enthalpyRXN_new;
     CCVariable<double> reactScalarSrc_new;
+    CCVariable<double> mixMW_new; 
     constCCVariable<double> solidTemp;
 
     if (d_bc->getIfCalcEnergyExchange())
@@ -1657,6 +1668,8 @@ Properties::computePropsFirst_mm(const ProcessorGroup*,
       old_dw->get(cpIN,     d_lab->d_cpINLabel,     indx, patch,gn, 0);
       old_dw->get(co2IN,    d_lab->d_co2INLabel,    indx, patch,gn, 0);
       old_dw->get(heatLoss, d_lab->d_heatLossLabel, indx, patch,gn, 0);
+      old_dw->get(mixMW,    d_lab->d_mixMWLabel,    indx, patch,gn, 0); 
+
       /*
       old_dw->get(enthalpyRXN, d_lab->d_enthalpyRXNLabel, indx, patch,
                   gn, 0);
@@ -1679,6 +1692,9 @@ Properties::computePropsFirst_mm(const ProcessorGroup*,
 
       new_dw->allocateAndPut(enthalpyRXN_new, d_lab->d_enthalpyRXNLabel, indx, patch);
       enthalpyRXN_new.initialize(0.0);
+
+      new_dw->allocateAndPut(mixMW_new, d_lab->d_mixMWLabel, indx, patch); 
+      mixMW_new.copyData(mixMW); 
 
       if (d_calcReactingScalar) {
         new_dw->allocateAndPut(reactScalarSrc_new, d_lab->d_reactscalarSRCINLabel,indx, patch);

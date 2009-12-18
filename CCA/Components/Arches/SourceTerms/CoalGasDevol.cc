@@ -163,5 +163,52 @@ CoalGasDevol::computeSource( const ProcessorGroup* pc,
     }
   }
 }
+//---------------------------------------------------------------------------
+// Method: Schedule dummy initialization
+//---------------------------------------------------------------------------
+void
+CoalGasDevol::sched_dummyInit( const LevelP& level, SchedulerP& sched )
+{
+  string taskname = "CoalGasDevol::dummyInit"; 
+
+  Task* tsk = scinew Task(taskname, this, &CoalGasDevol::dummyInit);
+
+  tsk->computes(d_srcLabel);
+
+  for (std::vector<const VarLabel*>::iterator iter = d_extraLocalLabels.begin(); iter != d_extraLocalLabels.end(); iter++){
+    tsk->computes(*iter); 
+  }
+
+  sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
+
+}
+void 
+CoalGasDevol::dummyInit( const ProcessorGroup* pc, 
+                         const PatchSubset* patches, 
+                         const MaterialSubset* matls, 
+                         DataWarehouse* old_dw, 
+                         DataWarehouse* new_dw )
+{
+  //patch loop
+  for (int p=0; p < patches->size(); p++){
+
+    const Patch* patch = patches->get(p);
+    int archIndex = 0;
+    int matlIndex = d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+
+    CCVariable<double> src;
+
+    new_dw->allocateAndPut( src, d_srcLabel, matlIndex, patch ); 
+
+    src.initialize(0.0); 
+
+    for (std::vector<const VarLabel*>::iterator iter = d_extraLocalLabels.begin(); iter != d_extraLocalLabels.end(); iter++){
+      CCVariable<double> tempVar; 
+      new_dw->allocateAndPut(tempVar, *iter, matlIndex, patch ); 
+    }
+  }
+}
+
+
 
 

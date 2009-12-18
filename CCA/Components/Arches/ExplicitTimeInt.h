@@ -137,6 +137,11 @@ private:
 
       // phi^{t+\Delta t} = ((rho*phi)^{t} + RHS) / rho^{t + \Delta t} 
       phi[c] = phi[c] / new_den[c]; 
+
+      double small = 1e-16; 
+      if (new_den[c] < small) 
+        phi[c] = 0.0; 
+
     } 
   }
 

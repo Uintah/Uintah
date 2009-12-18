@@ -259,6 +259,8 @@ namespace Uintah {
       const VarLabel* d_so3INLabel;
       const VarLabel* d_sulfurINLabel;
 
+      const VarLabel* d_mixMWLabel; 
+
       const VarLabel* d_s2INLabel;
       const VarLabel* d_shINLabel;
       const VarLabel* d_soINLabel;
