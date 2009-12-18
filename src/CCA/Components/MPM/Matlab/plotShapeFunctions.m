@@ -6,70 +6,127 @@ function k=plotShapeFunctions
   clear all;
   global PPC;
   global NSFN;
-  PPC = 2;
+  PPC = 8;
  [sf]  = shapeFunctions;                 % load all the shape functions
 
   interpolation = 'GIMP';
+  domain        = 1;
+  dx            = 1;
+  d_smallNum    = double(1e-16);
+  
+  [Regions, nRegions,NN] = initializeRegions(domain,PPC,dx,interpolation, d_smallNum);
+  R = Regions{1};
+  
+  %__________________________________
+  % compute node positions
+  nodePos       = zeros(NN,1);        % node Position
+  nodeNum = int32(1);
 
-  if( strcmp(interpolation,'GIMP') )
-    NSFN    = 3;                        % Number of shape function nodes Linear:2, GIMP:3
+  if(strcmp(interpolation,'GIMP'))    % Boundary condition Node
+    nodePos(1) = R.min;
   else
-    NSFN    = 2;        
-  end
+    nodePos(1) = 0.0;
+  end;
 
-  numRegions    = int32(1);              % partition the domain into numRegions
-  Regions       = cell(numRegions,1);    % array that holds the individual region information
+  for r=1:nRegions
+    R = Regions{r};
+    % loop over all nodes and set the node position
+    for  n=1:R.NN  
+      if(nodeNum > 1)
+        nodePos(nodeNum) = nodePos(nodeNum-1) + R.dx;
+      end
+      nodeNum = nodeNum + 1;
+    end
+  end
+  nodePos
+  
+  %__________________________________
+  % compute the zone of influence
+  Lx        = zeros(NN,2);              
+  Lx(1,1)   = 0.0;                      
+  Lx(1,2)   = nodePos(2) - nodePos(1);  
+  Lx(NN,1)  = nodePos(NN) - nodePos(NN-1);
+  Lx(NN,2)  = 0.0;
 
-  R.min         = 0;                     % location of left node
-  R.max         = 1;                     % location of right node
-  R.dx          = 1;
-  R.NN          = 4;                    % number of nodes including the BC nodes
-  Regions{1}    = R;
-  
-  Lx            = zeros(R.NN,2);
-  nodePos       = zeros(R.NN,1);        % node Position
-  nodePos(1)    = -R.dx;
-  
-  for  n=2:R.NN  
-    nodePos(n) = nodePos(n-1) + R.dx;
+  for n=2:NN-1
+    Lx(n,1) = nodePos(n) - nodePos(n-1);
+    Lx(n,2) = nodePos(n+1) - nodePos(n);
   end
   
-  Lx(1,1) = 0;
-  Lx(1,2) = R.dx;
-  Lx(2,1) = R.dx;
-  Lx(2,2) = R.dx;
-  Lx(3,1) = R.dx;
-  Lx(3,2) = R.dx;
-  Lx(4,1) = R.dx;
-  Lx(4,2) = 0;
-  
-  L = R.dx;
-  lp = R.dx/(2 * PPC);
+  Lx(3,2) = dx/4;
+  Lx(5,1) = dx/4;
+  Lx
+
+  L  = dx;
+  lp = R.lp
 
   maxpts = int32(100);
-  xp(1)  =  R.min;
+  if( strcmp(interpolation,'GIMP') )
+    NSFN      = 3;                        % Number of shape function nodes Linear:2, linear:3
+    xp(1)     =  -L-lp ;                  % starting postition GIMP
+    delX      = ( 2*(L + lp))/double(maxpts-1)
+    focusNode = 3;
+    
+  else
+    NSFN      = 2;                        % Number of shape function nodes Linear:2, linear:3
+    xp(1)     = -L;
+    delX      = 2*L/double(maxpts)
+    focusNode = 2;
+  end
+  
+  
+  %             GIMP
+  %Pos:    -2     dx   -1            0            1            2
+  %        |-----xxxxxxx|xxxxxxxxxxxx|xxxxxxxxxxxx|xxxxxx------|
+  %Node:  (1)           2            3            4            5
+  %            -L-lp                 0                  L+lp
+  %               
+  % loop over all cells from (-L -lp) to (L + lp) relative to focus node (3)
+  
+  
+    %             LINEAR
+  %Pos:   -1            0            1
+  %        |xxxxxxxxxxxx|xxxxxxxxxxxx|
+  %Node:  (1)           2            3
+  %       -L            0            L
+  %               
+  % loop over all cells from (-L) to (L) relative to focus node (2)
+  
   
   Ss1(1) = 0.0;
   Ss2(1) = 0.0;
   
   Gs(1)  = 0.0;
   Gs2(1) = 0.0;
-  
-  delX = ( 2 * (L+lp))/double(maxpts);
 
   for (c=2:maxpts)
     xp(c) = xp(c-1) + delX;
-    [nodes,S1]    = sf.findNodesAndWeights_gimp( xp(c), lp, numRegions, Regions, nodePos, Lx);
-    [nodes,S2]    = sf.findNodesAndWeights_gimp2(xp(c), lp, numRegions, Regions, nodePos, Lx);
     
-    [nodes,G1, dx]= sf.findNodesAndWeightGradients_gimp( xp(c), lp, numRegions, Regions, nodePos,Lx);
-    [nodes,G2, dx]= sf.findNodesAndWeightGradients_gimp2(xp(c), lp, numRegions, Regions, nodePos,Lx);    
+    if( strcmp(interpolation,'GIMP') )
+      [nodes,S1]    = sf.findNodesAndWeights_gimp( xp(c), lp, nRegions, Regions, nodePos, Lx);
+      [nodes,S2]    = sf.findNodesAndWeights_gimp2(xp(c), lp, nRegions, Regions, nodePos, Lx);
     
-    Ss1(c) = S1(1);
-    Ss2(c) = S2(1);
+      [nodes,G1, dx]= sf.findNodesAndWeightGradients_gimp( xp(c), lp, nRegions, Regions, nodePos,Lx);
+      [nodes,G2, dx]= sf.findNodesAndWeightGradients_gimp2(xp(c), lp, nRegions, Regions, nodePos,Lx);
+    else
+      [nodes,S1]    = sf.findNodesAndWeights_linear( xp(c), lp, nRegions, Regions, nodePos, Lx);
+      [nodes,S2]    = sf.findNodesAndWeights_linear(xp(c), lp, nRegions, Regions, nodePos, Lx);
     
-    Gs1(c) = G1(1);
-    Gs2(c) = G2(1);
+      [nodes,G1, dx]= sf.findNodesAndWeightGradients_linear( xp(c), lp, nRegions, Regions, nodePos,Lx);
+      [nodes,G2, dx]= sf.findNodesAndWeightGradients_linear(xp(c), lp, nRegions, Regions, nodePos,Lx);
+    end
+    % find the index that corresponds to the focusNode
+    for index=1:length(nodes)
+      if(nodes(index) == focusNode)
+        break
+      end
+    end
+
+    Ss1(c) = S1(index);
+    Ss2(c) = S2(index);
+    
+    Gs1(c) = G1(index);
+    Gs2(c) = G2(index);
   end
  
   % Numerically differentiate the shape functions
@@ -82,7 +139,8 @@ function k=plotShapeFunctions
   % plot up the results
   set(gcf,'position',[50,100,900,900]);
   subplot(2,1,1),plot(xp,Ss1, xp, Ss2)
-  title('Shape Function, PPC 8: dx_R = dx_L/4');
+  tmp = sprintf('Shape Function, PPC %g: dx_R = dx_L/4',PPC);
+  title(tmp);
   xlabel('xp')
   legend('Single Level','multi-level');
   
