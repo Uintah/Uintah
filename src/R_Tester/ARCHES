@@ -34,13 +34,13 @@ TESTS = [
     ("methane_explicit_table", "methane_explicit_table.ups", 1.1, "Darwin", ["doesTestRun"]),
     ("methane8patch", methane8patch_ups, 8, "Linux",["exactComparison"]),
     ("methane8patch", methane8patch_ups, 8, "Darwin", ["doesTestRun"]),
-    ("dqmom-scalar_test1","DQMOM_regression/dqmom-scalar_test1.ups",1.1,"Linux",["doesTestRun"]),
-    ("dqmom-scalar_test2a","DQMOM_regression/dqmom-scalar_test2a.ups",1.1,"Linux",["doesTestRun"]),
-    ("dqmom-scalar_test2b","DQMOM_regression/dqmom-scalar_test2b.ups",1.1,"Linux",["doesTestRun"]),
-    ("dqmom-scalar_test2c","DQMOM_regression/dqmom-scalar_test2c.ups",1.1,"Linux",["doesTestRun"]),
-    ("dqmom-scalar_test3","DQMOM_regression/dqmom-scalar_test3.ups",1.1,"Linux",["doesTestRun"]),
-    ("dqmom-scalar_test4","DQMOM_regression/dqmom-scalar_test4.ups",1.1,"Linux",["doesTestRun"]),
-    ("dqmom-scalar_test5","DQMOM_regression/dqmom-scalar_test5.ups",1.1,"Linux",["doesTestRun"])
+    ("dqmom-scalar_test1","DQMOM_regression/dqmom-scalar_test1.ups",1.1,"Linux",["exactComparison"]),
+    ("dqmom-scalar_test2a","DQMOM_regression/dqmom-scalar_test2a.ups",1.1,"Linux",["exactComparison"]),
+    ("dqmom-scalar_test2b","DQMOM_regression/dqmom-scalar_test2b.ups",1.1,"Linux",["exactComparison"]),
+    ("dqmom-scalar_test2c","DQMOM_regression/dqmom-scalar_test2c.ups",1.1,"Linux",["exactComparison"]),
+    ("dqmom-scalar_test3","DQMOM_regression/dqmom-scalar_test3.ups",1.1,"Linux",["exactComparison"]),
+    ("dqmom-scalar_test4","DQMOM_regression/dqmom-scalar_test4.ups",1.1,"Linux",["exactComparison"]),
+    ("dqmom-scalar_test5","DQMOM_regression/dqmom-scalar_test5.ups",1.1,"Linux",["exactComparison"])
 ]
 
 exit(runSusTests(argv, TESTS, "ARCHES"))
