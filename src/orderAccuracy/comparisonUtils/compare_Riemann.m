@@ -145,6 +145,7 @@ ncols = length(variables);
 susSol = zeros(nrows,ncols);
 x      = zeros(nrows);
 
+%__________________________________
 % loop over all the variables and load them into susSol
 for v=1:length(variables)
   c1 = sprintf('lineextract -v %s -l %i -cellCoords -timestep %i %s -o sim.dat -m %i  -uda %s >&/dev/null',variables(v),level,ts-1,startEnd,mat,uda);
@@ -159,7 +160,7 @@ for v=1:length(variables)
     susSol(:,v) = var(:,3 + pDir);
     
   else                                        % all other variables
-  
+ 
     var = load('sim.dat');
     susSol(:,v) = var(:,4); 
   endif
@@ -178,14 +179,34 @@ if(test > 1e-10)
   display('ERROR: compute_L2_norm: The results cannot be compared')
 end
 
-
+%__________________________________
 % compute the difference/L-norm for each of the variables
 d = zeros(nrows,ncols);
-for v=1:length(variables)
-  d(:,v) = ( susSol(:,v) .- exactSol(:,v+1) );
-  L_norm(v) = dx(pDir) * sum( abs( d(:,v) ) );
+
+if(0)             %  skip sections of the domain.
+  for v=1:length(variables)
+
+    for c=1:length(x)                                                      
+      d(c,v) = 0.0;                                                        
+
+      if( x(c) < 0.7 || x(c) > 0.75)          %define the regions to skip  
+        d(c,v) = ( susSol(c,v) .- exactSol(c,v+1) );                        
+      end                                                                  
+    end                                                                    
+    
+    L_norm(v) = dx(pDir) * sum( abs( d(:,v) ) );
+  end
+        
+else              % include all of the cells in the calculation
+
+  for v=1:length(variables)
+    d(:,v) = ( susSol(:,v) .- exactSol(:,v+1) );
+    L_norm(v) = dx(pDir) * sum( abs( d(:,v) ) );
+  end
 end
 
+
+%__________________________________
 % write L_norm to a file
 nargv = length(output_file);
 if (nargv > 0)
@@ -197,6 +218,7 @@ if (nargv > 0)
   fclose(fid);
 end
 
+%__________________________________
 %write simulation data to a file
 if (nargv > 0)
   fn = sprintf('sim_%g.dat',resolution(pDir));
