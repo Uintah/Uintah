@@ -300,8 +300,8 @@ end
 if strcmp(problem_type, 'mms')
   initVelocity    = 0;
   waveTansitTime  = bar_length/speedSound
-  t_initial       = 1.0/(2.0 * speedSound) 
-  t_final          = t_initial + waveTansitTime * 1.0;
+  t_initial       = 0.0 
+  t_final         = waveTansitTime * 1.0;
   numBCs          = 1;
   delta_0         = 0;
   velG_BCValueL   = initVelocity;

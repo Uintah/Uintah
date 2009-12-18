@@ -19,7 +19,7 @@ function [s] = MMS()
   %  Equation 47
   function [dp] = MMS_displacement(xp_initial, t, NP, speedSound, h)
     dp  = zeros(NP,1);
-    A = 0.001;   % Hardwired
+    A = 0.05;   % Hardwired
 
     for ip=1:NP
       dp(ip) = A * sin(2.0 * pi * xp_initial(ip)/h ) * cos( speedSound * pi * t/h);
@@ -30,7 +30,7 @@ function [s] = MMS()
   % Equation 48
   function [F] = MMS_deformationGradient(xp_initial, t, NP,speedSound, h)
     F  = zeros(NP,1);
-    A = 0.001;   % Hardwired
+    A = 0.05;   % Hardwired
 
     for ip=1:NP
       F(ip) = 1.0 + (2.0 * A * pi * cos(2.0 * pi * xp_initial(ip)/h) * cos( speedSound * pi * t/h) )/h;
@@ -39,7 +39,7 @@ function [s] = MMS()
   %__________________________________
   function [velExact] = MMS_velocity(xp_initial, t, NP, speedSound, h)
     velExact  = zeros(NP,1);
-    A = 0.001;   % Hardwired
+    A = 0.05;   % Hardwired
 
     c1 = -speedSound * pi * A/h;
 
@@ -63,7 +63,7 @@ function [s] = MMS()
   function [acclExact_G] = MMS_acceleration(nodePos, t, NN, speedSound, h)
     acclExact_G  = zeros(NN,1);
 
-    A = 0.001;   % Hardwired
+    A = 0.05;   % Hardwired
 
     c1 = -A * speedSound * speedSound * pi * pi * A/h;
 
@@ -76,7 +76,7 @@ function [s] = MMS()
   function [dFdx] = MMS_dFdx(x, t, N, speedSound, h, E)
     dFdx  = zeros(N,1);
   
-    A = 0.001; 
+    A = 0.05; 
   
     for c=1:N
       dFdx(c)  = -4.0 * A * pi * pi * sin(2 * pi * x(c)) * cos( speedSound * pi * t);
@@ -144,7 +144,7 @@ function [s] = MMS()
 
       subplot(4,1,1),plot(P.xp, P.dp,'rd', P.xp, dpExact,'b');
       %axis([0 50 -10000 0])           
-      ylim([-0.001 0.001]);         
+      ylim([-0.05 0.05]);         
 
       title(titleStr)                          
       legend('Simulation','Exact')             
