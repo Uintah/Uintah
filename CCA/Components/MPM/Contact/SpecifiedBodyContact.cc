@@ -134,28 +134,26 @@ SpecifiedBodyContact::findVelFromProfile(double t) const
   int smax = (int)(d_vel_profile.size())-1;
   double tmin = d_vel_profile[0].first;
   double tmax = d_vel_profile[smax].first;
-  if(t<=tmin)
-    {
+  if(t<=tmin) {
       return d_vel_profile[0].second;
-    }
-  else if(t>=tmax)
-    {
+  }
+  else if(t>=tmax) {
       return d_vel_profile[smax].second;
-    }
-  else
-    {
+  }
+  else {
       // bisection search on table
       // could probably speed this up by keeping copy of last successful
       // search, and looking at that point and a couple to the right
       //
-      while (smax>smin+1)
-        {
+      while (smax>smin+1) {
           int smid = (smin+smax)/2;
-          if(d_vel_profile[smid].first<t)
+          if(d_vel_profile[smid].first<t){
             smin = smid;
-          else
+          }
+          else{
             smax = smid;
-        }
+          }
+      }
       double l  = (d_vel_profile[smin+1].first-d_vel_profile[smin].first);
       double xi = (t-d_vel_profile[smin].first)/l;
       double vx = xi*d_vel_profile[smin+1].second[0]+(1-xi)*d_vel_profile[smin].second[0];
@@ -274,6 +272,8 @@ void SpecifiedBodyContact::exMomIntegrated(const ProcessorGroup*,
       rigid_velocity = false;
       requested_velocity = findVelFromProfile(tcurr);
     }
+
+    Vector reaction_force(0.0,0.0,0.0);
     
     for(NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
       IntVector c = *iter; 
@@ -291,10 +291,13 @@ void SpecifiedBodyContact::exMomIntegrated(const ProcessorGroup*,
         if(n==d_material || d_direction[2]) new_vel.z( rigid_vel.z() );
 
         if(!compare(gmass[d_material][c],0.)){
+          Vector old_vel = gvelocity_star[n][c];
           gvelocity_star[n][c] =  new_vel;
+          reaction_force += gmass[n][c]*(new_vel-old_vel)/delT;
         }
       }
     }
+    new_dw->put(sumvec_vartype(reaction_force), lb->RigidReactionForceLabel);
   }
 }
 
@@ -325,6 +328,7 @@ void SpecifiedBodyContact::addComputesAndRequiresIntegrated(SchedulerP & sched,
   t->requires(Task::OldDW, lb->delTLabel);    
   t->requires(Task::NewDW, lb->gMassLabel, Ghost::None);
   t->modifies(             lb->gVelocityStarLabel,   mss);
+  t->computes(lb->RigidReactionForceLabel);
 
   sched->addTask(t, patches, ms);
 }

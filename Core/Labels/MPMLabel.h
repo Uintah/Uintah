@@ -150,6 +150,7 @@ using std::vector;
       const VarLabel* BndyContactCellAreaLabel[6];
       const VarLabel* CenterOfMassPositionLabel;
       const VarLabel* TotalMomentumLabel;
+      const VarLabel* RigidReactionForceLabel;
 
       const VarLabel* pCellNAPIDLabel;
 
