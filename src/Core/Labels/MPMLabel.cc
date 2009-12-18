@@ -358,6 +358,9 @@ MPMLabel::MPMLabel()
   TotalMomentumLabel = VarLabel::create( "TotalMomentum",
 				 sumvec_vartype::getTypeDescription() );
 
+  RigidReactionForceLabel = VarLabel::create( "RigidReactionForce",
+				 sumvec_vartype::getTypeDescription() );
+
   // for assigning particle ids
   pCellNAPIDLabel =
     VarLabel::create("cellNAPID", CCVariable<short int>::getTypeDescription());
@@ -671,6 +674,7 @@ MPMLabel::~MPMLabel()
   }
   VarLabel::destroy(CenterOfMassPositionLabel);
   VarLabel::destroy(TotalMomentumLabel);
+  VarLabel::destroy(RigidReactionForceLabel);
   VarLabel::destroy(pCellNAPIDLabel);
 
   VarLabel::destroy(gVelocityOldLabel);
