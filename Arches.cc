@@ -35,6 +35,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Arches/SourceTerms/ConstSrcTerm.h>
 #include <CCA/Components/Arches/SourceTerms/MMS1.h>
 #include <CCA/Components/Arches/SourceTerms/CoalGasDevol.h>
+#include <CCA/Components/Arches/SourceTerms/WestbrookDryer.h>
 #include <CCA/Components/Arches/CoalModels/CoalModelFactory.h>
 #include <CCA/Components/Arches/CoalModels/ModelBase.h>
 #include <CCA/Components/Arches/TransportEqns/EqnBase.h>
@@ -1456,6 +1457,13 @@ Arches::sched_scalarInit( const LevelP& level,
       const VarLabel* srcVarLabel = src->getSrcLabel();
       tsk->computes( srcVarLabel ); 
 
+      vector<const VarLabel*> extraLocalLabels = src->getExtraLocalLabels(); 
+ 
+      for (vector<const VarLabel*>::iterator iexsrc = extraLocalLabels.begin(); iexsrc != extraLocalLabels.end(); iexsrc++){
+        tsk->computes( *iexsrc ); 
+      }
+
+
     }
 
   sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
@@ -1471,7 +1479,7 @@ Arches::scalarInit( const ProcessorGroup* ,
                     DataWarehouse* old_dw,
                     DataWarehouse* new_dw )
 {
-  proc0cout << "Initializing all scalar equations..." << endl;
+  proc0cout << "Initializing all scalar equations and sources..." << endl;
   for (int p = 0; p < patches->size(); p++){
     //assume only one material for now
     int archIndex = 0;
@@ -1513,7 +1521,10 @@ Arches::scalarInit( const ProcessorGroup* ,
       SourceTermBase* src = isrc->second; 
       string src_name = isrc->first; 
 
+      proc0cout << " found a source: " << src_name << endl;
+
       const VarLabel* srcVarLabel = src->getSrcLabel();
+      vector<const VarLabel*> extraLocalLabels = src->getExtraLocalLabels();  
  
       CCVariable<double> tempSource; 
       
@@ -1521,6 +1532,11 @@ Arches::scalarInit( const ProcessorGroup* ,
     
       tempSource.initialize(0.0);
 
+      for (vector<const VarLabel*>::iterator iexsrc = extraLocalLabels.begin(); iexsrc != extraLocalLabels.end(); iexsrc++){
+        CCVariable<double> extraVar; 
+        new_dw->allocateAndPut( extraVar, *iexsrc, matlIndex, patch ); 
+        extraVar.initialize(0.0); 
+      }
     } 
   }
   proc0cout << endl;
@@ -2284,6 +2300,11 @@ void Arches::registerSources(ProblemSpecP& db)
       } else if (src_type == "coal_gas_devol"){
         // Sums up the devol. model terms * weights
         SourceTermBuilder* srcBuilder = scinew CoalGasDevolBuilder(src_name, required_varLabels, d_lab->d_sharedState);
+        factory.register_source_term( src_name, srcBuilder ); 
+
+      } else if (src_type == "westbrook_dryer") {
+        // Computes a global reaction rate for a hydrocarbon (see Turns, eqn 5.1,5.2)
+        SourceTermBuilder* srcBuilder = scinew WestbrookDryerBuilder(src_name, required_varLabels, d_lab->d_sharedState); 
         factory.register_source_term( src_name, srcBuilder ); 
       
       } else if (src_type == "mms1"){

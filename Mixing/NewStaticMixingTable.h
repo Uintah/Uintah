@@ -192,6 +192,7 @@ private:
 
   int co_index, ch4_index, c2h2_index;
   int co2rate_index, so2rate_index;
+  int mixmolweight_index; 
   bool d_co_output;
   bool d_sulfur_chem;
   bool d_soot_precursors;
