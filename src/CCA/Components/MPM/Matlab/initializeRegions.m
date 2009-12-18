@@ -1,7 +1,22 @@
 function [Regions, nRegions,NN] = initializeRegions(domain,PPC,R1_dx,interpolation,d_smallNum)
   %__________________________________
   % region structure 
+  %
+  if(0)
+  fprintf('USING plotShapeFunction regions\n');
+  
+  nRegions      = int32(1);              % partition the domain into numRegions
+  Regions       = cell(nRegions,1);      % array that holds the individual region information
 
+  R.min         = -1;                     % location of left node
+  R.max         = 1;                     % location of right node
+  R.dx          = 1;
+  R.NN          = int32( (R.max - R.min)/R.dx +1 ); % number of nodes interior nodes
+  R.lp          = R.dx/(2 * PPC);
+  Regions{1}    = R;
+  end
+  
+  
   if(0)
   %____________
   % single level
@@ -42,7 +57,7 @@ function [Regions, nRegions,NN] = initializeRegions(domain,PPC,R1_dx,interpolati
 
   R.min         = domain/3.0;                       
   R.max         = 2.0*domain/3.0;
-  R.refineRatio = 1;
+  R.refineRatio = 2;
   R.dx          = R1_dx/R.refineRatio;
   R.volP        = R.dx/PPC;
   R.NN          = int32( (R.max - R.min)/R.dx );
@@ -121,8 +136,23 @@ function [Regions, nRegions,NN] = initializeRegions(domain,PPC,R1_dx,interpolati
     Regions{nRegions}.NN   = Regions{nRegions}.NN + 1;
     Regions{nRegions}.max  = Regions{nRegions}.max + Regions{nRegions}.dx;
   end;
+  
+  % Define the extra cells L & R for each region.
+  for r=1:nRegions
+    Regions{r}.EC(1) = 0;    
+    Regions{r}.EC(2) = 0;    
+  end
+  
+  if(strcmp(interpolation,'GIMP'))
+    Regions{1}.EC(1)        = 1;
+    Regions{nRegions}.EC(2) = 1;
+  end;
 
   NN = int32(0);
+  for r=1:nRegions
+    R = Regions{r};
+    NN = NN + R.NN;
+  end
 
   % bulletproofing:
   for r=1:nRegions
