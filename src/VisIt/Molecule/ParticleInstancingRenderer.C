@@ -1,4 +1,5 @@
 #include<cstring>
+#include<algorithm>
 #include "ParticleInstancingRenderer.h"
 
 static GLboolean CheckExtension( char *extName )
@@ -196,7 +197,8 @@ static GLuint LoadProgram(const std::string& vertex_shader_file, \
 
 void ParticleInstancingRenderer::BuildShaders() {
     debug1 << "building shaders" << endl;
-    program_instancing = LoadProgram("/home/collab/sshankar/visit_shigeru/src_nvd2/plots/Molecule/Instancing.Vertex.glsl", "/home/collab/sshankar/visit_shigeru/src_nvd2/plots/Molecule/Instancing.Fragment.glsl");
+    // program_instancing = LoadProgram("/home/collab/sshankar/visit_shigeru/src_nvd2/plots/Molecule/Instancing.Vertex.glsl", "/home/collab/sshankar/visit_shigeru/src_nvd2/plots/Molecule/Instancing.Fragment.glsl");
+    program_instancing = LoadProgram("./Instancing.Vertex.glsl", "./Instancing.Fragment.glsl");
 }
 
 static void BuildGridIndices(const bool build_quads, size_t x0, size_t x1, size_t y0, size_t y1, \
@@ -262,7 +264,7 @@ static void BuildGridIndices(const bool build_quads, size_t x0, size_t x1, size_
 	{
 	    for (size_t x = x0; x < x1 ; ++x)
 	    {
-		EmitQuad(Index(x + 0, y0 + 0), Index(x + 0, y0 + 0), Index(x + 0, y0 + 0), Index(x + 1,y0 + 0));
+		EmitQuad(Index(x + 0, y0 + 0), Index(x + 0, y0 + 0), Index(x + 1, y0 + 0), Index(x + 1,y0 + 0));
 	    }
 	}
 

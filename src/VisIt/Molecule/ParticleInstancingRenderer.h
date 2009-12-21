@@ -97,8 +97,8 @@ struct QualityLevel
 
 struct SphereData
 {
-    std::vector<double> Positions;
-    std::vector<double> Radii;		
+    std::vector<float> Positions;
+    std::vector<float> Radii;		
     std::vector<unsigned char> Attributes;
 
     void AddSphere(double* xyz , \
