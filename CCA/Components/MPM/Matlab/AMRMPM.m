@@ -17,8 +17,9 @@ global sf;
 global NSFN;               % number of shape function nodes
 d_debugging = problem_type;
 
-[mms] = MMS;                % load mms functions
-[sf]  = shapeFunctions;     % load all the shape functions
+[mms] = MMS;                      % load mms functions
+[sf]  = shapeFunctions;           % load all the shape functions
+[IF]  = initializationFunctions   % load initialization functions
 
 %  valid options:
 %  problem type:  impulsiveBar, oscillator, compaction advectBlock, mms
@@ -87,16 +88,7 @@ if (mod(domain,R1_dx) ~= 0)
   return;
 end
 
-[Regions, nRegions,NN] = initializeRegions(domain,PPC,R1_dx,interpolation, d_smallNum);
-
-
-%  find the number of nodes (NN) and the minimum dx
-dx_min = double(BigNum);
-for r=1:nRegions
-  R = Regions{r};
-  dx_min = min(dx_min,R.dx);
-  fprintf( 'region %g, min: %g, \t max: %g \t refineRatio: %g dx: %g, NN: %g\n',r, R.min, R.max, R.refineRatio, R.dx, R.NN)
-end
+[Regions, nRegions,NN, dx_min] = IF.initialize_Regions(domain,PPC,R1_dx,interpolation, d_smallNum);
 
 
 % define the boundary condition nodes
@@ -113,37 +105,8 @@ end
 %__________________________________
 % compute the zone of influence
 % compute the positions of the nodes
-Lx      = zeros(NN,2);
-nodePos = zeros(NN,1);      % node Position
-nodeNum = int32(1);
-
-if(strcmp(interpolation,'GIMP'))    % Boundary condition Node
-  nodePos(1) = -R1_dx;
-else
-  nodePos(1) = 0.0;
-end;
-
-for r=1:nRegions
-  R = Regions{r};
-  % loop over all nodes and set the node position
-  for  n=1:R.NN  
-    if(nodeNum > 1)
-      nodePos(nodeNum) = nodePos(nodeNum-1) + R.dx;
-    end
-    nodeNum = nodeNum + 1;
-  end
-end
-
-% compute the zone of influence
-Lx(1,1)  = 0.0;
-Lx(1,2)  = nodePos(2) - nodePos(1);
-Lx(NN,1) = nodePos(NN) - nodePos(NN-1);
-Lx(NN,2) = 0.0;
-
-for n=2:NN-1
-  Lx(n,1) = nodePos(n) - nodePos(n-1);
-  Lx(n,2) = nodePos(n+1) - nodePos(n);
-end
+[nodePos]  = IF.initialize_NodePos(NN, R1_dx, Regions, nRegions, interpolation)
+[Lx]       = IF.initialize_Lx(NN, nodePos)
 
 % output the regions and the Lx
 nn = 1;
@@ -156,47 +119,7 @@ for r=1:nRegions
   end
 end
 
-
-%__________________________________
-% create particles
-fprintf('Particle Position\n');
-ip = 1;
-
-startNode = 1;
-if( strcmp(interpolation,'GIMP') )
-  startNode = 2;
-end
-
-for n=startNode:NN-1
-  dx_p = (nodePos(n+1) - nodePos(n) )/double(PPC);
-  
-  offset = dx_p/2.0;
-  
-  for p = 1:PPC
-    xp_new = nodePos(n) + double(p-1) * dx_p + offset;
-    
-    if( xp_new >= bar_min && xp_new <= bar_max)
-    
-      xp(ip) = xp_new;
-      
-      fprintf('nodePos: %4.5e \t xp(%g) %g \t dx_p: %g \t offset: %g',nodePos(n),ip, xp(ip),dx_p,offset);
-      
-      if(ip > 1)
-        fprintf( '\t \tdx: %g \n',(xp(ip) - xp(ip-1)));
-      else
-        fprintf('\n');
-      end
-      
-      ip = ip + 1;
-      
-    end
-  end
-end
-
-
-NP=ip-1;  % number of particles
-
-xp = reshape(xp, NP,1);
+[xp, NP] = IF.initialize_xp(NN, nodePos, interpolation, PPC, bar_min, bar_max);
 
 %__________________________________
 % pre-allocate variables for speed
