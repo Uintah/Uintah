@@ -304,7 +304,14 @@ Press the 'g' key
 make
 make install
 \end{verbatim}
-The Teem libraries and include files will be install in /usr/local hierarchy.
+The Teem libraries and include files will be install in /usr/local
+hierarchy.  If you have a /usr/local/lib64 directory please make a
+symbolic link to the libteem.so found in /usr/local/lib, i.e.
+
+\begin{verbatim}
+cd /usr/local/lib64
+ln -s ../lib/libteem.so libteem.so
+\end{verbatim}
 
 \subsection{VisIt Installation}
 
