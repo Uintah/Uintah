@@ -73,6 +73,7 @@ ${VISIT_SRCDIR}/Makefile.visit : lib/libStandAlone_tools_uda2vis.${SO_OR_A_FILE}
 	  rm -f Makefile.visit; \
 	  mv Makefile Makefile.sci; \
 	  ${VISIT_INSTALL_DIR}/src/bin/xml2makefile -private -clobber udaReaderMTMD.xml; \
+	  ${VISIT_INSTALL_DIR}/src/bin/xml2info -clobber udaReaderMTMD.xml; \
 	  sed -e "s,^CPPFLAGS=,CPPFLAGS=-I${OBJTOP_ABS} -I${SRCTOP_ABS} ," Makefile > Makefile.visit; \
 	  mv Makefile.sci Makefile
 
