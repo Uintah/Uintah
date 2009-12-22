@@ -745,7 +745,7 @@ DataArchiver::copyTimesteps(Dir& fromDir, Dir& toDir, int startTimestep,
    int timestep;
    while (ts != 0) {
       ts->get(timestep);
-      if (timestep > startTimestep &&
+      if (timestep >= startTimestep &&
           (timestep <= maxTimestep || maxTimestep < 0)) {
          // copy the timestep directory over
          map<string,string> attributes;
