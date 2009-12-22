@@ -20,6 +20,7 @@ d_fieldLabels(fieldLabels)
 
 PartVel::~PartVel()
 {
+  delete d_boundaryCond; 
 }
 //---------------------------------------------------------------------------
 // Method: ProblemSetup
