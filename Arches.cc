@@ -158,6 +158,10 @@ Arches::~Arches()
   if (d_calcExtraScalars)
     for (int i=0; i < static_cast<int>(d_extraScalars.size()); i++)
       delete d_extraScalars[i];
+
+  delete d_dqmomSolver; 
+  delete d_timeIntegrator; 
+  delete d_partVel; 
 }
 
 // ****************************************************************************

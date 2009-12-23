@@ -16,8 +16,7 @@ EqnFactory::~EqnFactory()
 {
   // delete the builders
   for( BuildMap::iterator i=builders_.begin(); i!=builders_.end(); ++i ){
-    //not sure why this doesn't work...
-    //delete i->second; // This isn't exiting gracefully when this is uncommented
+      delete i->second;
     }
 
   // delete all constructed solvers
