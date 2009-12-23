@@ -17,14 +17,14 @@ CoalModelFactory::CoalModelFactory()
 CoalModelFactory::~CoalModelFactory()
 {
 //  // delete the builders
-//  for( BuildMap::iterator i=builders_.begin(); i!=builders_.end(); ++i ){
-//    //delete *i;
-//    }
-//
-//  // delete all constructed solvers
-//  for( ModelMap::iterator i=models_.begin(); i!=models_.end(); ++i ){
-//    //delete *i;
-//  }
+  for( BuildMap::iterator i=builders_.begin(); i!=builders_.end(); ++i ){
+      delete i->second;
+    }
+
+  // delete all constructed solvers
+  for( ModelMap::iterator i=models_.begin(); i!=models_.end(); ++i ){
+      delete i->second;
+  }
 }
 
 //---------------------------------------------------------------------------
