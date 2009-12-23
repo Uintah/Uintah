@@ -334,22 +334,29 @@ void BoundaryCondition_new::setVectorValueBC( const ProcessorGroup*,
 
             IntVector bp1(*bound_ptr - insideCellDir); 
 
-            X = ( const_vec[*bound_ptr].x() + const_vec[bp1].x() )/ 2.0;
-            Y = ( const_vec[*bound_ptr].y() + const_vec[bp1].y() )/ 2.0;
-            Z = ( const_vec[*bound_ptr].z() + const_vec[bp1].z() )/ 2.0;
+            X = ( const_vec[*bound_ptr].x() );
+            Y = ( const_vec[*bound_ptr].y() );
+            Z = ( const_vec[*bound_ptr].z() );
 
             vec[*bound_ptr] = Vector(X,Y,Z); 
 
           }
         } else if (bc_kind == "Neumann") {
+          
+          double dX, dY, dZ; 
+
           switch (face) {
             case Patch::xminus:
               for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
                 IntVector bp1(*bound_ptr - insideCellDir); 
 
-                X = ( const_vec[bp1].x() - const_vec[*bound_ptr].x() ) / Dx.x(); 
-                Y = ( const_vec[bp1].y() - const_vec[*bound_ptr].y() ) / Dx.x(); 
-                Z = ( const_vec[bp1].z() - const_vec[*bound_ptr].z() ) / Dx.x(); 
+                dX = ( const_vec[bp1].x() - const_vec[*bound_ptr].x() ) / Dx.x(); 
+                dY = ( const_vec[bp1].y() - const_vec[*bound_ptr].y() ) / Dx.x(); 
+                dZ = ( const_vec[bp1].z() - const_vec[*bound_ptr].z() ) / Dx.x(); 
+
+                X = vec[bp1].x() - Dx.x() * dX; 
+                Y = vec[bp1].y() - Dx.x() * dY; 
+                Z = vec[bp1].z() - Dx.x() * dZ; 
 
                 vec[*bound_ptr] = Vector(X,Y,Z); 
               }
@@ -358,9 +365,13 @@ void BoundaryCondition_new::setVectorValueBC( const ProcessorGroup*,
               for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
                 IntVector bp1(*bound_ptr - insideCellDir);
 
-                X = ( const_vec[*bound_ptr].x() - const_vec[bp1].x() ) / Dx.x();
-                Y = ( const_vec[*bound_ptr].y() - const_vec[bp1].y() ) / Dx.x();
-                Z = ( const_vec[*bound_ptr].z() - const_vec[bp1].z() ) / Dx.x();
+                dX = ( const_vec[*bound_ptr].x() - const_vec[bp1].x() ) / Dx.x();
+                dY = ( const_vec[*bound_ptr].y() - const_vec[bp1].y() ) / Dx.x();
+                dZ = ( const_vec[*bound_ptr].z() - const_vec[bp1].z() ) / Dx.x();
+
+                X = vec[bp1].x() + Dx.x() * dX; 
+                Y = vec[bp1].y() + Dx.x() * dY; 
+                Z = vec[bp1].z() + Dx.x() * dZ; 
 
                 vec[*bound_ptr] = Vector(X,Y,Z); 
               }
@@ -370,9 +381,13 @@ void BoundaryCondition_new::setVectorValueBC( const ProcessorGroup*,
               for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
                 IntVector bp1(*bound_ptr - insideCellDir); 
 
-                X = ( const_vec[bp1].x() - const_vec[*bound_ptr].x() ) / Dx.y(); 
-                Y = ( const_vec[bp1].y() - const_vec[*bound_ptr].y() ) / Dx.y(); 
-                Z = ( const_vec[bp1].z() - const_vec[*bound_ptr].z() ) / Dx.y(); 
+                dX = ( const_vec[bp1].x() - const_vec[*bound_ptr].x() ) / Dx.y(); 
+                dY = ( const_vec[bp1].y() - const_vec[*bound_ptr].y() ) / Dx.y(); 
+                dZ = ( const_vec[bp1].z() - const_vec[*bound_ptr].z() ) / Dx.y(); 
+
+                X = vec[bp1].x() - Dx.y() * dX; 
+                Y = vec[bp1].y() - Dx.y() * dY; 
+                Z = vec[bp1].z() - Dx.y() * dZ; 
 
                 vec[*bound_ptr] = Vector(X,Y,Z); 
               }
@@ -381,9 +396,13 @@ void BoundaryCondition_new::setVectorValueBC( const ProcessorGroup*,
               for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
                 IntVector bp1(*bound_ptr - insideCellDir);
 
-                X = ( const_vec[*bound_ptr].x() - const_vec[bp1].x() ) / Dx.y();
-                Y = ( const_vec[*bound_ptr].y() - const_vec[bp1].y() ) / Dx.y();
-                Z = ( const_vec[*bound_ptr].z() - const_vec[bp1].z() ) / Dx.y();
+                dX = ( const_vec[*bound_ptr].x() - const_vec[bp1].x() ) / Dx.y();
+                dY = ( const_vec[*bound_ptr].y() - const_vec[bp1].y() ) / Dx.y();
+                dZ = ( const_vec[*bound_ptr].z() - const_vec[bp1].z() ) / Dx.y();
+
+                X = vec[bp1].x() + Dx.y() * dX; 
+                Y = vec[bp1].y() + Dx.y() * dY; 
+                Z = vec[bp1].z() + Dx.y() * dZ; 
 
                 vec[*bound_ptr] = Vector(X,Y,Z); 
               }
@@ -394,9 +413,13 @@ void BoundaryCondition_new::setVectorValueBC( const ProcessorGroup*,
               for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
                 IntVector bp1(*bound_ptr - insideCellDir); 
 
-                X = ( const_vec[bp1].x() - const_vec[*bound_ptr].x() ) / Dx.z(); 
-                Y = ( const_vec[bp1].y() - const_vec[*bound_ptr].y() ) / Dx.z(); 
-                Z = ( const_vec[bp1].z() - const_vec[*bound_ptr].z() ) / Dx.z(); 
+                dX = ( const_vec[bp1].x() - const_vec[*bound_ptr].x() ) / Dx.z(); 
+                dY = ( const_vec[bp1].y() - const_vec[*bound_ptr].y() ) / Dx.z(); 
+                dZ = ( const_vec[bp1].z() - const_vec[*bound_ptr].z() ) / Dx.z(); 
+
+                X = vec[bp1].x() - Dx.z() * dX; 
+                Y = vec[bp1].y() - Dx.z() * dY; 
+                Z = vec[bp1].z() - Dx.z() * dZ; 
 
                 vec[*bound_ptr] = Vector(X,Y,Z); 
               }
@@ -405,9 +428,13 @@ void BoundaryCondition_new::setVectorValueBC( const ProcessorGroup*,
               for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
                 IntVector bp1(*bound_ptr - insideCellDir);
 
-                X = ( const_vec[*bound_ptr].x() - const_vec[bp1].x() ) / Dx.z();
-                Y = ( const_vec[*bound_ptr].y() - const_vec[bp1].y() ) / Dx.z();
-                Z = ( const_vec[*bound_ptr].z() - const_vec[bp1].z() ) / Dx.z();
+                dX = ( const_vec[*bound_ptr].x() - const_vec[bp1].x() ) / Dx.z();
+                dY = ( const_vec[*bound_ptr].y() - const_vec[bp1].y() ) / Dx.z();
+                dZ = ( const_vec[*bound_ptr].z() - const_vec[bp1].z() ) / Dx.z();
+
+                X = vec[bp1].x() + Dx.z() * dX; 
+                Y = vec[bp1].y() + Dx.z() * dY; 
+                Z = vec[bp1].z() + Dx.z() * dZ; 
 
                 vec[*bound_ptr] = Vector(X,Y,Z); 
               }
