@@ -1,47 +1,77 @@
 function [IF] = initializationFunctions
 
   % create function handles that are used in AMRMPM.m
-  IF.initialize_Regions     = @initialize_Regions;
-  IF.initialize_NodePos     = @initialize_NodePos;
-  IF.initialize_Lx          = @initialize_Lx;
-  IF.initialize_xp          = @initialize_xp;
+  IF.initialize_grid     = @initialize_grid;
+  IF.initialize_NodePos  = @initialize_NodePos;
+  IF.initialize_Lx       = @initialize_Lx;
+  IF.initialize_xp       = @initialize_xp;
  
   %______________________________________________________________________
-  function[nodePos]  = initialize_NodePos(NN, R1_dx, Regions, nRegions, interpolation)
-    nodePos = zeros(NN,1);              % node Position
+  function[nodePos]  = initialize_NodePos(L1_dx, Levels, Limits, interpolation)
+  
+    nodePos = zeros(Limits.NN_max, Limits.maxLevels);              % node Position
+    
     nodeNum = int32(1);
 
-    if(strcmp(interpolation,'GIMP'))    % Boundary condition Node
-      nodePos(1) = -R1_dx;
+    if(strcmp(interpolation,'GIMP'))    % Boundary condition Node on level 1
+      nodePos(1,1) = -L1_dx;
     else
-      nodePos(1) = 0.0;
+      nodePos(1,1) = 0.0;
     end;
 
-    for r=1:nRegions
-      R = Regions{r};
-      % loop over all nodes and set the node position
-      for  n=1:R.NN  
-        if(nodeNum > 1)
-          nodePos(nodeNum) = nodePos(nodeNum-1) + R.dx;
+    for l=1:Limits.maxLevels
+      L = Levels{l};
+      
+      for p=1:L.nPatches
+        P = L.Patches{p};
+        % loop over all nodes and set the node position
+        for  n=1:P.NN  
+          if(nodeNum > 1)
+            nodePos(nodeNum,l) = nodePos(nodeNum-1,l) + P.dx;
+          end
+          nodeNum = nodeNum + 1;
         end
-        nodeNum = nodeNum + 1;
-      end
-    end
+        
+      end  % patches
+    end  % level
   end
   
   %______________________________________________________________________
-  function[Lx]  = initialize_Lx(NN, nodePos)
-    Lx      = zeros(NN,2);
+  function[Lx]  = initialize_Lx(nodePos, Levels, Limits)
+    Lx = zeros(Limits.NN_max,2, Limits.maxLevels);
     % compute the zone of influence
-    Lx(1,1)  = 0.0;
-    Lx(1,2)  = nodePos(2) - nodePos(1);
-    Lx(NN,1) = nodePos(NN) - nodePos(NN-1);
-    Lx(NN,2) = 0.0;
+    l = 1;
+    r = 2;
+    
+    for L=1:Limits.maxLevels
+      NN = Levels{L}.NN;
+      Lx(1,l,L)  = 0.0;
+      Lx(1,r,L)  = nodePos(2,L) - nodePos(1,L);
 
-    for n=2:NN-1
-      Lx(n,1) = nodePos(n) - nodePos(n-1);
-      Lx(n,2) = nodePos(n+1) - nodePos(n);
+      Lx(NN,l,L) = nodePos(NN,L) - nodePos(NN-1,L);
+      Lx(NN,r,L) = 0.0;
+
+      for n=2:NN-1
+        Lx(n,l,L) = nodePos(n,L)   - nodePos(n-1,L);
+        Lx(n,r,L) = nodePos(n+1,L) - nodePos(n,L);
+      end
     end
+    
+    % output the regions and the Lx
+    for l=1:Limits.maxLevels
+      L  = Levels{l};
+      nn = 1;
+      
+      for p=1:L.nPatches
+        P = L.Patches{p};
+        fprintf('-----------------------Level %g Patch %g\n',l,p);
+        for  n=1:P.NN  
+          fprintf( 'Node:  %g, nodePos: %6.5f, \t Lx(L): %6.5f Lx(R): %6.5f\n',nn, nodePos(nn,l),Lx(nn,1,l), Lx(nn,2,l));
+          nn = nn + 1;
+        end
+      end
+    end
+    
   end
 
   %______________________________________________________________________
@@ -88,182 +118,159 @@ function [IF] = initializationFunctions
      xp = reshape(xp, NP,1);  
   end
   %______________________________________________________________________
-  function [Regions, nRegions,NN, dx_min] = initialize_Regions(domain,PPC,R1_dx,interpolation,d_smallNum)
-    %__________________________________
-    % region structure 
-    %
+  function [Levels, dx_min, Limits] = initialize_grid(domain,PPC,L1_dx,interpolation,d_smallNum)
+    
     if(0)
-    fprintf('USING plotShapeFunction regions\n');
+    fprintf('USING plotShapeFunction Patches\n');
 
-    nRegions      = int32(1);              % partition the domain into numRegions
-    Regions       = cell(nRegions,1);      % array that holds the individual region information
+    nPatches      = int32(1);              % partition the domain into numPatches
+    Patches       = cell(nPatches,1);      % array that holds the individual region information
 
     R.min         = -1;                     % location of left node
     R.max         = 1;                     % location of right node
     R.dx          = 1;
     R.NN          = int32( (R.max - R.min)/R.dx +1 ); % number of nodes interior nodes
     R.lp          = R.dx/(2 * PPC);
-    Regions{1}    = R;
+    Patches{1}    = R;
     end
 
 
-    if(0)
-    %____________
-    % single level
-    nRegions    = int32(2);               % partition the domain into nRegions
-    Regions       = cell(nRegions,1);     % array that holds the individual region information
-    R.min         = 0;                    % location of left point
-    R.max         = domain/2;             % location of right point
-    R.refineRatio = 1;
-    R.dx          = R1_dx;
-    R.volP        = R.dx/PPC;
-    R.NN          = int32( (R.max - R.min)/R.dx +1 );
-    R.lp          = R.dx/(2 * PPC);
-    Regions{1}    = R;
-
-    R.min         = domain/2;                       
-    R.max         = domain;
-    R.refineRatio = 1;
-    R.dx          = R1_dx/R.refineRatio;
-    R.volP        = R.dx/PPC;
-    R.NN          = int32( (R.max - R.min)/R.dx );
-    R.lp          = R.dx/(2 * PPC);
-    Regions{2}    = R;
-    end
-    %____________
-    % 2 level
     if(1)
-    nRegions    = int32(3);               % partition the domain into nRegions
-    Regions       = cell(nRegions,1);     % array that holds the individual region information
-
-    R.min         = 0;                    % location of left point
-    R.max         = domain/3.0;             % location of right point
-    R.refineRatio = 1;
-    R.dx          = R1_dx;
-    R.volP        = R.dx/PPC;
-    R.NN          = int32( (R.max - R.min)/R.dx +1 );
-    R.lp          = R.dx/(2 * PPC);
-    Regions{1}    = R;
-
-    R.min         = domain/3.0;                       
-    R.max         = 2.0*domain/3.0;
-    R.refineRatio = 1;
-    R.dx          = R1_dx/R.refineRatio;
-    R.volP        = R.dx/PPC;
-    R.NN          = int32( (R.max - R.min)/R.dx );
-    R.lp          = R.dx/(2 * PPC);
-    Regions{2}    = R;
-
-    R.min         = 2.0*domain/3.0;                       
-    R.max         = domain;
-    R.refineRatio = 1;
-    R.dx          = R1_dx/R.refineRatio; 
-    R.volP        = R.dx/PPC;
-    R.NN          = int32( (R.max - R.min)/R.dx); 
-    R.lp          = R.dx/(2 * PPC);
-    Regions{3}    = R;
-
-    end
-
     %____________
-    % 3 levels
-    if(0)
+    % single level  2 patches
+    maxLevels     = 1;
+    nPatches      = int32(2);             % partition the domain into nPatches
+    Patches       = cell(nPatches,1);     % array that holds the individual region information
+    
+    P.min         = 0;                    % location of left point
+    P.max         = domain/2;             % location of right point
+    P.refineRatio = 1;
+    P.dx          = L1_dx;
+    P.volP        = P.dx/PPC;
+    P.NN          = int32( (P.max - P.min)/P.dx +1 );
+    P.lp          = P.dx/(2 * PPC);
+    Patches{1}    = P;
 
-    nRegions    = int32(5);               % partition the domain into nRegions
-    Regions       = cell(nRegions,1);     % array that holds the individual region information
-
-    R.min         = 0;                    % location of left point
-    R.max         = 0.32;                 % location of right point
-    R.refineRatio = 1;
-    R.dx          = R1_dx;
-    R.volP        = R.dx/PPC;
-    R.NN          = int32( (R.max - R.min)/R.dx +1 );
-    R.lp          = R.dx/(2 * PPC);
-    Regions{1}    = R;
-
-    R.min         = 0.32;                       
-    R.max         = 0.4;
-    R.refineRatio = 4;
-    R.dx          = R1_dx/double(R.refineRatio);
-    R.volP        = R.dx/PPC;
-    R.NN          = int32( (R.max - R.min)/R.dx );
-    R.lp          = R.dx/(2 * PPC);
-    Regions{2}    = R;
-
-    R.min         = 0.4;                       
-    R.max         = 0.56;
-    R.refineRatio = 16;
-    R.dx          = R1_dx/double(R.refineRatio); 
-    R.volP        = R.dx/PPC;
-    R.NN          = int32( (R.max - R.min)/R.dx);
-    R.lp          = R.dx/(2 * PPC); 
-    Regions{3}    = R;
-
-    R.min         = 0.56;                       
-    R.max         = 0.64;
-    R.refineRatio = 4;
-    R.dx          = R1_dx/double(R.refineRatio);
-    R.volP        = R.dx/PPC;
-    R.NN          = int32( (R.max - R.min)/R.dx );
-    R.lp          = R.dx/(2 * PPC);
-    Regions{4}    = R;
-
-    R.min         = 0.64;                       
-    R.max         = domain;
-    R.refineRatio = 1;
-    R.dx          = R1_dx/R.refineRatio;
-    R.volP        = R.dx/PPC;
-    R.NN          = int32( (R.max - R.min)/R.dx );
-    R.lp          = R.dx/(2 * PPC);
-    Regions{5}    = R;
-
-    end
-
-    % increase the number of nodes in the first and last region if using gimp.
-    if(strcmp(interpolation,'GIMP'))
-      Regions{1}.NN          = Regions{1}.NN + 1;
-      Regions{1}.min         = Regions{1}.min - Regions{1}.dx;
-      Regions{nRegions}.NN   = Regions{nRegions}.NN + 1;
-      Regions{nRegions}.max  = Regions{nRegions}.max + Regions{nRegions}.dx;
-    end;
-
-    % Define the extra cells L & R for each region.
-    for r=1:nRegions
-      Regions{r}.EC(1) = 0;    
-      Regions{r}.EC(2) = 0;    
-    end
-
-    if(strcmp(interpolation,'GIMP'))
-      Regions{1}.EC(1)        = 1;
-      Regions{nRegions}.EC(2) = 1;
-    end;
-
-    %count the number of total nodes
-    NN = int32(0);
-    for r=1:nRegions
-      R = Regions{r};
-      NN = NN + R.NN;
+    P.min         = domain/2;                       
+    P.max         = domain;
+    P.refineRatio = 1;
+    P.dx          = L1_dx/P.refineRatio;
+    P.volP        = P.dx/PPC;
+    P.NN          = int32( (P.max - P.min)/P.dx );
+    P.lp          = P.dx/(2 * PPC);
+    Patches{2}    = P;
     end
     
-    %  find the minimum dx
-    dx_min = double(1e100);
-    for r=1:nRegions
-      R = Regions{r};
-      dx_min = min(dx_min,R.dx);
-      fprintf( 'region %g, min: %g, \t max: %g \t refineRatio: %g dx: %g, NN: %g\n',r, R.min, R.max, R.refineRatio, R.dx, R.NN)
+    %____________
+    % 2 level
+    if(0)
+    maxLevels     = X;
+    nPatches      = int32(3);               % partition the domain into nPatches
+    Patches       = cell(nPatches,1);     % array that holds the individual region information
+
+    P.min         = 0;                    % location of left point
+    P.max         = domain/3.0;             % location of right point
+    P.refineRatio = 1;
+    P.dx          = L1_dx;
+    P.volP        = P.dx/PPC;
+    P.NN          = int32( (P.max - P.min)/P.dx +1 );
+    P.lp          = P.dx/(2 * PPC);
+    Patches{1}    = R;
+
+    P.min         = domain/3.0;                       
+    P.max         = 2.0*domain/3.0;
+    P.refineRatio = 1;
+    P.dx          = L1_dx/P.refineRatio;
+    P.volP        = P.dx/PPC;
+    P.NN          = int32( (P.max - P.min)/P.dx );
+    P.lp          = P.dx/(2 * PPC);
+    Patches{2}    = R;
+
+    P.min         = 2.0*domain/3.0;                       
+    P.max         = domain;
+    P.refineRatio = 1;
+    P.dx          = L1_dx/P.refineRatio; 
+    P.volP        = P.dx/PPC;
+    P.NN          = int32( (P.max - P.min)/P.dx); 
+    P.lp          = P.dx/(2 * PPC);
+    Patches{3}    = R;
     end
 
-    % bulletproofing:
-    for r=1:nRegions
-      R = Regions{r};
-      d = (R.max - R.min) + 100* d_smallNum;
+    Levels            = cell(maxLevels,1);
+    Levels{1}.Patches = Patches;
+    Levels{1}.nPatches= nPatches;
 
-      if( mod( d, R.dx ) > 1.0e-10 )
-        fprintf('ERROR, the dx: %g in Region %g does not divide into the domain (R.max:%g R.min:%g) evenly\n', R.dx,r,R.max,R.min);
-        return;
+    % increase the number of nodes in the first and last patch if using gimp on level 1;
+    if(strcmp(interpolation,'GIMP'))
+      L1 = Levels{1};
+      firstP = L1.Patches{1};
+      lastP  = L1.Patches{L1.nPatches};
+      
+      Levels{1}.Patches{1}.NN             = firstP.NN  + 1;
+      Levels{1}.Patches{1}.min            = firstP.min - firstP.dx;
+      
+      Levels{1}.Patches{L1.nPatches}.NN   = lastP.NN  + 1;
+      Levels{1}.Patches{L1.nPatches}.max  = lastP.max + lastP.dx;
+    end;
+
+
+    % Define the extra cells L & R for each region.
+    for p=1:nPatches
+      Patches{p}.EC(1) = 0;    
+      Patches{p}.EC(2) = 0;    
+    end
+
+    if(strcmp(interpolation,'GIMP'))
+      Patches{1}.EC(1)        = 1;
+      Patches{nPatches}.EC(2) = 1;
+    end;
+
+    %count the number of nodes in a level
+    for l=1:maxLevels
+      L = Levels{l};
+      NN = int32(0);
+      
+      for p=1:L.nPatches
+        P = L.Patches{p};
+        NN = NN + P.NN;
+      end
+      Levels{l}.NN = NN
+    end
+    NN_max = sum(NN);
+    
+    %  find the minimum dx on all levels
+    dx_min = double(1e100);
+    for l=1:maxLevels
+      L = Levels{l};
+      
+      for p=1:L.nPatches
+        P = L.Patches{p};
+        dx_min = min(dx_min,P.dx);
+        fprintf( 'level: %g patch %g, min: %g, \t max: %g \t refineRatio: %g dx: %g, NN: %g\n',l,p, P.min, P.max, P.refineRatio, P.dx, P.NN)
       end
     end
 
+    % defines the limits
+    Limits  = cell(1,1);
+    Limits.maxLevels = maxLevels;
+    Limits.NN_max    = 49;
+
+    % bulletproofing:
+    for l=1:maxLevels
+      L = Levels{l};
+      
+      for p=1:L.nPatches
+        P = L.Patches{p};
+        d = (P.max - P.min) + 100* d_smallNum;
+
+        if( mod( d, P.dx ) > 1.0e-10 )
+          fprintf('ERROR, level: %g the dx: %g in patch %g does not divide into the domain (P.max:%g P.min:%g) evenly\n', l,P.dx,p,P.max,P.min);
+          return;
+        end
+      end  % patches
+    end  % levels
+    
   end
   
+ 
 end

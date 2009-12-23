@@ -88,42 +88,33 @@ if (mod(domain,L1_dx) ~= 0)
   return;
 end
 
-[Regions, nRegions,NN, dx_min] = IF.initialize_Regions(domain,PPC,L1_dx,interpolation, d_smallNum);
+%__________________________________
+% Grid Initialization
+% compute the zone of influence
+% compute the positions of the nodes
+[Levels, dx_min, Limits] = IF.initialize_grid(domain,PPC,L1_dx,interpolation, d_smallNum);
+
+[nodePos]  = IF.initialize_NodePos(L1_dx, Levels, Limits, interpolation);
+
+[Lx]       = IF.initialize_Lx(nodePos, Levels, Limits);
+
+[xp, NP]   = IF.initialize_xp(NN, nodePos, interpolation, PPC, bar_min, bar_max);
 
 
-% define the boundary condition nodes
+% define the boundary condition nodes on Level 1
+L1_NN = Levels{1}.NN
 BCNodeL(1)  = 1;
-BCNodeR(1)  = NN;
+BCNodeR(1)  = L1_NN;
 
 if(strcmp(interpolation,'GIMP'))
   BCNodeL(1) = 1;
   BCNodeL(2) = 2;
-  BCNodeR(1) = NN-1;
-  BCNodeR(2) = NN;
+  BCNodeR(1) = L1_NN-1;
+  BCNodeR(2) = L1_NN;
 end
-
-%__________________________________
-% compute the zone of influence
-% compute the positions of the nodes
-[nodePos]  = IF.initialize_NodePos(NN, L1_dx, Regions, nRegions, interpolation)
-[Lx]       = IF.initialize_Lx(NN, nodePos)
-
-% output the regions and the Lx
-nn = 1;
-for r=1:nRegions
-  R = Regions{r};
-  fprintf('-------------------------Region %g\n',r);
-  for n=1:R.NN
-    fprintf( 'Node:  %g, nodePos: %6.5f, \t Lx(1): %6.5f Lx(2): %6.5f\n',nn, nodePos(nn),Lx(nn,1), Lx(nn,2));
-    nn = nn + 1;
-  end
-end
-
-[xp, NP] = IF.initialize_xp(NN, nodePos, interpolation, PPC, bar_min, bar_max);
-
 %__________________________________
 % pre-allocate variables for speed
-maxLevels = 1;
+maxLevels = Limits.maxLevels;
 vol       = zeros(NP, maxLevels);
 lp        = zeros(NP, maxLevels);
 massP     = zeros(NP, maxLevels);
