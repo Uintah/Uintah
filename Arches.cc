@@ -158,9 +158,10 @@ Arches::~Arches()
   if (d_calcExtraScalars)
     for (int i=0; i < static_cast<int>(d_extraScalars.size()); i++)
       delete d_extraScalars[i];
+
+  delete d_timeIntegrator; 
   if (d_doDQMOM) { 
     delete d_dqmomSolver; 
-    delete d_timeIntegrator; 
     delete d_partVel; 
   }
 }
@@ -426,6 +427,8 @@ Arches::problemSetup(const ProblemSpecP& params,
   }
 
   // ----- DQMOM STUFF:
+  //create a time integrator.
+  d_timeIntegrator = scinew ExplicitTimeInt(d_lab);
   ProblemSpecP time_db = db->findBlock("TimeIntegrator");
   if (time_db) {
     string time_order; 
@@ -439,8 +442,6 @@ Arches::problemSetup(const ProblemSpecP& params,
     else 
       throw InvalidValue("Explicit time integrator must be one of: first, second, third!  Please fix input file",__FILE__,__LINE__);
 
-    //create a time integrator.
-    d_timeIntegrator = scinew ExplicitTimeInt(d_lab);
     d_timeIntegrator->problemSetup(time_db);
   }
 
