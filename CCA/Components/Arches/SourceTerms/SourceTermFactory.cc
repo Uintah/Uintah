@@ -16,12 +16,12 @@ SourceTermFactory::~SourceTermFactory()
 {
   // delete the builders
   for( BuildMap::iterator i=builders_.begin(); i!=builders_.end(); ++i ){
-    //delete *i;
+      delete i->second;
     }
 
   // delete all constructed solvers
   for( SourceMap::iterator i=sources_.begin(); i!=sources_.end(); ++i ){
-    //delete *i;
+      delete i->second;
   }
 }
 
