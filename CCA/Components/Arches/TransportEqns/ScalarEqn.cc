@@ -140,10 +140,20 @@ ScalarEqn::problemSetup(const ProblemSpecP& inputdb)
 
     } else if (d_initFunction == "mms1") {
       //currently nothing to do here. 
+    } else if (d_initFunction == "geometry_fill") {
+
+      db_initialValue->require("constant", d_constant_init); // going to full with this constant 
+
+      ProblemSpecP the_geometry = db_initialValue->findBlock("geom_object"); 
+      if (the_geometry) {
+        GeometryPieceFactory::create(the_geometry, d_initGeom); 
+      } else {
+        throw ProblemSetupException("You are missing the geometry specification (<geom_object>) for the transport eqn. initialization!", __FILE__, __LINE__); 
+      }
+
     } else {
       throw InvalidValue("Initialization function not supported!", __FILE__, __LINE__); 
     }
-
   }
 }
 //---------------------------------------------------------------------------

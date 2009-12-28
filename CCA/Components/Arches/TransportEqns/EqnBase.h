@@ -4,12 +4,17 @@
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/Variables/VarTypes.h>
+#include <Core/GeometryPiece/GeometryPiece.h>
+#include <Core/GeometryPiece/GeometryPieceFactory.h>
+#include <Core/GeometryPiece/UnionGeometryPiece.h>
+#include <Core/Grid/Box.h>
 #include <CCA/Components/Arches/BoundaryCond_new.h>
 #include <CCA/Components/Arches/ExplicitTimeInt.h>
 #include <CCA/Components/Arches/TransportEqns/Discretization_new.h>
 #include <CCA/Components/Arches/ArchesMaterial.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/Exceptions/InvalidValue.h>
+#include <Core/Exceptions/ParameterNotFound.h>
 #include <CCA/Components/Arches/Directives.h>
 
 //========================================================================
@@ -172,6 +177,9 @@ protected:
   // constant initialization function:
   double d_constant_init;           ///< constant value for initialization
 
+  // Vector of geometry pieces for initialization 
+  std::vector<GeometryPieceP> d_initGeom; 
+
   // step initialization function:
   std::string d_step_dir;           ///< For a step initialization function, direction in which step should occur
   double d_step_start;              ///< Physical location of step function start
@@ -320,6 +328,8 @@ void EqnBase::initializationFunction( const Patch* patch, phiType& phi )
 
   double pi = acos(-1.0); 
 
+  Box patchInteriorBox = patch->getBox(); 
+
   for (CellIterator iter=patch->getCellIterator(0); !iter.done(); iter++){
     IntVector c = *iter; 
     Vector Dx = patch->dCell(); 
@@ -368,6 +378,23 @@ void EqnBase::initializationFunction( const Patch* patch, phiType& phi )
       //======= an MMS with the function phi = sin(2*pi*x)cos(2*pi*y) ======
       phi[c] = sin(2.0 * pi * x)*cos(2.0 * pi * y);
 
+    } else if (d_initFunction == "geometry_fill") {
+      //======= Fills a geometry piece with the value of d_constant_init ======
+      for (std::vector<GeometryPieceP>::iterator giter = d_initGeom.begin(); giter != d_initGeom.end(); giter++){
+
+        GeometryPieceP g_piece = *giter; 
+        Box geomBox = g_piece->getBoundingBox(); 
+        Box intersectedBox = geomBox.intersect(patchInteriorBox); 
+
+        if (!(intersectedBox.degenerate())){
+
+          Point P = patch->cellPosition(*iter); 
+
+          if ( g_piece->inside(P) )
+            phi[c] = d_constant_init; 
+
+        }
+      }
     // ======= add other initialization functions below here ======
     } else {
 
