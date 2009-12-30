@@ -77,7 +77,6 @@ DQMOM::~DQMOM()
   for ( ArchesLabel::MomentMap::iterator iter = d_fieldLabels->DQMOMMoments.begin(); iter!= d_fieldLabels->DQMOMMoments.end(); iter++){
     VarLabel::destroy(iter->second); 
   }
-
 }
 //---------------------------------------------------------------------------
 // Method: Problem setup
