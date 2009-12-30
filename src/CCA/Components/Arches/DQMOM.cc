@@ -73,6 +73,11 @@ DQMOM::~DQMOM()
   VarLabel::destroy(d_normResNormalizedLabelB);
   VarLabel::destroy(d_normResNormalizedLabelX);
   VarLabel::destroy(d_conditionNumberLabel);
+
+  for ( ArchesLabel::MomentMap::iterator iter = d_fieldLabels->DQMOMMoments.begin(); iter!= d_fieldLabels->DQMOMMoments.end(); iter++){
+    VarLabel::destroy(iter->second); 
+  }
+
 }
 //---------------------------------------------------------------------------
 // Method: Problem setup

@@ -62,7 +62,9 @@ SimpleHeatTransfer::SimpleHeatTransfer( std::string modelName,
 }
 
 SimpleHeatTransfer::~SimpleHeatTransfer()
-{}
+{
+  VarLabel::destroy(d_abskp);
+}
 
 //---------------------------------------------------------------------------
 // Method: Problem Setup

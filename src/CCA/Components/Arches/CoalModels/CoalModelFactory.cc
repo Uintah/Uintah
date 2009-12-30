@@ -25,6 +25,25 @@ CoalModelFactory::~CoalModelFactory()
   for( ModelMap::iterator i=models_.begin(); i!=models_.end(); ++i ){
       delete i->second;
   }
+
+  VarLabel::destroy(d_Length_ICLabel); 
+  VarLabel::destroy(d_Length_GasLabel); 
+
+  VarLabel::destroy(d_RawCoal_ICLabel); 
+  VarLabel::destroy(d_RawCoal_GasLabel); 
+
+  if( b_useParticleTemperature ) {
+    VarLabel::destroy(d_ParticleTemperature_ICLabel); 
+    VarLabel::destroy(d_ParticleTemperature_GasLabel); 
+  } else {
+    VarLabel::destroy(d_ParticleEnthalpy_ICLabel); 
+    VarLabel::destroy(d_ParticleEnthalpy_GasLabel); 
+  }
+  
+  if( b_useMoisture ) {
+    VarLabel::destroy(d_Moisture_ICLabel);
+    VarLabel::destroy(d_Moisture_GasLabel);
+  }
 }
 
 //---------------------------------------------------------------------------
