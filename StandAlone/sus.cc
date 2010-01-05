@@ -343,10 +343,6 @@ main( int argc, char *argv[], char *env[] )
     } else if(arg == "-validate") {
       onlyValidateUps = true;
     } else if(arg == "-do_not_validate") {
-      cout << "\n";
-      cout << "WARNING: You have turned OFF .ups file validation... this may cause many unforseen problems\n";
-      cout << "         with your simulation run.  It is highly suggested that you do not use this flag!\n";
-      cout << "\n";
       validateUps = false;
     } else if(arg == "-track") {
       track = true;
@@ -456,6 +452,15 @@ main( int argc, char *argv[], char *env[] )
   // If regular MPI, then initialize after parsing the args...
   Uintah::Parallel::initializeManager( argc, argv, "");
 #endif
+
+  if( !validateUps ) {
+    // Print out warning message here (after Parallel::initializeManager()), so that
+    // proc0cout works correctly.
+    proc0cout << "\n";
+    proc0cout << "WARNING: You have turned OFF .ups file validation... this may cause many unforeseen problems\n";
+    proc0cout << "         with your simulation run.  It is strongly suggested that you leave validation on!\n";
+    proc0cout << "\n";
+  }
 
   bool thrownException = false;
   
