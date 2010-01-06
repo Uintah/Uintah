@@ -3763,20 +3763,20 @@ void SerialMPM::insertParticles(const ProcessorGroup*,
     printTask(patches, patch,cout_doing,
               "Doing insertParticles\t\t\t");
 
-    // Get current time 
+    // Get current time and timestep size
     double time = d_sharedState->getElapsedTime();
+    delt_vartype delT;
+    old_dw->get(delT, d_sharedState->get_delt_label(), getLevel(patches) );
 
     int index = -999;
-    static int last_index=-1111;
 
     for(int i = 0; i<(int) d_IPTimes.size(); i++){
-       if(i > last_index && time > d_IPTimes[i]){
+       if(time+delT > d_IPTimes[i] && time <= d_IPTimes[i]){
          index = i;
-         last_index=i;
        }
     }
 
-    if(index>0){
+    if(index>=0){
       int numMPMMatls=d_sharedState->getNumMPMMatls();
       for(int m = 0; m < numMPMMatls; m++){
         MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
