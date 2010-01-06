@@ -92,12 +92,22 @@ SimpleHeatTransfer::problemSetup(const ProblemSpecP& params, int qn)
     db_coal->require("N", yelem[2]);
     db_coal->require("O", yelem[3]);
     db_coal->require("S", yelem[4]);
+    db_coal->require("initial_ash_mass", ash_mass_init);
   } else {
     throw InvalidValue("Missing <Coal_Properties> section in input file!",__FILE__,__LINE__);
   }
 
+  // Check for radiation 
+  b_radiation = false;
+  if (params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ExplicitSolver")->findBlock("EnthalpySolver")->findBlock("DORadiationModel"))
+    b_radiation = true; // if gas phase radiation is turned on.  
+  //user can specifically turn off radiation heat transfer
+  if (db->findBlock("noRadiation"))
+    b_radiation = false;
+
+
   // Assume no ash (for now)
-  d_ash = false;
+  //d_ash = false;
 
   string label_name;
   string role_name;
@@ -129,7 +139,7 @@ SimpleHeatTransfer::problemSetup(const ProblemSpecP& params, int qn)
         // tempIN will be required explicitly
       } else if ( role_name == "particle_length" 
                || role_name == "raw_coal_mass"
-               || role_name == "ash_mass"
+               //|| role_name == "ash_mass"
                || role_name == "particle_temperature" ) {
         LabelToRoleMap[temp_label_name] = role_name;
       } else {
@@ -310,10 +320,16 @@ SimpleHeatTransfer::sched_computeModel( const LevelP& level, SchedulerP& sched, 
   if(b_radiation){
     tsk->requires(Task::OldDW, d_fieldLabels->d_radiationSRCINLabel,  Ghost::None, 0);
     tsk->requires(Task::OldDW, d_fieldLabels->d_abskgINLabel,  Ghost::None, 0);   
+    //tsk->requires(Task::OldDW, d_fieldLabels->d_radiationFluxEINLabel, Ghost::AroundCells, 1);
+    //tsk->requires(Task::OldDW, d_fieldLabels->d_radiationFluxWINLabel, Ghost::AroundCells, 1);
+    //tsk->requires(Task::OldDW, d_fieldLabels->d_radiationFluxNINLabel, Ghost::AroundCells, 1);
+    //tsk->requires(Task::OldDW, d_fieldLabels->d_radiationFluxSINLabel, Ghost::AroundCells, 1);
+    //tsk->requires(Task::OldDW, d_fieldLabels->d_radiationFluxTINLabel, Ghost::AroundCells, 1);
+    //tsk->requires(Task::OldDW, d_fieldLabels->d_radiationFluxBINLabel, Ghost::AroundCells, 1);
   }
 
   // always require the gas-phase temperature
-  tsk->requires(Task::OldDW, d_fieldLabels->d_tempINLabel, Ghost::AroundCells, 1);
+  tsk->requires(Task::OldDW, d_fieldLabels->d_tempINLabel, Ghost::None, 0);
 
   // For each required variable, determine what role it plays
   // - "particle_temperature" - look in DQMOMEqnFactory
@@ -371,23 +387,6 @@ SimpleHeatTransfer::sched_computeModel( const LevelP& level, SchedulerP& sched, 
           errmsg += "\" in DQMOMEqnFactory.";
           throw InvalidValue(errmsg,__FILE__,__LINE__);
         }
-      } else if ( iMap->second == "ash_mass") {
-        if (dqmom_eqn_factory.find_scalar_eqn(*iter) ) {
-          EqnBase& t_current_eqn = dqmom_eqn_factory.retrieve_scalar_eqn(*iter);
-          DQMOMEqn& current_eqn = dynamic_cast<DQMOMEqn&>(t_current_eqn);
-          d_ash_mass_label = current_eqn.getTransportEqnLabel();
-          d_ash_scaling_constant = current_eqn.getScalingConstant();
-          d_ash = true;
-          tsk->requires(Task::OldDW, d_ash_mass_label, Ghost::None, 0);
-        } else {
-          std::string errmsg = "ARCHES: SimpleHeatTransfer: Invalid variable given in <ICVars> block, for <variable> tag for SimpleHeatTransfer model.";
-          errmsg += "\nCould not find given ash mass  variable \"";
-          errmsg += *iter;
-          errmsg += "\" in DQMOMEqnFactory.";
-          throw InvalidValue(errmsg,__FILE__,__LINE__);
-        }
-
-
       } 
     } else {
       // can't find this required variable in the labels-to-roles map!
@@ -444,7 +443,7 @@ SimpleHeatTransfer::computeModel( const ProcessorGroup * pc,
   for( int p=0; p < patches->size(); p++ ) {  // Patch loop
 
     //Ghost::GhostType  gaf = Ghost::AroundFaces;
-    //Ghost::GhostType  gac = Ghost::AroundCells;
+    Ghost::GhostType  gac = Ghost::AroundCells;
     Ghost::GhostType  gn  = Ghost::None;
 
     const Patch* patch = patches->get(p);
@@ -492,18 +491,29 @@ SimpleHeatTransfer::computeModel( const ProcessorGroup * pc,
 
     constCCVariable<double> radiationSRCIN;
     constCCVariable<double> abskgIN;
+    //constCCVariable<double> radiationFluxEIN;
+    //constCCVariable<double> radiationFluxWIN;
+    //constCCVariable<double> radiationFluxNIN;
+    //constCCVariable<double> radiationFluxSIN;
+    //constCCVariable<double> radiationFluxTIN;
+    //constCCVariable<double> radiationFluxBIN;
     CCVariable<double> enthNonLinSrc;
 
     if(b_radiation){
       old_dw->get(radiationSRCIN, d_fieldLabels->d_radiationSRCINLabel, matlIndex, patch, gn, 0);
-      old_dw->get(abskgIN,        d_fieldLabels->d_abskgINLabel,        matlIndex, patch, gn, 0);
+      old_dw->get(abskgIN, d_fieldLabels->d_abskgINLabel, matlIndex, patch, gn, 0);
+      //old_dw->get(radiationFluxEIN, d_fieldLabels->d_radiationFluxEINLabel, matlIndex, patch, gac, 1);
+      //old_dw->get(radiationFluxWIN, d_fieldLabels->d_radiationFluxWINLabel, matlIndex, patch, gac, 1);
+      //old_dw->get(radiationFluxNIN, d_fieldLabels->d_radiationFluxNINLabel, matlIndex, patch, gac, 1);
+      //old_dw->get(radiationFluxSIN, d_fieldLabels->d_radiationFluxSINLabel, matlIndex, patch, gac, 1);
+      //old_dw->get(radiationFluxTIN, d_fieldLabels->d_radiationFluxTINLabel, matlIndex, patch, gac, 1);
+      //old_dw->get(radiationFluxBIN, d_fieldLabels->d_radiationFluxBINLabel, matlIndex, patch, gac, 1);
     }
 
     constCCVariable<double> temperature;
     constCCVariable<double> w_particle_temperature;
     constCCVariable<double> w_particle_length;
     constCCVariable<double> w_raw_coal_mass;
-    constCCVariable<double> w_ash_mass;
     constCCVariable<double> weight;
 
     old_dw->get( temperature, d_fieldLabels->d_tempINLabel, matlIndex, patch, gn, 0 );
@@ -512,15 +522,16 @@ SimpleHeatTransfer::computeModel( const ProcessorGroup * pc,
     old_dw->get( w_raw_coal_mass, d_raw_coal_mass_label, matlIndex, patch, gn, 0 );
     old_dw->get( weight, d_weight_label, matlIndex, patch, gn, 0 );
 
-    if (d_ash) {
-      old_dw->get( w_ash_mass, d_ash_mass_label, matlIndex, patch, gn, 0 );
-    }
-
 #if !defined(VERIFY_SIMPLEHEATTRANSFER_MODEL)
 
     for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
       IntVector c = *iter; 
-
+      IntVector cxp = *iter + IntVector(1,0,0);
+      IntVector cxm = *iter - IntVector(1,0,0);
+      IntVector cyp = *iter + IntVector(0,1,0);
+      IntVector cym = *iter - IntVector(0,1,0);
+      IntVector czp = *iter + IntVector(0,0,1);
+      IntVector czm = *iter - IntVector(0,0,1);
       // define variables specific for non-verification runs:
 
       // velocities
@@ -576,20 +587,7 @@ SimpleHeatTransfer::computeModel( const ProcessorGroup * pc,
         unscaled_raw_coal_mass = (w_raw_coal_mass[c]*d_rc_scaling_constant)/scaled_weight;
       }
 
-      // particle ash mass
-      double scaled_ash_mass;
-      double unscaled_ash_mass;
-      if (weight_is_small) {
-        scaled_ash_mass = 0.0;
-        unscaled_ash_mass = 0.0;
-      } else if (d_ash) {
-        scaled_ash_mass = w_ash_mass[c]/scaled_weight;
-        unscaled_ash_mass = (w_ash_mass[c]*d_ash_scaling_constant)/scaled_weight;
-      } else {
-        scaled_ash_mass = 0.0;
-        unscaled_ash_mass = 0.0;
-      }
-
+      double unscaled_ash_mass = ash_mass_init[d_quadNode];
       double density = den[c];
       // viscosity should be grabbed from data warehouse... right now it's constant
 
@@ -681,19 +679,24 @@ SimpleHeatTransfer::computeModel( const ProcessorGroup * pc,
         Q_convection = Nu*pi*blow*rkg*unscaled_length*(gas_temperature - unscaled_particle_temperature);
 
         // Radiation part: -------------------------
-        b_radiation = false;
         Q_radiation = 0.0;
         if (b_radiation) {
           // This will be verified after it is fixed up
           double Qabs = 0.8;
-	        double Apsc = (pi/4)*Qabs*pow(unscaled_length,2);
-	        double Eb = 4.0*sigma*pow(unscaled_particle_temperature,4);
-	        Q_radiation = Apsc*(FSum - Eb);
-	        abskp_ = pi/4*Qabs*unscaled_weight*pow(unscaled_length,2); 
+	  double Apsc = (pi/4)*Qabs*pow(unscaled_length,2);
+	  double Eb = 4.0*sigma*pow(unscaled_particle_temperature,4);
+          //FSum = 0.5*(radiationFluxEIN[c]+radiationFluxEIN[cxm] + radiationFluxWIN[c]+radiationFluxWIN[cxp]
+          //            + radiationFluxNIN[c]+radiationFluxNIN[cym] + radiationFluxSIN[c]+radiationFluxSIN[cyp]
+          //            + radiationFluxTIN[c]+radiationFluxTIN[czm] + radiationFluxBIN[c]+radiationFluxBIN[czp]); 
+          FSum = (radiationSRCIN[c]+4.0*sigma*abskgIN[c]*pow(gas_temperature,4))/abskgIN[c];
+          if(isnan(FSum)) FSum = 0.0;      
+	  Q_radiation = Apsc*(FSum - Eb);
+	  abskp_ = pi/4*Qabs*unscaled_weight*pow(unscaled_length,2); 
         } else {
           abskp_ = 0.0;
         }
-
+        //cout << "FSum " << FSum << " Tp " << unscaled_particle_temperature << " Tg " << gas_temperature << endl;
+        //cout << "Qrad " << Q_radiation << " Qconv " << Q_convection << " abskg " << abskgIN[c] <<" radiationSRCIN " << radiationSRCIN[c] << endl;
         heat_rate_ = (Q_convection + Q_radiation)/(mp_Cp*d_pt_scaling_constant);
 
         gas_heat_rate_ = 0.0;
