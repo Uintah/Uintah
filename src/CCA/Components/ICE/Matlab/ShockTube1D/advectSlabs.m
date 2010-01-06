@@ -20,14 +20,18 @@ for j = G.first_CC:G.last_CC
   faceFlux_L = 0.0;
   faceFlux_R = 0.0;
 
+  vol_L      = 0.0;           % debugging Variables
+  vol_R      = 0.0;         
   % Logical left face
   if (xvel_FC(j) > 0)
     influxVol  = abs(ofs(j));
+    vol_L      = influxVol;
     q_influx   = q_slab(j-1);
     faceFlux_L = influxVol * q_influx;
   end
   if (xvel_FC(j) < 0)
     outfluxVol = abs(ofs(j));
+    vol_L      = influxVol;
     q_outflux  = q_slab(j);
     faceFlux_L = -outfluxVol * q_outflux;
   end
@@ -35,19 +39,24 @@ for j = G.first_CC:G.last_CC
   % Logical right face
   if (xvel_FC(j+1) > 0)
     outfluxVol = abs(ofs(j+1));
+    vol_R      = outfluxVol;
     q_outflux  = q_slab(j);
     faceFlux_R = -outfluxVol * q_outflux;
   end
   if (xvel_FC(j+1) < 0)
     influxVol  = abs(ofs(j+1));
+    vol_R      = influxVol;
     q_influx   = q_slab(j+1);
     faceFlux_R = influxVol * q_influx;
   end
 
   q_advected(j) = (faceFlux_L + faceFlux_R)/cellVol;
 
-  % Print advected quantities near shock front at first timestep
-%  if ((j >= minPrintRange) & (j <= maxPrintRange))
-%    fprintf('cell %d xvel_FC %16.15E q_influx %16.15E influxVol %16.15E q_outflux %16.15E outfluxVol %16.15E q_advected %15.16E\n', j, xvel_FC(j), q_influx, influxVol, q_outflux, outfluxVol,q_advected(j));
+%  Debugging
+%  joffset = j-2;
+%  if ((joffset >= minPrintRange) & (joffset <= maxPrintRange))
+%    fprintf('cell %d  q_advected %15.16E faceFlux_L %15.16E faceFlux_R %15.16E\n', joffset,q_advected(j), faceFlux_L, faceFlux_R);
+%    fprintf('         vol_L: %15.16E   vol_R: %15.16E \n', vol_L, vol_R);
 %  end
+  end
 end

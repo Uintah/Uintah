@@ -35,26 +35,26 @@ P.boxLower          = 0;                            % Location of lower-left cor
 P.boxUpper          = 1;                            % Location of upper-right corner of domain
 
 % Grid
-P.nCells            = nCells;                        % Number of cells in each direction
+P.nCells            = nCells;                       % Number of cells in each direction
 P.extraCells        = 1;                            % Number of ghost cells in each direction
 
 % Time-stepping
 P.initTime          = 0.0;                          % Initial simulation time [sec]
 P.writeData         = 1;                            % output the final timestep to a .dat file
-P.delt_init         = 1e-7;                         % First timestep [sec]
-P.maxTimeSteps      = 10000;                          % Maximum number of timesteps [dimensionless]
+P.delt_init         = 1e-20;                        % First timestep [sec]
+P.maxTimeSteps      = 400                           % Maximum number of timesteps [dimensionless]
 P.CFL               = 0.25;                         % Courant number (~velocity*delT/delX) [dimensionless]
-P.advectionOrder    = 1;                            % 1=1st-order advection operator; 2=possibly-limited-2nd-order
+P.advectionOrder    = 2;                            % 1=1st-order advection operator; 2=possibly-limited-2nd-order
 
 [P, Region, numRegions] = initialConditions()
 
 %================ ICE Interal Parameters, Debugging Flags ================
 % Debug flags
-P.compareUintah     = 0;                            % Compares vs. Uintah ICE and plots results
+P.compareUintah     = 1;                            % Compares vs. Uintah ICE and plots results
 P.debugSteps        = 0;                            % Debug printout of steps (tasks) within timestep
 P.debugAdvectRho    = 0;                            % Debug printouts in advectRho()
 P.debugAdvectQ      = 0;                            % Debug printouts in advectQ()
-P.printRange        = [48:56];                      % Range of indices to be printed out (around the shock front at the first timestep, for testing)
+P.printRange        = [27:32];                      % Range of indices to be printed out (around the shock front at the first timestep, for testing)
 P.plotInitialData   = 0;                            % Plots initial data
 P.plotResults       = 0;                            % plot intermediate data
 
@@ -74,7 +74,7 @@ G.last_FC     = G.ghost_Right;                      % index of last xminus face
 
 %================ Cell Centered (CC) ================
 
-totCells        = P.nCells + 2*P.extraCells;    % Array size for CC vars
+totCells        = P.nCells + 2*P.extraCells;              % Array size for CC vars
 x_CC            = zeros(G.ghost_Left,G.ghost_Right);      % Cell centers locations (x-component)
 rho_CC          = zeros(G.ghost_Left,G.ghost_Right);      % Density rho
 xvel_CC         = zeros(G.ghost_Left,G.ghost_Right);      % Velocity u (x-component)
@@ -95,15 +95,15 @@ mom_L           = zeros(G.ghost_Left,G.ghost_Right);      % Momentum ( = mass * 
 eng_L           = zeros(G.ghost_Left,G.ghost_Right);      % Energy (= mass * internal energy = mass * cv * temperature)
 
 %================ Face Centered (FC) ================
-x_FC            = zeros(G.ghost_Left,G.last_FC);            % Face centers locations (x-component)
-xvel_FC         = zeros(G.ghost_Left,G.last_FC);            % Velocity u (x-component)
-press_FC        = zeros(G.ghost_Left,G.last_FC);            % Pressure p
-speedSound_FC   = zeros(G.ghost_Left,G.last_FC);            % c^*
+x_FC            = zeros(G.ghost_Left,G.last_FC);          % Face centers locations (x-component)  
+xvel_FC         = zeros(G.ghost_Left,G.last_FC);          % Velocity u (x-component)              
+press_FC        = zeros(G.ghost_Left,G.last_FC);          % Pressure p                            
+speedSound_FC   = zeros(G.ghost_Left,G.last_FC);          % c^*                                   
 
 %================ Node Centered (NC) ================
-totNodes        = P.nCells + 1;                 % Array size for NC vars
-mass_vrtx_1     = zeros(1,totNodes);            % Mass at vertices (for advection)
-mass_vrtx_2     = zeros(1,totNodes);            % --------//-------  (for advection)
+totNodes        = P.nCells + 1;                           % Array size for NC vars
+mass_vrtx_1     = zeros(1,totNodes);                      % Mass at vertices (for advection)
+mass_vrtx_2     = zeros(1,totNodes);                      % --------//-------  (for advection)
 
 %______________________________________________________________________
 %     Initialization
@@ -111,7 +111,7 @@ mass_vrtx_2     = zeros(1,totNodes);            % --------//-------  (for advect
 %================ Useful constants ================
 
 d_SMALL_NUM = 1e-100;                           % A small number (for bullet-proofing
-d_TINY_RHO  = 1.0e-12
+d_TINY_RHO  = 1.0e-12;
 delT        = P.delt_init;                      % Init timestep
 
 %================ Initialize interior cells ================
@@ -409,6 +409,9 @@ for tstep = 1:P.maxTimeSteps
   %================ Various breaks ================
 
   delT    = delt_CFL;                                             % Compute delT - "agressively" small
+  delT    = 5e-4;
+  fprintf ('-------------WARNING:   delT has been hard coded to compare with Uintah results\n');
+  
   t       = t + delT;                                             % Advance time
   if (t >= P.maxTime)
     fprintf('Reached maximum time\n');

@@ -46,8 +46,8 @@ for j = G.first_CC:G.last_CC
   %     d1          = 1.0;
   %     d2          = 1.0;
 
-  q_vrtx_1    = q(j) + (grad_x(j) * dx/2.0) * d1;
-  q_vrtx_2    = q(j) - (grad_x(j) * dx/2.0) * d2;
+  q_vrtx_1    = q(j) - (grad_x(j) * dx/2.0) * d1;
+  q_vrtx_2    = q(j) + (grad_x(j) * dx/2.0) * d2;
   q_vrtx_max  = max(q_vrtx_1, q_vrtx_2);
   q_vrtx_min  = min(q_vrtx_1, q_vrtx_2);
 
@@ -56,15 +56,15 @@ for j = G.first_CC:G.last_CC
   q_min       = min(q(j+1), q(j-1));
 
   %---------- Gradient limiter, pp.13-14
-  frac1       = (q_max - q(j) + d_SMALL_NUM)/...
-                (q_vrtx_max - q(j) + d_SMALL_NUM);
-  alphaMax    = max(0,frac1);                                 % Eq.(3.2.10c)
-  frac2       = (q(j) - q_min + d_SMALL_NUM)/...
-                (q(j) - q_vrtx_min + d_SMALL_NUM);
-  alphaMin    = max(0,frac2);                                 % Eq.(3.2.10d)
-  gradLim(j)  = min([1, alphaMax, alphaMin]);                 % Eq.(3.2.10b)
+  frac1       = (q_max - q(j) + d_SMALL_NUM)/(q_vrtx_max - q(j) + d_SMALL_NUM);
+  alphaMax    = max(0.0,frac1);                               % Eq.(3.2.10c)
+  
+  frac2       = (q_min - q(j)+ d_SMALL_NUM)/(q_vrtx_min  - q(j)  + d_SMALL_NUM);
+  alphaMin    = max(0.0,frac2);                               % Eq.(3.2.10d)
+  
+  gradLim(j)  = min([1, alphaMax, alphaMin]);    
 
-  %gradLim(j) = 1.0;           % Testing - phi=1
+%  gradLim(j) = 1.0;           % Testing - phi=1
 end
 
 

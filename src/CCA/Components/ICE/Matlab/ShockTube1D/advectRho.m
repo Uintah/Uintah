@@ -31,8 +31,8 @@ for j = G.first_CC:G.last_CC
   grad_x(j) = (q(j+1) - q(j-1))./(2.0*dx);
 
   %----------- Compute q at vertices before limiting and min/max of these vertex values
-  q_vrtx_1_tmp = q(j) + grad_x(j) * dx/2.0;                 % Eq.(3.2.8) for right vertex value
-  q_vrtx_2_tmp = q(j) - grad_x(j) * dx/2.0;                 % Eq.(3.2.8) for left vertex value
+  q_vrtx_1_tmp = q(j) - grad_x(j) * dx/2.0;                 % Eq.(3.2.8) for left vertex value
+  q_vrtx_2_tmp = q(j) + grad_x(j) * dx/2.0;                 % Eq.(3.2.8) for right vertex value
   q_vrtx_max  = max(q_vrtx_1_tmp, q_vrtx_2_tmp);
   q_vrtx_min  = min(q_vrtx_1_tmp, q_vrtx_2_tmp);
 
@@ -41,17 +41,17 @@ for j = G.first_CC:G.last_CC
   q_min = min(q(j+1), q(j-1));
 
   %---------- Gradient limiter, pp.13-14
-  frac1       = (q_max - q(j) + d_SMALL_NUM)/...
-                (q_vrtx_max - q(j) + d_SMALL_NUM);
-  alphaMax    = max(0,frac1);                               % Eq.(3.2.10c)
-  frac2       = (q(j) - q_min + d_SMALL_NUM)/...
-                (q(j) - q_vrtx_min + d_SMALL_NUM);
-  alphaMin    = max(0,frac2);                               % Eq.(3.2.10d)
-  gradLim(j)  = min([1, alphaMax, alphaMin]);               % Eq.(3.2.10b)
+  frac1       = (q_max - q(j) + d_SMALL_NUM)/(q_vrtx_max - q(j) + d_SMALL_NUM);
+  alphaMax    = max(0.0,frac1);                               % Eq.(3.2.10c)
+   
+  frac2       = (q_min - q(j) + d_SMALL_NUM)/(q_vrtx_min  - q(j)  + d_SMALL_NUM);
+  alphaMin    = max(0.0,frac2);                               % Eq.(3.2.10d)
+                                           
+  gradLim(j)  = min([1, alphaMax, alphaMin]);              
 
   %---------- Save vertex values after gradient limiting, for advectQ
-  q_vrtx_1(j) = q(j) + (grad_x(j) * gradLim(j) * dx/2.0);   % Eq.(3.2.8) for right vertex value
-  q_vrtx_2(j) = q(j) - (grad_x(j) * gradLim(j) * dx/2.0);   % Eq.(3.2.8) for left vertex value
+  q_vrtx_1(j) = q(j) - (grad_x(j) * gradLim(j) * dx/2.0);   % Eq.(3.2.8) for left vertex value
+  q_vrtx_2(j) = q(j) + (grad_x(j) * gradLim(j) * dx/2.0);   % Eq.(3.2.8) for right vertex value
 
   %gradLim(j) = 1.0;           % Testing - phi=1
 end
@@ -61,10 +61,8 @@ end
 % computes Q in the slab according to the reference.
 function [q_slab, gradLim, grad_x] = qAverageFluxRho(q, rx, grad_x, gradLim,G)
 globalParams;
-if (P.debugSteps)
-  fprintf('qAverageFluxRho\n');
-end
-q_slab      = zeros(G.ghost_Left,G.ghost_Right);
+
+q_slab = zeros(G.ghost_Left,G.ghost_Right);
 if (P.advectionOrder == 1)
   for j = G.ghost_Left:G.ghost_Right                            % For cells 1 and nCells, disregard contributions in this matlab code (note: grads=0 there)
     q_slab(j) = q(j);                                           % Limiter=0, first order upwind scheme
@@ -78,22 +76,11 @@ end
 %===================
 % PRINTOUTS
 if (P.debugAdvectRho)
-  fprintf('End of advectRho():\n');
-  range = P.printRange;
 
-  fprintf('rx = ');
-  fprintf('%.10f ' ,rx(range));
-  fprintf('\n');
-
-  fprintf('gradLim = ');
-  fprintf('%.10f ',gradLim(range));
-  fprintf('\n');
-
-  fprintf('grad_x =');
-  fprintf('%10f ',grad_x(range));
-  fprintf('\n');
-
-  fprintf('q = ');
-  fprintf('%.10f ',q(range));
-  fprintf('\n');
+  for j = G.ghost_Left:G.ghost_Right
+    joffset = j-2;
+    if(joffset >26 && joffset < 33)
+      fprintf('%i RX: %16.15E gradX %16.15E q(j) %16.15E q_slab %16.15E\n', joffset, rx(j), grad_x(j)*gradLim(j),q(j), q_slab(j));
+    end
+  end
 end

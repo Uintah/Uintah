@@ -11,13 +11,13 @@ clear all;
 close all;
 setenv('LD_LIBRARY_PATH', ['/usr/lib']);
 
-tstep = 802
+tstep = 1
 delT = 1;
 
 loadUintah      % load uintah data into arrays
 
-ML_CC     = importdata('matlab_CC_200.dat', ' ', 2);
-ML_FC     = importdata('matlab_FC_200.dat', ' ', 2);
+ML_CC     = importdata('matlab_CC_100.dat', ' ', 2);
+ML_FC     = importdata('matlab_FC_100.dat', ' ', 2);
 
 x_CC          = ML_CC.data(:,1);
 press_eq_CC   = ML_CC.data(:,2);
@@ -36,7 +36,7 @@ press_FC      = ML_FC.data(:,3);
 figure(1);
 set(gcf,'position',[100,600,900,900]);
 
-titleStr= {'Shock Tube','Uintah vs Matlab ICE', 'First Order Advection Scheme', '200 Cells'};
+titleStr= {'Shock Tube','Uintah vs Matlab ICE', 'Advection Scheme: Uintah, 1st order, Matlab 2nd order' '200 Cells'};
 
 xlo = 0.2;
 xhi = 0.9;
@@ -65,24 +65,24 @@ grid on;
 figure(2);
 set(gcf,'position',[100,100,900,900]);
 
-subplot(2,1,1), plot(x_FC, xvel_FC,'+', x_FC_ice, uvel_FC_ice, 'o');
+subplot(3,1,1), plot(x_FC, xvel_FC,'+', x_FC_ice, uvel_FC_ice, 'o');
 xlim([xlo xhi]);
 title(titleStr);
 legend('xvel FC','uvel FC Uintah',2);
 grid on;
 
-%subplot(3,1,2), plot(x_CC ,delPDilatate, x_ice, delP_ice);
-%xlim([xlo xhi]);
-%legend('delP','delP Uintah',2);
-%grid on;
+subplot(3,1,2), plot(x_CC ,delPDilatate, x_ice, delP_ice);
+xlim([xlo xhi]);
+legend('delP','delP Uintah',2);
+grid on;
 
- subplot(2,1,2), plot(x_CC, press_eq_CC,'+', x_ice, press_eq_ice,'o');
+subplot(3,1,3), plot(x_CC, press_eq_CC,'+', x_ice, press_eq_ice,'o');
 xlim([xlo xhi]);
 legend('press equilibration','press equilibration Uintah',2);
 grid on; 
 
-
+input('hit return')
 figure(1);
 print -depsc comparePlots1.eps
 figure(2);
-print -depsc comparePlots1.eps
+print -depsc comparePlots2.eps

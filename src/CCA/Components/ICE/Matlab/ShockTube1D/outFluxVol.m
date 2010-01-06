@@ -16,12 +16,12 @@ for j = G.first_FC:G.last_FC
   delX_slab = abs(xvel_FC(j) * delT);
   rx(j) = 0.0;
   
-  if xvel_FC(j) < 0
-    rx(j) = dx/2.0 - delX_slab/2.0;
+  if xvel_FC(j) > 0
+    rx(j-1) = dx/2.0 - delX_slab/2.0;
   end
 
-  if xvel_FC(j) > 0
-    rx(j-1) = delX_slab/2.0 - dx/2.0;
+  if xvel_FC(j) < 0
+    rx(j) = delX_slab/2.0 - dx/2.0;
   end
 
   % Outflux volumes
