@@ -153,16 +153,15 @@ private:
 
   
   const VarLabel* d_raw_coal_mass_label;        ///< Label for raw coal mass
-  const VarLabel* d_ash_mass_label;             ///< Label for ash mass
   const VarLabel* d_particle_temperature_label; ///< Label for particle temperature
   const VarLabel* d_particle_length_label;      ///< Label for particle length
   const VarLabel* d_weight_label;               ///< Weight label
 
   const VarLabel* d_abskp;  ///< Label for thermal conductivity (of the particles, I think???)
-  bool d_ash;               ///< Boolean: is there ash in the particle?
 
   double visc;
   double yelem[5];              ///< Fractions of each element in coal (C, H, N, O, S respectively)
+  vector<double>  ash_mass_init;         ///< Initial ash mass
   double rhop;                  ///< Density of particle 
 
   double Pr;
