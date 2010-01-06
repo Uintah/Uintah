@@ -9,33 +9,38 @@
 
 if (P.compareUintah)
   
-  err_CC = sum(x_CC - x_ice)
-  err_FC = sum(x_FC - x_FC_ice)
+  err_CC = sum(x_CC - x_ice);
+  err_FC = sum(x_FC - x_FC_ice);
+  
+  if (abs(err_CC) > 1e-15 || abs(err_FC) > 1e-15)
+    fprintf(' The difference between the Uintah and matlab X_CC[%e] or X_FC[%e] locations is too large\n',err_CC, err_FC)
+    input('hit return to continue');
+  end
   %================ Plot results ================
 
   if ((mod(tstep,100) == 0) | (tstep == P.maxTimeSteps))
     figure(1);
     set(gcf,'position',[100,600,700,700]);
 
-    xlo = 0.48;
-    xhi = 0.52;
+    xlo = 0.1;
+    xhi = 0.8;
 
-    subplot(2,2,1), plot(x_CC ,rho_CC, x_ice, rho_ice);
+    subplot(2,2,1), plot(x_CC ,rho_CC, '+',x_ice, rho_ice, 'o');
     xlim([xlo xhi]);
     legend('\rho', 'rho Uintah',2);
     grid on;
 
-    subplot(2,2,2), plot(x_CC ,xvel_CC, x_ice, vel_ice);
+    subplot(2,2,2), plot(x_CC ,xvel_CC, '+',x_ice, vel_ice, 'o');
     xlim([xlo xhi]);
     legend('u_1', 'u Uintah',2);
     grid on;
 
-    subplot(2,2,3), plot(x_CC ,temp_CC, x_ice, temp_ice);
+    subplot(2,2,3), plot(x_CC ,temp_CC, '+',x_ice, temp_ice, 'o');
     xlim([xlo xhi]);
     legend('T', 'T Uintah',2);
     grid on;
 
-    subplot(2,2,4), plot(x_CC ,press_CC, x_ice, press_ice);
+    subplot(2,2,4), plot(x_CC ,press_CC, '+',x_ice, press_ice, 'o');
     xlim([xlo xhi]);
     legend('p', 'p Uintah',2);
     grid on;
@@ -43,17 +48,17 @@ if (P.compareUintah)
     figure(2);
     set(gcf,'position',[100,100,700,700]);
 
-    subplot(3,1,1), plot(x_FC, xvel_FC, x_FC_ice, uvel_FC_ice);
+    subplot(3,1,1), plot(x_FC, xvel_FC, '+',x_FC_ice, uvel_FC_ice, 'o');
     xlim([xlo xhi]);
     legend('xvel_FC','uvel_FC Uintah',2);
     grid on;
 
-    subplot(3,1,2), plot(x_CC ,delPDilatate, x_ice, delP_ice);
+    subplot(3,1,2), plot(x_CC ,delPDilatate, '+',x_ice, delP_ice, 'o');
     xlim([xlo xhi]);
     legend('delP','delP Uintah',2);
     grid on;
 
-     subplot(3,1,3), plot(x_CC, press_eq_CC,'+', x_ice, press_eq_ice,'o');
+     subplot(3,1,3), plot(x_CC, press_eq_CC,'+', x_ice, press_eq_ice, 'o');
     xlim([xlo xhi]);
     legend('press_eq','press_eq Uintah',2);
     grid on; 
@@ -69,13 +74,13 @@ if (P.compareUintah)
     erroruvel_FC  = max(abs(xvel_FC(rangeMatlab)        - uvel_FC_ice)) ./max(abs(uvel_FC_ice + eps));
 
     fprintf('Relative differences between Uintah and matlab results:\n');
-    fprintf('press_eq: %e\n',errorpress_eq);
-    fprintf('rho     : %e\n',errorRho);    
-    fprintf('xvel    : %e\n',errorXvel);   
-    fprintf('press   : %e\n',errorPress);  
-    fprintf('temp    : %e\n',errorTemp);   
-    fprintf('delP    : %e\n',errordelP);
-    fprintf('vel_FC  : %e\n',erroruvel_FC);   
+    fprintf('press_eq: %16.15E\n',errorpress_eq);
+    fprintf('rho     : %16.15E\n',errorRho);    
+    fprintf('xvel    : %16.15E\n',errorXvel);   
+    fprintf('press   : %16.15E\n',errorPress);  
+    fprintf('temp    : %16.15E\n',errorTemp);   
+    fprintf('delP    : %16.15E\n',errordelP);
+    fprintf('vel_FC  : %16.15E\n',erroruvel_FC);   
   %  input('hit return to continue')
   end
 end  

@@ -42,7 +42,14 @@ end
 
 
 %______________________________________________________________________
-% non-dimensionalized shock tube problem: Test 1.in
+% non-dimensionalized shock tube problem: 
+%  src/orderAccuracy/test_config_files/ICE/riemann.ups
+%     <delt_max>           0.0005       </delt_max>
+%     <delt_init>          1.0e-20      </delt_init>
+%     <outputTimestepInterval> 1        </outputTimestepInterval>
+%     <cfl>               0.25          </cfl>
+%     second order advection
+
 if(1)
 
 % Material properties (ideal gas)

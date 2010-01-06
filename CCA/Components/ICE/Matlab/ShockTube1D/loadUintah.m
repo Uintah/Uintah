@@ -8,7 +8,7 @@
 %   See also ICE, PLOTRESULTS.
 
 %cd /scratch/SCIRun_Fresh/linux32dbg/Packages/Uintah/StandAlone;
-uda = '/data/Builds/071009SCIRun/opt_Linux/StandAlone/shockTube.uda';
+uda = '/data/Builds/Fresh/111109SCIRun/dbg_Linux/StandAlone/test1.uda';
 delX = 0.01;
 
 %  extract the physical time for each dump
@@ -25,6 +25,7 @@ end
 
 ts = tstep -1;
 startEnd = '-istart -1 0 0 -iend 1000 0 0';
+unix( '/bin/rm -f rho vel_tmp temp press delP press_eq uvelFC');
 c1 = sprintf('lineextract -v rho_CC         -cellCoords -timestep %i %s -o rho      -m 0 -uda %s',ts,startEnd,uda);
 c2 = sprintf('lineextract -v vel_CC         -cellCoords -timestep %i %s -o vel_tmp  -m 0 -uda %s',ts,startEnd,uda);
 c3 = sprintf('lineextract -v temp_CC        -cellCoords -timestep %i %s -o temp     -m 0 -uda %s',ts,startEnd,uda);
@@ -67,6 +68,6 @@ temp_ice      = reshape(temp_ice(:,4) ,     1, Ncells);
 press_ice     = reshape(press_ice(:,4) ,    1, Ncells);
 delP_ice      = reshape(delP_ice(:,4) ,     1, Ncells);
 press_eq_ice  = reshape(press_eq_ice(:,4) , 1, Ncells);
-uvel_FC_ice    = reshape(uvel_FC_ice(:,4) , 1, Ncells);
+uvel_FC_ice    = reshape(uvel_FC_ice(:,4) , 1, N_FC_cells);
 
 unix('/bin/rm delP press temp rho vel uvelFC vel_tmp');
