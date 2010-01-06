@@ -34,6 +34,7 @@
         <N                              spec="REQUIRED DOUBLE" />
         <O                              spec="REQUIRED DOUBLE" />
         <S                              spec="REQUIRED DOUBLE" />
+        <initial_ash_mass               spec="REQUIRED MULTIPLE_DOUBLES" />
       </Coal_Properties>
       
       <Turbulence                       spec="REQUIRED NO_DATA"
