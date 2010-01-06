@@ -82,7 +82,7 @@
        <Level>
            <Box label="1">
               <lower>        [0,0,0]          </lower>
-              <upper>        [1,0.001,0.001]    </upper>
+              <upper>        [1,0.01,0.01]    </upper>
               <extraCells>   [1,1,1]    </extraCells>
               <patches>      [1,1,1]    </patches>
               <resolution>   [100,1,1]  </resolution>
@@ -98,6 +98,8 @@
       <save label="delP_Dilatate"/>
       <save label="press_CC"/>
       <save label="rho_CC"/>
+      <save label="uvel_FCME"/>
+      <save label="press_equil_CC"/>
       <save label="vel_CC"/>
       <save label="temp_CC"/>
       <save label="sp_vol_CC"/>
