@@ -19,7 +19,7 @@
   </Time>
 
   <DataArchiver>
-    <filebase>dqmom_test_1a.uda</filebase>
+    <filebase>dqmom_test_1.uda</filebase>
     <outputInterval>0.01</outputInterval>
 
     <save label = "totalKineticEnergy"/>
