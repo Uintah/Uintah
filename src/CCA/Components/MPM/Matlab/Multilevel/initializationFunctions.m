@@ -135,9 +135,9 @@ function [IF] = initializationFunctions
     end
 
 
-    if(1)
     %____________
     % single level  2 patches
+    if(0)
     maxLevels     = 1;
     nPatches      = int32(2);             % partition the domain into nPatches
     Patches       = cell(nPatches,1);     % array that holds the individual region information
@@ -161,22 +161,45 @@ function [IF] = initializationFunctions
     Patches{2}    = P;
     end
     
-    %____________
-    % 2 level
-    if(0)
-    maxLevels     = X;
-    nPatches      = int32(3);               % partition the domain into nPatches
-    Patches       = cell(nPatches,1);     % array that holds the individual region information
-
-    P.min         = 0;                    % location of left point
+    %______________________________________________________________________
+    % 2 levels
+    % 3 patches on the coarse level 1 patch on the fine level
+    if(1)
+    maxLevels     = 2;
+    nPatchesL1    = int32(3);               % partition the domain into nPatches
+    PatchesL1     = cell(nPatchesL1,1);     % array that holds the individual region information
+    
+    %Level 1
+    P.min         = 0;                      % location of left point
     P.max         = domain/3.0;             % location of right point
     P.refineRatio = 1;
     P.dx          = L1_dx;
     P.volP        = P.dx/PPC;
     P.NN          = int32( (P.max - P.min)/P.dx +1 );
     P.lp          = P.dx/(2 * PPC);
-    Patches{1}    = R;
+    PatchesL1{1}    = P;
 
+    P.min         = domain/3.0;                       
+    P.max         = 2.0*domain/3.0;
+    P.refineRatio = 1;
+    P.dx          = L1_dx;
+    P.volP        = P.dx/PPC;
+    P.NN          = int32( (P.max - P.min)/P.dx );
+    P.lp          = P.dx/(2 * PPC);
+    PatchesL1{2}    = P;
+
+    P.min         = 2.0*domain/3.0;                       
+    P.max         = domain;
+    P.refineRatio = 1;
+    P.dx          = L1_dx
+    P.volP        = P.dx/PPC;
+    P.NN          = int32( (P.max - P.min)/P.dx); 
+    P.lp          = P.dx/(2 * PPC);
+    PatchesL1{3}  = P;
+    
+    % Level 2
+    nPatchesL2    = int32(1);               % partition the domain into nPatches
+    PatchesL2     = cell(nPatchesL2,1);     % array that holds the individual region information
     P.min         = domain/3.0;                       
     P.max         = 2.0*domain/3.0;
     P.refineRatio = 1;
@@ -184,21 +207,15 @@ function [IF] = initializationFunctions
     P.volP        = P.dx/PPC;
     P.NN          = int32( (P.max - P.min)/P.dx );
     P.lp          = P.dx/(2 * PPC);
-    Patches{2}    = R;
-
-    P.min         = 2.0*domain/3.0;                       
-    P.max         = domain;
-    P.refineRatio = 1;
-    P.dx          = L1_dx/P.refineRatio; 
-    P.volP        = P.dx/PPC;
-    P.NN          = int32( (P.max - P.min)/P.dx); 
-    P.lp          = P.dx/(2 * PPC);
-    Patches{3}    = R;
+    PatchesL2{1}    = P;
+    
     end
 
     Levels            = cell(maxLevels,1);
-    Levels{1}.Patches = Patches;
-    Levels{1}.nPatches= nPatches;
+    Levels{1}.Patches = PatchesL1;
+    Levels{1}.nPatches= nPatchesL1;
+    Levels{2}.Patches = PatchesL2;
+    Levels{2}.nPatches= nPatchesL2;
 
     % increase the number of nodes in the first and last patch if using gimp on level 1;
     if(strcmp(interpolation,'GIMP'))
@@ -213,7 +230,7 @@ function [IF] = initializationFunctions
       Levels{1}.Patches{L1.nPatches}.max  = lastP.max + lastP.dx;
     end;
 
-
+if (0)        % currently extracells are not used.
     % Define the extra cells L & R for each region.
     for p=1:nPatches
       Patches{p}.EC(1) = 0;    
@@ -224,8 +241,11 @@ function [IF] = initializationFunctions
       Patches{1}.EC(1)        = 1;
       Patches{nPatches}.EC(2) = 1;
     end;
+end
 
-    %count the number of nodes in a level
+    % Count the number of nodes in a level
+    NN_allLevels = 0;
+    
     for l=1:maxLevels
       L = Levels{l};
       NN = int32(0);
@@ -235,8 +255,9 @@ function [IF] = initializationFunctions
         NN = NN + P.NN;
       end
       Levels{l}.NN = NN
+      NN_allLevels = NN_allLevels + NN;
     end
-    NN_max = sum(NN);
+    
     
     %  find the minimum dx on all levels
     dx_min = double(1e100);
@@ -251,9 +272,8 @@ function [IF] = initializationFunctions
     end
 
     % defines the limits
-    Limits  = cell(1,1);
     Limits.maxLevels = maxLevels;
-    Limits.NN_max    = 49;
+    Limits.NN_max    = NN_allLevels;
 
     % bulletproofing:
     for l=1:maxLevels
