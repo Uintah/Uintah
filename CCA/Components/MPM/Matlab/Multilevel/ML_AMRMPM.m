@@ -59,7 +59,7 @@ else
   NSFN    = 2;        
 end
 
-t_initial  = 0.0;              % physical time
+t_initial  = 0.0;             % physical time
 tstep     = 0;                % timestep
 bodyForce = 0;
 
@@ -68,7 +68,6 @@ d_smallNum = double(1e-16);
 
 bar_min     = 0.0;
 bar_max     = 1;
-
 bar_length  = bar_max - bar_min;
 
 domain       = 1.0;
@@ -94,11 +93,19 @@ end
 % compute the positions of the nodes
 [Levels, dx_min, Limits] = IF.initialize_grid(domain,PPC,L1_dx,interpolation, d_smallNum);
 
+for l=1:Limits.maxLevels
+  Levels{l}
+end
+Limits
+
+return
+
 [nodePos]  = IF.initialize_NodePos(L1_dx, Levels, Limits, interpolation);
 
 [Lx]       = IF.initialize_Lx(nodePos, Levels, Limits);
 
 [xp, NP]   = IF.initialize_xp(NN, nodePos, interpolation, PPC, bar_min, bar_max);
+
 
 
 % define the boundary condition nodes on Level 1
@@ -155,14 +162,18 @@ input('hit return')
 
 %__________________________________
 % initialize other particle variables
-for ip=1:NP
-  [volP_0, lp_0] = sf.positionToVolP(xp(ip), nRegions, Regions);
-  
-  vol(ip)   = volP_0;
-  massP(ip) = volP_0*density;
-  lp(ip)    = lp_0;
-  Fp(ip)    = 1.;                     % total deformation
+for l=1:maxLevels
+   L = Levels{l};
+  for ip=1:NP
+    [volP_0, lp_0] = sf.positionToVolP(xp(ip), nRegions, Regions);
+
+    vol(ip)   = volP_0;
+    massP(ip) = volP_0*density;
+    lp(ip)    = lp_0;
+    Fp(ip)    = 1.;                     % total deformation
+  end
 end
+    
 
 %______________________________________________________________________
 % problem specific parameters
@@ -278,13 +289,17 @@ while t<t_final && tstep < max_tstep
   end
   
   % initialize arrays to be zero
-  for ig=1:NN
-    massG(ig)     =1.e-100;
-    velG(ig)      =0.;
-    vel_nobc_G(ig)=0.;
-    accl_G(ig)    =0.;
-    extForceG(ig) =0.;
-    intForceG(ig) =0.;
+   for l=1:Limits.maxLevels   
+    L = Levels{l};
+          
+    for ig=1:L.NN
+      massG(ig,l)     =1.e-100;
+      velG(ig,l)      =0.;
+      vel_nobc_G(ig,l)=0.;
+      accl_G(ig,l)    =0.;
+      extForceG(ig,l) =0.;
+      intForceG(ig,l) =0.;
+    end
   end
   
   % compute the problem specific external force acceleration.
