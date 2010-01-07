@@ -6,7 +6,7 @@
    
    
 
-function [L2_norm,maxError,NN,NP]=ml_amrmpm(problem_type,CFL,NN)
+function [L2_norm,maxError,NN,NP]=ml_amrmpm(problem_type,CFL,NCells)
 
 close all
 intwarning on
@@ -77,9 +77,7 @@ plotInterval = 100;
 writeData    = 0;
 max_tstep    = BigNum;
 
-% HARDWIRED FOR TESTING
-%NN          = 16;
-L1_dx       =domain/(NN-1)
+L1_dx       =domain/(NCells)
 
 if (mod(domain,L1_dx) ~= 0)
   fprintf('ERROR, the dx in Region 1 does not divide into the domain evenly\n');
@@ -93,19 +91,18 @@ end
 % compute the positions of the nodes
 [Levels, dx_min, Limits] = IF.initialize_grid(domain,PPC,L1_dx,interpolation, d_smallNum);
 
+[nodePos]                = IF.initialize_NodePos(L1_dx, Levels, Limits, interpolation);
+
+[Lx]                     = IF.initialize_Lx(nodePos, Levels, Limits);
+
+[xp, Levels, Limits]     = IF.initialize_xp(nodePos, interpolation, PPC, bar_min, bar_max, Limits, Levels);
+
 for l=1:Limits.maxLevels
   Levels{l}
 end
 Limits
 
 return
-
-[nodePos]  = IF.initialize_NodePos(L1_dx, Levels, Limits, interpolation);
-
-[Lx]       = IF.initialize_Lx(nodePos, Levels, Limits);
-
-[xp, NP]   = IF.initialize_xp(NN, nodePos, interpolation, PPC, bar_min, bar_max);
-
 
 
 % define the boundary condition nodes on Level 1

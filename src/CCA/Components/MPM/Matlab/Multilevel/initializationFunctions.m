@@ -5,13 +5,15 @@ function [IF] = initializationFunctions
   IF.initialize_NodePos  = @initialize_NodePos;
   IF.initialize_Lx       = @initialize_Lx;
   IF.initialize_xp       = @initialize_xp;
+  
+  [GF] = gridFunctions            % load grid based functions
  
   %______________________________________________________________________
   function[nodePos]  = initialize_NodePos(L1_dx, Levels, Limits, interpolation)
   
     nodePos = zeros(Limits.NN_max, Limits.maxLevels);              % node Position
     
-    nodeNum = int32(1);
+    
 
     if(strcmp(interpolation,'GIMP'))    % Boundary condition Node on level 1
       nodePos(1,1) = -L1_dx;
@@ -21,6 +23,11 @@ function [IF] = initializationFunctions
 
     for l=1:Limits.maxLevels
       L = Levels{l};
+      nodeNum = int32(1);
+      
+      if(l > 1)
+        nodePos(1,l) = L.Patches{1}.min;
+      end
       
       for p=1:L.nPatches
         P = L.Patches{p};
@@ -75,47 +82,67 @@ function [IF] = initializationFunctions
   end
 
   %______________________________________________________________________
-  function[xp, NP] = initialize_xp(NN, nodePos, interpolation, PPC, bar_min, bar_max)
-     %__________________________________
-     % create particles
-     fprintf('Particle Position\n');
-     ip = 1;
+  function[xp_allLevels, Levels Limits] = initialize_xp( nodePos, interpolation, PPC, bar_min, bar_max, Limits, Levels)
+    %__________________________________
+    % create particles
+    fprintf('Particle Position\n');
 
-     startNode = 1;
-     if( strcmp(interpolation,'GIMP') )
-       startNode = 2;
-     end
+    allLevels_NP = 0;
+    
+    for L=1:Limits.maxLevels
+      NN = Levels{L}.NN;
 
-     for n=startNode:NN-1
-       dx_p = (nodePos(n+1) - nodePos(n) )/double(PPC);
+      fprintf('-----------------------Level %g\n',L);
+      ip = 1;
 
-       offset = dx_p/2.0;
-
-       for p = 1:PPC
-         xp_new = nodePos(n) + double(p-1) * dx_p + offset;
-
-         if( xp_new >= bar_min && xp_new <= bar_max)
-
-           xp(ip) = xp_new;
-
-           fprintf('nodePos: %4.5e \t xp(%g) %g \t dx_p: %g \t offset: %g',nodePos(n),ip, xp(ip),dx_p,offset);
-
-           if(ip > 1)
-             fprintf( '\t \tdx: %g \n',(xp(ip) - xp(ip-1)));
-           else
-             fprintf('\n');
-           end
-
-           ip = ip + 1;
-
-         end
-       end
-     end
+      startNode = 1;
+      if( strcmp(interpolation,'GIMP') && L == 1 )
+        startNode = 2;
+      end
 
 
-     NP=ip-1;  % number of particles
+      for n=startNode:NN-1
+        dx_p = (nodePos(n+1,L) - nodePos(n,L) )/double(PPC);
 
-     xp = reshape(xp, NP,1);  
+        offset = dx_p/2.0;
+
+        for p = 1:PPC
+          xp_new = nodePos(n,L) + double(p-1) * dx_p + offset;
+          
+          test = GF.hasFinerCell(xp_new, L, Levels, Limits);
+
+          if( xp_new >= bar_min && xp_new <= bar_max  && (test==0) )
+
+            xp(ip) = xp_new;
+
+            fprintf('nodePos: %4.5e \t xp(%g) %g \t dx_p: %g \t offset: %g',nodePos(n,L),ip, xp(ip),dx_p,offset);
+
+            if(ip > 1)
+              fprintf( '\t \tdx: %g \n',(xp(ip) - xp(ip-1)));
+            else
+              fprintf('\n');
+            end
+
+            ip = ip + 1;
+
+          end
+        end
+      end
+
+      NP=ip-1;  % number of particles
+      
+      % place individual particle positions in array
+      for ip = 1:NP
+        xp_allLevels(ip,L) = xp(ip);
+      end
+
+      allLevels_NP = allLevels_NP + NP;      % total number of particles
+      Levels{L}.NP = NP;                     % number of particles on that level
+      
+    end  % levels loop
+    
+    %xp_allLevels
+    Limits.NP_max = allLevels_NP;
   end
   %______________________________________________________________________
   function [Levels, dx_min, Limits] = initialize_grid(domain,PPC,L1_dx,interpolation,d_smallNum)
@@ -175,7 +202,7 @@ function [IF] = initializationFunctions
     P.refineRatio = 1;
     P.dx          = L1_dx;
     P.volP        = P.dx/PPC;
-    P.NN          = int32( (P.max - P.min)/P.dx +1 );
+    P.NN          = int32( (P.max - P.min)/P.dx );
     P.lp          = P.dx/(2 * PPC);
     PatchesL1{1}    = P;
 
@@ -202,10 +229,10 @@ function [IF] = initializationFunctions
     PatchesL2     = cell(nPatchesL2,1);     % array that holds the individual region information
     P.min         = domain/3.0;                       
     P.max         = 2.0*domain/3.0;
-    P.refineRatio = 1;
+    P.refineRatio = 2;
     P.dx          = L1_dx/P.refineRatio;
     P.volP        = P.dx/PPC;
-    P.NN          = int32( (P.max - P.min)/P.dx );
+    P.NN          = int32( (P.max - P.min)/P.dx +1 );
     P.lp          = P.dx/(2 * PPC);
     PatchesL2{1}    = P;
     
