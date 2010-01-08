@@ -10,6 +10,8 @@ function [L2_norm,maxError,NN,NP]=ml_amrmpm(problem_type,CFL,NCells)
 
 close all
 intwarning on
+addpath([docroot '/techdoc/creating_plots/examples'])   % so you can use dsxy2figxy()
+
 
 global d_debugging;
 global PPC;
@@ -72,7 +74,7 @@ bar_length  = bar_max - bar_min;
 
 domain       = 1.0;
 area         = 1.;
-plotSwitch   = 0;
+plotSwitch   = 1;
 plotInterval = 100;
 writeData    = 0;
 max_tstep    = BigNum;
@@ -97,12 +99,7 @@ end
 
 [xp, Levels, Limits]     = IF.initialize_xp(nodePos, interpolation, PPC, bar_min, bar_max, Limits, Levels);
 
-for l=1:Limits.maxLevels
-  Levels{l}
-end
-Limits
-
-return
+[Limits]                 = IF.NN_NP_allLevels(Levels, Limits)
 
 
 % define the boundary condition nodes on Level 1
@@ -119,27 +116,30 @@ end
 %__________________________________
 % pre-allocate variables for speed
 maxLevels = Limits.maxLevels;
-vol       = zeros(NP, maxLevels);
-lp        = zeros(NP, maxLevels);
-massP     = zeros(NP, maxLevels);
-velP      = zeros(NP, maxLevels);
-dp        = zeros(NP, maxLevels);
-stressP   = zeros(NP, maxLevels);
-Fp        = zeros(NP, maxLevels);
-dF        = zeros(NP, maxLevels);
-accl_extForceP = zeros(NP,maxLevels);
+NP_max    = Limits.NP_max;
+NN_max    = Limits.NN_max;
+
+vol       = zeros(NP_max, maxLevels);
+lp        = zeros(NP_max, maxLevels);
+massP     = zeros(NP_max, maxLevels);
+velP      = zeros(NP_max, maxLevels);
+dp        = zeros(NP_max, maxLevels);
+stressP   = zeros(NP_max, maxLevels);
+Fp        = zeros(NP_max, maxLevels);
+dF        = zeros(NP_max, maxLevels);
+accl_extForceP = zeros(NP_max,maxLevels);
 
 nodes     = zeros(1,NSFN);
 Gs        = zeros(1,NSFN);
 Ss        = zeros(1,NSFN);
 
-massG     = zeros(NN,  maxLevels);
-momG      = zeros(NN,  maxLevels);
-velG      = zeros(NN,  maxLevels);
-vel_nobc_G= zeros(NN,  maxLevels);
-accl_G    = zeros(NN,  maxLevels);
-extForceG = zeros(NN,  maxLevels);
-intForceG = zeros(NN,  maxLevels);
+massG     = zeros(NN_max,  maxLevels);
+momG      = zeros(NN_max,  maxLevels);
+velG      = zeros(NN_max,  maxLevels);
+vel_nobc_G= zeros(NN_max,  maxLevels);
+accl_G    = zeros(NN_max,  maxLevels);
+extForceG = zeros(NN_max,  maxLevels);
+intForceG = zeros(NN_max,  maxLevels);
 
 
 KE        = zeros(BigNum, maxLevels);
@@ -154,23 +154,22 @@ totalEng_err   = zeros(BigNum, maxLevels);
 totalMom_err   = zeros(BigNum, maxLevels);
 tipDeflect_err = zeros(BigNum, maxLevels);
 
-vol(1)
 input('hit return')
 
 %__________________________________
 % initialize other particle variables
 for l=1:maxLevels
    L = Levels{l};
-  for ip=1:NP
-    [volP_0, lp_0] = sf.positionToVolP(xp(ip), nRegions, Regions);
+   
+  for ip=1: L.NP
+    [volP_0, lp_0] = sf.positionToVolP(xp(ip,l), L.nPatches, L.Patches);
 
-    vol(ip)   = volP_0;
-    massP(ip) = volP_0*density;
-    lp(ip)    = lp_0;
-    Fp(ip)    = 1.;                     % total deformation
+    vol(ip,l)   = volP_0;
+    massP(ip,l) = volP_0*density;
+    lp(ip,l)    = lp_0;
+    Fp(ip,l)    = 1.;                     % total deformation
   end
-end
-    
+end 
 
 %______________________________________________________________________
 % problem specific parameters
@@ -205,9 +204,12 @@ if strcmp(problem_type, 'advectBlock')
   numBCs          = 1;
   velG_BCValueL   = initVelocity;
   velG_BCValueR   = initVelocity;
-  for ip=1:NP
-    velP(ip)    = initVelocity;
-    initPos(ip) = xp(ip);
+  for l=1:maxLevels
+    NP = Levels{l}.NP;
+    for ip=1:NP
+      velP(ip,l)    = initVelocity;
+      initPos(ip,l) = xp(ip,l);
+    end
   end
 end
 
@@ -234,31 +236,34 @@ if strcmp(problem_type, 'mms')
   velG_BCValueR   = initVelocity;
   titleStr(1) = {'MMS Problem'};
   
-  xp_initial = zeros(NP,1);
-  xp_initial = xp;
-  [Fp]      = mms.deformationGradient(xp_initial, t_initial, NP,speedSound, bar_length);
-  [dp]      = mms.displacement(       xp_initial, t_initial, NP, speedSound, bar_length);
-  [velP]    = mms.velocity(           xp_initial, t_initial, NP, speedSound, bar_length);
-  [stressP] = computeStress(E,Fp,NP);
+  xp_initial = zeros(NP_max, maxLevels);
   
-  lp  = lp .* Fp;
-  vol = vol .* Fp;
-  xp  =  xp_initial + dp;
+  for l=1:maxLevels
+    xp_initial(:,l) = xp(:,l);
+    [Fp(:,l)]      = mms.deformationGradient(xp_initial(:,l), t_initial, NP,speedSound, bar_length);
+    [dp(:,l)]      = mms.displacement(       xp_initial(:,l), t_initial, NP, speedSound, bar_length);
+    [velP(:,l)]    = mms.velocity(           xp_initial(:,l), t_initial, NP, speedSound, bar_length);
+    [stressP(:,l)] = computeStress(E,Fp,NP);
+
+    lp(:,l)  = lp(:,l) .* Fp(:,l);
+    vol(:,l) = vol(:,l) .* Fp(:,l);
+    xp(:,l)  =  xp_initial(:,l) + dp(:,l);
+  end
 end
 
 %__________________________________
 titleStr(2) = {sprintf('Computational Domain 0,%g, MPM bar %g,%g',domain,bar_min, bar_max)};
 titleStr(3) = {sprintf('%s, PPC: %g',interpolation, PPC)};
 %titleStr(4)={'Variable Resolution, Center Region refinement ratio: 2'}
-titleStr(4) ={sprintf('Constant resolution, #cells %g', NN)};
+titleStr(4) ={sprintf('Constant resolution, #cells %g', Limits.NN_allLevels)};
 
 
 %plot initial conditions
 if(plotSwitch == 1)
-  plotResults(titleStr, t_initial, tstep, xp, dp, massP, Fp, velP, stressP, nodePos, velG, massG, momG)
+  plotResults(titleStr, t_initial, tstep, xp, dp, massP, Fp, velP, stressP, nodePos, velG, massG, momG, Limits, Levels)
 end
-fprintf('t_final: %g, interpolator: %s, NN: %g, NP: %g dx_min: %g \n',t_final,interpolation, NN,NP,dx_min);
-%input('hit return')
+fprintf('t_final: %g, interpolator: %s, NN: %g, NP: %g dx_min: %g \n',t_final,interpolation, Limits.NN_allLevels,Limits.NP_allLevels,dx_min);
+input('hit return')
 
 fn = sprintf('initialConditions.dat');
 fid = fopen(fn, 'w');
@@ -610,23 +615,32 @@ end
 
 
 %__________________________________
-function plotResults(titleStr,t, tstep, xp, dp, massP, Fp, velP, stressP, nodePos, velG, massG, momG)
+function plotResults(titleStr,t, tstep, xp, dp, massP, Fp, velP, stressP, nodePos, velG, massG, momG, Limits, Levels)
 
     % plot SimulationState
-  figure(1)
+  figure1 = figure(1)
   set(1,'position',[50,100,700,700]);
-  
-  vel_G_inter = interp1(xp,velP,nodePos);
-  e = ones(size(nodePos));
-  e(:) = 1e100;
+  levelColors = ['m','g','r','b','k'];
   
   subplot(4,1,1),plot(xp,velP,'rd');
-  ylim([min(1.1*velP - 1e-3) max(1.1*velP + 1e-3)])
+  ylim([min(min(velP - 1e-3) )  max( max(velP + 1e-3))])
+  
   xlabel('Particle Position');
   ylabel('Particle velocity');
   title(titleStr);
   hold on
-  errorbar(nodePos,vel_G_inter, e,'LineStyle','none','Color',[0.8314 0.8157 0.7843]);
+  
+  % draw vertical lines at each node 
+  for L=1:Limits.maxLevels
+    r = L/Limits.maxLevels;
+    NN = Levels{L}.NN;
+    for n=1:NN            
+      x = nodePos(n,L)
+      [pt1,pt2] = dsxy2figxy([x,x],ylim)
+      levelColors(L)
+      annotation(figure1,'line',pt1,pt2,'Color',levelColors(L));
+    end
+  end
   hold off
   %axis([0 50 99 101] )
 
