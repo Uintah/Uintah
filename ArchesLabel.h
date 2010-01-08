@@ -341,7 +341,8 @@ namespace Uintah {
       const VarLabel* d_radiationFluxSINLabel;
       const VarLabel* d_radiationFluxTINLabel;
       const VarLabel* d_radiationFluxBINLabel;
-      
+      const VarLabel* d_radiationVolqINLabel;
+ 
       // reactive scalar source term from properties
       const VarLabel* d_reactscalarSRCINLabel;
       
