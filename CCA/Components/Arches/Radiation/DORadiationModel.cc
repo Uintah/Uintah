@@ -344,7 +344,7 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
   CCVariable<double> at;
   CCVariable<double> ab;
   CCVariable<double> ap;
-  CCVariable<double> volq;
+  //CCVariable<double> volq;
   CCVariable<double> cenint;
   
   vars->cenint.allocate(domLo,domHi);
@@ -358,7 +358,7 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
   at.allocate(domLo,domHi);
   ab.allocate(domLo,domHi);
   ap.allocate(domLo,domHi);
-  volq.allocate(domLo,domHi);
+  //volq.allocate(domLo,domHi);
   
   arean.resize(domLo.x(),domHi.x());
   areatb.resize(domLo.x(),domHi.x());
@@ -371,7 +371,7 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
   qfluxbbm.initialize(0.0);
 
   volume.initialize(0.0);
-  volq.initialize(0.0);    
+  vars->volq.initialize(0.0);    
   arean.initialize(0.0);
   areatb.initialize(0.0);
   //  double timeRadMatrix = 0;
@@ -383,7 +383,7 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
   if(d_SHRadiationCalc==false) {
 
     for (int bands =1; bands <=lambda; bands++){
-      volq.initialize(0.0);
+      vars->volq.initialize(0.0);
 
       if(lwsgg == true){    
         fort_radwsgg(idxLo, idxHi, vars->ABSKG, vars->ESRCG, vars->shgamma,
@@ -417,7 +417,7 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
                        oeta, wt, 
                        vars->temperature, vars->ABSKG, vars->cenint, volume,
                        su, aw, as, ab, ap, ae, an, at,
-                       areaew, arean, areatb, volq, vars->src, 
+                       areaew, arean, areatb, vars->volq, vars->src, 
                        plusX, plusY, plusZ, fraction, fractiontwo, bands, 
                        vars->qfluxe, vars->qfluxw,
                        vars->qfluxn, vars->qfluxs,
@@ -435,14 +435,14 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
         }
         d_linearSolver->destroyMatrix();
 
-        fort_rdomvolq(idxLo, idxHi, direcn, wt, vars->cenint, volq);
+        fort_rdomvolq(idxLo, idxHi, direcn, wt, vars->cenint, vars->volq);
         fort_rdomflux(idxLo, idxHi, direcn, oxi, omu, oeta, wt, vars->cenint,
                       plusX, plusY, plusZ, vars->qfluxe, vars->qfluxw,
                       vars->qfluxn, vars->qfluxs,
                       vars->qfluxt, vars->qfluxb);
       }  // ordinate loop
 
-      fort_rdomsrc(idxLo, idxHi, vars->ABSKG, vars->ESRCG,volq, vars->src);
+      fort_rdomsrc(idxLo, idxHi, vars->ABSKG, vars->ESRCG,vars->volq, vars->src);
     }  // bands loop
     
     if(d_myworld->myrank() == 0) {
@@ -494,7 +494,7 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
                     cellinfo->xx,  cellinfo->yy,  cellinfo->zz,
                     vars->ESRCG, vars->temperature, vars->ABSKG, vars->shgamma, 
                     volume, su, ae, aw, an, as, at, ab, ap,
-                    areaew, arean, areatb, volq, vars->src, plusX, plusY, plusZ, fraction, fractiontwo, bands);
+                    areaew, arean, areatb, vars->volq, vars->src, plusX, plusY, plusZ, fraction, fractiontwo, bands);
 
       //      double timeSetMat = Time::currentSeconds();
       d_linearSolver->setMatrix(pg ,patch, vars, plusX, plusY, 
@@ -508,7 +508,7 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
       }
       d_linearSolver->destroyMatrix();
 
-      fort_rshresults(idxLo, idxHi, vars->cenint, volq,
+      fort_rshresults(idxLo, idxHi, vars->cenint, vars->volq,
                       constvars->cellType, ffield,
                       cellinfo->xx, cellinfo->yy, cellinfo->zz,
                       vars->temperature,

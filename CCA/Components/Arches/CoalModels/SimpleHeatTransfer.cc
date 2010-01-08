@@ -320,12 +320,7 @@ SimpleHeatTransfer::sched_computeModel( const LevelP& level, SchedulerP& sched, 
   if(b_radiation){
     tsk->requires(Task::OldDW, d_fieldLabels->d_radiationSRCINLabel,  Ghost::None, 0);
     tsk->requires(Task::OldDW, d_fieldLabels->d_abskgINLabel,  Ghost::None, 0);   
-    //tsk->requires(Task::OldDW, d_fieldLabels->d_radiationFluxEINLabel, Ghost::AroundCells, 1);
-    //tsk->requires(Task::OldDW, d_fieldLabels->d_radiationFluxWINLabel, Ghost::AroundCells, 1);
-    //tsk->requires(Task::OldDW, d_fieldLabels->d_radiationFluxNINLabel, Ghost::AroundCells, 1);
-    //tsk->requires(Task::OldDW, d_fieldLabels->d_radiationFluxSINLabel, Ghost::AroundCells, 1);
-    //tsk->requires(Task::OldDW, d_fieldLabels->d_radiationFluxTINLabel, Ghost::AroundCells, 1);
-    //tsk->requires(Task::OldDW, d_fieldLabels->d_radiationFluxBINLabel, Ghost::AroundCells, 1);
+    tsk->requires(Task::OldDW, d_fieldLabels->d_radiationVolqINLabel, Ghost::None, 0);
   }
 
   // always require the gas-phase temperature
@@ -443,7 +438,7 @@ SimpleHeatTransfer::computeModel( const ProcessorGroup * pc,
   for( int p=0; p < patches->size(); p++ ) {  // Patch loop
 
     //Ghost::GhostType  gaf = Ghost::AroundFaces;
-    Ghost::GhostType  gac = Ghost::AroundCells;
+    //Ghost::GhostType  gac = Ghost::AroundCells;
     Ghost::GhostType  gn  = Ghost::None;
 
     const Patch* patch = patches->get(p);
@@ -491,23 +486,13 @@ SimpleHeatTransfer::computeModel( const ProcessorGroup * pc,
 
     constCCVariable<double> radiationSRCIN;
     constCCVariable<double> abskgIN;
-    //constCCVariable<double> radiationFluxEIN;
-    //constCCVariable<double> radiationFluxWIN;
-    //constCCVariable<double> radiationFluxNIN;
-    //constCCVariable<double> radiationFluxSIN;
-    //constCCVariable<double> radiationFluxTIN;
-    //constCCVariable<double> radiationFluxBIN;
+    constCCVariable<double> radiationVolqIN;
     CCVariable<double> enthNonLinSrc;
 
     if(b_radiation){
       old_dw->get(radiationSRCIN, d_fieldLabels->d_radiationSRCINLabel, matlIndex, patch, gn, 0);
       old_dw->get(abskgIN, d_fieldLabels->d_abskgINLabel, matlIndex, patch, gn, 0);
-      //old_dw->get(radiationFluxEIN, d_fieldLabels->d_radiationFluxEINLabel, matlIndex, patch, gac, 1);
-      //old_dw->get(radiationFluxWIN, d_fieldLabels->d_radiationFluxWINLabel, matlIndex, patch, gac, 1);
-      //old_dw->get(radiationFluxNIN, d_fieldLabels->d_radiationFluxNINLabel, matlIndex, patch, gac, 1);
-      //old_dw->get(radiationFluxSIN, d_fieldLabels->d_radiationFluxSINLabel, matlIndex, patch, gac, 1);
-      //old_dw->get(radiationFluxTIN, d_fieldLabels->d_radiationFluxTINLabel, matlIndex, patch, gac, 1);
-      //old_dw->get(radiationFluxBIN, d_fieldLabels->d_radiationFluxBINLabel, matlIndex, patch, gac, 1);
+      old_dw->get(radiationVolqIN, d_fieldLabels->d_radiationVolqINLabel, matlIndex, patch, gn, 0);
     }
 
     constCCVariable<double> temperature;
@@ -681,22 +666,16 @@ SimpleHeatTransfer::computeModel( const ProcessorGroup * pc,
         // Radiation part: -------------------------
         Q_radiation = 0.0;
         if (b_radiation) {
-          // This will be verified after it is fixed up
           double Qabs = 0.8;
 	  double Apsc = (pi/4)*Qabs*pow(unscaled_length,2);
-	  double Eb = 4.0*sigma*pow(unscaled_particle_temperature,4);
-          //FSum = 0.5*(radiationFluxEIN[c]+radiationFluxEIN[cxm] + radiationFluxWIN[c]+radiationFluxWIN[cxp]
-          //            + radiationFluxNIN[c]+radiationFluxNIN[cym] + radiationFluxSIN[c]+radiationFluxSIN[cyp]
-          //            + radiationFluxTIN[c]+radiationFluxTIN[czm] + radiationFluxBIN[c]+radiationFluxBIN[czp]); 
-          FSum = (radiationSRCIN[c]+4.0*sigma*abskgIN[c]*pow(gas_temperature,4))/abskgIN[c];
-          if(isnan(FSum)) FSum = 0.0;      
+	  double Eb = 4*sigma*pow(unscaled_particle_temperature,4);
+          FSum = radiationVolqIN[c];    
 	  Q_radiation = Apsc*(FSum - Eb);
 	  abskp_ = pi/4*Qabs*unscaled_weight*pow(unscaled_length,2); 
         } else {
           abskp_ = 0.0;
         }
-        //cout << "FSum " << FSum << " Tp " << unscaled_particle_temperature << " Tg " << gas_temperature << endl;
-        //cout << "Qrad " << Q_radiation << " Qconv " << Q_convection << " abskg " << abskgIN[c] <<" radiationSRCIN " << radiationSRCIN[c] << endl;
+      
         heat_rate_ = (Q_convection + Q_radiation)/(mp_Cp*d_pt_scaling_constant);
 
         gas_heat_rate_ = 0.0;
