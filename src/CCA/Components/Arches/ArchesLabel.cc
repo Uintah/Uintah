@@ -293,6 +293,7 @@ ArchesLabel::ArchesLabel()
   d_radiationFluxSINLabel = VarLabel::create("radiationFluxSIN",  CC_double);
   d_radiationFluxTINLabel = VarLabel::create("radiationFluxTIN",  CC_double);
   d_radiationFluxBINLabel = VarLabel::create("radiationFluxBIN",  CC_double);
+  d_radiationVolqINLabel = VarLabel::create("radiationVolqIN",  CC_double);
 
   d_reactscalarSRCINLabel = VarLabel::create("reactscalarSRCIN",  CC_double);
 
@@ -667,6 +668,7 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_radiationFluxSINLabel);
   VarLabel::destroy(d_radiationFluxTINLabel);
   VarLabel::destroy(d_radiationFluxBINLabel);
+  VarLabel::destroy(d_radiationVolqINLabel);
   VarLabel::destroy(d_reactscalarSRCINLabel);
  // Runge-Kutta 3d order properties labels
   VarLabel::destroy(d_refDensityInterm_label);

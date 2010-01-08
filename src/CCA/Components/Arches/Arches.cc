@@ -776,7 +776,8 @@ Arches::sched_paramInit(const LevelP& level,
       tsk->computes(d_lab->d_radiationFluxNINLabel);
       tsk->computes(d_lab->d_radiationFluxSINLabel); 
       tsk->computes(d_lab->d_radiationFluxTINLabel);
-      tsk->computes(d_lab->d_radiationFluxBINLabel); 
+      tsk->computes(d_lab->d_radiationFluxBINLabel);
+      tsk->computes(d_lab->d_radiationVolqINLabel); 
       tsk->computes(d_lab->d_abskgINLabel); 
     }
 
@@ -998,6 +999,7 @@ Arches::paramInit(const ProcessorGroup* pg,
       CCVariable<double> qfluxs;
       CCVariable<double> qfluxt;
       CCVariable<double> qfluxb;
+      CCVariable<double> volq;
       CCVariable<double> abskg;
       CCVariable<double> radEnthalpySrc;;
 
@@ -1021,7 +1023,10 @@ Arches::paramInit(const ProcessorGroup* pg,
       
       new_dw->allocateAndPut(qfluxb, d_lab->d_radiationFluxBINLabel,indx, patch);
       qfluxb.initialize(0.0);
-      
+     
+      new_dw->allocateAndPut(volq, d_lab->d_radiationVolqINLabel,indx, patch);
+      volq.initialize(0.0);
+ 
       new_dw->allocateAndPut(abskg,   d_lab->d_abskgINLabel,        indx, patch);
       abskg.initialize(0.0);
 
