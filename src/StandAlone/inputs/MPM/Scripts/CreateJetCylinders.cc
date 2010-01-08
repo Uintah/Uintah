@@ -36,10 +36,9 @@ int main()
   double delT=0.5e-6;
   double total_mass=0.;
 
-  double x=0.10;     // Position at which to monitor densities
-  double T0=(x-0.30)/v_tip; // Time at which tip is at x=0.10 m
-//  double T0=-25.543e-6;
-  double t=T0;          // Time at which tip is at x=0.10 m
+  double x=0.30;          // Position at which to monitor densities
+  double T0=(x-L0)/v_tip; // Time at which tip is at x
+  double t=T0; 
   double temp_pos = -0.001;
   double X=100.;  // Initialize ref position to large value to get started
   int n=0;
@@ -49,24 +48,31 @@ int main()
     X=x/F;
     double rad = rad_ref/(1.0+B*X/L0);
     double vel = v_tip*X/L0-c;
-    double L_int=vel*delT;
+    // L_int = Length of this element of the jet
+    double L_int=vel*delT; 
+    // L_seg = Length of the segment representing this element of the jet
     double L_seg=L_int*(rho/rho_W);
-    cout << t << " " << rho << " " << rad << " " << vel << " " << L_int << " " << L_seg << endl;
+
     total_mass+=(M_PI*rad*rad)*L_seg*rho_W;
+    double elapT = t-T0;
+    double init_pos = vel*(-elapT) - 0.001;
+//    dest_IP << t-T0 << " " << n << " " << " 0.0 " << -init_pos << " 0.0 0.0 " << vel << " 0.0\n";
+    dest_IP << t-T0 << " " << n << " " << " 0.0  0.02 0.0  0.0 " << vel << " 0.0\n";
+    cout << t << " " << rho << " " << init_pos << " " << temp_pos << " " << vel << " " << L_int << " " << L_seg << endl;
+    // increase delT as velocity goes down to keep cylinders from shrinking much
     delT=delT*pow(v_tip/vel,.05);
-//    dest_IP << t-T0 << " " << n << " " << " 0.0 " << -temp_pos << " 0.0 0.0 " << vel << "0.0\n";
-    dest_IP << t-T0 << " " << n << " " << " 0.0 " <<  0.02 << " 0.0 0.0 " << vel << " 0.0\n";
     t+=delT;
     dest << "  <geom_object>\n";
     dest << "    <cylinder label = \"" << n << "\">\n";
-//    dest << "       <top>[0.0, " << temp_pos << ", 0.0]</top>\n";
-//    dest << "       <bottom>[0.0, " << temp_pos-L_seg << ", 0.0]</bottom>\n";
+//    dest << "       <top>[0.0, " << init_pos << ", 0.0]</top>\n";
+//    dest << "       <bottom>[0.0, " << init_pos-L_seg << ", 0.0]</bottom>\n";
     dest << "       <top>[0.0, " << -0.02 << ", 0.0]</top>\n";
     dest << "       <bottom>[0.0, " << -0.02 - L_seg << ", 0.0]</bottom>\n";
     dest << "       <radius>" << rad << "</radius>\n";
     dest << "    </cylinder>\n";
-    dest << "    <res>[2,2,1]</res>\n";
+    dest << "    <res>[4,4,1]</res>\n";
     dest << "    <velocity>[0.0, 0.0, 0.0]</velocity>\n";
+//    dest << "    <velocity>[0.0, " << vel << ", 0.0]</velocity>\n";
     dest << "    <temperature>294.0</temperature>\n";
     dest << "    <color>" << n++ << "</color>\n";
     dest << "  </geom_object>\n\n";
