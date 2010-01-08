@@ -5,6 +5,7 @@ function [IF] = initializationFunctions
   IF.initialize_NodePos  = @initialize_NodePos;
   IF.initialize_Lx       = @initialize_Lx;
   IF.initialize_xp       = @initialize_xp;
+  IF.NN_NP_allLevels     = @NN_NP_allLevels;
   
   [GF] = gridFunctions            % load grid based functions
  
@@ -87,7 +88,7 @@ function [IF] = initializationFunctions
     % create particles
     fprintf('Particle Position\n');
 
-    allLevels_NP = 0;
+    NP_max = 0;
     
     for L=1:Limits.maxLevels
       NN = Levels{L}.NN;
@@ -136,13 +137,13 @@ function [IF] = initializationFunctions
         xp_allLevels(ip,L) = xp(ip);
       end
 
-      allLevels_NP = allLevels_NP + NP;      % total number of particles
-      Levels{L}.NP = NP;                     % number of particles on that level
+      NP_max = max(NP_max,NP);      % nax number of particles on any level
+      Levels{L}.NP = NP;            % number of particles on that level
       
     end  % levels loop
     
     %xp_allLevels
-    Limits.NP_max = allLevels_NP;
+    Limits.NP_max = NP_max;
   end
   %______________________________________________________________________
   function [Levels, dx_min, Limits] = initialize_grid(domain,PPC,L1_dx,interpolation,d_smallNum)
@@ -271,7 +272,7 @@ if (0)        % currently extracells are not used.
 end
 
     % Count the number of nodes in a level
-    NN_allLevels = 0;
+    NN_max = 0;
     
     for l=1:maxLevels
       L = Levels{l};
@@ -282,9 +283,25 @@ end
         NN = NN + P.NN;
       end
       Levels{l}.NN = NN
-      NN_allLevels = NN_allLevels + NN;
+      NN_max = max(NN_max, NN);
     end
     
+    
+    % level extents
+    Lmax = 0;
+    Lmin = 1000;
+    
+    for l=1:maxLevels
+      L = Levels{l};
+      
+      for p=1:L.nPatches
+        P = L.Patches{p};
+        Lmax = max(Lmax,P.max);
+        Lmin = min(Lmin,P.min);
+      end
+      Levels{l}.max = Lmax;
+      Levels{l}.min = Lmin;
+    end
     
     %  find the minimum dx on all levels
     dx_min = double(1e100);
@@ -300,7 +317,7 @@ end
 
     % defines the limits
     Limits.maxLevels = maxLevels;
-    Limits.NN_max    = NN_allLevels;
+    Limits.NN_max    = NN_max;
 
     % bulletproofing:
     for l=1:maxLevels
@@ -319,5 +336,19 @@ end
     
   end
   
+  
+  %______________________________________________________________________
+  function [Limits] = NN_NP_allLevels(Levels, Limits)
+    NP_allLevels = 0;
+    NN_allLevels = 0;
+    
+    for l=1:Limits.maxLevels
+      L = Levels{l};
+      NP_allLevels = NP_allLevels + L.NP;
+      NN_allLevels = NN_allLevels + L.NN;
+    end
+    Limits.NP_allLevels = NP_allLevels;
+    Limits.NN_allLevels = NN_allLevels;
+  end  
  
 end
