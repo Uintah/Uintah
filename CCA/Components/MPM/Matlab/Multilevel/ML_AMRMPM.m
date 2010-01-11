@@ -53,7 +53,7 @@ mat.speedSound  = speedSound;
 Material{1} = mat;
 Material{1}.density
 
-interpolation = 'GIMP';
+interpolation = 'LINEAR';
 
 if( strcmp(interpolation,'GIMP') )
   NSFN    = 3;               % Number of shape function nodes Linear:2, GIMP:3
@@ -280,8 +280,11 @@ while t<t_final && tstep < max_tstep
 
   % compute the timestep
   dt = double(BigNum);
-  for ip=1:NP
-    dt = min(dt, CFL*dx_min/(speedSound + abs(velP(ip) ) ) );
+  for l=1:maxLevels
+    L = Levels{l};
+    for ip=1:L.NP
+      dt = min(dt, CFL*dx_min/(speedSound + abs(velP(ip,l) ) ) );
+    end
   end
 
   tstep = tstep + 1;
@@ -291,7 +294,7 @@ while t<t_final && tstep < max_tstep
   end
   
   % initialize arrays to be zero
-   for l=1:Limits.maxLevels   
+   for l=1:maxLevels   
     L = Levels{l};
           
     for ig=1:L.NN
@@ -305,26 +308,30 @@ while t<t_final && tstep < max_tstep
   end
   
   % compute the problem specific external force acceleration.
-  [accl_extForceP, delta] = ExternalForceAccl(problem_type, delta_0, bodyForce, Material, xp, xp_initial, t, tstep, NP, L1_dx, bar_length);
+  %[accl_extForceP, delta] = ExternalForceAccl(problem_type, delta_0, bodyForce, Material, xp, xp_initial, t, tstep, NP, L1_dx, bar_length);
     
   %__________________________________
   % project particle data to grid  
-  for ip=1:NP
-  
-    [nodes,Ss]=sf.findNodesAndWeights_gimp2(xp(ip), lp(ip), nRegions, Regions, nodePos, Lx);
-    for ig=1:NSFN
-      massG(nodes(ig))     = massG(nodes(ig))     + massP(ip) * Ss(ig);
-      velG(nodes(ig))      = velG(nodes(ig))      + massP(ip) * velP(ip) * Ss(ig);
-      extForceG(nodes(ig)) = extForceG(nodes(ig)) + massP(ip) * accl_extForceP(ip) * Ss(ig); 
-      
-      % debugging__________________________________
-      if(0)
-        fprintf( 'ip: %g xp: %g, nodes: %g, node_pos: %g massG: %g, massP: %g, Ss: %g,  prod: %g \n', ip, xp(ip), nodes(ig), nodePos(nodes(ig)), massG(nodes(ig)), massP(ip), Ss(ig), massP(ip) * Ss(ig) );
-        fprintf( '\t velG:      %g,  velP:       %g,  prod: %g \n', velG(nodes(ig)), velP(ip), (massP(ip) * velP(ip) * Ss(ig) ) );
-        fprintf( '\t extForceG: %g,  accl_extForceP:  %g,  prod: %g \n', extForceG(nodes(ig)), accl_extForceP(ip), accl_extForceP(ip) * Ss(ig) );
-      end 
-      % debugging__________________________________
+  for l=1:maxLevels   
+    L = Levels{l};
+    
+    for ip=1:L.NP
 
+      [nodes,Ss]=sf.findNodesAndWeights_linear(xp(ip,l), lp(ip,l), L.nPatches, L.Patches, nodePos(:,l), Lx(:,:,l));
+      for ig=1:NSFN
+        massG(nodes(ig),l)     = massG(nodes(ig),l)     + massP(ip,l) * Ss(ig);
+        velG(nodes(ig),l)      = velG(nodes(ig),l)      + massP(ip,l) * velP(ip,l) * Ss(ig);
+        extForceG(nodes(ig),l) = extForceG(nodes(ig),l) + massP(ip,l) * accl_extForceP(ip,l) * Ss(ig); 
+
+        % debugging__________________________________
+        if(1)
+          fprintf( 'L-%g  ip: %g xp: %g, nodes: %g, node_pos: %g massG: %g, massP: %g, Ss: %g,  prod: %g \n', l, ip, xp(ip,l), nodes(ig), nodePos(nodes(ig),l), massG(nodes(ig),l), massP(ip,l), Ss(ig), massP(ip,l) * Ss(ig) );
+          fprintf( '\t velG:      %g,  velP:       %g,  prod: %g \n', velG(nodes(ig),l), velP(ip,l), (massP(ip,l) * velP(ip,l) * Ss(ig) ) );
+          fprintf( '\t extForceG: %g,  accl_extForceP:  %g,  prod: %g \n', extForceG(nodes(ig),l), accl_extForceP(ip,l), accl_extForceP(ip,l) * Ss(ig) );
+        end 
+        % debugging__________________________________
+
+      end
     end
   end
 
@@ -340,10 +347,14 @@ while t<t_final && tstep < max_tstep
 
   
   %compute internal force
-  for ip=1:NP
-    [nodes,Gs,dx]=sf.findNodesAndWeightGradients_gimp2(xp(ip), lp(ip), nRegions, Regions, nodePos,Lx);
-    for ig=1:NSFN
-      intForceG(nodes(ig)) = intForceG(nodes(ig)) - Gs(ig) * stressP(ip) * vol(ip);
+  for l=1:maxLevels   
+    L = Levels{l};
+    
+    for ip=1:L.NP
+      [nodes,Gs,dx]=sf.findNodesAndWeightGradients_linear(xp(ip), lp(ip), nRegions, Regions, nodePos,Lx);
+      for ig=1:NSFN
+        intForceG(nodes(ig)) = intForceG(nodes(ig)) - Gs(ig) * stressP(ip) * vol(ip);
+      end
     end
   end
 
@@ -383,7 +394,7 @@ while t<t_final && tstep < max_tstep
   %project changes back to particles
   tmp = zeros(NP,1);
   for ip=1:NP
-    [nodes,Ss]=sf.findNodesAndWeights_gimp2(xp(ip), lp(ip), nRegions, Regions, nodePos, Lx);
+    [nodes,Ss]=sf.findNodesAndWeights_linear(xp(ip), lp(ip), nRegions, Regions, nodePos, Lx);
     dvelP = 0.;
     dxp   = 0.;
     
@@ -586,7 +597,7 @@ function [Fp, dF, vol, lp] = computeDeformationGradient(xp,lp,dt,velG,Fp,NP, nRe
   global sf;
   
   for ip=1:NP
-    [nodes,Gs,dx]  = sf.findNodesAndWeightGradients_gimp2(xp(ip), lp(ip), nRegions, Regions, nodePos, Lx);
+    [nodes,Gs,dx]  = sf.findNodesAndWeightGradients_linear(xp(ip), lp(ip), nRegions, Regions, nodePos, Lx);
     [volP_0, lp_0] = sf.positionToVolP(xp(ip), nRegions, Regions);
 
     gUp=0.0;
@@ -632,12 +643,10 @@ function plotResults(titleStr,t, tstep, xp, dp, massP, Fp, velP, stressP, nodePo
   
   % draw vertical lines at each node 
   for L=1:Limits.maxLevels
-    r = L/Limits.maxLevels;
     NN = Levels{L}.NN;
     for n=1:NN            
-      x = nodePos(n,L)
-      [pt1,pt2] = dsxy2figxy([x,x],ylim)
-      levelColors(L)
+      x = nodePos(n,L);
+      [pt1,pt2] = dsxy2figxy([x,x],ylim);
       annotation(figure1,'line',pt1,pt2,'Color',levelColors(L));
     end
   end
