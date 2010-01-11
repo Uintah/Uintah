@@ -13,22 +13,20 @@ function [sf] = shapeFunction()
 %
 function[node, dx]=positionToNode(xp, nRegions, Regions)
  
-  n_offset = 0;
+  n_offset = 1;                              % the left node is owned by the right patch 
   node = int32(-9);
-  region1_offset = 1;
   
   for r=1:nRegions
     R = Regions{r};
     dx = R.dx;
     
-    if ((xp >= R.min) && (xp < R.max))
+    if ((xp >= R.min) && (xp < R.max))   
       n    = floor((xp - R.min)/R.dx);      % # of nodes from the start of the current region
-      node = n + n_offset + region1_offset;             % add an offset to the local node number
+      node = n + n_offset;                  % add an offset to the local node number
 
-      %fprintf( 'region: %g, n: %g, node:%g, xp: %g dx: %g R.min: %g, R.max: %g n_offset: %g EC:%g\n',r, n, node, xp, dx, R.min, R.max,n_offset, EC);
+      fprintf( 'region: %g, n: %g, node:%g, xp: %g dx: %g R.min: %g, R.max: %g n_offset: %g \n',r, n, node, xp, dx, R.min, R.max,n_offset);
       return;
     end
-    region1_offset = 0;                     % set to 0 after the first region
 
     n_offset = (n_offset) + R.NN;           % increment the offset
   end
@@ -66,7 +64,7 @@ function[nodes,dx]=positionToClosestNodes(xp,nRegions,Regions, nodePos)
   nodes(1) = node + offset;
   nodes(2) = nodes(1) + 1;
   nodes(3) = nodes(2) + 1;
-  %fprintf( 'xp:%g, node(1):%g, node(2):%g, node(3):%g relativePosition:%g\n',xp, nodes(1), nodes(2), nodes(3), relativePosition);
+  fprintf( 'xp:%g, node(1):%g, node(2):%g, node(3):%g relativePosition:%g\n',xp, nodes(1), nodes(2), nodes(3), relativePosition);
 end
 %__________________________________
 % returns the initial volP and lp
@@ -125,7 +123,7 @@ function [nodes,Ss]=findNodesAndWeights_linear(xp, notused, nRegions, Regions, n
   end
   if ( abs(sum-1.0) > 1e-10)
     fprintf('findNodesAndWeights_linear\n');
-    fprintf('node(1):%g, node(2):%g ,node(3):%g, xp:%g Ss(1): %g, Ss(2): %g, Ss(3): %g, sum: %g\n',nodes(1),nodes(2),nodes(3), xp, Ss(1), Ss(2), Ss(3), sum)
+    fprintf('node(1):%g, node(2):%g , xp:%g Ss(1): %g, Ss(2): %g, sum: %g\n',nodes(1),nodes(2), xp, Ss(1), Ss(2), sum)
     input('error: the shape functions (linear) dont sum to 1.0 \n');
   end
 
