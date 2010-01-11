@@ -288,13 +288,6 @@
           <addSources                   spec="OPTIONAL BOOLEAN"/>
           <conv_scheme                  spec="OPTIONAL STRING 'upwind, super_bee, central'"/> 
           <scaling_const                spec="OPTIONAL DOUBLE"/>                              
-          <Clipping                     spec="OPTIONAL NO_DATA">
-
-            <low                        spec="OPTIONAL DOUBLE"/>
-            <small                      spec="OPTIONAL DOUBLE"/> <!-- this defaults to 1e-16, and is probably best left alone (but it can be changed, just in case) -->
-            <high                       spec="OPTIONAL DOUBLE"/>
-
-          </Clipping>
           <src                          spec="MULTIPLE NO_DATA" 
                                         attribute1="label REQUIRED STRING"/>
           <initialization               spec="OPTIONAL NO_DATA"
@@ -311,6 +304,12 @@
             <step_cellstart             spec="OPTIONAL DOUBLE"/>         <!-- cell location (in specified direction) at which the step should begin -->
             <step_cellend               spec="OPTIONAL DOUBLE"/>         <!-- cell location (in specified direction) at which the step should end -->
           </initialization>                              
+
+          <Clipping                     spec="OPTIONAL NO_DATA">
+            <low                        spec="OPTIONAL DOUBLE"/> <!-- Low clipping value for SCALED value of DQMOM internal coordinate -->
+            <high                       spec="OPTIONAL DOUBLE"/> <!-- High clipping value for SCALED value of DQMOM internal coordinate -->
+          </Clipping>
+
         </Eqn>
 
         <Sources                        spec="OPTIONAL NO_DATA">
@@ -461,11 +460,9 @@
           </initialization>                              
           <scaling_const                spec="REQUIRED DOUBLE"/>                              
           <Clipping                     spec="OPTIONAL NO_DATA">
-
-            <low                        spec="OPTIONAL DOUBLE"/>
+            <low                        spec="OPTIONAL DOUBLE"/> <!-- Low clipping value for SCALED value of DQMOM internal coordinate -->
             <small                      spec="OPTIONAL DOUBLE"/> <!-- this defaults to 1e-16, and is probably best left alone (but it can be changed, just in case) -->
-            <high                       spec="OPTIONAL DOUBLE"/>
-
+            <high                       spec="OPTIONAL DOUBLE"/> <!-- High clipping value for SCALED value of DQMOM internal coordinate -->
           </Clipping>
         </Weights>
 
@@ -497,10 +494,8 @@
           <model                        spec="MULTIPLE NO_DATA"
                                         attribute1="label REQUIRED STRING"/>
           <Clipping                     spec="OPTIONAL NO_DATA">
-
-            <low                        spec="OPTIONAL DOUBLE"/>
-            <high                       spec="OPTIONAL DOUBLE"/>
-
+            <low                        spec="OPTIONAL DOUBLE"/>    <!-- Low clipping value for SCALED value of DQMOM internal coordinate -->
+            <high                       spec="OPTIONAL DOUBLE"/>    <!-- High clipping value for SCALED value of DQMOM internal coordinate -->
           </Clipping>
         </Ic>
 
