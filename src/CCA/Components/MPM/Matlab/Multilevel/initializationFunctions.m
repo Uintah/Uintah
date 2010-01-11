@@ -89,8 +89,9 @@ function [IF] = initializationFunctions
     fprintf('Particle Position\n');
 
     NP_max = 0;
+    maxLevels = Limits.maxLevels;
     
-    for L=1:Limits.maxLevels
+    for L=1:maxLevels
       NN = Levels{L}.NN;
 
       fprintf('-----------------------Level %g\n',L);
@@ -132,9 +133,9 @@ function [IF] = initializationFunctions
 
       NP=ip-1;  % number of particles
       
-      % place individual particle positions in array
+      % place individual particle positions into a temporary array
       for ip = 1:NP
-        xp_allLevels(ip,L) = xp(ip);
+        xp_tmp(ip,L) = xp(ip);
       end
 
       NP_max = max(NP_max,NP);      % nax number of particles on any level
@@ -144,6 +145,16 @@ function [IF] = initializationFunctions
     
     %xp_allLevels
     Limits.NP_max = NP_max;
+    
+    
+    xp_allLevels = zeros(NP_max,maxLevels);
+    for L=1:maxLevels
+      for ip = 1:Levels{L}.NP
+        xp_allLevels(ip,L) = xp_tmp(ip,L);
+      end
+    end
+    
+    
   end
   %______________________________________________________________________
   function [Levels, dx_min, Limits] = initialize_grid(domain,PPC,L1_dx,interpolation,d_smallNum)
