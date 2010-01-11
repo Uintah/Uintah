@@ -1,5 +1,6 @@
 function [GF] = gridFunctions
   GF.hasFinerCell = @hasFinerCell;
+  GF.isOutsideLevel = @isOutsideLevel;
 
   %__________________________________
   function[test] = hasFinerCell(x,curLevel,Levels,Limits)
@@ -22,5 +23,15 @@ function [GF] = gridFunctions
     test = 0;
   end
   
+  
+  %__________________________________
+  function[test] = isOutsideLevel(x,curLevel,Levels)
+  
+    if ( (x < Levels{curLevel}.min) || (x >Levels{curLevel}.max) )
+      test = 1;
+    else
+      test = 0;
+    end
+  end  
   
 end  % gridFunctions

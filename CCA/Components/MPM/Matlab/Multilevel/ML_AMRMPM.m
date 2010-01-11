@@ -16,11 +16,13 @@ addpath([docroot '/techdoc/creating_plots/examples'])   % so you can use dsxy2fi
 global d_debugging;
 global PPC;
 global sf;
+global gf;
 global NSFN;               % number of shape function nodes
 d_debugging = problem_type;
 
 [mms] = MMS;                      % load mms functions
 [sf]  = shapeFunctions;           % load all the shape functions
+[gf]  = gridFunctions;            % load all grid based function
 [IF]  = initializationFunctions   % load initialization functions
 
 %  valid options:
@@ -70,7 +72,7 @@ d_smallNum = double(1e-16);
 L1         = 1;
 
 bar_min     = 0.0;
-bar_max     = 1;
+bar_max     = 0.32;
 bar_length  = bar_max - bar_min;
 
 domain       = 1.0;
@@ -396,8 +398,10 @@ while t<t_final && tstep < max_tstep
   %compute particle stress
   for l=1:maxLevels 
     L = Levels{l};
-    [Fp(:,l), dF(:,l),vol(:,l),lp(:,l)] = computeDeformationGradient(xp(:,l),lp(:,l),dt,vel_new_G(:,l),Fp(:,l),L.NP, L.nPatches, L.Patches, nodePos(:,l),Lx(:,:,l));
-    [stressP(:,l)]                      = computeStress(E,Fp(:,l),L.NP);
+    if(L.NP > 0)     
+      [Fp(:,l), dF(:,l),vol(:,l),lp(:,l)] = computeDeformationGradient(xp(:,l),lp(:,l),dt,vel_new_G(:,l),Fp(:,l),L.NP, L.nPatches, L.Patches, nodePos(:,l),Lx(:,:,l));
+      [stressP(:,l)]                      = computeStress(E,Fp(:,l),L.NP);
+    end
   end
   %__________________________________
   %project changes back to particles
@@ -419,11 +423,11 @@ while t<t_final && tstep < max_tstep
       dp(ip,l)   = dp(ip,l) + dxp;
     end
   end
- 
+
   
   %__________________________________
-  % particles relocation here
-  
+  % relocate particles between levels
+  [xp,massP,velP,vol,Fp,lp,Levels]=relocateParticles(xp,massP,velP,vol,Fp,lp,Levels,Limits);
   
   %__________________________________
   % find the tip displacement
@@ -657,7 +661,50 @@ function [stressP]=computeStress(E,Fp,NP)
   end
 end
 
+%__________________________________
+% relocate particles to the finest level
+function [xp,massP,velP,vol,Fp,lp,Levels]=relocateParticles(xp,massP,velP,vol,Fp,lp,Levels,Limits)
+  global gf;
+  
+  for l=1:Limits.maxLevels   
+    L = Levels{l};
+    
+    for ip=1:L.NP   % has particle moved from coarse level to fine level
+      moveToFinerLevel   = gf.hasFinerCell(xp(ip,l),l,Levels,Limits);
+      moveToCoarserLevel = gf.isOutsideLevel(xp(ip,l),l,Levels);
 
+      if(moveToFinerLevel)
+        newLevel = l +1;
+        fprintf('L-%g, particle id: %g  moving particle to finer level %g\n',l, ip, newLevel);
+      end
+
+      if(moveToCoarserLevel)
+        newLevel = l -1; 
+        fprintf('L-%g, particle id: %g  moving particle to coarser level %g \n',l, ip, newLevel);
+      end
+      
+      if(moveToFinerLevel || moveToCoarserLevel)
+        % Add particle state to the new level     
+        newNP    = Levels{newLevel}.NP +1;  
+        massP(newNP, newLevel) = massP(ip,l);  
+        velP(newNP, newLevel)  = velP(ip,l);   
+        Fp(newNP, newLevel)    = Fp(ip,l);     
+        lp(newNP, newLevel)    = lp(ip,l);     
+        vol(newNP,newLevel)    = vol(ip,l);
+        Levels{newLevel}.NP = newNP;
+        
+        % delete particle from level
+        massP(ip,l) = 0.0; 
+        velP(ip,l)  = 0.0;  
+        Fp(ip,l)    = 0.0;    
+        lp(ip,l)    = 0.0;    
+        vol(ip,l)   = 0.0;
+        Levels{l}.NP = L.NP -1;
+      end
+    end  %np
+    
+  end  % levels
+end
 
 
 %__________________________________
@@ -668,7 +715,10 @@ function plotResults(titleStr,t, tstep, xp, dp, massP, Fp, velP, stressP, nodePo
   set(1,'position',[50,100,700,700]);
   levelColors = ['m','g','r','b','k'];
   
+  xlim( [Levels{1}.min Levels{1}.max] )
   subplot(4,1,1),plot(xp,velP,'rd');
+  
+  xlim( [Levels{1}.min Levels{1}.max] )
   ylim([min(min(velP - 1e-3) )  max( max(velP + 1e-3))])
   
   xlabel('Particle Position');
@@ -686,18 +736,18 @@ function plotResults(titleStr,t, tstep, xp, dp, massP, Fp, velP, stressP, nodePo
     end
   end
   hold off
-  %axis([0 50 99 101] )
+
 
   subplot(4,1,2),plot(xp,Fp,'rd');
-  %axis([0 50 0 2] )
+  xlim( [Levels{1}.min Levels{1}.max] )
   ylabel('Fp');
 
   subplot(4,1,3),plot(xp,stressP,'rd');
-  %axis([0 50 -1 1] )
+  xlim( [Levels{1}.min Levels{1}.max] )
   ylabel('Particle stress');
   
   subplot(4,1,4),plot(xp,massP,'rd');
-  %axis([0 50 -1 1] )
+  xlim( [Levels{1}.min Levels{1}.max] )
   ylabel('Particle mass');
   
   
