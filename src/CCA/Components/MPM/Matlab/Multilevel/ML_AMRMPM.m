@@ -67,6 +67,7 @@ bodyForce = 0;
 
 BigNum     = int32(1e5);
 d_smallNum = double(1e-16);
+L1         = 1;
 
 bar_min     = 0.0;
 bar_max     = 1;
@@ -142,17 +143,17 @@ extForceG = zeros(NN_max,  maxLevels);
 intForceG = zeros(NN_max,  maxLevels);
 
 
-KE        = zeros(BigNum, maxLevels);
-SE        = zeros(BigNum, maxLevels);
-TE        = zeros(BigNum, maxLevels);
-totalMom  = zeros(BigNum, maxLevels);
-Exact_tip = zeros(BigNum, maxLevels);
-DX_tip    = zeros(BigNum, maxLevels);
-TIME      = zeros(BigNum, maxLevels);
+KE        = zeros(BigNum,1);
+SE        = zeros(BigNum,1);
+TE        = zeros(BigNum,1);
+totalMom  = zeros(BigNum,1);
+Exact_tip = zeros(BigNum,1);
+DX_tip    = zeros(BigNum,1);
+TIME      = zeros(BigNum,1);
 
-totalEng_err   = zeros(BigNum, maxLevels);
-totalMom_err   = zeros(BigNum, maxLevels);
-tipDeflect_err = zeros(BigNum, maxLevels);
+totalEng_err   = zeros(BigNum,1);
+totalMom_err   = zeros(BigNum,1);
+tipDeflect_err = zeros(BigNum,1);
 
 input('hit return')
 
@@ -199,14 +200,14 @@ if strcmp(problem_type, 'oscillator')
 end
 
 if strcmp(problem_type, 'advectBlock')
-  initVelocity    = 100;
+  initVelocity    = 0;
   t_final          = 0.5;
   numBCs          = 1;
   velG_BCValueL   = initVelocity;
   velG_BCValueR   = initVelocity;
   for l=1:maxLevels
-    NP = Levels{l}.NP;
-    for ip=1:NP
+    L = Levels{l};
+    for ip=1:L.NP
       velP(ip,l)    = initVelocity;
       initPos(ip,l) = xp(ip,l);
     end
@@ -267,12 +268,15 @@ input('hit return')
 
 fn = sprintf('initialConditions.dat');
 fid = fopen(fn, 'w');
-fprintf(fid,'#p, xp, velP, Fp, stressP accl_extForceP\n');
-for ip=1:NP
-  fprintf(fid,'%g %16.15E %16.15E %16.15E %16.15E %16.15E\n',ip, xp(ip),velP(ip),Fp(ip), stressP(ip), accl_extForceP(ip));
+fprintf(fid,'level, #p, xp, velP, Fp, stressP accl_extForceP\n');
+
+for l=1:maxLevels
+  L = Levels{l};  
+  for ip=1:L.NP
+    fprintf(fid,'%g, %g %16.15E %16.15E %16.15E %16.15E %16.15E\n',l,ip, xp(ip,l),velP(ip,l),Fp(ip,l), stressP(ip,l), accl_extForceP(ip,l));
+  end
 end
 fclose(fid);
-
 %==========================================================================
 % Main timstep loop
 t = t_initial;
@@ -324,7 +328,7 @@ while t<t_final && tstep < max_tstep
         extForceG(nodes(ig),l) = extForceG(nodes(ig),l) + massP(ip,l) * accl_extForceP(ip,l) * Ss(ig); 
 
         % debugging__________________________________
-        if(1)
+        if(0)
           fprintf( 'L-%g  ip: %g xp: %g, nodes: %g, node_pos: %g massG: %g, massP: %g, Ss: %g,  prod: %g \n', l, ip, xp(ip,l), nodes(ig), nodePos(nodes(ig),l), massG(nodes(ig),l), massP(ip,l), Ss(ig), massP(ip,l) * Ss(ig) );
           fprintf( '\t velG:      %g,  velP:       %g,  prod: %g \n', velG(nodes(ig),l), velP(ip,l), (massP(ip,l) * velP(ip,l) * Ss(ig) ) );
           fprintf( '\t extForceG: %g,  accl_extForceP:  %g,  prod: %g \n', extForceG(nodes(ig),l), accl_extForceP(ip,l), accl_extForceP(ip,l) * Ss(ig) );
@@ -339,10 +343,10 @@ while t<t_final && tstep < max_tstep
   velG = velG./massG;
   vel_nobc_G = velG;
 
-  % set velocity BC
+  % set velocity BC on L1
   for ibc=1:length(BCNodeL)
-    velG(BCNodeL(ibc)) = velG_BCValueL;
-    velG(BCNodeR(ibc)) = velG_BCValueR;
+    velG(BCNodeL(ibc),L1) = velG_BCValueL;
+    velG(BCNodeR(ibc),L1) = velG_BCValueR;
   end
 
   
@@ -351,35 +355,38 @@ while t<t_final && tstep < max_tstep
     L = Levels{l};
     
     for ip=1:L.NP
-      [nodes,Gs,dx]=sf.findNodesAndWeightGradients_linear(xp(ip), lp(ip), nRegions, Regions, nodePos,Lx);
+      [nodes,Gs,dx]=sf.findNodesAndWeightGradients_linear(xp(ip,l), lp(ip,l), L.nPatches, L.Patches, nodePos(:,l), Lx(:,:,l));
       for ig=1:NSFN
-        intForceG(nodes(ig)) = intForceG(nodes(ig)) - Gs(ig) * stressP(ip) * vol(ip);
+        intForceG(nodes(ig),l) = intForceG(nodes(ig),l) - Gs(ig) * stressP(ip,l) * vol(ip,l);
+        %fprintf( 'L-%g  ig: %g,  internalForceG: %g source: %g \n', l, nodes(ig), intForceG(nodes(ig),l), Gs(ig) * stressP(ip,l) * vol(ip,l)   );
       end
     end
-  end
-
+  end  % level
   %__________________________________
   %compute the acceleration and new velocity on the grid
   accl_G    =(intForceG + extForceG)./massG;
   vel_new_G = velG + accl_G.*dt;
   
 
-  %set velocity BC
+  %set velocity BC on L1
   for ibc=1:length(BCNodeL)
-    vel_new_G(BCNodeL(ibc)) = velG_BCValueL;
-    vel_new_G(BCNodeR(ibc)) = velG_BCValueR;
+    vel_new_G(BCNodeL(ibc),L1) = velG_BCValueL;
+    vel_new_G(BCNodeR(ibc),L1) = velG_BCValueR;
   end
 
   momG = massG .* vel_new_G;
 
   %__________________________________
   % compute the acceleration on the grid
-  for ig=1:NN
-    accl_G(ig)  = (vel_new_G(ig) - vel_nobc_G(ig))/dt;
+  for l=1:maxLevels   
+    L = Levels{l};
+          
+    for ig=1:L.NN
+      accl_G(ig,l)  = (vel_new_G(ig,l) - vel_nobc_G(ig,l))/dt;
+    end
   end
   
-  
-  %set acceleration BC
+  %set acceleration BC on L1
   for ibc=1:length(BCNodeL)
     accl_G(BCNodeL(ibc)) = 0.0;
     accl_G(BCNodeR(ibc)) = 0.0;
@@ -387,46 +394,70 @@ while t<t_final && tstep < max_tstep
  
   
   %compute particle stress
-  [Fp, dF,vol,lp] = computeDeformationGradient(xp,lp,dt,vel_new_G,Fp,NP, nRegions, Regions, nodePos,Lx);
-  [stressP]       = computeStress(E,Fp,NP);
-  
+  for l=1:maxLevels 
+    L = Levels{l};
+    [Fp(:,l), dF(:,l),vol(:,l),lp(:,l)] = computeDeformationGradient(xp(:,l),lp(:,l),dt,vel_new_G(:,l),Fp(:,l),L.NP, L.nPatches, L.Patches, nodePos(:,l),Lx(:,:,l));
+    [stressP(:,l)]                      = computeStress(E,Fp(:,l),L.NP);
+  end
   %__________________________________
   %project changes back to particles
-  tmp = zeros(NP,1);
-  for ip=1:NP
-    [nodes,Ss]=sf.findNodesAndWeights_linear(xp(ip), lp(ip), nRegions, Regions, nodePos, Lx);
-    dvelP = 0.;
-    dxp   = 0.;
+  for l=1:maxLevels 
+    L = Levels{l};
     
-    for ig=1:NSFN
-      dvelP = dvelP + accl_G(nodes(ig))    * dt * Ss(ig);
-      dxp   = dxp   + vel_new_G(nodes(ig)) * dt * Ss(ig);
-    end
+    for ip=1:L.NP
+      [nodes,Ss]=sf.findNodesAndWeights_linear(xp(ip,l), lp(ip,l), L.nPatches, L.Patches, nodePos(:,l), Lx(:,:,l));
+      dvelP = 0.;
+      dxp   = 0.;
 
-    velP(ip) = velP(ip) + dvelP;
-    xp(ip)   = xp(ip) + dxp; 
-    dp(ip)   = dp(ip) + dxp;
-    tmp(ip)  = tmp(ip) + dxp;
+      for ig=1:NSFN
+        dvelP = dvelP + accl_G(nodes(ig),l)    * dt * Ss(ig);
+        dxp   = dxp   + vel_new_G(nodes(ig),l) * dt * Ss(ig);
+      end
+
+      velP(ip,l) = velP(ip,l) + dvelP;
+      xp(ip,l)   = xp(ip,l) + dxp; 
+      dp(ip,l)   = dp(ip,l) + dxp;
+    end
   end
-  
  
   
-  DX_tip(tstep)=dp(NP);
+  %__________________________________
+  % particles relocation here
+  
+  
+  %__________________________________
+  % find the tip displacement
+  tipLocation     = 0.0;
+  tipDisplacement = 0.0;
+  for l=1:maxLevels 
+    L = Levels{l};
+
+    for ip=1:L.NP
+      if(xp(ip,l) > tipLocation)
+        tipLocation = xp(ip,l);
+        tipDisplacement = dp(ip,l);
+      end
+    end
+  end
+  
+  DX_tip(tstep)=tipDisplacement;
   T=t; %-dt;
 
   %__________________________________
-  % compute kinetic, strain and total energy
-  KE(tstep)=0.;
-  SE(tstep)=0.;
-  totalMom(tstep) = 0;
+  % compute kinetic, strain and total energy over all levels
+  KE(tstep) = 0.0;
+  SE(tstep) = 0.0;
+  totalMom(tstep) = 0.0;
   
-  for ip=1:NP
-    totalMom(tstep) = totalMom(tstep) + massP(ip) * velP(ip);
-    KE(tstep) = KE(tstep) + .5*massP(ip) * velP(ip) * velP(ip);
-    SE(tstep) = SE(tstep) + .5*stressP(ip) * (Fp(ip)-1.) * vol(ip);
-    TE(tstep) = KE(tstep) + SE(tstep);
+  for l=1:maxLevels 
+    L = Levels{l};
+    for ip=1:L.NP
+      totalMom(tstep) = totalMom(tstep) + massP(ip,l) * velP(ip,l);
+      KE(tstep) = KE(tstep) + .5*massP(ip,l) * velP(ip,l) * velP(ip,l);
+      SE(tstep) = SE(tstep) + .5*stressP(ip,l) * (Fp(ip,l)-1.) * vol(ip,l);
+      TE(tstep) = KE(tstep) + SE(tstep);
+    end
   end
-
   %__________________________________
   % Place data into structures
   G.nodePos   = nodePos;  % Grid based Variables
@@ -438,7 +469,6 @@ while t<t_final && tstep < max_tstep
   P.extForceP = accl_extForceP;
   
   OV.speedSound = speedSound;    % Other Variables
-  OV.NP         = NP;
   OV.E          = E;
   OV.t          = t;
   OV.tstep      = tstep;
@@ -459,13 +489,14 @@ while t<t_final && tstep < max_tstep
   end
   
   if strcmp(problem_type, 'advectBlock')
-    Exact_tip(tstep) = DX_tip(tstep);
-    
-    pos_error  = 0;          % position error
-    for ip=1:NP
-      exact_pos = (initPos(ip) + t * initVelocity);
-      pos_error = pos_error +  xp(ip) - exact_pos;
-      %fprintf('xp: %16.15f  exact: %16.15f error %16.15f \n',xp(ip), exact_pos, xp(ip) - exact_pos)
+    for l=1:maxLevels 
+      L = Levels{l};
+      pos_error  = 0;          % position error
+      for ip=1:L.NP
+        exact_pos = (initPos(ip,l) + t * initVelocity);
+        pos_error = pos_error +  xp(ip,l) - exact_pos;
+        %fprintf('xp: %16.15f  exact: %16.15f error %16.15f \n',xp(ip), exact_pos, xp(ip) - exact_pos)
+      end
     end
     %fprintf('sum position error %E \n',sum(pos_error))
   end
@@ -509,7 +540,7 @@ while t<t_final && tstep < max_tstep
   %__________________________________
   % plot intantaneous solution
   if (mod(tstep,plotInterval) == 0) && (plotSwitch == 1)
-    plotResults(titleStr, t, tstep, xp, dp, massP, Fp, velP, stressP, nodePos, velG, massG, momG)
+    plotResults(titleStr, t, tstep, xp, dp, massP, Fp, velP, stressP, nodePos, velG, massG, momG,Limits, Levels)
     %input('hit return');
   end
   
@@ -522,11 +553,15 @@ while t<t_final && tstep < max_tstep
   %__________________________________
   % bulletproofing
   % particles can't leave the domain
-  for ip=1:NP
-    if(xp(ip) >= domain) 
-      t = t_final;
-      fprintf('\nparticle(%g) position is outside the domain: %g \n',ip,xp(ip))
-      fprintf('now exiting the time integration loop\n\n') 
+  for l=1:maxLevels 
+    L = Levels{l};
+    
+    for ip=1:L.NP
+      if(xp(ip,l) >= L.max || xp(ip,l) < L.min) 
+        fprintf('\n L-%g, particle(%g) position is outside the domain [%g, %g]: %g \n',l,ip,L.min, L.max,xp(ip,l))
+        fprintf('now exiting the time integration loop\n\n');
+        return; 
+      end
     end
   end
 end  % main loop

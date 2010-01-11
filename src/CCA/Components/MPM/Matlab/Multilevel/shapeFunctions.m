@@ -24,7 +24,7 @@ function[node, dx]=positionToNode(xp, nRegions, Regions)
       n    = floor((xp - R.min)/R.dx);      % # of nodes from the start of the current region
       node = n + n_offset;                  % add an offset to the local node number
 
-      fprintf( 'region: %g, n: %g, node:%g, xp: %g dx: %g R.min: %g, R.max: %g n_offset: %g \n',r, n, node, xp, dx, R.min, R.max,n_offset);
+      %fprintf( 'region: %g, n: %g, node:%g, xp: %g dx: %g R.min: %g, R.max: %g n_offset: %g \n',r, n, node, xp, dx, R.min, R.max,n_offset);
       return;
     end
 
