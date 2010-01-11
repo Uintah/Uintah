@@ -221,7 +221,7 @@ function [IF] = initializationFunctions
     P.refineRatio = 1;
     P.dx          = L1_dx
     P.volP        = P.dx/PPC;
-    P.NN          = int32( (P.max - P.min)/P.dx); 
+    P.NN          = int32( (P.max - P.min)/P.dx +1); 
     P.lp          = P.dx/(2 * PPC);
     PatchesL1{3}  = P;
     
