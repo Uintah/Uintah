@@ -72,13 +72,13 @@ d_smallNum = double(1e-16);
 L1         = 1;
 
 bar_min     = 0.0;
-bar_max     = 0.32;
+bar_max     = 0.6666;
 bar_length  = bar_max - bar_min;
 
 domain       = 1.0;
 area         = 1.;
 plotSwitch   = 1;
-plotInterval = 100;
+plotInterval = 1;
 writeData    = 0;
 max_tstep    = BigNum;
 
@@ -202,16 +202,19 @@ if strcmp(problem_type, 'oscillator')
 end
 
 if strcmp(problem_type, 'advectBlock')
-  initVelocity    = 0;
+  initVelocity    = 100;
   t_final          = 0.5;
   numBCs          = 1;
   velG_BCValueL   = initVelocity;
   velG_BCValueR   = initVelocity;
+  
+  ipp = 0;
   for l=1:maxLevels
     L = Levels{l};
     for ip=1:L.NP
+      ipp = ipp + 1;
       velP(ip,l)    = initVelocity;
-      initPos(ip,l) = xp(ip,l);
+      initPos(ipp)  = xp(ip,l);
     end
   end
 end
@@ -493,16 +496,9 @@ while t<t_final && tstep < max_tstep
   end
   
   if strcmp(problem_type, 'advectBlock')
-    for l=1:maxLevels 
-      L = Levels{l};
-      pos_error  = 0;          % position error
-      for ip=1:L.NP
-        exact_pos = (initPos(ip,l) + t * initVelocity);
-        pos_error = pos_error +  xp(ip,l) - exact_pos;
-        %fprintf('xp: %16.15f  exact: %16.15f error %16.15f \n',xp(ip), exact_pos, xp(ip) - exact_pos)
-      end
-    end
-    %fprintf('sum position error %E \n',sum(pos_error))
+    sumExactPos = sum(sum(initPos));
+    sumCurPos = sum(sum(xp));
+    fprintf('sum position error %E \n',sumExactPos - sumCurPos);
   end
   
   if( strcmp(problem_type, 'compaction') && (mod(tstep,plotInterval) == 0) && (plotSwitch == 1) )
@@ -635,6 +631,9 @@ function [Fp, dF, vol, lp] = computeDeformationGradient(xp,lp,dt,velG,Fp,NP, nRe
   global NSFN;
   global sf;
   
+  nn = length(lp);
+  vol = zeros(nn,1);     % you must declare arrays that are not passed in.
+  dF  = zeros(nn,1);
   for ip=1:NP
     [nodes,Gs,dx]  = sf.findNodesAndWeightGradients_linear(xp(ip), lp(ip), nRegions, Regions, nodePos, Lx);
     [volP_0, lp_0] = sf.positionToVolP(xp(ip), nRegions, Regions);
@@ -644,17 +643,19 @@ function [Fp, dF, vol, lp] = computeDeformationGradient(xp,lp,dt,velG,Fp,NP, nRe
       gUp = gUp + velG(nodes(ig)) * Gs(ig);
     end
 
-    dF(ip)      = 1. + gUp * dt;
-    Fp(ip)      = dF(ip) * Fp(ip);
-    vol(ip)     = volP_0 * Fp(ip);
-    lp(ip)      = lp_0 * Fp(ip);
+    dF(ip,1)      = 1. + gUp * dt;
+    Fp(ip,1)      = dF(ip) * Fp(ip);
+    vol(ip,1)     = volP_0 * Fp(ip);
+    lp(ip,1)      = lp_0 * Fp(ip);
   end
 end
 
 
 %__________________________________
 function [stressP]=computeStress(E,Fp,NP)
-                                                                                
+  nn = length(Fp);
+  stressP = zeros(nn,1);  % you must declare arrays that are not passed in.
+                                                                                  
   for ip=1:NP
 %    stressP(ip) = E * (Fp(ip)-1.0);
     stressP(ip) = (E/2.0) * ( Fp(ip) - 1.0/Fp(ip) );        % hardwired for the mms test  see eq 50
@@ -675,34 +676,66 @@ function [xp,massP,velP,vol,Fp,lp,Levels]=relocateParticles(xp,massP,velP,vol,Fp
 
       if(moveToFinerLevel)
         newLevel = l +1;
-        fprintf('L-%g, particle id: %g  moving particle to finer level %g\n',l, ip, newLevel);
+        fprintf('L-%g, particle id: %g  moving particle to finer level %g, position: %g\n',l, ip, newLevel, xp(ip,l));
       end
 
       if(moveToCoarserLevel)
         newLevel = l -1; 
-        fprintf('L-%g, particle id: %g  moving particle to coarser level %g \n',l, ip, newLevel);
+        fprintf('L-%g, particle id: %g  moving particle to coarser level %g position: %g\n',l, ip, newLevel, xp(ip,l));
       end
       
       if(moveToFinerLevel || moveToCoarserLevel)
+      
         % Add particle state to the new level     
         newNP    = Levels{newLevel}.NP +1;  
+        fprintf(' Relocating Particle, Lnew:%g, Lold:%g particle id_old:%g  id_new:%g \n',newLevel,l,ip,newNP);
+        xp(newNP, newLevel)    = xp(ip,l);
         massP(newNP, newLevel) = massP(ip,l);  
-        velP(newNP, newLevel)  = velP(ip,l);   
+        velP(newNP, newLevel)  = velP(ip,l);
         Fp(newNP, newLevel)    = Fp(ip,l);     
         lp(newNP, newLevel)    = lp(ip,l);     
         vol(newNP,newLevel)    = vol(ip,l);
         Levels{newLevel}.NP = newNP;
         
         % delete particle from level
-        massP(ip,l) = 0.0; 
-        velP(ip,l)  = 0.0;  
-        Fp(ip,l)    = 0.0;    
-        lp(ip,l)    = 0.0;    
-        vol(ip,l)   = 0.0;
+        xp(ip,l)    = NaN;
+        massP(ip,l) = NaN;
+        velP(ip,l)  = NaN;
+        Fp(ip,l)    = NaN;
+        lp(ip,l)    = NaN;
+        vol(ip,l)   = NaN;
         Levels{l}.NP = L.NP -1;
+        
       end
     end  %np
-    
+  end  % levels
+  
+  % look for gaps in the arrays and eliminate the gaps if they are found
+  % a gap is a NaN followed by a non-zero number
+  for l=1:Limits.maxLevels   
+    L = Levels{l};
+
+    NP = length(xp(:,l)) -1;
+    for ip=1:NP
+
+      if ( isnan(xp(ip,l)) && ~isnan(xp(ip +1,l)) && xp(ip+1,l) ~= 0.0)
+        fprintf(' A gap has been found at L-%g, ip:%g \n',l,ip);
+        xp(ip, l)    = xp(ip+1,l);
+        massP(ip, l) = massP(ip+1,l);  
+        velP(ip, l)  = velP(ip+1,l);
+        Fp(ip, l)    = Fp(ip+1,l);     
+        lp(ip, l)    = lp(ip+1,l);     
+        vol(ip,l)    = vol(ip+1,l);
+
+        xp(ip+1,l)    = NaN;
+        massP(ip+1,l) = NaN;
+        velP(ip+1,l)  = NaN;
+        Fp(ip+1,l)    = NaN;
+        lp(ip+1,l)    = NaN;
+        vol(ip+1,l)   = NaN;
+
+      end
+    end  % np
   end  % levels
 end
 
@@ -711,7 +744,7 @@ end
 function plotResults(titleStr,t, tstep, xp, dp, massP, Fp, velP, stressP, nodePos, velG, massG, momG, Limits, Levels)
 
     % plot SimulationState
-  figure1 = figure(1)
+  figure1 = figure(1);
   set(1,'position',[50,100,700,700]);
   levelColors = ['m','g','r','b','k'];
   
