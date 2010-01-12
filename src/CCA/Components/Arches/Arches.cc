@@ -45,6 +45,9 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Arches/CoalModels/KobayashiSarofimDevol.h>
 #include <CCA/Components/Arches/CoalModels/HeatTransfer.h>
 #include <CCA/Components/Arches/CoalModels/SimpleHeatTransfer.h>
+#include <CCA/Components/Arches/CoalModels/XDragModel.h>
+#include <CCA/Components/Arches/CoalModels/YDragModel.h>
+#include <CCA/Components/Arches/CoalModels/ZDragModel.h>
 #include <CCA/Components/Arches/TransportEqns/EqnFactory.h>
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqnFactory.h>
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqn.h>
@@ -2447,6 +2450,15 @@ void Arches::registerModels(ProblemSpecP& db)
         //  model_factory.register_model( temp_model_name, modelBuilder );
         } else if ( model_type == "SimpleHeatTransfer" ) {
           ModelBuilder* modelBuilder = scinew SimpleHeatTransferBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
+          model_factory.register_model( temp_model_name, modelBuilder );
+        } else if ( model_type == "XDrag" ) {
+          ModelBuilder* modelBuilder = scinew XDragModelBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
+          model_factory.register_model( temp_model_name, modelBuilder );
+        } else if ( model_type == "YDrag" ) {
+          ModelBuilder* modelBuilder = scinew YDragModelBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
+          model_factory.register_model( temp_model_name, modelBuilder );
+        } else if ( model_type == "ZDrag" ) {
+          ModelBuilder* modelBuilder = scinew ZDragModelBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
           model_factory.register_model( temp_model_name, modelBuilder );
         //} else if (model_type == "Drag" ) {
         //  ModelBuilder* modelBuilder = scinew DragModelBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);

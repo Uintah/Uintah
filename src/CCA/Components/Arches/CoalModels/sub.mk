@@ -11,4 +11,7 @@ SRCS += \
   $(SRCDIR)/ConstantModel.cc  \
   $(SRCDIR)/HeatTransfer.cc \
   $(SRCDIR)/SimpleHeatTransfer.cc \
+  $(SRCDIR)/XDragModel.cc \
+  $(SRCDIR)/YDragModel.cc \
+  $(SRCDIR)/ZDragModel.cc \
   $(SRCDIR)/DragModel.cc
