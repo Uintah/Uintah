@@ -299,11 +299,10 @@ end
     
     
     % level extents
-    Lmax = 0;
-    Lmin = 1000;
-    
     for l=1:maxLevels
       L = Levels{l};
+      Lmax = 0;
+      Lmin = 1000;
       
       for p=1:L.nPatches
         P = L.Patches{p};
