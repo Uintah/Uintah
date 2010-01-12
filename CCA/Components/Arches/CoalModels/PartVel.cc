@@ -31,24 +31,36 @@ void PartVel::problemSetup(const ProblemSpecP& inputdb)
 
   ProblemSpecP vel_db = db->findBlock("VelModel");
   if (vel_db) {
-    int regime; 
-    vel_db->getWithDefault("kinematic_viscosity",kvisc,1.e-5); 
-    vel_db->getWithDefault("iter", d_totIter, 15); 
-    vel_db->getWithDefault("tol",  d_tol, 1e-15); 
-    vel_db->getWithDefault("rho_ratio",rhoRatio,1000);
-    vel_db->getWithDefault("L",d_L, 1.0);
-    vel_db->getWithDefault("eta", d_eta, 1e-5); 
-    beta = 3. / (2.*rhoRatio + 1.); 
-    vel_db->getWithDefault("regime",regime,1);      
-    vel_db->getWithDefault("min_vel_ratio", d_min_vel_ratio, .1); 
 
-    if (regime == 1)
-      d_power = 1;
-    else if (regime == 2) 
-      d_power = 0.5;
-    else if (regime == 3)
-      d_power = 1./3.;
+    std::string model_type;
+    vel_db->getAttribute("type", model_type);
 
+    if (model_type == "Balachandar") {
+      d_bala = true;
+      d_drag = false;
+      int regime; 
+      vel_db->getWithDefault("kinematic_viscosity",kvisc,1.e-5); 
+      vel_db->getWithDefault("iter", d_totIter, 15); 
+      vel_db->getWithDefault("tol",  d_tol, 1e-15); 
+      vel_db->getWithDefault("rho_ratio",rhoRatio,1000);
+      vel_db->getWithDefault("L",d_L, 1.0);
+      vel_db->getWithDefault("eta", d_eta, 1e-5); 
+      beta = 3. / (2.*rhoRatio + 1.); 
+      vel_db->getWithDefault("regime",regime,1);      
+      vel_db->getWithDefault("min_vel_ratio", d_min_vel_ratio, .1); 
+
+      if (regime == 1)
+        d_power = 1;
+      else if (regime == 2) 
+        d_power = 0.5;
+      else if (regime == 3)
+        d_power = 1./3.;
+    } else if(model_type == "Dragforce") {
+      d_bala = false;
+      d_drag = true;
+    } else {
+      throw InvalidValue( "Invalid type for Velocity Model, must be Balachandar or Dragforce",__FILE__,__LINE__);
+    }
   } else {
     throw InvalidValue( "A <VelModel> section is missing from your input file!",__FILE__,__LINE__);
   }
@@ -88,37 +100,100 @@ PartVel::schedComputePartVel( const LevelP& level, SchedulerP& sched, const int 
     tsk->requires( Task::OldDW, i->second, gn, 0);
   }
 
-  //--Old
-  // fluid velocity
-  tsk->requires( Task::OldDW, d_fieldLabels->d_newCCVelocityLabel, gn, 0 );
 
-  // requires weighted legnth and weight (to back out length)
-  for (int i = 0; i < N; i++){
-    std::string name = "length_qn"; 
-    std::string node; 
-    std::stringstream out; 
-    out << i; 
-    node = out.str(); 
-    name += node; 
+  if (d_bala) {
+    //--Old
+    // fluid velocity
+    tsk->requires( Task::OldDW, d_fieldLabels->d_newCCVelocityLabel, gn, 0 );
 
-    EqnBase& eqn = dqmomFactory.retrieve_scalar_eqn( name ); 
-    const VarLabel* myLabel = eqn.getTransportEqnLabel();  
+    // requires weighted legnth and weight (to back out length)
+    for (int i = 0; i < N; i++){
+      std::string name = "length_qn"; 
+      std::string node; 
+      std::stringstream out; 
+      out << i; 
+      node = out.str(); 
+      name += node; 
+
+      EqnBase& eqn = dqmomFactory.retrieve_scalar_eqn( name ); 
+      const VarLabel* myLabel = eqn.getTransportEqnLabel();  
     
-    tsk->requires( Task::OldDW, myLabel, gn, 0 ); 
-  }
+      tsk->requires( Task::OldDW, myLabel, gn, 0 ); 
+    }
 
-  for (int i = 0; i < N; i++){
-    std::string name = "w_qn"; 
-    std::string node; 
-    std::stringstream out; 
-    out << i; 
-    node = out.str(); 
-    name += node; 
+    for (int i = 0; i < N; i++){
+      std::string name = "w_qn"; 
+      std::string node; 
+      std::stringstream out; 
+      out << i; 
+      node = out.str(); 
+      name += node; 
 
-    EqnBase& eqn = dqmomFactory.retrieve_scalar_eqn( name ); 
-    const VarLabel* myLabel = eqn.getTransportEqnLabel(); 
+      EqnBase& eqn = dqmomFactory.retrieve_scalar_eqn( name ); 
+      const VarLabel* myLabel = eqn.getTransportEqnLabel(); 
   
-    tsk->requires( Task::OldDW, myLabel, gn, 0 ); 
+      tsk->requires( Task::OldDW, myLabel, gn, 0 ); 
+    }
+
+  } else if(d_drag) {
+   
+    tsk->requires( Task::OldDW, d_fieldLabels->d_newCCVelocityLabel, gn, 0 );
+    
+    for (int i = 0; i < N; i++){
+      std::string name = "w_qn";
+      std::string node;
+      std::stringstream out;
+      out << i;
+      node = out.str();
+      name += node;
+
+      EqnBase& eqn = dqmomFactory.retrieve_scalar_eqn( name );
+      const VarLabel* myLabel = eqn.getTransportEqnLabel();
+
+      tsk->requires( Task::OldDW, myLabel, gn, 0 );
+    }
+    
+    for (int i = 0; i < N; i++){
+      std::string name = "ux_qn";
+      std::string node;
+      std::stringstream out;
+      out << i;
+      node = out.str();
+      name += node;
+
+      EqnBase& eqn = dqmomFactory.retrieve_scalar_eqn( name );
+      const VarLabel* myLabel = eqn.getTransportEqnLabel();
+
+      tsk->requires( Task::OldDW, myLabel, gn, 0 );
+    }
+  
+   for (int i = 0; i < N; i++){
+      std::string name = "uy_qn";
+      std::string node;
+      std::stringstream out;
+      out << i;
+      node = out.str();
+      name += node;
+
+      EqnBase& eqn = dqmomFactory.retrieve_scalar_eqn( name );
+      const VarLabel* myLabel = eqn.getTransportEqnLabel();
+
+      tsk->requires( Task::OldDW, myLabel, gn, 0 );
+    }
+   
+    for (int i = 0; i < N; i++){
+      std::string name = "uz_qn";
+      std::string node;
+      std::stringstream out;
+      out << i;
+      node = out.str();
+      name += node;
+
+      EqnBase& eqn = dqmomFactory.retrieve_scalar_eqn( name );
+      const VarLabel* myLabel = eqn.getTransportEqnLabel();
+
+      tsk->requires( Task::OldDW, myLabel, gn, 0 );
+    }
   }
 
   sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
@@ -147,69 +222,71 @@ void PartVel::ComputePartVel( const ProcessorGroup* pc,
     int archIndex = 0;
     int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
 
-    constCCVariable<Vector> gasVel; 
 
-    old_dw->get( gasVel, d_fieldLabels->d_newCCVelocityLabel, matlIndex, patch, gn, 0 ); 
+    if (d_bala) {
 
-    // now loop for all qn's
-    int N = dqmomFactory.get_quad_nodes();  
-    for ( int iqn = 0; iqn < N; iqn++){
-      std::string name = "length_qn"; 
-      std::string node; 
-      std::stringstream out; 
-      out << iqn; 
-      node = out.str(); 
-      name += node; 
+      constCCVariable<Vector> gasVel; 
 
-      EqnBase& t_eqn = dqmomFactory.retrieve_scalar_eqn( name );
-      DQMOMEqn& eqn = dynamic_cast<DQMOMEqn&>(t_eqn);
+      old_dw->get( gasVel, d_fieldLabels->d_newCCVelocityLabel, matlIndex, patch, gn, 0 ); 
+
+      // now loop for all qn's
+      int N = dqmomFactory.get_quad_nodes();  
+      for ( int iqn = 0; iqn < N; iqn++){
+        std::string name = "length_qn"; 
+        std::string node; 
+        std::stringstream out; 
+        out << iqn; 
+        node = out.str(); 
+        name += node; 
+
+        EqnBase& t_eqn = dqmomFactory.retrieve_scalar_eqn( name );
+        DQMOMEqn& eqn = dynamic_cast<DQMOMEqn&>(t_eqn);
       
-      constCCVariable<double> wlength;  
-      const VarLabel* mylLabel = eqn.getTransportEqnLabel();  
-      old_dw->get(wlength, mylLabel, matlIndex, patch, gn, 0); 
+        constCCVariable<double> wlength;  
+        const VarLabel* mylLabel = eqn.getTransportEqnLabel();  
+        old_dw->get(wlength, mylLabel, matlIndex, patch, gn, 0); 
 
-      d_highClip = eqn.getScalingConstant()*d_upLimMult; // should figure out how to do this once and only once...
+        d_highClip = eqn.getScalingConstant()*d_upLimMult; // should figure out how to do this once and only once...
 
-      name = "w_qn"; 
-      name += node; 
-      EqnBase& eqn2 = dqmomFactory.retrieve_scalar_eqn( name );
-      constCCVariable<double> weight;  
-      const VarLabel* mywLabel = eqn2.getTransportEqnLabel();  
-      old_dw->get(weight, mywLabel, matlIndex, patch, gn, 0); 
+        name = "w_qn"; 
+        name += node; 
+        EqnBase& eqn2 = dqmomFactory.retrieve_scalar_eqn( name );
+        constCCVariable<double> weight;  
+        const VarLabel* mywLabel = eqn2.getTransportEqnLabel();  
+        old_dw->get(weight, mywLabel, matlIndex, patch, gn, 0); 
 
-      ArchesLabel::PartVelMap::iterator iter = d_fieldLabels->partVel.find(iqn);
+        ArchesLabel::PartVelMap::iterator iter = d_fieldLabels->partVel.find(iqn);
 
-      CCVariable<Vector> partVel;
-      constCCVariable<Vector> old_partVel;  
-      if (rkStep < 1) 
-        new_dw->allocateAndPut( partVel, iter->second, matlIndex, patch );  
-      else  
-        new_dw->getModifiable( partVel, iter->second, matlIndex, patch ); 
-      old_dw->get(old_partVel, iter->second, matlIndex, patch, gn, 0);
-      partVel.initialize(Vector(0,0,0));
+        CCVariable<Vector> partVel;
+        constCCVariable<Vector> old_partVel;  
+        if (rkStep < 1) 
+          new_dw->allocateAndPut( partVel, iter->second, matlIndex, patch );  
+        else  
+          new_dw->getModifiable( partVel, iter->second, matlIndex, patch ); 
+        old_dw->get(old_partVel, iter->second, matlIndex, patch, gn, 0);
 
-      partVel.initialize(Vector(0.,0.,0.));
+        partVel.initialize(Vector(0.,0.,0.));
 
-      // set boundary conditions. 
-      name = "vel_qn";
-      name += node; 
-      if ( d_gasBC )  // assume gas vel =  part vel on boundary 
-        d_boundaryCond->setVectorValueBC( 0, patch, partVel, gasVel, name ); 
-      else           // part vel set by user.  
-        d_boundaryCond->setVectorValueBC( 0, patch, partVel, name );  
+        // set boundary conditions. 
+        name = "vel_qn";
+        name += node; 
+        if ( d_gasBC )  // assume gas vel =  part vel on boundary 
+          d_boundaryCond->setVectorValueBC( 0, patch, partVel, gasVel, name ); 
+        else           // part vel set by user.  
+          d_boundaryCond->setVectorValueBC( 0, patch, partVel, name );  
       
 
-      // now loop over all cells
-      for (CellIterator iter=patch->getCellIterator(0); !iter.done(); iter++){
-        IntVector c = *iter;
-        IntVector cxm = *iter - IntVector(1,0,0); 
+        // now loop over all cells
+        for (CellIterator iter=patch->getCellIterator(0); !iter.done(); iter++){
+          IntVector c = *iter;
+          IntVector cxm = *iter - IntVector(1,0,0); 
 
-        double length;
-        if( weight[c] < 1e-6 ) {
-          length = 0;
-        } else {
-          length = (wlength[c]/weight[c])*eqn.getScalingConstant();
-        }
+          double length;
+          if( weight[c] < 1e-6 ) {
+            length = 0;
+          } else {
+            length = (wlength[c]/weight[c])*eqn.getScalingConstant();
+          }
 
         //if( length > d_highClip ) {
         //  length = d_highClip;
@@ -217,66 +294,148 @@ void PartVel::ComputePartVel( const ProcessorGroup* pc,
         //  length = d_lowClip;
         //}
 
-        Vector sphGas = Vector(0.,0.,0.);
-        Vector cartGas = gasVel[c]; 
+          Vector sphGas = Vector(0.,0.,0.);
+          Vector cartGas = gasVel[c]; 
         
-        Vector sphPart = Vector(0.,0.,0.);
-        Vector cartPart = old_partVel[c]; 
+          Vector sphPart = Vector(0.,0.,0.);
+          Vector cartPart = old_partVel[c]; 
 
-        sphGas = cart2sph( cartGas ); 
-        sphPart = cart2sph( cartPart ); 
+          sphGas = cart2sph( cartGas ); 
+          sphPart = cart2sph( cartPart ); 
 
-        
-        double diff = sphGas.z() - sphPart.z(); 
-        double prev_diff = 0.0;
-        double newPartMag = 0.0;
-        double length_ratio = 0.0;
+          double diff = sphGas.z() - sphPart.z(); 
+          double prev_diff = 0.0;
+          double newPartMag = 0.0;
+          double length_ratio = 0.0;
 
-        epsilon =  pow(sphGas.z(),3.0);
-        epsilon /= d_L;
+          epsilon =  pow(sphGas.z(),3.0);
+          epsilon /= d_L;
 
-        length_ratio = length / d_eta;
-        double uk = 0.0;
+          length_ratio = length / d_eta;
+          double uk = 0.0;
        
-        if (length > 0.0) {
-          uk = pow(d_eta/d_L, 1./3.);
-          uk *= sphGas.z();
-        }
+          if (length > 0.0) {
+            uk = pow(d_eta/d_L, 1./3.);
+            uk *= sphGas.z();
+          }
 
-        diff = 0.0;
+          diff = 0.0;
 
-        for ( int i = 0; i < d_totIter; i++) {
+          for ( int i = 0; i < d_totIter; i++) {
 
-          prev_diff = diff; 
-          double Re  = abs(diff)*length / kvisc;
-          double phi = 1. + .15*pow(Re, 0.687);
-          double t_p_by_t_k = (2*rhoRatio+1)/36*1.0/phi*pow(length_ratio,2);
-          diff = uk*(1-beta)*pow(t_p_by_t_k, d_power);
-          double error = abs(diff - prev_diff)/diff; 
-          if ( abs(diff) < 1e-16 )
-            error = 0.0;
+            prev_diff = diff; 
+            double Re  = abs(diff)*length / kvisc;
+            double phi = 1. + .15*pow(Re, 0.687);
+            double t_p_by_t_k = (2*rhoRatio+1)/36*1.0/phi*pow(length_ratio,2);
+            diff = uk*(1-beta)*pow(t_p_by_t_k, d_power);
+            double error = abs(diff - prev_diff)/diff; 
+            if ( abs(diff) < 1e-16 )
+              error = 0.0;
 
-          if (abs(error) < d_tol)
-            break;
+            if (abs(error) < d_tol)
+              break;
 
-        }
+          }
 
-        newPartMag = sphGas.z() - diff; 
+          newPartMag = sphGas.z() - diff; 
 
-        double vel_ratio = newPartMag / sphGas.z(); 
+          double vel_ratio = newPartMag / sphGas.z(); 
 
-        if (vel_ratio < d_min_vel_ratio) 
-          newPartMag = sphGas.z() * d_min_vel_ratio; 
+          if (vel_ratio < d_min_vel_ratio) 
+            newPartMag = sphGas.z() * d_min_vel_ratio; 
   
-        sphPart = Vector(sphGas.x(), sphGas.y(), newPartMag);
+          sphPart = Vector(sphGas.x(), sphGas.y(), newPartMag);
 
-        // now convert back to cartesian
-        Vector newcartPart = Vector(0.,0.,0.);
-        newcartPart = sph2cart( sphPart ); 
+          // now convert back to cartesian
+          Vector newcartPart = Vector(0.,0.,0.);
+          newcartPart = sph2cart( sphPart ); 
 
-        partVel[c] = newcartPart; 
+          partVel[c] = newcartPart; 
+        }
       }
-    }
+
+    } else if (d_drag) {
+     
+      constCCVariable<Vector> gasVel;
+
+      old_dw->get( gasVel, d_fieldLabels->d_newCCVelocityLabel, matlIndex, patch, gn, 0 );
+      
+      int N = dqmomFactory.get_quad_nodes();
+      for ( int iqn = 0; iqn < N; iqn++){
+    
+        std::string node;
+        std::stringstream out;
+        out << iqn;
+        node = out.str();
+
+        std::string name = "w_qn";
+        name += node;
+        EqnBase& eqn2 = dqmomFactory.retrieve_scalar_eqn( name );
+        constCCVariable<double> weight;
+        const VarLabel* mywLabel = eqn2.getTransportEqnLabel();
+        old_dw->get(weight, mywLabel, matlIndex, patch, gn, 0);
+        
+        name = "ux_qn";
+        name += node;
+        EqnBase& t_eqn3 = dqmomFactory.retrieve_scalar_eqn( name );
+        DQMOMEqn& eqn3 = dynamic_cast<DQMOMEqn&>(t_eqn3);
+        constCCVariable<double> vel_x;
+        const VarLabel* myuxLabel = eqn3.getTransportEqnLabel();
+        old_dw->get(vel_x, myuxLabel, matlIndex, patch, gn, 0);
+        
+        name = "uy_qn";
+        name += node;
+        EqnBase& t_eqn4 = dqmomFactory.retrieve_scalar_eqn( name );
+        DQMOMEqn& eqn4 = dynamic_cast<DQMOMEqn&>(t_eqn4);
+        constCCVariable<double> vel_y;
+        const VarLabel* myuyLabel = eqn4.getTransportEqnLabel();
+        old_dw->get(vel_y, myuyLabel, matlIndex, patch, gn, 0);
+
+        name = "uz_qn";
+        name += node;
+        EqnBase& t_eqn5 = dqmomFactory.retrieve_scalar_eqn( name );
+        DQMOMEqn& eqn5 = dynamic_cast<DQMOMEqn&>(t_eqn5);
+        constCCVariable<double> vel_z;
+        const VarLabel* myuzLabel = eqn5.getTransportEqnLabel();
+        old_dw->get(vel_z, myuzLabel, matlIndex, patch, gn, 0);
+
+        ArchesLabel::PartVelMap::iterator iter = d_fieldLabels->partVel.find(iqn);
+
+        CCVariable<Vector> partVel;
+        if (rkStep < 1)
+          new_dw->allocateAndPut( partVel, iter->second, matlIndex, patch );
+        else
+          new_dw->getModifiable( partVel, iter->second, matlIndex, patch );
+        partVel.initialize(Vector(0.,0.,0.));
+
+        // set boundary conditions. 
+        name = "vel_qn";
+        name += node;
+        if ( d_gasBC )  // assume gas vel =  part vel on boundary 
+          d_boundaryCond->setVectorValueBC( 0, patch, partVel, gasVel, name );
+        else           // part vel set by user.  
+          d_boundaryCond->setVectorValueBC( 0, patch, partVel, name );
+
+        // now loop over all cells
+        for (CellIterator iter=patch->getCellIterator(0); !iter.done(); iter++){
+          IntVector c = *iter;
+          double ux;
+          double uy;
+          double uz;
+          if( weight[c] < 1e-20 ) {
+            ux = 0;
+            uy = 0;
+            uz = 0;
+          } else {
+            ux = (vel_x[c]/weight[c])*eqn3.getScalingConstant();
+            uy = (vel_y[c]/weight[c])*eqn4.getScalingConstant();
+            uz = (vel_z[c]/weight[c])*eqn5.getScalingConstant();
+          }
+
+          partVel[c] = Vector(ux,uy,uz);
+        }
+      } 
+    }  
   } 
 }
 
