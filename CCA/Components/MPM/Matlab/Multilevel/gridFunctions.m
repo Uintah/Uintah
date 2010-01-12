@@ -27,7 +27,7 @@ function [GF] = gridFunctions
   %__________________________________
   function[test] = isOutsideLevel(x,curLevel,Levels)
   
-    if ( (x < Levels{curLevel}.min) || (x >Levels{curLevel}.max) )
+    if ( (x <= Levels{curLevel}.min) || (x >= Levels{curLevel}.max) )
       test = 1;
     else
       test = 0;
