@@ -417,7 +417,8 @@ EnthalpySolver::sched_buildLinearMatrix(const LevelP& level,
       tsk->computes(d_lab->d_radiationFluxSINLabel);
       tsk->computes(d_lab->d_radiationFluxTINLabel);
       tsk->computes(d_lab->d_radiationFluxBINLabel);
-      tsk->computes(d_lab->d_radiationVolqINLabel);
+      //tsk->computes(d_lab->d_radiationVolqINLabel);
+      tsk->modifies(d_lab->d_radiationVolqINLabel);
     }
   }
   else {
@@ -655,10 +656,10 @@ void EnthalpySolver::buildLinearMatrix(const ProcessorGroup* pc,
                                                d_lab->d_radiationFluxBINLabel,indx, patch);
           old_dw->copyOut(enthalpyVars.qfluxb, d_lab->d_radiationFluxBINLabel,indx, patch, gn, 0);
 
-          new_dw->allocateAndPut(enthalpyVars.volq,
-                                               d_lab->d_radiationVolqINLabel,indx, patch);
-          old_dw->copyOut(enthalpyVars.volq, d_lab->d_radiationVolqINLabel,indx, patch, gn, 0);
-
+          //new_dw->allocateAndPut(enthalpyVars.volq,
+          //                                     d_lab->d_radiationVolqINLabel,indx, patch);
+          //old_dw->copyOut(enthalpyVars.volq, d_lab->d_radiationVolqINLabel,indx, patch, gn, 0);
+          new_dw->getModifiable(enthalpyVars.volq, d_lab->d_radiationVolqINLabel,indx, patch);
 
           new_dw->allocateAndPut(enthalpyVars.src, d_lab->d_radiationSRCINLabel,indx, patch);
           old_dw->copyOut(enthalpyVars.src,        d_lab->d_radiationSRCINLabel,indx, patch, gn, 0);

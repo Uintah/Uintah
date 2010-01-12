@@ -765,7 +765,7 @@ DQMOMEqn::getUnscaledValues( const ProcessorGroup* pc,
         else {
           ic[c] = 0.0;
           wa[c] = 0.0; // if the weight is small (near zero) , then the product must also be small (near zero)
-          //w[c] = 0.0; 
+          w[c] = 0.0; 
         }
       }
 
