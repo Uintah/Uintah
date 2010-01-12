@@ -127,7 +127,9 @@ private:
   double d_power; 
   double d_L; 
   int    d_totIter; 
-  double d_tol; 
+  double d_tol;
+  bool d_bala;
+  bool d_drag; 
 
 
  }; //end class PartVel

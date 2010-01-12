@@ -829,6 +829,7 @@ ExplicitSolver::sched_setInitialGuess(SchedulerP& sched,
   tsk->requires(Task::OldDW, d_lab->d_viscosityCTSLabel,  gn, 0);
   tsk->requires(Task::OldDW, d_lab->d_newCCVelocityLabel, gn, 0);
   tsk->requires(Task::OldDW, d_lab->d_areaFractionLabel,  gn, 0); 
+  //tsk->requires(Task::OldDW, d_lab->d_radiationVolqINLabel,  gn, 0); 
 
   if (!(d_MAlab))
     tsk->computes(d_lab->d_cellInfoLabel);
@@ -851,6 +852,7 @@ ExplicitSolver::sched_setInitialGuess(SchedulerP& sched,
   tsk->computes(d_lab->d_wmomBoundarySrcLabel); 
   tsk->computes(d_lab->d_viscosityCTSLabel);
   tsk->computes(d_lab->d_areaFractionLabel); 
+  //tsk->computes(d_lab->d_radiationVolqINLabel);
   
   //__________________________________
   if (d_MAlab){
@@ -1871,7 +1873,8 @@ ExplicitSolver::setInitialGuess(const ProcessorGroup* ,
     constCCVariable<double> reactscalardiff;
     constCCVariable<Vector> ccVel; 
     constCCVariable<Vector> old_areaFraction; 
-    
+    //constCCVariable<double> old_volq;
+ 
     old_dw->get(uVelocity, d_lab->d_uVelocitySPBCLabel, indx, patch, gn, 0);
     old_dw->get(vVelocity, d_lab->d_vVelocitySPBCLabel, indx, patch, gn, 0);
     old_dw->get(wVelocity, d_lab->d_wVelocitySPBCLabel, indx, patch, gn, 0);
@@ -1880,7 +1883,8 @@ ExplicitSolver::setInitialGuess(const ProcessorGroup* ,
     old_dw->get(viscosity, d_lab->d_viscosityCTSLabel,  indx, patch, gn, 0);
     old_dw->get(ccVel,     d_lab->d_newCCVelocityLabel, indx, patch, gn, 0);
     old_dw->get(old_areaFraction, d_lab->d_areaFractionLabel, indx, patch, gn, 0); 
-    
+    //old_dw->get(old_volq, d_lab->d_radiationVolqINLabel, indx, patch, gn, 0);
+
     if (d_enthalpySolve){
       old_dw->get(enthalpy, d_lab->d_enthalpySPLabel, indx, patch, gn, 0);
     }
@@ -1937,7 +1941,11 @@ ExplicitSolver::setInitialGuess(const ProcessorGroup* ,
     CCVariable<Vector> new_areaFraction; 
     new_dw->allocateAndPut(new_areaFraction, d_lab->d_areaFractionLabel, indx, patch); 
     new_areaFraction.copyData(old_areaFraction); // copy old into new
-    
+   
+    //CCVariable<double> new_volq;
+    //new_dw->allocateAndPut(new_volq, d_lab->d_radiationVolqINLabel, indx, patch);
+    //new_volq.copyData(old_volq); // copy old into new
+ 
     if (d_timeIntegratorLabels[0]->multiple_steps) {
       new_dw->allocateAndPut(scalar_temp, d_lab->d_scalarTempLabel, indx, patch);
       scalar_temp.copyData(scalar); // copy old into new
