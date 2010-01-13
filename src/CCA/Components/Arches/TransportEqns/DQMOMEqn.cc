@@ -671,7 +671,7 @@ DQMOMEqn::sched_getUnscaledValues( const LevelP& level, SchedulerP& sched )
 
   Task* tsk = scinew Task(taskname, this, &DQMOMEqn::getUnscaledValues);
   
-  Ghost::GhostType  gn  = Ghost::None;
+  //Ghost::GhostType  gn  = Ghost::None;
   DQMOMEqnFactory& dqmomFactory  = DQMOMEqnFactory::self(); 
 
   //NEW
@@ -709,7 +709,7 @@ DQMOMEqn::getUnscaledValues( const ProcessorGroup* pc,
   //patch loop
   for (int p=0; p < patches->size(); p++){
 
-    Ghost::GhostType  gn  = Ghost::None;
+    //Ghost::GhostType  gn  = Ghost::None;
 
     const Patch* patch = patches->get(p);
     int archIndex = 0;
