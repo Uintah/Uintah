@@ -122,27 +122,28 @@ maxLevels = Limits.maxLevels;
 NP_max    = Limits.NP_max;
 NN_max    = Limits.NN_max;
 
-vol       = zeros(NP_max, maxLevels);
-lp        = zeros(NP_max, maxLevels);
-massP     = zeros(NP_max, maxLevels);
-velP      = zeros(NP_max, maxLevels);
-dp        = zeros(NP_max, maxLevels);
-stressP   = zeros(NP_max, maxLevels);
-Fp        = zeros(NP_max, maxLevels);
-dF        = zeros(NP_max, maxLevels);
+vol       = NaN(NP_max, maxLevels);
+lp        = NaN(NP_max, maxLevels);
+massP     = NaN(NP_max, maxLevels);
+velP      = NaN(NP_max, maxLevels);
+dp        = NaN(NP_max, maxLevels);
+Fp        = NaN(NP_max, maxLevels);
+dF        = NaN(NP_max, maxLevels);
+
+stressP        = zeros(NP_max, maxLevels);  % must be full of zeros
 accl_extForceP = zeros(NP_max,maxLevels);
 
 nodes     = zeros(1,NSFN);
 Gs        = zeros(1,NSFN);
 Ss        = zeros(1,NSFN);
 
-massG     = zeros(NN_max,  maxLevels);
-momG      = zeros(NN_max,  maxLevels);
-velG      = zeros(NN_max,  maxLevels);
-vel_nobc_G= zeros(NN_max,  maxLevels);
-accl_G    = zeros(NN_max,  maxLevels);
-extForceG = zeros(NN_max,  maxLevels);
-intForceG = zeros(NN_max,  maxLevels);
+massG     = NaN(NN_max,  maxLevels);
+momG      = NaN(NN_max,  maxLevels);
+velG      = NaN(NN_max,  maxLevels);
+vel_nobc_G= NaN(NN_max,  maxLevels);
+accl_G    = NaN(NN_max,  maxLevels);
+extForceG = NaN(NN_max,  maxLevels);
+intForceG = NaN(NN_max,  maxLevels);
 
 
 KE        = zeros(BigNum,1);
@@ -496,8 +497,11 @@ while t<t_final && tstep < max_tstep
   end
   
   if strcmp(problem_type, 'advectBlock')
-    sumExactPos = sum(sum(initPos));
-    sumCurPos = sum(sum(xp));
+    % remove NaN's and convert then to 1D arrays
+    xp_clean    = xp(isfinite(xp));
+  
+    sumExactPos = sum(initPos + t * initVelocity );
+    sumCurPos = sum(xp_clean);
     fprintf('sum position error %E \n',sumExactPos - sumCurPos);
   end
   
@@ -632,8 +636,8 @@ function [Fp, dF, vol, lp] = computeDeformationGradient(xp,lp,dt,velG,Fp,NP, nRe
   global sf;
   
   nn = length(lp);
-  vol = zeros(nn,1);     % you must declare arrays that are not passed in.
-  dF  = zeros(nn,1);
+  vol = NaN(nn,1);     % you must declare arrays that are not passed in.
+  dF  = NaN(nn,1);
   for ip=1:NP
     [nodes,Gs,dx]  = sf.findNodesAndWeightGradients_linear(xp(ip), lp(ip), nRegions, Regions, nodePos, Lx);
     [volP_0, lp_0] = sf.positionToVolP(xp(ip), nRegions, Regions);
@@ -655,6 +659,7 @@ end
 function [stressP]=computeStress(E,Fp,NP)
   nn = length(Fp);
   stressP = zeros(nn,1);  % you must declare arrays that are not passed in.
+                          % This array must be full of zeros
                                                                                   
   for ip=1:NP
 %    stressP(ip) = E * (Fp(ip)-1.0);
@@ -695,7 +700,7 @@ function [xp,massP,velP,vol,Fp,lp,Levels]=relocateParticles(xp,massP,velP,vol,Fp
         Fp(newNP, newLevel)    = Fp(ip,l);     
         lp(newNP, newLevel)    = lp(ip,l);     
         vol(newNP,newLevel)    = vol(ip,l);
-        Levels{newLevel}.NP = newNP;
+        Levels{newLevel}.NP    = newNP;
         
         % delete particle from level
         xp(ip,l)    = NaN;
@@ -744,32 +749,24 @@ end
 function plotResults(titleStr,t, tstep, xp, dp, massP, Fp, velP, stressP, nodePos, velG, massG, momG, Limits, Levels)
 
     % plot SimulationState
+    
+  % remove NaN's and convert then to 1D arrays just for plotting
+  velP_clean    = velP(isfinite(velP));
+  massP_clean   = massP(isfinite(massP));
+  stressP_clean = stressP(isfinite(stressP));
+  xp_clean      = xp(isfinite(xp));
+    
   figure1 = figure(1);
   set(1,'position',[50,100,700,700]);
   levelColors = ['m','g','r','b','k'];
   
+  subplot(4,1,1),plot(xp_clean,velP_clean,'rd');
   xlim( [Levels{1}.min Levels{1}.max] )
-  subplot(4,1,1),plot(xp,velP,'rd');
-  
-  xlim( [Levels{1}.min Levels{1}.max] )
-  ylim([min(min(velP - 1e-3) )  max( max(velP + 1e-3))])
+  ylim([min(min(velP_clean - 1e-3) )  max( max(velP_clean + 1e-3))])
   
   xlabel('Particle Position');
   ylabel('Particle velocity');
   title(titleStr);
-  hold on
-  
-  % draw vertical lines at each node 
-  for L=1:Limits.maxLevels
-    NN = Levels{L}.NN;
-    for n=1:NN            
-      x = nodePos(n,L);
-      [pt1,pt2] = dsxy2figxy([x,x],ylim);
-      annotation(figure1,'line',pt1,pt2,'Color',levelColors(L));
-    end
-  end
-  hold off
-
 
   subplot(4,1,2),plot(xp,Fp,'rd');
   xlim( [Levels{1}.min Levels{1}.max] )
@@ -779,10 +776,11 @@ function plotResults(titleStr,t, tstep, xp, dp, massP, Fp, velP, stressP, nodePo
   xlim( [Levels{1}.min Levels{1}.max] )
   ylabel('Particle stress');
   
-  subplot(4,1,4),plot(xp,massP,'rd');
+  subplot(4,1,4),plot(xp_clean,massP_clean,'rd');
   xlim( [Levels{1}.min Levels{1}.max] )
   ylabel('Particle mass');
   
+  drawNodes(figure1,nodePos,Levels,Limits)
   
 if(0)
   subplot(6,1,4),plot(nodePos, velG,'bx');
@@ -847,6 +845,19 @@ function plotFinalResults(TIME, DX_tip, Exact_tip, TE, problem_type, PPC, NN)
   ylabel('Abs(error)')
 end
 
+%__________________________________
+function drawNodes(figure1,nodePos,Levels,Limits)
+  % draw vertical lines at each node 
+  levelColors = ['m','g','r','b','k'];
+  for L=1:Limits.maxLevels
+    NN = Levels{L}.NN;
+    for n=1:NN            
+      x = nodePos(n,L);
+      [pt1,pt2] = dsxy2figxy([x,x],ylim);
+      annotation(figure1,'line',pt1,pt2,'Color',levelColors(L));
+    end
+  end
+end
 
 %__________________________________
 function [accl_extForceP, delta] = ExternalForceAccl(problem_type, delta_0, bodyForce, Material, xp, xp_initial, t, tstep, NP, L1_dx, bar_length)
