@@ -138,7 +138,7 @@
         </LinearSolver>
 
         <!-- particle models --> 
-        <VelModel>
+        <VelModel type = "Balachandar">
             <kinematic_viscosity>0.00001</kinematic_viscosity>
             <rho_ratio>1000</rho_ratio>
             <regime>2</regime>
