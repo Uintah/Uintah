@@ -147,7 +147,7 @@ function [IF] = initializationFunctions
     Limits.NP_max = NP_max;
     
     
-    xp_allLevels = zeros(NP_max,maxLevels);
+    xp_allLevels = NaN(NP_max,maxLevels);
     for L=1:maxLevels
       for ip = 1:Levels{L}.NP
         xp_allLevels(ip,L) = xp_tmp(ip,L);
