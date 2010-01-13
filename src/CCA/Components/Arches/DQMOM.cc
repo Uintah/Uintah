@@ -733,6 +733,7 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
             tempCCVar[c] = 0.0;
           } else if( b_calcConditionNumber == true && conditionNumber[c] > d_maxConditionNumber ) {
             tempCCVar[c] = 0.0;
+            conditionNumber[c] = -1.0; 
           } else {
             tempCCVar[c] = Xlong[z];
           }
@@ -761,6 +762,7 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
             tempCCVar[c] = 0.0;
           } else if( b_calcConditionNumber == true && conditionNumber[c] > d_maxConditionNumber ) {
             tempCCVar[c] = 0.0;
+            conditionNumber[c] = -1.0; 
           } else {
             tempCCVar[c] = Xlong[z];
           }
@@ -1104,6 +1106,7 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
             tempCCVar[c] = 0.0;
           } else if( b_calcConditionNumber == true && conditionNumber[c] > d_maxConditionNumber ) {
             tempCCVar[c] = 0.0;
+            conditionNumber[c] = -1.0; 
           } else {
             tempCCVar[c] = (*XX)[z];
           }
@@ -1132,6 +1135,7 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
             tempCCVar[c] = 0;
           } else if( b_calcConditionNumber == true && conditionNumber[c] > d_maxConditionNumber ) {
             tempCCVar[c] = 0.0;
+            conditionNumber[c] = -1.0; 
           } else {
             tempCCVar[c] = (*XX)[z];
           }
