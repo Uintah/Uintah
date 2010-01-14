@@ -8,54 +8,24 @@ function k=plotShapeFunctions
   global NSFN;
   PPC = 8;
  [sf]  = shapeFunctions;                 % load all the shape functions
+ [IF]  = initializationFunctions   % load initialization functions
 
   interpolation = 'GIMP';
   domain        = 1;
   dx            = 1;
   d_smallNum    = double(1e-16);
   
-  [Regions, nRegions,NN] = initializeRegions(domain,PPC,dx,interpolation, d_smallNum);
+  [Regions, nRegions,NN] = IF.initialize_Regions(domain,PPC,dx,interpolation, d_smallNum);
   R = Regions{1};
   
-  %__________________________________
-  % compute node positions
-  nodePos       = zeros(NN,1);        % node Position
-  nodeNum = int32(1);
-
-  if(strcmp(interpolation,'GIMP'))    % Boundary condition Node
-    nodePos(1) = R.min;
-  else
-    nodePos(1) = 0.0;
-  end;
-
-  for r=1:nRegions
-    R = Regions{r};
-    % loop over all nodes and set the node position
-    for  n=1:R.NN  
-      if(nodeNum > 1)
-        nodePos(nodeNum) = nodePos(nodeNum-1) + R.dx;
-      end
-      nodeNum = nodeNum + 1;
-    end
-  end
-  nodePos
+  [nodePos]  = IF.initialize_NodePos(NN, dx, Regions, nRegions, interpolation)
   
-  %__________________________________
-  % compute the zone of influence
-  Lx        = zeros(NN,2);              
-  Lx(1,1)   = 0.0;                      
-  Lx(1,2)   = nodePos(2) - nodePos(1);  
-  Lx(NN,1)  = nodePos(NN) - nodePos(NN-1);
-  Lx(NN,2)  = 0.0;
-
-  for n=2:NN-1
-    Lx(n,1) = nodePos(n) - nodePos(n-1);
-    Lx(n,2) = nodePos(n+1) - nodePos(n);
-  end
+  [Lx]       = IF.initialize_Lx(NN, nodePos);
   
-  Lx(3,2) = dx/4;
-  Lx(5,1) = dx/4;
+%  Lx(3,2) = dx/4;
+%  Lx(5,1) = dx/4;
   Lx
+
 
   L  = dx;
   lp = R.lp
