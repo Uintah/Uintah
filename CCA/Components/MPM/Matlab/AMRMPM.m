@@ -6,7 +6,7 @@
    
    
 
-function [L2_norm,maxError,NN,NP]=amrmpm(problem_type,CFL,NN)
+function [L2_norm,maxError,NN,NP]=amrmpm(problem_type,CFL,NCells)
 
 close all
 intwarning on
@@ -51,7 +51,7 @@ mat.speedSound  = speedSound;
 Material{1} = mat;
 Material{1}.density
 
-interpolation = 'GIMP';
+interpolation = 'LINEAR';
 
 if( strcmp(interpolation,'GIMP') )
   NSFN    = 3;               % Number of shape function nodes Linear:2, GIMP:3
@@ -67,20 +67,20 @@ BigNum     = int32(1e5);
 d_smallNum = double(1e-16);
 
 bar_min     = 0.0;
-bar_max     = 1;
+bar_max     = 0.6666;
 
 bar_length  = bar_max - bar_min;
 
 domain       = 1.0;
 area         = 1.;
-plotSwitch   = 0;
-plotInterval = 100;
+plotSwitch   = 1;
+plotInterval = 1;
 writeData    = 0;
 max_tstep    = BigNum;
 
 % HARDWIRED FOR TESTING
 %NN          = 16;
-R1_dx       =domain/(NN-1)
+R1_dx       =domain/(NCells)
 
 if (mod(domain,R1_dx) ~= 0)
   fprintf('ERROR, the dx in Region 1 does not divide into the domain evenly\n');
@@ -200,11 +200,12 @@ if strcmp(problem_type, 'advectBlock')
   initVelocity    = 100;
   t_final          = 0.5;
   numBCs          = 1;
+  delta_0         = 0;
   velG_BCValueL   = initVelocity;
   velG_BCValueR   = initVelocity;
   for ip=1:NP
     velP(ip)    = initVelocity;
-    initPos(ip) = xp(ip);
+    xp_initial(ip) = xp(ip);
   end
 end
 
@@ -299,7 +300,7 @@ while t<t_final && tstep < max_tstep
   % project particle data to grid  
   for ip=1:NP
   
-    [nodes,Ss]=sf.findNodesAndWeights_gimp2(xp(ip), lp(ip), nRegions, Regions, nodePos, Lx);
+    [nodes,Ss]=sf.findNodesAndWeights_linear(xp(ip), lp(ip), nRegions, Regions, nodePos, Lx);
     for ig=1:NSFN
       massG(nodes(ig))     = massG(nodes(ig))     + massP(ip) * Ss(ig);
       velG(nodes(ig))      = velG(nodes(ig))      + massP(ip) * velP(ip) * Ss(ig);
@@ -329,7 +330,7 @@ while t<t_final && tstep < max_tstep
   
   %compute internal force
   for ip=1:NP
-    [nodes,Gs,dx]=sf.findNodesAndWeightGradients_gimp2(xp(ip), lp(ip), nRegions, Regions, nodePos,Lx);
+    [nodes,Gs,dx]=sf.findNodesAndWeightGradients_linear(xp(ip), lp(ip), nRegions, Regions, nodePos,Lx);
     for ig=1:NSFN
       intForceG(nodes(ig)) = intForceG(nodes(ig)) - Gs(ig) * stressP(ip) * vol(ip);
     end
@@ -371,7 +372,7 @@ while t<t_final && tstep < max_tstep
   %project changes back to particles
   tmp = zeros(NP,1);
   for ip=1:NP
-    [nodes,Ss]=sf.findNodesAndWeights_gimp2(xp(ip), lp(ip), nRegions, Regions, nodePos, Lx);
+    [nodes,Ss]=sf.findNodesAndWeights_linear(xp(ip), lp(ip), nRegions, Regions, nodePos, Lx);
     dvelP = 0.;
     dxp   = 0.;
     
@@ -440,7 +441,7 @@ while t<t_final && tstep < max_tstep
     
     pos_error  = 0;          % position error
     for ip=1:NP
-      exact_pos = (initPos(ip) + t * initVelocity);
+      exact_pos = (xp_initial(ip) + t * initVelocity);
       pos_error = pos_error +  xp(ip) - exact_pos;
       %fprintf('xp: %16.15f  exact: %16.15f error %16.15f \n',xp(ip), exact_pos, xp(ip) - exact_pos)
     end
@@ -574,7 +575,7 @@ function [Fp, dF, vol, lp] = computeDeformationGradient(xp,lp,dt,velG,Fp,NP, nRe
   global sf;
   
   for ip=1:NP
-    [nodes,Gs,dx]  = sf.findNodesAndWeightGradients_gimp2(xp(ip), lp(ip), nRegions, Regions, nodePos, Lx);
+    [nodes,Gs,dx]  = sf.findNodesAndWeightGradients_linear(xp(ip), lp(ip), nRegions, Regions, nodePos, Lx);
     [volP_0, lp_0] = sf.positionToVolP(xp(ip), nRegions, Regions);
 
     gUp=0.0;
@@ -594,8 +595,8 @@ end
 function [stressP]=computeStress(E,Fp,NP)
                                                                                 
   for ip=1:NP
-%    stressP(ip) = E * (Fp(ip)-1.0);
-    stressP(ip) = (E/2.0) * ( Fp(ip) - 1.0/Fp(ip) );        % hardwired for the mms test  see eq 50
+    stressP(ip) = E * (Fp(ip)-1.0);
+%    stressP(ip) = (E/2.0) * ( Fp(ip) - 1.0/Fp(ip) );        % hardwired for the mms test  see eq 50
   end
 end
 
@@ -605,36 +606,35 @@ end
 %__________________________________
 function plotResults(titleStr,t, tstep, xp, dp, massP, Fp, velP, stressP, nodePos, velG, massG, momG)
 
-    % plot SimulationState
-  figure(1)
+  % plot SimulationState
+  figure1 = figure(1);
   set(1,'position',[50,100,700,700]);
   
-  vel_G_inter = interp1(xp,velP,nodePos);
-  e = ones(size(nodePos));
-  e(:) = 1e100;
-  
   subplot(4,1,1),plot(xp,velP,'rd');
-  ylim([min(1.1*velP - 1e-3) max(1.1*velP + 1e-3)])
+  ylim([min(velP - 1e-3) max(velP + 1e-3)])
+  xlim([min(nodePos) max(nodePos)]);
   xlabel('Particle Position');
   ylabel('Particle velocity');
   title(titleStr);
-  hold on
-  errorbar(nodePos,vel_G_inter, e,'LineStyle','none','Color',[0.8314 0.8157 0.7843]);
-  hold off
-  %axis([0 50 99 101] )
 
   subplot(4,1,2),plot(xp,Fp,'rd');
-  %axis([0 50 0 2] )
+  xlim([min(nodePos) max(nodePos)]);
   ylabel('Fp');
 
   subplot(4,1,3),plot(xp,stressP,'rd');
-  %axis([0 50 -1 1] )
+  xlim([min(nodePos) max(nodePos)]);
   ylabel('Particle stress');
   
   subplot(4,1,4),plot(xp,massP,'rd');
-  %axis([0 50 -1 1] )
+  xlim([min(nodePos) max(nodePos)]);
   ylabel('Particle mass');
   
+  NN = length(nodePos);
+  for n=1:NN           
+    x = nodePos(n);
+    [pt1,pt2] = dsxy2figxy([x,x],ylim);
+    annotation(figure1,'line',pt1,pt2,'Color','r');
+  end
   
 if(0)
   subplot(6,1,4),plot(nodePos, velG,'bx');
@@ -708,6 +708,8 @@ function [accl_extForceP, delta] = ExternalForceAccl(problem_type, delta_0, body
   speedSound = Material{1}.speedSound;
   
   delta = -9;
+  
+  accl_extForceP = zeros(length(xp),1);
   
   if (strcmp(problem_type, 'compaction'))
     if(bodyForce > -200)
