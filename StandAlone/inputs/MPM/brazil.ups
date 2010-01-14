@@ -23,7 +23,7 @@
        <save label = "p.volume"/>
        <save label = "p.stress"/>
        <save label = "p.epsf"/>
-       <save label = "p.failed"/>
+       <save label = "p.localized"/>
        <save label = "g.mass"/>
        <checkpoint cycle = "2" interval = "0.1"/>
 <!--
