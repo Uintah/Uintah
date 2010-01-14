@@ -11,20 +11,19 @@ function [IF] = initializationFunctions
     nodePos = zeros(NN,1);              % node Position
     nodeNum = int32(1);
 
-    if(strcmp(interpolation,'GIMP'))    % Boundary condition Node
-      nodePos(1) = -R1_dx;
-    else
-      nodePos(1) = 0.0;
-    end;
+    nodePos(1) = Regions{1}.min;
 
     for r=1:nRegions
       R = Regions{r};
       % loop over all nodes and set the node position
-      for  n=1:R.NN  
-        if(nodeNum > 1)
-          nodePos(nodeNum) = nodePos(nodeNum-1) + R.dx;
-        end
-        nodeNum = nodeNum + 1;
+      
+      if(r > 1)
+        nodePos(nodeNum+1) = R.min;
+      end
+      
+      while((nodePos(nodeNum) + R.dx) <= R.max)
+        nodeNum = nodeNum +1;
+        nodePos(nodeNum) = nodePos(nodeNum-1) + R.dx;
       end
     end
   end
@@ -92,11 +91,12 @@ function [IF] = initializationFunctions
     %__________________________________
     % region structure 
     %
-    if(0)
+    if(1)
     fprintf('USING plotShapeFunction regions\n');
 
     nRegions      = int32(1);              % partition the domain into numRegions
     Regions       = cell(nRegions,1);      % array that holds the individual region information
+    R.refineRatio = 1;
 
     R.min         = -1;                     % location of left node
     R.max         = 1;                     % location of right node
@@ -132,7 +132,7 @@ function [IF] = initializationFunctions
     end
     %____________
     % 2 level
-    if(1)
+    if(0)
     nRegions    = int32(3);               % partition the domain into nRegions
     Regions       = cell(nRegions,1);     % array that holds the individual region information
 
@@ -141,13 +141,13 @@ function [IF] = initializationFunctions
     R.refineRatio = 1;
     R.dx          = R1_dx;
     R.volP        = R.dx/PPC;
-    R.NN          = int32( (R.max - R.min)/R.dx +1 );
+    R.NN          = int32( (R.max - R.min)/R.dx );
     R.lp          = R.dx/(2 * PPC);
     Regions{1}    = R;
 
     R.min         = domain/3.0;                       
     R.max         = 2.0*domain/3.0;
-    R.refineRatio = 1;
+    R.refineRatio = 2;
     R.dx          = R1_dx/R.refineRatio;
     R.volP        = R.dx/PPC;
     R.NN          = int32( (R.max - R.min)/R.dx );
@@ -159,7 +159,7 @@ function [IF] = initializationFunctions
     R.refineRatio = 1;
     R.dx          = R1_dx/R.refineRatio; 
     R.volP        = R.dx/PPC;
-    R.NN          = int32( (R.max - R.min)/R.dx); 
+    R.NN          = int32( (R.max - R.min)/R.dx +1); 
     R.lp          = R.dx/(2 * PPC);
     Regions{3}    = R;
 
