@@ -13,23 +13,13 @@ function [IF] = initializationFunctions
   function[nodePos]  = initialize_NodePos(L1_dx, Levels, Limits, interpolation)
   
     nodePos = zeros(Limits.NN_max, Limits.maxLevels);              % node Position
-    
-    
-
-    if(strcmp(interpolation,'GIMP'))    % Boundary condition Node on level 1
-      nodePos(1,1) = -L1_dx;
-    else
-      nodePos(1,1) = 0.0;
-    end;
 
     for l=1:Limits.maxLevels
       L = Levels{l};
       nodeNum = int32(1);
       
-      if(l > 1)
-        nodePos(1,l) = L.Patches{1}.min;
-      end
-      
+      nodePos(1,l) = L.Patches{1}.min;
+if(0)      
       for p=1:L.nPatches
         P = L.Patches{p};
         % loop over all nodes and set the node position
@@ -41,6 +31,23 @@ function [IF] = initializationFunctions
         end
         
       end  % patches
+end      
+      
+      for p=1:L.nPatches
+        P = L.Patches{p}
+        % loop over all nodes and set the node position
+
+        if(p > 1)
+          nodePos(nodeNum+1,l) = P.min;
+        end
+
+        while((nodePos(nodeNum,l) + P.dx) <= P.max)
+          nodeNum = nodeNum +1;
+          nodePos(nodeNum,l) = nodePos(nodeNum-1,l) + P.dx;
+        end
+      end
+      
+      
     end  % level
   end
   
@@ -48,24 +55,32 @@ function [IF] = initializationFunctions
   function[Lx]  = initialize_Lx(nodePos, Levels, Limits)
     Lx = zeros(Limits.NN_max,2, Limits.maxLevels);
     % compute the zone of influence
-    l = 1;
-    r = 2;
+    left = 1;
+    right = 2;
     
     for L=1:Limits.maxLevels
       NN = Levels{L}.NN;
-      Lx(1,l,L)  = 0.0;
-      Lx(1,r,L)  = nodePos(2,L) - nodePos(1,L);
+      Lx(1,left,L)   = 0.0;
+      Lx(1,right,L)  = nodePos(2,L) - nodePos(1,L);
 
-      Lx(NN,l,L) = nodePos(NN,L) - nodePos(NN-1,L);
-      Lx(NN,r,L) = 0.0;
+      Lx(NN,left,L)  = nodePos(NN,L) - nodePos(NN-1,L);
+      Lx(NN,right,L) = 0.0;
 
       for n=2:NN-1
-        Lx(n,l,L) = nodePos(n,L)   - nodePos(n-1,L);
-        Lx(n,r,L) = nodePos(n+1,L) - nodePos(n,L);
+        Lx(n,left,L)  = nodePos(n,L)   - nodePos(n-1,L);
+        Lx(n,right,L) = nodePos(n+1,L) - nodePos(n,L);
       end
     end
     
-    % output the regions and the Lx
+    %__________________________________
+    % HARD CODE THE VALUES  AT THE CFI
+    Lx(3,right,1) = Levels{2}.dx;
+    Lx(4,:,1)     = 0.0;
+    Lx(5,left,1)  = Levels{2}.dx;
+    Lx(1,left,2)  = Levels{1}.dx;
+    Lx(5,right,2) = Levels{1}.dx;
+    
+    % output the regions and Lx
     for l=1:Limits.maxLevels
       L  = Levels{l};
       nn = 1;
@@ -230,7 +245,7 @@ function [IF] = initializationFunctions
     P.min         = 2.0*domain/3.0;                       
     P.max         = domain;
     P.refineRatio = 1;
-    P.dx          = L1_dx
+    P.dx          = L1_dx;
     P.volP        = P.dx/PPC;
     P.NN          = int32( (P.max - P.min)/P.dx +1); 
     P.lp          = P.dx/(2 * PPC);
@@ -251,8 +266,11 @@ function [IF] = initializationFunctions
     end
 
     Levels            = cell(maxLevels,1);
+    Levels{1}.dx      = PatchesL1{1}.dx;
     Levels{1}.Patches = PatchesL1;
     Levels{1}.nPatches= nPatchesL1;
+    
+    Levels{2}.dx      = PatchesL2{1}.dx;
     Levels{2}.Patches = PatchesL2;
     Levels{2}.nPatches= nPatchesL2;
 
@@ -293,12 +311,25 @@ end
         P = L.Patches{p};
         NN = NN + P.NN;
       end
-      Levels{l}.NN = NN
+      Levels{l}.NN = NN;
       NN_max = max(NN_max, NN);
     end
     
+    % determine low and high nodes for each patch
+    for l=1:maxLevels
+      L = Levels{l};
+      NN = int32(1);
+      
+      for p=1:L.nPatches
+        P = L.Patches{p};
+        Levels{l}.Patches{p}.nodeLo = NN;
+        Levels{l}.Patches{p}.nodeHi = NN + P.NN -1;
+        NN = NN + P.NN;
+      end
+      Levels{l};
+    end
     
-    % level extents
+    % compute the extents of each level
     for l=1:maxLevels
       L = Levels{l};
       Lmax = 0;
@@ -321,7 +352,23 @@ end
       for p=1:L.nPatches
         P = L.Patches{p};
         dx_min = min(dx_min,P.dx);
-        fprintf( 'level: %g patch %g, min: %g, \t max: %g \t refineRatio: %g dx: %g, NN: %g\n',l,p, P.min, P.max, P.refineRatio, P.dx, P.NN)
+      end
+    end
+    
+    %__________________________________
+    %HARD CODE WHICH NODES ARE CFI NODES
+    Levels{1}.CFI_nodes(1) = 3;
+    Levels{1}.CFI_nodes(2) = 5;
+    Levels{2}.CFI_nodes(1) = 1;
+    Levels{2}.CFI_nodes(2) = 5;
+    
+    %  output grid
+    for l=1:maxLevels
+      L = Levels{l};
+      
+      for p=1:L.nPatches
+        P = L.Patches{p};
+        fprintf( 'level: %g patch %g, min: %g, \t max: %g \t refineRatio: %g dx: %g, NN: %g lo: %g hi: %g\n',l,p, P.min, P.max, P.refineRatio, P.dx, P.NN, P.nodeLo, P.nodeHi)
       end
     end
 

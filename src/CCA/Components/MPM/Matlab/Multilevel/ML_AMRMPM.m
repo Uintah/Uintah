@@ -23,7 +23,7 @@ d_debugging = problem_type;
 [mms] = MMS;                      % load mms functions
 [sf]  = shapeFunctions;           % load all the shape functions
 [gf]  = gridFunctions;            % load all grid based function
-[IF]  = initializationFunctions   % load initialization functions
+[IF]  = initializationFunctions;   % load initialization functions
 
 %  valid options:
 %  problem type:  impulsiveBar, oscillator, compaction advectBlock, mms
@@ -82,7 +82,7 @@ plotInterval = 1;
 writeData    = 0;
 max_tstep    = BigNum;
 
-L1_dx       =domain/(NCells)
+L1_dx       =domain/(NCells);
 
 if (mod(domain,L1_dx) ~= 0)
   fprintf('ERROR, the dx in Region 1 does not divide into the domain evenly\n');
@@ -344,7 +344,12 @@ while t<t_final && tstep < max_tstep
       end
     end
   end
-
+  
+  
+  %__________________________________
+  % adjust the nodal values at the CFI
+  [massG, velG, extForceG] = adjustCFI_Nodes(massG, velG, extForceG, Levels,Limits);
+  
   % normalize by the mass
   velG = velG./massG;
   vel_nobc_G = velG;
@@ -638,6 +643,7 @@ function [Fp, dF, vol, lp] = computeDeformationGradient(xp,lp,dt,velG,Fp,NP, nRe
   nn = length(lp);
   vol = NaN(nn,1);     % you must declare arrays that are not passed in.
   dF  = NaN(nn,1);
+
   for ip=1:NP
     [nodes,Gs,dx]  = sf.findNodesAndWeightGradients_linear(xp(ip), lp(ip), nRegions, Regions, nodePos, Lx);
     [volP_0, lp_0] = sf.positionToVolP(xp(ip), nRegions, Regions);
@@ -662,9 +668,48 @@ function [stressP]=computeStress(E,Fp,NP)
                           % This array must be full of zeros
                                                                                   
   for ip=1:NP
-%    stressP(ip) = E * (Fp(ip)-1.0);
-    stressP(ip) = (E/2.0) * ( Fp(ip) - 1.0/Fp(ip) );        % hardwired for the mms test  see eq 50
+    stressP(ip) = E * (Fp(ip)-1.0);
+%    stressP(ip) = (E/2.0) * ( Fp(ip) - 1.0/Fp(ip) );        % hardwired for the mms test  see eq 50
   end
+end
+
+%__________________________________
+function [massG_new, velG_new, extForceG_new] = adjustCFI_Nodes(massG, velG, extForceG, Levels,Limits)
+
+  %fprintf( 'Before: L-1 velG(3,1): %g   velG(5,1): %g \n', velG(3,1), velG(5,1));
+  %fprintf( 'Before: L-2 velG(1,2): %g   velG(5,2): %g \n', velG(1,2), velG(5,2));
+  
+  CFI_Nodes = zeros(2,Limits.maxLevels);
+  CFI_Nodes(:,1) = Levels{1}.CFI_nodes;
+  CFI_Nodes(:,2) = Levels{2}.CFI_nodes;
+  
+  massG_new = massG;
+  velG_new  = velG;
+  extForceG_new = extForceG;
+  
+  % Level 1 values
+  massG_new(3,1) = massG(3,1) + massG(1,2);           %HARD WIRED!!!!!
+  massG_new(5,1) = massG(5,1) + massG(5,2);
+  
+  velG_new(3,1) = velG(3,1) + velG(1,2);
+  velG_new(5,1) = velG(5,1) + velG(5,2);
+  
+  extForceG_new(3,1) = extForceG(3,1) + extForceG(1,2);
+  extForceG_new(5,1) = extForceG(5,1) + extForceG(5,2);
+  
+  %Level 2 values
+  massG_new(1,2) = massG_new(3,1);
+  massG_new(5,2) = massG_new(5,1);
+  
+  velG_new(1,2) = velG_new(3,1);
+  velG_new(5,2) = velG_new(5,1);
+  
+  extForceG_new(1,2) = extForceG_new(3,1);
+  extForceG_new(5,2) = extForceG_new(5,1);
+  
+  %fprintf( 'After: L-1 velG(3,1): %g   velG(5,1): %g \n', velG_new(3,1), velG_new(5,1));
+  %fprintf( 'After: L-2 velG(1,2): %g   velG(5,2): %g \n', velG_new(1,2), velG_new(5,2));
+  
 end
 
 %__________________________________
