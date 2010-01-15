@@ -104,6 +104,7 @@ end
 
 [Limits]                 = IF.NN_NP_allLevels(Levels, Limits)
 
+[Levels]                 = IF.findCFI_nodes(Levels, nodePos, Limits);
 
 % define the boundary condition nodes on Level 1
 L1_NN = Levels{1}.NN
@@ -675,41 +676,50 @@ end
 
 %__________________________________
 function [massG_new, velG_new, extForceG_new] = adjustCFI_Nodes(massG, velG, extForceG, Levels,Limits)
-
-  %fprintf( 'Before: L-1 velG(3,1): %g   velG(5,1): %g \n', velG(3,1), velG(5,1));
-  %fprintf( 'Before: L-2 velG(1,2): %g   velG(5,2): %g \n', velG(1,2), velG(5,2));
   
-  CFI_Nodes = zeros(2,Limits.maxLevels);
-  CFI_Nodes(:,1) = Levels{1}.CFI_nodes;
-  CFI_Nodes(:,2) = Levels{2}.CFI_nodes;
-  
+  left  = 1;
+  right = 2;
   massG_new = massG;
   velG_new  = velG;
   extForceG_new = extForceG;
   
-  % Level 1 values
-  massG_new(3,1) = massG(3,1) + massG(1,2);           %HARD WIRED!!!!!
-  massG_new(5,1) = massG(5,1) + massG(5,2);
+  massG_tmp     = zeros(2,1);  %temporary storage
+  velG_tmp      = zeros(2,1);
+  extForceG_tmp = zeros(2,1);
   
-  velG_new(3,1) = velG(3,1) + velG(1,2);
-  velG_new(5,1) = velG(5,1) + velG(5,2);
   
-  extForceG_new(3,1) = extForceG(3,1) + extForceG(1,2);
-  extForceG_new(5,1) = extForceG(5,1) + extForceG(5,2);
+  %Q_tmp(CFI_node) = sum(q(CFI_node,levels));
+  for side=left:right
+    for l=2:Limits.maxLevels
+      cl = l -1;
+      fineNode   = Levels{l}.fineCFI_nodes(side);
+      coarseNode = Levels{cl}.coarseCFI_nodes(side);
+      
+      massG_tmp(side)     = massG_tmp(side)     + massG(fineNode,l)      + massG(coarseNode,cl);
+      velG_tmp(side)      = velG_tmp(side)      + velG(fineNode,l)       + velG(coarseNode,cl);
+      extForceG_tmp(side) = extForceG_tmp(side) + extForceG(fineNode,l)  + extForceG(coarseNode,cl);
+
+    end
+  end
   
-  %Level 2 values
-  massG_new(1,2) = massG_new(3,1);
-  massG_new(5,2) = massG_new(5,1);
-  
-  velG_new(1,2) = velG_new(3,1);
-  velG_new(5,2) = velG_new(5,1);
-  
-  extForceG_new(1,2) = extForceG_new(3,1);
-  extForceG_new(5,2) = extForceG_new(5,1);
-  
-  %fprintf( 'After: L-1 velG(3,1): %g   velG(5,1): %g \n', velG_new(3,1), velG_new(5,1));
-  %fprintf( 'After: L-2 velG(1,2): %g   velG(5,2): %g \n', velG_new(1,2), velG_new(5,2));
-  
+  %Q(CFI_node,AllLevels) = Q_tmp(CFI_node)
+  for side=left:right
+    for l=2:Limits.maxLevels
+      cl = l -1;
+      fineNode   = Levels{l}.fineCFI_nodes(side);
+      coarseNode = Levels{cl}.coarseCFI_nodes(side);
+      
+      massG_new(fineNode,l)        = massG_tmp(side);
+      velG_new(fineNode,l)         = velG_tmp(side);
+      extForceG_new(fineNode,l)    = extForceG_tmp(side);
+      
+      massG_new(coarseNode,cl)     = massG_tmp(side);
+      velG_new(coarseNode,cl)      = velG_tmp(side);
+      extForceG_new(coarseNode,cl) = extForceG_tmp(side);
+
+    end
+  end
+    
 end
 
 %__________________________________

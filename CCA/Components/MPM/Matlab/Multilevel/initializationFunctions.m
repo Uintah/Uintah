@@ -1,3 +1,5 @@
+
+
 function [IF] = initializationFunctions
 
   % create function handles that are used in AMRMPM.m
@@ -6,8 +8,34 @@ function [IF] = initializationFunctions
   IF.initialize_Lx       = @initialize_Lx;
   IF.initialize_xp       = @initialize_xp;
   IF.NN_NP_allLevels     = @NN_NP_allLevels;
+  IF.findCFI_nodes       = @findCFI_nodes;
   
-  [GF] = gridFunctions            % load grid based functions
+  [GF] = gridFunctions;            % load grid based functions
+  
+  %______________________________________________________________________
+  function[Levels]  = findCFI_nodes(Levels, nodePos, Limits)
+     
+    left  = 1;
+    right = 2;
+    
+    for fineLevel=Limits.maxLevels:-1:2
+      coarseLevel = fineLevel -1;
+      L = Levels{fineLevel};
+      
+      % fine level CFI nodes
+      cfi_left  = L.Patches{1}.nodeLo;
+      cfi_right = L.Patches{L.nPatches}.nodeHi;
+      Levels{fineLevel}.fineCFI_nodes(left)  = cfi_left;
+      Levels{fineLevel}.fineCFI_nodes(right) = cfi_right;
+      
+      % underlying CFI nodes on the coarse level
+      cfi_left  = GF.mapNodetoCoarser(nodePos(cfi_left,fineLevel),  fineLevel,nodePos,Levels);
+      cfi_right = GF.mapNodetoCoarser(nodePos(cfi_right,fineLevel), fineLevel,nodePos,Levels);
+      Levels{coarseLevel}.coarseCFI_nodes(left)  = cfi_left;
+      Levels{coarseLevel}.coarseCFI_nodes(right) = cfi_right;
+    end
+  
+  end
  
   %______________________________________________________________________
   function[nodePos]  = initialize_NodePos(L1_dx, Levels, Limits, interpolation)
@@ -18,23 +46,10 @@ function [IF] = initializationFunctions
       L = Levels{l};
       nodeNum = int32(1);
       
-      nodePos(1,l) = L.Patches{1}.min;
-if(0)      
-      for p=1:L.nPatches
-        P = L.Patches{p};
-        % loop over all nodes and set the node position
-        for  n=1:P.NN  
-          if(nodeNum > 1)
-            nodePos(nodeNum,l) = nodePos(nodeNum-1,l) + P.dx;
-          end
-          nodeNum = nodeNum + 1;
-        end
-        
-      end  % patches
-end      
+      nodePos(1,l) = L.Patches{1}.min;     
       
       for p=1:L.nPatches
-        P = L.Patches{p}
+        P = L.Patches{p};
         % loop over all nodes and set the node position
 
         if(p > 1)
@@ -53,6 +68,7 @@ end
   
   %______________________________________________________________________
   function[Lx]  = initialize_Lx(nodePos, Levels, Limits)
+    
     Lx = zeros(Limits.NN_max,2, Limits.maxLevels);
     % compute the zone of influence
     left = 1;
@@ -173,6 +189,7 @@ end
   end
   %______________________________________________________________________
   function [Levels, dx_min, Limits] = initialize_grid(domain,PPC,L1_dx,interpolation,d_smallNum)
+
     
     if(0)
     fprintf('USING plotShapeFunction Patches\n');
@@ -354,13 +371,6 @@ end
         dx_min = min(dx_min,P.dx);
       end
     end
-    
-    %__________________________________
-    %HARD CODE WHICH NODES ARE CFI NODES
-    Levels{1}.CFI_nodes(1) = 3;
-    Levels{1}.CFI_nodes(2) = 5;
-    Levels{2}.CFI_nodes(1) = 1;
-    Levels{2}.CFI_nodes(2) = 5;
     
     %  output grid
     for l=1:maxLevels
