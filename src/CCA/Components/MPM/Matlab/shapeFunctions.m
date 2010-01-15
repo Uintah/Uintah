@@ -23,10 +23,7 @@ function[node, dx]=positionToNode(xp, nRegions, Regions)
     if ((xp >= R.min) && (xp < R.max))   
       n    = floor((xp - R.min)/R.dx);      % # of nodes from the start of the current region
       node = n + n_offset;                  % add an offset to the local node number
-
-%      if(xp > 0.66)
-%        fprintf( 'region: %g, n: %g, node:%g, xp: %16.15E dx: %g R.min: %16.15E , R.max: %16.15E  n_offset: %g\n',r, n, node, xp, dx, R.min, R.max,n_offset);
-%      end
+%     fprintf( 'region: %g, n: %g, node:%g, xp: %16.15E dx: %g R.min: %16.15E , R.max: %16.15E  n_offset: %g\n',r, n, node, xp, dx, R.min, R.max,n_offset);
       return;
     end
 
@@ -84,7 +81,6 @@ function[volP_0, lp_0]=positionToVolP(xp, nRegions, Regions)
 end
 
 
-
 %__________________________________
 %  Equation 14 of "Structured Mesh Refinement in Generalized Interpolation Material Point Method
 %  for Simulation of Dynamic Problems"
@@ -119,6 +115,30 @@ function [nodes,Ss]=findNodesAndWeights_linear(xp, notused, nRegions, Regions, n
   end
   %__________________________________
   % bullet proofing
+  % is the particle's position exactly coincidental with a node
+  tst = 1.0./Ss;
+  isinf(tst);
+
+  if( isinf(tst(1)) || isinf(tst(2)) )
+    fprintf('\n\nWARNING:__________________________________\n');
+    fprintf(' The particle is positioned exactly on the node, xp: %16.15E  node: %g \n',xp, node);
+    fprintf(' Ss(1): %16.15E    Ss(2): %16.15E \n',Ss(1), Ss(2));
+    fprintf(' abs(xp - node(1))/dx: %16.15E\n',abs(xp - nodePos(nodes(1)) )/dx );
+    fprintf(' now adding/subtracting fuzz to the weights\n');
+    
+    fuzz = 1e-15;
+    if(Ss(1) == 0.0)
+      Ss(1) = Ss(1) + fuzz;
+      Ss(2) = Ss(2) - fuzz; 
+    end
+    if(Ss(2) == 0.0)
+      Ss(2) = Ss(2) + fuzz;
+      Ss(1) = Ss(1) - fuzz; 
+    end
+    fprintf(' Modified:Ss(1): %16.15E    Ss(2): %16.15E \n\n',Ss(1), Ss(2));
+  end
+
+  %  Do the shape functions sum to 1.0 
   sum = double(0);
   for ig=1:NSFN
     sum = sum + Ss(ig);
@@ -129,23 +149,6 @@ function [nodes,Ss]=findNodesAndWeights_linear(xp, notused, nRegions, Regions, n
     input('error: the shape functions (linear) dont sum to 1.0 \n');
   end
 
-  if(0)
-    node = xp/dx;
-    node=floor(node)+1;
-
-    nodes(1)= node;
-    nodes(2)=nodes(1)+1;
-
-    dnode=double(node);
-
-    locx=(xp-dx*(dnode-1))/dx;
-    Ss_old(1)=1-locx;
-    Ss_old(2)=locx;
-
-    if ( ( Ss(1) ~= Ss_old(1)) || ( Ss(1) ~= Ss_old(1)) )
-      fprintf('Ss(1): %g, Ss_old: %g     Ss(2):%g   Ss_old(2):%g \n',Ss(1), Ss_old(1), Ss(2), Ss_old(2));
-    end
-  end
 end
 
 
