@@ -1,6 +1,7 @@
 function [GF] = gridFunctions
   GF.hasFinerCell = @hasFinerCell;
   GF.isOutsideLevel = @isOutsideLevel;
+  GF.mapNodetoCoarser = @mapNodetoCoarser;
 
   %__________________________________
   function[test] = hasFinerCell(x,curLevel,Levels,Limits)
@@ -22,6 +23,23 @@ function [GF] = gridFunctions
     
     test = 0;
   end
+  
+  %__________________________________
+  function[node] = mapNodetoCoarser(x,curLevel,nodePos,Levels)
+      
+    coarseLevel = curLevel -1;  
+    L = Levels{coarseLevel};
+    
+    for ig =1:L.NN
+      if(nodePos(ig,coarseLevel) == x)
+        node = ig;
+        return;
+      end
+    end 
+    fprintf('ERROR: mapNodetoCoarser\n');
+    fprintf('Could not find coarse node corresponding to position %g \n',x);
+    input('hit return to continue');
+  end  
   
   
   %__________________________________
