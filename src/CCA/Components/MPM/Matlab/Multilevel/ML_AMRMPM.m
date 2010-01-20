@@ -44,7 +44,7 @@ end
 % Global variables
 
 PPC     = 2;
-E       = 1.0e4;
+E       = 1.0e6;
 density = 1.0;
 speedSound = sqrt(E/density);
 
@@ -72,14 +72,14 @@ d_smallNum = double(1e-16);
 L1         = 1;
 
 bar_min     = 0.0;
-bar_max     = 0.6666;
+bar_max     = 50.0;
 bar_length  = bar_max - bar_min;
 
-domain       = 1.0;
+domain       = 52;
 area         = 1.;
 plotSwitch   = 1;
 plotInterval = 1;
-writeData    = 0;
+writeData    = 1;
 max_tstep    = BigNum;
 
 L1_dx       =domain/(NCells);
@@ -98,13 +98,15 @@ end
 
 [nodePos]                = IF.initialize_NodePos(L1_dx, Levels, Limits, interpolation);
 
+[Levels]                 = IF.findCFI_nodes(Levels, nodePos, Limits);
+
 [Lx]                     = IF.initialize_Lx(nodePos, Levels, Limits);
 
 [xp, Levels, Limits]     = IF.initialize_xp(nodePos, interpolation, PPC, bar_min, bar_max, Limits, Levels);
 
 [Limits]                 = IF.NN_NP_allLevels(Levels, Limits)
 
-[Levels]                 = IF.findCFI_nodes(Levels, nodePos, Limits);
+
 
 % define the boundary condition nodes on Level 1
 L1_NN = Levels{1}.NN
@@ -152,8 +154,8 @@ SE        = zeros(BigNum,1);
 TE        = zeros(BigNum,1);
 totalMom  = zeros(BigNum,1);
 Exact_tip = zeros(BigNum,1);
+sumError  = zeros(BigNum,1);
 DX_tip    = zeros(BigNum,1);
-TIME      = zeros(BigNum,1);
 
 totalEng_err   = zeros(BigNum,1);
 totalMom_err   = zeros(BigNum,1);
@@ -230,6 +232,16 @@ if strcmp(problem_type, 'compaction')
   velG_BCValueL   = initVelocity;
   velG_BCValueR   = initVelocity;
   titleStr(1) = {'Quasi-Static Compaction Problem'};
+  
+  xp_initial = zeros(NP_max,1);
+  xp_initial = xp;
+  
+  for l=1:maxLevels
+    L = Levels{l};
+    for ip=1:L.NP
+      velP(ip,l)    = initVelocity;
+    end
+  end
   
 end
 
@@ -319,8 +331,10 @@ while t<t_final && tstep < max_tstep
   end
   
   % compute the problem specific external force acceleration.
-  %[accl_extForceP, delta] = ExternalForceAccl(problem_type, delta_0, bodyForce, Material, xp, xp_initial, t, tstep, NP, L1_dx, bar_length);
-    
+  for l=1:maxLevels
+     L = Levels{l};
+    [accl_extForceP(:,l), delta,bodyForce] = ExternalForceAccl(problem_type, delta_0, bodyForce, Material, xp(:,l), xp_initial(:,l), t, tstep, L.NP, L1_dx, bar_length);
+  end  
   %__________________________________
   % project particle data to grid  
   for l=1:maxLevels   
@@ -509,6 +523,7 @@ while t<t_final && tstep < max_tstep
     sumExactPos = sum(initPos + t * initVelocity );
     sumCurPos = sum(xp_clean);
     fprintf('sum position error %E \n',sumExactPos - sumCurPos);
+    sumError(tstep) = sumExactPos - sumCurPos;
   end
   
   if( strcmp(problem_type, 'compaction') && (mod(tstep,plotInterval) == 0) && (plotSwitch == 1) )
@@ -590,6 +605,8 @@ tipDeflect_err(tstep)
 % particle data
 
 if (writeData == 1)
+  NN = Limits.NN_max
+  NP = Limits.NP_max
   fname1 = sprintf('particle_NN_%g_PPC_%g.dat',NN, PPC);
   fid = fopen(fname1, 'w');
   fprintf(fid,'#%s, PPC: %g, NN %g\n',problem_type, PPC, NN);
@@ -623,9 +640,9 @@ if (writeData == 1)
   fname4 = sprintf('errors_NN_%g_PPC_%g.dat',NN, PPC);
   fid = fopen(fname4, 'w');
   fprintf(fid,'#%s, PPC: %g, NN %g\n',problem_type, PPC, NN);
-  fprintf(fid,'#timesetep, totalEng_err, totalMom_err, tipDeflect_err\n');
+  fprintf(fid,'#timesetep, totalEng_err, totalMom_err, tipDeflect_err, sumError\n');
   for t=1:length(TIME)
-    fprintf(fid,'%16.15f, %16.15f, %16.15f, %16.15f\n',TIME(t), totalEng_err(t), totalMom_err(t), tipDeflect_err(t));
+    fprintf(fid,'%16.15E, %16.15E, %16.15E, %16.15E, %16.15E\n',TIME(t), totalEng_err(t), totalMom_err(t), tipDeflect_err(t),sumError(t) );
   end
   fclose(fid);
 
@@ -915,13 +932,17 @@ function drawNodes(figure1,nodePos,Levels,Limits)
 end
 
 %__________________________________
-function [accl_extForceP, delta] = ExternalForceAccl(problem_type, delta_0, bodyForce, Material, xp, xp_initial, t, tstep, NP, L1_dx, bar_length)
+function [accl_extForceP, delta, bodyForce] = ExternalForceAccl(problem_type, delta_0, bodyForce, Material, xp, xp_initial, t, tstep, NP, R1_dx, bar_length)
 
   density    = Material{1}.density;
   E          = Material{1}.E;
   speedSound = Material{1}.speedSound;
   
   delta = -9;
+  
+  nn = length(xp)
+  accl_extForceP = zeros(nn,1);  % you must declare arrays that are not passed in.
+                                 % This array must be full of zeros
   
   if (strcmp(problem_type, 'compaction'))
     if(bodyForce > -200)

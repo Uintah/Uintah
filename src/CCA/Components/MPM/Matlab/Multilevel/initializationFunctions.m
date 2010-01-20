@@ -89,12 +89,30 @@ function [IF] = initializationFunctions
     end
     
     %__________________________________
-    % HARD CODE THE VALUES  AT THE CFI
-    Lx(3,right,1) = Levels{2}.dx;
-    Lx(4,:,1)     = 0.0;
-    Lx(5,left,1)  = Levels{2}.dx;
-    Lx(1,left,2)  = Levels{1}.dx;
-    Lx(5,right,2) = Levels{1}.dx;
+    % Set values at the fine/coarse level CFIs   
+    for fl=2:Limits.maxLevels
+      cl = fl-1;
+      fL = Levels{fl};
+      cL = Levels{fl-1};
+      
+      fineCFI_L  = fL.fineCFI_nodes(left)
+      fineCFI_R  = fL.fineCFI_nodes(right)
+      
+      coarseCFI_L = cL.coarseCFI_nodes(left)
+      coarseCFI_R = cL.coarseCFI_nodes(right)
+      
+      %fine level
+      Lx(fineCFI_L,left, fl) = cL.dx;
+      Lx(fineCFI_R,right,fl) = cL.dx;
+      
+      %coarseLevel
+      Lx(coarseCFI_L,right, cl) = fL.dx;
+      Lx(coarseCFI_R,left,  cl) = fL.dx;  
+          
+      range = [coarseCFI_L+1:coarseCFI_R-1];
+      Lx(range,:,cl) = 0.0;
+    end
+    
     
     % output the regions and Lx
     for l=1:Limits.maxLevels

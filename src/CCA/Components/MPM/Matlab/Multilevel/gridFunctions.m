@@ -29,9 +29,12 @@ function [GF] = gridFunctions
       
     coarseLevel = curLevel -1;  
     L = Levels{coarseLevel};
+    tolerance=1e-10;
     
     for ig =1:L.NN
-      if(nodePos(ig,coarseLevel) == x)
+      diff= abs(nodePos(ig,coarseLevel) - x);
+      
+      if(diff <= tolerance)
         node = ig;
         return;
       end
