@@ -40,7 +40,7 @@ end
 % Global variables
 
 PPC     = 2;
-E       = 1.0e4;
+E       = 1.0e6;
 density = 1.0;
 speedSound = sqrt(E/density);
 
@@ -54,7 +54,7 @@ Material{1}.density
 interpolation = 'LINEAR';
 
 if( strcmp(interpolation,'GIMP') )
-  NSFN    = 3;               % Number of shape function nodes Linear:2, GIMP:3
+  NSFN    = 3;               % Number of shape function nodes linear:2, GIMP:3
 else
   NSFN    = 2;        
 end
@@ -66,15 +66,18 @@ bodyForce = 0;
 BigNum     = int32(1e5);
 d_smallNum = double(1e-16);
 
-bar_min     = 0.0;
-bar_max     = 0.6666;
+bar_min     = 0 ;
+bar_max     = 50 ;
+
+%bar_min     = 0.75
+%bar_max     = 0.83
 
 bar_length  = bar_max - bar_min;
 
-domain       = 1.0;
+domain       = 52.0;
 area         = 1.;
 plotSwitch   = 1;
-plotInterval = 1;
+plotInterval = 200;
 writeData    = 0;
 max_tstep    = BigNum;
 
@@ -219,6 +222,9 @@ if strcmp(problem_type, 'compaction')
   velG_BCValueR   = initVelocity;
   titleStr(1) = {'Quasi-Static Compaction Problem'};
   
+  xp_initial = zeros(NP,1);
+  xp_initial = xp;
+  
 end
 
 if strcmp(problem_type, 'mms')
@@ -294,7 +300,7 @@ while t<t_final && tstep < max_tstep
   end
   
   % compute the problem specific external force acceleration.
-  [accl_extForceP, delta] = ExternalForceAccl(problem_type, delta_0, bodyForce, Material, xp, xp_initial, t, tstep, NP, R1_dx, bar_length);
+  [accl_extForceP, delta,bodyForce] = ExternalForceAccl(problem_type, delta_0, bodyForce, Material, xp, xp_initial, t, tstep, NP, R1_dx, bar_length);
     
   %__________________________________
   % project particle data to grid  
@@ -450,11 +456,11 @@ while t<t_final && tstep < max_tstep
   
   if( strcmp(problem_type, 'compaction') && (mod(tstep,plotInterval) == 0) && (plotSwitch == 1) )
     term1 = (2.0 * density * bodyForce)/E;
+
     for ip=1:NP
       term2 = term1 * (delta - xp(ip));
       stressExact(ip) = E *  ( sqrt( term2 + 1.0 ) - 1.0);
     end
-    
     figure(2)
     set(2,'position',[1000,100,700,700]);
 
@@ -701,7 +707,7 @@ end
 
 
 %__________________________________
-function [accl_extForceP, delta] = ExternalForceAccl(problem_type, delta_0, bodyForce, Material, xp, xp_initial, t, tstep, NP, R1_dx, bar_length)
+function [accl_extForceP, delta, bodyForce] = ExternalForceAccl(problem_type, delta_0, bodyForce, Material, xp, xp_initial, t, tstep, NP, R1_dx, bar_length)
 
   density    = Material{1}.density;
   E          = Material{1}.E;
