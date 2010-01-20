@@ -91,7 +91,7 @@ function [IF] = initializationFunctions
     %__________________________________
     % region structure 
     %
-    if(1)
+    if(0)
     fprintf('USING plotShapeFunction regions\n');
 
     nRegions      = int32(1);              % partition the domain into numRegions
@@ -132,7 +132,7 @@ function [IF] = initializationFunctions
     end
     %____________
     % 2 level
-    if(0)
+    if(1)
     nRegions    = int32(3);               % partition the domain into nRegions
     Regions       = cell(nRegions,1);     % array that holds the individual region information
 
@@ -147,7 +147,7 @@ function [IF] = initializationFunctions
 
     R.min         = domain/3.0;                       
     R.max         = 2.0*domain/3.0;
-    R.refineRatio = 2;
+    R.refineRatio = 1;
     R.dx          = R1_dx/R.refineRatio;
     R.volP        = R.dx/PPC;
     R.NN          = int32( (R.max - R.min)/R.dx );
