@@ -50,13 +50,14 @@ P.advectionOrder    = 2;                            % 1=1st-order advection oper
 
 %================ ICE Interal Parameters, Debugging Flags ================
 % Debug flags
-P.compareUintah     = 1;                            % Compares vs. Uintah ICE and plots results
+P.compareUintah     = 0;                            % Compares vs. Uintah ICE and plots results
 P.debugSteps        = 0;                            % Debug printout of steps (tasks) within timestep
 P.debugAdvectRho    = 0;                            % Debug printouts in advectRho()
 P.debugAdvectQ      = 0;                            % Debug printouts in advectQ()
 P.printRange        = [27:32];                      % Range of indices to be printed out (around the shock front at the first timestep, for testing)
 P.plotInitialData   = 0;                            % Plots initial data
-P.plotResults       = 0;                            % plot intermediate data
+P.plotResults       = 1;                            % plot intermediate data
+P.plotInterval      = 100;                          % plot every n timesteps
 
 %================ Grid Struct (G) ======= ================
 G.nCells      = P.nCells;                           % # interior cells

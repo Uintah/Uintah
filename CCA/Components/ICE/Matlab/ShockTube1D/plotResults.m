@@ -18,7 +18,7 @@ if (P.compareUintah)
   end
   %================ Plot results ================
 
-  if ((mod(tstep,100) == 0) | (tstep == P.maxTimeSteps))
+  if ((mod(tstep,P.plotInterval) == 0) | (tstep == P.maxTimeSteps))
     figure(1);
     set(gcf,'position',[100,600,700,700]);
 
@@ -86,7 +86,7 @@ if (P.compareUintah)
 end  
   
 if (P.plotResults)
-  if ((mod(tstep,10) == 0) | (tstep == P.maxTimeSteps))
+  if ((mod(tstep,P.plotInterval) == 0) | (tstep == P.maxTimeSteps))
     %================ Plot results ================
     figure(1);
     set(gcf,'position',[100,100,900,900]);
