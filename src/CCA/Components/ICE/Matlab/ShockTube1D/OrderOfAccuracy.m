@@ -3,11 +3,11 @@ function KK=OrderOfAccuracy
 %______________________________________________________________________
 %  This matlab script computes the order of accuracy
 
-  Ncells = [100, 200, 400, 800, 1600]
+  Ncells = [100, 200, 400, 800]
   nTests = length(Ncells);
 
   Lnorm   = zeros(1, nTests);
-
+  unix('rm OofA.dat');
   %__________________________________
   % loop through all ofthe tests 
   % compute the Lnorm
@@ -17,12 +17,12 @@ function KK=OrderOfAccuracy
     fprintf('Test: %g  Ncells: %g\n',n, Ncells(n));
     
     [tfinal, x_CC, dx, rho_CC, vel_CC, press_CC, temp_CC]= ...
-        ice(Ncells(n));
+        iceTotalEnergy(Ncells(n));
         
     [Lnorm(n)] = ...
         compare_Riemann(Ncells(n), tfinal, dx, x_CC, rho_CC, vel_CC, press_CC, temp_CC)
     
-    fprintf(fid,'%g %15.16E %15.16E\n',Ncells, Lnorm(n));
+    fprintf(fid,'%g %15.16E\n',Ncells(n), Lnorm(n));
   end
   
   fclose(fid);
