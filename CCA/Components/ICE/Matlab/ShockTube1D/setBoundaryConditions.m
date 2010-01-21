@@ -26,6 +26,10 @@ switch (lower(whichvar))
   case 'temp_cc'                              % Homogeneous Neumann B.C. for T at left boundary
     q(G.ghost_Left)   = q(G.ghost_Left+1);    % Left boundary
     q(G.ghost_Right)  = q(G.ghost_Right-1);   % Right boundary
+    
+  case 'e_cc'                              % Homogeneous Neumann B.C. for T at left boundary
+    q(G.ghost_Left)   = q(G.ghost_Left+1);    % Left boundary
+    q(G.ghost_Right)  = q(G.ghost_Right-1);   % Right boundary
 
   case 'press_cc'                             % Homogeneous Neumann B.C. for p at left boundary
     q(G.ghost_Left)   = q(G.ghost_Left+1);    % Left boundary
