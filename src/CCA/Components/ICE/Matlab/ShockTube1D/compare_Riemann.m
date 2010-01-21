@@ -21,6 +21,13 @@ function [Lnorm] = compare_Riemann(Ncells, t, dx, x_CC, rho_CC, vel_CC, press_CC
   c = sprintf('%s %s %s %i %g',exactRiemann, inputFile, 'exactSol', Ncells, t)
 
   [s, r]   = unix(c);
+  
+  if(s ~= 0)
+    fprintf('ERROR:comare_Riemann.m \n There has been an error running the exactRiemann code.  The output is shown below:\n');
+    r
+    input('hit return to continue');
+  end
+  
   exactSol = importdata('exactSol');
   x_ex     = exactSol(:,1);
 
@@ -48,6 +55,14 @@ function [Lnorm] = compare_Riemann(Ncells, t, dx, x_CC, rho_CC, vel_CC, press_CC
   ML_sol(:,4) = temp_CC(interiorCells);
 
   % bulletproofing
+  l1 = length(x_CC);
+  l2 = length(x_ex);
+  if(l1 ~= l2)
+    fprintf('ERROR:comare_Riemann.m \n Trying to compare two solutions at different resolutions:\n');
+    return
+  end
+  
+  
   test = sum (x_CC - x_ex);
   if(test > 1e-10)
     display('ERROR: compute_Riemann: The results cannot be compared')
