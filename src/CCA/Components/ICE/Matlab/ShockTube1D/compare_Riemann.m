@@ -82,6 +82,8 @@ function [Lnorm] = compare_Riemann(Ncells, t, dx, x_CC, rho_CC, vel_CC, press_CC
   %______________________________
   if(makePlot)
     for v=1:length(variables)
+      figure(1)
+      set(1,'position',[50,100,700,700]);
       subplot(2,1,1), plot(x_CC,ML_sol(:,v),'b+', x_ex, exactSol(:,v+1),'r', 'MarkerSize',2.5);
       xlabel('x')
       legend('exact','computed')
