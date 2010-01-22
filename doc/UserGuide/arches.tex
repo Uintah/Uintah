@@ -348,6 +348,8 @@ Choosing an explicit time stepping scheme, rather than an implict one, creates a
 \overline{\rho}^{ *} = \overline{\rho}^{ n} - \Delta t \frac{S_k}{V} n_{kj} \left(  \overline{\rho} \widetilde{u_j} \right) \; .
 \end{equation}
 %
+
+% FIXME: section reference is broken
 Ideally, one would like to know $\overline{\rho}^{n+1}$ rather than an estimate.  While more details will be discussed in Section \ref{sec:combust_react_models}, one recognizes that $\rho$ is a function of the same variables that are being updated in time, namely, the mixture fraction, $f$, and enthalpy, $h$.  This quandary is a result of the explicit time stepping method will not be resolved for variable density flows without using a fully implicit method.  Explicit methods, however, do have advantages, especially for large scale parallel computations.  Specifically, explicit methods are easier to load balance because the amount of work required for each processor is readily determined a priori, which makes for an efficient parallel computation.  Explicit methods are also easier to code into a computer and to debug.  For these reasons, the current algorithm discussion is limited to explicit methods only. 
 
 The explicit algorithm for solving the set of filtered equations is shown in Algorithm \ref{alg:LES_algorithm}.  
@@ -381,6 +383,174 @@ The explicit algorithm for solving the set of filtered equations is shown in Alg
 \ENDFOR
 \end{algorithmic}
 \end{algorithm}
+
+
+\subsection{Direct Quadrature Method of Moments}\label{sec:DQMOM}
+
+The direct quadrature method of moments (DQMOM) is a recently-developed moment method for tracking distributions.  It has been applied to distributions of evaporating droplets, soot particle distributions, fluidized beds, and subgrid chemistry PDFs. The method is similar to the quadrature method of moments (QMOM), in that it uses quadrature to provide closure for the moment transport equation; however, it differs in that the moment transport equations are not actually solved, unlike the quadrature method of moments (QMOM). Rather, the DQMOM tracks the quadrature weights and weighted abscissas representing the NDF directly, rather than using the product-difference algorithm to transform between a set of moments and quadrature weights and abscissas that would best represent that distribution.
+
+The basic outline of the method, given below, defines and covers these fundamental steps and concepts:
+\begin{enumerate}
+\item Number Density Function (NDF)
+\item Moments
+\item Moment Methods for NDF Transport
+\item Quadrature
+\item Direct Quadrature Method of Moments
+\end{enumerate}
+
+The number density function is the starting point, as it is the function of interest that is being tracked.  Moments are defined, and moment methods are explained and applied to the NDF transport equation to yield the moment transport equation.  Furthermore, quadrature is defined and applied to approximate the moments, which leads to a quadrature-approximated moment transport equation.  This equation leads to the fundamental equations governing DQMOM.
+
+\subsubsection{Number Density Function}\label{subsubsec:NDF}
+Using the direct quadrature method of moments (DQMOM) in Arches, the dispersed phase is represented as a number density function (NDF), which is tracked in a stationary Eulerian reference frame. 
+The NDF is denoted as $f$ and represents the number of particles at a particular point in space and time.  
+Using DQMOM, this NDF is parameterized on several different variables - independent variables for the particles. 
+These are called ``internal coordinates,'' and are denoted by $\boldsymbol{\xi}$ (where boldface denotes a vector quantity). 
+In this case the NDF is written as $f\left(\boldsymbol{\xi};\boldsymbol{x},t\right)$.
+
+The starting point for the DQMOM equations is the NDF transport equation; this is derived in several places and will not be derived here. The NDF transport equation is:
+\begin{eqnarray}\label{eq:NDF transport equation}
+  \dfrac{\partial f \left( \boldsymbol{\xi}; \boldsymbol{x},t \right)}{\partial t}  % accumulation term
+  + \dfrac{\partial}{\partial x_{i}} \left( \left< u_{i} \vert \boldsymbol{\xi}; \boldsymbol{x}, t \right> f \left( \boldsymbol{\xi}; \boldsymbol{x},t \right) \right) & & \nonumber \\ % spatial convection term
+  + \dfrac{\partial}{\partial \xi_{j}} \left( \left< G_{j} \vert \boldsymbol{\xi};\boldsymbol{x}, t \right> f \left( \boldsymbol{\xi}; \boldsymbol{x},t \right) \right)   % phase-space convection term
+  & = & h \left( \boldsymbol{\xi}; \boldsymbol{x},t \right),
+\end{eqnarray}
+
+\noindent where $G_{j}$ is the velocity of the NDF in phase-space (that is, internal coordinate-space), and is defined by:
+\begin{equation}
+G_{j} = \dfrac{ d \xi_{j} }{d t}
+\end{equation}
+
+\noindent (note this is analogous to spatial velocity $v$, defined by:
+\begin{equation}
+v_{i} = \dfrac{ d x_{i} }{d t},
+\end{equation}
+
+\noindent and that $G_{j}$ takes the same form as Lagrangian particle models); also, $h$ is a birth and death term representing the appearance or disappearance of particles within the domain.  Note also that the velocities $v_i$ and $G_j$ are conditioned on the value of the internal coordinates, as well as on space and time. This implies that the spatial and phase-space velocities are full distributions in $\left( \boldsymbol{\xi}, \boldsymbol{x} \right)$ space, just as the NDF is.
+
+The number of internal coordinates is denoted by $N_{\xi}$. If $N_{\xi} = 1$, the NDF is called ``univariate''; if $N_{\xi} > 1$, then the NDF is called ``multivariate''.
+
+
+
+\subsubsection{Moments}\label{subsubsec:moments}
+Using DQMOM, the particles are represented as an Eulerian distribution - that is, the particles are not treated in an individual sense, but in a statistical sense. In order to represent the NDF in the framework of a scalar CFD code, the NDF must be represented using a set of scalars that can be transported. One such set of scalars, the moments of the NDF, provide useful statistical information about the distribution. Additionally, a distribution can be approximately reconstructed from its moments. The first moment of the distribution represents the mean value; the second, the variance of the distribution; and so on. An arbitrary number of moments can be defined. For a univariate NDF, the $k^{th}$ moment of the NDF is defined as:
+\begin{equation}\label{eq:univariate moment definition}
+m_{k} = \dfrac{ \displaystyle{ \int_{-\infty}^{+\infty}{\xi^k f \left( \xi ; \boldsymbol{x},t \right) d\xi } } }{ \displaystyle{ \int_{-\infty}^{+\infty}{ f \left( \xi ; \boldsymbol{x},t \right) d\xi } } }
+\end{equation}
+
+Alternatively, if the NDF is a function of several internal coordinates, the $\boldsymbol{k}^{th}$ moment is defined as:
+\begin{eqnarray}\label{eq:multivariate moment definition}
+m_{\boldsymbol{k}} & = & \dfrac{ \displaystyle{ \dotsintop_{\infty}^{+\infty}{ \xi_{1}^{k_1} \dots \xi_{N_{\xi}}^{k_{N_{\xi}}}   f \left( \xi_1, \dots, \xi_{N_{\xi}} \right)   d\xi_1 \dots d\xi_{N_{\xi}} } }}
+{  \displaystyle{ \dotsintop_{\infty}^{+\infty}{ f \left( \xi_1, \dots, \xi_{N_{\xi}} \right)   d\xi_1 \dots d\xi_{N_{\xi}} } } }
+%m_{\boldsymbol{k}}  & = & \dfrac{ \displaystyle{ \dotsintop_{-\infty}^{+\infty} \xi_{1}^{k_1} \dots \xi_{N_{\xi}}^{k_{N_{\xi}}}   f \left( \xi_1, \dots \xi_{N_{\xi}} \right)   d\xi_1 \dots d\xi_{N_\xi} }{ \displaystyle{ } }
+%				& = & 
+\\
+m_{\boldsymbol{k}} & = & \dfrac{{\displaystyle \dotsintop_{-\infty}^{+\infty}}\left[
+\left({\displaystyle \prod_{m=1}^{N_{\xi}}}\xi_{m}^{k_{m}}\right)
+\, f(\boldsymbol{\xi};\boldsymbol{x},t)\, d\boldsymbol{\xi}\right]}{{\displaystyle \dotsintop_{-\infty}^{+\infty}}\, f(\boldsymbol{\xi};\boldsymbol{x},t)\, d\boldsymbol{\xi}}
+\end{eqnarray}
+
+\noindent where $\boldsymbol{k} = \left[ k_1, k_2, \dots k_{N_{\xi}} \right] $ is the multivariate moment index.
+
+
+
+\subsubsection{Moment Methods for NDF Transport}\label{subsubsec:momentmethods}
+
+The method of moments is a method of tracking the NDF of a system of particles. Because the NDF is a full, continuous distribution, it is difficult to track without assuming a functional form for it. Rather than assume a functional form, the moments of the NDF, which are simply scalars, are tracked instead. This method requires tracking various scalars, which is computationally feasible in a scalar framework and which greatly simplifies the process of tracking the NDF. However, the approach has a closure problem that prevents it from being used in practice for any but the most simple systems.
+
+The transport equation for each moment must be written in terms of higher order moments, and the transport equations for these higher order moments must be written in terms of successively higher order moments, etc. Simplifications (models) must be used to express higher order moments only in terms of lower order moments being tracked as a part of the method of moments. Once this is accomplished, the set of moment transport equations becomes a closed set of equations.
+
+
+
+\subsubsection{Quadrature}\label{subsubsec:quadrature}
+
+Quadrature approximates the integral of an unknown function with tabulated known values as a summation of a set of $N$ weighted abscissas. It determines a polynomial of degree $2N-1$ whose zeros are the $N$ weighted abscissas, and approximates the unknown function using this polynomial [Press 1992]. There are several common quadrature formulations, including the midpoint rule (the unknown function is assumed to be a constant, or zero-order polynomial), the trapezoid rule (the unknown function is assumed to be a straight line, or ﬁrst-order polynomial), and Simpson’s rule (the unknown function is assumed to be a second-order polynomial). Note that while the unknown function does not have to be a polynomial, the quadrature approximation becomes much better if it is (and exact if the unknown function is a polynomial of degree $2N-1$ or less). The general $N$-point quadrature formula can be written as:
+
+\begin{equation}\label{eq:quadrature-definition}
+\int_{a}^{b}w(r)g(r)\, dx\approx{\displaystyle \sum_{\alpha=1}^{N}w_{\alpha}g(r_{\alpha})}
+\end{equation}
+
+\noindent where $g(r)$ is an arbitrary function of the variable $r$. As $N$ increases, the quadrature approximation usually becomes more accurate. This equation can also be extended to a multivariate function $g(\mathbf{r)}$, an arbitrary function of the $D$-element vector $\mathbf{r}=\left[r_{1},r_{2},\dots,r_{D}\right]$ to yield:
+
+\begin{equation}\label{eq:multivariate-quadrature-definition}
+{\displaystyle \int_{a}^{b}w(\mathbf{r})g(\mathbf{r)}d\mathbf{r}}
+\end{equation}
+
+The weights are common to all internal coordinates $\mathbf{r}$ because the weight function $w(\mathbf{r})$ is binned into $N$ discrete weights, and this weight function is common to all internal coordinates.
+
+
+
+\subsubsection{Quadrature-Approximated Moment Transport Equation}\label{subsubsec:quadapproximated}
+
+When the quadrature approximation is applied to a multivariate NDF (where the NDF is the weight function), it yields:
+
+\begin{eqnarray}\label{eq:quadrature-approximated-ndf}
+f(\boldsymbol{\xi};\mathbf{x},t) 
+& \approx & {\displaystyle \sum_{\alpha=1}^{N}\left(w_{\alpha}(\boldsymbol{x},t){\displaystyle \,\boldsymbol{\delta}\left(\boldsymbol{\xi}-\left\langle \boldsymbol{\xi}(\boldsymbol{x},t)\right\rangle _{\alpha}\right)}\right)} \nonumber \\
+& \approx & {\displaystyle \sum_{\alpha=1}^{N}\left(w_{\alpha}(\boldsymbol{x},t){\displaystyle \prod_{j=1}^{N_{\xi}}\delta\left(\xi_{j}-\left\langle \xi_{j}(\boldsymbol{x},t)\right\rangle _{\alpha}\right)}\right)}
+\end{eqnarray}
+
+\noindent which makes the integral of the NDF:
+
+\begin{eqnarray}\label{eq:quadrature-approximated-ndf-integral}
+{\displaystyle \int_{-\infty}^{+\infty}}\boldsymbol{\xi}^{\boldsymbol{k}}f\, d\boldsymbol{\xi}
+&\approx&{\displaystyle \sum_{\alpha=1}^{N}\left\{ w_{\alpha}\left(\prod_{j=1}^{N_{\xi}}\langle\xi_{j}\rangle_{\alpha}^{k_{j}}\right)\right\} }
+\end{eqnarray}
+
+This quadrature-approximated NDF can then be substituted into the moment definition to get a quadrature-approximated moment,
+
+\begin{equation}\label{eq:quadrature-approximated-moment}
+m_{\boldsymbol{k}}\approx\sum_{\alpha=1}^{N}\left\{ p_{\alpha}\left(\prod_{j=1}^{N_{\xi}}\langle\xi_{j}\rangle_{\alpha}^{k_{j}}\right)\right\} 
+\end{equation}
+
+\noindent where $p_{\alpha}$ is the probability of environment $\alpha$ (defined as $w_{\alpha} / \sum_{i=1}^{N} w_{i} $), $\boldsymbol{k}$ is the multivariate moment index vector, and $k_{j}$ is the $j^{th}$ element of vector $\boldsymbol{k}$ (with a total of $N_{\xi}$ values).
+
+Starting with the NDF transport equation, the moment transform can be taken, yielding the moment transport equation. Next, the quadrature approximation can be plugged in, which yields the quadrature-approximated moment transport equation.  After some algebraic manipulation, this yields:
+
+\begin{multline}\label{eq:quadrature-approximated-moment-xport-eqn}
+{\displaystyle {\displaystyle \sum_{\alpha=1}^{N}\left[
+{\displaystyle \prod_{j=1}^{N_{\xi}}}\delta\left(\xi_{j}-\left\langle \xi_{j}\right\rangle _{\alpha}\right)
++\sum_{m=1}^{N}\dfrac{\partial}{\partial\langle\xi_{m}\rangle_{\alpha}}\left(\prod_{j=1}^{N_{\xi}}
+\delta\left(\xi_{j}-\left\langle \xi_{j}\right\rangle _{\alpha}\right)
+\right)\langle\xi_{m}\rangle_{\alpha}\right]}a_{\alpha}} \\
+-\sum_{\alpha=1}^{N}\sum_{n=1}^{N}\left[\dfrac{\partial}{\partial\langle\xi_{n}\rangle_{\alpha}}\left(\prod_{j=1}^{N_{\xi}}
+\delta\left(\xi_{j}-\left\langle \xi_{j}\right\rangle _{\alpha}\right)
+\right)\right]b_{n\alpha}= \\
+{\displaystyle \sum_{\alpha=1}^{N}\sum_{m=1}^{N_{\xi}}\sum_{n=1}^{N_{\xi}}}\left[\dfrac{\partial^{2}}{\partial\langle\xi_{m}\rangle_{\alpha}\partial\langle\xi_{n}\rangle_{\alpha}}\left({\displaystyle \prod_{j=1}^{N_{\xi}}
+\delta\left(\xi_{j}-\left\langle \xi_{j}\right\rangle _{\alpha}\right)
+}\right)\right]C_{mn\alpha} \\
++S_{\xi}+D_{\xi}+h,
+\end{multline}
+
+\noindent where $a_{\alpha}$ and $b_{n,\alpha}$, defined as:
+
+\begin{eqnarray}\label{eq:a-b-transport-eqns}
+\dfrac{\partial}{\partial t}\left( w_{\alpha} \right)
++\dfrac{\partial}{\partial x_{i}}\left( \langle u_{i}\rangle_{\alpha}w_{\alpha} \right)
+-\dfrac{\partial}{\partial x_{i}} \left( D_{x,\alpha} \dfrac{\partial}{\partial x_{i}} \left( w_{\alpha} \right) \right)
+&=&a_{\alpha} \\
+\dfrac{\partial}{\partial t}\left( \varsigma_{n\alpha} \right)
++\dfrac{\partial}{\partial x_{i}}\left( \langle u_{i}\rangle_{\alpha}\varsigma_{n\alpha} \right) 
+-\dfrac{\partial}{\partial x_{i}}\left( D_{x,\alpha} \dfrac{\partial}{\partial x_{i}} \left( \varsigma_{n,\alpha} \right) \right) 
+&=&b_{n\alpha}, \\
+&&\nonumber \\ 
+\text{for }j=1\dots N_{\xi} & & \nonumber
+\end{eqnarray}
+
+\noindent are the transport equations implemented to track the evolution of the NDF.  The source terms $a_{\alpha}$ and $b_{n,\alpha}$ come from the solution to the linear system
+
+\begin{equation}\label{eq:Ax=B}
+\mathbf{Ax} = \mathbf{B}.
+\end{equation}
+
+
+\subsubsection{Summary}\label{subsubsec:summary}
+In summary, the DQMOM solution procedure requires solving several transport equations, given by \ref{eq:a-b-transport-eqns}. These transport equations describe the changes in the quadrature weights and weighted abscissas used to approximate the NDF.  The source terms for these transport equations, $a_{\alpha}$ and $b_{n,\alpha}$, come from the solution to a linear system, $\mathbf{Ax}=\mathbf{B}$, in which the vector $\mathbf{x}$ contains the source terms.  This linear system comes from the quadrature-approximated moment trasport equation, equation \ref{eq:quadrature-approximated-moment-xport-eqn}, of which there are $\left(N_{\xi} + 1\right)N$.  It is because this set of equations is linear in the unknowns $a_{\alpha}$ and $b_{n,\alpha}$ that it can be re-cast in the form of a linear system.
+
+
+% ==========================================================
+% =============== Uintah Specifications =========================
+% ==========================================================
+
 
 \section{Uintah Specification}
 %
@@ -499,6 +669,8 @@ This option is often helpful in helping with stability if your simulation is exp
 \subsubsection{Implicit Time Integrator}
 %
 Currently the implicit time integrator is not supported. Please check back in subsequent releases.
+
+
 
 \subsection{Transport Equation Options}\label{Sec:Eqns_options}
 In the current configuration of Arches, transport equations are activated by specifying the option for each equation in a equation-specific node under the {\it ExplicitSolver} node.  Currently, all equation nodes are required except for the enthalpy solver node.  
@@ -661,15 +833,7 @@ If the $<$DORadiationModel$>$ section is found, the model is activated and the r
 %\subsection{Extra Scalar Solvers}
 %This section and all options will soon be replaced with Section \ref{Sec:AddTransEqn}. 
 
-
-
 %\subsection{Additional Transport Equations}\label{Sec:AddTransEqn}
-
-%\subsection{Direct Quadrature Method of Moments (DQMOM)}
-
-
-
-
 
 
 %\subsubsection{Turbulence}
@@ -685,6 +849,515 @@ If the $<$DORadiationModel$>$ section is found, the model is activated and the r
 
 
 %\subsubsection{Solvers}
+
+
+\subsection{Direct Quadrature Method of Moments}
+
+The direct quadrature method of moments (DQMOM) is implemented in Arches, and various parameters, optional and required, are set in the input file. DQMOM involves transporting several transport equations, namely transport equations for the weights $w_{\alpha}$ and abscissas $ \left< \xi_{j} \right>_{\alpha}$, or, alternatively, the weights $w_{\alpha}$ and weighted abscissas $\varsigma_{j,\alpha}$.  Information about these transport equations must be specified in the DQMOM tags.
+
+Three other things need to be specified, namely: a set of moments with which to generate a set of quadrature-approximated moment transport equations, which make up the linear system $\mathbf{Ax}=\mathbf{B}$; parameters related to the solver for the linear system $\mathbf{Ax} = \mathbf{B}$; and finally, physical models implemented to describe the evolution of the NDF in state-space. The input file has a DQMOM section denoted by the tag \verb=<DQMOM>=.
+
+The basic structure is as follows:
+
+% Add below, once completed:
+%	<coalParticleCalculation>
+%		...
+%	</coalParticleCalculation>
+\begin{Verbatim}[fontsize=\footnotesize]
+<DQMOM>
+	<LinearSolver>
+		<!-- Linear solver options -->
+		...
+	</LinearSolver>
+	
+	<Models>
+		<!-- the coal models used in DQMOM are specified here -->
+		...
+	</Models>
+	
+	<VelModel>
+		<!-- information about the particle velocity model 
+			is specified here -->
+		...
+	</VelModel>
+	
+	<Weights>
+		<!-- weight transport equation information set here -->
+		...
+	</Weights>
+	
+	<Ic label="...">
+		<!-- weighted abscissa (for each internal coordinate)
+			transport equation information set here -->
+		...
+	</Ic>
+	
+	<Moment><m>[...]</m></Moment>
+	...
+	<Moment><m>[...]</m></Moment>
+</DQMOM>
+\end{Verbatim}
+
+Three additional tags go between the \verb=<DQMOM>= tags.  These are:
+
+\begin{enumerate}
+%
+\item {\bf Number of quadrature nodes}: \verb=<number_quad_nodes>= \\
+{\bf Input type}: {\it Required, positive integer} \\
+%{\bf Default}: {\it NA} \\
+{\bf Description}: Denotes the number of quadrature nodes (also called environments) with which to represent the NDF. The NDF is represented by a set of delta function, and each quadrature node represents an additional delta function.
+%
+\item {\bf Adiabatic Gas, Non-Adiabatic Particles}: \verb=<adiabGas_nonadiabPart>= \\
+{\bf Input type}: {\it Optional, boolean} \\
+{\bf Default}: {\it false} \\
+{\bf Description}: This parameter is used to indicate that the gas is adiabatic (in which case, it is {\it true}) and therefore heat loss should not be looked up from the table.  The default is to assume {\it false}, so that the heat loss will be used as a variable if it is so determined by the remainder of the input file.
+% FIXME: This description needs some improvement
+%
+\item {\bf Save moments}: \verb=<save_moments>= \\
+{\bf Input type}: {\it Optional, boolean} \\
+{\bf Default}: {\it false} \\
+{\bf Description}: This boolean determines whether or not the moments specified in the \verb=<Moments>= tags (see below) should be calculated in order to be saved out as variables.  If true, all moments specified in the \verb=<Moments>= tags will be calculated.  In order to actually save them, however, they must also be added to the \verb=<save>= labels.
+%
+\end{enumerate}
+
+
+
+\subsubsection{Linear Solver, $<$LinearSolver$>$}
+\begin{enumerate}
+%
+\item {\bf Tolerance}: \verb=<tolerance>= \\
+{\bf Input type}: {\it Optional, positive double} \\
+{\bf Default}: {\it } 1.0e-5 \\
+{\bf Description}: Sets the linear solver tolerance for DQMOM.  For the linear system
+%
+\begin{equation}
+\mathbf{Ax}=\mathbf{B},
+\end{equation}
+%
+the residual vector $\mathbf{R}$ is defined as 
+%
+\begin{equation}
+\mathbf{R} = \mathbf{Ax} - \mathbf{B}
+\end{equation}
+%
+and the normalized residual vector $\mathbf{R^{\star}}$ is defined as 
+%
+\begin{equation}
+\mathbf{R^{\star}} = \frac{ \mathbf{Ax} - \mathbf{B} }{ \mathbf{x} }.
+\end{equation}
+%
+The tolerance set by this tag will enforce the following condition
+%
+\begin{equation}
+\begin{cases}
+\text{if} \Vert \mathbf{R^{\star}} \Vert \leq \text{tol} & \text{Use solution obtained from } \mathbf{x} = \mathbf{A^{-1}B} \\
+\text{if} \Vert \mathbf{R^{\star}} \Vert > \text{tol} & \text{Throw out solution from } \mathbf{x} = \mathbf{A^{-1}B} \text{ and use } \mathbf{x = 0} \\
+\end{cases}
+\end{equation}
+%
+\item {\bf Type}: \verb=<type>= \\
+{\bf Input type}: {\it Required, string} \\
+{\bf Default}: {\it ``LU''} \\
+{\bf Description}: The linear solver type; options are:
+\begin{itemize}
+\item ``Lapack-invert'' - uses a Lapack routine to invert $\mathbf{A}$, which is then multiplied by $\mathbf{B}$
+\item ``Lapack-svd'' - uses a Lapack routine to calculate the singular value decomposition (SVD) of $\mathbf{A}$
+\item ``LU'' - LU decomposition solver using the Crout's Method algorithm
+\end{itemize}
+%
+\item {\bf  Maximum allowable condition number for $\mathbf{A}$}: \verb=<maxConditionNumber>= \\
+{\bf Input type}: {\it Optional, positive double} \\
+{\bf Default}: {\it 1.0e+16} \\
+{\bf Description }: If the condition number of $\mathbf{A}$ is greater than the maximum allowable condition number, the resulting solution vector is discarded and $\mathbf{x = 0}$ is used; this prevents large numerical errors from contaminating the solution.
+%
+\item {\bf Calculate condition number? (boolean)}: \verb=<calcConditionNumber>= \\
+{\bf Input type}: {\it Optional, boolean} \\
+{\bf Default}: {\it false} \\
+{\bf Description }: If {\it true}, the condition number is calculated using singular value decomposition.  Note, this calculation is very expensive and should probably only be done when the ``Lapack-svd'' solver option is being used.  An error is thrown if this is true and the ``LU'' (Crout's Method) solver option is chosen.
+%
+\end{enumerate}
+
+
+
+\subsubsection{Coal Models for DQMOM, $<$Models$>$}
+See the \ref{subsec:models} section below for details about the \verb=<Models>= tag.
+
+
+
+%\subsubsection{Iterative Coal Particle Calculation}
+
+
+
+\subsubsection{Velocity Model}
+%
+This section sets parameters for the Balachandar velocity model.
+%
+\begin{enumerate}
+%
+\item {\bf Velocity model}: \verb=<VelModel>= \\
+{\bf Attributes}: label, type \\
+{\bf Description}: Attributes determine the label the velocity model is given, and the type of velocity model being used.  The label is an arbitrary string.  The type takes on these values:
+\begin{itemize}
+\item \verb=Balachandar= - Use the Balachandar particle velocity model
+\item \verb=Dragforce= - Use a drag force law, and track particle velocity as an internal coordinate
+\end{itemize}
+%
+\item {\bf Viscosity}: \verb=<kinematic_viscosity>= \\
+{\bf Input type}: {\it Required, positive double} \\
+{\bf Default}: {\it 1.0e-5} \\
+{\bf Description}: The kinematic viscosity.
+%
+\item {\bf Length scale}: \verb=<L>= \\
+{\bf Input type}: {\it Required, positive double} \\
+{\bf Default}: {\it 1.0} \\
+{\bf Description}: The integral scale of the simulation.
+%
+\item {\bf Density ratio}: \verb=<rho_ratio>= \\
+{\bf Input type}: {\it Required, positive double} \\
+{\bf Default}: {\it 1000} \\
+{\bf Description}: The ratio of particle density to fluid density, $\dfrac{ \rho_{\text{particle}} }{ \rho_{\text{fluid}} }$.
+%
+\item {\bf Regime}: \verb=<regime>= \\
+{\bf Input type}: {\it Required, integer (1 or 3)} \\
+{\bf Default}: {\it 1} \\
+{\bf Description}: The flow regime for the Balachandar particle velocity model.
+%
+\item {\bf Eta}: \verb=<eta>= \\
+{\bf Input type}: {\it Required, positive double} \\
+{\bf Default}: {\it 1.0e-5} \\
+{\bf Description}: The Kolmogorov scale.
+%
+{\color[gray]{0.5}
+\item {\bf High clip value (via upper limit multiplier)}: \verb=<upper_limit_multiplier>= \\
+{\bf Input type}: {\it Optional, double} \\
+{\bf Default}: {\it 2.0} \\
+{\bf Description}: This factor is not actually used.  It is used to set a high clip value.  The way it stands in the code, this is, for some reason, multiplying the upper limit multiplier and the high clip value for the particle length - which doesn't make sense.
+}
+%
+\item {\bf Low clip value}: \verb=<clip_low>= \\
+{\bf Input type}: {\it Optional, double} \\
+{\bf Default}: {\it 0.0} \\
+{\bf Description}: Sets the low clip value for the particle velocity.
+%
+{\color[gray]{0.5}
+\item {\bf Particle velocity boundary conditions}: \verb=<partvelBC_eq_gasvelBC>= \\
+{\bf Input type}: {\it Optional, double} \\
+{\bf Default}: {\it false} \\
+{\bf Description}: If this value is true, the particle velocity boundary conditions are the same as the gas velocity boundary conditions.  \\
+WARNING: This should NOT be turned on!  It will cause problems!
+}
+%
+\item {\bf Minimum velocity ratio}: \verb=<min_vel_ratio>= \\
+{\bf Input type}: {\it Optional, positive double} \\
+{\bf Default}: {\it 0.1} \\
+{\bf Description}: This keeps the particle velocity from becoming too different from the gas velocity.
+%
+\item {\bf Number of iterations}: \verb=<iter>= \\
+{\bf Input type}: {\it Optional, positive integer} \\
+{\bf Default}: {\it 15} \\
+{\bf Description}: An iterative procedure is required to determine the particle velocity, since it appears in the Balachandar particle velocity model implicitly. This tag controls the maximum iterations that may be run.
+%
+\item {\bf Tolerance}: \verb=<tol>= \\
+{\bf Input type}: {\it Optional, positive double} \\
+{\bf Default}: {\it 1e-15} \\
+{\bf Description}: This defines a maximum residual for the expression for the particle velocity appearing in the Balachandar particle velocity model; i.e., if $\left[ (LHS - RHS) \leq \text{tol} \right]$ then the iterative procedure finishes.
+%
+\end{enumerate}
+
+
+
+\subsubsection{Weight Transport Equation Options, $<$Weights$>$}
+%
+\begin{enumerate}
+%
+\item {\bf Do Diffusion?}: \verb=<doDiff>= \\
+{\bf Input type}: {\it Optional, boolean} \\
+{\bf Default}: {\it false} \\
+{\bf Description}: Boolean to determine whether transport equation's RHS will include a diffusion term. If true, it uses a turbulent Prandtl number to determine the diffusivity.  The turbulent Prandtl number can be set, but is 0.4 by default.  See \verb=<turbulentPrandtlNumber>= tag below.
+%
+\item {\bf Do Convection?}: \verb=<doConv>= \\
+{\bf Input type}: {\it Optional, boolean} \\
+{\bf Default}: {\it false} \\
+{\bf Description}: Boolean to determine whether transport equation's RHS will include a convection term. Because the weights are DQMOM scalars, and the weight transport equations (originally) come from the NDF transport equation, the velocity used for the convection term is the particle velocity, conditioned on particle size.  This velocity comes from the DQMOM particle velocity model (see the \verb=<VelModel>= tag above).
+%
+\item {\bf Convection scheme}: \verb=<conv_scheme>= \\
+{\bf Input type}: {\it Optional, string} \\
+{\bf Default}: {\it upwind} \\
+{\bf Description}: Tag to determine the convection scheme used. Valid options are:
+\begin{itemize}
+\item \verb=upwind= - use the upwind convection scheme
+\item \verb=super_bee= - use the super-bee convection scheme
+\end{itemize}
+%
+\item {\bf Turbulent Prandtl Number}: \verb=<turbulentPrandtlNumber>= \\
+{\bf Input type}: {\it Optional, double} \\
+{\bf Default}: {\it 0.4} \\
+{\bf Description}: If diffusion is turned on, a turbulent Prandtl number is required to determine the diffusion coefficient.  The Prandtl number is defined as:
+\begin{equation}
+Pr = \dfrac{\nu}{D}
+\end{equation}
+where $\nu$ is the fluid viscosity, and $D$ is the scalar diffusivity.  This is equivalent to the turbulent Schmidt number.
+%
+\item {\bf Initialization function}: \verb=<initialization>= \\
+{\bf Attributes}: type \\
+{\bf Default}: none \\
+{\bf Description}: There are several options for initialization functions. These are as follows:
+%%
+\begin{itemize}
+\item {\it Constant value initialization}, \verb=constant= - Initializes the weights to be a constant throughout the domain; the constant value is the same for all weights of all environments. The block looks like:
+\begin{Verbatim}
+<initialization type="constant">
+	<constant>...</constant>
+</initialization>
+\end{Verbatim}
+where the \verb=<constant>= tags encapsulate a double.
+%%
+\item {\it Environment-specific constants}, \verb=env_constant= - Initializes the weights to be a constant throughout the domain; the constant value is different for the weights of each environment. The block looks like:
+\begin{Verbatim}
+<initialization type="env_constant" qn="..." value="...">
+\end{Verbatim}
+where ``qn'' is an integer specifying an environment (or quadrature node), and ``value'' is a double, and is the value to which the weight of that environment will be initialized.
+%%
+\item {\it Step-function initialization}, \verb=step= - Initializes the weights to be a step function. Several attributes of the step function must be specified; these include:
+	\begin{itemize}
+	\item \verb=<step_direction>= - Direction in which the step occurrs (x, y, z) (Required, no default)
+	\item \verb=<step_value>= - The step goes from 0 to \verb=<step_value>= (double) (Required, no default)
+	\item \verb=<step_start>= - Physical location at which step begins (double) (No default)
+	\item \verb=<step_end>= - Physical location at which step ends (double) (No default)
+	\item \verb=<step_cellstart>= - Cell location at which step begins (integer) (No default)
+	\item \verb=<step_cellend>= - Cell location at which step ends (integer) (No default)
+	\end{itemize}
+The step function initialization block looks like:
+\begin{Verbatim}
+<initialization type="step">
+	<step_direction> ... </step_direction>
+	<step_value> ... </step_value>
+	<step_start> ... </step_start>
+	<step_end> ... </step_end>
+</initialization>
+\end{Verbatim}
+or, alternatively, the start and end of the step could be specified using the cell locations, which would look like:
+\begin{Verbatim}
+<initialization type="step">
+	<step_direction> ... </step_direction>
+	<step_value> ... </step_value>
+	<step_cellstart> ... </step_cellstart>
+	<step_cellend> ... </step_cellend>
+</initialization>
+\end{Verbatim}
+%%
+\item {\it Environmental step-function initialization}, \verb=env_step= - Initializes the weights to step functions, with the value of the step function different for each environment. The attributes are the same as for the step-function initialization, except that the \verb=<step_value>= tag becomes a set of \verb=<env_step_value>= tags. These tags have the following attributes:
+	\begin{itemize}
+	\item \verb=qn= - the environment (or quadrature node) to which the \verb=<env_step_value>= tag applies
+	\item \verb=value= - the value to which this environment's step function should be initialized
+	\end{itemize}
+so that the tags would look like:
+\begin{Verbatim}
+<initialization type="env_step">
+	<step_direction> ... </step_direction>
+	<step_start> ... </step_start>
+	<step_end> ... </step_end>
+	<env_step qn=" ... " value = " ... " >
+	...
+	<env_step qn=" ... "  value=" ... " >
+</initialization>
+\end{Verbatim}
+%%
+\end{itemize}
+%
+\item {\bf Scaling constant}: \verb=<scaling_const>= \\
+{\bf Input type}: {\it Required, double} \\
+{\bf Default}: {\it 1.0} \\
+{\bf Description}: Value by which to scale the weights. The actual values of the weights are very high, as the weights represent numbers of particles (typically greater than 1e6). Because the values of the weights are going into the $\mathbf{A}$ matrix, large weight values can cause $\mathbf{A}$ to become very ill-conditioned. Scaling the values of the weights can help control condition numbers for $\mathbf{A}$.
+%
+\item {\bf Clipping}: \verb=<Clipping>= \\
+{\bf Description}: Values of weights can attain non-physical values (e.g. negative numbers of particles, large and physically unrealistic numbers of particels, etc.). Clipping is implemented to prevent non-physical values.  The weights have three types of clipping:
+	\begin{itemize}
+	\item \verb=<low>= - Low clipping represents the lowest value the weights can attain (in most cases, 0)
+	\item \verb=<small>= - As a result of the weight/weighted abscissa formulation of DQMOM, the abscissa values are not calculated by themselves; they are bound to the weights. Many models thus require dividing the weighted abscissas by the weights. When the weights become very small, this leads to physically unrealistic abscissa values. The small clipping sets a minimum value at which weights can divide weighted abscissas; when the weights are lower than this small clipping, the abscissas are set to 0.
+	\item \verb=<high>= - High clipping represents an upper limit on values of weights.
+	\end{itemize}
+%
+\end{enumerate}
+
+
+
+\subsubsection{Weighted Abscissa Transport Equation Options, $<$Ic$>$}
+%
+Many of the options for the weighted abscissa transport equation options are the same as the weight transport equations. Only the differences are highlighted in this section.
+%
+\begin{enumerate}
+%
+\item {\bf Initialization}:
+{\bf Description}: The initialization function options are more limited for weighted abscissas than for weights. If abscissas coincide, this creates singularities in $\mathbf{A}$. Thus, the constant and step function initialization functions must be environment-specific
+%
+\item {\bf Scaling constant}:
+{\bf Description}: The scaling constant is for the abscissa, and not for the weighted abscissa. Because the weight is scaled, there are {\it two} scaling constants for each weighted abscissa: one scaling constant for the weights, the other for the abscissa.
+%
+\item {\bf Clipping}:
+{\bf Description}: The clipping values are set for the abscissas, and not the weighted abscissas.  Additionally, there is no ``small'' clipping value, as there is no dividing by the abscissas.
+%
+\item {\bf Models}: \verb=<model>=
+{\bf Attributes}: label \\
+{\bf Description}: Attribute determines which model (identified by the label) should be associated with this internal coordinate. The label is an arbitrary string that must match a label for a model.
+%
+\end{enumerate}
+
+
+
+\subsubsection{Moments, $<$Moment$>$}
+%
+An important part of DQMOM is selecting a set of moments that will be used to provide closure for the NDF. These moments are then used to construct the quadrature-approximated moment transport equations, which are written in the linear form $\mathbf{Ax} = \mathbf{B}$. The moments selected have a strong influence on the behavior of the matrix $\mathbf{A}$.
+%
+\begin{enumerate}
+%
+\item {\bf Moment}: \verb=<Moment>= \\
+{\bf Input type}: {\it Required, multiple integers} \\
+{\bf Default}: N/A \\
+{\bf Description}: The moments are specified as sets of integer vectors. The \verb=<Moment>= block looks like:
+\begin{Verbatim}
+<Moment><m>[ ... , ... , ... ]</m></Moment>
+...
+<Moment><m>[ ... , ... , ... ]</m></Moment>
+\end{Verbatim}
+Note that the moment index vectors must be of size $N_{\xi}$, where $N_{\xi}$ is the number of internal coordinates, and there must be $\left( N_{\xi} + 1 \right) N$ total moments, where $N$ is the number of environments (or quadrature nodes).
+%
+\end{enumerate}
+
+
+
+\subsubsection{Verification, $<$Verify\_Linear\_Solver$>$, $<$Verify\_AB\_Construction$>$}
+%
+Of major importance is the verification procedure for DQMOM. There are two important processes in the DQMOM code that must be verified: the construction of $\mathbf{Ax}=\mathbf{B}$, and the linear solver's solution to $\mathbf{Ax}={B}$. Both have verification mechanisms built in.
+%
+Verification is not something that can be ``turned on'' in the input file - it must be turned on using compiler directives.  The file Directives.h in the Arches component directory contains several directives related to verification, two of which are \verb=VERIFY_LINEAR_SOLVER= and \verb=VERIFY_AB_CONSTRUCTION=.
+%
+For verification, some additional information must be put into the input file. This information is specified for each verification procedure. Most of these tags point to files containing information which is used to construct $\mathbf{Ax}=\mathbf{B}$. These files are available in the Arches \verb=inputs/= directory.
+%
+\begin{enumerate}
+%
+\item {\bf Verification of Linear Solver}: \verb=<Verify_Linear_Solver>= \\
+	\begin{itemize}
+	\item \verb=<A>= - File containing A matrix
+	\item \verb=<X>= - File containing X vector (verification solution)
+	\item \verb=<B>= - File containing B vector
+	\item \verb=<normR>= - File containing norm of the residual vector
+	\item \verb=<norms>= - File containing several norms of vectors
+	\item \verb=<dimension>= - The dimension of the linear system being solved
+	\item \verb=<tolerance>= - Error tolerance
+	\end{itemize}
+%
+\item {\bf Verification of A, B construction process}: \verb=<Verify_AB_Construction>= \\
+	\begin{itemize}
+	\item \verb=<A>= - File containing A matrix
+	\item \verb=<B>= - File containing B vector
+	\item \verb=<input>= - File containing various inputs (e.g. model terms)
+	\item \verb=<moments>= - File containing moments
+	\item \verb=<number_environments>= - Number of environments used to represent the NDF
+	\item \verb=<number_internal_coordinates>= - Number of internal coordinates parameterizing the NDF
+	\item \verb=<tolerance>= - Error tolerance
+	\end{itemize}
+%
+\end{enumerate}
+
+
+
+\subsection{Models}\label{subsec:models}
+The $<$Models$>$ tags contain several tags that are not specific to models.  The outline of a typical $<$Models$>$ section looks like:
+
+\begin{Verbatim}[fontsize=\footnotesize]
+<Models>
+	<model
+	label = " ... "
+	type  = " ... "   >
+
+		<ICVars>
+
+			<variable	
+			label = " ... "
+			role = " ... "  >
+
+		</ICVars>
+
+		<scalarVars>
+		
+			<variable	
+			label = " ... "
+			role   = " ... " >
+
+		</scalarVars>
+
+		<low_clip>  ... </low_clip>
+		<high_clip> ... </high_clip>
+
+	</model>
+	
+	...
+	
+</Models>
+\end{Verbatim}
+
+The sections have the following significance:
+
+\begin{itemize}
+\item \verb=<model>= - there is a \verb=<model>= tag block for each coal model
+\item \verb=<ICVars>= - this tag block contains all of the internal coordinate variables that the model depends on (for example, if a kinetic model depends on temperature, and temperature is being tracked as an internal coordinate variable, the temperature would be included in this \verb=<ICVars>= block)
+\item \verb=<scalarVars>= - this tag block contains all of the scalar variables that the model depends on
+\item \verb=<low_clip>= - When values of the model are lower than \verb=<low_clip>=, the value is clipped to \verb=<low_clip>=
+\item \verb=<high_clip>= - When values of the model are higher than \verb=<high_clip>=, the value is clipped to \verb=<high_clip>=
+\end{itemize}
+
+\begin{enumerate}
+
+\item {\bf Model}: \verb=<model>= \\
+{\bf Attributes}: label, type \\
+{\bf Description}: Attributes determine the label the velocity model is given, and the type of velocity model being used.  The label is an arbitrary string.  The type takes on these values:
+\begin{itemize}
+\item \verb=KobayashiSarofimDevol= - Use the Kobayashi-Sarofim coal devolatilization model
+\item \verb=ConstantModel= - Use a constant model
+\item \verb=SimpleHeatTransfer= - Use a simple particle heat transfer model
+\item \verb=XDrag, YDrag, ZDrag= - Use a standard drag model for the x-, y-, and z-velocity of the particle
+\end{itemize}
+
+\item {\bf Internal Coordinate Variable}: \verb=<ICVars> <variable> </ICVars>= \\
+{\bf Attributes}: label, role \\
+{\bf Description}: Attributes set the label of the internal coordinate variable, and the role that the internal coordinate variable plays in the model.  The label must match a label for one of the internal coordinate variables (see the ``label'' attribute of the \verb=<Ic>= tag, above).  The role must match one of the role names specified by the model, in the model code.  These include:
+\begin{itemize}
+
+\item KobayashiSarofimDevol
+	\begin{itemize}
+	\item \verb=raw_coal_mass=
+	\item \verb=particle_temperature=
+	\end{itemize}
+
+\item SimpleHeatTransfer
+	\begin{itemize}
+	\item \verb=particle_length=
+	\item \verb=raw_coal_mass=
+	\item \verb=particle_temperature=
+	\end{itemize}
+
+\item XDrag / YDrag / ZDrag
+	\begin{itemize}
+	\item \verb=particle_length=
+	\item \verb=particle_xvel / particle_yvel / particle_zvel=
+	\end{itemize}
+
+\end{itemize}
+
+\item {\bf Scalar Variable}: \verb=<scalarVars> <variable> </scalarVars>= \\
+{\bf Attributes}: label, role \\
+{\bf Description}: As with the above \verb=<variable>= tag, this tag specifies information about scalar variables a model may depend on. The label attribute indicates the label of the scalar variable, and the role specifies the role that scalar variable will play in the model. The label attribute must match a label for one of the scalar variables. The role must match one of the role names specified by the model, in the model code.  Currently, scalar variables do not play a role in any models currently implemented.
+
+\end{enumerate}
+
+
+
+% ====================================================
+% ===================== Examples ======================
+% ====================================================
+
+
 
 \newpage
 \section{Examples}
