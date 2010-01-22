@@ -292,8 +292,7 @@ XDragModel::sched_computeModel( const LevelP& level, SchedulerP& sched, int time
           errmsg += *iter;
           errmsg += "\" in EqnFactory or in DQMOMEqnFactory.";
           throw InvalidValue(errmsg,__FILE__,__LINE__);
-        } 
-
+        }
       } else if ( iMap->second == "particle_xvel" ) {
         if (dqmom_eqn_factory.find_scalar_eqn(*iter) ) {
           EqnBase& t_current_eqn = dqmom_eqn_factory.retrieve_scalar_eqn(*iter);
@@ -390,7 +389,10 @@ XDragModel::computeModel( const ProcessorGroup* pc,
         gas_source[c] = 0.0;
       } else {
         double length = w_particle_length[c]/weight[c]*d_pl_scaling_factor;
+
+        // KLUDGE: implicit clipping
         length = max(min(length,1e-3),1e-6);
+
         Vector sphGas = Vector(0.,0.,0.);
         Vector cartGas = gasVel[c];
 
@@ -399,11 +401,13 @@ XDragModel::computeModel( const ProcessorGroup* pc,
 
         sphGas = cart2sph( cartGas );
         sphPart = cart2sph( cartPart );
+
         double kvisc = 2.0e-5;
         double rhop = 1000.0;
         double diff = sphGas.z() - sphPart.z();
         double Re  = abs(diff)*length / kvisc;
         double phi;
+
         if(Re < 1) {
           phi = 1;
         } else if(Re>1000) {
@@ -411,29 +415,39 @@ XDragModel::computeModel( const ProcessorGroup* pc,
         } else {
           phi = 1. + .15*pow(Re, 0.687);
         }
+
         double t_p = rhop/(18*kvisc)*pow(length,2);
-        //double m_p = rhop/6*pi*pow(length,3); 
+
 
         model[c] = (phi/t_p*(cartGas.x()-cartPart.x())+gravity.x())/(d_xvel_scaling_factor);
+
         //gas_source[c] = -weight[c]*d_w_scaling_factor*rhop*4/3*pi*phi/t_p*(cartGas.x()-cartPart.x())*pow(length,3);
+        
         if(isnan(model[c])){
           model[c] = 0.;
         }
         gas_source[c] = 0.0;
-        //model[c] = min(model[c], 1e7);
-        //model[c] = max(model[c],-1e7);
 
-        //cout << "quad_node " << d_quad_node << endl;
-        //cout << "drag source " << drag_part[c] << endl;
-        //if (cartPart.x() > 1) {
-        //cout << "quad_node " << node  << " cartgasx " << cartGas.x() << " " << "catrpartx " << cartPart.x() << endl;
-        //cout << "length " << length << " Re " << Re <<  endl;
-        //cout << "w_scaling " << d_w_scaling_factor << endl;
-        //cout << "phi " << phi << endl;
-        //cout << "t_p " << t_p << endl;
-        //cout << "pi " << pi << endl;
-        //cout << "diff " << diff << endl;
-        //}
+        /*
+        //KLUDGE: more implicit clipping
+        model[c] = min(model[c], 1e7);
+        model[c] = max(model[c],-1e7);
+        */
+
+        /*
+        // Debugging
+        cout << "quad_node " << d_quad_node << endl;
+        cout << "drag source " << drag_part[c] << endl;
+        if (cartPart.x() > 1.0) {
+          cout << "quad_node " << d_quad_node  << " cartgasx " << cartGas.x() << " " << "catrpartx " << cartPart.x() << endl;
+          cout << "length " << length << " Re " << Re <<  endl;
+          cout << "w_scaling " << d_w_scaling_factor << endl;
+          cout << "phi " << phi << endl;
+          cout << "t_p " << t_p << endl;
+          cout << "pi " << pi << endl;
+          cout << "diff " << diff << endl;
+        }
+        */
        }
     }
   }

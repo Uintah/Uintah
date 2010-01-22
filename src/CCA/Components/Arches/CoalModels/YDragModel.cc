@@ -110,7 +110,7 @@ YDragModel::problemSetup(const ProblemSpecP& params, int qn)
       LabelToRoleMap[temp_label_name] = role_name;
     } else {
       std::string errmsg;
-      errmsg = "Invalid variable role for YDrag model: must be \"particle_length\", you specified \"" + role_name + "\".";
+      errmsg = "Invalid variable role for YDrag model: must be \"particle_length\" or \"particle_yvel\", you specified \"" + role_name + "\".";
       throw InvalidValue(errmsg,__FILE__,__LINE__);
     }
 
@@ -279,25 +279,6 @@ YDragModel::sched_computeModel( const LevelP& level, SchedulerP& sched, int time
     map<string, string>::iterator iMap = LabelToRoleMap.find(*iter);
 
     if ( iMap != LabelToRoleMap.end() ) {
-      /*
-      if ( iMap->second == "particle_velocity" ) {
-        // particle_velocity is specified as an internal coordinate (found in <ICVar> block)
-        // so look for it in the DQMOMEqn map
-        if( dqmom_eqn_factory.find_scalar_eqn(*iter) ) {
-          EqnBase& t_current_eqn = dqmom_eqn_factory.retrieve_scalar_eqn(*iter);
-          DQMOMEqn& current_eqn = dynamic_cast<DQMOMEqn&>(t_current_eqn);
-          d_particle_velocity_label = current_eqn.getTransportEqnLabel();
-          d_pv_scaling_factor = current_eqn.getScalingConstant();
-          tsk->requires(Task::OldDW, d_particle_length_label, gn, 0);
-        } else {
-          std::string errmsg = "ARCHES: YDragModel: Invalid variable given in <variable> tag for Drag model";
-          errmsg += "\nCould not find given particle velocity variable \"";
-          errmsg += *iter;
-          errmsg += "\" in EqnFactory or in DQMOMEqnFactory.";
-          throw InvalidValue(errmsg,__FILE__,__LINE__);
-        }
-      */
-
       if ( iMap->second == "particle_length" ) {
         if (dqmom_eqn_factory.find_scalar_eqn(*iter) ) {
           EqnBase& t_current_eqn = dqmom_eqn_factory.retrieve_scalar_eqn(*iter);
@@ -318,7 +299,7 @@ YDragModel::sched_computeModel( const LevelP& level, SchedulerP& sched, int time
           DQMOMEqn& current_eqn = dynamic_cast<DQMOMEqn&>(t_current_eqn);
           d_yvel_scaling_factor = current_eqn.getScalingConstant();
         } else {
-          std::string errmsg = "ARCHES: XDragModel: Invalid variable given in <variable> tag for Drag model";
+          std::string errmsg = "ARCHES: YDragModel: Invalid variable given in <variable> tag for Drag model";
           errmsg += "\nCould not find given particle x-velocity variable \"";
           errmsg += *iter;
           errmsg += "\" in EqnFactory or in DQMOMEqnFactory.";
@@ -361,7 +342,7 @@ YDragModel::computeModel( const ProcessorGroup* pc,
 {
   //patch loop
   for (int p=0; p < patches->size(); p++){
-  
+
     //Ghost::GhostType  gaf = Ghost::AroundFaces;
     //Ghost::GhostType  gac = Ghost::AroundCells;
     Ghost::GhostType  gn  = Ghost::None;
@@ -380,14 +361,13 @@ YDragModel::computeModel( const ProcessorGroup* pc,
       model.initialize(0.0);
     }
 
-
     if (new_dw->exists( d_gasLabel, matlIndex, patch )){
       new_dw->getModifiable( gas_source, d_gasLabel, matlIndex, patch ); 
     } else {
       new_dw->allocateAndPut( gas_source, d_gasLabel, matlIndex, patch );
       gas_source.initialize(0.0);
     }
-    
+
     constCCVariable<Vector> gasVel;
     old_dw->get( gasVel, d_fieldLabels->d_newCCVelocityLabel, matlIndex, patch, gn, 0 );
 
@@ -409,22 +389,25 @@ YDragModel::computeModel( const ProcessorGroup* pc,
         gas_source[c] = 0.0;
       } else {
         double length = w_particle_length[c]/weight[c]*d_pl_scaling_factor;
+
+        // KLUDGE: implicit clipping
         length = max(min(length,1e-3),1e-6);
 
         Vector sphGas = Vector(0.,0.,0.);
         Vector cartGas = gasVel[c];
+
         Vector sphPart = Vector(0.,0.,0.);
         Vector cartPart = partVel[c];
-       
+
         sphGas = cart2sph( cartGas );
         sphPart = cart2sph( cartPart );
-        
+
         double kvisc = 2.0e-5;
         double rhop = 1000.0;
         double diff = sphGas.z() - sphPart.z();
         double Re  = abs(diff)*length / kvisc;
         double phi;
-        
+
         if(Re < 1) {
           phi = 1;
         } else if(Re>1000) {
@@ -432,8 +415,9 @@ YDragModel::computeModel( const ProcessorGroup* pc,
         } else {
           phi = 1. + .15*pow(Re, 0.687);
         }
-       
+
         double t_p = rhop/(18*kvisc)*pow(length,2);
+
         
         model[c] = (phi/t_p*(cartGas.y()-cartPart.y())+gravity.y())/(d_yvel_scaling_factor);
         
@@ -443,20 +427,27 @@ YDragModel::computeModel( const ProcessorGroup* pc,
           model[c] = 0.;
         }
         gas_source[c] = 0.0;
-        //model[c] = min(model[c], 1e7);
-        //model[c] = max(model[c],-1e7);
 
-        //cout << "quad_node " << d_quad_node << endl;
-        //cout << "drag source " << drag_part[c] << endl;
-        //if (cartPart.x() > 1) {
-        //cout << "quad_node " << d_quad_node  << " cartgasx " << cartGas.x() << " " << "catrpartx " << cartPart.x() << endl;
-        //cout << "length " << length << " Re " << Re <<  endl;
-        //cout << "w_scaling " << d_w_scaling_factor << endl;
-        //cout << "phi " << phi << endl;
-        //cout << "t_p " << t_p << endl;
-        //cout << "pi " << pi << endl;
-        //cout << "diff " << diff << endl;
-        //}
+        /*
+        //KLUDGE: more implicit clipping
+        model[c] = min(model[c], 1e7);
+        model[c] = max(model[c],-1e7);
+        */
+
+        /*
+        // Debugging
+        cout << "quad_node " << d_quad_node << endl;
+        cout << "drag source " << drag_part[c] << endl;
+        if (cartPart.y() > 1.0) {
+          cout << "quad_node " << d_quad_node  << " cartgasy " << cartGas.y() << " " << "catrparty " << cartPart.y() << endl;
+          cout << "length " << length << " Re " << Re <<  endl;
+          cout << "w_scaling " << d_w_scaling_factor << endl;
+          cout << "phi " << phi << endl;
+          cout << "t_p " << t_p << endl;
+          cout << "pi " << pi << endl;
+          cout << "diff " << diff << endl;
+        }
+        */
        }
     }
   }
