@@ -572,7 +572,7 @@ ViscoScramForBinder::computeStressTensor(const PatchSubset* patches,
                                     cc, (double) delT, K0, sigma, rkc);
         } else {
           double K0overK = K0/KK;
-          cDot = vmax*(1.0-K0overK*K0overK);
+          cDot = vmax*pow(1.0-K0overK*K0overK,mm);
           pCrackRadius_new[idx] = doRungeKuttaForCrack(
                                     &ViscoScramForBinder::crackGrowthEqn2, 
                                     cc, (double) delT, K0, sigma, rkc);
