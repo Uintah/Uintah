@@ -762,10 +762,10 @@ ViscoScram::computeStressTensor(const PatchSubset* patches,
         double fac = rko*rko/(M_PI*EffStress*EffStress);
         cdot = vres*(1. - rko*rko/(sif*sif));
         cc   = vres*delT;
-        rk1c = cc*(1. - fac/crad);
-        rk2c = cc*(1. - fac/(crad+.5*rk1c));
-        rk3c = cc*(1. - fac/(crad+.5*rk2c));
-        rk4c = cc*(1. - fac/(crad+rk3c));
+        rk1c = cc*pow(1. - fac/crad,              mm);
+        rk2c = cc*pow(1. - fac/(crad+.5*rk1c),    mm);
+        rk3c = cc*pow(1. - fac/(crad+.5*rk2c),    mm);
+        rk4c = cc*pow(1. - fac/(crad+rk3c),       mm);
       }
       //if (dbg.active()) {
       //  dbg << "c = " << crad << " cdot = " << cdot << " cc = " << cc
