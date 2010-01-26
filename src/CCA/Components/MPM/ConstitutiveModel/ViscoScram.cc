@@ -427,7 +427,7 @@ ViscoScram::computeStressTensor(const PatchSubset* patches,
 {
   // Constants
   Matrix3 Identity; Identity.Identity();
-  Matrix3 zero(0.),One(1.);
+  Matrix3 zero(0.);
   double onethird = (1.0/3.0);
   double onesixth = (1.0/6.0);
   double sqrtopf=sqrt(1.5);
@@ -642,14 +642,15 @@ ViscoScram::computeStressTensor(const PatchSubset* patches,
 
       // Get stress at time t_n
       double sigm_old = onethird*(pStress[idx].Trace()); //Eq 5
-      Matrix3 sigdev_old = pStress[idx] - One*sigm_old;
+      Matrix3 sigdev_old = pStress[idx] - Identity*sigm_old;
 
       // For objective rates (rotation neutralized)
       Matrix3 RR(0.0), UU(0.0), RT(0.0);
       if (d_useObjectiveRate) {
 
         // Compute polar decomposition of F
-        pDefGrad_new[idx].polarDecomposition(UU, RR, 1.0e-12, true);
+//        pDefGrad_new[idx].polarDecomposition(UU, RR, 1.0e-12, true);
+        pDefGrad_new[idx].polarDecompositionRMB(UU, RR);
         RT = RR.Transpose();
 
         // If we want objective rates, rotate stress and rate of
@@ -724,7 +725,7 @@ ViscoScram::computeStressTensor(const PatchSubset* patches,
       double crad   = pCrackRadius[idx];
       ASSERT(crad >= 0.0);
       double sqrtc  = sqrt(crad);
-      double sif    = sqrtopf*sqrtPI*sqrtc*sigmae; //Eq 26 or 27
+      double sif    = sqrtPI*sqrtc*sigmae; //Eq 26 or 27
 
       // Modification to include friction on crack faces
       double xmup   = (1 + compflag)*sqrt(45./(2.*(3. - 2.*cf*cf)))*cf; //Equation 31 
