@@ -641,7 +641,7 @@ ViscoScram::computeStressTensor(const PatchSubset* patches,
       Matrix3 D = (velGrad + velGrad.Transpose())*0.5;
 
       // Get stress at time t_n
-      double sigm_old = onethird*(pStress[idx].Trace());
+      double sigm_old = onethird*(pStress[idx].Trace()); //Eq 5
       Matrix3 sigdev_old = pStress[idx] - One*sigm_old;
 
       // For objective rates (rotation neutralized)
@@ -713,26 +713,28 @@ ViscoScram::computeStressTensor(const PatchSubset* patches,
       }
 
       int compflag = 0;
-      if (sigm_old > 0.0) compflag = -1;
+      //!!NOTE!! This should be >= 0?
+      if (sigm_old > 0.0) compflag = -1; 
 
       EffStress    = (1+compflag)*EffDevStress - compflag*EffStress;
       vres        *= ((1 + compflag) - cdot0*compflag);
-      double sigmae = sqrt(DevStressNormSq - compflag*(3*sigm_old*sigm_old));
+      double sigmae = sqrt(DevStressNormSq - compflag*(3*sigm_old*sigm_old));  //Sij*Sij or Oij*Oij, is this right?
 
       // Stress intensity factor
       double crad   = pCrackRadius[idx];
       ASSERT(crad >= 0.0);
       double sqrtc  = sqrt(crad);
-      double sif    = sqrtopf*sqrtPI*sqrtc*sigmae;
+      double sif    = sqrtopf*sqrtPI*sqrtc*sigmae; //Eq 26 or 27
 
       // Modification to include friction on crack faces
-      double xmup   = (1 + compflag)*sqrt(45./(2.*(3. - 2.*cf*cf)))*cf;
-      double a      = -xmup*sigm_old*sqrtc;
-      double b      = 1. + a/K_I;
-      double termm  = 1. + M_PI*a*b/K_I;
-      double rko    = K_I*sqrt(termm);
-      double skp    = rko*sqrt(1. + (2./mm));
-      double sk1    = skp*pow((1. + (mm/2.)), 1./mm);
+      double xmup   = (1 + compflag)*sqrt(45./(2.*(3. - 2.*cf*cf)))*cf; //Equation 31 
+      //Next 4 equations are equation 30
+      double a      = -xmup*sigm_old*sqrtc; //eq 30 -numerator 
+      double b      = 1. + a/K_I;           //eq 30 2nd term 
+      double termm  = 1. + M_PI*a*b/K_I;    //eq 30 inner sqrt term
+      double rko    = K_I*sqrt(termm);      //eq 30 K0m
+      double skp    = rko*sqrt(1. + (2./mm));  //eq 28
+      double sk1    = skp*pow((1. + (mm/2.)), 1./mm); //eq 29
 
       if(vres > d_initialData.CrackMaxGrowthRate){
         vres = d_initialData.CrackMaxGrowthRate;
@@ -751,7 +753,7 @@ ViscoScram::computeStressTensor(const PatchSubset* patches,
       // Use fourth order Runge Kutta integration to find new crack radius
       if(sif < skp ){
         double fac = EffStress/sk1;
-        cdot = vres*pow((sif/sk1), mm);
+        cdot = vres*pow((sif/sk1), mm); //Equation 24, denomenator is K1 not K'
         cc   = vres*delT;
         rk1c = cc*pow(sqrtPI*sqrtc*fac,              mm);
         rk2c = cc*pow(sqrtPI*sqrt(crad+.5*rk1c)*fac, mm);
