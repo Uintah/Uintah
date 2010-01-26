@@ -14,7 +14,7 @@ Vmax=7790.0
 Vmin =850.0
 Rslope=(Rmax-Rmin)/Ljet
 Vslope=(Vmax-Vmin)/Ljet
-Temp=700.0
+Temp=294.0
 ###density = array([0.0,19300.0,8930.0,19300.0,11350.0,19300.0])
 density = array([0.0,19300.0/2.0,8930.0/2.0,19300.0/2.0,11350.0/2.0,19300.0/2.0])
 
@@ -64,7 +64,7 @@ while y > Ymin:
 	        outputfile.write('      <radius>'+str(Rsphere)+'</radius> \n')
 	        outputfile.write('    </sphere> \n')
 	        outputfile.write('    <color>'+str(Nspheres)+'</color> \n')
-	        outputfile.write('    <res>[2,2,2]</res> \n')
+	        outputfile.write('    <res>[2,2,1]</res> \n')
 	        outputfile.write('    <velocity>[0.0,'+str(yvelocity)+',0.0]</velocity> \n')
 	        outputfile.write('    <temperature>'+str(Temp)+'</temperature> \n')
 	        outputfile.write('  </geom_object> \n')
