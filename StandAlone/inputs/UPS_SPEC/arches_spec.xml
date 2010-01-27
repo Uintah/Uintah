@@ -357,7 +357,10 @@
         <!-- Block of tags for specifying the linear solver used for DQMOM -->
         <LinearSolver                   spec="OPTIONAL NO_DATA">
           <tolerance                    spec="OPTIONAL DOUBLE 'positive'" />
-          <type                         spec="OPTIONAL STRING 'Lapack-invert, Lapack-svd, LU'" />
+          <type                         spec="OPTIONAL STRING 'Lapack-invert, Lapack-svd, LU, Optimize'" />
+          <Optimization                 spec="OPTIONAL NO_DATA" >
+            <Optimal_abscissas          spec="REQUIRED MULTIPLE_DOUBLES" />
+          </Optimization>
           <maxConditionNumber           spec="OPTIONAL DOUBLE 'positive'" />
           <calcConditionNumber          spec="OPTIONAL BOOLEAN" /> <!-- this tag can be added if the linear solver you choose doesn't do an SVD, but you still want a condition number -->
                                                                    <!-- NOTE: this doesn't actually do anything if you're using a linear solver that uses SVD -->
