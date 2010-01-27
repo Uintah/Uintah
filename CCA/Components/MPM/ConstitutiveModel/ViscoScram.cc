@@ -684,9 +684,6 @@ ViscoScram::computeStressTensor(const PatchSubset* patches,
 
       double EDeff = sqrtopf*DPrime.Norm();
 
-      // old total stress norm
-      double EffStress = sqrtopf*pStress[idx].Norm();
-
       //if (dbg.active()) {
       //  dbg << "D.Norm() = " << D.Norm()
       //      << " Ddev.Norm() = " << DPrime.Norm()
@@ -696,11 +693,6 @@ ViscoScram::computeStressTensor(const PatchSubset* patches,
 
       //old deviatoric stress norm
       double DevStressNormSq = sigdev_old.NormSquared();
-      double DevStressNorm = sqrt(DevStressNormSq);
-
-      // old effective deviatoric stress
-      double EffDevStress = sqrtopf*DevStressNorm;
-
       // Baseline
       double vres_a = 0.90564746;
       double vres_b =-2.90178468;
@@ -716,8 +708,6 @@ ViscoScram::computeStressTensor(const PatchSubset* patches,
       int compflag = 0;
       //!!NOTE!! This should be >= 0?
       if (sigm_old > 0.0) compflag = -1; 
-
-      EffStress    = (1+compflag)*EffDevStress - compflag*EffStress;
       vres        *= ((1 + compflag) - cdot0*compflag);
       double sigmae = sqrt(DevStressNormSq - compflag*(3*sigm_old*sigm_old));  //Sij*Sij or Oij*Oij, is this right?
 
@@ -752,20 +742,21 @@ ViscoScram::computeStressTensor(const PatchSubset* patches,
 
       // cdot is crack speed
       // Use fourth order Runge Kutta integration to find new crack radius
+      
       if(K_I < Kprime ){
-        double fac = EffStress/K_1;
+        double fac = pow(K_I/(K_1 * sqrtc), mm);
         cdot = vres*pow((K_I/K_1), mm); //Equation 24, denomenator is K_1 not K'
         cc   = vres*delT;
-        rk1c = cc*pow(sqrtPI*sqrtc*fac,              mm);
-        rk2c = cc*pow(sqrtPI*sqrt(crad+.5*rk1c)*fac, mm);
-        rk3c = cc*pow(sqrtPI*sqrt(crad+.5*rk2c)*fac, mm);
-        rk4c = cc*pow(sqrtPI*sqrt(crad+rk3c)*fac,    mm);
+        rk1c = cc * fac * pow(sqrtc, mm);
+        rk2c = cc * fac * pow(sqrt(crad+.5*rk1c), mm);
+        rk3c = cc * fac * pow(sqrt(crad+.5*rk2c), mm);
+        rk4c = cc * fac * pow(sqrt(crad+rk3c),    mm);
       }
       else{
-        double fac = K_0m*K_0m/(M_PI*EffStress*EffStress);
+        double fac = K_0m*K_0m * crad/(K_I * K_I);
         cdot = vres*(1. - K_0m*K_0m/(K_I*K_I));
         cc   = vres*delT;
-        rk1c = cc*(1. - fac/crad);
+        rk1c = cc*(1. - fac/(crad) );
         rk2c = cc*(1. - fac/(crad+.5*rk1c));
         rk3c = cc*(1. - fac/(crad+.5*rk2c));
         rk4c = cc*(1. - fac/(crad+rk3c));
