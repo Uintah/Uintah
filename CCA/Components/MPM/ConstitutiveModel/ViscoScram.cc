@@ -919,15 +919,15 @@ ViscoScram::computeStressTensor(const PatchSubset* patches,
       //}
 
       // Update crack radius
-      crad += onesixth*(rk1c + rk4c) + onethird*(rk2c + rk3c);
+      double deltacrad = onesixth*(rk1c + rk4c) + onethird*(rk2c + rk3c);
+      if(deltacrad<0)
+        throw InternalError("Error crack is healing\n",__FILE__,__LINE__);
 
-      ASSERT(crad >= 0.0);
+      crad += deltacrad;
 
       pCrackRadius_new[idx] = crad;
       //if (dbgSig.active())
       //  dbgSig << " Crack Radius = " << crad << endl;
-
-      ASSERT(crad > 0.0);
 
       // Update the internal heating rate 
       //double cpnew = Cp0 + d_initialData.DCp_DTemperature*pTemperature[idx];
