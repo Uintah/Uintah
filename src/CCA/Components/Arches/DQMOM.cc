@@ -219,6 +219,8 @@ void DQMOM::problemSetup(const ProblemSpecP& params)
 
     db_linear_solver->getWithDefault("type", d_solverType, "LU");
 
+    b_optimize = false;
+
     if( d_solverType == "Lapack-invert" ) {
       b_useLapack = true;
     } else if( d_solverType == "Lapack-svd" ){
