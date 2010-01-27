@@ -565,7 +565,6 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
       if (b_optimize == true) {
         ColumnMatrix* BB = scinew ColumnMatrix( dimension );
         ColumnMatrix* XX = scinew ColumnMatrix( dimension );
-        vector<double> weights_opt(N_ , 1.0);
         BB->zero();
         constructBopt( BB, weights, d_opt_abscissas, models );
         Mult( (*XX), (*AAopt), (*BB) );
@@ -1517,7 +1516,6 @@ DQMOM::constructBopt( ColumnMatrix*  &BB,
           double exponent = thisMoment[j] - 1;
 
           // Appendix C, C.16 (S matrix)
-          //prefixS = -(thisMoment[j])*( pow((weightedAbscissas[j*(N_)+alpha]/weights[alpha]),(thisMoment[j]-1)));
           prefixS = -(thisMoment[j])*(pow(base, exponent));
           productS = 1;
 
@@ -1529,9 +1527,6 @@ DQMOM::constructBopt( ColumnMatrix*  &BB,
               // coordinate n
               if (weights[alpha] == 0) {
                 productS = 0;
-              //} else if ( weightedAbscissas[n*(N_)+alpha] == 0 && thisMoment[n] == 0) {
-              //  productA = 0;
-              //  productS = 0;
               } else {
                 double base2 = Abscissas[n*(N_)+alpha];
                 double exponent2 = thisMoment[n];
