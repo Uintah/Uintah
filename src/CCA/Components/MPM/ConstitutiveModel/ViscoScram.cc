@@ -725,7 +725,7 @@ ViscoScram::computeStressTensor(const PatchSubset* patches,
       double crad   = pCrackRadius[idx];
       ASSERT(crad >= 0.0);
       double sqrtc  = sqrt(crad);
-      double K_I    = sqrtPI*sqrtc*sigmae; //Eq 26 or 27
+      double K_I    = sqrtopf*sqrtPI*sqrtc*sigmae; //Eq 26 or 27
 
       // Modification to include friction on crack faces
       double xmup   = (1 + compflag)*sqrt(45./(2.*(3. - 2.*cf*cf)))*cf; //Equation 31 
