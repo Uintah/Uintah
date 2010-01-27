@@ -234,8 +234,12 @@ ConstantModel::computeModel( const ProcessorGroup* pc,
 
 
     for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
-      IntVector c = *iter; 
-      model[c] = d_constant;
+      IntVector c = *iter;
+      if(d_quadNode ==1){
+        model[c] = -d_constant;
+      } else { 
+        model[c] = d_constant;
+      }
       gas_source[c] = 0.0;
     }
   }

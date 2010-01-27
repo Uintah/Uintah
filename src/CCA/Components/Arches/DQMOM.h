@@ -118,12 +118,11 @@ private:
                               int              verbosity=0);
 
   void constructAopt( DenseMatrix*   &AA,
-                      vector<double> &weights,
-                      vector<double> &weightedAbscissas);
+                      vector<double> &Abscissas);
 
   void constructBopt( ColumnMatrix*  &BB,
                       vector<double> &weights,
-                      vector<double> &weightedAbscissas,
+                      vector<double> &Abscissas,
                       vector<double> &models);
 
 
