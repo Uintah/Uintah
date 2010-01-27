@@ -125,39 +125,7 @@ void DQMOM::problemSetup(const ProblemSpecP& params)
   moments = 0;
 
   d_small_normalizer = 1e-8; // "small" number limit for denominator of norm calculations
-
-  ProblemSpecP db_linear_solver = db->findBlock("LinearSolver");
-  if( db_linear_solver ) {
-
-    db_linear_solver->getWithDefault("tolerance", d_solver_tolerance, 1.0e-5);
-
-    db_linear_solver->getWithDefault("maxConditionNumber", d_maxConditionNumber, 1.0e16);
-    
-    db_linear_solver->getWithDefault("calcConditionNumber", b_calcConditionNumber, false);
-
-    db_linear_solver->getWithDefault("type", d_solverType, "LU");
-    if( d_solverType == "Lapack-invert" ) {
-      b_useLapack = true;
-    } else if( d_solverType == "Lapack-svd" ){
-      b_useLapack = true; 
-      b_calcConditionNumber = true;
-    } else if( d_solverType == "LU" ) {
-      b_useLapack = false;
-    } else {
-      string err_msg = "ERROR: Arches: DQMOM: Unrecognized solver type "+d_solverType+": must be 'Lapack-invert', 'Lapack-svd', or 'LU'.\n";
-      throw ProblemSetupException(err_msg,__FILE__,__LINE__);
-    }
-
-    if( b_calcConditionNumber == true && b_useLapack == false ) {
-      string err_msg = "ERROR: Arches: DQMOM: Cannot perform singular value decomposition without using Lapack!\n";
-      throw ProblemSetupException(err_msg,__FILE__,__LINE__);
-    }
-
-  } else {
-    string err_msg = "ERROR: Arches: DQMOM: Could not find block '<LinearSolver>': this block is required for DQMOM. \n";
-    throw ProblemSetupException(err_msg,__FILE__,__LINE__);
-  }
-
+  
   // obtain moment index vectors
   vector<int> temp_moment_index;
   for ( ProblemSpecP db_moments = db->findBlock("Moment");
@@ -239,6 +207,50 @@ void DQMOM::problemSetup(const ProblemSpecP& params)
   N_ = vab_N;
   N_xi = vab_N_xi;
 #endif
+
+  ProblemSpecP db_linear_solver = db->findBlock("LinearSolver");
+  if( db_linear_solver ) {
+
+    db_linear_solver->getWithDefault("tolerance", d_solver_tolerance, 1.0e-5);
+
+    db_linear_solver->getWithDefault("maxConditionNumber", d_maxConditionNumber, 1.0e16);
+
+    db_linear_solver->getWithDefault("calcConditionNumber", b_calcConditionNumber, false);
+
+    db_linear_solver->getWithDefault("type", d_solverType, "LU");
+
+    if( d_solverType == "Lapack-invert" ) {
+      b_useLapack = true;
+    } else if( d_solverType == "Lapack-svd" ){
+      b_useLapack = true;
+      b_calcConditionNumber = true;
+    } else if( d_solverType == "LU" ) {
+      b_useLapack = false;
+    } else if( d_solverType == "Optimize" ) {
+      ProblemSpecP db_optimize = db_linear_solver->findBlock("Optimization");
+      if(db_optimize){
+        b_optimize = true;
+        db_optimize->get("Optimal_abscissas",d_opt_abscissas);
+        vector<double> weights_opt(N_ , 1.0);
+        AAopt = scinew DenseMatrix((N_xi+1)*N_,(N_xi+1)*N_);
+        AAopt->zero();
+        constructAopt( AAopt, weights_opt, d_opt_abscissas );
+        AAopt->invert();
+      }
+    } else {
+      string err_msg = "ERROR: Arches: DQMOM: Unrecognized solver type "+d_solverType+": must be 'Lapack-invert', 'Lapack-svd', or 'LU'.\n";
+      throw ProblemSetupException(err_msg,__FILE__,__LINE__);
+    }
+    if( b_calcConditionNumber == true && b_useLapack == false ) {
+      string err_msg = "ERROR: Arches: DQMOM: Cannot perform singular value decomposition without using Lapack!\n";
+      throw ProblemSetupException(err_msg,__FILE__,__LINE__);
+    }
+
+  } else {
+    string err_msg = "ERROR: Arches: DQMOM: Could not find block '<LinearSolver>': this block is required for DQMOM. \n";
+    throw ProblemSetupException(err_msg,__FILE__,__LINE__);
+  }
+
 
 }
 
@@ -548,8 +560,68 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
 #if !defined(VERIFY_LINEAR_SOLVER) && !defined(VERIFY_AB_CONSTRUCTION)
       
       int dimension = (N_xi+1)*N_;
-      
-      if( b_useLapack == false ) {
+     
+      if (b_optimize == true) {
+        ColumnMatrix* BB = scinew ColumnMatrix( dimension );
+        ColumnMatrix* XX = scinew ColumnMatrix( dimension );
+        vector<double> weights_opt(N_ , 1.0);
+        BB->zero();
+        constructBopt( BB, weights_opt, d_opt_abscissas, models );
+        Mult( (*XX), (*AAopt), (*BB) );
+        for (unsigned int n = 0; n < (N_xi+1); ++n) {
+          for ( unsigned int alpha = 0; alpha < N_; ++alpha) {
+            (*XX)[n*(N_)+alpha] *= weights[alpha];
+          }
+        }
+
+        int z=0; // equation loop counter
+
+        // Weight equations:
+        for( vector<DQMOMEqn*>::iterator iEqn = weightEqns.begin();
+             iEqn != weightEqns.end(); ++iEqn ) {
+          const VarLabel* source_label = (*iEqn)->getSourceLabel();
+          CCVariable<double> tempCCVar;
+          if( new_dw->exists(source_label, matlIndex, patch) ) {
+            new_dw->getModifiable(tempCCVar, source_label, matlIndex, patch);
+          } else {
+            new_dw->allocateAndPut(tempCCVar, source_label, matlIndex, patch);
+          }
+
+          if (z >= dimension ) {
+            stringstream err_msg;
+            err_msg << "ERROR: Arches: DQMOM: Trying to access solution of AX=B system, but had array out of bounds! Accessing element " << z << " of " << dimension << endl;
+            throw InvalidValue(err_msg.str(),__FILE__,__LINE__);
+          } else {
+            tempCCVar[c] = (*XX)[z];
+          }
+          ++z;
+        }
+        // Weighted abscissa equations:
+        for( vector<DQMOMEqn*>::iterator iEqn = weightedAbscissaEqns.begin();
+             iEqn != weightedAbscissaEqns.end(); ++iEqn) {
+          const VarLabel* source_label = (*iEqn)->getSourceLabel();
+          CCVariable<double> tempCCVar;
+          if (new_dw->exists(source_label, matlIndex, patch)) {
+            new_dw->getModifiable(tempCCVar, source_label, matlIndex, patch);
+          } else {
+            new_dw->allocateAndPut(tempCCVar, source_label, matlIndex, patch);
+          }
+
+          // Make sure several critera are met for an acceptable solution
+          if (z >= dimension ) {
+            stringstream err_msg;
+            err_msg << "ERROR: Arches: DQMOM: Trying to access solution of AX=B system, but had array out of bounds! Accessing element " << z << " of " << dimension << endl;
+            throw InvalidValue(err_msg.str(),__FILE__,__LINE__);
+          } else {
+            tempCCVar[c] = (*XX)[z];
+          }
+          ++z;
+        }
+
+        delete BB;
+        delete XX;
+ 
+      } else if( b_useLapack == false ) {
 
         ///////////////////////////////////////////////////////
         // Use the LU solver
@@ -1353,6 +1425,154 @@ DQMOM::constructLinearSystem( LU             &A,
   } // end moments
 }
 
+// **********************************************
+// Construct A optimized
+// **********************************************
+void
+DQMOM::constructAopt( DenseMatrix*   &AA,
+                      vector<double> &weights,
+                      vector<double> &weightedAbscissas)
+{
+  for ( unsigned int k = 0; k < momentIndexes.size(); ++k) {
+    MomentVector thisMoment = momentIndexes[k];
+
+    // weights
+    for ( unsigned int alpha = 0; alpha < N_; ++alpha) {
+      double prefixA = 1;
+      double productA = 1;
+      for ( unsigned int i = 0; i < thisMoment.size(); ++i) {
+        if (weights[alpha] != 0) {
+          // Appendix C, C.9 (A1 matrix)
+          prefixA = prefixA - (thisMoment[i]);
+          double base = weightedAbscissas[i*(N_)+alpha] / weights[alpha];
+          double exponent = thisMoment[i];
+          //productA = productA*( pow((weightedAbscissas[i*(N_)+alpha]/weights[alpha]),thisMoment[i]) );
+          productA = productA*( pow(base, exponent) );
+        } else {
+          prefixA = 0;
+          productA = 0;
+        }
+      }
+
+      (*AA)[k][alpha] = prefixA*productA;
+    } //end weights sub-matrix
+  
+    // weighted abscissas
+    for( unsigned int j = 0; j < N_xi; ++j ) {
+      double prefixA    = 1;
+      double productA   = 1;
+      
+      for( unsigned int alpha = 0; alpha < N_; ++alpha ) {
+        if (weights[alpha] == 0) {
+          prefixA = 0;
+          productA = 0;
+        } else if ( weightedAbscissas[j*(N_)+alpha] == 0 && thisMoment[j] == 0) {
+          //FIXME:
+          // both prefixes contain 0^(-1)
+          prefixA = 0;
+        } else {
+          // Appendix C, C.11 (A_j+1 matrix)
+          double base = weightedAbscissas[j*(N_)+alpha] / weights[alpha];
+          double exponent = thisMoment[j] - 1;
+          //prefixA = (thisMoment[j])*( pow((weightedAbscissas[j*(N_)+alpha]/weights[alpha]),(thisMoment[j]-1)) );
+          prefixA = (thisMoment[j])*(pow(base, exponent));
+          productA = 1;
+
+          // calculate product containing all internal coordinates except j
+          for (unsigned int n = 0; n < N_xi; ++n) {
+            if (n != j) {
+              // the if statements checking these same conditions (above) are only
+              // checking internal coordinate j, so we need them again for internal
+              // coordinate n
+              if (weights[alpha] == 0) {
+                productA = 0;
+              //} else if ( weightedAbscissas[n*(N_)+alpha] == 0 && thisMoment[n] == 0) {
+              //  productA = 0;
+              } else {
+                double base2 = weightedAbscissas[n*(N_)+alpha]/weights[alpha];
+                double exponent2 = thisMoment[n];
+                productA = productA*( pow(base2, exponent2));
+              }//end divide by zero conditionals
+            }
+          }//end int coord n
+        }//end divide by zero conditionals
+
+        int col = (j+1)*N_ + alpha;
+        (*AA)[k][col] = prefixA*productA;
+      }//end quad nodes
+    }//end int coords j sub-matrix
+  } // end moments
+}
+
+// **********************************************
+// Construct B optimized
+// **********************************************
+void
+DQMOM::constructBopt( ColumnMatrix*  &BB,
+                      vector<double> &weights,
+                      vector<double> &weightedAbscissas,
+                      vector<double> &models)
+{
+  for ( unsigned int k = 0; k < momentIndexes.size(); ++k) {
+    MomentVector thisMoment = momentIndexes[k];
+
+    // weighted abscissas
+    double totalsumS = 0;
+    for( unsigned int j = 0; j < N_xi; ++j ) {
+      double prefixS    = 1;
+      double productS   = 1;
+      double modelsumS  = 0;
+
+      double quadsumS = 0;
+      for( unsigned int alpha = 0; alpha < N_; ++alpha ) {
+        if (weights[alpha] == 0) {
+          prefixS = 0;
+          productS = 0;
+        } else if ( weightedAbscissas[j*(N_)+alpha] == 0 && thisMoment[j] == 0) {
+          //FIXME:
+          // both prefixes contain 0^(-1)
+          prefixS = 0;
+        } else {
+          // Appendix C, C.11 (A_j+1 matrix)
+          double base = weightedAbscissas[j*(N_)+alpha] / weights[alpha];
+          double exponent = thisMoment[j] - 1;
+
+          // Appendix C, C.16 (S matrix)
+          //prefixS = -(thisMoment[j])*( pow((weightedAbscissas[j*(N_)+alpha]/weights[alpha]),(thisMoment[j]-1)));
+          prefixS = -(thisMoment[j])*(pow(base, exponent));
+          productS = 1;
+
+          // calculate product containing all internal coordinates except j
+          for (unsigned int n = 0; n < N_xi; ++n) {
+            if (n != j) {
+              // the if statements checking these same conditions (above) are only
+              // checking internal coordinate j, so we need them again for internal
+              // coordinate n
+              if (weights[alpha] == 0) {
+                productS = 0;
+              //} else if ( weightedAbscissas[n*(N_)+alpha] == 0 && thisMoment[n] == 0) {
+              //  productA = 0;
+              //  productS = 0;
+              } else {
+                double base2 = weightedAbscissas[n*(N_)+alpha]/weights[alpha];
+                double exponent2 = thisMoment[n];
+                productS = productS*( pow(base2, exponent2));
+              }//end divide by zero conditionals
+            }
+          }//end int coord n
+        }//end divide by zero conditionals
+
+
+        modelsumS = - models[j*(N_)+alpha];
+        quadsumS = quadsumS + weights[alpha]*modelsumS*prefixS*productS;
+      }//end quad nodes
+      totalsumS = totalsumS + quadsumS;
+    }//end int coords j sub-matrix
+
+    (*BB)[k] = totalsumS;
+  } // end moments
+}
+  
 
 
 // **********************************************
