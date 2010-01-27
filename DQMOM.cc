@@ -233,10 +233,9 @@ void DQMOM::problemSetup(const ProblemSpecP& params)
       if(db_optimize){
         b_optimize = true;
         db_optimize->get("Optimal_abscissas",d_opt_abscissas);
-        vector<double> weights_opt(N_ , 1.0);
         AAopt = scinew DenseMatrix((N_xi+1)*N_,(N_xi+1)*N_);
         AAopt->zero();
-        constructAopt( AAopt, weights_opt, d_opt_abscissas );
+        constructAopt( AAopt, d_opt_abscissas );
         AAopt->invert();
       }
     } else {
@@ -568,13 +567,8 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
         ColumnMatrix* XX = scinew ColumnMatrix( dimension );
         vector<double> weights_opt(N_ , 1.0);
         BB->zero();
-        constructBopt( BB, weights_opt, d_opt_abscissas, models );
+        constructBopt( BB, weights, d_opt_abscissas, models );
         Mult( (*XX), (*AAopt), (*BB) );
-        for (unsigned int n = 0; n < (N_xi+1); ++n) {
-          for ( unsigned int alpha = 0; alpha < N_; ++alpha) {
-            (*XX)[n*(N_)+alpha] *= weights[alpha];
-          }
-        }
 
         int z=0; // equation loop counter
 
@@ -1432,8 +1426,7 @@ DQMOM::constructLinearSystem( LU             &A,
 // **********************************************
 void
 DQMOM::constructAopt( DenseMatrix*   &AA,
-                      vector<double> &weights,
-                      vector<double> &weightedAbscissas)
+                      vector<double> &Abscissas)
 {
   for ( unsigned int k = 0; k < momentIndexes.size(); ++k) {
     MomentVector thisMoment = momentIndexes[k];
@@ -1443,17 +1436,11 @@ DQMOM::constructAopt( DenseMatrix*   &AA,
       double prefixA = 1;
       double productA = 1;
       for ( unsigned int i = 0; i < thisMoment.size(); ++i) {
-        if (weights[alpha] != 0) {
-          // Appendix C, C.9 (A1 matrix)
-          prefixA = prefixA - (thisMoment[i]);
-          double base = weightedAbscissas[i*(N_)+alpha] / weights[alpha];
-          double exponent = thisMoment[i];
-          //productA = productA*( pow((weightedAbscissas[i*(N_)+alpha]/weights[alpha]),thisMoment[i]) );
-          productA = productA*( pow(base, exponent) );
-        } else {
-          prefixA = 0;
-          productA = 0;
-        }
+        // Appendix C, C.9 (A1 matrix)
+        prefixA = prefixA - (thisMoment[i]);
+        double base = Abscissas[i*(N_)+alpha];
+        double exponent = thisMoment[i];
+        productA = productA*( pow(base, exponent) );
       }
 
       (*AA)[k][alpha] = prefixA*productA;
@@ -1465,18 +1452,14 @@ DQMOM::constructAopt( DenseMatrix*   &AA,
       double productA   = 1;
       
       for( unsigned int alpha = 0; alpha < N_; ++alpha ) {
-        if (weights[alpha] == 0) {
-          prefixA = 0;
-          productA = 0;
-        } else if ( weightedAbscissas[j*(N_)+alpha] == 0 && thisMoment[j] == 0) {
+        if ( Abscissas[j*(N_)+alpha] == 0 && thisMoment[j] == 0) {
           //FIXME:
           // both prefixes contain 0^(-1)
           prefixA = 0;
         } else {
           // Appendix C, C.11 (A_j+1 matrix)
-          double base = weightedAbscissas[j*(N_)+alpha] / weights[alpha];
+          double base = Abscissas[j*(N_)+alpha];
           double exponent = thisMoment[j] - 1;
-          //prefixA = (thisMoment[j])*( pow((weightedAbscissas[j*(N_)+alpha]/weights[alpha]),(thisMoment[j]-1)) );
           prefixA = (thisMoment[j])*(pow(base, exponent));
           productA = 1;
 
@@ -1486,15 +1469,9 @@ DQMOM::constructAopt( DenseMatrix*   &AA,
               // the if statements checking these same conditions (above) are only
               // checking internal coordinate j, so we need them again for internal
               // coordinate n
-              if (weights[alpha] == 0) {
-                productA = 0;
-              //} else if ( weightedAbscissas[n*(N_)+alpha] == 0 && thisMoment[n] == 0) {
-              //  productA = 0;
-              } else {
-                double base2 = weightedAbscissas[n*(N_)+alpha]/weights[alpha];
-                double exponent2 = thisMoment[n];
-                productA = productA*( pow(base2, exponent2));
-              }//end divide by zero conditionals
+              double base2 = Abscissas[n*(N_)+alpha];
+              double exponent2 = thisMoment[n];
+              productA = productA*( pow(base2, exponent2));
             }
           }//end int coord n
         }//end divide by zero conditionals
@@ -1512,7 +1489,7 @@ DQMOM::constructAopt( DenseMatrix*   &AA,
 void
 DQMOM::constructBopt( ColumnMatrix*  &BB,
                       vector<double> &weights,
-                      vector<double> &weightedAbscissas,
+                      vector<double> &Abscissas,
                       vector<double> &models)
 {
   for ( unsigned int k = 0; k < momentIndexes.size(); ++k) {
@@ -1530,13 +1507,13 @@ DQMOM::constructBopt( ColumnMatrix*  &BB,
         if (weights[alpha] == 0) {
           prefixS = 0;
           productS = 0;
-        } else if ( weightedAbscissas[j*(N_)+alpha] == 0 && thisMoment[j] == 0) {
+        } else if ( Abscissas[j*(N_)+alpha] == 0 && thisMoment[j] == 0) {
           //FIXME:
           // both prefixes contain 0^(-1)
           prefixS = 0;
         } else {
           // Appendix C, C.11 (A_j+1 matrix)
-          double base = weightedAbscissas[j*(N_)+alpha] / weights[alpha];
+          double base = Abscissas[j*(N_)+alpha];
           double exponent = thisMoment[j] - 1;
 
           // Appendix C, C.16 (S matrix)
@@ -1556,7 +1533,7 @@ DQMOM::constructBopt( ColumnMatrix*  &BB,
               //  productA = 0;
               //  productS = 0;
               } else {
-                double base2 = weightedAbscissas[n*(N_)+alpha]/weights[alpha];
+                double base2 = Abscissas[n*(N_)+alpha];
                 double exponent2 = thisMoment[n];
                 productS = productS*( pow(base2, exponent2));
               }//end divide by zero conditionals
