@@ -117,6 +117,16 @@ private:
                               vector<double>  &models,
                               int              verbosity=0);
 
+  void constructAopt( DenseMatrix*   &AA,
+                      vector<double> &weights,
+                      vector<double> &weightedAbscissas);
+
+  void constructBopt( ColumnMatrix*  &BB,
+                      vector<double> &weights,
+                      vector<double> &weightedAbscissas,
+                      vector<double> &models);
+
+
   vector<string> InternalCoordinateEqnNames;
   
   vector<MomentVector> momentIndexes; ///< Vector containing all moment indices
@@ -139,6 +149,8 @@ private:
   double d_w_small;
   double d_weight_scaling_constant;
   vector<double> d_weighted_abscissa_scaling_constants;
+  vector<double> d_opt_abscissas;
+  DenseMatrix* AAopt;
 
   const VarLabel* d_normBLabel; 
   const VarLabel* d_normXLabel; 
@@ -150,6 +162,7 @@ private:
   double d_small_normalizer; ///< When X (or B) is smaller than this, don't normalize the residual by it
   bool b_useLapack;
   bool b_calcConditionNumber;
+  bool b_optimize;
   string d_solverType;
 
   struct constCCVarWrapper {
