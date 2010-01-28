@@ -78,7 +78,7 @@ bar_length  = bar_max - bar_min;
 domain       = 52;
 area         = 1.;
 plotSwitch   = 1;
-plotInterval = 1;
+plotInterval = 200;
 writeData    = 1;
 max_tstep    = BigNum;
 
@@ -145,7 +145,7 @@ momG      = NaN(NN_max,  maxLevels);
 velG      = NaN(NN_max,  maxLevels);
 vel_nobc_G= NaN(NN_max,  maxLevels);
 accl_G    = NaN(NN_max,  maxLevels);
-extForceG = NaN(NN_max,  maxLevels);
+extForceG = zeros(NN_max,  maxLevels);
 intForceG = NaN(NN_max,  maxLevels);
 
 
@@ -280,7 +280,7 @@ titleStr(4) ={sprintf('Constant resolution, #cells %g', Limits.NN_allLevels)};
 
 %plot initial conditions
 if(plotSwitch == 1)
-  plotResults(titleStr, t_initial, tstep, xp, dp, massP, Fp, velP, stressP, nodePos, velG, massG, momG, Limits, Levels)
+  plotResults(titleStr, t_initial, tstep, xp, dp, massP, Fp, velP, stressP, nodePos, velG, massG, momG,extForceG, Limits, Levels)
 end
 fprintf('t_final: %g, interpolator: %s, NN: %g, NP: %g dx_min: %g \n',t_final,interpolation, Limits.NN_allLevels,Limits.NP_allLevels,dx_min);
 input('hit return')
@@ -362,8 +362,9 @@ while t<t_final && tstep < max_tstep
   
   
   %__________________________________
-  % adjust the nodal values at the CFI
-  [massG, velG, extForceG] = adjustCFI_Nodes(massG, velG, extForceG, Levels,Limits);
+  % adjust the nodal values at the CFI  
+  [massG, velG, extForceG] = adjustCFI_Nodes(Levels, Limits,massG, velG, extForceG );
+  
   
   % normalize by the mass
   velG = velG./massG;
@@ -388,6 +389,10 @@ while t<t_final && tstep < max_tstep
       end
     end
   end  % level
+
+ 
+  [intForceG] = adjustCFI_Nodes(Levels, Limits,intForceG );
+
   %__________________________________
   %compute the acceleration and new velocity on the grid
   accl_G    =(intForceG + extForceG)./massG;
@@ -527,16 +532,20 @@ while t<t_final && tstep < max_tstep
   end
   
   if( strcmp(problem_type, 'compaction') && (mod(tstep,plotInterval) == 0) && (plotSwitch == 1) )
+    %convert the multi-level arrays into a 1D arrays
+    [xp_clean, stressP_clean] = ML_to_1D( Levels, Limits, xp, stressP);
+    NP = length(xp_clean);
+    
     term1 = (2.0 * density * bodyForce)/E;
     for ip=1:NP
-      term2 = term1 * (delta - xp(ip));
+      term2 = term1 * (delta - xp_clean(ip));
       stressExact(ip) = E *  ( sqrt( term2 + 1.0 ) - 1.0);
     end
     
-    figure(2)
-    set(2,'position',[1000,100,700,700]);
+    figure(3)
+    set(3,'position',[1000,100,700,700]);
 
-    plot(xp,stressP,'rd', xp, stressExact, 'b');
+    plot(xp_clean,stressP_clean,'rd', xp_clean, stressExact, 'b');
     axis([0 50 -10000 0])
 
     title(titleStr)
@@ -550,8 +559,8 @@ while t<t_final && tstep < max_tstep
     imwrite(X,f_name);
 
     % compute L2Norm
-    d = abs(stressP - stressExact);
-    L2_norm = sqrt( sum(d.^2)/length(stressP) )
+    d = abs(stressP_clean - stressExact);
+    L2_norm = sqrt( sum(d.^2)/length(stressP_clean) )
   end
   
   
@@ -565,7 +574,7 @@ while t<t_final && tstep < max_tstep
   %__________________________________
   % plot intantaneous solution
   if (mod(tstep,plotInterval) == 0) && (plotSwitch == 1)
-    plotResults(titleStr, t, tstep, xp, dp, massP, Fp, velP, stressP, nodePos, velG, massG, momG,Limits, Levels)
+    plotResults(titleStr, t, tstep, xp, dp, massP, Fp, velP, stressP, nodePos, velG, massG, momG,extForceG,Limits, Levels)
     %input('hit return');
   end
   
@@ -692,51 +701,41 @@ function [stressP]=computeStress(E,Fp,NP)
 end
 
 %__________________________________
-function [massG_new, velG_new, extForceG_new] = adjustCFI_Nodes(massG, velG, extForceG, Levels,Limits)
+function [varargout] = adjustCFI_Nodes( Levels, Limits, varargin)
   
   left  = 1;
   right = 2;
-  massG_new = massG;
-  velG_new  = velG;
-  extForceG_new = extForceG;
   
-  massG_tmp     = zeros(2,1);  %temporary storage
-  velG_tmp      = zeros(2,1);
-  extForceG_tmp = zeros(2,1);
-  
-  
-  %Q_tmp(CFI_node) = sum(q(CFI_node,levels));
-  for side=left:right
-    for l=2:Limits.maxLevels
-      cl = l -1;
-      fineNode   = Levels{l}.fineCFI_nodes(side);
-      coarseNode = Levels{cl}.coarseCFI_nodes(side);
-      
-      massG_tmp(side)     = massG_tmp(side)     + massG(fineNode,l)      + massG(coarseNode,cl);
-      velG_tmp(side)      = velG_tmp(side)      + velG(fineNode,l)       + velG(coarseNode,cl);
-      extForceG_tmp(side) = extForceG_tmp(side) + extForceG(fineNode,l)  + extForceG(coarseNode,cl);
-
-    end
-  end
-  
-  %Q(CFI_node,AllLevels) = Q_tmp(CFI_node)
-  for side=left:right
-    for l=2:Limits.maxLevels
-      cl = l -1;
-      fineNode   = Levels{l}.fineCFI_nodes(side);
-      coarseNode = Levels{cl}.coarseCFI_nodes(side);
-      
-      massG_new(fineNode,l)        = massG_tmp(side);
-      velG_new(fineNode,l)         = velG_tmp(side);
-      extForceG_new(fineNode,l)    = extForceG_tmp(side);
-      
-      massG_new(coarseNode,cl)     = massG_tmp(side);
-      velG_new(coarseNode,cl)      = velG_tmp(side);
-      extForceG_new(coarseNode,cl) = extForceG_tmp(side);
-
-    end
-  end
+  for i = 1:length(varargin)    % loop over each input argument
+    varG_new = varargin{i};
+    varG     = varargin{i};
+    varG_tmp = zeros(2,1);
     
+    %Q_tmp(CFI_node) = sum(q(CFI_node,levels));
+    for side=left:right
+      for l=2:Limits.maxLevels
+        cl = l -1;
+        fineNode   = Levels{l}.fineCFI_nodes(side);
+        coarseNode = Levels{cl}.coarseCFI_nodes(side);
+        varG_tmp(side) = varG_tmp(side) + varG(fineNode,l)  + varG(coarseNode,cl);
+
+      end
+    end
+
+    %Q(CFI_node,AllLevels) = Q_tmp(CFI_node)
+    for side=left:right
+      for l=2:Limits.maxLevels
+        cl = l -1;
+        fineNode   = Levels{l}.fineCFI_nodes(side);
+        coarseNode = Levels{cl}.coarseCFI_nodes(side);
+        varG_new(fineNode,l)    = varG_tmp(side);
+        varG_new(coarseNode,cl) = varG_tmp(side);
+      end
+    end
+
+    
+    varargout{i} = varG_new;
+  end  % loop over input variables
 end
 
 %__________________________________
@@ -818,23 +817,21 @@ end
 
 
 %__________________________________
-function plotResults(titleStr,t, tstep, xp, dp, massP, Fp, velP, stressP, nodePos, velG, massG, momG, Limits, Levels)
-
+function plotResults(titleStr,t, tstep, xp, dp, massP, Fp, velP, stressP, nodePos, velG, massG, momG, extForceG,Limits, Levels)
+  global gf;
     % plot SimulationState
+  % convert multilevel arrays into 1D arrays
+  [xp_1D, velP_1D, massP_1D, stressP_1D, ] = ML_to_1D( Levels, Limits, xp, velP, massP, stressP);  
+  [nodePos_1D, extForceG_1D, velG_1D] = ML_Grid_to_1D( Levels, Limits, nodePos, extForceG, velG);
     
-  % remove NaN's and convert then to 1D arrays just for plotting
-  velP_clean    = velP(isfinite(velP));
-  massP_clean   = massP(isfinite(massP));
-  stressP_clean = stressP(isfinite(stressP));
-  xp_clean      = xp(isfinite(xp));
     
   figure1 = figure(1);
-  set(1,'position',[50,100,700,700]);
+  set(1,'position',[10,10,700,700]);
   levelColors = ['m','g','r','b','k'];
   
-  subplot(4,1,1),plot(xp_clean,velP_clean,'rd');
+  subplot(4,1,1),plot(xp_1D,velP_1D,'rd');
   xlim( [Levels{1}.min Levels{1}.max] )
-  ylim([min(min(velP_clean - 1e-3) )  max( max(velP_clean + 1e-3))])
+  ylim([min(min(velP_1D - 1e-3) )  max( max(velP_1D + 1e-3))])
   
   xlabel('Particle Position');
   ylabel('Particle velocity');
@@ -848,43 +845,54 @@ function plotResults(titleStr,t, tstep, xp, dp, massP, Fp, velP, stressP, nodePo
   xlim( [Levels{1}.min Levels{1}.max] )
   ylabel('Particle stress');
   
-  subplot(4,1,4),plot(xp_clean,massP_clean,'rd');
+  subplot(4,1,4),plot(xp_1D,massP_1D,'rd');
   xlim( [Levels{1}.min Levels{1}.max] )
   ylabel('Particle mass');
   
   drawNodes(figure1,nodePos,Levels,Limits)
   
-if(0)
-  subplot(6,1,4),plot(nodePos, velG,'bx');
+  figure2 = figure(2);
+  set(2,'position',[10,1000,700,350]);
+  subplot(2,1,1),plot(nodePos_1D, velG_1D,'bx');
   xlabel('NodePos');
   ylabel('grid Vel');
-  %axis([0 50 0 101] )
-
+  xlim( [Levels{1}.min Levels{1}.max] )
+  
+  
+  subplot(2,1,2),plot(nodePos_1D, extForceG_1D,'rd');
+  xlim( [Levels{1}.min Levels{1}.max] )
+  ylabel('Accl_extForceP');
+  
+if(0)
   grad_velG = diff(velG);
+  grad_velG(1) = 0.0;
   grad_velG(length(velG)) = 0;
   
   for n=2:length(velG)
     grad_velG(n) = grad_velG(n)/(nodePos(n) - nodePos(n-1) );
   end
-  subplot(6,1,5),plot(nodePos, grad_velG,'bx');
-  ylabel('grad velG');
-  xlim([0,40])
   
+  length(nodePos)
+  length(grad_velG)
+  
+  subplot(2,1,2),plot(nodePos, grad_velG,'bx');
+  ylabel('grad velG');
+  xlim( [Levels{1}.min Levels{1}.max] )
+end  
   %subplot(6,1,5),plot(nodePos, massG,'bx');
   %ylabel('gridMass');
   %axis([0 50 0 1.1] )
-
-  momG = velG .* massG;
-  subplot(6,1,6),plot(nodePos, momG,'bx');
-  ylabel('gridMom');
+  
+  %momG = velG .* massG;
+  %subplot(6,1,6),plot(nodePos, momG,'bx');
+  %ylabel('gridMom');
   %axis([0 50 0 101] )
 
-  f_name = sprintf('%g.ppm',tstep-1);
-  F = getframe(gcf);
-  [X,map] = frame2im(F);
-  imwrite(X,f_name)
+  %f_name = sprintf('%g.ppm',tstep-1);
+  %F = getframe(gcf);
+  %[X,map] = frame2im(F);
+  %imwrite(X,f_name)
   %input('hit return');
-end
 end
 
 %__________________________________
@@ -932,7 +940,7 @@ function drawNodes(figure1,nodePos,Levels,Limits)
 end
 
 %__________________________________
-function [accl_extForceP, delta, bodyForce] = ExternalForceAccl(problem_type, delta_0, bodyForce, Material, xp, xp_initial, t, tstep, NP, R1_dx, bar_length)
+function [accl_extForceP, delta, bodyForce] = ExternalForceAccl(problem_type, delta_0, bodyForce, Material, xp, xp_initial, t, tstep, NP, L1_dx, bar_length)
 
   density    = Material{1}.density;
   E          = Material{1}.E;
@@ -940,7 +948,7 @@ function [accl_extForceP, delta, bodyForce] = ExternalForceAccl(problem_type, de
   
   delta = -9;
   
-  nn = length(xp)
+  nn = length(xp);
   accl_extForceP = zeros(nn,1);  % you must declare arrays that are not passed in.
                                  % This array must be full of zeros
   
@@ -967,3 +975,60 @@ function [accl_extForceP, delta, bodyForce] = ExternalForceAccl(problem_type, de
     [accl_extForceP] = mms.accl_bodyForce(xp_initial,t, NP, speedSound, bar_length);
   end
 end
+
+
+ %__________________________________
+ % Convert multi-level particle arrays into a 1D array
+ % This is mainly used for plotting 
+function [xp_1D,varargout] = ML_to_1D( Levels, Limits, xp, varargin)
+  
+  for i = 1:length(varargin)    % loop over each input argument
+    varP = varargin{i};
+    
+    c = 0;
+    for l=1:Limits.maxLevels
+      L = Levels{l};
+      for ip =1:L.NP
+        c = c+1;
+        xp_1D(c)   = xp(ip,l);
+        varP_1D(c) = varP(ip,l);
+      end
+    end
+    % sort xp into ascending order and varP_1D
+    [xp_1D, k] = sort(xp_1D);
+    varP_1D = varP_1D(k);
+    
+    varargout{i} = varP_1D;
+  end  % loop over input variables
+end  
+
+
+ %__________________________________
+ % Convert multi-level Grid arrays into 1D array
+ % This is mainly used for plotting 
+function [nodePos_1D, varargout ] = ML_Grid_to_1D( Levels, Limits, nodePos, varargin)
+  global gf;
+  
+  for i = 1:length(varargin)    % loop over each input argument
+    varG = varargin{i};
+    
+    c = 0;
+    for l=1:Limits.maxLevels
+      L = Levels{l};
+      for ig =1:L.NN
+        test = gf.hasFinerCell(nodePos(ig,l),l,Levels,Limits);
+        if( test == 0)
+          c = c+1;
+          varG_1D(c) = varG(ig,l);
+          nodePos_1D(c)  = nodePos(ig,l);
+        end
+      end
+    end
+    
+     % sort nodePos into ascending order and varG_1D
+    [nodePos_1D, k] = sort(nodePos_1D);
+    varG_1D = varG_1D(k);
+
+    varargout{i} = varG_1D;
+  end  % loop over input variables
+end   
