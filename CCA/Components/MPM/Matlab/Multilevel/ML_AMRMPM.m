@@ -18,6 +18,7 @@ global PPC;
 global sf;
 global gf;
 global NSFN;               % number of shape function nodes
+global dumpFrames;
 d_debugging = problem_type;
 
 [mms] = MMS;                      % load mms functions
@@ -79,6 +80,7 @@ domain       = 52;
 area         = 1.;
 plotSwitch   = 1;
 plotInterval = 200;
+dumpFrames   = 1;
 writeData    = 1;
 max_tstep    = BigNum;
 
@@ -275,7 +277,7 @@ end
 titleStr(2) = {sprintf('Computational Domain 0,%g, MPM bar %g,%g',domain,bar_min, bar_max)};
 titleStr(3) = {sprintf('%s, PPC: %g',interpolation, PPC)};
 %titleStr(4)={'Variable Resolution, Center Region refinement ratio: 2'}
-titleStr(4) ={sprintf('Constant resolution, #cells %g', Limits.NN_allLevels)};
+titleStr(4) ={sprintf('2 Levels, #cells %g', Limits.NN_allLevels)};
 
 
 %plot initial conditions
@@ -542,22 +544,26 @@ while t<t_final && tstep < max_tstep
       stressExact(ip) = E *  ( sqrt( term2 + 1.0 ) - 1.0);
     end
     
-    figure(3)
-    set(3,'position',[1000,100,700,700]);
+    fig3 = sfigure(3);
+    set(fig3,'position',[1000,100,700,700]);
 
     plot(xp_clean,stressP_clean,'rd', xp_clean, stressExact, 'b');
+    
+    
     axis([0 50 -10000 0])
 
     title(titleStr)
     legend('Simulation','Exact')
     xlabel('Position');
     ylabel('Particle stress');
+    
+    if(dumpFrames)
+      f_name = sprintf('%g.3.ppm',tstep-1);
+      F = getframe(fig3);
 
-    f_name = sprintf('%g.2.ppm',tstep-1);
-    F = getframe(gcf);
-    [X,map] = frame2im(F);
-    imwrite(X,f_name);
-
+      [X,map] = frame2im(F);
+      imwrite(X,f_name);
+    end
     % compute L2Norm
     d = abs(stressP_clean - stressExact);
     L2_norm = sqrt( sum(d.^2)/length(stressP_clean) )
@@ -574,7 +580,7 @@ while t<t_final && tstep < max_tstep
   %__________________________________
   % plot intantaneous solution
   if (mod(tstep,plotInterval) == 0) && (plotSwitch == 1)
-    plotResults(titleStr, t, tstep, xp, dp, massP, Fp, velP, stressP, nodePos, velG, massG, momG,extForceG,Limits, Levels)
+    %plotResults(titleStr, t, tstep, xp, dp, massP, Fp, velP, stressP, nodePos, velG, massG, momG,extForceG,Limits, Levels)
     %input('hit return');
   end
   
@@ -819,14 +825,14 @@ end
 %__________________________________
 function plotResults(titleStr,t, tstep, xp, dp, massP, Fp, velP, stressP, nodePos, velG, massG, momG, extForceG,Limits, Levels)
   global gf;
+  global dumpFrames;
     % plot SimulationState
   % convert multilevel arrays into 1D arrays
   [xp_1D, velP_1D, massP_1D, stressP_1D, ] = ML_to_1D( Levels, Limits, xp, velP, massP, stressP);  
   [nodePos_1D, extForceG_1D, velG_1D] = ML_Grid_to_1D( Levels, Limits, nodePos, extForceG, velG);
-    
-    
-  figure1 = figure(1);
-  set(1,'position',[10,10,700,700]);
+         
+  fig1 = sfigure(1);
+  set(fig1,'position',[10,10,700,700]);
   levelColors = ['m','g','r','b','k'];
   
   subplot(4,1,1),plot(xp_1D,velP_1D,'rd');
@@ -849,10 +855,10 @@ function plotResults(titleStr,t, tstep, xp, dp, massP, Fp, velP, stressP, nodePo
   xlim( [Levels{1}.min Levels{1}.max] )
   ylabel('Particle mass');
   
-  drawNodes(figure1,nodePos,Levels,Limits)
-  
-  figure2 = figure(2);
-  set(2,'position',[10,1000,700,350]);
+  drawNodes(fig1,nodePos,Levels,Limits)
+
+  fig2 = sfigure(2);
+  set(fig2,'position',[10,1000,700,350]);
   subplot(2,1,1),plot(nodePos_1D, velG_1D,'bx');
   xlabel('NodePos');
   ylabel('grid Vel');
@@ -863,6 +869,18 @@ function plotResults(titleStr,t, tstep, xp, dp, massP, Fp, velP, stressP, nodePo
   xlim( [Levels{1}.min Levels{1}.max] )
   ylabel('Accl_extForceP');
   
+  if(dumpFrames)
+    f_name = sprintf('%g.1.ppm',tstep-1);
+    F = getframe(fig1);
+    [X,map] = frame2im(F);
+    imwrite(X,f_name);
+  
+    f_name = sprintf('%g.2.ppm',tstep-1);  
+    F = getframe(fig2);                     
+    [X,map] = frame2im(F);                 
+    imwrite(X,f_name);   
+  end                  
+
 if(0)
   grad_velG = diff(velG);
   grad_velG(1) = 0.0;
