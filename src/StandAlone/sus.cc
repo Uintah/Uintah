@@ -79,7 +79,7 @@ DEALINGS IN THE SOFTWARE.
 #include <sci_defs/uintah_defs.h>
 #include <sci_defs/mpi_defs.h>
 #include <sci_defs/hypre_defs.h>
-
+#include <svn_info.h>
 #include <Core/Malloc/Allocator.h>
 
 #ifdef USE_VAMPIR
@@ -477,8 +477,12 @@ main( int argc, char *argv[], char *env[] )
     string time_string(ctime(&t));
     char name[256];
     gethostname(name, 256);
+    
     cout << "Date:    " << time_string; // has its own newline
     cout << "Machine: " << name << endl;
+
+    cout << "SVN: " << SVN_REVISION << endl;
+    cout << "SVN: " << SVN_DATE << endl;
 
     // Run svn commands on Packages/Uintah 
     if (do_svnDiff || do_svnStat){
