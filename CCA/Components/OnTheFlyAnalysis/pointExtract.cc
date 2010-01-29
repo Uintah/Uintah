@@ -147,6 +147,13 @@ void pointExtract::problemSetup(const ProblemSpecP& prob_spec,
       throw ProblemSetupException("pointExtract: analyze label not found: "
                            + name , __FILE__, __LINE__);
     }
+    
+    //__________________________________
+    //  Bulletproofing
+    // The user must specify the matl for single matl variables
+    if ( name == "press_CC" && attribute["matl"].empty() ){
+      throw ProblemSetupException("pointExtract: You must add (matl='0') to the press_CC line." , __FILE__, __LINE__);
+    }
      d_varLabels.push_back(label);
   }    
   

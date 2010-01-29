@@ -175,11 +175,17 @@ void lineExtract::problemSetup(const ProblemSpecP& prob_spec,
                            + name , __FILE__, __LINE__);
     }
     
+    //__________________________________
+    //  Bulletproofing
+    // The user must specify the matl for single matl variables
+    if ( name == "press_CC" && attribute["matl"].empty() ){
+      throw ProblemSetupException("lineExtract: You must add (matl='0') to the press_CC line." , __FILE__, __LINE__);
+    }
+    
     const Uintah::TypeDescription* td = label->typeDescription();
     const Uintah::TypeDescription* subtype = td->getSubType();
     
     //__________________________________
-    // Bulletproofing
     bool throwException = false;  
     
     // only CC, SFCX, SFCY, SFCZ variables
