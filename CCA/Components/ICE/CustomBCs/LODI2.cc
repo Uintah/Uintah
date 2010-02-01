@@ -391,46 +391,6 @@ VarLabel* getMaxMach_face_VarLabel( Patch::FaceType face)
 }
 
 /* ______________________________________________________________________ 
- Function~  Lodi_maxMach_patchSubset--   
- Purpose~   The reduction variables maxMach_<xminus, xplus....>
-            need a patchSubset for each face.
- ______________________________________________________________________  */
-void Lodi_maxMach_patchSubset(const LevelP& level,
-                               SimulationStateP& sharedState,
-                               vector<PatchSubset*> & maxMach_patchSubset)
-{
-  cout_doing << "Lodi_maxMach_patchSubset "<< endl;
-  //__________________________________
-  // Iterate over all patches on this levels
-  vector<const Patch*> p[Patch::numFaces];
-  for(Level::const_patchIterator iter = level->patchesBegin();
-                                 iter != level->patchesEnd(); iter++){
-    const Patch* patch = *iter;
-    
-    //_________________________________
-    // Iterate over just the boundary faces
-    vector<Patch::FaceType>::const_iterator itr;
-    vector<Patch::FaceType> bf;
-    patch->getBoundaryFaces(bf);
-    for (itr  = bf.begin(); itr != bf.end(); ++itr){
-      Patch::FaceType face = *itr;
-      //__________________________________
-      //  if Lodi face then keep track of the patch
-      if (is_LODI_face(patch,face, sharedState) ) {
-        p[face].push_back(patch);
-      }
-    }
-  }
-  //__________________________________
-  // now put each patch into a patchSubsets
-  for (int f = 0; f<Patch::numFaces; f++) {
-    PatchSubset* subset = scinew PatchSubset(p[f].begin(), p[f].end());
-    subset->addReference();
-    maxMach_patchSubset[f]=subset;
-  } 
-}
-
-/* ______________________________________________________________________ 
  Function~  is_LODI_face--   
  Purpose~   returns true if this face on this patch is using LODI bcs
  ______________________________________________________________________  */
@@ -754,6 +714,11 @@ void computeLi(StaticArray<CCVariable<Vector> >& L,
   cout_doing << "LODI computeLi "<< endl;
   Vector dx = patch->dCell();
   
+  /*`==========TESTING==========*/
+  Material* matl = sharedState->getMaterial(user_inputs->iceMatl_indx);
+  int indx = matl->getDWIndex();  
+  /*===========TESTING==========`*/
+  
   // Characteristic Length of the overall domain
   Vector domainLength;
   const Level* level = patch->getLevel();
@@ -803,7 +768,7 @@ void computeLi(StaticArray<CCVariable<Vector> >& L,
     
       VarLabel* V_Label = getMaxMach_face_VarLabel(face);
       max_vartype maxMach;
-      pNewDW->get(maxMach,   V_Label);
+      pNewDW->get(maxMach,   V_Label, level, indx);
       
       IntVector offset = patch->faceDirection(face);
       
