@@ -5016,7 +5016,6 @@ void ICE::maxMach_on_Lodi_BC_Faces(const ProcessorGroup*,
       patch->getID() << "\t\t\t ICE \tL-" <<level->getIndex()<< endl;
       
     Ghost::GhostType  gn = Ghost::None;
-    int numICEMatls = d_sharedState->getNumICEMatls();
     int numAllMatls = d_sharedState->getNumMatls();
     StaticArray<constCCVariable<Vector> > vel_CC(numAllMatls);
     StaticArray<constCCVariable<double> > speedSound(numAllMatls);
@@ -5041,14 +5040,13 @@ void ICE::maxMach_on_Lodi_BC_Faces(const ProcessorGroup*,
     for( f = d_customBC_var_basket->Lodi_var_basket->LodiFaces.begin();
          f !=d_customBC_var_basket->Lodi_var_basket->LodiFaces.end(); ++f) {
       Patch::FaceType face = *f;
-      
       //__________________________________
       // compute maxMach number on this lodi face
       // only ICE matls
       double maxMach = 0.0;
       if (is_LODI_face(patch,face, d_sharedState) ) {
         
-        for(int m=0; m < numICEMatls;m++){
+        for(int m=0; m < numAllMatls;m++){
           Material* matl = d_sharedState->getMaterial( m );
           int indx = matl->getDWIndex();
           ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
