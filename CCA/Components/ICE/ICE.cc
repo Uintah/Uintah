@@ -1641,7 +1641,7 @@ void ICE::scheduleAddExchangeToMomentumAndEnergy(SchedulerP& sched,
 _____________________________________________________________________*/
 void ICE::scheduleMaxMach_on_Lodi_BC_Faces(SchedulerP& sched, 
                                      const LevelP& level,
-                                     const MaterialSet* matls)
+                                     const MaterialSet* ice_matls)
 { 
   if(d_customBC_var_basket->usingLodi) {
     cout_doing << d_myworld->myrank() << " ICE::scheduleMaxMach_on_Lodi_BC_Faces" 
@@ -1661,9 +1661,9 @@ void ICE::scheduleMaxMach_on_Lodi_BC_Faces(SchedulerP& sched,
          f!= d_customBC_var_basket->Lodi_var_basket->LodiFaces.end(); ++f) {
          
       VarLabel* V_Label = getMaxMach_face_VarLabel(*f);
-      task->computes(V_Label, matls->getUnion());
+      task->computes(V_Label, ice_matls->getUnion());
     }
-    sched->addTask(task, level->eachPatch(), matls);
+    sched->addTask(task, level->eachPatch(), ice_matls);
   }
 }
 /* _____________________________________________________________________
@@ -5017,10 +5017,11 @@ void ICE::maxMach_on_Lodi_BC_Faces(const ProcessorGroup*,
       
     Ghost::GhostType  gn = Ghost::None;
     int numICEMatls = d_sharedState->getNumICEMatls();
-    StaticArray<constCCVariable<Vector> > vel_CC(numICEMatls);
-    StaticArray<constCCVariable<double> > speedSound(numICEMatls);
+    int numAllMatls = d_sharedState->getNumMatls();
+    StaticArray<constCCVariable<Vector> > vel_CC(numAllMatls);
+    StaticArray<constCCVariable<double> > speedSound(numAllMatls);
           
-    for(int m=0;m < numICEMatls;m++){
+    for(int m=0;m < numAllMatls;m++){
       Material* matl = d_sharedState->getMaterial( m );
       int indx = matl->getDWIndex();
       ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
@@ -5049,6 +5050,7 @@ void ICE::maxMach_on_Lodi_BC_Faces(const ProcessorGroup*,
         
         for(int m=0; m < numICEMatls;m++){
           Material* matl = d_sharedState->getMaterial( m );
+          int indx = matl->getDWIndex();
           ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
           if(ice_matl) {
             Patch::FaceIteratorType MEC = Patch::ExtraMinusEdgeCells;
@@ -5058,11 +5060,12 @@ void ICE::maxMach_on_Lodi_BC_Faces(const ProcessorGroup*,
               IntVector c = *iter;
               maxMach = Max(maxMach,vel_CC[m][c].length()/speedSound[m][c]);
             }
+            
+            VarLabel* V_Label = getMaxMach_face_VarLabel(face);
+            new_dw->put(max_vartype(maxMach), V_Label, level, indx);
           }  // icematl
         }  // matl loop
         
-        VarLabel* V_Label = getMaxMach_face_VarLabel(face);
-        new_dw->put(max_vartype(maxMach), V_Label);
       }  // is lodi Face
     }  // boundaryFaces
   }  // patches
