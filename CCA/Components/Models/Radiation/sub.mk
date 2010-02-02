@@ -58,8 +58,8 @@ ifeq ($(HAVE_HYPRE),yes)
 endif
 
 $(SRCDIR)/Models_CellInformation.$(OBJEXT): $(SRCDIR)/fortran/m_cellg_fort.h
-#$(SRCDIR)/Models_DORadiationModel.$(OBJEXT): $(SRCDIR)/fortran/m_rordr_fort.h
-#$(SRCDIR)/Models_DORadiationModel.$(OBJEXT): $(SRCDIR)/fortran/m_rordrss_fort.h
+
+$(SRCDIR)/Models_DORadiationModel.$(OBJEXT): $(SRCDIR)/fortran/m_rordr_fort.h
 $(SRCDIR)/Models_DORadiationModel.$(OBJEXT): $(SRCDIR)/fortran/m_rordrtn_fort.h
 $(SRCDIR)/Models_DORadiationModel.$(OBJEXT): $(SRCDIR)/fortran/m_radarray_fort.h
 $(SRCDIR)/Models_DORadiationModel.$(OBJEXT): $(SRCDIR)/fortran/m_radcal_fort.h
