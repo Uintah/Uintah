@@ -181,7 +181,7 @@ namespace Uintah {
   protected:
 
     // Modify the stress if particle has failed
-    void updateFailedParticlesAndModifyStress(const Matrix3& bb, 
+    void updateFailedParticlesAndModifyStress(const Matrix3& FF, 
                                               const double& pFailureStrain, 
                                               const int& pLocalized,
                                               int& pLocalized_new, 

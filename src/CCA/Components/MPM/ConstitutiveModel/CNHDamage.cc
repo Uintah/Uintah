@@ -480,7 +480,7 @@ CNHDamage::computeStressTensor(const PatchSubset* patches,
 
       pDefGrad_new[idx] = FF;
       
-      } // end of the particle loop
+    } // end of the particle loop
       
     // The following is used only for pressure stabilization
     CCVariable<double> J_CC;
@@ -561,8 +561,8 @@ CNHDamage::computeStressTensor(const PatchSubset* patches,
       pStress_new[idx] = Identity*p + Shear/J;
 
       // Modify the stress if particle has failed
-      updateFailedParticlesAndModifyStress(FF, pFailureStrain[idx], 
-               pLocalized[idx], pLocalized_new[idx], 
+      updateFailedParticlesAndModifyStress(pDefGrad_new[idx],
+               pFailureStrain[idx], pLocalized[idx], pLocalized_new[idx], 
                pStress_new[idx], pParticleID[idx]);
 
       // Compute the strain energy for all the particles
@@ -634,7 +634,9 @@ CNHDamage::updateFailedParticlesAndModifyStress(const Matrix3& FF,
 //now it distinguishes tension from compression
 //let ffjhl know if this causes a problem.
 //  double epsMax = Max(fabs(eigval[0]),fabs(eigval[2]));
-  double epsMax = Max(Max(eigval[0],eigval[1]), eigval[2]);
+//  double epsMax = Max(Max(eigval[0],eigval[1]), eigval[2]);
+  //The first eigenvalue returned by "eigen" is always the largest 
+  double epsMax = eigval[0];
 
   // Find if the particle has failed
   pLocalized_new = pLocalized;
