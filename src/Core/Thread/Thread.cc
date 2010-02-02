@@ -133,10 +133,13 @@ Thread::~Thread()
   free(const_cast<char *>(threadname_));
 }
 
-Thread::Thread( ThreadGroup * g, const char * name )
+void
+Thread::setDefaults( ThreadGroup * group, const char * name )
 {
-  g->addme( this );
-  group_      = g;
+  if( group ) {
+    group->addme( this );
+  }
+  group_      = group;
   threadname_ = strdup(name);
   daemon_     = false;
   detached_   = false;
@@ -144,6 +147,45 @@ Thread::Thread( ThreadGroup * g, const char * name )
   cpu_        = -1;
   stacksize_  = Thread::DEFAULT_STACKSIZE;
   abortCleanupFunc_ = NULL;
+}
+
+Thread::Thread( ThreadGroup * g, const char * name )
+{
+  setDefaults( g, name );
+}
+
+Thread::Thread( Runnable* runner, const char* name,
+                ThreadGroup* group, ActiveState state,
+                unsigned long stacksize )
+{
+  setDefaults( group, name );
+
+  runner_ = runner;
+  stacksize_ = stacksize;
+
+  if(group_ == 0) {
+    if( !ThreadGroup::s_default_group ) {
+      Thread::initialize();
+    }
+    group_ = ThreadGroup::s_default_group;
+    group_->addme(this);
+  }
+
+  runner_->my_thread_=this;
+  switch(state) {
+  case Activated:
+    os_start(false);
+    activated_=true;
+    break;
+  case Stopped:
+    os_start(true);
+    activated_=true;
+    break;
+  case NotActivated:
+    activated_=false;
+    priv_=0;
+    break;
+  }
 }
 
 void
@@ -174,41 +216,6 @@ Thread::run_body()
     fprintf(stderr, "Caught unhandled exception of unknown type\n");
     Thread::niceAbort();
 #endif
-  }
-}
-
-Thread::Thread( Runnable* runner, const char* name,
-                ThreadGroup* group, ActiveState state,
-                unsigned long stacksize ) :
-  runner_(runner),
-  threadname_(strdup(name)),
-  group_(group),
-  stacksize_(stacksize),
-  daemon_(false),
-  detached_(false),
-  cpu_(-1)
-{
-  if(group_ == 0) {
-    if( !ThreadGroup::s_default_group )
-      Thread::initialize();
-    group_=ThreadGroup::s_default_group;
-  }
-
-  runner_->my_thread_=this;
-  group_->addme(this);
-  switch(state) {
-  case Activated:
-    os_start(false);
-    activated_=true;
-    break;
-  case Stopped:
-    os_start(true);
-    activated_=true;
-    break;
-  case NotActivated:
-    activated_=false;
-    priv_=0;
-    break;
   }
 }
 

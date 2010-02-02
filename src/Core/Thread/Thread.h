@@ -88,6 +88,10 @@ DESCRIPTION
     };
 	    
     //////////
+    // Helper function for both constructors.
+    void setDefaults( ThreadGroup * g, const char * name );
+
+    //////////
     // Create a thread, which will execute the <b>run()</b>
     // method in the <b>runner</b> object. The thread <b>name</b>
     // is used for identification purposes, and does not need to
@@ -95,11 +99,15 @@ DESCRIPTION
     // specifies the ThreadGroup that to which this thread
     // should belong.  If no group is specified (group==0),
     // the default group is used.
-    Thread( Runnable* runner,
-            const char* name,
-            ThreadGroup* group=0, 
-            ActiveState state=Activated,
-            unsigned long stack_size = DEFAULT_STACKSIZE );
+    Thread( Runnable     * runner,
+            const char   * name,
+            ThreadGroup  * group = 0,
+            ActiveState    state = Activated,
+            unsigned long  stack_size = DEFAULT_STACKSIZE );
+
+  private:
+    Thread( ThreadGroup * g, const char * name );  // This is a private constructor for Thread.cc use only.
+  public:
 
     /////////////////////////////////////////////////////////////////////
     // Allows threaded code to specify a special routine to be called
@@ -374,7 +382,6 @@ DESCRIPTION
     bool detached_;
     bool activated_;
     void os_start(bool stopped);
-    Thread(ThreadGroup* g, const char* name);
 
     static bool initialized;
     static void initialize();
