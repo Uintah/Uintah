@@ -11,12 +11,12 @@
     <!--   T  I  M  E     V  A  R  I  A  B  L  E  S                         -->
     <!--____________________________________________________________________-->
    <Time>
-       <maxTime>            0.005         </maxTime>
+       <maxTime>            0.006         </maxTime>
        <initTime>           0.0         </initTime>
        <delt_min>           0.0         </delt_min>
        <delt_max>           1e-5        </delt_max>
        <delt_init>          1.0e-9      </delt_init>
-       <timestep_multiplier>0.8         </timestep_multiplier>
+       <timestep_multiplier>0.6         </timestep_multiplier>
    </Time>    
     <!--____________________________________________________________________-->
     <!--   G  R  I  D     V  A  R  I  A  B  L  E  S                         -->
@@ -77,11 +77,11 @@
        <Level>
            <Box label = "1">
               <lower>        [0,0,0]    </lower>
-              <upper>        [1.2,1.2,0.02]    </upper>
+              <upper>        [1.2,1.2,0.025]    </upper>
                <extraCells>  [1,1,1]     </extraCells>
               <patches>      [2,2,1]     </patches>
            </Box>
-           <spacing>   [0.025,0.025,0.02]  </spacing>
+           <spacing>   [0.025,0.025,0.025]  </spacing>
        </Level>
     </Grid>
    
@@ -90,7 +90,7 @@
     <!--____________________________________________________________________-->
    <DataArchiver>
       <filebase>symAnnulus.uda</filebase>
-      <outputInterval> 2.5e-4 </outputInterval>
+      <outputInterval> 1.0e-4 </outputInterval>
      <!--
        <compression>gzip</compression>
      -->
@@ -130,16 +130,24 @@
     <CFD>
          <cfl>0.25</cfl>
        <ICE>
-        <advection type = "FirstOrder"/>
+        <advection type = "SecondOrder"/>
         <ADD_HEAT>
           <add_heat_matls>   [2]      </add_heat_matls>
-          <add_heat_coeff>   [8.0e10] </add_heat_coeff>         
+          <add_heat_coeff>   [3.0e9] </add_heat_coeff>         
           <add_heat_t_start>  0       </add_heat_t_start>
-          <add_heat_t_final>  0       </add_heat_t_final>  <!-- this needs to be changed -->
+          <add_heat_t_final>  0.005  </add_heat_t_final>  <!-- this needs to be changed -->
         </ADD_HEAT>
         
       </ICE> 
     </CFD>
+    <MPM>
+        <time_integrator>explicit</time_integrator>
+        <interpolator>gimp</interpolator>
+        <testForNegTemps_mpm>true</testForNegTemps_mpm>
+        <DoExplicitHeatConduction>false</DoExplicitHeatConduction>
+        <withColor>      false      </withColor>
+        <artificial_damping_coeff> 1.0 </artificial_damping_coeff>
+    </MPM>
 
     <!--____________________________________________________________________-->
     <!--     P  H  Y  S  I  C  A  L     C  O  N  S  T  A  N  T  S           -->
@@ -233,8 +241,6 @@
           </exchange_coefficients>
         </exchange_properties> 
     </MaterialProperties>
-            
 
-       
 </Uintah_specification>
 
