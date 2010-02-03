@@ -25,6 +25,7 @@ d_debugging = problem_type;
 [sf]  = shapeFunctions;           % load all the shape functions
 [gf]  = gridFunctions;            % load all grid based function
 [IF]  = initializationFunctions;   % load initialization functions
+[pf]  = particleFunctions;        % load particle function
 
 %  valid options:
 %  problem type:  impulsiveBar, oscillator, compaction advectBlock, mms
@@ -272,6 +273,13 @@ if strcmp(problem_type, 'mms')
     xp(:,l)  =  xp_initial(:,l) + dp(:,l);
   end
 end
+
+
+
+[P] = pf.createParticleStruct(xp,massP,velP,stressP,vol,lp);
+[P] = pf.createGhostParticles(P, Levels, Limits);
+
+
 
 %__________________________________
 titleStr(2) = {sprintf('Computational Domain 0,%g, MPM bar %g,%g',domain,bar_min, bar_max)};

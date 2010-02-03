@@ -95,11 +95,11 @@ function [IF] = initializationFunctions
       fL = Levels{fl};
       cL = Levels{fl-1};
       
-      fineCFI_L  = fL.fineCFI_nodes(left)
-      fineCFI_R  = fL.fineCFI_nodes(right)
+      fineCFI_L  = fL.fineCFI_nodes(left);
+      fineCFI_R  = fL.fineCFI_nodes(right);
       
-      coarseCFI_L = cL.coarseCFI_nodes(left)
-      coarseCFI_R = cL.coarseCFI_nodes(right)
+      coarseCFI_L = cL.coarseCFI_nodes(left);
+      coarseCFI_R = cL.coarseCFI_nodes(right);
       
       %fine level
       Lx(fineCFI_L,left, fl) = cL.dx;
@@ -289,9 +289,9 @@ function [IF] = initializationFunctions
     % Level 2
     nPatchesL2    = int32(1);               % partition the domain into nPatches
     PatchesL2     = cell(nPatchesL2,1);     % array that holds the individual region information
-    P.min         = domain/3.0;                       
-    P.max         = 2.0*domain/3.0;
-    P.refineRatio = 2;
+    P.min         = domain/3.0                    
+    P.max         = 2.0*domain/3.0
+    P.refineRatio = 1;
     P.dx          = L1_dx/P.refineRatio;
     P.volP        = P.dx/PPC;
     P.NN          = int32( (P.max - P.min)/P.dx +1 );
@@ -304,36 +304,42 @@ function [IF] = initializationFunctions
     Levels{1}.dx      = PatchesL1{1}.dx;
     Levels{1}.Patches = PatchesL1;
     Levels{1}.nPatches= nPatchesL1;
+    Levels{1}.RR      = 1;                          % refinement Ratio always 1
     
     Levels{2}.dx      = PatchesL2{1}.dx;
     Levels{2}.Patches = PatchesL2;
     Levels{2}.nPatches= nPatchesL2;
+    Levels{2}.RR      = PatchesL2{1}.refineRatio;  % refinement Ratio
 
-    % increase the number of nodes in the first and last patch if using gimp on level 1;
-    if(strcmp(interpolation,'GIMP'))
-      L1 = Levels{1};
-      firstP = L1.Patches{1};
-      lastP  = L1.Patches{L1.nPatches};
+    %______________________________________________________________________
+    % On the coarsest level & GIMP there must be 1 extra cell
+    % On fine levels & GIMP there must be 3 extra cells
+    %        *---EC---*           *---EC---*           
+    % L-1    |..|..|..|..|..|..|..|..|..|..|         RefineRatio = 2
+    % L-0 |.....|.....|.....|.....|.....|.....|
+    %
+    % On fine levels & LINEAR there must be 2 extra cells
+    %          *--EC--*           *-EC--*           
+    % L-1       |..|..|..|..|..|..|..|..|            RefineRatio = 2
+    % L-0 |.....|.....|.....|.....|.....|.....|  
+  
+    % increase the number of nodes in the first and last patch if using gimp;
+    if(strcmp(interpolation,'LINEAR'))
+      [Levels] = AddExtraCells(Levels, 1, 1)
       
-      Levels{1}.Patches{1}.NN             = firstP.NN  + 1;
-      Levels{1}.Patches{1}.min            = firstP.min - firstP.dx;
-      
-      Levels{1}.Patches{L1.nPatches}.NN   = lastP.NN  + 1;
-      Levels{1}.Patches{L1.nPatches}.max  = lastP.max + lastP.dx;
-    end;
-
-if (0)        % currently extracells are not used.
-    % Define the extra cells L & R for each region.
-    for p=1:nPatches
-      Patches{p}.EC(1) = 0;    
-      Patches{p}.EC(2) = 0;    
+      for l=2:maxLevels
+        [Levels] = AddExtraCells(Levels, l, 2)
+      end
     end
-
+    
     if(strcmp(interpolation,'GIMP'))
-      Patches{1}.EC(1)        = 1;
-      Patches{nPatches}.EC(2) = 1;
-    end;
-end
+      [Levels] = AddExtraCells(Levels, 1, 1)
+      
+      for l=2:maxLevels
+        [Levels] = AddExtraCells(Levels, l, 3)
+      end
+      
+    end
 
     % Count the number of nodes in a level
     NN_max = 0;
@@ -396,7 +402,7 @@ end
       
       for p=1:L.nPatches
         P = L.Patches{p};
-        fprintf( 'level: %g patch %g, min: %g, \t max: %g \t refineRatio: %g dx: %g, NN: %g lo: %g hi: %g\n',l,p, P.min, P.max, P.refineRatio, P.dx, P.NN, P.nodeLo, P.nodeHi)
+        fprintf( 'level: %g patch %g, min: %g, \t max: %g \t refineRatio: %g dx: %g, NN: %g lo: %g hi: %g\n',l,p, P.min, P.max, P.refineRatio, P.dx, P.NN, P.nodeLo, P.nodeHi);
       end
     end
 
@@ -421,6 +427,26 @@ end
     
   end
   
+  %__________________________________
+  %  This function adds ncells of ghostcells to level l
+  function [Levels] = AddExtraCells(Levels, l, ncells)
+  
+    L = Levels{l};                                              
+    dx = L.dx;                                                        
+                                                                      
+    firstP = L.Patches{1};                                    
+    Levels{l}.Patches{1}.NN             = firstP.NN  + ncells;        
+    Levels{l}.Patches{1}.min            = firstP.min -  dx * ncells;  
+    
+    lastP = Levels{l}.Patches{L.nPatches};
+    Levels{l}.Patches{L.nPatches}.NN   = lastP.NN  + ncells;          
+    Levels{l}.Patches{L.nPatches}.max  = lastP.max + dx * ncells; 
+    Levels{l}.EC = ncells;
+    
+    fprintf('\nAddExtraCells \n');
+    fprintf('before: L-%i  P1.NN %g, P1.min: %g  LP.NN:%g LP.min: %g \n',l, firstP.NN, firstP.min, lastP.NN, lastP.max);
+    fprintf('After:  L-%i  P1.NN %g, P1.min: %g  LP.NN:%g LP.min: %g \n',l,Levels{l}.Patches{1}.NN, Levels{l}.Patches{1}.min, Levels{l}.Patches{L.nPatches}.NN, Levels{l}.Patches{L.nPatches}.max);
+  end
   
   %______________________________________________________________________
   function [Limits] = NN_NP_allLevels(Levels, Limits)
