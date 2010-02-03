@@ -58,6 +58,7 @@ using std::vector;
       //non PermanentParticleState
       const VarLabel* pTemperatureGradientLabel; //for heat conduction
       const VarLabel* pPressureLabel;
+      const VarLabel* pScratchVecLabel;
       const VarLabel* pLocalizedMPMLabel;
       const VarLabel* pVolumeDeformedLabel;
       const VarLabel* TotalVolumeDeformedLabel;

@@ -27,8 +27,6 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-
-
 #include <Core/Labels/MPMLabel.h>
 #include <Core/Math/Matrix3.h>
 #include <Core/Math/Short27.h>
@@ -62,6 +60,9 @@ MPMLabel::MPMLabel()
   
   pLocalizedMPMLabel  = VarLabel::create( "p.localizedMPM",
 			ParticleVariable<int>::getTypeDescription() );
+  
+  pScratchVecLabel  = VarLabel::create( "p.scratchvec",
+			ParticleVariable<Vector>::getTypeDescription() );
   
   // for thermal stress
   pTempCurrentLabel = VarLabel::create( "p.tempCurrent",
@@ -609,6 +610,7 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(pParticleIDLabel);
   VarLabel::destroy(pParticleIDLabel_preReloc);
   VarLabel::destroy(pPressureLabel);
+  VarLabel::destroy(pScratchVecLabel);
   VarLabel::destroy(pLocalizedMPMLabel);
   VarLabel::destroy(pSizeLabel);
   VarLabel::destroy(pSizeLabel_preReloc);
