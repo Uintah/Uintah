@@ -21,20 +21,22 @@ function [IF] = initializationFunctions
     for fineLevel=Limits.maxLevels:-1:2
       coarseLevel = fineLevel -1;
       L = Levels{fineLevel};
+      nExtraCells = L.EC;
       
       % fine level CFI nodes
-      cfi_left  = L.Patches{1}.nodeLo;
-      cfi_right = L.Patches{L.nPatches}.nodeHi;
+      cfi_left  = L.Patches{1}.nodeLo + nExtraCells;
+      cfi_right = L.Patches{L.nPatches}.nodeHi - nExtraCells;
       Levels{fineLevel}.fineCFI_nodes(left)  = cfi_left;
       Levels{fineLevel}.fineCFI_nodes(right) = cfi_right;
       
       % underlying CFI nodes on the coarse level
-      cfi_left  = GF.mapNodetoCoarser(nodePos(cfi_left,fineLevel),  fineLevel,nodePos,Levels);
+      cfi_left  = GF.mapNodetoCoarser(nodePos(cfi_left, fineLevel), fineLevel,nodePos,Levels);
       cfi_right = GF.mapNodetoCoarser(nodePos(cfi_right,fineLevel), fineLevel,nodePos,Levels);
       Levels{coarseLevel}.coarseCFI_nodes(left)  = cfi_left;
       Levels{coarseLevel}.coarseCFI_nodes(right) = cfi_right;
+      
+      fprintf('FineLevel:%g, CoarseLevel:%g, fineCFI_Nodes(%g, %g) coarseCFI_Nodes(%g, %g)\n',fineLevel,coarseLevel, Levels{fineLevel}.fineCFI_nodes(left), Levels{fineLevel}.fineCFI_nodes(right), Levels{coarseLevel}.coarseCFI_nodes(left), Levels{coarseLevel}.coarseCFI_nodes(right) ); 
     end
-  
   end
  
   %______________________________________________________________________
@@ -341,7 +343,7 @@ function [IF] = initializationFunctions
       
     end
 
-    % Count the number of nodes in a level
+    % Count the number of nodes (NN) and number of interior nodes in a level
     NN_max = 0;
     
     for l=1:maxLevels
@@ -353,6 +355,9 @@ function [IF] = initializationFunctions
         NN = NN + P.NN;
       end
       Levels{l}.NN = NN;
+      Levels{l}.interiorNN    = NN - 2*L.EC;
+      Levels{l}.N_interiorLo  = 1 + L.EC;
+      Levels{l}.N_interiorHi  = Levels{l}.interiorNN;      
       NN_max = max(NN_max, NN);
     end
     
@@ -360,14 +365,16 @@ function [IF] = initializationFunctions
     for l=1:maxLevels
       L = Levels{l};
       NN = int32(1);
+      lp = L.nPatches;
       
-      for p=1:L.nPatches
+      for p=1:lp
         P = L.Patches{p};
         Levels{l}.Patches{p}.nodeLo = NN;
         Levels{l}.Patches{p}.nodeHi = NN + P.NN -1;
         NN = NN + P.NN;
       end
-      Levels{l};
+      Levels{l}.Patches{1}.interiorNodeLo  = Levels{l}.Patches{1}.nodeLo  + L.EC;
+      Levels{l}.Patches{lp}.interiorNodeHi = Levels{l}.Patches{lp}.nodeHi - L.EC;
     end
     
     % compute the extents of each level
@@ -405,6 +412,11 @@ function [IF] = initializationFunctions
         fprintf( 'level: %g patch %g, min: %g, \t max: %g \t refineRatio: %g dx: %g, NN: %g lo: %g hi: %g\n',l,p, P.min, P.max, P.refineRatio, P.dx, P.NN, P.nodeLo, P.nodeHi);
       end
     end
+    for l=1:maxLevels
+      L = Levels{l};
+      fprintf('level: %g, dx: %g nPatches: %g NN:%g min: %g  max:%g  ',l, L.dx, L.nPatches, L.NN, L.min, L.max );
+      fprintf('\t interiorNN: %g, N_interiorLo: %g N_interiorHi: %g interiorMin: %g   interiorMax: %g\n',L.interiorNN, L.N_interiorLo, L.N_interiorHi,L.interiorMin, L.interiorMax);
+    end
 
     % defines the limits
     Limits.maxLevels = maxLevels;
@@ -435,13 +447,17 @@ function [IF] = initializationFunctions
     dx = L.dx;                                                        
                                                                       
     firstP = L.Patches{1};                                    
-    Levels{l}.Patches{1}.NN             = firstP.NN  + ncells;        
+    Levels{l}.Patches{1}.NN             = firstP.NN  + ncells;      
     Levels{l}.Patches{1}.min            = firstP.min -  dx * ncells;  
     
     lastP = Levels{l}.Patches{L.nPatches};
-    Levels{l}.Patches{L.nPatches}.NN   = lastP.NN  + ncells;          
-    Levels{l}.Patches{L.nPatches}.max  = lastP.max + dx * ncells; 
+    Levels{l}.Patches{L.nPatches}.NN          = lastP.NN  + ncells;
+    Levels{l}.Patches{L.nPatches}.interiorMax = lastP.max;        
+    Levels{l}.Patches{L.nPatches}.max         = lastP.max + dx * ncells; 
+    
     Levels{l}.EC = ncells;
+    Levels{l}.interiorMin  = firstP.min;
+    Levels{l}.interiorMax  = lastP.max; 
     
     fprintf('\nAddExtraCells \n');
     fprintf('before: L-%i  P1.NN %g, P1.min: %g  LP.NN:%g LP.min: %g \n',l, firstP.NN, firstP.min, lastP.NN, lastP.max);
