@@ -143,18 +143,22 @@ function [IF] = initializationFunctions
     maxLevels = Limits.maxLevels;
     
     for L=1:maxLevels
-      NN = Levels{L}.NN;
+      
+      N_interiorLo = Levels{L}.N_interiorLo;
+      N_interiorHi = Levels{L}.N_interiorHi;
 
       fprintf('-----------------------Level %g\n',L);
       ip = 1;
 
-      startNode = 1;
+      startNode = N_interiorLo;
       if( strcmp(interpolation,'GIMP') && L == 1 )
         startNode = 2;
+        fprintf(' this needs to be fixed \n');
+        input('');
       end
 
 
-      for n=startNode:NN-1
+      for n=startNode:N_interiorHi-1
         dx_p = (nodePos(n+1,L) - nodePos(n,L) )/double(PPC);
 
         offset = dx_p/2.0;
@@ -189,7 +193,7 @@ function [IF] = initializationFunctions
         xp_tmp(ip,L) = xp(ip);
       end
 
-      NP_max = max(NP_max,NP);      % nax number of particles on any level
+      NP_max = max(NP_max,NP);      % max number of particles on any level
       Levels{L}.NP = NP;            % number of particles on that level
       
     end  % levels loop
@@ -357,9 +361,25 @@ function [IF] = initializationFunctions
       Levels{l}.NN = NN;
       Levels{l}.interiorNN    = NN - 2*L.EC;
       Levels{l}.N_interiorLo  = 1 + L.EC;
-      Levels{l}.N_interiorHi  = Levels{l}.interiorNN;      
+      Levels{l}.N_interiorHi  = Levels{l}.N_interiorLo + Levels{l}.interiorNN - 1;
       NN_max = max(NN_max, NN);
     end
+    
+    %Determine what nodes are the extra cell nodes
+    for l=1:maxLevels
+      L = Levels{l};
+      NN = L.NN;
+      c = 1;
+      for n=1:NN
+        if(n < L.N_interiorLo || n > L.N_interiorHi)
+          EC_nodes(c) = n;
+          c = c+1;
+        end
+      end
+      Levels{l}.EC_nodes = EC_nodes;
+      Levels{l}
+    end
+    
     
     % determine low and high nodes for each patch
     for l=1:maxLevels

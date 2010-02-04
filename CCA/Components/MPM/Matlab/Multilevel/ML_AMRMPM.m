@@ -276,8 +276,8 @@ end
 
 
 
-[P] = pf.createParticleStruct(xp,massP,velP,stressP,vol,lp);
-[P] = pf.createGhostParticles(P, Levels, Limits);
+%[P] = pf.createParticleStruct(xp,massP,velP,stressP,vol,lp);
+%[P] = pf.createGhostParticles(P, Levels, Limits);
 
 
 
@@ -954,14 +954,27 @@ end
 %__________________________________
 function drawNodes(figure1,nodePos,Levels,Limits)
   % draw vertical lines at each node 
-  levelColors = ['m','g','r','b','k'];
-  for L=1:Limits.maxLevels
-    NN = Levels{L}.NN;
+  colors = ['m','g','r','b','k'];
+  for l=1:Limits.maxLevels
+    L = Levels{l};
+    
+    % first draw all the lines including the extra cells
+    NN = L.NN;
     for n=1:NN            
-      x = nodePos(n,L);
+      x = nodePos(n,l);
       [pt1,pt2] = dsxy2figxy([x,x],ylim);
-      annotation(figure1,'line',pt1,pt2,'Color',levelColors(L));
+      annotation(figure1,'line',pt1,pt2,'Color',colors(l));
     end
+    
+    % color the extra cell nodes
+    ECN = length(L.EC_nodes);
+    for c=1:ECN   
+      n = L.EC_nodes(c);         
+      x = nodePos(n,l);
+      [pt1,pt2] = dsxy2figxy([x,x],ylim);
+      annotation(figure1,'line',pt1,pt2,'Color','b');
+    end
+    
   end
 end
 
