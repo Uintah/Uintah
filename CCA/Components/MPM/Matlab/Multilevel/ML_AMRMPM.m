@@ -276,9 +276,9 @@ end
 
 
 
-[P] = pf.createParticleStruct(xp,massP,velP,stressP,vol,lp);
-[EC_P] = pf.createExtraCellParticles(P, Levels, Limits, nodePos, interpolation)
-
+[P]       = pf.createParticleStruct(xp,massP,velP,stressP,vol,lp);
+[pID]     = pf.findExtraCellParticles(P, Levels, Limits, nodePos, interpolation)
+[EC_P]    = pf.createEC_particleStruct(P, pID, Levels, Limits);
 
 
 %__________________________________
