@@ -270,14 +270,14 @@ if strcmp(problem_type, 'mms')
 
     lp(:,l)  = lp(:,l) .* Fp(:,l);
     vol(:,l) = vol(:,l) .* Fp(:,l);
-    xp(:,l)  =  xp_initial(:,l) + dp(:,l);
+    xp(:,l)  = xp_initial(:,l) + dp(:,l);
   end
 end
 
 
 
-%[P] = pf.createParticleStruct(xp,massP,velP,stressP,vol,lp);
-%[P] = pf.createGhostParticles(P, Levels, Limits);
+[P] = pf.createParticleStruct(xp,massP,velP,stressP,vol,lp);
+[EC_P] = pf.createExtraCellParticles(P, Levels, Limits, nodePos, interpolation)
 
 
 
@@ -1055,7 +1055,7 @@ function [nodePos_1D, varargout ] = ML_Grid_to_1D( Levels, Limits, nodePos, vara
     for l=1:Limits.maxLevels
       L = Levels{l};
       for ig =1:L.NN
-        test = gf.hasFinerCell(nodePos(ig,l),l,Levels,Limits);
+        test = gf.hasFinerCell(nodePos(ig,l),l,Levels,Limits, 'withExtraCells');
         if( test == 0)
           c = c+1;
           varG_1D(c) = varG(ig,l);
