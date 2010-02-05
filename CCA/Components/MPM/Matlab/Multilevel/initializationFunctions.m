@@ -166,7 +166,7 @@ function [IF] = initializationFunctions
         for p = 1:PPC
           xp_new = nodePos(n,L) + double(p-1) * dx_p + offset;
           
-          test = GF.hasFinerCell(xp_new, L, Levels, Limits);
+          test = GF.hasFinerCell(xp_new, L, Levels, Limits, 'withoutExtraCells');
 
           if( xp_new >= bar_min && xp_new <= bar_max  && (test==0) )
 
@@ -297,7 +297,7 @@ function [IF] = initializationFunctions
     PatchesL2     = cell(nPatchesL2,1);     % array that holds the individual region information
     P.min         = domain/3.0                    
     P.max         = 2.0*domain/3.0
-    P.refineRatio = 1;
+    P.refineRatio = 2;
     P.dx          = L1_dx/P.refineRatio;
     P.volP        = P.dx/PPC;
     P.NN          = int32( (P.max - P.min)/P.dx +1 );
@@ -369,15 +369,10 @@ function [IF] = initializationFunctions
     for l=1:maxLevels
       L = Levels{l};
       NN = L.NN;
-      c = 1;
-      for n=1:NN
-        if(n < L.N_interiorLo || n > L.N_interiorHi)
-          EC_nodes(c) = n;
-          c = c+1;
-        end
-      end
+      
+      n = [1:NN];
+      EC_nodes = find( n<L.N_interiorLo | n>L.N_interiorHi);
       Levels{l}.EC_nodes = EC_nodes;
-      Levels{l}
     end
     
     
@@ -422,26 +417,16 @@ function [IF] = initializationFunctions
         dx_min = min(dx_min,P.dx);
       end
     end
-    
-    %  output grid
-    for l=1:maxLevels
-      L = Levels{l};
-      
-      for p=1:L.nPatches
-        P = L.Patches{p};
-        fprintf( 'level: %g patch %g, min: %g, \t max: %g \t refineRatio: %g dx: %g, NN: %g lo: %g hi: %g\n',l,p, P.min, P.max, P.refineRatio, P.dx, P.NN, P.nodeLo, P.nodeHi);
-      end
-    end
-    for l=1:maxLevels
-      L = Levels{l};
-      fprintf('level: %g, dx: %g nPatches: %g NN:%g min: %g  max:%g  ',l, L.dx, L.nPatches, L.NN, L.min, L.max );
-      fprintf('\t interiorNN: %g, N_interiorLo: %g N_interiorHi: %g interiorMin: %g   interiorMax: %g\n',L.interiorNN, L.N_interiorLo, L.N_interiorHi,L.interiorMin, L.interiorMax);
-    end
-
+   
     % defines the limits
     Limits.maxLevels = maxLevels;
     Limits.NN_max    = NN_max;
 
+
+    %  output grid
+    GF.outputLevelInfo(Levels,Limits);
+    
+    
     % bulletproofing:
     for l=1:maxLevels
       L = Levels{l};
