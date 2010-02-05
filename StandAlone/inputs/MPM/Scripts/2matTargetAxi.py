@@ -40,6 +40,7 @@ for i in range(0,Nplates,2):
         outputfile.write('   <res>[1,1,1]</res> \n')
         outputfile.write('   <velocity>[0.0,0.0,0.0]</velocity> \n')
         outputfile.write('   <temperature>294</temperature> \n')
+        outputfile.write('   <color>-1</color> \n')
         outputfile.write('  </geom_object> \n')
         outputfile.write(' \n')
 
@@ -48,6 +49,7 @@ for i in range(0,Nplates,2):
         outputfile.write('    <res>[2,2,1]</res> \n')
         outputfile.write('    <velocity>[0.0,0.0,0.0]</velocity> \n')
         outputfile.write('    <temperature>294</temperature> \n')
+        outputfile.write('    <color>-1</color> \n')
         outputfile.write('  </geom_object> \n')
         outputfile.write(' \n')
         
@@ -67,6 +69,7 @@ for i in range(0,Nplates,2):
         outputfile2.write('   <res>[1,1,1]</res> \n')
         outputfile2.write('   <velocity>[0.0,0.0,0.0]</velocity> \n')
         outputfile2.write('   <temperature>294</temperature> \n')
+        outputfile2.write('   <color>-1</color> \n')
         outputfile2.write('  </geom_object> \n')
         outputfile2.write(' \n')
 
@@ -75,6 +78,7 @@ for i in range(0,Nplates,2):
         outputfile2.write('    <res>[2,2,1]</res> \n')
         outputfile2.write('    <velocity>[0.0,0.0,0.0]</velocity> \n')
         outputfile2.write('    <temperature>294</temperature> \n')
+        outputfile2.write('    <color>-1</color> \n')
         outputfile2.write('  </geom_object> \n')
         outputfile2.write(' \n')
 
