@@ -1644,9 +1644,10 @@ Tag::validate( const ProblemSpec * ps, unsigned int depth /* = 0 */ )
         bool valuesMustAllBe = found[ 0 ];
         for( unsigned int childNamePos = 1; childNamePos < childReqs_[ pos ]->childrenList.size(); childNamePos++ ) {
           if( found[ childNamePos ] != valuesMustAllBe ) {
-            throw ProblemSetupException( "Error with " + getCompleteName() + ": " + "ALL_OR_NONE_OF.\n" +
-                                         "Need all or none, but found some of: '" +
-                                         concatStrings( childReqs_[pos]->childrenList ) + "'\n" +
+            throw ProblemSetupException( "Error with " + getCompleteName() + ": \n" +
+                                         "Incomplete option specification.  " +
+                                         "You must specify all of the following options: '" +
+                                         concatStrings( childReqs_[pos]->childrenList ) + "' or none of them.\n" +
                                          getErrorInfo( textNode ),
                                          __FILE__, __LINE__ );
           }
