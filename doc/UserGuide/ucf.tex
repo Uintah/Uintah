@@ -183,21 +183,24 @@ command from the \tt StandAlone \normalfont directory:
 \begin{Verbatim}[fontsize=\footnotesize]
 inputs/labelNames component
 \end{Verbatim}
-where \tt component \normalfont is, e.g., \tt mpm, \normalfont \tt ice, \normalfont etc.
+where \TT{component} is, e.g., \TT{mpm}, \TT{ice,} etc.
 
 Check-pointing information can be created that provides a mechanism for
-restarting a simulation at a later point in time.  The \tt
-<checkpoint> \normalfont tag with the \tt cycle \normalfont and \tt
-interval \normalfont attributes describe how many copies of checkpoint
-data is stored (cycle)  and how often it is generated (interval).
+restarting a simulation at a later point in time.  The \TT{<checkpoint>}
+tag with the \TT{cycle} and \TT{ interval} attributes describe how many
+copies of checkpoint data is stored (cycle) and how often it is generated
+(interval).  You may also use the \TT{walltimeStart} and \TT{walltimeInterval}
+options for specifying when and how offen a checkpoint will be output based
+on wall-clock time.
 
 As an example of checkpoint data that has two timesteps worth of
-checkpoint data that is created every .01 seconds of simulation time
+che dckpoint data that is created every .01 seconds of simulation time
 are shown below:
 
 \begin{Verbatim}[fontsize=\footnotesize]
 <checkpoint cycle = "2" interval = "0.01"/>
 \end{Verbatim}
+% d
 
 To restart from a checkpointed archive, simply put ``\tt -restart\normalfont" in the
 sus command-line arguments and specify the .uda directory instead of
