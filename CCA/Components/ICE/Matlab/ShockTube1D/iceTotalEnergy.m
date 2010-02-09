@@ -27,8 +27,8 @@ P.debugAdvectRho    = 0;         % Debug printouts in advectRho()
 P.debugAdvectQ      = 0;         % Debug printouts in advectQ()
 P.printRange        = [27:32];   % Range of indices to be printed out (around the shock front at the first timestep, for testing)
 P.plotInitialData   = 0;         % Plots initial data
-P.plotInterval      = 100;
-P.plotResults       = 0;         % plot intermediate data
+P.plotInterval      = 50;
+P.plotResults       = 1;         % plot intermediate data
 
 %______________________________________________________________________
 %     Problem Setup
@@ -44,6 +44,7 @@ P.maxTimeSteps      = 2000       % Maximum number of timesteps [dimensionless]
 P.CFL               = 0.25;      % Courant number (~velocity*delT/delX) [dimensionless]
 P.advectionOrder    = 2;         % 1=1st-order advection operator; 2=possibly-limited-2nd-order
 P.gamma             = 1.4;       % gamma coefficient in the Equation of State (EOS)
+P.cv                = 1;
 
 Problem             = 'Test1';
 switch (Problem)
