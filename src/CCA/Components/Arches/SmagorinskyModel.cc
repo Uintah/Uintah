@@ -383,6 +383,8 @@ SmagorinskyModel::sched_computeScalarVariance(SchedulerP& sched,
     tsk->modifies(d_lab->d_normalizedScalarVarLabel);
   }
 
+  tsk->requires(Task::NewDW, d_lab->d_cellInfoLabel, Ghost::None);
+
   sched->addTask(tsk, patches, matls);
 }
 
@@ -622,6 +624,9 @@ SmagorinskyModel::sched_computeScalarDissipation(SchedulerP& sched,
   }else{
      tsk->modifies(d_lab->d_scalarDissSPLabel);
   }
+
+  tsk->requires(Task::NewDW, d_lab->d_cellInfoLabel, Ghost::None);
+
   sched->addTask(tsk, patches, matls);
 }
 
