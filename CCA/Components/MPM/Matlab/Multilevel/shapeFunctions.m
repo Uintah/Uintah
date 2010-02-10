@@ -11,17 +11,17 @@ function [sf] = shapeFunction()
   sf.findNodesAndWeightGradients_gimp2  = @findNodesAndWeightGradients_gimp2;
   %__________________________________
 %
-function[node, dx]=positionToNode(xp, nPatches, Patches)
+function[node]=positionToNode(xp, dx, Patches)
  
   n_offset = 1;                              % the left node is owned by the right patch 
   node = int32(-9);
+  nPatches = length(Patches);
   
   for r=1:nPatches
     R = Patches{r};
-    dx = R.dx;
     
     if ((xp >= R.min) && (xp < R.max))   
-      n    = floor((xp - R.min)/R.dx);      % # of nodes from the start of the current region
+      n    = floor((xp - R.min)/dx);      % # of nodes from the start of the current region
       node = n + n_offset;                  % add an offset to the local node number
 
       %fprintf( 'region: %g, n: %g, node:%g, xp: %g dx: %g R.min: %g, R.max: %g n_offset: %g \n',r, n, node, xp, dx, R.min, R.max,n_offset);
@@ -44,8 +44,8 @@ end
 
 
 %__________________________________
-function[nodes,dx]=positionToClosestNodes(xp,nPatches,Patches, nodePos)
-  [node, dx]=positionToNode(xp, nPatches, Patches);
+function[nodes,dx]=positionToClosestNodes(xp, dx, Patches, nodePos)
+  [node]=positionToNode(xp, dx, Patches);
   
   relativePosition = abs((xp) - nodePos(node))/dx;
   
@@ -68,15 +68,17 @@ function[nodes,dx]=positionToClosestNodes(xp,nPatches,Patches, nodePos)
 end
 %__________________________________
 % returns the initial volP and lp
-function[volP_0, lp_0]=positionToVolP(xp, nPatches, Patches)
+function[volP_0, lp_0]=positionToVolP(xp,dx, Patches)
   volP_0 = -9.0;
   lp_0 = -9.0;
  
+  nPatches = length(Patches);
+  
   for r=1:nPatches
-    R = Patches{r};
-    if ( (xp >= R.min) && (xp < R.max) )
-      volP_0 = R.dx;
-      lp_0   = R.lp;
+    P = Patches{r};
+    if ( (xp >= P.min) && (xp < P.max) )
+      volP_0 = dx;
+      lp_0   = P.lp;
     end
   end
 end
@@ -85,14 +87,14 @@ end
 %__________________________________
 %  Equation 14 of "Structured Mesh Refinement in Generalized Interpolation Material Point Method
 %  for Simulation of Dynamic Problems"
-function [nodes,Ss]=findNodesAndWeights_linear(xp, notused, nPatches, Patches, nodePos, Lx)
+function [nodes,Ss]=findNodesAndWeights_linear(xp, notused, dx, Patches, nodePos, Lx)
   global NSFN;
   % find the nodes that surround the given location and
   % the values of the shape functions for those nodes
   % Assume the grid starts at x=0.  This follows the numenclature
   % of equation 12 of the reference
 
-  [node, dx]=positionToNode(xp, nPatches, Patches);  
+  [node]=positionToNode(xp, dx, Patches);  
 
   nodes(1)= node;
   nodes(2)= node+1;
@@ -155,10 +157,10 @@ end
 
 %__________________________________
 %  Reference:  Uintah Documentation Chapter 7 MPM, Equation 7.16
-function [nodes,Ss]=findNodesAndWeights_gimp(xp, lp, nPatches, Patches, nodePos, notUsed)
+function [nodes,Ss]=findNodesAndWeights_gimp(xp, lp, dx, Patches, nodePos, notUsed)
   global NSFN;
 
- [nodes,dx]=positionToClosestNodes(xp,nPatches,Patches, nodePos);
+ [nodes]=positionToClosestNodes(xp, dx, Patches, nodePos);
   
   L = dx;
   
@@ -209,14 +211,14 @@ end
 %__________________________________
 %  Equation 15 of "Structured Mesh Refinement in Generalized Interpolation Material Point Method
 %  for Simulation of Dynamic Problems"
-function [nodes,Ss]=findNodesAndWeights_gimp2(xp, lp, nPatches, Patches, nodePos, Lx)
+function [nodes,Ss]=findNodesAndWeights_gimp2(xp, lp, dx, Patches, nodePos, Lx)
 
   global NSFN;
   % find the nodes that surround the given location and
   % the values of the shape functions for those nodes
   % Assume the grid starts at x=0.  This follows the numenclature
   % of equation 15 of the reference
-  [nodes,dx]=positionToClosestNodes(xp,nPatches,Patches, nodePos);
+  [nodes]=positionToClosestNodes(xp, dx, Patches, nodePos);
  
   for ig=1:NSFN
     node = nodes(ig);
@@ -286,7 +288,7 @@ function [nodes,Ss]=findNodesAndWeights_gimp2(xp, lp, nPatches, Patches, nodePos
   % error checking
   % Only turn this on with single resolution grids
   if(0)
-  [nodes,Ss_old]=findNodesAndWeights_gimp(xp, nPatches, Patches, nodePos, Lx);
+  [nodes,Ss_old]=findNodesAndWeights_gimp(xp, dx, Patches, nodePos, Lx);
   for ig=1:NSFN
     if ( abs(Ss_old(ig)-Ss(ig)) > 1e-10 )
       fprintf(' The methods (old/new) for computing the shape functions dont match\n');
@@ -299,13 +301,13 @@ end
 
 %__________________________________
 %  Reference:  Uintah Documentation Chapter 7 MPM, Equation 7.14
-function [nodes,Gs, dx]=findNodesAndWeightGradients_linear(xp, notUsed, nPatches, Patches, nodePos, notUsed2)
+function [nodes,Gs]=findNodesAndWeightGradients_linear(xp, notUsed, dx, Patches, nodePos, notUsed2)
  
   % find the nodes that surround the given location and
   % the values of the gradients of the linear shape functions.
   % Assume the grid starts at x=0.
 
-  [node, dx]=positionToNode(xp,nPatches, Patches);
+  [node]=positionToNode(xp, dx, Patches);
 
   nodes(1) = node;
   nodes(2) = nodes(1)+1;
@@ -316,13 +318,13 @@ end
 
 %__________________________________
 %  Reference:  Uintah Documentation Chapter 7 MPM, Equation 7.17
-function [nodes,Gs, dx]=findNodesAndWeightGradients_gimp(xp, lp, nPatches, Patches, nodePos,notUsed)
+function [nodes,Gs]=findNodesAndWeightGradients_gimp(xp, lp, dx, Patches, nodePos,notUsed)
 
   global NSFN;
   % find the nodes that surround the given location and
   % the values of the gradients of the shape functions.
   % Assume the grid starts at x=0.  
-  [nodes,dx]=positionToClosestNodes(xp,nPatches,Patches, nodePos);
+  [nodes]=positionToClosestNodes(xp, dx, Patches, nodePos);
   
   L  = dx;
   
@@ -371,11 +373,11 @@ end
 %__________________________________
 %  The equations for this function are derived in the hand written notes.  
 % The governing equations for the derivation come from equation 15.
-function [nodes,Gs, dx]=findNodesAndWeightGradients_gimp2(xp, lp, nPatches, Patches, nodePos,Lx)
+function [nodes,Gs]=findNodesAndWeightGradients_gimp2(xp, lp, dx, Patches, nodePos,Lx)
 
   global NSFN;
   
-  [nodes,dx]=positionToClosestNodes(xp,nPatches,Patches, nodePos);
+  [nodes]=positionToClosestNodes(xp, dx, Patches, nodePos);
   
   for ig=1:NSFN
     Gs(ig) = -9;

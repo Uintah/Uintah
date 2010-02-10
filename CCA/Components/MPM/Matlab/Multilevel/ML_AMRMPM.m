@@ -173,7 +173,7 @@ for l=1:maxLevels
    L = Levels{l};
    
   for ip=1: L.NP
-    [volP_0, lp_0] = sf.positionToVolP(P.xp(ip,l), L.nPatches, L.Patches);
+    [volP_0, lp_0] = sf.positionToVolP(P.xp(ip,l), L.dx, L.Patches);
 
     P.vol(ip,l)   = volP_0;
     P.massP(ip,l) = volP_0*density;
@@ -360,12 +360,12 @@ while t<t_final && tstep < max_tstep
     
     [xp, massP, velP, accl_extForceP, lp]= pf.getCopy(ps,'xp','massP','velP','accl_extForceP', 'lp');
     
-    for l=1:maxLevels   
+    for l=1:maxLevels
       L = Levels{l};
 
       for ip=1:L.NP
 
-        [nodes,Ss]=sf.findNodesAndWeights_linear(xp(ip,l), lp(ip,l), L.nPatches, L.Patches, nodePos(:,l), Lx(:,:,l));
+        [nodes,Ss]=sf.findNodesAndWeights_linear(xp(ip,l), lp(ip,l), L.dx, L.Patches, nodePos(:,l), Lx(:,:,l));
         for ig=1:NSFN
           massG(nodes(ig),l)     = massG(nodes(ig),l)     + massP(ip,l) * Ss(ig);
           velG(nodes(ig),l)      = velG(nodes(ig),l)      + massP(ip,l) * velP(ip,l) * Ss(ig);
@@ -411,7 +411,7 @@ while t<t_final && tstep < max_tstep
       L = Levels{l};
 
       for ip=1:L.NP
-        [nodes,Gs,dx]=sf.findNodesAndWeightGradients_linear(xp(ip,l), lp(ip,l), L.nPatches, L.Patches, nodePos(:,l), Lx(:,:,l));
+        [nodes,Gs,dx]=sf.findNodesAndWeightGradients_linear(xp(ip,l), lp(ip,l), L.dx, L.Patches, nodePos(:,l), Lx(:,:,l));
         for ig=1:NSFN
           intForceG(nodes(ig),l) = intForceG(nodes(ig),l) - Gs(ig) * P.stressP(ip,l) * P.vol(ip,l);
           %fprintf( 'L-%g  ig: %g,  internalForceG: %g source: %g \n', l, nodes(ig), intForceG(nodes(ig),l), Gs(ig) * stressP(ip,l) * vol(ip,l)   );
@@ -459,7 +459,7 @@ while t<t_final && tstep < max_tstep
   for l=1:maxLevels 
     L = Levels{l};
     if(L.NP > 0)     
-      [P.Fp(:,l), P.dF(:,l),P.vol(:,l),P.lp(:,l)] = computeDeformationGradient(P.xp(:,l),P.lp(:,l),dt,vel_new_G(:,l),P.Fp(:,l),L.NP, L.nPatches, L.Patches, nodePos(:,l),Lx(:,:,l));
+      [P.Fp(:,l), P.dF(:,l),P.vol(:,l),P.lp(:,l)] = computeDeformationGradient(P.xp(:,l),P.lp(:,l),dt,vel_new_G(:,l),P.Fp(:,l),L.NP, L.dx, L.Patches, nodePos(:,l),Lx(:,:,l));
       [P.stressP(:,l)]                      = computeStress(E,P.Fp(:,l),L.NP);
     end
   end
@@ -469,7 +469,7 @@ while t<t_final && tstep < max_tstep
     L = Levels{l};
     
     for ip=1:L.NP
-      [nodes,Ss]=sf.findNodesAndWeights_linear(P.xp(ip,l), P.lp(ip,l), L.nPatches, L.Patches, nodePos(:,l), Lx(:,:,l));
+      [nodes,Ss]=sf.findNodesAndWeights_linear(P.xp(ip,l), P.lp(ip,l), L.dx, L.Patches, nodePos(:,l), Lx(:,:,l));
       dvelP = 0.;
       dxp   = 0.;
 
@@ -698,7 +698,7 @@ end
 %______________________________________________________________________
 % functions
 %______________________________________________________________________
-function [Fp, dF, vol, lp] = computeDeformationGradient(xp,lp,dt,velG,Fp,NP, nRegions, Regions, nodePos,Lx)
+function [Fp, dF, vol, lp] = computeDeformationGradient(xp,lp,dt,velG,Fp,NP, dx, Regions, nodePos,Lx)
   global NSFN;
   global sf;
   
@@ -707,8 +707,8 @@ function [Fp, dF, vol, lp] = computeDeformationGradient(xp,lp,dt,velG,Fp,NP, nRe
   dF  = NaN(nn,1);
 
   for ip=1:NP
-    [nodes,Gs,dx]  = sf.findNodesAndWeightGradients_linear(xp(ip), lp(ip), nRegions, Regions, nodePos, Lx);
-    [volP_0, lp_0] = sf.positionToVolP(xp(ip), nRegions, Regions);
+    [nodes,Gs,dx]  = sf.findNodesAndWeightGradients_linear(xp(ip), lp(ip), dx, Regions, nodePos, Lx);
+    [volP_0, lp_0] = sf.positionToVolP(xp(ip), dx, Regions);
 
     gUp=0.0;
     for ig=1:NSFN
