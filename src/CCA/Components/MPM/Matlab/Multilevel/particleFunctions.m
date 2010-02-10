@@ -7,16 +7,29 @@ function [pf] = particleFunctions()
   pf.findExtraCellParticles   = @findExtraCellParticles;
   pf.createEC_particleStruct  = @createEC_particleStruct;
   pf.deleteGhostParticles     = @deleteGhostParticles;
+  pf.getCopy                  = @getCopy;
+
+  %__________________________________
+  %  get copies of the particle data out of the particleSet.
+  function [varargout] = getCopy(particleSet, varargin)
+
+    for k = 1:length(varargin)    % loop over each input argument
+      name = varargin{k};
+      varargout{k} =getfield(particleSet,name);
+    end
+  end
 
   %__________________________________
   %  This puts the particle arrays into a struct
-  function [P] = createParticleStruct(xp, massP, velP, stressP, vol, lp)
-    P.xp    = xp;
-    P.massP = massP;
-    P.velP  = stressP;
-    P.vol   = vol;
-    P.lp    = lp;
+  function [P] = createParticleStruct(varargin)
+
+    for k = 1:length(varargin)    % loop over each input argument
+      pVar = varargin{k};
+      name = inputname(k);
+      P.(name)=pVar;
+    end
   end
+  
   
   %__________________________________
   %  This extracts the particle variables from the struct
@@ -91,10 +104,10 @@ function [pf] = particleFunctions()
   %__________________________________
   function [EC_P] = createEC_particleStruct(P, pID, Levels, Limits)
     
-    f_names = fieldnames(P)               % all of the field names in the struct
+    f_names = fieldnames(P);              % find all of the field names in the struct
     
-    for c=1:length(f_names)               %loop over all of the fields in the struct P
-      fieldName = f_names{c}              %field n
+    for c=1:length(f_names)               % loop over all of the fields in the struct P
+      fieldName = f_names{c};
 
       for cl=1:Limits.maxLevels-1 
         fl = cl + 1;
@@ -105,14 +118,11 @@ function [pf] = particleFunctions()
         var = getfield(P,fieldName);      % get the field from the main array;
         
         % create the extra cell particle arrays for this field    
-        EC_P.(fieldName)(:,fl) = vertcat(var(cl_pID, cl));  % place the 
+        EC_P.(fieldName)(:,fl) = vertcat(var(cl_pID, cl));
         EC_P.(fieldName)(:,cl) = vertcat(var(fl_pID, fl));
 
       end
-
-      EC_P.(fieldName)
     end
-    EC_P
   end
   
   %__________________________________

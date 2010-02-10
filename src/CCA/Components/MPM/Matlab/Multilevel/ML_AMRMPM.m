@@ -105,7 +105,7 @@ end
 
 [Lx]                     = IF.initialize_Lx(nodePos, Levels, Limits);
 
-[xp, Levels, Limits]     = IF.initialize_xp(nodePos, interpolation, PPC, bar_min, bar_max, Limits, Levels);
+[P.xp, Levels, Limits]     = IF.initialize_xp(nodePos, interpolation, PPC, bar_min, bar_max, Limits, Levels);
 
 [Limits]                 = IF.NN_NP_allLevels(Levels, Limits)
 
@@ -127,18 +127,19 @@ end
 maxLevels = Limits.maxLevels;
 NP_max    = Limits.NP_max;
 NN_max    = Limits.NN_max;
+      % particle arrays
+P.vol       = NaN(NP_max, maxLevels);
+P.lp        = NaN(NP_max, maxLevels);
+P.massP     = NaN(NP_max, maxLevels);
+P.velP      = NaN(NP_max, maxLevels);
+P.dp        = NaN(NP_max, maxLevels);
+P.Fp        = NaN(NP_max, maxLevels);
+P.dF        = NaN(NP_max, maxLevels);
 
-vol       = NaN(NP_max, maxLevels);
-lp        = NaN(NP_max, maxLevels);
-massP     = NaN(NP_max, maxLevels);
-velP      = NaN(NP_max, maxLevels);
-dp        = NaN(NP_max, maxLevels);
-Fp        = NaN(NP_max, maxLevels);
-dF        = NaN(NP_max, maxLevels);
+P.stressP        = zeros(NP_max, maxLevels);  % must be full of zeros
+P.accl_extForceP = zeros(NP_max,maxLevels);
 
-stressP        = zeros(NP_max, maxLevels);  % must be full of zeros
-accl_extForceP = zeros(NP_max,maxLevels);
-
+      % node based arrays
 nodes     = zeros(1,NSFN);
 Gs        = zeros(1,NSFN);
 Ss        = zeros(1,NSFN);
@@ -172,12 +173,12 @@ for l=1:maxLevels
    L = Levels{l};
    
   for ip=1: L.NP
-    [volP_0, lp_0] = sf.positionToVolP(xp(ip,l), L.nPatches, L.Patches);
+    [volP_0, lp_0] = sf.positionToVolP(P.xp(ip,l), L.nPatches, L.Patches);
 
-    vol(ip,l)   = volP_0;
-    massP(ip,l) = volP_0*density;
-    lp(ip,l)    = lp_0;
-    Fp(ip,l)    = 1.;                     % total deformation
+    P.vol(ip,l)   = volP_0;
+    P.massP(ip,l) = volP_0*density;
+    P.lp(ip,l)    = lp_0;
+    P.Fp(ip,l)    = 1.;                     % total deformation
   end
 end 
 
@@ -201,8 +202,8 @@ if strcmp(problem_type, 'oscillator')
   t_final          = period;
   v0              = 0.5;
   Amp             = v0/(2.*3.14159/period);
-  massP(NP)       = Mass;                    % last particle masss
-  velP(NP)        = v0;                      % last particle velocity
+  P.massP(NP)       = Mass;                    % last particle masss
+  P.velP(NP)        = v0;                      % last particle velocity
   numBCs          = 1;
   velG_BCValueL   = 0.;
   velG_BCValueR   = 1.;
@@ -220,7 +221,7 @@ if strcmp(problem_type, 'advectBlock')
     L = Levels{l};
     for ip=1:L.NP
       ipp = ipp + 1;
-      velP(ip,l)    = initVelocity;
+      P.velP(ip,l)    = initVelocity;
       initPos(ipp)  = xp(ip,l);
     end
   end
@@ -237,12 +238,12 @@ if strcmp(problem_type, 'compaction')
   titleStr(1) = {'Quasi-Static Compaction Problem'};
   
   xp_initial = zeros(NP_max,1);
-  xp_initial = xp;
+  xp_initial = P.xp;
   
   for l=1:maxLevels
     L = Levels{l};
     for ip=1:L.NP
-      velP(ip,l)    = initVelocity;
+      P.velP(ip,l)    = initVelocity;
     end
   end
   
@@ -262,23 +263,17 @@ if strcmp(problem_type, 'mms')
   xp_initial = zeros(NP_max, maxLevels);
   
   for l=1:maxLevels
-    xp_initial(:,l) = xp(:,l);
-    [Fp(:,l)]      = mms.deformationGradient(xp_initial(:,l), t_initial, NP,speedSound, bar_length);
-    [dp(:,l)]      = mms.displacement(       xp_initial(:,l), t_initial, NP, speedSound, bar_length);
-    [velP(:,l)]    = mms.velocity(           xp_initial(:,l), t_initial, NP, speedSound, bar_length);
-    [stressP(:,l)] = computeStress(E,Fp,NP);
+    xp_initial(:,l) = P.xp(:,l);
+    [P.Fp(:,l)]      = mms.deformationGradient(xp_initial(:,l), t_initial, NP,speedSound, bar_length);
+    [P.dp(:,l)]      = mms.displacement(       xp_initial(:,l), t_initial, NP, speedSound, bar_length);
+    [P.velP(:,l)]    = mms.velocity(           xp_initial(:,l), t_initial, NP, speedSound, bar_length);
+    [P.stressP(:,l)] = computeStress(E,Fp,NP);
 
-    lp(:,l)  = lp(:,l) .* Fp(:,l);
-    vol(:,l) = vol(:,l) .* Fp(:,l);
-    xp(:,l)  = xp_initial(:,l) + dp(:,l);
+    P.lp(:,l)  = P.lp(:,l) .* P.Fp(:,l);
+    P.vol(:,l) = P.vol(:,l) .* P.Fp(:,l);
+    P.xp(:,l)  = xp_initial(:,l) + P.dp(:,l);
   end
 end
-
-
-
-[P]       = pf.createParticleStruct(xp,massP,velP,stressP,vol,lp);
-[pID]     = pf.findExtraCellParticles(P, Levels, Limits, nodePos, interpolation)
-[EC_P]    = pf.createEC_particleStruct(P, pID, Levels, Limits);
 
 
 %__________________________________
@@ -290,7 +285,7 @@ titleStr(4) ={sprintf('2 Levels, #cells %g', Limits.NN_allLevels)};
 
 %plot initial conditions
 if(plotSwitch == 1)
-  plotResults(titleStr, t_initial, tstep, xp, dp, massP, Fp, velP, stressP, nodePos, velG, massG, momG,extForceG, Limits, Levels)
+  plotResults(titleStr, t_initial, tstep, P, nodePos, velG, massG, momG,extForceG, Limits, Levels)
 end
 fprintf('t_final: %g, interpolator: %s, NN: %g, NP: %g dx_min: %g \n',t_final,interpolation, Limits.NN_allLevels,Limits.NP_allLevels,dx_min);
 input('hit return')
@@ -299,10 +294,11 @@ fn = sprintf('initialConditions.dat');
 fid = fopen(fn, 'w');
 fprintf(fid,'level, #p, xp, velP, Fp, stressP accl_extForceP\n');
 
+
 for l=1:maxLevels
   L = Levels{l};  
   for ip=1:L.NP
-    fprintf(fid,'%g, %g %16.15E %16.15E %16.15E %16.15E %16.15E\n',l,ip, xp(ip,l),velP(ip,l),Fp(ip,l), stressP(ip,l), accl_extForceP(ip,l));
+    fprintf(fid,'%g, %g %16.15E %16.15E %16.15E %16.15E %16.15E\n',l,ip, P.xp(ip,l),P.velP(ip,l),P.Fp(ip,l), P.stressP(ip,l), P.accl_extForceP(ip,l));
   end
 end
 fclose(fid);
@@ -316,7 +312,7 @@ while t<t_final && tstep < max_tstep
   for l=1:maxLevels
     L = Levels{l};
     for ip=1:L.NP
-      dt = min(dt, CFL*dx_min/(speedSound + abs(velP(ip,l) ) ) );
+      dt = min(dt, CFL*dx_min/(speedSound + abs(P.velP(ip,l) ) ) );
     end
   end
 
@@ -341,39 +337,57 @@ while t<t_final && tstep < max_tstep
   end
   
   % compute the problem specific external force acceleration.
+  % do not compute on the extra cell particles
   for l=1:maxLevels
      L = Levels{l};
-    [accl_extForceP(:,l), delta,bodyForce] = ExternalForceAccl(problem_type, delta_0, bodyForce, Material, xp(:,l), xp_initial(:,l), t, tstep, L.NP, L1_dx, bar_length);
+    [P.accl_extForceP(:,l), delta,bodyForce] = ExternalForceAccl(problem_type, delta_0, bodyForce, Material, P.xp(:,l), xp_initial(:,l), t, tstep, L.NP, L1_dx, bar_length);
   end  
+  
+  % determine which particle are "extra cell particles"
+  % create th extra cell particle struct
+   %[P]        = pf.createParticleStruct(xp, massP, velP, stressP, vol, lp, dp, Fp);
+  [pID]      = pf.findExtraCellParticles(P, Levels, Limits, nodePos, interpolation)
+  [EC_Pdata] = pf.createEC_particleStruct(P, pID, Levels, Limits);
+
+  % create the struct that contains the two particle structs
+  PSets{1} = P;
+  PSets{2} = EC_Pdata;
+  
   %__________________________________
-  % project particle data to grid  
-  for l=1:maxLevels   
-    L = Levels{l};
+  % project particle data to grid for each particle set
+  for pset = 1:length(PSets)
+    ps = PSets{pset};  
     
-    for ip=1:L.NP
+    [xp, massP, velP, accl_extForceP, lp]= pf.getCopy(ps,'xp','massP','velP','accl_extForceP', 'lp');
+    
+    for l=1:maxLevels   
+      L = Levels{l};
 
-      [nodes,Ss]=sf.findNodesAndWeights_linear(xp(ip,l), lp(ip,l), L.nPatches, L.Patches, nodePos(:,l), Lx(:,:,l));
-      for ig=1:NSFN
-        massG(nodes(ig),l)     = massG(nodes(ig),l)     + massP(ip,l) * Ss(ig);
-        velG(nodes(ig),l)      = velG(nodes(ig),l)      + massP(ip,l) * velP(ip,l) * Ss(ig);
-        extForceG(nodes(ig),l) = extForceG(nodes(ig),l) + massP(ip,l) * accl_extForceP(ip,l) * Ss(ig); 
+      for ip=1:L.NP
 
-        % debugging__________________________________
-        if(0)
-          fprintf( 'L-%g  ip: %g xp: %g, nodes: %g, node_pos: %g massG: %g, massP: %g, Ss: %g,  prod: %g \n', l, ip, xp(ip,l), nodes(ig), nodePos(nodes(ig),l), massG(nodes(ig),l), massP(ip,l), Ss(ig), massP(ip,l) * Ss(ig) );
-          fprintf( '\t velG:      %g,  velP:       %g,  prod: %g \n', velG(nodes(ig),l), velP(ip,l), (massP(ip,l) * velP(ip,l) * Ss(ig) ) );
-          fprintf( '\t extForceG: %g,  accl_extForceP:  %g,  prod: %g \n', extForceG(nodes(ig),l), accl_extForceP(ip,l), accl_extForceP(ip,l) * Ss(ig) );
-        end 
-        % debugging__________________________________
+        [nodes,Ss]=sf.findNodesAndWeights_linear(xp(ip,l), lp(ip,l), L.nPatches, L.Patches, nodePos(:,l), Lx(:,:,l));
+        for ig=1:NSFN
+          massG(nodes(ig),l)     = massG(nodes(ig),l)     + massP(ip,l) * Ss(ig);
+          velG(nodes(ig),l)      = velG(nodes(ig),l)      + massP(ip,l) * velP(ip,l) * Ss(ig);
+          extForceG(nodes(ig),l) = extForceG(nodes(ig),l) + massP(ip,l) * accl_extForceP(ip,l) * Ss(ig); 
 
-      end
-    end
-  end
+          % debugging__________________________________
+          if(0)
+            fprintf( 'L-%g  ip: %g xp: %g, nodes: %g, node_pos: %g massG: %g, massP: %g, Ss: %g,  prod: %g \n', l, ip, xp(ip,l), nodes(ig), nodePos(nodes(ig),l), massG(nodes(ig),l), massP(ip,l), Ss(ig), massP(ip,l) * Ss(ig) );
+            fprintf( '\t velG:      %g,  velP:       %g,  prod: %g \n', velG(nodes(ig),l), velP(ip,l), (massP(ip,l) * velP(ip,l) * Ss(ig) ) );
+            fprintf( '\t extForceG: %g,  accl_extForceP:  %g,  prod: %g \n', extForceG(nodes(ig),l), accl_extForceP(ip,l), accl_extForceP(ip,l) * Ss(ig) );
+          end 
+          % debugging__________________________________
+
+        end
+      end  %particles
+    end  % levels
+  end  % particle set
   
   
   %__________________________________
   % adjust the nodal values at the CFI  
-  [massG, velG, extForceG] = adjustCFI_Nodes(Levels, Limits,massG, velG, extForceG );
+  %[massG, velG, extForceG] = adjustCFI_Nodes(Levels, Limits,massG, velG, extForceG );
   
   
   % normalize by the mass
@@ -387,21 +401,27 @@ while t<t_final && tstep < max_tstep
   end
 
   
-  %compute internal force
-  for l=1:maxLevels   
-    L = Levels{l};
+  %compute internal force for each particle set
+  for pset = 1:length(PSets)
+    ps = PSets{pset};
     
-    for ip=1:L.NP
-      [nodes,Gs,dx]=sf.findNodesAndWeightGradients_linear(xp(ip,l), lp(ip,l), L.nPatches, L.Patches, nodePos(:,l), Lx(:,:,l));
-      for ig=1:NSFN
-        intForceG(nodes(ig),l) = intForceG(nodes(ig),l) - Gs(ig) * stressP(ip,l) * vol(ip,l);
-        %fprintf( 'L-%g  ig: %g,  internalForceG: %g source: %g \n', l, nodes(ig), intForceG(nodes(ig),l), Gs(ig) * stressP(ip,l) * vol(ip,l)   );
+    [xp, lp, stressP, vol]= pf.getCopy(ps,'xp','lp','stressP','vol');
+    
+    for l=1:maxLevels   
+      L = Levels{l};
+
+      for ip=1:L.NP
+        [nodes,Gs,dx]=sf.findNodesAndWeightGradients_linear(xp(ip,l), lp(ip,l), L.nPatches, L.Patches, nodePos(:,l), Lx(:,:,l));
+        for ig=1:NSFN
+          intForceG(nodes(ig),l) = intForceG(nodes(ig),l) - Gs(ig) * P.stressP(ip,l) * P.vol(ip,l);
+          %fprintf( 'L-%g  ig: %g,  internalForceG: %g source: %g \n', l, nodes(ig), intForceG(nodes(ig),l), Gs(ig) * stressP(ip,l) * vol(ip,l)   );
+        end
       end
-    end
-  end  % level
+    end  % level
+  end  % particle Set
 
  
-  [intForceG] = adjustCFI_Nodes(Levels, Limits,intForceG );
+ % [intForceG] = adjustCFI_Nodes(Levels, Limits,intForceG );
 
   %__________________________________
   %compute the acceleration and new velocity on the grid
@@ -433,13 +453,14 @@ while t<t_final && tstep < max_tstep
     accl_G(BCNodeR(ibc)) = 0.0;
   end
  
+  P = Pset{1};     % now using all non-extra cell particles
   
   %compute particle stress
   for l=1:maxLevels 
     L = Levels{l};
     if(L.NP > 0)     
-      [Fp(:,l), dF(:,l),vol(:,l),lp(:,l)] = computeDeformationGradient(xp(:,l),lp(:,l),dt,vel_new_G(:,l),Fp(:,l),L.NP, L.nPatches, L.Patches, nodePos(:,l),Lx(:,:,l));
-      [stressP(:,l)]                      = computeStress(E,Fp(:,l),L.NP);
+      [P.Fp(:,l), P.dF(:,l),P.vol(:,l),P.lp(:,l)] = computeDeformationGradient(P.xp(:,l),P.lp(:,l),dt,vel_new_G(:,l),P.Fp(:,l),L.NP, L.nPatches, L.Patches, nodePos(:,l),Lx(:,:,l));
+      [P.stressP(:,l)]                      = computeStress(E,P.Fp(:,l),L.NP);
     end
   end
   %__________________________________
@@ -448,7 +469,7 @@ while t<t_final && tstep < max_tstep
     L = Levels{l};
     
     for ip=1:L.NP
-      [nodes,Ss]=sf.findNodesAndWeights_linear(xp(ip,l), lp(ip,l), L.nPatches, L.Patches, nodePos(:,l), Lx(:,:,l));
+      [nodes,Ss]=sf.findNodesAndWeights_linear(P.xp(ip,l), P.lp(ip,l), L.nPatches, L.Patches, nodePos(:,l), Lx(:,:,l));
       dvelP = 0.;
       dxp   = 0.;
 
@@ -457,16 +478,16 @@ while t<t_final && tstep < max_tstep
         dxp   = dxp   + vel_new_G(nodes(ig),l) * dt * Ss(ig);
       end
 
-      velP(ip,l) = velP(ip,l) + dvelP;
-      xp(ip,l)   = xp(ip,l) + dxp; 
-      dp(ip,l)   = dp(ip,l) + dxp;
+      P.velP(ip,l) = P.velP(ip,l) + dvelP;
+      P.xp(ip,l)   = P.xp(ip,l) + dxp; 
+      P.dp(ip,l)   = P.dp(ip,l) + dxp;
     end
   end
 
   
   %__________________________________
   % relocate particles between levels
-  [xp,massP,velP,vol,Fp,lp,Levels]=relocateParticles(xp,massP,velP,vol,Fp,lp,Levels,Limits);
+  [P.xp,P.massP,P.velP,P.vol,P.Fp,P.lp,P.Levels]=relocateParticles(P.xp,P.massP,P.velP,P.vol,P.Fp,P.lp,Levels,Limits);
   
   %__________________________________
   % find the tip displacement
@@ -477,8 +498,8 @@ while t<t_final && tstep < max_tstep
 
     for ip=1:L.NP
       if(xp(ip,l) > tipLocation)
-        tipLocation = xp(ip,l);
-        tipDisplacement = dp(ip,l);
+        tipLocation = P.xp(ip,l);
+        tipDisplacement = P.dp(ip,l);
       end
     end
   end
@@ -495,9 +516,9 @@ while t<t_final && tstep < max_tstep
   for l=1:maxLevels 
     L = Levels{l};
     for ip=1:L.NP
-      totalMom(tstep) = totalMom(tstep) + massP(ip,l) * velP(ip,l);
-      KE(tstep) = KE(tstep) + .5*massP(ip,l) * velP(ip,l) * velP(ip,l);
-      SE(tstep) = SE(tstep) + .5*stressP(ip,l) * (Fp(ip,l)-1.) * vol(ip,l);
+      totalMom(tstep) = totalMom(tstep) + P.massP(ip,l) * P.velP(ip,l);
+      KE(tstep) = KE(tstep) + .5*P.massP(ip,l) * P.velP(ip,l) * P.velP(ip,l);
+      SE(tstep) = SE(tstep) + .5*P.stressP(ip,l) * (P.Fp(ip,l)-1.) * P.vol(ip,l);
       TE(tstep) = KE(tstep) + SE(tstep);
     end
   end
@@ -543,7 +564,7 @@ while t<t_final && tstep < max_tstep
   
   if( strcmp(problem_type, 'compaction') && (mod(tstep,plotInterval) == 0) && (plotSwitch == 1) )
     %convert the multi-level arrays into a 1D arrays
-    [xp_clean, stressP_clean] = ML_to_1D( Levels, Limits, xp, stressP);
+    [xp_clean, stressP_clean] = ML_to_1D( Levels, Limits, P.xp, P.stressP);
     NP = length(xp_clean);
     
     term1 = (2.0 * density * bodyForce)/E;
@@ -588,7 +609,7 @@ while t<t_final && tstep < max_tstep
   %__________________________________
   % plot intantaneous solution
   if (mod(tstep,plotInterval) == 0) && (plotSwitch == 1)
-    %plotResults(titleStr, t, tstep, xp, dp, massP, Fp, velP, stressP, nodePos, velG, massG, momG,extForceG,Limits, Levels)
+    %plotResults(titleStr, t, tstep, Pdata, nodePos, velG, massG, momG,extForceG,Limits, Levels)
     %input('hit return');
   end
   
@@ -831,12 +852,14 @@ end
 
 
 %__________________________________
-function plotResults(titleStr,t, tstep, xp, dp, massP, Fp, velP, stressP, nodePos, velG, massG, momG, extForceG,Limits, Levels)
+function plotResults(titleStr,t, tstep, P, nodePos, velG, massG, momG, extForceG,Limits, Levels)
   global gf;
   global dumpFrames;
     % plot SimulationState
   % convert multilevel arrays into 1D arrays
-  [xp_1D, velP_1D, massP_1D, stressP_1D, ] = ML_to_1D( Levels, Limits, xp, velP, massP, stressP);  
+  
+  
+  [xp_1D, velP_1D, massP_1D, stressP_1D, Fp_1D ] = ML_to_1D( Levels, Limits, P.xp, P.velP, P.massP, P.stressP,P.Fp);  
   [nodePos_1D, extForceG_1D, velG_1D] = ML_Grid_to_1D( Levels, Limits, nodePos, extForceG, velG);
          
   fig1 = sfigure(1);
@@ -851,11 +874,11 @@ function plotResults(titleStr,t, tstep, xp, dp, massP, Fp, velP, stressP, nodePo
   ylabel('Particle velocity');
   title(titleStr);
 
-  subplot(4,1,2),plot(xp,Fp,'rd');
+  subplot(4,1,2),plot(xp_1D,Fp_1D,'rd');
   xlim( [Levels{1}.min Levels{1}.max] )
   ylabel('Fp');
 
-  subplot(4,1,3),plot(xp,stressP,'rd');
+  subplot(4,1,3),plot(xp_1D,stressP_1D,'rd');
   xlim( [Levels{1}.min Levels{1}.max] )
   ylabel('Particle stress');
   
