@@ -90,9 +90,10 @@ namespace Uintah {
 
     virtual particleIndex countAndCreateParticles(const Patch*,
                                                   GeometryObject* obj);
-
+/*
     vector<const VarLabel* > returnParticleState();
     vector<const VarLabel* > returnParticleStatePreReloc();
+*/
 
   protected:
 
