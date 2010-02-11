@@ -249,7 +249,22 @@ using std::vector;
       // particle Debugging Labels
       const VarLabel* pColorLabel;
       const VarLabel* pColorLabel_preReloc;
-      
+
+      // For Cohesive Zones
+      const VarLabel* czLengthLabel; 
+      const VarLabel* czLengthLabel_preReloc; 
+      const VarLabel* czNormLabel; 
+      const VarLabel* czNormLabel_preReloc; 
+      const VarLabel* czTangLabel; 
+      const VarLabel* czTangLabel_preReloc; 
+      const VarLabel* czDispTopLabel; 
+      const VarLabel* czDispTopLabel_preReloc; 
+      const VarLabel* czDispBottomLabel; 
+      const VarLabel* czDispBottomLabel_preReloc; 
+      const VarLabel* czSeparationLabel; 
+      const VarLabel* czSeparationLabel_preReloc; 
+      const VarLabel* czForceLabel; 
+      const VarLabel* czForceLabel_preReloc; 
 
     };
 } // End namespace Uintah
