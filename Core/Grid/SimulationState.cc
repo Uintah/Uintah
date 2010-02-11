@@ -27,13 +27,12 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-
-
-#include <Core/Grid/SimulationState.h>
 #include <Core/Exceptions/ProblemSetupException.h>
+#include <Core/Grid/SimulationState.h>
 #include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/Variables/ReductionVariable.h>
+#include <Core/Grid/Variables/Reductions.h>
 #include <Core/Grid/Variables/PerPatch.h>
 #include <Core/Grid/Material.h>
 #include <Core/Grid/Grid.h>
@@ -41,11 +40,10 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/SimpleMaterial.h>
 #include <CCA/Components/ICE/ICEMaterial.h>
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
+#include <CCA/Components/MPM/CohesiveZone/CZMaterial.h>
 #include <CCA/Components/Angio/AngioMaterial.h>
 #include <CCA/Components/SpatialOps/SpatialOpsMaterial.h>
-#include <CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
 #include <CCA/Components/Arches/ArchesMaterial.h>
-#include <Core/Grid/Variables/Reductions.h>
 #include <Core/Containers/StringUtil.h>
 #include <Core/Malloc/Allocator.h>
 
@@ -77,6 +75,7 @@ SimulationState::SimulationState(ProblemSpecP &ps)
     amr->get("useLockStep", d_lockstepAMR);
 
   all_mpm_matls = 0;
+  all_cz_matls = 0;
   all_angio_matls = 0;
   all_ice_matls = 0;
   all_arches_matls = 0;
@@ -150,6 +149,18 @@ void SimulationState::registerMPMMaterial(MPMMaterial* matl,unsigned int index)
   registerMaterial(matl,index);
 }
 
+void SimulationState::registerCZMaterial(CZMaterial* matl)
+{
+  cz_matls.push_back(matl);
+  registerMaterial(matl);
+}
+
+void SimulationState::registerCZMaterial(CZMaterial* matl,unsigned int index)
+{
+  cz_matls.push_back(matl);
+  registerMaterial(matl,index);
+}
+
 void SimulationState::registerAngioMaterial(AngioMaterial* matl)
 {
   angio_matls.push_back(matl);
@@ -204,6 +215,16 @@ void SimulationState::finalizeMaterials()
     tmp_mpm_matls[i] = mpm_matls[i]->getDWIndex();
   }
   all_mpm_matls->addAll(tmp_mpm_matls);
+
+  if (all_cz_matls && all_cz_matls->removeReference())
+    delete all_cz_matls;
+  all_cz_matls = scinew MaterialSet();
+  all_cz_matls->addReference();
+  vector<int> tmp_cz_matls(cz_matls.size());
+  for( int i=0; i<(int)cz_matls.size(); i++ ) {
+    tmp_cz_matls[i] = cz_matls[i]->getDWIndex();
+  }
+  all_cz_matls->addAll(tmp_cz_matls);
   
   if (all_angio_matls && all_angio_matls->removeReference())
     delete all_angio_matls;
@@ -288,6 +309,9 @@ void SimulationState::clearMaterials()
   if(all_mpm_matls && all_mpm_matls->removeReference())
     delete all_mpm_matls;
 
+  if(all_cz_matls && all_cz_matls->removeReference())
+    delete all_cz_matls;
+
   if(all_angio_matls && all_angio_matls->removeReference())
     delete all_angio_matls;
 
@@ -306,6 +330,7 @@ void SimulationState::clearMaterials()
 
   matls.clear();
   mpm_matls.clear();
+  cz_matls.clear();
   angio_matls.clear();
   arches_matls.clear();
   spatialops_matls.clear();
@@ -317,6 +342,7 @@ void SimulationState::clearMaterials()
 
   all_matls = 0;
   all_mpm_matls = 0;
+  all_cz_matls = 0;
   all_angio_matls = 0;
   all_arches_matls = 0;
   all_spatialops_matls = 0;
@@ -347,6 +373,12 @@ const MaterialSet* SimulationState::allMPMMaterials() const
 {
   ASSERT(all_mpm_matls != 0);
   return all_mpm_matls;
+}
+
+const MaterialSet* SimulationState::allCZMaterials() const
+{
+  ASSERT(all_cz_matls != 0);
+  return all_cz_matls;
 }
 
 const MaterialSet* SimulationState::allAngioMaterials() const

@@ -55,6 +55,7 @@ class VarLabel;
 class Material; 
 class ICEMaterial;
 class MPMMaterial;
+class CZMaterial;
 class AngioMaterial;
 class ArchesMaterial; 
 class SpatialOpsMaterial;
@@ -117,6 +118,8 @@ public:
   void registerSimpleMaterial(SimpleMaterial*);
   void registerMPMMaterial(MPMMaterial*);
   void registerMPMMaterial(MPMMaterial*,unsigned int index);
+  void registerCZMaterial(CZMaterial*);
+  void registerCZMaterial(CZMaterial*,unsigned int index);
   void registerAngioMaterial(AngioMaterial*);
   void registerAngioMaterial(AngioMaterial*,unsigned int index);
   void registerArchesMaterial(ArchesMaterial*);
@@ -129,6 +132,9 @@ public:
   }
   int getNumMPMMatls() const {
     return (int)mpm_matls.size();
+  }
+  int getNumCZMatls() const {
+    return (int)cz_matls.size();
   }
   int getNumAngioMatls() const {
     return (int)angio_matls.size();
@@ -152,6 +158,9 @@ public:
   }
   MPMMaterial* getMPMMaterial(int idx) const {
     return mpm_matls[idx];
+  }
+  CZMaterial* getCZMaterial(int idx) const {
+    return cz_matls[idx];
   }
   AngioMaterial* getAngioMaterial(int idx) const {
     return angio_matls[idx];
@@ -189,6 +198,7 @@ public:
 
   void finalizeMaterials();
   const MaterialSet* allMPMMaterials() const;
+  const MaterialSet* allCZMaterials() const;
   const MaterialSet* allAngioMaterials() const;
   const MaterialSet* allArchesMaterials() const;
   const MaterialSet* allSpatialOpsMaterials() const;
@@ -277,6 +287,7 @@ private:
 
   std::vector<Material*>       matls;
   std::vector<MPMMaterial*>    mpm_matls;
+  std::vector<CZMaterial*>     cz_matls;
   std::vector<AngioMaterial*>  angio_matls;
   std::vector<ArchesMaterial*> arches_matls;
   std::vector<SpatialOpsMaterial*> spatialops_matls;
@@ -298,6 +309,7 @@ private:
   std::map<std::string, Material*> named_matls;
 
   MaterialSet    * all_mpm_matls;
+  MaterialSet    * all_cz_matls;
   MaterialSet    * all_angio_matls;
   MaterialSet    * all_ice_matls;
   MaterialSet    * all_arches_matls;

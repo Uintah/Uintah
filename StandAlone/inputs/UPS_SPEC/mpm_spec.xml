@@ -153,6 +153,13 @@
           </crack_segments>
         </crack>
       </material>
+      <cohesive_zone                     spec="MULTIPLE NO_DATA"
+                                           attribute1="name OPTIONAL STRING" >
+        <delta_n                           spec="OPTIONAL DOUBLE" />
+        <delta_t                           spec="OPTIONAL DOUBLE" />
+        <sig_max                           spec="OPTIONAL DOUBLE" />
+        <tau_max                           spec="OPTIONAL DOUBLE" />
+      </cohesive_zone>
       <thermal_contact                   spec="OPTIONAL NO_DATA" />
     </MPM>
   </MaterialProperties>
