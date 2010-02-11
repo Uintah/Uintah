@@ -48,7 +48,6 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/GeometryPiece/NullGeometryPiece.h>
 #include <Core/Exceptions/ParameterNotFound.h>
 #include <CCA/Ports/DataWarehouse.h>
-//#include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include   <iostream>
 #include   <string>
@@ -69,8 +68,8 @@ MPMMaterial::MPMMaterial(ProblemSpecP& ps, SimulationStateP& ss,MPMFlags* flags)
   standardInitialization(ps,flags);
   
   d_cm->setSharedState(ss.get_rep());
-  // Check to see which ParticleCreator object we need
 
+  // Check to see which ParticleCreator object we need
   d_particle_creator = ParticleCreatorFactory::create(ps,this,flags);
 }
 
@@ -172,11 +171,13 @@ MPMMaterial::~MPMMaterial()
   }
 }
 
+/*
 void MPMMaterial::registerParticleState(SimulationState* sharedState)
 {
   sharedState->d_particleState.push_back(d_particle_creator->returnParticleState());
   sharedState->d_particleState_preReloc.push_back(d_particle_creator->returnParticleStatePreReloc());
 }
+*/
 
 ProblemSpecP MPMMaterial::outputProblemSpec(ProblemSpecP& ps)
 {
@@ -403,4 +404,3 @@ MPMMaterial::initializeDummyCCVariables(CCVariable<double>& rho_micro,
   rho_CC.initialize(d_TINY_RHO);
   temp.initialize(d_troom);
 }
-
