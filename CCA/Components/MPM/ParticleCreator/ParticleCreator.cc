@@ -711,7 +711,6 @@ ParticleCreator::countAndCreateParticles(const Patch* patch,
   return (particleIndex) d_object_points[key].size();
 }
 
-/*
 vector<const VarLabel* > ParticleCreator::returnParticleState()
 {
   return particle_state;
@@ -722,7 +721,6 @@ vector<const VarLabel* > ParticleCreator::returnParticleStatePreReloc()
 {
   return particle_state_preReloc;
 }
-*/
 
 void ParticleCreator::registerPermanentParticleState(MPMMaterial* matl)
 {
