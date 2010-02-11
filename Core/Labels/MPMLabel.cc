@@ -569,6 +569,41 @@ MPMLabel::MPMLabel()
   gNormalRotAccLabel = VarLabel::create( "g.normalRotAcc",
 		     NCVariable<Vector>::getTypeDescription());
 
+  // For Cohesive Zones
+  czLengthLabel = VarLabel::create("cz.length",
+                     ParticleVariable<double>::getTypeDescription());
+  czLengthLabel_preReloc = VarLabel::create("cz.length+",
+                     ParticleVariable<double>::getTypeDescription());
+
+  czNormLabel = VarLabel::create("cz.norm",
+                     ParticleVariable<Vector>::getTypeDescription());
+  czNormLabel_preReloc = VarLabel::create("cz.norm+",
+                     ParticleVariable<Vector>::getTypeDescription());
+
+  czTangLabel = VarLabel::create("cz.tang",
+                     ParticleVariable<Vector>::getTypeDescription());
+  czTangLabel_preReloc = VarLabel::create("cz.tang+",
+                     ParticleVariable<Vector>::getTypeDescription());
+
+  czDispTopLabel = VarLabel::create("cz.disptop",
+                     ParticleVariable<Vector>::getTypeDescription());
+  czDispTopLabel_preReloc = VarLabel::create("cz.disptop+",
+                     ParticleVariable<Vector>::getTypeDescription());
+
+  czDispBottomLabel = VarLabel::create("cz.dispbottom",
+                     ParticleVariable<Vector>::getTypeDescription());
+  czDispBottomLabel_preReloc = VarLabel::create("cz.dispbottom+",
+                     ParticleVariable<Vector>::getTypeDescription());
+
+  czSeparationLabel = VarLabel::create("cz.separation",
+                     ParticleVariable<Vector>::getTypeDescription());
+  czSeparationLabel_preReloc = VarLabel::create("cz.separation+",
+                     ParticleVariable<Vector>::getTypeDescription());
+
+  czForceLabel = VarLabel::create("cz.force",
+                     ParticleVariable<Vector>::getTypeDescription());
+  czForceLabel_preReloc = VarLabel::create("cz.force+",
+                     ParticleVariable<Vector>::getTypeDescription());
 } 
 
 MPMLabel::~MPMLabel()
@@ -770,4 +805,21 @@ MPMLabel::~MPMLabel()
    // particle Debugging labels
   VarLabel::destroy(pColorLabel);
   VarLabel::destroy(pColorLabel_preReloc); 
+
+  // For Cohesive Zones
+  VarLabel::destroy(czLengthLabel);
+  VarLabel::destroy(czLengthLabel_preReloc);
+  VarLabel::destroy(czNormLabel);
+  VarLabel::destroy(czNormLabel_preReloc);
+  VarLabel::destroy(czTangLabel);
+  VarLabel::destroy(czTangLabel_preReloc);
+  VarLabel::destroy(czDispTopLabel);
+  VarLabel::destroy(czDispTopLabel_preReloc);
+  VarLabel::destroy(czDispBottomLabel);
+  VarLabel::destroy(czDispBottomLabel_preReloc);
+  VarLabel::destroy(czSeparationLabel);
+  VarLabel::destroy(czSeparationLabel_preReloc);
+  VarLabel::destroy(czForceLabel);
+  VarLabel::destroy(czForceLabel_preReloc);
+
 }
