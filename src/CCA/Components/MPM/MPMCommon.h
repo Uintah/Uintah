@@ -57,6 +57,9 @@ namespace Uintah {
                                       SimulationStateP& sharedState,
                                       MPMFlags* flags);
 
+    virtual void cohesiveZoneProblemSetup(const ProblemSpecP& prob_spec,
+                                          SimulationStateP& sharedState,
+                                          MPMFlags* flags);
 
     virtual void printSchedule(const PatchSet* patches,
                                DebugStream& dbg,
