@@ -37,7 +37,5 @@ SRCS     += \
 	$(SRCDIR)/CZMaterial.cc
 
 PSELIBS := Core/Grid \
-	CCA/Components/ICE \
-	CCA/Components/HETransformation \
 	Core/Datatypes \
 	Core/Util
