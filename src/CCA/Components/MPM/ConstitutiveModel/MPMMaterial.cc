@@ -172,12 +172,12 @@ MPMMaterial::~MPMMaterial()
 }
 
 /*
+*/
 void MPMMaterial::registerParticleState(SimulationState* sharedState)
 {
   sharedState->d_particleState.push_back(d_particle_creator->returnParticleState());
   sharedState->d_particleState_preReloc.push_back(d_particle_creator->returnParticleStatePreReloc());
 }
-*/
 
 ProblemSpecP MPMMaterial::outputProblemSpec(ProblemSpecP& ps)
 {
