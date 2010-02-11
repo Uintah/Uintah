@@ -60,6 +60,7 @@ SUBDIRS := \
 	$(SRCDIR)/ThermalContact    \
 	$(SRCDIR)/PhysicalBC        \
 	$(SRCDIR)/ParticleCreator   \
+	$(SRCDIR)/CohesiveZone   \
 	$(SRCDIR)/Crack		    \
 	$(SRCDIR)/HeatConduction
 
