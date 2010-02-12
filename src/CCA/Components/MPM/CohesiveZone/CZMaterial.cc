@@ -31,7 +31,6 @@ DEALINGS IN THE SOFTWARE.
 //  CZMaterial.cc
 
 #include <CCA/Components/MPM/CohesiveZone/CZMaterial.h>
-#include <CCA/Components/MPM/CohesiveZone/CohesiveZone.h>
 #include <Core/GeometryPiece/GeometryObject.h>
 #include <Core/Geometry/IntVector.h>
 #include <Core/Grid/Box.h>
@@ -61,7 +60,7 @@ CZMaterial::CZMaterial(ProblemSpecP& ps, SimulationStateP& ss,MPMFlags* flags)
   // The standard set of initializations needed
   standardInitialization(ps,flags);
   
-  d_cohesive_zone = scinew CohesiveZone(this,flags);
+  d_cohesive_zone = scinew CohesiveZone(this,flags,ss);
 }
 
 void
@@ -72,6 +71,7 @@ CZMaterial::standardInitialization(ProblemSpecP& ps, MPMFlags* flags)
   ps->require("delta_t",d_delta_t);
   ps->require("sig_max",d_sig_max);
   ps->require("tau_max",d_tau_max);
+  ps->require("cz_filename",d_cz_filename);
 }
 
 // Default constructor
@@ -86,13 +86,11 @@ CZMaterial::~CZMaterial()
   delete d_cohesive_zone;
 }
 
-/*
 void CZMaterial::registerParticleState(SimulationState* sharedState)
 {
   sharedState->d_particleState.push_back(d_cohesive_zone->returnCohesiveZoneState());
   sharedState->d_particleState_preReloc.push_back(d_cohesive_zone->returnCohesiveZoneStatePreReloc());
 }
-*/
 
 ProblemSpecP CZMaterial::outputProblemSpec(ProblemSpecP& ps)
 {
@@ -101,6 +99,7 @@ ProblemSpecP CZMaterial::outputProblemSpec(ProblemSpecP& ps)
   cz_ps->appendElement("delta_t",d_delta_t);
   cz_ps->appendElement("sig_max",d_sig_max);
   cz_ps->appendElement("tau_max",d_tau_max);
+  cz_ps->appendElement("cz_filename",d_cz_filename);
 
   return cz_ps;
 }
@@ -113,22 +112,9 @@ CZMaterial::copyWithoutGeom(ProblemSpecP& ps,const CZMaterial* mat,
   d_delta_t = mat->d_delta_t;
   d_sig_max = mat->d_sig_max;
   d_tau_max = mat->d_tau_max;
+  d_cz_filename = mat->d_cz_filename;
 
-  // Check to see which ParticleCreator object we need
-  d_cohesive_zone = scinew CohesiveZone(this,flags);
-}
-
-particleIndex CZMaterial::countParticles(const Patch* patch)
-{
-  return d_cohesive_zone->countCohesiveZones(patch);
-}
-
-void CZMaterial::createParticles(particleIndex numParticles,
-                                 CCVariable<short int>& cellNAPID,
-                                 const Patch* patch,
-                                 DataWarehouse* new_dw)
-{
-  d_cohesive_zone->createCohesiveZones(this,numParticles,cellNAPID,patch,new_dw);
+//  d_cohesive_zone = scinew CohesiveZone(this,flags);
 }
 
 CohesiveZone* CZMaterial::getCohesiveZone()
@@ -154,4 +140,9 @@ double CZMaterial::getCohesiveNormalStrength() const
 double CZMaterial::getCohesiveTangentialStrength() const
 {
   return d_tau_max;
+}
+
+string CZMaterial::getCohesiveFilename() const
+{
+  return d_cz_filename;
 }
