@@ -814,7 +814,7 @@ PETSC_ARCH=linux-gnu-c-real-opt <= Specifies PETSc architecture
         --without-fortran     <= Turns off the use of Fortran (and the Arches/Radiation component.)
 
         USE_ARCHES=no         <= Turn off the building of specific Uintah components.
-        USE_ICE=no
+        USE_ICE=no               (Note, turning off Arches also turns off SpatialOps.)
         USE_MPM=no
         USE_RADIATION=no
 
@@ -909,7 +909,8 @@ documentation assumes this directory is
 cd ~/Uintah/installs
 tar -xvf lam-7.1.4.tar.gz
 cd lam-7.1.4
-./configure --prefix=/Users/<username>/Uintah/installs/lam-7.1.4 --enable-shared=yes --with-fc=gfortran
+./configure --prefix=/Users/<username>/Uintah/installs/lam-7.1.4 \
+            --enable-shared=yes --with-fc=gfortran
 make
 make install
 \end{verbatim}
