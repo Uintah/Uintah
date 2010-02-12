@@ -88,8 +88,8 @@ CZMaterial::~CZMaterial()
 
 void CZMaterial::registerParticleState(SimulationState* sharedState)
 {
-  sharedState->d_particleState.push_back(d_cohesive_zone->returnCohesiveZoneState());
-  sharedState->d_particleState_preReloc.push_back(d_cohesive_zone->returnCohesiveZoneStatePreReloc());
+  sharedState->d_cohesiveZoneState.push_back(d_cohesive_zone->returnCohesiveZoneState());
+  sharedState->d_cohesiveZoneState_preReloc.push_back(d_cohesive_zone->returnCohesiveZoneStatePreReloc());
 }
 
 ProblemSpecP CZMaterial::outputProblemSpec(ProblemSpecP& ps)

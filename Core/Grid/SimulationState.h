@@ -244,6 +244,9 @@ public:
   vector<vector<const VarLabel* > > d_particleState;
   vector<vector<const VarLabel* > > d_particleState_preReloc;
 
+  vector<vector<const VarLabel* > > d_cohesiveZoneState;
+  vector<vector<const VarLabel* > > d_cohesiveZoneState_preReloc;
+
   bool d_switchState;
   double d_prev_delt;
 
