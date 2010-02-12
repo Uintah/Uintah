@@ -31,6 +31,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <CCA/Components/MPM/Contact/Contact.h>
 #include <CCA/Components/MPM/Contact/ContactFactory.h>
+#include <CCA/Components/MPM/CohesiveZone/CZMaterial.h>
 #include <CCA/Components/MPM/HeatConduction/HeatConduction.h>
 #include <CCA/Components/MPM/MPMBoundCond.h>
 #include <CCA/Components/MPM/ParticleCreator/ParticleCreator.h>
@@ -249,6 +250,8 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec,
     d_outputInterval = 1.0;
 
   materialProblemSetup(restart_mat_ps, d_sharedState,flags);
+
+  cohesiveZoneProblemSetup(restart_mat_ps, d_sharedState,flags);
   
   //__________________________________
   //  create analysis modules
@@ -257,7 +260,6 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec,
   if(d_analysisModule){
     d_analysisModule->problemSetup(prob_spec, grid, sharedState);
   }
-  
 }
 
 void SerialMPM::addMaterial(const ProblemSpecP& prob_spec,GridP&,
@@ -300,15 +302,21 @@ void SerialMPM::outputProblemSpec(ProblemSpecP& root_ps)
     MPMMaterial* mat = d_sharedState->getMPMMaterial(i);
     ProblemSpecP cm_ps = mat->outputProblemSpec(mpm_ps);
   }
+
   contactModel->outputProblemSpec(mpm_ps);
   thermalContactModel->outputProblemSpec(mpm_ps);
+
+  for (int i = 0; i < d_sharedState->getNumCZMatls();i++) {
+    CZMaterial* mat = d_sharedState->getCZMaterial(i);
+    ProblemSpecP cm_ps = mat->outputProblemSpec(mpm_ps);
+  }
   
   ProblemSpecP physical_bc_ps = root->appendChild("PhysicalBC");
   ProblemSpecP mpm_ph_bc_ps = physical_bc_ps->appendChild("MPM");
   for (int ii = 0; ii<(int)MPMPhysicalBCFactory::mpmPhysicalBCs.size(); ii++) {
     MPMPhysicalBCFactory::mpmPhysicalBCs[ii]->outputProblemSpec(mpm_ph_bc_ps);
   }
-  
+
 }
 
 void SerialMPM::scheduleInitialize(const LevelP& level,
@@ -374,7 +382,6 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
              << " 8 or 27 = " << flags->d_8or27 << endl;
 
   int numMPM = d_sharedState->getNumMPMMatls();
-  
   for(int m = 0; m < numMPM; m++){
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
     ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
@@ -393,12 +400,19 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
     // Schedule the initialization of pressure BCs per particle
     scheduleInitializePressureBCs(level, sched);
   }
-  
+
   // dataAnalysis 
   if(d_analysisModule){
     d_analysisModule->scheduleInitialize( sched, level);
   }
-  
+
+  int numCZM = d_sharedState->getNumCZMatls();
+  for(int m = 0; m < numCZM; m++){
+    CZMaterial* cz_matl = d_sharedState->getCZMaterial(m);
+    CohesiveZone* ch = cz_matl->getCohesiveZone();
+    ch->scheduleInitialize(level, sched, cz_matl);
+  }
+
 }
 
 void SerialMPM::scheduleInitializeAddedMaterial(const LevelP& level,
@@ -478,7 +492,8 @@ void SerialMPM::schedulePrintParticleCount(const LevelP& level,
                         this, &SerialMPM::printParticleCount);
   t->requires(Task::NewDW, lb->partCountLabel);
   t->setType(Task::OncePerProc);
-  sched->addTask(t, sched->getLoadBalancer()->getPerProcessorPatchSet(level), d_sharedState->allMPMMaterials());
+  sched->addTask(t, sched->getLoadBalancer()->getPerProcessorPatchSet(level),
+                 d_sharedState->allMPMMaterials());
 }
 
 void SerialMPM::scheduleInitializePressureBCs(const LevelP& level,
@@ -1772,7 +1787,7 @@ void SerialMPM::readInsertParticlesFile(string filename)
  if(filename!="") {
     std::ifstream is(filename.c_str());
     if (!is ){
-      throw ProblemSetupException("ERROR Opening prescribed deformation file '"+filename+"'\n",
+      throw ProblemSetupException("ERROR Opening particle insertion file '"+filename+"'\n",
                                   __FILE__, __LINE__);
     }
 
@@ -3224,6 +3239,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
     if(!flags->d_doGridReset){
       move_particles=0.;
     }
+
     for(int m = 0; m < numMPMMatls; m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();

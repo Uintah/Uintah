@@ -35,8 +35,10 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Variables/ParticleVariable.h>
 #include <Core/Grid/Task.h>
+#include <Core/Grid/LevelP.h>
 #include <Core/Grid/SimulationStateP.h>
 #include <Core/Grid/SimulationState.h>
+#include <CCA/Ports/Scheduler.h>
 #include <vector>
 #include <map>
 
@@ -56,14 +58,15 @@ namespace Uintah {
   class CohesiveZone {
   public:
     
-    CohesiveZone(CZMaterial* czmat, MPMFlags* flags);
+    CohesiveZone(CZMaterial* czmat, MPMFlags* flags,  SimulationStateP& ss);
 
     virtual ~CohesiveZone();
 
     virtual ParticleSubset* createCohesiveZones(CZMaterial* matl,
                                             particleIndex numParticles,
                                             CCVariable<short int>& cellNAPID,
-                                            const Patch*,DataWarehouse* new_dw);
+                                            const Patch*,DataWarehouse* new_dw,
+                                            const string filename);
 
     virtual ParticleSubset* allocateVariables(particleIndex numParticles,
                                               int dwi, const Patch* patch,
@@ -71,22 +74,22 @@ namespace Uintah {
 
     virtual void registerPermanentCohesiveZoneState(CZMaterial* czmat);
 
-    virtual particleIndex countCohesiveZones(const Patch*);
+    virtual particleIndex countCohesiveZones(const Patch*, const string fname);
 
-    virtual particleIndex countAndCreateCohesiveZones(const Patch*,
-                                                      GeometryObject* obj);
+    void scheduleInitialize(const LevelP& level, SchedulerP& sched,
+                            CZMaterial* czmat);
+
+    void initialize(const ProcessorGroup*,
+                    const PatchSubset* patches,
+                    const MaterialSubset* matls,
+                    DataWarehouse* old_dw,
+                    DataWarehouse* new_dw);
+
+    vector<const VarLabel* > returnCohesiveZoneState();
+    vector<const VarLabel* > returnCohesiveZoneStatePreReloc();
 
   protected:
 
-    void createPoints(const Patch* patch, GeometryObject* obj);
-
-    virtual void initializeCohesiveZone(const Patch* patch,
-                                    vector<GeometryObject*>::const_iterator obj,
-                                    MPMMaterial* matl,
-                                    Point p, IntVector cell_idx,
-                                    particleIndex i,
-                                    CCVariable<short int>& cellNAPI);
-    
     ParticleVariable<Point> czposition;
     ParticleVariable<Vector> cznormal, cztang, czdisptop, czdispbottom;
     ParticleVariable<double> czlength;
@@ -95,12 +98,10 @@ namespace Uintah {
 
     MPMLabel* d_lb;
     MPMFlags* d_flags;
+    SimulationStateP d_sharedState;
 
     vector<const VarLabel* > cz_state, cz_state_preReloc;
-
   };
-
-
 
 } // End of namespace Uintah
 

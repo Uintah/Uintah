@@ -144,6 +144,7 @@ PressureBC::flagMaterialPoint(const Point& p,
     Box box = d_surface->getBoundingBox();
     GeometryPiece* volume = scinew BoxGeometryPiece(box.lower()-dxpp, 
                                                  box.upper()+dxpp);
+
     if (volume->inside(p)) flag = true;
     delete volume;
 

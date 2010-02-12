@@ -29,11 +29,10 @@ DEALINGS IN THE SOFTWARE.
 
 
 #include <CCA/Components/MPM/CohesiveZone/CohesiveZone.h>
-#include <CCA/Components/MPM/MPMFlags.h>
+#include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/GeometryPiece/GeometryObject.h>
 #include <Core/Grid/Box.h>
 #include <Core/Grid/Variables/CellIterator.h>
-#include <CCA/Ports/DataWarehouse.h>
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/Variables/VarLabel.h>
 #include <Core/GeometryPiece/GeometryPiece.h>
@@ -44,6 +43,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/MPM/CohesiveZone/CZMaterial.h>
 #include <CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
 #include <CCA/Components/MPM/MPMFlags.h>
+#include <CCA/Ports/DataWarehouse.h>
 #include <fstream>
 #include <iostream>
 
@@ -52,11 +52,14 @@ using std::vector;
 using std::cerr;
 using std::ofstream;
 
-CohesiveZone::CohesiveZone(CZMaterial* czmat, MPMFlags* flags)
+CohesiveZone::CohesiveZone(CZMaterial* czmat, MPMFlags* flags,
+                           SimulationStateP& ss)
 {
   d_lb = scinew MPMLabel();
 
   d_flags = flags;
+
+  d_sharedState = ss;
 
   registerPermanentCohesiveZoneState(czmat);
 }
@@ -70,146 +73,118 @@ ParticleSubset*
 CohesiveZone::createCohesiveZones(CZMaterial* matl,
                                  particleIndex numCohesiveZones,
                                  CCVariable<short int>& cellNAPID,
-                                 const Patch* patch,DataWarehouse* new_dw)
+                                 const Patch* patch,DataWarehouse* new_dw,
+                                 const string filename)
 {
-  // Print the physical boundary conditions
-  //  printPhysicalBCs();
-
   int dwi = matl->getDWIndex();
   ParticleSubset* subset = allocateVariables(numCohesiveZones,dwi,patch,new_dw);
 
   particleIndex start = 0;
 
+  if(filename!="") {
+    std::ifstream is(filename.c_str());
+    if (!is ){
+      throw ProblemSetupException("ERROR Opening cohesive zone file "+filename+" in createCohesiveZones \n",
+                                  __FILE__, __LINE__);
+    }
+
+    // Field for position, normal, tangential and length.
+    // Everything else is assumed to be zero.
+    double p1,p2,p3,l4,n5,n6,n7,t8,t9,t10;
+    while(is >> p1 >> p2 >> p3 >> l4 >> n5 >> n6 >> n7 >> t8 >> t9 >> t10){
+      //cout << p1 << " " << p2 << " " << p3 << endl;
+      Point pos = Point(p1,p2,p3);
+        IntVector cell_idx;
+      if(patch->findCell(pos,cell_idx)){
+//      if(patch->containsPoint(pos)){
+        particleIndex pidx = start;
+        czposition[pidx]  = pos;
+        czlength[pidx]    = l4;
+        cznormal[pidx]    = Vector(n5,n6,n7);
+        cztang[pidx]      = Vector(t8,t9,t10);
+        czdisptop[pidx]   = Vector(0.0,0.0,0.0);
+        czdispbottom[pidx]= Vector(0.0,0.0,0.0);
+        czSeparation[pidx]= Vector(0.0,0.0,0.0);
+        czForce[pidx]     = Vector(0.0,0.0,0.0);
+
+        // Figure out unique ID for the CZ
+        ASSERT(cell_idx.x() <= 0xffff &&
+               cell_idx.y() <= 0xffff &&
+               cell_idx.z() <= 0xffff);
+
+        long64 cellID = ((long64)cell_idx.x() << 16) |
+                        ((long64)cell_idx.y() << 32) |
+                        ((long64)cell_idx.z() << 48);
+
+        short int& myCellNAPID = cellNAPID[cell_idx];
+        czID[pidx] = (cellID | (long64) myCellNAPID);
+        ASSERT(myCellNAPID < 0x7fff);
+        myCellNAPID++;
+        start++;
+      }
+    }
+    is.close();
+  }
+
   return subset;
 }
 
 ParticleSubset* 
-CohesiveZone::allocateVariables(particleIndex numParticles, 
-                                   int dwi, const Patch* patch,
-                                   DataWarehouse* new_dw)
+CohesiveZone::allocateVariables(particleIndex numCZs, 
+                                int dwi, const Patch* patch,
+                                DataWarehouse* new_dw)
 {
 
-  ParticleSubset* subset = new_dw->createParticleSubset(numParticles,dwi,patch);
+  ParticleSubset* subset = new_dw->createParticleSubset(numCZs,dwi,patch);
 
-#if 0
-  new_dw->allocateAndPut(position,       d_lb->pXLabel,             subset);
-  new_dw->allocateAndPut(pvelocity,      d_lb->pVelocityLabel,      subset); 
-  new_dw->allocateAndPut(pexternalforce, d_lb->pExternalForceLabel, subset);
-  new_dw->allocateAndPut(pmass,          d_lb->pMassLabel,          subset);
-  new_dw->allocateAndPut(pvolume,        d_lb->pVolumeLabel,        subset);
-  new_dw->allocateAndPut(ptemperature,   d_lb->pTemperatureLabel,   subset);
-  new_dw->allocateAndPut(pparticleID,    d_lb->pParticleIDLabel,    subset);
-  new_dw->allocateAndPut(psize,          d_lb->pSizeLabel,          subset);
-  new_dw->allocateAndPut(pfiberdir,      d_lb->pFiberDirLabel,      subset); 
-  new_dw->allocateAndPut(perosion,       d_lb->pErosionLabel,       subset); 
-  new_dw->allocateAndPut(pdisp,          d_lb->pDispLabel,          subset);
-#endif
+  new_dw->allocateAndPut(czposition,     d_lb->pXLabel,             subset);
+  new_dw->allocateAndPut(czlength,       d_lb->czLengthLabel,       subset); 
+  new_dw->allocateAndPut(cznormal,       d_lb->czNormLabel,         subset);
+  new_dw->allocateAndPut(cztang,         d_lb->czTangLabel,         subset);
+  new_dw->allocateAndPut(czdisptop,      d_lb->czDispTopLabel,      subset);
+  new_dw->allocateAndPut(czdispbottom,   d_lb->czDispBottomLabel,   subset);
+  new_dw->allocateAndPut(czID,           d_lb->pParticleIDLabel,    subset);
+  new_dw->allocateAndPut(czSeparation,   d_lb->czSeparationLabel,   subset);
+  new_dw->allocateAndPut(czForce,        d_lb->czForceLabel,        subset);
   
   return subset;
 }
 
-void CohesiveZone::createPoints(const Patch* patch, GeometryObject* obj)
-{
-  GeometryPieceP piece = obj->getPiece();
-  Box b2 = patch->getExtraBox();
-  IntVector ppc = obj->getNumParticlesPerCell();
-  Vector dxpp = patch->dCell()/ppc;
-  Vector dcorner = dxpp*0.5;
-
-  for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
-    Point lower = patch->nodePosition(*iter) + dcorner;
-    IntVector c = *iter;
-    
-    for(int ix=0;ix < ppc.x(); ix++){
-      for(int iy=0;iy < ppc.y(); iy++){
-        for(int iz=0;iz < ppc.z(); iz++){
-        
-          IntVector idx(ix, iy, iz);
-          Point p = lower + dxpp*idx;
-          if (!b2.contains(p)){
-            throw InternalError("Particle created outside of patch?", __FILE__, __LINE__);
-          }
-        }  // z
-      }  // y
-    }  // x
-  }  // iterator
-
-}
-
-
-void 
-CohesiveZone::initializeCohesiveZone(const Patch* patch,
-                                    vector<GeometryObject*>::const_iterator obj,
-                                    MPMMaterial* matl,
-                                    Point p,
-                                    IntVector cell_idx,
-                                    particleIndex i,
-                                    CCVariable<short int>& cellNACZID)
-{
-  IntVector ppc = (*obj)->getNumParticlesPerCell();
-  Vector dxpp = patch->dCell()/(*obj)->getNumParticlesPerCell();
-  czposition[i] = p;
-
-#if 0
-  psize[i]    = size;
-
-  pvelocity[i]    = (*obj)->getInitialVelocity();
-  ptemperature[i] = (*obj)->getInitialData("temperature");
-  pmass[i]        = matl->getInitialDensity()*pvolume[i];
-  pdisp[i]        = Vector(0.,0.,0.);
-  
-  if(d_with_color){
-    pcolor[i] = (*obj)->getInitialData("color");
-  }
-  if(d_artificial_viscosity){
-    p_q[i] = 0.;
-  }
-  
-  ptempPrevious[i]  = ptemperature[i];
-
-  Vector pExtForce(0,0,0);
-  
-  pexternalforce[i] = pExtForce;
-  pfiberdir[i]      = matl->getConstitutiveModel()->getInitialFiberDir();
-  perosion[i]       = 1.0;
-#endif
-
-  ASSERT(cell_idx.x() <= 0xffff && 
-         cell_idx.y() <= 0xffff && 
-         cell_idx.z() <= 0xffff);
-         
-  long64 cellID = ((long64)cell_idx.x() << 16) | 
-                  ((long64)cell_idx.y() << 32) | 
-                  ((long64)cell_idx.z() << 48);
-                  
-  short int& myCellNACZID = cellNACZID[cell_idx];
-  czID[i] = (cellID | (long64) myCellNACZID);
-  ASSERT(myCellNACZID < 0x7fff);
-  myCellNACZID++;
-}
-
 particleIndex 
-CohesiveZone::countCohesiveZones(const Patch* patch)
+CohesiveZone::countCohesiveZones(const Patch* patch, const string filename)
 {
   particleIndex sum = 0;
+
+  if(filename!="") {
+    std::ifstream is(filename.c_str());
+    if (!is ){
+      throw ProblemSetupException("ERROR Opening cohesive zone file "+filename+" in countCohesiveZones\n",
+                                  __FILE__, __LINE__);
+    }
+
+    // Field for position, normal, tangential and length.
+    // Everything else is assumed to be zero.
+    double f1,f2,f3,f4,f5,f6,f7,f8,f9,f10;
+    while(is >> f1 >> f2 >> f3 >> f4 >> f5 >> f6 >> f7 >> f8 >> f9 >> f10){
+      //cout << f1 << " " << f2 << " " << f3 << endl;
+      if(patch->containsPoint(Point(f1,f2,f3))){
+        sum++;
+      }
+    }
+    is.close();
+  }
 
   return sum;
 }
 
-
-particleIndex 
-CohesiveZone::countAndCreateCohesiveZones(const Patch* patch, 
-                                         GeometryObject* obj)
+vector<const VarLabel* > CohesiveZone::returnCohesiveZoneState()
 {
-  GeometryPieceP piece = obj->getPiece();
-  Box b1 = piece->getBoundingBox();
-  Box b2 = patch->getExtraBox();
-  Box b = b1.intersect(b2);
-  if(b.degenerate()) return 0;
-  
-  createPoints(patch,obj);
-  
-  return (particleIndex) 987654321;
+  return cz_state;
+}
+
+vector<const VarLabel* > CohesiveZone::returnCohesiveZoneStatePreReloc()
+{
+  return cz_state_preReloc;
 }
 
 void CohesiveZone::registerPermanentCohesiveZoneState(CZMaterial* czmat)
@@ -234,4 +209,65 @@ void CohesiveZone::registerPermanentCohesiveZoneState(CZMaterial* czmat)
 
   cz_state.push_back(d_lb->czForceLabel);
   cz_state_preReloc.push_back(d_lb->czForceLabel_preReloc);
+}
+
+void CohesiveZone::scheduleInitialize(const LevelP& level, SchedulerP& sched,
+                                      CZMaterial* czmat)
+{
+  Task* t = scinew Task("CohesiveZone::initialize",
+                  this, &CohesiveZone::initialize);
+
+  MaterialSubset* zeroth_matl = scinew MaterialSubset();
+  zeroth_matl->add(0);
+  zeroth_matl->addReference();
+
+  t->computes(d_lb->czLengthLabel);
+  t->computes(d_lb->czNormLabel);
+  t->computes(d_lb->czTangLabel);
+  t->computes(d_lb->czDispTopLabel);
+  t->computes(d_lb->czDispBottomLabel);
+  t->computes(d_lb->czSeparationLabel);
+  t->computes(d_lb->czForceLabel);
+  t->modifies(d_lb->pCellNAPIDLabel,zeroth_matl);
+
+  vector<int> m(1);
+  m[0] = czmat->getDWIndex();
+  MaterialSet* cz_matl_set = scinew MaterialSet();
+  cz_matl_set->addAll(m);
+  cz_matl_set->addReference();
+
+  sched->addTask(t, level->eachPatch(), cz_matl_set);
+
+  // The task will have a reference to zeroth_matl
+  if (zeroth_matl->removeReference())
+    delete zeroth_matl; // shouln't happen, but...
+}
+
+void CohesiveZone::initialize(const ProcessorGroup*,
+                              const PatchSubset* patches,
+                              const MaterialSubset* matls,
+                              DataWarehouse* ,
+                              DataWarehouse* new_dw)
+{
+  particleIndex totalCZs=0;
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+
+//  printTask(patches, patch,cout_doing,"Doing initialize for CohesiveZones\t");
+
+    CCVariable<short int> cellNACZID;
+    new_dw->getModifiable(cellNACZID, d_lb->pCellNAPIDLabel, 0, patch);
+
+    for(int m=0;m<matls->size();m++){
+      CZMaterial* cz_matl = d_sharedState->getCZMaterial( m );
+      string filename = cz_matl->getCohesiveFilename();
+      particleIndex numCZs = countCohesiveZones(patch,filename);
+      totalCZs+=numCZs;
+
+      cout << "Total CZs " << totalCZs << endl;
+
+      createCohesiveZones(cz_matl, numCZs, cellNACZID, patch, new_dw,filename);
+    }
+  }
+
 }

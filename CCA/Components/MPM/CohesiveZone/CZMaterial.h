@@ -36,6 +36,7 @@ DEALINGS IN THE SOFTWARE.
 
 #include <Core/Grid/Material.h>
 #include <Core/Grid/Variables/ParticleVariable.h>
+#include <CCA/Components/MPM/CohesiveZone/CohesiveZone.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/SimulationStateP.h>
 #include <Core/Grid/SimulationState.h>
@@ -57,7 +58,6 @@ using namespace SCIRun;
  class GeometryObject;
  class MPMLabel;
  class MPMFlags;
- class CohesiveZone;
 
       
 /**************************************
@@ -96,7 +96,7 @@ WARNING
          
    ~CZMaterial();
 
-//   virtual void registerParticleState(SimulationState* ss);
+   virtual void registerParticleState(SimulationState* ss);
 
    virtual ProblemSpecP outputProblemSpec(ProblemSpecP& ps);
 
@@ -104,19 +104,13 @@ WARNING
    void copyWithoutGeom(ProblemSpecP& ps,const CZMaterial* mat,
                         MPMFlags* flags);
          
-   particleIndex countParticles(const Patch* patch);
-
-   void createParticles(particleIndex numParticles,
-                        CCVariable<short int>& cellNAPID,
-                        const Patch*,
-                        DataWarehouse* new_dw);
-
    // Access functions
    CohesiveZone* getCohesiveZone();
    double getCharLengthNormal() const;
    double getCharLengthTangential() const;
    double getCohesiveNormalStrength() const;
    double getCohesiveTangentialStrength() const;
+   string getCohesiveFilename() const;
 
  private:
 
@@ -127,6 +121,7 @@ WARNING
    double d_delta_t;
    double d_sig_max;
    double d_tau_max;
+   string d_cz_filename;
 
    // Prevent copying of this class
    // copy constructor
