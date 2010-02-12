@@ -108,21 +108,39 @@ function [pf] = particleFunctions()
     
     for c=1:length(f_names)               % loop over all of the fields in the struct P
       fieldName = f_names{c};
+      
+      if( ~ strcmp(fieldName,'interpolation_dx') && ~ strcmp(fieldName,'CompDomain' ) && ~ strcmp(fieldName,'NP'))
+        for cl=1:Limits.maxLevels-1 
+          fl = cl + 1;
 
-      for cl=1:Limits.maxLevels-1 
-        fl = cl + 1;
+          cl_pID = pID(:,cl);                % extra cell particle indices on the coarse/fine level
+          fl_pID = pID(:,fl);
 
-        cl_pID = pID(:,cl);                % extra cell particle indices on the coarse/fine level
-        fl_pID = pID(:,fl);
+          var = getfield(P,fieldName);      % get the field from the main array;
 
-        var = getfield(P,fieldName);      % get the field from the main array;
-        
-        % create the extra cell particle arrays for this field    
-        EC_P.(fieldName)(:,fl) = vertcat(var(cl_pID, cl));
-        EC_P.(fieldName)(:,cl) = vertcat(var(fl_pID, fl));
+          % create the extra cell particle arrays for this field    
+          EC_P.(fieldName)(:,fl) = vertcat(var(cl_pID, cl));
+          EC_P.(fieldName)(:,cl) = vertcat(var(fl_pID, fl));
 
+
+        end
       end
     end
+    
+     %set what dx should be used during interpolation in the extra cells 
+    for cl=1:Limits.maxLevels-1 
+      fl = cl + 1;                         
+      EC_P.interpolation_dx(fl) = Levels{cl}.dx;    % on the fine level use the coarse level dx.  
+      EC_P.interpolation_dx(cl) = Levels{fl}.dx;    % on the coarse level use the fine level dx.  
+    end
+    
+    % define number of particles in the set
+    for l=1:Limits.maxLevels
+      EC_P.NP(l) = length(pID(:,l));
+    end
+    
+    % define the computational domain
+    EC_P.CompDomain = 'ExtraCells';
   end
   
   %__________________________________
