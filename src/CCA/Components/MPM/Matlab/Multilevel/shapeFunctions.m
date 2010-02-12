@@ -9,48 +9,28 @@ function [sf] = shapeFunction()
   sf.findNodesAndWeightGradients_linear = @findNodesAndWeightGradients_linear;
   sf.findNodesAndWeightGradients_gimp   = @findNodesAndWeightGradients_gimp;
   sf.findNodesAndWeightGradients_gimp2  = @findNodesAndWeightGradients_gimp2;
-  %__________________________________
+
+%__________________________________
 %
-function[nodes]=positionToNode(xp, dx, Patches)
- 
-  n_offset = 1;                              % the left node is owned by the right patch 
-  node = int32(-9);
-  nPatches = length(Patches);
-  
-  for r=1:nPatches
-    P = Patches{r};
-    
-    if ((xp >= P.min) && (xp < P.max))   
-      n    = floor((xp - P.min)/P.dx);      % # of nodes from the start of the current region
-      node = n + n_offset;                  % add an offset to the local node number
+function[nodes]=positionToNode(xp, nodePos)
 
-      nodes(1) = node;
-      nodes(2) = node + 1
-      
-      %fprintf( 'Patch: %g, n: %g, node:%g, xp: %g dx: %g P.min: %g, P.max: %g n_offset: %g \n',r, n, node, xp, dx, P.min, P.max,n_offset);
-      return;
-    end
-
-    n_offset = (n_offset) + P.NN;           % increment the offset
+  nodePos_clean = nodePos(isfinite(nodePos));
+  
+  nodeArray  = find( xp >= nodePos_clean );
+  node = length(nodeArray);
+  
+  if( isempty(node))
+    fprintf( 'ERROR: positionToNode(): node index could not be found in the computational domain( %g, %g ),xp( %g ) \n',nodePos_clean(1), nodePos_clean(length(nodePos_clean)), xp );
   end
   
-               
+  nodes(1) = node(1);
+  nodes(2) = node(1) + 1;
   
-  %bulletproofing
-  if( xp < Patches{1}.min || xp > Patches{nPatches}.max)
-    fprintf( 'ERROR: positionToNode(), the particle (xp: %g) is outside the computational domain( %g, %g )\n',xp,Patches{1}.min,Patches{nPatches}.max  );
-    input('stop'); 
-  end
- 
-  if( node == 0)
-    fprintf( 'ERROR: positionToNode(): node index must be > 0 \n');
-  end
 end
-
 
 %__________________________________
 function[nodes,dx]=positionToClosestNodes(xp, dx, Patches, nodePos)
-  [nodes]=positionToNode(xp, dx, Patches);
+  [nodes]=positionToNode(xp, nodePos);
   
   node = nodes(1);
   relativePosition = abs((xp) - nodePos(node))/dx;
@@ -100,7 +80,7 @@ function [nodes,Ss]=findNodesAndWeights_linear(xp, notused, dx, Patches, nodePos
   % Assume the grid starts at x=0.  This follows the numenclature
   % of equation 12 of the reference
 
-  [nodes]=positionToNode(xp, dx, Patches);
+  [nodes]=positionToNode(xp,nodePos);
   
   for ig=1:NSFN
     Ss(ig) = -9;
@@ -141,7 +121,7 @@ function [nodes,Ss]=findNodesAndWeights_linear(xp, notused, dx, Patches, nodePos
 
     if( isinf(tst(1)) || isinf(tst(2)) )
       fprintf('\n\nWARNING:__________________________________\n');
-      fprintf(' Something is wrong with the weights, xp: %16.15E  node: %g \n',xp, node);
+      fprintf(' Something is wrong with the weights, xp: %16.15E  node: %g \n',xp, nodes(1));
       fprintf(' Ss(1): %16.15E    Ss(2): %16.15E \n',Ss(1), Ss(2));
       fprintf(' abs(xp - node(1))/dx: %16.15E\n',abs(xp - nodePos(nodes(1)) )/dx );
       fprintf(' now adding/subtracting fuzz to the weights\n');
@@ -330,7 +310,7 @@ function [nodes,Gs]=findNodesAndWeightGradients_linear(xp, notUsed, dx, Patches,
   % the values of the gradients of the linear shape functions.
   % Assume the grid starts at x=0.
 
-  [nodes]=positionToNode(xp, dx, Patches);
+  [nodes]=positionToNode(xp, nodePos);
 
   Gs(1) = -1/dx;
   Gs(2) = 1/dx;
