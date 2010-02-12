@@ -42,7 +42,7 @@ function [IF] = initializationFunctions
   %______________________________________________________________________
   function[nodePos]  = initialize_NodePos(L1_dx, Levels, Limits, interpolation)
   
-    nodePos = zeros(Limits.NN_max, Limits.maxLevels);              % node Position
+    nodePos = NaN(Limits.NN_max, Limits.maxLevels);              % node Position
 
     for l=1:Limits.maxLevels
       L = Levels{l};
