@@ -339,6 +339,8 @@ void SimulationState::clearMaterials()
   named_matls.clear();
   d_particleState.clear();
   d_particleState_preReloc.clear();
+  d_cohesiveZoneState.clear();
+  d_cohesiveZoneState_preReloc.clear();
 
   all_matls = 0;
   all_mpm_matls = 0;

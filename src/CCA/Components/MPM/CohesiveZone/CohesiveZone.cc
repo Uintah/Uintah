@@ -221,6 +221,7 @@ void CohesiveZone::scheduleInitialize(const LevelP& level, SchedulerP& sched,
   zeroth_matl->add(0);
   zeroth_matl->addReference();
 
+  t->computes(d_lb->pXLabel);
   t->computes(d_lb->czLengthLabel);
   t->computes(d_lb->czNormLabel);
   t->computes(d_lb->czTangLabel);
@@ -228,6 +229,7 @@ void CohesiveZone::scheduleInitialize(const LevelP& level, SchedulerP& sched,
   t->computes(d_lb->czDispBottomLabel);
   t->computes(d_lb->czSeparationLabel);
   t->computes(d_lb->czForceLabel);
+  t->computes(d_lb->pParticleIDLabel);
   t->modifies(d_lb->pCellNAPIDLabel,zeroth_matl);
 
   vector<int> m(1);

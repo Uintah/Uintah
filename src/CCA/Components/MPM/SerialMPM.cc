@@ -557,6 +557,11 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
 
   const PatchSet* patches = level->eachPatch();
   const MaterialSet* matls = d_sharedState->allMPMMaterials();
+  const MaterialSet* cz_matls = d_sharedState->allCZMaterials();
+  const MaterialSet* all_matls = d_sharedState->allMaterials();
+
+  const MaterialSubset* mpm_matls_sub = matls->getUnion();
+  const MaterialSubset* cz_matls_sub  = cz_matls->getUnion();
 
   scheduleApplyExternalLoads(             sched, patches, matls);
   scheduleInterpolateParticlesToGrid(     sched, patches, matls);
@@ -589,6 +594,10 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
   scheduleComputeStressTensor(                sched, patches, matls);
   scheduleInterpolateToParticlesAndUpdateMom2(sched, patches, matls);
 #endif
+  scheduleUpdateCohesiveZones(                sched, patches, mpm_matls_sub,
+                                                              cz_matls_sub,
+                                                              all_matls);
+
   scheduleInsertParticles(                    sched, patches, matls);
 
   if(flags->d_canAddMPMMaterial){
@@ -606,6 +615,13 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
                                     lb->pXLabel, 
                                     d_sharedState->d_particleState,
                                     lb->pParticleIDLabel, matls);
+
+  sched->scheduleParticleRelocation(level, lb->pXLabel_preReloc,
+                                    d_sharedState->d_cohesiveZoneState_preReloc,
+                                    lb->pXLabel, 
+                                    d_sharedState->d_cohesiveZoneState,
+                                    lb->pParticleIDLabel, cz_matls);
+
   if(d_analysisModule){                                                        
     d_analysisModule->scheduleDoAnalysis( sched, level);
   }  
@@ -1315,6 +1331,50 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdateMom2(SchedulerP& sched,
   if (z_matl->removeReference())
     delete z_matl; // shouln't happen, but...
 
+}
+
+void SerialMPM::scheduleUpdateCohesiveZones(SchedulerP& sched,
+                                            const PatchSet* patches,
+                                            const MaterialSubset* mpm_matls,
+                                            const MaterialSubset* cz_matls,
+                                            const MaterialSet* matls)
+
+{
+  if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(),
+                           getLevel(patches)->getGrid()->numLevels()))
+    return;
+
+  printSchedule(patches,cout_doing,"MPM::scheduleUpdateCohesiveZones\t\t\t");
+
+  Task* t=scinew Task("MPM::updateCohesiveZones",
+                      this, &SerialMPM::updateCohesiveZones);
+
+  t->requires(Task::OldDW, d_sharedState->get_delt_label() );
+
+  Ghost::GhostType gac   = Ghost::AroundCells;
+  Ghost::GhostType gnone = Ghost::None;
+  t->requires(Task::NewDW, lb->gVelocityStarLabel, mpm_matls,   gac,NGN);
+  t->requires(Task::OldDW, lb->pXLabel,            cz_matls,    gnone);
+  t->requires(Task::OldDW, lb->czLengthLabel,      cz_matls,    gnone);
+  t->requires(Task::OldDW, lb->czNormLabel,        cz_matls,    gnone);
+  t->requires(Task::OldDW, lb->czTangLabel,        cz_matls,    gnone);
+  t->requires(Task::OldDW, lb->czDispTopLabel,     cz_matls,    gnone);
+  t->requires(Task::OldDW, lb->czDispBottomLabel,  cz_matls,    gnone);
+  t->requires(Task::OldDW, lb->czSeparationLabel,  cz_matls,    gnone);
+  t->requires(Task::OldDW, lb->czForceLabel,       cz_matls,    gnone);
+  t->requires(Task::OldDW, lb->pParticleIDLabel,   cz_matls,    gnone);
+
+  t->computes(lb->pXLabel_preReloc,           cz_matls);
+  t->computes(lb->czLengthLabel_preReloc,     cz_matls);
+  t->computes(lb->czNormLabel_preReloc,       cz_matls);
+  t->computes(lb->czTangLabel_preReloc,       cz_matls);
+  t->computes(lb->czDispTopLabel_preReloc,    cz_matls);
+  t->computes(lb->czDispBottomLabel_preReloc, cz_matls);
+  t->computes(lb->czSeparationLabel_preReloc, cz_matls);
+  t->computes(lb->czForceLabel_preReloc,      cz_matls);
+  t->computes(lb->pParticleIDLabel_preReloc,  cz_matls);
+
+  sched->addTask(t, patches, matls);
 }
 
 void SerialMPM::scheduleInsertParticles(SchedulerP& sched,
@@ -3763,6 +3823,233 @@ void SerialMPM::interpolateToParticlesAndUpdateMom2(const ProcessorGroup*,
 
     // DON'T MOVE THESE!!!
     new_dw->put(sum_vartype(thermal_energy), lb->ThermalEnergyLabel);
+
+    delete interpolator;
+  }
+}
+
+void SerialMPM::updateCohesiveZones(const ProcessorGroup*,
+                                    const PatchSubset* patches,
+                                    const MaterialSubset* ,
+                                    DataWarehouse* old_dw,
+                                    DataWarehouse* new_dw)
+{
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    printTask(patches, patch,cout_doing,
+              "Doing updateCohesiveZones\t\t\t");
+
+    ParticleInterpolator* interpolator = flags->d_interpolator->clone(patch);
+    vector<IntVector> ni(interpolator->size());
+    vector<double> S(interpolator->size());
+
+    cout << "Doing updateCohesiveZones" << endl;
+
+    int numCZMatls=d_sharedState->getNumCZMatls();
+    for(int m = 0; m < numCZMatls; m++){
+      CZMaterial* cz_matl = d_sharedState->getCZMaterial( m );
+      int dwi = cz_matl->getDWIndex();
+
+      ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
+
+      // Get the arrays of particle values to be changed
+      constParticleVariable<Point> czx;
+      ParticleVariable<Point> czx_new;
+      constParticleVariable<double> czlength;
+      ParticleVariable<double> czlength_new;
+      constParticleVariable<long64> czids;
+      ParticleVariable<long64> czids_new;
+      constParticleVariable<Vector> cznorm, cztang, czDispTop;
+      ParticleVariable<Vector> cznorm_new, cztang_new, czDispTop_new;
+      constParticleVariable<Vector> czDispBot, czsep, czforce;
+      ParticleVariable<Vector> czDispBot_new, czsep_new, czforce_new;
+
+      old_dw->get(czx,          lb->pXLabel,                         pset);
+      old_dw->get(czlength,     lb->czLengthLabel,                   pset);
+      old_dw->get(cznorm,       lb->czNormLabel,                     pset);
+      old_dw->get(cztang,       lb->czTangLabel,                     pset);
+      old_dw->get(czDispTop,    lb->czDispTopLabel,                  pset);
+      old_dw->get(czDispBot,    lb->czDispBottomLabel,               pset);
+      old_dw->get(czsep,        lb->czSeparationLabel,               pset);
+      old_dw->get(czforce,      lb->czForceLabel,                    pset);
+      old_dw->get(czids,        lb->pParticleIDLabel,                pset);
+
+      new_dw->allocateAndPut(czx_new,      lb->pXLabel_preReloc,          pset);
+      new_dw->allocateAndPut(czlength_new, lb->czLengthLabel_preReloc,    pset);
+      new_dw->allocateAndPut(cznorm_new,   lb->czNormLabel_preReloc,      pset);
+      new_dw->allocateAndPut(cztang_new,   lb->czTangLabel_preReloc,      pset);
+      new_dw->allocateAndPut(czDispTop_new,lb->czDispTopLabel_preReloc,   pset);
+      new_dw->allocateAndPut(czDispBot_new,lb->czDispBottomLabel_preReloc,pset);
+      new_dw->allocateAndPut(czsep_new,    lb->czSeparationLabel_preReloc,pset);
+      new_dw->allocateAndPut(czforce_new,  lb->czForceLabel_preReloc,     pset);
+      new_dw->allocateAndPut(czids_new,    lb->pParticleIDLabel_preReloc, pset);
+
+      czx_new.copyData(czx);
+      czlength_new.copyData(czlength);
+      cznorm_new.copyData(cznorm);
+      cztang_new.copyData(cztang);
+      czDispTop_new.copyData(czDispTop);
+      czDispBot_new.copyData(czDispBot);
+      czsep_new.copyData(czsep);
+      czforce_new.copyData(czforce);
+      czids_new.copyData(czids);
+
+    }
+/*
+    int numMPMMatls=d_sharedState->getNumMPMMatls();
+    delt_vartype delT;
+    old_dw->get(delT, d_sharedState->get_delt_label(), getLevel(patches) );
+
+    for(int m = 0; m < numMPMMatls; m++){
+      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+      int dwi = mpm_matl->getDWIndex();
+      // Get the arrays of particle values to be changed
+      constParticleVariable<Point> px;
+      ParticleVariable<Point> pxnew,pxx;
+      constParticleVariable<Vector> pvelocity, psize;
+      ParticleVariable<Vector> pvelocitynew, psizeNew;
+      constParticleVariable<double> pmass, pTemperature, pdTdt;
+      ParticleVariable<double> pmassNew,pvolume,pTempNew;
+      constParticleVariable<long64> pids;
+      ParticleVariable<long64> pids_new;
+      constParticleVariable<Vector> pdisp;
+      ParticleVariable<Vector> pdispnew;
+      constParticleVariable<double> pErosion;
+      constParticleVariable<int> pLocalized;
+
+      // Get the arrays of grid data on which the new part. values depend
+      constNCVariable<Vector> gvelocity_star, gacceleration;
+      constNCVariable<double> gTemperatureRate;
+      constNCVariable<double> dTdt, massBurnFrac, frictionTempRate;
+
+      ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
+
+      old_dw->get(px,           lb->pXLabel,                         pset);
+      old_dw->get(pdisp,        lb->pDispLabel,                      pset);
+      old_dw->get(pmass,        lb->pMassLabel,                      pset);
+      old_dw->get(pvelocity,    lb->pVelocityLabel,                  pset);
+      old_dw->get(pTemperature, lb->pTemperatureLabel,               pset);
+      new_dw->get(pErosion,     lb->pErosionLabel_preReloc,          pset);
+      new_dw->get(pdTdt,        lb->pdTdtLabel_preReloc,             pset);
+      new_dw->getModifiable(pvolume,  lb->pVolumeLabel_preReloc,     pset);
+      new_dw->get(pLocalized,   lb->pLocalizedMPMLabel,              pset);
+
+      new_dw->allocateAndPut(pvelocitynew, lb->pVelocityLabel_preReloc,   pset);
+      new_dw->allocateAndPut(pxnew,        lb->pXLabel_preReloc,          pset);
+      new_dw->allocateAndPut(pxx,          lb->pXXLabel,                  pset);
+      new_dw->allocateAndPut(pdispnew,     lb->pDispLabel_preReloc,       pset);
+      new_dw->allocateAndPut(pmassNew,     lb->pMassLabel_preReloc,       pset);
+      new_dw->allocateAndPut(pTempNew,     lb->pTemperatureLabel_preReloc,pset);
+
+
+      // for thermal stress analysis
+      new_dw->allocateAndPut(pTempPreNew, lb->pTempPreviousLabel_preReloc,pset);
+
+      ParticleSubset* delset = scinew ParticleSubset(0, dwi, patch);
+
+      //Carry forward ParticleID
+      old_dw->get(pids,                lb->pParticleIDLabel,          pset);
+      new_dw->allocateAndPut(pids_new, lb->pParticleIDLabel_preReloc, pset);
+      pids_new.copyData(pids);
+
+      //Carry forward ParticleSize
+      old_dw->get(psize,               lb->pSizeLabel,                pset);
+      new_dw->allocateAndPut(psizeNew, lb->pSizeLabel_preReloc,       pset);
+      psizeNew.copyData(psize);
+
+      //Carry forward NC_CCweight
+      constNCVariable<double> NC_CCweight;
+      NCVariable<double> NC_CCweight_new;
+      Ghost::GhostType  gnone = Ghost::None;
+      old_dw->get(NC_CCweight,         lb->NC_CCweightLabel,  0, patch, gnone, 0);
+      new_dw->allocateAndPut(NC_CCweight_new, lb->NC_CCweightLabel,0,patch);
+      NC_CCweight_new.copyData(NC_CCweight);
+
+      Ghost::GhostType  gac = Ghost::AroundCells;
+      new_dw->get(gvelocity_star,  lb->gVelocityStarLabel,   dwi,patch,gac,NGP);
+
+      // Loop over particles
+      for(ParticleSubset::iterator iter = pset->begin();
+          iter != pset->end(); iter++){
+        particleIndex idx = *iter;
+
+        // Get the node indices that surround the cell
+        interpolator->findCellAndWeights(px[idx],ni,S,psize[idx]);
+
+        Vector vel(0.0,0.0,0.0);
+        Vector acc(0.0,0.0,0.0);
+        double fricTempRate = 0.0;
+        double tempRate = 0.0;
+        double burnFraction = 0.0;
+
+        // Accumulate the contribution from each surrounding vertex
+        for (int k = 0; k < flags->d_8or27; k++) {
+          IntVector node = ni[k];
+          S[k] *= pErosion[idx];
+          vel      += gvelocity_star[node]  * S[k];
+          acc      += gacceleration[node]   * S[k];
+
+          fricTempRate = frictionTempRate[node]*flags->d_addFrictionWork;
+          tempRate += (gTemperatureRate[node] + dTdt[node] +
+                       fricTempRate)   * S[k];
+          burnFraction += massBurnFrac[node]     * S[k];
+        }
+
+        // Update the particle's position and velocity
+        pxnew[idx]           = px[idx]    + vel*delT*move_particles;
+        pdispnew[idx]        = pdisp[idx] + vel*delT;
+        pvelocitynew[idx]    = pvelocity[idx]    + acc*delT;
+        // pxx is only useful if we're not in normal grid resetting mode.
+        pxx[idx]             = px[idx]    + pdispnew[idx];
+        pTempNew[idx]        = pTemperature[idx] + (tempRate+pdTdt[idx])*delT;
+        pTempPreNew[idx]     = pTemperature[idx]; // for thermal stress
+
+        if (cout_heat.active()) {
+          cout_heat << "MPM::Particle = " << idx
+                    << " T_old = " << pTemperature[idx]
+                    << " Tdot = " << tempRate
+                    << " dT = " << (tempRate*delT)
+                    << " T_new = " << pTempNew[idx] << endl;
+        }
+
+        double rho;
+        if(pvolume[idx] > 0.){
+          rho = max(pmass[idx]/pvolume[idx],rho_frac_min*rho_init);
+        }
+        else{
+          rho = rho_init;
+        }
+        pmassNew[idx]     = Max(pmass[idx]*(1.    - burnFraction),0.);
+        pvolume[idx]      = pmassNew[idx]/rho;
+      }
+
+      // Delete particles that have left the domain
+      // This is only needed if extra cells are being used.
+      // Also delete particles whose mass is too small (due to combustion)
+      // For particles whose new velocity exceeds a maximum set in the input
+      // file, set their velocity back to the velocity that it came into
+      // this step with
+      for(ParticleSubset::iterator iter  = pset->begin();
+                                   iter != pset->end(); iter++){
+        particleIndex idx = *iter;
+//        if ((pmassNew[idx] <= flags->d_min_part_mass) || pTempNew[idx] < 0. ||
+//             (pLocalized[idx]==2)){
+//          delset->addParticle(idx);
+//        }
+      }
+
+      new_dw->deleteParticles(delset);
+      //__________________________________
+      //  particle debugging label-- carry forward
+      if (flags->d_with_color) {
+        constParticleVariable<double> pColor;
+        ParticleVariable<double>pColor_new;
+        old_dw->get(pColor, lb->pColorLabel, pset);
+        new_dw->allocateAndPut(pColor_new, lb->pColorLabel_preReloc, pset);
+        pColor_new.copyData(pColor);
+      }
+    }
+*/
 
     delete interpolator;
   }
