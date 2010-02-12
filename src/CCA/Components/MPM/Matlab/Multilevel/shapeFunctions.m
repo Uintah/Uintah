@@ -11,25 +11,30 @@ function [sf] = shapeFunction()
   sf.findNodesAndWeightGradients_gimp2  = @findNodesAndWeightGradients_gimp2;
   %__________________________________
 %
-function[node]=positionToNode(xp, dx, Patches)
+function[nodes]=positionToNode(xp, dx, Patches)
  
   n_offset = 1;                              % the left node is owned by the right patch 
   node = int32(-9);
   nPatches = length(Patches);
   
   for r=1:nPatches
-    R = Patches{r};
+    P = Patches{r};
     
-    if ((xp >= R.min) && (xp < R.max))   
-      n    = floor((xp - R.min)/dx);      % # of nodes from the start of the current region
+    if ((xp >= P.min) && (xp < P.max))   
+      n    = floor((xp - P.min)/P.dx);      % # of nodes from the start of the current region
       node = n + n_offset;                  % add an offset to the local node number
 
-      %fprintf( 'region: %g, n: %g, node:%g, xp: %g dx: %g R.min: %g, R.max: %g n_offset: %g \n',r, n, node, xp, dx, R.min, R.max,n_offset);
+      nodes(1) = node;
+      nodes(2) = node + 1
+      
+      %fprintf( 'Patch: %g, n: %g, node:%g, xp: %g dx: %g P.min: %g, P.max: %g n_offset: %g \n',r, n, node, xp, dx, P.min, P.max,n_offset);
       return;
     end
 
-    n_offset = (n_offset) + R.NN;           % increment the offset
+    n_offset = (n_offset) + P.NN;           % increment the offset
   end
+  
+               
   
   %bulletproofing
   if( xp < Patches{1}.min || xp > Patches{nPatches}.max)
@@ -45,8 +50,9 @@ end
 
 %__________________________________
 function[nodes,dx]=positionToClosestNodes(xp, dx, Patches, nodePos)
-  [node]=positionToNode(xp, dx, Patches);
+  [nodes]=positionToNode(xp, dx, Patches);
   
+  node = nodes(1);
   relativePosition = abs((xp) - nodePos(node))/dx;
   
   offset = int32(0);
@@ -87,17 +93,14 @@ end
 %__________________________________
 %  Equation 14 of "Structured Mesh Refinement in Generalized Interpolation Material Point Method
 %  for Simulation of Dynamic Problems"
-function [nodes,Ss]=findNodesAndWeights_linear(xp, notused, dx, Patches, nodePos, Lx)
+function [nodes,Ss]=findNodesAndWeights_linear(xp, notused, dx, Patches, nodePos, Lx, compDomain)
   global NSFN;
   % find the nodes that surround the given location and
   % the values of the shape functions for those nodes
   % Assume the grid starts at x=0.  This follows the numenclature
   % of equation 12 of the reference
 
-  [node]=positionToNode(xp, dx, Patches);  
-
-  nodes(1)= node;
-  nodes(2)= node+1;
+  [nodes]=positionToNode(xp, dx, Patches);
   
   for ig=1:NSFN
     Ss(ig) = -9;
@@ -116,40 +119,60 @@ function [nodes,Ss]=findNodesAndWeights_linear(xp, notused, dx, Patches, nodePos
       Ss(ig) = 0;
     end
   end
-  %__________________________________
-  % bullet proofing
-  % is the particle's position exactly coincidental with a node
-  tst = 1.0./Ss;
-  isinf(tst);
-
-  if( isinf(tst(1)) || isinf(tst(2)) )
-    fprintf('\n\nWARNING:__________________________________\n');
-    fprintf(' The particle is positioned exactly on the node, xp: %16.15E  node: %g \n',xp, node);
-    fprintf(' Ss(1): %16.15E    Ss(2): %16.15E \n',Ss(1), Ss(2));
-    fprintf(' abs(xp - node(1))/dx: %16.15E\n',abs(xp - nodePos(nodes(1)) )/dx );
-    fprintf(' now adding/subtracting fuzz to the weights\n');
-    
-    fuzz = 1e-15;
-    if(Ss(1) == 0.0)
-      Ss(1) = Ss(1) + fuzz;
-      Ss(2) = Ss(2) - fuzz; 
-    end
-    if(Ss(2) == 0.0)
-      Ss(2) = Ss(2) + fuzz;
-      Ss(1) = Ss(1) - fuzz; 
-    end
-    fprintf(' Modified:Ss(1): %16.15E    Ss(2): %16.15E \n\n',Ss(1), Ss(2));
+  
+  if( strcmp(compDomain,'ExtraCells'))
+    n1 = nodes(1);
+    n2 = nodes(2);
+    fprintf('\n\nfindNodesAndWeights_linear\n');
+    fprintf('xp:%g  dx:%g \n',xp, dx);
+    fprintf('node(1):%g, node(2):%g, xp:%g Ss(1): %g, Ss(2): %g\n',n1, n2, xp, Ss(1), Ss(2));
+    fprintf('Lx_L (%g):%g  Lx_R (%g):%g \n',n1, Lx(n1,1), n1, Lx(n1,2) );
+    fprintf('Lx_L (%g):%g  Lx_R (%g):%g \n',n2, Lx(n2,1), n2, Lx(n2,2) );
   end
+  
+  
+  if(~strcmp(compDomain,'ExtraCells') )
+  
+    %__________________________________
+    % bullet proofing
+    % is the particle's position exactly coincidental with a node
+    tst = 1.0./Ss;
+    isinf(tst);
 
-  %  Do the shape functions sum to 1.0 
-  sum = double(0);
-  for ig=1:NSFN
-    sum = sum + Ss(ig);
-  end
-  if ( abs(sum-1.0) > 1e-10)
-    fprintf('findNodesAndWeights_linear\n');
-    fprintf('node(1):%g, node(2):%g, xp:%g Ss(1): %g, Ss(2): %g, sum: %g\n',nodes(1),nodes(2), xp, Ss(1), Ss(2), sum)
-    input('error: the shape functions (linear) dont sum to 1.0 \n');
+    if( isinf(tst(1)) || isinf(tst(2)) )
+      fprintf('\n\nWARNING:__________________________________\n');
+      fprintf(' Something is wrong with the weights, xp: %16.15E  node: %g \n',xp, node);
+      fprintf(' Ss(1): %16.15E    Ss(2): %16.15E \n',Ss(1), Ss(2));
+      fprintf(' abs(xp - node(1))/dx: %16.15E\n',abs(xp - nodePos(nodes(1)) )/dx );
+      fprintf(' now adding/subtracting fuzz to the weights\n');
+
+      fuzz = 1e-15;
+      if(Ss(1) == 0.0)
+        Ss(1) = Ss(1) + fuzz;
+        Ss(2) = Ss(2) - fuzz; 
+      end
+      if(Ss(2) == 0.0)
+        Ss(2) = Ss(2) + fuzz;
+        Ss(1) = Ss(1) - fuzz; 
+      end
+      fprintf(' Modified:Ss(1): %16.15E    Ss(2): %16.15E \n\n',Ss(1), Ss(2));
+    end
+
+    %  Do the shape functions sum to 1.0 
+    sum = double(0);
+    for ig=1:NSFN
+      sum = sum + Ss(ig);
+    end
+    if ( abs(sum-1.0) > 1e-10)
+      n1 = nodes(1);
+      n2 = nodes(2);
+      fprintf('findNodesAndWeights_linear\n');
+      fprintf('node(1):%g, node(2):%g, xp:%g Ss(1): %g, Ss(2): %g, sum: %g\n',n1, n2, xp, Ss(1), Ss(2), sum)
+      fprintf('Lx_L (%g):%g  Lx_R (%g):%g \n',n1, Lx(n1,1), n1, Lx(n1,2) );
+      fprintf('Lx_L (%g):%g  Lx_R (%g):%g \n',n2, Lx(n2,1), n2, Lx(n2,2) );
+      input('error: the shape functions (linear) dont sum to 1.0 \n');
+    end
+  
   end
 
 end
@@ -307,10 +330,7 @@ function [nodes,Gs]=findNodesAndWeightGradients_linear(xp, notUsed, dx, Patches,
   % the values of the gradients of the linear shape functions.
   % Assume the grid starts at x=0.
 
-  [node]=positionToNode(xp, dx, Patches);
-
-  nodes(1) = node;
-  nodes(2) = nodes(1)+1;
+  [nodes]=positionToNode(xp, dx, Patches);
 
   Gs(1) = -1/dx;
   Gs(2) = 1/dx;

@@ -109,7 +109,15 @@ end
 
 [Limits]                 = IF.NN_NP_allLevels(Levels, Limits)
 
+% define what the interpolation dx for each level
+% set the number of particles in the set
+for l=1:Limits.maxLevels
+  P.interpolation_dx(l) = Levels{l}.dx;
+  P.NP(l) = Levels{l}.NP;
+end
 
+% set the computational domain tag
+P.CompDomain        = 'nonExtraCells';
 
 % define the boundary condition nodes on Level 1
 L1_NN = Levels{1}.NN
@@ -348,6 +356,8 @@ while t<t_final && tstep < max_tstep
    %[P]        = pf.createParticleStruct(xp, massP, velP, stressP, vol, lp, dp, Fp);
   [pID]      = pf.findExtraCellParticles(P, Levels, Limits, nodePos, interpolation)
   [EC_Pdata] = pf.createEC_particleStruct(P, pID, Levels, Limits);
+  
+
 
   % create the struct that contains the two particle structs
   PSets{1} = P;
@@ -356,16 +366,20 @@ while t<t_final && tstep < max_tstep
   %__________________________________
   % project particle data to grid for each particle set
   for pset = 1:length(PSets)
-    ps = PSets{pset};  
+    ps = PSets{pset}
     
     [xp, massP, velP, accl_extForceP, lp]= pf.getCopy(ps,'xp','massP','velP','accl_extForceP', 'lp');
+    compDomain = ps.CompDomain;
     
     for l=1:maxLevels
       L = Levels{l};
+      
+      dx = ps.interpolation_dx(l);
+      fprintf('pset %i level: %g interpolation dx: %g, Level dx:%g \n',pset, l, dx, L.dx );
+      
+      for ip=1:ps.NP
 
-      for ip=1:L.NP
-
-        [nodes,Ss]=sf.findNodesAndWeights_linear(xp(ip,l), lp(ip,l), L.dx, L.Patches, nodePos(:,l), Lx(:,:,l));
+        [nodes,Ss]=sf.findNodesAndWeights_linear(xp(ip,l), lp(ip,l), dx, L.Patches, nodePos(:,l), Lx(:,:,l), compDomain);
         for ig=1:NSFN
           massG(nodes(ig),l)     = massG(nodes(ig),l)     + massP(ip,l) * Ss(ig);
           velG(nodes(ig),l)      = velG(nodes(ig),l)      + massP(ip,l) * velP(ip,l) * Ss(ig);
@@ -410,7 +424,7 @@ while t<t_final && tstep < max_tstep
     for l=1:maxLevels   
       L = Levels{l};
 
-      for ip=1:L.NP
+      for ip=1:ps.NP
         [nodes,Gs,dx]=sf.findNodesAndWeightGradients_linear(xp(ip,l), lp(ip,l), L.dx, L.Patches, nodePos(:,l), Lx(:,:,l));
         for ig=1:NSFN
           intForceG(nodes(ig),l) = intForceG(nodes(ig),l) - Gs(ig) * P.stressP(ip,l) * P.vol(ip,l);
@@ -487,7 +501,7 @@ while t<t_final && tstep < max_tstep
   
   %__________________________________
   % relocate particles between levels
-  [P.xp,P.massP,P.velP,P.vol,P.Fp,P.lp,P.Levels]=relocateParticles(P.xp,P.massP,P.velP,P.vol,P.Fp,P.lp,Levels,Limits);
+  [P.xp,P.massP,P.velP,P.vol,P.Fp,P.lp,P.Levels, P]=relocateParticles(P.xp,P.massP,P.velP,P.vol,P.Fp,P.lp,Levels,Limits);
   
   %__________________________________
   % find the tip displacement
@@ -775,7 +789,7 @@ end
 
 %__________________________________
 % relocate particles to the finest level
-function [xp,massP,velP,vol,Fp,lp,Levels]=relocateParticles(xp,massP,velP,vol,Fp,lp,Levels,Limits)
+function [xp,massP,velP,vol,Fp,lp,Levels, P]=relocateParticles(xp,massP,velP,vol,Fp,lp,Levels,Limits)
   global gf;
   
   for l=1:Limits.maxLevels   
@@ -848,6 +862,13 @@ function [xp,massP,velP,vol,Fp,lp,Levels]=relocateParticles(xp,massP,velP,vol,Fp
       end
     end  % np
   end  % levels
+  
+  %define number of particles in the particle set
+  for l=1:Limits.maxLevels   
+    L = Levels{l};
+    P.NP(l) = L.NP;
+  end
+  
 end
 
 
