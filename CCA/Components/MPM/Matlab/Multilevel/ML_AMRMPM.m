@@ -371,22 +371,26 @@ while t<t_final && tstep < max_tstep
     [xp, massP, velP, accl_extForceP, lp]= pf.getCopy(ps,'xp','massP','velP','accl_extForceP', 'lp');
     compDomain = ps.CompDomain;
     
+    nsfn = NSFN;
+    if( strcmp(compDomain,'ExtraCells'))
+      nsfn = 1;
+    end
+    
     for l=1:maxLevels
       L = Levels{l};
-      
-      dx = ps.interpolation_dx(l);
-      fprintf('pset %i level: %g interpolation dx: %g, Level dx:%g \n',pset, l, dx, L.dx );
+  
+      fprintf('pset %i level: %g NSFN: %g \n',pset, l, nsfn);
       
       for ip=1:ps.NP
 
-        [nodes,Ss]=sf.findNodesAndWeights_linear(xp(ip,l), lp(ip,l), dx, L.Patches, nodePos(:,l), Lx(:,:,l), compDomain);
-        for ig=1:NSFN
+        [nodes,Ss]=sf.findNodesAndWeights_linear(xp(ip,l), lp(ip,l), L.CFI_nodes, nodePos(:,l), Lx(:,:,l), compDomain, nsfn);
+        for ig=1:nsfn
           massG(nodes(ig),l)     = massG(nodes(ig),l)     + massP(ip,l) * Ss(ig);
           velG(nodes(ig),l)      = velG(nodes(ig),l)      + massP(ip,l) * velP(ip,l) * Ss(ig);
           extForceG(nodes(ig),l) = extForceG(nodes(ig),l) + massP(ip,l) * accl_extForceP(ip,l) * Ss(ig); 
 
           % debugging__________________________________
-          if(0)
+          if(strcmp(compDomain,'ExtraCells'))
             fprintf( 'L-%g  ip: %g xp: %g, nodes: %g, node_pos: %g massG: %g, massP: %g, Ss: %g,  prod: %g \n', l, ip, xp(ip,l), nodes(ig), nodePos(nodes(ig),l), massG(nodes(ig),l), massP(ip,l), Ss(ig), massP(ip,l) * Ss(ig) );
             fprintf( '\t velG:      %g,  velP:       %g,  prod: %g \n', velG(nodes(ig),l), velP(ip,l), (massP(ip,l) * velP(ip,l) * Ss(ig) ) );
             fprintf( '\t extForceG: %g,  accl_extForceP:  %g,  prod: %g \n', extForceG(nodes(ig),l), accl_extForceP(ip,l), accl_extForceP(ip,l) * Ss(ig) );
@@ -420,15 +424,25 @@ while t<t_final && tstep < max_tstep
     ps = PSets{pset};
     
     [xp, lp, stressP, vol]= pf.getCopy(ps,'xp','lp','stressP','vol');
+
+    compDomain = ps.CompDomain;
+    
+    nsfn = NSFN;
+    if( strcmp(compDomain,'ExtraCells'))
+      nsfn = 1;
+    end
     
     for l=1:maxLevels   
       L = Levels{l};
 
       for ip=1:ps.NP
-        [nodes,Gs,dx]=sf.findNodesAndWeightGradients_linear(xp(ip,l), lp(ip,l), L.dx, L.Patches, nodePos(:,l), Lx(:,:,l));
-        for ig=1:NSFN
+        [nodes,Gs]=sf.findNodesAndWeightGradients_linear(xp(ip,l), lp(ip,l), L.dx, L.CFI_nodes, nodePos(:,l), Lx(:,:,l), compDomain);
+        for ig=1:nsfn
           intForceG(nodes(ig),l) = intForceG(nodes(ig),l) - Gs(ig) * P.stressP(ip,l) * P.vol(ip,l);
-          %fprintf( 'L-%g  ig: %g,  internalForceG: %g source: %g \n', l, nodes(ig), intForceG(nodes(ig),l), Gs(ig) * stressP(ip,l) * vol(ip,l)   );
+          
+          if(strcmp(compDomain,'ExtraCells') )
+            fprintf( 'L-%g  ig: %g,  internalForceG: %g source: %g \n', l, nodes(ig), intForceG(nodes(ig),l), Gs(ig) * stressP(ip,l) * vol(ip,l)   );
+          end
         end
       end
     end  % level
@@ -467,7 +481,7 @@ while t<t_final && tstep < max_tstep
     accl_G(BCNodeR(ibc)) = 0.0;
   end
  
-  P = Pset{1};     % now using all non-extra cell particles
+  P = PSets{1};     % now using all non-extra cell particles
   
   %compute particle stress
   for l=1:maxLevels 
@@ -483,7 +497,7 @@ while t<t_final && tstep < max_tstep
     L = Levels{l};
     
     for ip=1:L.NP
-      [nodes,Ss]=sf.findNodesAndWeights_linear(P.xp(ip,l), P.lp(ip,l), L.dx, L.Patches, nodePos(:,l), Lx(:,:,l));
+      [nodes,Ss]=sf.findNodesAndWeights_linear(P.xp(ip,l), P.lp(ip,l), CFI_nodes(:,l), nodePos(:,l), Lx(:,:,l));
       dvelP = 0.;
       dxp   = 0.;
 
@@ -719,9 +733,10 @@ function [Fp, dF, vol, lp] = computeDeformationGradient(xp,lp,dt,velG,Fp,NP, dx,
   nn = length(lp);
   vol = NaN(nn,1);     % you must declare arrays that are not passed in.
   dF  = NaN(nn,1);
-
+  notUsed = NaN(1);
+  
   for ip=1:NP
-    [nodes,Gs,dx]  = sf.findNodesAndWeightGradients_linear(xp(ip), lp(ip), dx, Regions, nodePos, Lx);
+    [nodes,Gs]  = sf.findNodesAndWeightGradients_linear(xp(ip), lp(ip), notUsed, nodePos, Lx, notUsed, notUsed);
     [volP_0, lp_0] = sf.positionToVolP(xp(ip), dx, Regions);
 
     gUp=0.0;
@@ -764,8 +779,8 @@ function [varargout] = adjustCFI_Nodes( Levels, Limits, varargin)
     for side=left:right
       for l=2:Limits.maxLevels
         cl = l -1;
-        fineNode   = Levels{l}.fineCFI_nodes(side);
-        coarseNode = Levels{cl}.coarseCFI_nodes(side);
+        fineNode   = Levels{l}.CFI_nodes(side);
+        coarseNode = Levels{cl}.CFI_nodes(side);
         varG_tmp(side) = varG_tmp(side) + varG(fineNode,l)  + varG(coarseNode,cl);
 
       end
@@ -773,10 +788,10 @@ function [varargout] = adjustCFI_Nodes( Levels, Limits, varargin)
 
     %Q(CFI_node,AllLevels) = Q_tmp(CFI_node)
     for side=left:right
-      for l=2:Limits.maxLevels
-        cl = l -1;
-        fineNode   = Levels{l}.fineCFI_nodes(side);
-        coarseNode = Levels{cl}.coarseCFI_nodes(side);
+      for fl=2:Limits.maxLevels
+        cl = fl -1;
+        fineNode   = Levels{fl}.CFI_nodes(side);
+        coarseNode = Levels{cl}.CFI_nodes(side);
         varG_new(fineNode,l)    = varG_tmp(side);
         varG_new(coarseNode,cl) = varG_tmp(side);
       end

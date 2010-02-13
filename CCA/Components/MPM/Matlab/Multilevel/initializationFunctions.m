@@ -26,16 +26,16 @@ function [IF] = initializationFunctions
       % fine level CFI nodes
       cfi_left  = L.Patches{1}.nodeLo + nExtraCells;
       cfi_right = L.Patches{L.nPatches}.nodeHi - nExtraCells;
-      Levels{fineLevel}.fineCFI_nodes(left)  = cfi_left;
-      Levels{fineLevel}.fineCFI_nodes(right) = cfi_right;
+      Levels{fineLevel}.CFI_nodes(left)  = cfi_left;
+      Levels{fineLevel}.CFI_nodes(right) = cfi_right;
       
       % underlying CFI nodes on the coarse level
       cfi_left  = GF.mapNodetoCoarser(nodePos(cfi_left, fineLevel), fineLevel,nodePos,Levels);
       cfi_right = GF.mapNodetoCoarser(nodePos(cfi_right,fineLevel), fineLevel,nodePos,Levels);
-      Levels{coarseLevel}.coarseCFI_nodes(left)  = cfi_left;
-      Levels{coarseLevel}.coarseCFI_nodes(right) = cfi_right;
+      Levels{coarseLevel}.CFI_nodes(left)  = cfi_left;
+      Levels{coarseLevel}.CFI_nodes(right) = cfi_right;
       
-      fprintf('FineLevel:%g, CoarseLevel:%g, fineCFI_Nodes(%g, %g) coarseCFI_Nodes(%g, %g)\n',fineLevel,coarseLevel, Levels{fineLevel}.fineCFI_nodes(left), Levels{fineLevel}.fineCFI_nodes(right), Levels{coarseLevel}.coarseCFI_nodes(left), Levels{coarseLevel}.coarseCFI_nodes(right) ); 
+      fprintf('FineLevel:%g, CoarseLevel:%g, CFI_nodes(%g, %g) CFI_nodes(%g, %g)\n',fineLevel,coarseLevel, Levels{fineLevel}.CFI_nodes(left), Levels{fineLevel}.CFI_nodes(right), Levels{coarseLevel}.CFI_nodes(left), Levels{coarseLevel}.CFI_nodes(right) ); 
     end
   end
  
@@ -97,11 +97,11 @@ function [IF] = initializationFunctions
       fL = Levels{fl};
       cL = Levels{fl-1};
       
-      fineCFI_L  = fL.fineCFI_nodes(left);
-      fineCFI_R  = fL.fineCFI_nodes(right);
+      fineCFI_L  = fL.CFI_nodes(left);
+      fineCFI_R  = fL.CFI_nodes(right);
       
-      coarseCFI_L = cL.coarseCFI_nodes(left);
-      coarseCFI_R = cL.coarseCFI_nodes(right);
+      coarseCFI_L = cL.CFI_nodes(left);
+      coarseCFI_R = cL.CFI_nodes(right);
       
       %fine level
       Lx(fineCFI_L,left, fl) = cL.dx;

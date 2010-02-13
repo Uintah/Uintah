@@ -29,6 +29,20 @@ function[nodes]=positionToNode(xp, nodePos)
 end
 
 %__________________________________
+function[nodes]=ExtraCell_positionToNode(xp, CFI_nodes, nodePos)
+
+  nodePos_clean = nodePos(isfinite(nodePos));
+  
+  %Find CFI node closest to xp
+  d = abs(xp - nodePos(CFI_nodes) );
+  [tmp,closest_d_indx] = min(d);
+  
+  CFI_node = CFI_nodes(closest_d_indx);
+  
+  nodes(1) = CFI_node;
+end
+
+%__________________________________
 function[nodes,dx]=positionToClosestNodes(xp, dx, Patches, nodePos)
   [nodes]=positionToNode(xp, nodePos);
   
@@ -73,14 +87,18 @@ end
 %__________________________________
 %  Equation 14 of "Structured Mesh Refinement in Generalized Interpolation Material Point Method
 %  for Simulation of Dynamic Problems"
-function [nodes,Ss]=findNodesAndWeights_linear(xp, notused, dx, Patches, nodePos, Lx, compDomain)
-  global NSFN;
+function [nodes,Ss]=findNodesAndWeights_linear(xp, notused, CFI_nodes, nodePos, Lx, compDomain, NSFN)
+ 
   % find the nodes that surround the given location and
   % the values of the shape functions for those nodes
   % Assume the grid starts at x=0.  This follows the numenclature
   % of equation 12 of the reference
 
-  [nodes]=positionToNode(xp,nodePos);
+  if( strcmp(compDomain,'ExtraCells'))
+    [nodes] = ExtraCell_positionToNode(xp, CFI_nodes, nodePos);
+  else
+    [nodes] = positionToNode(xp,nodePos);
+  end
   
   for ig=1:NSFN
     Ss(ig) = -9;
@@ -102,12 +120,9 @@ function [nodes,Ss]=findNodesAndWeights_linear(xp, notused, dx, Patches, nodePos
   
   if( strcmp(compDomain,'ExtraCells'))
     n1 = nodes(1);
-    n2 = nodes(2);
     fprintf('\n\nfindNodesAndWeights_linear\n');
-    fprintf('xp:%g  dx:%g \n',xp, dx);
-    fprintf('node(1):%g, node(2):%g, xp:%g Ss(1): %g, Ss(2): %g\n',n1, n2, xp, Ss(1), Ss(2));
+    fprintf('node(1):%g, xp:%g Ss(1): %g\n',n1, xp, Ss(1));
     fprintf('Lx_L (%g):%g  Lx_R (%g):%g \n',n1, Lx(n1,1), n1, Lx(n1,2) );
-    fprintf('Lx_L (%g):%g  Lx_R (%g):%g \n',n2, Lx(n2,1), n2, Lx(n2,2) );
   end
   
   
@@ -304,13 +319,17 @@ end
 
 %__________________________________
 %  Reference:  Uintah Documentation Chapter 7 MPM, Equation 7.14
-function [nodes,Gs]=findNodesAndWeightGradients_linear(xp, notUsed, dx, Patches, nodePos, notUsed2)
+function [nodes,Gs]=findNodesAndWeightGradients_linear(xp, notUsed, dx, CFI_nodes, nodePos, notUsed2, compDomain)
  
   % find the nodes that surround the given location and
   % the values of the gradients of the linear shape functions.
   % Assume the grid starts at x=0.
 
-  [nodes]=positionToNode(xp, nodePos);
+  if( strcmp(compDomain,'ExtraCells'))
+    [nodes] = ExtraCell_positionToNode(xp, CFI_nodes, nodePos);
+  else
+    [nodes] = positionToNode(xp,nodePos);
+  end
 
   Gs(1) = -1/dx;
   Gs(2) = 1/dx;

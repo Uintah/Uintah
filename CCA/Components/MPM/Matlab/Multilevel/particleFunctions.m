@@ -62,14 +62,14 @@ function [pf] = particleFunctions()
       right = 2;
       
       % Left ECs
-      nodeHi    = FL.fineCFI_nodes(left);
+      nodeHi    = FL.CFI_nodes(left);
       nodePosHi = nodePos(nodeHi,fl);
       nodePosLo = nodePosHi - CL.dx;      % Look at art
       
       pID_L = findParticlesInRegion(nodePosLo,nodePosHi,P,cl,Levels);
 
       % Right ECs      
-      nodeLo    = FL.fineCFI_nodes(right);
+      nodeLo    = FL.CFI_nodes(right);
       nodePosLo = nodePos(nodeLo,fl);
       nodePosHi = nodePosLo + CL.dx;      % Look at art
                   
@@ -84,14 +84,14 @@ function [pf] = particleFunctions()
       %                 ^--^     ^--^  
       %               In these regions
       % Left ECs      
-      nodeLo    = CL.coarseCFI_nodes(left);
+      nodeLo    = CL.CFI_nodes(left);
       nodePosLo = nodePos(nodeLo,cl);
       nodePosHi = nodePosLo + FL.dx;      % Look at art
       
       pID_L = findParticlesInRegion(nodePosLo,nodePosHi,P,fl,Levels);
      
       % Right ECs      
-      nodeHi    = CL.coarseCFI_nodes(right);
+      nodeHi    = CL.CFI_nodes(right);
       nodePosHi = nodePos(nodeHi,cl);
       nodePosLo = nodePosHi - FL.dx;      % Look at art
             
