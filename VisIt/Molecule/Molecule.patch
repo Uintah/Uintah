@@ -1,6 +1,19 @@
+Index: avtOpenGLMoleculeRenderer.h
+===================================================================
+--- avtOpenGLMoleculeRenderer.h	(revision 9839)
++++ avtOpenGLMoleculeRenderer.h	(working copy)
+@@ -132,6 +132,8 @@
+                    const MoleculeAttributes&);
+ 
+     void *tex;
++
++    class ParticleInstancingRenderer *instancing_renderer;
+ };
+ 
+ 
 Index: Molecule.xml
 ===================================================================
---- Molecule.xml	(revision 9265)
+--- Molecule.xml	(revision 9839)
 +++ Molecule.xml	(working copy)
 @@ -5,6 +5,7 @@
      </CXXFLAGS>
@@ -18,9 +31,36 @@ Index: Molecule.xml
        avtOpenGLMoleculeRenderer.C
        avtMesaMoleculeRenderer.C
        avtOpenGLAtomTexturer.C
+Index: CMakeLists.txt
+===================================================================
+--- CMakeLists.txt	(revision 9839)
++++ CMakeLists.txt	(working copy)
+@@ -25,6 +25,7 @@
+ MoleculeViewerPluginInfo.C
+ avtMoleculePlot.C
+ avtMoleculeRenderer.C
++ParticleInstancingRenderer.C
+ avtOpenGLMoleculeRenderer.C
+ avtMesaMoleculeRenderer.C
+ avtOpenGLAtomTexturer.C
+@@ -37,6 +38,7 @@
+ MoleculeEnginePluginInfo.C
+ avtMoleculePlot.C
+ avtMoleculeRenderer.C
++ParticleInstancingRenderer.C
+ avtOpenGLMoleculeRenderer.C
+ avtMesaMoleculeRenderer.C
+ avtOpenGLAtomTexturer.C
+@@ -138,5 +140,5 @@
+ ENDIF(VISIT_PARALLEL)
+ 
+ VISIT_INSTALL_PLOT_PLUGINS(${INSTALLTARGETS})
++VISIT_PLUGIN_TARGET_PREFIX(${INSTALLTARGETS})
+ 
+-VISIT_PLUGIN_TARGET_PREFIX(${INSTALLTARGETS})
 Index: avtOpenGLMoleculeRenderer.C
 ===================================================================
---- avtOpenGLMoleculeRenderer.C	(revision 9265)
+--- avtOpenGLMoleculeRenderer.C	(revision 9839)
 +++ avtOpenGLMoleculeRenderer.C	(working copy)
 @@ -69,6 +69,7 @@
  
@@ -30,186 +70,151 @@ Index: avtOpenGLMoleculeRenderer.C
  
  #include <DebugStream.h>
  #include "matrix.c"
-@@ -83,6 +84,8 @@
-     #endif
-     #include <GL/gl.h>
-   #endif
-+#else
-+  #include <GL/gl.h>
- #endif
+@@ -135,6 +136,8 @@
+     cylinders_calculated = false;
  
- #define SHORTEN_BONDS
-@@ -106,6 +109,35 @@
- };
-  
+     tex = (void *)new avtOpenGLAtomTexturer;
++
++    instancing_renderer=new ParticleInstancingRenderer();
+ }
  
-+static GLboolean CheckExtension( char *extName )
-+{
-+    /*
-+     ** Search for extName in the extensions string.  Use of strstr()
-+     ** is not sufficient because extension names can be prefixes of
-+     ** other extension names.  Could use strtok() but the constant
-+     ** string returned by glGetString can be in read-only memory.
-+     */
-+
-+    debug1 << "testing for extension: " << string(extName) << endl;
-+
-+    char *p = (char *) glGetString(GL_EXTENSIONS);
-+    char *end;
-+    int extNameLen;
-+
-+    extNameLen = strlen(extName);
-+    end = p + strlen(p);
-+
-+    while (p < end) {
-+	int n = strcspn(p, " ");
-+	if ((extNameLen == n) && (strncmp(extName, p, n) == 0)) {
-+	    return GL_TRUE;
-+	}
-+	p += (n + 1);
-+    }
-+    return GL_FALSE;
-+}
-+ 
-+
- // ****************************************************************************
- //  Constructor: avtOpenGLMoleculeRenderer::avtOpenGLMoleculeRenderer
- //
-@@ -273,6 +305,7 @@
- {
-     vtkPoints *points = data->GetPoints();
  
-+    // cout << "Num Points: " << data->GetNumberOfPoints() << endl;
-     vtkDataArray *primary = data->GetPointData()->GetScalars();
-     if (!primary)
-     {
-@@ -382,6 +415,45 @@
+@@ -162,6 +165,8 @@
+     }
+ 
+     delete ((avtOpenGLAtomTexturer *)tex);
++
++    delete instancing_renderer;
+ }
+ 
+ 
+@@ -387,7 +392,21 @@
          }
      }
  
-+    static bool checkForExtensions = true;
-+    static bool extensionsSupported = false;
+-    glBegin(GL_QUADS);
 +
-+    if (checkForExtensions) {
-+	char extnName[128];
-+        strcpy(extnName, "GL_EXT_gpu_shader4"); 
-+
-+        GLboolean extnA = CheckExtension(extnName);
-+        if (extnA) {
-+            debug1 << "Extension GL_EXT_gpu_shader4 supported" << endl;
-+	}
-+        else {
-+            debug1 << "Extension GL_EXT_gpu_shader4 not supported" << endl;
-+	}
-+        
-+	strcpy(extnName, "GL_EXT_texture_buffer_object"); 
-+
-+        GLboolean extnB = CheckExtension(extnName);
-+        if (extnB) {
-+            debug1 << "Extension GL_EXT_texture_buffer_object supported" << endl;
-+	}
-+        else {
-+            debug1 << "Extension GL_EXT_texture_buffer_object not supported" << endl;
-+	}
-+
-+	if (extnA && extnB) {
-+	    extensionsSupported = true;
-+	    cout << "Necessary extensions supported" << endl;
-+	    cout << "VisIt is using the new Molecule plot implementation" << endl;
-+	}
-+	else {
-+	    cout << "Necessary extensions not supported" << endl;
-+	    cout << "VisIt is switching to the old Molecule plot implementation" << endl;
-+	}
-+
-+	checkForExtensions = false;
++    // If we're not doing imposter rendering, but we support instancing,
++    // use the tbo instancing renderer.
++    bool instancing = (vmode==0 && instancing_renderer->IsSupported());
++    if (instancing)
++    {
++        vmode = 3;
++        instancing_renderer->ClearParticles();
++        instancing_renderer->SetQualityLevel(atts.GetAtomSphereQuality());
 +    }
 +
-+    if (vmode == 1 || vmode == 2 || (!extensionsSupported)) { // if drawing as imposters
-     glBegin(GL_QUADS);
-     for (int i=0; i<data->GetNumberOfPoints(); i++)
++    // if not instancing
++    if (!instancing)
++        glBegin(GL_QUADS);
++
+     vtkIdType *vertptr = data->GetVerts()->GetPointer();
+     for (int ix=0; ix<numverts; ix++, vertptr += (1+*vertptr))
      {
-@@ -475,6 +547,83 @@
-         }
-     }
-     glEnd();
-+    }
-+    else { // drawing as "real" spheres
-+        ParticleInstancingRenderer pirObject;
-+	// bool needsRecalculation = true;
-+
-+	pirObject.SetLiveQualityLevel(atts.GetAtomSphereQuality());
-+
-+	// if (needsRecalculation) {
-+	    pirObject.CleanUp();
-+
-+	    for (int i=0; i<data->GetNumberOfPoints(); i++)
-+	    {
-+		int element_number = 0;
-+		if (element)
-+		    element_number = int(elementnos[i]);
-+
-+		if (element_number < 0 || element_number > MAX_ELEMENT_NUMBER)
-+		    element_number = 0;
-+
-+		// Determine radius
-+		float radius = atts.GetRadiusFixed();
-+		if (element && sbar)
-+		    radius = atomic_radius[element_number] * radiusscale;
-+		else if (element && sbcr)
-+		    radius = covalent_radius[element_number] * radiusscale;
-+		else if (radiusvar && sbv)
-+		    radius = radiusvar[i] * radiusscale;
-+
-+		unsigned char colorArr[3];
-+
-+		// Determine color
-+		if (color_by_element)
-+		{
-+		    int level = element_number % numcolors;
-+		    memcpy(colorArr, &colors[4*level], 3*sizeof(colorArr)); 
-+		}
-+		else if (color_by_levels)
-+		{
-+		    int level = int(scalar[i]) - (primary_is_resseq ? 1 : 0);
-+		    if(levelsLUT != 0)
-+		    {
-+			const unsigned char *rgb = 
-+			    levelsLUT->GetLookupTable()->MapValue(level);
-+			memcpy(colorArr, rgb, 3*sizeof(colorArr)); ;
-+		    }
-+		    else
-+		    {
-+			level = level % numcolors;
-+			memcpy(colorArr, &colors[4*level], 3*sizeof(colorArr)); ; 
-+		    }
-+		}
-+		else
-+		{
-+		    float alpha;
-+		    if (varmax == varmin)
-+			alpha = 0.5;
-+		    else
-+			alpha = (scalar[i] - varmin) / (varmax - varmin);
-+		    
-+		    int color = int((float(numcolors)-.01) * alpha);
-+		    if (color < 0)
-+			color = 0;
-+		    if (color > numcolors-1)
-+			color = numcolors-1;
-+		    
-+		    memcpy(colorArr, &colors[4*color], 3*sizeof(colorArr)); 
-+		}
-+
-+		double *pt = points->GetPoint(i);
-+	        pirObject.AddInstancesData(pt, radius, colorArr);  		      
-+	    }
-+	// }
-+
-+	// cout << "Added " << pirObject.Size() << " spheres " << sizeof(unsigned char) << endl;  
-+
-+	pirObject.RenderBatchedInstancing();
-+    }
+@@ -413,24 +432,23 @@
+             radius = radiusvar[atom] * radiusscale;
  
+         // Determine color
++        const unsigned char *color;
+         if (color_by_element)
+         {
+             int level = element_number % numcolors;
+-            SetColor3ubv(&colors[4*level]);
++            color = &colors[4*level];
+         }
+         else if (color_by_levels)
+         {
+             int level = int(scalar[atom]) - (primary_is_resseq ? 1 : 0);
+             if(levelsLUT != 0)
+             {
+-                const unsigned char *rgb = 
+-                    levelsLUT->GetLookupTable()->MapValue(level);
+-                SetColor3ubv(rgb);
++                color = levelsLUT->GetLookupTable()->MapValue(level);
+             }
+             else
+             {
+                 level = level % numcolors;
+-                SetColor3ubv(&colors[4*level]);
++                color = &colors[4*level];
+             }
+         }
+         else
+@@ -441,28 +459,30 @@
+             else
+                 alpha = (scalar[atom] - varmin) / (varmax - varmin);
+             
+-            int color = int((float(numcolors)-.01) * alpha);
+-            if (color < 0)
+-                color = 0;
+-            if (color > numcolors-1)
+-                color = numcolors-1;
+-            SetColor3ubv(&colors[4*color]);
++            int icolor = int((float(numcolors)-.01) * alpha);
++            if (icolor < 0)
++                icolor = 0;
++            if (icolor > numcolors-1)
++                icolor = numcolors-1;
++            color = &colors[4*icolor];
+         }
+ 
+         if(vmode == 2)
+         {
+             // Plot squares. Use the same point for each of the vertices;
+             // a vertex program will figure out the real coordinates.
++            SetColor3ubv(color);
+             glNormal3f(radius, radius, radius);
+             for(int j = 0; j < 4; ++j)
+             {
++                glTexCoord2fv(texCoords[j]);
+                 glVertex3dv(points->GetPoint(atom));
+-                glTexCoord2fv(texCoords[j]);
+             }
+         }
+         else if(vmode == 1)
+         {
+             // Plot squares
++            SetColor3ubv(color);
+             for(int j = 0; j < 4; ++j)
+             {
+                 double *pt = points->GetPoint(atom);
+@@ -470,13 +490,14 @@
+                 vert[0] = pt[0] + ptOffsets[j][0] * radius;
+                 vert[1] = pt[1] + ptOffsets[j][1] * radius;
+                 vert[2] = pt[2] + ptOffsets[j][2] * radius;
++                glTexCoord2fv(texCoords[j]);
+                 glVertex3fv(vert);
+-                glTexCoord2fv(texCoords[j]);
+             }
+         }
+-        else
++        else if (vmode == 0)
+         {
+             // Plot spheres
++            SetColor3ubv(color);
+             double *pt = points->GetPoint(atom);
+             DrawSphereAsQuads(pt[0],
+                               pt[1],
+@@ -484,9 +505,21 @@
+                               radius,
+                               atts.GetAtomSphereQuality());
+         }
++
++        else if (vmode == 3)
++        {
++            // Add instance
++            double *pt = points->GetPoint(atom);
++            instancing_renderer->AddParticle(pt, radius, color);
++        }
++
+     }
+-    glEnd();
+ 
++    if (!instancing)
++        glEnd();
++    else
++        instancing_renderer->Render();
++
      // If we're imposter rendering then enable lighting once more and turn
      // off sphere texturing.
+     if(imposter)

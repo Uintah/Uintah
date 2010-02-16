@@ -1,8 +1,11 @@
-#include<cstring>
-#include<algorithm>
+#include <cstring>
+#include <algorithm>
+#include <math.h>
 #include "ParticleInstancingRenderer.h"
 
-static GLboolean CheckExtension( char *extName )
+
+
+static GLboolean CheckExtension( const char *extName )
 {
     /*
      ** Search for extName in the extensions string.  Use of strstr()
@@ -10,8 +13,6 @@ static GLboolean CheckExtension( char *extName )
      ** other extension names.  Could use strtok() but the constant
      ** string returned by glGetString can be in read-only memory.
      */
-
-    debug1 << "testing for extension: " << string(extName) << endl;
 
     char *p = (char *) glGetString(GL_EXTENSIONS);
     char *end;
@@ -21,33 +22,31 @@ static GLboolean CheckExtension( char *extName )
     end = p + strlen(p);
 
     while (p < end) {
-	int n = strcspn(p, " ");
-	if ((extNameLen == n) && (strncmp(extName, p, n) == 0)) {
-	    return GL_TRUE;
-	}
-	p += (n + 1);
+        int n = strcspn(p, " ");
+        if ((extNameLen == n) && (strncmp(extName, p, n) == 0))
+            return GL_TRUE;
+        p += (n + 1);
     }
     return GL_FALSE;
 }
+ 
 
 static void gltutCheckErrors(const char* file, int line)
 {
     bool errs = false;
     GLenum ret = glGetError();
     if(GL_NO_ERROR != ret)
-    {
-	debug1 << file << "(" << line << ") : " << /*gluErrorString(ret) <<*/ endl;
-    }
+        cerr << file << "(" << line << ") : " << /*gluErrorString(ret) << */endl;
 }
 
 // #ifdef _DEBUG
-    #define CheckOpenGLError() {gltutCheckErrors(__FILE__, __LINE__);}
+#define CheckOpenGLError() {gltutCheckErrors(__FILE__, __LINE__);}
 // #else
 //     #define CheckOpenGLError() {}
 // #endif
 
 #ifndef M_PI
-    #define M_PI 3.14159265358979323846
+#define M_PI 3.14159265358979323846
 #endif
 
 static string FormatBytes(size_t bytes)
@@ -56,11 +55,11 @@ static string FormatBytes(size_t bytes)
 
     str << bytes << " B";
     if (bytes >= 1024 )
-	str << " = " << bytes / 1024 << " KB";
+        str << " = " << bytes / 1024 << " KB";
     if (bytes >= 1024 * 1024 )
-	str << " = " << bytes / (1024 * 1024) << " MB";
+        str << " = " << bytes / (1024 * 1024) << " MB";
     if (bytes >= 1024 * 1024 * 1024 )
-	str << " =  " << bytes / (1024 * 1024 * 1024) << " GB";
+        str << " =  " << bytes / (1024 * 1024 * 1024) << " GB";
 
     return str.str();
 }
@@ -72,15 +71,15 @@ static string LoadFile(const string& shader_file)
     std::stringstream str;
 
     if(file.good())
-    {
-	str << file.rdbuf();
-	return str.str();
-    }
+        {
+            str << file.rdbuf();
+            return str.str();
+        }
     else
-    {
-	debug1 << "error opening " <<  shader_file << endl;
-	return "error";
-    }
+        {
+            debug1 << "error opening " <<  shader_file << endl;
+            return "error";
+        }
 }
 
 static GLuint LoadShader(const std::string& shader_file, GLenum type)
@@ -105,33 +104,33 @@ static GLuint LoadShader(const std::string& shader_file, GLenum type)
     CheckOpenGLError();
 
     if(!compile_status )
-    {
-	debug1 << "error" << endl;
-    }
+        {
+            debug1 << "error" << endl;
+        }
 
     if(info_log_length > 0)
-    {
-	std::string info_log(size_t(info_log_length),' ');
+        {
+            std::string info_log(size_t(info_log_length),' ');
 
-	glGetShaderInfoLog(shader, info_log_length, 0, &info_log[0]);
-	CheckOpenGLError();
-	debug1 << info_log << endl;
-    }
+            glGetShaderInfoLog(shader, info_log_length, 0, &info_log[0]);
+            CheckOpenGLError();
+            debug1 << info_log << endl;
+        }
 
     if(!compile_status )
-    {
-	return 0;
-    }
+        {
+            return 0;
+        }
 
     return shader;
 }
 
 static GLuint LoadProgram(const std::string& vertex_shader_file, \
-	const std::string& fragment_shader_file, \
-	const std::string& geometry_shader_file = "", \
-	GLint vertices_out = 1, \
-	GLenum input_type = GL_POINTS, \
-	GLenum output_type = GL_POINTS)
+                          const std::string& fragment_shader_file, \
+                          const std::string& geometry_shader_file = "", \
+                          GLint vertices_out = 1, \
+                          GLenum input_type = GL_POINTS, \
+                          GLenum output_type = GL_POINTS)
 {
     GLuint program = glCreateProgram();
     CheckOpenGLError();
@@ -147,21 +146,21 @@ static GLuint LoadProgram(const std::string& vertex_shader_file, \
     CheckOpenGLError();
 
     if(!geometry_shader_file.empty())
-    {
-	GLuint geometry_shader = LoadShader(geometry_shader_file, GL_GEOMETRY_SHADER_EXT);
-	CheckOpenGLError();
-	glAttachShader(program, geometry_shader);
-	CheckOpenGLError();
+        {
+            GLuint geometry_shader = LoadShader(geometry_shader_file, GL_GEOMETRY_SHADER_EXT);
+            CheckOpenGLError();
+            glAttachShader(program, geometry_shader);
+            CheckOpenGLError();
 
-	glProgramParameteriEXT(program, GL_GEOMETRY_VERTICES_OUT_EXT, vertices_out);
-	CheckOpenGLError();
+            glProgramParameteriEXT(program, GL_GEOMETRY_VERTICES_OUT_EXT, vertices_out);
+            CheckOpenGLError();
 
-	glProgramParameteriEXT(program, GL_GEOMETRY_INPUT_TYPE_EXT, input_type);
-	CheckOpenGLError();
+            glProgramParameteriEXT(program, GL_GEOMETRY_INPUT_TYPE_EXT, input_type);
+            CheckOpenGLError();
 
-	glProgramParameteriEXT(program, GL_GEOMETRY_OUTPUT_TYPE_EXT, output_type);
-	CheckOpenGLError();
-    }
+            glProgramParameteriEXT(program, GL_GEOMETRY_OUTPUT_TYPE_EXT, output_type);
+            CheckOpenGLError();
+        }
 
     debug1 << "linking" << endl;
     glLinkProgram(program);
@@ -175,25 +174,195 @@ static GLuint LoadProgram(const std::string& vertex_shader_file, \
     CheckOpenGLError();
 
     if(!link_status)
-    {
-	debug1 << "error" << endl;
-    }
+        {
+            debug1 << "error" << endl;
+        }
 
     if(info_log_length > 0)
-    {
-	std::string info_log(size_t(info_log_length),' ');
-	glGetProgramInfoLog(program, info_log_length, 0, &info_log[0]);
-	CheckOpenGLError();
-	debug1 << info_log << endl;
-    }
+        {
+            std::string info_log(size_t(info_log_length),' ');
+            glGetProgramInfoLog(program, info_log_length, 0, &info_log[0]);
+            CheckOpenGLError();
+            debug1 << info_log << endl;
+        }
 
     if(!link_status)
-    {
-	return 0;
-    }
+        {
+            return 0;
+        }
 
     return program;
 }
+
+
+
+
+class SphereGeometryVBO {
+public:
+    SphereGeometryVBO(size_t slices, size_t stacks);
+    ~SphereGeometryVBO();
+
+    void Initialize();
+
+    size_t GetNumVertices() const;
+    size_t GetNumIndices() const;
+    GLuint GetVBOVertices() const;
+    GLuint GetVBOIndices() const;
+
+private:
+
+    static void BuildSphereGrid(std::vector<float>& vertices, std::vector<unsigned short>& indices, const size_t slices, const size_t stacks);
+
+    size_t stacks;
+    size_t slices;
+
+    size_t num_vertices;
+    size_t num_indices;
+
+    GLuint vbo_vertices;
+    GLuint vbo_indices;
+};
+
+
+
+
+SphereGeometryVBO::SphereGeometryVBO(size_t pslices, size_t pstacks):
+	slices(pslices),
+	stacks(pstacks),
+	num_vertices(0),
+	num_indices(0),
+	vbo_vertices(0),
+	vbo_indices(0)
+{
+}
+
+SphereGeometryVBO::~SphereGeometryVBO() {
+	if(0 != vbo_vertices)
+        glDeleteBuffers(1, &vbo_vertices);
+
+	if(0 != vbo_indices)
+	    glDeleteBuffers(1, &vbo_indices);
+}
+
+
+void SphereGeometryVBO::Initialize() {
+
+	std::vector<float> vertices;
+	std::vector<unsigned short > indices;
+	BuildSphereGrid(vertices, indices, slices, stacks);
+
+	glGenBuffers(1, &vbo_vertices);
+    CheckOpenGLError();
+    glBindBuffer(GL_ARRAY_BUFFER, vbo_vertices);
+    CheckOpenGLError();
+    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), &vertices[0], GL_STATIC_DRAW);
+    CheckOpenGLError();
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    CheckOpenGLError();
+
+
+	glGenBuffers(1, &vbo_indices);
+    CheckOpenGLError();
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vbo_indices);
+    CheckOpenGLError();
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned short), &indices[0], GL_STATIC_DRAW);
+    CheckOpenGLError();
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+    CheckOpenGLError();
+
+	num_indices = indices.size();
+	num_vertices = vertices.size() / 2;
+}
+
+
+size_t SphereGeometryVBO::GetNumVertices() const
+{
+    return num_vertices;
+}
+
+size_t SphereGeometryVBO::GetNumIndices() const
+{
+    return num_indices;
+}
+
+GLuint SphereGeometryVBO::GetVBOVertices() const
+{
+    return vbo_vertices;
+}
+
+GLuint SphereGeometryVBO::GetVBOIndices() const
+{
+    return vbo_indices;
+}
+
+
+void SphereGeometryVBO::BuildSphereGrid(std::vector<float>& vertices, std::vector<unsigned short>& indices, 
+                                        const size_t slices, const size_t stacks)
+{
+    vertices.clear();
+    vertices.reserve(2 * slices * (stacks+1)); // we need 2 floats per position
+    indices.clear();
+    indices.reserve(vertices.capacity()); // pre-allocate an estimate of the required space
+
+
+    // create the grid of theta/phi vertices
+    for(size_t j = 0; j <= stacks; ++j)
+    {
+        for(size_t i = 0; i < slices; ++i)
+        {
+            float theta = (i * 2.0f * M_PI) / slices;
+            float phi = (j * M_PI) / stacks;
+            vertices.push_back(theta);
+            vertices.push_back(phi);
+        }
+    }
+
+    // create quad strip connecting them
+    for (int y=0; y<stacks; y++)
+    {
+        for (int x=0; x<=slices; x++)
+        {
+            indices.push_back((y+0)*slices+(x%slices));
+            indices.push_back((y+1)*slices+(x%slices));
+        }
+
+        // add degenerate quad to move to next stack
+        if (y!=stacks-1) {
+            indices.push_back((y+0)*slices);
+            indices.push_back((y+0)*slices);
+            indices.push_back((y+1)*slices);
+            indices.push_back((y+1)*slices);
+        }
+    }
+}
+
+
+
+ParticleInstancingRenderer::ParticleInstancingRenderer() {
+    is_initialized = false;
+    extensions_supported = false;
+	quality_level = 0;
+	program_instancing = 0;
+	instanced_batch_size = 0;
+    
+	memset(tbo_position_radius_batches, 0, 2 * sizeof(GLuint)); 
+	memset(tex_position_radius_batches, 0, 2 * sizeof(GLuint)); 
+
+    memset(tbo_color_batches, 0, 2 * sizeof(GLuint)); 
+    memset(tex_color_batches, 0, 2 * sizeof(GLuint));
+}
+
+ParticleInstancingRenderer::~ParticleInstancingRenderer() {
+    glDeleteBuffers(2, tbo_position_radius_batches);
+    glDeleteTextures(2, tex_position_radius_batches);
+
+    glDeleteBuffers(2, tbo_color_batches);
+    glDeleteTextures(2, tex_color_batches);
+
+    for (size_t i=0; i<sphere_geometry_vbos.size(); ++i)
+        delete sphere_geometry_vbos[i];
+}
+
 
 void ParticleInstancingRenderer::BuildShaders() {
     debug1 << "building shaders" << endl;
@@ -201,400 +370,262 @@ void ParticleInstancingRenderer::BuildShaders() {
     program_instancing = LoadProgram("./Instancing.Vertex.glsl", "./Instancing.Fragment.glsl");
 }
 
-static void BuildGridIndices(const bool build_quads, size_t x0, size_t x1, size_t y0, size_t y1, \
-	size_t width, size_t height, size_t cache_size, \
-	std::vector<unsigned short>& indices)
-{
-    struct LocalFunctions
-    {
-	LocalFunctions(size_t width, size_t height, std::vector<unsigned short>& indices):
-	    width(width),
-	    height(height),
-	    indices(indices)
-	{
-	}
 
-	const size_t Index(const size_t x, const size_t y)
-	{
-	    // return x * height + y;
-	    return (y * width + x);
-	}
-
-	void BuildTriangleStrip(const size_t x0, const size_t x1, const size_t y0, const size_t y1)
-	{
-	    for (size_t y = y0; y < y1 ; ++y)
-		for (size_t x = x0; x < x1 ; ++x)
-		{
-		    EmitTriangle(Index(x + 0, y + 0), Index(x + 0, y + 1), Index(x + 1, y + 0));
-		    EmitTriangle(Index(x + 1, y + 0), Index(x + 0, y + 1), Index(x + 1, y + 1));
-		}
-	}
-
-	void EmitTriangle(size_t i0, size_t i1, size_t i2)
-	{
-	    indices.push_back(static_cast<unsigned short>(i0));
-	    indices.push_back(static_cast<unsigned short>(i1));
-	    indices.push_back(static_cast<unsigned short>(i2));
-	}
-	void PrefetchTriangle(const size_t x0, const size_t x1, const size_t y0)
-	{
-	    for (size_t x = x0; x < x1 ; ++x)
-	    {
-		EmitTriangle(Index(x + 0, y0 + 0), Index(x + 0, y0 + 0), Index(x + 1,y0 + 0));
-	    }
-	}
-
-	void BuildQuadStrip(const size_t x0, const size_t x1, const size_t y0, const size_t y1)
-	{
-	    for (size_t y = y0; y < y1 ; ++y)
-		for (size_t x = x0; x < x1 ; ++x)
-		{
-		    EmitQuad(Index(x + 0, y + 0), Index(x + 0, y + 1), Index(x + 1, y + 1), Index(x + 1, y + 0));
-		}
-	}
-
-	void EmitQuad(size_t i0, size_t i1, size_t i2, size_t i3)
-	{
-	    indices.push_back(static_cast<unsigned short>(i0));
-	    indices.push_back(static_cast<unsigned short>(i1));
-	    indices.push_back(static_cast<unsigned short>(i2));
-	    indices.push_back(static_cast<unsigned short>(i3));
-	}
-	void PrefetchQuad(const size_t x0, const size_t x1, const size_t y0)
-	{
-	    for (size_t x = x0; x < x1 ; ++x)
-	    {
-		EmitQuad(Index(x + 0, y0 + 0), Index(x + 0, y0 + 0), Index(x + 1, y0 + 0), Index(x + 1,y0 + 0));
-	    }
-	}
-
-
-	const size_t width;
-	const size_t height;
-	std::vector<unsigned short>& indices;
-    };
-
-    LocalFunctions h(width, height,indices);
-
-    const size_t strip_width = cache_size - 2;
-
-    for(size_t x = 0; x <= x1; x+= strip_width)
-    {
-	const size_t strip_start = x;
-	const size_t strip_end =  std::min((x + strip_width), width - 1);
-	const bool prefetch = (2 * (strip_end - strip_start) + 1) > cache_size;
-
-	if(prefetch)
-	{
-	    if(build_quads)
-		h.PrefetchQuad(strip_start, strip_end, 0);
-	    else
-		h.PrefetchTriangle(strip_start, strip_end, 0);
-	}
-
-	if(build_quads)
-	    h.BuildQuadStrip(strip_start, strip_end, 0, y1 - 1);
-	else
-	    h.BuildTriangleStrip(strip_start, strip_end, 0, y1 - 1);
-    }
+bool ParticleInstancingRenderer::IsSupported() {
+    Initialize();
+    return extensions_supported;
 }
 
-static void BuildGridVertices( std::vector<float> &vertices, size_t slices, size_t stacks ) 
-{
-    for(size_t i = 0; i < slices; ++i)
-	for(size_t j = 0; j < stacks; ++j)
-	{
-	    const float u = (i) / float(slices - 1);
-	    const float v = (j) / float(stacks - 1);
 
-	    const float theta = u * M_PI;
-	    const float phi = v * 2.0f * M_PI;
-
-	    vertices.push_back(theta);
-	    vertices.push_back(phi);
-	}
-}
-    
 void ParticleInstancingRenderer::Initialize() {
-    // glewInit(); // not sure if this is required
-    
-    // debug1 << "OpenGL version: " << string((char *)glGetString(GL_VERSION)) << endl;
 
-    // char extnName[128];
-    // strcpy(extnName, "GL_EXT_gpu_shader4"); 
+    // Initialize can be called at any time - don't actually initialize
+    // more than once.
+    if (is_initialized)
+        return;
 
-    // GLboolean chkExtn = CheckExtension(extnName);
-    // if (chkExtn)
-    	// debug1 << "extension GL_EXT_gpu_shader4 supported" << endl;
-    // else
-	// debug1 << "extension GL_EXT_gpu_shader4 not supported" << endl;
+    is_initialized = true;
+    extensions_supported = false;
 
+    // check for the extensions that are required
+    GLboolean shader4_supported = CheckExtension("GL_EXT_gpu_shader4");
+    if (shader4_supported)
+        debug2 << "ParticleInstancingRenderer: Extension GL_EXT_gpu_shader4 supported" << endl;
+    else
+        debug2 << "ParticleInstancingRenderer: Extension GL_EXT_gpu_shader4 not supported" << endl;
+
+	
+    GLboolean tbo_supported = CheckExtension("GL_EXT_texture_buffer_object");
+    if (tbo_supported)
+        debug2 << "ParticleInstancingRenderer: Extension GL_EXT_texture_buffer_object supported" << endl;
+    else
+        debug2 << "ParticleInstancingRenderer: Extension GL_EXT_texture_buffer_object not supported" << endl;
+
+
+    extensions_supported = (shader4_supported && tbo_supported);
+	if (extensions_supported) {
+	    debug1 << "ParticleInstancingRenderer: Necessary extensions supported, "
+               << "using the new Molecule plot implementation." << endl;
+	}
+	else
+    {
+	    debug1 << "ParticleInstancingRenderer: Necessary extensions not supported, "
+               << "using the old Molecule plot implementation." << endl;
+	}
+
+    // don't do any more if the extensions aren't supported
+    if (!extensions_supported)
+        return;
+
+
+
+    // 
+    GLint max_texture_buffer_size;
     glGetIntegerv(GL_MAX_TEXTURE_BUFFER_SIZE_EXT, &max_texture_buffer_size);
     debug1 << "maximal texture buffer size " << FormatBytes(max_texture_buffer_size) << endl;
 
-    size_t instances_position_radius = size_t(max_texture_buffer_size) / (size_per_instance_position_radius);
-    size_t instances_attribute  = size_t(max_texture_buffer_size) / (size_per_instance_attribute);
-    size_t max_number_instances = std::min(instances_position_radius, instances_attribute);
+    size_t instances_position_radius = size_t(max_texture_buffer_size) / (4*sizeof(float));
+    size_t instances_color  = size_t(max_texture_buffer_size) / (4*sizeof(unsigned char));
+    instanced_batch_size = std::min(instances_position_radius, instances_color);
 
-    debug1 << "maximal number of instances  " << (max_number_instances) << " = " << max_number_instances / 1000000.0f << " millions";
-    debug1 << " consuming " << FormatBytes(max_number_instances * size_per_instance) << " video memory" << endl;
 
-    instanced_batch_size = std::min(max_number_instances / 2, max_instanced_batch_size);
-    debug1 << "batch size " << instanced_batch_size << endl;
+    debug1 << "ParticleInstancingRenderer: Max number of instances " 
+           << instanced_batch_size << " = "
+           << instanced_batch_size / 1000000.0f << " million" << endl;
 
     GenerateAndBuildTBO();
-    BuildQualityLevels();
-    BuildSphereGrids();
+    BuildSphereGeometryVBOs();
     BuildShaders();
 }
+    
 
-void ParticleInstancingRenderer::SetLiveQualityLevel(int level) {
-    live_quality_level = level;
+void ParticleInstancingRenderer::SetQualityLevel(int level) {
+    quality_level = level;
 }
+
+
 
 void ParticleInstancingRenderer::GenerateAndBuildTBO() {
     debug1 << "building buffers for batched instancing" << endl;
 
-    glGenBuffers(2, vbo_per_instance_data_position_radius_batches);
-    glGenTextures(2, tbo_per_instance_data_position_radius_batches);
+    glGenBuffers(2, tbo_position_radius_batches);
+    CheckOpenGLError();
+    glGenTextures(2, tex_position_radius_batches);
+    CheckOpenGLError();
 
-    glGenBuffers(2, vbo_per_instance_data_attributes_batches);
-    glGenTextures(2, tbo_per_instance_data_attributes_batches);
+    glGenBuffers(2, tbo_color_batches);
+    CheckOpenGLError();
+    glGenTextures(2, tex_color_batches);
+    CheckOpenGLError();
 
     for(size_t i = 0; i < 2; ++i)
     {
-	BuildTextureBufferObject
-	    (
-	     vbo_per_instance_data_position_radius_batches[i], 
-	     tbo_per_instance_data_position_radius_batches[i], 
-	     instanced_batch_size * size_per_instance_position_radius, 
-	     GL_STREAM_DRAW_ARB,
-	     GL_RGBA32F_ARB
-	    );
+        BuildTBO(tbo_position_radius_batches[i], 
+                 tex_position_radius_batches[i], 
+                 instanced_batch_size * 4 * sizeof(float), 
+                 GL_DYNAMIC_DRAW_ARB,
+                 GL_RGBA32F_ARB);
 
-	BuildTextureBufferObject
-	    (
-	     vbo_per_instance_data_attributes_batches[i],
-	     tbo_per_instance_data_attributes_batches[i],
-	     instanced_batch_size * size_per_instance_attribute,
-	     GL_STREAM_DRAW_ARB,
-	     GL_RGBA8
-	    );
+        BuildTBO(tbo_color_batches[i],
+                 tex_color_batches[i],
+                 instanced_batch_size * 4 * sizeof(unsigned char),
+                 GL_DYNAMIC_DRAW_ARB,
+                 GL_RGBA8);
     }
 }
 
-void ParticleInstancingRenderer::BuildQualityLevels() {
-    quality_levels.clear();
+void ParticleInstancingRenderer::BuildSphereGeometryVBOs() {
+    sphere_geometry_vbos.clear();
 
     // in accordance with VisIt's quality level's
-    quality_levels.push_back(QualityLevel( 6,  6));
-    quality_levels.push_back(QualityLevel( 8,  8));
-    quality_levels.push_back(QualityLevel(10, 10));
-    quality_levels.push_back(QualityLevel(24, 24));
+    sphere_geometry_vbos.push_back(new SphereGeometryVBO( 6,  3));
+    sphere_geometry_vbos.push_back(new SphereGeometryVBO(12,  6));
+    sphere_geometry_vbos.push_back(new SphereGeometryVBO(24, 12));
+    sphere_geometry_vbos.push_back(new SphereGeometryVBO(48, 24));
+
+    for (int i=0; i<sphere_geometry_vbos.size(); ++i)
+        sphere_geometry_vbos[i]->Initialize();
 }
 
-void ParticleInstancingRenderer::AddInstancesData(double* xyz, double radius, \
-	unsigned char* rgb)  {
-    sphere_data.AddSphere(xyz, radius, rgb);
-}
 
-void ParticleInstancingRenderer::BuildVertexBuffer(const GLuint vbo, const std::vector<float>& vertices)
-{
-    const size_t vbo_size = vertices.size() * sizeof(float);
-    debug1 << "\tbuilding vertex buffer of size " << FormatBytes(vbo_size) << endl;
-
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    CheckOpenGLError();
-    glBufferData(GL_ARRAY_BUFFER, vbo_size, &vertices[0], GL_STATIC_DRAW);
-    CheckOpenGLError();
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    CheckOpenGLError();
-}
-
-void ParticleInstancingRenderer::BuildIndexBuffer(const GLuint ibo, const std::vector<unsigned short>& indices)
-{
-    const size_t ibo_size = indices.size() * sizeof(unsigned short);
-    debug1 << "\tbuilding index buffer of size " << FormatBytes(ibo_size) << endl;
-
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
-    CheckOpenGLError();
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, ibo_size, &indices[0], GL_STATIC_DRAW);
-    CheckOpenGLError();
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-    CheckOpenGLError();
-}
-
-void ParticleInstancingRenderer::BuildTextureBufferObject(const GLuint vbo, const GLuint tbo, size_t tbo_size, \
-	GLenum usage, GLenum internal_format)
+void ParticleInstancingRenderer::BuildTBO(const GLuint tbo, const GLuint tex, size_t tbo_size,  \
+                                          GLenum usage, GLenum internal_format)
 {
     debug1 << "\tbuilding texture buffer for instance data of size " << FormatBytes(tbo_size) << endl;
 
-    glBindBufferARB(GL_TEXTURE_BUFFER_EXT, vbo);
+    glBindBufferARB(GL_TEXTURE_BUFFER_ARB, tbo);
     CheckOpenGLError();
 
-    glBufferDataARB(GL_TEXTURE_BUFFER_EXT, tbo_size, 0, usage);
+    glBufferDataARB(GL_TEXTURE_BUFFER_ARB, tbo_size, 0, usage);
     CheckOpenGLError();
 
-    glBindTexture(GL_TEXTURE_BUFFER_EXT, tbo );
-    CheckOpenGLError();
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 1); // set 1-byte alignment
+    glBindTexture(GL_TEXTURE_BUFFER_ARB, tex );
     CheckOpenGLError();
 
-    glTexBufferEXT(GL_TEXTURE_BUFFER_EXT, internal_format, tbo);
+    glTexBufferARB(GL_TEXTURE_BUFFER_ARB, internal_format, tbo);
     CheckOpenGLError();
 
-    glBindBufferARB(GL_TEXTURE_BUFFER_EXT, 0);
+    // clear texture / bufer bindings
+    glBindBufferARB(GL_TEXTURE_BUFFER_ARB, 0);
     CheckOpenGLError();
-    glBindTexture(GL_TEXTURE_BUFFER_EXT, 0);
+    glBindTexture(GL_TEXTURE_BUFFER_ARB, 0);
     CheckOpenGLError();
 }
 
-void ParticleInstancingRenderer::BuildSphereGrids()
+
+
+GLboolean ParticleInstancingRenderer::CopyParticleDataToGpuBuffers(size_t start, size_t count, \
+                                                                   GLuint tbo_position_radius, GLuint tex_position_radius, GLuint tbo_color, GLuint tex_color )
 {
-    std::vector<QualityLevel> tmp(quality_levels);
-
-    if(shuffle_indices)
-    {
-	quality_levels.insert(quality_levels.end(),tmp.begin(), tmp.end());
-    }
-
-    for(size_t l = 0; l < quality_levels.size(); ++l)
-    {
-	QualityLevel& level = quality_levels[l];
-	std::vector<float> vertices;
-	std::vector<unsigned short > indices;
-	BuildSphereGrid(vertices, indices, level.Slices, level.Stacks);
-
-	if(shuffle_indices && (l > tmp.size()))
-	{
-	    std::vector<size_t> shuffle_mask(indices.size()/4);
-	    for(size_t i = 0; i < shuffle_mask.size(); ++i)
-	    {
-		shuffle_mask[i] = i;
-	    }
-	    std::random_shuffle(shuffle_mask.begin(), shuffle_mask.end());
-
-	    for(size_t i = 0; i < shuffle_mask.size(); ++i)
-	    {
-		for(size_t k = 0; k < 4; ++k)
-		    indices[4 * i + k] = quality_levels[l - tmp.size()].Indices[4 * shuffle_mask[i] + k];
-	    }
-	}
-
-	glGenBuffers(1, &level.VboGrid);
-	BuildVertexBuffer(level.VboGrid, vertices);
-
-	glGenBuffers(1, &level.VboIndices);
-	BuildIndexBuffer(level.VboIndices, indices);
-
-	level.IndicesCount = indices.size();
-	level.VertexCount = vertices.size() / 2;
-	level.Vertices = vertices;
-	level.Indices = indices;
-    }
-}
-
-void ParticleInstancingRenderer::BuildSphereGrid(std::vector<float>& vertices, std::vector<unsigned short>& indices, 
-	const size_t _slices, const size_t _stacks)
-{
-    size_t slices =_slices;
-    size_t stacks = _stacks;
-    debug1 << "building sphere grid " << slices << " x " << stacks << endl;
-
-    vertices.clear();
-    vertices.reserve(2 * slices * stacks); // we need 2 floats per position
-    indices.clear();
-    indices.reserve(vertices.capacity()); // pre-allocate an estimate of the required space
-
-    BuildGridVertices(vertices, slices, stacks);
-    BuildGridIndices(true, 0, slices, 0, stacks, slices, stacks, PostVertexShaderCacheSizeModernGPU, indices);
-    debug1 << "\tv " << vertices.size() << "/" <<  vertices.capacity() << endl;
-    debug1 << "\ti " << indices.size() << "/" <<  indices.capacity() << endl;
-
-    debug1 << "building sphere grid vertices " << vertices.size()/2 << " triangles " << indices.size()/3 << endl;
-}
-
-GLboolean ParticleInstancingRenderer::CopySphereDataToGpuBuffers(const SphereData& spheres, size_t start, size_t count, \
-	GLuint vbo_position_radius, GLuint vbo_attributes )
-{
-    const size_t number_of_spheres = count;
+    const size_t number_of_particles = count;
 
     float* mapped_position_radius = 0;
-    unsigned char* mapped_attributes = 0;
+    unsigned char* mapped_color = 0;
+
 
     // bind the buffers and get a mapped pointer to the elements
-    glBindBufferARB ( GL_TEXTURE_BUFFER_EXT, vbo_position_radius );
+    glBindBufferARB ( GL_TEXTURE_BUFFER_ARB, tbo_position_radius );
     CheckOpenGLError();
 
-    mapped_position_radius = reinterpret_cast<float*>(glMapBufferARB(GL_TEXTURE_BUFFER_EXT, GL_WRITE_ONLY_ARB));
+    // rebind the texture to the buffer
+    // it's not clear why this is needed, but if we don't do it 
+    // occasionally no objects get rendered.
+    glBindTexture(GL_TEXTURE_BUFFER_ARB, tex_position_radius);
+    CheckOpenGLError();
+    glTexBufferARB(GL_TEXTURE_BUFFER_ARB, GL_RGBA32F_ARB, tbo_position_radius);
+    CheckOpenGLError();
+    glBindTexture(GL_TEXTURE_BUFFER_ARB, 0);
     CheckOpenGLError();
 
-    glBindBufferARB ( GL_TEXTURE_BUFFER_EXT, vbo_attributes);
+//#define GLMAPBUFFER
+#ifdef GLMAPBUFFER
+    mapped_position_radius = reinterpret_cast<float*>(glMapBufferARB(GL_TEXTURE_BUFFER_ARB, GL_WRITE_ONLY));
     CheckOpenGLError();
 
-    mapped_attributes = reinterpret_cast<unsigned char*>(glMapBufferARB(GL_TEXTURE_BUFFER_EXT, GL_WRITE_ONLY_ARB));
+    if(!mapped_position_radius)
+        cerr << " mapped_position_radius null " << endl;
+#else
+    glBufferData(GL_TEXTURE_BUFFER_ARB, count*4*sizeof(float), &particle_position_radius[start], GL_DYNAMIC_DRAW);
+    CheckOpenGLError();
+#endif
+
+
+    // bind the buffers and get a mapped pointer to the elements
+    glBindBufferARB ( GL_TEXTURE_BUFFER_ARB, tbo_color);
     CheckOpenGLError();
 
-    if(!(mapped_position_radius &&  mapped_attributes))
-	debug1 << "mapping failed: mapped_attributes " << mapped_attributes << " mapped_position_radius " <<  mapped_position_radius << endl;
+    // rebind the texture to the buffer
+    // it's not clear why this is needed, but if we don't do it 
+    // occasionally no objects get rendered.
+    glBindTexture(GL_TEXTURE_BUFFER_ARB, tex_color);
+    CheckOpenGLError();
+    glTexBufferARB(GL_TEXTURE_BUFFER_ARB, GL_RGBA8, tbo_color);
+    CheckOpenGLError();
+    glBindTexture(GL_TEXTURE_BUFFER_ARB, 0);
+    CheckOpenGLError();
+
+#ifdef GLMAPBUFFER
+    mapped_color = reinterpret_cast<unsigned char*>(glMapBufferARB(GL_TEXTURE_BUFFER_ARB, GL_WRITE_ONLY));
+    CheckOpenGLError();
+
+    if(!mapped_color)
+        cerr << "mapping failed: mapped_color null" << endl;
+#else
+    glBufferData(GL_TEXTURE_BUFFER_ARB, count*4*sizeof(unsigned char), &particle_color[start], GL_DYNAMIC_DRAW);
+    CheckOpenGLError();
+#endif
+
+#ifdef GLMAPBUFFER
 
     // now fill the buffer, this could be accelerated using OpenMP
-    for(size_t i = 0; i < number_of_spheres; ++ i)
+    for(size_t i = 0; i < number_of_particles; ++ i)
     {
-	const size_t sphere = start + i;
+        const size_t p = start + i;
 
-	mapped_position_radius[4 * i + 0] = spheres.PositionXFloat(sphere);
-	mapped_position_radius[4 * i + 1] = spheres.PositionYFloat(sphere);
-	mapped_position_radius[4 * i + 2] = spheres.PositionZFloat(sphere);
-	mapped_position_radius[4 * i + 3] = spheres.RadiusFloat(sphere);
+        mapped_position_radius[4 * i + 0] = particle_position_radius[p*4+0];
+        mapped_position_radius[4 * i + 1] = particle_position_radius[p*4+1];
+        mapped_position_radius[4 * i + 2] = particle_position_radius[p*4+2];
+        mapped_position_radius[4 * i + 3] = particle_position_radius[p*4+3];
 
-	// debug1 << mapped_position_radius[4 * i + 0] << " " \
-	     << mapped_position_radius[4 * i + 1] << " " \
-	     << mapped_position_radius[4 * i + 2] << " " \
-	     << mapped_position_radius[4 * i + 3] << endl; 
-
-	mapped_attributes[4 * i + 0] = spheres.AttributeRUChar(sphere);
-	mapped_attributes[4 * i + 1] = spheres.AttributeGUChar(sphere);
-	mapped_attributes[4 * i + 2] = spheres.AttributeBUChar(sphere);
-	mapped_attributes[4 * i + 3] = NULL;
-	
-	// debug1 << (int)mapped_attributes[4 * i + 0] << " " \
-	     << (int)mapped_attributes[4 * i + 1] << " " \
-	     << (int)mapped_attributes[4 * i + 2] << " " \
-	     << (int)mapped_attributes[4 * i + 3] << endl; 
+        mapped_color[4 * i + 0] = particle_color[p*4+0];
+        mapped_color[4 * i + 1] = particle_color[p*4+1];
+        mapped_color[4 * i + 2] = particle_color[p*4+2];
+        mapped_color[4 * i + 3] = particle_color[p*4+3];
     }
 
+
     // unmap buffers
-    const GLboolean unmapped_attributes = glUnmapBufferARB(GL_TEXTURE_BUFFER_EXT);
+    const GLboolean unmapped_color = glUnmapBufferARB(GL_TEXTURE_BUFFER_ARB);
     CheckOpenGLError();
 
-    glBindBufferARB ( GL_TEXTURE_BUFFER_EXT, vbo_position_radius);
+    glBindBufferARB(GL_TEXTURE_BUFFER_ARB, tbo_position_radius);
     CheckOpenGLError();
 
-    const GLboolean unmapped_position_radius = glUnmapBufferARB(GL_TEXTURE_BUFFER_EXT);
+    const GLboolean unmapped_position_radius = glUnmapBufferARB(GL_TEXTURE_BUFFER_ARB);
     CheckOpenGLError();
 
-    glBindBufferARB ( GL_TEXTURE_BUFFER_EXT, 0 );
+#endif
+    glBindBufferARB(GL_TEXTURE_BUFFER_ARB, 0);
     CheckOpenGLError();
 
-    if(!(unmapped_attributes &&  unmapped_position_radius))
-	debug1 << "unmapping failed: unmapped_attributes" << static_cast<unsigned int>(unmapped_attributes) << " unmapped_position_radius" << static_cast<unsigned int>(unmapped_position_radius) << endl;
+    /*
+    if(!(unmapped_color==GL_TRUE &&  unmapped_position_radius==GL_TRUE))
+        cerr << "unmapping failed: unmapped_color" << static_cast<unsigned int>(unmapped_color) << " unmapped_position_radius" << static_cast<unsigned int>(unmapped_position_radius) << endl;
 
-    return unmapped_attributes &&  unmapped_position_radius;
+    return unmapped_color &&  unmapped_position_radius;
+    */
+    return true;
 }
 
-void ParticleInstancingRenderer::RenderBatchedInstancing()
+
+
+void ParticleInstancingRenderer::Render()
 {
+
     glPushAttrib(GL_ALL_ATTRIB_BITS);
     CheckOpenGLError();
 
-    // debug1 << "live_quality_level: " << live_quality_level << endl;
-
-    const QualityLevel& level = quality_levels[live_quality_level];
-
-    // debug1 << "program instancing: " << program_instancing << endl;
-    // debug1 << "vertex count: " << level.VertexCount << endl;
-    // debug1 << "index  count: " << level.IndicesCount << endl;
+    const SphereGeometryVBO& level = *sphere_geometry_vbos[quality_level];
 
     glUseProgram(program_instancing);
     CheckOpenGLError();
@@ -602,57 +633,54 @@ void ParticleInstancingRenderer::RenderBatchedInstancing()
     glValidateProgram(program_instancing);
     CheckOpenGLError();
 
+
     glUniform1i(glGetUniformLocation(program_instancing,"per_instance_data_position_radius"), 0);
     CheckOpenGLError();
     glUniform1i(glGetUniformLocation(program_instancing,"per_instance_data_attribute"), 1);
     CheckOpenGLError();
 
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, level.VboIndices);
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, level.GetVBOIndices());
     CheckOpenGLError();
-    glBindBuffer(GL_ARRAY_BUFFER, level.VboGrid);
+    glBindBuffer(GL_ARRAY_BUFFER, level.GetVBOVertices());
     CheckOpenGLError();
-    glVertexPointer(2, GL_FLOAT, size_grid_vertex, reinterpret_cast<char*>(0) + 0);
+    glVertexPointer(2, GL_FLOAT, 0, 0);
     CheckOpenGLError();
 
     glEnableClientState(GL_VERTEX_ARRAY);
     CheckOpenGLError();
+
     
-    const size_t total_number_of_instances = sphere_data.Size();
+    const size_t total_number_of_instances = NumParticles();
     const size_t number_of_batches = 1 + (total_number_of_instances - 1) / instanced_batch_size;
-    
-    // debug1 << "total_number_of_instances: " << total_number_of_instances << endl; 
 
     for(size_t batch = 0, instances_remaining = total_number_of_instances; batch < number_of_batches; ++batch, instances_remaining -= instanced_batch_size)
     {
-	size_t current_buffer = batch % 2;
-	const size_t start_instance = batch * instanced_batch_size;
-	const size_t instance_count = std::min(instances_remaining,instanced_batch_size);
+        size_t current_buffer = batch % 2;
+        const size_t start_instance = batch * instanced_batch_size;
+        const size_t instance_count = std::min(instances_remaining,instanced_batch_size);
 
-	// debug1 << "start_instance: " << start_instance << endl;
-	// debug1 << "instance_count: " << instance_count << endl;
+        CopyParticleDataToGpuBuffers(start_instance,
+                                     instance_count, 
+                                     tbo_position_radius_batches[current_buffer],
+                                     tex_position_radius_batches[current_buffer],
+                                     tbo_color_batches[current_buffer], 
+                                     tex_color_batches[current_buffer]);
 
-	CopySphereDataToGpuBuffers
-	    (
-	     sphere_data,
-	     start_instance,
-	     instance_count, 
-	     vbo_per_instance_data_position_radius_batches[current_buffer],
-	     vbo_per_instance_data_attributes_batches[current_buffer] 
-	    );
 
-	glActiveTexture(GL_TEXTURE0);
-	CheckOpenGLError();
-	glBindTexture(GL_TEXTURE_BUFFER_EXT, tbo_per_instance_data_position_radius_batches[current_buffer]);
-	CheckOpenGLError();
+        glActiveTexture(GL_TEXTURE0);
+        CheckOpenGLError();
+        glBindTexture(GL_TEXTURE_BUFFER_ARB, tex_position_radius_batches[current_buffer]);
+        CheckOpenGLError();
 
-	glActiveTexture(GL_TEXTURE1);
-	CheckOpenGLError();
-	glBindTexture(GL_TEXTURE_BUFFER_EXT, tbo_per_instance_data_attributes_batches[current_buffer]);
-	CheckOpenGLError();
+        glActiveTexture(GL_TEXTURE1);
+        CheckOpenGLError();
+        glBindTexture(GL_TEXTURE_BUFFER_ARB, tex_color_batches[current_buffer]);
+        CheckOpenGLError();
 
-	glDrawElementsInstancedEXT(GL_QUADS, GLsizei(level.IndicesCount), GL_UNSIGNED_SHORT, reinterpret_cast<char*>(0), GLsizei(instance_count));
+        glDrawElementsInstancedARB(GL_QUAD_STRIP, GLsizei(level.GetNumIndices()), GL_UNSIGNED_SHORT, 0, GLsizei(instance_count));
+        CheckOpenGLError();
 
-	CheckOpenGLError();
     }
 
     glDisableClientState(GL_VERTEX_ARRAY);
@@ -665,12 +693,12 @@ void ParticleInstancingRenderer::RenderBatchedInstancing()
 
     glActiveTexture(GL_TEXTURE1);
     CheckOpenGLError();
-    glBindTexture(GL_TEXTURE_BUFFER_EXT, 0);
+    glBindTexture(GL_TEXTURE_BUFFER_ARB, 0);
     CheckOpenGLError();
 
     glActiveTexture(GL_TEXTURE0);
     CheckOpenGLError();	
-    glBindTexture(GL_TEXTURE_BUFFER_EXT, 0);
+    glBindTexture(GL_TEXTURE_BUFFER_ARB, 0);
     CheckOpenGLError();
 
     glUseProgram(0);
@@ -680,11 +708,31 @@ void ParticleInstancingRenderer::RenderBatchedInstancing()
     CheckOpenGLError();
 }
 
-void ParticleInstancingRenderer::CleanUp() {
-    sphere_data.CleanUp();
+
+void ParticleInstancingRenderer::ClearParticles() {
+
+    particle_position_radius.clear();
+    particle_color.clear();
 }
 
-size_t ParticleInstancingRenderer::Size() {
-    return sphere_data.Size();
+
+size_t ParticleInstancingRenderer::NumParticles() const {
+    // 4 entries for each particle
+    return particle_position_radius.size()/4;
 }
 
+
+void ParticleInstancingRenderer::AddParticle(const double* xyz,
+                                             const double radius,
+                                             const unsigned char* rgb)
+{
+    particle_position_radius.push_back(xyz[0]);
+    particle_position_radius.push_back(xyz[1]);
+    particle_position_radius.push_back(xyz[2]);
+    particle_position_radius.push_back(radius);
+
+    particle_color.push_back(rgb[0]);
+    particle_color.push_back(rgb[1]);
+    particle_color.push_back(rgb[2]);
+    particle_color.push_back(0);
+}
