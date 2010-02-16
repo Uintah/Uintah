@@ -7,6 +7,14 @@
 
    <SimulationComponent type="mpmice" />
 
+   <LoadBalancer type="DLB">
+     <doSpaceCurve>true</doSpaceCurve>
+     <dynamicAlgorithm>patchFactor</dynamicAlgorithm>
+     <levelIndependent>true</levelIndependent>
+     <timestepInterval>200</timestepInterval>
+     <doCostProfiling>true</doCostProfiling>
+   </LoadBalancer>
+
     <!--____________________________________________________________________-->
     <!--   T  I  M  E     V  A  R  I  A  B  L  E  S                         -->
     <!--____________________________________________________________________-->
@@ -135,6 +143,7 @@
 
     <MPM>
         <time_integrator>explicit</time_integrator>
+        <interpolator>                   gimp       </interpolator>
         <artificial_viscosity>true</artificial_viscosity>
         <minimum_particle_mass>          3.e-15     </minimum_particle_mass>
         <maximum_particle_velocity>      3.e4       </maximum_particle_velocity>
