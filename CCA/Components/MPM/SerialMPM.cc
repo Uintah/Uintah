@@ -616,11 +616,11 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
                                     d_sharedState->d_particleState,
                                     lb->pParticleIDLabel, matls);
 
-  sched->scheduleParticleRelocation(level, lb->pXLabel_preReloc,
-                                    d_sharedState->d_cohesiveZoneState_preReloc,
-                                    lb->pXLabel, 
-                                    d_sharedState->d_cohesiveZoneState,
-                                    lb->pParticleIDLabel, cz_matls);
+//  sched->scheduleParticleRelocation(level, lb->pXLabel_preReloc,
+//                                    d_sharedState->d_cohesiveZoneState_preReloc,
+//                                    lb->pXLabel, 
+//                                    d_sharedState->d_cohesiveZoneState,
+//                                    lb->pParticleIDLabel, cz_matls);
 
   if(d_analysisModule){                                                        
     d_analysisModule->scheduleDoAnalysis( sched, level);
