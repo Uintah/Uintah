@@ -432,6 +432,7 @@ void ProfileDriver::initializeWeights(const Grid* oldgrid, const Grid* newgrid)
     vector<double> weights;
     getWeights(l,old_level,weights);
     
+#if 1
     double volume=0;
     double weight=0;
     //compute average cost per datapoint
@@ -440,15 +441,33 @@ void ProfileDriver::initializeWeights(const Grid* oldgrid, const Grid* newgrid)
       volume+=old_level[r].getVolume();
       weight+=weights[r];
     }
-    double average_cost=weight/volume*d_minPatchSizeVolume[l];
-   
+    double initial_cost=weight/volume*d_minPatchSizeVolume[l];
+#elif 1
+    double weight=DBL_MAX;
+    //compute minimum cost per datapoint
+    for(int r=0;r<(int)old_level.size();r++)
+    {
+      if(weights[r]/old_level[r].getVolume()<weight)
+        weight=weights[r]/old_level[r].getVolume();
+    }
+    double initial_cost=weight*d_minPatchSizeVolume[l];
+#else
+    double weight=0;
+    //compute maximum cost per datapoint
+    for(int r=0;r<(int)old_level.size();r++)
+    {
+      if(weights[r]/old_level[r].getVolume()>weight)
+        weight=weights[r]/old_level[r].getVolume();
+    }
+    double initial_cost=weight*d_minPatchSizeVolume[l];
+#endif
     //if there is no cost data
-    if(average_cost==0)
+    if(initial_cost==0)
     {
       //set each datapoint to the same small value
-      average_cost=1;
+      initial_cost=1;
     }
-    
+   
     //compute regions in new level that are not in old
     
     vector<Region> new_regions_partial, new_regions, dnew, dold(old_level.begin(),old_level.end());
@@ -531,7 +550,29 @@ void ProfileDriver::initializeWeights(const Grid* oldgrid, const Grid* newgrid)
     }
     else
       new_regions.swap(new_regions_partial);
-
+#if 0
+    if(d_myworld->myrank()==0)
+    {
+      cout << " Old Regions: ";
+      for(vector<Region>::iterator it=old_level.begin();it!=old_level.end();it++)
+      {
+        IntVector low=it->getLow()/d_minPatchSize[l];
+        IntVector high=it->getHigh()/d_minPatchSize[l];
+        for(CellIterator iter(low,high); !iter.done(); iter++)
+          cout << *iter << " ";
+      }  
+      cout << endl;
+      cout << " New Regions: ";
+      for(vector<Region>::iterator it=new_regions.begin();it!=new_regions.end();it++)
+      {
+        IntVector low=it->getLow()/d_minPatchSize[l];
+        IntVector high=it->getHigh()/d_minPatchSize[l];
+        for(CellIterator iter(low,high); !iter.done(); iter++)
+          cout << *iter << " ";
+      }
+      cout << endl;
+    }
+#endif
     int p=0;
     //initialize weights 
     for(vector<Region>::iterator it=new_regions.begin();it!=new_regions.end();it++)
@@ -553,7 +594,7 @@ void ProfileDriver::initializeWeights(const Grid* oldgrid, const Grid* newgrid)
         if(p++%d_myworld->size()==d_myworld->myrank())  //distribute new regions accross processors
         {
           //add cost to current contribution
-          costs[l][*iter].weight=average_cost;
+          costs[l][*iter].weight=initial_cost;
         }
       } //end cell iteration
     } //end region iteration
