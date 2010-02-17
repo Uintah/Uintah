@@ -91,12 +91,11 @@ CohesiveZone::createCohesiveZones(CZMaterial* matl,
     // Field for position, normal, tangential and length.
     // Everything else is assumed to be zero.
     double p1,p2,p3,l4,n5,n6,n7,t8,t9,t10;
-    while(is >> p1 >> p2 >> p3 >> l4 >> n5 >> n6 >> n7 >> t8 >> t9 >> t10){
-      //cout << p1 << " " << p2 << " " << p3 << endl;
+    int mt, mb;
+    while(is >> p1 >> p2 >> p3 >> l4 >> n5 >> n6 >> n7 >> t8 >> t9 >> t10 >> mt >> mb){
       Point pos = Point(p1,p2,p3);
         IntVector cell_idx;
       if(patch->findCell(pos,cell_idx)){
-//      if(patch->containsPoint(pos)){
         particleIndex pidx = start;
         czposition[pidx]  = pos;
         czlength[pidx]    = l4;
@@ -106,6 +105,8 @@ CohesiveZone::createCohesiveZones(CZMaterial* matl,
         czdispbottom[pidx]= Vector(0.0,0.0,0.0);
         czSeparation[pidx]= Vector(0.0,0.0,0.0);
         czForce[pidx]     = Vector(0.0,0.0,0.0);
+        czTopMat[pidx]    = mt;
+        czBotMat[pidx]    = mb;
 
         // Figure out unique ID for the CZ
         ASSERT(cell_idx.x() <= 0xffff &&
@@ -146,6 +147,8 @@ CohesiveZone::allocateVariables(particleIndex numCZs,
   new_dw->allocateAndPut(czID,           d_lb->pParticleIDLabel,    subset);
   new_dw->allocateAndPut(czSeparation,   d_lb->czSeparationLabel,   subset);
   new_dw->allocateAndPut(czForce,        d_lb->czForceLabel,        subset);
+  new_dw->allocateAndPut(czTopMat,       d_lb->czTopMatLabel,       subset);
+  new_dw->allocateAndPut(czBotMat,       d_lb->czBotMatLabel,       subset);
   
   return subset;
 }
@@ -164,8 +167,8 @@ CohesiveZone::countCohesiveZones(const Patch* patch, const string filename)
 
     // Field for position, normal, tangential and length.
     // Everything else is assumed to be zero.
-    double f1,f2,f3,f4,f5,f6,f7,f8,f9,f10;
-    while(is >> f1 >> f2 >> f3 >> f4 >> f5 >> f6 >> f7 >> f8 >> f9 >> f10){
+    double f1,f2,f3,f4,f5,f6,f7,f8,f9,f10,mt,mb;
+    while(is >> f1 >> f2 >> f3 >> f4 >> f5 >> f6 >> f7 >> f8 >> f9 >> f10 >> mt >> mb){
       //cout << f1 << " " << f2 << " " << f3 << endl;
       if(patch->containsPoint(Point(f1,f2,f3))){
         sum++;
@@ -210,6 +213,12 @@ void CohesiveZone::registerPermanentCohesiveZoneState(CZMaterial* czmat)
   cz_state.push_back(d_lb->czForceLabel);
   cz_state_preReloc.push_back(d_lb->czForceLabel_preReloc);
 
+  cz_state.push_back(d_lb->czTopMatLabel);
+  cz_state_preReloc.push_back(d_lb->czTopMatLabel_preReloc);
+
+  cz_state.push_back(d_lb->czBotMatLabel);
+  cz_state_preReloc.push_back(d_lb->czBotMatLabel_preReloc);
+
   cz_state.push_back(d_lb->pParticleIDLabel);
   cz_state_preReloc.push_back(d_lb->pParticleIDLabel_preReloc);
 }
@@ -232,6 +241,8 @@ void CohesiveZone::scheduleInitialize(const LevelP& level, SchedulerP& sched,
   t->computes(d_lb->czDispBottomLabel);
   t->computes(d_lb->czSeparationLabel);
   t->computes(d_lb->czForceLabel);
+  t->computes(d_lb->czTopMatLabel);
+  t->computes(d_lb->czBotMatLabel);
   t->computes(d_lb->pParticleIDLabel);
   t->modifies(d_lb->pCellNAPIDLabel,zeroth_matl);
 

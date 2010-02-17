@@ -1364,6 +1364,8 @@ void SerialMPM::scheduleUpdateCohesiveZones(SchedulerP& sched,
   t->requires(Task::OldDW, lb->czDispBottomLabel,  cz_matls,    gnone);
   t->requires(Task::OldDW, lb->czSeparationLabel,  cz_matls,    gnone);
   t->requires(Task::OldDW, lb->czForceLabel,       cz_matls,    gnone);
+  t->requires(Task::OldDW, lb->czTopMatLabel,      cz_matls,    gnone);
+  t->requires(Task::OldDW, lb->czBotMatLabel,      cz_matls,    gnone);
   t->requires(Task::OldDW, lb->pParticleIDLabel,   cz_matls,    gnone);
 
   t->computes(lb->pXLabel_preReloc,           cz_matls);
@@ -1374,6 +1376,8 @@ void SerialMPM::scheduleUpdateCohesiveZones(SchedulerP& sched,
   t->computes(lb->czDispBottomLabel_preReloc, cz_matls);
   t->computes(lb->czSeparationLabel_preReloc, cz_matls);
   t->computes(lb->czForceLabel_preReloc,      cz_matls);
+  t->computes(lb->czTopMatLabel_preReloc,     cz_matls);
+  t->computes(lb->czBotMatLabel_preReloc,     cz_matls);
   t->computes(lb->pParticleIDLabel_preReloc,  cz_matls);
 
   sched->addTask(t, patches, matls);
@@ -3848,13 +3852,13 @@ void SerialMPM::updateCohesiveZones(const ProcessorGroup*,
 //    cout << "Doing updateCohesiveZones" << endl;
 
     int numMPMMatls=d_sharedState->getNumMPMMatls();
+    StaticArray<constNCVariable<Vector> > gvelocity_star(numMPMMatls);
     for(int m = 0; m < numMPMMatls; m++){
       MPMMaterial* cz_matl = d_sharedState->getMPMMaterial( m );
       int dwi = cz_matl->getDWIndex();
 
-      constNCVariable<Vector> gvelocity_star;
       Ghost::GhostType  gac = Ghost::AroundCells;
-      new_dw->get(gvelocity_star,  lb->gVelocityStarLabel,   dwi,patch,gac,NGP);
+      new_dw->get(gvelocity_star[m], lb->gVelocityStarLabel,dwi, patch,gac,NGP);
     }
 
     int numCZMatls=d_sharedState->getNumCZMatls();
@@ -3875,6 +3879,8 @@ void SerialMPM::updateCohesiveZones(const ProcessorGroup*,
       ParticleVariable<Vector> cznorm_new, cztang_new, czDispTop_new;
       constParticleVariable<Vector> czDispBot, czsep, czforce;
       ParticleVariable<Vector> czDispBot_new, czsep_new, czforce_new;
+      constParticleVariable<int> czTopMat, czBotMat;
+      ParticleVariable<int> czTopMat_new, czBotMat_new;
 
       old_dw->get(czx,          lb->pXLabel,                         pset);
       old_dw->get(czlength,     lb->czLengthLabel,                   pset);
@@ -3885,6 +3891,8 @@ void SerialMPM::updateCohesiveZones(const ProcessorGroup*,
       old_dw->get(czsep,        lb->czSeparationLabel,               pset);
       old_dw->get(czforce,      lb->czForceLabel,                    pset);
       old_dw->get(czids,        lb->pParticleIDLabel,                pset);
+      old_dw->get(czTopMat,     lb->czTopMatLabel,                   pset);
+      old_dw->get(czBotMat,     lb->czBotMatLabel,                   pset);
 
       new_dw->allocateAndPut(czx_new,      lb->pXLabel_preReloc,          pset);
       new_dw->allocateAndPut(czlength_new, lb->czLengthLabel_preReloc,    pset);
@@ -3895,6 +3903,8 @@ void SerialMPM::updateCohesiveZones(const ProcessorGroup*,
       new_dw->allocateAndPut(czsep_new,    lb->czSeparationLabel_preReloc,pset);
       new_dw->allocateAndPut(czforce_new,  lb->czForceLabel_preReloc,     pset);
       new_dw->allocateAndPut(czids_new,    lb->pParticleIDLabel_preReloc, pset);
+      new_dw->allocateAndPut(czTopMat_new, lb->czTopMatLabel_preReloc,    pset);
+      new_dw->allocateAndPut(czBotMat_new, lb->czBotMatLabel_preReloc,    pset);
 
       czx_new.copyData(czx);
       czlength_new.copyData(czlength);
@@ -3905,6 +3915,8 @@ void SerialMPM::updateCohesiveZones(const ProcessorGroup*,
       czsep_new.copyData(czsep);
       czforce_new.copyData(czforce);
       czids_new.copyData(czids);
+      czTopMat_new.copyData(czTopMat);
+      czBotMat_new.copyData(czBotMat);
 
       ParticleSubset* delset = scinew ParticleSubset(0, dwi, patch);
       new_dw->deleteParticles(delset);      

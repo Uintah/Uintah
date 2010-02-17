@@ -265,6 +265,10 @@ using std::vector;
       const VarLabel* czSeparationLabel_preReloc; 
       const VarLabel* czForceLabel; 
       const VarLabel* czForceLabel_preReloc; 
+      const VarLabel* czTopMatLabel; 
+      const VarLabel* czTopMatLabel_preReloc; 
+      const VarLabel* czBotMatLabel; 
+      const VarLabel* czBotMatLabel_preReloc; 
 
     };
 } // End namespace Uintah
