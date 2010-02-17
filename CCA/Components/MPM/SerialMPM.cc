@@ -594,7 +594,7 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
   scheduleComputeStressTensor(                sched, patches, matls);
   scheduleInterpolateToParticlesAndUpdateMom2(sched, patches, matls);
 #endif
-  scheduleUpdateCohesiveZones(                sched, patches, mpm_matls_sub,
+  scheduleUpdateCohesiveZones(                sched, patches,/* mpm_matls_sub,*/
                                                               cz_matls_sub,
                                                               all_matls);
 
@@ -614,13 +614,15 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
                                     d_sharedState->d_particleState_preReloc,
                                     lb->pXLabel, 
                                     d_sharedState->d_particleState,
-                                    lb->pParticleIDLabel, matls);
+                                    lb->pParticleIDLabel, matls, 1);
 
-//  sched->scheduleParticleRelocation(level, lb->pXLabel_preReloc,
-//                                    d_sharedState->d_cohesiveZoneState_preReloc,
-//                                    lb->pXLabel, 
-//                                    d_sharedState->d_cohesiveZoneState,
-//                                    lb->pParticleIDLabel, cz_matls);
+ if(flags->d_useCohesiveZones){
+  sched->scheduleParticleRelocation(level, lb->pXLabel_preReloc,
+                                    d_sharedState->d_cohesiveZoneState_preReloc,
+                                    lb->pXLabel, 
+                                    d_sharedState->d_cohesiveZoneState,
+                                    lb->pParticleIDLabel, cz_matls,2);
+  }
 
   if(d_analysisModule){                                                        
     d_analysisModule->scheduleDoAnalysis( sched, level);
@@ -1335,7 +1337,7 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdateMom2(SchedulerP& sched,
 
 void SerialMPM::scheduleUpdateCohesiveZones(SchedulerP& sched,
                                             const PatchSet* patches,
-                                            const MaterialSubset* mpm_matls,
+//                                            const MaterialSubset* mpm_matls,
                                             const MaterialSubset* cz_matls,
                                             const MaterialSet* matls)
 
@@ -1351,9 +1353,9 @@ void SerialMPM::scheduleUpdateCohesiveZones(SchedulerP& sched,
 
   t->requires(Task::OldDW, d_sharedState->get_delt_label() );
 
-  Ghost::GhostType gac   = Ghost::AroundCells;
+//  Ghost::GhostType gac   = Ghost::AroundCells;
   Ghost::GhostType gnone = Ghost::None;
-  t->requires(Task::NewDW, lb->gVelocityStarLabel, mpm_matls,   gac,NGN);
+//  t->requires(Task::NewDW, lb->gVelocityStarLabel, mpm_matls,   gac,NGN);
   t->requires(Task::OldDW, lb->pXLabel,            cz_matls,    gnone);
   t->requires(Task::OldDW, lb->czLengthLabel,      cz_matls,    gnone);
   t->requires(Task::OldDW, lb->czNormLabel,        cz_matls,    gnone);
@@ -3843,7 +3845,7 @@ void SerialMPM::updateCohesiveZones(const ProcessorGroup*,
     vector<IntVector> ni(interpolator->size());
     vector<double> S(interpolator->size());
 
-    cout << "Doing updateCohesiveZones" << endl;
+//    cout << "Doing updateCohesiveZones" << endl;
 
     int numCZMatls=d_sharedState->getNumCZMatls();
     for(int m = 0; m < numCZMatls; m++){
@@ -3894,6 +3896,8 @@ void SerialMPM::updateCohesiveZones(const ProcessorGroup*,
       czforce_new.copyData(czforce);
       czids_new.copyData(czids);
 
+      ParticleSubset* delset = scinew ParticleSubset(0, dwi, patch);
+      new_dw->deleteParticles(delset);      
     }
 /*
     int numMPMMatls=d_sharedState->getNumMPMMatls();

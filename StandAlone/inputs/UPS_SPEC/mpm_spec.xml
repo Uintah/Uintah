@@ -37,6 +37,7 @@
       <testForNegTemps_mpm                spec="OPTIONAL BOOLEAN" />  <!-- FIXME: default is? -->
 
       <use_load_curves                    spec="OPTIONAL BOOLEAN" />
+      <use_cohesive_zones                 spec="OPTIONAL BOOLEAN" />
       <use_volume_integral                spec="OPTIONAL BOOLEAN" /> 
       <UsePrescribedDeformation           spec="OPTIONAL BOOLEAN" /> 
       <InsertParticles                    spec="OPTIONAL BOOLEAN" /> 

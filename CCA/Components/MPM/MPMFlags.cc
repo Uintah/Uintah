@@ -60,6 +60,7 @@ MPMFlags::MPMFlags(const ProcessorGroup* myworld)
   d_artificialViscCoeff2 = 2.0;
   d_accStrainEnergy = false;
   d_useLoadCurves = false;
+  d_useCohesiveZones = false;
   d_createNewParticles = false;
   d_addNewMaterial = false;
   d_with_color = false;
@@ -155,6 +156,7 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps)
   mpm_flag_ps->get("artificial_viscosity_coeff2", d_artificialViscCoeff2);
   mpm_flag_ps->get("accumulate_strain_energy", d_accStrainEnergy);
   mpm_flag_ps->get("use_load_curves", d_useLoadCurves);
+  mpm_flag_ps->get("use_cohesive_zones", d_useCohesiveZones);
 
   if(d_artificial_viscosity && d_integrator_type == "implicit"){
     if (d_myworld->myrank() == 0){
@@ -287,6 +289,7 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps)
     dbg << " Delete Rogue Particles?     = " << d_doErosion << endl;
     dbg << "  Erosion Algorithm          = " << d_erosionAlgorithm << endl;
     dbg << " Use Load Curves             = " << d_useLoadCurves << endl;
+    dbg << " Use Cohesive Zones          = " << d_useCohesiveZones << endl;
     dbg << " ForceBC increment factor    = " << d_forceIncrementFactor<< endl;
     dbg << " Contact Friction Heating    = " << d_addFrictionWork << endl;
     dbg << " Extra Solver flushes        = " << d_extraSolverFlushes << endl;
@@ -311,7 +314,7 @@ MPMFlags::outputProblemSpec(ProblemSpecP& ps)
   ps->appendElement("artificial_viscosity_coeff1", d_artificialViscCoeff1);
   ps->appendElement("artificial_viscosity_coeff2", d_artificialViscCoeff2);
   ps->appendElement("accumulate_strain_energy", d_accStrainEnergy);
-  ps->appendElement("use_load_curves", d_useLoadCurves);
+  ps->appendElement("use_cohesive_zones", d_useCohesiveZones);
   ps->appendElement("ForceBC_force_increment_factor", d_forceIncrementFactor);
   ps->appendElement("create_new_particles", d_createNewParticles);
   ps->appendElement("manual_new_material", d_addNewMaterial);
