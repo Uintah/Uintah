@@ -594,7 +594,7 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
   scheduleComputeStressTensor(                sched, patches, matls);
   scheduleInterpolateToParticlesAndUpdateMom2(sched, patches, matls);
 #endif
-  scheduleUpdateCohesiveZones(                sched, patches,/* mpm_matls_sub,*/
+  scheduleUpdateCohesiveZones(                sched, patches, mpm_matls_sub,
                                                               cz_matls_sub,
                                                               all_matls);
 
@@ -1337,7 +1337,7 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdateMom2(SchedulerP& sched,
 
 void SerialMPM::scheduleUpdateCohesiveZones(SchedulerP& sched,
                                             const PatchSet* patches,
-//                                            const MaterialSubset* mpm_matls,
+                                            const MaterialSubset* mpm_matls,
                                             const MaterialSubset* cz_matls,
                                             const MaterialSet* matls)
 
@@ -1353,9 +1353,9 @@ void SerialMPM::scheduleUpdateCohesiveZones(SchedulerP& sched,
 
   t->requires(Task::OldDW, d_sharedState->get_delt_label() );
 
-//  Ghost::GhostType gac   = Ghost::AroundCells;
+  Ghost::GhostType gac   = Ghost::AroundCells;
   Ghost::GhostType gnone = Ghost::None;
-//  t->requires(Task::NewDW, lb->gVelocityStarLabel, mpm_matls,   gac,NGN);
+  t->requires(Task::NewDW, lb->gVelocityStarLabel, mpm_matls,   gac,NGN);
   t->requires(Task::OldDW, lb->pXLabel,            cz_matls,    gnone);
   t->requires(Task::OldDW, lb->czLengthLabel,      cz_matls,    gnone);
   t->requires(Task::OldDW, lb->czNormLabel,        cz_matls,    gnone);
@@ -3846,6 +3846,16 @@ void SerialMPM::updateCohesiveZones(const ProcessorGroup*,
     vector<double> S(interpolator->size());
 
 //    cout << "Doing updateCohesiveZones" << endl;
+
+    int numMPMMatls=d_sharedState->getNumMPMMatls();
+    for(int m = 0; m < numMPMMatls; m++){
+      MPMMaterial* cz_matl = d_sharedState->getMPMMaterial( m );
+      int dwi = cz_matl->getDWIndex();
+
+      constNCVariable<Vector> gvelocity_star;
+      Ghost::GhostType  gac = Ghost::AroundCells;
+      new_dw->get(gvelocity_star,  lb->gVelocityStarLabel,   dwi,patch,gac,NGP);
+    }
 
     int numCZMatls=d_sharedState->getNumCZMatls();
     for(int m = 0; m < numCZMatls; m++){
