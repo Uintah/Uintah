@@ -166,6 +166,14 @@ WARNING
 					    const VarLabel* particleIDLabel,
 					    const MaterialSet* matls) = 0;
 
+    virtual void scheduleParticleRelocation(const LevelP& level,
+					    const VarLabel* posLabel,
+					    const vector<vector<const VarLabel*> >& labels,
+					    const VarLabel* new_posLabel,
+					    const vector<vector<const VarLabel*> >& new_labels,
+					    const VarLabel* particleIDLabel,
+					    const MaterialSet* matls, int w) = 0;
+
     //! Schedule copying data to new grid after regridding
     virtual void scheduleAndDoDataCopy(const GridP& grid, 
                                        SimulationInterface* sim) = 0;

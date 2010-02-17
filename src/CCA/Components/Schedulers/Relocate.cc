@@ -592,7 +592,6 @@ const Patch* findCoarsePatch(const Point& pos, const Patch* guess, Level* coarse
     return guess;
   return coarseLevel->getPatchFromPoint(pos);
 }
-
 void
 Relocate::relocateParticles(const ProcessorGroup* pg,
              const PatchSubset* patches,

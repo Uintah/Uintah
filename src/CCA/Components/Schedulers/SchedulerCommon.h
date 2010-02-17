@@ -179,7 +179,8 @@ WARNING
     // if the simulation has been "restarted."
     virtual void setGeneration( int id ) { d_generation = id; }
 
-    virtual const MaterialSet* getMaterialSet() const {return reloc_.getMaterialSet();}
+//    virtual const MaterialSet* getMaterialSet() const {cout << "BEING CALLED"
+// << endl; return reloc_.getMaterialSet();}
 
     // This function will copy the data from the old grid to the new grid.
     // The PatchSubset structure will contain a patch on the new grid.
@@ -188,6 +189,16 @@ WARNING
 			   const MaterialSubset* ,
 			   DataWarehouse* old_dw,
 			   DataWarehouse* new_dw);
+
+    //////////
+    // Insert Documentation Here:
+    virtual void scheduleParticleRelocation(const LevelP& level,
+					    const VarLabel* old_posLabel,
+					    const vector<vector<const VarLabel*> >& old_labels,
+					    const VarLabel* new_posLabel,
+					    const vector<vector<const VarLabel*> >& new_labels,
+					    const VarLabel* particleIDLabel,
+					    const MaterialSet* matls,int which);
 
     //////////
     // Insert Documentation Here:
@@ -282,7 +293,8 @@ WARNING
     ofstream* memlogfile;
     bool emit_taskgraph;
     LocallyComputedPatchVarMap* m_locallyComputedPatchVarMap;
-    Relocate         reloc_;
+    Relocate         reloc1_;
+    Relocate         reloc2_;
 
     // whether or not to send a small message (takes more work to organize)
     // or a larger one (more communication time)

@@ -209,6 +209,9 @@ void CohesiveZone::registerPermanentCohesiveZoneState(CZMaterial* czmat)
 
   cz_state.push_back(d_lb->czForceLabel);
   cz_state_preReloc.push_back(d_lb->czForceLabel_preReloc);
+
+  cz_state.push_back(d_lb->pParticleIDLabel);
+  cz_state_preReloc.push_back(d_lb->pParticleIDLabel_preReloc);
 }
 
 void CohesiveZone::scheduleInitialize(const LevelP& level, SchedulerP& sched,
