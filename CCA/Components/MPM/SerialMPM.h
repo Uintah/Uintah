@@ -446,7 +446,7 @@ protected:
   virtual void scheduleUpdateCohesiveZones(SchedulerP&, 
                                            const PatchSet*,
                                            const MaterialSubset*,
-//                                           const MaterialSubset*,
+                                           const MaterialSubset*,
                                            const MaterialSet*);
 
   virtual void scheduleSetPrescribedMotion(SchedulerP&, 
