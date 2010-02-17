@@ -366,7 +366,6 @@ MPMLabel::MPMLabel()
   pCellNAPIDLabel =
     VarLabel::create("cellNAPID", CCVariable<short int>::getTypeDescription());
 
-
   doMechLabel = VarLabel::create( "doMech", delt_vartype::getTypeDescription());
 
   // Implicit MPM labels
@@ -604,6 +603,16 @@ MPMLabel::MPMLabel()
                      ParticleVariable<Vector>::getTypeDescription());
   czForceLabel_preReloc = VarLabel::create("cz.force+",
                      ParticleVariable<Vector>::getTypeDescription());
+
+  czTopMatLabel = VarLabel::create("cz.topmat",
+                     ParticleVariable<int>::getTypeDescription());
+  czTopMatLabel_preReloc = VarLabel::create("cz.topmat+",
+                     ParticleVariable<int>::getTypeDescription());
+
+  czBotMatLabel = VarLabel::create("cz.botmat",
+                     ParticleVariable<int>::getTypeDescription());
+  czBotMatLabel_preReloc = VarLabel::create("cz.botmat+",
+                     ParticleVariable<int>::getTypeDescription());
 } 
 
 MPMLabel::~MPMLabel()
@@ -821,5 +830,8 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(czSeparationLabel_preReloc);
   VarLabel::destroy(czForceLabel);
   VarLabel::destroy(czForceLabel_preReloc);
-
+  VarLabel::destroy(czTopMatLabel);
+  VarLabel::destroy(czTopMatLabel_preReloc);
+  VarLabel::destroy(czBotMatLabel);
+  VarLabel::destroy(czBotMatLabel_preReloc);
 }
