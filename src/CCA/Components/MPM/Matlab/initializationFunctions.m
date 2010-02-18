@@ -147,7 +147,7 @@ function [IF] = initializationFunctions
 
     R.min         = domain/3.0;                       
     R.max         = 2.0*domain/3.0;
-    R.refineRatio = 1;
+    R.refineRatio = 2;
     R.dx          = R1_dx/R.refineRatio;
     R.volP        = R.dx/PPC;
     R.NN          = int32( (R.max - R.min)/R.dx );

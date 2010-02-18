@@ -7,7 +7,7 @@
    
 
 function [L2_norm,maxError,NN,NP]=amrmpm(problem_type,CFL,NCells)
-
+unix('/bin/rm sl_1 sl_2 sl_0')
 close all
 intwarning on
 
@@ -19,7 +19,7 @@ d_debugging = problem_type;
 
 [mms] = MMS;                      % load mms functions
 [sf]  = shapeFunctions;           % load all the shape functions
-[IF]  = initializationFunctions   % load initialization functions
+[IF]  = initializationFunctions;  % load initialization functions
 
 %  valid options:
 %  problem type:  impulsiveBar, oscillator, compaction advectBlock, mms
@@ -77,9 +77,9 @@ bar_length  = bar_max - bar_min;
 domain       = 52.0;
 area         = 1.;
 plotSwitch   = 1;
-plotInterval = 200;
+plotInterval = 1;
 writeData    = 0;
-max_tstep    = BigNum;
+max_tstep    = 10;
 
 % HARDWIRED FOR TESTING
 %NN          = 16;
@@ -108,8 +108,8 @@ end
 %__________________________________
 % compute the zone of influence
 % compute the positions of the nodes
-[nodePos]  = IF.initialize_NodePos(NN, R1_dx, Regions, nRegions, interpolation)
-[Lx]       = IF.initialize_Lx(NN, nodePos)
+[nodePos]  = IF.initialize_NodePos(NN, R1_dx, Regions, nRegions, interpolation);
+[Lx]       = IF.initialize_Lx(NN, nodePos);
 
 % output the regions and the Lx
 nn = 1;
@@ -141,7 +141,6 @@ Gs        = zeros(1,NSFN);
 Ss        = zeros(1,NSFN);
 
 massG     = zeros(NN,1);
-momG      = zeros(NN,1);
 velG      = zeros(NN,1);
 vel_nobc_G= zeros(NN,1);
 accl_G    = zeros(NN,1);
@@ -259,7 +258,7 @@ titleStr(4) ={sprintf('Constant resolution, #cells %g', NN)};
 
 %plot initial conditions
 if(plotSwitch == 1)
-  plotResults(titleStr, t_initial, tstep, xp, dp, massP, Fp, velP, stressP, nodePos, velG, massG, momG)
+  plotResults(titleStr, t_initial, tstep, xp, dp, massP, Fp, velP, stressP, nodePos, velG, massG, extForceG,intForceG)
 end
 fprintf('t_final: %g, interpolator: %s, NN: %g, NP: %g dx_min: %g \n',t_final,interpolation, NN,NP,dx_min);
 %input('hit return')
@@ -313,7 +312,7 @@ while t<t_final && tstep < max_tstep
       extForceG(nodes(ig)) = extForceG(nodes(ig)) + massP(ip) * accl_extForceP(ip) * Ss(ig); 
       
       % debugging__________________________________
-      if(0)
+      if(nodes(ig) < 3)
         fprintf( 'ip: %g xp: %g, nodes: %g, node_pos: %g massG: %g, massP: %g, Ss: %g,  prod: %g \n', ip, xp(ip), nodes(ig), nodePos(nodes(ig)), massG(nodes(ig)), massP(ip), Ss(ig), massP(ip) * Ss(ig) );
         fprintf( '\t velG:      %g,  velP:       %g,  prod: %g \n', velG(nodes(ig)), velP(ip), (massP(ip) * velP(ip) * Ss(ig) ) );
         fprintf( '\t extForceG: %g,  accl_extForceP:  %g,  prod: %g \n', extForceG(nodes(ig)), accl_extForceP(ip), accl_extForceP(ip) * Ss(ig) );
@@ -339,6 +338,12 @@ while t<t_final && tstep < max_tstep
     [nodes,Gs,dx]=sf.findNodesAndWeightGradients_linear(xp(ip), lp(ip), nRegions, Regions, nodePos,Lx);
     for ig=1:NSFN
       intForceG(nodes(ig)) = intForceG(nodes(ig)) - Gs(ig) * stressP(ip) * vol(ip);
+      
+      if(nodes(ig) < 3)
+         source = Gs(ig) * stressP(ip) * vol(ip);
+         fprintf('node:%g internalForceG: %g source: %g, stressP: %g vol: %g \n',nodes(ig), intForceG(nodes(ig)), source, stressP(ip), vol(ip)   );
+      end
+
     end
   end
 
@@ -347,14 +352,20 @@ while t<t_final && tstep < max_tstep
   accl_G    =(intForceG + extForceG)./massG;
   vel_new_G = velG + accl_G.*dt;
   
+  for ig=1:NN
+    if( abs(nodePos(ig) - 17.3333) < 1e-3)
+      fid = fopen('sl_1','a');
+      fprintf(fid,' time: %g NP: %g, massG: %g, velG: %g extForceG: %g intForceG:%g accl_G:%g\n',t, nodePos(ig), massG(ig), velG(ig), extForceG(ig), intForceG(ig), accl_G(ig));
+      fclose(fid);
+    end
+  end
+  
 
   %set velocity BC
   for ibc=1:length(BCNodeL)
     vel_new_G(BCNodeL(ibc)) = velG_BCValueL;
     vel_new_G(BCNodeR(ibc)) = velG_BCValueR;
   end
-
-  momG = massG .* vel_new_G;
 
   %__________________________________
   % compute the acceleration on the grid
@@ -493,7 +504,7 @@ while t<t_final && tstep < max_tstep
   %__________________________________
   % plot intantaneous solution
   if (mod(tstep,plotInterval) == 0) && (plotSwitch == 1)
-    plotResults(titleStr, t, tstep, xp, dp, massP, Fp, velP, stressP, nodePos, velG, massG, momG)
+    plotResults(titleStr, t, tstep, xp, dp, massP, Fp, velP, stressP, nodePos, velG, massG, extForceG,intForceG)
     %input('hit return');
   end
   
@@ -593,6 +604,12 @@ function [Fp, dF, vol, lp] = computeDeformationGradient(xp,lp,dt,velG,Fp,NP, nRe
     Fp(ip)      = dF(ip) * Fp(ip);
     vol(ip)     = volP_0 * Fp(ip);
     lp(ip)      = lp_0 * Fp(ip);
+    
+    if(ip == 35 || ip == 36) 
+      fid = fopen('sl_2','a');
+      fprintf(fid,'xp:%g, gUp:%16.15E, Fp:%16.15E \n',xp(ip), gUp, Fp(ip));
+      fclose(fid);
+    end 
   end
 end
 
@@ -610,11 +627,11 @@ end
 
 
 %__________________________________
-function plotResults(titleStr,t, tstep, xp, dp, massP, Fp, velP, stressP, nodePos, velG, massG, momG)
+function plotResults(titleStr,t, tstep, xp, dp, massP, Fp, velP, stressP, nodePos, velG, massG, extForceG,intForceG)
 
   % plot SimulationState
-  figure1 = figure(1);
-  set(1,'position',[50,100,700,700]);
+  fig1 = sfigure(1);
+  set(fig1,'position',[50,100,700,700]);
   
   subplot(4,1,1),plot(xp,velP,'rd');
   ylim([min(velP - 1e-3) max(velP + 1e-3)])
@@ -639,34 +656,26 @@ function plotResults(titleStr,t, tstep, xp, dp, massP, Fp, velP, stressP, nodePo
   for n=1:NN           
     x = nodePos(n);
     [pt1,pt2] = dsxy2figxy([x,x],ylim);
-    annotation(figure1,'line',pt1,pt2,'Color','r');
+    annotation(fig1,'line',pt1,pt2,'Color','r');
   end
   
-if(0)
-  subplot(6,1,4),plot(nodePos, velG,'bx');
+  %__________________________________
+  fig2 = sfigure(2);
+  set(fig2,'position',[10,1000,700,350]);
+  subplot(3,1,1),plot(nodePos, velG,'bx');
   xlabel('NodePos');
   ylabel('grid Vel');
-  %axis([0 50 0 101] )
-
-  grad_velG = diff(velG);
-  grad_velG(length(velG)) = 0;
+  xlim([min(nodePos) max(nodePos)]);
   
-  for n=2:length(velG)
-    grad_velG(n) = grad_velG(n)/(nodePos(n) - nodePos(n-1) );
-  end
-  subplot(6,1,5),plot(nodePos, grad_velG,'bx');
-  ylabel('grad velG');
-  xlim([0,40])
+  subplot(3,1,2),plot(nodePos, extForceG,'rd');
+  xlim([min(nodePos) max(nodePos)]);
+  ylabel('extForceG');
   
-  %subplot(6,1,5),plot(nodePos, massG,'bx');
-  %ylabel('gridMass');
-  %axis([0 50 0 1.1] )
-
-  momG = velG .* massG;
-  subplot(6,1,6),plot(nodePos, momG,'bx');
-  ylabel('gridMom');
-  %axis([0 50 0 101] )
-
+  subplot(3,1,3),plot(nodePos, intForceG,'rd');
+  xlim([min(nodePos) max(nodePos)]);
+  ylabel('intForceG');  
+  
+if(0)
   f_name = sprintf('%g.ppm',tstep-1);
   F = getframe(gcf);
   [X,map] = frame2im(F);
