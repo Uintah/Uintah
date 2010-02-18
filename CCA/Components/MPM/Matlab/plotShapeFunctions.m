@@ -22,7 +22,7 @@ function k=plotShapeFunctions
   
   [Lx]       = IF.initialize_Lx(NN, nodePos);
   
-%  Lx(3,2) = dx/4;
+  Lx(2,1) = dx/4;
 %  Lx(5,1) = dx/4;
   Lx
 
