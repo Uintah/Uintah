@@ -1455,6 +1455,8 @@ void DynamicLoadBalancer::getCosts(const Grid* grid, vector<vector<double> >&cos
   //check if the forecaster is ready, if it is use it
   if(d_costForecaster->hasData())
   {
+    //we have data so don't collect particles
+    d_collectParticles=false;
     d_costForecaster->getWeights(grid,num_particles,costs);
   }
   else //otherwise just use a simple cost model (this happens on the first timestep when profiling data doesn't exist)
@@ -1481,6 +1483,7 @@ bool DynamicLoadBalancer::possiblyDynamicallyReallocate(const GridP& grid, int s
 
   bool changed = false;
   bool force = false;
+
   // don't do on a restart unless procs changed between runs.  For restarts, this is 
   // called mainly to update the perProc Patch sets (at the bottom)
   if (state != restart) {
@@ -1596,6 +1599,7 @@ DynamicLoadBalancer::problemSetup(ProblemSpecP& pspec, GridP& grid,  SimulationS
       p->getWithDefault("profileTimestepWindow",timestepWindow,10);
       d_costForecaster=scinew CostProfiler(d_myworld,this);
       d_costForecaster->setTimestepWindow(timestepWindow);
+      d_collectParticles = true;
     }
     else
     {
@@ -1604,7 +1608,6 @@ DynamicLoadBalancer::problemSetup(ProblemSpecP& pspec, GridP& grid,  SimulationS
     }
    
     p->getWithDefault("levelIndependent",d_levelIndependent,true);
-    p->getWithDefault("collectParticles",d_collectParticles,false);
   }
 
 
