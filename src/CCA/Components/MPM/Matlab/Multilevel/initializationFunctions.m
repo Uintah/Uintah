@@ -18,24 +18,24 @@ function [IF] = initializationFunctions
     left  = 1;
     right = 2;
     
-    for fineLevel=Limits.maxLevels:-1:2
-      coarseLevel = fineLevel -1;
-      L = Levels{fineLevel};
+    for fl=Limits.maxLevels:-1:2     % fine level
+      cl = fl -1;                    % coarse level
+      L = Levels{fl};
       nExtraCells = L.EC;
       
       % fine level CFI nodes
       cfi_left  = L.Patches{1}.nodeLo + nExtraCells;
       cfi_right = L.Patches{L.nPatches}.nodeHi - nExtraCells;
-      Levels{fineLevel}.CFI_nodes(left)  = cfi_left;
-      Levels{fineLevel}.CFI_nodes(right) = cfi_right;
+      Levels{fl}.CFI_nodes(left)  = cfi_left;
+      Levels{fl}.CFI_nodes(right) = cfi_right;
       
       % underlying CFI nodes on the coarse level
-      cfi_left  = GF.mapNodetoCoarser(nodePos(cfi_left, fineLevel), fineLevel,nodePos,Levels);
-      cfi_right = GF.mapNodetoCoarser(nodePos(cfi_right,fineLevel), fineLevel,nodePos,Levels);
-      Levels{coarseLevel}.CFI_nodes(left)  = cfi_left;
-      Levels{coarseLevel}.CFI_nodes(right) = cfi_right;
+      cfi_left  = GF.mapNodetoCoarser(nodePos(cfi_left, fl), fl,nodePos,Levels);
+      cfi_right = GF.mapNodetoCoarser(nodePos(cfi_right,fl), fl,nodePos,Levels);
+      Levels{cl}.CFI_nodes(left)  = cfi_left;
+      Levels{cl}.CFI_nodes(right) = cfi_right;
       
-      fprintf('FineLevel:%g, CoarseLevel:%g, CFI_nodes(%g, %g) CFI_nodes(%g, %g)\n',fineLevel,coarseLevel, Levels{fineLevel}.CFI_nodes(left), Levels{fineLevel}.CFI_nodes(right), Levels{coarseLevel}.CFI_nodes(left), Levels{coarseLevel}.CFI_nodes(right) ); 
+      fprintf('FineLevel:%g, CFI_nodes(%g, %g),  CoarseLevel:%g,  CFI_nodes(%g, %g)\n',fl,Levels{fl}.CFI_nodes(left), Levels{fl}.CFI_nodes(right),cl, Levels{cl}.CFI_nodes(left), Levels{cl}.CFI_nodes(right) ); 
     end
   end
  
@@ -71,9 +71,9 @@ function [IF] = initializationFunctions
   %______________________________________________________________________
   function[Lx]  = initialize_Lx(nodePos, Levels, Limits)
     
-    Lx = zeros(Limits.NN_max,2, Limits.maxLevels);
+    Lx = NaN(Limits.NN_max,2, Limits.maxLevels);
     % compute the zone of influence
-    left = 1;
+    left  = 1;
     right = 2;
     
     for L=1:Limits.maxLevels
@@ -295,8 +295,8 @@ function [IF] = initializationFunctions
     % Level 2
     nPatchesL2    = int32(1);               % partition the domain into nPatches
     PatchesL2     = cell(nPatchesL2,1);     % array that holds the individual region information
-    P.min         = domain/3.0                    
-    P.max         = 2.0*domain/3.0
+    P.min         = domain/3.0;                    
+    P.max         = 2.0*domain/3.0;
     P.refineRatio = 2;
     P.dx          = L1_dx/P.refineRatio;
     P.volP        = P.dx/PPC;
@@ -331,18 +331,18 @@ function [IF] = initializationFunctions
   
     % increase the number of nodes in the first and last patch if using gimp;
     if(strcmp(interpolation,'LINEAR'))
-      [Levels] = AddExtraCells(Levels, 1, 1)
+      [Levels] = AddExtraCells(Levels, 1, 0);
       
       for l=2:maxLevels
-        [Levels] = AddExtraCells(Levels, l, 2)
+        [Levels] = AddExtraCells(Levels, l, 2);
       end
     end
     
     if(strcmp(interpolation,'GIMP'))
-      [Levels] = AddExtraCells(Levels, 1, 1)
+      [Levels] = AddExtraCells(Levels, 1, 1);
       
       for l=2:maxLevels
-        [Levels] = AddExtraCells(Levels, l, 3)
+        [Levels] = AddExtraCells(Levels, l, 3);
       end
       
     end

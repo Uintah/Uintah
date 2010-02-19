@@ -7,7 +7,7 @@
    
 
 function [L2_norm,maxError,NN,NP]=ml_amrmpm(problem_type,CFL,NCells)
-
+unix('/bin/rm ml_1 ml_2 ml_0')
 close all
 intwarning on
 addpath([docroot '/techdoc/creating_plots/examples'])   % so you can use dsxy2figxy()
@@ -82,8 +82,8 @@ area         = 1.;
 plotSwitch   = 1;
 plotInterval = 200;
 dumpFrames   = 1;
-writeData    = 1;
-max_tstep    = BigNum;
+writeData    = 0;
+max_tstep    = 1000;
 
 L1_dx       =domain/(NCells);
 
@@ -107,7 +107,7 @@ end
 
 [P.xp, Levels, Limits]     = IF.initialize_xp(nodePos, interpolation, PPC, bar_min, bar_max, Limits, Levels);
 
-[Limits]                 = IF.NN_NP_allLevels(Levels, Limits)
+[Limits]                 = IF.NN_NP_allLevels(Levels, Limits);
 
 % define what the interpolation dx for each level
 % set the number of particles in the set
@@ -288,12 +288,12 @@ end
 titleStr(2) = {sprintf('Computational Domain 0,%g, MPM bar %g,%g',domain,bar_min, bar_max)};
 titleStr(3) = {sprintf('%s, PPC: %g',interpolation, PPC)};
 %titleStr(4)={'Variable Resolution, Center Region refinement ratio: 2'}
-titleStr(4) ={sprintf('2 Levels, #cells %g', Limits.NN_allLevels)};
+titleStr(4) ={sprintf('Multi-Levels, #cells %g', Limits.NN_allLevels)};
 
 
 %plot initial conditions
 if(plotSwitch == 1)
-  plotResults(titleStr, t_initial, tstep, P, nodePos, velG, massG, momG,extForceG, Limits, Levels)
+  plotResults(titleStr, t_initial, tstep, P, nodePos, velG, massG, momG,extForceG,intForceG, Limits, Levels)
 end
 fprintf('t_final: %g, interpolator: %s, NN: %g, NP: %g dx_min: %g \n',t_final,interpolation, Limits.NN_allLevels,Limits.NP_allLevels,dx_min);
 input('hit return')
@@ -315,6 +315,16 @@ fclose(fid);
 t = t_initial;
 while t<t_final && tstep < max_tstep
 
+  fid0 = fopen('ml_0','a');
+  fid1 = fopen('ml_1','a');
+  fid2 = fopen('ml_2','a');
+  fprintf(fid0,'__________________________________\n\n');
+  fprintf(fid1,'__________________________________\n\n');
+  fprintf(fid2,'__________________________________\n\n');
+  fclose(fid0);
+  fclose(fid1);
+  fclose(fid2);
+
   % compute the timestep
   dt = double(BigNum);
   for l=1:maxLevels
@@ -330,7 +340,7 @@ while t<t_final && tstep < max_tstep
     fprintf('timestep %g, dt = %g, time %g \n',tstep, dt, t)
   end
   
-  % initialize arrays to be zero
+  % initialize grid arrays to be zero
    for l=1:maxLevels   
     L = Levels{l};
           
@@ -354,7 +364,7 @@ while t<t_final && tstep < max_tstep
   % determine which particle are "extra cell particles"
   % create th extra cell particle struct
    %[P]        = pf.createParticleStruct(xp, massP, velP, stressP, vol, lp, dp, Fp);
-  [pID]      = pf.findExtraCellParticles(P, Levels, Limits, nodePos, interpolation)
+  [pID]      = pf.findExtraCellParticles(P, Levels, Limits, nodePos, interpolation);
   [EC_Pdata] = pf.createEC_particleStruct(P, pID, Levels, Limits);
   
 
@@ -366,7 +376,7 @@ while t<t_final && tstep < max_tstep
   %__________________________________
   % project particle data to grid for each particle set
   for pset = 1:length(PSets)
-    ps = PSets{pset}
+    ps = PSets{pset};
     
     [xp, massP, velP, accl_extForceP, lp]= pf.getCopy(ps,'xp','massP','velP','accl_extForceP', 'lp');
     compDomain = ps.CompDomain;
@@ -378,10 +388,9 @@ while t<t_final && tstep < max_tstep
     
     for l=1:maxLevels
       L = Levels{l};
-  
-      fprintf('pset %i level: %g NSFN: %g \n',pset, l, nsfn);
+      NP = ps.NP(l);
       
-      for ip=1:ps.NP
+      for ip=1:NP
 
         [nodes,Ss]=sf.findNodesAndWeights_linear(xp(ip,l), lp(ip,l), L.CFI_nodes, nodePos(:,l), Lx(:,:,l), compDomain, nsfn);
         for ig=1:nsfn
@@ -390,10 +399,15 @@ while t<t_final && tstep < max_tstep
           extForceG(nodes(ig),l) = extForceG(nodes(ig),l) + massP(ip,l) * accl_extForceP(ip,l) * Ss(ig); 
 
           % debugging__________________________________
-          if(strcmp(compDomain,'ExtraCells'))
-            fprintf( 'L-%g  ip: %g xp: %g, nodes: %g, node_pos: %g massG: %g, massP: %g, Ss: %g,  prod: %g \n', l, ip, xp(ip,l), nodes(ig), nodePos(nodes(ig),l), massG(nodes(ig),l), massP(ip,l), Ss(ig), massP(ip,l) * Ss(ig) );
-            fprintf( '\t velG:      %g,  velP:       %g,  prod: %g \n', velG(nodes(ig),l), velP(ip,l), (massP(ip,l) * velP(ip,l) * Ss(ig) ) );
-            fprintf( '\t extForceG: %g,  accl_extForceP:  %g,  prod: %g \n', extForceG(nodes(ig),l), accl_extForceP(ip,l), accl_extForceP(ip,l) * Ss(ig) );
+          %if( any(nodes(ig) == L.CFI_nodes(:)) )
+          n = nodePos(nodes(ig),l);
+          %if( ( (n >= 17.333 && n <= 17.34) || (n >= 34.6 && n <= 34.7) )  && l == 1)
+          if( (n >= 34.6 && n <= 34.7)   && l == 2)
+            fid = fopen('ml_0','a');
+            fprintf( fid,'L-%g  ip: %g xp: %g, nodes: %g, node_pos: %g massG: %g, massP: %g, Ss: %g,  prod: %g \n', l, ip, xp(ip,l), nodes(ig), nodePos(nodes(ig),l), massG(nodes(ig),l), massP(ip,l), Ss(ig), massP(ip,l) * Ss(ig) );
+            fprintf( fid,'\t velG:      %g,  velP:       %g,  prod: %g \n', velG(nodes(ig),l), velP(ip,l), (massP(ip,l) * velP(ip,l) * Ss(ig) ) );
+            fprintf( fid,'\t extForceG: %g,  accl_extForceP:  %g,  prod: %g \n', extForceG(nodes(ig),l), accl_extForceP(ip,l), accl_extForceP(ip,l) * Ss(ig) );
+            fclose(fid);
           end 
           % debugging__________________________________
 
@@ -418,8 +432,8 @@ while t<t_final && tstep < max_tstep
     velG(BCNodeR(ibc),L1) = velG_BCValueR;
   end
 
-  
   %compute internal force for each particle set
+  % with/without the extra cells
   for pset = 1:length(PSets)
     ps = PSets{pset};
     
@@ -435,14 +449,25 @@ while t<t_final && tstep < max_tstep
     for l=1:maxLevels   
       L = Levels{l};
 
-      for ip=1:ps.NP
-        [nodes,Gs]=sf.findNodesAndWeightGradients_linear(xp(ip,l), lp(ip,l), L.dx, L.CFI_nodes, nodePos(:,l), Lx(:,:,l), compDomain);
+      dx = ps.interpolation_dx(l);
+      
+      for ip=1:ps.NP(l)
+        [nodes,Gs]=sf.findNodesAndWeightGradients_linear(xp(ip,l), lp(ip,l), dx, L.CFI_nodes, nodePos(:,l), Lx(:,:,l), compDomain);
+        
         for ig=1:nsfn
-          intForceG(nodes(ig),l) = intForceG(nodes(ig),l) - Gs(ig) * P.stressP(ip,l) * P.vol(ip,l);
-          
-          if(strcmp(compDomain,'ExtraCells') )
-            fprintf( 'L-%g  ig: %g,  internalForceG: %g source: %g \n', l, nodes(ig), intForceG(nodes(ig),l), Gs(ig) * stressP(ip,l) * vol(ip,l)   );
+          source =  Gs(ig) * stressP(ip,l) * vol(ip,l);
+          intForceG(nodes(ig),l) = intForceG(nodes(ig),l) - source;
+         
+          % debugging__________________________________
+          %if( any(nodes(ig) == L.CFI_nodes(:)) )
+          n = nodePos(nodes(ig),l);
+          %if( ( (n >= 17.333 && n <= 17.34) || (n >= 34.6 && n <= 34.7) )  && l == 1)
+          if( (n >= 34.6 && n <= 34.7)   && l == 2)
+            fid = fopen('ml_1','a');
+            fprintf( fid, 'L-%g  compDomain:%s nodePos: %g, ip: %g  internalForceG: %g source: %g, stressP: %g vol: %g Gs: %g \n', l, compDomain, n, ip, intForceG(nodes(ig),l), source, stressP(ip,l), vol(ip,l), Gs(ig)  );
+            fclose(fid);
           end
+          % debugging__________________________________
         end
       end
     end  % level
@@ -480,24 +505,26 @@ while t<t_final && tstep < max_tstep
     accl_G(BCNodeL(ibc)) = 0.0;
     accl_G(BCNodeR(ibc)) = 0.0;
   end
- 
-  P = PSets{1};     % now using all non-extra cell particles
   
   %compute particle stress
   for l=1:maxLevels 
     L = Levels{l};
+        
     if(L.NP > 0)     
-      [P.Fp(:,l), P.dF(:,l),P.vol(:,l),P.lp(:,l)] = computeDeformationGradient(P.xp(:,l),P.lp(:,l),dt,vel_new_G(:,l),P.Fp(:,l),L.NP, L.dx, L.Patches, nodePos(:,l),Lx(:,:,l));
-      [P.stressP(:,l)]                      = computeStress(E,P.Fp(:,l),L.NP);
+      [P.Fp(:,l), P.dF(:,l), P.vol(:,l), P.lp(:,l)] = computeDeformationGradient(P.xp(:,l), P.lp(:,l), P.Fp(:,l), dt, vel_new_G(:,l), L.NP, L.dx, L.Patches, nodePos(:,l), Lx(:,:,l));
+      [P.stressP(:,l)]                      = computeStress(E, P.Fp(:,l), L.NP);
     end
   end
+  
   %__________________________________
   %project changes back to particles
   for l=1:maxLevels 
     L = Levels{l};
     
+    compDomain = 'noExtraCells';
+
     for ip=1:L.NP
-      [nodes,Ss]=sf.findNodesAndWeights_linear(P.xp(ip,l), P.lp(ip,l), CFI_nodes(:,l), nodePos(:,l), Lx(:,:,l));
+      [nodes,Ss]=sf.findNodesAndWeights_linear(P.xp(ip,l), P.lp(ip,l), L.CFI_nodes, nodePos(:,l), Lx(:,:,l), compDomain, NSFN);
       dvelP = 0.;
       dxp   = 0.;
 
@@ -515,21 +542,21 @@ while t<t_final && tstep < max_tstep
   
   %__________________________________
   % relocate particles between levels
-  [P.xp,P.massP,P.velP,P.vol,P.Fp,P.lp,P.Levels, P]=relocateParticles(P.xp,P.massP,P.velP,P.vol,P.Fp,P.lp,Levels,Limits);
+  [P.xp,P.massP,P.velP,P.vol,P.Fp,P.lp, Levels]=relocateParticles(P.xp,P.massP,P.velP,P.vol,P.Fp,P.lp,Levels,Limits);
+  
+  %define number of particles in the main particle set
+  for l=1:Limits.maxLevels   
+    L = Levels{l};
+    P.NP(l) = L.NP;
+  end
+  
   
   %__________________________________
   % find the tip displacement
-  tipLocation     = 0.0;
-  tipDisplacement = 0.0;
   for l=1:maxLevels 
-    L = Levels{l};
-
-    for ip=1:L.NP
-      if(xp(ip,l) > tipLocation)
-        tipLocation = P.xp(ip,l);
-        tipDisplacement = P.dp(ip,l);
-      end
-    end
+    [tmp,ip]        = max(P.xp(:,l) );
+    tipLocation     = P.xp(ip,l);
+    tipDisplacement = P.dp(ip,l);
   end
   
   DX_tip(tstep)=tipDisplacement;
@@ -550,15 +577,10 @@ while t<t_final && tstep < max_tstep
       TE(tstep) = KE(tstep) + SE(tstep);
     end
   end
+  
   %__________________________________
   % Place data into structures
   G.nodePos   = nodePos;  % Grid based Variables
-  
-  P.velP      = velP;     % particle variables
-  P.Fp        = Fp;
-  P.xp        = xp;
-  P.dp        = dp;
-  P.extForceP = accl_extForceP;
   
   OV.speedSound = speedSound;    % Other Variables
   OV.E          = E;
@@ -637,7 +659,7 @@ while t<t_final && tstep < max_tstep
   %__________________________________
   % plot intantaneous solution
   if (mod(tstep,plotInterval) == 0) && (plotSwitch == 1)
-    %plotResults(titleStr, t, tstep, Pdata, nodePos, velG, massG, momG,extForceG,Limits, Levels)
+    plotResults(titleStr, t, tstep, P, nodePos, velG, massG, momG,extForceG,intForceG,Limits, Levels)
     %input('hit return');
   end
   
@@ -653,19 +675,20 @@ while t<t_final && tstep < max_tstep
   for l=1:maxLevels 
     L = Levels{l};
     
-    for ip=1:L.NP
-      if(xp(ip,l) >= L.max || xp(ip,l) < L.min) 
-        fprintf('\n L-%g, particle(%g) position is outside the domain [%g, %g]: %g \n',l,ip,L.min, L.max,xp(ip,l))
-        fprintf('now exiting the time integration loop\n\n');
-        return; 
-      end
+    rougeParticle = find(P.xp(:,l) >= L.max | P.xp(:,l) < L.min);
+    
+    if( ~ isempty(rougeParticle)) 
+      fprintf('\n L-%g, particle(%g) position is outside the domain [%g, %g]: %g \n',l,ip,L.min, L.max,xp(ip,l))
+      fprintf('now exiting the time integration loop\n\n');
+      return; 
     end
+
   end
 end  % main loop
 
-totalEng_err(tstep)
-totalMom_err(tstep)
-tipDeflect_err(tstep)
+totalEng_err(tstep);
+totalMom_err(tstep);
+tipDeflect_err(tstep);
 
 
 %==========================================================================
@@ -684,7 +707,7 @@ if (writeData == 1)
   fprintf(fid,'#%s, PPC: %g, NN %g\n',problem_type, PPC, NN);
   fprintf(fid,'#p, xp, velP, Fp, stressP, time\n');
   for ip=1:NP
-    fprintf(fid,'%g %16.15E %16.15E %16.15E %16.15E %16.15E\n',ip, xp(ip),velP(ip),Fp(ip), stressP(ip), t);
+    fprintf(fid,'%g %16.15E %16.15E %16.15E %16.15E %16.15E\n',ip, P.xp(ip),P.velP(ip),P.Fp(ip), P.stressP(ip), t);
   end
   fclose(fid);
 
@@ -726,28 +749,51 @@ end
 %______________________________________________________________________
 % functions
 %______________________________________________________________________
-function [Fp, dF, vol, lp] = computeDeformationGradient(xp,lp,dt,velG,Fp,NP, dx, Regions, nodePos,Lx)
+function [Fp, dF, vol, lp] = computeDeformationGradient(xp, lp, Fp, dt ,velG, NP, dx, Regions, nodePos, Lx)
   global NSFN;
   global sf;
   
-  nn = length(lp);
+  nn  = length(lp);
   vol = NaN(nn,1);     % you must declare arrays that are not passed in.
   dF  = NaN(nn,1);
-  notUsed = NaN(1);
+  
+  notUsed   = NaN(1); 
+  CFI_nodes = NaN(1);
+  compDomain = 'nonExtraCells';
   
   for ip=1:NP
-    [nodes,Gs]  = sf.findNodesAndWeightGradients_linear(xp(ip), lp(ip), notUsed, nodePos, Lx, notUsed, notUsed);
+    [nodes,Gs]  = sf.findNodesAndWeightGradients_linear(xp(ip), lp(ip), dx, CFI_nodes, nodePos, Lx, compDomain);
+
     [volP_0, lp_0] = sf.positionToVolP(xp(ip), dx, Regions);
 
     gUp=0.0;
     for ig=1:NSFN
       gUp = gUp + velG(nodes(ig)) * Gs(ig);
+      
+      if(1)
+      %if(xp(ip) >= 17.333 && xp(ip) <= 18.45) 
+       if(xp(ip) >=  34.156 && xp(ip) <= 35.17)
+        fid = fopen('ml_2','a');
+        fprintf(fid,'nodePos:%g xp:%g, gUp:%16.15E, velG:%16.15E Gs:%16.15E \n',nodePos(nodes(ig)),xp(ip), gUp, velG(nodes(ig)), Gs(ig));
+        fclose(fid);
+      end
+      end
     end
-
+ 
     dF(ip,1)      = 1. + gUp * dt;
     Fp(ip,1)      = dF(ip) * Fp(ip);
     vol(ip,1)     = volP_0 * Fp(ip);
     lp(ip,1)      = lp_0 * Fp(ip);
+    
+    if(0)
+    %if(xp(ip) >= 17.333 && xp(ip) <= 18.45) 
+    if(xp(ip) >=  34.156 && xp(ip) <= 35.17)
+      fid = fopen('ml_2','a');
+      fprintf(fid,'xp:%g, gUp:%16.15E, Fp:%16.15E \n',xp(ip), gUp, Fp(ip));
+      fclose(fid);
+    end 
+    end
+    
   end
 end
 
@@ -804,14 +850,15 @@ end
 
 %__________________________________
 % relocate particles to the finest level
-function [xp,massP,velP,vol,Fp,lp,Levels, P]=relocateParticles(xp,massP,velP,vol,Fp,lp,Levels,Limits)
+function [xp,massP,velP,vol,Fp,lp,Levels]=relocateParticles(xp,massP,velP,vol,Fp,lp,Levels,Limits)
   global gf;
+  compDomain = 'withoutExtraCells';
   
   for l=1:Limits.maxLevels   
     L = Levels{l};
     
     for ip=1:L.NP   % has particle moved from coarse level to fine level
-      moveToFinerLevel   = gf.hasFinerCell(xp(ip,l),l,Levels,Limits);
+      moveToFinerLevel   = gf.hasFinerCell(xp(ip,l),l,Levels,Limits,compDomain);
       moveToCoarserLevel = gf.isOutsideLevel(xp(ip,l),l,Levels);
 
       if(moveToFinerLevel)
@@ -878,17 +925,13 @@ function [xp,massP,velP,vol,Fp,lp,Levels, P]=relocateParticles(xp,massP,velP,vol
     end  % np
   end  % levels
   
-  %define number of particles in the particle set
-  for l=1:Limits.maxLevels   
-    L = Levels{l};
-    P.NP(l) = L.NP;
-  end
+
   
 end
 
 
 %__________________________________
-function plotResults(titleStr,t, tstep, P, nodePos, velG, massG, momG, extForceG,Limits, Levels)
+function plotResults(titleStr,t, tstep, P, nodePos, velG, massG, momG, extForceG,intForceG, Limits, Levels)
   global gf;
   global dumpFrames;
     % plot SimulationState
@@ -896,7 +939,7 @@ function plotResults(titleStr,t, tstep, P, nodePos, velG, massG, momG, extForceG
   
   
   [xp_1D, velP_1D, massP_1D, stressP_1D, Fp_1D ] = ML_to_1D( Levels, Limits, P.xp, P.velP, P.massP, P.stressP,P.Fp);  
-  [nodePos_1D, extForceG_1D, velG_1D] = ML_Grid_to_1D( Levels, Limits, nodePos, extForceG, velG);
+  [nodePos_1D, extForceG_1D, intForceG_1D, velG_1D] = ML_Grid_to_1D( Levels, Limits, nodePos, extForceG, intForceG, velG);
          
   fig1 = sfigure(1);
   set(fig1,'position',[10,10,700,700]);
@@ -925,16 +968,21 @@ function plotResults(titleStr,t, tstep, P, nodePos, velG, massG, momG, extForceG
   drawNodes(fig1,nodePos,Levels,Limits)
 
   fig2 = sfigure(2);
-  set(fig2,'position',[10,1000,700,350]);
-  subplot(2,1,1),plot(nodePos_1D, velG_1D,'bx');
+  set(fig2,'position',[10,1000,700,700]);
+  subplot(3,1,1),plot(nodePos_1D, velG_1D,'bx');
   xlabel('NodePos');
   ylabel('grid Vel');
+  title(titleStr);
   xlim( [Levels{1}.min Levels{1}.max] )
   
   
-  subplot(2,1,2),plot(nodePos_1D, extForceG_1D,'rd');
+  subplot(3,1,2),plot(nodePos_1D, extForceG_1D,'rd');
   xlim( [Levels{1}.min Levels{1}.max] )
-  ylabel('Accl_extForceP');
+  ylabel('extForceG');
+  
+  subplot(3,1,3),plot(nodePos_1D, intForceG_1D,'rd');
+  xlim( [Levels{1}.min Levels{1}.max] )
+  ylabel('intForceG');
   
   if(dumpFrames)
     f_name = sprintf('%g.1.ppm',tstep-1);
@@ -1052,7 +1100,7 @@ function [accl_extForceP, delta, bodyForce] = ExternalForceAccl(problem_type, de
   
   if (strcmp(problem_type, 'compaction'))
     if(bodyForce > -200)
-      bodyForce = -t * 100;
+      bodyForce = -t * 1000;
     end
     
     delta = delta_0 + (density*bodyForce/(2.0 * E) ) * (delta_0 * delta_0);  
@@ -1064,7 +1112,7 @@ function [accl_extForceP, delta, bodyForce] = ExternalForceAccl(problem_type, de
       fprintf('Bodyforce: %g displacement:%g, W: %g\n',bodyForce, displacement/L1_dx, W);                                             
     end
     for ip=1:NP                                                                       
-       accl_extForceP(ip) = bodyForce;                                                      
+       accl_extForceP(ip) = bodyForce;                                   
     end                                                                               
   end
   

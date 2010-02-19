@@ -44,7 +44,7 @@ function [pf] = particleFunctions()
   %__________________________________
   %  This function returns the particle indices of the extra Cell particles 
   function [pID] = findExtraCellParticles(P, Levels, Limits, nodePos, interpolation)
-    disp('findExtraCellParticles')
+    %disp('findExtraCellParticles')
     
 
     for fl=2:Limits.maxLevels 
@@ -118,7 +118,7 @@ function [pf] = particleFunctions()
 
           var = getfield(P,fieldName);      % get the field from the main array;
 
-          % create the extra cell particle arrays for this field    
+          % create the extra cell particle arrays for this field   
           EC_P.(fieldName)(:,fl) = vertcat(var(cl_pID, cl));
           EC_P.(fieldName)(:,cl) = vertcat(var(fl_pID, fl));
 
@@ -131,7 +131,7 @@ function [pf] = particleFunctions()
     for cl=1:Limits.maxLevels-1 
       fl = cl + 1;                         
       EC_P.interpolation_dx(fl) = Levels{cl}.dx;    % on the fine level use the coarse level dx.  
-      EC_P.interpolation_dx(cl) = Levels{fl}.dx;    % on the coarse level use the fine level dx.  
+      EC_P.interpolation_dx(cl) = Levels{fl}.dx;    % on the coarse level use the fine level dx. 
     end
     
     % define number of particles in the set
@@ -141,10 +141,6 @@ function [pf] = particleFunctions()
     
     % define the computational domain
     EC_P.CompDomain = 'ExtraCells';
-  end
-  
-  %__________________________________
-  function [levels, xp, massP, velP, stressP, vol] = deleteGhostParticles()
   end
   
   
@@ -158,11 +154,13 @@ function [pf] = particleFunctions()
     
     pID = find( (xp>=xLo) & (xp <= xHi) );
     
-    fprintf('Particle in cell region [%g %g] \n indx: ',xLo,xHi);
-    fprintf('%i ',pID);
-    fprintf('\n Pos: ');
-    fprintf(' %g ',xp(pID));
-    fprintf('\n');
+    if(0)
+      fprintf('Particle in cell region [%g %g] \n indx: ',xLo,xHi);
+      fprintf('%i ',pID);
+      fprintf('\n Pos: ');
+      fprintf(' %g ',xp(pID));
+      fprintf('\n');
+    end
   end
 
 end
