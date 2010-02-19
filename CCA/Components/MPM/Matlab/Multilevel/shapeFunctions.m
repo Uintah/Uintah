@@ -5,7 +5,7 @@ function [sf] = shapeFunction()
   sf.positionToVolP                     = @positionToVolP;
   sf.findNodesAndWeights_linear         = @findNodesAndWeights_linear;
   sf.findNodesAndWeights_gimp           = @findNodesAndWeights_gimp;
-  sf.findNodesAndWeights_gimp2          = @findNodesAndWeights_gimp2
+  sf.findNodesAndWeights_gimp2          = @findNodesAndWeights_gimp2;
   sf.findNodesAndWeightGradients_linear = @findNodesAndWeightGradients_linear;
   sf.findNodesAndWeightGradients_gimp   = @findNodesAndWeightGradients_gimp;
   sf.findNodesAndWeightGradients_gimp2  = @findNodesAndWeightGradients_gimp2;
@@ -118,7 +118,7 @@ function [nodes,Ss]=findNodesAndWeights_linear(xp, notused, CFI_nodes, nodePos, 
     end
   end
   
-  if( strcmp(compDomain,'ExtraCells'))
+  if( strcmp(compDomain,'ExtraCells') & 0)
     n1 = nodes(1);
     fprintf('\n\nfindNodesAndWeights_linear\n');
     fprintf('node(1):%g, xp:%g Ss(1): %g\n',n1, xp, Ss(1));
@@ -327,12 +327,18 @@ function [nodes,Gs]=findNodesAndWeightGradients_linear(xp, notUsed, dx, CFI_node
 
   if( strcmp(compDomain,'ExtraCells'))
     [nodes] = ExtraCell_positionToNode(xp, CFI_nodes, nodePos);
+    
+    if(nodePos(nodes(1)) < xp )
+      Gs(1) = -1/dx;
+    else
+      Gs(1) = 1/dx;
+    end
+    
   else
     [nodes] = positionToNode(xp,nodePos);
+    Gs(1) = -1/dx;
+    Gs(2) = 1/dx;
   end
-
-  Gs(1) = -1/dx;
-  Gs(2) = 1/dx;
 end
 
 %__________________________________
