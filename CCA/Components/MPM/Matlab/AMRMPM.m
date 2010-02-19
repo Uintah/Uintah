@@ -15,6 +15,7 @@ global d_debugging;
 global PPC;
 global sf;
 global NSFN;               % number of shape function nodes
+global dumpFrames;
 d_debugging = problem_type;
 
 [mms] = MMS;                      % load mms functions
@@ -77,9 +78,10 @@ bar_length  = bar_max - bar_min;
 domain       = 52.0;
 area         = 1.;
 plotSwitch   = 1;
-plotInterval = 1;
+plotInterval = 200;
+dumpFrames   = 1;
 writeData    = 0;
-max_tstep    = 10;
+max_tstep    = 1000;
 
 % HARDWIRED FOR TESTING
 %NN          = 16;
@@ -253,7 +255,7 @@ end
 titleStr(2) = {sprintf('Computational Domain 0,%g, MPM bar %g,%g',domain,bar_min, bar_max)};
 titleStr(3) = {sprintf('%s, PPC: %g',interpolation, PPC)};
 %titleStr(4)={'Variable Resolution, Center Region refinement ratio: 2'}
-titleStr(4) ={sprintf('Constant resolution, #cells %g', NN)};
+titleStr(4) ={sprintf('Composite Grid, #cells %g', NN)};
 
 
 %plot initial conditions
@@ -275,6 +277,17 @@ fclose(fid);
 % Main timstep loop
 t = t_initial;
 while t<t_final && tstep < max_tstep
+
+  fid0 = fopen('sl_0','a');
+  fid1 = fopen('sl_1','a');
+  fid2 = fopen('sl_2','a');
+  fprintf(fid0,'__________________________________\n\n');
+  fprintf(fid1,'__________________________________\n\n');
+  fprintf(fid2,'__________________________________\n\n');
+  fclose(fid0);
+  fclose(fid1);
+  fclose(fid2);
+
 
   % compute the timestep
   dt = double(BigNum);
@@ -312,10 +325,14 @@ while t<t_final && tstep < max_tstep
       extForceG(nodes(ig)) = extForceG(nodes(ig)) + massP(ip) * accl_extForceP(ip) * Ss(ig); 
       
       % debugging__________________________________
-      if(nodes(ig) < 3)
-        fprintf( 'ip: %g xp: %g, nodes: %g, node_pos: %g massG: %g, massP: %g, Ss: %g,  prod: %g \n', ip, xp(ip), nodes(ig), nodePos(nodes(ig)), massG(nodes(ig)), massP(ip), Ss(ig), massP(ip) * Ss(ig) );
-        fprintf( '\t velG:      %g,  velP:       %g,  prod: %g \n', velG(nodes(ig)), velP(ip), (massP(ip) * velP(ip) * Ss(ig) ) );
-        fprintf( '\t extForceG: %g,  accl_extForceP:  %g,  prod: %g \n', extForceG(nodes(ig)), accl_extForceP(ip), accl_extForceP(ip) * Ss(ig) );
+      n = nodePos(nodes(ig));
+      %if( ( (n >= 17.333 && n <= 17.34) || (n >= 34.6 && n <= 34.7) ) )
+      if( (n >= 34.6 && n <= 34.7))
+        fid = fopen('sl_0','a');
+        fprintf(fid, 'ip: %g xp: %g, nodes: %g, node_pos: %g massG: %g, massP: %g, Ss: %g,  prod: %g \n', ip, xp(ip), nodes(ig), nodePos(nodes(ig)), massG(nodes(ig)), massP(ip), Ss(ig), massP(ip) * Ss(ig) );
+        fprintf(fid, '\t velG:      %g,  velP:       %g,  prod: %g \n', velG(nodes(ig)), velP(ip), (massP(ip) * velP(ip) * Ss(ig) ) );
+        fprintf(fid, '\t extForceG: %g,  accl_extForceP:  %g,  prod: %g \n', extForceG(nodes(ig)), accl_extForceP(ip), accl_extForceP(ip) * Ss(ig) );
+        fclose(fid);
       end 
       % debugging__________________________________
 
@@ -339,9 +356,13 @@ while t<t_final && tstep < max_tstep
     for ig=1:NSFN
       intForceG(nodes(ig)) = intForceG(nodes(ig)) - Gs(ig) * stressP(ip) * vol(ip);
       
-      if(nodes(ig) < 3)
+      n = nodePos(nodes(ig));
+      %if( ( (n >= 17.333 && n <= 17.34) || (n >= 34.6 && n <= 34.7) ) )
+      if( (n >= 34.6 && n <= 34.7))
          source = Gs(ig) * stressP(ip) * vol(ip);
-         fprintf('node:%g internalForceG: %g source: %g, stressP: %g vol: %g \n',nodes(ig), intForceG(nodes(ig)), source, stressP(ip), vol(ip)   );
+         fid = fopen('sl_1','a');
+         fprintf( fid,'nodePos:%g ip: %g internalForceG: %g source: %g, stressP: %g vol: %g Gs: %g\n',n, ip,intForceG(nodes(ig)), source, stressP(ip), vol(ip), Gs(ig)   );
+         fclose(fid);
       end
 
     end
@@ -351,15 +372,6 @@ while t<t_final && tstep < max_tstep
   %compute the acceleration and new velocity on the grid
   accl_G    =(intForceG + extForceG)./massG;
   vel_new_G = velG + accl_G.*dt;
-  
-  for ig=1:NN
-    if( abs(nodePos(ig) - 17.3333) < 1e-3)
-      fid = fopen('sl_1','a');
-      fprintf(fid,' time: %g NP: %g, massG: %g, velG: %g extForceG: %g intForceG:%g accl_G:%g\n',t, nodePos(ig), massG(ig), velG(ig), extForceG(ig), intForceG(ig), accl_G(ig));
-      fclose(fid);
-    end
-  end
-  
 
   %set velocity BC
   for ibc=1:length(BCNodeL)
@@ -403,8 +415,6 @@ while t<t_final && tstep < max_tstep
     dp(ip)   = dp(ip) + dxp;
     tmp(ip)  = tmp(ip) + dxp;
   end
-  
- 
   
   DX_tip(tstep)=dp(NP);
   T=t; %-dt;
@@ -472,8 +482,9 @@ while t<t_final && tstep < max_tstep
       term2 = term1 * (delta - xp(ip));
       stressExact(ip) = E *  ( sqrt( term2 + 1.0 ) - 1.0);
     end
-    figure(2)
-    set(2,'position',[1000,100,700,700]);
+    
+    fig3 = sfigure(3);
+    set(fig3,'position',[1000,100,700,700]);
 
     plot(xp,stressP,'rd', xp, stressExact, 'b');
     axis([0 50 -10000 0])
@@ -483,11 +494,12 @@ while t<t_final && tstep < max_tstep
     xlabel('Position');
     ylabel('Particle stress');
 
-    f_name = sprintf('%g.2.ppm',tstep-1);
-    F = getframe(gcf);
-    [X,map] = frame2im(F);
-    imwrite(X,f_name);
-
+    if(dumpFrames)
+      f_name = sprintf('%g.3.ppm',tstep-1);
+      F = getframe(gcf);
+      [X,map] = frame2im(F);
+      imwrite(X,f_name);
+    end
     % compute L2Norm
     d = abs(stressP - stressExact);
     L2_norm = sqrt( sum(d.^2)/length(stressP) )
@@ -598,6 +610,16 @@ function [Fp, dF, vol, lp] = computeDeformationGradient(xp,lp,dt,velG,Fp,NP, nRe
     gUp=0.0;
     for ig=1:NSFN
       gUp = gUp + velG(nodes(ig)) * Gs(ig);
+      
+      %if(xp(ip) >= 17.333 && xp(ip) <= 18.45) 
+      if(1)
+      if(xp(ip) >=  34.156 && xp(ip) <= 35.17) 
+        fid = fopen('sl_2','a');
+        fprintf(fid,'nodePos:%g xp:%g, gUp:%16.15E, velG:%16.15E Gs:%16.15E \n',nodePos(nodes(ig)),xp(ip), gUp, velG(nodes(ig)), Gs(ig));
+        fclose(fid);
+      end
+      end
+      
     end
 
     dF(ip)      = 1. + gUp * dt;
@@ -605,10 +627,13 @@ function [Fp, dF, vol, lp] = computeDeformationGradient(xp,lp,dt,velG,Fp,NP, nRe
     vol(ip)     = volP_0 * Fp(ip);
     lp(ip)      = lp_0 * Fp(ip);
     
-    if(ip == 35 || ip == 36) 
+    %if(xp(ip) >= 17.333 && xp(ip) <= 18.45) 
+    if(0)
+    if(xp(ip) >=  34.156 && xp(ip) <= 35.17)
       fid = fopen('sl_2','a');
       fprintf(fid,'xp:%g, gUp:%16.15E, Fp:%16.15E \n',xp(ip), gUp, Fp(ip));
       fclose(fid);
+    end
     end 
   end
 end
@@ -628,7 +653,8 @@ end
 
 %__________________________________
 function plotResults(titleStr,t, tstep, xp, dp, massP, Fp, velP, stressP, nodePos, velG, massG, extForceG,intForceG)
-
+  global dumpFrames;
+  
   % plot SimulationState
   fig1 = sfigure(1);
   set(fig1,'position',[50,100,700,700]);
@@ -661,10 +687,11 @@ function plotResults(titleStr,t, tstep, xp, dp, massP, Fp, velP, stressP, nodePo
   
   %__________________________________
   fig2 = sfigure(2);
-  set(fig2,'position',[10,1000,700,350]);
+  set(fig2,'position',[10,1000,700,700]);
   subplot(3,1,1),plot(nodePos, velG,'bx');
   xlabel('NodePos');
   ylabel('grid Vel');
+  title(titleStr);
   xlim([min(nodePos) max(nodePos)]);
   
   subplot(3,1,2),plot(nodePos, extForceG,'rd');
@@ -675,13 +702,17 @@ function plotResults(titleStr,t, tstep, xp, dp, massP, Fp, velP, stressP, nodePo
   xlim([min(nodePos) max(nodePos)]);
   ylabel('intForceG');  
   
-if(0)
-  f_name = sprintf('%g.ppm',tstep-1);
-  F = getframe(gcf);
-  [X,map] = frame2im(F);
-  imwrite(X,f_name)
-  %input('hit return');
-end
+  if(dumpFrames)
+    f_name = sprintf('%g.1.ppm',tstep-1);
+    F = getframe(fig1);
+    [X,map] = frame2im(F);
+    imwrite(X,f_name);
+  
+    f_name = sprintf('%g.2.ppm',tstep-1);  
+    F = getframe(fig2);                     
+    [X,map] = frame2im(F);                 
+    imwrite(X,f_name);   
+  end
 end
 
 %__________________________________
@@ -728,7 +759,7 @@ function [accl_extForceP, delta, bodyForce] = ExternalForceAccl(problem_type, de
   
   if (strcmp(problem_type, 'compaction'))
     if(bodyForce > -200)
-      bodyForce = -t * 100;
+      bodyForce = -t * 1000;
     end
     
     delta = delta_0 + (density*bodyForce/(2.0 * E) ) * (delta_0 * delta_0);  
@@ -740,8 +771,8 @@ function [accl_extForceP, delta, bodyForce] = ExternalForceAccl(problem_type, de
       fprintf('Bodyforce: %g displacement:%g, W: %g\n',bodyForce, displacement/R1_dx, W);                                             
     end
     for ip=1:NP                                                                       
-       accl_extForceP(ip) = bodyForce;                                                      
-    end                                                                               
+       accl_extForceP(ip) = bodyForce;                                                       
+    end                                                                            
   end
   
   if (strcmp(problem_type, 'mms'))
