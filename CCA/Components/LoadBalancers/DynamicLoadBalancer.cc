@@ -1456,7 +1456,6 @@ void DynamicLoadBalancer::getCosts(const Grid* grid, vector<vector<double> >&cos
   if(d_costForecaster->hasData())
   {
     //we have data so don't collect particles
-    d_collectParticles=false;
     d_costForecaster->getWeights(grid,num_particles,costs);
   }
   else //otherwise just use a simple cost model (this happens on the first timestep when profiling data doesn't exist)
@@ -1599,7 +1598,6 @@ DynamicLoadBalancer::problemSetup(ProblemSpecP& pspec, GridP& grid,  SimulationS
       p->getWithDefault("profileTimestepWindow",timestepWindow,10);
       d_costForecaster=scinew CostProfiler(d_myworld,this);
       d_costForecaster->setTimestepWindow(timestepWindow);
-      d_collectParticles = true;
     }
     else
     {
@@ -1658,6 +1656,7 @@ DynamicLoadBalancer::problemSetup(ProblemSpecP& pspec, GridP& grid,  SimulationS
     //////////////////////////////////////////////////////////////////////
     //this is for temperary testing only and should not be on
     delete d_costForecaster;
+    d_collectParticles = true;
     d_costForecaster= scinew CostModelForecaster(d_myworld,this,d_patchCost,d_cellCost,d_extraCellCost,d_particleCost);
     ///////////////////////////////////////////////////////////////////////
 #endif 
