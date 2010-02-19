@@ -18,8 +18,9 @@
        <initTime>           0.0        </initTime>
        <delt_min>           2.4e-14    </delt_min>
        <delt_max>           2.0e-06    </delt_max>
-       <delt_init>          1.8e-09    </delt_init>
-       <timestep_multiplier>0.5        </timestep_multiplier>
+       <delt_init>          1.e-12    </delt_init>
+       <max_delt_increase>  1.0        </max_delt_increase>
+       <timestep_multiplier>0.3        </timestep_multiplier>
    </Time>
     <!--____________________________________________________________________-->
     <!--      G  R  I  D     V  A  R  I  A  B  L  E  S                      -->
@@ -82,7 +83,7 @@
               <lower>        [-1.e-2,   0.,   0.]      </lower>
               <upper>        [ 4.e-2,1.2e-2,2.5e-4] </upper>
               <extraCells>   [1,1,1]               </extraCells>
-              <patches>      [2,1,1]            </patches>
+              <patches>      [4,2,1]            </patches>
               <resolution>   [200, 48, 1]       </resolution>
            </Box>
        </Level>
@@ -93,7 +94,6 @@
    <DataArchiver>
       <filebase>JWLppCuRS2d.uda</filebase>
       <outputInterval>2.00e-7</outputInterval>
-      <save label="press_equil_CC"/>
       <save label="delP_Dilatate"/>
       <save label="delP_MassX"/>
       <save label="press_CC"/>
@@ -102,13 +102,10 @@
       <save label="mass_L_CC"/> 
       <save label="mom_L_ME_CC"/>
       <save label="eng_L_ME_CC"/>
-      <save label="mom_L_CC"/>
-      <save label="int_eng_L_CC"/>
       <save label="vel_CC"/>
       <save label="rho_CC"/>
       <save label="sp_vol_CC"/>
       <save label="temp_CC"/>
-      <save label="speedSound_CC"/>
       <save label="modelMass_src"/>
       <save label="modelEng_src"/>
       <save label="modelVol_src"/>
@@ -119,25 +116,35 @@
       <save label="p.velocity"/>
       <save label="p.volume"/>
       <save label="p.stress"/>
-      <checkpoint cycle = "2" timestepInterval = "20"/>
+      <checkpoint cycle = "2" timestepInterval = "200"/>
    </DataArchiver>
 
     <!--____________________________________________________________________-->
     <!--    I  C  E     P  A  R  A  M  E  T  E  R  S                        -->
     <!--____________________________________________________________________-->
     <CFD>
-         <cfl>0.5</cfl>
+         <cfl>0.2</cfl>
        <ICE>
         <advection type = "FirstOrder" />
-        <TimeStepControl>
-          <Scheme_for_delT_calc> conservative   </Scheme_for_delT_calc>
-          <knob_for_speedSound>  1.0            </knob_for_speedSound>
-        </TimeStepControl>
+        <ClampSpecificVolume>  true  </ClampSpecificVolume>
       </ICE>        
     </CFD>
     <MPM>
-        <time_integrator>explicit</time_integrator>
-        <interpolator>                   gimp       </interpolator>
+      <time_integrator>               explicit    </time_integrator>
+      <interpolator>                  gimp        </interpolator>
+      <minimum_particle_mass>         3.e-10      </minimum_particle_mass>
+      <maximum_particle_velocity>     1.e3        </maximum_particle_velocity>
+      <artificial_damping_coeff>      0.0         </artificial_damping_coeff>
+      <artificial_viscosity>          true        </artificial_viscosity>
+      <artificial_viscosity_coeff1>   0.07        </artificial_viscosity_coeff1>
+      <artificial_viscosity_coeff2>   1.6         </artificial_viscosity_coeff2>
+      <accumulate_strain_energy>      false       </accumulate_strain_energy>
+      <use_load_curves>               false       </use_load_curves>
+      <do_contact_friction_heating>   false       </do_contact_friction_heating>
+      <create_new_particles>          false       </create_new_particles>
+      <DoThermalExpansion>            false       </DoThermalExpansion>
+      <testForNegTemps_mpm>           false       </testForNegTemps_mpm>
+      <erosion algorithm="ZeroStress"/>
     </MPM>
     <!--____________________________________________________________________-->
     <!--     P  H  Y  S  I  C  A  L     C  O  N  S  T  A  N  T  S           -->
@@ -203,10 +210,10 @@
        <ICE>
          <material name = "reactant">
            <EOS type = "Murnahan">
-             <n>7.4</n>
-             <K>39.0e-11</K>
-             <rho0>1160.0</rho0>
-             <P0>101325.0</P0>
+             <n>      7.4       </n>
+             <K>      39.0e-11  </K>
+             <rho0>   1160.0    </rho0>
+             <P0>     101325.0  </P0>
            </EOS>
            <dynamic_viscosity>      0.0                 </dynamic_viscosity>
            <thermal_conductivity>   0.0                 </thermal_conductivity>
@@ -224,13 +231,13 @@
 
          <material name = "product">
            <EOS type = "JWLC">
-             <A>2.9867e11</A>
-             <B>4.11706e9</B>
-             <C>7.206147e8</C>
-             <R1>4.95</R1>
-             <R2>1.15</R2>
-             <om>0.35</om>
-             <rho0>1160.0</rho0>
+             <A>  2.9867e11   </A>
+             <B>  4.11706e9   </B>
+             <C>  7.206147e8  </C>
+             <R1> 4.95        </R1>
+             <R2> 1.15        </R2>
+             <om> 0.35        </om>
+             <rho0> 1160.0    </rho0>
            </EOS>
            <dynamic_viscosity>      0.0                 </dynamic_viscosity>
            <thermal_conductivity>   0.0                 </thermal_conductivity>
@@ -238,8 +245,8 @@
            <gamma>                  1.4                 </gamma>
            <geom_object>
                 <box label="out_of_domain">
-                    <min>           [ 99.0,  99.0,  99.0 ]   </min>
-                    <max>           [100.0, 100.0, 100.0 ]   </max>
+                    <min>       [ 99.0,  99.0,  99.0 ]   </min>
+                    <max>       [100.0, 100.0, 100.0 ]   </max>
                 </box>
                <res>            [2,2,2]                 </res>
                <velocity>       [0.0,0.0,0.0]           </velocity>
@@ -288,11 +295,11 @@
       <Model type="JWLpp">
         <fromMaterial> reactant   </fromMaterial>
         <toMaterial>   product    </toMaterial>
-        <G>    3.5083e-7  </G>
-        <b>       1.3     </b>
-        <rho0> 1160.0     </rho0>
-        <E0>      5.558e6 </E0>
-        <ThresholdPressure>      200000000.      </ThresholdPressure>
+        <G>        3.5083e-7   </G>             
+        <b>        1.3         </b>             
+        <rho0>     1160.0      </rho0>          
+        <E0>       5.558e6     </E0>            
+        <ThresholdPressure>  200000000.  </ThresholdPressure>
       </Model>
     </Models>
 
