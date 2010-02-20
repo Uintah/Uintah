@@ -92,7 +92,7 @@ CohesiveZone::createCohesiveZones(CZMaterial* matl,
     // Everything else is assumed to be zero.
     double p1,p2,p3,l4,n5,n6,n7,t8,t9,t10;
     int mt, mb;
-    while(is >> p1 >> p2 >> p3 >> l4 >> n5 >> n6 >> n7 >> t8 >> t9 >> t10 >> mt >> mb){
+    while(is >> p1 >> p2 >> p3 >> l4 >> n5 >> n6 >> n7 >> t8 >> t9 >> t10 >> mb >> mt){
       Point pos = Point(p1,p2,p3);
         IntVector cell_idx;
       if(patch->findCell(pos,cell_idx)){
@@ -105,8 +105,8 @@ CohesiveZone::createCohesiveZones(CZMaterial* matl,
         czdispbottom[pidx]= Vector(0.0,0.0,0.0);
         czSeparation[pidx]= Vector(0.0,0.0,0.0);
         czForce[pidx]     = Vector(0.0,0.0,0.0);
-        czTopMat[pidx]    = mt;
         czBotMat[pidx]    = mb;
+        czTopMat[pidx]    = mt;
 
         // Figure out unique ID for the CZ
         ASSERT(cell_idx.x() <= 0xffff &&
