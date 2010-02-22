@@ -3,14 +3,7 @@
 %   This script tests full ICE time-stepping algorithm for Sod's Shocktube
 %   problem in one space dimension.
 %   We solve the compressible Euler equations for density (rho), velocity
-%   (u), temperature (T) and pressure (p). Internal energy is also used in
-%   parts of the timestep (but is linearly related to the temperature).
-%
-%   Initial conditions:
-%       rho=step function
-%       u=0
-%       T=300 Kelvin
-%       p=constant
+%   (u), internal energy (e) and pressure (p). 
 %
 %   Reference:  "ICE, explicit pressure, single material, reaction model"
 %               by Todd Harman, 09/24/04.
@@ -25,6 +18,7 @@ function [tfinal, x_CC, delX, rho_CC, xvel_CC, press_CC, temp_CC]=ice(nCells)
 close all;
 globalParams;                                       % Load global parameters
 setenv('LD_LIBRARY_PATH', ['/usr/lib']);
+[OF] = outputFunctions;
 %______________________________________________________________________
 %     Problem Setup
 
@@ -42,7 +36,11 @@ P.extraCells        = 1;                            % Number of ghost cells in e
 P.initTime          = 0.0;                          % Initial simulation time [sec]
 P.writeData         = 1;                            % output the final timestep to a .dat file
 P.delt_init         = 1e-20;                        % First timestep [sec]
-P.maxTimeSteps      = 400                           % Maximum number of timesteps [dimensionless]
+P.maxTimeSteps      = 100000                           % Maximum number of timesteps [dimensionless]
+P.UseProbeCells     = 1;                            % on/off switch for writing out data at probe locations
+P.probeLocations    = [ 0.4 0.5 0.6]
+                                                    % physical locations of probe locations
+
 P.CFL               = 0.25;                         % Courant number (~velocity*delT/delX) [dimensionless]
 P.advectionOrder    = 2;                            % 1=1st-order advection operator; 2=possibly-limited-2nd-order
 
@@ -108,21 +106,17 @@ mass_vrtx_2     = zeros(1,totNodes);                      % --------//-------  (
 
 %______________________________________________________________________
 %     Initialization
-
-%================ Useful constants ================
-
 d_SMALL_NUM = 1e-100;                           % A small number (for bullet-proofing
 d_TINY_RHO  = 1.0e-12;
 delT        = P.delt_init;                      % Init timestep
 
 %================ Initialize interior cells ================
 % Initial data at t=0 in the interior domain.
+x_CC    = ([G.ghost_Left:G.ghost_Right]-1-0.5).*G.delX + P.boxLower; 
+x_FC(1) = -G.delX + P.boxLower;
 
-x_CC    = ([G.ghost_Left:G.ghost_Right]-1-0.5).*G.delX; % Cell centers coordinates (note the "1-based" matlab index array)
-
-x_FC(1) = -G.delX;
 for j = G.first_FC:G.last_FC   % Loop over all xminus cell faces
-  x_FC(j) = (j-G.first_FC).*G.delX;  
+  x_FC(j) = (j - G.first_FC).*G.delX + P.boxLower;  
 end
 
 for r = 1:numRegions                                    % Init each region, assuming they are a non-overlapping all-covering partition of the domain
@@ -139,23 +133,19 @@ for r = 1:numRegions                                    % Init each region, assu
   end
 end
 
-%================ Initialize ghost cells ================
-% Impose boundary conditions (determine ghost cell values from
-% interior cell values).
-
+%================ Boundary Conditions ================
 rho_CC      = setBoundaryConditions(rho_CC  ,'rho_CC',   G);
 xvel_CC     = setBoundaryConditions(xvel_CC ,'xvel_CC',  G);
 temp_CC     = setBoundaryConditions(temp_CC ,'temp_CC',  G);
 press_CC    = setBoundaryConditions(press_CC,'press_CC', G);
 
-%================ Initialize graphics ================
+%================ Plot Initial conditions ================
 if (P.plotInitialData)
   figure(1);
   set(gcf,'position',[100,1000,1000,400]);
-  %================ Plot results ================
 
-  subplot(2,2,1), plot(rho_CC);
-  %xlim([P.boxLower(1) P.boxUpper(1)]);
+  subplot(2,2,1), plot(x_CC,rho_CC);
+  xlim([P.boxLower(1) P.boxUpper(1)]);
   legend('\rho');
   grid on;
 
@@ -179,6 +169,11 @@ if (P.plotInitialData)
   pause
 end
 
+% find the cell indicies of the probe cells
+if(P.UseProbeCells)
+  [P.probeCells] = findProbeCellIndices(P, x_CC)
+end
+
 %______________________________________________________________________
 %     Time integration loop
 t = P.initTime + delT;
@@ -189,11 +184,9 @@ for tstep = 1:P.maxTimeSteps
   fprintf('\n_____________________________________tstep=%d, t=%e, prev. delT=%e\n', tstep, t, delT);
 
   %_____________________________________________________
-  % 0. Dummy setting for a single-material problem
   % Set the volume fraction and specific volume.
-
   if (P.debugSteps)
-    fprintf('Step 0: dummy setting for single-material\n');
+    fprintf('Step 0: compute volFrac\n');
   end
 
   volfrac_CC = ones(G.ghost_Left,G.ghost_Right);             % Single material ==> covers 100% of each cell (volfrac=1)
@@ -202,9 +195,7 @@ for tstep = 1:P.maxTimeSteps
 
   %_____________________________________________________
   % 1. Compute thremodynamic/transport properties
-  % These are constants in this application and were already computed in the
-  % initialization stage.
-
+  % These are constants for now
 
   %_____________________________________________________
   % 2. Compute the equilibration pressure
@@ -223,7 +214,6 @@ for tstep = 1:P.maxTimeSteps
   speedSound_CC   = sqrt(tmp);                                      % Speed of sound
 
 
-  % Set boundary conditions on p
   press_eq_CC     =  setBoundaryConditions(press_eq_CC,'press_CC',G);
 
   %_____________________________________________________
@@ -288,9 +278,8 @@ for tstep = 1:P.maxTimeSteps
   for j = G.first_FC:G.last_FC                                   
     L  = j-1; 
     R = j;
-    press_FC(j) = (...
-      press_CC(L)   * rho_CC(R) + press_CC(R) * rho_CC(L)) / ...
-      (rho_CC(L) + rho_CC(R) + d_SMALL_NUM);
+    press_FC(j) = (press_CC(L)* rho_CC(R) + press_CC(R) * rho_CC(L)) / ...
+                   (rho_CC(L) + rho_CC(R) + d_SMALL_NUM);
   end
 
 
@@ -345,37 +334,22 @@ for tstep = 1:P.maxTimeSteps
     fprintf('Step 9: advect and advance in time\n');
   end
 
-  %==================================
-  % M A S S
-  % Uses van Leer limiter
-  if (P.debugSteps)
-    fprintf ('Advecting density\n');
-  end
+  % Mass:  Uses van Leer limiter
   [q_advected, gradLim, grad_x, mass_slab, mass_vrtx_1, mass_vrtx_2] = ...
     advectRho(mass_L, ofs, rx, xvel_FC, G);
   
-  mass_CC     = mass_L + q_advected;                                % Advection of rho*ofs (the advected volume) = advection correction to the mass
-  rho_CC      = mass_CC ./ G.delX;                                  % Updated density
-  rho_CC      = setBoundaryConditions(rho_CC,'rho_CC', G);          % We need to set B.C. on rho,T,u
+  mass_CC     = mass_L + q_advected;                        % Advection of rho*ofs (the advected volume) = advection correction to the mass
+  rho_CC      = mass_CC ./ G.delX;                          % Updated density
+  rho_CC      = setBoundaryConditions(rho_CC,'rho_CC', G); 
 
-  %==================================
-  % M O M E N T U M
-  % Uses compatible flux limiter
-  if (P.debugSteps)
-    fprintf ('Advecting momentum\n');
-  end
+  % Momentum: Uses compatible flux limiter
   [q_advected, gradLim, grad_x] = ...
     advectQ(mom_L, mass_L, mass_slab, mass_vrtx_1, mass_vrtx_2, ofs, rx, xvel_FC, G);
     
-  xvel_CC     = (mom_L + q_advected) ./ (mass_CC);                % Updated velocity
+  xvel_CC     = (mom_L + q_advected) ./ (mass_CC);           % Updated velocity
   xvel_CC     = setBoundaryConditions(xvel_CC,'xvel_CC', G);
 
-  %==================================
-  % E N E R G Y
-  % Uses compatible flux limiter
-  if (P.debugSteps)
-    fprintf ('Advecting energy\n');
-  end
+  % Energy:  Uses compatible flux limiter
   [q_advected, gradLim, grad_x] = ...
     advectQ(eng_L, mass_L, mass_slab, mass_vrtx_1, mass_vrtx_2, ofs, rx, xvel_FC, G);
   
@@ -384,36 +358,48 @@ for tstep = 1:P.maxTimeSteps
 
 
   %_____________________________________________________
-  % 10. End of the timestep
+  % End of the timestep
 
-  %================ Compute del_T ================
-  % A G G R E S S I V E
 
-  delt_CFL        = 1e+30;
+  CC_data = createDataStruct(x_CC, press_CC, press_eq_CC, delPDilatate, xvel_CC, temp_CC, rho_CC);
+  FC_data = createDataStruct(x_FC, xvel_FC, press_FC );
+  
+  
+  if(P.UseProbeCells)
+    for c = 1:length(P.probeCells)
+      cell = P.probeCells(c);
+      filename = sprintf('probeCell_%g.dat', P.probeLocations(c));
+      OF.writeProbePoints(filename,tstep, t, CC_data, cell);
+    end
+  end
+   
+  %  Compute delT
+  if (t >= P.maxTime)   
+    fprintf('Reached maximum time\n');
+    break;
+  end
+
+  delT        = 1e+30;
   for j = G.first_CC:G.last_CC
     speed_Sound = speedSound_CC(j);
     A           = P.CFL*G.delX/(speed_Sound + abs(xvel_CC(j)));
-    delt_CFL    = min(A, delt_CFL);
+    delT    = min(A, delT);
   end
   
   if (P.debugSteps)
-    fprintf('Aggressive delT Based on currant number CFL = %.3e\n',delt_CFL);
+    fprintf('Aggressive delT Based on currant number CFL = %.3e\n',delT);
   end
-
 
   %================ Compare with Uintah ICE and Plot Results ================
   if (P.compareUintah)
-    loadUintah;                                                   % Load Uintah results
+    loadUintah;                             % Load Uintah results
   end
-  plotResults;                                                    % Plot results (and also against Uintah, if compareUintah flag is on)
+  plotResults;                              % Plot results (and also against Uintah, if compareUintah flag is on)
 
-  %================ Various breaks ================
-
-  delT    = delt_CFL;                                             % Compute delT - "agressively" small
-  delT    = 5e-4;
-  fprintf ('-------------WARNING:   delT has been hard coded to compare with Uintah results\n');
+ % delT   = 5e-4;
+ % fprintf ('-------------WARNING:   delT has been hard coded to compare with Uintah results\n');
   
-  t       = t + delT;                                             % Advance time
+  t = t + delT;                             % Advance time
   if (t >= P.maxTime)
     fprintf('Reached maximum time\n');
     break;
@@ -421,37 +407,51 @@ for tstep = 1:P.maxTimeSteps
 
 end
 
-tfinal = t - delT;
-delX   = G.delX;
-
-if (P.writeData == 1)
-  fname = sprintf('matlab_CC_%g.dat', P.nCells);
-  fid = fopen(fname, 'w');
-  fprintf(fid,'time %15.16E\n',t-delT)
-  fprintf(fid,'X_CC \t press_eq \t delP \t press_CC \t xvel_CC \t temp_CC \t rho_CC\n');
-
-  for c=1:length(x_CC)
-    fprintf(fid,'%16.15E %16.15E %16.15E %16.15E %16.15E %16.15E %16.15E\n',x_CC(c), press_eq_CC(c), delPDilatate(c), press_CC(c), xvel_CC(c), temp_CC(c), rho_CC(c));
-  end
-  fclose(fid);
+  tfinal = t - delT;
+  delX   = G.delX;
   
-  fname = sprintf('matlab_FC_%g.dat', P.nCells);
-  fid = fopen(fname, 'w');
-  fprintf(fid,'time %15.16E\n',t-delT)
-  fprintf(fid,'X_FC \t xvel_FC \t press_FC\n');
-
-  for c=1:length(x_FC)
-    fprintf(fid,'%16.15E %16.15E %16.15E \n',x_FC(c), xvel_FC(c), press_FC(c) );
+  
+  % __________________________________
+  %   OUTPUT
+  if (P.writeData == 1)
+    CCfilename = sprintf('matlab_CC_%g.dat', P.nCells);
+    FCfilename = sprintf('matlab_FC_%g.dat', P.nCells);
+    OF.writeData( CCfilename, t-delT, CC_data);
+    OF.writeData( FCfilename, t-delT, FC_data);
   end
-  fclose(fid);
+
+  if(P.plotResults)
+    plotResults;
+    figure(1);
+    print -depsc iceResult1.eps
+    figure(2);
+    print -depsc iceResult2.eps
+  end
+  % Show a movie of the results
+  %hFig = figure(2);
+  %movie(hFig,M,1,10)
+
+end  % end of ICE
+
+
+%__________________________________
+function [data] =  createDataStruct(varargin)
+
+  for k = 1:length(varargin)    % loop over each input argument
+    varG = varargin{k};
+    name = inputname(k);
+    
+    data.(name)=varG;
+  end
 end
 
-if(P.plotResults)
-  figure(1);
-  print -depsc iceResult1.eps
-  figure(2);
-  print -depsc iceResult2.eps
+%__________________________________
+% This function computes probeCell indices
+function [cell] = findProbeCellIndices(P, x_CC)
+
+  for p = 1:length(P.probeLocations)
+    x = P.probeLocations(p);
+    diff = abs(x - x_CC);
+    [tmp,cell(p)] = min(diff);
+  end
 end
-% Show a movie of the results
-%hFig = figure(2);
-%movie(hFig,M,1,10)
