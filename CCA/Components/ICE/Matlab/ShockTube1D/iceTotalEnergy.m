@@ -41,6 +41,10 @@ P.initTime          = 0.0;       % Initial simulation time [sec]
 P.writeData         = 1;         % output the final timestep to a .dat file
 P.delt_init         = 1e-20;     % First timestep [sec]
 P.maxTimeSteps      = 2000       % Maximum number of timesteps [dimensionless]
+P.probeCells        = 1;         % on/off switch for writing out data at probe locations
+P.probeLocations    = [ 0.1 0.2 0.4]
+                                 % physical locations of probe locations
+
 P.CFL               = 0.25;      % Courant number (~velocity*delT/delX) [dimensionless]
 P.advectionOrder    = 2;         % 1=1st-order advection operator; 2=possibly-limited-2nd-order
 P.gamma             = 1.4;       % gamma coefficient in the Equation of State (EOS)
@@ -104,9 +108,6 @@ mass_vrtx_2     = zeros(1,totNodes);                      % --------//-------  (
 
 %______________________________________________________________________
 %     Initialization
-
-%================ Useful constants ================
-
 d_SMALL_NUM = 1e-100;                           % A small number (for bullet-proofing
 d_TINY_RHO  = 1.0e-12;
 delT        = P.delt_init;                      % Init timestep
@@ -117,109 +118,106 @@ x_CC    = ([G.ghost_Left:G.ghost_Right]-1-0.5).*G.delX + P.boxLower;
 x_FC(1) = -G.delX + P.boxLower;
 
 for j = G.first_FC:G.last_FC   % Loop over all xminus cell faces
-  x_FC(j) = (j-G.first_FC).*G.delX + P.boxLower;  
+  x_FC(j) = (j - G.first_FC).*G.delX + P.boxLower;  
 end
 
 for j = G.first_CC:G.last_CC
     switch (Problem)
-        case 'Test1'                    
-            P.maxTime = 0.2;      
-            if (x_CC(j) < 0.3)
-                rho_CC(j)    = (1.0+d_TINY_RHO);
-                xvel_CC(j)   = 0.75;
-                E_CC(j)      = 2.78125;
-                press_CC(j)  = 1.0;   
-            else
-                rho_CC(j)    = (1.0+d_TINY_RHO)*0.125;
-                xvel_CC(j)   = 0.0;
-                E_CC(j)      = 2.0;
-                press_CC(j)  = 0.1; 
-            end
-        case 'Test2'
-            P.maxTime = 0.15;      
-            if (x_CC(j) < 0.5)
-                rho_CC(j)    = (1.0+d_TINY_RHO);
-                xvel_CC(j)   = -2.0;
-                E_CC(j)      = 3.0;
-                press_CC(j)  = 0.4;   
-            else
-                rho_CC(j)    = (1.0+d_TINY_RHO);
-                xvel_CC(j)   = 2.0;
-                E_CC(j)      = 3.0;
-                press_CC(j)  = 0.4; 
-            end
-        case 'Test3'
-            P.maxTime = 0.011;      
-            if (x_CC(j) < 0.5)
-                rho_CC(j)    = (1.0+d_TINY_RHO);
-                xvel_CC(j)   = 0.0;
-                E_CC(j)      = 2500.0;
-                press_CC(j)  = 1000.0;   
-            else
-                rho_CC(j)    = (1.0+d_TINY_RHO);
-                xvel_CC(j)   = 0.0;
-                E_CC(j)      = 0.25;
-                press_CC(j)  = 0.01; 
-            end
-        case 'Test4'
-            P.maxTime = 0.034;      
-            if (x_CC(j) < 0.4)
-                rho_CC(j)    = (1.0+d_TINY_RHO)*5.99924;
-                xvel_CC(j)   = 19.5975;
-                E_CC(j)      = 384.0944978343299;
-                press_CC(j)  = 460.894;  
-            else
-                rho_CC(j)    = (1.0+d_TINY_RHO)*5.99242;
-                xvel_CC(j)   = -6.19633;
-                E_CC(j)      = 38.405929430605944;
-                press_CC(j)  = 46.0950; 
-            end
-        case 'ShuOsher'
-            P.maxTime = 1.8;      
-            if (x_CC(j) < -4.0)
-                rho_CC(j)    = (1.0+d_TINY_RHO)*3.85714;
-                xvel_CC(j)   = 2.62936;                
-                press_CC(j)  = 10.33333; 
-                E_CC(j)      = press_CC(j)/(0.4*rho_CC(j)) + 0.5*xvel_CC(j)*xvel_CC(j);
-            else
-                rho_CC(j)    = (1.0+d_TINY_RHO)*(1.0+0.2*sin(5*x_CC(j)));
-                xvel_CC(j)   = 0.0;
-                press_CC(j)  = 1.0; 
-                E_CC(j)      = press_CC(j)/(0.4*rho_CC(j)) + 0.5*xvel_CC(j)*xvel_CC(j);
-                
-            end
-        case 'Lax'
-            P.maxTime = 0.16;  
-            if (x_CC(j) < 0.5)
-                rho_CC(j)    = (1.0+d_TINY_RHO)*0.445;
-                xvel_CC(j)   = 0.698;                
-                press_CC(j)  = 3.528; 
-                E_CC(j)      = 19.5766;
-            else
-                rho_CC(j)    = (1.0+d_TINY_RHO)*0.5;
-                xvel_CC(j)   = 0.0;
-                press_CC(j)  = 0.571; 
-                E_CC(j)      = 2.855;                
-            end
+      case 'Test1'                    
+        P.maxTime = 0.2;      
+        if (x_CC(j) < 0.3)
+            rho_CC(j)    = (1.0+d_TINY_RHO);
+            xvel_CC(j)   = 0.75;
+            E_CC(j)      = 2.78125;
+            press_CC(j)  = 1.0;   
+        else
+            rho_CC(j)    = (1.0+d_TINY_RHO)*0.125;
+            xvel_CC(j)   = 0.0;
+            E_CC(j)      = 2.0;
+            press_CC(j)  = 0.1; 
+        end
+      case 'Test2'
+        P.maxTime = 0.15;      
+        if (x_CC(j) < 0.5)
+            rho_CC(j)    = (1.0+d_TINY_RHO);
+            xvel_CC(j)   = -2.0;
+            E_CC(j)      = 3.0;
+            press_CC(j)  = 0.4;   
+        else
+            rho_CC(j)    = (1.0+d_TINY_RHO);
+            xvel_CC(j)   = 2.0;
+            E_CC(j)      = 3.0;
+            press_CC(j)  = 0.4; 
+        end
+      case 'Test3'
+        P.maxTime = 0.011;      
+        if (x_CC(j) < 0.5)
+            rho_CC(j)    = (1.0+d_TINY_RHO);
+            xvel_CC(j)   = 0.0;
+            E_CC(j)      = 2500.0;
+            press_CC(j)  = 1000.0;   
+        else
+            rho_CC(j)    = (1.0+d_TINY_RHO);
+            xvel_CC(j)   = 0.0;
+            E_CC(j)      = 0.25;
+            press_CC(j)  = 0.01; 
+        end
+      case 'Test4'
+        P.maxTime = 0.034;      
+        if (x_CC(j) < 0.4)
+            rho_CC(j)    = (1.0+d_TINY_RHO)*5.99924;
+            xvel_CC(j)   = 19.5975;
+            E_CC(j)      = 384.0944978343299;
+            press_CC(j)  = 460.894;  
+        else
+            rho_CC(j)    = (1.0+d_TINY_RHO)*5.99242;
+            xvel_CC(j)   = -6.19633;
+            E_CC(j)      = 38.405929430605944;
+            press_CC(j)  = 46.0950; 
+        end
+      case 'ShuOsher'
+        P.maxTime = 1.8;      
+        if (x_CC(j) < -4.0)
+            rho_CC(j)    = (1.0+d_TINY_RHO)*3.85714;
+            xvel_CC(j)   = 2.62936;                
+            press_CC(j)  = 10.33333; 
+            E_CC(j)      = press_CC(j)/(0.4*rho_CC(j)) + 0.5*xvel_CC(j)*xvel_CC(j);
+        else
+            rho_CC(j)    = (1.0+d_TINY_RHO)*(1.0+0.2*sin(5*x_CC(j)));
+            xvel_CC(j)   = 0.0;
+            press_CC(j)  = 1.0; 
+            E_CC(j)      = press_CC(j)/(0.4*rho_CC(j)) + 0.5*xvel_CC(j)*xvel_CC(j);
+
+        end
+      case 'Lax'
+        P.maxTime = 0.16;  
+        if (x_CC(j) < 0.5)
+            rho_CC(j)    = (1.0+d_TINY_RHO)*0.445;
+            xvel_CC(j)   = 0.698;                
+            press_CC(j)  = 3.528; 
+            E_CC(j)      = 19.5766;
+        else
+            rho_CC(j)    = (1.0+d_TINY_RHO)*0.5;
+            xvel_CC(j)   = 0.0;
+            press_CC(j)  = 0.571; 
+            E_CC(j)      = 2.855;                
+        end
     end
 end
 
-%================ Initialize ghost cells ================
-% Impose boundary conditions (determine ghost cell values from
-% interior cell values).
+%================ Boundary Conditions ================
 rho_CC      = setBoundaryConditions(rho_CC  ,'rho_CC',   G);
 xvel_CC     = setBoundaryConditions(xvel_CC ,'xvel_CC',  G);
 E_CC        = setBoundaryConditions(E_CC ,   'e_CC',     G);
 press_CC    = setBoundaryConditions(press_CC,'press_CC', G);
 
-%================ Initialize graphics ================
+%================ Plot Initial conditions ================
 if (P.plotInitialData)
   figure(1);
   set(gcf,'position',[100,1000,1000,400]);
-  %================ Plot results ================
 
-  subplot(2,2,1), plot(rho_CC);
-  %xlim([P.boxLower(1) P.boxUpper(1)]);
+  subplot(2,2,1), plot(x_CC,rho_CC);
+  xlim([P.boxLower(1) P.boxUpper(1)]);
   legend('\rho');
   grid on;
 
@@ -251,11 +249,9 @@ for tstep = 1:P.maxTimeSteps
   fprintf('\n_____________________________tstep=%d, t=%e, prev. delT=%e\n', tstep, t, delT);
   
   %_____________________________________________________
-  % 0. Dummy setting for a single-material problem
   % Set the volume fraction and specific volume.
-
   if (P.debugSteps)
-    fprintf('Step 0: dummy setting for single-material\n');
+    fprintf('Step 0: compute volFrac\n');
   end
 
   volfrac_CC = ones(G.ghost_Left,G.ghost_Right);             % Single material ==> covers 100% of each cell (volfrac=1)
@@ -263,8 +259,7 @@ for tstep = 1:P.maxTimeSteps
 
   %_____________________________________________________
   % 1. Compute thremodynamic/transport properties
-  % These are constants in this application and were already computed in the
-  % initialization stage.
+  % These are constants for now
 
   %_____________________________________________________
   % 2. Compute the equilibration pressure
@@ -284,8 +279,6 @@ for tstep = 1:P.maxTimeSteps
   tmp             = P.gamma*press_eq_CC./ rho_CC;
   speedSound_CC   = sqrt(tmp);                   % Speed of sound
 
-
-  % Set boundary conditions on p
   press_eq_CC     =  setBoundaryConditions(press_eq_CC,'press_CC',G);
 
   %_____________________________________________________
@@ -403,41 +396,26 @@ end
     fprintf('Step 9: advect and advance in time\n');
   end
 
-  %==================================
-  % M A S S
-  % Uses van Leer limiter
-  if (P.debugSteps)
-    fprintf ('Advecting density\n');
-  end
+  % Mass:  Uses van Leer limiter
   [q_advected, gradLim, grad_x, mass_slab, mass_vrtx_1, mass_vrtx_2] = ...
     advectRho(mass_L, ofs, rx, xvel_FC, G);
   
   mass_CC     = mass_L + q_advected;                        % Advection of rho*ofs (the advected volume) = advection correction to the mass
   rho_CC      = mass_CC ./ G.delX;                          % Updated density
-  rho_CC      = setBoundaryConditions(rho_CC,'rho_CC', G);  % We need to set B.C. on rho,T,u
+  rho_CC      = setBoundaryConditions(rho_CC,'rho_CC', G); 
 
-  %==================================
-  % M O M E N T U M
-  % Uses compatible flux limiter
-  if (P.debugSteps)
-    fprintf ('Advecting momentum\n');
-  end
+  % Momentum: Uses compatible flux limiter
   [q_advected, gradLim, grad_x] = ...
     advectQ(mom_L, mass_L, mass_slab, mass_vrtx_1, mass_vrtx_2, ofs, rx, xvel_FC, G);
     
   xvel_CC     = (mom_L + q_advected) ./ (mass_CC);           % Updated velocity
   xvel_CC     = setBoundaryConditions(xvel_CC,'xvel_CC', G);
 
-  %==================================
-  % E N E R G Y
-  % Uses compatible flux limiter
-  if (P.debugSteps)
-    fprintf ('Advecting energy\n');
-  end
+  % Energy:  Uses compatible flux limiter
   [q_advected, gradLim, grad_x] = ...
     advectQ(eng_L, mass_L, mass_slab, mass_vrtx_1, mass_vrtx_2, ofs, rx, xvel_FC, G);
   
-  E_CC     = (eng_L + q_advected)./(mass_CC);        % Updated energy
+  E_CC     = (eng_L + q_advected)./(mass_CC);                 % Updated energy
   E_CC     = setBoundaryConditions(E_CC,'e_CC', G);
   
   e_CC     = E_CC -  (0.5 .* xvel_CC .* xvel_CC);
@@ -446,23 +424,24 @@ end
   %_____________________________________________________
   % 10. End of the timestep
 
-  %================ Compute del_T ================
-  % A G G R E S S I V E
-  
+
+  data = createDataStruct(t, ncells, x_CC, press_eq_CC, delPDilatate, press_CC, xvel_CC, temp_CC, rho_CC, x_FC, xvel_FC, press_FC);
+   
+  %  Compute delT
   if (t >= P.maxTime)   
     fprintf('Reached maximum time\n');
     break;
   end
 
-  delt_CFL        = 1e+30;
+  delT        = 1e+30;
   for j = G.first_CC:G.last_CC
     speed_Sound = speedSound_CC(j);
     A           = P.CFL*G.delX/(speed_Sound + abs(xvel_CC(j)));
-    delt_CFL    = min(A, delt_CFL);
+    delT    = min(A, delT);
   end
   
   if (P.debugSteps)
-    fprintf('Aggressive delT Based on currant number CFL = %.3e\n',delt_CFL);
+    fprintf('Aggressive delT Based on currant number CFL = %.3e\n',delT);
   end
 
   %================ Compare with Uintah ICE and Plot Results ================
@@ -471,13 +450,10 @@ end
   end
   plotResults;                              % Plot results (and also against Uintah, if compareUintah flag is on)
 
-  %================ Various breaks ================
-
-  delT    = delt_CFL;                                             % Compute delT - "agressively" small
- % delT    = 5e-4;
+ % delT   = 5e-4;
  % fprintf ('-------------WARNING:   delT has been hard coded to compare with Uintah results\n');
   
-  t       = t + delT;                                             % Advance time
+  t = t + delT;                             % Advance time
   if (t >= P.maxTime)
     fprintf('Reached maximum time\n');
     break;
@@ -487,6 +463,7 @@ end
 
 tfinal = t - delT;
 delX   = G.delX;
+
 
 if (P.writeData == 1)
   fname = sprintf('matlab_CC_%g.dat', P.nCells);
@@ -520,3 +497,17 @@ end
 % Show a movie of the results
 %hFig = figure(2);
 %movie(hFig,M,1,10)
+
+function [data] =  createDataStruct(varargin)
+
+  for k = 1:length(varargin)    % loop over each input argument
+    varG = varargin{k};
+    name = inputname(k);
+    
+    fprintf(' input variable %s \n',name)
+    
+    P.(name)=varG;
+  end
+  P
+
+end
