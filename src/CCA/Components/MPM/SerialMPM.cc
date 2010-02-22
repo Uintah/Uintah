@@ -2189,6 +2189,7 @@ void SerialMPM::addCohesiveZoneForces(const ProcessorGroup*,
         }
       }
     }
+    delete interpolator;
   }
 }
 
@@ -2807,7 +2808,6 @@ void SerialMPM::setGridBoundaryConditions(const ProcessorGroup*,
         }
       }  // d_doGridReset
     } // matl loop
-    delete interpolator;
   }  // patch loop
 }
 
