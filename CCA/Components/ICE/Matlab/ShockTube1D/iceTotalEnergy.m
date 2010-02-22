@@ -18,6 +18,7 @@ close all;
 globalParams;                                       % Load global parameters
 setenv('LD_LIBRARY_PATH', ['/usr/lib']);
 [LF] = LethuyFunctions;
+[OF] = outputFunctions;
 
 %================ ICE Interal Parameters, Debugging Flags ================
 % Debug flags
@@ -41,12 +42,12 @@ P.initTime          = 0.0;       % Initial simulation time [sec]
 P.writeData         = 1;         % output the final timestep to a .dat file
 P.delt_init         = 1e-20;     % First timestep [sec]
 P.maxTimeSteps      = 2000       % Maximum number of timesteps [dimensionless]
-P.probeCells        = 1;         % on/off switch for writing out data at probe locations
-P.probeLocations    = [ 0.1 0.2 0.4]
+P.UseProbeCells     = 1;         % on/off switch for writing out data at probe locations
+P.probeLocations    = [ 0.4 0.5 0.6]
                                  % physical locations of probe locations
 
 P.CFL               = 0.25;      % Courant number (~velocity*delT/delX) [dimensionless]
-P.advectionOrder    = 2;         % 1=1st-order advection operator; 2=possibly-limited-2nd-order
+P.advectionOrder    = 1;         % 1=1st-order advection operator; 2=possibly-limited-2nd-order
 P.gamma             = 1.4;       % gamma coefficient in the Equation of State (EOS)
 P.cv                = 1;
 
@@ -241,6 +242,11 @@ if (P.plotInitialData)
   pause
 end
 
+% find the cell indicies of the probe cells
+if(P.UseProbeCells)
+  [P.probeCells] = findProbeCellIndices(P, x_CC)
+end
+
 %______________________________________________________________________
 %     Time integration loop
 t = P.initTime + delT;
@@ -292,7 +298,7 @@ for tstep = 1:P.maxTimeSteps
     fprintf('Step 4: compute face-centered velocities\n');
   end
 
-if(0)
+if(1)
   for j = G.first_FC:G.last_FC   % Loop over all xminus cell faces
     L = j-1;
     R = j;
@@ -303,7 +309,7 @@ if(0)
   end
 end
 
-if(1)  
+if(0)  
   xvel_FC = LF.computeVel_FC(rho_CC, xvel_CC, spvol_CC, E_CC, press_eq_CC, delT, P, G);
 end
   % Set boundary conditions on u @ face centers
@@ -422,10 +428,20 @@ end
   temp_CC  = e_CC./P.cv;
 
   %_____________________________________________________
-  % 10. End of the timestep
+  % End of the timestep
 
 
-  data = createDataStruct(t, ncells, x_CC, press_eq_CC, delPDilatate, press_CC, xvel_CC, temp_CC, rho_CC, x_FC, xvel_FC, press_FC);
+  CC_data = createDataStruct(x_CC, press_CC, press_eq_CC, delPDilatate, xvel_CC, temp_CC, rho_CC);
+  FC_data = createDataStruct(x_FC, xvel_FC, press_FC );
+  
+  
+  if(P.UseProbeCells)
+    for c = 1:length(P.probeCells)
+      cell = P.probeCells(c);
+      filename = sprintf('probeCell_%g.dat', P.probeLocations(c));
+      OF.writeProbePoints(filename,tstep, t, CC_data, cell);
+    end
+  end
    
   %  Compute delT
   if (t >= P.maxTime)   
@@ -461,53 +477,51 @@ end
 
 end
 
-tfinal = t - delT;
-delX   = G.delX;
-
-
-if (P.writeData == 1)
-  fname = sprintf('matlab_CC_%g.dat', P.nCells);
-  fid = fopen(fname, 'w');
-  fprintf(fid,'time %15.16E\n',t-delT)
-  fprintf(fid,'X_CC \t press_eq \t delP \t press_CC \t xvel_CC \t temp_CC \t rho_CC\n');
-
-  for c=1:length(x_CC)
-    fprintf(fid,'%16.15E %16.15E %16.15E %16.15E %16.15E %16.15E %16.15E\n',x_CC(c), press_eq_CC(c), delPDilatate(c), press_CC(c), xvel_CC(c), temp_CC(c), rho_CC(c));
-  end
-  fclose(fid);
+  tfinal = t - delT;
+  delX   = G.delX;
   
-  fname = sprintf('matlab_FC_%g.dat', P.nCells);
-  fid = fopen(fname, 'w');
-  fprintf(fid,'time %15.16E\n',t-delT)
-  fprintf(fid,'X_FC \t xvel_FC \t press_FC\n');
-
-  for c=1:length(x_FC)
-    fprintf(fid,'%16.15E %16.15E %16.15E \n',x_FC(c), xvel_FC(c), press_FC(c) );
+  
+  % __________________________________
+  %   OUTPUT
+  if (P.writeData == 1)
+    CCfilename = sprintf('matlab_CC_%g.dat', P.nCells);
+    FCfilename = sprintf('matlab_FC_%g.dat', P.nCells);
+    OF.writeData( CCfilename, t-delT, CC_data);
+    OF.writeData( FCfilename, t-delT, FC_data);
   end
-  fclose(fid);
-end
 
-if(P.plotResults)
-  plotResults;
-  figure(1);
-  print -depsc iceResult1.eps
-  figure(2);
-  print -depsc iceResult2.eps
-end
-% Show a movie of the results
-%hFig = figure(2);
-%movie(hFig,M,1,10)
+  if(P.plotResults)
+    plotResults;
+    figure(1);
+    print -depsc iceResult1.eps
+    figure(2);
+    print -depsc iceResult2.eps
+  end
+  % Show a movie of the results
+  %hFig = figure(2);
+  %movie(hFig,M,1,10)
 
+end  % end of ICE
+
+
+%__________________________________
 function [data] =  createDataStruct(varargin)
 
   for k = 1:length(varargin)    % loop over each input argument
     varG = varargin{k};
     name = inputname(k);
     
-    fprintf(' input variable %s \n',name)
-    
-    P.(name)=varG;
+    data.(name)=varG;
   end
-  P
+end
 
+%__________________________________
+% This function computes probeCell indices
+function [cell] = findProbeCellIndices(P, x_CC)
+
+  for p = 1:length(P.probeLocations)
+    x = P.probeLocations(p);
+    diff = abs(x - x_CC);
+    [tmp,cell(p)] = min(diff);
+  end
 end
