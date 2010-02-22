@@ -144,7 +144,7 @@ CohesiveZone::allocateVariables(particleIndex numCZs,
   new_dw->allocateAndPut(cztang,         d_lb->czTangLabel,         subset);
   new_dw->allocateAndPut(czdisptop,      d_lb->czDispTopLabel,      subset);
   new_dw->allocateAndPut(czdispbottom,   d_lb->czDispBottomLabel,   subset);
-  new_dw->allocateAndPut(czID,           d_lb->pParticleIDLabel,    subset);
+  new_dw->allocateAndPut(czID,           d_lb->czIDLabel,           subset);
   new_dw->allocateAndPut(czSeparation,   d_lb->czSeparationLabel,   subset);
   new_dw->allocateAndPut(czForce,        d_lb->czForceLabel,        subset);
   new_dw->allocateAndPut(czTopMat,       d_lb->czTopMatLabel,       subset);
@@ -219,8 +219,8 @@ void CohesiveZone::registerPermanentCohesiveZoneState(CZMaterial* czmat)
   cz_state.push_back(d_lb->czBotMatLabel);
   cz_state_preReloc.push_back(d_lb->czBotMatLabel_preReloc);
 
-  cz_state.push_back(d_lb->pParticleIDLabel);
-  cz_state_preReloc.push_back(d_lb->pParticleIDLabel_preReloc);
+  cz_state.push_back(d_lb->czIDLabel);
+  cz_state_preReloc.push_back(d_lb->czIDLabel_preReloc);
 }
 
 void CohesiveZone::scheduleInitialize(const LevelP& level, SchedulerP& sched,
@@ -243,8 +243,8 @@ void CohesiveZone::scheduleInitialize(const LevelP& level, SchedulerP& sched,
   t->computes(d_lb->czForceLabel);
   t->computes(d_lb->czTopMatLabel);
   t->computes(d_lb->czBotMatLabel);
-  t->computes(d_lb->pParticleIDLabel);
-  t->modifies(d_lb->pCellNAPIDLabel,zeroth_matl);
+  t->computes(d_lb->czIDLabel);
+  t->computes(d_lb->pCellNACZIDLabel,zeroth_matl);
 
   vector<int> m(1);
   m[0] = czmat->getDWIndex();
@@ -272,7 +272,8 @@ void CohesiveZone::initialize(const ProcessorGroup*,
 //  printTask(patches, patch,cout_doing,"Doing initialize for CohesiveZones\t");
 
     CCVariable<short int> cellNACZID;
-    new_dw->getModifiable(cellNACZID, d_lb->pCellNAPIDLabel, 0, patch);
+    new_dw->allocateAndPut(cellNACZID, d_lb->pCellNACZIDLabel, 0, patch);
+    cellNACZID.initialize(0.);
 
     for(int m=0;m<matls->size();m++){
       CZMaterial* cz_matl = d_sharedState->getCZMaterial( m );

@@ -613,6 +613,17 @@ MPMLabel::MPMLabel()
                      ParticleVariable<int>::getTypeDescription());
   czBotMatLabel_preReloc = VarLabel::create("cz.botmat+",
                      ParticleVariable<int>::getTypeDescription());
+
+  czIDLabel = VarLabel::create("cz.CZID",
+			ParticleVariable<long64>::getTypeDescription() );
+
+  czIDLabel_preReloc = VarLabel::create("cz.CZID+",
+			ParticleVariable<long64>::getTypeDescription() );
+
+  // for assigning particle ids
+  pCellNACZIDLabel =
+    VarLabel::create("cellNACZID", CCVariable<short int>::getTypeDescription());
+
 } 
 
 MPMLabel::~MPMLabel()
@@ -653,6 +664,8 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(pSurfLabel_preReloc);
   VarLabel::destroy(pParticleIDLabel);
   VarLabel::destroy(pParticleIDLabel_preReloc);
+  VarLabel::destroy(czIDLabel);
+  VarLabel::destroy(czIDLabel_preReloc);
   VarLabel::destroy(pPressureLabel);
   VarLabel::destroy(pScratchVecLabel);
   VarLabel::destroy(pLocalizedMPMLabel);
@@ -722,6 +735,7 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(TotalMomentumLabel);
   VarLabel::destroy(RigidReactionForceLabel);
   VarLabel::destroy(pCellNAPIDLabel);
+  VarLabel::destroy(pCellNACZIDLabel);
 
   VarLabel::destroy(gVelocityOldLabel);
   VarLabel::destroy(dispNewLabel);

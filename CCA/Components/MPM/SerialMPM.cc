@@ -624,7 +624,7 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
                                     d_sharedState->d_cohesiveZoneState_preReloc,
                                     lb->pXLabel, 
                                     d_sharedState->d_cohesiveZoneState,
-                                    lb->pParticleIDLabel, cz_matls,2);
+                                    lb->czIDLabel, cz_matls,2);
   }
 
   if(d_analysisModule){                                                        
@@ -736,7 +736,7 @@ void SerialMPM::scheduleAddCohesiveZoneForces(SchedulerP& sched,
                         this,&SerialMPM::addCohesiveZoneForces);
 
   Ghost::GhostType  gan = Ghost::AroundNodes;
-  t->requires(Task::NewDW, lb->pXLabel_preReloc,            cz_matls, gan,NGP);
+  t->requires(Task::OldDW, lb->pXLabel,                     cz_matls, gan,NGP);
   t->requires(Task::NewDW, lb->czLengthLabel_preReloc,      cz_matls, gan,NGP);
   t->requires(Task::NewDW, lb->czForceLabel_preReloc,       cz_matls, gan,NGP);
   t->requires(Task::NewDW, lb->czTopMatLabel_preReloc,      cz_matls, gan,NGP);
@@ -1395,7 +1395,7 @@ void SerialMPM::scheduleUpdateCohesiveZones(SchedulerP& sched,
   t->requires(Task::OldDW, lb->czForceLabel,       cz_matls,    gnone);
   t->requires(Task::OldDW, lb->czTopMatLabel,      cz_matls,    gnone);
   t->requires(Task::OldDW, lb->czBotMatLabel,      cz_matls,    gnone);
-  t->requires(Task::OldDW, lb->pParticleIDLabel,   cz_matls,    gnone);
+  t->requires(Task::OldDW, lb->czIDLabel,          cz_matls,    gnone);
 
   t->computes(lb->pXLabel_preReloc,           cz_matls);
   t->computes(lb->czLengthLabel_preReloc,     cz_matls);
@@ -1407,7 +1407,7 @@ void SerialMPM::scheduleUpdateCohesiveZones(SchedulerP& sched,
   t->computes(lb->czForceLabel_preReloc,      cz_matls);
   t->computes(lb->czTopMatLabel_preReloc,     cz_matls);
   t->computes(lb->czBotMatLabel_preReloc,     cz_matls);
-  t->computes(lb->pParticleIDLabel_preReloc,  cz_matls);
+  t->computes(lb->czIDLabel_preReloc,         cz_matls);
 
   sched->addTask(t, patches, matls);
 }
@@ -2156,7 +2156,7 @@ void SerialMPM::addCohesiveZoneForces(const ProcessorGroup*,
       constParticleVariable<Vector> czforce;
       constParticleVariable<int> czTopMat, czBotMat;
 
-      new_dw->get(czx,          lb->pXLabel_preReloc,                 pset);
+      old_dw->get(czx,          lb->pXLabel,                          pset);
       new_dw->get(czlength,     lb->czLengthLabel_preReloc,           pset);
       new_dw->get(czforce,      lb->czForceLabel_preReloc,            pset);
       new_dw->get(czTopMat,     lb->czTopMatLabel_preReloc,           pset);
@@ -2180,14 +2180,15 @@ void SerialMPM::addCohesiveZoneForces(const ProcessorGroup*,
         // Accumulate the contribution from each surrounding vertex
         for (int k = 0; k < flags->d_8or27; k++) {
           IntVector node = ni[k];
-          gext_force[BotMat][node] = gext_force[BotMat][node] 
-                                   + czforce[idx] * S[k];
-          gext_force[TopMat][node] = gext_force[TopMat][node] 
-                                   - czforce[idx] * S[k];
+          if(patch->containsNode(node)) {
+            gext_force[BotMat][node] = gext_force[BotMat][node] 
+                                     + czforce[idx] * S[k];
+            gext_force[TopMat][node] = gext_force[TopMat][node] 
+                                     - czforce[idx] * S[k];
+          }
         }
       }
     }
-
   }
 }
 
@@ -2806,6 +2807,7 @@ void SerialMPM::setGridBoundaryConditions(const ProcessorGroup*,
         }
       }  // d_doGridReset
     } // matl loop
+    delete interpolator;
   }  // patch loop
 }
 
@@ -4010,7 +4012,7 @@ void SerialMPM::updateCohesiveZones(const ProcessorGroup*,
       old_dw->get(czDispBot,    lb->czDispBottomLabel,               pset);
       old_dw->get(czsep,        lb->czSeparationLabel,               pset);
       old_dw->get(czforce,      lb->czForceLabel,                    pset);
-      old_dw->get(czids,        lb->pParticleIDLabel,                pset);
+      old_dw->get(czids,        lb->czIDLabel,                       pset);
       old_dw->get(czTopMat,     lb->czTopMatLabel,                   pset);
       old_dw->get(czBotMat,     lb->czBotMatLabel,                   pset);
 
@@ -4022,7 +4024,7 @@ void SerialMPM::updateCohesiveZones(const ProcessorGroup*,
       new_dw->allocateAndPut(czDispBot_new,lb->czDispBottomLabel_preReloc,pset);
       new_dw->allocateAndPut(czsep_new,    lb->czSeparationLabel_preReloc,pset);
       new_dw->allocateAndPut(czforce_new,  lb->czForceLabel_preReloc,     pset);
-      new_dw->allocateAndPut(czids_new,    lb->pParticleIDLabel_preReloc, pset);
+      new_dw->allocateAndPut(czids_new,    lb->czIDLabel_preReloc,        pset);
       new_dw->allocateAndPut(czTopMat_new, lb->czTopMatLabel_preReloc,    pset);
       new_dw->allocateAndPut(czBotMat_new, lb->czBotMatLabel_preReloc,    pset);
 
