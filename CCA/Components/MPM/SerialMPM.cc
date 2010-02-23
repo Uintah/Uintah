@@ -3953,6 +3953,10 @@ void SerialMPM::updateCohesiveZones(const ProcessorGroup*,
     printTask(patches, patch,cout_doing,
               "Doing updateCohesiveZones\t\t\t");
 
+    // The following is adapted from "Simulation of dynamic crack growth
+    // using the generalized interpolation material point (GIMP) method"
+    // Daphalapurkar, N.P., et al., Int. J. Fracture, 143, 79-102, 2007.
+
     ParticleInterpolator* interpolator = flags->d_interpolator->clone(patch);
     vector<IntVector> ni(interpolator->size());
     vector<double> S(interpolator->size());
@@ -3971,6 +3975,7 @@ void SerialMPM::updateCohesiveZones(const ProcessorGroup*,
     }
 
 /*
+    double time = d_sharedState->getElapsedTime();
     string outfile_name = "force_sep.dat";
     ofstream dest;
     dest.open(outfile_name.c_str(),ios::app);
@@ -4044,6 +4049,7 @@ void SerialMPM::updateCohesiveZones(const ProcessorGroup*,
       double phi_t = sqrt(M_E/2)*tau_max*delta_t;
       double q = phi_t/phi_n;
       q=1.;
+      double r=0.;
 
       // Loop over particles
       for(ParticleSubset::iterator iter = pset->begin();
@@ -4076,10 +4082,9 @@ void SerialMPM::updateCohesiveZones(const ProcessorGroup*,
         czsep_new[idx]       = czDispTop_new[idx] - czDispBot_new[idx];
         double D_n = Dot(czsep_new[idx],cznorm[idx]);
         double D_t = Dot(czsep_new[idx],cztang[idx]);
-        double r=0.;
         double normal_stress  = (phi_n/delta_n)*exp(-D_n/delta_n)*
-                               ((D_n/delta_n)*exp((-D_t*D_t)/(delta_t*delta_t))
-                             + (1.-q/(r-1.))
+                              ((D_n/delta_n)*exp((-D_t*D_t)/(delta_t*delta_t))
+                              + ((1.-q)/(r-1.))
                          *(1.-exp(-D_t*D_t/(delta_t*delta_t)))*(r-D_n/delta_n));
 
         double tang_stress  = (phi_n/delta_n)*(2.*delta_n/delta_t)*(D_t/delta_t)
@@ -4087,12 +4092,11 @@ void SerialMPM::updateCohesiveZones(const ProcessorGroup*,
                               + ((r-q)/(r-1.))*(D_n/delta_n))
                               * exp(-D_n/delta_n)
                               * exp(-D_t*D_t/(delta_t*delta_t));
-//        double normal_stress  = sig_max*Dot(czsep_new[idx],cznorm[idx]);
         czforce_new[idx]     = normal_stress*cznorm[idx]*czlength_new[idx]
                              + tang_stress*cztang[idx]*czlength_new[idx];
 
 /*
-        dest << czsep_new[idx].z() << " " << normal_stress << endl;
+        dest << time << " " << czsep_new[idx].x() << " " << czsep_new[idx].y() << " " << czforce_new[idx].x() << " " << czforce_new[idx].y() << endl;
         if(fabs(normal_force) >= 0.0){
           cout << "czx_new " << czx_new[idx] << endl;
           cout << "czforce_new " << czforce_new[idx] << endl;
