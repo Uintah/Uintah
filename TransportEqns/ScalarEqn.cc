@@ -150,9 +150,6 @@ ScalarEqn::problemSetup(const ProblemSpecP& inputdb)
       } else {
         throw ProblemSetupException("You are missing the geometry specification (<geom_object>) for the transport eqn. initialization!", __FILE__, __LINE__); 
       }
-
-    } else {
-      throw InvalidValue("Initialization function not supported!", __FILE__, __LINE__); 
     }
   }
 }
