@@ -278,12 +278,8 @@ DQMOMEqn::problemSetup(const ProblemSpecP& inputdb, int qn)
       //currently nothing to do here. 
 
     // ------------ Other initialization function --------------------
-    } else {
-      throw ProblemSetupException("Initialization function not supported!", __FILE__, __LINE__); 
     }
-
   }
-
 }
 //---------------------------------------------------------------------------
 // Method: Schedule clean up. 
