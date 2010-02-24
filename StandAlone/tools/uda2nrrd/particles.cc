@@ -28,18 +28,6 @@ DEALINGS IN THE SOFTWARE.
 */
 
 /////////////////////////////////////////////////////////////////////////////
-// GCC 4.4 is optimizing away template instantiations that are needed.
-// To force this not to happen, we have to turn off (using pragmas)
-// optimization for the template instantiation function (at bottom of
-// this file).  However, this is causing internal compiler errors.
-// Strangely enough, if you put these 'bogus' pragmas here (bogus because
-// while they change the opt level, they then put it right back), then
-// everything works as advertised...  sigh... don't ask me... (Dd)
-#if( ( __GNUC__ == 4  && __GNUC_MINOR__ >= 4 ) || ( __GNUC__ > 4 ) )
-#  pragma GCC optimize "-O0"
-#  pragma GCC reset_options
-#endif
-/////////////////////////////////////////////////////////////////////////////
 
 #include <stdio.h>
 
@@ -456,26 +444,12 @@ saveParticleData( vector<ParticleDataContainer> & particleVars,
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// Instantiate some of the needed verisons of functions.  This
-// function is never called, but forces the compiler to instantiate
-// the needed templated functions.
+// Instantiate some of the needed verisons of functions.
 
-// This pragma is used to force gcc 4.4 to not optimize away the needed
-// function instantiations.
-#if( ( __GNUC__ == 4  && __GNUC_MINOR__ >= 4 ) || ( __GNUC__ > 4 ) )
-#  pragma GCC optimize "-O0"
-#endif
-
-void
-templateInstantiationForParticlesCC()
-{
-  QueryInfo  * qinfo = NULL;
-
-  handleParticleData<int>    ( *qinfo );
-  handleParticleData<long64> ( *qinfo );
-  handleParticleData<float>  ( *qinfo );
-  handleParticleData<double> ( *qinfo );
-  handleParticleData<Point>  ( *qinfo );
-  handleParticleData<Vector> ( *qinfo );
-  handleParticleData<Matrix3>( *qinfo );
-}
+template ParticleDataContainer handleParticleData<int>    (QueryInfo&);
+template ParticleDataContainer handleParticleData<long64> (QueryInfo&);
+template ParticleDataContainer handleParticleData<float>  (QueryInfo&);
+template ParticleDataContainer handleParticleData<double> (QueryInfo&);
+template ParticleDataContainer handleParticleData<Point>  (QueryInfo&);
+template ParticleDataContainer handleParticleData<Vector> (QueryInfo&);
+template ParticleDataContainer handleParticleData<Matrix3>(QueryInfo&);
