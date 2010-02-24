@@ -27,20 +27,6 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-/////////////////////////////////////////////////////////////////////////////
-// GCC 4.4 is optimizing away template instantiations that are needed.
-// To force this not to happen, we have to turn off (using pragmas)
-// optimization for the template instantiation function (at bottom of
-// this file).  However, this is causing internal compiler errors.
-// Strangely enough, if you put these 'bogus' pragmas here (bogus because
-// while they change the opt level, they then put it right back), then
-// everything works as advertised...  sigh... don't ask me... (Dd)
-#if( ( __GNUC__ == 4  && __GNUC_MINOR__ >= 4 ) || ( __GNUC__ > 4 ) )
-#  pragma GCC optimize "-O0"
-#  pragma GCC reset_options
-#endif
-/////////////////////////////////////////////////////////////////////////////
-
 /////////////////
 // Due to template instantiation ordering problems, these 2 includes must be first:
 #include <Core/Math/Matrix3.h>
@@ -357,63 +343,26 @@ handlePatchData( QueryInfo& qinfo, IntVector& offset,
 // functions are never called, but force the compiler to instantiate the
 // handleVariable<Vector> function that is needed.
 
-// This pragma is used to force gcc to not optimize away the needed
-// function instantiations.
-#if( ( __GNUC__ == 4  && __GNUC_MINOR__ >= 4 ) || ( __GNUC__ > 4 ) )
-#  pragma GCC optimize "-O0"
-#endif
 
-template <class T>
-void
-templateInstantiationForGetCCHelper()
-{
-  typedef LatVolMesh<HexTrilinearLgn<Point> > LVMesh;
-  typedef GenericField<LVMesh, ConstantBasis<T>, FData3d<T, LVMesh> >   LVFieldCB;
-  typedef GenericField<LVMesh, HexTrilinearLgn<T>, FData3d<T, LVMesh> > LVFieldLB;
+typedef LatVolMesh<HexTrilinearLgn<Point> > LVMesh_template;
 
-  LVFieldCB   * gfcb = NULL;
-  LVFieldLB   * gfhb = NULL;
-  QueryInfo   * qinfo = NULL;
-  IntVector     hi;
-  const Patch * patch = NULL;
-  const Args  * args = NULL;
+#define INTANTIATE_TEMPLATES_HANDLEVARIABLE_CC(T) \
+template void handlePatchData<T, SFCXVariable<T>, GenericField<LVMesh_template, ConstantBasis<T>, FData3d<T, LVMesh_template> > > (QueryInfo&, IntVector&, GenericField<LVMesh_template, ConstantBasis<T>, FData3d<T, LVMesh_template> >*, const Patch*, const Args&);\
+template void handlePatchData<T, SFCYVariable<T>, GenericField<LVMesh_template, ConstantBasis<T>, FData3d<T, LVMesh_template> > > (QueryInfo&, IntVector&, GenericField<LVMesh_template, ConstantBasis<T>, FData3d<T, LVMesh_template> >*, const Patch*, const Args&);\
+template void handlePatchData<T, SFCZVariable<T>, GenericField<LVMesh_template, ConstantBasis<T>, FData3d<T, LVMesh_template> > > (QueryInfo&, IntVector&, GenericField<LVMesh_template, ConstantBasis<T>, FData3d<T, LVMesh_template> >*, const Patch*, const Args&);\
+template void handlePatchData<T, CCVariable<T>,   GenericField<LVMesh_template, ConstantBasis<T>, FData3d<T, LVMesh_template> > > (QueryInfo&, IntVector&, GenericField<LVMesh_template, ConstantBasis<T>, FData3d<T, LVMesh_template> >*, const Patch*, const Args&);\
+template void handlePatchData<T, NCVariable<T>,   GenericField<LVMesh_template, ConstantBasis<T>, FData3d<T, LVMesh_template> > > (QueryInfo&, IntVector&, GenericField<LVMesh_template, ConstantBasis<T>, FData3d<T, LVMesh_template> >*, const Patch*, const Args&);\
+\
+template void handlePatchData<T, SFCXVariable<T>, GenericField<LVMesh_template, HexTrilinearLgn<T>, FData3d<T, LVMesh_template> > > (QueryInfo&, IntVector&, GenericField<LVMesh_template, HexTrilinearLgn<T>, FData3d<T, LVMesh_template> >*, const Patch*, const Args&);\
+template void handlePatchData<T, SFCYVariable<T>, GenericField<LVMesh_template, HexTrilinearLgn<T>, FData3d<T, LVMesh_template> > > (QueryInfo&, IntVector&, GenericField<LVMesh_template, HexTrilinearLgn<T>, FData3d<T, LVMesh_template> >*, const Patch*, const Args&);\
+template void handlePatchData<T, SFCZVariable<T>, GenericField<LVMesh_template, HexTrilinearLgn<T>, FData3d<T, LVMesh_template> > > (QueryInfo&, IntVector&, GenericField<LVMesh_template, HexTrilinearLgn<T>, FData3d<T, LVMesh_template> >*, const Patch*, const Args&);\
+template void handlePatchData<T, CCVariable<T>,   GenericField<LVMesh_template, HexTrilinearLgn<T>, FData3d<T, LVMesh_template> > > (QueryInfo&, IntVector&, GenericField<LVMesh_template, HexTrilinearLgn<T>, FData3d<T, LVMesh_template> >*, const Patch*, const Args&);\
+template void handlePatchData<T, NCVariable<T>,   GenericField<LVMesh_template, HexTrilinearLgn<T>, FData3d<T, LVMesh_template> > > (QueryInfo&, IntVector&, GenericField<LVMesh_template, HexTrilinearLgn<T>, FData3d<T, LVMesh_template> >*, const Patch*, const Args&);\
+\
+template void handleVariable<T>(QueryInfo&, IntVector&, IntVector&, IntVector&, BBox&, const string&, const Args&);
 
-  handlePatchData<T, SFCXVariable<T>, LVFieldCB> ( *qinfo, hi, gfcb, patch, *args );
-  handlePatchData<T, SFCYVariable<T>, LVFieldCB> ( *qinfo, hi, gfcb, patch, *args );
-  handlePatchData<T, SFCZVariable<T>, LVFieldCB> ( *qinfo, hi, gfcb, patch, *args );
-  handlePatchData<T, CCVariable<T>,   LVFieldCB> ( *qinfo, hi, gfcb, patch, *args );
-  handlePatchData<T, NCVariable<T>,   LVFieldCB> ( *qinfo, hi, gfcb, patch, *args );
-
-  handlePatchData<T, SFCXVariable<T>, LVFieldLB> ( *qinfo, hi, gfhb, patch, *args );
-  handlePatchData<T, SFCYVariable<T>, LVFieldLB> ( *qinfo, hi, gfhb, patch, *args );
-  handlePatchData<T, SFCZVariable<T>, LVFieldLB> ( *qinfo, hi, gfhb, patch, *args );
-  handlePatchData<T, CCVariable<T>,   LVFieldLB> ( *qinfo, hi, gfhb, patch, *args );
-  handlePatchData<T, NCVariable<T>,   LVFieldLB> ( *qinfo, hi, gfhb, patch, *args );
-}
-#if( ( __GNUC__ == 4  && __GNUC_MINOR__ >= 4 ) || ( __GNUC__ > 4 ) )
-#  pragma GCC reset_options
-#endif
-
-void
-templateInstantiationForGetCC()
-{
-  IntVector    hi, low, range;
-  BBox         box;
-  QueryInfo  * qinfo = NULL;
-  const Args * args = NULL;
-  LVMeshHandle mesh_handle;
-  string       filename;
-
-  handleVariable<Vector> ( *qinfo, low, hi, range, box, "", *args );
-  handleVariable<double> ( *qinfo, low, hi, range, box, "", *args );
-  handleVariable<int>    ( *qinfo, low, hi, range, box, "", *args );
-  handleVariable<float>  ( *qinfo, low, hi, range, box, "", *args );
-  handleVariable<Matrix3>( *qinfo, low, hi, range, box, "", *args );
-
-  templateInstantiationForGetCCHelper<Vector>();
-  templateInstantiationForGetCCHelper<int>();
-  templateInstantiationForGetCCHelper<float>();
-  templateInstantiationForGetCCHelper<double>();
-  templateInstantiationForGetCCHelper<Matrix3>();
-}
-
+INTANTIATE_TEMPLATES_HANDLEVARIABLE_CC(Vector)
+INTANTIATE_TEMPLATES_HANDLEVARIABLE_CC(int)
+INTANTIATE_TEMPLATES_HANDLEVARIABLE_CC(float)
+INTANTIATE_TEMPLATES_HANDLEVARIABLE_CC(double)
+INTANTIATE_TEMPLATES_HANDLEVARIABLE_CC(Matrix3)

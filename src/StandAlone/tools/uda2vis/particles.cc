@@ -27,19 +27,6 @@
 
  */
 
-/////////////////////////////////////////////////////////////////////////////
-// GCC 4.4 is optimizing away template instantiations that are needed.
-// To force this not to happen, we have to turn off (using pragmas)
-// optimization for the template instantiation function (at bottom of
-// this file).  However, this is causing internal compiler errors.
-// Strangely enough, if you put these 'bogus' pragmas here (bogus because
-// while they change the opt level, they then put it right back), then
-// everything works as advertised...  sigh... don't ask me... (Dd)
-#if( ( __GNUC__ == 4  && __GNUC_MINOR__ >= 4 ) || ( __GNUC__ > 4 ) )
-#  pragma GCC optimize "-O0"
-#  pragma GCC reset_options
-#endif
-/////////////////////////////////////////////////////////////////////////////
 
 #include <stdio.h>
 
@@ -736,31 +723,12 @@ saveParticleData( vector<ParticleDataContainer> & particleVars,
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// Instantiate some of the needed verisons of functions.  This
-// function is never called, but forces the compiler to instantiate
-// the needed templated functions.
+// Instantiate some of the needed verisons of functions.
 
-// This pragma is used to force gcc 4.4 to not optimize away the needed
-// function instantiations.
-#if( ( __GNUC__ == 4  && __GNUC_MINOR__ >= 4 ) || ( __GNUC__ > 4 ) )
-#  pragma GCC optimize "-O0"
-#endif
-
-void
-templateInstantiationForParticlesCC()
-{
-  QueryInfo  * qinfo = NULL;
-  int matlNo = 0;
-  int patchNo = 0;
-  bool matlClassfication = false;
-  ParticleDataContainer result;
-  string varSelected = "null";
-
-  handleParticleData<int>    ( *qinfo, matlNo, matlClassfication, result, varSelected, patchNo );
-  handleParticleData<long64> ( *qinfo, matlNo, matlClassfication, result, varSelected, patchNo );
-  handleParticleData<float>  ( *qinfo, matlNo, matlClassfication, result, varSelected, patchNo );
-  handleParticleData<double> ( *qinfo, matlNo, matlClassfication, result, varSelected, patchNo );
-  handleParticleData<Point>  ( *qinfo, matlNo, matlClassfication, result, varSelected, patchNo );
-  handleParticleData<Vector> ( *qinfo, matlNo, matlClassfication, result, varSelected, patchNo );
-  handleParticleData<Matrix3>( *qinfo, matlNo, matlClassfication, result, varSelected, patchNo );
-}
+template void handleParticleData<int>    (QueryInfo&, int, bool, ParticleDataContainer&, string, int);
+template void handleParticleData<long64> (QueryInfo&, int, bool, ParticleDataContainer&, string, int);
+template void handleParticleData<float>  (QueryInfo&, int, bool, ParticleDataContainer&, string, int);
+template void handleParticleData<double> (QueryInfo&, int, bool, ParticleDataContainer&, string, int);
+template void handleParticleData<Point>  (QueryInfo&, int, bool, ParticleDataContainer&, string, int);
+template void handleParticleData<Vector> (QueryInfo&, int, bool, ParticleDataContainer&, string, int);
+template void handleParticleData<Matrix3>(QueryInfo&, int, bool, ParticleDataContainer&, string, int);

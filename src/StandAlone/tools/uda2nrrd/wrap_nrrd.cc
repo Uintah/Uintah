@@ -255,42 +255,17 @@ wrap_nrrd( FIELD * source, Matrix_Op matrix_op, bool verbose )
 } // end wrap_nrrd()
 
 ///////////////////////////////////////////////////////////////////////////////
-// Instantiate some of the needed verisons of functions.  This
-// function is never called, but forces the instantiation of the
-// wrap_nrrd functions that are needed.
+// Instantiate some of the needed verisons of functions.
 
-// This pragma is used to force gcc v4.4 to not optimize away the needed
-// function instantiations.
-#if( ( __GNUC__ == 4  && __GNUC_MINOR__ >= 4 ) || ( __GNUC__ > 4 ) )
-#  pragma GCC optimize "-O0"
-#endif
+typedef LatVolMesh<HexTrilinearLgn<Point> > LVMesh_template;
 
-template <class T>
-static
-void
-instHelper()
-{
-  typedef LatVolMesh<HexTrilinearLgn<Point> > LVMesh;
+#define INTANTIATE_TEMPLATES_WRAP_NRRD_CC(T) \
+template Nrrd* wrap_nrrd< GenericField< LVMesh_template, ConstantBasis<T>,   FData3d<T, LVMesh_template > > >(GenericField< LVMesh_template, ConstantBasis<T>,   FData3d<T, LVMesh_template > >*, Matrix_Op, bool);             \
+template Nrrd* wrap_nrrd< GenericField< LVMesh_template, HexTrilinearLgn<T>, FData3d<T, LVMesh_template > > >(GenericField< LVMesh_template, HexTrilinearLgn<T>, FData3d<T, LVMesh_template > >*, Matrix_Op, bool);
 
-  typedef GenericField<LVMesh, ConstantBasis<T>, FData3d<T, LVMesh> >   LVFieldCB;
-  typedef GenericField<LVMesh, HexTrilinearLgn<T>, FData3d<T, LVMesh> > LVFieldLB;
+INTANTIATE_TEMPLATES_WRAP_NRRD_CC(double)
+INTANTIATE_TEMPLATES_WRAP_NRRD_CC(float)
+INTANTIATE_TEMPLATES_WRAP_NRRD_CC(int)
+INTANTIATE_TEMPLATES_WRAP_NRRD_CC(Matrix3)
+INTANTIATE_TEMPLATES_WRAP_NRRD_CC(Vector)
 
-  LVFieldCB   * sf = NULL;
-  LVFieldLB   * flb = NULL;
-
-  wrap_nrrd( sf,  (Matrix_Op)0, false );
-  wrap_nrrd( flb, (Matrix_Op)0, false );
-}
-#if( ( __GNUC__ == 4  && __GNUC_MINOR__ >= 4 ) || ( __GNUC__ > 4 ) )
-#  pragma GCC reset_options
-#endif
-
-void
-templateInstantiationForWrapNrrdCC()
-{
-  instHelper<double>();
-  instHelper<float>();
-  instHelper<int>();
-  instHelper<Matrix3>();
-  instHelper<Vector>();
-}
