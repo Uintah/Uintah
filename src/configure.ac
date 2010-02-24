@@ -1753,6 +1753,14 @@ if test "$with_visit"; then
       AC_MSG_ERROR( Could not find xml2makefile in $with_visit/src/bin/... )
    fi
 
+   if test -f "./VisIt/udaReaderMTMD/Makefile.visit"; then
+      old_visit_dir=`grep TOPDIR ./VisIt/udaReaderMTMD/Makefile.visit`
+      if test "$old_visit_dir" != "TOPDIR=$with_visit/src"; then
+      	 AC_MSG_WARN(VisIt target directory has changed - removing old VisIt build directory)
+	 rm -rf ./VisIt
+      fi
+   fi
+
    sci_defs_files="$sci_defs_files VisIt/udaReaderMTMD/testavtudaReaderMTMDFileFormat.C"
 
    BUILD_VISIT=yes
