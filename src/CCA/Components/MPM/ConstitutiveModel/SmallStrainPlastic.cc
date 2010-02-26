@@ -1296,16 +1296,18 @@ SmallStrainPlastic::computeStressTensorExplicit(const PatchSubset* patches,
       // Rotate the deformation rate back to the laboratory coordinates
       rateOfDef_new = (rotation*rateOfDef_new)*(rotation.Transpose());
 
-      // Compute the strain energy for the particles
-      Matrix3 avgStress = (pStress_new[idx] + pStress_old[idx])*0.5;
-      double pStrainEnergy = (rateOfDef_new(0,0)*avgStress(0,0) +
-                              rateOfDef_new(1,1)*avgStress(1,1) +
-                              rateOfDef_new(2,2)*avgStress(2,2) +
-                              2.0*(rateOfDef_new(0,1)*avgStress(0,1) + 
-                                   rateOfDef_new(0,2)*avgStress(0,2) +
-                                   rateOfDef_new(1,2)*avgStress(1,2)))*
-        pVol_new[idx]*delT;
-      totalStrainEnergy += pStrainEnergy;                  
+      // Compute the strain energy for non-localized particles
+      if(pLocalized_new[idx] == 0){
+        Matrix3 avgStress = (pStress_new[idx] + pStress_old[idx])*0.5;
+        double pStrainEnergy = (rateOfDef_new(0,0)*avgStress(0,0) +
+                                rateOfDef_new(1,1)*avgStress(1,1) +
+                                rateOfDef_new(2,2)*avgStress(2,2) +
+                                2.0*(rateOfDef_new(0,1)*avgStress(0,1) + 
+                                     rateOfDef_new(0,2)*avgStress(0,2) +
+                                     rateOfDef_new(1,2)*avgStress(1,2)))*
+          pVol_new[idx]*delT;
+        totalStrainEnergy += pStrainEnergy;
+      }         
 
       // Compute wave speed at each particle, store the maximum
       Vector pVel = pVelocity[idx];

@@ -381,11 +381,13 @@ CNHPDamage::computeStressTensor(const PatchSubset* patches,
                                            pLocalized[idx], pLocalized_new[idx],
                                            pStress_new[idx], pParticleID[idx]);
 
-      // Compute the strain energy for all the particles
-      U = .5*bulk*(.5*(J*J - 1.0) - log(J));
-      W = .5*shear*(pBeBar_new[idx].Trace() - 3.0);
-      double e = (U + W)*pVol_new[idx]/J;
-      se += e;
+      // Compute the strain energy for non-localized particles
+      if(pLocalized_new[idx] == 0){
+        U = .5*bulk*(.5*(J*J - 1.0) - log(J));
+        W = .5*shear*(pBeBar_new[idx].Trace() - 3.0);
+        double e = (U + W)*pVol_new[idx]/J;
+        se += e;
+      }
 
       // Compute the local sound speed
       c_dil = sqrt((bulk + 4.*shear/3.)/rho_cur);
@@ -589,11 +591,13 @@ CNHPDamage::computeStressTensorImplicit(const PatchSubset* patches,
                                            pLocalized[idx], pLocalized_new[idx],
                                            pStress_new[idx], idx);
 
-      // Compute the strain energy for all the particles
-      double U = .5*bulk*(.5*(J*J - 1.0) - log(J));
-      double W = .5*shear*(pBeBar_new[idx].Trace() - 3.0);
-      double e = (U + W)*pVol_new[idx]/J;
-      se += e;
+      // Compute the strain energy for non-localized particles
+      if(pLocalized_new[idx] == 0){
+        double U = .5*bulk*(.5*(J*J - 1.0) - log(J));
+        double W = .5*shear*(pBeBar_new[idx].Trace() - 3.0);
+        double e = (U + W)*pVol_new[idx]/J;
+        se += e;
+      }
     }
     new_dw->put(sum_vartype(se), lb->StrainEnergyLabel);
     delete interpolator;
