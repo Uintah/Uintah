@@ -93,18 +93,14 @@ using     std::string;
 // ****************************************************************************
 
 avtudaReaderMTMDFileFormat::avtudaReaderMTMDFileFormat(const char *filename) :
-  avtMTMDFileFormat(filename)
+  avtMTMDFileFormat(filename),
+  archive(NULL),
+  grid(NULL)
 {
   debug5 << "\nIn avtudaReaderFileFormat\n";
 
   // INITIALIZE DATA MEMBERS
   bool fileOpened = false;
-
-  // folder.assign("/home/collab/sshankar/csafe_data/jp8_tuna_can_Dmin_Pmax_rel_Wmax.uda"); 
-  // folder.assign("/home/collab/sshankar/csafe_data/jp8_tuna_can_Dmax_Pmax.uda");
-  // folder.assign("/home/sci/kuzimmer/work/SCIRunData/JP8_MR.uda.000");
-  // folder.assign("/home/collab/sshankar/csafe_data/guni.2L.2C.uda.000");
-  // folder.assign("/home/collab/sshankar/csafe_data/M2wedge.2L.uda.001");
 
   // Verify that it is a UDA index.xml file:
   //   The 2nd line should look like this <Uintah_DataArchive>.
@@ -148,6 +144,27 @@ avtudaReaderMTMDFileFormat::avtudaReaderMTMDFileFormat(const char *filename) :
   }
 
   // All possible function calls - check here
+
+  *(void **)(&openDataArchive) = dlsym(libHandle, "openDataArchive");
+  if((error = dlerror()) != NULL) {
+    EXCEPTION1(InvalidDBTypeException, "The function openDataArchive could not be located in the library!!!");
+  }
+
+  *(void **)(&closeDataArchive) = dlsym(libHandle, "closeDataArchive");
+  if((error = dlerror()) != NULL) {
+    EXCEPTION1(InvalidDBTypeException, "The function closeDataArchive could not be located in the library!!!");
+  }
+
+  *(void **)(&getGrid) = dlsym(libHandle, "getGrid");
+  if((error = dlerror()) != NULL) {
+    EXCEPTION1(InvalidDBTypeException, "The function getGrid could not be located in the library!!!");
+  }
+
+  *(void **)(&releaseGrid) = dlsym(libHandle, "releaseGrid");
+  if((error = dlerror()) != NULL) {
+    EXCEPTION1(InvalidDBTypeException, "The function releaseGrid could not be located in the library!!!");
+  }
+
 
   *(void **)(&getTimeSteps) = dlsym(libHandle, "getTimeSteps");
   if((error = dlerror()) != NULL) {
@@ -216,23 +233,22 @@ avtudaReaderMTMDFileFormat::avtudaReaderMTMDFileFormat(const char *filename) :
     EXCEPTION1(InvalidDBTypeException, "The function getPVarLevelAndPatches could not be located in the library!!!");
   }                                                                                                                                                                         
 
-  // Check to see if the file could be opened should be here
+
+
+  archive = (*openDataArchive)(folder);
+
+
   // fileOpened should be set if the file could be opened
   fileOpened = true;
 
-  // No. of timesteps
-  // timeSteps = *((*getTimeSteps)(folder));
-  timeStepInfo = ((*getTimeSteps)(folder));
+  // timestep times
+  timeStepInfo = ((*getTimeSteps)(archive));
 
   currLevel = -1;
   currVar.assign("any_var");
   currMesh.assign("any_mesh");
-  // callDomainNesting = false;
-  // patchInfoReq = true;
-  // levelInfoReq = true;
 
   currTimeStep = -1;
-  lastTimeStep = -1;
 
   ccMesh = false;
   ncMesh = false;
@@ -264,16 +280,22 @@ avtudaReaderMTMDFileFormat::~avtudaReaderMTMDFileFormat()
 {
   debug5 << "In destructor\n";
 
+  if (grid)
+    (*releaseGrid)(grid);
+
+  if (archive)
+    (*closeDataArchive)(archive);
+
   dlclose(libHandle);
 
-  if (levelPatchVecPtr != NULL) // just a pre-cautionary measure
+  if (levelPatchVecPtr != NULL)
     delete levelPatchVecPtr;
 
-  if (patchInfoVecPtr != NULL) // just a pre-cautionary measure
+  if (patchInfoVecPtr != NULL)
     delete patchInfoVecPtr;     
   
-  if (udaVarsPtr != NULL) // just a pre-cautionary measure
-    delete udaVarsPtr;     
+  if (udaVarsPtr != NULL)
+    delete udaVarsPtr;
 }
 
 
@@ -288,10 +310,9 @@ avtudaReaderMTMDFileFormat::~avtudaReaderMTMDFileFormat()
 //
 // ****************************************************************************
 
-  int
-avtudaReaderMTMDFileFormat::GetNTimesteps(void)
+int
+  avtudaReaderMTMDFileFormat::GetNTimesteps(void)
 {
-  // return timeSteps;
   return timeStepInfo->size();
 }
 
@@ -307,8 +328,8 @@ avtudaReaderMTMDFileFormat::GetNTimesteps(void)
 //
 // ****************************************************************************
 
-  double 
-avtudaReaderMTMDFileFormat::GetTime(int ts)
+double 
+  avtudaReaderMTMDFileFormat::GetTime(int ts)
 {
   return (*timeStepInfo)[ts];
 }
@@ -328,18 +349,22 @@ avtudaReaderMTMDFileFormat::GetTime(int ts)
 //
 // ****************************************************************************
 
-  void
-avtudaReaderMTMDFileFormat::FreeUpResources(void)
+void
+  avtudaReaderMTMDFileFormat::FreeUpResources(void)
 {
   debug5 << "In Free up resources\n";
   currLevel = -1;
   currVar.assign("any_var");
   currMesh.assign("any_mesh");
 
+  if (grid)
+    (*releaseGrid)(grid);
+  grid = NULL;
+
   if (refMatrix != NULL) {
     for (int i = 0; i < refX; i++) {
       for (int j = 0; j < refY; j++) {
-	free(refMatrix[i][j]);
+        free(refMatrix[i][j]);
       }
       free(refMatrix[i]);
     }
@@ -350,7 +375,7 @@ avtudaReaderMTMDFileFormat::FreeUpResources(void)
   if (vecValMatrix != NULL) {
     for (int i = 0; i < vecX; i++) {
       for (int j = 0; j < vecY; j++) {
-	free(vecValMatrix[i][j]);
+        free(vecValMatrix[i][j]);
       }
       free(vecValMatrix[i]);
     }
@@ -361,7 +386,7 @@ avtudaReaderMTMDFileFormat::FreeUpResources(void)
   if (tenValMatrix != NULL) {
     for (int i = 0; i < tenX; i++) {
       for (int j = 0; j < tenY; j++) {
-	free(tenValMatrix[i][j]);
+        free(tenValMatrix[i][j]);
       }
       free(tenValMatrix[i]);
     }
@@ -375,59 +400,13 @@ avtudaReaderMTMDFileFormat::FreeUpResources(void)
   delete [] extraCells;
   extraCells = NULL;
 
-  // ccMesh = false;
-  // ncMesh = false;
-  // sfcxMesh = false;
-  // sfcyMesh = false;
-  // sfczMesh = false;
-
-  // callDomainNesting = false;
-
-  // levelPatchVecPtr = NULL;
-  // patchInfoVecPtr = NULL;
-
-  // if (levelPatchVecPtr !=  NULL) // just a pre-cautionary measure
-  // delete levelPatchVecPtr;
-
-  if (patchInfoVecPtr !=  NULL) {// just a pre-cautionary measure
+  if (patchInfoVecPtr !=  NULL) {
     delete patchInfoVecPtr;
     patchInfoVecPtr = NULL;
   }
 }
 
 
-// ****************************************************************************
-//  Method: avtudaReaderMTMDFileFormat::ActivateTimestep
-//
-//  Purpose:
-//      Tells the reader it can now do some initialization work.
-//  
-//  Programmer: sshankar
-//  Creation:   Aug 4, 2008
-//
-// ****************************************************************************
-
-#if 0
-  void
-avtudaReaderMTMDFileFormat::ActivateTimestep(int ts)
-{
-  // debug5 << "\n\nActivating timestep: " << ts << "\n\n";
-  if (callDomainNesting) {
-    debug5 << "Making the much required call to getPatchInfo\n";
-    patchInfoVecPtr = (*getPatchInfo)(folder, ts, currMesh, true); // remove_boundary: true or false
-    levelPatchVec& levelPatchVecObj = *levelPatchVecPtr;
-    int numLevels = levelPatchVecObj.size();
-
-    // if there is just a single level, there is no need to call this function
-    if (numLevels > 1) {
-      debug5 << "CalculateDomainNesting() called\n";
-      CalculateDomainNesting(ts);
-    }
-
-    callDomainNesting = false;
-  }
-}
-#endif
 
 // ****************************************************************************
 //  Method:  avtudaReaderMTMDFileFormat::RegisterVariableList
@@ -442,9 +421,9 @@ avtudaReaderMTMDFileFormat::ActivateTimestep(int ts)
 // ****************************************************************************
 
 #if 0
-  void
-avtudaReaderMTMDFileFormat::RegisterVariableList(const char *prim_var_name,
-    const std::vector<CharStrRef> &)
+void
+  avtudaReaderMTMDFileFormat::RegisterVariableList(const char *prim_var_name,
+                                                   const std::vector<CharStrRef> &)
 {
   debug5 << "\n\n\nActive variable: " << string(prim_var_name) << "\n\n\n";
 
@@ -456,8 +435,9 @@ avtudaReaderMTMDFileFormat::RegisterVariableList(const char *prim_var_name,
 }
 #endif
 
-  void
-avtudaReaderMTMDFileFormat::InitializeReader(avtDatabaseMetaData *md, int timeState)
+
+void
+  avtudaReaderMTMDFileFormat::InitializeReader(avtDatabaseMetaData *md, int timeState)
 {
   //
   // CODE TO ADD A MESH
@@ -467,21 +447,18 @@ avtudaReaderMTMDFileFormat::InitializeReader(avtDatabaseMetaData *md, int timeSt
   // Prevent VisIt from sorting the variables.
   // md->SetMustAlphabetizeVariables(false);
 
-  // currTimeStep = timeState;
+  if (!grid || timeState != currTimeStep) {
+    if (grid)
+      (*releaseGrid)(grid);
+    grid = (*getGrid)(archive, timeState);
 
-  // if (levelPatchVecPtr !=  NULL) // just a pre-cautionary measure
-  // delete levelPatchVecPtr;
-
-  // if (patchInfoVecPtr !=  NULL) // just a pre-cautionary measure
-  // delete patchInfoVecPtr;    
-
-  lastTimeStep = currTimeStep;
-  currTimeStep = timeState;
+    currTimeStep = timeState;
+  }
 
   if (levelPatchVecPtr != NULL) 
     delete levelPatchVecPtr;
 
-  levelPatchVecPtr = (*getTotalNumPatches)(folder, timeState);
+  levelPatchVecPtr = (*getTotalNumPatches)(archive, grid);
   levelPatchVec& levelPatchVecObj = *levelPatchVecPtr;
 
   int numLevels = levelPatchVecObj.size();
@@ -515,7 +492,7 @@ avtudaReaderMTMDFileFormat::InitializeReader(avtDatabaseMetaData *md, int timeSt
   avtMeshType mt;
   avtCentering cent;
 
-  double* minMaxArr = (*getBBox)(folder, timeState, 0); // level 0
+  double* minMaxArr = (*getBBox)(archive, grid, 0); // level 0
 
   double extents[6];
 
@@ -529,7 +506,7 @@ avtudaReaderMTMDFileFormat::InitializeReader(avtDatabaseMetaData *md, int timeSt
   if (udaVarsPtr != NULL)
     delete udaVarsPtr;
 
-  udaVarsPtr = (*getVarList)(folder);
+  udaVarsPtr = (*getVarList)(archive);
   udaVars& udaVarsObj = *(udaVarsPtr);
 
   debug5 << "Variables: " << udaVarsObj.size() << endl;
@@ -546,22 +523,22 @@ avtudaReaderMTMDFileFormat::InitializeReader(avtDatabaseMetaData *md, int timeSt
       string mesh_for_this_var;
 
       if (vartype.find("NC") != string::npos) {
-	cent = AVT_NODECENT;
-	mesh_for_this_var.assign("NC_Mesh"); 
+        cent = AVT_NODECENT;
+        mesh_for_this_var.assign("NC_Mesh"); 
       }  
       else if (vartype.find("CC") != string::npos) {  
-	cent = AVT_ZONECENT;
-	mesh_for_this_var.assign("CC_Mesh"); 
+        cent = AVT_ZONECENT;
+        mesh_for_this_var.assign("CC_Mesh"); 
       }
       else if (vartype.find("SFC") != string::npos) { 
-	cent = AVT_ZONECENT;
+        cent = AVT_ZONECENT;
 
-	if (vartype.find("SFCX") != string::npos)		
-	  mesh_for_this_var.assign("SFCX_Mesh");
-	else if (vartype.find("SFCY") != string::npos)		
-	  mesh_for_this_var.assign("SFCY_Mesh");
-	else if (vartype.find("SFCZ") != string::npos)		
-	  mesh_for_this_var.assign("SFCZ_Mesh");
+        if (vartype.find("SFCX") != string::npos)		
+          mesh_for_this_var.assign("SFCX_Mesh");
+        else if (vartype.find("SFCY") != string::npos)		
+          mesh_for_this_var.assign("SFCY_Mesh");
+        else if (vartype.find("SFCZ") != string::npos)		
+          mesh_for_this_var.assign("SFCZ_Mesh");
       }  
       
       // debug5 << newVarname << " " << mesh_for_this_var << endl;
@@ -569,76 +546,76 @@ avtudaReaderMTMDFileFormat::InitializeReader(avtDatabaseMetaData *md, int timeSt
       bool addMeshToMetadata = false;
 
       if  ((vartype.find("NC") != string::npos) && ncMesh == false) {
-	ncMesh = true;
-	addMeshToMetadata = true;
+        ncMesh = true;
+        addMeshToMetadata = true;
       }	
       else if ((vartype.find("CC") != string::npos) && ccMesh == false) {
-	ccMesh = true;
-	addMeshToMetadata = true;
+        ccMesh = true;
+        addMeshToMetadata = true;
       }
       else if ((vartype.find("SFCX") != string::npos) && sfcxMesh == false) {
-	sfcxMesh = true;
-	addMeshToMetadata = true;
+        sfcxMesh = true;
+        addMeshToMetadata = true;
       }	
       else if ((vartype.find("SFCY") != string::npos) && sfcyMesh == false) {
-	sfcyMesh = true;
-	addMeshToMetadata = true;
+        sfcyMesh = true;
+        addMeshToMetadata = true;
       }	
       else if ((vartype.find("SFCZ") != string::npos) && sfczMesh == false) {
-	sfczMesh = true;
-	addMeshToMetadata = true;	   
+        sfczMesh = true;
+        addMeshToMetadata = true;	   
       }	   
 
       if (addMeshToMetadata) {
-	strcpy(tmpArray, mesh_for_this_var.c_str());
-	avtMeshMetaData *mesh = new avtMeshMetaData;
+        strcpy(tmpArray, mesh_for_this_var.c_str());
+        avtMeshMetaData *mesh = new avtMeshMetaData;
 
-	mesh->name = tmpArray;
-	mesh->meshType = AVT_AMR_MESH;
-	mesh->topologicalDimension = 3;
-	mesh->spatialDimension = 3;
+        mesh->name = tmpArray;
+        mesh->meshType = AVT_AMR_MESH;
+        mesh->topologicalDimension = 3;
+        mesh->spatialDimension = 3;
 
-	mesh->numBlocks = totalPatches;
-	mesh->blockTitle = "patches";
-	mesh->blockPieceName = "patch";
-	mesh->numGroups = numLevels;
-	mesh->groupTitle = "levels";
-	mesh->groupPieceName = "level";
-	mesh->blockNames = pieceNames;
-	mesh->containsExteriorBoundaryGhosts = true;
+        mesh->numBlocks = totalPatches;
+        mesh->blockTitle = "patches";
+        mesh->blockPieceName = "patch";
+        mesh->numGroups = numLevels;
+        mesh->groupTitle = "levels";
+        mesh->groupPieceName = "level";
+        mesh->blockNames = pieceNames;
+        mesh->containsExteriorBoundaryGhosts = true;
 
-	mesh->hasSpatialExtents = true; 
-	mesh->minSpatialExtents[0] = minMaxArr[0];
-	mesh->maxSpatialExtents[0] = minMaxArr[3];
-	mesh->minSpatialExtents[1] = minMaxArr[1];
-	mesh->maxSpatialExtents[1] = minMaxArr[4];
-	mesh->minSpatialExtents[2] = minMaxArr[2];
-	mesh->maxSpatialExtents[2] = minMaxArr[5];
+        mesh->hasSpatialExtents = true; 
+        mesh->minSpatialExtents[0] = minMaxArr[0];
+        mesh->maxSpatialExtents[0] = minMaxArr[3];
+        mesh->minSpatialExtents[1] = minMaxArr[1];
+        mesh->maxSpatialExtents[1] = minMaxArr[4];
+        mesh->minSpatialExtents[2] = minMaxArr[2];
+        mesh->maxSpatialExtents[2] = minMaxArr[5];
 
-	md->Add(mesh); 
+        md->Add(mesh); 
       }
 
-      varMatls* varMatlsPtr = (*getMaterials)(folder, varname, timeState);
+      varMatls* varMatlsPtr = (*getMaterials)(archive, grid, timeState, varname);
       varMatls& varMatlsObj = *(varMatlsPtr); 
 
       if (varMatlsObj.size() == 0)
-	debug5 << varname << " has no materials\n";
+        debug5 << varname << " has no materials\n";
 
       // debug5 << "Querying variable " << varname << " with " << varMatlsObj.size() << " materials" << endl;
 
       for (int j = 0; j < varMatlsObj.size(); j++) {
-	char buffer[128];
-	string newVarname = varname;
-	sprintf(buffer, "%d", varMatlsObj[j]);
-	newVarname.append("/");
-	newVarname.append(buffer);
+        char buffer[128];
+        string newVarname = varname;
+        sprintf(buffer, "%d", varMatlsObj[j]);
+        newVarname.append("/");
+        newVarname.append(buffer);
 
-	if (vartype.find("Vector") != string::npos) 
-	  AddVectorVarToMetaData(md, newVarname, mesh_for_this_var, cent, 3); // 3 -> vector dimension
-	else if (vartype.find("Matrix3") != string::npos)
-	  AddTensorVarToMetaData(md, newVarname, mesh_for_this_var, cent, 9); // 9 -> tensor 
-	else  
-	  AddScalarVarToMetaData(md, newVarname, mesh_for_this_var, cent);
+        if (vartype.find("Vector") != string::npos) 
+          AddVectorVarToMetaData(md, newVarname, mesh_for_this_var, cent, 3); // 3 -> vector dimension
+        else if (vartype.find("Matrix3") != string::npos)
+          AddTensorVarToMetaData(md, newVarname, mesh_for_this_var, cent, 9); // 9 -> tensor 
+        else  
+          AddScalarVarToMetaData(md, newVarname, mesh_for_this_var, cent);
       }
     }   
   }
@@ -659,77 +636,66 @@ avtudaReaderMTMDFileFormat::InitializeReader(avtDatabaseMetaData *md, int timeSt
       string vartype = varname.substr(found + 1);
       varname = varname.substr(0, found);
 
-      varMatls* varMatlsPtr = (*getMaterials)(folder, varname, timeState);
+      varMatls* varMatlsPtr = (*getMaterials)(archive, grid, timeState, varname);
       varMatls& varMatlsObj = *(varMatlsPtr);
 
-      int* levelAndPatches = (*getPVarLevelAndPatches)(folder, varname, timeState);
+      int* levelAndPatches = (*getPVarLevelAndPatches)(archive, grid, timeState, varname);
 
       debug5 << "Querying variable " << varname << " with " << varMatlsObj.size() << " materials" << endl;
 
       bool addStar = false;
       int count =  varMatlsObj.size() + 1;
       for (int j = 0; j < count; j++) {
-	char buffer[128];
-	string newVarname = varname;
-	if (j > 0)
-	  sprintf(buffer, "%d", varMatlsObj[j-1]);
+        char buffer[128];
+        string newVarname = varname;
+        if (j > 0)
+          sprintf(buffer, "%d", varMatlsObj[j-1]);
 	
-	newVarname.append("/");
-	if (j == 0 && addStar == false) {
-	  newVarname.append("*");
-	  // j--;
-	  addStar = true;
-	}    
-	else
-	  newVarname.append(buffer);
+        newVarname.append("/");
+        if (j == 0 && addStar == false) {
+          newVarname.append("*");
+          // j--;
+          addStar = true;
+        }    
+        else
+          newVarname.append(buffer);
 
-	string mesh_for_this_var = string("mesh_particle_");
-	mesh_for_this_var.append(newVarname);
+        string mesh_for_this_var = string("mesh_particle_");
+        mesh_for_this_var.append(newVarname);
 
-	debug5 << newVarname << " " << mesh_for_this_var << endl;
+        debug5 << newVarname << " " << mesh_for_this_var << endl;
       
-        // if (addMeshToMetadata) {
-	  strcpy(tmpArray, mesh_for_this_var.c_str());
-	  avtMeshMetaData *mesh = new avtMeshMetaData;
+        strcpy(tmpArray, mesh_for_this_var.c_str());
+        avtMeshMetaData *mesh = new avtMeshMetaData;
 
-	  mesh->name = tmpArray;
-	  mesh->meshType = AVT_POINT_MESH;
-	  mesh->topologicalDimension = 0;
-	  mesh->spatialDimension = 3;
+        mesh->name = tmpArray;
+        mesh->meshType = AVT_POINT_MESH;
+        mesh->topologicalDimension = 0;
+        mesh->spatialDimension = 3;
 
-	  mesh->numBlocks = levelAndPatches[1];
-	  mesh->blockTitle = "patches";
-	  mesh->blockPieceName = "patch";
-	  // mesh->numGroups = 1; // since particles are on a single level
-	  // mesh->groupTitle = "levels";
-	  // mesh->groupPieceName = "level";
-	  // mesh->blockNames = pieceNames;
+        mesh->numBlocks = levelAndPatches[1];
+        mesh->blockTitle = "patches";
+        mesh->blockPieceName = "patch";
 
-	  mesh->hasSpatialExtents = true; 
-	  mesh->minSpatialExtents[0] = minMaxArr[0];
-	  mesh->maxSpatialExtents[0] = minMaxArr[3];
-	  mesh->minSpatialExtents[1] = minMaxArr[1];
-	  mesh->maxSpatialExtents[1] = minMaxArr[4];
-	  mesh->minSpatialExtents[2] = minMaxArr[2];
-	  mesh->maxSpatialExtents[2] = minMaxArr[5];
+        mesh->hasSpatialExtents = true; 
+        mesh->minSpatialExtents[0] = minMaxArr[0];
+        mesh->maxSpatialExtents[0] = minMaxArr[3];
+        mesh->minSpatialExtents[1] = minMaxArr[1];
+        mesh->maxSpatialExtents[1] = minMaxArr[4];
+        mesh->minSpatialExtents[2] = minMaxArr[2];
+        mesh->maxSpatialExtents[2] = minMaxArr[5];
 
-	  md->Add(mesh); 
-        // }
+        md->Add(mesh); 
 
-	// mt = AVT_POINT_MESH;
-	// topological_dimension = 0;
-	// AddMeshToMetaData(md, mesh_for_this_var, mt, extents, nblocks, block_origin,
-	//     spatial_dimension, topological_dimension);
+        cent = AVT_NODECENT;
 
-	cent = AVT_NODECENT;
-
-	if ((vartype.find("Vector") != string::npos) ||
-	    (vartype.find("Point") != string::npos)) 
-	  AddVectorVarToMetaData(md, newVarname, mesh_for_this_var, cent, 3); // 3 -> vector dimension
-	else if (vartype.find("Matrix3") != string::npos)
-	  AddTensorVarToMetaData(md, newVarname, mesh_for_this_var, cent, 9); // 9 -> tensor 
-	else  
-	  AddScalarVarToMetaData(md, newVarname, mesh_for_this_var, cent);
+        if ((vartype.find("Vector") != string::npos) ||
+            (vartype.find("Point") != string::npos)) 
+          AddVectorVarToMetaData(md, newVarname, mesh_for_this_var, cent, 3); // 3 -> vector dimension
+        else if (vartype.find("Matrix3") != string::npos)
+          AddTensorVarToMetaData(md, newVarname, mesh_for_this_var, cent, 9); // 9 -> tensor 
+        else  
+          AddScalarVarToMetaData(md, newVarname, mesh_for_this_var, cent);
       }
     }   
   }
@@ -754,13 +720,12 @@ avtudaReaderMTMDFileFormat::InitializeReader(avtDatabaseMetaData *md, int timeSt
 //
 // ****************************************************************************
 
-  void
-avtudaReaderMTMDFileFormat::PopulateDatabaseMetaData(avtDatabaseMetaData *md, int timeState)
+void
+  avtudaReaderMTMDFileFormat::PopulateDatabaseMetaData(avtDatabaseMetaData *md, int timeState)
 {
   //
   // CODE TO ADD A MESH
   //
-  // debug5 << "\nIn PopulateDatabaseMetaData\n";
 
 #ifdef PARALLEL
   int numProcs, rank;
@@ -787,250 +752,6 @@ avtudaReaderMTMDFileFormat::PopulateDatabaseMetaData(avtDatabaseMetaData *md, in
 #else      
   InitializeReader(md, timeState);
 #endif
-
-  // Prevent VisIt from sorting the variables.
-  // md->SetMustAlphabetizeVariables(false);
-
-  // currTimeStep = timeState;
-
-  // if (levelPatchVecPtr !=  NULL) // just a pre-cautionary measure
-  // delete levelPatchVecPtr;
-
-  // if (patchInfoVecPtr !=  NULL) // just a pre-cautionary measure
-  // delete patchInfoVecPtr;    
-
-  /*lastTimeStep = currTimeStep;
-  currTimeStep = timeState;
-
-  if (levelPatchVecPtr != NULL) 
-    delete levelPatchVecPtr;
-
-  levelPatchVecPtr = (*getTotalNumPatches)(folder, timeState);
-  levelPatchVec& levelPatchVecObj = *levelPatchVecPtr;
-
-  int numLevels = levelPatchVecObj.size();
-  int totalPatches = 0;
-
-  for (int i = 0; i < numLevels; i++) {
-    totalPatches +=  levelPatchVecObj[i].noPatches;
-  }  
-
-  debug5 << "Levels: " << numLevels << " Patches: " << totalPatches << endl;
-
-  vector<int> groupIds(totalPatches);
-  vector<string> pieceNames(totalPatches);
-
-  for (int i = 0; i < totalPatches; i++) {
-    char tmpName[64];
-    int level, local_patch;
-
-    GetLevelAndLocalPatchNumber(i, timeState, level, local_patch);
-    sprintf(tmpName,"level%d, patch%d", level, local_patch);
-
-    groupIds[i] = level;
-    pieceNames[i] = tmpName;
-  }
-
-  int nblocks = 1;  
-  int block_origin = 0;
-  int spatial_dimension = 3;
-  int topological_dimension;
-
-  avtMeshType mt;
-  avtCentering cent;
-
-  double* minMaxArr = (*getBBox)(folder, timeState, 0); // level 0
-
-  double extents[6];
-
-  extents[0] = minMaxArr[0];
-  extents[1] = minMaxArr[3];
-  extents[2] = minMaxArr[1];
-  extents[3] = minMaxArr[4];
-  extents[4] = minMaxArr[2];
-  extents[5] = minMaxArr[5];
-
-  udaVars* udaVarsPtr = (*getVarList)(folder);
-  udaVars& udaVarsObj = *(udaVarsPtr);
-
-  debug5 << "Variables: " << udaVarsObj.size() << endl;
-
-  for (int i = 0; i < udaVarsObj.size(); i++) {
-    if (udaVarsObj[i].find("p.") == string::npos) {
-      char tmpArray[128];
-      string varname = udaVarsObj[i];
-      size_t found = varname.find("/");
-
-      string vartype = varname.substr(found + 1);
-      varname = varname.substr(0, found);
-
-      string mesh_for_this_var;
-
-      if (vartype.find("NC") != string::npos) {
-	cent = AVT_NODECENT;
-	mesh_for_this_var.assign("NC_Mesh"); 
-      }  
-      else if (vartype.find("CC") != string::npos) {  
-	cent = AVT_ZONECENT;
-	mesh_for_this_var.assign("CC_Mesh"); 
-      }
-      else if (vartype.find("SFC") != string::npos) { 
-	cent = AVT_ZONECENT;
-
-	if (vartype.find("SFCX") != string::npos)		
-	  mesh_for_this_var.assign("SFCX_Mesh");
-	else if (vartype.find("SFCY") != string::npos)		
-	  mesh_for_this_var.assign("SFCY_Mesh");
-	else if (vartype.find("SFCZ") != string::npos)		
-	  mesh_for_this_var.assign("SFCZ_Mesh");
-      }  
-
-      // mesh_for_this_var.append("mesh_");
-      // mesh_for_this_var.append(newVarname);
-
-      // debug5 << newVarname << " " << mesh_for_this_var << endl;
-
-      bool addMeshToMetadata = false;
-
-      if  ((vartype.find("NC") != string::npos) && ncMesh == false) {
-	ncMesh = true;
-	addMeshToMetadata = true;
-      }	
-      else if ((vartype.find("CC") != string::npos) && ccMesh == false) {
-	ccMesh = true;
-	addMeshToMetadata = true;
-      }
-      else if ((vartype.find("SFCX") != string::npos) && sfcxMesh == false) {
-	sfcxMesh = true;
-	addMeshToMetadata = true;
-      }	
-      else if ((vartype.find("SFCY") != string::npos) && sfcyMesh == false) {
-	sfcyMesh = true;
-	addMeshToMetadata = true;
-      }	
-      else if ((vartype.find("SFCZ") != string::npos) && sfczMesh == false) {
-	sfczMesh = true;
-	addMeshToMetadata = true;	   
-      }	   
-
-      if (addMeshToMetadata) {
-	strcpy(tmpArray, mesh_for_this_var.c_str());
-	avtMeshMetaData *mesh = new avtMeshMetaData;
-
-	mesh->name = tmpArray;
-	mesh->meshType = AVT_AMR_MESH;
-	mesh->topologicalDimension = 3;
-	mesh->spatialDimension = 3;
-
-	mesh->numBlocks = totalPatches;
-	mesh->blockTitle = "patches";
-	mesh->blockPieceName = "patch";
-	mesh->numGroups = numLevels;
-	mesh->groupTitle = "levels";
-	mesh->groupPieceName = "level";
-	mesh->blockNames = pieceNames;
-	mesh->containsExteriorBoundaryGhosts = true;
-
-	mesh->hasSpatialExtents = true; 
-	mesh->minSpatialExtents[0] = minMaxArr[0];
-	mesh->maxSpatialExtents[0] = minMaxArr[3];
-	mesh->minSpatialExtents[1] = minMaxArr[1];
-	mesh->maxSpatialExtents[1] = minMaxArr[4];
-	mesh->minSpatialExtents[2] = minMaxArr[2];
-	mesh->maxSpatialExtents[2] = minMaxArr[5];
-
-	md->Add(mesh); 
-      }
-
-      varMatls* varMatlsPtr = (*getMaterials)(folder, varname, timeState);
-      varMatls& varMatlsObj = *(varMatlsPtr); 
-
-      if (varMatlsObj.size() == 0)
-	debug5 << varname << " has no materials\n";
-
-      // debug5 << "Querying variable " << varname << " with " << varMatlsObj.size() << " materials" << endl;
-
-      for (int j = 0; j < varMatlsObj.size(); j++) {
-	char buffer[128];
-	string newVarname = varname;
-	sprintf(buffer, "%d", varMatlsObj[j]);
-	newVarname.append("/");
-	newVarname.append(buffer);
-	
-	if (vartype.find("Vector") != string::npos) 
-	  AddVectorVarToMetaData(md, newVarname, mesh_for_this_var, cent, 3); // 3 -> vector dimension
-	else if (vartype.find("Matrix3") != string::npos)
-	  AddTensorVarToMetaData(md, newVarname, mesh_for_this_var, cent, 9); // 9 -> tensor 
-	else  
-	  AddScalarVarToMetaData(md, newVarname, mesh_for_this_var, cent);
-      }
-    }   
-  }
-
-  ccMesh = false;
-  ncMesh = false;
-  sfcxMesh = false;
-  sfcyMesh = false;
-  sfczMesh = false;
-
-  md->AddGroupInformation(numLevels, totalPatches, groupIds);
-  md->AddDefaultSILRestrictionDescription(std::string("!TurnOnAll"));
-
-  // Nothing needs to be modifed for particle data, as they exist only on a single level
-  for (int i = 0; i < udaVarsObj.size(); i++) {
-    if (udaVarsObj[i].find("p.") != string::npos) {
-      string varname = udaVarsObj[i];
-      size_t found = varname.find("/");
-
-      string vartype = varname.substr(found + 1);
-      varname = varname.substr(0, found);
-
-      varMatls* varMatlsPtr = (*getMaterials)(folder, varname, timeState);
-      varMatls& varMatlsObj = *(varMatlsPtr);
-
-      debug5 << "Querying variable " << varname << " with " << varMatlsObj.size() << " materials" << endl;
-
-      bool addStar = false;
-      int count =  varMatlsObj.size() + 1;
-      for (int j = 0; j < count; j++) {
-	char buffer[128];
-	string newVarname = varname;
-	if (j > 0)
-	  sprintf(buffer, "%d", varMatlsObj[j-1]);
-	newVarname.append("/");
-
-	if (j == 0 && addStar == false) {
-	  newVarname.append("*");
-	  // j--;
-	  addStar = true;
-	}    
-	else
-	  newVarname.append(buffer);
-
-	string mesh_for_this_var = string("mesh_particle_");
-	mesh_for_this_var.append(newVarname);
-
-	debug5 << newVarname << " " << mesh_for_this_var << endl;
-
-	mt = AVT_POINT_MESH;
-	topological_dimension = 0;
-	AddMeshToMetaData(md, mesh_for_this_var, mt, extents, nblocks, block_origin,
-	    spatial_dimension, topological_dimension);
-
-	cent = AVT_NODECENT;
-
-	if ((vartype.find("Vector") != string::npos) ||
-	    (vartype.find("Point") != string::npos)) 
-	  AddVectorVarToMetaData(md, newVarname, mesh_for_this_var, cent, 3); // 3 -> vector dimension
-	else if (vartype.find("Matrix3") != string::npos)
-	  AddTensorVarToMetaData(md, newVarname, mesh_for_this_var, cent, 9); // 9 -> tensor 
-	else  
-	  AddScalarVarToMetaData(md, newVarname, mesh_for_this_var, cent);
-      }
-    }   
-  }*/
-
-  // debug5 << "Out PopulateDatabaseMetaData\n";
 }
 
 
@@ -1046,26 +767,25 @@ avtudaReaderMTMDFileFormat::PopulateDatabaseMetaData(avtDatabaseMetaData *md, in
 //
 // ****************************************************************************
 
-  void
-avtudaReaderMTMDFileFormat::GetLevelAndLocalPatchNumber(int global_patch, int timestate, 
-    int &level, int &local_patch)
+void
+  avtudaReaderMTMDFileFormat::GetLevelAndLocalPatchNumber(int global_patch, int timestate, 
+                                                          int &level, int &local_patch)
 {
   levelPatchVec& levelPatchVecObj = *levelPatchVecPtr;
   int num_levels = levelPatchVecObj.size();
-  // debug5 << "In GetLevelAndLocalPatchNumber, num_levels = " << num_levels << endl; 
   int num_patches = 0;
   int tmp = global_patch;
   level = 0;
   while (1 && level < num_levels)
-  {
-    num_patches = levelPatchVecObj[level].noPatches;
-    if (tmp < num_patches)
     {
-      break;
+      num_patches = levelPatchVecObj[level].noPatches;
+      if (tmp < num_patches)
+        {
+          break;
+        }
+      tmp -= num_patches;
+      level++;
     }
-    tmp -= num_patches;
-    level++;
-  }
   local_patch = tmp;
 }
 
@@ -1087,16 +807,14 @@ avtudaReaderMTMDFileFormat::GetLevelAndLocalPatchNumber(int global_patch, int ti
 //
 // ****************************************************************************
 
-  void
-avtudaReaderMTMDFileFormat::CalculateDomainNesting(int timestate)
+void
+  avtudaReaderMTMDFileFormat::CalculateDomainNesting(int timestate)
 {
   levelPatchVec& levelPatchVecObj = *levelPatchVecPtr;
   int num_levels = levelPatchVecObj.size();
 
   // Call to store all patch information
   // Patch Info Vector
-  // patchInfoVecPtr should be made global for use in GetMesh
-  // patchInfoVec* patchInfoVecPtr = (*getPatchInfo)(folder, timestate);
   patchInfoVec& patchInfoVecObj = *(patchInfoVecPtr);   
 
   //
@@ -1115,16 +833,11 @@ avtudaReaderMTMDFileFormat::CalculateDomainNesting(int timestate)
   // Now that we know the total number of patches, we can allocate the
   // data structure for the patch nesting.
   // 
-  avtStructuredDomainNesting *dn = new avtStructuredDomainNesting(
-      totalPatches, num_levels);
+  avtStructuredDomainNesting *dn = new avtStructuredDomainNesting(totalPatches, num_levels);
 
   //
   // Calculate what the refinement ratio is from one level to the next.
   //
-
-  // vector<int> dim(3); 
-  // vector<vector<int>> rr(3, dim);
-
   vector<int> rr(3); 
   for (int level = 0 ; level < num_levels ; level++) {
     int* refinement_ratio = levelPatchVecObj[level].rr;
@@ -1137,7 +850,6 @@ avtudaReaderMTMDFileFormat::CalculateDomainNesting(int timestate)
   //
   // This multiplier will be needed to find out if patches are nested.
   //
-
   vector<int> dim(3); 
   vector< vector<int> > multiplier(num_levels, dim);
   multiplier[num_levels-1][0] = 1;
@@ -1147,9 +859,7 @@ avtudaReaderMTMDFileFormat::CalculateDomainNesting(int timestate)
     int* refinement_ratio = levelPatchVecObj[level+1].rr;
     for (int i = 0; i < 3; i++) {
       multiplier[level][i] = multiplier[level+1][i] * refinement_ratio[i];
-      // debug5 << multiplier[level][i] << " ";
     }
-    // debug5 << endl;       
   }
 
   //
@@ -1187,21 +897,21 @@ avtudaReaderMTMDFileFormat::CalculateDomainNesting(int timestate)
 
       e[0] = patchInfoVecObj[patch].indexArr[0];
       if (indexArr[3] < indexRangeNC[0])
-	e[1] = patchInfoVecObj[patch].indexArr[3] - 1; 
+        e[1] = patchInfoVecObj[patch].indexArr[3] - 1; 
       else  
-	e[1] = patchInfoVecObj[patch].indexArr[3] - 2;
+        e[1] = patchInfoVecObj[patch].indexArr[3] - 2;
 
       e[2] = patchInfoVecObj[patch].indexArr[1];
       if (indexArr[4] < indexRangeNC[1])
-	e[3] = patchInfoVecObj[patch].indexArr[4] - 1;
+        e[3] = patchInfoVecObj[patch].indexArr[4] - 1;
       else 
-	e[3] = patchInfoVecObj[patch].indexArr[4] - 2;
+        e[3] = patchInfoVecObj[patch].indexArr[4] - 2;
 
       e[4] = patchInfoVecObj[patch].indexArr[2];
       if (indexArr[5] < indexRangeNC[2])
-	e[5] = patchInfoVecObj[patch].indexArr[5] - 1;
+        e[5] = patchInfoVecObj[patch].indexArr[5] - 1;
       else  
-	e[5] = patchInfoVecObj[patch].indexArr[5] - 2;
+        e[5] = patchInfoVecObj[patch].indexArr[5] - 2;
 
       rdb->SetIndicesForAMRPatch(patch, my_level, e);
     }
@@ -1230,25 +940,25 @@ avtudaReaderMTMDFileFormat::CalculateDomainNesting(int timestate)
       int actualHiArr[3];
       int* hiLoArr = patchInfoVecObj[patch].hiLoArr;
 	  
-       actualHiArr[0] = patchInfoVecObj[patch].indexArr[3];
-       actualHiArr[1] = patchInfoVecObj[patch].indexArr[4];
-       actualHiArr[2] = patchInfoVecObj[patch].indexArr[5];
+      actualHiArr[0] = patchInfoVecObj[patch].indexArr[3];
+      actualHiArr[1] = patchInfoVecObj[patch].indexArr[4];
+      actualHiArr[2] = patchInfoVecObj[patch].indexArr[5];
      
       if (currMesh.find("SFCX") != string::npos) { 
         if (actualHiArr[0] < (hiLoArr[3] - hiLoArr[0])) {
-	  actualHiArr[0] += 1;
+          actualHiArr[0] += 1;
         }
       }
 
       if (currMesh.find("SFCY") != string::npos) { 
         if (actualHiArr[1] < (hiLoArr[4] - hiLoArr[1])) {
-	  actualHiArr[1] += 1;
+          actualHiArr[1] += 1;
         }
       }
 
       if (currMesh.find("SFCZ") != string::npos) { 
         if (actualHiArr[2] < (hiLoArr[5] - hiLoArr[2])) {
-	  actualHiArr[2] += 1;
+          actualHiArr[2] += 1;
         }
       }
 
@@ -1272,9 +982,9 @@ avtudaReaderMTMDFileFormat::CalculateDomainNesting(int timestate)
 
   rdb->CalculateBoundaries();
   void_ref_ptr vrdb = void_ref_ptr(rdb,
-      avtStructuredDomainBoundaries::Destruct);
+                                   avtStructuredDomainBoundaries::Destruct);
   cache->CacheVoidRef("any_mesh", AUXILIARY_DATA_DOMAIN_BOUNDARY_INFORMATION,
-      timestate, -1, vrdb);
+                      timestate, -1, vrdb);
 
   //
   // Calculating the child patches really needs some better sorting than
@@ -1293,115 +1003,115 @@ avtudaReaderMTMDFileFormat::CalculateDomainNesting(int timestate)
     vector<int> mP = multiplier[level];
     if (currMesh.find("NC") != string::npos) {
       for (int patch = patches_start ; patch < patches_end ; patch++) {
-	for (int candidate = search_start ; candidate < search_end ; candidate++) {                       
-	  int indexArrP[6];
-	  std::memcpy(indexArrP, patchInfoVecObj[patch].indexArr, sizeof(int) * 6);
+        for (int candidate = search_start ; candidate < search_end ; candidate++) {                       
+          int indexArrP[6];
+          std::memcpy(indexArrP, patchInfoVecObj[patch].indexArr, sizeof(int) * 6);
 
-	  int indexArrC[6];
-	  std::memcpy(indexArrC, patchInfoVecObj[candidate].indexArr, sizeof(int) * 6);
+          int indexArrC[6];
+          std::memcpy(indexArrC, patchInfoVecObj[candidate].indexArr, sizeof(int) * 6);
 
-	  int* hiLoArrP = patchInfoVecObj[patch].hiLoArr;
-	  int* hiLoArrC = patchInfoVecObj[candidate].hiLoArr;
+          int* hiLoArrP = patchInfoVecObj[patch].hiLoArr;
+          int* hiLoArrC = patchInfoVecObj[candidate].hiLoArr;
 
-	  indexArrP[0] = indexArrP[0] - hiLoArrP[0]; 
-	  indexArrP[1] = indexArrP[1] - hiLoArrP[1]; 
-	  indexArrP[2] = indexArrP[2] - hiLoArrP[2];
-	  indexArrP[3] = indexArrP[3] - hiLoArrP[0]; 
-	  indexArrP[4] = indexArrP[4] - hiLoArrP[1]; 
-	  indexArrP[5] = indexArrP[5] - hiLoArrP[2];
+          indexArrP[0] = indexArrP[0] - hiLoArrP[0]; 
+          indexArrP[1] = indexArrP[1] - hiLoArrP[1]; 
+          indexArrP[2] = indexArrP[2] - hiLoArrP[2];
+          indexArrP[3] = indexArrP[3] - hiLoArrP[0]; 
+          indexArrP[4] = indexArrP[4] - hiLoArrP[1]; 
+          indexArrP[5] = indexArrP[5] - hiLoArrP[2];
 
-	  indexArrC[0] = indexArrC[0] - hiLoArrC[0]; 
-	  indexArrC[1] = indexArrC[1] - hiLoArrC[1]; 
-	  indexArrC[2] = indexArrC[2] - hiLoArrC[2];
-	  indexArrC[3] = indexArrC[3] - hiLoArrC[0]; 
-	  indexArrC[4] = indexArrC[4] - hiLoArrC[1]; 
-	  indexArrC[5] = indexArrC[5] - hiLoArrC[2];
+          indexArrC[0] = indexArrC[0] - hiLoArrC[0]; 
+          indexArrC[1] = indexArrC[1] - hiLoArrC[1]; 
+          indexArrC[2] = indexArrC[2] - hiLoArrC[2];
+          indexArrC[3] = indexArrC[3] - hiLoArrC[0]; 
+          indexArrC[4] = indexArrC[4] - hiLoArrC[1]; 
+          indexArrC[5] = indexArrC[5] - hiLoArrC[2];
 
-	  int indexRangeP[3], indexRangeC[3];
+          int indexRangeP[3], indexRangeC[3];
 
-	  indexRangeP[0] = hiLoArrP[3] - hiLoArrP[0] - 1;
-	  indexRangeP[1] = hiLoArrP[4] - hiLoArrP[1] - 1;
-	  indexRangeP[2] = hiLoArrP[5] - hiLoArrP[2] - 1;
+          indexRangeP[0] = hiLoArrP[3] - hiLoArrP[0] - 1;
+          indexRangeP[1] = hiLoArrP[4] - hiLoArrP[1] - 1;
+          indexRangeP[2] = hiLoArrP[5] - hiLoArrP[2] - 1;
 
-	  indexRangeC[0] = hiLoArrC[3] - hiLoArrC[0] - 1;
-	  indexRangeC[1] = hiLoArrC[4] - hiLoArrC[1] - 1;
-	  indexRangeC[2] = hiLoArrC[5] - hiLoArrC[2] - 1;
+          indexRangeC[0] = hiLoArrC[3] - hiLoArrC[0] - 1;
+          indexRangeC[1] = hiLoArrC[4] - hiLoArrC[1] - 1;
+          indexRangeC[2] = hiLoArrC[5] - hiLoArrC[2] - 1;
 
-	  int a[6];
+          int a[6];
 
-	  if (indexArrP[3] < indexRangeP[0])
-	    a[0] = patchInfoVecObj[patch].indexArr[3] - 1; 
-	  else  
-	    a[0] = patchInfoVecObj[patch].indexArr[3] - 2;
+          if (indexArrP[3] < indexRangeP[0])
+            a[0] = patchInfoVecObj[patch].indexArr[3] - 1; 
+          else  
+            a[0] = patchInfoVecObj[patch].indexArr[3] - 2;
 
-	  if (indexArrC[3] < indexRangeC[0])
-	    a[1] = patchInfoVecObj[candidate].indexArr[3] - 1; 
-	  else  
-	    a[1] = patchInfoVecObj[candidate].indexArr[3] - 2;
+          if (indexArrC[3] < indexRangeC[0])
+            a[1] = patchInfoVecObj[candidate].indexArr[3] - 1; 
+          else  
+            a[1] = patchInfoVecObj[candidate].indexArr[3] - 2;
 
-	  if (indexArrP[4] < indexRangeP[1])
-	    a[2] = patchInfoVecObj[patch].indexArr[4] - 1; 
-	  else  
-	    a[2] = patchInfoVecObj[patch].indexArr[4] - 2;
+          if (indexArrP[4] < indexRangeP[1])
+            a[2] = patchInfoVecObj[patch].indexArr[4] - 1; 
+          else  
+            a[2] = patchInfoVecObj[patch].indexArr[4] - 2;
 
-	  if (indexArrC[4] < indexRangeC[1])
-	    a[3] = patchInfoVecObj[candidate].indexArr[4] - 1; 
-	  else  
-	    a[3] = patchInfoVecObj[candidate].indexArr[4] - 2;
+          if (indexArrC[4] < indexRangeC[1])
+            a[3] = patchInfoVecObj[candidate].indexArr[4] - 1; 
+          else  
+            a[3] = patchInfoVecObj[candidate].indexArr[4] - 2;
 
-	  if (indexArrP[5] < indexRangeP[2])
-	    a[4] = patchInfoVecObj[patch].indexArr[5] - 1; 
-	  else  
-	    a[4] = patchInfoVecObj[patch].indexArr[5] - 2;
+          if (indexArrP[5] < indexRangeP[2])
+            a[4] = patchInfoVecObj[patch].indexArr[5] - 1; 
+          else  
+            a[4] = patchInfoVecObj[patch].indexArr[5] - 2;
 
-	  if (indexArrC[5] < indexRangeC[2])
-	    a[5] = patchInfoVecObj[candidate].indexArr[5] - 1; 
-	  else  
-	    a[5] = patchInfoVecObj[candidate].indexArr[5] - 2;
+          if (indexArrC[5] < indexRangeC[2])
+            a[5] = patchInfoVecObj[candidate].indexArr[5] - 1; 
+          else  
+            a[5] = patchInfoVecObj[candidate].indexArr[5] - 2;
 
-	  if (a[0]*mP[0] <  patchInfoVecObj[candidate].indexArr[0]*mC[0])
-	    continue;
-	  if (patchInfoVecObj[patch].indexArr[0]*mP[0] >= a[1]*mC[0])
-	    continue;
-	  if (a[2]*mP[1] <  patchInfoVecObj[candidate].indexArr[1]*mC[1])
-	    continue;
-	  if (patchInfoVecObj[patch].indexArr[1]*mP[1] >= a[3]*mC[1])
-	    continue;
-	  if (a[4]*mP[2] <  patchInfoVecObj[candidate].indexArr[2]*mC[2])
-	    continue;
-	  if (patchInfoVecObj[patch].indexArr[2]*mP[2] >= a[5]*mC[2])
-	    continue;
+          if (a[0]*mP[0] <  patchInfoVecObj[candidate].indexArr[0]*mC[0])
+            continue;
+          if (patchInfoVecObj[patch].indexArr[0]*mP[0] >= a[1]*mC[0])
+            continue;
+          if (a[2]*mP[1] <  patchInfoVecObj[candidate].indexArr[1]*mC[1])
+            continue;
+          if (patchInfoVecObj[patch].indexArr[1]*mP[1] >= a[3]*mC[1])
+            continue;
+          if (a[4]*mP[2] <  patchInfoVecObj[candidate].indexArr[2]*mC[2])
+            continue;
+          if (patchInfoVecObj[patch].indexArr[2]*mP[2] >= a[5]*mC[2])
+            continue;
 
-	  childPatches[candidate].push_back(patch);
-	}
+          childPatches[candidate].push_back(patch);
+        }
       }
     }
     else if (currMesh.find("CC") != string::npos) {
       for (int patch = patches_start ; patch < patches_end ; patch++) {
-	for (int candidate = search_start ; candidate < search_end ; candidate++) {                       
-	  if ((patchInfoVecObj[patch].indexArr[3])*mP[0] <  patchInfoVecObj[candidate].indexArr[0]*mC[0])
-	    continue;
-	  if (patchInfoVecObj[patch].indexArr[0]*mP[0] >= (patchInfoVecObj[candidate].indexArr[3])*mC[0])
-	    continue;
-	  if ((patchInfoVecObj[patch].indexArr[4])*mP[1] <  patchInfoVecObj[candidate].indexArr[1]*mC[1])
-	    continue;
-	  if (patchInfoVecObj[patch].indexArr[1]*mP[1] >= (patchInfoVecObj[candidate].indexArr[4])*mC[1])
-	    continue;
-	  if ((patchInfoVecObj[patch].indexArr[5])*mP[2] <  patchInfoVecObj[candidate].indexArr[2]*mC[2])
-	    continue;
-	  if (patchInfoVecObj[patch].indexArr[2]*mP[2] >= (patchInfoVecObj[candidate].indexArr[5])*mC[2])
-	    continue;
+        for (int candidate = search_start ; candidate < search_end ; candidate++) {                       
+          if ((patchInfoVecObj[patch].indexArr[3])*mP[0] <  patchInfoVecObj[candidate].indexArr[0]*mC[0])
+            continue;
+          if (patchInfoVecObj[patch].indexArr[0]*mP[0] >= (patchInfoVecObj[candidate].indexArr[3])*mC[0])
+            continue;
+          if ((patchInfoVecObj[patch].indexArr[4])*mP[1] <  patchInfoVecObj[candidate].indexArr[1]*mC[1])
+            continue;
+          if (patchInfoVecObj[patch].indexArr[1]*mP[1] >= (patchInfoVecObj[candidate].indexArr[4])*mC[1])
+            continue;
+          if ((patchInfoVecObj[patch].indexArr[5])*mP[2] <  patchInfoVecObj[candidate].indexArr[2]*mC[2])
+            continue;
+          if (patchInfoVecObj[patch].indexArr[2]*mP[2] >= (patchInfoVecObj[candidate].indexArr[5])*mC[2])
+            continue;
 
-	  childPatches[candidate].push_back(patch);
-	}
+          childPatches[candidate].push_back(patch);
+        }
       }
     }
     else if (currMesh.find("SFC") != string::npos) {
       for (int patch = patches_start ; patch < patches_end ; patch++) {
-	for (int candidate = search_start ; candidate < search_end ; candidate++) {                       
-	  int* hiLoArrP = patchInfoVecObj[patch].hiLoArr;
-	  int* hiLoArrC = patchInfoVecObj[candidate].hiLoArr;
-	  int a[6];
+        for (int candidate = search_start ; candidate < search_end ; candidate++) {                       
+          int* hiLoArrP = patchInfoVecObj[patch].hiLoArr;
+          int* hiLoArrC = patchInfoVecObj[candidate].hiLoArr;
+          int a[6];
        
           a[0] = patchInfoVecObj[patch].indexArr[3];
           a[1] = patchInfoVecObj[candidate].indexArr[3];
@@ -1412,46 +1122,46 @@ avtudaReaderMTMDFileFormat::CalculateDomainNesting(int timestate)
      
           if (currMesh.find("SFCX") != string::npos) { 
             if (a[0] < (hiLoArrP[3] - hiLoArrP[0])) {
-	      a[0] += 1;
+              a[0] += 1;
             }
             if (a[1] < (hiLoArrC[3] - hiLoArrC[0])) {
-	      a[1] += 1;
+              a[1] += 1;
             }
           }
 
           if (currMesh.find("SFCY") != string::npos) { 
             if (a[2] < (hiLoArrP[4] - hiLoArrP[1])) {
-	      a[2] += 1;
+              a[2] += 1;
             }
             if (a[3] < (hiLoArrC[4] - hiLoArrC[1])) {
-	      a[3] += 1;
+              a[3] += 1;
             }
           }
 
           if (currMesh.find("SFCZ") != string::npos) { 
             if (a[4] < (hiLoArrP[5] - hiLoArrP[2])) {
-	      a[4] += 1;
+              a[4] += 1;
             }
             if (a[5] < (hiLoArrC[5] - hiLoArrC[2])) {
-	      a[5] += 1;
+              a[5] += 1;
             }
           }
 
-	  if (a[0]*mP[0] <  patchInfoVecObj[candidate].indexArr[0]*mC[0])
-	    continue;
-	  if (patchInfoVecObj[patch].indexArr[0]*mP[0] >= a[1]*mC[0])
-	    continue;
-	  if (a[2]*mP[1] <  patchInfoVecObj[candidate].indexArr[1]*mC[1])
-	    continue;
-	  if (patchInfoVecObj[patch].indexArr[1]*mP[1] >= a[3]*mC[1])
-	    continue;
-	  if (a[4]*mP[2] <  patchInfoVecObj[candidate].indexArr[2]*mC[2])
-	    continue;
-	  if (patchInfoVecObj[patch].indexArr[2]*mP[2] >= a[5]*mC[2])
-	    continue;
+          if (a[0]*mP[0] <  patchInfoVecObj[candidate].indexArr[0]*mC[0])
+            continue;
+          if (patchInfoVecObj[patch].indexArr[0]*mP[0] >= a[1]*mC[0])
+            continue;
+          if (a[2]*mP[1] <  patchInfoVecObj[candidate].indexArr[1]*mC[1])
+            continue;
+          if (patchInfoVecObj[patch].indexArr[1]*mP[1] >= a[3]*mC[1])
+            continue;
+          if (a[4]*mP[2] <  patchInfoVecObj[candidate].indexArr[2]*mC[2])
+            continue;
+          if (patchInfoVecObj[patch].indexArr[2]*mP[2] >= a[5]*mC[2])
+            continue;
 
-	  childPatches[candidate].push_back(patch);
-	}
+          childPatches[candidate].push_back(patch);
+        }
       }
     }
   }
@@ -1488,29 +1198,21 @@ avtudaReaderMTMDFileFormat::CalculateDomainNesting(int timestate)
 
       logExts[0] = patchInfoVecObj[i].indexArr[0];
       if (indexArr[3] < indexRangeNC[0])
-	logExts[3] = patchInfoVecObj[i].indexArr[3] - 1; 
+        logExts[3] = patchInfoVecObj[i].indexArr[3] - 1; 
       else  
-	logExts[3] = patchInfoVecObj[i].indexArr[3] - 2;
+        logExts[3] = patchInfoVecObj[i].indexArr[3] - 2;
 
       logExts[1] = patchInfoVecObj[i].indexArr[1];
       if (indexArr[4] < indexRangeNC[1])
-	logExts[4] = patchInfoVecObj[i].indexArr[4] - 1;
+        logExts[4] = patchInfoVecObj[i].indexArr[4] - 1;
       else 
-	logExts[4] = patchInfoVecObj[i].indexArr[4] - 2;
+        logExts[4] = patchInfoVecObj[i].indexArr[4] - 2;
 
       logExts[2] = patchInfoVecObj[i].indexArr[2];
       if (indexArr[5] < indexRangeNC[2])
-	logExts[5] = patchInfoVecObj[i].indexArr[5] - 1;
+        logExts[5] = patchInfoVecObj[i].indexArr[5] - 1;
       else  
-	logExts[5] = patchInfoVecObj[i].indexArr[5] - 2;
-
-      /*if (childPatches[i].size() > 0) {
-	debug5 << "Parent: " << i << " Child patches: ";
-	for (int j = 0; j < childPatches[i].size(); j++) {
-	debug5 << childPatches[i][j] << " ";
-	}
-	debug5 << endl;
-	}*/   
+        logExts[5] = patchInfoVecObj[i].indexArr[5] - 2;
 
       dn->SetNestingForDomain(i, my_level, childPatches[i], logExts);
     }
@@ -1529,14 +1231,6 @@ avtudaReaderMTMDFileFormat::CalculateDomainNesting(int timestate)
       logExts[2] = patchInfoVecObj[i].indexArr[2]; 
       logExts[5] = patchInfoVecObj[i].indexArr[5] - 1;
 
-      /*if (childPatches[i].size() > 0) {
-	debug5 << "Parent: " << i << " Child patches: ";
-	for (int j = 0; j < childPatches[i].size(); j++) {
-	debug5 << childPatches[i][j] << " ";
-	}
-	debug5 << endl;
-	}*/   
-
       dn->SetNestingForDomain(i, my_level, childPatches[i], logExts);
     }
   }
@@ -1545,25 +1239,25 @@ avtudaReaderMTMDFileFormat::CalculateDomainNesting(int timestate)
       int actualHiArr[3];
       int* hiLoArr = patchInfoVecObj[i].hiLoArr;
 	  
-       actualHiArr[0] = patchInfoVecObj[i].indexArr[3];
-       actualHiArr[1] = patchInfoVecObj[i].indexArr[4];
-       actualHiArr[2] = patchInfoVecObj[i].indexArr[5];
+      actualHiArr[0] = patchInfoVecObj[i].indexArr[3];
+      actualHiArr[1] = patchInfoVecObj[i].indexArr[4];
+      actualHiArr[2] = patchInfoVecObj[i].indexArr[5];
      
       if (currMesh.find("SFCX") != string::npos) { 
         if (actualHiArr[0] < (hiLoArr[3] - hiLoArr[0])) {
-	  actualHiArr[0] += 1;
+          actualHiArr[0] += 1;
         }
       }
 
       if (currMesh.find("SFCY") != string::npos) { 
         if (actualHiArr[1] < (hiLoArr[4] - hiLoArr[1])) {
-	  actualHiArr[1] += 1;
+          actualHiArr[1] += 1;
         }
       }
 
       if (currMesh.find("SFCZ") != string::npos) { 
         if (actualHiArr[2] < (hiLoArr[5] - hiLoArr[2])) {
-	  actualHiArr[2] += 1;
+          actualHiArr[2] += 1;
         }
       }
 
@@ -1579,14 +1273,6 @@ avtudaReaderMTMDFileFormat::CalculateDomainNesting(int timestate)
       logExts[2] = patchInfoVecObj[i].indexArr[2]; 
       logExts[5] = actualHiArr[2] - 1;
 
-      /*if (childPatches[i].size() > 0) {
-        debug5 << "Parent: " << i << " Child patches: ";
-	for (int j = 0; j < childPatches[i].size(); j++) {
-	  debug5 << childPatches[i][j] << " ";
-	}
-	debug5 << endl;
-      }*/   
-
       dn->SetNestingForDomain(i, my_level, childPatches[i], logExts);
     }
   }
@@ -1598,7 +1284,7 @@ avtudaReaderMTMDFileFormat::CalculateDomainNesting(int timestate)
   dn->SetNumDimensions(3);
   void_ref_ptr vr = void_ref_ptr(dn, avtStructuredDomainNesting::Destruct);
   cache->CacheVoidRef("any_mesh", AUXILIARY_DATA_DOMAIN_NESTING_INFORMATION,
-      timestate, -1, vr);
+                      timestate, -1, vr);
 }
 
 
@@ -1624,35 +1310,27 @@ avtudaReaderMTMDFileFormat::CalculateDomainNesting(int timestate)
 //
 // ****************************************************************************
 
-  vtkDataSet *
-avtudaReaderMTMDFileFormat::GetMesh(int timestate, int domain, const char *meshname)
+vtkDataSet *
+  avtudaReaderMTMDFileFormat::GetMesh(int timestate, int domain, const char *meshname)
 {
-  if (currTimeStep != timestate) {
+
+  if (!grid || currTimeStep != timestate) {
+    if (grid)
+      (*releaseGrid)(grid);
+    grid = (*getGrid)(archive, timestate);
+  
     delete levelPatchVecPtr;
-    levelPatchVecPtr = (*getTotalNumPatches)(folder, timestate);
+    levelPatchVecPtr = (*getTotalNumPatches)(archive, grid);
     currTimeStep = timestate; 
   }
 
   string meshName(meshname);
 
-  if (meshName.find("mesh_particle") == string::npos) { // volume data
-    // debug5 << "\nIn GetMesh, timestate: " << timestate << "\n";
-
-    // debug5 << "domain: " << domain << endl;
-    // debug5 << meshName << " ";
-
-    // size_t found1 = meshName.find("_");
-    // size_t found2 = meshName.find("/");
-
-    // string varName = meshName.substr(found1 + 1, found2 - (found1 + 1));
-    // string matlNo = meshName.substr(found2 + 1);
-
-    // debug5 << varName << endl;
-    // debug5 << matlNo << endl;
+  // volume data
+  if (meshName.find("mesh_particle") == string::npos) {
 
     if (currMesh.compare(meshName) != 0) {
-      // debug5 << "Making the much required call to getPatchInfo\n";
-      patchInfoVecPtr = (*getPatchInfo)(folder, timestate, meshname, true);
+      patchInfoVecPtr = (*getPatchInfo)(archive, grid, meshname, true);
       levelPatchVec& levelPatchVecObj = *levelPatchVecPtr;
       int numLevels = levelPatchVecObj.size();
 
@@ -1660,8 +1338,8 @@ avtudaReaderMTMDFileFormat::GetMesh(int timestate, int domain, const char *meshn
 
       // if there is just a single level, there is no need to call this function
       if (numLevels > 1) {
-	debug5 << "CalculateDomainNesting() called\n";
-	CalculateDomainNesting(timestate);
+        debug5 << "CalculateDomainNesting() called\n";
+        CalculateDomainNesting(timestate);
       }
     }    
 
@@ -1672,43 +1350,21 @@ avtudaReaderMTMDFileFormat::GetMesh(int timestate, int domain, const char *meshn
 
     if (currLevel != level) {
       if (boundaryExists != NULL) 
-	delete [] boundaryExists;
+        delete [] boundaryExists;
 
       if (extraCells != NULL)
-	delete [] extraCells;
+        delete [] extraCells;
 
       currLevel = level;
 
-      boundaryExists = (*getPeriodicBoundaries)(folder, timestate, level);
-      extraCells = (*getExtraCells)(folder, timestate, level); 
+      boundaryExists = (*getPeriodicBoundaries)(archive, grid, level);
+      extraCells = (*getExtraCells)(archive, grid, level); 
     }
 
     double* minMaxArr = patchInfoVecObj[domain].minMaxArr;
 
     int indexArr[6];
     std::memcpy(indexArr, patchInfoVecObj[domain].indexArr, sizeof(int) * 6);
-
-    // debug5 << level << " " << local_patch << endl; 
-
-    // char buffer[128];
-    // sprintf(buffer, "%d", level);
-
-    /*strcpy(arr2d[0], "uda2nrrd"); // anything will do
-      strcpy(arr2d[1], "-uda");
-      strcpy(arr2d[2], folder.c_str());
-      strcpy(arr2d[3], "-v");
-      strcpy(arr2d[4], varName.c_str());
-      strcpy(arr2d[5], "-m");
-      strcpy(arr2d[6], matlNo.c_str());
-      strcpy(arr2d[7], "-l");
-      strcpy(arr2d[8], buffer);
-      strcpy(arr2d[9], "-o");
-      strcpy(arr2d[10], "test"); // anything will do*/
-
-    // timeStep *timeStepObjPtr = (*processData)(11, arr2d, timestate, false, 0, false, local_patch);
-    // timeStep &timeStepObj = *timeStepObjPtr;
-
-    // cellVals& cellValColln = *(timeStepObj.cellValColln);
 
     int cellValColln_x = indexArr[3] - indexArr[0];
     int cellValColln_y = indexArr[4] - indexArr[1];
@@ -1724,14 +1380,6 @@ avtudaReaderMTMDFileFormat::GetMesh(int timestate, int domain, const char *meshn
     indexArr[5] = indexArr[5] - hiLoArr[2];
 
     int indexRangeNC[3];
-
-    // indexRangeNC[0] = hiLoArr[3] - hiLoArr[0] - 1;
-    // indexRangeNC[1] = hiLoArr[4] - hiLoArr[1] - 1;
-    // indexRangeNC[2] = hiLoArr[5] - hiLoArr[2] - 1;
-
-    // debug5 << indexArr[0] << " " << indexArr[1] << " " << indexArr[2] << " "; 
-    // debug5 << indexArr[3] << " " << indexArr[4] << " " << indexArr[5] << endl; 
-
     int ndims = 3; 
     int dims[3] = {cellValColln_x + 1, cellValColln_y + 1, cellValColln_z + 1}; // for node centered -> remove +1
     vtkFloatArray *coords[3] = {0,0,0};
@@ -1745,15 +1393,6 @@ avtudaReaderMTMDFileFormat::GetMesh(int timestate, int domain, const char *meshn
     dtdx = dtdy = dtdz = 0.;
 
     if (meshName.find("NC") != string::npos) {
-      // if (indexArr[3] < indexRangeNC[0])
-	// cellValColln_x += 1;
-
-      // if (indexArr[4] < indexRangeNC[1])
-	// cellValColln_y += 1;
-
-      // if (indexArr[5] < indexRangeNC[2])
-	// cellValColln_z += 1;
-
       dims[0] = cellValColln_x;
       dims[1] = cellValColln_y;
       dims[2] = cellValColln_z;
@@ -1765,7 +1404,7 @@ avtudaReaderMTMDFileFormat::GetMesh(int timestate, int domain, const char *meshn
     else if (meshName.find("SFC") != string::npos) {
       if (meshName.find("SFCX") != string::npos) {
         if (indexArr[3] < (hiLoArr[3] - hiLoArr[0])) {
-	   cellValColln_x += 1;
+          cellValColln_x += 1;
         }
       }
 
@@ -1778,30 +1417,20 @@ avtudaReaderMTMDFileFormat::GetMesh(int timestate, int domain, const char *meshn
       dz = (minMaxArr[5] - minMaxArr[2]) / cellValColln_z;
     }
 
-    /*if (level == 2) {
-      debug5 << minMaxArr[0] << " " << minMaxArr[3] << " " << indexArr[0] << " " << indexArr[3] << "  " << indexRangeNC[0] << " " << patchInfoVecObj[domain].numCells << endl;
-      }*/
-
     int numGhosts[3];
-
     for (int i = 0; i < 3; i++) {
       if (boundaryExists[i]) {
-	numGhosts[i] = 1;
+        numGhosts[i] = 1;
       }
       else if (extraCells[i]) {
-	numGhosts[i] = extraCells[i];
+        numGhosts[i] = extraCells[i];
       }
       else {
-	numGhosts[i] = 1;
+        numGhosts[i] = 1;
       }
     }
 
-    // debug5 << numGhosts[0] << " " << numGhosts[1] << " " << numGhosts[2] << endl;
-    // debug5 << boundaryExists[0] << " " << boundaryExists[1] << " " << boundaryExists[2] << endl;
-    // debug5 << extraCells[0] << " " << extraCells[1] << " " << extraCells[2] << endl;
-
     int oldDims[3];
-
     oldDims[0] = dims[0];
     oldDims[1] = dims[1];
     oldDims[2] = dims[2];
@@ -1810,7 +1439,6 @@ avtudaReaderMTMDFileFormat::GetMesh(int timestate, int domain, const char *meshn
     dims[1] = dims[1] + 2 * numGhosts[1];
     dims[2] = dims[2] + 2 * numGhosts[2];
 
-    // debug5 << dims[0] << " " << dims[1] << " " << dims[2] << endl;
 
     vtkRectilinearGrid *rgrid = vtkRectilinearGrid::New();
     rgrid->SetDimensions(dims);
@@ -1872,98 +1500,86 @@ avtudaReaderMTMDFileFormat::GetMesh(int timestate, int domain, const char *meshn
     rgrid->GetFieldData()->AddArray(arr);
     arr->Delete();
 
+    //
     // Generate ghost zone information
     //
 
     unsigned char realVal = 0, ghostInternal = 0, ghostExternal = 0;
     
     if (meshName.find("CC") != string::npos) {
-    avtGhostData::AddGhostZoneType(ghostInternal, 
-	DUPLICATED_ZONE_INTERNAL_TO_PROBLEM);
-    avtGhostData::AddGhostZoneType(ghostExternal, 
-	ZONE_EXTERIOR_TO_PROBLEM);
+      avtGhostData::AddGhostZoneType(ghostInternal, 
+                                     DUPLICATED_ZONE_INTERNAL_TO_PROBLEM);
+      avtGhostData::AddGhostZoneType(ghostExternal, 
+                                     ZONE_EXTERIOR_TO_PROBLEM);
 
-    vtkUnsignedCharArray *ghostCells = vtkUnsignedCharArray::New();
-    ghostCells->SetName("avtGhostZones");
-    ghostCells->Allocate(rgrid->GetNumberOfCells());
+      vtkUnsignedCharArray *ghostCells = vtkUnsignedCharArray::New();
+      ghostCells->SetName("avtGhostZones");
+      ghostCells->Allocate(rgrid->GetNumberOfCells());
 
       for (int k = indexArr[2] - numGhosts[2]; k < indexArr[5] + numGhosts[2]; ++k)
-	for (int j = indexArr[1] - numGhosts[1]; j < indexArr[4] + numGhosts[1]; ++j)
-	  for (int i = indexArr[0] - numGhosts[0]; i < indexArr[3] + numGhosts[0]; ++i)
-	  {
-	    if (i >= indexArr[0] && i < indexArr[3] &&
-		j >= indexArr[1] && j < indexArr[4] && 
-		k >= indexArr[2] && k < indexArr[5])  
-	    {
-	      ghostCells->InsertNextValue(realVal);
-	    }
-	    else
-	    {
-	      if (i >= 0 && i < (hiLoArr[3] - hiLoArr[0] - 1) && 
-		  j >= 0 && j < (hiLoArr[4] - hiLoArr[1] - 1) && 
-		  k >= 0 && k < (hiLoArr[5] - hiLoArr[2] - 1)) 
-	      {
-		ghostCells->InsertNextValue(ghostInternal);
-	      }
-	      else
-	      {
-		ghostCells->InsertNextValue(ghostExternal);
-	      }
-	    }
-	  }
+        for (int j = indexArr[1] - numGhosts[1]; j < indexArr[4] + numGhosts[1]; ++j)
+          for (int i = indexArr[0] - numGhosts[0]; i < indexArr[3] + numGhosts[0]; ++i)
+            {
+              if (i >= indexArr[0] && i < indexArr[3] &&
+                  j >= indexArr[1] && j < indexArr[4] && 
+                  k >= indexArr[2] && k < indexArr[5])  
+                {
+                  ghostCells->InsertNextValue(realVal);
+                }
+              else
+                {
+                  if (i >= 0 && i < (hiLoArr[3] - hiLoArr[0] - 1) && 
+                      j >= 0 && j < (hiLoArr[4] - hiLoArr[1] - 1) && 
+                      k >= 0 && k < (hiLoArr[5] - hiLoArr[2] - 1)) 
+                    {
+                      ghostCells->InsertNextValue(ghostInternal);
+                    }
+                  else
+                    {
+                      ghostCells->InsertNextValue(ghostExternal);
+                    }
+                }
+            }
      
       rgrid->GetCellData()->AddArray(ghostCells);
       rgrid->SetUpdateGhostLevel(level);
       ghostCells->Delete();
     }
     else if (meshName.find("NC") != string::npos) {
-      // avtGhostData::AddGhostNodeType(ghostInternal, 
-      // 	  DUPLICATED_NODE);
-      // avtGhostData::AddGhostNodeType(ghostExternal, 
-      // 	  NODE_NOT_APPLICABLE_TO_PROBLEM);
-
-      // vtkUnsignedCharArray *ghostNodes = vtkUnsignedCharArray::New();
-      // ghostNodes->SetName("avtGhostNodes");
-      // ghostNodes->Allocate(rgrid->GetNumberOfPoints());
 
       avtGhostData::AddGhostZoneType(ghostInternal, 
-	  DUPLICATED_ZONE_INTERNAL_TO_PROBLEM);
+                                     DUPLICATED_ZONE_INTERNAL_TO_PROBLEM);
       avtGhostData::AddGhostZoneType(ghostExternal, 
-	  ZONE_EXTERIOR_TO_PROBLEM);
+                                     ZONE_EXTERIOR_TO_PROBLEM);
 
       vtkUnsignedCharArray *ghostCells = vtkUnsignedCharArray::New();
       ghostCells->SetName("avtGhostZones");
       ghostCells->Allocate(rgrid->GetNumberOfCells());
 
-      // debug5 << actualHiArr[0] << " " << actualHiArr[1] << " " << actualHiArr[2]  << endl; 
-
       for (int k = (indexArr[2] - numGhosts[2]); k < (indexArr[5] + numGhosts[2] - 1); k++)
-	for (int j = (indexArr[1] - numGhosts[1]); j < (indexArr[4] + numGhosts[1] - 1); j++)
-	  for (int i = (indexArr[0] - numGhosts[0]); i < (indexArr[3] + numGhosts[0] - 1); i++)
-	  {
-	    if (i >= indexArr[0] && i < (indexArr[3] - 1) &&
-		j >= indexArr[1] && j < (indexArr[4] - 1) && 
-		k >= indexArr[2] && k < (indexArr[5] - 1))  
-	    {
-	      ghostCells->InsertNextValue(realVal);
-	      // realCells++;
-	    }
-	    else
-	    {
-	      if (i >= 0 && i < (hiLoArr[3] - hiLoArr[0] - 1) &&
-		  j >= 0 && j < (hiLoArr[4] - hiLoArr[1] - 1) &&
-		  k >= 0 && k < (hiLoArr[5] - hiLoArr[2] - 1))
-	      {
-		ghostCells->InsertNextValue(ghostInternal);
-		// intCells++;
-	      }
-	      else
-	      {
-		ghostCells->InsertNextValue(ghostExternal);
-		// extCells++;
-	      }
-	    }
-	  }
+        for (int j = (indexArr[1] - numGhosts[1]); j < (indexArr[4] + numGhosts[1] - 1); j++)
+          for (int i = (indexArr[0] - numGhosts[0]); i < (indexArr[3] + numGhosts[0] - 1); i++)
+            {
+              if (i >= indexArr[0] && i < (indexArr[3] - 1) &&
+                  j >= indexArr[1] && j < (indexArr[4] - 1) && 
+                  k >= indexArr[2] && k < (indexArr[5] - 1))  
+                {
+                  ghostCells->InsertNextValue(realVal);
+                }
+              else
+                {
+                  if (i >= 0 && i < (hiLoArr[3] - hiLoArr[0] - 1) &&
+                      j >= 0 && j < (hiLoArr[4] - hiLoArr[1] - 1) &&
+                      k >= 0 && k < (hiLoArr[5] - hiLoArr[2] - 1))
+                    {
+                      ghostCells->InsertNextValue(ghostInternal);
+                    }
+                  else
+                    {
+                      ghostCells->InsertNextValue(ghostExternal);
+                    }
+                }
+            }
       
       rgrid->GetCellData()->AddArray(ghostCells);
       rgrid->SetUpdateGhostLevel(level);
@@ -1971,9 +1587,9 @@ avtudaReaderMTMDFileFormat::GetMesh(int timestate, int domain, const char *meshn
     }
     else if (meshName.find("SFC") != string::npos) {
       avtGhostData::AddGhostZoneType(ghostInternal, 
-	  DUPLICATED_ZONE_INTERNAL_TO_PROBLEM);
+                                     DUPLICATED_ZONE_INTERNAL_TO_PROBLEM);
       avtGhostData::AddGhostZoneType(ghostExternal, 
-	  ZONE_EXTERIOR_TO_PROBLEM);
+                                     ZONE_EXTERIOR_TO_PROBLEM);
 
       vtkUnsignedCharArray *ghostCells = vtkUnsignedCharArray::New();
       ghostCells->SetName("avtGhostZones");
@@ -1981,77 +1597,63 @@ avtudaReaderMTMDFileFormat::GetMesh(int timestate, int domain, const char *meshn
       
       int actualHiArr[3];
 	  
-       actualHiArr[0] = indexArr[3];
-       actualHiArr[1] = indexArr[4];
-       actualHiArr[2] = indexArr[5];
+      actualHiArr[0] = indexArr[3];
+      actualHiArr[1] = indexArr[4];
+      actualHiArr[2] = indexArr[5];
      
       if (meshName.find("SFCX") != string::npos) { 
         if (indexArr[3] < (hiLoArr[3] - hiLoArr[0])) {
-	  actualHiArr[0] += 1;
+          actualHiArr[0] += 1;
         }
       }
 
       if (meshName.find("SFCY") != string::npos) { 
         if (indexArr[4] < (hiLoArr[4] - hiLoArr[1])) {
-	  actualHiArr[1] += 1;
+          actualHiArr[1] += 1;
         }
       }
 
       if (meshName.find("SFCZ") != string::npos) { 
         if (indexArr[5] < (hiLoArr[5] - hiLoArr[2])) {
-	  actualHiArr[2] += 1;
+          actualHiArr[2] += 1;
         }
       }
 
       for (int k = (indexArr[2] - numGhosts[2]); k < actualHiArr[2] + numGhosts[2]; k++)
-	for (int j = (indexArr[1] - numGhosts[1]); j < actualHiArr[1] + numGhosts[1]; j++)
-	  for (int i = (indexArr[0] - numGhosts[0]); i < actualHiArr[0] + numGhosts[0]; i++)
-	  {
-	    // cellCount++;
-	    if (i >= indexArr[0] && i < actualHiArr[0] &&
-		j >= indexArr[1] && j < actualHiArr[1] && 
-		k >= indexArr[2] && k < actualHiArr[2])  
-	    {
-	      ghostCells->InsertNextValue(realVal);
-	      // realCells++;
-	    }
-	    else
-	    {
-	      if (i >= 0 && i < (hiLoArr[3] - hiLoArr[0]) &&
-		  j >= 0 && j < (hiLoArr[4] - hiLoArr[1] - 1) &&
-		  k >= 0 && k < (hiLoArr[5] - hiLoArr[2] - 1))
-	      {
-		ghostCells->InsertNextValue(ghostInternal);
-		// intCells++;
-	      }
-	      else
-	      {
-		ghostCells->InsertNextValue(ghostExternal);
-		// extCells++;
-	      }
-	    }
-	  }
+        for (int j = (indexArr[1] - numGhosts[1]); j < actualHiArr[1] + numGhosts[1]; j++)
+          for (int i = (indexArr[0] - numGhosts[0]); i < actualHiArr[0] + numGhosts[0]; i++)
+            {
+              if (i >= indexArr[0] && i < actualHiArr[0] &&
+                  j >= indexArr[1] && j < actualHiArr[1] && 
+                  k >= indexArr[2] && k < actualHiArr[2])  
+                {
+                  ghostCells->InsertNextValue(realVal);
+                }
+              else
+                {
+                  if (i >= 0 && i < (hiLoArr[3] - hiLoArr[0]) &&
+                      j >= 0 && j < (hiLoArr[4] - hiLoArr[1] - 1) &&
+                      k >= 0 && k < (hiLoArr[5] - hiLoArr[2] - 1))
+                    {
+                      ghostCells->InsertNextValue(ghostInternal);
+                    }
+                  else
+                    {
+                      ghostCells->InsertNextValue(ghostExternal);
+                    }
+                }
+            }
       
       rgrid->GetCellData()->AddArray(ghostCells);
       rgrid->SetUpdateGhostLevel(level);
       ghostCells->Delete();
     }
 
-    // debug5 << dims[0] << " " << dims[1] << " " << dims[2] << endl;
-    // debug5 << cellCount << " " << realCells << " " << intCells << " " << extCells << endl;
-    // debug5 << rgrid->GetNumberOfCells() << endl;
-
-    // rgrid->GetCellData()->AddArray(ghostCells);
-    // rgrid->SetUpdateGhostLevel(level);
-    // ghostCells->Delete();
-
-    // debug5 << "Out GetMesh\n";
-
     return rgrid;
   }
-  else if (meshName.find("mesh_particle") != string::npos) { // particle data
-    // debug5 << "\nIn GetMesh\n";
-    // debug5 << meshName << endl;
+
+  // particle data
+  else if (meshName.find("mesh_particle") != string::npos) {
 
     size_t found1 = meshName.find("mesh_particle_");
     found1 += strlen("mesh_particle_");
@@ -2069,8 +1671,6 @@ avtudaReaderMTMDFileFormat::GetMesh(int timestate, int domain, const char *meshn
     if (matl.compare("*") != 0)
       matlNo = atoi(matl.c_str());
 
-    // debug5 << matlNo << endl;
-
     strcpy(arr2d[0], "uda2nrrd"); // anything will do
     strcpy(arr2d[1], "-uda");
     strcpy(arr2d[2], folder.c_str());
@@ -2083,11 +1683,11 @@ avtudaReaderMTMDFileFormat::GetMesh(int timestate, int domain, const char *meshn
 
     // not removing the boundary with particle data
     if (matl.compare("*") == 0) {
-      timeStepObjPtr = (*processData)(7, arr2d, timestate, false, matlNo, false, vars, domain); 
+      timeStepObjPtr = (*processData)(archive, grid, true, "", -1, 0, timestate, false, matlNo, false, vars, domain); 
       debug5 << "All data\n";
     }
     else {
-      timeStepObjPtr = (*processData)(7, arr2d, timestate, false, matlNo, true, vars, domain);
+      timeStepObjPtr = (*processData)(archive, grid, true, "", -1, 0, timestate, false, matlNo, true, vars, domain);
       debug5 << "Some data\n";
     }  
 
@@ -2134,23 +1734,23 @@ avtudaReaderMTMDFileFormat::GetMesh(int timestate, int domain, const char *meshn
     zc = zarray; 
 
     if(ndims == 3) 
-    { 
-      for(i = 0; i < nnodes; ++i) 
       { 
-	*pts++ = *xc++; 
-	*pts++ = *yc++; 
-	*pts++ = *zc++;
-      }
-    } 
-    else if(ndims == 2) 
-    { 
-      for(i = 0; i < nnodes; ++i) 
-      { 
-	*pts++ = *xc++; 
-	*pts++ = *yc++; 
-	*pts++ = 0.; 
+        for(i = 0; i < nnodes; ++i) 
+          { 
+            *pts++ = *xc++; 
+            *pts++ = *yc++; 
+            *pts++ = *zc++;
+          }
       } 
-    } 
+    else if(ndims == 2) 
+      { 
+        for(i = 0; i < nnodes; ++i) 
+          { 
+            *pts++ = *xc++; 
+            *pts++ = *yc++; 
+            *pts++ = 0.; 
+          } 
+      } 
 
     // 
     // Create a vtkUnstructuredGrid to contain the point cells. 
@@ -2163,10 +1763,10 @@ avtudaReaderMTMDFileFormat::GetMesh(int timestate, int domain, const char *meshn
     vtkIdType onevertex; 
 
     for(int i = 0; i < nnodes; ++i) 
-    { 
-      onevertex = i; 
-      ugrid->InsertNextCell(VTK_VERTEX, 1, &onevertex); 
-    } 
+      { 
+        onevertex = i; 
+        ugrid->InsertNextCell(VTK_VERTEX, 1, &onevertex); 
+      } 
 
     // Delete temporary arrays. 
     delete [] xarray; 
@@ -2174,8 +1774,6 @@ avtudaReaderMTMDFileFormat::GetMesh(int timestate, int domain, const char *meshn
     delete [] zarray;
 
     delete timeStepObjPtr;
-
-    // debug5 << "Out GetMesh\n";
 
     return ugrid;
   }
@@ -2203,8 +1801,8 @@ avtudaReaderMTMDFileFormat::GetMesh(int timestate, int domain, const char *meshn
 //
 // ****************************************************************************
 
-  vtkDataArray *
-avtudaReaderMTMDFileFormat::GetVar(int timestate, int domain, const char *varname)
+vtkDataArray *
+  avtudaReaderMTMDFileFormat::GetVar(int timestate, int domain, const char *varname)
 {
   //
   // If you have a file format where variables don't apply (for example a
@@ -2216,9 +1814,14 @@ avtudaReaderMTMDFileFormat::GetVar(int timestate, int domain, const char *varnam
 
   debug5 << "\nIn GetVar, timestate: " << timestate << "\n";
 
+
   if (currTimeStep != timestate) {
+    if (grid)
+      (*releaseGrid)(grid);
+    grid = (*getGrid)(archive, timestate);
+
     delete levelPatchVecPtr;
-    levelPatchVecPtr = (*getTotalNumPatches)(folder, timestate);
+    levelPatchVecPtr = (*getTotalNumPatches)(archive, grid);
     currTimeStep = timestate; 
   }
 
@@ -2237,452 +1840,289 @@ avtudaReaderMTMDFileFormat::GetVar(int timestate, int domain, const char *varnam
     if (udaVarsObj[k].find(varName) != string::npos) { 
       if (udaVarsObj[k].find("ParticleVariable") != string::npos) {
         isParticleVar = true;
-	break;
+        break;
       }	
     }
   }
 
-  // debug5 << isParticleVar << endl;
 
   vtkFloatArray *rv = vtkFloatArray::New();
 
-  if (/*varName.find("p.") == string::npos*/ !(isParticleVar)) { // volume data
-    // size_t found = varName.find("/");
-    // string tmpVarName = varName;
-
-    // string matl = varName.substr(found + 1);
-    // varName = varName.substr(0, found);
-
-    // debug5 << varName << endl;
-    // debug5 << matl << endl;
-
+  // volume data
+  if (!isParticleVar) { 
     int level, local_patch;
-
     GetLevelAndLocalPatchNumber(domain, timestate, level, local_patch);
-    // double* minMaxArr = (*getPatchBBox)(folder, timestate, level, local_patch);
 
     unsigned int count = 0;
 
-    // if ((currLevel != level) || (currVar.find(tmpVarName) == string::npos)) {
-      /*if (currVar.find(tmpVarName) == string::npos) {
-	levelPatchVec& levelPatchVecObj = *levelPatchVecPtr;
-	int numLevels = levelPatchVecObj.size();
+    debug5 << "Making the much required call to collect information at level " << level << "\n";
 
-      // if there is just a single level, there is no need to call this function
-      if (numLevels > 1) {
-      debug5 << "CalculateDomainNesting() called\n";
-      CalculateDomainNesting(timestate);
-      }
-      }*/
+    char buffer[128];
+    sprintf(buffer, "%d", level);
 
-      debug5 << "Making the much required call to collect information at level " << level << "\n";
-      // currLevel = level;
-      // currVar.assign(tmpVarName);
+    strcpy(arr2d[0], "uda2nrrd"); // anything will do
+    strcpy(arr2d[1], "-uda");
+    strcpy(arr2d[2], folder.c_str());
+    strcpy(arr2d[3], "-v");
+    strcpy(arr2d[4], varName.c_str());
+    strcpy(arr2d[5], "-m");
+    strcpy(arr2d[6], matl.c_str());
+    strcpy(arr2d[7], "-l");
+    strcpy(arr2d[8], buffer); 
+    strcpy(arr2d[9], "-o");
+    strcpy(arr2d[10], "test"); // anything will do
+    strcpy(arr2d[11], "-q"); // boundary cells not required
 
-      char buffer[128];
-      sprintf(buffer, "%d", level);
-
-      strcpy(arr2d[0], "uda2nrrd"); // anything will do
-      strcpy(arr2d[1], "-uda");
-      strcpy(arr2d[2], folder.c_str());
-      strcpy(arr2d[3], "-v");
-      strcpy(arr2d[4], varName.c_str());
-      strcpy(arr2d[5], "-m");
-      strcpy(arr2d[6], matl.c_str());
-      strcpy(arr2d[7], "-l");
-      strcpy(arr2d[8], buffer); 
-      strcpy(arr2d[9], "-o");
-      strcpy(arr2d[10], "test"); // anything will do
-      strcpy(arr2d[11], "-q"); // boundary cells not required
-
-      timeStep* timeStepObjPtr = NULL;
+    timeStep* timeStepObjPtr = NULL;
 
 #ifdef PARALLEL
-      int numProcs, rank;
-      int msg = 128, tag = 256;
-      MPI_Status status;
+    int numProcs, rank;
+    int msg = 128, tag = 256;
+    MPI_Status status;
 
-      MPI_Comm_size(VISIT_MPI_COMM, &numProcs);
-      MPI_Comm_rank(VISIT_MPI_COMM, &rank);
+    MPI_Comm_size(VISIT_MPI_COMM, &numProcs);
+    MPI_Comm_rank(VISIT_MPI_COMM, &rank);
 
-      debug5 << "Proc: " << rank << " sent to GetVar" << endl;  
+    debug5 << "Proc: " << rank << " sent to GetVar" << endl;  
 
-      if (rank == 0) {
-         debug5 << "level: " << level << ", patch: " << local_patch << " proc: " << rank << endl;
-         timeStepObjPtr = (*processData)(12, arr2d, timestate, true, 0, false, string("null"), local_patch);
-	 MPI_Send(&msg, 1, MPI_INT, 1, tag, VISIT_MPI_COMM);
+    if (rank == 0) {
+      debug5 << "level: " << level << ", patch: " << local_patch << " proc: " << rank << endl;
+      timeStepObjPtr = (*processData)(archive, grid, false, varName, atoi(matl.c_str()), level, timestate, true, 0, false, string("null"), local_patch);
+      MPI_Send(&msg, 1, MPI_INT, 1, tag, VISIT_MPI_COMM);
+    }
+    else {
+      MPI_Recv(&msg, 1, MPI_INT, rank - 1, tag, VISIT_MPI_COMM, &status);
+      if (msg == 128 && tag == 256) {
+        debug5 << "level: " << level << ", patch: " << local_patch << ", proc: " << rank << endl;
+        timeStepObjPtr = (*processData)(archive, grid, false, varName, atoi(matl.c_str()), level, timestate, true, 0, false, string("null"), local_patch);
+        if (rank < (numProcs - 1))
+          MPI_Send(&msg, 1, MPI_INT, rank + 1, tag, VISIT_MPI_COMM);
       }
-      else {
-        MPI_Recv(&msg, 1, MPI_INT, rank - 1, tag, VISIT_MPI_COMM, &status);
-	if (msg == 128 && tag == 256) {
-          debug5 << "level: " << level << ", patch: " << local_patch << ", proc: " << rank << endl;
-          timeStepObjPtr = (*processData)(12, arr2d, timestate, true, 0, false, string("null"), local_patch);
-	  if (rank < (numProcs - 1))
-	    MPI_Send(&msg, 1, MPI_INT, rank + 1, tag, VISIT_MPI_COMM);
-	  }
-      } 
+    } 
 #else
-      timeStepObjPtr = (*processData)(12, arr2d, timestate, true, 0, false, string("null"), local_patch);
+    timeStepObjPtr = (*processData)(archive, grid, false, varName, atoi(matl.c_str()), level, timestate, true, 0, false, string("null"), local_patch);
 #endif
 
-      timeStep &timeStepObj = *timeStepObjPtr;
+
+    timeStep &timeStepObj = *timeStepObjPtr;
     
-      patchInfoVec& patchInfoVecObj = *(patchInfoVecPtr);
+    patchInfoVec& patchInfoVecObj = *(patchInfoVecPtr);
 
-      int indexArr[6];
-      std::memcpy(indexArr, patchInfoVecObj[domain].indexArr, sizeof(int) * 6);
+    int indexArr[6];
+    std::memcpy(indexArr, patchInfoVecObj[domain].indexArr, sizeof(int) * 6);
       
-      int numGhosts[3];
+    int numGhosts[3];
 
-      for (int i = 0; i < 3; i++) {
-	if (boundaryExists[i]) {
-	  numGhosts[i] = 1;
-	}
-	else if (extraCells[i]) {
-	  numGhosts[i] = extraCells[i];
-	}
-	else {
-	  numGhosts[i] = 1;
-	}
+    for (int i = 0; i < 3; i++) {
+      if (boundaryExists[i]) {
+        numGhosts[i] = 1;
       }
-      
-      int cellValColln_x = indexArr[3] - indexArr[0] + 2 * numGhosts[0];
-      int cellValColln_y = indexArr[4] - indexArr[1] + 2 * numGhosts[1];
-      int cellValColln_z = indexArr[5] - indexArr[2] + 2 * numGhosts[2];
-
-      int* hiLoArr = patchInfoVecObj[domain].hiLoArr;
-
-      indexArr[0] = indexArr[0] - hiLoArr[0]; 
-      indexArr[1] = indexArr[1] - hiLoArr[1]; 
-      indexArr[2] = indexArr[2] - hiLoArr[2];
-      indexArr[3] = indexArr[3] - hiLoArr[0]; 
-      indexArr[4] = indexArr[4] - hiLoArr[1]; 
-      indexArr[5] = indexArr[5] - hiLoArr[2];
-
-      if (timeStepObj.cellValColln != NULL) {
-	cellVals& cellValColln = *(timeStepObj.cellValColln);
-	typeDouble& cellValVec = *(cellValColln.cellValVec);
-
-	// debug5 << cellValColln.x << " " << cellValColln.y << " " << cellValColln.z << endl;
-
-	if (refMatrix != NULL) {
-	  for (int i = 0; i < refX; i++) {
-	    for (int j = 0; j < refY; j++) {
-	      free(refMatrix[i][j]);
-	    }
-	    free(refMatrix[i]);
-	  }
-	  free(refMatrix);
-	  refMatrix = NULL;
-	}	 
-
-	int extraXYZ[3] = {0, 0, 0};
-
-	// Expand the size of the refMatrix -
-	// if periodic or no extraCells found
-	for (int i = 0; i < 3; i++) {
-	  if (boundaryExists[i] || (extraCells[i] == 0)) {
-	    extraXYZ[i] = 1; 
-	  }
-	}
-
-	// debug5 << extraXYZ[0] << " " << extraXYZ[1] << " " << extraXYZ[2] << endl;
-
-	// Allocating Matrix
-	refMatrix = (double***)malloc((cellValColln.x /*+ 2 * extraXYZ[0]*/) * sizeof(double**));
-	if (refMatrix == NULL) debug5 << "Error allocating refMatrix\n";
-	for(int i = 0; i < (cellValColln.x /*+ 2 * extraXYZ[0]*/); i++) {
-	  refMatrix[i] = (double**)malloc((cellValColln.y /*+ 2 * extraXYZ[1]*/) * sizeof(double*));
-	  if (refMatrix[i] == NULL) debug5 << "Error allocating refMatrix[" << i << "]\n";
-	  for(int j = 0; j < (cellValColln.y /*+ 2 * extraXYZ[1]*/); j++) {
-	    refMatrix[i][j] = (double*)malloc((cellValColln.z /*+ 2 * extraXYZ[2]*/) * sizeof(double));
-	    if (refMatrix[i][j] == NULL) debug5 << "Error allocating refMatrix[" << i << "][" << j << "]\n";
-	  }
-	}
-
-	refX = cellValColln.x /*+ 2 * extraXYZ[0]*/;
-	refY = cellValColln.y /*+ 2 * extraXYZ[1]*/;
-	refZ = cellValColln.z /*+ 2 * extraXYZ[2]*/;
-
-	// Reference matrix
-	for (int i = 0 /*extraXYZ[2]*/; i < (cellValColln.z /*+ extraXYZ[2]*/); i++) {
-	  for (int j = 0 /*extraXYZ[1]*/; j < (cellValColln.y /*+ extraXYZ[1]*/); j++) {
-	    for (int k = 0 /*extraXYZ[0]*/; k < (cellValColln.x /*+ extraXYZ[0]*/); k++) {    
-	      refMatrix[k][j][i] = cellValVec[count];
-	      count++;  
-	    }
-	  }
-	}
-
-	// Re-sized matrix
-	for (int m = 0; m < 3; m++) {
-	  if (boundaryExists[m] || (extraCells[m] == 0)) {
-	    // debug5 << boundaryExists[m] << endl;
-	    if (m == 0) { // x-axis 
-	      for (int i = 0 /*extraXYZ[2]*/; i < (cellValColln.z /*- extraXYZ[2]*/); i++) {
-		for (int j = 0 /*extraXYZ[1]*/; j < (cellValColln.y /*- extraXYZ[1]*/); j++) {
-		  // refMatrix[0][j][i] = refMatrix[cellValColln.x + extraXYZ[0] - 1][j][i];
-		  // refMatrix[cellValColln.x+extraXYZ[0]][j][i] = refMatrix[extraXYZ[0]][j][i];
-		 
-		  if (indexArr[0] <= hiLoArr[0]) 
-                    refMatrix[0][j][i] = refMatrix[extraXYZ[0]][j][i];
-
-		  if ((indexArr[3] >= hiLoArr[3]) || ((indexArr[3] + 1) >= hiLoArr[3])) 
-		    refMatrix[cellValColln.x - extraXYZ[0]][j][i] = refMatrix[cellValColln.x - 2*extraXYZ[0]][j][i];
-		}
-	      }
-	    }
-	    else if (m == 1) { // y-axis
-	      int loX;
-	      int hiX;
-
-	      // check the extents on the x-axis
-	      if (boundaryExists[0] || (extraCells[0] == 0)) { 
-		loX = 0;
-		hiX = cellValColln.x /*+ extraXYZ[0] + 1*/;
-	      }
-	      else {
-		loX = extraXYZ[0];
-		hiX = cellValColln.x - extraXYZ[0];
-	      }
-
-	      for (int i = 0 /*extraXYZ[2]*/; i < (cellValColln.z /*- extraXYZ[2]*/); i++) {
-		for (int k = loX; k < hiX; k++) {
-		  // refMatrix[k][0][i] = refMatrix[k][cellValColln.y + extraXYZ[1] - 1][i];
-		  // refMatrix[k][cellValColln.y+extraXYZ[1]][i] = refMatrix[k][extraXYZ[1]][i];
-		  
-		  if (indexArr[1] <= hiLoArr[1]) 
-                    refMatrix[k][0][i] = refMatrix[k][extraXYZ[1]][i];
-		  
-		  if ((indexArr[4] >= hiLoArr[4]) || ((indexArr[4] + 1) >= hiLoArr[4])) 
-		    refMatrix[k][cellValColln.y - extraXYZ[1]][i] = refMatrix[k][cellValColln.y - 2*extraXYZ[1]][i];
-		}
-	      }
-	    }
-	    else if (m == 2) { // z-axis
-	      int loX, loY;
-	      int hiX, hiY;
-
-	      // check the extents on the x-axis
-	      if (boundaryExists[0] || (extraCells[0] == 0)) {
-		loX = 0;
-		hiX = cellValColln.x /*+ extraXYZ[0] + 1*/;
-	      }
-	      else {
-		loX = extraXYZ[0];
-		hiX = cellValColln.x - extraXYZ[0]; 
-	      }
-
-	      // check the extents on the y-axis
-	      if (boundaryExists[1] || (extraCells[1] == 0)) {
-		loY = 0;
-		hiY = cellValColln.y /*+ extraXYZ[1] + 1*/;
-	      }
-	      else {
-		loY = extraXYZ[1];
-		hiY = cellValColln.y - extraXYZ[1]; 
-	      }
-
-	      // debug5 << loX << " " << hiX << endl;
-	      // debug5 << loY << " " << hiY << endl;
-
-	      for (int j = loY; j < hiY; j++) {
-		for (int k = loX; k < hiX; k++) {
-		  // refMatrix[k][j][0] = refMatrix[k][j][cellValColln.z + extraXYZ[2] - 1];
-		  // refMatrix[k][j][cellValColln.z+extraXYZ[2]] = refMatrix[k][j][extraXYZ[2]];
-		  
-		  if (indexArr[2] <= hiLoArr[2]) 
-                    refMatrix[k][j][0] = refMatrix[k][j][extraXYZ[2]];
-		  
-		  if ((indexArr[5] >= hiLoArr[5]) || ((indexArr[5] + 1) >= hiLoArr[5])) 
-		    refMatrix[k][j][cellValColln.z - extraXYZ[2]] = refMatrix[k][j][cellValColln.z - 2*extraXYZ[2]];
-		}
-	      }
-	    }
-	  }
-	  /*else if (extraCells[m] == 0) {
-	    if (m == 0) { // x-axis 
-	      for (int i = extraXYZ[2]; i < (cellValColln.z + extraXYZ[2]); i++) {
-		for (int j = extraXYZ[1]; j < (cellValColln.y + extraXYZ[1]); j++) {
-		  refMatrix[0][j][i] = refMatrix[extraXYZ[0]][j][i];
-		  refMatrix[cellValColln.x + extraXYZ[0]][j][i] = refMatrix[cellValColln.x][j][i];
-		}
-	      }
-	    }
-	    else if (m == 1) { // y-axis 
-	      int loX;
-	      int hiX;
-
-	      // check the extents on the x-axis
-	      if (boundaryExists[0] || (extraCells[0] == 0)) { 
-		loX = 0;
-		hiX = cellValColln.x + extraXYZ[0] + 1;
-	      }
-	      else {
-		loX = extraXYZ[0];
-		hiX = cellValColln.x + extraXYZ[0]; 
-	      }
-
-	      for (int i = extraXYZ[2]; i < (cellValColln.z + extraXYZ[2]); i++) {
-		for (int k = loX; k < hiX; k++) {
-		  refMatrix[k][0][i] = refMatrix[k][extraXYZ[1]][i];
-		  refMatrix[k][cellValColln.y+extraXYZ[1]][i] = refMatrix[k][cellValColln.y][i];
-		}
-	      }
-	    }
-	    else if (m == 2) { // z-axis
-	      int loX, loY;
-	      int hiX, hiY;
-
-	      // check the extents on the x-axis
-	      if (boundaryExists[0] || (extraCells[0] == 0)) {
-		loX = 0;
-		hiX = cellValColln.x + extraXYZ[0] + 1;
-	      }
-	      else {
-		loX = extraXYZ[0];
-		hiX = cellValColln.x + extraXYZ[0]; 
-	      }
-
-	      // check the extents on the y-axis
-	      if (boundaryExists[1] || (extraCells[1] == 0)) {
-		loY = 0;
-		hiY = cellValColln.y + extraXYZ[1] + 1;
-	      }
-	      else {
-		loY = extraXYZ[1];
-		hiY = cellValColln.y + extraXYZ[1]; 
-	      }
-
-	      // debug5 << loX << " " << hiX << endl;
-	      // debug5 << loY << " " << hiY << endl;
-
-	      for (int j = loY; j < hiY; j++) {
-		for (int k = loX; k < hiX; k++) {
-		  refMatrix[k][j][0] = refMatrix[k][j][extraXYZ[2]];
-		  refMatrix[k][j][cellValColln.z+extraXYZ[2]] = refMatrix[k][j][cellValColln.z];
-		}
-	      }
-	    }
-	  }*/
-	}
-
-	// debug5 << "refMatrix allocated\n";
+      else if (extraCells[i]) {
+        numGhosts[i] = extraCells[i];
       }
       else {
-	debug5 << "No data returned for the level/ material\n";
+        numGhosts[i] = 1;
+      }
+    }
+      
+    int cellValColln_x = indexArr[3] - indexArr[0] + 2 * numGhosts[0];
+    int cellValColln_y = indexArr[4] - indexArr[1] + 2 * numGhosts[1];
+    int cellValColln_z = indexArr[5] - indexArr[2] + 2 * numGhosts[2];
+
+    int* hiLoArr = patchInfoVecObj[domain].hiLoArr;
+
+    indexArr[0] = indexArr[0] - hiLoArr[0]; 
+    indexArr[1] = indexArr[1] - hiLoArr[1]; 
+    indexArr[2] = indexArr[2] - hiLoArr[2];
+    indexArr[3] = indexArr[3] - hiLoArr[0]; 
+    indexArr[4] = indexArr[4] - hiLoArr[1]; 
+    indexArr[5] = indexArr[5] - hiLoArr[2];
+
+    if (timeStepObj.cellValColln != NULL) {
+      cellVals& cellValColln = *(timeStepObj.cellValColln);
+      typeDouble& cellValVec = *(cellValColln.cellValVec);
+
+      if (refMatrix != NULL) {
+        for (int i = 0; i < refX; i++) {
+          for (int j = 0; j < refY; j++) {
+            free(refMatrix[i][j]);
+          }
+          free(refMatrix[i]);
+        }
+        free(refMatrix);
+        refMatrix = NULL;
+      }	 
+
+      int extraXYZ[3] = {0, 0, 0};
+
+      // Expand the size of the refMatrix -
+      // if periodic or no extraCells found
+      for (int i = 0; i < 3; i++) {
+        if (boundaryExists[i] || (extraCells[i] == 0)) {
+          extraXYZ[i] = 1; 
+        }
       }
 
-      // Cleaning up
-      delete timeStepObjPtr;
-    // }  
+      // Allocating Matrix
+      refMatrix = (double***)malloc((cellValColln.x /*+ 2 * extraXYZ[0]*/) * sizeof(double**));
+      if (refMatrix == NULL) debug5 << "Error allocating refMatrix\n";
+      for(int i = 0; i < (cellValColln.x /*+ 2 * extraXYZ[0]*/); i++) {
+        refMatrix[i] = (double**)malloc((cellValColln.y /*+ 2 * extraXYZ[1]*/) * sizeof(double*));
+        if (refMatrix[i] == NULL) debug5 << "Error allocating refMatrix[" << i << "]\n";
+        for(int j = 0; j < (cellValColln.y /*+ 2 * extraXYZ[1]*/); j++) {
+          refMatrix[i][j] = (double*)malloc((cellValColln.z /*+ 2 * extraXYZ[2]*/) * sizeof(double));
+          if (refMatrix[i][j] == NULL) debug5 << "Error allocating refMatrix[" << i << "][" << j << "]\n";
+        }
+      }
+
+      refX = cellValColln.x /*+ 2 * extraXYZ[0]*/;
+      refY = cellValColln.y /*+ 2 * extraXYZ[1]*/;
+      refZ = cellValColln.z /*+ 2 * extraXYZ[2]*/;
+
+      // Reference matrix
+      for (int i = 0 /*extraXYZ[2]*/; i < (cellValColln.z /*+ extraXYZ[2]*/); i++) {
+        for (int j = 0 /*extraXYZ[1]*/; j < (cellValColln.y /*+ extraXYZ[1]*/); j++) {
+          for (int k = 0 /*extraXYZ[0]*/; k < (cellValColln.x /*+ extraXYZ[0]*/); k++) {    
+            refMatrix[k][j][i] = cellValVec[count];
+            count++;  
+          }
+        }
+      }
+
+      // Re-sized matrix
+      for (int m = 0; m < 3; m++) {
+        if (boundaryExists[m] || (extraCells[m] == 0)) {
+          // debug5 << boundaryExists[m] << endl;
+          if (m == 0) { // x-axis 
+            for (int i = 0 /*extraXYZ[2]*/; i < (cellValColln.z /*- extraXYZ[2]*/); i++) {
+              for (int j = 0 /*extraXYZ[1]*/; j < (cellValColln.y /*- extraXYZ[1]*/); j++) {
+		 
+                if (indexArr[0] <= hiLoArr[0]) 
+                  refMatrix[0][j][i] = refMatrix[extraXYZ[0]][j][i];
+
+                if ((indexArr[3] >= hiLoArr[3]) || ((indexArr[3] + 1) >= hiLoArr[3])) 
+                  refMatrix[cellValColln.x - extraXYZ[0]][j][i] = refMatrix[cellValColln.x - 2*extraXYZ[0]][j][i];
+              }
+            }
+          }
+          else if (m == 1) { // y-axis
+            int loX;
+            int hiX;
+
+            // check the extents on the x-axis
+            if (boundaryExists[0] || (extraCells[0] == 0)) { 
+              loX = 0;
+              hiX = cellValColln.x /*+ extraXYZ[0] + 1*/;
+            }
+            else {
+              loX = extraXYZ[0];
+              hiX = cellValColln.x - extraXYZ[0];
+            }
+
+            for (int i = 0 /*extraXYZ[2]*/; i < (cellValColln.z /*- extraXYZ[2]*/); i++) {
+              for (int k = loX; k < hiX; k++) {
+		  
+                if (indexArr[1] <= hiLoArr[1]) 
+                  refMatrix[k][0][i] = refMatrix[k][extraXYZ[1]][i];
+		  
+                if ((indexArr[4] >= hiLoArr[4]) || ((indexArr[4] + 1) >= hiLoArr[4])) 
+                  refMatrix[k][cellValColln.y - extraXYZ[1]][i] = refMatrix[k][cellValColln.y - 2*extraXYZ[1]][i];
+              }
+            }
+          }
+          else if (m == 2) { // z-axis
+            int loX, loY;
+            int hiX, hiY;
+
+            // check the extents on the x-axis
+            if (boundaryExists[0] || (extraCells[0] == 0)) {
+              loX = 0;
+              hiX = cellValColln.x /*+ extraXYZ[0] + 1*/;
+            }
+            else {
+              loX = extraXYZ[0];
+              hiX = cellValColln.x - extraXYZ[0]; 
+            }
+
+            // check the extents on the y-axis
+            if (boundaryExists[1] || (extraCells[1] == 0)) {
+              loY = 0;
+              hiY = cellValColln.y /*+ extraXYZ[1] + 1*/;
+            }
+            else {
+              loY = extraXYZ[1];
+              hiY = cellValColln.y - extraXYZ[1]; 
+            }
+
+            for (int j = loY; j < hiY; j++) {
+              for (int k = loX; k < hiX; k++) {
+		  
+                if (indexArr[2] <= hiLoArr[2]) 
+                  refMatrix[k][j][0] = refMatrix[k][j][extraXYZ[2]];
+		  
+                if ((indexArr[5] >= hiLoArr[5]) || ((indexArr[5] + 1) >= hiLoArr[5])) 
+                  refMatrix[k][j][cellValColln.z - extraXYZ[2]] = refMatrix[k][j][cellValColln.z - 2*extraXYZ[2]];
+              }
+            }
+          }
+        }
+      }
+    }
+    else {
+      debug5 << "No data returned for the level/ material\n";
+    }
+
+    // Cleaning up
+    delete timeStepObjPtr;
 
     
-    // int indexRangeNC[3];
     int actualHiArr[3];
-
-    // indexRangeNC[0] = hiLoArr[3] - hiLoArr[0] - 1;
-    // indexRangeNC[1] = hiLoArr[4] - hiLoArr[1] - 1;
-    // indexRangeNC[2] = hiLoArr[5] - hiLoArr[2] - 1;
-
     actualHiArr[0] = indexArr[3];
     actualHiArr[1] = indexArr[4];
     actualHiArr[2] = indexArr[5];
 
-    // debug5 << indexRangeNC[0] << " " << indexRangeNC[1] << " " << indexRangeNC[2] << endl; 
-
-    /*if (currMesh.find("NC") != string::npos) {
-      if (indexArr[3] < indexRangeNC[0]) {
-	cellValColln_x += 1;
-	actualHiArr[0] = indexArr[3] + 1;
-      }  
-
-      if (indexArr[4] < indexRangeNC[1]) {
-	cellValColln_y += 1;
-	actualHiArr[1] = indexArr[4] + 1;
-      }  
-
-      if (indexArr[5] < indexRangeNC[2]) {
-	cellValColln_z += 1;
-	actualHiArr[2] = indexArr[5] + 1;
-      }  
-    }*/  
-      
     if (currMesh.find("SFC") != string::npos) {
       if (currMesh.find("SFCX") != string::npos) { 
         if (actualHiArr[0] < (hiLoArr[3] - hiLoArr[0])) {
-	  cellValColln_x += 1;
-	  // actualHiArr[0] += 1;
+          cellValColln_x += 1;
         }
       }
 
       if (currMesh.find("SFCY") != string::npos) { 
         if (actualHiArr[1] < (hiLoArr[4] - hiLoArr[1])) {
-	  cellValColln_y += 1;
-	  // actualHiArr[1] += 1;
+          cellValColln_y += 1;
         }
       }
 
       if (currMesh.find("SFCZ") != string::npos) { 
         if (actualHiArr[2] < (hiLoArr[5] - hiLoArr[2])) {
-	  cellValColln_z += 1;
-	  // actualHiArr[2] += 1;
+          cellValColln_z += 1;
         }
       }
     }
-
-    // debug5 << hiLoArr[0] << " " << hiLoArr[1] << " " << hiLoArr[2] << endl;
-    // debug5 << hiLoArr[3] << " " << hiLoArr[4] << " " << hiLoArr[5] << endl;
-
-    // debug5 << indexArr[0] << " " << indexArr[1] << " " << indexArr[2] << endl;
-    // debug5 << actualHiArr[0] + 2 << " " << actualHiArr[1] + 2 << " " << actualHiArr[2] + 2 << endl;
 
     rv->SetNumberOfTuples(cellValColln_x * cellValColln_y * cellValColln_z);
     count = 0;
 
     if (refMatrix != NULL) {
-      // rv->SetNumberOfTuples(cellValColln_x * cellValColln_y * cellValColln_z);
-      //  count = 0;
 
       for (int i = 0 /*indexArr[2]*/; i < cellValColln_z /*actualHiArr[2] + 2 * numGhosts[2]*/; i++) {
-	for (int j = 0 /*indexArr[1]*/; j < cellValColln_y /*actualHiArr[1] + 2 * numGhosts[1]*/; j++) {
-	  for (int k = 0 /*indexArr[0]*/; k < cellValColln_x /*actualHiArr[0] + 2 * numGhosts[0]*/; k++) {
+        for (int j = 0 /*indexArr[1]*/; j < cellValColln_y /*actualHiArr[1] + 2 * numGhosts[1]*/; j++) {
+          for (int k = 0 /*indexArr[0]*/; k < cellValColln_x /*actualHiArr[0] + 2 * numGhosts[0]*/; k++) {
 
-	    /*if ((k + hiLoArr[0] == 1) && (j + hiLoArr[1] == 62) && (i + hiLoArr[2] == 56)) {
-	      debug5 << "DATA_CHECK\n";
-	      debug5 << k + hiLoArr[0] << " " << j + 1 + hiLoArr[1] << " " << i + hiLoArr[2] << " " << refMatrix[k][j+1][i]   << endl;
-	      }*/
-
-	    /*if ((k + hiLoArr[0] == 1) && (j + hiLoArr[1] == 63) && (i + hiLoArr[2] == 56)) {
-	      debug5 << "DATA_CHECK\n";
-	      debug5 << k + hiLoArr[0] << " " << j - 1 + hiLoArr[1] << " " << i + hiLoArr[2] << " " << refMatrix[k][j-1][i]   << endl;
-	      }*/
-
-	    rv->SetTuple1(count++, refMatrix[k][j][i]);
-	  }
-	}
+            rv->SetTuple1(count++, refMatrix[k][j][i]);
+          }
+        }
       }
     }
     else {
       // Why not set 0's?
       for (int i = 0; i < rv->GetNumberOfTuples(); i++) {
-	rv->SetTuple1(count++, 0);
+        rv->SetTuple1(count++, 0);
       }
     }
-
-    // debug5 << "Values populated: " << count << endl;
-
-    /*for (unsigned int i = 0; i < cellValVec.size(); ++i) {
-      rv->SetTuple1(i, cellValVec[i]);  // you must determine value for ith entry.
-      }*/
-
-    // delete timeStepObjPtr;
   }
   else {
-    // size_t found = varName.find("/");
-
-    // string matl = varName.substr(found + 1);
-    // varName = varName.substr(0, found);
 
     int matlNo = 0;
 
@@ -2703,11 +2143,11 @@ avtudaReaderMTMDFileFormat::GetVar(int timestate, int domain, const char *varnam
     timeStep *timeStepObjPtr;
 
     if (matl.compare("*") == 0) {
-      timeStepObjPtr = (*processData)(7, arr2d, timestate, false, matlNo, false, varName, domain); 
+      timeStepObjPtr = (*processData)(archive, grid, true, "", -1, 0, timestate, false, matlNo, false, varName, domain); 
       debug5 << "All data\n";
     }  
     else { 
-      timeStepObjPtr = (*processData)(7, arr2d, timestate, false, matlNo, true, varName, domain);
+      timeStepObjPtr = (*processData)(archive, grid, true, "", -1, 0, timestate, false, matlNo, true, varName, domain);
       debug5 << "Some data\n";
     }  
 
@@ -2730,34 +2170,16 @@ avtudaReaderMTMDFileFormat::GetVar(int timestate, int domain, const char *varnam
       variable& varRef = varColln[i * PARTICLE_INTERVAL];
       unknownData& dataRef = varRef.data;
 
-      // if (dataRef.size() == 0) {
-      // debug5 << "No data for particle " << i << endl; 
-      // }
-
-      // debug5 << dataRef.size() << endl;
-
-      // bool varFound = false;
-
       for (int j = 0;  j < dataRef.size(); j++) {
-	if (strcmp(varName.c_str(), dataRef[j].name.c_str()) == 0)
-	  // varFound = true;
-	  rv->SetTuple1(i, dataRef[j].value);  // you must determine value for ith entry.
+        if (strcmp(varName.c_str(), dataRef[j].name.c_str()) == 0)
+          rv->SetTuple1(i, dataRef[j].value);  // you must determine value for ith entry.
       }
-
-      /*if (!varFound) {
-	rv->SetTuple1(i, 0.f);  // you must determine value for ith entry.
-	}*/
-
     }
 
     delete timeStepObjPtr;
   }
 
-  // debug5 << "Out GetVar\n";
-
-  //
   return rv;
-  //
 }
 
 
@@ -2782,8 +2204,8 @@ avtudaReaderMTMDFileFormat::GetVar(int timestate, int domain, const char *varnam
 //
 // ****************************************************************************
 
-  vtkDataArray *
-avtudaReaderMTMDFileFormat::GetVectorVar(int timestate, int domain,const char *varname)
+vtkDataArray *
+  avtudaReaderMTMDFileFormat::GetVectorVar(int timestate, int domain,const char *varname)
 {
   //
   // If you have a file format where variables don't apply (for example a
@@ -2796,10 +2218,15 @@ avtudaReaderMTMDFileFormat::GetVectorVar(int timestate, int domain,const char *v
   // debug5 << "\nIn GetVectorVar " << timestate << "\n";
 
   if (currTimeStep != timestate) {
+    if (grid)
+      (*releaseGrid)(grid);
+    grid = (*getGrid)(archive, timestate);
+
     delete levelPatchVecPtr;
-    levelPatchVecPtr = (*getTotalNumPatches)(folder, timestate);
+    levelPatchVecPtr = (*getTotalNumPatches)(archive, grid);
     currTimeStep = timestate; 
   }
+
 
   string varName(varname);
   bool isParticleVar = false;
@@ -2816,442 +2243,280 @@ avtudaReaderMTMDFileFormat::GetVectorVar(int timestate, int domain,const char *v
     if (udaVarsObj[k].find(varName) != string::npos) { 
       if (udaVarsObj[k].find("ParticleVariable") != string::npos) {
         isParticleVar = true;
-	break;
+        break;
       }	
     }
   }             
 
   vtkFloatArray *rv = vtkFloatArray::New();
 
-  if (/*varName.find("p.") == string::npos*/ !(isParticleVar)) {
-    // size_t found = varName.find("/");
-    // string tmpVarName = varName;
-
-    // string matl = varName.substr(found + 1);
-    // varName = varName.substr(0, found);
-
-    // debug5 << varName << endl;
-    // debug5 << matl << endl;
-
+  // volume variable
+  if (!isParticleVar) {
     int level, local_patch;
-
     GetLevelAndLocalPatchNumber(domain, timestate, level, local_patch);
 
     unsigned int count = 0;
 
-    // if ((currLevel != level) || (currVar.find(tmpVarName) == string::npos)) { 
-      debug5 << "Making the much required call to collect information at level " << level << "\n";
-      // currLevel = level;
-      // currVar.assign(tmpVarName);
+    char buffer[128];
+    sprintf(buffer, "%d", level);
 
-      char buffer[128];
-      sprintf(buffer, "%d", level);
+    strcpy(arr2d[0], "uda2nrrd"); // anything will do
+    strcpy(arr2d[1], "-uda");
+    strcpy(arr2d[2], folder.c_str());
+    strcpy(arr2d[3], "-v");
+    strcpy(arr2d[4], varName.c_str());
+    strcpy(arr2d[5], "-m");
+    strcpy(arr2d[6], matl.c_str());
+    strcpy(arr2d[7], "-l");
+    strcpy(arr2d[8], buffer);
+    strcpy(arr2d[9], "-o"); // this is not required
+    strcpy(arr2d[10], "test"); // this is not required
+    strcpy(arr2d[11], "-q");
 
-      strcpy(arr2d[0], "uda2nrrd"); // anything will do
-      strcpy(arr2d[1], "-uda");
-      strcpy(arr2d[2], folder.c_str());
-      strcpy(arr2d[3], "-v");
-      strcpy(arr2d[4], varName.c_str());
-      strcpy(arr2d[5], "-m");
-      strcpy(arr2d[6], matl.c_str());
-      strcpy(arr2d[7], "-l");
-      strcpy(arr2d[8], buffer);
-      strcpy(arr2d[9], "-o"); // this is not required
-      strcpy(arr2d[10], "test"); // this is not required
-      strcpy(arr2d[11], "-q");
-
-      timeStep *timeStepObjPtr = (*processData)(12, arr2d, timestate, true, 0, false, string("null"), local_patch);
-      timeStep &timeStepObj = *timeStepObjPtr;
+    timeStep *timeStepObjPtr = (*processData)(archive, grid, false, varName, atoi(matl.c_str()), level, timestate, true, 0, false, string("null"), local_patch);
+    timeStep &timeStepObj = *timeStepObjPtr;
       
-      int numGhosts[3];
+    int numGhosts[3];
 
-      for (int i = 0; i < 3; i++) {
-	if (boundaryExists[i]) {
-	  numGhosts[i] = 1;
-	}
-	else if (extraCells[i]) {
-	  numGhosts[i] = extraCells[i];
-	}
-	else {
-	  numGhosts[i] = 1;
-	}
+    for (int i = 0; i < 3; i++) {
+      if (boundaryExists[i]) {
+        numGhosts[i] = 1;
       }
-
-      patchInfoVec& patchInfoVecObj = *(patchInfoVecPtr); 
-
-      int indexArr[6];
-      std::memcpy(indexArr, patchInfoVecObj[domain].indexArr, sizeof(int) * 6);
-
-      int cellValColln_x = indexArr[3] - indexArr[0] + 2 * numGhosts[0]; 
-      int cellValColln_y = indexArr[4] - indexArr[1] + 2 * numGhosts[1]; 
-      int cellValColln_z = indexArr[5] - indexArr[2] + 2 * numGhosts[2];
-
-      int* hiLoArr = patchInfoVecObj[domain].hiLoArr;
-
-      indexArr[0] = indexArr[0] - hiLoArr[0]; 
-      indexArr[1] = indexArr[1] - hiLoArr[1]; 
-      indexArr[2] = indexArr[2] - hiLoArr[2];
-      indexArr[3] = indexArr[3] - hiLoArr[0]; 
-      indexArr[4] = indexArr[4] - hiLoArr[1]; 
-      indexArr[5] = indexArr[5] - hiLoArr[2];
-
-      if (timeStepObj.cellValColln != NULL) {
-	cellVals& cellValColln = *(timeStepObj.cellValColln);
-	typeDouble& cellValVec = *(cellValColln.cellValVec);
-	int dim = cellValColln.dim;
-
-	// debug5 << dim << endl;
-
-	if (dim == 5) // Tensors
-	  ncomps = 9;
-	else if (dim == 4) // Vectors
-	  ncomps = 3;
-	// else if (dim == 3) // Scalars + Tensors
-	// ncomps = 1; // This case would lead to problem as it has not been added to meta data   
-
-	// ntuples = cellValVec.size() / ncomps; // this is the number of entries in the variable.        
-	if (vecValMatrix != NULL) {
-	  for (int i = 0; i < vecX; i++) {
-	    for (int j = 0; j < vecY; j++) {
-	      free(vecValMatrix[i][j]);
-	    }
-	    free(vecValMatrix[i]);
-	  }
-	  free(vecValMatrix);
-	  vecValMatrix = NULL;
-	} 	 
-
-	if (tenValMatrix != NULL) {
-	  for (int i = 0; i < tenX; i++) {
-	    for (int j = 0; j < tenY; j++) {
-	      free(tenValMatrix[i][j]);
-	    }
-	    free(tenValMatrix[i]);
-	  }
-	  free(tenValMatrix );
-	  tenValMatrix = NULL;
-	} 	 
-	        
-	int extraXYZ[3] = {0, 0, 0};
-
-	// Expand the size of the the matrices
-	// if periodic or no extra cells found
-	for (int i = 0; i < 3; i++) {
-	  if (boundaryExists[i] || (extraCells[i] == 0)) {
-	    extraXYZ[i] = 1; 
-	  }
-	}
-
-	// debug5 << extraXYZ[0] << " " << extraXYZ[1] << " " << extraXYZ[2] << endl;
-
-	if (ncomps == 3) { // Vectors
-	  // Allocating Matrix
-	  vecValMatrix = (vecVal***)malloc((cellValColln.x /*+ 2 * extraXYZ[0]*/) * sizeof(vecVal**));
-	  if (vecValMatrix == NULL) debug5 << "Error allocating vecValMatrix\n";
-	  for(int i = 0; i < (cellValColln.x /*+ 2 * extraXYZ[0]*/); i++) {
-	    vecValMatrix[i] = (vecVal**)malloc((cellValColln.y /*+ 2 * extraXYZ[1]*/) * sizeof(vecVal*));
-	    if (vecValMatrix[i] == NULL) debug5 << "Error allocating vecValMatrix[" << i << "]\n";
-	    for(int j = 0; j < (cellValColln.y /*+ 2 * extraXYZ[1]*/); j++) {
-	      vecValMatrix[i][j] = (vecVal*)malloc((cellValColln.z /*+ 2 * extraXYZ[2]*/) * sizeof(vecVal));
-	      if (vecValMatrix[i][j] == NULL) debug5 << "Error allocating vecValMatrix[" << i << "][" << j << "]\n";
-	    }
-	  }
-
-	  vecX = cellValColln.x /*+ 2 * extraXYZ[0]*/;
-	  vecY = cellValColln.y /*+ 2 * extraXYZ[1]*/;
-	  vecZ = cellValColln.z /*+ 2 * extraXYZ[2]*/;
-
-	  // Reference matrix
-	  for (int i = 0 /*extraXYZ[2]*/; i < (cellValColln.z /*+ extraXYZ[2]*/); i++) {
-	    for (int j = 0 /*extraXYZ[1]*/; j < (cellValColln.y /*+ extraXYZ[1]*/); j++) {
-	      for (int k = 0 /*extraXYZ[0]*/; k < (cellValColln.x /*+ extraXYZ[0]*/); k++) {    
-		vecVal& vecValRef = vecValMatrix[k][j][i];
-		// vecValRef.name = varName;
-		vecValRef.x = cellValVec[count++];
-		vecValRef.y = cellValVec[count++];
-		vecValRef.z = cellValVec[count++];
-	      }
-	    }
-	  }
-	}
-	else if (ncomps == 9) { // Tensors
-	  // Allocating Matrix
-	  tenValMatrix = (tenVal***)malloc((cellValColln.x /*+ 2 * extraXYZ[0]*/) * sizeof(tenVal**));
-	  if (tenValMatrix == NULL) debug5 << "Error allocating tenValMatrix\n";
-	  for(int i = 0; i < (cellValColln.x /*+ 2 * extraXYZ[0]*/); i++) {
-	    tenValMatrix[i] = (tenVal**)malloc((cellValColln.y /*+ 2 * extraXYZ[1]*/) * sizeof(tenVal*));
-	    if (tenValMatrix[i] == NULL) debug5 << "Error allocating tenValMatrix[" << i << "]\n";
-	    for(int j = 0; j < (cellValColln.y /*+ 2 * extraXYZ[1]*/); j++) {
-	      tenValMatrix[i][j] = (tenVal*)malloc((cellValColln.z /*+ 2 * extraXYZ[2]*/)* sizeof(tenVal));
-	      if (tenValMatrix[i][j] == NULL) debug5 << "Error allocating tenValMatrix[" << i << "][" << j << "]\n";
-	    }
-	  }
-
-	  tenX = cellValColln.x /*+ 2 * extraXYZ[0]*/;
-	  tenY = cellValColln.y /*+ 2 * extraXYZ[1]*/;
-	  tenZ = cellValColln.z /*+ 2 * extraXYZ[2]*/;
-
-	  // Reference matrix
-	  for (int i = 0 /*extraXYZ[2*]*/; i < (cellValColln.z /*+ extraXYZ[2]*/); i++) {
-	    for (int j = 0 /*extraXYZ[1]*/; j < (cellValColln.y /*+ extraXYZ[1]*/); j++) {
-	      for (int k = 0 /*extraXYZ[0]*/; k < (cellValColln.x /*+ extraXYZ[0]*/); k++) {    
-		tenVal& tenValRef = tenValMatrix[k][j][i];
-		// tenValRef.name = varName;
-		for (int p = 0; p < 3; p++) {
-		  for (int q = 0; q < 3; q++) {
-		    tenValRef.mat[p][q] = cellValVec[count++];
-		  }
-		}   
-	      }
-	    }
-	  }
-	}
-
-	// Re-sized matrix
-	for (int m = 0; m < 3; m++) {
-	  if (boundaryExists[m] || (extraCells[m] == 0)) {
-	    // debug5 << boundaryExists[m] << endl;
-	    if (m == 0) { // x-axis 
-	      for (int i = 0 /*extraXYZ[2]*/; i < (cellValColln.z /*+ extraXYZ[2]*/); i++) {
-		for (int j = 0 /*extraXYZ[1]*/; j < (cellValColln.y /*+ extraXYZ[1]*/); j++) {
-		  if (ncomps == 3) {
-		    // vecValMatrix[0][j][i] = vecValMatrix[cellValColln.x + extraXYZ[0] - 1][j][i];
-		    // vecValMatrix[cellValColln.x+extraXYZ[0]][j][i] = vecValMatrix[extraXYZ[0]][j][i];
-		    
-		      if (indexArr[0] <= hiLoArr[0]) 
-                      vecValMatrix[0][j][i] = vecValMatrix[extraXYZ[0]][j][i];
-		  
-		    if ((indexArr[3] >= hiLoArr[3]) || ((indexArr[3] + 1) >= hiLoArr[3])) 
-		      vecValMatrix[cellValColln.x - extraXYZ[0]][j][i] = vecValMatrix[cellValColln.x - 2*extraXYZ[0]][j][i];
-		  }
-		  else if (ncomps == 9) {
-		    // tenValMatrix[0][j][i] = tenValMatrix[cellValColln.x + extraXYZ[0] - 1][j][i];
-		    // tenValMatrix[cellValColln.x+extraXYZ[0]][j][i] = tenValMatrix[extraXYZ[0]][j][i];
-		    
-		    if (indexArr[0] <= hiLoArr[0]) 
-                      tenValMatrix[0][j][i] = tenValMatrix[extraXYZ[0]][j][i];
-		    
-		    if ((indexArr[3] >= hiLoArr[3]) || ((indexArr[3] + 1) >= hiLoArr[3])) 
-		      tenValMatrix[cellValColln.x - extraXYZ[0]][j][i] = tenValMatrix[cellValColln.x - 2*extraXYZ[0]][j][i];
-		  }
-		}
-	      }
-	    }
-	    else if (m == 1) { // y-axis
-	      int loX;
-	      int hiX;
-
-	      // check the extents on the x-axis
-	      if (boundaryExists[0] || (extraCells[0] == 0)) { 
-		loX = 0;
-		hiX = cellValColln.x /*+ extraXYZ[0] + 1*/;
-	      }
-	      else {
-		loX = extraXYZ[0];
-		hiX = cellValColln.x - extraXYZ[0]; 
-	      }
-
-	      for (int i = 0 /*extraXYZ[2]*/; i < (cellValColln.z /*+ extraXYZ[2]*/); i++) {
-		for (int k = loX; k < hiX; k++) {
-		  if (ncomps == 3) {
-		    // vecValMatrix[k][0][i] = vecValMatrix[k][cellValColln.y + extraXYZ[1] - 1][i];
-		    // vecValMatrix[k][cellValColln.y+extraXYZ[1]][i] = vecValMatrix[k][extraXYZ[1]][i];
-		  
-		    if (indexArr[1] <= hiLoArr[1]) 
-                      vecValMatrix[k][0][i] = vecValMatrix[k][extraXYZ[1]][i];
-		    
-		    if ((indexArr[4] >= hiLoArr[4]) || ((indexArr[4] + 1) >= hiLoArr[4])) 
-		      vecValMatrix[k][cellValColln.y - extraXYZ[1]][i] = vecValMatrix[k][cellValColln.y - 2*extraXYZ[1]][i];
-		  }
-		  else if (ncomps == 9) {
-		    // tenValMatrix[k][0][i] = tenValMatrix[k][cellValColln.y + extraXYZ[1] - 1][i];
-		    // tenValMatrix[k][cellValColln.y+extraXYZ[1]][i] = tenValMatrix[k][extraXYZ[1]][i];
-		    
-		    if (indexArr[1] <= hiLoArr[1]) 
-                      tenValMatrix[k][0][i] = tenValMatrix[k][extraXYZ[1]][i];
-		    
-		    if ((indexArr[4] >= hiLoArr[4]) || ((indexArr[4] + 1) >= hiLoArr[4])) 
-		      tenValMatrix[k][cellValColln.y - extraXYZ[1]][i] = tenValMatrix[k][cellValColln.y - 2*extraXYZ[1]][i];
-		  }
-		}
-	      }
-	    }
-	    else if (m == 2) { // z-axis
-	      int loX, loY;
-	      int hiX, hiY;
-
-	      // check the extents on the x-axis
-	      if (boundaryExists[0] || (extraCells[0] == 0)) {
-		loX = 0;
-		hiX = cellValColln.x /*+ extraXYZ[0] + 1*/;
-	      }
-	      else {
-		loX = extraXYZ[0];
-		hiX = cellValColln.x - extraXYZ[0]; 
-	      }
-
-	      // check the extents on the y-axis
-	      if (boundaryExists[1] || (extraCells[1] == 0)) {
-		loY = 0;
-		hiY = cellValColln.y /*+ extraXYZ[1] + 1*/;
-	      }
-	      else {
-		loY = extraXYZ[1];
-		hiY = cellValColln.y - extraXYZ[1]; 
-	      }
-
-	      // debug5 << loX << " " << hiX << endl;
-	      // debug5 << loY << " " << hiY << endl;
-
-	      for (int j = loY; j < hiY; j++) {
-		for (int k = loX; k < hiX; k++) {
-		  if (ncomps == 3) {
-		    // vecValMatrix[k][j][0] = vecValMatrix[k][j][cellValColln.z + extraXYZ[2] - 1];
-		    // vecValMatrix[k][j][cellValColln.z+extraXYZ[2]] = vecValMatrix[k][j][extraXYZ[2]];
-		    
-		    if (indexArr[2] <= hiLoArr[2]) 
-                      vecValMatrix[k][j][0] = vecValMatrix[k][j][extraXYZ[2]];
-		    
-		    if ((indexArr[5] >= hiLoArr[5]) || ((indexArr[5] + 1) >= hiLoArr[5])) 
-		      vecValMatrix[k][j][cellValColln.z - extraXYZ[2]] = vecValMatrix[k][j][cellValColln.z - 2*extraXYZ[2]];
-		  }
-		  else if (ncomps == 9) {
-		    // tenValMatrix[k][j][0] = tenValMatrix[k][j][cellValColln.z + extraXYZ[2] - 1];
-		    // tenValMatrix[k][j][cellValColln.z+extraXYZ[2]] = tenValMatrix[k][j][extraXYZ[2]];
-		    
-		    if (indexArr[2] <= hiLoArr[2]) 
-                      tenValMatrix[k][j][0] = tenValMatrix[k][j][extraXYZ[2]];
-		    
-		    if ((indexArr[5] >= hiLoArr[5]) || ((indexArr[5] + 1) >= hiLoArr[5])) 
-		      tenValMatrix[k][j][cellValColln.z - extraXYZ[2]] = tenValMatrix[k][j][cellValColln.z - 2*extraXYZ[2]];
-		  }
-		}
-	      }
-	    }
-	  }
-	  /*else if (extraCells[m] == 0) {
-	    if (m == 0) { // x-axis 
-	      for (int i = extraXYZ[2]; i < (cellValColln.z + extraXYZ[2]); i++) {
-		for (int j = extraXYZ[1]; j < (cellValColln.y + extraXYZ[1]); j++) {
-		  if (ncomps == 3) {
-		    vecValMatrix[0][j][i] = vecValMatrix[extraXYZ[0]][j][i];
-		    vecValMatrix[cellValColln.x + extraXYZ[0]][j][i] = vecValMatrix[cellValColln.x][j][i];
-		  }
-		  else if (ncomps == 9) {
-		    tenValMatrix[0][j][i] = tenValMatrix[extraXYZ[0]][j][i];
-		    tenValMatrix[cellValColln.x + extraXYZ[0]][j][i] = tenValMatrix[cellValColln.x][j][i];
-		  }
-		}
-	      }
-	    }
-	    else if (m == 1) { // y-axis 
-	      int loX;
-	      int hiX;
-
-	      // check the extents on the x-axis
-	      if (boundaryExists[0] || (extraCells[0] == 0)) { 
-		loX = 0;
-		hiX = cellValColln.x + extraXYZ[0] + 1;
-	      }
-	      else {
-		loX = extraXYZ[0];
-		hiX = cellValColln.x + extraXYZ[0]; 
-	      }
-
-	      for (int i = extraXYZ[2]; i < (cellValColln.z + extraXYZ[2]); i++) {
-		for (int k = loX; k < hiX; k++) {
-		  if (ncomps == 3) {
-		    vecValMatrix[k][0][i] = vecValMatrix[k][extraXYZ[1]][i];
-		    vecValMatrix[k][cellValColln.y+extraXYZ[1]][i] = vecValMatrix[k][cellValColln.y][i];
-		  }
-		  else if (ncomps == 9) {
-		    tenValMatrix[k][0][i] = tenValMatrix[k][extraXYZ[1]][i];
-		    tenValMatrix[k][cellValColln.y+extraXYZ[1]][i] = tenValMatrix[k][cellValColln.y][i];
-		  }
-		}
-	      }
-	    }
-	    else if (m == 2) { // z-axis
-	      int loX, loY;
-	      int hiX, hiY;
-
-	      // check the extents on the x-axis
-	      if (boundaryExists[0] || (extraCells[0] == 0)) {
-		loX = 0;
-		hiX = cellValColln.x + extraXYZ[0] + 1;
-	      }
-	      else {
-		loX = extraXYZ[0];
-		hiX = cellValColln.x + extraXYZ[0]; 
-	      }
-
-	      // check the extents on the y-axis
-	      if (boundaryExists[1] || (extraCells[1] == 0)) {
-		loY = 0;
-		hiY = cellValColln.y + extraXYZ[1] + 1;
-	      }
-	      else {
-		loY = extraXYZ[1];
-		hiY = cellValColln.y + extraXYZ[1]; 
-	      }
-
-	      // debug5 << loX << " " << hiX << endl;
-	      // debug5 << loY << " " << hiY << endl;
-
-	      for (int j = loY; j < hiY; j++) {
-		for (int k = loX; k < hiX; k++) {
-		  if (ncomps == 3) {
-		    vecValMatrix[k][j][0] = vecValMatrix[k][j][extraXYZ[2]];
-		    vecValMatrix[k][j][cellValColln.z+extraXYZ[2]] = vecValMatrix[k][j][cellValColln.z];
-		  }
-		  else if (ncomps == 9) {
-		    tenValMatrix[k][j][0] = tenValMatrix[k][j][extraXYZ[2]];
-		    tenValMatrix[k][j][cellValColln.z+extraXYZ[2]] = tenValMatrix[k][j][cellValColln.z];
-		  }
-		}
-	      }
-	    }
-	  }*/
-	}
-
-	// debug5 << "refMatrix allocated\n";
-
+      else if (extraCells[i]) {
+        numGhosts[i] = extraCells[i];
       }
       else {
-	debug5 << "No data returned for the level/ material\n";
+        numGhosts[i] = 1;
+      }
+    }
+
+    patchInfoVec& patchInfoVecObj = *(patchInfoVecPtr); 
+
+    int indexArr[6];
+    std::memcpy(indexArr, patchInfoVecObj[domain].indexArr, sizeof(int) * 6);
+
+    int cellValColln_x = indexArr[3] - indexArr[0] + 2 * numGhosts[0]; 
+    int cellValColln_y = indexArr[4] - indexArr[1] + 2 * numGhosts[1]; 
+    int cellValColln_z = indexArr[5] - indexArr[2] + 2 * numGhosts[2];
+
+    int* hiLoArr = patchInfoVecObj[domain].hiLoArr;
+
+    indexArr[0] = indexArr[0] - hiLoArr[0]; 
+    indexArr[1] = indexArr[1] - hiLoArr[1]; 
+    indexArr[2] = indexArr[2] - hiLoArr[2];
+    indexArr[3] = indexArr[3] - hiLoArr[0]; 
+    indexArr[4] = indexArr[4] - hiLoArr[1]; 
+    indexArr[5] = indexArr[5] - hiLoArr[2];
+
+    if (timeStepObj.cellValColln != NULL) {
+      cellVals& cellValColln = *(timeStepObj.cellValColln);
+      typeDouble& cellValVec = *(cellValColln.cellValVec);
+      int dim = cellValColln.dim;
+
+      if (dim == 5) // Tensors
+        ncomps = 9;
+      else if (dim == 4) // Vectors
+        ncomps = 3;
+
+      if (vecValMatrix != NULL) {
+        for (int i = 0; i < vecX; i++) {
+          for (int j = 0; j < vecY; j++) {
+            free(vecValMatrix[i][j]);
+          }
+          free(vecValMatrix[i]);
+        }
+        free(vecValMatrix);
+        vecValMatrix = NULL;
+      } 	 
+
+      if (tenValMatrix != NULL) {
+        for (int i = 0; i < tenX; i++) {
+          for (int j = 0; j < tenY; j++) {
+            free(tenValMatrix[i][j]);
+          }
+          free(tenValMatrix[i]);
+        }
+        free(tenValMatrix );
+        tenValMatrix = NULL;
+      } 	 
+	        
+      int extraXYZ[3] = {0, 0, 0};
+
+      // Expand the size of the the matrices
+      // if periodic or no extra cells found
+      for (int i = 0; i < 3; i++) {
+        if (boundaryExists[i] || (extraCells[i] == 0)) {
+          extraXYZ[i] = 1; 
+        }
       }
 
-      // Cleaning up
-      delete timeStepObjPtr;
-    // }  
+      // Vectors
+      if (ncomps == 3) { 
+        // Allocating Matrix
+        vecValMatrix = (vecVal***)malloc((cellValColln.x /*+ 2 * extraXYZ[0]*/) * sizeof(vecVal**));
+        if (vecValMatrix == NULL) debug5 << "Error allocating vecValMatrix\n";
+        for(int i = 0; i < (cellValColln.x /*+ 2 * extraXYZ[0]*/); i++) {
+          vecValMatrix[i] = (vecVal**)malloc((cellValColln.y /*+ 2 * extraXYZ[1]*/) * sizeof(vecVal*));
+          if (vecValMatrix[i] == NULL) debug5 << "Error allocating vecValMatrix[" << i << "]\n";
+          for(int j = 0; j < (cellValColln.y /*+ 2 * extraXYZ[1]*/); j++) {
+            vecValMatrix[i][j] = (vecVal*)malloc((cellValColln.z /*+ 2 * extraXYZ[2]*/) * sizeof(vecVal));
+            if (vecValMatrix[i][j] == NULL) debug5 << "Error allocating vecValMatrix[" << i << "][" << j << "]\n";
+          }
+        }
 
-    // int indexRangeNC[3];
-    // int actualHiArr[3];
+        vecX = cellValColln.x /*+ 2 * extraXYZ[0]*/;
+        vecY = cellValColln.y /*+ 2 * extraXYZ[1]*/;
+        vecZ = cellValColln.z /*+ 2 * extraXYZ[2]*/;
 
-    // indexRangeNC[0] = hiLoArr[3] - hiLoArr[0] - 1;
-    // indexRangeNC[1] = hiLoArr[4] - hiLoArr[1] - 1;
-    // indexRangeNC[2] = hiLoArr[5] - hiLoArr[2] - 1;
+        // Reference matrix
+        for (int i = 0 /*extraXYZ[2]*/; i < (cellValColln.z /*+ extraXYZ[2]*/); i++) {
+          for (int j = 0 /*extraXYZ[1]*/; j < (cellValColln.y /*+ extraXYZ[1]*/); j++) {
+            for (int k = 0 /*extraXYZ[0]*/; k < (cellValColln.x /*+ extraXYZ[0]*/); k++) {    
+              vecVal& vecValRef = vecValMatrix[k][j][i];
+              // vecValRef.name = varName;
+              vecValRef.x = cellValVec[count++];
+              vecValRef.y = cellValVec[count++];
+              vecValRef.z = cellValVec[count++];
+            }
+          }
+        }
+      }
+      else if (ncomps == 9) { // Tensors
+        // Allocating Matrix
+        tenValMatrix = (tenVal***)malloc((cellValColln.x /*+ 2 * extraXYZ[0]*/) * sizeof(tenVal**));
+        if (tenValMatrix == NULL) debug5 << "Error allocating tenValMatrix\n";
+        for(int i = 0; i < (cellValColln.x /*+ 2 * extraXYZ[0]*/); i++) {
+          tenValMatrix[i] = (tenVal**)malloc((cellValColln.y /*+ 2 * extraXYZ[1]*/) * sizeof(tenVal*));
+          if (tenValMatrix[i] == NULL) debug5 << "Error allocating tenValMatrix[" << i << "]\n";
+          for(int j = 0; j < (cellValColln.y /*+ 2 * extraXYZ[1]*/); j++) {
+            tenValMatrix[i][j] = (tenVal*)malloc((cellValColln.z /*+ 2 * extraXYZ[2]*/)* sizeof(tenVal));
+            if (tenValMatrix[i][j] == NULL) debug5 << "Error allocating tenValMatrix[" << i << "][" << j << "]\n";
+          }
+        }
 
-    // actualHiArr[0] = indexArr[3];
-    // actualHiArr[1] = indexArr[4];
-    // actualHiArr[2] = indexArr[5];
+        tenX = cellValColln.x /*+ 2 * extraXYZ[0]*/;
+        tenY = cellValColln.y /*+ 2 * extraXYZ[1]*/;
+        tenZ = cellValColln.z /*+ 2 * extraXYZ[2]*/;
 
-    /*if (currMesh.find("NC") != string::npos) {
-      if (indexArr[3] < indexRangeNC[0]) {
-	cellValColln_x += 1;
-	actualHiArr[0] = indexArr[3] + 1;
-      }  
+        // Reference matrix
+        for (int i = 0 /*extraXYZ[2*]*/; i < (cellValColln.z /*+ extraXYZ[2]*/); i++) {
+          for (int j = 0 /*extraXYZ[1]*/; j < (cellValColln.y /*+ extraXYZ[1]*/); j++) {
+            for (int k = 0 /*extraXYZ[0]*/; k < (cellValColln.x /*+ extraXYZ[0]*/); k++) {    
+              tenVal& tenValRef = tenValMatrix[k][j][i];
+              // tenValRef.name = varName;
+              for (int p = 0; p < 3; p++) {
+                for (int q = 0; q < 3; q++) {
+                  tenValRef.mat[p][q] = cellValVec[count++];
+                }
+              }   
+            }
+          }
+        }
+      }
 
-      if (indexArr[4] < indexRangeNC[1]) {
-	cellValColln_y += 1;
-	actualHiArr[1] = indexArr[4] + 1;
-      }  
+      // Re-sized matrix
+      for (int m = 0; m < 3; m++) {
+        if (boundaryExists[m] || (extraCells[m] == 0)) {
+          // debug5 << boundaryExists[m] << endl;
+          if (m == 0) { // x-axis 
+            for (int i = 0 /*extraXYZ[2]*/; i < (cellValColln.z /*+ extraXYZ[2]*/); i++) {
+              for (int j = 0 /*extraXYZ[1]*/; j < (cellValColln.y /*+ extraXYZ[1]*/); j++) {
+                if (ncomps == 3) {
+                  if (indexArr[0] <= hiLoArr[0]) 
+                    vecValMatrix[0][j][i] = vecValMatrix[extraXYZ[0]][j][i];
+                  if ((indexArr[3] >= hiLoArr[3]) || ((indexArr[3] + 1) >= hiLoArr[3])) 
+                    vecValMatrix[cellValColln.x - extraXYZ[0]][j][i] = vecValMatrix[cellValColln.x - 2*extraXYZ[0]][j][i];
+                }
+                else if (ncomps == 9) {
+                  if (indexArr[0] <= hiLoArr[0]) 
+                    tenValMatrix[0][j][i] = tenValMatrix[extraXYZ[0]][j][i];
+                  if ((indexArr[3] >= hiLoArr[3]) || ((indexArr[3] + 1) >= hiLoArr[3])) 
+                    tenValMatrix[cellValColln.x - extraXYZ[0]][j][i] = tenValMatrix[cellValColln.x - 2*extraXYZ[0]][j][i];
+                }
+              }
+            }
+          }
+          else if (m == 1) { // y-axis
+            int loX;
+            int hiX;
 
-      if (indexArr[5] < indexRangeNC[2]) {
-	cellValColln_z += 1;
-	actualHiArr[2] = indexArr[5] + 1;
-      }  
-    }*/  
+            // check the extents on the x-axis
+            if (boundaryExists[0] || (extraCells[0] == 0)) { 
+              loX = 0;
+              hiX = cellValColln.x /*+ extraXYZ[0] + 1*/;
+            }
+            else {
+              loX = extraXYZ[0];
+              hiX = cellValColln.x - extraXYZ[0]; 
+            }
+
+            for (int i = 0 /*extraXYZ[2]*/; i < (cellValColln.z /*+ extraXYZ[2]*/); i++) {
+              for (int k = loX; k < hiX; k++) {
+                if (ncomps == 3) {
+                  if (indexArr[1] <= hiLoArr[1]) 
+                    vecValMatrix[k][0][i] = vecValMatrix[k][extraXYZ[1]][i];
+                  if ((indexArr[4] >= hiLoArr[4]) || ((indexArr[4] + 1) >= hiLoArr[4])) 
+                    vecValMatrix[k][cellValColln.y - extraXYZ[1]][i] = vecValMatrix[k][cellValColln.y - 2*extraXYZ[1]][i];
+                }
+                else if (ncomps == 9) {
+                  if (indexArr[1] <= hiLoArr[1]) 
+                    tenValMatrix[k][0][i] = tenValMatrix[k][extraXYZ[1]][i];
+                  if ((indexArr[4] >= hiLoArr[4]) || ((indexArr[4] + 1) >= hiLoArr[4])) 
+                    tenValMatrix[k][cellValColln.y - extraXYZ[1]][i] = tenValMatrix[k][cellValColln.y - 2*extraXYZ[1]][i];
+                }
+              }
+            }
+          }
+          else if (m == 2) { // z-axis
+            int loX, loY;
+            int hiX, hiY;
+
+            // check the extents on the x-axis
+            if (boundaryExists[0] || (extraCells[0] == 0)) {
+              loX = 0;
+              hiX = cellValColln.x /*+ extraXYZ[0] + 1*/;
+            }
+            else {
+              loX = extraXYZ[0];
+              hiX = cellValColln.x - extraXYZ[0]; 
+            }
+
+            // check the extents on the y-axis
+            if (boundaryExists[1] || (extraCells[1] == 0)) {
+              loY = 0;
+              hiY = cellValColln.y /*+ extraXYZ[1] + 1*/;
+            }
+            else {
+              loY = extraXYZ[1];
+              hiY = cellValColln.y - extraXYZ[1]; 
+            }
+
+            for (int j = loY; j < hiY; j++) {
+              for (int k = loX; k < hiX; k++) {
+                if (ncomps == 3) {
+                  if (indexArr[2] <= hiLoArr[2]) 
+                    vecValMatrix[k][j][0] = vecValMatrix[k][j][extraXYZ[2]];
+                  if ((indexArr[5] >= hiLoArr[5]) || ((indexArr[5] + 1) >= hiLoArr[5])) 
+                    vecValMatrix[k][j][cellValColln.z - extraXYZ[2]] = vecValMatrix[k][j][cellValColln.z - 2*extraXYZ[2]];
+                }
+                else if (ncomps == 9) {
+                  if (indexArr[2] <= hiLoArr[2]) 
+                    tenValMatrix[k][j][0] = tenValMatrix[k][j][extraXYZ[2]];
+                  if ((indexArr[5] >= hiLoArr[5]) || ((indexArr[5] + 1) >= hiLoArr[5])) 
+                    tenValMatrix[k][j][cellValColln.z - extraXYZ[2]] = tenValMatrix[k][j][cellValColln.z - 2*extraXYZ[2]];
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    else {
+      debug5 << "No data returned for the level/ material\n";
+    }
+
+    // Cleaning up
+    delete timeStepObjPtr;
 
     rv->SetNumberOfComponents(ncomps);
     rv->SetNumberOfTuples(cellValColln_x * cellValColln_y * cellValColln_z);
@@ -3260,87 +2525,74 @@ avtudaReaderMTMDFileFormat::GetVectorVar(int timestate, int domain,const char *v
     count = 0;
 
     if ((vecValMatrix != NULL) || (tenValMatrix != NULL)) {   
-      // rv->SetNumberOfComponents(ncomps);
-      // rv->SetNumberOfTuples(cellValColln_x * cellValColln_y * cellValColln_z);
-
-      // double* one_entry = new double[ncomps];
-      // count = 0;
 
       if (ncomps == 3) {
-	for (int i = 0 /*indexArr[2]*/; i < cellValColln_z /*actualHiArr[2] + 2 * numGhosts[2]*/; i++) {
-	  for (int j = 0 /*indexArr[1]*/; j < cellValColln_y /*actualHiArr[1] + 2 * numGhosts[1]*/; j++) {
-	    for (int k = 0 /*indexArr[0]*/; k < cellValColln_x /*actualHiArr[0] + 2 * numGhosts[0]*/; k++) {
-	      vecVal& vecValRef = vecValMatrix[k][j][i];
-	      one_entry[0] = vecValRef.x;
-	      one_entry[1] = vecValRef.y;
-	      one_entry[2] = vecValRef.z;
-	      rv->SetTuple(count++, one_entry);
-	    }
-	  }
-	}
+        for (int i = 0 /*indexArr[2]*/; i < cellValColln_z /*actualHiArr[2] + 2 * numGhosts[2]*/; i++) {
+          for (int j = 0 /*indexArr[1]*/; j < cellValColln_y /*actualHiArr[1] + 2 * numGhosts[1]*/; j++) {
+            for (int k = 0 /*indexArr[0]*/; k < cellValColln_x /*actualHiArr[0] + 2 * numGhosts[0]*/; k++) {
+              vecVal& vecValRef = vecValMatrix[k][j][i];
+              one_entry[0] = vecValRef.x;
+              one_entry[1] = vecValRef.y;
+              one_entry[2] = vecValRef.z;
+              rv->SetTuple(count++, one_entry);
+            }
+          }
+        }
       }
       else if (ncomps == 9) {
-	for (int i = 0 /*indexArr[2]*/; i < cellValColln_z /*actualHiArr[2] + 2 * numGhosts[2]*/; i++) {
-	  for (int j = 0 /*indexArr[1]*/; j < cellValColln_y /*actualHiArr[1] + 2 * numGhosts[1]*/; j++) {
-	    for (int k = 0 /*indexArr[0]*/; k < cellValColln_x /*actualHiArr[0] + 2 * numGhosts[0]*/; k++) {
-	      tenVal& tenValRef = tenValMatrix[k][j][i];
-	      one_entry[0] = tenValRef.mat[0][0];
-	      one_entry[1] = tenValRef.mat[0][1];
-	      one_entry[2] = tenValRef.mat[0][2];
-	      one_entry[3] = tenValRef.mat[1][0];
-	      one_entry[4] = tenValRef.mat[1][1];
-	      one_entry[5] = tenValRef.mat[1][2];
-	      one_entry[6] = tenValRef.mat[2][0];
-	      one_entry[7] = tenValRef.mat[2][1];
-	      one_entry[8] = tenValRef.mat[2][2];
-	      rv->SetTuple(count++, one_entry);
-	    }
-	  }
-	}
+        for (int i = 0 /*indexArr[2]*/; i < cellValColln_z /*actualHiArr[2] + 2 * numGhosts[2]*/; i++) {
+          for (int j = 0 /*indexArr[1]*/; j < cellValColln_y /*actualHiArr[1] + 2 * numGhosts[1]*/; j++) {
+            for (int k = 0 /*indexArr[0]*/; k < cellValColln_x /*actualHiArr[0] + 2 * numGhosts[0]*/; k++) {
+              tenVal& tenValRef = tenValMatrix[k][j][i];
+              one_entry[0] = tenValRef.mat[0][0];
+              one_entry[1] = tenValRef.mat[0][1];
+              one_entry[2] = tenValRef.mat[0][2];
+              one_entry[3] = tenValRef.mat[1][0];
+              one_entry[4] = tenValRef.mat[1][1];
+              one_entry[5] = tenValRef.mat[1][2];
+              one_entry[6] = tenValRef.mat[2][0];
+              one_entry[7] = tenValRef.mat[2][1];
+              one_entry[8] = tenValRef.mat[2][2];
+              rv->SetTuple(count++, one_entry);
+            }
+          }
+        }
       }
 
       delete [] one_entry;
     }
     else {
       if (ncomps == 3) {
-	for (int i = 0; i < rv->GetNumberOfTuples(); i++) {
-	  one_entry[0] = 0;
-	  one_entry[1] = 0;
-	  one_entry[2] = 0;
-	  rv->SetTuple(count++, one_entry);
-	}
+        for (int i = 0; i < rv->GetNumberOfTuples(); i++) {
+          one_entry[0] = 0;
+          one_entry[1] = 0;
+          one_entry[2] = 0;
+          rv->SetTuple(count++, one_entry);
+        }
       }
       else if (ncomps == 9) {
-	for (int i = 0; i < rv->GetNumberOfTuples(); i++) {
-	  one_entry[0] = 0;
-	  one_entry[1] = 0;
-	  one_entry[2] = 0;
-	  one_entry[3] = 0;
-	  one_entry[4] = 0;
-	  one_entry[5] = 0;
-	  one_entry[6] = 0;
-	  one_entry[7] = 0;
-	  one_entry[8] = 0;
-	  rv->SetTuple(count++, one_entry);
-	}
+        for (int i = 0; i < rv->GetNumberOfTuples(); i++) {
+          one_entry[0] = 0;
+          one_entry[1] = 0;
+          one_entry[2] = 0;
+          one_entry[3] = 0;
+          one_entry[4] = 0;
+          one_entry[5] = 0;
+          one_entry[6] = 0;
+          one_entry[7] = 0;
+          one_entry[8] = 0;
+          rv->SetTuple(count++, one_entry);
+        }
       }
 
       delete [] one_entry;
     }
   }
   else {
-    // size_t found = varName.find("/");
-
-    // string matl = varName.substr(found + 1);
-    // varName = varName.substr(0, found);
-
     int matlNo = 0;
 
     if (matl.compare("*") != 0)
       matlNo = atoi(matl.c_str());
-
-    // debug5 << varName << endl;
-    // debug5 << matlNo << endl;
 
     strcpy(arr2d[0], "uda2nrrd"); // anything will do
     strcpy(arr2d[1], "-uda");
@@ -3353,11 +2605,11 @@ avtudaReaderMTMDFileFormat::GetVectorVar(int timestate, int domain,const char *v
     timeStep *timeStepObjPtr;
 
     if (matl.compare("*") == 0) {
-      timeStepObjPtr = (*processData)(7, arr2d, timestate, false, matlNo, false, varName, domain); 
+      timeStepObjPtr = (*processData)(archive, grid, true, "", -1, 0, timestate, false, matlNo, false, varName, domain); 
       debug5 << "All data\n";
     }  
     else { 
-      timeStepObjPtr = (*processData)(7, arr2d, timestate, false, matlNo, true, varName, domain);
+      timeStepObjPtr = (*processData)(archive, grid, true, "", -1, 0, timestate, false, matlNo, true, varName, domain);
       debug5 << "Some data\n";
     }  
 
@@ -3369,21 +2621,15 @@ avtudaReaderMTMDFileFormat::GetVectorVar(int timestate, int domain,const char *v
     int ncomps = 0;  // Vector -> 3, Tensor ->  9
 
     // Detemine whether we have a vector or a tensor
-
-    // udaVars* udaVarsPtr = (*getVarList)(folder);
-    // udaVars& udaVarsObj = *(udaVarsPtr);
-
-    // debug5 << "varName is: " << varName << endl;
-
     for (int k = 0; k < udaVarsObj.size(); k++) {
       if (udaVarsObj[k].find(varName) != string::npos) { // should be a vector or a tensor
-	if ((udaVarsObj[k].find("Vector") != string::npos) ||
-	    (udaVarsObj[k].find("Point") != string::npos))
-	  ncomps = 3;
-	else if (udaVarsObj[k].find("Matrix3") != string::npos)   
-	  ncomps = 9;
+        if ((udaVarsObj[k].find("Vector") != string::npos) ||
+            (udaVarsObj[k].find("Point") != string::npos))
+          ncomps = 3;
+        else if (udaVarsObj[k].find("Matrix3") != string::npos)   
+          ncomps = 9;
 	
-	break;
+        break;
       }
     }              
 
@@ -3399,58 +2645,54 @@ avtudaReaderMTMDFileFormat::GetVectorVar(int timestate, int domain,const char *v
 
     float* one_entry = new float[ncomps];
 
-    // int ntuples = varColln.size(); // this is the number of entries in the variable.
-
     if (ncomps == 3) { // Vectors
       if (varName.compare("p.x") == 0) {
-	for (int i = 0 ; i < ntuples ; i++) {
-	  variable& varRef = varColln[i * PARTICLE_INTERVAL];
+        for (int i = 0 ; i < ntuples ; i++) {
+          variable& varRef = varColln[i * PARTICLE_INTERVAL];
 
-	  one_entry[0] = varRef.x; one_entry[1] = varRef.y; one_entry[2] = varRef.z; 
-	  rv->SetTuple(i, one_entry);  // you must determine value for ith entry.
-	}
+          one_entry[0] = varRef.x; one_entry[1] = varRef.y; one_entry[2] = varRef.z; 
+          rv->SetTuple(i, one_entry);  // you must determine value for ith entry.
+        }
       }
       else {
-	for (int i = 0 ; i < ntuples ; i++) {
-	  variable& varRef = varColln[i * PARTICLE_INTERVAL];
-	  vecValData& vecDataRef = varRef.vecData;
+        for (int i = 0 ; i < ntuples ; i++) {
+          variable& varRef = varColln[i * PARTICLE_INTERVAL];
+          vecValData& vecDataRef = varRef.vecData;
 
-	  for (int j = 0;  j < vecDataRef.size(); j++) {
-	    if (strcmp(varName.c_str(), vecDataRef[j].name.c_str()) == 0) {
-	      one_entry[0] = vecDataRef[j].x; one_entry[1] = vecDataRef[j].y; one_entry[2] = vecDataRef[j].z; 
-	      rv->SetTuple(i, one_entry);  // you must determine value for ith entry.
-	    }     
-	  }
-	}
+          for (int j = 0;  j < vecDataRef.size(); j++) {
+            if (strcmp(varName.c_str(), vecDataRef[j].name.c_str()) == 0) {
+              one_entry[0] = vecDataRef[j].x; one_entry[1] = vecDataRef[j].y; one_entry[2] = vecDataRef[j].z; 
+              rv->SetTuple(i, one_entry);  // you must determine value for ith entry.
+            }     
+          }
+        }
       }
     }
     else if (ncomps == 9) { // Tensors
       for (int i = 0 ; i < ntuples ; i++) {
-	variable& varRef = varColln[i * PARTICLE_INTERVAL];
-	tenValData& tenDataRef = varRef.tenData;
+        variable& varRef = varColln[i * PARTICLE_INTERVAL];
+        tenValData& tenDataRef = varRef.tenData;
 
-	for (int j = 0;  j < tenDataRef.size(); j++) {
-	  if (strcmp(varName.c_str(), tenDataRef[j].name.c_str()) == 0) {
-	    one_entry[0] = (float)tenDataRef[j].mat[0][0];
-	    one_entry[1] = (float)tenDataRef[j].mat[0][1];
-	    one_entry[2] = (float)tenDataRef[j].mat[0][2];
-	    one_entry[3] = (float)tenDataRef[j].mat[1][0];
-	    one_entry[4] = (float)tenDataRef[j].mat[1][1];
-	    one_entry[5] = (float)tenDataRef[j].mat[1][2];
-	    one_entry[6] = (float)tenDataRef[j].mat[2][0];
-	    one_entry[7] = (float)tenDataRef[j].mat[2][1];
-	    one_entry[8] = (float)tenDataRef[j].mat[2][2];
-	    rv->SetTuple(i, one_entry);  // you must determine value for ith entry.
-	  }     
-	}
+        for (int j = 0;  j < tenDataRef.size(); j++) {
+          if (strcmp(varName.c_str(), tenDataRef[j].name.c_str()) == 0) {
+            one_entry[0] = (float)tenDataRef[j].mat[0][0];
+            one_entry[1] = (float)tenDataRef[j].mat[0][1];
+            one_entry[2] = (float)tenDataRef[j].mat[0][2];
+            one_entry[3] = (float)tenDataRef[j].mat[1][0];
+            one_entry[4] = (float)tenDataRef[j].mat[1][1];
+            one_entry[5] = (float)tenDataRef[j].mat[1][2];
+            one_entry[6] = (float)tenDataRef[j].mat[2][0];
+            one_entry[7] = (float)tenDataRef[j].mat[2][1];
+            one_entry[8] = (float)tenDataRef[j].mat[2][2];
+            rv->SetTuple(i, one_entry);  // you must determine value for ith entry.
+          }     
+        }
       }         
     }
 
     delete [] one_entry;
     delete timeStepObjPtr;
   }
-
-  // debug5 << "Out GetVectorVar\n";
 
   return rv;
 }
@@ -3482,54 +2724,41 @@ avtudaReaderMTMDFileFormat::GetVectorVar(int timestate, int domain,const char *v
 //    Return material information
 // ****************************************************************************
 
-  void *
-avtudaReaderMTMDFileFormat::GetAuxiliaryData(const char *var, int dom,
-    const char * type, void *,
-    DestructorFunction &df)
+void *
+  avtudaReaderMTMDFileFormat::GetAuxiliaryData(const char *var, int dom,
+                                               const char * type, void *,
+                                               DestructorFunction &df)
 {
-  /*if (strcmp(type, AUXILIARY_DATA_MATERIAL) == 0)
-    {
-    return GetMaterial(var, dom, type, df);
-    }*/
-
   if (strcmp(type, AUXILIARY_DATA_SPATIAL_EXTENTS) == 0)
-  {
-    // levelPatchVec& levelPatchVecObj = *levelPatchVecPtr;
-    // int num_levels = levelPatchVecObj.size();
-
-    debug5 << "In GetAuxiliaryData" << endl;
-
-    patchInfoVec& patchInfoVecObj = *(patchInfoVecPtr);   
-
-    int totalPatches = patchInfoVecObj.size();
-    // for (int level = 0 ; level < num_levels ; level++)
-      // totalPatches += levelPatchVecObj[level].noPatches;
-
-    avtIntervalTree *itree = new avtIntervalTree(totalPatches, 3);
-
-    for (int patch = 0 ; patch < totalPatches ; patch++)
     {
-      double bounds[6];
-      // int level, local_patch;
+      debug5 << "In GetAuxiliaryData" << endl;
 
-      // GetLevelAndLocalPatchNumber(patch, level, local_patch);
-      double* minMaxArr = patchInfoVecObj[patch].minMaxArr;
+      patchInfoVec& patchInfoVecObj = *(patchInfoVecPtr);   
 
-      bounds[0] = /*lowI[patch]*dx[level]*/ minMaxArr[0];
-      bounds[1] = /*bounds[0] + (hiI[patch]-lowI[patch])*dx[level]*/ minMaxArr[3];
-      bounds[2] = /*lowJ[patch]*dx[level]*/ minMaxArr[1];
-      bounds[3] = /*bounds[2] + (hiJ[patch]-lowJ[patch])*dx[level]*/ minMaxArr[4];
-      bounds[4] = /*lowK[patch]*dx[level]*/ minMaxArr[2];
-      bounds[5] = /*bounds[4] + (hiK[patch]-lowK[patch])*dx[level]*/ minMaxArr[5];
+      int totalPatches = patchInfoVecObj.size();
+      avtIntervalTree *itree = new avtIntervalTree(totalPatches, 3);
 
-      itree->AddElement(patch, bounds);
+      for (int patch = 0 ; patch < totalPatches ; patch++)
+        {
+          double bounds[6];
+
+          double* minMaxArr = patchInfoVecObj[patch].minMaxArr;
+
+          bounds[0] = /*lowI[patch]*dx[level]*/ minMaxArr[0];
+          bounds[1] = /*bounds[0] + (hiI[patch]-lowI[patch])*dx[level]*/ minMaxArr[3];
+          bounds[2] = /*lowJ[patch]*dx[level]*/ minMaxArr[1];
+          bounds[3] = /*bounds[2] + (hiJ[patch]-lowJ[patch])*dx[level]*/ minMaxArr[4];
+          bounds[4] = /*lowK[patch]*dx[level]*/ minMaxArr[2];
+          bounds[5] = /*bounds[4] + (hiK[patch]-lowK[patch])*dx[level]*/ minMaxArr[5];
+
+          itree->AddElement(patch, bounds);
+        }
+      itree->Calculate(true);
+
+      df = avtIntervalTree::Destruct;
+
+      return ((void *) itree);
     }
-    itree->Calculate(true);
-
-    df = avtIntervalTree::Destruct;
-
-    return ((void *) itree);
-  }
 
   return NULL;
 }
