@@ -90,6 +90,11 @@ DEALINGS IN THE SOFTWARE.
 //
 // ****************************************************************************
 
+// the DataArchive and GridP types are considered opaque from this library, we dlsym()
+// functions from uintah libs to allocate, free, and perform operations on them.
+class DataArchive;
+class GridP;
+
 class avtudaReaderMTMDFileFormat : public avtMTMDFileFormat
 {
 public:
@@ -127,8 +132,11 @@ public:
 protected:
   // DATA MEMBERS
         
-  int timeSteps, currTimeStep, lastTimeStep;
+  int currTimeStep;
   std::string  folder;
+
+  DataArchive *archive;
+  GridP *grid;
         
   void  * libHandle;
   char  * error, arr2d[128][128];
@@ -155,25 +163,30 @@ protected:
   int vecX, vecY, vecZ;
   int tenX, tenY, tenZ;
         
-  timeStep*        (*processData)(int, char[][128], int, bool, int, bool, const std::string&, int);
-  udaVars*         (*getVarList)(const std::string&);
-  typeDouble*      (*getTimeSteps)(const std::string&);
-  double*          (*getBBox)(const std::string&, int, int);
-  double*          (*getPatchBBox)(const std::string&, int, int, int);
-  int*             (*getPatchIndex)(const std::string&, int, int, int, const std::string&);
-  varMatls*        (*getMaterials)(const std::string&, const std::string&, int);
-  levelPatchVec*   (*getTotalNumPatches)(const std::string&, int);
-  patchInfoVec*    (*getPatchInfo)(const std::string&, int, const std::string&, bool);
-  int*             (*getNumPatches)(const std::string&, int, int);
-  int*             (*getPeriodicBoundaries)(const std::string&, int, int);
-  int*             (*getExtraCells)(const std::string&, int, int);
-  int*             (*getNumLevels)(const std::string&, int);
-  int*             (*getPVarLevelAndPatches)(const std::string&, const std::string&, int); 
+  DataArchive*     (*openDataArchive)(const std::string&);
+  void             (*closeDataArchive)(DataArchive*);
+
+  GridP*           (*getGrid)(DataArchive*, int);
+  void             (*releaseGrid)(GridP*);
+
+  timeStep*        (*processData)(DataArchive*, GridP*, bool, string, int, int, int, bool, int, bool, const std::string&, int);
+  udaVars*         (*getVarList)(DataArchive*);
+  typeDouble*      (*getTimeSteps)(DataArchive*);
+  double*          (*getBBox)(DataArchive*, GridP*, int);
+  double*          (*getPatchBBox)(DataArchive*, GridP*, int, int);
+  int*             (*getPatchIndex)(DataArchive*, GridP*, int, int, const std::string&);
+  varMatls*        (*getMaterials)(DataArchive*, GridP*, int, const std::string&);
+  levelPatchVec*   (*getTotalNumPatches)(DataArchive*, GridP*);
+  patchInfoVec*    (*getPatchInfo)(DataArchive*, GridP*, const std::string&, bool);
+  int*             (*getNumPatches)(DataArchive*, GridP*, int);
+  int*             (*getPeriodicBoundaries)(DataArchive*, GridP*, int);
+  int*             (*getExtraCells)(DataArchive*, GridP*, int);
+  int*             (*getNumLevels)(DataArchive*, GridP*);
+  int*             (*getPVarLevelAndPatches)(DataArchive*, GridP*, int, const std::string&); 
 
   virtual void     PopulateDatabaseMetaData(avtDatabaseMetaData *, int);
   void             InitializeReader(avtDatabaseMetaData *, int);
-  // virtual void     RegisterVariableList(const char *,
-  // const vector<CharStrRef> &);
+
   virtual void     *GetAuxiliaryData(const char *var, int,
                                      const char *type, void *args,
                                      DestructorFunction &);
