@@ -83,6 +83,6 @@ ${VISIT_SRCDIR}/Makefile.visit : lib/libStandAlone_tools_uda2vis.${SO_OR_A_FILE}
 # use the src_side/.../test...C.in file to generate the bin_side/.../...C file.
 #
 ${VISIT_SRCDIR}/avtudaReaderMTMDFileFormat.C: ${VISIT_SRCDIR}/testavtudaReaderMTMDFileFormat.C.in
-	config.status --file=${OBJTOP_ABS}/$@:$<
+	${OBJTOP}/config.status --file=${OBJTOP_ABS}/$@:$<
 
 endif
