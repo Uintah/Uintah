@@ -305,7 +305,7 @@
       
     <SimulationComponent          spec="REQUIRED NO_DATA"
                                     attribute1="type REQUIRED STRING 'angio, arches, burger, ice, impm, mpm, mpmarches, 
-                                                                      mpmf, mpmice, 
+                                                                      mpmf, mpmice, amrmpm,
                                                                       poisson1, poisson2, poisson3, poisson4, rigidmpmice, 
                                                                       rmpmice, smpm, smpmice, spatialops, switcher, wave, solvertest'" >
                                   <!-- The 'type' above is used in CCA/Components/Parent/ComponentFactory.cc -->
