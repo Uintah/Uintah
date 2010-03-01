@@ -176,6 +176,8 @@ void AMRMPM::problemSetup(const ProblemSpecP& prob_spec,
   materialProblemSetup(restart_mat_ps, d_sharedState,flags);
 }
 
+//______________________________________________________________________
+//
 void AMRMPM::outputProblemSpec(ProblemSpecP& root_ps)
 {
   ProblemSpecP root = root_ps->getRootNode();
@@ -196,6 +198,8 @@ void AMRMPM::outputProblemSpec(ProblemSpecP& root_ps)
   }
 }
 
+//______________________________________________________________________
+//
 void AMRMPM::scheduleInitialize(const LevelP& level, SchedulerP& sched)
 {
 
@@ -208,8 +212,8 @@ void AMRMPM::scheduleInitialize(const LevelP& level, SchedulerP& sched)
   
   if (!flags->doMPMOnLevel(level->getIndex(), level->getGrid()->numLevels()))
     return;
-  Task* t = scinew Task("MPM::actuallyInitialize",
-                        this, &AMRMPM::actuallyInitialize);
+  Task* t = scinew Task("AMRMPM::actuallyInitialize",
+                  this, &AMRMPM::actuallyInitialize);
 
   MaterialSubset* zeroth_matl = scinew MaterialSubset();
   zeroth_matl->add(0);
@@ -221,7 +225,7 @@ void AMRMPM::scheduleInitialize(const LevelP& level, SchedulerP& sched)
   t->computes(lb->pMassLabel);
   t->computes(lb->pVolumeLabel);
   t->computes(lb->pTemperatureLabel);
-  t->computes(lb->pTempPreviousLabel); // for therma  stresm analysis
+  t->computes(lb->pTempPreviousLabel); // for therma  stress analysis
   t->computes(lb->pdTdtLabel);
   t->computes(lb->pVelocityLabel);
   t->computes(lb->pExternalForceLabel);
@@ -274,26 +278,28 @@ void AMRMPM::scheduleInitialize(const LevelP& level, SchedulerP& sched)
     delete zeroth_matl; // shouln't happen, but...
 
 }
-
+//______________________________________________________________________
+//
 void AMRMPM::schedulePrintParticleCount(const LevelP& level, 
                                         SchedulerP& sched)
 {
-  Task* t = scinew Task("MPM::printParticleCount",
-                        this, &AMRMPM::printParticleCount);
+  Task* t = scinew Task("AMRMPM::printParticleCount",
+                  this, &AMRMPM::printParticleCount);
   t->requires(Task::NewDW, lb->partCountLabel);
   sched->addTask(t, sched->getLoadBalancer()->getPerProcessorPatchSet(level), d_sharedState->allMPMMaterials());
 }
-
+//______________________________________________________________________
+//
 void AMRMPM::scheduleComputeStableTimestep(const LevelP&,
                                               SchedulerP&)
 {
   // Nothing to do here - delt is computed as a by-product of the
   // consitutive model
 }
-
-void
-AMRMPM::scheduleTimeAdvance(const LevelP & inlevel,
-                            SchedulerP   & sched)
+//______________________________________________________________________
+//
+void AMRMPM::scheduleTimeAdvance(const LevelP & inlevel,
+                                 SchedulerP   & sched)
 {
   if(inlevel->getIndex() > 0)
     return;
@@ -334,8 +340,9 @@ AMRMPM::scheduleTimeAdvance(const LevelP & inlevel,
   }
 }
 
-void
-AMRMPM::scheduleFinalizeTimestep( const LevelP& level, SchedulerP& sched)
+//______________________________________________________________________
+//
+void AMRMPM::scheduleFinalizeTimestep( const LevelP& level, SchedulerP& sched)
 {
   if (level->getIndex() == 0) {
     const MaterialSet* matls = d_sharedState->allMPMMaterials();
@@ -347,6 +354,8 @@ AMRMPM::scheduleFinalizeTimestep( const LevelP& level, SchedulerP& sched)
   }
 }
 
+//______________________________________________________________________
+//
 void AMRMPM::scheduleComputeZoneOfInfluence(SchedulerP& sched,
                                             const PatchSet* patches,
                                             const MaterialSet* matls)
@@ -359,9 +368,9 @@ void AMRMPM::scheduleComputeZoneOfInfluence(SchedulerP& sched,
   one_matl->add(0);
   one_matl->addReference();
                                                                                 
-  printSchedule(patches,cout_doing,"MPM::scheduleComputeZoneOfInfluence\t\t\t");                                                                                
-  Task* t = scinew Task("MPM::computeZoneOfInfluence",
-                        this, &AMRMPM::computeZoneOfInfluence);
+  printSchedule(patches,cout_doing,"AMRMPM::scheduleComputeZoneOfInfluence\t\t\t");                                                                                
+  Task* t = scinew Task("AMRMPM::computeZoneOfInfluence",
+                  this, &AMRMPM::computeZoneOfInfluence);
                                                                                 
   t->computes(lb->gZOILabel);
                                                                                 
@@ -371,6 +380,8 @@ void AMRMPM::scheduleComputeZoneOfInfluence(SchedulerP& sched,
     delete one_matl;
 }
 
+//______________________________________________________________________
+//
 void AMRMPM::scheduleApplyExternalLoads(SchedulerP& sched,
                                         const PatchSet* patches,
                                         const MaterialSet* matls)
@@ -379,10 +390,10 @@ void AMRMPM::scheduleApplyExternalLoads(SchedulerP& sched,
                            getLevel(patches)->getGrid()->numLevels()))
     return;
 
-  printSchedule(patches,cout_doing,"MPM::scheduleApplyExternalLoads\t\t\t\t");
+  printSchedule(patches,cout_doing,"AMRMPM::scheduleApplyExternalLoads\t\t\t\t");
 
-  Task* t=scinew Task("MPM::applyExternalLoads",
-                    this, &AMRMPM::applyExternalLoads);
+  Task* t=scinew Task("AMRMPM::applyExternalLoads",
+                this, &AMRMPM::applyExternalLoads);
 
   t->requires(Task::OldDW, lb->pExternalForceLabel,    Ghost::None);
   t->computes(             lb->pExtForceLabel_preReloc);
@@ -390,6 +401,8 @@ void AMRMPM::scheduleApplyExternalLoads(SchedulerP& sched,
   sched->addTask(t, patches, matls);
 }
 
+//______________________________________________________________________
+//
 void AMRMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
                                                 const PatchSet* patches,
                                                 const MaterialSet* matls)
@@ -398,11 +411,11 @@ void AMRMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
                            getLevel(patches)->getGrid()->numLevels()))
     return;
     
-  printSchedule(patches,cout_doing,"MPM::scheduleInterpolateParticlesToGrid\t");
+  printSchedule(patches,cout_doing,"AMRMPM::scheduleInterpolateParticlesToGrid\t");
   
 
-  Task* t = scinew Task("MPM::interpolateParticlesToGrid",
-                        this,&AMRMPM::interpolateParticlesToGrid);
+  Task* t = scinew Task("AMRMPM::interpolateParticlesToGrid",
+                   this,&AMRMPM::interpolateParticlesToGrid);
   Ghost::GhostType  gan = Ghost::AroundNodes;
   Ghost::GhostType  gac = Ghost::AroundCells;
   t->requires(Task::OldDW, lb->pXLabel,                gan,NGP);
@@ -476,6 +489,8 @@ void AMRMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
     delete one_matl;
 }
 
+//______________________________________________________________________
+//
 /////////////////////////////////////////////////////////////////////////
 /*!  **WARNING** In addition to the stresses and deformations, the internal 
  *               heat rate in the particles (pdTdtLabel) 
@@ -489,11 +504,12 @@ void AMRMPM::scheduleComputeStressTensor(SchedulerP& sched,
                            getLevel(patches)->getGrid()->numLevels()))
     return;
   
-  printSchedule(patches,cout_doing,"MPM::scheduleComputeStressTensor\t\t\t\t");
+  printSchedule(patches,cout_doing,"AMRMPM::scheduleComputeStressTensor\t\t\t\t");
   
   int numMatls = d_sharedState->getNumMPMMatls();
-  Task* t = scinew Task("MPM::computeStressTensor",
-                        this, &AMRMPM::computeStressTensor);
+  Task* t = scinew Task("AMRMPM::computeStressTensor",
+                  this, &AMRMPM::computeStressTensor);
+                  
   for(int m = 0; m < numMatls; m++){
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
     ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
@@ -520,7 +536,8 @@ void AMRMPM::scheduleComputeStressTensor(SchedulerP& sched,
   }
 #endif
 }
-
+//______________________________________________________________________
+//
 void AMRMPM::scheduleUpdateErosionParameter(SchedulerP& sched,
                                             const PatchSet* patches,
                                             const MaterialSet* matls)
@@ -529,10 +546,11 @@ void AMRMPM::scheduleUpdateErosionParameter(SchedulerP& sched,
                            getLevel(patches)->getGrid()->numLevels()))
     return;
     
-  printSchedule(patches,cout_doing,"MPM::scheduleUpdateErosionParameter\t\t\t");
+  printSchedule(patches,cout_doing,"AMRMPM::scheduleUpdateErosionParameter\t\t\t");
 
-  Task* t = scinew Task("MPM::updateErosionParameter",
-                        this, &AMRMPM::updateErosionParameter);
+  Task* t = scinew Task("AMRMPM::updateErosionParameter",
+                  this, &AMRMPM::updateErosionParameter);
+                  
   t->requires(Task::OldDW, lb->pErosionLabel,          Ghost::None);
   int numMatls = d_sharedState->getNumMPMMatls();
   for(int m = 0; m < numMatls; m++){
@@ -543,7 +561,8 @@ void AMRMPM::scheduleUpdateErosionParameter(SchedulerP& sched,
   t->computes(lb->pErosionLabel_preReloc);
   sched->addTask(t, patches, matls);
 }
-
+//______________________________________________________________________
+//
 void AMRMPM::scheduleComputeInternalForce(SchedulerP& sched,
                                           const PatchSet* patches,
                                           const MaterialSet* matls)
@@ -552,10 +571,10 @@ void AMRMPM::scheduleComputeInternalForce(SchedulerP& sched,
                            getLevel(patches)->getGrid()->numLevels()))
     return;
 
-  printSchedule(patches,cout_doing,"MPM::scheduleComputeInternalForce\t\t\t\t");
+  printSchedule(patches,cout_doing,"AMRMPM::scheduleComputeInternalForce\t\t\t\t");
    
-  Task* t = scinew Task("MPM::computeInternalForce",
-                        this, &AMRMPM::computeInternalForce);
+  Task* t = scinew Task("AMRMPM::computeInternalForce",
+                  this, &AMRMPM::computeInternalForce);
 
   Ghost::GhostType  gan   = Ghost::AroundNodes;
   Ghost::GhostType  gnone = Ghost::None;
@@ -580,7 +599,8 @@ void AMRMPM::scheduleComputeInternalForce(SchedulerP& sched,
   
   sched->addTask(t, patches, matls);
 }
-
+//______________________________________________________________________
+//
 void AMRMPM::scheduleComputeAndIntegrateAcceleration(SchedulerP& sched,
                                                      const PatchSet* patches,
                                                      const MaterialSet* matls)
@@ -589,10 +609,10 @@ void AMRMPM::scheduleComputeAndIntegrateAcceleration(SchedulerP& sched,
                            getLevel(patches)->getGrid()->numLevels()))
     return;
 
-  printSchedule(patches,cout_doing,"MPM::scheduleComputeAndIntegrateAcceleration\t\t\t\t");
+  printSchedule(patches,cout_doing,"AMRMPM::scheduleComputeAndIntegrateAcceleration\t\t\t\t");
 
-  Task* t = scinew Task("MPM::computeAndIntegrateAcceleration",
-                        this, &AMRMPM::computeAndIntegrateAcceleration);
+  Task* t = scinew Task("AMRMPM::computeAndIntegrateAcceleration",
+                  this, &AMRMPM::computeAndIntegrateAcceleration);
 
   t->requires(Task::OldDW, d_sharedState->get_delt_label() );
 
@@ -606,7 +626,8 @@ void AMRMPM::scheduleComputeAndIntegrateAcceleration(SchedulerP& sched,
 
   sched->addTask(t, patches, matls);
 }
-
+//______________________________________________________________________
+//
 void AMRMPM::scheduleSetGridBoundaryConditions(SchedulerP& sched,
                                                   const PatchSet* patches,
                                                   const MaterialSet* matls)
@@ -615,9 +636,9 @@ void AMRMPM::scheduleSetGridBoundaryConditions(SchedulerP& sched,
   if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(), 
                            getLevel(patches)->getGrid()->numLevels()))
     return;
-  printSchedule(patches,cout_doing,"MPM::scheduleSetGridBoundaryConditions\t");
-  Task* t=scinew Task("MPM::setGridBoundaryConditions",
-                      this, &AMRMPM::setGridBoundaryConditions);
+  printSchedule(patches,cout_doing,"AMRMPM::scheduleSetGridBoundaryConditions\t");
+  Task* t=scinew Task(AMRMPM::setGridBoundaryConditions",
+               this, &AMRMPM::setGridBoundaryConditions);
                   
   const MaterialSubset* mss = matls->getUnion();
   t->requires(Task::OldDW, d_sharedState->get_delt_label() );
@@ -633,7 +654,8 @@ void AMRMPM::scheduleSetGridBoundaryConditions(SchedulerP& sched,
 
   sched->addTask(t, patches, matls);
 }
-
+//______________________________________________________________________
+//
 void AMRMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
                                                      const PatchSet* patches,
                                                      const MaterialSet* matls)
@@ -643,10 +665,10 @@ void AMRMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
                            getLevel(patches)->getGrid()->numLevels()))
     return;
 
-  printSchedule(patches,cout_doing,"MPM::scheduleInterpolateToParticlesAndUpdate\t\t\t");
+  printSchedule(patches,cout_doing,"AMRMPM::scheduleInterpolateToParticlesAndUpdate\t\t\t");
   
-  Task* t=scinew Task("MPM::interpolateToParticlesAndUpdate",
-                      this, &AMRMPM::interpolateToParticlesAndUpdate);
+  Task* t=scinew Task("AMRMPM::interpolateToParticlesAndUpdate",
+                this, &AMRMPM::interpolateToParticlesAndUpdate);
 
   Task::DomainSpec DS = Task::NormalDomain;
   Ghost::GhostType gac   = Ghost::AroundCells;
@@ -704,11 +726,12 @@ void AMRMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   
   sched->addTask(t, patches, matls);
 }
-
+//______________________________________________________________________
+//
 void AMRMPM::scheduleRefine(const PatchSet* patches, 
                                SchedulerP& sched)
 {
-  printSchedule(patches,cout_doing,"MPM::scheduleRefine\t\t");
+  printSchedule(patches,cout_doing,"AMRMPM::scheduleRefine\t\t");
   Task* t = scinew Task("AMRMPM::refine", this, &AMRMPM::refine);
 
   t->computes(lb->pXLabel);
@@ -750,14 +773,16 @@ void AMRMPM::scheduleRefine(const PatchSet* patches,
                                                                                 
   sched->addTask(t, patches, d_sharedState->allMPMMaterials());
 }
-
+//______________________________________________________________________
+//
 void AMRMPM::scheduleRefineInterface(const LevelP& /*fineLevel*/, 
                                      SchedulerP& /*scheduler*/,
                                      bool, bool)
 {
   // do nothing for now
 }
-
+//______________________________________________________________________
+//
 void AMRMPM::scheduleCoarsen(const LevelP& /*coarseLevel*/, 
                              SchedulerP& /*sched*/)
 {
@@ -776,7 +801,7 @@ void AMRMPM::scheduleErrorEstimate(const LevelP& coarseLevel,
     amr_doing << "AMRMPM::scheduleErrorEstimate on level " << coarseLevel->getIndex() << '\n';
 
   // The simulation controller should not schedule it every time step
-  Task* task = scinew Task("errorEstimate", this, &AMRMPM::errorEstimate);
+  Task* task = scinew Task("AMRMPM::errorEstimate", this, &AMRMPM::errorEstimate);
   
   // if the finest level, compute flagged cells
   if (coarseLevel->getIndex() == coarseLevel->getGrid()->numLevels()-1) {
@@ -800,16 +825,19 @@ void AMRMPM::scheduleInitialErrorEstimate(const LevelP& coarseLevel,
   scheduleErrorEstimate(coarseLevel, sched);
 }
 
+//______________________________________________________________________
+//
 void AMRMPM::scheduleSwitchTest(const LevelP& level, SchedulerP& sched)
 {
-  Task* task = scinew Task("switchTest",this, &AMRMPM::switchTest);
+  Task* task = scinew Task("AMRMPM::switchTest",this, &AMRMPM::switchTest);
 
   task->requires(Task::OldDW, d_sharedState->get_delt_label() );
   task->computes(d_sharedState->get_switch_label(), level.get_rep());
   sched->addTask(task, level->eachPatch(),d_sharedState->allMaterials());
 
 }
-
+//______________________________________________________________________
+//
 void AMRMPM::printParticleCount(const ProcessorGroup* pg,
                                 const PatchSubset*,
                                 const MaterialSubset*,
@@ -823,7 +851,8 @@ void AMRMPM::printParticleCount(const ProcessorGroup* pg,
     cerr << "Created " << (long) pcount << " total particles\n";
   }
 }
-
+//______________________________________________________________________
+//
 void AMRMPM::actuallyInitialize(const ProcessorGroup*,
                                 const PatchSubset* patches,
                                 const MaterialSubset* matls,
@@ -872,7 +901,8 @@ void AMRMPM::actuallyInitialize(const ProcessorGroup*,
 
   new_dw->put(sumlong_vartype(totalParticles), lb->partCountLabel);
 }
-
+//______________________________________________________________________
+//
 void AMRMPM::actuallyComputeStableTimestep(const ProcessorGroup*,
                                            const PatchSubset*,
                                            const MaterialSubset*,
@@ -880,7 +910,8 @@ void AMRMPM::actuallyComputeStableTimestep(const ProcessorGroup*,
                                            DataWarehouse*)
 {
 }
-
+//______________________________________________________________________
+//
 void AMRMPM::interpolateParticlesToGrid(const ProcessorGroup*,
                                         const PatchSubset* patches,
                                         const MaterialSubset* ,
@@ -1030,7 +1061,8 @@ void AMRMPM::interpolateParticlesToGrid(const ProcessorGroup*,
     delete interpolator;
   }  // End loop over patches
 }
-
+//______________________________________________________________________
+//
 void AMRMPM::computeStressTensor(const ProcessorGroup*,
                                  const PatchSubset* patches,
                                  const MaterialSubset* ,
@@ -1051,7 +1083,8 @@ void AMRMPM::computeStressTensor(const ProcessorGroup*,
   }
 
 }
-
+//______________________________________________________________________
+//
 void AMRMPM::updateErosionParameter(const ProcessorGroup*,
                                     const PatchSubset* patches,
                                     const MaterialSubset* ,
@@ -1096,7 +1129,8 @@ void AMRMPM::updateErosionParameter(const ProcessorGroup*,
     }
   }
 }
-
+//______________________________________________________________________
+//
 void AMRMPM::computeInternalForce(const ProcessorGroup*,
                                   const PatchSubset* patches,
                                   const MaterialSubset* ,
@@ -1187,7 +1221,8 @@ void AMRMPM::computeInternalForce(const ProcessorGroup*,
     delete interpolator;
   }
 }
-
+//______________________________________________________________________
+//
 void AMRMPM::computeAndIntegrateAcceleration(const ProcessorGroup*,
                                                 const PatchSubset* patches,
                                                 const MaterialSubset*,
@@ -1233,7 +1268,8 @@ void AMRMPM::computeAndIntegrateAcceleration(const ProcessorGroup*,
     }    // matls
   }
 }
-
+//______________________________________________________________________
+//
 void AMRMPM::setGridBoundaryConditions(const ProcessorGroup*,
                                        const PatchSubset* patches,
                                        const MaterialSubset* ,
@@ -1292,7 +1328,8 @@ void AMRMPM::setGridBoundaryConditions(const ProcessorGroup*,
     } // matl loop
   }  // patch loop
 }
-
+//______________________________________________________________________
+//
 void AMRMPM::computeZoneOfInfluence(const ProcessorGroup*,
                                     const PatchSubset* patches,
                                     const MaterialSubset*,
@@ -1461,7 +1498,8 @@ void AMRMPM::computeZoneOfInfluence(const ProcessorGroup*,
     }
   }
 }
-
+//______________________________________________________________________
+//
 void AMRMPM::applyExternalLoads(const ProcessorGroup* ,
                                 const PatchSubset* patches,
                                 const MaterialSubset*,
@@ -1508,7 +1546,8 @@ void AMRMPM::applyExternalLoads(const ProcessorGroup* ,
     } // matl loop
   }  // patch loop
 }
-
+//______________________________________________________________________
+//
 void AMRMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
                                              const PatchSubset* patches,
                                              const MaterialSubset* ,
@@ -1599,6 +1638,8 @@ void AMRMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       // Get finer level data
       const Patch* finePatch = NULL;
       // FIX: finePatch business
+      
+      
       if(getLevel(patches)->hasFinerLevel()){
          const Level* fineLevel = getLevel(patches)->getFinerLevel().get_rep();
          Level::selectType finePatches;
@@ -1606,6 +1647,7 @@ void AMRMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
          IntVector one(1,1,1);
          IntVector FH(-9999,-9999,-9999);
          IntVector FL(9999,9999,9999);
+         
          for(int i=0;i<finePatches.size();i++){
             finePatch = finePatches[i];
 
@@ -1682,13 +1724,13 @@ void AMRMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
     delete interpolator;
   }
 }
-
-void 
-AMRMPM::setParticleDefault(ParticleVariable<double>& pvar,
-                              const VarLabel* label, 
-                              ParticleSubset* pset,
-                              DataWarehouse* new_dw,
-                              double val)
+//______________________________________________________________________
+//
+void AMRMPM::setParticleDefault(ParticleVariable<double>& pvar,
+                                const VarLabel* label, 
+                                ParticleSubset* pset,
+                                DataWarehouse* new_dw,
+                                double val)
 {
   new_dw->allocateAndPut(pvar, label, pset);
   ParticleSubset::iterator iter = pset->begin();
@@ -1697,11 +1739,12 @@ AMRMPM::setParticleDefault(ParticleVariable<double>& pvar,
   }
 }
 
-void 
-AMRMPM::setParticleDefault(ParticleVariable<Vector>& pvar,
-                              const VarLabel* label, 
-                              ParticleSubset* pset,
-                              DataWarehouse* new_dw,
+//______________________________________________________________________
+//
+void  AMRMPM::setParticleDefault(ParticleVariable<Vector>& pvar,
+                                 const VarLabel* label, 
+                                 ParticleSubset* pset,
+                                 DataWarehouse* new_dw,
                               const Vector& val)
 {
   new_dw->allocateAndPut(pvar, label, pset);
@@ -1710,7 +1753,8 @@ AMRMPM::setParticleDefault(ParticleVariable<Vector>& pvar,
     pvar[*iter] = val;
   }
 }
-
+//______________________________________________________________________
+//
 void 
 AMRMPM::setParticleDefault(ParticleVariable<Matrix3>& pvar,
                               const VarLabel* label, 
@@ -1724,7 +1768,8 @@ AMRMPM::setParticleDefault(ParticleVariable<Matrix3>& pvar,
     pvar[*iter] = val;
   }
 }
-
+//______________________________________________________________________
+//
 void AMRMPM::setSharedState(SimulationStateP& ssp)
 {
   d_sharedState = ssp;
@@ -1849,7 +1894,8 @@ AMRMPM::errorEstimate(const ProcessorGroup* group,
     } // coarse patch loop 
   }
 }  
-
+//______________________________________________________________________
+//
 void AMRMPM::refine(const ProcessorGroup*,
                     const PatchSubset* patches,
                     const MaterialSubset* /*matls*/,
@@ -1906,16 +1952,17 @@ void AMRMPM::refine(const ProcessorGroup*,
   }
 
 } // end refine()
-
+//______________________________________________________________________
+//
 void AMRMPM::scheduleCheckNeedAddMPMMaterial(SchedulerP& sched,
                                              const PatchSet* patches,
                                              const MaterialSet* matls)
 {
-  printSchedule(patches,cout_doing,"MPM::scheduleCheckNeedAddMPMMateria\t\t");
+  printSchedule(patches,cout_doing,"AMRMPM::scheduleCheckNeedAddMPMMateria\t\t");
 
   int numMatls = d_sharedState->getNumMPMMatls();
-  Task* t = scinew Task("MPM::checkNeedAddMPMMaterial",
-                        this, &AMRMPM::checkNeedAddMPMMaterial);
+  Task* t = scinew Task("ARMMPM::checkNeedAddMPMMaterial",
+                  this, &AMRMPM::checkNeedAddMPMMaterial);
   for(int m = 0; m < numMatls; m++){
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
     ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
@@ -1924,7 +1971,8 @@ void AMRMPM::scheduleCheckNeedAddMPMMaterial(SchedulerP& sched,
 
   sched->addTask(t, patches, matls);
 }
-
+//______________________________________________________________________
+//
 void AMRMPM::checkNeedAddMPMMaterial(const ProcessorGroup*,
                                      const PatchSubset* patches,
                                      const MaterialSubset* ,
@@ -1937,19 +1985,21 @@ void AMRMPM::checkNeedAddMPMMaterial(const ProcessorGroup*,
     cm->checkNeedAddMPMMaterial(patches, mpm_matl, old_dw, new_dw);
   }
 }
-
+//______________________________________________________________________
+//
 void AMRMPM::scheduleSetNeedAddMaterialFlag(SchedulerP& sched,
                                             const LevelP& level,
                                             const MaterialSet* all_matls)
 {
-  printSchedule(level,cout_doing,"MPM::scheduleSetNeedAddMaterialFlag\t\t");
+  printSchedule(level,cout_doing,"AMRMPM::scheduleSetNeedAddMaterialFlag\t\t");
 
   Task* t= scinew Task("AMRMPM::setNeedAddMaterialFlag",
-               this, &AMRMPM::setNeedAddMaterialFlag);
+                 this, &AMRMPM::setNeedAddMaterialFlag);
   t->requires(Task::NewDW, lb->NeedAddMPMMaterialLabel);
   sched->addTask(t, level->eachPatch(), all_matls);
 }
-
+//______________________________________________________________________
+//
 void AMRMPM::setNeedAddMaterialFlag(const ProcessorGroup*,
                                        const PatchSubset* ,
                                        const MaterialSubset* ,
@@ -1962,13 +2012,14 @@ void AMRMPM::setNeedAddMaterialFlag(const ProcessorGroup*,
     if(need_add_flag < -0.1){
       d_sharedState->setNeedAddMaterial(-99);
       flags->d_canAddMPMMaterial=false;
-      cout << "MPM setting NAM to -99" << endl;
+      cout << "AMRMPM setting NAM to -99" << endl;
     }
     else{
       d_sharedState->setNeedAddMaterial(0);
     }
 }
-
+//______________________________________________________________________
+//
 bool AMRMPM::needRecompile(double , double , const GridP& )
 {
   if(d_recompile){
@@ -1979,7 +2030,8 @@ bool AMRMPM::needRecompile(double , double , const GridP& )
     return false;
   }
 }
-
+//______________________________________________________________________
+//
 void AMRMPM::switchTest(const ProcessorGroup* group,
                         const PatchSubset* patches,
                         const MaterialSubset* matls,
