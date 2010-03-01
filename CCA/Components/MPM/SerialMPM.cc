@@ -1790,15 +1790,6 @@ void SerialMPM::actuallyInitialize(const ProcessorGroup*,
 
       mpm_matl->getConstitutiveModel()->initializeCMData(patch,mpm_matl,new_dw);
 
-#if 0
-      // scalar used for debugging
-      if(flags->d_with_color) {
-        ParticleVariable<double> pcolor;
-        ParticleSubset* pset = new_dw->getParticleSubset(indx, patch);
-        setParticleDefault(pcolor, lb->pColorLabel, pset, new_dw, 0.0);
-      }
-#endif
-
     }
     IntVector num_extra_cells=patch->getExtraCells();
     IntVector periodic=patch->getLevel()->getPeriodicBoundaries();
