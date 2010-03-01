@@ -351,9 +351,9 @@ main( int argc, char *argv[], char *env[] )
       track_or_die = true;
     } else if(arg == "-combine_patches") {
       combine_patches = true;
-    } else if( arg == "-arches"  || arg == "-ice"      || arg == "-impm"     || arg == "-mpm"  || arg == "-mpmarches"  ||
+    } else if( arg == "-arches"  || arg == "-ice"      || arg == "-impm"     || arg == "-mpm"      || arg == "-mpmarches"  ||
                arg == "-mpmice"  || arg == "-poisson1" || arg == "-poisson2" || arg == "-switcher" || arg == "-poisson4" ||
-               arg == "-mpmf"    || arg == "-rmpm"     || arg == "-smpm"     || arg == "-smpmice"  ||
+               arg == "-mpmf"    || arg == "-rmpm"     || arg == "-smpm"     || arg == "-amrmpm"   || arg == "-smpmice"  ||
                arg == "-rmpmice" || arg == "-angio" ) {
       usage( string( "'" ) + arg + "' is deprecated.  Simulation component must be specified " +
              "in the .ups file!", arg, argv[0] );
