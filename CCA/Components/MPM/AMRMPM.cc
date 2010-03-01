@@ -637,7 +637,7 @@ void AMRMPM::scheduleSetGridBoundaryConditions(SchedulerP& sched,
                            getLevel(patches)->getGrid()->numLevels()))
     return;
   printSchedule(patches,cout_doing,"AMRMPM::scheduleSetGridBoundaryConditions\t");
-  Task* t=scinew Task(AMRMPM::setGridBoundaryConditions",
+  Task* t=scinew Task("AMRMPM::setGridBoundaryConditions",
                this, &AMRMPM::setGridBoundaryConditions);
                   
   const MaterialSubset* mss = matls->getUnion();
