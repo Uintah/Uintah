@@ -960,9 +960,6 @@ void MPMICE::scheduleComputePressure(SchedulerP& sched,
   t->computes(Ilb->sp_vol_CCLabel,      ice_matls);
   t->computes(Ilb->rho_CCLabel,         ice_matls);
   
-  computesRequires_CustomBCs(t, "EqPress", Ilb, ice_matls,
-                            d_ice->d_customBC_var_basket);
-                            
   sched->addTask(t, patches, all_matls);
 }
 
