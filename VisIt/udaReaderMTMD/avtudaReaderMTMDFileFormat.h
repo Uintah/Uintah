@@ -122,12 +122,13 @@ public:
   virtual int           GetNTimesteps(void);
 
   virtual const char    *GetType(void)   { return "udaReaderMTMD"; };
-  virtual void           FreeUpResources(void);
-  // virtual void          ActivateTimestep(int); 
+  virtual void          FreeUpResources(void);
+  virtual void          ActivateTimestep(int); 
 
   virtual vtkDataSet    *GetMesh(int, int, const char *);
   virtual vtkDataArray  *GetVar(int, int, const char *);
   virtual vtkDataArray  *GetVectorVar(int, int, const char *);
+
 
 protected:
   // DATA MEMBERS
@@ -139,7 +140,6 @@ protected:
   GridP *grid;
         
   void  * libHandle;
-  char  * error, arr2d[128][128];
         
   levelPatchVec * levelPatchVecPtr;
   patchInfoVec  * patchInfoVecPtr;
@@ -169,7 +169,7 @@ protected:
   GridP*           (*getGrid)(DataArchive*, int);
   void             (*releaseGrid)(GridP*);
 
-  timeStep*        (*processData)(DataArchive*, GridP*, bool, string, int, int, int, bool, int, bool, const std::string&, int);
+  timeStep*        (*processData)(DataArchive*, GridP*, int, int, int, string, int, bool, bool);
   udaVars*         (*getVarList)(DataArchive*);
   typeDouble*      (*getTimeSteps)(DataArchive*);
   double*          (*getBBox)(DataArchive*, GridP*, int);

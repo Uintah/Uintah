@@ -34,17 +34,6 @@
 #include <vector>
 using namespace std;
 
-enum DataType { UNKNOWN=-1, POINT=0, VECTOR=1, TENSOR=2 };
-
-class nameVal {
-  public:
-    string name;
-    float value;
-    nameVal(){};
-    ~nameVal(){};
-};
-
-typedef vector<nameVal> unknownData;
 
 // Vector variables
 class vecVal {
@@ -80,8 +69,7 @@ class tenVal {
     ~tenVal(){};
 };
 
-typedef vector<vecVal> vecValData;
-typedef vector<tenVal> tenValData;
+
 
 // Level-Patch pair
 class levelPatch {
@@ -100,6 +88,7 @@ class levelPatch {
 };
 
 typedef vector<levelPatch> levelPatchVec;
+
 
 // Patch collection
 // 
@@ -138,30 +127,15 @@ class patchInfo {
 
 typedef vector<patchInfo> patchInfoVec;
 
-class variable {
+
+
+class ParticleVariableRaw {
   public:
-    float x;
-    float y;
-    float z;
-    unknownData data;
-    vecValData vecData;
-    tenValData tenData;
-    variable() {
-      // vecData = NULL;
-    };
-    ~variable() { 
-      // if (vecData) delete vecData;
-    };
-    variable(const variable &obj)
-    {
-      this->x = obj.x;
-      this->y = obj.y;
-      this->z = obj.z;
-      this->data = obj.data;	
-      this->vecData = obj.vecData;
-      this->tenData = obj.tenData;
-    }
+  int components;
+  vector<float> values;
 };
+
+
 
 typedef vector<double> typeDouble;
 
@@ -177,22 +151,19 @@ class cellVals {
     };
 };	
 
-typedef vector<variable> variables;
 typedef vector<string> udaVars;
 typedef vector<int> varMatls;
 
 class timeStep {
   public:
-    variables* varColln;
+  ParticleVariableRaw partVar;
     cellVals* cellValColln;
     int no;
     string name;
     timeStep() {
-      varColln = NULL;
       cellValColln = NULL;
     };
     ~timeStep() {
-      if (varColln) delete varColln;
       if (cellValColln) delete cellValColln;  
     };
 };

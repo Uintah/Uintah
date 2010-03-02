@@ -144,6 +144,7 @@ avtudaReaderMTMDFileFormat::avtudaReaderMTMDFileFormat(const char *filename) :
   }
 
   // All possible function calls - check here
+  char *error;
 
   *(void **)(&openDataArchive) = dlsym(libHandle, "openDataArchive");
   if((error = dlerror()) != NULL) {
@@ -244,6 +245,10 @@ avtudaReaderMTMDFileFormat::avtudaReaderMTMDFileFormat(const char *filename) :
   // timestep times
   timeStepInfo = ((*getTimeSteps)(archive));
 
+  // list of vars - not time dependent
+  udaVarsPtr = (*getVarList)(archive);
+  
+
   currLevel = -1;
   currVar.assign("any_var");
   currMesh.assign("any_mesh");
@@ -269,7 +274,6 @@ avtudaReaderMTMDFileFormat::avtudaReaderMTMDFileFormat(const char *filename) :
 
   levelPatchVecPtr = NULL;
   patchInfoVecPtr = NULL;
-  udaVarsPtr = NULL;
 
   debug5 << "Out avtudaReaderFileFormat\n";
 }
@@ -336,6 +340,33 @@ double
 
 
 // ****************************************************************************
+// Method: avtudaReaderMTMDFileForma::ActivateTimestep
+//
+// Purpose: 
+//   Get ready to read data for the given timestep
+//
+// ****************************************************************************
+
+void
+avtudaReaderMTMDFileFormat::ActivateTimestep(int ts)
+{
+  if (currTimeStep == ts)
+    return;
+
+  // get the uda grid for the new timestep
+  if (grid)
+    (*releaseGrid)(grid);
+  grid = (*getGrid)(archive, ts);
+
+  // patch info
+  if (levelPatchVecPtr)
+    delete levelPatchVecPtr;
+  levelPatchVecPtr = (*getTotalNumPatches)(archive, grid);
+  currTimeStep = ts; 
+}
+
+
+// ****************************************************************************
 //  Method: avtudaReaderMTMDFileFormat::FreeUpResources
 //
 //  Purpose:
@@ -356,10 +387,6 @@ void
   currLevel = -1;
   currVar.assign("any_var");
   currMesh.assign("any_mesh");
-
-  if (grid)
-    (*releaseGrid)(grid);
-  grid = NULL;
 
   if (refMatrix != NULL) {
     for (int i = 0; i < refX; i++) {
@@ -447,18 +474,8 @@ void
   // Prevent VisIt from sorting the variables.
   // md->SetMustAlphabetizeVariables(false);
 
-  if (!grid || timeState != currTimeStep) {
-    if (grid)
-      (*releaseGrid)(grid);
-    grid = (*getGrid)(archive, timeState);
+  ActivateTimestep(timeState);
 
-    currTimeStep = timeState;
-  }
-
-  if (levelPatchVecPtr != NULL) 
-    delete levelPatchVecPtr;
-
-  levelPatchVecPtr = (*getTotalNumPatches)(archive, grid);
   levelPatchVec& levelPatchVecObj = *levelPatchVecPtr;
 
   int numLevels = levelPatchVecObj.size();
@@ -503,10 +520,7 @@ void
   extents[4] = minMaxArr[2];
   extents[5] = minMaxArr[5];
 
-  if (udaVarsPtr != NULL)
-    delete udaVarsPtr;
 
-  udaVarsPtr = (*getVarList)(archive);
   udaVars& udaVarsObj = *(udaVarsPtr);
 
   debug5 << "Variables: " << udaVarsObj.size() << endl;
@@ -1313,16 +1327,7 @@ void
 vtkDataSet *
   avtudaReaderMTMDFileFormat::GetMesh(int timestate, int domain, const char *meshname)
 {
-
-  if (!grid || currTimeStep != timestate) {
-    if (grid)
-      (*releaseGrid)(grid);
-    grid = (*getGrid)(archive, timestate);
-  
-    delete levelPatchVecPtr;
-    levelPatchVecPtr = (*getTotalNumPatches)(archive, grid);
-    currTimeStep = timestate; 
-  }
+  ActivateTimestep(timestate);
 
   string meshName(meshname);
 
@@ -1666,60 +1671,21 @@ vtkDataSet *
     debug5 << "<<<<<<< " << vars << " >>>>>>>\n"; 
     debug5 << "<<<<<<< " << matl << " >>>>>>>\n"; 
 
-    int matlNo = 0;
-
+    int matlNo = -1;
     if (matl.compare("*") != 0)
       matlNo = atoi(matl.c_str());
 
-    strcpy(arr2d[0], "uda2nrrd"); // anything will do
-    strcpy(arr2d[1], "-uda");
-    strcpy(arr2d[2], folder.c_str());
-    strcpy(arr2d[3], "-p");
-    strcpy(arr2d[4], "-o");
-    strcpy(arr2d[5], "test"); // anything will do
-    strcpy(arr2d[6], "-q"); 
+    // we always actualy want p.x when setting up the mesh
+    vars = "p.x";
 
     timeStep *timeStepObjPtr;
 
     // not removing the boundary with particle data
-    if (matl.compare("*") == 0) {
-      timeStepObjPtr = (*processData)(archive, grid, true, "", -1, 0, timestate, false, matlNo, false, vars, domain); 
-      debug5 << "All data\n";
-    }
-    else {
-      timeStepObjPtr = (*processData)(archive, grid, true, "", -1, 0, timestate, false, matlNo, true, vars, domain);
-      debug5 << "Some data\n";
-    }  
+    timeStepObjPtr = (*processData)(archive, grid, timestate, 0, domain, vars, matlNo, true, false); 
 
     timeStep &timeStepObj = *timeStepObjPtr;
-
-    variables& varCollnRef = *(timeStepObj.varColln);
-
-    unsigned int i, ndims, nnodes, count = 0;
-
-    ndims = 3;
-
-    if ((varCollnRef.size() % PARTICLE_INTERVAL) != 0) 
-      nnodes = (varCollnRef.size() / PARTICLE_INTERVAL) + 1;
-    else
-      nnodes = varCollnRef.size() / PARTICLE_INTERVAL;
-
-    debug5 << nnodes << endl;
-
-    float *xarray = new float[nnodes];
-    float *yarray = new float[nnodes]; 
-    float *zarray = new float[nnodes];
-
-    float *xc = xarray; 
-    float *yc = yarray; 
-    float *zc = zarray; 
-
-    for (i = 0; i < nnodes; ++i) {
-      variable& varRef = varCollnRef[i * PARTICLE_INTERVAL];
-      *xc++ = varRef.x;
-      *yc++ = varRef.y;
-      *zc++ = varRef.z;
-    }
+    ParticleVariableRaw &partVar = timeStepObj.partVar;
+    unsigned int nnodes = partVar.values.size() / partVar.components;
 
     // 
     // Create the vtkPoints object and copy points into it. 
@@ -1729,28 +1695,11 @@ vtkDataSet *
     points->SetNumberOfPoints(nnodes); 
     float *pts = (float *) points->GetVoidPointer(0); 
 
-    xc = xarray; 
-    yc = yarray; 
-    zc = zarray; 
-
-    if(ndims == 3) 
-      { 
-        for(i = 0; i < nnodes; ++i) 
-          { 
-            *pts++ = *xc++; 
-            *pts++ = *yc++; 
-            *pts++ = *zc++;
-          }
-      } 
-    else if(ndims == 2) 
-      { 
-        for(i = 0; i < nnodes; ++i) 
-          { 
-            *pts++ = *xc++; 
-            *pts++ = *yc++; 
-            *pts++ = 0.; 
-          } 
-      } 
+    for(unsigned int i = 0; i < nnodes; ++i) { 
+      *pts++ = partVar.values[i*3+0];
+      *pts++ = partVar.values[i*3+1];
+      *pts++ = partVar.values[i*3+2];
+    }
 
     // 
     // Create a vtkUnstructuredGrid to contain the point cells. 
@@ -1762,16 +1711,10 @@ vtkDataSet *
     ugrid->Allocate(nnodes); 
     vtkIdType onevertex; 
 
-    for(int i = 0; i < nnodes; ++i) 
-      { 
-        onevertex = i; 
-        ugrid->InsertNextCell(VTK_VERTEX, 1, &onevertex); 
-      } 
-
-    // Delete temporary arrays. 
-    delete [] xarray; 
-    delete [] yarray; 
-    delete [] zarray;
+    for(int i = 0; i < nnodes; ++i) {
+      onevertex = i; 
+      ugrid->InsertNextCell(VTK_VERTEX, 1, &onevertex); 
+    } 
 
     delete timeStepObjPtr;
 
@@ -1815,15 +1758,7 @@ vtkDataArray *
   debug5 << "\nIn GetVar, timestate: " << timestate << "\n";
 
 
-  if (currTimeStep != timestate) {
-    if (grid)
-      (*releaseGrid)(grid);
-    grid = (*getGrid)(archive, timestate);
-
-    delete levelPatchVecPtr;
-    levelPatchVecPtr = (*getTotalNumPatches)(archive, grid);
-    currTimeStep = timestate; 
-  }
+  ActivateTimestep(timestate);
 
   string varName(varname);
   bool isParticleVar = false;
@@ -1857,22 +1792,6 @@ vtkDataArray *
 
     debug5 << "Making the much required call to collect information at level " << level << "\n";
 
-    char buffer[128];
-    sprintf(buffer, "%d", level);
-
-    strcpy(arr2d[0], "uda2nrrd"); // anything will do
-    strcpy(arr2d[1], "-uda");
-    strcpy(arr2d[2], folder.c_str());
-    strcpy(arr2d[3], "-v");
-    strcpy(arr2d[4], varName.c_str());
-    strcpy(arr2d[5], "-m");
-    strcpy(arr2d[6], matl.c_str());
-    strcpy(arr2d[7], "-l");
-    strcpy(arr2d[8], buffer); 
-    strcpy(arr2d[9], "-o");
-    strcpy(arr2d[10], "test"); // anything will do
-    strcpy(arr2d[11], "-q"); // boundary cells not required
-
     timeStep* timeStepObjPtr = NULL;
 
 #ifdef PARALLEL
@@ -1887,20 +1806,20 @@ vtkDataArray *
 
     if (rank == 0) {
       debug5 << "level: " << level << ", patch: " << local_patch << " proc: " << rank << endl;
-      timeStepObjPtr = (*processData)(archive, grid, false, varName, atoi(matl.c_str()), level, timestate, true, 0, false, string("null"), local_patch);
+      timeStepObjPtr = (*processData)(archive, grid, timestate, level, local_patch, varName, atoi(matl.c_str()), false, true);
       MPI_Send(&msg, 1, MPI_INT, 1, tag, VISIT_MPI_COMM);
     }
     else {
       MPI_Recv(&msg, 1, MPI_INT, rank - 1, tag, VISIT_MPI_COMM, &status);
       if (msg == 128 && tag == 256) {
         debug5 << "level: " << level << ", patch: " << local_patch << ", proc: " << rank << endl;
-        timeStepObjPtr = (*processData)(archive, grid, false, varName, atoi(matl.c_str()), level, timestate, true, 0, false, string("null"), local_patch);
+        timeStepObjPtr = (*processData)(archive, grid, timestate, level, local_patch, varName, atoi(matl.c_str()), false, true);
         if (rank < (numProcs - 1))
           MPI_Send(&msg, 1, MPI_INT, rank + 1, tag, VISIT_MPI_COMM);
       }
     } 
 #else
-    timeStepObjPtr = (*processData)(archive, grid, false, varName, atoi(matl.c_str()), level, timestate, true, 0, false, string("null"), local_patch);
+    timeStepObjPtr = (*processData)(archive, grid, timestate, level, local_patch, varName, atoi(matl.c_str()), false, true);
 #endif
 
 
@@ -1962,6 +1881,7 @@ vtkDataArray *
           extraXYZ[i] = 1; 
         }
       }
+
 
       // Allocating Matrix
       refMatrix = (double***)malloc((cellValColln.x /*+ 2 * extraXYZ[0]*/) * sizeof(double**));
@@ -2124,56 +2044,21 @@ vtkDataArray *
   }
   else {
 
-    int matlNo = 0;
-
+    int matlNo = -1;
     if (matl.compare("*") != 0)
       matlNo = atoi(matl.c_str());
 
-    debug5 << varName << endl;
-    debug5 << matlNo << endl;
-
-    strcpy(arr2d[0], "uda2nrrd"); // anything will do
-    strcpy(arr2d[1], "-uda");
-    strcpy(arr2d[2], folder.c_str());
-    strcpy(arr2d[3], "-p");
-    strcpy(arr2d[4], "-o");
-    strcpy(arr2d[5], "test"); // anything will do
-    strcpy(arr2d[6], "-q"); 
-
     timeStep *timeStepObjPtr;
+    timeStepObjPtr = (*processData)(archive, grid, timestate, 0, domain, varName, matlNo, true, false); 
 
-    if (matl.compare("*") == 0) {
-      timeStepObjPtr = (*processData)(archive, grid, true, "", -1, 0, timestate, false, matlNo, false, varName, domain); 
-      debug5 << "All data\n";
-    }  
-    else { 
-      timeStepObjPtr = (*processData)(archive, grid, true, "", -1, 0, timestate, false, matlNo, true, varName, domain);
-      debug5 << "Some data\n";
-    }  
 
     timeStep &timeStepObj = *timeStepObjPtr;
 
-    variables& varColln = *(timeStepObj.varColln);
-
-    int ntuples = 0;
-
-    if ((varColln.size() % PARTICLE_INTERVAL) != 0) 
-      ntuples = (varColln.size() / PARTICLE_INTERVAL) + 1;
-    else
-      ntuples = varColln.size() / PARTICLE_INTERVAL;
-
-    debug5 << ntuples << endl;
-
-    // int ntuples = varColln.size(); // this is the number of entries in the variable.
-    rv->SetNumberOfTuples(ntuples);
-    for (int i = 0 ; i < ntuples ; i++) {
-      variable& varRef = varColln[i * PARTICLE_INTERVAL];
-      unknownData& dataRef = varRef.data;
-
-      for (int j = 0;  j < dataRef.size(); j++) {
-        if (strcmp(varName.c_str(), dataRef[j].name.c_str()) == 0)
-          rv->SetTuple1(i, dataRef[j].value);  // you must determine value for ith entry.
-      }
+    ParticleVariableRaw &partVar = timeStepObj.partVar;
+    unsigned int nnodes = partVar.values.size() / partVar.components;
+    rv->SetNumberOfTuples(nnodes);
+    for (int i = 0 ; i < nnodes ; i++) {
+      rv->SetTuple1(i, partVar.values[i]);  // you must determine value for ith entry.
     }
 
     delete timeStepObjPtr;
@@ -2217,16 +2102,7 @@ vtkDataArray *
 
   // debug5 << "\nIn GetVectorVar " << timestate << "\n";
 
-  if (currTimeStep != timestate) {
-    if (grid)
-      (*releaseGrid)(grid);
-    grid = (*getGrid)(archive, timestate);
-
-    delete levelPatchVecPtr;
-    levelPatchVecPtr = (*getTotalNumPatches)(archive, grid);
-    currTimeStep = timestate; 
-  }
-
+  ActivateTimestep(timestate);
 
   string varName(varname);
   bool isParticleVar = false;
@@ -2257,23 +2133,7 @@ vtkDataArray *
 
     unsigned int count = 0;
 
-    char buffer[128];
-    sprintf(buffer, "%d", level);
-
-    strcpy(arr2d[0], "uda2nrrd"); // anything will do
-    strcpy(arr2d[1], "-uda");
-    strcpy(arr2d[2], folder.c_str());
-    strcpy(arr2d[3], "-v");
-    strcpy(arr2d[4], varName.c_str());
-    strcpy(arr2d[5], "-m");
-    strcpy(arr2d[6], matl.c_str());
-    strcpy(arr2d[7], "-l");
-    strcpy(arr2d[8], buffer);
-    strcpy(arr2d[9], "-o"); // this is not required
-    strcpy(arr2d[10], "test"); // this is not required
-    strcpy(arr2d[11], "-q");
-
-    timeStep *timeStepObjPtr = (*processData)(archive, grid, false, varName, atoi(matl.c_str()), level, timestate, true, 0, false, string("null"), local_patch);
+    timeStep *timeStepObjPtr = (*processData)(archive, grid, timestate, level, local_patch, varName, atoi(matl.c_str()), false, true);
     timeStep &timeStepObj = *timeStepObjPtr;
       
     int numGhosts[3];
@@ -2317,7 +2177,6 @@ vtkDataArray *
         ncomps = 9;
       else if (dim == 4) // Vectors
         ncomps = 3;
-
       if (vecValMatrix != NULL) {
         for (int i = 0; i < vecX; i++) {
           for (int j = 0; j < vecY; j++) {
@@ -2589,108 +2448,30 @@ vtkDataArray *
     }
   }
   else {
-    int matlNo = 0;
-
+    int matlNo = -1;
     if (matl.compare("*") != 0)
       matlNo = atoi(matl.c_str());
 
-    strcpy(arr2d[0], "uda2nrrd"); // anything will do
-    strcpy(arr2d[1], "-uda");
-    strcpy(arr2d[2], folder.c_str());
-    strcpy(arr2d[3], "-p");
-    strcpy(arr2d[4], "-o");
-    strcpy(arr2d[5], "test"); // anything will do
-    strcpy(arr2d[6], "-q"); 
-
     timeStep *timeStepObjPtr;
-
-    if (matl.compare("*") == 0) {
-      timeStepObjPtr = (*processData)(archive, grid, true, "", -1, 0, timestate, false, matlNo, false, varName, domain); 
-      debug5 << "All data\n";
-    }  
-    else { 
-      timeStepObjPtr = (*processData)(archive, grid, true, "", -1, 0, timestate, false, matlNo, true, varName, domain);
-      debug5 << "Some data\n";
-    }  
+    timeStepObjPtr = (*processData)(archive, grid, timestate, 0, domain, varName, matlNo, true, false); 
 
     timeStep &timeStepObj = *timeStepObjPtr;
 
-    variables& varColln = *(timeStepObj.varColln);
+    ParticleVariableRaw &partVar = timeStepObj.partVar;
+    unsigned int nnodes = partVar.values.size() / partVar.components;
 
-    int ntuples = 0;
-    int ncomps = 0;  // Vector -> 3, Tensor ->  9
+    rv->SetNumberOfComponents(partVar.components);
+    rv->SetNumberOfTuples(nnodes);
 
-    // Detemine whether we have a vector or a tensor
-    for (int k = 0; k < udaVarsObj.size(); k++) {
-      if (udaVarsObj[k].find(varName) != string::npos) { // should be a vector or a tensor
-        if ((udaVarsObj[k].find("Vector") != string::npos) ||
-            (udaVarsObj[k].find("Point") != string::npos))
-          ncomps = 3;
-        else if (udaVarsObj[k].find("Matrix3") != string::npos)   
-          ncomps = 9;
-	
-        break;
-      }
-    }              
+    float one_entry[9];  // maximum components we could have
 
-    if ((varColln.size() % PARTICLE_INTERVAL) != 0) 
-      ntuples = (varColln.size() / PARTICLE_INTERVAL) + 1;
-    else
-      ntuples = varColln.size() / PARTICLE_INTERVAL;
+    for (int i = 0 ; i < nnodes ; i++) {
+      for (int c=0; c<partVar.components; c++)
+        one_entry[c] = partVar.values[i*partVar.components + c];
 
-    debug5 << ncomps << " " << ntuples << endl;
-
-    rv->SetNumberOfComponents(ncomps);
-    rv->SetNumberOfTuples(ntuples);
-
-    float* one_entry = new float[ncomps];
-
-    if (ncomps == 3) { // Vectors
-      if (varName.compare("p.x") == 0) {
-        for (int i = 0 ; i < ntuples ; i++) {
-          variable& varRef = varColln[i * PARTICLE_INTERVAL];
-
-          one_entry[0] = varRef.x; one_entry[1] = varRef.y; one_entry[2] = varRef.z; 
-          rv->SetTuple(i, one_entry);  // you must determine value for ith entry.
-        }
-      }
-      else {
-        for (int i = 0 ; i < ntuples ; i++) {
-          variable& varRef = varColln[i * PARTICLE_INTERVAL];
-          vecValData& vecDataRef = varRef.vecData;
-
-          for (int j = 0;  j < vecDataRef.size(); j++) {
-            if (strcmp(varName.c_str(), vecDataRef[j].name.c_str()) == 0) {
-              one_entry[0] = vecDataRef[j].x; one_entry[1] = vecDataRef[j].y; one_entry[2] = vecDataRef[j].z; 
-              rv->SetTuple(i, one_entry);  // you must determine value for ith entry.
-            }     
-          }
-        }
-      }
-    }
-    else if (ncomps == 9) { // Tensors
-      for (int i = 0 ; i < ntuples ; i++) {
-        variable& varRef = varColln[i * PARTICLE_INTERVAL];
-        tenValData& tenDataRef = varRef.tenData;
-
-        for (int j = 0;  j < tenDataRef.size(); j++) {
-          if (strcmp(varName.c_str(), tenDataRef[j].name.c_str()) == 0) {
-            one_entry[0] = (float)tenDataRef[j].mat[0][0];
-            one_entry[1] = (float)tenDataRef[j].mat[0][1];
-            one_entry[2] = (float)tenDataRef[j].mat[0][2];
-            one_entry[3] = (float)tenDataRef[j].mat[1][0];
-            one_entry[4] = (float)tenDataRef[j].mat[1][1];
-            one_entry[5] = (float)tenDataRef[j].mat[1][2];
-            one_entry[6] = (float)tenDataRef[j].mat[2][0];
-            one_entry[7] = (float)tenDataRef[j].mat[2][1];
-            one_entry[8] = (float)tenDataRef[j].mat[2][2];
-            rv->SetTuple(i, one_entry);  // you must determine value for ith entry.
-          }     
-        }
-      }         
+      rv->SetTuple(i, one_entry);
     }
 
-    delete [] one_entry;
     delete timeStepObjPtr;
   }
 

@@ -42,7 +42,6 @@ template<class T>                           void handleVariable( QueryInfo &    
                                                                  IntVector &    hi,
                                                                  IntVector &    range,
                                                                  BBox &         box,
-                                                                 const string & filename,
                                                                  const Args   & args,
 																 cellVals& cellValColln,
 																 bool dataReq,
