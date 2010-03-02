@@ -60,10 +60,9 @@ public:
   AMRMPM(const ProcessorGroup* myworld);
   virtual ~AMRMPM();
 
-  //////////
-  // Insert Documentation Here:
   virtual void problemSetup(const ProblemSpecP& params, 
-                            const ProblemSpecP& restart_prob_spec, GridP&,
+                            const ProblemSpecP& restart_prob_spec,
+                            GridP&,
                             SimulationStateP&);
 
   virtual void outputProblemSpec(ProblemSpecP& ps);
@@ -73,23 +72,23 @@ public:
 
   void schedulePrintParticleCount(const LevelP& level, 
                                   SchedulerP& sched);
-  //////////
-  // Insert Documentation Here:
+
   virtual void scheduleComputeStableTimestep(const LevelP& level,
                                              SchedulerP&);
          
-  //////////
-  // Insert Documentation Here:
   virtual void scheduleTimeAdvance(const LevelP& level, 
                                    SchedulerP&);
 
-  virtual void scheduleFinalizeTimestep(const LevelP& level, 
+  virtual void scheduleFinalizeTimestep(const LevelP& level,
                                         SchedulerP&);
 
-  virtual void scheduleRefine(const PatchSet* patches, SchedulerP& scheduler);
+  virtual void scheduleRefine(const PatchSet* patches, 
+                              SchedulerP& scheduler);
 
-  virtual void scheduleRefineInterface(const LevelP& fineLevel, SchedulerP& scheduler,
-                                       bool needCoarse, bool needFine);
+  virtual void scheduleRefineInterface(const LevelP& fineLevel, 
+                                       SchedulerP& scheduler,
+                                       bool needCoarse, 
+                                       bool needFine);
 
   virtual void scheduleCoarsen(const LevelP& coarseLevel, SchedulerP& sched);
 
@@ -105,13 +104,13 @@ public:
 
   void setMPMLabel(MPMLabel* Mlb)
   {
-        delete lb;
-        lb = Mlb;
+    delete lb;
+    lb = Mlb;
   };
 
   void setWithICE()
   {
-        flags->d_with_ice = true;
+    flags->d_with_ice = true;
   };
 
   enum bctype { NONE=0,
@@ -126,8 +125,7 @@ public:
   };
 
 protected:
-  //////////
-  // Insert Documentation Here:
+
   virtual void actuallyInitialize(const ProcessorGroup*,
                                   const PatchSubset* patches,
                                   const MaterialSubset* matls,
@@ -148,53 +146,48 @@ protected:
                           ParticleSubset* pset,
                           DataWarehouse* new_dw,
                           double val);
+                          
   void setParticleDefault(ParticleVariable<Vector>& pvar,
                           const VarLabel* label, 
                           ParticleSubset* pset,
                           DataWarehouse* new_dw,
                           const Vector& val);
+                          
   void setParticleDefault(ParticleVariable<Matrix3>& pvar,
                           const VarLabel* label, 
                           ParticleSubset* pset,
                           DataWarehouse* new_dw,
                           const Matrix3& val);
 
-  void printParticleLabels(vector<const VarLabel*> label,DataWarehouse* dw,
-                           int dwi, const Patch* patch);
+  void printParticleLabels(vector<const VarLabel*> label,
+                           DataWarehouse* dw,
+                           int dwi, 
+                           const Patch* patch);
 
-  //////////
-  // Insert Documentation Here:
   void actuallyComputeStableTimestep(const ProcessorGroup*,
                                      const PatchSubset* patches,
                                      const MaterialSubset* matls,
                                      DataWarehouse* old_dw,
                                      DataWarehouse* new_dw);
 
-  //////////
-  // Insert Documentation Here:
   virtual void computeZoneOfInfluence(const ProcessorGroup*,
                                       const PatchSubset* patches,
                                       const MaterialSubset* matls,
                                       DataWarehouse* old_dw,
                                       DataWarehouse* new_dw);
 
-  //////////
-  // Insert Documentation Here:
   virtual void interpolateParticlesToGrid(const ProcessorGroup*,
                                           const PatchSubset* patches,
                                           const MaterialSubset* matls,
                                           DataWarehouse* old_dw,
                                           DataWarehouse* new_dw);
 
-  //////////
-  // Insert Documentation Here:
   virtual void computeStressTensor(const ProcessorGroup*,
                                    const PatchSubset* patches,
                                    const MaterialSubset* matls,
                                    DataWarehouse* old_dw,
                                    DataWarehouse* new_dw);
-  //////////
-  // Insert Documentation Here: for thermal stress analysis
+
   void updateErosionParameter(const ProcessorGroup*,
                               const PatchSubset* patches,
                               const MaterialSubset* ,
@@ -202,21 +195,19 @@ protected:
                               DataWarehouse* new_dw);
 
   virtual void computeInternalForce(const ProcessorGroup*,
-                            const PatchSubset* patches,
-                            const MaterialSubset* matls,
-                            DataWarehouse* old_dw,
-                            DataWarehouse* new_dw);
+                                    const PatchSubset* patches,  
+                                    const MaterialSubset* matls, 
+                                    DataWarehouse* old_dw,       
+                                    DataWarehouse* new_dw);      
 
-  //////////
-  // Insert Documentation Here:
+
   virtual void computeAndIntegrateAcceleration(const ProcessorGroup*,
                                                const PatchSubset* patches,
                                                const MaterialSubset* matls,
                                                DataWarehouse* old_dw,
                                                DataWarehouse* new_dw);
 
-  //////////
-  // Insert Documentation Here:                            
+                          
   void setGridBoundaryConditions(const ProcessorGroup*,
                                  const PatchSubset* patches,
                                  const MaterialSubset* ,
@@ -233,12 +224,11 @@ protected:
                           DataWarehouse* old_dw,
                           DataWarehouse* new_dw);
 
-  // Insert Documentation Here:
   virtual void interpolateToParticlesAndUpdate(const ProcessorGroup*,
-                                       const PatchSubset* patches,
-                                       const MaterialSubset* matls,
-                                       DataWarehouse* old_dw,
-                                       DataWarehouse* new_dw);
+                                               const PatchSubset* patches,
+                                               const MaterialSubset* matls,
+                                               DataWarehouse* old_dw,
+                                               DataWarehouse* new_dw);
 
   void refine(const ProcessorGroup*,
               const PatchSubset* patches,
@@ -258,30 +248,36 @@ protected:
                             DataWarehouse*,
                             DataWarehouse* new_dw);
 
-  virtual void scheduleComputeZoneOfInfluence(SchedulerP&, const PatchSet*,
+  virtual void scheduleComputeZoneOfInfluence(SchedulerP&, 
+                                              const PatchSet*,
                                               const MaterialSet*);
 
-  virtual void scheduleInterpolateParticlesToGrid(SchedulerP&, const PatchSet*,
+  virtual void scheduleInterpolateParticlesToGrid(SchedulerP&, 
+                                                  const PatchSet*,
                                                   const MaterialSet*);
 
-  virtual void scheduleComputeStressTensor(SchedulerP&, const PatchSet*,
+  virtual void scheduleComputeStressTensor(SchedulerP&, 
+                                           const PatchSet*,
                                            const MaterialSet*);
   
   void scheduleUpdateErosionParameter(SchedulerP& sched,
                                       const PatchSet* patches,
                                       const MaterialSet* matls);
 
-  virtual void scheduleComputeInternalForce(SchedulerP&, const PatchSet*,
+  virtual void scheduleComputeInternalForce(SchedulerP&, 
+                                            const PatchSet*,
                                             const MaterialSet*);
 
   virtual void scheduleComputeAndIntegrateAcceleration(SchedulerP&,
                                                        const PatchSet*,
                                                        const MaterialSet*);
 
-  void scheduleSetGridBoundaryConditions(SchedulerP&, const PatchSet*,
+  void scheduleSetGridBoundaryConditions(SchedulerP&, 
+                                         const PatchSet*,
                                          const MaterialSet* matls);
                                                  
-  void scheduleApplyExternalLoads(SchedulerP&, const PatchSet*,
+  void scheduleApplyExternalLoads(SchedulerP&, 
+                                  const PatchSet*,
                                   const MaterialSet*);
 
   virtual void scheduleInterpolateToParticlesAndUpdate(SchedulerP&, 
@@ -292,49 +288,47 @@ protected:
                                         const PatchSet* patches,
                                         const MaterialSet*);
                                                                              
-  //////////
-  // Insert Documentation Here:
   void checkNeedAddMPMMaterial(const ProcessorGroup*,
-                                       const PatchSubset* patches,
-                                       const MaterialSubset* matls,
-                                       DataWarehouse* old_dw,
-                                       DataWarehouse* new_dw);
+                               const PatchSubset* patches,         
+                               const MaterialSubset* matls,        
+                               DataWarehouse* old_dw,              
+                               DataWarehouse* new_dw);             
 
   void scheduleSetNeedAddMaterialFlag(SchedulerP&,
-                                              const LevelP& level,
-                                              const MaterialSet*);
+                                      const LevelP& level,        
+                                      const MaterialSet*);        
   
   
   void setNeedAddMaterialFlag(const ProcessorGroup*,
-                                      const PatchSubset* patches,
-                                      const MaterialSubset* matls,
-                                      DataWarehouse*,
-                                      DataWarehouse*);
+                              const PatchSubset* patches,         
+                              const MaterialSubset* matls,        
+                              DataWarehouse*,                     
+                              DataWarehouse*);                    
   
-  bool needRecompile(double time, double dt,
-                             const GridP& grid);
+  bool needRecompile(double time, 
+                     double dt,
+                     const GridP& grid);
   
   
-  virtual void scheduleSwitchTest(const LevelP& level, SchedulerP& sched);
+  virtual void scheduleSwitchTest(const LevelP& level, 
+                                  SchedulerP& sched);
   
   virtual void switchTest(const ProcessorGroup*,
                           const PatchSubset* patches,
                           const MaterialSubset* matls,
                           DataWarehouse*,
                           DataWarehouse*);
-                   
-
   
   SimulationStateP d_sharedState;
   MPMLabel* lb;
   MPMFlags* flags;
   Output* dataArchiver;
 
-  double           d_nextOutputTime;
-  double           d_outputInterval;
-  double           d_SMALL_NUM_MPM;
-  int              NGP;      // Number of ghost particles needed.
-  int              NGN;      // Number of ghost nodes     needed.
+  double   d_nextOutputTime;
+  double   d_outputInterval;
+  double   d_SMALL_NUM_MPM;
+  int      NGP;      // Number of ghost particles needed.
+  int      NGN;      // Number of ghost nodes     needed.
   
   list<Patch::FaceType>  d_bndy_traction_faces; // list of xminus, xplus, yminus, ...
   vector<MPMPhysicalBC*> d_physicalBCs;
