@@ -708,9 +708,26 @@ Arches::scheduleInitialize(const LevelP& level,
   {
     sched_weightInit(level, sched);
     sched_weightedAbsInit(level, sched);
+
+    // check to make sure that all dqmom equations have BCs set. 
+    DQMOMEqnFactory& dqmom_factory = DQMOMEqnFactory::self(); 
+    DQMOMEqnFactory::EqnMap& dqmom_eqns = dqmom_factory.retrieve_all_eqns(); 
+    for (DQMOMEqnFactory::EqnMap::iterator ieqn=dqmom_eqns.begin(); ieqn != dqmom_eqns.end(); ieqn++){
+      EqnBase* eqn = ieqn->second; 
+      eqn->sched_checkBCs( level, sched ); 
+    }
+
   }
 
   sched_scalarInit(level, sched);
+
+  // check to make sure that all the scalar variables have BCs set. 
+  EqnFactory& eqnFactory = EqnFactory::self(); 
+  EqnFactory::EqnMap& scalar_eqns = eqnFactory.retrieve_all_eqns(); 
+  for (EqnFactory::EqnMap::iterator ieqn=scalar_eqns.begin(); ieqn != scalar_eqns.end(); ieqn++){
+    EqnBase* eqn = ieqn->second; 
+    eqn->sched_checkBCs( level, sched ); 
+  }
 
   // compute the cell area fraction 
   d_boundaryCondition->sched_setAreaFraction( sched, patches, matls ); 
@@ -1462,23 +1479,23 @@ Arches::sched_scalarInit( const LevelP& level,
     tsk->computes( oldtempVar ); 
   } 
 
-    SourceTermFactory& srcFactory = SourceTermFactory::self();
-    SourceTermFactory::SourceMap& sources = srcFactory.retrieve_all_sources();
-    for (SourceTermFactory::SourceMap::iterator isrc=sources.begin(); isrc !=sources.end(); isrc++){
+  SourceTermFactory& srcFactory = SourceTermFactory::self();
+  SourceTermFactory::SourceMap& sources = srcFactory.retrieve_all_sources();
+  for (SourceTermFactory::SourceMap::iterator isrc=sources.begin(); isrc !=sources.end(); isrc++){
 
-      SourceTermBase* src = isrc->second; 
-      string src_name = isrc->first; 
-      const VarLabel* srcVarLabel = src->getSrcLabel();
-      tsk->computes( srcVarLabel ); 
+    SourceTermBase* src = isrc->second; 
+    string src_name = isrc->first; 
+    const VarLabel* srcVarLabel = src->getSrcLabel();
+    tsk->computes( srcVarLabel ); 
 
-      vector<const VarLabel*> extraLocalLabels = src->getExtraLocalLabels(); 
- 
-      for (vector<const VarLabel*>::iterator iexsrc = extraLocalLabels.begin(); iexsrc != extraLocalLabels.end(); iexsrc++){
-        tsk->computes( *iexsrc ); 
-      }
+    vector<const VarLabel*> extraLocalLabels = src->getExtraLocalLabels(); 
 
-
+    for (vector<const VarLabel*>::iterator iexsrc = extraLocalLabels.begin(); iexsrc != extraLocalLabels.end(); iexsrc++){
+      tsk->computes( *iexsrc ); 
     }
+
+
+  }
 
   sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
 
