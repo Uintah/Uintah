@@ -76,6 +76,17 @@ public:
       return i_ + ni()*j_ + ni()*nj()*k_;
     }
 
+    bool operator ==(const LatIndex &a) const
+    {
+      return (this->i_ == a.i_ && this->j_ == a.j_ &&
+              this->k_ == a.k_ && this->mesh_ == a.mesh_);
+    }
+
+    bool operator !=(const LatIndex &a) const
+    {
+      return !(*this == a);
+    }
+
     std::ostream& str_render(std::ostream& os) const
     {
       os << "[" << i_ << "," << j_ << "," << k_ << "]";
@@ -147,32 +158,11 @@ public:
   };
 
 
-  struct LatIter : public LatIndex
+  struct NodeIter : public NodeIndex
   {
-    LatIter() : LatIndex() {}
-    LatIter(const LatVolMesh *m, unsigned i, unsigned j, unsigned k)
-      : LatIndex(m, i, j, k) {}
-
-    const LatIndex &operator *() { return *this; }
-
-    bool operator ==(const LatIter &a) const
-    {
-      return (this->i_ == a.i_ && this->j_ == a.j_ &&
-              this->k_ == a.k_ && this->mesh_ == a.mesh_);
-    }
-
-    bool operator !=(const LatIter &a) const
-    {
-      return !(*this == a);
-    }
-  };
-
-
-  struct NodeIter : public LatIter
-  {
-    NodeIter() : LatIter() {}
+    NodeIter() : NodeIndex() {}
     NodeIter(const LatVolMesh *m, unsigned i, unsigned j, unsigned k)
-      : LatIter(m, i, j, k) {}
+      : NodeIndex(m, i, j, k) {}
 
     const NodeIndex &operator *() const { return (const NodeIndex&)(*this); }
 
@@ -201,11 +191,11 @@ public:
   };
 
 
-  struct CellIter : public LatIter
+  struct CellIter : public CellIndex
   {
-    CellIter() : LatIter() {}
+    CellIter() : CellIndex() {}
     CellIter(const LatVolMesh *m, unsigned i, unsigned j, unsigned k)
-      : LatIter(m, i, j, k) {}
+      : CellIndex(m, i, j, k) {}
 
     const CellIndex &operator *() const { return (const CellIndex&)(*this); }
 
