@@ -24,3 +24,73 @@ EqnBase::~EqnBase()
   delete(d_boundaryCond);
   delete(d_disc);
 }
+
+void 
+EqnBase::sched_checkBCs( const LevelP& level, SchedulerP& sched )
+{
+  string taskname = "EqnBase::checkBCs"; 
+  Task* tsk = scinew Task(taskname, this, &EqnBase::checkBCs); 
+
+  sched->addTask( tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials() ); 
+}
+
+void 
+EqnBase::checkBCs( const ProcessorGroup* pc, 
+                 const PatchSubset* patches, 
+                 const MaterialSubset* matls, 
+                 DataWarehouse* old_dw, 
+                 DataWarehouse* new_dw )
+{
+
+  //patch loop
+  for (int p=0; p < patches->size(); p++){
+
+    const Patch* patch = patches->get(p);
+    int archIndex = 0;
+    int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+
+    vector<Patch::FaceType> bf;
+    vector<Patch::FaceType>::const_iterator bf_iter;
+    patch->getBoundaryFaces(bf);
+    // Loop over all boundary faces on this patch
+    for (bf_iter = bf.begin(); bf_iter != bf.end(); bf_iter++){
+      Patch::FaceType face = *bf_iter; 
+
+      int numChildren = patch->getBCDataArray(face)->getNumberChildren(matlIndex);
+      for (int child = 0; child < numChildren; child++){
+
+        string bc_kind = "NotSet"; 
+        Iterator bound_ptr; 
+        Iterator nu; //not used...who knows why?
+        const BoundCondBase* bc = patch->getArrayBCValues( face, matlIndex, 
+                                                           d_eqnName, bound_ptr, 
+                                                           nu, child ); 
+        const BoundCond<double> *new_bcs = dynamic_cast<const BoundCond<double> *>(bc); 
+        if (new_bcs != 0) 
+          bc_kind = new_bcs->getBCType__NEW(); 
+        else {
+          string whichface; 
+          if (face == 0)
+            whichface = "x-";
+          else if (face == 1)
+            whichface = "x+"; 
+          else if (face == 2) 
+            whichface = "y-";
+          else if (face == 3)
+            whichface = "y+";
+          else if (face == 4)
+            whichface = "z-";
+          else if (face == 5)
+            whichface = "z+";
+
+          cout << "ERROR!:  Missing boundary condition specification!" << endl;
+          cout << "Here are the details:" << endl;
+          cout << "Variable = " << d_eqnName << endl;
+          cout << "Face = " << whichface << endl; 
+          cout << "Child = " << child << endl;
+          throw ProblemSetupException("Please correct your input file for this variable", __FILE__,__LINE__); 
+        }
+      }
+    }
+  }
+}
