@@ -78,6 +78,7 @@ DEALINGS IN THE SOFTWARE.
 #include <avtMTMDFileFormat.h>
 
 #include <string>
+#include <map>
 
 // ****************************************************************************
 //  Class: avtudaReaderMTMDFileFormat
@@ -131,38 +132,57 @@ public:
 
 
 protected:
+
+  virtual void     PopulateDatabaseMetaData(avtDatabaseMetaData *, int);
+  void             InitializeReader(avtDatabaseMetaData *, int);
+
+  virtual void     *GetAuxiliaryData(const char *var, int,
+                                     const char *type, void *args,
+                                     DestructorFunction &);
+
+  void             GetLevelAndLocalPatchNumber(int, int&, int&);
+  void             CalculateDomainNesting(int, const std::string&);
+        
+  virtual bool     HasInvariantMetaData(void) const { return false; };
+  virtual bool     HasInvariantSIL(void) const { return false; };
+
+
   // DATA MEMBERS
         
   int currTimeStep;
   std::string  folder;
 
+  // data that is not dependent on time
   DataArchive *archive;
-  GridP *grid;
-        
-  void  * libHandle;
-        
-  levelPatchVec * levelPatchVecPtr;
-  patchInfoVec  * patchInfoVecPtr;
   typeDouble* timeStepInfo;
   udaVars* udaVarsPtr;
-        
-  double ***refMatrix; // scalars
-  vecVal ***vecValMatrix;
-  tenVal ***tenValMatrix;
-        
-  int         currLevel;
-  std::string currVar, currMesh;
-  bool ccMesh, ncMesh, sfcxMesh, sfcyMesh, sfczMesh;
 
+  // data that is dependent on time
+  GridP *grid;
+  levelPatchVec * levelPatchVecPtr;
+
+  // map from a mesh type (CC/NC/...) to the patch info, **for the active timestep**
+  std::map<std::string,patchInfoVec*> meshNameToPatchInfoVec;
+  patchInfoVec* getCachedPatchInfo(const std::string& meshname);
+
+  // data dependent on time, and level
+  int  currLevel;
   int* boundaryExists;
   int* extraCells;
         
-  int ncomps;
 
+  double ***refMatrix; // scalars
+  vecVal ***vecValMatrix;
+  tenVal ***tenValMatrix;
+       
   int refX, refY, refZ;
   int vecX, vecY, vecZ;
   int tenX, tenY, tenZ;
-        
+
+
+  // interface to the uda2vis library
+  void  * libHandle;
+
   DataArchive*     (*openDataArchive)(const std::string&);
   void             (*closeDataArchive)(DataArchive*);
 
@@ -183,19 +203,6 @@ protected:
   int*             (*getExtraCells)(DataArchive*, GridP*, int);
   int*             (*getNumLevels)(DataArchive*, GridP*);
   int*             (*getPVarLevelAndPatches)(DataArchive*, GridP*, int, const std::string&); 
-
-  virtual void     PopulateDatabaseMetaData(avtDatabaseMetaData *, int);
-  void             InitializeReader(avtDatabaseMetaData *, int);
-
-  virtual void     *GetAuxiliaryData(const char *var, int,
-                                     const char *type, void *args,
-                                     DestructorFunction &);
-
-  void             GetLevelAndLocalPatchNumber(int, int, int&, int&);
-  void             CalculateDomainNesting(int);
-        
-  virtual bool     HasInvariantMetaData(void) const { return false; };
-  virtual bool     HasInvariantSIL(void) const { return false; };
 };
 
 #endif
