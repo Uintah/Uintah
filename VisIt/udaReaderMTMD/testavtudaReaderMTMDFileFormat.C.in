@@ -581,6 +581,7 @@ void
       }	   
 
       if (addMeshToMetadata) {
+        cerr<<"adding mesh"<<mesh_for_this_var<<endl;
         strcpy(tmpArray, mesh_for_this_var.c_str());
         avtMeshMetaData *mesh = new avtMeshMetaData;
 
