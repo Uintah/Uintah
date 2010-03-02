@@ -60,52 +60,6 @@ struct patchMatlPart {
   }
 };
 
-static vector<patchMatlPart> mapA;
-static map<int, Patch*> patchMap;
-
-class ParticleDataContainer {
-public:
-  ParticleDataContainer() :
-    name( "name not set" ),
-    // data( NULL ),
-    // x( NULL ), y( NULL ), z( NULL ),
-    numParticles( 0 )
-  {
-  }
-
-  /*ParticleDataContainer( const string & theName, float * theData, int theNumParticles ) :
-    name( theName ),
-    data( theData ),
-    x( NULL ), y( NULL ), z( NULL ),
-    numParticles( theNumParticles )
-  {
-    type = UNKNOWN;
-  }*/
-
-  /*~ParticleDataContainer() {
-    if (data != NULL) {
-      free(data);	
-    }
-    if (x != NULL) {
-      free(x);	
-    }
-    if (y != NULL) {
-      free(y);	
-    }
-    if (z != NULL) {
-      free(z);	
-    }
-  }*/
-
-  string name;
-  vector<float> data;
-  vector<float> x, y, z;
-  unsigned int numParticles;
-  
-  // Addition
-  matrixVec matrixRep; // matrix repository
-  DataType type;
-};
 
 //
 // handleParticleDataContainer()
@@ -119,11 +73,7 @@ public:
 
 template<class PartT>
 void
-handleParticleData( QueryInfo & qinfo, int matlNo, bool matlClassfication, ParticleDataContainer& result, string varSelected, int patchNo );
+handleParticleData( QueryInfo & qinfo, int matlNo, ParticleVariableRaw &result, string varSelected, int patchNo );
 
-void
-saveParticleData( std::vector<ParticleDataContainer> & data,
-                  const std::string                  & filename,
-				  variables & varColln );
 
 #endif // UDA2NRRD_PARTICLES_H

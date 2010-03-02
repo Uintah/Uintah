@@ -591,17 +591,13 @@ getPVarLevelAndPatches(DataArchive *archive,
 extern "C"
 timeStep*
 processData(DataArchive *archive, GridP *grid,
-            bool do_particles,
+            int timeStepNo, 
+            int level_index,
+            int patchNo,
             string variable_name,
             int material,
-            int level_index,
-             
-            int timeStepNo, 
-            bool dataReq, 
-            int matlNo, 
-            bool matlClassfication, 
-            const string& varSelected,
-            int patchNo) 
+            bool do_particles,
+            bool dataReq)
 {
   /*
    * Default values
@@ -609,9 +605,6 @@ processData(DataArchive *archive, GridP *grid,
 
   Args args;
   args.quiet=true;
-
-  string filename = "";
-
 
   try {
 
@@ -636,7 +629,7 @@ processData(DataArchive *archive, GridP *grid,
     ASSERTEQ(vars.size(), types.size());
     if( args.verbose ) cout << "There are " << vars.size() << " variables:\n";
     bool var_found = false;
-    vector<unsigned int> var_indices;
+    int var_index=-1;
 
     if( do_particles ) {
       unsigned int vi = 0;
@@ -644,10 +637,13 @@ processData(DataArchive *archive, GridP *grid,
         // if( vars[vi][0] == 'p' && vars[vi][1] == '.' ) { // starts with "p."
         if ( types[vi]->getType() == Uintah::TypeDescription::ParticleVariable ) { 
           // It is a particle variable
-          var_indices.push_back( vi );
+          if (vars[vi]==variable_name) {
+            var_index = vi;
+            break;
+          }
         }
       }
-      if( var_indices.size() == 0 ) {
+      if( var_index < 0 ) {
         cout << "\n";
         cout << "Error: No particle variables found (\"p.something\")...\n";
         cout << "\n";
@@ -679,7 +675,7 @@ processData(DataArchive *archive, GridP *grid,
         cerr << "\nExiting!!\n\n";
         exit(-1);
       }
-      var_indices.push_back( vi );
+      var_index = vi;
     }
 
 
@@ -691,14 +687,12 @@ processData(DataArchive *archive, GridP *grid,
 
 
     // Check the level index
-    double current_time = times[timeStepNo];
-	
     if (level_index >= (*grid)->numLevels() || level_index < 0) {
       cerr << "level index is bad ("<<level_index<<").  Should be between 0 and "<<(*grid)->numLevels()<<".\n";
       exit(1); 
     }
 
-    vector<ParticleDataContainer> particleDataArray;
+    //vector<ParticleDataContainer> particleDataArray;
 
     // Create a timeStep object, corresponding to every time step.
     timeStep* timeStepObjPtr = new timeStep();
@@ -709,263 +703,229 @@ processData(DataArchive *archive, GridP *grid,
   
     LevelP level;
 
-    // Loop over the specified variable(s)...
-    //
-    // ... Currently you can only specify one grid var, or all particles vars.
-    // ... This loop is used to run over the one grid var, or over all the particle vars...
-    // ... However, it should be easy to allow the user to create multiple grid var
-    // ... NRRDs at the same time using this loop...
 
-    // p.x should always be at the top 
-    for (unsigned int varCount = 0; varCount < var_indices.size(); varCount++) {
-      if (vars[var_indices[varCount]].compare("p.x") == 0) {
-        unsigned int tmpIndex = var_indices[0];
-        var_indices[0] = var_indices[varCount];
-        var_indices[varCount] = tmpIndex;
-        break;
+    variable_name = vars[var_index];
+
+    //cerr<<"var_name "<<variable_name<<endl;
+      
+    if( !args.quiet ) {
+      // cout << "Extracting data for " << vars[var_index] << ": " << types[var_index]->getName() << "\n";
+    }
+
+    //////////////////////////////////////////////////
+    // Set the level pointer
+
+    if( level.get_rep() == NULL ) {  // Only need to get the level for the first timestep... as
+      // the data will be on the same level(s) for all timesteps.
+      if( do_particles ) { // Determine which level the particles are on...
+        bool found_particle_level = false;
+        for( int lev = 0; lev < (*grid)->numLevels(); lev++ ) {
+          LevelP particleLevel = (*grid)->getLevel( lev );
+          const Patch* patch = *(particleLevel->patchesBegin());
+          ConsecutiveRangeSet matls = archive->queryMaterials(variable_name, patch, timeStepNo);
+          if( matls.size() > 0 ) {
+            if( found_particle_level ) {
+              // Ut oh... found particles on more than one level... don't know how 
+              // to handle this yet...
+              cout << "\n";
+              cout << "Error: uda2nrrd currently can only handle particles on only a single level.  Goodbye.\n";
+              cout << "\n";
+              exit(1);
+            }
+            // The particles are on this level...
+            found_particle_level = true;
+            level = particleLevel;
+            // cout << "Found the PARTICLES on level " << lev << ".\n";
+          }
+        }
+      }
+      else {
+        if( args.use_all_levels ){ // set to level zero
+          level = (*grid)->getLevel( 0 );
+          if( (*grid)->numLevels() == 1 ){ // only one level to use
+            args.use_all_levels = false;
+          }
+        } else {  // set to requested level
+          level = (*grid)->getLevel(level_index);
+        }
+      }
+    }
+
+    ///////////////////////////////////////////////////
+    // Check the material number.
+
+    const Patch* patch = *(level->patchesBegin());
+      
+    ConsecutiveRangeSet matls = archive->queryMaterials(variable_name, patch, timeStepNo);
+
+    ConsecutiveRangeSet  materialsOfInterest;
+
+    if( do_particles ) {
+      materialsOfInterest = matls;
+    } else {
+      if (material == -1) {
+        materialsOfInterest.addInOrder( *(matls.begin()) ); // Default: only interested in first material.
+      } else {
+        unsigned int mat_index = 0;
+
+        ConsecutiveRangeSet::iterator matlIter = matls.begin();
+
+        for( ; matlIter != matls.end(); matlIter++ ){
+          int matl = *matlIter;
+          if (matl == material) {
+            materialsOfInterest.addInOrder( matl );
+            break;
+          }
+          mat_index++;
+        }
+        if( mat_index == matls.size() ) { // We didn't find the right material...
+          cerr << "Didn't find material " << material << " in the data.\n";
+          cerr << "Trying next timestep.\n";
+          exit(-1);
+        }
+      }
+    }
+
+    // get type and subtype of data
+    const Uintah::TypeDescription* td = types[var_index];
+    const Uintah::TypeDescription* subtype = td->getSubType();
+
+    QueryInfo qinfo( archive, (*grid), level, variable_name, materialsOfInterest,
+                     timeStepNo, args.use_all_levels, td );
+
+    IntVector hi, low, range;
+    BBox box;
+
+    // Remove the edges if no boundary cells
+    if( args.remove_boundary ){
+      level->findInteriorIndexRange(low, hi);
+      level->getInteriorSpatialRange(box);
+    } else {
+
+      const Patch* patch = level->getPatch(patchNo);
+
+      Point min = patch->getExtraBox().lower();
+      Point max = patch->getExtraBox().upper();
+
+      IntVector extraCells = patch->getExtraCells();
+  
+      // necessary check - useful with periodic boundaries
+      for (int i = 0; i < 3; i++) {
+        if (extraCells(i) == 0) {
+          extraCells(i) = 1;
+        }
+      }
+
+      IntVector noCells = patch->getCellHighIndex() - patch->getCellLowIndex();
+
+      box = BBox(min, max);
+
+      low = patch->getNodeLowIndex() - extraCells;
+      hi = patch->getNodeLowIndex() + noCells + extraCells + IntVector(1, 1, 1);
+    }
+
+    // this is a hack to make things work, substantiated in build_multi_level_field()
+    range = hi - low;
+
+    // Adjust the range for using all levels
+    if( args.use_all_levels && (*grid)->numLevels() > 0 ){
+      double exponent = (*grid)->numLevels() - 1;
+      range.x( range.x() * int(pow(2.0, exponent)));
+      range.y( range.y() * int(pow(2.0, exponent)));
+      range.z( range.z() * int(pow(2.0, exponent)));
+      low.x( low.x() * int(pow(2.0, exponent)));
+      low.y( low.y() * int(pow(2.0, exponent)));
+      low.z( low.z() * int(pow(2.0, exponent)));
+      hi.x( hi.x() * int(pow(2.0, exponent)));
+      hi.y( hi.y() * int(pow(2.0, exponent)));
+      hi.z( hi.z() * int(pow(2.0, exponent)));
+
+      if( args.verbose ){
+        cout<< "The entire domain for all levels will have an index range of "
+            << low <<" to "<< hi
+            << " and a spatial range from "<< box.min()<< " to "
+            << box.max()<<".\n";
       }
     }
 
 
-    vector<ConsecutiveRangeSet> matlsArr;
-  
+    ///////////////////
+    // Get the data...
+    if( td->getType() == Uintah::TypeDescription::ParticleVariable ) {  // Handle Particles
 
-    for( unsigned int cnt = 0; cnt < var_indices.size(); cnt++ ) {
+      //ParticleDataContainer data;
 
-      unsigned int var_index = var_indices[cnt];
-      variable_name = vars[var_index];
+      switch (subtype->getType()) {
+      case Uintah::TypeDescription::double_type:
+        handleParticleData<double>( qinfo, material, timeStepObjPtr->partVar, variable_name, patchNo );
+        break;
+      case Uintah::TypeDescription::float_type:
+        handleParticleData<float>( qinfo, material, timeStepObjPtr->partVar, variable_name, patchNo );
+        break;
+      case Uintah::TypeDescription::int_type:
+        handleParticleData<int>( qinfo, material, timeStepObjPtr->partVar, variable_name, patchNo );
+        break;
+      case Uintah::TypeDescription::long64_type:
+        handleParticleData<long64>( qinfo, material, timeStepObjPtr->partVar, variable_name, patchNo );
+        break;
+      case Uintah::TypeDescription::Point:
+        handleParticleData<Point>( qinfo, material, timeStepObjPtr->partVar, variable_name, patchNo );
+        break;
+      case Uintah::TypeDescription::Vector:
+        handleParticleData<Vector>( qinfo, material, timeStepObjPtr->partVar, variable_name, patchNo );
+        break;
+      case Uintah::TypeDescription::Matrix3:
+        handleParticleData<Matrix3>( qinfo, material, timeStepObjPtr->partVar, variable_name, patchNo );
+        break;
+      default:
+        cerr << "Unknown subtype for particle data: " << subtype->getName() << "\n";
+        exit(1);
+      } // end switch( subtype )
 
-      if( !args.quiet ) {
-        // cout << "Extracting data for " << vars[var_index] << ": " << types[var_index]->getName() << "\n";
+        //particleDataArray.push_back( data );
+
+    } else { // Handle Grid Variables
+
+      switch (subtype->getType()) {
+      case Uintah::TypeDescription::double_type:
+        timeStepObjPtr->cellValColln = new cellVals();
+        handleVariable<double>( qinfo, low, hi, range, box, args, *(timeStepObjPtr->cellValColln), dataReq, patchNo );
+        break;
+      case Uintah::TypeDescription::float_type:
+        timeStepObjPtr->cellValColln = new cellVals();
+        handleVariable<float>( qinfo, low, hi, range, box, args, *(timeStepObjPtr->cellValColln), dataReq, patchNo );
+        break;
+      case Uintah::TypeDescription::int_type:
+        timeStepObjPtr->cellValColln = new cellVals();
+        handleVariable<int>( qinfo, low, hi, range, box, args, *(timeStepObjPtr->cellValColln), dataReq, patchNo );
+        break;
+      case Uintah::TypeDescription::Vector:
+        timeStepObjPtr->cellValColln = new cellVals();
+        handleVariable<Vector>( qinfo, low, hi, range, box, args, *(timeStepObjPtr->cellValColln), dataReq, patchNo );
+        break;
+      case Uintah::TypeDescription::Matrix3:
+        timeStepObjPtr->cellValColln = new cellVals();
+        handleVariable<Matrix3>( qinfo, low, hi, range, box, args, *(timeStepObjPtr->cellValColln), dataReq, patchNo );
+        break;
+      case Uintah::TypeDescription::bool_type:
+      case Uintah::TypeDescription::short_int_type:
+      case Uintah::TypeDescription::long_type:
+      case Uintah::TypeDescription::long64_type:
+        cerr << "Subtype " << subtype->getName() << " is not implemented...\n";
+        exit(1);
+        break;
+      default:
+        cerr << "Unknown subtype\n";
+        exit(1);
       }
-
-      //////////////////////////////////////////////////
-      // Set the level pointer
-
-      if( level.get_rep() == NULL ) {  // Only need to get the level for the first timestep... as
-        // the data will be on the same level(s) for all timesteps.
-        if( do_particles ) { // Determine which level the particles are on...
-          bool found_particle_level = false;
-          for( int lev = 0; lev < (*grid)->numLevels(); lev++ ) {
-            LevelP particleLevel = (*grid)->getLevel( lev );
-            const Patch* patch = *(particleLevel->patchesBegin());
-            ConsecutiveRangeSet matls = archive->queryMaterials(variable_name, patch, timeStepNo);
-            if( matls.size() > 0 ) {
-              if( found_particle_level ) {
-                // Ut oh... found particles on more than one level... don't know how 
-                // to handle this yet...
-                cout << "\n";
-                cout << "Error: uda2nrrd currently can only handle particles on only a single level.  Goodbye.\n";
-                cout << "\n";
-                exit(1);
-              }
-              // The particles are on this level...
-              found_particle_level = true;
-              level = particleLevel;
-              // cout << "Found the PARTICLES on level " << lev << ".\n";
-            }
-          }
-        }
-        else {
-          if( args.use_all_levels ){ // set to level zero
-            level = (*grid)->getLevel( 0 );
-            if( (*grid)->numLevels() == 1 ){ // only one level to use
-              args.use_all_levels = false;
-            }
-          } else {  // set to requested level
-            level = (*grid)->getLevel(level_index);
-          }
-        }
-      }
-
-      ///////////////////////////////////////////////////
-      // Check the material number.
-
-      const Patch* patch = *(level->patchesBegin());
-          
-      //matlsArr[cnt] = archive->queryMaterials(variable_name, patch, timeStepNo);
-      matlsArr.push_back(archive->queryMaterials(variable_name, patch, timeStepNo));
-
-      if( args.verbose ) {
-        // Print out all the material indicies valid for this timestep
-        cout << "Valid materials for " << variable_name << " at time[" << timeStepNo << "](" << current_time << ") are:  ";
-        for (ConsecutiveRangeSet::iterator matlIter = matlsArr[cnt].begin();
-             matlIter != matlsArr[cnt].end(); matlIter++) {
-          cout << *matlIter << ", ";
-        }
-        cout << "\n";
-      }
-
-      ConsecutiveRangeSet  materialsOfInterest;
-
-      if( do_particles ) {
-        materialsOfInterest = matlsArr[cnt];
-      } else {
-        if (material == -1) {
-          materialsOfInterest.addInOrder( *(matlsArr[cnt].begin()) ); // Default: only interested in first material.
-        } else {
-          unsigned int mat_index = 0;
-
-          ConsecutiveRangeSet::iterator matlIter = matlsArr[cnt].begin();
-
-          for( ; matlIter != matlsArr[cnt].end(); matlIter++ ){
-            int matl = *matlIter;
-            if (matl == material) {
-              materialsOfInterest.addInOrder( matl );
-              break;
-            }
-            mat_index++;
-          }
-          if( mat_index == matlsArr[cnt].size() ) { // We didn't find the right material...
-            cerr << "Didn't find material " << material << " in the data.\n";
-            cerr << "Trying next timestep.\n";
-            continue;
-          }
-        }
-      }
-
-      // get type and subtype of data
-      const Uintah::TypeDescription* td = types[var_index];
-      const Uintah::TypeDescription* subtype = td->getSubType();
-
-      QueryInfo qinfo( archive, (*grid), level, variable_name, materialsOfInterest,
-                       timeStepNo, args.use_all_levels, td );
-
-      IntVector hi, low, range;
-      BBox box;
-
-      // Remove the edges if no boundary cells
-      if( args.remove_boundary ){
-        level->findInteriorIndexRange(low, hi);
-        level->getInteriorSpatialRange(box);
-      } else {
-
-        const Patch* patch = level->getPatch(patchNo);
-
-        Point min = patch->getExtraBox().lower();
-        Point max = patch->getExtraBox().upper();
-
-        IntVector extraCells = patch->getExtraCells();
-  
-        // necessary check - useful with periodic boundaries
-        for (int i = 0; i < 3; i++) {
-          if (extraCells(i) == 0) {
-            extraCells(i) = 1;
-          }
-        }
-
-        IntVector noCells = patch->getCellHighIndex() - patch->getCellLowIndex();
-
-        box = BBox(min, max);
-
-        low = patch->getNodeLowIndex() - extraCells;
-        hi = patch->getNodeLowIndex() + noCells + extraCells + IntVector(1, 1, 1);
-      }
-
-      // this is a hack to make things work, substantiated in build_multi_level_field()
-      range = hi - low;
-
-      // Adjust the range for using all levels
-      if( args.use_all_levels && (*grid)->numLevels() > 0 ){
-        double exponent = (*grid)->numLevels() - 1;
-        range.x( range.x() * int(pow(2.0, exponent)));
-        range.y( range.y() * int(pow(2.0, exponent)));
-        range.z( range.z() * int(pow(2.0, exponent)));
-        low.x( low.x() * int(pow(2.0, exponent)));
-        low.y( low.y() * int(pow(2.0, exponent)));
-        low.z( low.z() * int(pow(2.0, exponent)));
-        hi.x( hi.x() * int(pow(2.0, exponent)));
-        hi.y( hi.y() * int(pow(2.0, exponent)));
-        hi.z( hi.z() * int(pow(2.0, exponent)));
-
-        if( args.verbose ){
-          cout<< "The entire domain for all levels will have an index range of "
-              << low <<" to "<< hi
-              << " and a spatial range from "<< box.min()<< " to "
-              << box.max()<<".\n";
-        }
-      }
-
-
-      ///////////////////
-      // Get the data...
-      if( td->getType() == Uintah::TypeDescription::ParticleVariable ) {  // Handle Particles
-
-        ParticleDataContainer data;
-
-        switch (subtype->getType()) {
-	      case Uintah::TypeDescription::double_type:
-          handleParticleData<double>( qinfo, matlNo, matlClassfication, data, varSelected, patchNo );
-          break;
-	      case Uintah::TypeDescription::float_type:
-          handleParticleData<float>( qinfo, matlNo, matlClassfication, data, varSelected, patchNo );
-          break;
-	      case Uintah::TypeDescription::int_type:
-          handleParticleData<int>( qinfo, matlNo, matlClassfication, data, varSelected, patchNo );
-          break;
-	      case Uintah::TypeDescription::long64_type:
-          handleParticleData<long64>( qinfo, matlNo, matlClassfication, data, varSelected, patchNo );
-          break;
-	      case Uintah::TypeDescription::Point:
-          handleParticleData<Point>( qinfo, matlNo, matlClassfication, data, varSelected, patchNo );
-          break;
-	      case Uintah::TypeDescription::Vector:
-          handleParticleData<Vector>( qinfo, matlNo, matlClassfication, data, varSelected, patchNo );
-          break;
-	      case Uintah::TypeDescription::Matrix3:
-          handleParticleData<Matrix3>( qinfo, matlNo, matlClassfication, data, varSelected, patchNo );
-          break;
-	      default:
-          cerr << "Unknown subtype for particle data: " << subtype->getName() << "\n";
-          exit(1);
-        } // end switch( subtype )
-
-        particleDataArray.push_back( data );
-
-      } else { // Handle Grid Variables
-
-        switch (subtype->getType()) {
-	      case Uintah::TypeDescription::double_type:
-          timeStepObjPtr->cellValColln = new cellVals();
-          handleVariable<double>( qinfo, low, hi, range, box, filename, args, *(timeStepObjPtr->cellValColln), dataReq, patchNo );
-          break;
-	      case Uintah::TypeDescription::float_type:
-          timeStepObjPtr->cellValColln = new cellVals();
-          handleVariable<float>( qinfo, low, hi, range, box, filename, args, *(timeStepObjPtr->cellValColln), dataReq, patchNo );
-          break;
-	      case Uintah::TypeDescription::int_type:
-          timeStepObjPtr->cellValColln = new cellVals();
-          handleVariable<int>( qinfo, low, hi, range, box, filename, args, *(timeStepObjPtr->cellValColln), dataReq, patchNo );
-          break;
-	      case Uintah::TypeDescription::Vector:
-          timeStepObjPtr->cellValColln = new cellVals();
-          handleVariable<Vector>( qinfo, low, hi, range, box, filename, args, *(timeStepObjPtr->cellValColln), dataReq, patchNo );
-          break;
-	      case Uintah::TypeDescription::Matrix3:
-          timeStepObjPtr->cellValColln = new cellVals();
-          handleVariable<Matrix3>( qinfo, low, hi, range, box, filename, args, *(timeStepObjPtr->cellValColln), dataReq, patchNo );
-          break;
-	      case Uintah::TypeDescription::bool_type:
-	      case Uintah::TypeDescription::short_int_type:
-	      case Uintah::TypeDescription::long_type:
-	      case Uintah::TypeDescription::long64_type:
-          cerr << "Subtype " << subtype->getName() << " is not implemented...\n";
-          exit(1);
-          break;
-	      default:
-          cerr << "Unknown subtype\n";
-          exit(1);
-        }
-      }
-    } // end variables loop
+    }
 
 
     // Passing the 'variables', a vector member variable to the function. This is where all the particles, along with the variables, 
     // get stored. 
 
     if( do_particles ) {
-      timeStepObjPtr->varColln = new variables();
-      saveParticleData( particleDataArray, filename, *(timeStepObjPtr->varColln) );
+      //saveParticleData( particleDataArray, *(timeStepObjPtr->varColln) );
     }
 
     return timeStepObjPtr;
