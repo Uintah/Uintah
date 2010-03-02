@@ -297,7 +297,7 @@ OnDemandDataWarehouse::sendMPI(DependencyBatch* batch,
     // A non-data dependency -- send an empty message.
     // This would be used, for example, when a task is to modify data that
     // was previously required with ghost-cells.
-    buffer.add(0, 0, MPI_INT, false);
+    //buffer.add(0, 0, MPI_INT, false);
     return;
   }
   
@@ -536,7 +536,7 @@ OnDemandDataWarehouse::recvMPI(DependencyBatch* batch,
     // A non-data dependency -- send an empty message.
     // This would be used, for example, for dependencies between a modifying
     // task and a task the requires the data before it is to be modified.
-    buffer.add(0, 0, MPI_INT, false);
+    //buffer.add(0, 0, MPI_INT, false);
     return;
   }
   
