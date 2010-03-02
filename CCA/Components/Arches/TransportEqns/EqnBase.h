@@ -62,6 +62,15 @@ public:
   /** @brief Dummy init for MPMArches */ 
   virtual void sched_dummyInit( const LevelP&, SchedulerP& sched ) = 0; 
 
+  /** @brief Checks that boundary conditions for this variable are set for every 
+   * face for every child */ 
+  void sched_checkBCs( const LevelP&, SchedulerP& sched ); 
+  void checkBCs( const ProcessorGroup* pc, 
+                 const PatchSubset* patches, 
+                 const MaterialSubset* matls, 
+                 DataWarehouse* old_dw, 
+                 DataWarehouse* new_dw ); 
+
   /** @brief Compute the convective terms */ 
   template <class fT, class oldPhiT>  
   void computeConv( const Patch* patch, fT& Fdiff, 

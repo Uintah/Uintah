@@ -8,8 +8,11 @@
 #include <Core/Grid/Variables/SFCXVariable.h>
 #include <Core/Grid/Variables/SFCYVariable.h>
 #include <Core/Grid/Variables/SFCZVariable.h>
+#include <Core/Grid/BoundaryConditions/BoundCond.h>
+#include <Core/Grid/BoundaryConditions/BCDataArray.h>
 #include <Core/Exceptions/InvalidValue.h>
 #include <CCA/Components/Arches/Directives.h>
+#include <Core/Parallel/Parallel.h>
 
 //==========================================================================
 
@@ -74,7 +77,7 @@ namespace Uintah{
        * \int_S \grad \phi \cdot \dS */
       template <class fT, class oldPhiT, class gammaT> void 
         computeDiff( const Patch* p, fT& Fdiff, oldPhiT& oldPhi, gammaT& gamma,
-          constCCVariable<Vector>& areaFraction, double turbPr ); 
+        constCCVariable<Vector>& areaFraction, double turbPr, int mat_id, string varName );
 
       //---------------------------------------------------------------------------
       // Custom Data Managers
@@ -150,13 +153,13 @@ namespace Uintah{
           bool zplus =  p->getBCType(Patch::zplus)  == Patch::None;
 
           if (yminus)
-            l[1] += 2;
+            l[1] += 1;
           if (yplus)
-            h[1] -= 2;
+            h[1] -= 1;
           if (zminus)
-            l[2] += 2;
+            l[2] += 1;
           if (zplus)
-            h[2] -= 2;
+            h[2] -= 1;
 
         } else if ( face == Patch::yminus || face == Patch::yplus ){
 
@@ -382,6 +385,39 @@ namespace Uintah{
 
             face_values.minus = 0.5 * (den[c] + den[cxm]); 
             face_values.plus  = 0.5 * (den[c] + den[cxp]); 
+          } else {
+            // assume the only other type is a face type...
+            IntVector cxm = c - coord; 
+
+            face_values.minus = den[cxm];
+            face_values.plus  = den[c]; 
+          }
+
+          return face_values; 
+        }
+      /** @brief Return the face density if there is a boundary for all cell types */
+      template< class phiT > 
+        inline FaceData1D getDensityOnFace( const IntVector c, const IntVector coord, 
+            phiT& phi, constCCVariable<double>& den , FaceBoundaryBool isBoundary){
+
+          FaceData1D face_values; 
+          face_values.minus = 0.0;
+          face_values.plus  = 0.0;
+
+          TypeDescription::Type type = phi.getTypeDescription()->getType(); 
+
+          if ( type == TypeDescription::CCVariable ) {
+            IntVector cxm = c - coord; 
+            IntVector cxp = c + coord; 
+
+            if (isBoundary.minus)
+              face_values.minus = den[cxm];
+            else
+              face_values.minus = 0.5 * (den[c] + den[cxm]); 
+            if (isBoundary.plus)
+              face_values.plus = den[cxp];
+            else
+              face_values.plus  = 0.5 * (den[c] + den[cxp]); 
           } else {
             // assume the only other type is a face type...
             IntVector cxm = c - coord; 
@@ -626,7 +662,33 @@ namespace Uintah{
 
           return face_dx; 
         } 
+        /* @brief Computes the gradient of a scalar, returning zero gradient if the face
+         *         is a boundary cell that is set by a scalar dirichet condition. */
+      template <class phiT> 
+        inline FaceData1D gradPtoF( const IntVector c, phiT& phi, const double dx, const IntVector coord, FaceBoundaryBool isBoundary )
+        {
+          Discretization_new::FaceData1D face_dx; 
+          face_dx.plus = 0.0; 
+          face_dx.minus = 0.0; 
 
+          IntVector cxm = c - coord; 
+          IntVector cxp = c + coord; 
+
+          if (isBoundary.plus) {
+
+          }
+          else 
+            face_dx.plus  =  ( phi[cxp] - phi[c] ) / dx;
+
+          if (isBoundary.minus) {
+
+          }
+          else
+            face_dx.minus =  ( phi[c] - phi[cxm] ) / dx;
+
+          return face_dx; 
+        }
+      
   }; // class Discretization_new
 
   template<class T> 
@@ -750,7 +812,7 @@ namespace Uintah{
             area = Dx.y()*Dx.z();            
 
             faceIsBoundary = checkFacesForBoundaries( p, c, coord ); 
-            face_den       = getDensityOnFace( c, coord, Fconv, den ); 
+            face_den       = getDensityOnFace( c, coord, Fconv, den, faceIsBoundary ); 
             face_vel       = getFaceVelocity( c, Fconv, uVel ); 
             face_phi       = upwindInterp( c, coord, oldPhi, face_vel, faceIsBoundary ); 
             Fconv[c]       = getFlux( area, face_den, face_vel, face_phi, areaFraction, coord, c ); 
@@ -761,7 +823,7 @@ namespace Uintah{
             area = Dx.x()*Dx.z(); 
 
             faceIsBoundary = checkFacesForBoundaries( p, c, coord ); 
-            face_den       = getDensityOnFace( c, coord, Fconv, den ); 
+            face_den       = getDensityOnFace( c, coord, Fconv, den, faceIsBoundary ); 
             face_vel       = getFaceVelocity( c, Fconv, vVel ); 
             face_phi       = upwindInterp( c, coord, oldPhi, face_vel, faceIsBoundary ); 
             Fconv[c]      += getFlux( area, face_den, face_vel, face_phi, areaFraction, coord, c ); 
@@ -773,7 +835,7 @@ namespace Uintah{
             area = Dx.x()*Dx.y(); 
 
             faceIsBoundary = checkFacesForBoundaries( p, c, coord ); 
-            face_den       = getDensityOnFace( c, coord, Fconv, den ); 
+            face_den       = getDensityOnFace( c, coord, Fconv, den, faceIsBoundary ); 
             face_vel       = getFaceVelocity( c, Fconv, wVel ); 
             face_phi       = upwindInterp( c, coord, oldPhi, face_vel, faceIsBoundary ); 
             Fconv[c]      += getFlux( area, face_den, face_vel, face_phi, areaFraction, coord, c ); 
@@ -864,7 +926,7 @@ namespace Uintah{
             area = Dx.y()*Dx.z(); 
 
             faceIsBoundary = checkFacesForBoundaries( p, c, coord ); 
-            face_den       = getDensityOnFace( c, coord, Fconv, den ); 
+            face_den       = getDensityOnFace( c, coord, Fconv, den, faceIsBoundary ); 
             face_vel       = getFaceVelocity( c, Fconv, uVel ); 
             face_phi       = superBeeInterp( c, coord, oldPhi, face_vel, faceIsBoundary ); 
             Fconv[c]       = getFlux( area, face_den, face_vel, face_phi, areaFraction, coord, c ); 
@@ -875,7 +937,7 @@ namespace Uintah{
             area = Dx.x()*Dx.z(); 
 
             faceIsBoundary = checkFacesForBoundaries( p, c, coord ); 
-            face_den       = getDensityOnFace( c, coord, Fconv, den ); 
+            face_den       = getDensityOnFace( c, coord, Fconv, den, faceIsBoundary ); 
             face_vel       = getFaceVelocity( c, Fconv, vVel ); 
             face_phi       = superBeeInterp( c, coord, oldPhi, face_vel, faceIsBoundary ); 
             Fconv[c]      += getFlux( area, face_den, face_vel, face_phi, areaFraction, coord, c ); 
@@ -887,7 +949,7 @@ namespace Uintah{
             area = Dx.x()*Dx.y(); 
 
             faceIsBoundary = checkFacesForBoundaries( p, c, coord ); 
-            face_den       = getDensityOnFace( c, coord, Fconv, den ); 
+            face_den       = getDensityOnFace( c, coord, Fconv, den, faceIsBoundary ); 
             face_vel       = getFaceVelocity( c, Fconv, wVel ); 
             face_phi       = superBeeInterp( c, coord, oldPhi, face_vel, faceIsBoundary ); 
             Fconv[c]      += getFlux( area, face_den, face_vel, face_phi, areaFraction, coord, c ); 
@@ -1526,12 +1588,12 @@ namespace Uintah{
   //---------------------------------------------------------------------------
   template <class fT, class oldPhiT, class gammaT> void 
     Discretization_new::computeDiff( const Patch* p, fT& Fdiff, oldPhiT& oldPhi, gammaT& gamma,
-        constCCVariable<Vector>& areaFraction, double turbPr )
+        constCCVariable<Vector>& areaFraction, double turbPr, int mat_id, string varName )
     {
 
       Vector Dx = p->dCell(); //assuming uniform grid
-  
-      for (CellIterator iter=p->getCellIterator(); !iter.done(); iter++){
+      
+      for (CellIterator iter = p->getCellIterator(); !iter.done(); iter++){
 
         IntVector c = *iter; 
         IntVector coord; 
@@ -1580,6 +1642,157 @@ namespace Uintah{
 
 #endif
 
+      }
+      // boundaries ::: diffusion
+      // need to go back and remove the contribution on the cell 
+      // face if the face touched a dirichlet boundary condition 
+      vector<Patch::FaceType> bf;
+      vector<Patch::FaceType>::const_iterator bf_iter;
+      p->getBoundaryFaces(bf);
+      // Loop over all boundary faces on this patch
+      for (bf_iter = bf.begin(); bf_iter != bf.end(); bf_iter++){
+        Patch::FaceType face = *bf_iter; 
+
+        IntVector insideCellDir = p->faceDirection(face); 
+        int numChildren = p->getBCDataArray(face)->getNumberChildren(mat_id);
+        for (int child = 0; child < numChildren; child++){
+
+          string bc_kind = "NotSet"; 
+          Iterator bound_ptr; 
+          Iterator nu; //not used...who knows why?
+          const BoundCondBase* bc = p->getArrayBCValues( face, mat_id, 
+                                                         varName, bound_ptr, 
+                                                         nu, child ); 
+          const BoundCond<double> *new_bcs = dynamic_cast<const BoundCond<double> *>(bc); 
+          if (new_bcs != 0) 
+            bc_kind = new_bcs->getBCType__NEW(); 
+          else {
+            cout << "Warning!  Boundary condition not set for: " << endl;
+            cout << "variable = " << varName << endl;
+            cout << "face = " << face << endl;
+          }
+
+          delete bc; 
+          if (bc_kind == "Dirichlet"){
+            
+            IntVector coord; 
+            FaceData1D face_gamma; 
+            FaceData1D grad_phi; 
+            double dx; 
+            switch (face) {
+              case Patch::xminus:
+
+                coord[0] = 1; coord[1] = 0; coord[2] = 0;
+                dx = Dx.x();
+
+                for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++){
+
+                  IntVector bp1(*bound_ptr - insideCellDir); 
+                  face_gamma = centralInterp( bp1, coord, gamma ); 
+                  grad_phi   = gradPtoF( bp1, oldPhi, dx, coord ); 
+
+                  Vector c_af = areaFraction[bp1]; 
+                  Vector cp_af = areaFraction[bp1 + coord]; 
+
+                  Fdiff[bp1] += 1.0/turbPr * Dx.y()*Dx.z() * 
+                             ( face_gamma.minus * grad_phi.minus * c_af.x() ); 
+                }
+                break; 
+              case Patch::xplus:
+
+                coord[0] = 1; coord[1] = 0; coord[2] = 0;
+                dx = Dx.x(); 
+
+                for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++){
+
+                  IntVector bp1(*bound_ptr - insideCellDir); 
+                  face_gamma = centralInterp( bp1, coord, gamma ); 
+                  grad_phi   = gradPtoF( bp1, oldPhi, dx, coord ); 
+
+                  Vector c_af = areaFraction[bp1]; 
+                  Vector cp_af = areaFraction[bp1 + coord]; 
+
+                  Fdiff[bp1] -= 1.0/turbPr * Dx.y()*Dx.z() * 
+                             ( face_gamma.plus * grad_phi.plus * cp_af.x() ); 
+                }
+                break; 
+#ifdef YDIM
+              case Patch::yminus:
+
+                coord[0] = 0; coord[1] = 1; coord[2] = 0;
+                dx = Dx.y(); 
+
+                for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++){
+                  IntVector bp1(*bound_ptr - insideCellDir); 
+                  face_gamma = centralInterp( bp1, coord, gamma ); 
+                  grad_phi   = gradPtoF( bp1, oldPhi, dx, coord ); 
+
+                  Vector c_af = areaFraction[bp1]; 
+                  Vector cp_af = areaFraction[bp1 + coord]; 
+
+                  Fdiff[bp1] += 1.0/turbPr * Dx.x()*Dx.z() * 
+                             ( face_gamma.minus * grad_phi.minus * c_af.y() ); 
+                }
+                break; 
+              case Patch::yplus:
+
+                coord[0] = 0; coord[1] = 1; coord[2] = 0;
+                dx = Dx.y();
+
+                for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++){
+                  IntVector bp1(*bound_ptr - insideCellDir); 
+                  face_gamma = centralInterp( bp1, coord, gamma ); 
+                  grad_phi   = gradPtoF( bp1, oldPhi, dx, coord ); 
+
+                  Vector c_af = areaFraction[bp1]; 
+                  Vector cp_af = areaFraction[bp1 + coord]; 
+
+                  Fdiff[bp1] -= 1.0/turbPr * Dx.x()*Dx.z() * 
+                             ( face_gamma.plus * grad_phi.plus * cp_af.y() ); 
+                }
+                break;
+#endif 
+#ifdef ZDIM
+              case Patch::zminus:
+
+                coord[0] = 0; coord[1] = 0; coord[2] = 1;
+                dx = Dx.z(); 
+
+                for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++){
+
+                  IntVector bp1(*bound_ptr - insideCellDir); 
+                  face_gamma = centralInterp( bp1, coord, gamma ); 
+                  grad_phi   = gradPtoF( bp1, oldPhi, dx, coord ); 
+
+                  Vector c_af = areaFraction[bp1]; 
+                  Vector cp_af = areaFraction[bp1 + coord]; 
+
+                  Fdiff[bp1] += 1.0/turbPr * Dx.x()*Dx.y() * 
+                             ( face_gamma.minus * grad_phi.minus * c_af.z() ); 
+                }
+                break; 
+              case Patch::zplus:
+
+                coord[0] = 0; coord[1] = 0; coord[2] = 1;
+                dx = Dx.z(); 
+
+                for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++){
+
+                  IntVector bp1(*bound_ptr - insideCellDir); 
+                  face_gamma = centralInterp( bp1, coord, gamma ); 
+                  grad_phi   = gradPtoF( bp1, oldPhi, dx, coord ); 
+
+                  Vector c_af = areaFraction[bp1]; 
+                  Vector cp_af = areaFraction[bp1 + coord]; 
+
+                  Fdiff[bp1] -= 1.0/turbPr * Dx.x()*Dx.y() * 
+                             ( face_gamma.plus * grad_phi.plus * cp_af.z() ); 
+                }
+                break; 
+#endif
+            }
+          }
+        }
       }
     }
 
