@@ -70,7 +70,9 @@ WARNING
 
   class JWLpp : public ModelInterface {
   public:
-    JWLpp(const ProcessorGroup* myworld, ProblemSpecP& params);
+    JWLpp(const ProcessorGroup* myworld, ProblemSpecP& params,
+          const ProblemSpecP& prob_spec);
+
     virtual ~JWLpp();
 
     virtual void outputProblemSpec(ProblemSpecP& ps);
@@ -92,8 +94,8 @@ WARNING
                                                const ModelInfo*);
       
     virtual void scheduleComputeModelSources(SchedulerP&,
-                                                   const LevelP& level,
-                                                   const ModelInfo*);
+                                             const LevelP& level,      
+                                             const ModelInfo*);        
                                              
     virtual void scheduleModifyThermoTransportProperties(SchedulerP&,
                                                const LevelP&,
@@ -135,14 +137,25 @@ WARNING
 
     const VarLabel* reactedFractionLabel;   // diagnostic labels
     const VarLabel* delFLabel;   // diagnostic labels
+    const VarLabel* totalMassBurnedLabel;
+    const VarLabel* totalHeatReleasedLabel;
 
-    ProblemSpecP params;
+    ProblemSpecP d_params;
+    ProblemSpecP d_prob_spec;
     const Material* matl0;
     const Material* matl1;
     SimulationStateP d_sharedState;   
 
     ICELabel* Ilb;
     MaterialSet* mymatls;
+    
+    // flags for the conservation test
+    struct saveConservedVars{
+      bool onOff;
+      bool mass;
+      bool energy;
+    };
+    saveConservedVars* d_saveConservedVars;
 
     string fromMaterial, toMaterial;
     bool d_active;
