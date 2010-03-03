@@ -120,7 +120,7 @@ ModelFactory::makeModels( const ProblemSpecP& restart_prob_spec,
     else if(type == "IandG")
       d_models.push_back(scinew IandG(d_myworld, model_ps));
     else if(type == "JWLpp")
-      d_models.push_back(scinew JWLpp(d_myworld, model_ps));
+      d_models.push_back(scinew JWLpp(d_myworld, model_ps, prob_spec));
     else if(type == "LightTime")
       d_models.push_back(scinew LightTime(d_myworld, model_ps));
     else if(type == "DDT0")

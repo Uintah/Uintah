@@ -51,49 +51,77 @@ using namespace std;
 //  MODELS_DOING_COUT:   dumps when tasks are scheduled and performed
 static DebugStream cout_doing("MODELS_DOING_COUT", false);
 
-JWLpp::JWLpp(const ProcessorGroup* myworld, ProblemSpecP& params)
-  : ModelInterface(myworld), params(params)
+JWLpp::JWLpp(const ProcessorGroup* myworld, 
+             ProblemSpecP& params,
+             const ProblemSpecP& prob_spec)
+  : ModelInterface(myworld), d_params(params), d_prob_spec(prob_spec)
 {
   mymatls = 0;
   Ilb  = scinew ICELabel();
+  d_saveConservedVars = scinew saveConservedVars();
+  
   //__________________________________
   //  diagnostic labels
   reactedFractionLabel   = VarLabel::create("F",
-                     CCVariable<double>::getTypeDescription());
+                                       CCVariable<double>::getTypeDescription());
+  delFLabel              = VarLabel::create("delF",
+                                       CCVariable<double>::getTypeDescription());
                      
-  delFLabel   = VarLabel::create("delF",
-                     CCVariable<double>::getTypeDescription());
+  totalMassBurnedLabel  = VarLabel::create( "totalMassBurned",
+                                            sum_vartype::getTypeDescription() );
+  totalHeatReleasedLabel= VarLabel::create( "totalHeatReleased",
+                                            sum_vartype::getTypeDescription() );
 }
 
 JWLpp::~JWLpp()
 {
   delete Ilb;
+  delete d_saveConservedVars;
 
   VarLabel::destroy(reactedFractionLabel);
   VarLabel::destroy(delFLabel);
-  
+  VarLabel::destroy(totalMassBurnedLabel);
+  VarLabel::destroy(totalHeatReleasedLabel);
+    
   if(mymatls && mymatls->removeReference())
     delete mymatls;
 }
-
-void JWLpp::problemSetup(GridP&, SimulationStateP& sharedState,
-                             ModelSetup*)
+//______________________________________________________________________
+//
+void JWLpp::problemSetup(GridP&, SimulationStateP& sharedState, ModelSetup*)
 {
   d_sharedState = sharedState;
   bool defaultActive=true;
-  params->getWithDefault("Active", d_active, defaultActive);
-  params->require("ThresholdPressure",   d_threshold_pressure);
+  d_params->getWithDefault("Active",   d_active, defaultActive);
+  d_params->require("ThresholdPressure",   d_threshold_pressure);
 
-  params->require("fromMaterial",fromMaterial);
-  params->require("toMaterial",toMaterial);
-  params->require("G",    d_G);
-  params->require("b",    d_b);
-  params->require("E0",   d_E0);
-  params->require("rho0", d_rho0);
+  d_params->require("fromMaterial",fromMaterial);
+  d_params->require("toMaterial",toMaterial);
+  d_params->require("G",    d_G);
+  d_params->require("b",    d_b);
+  d_params->require("E0",   d_E0);
+  d_params->require("rho0", d_rho0);
 
+  //__________________________________
+  //  Are we saving the total burned mass and total burned energy
+  ProblemSpecP DA_ps = d_prob_spec->findBlock("DataArchiver");
+  for (ProblemSpecP child = DA_ps->findBlock("save");
+       child != 0;
+       child = child->findNextBlock("save") ){
+    map<string,string> var_attr;
+    child->getAttributes(var_attr);
+    
+    if (var_attr["label"] == "totalMassBurned"){
+      d_saveConservedVars->mass  = true;
+    }
+    if (var_attr["label"] == "totalHeatReleased"){
+      d_saveConservedVars->energy = true;
+    }
+  }
+  
   if(d_active){
-    matl0 = sharedState->parseAndLookupMaterial(params, "fromMaterial");
-    matl1 = sharedState->parseAndLookupMaterial(params, "toMaterial");
+    matl0 = sharedState->parseAndLookupMaterial(d_params, "fromMaterial");
+    matl1 = sharedState->parseAndLookupMaterial(d_params, "toMaterial");
 
     //__________________________________
     //  define the materialSet
@@ -117,7 +145,8 @@ void JWLpp::problemSetup(GridP&, SimulationStateP& sharedState,
     mymatls->addReference();
   }
 }
-
+//______________________________________________________________________
+//
 void JWLpp::outputProblemSpec(ProblemSpecP& ps)
 {
   ProblemSpecP model_ps = ps->appendChild("Model");
@@ -134,19 +163,20 @@ void JWLpp::outputProblemSpec(ProblemSpecP& ps)
   
 }
 
-
+//______________________________________________________________________
+//
 void JWLpp::activateModel(GridP&, SimulationStateP& sharedState, ModelSetup*)
 {
   d_active=true;
 #if 0
-  params->require("G",    d_G);
-  params->require("b",    d_b);
-  params->require("E0",   d_E0);
-  params->require("rho0", d_rho0);
+  d_params->require("G",    d_G);
+  d_params->require("b",    d_b);
+  d_params->require("E0",   d_E0);
+  d_params->require("rho0", d_rho0);
 #endif
 
-  matl0 = sharedState->parseAndLookupMaterial(params, "fromMaterial");
-  matl1 = sharedState->parseAndLookupMaterial(params, "toMaterial");
+  matl0 = sharedState->parseAndLookupMaterial(d_params, "fromMaterial");
+  matl1 = sharedState->parseAndLookupMaterial(d_params, "toMaterial");
   //__________________________________
   //  define the materialSet
   vector<int> m_tmp(2);
@@ -226,13 +256,21 @@ void JWLpp::scheduleComputeModelSources(SchedulerP& sched,
     t->modifies(mi->modelMom_srcLabel);
     t->modifies(mi->modelEng_srcLabel);
     t->modifies(mi->modelVol_srcLabel); 
+    
+    if(d_saveConservedVars->mass ){
+      t->computes(JWLpp::totalMassBurnedLabel);
+    }
+    if(d_saveConservedVars->energy){
+      t->computes(JWLpp::totalHeatReleasedLabel);
+    } 
     sched->addTask(t, level->eachPatch(), mymatls);
 
     if (one_matl->removeReference())
       delete one_matl;
   }
 }
-
+//______________________________________________________________________
+//
 void JWLpp::scheduleCheckNeedAddMaterial(SchedulerP& sched,
                                          const LevelP& level,
                                          const ModelInfo* mi)
@@ -256,6 +294,8 @@ void JWLpp::scheduleCheckNeedAddMaterial(SchedulerP& sched,
       delete one_matl;
 }
 
+//______________________________________________________________________
+//
 void
 JWLpp::checkNeedAddMaterial(const ProcessorGroup*,
                             const PatchSubset* patches,
@@ -312,8 +352,10 @@ void JWLpp::computeModelSources(const ProcessorGroup*,
   const Level* level = getLevel(patches);
   old_dw->get(delT, mi->delT_Label, level);
 
-  int m0 = matl0->getDWIndex();
-  int m1 = matl1->getDWIndex();
+  int m0 = matl0->getDWIndex(); /* reactant material */
+  int m1 = matl1->getDWIndex(); /* product material */
+  double totalBurnedMass = 0;
+  double totalHeatReleased = 0;
  
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);  
@@ -386,8 +428,9 @@ void JWLpp::computeModelSources(const ProcessorGroup*,
 
         //__________________________________
         // conservation of mass, momentum and energy                           
-        mass_src_0[c] -= burnedMass;
-        mass_src_1[c] += burnedMass;
+        mass_src_0[c]   -= burnedMass;
+        mass_src_1[c]   += burnedMass;
+        totalBurnedMass += burnedMass;
            
         Vector momX        = rctvel_CC[c] * burnedMass;
         momentum_src_0[c] -= momX;
@@ -395,8 +438,9 @@ void JWLpp::computeModelSources(const ProcessorGroup*,
 
         double energyX   = cv_reactant[c]*rctTemp[c]*burnedMass; 
         double releasedHeat = burnedMass * d_E0;
-        energy_src_0[c] -= energyX;
-        energy_src_1[c] += energyX + releasedHeat;
+        energy_src_0[c]   -= energyX;
+        energy_src_1[c]   += energyX + releasedHeat;
+        totalHeatReleased += releasedHeat;
 
         double createdVolx  = burnedMass * rctSpvol[c];
         sp_vol_src_0[c] -= createdVolx;
@@ -410,6 +454,14 @@ void JWLpp::computeModelSources(const ProcessorGroup*,
     setBC(mass_src_1, "set_if_sym_BC",patch, d_sharedState, m1, new_dw);
     setBC(delF,       "set_if_sym_BC",patch, d_sharedState, m0, new_dw);
     setBC(Fr,         "set_if_sym_BC",patch, d_sharedState, m0, new_dw);
+  }
+  //__________________________________
+  //save total quantities
+  if(d_saveConservedVars->mass ){
+    new_dw->put(sum_vartype(totalBurnedMass),   JWLpp::totalMassBurnedLabel);
+  }
+  if(d_saveConservedVars->energy){
+    new_dw->put(sum_vartype(totalHeatReleased), JWLpp::totalHeatReleasedLabel);
   }
 }
 //______________________________________________________________________
