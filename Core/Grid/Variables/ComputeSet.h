@@ -144,7 +144,18 @@ namespace Uintah {
         const vector<T>& getVector() const 
         { return items; }
 
-        const ComputeSubset<T>* equals(const ComputeSubset<T>* s2) const;
+        bool equals(const ComputeSubset<T>* s2) const
+        {
+          //check that the sets are equvalent
+          if(items.size() != s2->items.size())
+            return false;
+
+          for(unsigned int i=0;i<items.size();i++)
+            if(items[i]!=s2->items[i])
+              return false;
+          
+          return true;
+        };
 
         constHandle< ComputeSubset<T> >
           intersection(constHandle< ComputeSubset<T> > s2) const
