@@ -39,6 +39,7 @@
 //#include <Core/Grid/Variables/PSPatchMatlGhost.h>
 #include <CCA/Components/Schedulers/MemoryLog.h>
 #include <CCA/Components/Schedulers/SchedulerCommon.h>
+#include <CCA/Components/Schedulers/CommRecMPI.h>
 #include <Core/Containers/ConsecutiveRangeSet.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/Util/FancyAssert.h>
@@ -66,10 +67,13 @@ static DebugStream dbg("TaskGraph", false);
 static DebugStream scrubout("Scrubbing", false);
 static DebugStream messagedbg("MessageTags", false);
 static DebugStream internaldbg("InternalDeps", false);
+static DebugStream waitout("WaitTimes", false);
 
 // for debugging - set the var name to watch one in the scrubout
 static string dbgScrubVar = "";
 static int dbgScrubPatch = -1;
+    
+map<string,double> DependencyBatch::waittimes;
 
 DetailedTasks::DetailedTasks(SchedulerCommon* sc, const ProcessorGroup* pg,
     DetailedTasks* first, const TaskGraph* taskgraph,const set<int>& neighborhood_processors,
@@ -1278,7 +1282,11 @@ void DependencyBatch::received(const ProcessorGroup * pg)
       mixedDebug << "\tSatisfying " << *dep << "\n";
     cerrLock.unlock();
   }
-
+  if(waitout.active())
+  {
+    //add the time waiting on MPI to the wait times per from task
+    waittimes[fromTask->getTask()->getName()]+=CommRecMPI::WaitTimePerMessage;
+  }
   for (list<DetailedTask*>::iterator iter = toTasks.begin(); iter != toTasks.end(); iter++) {
     // if the count is 0, the task will add itself to the external ready queue
     //cout << pg->myrank() << "  Dec: " << *fromTask << " for " << *(*iter) << endl;

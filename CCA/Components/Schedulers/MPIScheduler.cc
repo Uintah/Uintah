@@ -1236,11 +1236,20 @@ MPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
 
   if(waitout.active())
   {
-    for(map<string,double>::iterator iter=waittimes.begin();iter!=waittimes.end();iter++)
+    static int count=0;
+
+    //only output the wait times every so many timesteps
+    if(++count%100==0)
     {
-      waitout << d_myworld->myrank() << ": TaskWaitTime: " << iter->second << " Task:" << iter->first << endl;
+      for(map<string,double>::iterator iter=waittimes.begin();iter!=waittimes.end();iter++)
+        waitout << fixed << d_myworld->myrank() << ": TaskWaitTime(TO): " << iter->second << " Task:" << iter->first << endl;
+
+      for(map<string,double>::iterator iter=DependencyBatch::waittimes.begin();iter!=DependencyBatch::waittimes.end();iter++)
+        waitout << fixed << d_myworld->myrank() << ": TaskWaitTime(FROM): " << iter->second << " Task:" << iter->first << endl;
+      
+      waittimes.clear();
+      DependencyBatch::waittimes.clear();
     }
-    waittimes.clear();
   }
 
   if( dbg.active()) {

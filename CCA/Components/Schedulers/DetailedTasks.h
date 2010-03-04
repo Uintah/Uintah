@@ -154,6 +154,8 @@ namespace Uintah {
     int messageTag;
     int to;
 
+    //scratch pad to store wait times for debugging
+    static map<string,double> waittimes;
   private:
     volatile bool received_;
     volatile bool madeMPIRequest_;
