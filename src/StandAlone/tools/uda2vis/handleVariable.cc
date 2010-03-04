@@ -59,134 +59,12 @@ typedef LVMesh::handle_type LVMeshHandle;
 
 ///////////////////////////////////////////////////////////////////////////////
 
-template<class VarT, class T>
-  void
-  handleData( QueryInfo &    qinfo,
-              IntVector &    low,
-              LVMeshHandle   mesh_handle,
-              int            basis_order,
-              const Args   & args,
-              cellVals& cellValColln,
-              bool dataReq, 
-              int patchNo )
-{
-  typedef GenericField<LVMesh, ConstantBasis<T>, FData3d<T, LVMesh> > LVFieldCB;
-  typedef GenericField<LVMesh, HexTrilinearLgn<T>, FData3d<T, LVMesh> > LVFieldLB;
-
-  VarT gridVar;
-  T data_T;
-
-  // set the generation and timestep in the field
-  if( !args.quiet ) cout << "Building Field from uda data\n";
-
-  // Print out the psycal extents
-  BBox bbox = mesh_handle->get_bounding_box();
-  if( !args.quiet ) cout << "Bounding box: min("<<bbox.min()<<"), max("<<bbox.max()<<")\n";
-
-  // Get the nrrd data, and print it out.
-  // char *err;
-
-  if( basis_order == 0 ){
-    LVFieldCB* sf = scinew LVFieldCB(mesh_handle);
-    typedef typename LVFieldCB::mesh_type::Cell FLOC;
-    if (!sf) {
-      cerr << "Cannot allocate memory for field\n";
-      return;
-    }
-    if(qinfo.combine_levels){
-      // this will only be called for all levels, combined
-      build_combined_level_field<T, VarT, LVFieldCB, FLOC>( qinfo, low, sf, args );
-    } else {
-      build_field( qinfo, low, data_T, gridVar, sf, args, patchNo );
-    }
-    // Convert the field to a nrrd
-    wrap_nrrd( sf, args.matrix_op, args.verbose, cellValColln, dataReq );
-    // Clean up our memory
-    delete sf;
-  } else {
-    LVFieldLB* sf = scinew LVFieldLB(mesh_handle);
-    typedef typename LVFieldLB::mesh_type::Node FLOC;
-    if (!sf) {
-      cerr << "Cannot allocate memory for field\n";
-      return;
-    }
-    if(qinfo.combine_levels){
-      // this will only be called for all levels, combined
-      build_combined_level_field<T, VarT, LVFieldLB, FLOC>( qinfo, low, sf, args );
-    } else {
-      build_field( qinfo, low, data_T, gridVar, sf, args, patchNo );
-    }
-    // Convert the field to a nrrd
-    wrap_nrrd( sf, args.matrix_op, args.verbose, cellValColln, dataReq );
-    // Clean up our memory
-    delete sf;
-  }
-
-  return;
-}
-
-
-///////////////////////////////////////////////////////////////////////////////
-
-template<class T>
-void
-handleVariable( QueryInfo &qinfo, IntVector &low, IntVector& hi,
-                IntVector &range, BBox &box,
-                const Args & args,
-                cellVals& cellVallColln,
-                bool dataReq,
-                int patchNo )
-{
-  LVMeshHandle mesh_handle;
-  switch( qinfo.type->getType() ) {
-  case Uintah::TypeDescription::CCVariable:
-    // cout << "CCVariable: " << range << endl;
-    mesh_handle = scinew LVMesh(range.x(), range.y(),
-                                range.z(), box.min(),
-                                box.max());
-    handleData<CCVariable<T>, T>( qinfo, low, mesh_handle, 0, args, cellVallColln, dataReq, patchNo );
-    break;
-  case Uintah::TypeDescription::NCVariable:
-    mesh_handle = scinew LVMesh(range.x(), range.y(),
-                                range.z(), box.min(),
-                                box.max());
-    handleData<NCVariable<T>, T>( qinfo, low, mesh_handle, 1, args, cellVallColln, dataReq, patchNo );
-    break;
-  case Uintah::TypeDescription::SFCXVariable:
-    mesh_handle = scinew LVMesh(range.x(), range.y()-1,
-                                range.z()-1, box.min(),
-                                box.max());
-    handleData<SFCXVariable<T>, T>( qinfo, low, mesh_handle, 1, args, cellVallColln, dataReq, patchNo );
-    break;
-  case Uintah::TypeDescription::SFCYVariable:
-    mesh_handle = scinew LVMesh(range.x()-1, range.y(),
-                                range.z()-1, box.min(),
-                                box.max());
-    handleData<SFCYVariable<T>, T>( qinfo, low, mesh_handle, 1, args, cellVallColln, dataReq, patchNo );
-    break;
-  case Uintah::TypeDescription::SFCZVariable:
-    mesh_handle = scinew LVMesh(range.x()-1, range.y()-1,
-                                range.z(), box.min(),
-                                box.max());
-    handleData<SFCZVariable<T>, T>( qinfo, low, mesh_handle, 1, args, cellVallColln, dataReq, patchNo );
-    break;
-  default:
-    cerr << "Type is unknown.\n";
-    return;
-    break;
-
-  }
-}
-
-
-
-///////////////////////////////////////////////////////////////////////////////
 
 template <class T, class VarT, class FIELD>
-  void
-  handlePatchData( QueryInfo& qinfo, IntVector& offset,
-                   FIELD* sfield, const Patch* patch,
-                   const Args & args )
+void
+handlePatchData( QueryInfo& qinfo, IntVector& offset,
+                 FIELD* sfield, const Patch* patch,
+                 const Args & args )
 {
   if( qinfo.materials.size() != 1 ) {
     cout << "ERROR: handlePatchData: number of materials should be one, but it was " 
@@ -216,6 +94,7 @@ template <class T, class VarT, class FIELD>
     qinfo.level->findNodeIndexRange(lo, hi);
   }
 
+  // remove boundary
   if ( args.remove_boundary ) {
     if(sfield->basis_order() == 0){
       patch_low = patch->getCellLowIndex();
@@ -234,32 +113,25 @@ template <class T, class VarT, class FIELD>
         break;
       case Uintah::TypeDescription::NCVariable:
         patch_high = patch->getNodeHighIndex();
-        // patch_high = patch->getExtraNodeHighIndex();   
         break;
       default:
         cerr << "build_field::unknown variable.\n";
         exit(1);
       } 
     }
-  } else { // Don't remove the boundary
+  }
+
+  // Don't remove the boundary
+  else {
     if(sfield->basis_order() == 0){
       patch_low = patch->getCellLowIndex()   - extraCells;
       patch_high = patch->getCellHighIndex() + extraCells;
-
-      // patch_low = patch->getExtraCellLowIndex();
-      // patch_high = patch->getExtraCellHighIndex();
     } else {
-      // patch_low = patch->getExtraNodeLowIndex();
       patch_low = patch->getNodeLowIndex() - extraCells;
       switch (qinfo.type->getType()) {
       case Uintah::TypeDescription::SFCXVariable:
-        // patch_high = patch->getSFCXHighIndex();
-		
         patch_high = patch_low + noCells;
-        // if (patch_high.x() == (hi.x() - 1)) {
         patch_high = IntVector(patch_high.x() + 1, patch_high.y(), patch_high.z());
-        // } 
-
         patch_high = patch_high + extraCells;
         break;
       case Uintah::TypeDescription::SFCYVariable:
@@ -270,29 +142,24 @@ template <class T, class VarT, class FIELD>
         break;
       case Uintah::TypeDescription::NCVariable:
         patch_high = patch->getNodeLowIndex() + noCells + extraCells + IntVector(1, 1, 1);
-        // patch_high = patch->getExtraNodeHighIndex();   
         break;
       default:
         cerr << "build_field::unknown variable.\n";
         exit(1);
       }
     }
-  } // if (remove_boundary)
+  }
 
   // necessary check - useful with periodic boundaries
   for (int i = 0; i < 3; i++) {
     if (patch_high(i) > hi(i)) {
-      // cout << "boundary exceded..." << endl;	
       patch_high(i) = hi(i);
     }
 
     if (patch_low(i) < lo(i)) {
-      // cout << "boundary exceded..." << endl;	
       patch_low(i) = lo(i);
     }
   }
-  
-  // cout << patch_low << " " << patch_high << endl;
 
   try {
     int material = *qinfo.materials.begin();
@@ -312,8 +179,129 @@ template <class T, class VarT, class FIELD>
                                         patch_low, patch_high);
   worker->run();
   delete worker;
+}
 
-} // end handlePatchData()
+
+///////////////////////////////////////////////////////////////////////////////
+
+
+template<class VarT, class T>
+void
+handleData( QueryInfo &    qinfo,
+            IntVector &    low,
+            LVMeshHandle   mesh_handle,
+            int            basis_order,
+            const Args   & args,
+            cellVals& cellValColln,
+            bool dataReq, 
+            int patchNo )
+{
+
+  VarT gridVar;
+  T data_T;
+
+  // set the generation and timestep in the field
+  if( !args.quiet ) cout << "Building Field from uda data\n";
+
+  // Print out the physical extents
+  BBox bbox = mesh_handle->get_bounding_box();
+  if( !args.quiet ) cout << "Bounding box: min("<<bbox.min()<<"), max("<<bbox.max()<<")\n";
+
+    
+  if( basis_order == 0 ){
+    typedef GenericField<LVMesh, ConstantBasis<T>, FData3d<T, LVMesh> > LVFieldCB;
+    typedef typename LVFieldCB::mesh_type::Cell FLOC;
+
+    LVFieldCB* sf = scinew LVFieldCB(mesh_handle);
+    if (!sf) {
+      cerr << "Cannot allocate memory for field\n";
+      return;
+    }
+
+    if(qinfo.combine_levels){
+      // this will only be called for all levels, combined
+      build_combined_level_field<T, VarT, LVFieldCB, FLOC>( qinfo, low, sf, args );
+    } else {
+      build_field( qinfo, low, data_T, gridVar, sf, args, patchNo );
+    }
+
+    // Convert the field to a nrrd
+    wrap_nrrd( sf, args.matrix_op, args.verbose, cellValColln, dataReq );
+    delete sf;
+  }
+
+  else {
+    typedef GenericField<LVMesh, HexTrilinearLgn<T>, FData3d<T, LVMesh> > LVFieldLB;
+    typedef typename LVFieldLB::mesh_type::Node FLOC;
+
+    LVFieldLB* sf = scinew LVFieldLB(mesh_handle);
+    if (!sf) {
+      cerr << "Cannot allocate memory for field\n";
+      return;
+    }
+
+    if(qinfo.combine_levels){
+      // this will only be called for all levels, combined
+      build_combined_level_field<T, VarT, LVFieldLB, FLOC>( qinfo, low, sf, args );
+    } else {
+      build_field( qinfo, low, data_T, gridVar, sf, args, patchNo );
+    }
+
+    // Convert the field to a nrrd
+    wrap_nrrd( sf, args.matrix_op, args.verbose, cellValColln, dataReq );
+    delete sf;
+  }
+
+  return;
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+
+template<class T>
+void
+handleVariable( QueryInfo &qinfo, IntVector &low, IntVector& hi,
+                IntVector &range, BBox &box,
+                const Args & args,
+                cellVals& cellVallColln,
+                bool dataReq,
+                int patchNo )
+{
+  LVMeshHandle mesh_handle;
+  switch( qinfo.type->getType() ) {
+  case Uintah::TypeDescription::CCVariable:
+    mesh_handle = scinew LVMesh(range.x(), range.y(), range.z(),
+                                box.min(), box.max());
+    handleData<CCVariable<T>, T>( qinfo, low, mesh_handle, 0, args, cellVallColln, dataReq, patchNo );
+    break;
+  case Uintah::TypeDescription::NCVariable:
+    mesh_handle = scinew LVMesh(range.x(), range.y(), range.z(),
+                                box.min(), box.max());
+    handleData<NCVariable<T>, T>( qinfo, low, mesh_handle, 1, args, cellVallColln, dataReq, patchNo );
+    break;
+  case Uintah::TypeDescription::SFCXVariable:
+    mesh_handle = scinew LVMesh(range.x(), range.y()-1, range.z()-1,
+                                box.min(), box.max());
+    handleData<SFCXVariable<T>, T>( qinfo, low, mesh_handle, 1, args, cellVallColln, dataReq, patchNo );
+    break;
+  case Uintah::TypeDescription::SFCYVariable:
+    mesh_handle = scinew LVMesh(range.x()-1, range.y(), range.z()-1,
+                                box.min(), box.max());
+    handleData<SFCYVariable<T>, T>( qinfo, low, mesh_handle, 1, args, cellVallColln, dataReq, patchNo );
+    break;
+  case Uintah::TypeDescription::SFCZVariable:
+    mesh_handle = scinew LVMesh(range.x()-1, range.y()-1, range.z(),
+                                box.min(), box.max());
+    handleData<SFCZVariable<T>, T>( qinfo, low, mesh_handle, 1, args, cellVallColln, dataReq, patchNo );
+    break;
+  default:
+    cerr << "Type is unknown.\n";
+    return;
+    break;
+
+  }
+}
+
 
 ///////////////////////////////////////////////////////////////////////////////
 // Instantiate some of the needed verisons of functions.

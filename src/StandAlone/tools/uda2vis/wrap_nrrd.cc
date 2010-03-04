@@ -84,68 +84,53 @@ wrap_copy( T* fdata, typeDouble* cellValVecPtr, unsigned int size, Matrix_Op mat
 // Vector version
 template <>
 bool
-// wrap_copy( Vector* fdata, double*& datap, unsigned int size, Matrix_Op matrix_op ){
 wrap_copy( Vector* fdata, typeDouble* cellValVecPtr, unsigned int size, Matrix_Op matrix_op ){
 
-  // cout << "Pushed in " << size << " elements\n"; 
-
-  // Copy the data
   for(unsigned int i = 0; i < size; i++) {
-    // *datap++ = fdata->x();
-    // *datap++ = fdata->y();
-    // *datap++ = fdata->z();
-
     cellValVecPtr->push_back(fdata->x());
     cellValVecPtr->push_back(fdata->y());
     cellValVecPtr->push_back(fdata->z());
-
     fdata++;
   }
   return true;
 }
 
 // Matrix3 version
-
 template <>
 bool
-// wrap_copy( Matrix3* fdata, double*& datap, unsigned int size, Matrix_Op matrix_op ){
 wrap_copy( Matrix3* fdata, typeDouble* cellValVecPtr, unsigned int size, Matrix_Op matrix_op ){
 
   switch (matrix_op) {
-    case None:
-      for(unsigned int i = 0; i < size; i++) {
-	for(int i = 0; i < 3; i++)
-	  for(int j = 0; j < 3; j++) {
-	    // *datap++ = (*fdata)(i,j);
-	    cellValVecPtr->push_back((*fdata)(i,j));
-	  }  
-	fdata++;
-      }
-      break;
-    case Det:
-      for(unsigned int i = 0; i < size; i++) {
-	// *datap++ = fdata->Determinant();
-	cellValVecPtr->push_back(fdata->Determinant());
-	fdata++;
-      }
-      break;
-    case Trace:
-      for(unsigned int i = 0; i < size; i++) {
-	// *datap++ = fdata->Trace();
-	cellValVecPtr->push_back(fdata->Trace());
-	fdata++;
-      }
-      break;
-    case Norm:
-      for(unsigned int i = 0; i < size; i++) {
-	// *datap++ = fdata->Norm();
-	cellValVecPtr->push_back(fdata->Norm());
-	fdata++;
-      }
-      break;
-    default:
-      cerr << "Unknown matrix operation\n";
-      return false;
+  case None:
+    for(unsigned int i = 0; i < size; i++) {
+      for(int i = 0; i < 3; i++)
+        for(int j = 0; j < 3; j++) {
+          cellValVecPtr->push_back((*fdata)(i,j));
+        }  
+      fdata++;
+    }
+    break;
+  case Det:
+    for(unsigned int i = 0; i < size; i++) {
+      cellValVecPtr->push_back(fdata->Determinant());
+      fdata++;
+    }
+    break;
+  case Trace:
+    for(unsigned int i = 0; i < size; i++) {
+      cellValVecPtr->push_back(fdata->Trace());
+      fdata++;
+    }
+    break;
+  case Norm:
+    for(unsigned int i = 0; i < size; i++) {
+      cellValVecPtr->push_back(fdata->Norm());
+      fdata++;
+    }
+    break;
+  default:
+    cerr << "Unknown matrix operation\n";
+    return false;
   }
   return true;
 }
@@ -153,18 +138,17 @@ wrap_copy( Matrix3* fdata, typeDouble* cellValVecPtr, unsigned int size, Matrix_
 ////////////////////////////////////////////////////////////////////////////////////
 
 template<class FIELD>
-// Nrrd*
-  void
+void
 wrap_nrrd( FIELD * source, Matrix_Op matrix_op, bool verbose, cellVals& cellValColln, bool dataReq )
 {
   typeDouble* cellValVecPtr = NULL;
-  // Nrrd *out = nrrdNew(); // not required now
   int dim = -1;
   size_t size[5];
 
   const SCIRun::TypeDescription *td = source->get_type_description( Field::FDATA_TD_E );
 
-  if( td->get_name().find( "Vector") != string::npos ) {  // Vectors
+  // Vectors
+  if( td->get_name().find( "Vector") != string::npos ) {
     dim = 4;
     size[0] = 3;
     size[1] = source->fdata().dim3();
@@ -172,42 +156,25 @@ wrap_nrrd( FIELD * source, Matrix_Op matrix_op, bool verbose, cellVals& cellValC
     size[3] = source->fdata().dim1();
 
     cellValColln.dim = dim;
-
-    // cout << "Dataset has " << dim << " dimensions\n";
-
     cellValColln.x = size[1];
     cellValColln.y = size[2];
     cellValColln.z = size[3];
 
     unsigned int num_vec = source->fdata().size();
-    // double *data = new double[num_vec*3];
 
     if (dataReq) {
       cellValVecPtr = new typeDouble();
       cellValVecPtr->reserve(num_vec * 3);
 
-      /*if (!data) {
-	cerr << "Cannot allocate memory ("<<num_vec*3*sizeof(double)<<" byptes) for temp storage of vectors\n";
-	nrrdNix(out);
-	return 0;
-	}*/
-
-      // double *datap = data;
       typename FIELD::value_type *vec_data = &(source->fdata()(0,0,0));
 
       // Copy the data
-      // wrap_copy( vec_data, datap, num_vec, matrix_op );
       wrap_copy( vec_data, cellValVecPtr, num_vec, matrix_op );
     }  
+  }
 
-    /*if (nrrdWrap_nva(out, data, nrrdTypeDouble, dim, size) == 0) {
-      return out;
-      } else {
-      nrrdNix(out);
-      delete data;
-      return 0;
-      }*/
-  } else if (td->get_name().find( "Matrix3") != string::npos ) { // Matrix3
+  // Matrix3
+  else if (td->get_name().find( "Matrix3") != string::npos ) { 
     dim = (matrix_op == None) ? 5 : 3;
     if (matrix_op == None) {
       size[0] = 3;
@@ -231,156 +198,101 @@ wrap_nrrd( FIELD * source, Matrix_Op matrix_op, bool verbose, cellVals& cellValC
 
     cellValColln.dim = dim;
 
-    // cout << "Dataset has " << dim << " dimensions\n";
-
     unsigned int num_mat = source->fdata().size();
     int elem_size = (matrix_op == None) ? 9 : 1;
 
-    // double *data = new double[num_mat*elem_size];
     if (dataReq) {
       cellValVecPtr = new typeDouble();
       cellValVecPtr->reserve(num_mat*elem_size);
 
-      /*if (!data) {
-	cerr << "Cannot allocate memory ("<<num_mat*elem_size*sizeof(double)<<" byptes) for temp storage of vectors\n";
-	nrrdNix(out);
-	return 0;
-	}*/
-
-      // double *datap = data;
       typename FIELD::value_type *mat_data = &(source->fdata()(0,0,0));
+
       // Copy the data
-
       wrap_copy( mat_data, cellValVecPtr, num_mat, matrix_op );
-
-      /*if( !wrap_copy( mat_data, datap, num_mat, matrix_op )){
-	nrrdNix(out);
-	delete data;
-	return 0;
-	}*/
-
-      /*if (nrrdWrap_nva(out, data, nrrdTypeDouble, dim, size) == 0) {
-	return out;
-	} else {
-	nrrdNix(out);
-	delete data;
-	return 0;
-	}*/
     }
-  } else { // Scalars
+  }
+
+  // Scalars
+  else {
     dim = 3;
     size[0] = source->fdata().dim3();
     size[1] = source->fdata().dim2();
     size[2] = source->fdata().dim1();
 
     cellValColln.dim = dim;
-
-    // cout << "Dataset has " << dim << " dimensions\n";
-
     cellValColln.x = size[0];
     cellValColln.y = size[1];
     cellValColln.z = size[2];
 
     // We don't need to copy data, so just get the pointer to the data
     size_t field_size = (source->fdata().size() *
-	sizeof(typename FIELD::value_type));
+                         sizeof(typename FIELD::value_type));
     void* data = malloc(field_size);
-    /*if (!data) {
-      cerr << "Cannot allocate memory ("<<field_size<<" byptes) for scalar nrrd copy.\n";
-      nrrdNix(out);
-      return 0;
-      }*/
     memcpy(data, (void*)&(source->fdata()(0,0,0)), field_size);
-    // typename FIELD::value_type* newData = (typename FIELD::value_type*)data;
 
     unsigned int num_elements = source->fdata().size();
-    unsigned int prodXYZ = cellValColln.x * cellValColln.y * cellValColln.z;
-
-    if (num_elements != prodXYZ)
-      cout << "fdata().size() != prodXYZ\n";
-    /*else {
-      cout << num_elements << " = " << cellValColln.x << " * " << cellValColln.y << " * " << cellValColln.z << "\n";
-    }*/  
 
     if (dataReq) {
       cellValVecPtr = new typeDouble();
       cellValVecPtr->reserve(num_elements);
-
-      /*for (unsigned int i = 0; i < num_elements; i++) 
-	if (sizeof(typename FIELD::value_type) == 8)
-	  cellValVecPtr->push_back(*((double*)data + i));
-	else if (sizeof(typename FIELD::value_type) == 4)
-	  cellValVecPtr->push_back(*((float*)data + i)); 
-	else if (sizeof(typename FIELD::value_type) == 2)
-	  cellValVecPtr->push_back(*((int*)data + i));*/     
       
       for (unsigned int i = 0; i < num_elements; i++) {
-	if (get_nrrd_type<typename FIELD::value_type>() == nrrdTypeDouble) {
-	  cellValVecPtr->push_back(*((double*)data + i));
-	}  
-	else if (get_nrrd_type<typename FIELD::value_type>() == nrrdTypeFloat) {
-	  cellValVecPtr->push_back(*((float*)data + i)); 
-	}  
-	else if (get_nrrd_type<typename FIELD::value_type>() == nrrdTypeInt) {
-	  cellValVecPtr->push_back(*((int*)data + i));
-	}
-	else if (get_nrrd_type<typename FIELD::value_type>() == nrrdTypeChar) {
-	  cellValVecPtr->push_back(*((char*)data + i));
-	}
-	else if (get_nrrd_type<typename FIELD::value_type>() == nrrdTypeUChar) {
-	  cellValVecPtr->push_back(*((unsigned char*)data + i));
-	}
-	else if (get_nrrd_type<typename FIELD::value_type>() == nrrdTypeShort) {
-	  cellValVecPtr->push_back(*((short*)data + i));
-	}
-	else if (get_nrrd_type<typename FIELD::value_type>() == nrrdTypeUShort) {
-	  cellValVecPtr->push_back(*((unsigned short*)data + i));
-	}
-	else if (get_nrrd_type<typename FIELD::value_type>() == nrrdTypeUInt) {
-	  cellValVecPtr->push_back(*((unsigned int*)data + i));
-	}
-	else if (get_nrrd_type<typename FIELD::value_type>() == nrrdTypeLLong) {
-	  cellValVecPtr->push_back(*((long long*)data + i));
-	}
-	else if (get_nrrd_type<typename FIELD::value_type>() == nrrdTypeULLong) {
-	  cellValVecPtr->push_back(*((unsigned long long*)data + i));
-	}
+        if (get_nrrd_type<typename FIELD::value_type>() == nrrdTypeDouble) {
+          cellValVecPtr->push_back(*((double*)data + i));
+        }  
+        else if (get_nrrd_type<typename FIELD::value_type>() == nrrdTypeFloat) {
+          cellValVecPtr->push_back(*((float*)data + i)); 
+        }  
+        else if (get_nrrd_type<typename FIELD::value_type>() == nrrdTypeInt) {
+          cellValVecPtr->push_back(*((int*)data + i));
+        }
+        else if (get_nrrd_type<typename FIELD::value_type>() == nrrdTypeChar) {
+          cellValVecPtr->push_back(*((char*)data + i));
+        }
+        else if (get_nrrd_type<typename FIELD::value_type>() == nrrdTypeUChar) {
+          cellValVecPtr->push_back(*((unsigned char*)data + i));
+        }
+        else if (get_nrrd_type<typename FIELD::value_type>() == nrrdTypeShort) {
+          cellValVecPtr->push_back(*((short*)data + i));
+        }
+        else if (get_nrrd_type<typename FIELD::value_type>() == nrrdTypeUShort) {
+          cellValVecPtr->push_back(*((unsigned short*)data + i));
+        }
+        else if (get_nrrd_type<typename FIELD::value_type>() == nrrdTypeUInt) {
+          cellValVecPtr->push_back(*((unsigned int*)data + i));
+        }
+        else if (get_nrrd_type<typename FIELD::value_type>() == nrrdTypeLLong) {
+          cellValVecPtr->push_back(*((long long*)data + i));
+        }
+        else if (get_nrrd_type<typename FIELD::value_type>() == nrrdTypeULLong) {
+          cellValVecPtr->push_back(*((unsigned long long*)data + i));
+        }
       }
-
-      /*if (nrrdWrap_nva(out, data, get_nrrd_type< typename FIELD::value_type>(), 
-	dim, size) == 0) {
-	return out;
-	} else {
-	nrrdNix(out);
-	free(data);
-	return 0;
-	}*/
     }
 
     free(data);
   }
 
-  // return out;
-
   if (dataReq)
     cellValColln.cellValVec = cellValVecPtr; 	  
 
   if (verbose) for(int i = 0; i < dim; i++) cout << "size["<<i<<"] = "<<size[i]<<endl;
+}
 
-} // end wrap_nrrd()
+
 
 ///////////////////////////////////////////////////////////////////////////////
 // Instantiate some of the needed verisons of functions.
 
 typedef LatVolMesh<HexTrilinearLgn<Point> > LVMesh_template;
 
-#define INTANTIATE_TEMPLATES_WRAP_NRRD_CC(T) \
-template void wrap_nrrd< GenericField< LVMesh_template, ConstantBasis<T>,   FData3d<T, LVMesh_template > > >(GenericField< LVMesh_template, ConstantBasis<T>,   FData3d<T, LVMesh_template > >*, Matrix_Op, bool, cellVals&, bool);             \
-template void wrap_nrrd< GenericField< LVMesh_template, HexTrilinearLgn<T>, FData3d<T, LVMesh_template > > >(GenericField< LVMesh_template, HexTrilinearLgn<T>, FData3d<T, LVMesh_template > >*, Matrix_Op, bool, cellVals&, bool);
+#define INTANTIATE_TEMPLATES_WRAP_NRRD_CC(T)                            \
+  template void wrap_nrrd< GenericField< LVMesh_template, ConstantBasis<T>,   FData3d<T, LVMesh_template > > >(GenericField< LVMesh_template, ConstantBasis<T>,   FData3d<T, LVMesh_template > >*, Matrix_Op, bool, cellVals&, bool); \
+  template void wrap_nrrd< GenericField< LVMesh_template, HexTrilinearLgn<T>, FData3d<T, LVMesh_template > > >(GenericField< LVMesh_template, HexTrilinearLgn<T>, FData3d<T, LVMesh_template > >*, Matrix_Op, bool, cellVals&, bool);
 
 INTANTIATE_TEMPLATES_WRAP_NRRD_CC(double)
-INTANTIATE_TEMPLATES_WRAP_NRRD_CC(float)
-INTANTIATE_TEMPLATES_WRAP_NRRD_CC(int)
-INTANTIATE_TEMPLATES_WRAP_NRRD_CC(Matrix3)
-INTANTIATE_TEMPLATES_WRAP_NRRD_CC(Vector)
+  INTANTIATE_TEMPLATES_WRAP_NRRD_CC(float)
+  INTANTIATE_TEMPLATES_WRAP_NRRD_CC(int)
+  INTANTIATE_TEMPLATES_WRAP_NRRD_CC(Matrix3)
+  INTANTIATE_TEMPLATES_WRAP_NRRD_CC(Vector)
 
