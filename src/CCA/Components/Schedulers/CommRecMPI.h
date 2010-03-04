@@ -79,6 +79,8 @@ public:
   { return ids.size(); }
 
   void print(const ProcessorGroup * pg);
+
+  static double WaitTimePerMessage;
 private:  
   vector<MPI_Request> ids;
   vector<int> groupIDs;  

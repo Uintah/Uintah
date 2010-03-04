@@ -49,6 +49,8 @@ using namespace SCIRun;
 extern UINTAHSHARE SCIRun::Mutex       cerrLock;
 extern SCIRun::DebugStream mixedDebug;
 
+double CommRecMPI::WaitTimePerMessage=0;
+
 void CommRecMPI::add(MPI_Request id, int bytes, 
 		     AfterCommunicationHandler* handler, 
                      string var, int message, 
@@ -95,8 +97,10 @@ bool CommRecMPI::waitsome(const ProcessorGroup * pg,
   }
     
   int donecount;
+  clock_t start=clock();
   MPI_Waitsome((int)ids.size(), &ids[0], &donecount,
 	       &indices[0], &statii[0]);
+  WaitTimePerMessage=(clock()-start)/(double)CLOCKS_PER_SEC/donecount;
   //mixedDebug << me <<  "after waitsome\n";
   return donesome(pg, donecount, statii, finishedGroups);
 }
@@ -150,8 +154,10 @@ bool CommRecMPI::waitsome(const ProcessorGroup * pg, CommRecMPI & cr,
     }
   }
 
+  clock_t start=clock();
   MPI_Waitsome(size, &combinedIDs[0], &donecount,
 	       &combinedIndices[0], &statii[0]);
+  WaitTimePerMessage=(clock()-start)/(double)CLOCKS_PER_SEC/donecount;
   mixedDebug << "after combined waitsome\n";
 
   
@@ -191,8 +197,11 @@ bool CommRecMPI::testsome(const ProcessorGroup * pg,
   int me = pg->myrank();
   mixedDebug << me << " Calling testsome with " << ids.size() << " waiters\n";
   int donecount;
+  clock_t start=clock();
   MPI_Testsome((int)ids.size(), &ids[0], &donecount,
 	       &indices[0], &statii[0]);
+  if(donecount>0)
+    WaitTimePerMessage=(clock()-start)/(double)CLOCKS_PER_SEC/donecount;
   return donesome(pg, donecount,statii, finishedGroups);
 }
 
@@ -276,7 +285,9 @@ void CommRecMPI::waitall(const ProcessorGroup * pg)
     return;
   statii.resize(ids.size());
   //  mixedDebug << me << " Calling waitall with " << ids.size() << " waiters\n";
+  clock_t start=clock();
   MPI_Waitall((int)ids.size(), &ids[0], &statii[0]);
+  WaitTimePerMessage=(clock()-start)/(double)CLOCKS_PER_SEC/ids.size();
   //  mixedDebug << me << " Done calling waitall with " 
   //      << ids.size() << " waiters\n";
   for(int i=0;i<(int)ids.size();i++){
