@@ -56,8 +56,8 @@ string DependencyException::makeMessage(const Task* task,
 					string has, string needs)
 {
   ostringstream str;
-  str << "Task Dependency Error: " << has << " has no corresponding ";
-  str << needs << " for " << label->getName();
+  str << "Task Dependency Error: (" << has << ") has no corresponding (";
+  str << needs << ") for " << label->getName();
   if (patch)
     str << " on patch " << patch->getID();
   str << " for material " << matlIndex;
