@@ -692,8 +692,6 @@ processData(DataArchive *archive, GridP *grid,
       exit(1); 
     }
 
-    //vector<ParticleDataContainer> particleDataArray;
-
     // Create a timeStep object, corresponding to every time step.
     timeStep* timeStepObjPtr = new timeStep();
 
@@ -701,53 +699,44 @@ processData(DataArchive *archive, GridP *grid,
     timeStepObjPtr->name.assign(filename_num + 1);
     timeStepObjPtr->no = index[timeStepNo];
   
-    LevelP level;
-
-
     variable_name = vars[var_index];
-
-    //cerr<<"var_name "<<variable_name<<endl;
-      
-    if( !args.quiet ) {
-      // cout << "Extracting data for " << vars[var_index] << ": " << types[var_index]->getName() << "\n";
-    }
 
     //////////////////////////////////////////////////
     // Set the level pointer
 
-    if( level.get_rep() == NULL ) {  // Only need to get the level for the first timestep... as
-      // the data will be on the same level(s) for all timesteps.
-      if( do_particles ) { // Determine which level the particles are on...
-        bool found_particle_level = false;
-        for( int lev = 0; lev < (*grid)->numLevels(); lev++ ) {
-          LevelP particleLevel = (*grid)->getLevel( lev );
-          const Patch* patch = *(particleLevel->patchesBegin());
-          ConsecutiveRangeSet matls = archive->queryMaterials(variable_name, patch, timeStepNo);
-          if( matls.size() > 0 ) {
-            if( found_particle_level ) {
-              // Ut oh... found particles on more than one level... don't know how 
-              // to handle this yet...
-              cout << "\n";
-              cout << "Error: uda2nrrd currently can only handle particles on only a single level.  Goodbye.\n";
-              cout << "\n";
-              exit(1);
-            }
-            // The particles are on this level...
-            found_particle_level = true;
-            level = particleLevel;
-            // cout << "Found the PARTICLES on level " << lev << ".\n";
+    LevelP level;
+
+    // the data will be on the same level(s) for all timesteps.
+    if( do_particles ) { // Determine which level the particles are on...
+      bool found_particle_level = false;
+      for( int lev = 0; lev < (*grid)->numLevels(); lev++ ) {
+        LevelP particleLevel = (*grid)->getLevel( lev );
+        const Patch* patch = *(particleLevel->patchesBegin());
+        ConsecutiveRangeSet matls = archive->queryMaterials(variable_name, patch, timeStepNo);
+        if( matls.size() > 0 ) {
+          if( found_particle_level ) {
+            // Ut oh... found particles on more than one level... don't know how 
+            // to handle this yet...
+            cout << "\n";
+            cout << "Error: uda2nrrd currently can only handle particles on only a single level.  Goodbye.\n";
+            cout << "\n";
+            exit(1);
           }
+          // The particles are on this level...
+          found_particle_level = true;
+          level = particleLevel;
+          // cout << "Found the PARTICLES on level " << lev << ".\n";
         }
       }
-      else {
-        if( args.use_all_levels ){ // set to level zero
-          level = (*grid)->getLevel( 0 );
-          if( (*grid)->numLevels() == 1 ){ // only one level to use
-            args.use_all_levels = false;
-          }
-        } else {  // set to requested level
-          level = (*grid)->getLevel(level_index);
+    }
+    else {
+      if( args.use_all_levels ){ // set to level zero
+        level = (*grid)->getLevel( 0 );
+        if( (*grid)->numLevels() == 1 ){ // only one level to use
+          args.use_all_levels = false;
         }
+      } else {  // set to requested level
+        level = (*grid)->getLevel(level_index);
       }
     }
 

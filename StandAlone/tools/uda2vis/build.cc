@@ -61,22 +61,16 @@ build_field( QueryInfo &qinfo,
              VarT& /*var*/,
              FIELD *sfield,
              const Args & args,
-			 int patchNo )
+             int patchNo )
 {
   // TODO: Bigler
   // Not sure I need this yet
   sfield->fdata().initialize(T(0));
 
-  // Loop over each patch and get the data from the data archive.
-  /*for( Level::const_patchIterator patch_it = qinfo.level->patchesBegin();
-       patch_it != qinfo.level->patchesEnd(); ++patch_it){*/
-	   
-	// const Patch* patch = *patch_it;
 	const Patch* patch = qinfo.level->getPatch(patchNo);
 		
-      // This gets the data
-      handlePatchData<T, VarT, FIELD>(qinfo, offset, sfield, patch, args);
-  // }
+  // This gets the data
+  handlePatchData<T, VarT, FIELD>(qinfo, offset, sfield, patch, args);
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -84,7 +78,7 @@ build_field( QueryInfo &qinfo,
 map<const Patch*, list<const Patch*> > new2OldPatchMap_;
 
 GridP 
-build_minimal_patch_grid( GridP oldGrid )
+  build_minimal_patch_grid( GridP oldGrid )
 {
   int nlevels = oldGrid->numLevels();
   GridP newGrid = scinew Grid();
@@ -102,8 +96,8 @@ build_minimal_patch_grid( GridP oldGrid )
     LevelP newLevel =
       newGrid->addLevel(level->getAnchor(), level->dCell());
 
-//     cerr<<"Level "<<i<<":\n";
-//    int count = 0;
+    //     cerr<<"Level "<<i<<":\n";
+    //    int count = 0;
     SuperPatchContainer::const_iterator superIter;
     for (superIter = superPatches->begin();
          superIter != superPatches->end(); superIter++) {
@@ -112,7 +106,7 @@ build_minimal_patch_grid( GridP oldGrid )
       IntVector inLow = high; // taking min values starting at high
       IntVector inHigh = low; // taking max values starting at low
 
-//       cerr<<"\tcombined patch "<<count++<<" is "<<low<<", "<<high<<"\n";
+      //       cerr<<"\tcombined patch "<<count++<<" is "<<low<<", "<<high<<"\n";
 
       for (unsigned int p = 0; p < (*superIter)->getBoxes().size(); p++) {
         const Patch* patch = (*superIter)->getBoxes()[p];
@@ -139,12 +133,12 @@ build_minimal_patch_grid( GridP oldGrid )
 /////////////////////////////////////////////////////////////////////
 
 template<class T, class VarT, class FIELD>
-void
-build_patch_field(QueryInfo   & qinfo,
-                  const Patch * patch,
-                  IntVector   & offset,
-                  FIELD       * field,
-                  const Args  & args )
+  void
+  build_patch_field(QueryInfo   & qinfo,
+                    const Patch * patch,
+                    IntVector   & offset,
+                    FIELD       * field,
+                    const Args  & args )
 {
   // Initialize the data
   field->fdata().initialize((typename FIELD::value_type)(0));
@@ -167,8 +161,8 @@ build_patch_field(QueryInfo   & qinfo,
 /////////////////////////////////////////////////////////////////////
 
 template <class T, class VarT, class FIELD>
-FieldHandle
-build_multi_level_field( QueryInfo &qinfo, const Args & args )
+  FieldHandle
+  build_multi_level_field( QueryInfo &qinfo, const Args & args )
 {
   IntVector offset;
   if( args.verbose ) cout<<"Building minimal patch grid.\n";
@@ -177,71 +171,71 @@ build_multi_level_field( QueryInfo &qinfo, const Args & args )
 
   vector<MultiLevelFieldLevel< FIELD >*> levelfields;
 
-    for(int i = 0; i < grid_minimal->numLevels(); i++){
-      LevelP level = grid_minimal->getLevel( i );
-      vector<LockingHandle< FIELD > > patchfields;
+  for(int i = 0; i < grid_minimal->numLevels(); i++){
+    LevelP level = grid_minimal->getLevel( i );
+    vector<LockingHandle< FIELD > > patchfields;
     
-      // At this point we should have a mimimal patch set in our
-      // grid_minimal, and we want to make a LatVolField for each patch.
-      for(Level::const_patchIterator patch_it = level->patchesBegin();
-          patch_it != level->patchesEnd(); ++patch_it){
+    // At this point we should have a mimimal patch set in our
+    // grid_minimal, and we want to make a LatVolField for each patch.
+    for(Level::const_patchIterator patch_it = level->patchesBegin();
+        patch_it != level->patchesEnd(); ++patch_it){
       
         
-        IntVector patch_low, patch_high, range;
-        BBox pbox;
-        if( args.remove_boundary ){
-          patch_low = (*patch_it)->getNodeLowIndex();
-          patch_high = (*patch_it)->getNodeHighIndex(); 
-          pbox.extend((*patch_it)->getBox().lower());
-          pbox.extend((*patch_it)->getBox().upper());
-        } else {
-          patch_low = (*patch_it)->getExtraCellLowIndex();
-          patch_high = (*patch_it)->getExtraCellHighIndex(); 
-          pbox.extend((*patch_it)->getExtraBox().lower());
-          pbox.extend((*patch_it)->getExtraBox().upper());
-        }
-        // ***** This seems like a hack *****
-        range = patch_high - patch_low + IntVector(1,1,1); 
-        // **********************************
-//         cerr<<"before mesh update: range is "<<range.x()<<"x"<<
-//           range.y()<<"x"<< range.z()<<",  low index is "<<patch_low<<
-//           "high index is "<<patch_high<<" , size is  "<<
-//           pbox.min()<<", "<<pbox.max()<<" for Patch address "<<
-//           (*patch_it)<<"\n";
-      
-        LVMeshHandle mh = 0;
-        qinfo.level = level;
-        update_mesh_handle(qinfo.level, patch_high, 
-                           range, pbox, qinfo.type->getType(), mh, args ); 
-
-        FIELD *field = scinew FIELD( mh );
-//         set_field_properties(field, qinfo, patch_low);
-
-        build_patch_field<T, VarT, FIELD>( qinfo, (*patch_it), patch_low, field, args );
-
-        patchfields.push_back( field );
+      IntVector patch_low, patch_high, range;
+      BBox pbox;
+      if( args.remove_boundary ){
+        patch_low = (*patch_it)->getNodeLowIndex();
+        patch_high = (*patch_it)->getNodeHighIndex(); 
+        pbox.extend((*patch_it)->getBox().lower());
+        pbox.extend((*patch_it)->getBox().upper());
+      } else {
+        patch_low = (*patch_it)->getExtraCellLowIndex();
+        patch_high = (*patch_it)->getExtraCellHighIndex(); 
+        pbox.extend((*patch_it)->getExtraBox().lower());
+        pbox.extend((*patch_it)->getExtraBox().upper());
       }
-      MultiLevelFieldLevel<FIELD> *mrlevel = 
-        scinew MultiLevelFieldLevel<FIELD>( patchfields, i );
-      levelfields.push_back(mrlevel);
+      // ***** This seems like a hack *****
+      range = patch_high - patch_low + IntVector(1,1,1); 
+      // **********************************
+      //         cerr<<"before mesh update: range is "<<range.x()<<"x"<<
+      //           range.y()<<"x"<< range.z()<<",  low index is "<<patch_low<<
+      //           "high index is "<<patch_high<<" , size is  "<<
+      //           pbox.min()<<", "<<pbox.max()<<" for Patch address "<<
+      //           (*patch_it)<<"\n";
+      
+      LVMeshHandle mh = 0;
+      qinfo.level = level;
+      update_mesh_handle(qinfo.level, patch_high, 
+                         range, pbox, qinfo.type->getType(), mh, args ); 
+
+      FIELD *field = scinew FIELD( mh );
+      //         set_field_properties(field, qinfo, patch_low);
+
+      build_patch_field<T, VarT, FIELD>( qinfo, (*patch_it), patch_low, field, args );
+
+      patchfields.push_back( field );
     }
-    return scinew MultiLevelField<typename FIELD::mesh_type, 
-                                  typename FIELD::basis_type,
-                                  typename FIELD::fdata_type>(levelfields);
+    MultiLevelFieldLevel<FIELD> *mrlevel = 
+      scinew MultiLevelFieldLevel<FIELD>( patchfields, i );
+    levelfields.push_back(mrlevel);
+  }
+  return scinew MultiLevelField<typename FIELD::mesh_type, 
+    typename FIELD::basis_type,
+    typename FIELD::fdata_type>(levelfields);
 }
 
 
 /////////////////////////////////////////////////////////////////////
 
 template <class T, class VarT, class FIELD, class FLOC>
-NO_INLINE
-void
-build_combined_level_field( QueryInfo &qinfo,
-                            IntVector& offset,
-                            FIELD *sfield,
-                            const Args & args )
+  NO_INLINE
+  void
+  build_combined_level_field( QueryInfo &qinfo,
+                              IntVector& offset,
+                              FIELD *sfield,
+                              const Args & args )
 {
- // TODO: Bigler
+  // TODO: Bigler
   // Not sure I need this yet
   sfield->fdata().initialize(T(0));
 
@@ -251,11 +245,11 @@ build_combined_level_field( QueryInfo &qinfo,
   if( args.verbose ) cout<<"Multi-level Field is built\n";
 
   typedef MultiLevelField<typename FIELD::mesh_type, 
-                          typename FIELD::basis_type,
-                          typename FIELD::fdata_type> MLField;
+    typename FIELD::basis_type,
+    typename FIELD::fdata_type> MLField;
   typedef GenericField<typename FIELD::mesh_type, 
-                       typename FIELD::basis_type,
-                       typename FIELD::fdata_type>  GF;
+    typename FIELD::basis_type,
+    typename FIELD::fdata_type>  GF;
 
   MLField *mlfield = (MLField*) fh.get_rep();;
 
@@ -335,76 +329,53 @@ build_combined_level_field( QueryInfo &qinfo,
 } // end build_combined_level_field()
 
 ///////////////////////////////////////////////////////////////////////////////
-// Instantiate some of the needed verisons of functions.  The
-// following functions are never actually called, but force the
-// instantiation of the build* functions that are needed.
+// Instantiate some of the needed verisons of functions.
 
-template <class T>
-void
-instHelper()
-{
-  typedef GenericField<LVMesh, ConstantBasis<T>, FData3d<T, LVMesh> >   LVFieldCB;
-  typedef GenericField<LVMesh, HexTrilinearLgn<T>, FData3d<T, LVMesh> > LVFieldLB;
-  typedef typename LVFieldCB::mesh_type::Cell FLOC;
-  typedef typename LVFieldCB::mesh_type::Node FLON;
+#define INSTANTIATE_BUILD_COMBINED(T, V, LVField, FLO)                  \
+  template void build_combined_level_field<T, V<T>, LVField, FLO>(QueryInfo&, IntVector&, LVField*, const Args&);
 
-  QueryInfo   * qinfo = NULL;
-  IntVector     low;
-  LVFieldCB   * sf = NULL;
-  LVFieldLB   * flb = NULL;
-  const Args  * args = NULL;
+#define INSTANTIATE_BUILD_FIELD(T, V, LVField)                          \
+  template void build_field<T, V<T>, LVField >(QueryInfo&, IntVector&, T&, V<T>&, LVField*, const Args&, int);
+  
 
-  SFCXVariable<T> * sfcxv = NULL;
-  SFCYVariable<T> * sfcyv = NULL;
-  SFCZVariable<T> * sfczv = NULL;
-  CCVariable<T>   * ccv = NULL;
-  NCVariable<T>   * ncv = NULL;
-  T * aT = NULL;
-  int patchNo = 0;
-
-  build_combined_level_field<T, SFCXVariable<T>, LVFieldCB, FLOC>( *qinfo, low, sf, *args );
-  build_combined_level_field<T, SFCYVariable<T>, LVFieldCB, FLOC>( *qinfo, low, sf, *args );
-  build_combined_level_field<T, SFCZVariable<T>, LVFieldCB, FLOC>( *qinfo, low, sf, *args );
-  build_combined_level_field<T, CCVariable<T>,   LVFieldCB, FLOC>( *qinfo, low, sf, *args );
-  build_combined_level_field<T, NCVariable<T>,   LVFieldCB, FLOC>( *qinfo, low, sf, *args );
-
-  build_combined_level_field<T, SFCXVariable<T>, LVFieldCB, FLON>( *qinfo, low, sf, *args );
-  build_combined_level_field<T, SFCYVariable<T>, LVFieldCB, FLON>( *qinfo, low, sf, *args );
-  build_combined_level_field<T, SFCZVariable<T>, LVFieldCB, FLON>( *qinfo, low, sf, *args );
-  build_combined_level_field<T, CCVariable<T>,   LVFieldCB, FLON>( *qinfo, low, sf, *args );
-  build_combined_level_field<T, NCVariable<T>,   LVFieldCB, FLON>( *qinfo, low, sf, *args );
-
-  build_combined_level_field<T, SFCXVariable<T>, LVFieldLB, FLOC>( *qinfo, low, flb, *args );
-  build_combined_level_field<T, SFCYVariable<T>, LVFieldLB, FLOC>( *qinfo, low, flb, *args );
-  build_combined_level_field<T, SFCZVariable<T>, LVFieldLB, FLOC>( *qinfo, low, flb, *args );
-  build_combined_level_field<T, CCVariable<T>,   LVFieldLB, FLOC>( *qinfo, low, flb, *args );
-  build_combined_level_field<T, NCVariable<T>,   LVFieldLB, FLOC>( *qinfo, low, flb, *args );
-
-  build_combined_level_field<T, SFCXVariable<T>, LVFieldLB, FLON>( *qinfo, low, flb, *args );
-  build_combined_level_field<T, SFCYVariable<T>, LVFieldLB, FLON>( *qinfo, low, flb, *args );
-  build_combined_level_field<T, SFCZVariable<T>, LVFieldLB, FLON>( *qinfo, low, flb, *args );
-  build_combined_level_field<T, CCVariable<T>,   LVFieldLB, FLON>( *qinfo, low, flb, *args );
-  build_combined_level_field<T, NCVariable<T>,   LVFieldLB, FLON>( *qinfo, low, flb, *args );
-
-  build_field( *qinfo, low, *aT, *sfcxv, sf, *args, patchNo );
-  build_field( *qinfo, low, *aT, *sfcyv, sf, *args, patchNo );
-  build_field( *qinfo, low, *aT, *sfczv, sf, *args, patchNo );
-  build_field( *qinfo, low, *aT, *ccv,   sf, *args, patchNo );
-  build_field( *qinfo, low, *aT, *ncv,   sf, *args, patchNo );
-
-  build_field( *qinfo, low, *aT, *sfcxv, flb, *args, patchNo );
-  build_field( *qinfo, low, *aT, *sfcyv, flb, *args, patchNo );
-  build_field( *qinfo, low, *aT, *sfczv, flb, *args, patchNo );
-  build_field( *qinfo, low, *aT, *ccv,   flb, *args, patchNo );
-  build_field( *qinfo, low, *aT, *ncv,   flb, *args, patchNo );
-}
-
-void
-templateInstantiationForBuildCC()
-{
-  instHelper<Vector>();
-  instHelper<double>();
-  instHelper<int>();
-  instHelper<float>();
-  instHelper<Matrix3>();
-}
+#define INSTANTIATE_TEMPLATES_BUILD_CC(T)                               \
+  typedef GenericField<LVMesh, ConstantBasis<T>, FData3d<T, LVMesh> >   LVFieldCB_##T; \
+  typedef GenericField<LVMesh, HexTrilinearLgn<T>, FData3d<T, LVMesh> > LVFieldLB_##T; \
+  typedef LVFieldCB_##T::mesh_type::Cell FLOC_##T;                      \
+  typedef LVFieldCB_##T::mesh_type::Node FLON_##T;                      \
+  INSTANTIATE_BUILD_COMBINED(T, SFCXVariable, LVFieldCB_##T, FLOC_##T) \
+  INSTANTIATE_BUILD_COMBINED(T, SFCYVariable, LVFieldCB_##T, FLOC_##T) \
+  INSTANTIATE_BUILD_COMBINED(T, SFCZVariable, LVFieldCB_##T, FLOC_##T) \
+  INSTANTIATE_BUILD_COMBINED(T, CCVariable,   LVFieldCB_##T, FLOC_##T) \
+  INSTANTIATE_BUILD_COMBINED(T, NCVariable,   LVFieldCB_##T, FLOC_##T) \
+  INSTANTIATE_BUILD_COMBINED(T, SFCXVariable, LVFieldCB_##T, FLON_##T) \
+  INSTANTIATE_BUILD_COMBINED(T, SFCYVariable, LVFieldCB_##T, FLON_##T) \
+  INSTANTIATE_BUILD_COMBINED(T, SFCZVariable, LVFieldCB_##T, FLON_##T) \
+  INSTANTIATE_BUILD_COMBINED(T, CCVariable,   LVFieldCB_##T, FLON_##T) \
+  INSTANTIATE_BUILD_COMBINED(T, NCVariable,   LVFieldCB_##T, FLON_##T) \
+  INSTANTIATE_BUILD_COMBINED(T, SFCXVariable, LVFieldLB_##T, FLOC_##T) \
+  INSTANTIATE_BUILD_COMBINED(T, SFCYVariable, LVFieldLB_##T, FLOC_##T) \
+  INSTANTIATE_BUILD_COMBINED(T, SFCZVariable, LVFieldLB_##T, FLOC_##T) \
+  INSTANTIATE_BUILD_COMBINED(T, CCVariable,   LVFieldLB_##T, FLOC_##T) \
+  INSTANTIATE_BUILD_COMBINED(T, NCVariable,   LVFieldLB_##T, FLOC_##T) \
+  INSTANTIATE_BUILD_COMBINED(T, SFCXVariable, LVFieldLB_##T, FLON_##T) \
+  INSTANTIATE_BUILD_COMBINED(T, SFCYVariable, LVFieldLB_##T, FLON_##T) \
+  INSTANTIATE_BUILD_COMBINED(T, SFCZVariable, LVFieldLB_##T, FLON_##T) \
+  INSTANTIATE_BUILD_COMBINED(T, CCVariable,   LVFieldLB_##T, FLON_##T) \
+  INSTANTIATE_BUILD_COMBINED(T, NCVariable,   LVFieldLB_##T, FLON_##T) \
+  INSTANTIATE_BUILD_FIELD(T, SFCXVariable, LVFieldCB_##T)           \
+  INSTANTIATE_BUILD_FIELD(T, SFCYVariable, LVFieldCB_##T)           \
+  INSTANTIATE_BUILD_FIELD(T, SFCZVariable, LVFieldCB_##T)           \
+  INSTANTIATE_BUILD_FIELD(T, CCVariable,   LVFieldCB_##T)           \
+  INSTANTIATE_BUILD_FIELD(T, NCVariable,   LVFieldCB_##T)           \
+  INSTANTIATE_BUILD_FIELD(T, SFCXVariable, LVFieldLB_##T)           \
+  INSTANTIATE_BUILD_FIELD(T, SFCYVariable, LVFieldLB_##T)           \
+  INSTANTIATE_BUILD_FIELD(T, SFCZVariable, LVFieldLB_##T)           \
+  INSTANTIATE_BUILD_FIELD(T, CCVariable,   LVFieldLB_##T)           \
+  INSTANTIATE_BUILD_FIELD(T, NCVariable,   LVFieldLB_##T)             
+  
+INSTANTIATE_TEMPLATES_BUILD_CC(Vector)
+INSTANTIATE_TEMPLATES_BUILD_CC(double)
+INSTANTIATE_TEMPLATES_BUILD_CC(int)
+INSTANTIATE_TEMPLATES_BUILD_CC(float)
+INSTANTIATE_TEMPLATES_BUILD_CC(Matrix3)

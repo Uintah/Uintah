@@ -102,23 +102,6 @@ public:
   avtudaReaderMTMDFileFormat(const char *);
   virtual           ~avtudaReaderMTMDFileFormat();
 
-  //
-  // This is used to return unconvention data -- ranging from material
-  // information to information about block connectivity.
-  //
-  // virtual void      *GetAuxiliaryData(const char *var, int timestep, 
-  //                                     int domain, const char *type, void *args, 
-  //                                     DestructorFunction &);
-  //
-
-  //
-  // If you know the times and cycle numbers, overload this function.
-  // Otherwise, VisIt will make up some reasonable ones for you.
-  //
-  // virtual void        GetCycles(std::vector<int> &);
-  // virtual void        GetTimes(std::vector<double> &);
-  //
-
   virtual double        GetTime(int);
   virtual int           GetNTimesteps(void);
 
