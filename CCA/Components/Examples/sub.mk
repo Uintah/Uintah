@@ -48,7 +48,8 @@ SRCS     += \
 	$(SRCDIR)/ExamplesLabel.cc \
 	$(SRCDIR)/RegridderTest.cc \
 	$(SRCDIR)/SolverTest1.cc \
-	$(SRCDIR)/RegionDB.cc 		
+	$(SRCDIR)/RegionDB.cc \
+	$(SRCDIR)/Benchmark.cc 		
 
 PSELIBS := \
 	Core/Geometry \
