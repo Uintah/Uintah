@@ -49,6 +49,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Examples/ParticleTest1.h>
 #include <CCA/Components/Examples/RegridderTest.h>
 #include <CCA/Components/Examples/Poisson3.h>
+#include <CCA/Components/Examples/Benchmark.h>
 #include <CCA/Components/Angio/Angio.h>
 #include <CCA/Components/Examples/SolverTest1.h>
 #include <CCA/Components/PatchCombiner/PatchCombiner.h>
@@ -179,6 +180,9 @@ ComponentFactory::create( ProblemSpecP& ps, const ProcessorGroup* world,
   if (sim_comp == "poisson4" || sim_comp == "POISSON4") {
     return scinew Poisson4(world);
   } 
+  if (sim_comp == "benchmark" || sim_comp == "BENCHMARK") {
+    return scinew Benchmark(world);
+  } 
   if (sim_comp == "angio") {
     return scinew Angio(world);
   } 
@@ -203,7 +207,7 @@ ComponentFactory::create( ProblemSpecP& ps, const ProcessorGroup* world,
   }
 #endif
   throw ProblemSetupException("Unknown simulationComponent ('" + sim_comp + "'). Must specify -arches, -ice, -mpm, "
-                              "-impm, -mpmice, -mpmarches, -burger, -wave, -poisson1, -poisson2, -poisson3 or -angio.\n"
+                              "-impm, -mpmice, -mpmarches, -burger, -wave, -poisson1, -poisson2, -poisson3, -benchmark or -angio.\n"
                               "Note: the following components were turned off at configure time: " + turned_off_options + "\n"
                               "Make sure that the requested component is supported in this build.", __FILE__, __LINE__);
 }
