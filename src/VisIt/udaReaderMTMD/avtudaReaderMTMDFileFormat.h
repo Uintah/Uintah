@@ -176,15 +176,11 @@ protected:
   udaVars*         (*getVarList)(DataArchive*);
   typeDouble*      (*getTimeSteps)(DataArchive*);
   double*          (*getBBox)(DataArchive*, GridP*, int);
-  double*          (*getPatchBBox)(DataArchive*, GridP*, int, int);
-  int*             (*getPatchIndex)(DataArchive*, GridP*, int, int, const std::string&);
   varMatls*        (*getMaterials)(DataArchive*, GridP*, int, const std::string&);
   levelPatchVec*   (*getTotalNumPatches)(DataArchive*, GridP*);
   patchInfoVec*    (*getPatchInfo)(DataArchive*, GridP*, const std::string&, bool);
-  int*             (*getNumPatches)(DataArchive*, GridP*, int);
   int*             (*getPeriodicBoundaries)(DataArchive*, GridP*, int);
   int*             (*getExtraCells)(DataArchive*, GridP*, int);
-  int*             (*getNumLevels)(DataArchive*, GridP*);
   int*             (*getPVarLevelAndPatches)(DataArchive*, GridP*, int, const std::string&); 
 };
 

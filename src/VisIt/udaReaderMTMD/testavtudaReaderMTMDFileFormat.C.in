@@ -187,11 +187,6 @@ avtudaReaderMTMDFileFormat::avtudaReaderMTMDFileFormat(const char *filename) :
     EXCEPTION1(InvalidDBTypeException, "The function getBBox could not be located in the library!!!");
   }
 
-  *(void **)(&getPatchBBox) = dlsym(libHandle, "getPatchBBox");
-  if((error = dlerror()) != NULL) {
-    EXCEPTION1(InvalidDBTypeException, "The function getPatchBBox could not be located in the library!!!");
-  }
-
   *(void **)(&processData) = dlsym(libHandle, "processData");
   if((error = dlerror()) != NULL) {
     EXCEPTION1(InvalidDBTypeException, "The function processData could not be located in the library!!!");
@@ -201,21 +196,6 @@ avtudaReaderMTMDFileFormat::avtudaReaderMTMDFileFormat(const char *filename) :
   if((error = dlerror()) != NULL) {
     EXCEPTION1(InvalidDBTypeException, "The function getTotalNumPatches could not be located in the library!!!");
   }
-
-  *(void **)(&getNumPatches) = dlsym(libHandle, "getNumPatches");
-  if((error = dlerror()) != NULL) {
-    EXCEPTION1(InvalidDBTypeException, "The function getNumPatches could not be located in the library!!!");
-  }
-
-  *(void **)(&getNumLevels) = dlsym(libHandle, "getNumLevels");
-  if((error = dlerror()) != NULL) {
-    EXCEPTION1(InvalidDBTypeException, "The function getNumLevels could not be located in the library!!!");
-  }             
-
-  *(void **)(&getPatchIndex) = dlsym(libHandle, "getPatchIndex");
-  if((error = dlerror()) != NULL) {
-    EXCEPTION1(InvalidDBTypeException, "The function getPatchIndex could not be located in the library!!!");
-  }     
 
   *(void **)(&getPatchInfo) = dlsym(libHandle, "getPatchInfo");
   if((error = dlerror()) != NULL) {
