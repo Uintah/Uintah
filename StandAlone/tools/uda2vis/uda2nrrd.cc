@@ -243,31 +243,6 @@ getTotalNumPatches(DataArchive *archive, GridP *grid) {
 
 /////////////////////////////////////////////////////////////////////
 extern "C"
-int*
-getNumPatches(DataArchive *archive, GridP *grid, int levelNo) {
-
-  int* numPatches = new int();
-
-  LevelP level;
-  level = (*grid)->getLevel(levelNo);
-  *numPatches = level->numPatches();
-
-  return numPatches;
-}
-
-/////////////////////////////////////////////////////////////////////
-extern "C"
-int*
-getNumLevels(DataArchive *archive, GridP *grid) {
-
-  int* numLevels = new int();
-  *numLevels = (*grid)->numLevels();
-
-  return numLevels;
-}
-
-/////////////////////////////////////////////////////////////////////
-extern "C"
 varMatls*
 getMaterials(DataArchive *archive, GridP *grid, int timeStepNo, const string& variable_name) {
 
@@ -314,68 +289,6 @@ getBBox(DataArchive *archive, GridP* grid, int levelNo) {
   return minMaxArr;
 } 
 
-/////////////////////////////////////////////////////////////////////
-extern "C"
-int*
-getPatchIndex(DataArchive *archive, GridP *grid, int levelNo, int patchNo, 
-              const string& varType) { 
-
-  // Modify this to include basis order, as implemented in handlePatchData
-  // NC - 0, CC, SFCX, SFCY, SFCZ - 1
-
-  LevelP level;
-
-  level = (*grid)->getLevel(levelNo);
-  const Patch* patch = level->getPatch(patchNo);
-
-  IntVector patch_lo, patch_hi, low, hi;
-
-  if(varType.find("CC") != string::npos) {
-    patch_lo = patch->getExtraCellLowIndex();
-    patch_hi = patch->getExtraCellHighIndex();
-  } 
-  else {
-    patch_lo = patch->getExtraNodeLowIndex();
-    // switch (qinfo.type->getType()) {
-    // case Uintah::TypeDescription::SFCXVariable:
-    if(varType.find("SFCX") != string::npos)
-      patch_hi = patch->getSFCXHighIndex();
-    // break;
-    // case Uintah::TypeDescription::SFCYVariable:
-    else if(varType.find("SFCY") != string::npos)
-      patch_hi = patch->getSFCYHighIndex();
-    // break;
-    // case Uintah::TypeDescription::SFCZVariable:
-    else if(varType.find("SFCZ") != string::npos)
-      patch_hi = patch->getSFCZHighIndex();
-    // break;
-    // case Uintah::TypeDescription::NCVariable:
-    else if(varType.find("NC") != string::npos)
-      patch_hi = patch->getNodeHighIndex();
-    // break;
-    // default:
-    // cerr << "build_field::unknown variable.\n";
-    // exit(1);
-  }
-
-  level->findIndexRange(low, hi);
-
-  patch_lo = patch->getExtraCellLowIndex() - low;
-  patch_hi = patch->getExtraCellHighIndex() - low;
-
-  int *indexArr = new int[6];
-
-  indexArr[0] = patch_lo.x(); 
-  indexArr[1] = patch_lo.y(); 
-  indexArr[2] = patch_lo.z();
-  indexArr[3] = patch_hi.x(); 
-  indexArr[4] = patch_hi.y(); 
-  indexArr[5] = patch_hi.z();
-
-  cout << indexArr[3] - indexArr[0] << " " << indexArr[4] - indexArr[1] << " " << indexArr[5] - indexArr[2] << "\n";
-
-  return indexArr;
-}
 
 /////////////////////////////////////////////////////////////////////
 extern "C"
@@ -484,26 +397,6 @@ getPatchInfo(DataArchive *archive, GridP *grid, const string& varType,
   return patchInfoVecPtr;
 }
 
-/////////////////////////////////////////////////////////////////////
-extern "C"
-double*
-getPatchBBox(DataArchive *archive, GridP *grid, int levelNo, int patchNo) {
-
-  LevelP level;
-
-  level = (*grid)->getLevel(levelNo);
-  const Patch* patch = level->getPatch(patchNo);
-
-  Point min = patch->getExtraBox().lower();
-  Point max = patch->getExtraBox().upper();
-
-  double *minMaxArr = new double[6];
-
-  minMaxArr[0] = min.x(); minMaxArr[1] = min.y(); minMaxArr[2] = min.z();
-  minMaxArr[3] = max.x(); minMaxArr[4] = max.y(); minMaxArr[5] = max.z();
-
-  return minMaxArr;
-}
 
 /////////////////////////////////////////////////////////////////////
 extern "C"
