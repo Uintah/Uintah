@@ -2888,6 +2888,95 @@ As a final example the table:
 would result in 50\% hydrostatic compression at time=1 with a 45 degree superimposed rotation about the 2-axis, followed by  simple shear and a 90 degree rotation about the 3-axis between time=1 and time=2.
 
 
+\subsubsection{Cohesive Zones} \label{CohesiveZones}
+A cohesive zone formulation is available in Uintah based on the description
+by Daphalapurkar, et al.~\cite{Daphalapurkar}.  As in their implementation,
+that in Uintah has several limitations.  It is limited to a 2D implementation,
+and the cohesive zone segments are assumed to not rotate or deform.
+
+In order to use cohesive zones, the following field must be added to the
+\tt <MPM> \normalfont section of the input file:
+
+\begin{Verbatim}
+ <MPM>
+     <use_cohesive_zones>true</use_cohesive_zones>
+ </MPM>
+\end{Verbatim}
+
+The traction functions used in Uintah are those given in Eq. 15
+of~\cite{Daphalapurkar}.  These require 4 input parameters.  They are
+$\sig_{max}$, $\tau_{max}$, $\delta_n$ and $\delta_t$, the cohesive strengths
+in the normal and shear directions, and the displacement jumps in the normal and
+tangential directions corresponding to the maximum normal and shear strength
+values, respectively.
+
+In an input file, the description of a cohesive zone looks like:
+
+\begin{Verbatim}
+            <cohesive_zone>
+              <sig_max> 240. </sig_max>
+              <tau_max> 240. </tau_max>
+              <delta_n> 0.00004   </delta_n>
+              <delta_t> 0.0000933 </delta_t>
+              <cz_filename>HOM.txt</cz_filename>
+            </cohesive_zone>
+\end{Verbatim}
+
+Note that in addition to the four parameters listed above, a cohesive zone
+filename is also specified.  The format of this file will be described below.
+Units on the strength and displacement correspond to the units for
+stress and length used in the remainder of the input file.
+
+Cohesive zones describe a cohesion law between adjacent materials. As such,
+they take the place of a contact model.  Thus, when using cohesive zones to
+describe the interaction of materials 1 and 2, the contact section of the input
+file would be:
+
+\begin{Verbatim}
+            <contact>
+                <type>null</type>
+                <materials>[1,2]</materials>
+            </contact>
+\end{Verbatim}
+
+Use of friction or approach contact to describe interaction between objects
+subsequent to decohesion should be possible and is being investigated.
+
+The traction that is applied to the two materials governed by a
+cohesive zone model is based on the displacement between those two materials,
+both normal and tangential.  The two adjacent materials are referred to in the
+implementation as the ``Top" and ``Bottom" materials.  A normal and tangential
+vector describes the orientation of the cohesive zone surface.  The convention
+for the normal vector is that it points in the direction from the bottom
+material to the top material.  With this information in hand, we can describe
+the format of the \tt <cz\_filename> \normalfont mentioned above.
+
+\begin{Verbatim}
+px1 py1 pz1 length1 normx1 normy1 normz1 tangx1 tangy1 tangz1 botmat1 topmat1
+px2 py2 pz2 length2 normx2 normy2 normz2 tangx2 tangy2 tangz2 botmat2 topmat2
+. . .
+pxN pyN pzN lengthN normxN normyN normzN tangxN tangyN tangzN botmatN topmatN
+\end{Verbatim}
+
+where the first three columns are the x, y and z coordinates of the position, 
+the fourth column is the length, the fifth through seventh column is the normal
+direction (x, y, z) and the eighth through tenth column is the tangential
+direction (x, y, z).  Finally, the eleventh and twelth columns are the bottom
+and top material indices, respectively.
+
+An example of 3 cohesive zone segments follows:
+
+\begin{Verbatim}
+2.5125 0.0 0.025 0.00125 0.0 1.0 0.0 1.0 0.0 0.0 1 2
+2.5375 0.0 0.025 0.00125 0.0 1.0 0.0 1.0 0.0 0.0 1 2
+2.5625 0.0 0.025 0.00125 0.0 1.0 0.0 1.0 0.0 0.0 1 2
+\end{Verbatim}
+
+As a 2D simulation in Uintah is actually a 3D simulation that is 1 cell thick,
+the ``length" parameter described above is actually going to be an area.
+Namely, the length in the plane of the simulation multiplied by the domain
+thickness in the out of plane direction.
+
 %
 %______________________________________________________________________
 \section{Examples} \label{Sec:ExamplesMPM}
@@ -3320,7 +3409,4 @@ magnitude.
 %\section{References}
 \bibliographystyle{plain}
 \bibliography{mpm}
-
-
-
 
