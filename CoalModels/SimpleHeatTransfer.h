@@ -16,7 +16,7 @@
 /**
   * @class    SimpleHeatTransfer
   * @author   Julien Pedel, Jeremy Thornock, Charles Reid
-  * @date     November 2010
+  * @date     November 2009
   *
   * @brief    A simple heat transfer model for coal paticles.
   *           (This needs a more descriptive name)
