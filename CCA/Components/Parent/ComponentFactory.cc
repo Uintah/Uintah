@@ -2,7 +2,7 @@
 
 The MIT License
 
-Copyright (c) 1997-2009 Center for the Simulation of Accidental Fires and 
+Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
 Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 University of Utah.
 
@@ -27,29 +27,6 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-
-#include <CCA/Components/Parent/ComponentFactory.h>
-#include <CCA/Components/Parent/Switcher.h>
-#include <CCA/Components/MPM/SerialMPM.h>
-#include <CCA/Components/MPM/AMRMPM.h>
-#include <CCA/Components/MPM/FractureMPM.h>
-#include <CCA/Components/MPM/RigidMPM.h>
-#include <CCA/Components/MPM/ShellMPM.h>
-#include <CCA/Components/MPM/ImpMPM.h>
-#include <CCA/Components/ICE/ICE.h>
-#include <CCA/Components/ICE/AMRICE.h>
-#include <CCA/Components/MPMICE/MPMICE.h>
-#include <CCA/Components/MPMArches/MPMArches.h>
-#include <CCA/Components/Examples/Poisson1.h>
-#include <CCA/Components/Examples/Poisson2.h>
-#include <CCA/Components/Examples/Poisson4.h>
-#include <CCA/Components/Examples/Burger.h>
-#include <CCA/Components/Examples/Wave.h>
-#include <CCA/Components/Examples/AMRWave.h>
-#include <CCA/Components/Examples/ParticleTest1.h>
-#include <CCA/Components/Examples/RegridderTest.h>
-#include <CCA/Components/Examples/Poisson3.h>
-#include <CCA/Components/Examples/Benchmark.h>
 #include <CCA/Components/Angio/Angio.h>
 #include <CCA/Components/Examples/SolverTest1.h>
 #include <CCA/Components/PatchCombiner/PatchCombiner.h>
@@ -68,8 +45,10 @@ DEALINGS IN THE SOFTWARE.
 
 #include <sci_defs/uintah_defs.h>
 
+using std::cerr;
+using std::endl;
+
 using namespace Uintah;
-using namespace std;
 
 UintahParallelComponent *
 ComponentFactory::create( ProblemSpecP& ps, const ProcessorGroup* world, 

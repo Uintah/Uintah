@@ -55,6 +55,7 @@ class VarLabel;
 class Material; 
 class ICEMaterial;
 class MPMMaterial;
+class CZMaterial;
 class ArchesMaterial; 
 class SimpleMaterial;
 class Level;
@@ -115,16 +116,20 @@ public:
   void registerSimpleMaterial(SimpleMaterial*);
   void registerMPMMaterial(MPMMaterial*);
   void registerMPMMaterial(MPMMaterial*,unsigned int index);
+  void registerCZMaterial(CZMaterial*);
+  void registerCZMaterial(CZMaterial*,unsigned int index);
   void registerArchesMaterial(ArchesMaterial*);
   void registerICEMaterial(ICEMaterial*);
   void registerICEMaterial(ICEMaterial*,unsigned int index);
-  int getNumVelFields() const;
 
   int getNumMatls() const {
     return (int)matls.size();
   }
   int getNumMPMMatls() const {
     return (int)mpm_matls.size();
+  }
+  int getNumCZMatls() const {
+    return (int)cz_matls.size();
   }
   int getNumArchesMatls() const {
     return (int)arches_matls.size();
@@ -144,7 +149,9 @@ public:
   MPMMaterial* getMPMMaterial(int idx) const {
     return mpm_matls[idx];
   }
-
+  CZMaterial* getCZMaterial(int idx) const {
+    return cz_matls[idx];
+  }
   ArchesMaterial* getArchesMaterial(int idx) const {
     return arches_matls[idx];
   }
@@ -152,9 +159,7 @@ public:
   ICEMaterial* getICEMaterial(int idx) const {
     return ice_matls[idx];
   }
-  Vector getGravity() const {
-    return d_gravity;
-  }
+
   void setNeedAddMaterial(int nAM) {
     d_needAddMaterial += nAM;
   }
@@ -178,6 +183,7 @@ public:
 
   void finalizeMaterials();
   const MaterialSet* allMPMMaterials() const;
+  const MaterialSet* allCZMaterials() const;
   const MaterialSet* allArchesMaterials() const;
   const MaterialSet* allICEMaterials() const;
   const MaterialSet* allMaterials() const;
@@ -186,10 +192,6 @@ public:
 
   void setOriginalMatlsFromRestart(MaterialSet* matls);
   
-  double getRefPress() const {
-    return d_ref_press;
-  }
-
   double getElapsedTime() const { return d_elapsed_time; }
   void   setElapsedTime(double t) { d_elapsed_time = t; }
 
@@ -224,6 +226,9 @@ public:
 
   vector<vector<const VarLabel* > > d_particleState;
   vector<vector<const VarLabel* > > d_particleState_preReloc;
+
+  vector<vector<const VarLabel* > > d_cohesiveZoneState;
+  vector<vector<const VarLabel* > > d_cohesiveZoneState_preReloc;
 
   bool d_switchState;
   double d_prev_delt;
@@ -268,6 +273,7 @@ private:
 
   std::vector<Material*>       matls;
   std::vector<MPMMaterial*>    mpm_matls;
+  std::vector<CZMaterial*>     cz_matls;
   std::vector<ArchesMaterial*> arches_matls;
   std::vector<ICEMaterial*>    ice_matls;
   std::vector<SimpleMaterial*> simple_matls;
@@ -286,9 +292,8 @@ private:
 
   std::map<std::string, Material*> named_matls;
 
-  Vector d_gravity;
-
   MaterialSet    * all_mpm_matls;
+  MaterialSet    * all_cz_matls;
   MaterialSet    * all_ice_matls;
   MaterialSet    * all_arches_matls;
   MaterialSet    * all_matls;
@@ -298,7 +303,6 @@ private:
   MaterialSubset * refine_flag_matls;
   MaterialSubset * allInOneMatl;
 
-  double d_ref_press;
   int    d_needAddMaterial;
 
   // The time step that the top level (w.r.t. AMR) is at during a

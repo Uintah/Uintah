@@ -16,7 +16,7 @@
 /**
   * @class    HeatTransfer
   * @author   Charles Reid
-  * @date     November 2009
+  * @date     November 2010
   *
   * @brief    A heat transfer model parent class 
   *

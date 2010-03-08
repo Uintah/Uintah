@@ -42,12 +42,14 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/MPMArches/MPMArches.h>
 #include <CCA/Components/Examples/Poisson1.h>
 #include <CCA/Components/Examples/Poisson2.h>
+#include <CCA/Components/Examples/Poisson4.h>
 #include <CCA/Components/Examples/Burger.h>
 #include <CCA/Components/Examples/Wave.h>
 #include <CCA/Components/Examples/AMRWave.h>
 #include <CCA/Components/Examples/ParticleTest1.h>
 #include <CCA/Components/Examples/RegridderTest.h>
 #include <CCA/Components/Examples/Poisson3.h>
+#include <CCA/Components/Examples/Benchmark.h>
 #include <CCA/Components/Examples/SolverTest1.h>
 #include <CCA/Components/PatchCombiner/PatchCombiner.h>
 #include <CCA/Components/PatchCombiner/UdaReducer.h>
@@ -58,6 +60,7 @@ DEALINGS IN THE SOFTWARE.
 
 
 #include <iosfwd>
+#include <string>
 
 #include <sci_defs/uintah_defs.h>
 
@@ -87,6 +90,8 @@ ComponentFactory::create( ProblemSpecP& ps, const ProcessorGroup* world,
 
   proc0cout << "Simulation Component: \t'" << sim_comp << "'\n";
 
+  string turned_off_options;
+
 #ifndef NO_MPM
   if (sim_comp == "mpm" || sim_comp == "MPM") {
     return scinew SerialMPM(world);
@@ -106,6 +111,8 @@ ComponentFactory::create( ProblemSpecP& ps, const ProcessorGroup* world,
   if (sim_comp == "impm" || sim_comp == "IMPM") {
     return scinew ImpMPM(world);
   } 
+#else
+  turned_off_options += "MPM ";
 #endif
 #ifndef NO_ICE
   if (sim_comp == "ice" || sim_comp == "ICE") {
@@ -114,6 +121,8 @@ ComponentFactory::create( ProblemSpecP& ps, const ProcessorGroup* world,
     else
       return scinew ICE(world);
   } 
+#else
+  turned_off_options += "ICE ";
 #endif
 #if !defined(NO_MPM) && !defined(NO_ICE)
   if (sim_comp == "mpmice" || sim_comp == "MPMICE") {
@@ -125,6 +134,8 @@ ComponentFactory::create( ProblemSpecP& ps, const ProcessorGroup* world,
   if (sim_comp == "rmpmice" || sim_comp == "rigidmpmice" || sim_comp == "RIGIDMPMICE") {
     return scinew MPMICE(world,RIGID_MPMICE, doAMR);
   } 
+#else
+  turned_off_options += "MPMICE ";
 #endif
 #ifndef NO_ARCHES
   if (sim_comp == "arches" || sim_comp == "ARCHES") {
@@ -133,11 +144,15 @@ ComponentFactory::create( ProblemSpecP& ps, const ProcessorGroup* world,
     }
     return scinew Arches(world);
   } 
+#else
+  turned_off_options += "ARCHES ";
 #endif
 #if !defined(NO_MPM) && !defined(NO_ARCHES)
   if (sim_comp == "mpmarches" || sim_comp == "MPMARCHES") {
     return scinew MPMArches(world);
   } 
+#else
+  turned_off_options += "MPMARCHES ";
 #endif
   if (sim_comp == "burger" || sim_comp == "BURGER") {
     return scinew Burger(world);
@@ -160,6 +175,12 @@ ComponentFactory::create( ProblemSpecP& ps, const ProcessorGroup* world,
   if (sim_comp == "poisson3" || sim_comp == "POISSON3") {
     return scinew Poisson3(world);
   } 
+  if (sim_comp == "poisson4" || sim_comp == "POISSON4") {
+    return scinew Poisson4(world);
+  } 
+  if (sim_comp == "benchmark" || sim_comp == "BENCHMARK") {
+    return scinew Benchmark(world);
+  } 
   if (sim_comp == "particletest" || sim_comp == "PARTICLETEST") {
     return scinew ParticleTest1(world);
   } 
@@ -176,6 +197,7 @@ ComponentFactory::create( ProblemSpecP& ps, const ProcessorGroup* world,
     return scinew UdaReducer(world, uda);
   } 
   throw ProblemSetupException("Unknown simulationComponent ('" + sim_comp + "'). Must specify -arches, -ice, -mpm, "
-                              "-impm, -mpmice, -mpmarches, -burger, -wave, -poisson1, -poisson2, -poisson3"
-                              "\nMake sure that component is supported in this build", __FILE__, __LINE__);
+                              "-impm, -mpmice, -mpmarches, -burger, -wave, -poisson1, -poisson2, -poisson3, -benchmark.\n"
+                              "Note: the following components were turned off at configure time: " + turned_off_options + "\n"
+                              "Make sure that the requested component is supported in this build.", __FILE__, __LINE__);
 }

@@ -13,8 +13,8 @@
 /**
   * @class    KobayashiSarofimDevol
   * @author   Jeremy Thornock, Julien Pedel, Charles Reid
-  * @date     May 2009        Check-in of initial version
-  *           November 2009   Verification
+  * @date     May 2010        Check-in of initial version
+  *           November 2010   Verification
   *
   * @brief    A class for calculating the DQMOM model term for the 
   *           Kobayashi-Sarofim coal devolatilization model.
