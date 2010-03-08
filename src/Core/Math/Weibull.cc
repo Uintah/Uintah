@@ -36,9 +36,9 @@
  *   Scot Swan
  *   Department of Mechanical Engineering
  *   University of Utah
- *   March 2010
+ *   March 2009
  *
- *  Copyright (C) 2010 SCI Group
+ *  Copyright (C) 2009 SCI Group
  */
 
 #include <Core/Math/Weibull.h>

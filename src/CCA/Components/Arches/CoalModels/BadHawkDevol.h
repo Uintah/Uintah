@@ -15,7 +15,7 @@
 /**
   * @class    BadHawkDevol
   * @author   Charles Reid
-  * @date     October 2010
+  * @date     October 2009
   *
   * @brief    A class for calculating the DQMOM model term for the 
   *           Badzioch and Hawksley coal devolatilization model.
