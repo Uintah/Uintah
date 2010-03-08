@@ -630,7 +630,7 @@
   <Scheduler              spec="OPTIONAL NO_DATA">
     <small_messages       spec="OPTIONAL BOOLEAN" />
     <useExternalReadyQueue  spec="OPTIONAL BOOLEAN" />
-    <taskReadyQueueAlg     spec="OPTIONAL STRING" />
+    <taskReadyQueueAlg     spec="OPTIONAL STRING 'MostChildren LeastChildren MostAllChildren LeastAllChildren MostL2Children LeastL2Children MostMesssages LeastMesages Random FCFS'" />
     <VarTracker           spec="OPTIONAL NO_DATA">
       <start_time         spec="REQUIRED DOUBLE" />
       <end_time           spec="REQUIRED DOUBLE" />
