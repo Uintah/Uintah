@@ -487,6 +487,7 @@ void AMRMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
   t->computes(lb->gVolumeLabel);
   t->computes(lb->gVelocityLabel);
   t->computes(lb->gExternalForceLabel);
+  t->computes(lb->TotalMassLabel);
 
   sched->addTask(t, patches, matls);
 
@@ -914,6 +915,9 @@ void AMRMPM::interpolateParticlesToGrid(const ProcessorGroup*,
     ParticleInterpolator* interpolator = flags->d_interpolator->clone(patch);
     vector<IntVector> ni(interpolator->size());
     vector<double> S(interpolator->size());
+    
+    string interp_type = flags->d_interpolator_type;
+          
     Ghost::GhostType  gan = Ghost::AroundNodes;
     Ghost::GhostType  gac = Ghost::AroundCells;
 
@@ -964,6 +968,7 @@ void AMRMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       gvolume.initialize(d_SMALL_NUM_MPM);
       gvelocity.initialize(Vector(0,0,0));
       gexternalforce.initialize(Vector(0,0,0));
+      double totalmass = 0;
 
       // Create arrays for the particle data on this patch
       constParticleVariable<Point>  px;
@@ -1008,24 +1013,36 @@ void AMRMPM::interpolateParticlesToGrid(const ProcessorGroup*,
           old_dw->get(pErosion,       lb->pErosionLabel,           pset);
           new_dw->get(pexternalforce, lb->pExtForceLabel_preReloc, pset);
 
+
+          int n8or27=flags->d_8or27;
           int num_cur, num_fine, num_coarse;
           for (ParticleSubset::iterator iter = pset->begin();
                iter != pset->end(); 
                iter++){
             particleIndex idx = *iter;
     
+#if 0
             // Get the node indices that surround the cell
             interpolator->findCellAndWeights(px[idx],ni,S,ZOI_CUR,ZOI_FINE,
                                              get_finer,num_cur,num_fine,
                                              num_coarse,psize[idx],coarse_part,
                                              patch);
+#endif
+                                             
+/*`==========TESTING==========*/
+            // Get the node indices that surround the cell
+            interpolator->findCellAndWeights(px[idx],ni,S,psize[idx]); 
+/*===========TESTING==========`*/
 
             Vector pmom = pvelocity[idx]*pmass[idx];
     
             // Add each particles contribution to the local mass & velocity 
             // Must use the node indices
             IntVector node;
-            for(int k = 0; k < num_cur; k++) {
+/*`==========TESTING==========*/
+//            for(int k = 0; k < num_cur; k++) {
+            for(int k = 0; k < n8or27; k++) { 
+/*===========TESTING==========`*/
               node = ni[k];
               if(patch->containsNode(node)) {
                 S[k] *= pErosion[idx];
@@ -1039,12 +1056,16 @@ void AMRMPM::interpolateParticlesToGrid(const ProcessorGroup*,
         }
       }
 
-      string interp_type = flags->d_interpolator_type;
+
       for(NodeIterator iter=patch->getExtraNodeIterator();!iter.done();iter++){
         IntVector c = *iter; 
+        totalmass       += gmass[c];
         gvelocity[c]    /= gmass[c];
       }
+      
+      new_dw->put(sum_vartype(totalmass), lb->TotalMassLabel);
     }  // End loop over materials
+    
     delete interpolator;
   }  // End loop over patches
 }
@@ -1547,6 +1568,12 @@ void AMRMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
     printTask(patches, patch,cout_doing, "Doing interpolateToParticlesAndUpdate\t\t\t");
 
+    double thermal_energy = 0.0;
+    double ke = 0;
+    Vector CMX(0.0,0.0,0.0);
+    Vector totalMom(0.0,0.0,0.0);
+    
+
     ParticleInterpolator* interpolator = flags->d_interpolator->clone(patch);
     vector<IntVector> ni(interpolator->size());
     vector<double> S(interpolator->size());
@@ -1588,6 +1615,8 @@ void AMRMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       constNCVariable<Vector> gvelocity_star, gacceleration;
       constNCVariable<Vector> gv_star_coarse, gacc_coarse;
       constNCVariable<Vector> gv_star_fine, gacc_fine;
+      
+      double Cp =mpm_matl->getSpecificHeat();
 
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
 
@@ -1672,33 +1701,54 @@ void AMRMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       bool get_finer = true;
       bool coarse_part = false;
       int num_cur, num_fine, num_coarse;
+      int n8or27=flags->d_8or27;
+
+      
+      
       for(ParticleSubset::iterator iter = pset->begin();
           iter != pset->end(); iter++){
         particleIndex idx = *iter;
 
+/*`==========TESTING==========*/
+#if 0
         // Get the node indices that surround the cell
         interpolator->findCellAndWeights(px[idx],ni,S,ZOI_CUR,ZOI_FINE,
                                          get_finer,num_cur,num_fine,
                                          num_coarse,psize[idx],
-                                         coarse_part,finePatch);
+                                         coarse_part,finePatch); 
+#endif
+        // Get the node indices that surround the cell                
+        interpolator->findCellAndWeights(px[idx],ni,S,psize[idx]);    
+/*===========TESTING==========`*/
 
         Vector vel(0.0,0.0,0.0);
         Vector acc(0.0,0.0,0.0);
 
         // Accumulate the contribution from vertices on this level
-        for (int k = 0; k < num_cur; k++) {
+ /*`==========TESTING==========*/
+#if 0
+       for (int k = 0; k < num_cur; k++) { 
+#endif
+       for(int k = 0; k < n8or27; k++) {
+/*===========TESTING==========`*/
           IntVector node = ni[k];
           S[k] *= pErosion[idx];
           vel      += gvelocity_star[node]  * S[k];
           acc      += gacceleration[node]   * S[k];
         }
+        
+        
+/*`==========TESTING==========*/
+#if 0
         // Accumulate the contribution from vertices on the finer level
         for (int k = num_cur; k < num_cur+num_fine; k++) {
           IntVector node = ni[k];
           S[k] *= pErosion[idx];
           vel      += gv_star_fine[node]  * S[k];
           acc      += gacc_fine[node]     * S[k];
-        }
+        } 
+#endif
+/*===========TESTING==========`*/
 
         // Update the particle's position and velocity
         pxnew[idx]           = px[idx]    + vel*delT*move_particles;
@@ -1710,8 +1760,29 @@ void AMRMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         pTempPreNew[idx]     = pTemperature[idx]; //
         pmassNew[idx]        = pmass[idx];
         pvolumeNew[idx]      = pvolume[idx];
+        
+
+        thermal_energy += pTemperature[idx] * pmass[idx] * Cp;
+        ke += .5*pmass[idx]*pvelocitynew[idx].length2();
+        CMX = CMX + (pxnew[idx]*pmass[idx]).asVector();
+        totalMom += pvelocitynew[idx]*pmass[idx];
+        
       }
-      new_dw->deleteParticles(delset);      
+      new_dw->deleteParticles(delset);  
+     
+      new_dw->put(sum_vartype(ke),              lb->KineticEnergyLabel);
+      new_dw->put(sum_vartype(thermal_energy),  lb->ThermalEnergyLabel);
+      new_dw->put(sumvec_vartype(CMX),          lb->CenterOfMassPositionLabel);
+      new_dw->put(sumvec_vartype(totalMom),     lb->TotalMomentumLabel);
+      //__________________________________
+      //  particle debugging label-- carry forward
+      if (flags->d_with_color) {
+        constParticleVariable<double> pColor;
+        ParticleVariable<double>pColor_new;
+        old_dw->get(pColor, lb->pColorLabel, pset);
+        new_dw->allocateAndPut(pColor_new, lb->pColorLabel_preReloc, pset);
+        pColor_new.copyData(pColor);
+      }     
     }
     delete interpolator;
   }
