@@ -14,12 +14,52 @@
 #    6)  Does each pxxxxx.data file contain data (RAID stripes exist)
 #______________________________________________________________________
 
-set udas = ($argv)
+# defaults
+set runTest6 = "1"
 
-if ($#udas == 0) then
-  echo "Usage validateUda  <udas>"
+set STAT = "stat --format %s"
+if ( `uname` == "Darwin" ) then
+  set STAT = "stat -f %z"
+endif
+
+
+# bulletproofing
+if ($#argv == 0) then
+  echo "Usage validateUda  -6 <udas>"
+  echo "     -6:   Skip do RAID strips exist test"
   exit
 endif
+
+# parse the user inputs
+set temp=(`getopt --shell tcsh --unquoted --options 6:: -- $argv:q`)
+
+if ($status != 0) then 
+  echo "Terminating..." >/dev/stderr
+  exit 1
+endif
+
+eval set argv=\($temp:q\)
+
+while (1)
+  switch($1:q)  # $1 is first argument
+  case -6:
+    echo "skip test 6" ; shift
+    set runTest6 = "0"
+    breaksw;           
+  case --:
+    shift    
+    break    
+  endsw
+end
+
+
+set udas = ""
+while ($#argv > 0)
+  set udas = ($udas "$1:q" )
+  shift
+end
+
+echo "udas: $udas"
 
 # bulletproofing
 foreach U ($udas[*]:q)
@@ -31,10 +71,6 @@ end
 
 date
 
-set STAT = "stat --format %s"
-if ( `uname` == "Darwin" ) then
-  set STAT = "stat -f %z"
-endif
 
 #__________________________________
 foreach U ($udas[*]:q)
@@ -71,6 +107,7 @@ foreach U ($udas[*]:q)
 
   echo "                       $passed1"
   if ( $passed1 == "false" ) then
+    echo""
     foreach T ($missingTimesteps[*])
       echo "          Missing directory:  $T"
     end
@@ -84,7 +121,7 @@ foreach U ($udas[*]:q)
       
       if ( ! -e $T/timestep.xml ) then
         set passed2 = false
-        echo "           Missinng $T/timestep.xml"
+        echo "           Missing $T/timestep.xml"
       endif
       
     endif
@@ -114,22 +151,26 @@ foreach U ($udas[*]:q)
   end
   echo "                          $passed3"    
   
-  #__________________________________
-  #Test 4:  do the pxxxx.xml files for each level
-  #Test 5:  do the pxxxxx.data files exist
-  #Test 6:  Does each pxxxxx.data file contain data (RAID stripes exist)
-
   echo "Test 4:  Do all of the pxxxx.xml  files exist and have size > 0?      "  
   echo "Test 5:  Do all of the pxxxx.data files exist and have size > 0?      "
-  echo "Test 6:  Does each pxxxxx.data file contain data (RAID stripes exist)?"
-  
   set passed4 = true
   set passed5 = true
-  set passed6 = true
+  
+  if( $runTest6 == "1") then 
+    echo "Test 6:  Does each pxxxxx.data file contain data (RAID stripes exist)?"
+    set passed6 = true
+  endif 
+
+  
   
   foreach T ($timesteps[*]:q)
+  
+    
     if ( -e $T/timestep.xml ) then
 
+      
+      #__________________________________
+      #Test 4:  do the pxxxx.xml files for each level
       set pxxx_xml = `grep Datafile $T/timestep.xml | awk -F '[="]' '{print $3}'`
       
       foreach D ($pxxx_xml[*]:q)
@@ -149,9 +190,10 @@ foreach U ($udas[*]:q)
         endif
       end   
       
-
+      #__________________________________
       # do all pxxxx.data files exist and have size > 0
       set pxxx_data = `grep Datafile $T/timestep.xml | awk -F '[=."]' '{print $3".data"}'`
+      
       foreach D ($pxxx_data[*]:q)
         set here = "$T/$D"
         
@@ -160,42 +202,59 @@ foreach U ($udas[*]:q)
         endif
         
         if ( -e $here ) then 
-          set bytes = `$STAT $here`
-          if ( $bytes == "0" ) then
-            echo "            $here has 0 bytes"
-            set passed5 = false
-          endif
-
-          # Does each pxxxxx.data file contain data (RAID stripes exist)
-          @ middle = $bytes / 2
-          @ endoff = $bytes - 16
-          set first_bytes =  "`xxd -ps -l 16 $here`"
-          set middle_bytes = "`xxd -ps -l 16 -seek $middle $here`" 
-          set endoff_bytes = "`xxd -ps -l 16 -seek $endoff $here`"
-          #Ignore t00000 since most data is low-entropy (zero) on the first timestep.
-          #If middle and (first or last) are empty, stripe missing 
-          if ( $T != "t00000" \
-           && $middle_bytes == "00000000000000000000000000000000" \
-           &&($first_bytes  == "00000000000000000000000000000000" \
-           || $endoff_bytes == "00000000000000000000000000000000" )) then
-            #Only fail the test if datafiles are gzip-compressed.
-            grep gzip `echo $here | sed -e 's/data$/xml/'`
-            if ( $? == "0") then
-              set passed6 = false
-              echo "            $here is empty (possible missing RAID stripe)"
-            endif
-          endif
-
-
-
+          set bytes = `$STAT $here`                 
+                                                    
+          if ( $bytes == "0" ) then                 
+            echo "            $here has 0 bytes"    
+            set passed5 = false                     
+          endif                                     
         endif
+      
       end
-    endif
-  end
+      
+      #__________________________________
+      #  Test 6:  Does each pxxxxx.data file contain data (RAID stripes exist)?
+      foreach D ($pxxx_data[*]:q)
+        set here = "$T/$D"
+
+        if ( -e $here && $runTest6 == 1) then 
+        
+          set bytes = `$STAT $here`               
+          @ middle = $bytes / 2                                                             
+          @ endoff = $bytes - 16             
+                                                         
+          set first_bytes =  "`xxd -ps -l 16 $here`"                                        
+          set middle_bytes = "`xxd -ps -l 16 -seek $middle $here`"                          
+          set endoff_bytes = "`xxd -ps -l 16 -seek $endoff $here`"                          
+
+          #Ignore t00000 since most data is low-entropy (zero) on the first timestep.       
+          #If middle and (first or last) are empty, stripe missing                          
+          
+          if ( $T != "t00000" &&  $middle_bytes == "00000000000000000000000000000000" \
+                              && ($first_bytes  == "00000000000000000000000000000000" ||  $endoff_bytes == "00000000000000000000000000000000" ) ) then
+
+            #Only fail the test if datafiles are gzip-compressed.                           
+            grep gzip `echo $here | sed -e 's/data$/xml/'`                                  
+            if ( $? == "0" ) then                                                            
+              set passed6 = false                                                           
+              echo "            $here is empty (possible missing RAID stripe)"              
+            endif
+             
+          endif
+                                                                        
+        endif
+        
+      end  # pxxx_data loop
+      
+    endif  # if timestep exists
+    
+  end  # timestep loop
   echo "                                                         Test 4:      $passed4"  
   echo "                                                         Test 5:      $passed5"
-  echo "                                                         Test 6:      $passed6"
   
+  if( $runTest6 == "1") then
+    echo "                                                         Test 6:      $passed6"
+  endif
 bottom:  
   cd ..
 end
