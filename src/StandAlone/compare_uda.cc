@@ -1168,7 +1168,7 @@ main(int argc, char** argv)
     da2->queryVariables(vars2, types2);
     ASSERTEQ(vars2.size(), types2.size());
     
-    if (vars.size() != vars2.size()) {
+    if (vars.size() != vars2.size() && ignoreVar.size() == 0) {
       cerr << filebase1 << " has " << vars.size() << " variables\n";
       cerr << filebase2 << " has " << vars2.size() << " variables\n";
       abort_uncomparable();
@@ -1180,6 +1180,7 @@ main(int argc, char** argv)
     //__________________________________
     //  eliminate the variable to be ignored
     // Create a list of ignored variables
+    // uda 1
     stringstream iV(ignoreVar);
     vector<string> vs;
     copy(istream_iterator<string>(iV),istream_iterator<string>(),
@@ -1189,15 +1190,27 @@ main(int argc, char** argv)
       vector<string>::iterator fs = find(vs.begin(),vs.end(),vars[i]);
       // if vars[i] is NOT in the ignore Variables list make a pair
       if (fs == vs.end()){ 
-        vartypes1[count] = make_pair(vars[i], types[i]);
-        vartypes2[count] = make_pair(vars2[i], types2[i]); 
+        vartypes1[count] = make_pair(vars[i], types[i]); 
         count ++;
       }     
     }
     vars.resize(count);
     vartypes1.resize(vars.size());
-    vartypes2.resize(vars.size());    
     
+    // uda 2
+    count =0;
+    for (unsigned int i = 0; i < vars2.size(); i++) {
+      vector<string>::iterator fs = find(vs.begin(),vs.end(),vars2[i]);
+      // if vars[i] is NOT in the ignore Variables list make a pair
+      if (fs == vs.end()){ 
+        vartypes2[count] = make_pair(vars2[i], types2[i]); 
+        count ++;
+      }     
+    }
+    vars2.resize(count);
+    vartypes2.resize(vars2.size()); 
+    
+    //__________________________________
     // sort vars so uda's can be compared if their index files have
     // different orders of variables.
     // Assuming that there are no duplicates in the var names, these will
