@@ -14,7 +14,7 @@
 /** 
   * @class  ModelBase
   * @author Jeremy Thornock, Charles Reid
-  * @date   November 2008, November 2009
+  * @date   November 2008, November 2010
   * 
   * @brief A base class for models for a transport 
   *        equation. 

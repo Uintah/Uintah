@@ -15,7 +15,7 @@
 /**
   * @class    Devolatilization
   * @author   Charles Reid
-  * @date     October 2009
+  * @date     October 2010
   *
   * @brief    A parent class for devolatilization models
   *

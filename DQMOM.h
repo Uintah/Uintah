@@ -25,9 +25,9 @@ namespace Uintah {
 /** 
   * @class    DQMOM
   * @author   Charles Reid (charlesreid1@gmail.com)
-  * @date     March 2009      "Initial" Arches version
-  *           July 2009       Iterative Refinement
-  *           November 2009   LAPACK (via DenseMatrix in Uintah framework)
+  * @date     March 2010      "Initial" Arches version
+  *           July 2010       Iterative Refinement
+  *           November 2010   LAPACK (via DenseMatrix in Uintah framework)
   *
   * @brief    This class constructs and solves the AX=B linear system for DQMOM scalars.
   *

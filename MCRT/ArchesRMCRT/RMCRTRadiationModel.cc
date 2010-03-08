@@ -2,13 +2,13 @@
 /// Reverse Monte Carlo Ray Tracing Radiation Model interface
 /// 
 /// @author Xiaojing Sun ( Paula ) and Jeremy Thornock
-/// @date Feb 20, 2009.
+/// @date Feb 20, 2010.
 ///
 /*
 
 The MIT License
 
-Copyright (c) 1997-2009 Center for the Simulation of Accidental Fires and 
+Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
 Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 University of Utah.
 
