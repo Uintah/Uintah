@@ -34,9 +34,9 @@
  *   Scot Swan
  *   Department of Mechanical Engineering
  *   University of Utah
- *   April 2010
+ *   April 2009
  *
- *  Copyright (C) 2010 SCI Group
+ *  Copyright (C) 2009 SCI Group
  */
 
 

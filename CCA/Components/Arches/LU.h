@@ -14,8 +14,8 @@
   *
   * @author   Charles Reid and James Sutherland
   * @date     November 2005   Crout's Method
-  *           April 2010      Crout's Method with Partial Pivoting
-  *           July 2010       Iterative Refinement, templated matrix operations
+  *           April 2009      Crout's Method with Partial Pivoting
+  *           July 2009       Iterative Refinement, templated matrix operations
   */
 
 namespace Uintah {

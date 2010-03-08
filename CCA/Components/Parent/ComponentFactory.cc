@@ -2,7 +2,7 @@
 
 The MIT License
 
-Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+Copyright (c) 1997-2009 Center for the Simulation of Accidental Fires and 
 Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 University of Utah.
 
@@ -26,6 +26,7 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 
 */
+
 
 #include <CCA/Components/Parent/ComponentFactory.h>
 #include <CCA/Components/Parent/Switcher.h>
@@ -67,10 +68,8 @@ DEALINGS IN THE SOFTWARE.
 
 #include <sci_defs/uintah_defs.h>
 
-using std::cerr;
-using std::endl;
-
 using namespace Uintah;
+using namespace std;
 
 UintahParallelComponent *
 ComponentFactory::create( ProblemSpecP& ps, const ProcessorGroup* world, 

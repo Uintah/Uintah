@@ -2,7 +2,7 @@
 
 The MIT License
 
-Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+Copyright (c) 1997-2009 Center for the Simulation of Accidental Fires and 
 Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 University of Utah.
 
@@ -36,9 +36,9 @@ DEALINGS IN THE SOFTWARE.
  *   Todd Harman
  *   Department of Mechanical Engineering
  *   University of Utah
- *   February 2010
+ *   February 2009
  *
- *  Copyright (C) 2010 U of U
+ *  Copyright (C) 2009 U of U
  */
 
 #include <Core/DataArchive/DataArchive.h>

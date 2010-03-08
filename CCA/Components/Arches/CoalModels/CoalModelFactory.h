@@ -70,7 +70,7 @@ private:
 /**
   *  @class  CoalModelFactory
   *  @author James C. Sutherland and Jeremy Thornock
-  *  @date   November 2006, November 2010
+  *  @date   November 2006, November 2009
   *  @brief  Factory for DQMOM model term generation.
   *
   *  Allows easy addition of models.

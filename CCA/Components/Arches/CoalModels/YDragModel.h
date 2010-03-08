@@ -18,7 +18,7 @@
 /**
   * @class    YDragModel
   * @author   Julien Pedel
-  * @date     September 2010
+  * @date     September 2009
   *
   * @brief    A class for calculating the two-way coupling between
   *           particle velocities and the gas phase velocities.
