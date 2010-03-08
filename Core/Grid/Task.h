@@ -40,6 +40,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Geometry/IntVector.h>
 
 #include <map>
+#include <set>
 #include <vector>
 #include <string>
 #include <iostream>
@@ -588,7 +589,9 @@ WARNING
     struct Edge;
       
     int d_phase;  //synchronized phase id, for dynamic task scheduling
-
+    std::set<Task*> childTasks;
+    std::set<Task*> allChildTasks;
+    
     enum DepType {
       Modifies, Computes, Requires
     };

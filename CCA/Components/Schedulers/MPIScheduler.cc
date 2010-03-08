@@ -146,7 +146,41 @@ MPIScheduler::problemSetup(const ProblemSpecP& prob_spec,
 {
   ProblemSpecP params = prob_spec->findBlock("Scheduler");
   if(params){
+    string taskQueueAlg;
     params->get("useExternalReadyQueue", useExternalQueue_);
+    params->getWithDefault("taskReadyQueueAlg", taskQueueAlg, "MostMessages");
+    if (taskQueueAlg == "FCFS") 
+      taskQueueAlg_ =  FCFS;
+    else if (taskQueueAlg == "Random")
+      taskQueueAlg_ =  Random;
+    else if (taskQueueAlg == "Stack")
+      taskQueueAlg_ =  Stack;
+    else if (taskQueueAlg == "MostChildren")
+      taskQueueAlg_ =  MostChildren;
+    else if (taskQueueAlg == "LeastChildren")
+      taskQueueAlg_ =  LeastChildren;
+    else if (taskQueueAlg == "MostAllChildren")
+      taskQueueAlg_ =  MostChildren;
+    else if (taskQueueAlg == "LeastAllChildren")
+      taskQueueAlg_ =  LeastChildren;
+    else if (taskQueueAlg == "MostL2Children")
+      taskQueueAlg_ =  MostL2Children;
+    else if (taskQueueAlg == "LeastL2Children")
+      taskQueueAlg_ =  LeastL2Children;
+    else if (taskQueueAlg == "MostMessages")
+      taskQueueAlg_ =  MostMessages;
+    else if (taskQueueAlg == "LeastMessages")
+      taskQueueAlg_ =  LeastMessages;
+    else if (taskQueueAlg == "PatchOrder")
+      taskQueueAlg_ =  PatchOrder;
+    else if (taskQueueAlg == "PatchOrderRandom")
+      taskQueueAlg_ =  PatchOrderRandom;
+    else {
+      if (d_myworld->myrank() == 0)
+        cout << "Invalid Task Queue Algorithm: " << taskQueueAlg
+             << "\nUsing 'MostMessages' Algorithm\n";
+      taskQueueAlg_ = MostMessages;
+    }
   }
 
   log.problemSetup(prob_spec);
@@ -838,6 +872,7 @@ MPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
   map<int, int> phaseTasks;
   map<int, int> phaseTasksDone;
   if (useExternalQueue_ && !d_sharedState->isCopyDataTimestep()) {
+    dts->setTaskPriorityAlg(taskQueueAlg_ );
     for (int i = 0; i < ntasks; i++)
       phaseTasks[dts->localTask(i)->getTask()->d_phase]++;
   }

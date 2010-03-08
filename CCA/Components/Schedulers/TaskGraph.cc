@@ -54,6 +54,7 @@ DEALINGS IN THE SOFTWARE.
 #include <fstream>
 #include <iostream>
 #include <map>
+#include <set>
 #include <cstring>
 #include <sstream>
 
@@ -279,6 +280,33 @@ TaskGraph::setupTaskConnections(GraphSortInfoMap& sortinfo)
     // Used here just to warn if a modifies comes before its computes
     // in the order that tasks were added to the graph.
     sortinfo.find(task)->second.visited = true;
+    task->allChildTasks.clear();
+    //cout << d_myworld->myrank() << "   Looking at dependencies for task: " << *task << "child task num=" << task->childTasks.size()  <<'\n';
+  }
+  
+  //count the all child tasks
+  int nd_task=d_tasks.size();
+  while (nd_task > 0 ){
+    nd_task =d_tasks.size(); 
+    for( iter=d_tasks.begin(); iter != d_tasks.end(); iter++ ) {
+      Task* task = *iter;
+      if (task->allChildTasks.size() == 0){            
+          if (task->childTasks.size() == 0) {     //leaf task, add itself to the set
+            task->allChildTasks.insert(task);
+            break;
+          }
+          set<Task*>::iterator it;
+          for( it=task->childTasks.begin(); it != task->childTasks.end(); it++ ) {
+            if ( (*it)->allChildTasks.size()> 0 ) {
+              task->allChildTasks.insert((*it)->allChildTasks.begin(), (*it)->allChildTasks.end());
+              task->allChildTasks.insert(*it);
+            } else {                 //if child didn't finish computing allChildTasks
+              task->allChildTasks.clear();        
+              break;
+            }
+          }
+      } else nd_task--;
+    }
   }
 
   // Initialize variables on the tasks
@@ -397,6 +425,7 @@ void TaskGraph::addDependencyEdges( Task* task, GraphSortInfoMap& sortinfo,
             cout << "\n";
           }
           count++;
+          task->childTasks.insert(comp->task);
           if(dbg.active()){
             dbg << d_myworld->myrank() << "       Creating edge from task: " << *comp->task << " to task: " << *task << '\n';
             dbg << d_myworld->myrank() << "         Req=" << *req << '\n';

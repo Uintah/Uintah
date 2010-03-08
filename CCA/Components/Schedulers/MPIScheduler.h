@@ -34,6 +34,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Schedulers/SchedulerCommon.h>
 #include <CCA/Components/Schedulers/MessageLog.h>
 #include <CCA/Components/Schedulers/CommRecMPI.h>
+#include <CCA/Components/Schedulers/DetailedTasks.h>
 #include <CCA/Components/Schedulers/OnDemandDataWarehouseP.h>
 #include <CCA/Ports/DataWarehouseP.h>
 #include <Core/Parallel/PackBufferInfo.h>
@@ -194,6 +195,7 @@ WARNING
     ofstream         timingStats, avgStats, maxStats;
 
     bool useExternalQueue_;
+    QueueAlg taskQueueAlg_;
 
     void emitTime(const char* label);
     void emitTime(const char* label, double time);

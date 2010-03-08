@@ -63,6 +63,7 @@ namespace Uintah {
 
   typedef std::map<int, std::set<PSPatchMatlGhost> > ParticleExchangeVar;
   enum ProfileType {Normal,Fine};
+  enum QueueAlg {FCFS, Stack, Random, MostChildren, LeastChildren, MostAllChildren, LeastAllChildren, MostMessages, LeastMessages, MostL2Children, LeastL2Children, CritialPath, PatchOrder, PatchOrderRandom};
   
   class DetailedDep {
   public:
@@ -250,6 +251,7 @@ namespace Uintah {
 
     bool areInternalDependenciesSatisfied()
     { return (numPendingInternalDependencies == 0); }
+
   protected:
     friend class TaskGraph;
   private:
@@ -292,6 +294,9 @@ namespace Uintah {
     //specifies the type of task this is
       //normal executes on either the patches cells or the patches coarse cells
       //fine executes on the patches fine cells (for example coarsening)
+    
+    bool operator<(const DetailedTask& other);
+    
     ProfileType d_profileType;
   };
 
@@ -366,7 +371,10 @@ namespace Uintah {
     friend std::ostream& operator<<(std::ostream& out, const Uintah::DetailedDep& task);
 
     ParticleExchangeVar& getParticleSends() { return particleSends_; }
-    ParticleExchangeVar& getParticleRecvs() { return particleRecvs_;}
+    ParticleExchangeVar& getParticleRecvs() { return particleRecvs_; }
+    
+    void setTaskPriorityAlg(QueueAlg alg) { taskPriorityAlg_=alg; }
+    QueueAlg getTaskPriorityAlg() { return taskPriorityAlg_; }
 
   protected:
     friend class DetailedTask;
@@ -419,11 +427,13 @@ namespace Uintah {
     // but that probably isn't a good way to do unless you make it a breadth
     // first topological order.
     //typedef priority_queue<DetailedTask*, vector<DetailedTask*>, TaskNumberCompare> TaskQueue;    
+    QueueAlg taskPriorityAlg_;
     typedef queue<DetailedTask*> TaskQueue;
+    typedef priority_queue<DetailedTask*> TaskPQueue;
     
     TaskQueue readyTasks_; 
     TaskQueue initiallyReadyTasks_;
-    TaskQueue mpiCompletedTasks_;
+    TaskPQueue mpiCompletedTasks_;
 
     // This "generation" number is to keep track of which InternalDependency
     // links have been satisfied in the current timestep and avoids the
