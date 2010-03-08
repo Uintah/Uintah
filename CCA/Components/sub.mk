@@ -52,8 +52,7 @@ endif
 ifeq ($(BUILD_ARCHES),yes)
   ARCHES   := $(SRCDIR)/Arches \
 	      $(ADIR)/ChemMix/TabProps $(ADIR)/fortran           $(ADIR)/Mixing \
-	      $(ADIR)/Radiation        $(ADIR)/Radiation/fortran $(ADIR)/MCRT/ArchesRMCRT \
-              $(SRCDIR)/SpatialOps 
+	      $(ADIR)/Radiation        $(ADIR)/Radiation/fortran $(ADIR)/MCRT/ArchesRMCRT 
   ifeq ($(BUILD_MPM),yes)
     MPMARCHES := $(SRCDIR)/MPMArches
   endif
@@ -72,7 +71,6 @@ SUBDIRS := \
         $(MPMICE)         \
         $(ARCHES)         \
         $(MPMARCHES)      \
-        $(SRCDIR)/Angio   \
         $(SRCDIR)/ProblemSpecification \
         $(SRCDIR)/PatchCombiner \
         $(SRCDIR)/Solvers \

@@ -35,12 +35,8 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR     := CCA/Components/Parent
 COMPONENTS := CCA/Components
 
-SRCS := $(SRCDIR)/Switcher.cc \
-        $(SRCDIR)/ComponentFactory.cc 
-
-ifeq ($(BUILD_ARCHES),yes)
-  MORE_LIBS := $(COMPONENTS)/SpatialOps
-endif
+SRCS    := $(SRCDIR)/Switcher.cc \
+	   $(SRCDIR)/ComponentFactory.cc 
 
 # ARCHES et. al. should have been seen by CCA/Components/sub.mk
 PSELIBS := \
@@ -62,12 +58,10 @@ PSELIBS := \
         $(MPM)           \
         $(MPMICE)        \
         $(COMPONENTS)/Examples             \
-        $(COMPONENTS)/Angio                \
-        $(COMPONENTS)/PatchCombiner        \
-        $(COMPONENTS)/ProblemSpecification \
-        $(COMPONENTS)/Solvers              \
-        $(COMPONENTS)/SwitchingCriteria    \
-        $(MORE_LIBS)
+	$(COMPONENTS)/PatchCombiner        \
+	$(COMPONENTS)/ProblemSpecification \
+	$(COMPONENTS)/Solvers              \
+	$(COMPONENTS)/SwitchingCriteria
 
 LIBS := $(XML2_LIBRARY) $(MPI_LIBRARY)
 
