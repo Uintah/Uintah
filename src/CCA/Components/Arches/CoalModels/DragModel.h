@@ -11,7 +11,7 @@
 /**
   * @class    DragModel
   * @author   Julien Pedel
-  * @date     September 2009
+  * @date     September 2010
   *
   * @brief    A class for calculating the two-way coupling between
   *           particle velocities and the gas phase velocities.
