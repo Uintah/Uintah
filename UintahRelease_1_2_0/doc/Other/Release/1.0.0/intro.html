@@ -1,0 +1,127 @@
+<html>
+<head>
+   <title> Uintah Release Help </title>
+</head>
+
+<body>
+
+  <table cellspacing="0" cellpadding="0" border="0">
+    <tr>
+      <td><a href="http://www.csafe.utah.edu"><img src="Images/CSAFELarge.gif" alt="record.png" /></a></td>
+      <td valign="bottom" bgcolor="#353E49"><img src="Images/c-safe_text.jpg" alt="record.png" /></td>
+    </tr>
+    <tr>
+      <td bgcolor="#353E49"></td>
+      <td><table cellpadding="10" width="600"><tr><td>
+
+<h1>Uintah Software Overview</h1>
+
+The primary objective of C-SAFE is to provide a software
+system in which fundamental chemistry and engineering physics are
+fully coupled with nonlinear solvers, visualization, and experimental
+data verification, thereby integrating expertise from a wide variety
+of disciplines.  Simulations using this system will help to better
+evaluate the risks and safety issues associated with fires and
+explosions in accidents involving both hydrocarbon and energetic
+materials.
+
+<h2>Target Simulation</h2>
+
+The Uintah software system was designed to support the solution of a
+wide range of highly dynamic physical processes on a large number of
+processors.  <img src="Images/explosion1_tn.jpg" alt="End-to-end
+Simulation" align="right" width="192" height="307" vspace="10"
+hspace="10" /> Specifically, our target simulation is the heating of a
+explosive device placed in a large hydrocarbon pool fire and the
+subsequent deflagration explosion and blast wave.  The explosive
+device is a small cylindrical steel container (4" outside diameter)
+filled with plastic bonded explosive (PBX-9501).  Convective and
+radiative heat fluxes from the fire heat the outside of the container
+and the PBX.  After some amount of time the critical temperature in
+the PBX is reached and the explosive begins to rapidly decompose into
+a gas.  The solid->gas reaction pressurizes the interior of the steel
+container causing the shell to rapidly expand and eventually rupture.
+The gaseous products of reaction form a blast wave that expands
+outward along with pieces of the container and the unreacted PBX. The
+physical processes in this simulation have a wide range in time and
+length scales from microseconds and microns to minutes and meters.  An
+example of this simulation is depicted in this image.  Uintah is
+designed to be a general-purpose fluid-structure code that will
+simulate not only this scenario but a wide range of related problems.
+<p/>
+Complex simulations such as this require both immense computational
+power and complex software.  Typical simulations include solvers for
+structural mechanics, fluids, chemical reactions, and material models.
+All of these aspects must be integrated in an efficient manner to
+achieve the scalability required to perform these simulations.  The
+heart of Uintah is a sophisticated computational framework that can
+integrate multiple simulation components, analyze the dependencies and
+communication patterns between them, and efficiently execute the
+resulting multi-physics simulation.  Uintah also provides mechanisms
+for automating load-balancing, checkpoint/restart, and parallel I/O.
+The Uintah core is designed to be general, and is appropriate for use
+for a wide range of PDE algorithms based on structured (possibly
+adaptive) grids and particle-in-cell algorithms.
+
+<a name="ucf"/>
+<h2>Uintah Computational Framework (UCF)</h2>
+
+The Uintah Computational Framework consists of a set of software
+components and libraries that facilitate the solution of Partial
+Differential Equations (PDEs) on Structured AMR (SAMR) grids using
+hundreds to thousands of processors.
+<p/>
+One of the challenges in designing a parallel, component-based
+multi-physics application is determining how to efficiently decompose
+the problem domain.  Components, by definition, make local decisions.
+Yet parallel efficiency is only obtained through a globally optimal
+domain decomposition and scheduling of computational tasks.  Typical
+techniques include allocating disjoint sets of processing resources to
+each component, or defining a single domain decomposition that is a
+compromise between the ideal load balance of multiple components.
+However, neither of these techniques will achieve maximum efficiency
+for complex multi-physics problems.
+<p/>
+Uintah uses a non-traditional approach to achieving parallelism,
+employing an abstract taskgraph representation to describe computation
+and communication.  The taskgraph is an explicit representation of the
+computation and communication that occur in the coarse of a single
+iteration of the simulation (typically a timestep or nonlinear solver
+iteration).  Uintah components delegate decisions about parallelism to
+a scheduler component, using variable dependencies to describe
+communication patterns and characterizing computational workloads to
+facilitate a global resource optimization.  The taskgraph
+representation has a number of advantages, including efficient
+fine-grained coupling of multi-physics components, flexible load
+balancing mechanisms and a separation of application concerns from
+parallelism concerns.  However, it creates a challenge for scalability
+which we overcome by creating an implicit definition of this graph and
+representing it in a distributed fashion.
+<p/>
+The primary advantage of a component-based approach is that it
+facilitates the separate development of simulation algorithms, models,
+and infrastructure.  Components of the simulation can evolve
+independently.  Since C-SAFE is a research project, we need to
+accommodate the fact that most of the software is still under
+development.  The component-based architecture allows pieces of the
+system to be implemented in a rudimentary form at first and then
+evolve as the technologies mature.  Most importantly, Uintah allows
+the aspects of parallelism (schedulers, load-balancers, parallel
+input/output, and so forth) to evolve independently of the simulation
+components.  This approach allows the computer science effort to focus
+on these problems without waiting for the completion of the scientific
+applications or vice-versa.  Furthermore, components enable
+replacement of computation pieces without complex decision logic in
+the code itself.
+
+<p/>
+<hr/>
+<a href="index.html">Return to Index.</a>
+
+</td></tr></table>
+      </td>
+    </tr>
+  </table>
+</body>
+
+</html>

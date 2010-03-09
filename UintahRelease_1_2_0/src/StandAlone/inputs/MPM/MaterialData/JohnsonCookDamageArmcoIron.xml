@@ -1,0 +1,10 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<Uintah_Include>
+  <damage_model type="johnson_cook">
+    <D1>-2.20</D1>
+    <D2>5.43</D2>
+    <D3>-0.47</D3>
+    <D4>0.016</D4>
+    <D5>0.63</D5>
+  </damage_model>
+</Uintah_Include>
