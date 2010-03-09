@@ -50,6 +50,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Examples/RegridderTest.h>
 #include <CCA/Components/Examples/Poisson3.h>
 #include <CCA/Components/Examples/Benchmark.h>
+#include <CCA/Components/Angio/Angio.h>
 #include <CCA/Components/Examples/SolverTest1.h>
 #include <CCA/Components/PatchCombiner/PatchCombiner.h>
 #include <CCA/Components/PatchCombiner/UdaReducer.h>
@@ -58,6 +59,9 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Parallel/Parallel.h>
 #include <Core/Parallel/ProcessorGroup.h>
 
+#if !defined(NO_ARCHES)
+#  include <CCA/Components/SpatialOps/SpatialOps.h>
+#endif
 
 #include <iosfwd>
 #include <string>
@@ -179,6 +183,9 @@ ComponentFactory::create( ProblemSpecP& ps, const ProcessorGroup* world,
   if (sim_comp == "benchmark" || sim_comp == "BENCHMARK") {
     return scinew Benchmark(world);
   } 
+  if (sim_comp == "angio") {
+    return scinew Angio(world);
+  } 
   if (sim_comp == "particletest" || sim_comp == "PARTICLETEST") {
     return scinew ParticleTest1(world);
   } 
@@ -194,8 +201,13 @@ ComponentFactory::create( ProblemSpecP& ps, const ProcessorGroup* world,
   if (sim_comp == "reduce_uda") {
     return scinew UdaReducer(world, uda);
   } 
+#if !defined(NO_ARCHES)
+  if (sim_comp == "spatialops") {
+	 return scinew SpatialOps(world);
+  }
+#endif
   throw ProblemSetupException("Unknown simulationComponent ('" + sim_comp + "'). Must specify -arches, -ice, -mpm, "
-                              "-impm, -mpmice, -mpmarches, -burger, -wave, -poisson1, -poisson2, -poisson3, -benchmark.\n"
+                              "-impm, -mpmice, -mpmarches, -burger, -wave, -poisson1, -poisson2, -poisson3, -benchmark or -angio.\n"
                               "Note: the following components were turned off at configure time: " + turned_off_options + "\n"
                               "Make sure that the requested component is supported in this build.", __FILE__, __LINE__);
 }

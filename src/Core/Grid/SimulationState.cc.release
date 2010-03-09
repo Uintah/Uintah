@@ -27,12 +27,13 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-#include <Core/Exceptions/ProblemSetupException.h>
+
+
 #include <Core/Grid/SimulationState.h>
+#include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/Variables/ReductionVariable.h>
-#include <Core/Grid/Variables/Reductions.h>
 #include <Core/Grid/Variables/PerPatch.h>
 #include <Core/Grid/Material.h>
 #include <Core/Grid/Grid.h>
@@ -40,8 +41,9 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/SimpleMaterial.h>
 #include <CCA/Components/ICE/ICEMaterial.h>
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
-#include <CCA/Components/MPM/CohesiveZone/CZMaterial.h>
+#include <CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
 #include <CCA/Components/Arches/ArchesMaterial.h>
+#include <Core/Grid/Variables/Reductions.h>
 #include <Core/Containers/StringUtil.h>
 #include <Core/Malloc/Allocator.h>
 
@@ -63,9 +65,35 @@ SimulationState::SimulationState(ProblemSpecP &ps)
 				       PerPatch<int>::getTypeDescription());
    switch_label = VarLabel::create("switchFlag", 
                                    max_vartype::getTypeDescription());
-
+   d_ref_press = 0.0;
    d_elapsed_time = 0.0;
    d_needAddMaterial = 0;
+
+  // Get the physical constants that are shared between codes.
+  // For now it is just gravity.
+
+  ProblemSpecP phys_cons_ps = ps->findBlock("PhysicalConstants");
+  if(phys_cons_ps){
+    phys_cons_ps->require("gravity",d_gravity);
+    phys_cons_ps->get("reference_pressure",d_ref_press);
+  } else {
+    d_gravity=Vector(0,0,0);
+    d_ref_press=0;
+  }
+  //__________________________________
+  // with ICE or MPMICE you must a reference pressure
+  ProblemSpecP cfd_ps = ps->findBlock("CFD");
+  if(cfd_ps){
+    ProblemSpecP ice_ps=cfd_ps->findBlock("ICE");
+    if(ice_ps && d_ref_press == 0.0){
+      throw ProblemSetupException(
+       "\n Could not find <reference_pressure> inside of <PhysicalConstants> \n"
+       " This pressure is used during the problem intialization and when\n"
+       " the pressure gradient is interpolated to the MPM particles \n"
+       " you must have it for all MPMICE and multimaterial ICE problems\n",
+       __FILE__, __LINE__);  
+    }
+  }
 
   d_lockstepAMR = false;
   ProblemSpecP amr = ps->findBlock("AMR");
@@ -73,7 +101,6 @@ SimulationState::SimulationState(ProblemSpecP &ps)
     amr->get("useLockStep", d_lockstepAMR);
 
   all_mpm_matls = 0;
-  all_cz_matls = 0;
   all_ice_matls = 0;
   all_arches_matls = 0;
   all_matls = 0;
@@ -145,17 +172,6 @@ void SimulationState::registerMPMMaterial(MPMMaterial* matl,unsigned int index)
   registerMaterial(matl,index);
 }
 
-void SimulationState::registerCZMaterial(CZMaterial* matl)
-{
-  cz_matls.push_back(matl);
-  registerMaterial(matl);
-}
-
-void SimulationState::registerCZMaterial(CZMaterial* matl,unsigned int index)
-{
-  cz_matls.push_back(matl);
-  registerMaterial(matl,index);
-}
 
 void SimulationState::registerArchesMaterial(ArchesMaterial* matl)
 {
@@ -193,16 +209,6 @@ void SimulationState::finalizeMaterials()
     tmp_mpm_matls[i] = mpm_matls[i]->getDWIndex();
   }
   all_mpm_matls->addAll(tmp_mpm_matls);
-
-  if (all_cz_matls && all_cz_matls->removeReference())
-    delete all_cz_matls;
-  all_cz_matls = scinew MaterialSet();
-  all_cz_matls->addReference();
-  vector<int> tmp_cz_matls(cz_matls.size());
-  for( int i=0; i<(int)cz_matls.size(); i++ ) {
-    tmp_cz_matls[i] = cz_matls[i]->getDWIndex();
-  }
-  all_cz_matls->addAll(tmp_cz_matls);
   
   if (all_arches_matls && all_arches_matls->removeReference())
     delete all_arches_matls;
@@ -254,6 +260,14 @@ void SimulationState::finalizeMaterials()
   }
 }
 
+int SimulationState::getNumVelFields() const {
+  int num_vf=0;
+  for (int i = 0; i < (int)matls.size(); i++) {
+    num_vf = Max(num_vf,matls[i]->getVFIndex());
+  }
+  return num_vf+1;
+}
+
 void SimulationState::clearMaterials()
 {
   for (int i = 0; i < (int)matls.size(); i++)
@@ -264,9 +278,6 @@ void SimulationState::clearMaterials()
   
   if(all_mpm_matls && all_mpm_matls->removeReference())
     delete all_mpm_matls;
-
-  if(all_cz_matls && all_cz_matls->removeReference())
-    delete all_cz_matls;
 
   if (all_arches_matls && all_arches_matls->removeReference())
     delete all_arches_matls;
@@ -280,19 +291,15 @@ void SimulationState::clearMaterials()
 
   matls.clear();
   mpm_matls.clear();
-  cz_matls.clear();
   arches_matls.clear();
   ice_matls.clear();
   simple_matls.clear();
   named_matls.clear();
   d_particleState.clear();
   d_particleState_preReloc.clear();
-  d_cohesiveZoneState.clear();
-  d_cohesiveZoneState_preReloc.clear();
 
   all_matls = 0;
   all_mpm_matls = 0;
-  all_cz_matls = 0;
   all_arches_matls = 0;
   all_ice_matls = 0;
   allInOneMatl = 0;
@@ -321,12 +328,6 @@ const MaterialSet* SimulationState::allMPMMaterials() const
 {
   ASSERT(all_mpm_matls != 0);
   return all_mpm_matls;
-}
-
-const MaterialSet* SimulationState::allCZMaterials() const
-{
-  ASSERT(all_cz_matls != 0);
-  return all_cz_matls;
 }
 
 const MaterialSet* SimulationState::allArchesMaterials() const
