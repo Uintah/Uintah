@@ -33,7 +33,6 @@ exclude.txt
 scripts
 
 CCA/Components/SpatialOps
-CCA/Components/Arches/MCRT
 
 CCA/Components/*.orig
 CCA/Components/*.release
@@ -46,6 +45,8 @@ CCA/Components/Arches/*.release
 
 Core/Grid/*.orig
 Core/Grid/*.release
+
+StandAlone/*.release
 
 CCA/Components/ICE/CodeAttic
 CCA/Components/ICE/PressureSolve
