@@ -1,0 +1,18 @@
+Changelog from version 1.1 to 1.2
+
+Arches
+- New DQMOM model
+- 
+
+MPM
+- Cohesive Zone Model
+
+
+ICE
+
+
+
+Infrastructure
+
+ - Cost forcasting algorithm for load balancer based on a least
+squares regression analsysi using a cost model and profiling.
