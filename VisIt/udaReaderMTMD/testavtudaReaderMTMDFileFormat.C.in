@@ -134,6 +134,11 @@ avtudaReaderMTMDFileFormat::avtudaReaderMTMDFileFormat(const char *filename) :
 
   const char * lib = "@UINTAH_UDA_TO_VIS_LIB@";
 
+  // This environment variable prevents Core/Thread/Thread_pthreads.cc
+  // from adding it's atexit handler, which will kill visit's process
+  // when dlclose is called.
+  putenv("THREAD_NO_ATEXIT=1");
+  
   libHandle = dlopen(lib, RTLD_NOW); // The dylib locn should be changed
   if (!libHandle) {
     char* errString = dlerror();

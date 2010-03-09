@@ -892,7 +892,9 @@ Thread::initialize()
 
   CleanupManager::initialize();
 
-  atexit(exit_handler);
+  if (!getenv("THREAD_NO_ATEXIT"))
+    atexit(exit_handler);
+
   pthread_mutex_init(&sched_lock, NULL);
 
   if (pthread_key_create(&thread_key, NULL) != 0)
