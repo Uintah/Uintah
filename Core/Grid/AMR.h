@@ -872,18 +872,31 @@ UINTAHSHARE void getCoarseLevelRangeNodes(const Patch* finePatch,
 UINTAHSHARE void getCoarseFineFaceRange(const Patch* finePatch, const Level* coarseLevel, Patch::FaceType face,
                                   const int interOrder, IntVector& cl, IntVector& ch, IntVector& fl, IntVector& fh);
                                   
+UINTAHSHARE void coarseLevel_CFI_NodeIterator(Patch::FaceType patchFace,
+                                              const Patch* coarsePatch, 
+                                              const Patch* finePatch,   
+                                              const Level* fineLevel,   
+                                              NodeIterator& iter,       
+                                              bool& isRight_CP_FP_pair);
+
 UINTAHSHARE void coarseLevel_CFI_Iterator(Patch::FaceType patchFace,
-                                       const Patch* coarsePatch,  
-                                       const Patch* finePatch,    
-                                       const Level* fineLevel,    
-                                       CellIterator& iter,        
-                                       bool& isRight_CP_FP_pair);
+                                          const Patch* coarsePatch,  
+                                          const Patch* finePatch,    
+                                          const Level* fineLevel,    
+                                          CellIterator& iter,        
+                                          bool& isRight_CP_FP_pair);
                                        
 UINTAHSHARE void fineLevel_CFI_Iterator(Patch::FaceType patchFace,
                                        const Patch* coarsePatch,  
                                        const Patch* finePatch,    
                                        CellIterator& iter,
-                                       bool& isRight_CP_FP_pair);                                       
+                                       bool& isRight_CP_FP_pair);   
+                                       
+UINTAHSHARE void fineLevel_CFI_NodeIterator(Patch::FaceType patchFace,
+                                            const Patch* coarsePatch,  
+                                            const Patch* finePatch,    
+                                            NodeIterator& iter,
+                                            bool& isRight_CP_FP_pair);                                     
                                         
 } // end namespace Uintah
 #endif

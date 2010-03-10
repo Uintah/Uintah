@@ -268,6 +268,44 @@ void coarseLevel_CFI_Iterator(Patch::FaceType patchFace,
   }
 }
 
+
+/*___________________________________________________________________
+ Function~  coarseLevel_CFI_NodeIterator--  
+ Purpose:  returns the coarse level node iterator at the CFI looking up
+_____________________________________________________________________*/
+void coarseLevel_CFI_NodeIterator(Patch::FaceType patchFace,
+                                  const Patch* coarsePatch, 
+                                  const Patch* finePatch,   
+                                  const Level* fineLevel,   
+                                  NodeIterator& iter,       
+                                  bool& isRight_CP_FP_pair) 
+{
+  CellIterator f_iter=finePatch->getFaceIterator(patchFace, Patch::FaceNodes);
+
+  // find the intersection of the fine patch face iterator and underlying coarse patch
+  IntVector f_lo_face = f_iter.begin();                 // fineLevel face indices   
+  IntVector f_hi_face = f_iter.end();
+
+  f_lo_face = fineLevel->mapNodeToCoarser(f_lo_face);     
+  f_hi_face = fineLevel->mapNodeToCoarser(f_hi_face);
+
+  IntVector c_lo_patch = coarsePatch->getExtraNodeLowIndex(); 
+  IntVector c_hi_patch = coarsePatch->getExtraNodeHighIndex();
+
+  IntVector l = Max(f_lo_face, c_lo_patch);             // intersection
+  IntVector h = Min(f_hi_face, c_hi_patch);
+
+  l = Max(l, coarsePatch->getExtraNodeLowIndex());
+  h = Min(h, coarsePatch->getExtraNodeHighIndex());
+  
+  iter=NodeIterator(l,h);
+  isRight_CP_FP_pair = false;
+  if ( coarsePatch->containsCell(l) ){
+    isRight_CP_FP_pair = true;
+  }
+}
+
+
 /*___________________________________________________________________
  Function~  fineLevel_CFI_Iterator--  
  Purpose:  returns the fine level iterator at the CFI looking down
@@ -345,4 +383,72 @@ void fineLevel_CFI_Iterator(Patch::FaceType patchFace,
   }
 #endif
 }
+
+/*___________________________________________________________________
+ Function~  fineLevel_CFI_NodeIterator--  
+ Purpose:  returns the fine level node iterator at the CFI looking down
+_____________________________________________________________________*/
+void fineLevel_CFI_NodeIterator(Patch::FaceType patchFace,
+                               const Patch* coarsePatch, 
+                               const Patch* finePatch,   
+                               NodeIterator& iter,
+                               bool& isRight_CP_FP_pair) 
+{
+  CellIterator f_iter=finePatch->getFaceIterator(patchFace, Patch::FaceNodes);
+
+  // find the intersection of the fine patch face iterator and underlying coarse patch
+  IntVector f_lo_face = f_iter.begin();                 // fineLevel face indices   
+  IntVector f_hi_face = f_iter.end();
+
+  IntVector c_lo_patch = coarsePatch->getExtraNodeLowIndex(); 
+  IntVector c_hi_patch = coarsePatch->getExtraNodeHighIndex();
+  
+  const Level* coarseLevel = coarsePatch->getLevel();
+  c_lo_patch = coarseLevel->mapNodeToFiner(c_lo_patch);     
+  c_hi_patch = coarseLevel->mapNodeToFiner(c_hi_patch); 
+
+  IntVector dir = finePatch->getFaceAxes(patchFace);        // face axes
+  int pdir = dir[0];
+  int y = dir[1];  // tangential directions
+  int z = dir[2];
+
+  IntVector l = f_lo_face, h = f_hi_face;
+
+  l[y] = Max(f_lo_face[y], c_lo_patch[y]);             // intersection
+  l[z] = Max(f_lo_face[z], c_lo_patch[z]);
+  
+  h[y] = Min(f_hi_face[y], c_hi_patch[y]);
+  h[z] = Min(f_hi_face[z], c_hi_patch[z]);
+  
+  //__________________________________
+  // is this the right finepatch/coarse patch pair?
+  // does this iterator exceed the coarse level patch
+  const Level* fineLevel = finePatch->getLevel();
+  IntVector f_l = fineLevel->mapNodeToCoarser(l);     
+  IntVector f_h = fineLevel->mapNodeToCoarser(h) - IntVector(1,1,1);
+
+  string name = finePatch->getFaceName(patchFace);
+  if(name == "xminus" || name == "yminus" || name == "zminus"){
+    // the coarse cells we want are really one beneath the coarse cell.  This matters when 
+    // the face of the fine patch is on the border of a coarse patch face
+    f_l[pdir]--; 
+  }
+  else {
+    // same thing, but add instead of subtract (add high too, since on the high end
+    // f_l and f_h will have the same value)
+    f_l[pdir]++;
+    f_h[pdir]++;
+  }
+    
+  isRight_CP_FP_pair = false;
+
+  if ( coarsePatch->containsNode(f_l) && coarsePatch->containsNode(f_h) ){
+    isRight_CP_FP_pair = true;
+  }
+  
+  if (isRight_CP_FP_pair){
+    iter=NodeIterator(l,h);
+  }
+}
+
 }
