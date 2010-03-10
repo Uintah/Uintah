@@ -147,6 +147,15 @@ namespace Uintah {
           }
 
         friend class GridIterator;
+        
+        inline NodeIterator& operator=( const NodeIterator& copy ) {
+          d_s   = copy.d_s;
+          d_e   = copy.d_e;
+          d_ix  = copy.d_ix;
+          d_iy  = copy.d_iy;
+          d_iz  = copy.d_iz;
+          return *this;
+        }
 
         bool operator==(const NodeIterator& o) const
         {
@@ -173,7 +182,6 @@ namespace Uintah {
 
       private:
         NodeIterator();
-        NodeIterator& operator=(const NodeIterator& copy);
 
         NodeIterator* clone() const
         {
