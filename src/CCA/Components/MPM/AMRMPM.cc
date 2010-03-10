@@ -302,41 +302,50 @@ void AMRMPM::scheduleComputeStableTimestep(const LevelP&,
 void AMRMPM::scheduleTimeAdvance(const LevelP & inlevel,
                                  SchedulerP   & sched)
 {
-  if(inlevel->getIndex() > 0)
+  if(inlevel->getIndex() > 0)  // only schedule once
     return;
 
   const MaterialSet* matls = d_sharedState->allMPMMaterials();
-
-  for (int l = 0; l < inlevel->getGrid()->numLevels(); l++) {
-    const LevelP& level = inlevel->getGrid()->getLevel(l);
+  int maxLevels = inlevel->getGrid()->numLevels();
+  GridP grid = inlevel->getGrid();
+  
+   // maxLevels = 1;
+  
+  for (int l = 0; l < maxLevels; l++) {
+    const LevelP& level = grid->getLevel(l);
     const PatchSet* patches = level->eachPatch();
     scheduleComputeZoneOfInfluence(         sched, patches, matls);
     scheduleApplyExternalLoads(             sched, patches, matls);
   }
-  for (int l = 0; l < inlevel->getGrid()->numLevels(); l++) {
-    const LevelP& level = inlevel->getGrid()->getLevel(l);
+
+  
+  for (int l = 0; l < maxLevels; l++) {
+    const LevelP& level = grid->getLevel(l);
     const PatchSet* patches = level->eachPatch();
     scheduleInterpolateParticlesToGrid(     sched, patches, matls);
   }
 
-  for (int l = 0; l < inlevel->getGrid()->numLevels(); l++) {
-    const LevelP& level = inlevel->getGrid()->getLevel(l);
+  for (int l = 0; l < maxLevels; l++) {
+    const LevelP& level = grid->getLevel(l);
     const PatchSet* patches = level->eachPatch();
     scheduleComputeInternalForce(           sched, patches, matls);
   }
-  for (int l = 0; l < inlevel->getGrid()->numLevels(); l++) {
-    const LevelP& level = inlevel->getGrid()->getLevel(l);
+  
+  for (int l = 0; l < maxLevels; l++) {
+    const LevelP& level = grid->getLevel(l);
     const PatchSet* patches = level->eachPatch();
     scheduleComputeAndIntegrateAcceleration(sched, patches, matls);
     scheduleSetGridBoundaryConditions(      sched, patches, matls);
   }
-  for (int l = 0; l < inlevel->getGrid()->numLevels(); l++) {
-    const LevelP& level = inlevel->getGrid()->getLevel(l);
+  
+  for (int l = 0; l < maxLevels; l++) {
+    const LevelP& level = grid->getLevel(l);
     const PatchSet* patches = level->eachPatch();
     scheduleComputeStressTensor(            sched, patches, matls);
   }
-  for (int l = 0; l < inlevel->getGrid()->numLevels(); l++) {
-    const LevelP& level = inlevel->getGrid()->getLevel(l);
+  
+  for (int l = 0; l < maxLevels; l++) {
+    const LevelP& level = grid->getLevel(l);
     const PatchSet* patches = level->eachPatch();
     scheduleInterpolateToParticlesAndUpdate(sched, patches, matls);
   }
@@ -374,7 +383,7 @@ void AMRMPM::scheduleComputeZoneOfInfluence(SchedulerP& sched,
   Task* t = scinew Task("AMRMPM::computeZoneOfInfluence",
                   this, &AMRMPM::computeZoneOfInfluence);
                                                                                 
-  t->computes(lb->gZOILabel);
+  t->computes(lb->gZOILabel, one_matl);
                                                                                 
   sched->addTask(t, patches, matls);
 
@@ -925,6 +934,7 @@ void AMRMPM::interpolateParticlesToGrid(const ProcessorGroup*,
     constNCVariable<Stencil7> ZOI_CUR,ZOI_FINE;
     new_dw->get(zoi_cur, lb->gZOILabel, 0, patch, gac, NGN);
 
+
     IntVector cl, ch, fl, fh, CL, CH, FL, FH;
     // Determine extents for coarser level particle data
     const Level* coarseLevel = 0;
@@ -946,7 +956,6 @@ void AMRMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       fh = patch->getLevel()->mapNodeToFiner(ch);// + ghost;
       new_dw->getRegion(zoi_fine, lb->gZOILabel, 0, fineLevel, fl, fh, false);
     }
-
 
     for(int m = 0; m < numMatls; m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
@@ -1020,7 +1029,8 @@ void AMRMPM::interpolateParticlesToGrid(const ProcessorGroup*,
                iter != pset->end(); 
                iter++){
             particleIndex idx = *iter;
-    
+
+/*`==========TESTING==========*/    
 #if 0
             // Get the node indices that surround the cell
             interpolator->findCellAndWeights(px[idx],ni,S,ZOI_CUR,ZOI_FINE,
@@ -1029,7 +1039,7 @@ void AMRMPM::interpolateParticlesToGrid(const ProcessorGroup*,
                                              patch);
 #endif
                                              
-/*`==========TESTING==========*/
+
             // Get the node indices that surround the cell
             interpolator->findCellAndWeights(px[idx],ni,S,psize[idx]); 
 /*===========TESTING==========`*/
@@ -1346,6 +1356,180 @@ void AMRMPM::computeZoneOfInfluence(const ProcessorGroup*,
                                     DataWarehouse* old_dw,
                                     DataWarehouse* new_dw)
 {
+  const Level* level = getLevel(patches);
+  NCVariable<Stencil7> zoi;
+  
+  //__________________________________
+  //  Initialize the interior nodes
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    Vector dx = patch->dCell();
+    
+    printTask(patches, patch,cout_doing,"Doing computeZoneOfInfluence\t\t\t\t");
+    new_dw->allocateAndPut(zoi, lb->gZOILabel, 0, patch);
+    
+    for(NodeIterator iter = patch->getNodeIterator();!iter.done();iter++){
+      IntVector c = *iter;
+      zoi[c].p=-9876543210e99;
+      zoi[c].w=dx.x();
+      zoi[c].e=dx.x();
+      zoi[c].s=dx.y();
+      zoi[c].n=dx.y();
+      zoi[c].b=dx.z();
+      zoi[c].t=dx.z();
+    }
+  }
+
+  //__________________________________
+  // set the ZOI coarse
+  // look up for at the finer level patches
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+  
+    new_dw->getModifiable(zoi, lb->gZOILabel, 0,patch);
+  
+    if(level->hasFinerLevel()) {
+      const Level* fineLevel = level->getFinerLevel().get_rep();
+     
+      Level::selectType finePatches;
+      patch->getFineLevelPatches(finePatches);
+      
+      for(int p=0;p<finePatches.size();p++){  
+        const Patch* finePatch = finePatches[p];
+        Vector fine_dx = finePatch->dCell();
+ 
+        //__________________________________
+        // Iterate over coarsefine interface faces
+        if(finePatch->hasCoarseFaces() ){
+          vector<Patch::FaceType> cf;
+          finePatch->getCoarseFaces(cf);
+          
+          vector<Patch::FaceType>::const_iterator iter;  
+          for (iter  = cf.begin(); iter != cf.end(); ++iter){
+            Patch::FaceType patchFace = *iter;
+
+            cout << " working on face " << finePatch->getFaceName(patchFace)<<  endl;
+
+            // determine the iterator on the coarse level.
+            NodeIterator n_iter(IntVector(-8,-8,-8),IntVector(-9,-9,-9));
+            bool isRight_CP_FP_pair;
+            
+            coarseLevel_CFI_NodeIterator( patchFace,patch, finePatch, fineLevel,
+                                          n_iter ,isRight_CP_FP_pair);
+            // The ZOI element is opposite
+            // of the patch face
+            int element = patchFace;
+            if(patchFace == Patch::xminus || 
+               patchFace == Patch::yminus || 
+               patchFace == Patch::zminus){
+              element += 1;  // e, n, t 
+            }
+            if(patchFace == Patch::xplus || 
+               patchFace == Patch::yplus || 
+               patchFace == Patch::zplus){
+              element -= 1;   // w, s, b
+            }
+            IntVector dir = patch->getFaceAxes(patchFace);        // face axes
+            int p_dir = dir[0];                                    // normal direction 
+            
+            // eject if this is not the right coarse/fine patch pair
+            if (isRight_CP_FP_pair){
+              for(; !n_iter.done(); n_iter++) {
+                IntVector c = *n_iter;
+                cout << " coarseLevels CFI Cells L-" << level->getIndex() << " " << c << endl;
+                zoi[c][element]=fine_dx[p_dir];
+              }
+            }
+          }  // patch face loop
+        }  // hasCoarseFaces
+      }  // finePatches loop
+    }  // has finer level
+  }  // patches loop
+   
+   
+  //__________________________________
+  // set the ZOI in cells in which there are overlaping coarse level nodes
+  // look down for coarse level patches 
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    
+    new_dw->getModifiable(zoi, lb->gZOILabel, 0,patch);
+      
+    // underlying coarse level
+    if( level->hasCoarserLevel() ) {
+      const Level* coarseLevel = level->getCoarserLevel().get_rep();
+      
+      Level::selectType coarsePatches;
+      patch->getCoarseLevelPatches(coarsePatches);
+
+      for(int p=0;p<coarsePatches.size();p++){  
+        const Patch* coarsePatch = coarsePatches[p];
+        Vector coarse_dx = coarsePatch->dCell();
+        
+        //__________________________________
+        // Iterate over coarsefine interface faces
+        if(patch->hasCoarseFaces() ){
+          vector<Patch::FaceType> cf;
+          patch->getCoarseFaces(cf);
+          
+          vector<Patch::FaceType>::const_iterator iter;  
+          for (iter  = cf.begin(); iter != cf.end(); ++iter){
+            Patch::FaceType patchFace = *iter;
+
+            cout << " working on face " << patch->getFaceName(patchFace)<<  endl;
+
+            // determine the iterator on the coarse level.
+            NodeIterator n_iter(IntVector(-8,-8,-8),IntVector(-9,-9,-9));
+            bool isRight_CP_FP_pair;
+            
+            fineLevel_CFI_NodeIterator( patchFace,coarsePatch, patch,
+                                          n_iter ,isRight_CP_FP_pair);
+                                          
+            // The ZOI element is opposite
+            // of the patch face
+            int element = patchFace;
+            if(patchFace == Patch::xminus || 
+               patchFace == Patch::yminus || 
+               patchFace == Patch::zminus){
+              element += 1;  // e, n, t 
+            }
+            if(patchFace == Patch::xplus || 
+               patchFace == Patch::yplus || 
+               patchFace == Patch::zplus){
+              element -= 1;   // w, s, b
+            }
+            
+            IntVector dir = patch->getFaceAxes(patchFace);        // face axes
+            int p_dir = dir[0];                                    // normal direction 
+            
+            // Is this the right coarse/fine patch pair
+            if (isRight_CP_FP_pair){
+              for(; !n_iter.done(); n_iter++) {
+                IntVector c = *n_iter;
+                cout << " fineLevel CFI Cells L-" << level->getIndex() << " " << c << endl;
+                zoi[c][element]=coarse_dx[p_dir];
+              }
+            }
+
+          }  // face interator
+        }  // patch has coarse face
+      }  // coarsePatches loop
+    }  // has finer level                                                                              
+
+  }  // patch loop
+}
+
+
+#if 0
+
+//______________________________________________________________________
+//
+void AMRMPM::computeZoneOfInfluence(const ProcessorGroup*,
+                                    const PatchSubset* patches,
+                                    const MaterialSubset*,
+                                    DataWarehouse* old_dw,
+                                    DataWarehouse* new_dw)
+{
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     printTask(patches, patch,cout_doing,"Doing computeZoneOfInfluence\t\t\t\t");
@@ -1415,8 +1599,7 @@ void AMRMPM::computeZoneOfInfluence(const ProcessorGroup*,
     cout << "Patch node high index = " << patch->getExtraNodeHighIndex() << endl;
     cout << "Patch cell high index = " << patch->getExtraCellHighIndex() << endl;
 
-    for(NodeIterator iter = patch->getExtraNodeIterator();
-        !iter.done();iter++){
+    for(NodeIterator iter = patch->getExtraNodeIterator();!iter.done();iter++){
       IntVector c = *iter;
 
       Point node_pos = curLevel->getNodePosition(c);
@@ -1508,6 +1691,8 @@ void AMRMPM::computeZoneOfInfluence(const ProcessorGroup*,
     }
   }
 }
+
+#endif
 //______________________________________________________________________
 //
 void AMRMPM::applyExternalLoads(const ProcessorGroup* ,
