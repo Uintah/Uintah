@@ -83,6 +83,7 @@ extern DebugStream mixedDebug;
 static DebugStream dbg("MPIScheduler", false);
 static DebugStream timeout("MPIScheduler.timings", false);
 static DebugStream waitout("WaitTimes", false);
+static DebugStream execout("ExecTimes", false);
 DebugStream taskdbg("TaskDBG", false);
 DebugStream mpidbg("MPIDBG",false);
 static DebugStream queuelength("QueueLength",false);
@@ -90,6 +91,7 @@ static Mutex sendsLock( "sendsLock" );
 
 static double CurrentWaitTime=0;
 map<string,double> waittimes;
+map<string,double> exectimes;
 
 static
 void
@@ -342,7 +344,12 @@ MPIScheduler::runTask( DetailedTask         * task, int iteration)
 #endif
   
   double dtask = Time::currentSeconds()-taskstart;
-  
+ 
+  if(execout.active())
+  {
+    exectimes[task->getTask()->getName()]+=dtask;
+  }
+
   //if i do not have a sub scheduler 
   if(!task->getTask()->getHasSubScheduler())
   {
@@ -1269,6 +1276,23 @@ MPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
     //        << rtime << '\n';
   }
 
+  if(execout.active())
+  {
+    static int count=0;
+      
+    if(++count%100==0)
+    {
+      ofstream fout;
+      char filename[100];
+      sprintf(filename,"exectimes.%d",d_myworld->myrank());
+      fout.open(filename);
+      
+      for(map<string,double>::iterator iter=exectimes.begin();iter!=exectimes.end();iter++)
+        fout << fixed << d_myworld->myrank() << ": TaskExecTime: " << iter->second << " Task:" << iter->first << endl;
+
+      //exectimes.clear();
+    }
+  }
   if(waitout.active())
   {
     static int count=0;
