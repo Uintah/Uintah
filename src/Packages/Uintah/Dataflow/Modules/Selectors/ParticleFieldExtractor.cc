@@ -233,29 +233,30 @@ ParticleFieldExtractor::setVars( DataArchiveHandle& archive, int timestep,
   if( !archive_dirty && nm == num_materials){
     return true;
   } else {
-    // make a list of levels with particles on them.  Eventually
-    // particles will only exist on one level, but until then
-    // Figure out which levels have particles and build the 
-    // interface for them. 
-    // NOTE: this is not a general solution!
-    bool found_particles = false;
+    // make a list of levels with particles on them.
     for( int j = 0; j < (int)names.size(); j++ ){
       if( names[j] == "p.x" ){
-        for( int lev = levels-1; !found_particles && lev >= 0; lev-- ){
+      
+        for( int lev = 0; lev < levels; lev++ ){
           level = grid->getLevel( lev );
-          for( Level::patchIterator iter = level->patchesBegin(); 
+          bool found_particles = false;
+          
+          for( Level::patchIterator iter = level->patchesBegin();
                !found_particles && iter != level->patchesEnd(); ++iter ) {
 
             ParticleVariable<Point> var;
             matls = archive->queryMaterials(names[j], *iter, timestep);
             ConsecutiveRangeSet::iterator it = matls.begin();
-            while( !found_particles && it != matls.end() ){
+            
+            while( it != matls.end() ){
               archive->query( var, names[j], *it, *iter, timestep); 
-              if(var.getParticleSubset()->numParticles() > 0){
+              
+              int numParticles = var.getParticleSubset()->numParticles();
+              
+              if( numParticles > 0){
                 level_os << lev << " ";
-                if( !found_particles ) {
-                  found_particles = true; //we have found particles
-                }
+                found_particles = true; 
+                cout << " Level-"<< level->getIndex() << " numParticles " << numParticles << endl;
               }
               ++it;
             } // end while
