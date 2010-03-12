@@ -334,7 +334,6 @@ void TiledRegridder::problemSetup(const ProblemSpecP& params,
   }
   // get min patch size
   regrid_spec->require("min_patch_size", d_minTileSize);
-  regrid_spec->getWithDefault("dynamic_size", d_dynamic_size, false);
   int size=d_minTileSize.size();
 
   //it is not required to specifiy the minimum patch size on each level

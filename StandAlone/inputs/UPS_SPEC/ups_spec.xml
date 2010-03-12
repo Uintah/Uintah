@@ -596,7 +596,6 @@
       <adaptive                         spec="OPTIONAL BOOLEAN" /> <!-- FIXME: optional? does this only apply to one of the types of regridder? -->
       <!--Generic Required Regridder Options --> 
       <max_levels                       spec="REQUIRED INTEGER 'positive'" />
-      <dynamic_size                     spec="OPTIONAL BOOLEAN" />
       <cell_refinement_ratio            spec="REQUIRED STRING" />
       <min_boundary_cells               spec="REQUIRED VECTOR" />
       
