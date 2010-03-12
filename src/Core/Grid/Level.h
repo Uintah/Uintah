@@ -157,8 +157,8 @@ public:
   int numPatches() const;
   long totalCells() const;
 
-  void getSpatialRange(BBox& b) const;
-  void getInteriorSpatialRange(BBox& b) const;
+  void getSpatialRange(BBox& b) const {b=d_spatial_range;};
+  void getInteriorSpatialRange(BBox& b) const {b=d_int_spatial_range;};
   void findIndexRange(IntVector& lowIndex, IntVector& highIndex) const
   { findNodeIndexRange(lowIndex, highIndex); }
   void findNodeIndexRange(IntVector& lowIndex, IntVector& highIndex) const;
@@ -258,6 +258,11 @@ private:
   Grid* grid;
   Point d_anchor;
   Vector d_dcell;
+
+  //the spatial range of the level
+  BBox d_spatial_range;
+  BBox d_int_spatial_range;
+  
   bool d_finalized;
   int d_index; // number of the level
   IntVector d_patchDistribution;

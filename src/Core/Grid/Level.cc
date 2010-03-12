@@ -30,7 +30,7 @@ DEALINGS IN THE SOFTWARE.
 //Allgatherv currently performs poorly on Kraken.  
 //This hack changes the Allgatherv to an allgather 
 //by padding the digits
-//#define AG_HACK  
+#define AG_HACK  
 
 
 #include <TauProfilerForSCIRun.h>
@@ -85,7 +85,10 @@ static DebugStream rgtimes("RGTimes",false);
 
 Level::Level(Grid* grid, const Point& anchor, const Vector& dcell, 
              int index, IntVector refinementRatio, int id /*=-1*/)
-   : grid(grid), d_anchor(anchor), d_dcell(dcell), d_index(index),
+   : grid(grid), d_anchor(anchor), d_dcell(dcell), 
+     d_spatial_range(Point(0,0,0),Point(0,0,0)),
+     d_int_spatial_range(Point(0,0,0),Point(0,0,0)),
+     d_index(index),
      d_patchDistribution(-1,-1,-1), d_periodicBoundaries(0, 0, 0), d_id(id),
      d_refinementRatio(refinementRatio)
 {
@@ -303,24 +306,6 @@ void Level::findInteriorNodeIndexRange(IntVector& lowIndex,IntVector& highIndex)
       if( l(i) < lowIndex(i) ) lowIndex(i) = l(i);
       if( u(i) > highIndex(i) ) highIndex(i) = u(i);
     }
-  }
-}
-
-void Level::getSpatialRange(BBox& b) const
-{
-  for(int i=0;i<(int)d_realPatches.size();i++){
-    Patch* r = d_realPatches[i];
-    b.extend(r->getExtraBox().lower());
-    b.extend(r->getExtraBox().upper());
-  }
-}
-
-void Level::getInteriorSpatialRange(BBox& b) const
-{
-  for(int i=0;i<(int)d_realPatches.size();i++){
-    Patch* r = d_realPatches[i];
-    b.extend(r->getBox().lower());
-    b.extend(r->getBox().upper());
   }
 }
 
@@ -626,6 +611,17 @@ void Level::finalizeLevel(bool periodicX, bool periodicY, bool periodicZ)
   for(int i=0;i<(int)d_realPatches.size();i++)
   {
     d_totalCells+=d_realPatches[i]->getNumExtraCells();
+  }
+  
+  //compute and store the spatial ranges
+  for(int i=0;i<(int)d_realPatches.size();i++){
+    Patch* r = d_realPatches[i];
+    
+    d_spatial_range.extend(r->getExtraBox().lower());
+    d_spatial_range.extend(r->getExtraBox().upper());
+    
+    d_int_spatial_range.extend(r->getBox().lower());
+    d_int_spatial_range.extend(r->getBox().upper());
   }
 }
 void Level::setBCTypes()
