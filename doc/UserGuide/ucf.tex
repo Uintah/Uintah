@@ -633,8 +633,6 @@ The following is an example of this regridder.
     <cell_stability_dilation> [2,2,0] </cell_stability_dilation>
     <min_boundary_cells> [1,1,0] </min_boundary_cells>
     <min_patch_size>  [[8,8,1]] </min_patch_size>
-    <dynamic_size> true </dynamic_size>      
-    <patches_per_level_per_proc>8</patches_per_level_per_proc>   
 </Regridder>
 \end{Verbatim}
 
@@ -652,14 +650,6 @@ the refinement flags are also guaranteed to be refined.  The
 \TT{min\_boundary\_cells} tag specifies the size of the boundary layers. 
 The size of the tiles is specified using the \TT{min\_patch\_size} tag
 and can also be specified on a per level basis.
-
-Finally the size of the tiles can change at run time.  If the number
-of patches is higher than what is needed then the tile size will double in
-the smallest dimension.  Conversely if the target number of patches is low
-then the tile size will halve in the longest dimension but will never go
-below the \TT{min\_patch\_size}.  The target number of patches per processor is 
-specified using the \TT{patches\_per\_level\_per\_proc} tag. To prevent the 
-resizing of tiles set the tag \TT{dynamic\_size} to false. 
 
 %
 %__________________________________
