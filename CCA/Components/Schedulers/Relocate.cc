@@ -427,40 +427,50 @@ Relocate::exchangeParticles(const ProcessorGroup* pg,
     // Go through once to calc the size of the message
     int psize;
     MPI_Pack_size(1, MPI_INT, pg->getComm(), &psize);
-    int sendsize=psize; // One for the count of active patches
-    int numactive=0;
+    int sendsize  = psize; // One for the count of active patches
+    int numactive = 0;
     vector<int> datasizes;
-    for(patchestype::iterator it = pr->patches.begin();
-  it != pr->patches.end(); it++){
+    
+    for(patchestype::iterator it = pr->patches.begin(); it != pr->patches.end(); it++){
       const Patch* toPatch = *it;
+      
       for(int m=0;m<numMatls;m++){
         int matl = matls->get(m);
-  int numVars = (int)reloc_old_labels[m].size();
-  int numParticles=0;
-  pair<maptype::iterator, maptype::iterator> pr;
-  pr = scatter_records->records.equal_range(make_pair(toPatch, matl));
-  for(;pr.first != pr.second; pr.first++){
-    numactive++;
-    int psize;
-    MPI_Pack_size(4, MPI_INT, pg->getComm(), &psize);
-    sendsize += psize; // Patch ID, matl #, # particles, datasize
-    int orig_sendsize=sendsize;
-    ScatterRecord* record = pr.first->second;
-    int np = record->sendset->numParticles();
-    numParticles += np;
-    ParticleSubset* pset = old_dw->getParticleSubset(matl, record->fromPatch);
-    ParticleVariableBase* posvar = new_dw->getParticleVariable(reloc_old_posLabel, pset);
-    ParticleSubset* sendset=record->sendset;
-    posvar->packsizeMPI(&sendsize, pg, sendset);
-    for(int v=0;v<numVars;v++){
-      ParticleVariableBase* var = new_dw->getParticleVariable(reloc_old_labels[m][v], pset);
-      var->packsizeMPI(&sendsize, pg, sendset);
-    }
-    int datasize=sendsize-orig_sendsize;
-    datasizes.push_back(datasize);
-  }
-      }
-    }
+        
+        int numVars = (int)reloc_old_labels[m].size();
+        int numParticles = 0;
+        
+        pair<maptype::iterator, maptype::iterator> pr;
+        pr = scatter_records->records.equal_range(make_pair(toPatch, matl));
+  
+        for(;pr.first != pr.second; pr.first++){
+          numactive++;
+          int psize;
+          
+          MPI_Pack_size(4, MPI_INT, pg->getComm(), &psize);
+          sendsize += psize; // Patch ID, matl #, # particles, datasize
+          int orig_sendsize = sendsize;
+          ScatterRecord* record = pr.first->second;
+          int np = record->sendset->numParticles();
+          
+          numParticles += np;
+          ParticleSubset* pset         = old_dw->getParticleSubset(matl, record->fromPatch);
+          ParticleVariableBase* posvar = new_dw->getParticleVariable(reloc_old_posLabel, pset);
+          ParticleSubset* sendset      = record->sendset;
+          
+          posvar->packsizeMPI(&sendsize, pg, sendset);
+          
+          for(int v=0;v<numVars;v++){
+            ParticleVariableBase* var = new_dw->getParticleVariable(reloc_old_labels[m][v], pset);
+            var->packsizeMPI(&sendsize, pg, sendset);
+          }
+          int datasize = sendsize-orig_sendsize;
+          datasizes.push_back(datasize);
+        }
+      }  // matl loop
+    } // patches loop
+    
+    
     // Create the buffer for this message
     char* buf = scinew char[sendsize];
     int position=0;
@@ -468,67 +478,72 @@ Relocate::exchangeParticles(const ProcessorGroup* pg,
     // And go through it again to pack the message
     int idx=0;
     MPI_Pack(&numactive, 1, MPI_INT, buf, sendsize, &position, pg->getComm());
-    for(patchestype::iterator it = pr->patches.begin();
-  it != pr->patches.end(); it++){
+    
+    for(patchestype::iterator it = pr->patches.begin();it != pr->patches.end(); it++){
       const Patch* toPatch = *it;
+      
       for(int m=0;m<numMatls;m++){
         int matl = matls->get(m);
-  int numVars = (int)reloc_old_labels[m].size();
+        int numVars = (int)reloc_old_labels[m].size();
 
-  pair<maptype::iterator, maptype::iterator> pr;
-  pr = scatter_records->records.equal_range(make_pair(toPatch, matl));
-  for(;pr.first != pr.second; pr.first++){
-    int patchid = toPatch->getID();
-    MPI_Pack(&patchid, 1, MPI_INT, buf, sendsize, &position,
-       pg->getComm());
-    MPI_Pack(&m, 1, MPI_INT, buf, sendsize, &position,
-       pg->getComm());
-    ScatterRecord* record = pr.first->second;
-    int totalParticles=record->sendset->numParticles();
-    MPI_Pack(&totalParticles, 1, MPI_INT, buf, sendsize, &position,
-       pg->getComm());
-    total_reloc[1]+=totalParticles;
-    int datasize = datasizes[idx];
-    ASSERT(datasize>0);
-    MPI_Pack(&datasize, 1, MPI_INT, buf, sendsize, &position,
-       pg->getComm());
+        pair<maptype::iterator, maptype::iterator> pr;
+        pr = scatter_records->records.equal_range(make_pair(toPatch, matl));
+  
+        for(;pr.first != pr.second; pr.first++){
+          int patchid = toPatch->getID();
+          MPI_Pack(&patchid, 1, MPI_INT, buf, sendsize, &position, pg->getComm());
+          MPI_Pack(&m,       1, MPI_INT, buf, sendsize, &position, pg->getComm());
+          
+          ScatterRecord* record = pr.first->second;
+          int totalParticles = record->sendset->numParticles();
+          
+          MPI_Pack(&totalParticles, 1, MPI_INT, buf, sendsize, &position, pg->getComm());
+          
+          total_reloc[1]+=totalParticles;
+          int datasize   = datasizes[idx];
+          ASSERT(datasize>0);
+          
+          MPI_Pack(&datasize, 1, MPI_INT, buf, sendsize, &position, pg->getComm());
 
-    int start = position;
-    ParticleSubset* pset = old_dw->getParticleSubset(matl, record->fromPatch);
-    ParticleVariableBase* posvar = new_dw->getParticleVariable(reloc_old_posLabel, pset);
-    ParticleSubset* sendset=record->sendset;
-    posvar->packMPI(buf, sendsize, &position, pg, sendset, record->toPatch);
-    for(int v=0;v<numVars;v++){
-      ParticleVariableBase* var = new_dw->getParticleVariable(reloc_old_labels[m][v], pset);
-      var->packMPI(buf, sendsize, &position, pg, sendset);
-    }
-    int size=position-start;
-    if(size < datasize){
-      // MPI mis-esimated the size of the message.  For some
-      // reason, mpich does this all the time.  We must pad...
-      int diff=datasize-size;
-      char* junk = scinew char[diff];
-      MPI_Pack(junk, diff, MPI_CHAR, buf, sendsize, &position,
-         pg->getComm());
-      ASSERTEQ(position, start+datasize);
-      delete[] junk;
-    }
-    idx++;
-  }
+          int start = position;
+          ParticleSubset* pset         = old_dw->getParticleSubset(matl, record->fromPatch);
+          ParticleVariableBase* posvar = new_dw->getParticleVariable(reloc_old_posLabel, pset);
+          ParticleSubset* sendset      =record->sendset;
+          posvar->packMPI(buf, sendsize, &position, pg, sendset, record->toPatch);
+          
+          for(int v=0;v<numVars;v++){
+            ParticleVariableBase* var = new_dw->getParticleVariable(reloc_old_labels[m][v], pset);
+            var->packMPI(buf, sendsize, &position, pg, sendset);
+          }
+          int size=position-start;
+          if(size < datasize){
+            // MPI mis-esimated the size of the message.  For some
+            // reason, mpich does this all the time.  We must pad...
+            int diff=datasize-size;
+            char* junk = scinew char[diff];
+            MPI_Pack(junk, diff, MPI_CHAR, buf, sendsize, &position, pg->getComm());
+            
+            ASSERTEQ(position, start+datasize);
+            delete[] junk;
+          }
+          idx++;
+        }
       }
-    }
+    }  // patch loop
     ASSERT(position <= sendsize);
-    ASSERT(sendsize > 0);    
+    ASSERT(sendsize > 0); 
+       
     // Send (isend) the message
     MPI_Request rid;
     int to=iter->first;
+    
     mpidbg << pg->myrank() << " Send relocate msg size " << sendsize << " tag " << RELOCATE_TAG << " to " << to << endl;
-    MPI_Isend(buf, sendsize, MPI_PACKED, to, RELOCATE_TAG,
-        pg->getComm(), &rid);
+    MPI_Isend(buf, sendsize, MPI_PACKED, to, RELOCATE_TAG, pg->getComm(), &rid);
     mpidbg << pg->myrank() << " done Sending relocate msg size " << sendsize << " tag " << RELOCATE_TAG << " to " << to << endl;
+    
     sendbuffers.push_back(buf);
     sendrequests.push_back(rid);
-  }
+  }  // scatter records loop
 
   // Receive, and handle the local case too...
   // Foreach processor, post a receive
@@ -555,39 +570,40 @@ Relocate::exchangeParticles(const ProcessorGroup* pg,
     char* buf = scinew char[size];
     recvbuffers[idx]=buf;
     mpidbg << pg->myrank() << " Recv relocate msg size " << size << " tag " << RELOCATE_TAG << " from " << iter->first << endl;
-    MPI_Recv(recvbuffers[idx], size, MPI_PACKED, iter->first,
-       RELOCATE_TAG, pg->getComm(), &status);
+    MPI_Recv(recvbuffers[idx], size, MPI_PACKED, iter->first, RELOCATE_TAG, pg->getComm(), &status);
 
     mpidbg << pg->myrank() << " Done Recving relocate msg size " << size << " tag " << RELOCATE_TAG << " from " << iter->first << endl;
     // Partially unpack
     int position=0;
     int numrecords;
-    MPI_Unpack(buf, size, &position, &numrecords, 1, MPI_INT,
-         pg->getComm());
+    
+    MPI_Unpack(buf, size, &position, &numrecords,     1, MPI_INT, pg->getComm());
+    
     for(int i=0;i<numrecords;i++){
       int patchid;
-      MPI_Unpack(buf, size, &position, &patchid, 1, MPI_INT,
-     pg->getComm());
+      MPI_Unpack(buf, size, &position, &patchid,      1, MPI_INT, pg->getComm());
 
       // find the patch from the id
       const Patch* toPatch = grid->getPatchByID(patchid, coarsestLevel->getIndex());;
 
       ASSERT(toPatch != 0 && toPatch->getID() == patchid);
+      
       int matl;
-      MPI_Unpack(buf, size, &position, &matl, 1, MPI_INT,
-     pg->getComm());
+      MPI_Unpack(buf, size, &position, &matl,         1, MPI_INT, pg->getComm());
       ASSERTRANGE(matl, 0, numMatls);
+      
       int numParticles;
-      MPI_Unpack(buf, size, &position, &numParticles, 1, MPI_INT,
-     pg->getComm());
+      MPI_Unpack(buf, size, &position, &numParticles, 1, MPI_INT, pg->getComm());
+      
       int datasize;
-      MPI_Unpack(buf, size, &position, &datasize, 1, MPI_INT,
-     pg->getComm());
+      MPI_Unpack(buf, size, &position, &datasize,     1, MPI_INT, pg->getComm());
+      
       char* databuf=buf+position;
       ASSERTEQ(lb->getPatchwiseProcessorAssignment(toPatch), me);
-      scatter_records->saveRecv(toPatch, matl,
-             databuf, datasize, numParticles);
-      position+=datasize;
+      
+      scatter_records->saveRecv(toPatch, matl, databuf, datasize, numParticles);
+      
+      position      +=datasize;
       total_reloc[2]+=numParticles;
     }
   }
@@ -826,6 +842,7 @@ Relocate::relocateParticles(const ProcessorGroup* pg,
         
         for(int i=0;i<(int)neighborPatches.size();i++){
           const Patch* fromPatch=neighborPatches[i];
+          
           int from = lb->getPatchwiseProcessorAssignment(fromPatch->getRealPatch());
           ASSERTRANGE(from, 0, pg->size());
           
@@ -841,6 +858,7 @@ Relocate::relocateParticles(const ProcessorGroup* pg,
         
         MPIRecvBuffer* recvs = scatter_records.findRecv(patch, matl);
         map<const VarLabel*, ParticleVariableBase*>* newParts = 0;
+       
         newParts = new_dw->getNewParticleState(matl,patch);
         bool adding_new_particles = false;
         
