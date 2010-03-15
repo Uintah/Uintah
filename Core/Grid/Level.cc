@@ -82,7 +82,6 @@ static Mutex ids_init("ID init");
 static DebugStream bcout("BCTypes", false);
 static DebugStream rgtimes("RGTimes",false);
 
-
 Level::Level(Grid* grid, const Point& anchor, const Vector& dcell, 
              int index, IntVector refinementRatio, int id /*=-1*/)
    : grid(grid), d_anchor(anchor), d_dcell(dcell), 
@@ -181,6 +180,10 @@ Patch* Level::addPatch(const IntVector& lowIndex,
     r->setGrid(grid);
     d_realPatches.push_back(r);
     d_virtualAndRealPatches.push_back(r);
+    d_int_spatial_range.extend(r->getBox().lower());
+    d_int_spatial_range.extend(r->getBox().upper());
+    d_spatial_range.extend(r->getExtraBox().lower());
+    d_spatial_range.extend(r->getExtraBox().upper());
     return r;
 }
 
@@ -196,6 +199,10 @@ Patch* Level::addPatch(const IntVector& lowIndex,
     r->setGrid(grid);
     d_realPatches.push_back(r);
     d_virtualAndRealPatches.push_back(r);
+    d_int_spatial_range.extend(r->getBox().lower());
+    d_int_spatial_range.extend(r->getBox().upper());
+    d_spatial_range.extend(r->getExtraBox().lower());
+    d_spatial_range.extend(r->getExtraBox().upper());
     return r;
 }
 
@@ -561,9 +568,10 @@ void Level::finalizeLevel(bool periodicX, bool periodicY, bool periodicZ)
   BBox bbox;
   
   if (d_index > 0)
-    grid->getLevel(0)->getSpatialRange(bbox);
+    grid->getLevel(0)->getInteriorSpatialRange(bbox);
   else
-    getSpatialRange(bbox);
+    getInteriorSpatialRange(bbox);
+
   Box domain(bbox.min(), bbox.max());
   Vector vextent = positionToIndex(bbox.max()) - positionToIndex(bbox.min());
   IntVector extent((int)rint(vextent.x()), (int)rint(vextent.y()),
@@ -613,15 +621,12 @@ void Level::finalizeLevel(bool periodicX, bool periodicY, bool periodicZ)
     d_totalCells+=d_realPatches[i]->getNumExtraCells();
   }
   
-  //compute and store the spatial ranges
+  //compute and store the spatial ranges now that BCTypes are set
   for(int i=0;i<(int)d_realPatches.size();i++){
     Patch* r = d_realPatches[i];
     
     d_spatial_range.extend(r->getExtraBox().lower());
     d_spatial_range.extend(r->getExtraBox().upper());
-    
-    d_int_spatial_range.extend(r->getBox().lower());
-    d_int_spatial_range.extend(r->getBox().upper());
   }
 }
 void Level::setBCTypes()
