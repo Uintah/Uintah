@@ -113,7 +113,9 @@ namespace SCIRun {
     bool intersect( const Point& e, const Vector& v, Point& hitNear );
 
     friend std::ostream& operator<<(std::ostream& out, const BBox& b);
-
+ 
+    bool operator==( const BBox &b ) const{ return cmin==b.cmin && cmax==b.cmax;};
+    bool operator!=( const BBox &b ) const{ return cmin!=b.cmin || cmax!=b.cmax;};
   private:
     Point cmin;
     Point cmax;
