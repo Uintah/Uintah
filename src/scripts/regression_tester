@@ -4,6 +4,7 @@ if test "$GOLD_STANDARD" = "" ; then
     echo "The variable GOLD_STANDARD has not been set.  Please set the GOLD_STANDARD"
     echo "variable to a valid directory (either in your environment or in this script."
     echo "Goodbye."
+    exit
 
 elif test -d ${GOLD_STANDARD}; then
     test_dir=${GOLD_STANDARD}
