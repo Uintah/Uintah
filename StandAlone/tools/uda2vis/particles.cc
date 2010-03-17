@@ -27,6 +27,7 @@
 
  */
 
+#if 0
 
 #include <stdio.h>
 
@@ -211,3 +212,6 @@ template void handleParticleData<double> (QueryInfo&, int, ParticleVariableRaw&,
 template void handleParticleData<Point>  (QueryInfo&, int, ParticleVariableRaw&, string, int);
 template void handleParticleData<Vector> (QueryInfo&, int, ParticleVariableRaw&, string, int);
 template void handleParticleData<Matrix3>(QueryInfo&, int, ParticleVariableRaw&, string, int);
+
+
+#endif

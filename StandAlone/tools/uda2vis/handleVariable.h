@@ -31,6 +31,8 @@ DEALINGS IN THE SOFTWARE.
 #ifndef UDA2NRRD_GET_FUNCTIONS_H
 #define UDA2NRRD_GET_FUNCTIONS_H
 
+#if 0
+
 #include <StandAlone/tools/uda2vis/particleData.h>
 
 #include <StandAlone/tools/uda2vis/Args.h>
@@ -54,6 +56,8 @@ void handlePatchData( QueryInfo & qinfo,
                       FIELD* sfield,
                       const Patch* patch,
                       const Args & args );
+
+#endif
 
 #endif // UDA2NRRD_GET_FUNCTIONS_H
 

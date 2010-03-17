@@ -31,6 +31,8 @@ DEALINGS IN THE SOFTWARE.
 #ifndef WRAP_NRRD_H
 #define WRAP_NRRD_H
 
+#if 0
+
 #include <teem/nrrd.h>
 
 #include <StandAlone/tools/uda2vis/particleData.h>
@@ -38,5 +40,7 @@ DEALINGS IN THE SOFTWARE.
 #include <StandAlone/tools/uda2vis/Matrix_Op.h>
 
 template<class FIELD> void wrap_nrrd( FIELD * source, Matrix_Op matrix_op, bool verbose, cellVals& cellValColln, bool dataReq );
+
+#endif
 
 #endif // WRAP_NRRD_H

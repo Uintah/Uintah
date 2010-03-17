@@ -31,6 +31,8 @@ DEALINGS IN THE SOFTWARE.
 #ifndef UDA2NRRD_UPDATE_MESH_HANDLE_H
 #define UDA2NRRD_UPDATE_MESH_HANDLE_H
 
+#if 0
+
 #include <Core/Basis/HexTrilinearLgn.h>
 #include <Core/Datatypes/LatVolMesh.h>
 
@@ -54,6 +56,8 @@ bool update_mesh_handle( Uintah::LevelP& level,
                          Uintah::TypeDescription::Type type,
                          LVMeshHandle& mesh_handle,
                          const Args & args );
+
+#endif 
 
 #endif // UDA2NRRD_UPDATE_MESH_HANDLE_H
 

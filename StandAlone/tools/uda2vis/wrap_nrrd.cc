@@ -27,6 +27,8 @@
 
  */
 
+#if 0
+
 
 // Allocates memory for dest, then copies all the data to dest from
 // source.
@@ -296,3 +298,5 @@ INTANTIATE_TEMPLATES_WRAP_NRRD_CC(double)
   INTANTIATE_TEMPLATES_WRAP_NRRD_CC(Matrix3)
   INTANTIATE_TEMPLATES_WRAP_NRRD_CC(Vector)
 
+
+#endif

@@ -106,7 +106,6 @@ public:
   virtual int           GetNTimesteps(void);
 
   virtual const char    *GetType(void)   { return "udaReaderMTMD"; };
-  virtual void          FreeUpResources(void);
   virtual void          ActivateTimestep(int); 
 
   virtual vtkDataSet    *GetMesh(int, int, const char *);
@@ -117,13 +116,14 @@ public:
 protected:
 
   virtual void     PopulateDatabaseMetaData(avtDatabaseMetaData *, int);
-  void             InitializeReader(avtDatabaseMetaData *, int);
+  void             ReadMetaData(avtDatabaseMetaData *, int);
 
   virtual void     *GetAuxiliaryData(const char *var, int,
                                      const char *type, void *args,
                                      DestructorFunction &);
 
   void             GetLevelAndLocalPatchNumber(int, int&, int&);
+  int              GetGlobalDomainNumber(int, int);
   void             CalculateDomainNesting(int, const std::string&);
         
   virtual bool     HasInvariantMetaData(void) const { return false; };
@@ -133,36 +133,15 @@ protected:
   // DATA MEMBERS
         
   int currTimeStep;
-  std::string  folder;
 
   // data that is not dependent on time
   DataArchive *archive;
-  typeDouble* timeStepInfo;
-  udaVars* udaVarsPtr;
+  vector<double> cycleTimes;
 
   // data that is dependent on time
   GridP *grid;
-  levelPatchVec * levelPatchVecPtr;
-
-  // map from a mesh type (CC/NC/...) to the patch info, **for the active timestep**
-  std::map<std::string,patchInfoVec*> meshNameToPatchInfoVec;
-  patchInfoVec* getCachedPatchInfo(const std::string& meshname);
-
-  // data dependent on time, and level
-  int  currLevel;
-  int* boundaryExists;
-  int* extraCells;
+  TimeStepInfo *stepInfo;
         
-
-  double ***refMatrix; // scalars
-  vecVal ***vecValMatrix;
-  tenVal ***tenValMatrix;
-       
-  int refX, refY, refZ;
-  int vecX, vecY, vecZ;
-  int tenX, tenY, tenZ;
-
-
   // interface to the uda2vis library
   void  * libHandle;
 
@@ -172,16 +151,11 @@ protected:
   GridP*           (*getGrid)(DataArchive*, int);
   void             (*releaseGrid)(GridP*);
 
-  timeStep*        (*processData)(DataArchive*, GridP*, int, int, int, string, int, bool, bool);
-  udaVars*         (*getVarList)(DataArchive*);
-  typeDouble*      (*getTimeSteps)(DataArchive*);
-  double*          (*getBBox)(DataArchive*, GridP*, int);
-  varMatls*        (*getMaterials)(DataArchive*, GridP*, int, const std::string&);
-  levelPatchVec*   (*getTotalNumPatches)(DataArchive*, GridP*);
-  patchInfoVec*    (*getPatchInfo)(DataArchive*, GridP*, const std::string&, bool);
-  int*             (*getPeriodicBoundaries)(DataArchive*, GridP*, int);
-  int*             (*getExtraCells)(DataArchive*, GridP*, int);
-  int*             (*getPVarLevelAndPatches)(DataArchive*, GridP*, int, const std::string&); 
+  vector<double>   (*getCycleTimes)(DataArchive*);
+  TimeStepInfo*    (*getTimeStepInfo)(DataArchive*, GridP*, int);
+
+  GridDataRaw*     (*getGridData)(DataArchive*, GridP*, int, int, string, int, int, int[3], int[3]);
+  ParticleDataRaw* (*getParticleData)(DataArchive*, GridP*, int, int, string, int, int);
 };
 
 #endif
