@@ -38,7 +38,8 @@ if test ! -x /usr/bin/which; then
   exit 1
 fi
 
-pscp2fulldir=`/usr/bin/which $0`
+#pscp2fulldir=`/usr/bin/which $0`
+pscp2fulldir=`readlink -f $0`
 pscp2dir=`dirname $pscp2fulldir`
 
 nproc=$1
@@ -150,9 +151,10 @@ echo "yes."
 
 echo -n "  Testing: does $REMOTEDIR_PARENT exist on the remote machine... "
 
-test=`$SSH -x $LOGIN "if(-e $REMOTEDIR_PARENT) echo true"`
+command="echo `test -e $REMOTEDIR_PARENT && echo $?`"
+test=`$SSH -x $LOGIN $command`
 
-if test "$test" != "true"; then
+if test "$test" != "0"; then
   echo ""
   echo ""
   echo "  ERROR:  The destination remote directory '$REMOTEDIR_PARENT' does not exist..."
@@ -250,7 +252,7 @@ $FIND .             -maxdepth 1 -type f -exec basename {} \; | grep -v .transfer
 $FIND ./t*          -maxdepth 0 -type d -exec basename {} \; | sort -r                    >>$PSCP_FILES
 $FIND ./checkpoints -maxdepth 1                                                                     >>$PSCP_FILES
 
-echo "Now starting an editor in a separate xterm:  Remove the files you don't want transferred"
+echo "Now starting an editor:  Remove the files you don't want transferred"
 
 if test ! $?EDITOR || test "$EDITOR" == ""; then
   echo
@@ -259,7 +261,7 @@ if test ! $?EDITOR || test "$EDITOR" == ""; then
   export EDITOR=vi
 fi
 
-xterm -bg "DarkSlateGray" -fg "orange" -e $EDITOR $PSCP_FILES
+$EDITOR $PSCP_FILES
 chmod ug+rw $PSCP_FILES
  
 echo
