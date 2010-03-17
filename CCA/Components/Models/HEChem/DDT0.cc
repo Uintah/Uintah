@@ -589,13 +589,13 @@ void DDT0::computeModelSources(const ProcessorGroup*,
     new_dw->get(press_CC,         Ilb->press_equil_CCLabel,0,  patch,gn, 0);
     old_dw->get(NC_CCweight,      MIlb->NC_CCweightLabel,  0,   patch,gac,1);   
     
-    new_dw->allocateAndPut(burning,    burningLabel,           0, patch,gn,0);  
-    new_dw->allocateAndPut(detonating, detonatingLabel,        0, patch);
+    new_dw->allocateAndPut(burning,    burningLabel,           m0, patch,gn,0);  
+    new_dw->allocateAndPut(detonating, detonatingLabel,        m0, patch);
     burning.initialize(0.);
     detonating.initialize(0.);
 
-    new_dw->allocateAndPut(onSurface,  DDT0::onSurfaceLabel,   0, patch);
-    new_dw->allocateAndPut(surfaceTemp,DDT0::surfaceTempLabel, 0, patch);
+    new_dw->allocateAndPut(onSurface,  DDT0::onSurfaceLabel,   m0, patch);
+    new_dw->allocateAndPut(surfaceTemp,DDT0::surfaceTempLabel, m0, patch);
 
     IntVector nodeIdx[8];
       
