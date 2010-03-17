@@ -53,16 +53,12 @@
 
 #include <vtkPoints.h>
 #include <vtkPolyData.h>
-#include <vtkFieldData.h>
 #include <vtkCellData.h>
-#include <vtkPointData.h>
 #include <vtkFloatArray.h>
 #include <vtkDoubleArray.h>
 #include <vtkIntArray.h>
 #include <vtkRectilinearGrid.h>
-#include <vtkStructuredGrid.h>
 #include <vtkUnstructuredGrid.h>
-#include <vtkCellType.h>
 
 #include <avtParallel.h>
 #include <avtDatabase.h>
@@ -72,9 +68,6 @@
 #include <avtStructuredDomainNesting.h>
 #include <avtVariableCache.h>
 #include <avtMaterial.h>
-
-#include <DBOptionsAttributes.h>
-#include <Expression.h>
 
 #include <DebugStream.h>
 #include <InvalidVariableException.h>
@@ -814,21 +807,6 @@ avtudaReaderMTMDFileFormat::GetMesh(int timestate, int domain, const char *meshn
     // make sure we have ghosting info for this mesh
     CalculateDomainNesting(timestate, meshname);
 
-
-      // store which indices we're using - depends on cc/nc/fc
-      // cc and nc meshes are identical - TODO: update for face centered
-      bool use_nc[3] = {false,false,false};
-#if 0
-      // face centered meshes use node centered indices for one axis
-      if (meshname.find("SFCX") != string::npos)
-        use_nc[0] = true;
-      if (meshname.find("SFCY") != string::npos)
-        use_nc[1] = true;
-      if (meshname.find("SFCZ") != string::npos)
-        use_nc[2] = true;
-#endif
-
-
     int level, local_patch;
     GetLevelAndLocalPatchNumber(domain, level, local_patch);
 
@@ -858,25 +836,56 @@ avtudaReaderMTMDFileFormat::GetMesh(int timestate, int domain, const char *meshn
 #endif
 
 
+    // Node centered data uses the same mesh as cell centered,
+    // face centered meshes need an extra value for one axis.
+    int extra_for_faces[3] = {0,0,0};
+    if (meshName.find("SFCX") != string::npos) {
+      extra_for_faces[0]=1;
+      high[0]++; extra_high[0]++;
+    }
+
+    if (meshName.find("SFCY") != string::npos) {
+      extra_for_faces[1]=1;
+      high[1]++; extra_high[1]++;
+    }
+
+    if (meshName.find("SFCZ") != string::npos) {
+      extra_for_faces[2]=1;
+      high[2]++; extra_high[2]++;
+    }
+
+
+
     vtkRectilinearGrid *rgrid = vtkRectilinearGrid::New();
 
     int dims[3];
-    for (int i=0; i<3; i++) {
-      if (use_nc[i])
-        dims[i] = extra_high[i]-extra_low[i];
-      else
-        dims[i] = extra_high[i]-extra_low[i]+1; // cell based indices need an extra element!
-    }
+    for (int i=0; i<3; i++)
+      dims[i] = extra_high[i]-extra_low[i]+1;
     rgrid->SetDimensions(dims);
 
 
-    // Read the coordinates from the file.
+    // Set the coordinates of the grid points in each direction.
     for (int c=0; c<3; c++) {
       vtkFloatArray *coords = vtkFloatArray::New(); 
       coords->SetNumberOfTuples(dims[c]); 
       float *array = (float *)coords->GetVoidPointer(0); 
       for (int i=0; i<dims[c]; i++) {
-        array[i] = levelInfo.anchor[c] + (i+extra_low[c])*levelInfo.spacing[c];
+
+        // Face centered data gets shifted towards -inf by half a cell, except
+        // for the first and last nodes, which have an extra half cell movement
+        // to keep the spatial range the same as it otherwise would be.
+        float face_offset=0;
+        if (extra_for_faces[c]) {
+          if (i==0)
+            face_offset = 0;
+          else if (i==dims[c]-1)
+            face_offset = -1;
+          else
+            face_offset = -0.5;
+        }
+
+        array[i] = levelInfo.anchor[c] +
+          (i + extra_low[c] + face_offset) * levelInfo.spacing[c];
       }
 
       switch(c) {
@@ -993,13 +1002,12 @@ avtudaReaderMTMDFileFormat::GetMesh(int timestate, int domain, const char *meshn
 
     ParticleDataRaw *pd = (*getParticleData)(archive, grid, level, domain, vars, matlNo, timestate);
 
-
     // Create the vtkPoints object and copy points into it.
     vtkFloatArray *floatArray = vtkFloatArray::New();
     floatArray->SetNumberOfComponents(3);
     floatArray->SetArray(pd->data, pd->num*pd->components, 0);
 
-    vtkPoints *points = vtkPoints::New(); 
+    vtkPoints *points = vtkPoints::New();
     points->SetData(floatArray);
     floatArray->Delete();
 
@@ -1083,20 +1091,6 @@ avtudaReaderMTMDFileFormat::GetVar(int timestate, int domain, const char *varnam
     PatchInfo &patchInfo = levelInfo.patchInfo[local_patch];
 
 
-    // store which indices we're using - depends on cc/nc/fc
-    bool use_nc[3] = {false,false,false};
-
-#if 0    
-    // face centered meshes use node centered indices for one axis
-    if (varType.find("SFCX") != string::npos)
-      use_nc[0] = true;
-    if (varType.find("SFCY") != string::npos)
-      use_nc[1] = true;
-    if (varType.find("SFCZ") != string::npos)
-      use_nc[2] = true;
-#endif
-
-
     int low[3], high[3];   // region that visit expects
     int qlow[3], qhigh[3]; // region we're going to ask uintah for
     int nextra=0;
@@ -1123,11 +1117,23 @@ avtudaReaderMTMDFileFormat::GetVar(int timestate, int domain, const char *varnam
 #endif
 
 
-    if (varType.find("NC") != string::npos) {
-      for (int i=0; i<3; i++) {
-        high[i]++;
-        qhigh[i]++;
-      }
+    // Node centered data needs an extra value in each direction,
+    // face centered meshes need an extra value for one axis.
+    // This is bad because it requires reading data from neighboring
+    // patches, but there's no way around that right now.
+    if (varType.find("SFCX") != string::npos ||
+        varType.find("NC") != string::npos) {
+      high[0]++; qhigh[0]++;
+    }
+
+    if (varType.find("SFCY") != string::npos ||
+        varType.find("NC") != string::npos) {
+      high[1]++; qhigh[1]++;
+    }
+
+    if (varType.find("SFCZ") != string::npos ||
+        varType.find("NC") != string::npos) {
+      high[2]++; qhigh[2]++;
     }
       
 
