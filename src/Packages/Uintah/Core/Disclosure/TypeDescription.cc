@@ -32,6 +32,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Exceptions/InternalError.h>
+#include <Core/Util/DebugStream.h>
 #include <Core/Util/Assert.h>
 #include <Core/Thread/Mutex.h>
 #include <map>
@@ -39,10 +40,10 @@ DEALINGS IN THE SOFTWARE.
 #include <iostream>
 
 using namespace Uintah;
-
 using namespace SCIRun;
-using std::map;
-using std::vector;
+using namespace std;
+
+static DebugStream dbg( "TypeDescription", false );
 
 static Mutex tdLock("TypeDescription::getMPIType lock");
 
@@ -76,7 +77,9 @@ void TypeDescription::register_type()
     types=scinew map<string, const TypeDescription*>;
     typelist=scinew vector<const TypeDescription*>;
   }
-  
+
+  dbg << "register_type: " << getName() << "\n";
+
   map<string, const TypeDescription*>::iterator iter = types->find(getName());
   if(iter == types->end()){
     (*types)[getName()]=this;
