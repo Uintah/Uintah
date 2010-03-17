@@ -31,6 +31,8 @@ DEALINGS IN THE SOFTWARE.
 #ifndef UDA2NRRD_PARTICLES_H
 #define UDA2NRRD_PARTICLES_H
 
+#if 0
+
 #include <StandAlone/tools/uda2vis/particleData.h>
 
 #include <StandAlone/tools/uda2vis/Args.h>
@@ -75,5 +77,6 @@ template<class PartT>
 void
 handleParticleData( QueryInfo & qinfo, int matlNo, ParticleVariableRaw &result, string varSelected, int patchNo );
 
+#endif
 
 #endif // UDA2NRRD_PARTICLES_H

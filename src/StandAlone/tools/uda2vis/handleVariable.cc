@@ -26,6 +26,7 @@
    DEALINGS IN THE SOFTWARE.
 
  */
+#if 0
 
 /////////////////
 // Due to template instantiation ordering problems, these 2 includes must be first:
@@ -326,3 +327,6 @@ INTANTIATE_TEMPLATES_HANDLEVARIABLE_CC(int)
 INTANTIATE_TEMPLATES_HANDLEVARIABLE_CC(float)
 INTANTIATE_TEMPLATES_HANDLEVARIABLE_CC(double)
 INTANTIATE_TEMPLATES_HANDLEVARIABLE_CC(Matrix3)
+
+
+#endif

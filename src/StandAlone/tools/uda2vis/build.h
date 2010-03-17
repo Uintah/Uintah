@@ -31,6 +31,8 @@ DEALINGS IN THE SOFTWARE.
 #ifndef UDA2NRRD_BUILD_FUNCTIONS_H
 #define UDA2NRRD_BUILD_FUNCTIONS_H
 
+#if 0
+
 #include <StandAlone/tools/uda2vis/QueryInfo.h>
 
 #include <StandAlone/tools/uda2vis/Args.h>
@@ -77,5 +79,7 @@ build_combined_level_field( QueryInfo &qinfo,
                             IntVector& offset,
                             FIELD *sfield,
                             const Args & args );
+
+#endif
 
 #endif // UDA2NRRD_BUILD_FUNCTIONS_H

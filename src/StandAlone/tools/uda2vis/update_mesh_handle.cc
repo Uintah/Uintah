@@ -26,7 +26,7 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 
 */
-
+#if 0
 
 
 #include <StandAlone/tools/uda2vis/update_mesh_handle.h>
@@ -231,3 +231,5 @@ update_mesh_handle( LevelP& level,
   }
 } // end update_mesh_handled()
 
+
+#endif

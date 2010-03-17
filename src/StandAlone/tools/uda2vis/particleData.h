@@ -35,137 +35,90 @@
 using namespace std;
 
 
-// Vector variables
-class vecVal {
-  public:
-    string name;
-    float x;
-    float y;
-    float z;
-    vecVal(){};
-    void operator=(const vecVal& obj) {
-      // name.assign(obj.name);
-      x = obj.x;
-      y = obj.y;
-      z = obj.z;
-    }
-    ~vecVal(){};
+
+class PatchInfo {
+public:
+
+  void getLow(bool use_nc[3], int out[3]) {
+    for (int i=0; i<3; i++)
+      out[i] = use_nc[i] ? nc_low[i] : cc_low[i];
+  }
+
+  void getHigh(bool use_nc[3], int out[3]) {
+    for (int i=0; i<3; i++)
+      out[i] = use_nc[i] ? nc_high[i] : cc_high[i];
+  }
+  
+  void getExtraLow(bool use_nc[3], int out[3]) {
+    for (int i=0; i<3; i++)
+      out[i] = use_nc[i] ? nc_extra_low[i] : cc_extra_low[i];
+  }
+
+  void getExtraHigh(bool use_nc[3], int out[3]) {
+    for (int i=0; i<3; i++)
+      out[i] = use_nc[i] ? nc_extra_high[i] : cc_extra_high[i];
+  }
+  
+  // cell centered indices
+  int cc_low[3];
+  int cc_high[3];
+  int cc_extra_low[3];
+  int cc_extra_high[3];
+
+  // node centered indices - can be combined with cc to get face centered indices
+  int nc_low[3];
+  int nc_high[3];
+  int nc_extra_low[3];
+  int nc_extra_high[3];
 };
 
-// Tensor variables
-class tenVal {
-  public:
-    string name;
-    double mat[3][3];
-    tenVal(){};
-    void operator=(const tenVal& obj) {
-      // name.assign(obj.name);
-      for (int i = 0; i < 3; i++) {
-        for (int j = 0; j < 3; j++) {
-	  mat[i][j] = obj.mat[i][j];
-	}
-      }
-    }
-    ~tenVal(){};
+
+class LevelInfo {
+public:
+  vector<PatchInfo> patchInfo;
+  int refinementRatio[3];
+  int extraCells[3];
+  double spacing[3];
+  double anchor[3];
+  bool particleLevel;
 };
 
 
 
-// Level-Patch pair
-class levelPatch {
-  public:
-    int levelNo;
-    int noPatches;
-    int rr[3];
-    levelPatch(int level, int patches, int x, int y, int z) {
-      levelNo = level;
-      noPatches = patches;
-      rr[0] = x;
-      rr[1] = y;
-      rr[2] = z;
-    };
-    ~levelPatch(){};
+class VariableInfo {
+public:
+  string name;
+  string type;
+  vector<int> materials;
 };
 
-typedef vector<levelPatch> levelPatchVec;
 
-
-// Patch collection
-// 
-class patchInfo {
-  public: 
-    int indexArr[6];
-    int hiLoArr[6];
-    double minMaxArr[6];
-    int numCells;
-    patchInfo(int* indexArrPtr, double* minMaxArrPtr, int *hiLoPtr, int nCells) {
-      indexArr[0] = indexArrPtr[0];	
-      indexArr[1] = indexArrPtr[1];	
-      indexArr[2] = indexArrPtr[2];	
-      indexArr[3] = indexArrPtr[3];	
-      indexArr[4] = indexArrPtr[4];	
-      indexArr[5] = indexArrPtr[5];
-
-      minMaxArr[0] = minMaxArrPtr[0];
-      minMaxArr[1] = minMaxArrPtr[1];
-      minMaxArr[2] = minMaxArrPtr[2];
-      minMaxArr[3] = minMaxArrPtr[3];
-      minMaxArr[4] = minMaxArrPtr[4];
-      minMaxArr[5] = minMaxArrPtr[5];
-
-      hiLoArr[0] = hiLoPtr[0];
-      hiLoArr[1] = hiLoPtr[1];
-      hiLoArr[2] = hiLoPtr[2];
-      hiLoArr[3] = hiLoPtr[3];
-      hiLoArr[4] = hiLoPtr[4];
-      hiLoArr[5] = hiLoPtr[5]; 						
-
-      numCells = nCells;
-    }
-    ~patchInfo(){};
+class TimeStepInfo {
+public:
+  vector<LevelInfo> levelInfo;
+  vector<VariableInfo> varInfo;
 };
 
-typedef vector<patchInfo> patchInfoVec;
 
 
 
-class ParticleVariableRaw {
-  public:
+class GridDataRaw {
+public:
+  // Low and high indexes of the data that was read.
+  // They SHOULD match what we're expecting, but may not 
+  // if there is a boundary layer for the variable.
+  int low[3];
+  int high[3];
   int components;
-  vector<float> values;
+
+  float *data;
 };
 
 
-
-typedef vector<double> typeDouble;
-
-class cellVals {
-  public:
-    int x, y, z, dim;
-    typeDouble* cellValVec;
-    cellVals() {
-      cellValVec = NULL;
-    };
-    ~cellVals() {
-      if (cellValVec) delete cellValVec;
-    };
-};	
-
-typedef vector<string> udaVars;
-typedef vector<int> varMatls;
-
-class timeStep {
-  public:
-  ParticleVariableRaw partVar;
-    cellVals* cellValColln;
-    int no;
-    string name;
-    timeStep() {
-      cellValColln = NULL;
-    };
-    ~timeStep() {
-      if (cellValColln) delete cellValColln;  
-    };
+class ParticleDataRaw {
+public:
+  int num;
+  int components;
+  float *data;
 };
 
-typedef vector<timeStep> udaData;
