@@ -36,6 +36,8 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Malloc/Allocator.h>
 #include <sci_defs/mpi_defs.h> // For MPIPP_H on SGI
 
+#include <Packages/Uintah/Core/Grid/Variables/NCVariable.h>
+
 using namespace Uintah;
 
 namespace Uintah {
@@ -52,7 +54,7 @@ namespace Uintah {
   {
     static TypeDescription* td = 0;
     if(!td){
-      td = scinew TypeDescription(TypeDescription::Other,
+      td = scinew TypeDescription(TypeDescription::Stencil7_type,
 				  "Stencil7", true, 
 				  &makeMPI_Stencil7);
     }
@@ -65,6 +67,11 @@ namespace Uintah {
     return out;
   }
 
+
+  // Dd: Testing... to see if I can get Stencil7 into the list of types... not sure that this should be done here, but
+  //     for now it will have to do...  (Don't need the label for anything... just have to create it to get the type registered
+  //     into our type system...)
+  static const TypeDescription * junk = NCVariable<Stencil7>::getTypeDescription();
 
 }
 
