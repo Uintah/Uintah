@@ -261,8 +261,15 @@ void Simple_Burn::scheduleComputeModelSources(SchedulerP& sched,
   one_matl->add(0);
   one_matl->addReference();
   MaterialSubset* press_matl   = one_matl;
-  
-  
+
+  // Used for getting temperature and volume fraction for all materials for
+  //  for burning criteria
+  const MaterialSet* all_matls = d_sharedState->allMaterials();
+  const MaterialSubset* all_matls_sub = all_matls->getUnion();  
+  Task::DomainSpec oms = Task::OutOfDomain;  //outside of mymatl set.
+  t->requires(Task::OldDW, Ilb->temp_CCLabel,      all_matls_sub, oms, gac,1);
+  t->requires(Task::NewDW, Ilb->vol_frac_CCLabel,  all_matls_sub, oms, gac,1);
+
   t->requires( Task::OldDW, mi->delT_Label,       level.get_rep());
   //__________________________________
   // Products
@@ -385,7 +392,20 @@ void Simple_Burn::computeModelSources(const ProcessorGroup*,
     
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m0);
     double cv_solid = mpm_matl->getSpecificHeat();
-    
+   
+
+    // Get all Temperatures for burning check
+    int numAllMatls = d_sharedState->getNumMatls();
+    StaticArray<constCCVariable<double> >  vol_frac_CC(numAllMatls);
+    StaticArray<constCCVariable<double> >  temp_CC(numAllMatls);
+    for (int m = 0; m < numAllMatls; m++) {
+      Material* matl = d_sharedState->getMaterial(m);
+      int indx = matl->getDWIndex();
+      old_dw->get(temp_CC[m],       MIlb->temp_CCLabel,    indx, patch, gac, 1);
+      new_dw->get(vol_frac_CC[m],   Ilb->vol_frac_CCLabel, indx, patch, gac, 1);
+    }
+
+ 
     for (CellIterator iter = patch->getCellIterator();!iter.done();iter++){
       IntVector c = *iter;
 
@@ -415,6 +435,14 @@ void Simple_Burn::computeModelSources(const ProcessorGroup*,
         //  to use in burn model
         double Temp = 0;
 
+        // Check if any material occupies more than 20 % of cell and has temperature larger than
+	// ignition temperature, use that temperature as the criteria for burning
+        for (int m = 0; m < numAllMatls; m++){
+          if(vol_frac_CC[m][c] > 0.2 && temp_CC[m][c] > d_thresholdTemp && temp_CC[m][c] > Temp){
+            Temp = temp_CC[m][c];
+          }
+        }
+/*
         if (gasVol_frac[c] < 0.2){             //--------------KNOB 2
           Temp =solidTemp[c];
         }else {
@@ -424,7 +452,7 @@ void Simple_Burn::computeModelSources(const ProcessorGroup*,
           Temp =std::max(Temp, gasTempX_FC[c + IntVector(1,0,0)] );
           Temp =std::max(Temp, gasTempY_FC[c + IntVector(0,1,0)] );          
           Temp =std::max(Temp, gasTempZ_FC[c + IntVector(0,0,1)] );
-        }
+        }*/
         surfaceTemp[c] = Temp;
 
         double surfArea = delX*delY;  
