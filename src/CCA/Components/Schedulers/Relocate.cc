@@ -715,7 +715,7 @@ Relocate::relocateParticles(const ProcessorGroup* pg,
         
         constParticleVariable<Point> px;
         new_dw->get(px, reloc_old_posLabel, pset);
-
+        
         ParticleSubset* keep_pset    = scinew ParticleSubset(0, -1, 0);
         ParticleSubset* delete_pset  = new_dw->getDeleteSubset(matl, patch);
         
@@ -731,36 +731,52 @@ Relocate::relocateParticles(const ProcessorGroup* pg,
         ASSERT(is_sorted(delete_pset->begin(), delete_pset->end()));
         ASSERT(pset->begin() == pset->end() || *pset->begin() == 0);
 
-        // when we find a relocated patch, check it against the next to-relocate particle
-        //   before checking the rest of the patches
-        const Patch* prevToRefinePatch  = 0;
-        const Patch* prevToPatch        = 0;
-        const Patch* prevToCoarsenPatch = 0;
+        // The previous Particle's relocation patch
+        const Patch* PP_ToPatch_FL = 0;   // on fine level
+        const Patch* PP_ToPatch_CL = 0;   // on coarse level
+        const Patch* PP_ToPatch    = 0;
+        
         
         for(ParticleSubset::iterator iter = pset->begin(); iter != pset->end(); iter++){
           particleIndex idx = *iter;
           const Patch* toPatch = 0; // patch to relocate particles to
-
+          
+          //__________________________________
+          // Does this particle belong to the delete particle set?
+          // The delete particle set is computed in MPM
           if (delete_iter != delete_pset->end() && idx == *delete_iter) {
             // all you need to do to delete a particle is neither keep it or 
             // relocate it.  So just go to the next deleted particle and wait for a match
             delete_iter++;
           }
-          else if (fineLevel && (toPatch = findFinePatch(px[idx], prevToRefinePatch, fineLevel)) != 0) {
+          
+          //__________________________________
+          //  Has particle has moved to a finer level?
+          else if (fineLevel && (toPatch = findFinePatch(px[idx], PP_ToPatch_FL, fineLevel)) != 0) {
             // do nothing - what we wanted was to set toPatch, and we'll add that to a scatterRecord
-            prevToRefinePatch = toPatch;
-          }
+            PP_ToPatch_FL = toPatch;
+          } 
+          
+          //__________________________________
+          //  Does this patch contains this particle?
           else if(patch->containsPoint(px[idx])){
             // is particle going to a finer patch?  Note, a particle does not have to leave the current patch
             // to go to a finer patch
             keep_pset->addParticle(idx);
           }
-          else {
-            // not to delete or keep, so relocate it - add it to a scatter record
-            if (prevToPatch && prevToPatch->getExtraBox().contains(px[idx])){
-              // optimization - check if particle went to the same patch as the previous relocated particle
-              toPatch = prevToPatch;
-            }else {
+          
+          //__________________________________
+          //Particle is not on the current patch find where it went
+          else {  
+            
+            //__________________________________
+            //  Did the particle move to the same patch as the previous particle?
+            //  (optimization)
+            if (PP_ToPatch && PP_ToPatch->getExtraBox().contains(px[idx])){
+              toPatch = PP_ToPatch;
+            }else { 
+              //__________________________________
+              //  Search for the new patch that the particle belongs to.
               // This loop should change - linear searches are not good! However, since not very many particles leave the patches
               // and there are a limited number of neighborPatches, perhaps it won't matter much
               int i=0;
@@ -769,11 +785,14 @@ Relocate::relocateParticles(const ProcessorGroup* pg,
                   break;
                 }
               }
+              //__________________________________
+              // The particle is not in the surrounding patches
+              // has it moved to a coarser level?
               if(i == (int)neighborPatches.size()){
                 //  Particle fell off of current level, maybe to a coarser one?
                 if (coarseLevel) {
-                  toPatch = findCoarsePatch(px[idx], prevToCoarsenPatch, coarseLevel);
-                  prevToCoarsenPatch = toPatch;
+                  toPatch = findCoarsePatch(px[idx], PP_ToPatch_CL, coarseLevel);
+                  PP_ToPatch_CL = toPatch;
                 }
 #if SCI_ASSERTION_LEVEL >= 1
                 if(!toPatch && level->containsPointInRealCells(px[idx])){
@@ -783,21 +802,27 @@ Relocate::relocateParticles(const ProcessorGroup* pg,
                 }
 #endif
               }
+              //__________________________________
+              // The particle has left the computational domain
               else {
                 toPatch = neighborPatches[i];
-                prevToPatch = toPatch;
+                PP_ToPatch = toPatch;
               }
-            }
-          }
-
-          // now that we have toPatch - add it to a scatter record
+            }  // search for new patch that particle belongs to
+          }  // not on current patch
+          
+          //__________________________________
+          // We now know which patch the particle is
+          // going to be moved to, add it to a scatter record
           if (toPatch) {
             total_reloc[0]++;
             ScatterRecord* record = scatter_records.findRecord(patch, toPatch, matl, pset);
             record->sendset->addParticle(idx);
           }
         }  // pset loop
-
+        
+        //__________________________________
+        //  No particles have left the patch
         if(keep_pset->numParticles() == numParticles){
           delete keep_pset;
           keep_pset=pset;
@@ -857,12 +882,13 @@ Relocate::relocateParticles(const ProcessorGroup* pg,
         }
         
         MPIRecvBuffer* recvs = scatter_records.findRecv(patch, matl);
-        map<const VarLabel*, ParticleVariableBase*>* newParts = 0;
-       
-        newParts = new_dw->getNewParticleState(matl,patch);
+        
+        // create a map for the new particles
+        map<const VarLabel*, ParticleVariableBase*>* newParticles_map = 0;
+        newParticles_map = new_dw->getNewParticleState(matl,patch);
         bool adding_new_particles = false;
         
-        if (newParts){
+        if (newParticles_map){
           adding_new_particles = true;
         }
         
@@ -881,11 +907,11 @@ Relocate::relocateParticles(const ProcessorGroup* pg,
         } else {
           int numOldVariables = (int)subsets.size();
           
-          if(newParts){
+          if(newParticles_map){
             map<const VarLabel*, ParticleVariableBase*>::iterator piter;
-            piter = newParts->find(reloc_new_posLabel);
+            piter = newParticles_map->find(reloc_new_posLabel);
             
-            if(piter == newParts->end()){
+            if(piter == newParticles_map->end()){
               throw InternalError("didnt create new position", __FILE__, __LINE__);
             }
             
@@ -917,11 +943,11 @@ Relocate::relocateParticles(const ProcessorGroup* pg,
             invars[i]=new_dw->getParticleVariable(reloc_old_posLabel, matl, fromPatches[i]);
           }
           
-          if(newParts){
+          if(newParticles_map){
             map<const VarLabel*, ParticleVariableBase*>::iterator piter;
-            piter = newParts->find(reloc_new_posLabel);
+            piter = newParticles_map->find(reloc_new_posLabel);
             
-            if(piter == newParts->end()){
+            if(piter == newParticles_map->end()){
               throw InternalError("didnt create new position", __FILE__, __LINE__);
             }
             
@@ -943,12 +969,11 @@ Relocate::relocateParticles(const ProcessorGroup* pg,
               invars[i]=new_dw->getParticleVariable(label, matl, fromPatches[i]);
             }
             
-            if(newParts){
+            if(newParticles_map){
               map<const VarLabel*, ParticleVariableBase*>::iterator piter;
-              piter = newParts->find(reloc_new_labels[m][v]);
-              if(piter == newParts->end()) {
-                cout << "reloc_new_labels = " << reloc_new_labels[m][v]->getName()
-                     << endl;
+              piter = newParticles_map->find(reloc_new_labels[m][v]);
+              if(piter == newParticles_map->end()) {
+                cout << "reloc_new_labels = " << reloc_new_labels[m][v]->getName() << endl;
                 throw InternalError("didnt create new variable of this type", __FILE__, __LINE__);
               }
               ParticleVariableBase* addedVar = piter->second;
@@ -960,7 +985,7 @@ Relocate::relocateParticles(const ProcessorGroup* pg,
             vars[v]=newvar;
           }  // numVars
           
-          
+          //__________________________________
           // Unpack MPI portion
           particleIndex idx = totalParticles-numRemote;
           for(MPIRecvBuffer* buf=recvs;buf!=0;buf=buf->next){
@@ -1031,8 +1056,7 @@ Relocate::relocateParticles(const ProcessorGroup* pg,
     //if (!lb->isDynamic() && level->getGrid()->numLevels() == 1 && level->numPatches() >= pg->size() && pg->size() > 1) {
     if (pg->size() > 1) {
       mpidbg << pg->myrank() << " Relocate reduce\n";
-      MPI_Reduce(total_reloc, &alltotal, 3, MPI_INT, MPI_SUM, 0,
-                pg->getComm());
+      MPI_Reduce(total_reloc, &alltotal, 3, MPI_INT, MPI_SUM, 0, pg->getComm());
       mpidbg << pg->myrank() << " Done Relocate reduce\n";
     }
     if(pg->myrank() == 0){
