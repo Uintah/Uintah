@@ -85,8 +85,8 @@ static DebugStream rgtimes("RGTimes",false);
 Level::Level(Grid* grid, const Point& anchor, const Vector& dcell, 
              int index, IntVector refinementRatio, int id /*=-1*/)
    : grid(grid), d_anchor(anchor), d_dcell(dcell), 
-     d_spatial_range(Point(0,0,0),Point(0,0,0)),
-     d_int_spatial_range(Point(0,0,0),Point(0,0,0)),
+     d_spatial_range(Point(DBL_MAX,DBL_MAX,DBL_MAX),Point(DBL_MIN,DBL_MIN,DBL_MIN)),
+     d_int_spatial_range(Point(DBL_MAX,DBL_MAX,DBL_MAX),Point(DBL_MIN,DBL_MIN,DBL_MIN)),
      d_index(index),
      d_patchDistribution(-1,-1,-1), d_periodicBoundaries(0, 0, 0), d_id(id),
      d_refinementRatio(refinementRatio)
@@ -250,70 +250,37 @@ void Level::performConsistencyCheck() const
 
 void Level::findNodeIndexRange(IntVector& lowIndex,IntVector& highIndex) const
 {
-  lowIndex = d_realPatches[0]->getExtraNodeLowIndex();
-  highIndex = d_realPatches[0]->getExtraNodeHighIndex();
-  
-  for(int p=1;p<(int)d_realPatches.size();p++)
-  {
-    Patch* patch = d_realPatches[p];
-    IntVector l( patch->getExtraNodeLowIndex() );
-    IntVector u( patch->getExtraNodeHighIndex() );
-    for(int i=0;i<3;i++) {
-      if( l(i) < lowIndex(i) ) lowIndex(i) = l(i);
-      if( u(i) > highIndex(i) ) highIndex(i) = u(i);
-    }
-  }
-}
+  Vector l=(d_spatial_range.min()-d_anchor)/d_dcell;
+  Vector h=(d_spatial_range.max()-d_anchor)/d_dcell+Vector(1,1,1);
 
+  lowIndex=IntVector(l.x(),l.y(),l.z());
+  highIndex=IntVector(h.x(),h.y(),h.z());
+}
 void Level::findCellIndexRange(IntVector& lowIndex,IntVector& highIndex) const
 {
-  lowIndex = d_realPatches[0]->getExtraCellLowIndex();
-  highIndex = d_realPatches[0]->getExtraCellHighIndex();
-  
-  for(int p=1;p<(int)d_realPatches.size();p++)
-  {
-    Patch* patch = d_realPatches[p];
-    IntVector l( patch->getExtraCellLowIndex() );
-    IntVector u( patch->getExtraCellHighIndex() );
-    for(int i=0;i<3;i++) {
-      if( l(i) < lowIndex(i) ) lowIndex(i) = l(i);
-      if( u(i) > highIndex(i) ) highIndex(i) = u(i);
-    }
-  }
+  Vector l=(d_spatial_range.min()-d_anchor)/d_dcell;
+  Vector h=(d_spatial_range.max()-d_anchor)/d_dcell;
+
+  lowIndex=IntVector(l.x(),l.y(),l.z());
+  highIndex=IntVector(h.x(),h.y(),h.z());
 }
 
 void Level::findInteriorCellIndexRange(IntVector& lowIndex,IntVector& highIndex) const
 {
-  lowIndex = d_realPatches[0]->getCellLowIndex();
-  highIndex = d_realPatches[0]->getCellHighIndex();
-  
-  for(int p=1;p<(int)d_realPatches.size();p++)
-  {
-    Patch* patch = d_realPatches[p];
-    IntVector l( patch->getCellLowIndex() );
-    IntVector u( patch->getCellHighIndex() );
-    for(int i=0;i<3;i++) {
-      if( l(i) < lowIndex(i) ) lowIndex(i) = l(i);
-      if( u(i) > highIndex(i) ) highIndex(i) = u(i);
-    }
-  }
+  Vector l=(d_int_spatial_range.min()-d_anchor)/d_dcell;
+  Vector h=(d_int_spatial_range.max()-d_anchor)/d_dcell;
+
+  lowIndex=IntVector(l.x(),l.y(),l.z());
+  highIndex=IntVector(h.x(),h.y(),h.z());
 }
 
 void Level::findInteriorNodeIndexRange(IntVector& lowIndex,IntVector& highIndex) const
 {
-  lowIndex = d_realPatches[0]->getNodeLowIndex();
-  highIndex = d_realPatches[0]->getNodeHighIndex();
-  
-  for(int p=1;p<(int)d_realPatches.size();p++)
-  {
-    Patch* patch = d_realPatches[p];
-    IntVector l( patch->getNodeLowIndex() );
-    IntVector u( patch->getNodeHighIndex() );
-    for(int i=0;i<3;i++) {
-      if( l(i) < lowIndex(i) ) lowIndex(i) = l(i);
-      if( u(i) > highIndex(i) ) highIndex(i) = u(i);
-    }
-  }
+  Vector l=(d_int_spatial_range.min()-d_anchor)/d_dcell;
+  Vector h=(d_int_spatial_range.max()-d_anchor)/d_dcell+Vector(1,1,1);
+
+  lowIndex=IntVector(l.x(),l.y(),l.z());
+  highIndex=IntVector(h.x(),h.y(),h.z());
 }
 
 long Level::totalCells() const
@@ -544,6 +511,14 @@ void Level::finalizeLevel()
   for(int i=0;i<(int)d_realPatches.size();i++)
   {
     d_totalCells+=d_realPatches[i]->getNumExtraCells();
+  }
+  
+  //compute and store the spatial ranges now that BCTypes are set
+  for(int i=0;i<(int)d_realPatches.size();i++){
+    Patch* r = d_realPatches[i];
+    
+    d_spatial_range.extend(r->getExtraBox().lower());
+    d_spatial_range.extend(r->getExtraBox().upper());
   }
 }
 
