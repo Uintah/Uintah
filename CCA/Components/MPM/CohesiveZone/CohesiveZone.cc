@@ -94,8 +94,8 @@ CohesiveZone::createCohesiveZones(CZMaterial* matl,
     int mt, mb;
     while(is >> p1 >> p2 >> p3 >> l4 >> n5 >> n6 >> n7 >> t8 >> t9 >> t10 >> mb >> mt){
       Point pos = Point(p1,p2,p3);
-        IntVector cell_idx;
-      if(patch->findCell(pos,cell_idx)){
+      IntVector cell_idx;
+      if(patch->containsPoint(pos)){
         particleIndex pidx = start;
         czposition[pidx]  = pos;
         czlength[pidx]    = l4;
@@ -109,6 +109,7 @@ CohesiveZone::createCohesiveZones(CZMaterial* matl,
         czTopMat[pidx]    = mt;
 
         // Figure out unique ID for the CZ
+        patch->findCell(pos,cell_idx);
         ASSERT(cell_idx.x() <= 0xffff &&
                cell_idx.y() <= 0xffff &&
                cell_idx.z() <= 0xffff);
@@ -123,7 +124,7 @@ CohesiveZone::createCohesiveZones(CZMaterial* matl,
         myCellNAPID++;
         start++;
       }
-    }
+    }  // while
     is.close();
   }
 
