@@ -374,8 +374,8 @@ void RegridderCommon::problemSetup(const ProblemSpecP& params,
   d_cellNum.resize(d_maxLevels);
 
   IntVector low, high;
-  oldGrid->getLevel(0)->findCellIndexRange(low, high);
-  d_cellNum[0] = high-low - oldGrid->getLevel(0)->getExtraCells()*IntVector(2,2,2);
+  oldGrid->getLevel(0)->findInteriorCellIndexRange(low, high);
+  d_cellNum[0] = high-low;
   for (int k = 1; k < d_maxLevels; k++) {
     d_cellNum[k] = d_cellNum[k-1] * d_cellRefinementRatio[k-1];
   }
