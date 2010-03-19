@@ -102,8 +102,7 @@ namespace Uintah {
     // a virtual patch has an equivalent representation going from
     // a virtual patch to a real patch (wrap-around, periodic bound. cond.).
     bool equivalent(const ScatterRecord& sr)
-    { return (toPatch->getRealPatch() == sr.toPatch->getRealPatch()) &&
-  (matl == sr.matl) && (vectorToNeighbor == sr.vectorToNeighbor);
+    { return (toPatch->getRealPatch() == sr.toPatch->getRealPatch()) && (matl == sr.matl) && (vectorToNeighbor == sr.vectorToNeighbor);
     }
   };
 
@@ -299,8 +298,9 @@ ScatterRecord* MPIScatterRecords::findRecord(const Patch* from,
   IntVector vectorToNeighbor = to->getExtraCellLowIndex() - from->getExtraCellLowIndex();
   const Patch* realTo = to->getRealPatch();
 
-  pair<maptype::iterator, maptype::iterator> pr =
-    records.equal_range(make_pair(realTo, matl));
+  pair<maptype::iterator, maptype::iterator> pr = records.equal_range(make_pair(realTo, matl));
+  
+  // does the record exist if so return.
   for(;pr.first != pr.second;pr.first++){
     if(pr.first->second->vectorToNeighbor == vectorToNeighbor){
       break;
@@ -327,8 +327,8 @@ ScatterRecord* MPIScatterRecords::findRecord(const Patch* from,
   IntVector vectorToNeighbor = to->getExtraCellLowIndex() - from->getExtraCellLowIndex();
   const Patch* realTo = to->getRealPatch();
 
-  pair<maptype::iterator, maptype::iterator> pr =
-    records.equal_range(make_pair(realTo, matl));
+  pair<maptype::iterator, maptype::iterator> pr = records.equal_range(make_pair(realTo, matl));
+  
   for(;pr.first != pr.second;pr.first++){
     if(pr.first->second->vectorToNeighbor == vectorToNeighbor){
       break;
@@ -354,13 +354,16 @@ void MPIScatterProcessorRecord::sortPatches()
 }
 //______________________________________________________________________
 //
-void MPIScatterRecords::addNeighbor(LoadBalancer* lb, const ProcessorGroup* pg,
-            const Patch* neighbor)
+void MPIScatterRecords::addNeighbor(LoadBalancer* lb, 
+                                   const ProcessorGroup* pg,
+                                   const Patch* neighbor)
 {
   neighbor = neighbor->getRealPatch();
   int toProc = lb->getPatchwiseProcessorAssignment(neighbor);
   ASSERTRANGE(toProc, 0, pg->size());
+  
   procmaptype::iterator iter = procs.find(toProc);
+  
   if(iter == procs.end()){
     MPIScatterProcessorRecord* pr = scinew MPIScatterProcessorRecord();
     procs[toProc]=pr;
@@ -370,11 +373,14 @@ void MPIScatterRecords::addNeighbor(LoadBalancer* lb, const ProcessorGroup* pg,
     // processor will not be huge.
     MPIScatterProcessorRecord* pr = iter->second;
     int i;
-    for(i=0;i<(int)pr->patches.size();i++)
-      if(pr->patches[i] == neighbor)
-  break;
-    if(i==(int)pr->patches.size())
+    for(i=0;i<(int)pr->patches.size();i++){
+      if(pr->patches[i] == neighbor){
+        break;
+      }
+    }
+    if(i==(int)pr->patches.size()){
       pr->patches.push_back(neighbor);
+    }
   }
 }
 //______________________________________________________________________
@@ -636,7 +642,7 @@ void Relocate::finalizeCommunication()
 //
 const Patch* findFinePatch(const Point& pos, const Patch* guess, Level* fineLevel)
 {
-  cout << "Consider replacing getPatchFromPoint with selectPatchForCellIndex(level->getCellIndex(pos))" << endl;
+  cout << "findFinePatch: Consider replacing getPatchFromPoint with selectPatchForCellIndex(level->getCellIndex(pos))" << endl;
   if (guess && guess->getExtraBox().contains(pos)){
     return guess;
   }
@@ -646,7 +652,7 @@ const Patch* findFinePatch(const Point& pos, const Patch* guess, Level* fineLeve
 //
 const Patch* findCoarsePatch(const Point& pos, const Patch* guess, Level* coarseLevel)
 {
-  cout << "Consider replacing getPatchFromPoint with selectPatchForCellIndex(level->getCellIndex(pos))" << endl;
+  cout << "findCoarsePatch Consider replacing getPatchFromPoint with selectPatchForCellIndex(level->getCellIndex(pos))" << endl;
   if (guess && guess->getExtraBox().contains(pos)){
     return guess;
   }
@@ -832,7 +838,6 @@ Relocate::relocateParticles(const ProcessorGroup* pg,
       }
     }  // patches loop
     
-    
     //__________________________________
     if (pg->size() > 1) {
       // send the particles where they need to go
@@ -865,13 +870,16 @@ Relocate::relocateParticles(const ProcessorGroup* pg,
         fromPatches.push_back(patch);
         subsets.push_back(keep_pset);
         
+        //__________________________________
+        // loop over all neighboring patches and find all of the 'from' patches
+        // on this processor
         for(int i=0;i<(int)neighborPatches.size();i++){
           const Patch* fromPatch=neighborPatches[i];
           
-          int from = lb->getPatchwiseProcessorAssignment(fromPatch->getRealPatch());
-          ASSERTRANGE(from, 0, pg->size());
+          int fromProc = lb->getPatchwiseProcessorAssignment(fromPatch->getRealPatch());
+          ASSERTRANGE(fromProc, 0, pg->size());
           
-          if(from == me){
+          if(fromProc == me){  
             ScatterRecord* record = scatter_records.findRecord(fromPatch, patch, matl);
           
             if(record){
@@ -879,7 +887,7 @@ Relocate::relocateParticles(const ProcessorGroup* pg,
               subsets.push_back(record->sendset);
             }
           }
-        }
+        }  // neighbor patches
         
         MPIRecvBuffer* recvs = scatter_records.findRecv(patch, matl);
         
@@ -894,20 +902,30 @@ Relocate::relocateParticles(const ProcessorGroup* pg,
         
         ParticleSubset* orig_pset = old_dw->getParticleSubset(matl, patch);
         
+        //__________________________________
+        // Particles haven't moved, carry the old data forward
         if(recvs == 0 && subsets.size() == 1 && keep_pset == orig_pset && !adding_new_particles){
           // carry forward old data
           new_dw->saveParticleSubset(orig_pset, matl, patch);
+          
+          // particle position
           ParticleVariableBase* posvar = new_dw->getParticleVariable(reloc_old_posLabel, orig_pset);
           new_dw->put(*posvar, reloc_new_posLabel);
           
+          // all other variables
           for(int v=0;v<numVars;v++){
             ParticleVariableBase* var = new_dw->getParticleVariable(reloc_old_labels[m][v], orig_pset);
             new_dw->put(*var, reloc_new_labels[m][v]);
           }
         } else {
+        
+          //__________________________________
+          // Particles have moved
           int numOldVariables = (int)subsets.size();
           
           if(newParticles_map){
+            
+            // bulletproofing
             map<const VarLabel*, ParticleVariableBase*>::iterator piter;
             piter = newParticles_map->find(reloc_new_posLabel);
             
@@ -925,18 +943,15 @@ Relocate::relocateParticles(const ProcessorGroup* pg,
           }
           
           int numRemote=0;
-          
           for(MPIRecvBuffer* buf=recvs;buf!=0;buf=buf->next){
             numRemote+=buf->numParticles;
           }
           totalParticles+=numRemote;
 
-          ParticleVariableBase* posvar = 
-            new_dw->getParticleVariable(reloc_old_posLabel, orig_pset);
-            
-          ParticleSubset* newsubset = 
-            new_dw->createParticleSubset(totalParticles, matl, patch);
+          ParticleSubset* newsubset = new_dw->createParticleSubset(totalParticles, matl, patch);
 
+          //__________________________________
+          // particle position
           // Merge local portion
           vector<ParticleVariableBase*> invars(subsets.size());
           for(int i=0;i<(int)numOldVariables;i++){
@@ -944,21 +959,27 @@ Relocate::relocateParticles(const ProcessorGroup* pg,
           }
           
           if(newParticles_map){
+            // bulletproofing
             map<const VarLabel*, ParticleVariableBase*>::iterator piter;
             piter = newParticles_map->find(reloc_new_posLabel);
             
             if(piter == newParticles_map->end()){
               throw InternalError("didnt create new position", __FILE__, __LINE__);
             }
+
             
             ParticleVariableBase* addedPos = piter->second;
             invars[subsets.size()-1] = addedPos;
             fromPatches.push_back(patch);
           }
           
+          // particle position
+          ParticleVariableBase* posvar = new_dw->getParticleVariable(reloc_old_posLabel, orig_pset);
           ParticleVariableBase* newpos = posvar->clone();
           newpos->gather(newsubset, subsets, invars, fromPatches, numRemote);
-
+          
+          //__________________________________
+          // other particle variables
           vector<ParticleVariableBase*> vars(numVars);
           
           for(int v=0;v<numVars;v++){
@@ -970,12 +991,15 @@ Relocate::relocateParticles(const ProcessorGroup* pg,
             }
             
             if(newParticles_map){
+              // bulletproofing
               map<const VarLabel*, ParticleVariableBase*>::iterator piter;
               piter = newParticles_map->find(reloc_new_labels[m][v]);
+              
               if(piter == newParticles_map->end()) {
                 cout << "reloc_new_labels = " << reloc_new_labels[m][v]->getName() << endl;
                 throw InternalError("didnt create new variable of this type", __FILE__, __LINE__);
               }
+              
               ParticleVariableBase* addedVar = piter->second;
               invars[subsets.size()-1] = addedVar;
             }
@@ -1004,7 +1028,8 @@ Relocate::relocateParticles(const ProcessorGroup* pg,
             
             ASSERT(position <= buf->bufsize);
             delete unpackset;
-          }
+          }  // MPI portion
+          
           ASSERTEQ(idx, totalParticles);
 
 #if 0
@@ -1022,12 +1047,13 @@ Relocate::relocateParticles(const ProcessorGroup* pg,
           // Put the data back in the data warehouse
           new_dw->put(*newpos, reloc_new_posLabel);
           delete newpos;
+          
           for(int v=0;v<numVars;v++){
             new_dw->put(*vars[v], reloc_new_labels[m][v]);
             delete vars[v];
           }
           
-        }
+        }  // particles have moved 
         if(keep_pset->removeReference()){
           delete keep_pset;
         }
@@ -1036,8 +1062,7 @@ Relocate::relocateParticles(const ProcessorGroup* pg,
 
     if( mixedDebug.active() ) {
       cerrLock.lock();
-      mixedDebug << "total_reloc: " << total_reloc[0] << ", " << total_reloc[1]
-           << ", " << total_reloc[2] << "\n";
+      mixedDebug << "total_reloc: " << total_reloc[0] << ", " << total_reloc[1] << ", " << total_reloc[2] << "\n";
       cerrLock.unlock();
     }
   }  // patch size !-= 0
