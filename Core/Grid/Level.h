@@ -148,7 +148,7 @@ public:
 
   //////////
   // Find a patch containing the point, return 0 if non exists
-  Patch* getPatchFromPoint( const Point& );
+  const Patch* getPatchFromPoint( const Point& );
 
   void finalizeLevel();
   void finalizeLevel(bool periodicX, bool periodicY, bool periodicZ);
