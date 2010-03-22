@@ -65,13 +65,13 @@ namespace Uintah {
   PatchBVHLeaf::PatchBVHLeaf(std::vector<PatchKeyVal>::iterator begin, std::vector<PatchKeyVal>::iterator end) : begin_(begin), end_(end)
   {
     //set bounding box
-    low_=begin->patch->getCellLowIndex();
-    high_=begin->patch->getCellHighIndex();
+    low_=begin->patch->getExtraCellLowIndex();
+    high_=begin->patch->getExtraCellHighIndex();
 
     for(std::vector<PatchKeyVal>::iterator iter=begin+1; iter<end; iter++)
     {
-      low_=Min(low_,iter->patch->getCellLowIndex());
-      high_=Max(high_,iter->patch->getCellHighIndex());
+      low_=Min(low_,iter->patch->getExtraCellLowIndex());
+      high_=Max(high_,iter->patch->getExtraCellHighIndex());
     }
 
   }
@@ -81,7 +81,7 @@ namespace Uintah {
     //no need to delete anything
   }
 
-  void PatchBVHLeaf::query(const IntVector& low, const IntVector& high, Level::selectType& patches)
+  void PatchBVHLeaf::query(const IntVector& low, const IntVector& high, Level::selectType& patches, bool includeExtraCells)
   {
     //check that the query intersects my bounding box
     if(!intersects(low,high,low_,high_))
@@ -90,9 +90,18 @@ namespace Uintah {
     //loop through lists individually
     for(std::vector<PatchKeyVal>::iterator iter=begin_;iter<end_;iter++)
     {
-      //if patch intersects range
-      if(intersects(low,high, iter->patch->getCellLowIndex(), iter->patch->getCellHighIndex()))
-        patches.push_back(iter->patch); //add it to the list
+      if(includeExtraCells)
+      {
+        //if patch intersects range
+        if(intersects(low,high, iter->patch->getExtraCellLowIndex(), iter->patch->getExtraCellHighIndex()))
+          patches.push_back(iter->patch); //add it to the list
+      }
+      else
+      {
+        //if patch intersects range
+        if(intersects(low,high, iter->patch->getCellLowIndex(), iter->patch->getCellHighIndex()))
+          patches.push_back(iter->patch); //add it to the list
+      }
     }
   }
 

@@ -73,7 +73,7 @@ namespace Uintah {
       PatchKeyVal key;
 
       key.patch=*iter;
-      key.center2=(*iter)->getCellLowIndex()+(*iter)->getCellHighIndex();
+      key.center2=(*iter)->getExtraCellLowIndex()+(*iter)->getExtraCellHighIndex();
 
       patches_.push_back(key);
     }
@@ -101,7 +101,7 @@ namespace Uintah {
       PatchKeyVal key;
 
       key.patch=*iter;
-      key.center2=(*iter)->getCellLowIndex()+(*iter)->getCellHighIndex();
+      key.center2=(*iter)->getExtraCellLowIndex()+(*iter)->getExtraCellHighIndex();
 
       patches_.push_back(key);
     }
@@ -127,7 +127,7 @@ namespace Uintah {
     patches_.clear();
   }
 
-  void PatchBVH::query(const IntVector& low, const IntVector& high, Level::selectType& patches)
+  void PatchBVH::query(const IntVector& low, const IntVector& high, Level::selectType& patches, bool includeExtraCells)
   {
     //verify query range is valid
     if(high.x()<=low.x() || high.y()<=low.y() || high.z()<=low.z())
@@ -136,7 +136,7 @@ namespace Uintah {
     if(root_==NULL)
       return;
     
-    root_->query(low,high,patches);
+    root_->query(low,high,patches,includeExtraCells);
   }
 
 } // end namespace Uintah

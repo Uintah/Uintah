@@ -97,7 +97,7 @@ namespace Uintah {
 
     virtual ~PatchBVHBase() {} ;
 
-    virtual void query(const IntVector& low, const IntVector& high, Level::selectType& patches)=0;
+    virtual void query(const IntVector& low, const IntVector& high, Level::selectType& patches, bool includeExtraCells)=0;
 
     static unsigned int getLeafSize() { return leafSize_; }
     static void setLeafSize(int leafSize) { leafSize_=leafSize; }

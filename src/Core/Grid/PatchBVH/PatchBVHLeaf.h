@@ -73,7 +73,7 @@ namespace Uintah {
 
       ~PatchBVHLeaf();
 
-      void query(const IntVector& low, const IntVector& high, Level::selectType& patches);
+      void query(const IntVector& low, const IntVector& high, Level::selectType& patches,bool includeExtraCells);
     private:
       std::vector<PatchKeyVal>::iterator begin_, end_;
 
