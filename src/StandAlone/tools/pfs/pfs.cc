@@ -194,7 +194,7 @@ main(int argc, char *argv[])
                 }
                 
                 Point pp(x,y,z);
-                if(level->containsPoint(pp)){
+                if(level->containsPointIncludingExtraCells(pp)){
                   const Patch* currentpatch =
                     level->selectPatchForCellIndex(level->getCellIndex(pp));
                   int pid = currentpatch->getID();

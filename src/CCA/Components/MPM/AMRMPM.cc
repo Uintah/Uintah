@@ -1614,11 +1614,11 @@ void AMRMPM::computeZoneOfInfluence(const ProcessorGroup*,
 
 
       for(int i=0;i<8;i++){
-        if(curLevel->containsPoint(TBNSEW[i])){
+        if(curLevel->containsPointIncludingExtraCells(TBNSEW[i])){
           // The resolution at that point is at least the current resolution
           TBNSEWh[i]=dx;
           if(finer){  // If there's a finer level, check for the point there
-            if(fineLevel->containsPoint(TBNSEW[i])){
+            if(fineLevel->containsPointIncludingExtraCells(TBNSEW[i])){
               // The resolution is that of the finer level at this point
               TBNSEWh[i]=dxfine;
             }
@@ -1628,7 +1628,7 @@ void AMRMPM::computeZoneOfInfluence(const ProcessorGroup*,
           // Point is either off the edge of the fine level, either on
           // coarse level or outside the domain.
           if(coarser){  // If there's a finer level, check for the point there
-            if(coarseLevel->containsPoint(TBNSEW[i])){
+            if(coarseLevel->containsPointIncludingExtraCells(TBNSEW[i])){
               // The resolution is that of the coarser level at this point
               TBNSEWh[i]=dxcoarse;
             }
