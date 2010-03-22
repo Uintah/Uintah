@@ -206,10 +206,24 @@ Patch* Level::addPatch(const IntVector& lowIndex,
     return r;
 }
 
-const Patch* Level::getPatchFromPoint(const Point& p)
+const Patch* Level::getPatchFromPoint(const Point& p) const
 {
   selectType patch;
   IntVector c=getCellIndex(p);
+  //point is within the bounding box so query the bvh
+  d_bvh->query(c,c+IntVector(1,1,1), patch,true);
+
+  if(patch.size()==0)
+    return 0;
+  
+  ASSERT(patch.size()==1);
+  return patch[0];
+}
+
+const Patch* Level::getPatchFromIndex(const IntVector& c) const
+{
+  selectType patch;
+  
   //point is within the bounding box so query the bvh
   d_bvh->query(c,c+IntVector(1,1,1), patch,true);
 
@@ -439,46 +453,23 @@ void Level::selectPatches(const IntVector& low, const IntVector& high,
 #endif
 }
 
-/*
- * \todo rename to containsPointInExtraCells
- */
-bool Level::containsPoint(const Point& p) const
+bool Level::containsPointIncludingExtraCells(const Point& p) const
 {
-   // This sucks - it should be made faster.  -Steve
-   for(const_patchIterator iter=d_realPatches.begin();
-       iter != d_realPatches.end(); iter++){
-      const Patch* patch = *iter;
-      if(patch->getExtraBox().contains(p))
-         return true;
-   }
-   return false;
+  return getPatchFromPoint(p)!=0;
 }
 
-/*
- * \todo rename to containsPoint
- */
-bool Level::containsPointInRealCells(const Point& p) const
+bool Level::containsPoint(const Point& p) const
 {
-   // This sucks - it should be made faster.  -Steve
-   for(const_patchIterator iter=d_realPatches.begin();
-       iter != d_realPatches.end(); iter++){
-      const Patch* patch = *iter;
-      if(patch->containsPoint(p))
-         return true;
-   }
-   return false;
+  const Patch* patch=getPatchFromPoint(p);
+  //intersect (without extraCells)
+  return patch->containsPoint(p);
 }
 
 bool Level::containsCell(const IntVector& idx) const
 {
-   for(const_patchIterator iter=d_realPatches.begin();
-       iter != d_realPatches.end(); iter++){
-      const Patch* patch = *iter;
-      if(patch->containsCell(idx)){
-        return true;
-      }
-   }
-   return false;
+  const Patch* patch=getPatchFromIndex(idx);
+  //intersect (without extraCells)
+  return patch->containsCell(idx);
 }
 
 
