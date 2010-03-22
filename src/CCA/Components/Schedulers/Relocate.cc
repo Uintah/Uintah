@@ -801,7 +801,7 @@ Relocate::relocateParticles(const ProcessorGroup* pg,
                   PP_ToPatch_CL = toPatch;
                 }
 #if SCI_ASSERTION_LEVEL >= 1
-                if(!toPatch && level->containsPointInRealCells(px[idx])){
+                if(!toPatch && level->containsPoint(px[idx])){
                   // Make sure that the particle really left the world
                   static ProgressiveWarning warn("A particle just travelled from one patch to another non-adjacent patch.  It has been deleted and we're moving on.",10);
                   warn.invoke();
