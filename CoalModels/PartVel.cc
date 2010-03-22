@@ -251,8 +251,10 @@ void PartVel::ComputePartVel( const ProcessorGroup* pc,
         name = "w_qn"; 
         name += node; 
         EqnBase& eqn2 = dqmomFactory.retrieve_scalar_eqn( name );
+        DQMOMEqn& weight_eqn = dynamic_cast<DQMOMEqn&>(eqn2);
         constCCVariable<double> weight;  
-        const VarLabel* mywLabel = eqn2.getTransportEqnLabel();  
+        const VarLabel* mywLabel = weight_eqn.getTransportEqnLabel();  
+        double small_weight = weight_eqn.getSmallClip(); 
         old_dw->get(weight, mywLabel, matlIndex, patch, gn, 0); 
 
         ArchesLabel::PartVelMap::iterator iter = d_fieldLabels->partVel.find(iqn);
@@ -282,75 +284,69 @@ void PartVel::ComputePartVel( const ProcessorGroup* pc,
           IntVector cxm = *iter - IntVector(1,0,0); 
 
           double length;
-          if( weight[c] < 1e-6 ) {
-            length = 0;
+          if( weight[c] <= small_weight ) {
+
+            partVel[c] = Vector(0.0,0.0,0.0); //could end up in a step
+
           } else {
+
             length = (wlength[c]/weight[c])*eqn.getScalingConstant();
+
+            Vector v_gas = gasVel[c];
+            Vector v_part = old_partVel[c]; 
+            Vector new_v_part = Vector(0.0,0.0,0.0);
+         
+            // loop over each vel component 
+            for ( int i = 0; i < 3; i++ ){
+            
+              double diff = v_gas[i] - v_part[i]; 
+              double prev_diff = 0.0;
+              double length_ratio = 0.0;
+
+              epsilon = pow(v_gas[i],3.0); 
+              epsilon /= d_L;
+
+              length_ratio = length / d_eta;  
+              cout << "length ratio = " << length_ratio << endl;
+              double uk = 0.0; 
+
+              if (length > 0.0) {
+                uk = pow(d_eta/d_L, 1./3.);
+                uk *= v_gas[i];
+              }
+
+              diff = 0.0;
+
+              // iterate to find convergence 
+              for ( int iter = 0; iter < d_totIter; iter++) {
+
+                prev_diff = diff; 
+                double Re  = abs(diff)*length / kvisc; //do we really want an Re component wise? 
+                double phi = 1. + .15*pow(Re, 0.687);
+                double t_p_by_t_k = (2*rhoRatio+1)/36*1.0/phi*pow(length_ratio,2);
+
+                diff = uk*(1-beta)*pow(t_p_by_t_k, d_power);
+                double error = abs(diff - prev_diff)/diff; 
+
+                if ( abs(diff) < 1e-16 )
+                  error = 0.0;
+
+                if (abs(error) < d_tol)
+                  break;
+
+              }
+              double newPartMag = v_gas[i] - diff; 
+              double vel_ratio = newPartMag / v_gas[i]; 
+
+              if (vel_ratio < d_min_vel_ratio)
+                newPartMag = v_gas[i] * d_min_vel_ratio; 
+
+              new_v_part[i] = newPartMag;
+            }
+
+            // Assign the new particle velocity 
+            partVel[c] = new_v_part; 
           }
-
-        //if( length > d_highClip ) {
-        //  length = d_highClip;
-        //} else if( length < d_lowClip ) {
-        //  length = d_lowClip;
-        //}
-
-          Vector sphGas = Vector(0.,0.,0.);
-          Vector cartGas = gasVel[c]; 
-        
-          Vector sphPart = Vector(0.,0.,0.);
-          Vector cartPart = old_partVel[c]; 
-
-          sphGas = cart2sph( cartGas ); 
-          sphPart = cart2sph( cartPart ); 
-
-          double diff = sphGas.z() - sphPart.z(); 
-          double prev_diff = 0.0;
-          double newPartMag = 0.0;
-          double length_ratio = 0.0;
-
-          epsilon =  pow(sphGas.z(),3.0);
-          epsilon /= d_L;
-
-          length_ratio = length / d_eta;
-          double uk = 0.0;
-       
-          if (length > 0.0) {
-            uk = pow(d_eta/d_L, 1./3.);
-            uk *= sphGas.z();
-          }
-
-          diff = 0.0;
-
-          for ( int i = 0; i < d_totIter; i++) {
-
-            prev_diff = diff; 
-            double Re  = abs(diff)*length / kvisc;
-            double phi = 1. + .15*pow(Re, 0.687);
-            double t_p_by_t_k = (2*rhoRatio+1)/36*1.0/phi*pow(length_ratio,2);
-            diff = uk*(1-beta)*pow(t_p_by_t_k, d_power);
-            double error = abs(diff - prev_diff)/diff; 
-            if ( abs(diff) < 1e-16 )
-              error = 0.0;
-
-            if (abs(error) < d_tol)
-              break;
-
-          }
-
-          newPartMag = sphGas.z() - diff; 
-
-          double vel_ratio = newPartMag / sphGas.z(); 
-
-          if (vel_ratio < d_min_vel_ratio) 
-            newPartMag = sphGas.z() * d_min_vel_ratio; 
-  
-          sphPart = Vector(sphGas.x(), sphGas.y(), newPartMag);
-
-          // now convert back to cartesian
-          Vector newcartPart = Vector(0.,0.,0.);
-          newcartPart = sph2cart( sphPart ); 
-
-          partVel[c] = newcartPart; 
         }
       }
 
