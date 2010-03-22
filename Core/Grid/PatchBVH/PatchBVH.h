@@ -75,7 +75,7 @@ namespace Uintah {
 
       ~PatchBVH();
 
-      void query(const IntVector& low, const IntVector& high, Level::selectType& patches);
+      void query(const IntVector& low, const IntVector& high, Level::selectType& patches,bool includeExtraCells=false);
       
     private:
 

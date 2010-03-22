@@ -66,13 +66,13 @@ namespace Uintah {
   PatchBVHNode::PatchBVHNode(std::vector<PatchKeyVal>::iterator begin, std::vector<PatchKeyVal>::iterator end) : left_(NULL), right_(NULL)
   {
     //set bounding box
-    low_=begin->patch->getCellLowIndex();
-    high_=begin->patch->getCellHighIndex();
+    low_=begin->patch->getExtraCellLowIndex();
+    high_=begin->patch->getExtraCellHighIndex();
 
     for(std::vector<PatchKeyVal>::iterator iter=begin+1; iter<end; iter++)
     {
-       low_=Min(low_,iter->patch->getCellLowIndex());
-       high_=Max(high_,iter->patch->getCellHighIndex());
+       low_=Min(low_,iter->patch->getExtraCellLowIndex());
+       high_=Max(high_,iter->patch->getExtraCellHighIndex());
     }
 
     //find maximum dimension
@@ -140,7 +140,7 @@ namespace Uintah {
     delete right_;
   }
 
-  void PatchBVHNode::query(const IntVector& low, const IntVector& high, Level::selectType& patches)
+  void PatchBVHNode::query(const IntVector& low, const IntVector& high, Level::selectType& patches,bool includeExtraCells)
   {
     //check that the query intersects my bounding box
     if(!intersects(low,high,low_,high_))
@@ -148,9 +148,9 @@ namespace Uintah {
 
     //intersect with left and right trees
     ASSERT(left_!=NULL);
-    left_->query(low,high,patches);
+    left_->query(low,high,patches,includeExtraCells);
     ASSERT(right_!=NULL);
-    right_->query(low,high,patches);
+    right_->query(low,high,patches,includeExtraCells);
   }
 
 } // end namespace Uintah
