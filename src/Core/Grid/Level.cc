@@ -206,14 +206,18 @@ Patch* Level::addPatch(const IntVector& lowIndex,
     return r;
 }
 
-Patch* Level::getPatchFromPoint(const Point& p)
+const Patch* Level::getPatchFromPoint(const Point& p)
 {
-  for(int i=0;i<(int)d_realPatches.size();i++){
-    Patch* r = d_realPatches[i];
-    if( r->getExtraBox().contains( p ) )
-      return r;
-  }
-  return 0;
+  selectType patch;
+  IntVector c=getCellIndex(p);
+  //point is within the bounding box so query the bvh
+  d_bvh->query(c,c+IntVector(1,1,1), patch,true);
+
+  if(patch.size()==0)
+    return 0;
+  
+  ASSERT(patch.size()==1);
+  return patch[0];
 }
 
 int Level::numPatches() const
