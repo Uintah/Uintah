@@ -318,10 +318,18 @@ void DDT0::scheduleComputeModelSources(SchedulerP& sched,
     one_matl->add(0);
     one_matl->addReference();
   
+    const MaterialSet* all_matls = d_sharedState->allMaterials();
+    const MaterialSubset* all_matls_sub = all_matls->getUnion();
+    Task::DomainSpec oms = Task::OutOfDomain;
+
     //__________________________________
     // Requires
     //__________________________________
     t->requires( Task::OldDW, mi->delT_Label,       level.get_rep());
+    t->requires(Task::OldDW, Ilb->temp_CCLabel,     all_matls_sub, oms, gac,1);
+    t->requires(Task::NewDW, Ilb->vol_frac_CCLabel, all_matls_sub, oms, gac,1);
+    
+
     //__________________________________
     // Products
     t->requires(Task::NewDW,  Ilb->rho_CCLabel,     prod_matl, gn);
@@ -332,7 +340,8 @@ void DDT0::scheduleComputeModelSources(SchedulerP& sched,
     t->requires(Task::NewDW,  Ilb->TempZ_FCLabel,   prod_matl, gac,2);
     t->requires(Task::NewDW,  Ilb->press_equil_CCLabel, one_matl,  gn);
     t->requires(Task::OldDW,  MIlb->NC_CCweightLabel,   one_matl,  gac, 1);
-      
+        
+  
     //__________________________________
     // Reactants
     t->requires(Task::NewDW, Ilb->sp_vol_CCLabel,   react_matl, gn);
@@ -352,8 +361,8 @@ void DDT0::scheduleComputeModelSources(SchedulerP& sched,
     t->computes(delFLabel,            react_matl);
     t->computes(burningLabel,         react_matl);
     t->computes(detonatingLabel,      react_matl);
-    t->computes(DDT0::onSurfaceLabel,    one_matl);
-    t->computes(DDT0::surfaceTempLabel,  one_matl);
+    t->computes(DDT0::onSurfaceLabel,    react_matl);
+    t->computes(DDT0::surfaceTempLabel,  react_matl);
 
     //__________________________________
     // Conserved Variables
@@ -601,7 +610,17 @@ void DDT0::computeModelSources(const ProcessorGroup*,
       
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m0);
     double cv_solid = mpm_matl->getSpecificHeat();
-      
+     
+    // Get Temperatures for burning check
+    int numAllMatls = d_sharedState->getNumMatls();
+    StaticArray<constCCVariable<double> > vol_frac_CC(numAllMatls);
+    StaticArray<constCCVariable<double> > temp_CC(numAllMatls);
+    for(int m = 0; m < numAllMatls; m++) {
+      Material* matl = d_sharedState->getMaterial(m);
+      int indx = matl->getDWIndex();
+      old_dw->get(temp_CC[m],     MIlb->temp_CCLabel,    indx, patch, gac, 1);
+      new_dw->get(vol_frac_CC[m], Ilb->vol_frac_CCLabel, indx, patch, gac, 1);
+    }
 
     for (CellIterator iter = patch->getCellIterator();!iter.done();iter++){
       IntVector c = *iter;
@@ -665,21 +684,18 @@ void DDT0::computeModelSources(const ProcessorGroup*,
             && (MaxMass-MinMass)/MaxMass < 1.0
             &&  MaxMass > d_TINY_RHO){
 
+
+
             //__________________________________
             //  Determine the temperature
             //  to use in burn model
             double Temp = 0;
-              
-            if (gasVol_frac[c] < 0.2){             //--------------KNOB 2
-                Temp =solidTemp[c];
-            } else {
-                Temp =std::max(Temp, gasTempX_FC[c] );    //L
-                Temp =std::max(Temp, gasTempY_FC[c] );    //Bot
-                Temp =std::max(Temp, gasTempZ_FC[c] );    //BK
-                Temp =std::max(Temp, gasTempX_FC[c + IntVector(1,0,0)] );
-                Temp =std::max(Temp, gasTempY_FC[c + IntVector(0,1,0)] );          
-                Temp =std::max(Temp, gasTempZ_FC[c + IntVector(0,0,1)] );
-            }
+            
+            for (int m = 0; m < numAllMatls; m++) {
+              if(vol_frac_CC[m][c] > 0.2 && temp_CC[m][c] > d_thresholdTemp && temp_CC[m][c] > Temp )
+                Temp = temp_CC[m][c];
+            }  
+            
             surfaceTemp[c] = Temp;
               
             double surfArea = delX*delY;  
