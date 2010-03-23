@@ -66,8 +66,6 @@ DEALINGS IN THE SOFTWARE.
 #include <map>
 #include <cmath>
 
-#define BRYAN_SELECT_CACHE
-
 #ifdef _WIN32
 #define rint(x) (int)((x>0) ? x+.5 : x-.5)
 #endif
@@ -118,25 +116,22 @@ Level::~Level()
   if(all_patches && all_patches->removeReference())
     delete all_patches;
 
-#ifdef BRYAN_SELECT_CACHE
   int patches_stored = 0;
   int queries_stored = 0;
   for (selectCache::iterator iter = d_selectCache.begin(); iter != d_selectCache.end(); iter++) {
     queries_stored++;
     patches_stored += iter->second.size();
   }
-  //cout << "  Bryan's select cache stored " << queries_stored << " queries and " << patches_stored << " patches\n";
-#endif
-
 }
 
 void Level::setPatchDistributionHint(const IntVector& hint)
 {
-   if(d_patchDistribution.x() == -1)
+    if(d_patchDistribution.x() == -1){
       d_patchDistribution = hint;
-   else
+    }else{
       // Called more than once, we have to punt
       d_patchDistribution = IntVector(-2,-2,2);
+    }
 }
 
 Level::const_patchIterator Level::patchesBegin() const
@@ -400,10 +395,8 @@ void Level::selectPatches(const IntVector& low, const IntVector& high,
                           selectType& neighbors, bool cache) const
 {
  TAU_PROFILE("Level::selectPatches", " ", TAU_USER);
-#ifdef BRYAN_SELECT_CACHE
     
- if(cache)
- {
+ if(cache){
    // look it up in the cache first
    selectCache::const_iterator iter = d_selectCache.find(make_pair(low, high));
    if (iter != d_selectCache.end()) {
@@ -415,7 +408,6 @@ void Level::selectPatches(const IntVector& low, const IntVector& high,
    }
    ASSERT(neighbors.size() == 0);
  }
-#endif
 
    //cout << Parallel::getMPIRank() << " Level Quesy: " << low << " " << high << endl;
    d_bvh->query(low, high, neighbors);
@@ -439,9 +431,7 @@ void Level::selectPatches(const IntVector& low, const IntVector& high,
       ASSERT(neighbors[i] == tneighbors[i]);
 #endif
 
-#ifdef BRYAN_SELECT_CACHE
-   if(cache)
-   {
+   if(cache){
      // put it in the cache - start at orig_size in case there was something in
      // neighbors before this query
      vector<const Patch*>& cache = d_selectCache[make_pair(low,high)];
@@ -450,7 +440,6 @@ void Level::selectPatches(const IntVector& low, const IntVector& high,
        cache.push_back(neighbors[i]);
      }
    }
-#endif
 }
 
 bool Level::containsPointIncludingExtraCells(const Point& p) const
