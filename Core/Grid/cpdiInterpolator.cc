@@ -102,20 +102,28 @@ void cpdiInterpolator::findCellAndWeights(const Point& pos,
 
  // now  we will loop over each of these "nodes" or corners and use the deformation gradient to find the current location: 
   for(i=0;i<8;i++){
+    int i8  = i*8;
+    int i81 = i*8+1;
+    int i82 = i*8+2;
+    int i83 = i*8+3;
+    int i84 = i*8+4;
+    int i85 = i*8+5;
+    int i86 = i*8+6;
+    int i87 = i*8+7;
     //    first we need to find the position vector of the ith corner of the particle with respect to the particle center:
     current_corner_pos = Vector(cellpos) + defgrad*relative_node_reference_location[i];
     ix = Floor(current_corner_pos.x());
     iy = Floor(current_corner_pos.y());
     iz = Floor(current_corner_pos.z());
 
-    ni[i*8] = IntVector(ix    , iy  , iz  ); // x1    , y1    , z1
-    ni[i*8+1] = IntVector(ix+1, iy  , iz  ); // x1+r1x, y1    , z1
-    ni[i*8+2] = IntVector(ix+1, iy+1, iz  ); // x1+r1x, y1+r2y, z1
-    ni[i*8+3] = IntVector(ix  , iy+1, iz  ); // x1    , y1+r2y, z1
-    ni[i*8+4] = IntVector(ix  , iy  , iz+1); // x1    , y1    , z1+r3z
-    ni[i*8+5] = IntVector(ix+1, iy  , iz+1); // x1+r1x, y1    , z1+r3z
-    ni[i*8+6] = IntVector(ix+1, iy+1, iz+1); // x1+r1x, y1+r2y, z1+r3z
-    ni[i*8+7] = IntVector(ix  , iy+1, iz+1); // x1    , y1+r2y, z1+r3z
+    ni[i8] = IntVector(ix    , iy  , iz  ); // x1    , y1    , z1
+    ni[i81] = IntVector(ix+1, iy  , iz  ); // x1+r1x, y1    , z1
+    ni[i82] = IntVector(ix+1, iy+1, iz  ); // x1+r1x, y1+r2y, z1
+    ni[i83] = IntVector(ix  , iy+1, iz  ); // x1    , y1+r2y, z1
+    ni[i84] = IntVector(ix  , iy  , iz+1); // x1    , y1    , z1+r3z
+    ni[i85] = IntVector(ix+1, iy  , iz+1); // x1+r1x, y1    , z1+r3z
+    ni[i86] = IntVector(ix+1, iy+1, iz+1); // x1+r1x, y1+r2y, z1+r3z
+    ni[i87] = IntVector(ix  , iy+1, iz+1); // x1    , y1+r2y, z1+r3z
 
     fx = current_corner_pos.x()-ix;
     fy = current_corner_pos.y()-iy;
@@ -133,14 +141,14 @@ void cpdiInterpolator::findCellAndWeights(const Point& pos,
     phi[6] = fx *fy *fz;  // x1+r1x, y1+r2y, z1+r3z
     phi[7] = fx1*fy *fz;  // x1    , y1+r2y, z1+r3z
 
-    S[i*8]   = one_over_8*phi[0];
-    S[i*8+1] = one_over_8*phi[1];
-    S[i*8+2] = one_over_8*phi[2];
-    S[i*8+3] = one_over_8*phi[3];
-    S[i*8+4] = one_over_8*phi[4];
-    S[i*8+5] = one_over_8*phi[5];
-    S[i*8+6] = one_over_8*phi[6];
-    S[i*8+7] = one_over_8*phi[7];
+    S[i8]   = one_over_8*phi[0];
+    S[i81] = one_over_8*phi[1];
+    S[i82] = one_over_8*phi[2];
+    S[i83] = one_over_8*phi[3];
+    S[i84] = one_over_8*phi[4];
+    S[i85] = one_over_8*phi[5];
+    S[i86] = one_over_8*phi[6];
+    S[i87] = one_over_8*phi[7];
 
 
 
@@ -228,20 +236,28 @@ void cpdiInterpolator::findCellAndShapeDerivatives(const Point& pos,
 
  // now  we will loop over each of these "nodes" or corners and use the deformation gradient to find the current location: 
   for(i=0;i<8;i++){
+    int i8  = i*8;
+    int i81 = i*8+1;
+    int i82 = i*8+2;
+    int i83 = i*8+3;
+    int i84 = i*8+4;
+    int i85 = i*8+5;
+    int i86 = i*8+6;
+    int i87 = i*8+7;
     //    first we need to find the position vector of the ith corner of the particle with respect to the particle center:
     current_corner_pos = Vector(cellpos) + defgrad*relative_node_reference_location[i];
     ix = Floor(current_corner_pos.x());
     iy = Floor(current_corner_pos.y());
     iz = Floor(current_corner_pos.z());
 
-    ni[i*8] = IntVector(ix    , iy  , iz  ); // x1    , y1    , z1
-    ni[i*8+1] = IntVector(ix+1, iy  , iz  ); // x1+r1x, y1    , z1
-    ni[i*8+2] = IntVector(ix+1, iy+1, iz  ); // x1+r1x, y1+r2y, z1
-    ni[i*8+3] = IntVector(ix  , iy+1, iz  ); // x1    , y1+r2y, z1
-    ni[i*8+4] = IntVector(ix  , iy  , iz+1); // x1    , y1    , z1+r3z
-    ni[i*8+5] = IntVector(ix+1, iy  , iz+1); // x1+r1x, y1    , z1+r3z
-    ni[i*8+6] = IntVector(ix+1, iy+1, iz+1); // x1+r1x, y1+r2y, z1+r3z
-    ni[i*8+7] = IntVector(ix  , iy+1, iz+1); // x1    , y1+r2y, z1+r3z
+    ni[i8] = IntVector(ix    , iy  , iz  ); // x1    , y1    , z1
+    ni[i81] = IntVector(ix+1, iy  , iz  ); // x1+r1x, y1    , z1
+    ni[i82] = IntVector(ix+1, iy+1, iz  ); // x1+r1x, y1+r2y, z1
+    ni[i83] = IntVector(ix  , iy+1, iz  ); // x1    , y1+r2y, z1
+    ni[i84] = IntVector(ix  , iy  , iz+1); // x1    , y1    , z1+r3z
+    ni[i85] = IntVector(ix+1, iy  , iz+1); // x1+r1x, y1    , z1+r3z
+    ni[i86] = IntVector(ix+1, iy+1, iz+1); // x1+r1x, y1+r2y, z1+r3z
+    ni[i87] = IntVector(ix  , iy+1, iz+1); // x1    , y1+r2y, z1+r3z
 
     fx = current_corner_pos.x()-ix;
     fy = current_corner_pos.y()-iy;
@@ -259,37 +275,37 @@ void cpdiInterpolator::findCellAndShapeDerivatives(const Point& pos,
     phi[6] = fx *fy *fz;  // x1+r1x, y1+r2y, z1+r3z
     phi[7] = fx1*fy *fz;  // x1    , y1+r2y, z1+r3z
 
-    d_S[i*8][0]   = alpha[i][0]*phi[0];
-    d_S[i*8][1]   = alpha[i][1]*phi[0];
-    d_S[i*8][2]   = alpha[i][2]*phi[0];
+    d_S[i8][0]   = alpha[i][0]*phi[0];
+    d_S[i8][1]   = alpha[i][1]*phi[0];
+    d_S[i8][2]   = alpha[i][2]*phi[0];
 
-    d_S[i*8+1][0] = alpha[i][0]*phi[1];
-    d_S[i*8+1][1] = alpha[i][1]*phi[1];
-    d_S[i*8+1][2] = alpha[i][2]*phi[1];
+    d_S[i81][0] = alpha[i][0]*phi[1];
+    d_S[i81][1] = alpha[i][1]*phi[1];
+    d_S[i81][2] = alpha[i][2]*phi[1];
 
-    d_S[i*8+2][0] = alpha[i][0]*phi[2];
-    d_S[i*8+2][1] = alpha[i][1]*phi[2];
-    d_S[i*8+2][2] = alpha[i][2]*phi[2];
+    d_S[i82][0] = alpha[i][0]*phi[2];
+    d_S[i82][1] = alpha[i][1]*phi[2];
+    d_S[i82][2] = alpha[i][2]*phi[2];
 
-    d_S[i*8+3][0] = alpha[i][0]*phi[3];
-    d_S[i*8+3][1] = alpha[i][1]*phi[3];
-    d_S[i*8+3][2] = alpha[i][2]*phi[3];
+    d_S[i83][0] = alpha[i][0]*phi[3];
+    d_S[i83][1] = alpha[i][1]*phi[3];
+    d_S[i83][2] = alpha[i][2]*phi[3];
 
-    d_S[i*8+4][0] = alpha[i][0]*phi[4];
-    d_S[i*8+4][1] = alpha[i][1]*phi[4];
-    d_S[i*8+4][2] = alpha[i][2]*phi[4];
+    d_S[i84][0] = alpha[i][0]*phi[4];
+    d_S[i84][1] = alpha[i][1]*phi[4];
+    d_S[i84][2] = alpha[i][2]*phi[4];
 
-    d_S[i*8+5][0] = alpha[i][0]*phi[5];
-    d_S[i*8+5][1] = alpha[i][1]*phi[5];
-    d_S[i*8+5][2] = alpha[i][2]*phi[5];
+    d_S[i85][0] = alpha[i][0]*phi[5];
+    d_S[i85][1] = alpha[i][1]*phi[5];
+    d_S[i85][2] = alpha[i][2]*phi[5];
 
-    d_S[i*8+6][0] = alpha[i][0]*phi[6];
-    d_S[i*8+6][1] = alpha[i][1]*phi[6];
-    d_S[i*8+6][2] = alpha[i][2]*phi[6];
+    d_S[i86][0] = alpha[i][0]*phi[6];
+    d_S[i86][1] = alpha[i][1]*phi[6];
+    d_S[i86][2] = alpha[i][2]*phi[6];
 
-    d_S[i*8+7][0] = alpha[i][0]*phi[7];
-    d_S[i*8+7][1] = alpha[i][1]*phi[7];
-    d_S[i*8+7][2] = alpha[i][2]*phi[7];
+    d_S[i87][0] = alpha[i][0]*phi[7];
+    d_S[i87][1] = alpha[i][1]*phi[7];
+    d_S[i87][2] = alpha[i][2]*phi[7];
  
 
   }
@@ -379,25 +395,32 @@ void cpdiInterpolator::findCellAndWeightsAndShapeDerivatives(const Point& pos,
   alpha[7][1]   =  one_over_4V*(r2[0]*r3[2]-r2[2]*r3[0]+r1[0]*r3[2]-r1[2]*r3[0]-r1[0]*r2[2]+r1[2]*r2[0]);
   alpha[7][2]   =  one_over_4V*(-r2[0]*r3[1]+r2[1]*r3[0]-r1[0]*r3[1]+r1[1]*r3[0]+r1[0]*r2[1]-r1[1]*r2[0]);
 
-
+ 
 
  // now  we will loop over each of these "nodes" and use the deformation gradient to find the current location: 
   for(i=0;i<8;i++){
     //    first we need to find the position vector of the ith corner of the particle:
     current_corner_pos = Vector(cellpos) + defgrad*relative_node_reference_location[i];
-
+    int i8  = i*8;
+    int i81 = i*8+1;
+    int i82 = i*8+2;
+    int i83 = i*8+3;
+    int i84 = i*8+4;
+    int i85 = i*8+5;
+    int i86 = i*8+6;
+    int i87 = i*8+7;
     ix = Floor(current_corner_pos.x());
     iy = Floor(current_corner_pos.y());
     iz = Floor(current_corner_pos.z());
 
-    ni[i*8] = IntVector(ix    , iy  , iz  ); // x1    , y1    , z1
-    ni[i*8+1] = IntVector(ix+1, iy  , iz  ); // x1+r1x, y1    , z1
-    ni[i*8+2] = IntVector(ix+1, iy+1, iz  ); // x1+r1x, y1+r2y, z1
-    ni[i*8+3] = IntVector(ix  , iy+1, iz  ); // x1    , y1+r2y, z1
-    ni[i*8+4] = IntVector(ix  , iy  , iz+1); // x1    , y1    , z1+r3z
-    ni[i*8+5] = IntVector(ix+1, iy  , iz+1); // x1+r1x, y1    , z1+r3z
-    ni[i*8+6] = IntVector(ix+1, iy+1, iz+1); // x1+r1x, y1+r2y, z1+r3z
-    ni[i*8+7] = IntVector(ix  , iy+1, iz+1); // x1    , y1+r2y, z1+r3z
+    ni[i8] = IntVector(ix    , iy  , iz  ); // x1    , y1    , z1
+    ni[i81] = IntVector(ix+1, iy  , iz  ); // x1+r1x, y1    , z1
+    ni[i82] = IntVector(ix+1, iy+1, iz  ); // x1+r1x, y1+r2y, z1
+    ni[i83] = IntVector(ix  , iy+1, iz  ); // x1    , y1+r2y, z1
+    ni[i84] = IntVector(ix  , iy  , iz+1); // x1    , y1    , z1+r3z
+    ni[i85] = IntVector(ix+1, iy  , iz+1); // x1+r1x, y1    , z1+r3z
+    ni[i86] = IntVector(ix+1, iy+1, iz+1); // x1+r1x, y1+r2y, z1+r3z
+    ni[i87] = IntVector(ix  , iy+1, iz+1); // x1    , y1+r2y, z1+r3z
 
     fx = current_corner_pos.x()-ix;
     fy = current_corner_pos.y()-iy;
@@ -415,46 +438,46 @@ void cpdiInterpolator::findCellAndWeightsAndShapeDerivatives(const Point& pos,
     phi[6] = fx *fy *fz;  // x1+r1x, y1+r2y, z1+r3z
     phi[7] = fx1*fy *fz;  // x1    , y1+r2y, z1+r3z
 
-    S[i*8]   = one_over_8*phi[0];
-    S[i*8+1] = one_over_8*phi[1];
-    S[i*8+2] = one_over_8*phi[2];
-    S[i*8+3] = one_over_8*phi[3];
-    S[i*8+4] = one_over_8*phi[4];
-    S[i*8+5] = one_over_8*phi[5];
-    S[i*8+6] = one_over_8*phi[6];
-    S[i*8+7] = one_over_8*phi[7];
+    S[i8]   = one_over_8*phi[0];
+    S[i81] = one_over_8*phi[1];
+    S[i82] = one_over_8*phi[2];
+    S[i83] = one_over_8*phi[3];
+    S[i84] = one_over_8*phi[4];
+    S[i85] = one_over_8*phi[5];
+    S[i86] = one_over_8*phi[6];
+    S[i87] = one_over_8*phi[7];
 
-    d_S[i*8][0]   = alpha[i][0]*phi[0];
-    d_S[i*8][1]   = alpha[i][1]*phi[0];
-    d_S[i*8][2]   = alpha[i][2]*phi[0];
+    d_S[i8][0]   = alpha[i][0]*phi[0];
+    d_S[i8][1]   = alpha[i][1]*phi[0];
+    d_S[i8][2]   = alpha[i][2]*phi[0];
 
-    d_S[i*8+1][0] = alpha[i][0]*phi[1];
-    d_S[i*8+1][1] = alpha[i][1]*phi[1];
-    d_S[i*8+1][2] = alpha[i][2]*phi[1];
+    d_S[i81][0] = alpha[i][0]*phi[1];
+    d_S[i81][1] = alpha[i][1]*phi[1];
+    d_S[i81][2] = alpha[i][2]*phi[1];
 
-    d_S[i*8+2][0] = alpha[i][0]*phi[2];
-    d_S[i*8+2][1] = alpha[i][1]*phi[2];
-    d_S[i*8+2][2] = alpha[i][2]*phi[2];
+    d_S[i82][0] = alpha[i][0]*phi[2];
+    d_S[i82][1] = alpha[i][1]*phi[2];
+    d_S[i82][2] = alpha[i][2]*phi[2];
 
-    d_S[i*8+3][0] = alpha[i][0]*phi[3];
-    d_S[i*8+3][1] = alpha[i][1]*phi[3];
-    d_S[i*8+3][2] = alpha[i][2]*phi[3];
+    d_S[i83][0] = alpha[i][0]*phi[3];
+    d_S[i83][1] = alpha[i][1]*phi[3];
+    d_S[i83][2] = alpha[i][2]*phi[3];
 
-    d_S[i*8+4][0] = alpha[i][0]*phi[4];
-    d_S[i*8+4][1] = alpha[i][1]*phi[4];
-    d_S[i*8+4][2] = alpha[i][2]*phi[4];
+    d_S[i84][0] = alpha[i][0]*phi[4];
+    d_S[i84][1] = alpha[i][1]*phi[4];
+    d_S[i84][2] = alpha[i][2]*phi[4];
 
-    d_S[i*8+5][0] = alpha[i][0]*phi[5];
-    d_S[i*8+5][1] = alpha[i][1]*phi[5];
-    d_S[i*8+5][2] = alpha[i][2]*phi[5];
+    d_S[i85][0] = alpha[i][0]*phi[5];
+    d_S[i85][1] = alpha[i][1]*phi[5];
+    d_S[i85][2] = alpha[i][2]*phi[5];
 
-    d_S[i*8+6][0] = alpha[i][0]*phi[6];
-    d_S[i*8+6][1] = alpha[i][1]*phi[6];
-    d_S[i*8+6][2] = alpha[i][2]*phi[6];
+    d_S[i86][0] = alpha[i][0]*phi[6];
+    d_S[i86][1] = alpha[i][1]*phi[6];
+    d_S[i86][2] = alpha[i][2]*phi[6];
 
-    d_S[i*8+7][0] = alpha[i][0]*phi[7];
-    d_S[i*8+7][1] = alpha[i][1]*phi[7];
-    d_S[i*8+7][2] = alpha[i][2]*phi[7];
+    d_S[i87][0] = alpha[i][0]*phi[7];
+    d_S[i87][1] = alpha[i][1]*phi[7];
+    d_S[i87][2] = alpha[i][2]*phi[7];
 
     
  
