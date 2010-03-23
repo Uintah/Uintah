@@ -1280,16 +1280,16 @@ MPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
   {
     static int count=0;
       
-    if(++count%100==0)
+    if(++count%10==0)
     {
       ofstream fout;
       char filename[100];
-      sprintf(filename,"exectimes.%d",d_myworld->myrank());
+      sprintf(filename,"exectimes.%d.%d",d_myworld->size(),d_myworld->myrank());
       fout.open(filename);
       
       for(map<string,double>::iterator iter=exectimes.begin();iter!=exectimes.end();iter++)
         fout << fixed << d_myworld->myrank() << ": TaskExecTime: " << iter->second << " Task:" << iter->first << endl;
-
+      fout.close();
       //exectimes.clear();
     }
   }
