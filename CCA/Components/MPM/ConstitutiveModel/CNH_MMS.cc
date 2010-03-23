@@ -252,6 +252,7 @@ void CNH_MMS::computeStressTensor(const PatchSubset* patches,
       computeDeformationGradientFromDisplacement(gdisplacement,
                                                  pset, px, psize,
                                                  deformationGradient_new,
+                                                 deformationGradient,
                                                  dx, interpolator);
     }
 

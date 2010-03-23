@@ -887,6 +887,9 @@ void ImpMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
   printSchedule(patches,cout_doing,"IMPM::scheduleInterpolateParticlesToGrid\t");
   Task* t = scinew Task("ImpMPM::interpolateParticlesToGrid",
                         this,&ImpMPM::interpolateParticlesToGrid);
+
+
+
   t->requires(Task::OldDW, lb->pMassLabel,             Ghost::AroundNodes,1);
   t->requires(Task::OldDW, lb->pVolumeLabel,           Ghost::AroundNodes,1);
   t->requires(Task::OldDW, lb->pAccelerationLabel,     Ghost::AroundNodes,1);
@@ -902,6 +905,9 @@ void ImpMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
     t->requires(Task::OldDW,lb->gDisplacementLabel,    Ghost::None);
     t->computes(lb->gDisplacementLabel);
   }
+  t->requires(Task::OldDW, lb->pDeformationMeasureLabel,   Ghost::AroundNodes,1);
+
+
   t->requires(Task::OldDW,lb->NC_CCweightLabel, one_matl,Ghost::AroundCells,1);
   if (flags->d_temp_solve == false)
     //    t->requires(Task::OldDW,lb->gTemperatureLabel,one_matl,Ghost::AroundCells,1);
@@ -1155,10 +1161,15 @@ void ImpMPM::scheduleComputeInternalForce(SchedulerP& sched,
   Task* t = scinew Task("ImpMPM::computeInternalForce",
                          this, &ImpMPM::computeInternalForce);
 
+
+ 
+
   t->requires(Task::ParentOldDW,lb->pXLabel,              Ghost::AroundNodes,1);
   t->requires(Task::ParentOldDW,lb->pSizeLabel,          Ghost::AroundNodes,1);
   t->requires(Task::NewDW,      lb->pStressLabel_preReloc,Ghost::AroundNodes,1);
   t->requires(Task::NewDW,      lb->pVolumeDeformedLabel, Ghost::AroundNodes,1);
+  t->requires(Task::OldDW, lb->pDeformationMeasureLabel,   Ghost::AroundNodes,1);
+
 
   t->computes(lb->gInternalForceLabel);
 
@@ -1400,6 +1411,7 @@ void ImpMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   Task* t=scinew Task("ImpMPM::interpolateToParticlesAndUpdate",
                     this, &ImpMPM::interpolateToParticlesAndUpdate);
 
+ 
   t->requires(Task::OldDW, d_sharedState->get_delt_label() );
 
   t->requires(Task::NewDW, lb->gAccelerationLabel,     Ghost::AroundCells,1);
@@ -1417,6 +1429,8 @@ void ImpMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->requires(Task::OldDW, lb->pErosionLabel,          Ghost::None);
   t->requires(Task::NewDW, lb->gTemperatureRateLabel,one_matl,
               Ghost::AroundCells,1);
+  t->requires(Task::NewDW, lb->pDeformationMeasureLabel_preReloc,        Ghost::None);
+
 
   t->computes(lb->pVelocityLabel_preReloc);
   t->computes(lb->pAccelerationLabel_preReloc);
@@ -1551,6 +1565,9 @@ void ImpMPM::scheduleInterpolateStressToGrid(SchedulerP& sched,
 
   // This task is done for visualization only
 
+
+
+  
   t->requires(Task::OldDW,lb->pXLabel,              Ghost::AroundNodes,1);
   t->requires(Task::OldDW,lb->pSizeLabel,           Ghost::AroundNodes,1);
   t->requires(Task::NewDW,lb->pVolumeDeformedLabel, Ghost::AroundNodes,1);
@@ -1558,6 +1575,9 @@ void ImpMPM::scheduleInterpolateStressToGrid(SchedulerP& sched,
   t->requires(Task::NewDW,lb->gVolumeLabel,         Ghost::None);
   t->requires(Task::NewDW,lb->gVolumeLabel,d_sharedState->getAllInOneMatl(),
                                  Task::OutOfDomain, Ghost::None);
+  t->requires(Task::OldDW, lb->pDeformationMeasureLabel,   Ghost::AroundNodes,1);
+
+
   t->modifies(lb->gInternalForceLabel);
   t->computes(lb->gStressForSavingLabel);
 
@@ -2082,6 +2102,7 @@ void ImpMPM::interpolateParticlesToGrid(const ProcessorGroup*,
     vector<IntVector> ni(i_size);
     vector<double> S(i_size);
 
+ 
     NCVariable<double> gmassglobal,gvolumeglobal;
     new_dw->allocateAndPut(gmassglobal, lb->gMassLabel,
                            d_sharedState->getAllInOneMatl()->get(0), patch);
@@ -2142,6 +2163,8 @@ void ImpMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       constParticleVariable<double> pextheatrate,pextheatflux;
       constParticleVariable<Vector> pvelocity, pacceleration, pexternalforce;
       constParticleVariable<Vector> psize;
+      constParticleVariable<Matrix3> pDeformationMeasure;
+
 
       ParticleSubset* pset = old_dw->getParticleSubset(matl, patch,
                                                Ghost::AroundNodes, 1,
@@ -2157,6 +2180,8 @@ void ImpMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       new_dw->get(pexternalforce, lb->pExtForceLabel_preReloc, pset);
       new_dw->get(pextheatrate,   lb->pExternalHeatRateLabel,  pset);
       new_dw->get(pextheatflux,   lb->pExternalHeatFluxLabel_preReloc,  pset);
+      old_dw->get(pDeformationMeasure,  lb->pDeformationMeasureLabel, pset);
+
 
       new_dw->allocateAndPut(gmass[m],      lb->gMassLabel,         matl,patch);
       new_dw->allocateAndPut(gmassall[m],   lb->gMassAllLabel,      matl,patch);
@@ -2203,7 +2228,7 @@ void ImpMPM::interpolateParticlesToGrid(const ProcessorGroup*,
         particleIndex idx = *iter;
 
         // Get the node indices that surround the cell
-        interpolator->findCellAndWeights(px[idx], ni, S, psize[idx]);
+        interpolator->findCellAndWeights(px[idx], ni, S, psize[idx],pDeformationMeasure[idx]);
 
         pmassacc    = pacceleration[idx]*pmass[idx];
         pmom        = pvelocity[idx]*pmass[idx];
@@ -2286,7 +2311,9 @@ void ImpMPM::interpolateParticlesToGrid(const ProcessorGroup*,
         constParticleVariable<Point>  px;
         constParticleVariable<Vector> psize;
         constParticleVariable<double> pTemperature;
-        
+        constParticleVariable<Matrix3> pDeformationMeasure;
+
+       
         ParticleSubset* pset = old_dw->getParticleSubset(matl, patch,
                                                          Ghost::AroundNodes, 1,
                                                          lb->pXLabel);
@@ -2294,13 +2321,16 @@ void ImpMPM::interpolateParticlesToGrid(const ProcessorGroup*,
         old_dw->get(px,             lb->pXLabel,                 pset);
         old_dw->get(pTemperature,   lb->pTemperatureLabel,       pset);
         old_dw->get(psize,          lb->pSizeLabel,              pset);
+        old_dw->get(pDeformationMeasure,  lb->pDeformationMeasureLabel, pset);
+ 
+
 
         
         for (ParticleSubset::iterator iter = pset->begin(); iter < pset->end();
              iter++) {
           vector<IntVector> ni_cell(interpolator->size());
 
-          interpolator->findCellAndWeights(px[*iter],ni_cell,S,psize[*iter]);
+          interpolator->findCellAndWeights(px[*iter],ni_cell,S,psize[*iter],pDeformationMeasure[*iter]);
         
           particleTempShape ptshape;
 
@@ -2954,6 +2984,7 @@ void ImpMPM::computeInternalForce(const ProcessorGroup*,
     vector<IntVector> ni(interpolator->size());
     vector<Vector> d_S(interpolator->size());
 
+
     Vector dx = patch->dCell();
     double oodx[3];
     oodx[0] = 1.0/dx.x();
@@ -2987,11 +3018,14 @@ void ImpMPM::computeInternalForce(const ProcessorGroup*,
         constParticleVariable<double>  pvol;
         constParticleVariable<Matrix3> pstress;
         constParticleVariable<Vector>  psize;
+        constParticleVariable<Matrix3> pDeformationMeasure;
 
         parent_old_dw->get(px,   lb->pXLabel,               pset);
         parent_old_dw->get(psize,lb->pSizeLabel,            pset);
         new_dw->get(pvol,        lb->pVolumeDeformedLabel,  pset);
         new_dw->get(pstress,     lb->pStressLabel_preReloc, pset);
+        new_dw->get(pDeformationMeasure, lb->pDeformationMeasureLabel_preReloc, pset);
+
 
         Matrix3 stressvol;
 
@@ -3000,7 +3034,7 @@ void ImpMPM::computeInternalForce(const ProcessorGroup*,
           particleIndex idx = *iter;
 
           // Get the node indices that surround the cell
-          interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx]);
+          interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx],pDeformationMeasure[idx]);
 
           stressvol  = pstress[idx]*pvol[idx];
 
@@ -3490,7 +3524,7 @@ void ImpMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
     vector<IntVector> ni(interpolator->size());
     vector<double> S(interpolator->size());
     vector<Vector> d_S(interpolator->size());
-
+ 
     // Performs the interpolation from the cell vertices of the grid
     // acceleration and displacement to the particles to update their
     // velocity and position respectively
@@ -3527,7 +3561,9 @@ void ImpMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       constParticleVariable<double> pmass, pvolume,pTempOld,pEro,pq;
       ParticleVariable<double> pmassNew,pvolumeNew,pTemp,pEroNew,pqNew;
       ParticleVariable<double> pTempPreNew;
-  
+      constParticleVariable<Matrix3> pDeformationMeasure;
+
+ 
       // Get the arrays of grid data on which the new part. values depend
       constNCVariable<Vector> dispNew, gacceleration;
 
@@ -3552,6 +3588,8 @@ void ImpMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       new_dw->allocateAndPut(pvolumeNew, lb->pVolumeLabel_preReloc,      pset);
       new_dw->allocateAndPut(pTemp,      lb->pTemperatureLabel_preReloc, pset);
       new_dw->allocateAndPut(pDisp,      lb->pDispLabel_preReloc,        pset);
+      new_dw->get(pDeformationMeasure, lb->pDeformationMeasureLabel_preReloc, pset);
+
 
       new_dw->get(dispNew,        lb->dispNewLabel,      dwindex,patch,gac, 1);
       new_dw->get(gacceleration,  lb->gAccelerationLabel,dwindex,patch,gac, 1);
@@ -3580,7 +3618,7 @@ void ImpMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
         // Get the node indices that surround the cell
         interpolator->findCellAndWeightsAndShapeDerivatives(
-                                                   px[idx],ni,S,d_S,psize[idx]);
+                                                   px[idx],ni,S,d_S,psize[idx],pDeformationMeasure[idx]);
 
         disp = Vector(0.0,0.0,0.0);
         acc = Vector(0.0,0.0,0.0);
@@ -3676,6 +3714,7 @@ void ImpMPM::interpolateStressToGrid(const ProcessorGroup*,
     vector<double> S(interpolator->size());
     vector<Vector> d_S(interpolator->size());
 
+ 
     // This task is done for visualization only
     int numMatls = d_sharedState->getNumMPMMatls();
     int n8or27 = flags->d_8or27;
@@ -3717,6 +3756,8 @@ void ImpMPM::interpolateStressToGrid(const ProcessorGroup*,
        constParticleVariable<double>  pvol;
        constParticleVariable<Vector>  psize;
        constParticleVariable<Matrix3> pstress;
+       constParticleVariable<Matrix3> pDeformationMeasure;
+
 
        ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch,
                                               Ghost::AroundNodes,1,lb->pXLabel);
@@ -3724,6 +3765,8 @@ void ImpMPM::interpolateStressToGrid(const ProcessorGroup*,
        new_dw->get(pvol,        lb->pVolumeDeformedLabel,  pset);
        old_dw->get(psize,       lb->pSizeLabel,            pset);
        new_dw->get(pstress,     lb->pStressLabel_preReloc, pset);
+       old_dw->get(pDeformationMeasure,  lb->pDeformationMeasureLabel, pset);
+
 
        Matrix3 stressvol;
 
@@ -3733,7 +3776,7 @@ void ImpMPM::interpolateStressToGrid(const ProcessorGroup*,
 
         // Get the node indices that surround the cell
         interpolator->findCellAndWeightsAndShapeDerivatives(
-                                                   px[idx],ni,S,d_S,psize[idx]);
+                                                   px[idx],ni,S,d_S,psize[idx],pDeformationMeasure[idx]);
 
         stressvol  = pstress[idx]*pvol[idx];
 

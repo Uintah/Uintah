@@ -29,7 +29,7 @@
       <boundary_traction_faces            spec="OPTIONAL STRING" />
       <interpolateParticleTempToGridEveryStep spec="OPTIONAL BOOLEAN" />  <!-- FIXME: What is the default? -->
       <time_integrator                    spec="OPTIONAL STRING 'explicit, fracture, implicit'" /> <!-- FIXME: is 'fracture' valid? -->
-      <interpolator                       spec="OPTIONAL STRING 'linear, gimp, 3rdorderBS, 4thorderBS'" /> <!-- FIXME:  Is this really optional?  If so, what is the default? -->
+      <interpolator                       spec="OPTIONAL STRING 'linear, gimp,cpdi, 3rdorderBS, 4thorderBS'" /> <!-- FIXME:  Is this really optional?  If so, what is the default? -->
       <minimum_particle_mass              spec="OPTIONAL DOUBLE 'positive'"/>
       <minimum_mass_for_acc               spec="OPTIONAL DOUBLE 'positive'"/>
       <maximum_particle_velocity          spec="OPTIONAL DOUBLE 'positive'"/>

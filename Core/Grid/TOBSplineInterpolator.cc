@@ -197,7 +197,8 @@ double TOBSplineInterpolator::evalType3BSplineGrad(const double& dx)    // bound
 void TOBSplineInterpolator::findCellAndWeights(const Point& pos,
 					    vector<IntVector>& ni, 
 					    vector<double>& S,
-					    const Vector& size)
+					    const Vector& size,
+                                            const Matrix3& defgrad)
 {
   IntVector low,hi;
   Point cellpos = d_patch->getLevel()->positionToIndex(pos);
@@ -244,7 +245,8 @@ void TOBSplineInterpolator::findCellAndWeights(const Point& pos,
 void TOBSplineInterpolator::findCellAndShapeDerivatives(const Point& pos,
 						     vector<IntVector>& ni,
 						     vector<Vector>& d_S,
-					             const Vector& size)
+					             const Vector& size,
+                                                     const Matrix3& defgrad)
 {
   IntVector low,hi;
   Point cellpos = d_patch->getLevel()->positionToIndex(pos);
@@ -302,7 +304,8 @@ TOBSplineInterpolator::findCellAndWeightsAndShapeDerivatives(const Point& pos,
 							  vector<IntVector>& ni,
 							  vector<double>& S,
 							  vector<Vector>& d_S,
-							  const Vector& size)
+							  const Vector& size,
+                                                          const Matrix3& defgrad)
 {
   IntVector low,hi;
   Point cellpos = d_patch->getLevel()->positionToIndex(pos);

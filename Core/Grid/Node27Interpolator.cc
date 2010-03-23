@@ -62,7 +62,8 @@ Node27Interpolator* Node27Interpolator::clone(const Patch* patch)
 void Node27Interpolator::findCellAndWeights(const Point& pos,
 					    vector<IntVector>& ni, 
 					    vector<double>& S,
-					    const Vector& size)
+					    const Vector& size,
+                                            const Matrix3& defgrad)
 {
   Point cellpos = d_patch->getLevel()->positionToIndex(pos);
   int ix = Floor(cellpos.x());
@@ -200,7 +201,8 @@ void Node27Interpolator::findCellAndWeights(const Point& pos,
 void Node27Interpolator::findCellAndShapeDerivatives(const Point& pos,
 						     vector<IntVector>& ni,
 						     vector<Vector>& d_S,
-						     const Vector& size)
+						     const Vector& size,
+                                                     const Matrix3& defgrad)
 {
   Point cellpos = d_patch->getLevel()->positionToIndex(pos);
   int ix = Floor(cellpos.x());
@@ -372,7 +374,8 @@ Node27Interpolator::findCellAndWeightsAndShapeDerivatives(const Point& pos,
 							  vector<IntVector>& ni,
 							  vector<double>& S,
 							  vector<Vector>& d_S,
-							  const Vector& size)
+							  const Vector& size,
+                                                          const Matrix3& defgrad)
 {
   Point cellpos = d_patch->getLevel()->positionToIndex(pos);
   int ix = Floor(cellpos.x());

@@ -33,6 +33,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/Level.h>
 #include <Core/Grid/LinearInterpolator.h>
 #include <Core/Grid/Node27Interpolator.h>
+#include <Core/Grid/cpdiInterpolator.h>
 #include <Core/Grid/TOBSplineInterpolator.h>
 #include <Core/Grid/BSplineInterpolator.h>
 #include <Core/Parallel/ProcessorGroup.h>
@@ -138,7 +139,7 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps)
      cerr << "nodes8or27 is deprecated, use " << endl;
      cerr << "<interpolator>type</interpolator>" << endl;
      cerr << "where type is one of the following:" << endl;
-     cerr << "linear, gimp, 3rdorderBS" << endl;
+     cerr << "linear, gimp, 3rdorderBS,cpdi" << endl;
     exit(1);
   }
 
@@ -255,12 +256,16 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps)
   } else if(d_interpolator_type=="4thorderBS"){
     d_interpolator = scinew BSplineInterpolator();
     d_8or27 = 64;
-  } else{
+  } else if(d_interpolator_type=="cpdi"){
+    d_interpolator = scinew cpdiInterpolator();
+    d_8or27 = 64;
+  }else{
     ostringstream warn;
     warn << "ERROR:MPM: invalid interpolation type ("<<d_interpolator_type << ")"
          << "Valid options are: \n"
          << "linear\n"
          << "gimp\n"
+         << "cpdi\n"
          << "3rdorderBS\n"
          << "4thorderBS\n"<< endl;
     throw ProblemSetupException(warn.str(), __FILE__, __LINE__ );

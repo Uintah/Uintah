@@ -85,6 +85,7 @@ void HeatConduction::scheduleComputeInternalHeatRate(SchedulerP& sched,
   t->requires(Task::OldDW, d_lb->pSizeLabel,                      gan, NGP);
   t->requires(Task::OldDW, d_lb->pMassLabel,                      gan, NGP);
   t->requires(Task::OldDW, d_lb->pVolumeLabel,                    gan, NGP);
+  t->requires(Task::OldDW, d_lb->pDeformationMeasureLabel,        gan, NGP);
 #ifdef EROSION  
   t->requires(Task::NewDW, d_lb->pErosionLabel_preReloc,          gan, NGP);
 #endif  
@@ -121,6 +122,7 @@ void HeatConduction::scheduleComputeNodalHeatFlux(SchedulerP& sched,
   Ghost::GhostType  gnone = Ghost::None;
   t->requires(Task::OldDW, d_lb->pXLabel,             gan, NGP);
   t->requires(Task::OldDW, d_lb->pSizeLabel,          gan, NGP);
+  t->requires(Task::OldDW, d_lb->pDeformationMeasureLabel, gan, NGP);
   t->requires(Task::OldDW, d_lb->pMassLabel,          gan, NGP);
   t->requires(Task::NewDW, d_lb->gTemperatureLabel,   gac, 2*NGP);
   t->requires(Task::NewDW, d_lb->gMassLabel,          gnone);
@@ -230,6 +232,7 @@ void HeatConduction::computeInternalHeatRate(const ProcessorGroup*,
       constParticleVariable<Point>  px;
       constParticleVariable<double> pvol,pMass;
       constParticleVariable<Vector> psize;
+      constParticleVariable<Matrix3> deformationGradient;
 #ifdef EROSION      
       constParticleVariable<double> pErosion;
 #endif      
@@ -245,6 +248,7 @@ void HeatConduction::computeInternalHeatRate(const ProcessorGroup*,
       old_dw->get(pvol,         d_lb->pVolumeLabel,                    pset);
       old_dw->get(pMass,        d_lb->pMassLabel,                      pset);
       old_dw->get(psize,        d_lb->pSizeLabel,                      pset);
+      old_dw->get(deformationGradient, d_lb->pDeformationMeasureLabel, pset);
 #ifdef EROSION      
       new_dw->get(pErosion,     d_lb->pErosionLabel_preReloc, pset);
 #endif      
@@ -275,7 +279,7 @@ void HeatConduction::computeInternalHeatRate(const ProcessorGroup*,
         particleIndex idx = *iter;
 
         // Get the node indices that surround the cell
-        interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx]);
+        interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx],deformationGradient[idx]);
 
         pTemperatureGradient[idx] = Vector(0.0,0.0,0.0);
         for (int k = 0; k < d_flag->d_8or27; k++){
@@ -307,7 +311,7 @@ void HeatConduction::computeInternalHeatRate(const ProcessorGroup*,
           particleIndex idx = *iter;
 
           // Get the node indices that surround the cell
-          interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx]);
+          interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx],deformationGradient[idx]);
 
           pTemperatureGradient[idx] = Vector(0.0,0.0,0.0);
           for (int k = 0; k < d_flag->d_8or27; k++){
@@ -335,7 +339,7 @@ void HeatConduction::computeInternalHeatRate(const ProcessorGroup*,
         particleIndex idx = *iter;
   
         // Get the node indices that surround the cell
-        interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx]);
+        interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx],deformationGradient[idx]);
 
         // Calculate k/(rho*Cv)
         double alpha = kappa*pvol[idx]/Cv; 
@@ -430,6 +434,7 @@ void HeatConduction::computeNodalHeatFlux(const ProcessorGroup*,
       constParticleVariable<Point>  px;
       constParticleVariable<double> pMass;
       constParticleVariable<Vector> psize;
+      constParticleVariable<Matrix3> deformationGradient;
       
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch,
                                                        Ghost::AroundNodes, NGP,
@@ -440,6 +445,7 @@ void HeatConduction::computeNodalHeatFlux(const ProcessorGroup*,
       old_dw->get(px,           d_lb->pXLabel,           pset);
       old_dw->get(pMass,        d_lb->pMassLabel,        pset);
       old_dw->get(psize,        d_lb->pSizeLabel,        pset);
+      old_dw->get(deformationGradient, d_lb->pDeformationMeasureLabel, pset);
       
       new_dw->allocateAndPut(gHeatFlux, d_lb->gHeatFluxLabel,  dwi, patch);  
       gHeatFlux.initialize(Vector(0.0));
@@ -460,7 +466,7 @@ void HeatConduction::computeNodalHeatFlux(const ProcessorGroup*,
         particleIndex idx = *iter;
         pdTdx[idx] = Vector(0,0,0);
         
-        interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx]);
+        interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx],deformationGradient[idx]);
 
         for (int k = 0; k < d_flag->d_8or27; k++){
           for (int j = 0; j<3; j++) {
@@ -475,7 +481,7 @@ void HeatConduction::computeNodalHeatFlux(const ProcessorGroup*,
         particleIndex idx = *iter;
 
         // Get the node indices that surround the cell
-        interpolator->findCellAndWeights(px[idx],ni,S,psize[idx]);
+        interpolator->findCellAndWeights(px[idx],ni,S,psize[idx],deformationGradient[idx]);
                                                             
         Vector pdTdx_massWt = pdTdx[idx] * pMass[idx];
         

@@ -37,7 +37,6 @@ SRCDIR   := CCA/Components/MPM/ConstitutiveModel/fortran
 SRCS     += \
 	$(SRCDIR)/Hooke.F	\
         $(SRCDIR)/Kayenta_chk.F   \
-	$(SRCDIR)/Kayenta_init.F	\
 	$(SRCDIR)/Kayenta_calcs.F	\
 	$(SRCDIR)/MIGUtilsF.F	\
 	$(SRCDIR)/MIGUtils.cc
