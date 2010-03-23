@@ -254,7 +254,7 @@ HypoElasticImplicit::computeStressTensor(const PatchSubset* patches,
 
         dispGrad.set(0.0);
         // Get the node indices that surround the cell
-        interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx]);
+        interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx],deformationGradient[idx]);
 
         for(int k = 0; k < 8; k++) {
           const Vector& disp = dispNew[ni[k]];
@@ -431,7 +431,7 @@ HypoElasticImplicit::computeStressTensor(const PatchSubset* patches,
         dispGrad.set(0.0);
         // Get the node indices that surround the cell
         
-        interpolator->findCellAndShapeDerivatives(px[idx], ni, d_S, psize[idx]);
+        interpolator->findCellAndShapeDerivatives(px[idx], ni, d_S, psize[idx],deformationGradient[idx]);
         for(int k = 0; k < 8; k++) {
           const Vector& disp = dispNew[ni[k]];
           

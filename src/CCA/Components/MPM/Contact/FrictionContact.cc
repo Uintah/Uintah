@@ -157,11 +157,13 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
       constParticleVariable<Point> px;
       constParticleVariable<double> pmass, pvolume;
       constParticleVariable<Vector> psize;
+      constParticleVariable<Matrix3> deformationGradient;
 
       old_dw->get(px,                  lb->pXLabel,                  pset);
       old_dw->get(pmass,               lb->pMassLabel,               pset);
       old_dw->get(pvolume,             lb->pVolumeLabel,             pset);
       old_dw->get(psize,               lb->pSizeLabel,               pset);
+      old_dw->get(deformationGradient,  lb->pDeformationMeasureLabel, pset);
 
       gstress[m].initialize(Matrix3(0.0));
       gsurfnorm[m].initialize(Vector(0.0,0.0,0.0));
@@ -173,7 +175,7 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
         for(ParticleSubset::iterator it=pset->begin();it!=pset->end();it++){
           particleIndex idx = *it;
 
-          interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx]);
+          interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx],deformationGradient[idx]);
           double rho = pmass[idx]/pvolume[idx];
 
            for(int k = 0; k < flag->d_8or27; k++) {
@@ -187,7 +189,7 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
         for(ParticleSubset::iterator it=pset->begin();it!=pset->end();it++){
           particleIndex idx = *it;
 
-          interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx]);
+          interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx],deformationGradient[idx]);
 
            for(int k = 0; k < flag->d_8or27; k++) {
              if (patch->containsNode(ni[k])){
@@ -221,7 +223,7 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
         particleIndex idx = *iter;
 
         // Get the node indices that surround the cell
-        interpolator->findCellAndWeights(px[idx], ni, S, psize[idx]);
+        interpolator->findCellAndWeights(px[idx], ni, S, psize[idx],deformationGradient[idx]);
         
         // Add each particles contribution to the local mass & velocity
         // Must use the node indices
@@ -602,6 +604,7 @@ void FrictionContact::addComputesAndRequiresInterpolated(SchedulerP & sched,
   t->requires(Task::OldDW, lb->pVolumeLabel,      gp, ngc_p);
   t->requires(Task::OldDW, lb->pStressLabel,      gp, ngc_p);
   t->requires(Task::OldDW, lb->pSizeLabel,        gp, ngc_p);
+  t->requires(Task::OldDW, lb->pDeformationMeasureLabel, gp, ngc_p);
   t->requires(Task::NewDW, lb->gMassLabel,        Ghost::AroundNodes, 1);
   t->requires(Task::NewDW, lb->gVolumeLabel,           Ghost::None);
   t->requires(Task::OldDW, lb->NC_CCweightLabel,z_matl,Ghost::None);

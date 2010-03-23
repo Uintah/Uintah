@@ -87,7 +87,7 @@ namespace Uintah {
 	S[7] = fx * fy * fz;
       };
     virtual void findCellAndWeights(const Point& p,vector<IntVector>& ni, 
-				    vector<double>& S,const Vector& size);
+				    vector<double>& S,const Vector& size, const Matrix3& defgrad);
     virtual void findCellAndWeights(const Point& p,
                                     vector<IntVector>& ni,
                                     vector<double>& S,
@@ -95,7 +95,7 @@ namespace Uintah {
                                     constNCVariable<Stencil7>& zoi_fine,
                                     const bool& getFiner,
                                     int& num_cur,int& num_fine,int& num_coarse,
-                                    const Vector& size, bool coarse_particle,
+                                    const Vector& size,  bool coarse_particle,
                                     const Patch* patch);
     inline void findCellAndShapeDerivatives(const Point& pos,
 					    vector<IntVector>& ni,
@@ -131,7 +131,7 @@ namespace Uintah {
     virtual void findCellAndShapeDerivatives(const Point& pos,
 					     vector<IntVector>& ni,
 					     vector<Vector>& d_S,
-					     const Vector& size);
+					     const Vector& size, const Matrix3& defgrad);
     inline void findCellAndWeightsAndShapeDerivatives(const Point& pos,
 						      vector<IntVector>& ni,
 						      vector<double>& S,
@@ -196,7 +196,8 @@ namespace Uintah {
 						       vector<IntVector>& ni,
 						       vector<double>& S,
 						       vector<Vector>& d_S,
-						       const Vector& size);
+						       const Vector& size,
+                                                       const Matrix3& defgrad);
     virtual int size();
 
   private:

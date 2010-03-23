@@ -426,7 +426,7 @@ CNHDamage::computeStressTensor(const PatchSubset* patches,
 
       if(!flag->d_axisymmetric){
         // Get the node indices that surround the cell
-        interpolator->findCellAndShapeDerivatives(pX[idx],ni,d_S,pSize[idx]);
+        interpolator->findCellAndShapeDerivatives(pX[idx],ni,d_S,pSize[idx],pDefGrad[idx]);
 
         short pgFld[27];
         if (flag->d_fracture) {
@@ -441,7 +441,7 @@ CNHDamage::computeStressTensor(const PatchSubset* patches,
       } else {  // axi-symmetric kinematics
         // Get the node indices that surround the cell
         interpolator->findCellAndWeightsAndShapeDerivatives(pX[idx],ni,S,d_S,
-                                                                    pSize[idx]);
+                                                                    pSize[idx],pDefGrad[idx]);
         // x -> r, y -> z, z -> theta
         computeAxiSymVelocityGradient(velGrad,ni,d_S,S,oodx,gVelocity,pX[idx]);
       }
@@ -750,7 +750,7 @@ CNHDamage::computeStressTensorImplicit(const PatchSubset* patches,
       // Assign zero internal heating by default - modify if necessary.
       pdTdt[idx] = 0.0;
 
-      interpolator->findCellAndShapeDerivatives(pX[idx], ni, d_S, pSize[idx]);
+      interpolator->findCellAndShapeDerivatives(pX[idx], ni, d_S, pSize[idx],pDefGrad[idx]);
       // Compute the displacement gradient and the deformation gradient
       computeGrad(pDispGrad,ni,d_S, oodx, gDisp);
       pDefGradInc = pDispGrad + Identity;         
@@ -892,7 +892,7 @@ CNHDamage::computeStressTensor(const PatchSubset* patches,
       // Compute the displacement gradient and B matrices
 
 
-      interpolator->findCellAndShapeDerivatives(pX[idx], ni, d_S, pSize[idx]);
+      interpolator->findCellAndShapeDerivatives(pX[idx], ni, d_S, pSize[idx],pDefGrad[idx]);
 
       computeGradAndBmats(pDispGrad,ni,d_S, oodx, gDisp, l2g,B, Bnl, dof);
 

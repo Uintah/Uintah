@@ -867,18 +867,18 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset* patches,
         for(int k=0; k<27; k++){
           pgFld[k]=pgCode[idx][k];
         }
-        interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx]);
+        interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx],pDeformGrad[idx]);
         computeVelocityGradient(tensorL,ni,d_S,oodx,pgFld,gVelocity,GVelocity);
       } else {
         if(!flag->d_axisymmetric){
          // Get the node indices that surround the cell
-         interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx]);
+         interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx],pDeformGrad[idx]);
 
          computeVelocityGradient(tensorL,ni,d_S, oodx, gVelocity);
         } else {  // axi-symmetric kinematics
          // Get the node indices that surround the cell
          interpolator->findCellAndWeightsAndShapeDerivatives(px[idx],ni,S,d_S,
-                                                                    psize[idx]);
+                                                                    psize[idx],pDeformGrad[idx]);
          // x -> r, y -> z, z -> theta
          computeAxiSymVelocityGradient(tensorL,ni,d_S,S,oodx,gVelocity,px[idx]);
         }
@@ -1729,7 +1729,7 @@ ElasticPlasticHP::computeStressTensorImplicit(const PatchSubset* patches,
       pdTdt[idx] = 0.0;
 
       // Calculate the displacement gradient
-      interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx]);
+      interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx],pDeformGrad[idx]);
       computeGrad(DispGrad, ni, d_S, oodx, gDisp);
 
       // Compute the deformation gradient increment
@@ -2091,7 +2091,7 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset* patches,
       particleIndex idx = *iter;
 
       // Calculate the displacement gradient
-      interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx]);
+      interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx],pDeformGrad[idx]);
       computeGradAndBmats(DispGrad,ni,d_S, oodx, gDisp, l2g,B, Bnl, dof);
 
       // Compute the deformation gradient increment

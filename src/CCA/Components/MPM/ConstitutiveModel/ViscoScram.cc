@@ -598,18 +598,18 @@ ViscoScram::computeStressTensor(const PatchSubset* patches,
           pgFld[k]=pgCode[idx][k];
         }
         // Get the node indices that surround the cell
-        interpolator->findCellAndShapeDerivatives(px[idx], ni, d_S,psize[idx]);
+        interpolator->findCellAndShapeDerivatives(px[idx], ni, d_S,psize[idx],pDefGrad[idx]);
         computeVelocityGradient(velGrad,ni,d_S,oodx,pgFld,gvelocity,Gvelocity);
       } else {
         if(!flag->d_axisymmetric){
          // Get the node indices that surround the cell
-         interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx]);
+         interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx],pDefGrad[idx]);
 
          computeVelocityGradient(velGrad,ni,d_S, oodx, gvelocity);
         } else {  // axi-symmetric kinematics
          // Get the node indices that surround the cell
          interpolator->findCellAndWeightsAndShapeDerivatives(px[idx],ni,S,d_S,
-                                                                    psize[idx]);
+                                                                    psize[idx],pDefGrad[idx]);
          // x -> r, y -> z, z -> theta
          computeAxiSymVelocityGradient(velGrad,ni,d_S,S,oodx,gvelocity,px[idx]);
         }

@@ -220,6 +220,7 @@ namespace Uintah {
                                            constParticleVariable<Point> px,
                                            constParticleVariable<Vector> psize,
                                            ParticleVariable<Matrix3> &Fnew,
+                                           constParticleVariable<Matrix3> &Fold,
                                            Vector dx,
                                            ParticleInterpolator* interp);
 
@@ -239,6 +240,7 @@ namespace Uintah {
                                            ParticleSubset* pset,
                                            constParticleVariable<Point> px,
                                            ParticleVariable<Matrix3> &Fnew,
+                                           constParticleVariable<Matrix3> &Fold,
                                            Vector dx,
                                            constParticleVariable<Vector> psize,
                                            ParticleInterpolator* interp);

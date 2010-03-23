@@ -152,11 +152,13 @@ void ApproachContact::exMomInterpolated(const ProcessorGroup*,
       constParticleVariable<Point>  px;
       constParticleVariable<double> pmass, pvolume;
       constParticleVariable<Vector> psize;
+      constParticleVariable<Matrix3> deformationGradient;
 
       old_dw->get(px,                  lb->pXLabel,                  pset);
       old_dw->get(pmass,               lb->pMassLabel,               pset);
       old_dw->get(pvolume,             lb->pVolumeLabel,             pset);
       old_dw->get(psize,               lb->pSizeLabel,               pset);
+      old_dw->get(deformationGradient, lb->pDeformationMeasureLabel, pset);
 
       gsurfnorm[m].initialize(Vector(0.0,0.0,0.0));
 
@@ -167,7 +169,7 @@ void ApproachContact::exMomInterpolated(const ProcessorGroup*,
         for(ParticleSubset::iterator it=pset->begin();it!=pset->end();it++){
           particleIndex idx = *it;
 
-          interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx]);
+          interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx],deformationGradient[idx]);
           double rho = pmass[idx]/pvolume[idx];
 
            for(int k = 0; k < flag->d_8or27; k++) {
@@ -181,7 +183,7 @@ void ApproachContact::exMomInterpolated(const ProcessorGroup*,
         for(ParticleSubset::iterator it=pset->begin();it!=pset->end();it++){
           particleIndex idx = *it;
 
-          interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx]);
+          interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx],deformationGradient[idx]);
 
            for(int k = 0; k < flag->d_8or27; k++) {
              if (patch->containsNode(ni[k])){
@@ -548,13 +550,14 @@ void ApproachContact::addComputesAndRequiresInterpolated(SchedulerP & sched,
   
   const MaterialSubset* mss = ms->getUnion();
   t->requires(Task::OldDW, lb->delTLabel);
-  t->requires(Task::OldDW, lb->pXLabel,                Ghost::AroundNodes, NGP);
-  t->requires(Task::OldDW, lb->pMassLabel,             Ghost::AroundNodes, NGP);
-  t->requires(Task::OldDW, lb->pVolumeLabel,           Ghost::AroundNodes, NGP);
-  t->requires(Task::OldDW, lb->pSizeLabel,             Ghost::AroundNodes, NGP);
-  t->requires(Task::NewDW, lb->gMassLabel,             Ghost::AroundNodes, 1);
-  t->requires(Task::NewDW, lb->gVolumeLabel,           Ghost::None);
-  t->requires(Task::OldDW, lb->NC_CCweightLabel,z_matl,Ghost::None);
+  t->requires(Task::OldDW, lb->pXLabel,                 Ghost::AroundNodes, NGP);
+  t->requires(Task::OldDW, lb->pMassLabel,              Ghost::AroundNodes, NGP);
+  t->requires(Task::OldDW, lb->pVolumeLabel,            Ghost::AroundNodes, NGP);
+  t->requires(Task::OldDW, lb->pDeformationMeasureLabel,Ghost::AroundNodes, NGP);
+  t->requires(Task::OldDW, lb->pSizeLabel,              Ghost::AroundNodes, NGP);
+  t->requires(Task::NewDW, lb->gMassLabel,              Ghost::AroundNodes, 1);
+  t->requires(Task::NewDW, lb->gVolumeLabel,            Ghost::None);
+  t->requires(Task::OldDW, lb->NC_CCweightLabel,z_matl, Ghost::None);
 
   t->computes(lb->gSurfNormLabel);
   t->modifies(lb->frictionalWorkLabel, mss);

@@ -145,6 +145,7 @@ void Crack::addComputesAndRequiresRecollectCrackFrontSegments(Task* t,
   t->requires(Task::NewDW, lb->gMassLabel, gac, NGC);
   t->requires(Task::NewDW, lb->GMassLabel, gac, NGC);
   t->requires(Task::OldDW,lb->pSizeLabel, Ghost::None);
+  t->requires(Task::OldDW,lb->pDeformationMeasureLabel, Ghost::None);
 }
 
 void Crack::RecollectCrackFrontSegments(const ProcessorGroup*,
@@ -184,7 +185,9 @@ void Crack::RecollectCrackFrontSegments(const ProcessorGroup*,
       new_dw->get(Gmass, lb->GMassLabel, dwi, patch, gac, NGC);
 
       constParticleVariable<Vector> psize;
+      constParticleVariable<Matrix3> deformationGradient;
       old_dw->get(psize, lb->pSizeLabel, pset);
+      old_dw->get(deformationGradient, lb->pDeformationMeasureLabel, pset);
 
       if(d_doCrackPropagation) {
 
@@ -208,7 +211,7 @@ void Crack::RecollectCrackFrontSegments(const ProcessorGroup*,
               Point pt=cx[m][node];
               inMat[j]=YES;
 
-              interpolator->findCellAndWeights(pt, ni, S, psize[j]);
+              interpolator->findCellAndWeights(pt, ni, S, psize[j],deformationGradient[j]);
 
               for(int k = 0; k < n8or27; k++) {
                 double totalMass=gmass[ni[k]]+Gmass[ni[k]];
@@ -253,7 +256,7 @@ void Crack::RecollectCrackFrontSegments(const ProcessorGroup*,
               Point cent=cx[m][node1]+(cx[m][node2]-cx[m][node1])/2.;
               inMat[j]=YES;
 
-              interpolator->findCellAndWeights(cent, ni, S, psize[j]);
+              interpolator->findCellAndWeights(cent, ni, S, psize[j],deformationGradient[j]);
 
               for(int k = 0; k < n8or27; k++) {
                 double totalMass=gmass[ni[k]]+Gmass[ni[k]];

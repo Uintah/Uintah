@@ -1,8 +1,8 @@
 /*****************************************************************************
 *
-* Copyright (c) 2000 - 2009, Lawrence Livermore National Security, LLC
+* Copyright (c) 2000 - 2008, Lawrence Livermore National Security, LLC
 * Produced at the Lawrence Livermore National Laboratory
-* LLNL-CODE-400124
+* LLNL-CODE-400142
 * All rights reserved.
 *
 * This file is  part of VisIt. For  details, see https://visit.llnl.gov/.  The
@@ -43,7 +43,15 @@
 #include <udaReaderMTMDPluginInfo.h>
 
 #include <visit-config.h>
-extern "C" DBP_EXPORT const char *udaReaderMTMDVisItPluginVersion = VISIT_VERSION;
+#if defined(__APPLE__)
+extern "C" const char *udaReaderMTMDVisItPluginVersion = VERSION;
+#else
+extern "C" const char *VisItPluginVersion = VERSION;
+#endif
+
+#if defined(__APPLE__)
+#define GetGeneralInfo udaReaderMTMD_GetGeneralInfo
+#endif
 
 // ****************************************************************************
 //  Function:  GetGeneralInfo
@@ -55,7 +63,7 @@ extern "C" DBP_EXPORT const char *udaReaderMTMDVisItPluginVersion = VISIT_VERSIO
 //  Creation:    omitted
 //
 // ****************************************************************************
-extern "C" DBP_EXPORT GeneralDatabasePluginInfo* udaReaderMTMD_GetGeneralInfo()
+extern "C" GeneralDatabasePluginInfo* GetGeneralInfo()
 {
     return new udaReaderMTMDGeneralPluginInfo;
 }

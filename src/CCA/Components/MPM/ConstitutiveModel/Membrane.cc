@@ -328,7 +328,7 @@ void Membrane::computeStressTensor(const PatchSubset* patches,
       p_q[idx] = 0.0;
 
        // Get the node indices that surround the cell
-      interpolator->findCellAndShapeDerivatives(px[idx], ni, d_S,psize[idx]);
+      interpolator->findCellAndShapeDerivatives(px[idx], ni, d_S,psize[idx],deformationGradient[idx]);
 
       velGrad.set(0.0);
       computeVelocityGradient(velGrad,ni,d_S,oodx,gvelocity);

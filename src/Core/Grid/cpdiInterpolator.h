@@ -2,7 +2,7 @@
 
 The MIT License
 
-Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+Copyright (c) 1997-2009 Center for the Simulation of Accidental Fires and 
 Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 University of Utah.
 
@@ -28,8 +28,8 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#ifndef TO_BSPLINE_INTERPOLATOR_H
-#define TO_BSPLINE_INTERPOLATOR_H
+#ifndef CPDI_INTERPOLATOR_H
+#define CPDI_INTERPOLATOR_H
 
 #include <Core/Grid/ParticleInterpolator.h>
 
@@ -38,21 +38,18 @@ namespace Uintah {
 
   class Patch;
 
-  class UINTAHSHARE TOBSplineInterpolator : public ParticleInterpolator {
-
-  //TO = ThirdOrder B Splines 
-
+  class UINTAHSHARE cpdiInterpolator : public ParticleInterpolator {
+    
   public:
     
-    TOBSplineInterpolator();
-    TOBSplineInterpolator(const Patch* patch);
-    virtual ~TOBSplineInterpolator();
+    cpdiInterpolator();
+    cpdiInterpolator(const Patch* patch);
+    virtual ~cpdiInterpolator();
     
-    virtual TOBSplineInterpolator* clone(const Patch*);
+    virtual cpdiInterpolator* clone(const Patch*);
     
     virtual void findCellAndWeights(const Point& p,vector<IntVector>& ni, 
 				    vector<double>& S, const Vector& size, const Matrix3& defgrad);
-
     virtual void findCellAndShapeDerivatives(const Point& pos,
 					     vector<IntVector>& ni,
 					     vector<Vector>& d_S,
@@ -65,27 +62,7 @@ namespace Uintah {
 						       const Vector& size,
                                                        const Matrix3& defgrad);
     virtual int size();
-
-    void findNodeComponents(const int& idx, int* xn, int& count,
-                            const int& low, const int& hi,
-                            const double& cellpos);
-
-    void getBSplineWeights(double* Sd, const int* xn,
-                           const int& low, const int& hi,
-                           const int& count, const double& cellpos);
-
-    void getBSplineGrads(double* dSd, const int* xn,
-                         const int& low, const int& hi, const int& count,
-                         const double& cellpos);
-
-    double evalType1BSpline(const double& cp);
-    double evalType2BSpline(const double& cp);
-    double evalType3BSpline(const double& cp);
-
-    double evalType1BSplineGrad(const double& cp);
-    double evalType2BSplineGrad(const double& cp);
-    double evalType3BSplineGrad(const double& cp);
-
+    
   private:
     const Patch* d_patch;
     int d_size;
@@ -94,3 +71,4 @@ namespace Uintah {
 }
 
 #endif
+

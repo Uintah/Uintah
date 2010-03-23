@@ -432,6 +432,7 @@ void AMRMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
   
   t->requires(Task::OldDW, lb->pXLabel,                gan,NGP);
   t->requires(Task::OldDW, lb->pSizeLabel,             gan,NGP);
+  t->requires(Task::OldDW, lb->pDeformationMeasureLabel,gan,NGP);
   t->requires(Task::OldDW, lb->pMassLabel,             gan,NGP);
   t->requires(Task::OldDW, lb->pVolumeLabel,           gan,NGP);
   t->requires(Task::OldDW, lb->pErosionLabel,          gan,NGP);
@@ -588,6 +589,7 @@ void AMRMPM::scheduleComputeInternalForce(SchedulerP& sched,
   Task* t = scinew Task("AMRMPM::computeInternalForce",
                   this, &AMRMPM::computeInternalForce);
 
+ 
   Ghost::GhostType  gan   = Ghost::AroundNodes;
   Ghost::GhostType  gnone = Ghost::None;
   t->requires(Task::NewDW,lb->gVolumeLabel, gnone);
@@ -596,6 +598,8 @@ void AMRMPM::scheduleComputeInternalForce(SchedulerP& sched,
   t->requires(Task::OldDW,lb->pXLabel,                    gan,NGP);
   t->requires(Task::OldDW,lb->pSizeLabel,                 gan,NGP);
   t->requires(Task::OldDW,lb->pErosionLabel,              gan,NGP);
+  t->requires(Task::OldDW, lb->pDeformationMeasureLabel,   gan,NGP);
+
 
   t->computes(lb->gInternalForceLabel);
   t->computes(lb->TotalVolumeDeformedLabel);
@@ -983,6 +987,7 @@ void AMRMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       constParticleVariable<Point>  px;
       constParticleVariable<double> pmass, pvolume, pTemperature;
       constParticleVariable<Vector> pvelocity, pexternalforce,psize;
+      constParticleVariable<Matrix3> pDeformationMeasure;
       constParticleVariable<double> pErosion;
 
       ParticleSubset* pset=0;
@@ -1013,14 +1018,15 @@ void AMRMPM::interpolateParticlesToGrid(const ProcessorGroup*,
         }
 
         if(doit){
-          old_dw->get(px,             lb->pXLabel,                 pset);
-          old_dw->get(pmass,          lb->pMassLabel,              pset);
-          old_dw->get(pvolume,        lb->pVolumeLabel,            pset);
-          old_dw->get(pvelocity,      lb->pVelocityLabel,          pset);
-          old_dw->get(pTemperature,   lb->pTemperatureLabel,       pset);
-          old_dw->get(psize,          lb->pSizeLabel,              pset);
-          old_dw->get(pErosion,       lb->pErosionLabel,           pset);
-          new_dw->get(pexternalforce, lb->pExtForceLabel_preReloc, pset);
+          old_dw->get(px,                 lb->pXLabel,                  pset);
+          old_dw->get(pmass,              lb->pMassLabel,               pset);
+          old_dw->get(pvolume,            lb->pVolumeLabel,             pset);
+          old_dw->get(pvelocity,          lb->pVelocityLabel,           pset);
+          old_dw->get(pTemperature,       lb->pTemperatureLabel,        pset);
+          old_dw->get(psize,              lb->pSizeLabel,               pset);
+	  old_dw->get(pDeformationMeasure,lb->pDeformationMeasureLabel, pset);
+          old_dw->get(pErosion,           lb->pErosionLabel,            pset);
+          new_dw->get(pexternalforce,     lb->pExtForceLabel_preReloc,  pset);
 
 
           int n8or27=flags->d_8or27;
@@ -1041,7 +1047,7 @@ void AMRMPM::interpolateParticlesToGrid(const ProcessorGroup*,
                                              
 
             // Get the node indices that surround the cell
-            interpolator->findCellAndWeights(px[idx],ni,S,psize[idx]); 
+            interpolator->findCellAndWeights(px[idx],ni,S,psize[idx],pDeformationMeasure[idx]); 
 /*===========TESTING==========`*/
 
             Vector pmom = pvelocity[idx]*pmass[idx];
@@ -1172,6 +1178,9 @@ void AMRMPM::computeInternalForce(const ProcessorGroup*,
     vector<double> S(interpolator->size());
     vector<Vector> d_S(interpolator->size());
 
+    string interp_type = flags->d_interpolator_type;
+
+
     int numMPMMatls = d_sharedState->getNumMPMMatls();
 
     for(int m = 0; m < numMPMMatls; m++){
@@ -1189,6 +1198,7 @@ void AMRMPM::computeInternalForce(const ProcessorGroup*,
       NCVariable<Vector>             internalforce;
       NCVariable<Matrix3>            gstress;
       constNCVariable<double>        gvolume;
+      constParticleVariable<Matrix3> pDeformationMeasure;
 
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch,
                                                        Ghost::AroundNodes, NGP,
@@ -1199,6 +1209,8 @@ void AMRMPM::computeInternalForce(const ProcessorGroup*,
       old_dw->get(pstress, lb->pStressLabel,    pset);             
       old_dw->get(psize,   lb->pSizeLabel,      pset);             
       old_dw->get(pErosion,lb->pErosionLabel,   pset);
+      old_dw->get(pDeformationMeasure, lb->pDeformationMeasureLabel, pset);
+
 
       new_dw->get(gvolume, lb->gVolumeLabel, dwi, patch, Ghost::None, 0);
 
@@ -1217,7 +1229,7 @@ void AMRMPM::computeInternalForce(const ProcessorGroup*,
   
         // Get the node indices that surround the cell
         interpolator->findCellAndWeightsAndShapeDerivatives(px[idx],ni,S,d_S,
-                                                            psize[idx]);
+                                                            psize[idx],pDeformationMeasure[idx]);
 
         stresspress = pstress[idx];
 
@@ -1786,6 +1798,7 @@ void AMRMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       constParticleVariable<Point> px;
       ParticleVariable<Point> pxnew,pxx;
       constParticleVariable<Vector> pvelocity, psize;
+      constParticleVariable<Matrix3> pDeformationMeasure;
       ParticleVariable<Vector> pvelocitynew, psizeNew;
       constParticleVariable<double> pmass, pvolume, pTemperature;
       ParticleVariable<double> pmassNew,pvolumeNew,pTempNew;
@@ -1831,6 +1844,7 @@ void AMRMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
       pids_new.copyData(pids);
       old_dw->get(psize,               lb->pSizeLabel,                 pset);
+      old_dw->get(pDeformationMeasure, lb->pDeformationMeasureLabel,   pset);
       new_dw->allocateAndPut(psizeNew, lb->pSizeLabel_preReloc,        pset);
       psizeNew.copyData(psize);
 
@@ -1903,7 +1917,7 @@ void AMRMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
                                          coarse_part,finePatch); 
 #endif
         // Get the node indices that surround the cell                
-        interpolator->findCellAndWeights(px[idx],ni,S,psize[idx]);    
+        interpolator->findCellAndWeights(px[idx],ni,S,psize[idx],pDeformationMeasure[idx]);    
 /*===========TESTING==========`*/
 
         Vector vel(0.0,0.0,0.0);

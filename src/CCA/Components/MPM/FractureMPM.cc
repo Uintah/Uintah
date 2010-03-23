@@ -425,6 +425,8 @@ void FractureMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
 
   Task* t = scinew Task("FractureMPM::interpolateParticlesToGrid",
                         this,&FractureMPM::interpolateParticlesToGrid);
+
+ 
   Ghost::GhostType  gan = Ghost::AroundNodes;
   t->requires(Task::OldDW, lb->pMassLabel,             gan,NGP);
   t->requires(Task::OldDW, lb->pVolumeLabel,           gan,NGP);
@@ -434,6 +436,9 @@ void FractureMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
   t->requires(Task::OldDW, lb->pSizeLabel,             gan,NGP);
   t->requires(Task::NewDW, lb->pExtForceLabel_preReloc,gan,NGP);
 //t->requires(Task::OldDW, lb->pExternalHeatRateLabel, gan,NGP);
+  t->requires(Task::OldDW, lb->pDeformationMeasureLabel,   gan,NGP);
+
+
 
   t->computes(lb->gMassLabel);
   t->computes(lb->gMassLabel,        d_sharedState->getAllInOneMatl(),
@@ -560,11 +565,12 @@ void FractureMPM::scheduleComputeParticleTempFromGrid(SchedulerP& sched,
   Ghost::GhostType gan = Ghost::AroundNodes;
   Task* t = scinew Task("FractureMPM::computeParticleTempFromGrid",
                         this, &FractureMPM::computeParticleTempFromGrid);
-  t->requires(Task::OldDW, lb->pXLabel,           gan, NGP);
-  t->requires(Task::OldDW, lb->pSizeLabel,        gan, NGP);
-  t->requires(Task::NewDW, lb->gTemperatureLabel, gac, NGN);
-  t->requires(Task::NewDW, lb->GTemperatureLabel, gac, NGN);
-  t->requires(Task::NewDW,lb->pgCodeLabel,        gan, NGP);
+  t->requires(Task::OldDW, lb->pXLabel,                 gan, NGP);
+  t->requires(Task::OldDW, lb->pSizeLabel,              gan, NGP);
+  t->requires(Task::NewDW, lb->gTemperatureLabel,       gac, NGN);
+  t->requires(Task::NewDW, lb->GTemperatureLabel,       gac, NGN);
+  t->requires(Task::NewDW,lb->pgCodeLabel,              gan, NGP);
+  t->requires(Task::OldDW, lb->pDeformationMeasureLabel,gan,NGP);
   t->computes(lb->pTempCurrentLabel);
   sched->addTask(t, patches, matls);
 }
@@ -596,6 +602,7 @@ void FractureMPM::scheduleComputeArtificialViscosity(SchedulerP& sched,
   t->requires(Task::OldDW, lb->pSizeLabel,              Ghost::None);
   t->requires(Task::NewDW, lb->gVelocityStarLabel,      gac, NGN);
   t->requires(Task::NewDW, lb->GVelocityStarLabel,      gac, NGN);  // for FractureMPM
+  t->requires(Task::OldDW, lb->pDeformationMeasureLabel,Ghost::None);
   t->computes(lb->p_qLabel);
 
   sched->addTask(t, patches, matls);
@@ -638,6 +645,7 @@ void FractureMPM::scheduleComputeInternalForce(SchedulerP& sched,
   Task* t = scinew Task("FractureMPM::computeInternalForce",
                     this, &FractureMPM::computeInternalForce);
 
+
   Ghost::GhostType  gan   = Ghost::AroundNodes;
   Ghost::GhostType  gnone = Ghost::None;
   t->requires(Task::NewDW,lb->gMassLabel, gnone);
@@ -648,7 +656,9 @@ void FractureMPM::scheduleComputeInternalForce(SchedulerP& sched,
   t->requires(Task::OldDW,lb->pXLabel,                    gan,NGP);
   t->requires(Task::OldDW,lb->pMassLabel,                 gan,NGP);
   t->requires(Task::OldDW,lb->pSizeLabel,                 gan,NGP);
- 
+  t->requires(Task::OldDW, lb->pDeformationMeasureLabel,   gan,NGP);
+
+
   // for FractureMPM
   t->requires(Task::NewDW,lb->pgCodeLabel,                gan,NGP);
   t->requires(Task::NewDW,lb->GMassLabel, gnone); 
@@ -870,6 +880,8 @@ void FractureMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
                       this, &FractureMPM::interpolateToParticlesAndUpdate);
 
 
+
+
   t->requires(Task::OldDW, d_sharedState->get_delt_label() );
 
   Ghost::GhostType   gac = Ghost::AroundCells;
@@ -890,6 +902,9 @@ void FractureMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->modifies(lb->pVolumeLabel_preReloc);
   // for thermal stress analysis
   t->requires(Task::NewDW, lb->pTempCurrentLabel,      gnone);
+  t->requires(Task::NewDW, lb->pDeformationMeasureLabel_preReloc,        gnone);
+
+
 
   // for FractureMPM
   t->requires(Task::NewDW, lb->GAccelerationLabel,     gac,NGN);
@@ -1312,6 +1327,7 @@ void FractureMPM::interpolateParticlesToGrid(const ProcessorGroup*,
     vector<double> S(interpolator->size());
 
 
+
     NCVariable<double> gmassglobal,gtempglobal,gvolumeglobal;
     NCVariable<Vector> gvelglobal;
     new_dw->allocateAndPut(gmassglobal, lb->gMassLabel,
@@ -1336,6 +1352,8 @@ void FractureMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       constParticleVariable<Point>  px;
       constParticleVariable<double> pmass, pvolume, pTemperature;
       constParticleVariable<Vector> pvelocity, pexternalforce, psize, pdisp;
+      constParticleVariable<Matrix3> pDeformationMeasure;
+
 
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch,
                                                        gan, NGP, lb->pXLabel);
@@ -1347,6 +1365,8 @@ void FractureMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       old_dw->get(pTemperature,   lb->pTemperatureLabel,   pset);
       old_dw->get(psize,          lb->pSizeLabel,          pset);
       new_dw->get(pexternalforce, lb->pExtForceLabel_preReloc, pset);
+      old_dw->get(pDeformationMeasure,  lb->pDeformationMeasureLabel, pset);
+
 
       // for FractureMPM
       constParticleVariable<Short27> pgCode;
@@ -1447,7 +1467,7 @@ void FractureMPM::interpolateParticlesToGrid(const ProcessorGroup*,
         particleIndex idx = *iter;
 
         // Get the node indices that surround the cell
-        interpolator->findCellAndWeights(px[idx],ni,S,psize[idx]);
+        interpolator->findCellAndWeights(px[idx],ni,S,psize[idx],pDeformationMeasure[idx]);
 
         pmom = pvelocity[idx]*pmass[idx];
         total_mom += pvelocity[idx]*pmass[idx];
@@ -1593,6 +1613,7 @@ void FractureMPM::computeArtificialViscosity(const ProcessorGroup*,
     vector<IntVector> ni(interpolator->size());
     vector<Vector> d_S(interpolator->size());
 
+  
     for(int m = 0; m < numMatls; m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
@@ -1604,13 +1625,18 @@ void FractureMPM::computeArtificialViscosity(const ProcessorGroup*,
       constParticleVariable<Vector> psize;
       constParticleVariable<Point> px;
       constParticleVariable<double> pmass,pvol;
+      constParticleVariable<Matrix3> pDeformationMeasure;
+
+
       new_dw->get(gvelocity, lb->gVelocityLabel, dwi,patch, gac, NGN);
       old_dw->get(px,        lb->pXLabel,                      pset);
       old_dw->get(pmass,     lb->pMassLabel,                   pset);
       new_dw->get(pvol,      lb->pVolumeLabel,                 pset);
       old_dw->get(psize,     lb->pSizeLabel,                   pset);
       new_dw->allocateAndPut(p_q,    lb->p_qLabel,             pset);
-      
+      old_dw->get(pDeformationMeasure,  lb->pDeformationMeasureLabel, pset);
+
+     
       // for FractureMPM
       constNCVariable<Vector> Gvelocity;
       new_dw->get(Gvelocity, lb->GVelocityLabel, dwi,patch, gac, NGN);
@@ -1630,7 +1656,7 @@ void FractureMPM::computeArtificialViscosity(const ProcessorGroup*,
         particleIndex idx = *iter;
 
         // Get the node indices that surround the cell
-        interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx]);
+        interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx],pDeformationMeasure[idx]);
 
         // get particle's velocity gradients 
         Vector gvel;
@@ -1776,6 +1802,7 @@ void FractureMPM::computeInternalForce(const ProcessorGroup*,
     vector<Vector> d_S(interpolator->size());
 
 
+
     int numMPMMatls = d_sharedState->getNumMPMMatls();
 
     NCVariable<Matrix3>       gstressglobal;
@@ -1797,6 +1824,7 @@ void FractureMPM::computeInternalForce(const ProcessorGroup*,
       constParticleVariable<double>  p_q;
       constParticleVariable<Matrix3> pstress;
       constParticleVariable<Vector>  psize;
+      constParticleVariable<Matrix3> pDeformationMeasure;
       NCVariable<Vector>             internalforce;
       NCVariable<Matrix3>            gstress;
       constNCVariable<double>        gmass;
@@ -1811,7 +1839,9 @@ void FractureMPM::computeInternalForce(const ProcessorGroup*,
       old_dw->get(pstress, lb->pStressLabel,                 pset);
       old_dw->get(psize,   lb->pSizeLabel,                   pset);
       new_dw->get(gmass,   lb->gMassLabel, dwi, patch, Ghost::None, 0);
-      
+      old_dw->get(pDeformationMeasure, lb->pDeformationMeasureLabel, pset);
+
+
       new_dw->allocateAndPut(gstress,      lb->gStressForSavingLabel,dwi,patch);
       new_dw->allocateAndPut(internalforce,lb->gInternalForceLabel,  dwi,patch);
       //gstress.initialize(Matrix3(0.));  
@@ -1861,7 +1891,7 @@ void FractureMPM::computeInternalForce(const ProcessorGroup*,
   
         // Get the node indices that surround the cell
         interpolator->findCellAndWeightsAndShapeDerivatives(px[idx],ni,S,d_S,
-                                                            psize[idx]);
+                                                            psize[idx],pDeformationMeasure[idx]);
 
         stressmass  = pstress[idx]*pmass[idx];
         //stresspress = pstress[idx] + Id*p_pressure[idx];
@@ -2548,8 +2578,12 @@ void FractureMPM::computeParticleTempFromGrid(const ProcessorGroup*,
 
       constParticleVariable<Point> px;
       constParticleVariable<Vector> psize;
+      constParticleVariable<Matrix3> pDeformationMeasure;
+
       old_dw->get(px,    lb->pXLabel,    pset);
       old_dw->get(psize, lb->pSizeLabel, pset);
+      old_dw->get(pDeformationMeasure, lb->pDeformationMeasureLabel, pset);
+
 
       constParticleVariable<Short27> pgCode;
       new_dw->get(pgCode, lb->pgCodeLabel, pset);
@@ -2565,7 +2599,7 @@ void FractureMPM::computeParticleTempFromGrid(const ProcessorGroup*,
 
         // Get the node indices that surround the cell
         interpolator->findCellAndWeightsAndShapeDerivatives(px[idx],ni,S,d_S,
-                                                            psize[idx]);
+                                                            psize[idx],pDeformationMeasure[idx]);
         // Accumulate the contribution from each surrounding vertex
         for (int k = 0; k < flags->d_8or27; k++) {
           IntVector node = ni[k];
@@ -2602,6 +2636,7 @@ void FractureMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
     vector<IntVector> ni(interpolator->size());
     vector<double> S(interpolator->size());
     vector<Vector> d_S(interpolator->size());
+ 
 
     // Performs the interpolation from the cell vertices of the grid
     // acceleration and velocity to the particles to update their
@@ -2643,6 +2678,8 @@ void FractureMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       constParticleVariable<Vector> pdisp;
       ParticleVariable<Vector> pdispnew;
       ParticleVariable<double> pkineticEnergyDensity;
+      constParticleVariable<Matrix3> pDeformationMeasure;
+
 
       // for thermal stress analysis
       constParticleVariable<double> pTempCurrent;
@@ -2661,6 +2698,9 @@ void FractureMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       old_dw->get(pids,                  lb->pParticleIDLabel,            pset);
       old_dw->get(pvelocity,             lb->pVelocityLabel,              pset);
       old_dw->get(pTemperature,          lb->pTemperatureLabel,           pset);
+      new_dw->get(pDeformationMeasure, lb->pDeformationMeasureLabel_preReloc, pset);
+
+
       // for thermal stress analysis
       new_dw->get(pTempCurrent,          lb->pTempCurrentLabel,           pset);
       new_dw->getModifiable(pvolume,     lb->pVolumeLabel_preReloc,       pset);
@@ -2729,7 +2769,7 @@ void FractureMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
         // Get the node indices that surround the cell
         interpolator->findCellAndWeightsAndShapeDerivatives(px[idx],ni,S,d_S,
-                                                            psize[idx]);
+                                                            psize[idx], pDeformationMeasure[idx]);
 
         Vector vel(0.0,0.0,0.0);
         Vector acc(0.0,0.0,0.0);

@@ -792,13 +792,13 @@ SmallStrainPlastic::computeStressTensorExplicit(const PatchSubset* patches,
       Matrix3 velGrad(0.0);
       if(!flag->d_axisymmetric){
         // Get the node indices that surround the cell
-        interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx]);
+        interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx],pDefGrad[idx]);
 
         computeVelocityGradient(velGrad,ni,d_S, oodx, gVelocity);
       } else {  // axi-symmetric kinematics
         // Get the node indices that surround the cell
         interpolator->findCellAndWeightsAndShapeDerivatives(px[idx],ni,S,d_S,
-                                                                   psize[idx]);
+                                                                   psize[idx],pDefGrad[idx]);
         // x -> r, y -> z, z -> theta
         computeAxiSymVelocityGradient(velGrad,ni,d_S,S,oodx,gVelocity,px[idx]);
       }

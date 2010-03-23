@@ -478,6 +478,7 @@ ShellMaterial::interpolateParticleRotToGrid(const PatchSubset* patches,
   constParticleVariable<double> pMass;
   constParticleVariable<Point>  pX;
   constParticleVariable<Vector> pRotRate, pSize;
+  constParticleVariable<Matrix3> deformationGradient;
   constNCVariable<double> gMass;
 
   // Create arrays for the grid data
@@ -498,6 +499,7 @@ ShellMaterial::interpolateParticleRotToGrid(const PatchSubset* patches,
     old_dw->get(pMass,          lb->pMassLabel,          pset);
     old_dw->get(pX,             lb->pXLabel,             pset);
     old_dw->get(pSize,        lb->pSizeLabel,          pset);
+    old_dw->get(deformationGradient, lb->pDeformationMeasureLabel, pset);
     old_dw->get(pRotRate,       pNormalRotRateLabel,     pset);
     new_dw->get(gMass,          lb->gMassLabel, dwi,     patch, gan, NGN);
 
@@ -514,7 +516,7 @@ ShellMaterial::interpolateParticleRotToGrid(const PatchSubset* patches,
       particleIndex idx = *iter;
 
       // Get the node indices that surround the cell
-      interpolator->findCellAndWeights(pX[idx], ni, S,pSize[idx]);
+      interpolator->findCellAndWeights(pX[idx], ni, S,pSize[idx],deformationGradient[idx]);
 
       // Calculate momentum
       pMom = pRotRate[idx]*pMass[idx];
@@ -701,7 +703,7 @@ ShellMaterial::computeStressTensor(const PatchSubset* patches,
 
       // Find the surrounding nodes, interpolation functions and derivatives
 
-      interpolator->findCellAndShapeDerivatives(pX[idx],ni,d_S, pSize[idx]);
+      interpolator->findCellAndShapeDerivatives(pX[idx],ni,d_S, pSize[idx],pDefGrad[idx]);
 
       // Calculate the spatial gradient of the velocity and the 
       // normal rotation rate
@@ -941,10 +943,12 @@ ShellMaterial::computeRotInternalMoment(const PatchSubset* patches,
     // Get stuff from datawarehouse
     constParticleVariable<Point>   pX;
     constParticleVariable<Vector>  pSize;
+    constParticleVariable<Matrix3> pDefGrad;
     constParticleVariable<Matrix3> pAvMoment;
     old_dw->get(pX,         lb->pXLabel,                      pset);
     
     old_dw->get(pSize,    lb->pSizeLabel,                   pset);
+    old_dw->get(pDefGrad, lb->pDeformationMeasureLabel,     pset);
     new_dw->get(pAvMoment,  pAverageMomentLabel,              pset);
 
     // Allocate stuff to be written to datawarehouse
@@ -962,7 +966,7 @@ ShellMaterial::computeRotInternalMoment(const PatchSubset* patches,
       // Get the node indices that surround the cell and the derivatives
       // of the interpolation functions
       interpolator->findCellAndWeightsAndShapeDerivatives(pX[idx],ni,S,d_S,
-                                                          pSize[idx]);
+                                                          pSize[idx],pDefGrad[idx]);
 
       // Loop thru nodes
       for (int k = 0; k < flag->d_8or27; k++){
@@ -1031,10 +1035,12 @@ ShellMaterial::computeRotAcceleration(const PatchSubset* patches,
     constParticleVariable<Point>   pX;
     constParticleVariable<double>  pRotMass;
     constParticleVariable<Vector>  pSize, pNormal, pNDotAvSig;
+    constParticleVariable<Matrix3> pDefGrad;
     constNCVariable<Vector>        gRotMoment;
     old_dw->get(pX,          lb->pXLabel,                      pset);
 
     old_dw->get(pSize,     lb->pSizeLabel,                   pset);
+    old_dw->get(pDefGrad,  lb->pDeformationMeasureLabel,     pset);
     old_dw->get(pNormal,     lb->pNormalLabel,                 pset);
     new_dw->get(pRotMass,    pRotMassLabel,                    pset);
     new_dw->get(pNDotAvSig,  pNormalDotAvStressLabel,          pset);
@@ -1054,7 +1060,7 @@ ShellMaterial::computeRotAcceleration(const PatchSubset* patches,
       // of the interpolation functions
       
       interpolator->findCellAndWeightsAndShapeDerivatives(pX[idx],ni,S,d_S,
-                                                          pSize[idx]);
+                                                          pSize[idx],pDefGrad[idx]);
       // Calculate the in-surface identity tensor
       Matrix3 nn(pNormal[idx], pNormal[idx]);
       Matrix3 Is = One - nn;

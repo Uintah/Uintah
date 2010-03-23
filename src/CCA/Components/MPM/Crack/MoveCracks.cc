@@ -137,6 +137,7 @@ Crack::addComputesAndRequiresMoveCracks(Task* t,
   t->requires(Task::NewDW, lb->GVelocityStarLabel, gac, NGC);
 
   t->requires(Task::OldDW,lb->pSizeLabel, Ghost::None);
+  t->requires(Task::OldDW,lb->pDeformationMeasureLabel, Ghost::None);
 }
 
 void
@@ -179,7 +180,9 @@ Crack::MoveCracks(const ProcessorGroup*,
 
       ParticleSubset* pset=old_dw->getParticleSubset(dwi,patch);
       constParticleVariable<Vector> psize;
+      constParticleVariable<Matrix3> deformationGradient;
       old_dw->get(psize,lb->pSizeLabel,pset);
+      old_dw->get(deformationGradient, lb->pDeformationMeasureLabel, pset);
 
       Ghost::GhostType  gac = Ghost::AroundCells;
       constNCVariable<double> gmass,Gmass;
@@ -206,7 +209,7 @@ Crack::MoveCracks(const ProcessorGroup*,
               Vector vg,vG;
               Vector vcm = Vector(0.0,0.0,0.0);
 
-              interpolator->findCellAndWeights(pt, ni, S, psize[idx]);
+              interpolator->findCellAndWeights(pt, ni, S, psize[idx],deformationGradient[idx]);
 
               // Calculate center-of-velocity (vcm)
               // Sum of shape functions from nodes with particle(s) around them

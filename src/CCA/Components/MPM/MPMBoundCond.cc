@@ -62,7 +62,7 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
     if (patch->getBCType(face) == Patch::None) {
       int numChildren = patch->getBCDataArray(face)->getNumberChildren(dwi);
       IntVector l(0,0,0),h(0,0,0),off(0,0,0);
-      if(interp_type=="gimp" || interp_type=="3rdorderBS"){
+      if(interp_type=="gimp" || interp_type=="3rdorderBS" || interp_type=="cpdi"){
         patch->getFaceExtraNodes(face,0,l,h);
       }
       for (int child = 0; child < numChildren; child++) {
@@ -82,7 +82,7 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
                 IntVector nd = *nbound_ptr;
                 variable[nd] = bcv;
               }
-              if(interp_type=="gimp" || interp_type=="3rdorderBS"){
+              if(interp_type=="gimp" || interp_type=="3rdorderBS" || interp_type=="cpdi"){
                 for(NodeIterator it(l,h); !it.done(); it++) {
                   IntVector nd = *it;
                   variable[nd] = bcv;
@@ -99,13 +99,13 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
           
           if (bcb->getBCType__NEW() == "symmetry") {
             if (face == Patch::xplus || face == Patch::xminus){
-              if(interp_type!="gimp"){
+              if(interp_type!="gimp" || interp_type!="cpdi"){
                for (nbound_ptr.reset(); !nbound_ptr.done();nbound_ptr++) {
                 IntVector nd = *nbound_ptr;
                 variable[nd] = Vector(0.,variable[nd].y(), variable[nd].z());
                }
               }
-              if(interp_type=="gimp"){
+              if(interp_type=="gimp" || interp_type=="cpdi"){
                 IntVector off = IntVector(1,0,0);
                 IntVector L,H;
                 if(face==Patch::xminus){
@@ -138,13 +138,13 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
               }
             }
             if (face == Patch::yplus || face == Patch::yminus){
-              if(interp_type!="gimp"){
+              if(interp_type!="gimp" || interp_type!="cpdi"){
                for (nbound_ptr.reset(); !nbound_ptr.done();nbound_ptr++){
                 IntVector nd = *nbound_ptr;
                 variable[nd] = Vector(variable[nd].x(),0.,variable[nd].z());
                }
               }
-              if(interp_type=="gimp"){
+              if(interp_type=="gimp" || interp_type=="cpdi"){
                 IntVector off = IntVector(0,1,0);
                 IntVector L,H;
                 if(face==Patch::yminus){
@@ -177,13 +177,13 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
               }
             }
             if (face == Patch::zplus || face == Patch::zminus){
-              if(interp_type!="gimp"){
+              if(interp_type!="gimp"||interp_type!="cpdi"){
                for (nbound_ptr.reset(); !nbound_ptr.done();nbound_ptr++){
                 IntVector nd = *nbound_ptr;
                 variable[nd] = Vector(variable[nd].x(), variable[nd].y(),0.);
                }
               }
-              if(interp_type=="gimp"){
+              if(interp_type=="gimp"||interp_type=="cpdi"){
                 IntVector off = IntVector(0,0,1);
                 IntVector L,H;
                 if(face==Patch::zminus){
@@ -236,7 +236,7 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
     if (patch->getBCType(face) == Patch::None) {
       int numChildren = patch->getBCDataArray(face)->getNumberChildren(dwi);
       IntVector l(0,0,0),h(0,0,0);
-      if(interp_type=="gimp" || interp_type=="3rdorderBS"){
+      if(interp_type=="gimp" || interp_type=="3rdorderBS" || interp_type=="cpdi"){
         patch->getFaceExtraNodes(face,0,l,h);
       }
       for (int child = 0; child < numChildren; child++) {
@@ -256,7 +256,7 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
                 IntVector nd = *nbound_ptr;
                 variable[nd] = bcv;
               }
-              if(interp_type=="gimp" || interp_type=="3rdorderBS"){
+              if(interp_type=="gimp" || interp_type=="3rdorderBS" || interp_type=="cpdi"){
                 for(NodeIterator it(l,h); !it.done(); it++) {
                   IntVector nd = *it;
                   variable[nd] = bcv;
@@ -284,7 +284,7 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
                 IntVector nd = *nbound_ptr;
                 variable[nd] = bcv;
               }
-              if(interp_type=="gimp" || interp_type=="3rdorderBS"){
+              if(interp_type=="gimp" || interp_type=="3rdorderBS" || interp_type=="cpdi"){
                 for(NodeIterator it(l,h); !it.done(); it++) {
                   IntVector nd = *it;
                   variable[nd] = bcv;
@@ -293,7 +293,7 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
             }
             
             if (bc->getBCType__NEW() == "Neumann" && (interp_type=="gimp" 
-                                               ||  interp_type=="3rdorderBS")) {
+                                               ||  interp_type=="3rdorderBS" || interp_type=="cpdi")) {
               Vector deltax = patch->dCell();
               double dx = -9;
               IntVector off(-9,-9,-9);
