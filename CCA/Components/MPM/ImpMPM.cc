@@ -3020,11 +3020,13 @@ void ImpMPM::computeInternalForce(const ProcessorGroup*,
         constParticleVariable<Vector>  psize;
         constParticleVariable<Matrix3> pDeformationMeasure;
 
-        parent_old_dw->get(px,   lb->pXLabel,               pset);
-        parent_old_dw->get(psize,lb->pSizeLabel,            pset);
+        parent_old_dw->get(px,                  lb->pXLabel,                           pset);
+        parent_old_dw->get(psize,               lb->pSizeLabel,                        pset);
+        parent_old_dw->get(pDeformationMeasure, lb->pDeformationMeasureLabel,          pset);
+
         new_dw->get(pvol,        lb->pVolumeDeformedLabel,  pset);
         new_dw->get(pstress,     lb->pStressLabel_preReloc, pset);
-        new_dw->get(pDeformationMeasure, lb->pDeformationMeasureLabel_preReloc, pset);
+
 
 
         Matrix3 stressvol;
