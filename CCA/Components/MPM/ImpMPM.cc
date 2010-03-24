@@ -1164,11 +1164,12 @@ void ImpMPM::scheduleComputeInternalForce(SchedulerP& sched,
 
  
 
-  t->requires(Task::ParentOldDW,lb->pXLabel,              Ghost::AroundNodes,1);
-  t->requires(Task::ParentOldDW,lb->pSizeLabel,          Ghost::AroundNodes,1);
+  t->requires(Task::ParentOldDW,lb->pXLabel,                 Ghost::AroundNodes,1);
+  t->requires(Task::ParentOldDW,lb->pSizeLabel,              Ghost::AroundNodes,1);
+  t->requires(Task::ParentOldDW,lb->pDeformationMeasureLabel,Ghost::AroundNodes,1);
   t->requires(Task::NewDW,      lb->pStressLabel_preReloc,Ghost::AroundNodes,1);
   t->requires(Task::NewDW,      lb->pVolumeDeformedLabel, Ghost::AroundNodes,1);
-  t->requires(Task::OldDW, lb->pDeformationMeasureLabel,   Ghost::AroundNodes,1);
+
 
 
   t->computes(lb->gInternalForceLabel);
