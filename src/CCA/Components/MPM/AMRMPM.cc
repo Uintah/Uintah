@@ -445,7 +445,7 @@ void AMRMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
   one_matl->add(0);
   one_matl->addReference();
 
-  Task::WhichDW C_oldDW = Task::CoarseOldDW;
+  //Task::WhichDW C_oldDW = Task::CoarseOldDW;
   
   if(getLevel(patches)->hasCoarserLevel()){
     const MaterialSubset* mss = matls->getUnion();
@@ -993,7 +993,7 @@ void AMRMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       ParticleSubset* pset=0;
       for(int whichLevel=0;whichLevel<3;whichLevel++){
         bool doit = false;
-        bool get_finer = false;
+        //bool get_finer = false;
         bool coarse_part = false;
         if(getLevel(patches)->hasCoarserLevel() && whichLevel==0){
           pset = old_dw->getParticleSubset(dwi, CL, CH, coarseLevel, NULL,
@@ -1030,7 +1030,7 @@ void AMRMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 
 
           int n8or27=flags->d_8or27;
-          int num_cur, num_fine, num_coarse;
+          //int num_cur, num_fine, num_coarse;
           for (ParticleSubset::iterator iter = pset->begin();
                iter != pset->end(); 
                iter++){
@@ -1469,7 +1469,7 @@ void AMRMPM::computeZoneOfInfluence(const ProcessorGroup*,
       
     // underlying coarse level
     if( level->hasCoarserLevel() ) {
-      const Level* coarseLevel = level->getCoarserLevel().get_rep();
+      //const Level* coarseLevel = level->getCoarserLevel().get_rep();
       
       Level::selectType coarsePatches;
       patch->getCoarseLevelPatches(coarsePatches);
@@ -1897,9 +1897,9 @@ void AMRMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       }
 
       // Loop over particles
-      bool get_finer = true;
-      bool coarse_part = false;
-      int num_cur, num_fine, num_coarse;
+      //bool get_finer = true;
+      //bool coarse_part = false;
+      //int num_cur, num_fine, num_coarse;
       int n8or27=flags->d_8or27;
 
       
