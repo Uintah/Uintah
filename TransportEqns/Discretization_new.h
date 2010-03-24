@@ -1790,6 +1790,10 @@ namespace Uintah{
                 }
                 break; 
 #endif
+            case Patch::numFaces:
+              break;
+            case Patch::invalidFace:
+              break; 
             }
           }
         }
