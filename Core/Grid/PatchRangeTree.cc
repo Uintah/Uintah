@@ -55,7 +55,7 @@ PatchRangeTree::PatchRangeTree(const std::vector<Patch*>& patches)
 
     for (int j = 0; j < 3; j++) {
       if (dimensions[j] > d_maxPatchDimensions[j]) {
-	d_maxPatchDimensions[j] = dimensions[j];
+        d_maxPatchDimensions[j] = dimensions[j];
       }
     }
   }
@@ -81,7 +81,7 @@ PatchRangeTree::PatchRangeTree(const std::vector<const Patch*>& patches)
 
     for (int j = 0; j < 3; j++) {
       if (dimensions[j] > d_maxPatchDimensions[j]) {
-	d_maxPatchDimensions[j] = dimensions[j];
+        d_maxPatchDimensions[j] = dimensions[j];
       }
     }
   }
@@ -96,7 +96,7 @@ PatchRangeTree::~PatchRangeTree()
 }
 
 void PatchRangeTree::query(const IntVector& low, const IntVector& high,
-			   Patch::selectType& foundPatches)
+                           Patch::selectType& foundPatches)
 {
   list<PatchPoint*> foundPoints;
 

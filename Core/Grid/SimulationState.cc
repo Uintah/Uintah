@@ -58,11 +58,11 @@ SimulationState::SimulationState(ProblemSpecP &ps)
    delt_label = nonconstDelt;
 
    refineFlag_label = VarLabel::create("refineFlag",
-				       CCVariable<int>::getTypeDescription());
+                                       CCVariable<int>::getTypeDescription());
    oldRefineFlag_label = VarLabel::create("oldRefineFlag",
-				       CCVariable<int>::getTypeDescription());
+                                       CCVariable<int>::getTypeDescription());
    refinePatchFlag_label = VarLabel::create("refinePatchFlag",
-				       PerPatch<int>::getTypeDescription());
+                                       PerPatch<int>::getTypeDescription());
    switch_label = VarLabel::create("switchFlag", 
                                    max_vartype::getTypeDescription());
 
@@ -444,7 +444,7 @@ Material* SimulationState::getMaterialByName(const std::string& name) const
 //__________________________________
 //
 Material* SimulationState::parseAndLookupMaterial(ProblemSpecP& params,
-						  const std::string& name) const
+                                                  const std::string& name) const
 {
   // for single material problems return matl 0
   Material* result = getMaterial(0);

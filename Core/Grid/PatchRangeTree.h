@@ -90,7 +90,7 @@ public:
   ~PatchRangeTree();
   
   void query(const IntVector& low, const IntVector& high,
-	     Level::selectType& patches);
+             Level::selectType& patches);
 private:
   class PatchPoint
   {

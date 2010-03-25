@@ -69,14 +69,14 @@ namespace Uintah {
    class UINTAHSHARE Ghost {
    public:
       enum GhostType {
-	 None,
-	 AroundNodes,
-	 AroundCells,
-	 AroundFacesX,
-	 AroundFacesY,
-	 AroundFacesZ,
-	 AroundFaces,
-	 numGhostTypes // 7
+         None,
+         AroundNodes,
+         AroundCells,
+         AroundFacesX,
+         AroundFacesY,
+         AroundFacesZ,
+         AroundFaces,
+         numGhostTypes // 7
       };
 
      static SCIRun::IntVector getGhostTypeDir(Ghost::GhostType gtype)

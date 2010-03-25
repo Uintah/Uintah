@@ -60,8 +60,8 @@ IntVector Patch::d_extraCells;
 
 
 Patch::Patch(const Level* level,
-	     const IntVector& lowIndex, const IntVector& highIndex,
-	     const IntVector& inLowIndex, const IntVector& inHighIndex, 
+             const IntVector& lowIndex, const IntVector& highIndex,
+             const IntVector& inLowIndex, const IntVector& inHighIndex, 
              unsigned int levelIndex,  int id)
   : d_lowIndex(inLowIndex), d_highIndex(inHighIndex), 
     d_grid(0), d_id(id) , d_realPatch(0), d_level_index(-1),
@@ -340,9 +340,9 @@ const BoundCondBase*
 Patch::getArrayBCValues(Patch::FaceType face,
                         int mat_id,
                         const string& type,
-			Iterator& cell_ptr, 
-			Iterator& node_ptr,
-			int child) const
+                        Iterator& cell_ptr, 
+                        Iterator& node_ptr,
+                        int child) const
 {
   BCDataArray* bcd = (*d_arrayBCS)[face];
   if (bcd) {
@@ -378,18 +378,18 @@ Patch::haveBC(FaceType face,int mat_id,const string& bc_type,
       (*it)->getBCData(bc);
       bool found_variable = bc.find(bc_type,bc_variable);
       if (found_variable)
-	return true;
+        return true;
       }
     } 
     // Check the mat_it = "all" case
     v_itr = itr->d_BCDataArray.find(-1);
     if (v_itr != itr->d_BCDataArray.end()) {
       for (it = v_itr->second.begin(); it != v_itr->second.end(); ++it) {
-	BCData bc;
-	(*it)->getBCData(bc);
-	bool found_variable = bc.find(bc_type,bc_variable);
-	if (found_variable)
-	  return true;
+        BCData bc;
+        (*it)->getBCData(bc);
+        bool found_variable = bc.find(bc_type,bc_variable);
+        if (found_variable)
+          return true;
       }
     }
   }
@@ -398,8 +398,8 @@ Patch::haveBC(FaceType face,int mat_id,const string& bc_type,
 
 void
 Patch::getFace(FaceType face, const IntVector& insideOffset,
-	       const IntVector& outsideOffset,
-	       IntVector& l, IntVector& h) const
+               const IntVector& outsideOffset,
+               IntVector& l, IntVector& h) const
 {
   // don't count extra cells
   IntVector ll=getCellLowIndex();
@@ -594,8 +594,8 @@ Patch::toString() const
 
   Box box(getExtraBox());
   sprintf( str, "[ [%2.2f, %2.2f, %2.2f] [%2.2f, %2.2f, %2.2f] ]",
-	   box.lower().x(), box.lower().y(), box.lower().z(),
-	   box.upper().x(), box.upper().y(), box.upper().z() );
+           box.lower().x(), box.lower().y(), box.lower().z(),
+           box.upper().x(), box.upper().y(), box.upper().z() );
 
   return string( str );
 }
@@ -929,10 +929,10 @@ Patch::getEdgeCellIterator(const FaceType& face0,
 }
 
 Box Patch::getGhostBox(const IntVector& lowOffset,
-		       const IntVector& highOffset) const
+                       const IntVector& highOffset) const
 {
    return Box(getLevel()->getNodePosition(getExtraCellLowIndex()+lowOffset),
-	      getLevel()->getNodePosition(getExtraCellHighIndex()+highOffset));
+              getLevel()->getNodePosition(getExtraCellHighIndex()+highOffset));
 }
 
 
@@ -989,18 +989,18 @@ Patch::getNodeIterator(const Box& b) const
 IntVector Patch::getSFCXFORTLowIndex__Old() const
 {
   IntVector h(getFortranExtraCellLowIndex()+
-	      IntVector(getBCType(xminus) == Neighbor?0:2, 
-			getBCType(yminus) == Neighbor?0:1,
-			getBCType(zminus) == Neighbor?0:1));
+              IntVector(getBCType(xminus) == Neighbor?0:2, 
+                        getBCType(yminus) == Neighbor?0:1,
+                        getBCType(zminus) == Neighbor?0:1));
   return h;
 }
 // if next to a boundary then highindex = cellhighindex - 1 - 1(coz of fortran)
 IntVector Patch::getSFCXFORTHighIndex__Old() const
 {
    IntVector h(getFortranExtraCellHighIndex() -
-	       IntVector(getBCType(xplus) == Neighbor?0:1,
-			 getBCType(yplus) == Neighbor?0:1,
-			 getBCType(zplus) == Neighbor?0:1));
+               IntVector(getBCType(xplus) == Neighbor?0:1,
+                         getBCType(yplus) == Neighbor?0:1,
+                         getBCType(zplus) == Neighbor?0:1));
    return h;
 }
 
@@ -1008,18 +1008,18 @@ IntVector Patch::getSFCXFORTHighIndex__Old() const
 IntVector Patch::getSFCYFORTLowIndex__Old() const
 {
   IntVector h(getFortranExtraCellLowIndex()+
-	      IntVector(getBCType(xminus) == Neighbor?0:1, 
-			getBCType(yminus) == Neighbor?0:2,
-			getBCType(zminus) == Neighbor?0:1));
+              IntVector(getBCType(xminus) == Neighbor?0:1, 
+                        getBCType(yminus) == Neighbor?0:2,
+                        getBCType(zminus) == Neighbor?0:1));
   return h;
 }
 // if next to a boundary then highindex = cellhighindex - 1 - 1(coz of fortran)
 IntVector Patch::getSFCYFORTHighIndex__Old() const
 {
    IntVector h(getFortranExtraCellHighIndex() - 
-	       IntVector(getBCType(xplus) == Neighbor?0:1,
-			 getBCType(yplus) == Neighbor?0:1,
-			 getBCType(zplus) == Neighbor?0:1));
+               IntVector(getBCType(xplus) == Neighbor?0:1,
+                         getBCType(yplus) == Neighbor?0:1,
+                         getBCType(zplus) == Neighbor?0:1));
    return h;
 }
 
@@ -1027,18 +1027,18 @@ IntVector Patch::getSFCYFORTHighIndex__Old() const
 IntVector Patch::getSFCZFORTLowIndex__Old() const
 {
   IntVector h(getFortranExtraCellLowIndex()+
-	      IntVector(getBCType(xminus) == Neighbor?0:1, 
-			getBCType(yminus) == Neighbor?0:1,
-			getBCType(zminus) == Neighbor?0:2));
+              IntVector(getBCType(xminus) == Neighbor?0:1, 
+                        getBCType(yminus) == Neighbor?0:1,
+                        getBCType(zminus) == Neighbor?0:2));
   return h;
 }
 // if next to a boundary then highindex = cellhighindex - 1 - 1(coz of fortran)
 IntVector Patch::getSFCZFORTHighIndex__Old() const
 {
    IntVector h(getFortranExtraCellHighIndex() - 
-	       IntVector(getBCType(xplus) == Neighbor?0:1,
-			 getBCType(yplus) == Neighbor?0:1,
-			 getBCType(zplus) == Neighbor?0:1));
+               IntVector(getBCType(xplus) == Neighbor?0:1,
+                         getBCType(yplus) == Neighbor?0:1,
+                         getBCType(zplus) == Neighbor?0:1));
    return h;
 }
 
@@ -1094,8 +1094,8 @@ void Patch::cullIntersection(VariableBasis basis, IntVector bl, const Patch* nei
 }
 
 void Patch::getGhostOffsets(VariableBasis basis, Ghost::GhostType gtype,
-			    int numGhostCells,
-			    IntVector& lowOffset, IntVector& highOffset)
+                            int numGhostCells,
+                            IntVector& lowOffset, IntVector& highOffset)
 {
   MALLOC_TRACE_TAG_SCOPE("Patch::getGhostOffsets");
   // This stuff works by assuming there are no neighbors.  If there are
@@ -1145,13 +1145,13 @@ void Patch::getGhostOffsets(VariableBasis basis, Ghost::GhostType gtype,
   }
 
   ASSERT(lowOffset[0] >= 0 && lowOffset[1] >= 0 && lowOffset[2] >= 0 &&
-	 highOffset[0] >= 0 && highOffset[2] >= 0 && highOffset[2] >= 0); 
+         highOffset[0] >= 0 && highOffset[2] >= 0 && highOffset[2] >= 0); 
 }
 
 void Patch::computeVariableExtents(VariableBasis basis,
-				   const IntVector& boundaryLayer,
-				   Ghost::GhostType gtype, int numGhostCells,
-				   IntVector& low, IntVector& high) const
+                                   const IntVector& boundaryLayer,
+                                   Ghost::GhostType gtype, int numGhostCells,
+                                   IntVector& low, IntVector& high) const
 {
   IntVector lowOffset, highOffset;
   getGhostOffsets(basis, gtype, numGhostCells, lowOffset, highOffset);
@@ -1159,10 +1159,10 @@ void Patch::computeVariableExtents(VariableBasis basis,
 }
 
 void Patch::computeVariableExtents(VariableBasis basis,
-				   const IntVector& boundaryLayer,
-				   Ghost::GhostType gtype, int numGhostCells,
-				   Patch::selectType& neighbors,
-				   IntVector& low, IntVector& high) const
+                                   const IntVector& boundaryLayer,
+                                   Ghost::GhostType gtype, int numGhostCells,
+                                   Patch::selectType& neighbors,
+                                   IntVector& low, IntVector& high) const
 {
   IntVector lowOffset, highOffset;
   getGhostOffsets(basis, gtype, numGhostCells, lowOffset, highOffset);
@@ -1171,36 +1171,36 @@ void Patch::computeVariableExtents(VariableBasis basis,
 }
 
 void Patch::computeVariableExtents(Uintah::TypeDescription::Type basis,
-				   const IntVector& boundaryLayer,
-				   Ghost::GhostType gtype, int numGhostCells,
-				   IntVector& low, IntVector& high) const
+                                   const IntVector& boundaryLayer,
+                                   Ghost::GhostType gtype, int numGhostCells,
+                                   IntVector& low, IntVector& high) const
 {
   bool basisMustExist = (gtype != Ghost::None);
   computeVariableExtents(translateTypeToBasis(basis, basisMustExist),
-			 boundaryLayer, gtype, numGhostCells, low, high);
+                         boundaryLayer, gtype, numGhostCells, low, high);
 }
 
 void Patch::computeVariableExtents(Uintah::TypeDescription::Type basis,
-				   const IntVector& boundaryLayer,
-				   Ghost::GhostType gtype, int numGhostCells,
-				   Patch::selectType& neighbors,
-				   IntVector& low, IntVector& high) const
+                                   const IntVector& boundaryLayer,
+                                   Ghost::GhostType gtype, int numGhostCells,
+                                   Patch::selectType& neighbors,
+                                   IntVector& low, IntVector& high) const
 {
   bool basisMustExist = (gtype != Ghost::None);
   computeVariableExtents(translateTypeToBasis(basis, basisMustExist),
-			 boundaryLayer, gtype, numGhostCells, neighbors,
-			 low, high);
+                         boundaryLayer, gtype, numGhostCells, neighbors,
+                         low, high);
 }
 
 void Patch::computeExtents(VariableBasis basis,
-			   const IntVector& boundaryLayer,
-			   const IntVector& lowOffset,
-			   const IntVector& highOffset,
-			   IntVector& low, IntVector& high) const
+                           const IntVector& boundaryLayer,
+                           const IntVector& lowOffset,
+                           const IntVector& highOffset,
+                           IntVector& low, IntVector& high) const
 
 {
   ASSERT(lowOffset[0] >= 0 && lowOffset[1] >= 0 && lowOffset[2] >= 0 &&
-	 highOffset[0] >= 0 && highOffset[2] >= 0 && highOffset[2] >= 0);
+         highOffset[0] >= 0 && highOffset[2] >= 0 && highOffset[2] >= 0);
   
   IntVector origLowIndex = getExtraLowIndex(basis, IntVector(0,0,0));
   IntVector origHighIndex = getExtraHighIndex(basis, IntVector(0,0,0));
@@ -1223,7 +1223,7 @@ void Patch::computeExtents(VariableBasis basis,
 }
 
 void Patch::getOtherLevelPatches(int levelOffset,
-				 Patch::selectType& selected_patches,
+                                 Patch::selectType& selected_patches,
                                  int numGhostCells /*=0*/) const
 {
   ASSERT(levelOffset == 1 || levelOffset == -1);
@@ -1281,7 +1281,7 @@ void Patch::getOtherLevelPatches(int levelOffset,
  * if the VariableBasis does not exist for the given type.
  */
 Patch::VariableBasis Patch::translateTypeToBasis(Uintah::TypeDescription::Type type,
-						 bool mustExist)
+                                                 bool mustExist)
 {
   switch(type){
   case TypeDescription::CCVariable:
@@ -1323,15 +1323,15 @@ Box Patch::getBox() const {
 IntVector Patch::noNeighborsLow() const
 {
   return IntVector(getBCType(xminus) == Neighbor? 0:1,
-		   getBCType(yminus) == Neighbor? 0:1,
-		   getBCType(zminus) == Neighbor? 0:1);
+                   getBCType(yminus) == Neighbor? 0:1,
+                   getBCType(zminus) == Neighbor? 0:1);
 }
 
 IntVector Patch::noNeighborsHigh() const
 {
   return IntVector(getBCType(xplus) == Neighbor? 0:1,
-		   getBCType(yplus) == Neighbor? 0:1,
-		   getBCType(zplus) == Neighbor? 0:1);
+                   getBCType(yplus) == Neighbor? 0:1,
+                   getBCType(zplus) == Neighbor? 0:1);
 }
 
 /**
@@ -1340,7 +1340,7 @@ IntVector Patch::noNeighborsHigh() const
 * precidence over extra cells.
 */
 IntVector Patch::getExtraLowIndex(VariableBasis basis,
-			     const IntVector& boundaryLayer) const
+                             const IntVector& boundaryLayer) const
 {
   //no boundary layer so use extra cells
   if(boundaryLayer==IntVector(0,0,0))
@@ -1394,7 +1394,7 @@ IntVector Patch::getExtraLowIndex(VariableBasis basis,
 * over extra cells.
 */
 IntVector Patch::getExtraHighIndex(VariableBasis basis,
-			      const IntVector& boundaryLayer) const
+                              const IntVector& boundaryLayer) const
 {
  
   if(boundaryLayer==IntVector(0,0,0))

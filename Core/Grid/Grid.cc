@@ -286,7 +286,7 @@ void Grid::printStatistics() const
     cout << "Level " << i << ":\n";
     if (l->getPeriodicBoundaries() != IntVector(0,0,0))
       cout << "  Periodic boundaries:\t\t" << l->getPeriodicBoundaries()
-	   << '\n';
+           << '\n';
     cout << "  Number of patches:\t\t" << l->numPatches() << '\n';
     totalPatches += l->numPatches();
     double ppc = double(l->totalCells())/double(l->numPatches());

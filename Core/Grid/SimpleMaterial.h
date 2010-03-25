@@ -67,9 +67,9 @@ WARNING
 
       class UINTAHSHARE SimpleMaterial : public Material {
       public:
-	 SimpleMaterial();
-	 
-	 ~SimpleMaterial();
+         SimpleMaterial();
+         
+         ~SimpleMaterial();
  
       private:
       };

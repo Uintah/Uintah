@@ -224,7 +224,7 @@ public:
   void incrementCurrentTopLevelTimeStep() { d_topLevelTimeStep++; }
 
   Material* parseAndLookupMaterial(ProblemSpecP& params,
-				   const std::string& name) const;
+                                   const std::string& name) const;
   Material* getMaterialByName(const std::string& name) const;
 
   inline int getMaxMatlIndex() { return max_matl_index; }
