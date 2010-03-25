@@ -186,7 +186,7 @@ void BCData::print() const
   BCData_dbg << "size of d_BCData = " << d_BCData.size() << endl;
   for (itr = d_BCData.begin(); itr != d_BCData.end(); itr++) {
     BCData_dbg << "BC = " << (*itr)->getBCVariable() << " type = " 
-	       << (*itr)->getBCType__NEW() << endl;
+               << (*itr)->getBCType__NEW() << endl;
   }
   
 }

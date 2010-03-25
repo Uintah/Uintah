@@ -111,7 +111,7 @@ void BoundCondReader::whichPatchFace(const std::string fc,
 
 BCGeomBase* BoundCondReader::createBoundaryConditionFace(ProblemSpecP& face_ps,
                                               const ProblemSpecP& grid_ps,
-						    Patch::FaceType& face_side)
+                                                    Patch::FaceType& face_side)
 {
 
   // Determine the Level 0 grid high and low points, need by 
@@ -495,8 +495,8 @@ void BoundCondReader::combineBCS()
 
     BCDataArray::bcDataArrayType::const_iterator mat_id_itr;
     for (mat_id_itr = original.d_BCDataArray.begin(); 
-	 mat_id_itr != original.d_BCDataArray.end(); 
-	 ++mat_id_itr) {
+         mat_id_itr != original.d_BCDataArray.end(); 
+         ++mat_id_itr) {
       int mat_id = mat_id_itr->first;
 
       BCR_dbg << "Mat ID = " << mat_id << endl;
@@ -506,110 +506,110 @@ void BoundCondReader::combineBCS()
       vector<BCGeomBase*>::const_iterator vec_itr;
       map<BCData,vector<BCGeomBase*> > bcdata_bcgeom;
       for (vec_itr = mat_id_itr->second.begin(); 
-	   vec_itr != mat_id_itr->second.end(); ++vec_itr) {
-	BCData bc_data;
-	(*vec_itr)->getBCData(bc_data);
-	bcdata_bcgeom[bc_data].push_back((*vec_itr)->clone());
+           vec_itr != mat_id_itr->second.end(); ++vec_itr) {
+        BCData bc_data;
+        (*vec_itr)->getBCData(bc_data);
+        bcdata_bcgeom[bc_data].push_back((*vec_itr)->clone());
       }
-	
+        
       map<BCData,vector<BCGeomBase*> >::iterator bcd_itr;
       for (bcd_itr = bcdata_bcgeom.begin(); bcd_itr != bcdata_bcgeom.end(); 
-	   ++bcd_itr) {
+           ++bcd_itr) {
 
-	BCR_dbg << "Printing out the bcd types" << endl;
-	bcd_itr->first.print();
+        BCR_dbg << "Printing out the bcd types" << endl;
+        bcd_itr->first.print();
 
-	
-	if (count_if(bcd_itr->second.begin(),
-		     bcd_itr->second.end(),
-		     cmp_type<SideBCData>()) == 1 && 
-	    bcd_itr->second.size() == 1) {
-	  BCGeomBase* bc = bcd_itr->second[0];
-	  rearranged.addBCData(mat_id,bc->clone());
-	} else {
-	  // Find the child that is the "side" bc
-	  BCGeomBase* side_bc = NULL;
-	  vector<BCGeomBase*>::const_iterator index;
-	  index = find_if(bcd_itr->second.begin(),
-			  bcd_itr->second.end(),
-			  cmp_type<SideBCData>());
-	
-	  
-	  if (index != bcd_itr->second.end()) {
-	    BCR_dbg << "Found the side bc data" << endl;
-	    side_bc = (*index)->clone();
-	  } else {
-	    BCR_dbg << "Didnt' find the side bc data" << endl;
+        
+        if (count_if(bcd_itr->second.begin(),
+                     bcd_itr->second.end(),
+                     cmp_type<SideBCData>()) == 1 && 
+            bcd_itr->second.size() == 1) {
+          BCGeomBase* bc = bcd_itr->second[0];
+          rearranged.addBCData(mat_id,bc->clone());
+        } else {
+          // Find the child that is the "side" bc
+          BCGeomBase* side_bc = NULL;
+          vector<BCGeomBase*>::const_iterator index;
+          index = find_if(bcd_itr->second.begin(),
+                          bcd_itr->second.end(),
+                          cmp_type<SideBCData>());
+        
+          
+          if (index != bcd_itr->second.end()) {
+            BCR_dbg << "Found the side bc data" << endl;
+            side_bc = (*index)->clone();
+          } else {
+            BCR_dbg << "Didnt' find the side bc data" << endl;
 
-	    index = find_if(original.d_BCDataArray[-1].begin(),
-			    original.d_BCDataArray[-1].end(),
-			    cmp_type<SideBCData>());
+            index = find_if(original.d_BCDataArray[-1].begin(),
+                            original.d_BCDataArray[-1].end(),
+                            cmp_type<SideBCData>());
 
-	    if (index != d_BCReaderData[face].d_BCDataArray[-1].end()){
-	      BCR_dbg << "Using the 'all' case" << endl;
-	      side_bc = (*index)->clone();
-	    }
-	  }
-	  
-	  // Create a unionbcdata for all the remaining bcs and remove the 
-	  // sidebcdata.  
-	  UnionBCData* union_bc = scinew UnionBCData();
-	  for (vector<BCGeomBase*>::const_iterator i = bcd_itr->second.begin();
-	       i != bcd_itr->second.end(); ++i)
-	    union_bc->child.push_back((*i)->clone());
-	  vector<BCGeomBase*>::iterator itr, new_end = 
-	    remove_if(union_bc->child.begin(),
-		      union_bc->child.end(),
-		      cmp_type<SideBCData>());
-	  
-	  BCR_dbg << endl << "Before deleting" << endl;
-	  for_each(union_bc->child.begin(),
-		   union_bc->child.end(),
-		   Uintah::print);
+            if (index != d_BCReaderData[face].d_BCDataArray[-1].end()){
+              BCR_dbg << "Using the 'all' case" << endl;
+              side_bc = (*index)->clone();
+            }
+          }
+          
+          // Create a unionbcdata for all the remaining bcs and remove the 
+          // sidebcdata.  
+          UnionBCData* union_bc = scinew UnionBCData();
+          for (vector<BCGeomBase*>::const_iterator i = bcd_itr->second.begin();
+               i != bcd_itr->second.end(); ++i)
+            union_bc->child.push_back((*i)->clone());
+          vector<BCGeomBase*>::iterator itr, new_end = 
+            remove_if(union_bc->child.begin(),
+                      union_bc->child.end(),
+                      cmp_type<SideBCData>());
+          
+          BCR_dbg << endl << "Before deleting" << endl;
+          for_each(union_bc->child.begin(),
+                   union_bc->child.end(),
+                   Uintah::print);
 
-	  
-	  for(itr = new_end; itr != union_bc->child.end(); ++itr)
-	    delete *itr;
-	  union_bc->child.erase(new_end,union_bc->child.end());
+          
+          for(itr = new_end; itr != union_bc->child.end(); ++itr)
+            delete *itr;
+          union_bc->child.erase(new_end,union_bc->child.end());
 
-	  BCR_dbg << endl << "After deleting" << endl;
+          BCR_dbg << endl << "After deleting" << endl;
 
-	  for_each(union_bc->child.begin(),union_bc->child.end(),
-		   Uintah::print);
+          for_each(union_bc->child.begin(),union_bc->child.end(),
+                   Uintah::print);
 
-	  
-	  // Create a differencebcdata for the side and the unionbc
-	  DifferenceBCData* difference_bc = 
-	    scinew DifferenceBCData(side_bc,union_bc);
-	  rearranged.addBCData(mat_id,difference_bc->clone());
-	  
-	  // Take the individual bcs and add them to the rearranged list.
-	  // These are found in the union_bcs (doesn't have the SideDataBC).
-	  vector<BCGeomBase*>::const_iterator it;
-	  for (it = union_bc->child.begin(); 
-	       it != union_bc->child.end(); ++it) 
-	    rearranged.addBCData(mat_id,(*it)->clone());
+          
+          // Create a differencebcdata for the side and the unionbc
+          DifferenceBCData* difference_bc = 
+            scinew DifferenceBCData(side_bc,union_bc);
+          rearranged.addBCData(mat_id,difference_bc->clone());
+          
+          // Take the individual bcs and add them to the rearranged list.
+          // These are found in the union_bcs (doesn't have the SideDataBC).
+          vector<BCGeomBase*>::const_iterator it;
+          for (it = union_bc->child.begin(); 
+               it != union_bc->child.end(); ++it) 
+            rearranged.addBCData(mat_id,(*it)->clone());
 
-	  BCR_dbg << endl << "Printing out BCGeomBase types in rearranged" 
-		  << endl;
+          BCR_dbg << endl << "Printing out BCGeomBase types in rearranged" 
+                  << endl;
           BCR_dbg << "mat_id = " << mat_id << endl;
 
-	  for_each(rearranged.d_BCDataArray[mat_id].begin(),
-		   rearranged.d_BCDataArray[mat_id].end(),
-		   Uintah::print);
+          for_each(rearranged.d_BCDataArray[mat_id].begin(),
+                   rearranged.d_BCDataArray[mat_id].end(),
+                   Uintah::print);
 
-	  delete side_bc;
-	  delete union_bc;
-	  delete difference_bc;
-	}
+          delete side_bc;
+          delete union_bc;
+          delete difference_bc;
+        }
       }
       // Delete the bcdata_bcgeom stuff
       for (bcd_itr = bcdata_bcgeom.begin(); bcd_itr != bcdata_bcgeom.end();
-	   ++bcd_itr) {
-	for (vec_itr=bcd_itr->second.begin();vec_itr != bcd_itr->second.end();
-	     ++vec_itr)
-	  delete *vec_itr;
-	bcd_itr->second.clear();
+           ++bcd_itr) {
+        for (vec_itr=bcd_itr->second.begin();vec_itr != bcd_itr->second.end();
+             ++vec_itr)
+          delete *vec_itr;
+        bcd_itr->second.clear();
       }
       bcdata_bcgeom.clear();
       
@@ -622,7 +622,7 @@ void BoundCondReader::combineBCS()
     d_BCReaderData[face] = rearranged;
     
     BCR_dbg << endl << "Printing out rearranged from d_BCReaderData list" 
-	    << endl;
+            << endl;
 
     d_BCReaderData[face].print();
 
@@ -654,8 +654,8 @@ void BoundCondReader::combineBCS_NEW()
 
     BCDataArray::bcDataArrayType::iterator mat_id_itr;
     for (mat_id_itr = original.d_BCDataArray.begin(); 
-	 mat_id_itr != original.d_BCDataArray.end(); 
-	 ++mat_id_itr) {
+         mat_id_itr != original.d_BCDataArray.end(); 
+         ++mat_id_itr) {
       int mat_id = mat_id_itr->first;
 
       BCR_dbg << "Mat ID = " << mat_id << endl;
@@ -738,11 +738,11 @@ void BoundCondReader::combineBCS_NEW()
     d_BCReaderData[face] = rearranged;
 
     BCR_dbg << endl << "Printing out rearranged from d_BCReaderData list" 
-	    << endl;
+            << endl;
 
     d_BCReaderData[face].print();
   }
-	
+        
   
   BCR_dbg << endl << "Printing out in combineBCS()" << endl;
   for (Patch::FaceType face = Patch::startFace; 

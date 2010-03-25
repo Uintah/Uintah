@@ -121,8 +121,8 @@ void RectangleBCData::print()
 
 
 void RectangleBCData::determineIteratorLimits(Patch::FaceType face, 
-					      const Patch* patch, 
-					      vector<Point>& test_pts)
+                                              const Patch* patch, 
+                                              vector<Point>& test_pts)
 {
 #if 0
   cout << "RectangleBC determineIteratorLimits()" << endl;

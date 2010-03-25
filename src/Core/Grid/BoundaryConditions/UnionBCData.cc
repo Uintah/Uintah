@@ -148,8 +148,8 @@ void UnionBCData::print()
 
 
 void UnionBCData::determineIteratorLimits(Patch::FaceType face, 
-					  const Patch* patch, 
-					  vector<Point>& test_pts)
+                                          const Patch* patch, 
+                                          vector<Point>& test_pts)
 {
 #if 0
   cout << "UnionBC determineIteratorLimits()" << endl;
@@ -199,7 +199,7 @@ void UnionBCData::determineIteratorLimits(Patch::FaceType face,
     vector<IntVector> boundary_itr;
     for (CellIterator bound(l,h); !bound.done(); bound++, pts++) 
       if ( (*bc)->inside(*pts))
-	boundary_itr.push_back(*bound);
+        boundary_itr.push_back(*bound);
 #if 0
     cout << "Size of boundary_itr = " << boundary_itr.size() << endl;
 #endif

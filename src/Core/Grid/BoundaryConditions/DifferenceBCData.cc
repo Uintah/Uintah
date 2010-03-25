@@ -134,8 +134,8 @@ void DifferenceBCData::print()
 }
 
 void DifferenceBCData::determineIteratorLimits(Patch::FaceType face,
-					       const Patch* patch,
-					       vector<Point>& test_pts)
+                                               const Patch* patch,
+                                               vector<Point>& test_pts)
 {
 
 #if 0
@@ -194,7 +194,7 @@ void DifferenceBCData::determineIteratorLimits(Patch::FaceType face,
   for (vector<IntVector>::const_iterator it = left_boundary->begin();
        it != left_boundary->end(); ++it) {
     vector<IntVector>::const_iterator result = find(right_boundary->begin(),
-						    right_boundary->end(),*it);
+                                                    right_boundary->end(),*it);
     if (result == right_boundary->end())
       diff_boundary.push_back(*it);
   }
@@ -202,7 +202,7 @@ void DifferenceBCData::determineIteratorLimits(Patch::FaceType face,
   for (vector<IntVector>::const_iterator it = left_nboundary->begin();
        it != left_nboundary->end(); ++it) {
     vector<IntVector>::const_iterator result = find(right_nboundary->begin(),
-						    right_nboundary->end(),*it);
+                                                    right_nboundary->end(),*it);
     if (result == right_nboundary->end())
       diff_nboundary.push_back(*it);
   }

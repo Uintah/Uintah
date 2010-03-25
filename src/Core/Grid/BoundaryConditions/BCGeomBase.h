@@ -107,8 +107,8 @@ namespace Uintah {
     /// Determine the cell centered boundary and node centered boundary
     /// iterators.
     virtual void determineIteratorLimits(Patch::FaceType face, 
-					 const Patch* patch, 
-					 vector<Point>& test_pts);
+                                         const Patch* patch, 
+                                         vector<Point>& test_pts);
     
     /// Print out the iterators for the boundary.
     void printLimits() const;

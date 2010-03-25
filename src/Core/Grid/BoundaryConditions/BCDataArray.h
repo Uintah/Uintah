@@ -46,14 +46,14 @@ namespace Uintah {
 /*!
 
   \class BCDataArray
-	
+        
   \brief Supporting class for holding the basic boundary condition geometry
   classes such as side, circle, rectangle, union, and difference.   
 
   The boundary conditions may be applied to \b all materials.  In this case,
   we use the mat_id of -1.  Other materials are stored according to the mat_id
   specified such as 0, 1, 2, etc.  
-	
+        
 
   \author John A. Schmidt \n
   Department of Mechanical Engineering \n
@@ -164,9 +164,9 @@ namespace Uintah {
    struct ltiv_xyz {
      bool operator()(const IntVector& i1,const IntVector& i2) {
        if (i1.x() < i2.x() && i1.y() < i2.y() && i1.z() < i2.z())
-	 return true;
+         return true;
        else
-	 return false;
+         return false;
      }
    };
 
