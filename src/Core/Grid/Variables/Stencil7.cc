@@ -53,8 +53,8 @@ namespace Uintah {
     static TypeDescription* td = 0;
     if(!td){
       td = scinew TypeDescription(TypeDescription::Other,
-				  "Stencil7", true, 
-				  &makeMPI_Stencil7);
+                                  "Stencil7", true, 
+                                  &makeMPI_Stencil7);
     }
     return td;
   }

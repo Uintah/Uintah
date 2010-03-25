@@ -84,9 +84,9 @@ WARNING
     ParticleSubset(int num_particles, int matlIndex, const Patch*,
                    IntVector low, IntVector high);
     ParticleSubset(int num_particles, int matlIndex, const Patch*,
-		   IntVector low, IntVector high,
+                   IntVector low, IntVector high,
                    const std::vector<const Patch*>& neighbors,
-		   const std::vector<ParticleSubset*>& subsets);
+                   const std::vector<ParticleSubset*>& subsets);
     ParticleSubset();
     ~ParticleSubset();
     
@@ -104,7 +104,7 @@ WARNING
     // Insert Documentation Here:
     void addParticle(particleIndex idx) {
       if(d_numParticles >= d_allocatedSize)
-	expand(1);
+        expand(1);
       d_particles[d_numParticles++] = idx;
     }
     particleIndex addParticles(particleIndex count);

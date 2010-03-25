@@ -66,35 +66,35 @@ namespace Uintah {
    class SimpleString {
    public:
       SimpleString() {
-	 str=0;
-	 freeit=0;
+         str=0;
+         freeit=0;
       }
       ~SimpleString() {
-	 if(freeit)
-	    free((void*)str);
+         if(freeit)
+            free((void*)str);
       }
       SimpleString(const char* str)
-	 : str(str), freeit(false) {
+         : str(str), freeit(false) {
       }
       SimpleString(const std::string& s)
-	 : str(strdup(s.c_str())), freeit(true) {
+         : str(strdup(s.c_str())), freeit(true) {
       }
       SimpleString(const SimpleString& copy)
-	 : str(copy.str), freeit(copy.freeit) {
-	    if(freeit)
-	       str=strdup(str);
+         : str(copy.str), freeit(copy.freeit) {
+            if(freeit)
+               str=strdup(str);
       }
       SimpleString& operator=(const SimpleString& copy) {
-	 if(freeit && str)
-	    free((void*)str);
-	 freeit=copy.freeit;
-	 str=copy.str;
-	 if(freeit)
-	    str=strdup(str);
-	 return *this;
+         if(freeit && str)
+            free((void*)str);
+         freeit=copy.freeit;
+         str=copy.str;
+         if(freeit)
+            str=strdup(str);
+         return *this;
       }
       operator const char*() const {
-	 return str;
+         return str;
       }
    private:
       const char* str;

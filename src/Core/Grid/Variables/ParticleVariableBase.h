@@ -108,26 +108,26 @@ WARNING
       virtual void allocate(ParticleSubset*) = 0;
       virtual void allocate(int totalParticles) = 0;
       virtual void gather(ParticleSubset* dest,
-			  std::vector<ParticleSubset*> subsets,
-			  std::vector<ParticleVariableBase*> srcs,
-			  particleIndex extra = 0) = 0;
+                          std::vector<ParticleSubset*> subsets,
+                          std::vector<ParticleVariableBase*> srcs,
+                          particleIndex extra = 0) = 0;
       virtual void gather(ParticleSubset* dest,
-			  std::vector<ParticleSubset*> subsets,
-			  std::vector<ParticleVariableBase*> srcs,
-			  const std::vector<const Patch*>& srcPatches,
-			  particleIndex extra = 0) = 0;
+                          std::vector<ParticleSubset*> subsets,
+                          std::vector<ParticleVariableBase*> srcs,
+                          const std::vector<const Patch*>& srcPatches,
+                          particleIndex extra = 0) = 0;
       virtual void unpackMPI(void* buf, int bufsize, int* bufpos,
-			     const ProcessorGroup* pg,
-			     ParticleSubset* pset) = 0;
+                             const ProcessorGroup* pg,
+                             ParticleSubset* pset) = 0;
       virtual void packMPI(void* buf, int bufsize, int* bufpos,
-			   const ProcessorGroup* pg,
-			   ParticleSubset* pset) = 0;
+                           const ProcessorGroup* pg,
+                           ParticleSubset* pset) = 0;
       virtual void packMPI(void* buf, int bufsize, int* bufpos,
-			   const ProcessorGroup* pg,
-			   ParticleSubset* pset, const Patch* forPatch) = 0;
+                           const ProcessorGroup* pg,
+                           ParticleSubset* pset, const Patch* forPatch) = 0;
       virtual void packsizeMPI(int* bufpos,
-			       const ProcessorGroup* pg,
-			       ParticleSubset* pset) = 0;
+                               const ProcessorGroup* pg,
+                               ParticleSubset* pset) = 0;
 
       virtual int size() = 0;
 
@@ -135,7 +135,7 @@ WARNING
       // Insert Documentation Here:
       ParticleSubset* getParticleSubset() const {
         ASSERT(!isForeign());
-	 return d_pset;
+         return d_pset;
       }
 
       virtual void* getBasePointer() const = 0;
@@ -143,7 +143,7 @@ WARNING
       virtual const TypeDescription* virtualGetTypeDescription() const = 0;
      virtual RefCounted* getRefCounted() = 0;
      virtual void getSizeInfo(string& elems, unsigned long& totsize,
-			      void*& ptr) const = 0;
+                              void*& ptr) const = 0;
    protected:
       ParticleVariableBase(const ParticleVariableBase&);
       ParticleVariableBase(ParticleSubset* pset);

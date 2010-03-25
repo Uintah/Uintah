@@ -84,13 +84,13 @@ WARNING
       virtual PerPatchBase* clone() const = 0;
       virtual RefCounted* getRefCounted();
       virtual void getSizeInfo(std::string& elems, unsigned long& totsize,
-			       void*& ptr) const = 0;
+                               void*& ptr) const = 0;
 
       // Only affects grid variables
       void offsetGrid(const IntVector& /*offset*/);
  
       virtual void emitNormal(std::ostream& out, const IntVector& l,
-			      const IntVector& h, ProblemSpecP varnode, bool outputDoubleAsFloat );
+                              const IntVector& h, ProblemSpecP varnode, bool outputDoubleAsFloat );
       virtual void readNormal(std::istream& in, bool swapbytes);      
       virtual void allocate(const Patch* patch, const IntVector& boundary);
 

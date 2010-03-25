@@ -124,8 +124,8 @@ WARNING
     static TypeDescription* td;
     if(!td){
       td = scinew TypeDescription(TypeDescription::NCVariable,
-				  "NCVariable", &maker,
-				  fun_getTypeDescription((T*)0));
+                                  "NCVariable", &maker,
+                                  fun_getTypeDescription((T*)0));
     }
     return td;
   }

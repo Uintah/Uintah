@@ -45,7 +45,7 @@ namespace Uintah {
         VarLabelMatl
       
         VarLabel, Material, and Domain
-	
+        
       
       GENERAL INFORMATION
       
@@ -64,7 +64,7 @@ namespace Uintah {
       
       DESCRIPTION
         Specifies a VarLabel on a specific patch and for a specific material
-	with an operator< defined so this can be used as a key in a map.
+        with an operator< defined so this can be used as a key in a map.
       
       WARNING
       

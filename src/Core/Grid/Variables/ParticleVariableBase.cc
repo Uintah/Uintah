@@ -50,7 +50,7 @@ using namespace SCIRun;
 extern UINTAHSHARE Mutex MPITypeLock;
 
 ParticleVariableBase::~ParticleVariableBase()
-{	
+{       
    if(d_pset && d_pset->removeReference())
       delete d_pset;
 }
@@ -73,16 +73,16 @@ ParticleVariableBase& ParticleVariableBase::operator=(const ParticleVariableBase
 {
    if(this != &copy){
       if(d_pset && d_pset->removeReference())
-	 delete d_pset;
+         delete d_pset;
       d_pset = copy.d_pset;
       if(d_pset)
-	 d_pset->addReference();
+         d_pset->addReference();
    }
    return *this;
 }
 
 void ParticleVariableBase::getMPIBuffer(BufferInfo& buffer,
-					ParticleSubset* sendset)
+                                        ParticleSubset* sendset)
 {
   const TypeDescription* td = virtualGetTypeDescription()->getSubType();
 
@@ -97,8 +97,8 @@ void ParticleVariableBase::getMPIBuffer(BufferInfo& buffer,
     for(;iter != sendset->end(); iter++){
       particleIndex idx = *iter;
       if(idx != last+1){
-	linear=false;
-	break;
+        linear=false;
+        break;
       }
     }
   }

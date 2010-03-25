@@ -85,8 +85,8 @@ namespace Uintah {
 
     // Ensure the uniqueness of VarLabel names (same name, same object).
     static VarLabel* create(const string&, const TypeDescription*,
-			    const IntVector& boundaryLayer = IntVector(0,0,0),
-			    VarType vartype = Normal);
+                            const IntVector& boundaryLayer = IntVector(0,0,0),
+                            VarType vartype = Normal);
 
     static bool destroy(const VarLabel* label);
 
@@ -116,12 +116,12 @@ namespace Uintah {
     class Compare {
     public:
       inline bool operator()(const VarLabel* v1, const VarLabel* v2) const {
-	// because of uniqueness, we can use pointer comparisons
-	//return v1 < v2;
-	// No we cannot, because we need the order to be the same on different processes
-	if(v1 == v2)
-	  return false;
-	return v1->getName() < v2->getName();
+        // because of uniqueness, we can use pointer comparisons
+        //return v1 < v2;
+        // No we cannot, because we need the order to be the same on different processes
+        if(v1 == v2)
+          return false;
+        return v1->getName() < v2->getName();
       }
     private:
     };
@@ -130,9 +130,9 @@ namespace Uintah {
       // because of uniqueness, we can use pointer comparisons
       return this == v2;
       /* old way
-	 if(this == v2)
-	 return true;
-	 return getName() == v2->getName();
+         if(this == v2)
+         return true;
+         return getName() == v2->getName();
       */
     }
 
@@ -141,7 +141,7 @@ namespace Uintah {
     
     const string& getCompressionMode() const {
       return (d_compressionMode == "default") ?
-	defaultCompressionMode : d_compressionMode;
+        defaultCompressionMode : d_compressionMode;
     }
      
     static void setDefaultCompressionMode(string compressionMode)
@@ -156,7 +156,7 @@ namespace Uintah {
   private:
     // You must use VarLabel::create.
     VarLabel(const string&, const TypeDescription*,
-	     const IntVector& boundaryLayer, VarType vartype);
+             const IntVector& boundaryLayer, VarType vartype);
     // You must use destroy.
     ~VarLabel();   
      

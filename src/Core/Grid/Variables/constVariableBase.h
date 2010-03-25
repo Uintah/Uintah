@@ -89,11 +89,11 @@ WARNING
 
     /*
     virtual void getSizes(IntVector& low, IntVector& high,
-			  IntVector& dataLow, IntVector& siz,
-			  IntVector& strides) const = 0;
+                          IntVector& dataLow, IntVector& siz,
+                          IntVector& strides) const = 0;
 
     virtual void getSizeInfo(string& elems, unsigned long& totsize,
-			     void*& ptr) const = 0;
+                             void*& ptr) const = 0;
     */
   protected:
     constVariableBase() {}

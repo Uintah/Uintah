@@ -124,8 +124,8 @@ WARNING
     static TypeDescription* td;
     if(!td){
       td = scinew TypeDescription(TypeDescription::SFCZVariable,
-				  "SFCZVariable", &maker,
-				  fun_getTypeDescription((T*)0));
+                                  "SFCZVariable", &maker,
+                                  fun_getTypeDescription((T*)0));
     }
     return td;
   }

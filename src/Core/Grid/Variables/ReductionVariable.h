@@ -97,7 +97,7 @@ WARNING
     virtual void print(std::ostream& out) const { out << value; }
 
     virtual void emitNormal(std::ostream& out, const IntVector& /*l*/,
-			    const IntVector& /*h*/, ProblemSpecP /*varnode*/, bool /*outputDoubleAsFloat*/)
+                            const IntVector& /*h*/, ProblemSpecP /*varnode*/, bool /*outputDoubleAsFloat*/)
     { out.write((char*)&value, sizeof(double)); }
 
     virtual void readNormal(std::istream& in, bool swapBytes)
@@ -117,7 +117,7 @@ WARNING
     virtual void getMPIData(std::vector<char>& buf, int& index);
     virtual void putMPIData(std::vector<char>& buf, int& index);
     virtual void getSizeInfo(string& elems, unsigned long& totsize,
-			     void*& ptr) const {
+                             void*& ptr) const {
       elems="1";
       totsize = sizeof(T);
       ptr = 0;
@@ -143,8 +143,8 @@ WARNING
     if(!td){
       T* junk=0;
       td = scinew TypeDescription(TypeDescription::ReductionVariable,
-				  "ReductionVariable", &maker,
-				  fun_getTypeDescription(junk));
+                                  "ReductionVariable", &maker,
+                                  fun_getTypeDescription(junk));
     }
     return td;
   }
@@ -153,7 +153,7 @@ WARNING
   Variable*
   ReductionVariable<T, Op>::maker()
   {
-	  
+          
      return scinew ReductionVariable<T, Op>();
   }
    

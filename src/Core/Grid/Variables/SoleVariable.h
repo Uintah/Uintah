@@ -93,7 +93,7 @@ WARNING
     virtual void print(std::ostream& out)
     { out << value; }
     virtual void emitNormal(std::ostream& out, const IntVector& /*l*/,
-			    const IntVector& /*h*/, ProblemSpecP /*varnode*/, bool /*outputDoubleAsFloat*/)
+                            const IntVector& /*h*/, ProblemSpecP /*varnode*/, bool /*outputDoubleAsFloat*/)
     { out.write((char*)&value, sizeof(double)); }
     virtual void readNormal(std::istream& in, bool swapBytes)
     {
@@ -104,7 +104,7 @@ WARNING
     virtual void allocate(const Patch*,const IntVector& boundary)
     {
       SCI_THROW(SCIRun::InternalError("Should not call SoleVariable<T>"
-			  "::allocate(const Patch*)", __FILE__, __LINE__)); 
+                          "::allocate(const Patch*)", __FILE__, __LINE__)); 
     }
 
     virtual const TypeDescription* virtualGetTypeDescription() const;
@@ -130,8 +130,8 @@ WARNING
     if(!td){
       T* junk=0;
       td = scinew TypeDescription(TypeDescription::SoleVariable,
-				  "SoleVariable", &maker,
-				  fun_getTypeDescription(junk));
+                                  "SoleVariable", &maker,
+                                  fun_getTypeDescription(junk));
     }
     return td;
   }
