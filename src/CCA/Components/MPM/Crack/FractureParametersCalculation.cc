@@ -84,6 +84,7 @@ void Crack::addComputesAndRequiresGetNodalSolutions(Task* t,
   t->requires(Task::NewDW,lb->pVelGradsLabel,                     gan,NGP);
   t->requires(Task::OldDW,lb->pXLabel,                            gan,NGP);
   t->requires(Task::OldDW, lb->pSizeLabel,                        gan,NGP);
+  t->requires(Task::OldDW,lb->pDeformationMeasureLabel,           gan,NGP);
   t->requires(Task::NewDW,lb->gMassLabel,                         gnone);
   t->requires(Task::NewDW,lb->GMassLabel,                         gnone);
 
