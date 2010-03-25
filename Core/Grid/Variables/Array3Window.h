@@ -77,15 +77,15 @@ namespace Uintah {
    public:
       Array3Window(Array3Data<T>*);
       Array3Window(Array3Data<T>*, const IntVector& offset,
-		   const IntVector& lowIndex, const IntVector& highIndex);
+                   const IntVector& lowIndex, const IntVector& highIndex);
       virtual ~Array3Window();
       
       inline const Array3Data<T>* getData() const {
-	 return data;
+         return data;
       }
      
       inline Array3Data<T>* getData() {
-	 return data;
+         return data;
       }
       
       void copy(const Array3Window<T>*);
@@ -93,16 +93,16 @@ namespace Uintah {
       void initialize(const T&);
       void initialize(const T&, const IntVector& s, const IntVector& e);
       inline IntVector getLowIndex() const {
-	 return lowIndex;
+         return lowIndex;
       }
       inline IntVector getHighIndex() const {
-	 return highIndex;
+         return highIndex;
       }
       inline IntVector getOffset() const {
-	 return offset;
+         return offset;
       }
       inline T& get(const IntVector& idx) {
-	 ASSERT(data);
+         ASSERT(data);
 #if SCI_ASSERTION_LEVEL >= 3
           // used to be several CHECKARRAYBOUNDS, but its lack of information
           // has bitten me a few times.... BJW
@@ -117,28 +117,28 @@ namespace Uintah {
             throw SCIRun::InternalError(ostr.str(), __FILE__, __LINE__);
           }
 #endif
-	 return data->get(idx-offset);
+         return data->get(idx-offset);
       }
       
       ///////////////////////////////////////////////////////////////////////
       // Return pointer to the data 
       // (**WARNING**not complete implementation)
       inline T* getPointer() {
-	return data ? (data->getPointer()) : 0;
+        return data ? (data->getPointer()) : 0;
       }
       
       ///////////////////////////////////////////////////////////////////////
       // Return const pointer to the data 
       // (**WARNING**not complete implementation)
       inline const T* getPointer() const {
-	return (data->getPointer());
+        return (data->getPointer());
       }
 
       inline T*** get3DPointer() {
-	return data ? data->get3DPointer():0;
+        return data ? data->get3DPointer():0;
       }
       inline T*** get3DPointer() const {
-	return data ? data->get3DPointer():0;
+        return data ? data->get3DPointer():0;
       }
 
    private:
@@ -154,54 +154,54 @@ namespace Uintah {
    template<class T>
       void Array3Window<T>::initialize(const T& val)
       {
-	 data->initialize(val, lowIndex-offset, highIndex-offset);
+         data->initialize(val, lowIndex-offset, highIndex-offset);
       }
    
    template<class T>
       void Array3Window<T>::copy(const Array3Window<T>* from)
       {
-	 data->copy(lowIndex-offset, highIndex-offset, from->data,
-		    from->lowIndex-from->offset, from->highIndex-from->offset);
+         data->copy(lowIndex-offset, highIndex-offset, from->data,
+                    from->lowIndex-from->offset, from->highIndex-from->offset);
       }
    
    template<class T>
       void Array3Window<T>::copy(const Array3Window<T>* from,
-				 const IntVector& low, const IntVector& high)
+                                 const IntVector& low, const IntVector& high)
       {
-	 data->copy(low-offset, high-offset, from->data,
-		    low-from->offset, high-from->offset);
+         data->copy(low-offset, high-offset, from->data,
+                    low-from->offset, high-from->offset);
       }
    
    template<class T>
       void Array3Window<T>::initialize(const T& val,
-				       const IntVector& s,
-				       const IntVector& e)
+                                       const IntVector& s,
+                                       const IntVector& e)
       {
-	 CHECKARRAYBOUNDS(s.x(), lowIndex.x(), highIndex.x());
-	 CHECKARRAYBOUNDS(s.y(), lowIndex.y(), highIndex.y());
-	 CHECKARRAYBOUNDS(s.z(), lowIndex.z(), highIndex.z());
-	 CHECKARRAYBOUNDS(e.x(), s.x(), highIndex.x()+1);
-	 CHECKARRAYBOUNDS(e.y(), s.y(), highIndex.y()+1);
-	 CHECKARRAYBOUNDS(e.z(), s.z(), highIndex.z()+1);
-	 data->initialize(val, s-offset, e-offset);
+         CHECKARRAYBOUNDS(s.x(), lowIndex.x(), highIndex.x());
+         CHECKARRAYBOUNDS(s.y(), lowIndex.y(), highIndex.y());
+         CHECKARRAYBOUNDS(s.z(), lowIndex.z(), highIndex.z());
+         CHECKARRAYBOUNDS(e.x(), s.x(), highIndex.x()+1);
+         CHECKARRAYBOUNDS(e.y(), s.y(), highIndex.y()+1);
+         CHECKARRAYBOUNDS(e.z(), s.z(), highIndex.z()+1);
+         data->initialize(val, s-offset, e-offset);
       }
    
    template<class T>
       Array3Window<T>::Array3Window(Array3Data<T>* data)
       : data(data), offset(0,0,0), lowIndex(0,0,0), highIndex(data->size())
       {
-	 data->addReference();
+         data->addReference();
       }
    
    template<class T>
       Array3Window<T>::Array3Window(Array3Data<T>* data,
-				    const IntVector& offset,
-				    const IntVector& lowIndex,
-				    const IntVector& highIndex)
+                                    const IntVector& offset,
+                                    const IntVector& lowIndex,
+                                    const IntVector& highIndex)
       : data(data), offset(offset), lowIndex(lowIndex), highIndex(highIndex)
       {
-	// null data can be used for a place holder in OnDemandDataWarehouse
-	if (data != 0) {
+        // null data can be used for a place holder in OnDemandDataWarehouse
+        if (data != 0) {
 #if SCI_ASSERTION_LEVEL >= 3
           // used to be several CHECKARRAYBOUNDS, but its lack of information
           // has bitten me a few times.... BJW
@@ -221,15 +221,15 @@ namespace Uintah {
             throw SCIRun::InternalError(ostr.str(), __FILE__, __LINE__);
           }
 #endif
-	  data->addReference();
-	}
-	else {
-	  // To use null data, put the offset as {INT_MAX, INT_MAX, INT_MAX}.
-	  // This way, when null is used accidentally, this assertion will
-	  // fail while allowing purposeful (and hopefully careful) uses
-	  // of null data.
-	  ASSERT(offset == IntVector(INT_MAX, INT_MAX, INT_MAX));
-	}
+          data->addReference();
+        }
+        else {
+          // To use null data, put the offset as {INT_MAX, INT_MAX, INT_MAX}.
+          // This way, when null is used accidentally, this assertion will
+          // fail while allowing purposeful (and hopefully careful) uses
+          // of null data.
+          ASSERT(offset == IntVector(INT_MAX, INT_MAX, INT_MAX));
+        }
       }
    
    template<class T>

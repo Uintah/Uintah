@@ -47,7 +47,7 @@ namespace Uintah {
         PSPatchMatlGhost
       
         Patch, Material, Ghost info
-	
+        
       
       GENERAL INFORMATION
       

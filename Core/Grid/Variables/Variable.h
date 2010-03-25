@@ -97,16 +97,16 @@ public:
   bool isValid() const {return d_valid;}
 
   void emit(OutputContext&, const IntVector& l, const IntVector& h,
-	    const string& compressionModeHint);
+            const string& compressionModeHint);
   void read(InputContext&, long end, bool swapbytes, int nByteMode,
-	    const string& compressionMode);
+            const string& compressionMode);
 
   virtual void emitNormal(std::ostream& out, const IntVector& l,
-			  const IntVector& h, ProblemSpecP varnode, bool outputDoubleAsFloat ) = 0;
+                          const IntVector& h, ProblemSpecP varnode, bool outputDoubleAsFloat ) = 0;
   virtual void readNormal(std::istream& in, bool swapbytes) = 0;
 
   virtual bool emitRLE(std::ostream& /*out*/, const IntVector& l,
-		       const IntVector& h, ProblemSpecP /*varnode*/);
+                       const IntVector& h, ProblemSpecP /*varnode*/);
   virtual void readRLE(std::istream& /*in*/, bool swapbytes, int nByteMode);
   
   virtual void allocate(const Patch* patch, const IntVector& boundary) = 0;

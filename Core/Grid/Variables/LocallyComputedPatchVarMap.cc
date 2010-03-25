@@ -55,7 +55,7 @@ private:
 };
 
 void PatchRangeQuerier::query(IntVector low, IntVector high,
-			      ResultContainer& result)
+                              ResultContainer& result)
 {
   back_insert_iterator<ResultContainer> result_ii(result);
   
@@ -73,7 +73,7 @@ void PatchRangeQuerier::query(IntVector low, IntVector high,
 }
 void
 PatchRangeQuerier::queryNeighbors(IntVector low, IntVector high,
-				  PatchRangeQuerier::ResultContainer& result)
+                                  PatchRangeQuerier::ResultContainer& result)
 {
   back_insert_iterator<ResultContainer> result_ii(result);
   
@@ -87,7 +87,7 @@ PatchRangeQuerier::queryNeighbors(IntVector low, IntVector high,
     level_->selectPatches(sideLow, sideHigh, tmp);
     for(ResultContainer::iterator iter = tmp.begin(); iter != tmp.end(); iter++){
       if(patches_.find(*iter) != patches_.end())
-	*result_ii++ = *iter;
+        *result_ii++ = *iter;
     }
 
     sideHigh = high;
@@ -97,7 +97,7 @@ PatchRangeQuerier::queryNeighbors(IntVector low, IntVector high,
     level_->selectPatches(sideLow, sideHigh, tmp);
     for(ResultContainer::iterator iter = tmp.begin(); iter != tmp.end(); iter++){
       if(patches_.find(*iter) != patches_.end())
-	*result_ii++ = *iter;
+        *result_ii++ = *iter;
     }
   }
 }
@@ -239,8 +239,8 @@ LocallyComputedPatchVarMap::LocallyComputedPatchSet::makeGroups()
   PatchRangeQuerier patchRangeQuerier(level, patches);
   connectedPatchGroups_ =
     SuperPatchSet::makeNearOptimalSuperBoxSet(patches.begin(),
-					      patches.end(),
-					      patchRangeQuerier);
+                                              patches.end(),
+                                              patchRangeQuerier);
   //cerr << "ConnectedPatchGroups: \n";
   //cerr << *connectedPatchGroups_ << "\n";
 
@@ -252,7 +252,7 @@ LocallyComputedPatchVarMap::LocallyComputedPatchSet::makeGroups()
     const SuperPatch* superBox = *iter;
     vector<const Patch*>::const_iterator SBiter;
     for (SBiter = superBox->getBoxes().begin();
-	 SBiter != superBox->getBoxes().end(); SBiter++) {
+         SBiter != superBox->getBoxes().end(); SBiter++) {
       map_[*SBiter] = superBox;
     }
   }

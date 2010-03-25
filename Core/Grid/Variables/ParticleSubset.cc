@@ -77,8 +77,8 @@ ParticleSubset::ParticleSubset(int num_particles, int matlIndex, const Patch* pa
 
 ParticleSubset::ParticleSubset(int num_particles, int matlIndex, const Patch* patch,
                                IntVector low, IntVector high,
-			       const vector<const Patch*>& neighbors,
-			       const vector<ParticleSubset*>& neighbor_subsets)
+                               const vector<const Patch*>& neighbors,
+                               const vector<ParticleSubset*>& neighbor_subsets)
   : d_numParticles(num_particles), d_matlIndex(matlIndex), d_patch(patch),
     d_low(low), d_high(high),
     neighbors(neighbors), neighbor_subsets(neighbor_subsets)

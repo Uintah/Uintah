@@ -91,7 +91,7 @@ WARNING
     operator=(const constVariableBase<VariableBase>& v)
     {
       const constVariable<VariableBase, Variable, T, Index>* cvp =
-	dynamic_cast<const constVariable<VariableBase, Variable, T, Index>*>(&v);
+        dynamic_cast<const constVariable<VariableBase, Variable, T, Index>*>(&v);
       ASSERT(cvp != 0);
       copyPointer(cvp->rep_);
       return *this;

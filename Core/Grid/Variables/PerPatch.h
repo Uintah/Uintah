@@ -82,22 +82,22 @@ WARNING
       static const TypeDescription* getTypeDescription();
       
       inline operator T () const {
-	 return value;
+         return value;
       }
       inline T& get() {
-	 return value;
+         return value;
       }
       inline const T& get() const {
-	 return value;
+         return value;
       }
       void setData(const T&);
       virtual PerPatchBase* clone() const;
       PerPatch<T>& operator=(const PerPatch<T>& copy);
       virtual void getSizeInfo(string& elems, unsigned long& totsize,
-			       void*& ptr) const {
-	elems="1";
-	totsize=sizeof(T);
-	ptr=(void*)&value;
+                               void*& ptr) const {
+        elems="1";
+        totsize=sizeof(T);
+        ptr=(void*)&value;
       }
    private:
       T value;
@@ -138,15 +138,15 @@ WARNING
       PerPatchBase*
       PerPatch<T>::clone() const
       {
-	 return scinew PerPatch<T>(*this);
+         return scinew PerPatch<T>(*this);
       }
    
    template<class T>
       PerPatch<T>&
       PerPatch<T>::operator=(const PerPatch<T>& copy)
       {
-	 value = copy.value;
-	 return *this;
+         value = copy.value;
+         return *this;
       }
 
    template<class T>
@@ -155,7 +155,7 @@ WARNING
       {
          const PerPatch<T>* c = dynamic_cast<const PerPatch<T>* >(&copy);
          if(!c)
-	   SCI_THROW(TypeMismatchException("Type mismatch in PerPatch variable", __FILE__, __LINE__));
+           SCI_THROW(TypeMismatchException("Type mismatch in PerPatch variable", __FILE__, __LINE__));
          *this = *c;
       }
 
@@ -164,7 +164,7 @@ WARNING
       void
       PerPatch<T>::setData(const T& val)
       {
-	value = val;
+        value = val;
       }
 } // End namespace Uintah
 

@@ -88,13 +88,13 @@ WARNING
     virtual void getSizes(IntVector& low, IntVector& high,
                           IntVector& siz) const = 0;
     virtual void getSizes(IntVector& low, IntVector& high,
-			    IntVector& dataLow, IntVector& siz,
-			    IntVector& strides) const = 0;
+                            IntVector& dataLow, IntVector& siz,
+                            IntVector& strides) const = 0;
     //////////
     // Insert Documentation Here:
     virtual void copyPatch(const GridVariableBase* src,
-			   const IntVector& lowIndex,
-			   const IntVector& highIndex) = 0;
+                           const IntVector& lowIndex,
+                           const IntVector& highIndex) = 0;
     
     virtual void copyData(const GridVariableBase* src) = 0;
     

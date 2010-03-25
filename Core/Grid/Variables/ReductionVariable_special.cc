@@ -320,7 +320,7 @@ template<>
 UINTAHSHARE void
 ReductionVariable<Vector, Reductions::Sum<Vector> >
 ::getMPIData(vector<char>& data, int& index)
-{	
+{       
   ASSERTRANGE(index, 0, static_cast<int>(data.size()+1-3*sizeof(double)));
   double* ptr = reinterpret_cast<double*>(&data[index]);
   *ptr++ = value.x();

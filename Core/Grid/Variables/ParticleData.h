@@ -74,15 +74,15 @@ WARNING
       //////////
       // Insert Documentation Here:
       void resize(int newSize) {
-	T* newdata = scinew T[newSize];
-	if(data){
-	  int smaller = ((newSize < size ) ? newSize:size);
-	  for(int i = 0; i < smaller; i++)
-	    newdata[i] = data[i];
-	  delete[] data;
-	}
-	data = newdata;
-	size = newSize;
+        T* newdata = scinew T[newSize];
+        if(data){
+          int smaller = ((newSize < size ) ? newSize:size);
+          for(int i = 0; i < smaller; i++)
+            newdata[i] = data[i];
+          delete[] data;
+        }
+        data = newdata;
+        size = newSize;
       }
 
    private:
@@ -99,28 +99,28 @@ WARNING
    template<class T>
       ParticleData<T>::ParticleData()
       {
-	data=0;
+        data=0;
       }
    
    template<class T>
      ParticleData<T>::ParticleData(particleIndex size)
      : size(size)
       {
-	data = scinew T[size];
+        data = scinew T[size];
       }
       
    template<class T>
       ParticleData<T>::~ParticleData()
       {
-	if(data)
-	  delete[] data;
+        if(data)
+          delete[] data;
       }
 
    template<class T>
      ParticleData<T>& ParticleData<T>::operator=(const ParticleData<T>& copy)
      {
        for(particleIndex i=0;i<size;i++)
-	 data[i] = copy.data[i];
+         data[i] = copy.data[i];
        return *this;
      }
 } // End namespace Uintah

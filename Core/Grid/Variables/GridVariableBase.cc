@@ -49,7 +49,7 @@ using namespace SCIRun;
 extern UINTAHSHARE Mutex MPITypeLock;
 
 void GridVariableBase::getMPIBuffer(BufferInfo& buffer,
-	  			    const IntVector& low, const IntVector& high)
+                                    const IntVector& low, const IntVector& high)
 {
   const TypeDescription* td = virtualGetTypeDescription()->getSubType();
   MPI_Datatype basetype=td->getMPIType();

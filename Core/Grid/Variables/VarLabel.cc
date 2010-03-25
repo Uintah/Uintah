@@ -66,7 +66,7 @@ VarLabel::create(const string& name,
     // And I am not sure why we have to do this on the mac or windows...
     if (td != dup->d_td || vartype != dup->d_vartype)
       SCI_THROW(InternalError(string("VarLabel with same name exists, '"
-			  + name + "', but with different type"), __FILE__, __LINE__));
+                          + name + "', but with different type"), __FILE__, __LINE__));
 #endif
     label = dup;
   }
@@ -96,7 +96,7 @@ VarLabel::destroy(const VarLabel* label)
 }
 
 VarLabel::VarLabel(const std::string& name, const Uintah::TypeDescription* td,
-		   const IntVector& boundaryLayer, VarType vartype)
+                   const IntVector& boundaryLayer, VarType vartype)
   : d_name(name), d_td(td), d_boundaryLayer(boundaryLayer),
     d_vartype(vartype), d_compressionMode("default"),
     d_allowMultipleComputes(false)

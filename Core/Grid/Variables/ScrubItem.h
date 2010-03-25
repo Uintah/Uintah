@@ -75,7 +75,7 @@ struct ScrubItem {
   }
 
   void operator delete(void* rp, size_t)
-  {	
+  {     
     scrub_alloc.free(rp);
   }
 #endif

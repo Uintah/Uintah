@@ -91,7 +91,7 @@ Variable::emit( OutputContext& oc, const IntVector& l,
     try_all = true;
   }
   else if ((compressionModeHint == "rle, gzip") ||
-	   (compressionModeHint == "gzip, rle")) {
+           (compressionModeHint == "gzip, rle")) {
     use_rle = true;
     use_gzip = true;
   }
@@ -114,7 +114,7 @@ Variable::emit( OutputContext& oc, const IntVector& l,
       cout << "Invalid Compression Mode - throwing exception...\n";
 
       SCI_THROW(InvalidCompressionMode("rle",
-				   virtualGetTypeDescription()->getName(), __FILE__, __LINE__));
+                                   virtualGetTypeDescription()->getName(), __FILE__, __LINE__));
     }
   }
   else {
@@ -135,21 +135,21 @@ Variable::emit( OutputContext& oc, const IntVector& l,
     if (try_all) {
       ostringstream outstream2;
       if (emitRLE(outstream2, l, h, oc.varnode)) {
-	preGzip2 = outstream2.str();
-	string* writeoutString2 = gzipCompress(&preGzip2, &buffer2);
-	
-	if ((*writeoutString2).size() < (*writeoutString).size()) {
-	  // rle was making it worse
-	  writeoutString->erase(); // erase the old one to save space
-	  writeoutString = writeoutString2; 
-	  used_rle = true;
-	  if (writeoutString2 == &buffer2)
-	    used_gzip = true;
-	  else
-	  used_gzip = false;
-	}
-	else
-	  writeoutString2->erase(); // doesn't get used, so erase it
+        preGzip2 = outstream2.str();
+        string* writeoutString2 = gzipCompress(&preGzip2, &buffer2);
+        
+        if ((*writeoutString2).size() < (*writeoutString).size()) {
+          // rle was making it worse
+          writeoutString->erase(); // erase the old one to save space
+          writeoutString = writeoutString2; 
+          used_rle = true;
+          if (writeoutString2 == &buffer2)
+            used_gzip = true;
+          else
+          used_gzip = false;
+        }
+        else
+          writeoutString2->erase(); // doesn't get used, so erase it
       }
     }
   }
@@ -181,9 +181,9 @@ Variable::emit( OutputContext& oc, const IntVector& l,
     // compression mode string changes
     if (used_gzip) {
       if (used_rle)
-	compressionMode = "rle, gzip";
+        compressionMode = "rle, gzip";
       else
-	compressionMode = "gzip";
+        compressionMode = "gzip";
     }
     else if (used_rle) {
       compressionMode = "rle";
@@ -209,10 +209,10 @@ Variable::gzipCompress(string* pUncompressed, string* pBuffer)
   pBuffer->resize(compressBufsize + sizeof(ssize_t));
   char* buf = const_cast<char*>(pBuffer->c_str()); // casting from const
   buf += sizeof(ssize_t); /* the first part will give the size of
-				   the uncompressed data */
+                                   the uncompressed data */
   
   if (compress((Bytef*)buf, &compressBufsize,
-	       (const Bytef*)pUncompressed->c_str(), uncompressedSize) != Z_OK)
+               (const Bytef*)pUncompressed->c_str(), uncompressedSize) != Z_OK)
     cerr << "compress failed in Uintah::Variable::gzipCompress\n";
 
   pBuffer->resize(compressBufsize + sizeof(ssize_t));
@@ -220,7 +220,7 @@ Variable::gzipCompress(string* pUncompressed, string* pBuffer)
     // gzip made it worse -- forget that
     // (this should rarely, if ever, happen, but just in case)
     pBuffer->erase(); /* the other buffer isn't needed, erase it to
-			 save space */
+                         save space */
     return pUncompressed;
   }
   else {
@@ -230,7 +230,7 @@ Variable::gzipCompress(string* pUncompressed, string* pBuffer)
       (*pBuffer)[i] = *pbyte;
     }
     pUncompressed->erase(); /* the original buffer isn't needed, erase it to
-			       save space */
+                               save space */
     return pBuffer;
   } 
 }
@@ -331,7 +331,7 @@ void
 Variable::readRLE(istream& /*in*/, bool /*swapBytes*/, int /*nByteMode*/)
 {
   SCI_THROW(InvalidCompressionMode("rle",
-			       virtualGetTypeDescription()->getName(), __FILE__, __LINE__));
+                               virtualGetTypeDescription()->getName(), __FILE__, __LINE__));
 }
 
 void

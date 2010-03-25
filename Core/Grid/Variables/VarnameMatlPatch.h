@@ -44,7 +44,7 @@ class Patch;
         VarnameMatlPatch
       
         Variable name, Material, and Patch
-	
+        
       
       GENERAL INFORMATION
       
@@ -81,9 +81,9 @@ struct VarnameMatlPatch {
   {
     if (name_ == other.name_) {
       if (matlIndex_ == other.matlIndex_)
-	return patchid_ < other.patchid_;
+        return patchid_ < other.patchid_;
       else
-	return matlIndex_ < other.matlIndex_;
+        return matlIndex_ < other.matlIndex_;
     }
     else {
       return name_ < name_;

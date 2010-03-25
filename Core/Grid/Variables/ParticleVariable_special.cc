@@ -44,8 +44,8 @@ using namespace SCIRun;
   template<>
   void
   ParticleVariable<Point>::packMPI(void* buf, int bufsize, int* bufpos,
-				   const ProcessorGroup* pg,
-				   ParticleSubset* pset, const Patch* forPatch)
+                                   const ProcessorGroup* pg,
+                                   ParticleSubset* pset, const Patch* forPatch)
   {
     // This should be fixed for variable sized types!
     if (!forPatch->isVirtual()) {
@@ -55,13 +55,13 @@ using namespace SCIRun;
       Vector offset = forPatch->getVirtualOffsetVector();
       const TypeDescription* td = getTypeDescription()->getSubType();
       if(td->isFlat()){
-	for(ParticleSubset::iterator iter = pset->begin();
-	    iter != pset->end(); iter++){
-	  Point p = d_pdata->data[*iter] - offset;
-	  MPI_Pack(&p, 1, td->getMPIType(), buf, bufsize, bufpos, pg->getComm());
-	}
+        for(ParticleSubset::iterator iter = pset->begin();
+            iter != pset->end(); iter++){
+          Point p = d_pdata->data[*iter] - offset;
+          MPI_Pack(&p, 1, td->getMPIType(), buf, bufsize, bufpos, pg->getComm());
+        }
       } else {
-	SCI_THROW(InternalError("packMPI not finished\n", __FILE__, __LINE__));
+        SCI_THROW(InternalError("packMPI not finished\n", __FILE__, __LINE__));
       }
     }
   }
@@ -69,10 +69,10 @@ using namespace SCIRun;
   // specialization for T=Point
   template <>
   void ParticleVariable<Point>::gather(ParticleSubset* pset,
-				       vector<ParticleSubset*> subsets,
-				       vector<ParticleVariableBase*> srcs,
-				       const vector<const Patch*>& srcPatches,
-				       particleIndex extra)
+                                       vector<ParticleSubset*> subsets,
+                                       vector<ParticleVariableBase*> srcs,
+                                       const vector<const Patch*>& srcPatches,
+                                       particleIndex extra)
   {
     if(d_pdata && d_pdata->removeReference())
       delete d_pdata;
@@ -98,28 +98,28 @@ using namespace SCIRun;
     ParticleSubset::iterator dstiter = pset->begin();
     for(int i=0;i<(int)subsets.size();i++){
       ParticleVariable<Point>* srcptr =
-	dynamic_cast<ParticleVariable<Point>*>(srcs[i]);
+        dynamic_cast<ParticleVariable<Point>*>(srcs[i]);
       if(!srcptr)
-	SCI_THROW(TypeMismatchException("Type mismatch in ParticleVariable::gather", __FILE__, __LINE__));
+        SCI_THROW(TypeMismatchException("Type mismatch in ParticleVariable::gather", __FILE__, __LINE__));
       ParticleVariable<Point>& src = *srcptr;
       ParticleSubset* subset = subsets[i];
       const Patch* srcPatch = srcPatches[i];
       if (srcPatch == 0 || !srcPatch->isVirtual()) {
-	for(ParticleSubset::iterator srciter = subset->begin();
-	    srciter != subset->end(); srciter++){
-	  (*this)[*dstiter] = src[*srciter];
-	  ASSERT(box.contains(src[*srciter]));	  
-	  dstiter++;
-	}
+        for(ParticleSubset::iterator srciter = subset->begin();
+            srciter != subset->end(); srciter++){
+          (*this)[*dstiter] = src[*srciter];
+          ASSERT(box.contains(src[*srciter]));    
+          dstiter++;
+        }
       }
       else if (subset->numParticles() != 0) {
-	Vector offset = srcPatch->getVirtualOffsetVector();
-	for(ParticleSubset::iterator srciter = subset->begin();
-	    srciter != subset->end(); srciter++){
-	  (*this)[*dstiter] = src[*srciter] + offset;
-	  ASSERT(box.contains((*this)[*dstiter]));
-	  dstiter++;
-	}
+        Vector offset = srcPatch->getVirtualOffsetVector();
+        for(ParticleSubset::iterator srciter = subset->begin();
+            srciter != subset->end(); srciter++){
+          (*this)[*dstiter] = src[*srciter] + offset;
+          ASSERT(box.contains((*this)[*dstiter]));
+          dstiter++;
+        }
       }
     }
     ASSERTEQ(dstiter+extra,pset->end());    
@@ -129,7 +129,7 @@ using namespace SCIRun;
   template<>
   void
   ParticleVariable<double>::emitNormal(ostream& out, const IntVector&,
-				  const IntVector&, ProblemSpecP varnode, bool outputDoubleAsFloat )
+                                  const IntVector&, ProblemSpecP varnode, bool outputDoubleAsFloat )
   {
     const TypeDescription* td = fun_getTypeDescription((double*)0);
 
@@ -141,26 +141,26 @@ using namespace SCIRun;
     }
     else {
       if (outputDoubleAsFloat) {
-	// This could be optimized...
-	ParticleSubset::iterator iter = d_pset->begin();
-	for ( ; iter != d_pset->end(); iter++) {
-	  float tempFloat = (float)(*this)[*iter];
-	  out.write((char*)&tempFloat, sizeof(float));
-	}
+        // This could be optimized...
+        ParticleSubset::iterator iter = d_pset->begin();
+        for ( ; iter != d_pset->end(); iter++) {
+          float tempFloat = (float)(*this)[*iter];
+          out.write((char*)&tempFloat, sizeof(float));
+        }
       } else {
-	// This could be optimized...
-	ParticleSubset::iterator iter = d_pset->begin();
-	while(iter != d_pset->end()){
-	  particleIndex start = *iter;
-	  iter++;
-	  particleIndex end = start+1;
-	  while(iter != d_pset->end() && *iter == end) {
-	    end++;
-	    iter++;
-	  }
-	  ssize_t size = (ssize_t)(sizeof(double)*(end-start));
-	  out.write((char*)&(*this)[start], size);
-	}
+        // This could be optimized...
+        ParticleSubset::iterator iter = d_pset->begin();
+        while(iter != d_pset->end()){
+          particleIndex start = *iter;
+          iter++;
+          particleIndex end = start+1;
+          while(iter != d_pset->end() && *iter == end) {
+            end++;
+            iter++;
+          }
+          ssize_t size = (ssize_t)(sizeof(double)*(end-start));
+          out.write((char*)&(*this)[start], size);
+        }
       }
     }
   }

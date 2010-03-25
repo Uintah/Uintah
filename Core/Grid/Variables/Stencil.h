@@ -98,8 +98,8 @@ WARNING
       const TypeDescription*
       Stencil<T>::getTypeDescription()
       {
-	 //cerr << "Stencil::getTypeDescription not done\n";
-	 return 0;
+         //cerr << "Stencil::getTypeDescription not done\n";
+         return 0;
       }
    
    template<class T>
@@ -111,45 +111,45 @@ WARNING
       void
       Stencil<T>::get(DataItem& copy) const
       {
-	 Stencil<T>* ref=dynamic_cast<Stencil<T>*>(&copy);
-	 if(!ref)
-	   SCI_THROW(TypeMismatchException("Stencil<T>", __FILE__, __LINE__));
-	 *ref = *this;
+         Stencil<T>* ref=dynamic_cast<Stencil<T>*>(&copy);
+         if(!ref)
+           SCI_THROW(TypeMismatchException("Stencil<T>", __FILE__, __LINE__));
+         *ref = *this;
       }
    
    template<class T>
       Stencil<T>*
       Stencil<T>::clone() const
       {
-	 return scinew Stencil<T>(*this);
+         return scinew Stencil<T>(*this);
       }
    
    template<class T>
       Stencil<T>&
       Stencil<T>::operator=(const Stencil<T>& copy)
       {
-	 if(this != &copy){
-	    std::cerr << "Stencil<T>::operator= not done!\n";
-	 }
-	 return *this;
+         if(this != &copy){
+            std::cerr << "Stencil<T>::operator= not done!\n";
+         }
+         return *this;
       }
    
    template<class T>
       Stencil<T>::Stencil()
       {
-	 std::cerr << "Stencil ctor not done!\n";
+         std::cerr << "Stencil ctor not done!\n";
       }
    
    template<class T>
       Stencil<T>::Stencil(const Stencil<T>& copy)
       {
-	 std::cerr << "Stencil copy ctor not done!\n";
+         std::cerr << "Stencil copy ctor not done!\n";
       }
    
    template<class T>
       void Stencil<T>::allocate(const Patch*)
       {
-	 std::cerr << "Stencil::allocate not done!\n";
+         std::cerr << "Stencil::allocate not done!\n";
       }
 } // End namespace Uintah
 

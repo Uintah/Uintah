@@ -157,30 +157,30 @@ public:
 
   // specialized for T=Point
   virtual void gather(ParticleSubset* dest,
-		      std::vector<ParticleSubset*> subsets,
-		      std::vector<ParticleVariableBase*> srcs,
-		      const std::vector<const Patch*>& /*srcPatches*/,
-		      particleIndex extra = 0);  
+                      std::vector<ParticleSubset*> subsets,
+                      std::vector<ParticleVariableBase*> srcs,
+                      const std::vector<const Patch*>& /*srcPatches*/,
+                      particleIndex extra = 0);  
   virtual void gather(ParticleSubset* dest,
-		      std::vector<ParticleSubset*> subsets,
-		      std::vector<ParticleVariableBase*> srcs,
-		      particleIndex extra = 0);
+                      std::vector<ParticleSubset*> subsets,
+                      std::vector<ParticleVariableBase*> srcs,
+                      particleIndex extra = 0);
   
   virtual void unpackMPI(void* buf, int bufsize, int* bufpos,
-			 const ProcessorGroup* pg, ParticleSubset* pset);
+                         const ProcessorGroup* pg, ParticleSubset* pset);
   virtual void packMPI(void* buf, int bufsize, int* bufpos,
-		       const ProcessorGroup* pg, ParticleSubset* pset);
+                       const ProcessorGroup* pg, ParticleSubset* pset);
   // specialized for T=Point
   virtual void packMPI(void* buf, int bufsize, int* bufpos,
-		       const ProcessorGroup* pg, ParticleSubset* pset,
-		       const Patch* /*forPatch*/);
+                       const ProcessorGroup* pg, ParticleSubset* pset,
+                       const Patch* /*forPatch*/);
   virtual void packsizeMPI(int* bufpos,
-			   const ProcessorGroup* pg,
-			   ParticleSubset* pset);
+                           const ProcessorGroup* pg,
+                           ParticleSubset* pset);
   virtual void emitNormal(ostream& out, const IntVector& l,
-			  const IntVector& h, ProblemSpecP varnode, bool outputDoubleAsFloat);
+                          const IntVector& h, ProblemSpecP varnode, bool outputDoubleAsFloat);
   virtual bool emitRLE(ostream& out, const IntVector& l, const IntVector& h,
-		       ProblemSpecP varnode);
+                       ProblemSpecP varnode);
   
   virtual void readNormal(istream& in, bool swapBytes);
   virtual void readRLE(istream& in, bool swapBytes, int nByteMode);
@@ -191,7 +191,7 @@ public:
     return d_pdata;
   }
   virtual void getSizeInfo(std::string& elems, unsigned long& totsize,
-			   void*& ptr) const {
+                           void*& ptr) const {
     std::ostringstream str;
     str << getParticleSubset()->numParticles();
     elems=str.str();
@@ -223,8 +223,8 @@ private:
     static TypeDescription* td;
     if(!td){
       td = scinew TypeDescription(TypeDescription::ParticleVariable,
-				  "ParticleVariable", &maker,
-				  fun_getTypeDescription((T*)0));
+                                  "ParticleVariable", &maker,
+                                  fun_getTypeDescription((T*)0));
     }
     return td;
   }
@@ -331,7 +331,7 @@ private:
 
   template<class T>
   ParticleVariable<T>::ParticleVariable(ParticleData<T>* pdata,
-					ParticleSubset* pset)
+                                        ParticleSubset* pset)
     : ParticleVariableBase(pset), d_pdata(pdata)
   {
     if(d_pdata)
@@ -353,10 +353,10 @@ private:
     if(this != &copy){
       ParticleVariableBase::operator=(copy);
       if(d_pdata && d_pdata->removeReference())
-	delete d_pdata;
+        delete d_pdata;
       d_pdata = copy.d_pdata;
       if(d_pdata)
-	d_pdata->addReference();
+        d_pdata->addReference();
     }
   }
    
@@ -373,25 +373,25 @@ private:
   // specialization for T=Point
   template <>
   UINTAHSHARE void ParticleVariable<Point>::gather(ParticleSubset* pset,
-				       vector<ParticleSubset*> subsets,
-				       vector<ParticleVariableBase*> srcs,
-				       const vector<const Patch*>& srcPatches,
-				       particleIndex extra);
+                                       vector<ParticleSubset*> subsets,
+                                       vector<ParticleVariableBase*> srcs,
+                                       const vector<const Patch*>& srcPatches,
+                                       particleIndex extra);
 
   template<class T>
     void ParticleVariable<T>::gather(ParticleSubset* pset,
-				     vector<ParticleSubset*> subsets,
-				     vector<ParticleVariableBase*> srcs,
-				     const vector<const Patch*>& /*srcPatches*/,
-				     particleIndex extra)
+                                     vector<ParticleSubset*> subsets,
+                                     vector<ParticleVariableBase*> srcs,
+                                     const vector<const Patch*>& /*srcPatches*/,
+                                     particleIndex extra)
   { gather(pset, subsets, srcs, extra); }
 
 template<class T>
   void
   ParticleVariable<T>::gather(ParticleSubset* pset,
-			      std::vector<ParticleSubset*> subsets,
-			      std::vector<ParticleVariableBase*> srcs,
-			      particleIndex extra)
+                              std::vector<ParticleSubset*> subsets,
+                              std::vector<ParticleVariableBase*> srcs,
+                              particleIndex extra)
   {
     if(d_pdata && d_pdata->removeReference())
       delete d_pdata;
@@ -406,13 +406,13 @@ template<class T>
     for(int i=0;i<(int)subsets.size();i++){
       ParticleVariable<T>* srcptr = dynamic_cast<ParticleVariable<T>*>(srcs[i]);
       if(!srcptr)
-	SCI_THROW(TypeMismatchException("Type mismatch in ParticleVariable::gather", __FILE__, __LINE__));
+        SCI_THROW(TypeMismatchException("Type mismatch in ParticleVariable::gather", __FILE__, __LINE__));
       ParticleVariable<T>& src = *srcptr;
       ParticleSubset* subset = subsets[i];
       for(ParticleSubset::iterator srciter = subset->begin();
-	  srciter != subset->end(); srciter++){
-	(*this)[*dstiter] = src[*srciter];
-	dstiter++;
+          srciter != subset->end(); srciter++){
+        (*this)[*dstiter] = src[*srciter];
+        dstiter++;
       }
     }
     ASSERT(dstiter+extra == pset->end());
@@ -436,17 +436,17 @@ template<class T>
   template<class T>
   void
   ParticleVariable<T>::unpackMPI(void* buf, int bufsize, int* bufpos,
-				 const ProcessorGroup* pg,
-				 ParticleSubset* pset)
+                                 const ProcessorGroup* pg,
+                                 ParticleSubset* pset)
   {
     // This should be fixed for variable sized types!
     const TypeDescription* td = getTypeDescription()->getSubType();
     if(td->isFlat()){
       for(ParticleSubset::iterator iter = pset->begin();
-	  iter != pset->end(); iter++){
-	MPI_Unpack(buf, bufsize, bufpos,
-		   &d_pdata->data[*iter], 1, td->getMPIType(),
-		   pg->getComm());
+          iter != pset->end(); iter++){
+        MPI_Unpack(buf, bufsize, bufpos,
+                   &d_pdata->data[*iter], 1, td->getMPIType(),
+                   pg->getComm());
       }
     } else {
       SCI_THROW(InternalError("packMPI not finished\n", __FILE__, __LINE__));
@@ -457,31 +457,31 @@ template<class T>
   template<>
   UINTAHSHARE void
     ParticleVariable<Point>::packMPI(void* buf, int bufsize, int* bufpos,
-				     const ProcessorGroup* pg,
-				     ParticleSubset* pset,
-				     const Patch* forPatch);
+                                     const ProcessorGroup* pg,
+                                     ParticleSubset* pset,
+                                     const Patch* forPatch);
   template<class T>
   void
     ParticleVariable<T>::packMPI(void* buf, int bufsize, int* bufpos,
-				 const ProcessorGroup* pg,
-				 ParticleSubset* pset,
-				 const Patch* /*forPatch*/)
+                                 const ProcessorGroup* pg,
+                                 ParticleSubset* pset,
+                                 const Patch* /*forPatch*/)
     { packMPI(buf, bufsize, bufpos, pg, pset); }
 
 
   template<class T>
   void
   ParticleVariable<T>::packMPI(void* buf, int bufsize, int* bufpos,
-			       const ProcessorGroup* pg,
-			       ParticleSubset* pset)
+                               const ProcessorGroup* pg,
+                               ParticleSubset* pset)
   {
     // This should be fixed for variable sized types!
     const TypeDescription* td = getTypeDescription()->getSubType();
     if(td->isFlat()){
       for(ParticleSubset::iterator iter = pset->begin();
-	  iter != pset->end(); iter++){
-	MPI_Pack(&d_pdata->data[*iter], 1, td->getMPIType(),
-		 buf, bufsize, bufpos, pg->getComm());
+          iter != pset->end(); iter++){
+        MPI_Pack(&d_pdata->data[*iter], 1, td->getMPIType(),
+                 buf, bufsize, bufpos, pg->getComm());
       }
     } else {
       SCI_THROW(InternalError("packMPI not finished\n", __FILE__, __LINE__));
@@ -491,8 +491,8 @@ template<class T>
   template<class T>
   void
   ParticleVariable<T>::packsizeMPI(int* bufpos,
-				   const ProcessorGroup* pg,
-				   ParticleSubset* pset)
+                                   const ProcessorGroup* pg,
+                                   ParticleSubset* pset)
   {
     // This should be fixed for variable sized types!
     const TypeDescription* td = getTypeDescription()->getSubType();
@@ -510,12 +510,12 @@ template<class T>
   template<>
   UINTAHSHARE void
   ParticleVariable<double>::emitNormal(ostream& out, const IntVector&,
-				  const IntVector&, ProblemSpecP varnode, bool outputDoubleAsFloat );
+                                  const IntVector&, ProblemSpecP varnode, bool outputDoubleAsFloat );
 
   template<class T>
   void
   ParticleVariable<T>::emitNormal(ostream& out, const IntVector&,
-				  const IntVector&, ProblemSpecP varnode, bool /*outputDoubleAsFloat*/ )
+                                  const IntVector&, ProblemSpecP varnode, bool /*outputDoubleAsFloat*/ )
   {
     const TypeDescription* td = fun_getTypeDescription((T*)0);
 
@@ -529,15 +529,15 @@ template<class T>
       // This could be optimized...
       ParticleSubset::iterator iter = d_pset->begin();
       while(iter != d_pset->end()){
-	particleIndex start = *iter;
-	iter++;
-	particleIndex end = start+1;
-	while(iter != d_pset->end() && *iter == end) {
-	  end++;
-	  iter++;
-	}
-	ssize_t size = (ssize_t)(sizeof(T)*(end-start));
-	out.write((char*)&(*this)[start], size);
+        particleIndex start = *iter;
+        iter++;
+        particleIndex end = start+1;
+        while(iter != d_pset->end() && *iter == end) {
+          end++;
+          iter++;
+        }
+        ssize_t size = (ssize_t)(sizeof(T)*(end-start));
+        out.write((char*)&(*this)[start], size);
       }
     }
   }
@@ -545,7 +545,7 @@ template<class T>
   template<class T>
   bool
   ParticleVariable<T>::emitRLE(ostream& out, const IntVector& /*l*/,
-			       const IntVector& /*h*/, ProblemSpecP varnode)
+                               const IntVector& /*h*/, ProblemSpecP varnode)
   {
     const TypeDescription* td = fun_getTypeDescription((T*)0);
     if (varnode->findBlock("numParticles") == 0) {
@@ -559,7 +559,7 @@ template<class T>
       SCIRun::RunLengthEncoder<T> rle;
       ParticleSubset::iterator iter = d_pset->begin();
       for ( ; iter != d_pset->end(); iter++)
-	rle.addItem((*this)[*iter]);
+        rle.addItem((*this)[*iter]);
       rle.write(out);
     }
     return true;
@@ -577,20 +577,20 @@ template<class T>
       // This could be optimized...
       ParticleSubset::iterator iter = d_pset->begin();
       while(iter != d_pset->end()){
-	particleIndex start = *iter;
-	iter++;
-	particleIndex end = start+1;
-	while(iter != d_pset->end() && *iter == end) {
-	  end++;
-	  iter++;
-	}
-	ssize_t size = (ssize_t)(sizeof(T)*(end-start));
-	in.read((char*)&(*this)[start], size);
-	if (swapBytes) {
-	  for (particleIndex idx = start; idx != end; idx++) {
-	    SCIRun::swapbytes((*this)[idx]);
-	  }
-	}
+        particleIndex start = *iter;
+        iter++;
+        particleIndex end = start+1;
+        while(iter != d_pset->end() && *iter == end) {
+          end++;
+          iter++;
+        }
+        ssize_t size = (ssize_t)(sizeof(T)*(end-start));
+        in.read((char*)&(*this)[start], size);
+        if (swapBytes) {
+          for (particleIndex idx = start; idx != end; idx++) {
+            SCIRun::swapbytes((*this)[idx]);
+          }
+        }
       }
     }
   }
@@ -609,11 +609,11 @@ template<class T>
       ParticleSubset::iterator iter = d_pset->begin();
       typename SCIRun::RunLengthEncoder<T>::iterator rle_iter = rle.begin();
       for ( ; iter != d_pset->end() && rle_iter != rle.end();
-	    iter++, rle_iter++)
-	(*this)[*iter] = *rle_iter;
+            iter++, rle_iter++)
+        (*this)[*iter] = *rle_iter;
 
       if ((rle_iter != rle.end()) || (iter != d_pset->end()))
-	SCI_THROW(InternalError("ParticleVariable::read RLE data is not consistent with the particle subset size", __FILE__, __LINE__));
+        SCI_THROW(InternalError("ParticleVariable::read RLE data is not consistent with the particle subset size", __FILE__, __LINE__));
     }
   }
 
