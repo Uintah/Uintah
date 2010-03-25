@@ -43,12 +43,12 @@ DEALINGS IN THE SOFTWARE.
 namespace Uintah {
 
 /*!
-	
+        
   \class BoundCondReader
-	
+        
   \brief Reads in the boundary conditions and stores them for later processing
   by Patch.cc.
-	
+        
   Reads in the boundary conditions for a given face and a given material.
   Multiple material bc specifications may be combined within a single 
   \<Face\> \</Face\>.
@@ -126,7 +126,7 @@ namespace Uintah {
     /// tags are not specified correctly.
     BCGeomBase* createBoundaryConditionFace(ProblemSpecP& ps,
                                             const ProblemSpecP& grid_ps,
-					    Patch::FaceType& face_side);
+                                            Patch::FaceType& face_side);
 
 
     /// Combine the boundary conditions for a given face into union and 
