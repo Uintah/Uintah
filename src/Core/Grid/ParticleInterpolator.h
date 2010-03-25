@@ -57,7 +57,7 @@ namespace Uintah {
     virtual ParticleInterpolator* clone(const Patch*) = 0;
     
     virtual void findCellAndWeights(const Point& p,vector<IntVector>& ni, 
-				    vector<double>& S,const Vector& size, const Matrix3& defgrad) = 0;
+                                    vector<double>& S,const Vector& size, const Matrix3& defgrad) = 0;
     virtual void findCellAndShapeDerivatives(const Point& pos,
                                              vector<IntVector>& ni,
                                              vector<Vector>& d_S,

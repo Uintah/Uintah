@@ -87,10 +87,10 @@ WARNING
     public:
       virtual ~ActionBase();
       virtual void doit(const ProcessorGroup* pc,
-			const PatchSubset* patches,
-			const MaterialSubset* matls,
-			DataWarehouse* fromDW,
-			DataWarehouse* toDW) = 0;
+                        const PatchSubset* patches,
+                        const MaterialSubset* matls,
+                        DataWarehouse* fromDW,
+                        DataWarehouse* toDW) = 0;
     };
     
     template<class T>
@@ -98,28 +98,28 @@ WARNING
       
       T* ptr;
       void (T::*pmf)(const ProcessorGroup*,
-		     const PatchSubset* patches,
-		     const MaterialSubset* matls,
-		     DataWarehouse*,
-		     DataWarehouse*);
+                     const PatchSubset* patches,
+                     const MaterialSubset* matls,
+                     DataWarehouse*,
+                     DataWarehouse*);
     public: // class Action
       Action( T* ptr,
-	      void (T::*pmf)(const ProcessorGroup*, 
-			     const PatchSubset* patches,
-			     const MaterialSubset* matls,
-			     DataWarehouse*,
-			     DataWarehouse*) )
-	: ptr(ptr), pmf(pmf) {}
+              void (T::*pmf)(const ProcessorGroup*, 
+                             const PatchSubset* patches,
+                             const MaterialSubset* matls,
+                             DataWarehouse*,
+                             DataWarehouse*) )
+        : ptr(ptr), pmf(pmf) {}
       virtual ~Action() {}
       
       //////////
       // Insert Documentation Here:
       virtual void doit(const ProcessorGroup* pc,
-			const PatchSubset* patches,
-			const MaterialSubset* matls,
-			DataWarehouse* fromDW,
-			DataWarehouse* toDW) {
-	(ptr->*pmf)(pc, patches, matls, fromDW, toDW);
+                        const PatchSubset* patches,
+                        const MaterialSubset* matls,
+                        DataWarehouse* fromDW,
+                        DataWarehouse* toDW) {
+        (ptr->*pmf)(pc, patches, matls, fromDW, toDW);
       }
     }; // end class Action
     
@@ -128,32 +128,32 @@ WARNING
       
       T* ptr;
       void (T::*pmf)(const ProcessorGroup*,
-		     const PatchSubset* patches,
-		     const MaterialSubset* matls,
-		     DataWarehouse*,
-		     DataWarehouse*,
-		     Arg1 arg1);
+                     const PatchSubset* patches,
+                     const MaterialSubset* matls,
+                     DataWarehouse*,
+                     DataWarehouse*,
+                     Arg1 arg1);
       Arg1 arg1;
     public: // class Action1
       Action1( T* ptr,
-	       void (T::*pmf)(const ProcessorGroup*, 
-			      const PatchSubset* patches,
-			      const MaterialSubset* matls,
-			      DataWarehouse*,
-			      DataWarehouse*,
-			      Arg1),
-	       Arg1 arg1)
-	: ptr(ptr), pmf(pmf), arg1(arg1) {}
+               void (T::*pmf)(const ProcessorGroup*, 
+                              const PatchSubset* patches,
+                              const MaterialSubset* matls,
+                              DataWarehouse*,
+                              DataWarehouse*,
+                              Arg1),
+               Arg1 arg1)
+        : ptr(ptr), pmf(pmf), arg1(arg1) {}
       virtual ~Action1() {}
       
       //////////
       // Insert Documentation Here:
       virtual void doit(const ProcessorGroup* pc,
-			const PatchSubset* patches,
-			const MaterialSubset* matls,
-			DataWarehouse* fromDW,
-			DataWarehouse* toDW) {
-	(ptr->*pmf)(pc, patches, matls, fromDW, toDW, arg1);
+                        const PatchSubset* patches,
+                        const MaterialSubset* matls,
+                        DataWarehouse* fromDW,
+                        DataWarehouse* toDW) {
+        (ptr->*pmf)(pc, patches, matls, fromDW, toDW, arg1);
       }
     }; // end class Action1
     
@@ -162,33 +162,33 @@ WARNING
       
       T* ptr;
       void (T::*pmf)(const ProcessorGroup*,
-		     const PatchSubset* patches,
-		     const MaterialSubset* matls,
-		     DataWarehouse*,
-		     DataWarehouse*,
-		     Arg1 arg1, Arg2 arg2);
+                     const PatchSubset* patches,
+                     const MaterialSubset* matls,
+                     DataWarehouse*,
+                     DataWarehouse*,
+                     Arg1 arg1, Arg2 arg2);
       Arg1 arg1;
       Arg2 arg2;
     public: // class Action2
       Action2( T* ptr,
-	       void (T::*pmf)(const ProcessorGroup*, 
-			      const PatchSubset* patches,
-			      const MaterialSubset* matls,
-			      DataWarehouse*,
-			      DataWarehouse*,
-			      Arg1, Arg2),
-	       Arg1 arg1, Arg2 arg2)
-	: ptr(ptr), pmf(pmf), arg1(arg1), arg2(arg2) {}
+               void (T::*pmf)(const ProcessorGroup*, 
+                              const PatchSubset* patches,
+                              const MaterialSubset* matls,
+                              DataWarehouse*,
+                              DataWarehouse*,
+                              Arg1, Arg2),
+               Arg1 arg1, Arg2 arg2)
+        : ptr(ptr), pmf(pmf), arg1(arg1), arg2(arg2) {}
       virtual ~Action2() {}
       
       //////////
       // Insert Documentation Here:
       virtual void doit(const ProcessorGroup* pc,
-			const PatchSubset* patches,
-			const MaterialSubset* matls,
-			DataWarehouse* fromDW,
-			DataWarehouse* toDW) {
-	(ptr->*pmf)(pc, patches, matls, fromDW, toDW, arg1, arg2);
+                        const PatchSubset* patches,
+                        const MaterialSubset* matls,
+                        DataWarehouse* fromDW,
+                        DataWarehouse* toDW) {
+        (ptr->*pmf)(pc, patches, matls, fromDW, toDW, arg1, arg2);
       }
     }; // end class Action2
     
@@ -197,34 +197,34 @@ WARNING
       
       T* ptr;
       void (T::*pmf)(const ProcessorGroup*,
-		     const PatchSubset* patches,
-		     const MaterialSubset* matls,
-		     DataWarehouse*,
-		     DataWarehouse*,
-		     Arg1 arg1, Arg2 arg2, Arg3 arg3);
+                     const PatchSubset* patches,
+                     const MaterialSubset* matls,
+                     DataWarehouse*,
+                     DataWarehouse*,
+                     Arg1 arg1, Arg2 arg2, Arg3 arg3);
       Arg1 arg1;
       Arg2 arg2;
       Arg3 arg3;
     public: // class Action3
       Action3( T* ptr,
-	       void (T::*pmf)(const ProcessorGroup*, 
-			      const PatchSubset* patches,
-			      const MaterialSubset* matls,
-			      DataWarehouse*,
-			      DataWarehouse*,
-			      Arg1, Arg2, Arg3),
-	       Arg1 arg1, Arg2 arg2, Arg3 arg3)
-	: ptr(ptr), pmf(pmf), arg1(arg1), arg2(arg2), arg3(arg3) {}
+               void (T::*pmf)(const ProcessorGroup*, 
+                              const PatchSubset* patches,
+                              const MaterialSubset* matls,
+                              DataWarehouse*,
+                              DataWarehouse*,
+                              Arg1, Arg2, Arg3),
+               Arg1 arg1, Arg2 arg2, Arg3 arg3)
+        : ptr(ptr), pmf(pmf), arg1(arg1), arg2(arg2), arg3(arg3) {}
       virtual ~Action3() {}
       
       //////////
       // Insert Documentation Here:
       virtual void doit(const ProcessorGroup* pc,
-			const PatchSubset* patches,
-			const MaterialSubset* matls,
-			DataWarehouse* fromDW,
-			DataWarehouse* toDW) {
-	(ptr->*pmf)(pc, patches, matls, fromDW, toDW, arg1, arg2, arg3);
+                        const PatchSubset* patches,
+                        const MaterialSubset* matls,
+                        DataWarehouse* fromDW,
+                        DataWarehouse* toDW) {
+        (ptr->*pmf)(pc, patches, matls, fromDW, toDW, arg1, arg2, arg3);
       }
     }; // end Action3
     
@@ -233,36 +233,36 @@ WARNING
       
       T* ptr;
       void (T::*pmf)(const ProcessorGroup*,
-		     const PatchSubset* patches,
-		     const MaterialSubset* matls,
-		     DataWarehouse*,
-		     DataWarehouse*,
-		     Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4);
+                     const PatchSubset* patches,
+                     const MaterialSubset* matls,
+                     DataWarehouse*,
+                     DataWarehouse*,
+                     Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4);
       Arg1 arg1;
       Arg2 arg2;
       Arg3 arg3;
       Arg4 arg4;
     public: // class Action4
       Action4( T* ptr,
-	       void (T::*pmf)(const ProcessorGroup*, 
-			      const PatchSubset* patches,
-			      const MaterialSubset* matls,
-			      DataWarehouse*,
-			      DataWarehouse*,
-			      Arg1, Arg2, Arg3, Arg4),
-	       Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4)
-	: ptr(ptr), pmf(pmf), arg1(arg1), arg2(arg2),
-	  arg3(arg3), arg4(arg4) {}
+               void (T::*pmf)(const ProcessorGroup*, 
+                              const PatchSubset* patches,
+                              const MaterialSubset* matls,
+                              DataWarehouse*,
+                              DataWarehouse*,
+                              Arg1, Arg2, Arg3, Arg4),
+               Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4)
+        : ptr(ptr), pmf(pmf), arg1(arg1), arg2(arg2),
+          arg3(arg3), arg4(arg4) {}
       virtual ~Action4() {}
       
       //////////
       // Insert Documentation Here:
       virtual void doit(const ProcessorGroup* pc,
-			const PatchSubset* patches,
-			const MaterialSubset* matls,
-			DataWarehouse* fromDW,
-			DataWarehouse* toDW) {
-	(ptr->*pmf)(pc, patches, matls, fromDW, toDW, arg1, arg2, arg3, arg4);
+                        const PatchSubset* patches,
+                        const MaterialSubset* matls,
+                        DataWarehouse* fromDW,
+                        DataWarehouse* toDW) {
+        (ptr->*pmf)(pc, patches, matls, fromDW, toDW, arg1, arg2, arg3, arg4);
       }
     }; // end Action4
     
@@ -271,11 +271,11 @@ WARNING
       
       T* ptr;
       void (T::*pmf)(const ProcessorGroup*,
-		     const PatchSubset* patches,
-		     const MaterialSubset* matls,
-		     DataWarehouse*,
-		     DataWarehouse*,
-		     Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4, Arg5 arg5);
+                     const PatchSubset* patches,
+                     const MaterialSubset* matls,
+                     DataWarehouse*,
+                     DataWarehouse*,
+                     Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4, Arg5 arg5);
       Arg1 arg1;
       Arg2 arg2;
       Arg3 arg3;
@@ -283,25 +283,25 @@ WARNING
       Arg5 arg5;
     public: // class Action4
       Action5( T* ptr,
-	       void (T::*pmf)(const ProcessorGroup*, 
-			      const PatchSubset* patches,
-			      const MaterialSubset* matls,
-			      DataWarehouse*,
-			      DataWarehouse*,
-			      Arg1, Arg2, Arg3, Arg4, Arg5),
-	       Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4, Arg5 arg5)
-	: ptr(ptr), pmf(pmf), arg1(arg1), arg2(arg2),
-	  arg3(arg3), arg4(arg4), arg5(arg5) {}
+               void (T::*pmf)(const ProcessorGroup*, 
+                              const PatchSubset* patches,
+                              const MaterialSubset* matls,
+                              DataWarehouse*,
+                              DataWarehouse*,
+                              Arg1, Arg2, Arg3, Arg4, Arg5),
+               Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4, Arg5 arg5)
+        : ptr(ptr), pmf(pmf), arg1(arg1), arg2(arg2),
+          arg3(arg3), arg4(arg4), arg5(arg5) {}
       virtual ~Action5() {}
       
       //////////
       // Insert Documentation Here:
       virtual void doit(const ProcessorGroup* pc,
-			const PatchSubset* patches,
-			const MaterialSubset* matls,
-			DataWarehouse* fromDW,
-			DataWarehouse* toDW) {
-	(ptr->*pmf)(pc, patches, matls, fromDW, toDW, arg1, arg2, arg3, arg4, arg5);
+                        const PatchSubset* patches,
+                        const MaterialSubset* matls,
+                        DataWarehouse* fromDW,
+                        DataWarehouse* toDW) {
+        (ptr->*pmf)(pc, patches, matls, fromDW, toDW, arg1, arg2, arg3, arg4, arg5);
       }
     }; // end Action5
     
@@ -325,7 +325,7 @@ WARNING
     
     Task(const std::string& taskName, TaskType type)
       :  d_taskName(taskName),
-	 d_action(0)
+         d_action(0)
     {
       d_tasktype = type;
       initialize();
@@ -333,14 +333,14 @@ WARNING
     
     template<class T>
     Task(const std::string&         taskName,
-	 T*                    ptr,
-	 void (T::*pmf)(const ProcessorGroup*,
-			const PatchSubset* patches,
-			const MaterialSubset* matls,
-			DataWarehouse*,
-			DataWarehouse*) )
+         T*                    ptr,
+         void (T::*pmf)(const ProcessorGroup*,
+                        const PatchSubset* patches,
+                        const MaterialSubset* matls,
+                        DataWarehouse*,
+                        DataWarehouse*) )
       : d_taskName( taskName ), 
-	d_action( scinew Action<T>(ptr, pmf) )
+        d_action( scinew Action<T>(ptr, pmf) )
     {
       d_tasktype = Normal;
       initialize();
@@ -348,16 +348,16 @@ WARNING
     
     template<class T, class Arg1>
     Task(const std::string&         taskName,
-	 T*                    ptr,
-	 void (T::*pmf)(const ProcessorGroup*,
-			const PatchSubset* patches,
-			const MaterialSubset* matls,
-			DataWarehouse*,
-			DataWarehouse*,
-			Arg1),
-	 Arg1 arg1)
+         T*                    ptr,
+         void (T::*pmf)(const ProcessorGroup*,
+                        const PatchSubset* patches,
+                        const MaterialSubset* matls,
+                        DataWarehouse*,
+                        DataWarehouse*,
+                        Arg1),
+         Arg1 arg1)
       : d_taskName( taskName ), 
-	d_action( scinew Action1<T, Arg1>(ptr, pmf, arg1) )
+        d_action( scinew Action1<T, Arg1>(ptr, pmf, arg1) )
     {
       d_tasktype = Normal;
       initialize();
@@ -365,16 +365,16 @@ WARNING
     
     template<class T, class Arg1, class Arg2>
     Task(const std::string&         taskName,
-	 T*                    ptr,
-	 void (T::*pmf)(const ProcessorGroup*,
-			const PatchSubset* patches,
-			const MaterialSubset* matls,
-			DataWarehouse*,
-			DataWarehouse*,
-			Arg1, Arg2),
-	 Arg1 arg1, Arg2 arg2)
+         T*                    ptr,
+         void (T::*pmf)(const ProcessorGroup*,
+                        const PatchSubset* patches,
+                        const MaterialSubset* matls,
+                        DataWarehouse*,
+                        DataWarehouse*,
+                        Arg1, Arg2),
+         Arg1 arg1, Arg2 arg2)
       : d_taskName( taskName ), 
-	d_action( scinew Action2<T, Arg1, Arg2>(ptr, pmf, arg1, arg2) )
+        d_action( scinew Action2<T, Arg1, Arg2>(ptr, pmf, arg1, arg2) )
     {
       d_tasktype = Normal;
       initialize();
@@ -382,16 +382,16 @@ WARNING
     
     template<class T, class Arg1, class Arg2, class Arg3>
     Task(const std::string&         taskName,
-	 T*                    ptr,
-	 void (T::*pmf)(const ProcessorGroup*,
-			const PatchSubset* patches,
-			const MaterialSubset* matls,
-			DataWarehouse*,
-			DataWarehouse*,
-			Arg1, Arg2, Arg3),
-	 Arg1 arg1, Arg2 arg2, Arg3 arg3)
+         T*                    ptr,
+         void (T::*pmf)(const ProcessorGroup*,
+                        const PatchSubset* patches,
+                        const MaterialSubset* matls,
+                        DataWarehouse*,
+                        DataWarehouse*,
+                        Arg1, Arg2, Arg3),
+         Arg1 arg1, Arg2 arg2, Arg3 arg3)
       : d_taskName( taskName ), 
-	d_action( scinew Action3<T, Arg1, Arg2, Arg3>(ptr, pmf, arg1, arg2, arg3) )
+        d_action( scinew Action3<T, Arg1, Arg2, Arg3>(ptr, pmf, arg1, arg2, arg3) )
     {
       d_tasktype = Normal;
       initialize();
@@ -399,16 +399,16 @@ WARNING
     
     template<class T, class Arg1, class Arg2, class Arg3, class Arg4>
     Task(const std::string&         taskName,
-	 T*                    ptr,
-	 void (T::*pmf)(const ProcessorGroup*,
-			const PatchSubset* patches,
-			const MaterialSubset* matls,
-			DataWarehouse*,
-			DataWarehouse*,
-			Arg1, Arg2, Arg3, Arg4),
-	 Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4)
+         T*                    ptr,
+         void (T::*pmf)(const ProcessorGroup*,
+                        const PatchSubset* patches,
+                        const MaterialSubset* matls,
+                        DataWarehouse*,
+                        DataWarehouse*,
+                        Arg1, Arg2, Arg3, Arg4),
+         Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4)
       : d_taskName( taskName ), 
-	d_action( scinew Action4<T, Arg1, Arg2, Arg3, Arg4>(ptr, pmf, arg1, arg2, arg3, arg4) )
+        d_action( scinew Action4<T, Arg1, Arg2, Arg3, Arg4>(ptr, pmf, arg1, arg2, arg3, arg4) )
     {
       d_tasktype = Normal;
       initialize();
@@ -416,16 +416,16 @@ WARNING
     
     template<class T, class Arg1, class Arg2, class Arg3, class Arg4, class Arg5>
     Task(const std::string&         taskName,
-	 T*                    ptr,
-	 void (T::*pmf)(const ProcessorGroup*,
-			const PatchSubset* patches,
-			const MaterialSubset* matls,
-			DataWarehouse*,
-			DataWarehouse*,
-			Arg1, Arg2, Arg3, Arg4, Arg5),
-	 Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4, Arg5 arg5)
+         T*                    ptr,
+         void (T::*pmf)(const ProcessorGroup*,
+                        const PatchSubset* patches,
+                        const MaterialSubset* matls,
+                        DataWarehouse*,
+                        DataWarehouse*,
+                        Arg1, Arg2, Arg3, Arg4, Arg5),
+         Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4, Arg5 arg5)
       : d_taskName( taskName ), 
-	d_action( scinew Action5<T, Arg1, Arg2, Arg3, Arg4, Arg5>(ptr, pmf, arg1, arg2, arg3, arg4, arg5) )
+        d_action( scinew Action5<T, Arg1, Arg2, Arg3, Arg4, Arg5>(ptr, pmf, arg1, arg2, arg3, arg4, arg5) )
     {
       d_tasktype = Normal;
       initialize();
@@ -458,49 +458,49 @@ WARNING
     //////////
     // Most general case
     void requires(WhichDW, const VarLabel*,
-		  const PatchSubset* patches, DomainSpec patches_dom,
-		  const MaterialSubset* matls, DomainSpec matls_dom,
-		  Ghost::GhostType gtype, int numGhostCells = 0, bool oldTG=false);
+                  const PatchSubset* patches, DomainSpec patches_dom,
+                  const MaterialSubset* matls, DomainSpec matls_dom,
+                  Ghost::GhostType gtype, int numGhostCells = 0, bool oldTG=false);
     
     //////////
     // Insert Documentation Here:
     void requires(WhichDW, const VarLabel*,
-		  Ghost::GhostType gtype, int numGhostCells = 0, bool oldTG=false);
+                  Ghost::GhostType gtype, int numGhostCells = 0, bool oldTG=false);
     
     //////////
     // Insert Documentation Here:
     void requires(WhichDW, const VarLabel*,
-		  const PatchSubset* patches, const MaterialSubset* matls,
-		  Ghost::GhostType gtype, int numGhostCells = 0, bool oldTG=false);
+                  const PatchSubset* patches, const MaterialSubset* matls,
+                  Ghost::GhostType gtype, int numGhostCells = 0, bool oldTG=false);
     
     //////////
     // Insert Documentation Here:
     void requires(WhichDW, const VarLabel*,
-		  const PatchSubset* patches,
-		  Ghost::GhostType gtype, int numGhostCells = 0, bool oldTG=false);
+                  const PatchSubset* patches,
+                  Ghost::GhostType gtype, int numGhostCells = 0, bool oldTG=false);
     
     //////////
     // Insert Documentation Here:
     void requires(WhichDW, const VarLabel*,
-		  const MaterialSubset* matls,
-		  Ghost::GhostType gtype, int numGhostCells = 0, bool oldTG=false);
+                  const MaterialSubset* matls,
+                  Ghost::GhostType gtype, int numGhostCells = 0, bool oldTG=false);
 
     //////////
     // Insert Documentation Here:
     void requires(WhichDW, const VarLabel*,
-		  const PatchSubset* patches, DomainSpec patches_dom,
-		  Ghost::GhostType gtype, int numGhostCells = 0, bool oldTG=false);
+                  const PatchSubset* patches, DomainSpec patches_dom,
+                  Ghost::GhostType gtype, int numGhostCells = 0, bool oldTG=false);
     
     //////////
     // Insert Documentation Here:
     void requires(WhichDW, const VarLabel*,
-		  const MaterialSubset* matls, DomainSpec matls_dom,
-		  Ghost::GhostType gtype, int numGhostCells = 0, bool oldTG=false);
+                  const MaterialSubset* matls, DomainSpec matls_dom,
+                  Ghost::GhostType gtype, int numGhostCells = 0, bool oldTG=false);
     
     //////////
     // Requires only for reduction variables
     void requires(WhichDW, const VarLabel*, const Level* level = 0,
-		  const MaterialSubset* matls = 0, DomainSpec matls_dom = NormalDomain, bool oldTG=false);
+                  const MaterialSubset* matls = 0, DomainSpec matls_dom = NormalDomain, bool oldTG=false);
     
     //////////
     // Requires for reduction variables or perpatch veriables
@@ -509,18 +509,18 @@ WARNING
     //////////
     // Requires only for perpatch variables
     void requires(WhichDW, const VarLabel*, const PatchSubset* patches,
-		  const MaterialSubset* matls = 0);
+                  const MaterialSubset* matls = 0);
     
     //////////
     // Most general case
     void computes(const VarLabel*,
-		  const PatchSubset* patches, DomainSpec patches_domain, 
-		  const MaterialSubset* matls, DomainSpec matls_domain);
+                  const PatchSubset* patches, DomainSpec patches_domain, 
+                  const MaterialSubset* matls, DomainSpec matls_domain);
     
     //////////
     // Insert Documentation Here:
     void computes(const VarLabel*, const PatchSubset* patches = 0,
-		  const MaterialSubset* matls = 0);
+                  const MaterialSubset* matls = 0);
     
     //////////
     // Insert Documentation Here:
@@ -529,28 +529,28 @@ WARNING
     //////////
     // Insert Documentation Here:
     void computes(const VarLabel*, const MaterialSubset* matls,
-		  DomainSpec matls_domain);
+                  DomainSpec matls_domain);
 
     //////////
     // Insert Documentation Here:
     void computes(const VarLabel*,
-		  const PatchSubset* patches, DomainSpec patches_domain);
+                  const PatchSubset* patches, DomainSpec patches_domain);
 
     //////////
     // Insert Documentation Here:
     void computes(const VarLabel*, const Level* level,
-		  const MaterialSubset* matls = 0, DomainSpec matls_domain = NormalDomain);
+                  const MaterialSubset* matls = 0, DomainSpec matls_domain = NormalDomain);
 
      //////////
     // Most general case
     void modifies(const VarLabel*,
-		  const PatchSubset* patches, DomainSpec patches_domain, 
-		  const MaterialSubset* matls, DomainSpec matls_domain, bool oldTG=false);
+                  const PatchSubset* patches, DomainSpec patches_domain, 
+                  const MaterialSubset* matls, DomainSpec matls_domain, bool oldTG=false);
     
     //////////
     // Insert Documentation Here:
     void modifies(const VarLabel*, const PatchSubset* patches,
-		  const MaterialSubset* matls, bool oldTG=false);
+                  const MaterialSubset* matls, bool oldTG=false);
     
     //////////
     // Insert Documentation Here:
@@ -559,7 +559,7 @@ WARNING
     //////////
     // Insert Documentation Here:
     void modifies(const VarLabel*, const MaterialSubset* matls,
-		  DomainSpec matls_domain, bool oldTG=false);
+                  DomainSpec matls_domain, bool oldTG=false);
    
     //////////
     // Insert Documentation Here:
@@ -568,12 +568,12 @@ WARNING
     //////////
     // Modify reduction vars
     void modifies(const VarLabel*, const Level* level,
-		  const MaterialSubset* matls = 0, DomainSpec matls_domain = NormalDomain, bool oldTG=false);
+                  const MaterialSubset* matls = 0, DomainSpec matls_domain = NormalDomain, bool oldTG=false);
     
     //////////
     // Tells the task to actually execute the function assigned to it.
     void doit(const ProcessorGroup* pc, const PatchSubset*,
-	      const MaterialSubset*, vector<DataWarehouseP>& dws);
+              const MaterialSubset*, vector<DataWarehouseP>& dws);
 
     inline const char* getName() const {
       return d_taskName.c_str();
@@ -618,22 +618,22 @@ WARNING
       // var will be constructed by the old TG
       int numGhostCells;
       int mapDataWarehouse() const {
-	return task->mapDataWarehouse(whichdw);
+        return task->mapDataWarehouse(whichdw);
       }
       
       Dependency(DepType deptype, Task* task, WhichDW dw, const VarLabel* var,
                  bool oldtg, 
-		 const PatchSubset* patches,
-		 const MaterialSubset* matls,
-		 DomainSpec patches_dom = NormalDomain,
-		 DomainSpec matls_dom = NormalDomain,
-		 Ghost::GhostType gtype = Ghost::None,
-		 int numGhostCells = 0);
+                 const PatchSubset* patches,
+                 const MaterialSubset* matls,
+                 DomainSpec patches_dom = NormalDomain,
+                 DomainSpec matls_dom = NormalDomain,
+                 Ghost::GhostType gtype = Ghost::None,
+                 int numGhostCells = 0);
       Dependency(DepType deptype, Task* task, WhichDW dw, const VarLabel* var,
                  bool oldtg, 
-		 const Level* reductionLevel,
-		 const MaterialSubset* matls,
-		 DomainSpec matls_dom = NormalDomain);
+                 const Level* reductionLevel,
+                 const MaterialSubset* matls,
+                 DomainSpec matls_dom = NormalDomain);
       ~Dependency();
       inline void addComp(Edge* edge);
       inline void addReq(Edge* edge);
@@ -647,8 +647,8 @@ WARNING
     private:
       static constHandle< PatchSubset >
       getOtherLevelPatchSubset(DomainSpec dom,
-				 const PatchSubset* subset,
-				 const PatchSubset* domainSubset, int ngc);
+                                 const PatchSubset* subset,
+                                 const PatchSubset* domainSubset, int ngc);
      
       Dependency();
       Dependency& operator=(const Dependency& copy);
@@ -662,7 +662,7 @@ WARNING
       const Dependency* req;
       Edge* reqNext;
       inline Edge(const Dependency* comp, const Dependency * req)
-	: comp(comp), compNext(0), req(req), reqNext(0)
+        : comp(comp), compNext(0), req(req), reqNext(0)
       {
       }
     };
@@ -691,16 +691,16 @@ WARNING
 
     // finds if it computes or modifies var
     bool hasComputes(const VarLabel* var, int matlIndex,
-		     const Patch* patch) const;
+                     const Patch* patch) const;
 
     // finds if it requires or modifies var
     bool hasRequires(const VarLabel* var, int matlIndex, const Patch* patch,
-		     IntVector lowOffset, IntVector highOffset,
-		     WhichDW dw) const;
+                     IntVector lowOffset, IntVector highOffset,
+                     WhichDW dw) const;
 
     // finds if it modifies var
     bool hasModifies(const VarLabel* var, int matlIndex,
-		     const Patch* patch) const;
+                     const Patch* patch) const;
 
     bool isReductionTask() const {
       return d_tasktype == Reduction;
@@ -739,7 +739,7 @@ WARNING
     
   private: // class Task
     Dependency* isInDepMap(const DepMap& depMap, const VarLabel* var,
-			   int matlIndex, const Patch* patch) const;
+                           int matlIndex, const Patch* patch) const;
     
     //////////
     // Insert Documentation Here:
@@ -764,7 +764,7 @@ WARNING
     bool                d_usesThreads;
     bool                d_subpatchCapable;
     bool                d_hasSubScheduler;
-    TaskType		d_tasktype;
+    TaskType            d_tasktype;
     
     Task(const Task&);
     Task& operator=(const Task&);
@@ -784,17 +784,17 @@ WARNING
   inline void Task::Dependency::addComp(Edge* edge)
     {
       if(comp_tail)
-	comp_tail->compNext=edge;
+        comp_tail->compNext=edge;
       else
-	comp_head=edge;
+        comp_head=edge;
       comp_tail=edge;
     }
   inline void Task::Dependency::addReq(Edge* edge)
     {
       if(req_tail)
-	req_tail->reqNext=edge;
+        req_tail->reqNext=edge;
       else
-	req_head=edge;
+        req_head=edge;
       req_tail=edge;
     }
 

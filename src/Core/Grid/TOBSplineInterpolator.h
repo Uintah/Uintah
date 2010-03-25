@@ -51,18 +51,18 @@ namespace Uintah {
     virtual TOBSplineInterpolator* clone(const Patch*);
     
     virtual void findCellAndWeights(const Point& p,vector<IntVector>& ni, 
-				    vector<double>& S, const Vector& size, const Matrix3& defgrad);
+                                    vector<double>& S, const Vector& size, const Matrix3& defgrad);
 
     virtual void findCellAndShapeDerivatives(const Point& pos,
-					     vector<IntVector>& ni,
-					     vector<Vector>& d_S,
-					     const Vector& size,
+                                             vector<IntVector>& ni,
+                                             vector<Vector>& d_S,
+                                             const Vector& size,
                                              const Matrix3& defgrad);
     virtual void findCellAndWeightsAndShapeDerivatives(const Point& pos,
-						       vector<IntVector>& ni,
-						       vector<double>& S,
-						       vector<Vector>& d_S,
-						       const Vector& size,
+                                                       vector<IntVector>& ni,
+                                                       vector<double>& S,
+                                                       vector<Vector>& d_S,
+                                                       const Vector& size,
                                                        const Matrix3& defgrad);
     virtual int size();
 

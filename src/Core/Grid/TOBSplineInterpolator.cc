@@ -61,7 +61,7 @@ TOBSplineInterpolator* TOBSplineInterpolator::clone(const Patch* patch)
 
 void TOBSplineInterpolator::findNodeComponents(const int& ix, int* xn, int& count,
                                              const int& low, const int& hi,
-					     const double& cellpos)
+                                             const double& cellpos)
 {
   xn[0] = ix;
   xn[1] = ix+1;
@@ -195,9 +195,9 @@ double TOBSplineInterpolator::evalType3BSplineGrad(const double& dx)    // bound
 }
 
 void TOBSplineInterpolator::findCellAndWeights(const Point& pos,
-					    vector<IntVector>& ni, 
-					    vector<double>& S,
-					    const Vector& size,
+                                            vector<IntVector>& ni, 
+                                            vector<double>& S,
+                                            const Vector& size,
                                             const Matrix3& defgrad)
 {
   IntVector low,hi;
@@ -243,9 +243,9 @@ void TOBSplineInterpolator::findCellAndWeights(const Point& pos,
 }
  
 void TOBSplineInterpolator::findCellAndShapeDerivatives(const Point& pos,
-						     vector<IntVector>& ni,
-						     vector<Vector>& d_S,
-					             const Vector& size,
+                                                     vector<IntVector>& ni,
+                                                     vector<Vector>& d_S,
+                                                     const Vector& size,
                                                      const Matrix3& defgrad)
 {
   IntVector low,hi;
@@ -301,10 +301,10 @@ void TOBSplineInterpolator::findCellAndShapeDerivatives(const Point& pos,
 
 void 
 TOBSplineInterpolator::findCellAndWeightsAndShapeDerivatives(const Point& pos,
-							  vector<IntVector>& ni,
-							  vector<double>& S,
-							  vector<Vector>& d_S,
-							  const Vector& size,
+                                                          vector<IntVector>& ni,
+                                                          vector<double>& S,
+                                                          vector<Vector>& d_S,
+                                                          const Vector& size,
                                                           const Matrix3& defgrad)
 {
   IntVector low,hi;

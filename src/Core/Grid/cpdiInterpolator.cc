@@ -60,9 +60,9 @@ cpdiInterpolator* cpdiInterpolator::clone(const Patch* patch)
 }
     
 void cpdiInterpolator::findCellAndWeights(const Point& pos,
-					    vector<IntVector>& ni, 
-					    vector<double>& S,
-					    const Vector& size,
+                                            vector<IntVector>& ni, 
+                                            vector<double>& S,
+                                            const Vector& size,
                                             const Matrix3& defgrad)
 {
   Point cellpos = d_patch->getLevel()->positionToIndex(Point(pos));
@@ -159,9 +159,9 @@ void cpdiInterpolator::findCellAndWeights(const Point& pos,
  }
  
 void cpdiInterpolator::findCellAndShapeDerivatives(const Point& pos,
-						     vector<IntVector>& ni,
-						     vector<Vector>& d_S,
-						     const Vector& size,
+                                                     vector<IntVector>& ni,
+                                                     vector<Vector>& d_S,
+                                                     const Vector& size,
                                                      const Matrix3& defgrad)
 {
   Point cellpos = d_patch->getLevel()->positionToIndex(Point(pos));
@@ -317,10 +317,10 @@ void cpdiInterpolator::findCellAndShapeDerivatives(const Point& pos,
 }
 
 void cpdiInterpolator::findCellAndWeightsAndShapeDerivatives(const Point& pos,
-							  vector<IntVector>& ni,
-							  vector<double>& S,
-							  vector<Vector>& d_S,
-							  const Vector& size,
+                                                          vector<IntVector>& ni,
+                                                          vector<double>& S,
+                                                          vector<Vector>& d_S,
+                                                          const Vector& size,
                                                           const Matrix3& defgrad)
 {
   Point cellpos = d_patch->getLevel()->positionToIndex(Point(pos));
