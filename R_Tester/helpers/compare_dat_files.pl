@@ -153,7 +153,7 @@ foreach $datfile (@ARGV[4 .. @ARGV-1]) {
             }
         }
         print "\nThe following is the suggested command to compare these files:\n";
-	print "xdiff\\\n" . $datfilename1 . "\\\n" . $datfilename2 . "\n\n";
+	print "xxdiff\\\n" . $datfilename1 . "\\\n" . $datfilename2 . "\n\n";
 	$failed = 1;
     }
     else {
