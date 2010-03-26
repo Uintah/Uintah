@@ -195,6 +195,8 @@ void MassMomEng_src::computeModelSources(const ProcessorGroup*,
     
       //__________________________________
       //  Do some work
+      // To maintain constant temperature, eng_src must be:
+      // mass_src * specific_heat * initial_temperature
       double usr_eng_src  = d_src->eng_src_rate  * dt * vol;
       double usr_mass_src = d_src->mass_src_rate * dt * vol;
       Vector usr_mom_src  = d_src->mom_src_rate  * dt * vol;
