@@ -495,6 +495,48 @@ void SerialMPM::schedulePrintParticleCount(const LevelP& level,
   sched->addTask(t, sched->getLoadBalancer()->getPerProcessorPatchSet(level),
                  d_sharedState->allMPMMaterials());
 }
+//__________________________________
+//  Diagnostic task: compute the total number of particles
+void SerialMPM::scheduleTotalParticleCount(SchedulerP& sched,
+                                           const PatchSet* patches,
+                                           const MaterialSet* matls)
+{
+  if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(),
+                           getLevel(patches)->getGrid()->numLevels())){
+    return;
+  }
+
+  Task* t = scinew Task("SerialMPM::totalParticleCount",
+                  this, &SerialMPM::totalParticleCount);
+  t->computes(lb->partCountLabel);
+  
+  sched->addTask(t, patches,matls);
+}
+//__________________________________
+//  Diagnostic task: compute the total number of particles
+void SerialMPM::totalParticleCount(const ProcessorGroup*,
+                                   const PatchSubset* patches,
+                                   const MaterialSubset* matls,
+                                   DataWarehouse* old_dw,
+                                   DataWarehouse* new_dw)
+{
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    long int totalParticles = 0;
+    
+    for(int m=0;m<matls->size();m++){  
+      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+      int dwi = mpm_matl->getDWIndex();
+      
+      ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
+      int numParticles  = pset->end() - pset->begin();
+      
+      totalParticles+=numParticles;
+    }
+    new_dw->put(sumlong_vartype(totalParticles), lb->partCountLabel);
+  }
+}
+
 
 void SerialMPM::scheduleInitializePressureBCs(const LevelP& level,
                                               SchedulerP& sched)
@@ -3646,10 +3688,10 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
     }
 
     // DON'T MOVE THESE!!!
-    new_dw->put(sum_vartype(ke),     lb->KineticEnergyLabel);
+    new_dw->put(sum_vartype(ke),             lb->KineticEnergyLabel);
     new_dw->put(sum_vartype(thermal_energy), lb->ThermalEnergyLabel);
-    new_dw->put(sumvec_vartype(CMX), lb->CenterOfMassPositionLabel);
-    new_dw->put(sumvec_vartype(totalMom), lb->TotalMomentumLabel);
+    new_dw->put(sumvec_vartype(CMX),         lb->CenterOfMassPositionLabel);
+    new_dw->put(sumvec_vartype(totalMom),    lb->TotalMomentumLabel);
 
     // cout << "Solid mass lost this timestep = " << massLost << endl;
     // cout << "Solid momentum after advection = " << totalMom << endl;
