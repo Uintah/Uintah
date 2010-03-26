@@ -711,8 +711,7 @@ Relocate::findNeighboringPatches(const Patch* patch,
       IntVector l = level->mapNodeToCoarser(lo_face);     
       IntVector h = level->mapNodeToCoarser(hi_face);
       
-      cout <<" coarseLevel-"<< coarseLevel->getID();
-      //cout << " lo " << lo_face << " l " << l << " hi " << hi_face << " h " << h;
+      cout <<" coarseLevel-"<< coarseLevel->getID() << " lo " << lo_face << " l " << l << " hi " << hi_face << " h " << h;
       Patch::selectType CL_neighborPatches;
       coarseLevel->selectPatches(l, h, CL_neighborPatches);
       
@@ -728,7 +727,9 @@ Relocate::findNeighboringPatches(const Patch* patch,
   }
   
   //__________________________________
-  // find the adjacent fine level neighbor patches
+  // Find the adjacent fine level neighboring patches.
+  // If a fine patch shares a coarse fine interface with the
+  // coarse patch then add it as a neighbor
   if(hasFiner){
     const Level* fineLevel = level->getFinerLevel().get_rep();
     
@@ -738,10 +739,10 @@ Relocate::findNeighboringPatches(const Patch* patch,
     for(int i=0;i<finePatches.size();i++){
       const Patch* finePatch = finePatches[i];
       
-      
       vector<Patch::FaceType> cf;
       finePatch->getCoarseFaces(cf);
       vector<Patch::FaceType>::const_iterator iter;  
+      
 
       for (iter  = cf.begin(); iter != cf.end(); ++iter){
         Patch::FaceType patchFace = *iter;
@@ -753,19 +754,13 @@ Relocate::findNeighboringPatches(const Patch* patch,
 
         IntVector l = f_iter.begin();   
         IntVector h = f_iter.end();
-
-        cout <<" fineLevel-"<< fineLevel->getID() << " finePatch " << finePatch->getID() << "< l " << l << " h " << h << ">"<<endl;
-
-        Patch::selectType FL_neighborPatches;
-        fineLevel->selectPatches(l, h, FL_neighborPatches);
-        ASSERT(FL_neighborPatches.size() == 0);
-
-
-        for(int i=0; i<FL_neighborPatches.size(); i++){
-          const Patch* neighbor=FL_neighborPatches[i];
-          
-          neighborSet.insert(neighbor);
-          cout << " neighborPatch " << neighbor->getID();
+        IntVector coarseStart = fineLevel->mapCellToCoarser(l);
+        IntVector coarseEnd   = fineLevel->mapCellToCoarser(h);
+        
+        if(patch->containsCell(coarseStart) || patch->containsCell(coarseEnd)){
+          cout <<" fineLevel-"<< fineLevel->getID() << " finePatch " << finePatch->getID() << "< l " << l << " h " << h << ">"<<endl;
+          neighborSet.insert(finePatch);
+          cout << " neighborPatch " << finePatch->getID();
         } 
         cout << endl;
       }  // face iterator
