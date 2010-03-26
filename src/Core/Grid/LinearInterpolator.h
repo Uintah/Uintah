@@ -56,7 +56,12 @@ namespace Uintah {
     
     virtual LinearInterpolator* clone(const Patch*);
     
-    inline void findCellAndWeights(const Point& pos,vector<IntVector>& ni, 
+    
+//__________________________________
+//  This version of findCellAndWeights is only used
+//  by MPM/HeatConduction/ImplicitHeatConduction.cc
+    inline void findCellAndWeights(const Point& pos,
+                                   vector<IntVector>& ni, 
                                    vector<double>& S)
       {
         Point cellpos = d_patch->getLevel()->positionToIndex(pos);
@@ -86,8 +91,14 @@ namespace Uintah {
         S[6] = fx * fy * fz1;
         S[7] = fx * fy * fz;
       };
-    virtual void findCellAndWeights(const Point& p,vector<IntVector>& ni, 
-                                    vector<double>& S,const Vector& size, const Matrix3& defgrad);
+//__________________________________
+
+    virtual void findCellAndWeights(const Point& p,
+                                    vector<IntVector>& ni, 
+				         vector<double>& S,
+                                     const Vector& size, 
+                                     const Matrix3& defgrad);
+                                
     virtual void findCellAndWeights(const Point& p,
                                     vector<IntVector>& ni,
                                     vector<double>& S,
@@ -97,6 +108,7 @@ namespace Uintah {
                                     int& num_cur,int& num_fine,int& num_coarse,
                                     const Vector& size,  bool coarse_particle,
                                     const Patch* patch);
+                                    
     inline void findCellAndShapeDerivatives(const Point& pos,
                                             vector<IntVector>& ni,
                                             vector<Vector>& d_S)
@@ -129,9 +141,12 @@ namespace Uintah {
         d_S[7] = Vector(  fy  * fz,   fx  * fz,   fx  * fy);
       };
     virtual void findCellAndShapeDerivatives(const Point& pos,
-                                             vector<IntVector>& ni,
-                                             vector<Vector>& d_S,
-                                             const Vector& size, const Matrix3& defgrad);
+					          vector<IntVector>& ni,
+					          vector<Vector>& d_S,
+					          const Vector& size, 
+                                             const Matrix3& defgrad);
+                                        
+
     inline void findCellAndWeightsAndShapeDerivatives(const Point& pos,
                                                       vector<IntVector>& ni,
                                                       vector<double>& S,

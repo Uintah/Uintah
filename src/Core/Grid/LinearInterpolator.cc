@@ -174,7 +174,7 @@ void LinearInterpolator::findCellAndShapeDerivatives(const Point& pos,
                                                      vector<IntVector>& ni,
                                                      vector<Vector>& d_S,
                                                      const Vector& size,
-                                                     const Matrix3& defgrad)
+                                               const Matrix3& defgrad)
 {
   Point cellpos = d_patch->getLevel()->positionToIndex(pos);
   int ix = Floor(cellpos.x());
@@ -210,7 +210,7 @@ LinearInterpolator::findCellAndWeightsAndShapeDerivatives(const Point& pos,
                                                           vector<double>& S,
                                                           vector<Vector>& d_S,
                                                           const Vector& size,
-                                                          const Matrix3& defgrad)
+                                                   const Matrix3& defgrad)
 {
   Point cellpos = d_patch->getLevel()->positionToIndex(pos);
   int ix = Floor(cellpos.x());
@@ -255,7 +255,8 @@ int LinearInterpolator::size()
 
 void LinearInterpolator::findFinerNodes(const Point& pos,
                                vector<IntVector>& cur,
-                               const Level* level, const Patch* patch)
+                               const Level* level, 
+                               const Patch* patch)
 {
         Point cellpos = level->positionToIndex(pos);
         int r = Floor(cellpos.x());
