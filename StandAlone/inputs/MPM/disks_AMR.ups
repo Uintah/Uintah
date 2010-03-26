@@ -14,19 +14,22 @@
        <initTime>0.0</initTime>
        <delt_min>0.00001</delt_min>
        <delt_max>0.001</delt_max>
-       <max_Timesteps> 500 </max_Timesteps>
+       <max_Timesteps> 2 </max_Timesteps>
        <timestep_multiplier>0.1</timestep_multiplier>
    </Time>
    
    <DataArchiver>
         <filebase>disks_AMR.uda</filebase>
-       <outputTimestepInterval>5</outputTimestepInterval>
+       <outputTimestepInterval>1</outputTimestepInterval>
+
+        <save label = "g.zoi"/>
 
        <save label = "KineticEnergy"/>
        <save label = "TotalMass"/>
        <save label = "StrainEnergy"/>
        <save label = "CenterOfMassPosition"/>
        <save label = "TotalMomentum"/>
+       
        <save label = "p.x"/>
        <save label = "p.particleID"/>
        <save label = "p.volume"/>
@@ -37,7 +40,7 @@
        <save label = "p.displacement"/>
        <save label = "p.deformationMeasure"/>
        <save label = "p.velocity"/>
-       
+
       <!-- <checkpoint cycle = "5" timestepInterval = "1"/> -->
    </DataArchiver>
 
@@ -50,7 +53,7 @@
     <AMR>
       <MPM>
         <min_grid_level> 0 </min_grid_level>
-        <max_grid_level> 1 </max_grid_level>
+        <max_grid_level> 2 </max_grid_level>
       </MPM>
     </AMR>    
 
@@ -71,40 +74,14 @@
               <specific_heat>5</specific_heat>
               
               <geom_object>
-                  <cylinder label = "gp1">
-                     <bottom>   [.25,.25,.05]     </bottom>
-                     <top>      [.25,.25,.1]      </top>
-                     <radius>       .2            </radius>
-                  </cylinder>
-                  <res>         [2,2,2]           </res>
-                  <velocity>    [2.0,2.0,0]       </velocity>
+                  <box label = "gp1">
+                     <min>   [0.5, 0.95, 0.0]     </min>
+                     <max>   [1.5, 1.0,  0.05]    </max>
+                  </box>
+                  <res>         [1,1,1]           </res>
+                  <velocity>    [-100.0,0.0,0]    </velocity>
                   <temperature>     12            </temperature>
                   <color>            0            </color>
-               </geom_object>
-
-              <geom_object>
-                <difference>
-                  <cylinder label = "gp2">
-                     <bottom>   [.75,.75,.05]     </bottom>
-                     <top>      [.75,.75,.1]      </top>
-                     <radius>       .2            </radius>
-                  </cylinder>
-                  <box label="gp3">
-                     <min>      [ 0.725, 0.725, 0.05 ]</min>
-                     <max>      [ 0.775, 0.775, 0.10 ]</max>
-                  </box>
-                </difference>
-                <res>           [2,2,2]             </res>
-                <velocity>      [-2.0,-2.0,0]       </velocity>
-                <temperature>       12              </temperature>
-                <color>             0               </color>
-               </geom_object>
-              <geom_object>
-                <box label="gp3"/>
-                <res>           [2,2,2]             </res>
-                <velocity>      [-2.0,-2.0,0]       </velocity>
-                <temperature>       12              </temperature>
-                <color>             1               </color>
                </geom_object>
            </material>
 
@@ -119,12 +96,12 @@
        <BoundaryConditions>
           <Face side = "x-">
               <BCType id = "all" var = "Dirichlet" label = "Velocity">
-                     <value> [0.0,0.0,0.0] </value>
+                     <value> [-100.0,0.0,0.0] </value>
               </BCType>
           </Face>
           <Face side = "x+">
               <BCType id = "all" var = "Dirichlet" label = "Velocity">
-                    <value> [0.0,0.0,0.0] </value>
+                    <value> [-100.0,0.0,0.0] </value>
               </BCType>
           </Face>
           <Face side = "y-">
@@ -144,24 +121,69 @@
               <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
           </Face>                           
        </BoundaryConditions>
+      
        <Level>
-           <Box label = "1">
-              <lower>       [0,0,0]         </lower>
-              <upper>       [1.0,1.0,0.15]  </upper>
-              <resolution>  [40,40,3]       </resolution>
+           <Box label = "0">
+              <lower>       [0,  0.90,-0.05]         </lower>
+              <upper>       [2.0,1.05, 0.1] </upper>
+              <resolution>  [20,3,3]        </resolution>
               <patches>     [1,1,1]         </patches>
               <extraCells>  [0,0,0]         </extraCells>
            </Box>
        </Level>
+ 
        <Level>
            <Box label = "1">
-              <lower>       [0.25,0.25,0.0]       </lower>
-              <upper>       [0.75,0.75,0.15] </upper>
-              <resolution>  [40,40,3]     </resolution>
-              <patches>     [1,1,1]       </patches>
-              <extraCells>  [0,0,0]       </extraCells>
+              <lower>       [0.5,0.90,-0.05]   </lower>
+              <upper>       [1.5,1.05, 0.1]   </upper>
+              <resolution>  [10,3,3]         </resolution>
+              <patches>     [1,1,1]          </patches>
+              <extraCells>  [0,0,0]           </extraCells>
            </Box>
        </Level>
+       
+       <Level>
+           <Box label = "2">
+              <lower>       [0.8,0.90, -0.05]   </lower>
+              <upper>       [1.2,1.05, 0.1] </upper>
+              <resolution>  [4,3,3]         </resolution>
+              <patches>     [1,1,1]          </patches>
+              <extraCells>  [0,0,0]           </extraCells>
+           </Box>
+       </Level>
+      
+       <!--
+       <Level>
+           <Box label = "0">
+              <lower>       [0,  0,  -0.05]         </lower>
+              <upper>       [2.0,2.0, 0.1]    </upper>
+              <resolution>  [20,20,3]         </resolution>
+              <patches>     [2,2,1]           </patches>
+              <extraCells>  [0,0,0]           </extraCells>
+           </Box>
+       </Level>
+ 
+       <Level>
+           <Box label = "1">
+              <lower>       [0.5,0.5,-0.05]   </lower>
+              <upper>       [1.5,1.5, 0.1]    </upper>
+              <resolution>  [10,10,3]         </resolution>
+              <patches>     [2,2,1]           </patches>
+              <extraCells>  [0,0,0]           </extraCells>
+           </Box>
+       </Level>
+       
+       <Level>
+           <Box label = "2">
+              <lower>       [0.8,0.8, -0.05]   </lower>
+              <upper>       [1.2,1.2, 0.1] </upper>
+              <resolution>  [4,4,3]         </resolution>
+              <patches>     [1,1,1]          </patches>
+              <extraCells>  [0,0,0]           </extraCells>
+           </Box>
+       </Level>
+      -->
+
     </Grid>
     
 </Uintah_specification>
