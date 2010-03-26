@@ -77,10 +77,15 @@ MassMomEng_src::~MassMomEng_src()
 void MassMomEng_src::problemSetup(GridP&, SimulationStateP& sharedState,
                              ModelSetup* )
 {
+  d_sharedState = sharedState;
+
   d_matl = sharedState->parseAndLookupMaterial(params, "material");
   params->require("momentum_src", d_src->mom_src_rate);
   params->require("mass_src",     d_src->mass_src_rate);
   params->require("energy_src",   d_src->eng_src_rate);
+  params->getWithDefault("mme_src_t_start",d_src->d_mme_src_t_start,0.0);
+  params->getWithDefault("mme_src_t_final",d_src->d_mme_src_t_final,9.e99);
+
 
   vector<int> m(1);
   m[0] = d_matl->getDWIndex();
@@ -163,55 +168,60 @@ void MassMomEng_src::computeModelSources(const ProcessorGroup*,
   double totalMass_src = 0.0;
   double totalEng_src = 0.0;
   Vector totalMom_src(0,0,0);
+
+  double time= d_sharedState->getElapsedTime();
+
   
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);  
     
-    Vector dx = patch->dCell();
-    double vol = dx.x()*dx.y()*dx.z();
-  
-    CCVariable<double> mass_src;
-    CCVariable<Vector> mom_src;
-    CCVariable<double> eng_src;
-    CCVariable<double> vol_src;
-    constCCVariable<double> sp_vol_CC;
-    constCCVariable<double> vol_frac;
-    
-    new_dw->getModifiable(mass_src, mi->modelMass_srcLabel, indx, patch);
-    new_dw->getModifiable(mom_src,  mi->modelMom_srcLabel,  indx, patch);
-    new_dw->getModifiable(eng_src,  mi->modelEng_srcLabel,  indx, patch);
-    new_dw->getModifiable(vol_src,  mi->modelVol_srcLabel,  indx, patch);
-    new_dw->get(sp_vol_CC,          Ilb->sp_vol_CCLabel,    indx, patch, Ghost::None,0);
-    new_dw->get(vol_frac,           Ilb->vol_frac_CCLabel,  indx, patch, Ghost::None,0);
-    
-    //__________________________________
-    //  Do some work
-    double usr_eng_src  = d_src->eng_src_rate  * dt * vol;
-    double usr_mass_src = d_src->mass_src_rate * dt * vol;
-    Vector usr_mom_src  = d_src->mom_src_rate  * dt * vol;
-    
-    vector<Region> regions;
-    patch->getFinestRegionsOnPatch(regions);
+    if(time>d_src->d_mme_src_t_start && time <=d_src->d_mme_src_t_final){
+      Vector dx = patch->dCell();
+      double vol = dx.x()*dx.y()*dx.z();
 
-    for(vector<Region>::iterator region=regions.begin();region!=regions.end();region++){
+      CCVariable<double> mass_src;
+      CCVariable<Vector> mom_src;
+      CCVariable<double> eng_src;
+      CCVariable<double> vol_src;
+      constCCVariable<double> sp_vol_CC;
+      constCCVariable<double> vol_frac;
     
-      for (CellIterator iter(region->getLow(), region->getHigh()); !iter.done(); iter++){
-        IntVector c = *iter;
+      new_dw->getModifiable(mass_src, mi->modelMass_srcLabel, indx, patch);
+      new_dw->getModifiable(mom_src,  mi->modelMom_srcLabel,  indx, patch);
+      new_dw->getModifiable(eng_src,  mi->modelEng_srcLabel,  indx, patch);
+      new_dw->getModifiable(vol_src,  mi->modelVol_srcLabel,  indx, patch);
+      new_dw->get(sp_vol_CC,          Ilb->sp_vol_CCLabel,    indx, patch, Ghost::None,0);
+      new_dw->get(vol_frac,           Ilb->vol_frac_CCLabel,  indx, patch, Ghost::None,0);
+    
+      //__________________________________
+      //  Do some work
+      double usr_eng_src  = d_src->eng_src_rate  * dt * vol;
+      double usr_mass_src = d_src->mass_src_rate * dt * vol;
+      Vector usr_mom_src  = d_src->mom_src_rate  * dt * vol;
+    
+      vector<Region> regions;
+      patch->getFinestRegionsOnPatch(regions);
+
+      for(vector<Region>::iterator region=regions.begin();region!=regions.end();region++){
+    
+        for (CellIterator iter(region->getLow(), region->getHigh()); !iter.done(); iter++){
+          IntVector c = *iter;
         
-        if ( vol_frac[c] > 0.001) {
-          eng_src[c]  += usr_eng_src;
-          mass_src[c] += usr_mass_src;
-          mom_src[c]  += usr_mom_src;
-          vol_src[c]  += usr_mass_src * sp_vol_CC[c];  // volume src
-          totalMass_src += usr_mass_src;
-          totalMom_src  += usr_mom_src;
-          totalEng_src  += usr_eng_src;
+          if ( vol_frac[c] > 0.001) {
+            eng_src[c]  += usr_eng_src;
+            mass_src[c] += usr_mass_src;
+            mom_src[c]  += usr_mom_src;
+            vol_src[c]  += usr_mass_src * sp_vol_CC[c];  // volume src
+            totalMass_src += usr_mass_src;
+            totalMom_src  += usr_mom_src;
+            totalEng_src  += usr_eng_src;
+          }
         }
-      }
-    } // region
-    new_dw->put(sum_vartype(totalMass_src),    MassMomEng_src::totalMass_srcLabel);
-    new_dw->put(sumvec_vartype(totalMom_src),  MassMomEng_src::totalMom_srcLabel);
-    new_dw->put(sum_vartype(totalEng_src),     MassMomEng_src::totalEng_srcLabel);
+      } // region
+      new_dw->put(sum_vartype(totalMass_src),    MassMomEng_src::totalMass_srcLabel);
+      new_dw->put(sumvec_vartype(totalMom_src),  MassMomEng_src::totalMom_srcLabel);
+      new_dw->put(sum_vartype(totalEng_src),     MassMomEng_src::totalEng_srcLabel);
+    }
   }
 }
 //______________________________________________________________________  

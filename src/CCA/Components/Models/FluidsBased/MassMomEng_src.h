@@ -127,12 +127,15 @@ WARNING
       Vector mom_src_rate;
       double mass_src_rate;
       double eng_src_rate;
+      double d_mme_src_t_start;
+      double d_mme_src_t_final;
     };
     src* d_src;
     
     const VarLabel* totalMass_srcLabel;
     const VarLabel* totalMom_srcLabel;
     const VarLabel* totalEng_srcLabel;
+    SimulationStateP d_sharedState;
   };
 }
 
