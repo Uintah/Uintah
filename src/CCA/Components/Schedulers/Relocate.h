@@ -108,6 +108,12 @@ WARNING
                            DataWarehouse* old_dw,
                            DataWarehouse* new_dw, MPIScatterRecords* scatter_records, 
                            int total_reloc[3]);
+    
+    void findNeighboringPatches(const Patch* patch,
+                                const Level* level,
+                                const bool hasFiner,
+                                const bool hasCoarser);
+   
     void finalizeCommunication();
     const VarLabel* reloc_old_posLabel;
     vector<vector<const VarLabel*> > reloc_old_labels;

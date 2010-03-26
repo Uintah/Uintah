@@ -658,6 +658,130 @@ const Patch* findCoarsePatch(const Point& pos, const Patch* guess, Level* coarse
   bool includeExtraCells = false;
   return coarseLevel->getPatchFromPoint(pos, includeExtraCells);
 }
+
+//__________________________________
+// find all of the neighboring patches on the current level and the adjacent fine 
+// and coarse levels
+void
+Relocate::findNeighboringPatches(const Patch* patch,
+                                 const Level* level,
+                                 const bool hasFiner,
+                                 const bool hasCoarser)
+{ 
+  
+  // put patch neighbors into a std::set this will automatically
+  // delete any duplicate entries
+  set<const Patch*> neighborSet;
+  
+  // current level
+  Patch::selectType neighborPatches;
+
+  // Particles are only allowed to be one cell out
+  IntVector l = patch->getExtraCellLowIndex()  - IntVector(1,1,1);
+  IntVector h = patch->getExtraCellHighIndex() + IntVector(1,1,1);
+   
+  level->selectPatches(l, h, neighborPatches);
+  for(int i=0; i<neighborPatches.size(); i++){
+    const Patch* neighbor=neighborPatches[i];
+    neighborSet.insert(neighbor);
+    cout << " AA Current Level L-"<< level->getID() << " neighborPatch " << neighbor->getID() << endl;
+  }
+  
+  
+  // coarse level
+  if(hasCoarser){
+    const Level* coarseLevel = level->getCoarserLevel().get_rep();
+
+    // coarse level patches
+    vector<Patch::FaceType> cf;
+    patch->getCoarseFaces(cf);     // find all CFI faces
+    vector<Patch::FaceType>::const_iterator iter;  
+
+    for (iter  = cf.begin(); iter != cf.end(); ++iter){
+      Patch::FaceType patchFace = *iter;
+
+      cout << " AA L-"<< level->getID() << " patch-" << patch->getID()<<  " face: " << patch->getFaceName(patchFace);
+      
+      Patch::FaceIteratorType IFC = Patch::FaceNodes;
+      CellIterator f_iter=patch->getFaceIterator(patchFace, IFC);
+
+      IntVector lo_face = f_iter.begin();   
+      IntVector hi_face = f_iter.end();
+
+      IntVector l = level->mapNodeToCoarser(lo_face);     
+      IntVector h = level->mapNodeToCoarser(hi_face);
+      
+      cout <<" coarseLevel-"<< coarseLevel->getID();
+      //cout << " lo " << lo_face << " l " << l << " hi " << hi_face << " h " << h;
+      Patch::selectType CL_neighborPatches;
+      coarseLevel->selectPatches(l, h, CL_neighborPatches);
+      
+      ASSERT(CL_neighborPatches.size() == 0);
+
+      for(int i=0; i<CL_neighborPatches.size(); i++){
+        const Patch* neighbor=CL_neighborPatches[i];
+        neighborSet.insert(neighbor);
+        cout << " neighborPatch " << neighbor->getID();
+      }
+      cout << endl;
+    }  // face iterator
+  }
+  
+  //__________________________________
+  // find the adjacent fine level neighbor patches
+  if(hasFiner){
+    const Level* fineLevel = level->getFinerLevel().get_rep();
+    
+    Patch::selectType finePatches;
+    patch->getFineLevelPatches(finePatches);
+
+    for(int i=0;i<finePatches.size();i++){
+      const Patch* finePatch = finePatches[i];
+      
+      
+      vector<Patch::FaceType> cf;
+      finePatch->getCoarseFaces(cf);
+      vector<Patch::FaceType>::const_iterator iter;  
+
+      for (iter  = cf.begin(); iter != cf.end(); ++iter){
+        Patch::FaceType patchFace = *iter;
+
+        cout << " AA L-"<< level->getID() << " patch-" << finePatch->getID()<<  " face: " << patch->getFaceName(patchFace);
+
+        Patch::FaceIteratorType IFC = Patch::FaceNodes;
+        CellIterator f_iter=finePatch->getFaceIterator(patchFace, IFC);
+
+        IntVector l = f_iter.begin();   
+        IntVector h = f_iter.end();
+
+        cout <<" fineLevel-"<< fineLevel->getID() << " finePatch " << finePatch->getID() << "< l " << l << " h " << h << ">"<<endl;
+
+        Patch::selectType FL_neighborPatches;
+        fineLevel->selectPatches(l, h, FL_neighborPatches);
+        ASSERT(FL_neighborPatches.size() == 0);
+
+
+        for(int i=0; i<FL_neighborPatches.size(); i++){
+          const Patch* neighbor=FL_neighborPatches[i];
+          
+          neighborSet.insert(neighbor);
+          cout << " neighborPatch " << neighbor->getID();
+        } 
+        cout << endl;
+      }  // face iterator
+    }  // fine patches loop
+  }
+
+  //__________________________________
+  // put the neighborSet into a selectType variable.
+  Patch::selectType AllNeighborPatches;
+  cout << endl << "Neighbor Patches:" << endl;
+  for (set<const Patch*>::iterator iter = neighborSet.begin();iter != neighborSet.end();++iter) {
+    const Patch* neighbor = *iter;
+    cout << "  [" << (*neighbor) << "]" << endl;
+    AllNeighborPatches.push_back(neighbor);
+  }
+}
 //______________________________________________________________________
 //
 void
@@ -707,6 +831,8 @@ Relocate::relocateParticles(const ProcessorGroup* pg,
       
       Patch::selectType neighborPatches;
       level->selectPatches(l, h, neighborPatches);
+      
+      //findNeighboringPatches(patch, level, hasFiner, hasCoarser);
 
       // Find all of the neighborPatches, and add them to a set
       for(int i=0; i<neighborPatches.size(); i++){
@@ -745,6 +871,7 @@ Relocate::relocateParticles(const ProcessorGroup* pg,
         
         for(ParticleSubset::iterator iter = pset->begin(); iter != pset->end(); iter++){
           particleIndex idx = *iter;
+          
           const Patch* toPatch = 0; // patch to relocate particles to
           
           //__________________________________
