@@ -201,12 +201,12 @@ Patch* Level::addPatch(const IntVector& lowIndex,
     return r;
 }
 
-const Patch* Level::getPatchFromPoint(const Point& p) const
+const Patch* Level::getPatchFromPoint(const Point& p, const bool includeExtraCells) const
 {
   selectType patch;
   IntVector c=getCellIndex(p);
   //point is within the bounding box so query the bvh
-  d_bvh->query(c,c+IntVector(1,1,1), patch,true);
+  d_bvh->query(c,c+IntVector(1,1,1), patch,includeExtraCells);
 
   if(patch.size()==0)
     return 0;
@@ -215,12 +215,12 @@ const Patch* Level::getPatchFromPoint(const Point& p) const
   return patch[0];
 }
 
-const Patch* Level::getPatchFromIndex(const IntVector& c) const
+const Patch* Level::getPatchFromIndex(const IntVector& c, const bool includeExtraCells) const
 {
   selectType patch;
   
   //point is within the bounding box so query the bvh
-  d_bvh->query(c,c+IntVector(1,1,1), patch,true);
+  d_bvh->query(c,c+IntVector(1,1,1), patch,includeExtraCells);
 
   if(patch.size()==0)
     return 0;
@@ -444,21 +444,22 @@ void Level::selectPatches(const IntVector& low, const IntVector& high,
 
 bool Level::containsPointIncludingExtraCells(const Point& p) const
 {
-  return getPatchFromPoint(p)!=0;
+  bool includeExtraCells = true;
+  return getPatchFromPoint(p, includeExtraCells)!=0;
 }
 
 bool Level::containsPoint(const Point& p) const
 {
-  const Patch* patch=getPatchFromPoint(p);
-  //intersect (without extraCells)
-  return patch->containsPoint(p);
+  bool includeExtraCells = false;
+  const Patch* patch=getPatchFromPoint(p,includeExtraCells);
+  return patch != 0;
 }
 
 bool Level::containsCell(const IntVector& idx) const
 {
-  const Patch* patch=getPatchFromIndex(idx);
-  //intersect (without extraCells)
-  return patch->containsCell(idx);
+  bool includeExtraCells = false;
+  const Patch* patch=getPatchFromIndex(idx,includeExtraCells);
+  return patch != 0;
 }
 
 

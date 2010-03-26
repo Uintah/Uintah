@@ -148,10 +148,10 @@ public:
 
   //////////
   // Find a patch containing the point, return 0 if non exists
-  const Patch* getPatchFromPoint( const Point& ) const;
+  const Patch* getPatchFromPoint( const Point&, const bool includeExtraCells ) const;
   //////////
   // Find a patch containing the cell or node, return 0 if non exists
-  const Patch* getPatchFromIndex( const IntVector& ) const;
+  const Patch* getPatchFromIndex( const IntVector&, const bool includeExtraCells ) const;
 
   void finalizeLevel();
   void finalizeLevel(bool periodicX, bool periodicY, bool periodicZ);
