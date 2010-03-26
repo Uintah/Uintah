@@ -14,7 +14,7 @@
     <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
    <Time>
-       <maxTime>            0.001        </maxTime>
+       <maxTime>            0.01        </maxTime>
        <initTime>           0.0         </initTime>
        <delt_min>           0.0         </delt_min>
        <delt_max>           1.0         </delt_max>
@@ -146,7 +146,7 @@
     <!--____________________________________________________________________-->
    <DataArchiver>
       <filebase>massX.uda</filebase>
-      <outputInterval>0.0</outputInterval>
+      <outputTimestepInterval>1</outputTimestepInterval>
       <save label="vel_CC"/> 
       <save label="press_CC"/>
       <save label="rho_CC"/>
@@ -224,7 +224,7 @@
        <exchange_properties>       
          <exchange_coefficients>
             <momentum>          [1.0e10]          </momentum>
-            <heat>              [1.0e10]          </heat>
+            <heat>              [0.0e10]          </heat>
          </exchange_coefficients>
        </exchange_properties>
 
@@ -236,7 +236,9 @@
         <material> reactant   </material>
         <momentum_src>  [0,0,0]   </momentum_src>
         <mass_src>      1         </mass_src>
-        <energy_src>    1         </energy_src>
+        <!-- To maintain constant temperature, eng_src must be:
+                mass_src * specific_heat * initial_temperature -->
+        <energy_src>    195870.    </energy_src>
       </Model>
     </Models>       
 </Uintah_specification>
