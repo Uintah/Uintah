@@ -642,21 +642,21 @@ void Relocate::finalizeCommunication()
 //
 const Patch* findFinePatch(const Point& pos, const Patch* guess, Level* fineLevel)
 {
-  cout << "findFinePatch: Consider replacing getPatchFromPoint with selectPatchForCellIndex(level->getCellIndex(pos))" << endl;
   if (guess && guess->getExtraBox().contains(pos)){
     return guess;
   }
-  return fineLevel->getPatchFromPoint(pos);
+  bool includeExtraCells = false;
+  return fineLevel->getPatchFromPoint(pos, includeExtraCells);
 }
 //______________________________________________________________________
 //
 const Patch* findCoarsePatch(const Point& pos, const Patch* guess, Level* coarseLevel)
 {
-  cout << "findCoarsePatch Consider replacing getPatchFromPoint with selectPatchForCellIndex(level->getCellIndex(pos))" << endl;
   if (guess && guess->getExtraBox().contains(pos)){
     return guess;
   }
-  return coarseLevel->getPatchFromPoint(pos);
+  bool includeExtraCells = false;
+  return coarseLevel->getPatchFromPoint(pos, includeExtraCells);
 }
 //______________________________________________________________________
 //
@@ -757,9 +757,8 @@ Relocate::relocateParticles(const ProcessorGroup* pg,
           }
           
           //__________________________________
-          //  Has particle has moved to a finer level?
-          else if (fineLevel && (toPatch = findFinePatch(px[idx], PP_ToPatch_FL, fineLevel)) != 0) {
-            // do nothing - what we wanted was to set toPatch, and we'll add that to a scatterRecord
+          //  Has particle moved to a finer level?
+          else if (fineLevel && (toPatch = findFinePatch(px[idx], PP_ToPatch_FL, fineLevel) ) ) {
             PP_ToPatch_FL = toPatch;
           } 
           
@@ -782,24 +781,18 @@ Relocate::relocateParticles(const ProcessorGroup* pg,
               toPatch = PP_ToPatch;
             }else { 
               //__________________________________
-              //  Search for the new patch that the particle belongs to.
-              // This loop should change - linear searches are not good! However, since not very many particles leave the patches
-              // and there are a limited number of neighborPatches, perhaps it won't matter much
-              int i=0;
-              for(;i<(int)neighborPatches.size();i++){
-                if(neighborPatches[i]->containsPoint(px[idx])){
-                  break;
-                }
-              }
+              //  Search for the new patch that the particle belongs to on this level.
+              bool includeExtraCells = false;
+              toPatch = level->getPatchFromPoint(px[idx], includeExtraCells);
+              PP_ToPatch = toPatch;
+              
               //__________________________________
               // The particle is not in the surrounding patches
               // has it moved to a coarser level?
-              if(i == (int)neighborPatches.size()){
-                //  Particle fell off of current level, maybe to a coarser one?
-                if (coarseLevel) {
+              if (toPatch == 0 && coarseLevel){
                   toPatch = findCoarsePatch(px[idx], PP_ToPatch_CL, coarseLevel);
+
                   PP_ToPatch_CL = toPatch;
-                }
 #if SCI_ASSERTION_LEVEL >= 1
                 if(!toPatch && level->containsPoint(px[idx])){
                   // Make sure that the particle really left the world
@@ -807,12 +800,6 @@ Relocate::relocateParticles(const ProcessorGroup* pg,
                   warn.invoke();
                 }
 #endif
-              }
-              //__________________________________
-              // The particle has left the computational domain
-              else {
-                toPatch = neighborPatches[i];
-                PP_ToPatch = toPatch;
               }
             }  // search for new patch that particle belongs to
           }  // not on current patch
