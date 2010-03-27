@@ -118,7 +118,7 @@ ICE::ICE(const ProcessorGroup* myworld, const bool doAMR) :
   d_dbgVar2   = 0;
   d_EVIL_NUM  = -9.99e30;                                                    
   d_SMALL_NUM = 1.0e-100;                                                   
-  d_TINY_RHO  = 1.0e-12;// also defined ICEMaterial.cc and MPMMaterial.cc   
+  d_TINY_RHO  = 1.0e-12;   // also defined ICEMaterial.cc and MPMMaterial.cc   
   d_modelInfo = 0;
   d_modelSetup = 0;
   d_analysisModule = 0;
@@ -1328,7 +1328,6 @@ void ICE::scheduleComputeDelPressAndUpdatePressCC(SchedulerP& sched,
   task->requires( Task::NewDW, lb->press_equil_CCLabel,press_matl,oims,gn);
   //__________________________________
   if(d_models.size() > 0){
-    task->requires(Task::NewDW, lb->modelVol_srcLabel,  gn);
     task->requires(Task::NewDW, lb->modelMass_srcLabel, gn);
   }
   
@@ -3605,8 +3604,7 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
       if(d_models.size() > 0){
         constCCVariable<double> modelMass_src, modelVol_src;
         new_dw->get(modelMass_src, lb->modelMass_srcLabel, indx, patch, gn, 0);
-        new_dw->get(modelVol_src,  lb->modelVol_srcLabel,  indx, patch, gn, 0);
-                
+
         for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) {
          IntVector c = *iter;
          term1[c] += modelMass_src[c] * (sp_vol_CC[m][c]* inv_vol);
