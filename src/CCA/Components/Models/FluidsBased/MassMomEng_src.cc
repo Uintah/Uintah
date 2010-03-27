@@ -210,13 +210,13 @@ void MassMomEng_src::computeModelSources(const ProcessorGroup*,
           IntVector c = *iter;
         
           if ( vol_frac[c] > 0.001) {
-            eng_src[c]  += usr_eng_src;
-            mass_src[c] += usr_mass_src;
-            mom_src[c]  += usr_mom_src;
-            vol_src[c]  += usr_mass_src * sp_vol_CC[c];  // volume src
-            totalMass_src += usr_mass_src;
-            totalMom_src  += usr_mom_src;
-            totalEng_src  += usr_eng_src;
+            eng_src[c]  += usr_eng_src*vol_frac[c];
+            mass_src[c] += usr_mass_src*vol_frac[c];
+            mom_src[c]  += usr_mom_src*vol_frac[c];
+//          vol_src[c]  += usr_mass_src * sp_vol_CC[c]*vol_frac[c];// volume src
+            totalMass_src += usr_mass_src*vol_frac[c];
+            totalMom_src  += usr_mom_src*vol_frac[c];
+            totalEng_src  += usr_eng_src*vol_frac[c];
           }
         }
       } // region
