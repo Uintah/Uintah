@@ -153,6 +153,10 @@ public:
     //return d_intrusionBoundary; 
   }
 
+  bool getturbinlet() { 
+    return turbinlet; 
+  }
+
   bool anyArchesPhysicalBC() { 
     return ((d_wallBoundary)||(d_inletBoundary)||(d_pressureBoundary)||(d_outletBoundary)||(d_intrusionBoundary)); 
   }
@@ -295,6 +299,10 @@ public:
   // Also sets flat profiles for density
   // ** WARNING ** Properties profile not done yet
   void sched_setProfile(SchedulerP&, 
+                        const PatchSet* patches,
+                        const MaterialSet* matls);
+
+  void sched_setTurbulence(SchedulerP&,
                         const PatchSet* patches,
                         const MaterialSet* matls);
 
@@ -653,6 +661,12 @@ private:
                   DataWarehouse* old_dw,
                   DataWarehouse* new_dw);
                   
+  void setTurbulence(const ProcessorGroup*,
+                  const PatchSubset* patches,
+                  const MaterialSubset* matls,
+                  DataWarehouse* old_dw,
+                  DataWarehouse* new_dw);
+
 
   void Prefill(const ProcessorGroup*,
                const PatchSubset* patches,
@@ -720,6 +734,26 @@ private:
                      DataWarehouse* old_dw,
                      DataWarehouse* new_dw);
 
+  
+  bool turbinlet;
+  int ilow;
+  int ihigh;
+  int Nx;
+  int Ny;
+  int Nz;
+  int My;
+  int Mz;
+  int Nf;
+  double lscale;
+  double intensity;
+  double cellsize;
+  double *bcoeffx;
+  double *bcoeffy;
+  double *bcoeffz;
+  //double ***bbcoeff;
+  //double ***Rturb;
+  double *bbcoeff;
+  double *Rturb;
 
 private:
   // GROUP:  Local DataTypes :

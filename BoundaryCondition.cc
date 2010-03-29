@@ -67,6 +67,7 @@ DEALINGS IN THE SOFTWARE.
 
 #include <iostream>
 #include <sstream>
+#include <stdlib.h>
 
 
 using namespace std;
@@ -207,6 +208,76 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
         ++d_numSourceBoundaries;
 
       }
+    }
+
+    // --- new turbulence inlet flow generator --- 
+    if (ProblemSpecP turb_db = db->findBlock("TurbulentInlet")){
+      turbinlet = true;
+      int Nstep;
+      turb_db->get("cell_low",ilow);
+      turb_db->get("cell_high",ihigh);
+      turb_db->get("Ntimestep",Nstep);
+      turb_db->get("turbulence_intensity",intensity);
+
+      double summ;
+      double bsum;
+      int ncell;
+      double pi = acos(-1);
+      double ratio;
+      ncell = ihigh-ilow+1;
+      Nx = 2*Nstep;
+      My = ncell;
+      Mz = ncell;
+ 
+      summ = 0;     
+      for (int j = -Nx;j<(Nx+1);j++){
+        ratio = 1.0*j/(Nx/2);
+        summ += pow((exp(-pi/2*pow(ratio,2))),2);
+      }
+      bsum = sqrt(summ);
+      bcoeffx = new double[2*Nx+1];
+      for (int j = -Nx;j<(Nx+1);j++){
+        ratio = 1.0*j/(Nx/2);
+        bcoeffx[j+Nx] = exp(-pi/2*pow(ratio,2))/bsum;
+      }
+ 
+      summ = 0;     
+      for (int j = -Ny;j<(Ny+1);j++){
+        ratio = 1.0*j/(Ny/2);
+        summ += pow((exp(-pi/2*pow(ratio,2))),2);
+      }
+      bsum = sqrt(summ);
+      bcoeffy = new double[2*Ny+1];
+      for (int j = -Ny;j<(Ny+1);j++){
+        ratio = 1.0*j/(Ny/2);
+        bcoeffy[j+Ny] = exp(-pi/2*pow(ratio,2))/bsum;
+      }
+
+      summ = 0;     
+      for (int j = -Nz;j<(Nz+1);j++){
+        ratio = 1.0*j/(Nz/2);
+        summ += pow((exp(-pi/2*pow(ratio,2))),2);
+      }
+      bsum = sqrt(summ);
+      bcoeffz = new double[2*Nz+1];
+      for (int j = -Nz;j<(Nz+1);j++){
+        ratio = 1.0*j/(Nz/2);
+        bcoeffz[j+Nz] = exp(-pi/2*pow(ratio,2))/bsum;
+      }
+
+      Rturb = new double[2*Nx+1];
+      for(int i = -Nx;i<(Nx+1);i++){
+            double r = rand();
+            Rturb[i+Nx] = intensity*(r/RAND_MAX-.5)*sqrt(12.0);
+      }
+
+      bbcoeff = new double[2*Nx+1];
+      for(int i = -Nx;i<(Nx+1);i++){
+            bbcoeff[i+Nx] = bcoeffx[i+Nx];
+      }
+
+    } else {
+      turbinlet = false;
     }
 
     // --- new efficiency calculator --- 
@@ -1214,8 +1285,7 @@ BoundaryCondition::setProfile(const ProcessorGroup*,
         // Get a copy of the current flow inlet
         // check if given patch intersects with the inlet boundary of type index
         FlowInlet* fi = d_flowInlets[indx];
-        //cerr << " inlet area" << area << " flowrate" << fi.flowRate << endl;
-        //cerr << "density=" << fi.calcStream.d_density << endl;
+        
         fort_profv(uVelocity, vVelocity, wVelocity, idxLo, idxHi,
                    cellType, area, fi->d_cellTypeID, fi->flowRate, fi->inletVel,
                    fi->calcStream.d_density,
@@ -1373,6 +1443,131 @@ BoundaryCondition::setProfile(const ProcessorGroup*,
         }
       }
     }
+  }
+}
+
+
+//****************************************************************************
+// Apply turbulence fluctuations to the inlet profile
+//****************************************************************************
+void
+BoundaryCondition::sched_setTurbulence(SchedulerP& sched,
+                                       const PatchSet* patches,
+                                       const MaterialSet* matls)
+{
+  Task* tsk = scinew Task("BoundaryCondition::setTurbulence",
+                          this,
+                          &BoundaryCondition::setTurbulence);
+
+  tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, Ghost::None, 0);
+ 
+  tsk->modifies(d_lab->d_uVelocitySPBCLabel);
+  tsk->modifies(d_lab->d_vVelocitySPBCLabel);
+  tsk->modifies(d_lab->d_wVelocitySPBCLabel);
+  tsk->modifies(d_lab->d_uVelRhoHatLabel);
+  tsk->modifies(d_lab->d_vVelRhoHatLabel);
+  tsk->modifies(d_lab->d_wVelRhoHatLabel);
+
+  sched->addTask(tsk, patches, matls);
+}
+
+
+//****************************************************************************
+// Actually set turbulent profile at flow inlet boundary
+//****************************************************************************
+void
+BoundaryCondition::setTurbulence(const ProcessorGroup*,
+                                 const PatchSubset* patches,
+                                 const MaterialSubset*,
+                                 DataWarehouse*,
+                                 DataWarehouse* new_dw)
+{
+  for (int p = 0; p < patches->size(); p++) {
+
+    int nofTimeSteps=d_lab->d_sharedState->getCurrentTopLevelTimeStep();
+    const Patch* patch = patches->get(p);
+    int archIndex = 0; // only one arches material
+    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
+    constCCVariable<int> cellType;
+    SFCXVariable<double> uVelocity;
+    SFCYVariable<double> vVelocity;
+    SFCZVariable<double> wVelocity;
+    SFCXVariable<double> uVelRhoHat;
+    SFCYVariable<double> vVelRhoHat;
+    SFCZVariable<double> wVelRhoHat;
+   
+    new_dw->getModifiable(uVelocity, d_lab->d_uVelocitySPBCLabel, indx, patch);
+    new_dw->getModifiable(vVelocity, d_lab->d_vVelocitySPBCLabel, indx, patch);
+    new_dw->getModifiable(wVelocity, d_lab->d_wVelocitySPBCLabel, indx, patch);
+    new_dw->getModifiable(uVelRhoHat, d_lab->d_uVelRhoHatLabel, indx, patch);
+    new_dw->getModifiable(vVelRhoHat, d_lab->d_vVelRhoHatLabel, indx, patch);
+    new_dw->getModifiable(wVelRhoHat, d_lab->d_wVelRhoHatLabel, indx, patch);
+  
+    // get cellType, density and velocity
+    new_dw->get(cellType, d_lab->d_cellTypeLabel, indx, patch, Ghost::None,
+                Arches::ZEROGHOSTCELLS);
+ 
+    IntVector idxLo = patch->getFortranCellLowIndex();
+    IntVector idxHi = patch->getFortranCellHighIndex();
+    bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
+    //bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
+    //bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
+    //bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
+    //bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
+    //bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
+
+    if (d_inletBoundary) {
+      if(xminus) {
+        srand(nofTimeSteps);
+        for (int indx = 0; indx < d_numInlets; indx++) {
+        
+          FlowInlet* fi = d_flowInlets[indx];
+
+          int inlet_celltypeval = inletCellType(indx);
+          double sumdum;
+          double UUa[My][Mz];
+          double Rnew[2*Nx+1];
+
+          for(int j = 0;j<My;j++){
+            for(int k = 0;k<Mz;k++){
+              sumdum = 0;
+              for(int ii = -Nx;ii<(Nx+1);ii++){
+                    sumdum += bbcoeff[ii+Nx]*Rturb[ii+Nx];
+              }
+              UUa[j][k] = (fi->inletVel)*(1+sumdum);
+            }
+          }
+      
+          for(int i = -Nx;i<(Nx);i++){
+                Rnew[i+Nx] = Rturb[i+1+Nx];
+          }
+ 
+          double r = rand();
+          Rnew[2*Nx] = intensity*(r/RAND_MAX-.5)*sqrt(12.0);
+
+          for(int i = -Nx;i<(Nx+1);i++){
+                Rturb[i+Nx] = Rnew[i+Nx];
+          }
+ 
+          if (xminus) {
+            int colX = idxLo.x();
+            for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
+              for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+                IntVector currCell(colX, colY, colZ);
+                IntVector xminusCell(colX-1, colY, colZ);
+                if (cellType[xminusCell] == inlet_celltypeval) {
+                  uVelocity[currCell] = UUa[colY-ilow][colZ-ilow];
+                  uVelocity[xminusCell] = UUa[colY-ilow][colZ-ilow];
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    uVelRhoHat.copyData(uVelocity);
+    vVelRhoHat.copyData(vVelocity);
+    wVelRhoHat.copyData(wVelocity);
   }
 }
 
@@ -3465,14 +3660,16 @@ BoundaryCondition::velRhoHatInletBC(const Patch* patch,
     bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
     bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
     bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
+
     fort_inlbcs(vars->uVelRhoHat, vars->vVelRhoHat, vars->wVelRhoHat,
                 idxLo, idxHi, constvars->new_density, constvars->cellType, 
                 fi->d_cellTypeID, current_time,
                 xminus, xplus, yminus, yplus, zminus, zplus,
           fi->d_ramping_inlet_flowrate);
-    
   }
+  
 }
+
 //****************************************************************************
 // Set hat velocity at the outlet
 // Tangential bc's are not needed to be set for hat velocities

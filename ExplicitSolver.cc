@@ -151,6 +151,7 @@ ExplicitSolver::problemSetup(const ProblemSpecP& params)
       d_probePoints.push_back(prbPoint);
     }
   }
+  d_turbinlet = d_boundaryCondition->getturbinlet();
 
   //RMCRT StandAlone solver:
   db->getWithDefault("do_standalone_RMCRT",d_standAloneRMCRT, false);
@@ -613,6 +614,9 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     sched_updatePressure(sched, patches, matls,
                                  d_timeIntegratorLabels[curr_level]);
 
+    if(d_turbinlet){
+      d_boundaryCondition->sched_setTurbulence(sched, patches, matls);
+    }
     //if (curr_level == numTimeIntegratorLevels - 1) {
     if (d_boundaryCondition->anyArchesPhysicalBC()) {
 
@@ -629,10 +633,10 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     }
 
 
-
     // Schedule an interpolation of the face centered velocity data 
     sched_interpolateFromFCToCC(sched, patches, matls,
                         d_timeIntegratorLabels[curr_level]);
+
     // Compute mms error
     if (d_doMMS){
       sched_computeMMSError(sched, patches, matls,
