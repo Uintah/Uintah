@@ -1236,6 +1236,12 @@ avtudaReaderMTMDFileFormat::GetVar(int timestate, int domain, const char *varnam
 
     int n = (high[0]-low[0])*(high[1]-low[1])*(high[2]-low[2]);
 
+    // replace nan's with a large negative number
+    for (int i=0; i<n*gd->components; i++) {
+      if (isnan(gd->data[i]))
+        gd->data[i] = -1e16;
+    }
+
     rv->SetNumberOfComponents(gd->components);
     rv->SetArray(gd->data, n*gd->components, 0);
 
