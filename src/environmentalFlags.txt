@@ -4,6 +4,7 @@ Name              type               Description
 ______________________________________________________________________
 
 ExecTimes         SCI_DEBUG     outputs the time for execution on each task.
+RELOCATE_DBG      SCI_DEBUG     prints out debugging information in the code that finds the neighboring patches inside of particle relocation task.
 
 
 
