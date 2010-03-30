@@ -74,6 +74,11 @@
 #include <InvalidDBTypeException.h>
 
 
+#ifdef PARALLEL
+// we only get the option for  serialized reads if compiling the parallel version
+//#define SERIALIZED_READS
+#endif
+
 //#define USE_EXTRA_CELLS
 
 
@@ -90,9 +95,6 @@ avtudaReaderMTMDFileFormat::avtudaReaderMTMDFileFormat(const char *filename) :
   grid(NULL)
 {
   debug5 << "\nIn avtudaReaderFileFormat\n";
-
-  // INITIALIZE DATA MEMBERS
-  bool fileOpened = false;
 
   // Verify that it is a UDA index.xml file:
   // The 2nd line should look like this <Uintah_DataArchive>.
@@ -194,9 +196,6 @@ avtudaReaderMTMDFileFormat::avtudaReaderMTMDFileFormat(const char *filename) :
   // haven't loaded any timestep data yet
   stepInfo = NULL;  
   currTimeStep = -1;
-
-  // fileOpened should be set if the file could be opened
-  fileOpened = true;
 
   debug5 << "Out avtudaReaderFileFormat\n";
 }
@@ -319,7 +318,7 @@ avtudaReaderMTMDFileFormat::ReadMetaData(avtDatabaseMetaData *md, int timeState)
     groupIds[i] = level;
     pieceNames[i] = tmpName;
   }
-
+  debug5<<"num domains: "<<totalPatches<<endl;
 
   // compute the bounding box of the mesh from the grid indices of level 0
   LevelInfo &level0Info = stepInfo->levelInfo[0];
@@ -520,7 +519,7 @@ avtudaReaderMTMDFileFormat::ReadMetaData(avtDatabaseMetaData *md, int timeState)
 void
 avtudaReaderMTMDFileFormat::PopulateDatabaseMetaData(avtDatabaseMetaData *md, int timeState)
 {
-#ifdef PARALLEL
+#ifdef SERIALIZED_READS
 
   int numProcs, rank;
   int msg = 128, tag = 256;
@@ -530,7 +529,6 @@ avtudaReaderMTMDFileFormat::PopulateDatabaseMetaData(avtDatabaseMetaData *md, in
   MPI_Comm_rank(VISIT_MPI_COMM, &rank);
 
   debug5 << "Proc: " << rank << " sent to mdserver" << endl;  
-  //  cerr << "Proc: " << rank << " sent to mdserver" << endl;  
 
   if (rank == 0) {
     ReadMetaData(md, timeState);
@@ -543,7 +541,7 @@ avtudaReaderMTMDFileFormat::PopulateDatabaseMetaData(avtDatabaseMetaData *md, in
       if (rank < (numProcs - 1))
         MPI_Send(&msg, 1, MPI_INT, rank + 1, tag, VISIT_MPI_COMM);
     }
-  } 
+  }
 #else      
   ReadMetaData(md, timeState);
 #endif
@@ -1135,11 +1133,10 @@ avtudaReaderMTMDFileFormat::GetVar(int timestate, int domain, const char *varnam
         varType.find("NC") != string::npos) {
       high[2]++; qhigh[2]++;
     }
-      
 
     GridDataRaw *gd=NULL;
 
-#ifdef PARALLEL
+#ifdef SERIALIZED_READS
     int numProcs, rank;
     int msg = 128, tag = 256;
     MPI_Status status;
@@ -1147,22 +1144,31 @@ avtudaReaderMTMDFileFormat::GetVar(int timestate, int domain, const char *varnam
     MPI_Comm_size(VISIT_MPI_COMM, &numProcs);
     MPI_Comm_rank(VISIT_MPI_COMM, &rank);
 
-    debug5 << "Proc: " << rank << " sent to GetVar" << endl;  
+    int totalPatches = 0;
+    for (int i = 0; i < stepInfo->levelInfo.size(); i++)
+      totalPatches += stepInfo->levelInfo[i].patchInfo.size();
 
-    if (rank == 0) {
-      debug5 << "level: " << level << ", patch: " << local_patch << " proc: " << rank << endl;
-      gd = (*getGridData)(archive, grid, level, local_patch, varName, atoi(matl.c_str()), timestate, qlow, qhigh);
-      MPI_Send(&msg, 1, MPI_INT, 1, tag, VISIT_MPI_COMM);
-    }
-    else {
-      MPI_Recv(&msg, 1, MPI_INT, rank - 1, tag, VISIT_MPI_COMM, &status);
-      if (msg == 128 && tag == 256) {
-        debug5 << "level: " << level << ", patch: " << local_patch << ", proc: " << rank << endl;
-        gd = (*getGridData)(archive, grid, level, local_patch, varName, atoi(matl.c_str()), timestate, qlow, qhigh);
-        if (rank < (numProcs - 1))
-          MPI_Send(&msg, 1, MPI_INT, rank + 1, tag, VISIT_MPI_COMM);
-      }
-    } 
+    // calculate which process we should wait for a message from
+    // if we're processing doiman 0 don't wait for anyone else
+    int prev = (rank+numProcs-1)%numProcs;
+    int next = (rank+1)%numProcs;
+
+    // domain 0 always reads right away
+    if (domain==0)
+      prev = -1;
+    
+    debug5 << "Proc: " << rank << " sent to GetVar" << endl;
+
+    // wait for previous read to finish
+    if (prev>=0)
+      MPI_Recv(&msg, 1, MPI_INT, prev, tag, VISIT_MPI_COMM, &status);
+
+    gd = (*getGridData)(archive, grid, level, local_patch, varName, atoi(matl.c_str()), timestate, qlow, qhigh);
+
+    // let the next read go
+    if (next>=0)
+      MPI_Send(&msg, 1, MPI_INT, next, tag, VISIT_MPI_COMM);
+
 #else
     gd = (*getGridData)(archive, grid, level, local_patch, varName, atoi(matl.c_str()), timestate, qlow, qhigh);
 #endif
@@ -1247,7 +1253,6 @@ avtudaReaderMTMDFileFormat::GetVar(int timestate, int domain, const char *varnam
 
     // don't delete gd->data - vtk owns it now!
     delete gd;
-
   }
 
   // particle data
@@ -1265,7 +1270,44 @@ avtudaReaderMTMDFileFormat::GetVar(int timestate, int domain, const char *varnam
         level = i;
     }
 
-    ParticleDataRaw *pd = (*getParticleData)(archive, grid, level, domain, varName, matlNo, timestate);
+    ParticleDataRaw *pd = NULL;
+
+#ifdef SERIALIZED_READS
+    int numProcs, rank;
+    int msg = 128, tag = 256;
+    MPI_Status status;
+
+    MPI_Comm_size(VISIT_MPI_COMM, &numProcs);
+    MPI_Comm_rank(VISIT_MPI_COMM, &rank);
+
+    int totalPatches = 0;
+    for (int i = 0; i < stepInfo->levelInfo.size(); i++)
+      totalPatches += stepInfo->levelInfo[i].patchInfo.size();
+
+    // calculate which process we should wait for a message from
+    // if we're processing doiman 0 don't wait for anyone else
+    int prev = (rank+numProcs-1)%numProcs;
+    int next = (rank+1)%numProcs;
+
+    // domain 0 always reads right away
+    if (domain==0)
+      prev = -1;
+    
+    debug5 << "Proc: " << rank << " sent to GetVar" << endl;
+
+    // wait for previous read to finish
+    if (prev>=0)
+      MPI_Recv(&msg, 1, MPI_INT, prev, tag, VISIT_MPI_COMM, &status);
+
+    pd = (*getParticleData)(archive, grid, level, domain, varName, matlNo, timestate);
+
+    // let the next read go
+    if (next>=0)
+      MPI_Send(&msg, 1, MPI_INT, next, tag, VISIT_MPI_COMM);
+
+#else
+    pd = (*getParticleData)(archive, grid, level, domain, varName, matlNo, timestate);
+#endif
 
     // replace nan's with a large negative number
     for (int i=0; i<pd->num*pd->components; i++) {

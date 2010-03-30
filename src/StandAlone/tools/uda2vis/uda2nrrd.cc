@@ -429,20 +429,21 @@ ParticleDataRaw* readParticleData(DataArchive *archive,
     archive->query(*var, variable_name, matl, patch, timestep);
 
     particle_vars.push_back(var);
-    pd->num += var->size();
+    pd->num += var->getParticleSubset()->numParticles();
   }
 
 
   // copy all the data
-  int base=0;
+  int pi=0;
   pd->data = new float[pd->components * pd->num];
   for (unsigned int i=0; i<particle_vars.size(); i++) {
-    for (int p=0; p<particle_vars[i]->size(); p++) {
-      copyComponents<T>(&pd->data[(base+p)*pd->components],
-                        (*particle_vars[i])[p]);
-    }
+    for (ParticleSubset::iterator p = particle_vars[i]->getParticleSubset()->begin();
+         p != particle_vars[i]->getParticleSubset()->end(); ++p) {
 
-    base += particle_vars[i]->size();
+      copyComponents<T>(&pd->data[pi*pd->components],
+                        (*particle_vars[i])[*p]);
+      pi++;
+    }
   }
 
   // cleanup
