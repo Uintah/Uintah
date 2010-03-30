@@ -32,6 +32,7 @@ DEALINGS IN THE SOFTWARE.
 #define UINTAH_HOMEBREW_RELOCATE_H
 
 #include <Core/Grid/LevelP.h>
+#include <Core/Grid/Patch.h>
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <vector>
 
@@ -112,7 +113,8 @@ WARNING
     void findNeighboringPatches(const Patch* patch,
                                 const Level* level,
                                 const bool hasFiner,
-                                const bool hasCoarser);
+                                const bool hasCoarser,
+                                Patch::selectType& AllNeighborPatches);
    
     void finalizeCommunication();
     const VarLabel* reloc_old_posLabel;
