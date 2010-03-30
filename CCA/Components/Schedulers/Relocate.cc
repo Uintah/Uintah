@@ -69,6 +69,7 @@ using namespace Uintah;
 extern UINTAHSHARE SCIRun::Mutex       cerrLock;
 extern DebugStream mixedDebug;
 extern DebugStream mpidbg;
+static DebugStream coutdbg("RELOCATE_DBG", false);
 
 Relocate::Relocate()
 {
@@ -88,10 +89,10 @@ namespace Uintah {
     const Patch* toPatch;    
     IntVector vectorToNeighbor;
     int matl;    
-    ParticleSubset* sendset;
+    ParticleSubset* send_pset;
     
     ScatterRecord(const Patch* fromPatch, const Patch* toPatch, int matl)
-      : fromPatch(fromPatch), toPatch(toPatch), matl(matl), sendset(0)
+      : fromPatch(fromPatch), toPatch(toPatch), matl(matl), send_pset(0)
     {
       ASSERT(fromPatch != 0);
       ASSERT(toPatch != 0);
@@ -263,7 +264,7 @@ Relocate::scheduleParticleRelocation(Scheduler* sched,
 //______________________________________________________________________
 //
 void MPIScatterRecords::saveRecv(const Patch* to, int matl,
-         char* databuf, int datasize, int numParticles)
+                                 char* databuf, int datasize, int numParticles)
 {
   recvmaptype::key_type key(to, matl);
   recvmaptype::iterator iter = recvs.find(key);
@@ -309,7 +310,7 @@ ScatterRecord* MPIScatterRecords::findRecord(const Patch* from,
   
   if(pr.first == pr.second){
     ScatterRecord* rec = scinew ScatterRecord(from, to, matl);
-    rec->sendset = scinew ParticleSubset(0, -1, 0);
+    rec->send_pset = scinew ParticleSubset(0, -1, 0);
     records.insert(maptype::value_type(make_pair(realTo, matl), rec));
     return rec;
   } else {
@@ -387,20 +388,24 @@ void MPIScatterRecords::addNeighbor(LoadBalancer* lb,
 //
 MPIScatterRecords::~MPIScatterRecords()
 {
-  for(procmaptype::iterator iter = procs.begin(); iter != procs.end(); iter++)
+  for(procmaptype::iterator iter = procs.begin(); iter != procs.end(); iter++){
     delete iter->second;
-  for(maptype::iterator mapiter = records.begin(); mapiter != records.end();
-      mapiter++){
-    delete mapiter->second->sendset;    
+  }
+    
+  for(maptype::iterator mapiter = records.begin(); mapiter != records.end();mapiter++){
+    delete mapiter->second->send_pset;    
     delete mapiter->second;
   }
+  
   for(recvmaptype::iterator iter = recvs.begin(); iter != recvs.end(); iter++){
     MPIRecvBuffer* p = iter->second;
+  
     while(p){
       MPIRecvBuffer* next = p->next;
       delete p;
       p=next;
     }
+    
   }
 }
 //______________________________________________________________________
@@ -457,18 +462,18 @@ Relocate::exchangeParticles(const ProcessorGroup* pg,
           sendsize += psize; // Patch ID, matl #, # particles, datasize
           int orig_sendsize = sendsize;
           ScatterRecord* record = pr.first->second;
-          int np = record->sendset->numParticles();
+          int np = record->send_pset->numParticles();
           
           numParticles += np;
           ParticleSubset* pset         = old_dw->getParticleSubset(matl, record->fromPatch);
           ParticleVariableBase* posvar = new_dw->getParticleVariable(reloc_old_posLabel, pset);
-          ParticleSubset* sendset      = record->sendset;
+          ParticleSubset* send_pset    = record->send_pset;
           
-          posvar->packsizeMPI(&sendsize, pg, sendset);
+          posvar->packsizeMPI(&sendsize, pg, send_pset);
           
           for(int v=0;v<numVars;v++){
             ParticleVariableBase* var = new_dw->getParticleVariable(reloc_old_labels[m][v], pset);
-            var->packsizeMPI(&sendsize, pg, sendset);
+            var->packsizeMPI(&sendsize, pg, send_pset);
           }
           int datasize = sendsize-orig_sendsize;
           datasizes.push_back(datasize);
@@ -501,7 +506,7 @@ Relocate::exchangeParticles(const ProcessorGroup* pg,
           MPI_Pack(&m,       1, MPI_INT, buf, sendsize, &position, pg->getComm());
           
           ScatterRecord* record = pr.first->second;
-          int totalParticles = record->sendset->numParticles();
+          int totalParticles = record->send_pset->numParticles();
           
           MPI_Pack(&totalParticles, 1, MPI_INT, buf, sendsize, &position, pg->getComm());
           
@@ -514,12 +519,12 @@ Relocate::exchangeParticles(const ProcessorGroup* pg,
           int start = position;
           ParticleSubset* pset         = old_dw->getParticleSubset(matl, record->fromPatch);
           ParticleVariableBase* posvar = new_dw->getParticleVariable(reloc_old_posLabel, pset);
-          ParticleSubset* sendset      =record->sendset;
-          posvar->packMPI(buf, sendsize, &position, pg, sendset, record->toPatch);
+          ParticleSubset* send_pset    = record->send_pset;
+          posvar->packMPI(buf, sendsize, &position, pg, send_pset, record->toPatch);
           
           for(int v=0;v<numVars;v++){
             ParticleVariableBase* var = new_dw->getParticleVariable(reloc_old_labels[m][v], pset);
-            var->packMPI(buf, sendsize, &position, pg, sendset);
+            var->packMPI(buf, sendsize, &position, pg, send_pset);
           }
           int size=position-start;
           if(size < datasize){
@@ -559,12 +564,13 @@ Relocate::exchangeParticles(const ProcessorGroup* pg,
   // this more dynamically...
   int idx=0;
   for(procmaptype::iterator iter = scatter_records->procs.begin();
-      iter != scatter_records->procs.end(); iter++, idx++){
+                            iter != scatter_records->procs.end(); iter++, idx++){
     if(iter->first == me){
       // Local - put a placeholder here for the buffer and request
       recvbuffers[idx]=0;
       continue;
     }
+    
     MPI_Status status;
     MPI_Probe(iter->first, RELOCATE_TAG, pg->getComm(), &status);
     //ASSERT(status.MPI_ERROR == 0);      
@@ -659,18 +665,19 @@ const Patch* findCoarsePatch(const Point& pos, const Patch* guess, Level* coarse
   return coarseLevel->getPatchFromPoint(pos, includeExtraCells);
 }
 
-//__________________________________
+//______________________________________________________________________
 // find all of the neighboring patches on the current level and the adjacent fine 
 // and coarse levels
 void
 Relocate::findNeighboringPatches(const Patch* patch,
                                  const Level* level,
                                  const bool hasFiner,
-                                 const bool hasCoarser)
+                                 const bool hasCoarser,
+                                 Patch::selectType& AllNeighborPatches)
 { 
   
   // put patch neighbors into a std::set this will automatically
-  // delete any duplicate entries
+  // delete any duplicate patch entries
   set<const Patch*> neighborSet;
   
   // current level
@@ -684,11 +691,11 @@ Relocate::findNeighboringPatches(const Patch* patch,
   for(int i=0; i<neighborPatches.size(); i++){
     const Patch* neighbor=neighborPatches[i];
     neighborSet.insert(neighbor);
-    cout << " AA Current Level L-"<< level->getID() << " neighborPatch " << neighbor->getID() << endl;
   }
   
   
-  // coarse level
+  //__________________________________
+  //  Look for neighboring coarse level patches
   if(hasCoarser){
     const Level* coarseLevel = level->getCoarserLevel().get_rep();
 
@@ -700,7 +707,7 @@ Relocate::findNeighboringPatches(const Patch* patch,
     for (iter  = cf.begin(); iter != cf.end(); ++iter){
       Patch::FaceType patchFace = *iter;
 
-      cout << " AA L-"<< level->getID() << " patch-" << patch->getID()<<  " face: " << patch->getFaceName(patchFace);
+      coutdbg << "L-"<< level->getID() << " patch-" << patch->getID()<<  " face: " << patch->getFaceName(patchFace);
       
       Patch::FaceIteratorType IFC = Patch::FaceNodes;
       CellIterator f_iter=patch->getFaceIterator(patchFace, IFC);
@@ -711,18 +718,19 @@ Relocate::findNeighboringPatches(const Patch* patch,
       IntVector l = level->mapNodeToCoarser(lo_face);     
       IntVector h = level->mapNodeToCoarser(hi_face);
       
-      cout <<" coarseLevel-"<< coarseLevel->getID() << " lo " << lo_face << " l " << l << " hi " << hi_face << " h " << h;
+      coutdbg <<" coarseLevel-"<< coarseLevel->getID() << " lo " << lo_face << " l " << l << " hi " << hi_face << " h " << h;
+      
       Patch::selectType CL_neighborPatches;
       coarseLevel->selectPatches(l, h, CL_neighborPatches);
       
-      ASSERT(CL_neighborPatches.size() == 0);
+      ASSERT(CL_neighborPatches.size() != 0);
 
       for(int i=0; i<CL_neighborPatches.size(); i++){
         const Patch* neighbor=CL_neighborPatches[i];
         neighborSet.insert(neighbor);
-        cout << " neighborPatch " << neighbor->getID();
+        coutdbg << " neighborPatch " << neighbor->getID();
       }
-      cout << endl;
+      coutdbg  << endl;
     }  // face iterator
   }
   
@@ -747,7 +755,7 @@ Relocate::findNeighboringPatches(const Patch* patch,
       for (iter  = cf.begin(); iter != cf.end(); ++iter){
         Patch::FaceType patchFace = *iter;
 
-        cout << " AA L-"<< level->getID() << " patch-" << finePatch->getID()<<  " face: " << patch->getFaceName(patchFace);
+        coutdbg << "L-"<< level->getID() << " patch-" << finePatch->getID()<<  " face: " << patch->getFaceName(patchFace);
 
         Patch::FaceIteratorType IFC = Patch::FaceNodes;
         CellIterator f_iter=finePatch->getFaceIterator(patchFace, IFC);
@@ -758,22 +766,21 @@ Relocate::findNeighboringPatches(const Patch* patch,
         IntVector coarseEnd   = fineLevel->mapCellToCoarser(h);
         
         if(patch->containsCell(coarseStart) || patch->containsCell(coarseEnd)){
-          cout <<" fineLevel-"<< fineLevel->getID() << " finePatch " << finePatch->getID() << "< l " << l << " h " << h << ">"<<endl;
+          coutdbg <<" fineLevel-"<< fineLevel->getID() << " finePatch " << finePatch->getID() << "< l " << l << " h " << h << ">"<< " neighborPatch " << finePatch->getID();
           neighborSet.insert(finePatch);
-          cout << " neighborPatch " << finePatch->getID();
         } 
-        cout << endl;
+        coutdbg << endl;
       }  // face iterator
     }  // fine patches loop
   }
 
   //__________________________________
   // put the neighborSet into a selectType variable.
-  Patch::selectType AllNeighborPatches;
-  cout << endl << "Neighbor Patches:" << endl;
+  //Patch::selectType AllNeighborPatches;
+  coutdbg << endl << "Neighbor Patches:" << endl;
   for (set<const Patch*>::iterator iter = neighborSet.begin();iter != neighborSet.end();++iter) {
     const Patch* neighbor = *iter;
-    cout << "  [" << (*neighbor) << "]" << endl;
+    coutdbg << "  [" << (*neighbor) << "]" << endl;
     AllNeighborPatches.push_back(neighbor);
   }
 }
@@ -819,15 +826,9 @@ Relocate::relocateParticles(const ProcessorGroup* pg,
       if(hasCoarser){
         coarseLevel = (Level*) curLevel->getCoarserLevel().get_rep();
       }
-
-      // Particles are only allowed to be one cell out
-      IntVector l = patch->getExtraCellLowIndex()  - IntVector(1,1,1);
-      IntVector h = patch->getExtraCellHighIndex() + IntVector(1,1,1);
       
       Patch::selectType neighborPatches;
-      level->selectPatches(l, h, neighborPatches);
-      
-      //findNeighboringPatches(patch, level, hasFiner, hasCoarser);
+      findNeighboringPatches(patch, level, hasFiner, hasCoarser, neighborPatches);
 
       // Find all of the neighborPatches, and add them to a set
       for(int i=0; i<neighborPatches.size(); i++){
@@ -932,7 +933,7 @@ Relocate::relocateParticles(const ProcessorGroup* pg,
           if (toPatch) {
             total_reloc[0]++;
             ScatterRecord* record = scatter_records.findRecord(patch, toPatch, matl, pset);
-            record->sendset->addParticle(idx);
+            record->send_pset->addParticle(idx);
           }
         }  // pset loop
         
@@ -958,13 +959,23 @@ Relocate::relocateParticles(const ProcessorGroup* pg,
     for(int p=0;p<patches->size();p++){
       const Patch* patch = patches->get(p);
       const Level* level = patch->getLevel();
-
-      // Particles are only allowed to be one cell out
-      IntVector l = patch->getExtraCellLowIndex()  - IntVector(1,1,1);
-      IntVector h = patch->getExtraCellHighIndex() + IntVector(1,1,1);
+      
+      // AMR related
+      const Level* curLevel = patch->getLevel();
+      bool hasFiner   = curLevel->hasFinerLevel();
+      bool hasCoarser = curLevel->hasCoarserLevel() && curLevel->getIndex() > coarsestLevel->getIndex();
+      Level* fineLevel=0;
+      Level* coarseLevel=0;
+      
+      if(hasFiner){
+        fineLevel = (Level*) curLevel->getFinerLevel().get_rep();
+      }
+      if(hasCoarser){
+        coarseLevel = (Level*) curLevel->getCoarserLevel().get_rep();
+      }
       
       Patch::selectType neighborPatches;
-      level->selectPatches(l, h, neighborPatches);
+      findNeighboringPatches(patch, level, hasFiner, hasCoarser, neighborPatches);
 
       for(int m = 0; m < matls->size(); m++){
         int matl = matls->get(m);
@@ -993,7 +1004,7 @@ Relocate::relocateParticles(const ProcessorGroup* pg,
           
             if(record){
               fromPatches.push_back(fromPatch);
-              subsets.push_back(record->sendset);
+              subsets.push_back(record->send_pset);
             }
           }
         }  // neighbor patches
@@ -1155,6 +1166,7 @@ Relocate::relocateParticles(const ProcessorGroup* pg,
   
           // Put the data back in the data warehouse
           new_dw->put(*newpos, reloc_new_posLabel);
+          
           delete newpos;
           
           for(int v=0;v<numVars;v++){
