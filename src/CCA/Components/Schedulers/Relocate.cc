@@ -107,6 +107,20 @@ namespace Uintah {
     }
   };
 
+
+  ostream& operator<<(ostream& out, const ScatterRecord & r){
+    out.setf(ios::scientific,ios::floatfield);
+    out.precision(4);
+    out << " Scatter Record, matl: " << r.matl
+        << " numParticles " << r.send_pset->numParticles()
+        << " (Particle moving from Patch " << r.fromPatch->getID() 
+        << ", to Patch " <<  r.toPatch->getID() << ")"
+        << " vectorToNeighbor " << r.vectorToNeighbor;
+    out.setf(ios::scientific ,ios::floatfield);
+    return out;
+  }
+
+
   typedef multimap<pair<const Patch*, int>, ScatterRecord*> maptype;
 
 
@@ -114,7 +128,7 @@ namespace Uintah {
   
     bool operator()(const ScatterRecord* sr1, const ScatterRecord* sr2) const
     {
-      return  // THIS SUCKS --TODD
+      return 
       ((sr1->toPatch->getRealPatch() != sr2->toPatch->getRealPatch()) ?
        (sr1->toPatch->getRealPatch() <  sr2->toPatch->getRealPatch()) :
        ((sr1->matl != sr2->matl)     ? (sr1->matl < sr2->matl) :
@@ -158,7 +172,7 @@ namespace Uintah {
     
     procmaptype procs;
 
-    ScatterRecord* findRecord(const Patch* from, const Patch* to, int matl, ParticleSubset* pset);
+    ScatterRecord* findOrInsertRecord(const Patch* from, const Patch* to, int matl, ParticleSubset* pset);
     ScatterRecord* findRecord(const Patch* from, const Patch* to, int matl);
     
     void addNeighbor(LoadBalancer* lb, const ProcessorGroup* pg, const Patch* to);
@@ -290,10 +304,10 @@ MPIRecvBuffer* MPIScatterRecords::findRecv(const Patch* to, int matl)
 }
 //______________________________________________________________________
 //
-ScatterRecord* MPIScatterRecords::findRecord(const Patch* from,
-                                             const Patch* to, 
-                                             int matl,
-                                             ParticleSubset* pset)
+ScatterRecord* MPIScatterRecords::findOrInsertRecord(const Patch* from,
+                                                     const Patch* to, 
+                                                     int matl,
+                                                     ParticleSubset* pset)
 {
   ASSERT(to != 0);
   IntVector vectorToNeighbor = to->getExtraCellLowIndex() - from->getExtraCellLowIndex();
@@ -427,13 +441,14 @@ Relocate::exchangeParticles(const ProcessorGroup* pg,
 
   int me = pg->myrank();
   for(procmaptype::iterator iter = scatter_records->procs.begin();
-      iter != scatter_records->procs.end(); iter++){
+                           iter != scatter_records->procs.end(); iter++){
+    
     if(iter->first == me){
-      // Local
-      continue;
+      continue;   // Local
     }
-    MPIScatterProcessorRecord* pr = iter->second;
-    pr->sortPatches();
+
+    MPIScatterProcessorRecord* procRecord = iter->second;
+    procRecord->sortPatches();
 
     // Go through once to calc the size of the message
     int psize;
@@ -442,7 +457,7 @@ Relocate::exchangeParticles(const ProcessorGroup* pg,
     int numactive = 0;
     vector<int> datasizes;
     
-    for(patchestype::iterator it = pr->patches.begin(); it != pr->patches.end(); it++){
+    for(patchestype::iterator it = procRecord->patches.begin(); it != procRecord->patches.end(); it++){
       const Patch* toPatch = *it;
       
       for(int m=0;m<numMatls;m++){
@@ -490,7 +505,7 @@ Relocate::exchangeParticles(const ProcessorGroup* pg,
     int idx=0;
     MPI_Pack(&numactive, 1, MPI_INT, buf, sendsize, &position, pg->getComm());
     
-    for(patchestype::iterator it = pr->patches.begin();it != pr->patches.end(); it++){
+    for(patchestype::iterator it = procRecord->patches.begin();it != procRecord->patches.end(); it++){
       const Patch* toPatch = *it;
       
       for(int m=0;m<numMatls;m++){
@@ -707,7 +722,7 @@ Relocate::findNeighboringPatches(const Patch* patch,
     for (iter  = cf.begin(); iter != cf.end(); ++iter){
       Patch::FaceType patchFace = *iter;
 
-      coutdbg << "L-"<< level->getID() << " patch-" << patch->getID()<<  " face: " << patch->getFaceName(patchFace);
+      // coutdbg << "L-"<< level->getID() << " patch-" << patch->getID()<<  " face: " << patch->getFaceName(patchFace);
       
       Patch::FaceIteratorType IFC = Patch::FaceNodes;
       CellIterator f_iter=patch->getFaceIterator(patchFace, IFC);
@@ -718,7 +733,7 @@ Relocate::findNeighboringPatches(const Patch* patch,
       IntVector l = level->mapNodeToCoarser(lo_face);     
       IntVector h = level->mapNodeToCoarser(hi_face);
       
-      coutdbg <<" coarseLevel-"<< coarseLevel->getID() << " lo " << lo_face << " l " << l << " hi " << hi_face << " h " << h;
+     // coutdbg <<" coarseLevel-"<< coarseLevel->getID() << " lo " << lo_face << " l " << l << " hi " << hi_face << " h " << h;
       
       Patch::selectType CL_neighborPatches;
       coarseLevel->selectPatches(l, h, CL_neighborPatches);
@@ -728,9 +743,9 @@ Relocate::findNeighboringPatches(const Patch* patch,
       for(int i=0; i<CL_neighborPatches.size(); i++){
         const Patch* neighbor=CL_neighborPatches[i];
         neighborSet.insert(neighbor);
-        coutdbg << " neighborPatch " << neighbor->getID();
+       // coutdbg << " neighborPatch " << neighbor->getID();
       }
-      coutdbg  << endl;
+      //coutdbg  << endl;
     }  // face iterator
   }
   
@@ -765,11 +780,13 @@ Relocate::findNeighboringPatches(const Patch* patch,
         IntVector coarseStart = fineLevel->mapCellToCoarser(l);
         IntVector coarseEnd   = fineLevel->mapCellToCoarser(h);
         
-        if(patch->containsCell(coarseStart) || patch->containsCell(coarseEnd)){
-          coutdbg <<" fineLevel-"<< fineLevel->getID() << " finePatch " << finePatch->getID() << "< l " << l << " h " << h << ">"<< " neighborPatch " << finePatch->getID();
+        bool test = doesIntersect(l, h, coarseStart, coarseEnd);
+        
+        if(test){
+          //coutdbg << Parallel::getMPIRank() << " fineLevel-"<< fineLevel->getID() << " finePatch " << finePatch->getID() << "< l " << l << " h " << h << ">" << "< cS " << coarseStart << " CE " << coarseEnd << ">"<< " neighborPatch " << finePatch->getID()<< endl;
           neighborSet.insert(finePatch);
         } 
-        coutdbg << endl;
+        //coutdbg << endl;
       }  // face iterator
     }  // fine patches loop
   }
@@ -777,10 +794,10 @@ Relocate::findNeighboringPatches(const Patch* patch,
   //__________________________________
   // put the neighborSet into a selectType variable.
   //Patch::selectType AllNeighborPatches;
-  coutdbg << endl << "Neighbor Patches:" << endl;
+  //cout << endl << Parallel::getMPIRank()<< "Neighbor Patches:" << endl;
   for (set<const Patch*>::iterator iter = neighborSet.begin();iter != neighborSet.end();++iter) {
     const Patch* neighbor = *iter;
-    coutdbg << "  [" << (*neighbor) << "]" << endl;
+    //cout << Parallel::getMPIRank()<< "  [" << (*neighbor) << "]" << endl;
     AllNeighborPatches.push_back(neighbor);
   }
 }
@@ -928,11 +945,11 @@ Relocate::relocateParticles(const ProcessorGroup* pg,
           }  // not on current patch
           
           //__________________________________
-          // We now know which patch the particle is
+          // We know which patch the particle is
           // going to be moved to, add it to a scatter record
           if (toPatch) {
             total_reloc[0]++;
-            ScatterRecord* record = scatter_records.findRecord(patch, toPatch, matl, pset);
+            ScatterRecord* record = scatter_records.findOrInsertRecord(patch, toPatch, matl, pset);
             record->send_pset->addParticle(idx);
           }
         }  // pset loop
