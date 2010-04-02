@@ -28,7 +28,6 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-
 #include <Core/Grid/PatchBVH/PatchBVHNode.h>
 #include <Core/Grid/PatchBVH/PatchBVHLeaf.h>
 
@@ -143,9 +142,9 @@ namespace Uintah {
   void PatchBVHNode::query(const IntVector& low, const IntVector& high, Level::selectType& patches,bool includeExtraCells)
   {
     //check that the query intersects my bounding box
-    if(!intersects(low,high,low_,high_))
+    if(!doesIntersect(low,high,low_,high_)) {
       return;
-
+    }
     //intersect with left and right trees
     ASSERT(left_!=NULL);
     left_->query(low,high,patches,includeExtraCells);

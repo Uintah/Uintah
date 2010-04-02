@@ -77,6 +77,8 @@ public:
   inline bool operator==(const IntVector& a) const {
     return value_[0] == a.value_[0] && value_[1] == a.value_[1] && value_[2] == a.value_[2];
   }
+  
+
 
   /* Do not use these operators,  STL require < operator in different manner
   inline bool operator>=(const IntVector& a) const { 
@@ -245,6 +247,19 @@ inline IntVector Abs(const IntVector& v)
     int y=v.value_[1]<0?-v.value_[1]:v.value_[1];
     int z=v.value_[2]<0?-v.value_[2]:v.value_[2];
     return IntVector(x,y,z);
+}
+
+/**
+* Returns true if the given ranges intersect
+*/
+static inline bool doesIntersect(const IntVector& low1, const IntVector &high1, const IntVector& low2, const IntVector &high2)
+{
+  return low1.x()<high2.x() && 
+         low1.y()<high2.y() && 
+         low1.z()<high2.z() &&    // intersect if low1 is less than high2 
+         high1.x()>low2.x() && 
+         high1.y()>low2.y() && 
+         high1.z()>low2.z();     // and high1 is greater than their low2
 }
 
 } // End namespace SCIRun

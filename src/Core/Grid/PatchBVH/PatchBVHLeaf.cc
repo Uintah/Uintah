@@ -28,7 +28,6 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-
 #include <Core/Grid/PatchBVH/PatchBVHLeaf.h>
 
 namespace Uintah {
@@ -84,7 +83,7 @@ namespace Uintah {
   void PatchBVHLeaf::query(const IntVector& low, const IntVector& high, Level::selectType& patches, bool includeExtraCells)
   {
     //check that the query intersects my bounding box
-    if(!intersects(low,high,low_,high_))
+    if(!doesIntersect(low,high,low_,high_))
       return;
 
     //loop through lists individually
@@ -93,13 +92,13 @@ namespace Uintah {
       if(includeExtraCells)
       {
         //if patch intersects range
-        if(intersects(low,high, iter->patch->getExtraCellLowIndex(), iter->patch->getExtraCellHighIndex()))
+        if(doesIntersect(low,high, iter->patch->getExtraCellLowIndex(), iter->patch->getExtraCellHighIndex()))
           patches.push_back(iter->patch); //add it to the list
       }
       else
       {
         //if patch intersects range
-        if(intersects(low,high, iter->patch->getCellLowIndex(), iter->patch->getCellHighIndex()))
+        if(doesIntersect(low,high, iter->patch->getCellLowIndex(), iter->patch->getCellHighIndex()))
           patches.push_back(iter->patch); //add it to the list
       }
     }
