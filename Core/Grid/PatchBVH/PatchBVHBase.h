@@ -105,22 +105,7 @@ namespace Uintah {
   protected:
 
     friend class PatchBVH;
-    /**
-     * Returns true if the given range intersects my volume
-     */
-    inline bool intersects(const IntVector& low, const IntVector &high)
-    {
-      return intersects(low,high,low_,high_);
-    }
 
-    /**
-     * Returns true if the given ranges intersect
-     */
-    static inline bool intersects(const IntVector& low1, const IntVector &high1, const IntVector& low2, const IntVector high2)
-    {
-      return low1.x()<high2.x() && low1.y()<high2.y() && low1.z()<high2.z()    // intersect if low1 is less than high2 
-        && high1.x()>low2.x() && high1.y()>low2.y() && high1.z()>low2.z();  // and high1 is greater than their low2
-    }
     IntVector low_, high_;  //the bounding box for this node/leaf
 
     static unsigned int leafSize_;      //the number of patches in a leaf
