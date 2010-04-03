@@ -151,7 +151,7 @@ echo "yes."
 
 echo -n "  Testing: does $REMOTEDIR_PARENT exist on the remote machine... "
 
-command="echo `test -e $REMOTEDIR_PARENT && echo $?`"
+command="ls $REMOTEDIR_PARENT ; echo $?"
 test=`$SSH -x $LOGIN $command`
 
 if test "$test" != "0"; then
