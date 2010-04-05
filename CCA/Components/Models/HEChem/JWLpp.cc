@@ -92,11 +92,12 @@ void JWLpp::problemSetup(GridP&, SimulationStateP& sharedState, ModelSetup*)
 {
   d_sharedState = sharedState;
   bool defaultActive=true;
-  d_params->getWithDefault("Active",   d_active, defaultActive);
-  d_params->require("ThresholdPressure",   d_threshold_pressure);
-
+  d_params->getWithDefault("Active",          d_active, defaultActive);
+  d_params->getWithDefault("ThresholdVolFrac",d_threshold_volFrac, 0.01);
+  
+  d_params->require("ThresholdPressure", d_threshold_pressure);
   d_params->require("fromMaterial",fromMaterial);
-  d_params->require("toMaterial",toMaterial);
+  d_params->require("toMaterial",  toMaterial);
   d_params->require("G",    d_G);
   d_params->require("b",    d_b);
   d_params->require("E0",   d_E0);
@@ -154,6 +155,7 @@ void JWLpp::outputProblemSpec(ProblemSpecP& ps)
 
   model_ps->appendElement("Active",d_active);
   model_ps->appendElement("ThresholdPressure",d_threshold_pressure);
+  model_ps->appendElement("ThresholdVolFrac", d_threshold_volFrac);
   model_ps->appendElement("fromMaterial",fromMaterial);
   model_ps->appendElement("toMaterial",toMaterial);
   model_ps->appendElement("G",    d_G);
@@ -247,6 +249,7 @@ void JWLpp::scheduleComputeModelSources(SchedulerP& sched,
     t->requires(Task::OldDW, Ilb->temp_CCLabel,      react_matl, gn);
     t->requires(Task::NewDW, Ilb->rho_CCLabel,       react_matl, gn);
     t->requires(Task::NewDW, Ilb->specific_heatLabel,react_matl, gn);
+    t->requires(Task::NewDW, Ilb->vol_frac_CCLabel,  react_matl, gn);
 
     t->requires(Task::NewDW, Ilb->press_equil_CCLabel, press_matl,gn);
     t->computes(reactedFractionLabel, react_matl);
@@ -377,7 +380,7 @@ void JWLpp::computeModelSources(const ProcessorGroup*,
     new_dw->getModifiable(energy_src_1,  mi->modelEng_srcLabel,   m1,patch);
     new_dw->getModifiable(sp_vol_src_1,  mi->modelVol_srcLabel,   m1,patch);
 
-    constCCVariable<double> press_CC, cv_reactant;
+    constCCVariable<double> press_CC, cv_reactant,rctVolFrac;
     constCCVariable<double> rctTemp,rctRho,rctSpvol,prodRho;
     constCCVariable<Vector> rctvel_CC;
     CCVariable<double> Fr;
@@ -389,13 +392,14 @@ void JWLpp::computeModelSources(const ProcessorGroup*,
    
     //__________________________________
     // Reactant data
-    old_dw->get(rctTemp,       Ilb->temp_CCLabel,  m0,patch,gn, 0);
-    old_dw->get(rctvel_CC,     Ilb->vel_CCLabel,   m0,patch,gn, 0);
-    new_dw->get(rctRho,        Ilb->rho_CCLabel,   m0,patch,gn, 0);
-    new_dw->get(rctSpvol,      Ilb->sp_vol_CCLabel,m0,patch,gn, 0);
+    old_dw->get(rctTemp,       Ilb->temp_CCLabel,      m0,patch,gn, 0); 
+    old_dw->get(rctvel_CC,     Ilb->vel_CCLabel,       m0,patch,gn, 0); 
+    new_dw->get(rctRho,        Ilb->rho_CCLabel,       m0,patch,gn, 0); 
+    new_dw->get(rctSpvol,      Ilb->sp_vol_CCLabel    ,m0,patch,gn, 0); 
     new_dw->get(cv_reactant,   Ilb->specific_heatLabel,m0,patch,gn, 0);
-    new_dw->allocateAndPut(Fr,   reactedFractionLabel,m0,patch);
-    new_dw->allocateAndPut(delF, delFLabel,           m0,patch);
+    new_dw->get(rctVolFrac,    Ilb->vol_frac_CCLabel,  m0,patch,gn, 0);
+    new_dw->allocateAndPut(Fr,   reactedFractionLabel, m0,patch);
+    new_dw->allocateAndPut(delF, delFLabel,            m0,patch);
     Fr.initialize(0.);
     delF.initialize(0.);
 
@@ -409,7 +413,7 @@ void JWLpp::computeModelSources(const ProcessorGroup*,
 
     for (CellIterator iter = patch->getCellIterator();!iter.done();iter++){
       IntVector c = *iter;
-      if (press_CC[c] > d_threshold_pressure){
+      if (press_CC[c] > d_threshold_pressure && rctVolFrac[c] > d_threshold_volFrac){          
         //__________________________________
         // Insert Burn Model Here
         double burnedMass;
