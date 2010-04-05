@@ -1,13 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE network PUBLIC "-//SCIRun/Network DTD" "network.dtd">
-<network version="v1.25.3" name="{Main}" bbox="{0 7 974 779}" creationDate="{Wed Mar 31 2010}" creationTime="{16:41:54}" geometry="{1132x1107+588+14}">
+<network version="v1.25.3" name="{Main}" bbox="{0 7 974 779}" creationDate="{Mon Apr 05 2010}" creationTime="{17:01:10}" geometry="{1132x1107+588+14}">
   <note>{}</note>
   <modules>
     <module id="m1" package="Uintah" category="DataIO" name="ArchiveReader">
       <position x="1" y="7"/>
-      <var name="filebase" val="{/data/Builds/Fresh/020110SCIRun/dbg_Linux/StandAlone/disks_AMR_1D.uda}"/>
       <var name="tcl_status" val="{Executing}"/>
-      <var name="ui_geometry" val="{697x79+548+292}"/>
+      <var name="ui_geometry" val="{697x79+540+299}"/>
     </module>
     <module id="m2" package="Uintah" category="Visualization" name="RescaleColorMapForParticles">
       <position x="75" y="382"/>
@@ -30,7 +29,7 @@
       <position x="214" y="293"/>
       <var name="nl" val="{3}"/>
       <var name="curr_var" val="{}"/>
-      <var name="archive_name" val="{/data/Builds/Fresh/020110SCIRun/dbg_Linux/StandAlone/disks_AMR_1D.uda}"/>
+      <var name="archive_name" val="{}"/>
       <var name="level2_grid_color" val="{cyan}"/>
       <var name="default_radius" val="{0.025}"/>
       <var name="show_selected_node" val="{0}"/>
@@ -38,7 +37,7 @@
     </module>
     <module id="m5" package="Uintah" category="Selectors" name="ParticleFieldExtractor">
       <position x="2" y="290"/>
-      <var name="tcl_status" val="{Done}"/>
+      <var name="tcl_status" val="{Calling ParticleFieldExtractor!}"/>
       <var name="psVar" val="{p.color}"/>
       <var name="pvVar" val="{p.displacement}"/>
       <var name="ptVar" val="{p.stress}"/>
@@ -52,14 +51,14 @@
       <var name="max_time" val="{94}"/>
       <var name="timeval" val="{4.51938453789e-05}"/>
       <var name="def-color-a" val="{}"/>
-      <var name="ui_geometry" val="{499x270+1339+860}"/>
+      <var name="ui_geometry" val="{499x270+1951+534}"/>
     </module>
     <module id="m7" package="SCIRun" category="Render" name="Viewer">
       <position x="0" y="735"/>
       <gui_callback>
         <callback>addViewer</callback>
       </gui_callback>
-      <var name="ViewWindow_0-geometry" val="331x371+2215+123"/>
+      <var name="ViewWindow_0-geometry" val="331x370+2219+141"/>
       <var name="ViewWindow_0-view-eyep-x" val="{0.132731618878}"/>
       <var name="ViewWindow_0-view-eyep-y" val="{1.20029671447}"/>
       <var name="ViewWindow_0-view-eyep-z" val="{12.0449398056}"/>
@@ -115,24 +114,11 @@
       <var name="ViewWindow_0-global-cull" val="{0}"/>
       <var name="ViewWindow_0-global-dl" val="{0}"/>
       <var name="ViewWindow_0-global-type" val="{Gouraud}"/>
-      <var name="&quot;ViewWindow_0-TimeStamp Sticky (1)&quot;" val="{0}"/>
-      <var name="&quot;ViewWindow_0-Clock Sticky (1)&quot;" val="{0}"/>
-      <var name="&quot;ViewWindow_0-GridVisualizer Widget (3)&quot;" val="{1}"/>
-      <var name="&quot;ViewWindow_0-Nodes - level 0 (3)&quot;" val="{0}"/>
-      <var name="&quot;ViewWindow_0-Patches - level 0 (3)&quot;" val="{1}"/>
-      <var name="&quot;ViewWindow_0-Nodes - level 1 (3)&quot;" val="{0}"/>
-      <var name="&quot;ViewWindow_0-Patches - level 1 (3)&quot;" val="{1}"/>
-      <var name="&quot;ViewWindow_0-Nodes - level 2 (3)&quot;" val="{0}"/>
-      <var name="&quot;ViewWindow_0-Patches - level 2 (3)&quot;" val="{1}"/>
-      <var name="&quot;ViewWindow_0-Particles (5)&quot;" val="{1}"/>
-      <var name="&quot;ViewWindow_0-ShowColorMap Sticky (4)&quot;" val="{0}"/>
-      <var name="&quot;ViewWindow_0-Particles (2)&quot;" val="{1}"/>
-      <var name="&quot;ViewWindow_0-Particles (6)&quot;" val="{1}"/>
     </module>
     <module id="m8" package="Uintah" category="Visualization" name="ParticleVis">
       <position x="1" y="479"/>
-      <var name="radius" val="{0.0277608581932}"/>
-      <var name="length_scale" val="{245.704767633}"/>
+      <var name="radius" val="{0.0}"/>
+      <var name="length_scale" val="{}"/>
       <var name="min_crop_length" val="{0.0}"/>
       <var name="max_crop_length" val="{0.0}"/>
       <var name="head_length" val="{0.1}"/>
@@ -159,7 +145,7 @@
     </module>
     <module id="m11" package="Uintah" category="Selectors" name="ParticleFieldExtractor">
       <position x="408" y="291"/>
-      <var name="tcl_status" val="{Done}"/>
+      <var name="tcl_status" val="{Calling ParticleFieldExtractor!}"/>
       <var name="level" val="{1}"/>
       <var name="psVar" val="{p.color}"/>
       <var name="pvVar" val="{p.displacement}"/>
@@ -167,11 +153,11 @@
       <var name="onMaterials" val="{0}"/>
       <var name="ui_geometry" val="{404x246+928+615}"/>
     </module>
-    <module id="m12" package="Uintah" category="Visualization" name="RescaleColorMapForParticles" gui_visible="yes">
+    <module id="m12" package="Uintah" category="Visualization" name="RescaleColorMapForParticles">
       <position x="453" y="393"/>
       <var name="minVal" val="{-0.001}"/>
       <var name="maxVal" val="{0.001}"/>
-      <var name="ui_geometry" val="{390x110+1165+793}"/>
+      <var name="ui_geometry" val="{390x110+1948+517}"/>
     </module>
     <module id="m13" package="Uintah" category="Visualization" name="ParticleVis">
       <position x="408" y="491"/>
@@ -181,20 +167,19 @@
       <var name="max_crop_length" val="{0.0}"/>
       <var name="head_length" val="{0.1}"/>
       <var name="width_scale" val="{0.05}"/>
-      <var name="shaft_rad" val="{0.1}"/>
       <var name="drawspheres" val="{1}"/>
       <var name="polygons" val="{31}"/>
       <var name="ui_geometry" val="{394x580+1017+570}"/>
     </module>
     <module id="m14" package="Uintah" category="Selectors" name="ParticleFieldExtractor">
       <position x="718" y="281"/>
-      <var name="tcl_status" val="{Done}"/>
+      <var name="tcl_status" val="{Calling ParticleFieldExtractor!}"/>
       <var name="level" val="{2}"/>
       <var name="psVar" val="{p.color}"/>
       <var name="pvVar" val="{p.displacement}"/>
       <var name="ptVar" val="{p.stress}"/>
       <var name="onMaterials" val="{0}"/>
-      <var name="ui_geometry" val="{404x246+927+615}"/>
+      <var name="ui_geometry" val="{404x246+1263+572}"/>
     </module>
     <module id="m15" package="Uintah" category="Visualization" name="RescaleColorMapForParticles">
       <position x="746" y="387"/>
