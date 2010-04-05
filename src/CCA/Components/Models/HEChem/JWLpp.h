@@ -164,6 +164,7 @@ WARNING
     double d_E0;
     double d_rho0;
     double d_threshold_pressure;
+    double d_threshold_volFrac;
 
     #define d_SMALL_NUM 1e-100
     #define d_TINY_RHO 1e-12
