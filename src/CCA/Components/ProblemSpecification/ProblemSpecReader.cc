@@ -1752,8 +1752,7 @@ ProblemSpecReader::validateProblemSpec( ProblemSpecP & prob_spec )
     if( Parallel::getMPIRank() == 0 ) {
       cout << "\n";
       cout << "!! WARNING: Your .ups file did not parse successfully...\n";
-      cout << "!!          Soon this will be a fatal error... please\n";
-      cout << "!!          fix your .ups file or update the ups_spec.xml\n";
+      cout << "!!          Fix your .ups file or update the ups_spec.xml\n";
       cout << "!!          specification.  Reason for failure is:\n";
       cout << "\n";
       throw;
