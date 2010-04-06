@@ -80,7 +80,6 @@ public:
   int extraCells[3];
   double spacing[3];
   double anchor[3];
-  bool particleLevel;
 };
 
 

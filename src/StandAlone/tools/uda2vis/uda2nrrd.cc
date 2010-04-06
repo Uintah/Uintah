@@ -194,8 +194,6 @@ getTimeStepInfo(DataArchive *archive, GridP *grid, int timestep) {
   TimeStepInfo *stepInfo = new TimeStepInfo;
   stepInfo->levelInfo.resize(numLevels);
 
-  int particle_level = -1;
-
   // get variable information
   vector<string> vars;
   vector<const Uintah::TypeDescription*> types;
@@ -214,10 +212,6 @@ getTimeStepInfo(DataArchive *archive, GridP *grid, int timestep) {
       const Patch* patch = *(level->patchesBegin());
       ConsecutiveRangeSet matls = archive->queryMaterials(vars[i], patch, timestep);
       if (matls.size() > 0) {
-
-        // if it is a partcle variable, keep track of the level it was on
-        if (types[i]->getName().find("ParticleVariable") != string::npos)
-          particle_level = l;
 
         // copy the list of materials
         for (ConsecutiveRangeSet::iterator matlIter = matls.begin();
@@ -240,7 +234,6 @@ getTimeStepInfo(DataArchive *archive, GridP *grid, int timestep) {
     copyIntVector(levelInfo.extraCells, level->getExtraCells());
     copyVector(levelInfo.spacing, level->dCell());
     copyVector(levelInfo.anchor, level->getAnchor());
-    levelInfo.particleLevel = (l==particle_level);
 
     // patch info
     int numPatches = level->numPatches();
@@ -414,11 +407,17 @@ ParticleDataRaw* readParticleData(DataArchive *archive,
   pd->num = 0;
 
   // figure out which material we're interested in
+  ConsecutiveRangeSet allMatls = archive->queryMaterials(variable_name, patch, timestep);
+
   ConsecutiveRangeSet matlsForVar;
-  if (material<0)
-    matlsForVar = archive->queryMaterials(variable_name, patch, timestep);
-  else
-    matlsForVar.addInOrder(material);
+  if (material<0) {
+    matlsForVar = allMatls;
+  }
+  else {
+    // make sure the patch has the variable - use empty material set if it doesn't
+    if (allMatls.size()>0 && allMatls.find(material) != allMatls.end())
+      matlsForVar.addInOrder(material);
+  }
 
   // first get all the particle subsets so that we know how many total particles we'll have
   vector<ParticleVariable<T>*> particle_vars;
