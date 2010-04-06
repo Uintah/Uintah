@@ -462,14 +462,13 @@ avtudaReaderMTMDFileFormat::ReadMetaData(avtDatabaseMetaData *md, int timeState)
           mesh->topologicalDimension = 0;
           mesh->spatialDimension = 3;
 
-          mesh->numBlocks = 0;
-          for (unsigned int l=0; l<stepInfo->levelInfo.size(); l++) {
-            if (stepInfo->levelInfo[l].particleLevel)
-              mesh->numBlocks = stepInfo->levelInfo[l].patchInfo.size();
-          }
-
+          mesh->numBlocks = totalPatches;
           mesh->blockTitle = "patches";
           mesh->blockPieceName = "patch";
+          mesh->numGroups = numLevels;
+          mesh->groupTitle = "levels";
+          mesh->groupPieceName = "level";
+          mesh->blockNames = pieceNames;
 
           mesh->hasSpatialExtents = true; 
           mesh->minSpatialExtents[0] = box_min[0];
@@ -797,16 +796,14 @@ avtudaReaderMTMDFileFormat::GetMesh(int timestate, int domain, const char *meshn
 
   string meshName(meshname);
 
+  int level, local_patch;
+  GetLevelAndLocalPatchNumber(domain, level, local_patch);
+
   // volume data
   if (meshName.find("Particle_Mesh") == string::npos) {
 
-    int numLevels = stepInfo->levelInfo.size();
-
     // make sure we have ghosting info for this mesh
     CalculateDomainNesting(timestate, meshname);
-
-    int level, local_patch;
-    GetLevelAndLocalPatchNumber(domain, level, local_patch);
 
     LevelInfo &levelInfo = stepInfo->levelInfo[level];
     PatchInfo &patchInfo = levelInfo.patchInfo[local_patch];
@@ -990,15 +987,7 @@ avtudaReaderMTMDFileFormat::GetMesh(int timestate, int domain, const char *meshn
     // we always want p.x when setting up the mesh
     string vars = "p.x";
 
-    // figure out which level our particle data is on -
-    // domain is the patch index within that level
-    int level=0;
-    for (int i=0; i<stepInfo->levelInfo.size(); i++) {
-      if (stepInfo->levelInfo[i].particleLevel)
-        level = i;
-    }
-
-    ParticleDataRaw *pd = (*getParticleData)(archive, grid, level, domain, vars, matlNo, timestate);
+    ParticleDataRaw *pd = (*getParticleData)(archive, grid, level, local_patch, vars, matlNo, timestate);
 
     // Create the vtkPoints object and copy points into it.
     vtkFloatArray *floatArray = vtkFloatArray::New();
@@ -1079,11 +1068,11 @@ avtudaReaderMTMDFileFormat::GetVar(int timestate, int domain, const char *varnam
 
   vtkFloatArray *rv = vtkFloatArray::New();
 
+  int level, local_patch;
+  GetLevelAndLocalPatchNumber(domain, level, local_patch);
+
   // volume data
   if (!isParticleVar) { 
-    int level, local_patch;
-    GetLevelAndLocalPatchNumber(domain, level, local_patch);
-
 
     LevelInfo &levelInfo = stepInfo->levelInfo[level];
     PatchInfo &patchInfo = levelInfo.patchInfo[local_patch];
@@ -1261,15 +1250,6 @@ avtudaReaderMTMDFileFormat::GetVar(int timestate, int domain, const char *varnam
     if (matl.compare("*") != 0)
       matlNo = atoi(matl.c_str());
 
-
-    // figure out which level our particle data is on -
-    // domain is the patch index within that level
-    int level=0;
-    for (int i=0; i<stepInfo->levelInfo.size(); i++) {
-      if (stepInfo->levelInfo[i].particleLevel)
-        level = i;
-    }
-
     ParticleDataRaw *pd = NULL;
 
 #ifdef SERIALIZED_READS
@@ -1299,14 +1279,14 @@ avtudaReaderMTMDFileFormat::GetVar(int timestate, int domain, const char *varnam
     if (prev>=0)
       MPI_Recv(&msg, 1, MPI_INT, prev, tag, VISIT_MPI_COMM, &status);
 
-    pd = (*getParticleData)(archive, grid, level, domain, varName, matlNo, timestate);
+    pd = (*getParticleData)(archive, grid, level, local_patch, varName, matlNo, timestate);
 
     // let the next read go
     if (next>=0)
       MPI_Send(&msg, 1, MPI_INT, next, tag, VISIT_MPI_COMM);
 
 #else
-    pd = (*getParticleData)(archive, grid, level, domain, varName, matlNo, timestate);
+    pd = (*getParticleData)(archive, grid, level, local_patch, varName, matlNo, timestate);
 #endif
 
     // replace nan's with a large negative number
