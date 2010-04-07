@@ -176,6 +176,12 @@ double ICEMaterial::getThermalConductivity() const
   return d_thermalConductivity;
 }
 
+double ICEMaterial::getInitialDensity() const
+{
+  std::cout << "Density: " << d_geom_objs[0]->getInitialData("density") << endl;
+  return d_geom_objs[0]->getInitialData("density");
+}
+
 /* --------------------------------------------------------------------- 
  Function~  ICEMaterial::initializeCells--
  Purpose~ Initialize material dependent variables 
