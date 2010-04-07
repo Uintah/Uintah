@@ -99,6 +99,7 @@ WARNING
    bool getIncludeFlowWork() const;
    double getSpecificHeat() const;
    double getThermalConductivity() const;
+   double getInitialDensity() const;
    
    void initializeCells(CCVariable<double>& rhom,
                      CCVariable<double>& rhC,
