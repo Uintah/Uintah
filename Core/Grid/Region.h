@@ -103,6 +103,12 @@ WARNING
     {
     }
     
+    inline void extend(IntVector p)
+    {
+      d_lowIndex=Min(p,d_lowIndex);
+      d_highIndex=Max(p,d_highIndex);
+    }
+
     //Get refrences to the indices
     inline IntVector& low()
     { return d_lowIndex;  }
