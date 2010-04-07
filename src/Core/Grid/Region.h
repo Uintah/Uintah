@@ -106,7 +106,7 @@ WARNING
     inline void extend(IntVector p)
     {
       d_lowIndex=Min(p,d_lowIndex);
-      d_highIndex=Max(p,d_highIndex);
+      d_highIndex=Max(p+IntVector(1,1,1),d_highIndex);
     }
 
     //Get refrences to the indices
