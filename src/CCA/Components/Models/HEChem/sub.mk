@@ -39,4 +39,5 @@ SRCS	+= \
        $(SRCDIR)/IandG.cc         \
        $(SRCDIR)/LightTime.cc     \
        $(SRCDIR)/JWLpp.cc         \
-       $(SRCDIR)/DDT0.cc
+       $(SRCDIR)/DDT0.cc          \
+       $(SRCDIR)/DDT1.cc
