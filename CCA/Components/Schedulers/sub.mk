@@ -39,6 +39,7 @@ SRCS += \
 	$(SRCDIR)/MemoryLog.cc \
 	$(SRCDIR)/CommRecMPI.cc \
 	$(SRCDIR)/MPIScheduler.cc \
+	$(SRCDIR)/DynamicMPIScheduler.cc \
 	$(SRCDIR)/MessageLog.cc \
 	$(SRCDIR)/MixedScheduler.cc \
 	$(SRCDIR)/OnDemandDataWarehouse.cc \

@@ -99,7 +99,6 @@ WARNING
 ****************************************/
 
   class MPIScheduler : public SchedulerCommon {
-    MessageLog log;
   public:
     MPIScheduler(const ProcessorGroup* myworld, Output* oport, MPIScheduler* parentScheduler = 0);
     virtual ~MPIScheduler();
@@ -113,10 +112,6 @@ WARNING
 
     virtual SchedulerP createSubScheduler();
     
-    virtual bool useInternalDeps() { return useExternalQueue_ &&! d_sharedState->isCopyDataTimestep(); }
-
-
-
     void postMPIRecvs( DetailedTask* task, bool only_old_recvs, int abort_point, int iteration);
 
     enum { TEST, WAIT_ONCE, WAIT_ALL};
@@ -177,14 +172,13 @@ WARNING
     // and waits until the threadpool in empty (ie: all tasks done.)
     virtual void wait_till_all_done();
     
-  private:
-    MPIScheduler(const MPIScheduler&);
-    MPIScheduler& operator=(const MPIScheduler&);
-    
     virtual void verifyChecksum();
+    MessageLog log;
 
     MPIScheduler* parentScheduler;
+
     Output*       oport_;
+
     mpi_timing_info_s     mpi_info_;
     CommRecMPI            sends_;
     CommRecMPI            recvs_;
@@ -194,14 +188,15 @@ WARNING
     vector<double>   d_times;
     ofstream         timingStats, avgStats, maxStats;
 
-    bool useExternalQueue_;
-    QueueAlg taskQueueAlg_;
-
     void emitTime(const char* label);
     void emitTime(const char* label, double time);
 
     unsigned int numMessages_;
     double messageVolume_;
+
+  private:
+    MPIScheduler(const MPIScheduler&);
+    MPIScheduler& operator=(const MPIScheduler&);
   };
 
 } // End namespace Uintah
