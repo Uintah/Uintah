@@ -626,9 +626,9 @@
   </AMR>
   <!--__________________________________-->
   
-  <Scheduler              spec="OPTIONAL NO_DATA">
+  <Scheduler              spec="OPTIONAL NO_DATA"
+                               attribute1="type OPTIONAL STRING 'MPI DynamicMPI'">
     <small_messages       spec="OPTIONAL BOOLEAN" />
-    <useExternalReadyQueue  spec="OPTIONAL BOOLEAN" />
     <taskReadyQueueAlg     spec="OPTIONAL STRING 'MostChildren LeastChildren MostAllChildren LeastAllChildren MostL2Children LeastL2Children MostMesssages LeastMesages Random FCFS'" />
     <VarTracker           spec="OPTIONAL NO_DATA">
       <start_time         spec="REQUIRED DOUBLE" />

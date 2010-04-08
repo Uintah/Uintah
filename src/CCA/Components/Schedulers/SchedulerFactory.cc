@@ -32,6 +32,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Schedulers/SchedulerCommon.h>
 #include <CCA/Components/Schedulers/SingleProcessorScheduler.h>
 #include <CCA/Components/Schedulers/MPIScheduler.h>
+#include <CCA/Components/Schedulers/DynamicMPIScheduler.h>
 
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Parallel/Parallel.h>
@@ -72,8 +73,12 @@ SchedulerCommon* SchedulerFactory::create(ProblemSpecP& ps,
 
   if(scheduler == "SingleProcessorScheduler"){
     sch = scinew SingleProcessorScheduler(world, output);
-  } else if(scheduler == "MPIScheduler"){
+  } else if(scheduler == "MPIScheduler" ||
+            scheduler == "MPI" ){
     sch = scinew MPIScheduler(world, output);
+  } else if(scheduler == "DynamicMPIScheduler" || 
+            scheduler == "DynamicMPI"){
+    sch = scinew DynamicMPIScheduler(world, output);
   } else {
     sch = 0;   
     throw ProblemSetupException("Unknown scheduler", __FILE__, __LINE__);

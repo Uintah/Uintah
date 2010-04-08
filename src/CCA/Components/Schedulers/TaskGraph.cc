@@ -964,7 +964,7 @@ TaskGraph::createDetailedDependencies()
     remembercomps(task, task->task->getModifies(), ct);
   }
 
-  // Put internal links between the reduction tasks so a mixed thread/mpi
+  // Assign task phase number based on the reduction tasks so a mixed thread/mpi
   // scheduler won't have out of order reduction problems.
   DetailedTask* lastReductionTask = 0;
   int currphase=0;
@@ -972,13 +972,7 @@ TaskGraph::createDetailedDependencies()
     DetailedTask* task = dts_->getTask(i);
     task->task->d_phase=currphase;
     //cout << d_myworld->myrank()  << " Task: " << *task << " phase: " << currphase << endl;
-    if (task->task->getType() == Task::Reduction) {
-      if (lastReductionTask != 0)
-      {
-        task->addInternalDependency(lastReductionTask,
-            task->task->getModifies()->var);
-      //  cout << d_myworld->myrank() << " reduction dependency:  making " << *lastReductionTask << " dependent on " << *task << " var:" << *task->task->getModifies()->var << endl;
-      }
+    if (task->task->getType() == Task::Reduction || task->task->getType() == Task::OncePerProc) {
       currphase++;
       lastReductionTask = task;
     }
