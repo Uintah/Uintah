@@ -354,7 +354,6 @@ void DDT1::scheduleComputeModelSources(SchedulerP& sched,
     t->computes(detonatingLabel,      react_matl);
     t->computes(onSurfaceLabel,    react_matl);
     t->computes(surfaceTempLabel,  react_matl);
-    t->computes(BurningCellLabel, react_matl);
     t->computes(TsLabel,          react_matl);
 
     //__________________________________
