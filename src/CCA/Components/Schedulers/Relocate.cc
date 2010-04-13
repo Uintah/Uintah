@@ -87,7 +87,7 @@ namespace Uintah {
   struct ScatterRecord {
     const Patch* fromPatch;
     const Patch* toPatch;    
-    IntVector vectorToNeighbor;
+    Vector vectorToNeighbor;
     int matl;    
     ParticleSubset* send_pset;
     
@@ -96,14 +96,17 @@ namespace Uintah {
     {
       ASSERT(fromPatch != 0);
       ASSERT(toPatch != 0);
-      vectorToNeighbor = toPatch->getExtraCellLowIndex() - fromPatch->getExtraCellLowIndex();
+      
+      Point to_pt   = toPatch->getCellPosition(toPatch->getExtraCellLowIndex());
+      Point from_pt = fromPatch->getCellPosition(fromPatch->getExtraCellLowIndex());
+      vectorToNeighbor=to_pt - from_pt;
     }
 
     // Note that when the ScatterRecord going from a real patch to
     // a virtual patch has an equivalent representation going from
     // a virtual patch to a real patch (wrap-around, periodic bound. cond.).
-    bool equivalent(const ScatterRecord& sr)
-    { return (toPatch->getRealPatch() == sr.toPatch->getRealPatch()) && (matl == sr.matl) && (vectorToNeighbor == sr.vectorToNeighbor);
+    bool equivalent(const ScatterRecord& sr){ 
+      return (toPatch->getRealPatch() == sr.toPatch->getRealPatch()) && (matl == sr.matl) && (vectorToNeighbor == sr.vectorToNeighbor);
     }
   };
 
@@ -132,10 +135,10 @@ namespace Uintah {
       ((sr1->toPatch->getRealPatch() != sr2->toPatch->getRealPatch()) ?
        (sr1->toPatch->getRealPatch() <  sr2->toPatch->getRealPatch()) :
        ((sr1->matl != sr2->matl)     ? (sr1->matl < sr2->matl) :
-    compareIntVector(sr1->vectorToNeighbor, sr2->vectorToNeighbor)));
+    compareVector(sr1->vectorToNeighbor, sr2->vectorToNeighbor)));
     }
     
-    bool compareIntVector(const IntVector& v1, const IntVector& v2) const
+    bool compareVector(const Vector& v1, const Vector& v2) const
     {
       return (v1.x() != v2.x()) ? (v1.x() < v2.x()) :
             ((v1.y() != v2.y()) ? (v1.y() < v2.y()) : 
@@ -310,7 +313,11 @@ ScatterRecord* MPIScatterRecords::findOrInsertRecord(const Patch* from,
                                                      ParticleSubset* pset)
 {
   ASSERT(to != 0);
-  IntVector vectorToNeighbor = to->getExtraCellLowIndex() - from->getExtraCellLowIndex();
+  Point to_pt   = to->getCellPosition(to->getExtraCellLowIndex());
+  Point from_pt = from->getCellPosition(from->getExtraCellLowIndex());
+ 
+  Vector vectorToNeighbor(to_pt - from_pt);
+ 
   const Patch* realTo = to->getRealPatch();
 
   pair<maptype::iterator, maptype::iterator> pr = records.equal_range(make_pair(realTo, matl));
@@ -339,7 +346,12 @@ ScatterRecord* MPIScatterRecords::findRecord(const Patch* from,
                                              int matl)
 {
   ASSERT(to != 0);
-  IntVector vectorToNeighbor = to->getExtraCellLowIndex() - from->getExtraCellLowIndex();
+  
+  Point to_pt   = to->getCellPosition(to->getExtraCellLowIndex());
+  Point from_pt = from->getCellPosition(from->getExtraCellLowIndex());
+ 
+  Vector vectorToNeighbor(to_pt - from_pt);
+  
   const Patch* realTo = to->getRealPatch();
 
   pair<maptype::iterator, maptype::iterator> pr = records.equal_range(make_pair(realTo, matl));
@@ -722,7 +734,7 @@ Relocate::findNeighboringPatches(const Patch* patch,
     for (iter  = cf.begin(); iter != cf.end(); ++iter){
       Patch::FaceType patchFace = *iter;
 
-      // coutdbg << "L-"<< level->getID() << " patch-" << patch->getID()<<  " face: " << patch->getFaceName(patchFace);
+      //cout << "L-"<< level->getID() << " patch-" << patch->getID()<<  " face: " << patch->getFaceName(patchFace);
       
       Patch::FaceIteratorType IFC = Patch::FaceNodes;
       CellIterator f_iter=patch->getFaceIterator(patchFace, IFC);
@@ -733,7 +745,7 @@ Relocate::findNeighboringPatches(const Patch* patch,
       IntVector l = level->mapNodeToCoarser(lo_face);     
       IntVector h = level->mapNodeToCoarser(hi_face);
       
-     // coutdbg <<" coarseLevel-"<< coarseLevel->getID() << " lo " << lo_face << " l " << l << " hi " << hi_face << " h " << h;
+      //cout <<" coarseLevel-"<< coarseLevel->getID() << " lo " << lo_face << " l " << l << " hi " << hi_face << " h " << h;
       
       Patch::selectType CL_neighborPatches;
       coarseLevel->selectPatches(l, h, CL_neighborPatches);
@@ -743,9 +755,9 @@ Relocate::findNeighboringPatches(const Patch* patch,
       for(int i=0; i<CL_neighborPatches.size(); i++){
         const Patch* neighbor=CL_neighborPatches[i];
         neighborSet.insert(neighbor);
-       // coutdbg << " neighborPatch " << neighbor->getID();
+       //cout << " neighborPatch " << neighbor->getID();
       }
-      //coutdbg  << endl;
+      //cout  << endl;
     }  // face iterator
   }
   
@@ -775,10 +787,13 @@ Relocate::findNeighboringPatches(const Patch* patch,
         Patch::FaceIteratorType IFC = Patch::FaceNodes;
         CellIterator f_iter=finePatch->getFaceIterator(patchFace, IFC);
 
-        IntVector l = f_iter.begin();   
-        IntVector h = f_iter.end();
-        IntVector coarseStart = fineLevel->mapCellToCoarser(l);
-        IntVector coarseEnd   = fineLevel->mapCellToCoarser(h);
+        IntVector fpl = f_iter.begin();  // fine patch lo/hi   
+        IntVector fph = f_iter.end();
+        IntVector coarseStart = fineLevel->mapCellToCoarser(fpl);
+        IntVector coarseEnd   = fineLevel->mapCellToCoarser(fph);
+        
+        IntVector l = patch->getExtraCellLowIndex()  - IntVector(1,1,1);
+        IntVector h = patch->getExtraCellHighIndex() + IntVector(1,1,1);
         
         bool test = doesIntersect(l, h, coarseStart, coarseEnd);
         
@@ -797,7 +812,7 @@ Relocate::findNeighboringPatches(const Patch* patch,
   //cout << endl << Parallel::getMPIRank()<< "Neighbor Patches:" << endl;
   for (set<const Patch*>::iterator iter = neighborSet.begin();iter != neighborSet.end();++iter) {
     const Patch* neighbor = *iter;
-    //cout << Parallel::getMPIRank()<< "  [" << (*neighbor) << "]" << endl;
+    //cout << Parallel::getMPIRank()<< " L-" << neighbor->getLevel()->getID() << "  [" << (*neighbor) << "]" << "   [ " << neighbor->getBox() << " ]" << endl;
     AllNeighborPatches.push_back(neighbor);
   }
 }
@@ -1030,7 +1045,7 @@ Relocate::relocateParticles(const ProcessorGroup* pg,
         
         // create a map for the new particles
         map<const VarLabel*, ParticleVariableBase*>* newParticles_map = 0;
-        newParticles_map = new_dw->getNewParticleState(matl,patch);
+        newParticles_map = new_dw->getNewParticleState(matl, patch);
         bool adding_new_particles = false;
         
         if (newParticles_map){
