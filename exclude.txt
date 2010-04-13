@@ -50,3 +50,5 @@ StandAlone/*.release
 
 CCA/Components/ICE/CodeAttic
 CCA/Components/ICE/PressureSolve
+
+StandAlone/inputs/UCF/*.xml
