@@ -54,7 +54,7 @@ SchedulerCommon* SchedulerFactory::create(ProblemSpecP& ps,
   
   ProblemSpecP sc_ps = ps->findBlock("Scheduler");
   if (sc_ps)
-    sc_ps->get("type",scheduler);
+    sc_ps->getAttribute("type",scheduler);
 
   // Default settings
   if (Uintah::Parallel::usingMPI()) {
