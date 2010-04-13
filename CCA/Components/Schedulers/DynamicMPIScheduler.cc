@@ -284,6 +284,7 @@ DynamicMPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
   }
 
   static vector<int> histogram;
+  static int totaltasks;
   set<DetailedTask*> pending_tasks;
 
   while( numTasksDone < ntasks) {
@@ -306,131 +307,137 @@ DynamicMPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
     //checkMemoryUse( memuse, highwater, maxMemUse );
 
     DetailedTask * task = 0;
-      
+
     // if we have an internally-ready task, initiate its recvs
     while(dts->numInternalReadyTasks() > 0) { 
-        DetailedTask * task = dts->getNextInternalReadyTask();
+      DetailedTask * task = dts->getNextInternalReadyTask();
 
-        if ((task->getTask()->getType() == Task::Reduction) || (task->getTask()->getType() == Task::OncePerProc))  //save the reduction task for later
+      if ((task->getTask()->getType() == Task::Reduction) || (task->getTask()->getType() == Task::OncePerProc))  //save the reduction task for later
+      {
+        phaseSyncTask[task->getTask()->d_phase]= task;
+        taskdbg << d_myworld->myrank() << " Task Reduction ready " << *task << " deps needed: " << task->getExternalDepCount() << endl;
+      }
+      else {
+        initiateTask( task, abort, abort_point, iteration );
+        task->markInitiated();
+        task->checkExternalDepCount();
+        taskdbg << d_myworld->myrank() << " Task internal ready " << *task << " deps needed: " << task->getExternalDepCount() << endl;
+        // if MPI has completed, it will run on the next iteration
+        pending_tasks.insert(task);
+      }
+    }
+
+    if (dts->numExternalReadyTasks() > 0) {
+      // run a task that has its communication complete
+      // tasks get in this queue automatically when their receive count hits 0
+      //   in DependencyBatch::received, which is called when a message is delivered.
+      if(queuelength.active())
         {
-          phaseSyncTask[task->getTask()->d_phase]= task;
-          taskdbg << d_myworld->myrank() << " Task Reduction ready " << *task << " deps needed: " << task->getExternalDepCount() << endl;
+          if((int)histogram.size()<dts->numExternalReadyTasks()+1)
+            histogram.resize(dts->numExternalReadyTasks()+1);
+          histogram[dts->numExternalReadyTasks()]++;
         }
-        else {
-          initiateTask( task, abort, abort_point, iteration );
-          task->markInitiated();
-          task->checkExternalDepCount();
-          taskdbg << d_myworld->myrank() << " Task internal ready " << *task << " deps needed: " << task->getExternalDepCount() << endl;
-          // if MPI has completed, it will run on the next iteration
-          pending_tasks.insert(task);
+     
+      DetailedTask * task = dts->getNextExternalReadyTask();
+#ifdef USE_TAU_PROFILING
+      int id;
+      const PatchSubset* patches = task->getPatches();
+      id = create_tau_mapping( task->getTask()->getName(), patches );
+
+      string phase_name = "no patches";
+      if (patches && patches->size() > 0) {
+        phase_name = "level";
+        for(int i=0;i<patches->size();i++) {
+
+          ostringstream patch_num;
+          patch_num << patches->get(i)->getLevel()->getIndex();
+
+          if (i == 0) {
+            phase_name = phase_name + " " + patch_num.str();
+          } else {
+            phase_name = phase_name + ", " + patch_num.str();
+          }
         }
       }
-      
+
+      static map<string,int> phase_map;
+      static int unique_id = 99999;
+      int phase_id;
+      map<string,int>::iterator iter = phase_map.find( phase_name );
+      if( iter != phase_map.end() ) {
+        phase_id = (*iter).second;
+      } else {
+        TAU_MAPPING_CREATE( phase_name, "",
+            (TauGroup_t) unique_id, "TAU_USER", 0 );
+        phase_map[ phase_name ] = unique_id;
+        phase_id = unique_id++;
+      }
+      // Task name
+      TAU_MAPPING_OBJECT(tautimer)
+        TAU_MAPPING_LINK(tautimer, (TauGroup_t)id);  // EXTERNAL ASSOCIATION
+      TAU_MAPPING_PROFILE_TIMER(doitprofiler, tautimer, 0)
+        TAU_MAPPING_PROFILE_START(doitprofiler,0);
+#endif
+      taskdbg << d_myworld->myrank() << " Running task " << *task << "(" << dts->numExternalReadyTasks() <<"/"<< pending_tasks.size() <<" tasks in queue)"<<endl;
+      pending_tasks.erase(pending_tasks.find(task));
+      ASSERTEQ(task->getExternalDepCount(), 0);
+      runTask(task, iteration);
+      numTasksDone++;
+      phaseTasksDone[task->getTask()->d_phase]++;
+      //cout << d_myworld->myrank() << " finished task(0) " << *task << " scheduled in phase: " << task->getTask()->d_phase << ", tasks finished in that phase: " <<  phaseTasksDone[task->getTask()->d_phase] << " current phase:" << currphase << endl; 
+#ifdef USE_TAU_PROFILING
+      TAU_MAPPING_PROFILE_STOP(doitprofiler);
+#endif
+    } 
+
+    if ((phaseSyncTask.find(currphase)!= phaseSyncTask.end()) && (phaseTasksDone[currphase] == phaseTasks[currphase]-1)){ //if it is time to run the reduction task
       if(queuelength.active())
       {
         if((int)histogram.size()<dts->numExternalReadyTasks()+1)
           histogram.resize(dts->numExternalReadyTasks()+1);
         histogram[dts->numExternalReadyTasks()]++;
       }
-     
-      if (dts->numExternalReadyTasks() > 0) {
-        // run a task that has its communication complete
-        // tasks get in this queue automatically when their receive count hits 0
-        //   in DependencyBatch::received, which is called when a message is delivered.
-        DetailedTask * task = dts->getNextExternalReadyTask();
-#ifdef USE_TAU_PROFILING
-        int id;
-        const PatchSubset* patches = task->getPatches();
-        id = create_tau_mapping( task->getTask()->getName(), patches );
-
-        string phase_name = "no patches";
-        if (patches && patches->size() > 0) {
-          phase_name = "level";
-          for(int i=0;i<patches->size();i++) {
-
-            ostringstream patch_num;
-            patch_num << patches->get(i)->getLevel()->getIndex();
-
-            if (i == 0) {
-              phase_name = phase_name + " " + patch_num.str();
-            } else {
-              phase_name = phase_name + ", " + patch_num.str();
-            }
-          }
-        }
-
-        static map<string,int> phase_map;
-        static int unique_id = 99999;
-        int phase_id;
-        map<string,int>::iterator iter = phase_map.find( phase_name );
-        if( iter != phase_map.end() ) {
-          phase_id = (*iter).second;
-        } else {
-          TAU_MAPPING_CREATE( phase_name, "",
-              (TauGroup_t) unique_id, "TAU_USER", 0 );
-          phase_map[ phase_name ] = unique_id;
-          phase_id = unique_id++;
-        }
-        // Task name
-        TAU_MAPPING_OBJECT(tautimer)
-        TAU_MAPPING_LINK(tautimer, (TauGroup_t)id);  // EXTERNAL ASSOCIATION
-        TAU_MAPPING_PROFILE_TIMER(doitprofiler, tautimer, 0)
-        TAU_MAPPING_PROFILE_START(doitprofiler,0);
-#endif
-        taskdbg << d_myworld->myrank() << " Running task " << *task << "(" << dts->numExternalReadyTasks() <<"/"<< pending_tasks.size() <<" tasks in queue)"<<endl;
-        pending_tasks.erase(pending_tasks.find(task));
-        ASSERTEQ(task->getExternalDepCount(), 0);
-        runTask(task, iteration);
-        numTasksDone++;
-        phaseTasksDone[task->getTask()->d_phase]++;
-        //cout << d_myworld->myrank() << " finished task(0) " << *task << " scheduled in phase: " << task->getTask()->d_phase << ", tasks finished in that phase: " <<  phaseTasksDone[task->getTask()->d_phase] << " current phase:" << currphase << endl; 
-#ifdef USE_TAU_PROFILING
-        TAU_MAPPING_PROFILE_STOP(doitprofiler);
-#endif
-      } 
-
-      if ((phaseSyncTask.find(currphase)!= phaseSyncTask.end()) && (phaseTasksDone[currphase] == phaseTasks[currphase]-1)){ //if it is time to run the reduction task
-        DetailedTask *reducetask = phaseSyncTask[currphase];
-        if (reducetask->getTask()->getType() == Task::Reduction){
-          if(!abort)
-            taskdbg << d_myworld->myrank() << " Running Reduce task " << reducetask->getTask()->getName() << endl;
-            initiateReduction(reducetask);
-        }
-        else { // Task::OncePerProc task
-          ASSERT(reducetask->getTask()->getType() ==  Task::OncePerProc);
-          initiateTask( reducetask, abort, abort_point, iteration );
-          reducetask->markInitiated();
-          while(reducetask->getExternalDepCount() > 0) {
-            processMPIRecvs(WAIT_ONCE);
-            reducetask->checkExternalDepCount();
-          }
-
-          runTask(reducetask, iteration);
-          taskdbg << d_myworld->myrank() << " Runnding OPP task:  \t";
-          printTask(taskdbg, reducetask); taskdbg << '\n';
-        }
-        ASSERT(reducetask->getTask()->d_phase==currphase);
-
-        numTasksDone++;
-        phaseTasksDone[reducetask->getTask()->d_phase]++;
-        //cout << d_myworld->myrank() << " finished reduction task(1) " << *reducetask << " scheduled in phase: " << reducetask->getTask()->d_phase << ", tasks finished in that phase: " <<  phaseTasksDone[reducetask->getTask()->d_phase] << " current phase:" << currphase << endl; 
-        currphase++;
-      } 
-
-      if (numTasksDone < ntasks){
-        if(dts->numExternalReadyTasks()>0 || dts->numInternalReadyTasks()>0) //if there is work to do
-        {
-          processMPIRecvs(TEST);  //recieve what is ready and do not block
-        }
-        else
-        {
-          // we have nothing to do, so wait until we get something
-          //taskdbg << d_myworld->myrank() << " Waiting .... "  << endl;
-          //  for (set<DetailedTask*>::iterator iter = pending_tasks.begin(); iter != pending_tasks.end(); iter++)
-          //  ;//taskdbg << d_myworld->myrank() << " Task " << **iter << " MPID: " << (*iter)->getExternalDepCount() << endl;
-          processMPIRecvs(WAIT_ONCE); //There is no other work to do so block until some receives are completed
-        }
+      DetailedTask *reducetask = phaseSyncTask[currphase];
+      if (reducetask->getTask()->getType() == Task::Reduction){
+        if(!abort)
+          taskdbg << d_myworld->myrank() << " Running Reduce task " << reducetask->getTask()->getName() << endl;
+        initiateReduction(reducetask);
       }
+      else { // Task::OncePerProc task
+        ASSERT(reducetask->getTask()->getType() ==  Task::OncePerProc);
+        initiateTask( reducetask, abort, abort_point, iteration );
+        reducetask->markInitiated();
+        while(reducetask->getExternalDepCount() > 0) {
+          processMPIRecvs(WAIT_ONCE);
+          reducetask->checkExternalDepCount();
+        }
+
+        runTask(reducetask, iteration);
+        taskdbg << d_myworld->myrank() << " Runnding OPP task:  \t";
+        printTask(taskdbg, reducetask); taskdbg << '\n';
+      }
+      ASSERT(reducetask->getTask()->d_phase==currphase);
+
+      numTasksDone++;
+      phaseTasksDone[reducetask->getTask()->d_phase]++;
+      //cout << d_myworld->myrank() << " finished reduction task(1) " << *reducetask << " scheduled in phase: " << reducetask->getTask()->d_phase << ", tasks finished in that phase: " <<  phaseTasksDone[reducetask->getTask()->d_phase] << " current phase:" << currphase << endl; 
+      currphase++;
+    } 
+
+    if (numTasksDone < ntasks){
+      if(dts->numExternalReadyTasks()>0 || dts->numInternalReadyTasks()>0) //if there is work to do
+      {
+        processMPIRecvs(TEST);  //recieve what is ready and do not block
+      }
+      else
+      {
+        // we have nothing to do, so wait until we get something
+        //taskdbg << d_myworld->myrank() << " Waiting .... "  << endl;
+        //  for (set<DetailedTask*>::iterator iter = pending_tasks.begin(); iter != pending_tasks.end(); iter++)
+        //  ;//taskdbg << d_myworld->myrank() << " Task " << **iter << " MPID: " << (*iter)->getExternalDepCount() << endl;
+        processMPIRecvs(WAIT_ONCE); //There is no other work to do so block until some receives are completed
+      }
+    }
 
     if(!abort && dws[dws.size()-1] && dws[dws.size()-1]->timestepAborted()){
       // TODO - abort might not work with external queue...
@@ -448,15 +455,22 @@ DynamicMPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
   //if (d_generation > 2)
   //dws[dws.size()-2]->printParticleSubsets();
 
-  if(queuelength.active() && d_myworld->myrank()==false)
+  if(queuelength.active())
   {
-    cout << d_myworld->myrank() << " queue length histogram: ";
-    for(vector<int>::iterator iter=histogram.begin();iter!=histogram.end();iter++)
+    float lengthsum=0;
+    totaltasks += ntasks;
+   // if (me == 0) cout << d_myworld->myrank() << " queue length histogram: ";
+    for (unsigned int i=1; i<histogram.size(); i++)
     {
-      cout << *iter << " ";
+     // if (me == 0)cout << histogram[i] << " ";
       //cout << iter->first << ":" << iter->second << " ";
+      lengthsum = lengthsum + i*histogram[i];
     }
-    cout << endl;
+   // if (me==0) cout << endl;
+    float queuelength = lengthsum/totaltasks;
+    float allqueuelength = 0;
+    MPI_Reduce(&queuelength, &allqueuelength, 1 , MPI_FLOAT, MPI_SUM, 0, d_myworld->getComm());
+    if (me == 0) cout  << "average queue length:" << allqueuelength/d_myworld->size() << endl;
   }
   
   if(timeout.active()){
