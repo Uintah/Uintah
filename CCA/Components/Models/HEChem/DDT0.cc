@@ -129,6 +129,7 @@ void DDT0::problemSetup(GridP&, SimulationStateP& sharedState,
   d_params->require("b",    d_b);
   d_params->require("E0",   d_E0);
   d_params->require("rho0", d_rho0);
+  d_params->getWithDefault("ThresholdVolFrac",d_threshold_volFrac, 0.01);
 
   if(d_active){
     // Required for Simple Burn
@@ -208,6 +209,7 @@ void DDT0::outputProblemSpec(ProblemSpecP& ps)
   model_ps->appendElement("rho0", d_rho0);
   model_ps->appendElement("ThresholdTemp",     d_thresholdTemp);
   model_ps->appendElement("ThresholdPressureSB", d_thresholdPress);
+  model_ps->appendElement("ThresholdVolFrac", d_threshold_volFrac);
   model_ps->appendElement("fromMaterial",      matl0->getName());
   if(d_active){
     model_ps->appendElement("toMaterial",        matl1->getName());
@@ -353,7 +355,8 @@ void DDT0::scheduleComputeModelSources(SchedulerP& sched,
     t->requires(Task::NewDW, MIlb->cMassLabel,      react_matl, gn);
     t->requires(Task::NewDW, Mlb->gMassLabel,       react_matl, gac,1); 
     t->requires(Task::OldDW, reactedFractionLabel,  react_matl, gn); 
- 
+    t->requires(Task::NewDW, Ilb->vol_frac_CCLabel,  react_matl, gn); 
+
     //__________________________________
     // Computes
     //__________________________________
@@ -552,7 +555,7 @@ void DDT0::computeModelSources(const ProcessorGroup*,
     new_dw->getModifiable(sp_vol_src_1,  mi->modelVol_srcLabel,   m1,patch);
 
     // New Variables to store for this timestep
-    constCCVariable<double> press_CC, cv_reactant, gasTemp,gasVol_frac,solidTemp,solidMass;
+    constCCVariable<double> press_CC, cv_reactant, gasTemp,gasVol_frac,solidTemp,solidMass, rctVolFrac;
     constCCVariable<double> rctTemp,rctRho,rctSpvol,prodRho, rctFr;
     constCCVariable<Vector> rctvel_CC;
     CCVariable<double> Fr;
@@ -581,6 +584,7 @@ void DDT0::computeModelSources(const ProcessorGroup*,
     new_dw->get(NCsolidMass,   Mlb->gMassLabel,     m0,patch,gac,1);
     //new_dw->get(cv_reactant,   Ilb->specific_heatLabel,m0,patch,gn, 0);
     old_dw->get(rctFr,         reactedFractionLabel,  m0,patch,gac,0);
+    new_dw->get(rctVolFrac,    Ilb->vol_frac_CCLabel,  m0,patch,gn, 0);
     new_dw->allocateAndPut(Fr,   reactedFractionLabel,m0,patch);
     new_dw->allocateAndPut(delF, delFLabel,           m0,patch);
     Fr.initialize(0.);
@@ -628,7 +632,7 @@ void DDT0::computeModelSources(const ProcessorGroup*,
       Fr[c]=rctFr[c];
 
       // JWL++ Model For explosions
-      if (press_CC[c] > d_threshold_pressure){
+      if (press_CC[c] > d_threshold_pressure && rctVolFrac[c] > d_threshold_volFrac){
         // Flag for detonating
         detonating[c] = 1;
 
