@@ -217,6 +217,9 @@ namespace Uintah {
         ComputeSet();
         ~ComputeSet();
 
+        // adds all unique elements of vector in one subset
+        void addAll_unique(const vector<T>&);
+        
         // adds all elements of vector in one subset
         void addAll(const vector<T>&);
 
@@ -280,6 +283,26 @@ namespace Uintah {
     {
       ASSERT(!un);
       ComputeSubset<T>* subset = scinew ComputeSubset<T>(sub);
+      subset->sort();
+      subset->addReference();
+      set.push_back(subset);
+    }
+
+  template<class T>
+    void ComputeSet<T>::addAll_unique(const vector<T>& sub)
+    {
+       // Only insert unique entries into the set
+      vector<T> sub_unique;
+      sub_unique.push_back(sub[0]);
+
+      for(int i=1;i<(int)sub.size();i++){
+        if( find(sub_unique.begin(), sub_unique.end(), sub[i] ) == sub_unique.end()){
+          sub_unique.push_back(sub[i]);
+        }
+      }
+      
+      ASSERT(!un);
+      ComputeSubset<T>* subset = scinew ComputeSubset<T>(sub_unique);
       subset->sort();
       subset->addReference();
       set.push_back(subset);
