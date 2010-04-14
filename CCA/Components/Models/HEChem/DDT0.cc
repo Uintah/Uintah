@@ -59,14 +59,13 @@ DDT0::DDT0(const ProcessorGroup* myworld,
                          const ProblemSpecP& prob_spec)
   : ModelInterface(myworld), d_prob_spec(prob_spec), d_params(params)
 {
-  d_mymatls = 0;
+  d_mymatls  = 0;
+  d_one_matl = 0;
   Ilb  = scinew ICELabel();
   MIlb = scinew MPMICELabel();
   Mlb  = scinew MPMLabel();
   
-  MaterialSubset* d_one_matl = scinew MaterialSubset();
-  d_one_matl->add(0);
-  d_one_matl->addReference();
+
   //__________________________________
   //  diagnostic labels JWL++
   reactedFractionLabel   = VarLabel::create("F",
@@ -118,7 +117,7 @@ DDT0::~DDT0()
   if(d_mymatls && d_mymatls->removeReference())
     delete d_mymatls;
     
-  if (d_one_matl->removeReference())
+  if (d_one_matl && d_one_matl->removeReference())
     delete d_one_matl;
 }
 
@@ -159,6 +158,10 @@ void DDT0::problemSetup(GridP&, SimulationStateP& sharedState,
 
     d_mymatls->addAll_unique(m);                    // elimiate duplicate entries
     d_mymatls->addReference();
+    
+    d_one_matl = scinew MaterialSubset();
+    d_one_matl->add(0);
+    d_one_matl->addReference();
   }
 
   //__________________________________
