@@ -220,6 +220,9 @@ namespace Uintah {
     int getAssignedResourceIndex() const {
       return resourceIndex;
     }
+    DetailedTasks* getTaskGroup() const {
+     return taskGroup;
+    }
 
     map<DependencyBatch*, DependencyBatch*>& getRequires() {
       return reqs;
@@ -298,6 +301,12 @@ namespace Uintah {
     bool operator<(const DetailedTask& other);
     
     ProfileType d_profileType;
+  };
+  
+  class DetailedTaskPriorityComparison
+  {
+    public:
+      bool operator()(DetailedTask*& ltask, DetailedTask*& rtask);
   };
 
   class DetailedTasks {
@@ -429,7 +438,7 @@ namespace Uintah {
     //typedef priority_queue<DetailedTask*, vector<DetailedTask*>, TaskNumberCompare> TaskQueue;    
     QueueAlg taskPriorityAlg_;
     typedef queue<DetailedTask*> TaskQueue;
-    typedef priority_queue<DetailedTask*> TaskPQueue;
+    typedef priority_queue<DetailedTask*, vector<DetailedTask*>, DetailedTaskPriorityComparison> TaskPQueue;
     
     TaskQueue readyTasks_; 
     TaskQueue initiallyReadyTasks_;
