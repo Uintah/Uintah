@@ -1426,109 +1426,78 @@ string DetailedTask::getName() const
   return name_;
 }
 
-bool DetailedTask::operator<(const DetailedTask& other){
-  QueueAlg alg = taskGroup->getTaskPriorityAlg();
-  ASSERT(alg == other.taskGroup->getTaskPriorityAlg());
+bool DetailedTaskPriorityComparison::operator() (DetailedTask*& ltask, DetailedTask*& rtask) {
+  QueueAlg alg = ltask->getTaskGroup()->getTaskPriorityAlg();
+  ASSERT(alg == rtask->getTaskGroup()->getTaskPriorityAlg());
 
-  if (alg == FCFS) return false;               //First come First service;
-  else if (alg == Stack) return true;               //Last come First Service;
-  else if (alg == Random) return (random()%2==0);   //Random;
-  else if (alg == MostChildren) {
-    return getTask()->childTasks.size() < other.getTask()->childTasks.size();
+  if (alg == FCFS) return false;               //First Come First Serve;
+  if (alg == Stack) return true;               //Fist Come Last Serve, for robust testing;
+  if (alg == Random) return (random()%2==0);   //Random;
+  
+  if (ltask->getTask()->getSortedOrder() > rtask->getTask()->getSortedOrder()){
+   // cout << "task order" << ltask->getTask()->getSortedOrder() << " > " << rtask->getTask()->getSortedOrder() << endl;
+    return true;
+  }
+  if (ltask->getTask()->getSortedOrder() < rtask->getTask()->getSortedOrder()){
+   // cout << "task order" << ltask->getTask()->getSortedOrder() << " < " << rtask->getTask()->getSortedOrder() << endl;
+    return false;
+  }
+  
+  if (alg == MostChildren) {
+    return ltask->getTask()->childTasks.size() < rtask->getTask()->childTasks.size();
   }
   else if (alg == LeastChildren) {
-    return getTask()->childTasks.size() > other.getTask()->childTasks.size();
+    return ltask->getTask()->childTasks.size() > rtask->getTask()->childTasks.size();
   }
   else if (alg == MostAllChildren) {
-    return getTask()->allChildTasks.size() < other.getTask()->allChildTasks.size();
+    return ltask->getTask()->allChildTasks.size() < rtask->getTask()->allChildTasks.size();
   }
   else if (alg == LeastAllChildren) {
-    return getTask()->allChildTasks.size() > other.getTask()->allChildTasks.size();
+    return ltask->getTask()->allChildTasks.size() > rtask->getTask()->allChildTasks.size();
   }
   else if (alg == MostL2Children || alg == LeastL2Children) {
-    int thisl2=0;
-    int otherl2=0;
+    int ll2=0;
+    int rl2=0;
     set<Task*>::iterator it;
-    for( it=task->childTasks.begin(); it != task->childTasks.end(); it++ ) thisl2 += (*it)->childTasks.size();
-    for( it=other.task->childTasks.begin(); it != other.task->childTasks.end(); it++ ) otherl2 += (*it)->childTasks.size();
-    if (alg == MostL2Children) return thisl2 < otherl2;
-    else return thisl2 > otherl2;
+    for( it=ltask->getTask()->childTasks.begin(); it != ltask->getTask()->childTasks.end(); it++ ) ll2 += (*it)->childTasks.size();
+    for( it=rtask->getTask()->childTasks.begin(); it != rtask->getTask()->childTasks.end(); it++ ) rl2 += (*it)->childTasks.size();
+    if (alg == MostL2Children) return ll2 < rl2;
+    else return ll2 > rl2;
   }
   else if (alg == MostMessages || alg == LeastMessages ){
-    int thismsg=0;
-    int othermsg=0;
-    for (DependencyBatch* batch = getComputes(); batch != 0;
-        batch = batch->comp_next) {
-      for (DetailedDep* dep = batch->head; dep != 0; 
-          dep = dep->next) {
-        const VarLabel* label = dep->req->var;
-        const Patch* patch = dep->fromPatch;
-        int matlIndex = dep->matl;
-        switch(label->typeDescription()->getType()){
-          case TypeDescription::ParticleVariable:  //???
-            {   
-            }
-          case TypeDescription::NCVariable:
-          case TypeDescription::CCVariable:
-          case TypeDescription::SFCXVariable:
-          case TypeDescription::SFCYVariable:
-          case TypeDescription::SFCZVariable:
-            {
-              IntVector strides = dep->high - dep->low;
-              thismsg += strides.x()*strides.y()*strides.z();
-            }
-          default:
-            SCI_THROW(InternalError(" vartype not implemented for "+label->getFullName(matlIndex, patch), __FILE__, __LINE__));
-        }
-      }
+    int lmsg=0;
+    int rmsg=0;
+    for (DependencyBatch* batch = ltask->getComputes(); batch != 0; batch = batch->comp_next) {
+      for (DetailedDep* dep = batch->head; dep != 0; dep = dep->next)
+        rmsg++;
     }
-    for (DependencyBatch* batch = other.getComputes(); batch != 0;
-        batch = batch->comp_next) {
-      for (DetailedDep* dep = batch->head; dep != 0; 
-          dep = dep->next) {
-        const VarLabel* label = dep->req->var;
-        const Patch* patch = dep->fromPatch;
-        int matlIndex = dep->matl;
-        switch(label->typeDescription()->getType()){
-          case TypeDescription::ParticleVariable:  //???
-            {   
-            }
-          case TypeDescription::NCVariable:
-          case TypeDescription::CCVariable:
-          case TypeDescription::SFCXVariable:
-          case TypeDescription::SFCYVariable:
-          case TypeDescription::SFCZVariable:
-            {
-              IntVector strides = dep->high - dep->low;
-              othermsg += strides.x()*strides.y()*strides.z();
-            }
-          default:
-            SCI_THROW(InternalError(" vartype not implemented for "+label->getFullName(matlIndex, patch), __FILE__, __LINE__));
-        }
-      }
+    for (DependencyBatch* batch = rtask->getComputes(); batch != 0; batch = batch->comp_next) {
+      for (DetailedDep* dep = batch->head; dep != 0; dep = dep->next)
+        lmsg++;
     }
-    if (alg == MostMessages) return thismsg < othermsg;
-    else return thismsg > othermsg;
+    if (alg == MostMessages){
+     // cout << "msg " <<  lmsg << "<>" << rmsg << endl;
+      return lmsg < rmsg;
+    }
+    else return lmsg > rmsg;
   }
   else if (alg == PatchOrder) { //smaller level, larger size, smaller patchied, smaller tasksortid
-    const PatchSubset* thispatches = getPatches();
-    const PatchSubset* otherpatches = other.getPatches();
-    if (getLevel(thispatches) == getLevel(otherpatches)){
-      if (thispatches->size() ==  otherpatches->size()){
-        if (thispatches->get(0)->getID() == thispatches->get(0)->getID()){
-          return task->getSortedOrder() > other.task->getSortedOrder();
-        } else return thispatches->get(0)->getID() > thispatches->get(0)->getID();
-      } else return thispatches->size() < otherpatches->size();
-    } else return getLevel(thispatches) > getLevel(otherpatches);   
+    const PatchSubset* lpatches = ltask->getPatches();
+    const PatchSubset* rpatches = rtask->getPatches();
+    if (getLevel(lpatches) == getLevel(rpatches)){
+      if (lpatches->size() ==  rpatches->size()){
+        return lpatches->get(0)->getID() > rpatches->get(0)->getID();
+      } else return lpatches->size() < rpatches->size();
+    } else return getLevel(lpatches) > getLevel(rpatches);   
   }
   else if (alg == PatchOrderRandom) { //smaller level, larger size, smaller patchied, smaller tasksortid
-    const PatchSubset* thispatches = getPatches();
-    const PatchSubset* otherpatches = other.getPatches();
-    if (getLevel(thispatches) == getLevel(otherpatches)){
-      if (thispatches->size() ==  otherpatches->size()){
+    const PatchSubset* lpatches = ltask->getPatches();
+    const PatchSubset* rpatches = rtask->getPatches();
+    if (getLevel(lpatches) == getLevel(rpatches)){
+      if (lpatches->size() ==  rpatches->size()){
         return (random()%2==0);
-      } else return thispatches->size() < otherpatches->size();
-    } else return getLevel(thispatches) > getLevel(otherpatches);   
+      } else return lpatches->size() < rpatches->size();
+    } else return getLevel(lpatches) > getLevel(rpatches);   
   }
   else return false;
 }
