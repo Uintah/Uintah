@@ -141,25 +141,18 @@ void Steady_Burn::problemSetup(GridP&, SimulationStateP& sharedState, ModelSetup
     }
   }
   
-  /*  define the materialSet */
-  vector<int> m_tmp(2);
-  m_tmp[0] = matl0->getDWIndex();
-  m_tmp[1] = matl1->getDWIndex();
-  mymatls = scinew MaterialSet();            
   
-  if( m_tmp[0] != 0 && m_tmp[1] != 0){
-    vector<int> m(3);
-    m[0] = 0; /* needed for the pressure and NC_CCWeight */ 
-    m[1] = m_tmp[0];
-    m[2] = m_tmp[1];
-    mymatls->addAll(m);
-  }else{
-    vector<int> m(2);
-    m[0] = m_tmp[0];
-    m[1] = m_tmp[1];
-    mymatls->addAll(m);
-  }
-  mymatls->addReference();
+  //__________________________________
+  //  define the materialSet
+  mymatls = scinew MaterialSet();
+
+  vector<int> m;
+  m.push_back(0);                                 // needed for the pressure and NC_CCWeight
+  m.push_back(matl0->getDWIndex());
+  m.push_back(matl1->getDWIndex());
+
+  mymatls->addAll_unique(m);                    // elimiate duplicate entries
+  mymatls->addReference(); 
 }
 //______________________________________________________________________
 void Steady_Burn::outputProblemSpec(ProblemSpecP& ps)
@@ -187,6 +180,7 @@ void Steady_Burn::outputProblemSpec(ProblemSpecP& ps)
 //______________________________________________________________________
 void Steady_Burn::scheduleInitialize(SchedulerP& sched, const LevelP& level, const ModelInfo*){
   printSchedule(level,"Steady_Burn::scheduleInitialize\t\t\t");
+  
   Task* t = scinew Task("Steady_Burn::initialize", this, &Steady_Burn::initialize);                        
   const MaterialSubset* react_matl = matl0->thisMaterial();
   t->computes(TsLabel, react_matl);

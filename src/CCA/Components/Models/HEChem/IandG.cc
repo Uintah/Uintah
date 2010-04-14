@@ -108,26 +108,18 @@ void IandG::problemSetup(GridP&, SimulationStateP& sharedState,
   IG_ps->require("E0",     d_E0);
   IG_ps->require("ThresholdPressure",   d_threshold_pressure);
 
+
   //__________________________________
   //  define the materialSet
-  vector<int> m_tmp(2);
-  m_tmp[0] = matl0->getDWIndex();
-  m_tmp[1] = matl1->getDWIndex();
-  mymatls = scinew MaterialSet();            
- 
-  if( m_tmp[0] != 0 && m_tmp[1] != 0){
-    vector<int> m(3);
-    m[0] = 0;    // needed for the pressure and NC_CCWeight 
-    m[1] = m_tmp[0];
-    m[2] = m_tmp[1];
-    mymatls->addAll(m);
-  }else{
-    vector<int> m(2);
-    m[0] = m_tmp[0];
-    m[1] = m_tmp[1];
-    mymatls->addAll(m);
-  }
-  mymatls->addReference();
+  mymatls = scinew MaterialSet();
+
+  vector<int> m;
+  m.push_back(0);                       // needed for the pressure and NC_CCWeight
+  m.push_back(matl0->getDWIndex());
+  m.push_back(matl1->getDWIndex());
+
+  mymatls->addAll_unique(m);            // elimiate duplicate entries
+  mymatls->addReference(); 
 }
 
 void IandG::outputProblemSpec(ProblemSpecP& ps)
