@@ -59,10 +59,14 @@ DDT0::DDT0(const ProcessorGroup* myworld,
                          const ProblemSpecP& prob_spec)
   : ModelInterface(myworld), d_prob_spec(prob_spec), d_params(params)
 {
-  mymatls = 0;
+  d_mymatls = 0;
   Ilb  = scinew ICELabel();
   MIlb = scinew MPMICELabel();
   Mlb  = scinew MPMLabel();
+  
+  MaterialSubset* d_one_matl = scinew MaterialSubset();
+  d_one_matl->add(0);
+  d_one_matl->addReference();
   //__________________________________
   //  diagnostic labels JWL++
   reactedFractionLabel   = VarLabel::create("F",
@@ -111,8 +115,11 @@ DDT0::~DDT0()
   VarLabel::destroy(totalHeatReleasedLabel);
 
 
-  if(mymatls && mymatls->removeReference())
-    delete mymatls;
+  if(d_mymatls && d_mymatls->removeReference())
+    delete d_mymatls;
+    
+  if (d_one_matl->removeReference())
+    delete d_one_matl;
 }
 
 void DDT0::problemSetup(GridP&, SimulationStateP& sharedState,
@@ -133,8 +140,8 @@ void DDT0::problemSetup(GridP&, SimulationStateP& sharedState,
 
   if(d_active){
     // Required for Simple Burn
-    matl0 = sharedState->parseAndLookupMaterial(d_params, "fromMaterial");
-    matl1 = sharedState->parseAndLookupMaterial(d_params, "toMaterial");
+    d_matl0 = sharedState->parseAndLookupMaterial(d_params, "fromMaterial");
+    d_matl1 = sharedState->parseAndLookupMaterial(d_params, "toMaterial");
     d_params->require("Enthalpy",         d_Enthalpy);
     d_params->require("BurnCoeff",        d_BurnCoeff);
     d_params->require("refPressure",      d_refPress);
@@ -143,40 +150,16 @@ void DDT0::problemSetup(GridP&, SimulationStateP& sharedState,
 
     //__________________________________
     //  define the materialSet
-    vector<int> m_tmp(2);
-    m_tmp[0] = matl0->getDWIndex();
-    m_tmp[1] = matl1->getDWIndex();
-    mymatls = scinew MaterialSet();            
- 
-    if( m_tmp[0] != 0 && m_tmp[1] != 0){
-      vector<int> m(3);
-      m[0] = 0;    // needed for the pressure and NC_CCWeight 
-      m[1] = m_tmp[0];
-      m[2] = m_tmp[1];
-      mymatls->addAll(m);
-    }else{
-      vector<int> m(2);
-      m[0] = m_tmp[0];
-      m[1] = m_tmp[1];
-      mymatls->addAll(m);
-    }
-    mymatls->addReference();
-  }else{               // else is extension from Simple Burn
-    int matl0_DWI = matl0->getDWIndex();
-    mymatls = scinew MaterialSet();
-    if( matl0_DWI != 0){
-        vector<int> m(2);
-        m[0] = 0;    // needed for the pressure and NC_CCWeight 
-        m[1] = matl0_DWI;
-        mymatls->addAll(m);
-    }else{
-        vector<int> m(1);
-        m[0] = matl0_DWI;
-        mymatls->addAll(m);
-    }
-    mymatls->addReference();
+    d_mymatls = scinew MaterialSet();
+
+    vector<int> m;
+    m.push_back(0);                                 // needed for the pressure and NC_CCWeight
+    m.push_back(d_matl0->getDWIndex());
+    m.push_back(d_matl1->getDWIndex());
+
+    d_mymatls->addAll_unique(m);                    // elimiate duplicate entries
+    d_mymatls->addReference();
   }
- 
 
   //__________________________________
   //  Are we saving the total burned mass and total burned energy
@@ -194,6 +177,8 @@ void DDT0::problemSetup(GridP&, SimulationStateP& sharedState,
   }
 }
 
+//______________________________________________________________________
+//
 void DDT0::outputProblemSpec(ProblemSpecP& ps)
 {
   ProblemSpecP model_ps = ps->appendChild("Model");
@@ -210,16 +195,17 @@ void DDT0::outputProblemSpec(ProblemSpecP& ps)
   model_ps->appendElement("ThresholdTemp",     d_thresholdTemp);
   model_ps->appendElement("ThresholdPressureSB", d_thresholdPress);
   model_ps->appendElement("ThresholdVolFrac", d_threshold_volFrac);
-  model_ps->appendElement("fromMaterial",      matl0->getName());
+  model_ps->appendElement("fromMaterial",      d_matl0->getName());
   if(d_active){
-    model_ps->appendElement("toMaterial",        matl1->getName());
+    model_ps->appendElement("toMaterial",        d_matl1->getName());
     model_ps->appendElement("Enthalpy",          d_Enthalpy);
     model_ps->appendElement("BurnCoeff",         d_BurnCoeff);
     model_ps->appendElement("refPressure",       d_refPress);
   }
 }
 
-
+//______________________________________________________________________
+//
 void DDT0::activateModel(GridP&, SimulationStateP& sharedState, ModelSetup*)
 {
   d_active=true;
@@ -233,28 +219,21 @@ void DDT0::activateModel(GridP&, SimulationStateP& sharedState, ModelSetup*)
   d_params->require("BurnCoeff",        d_BurnCoeff);
   d_params->require("refPressure",      d_refPress);
 
-  matl0 = sharedState->parseAndLookupMaterial(d_params, "fromMaterial");
-  matl1 = sharedState->parseAndLookupMaterial(d_params, "toMaterial");
+  d_matl0 = sharedState->parseAndLookupMaterial(d_params, "fromMaterial");
+  d_matl1 = sharedState->parseAndLookupMaterial(d_params, "toMaterial");
+ 
+  
   //__________________________________
   //  define the materialSet
-  vector<int> m_tmp(2);
-  m_tmp[0] = matl0->getDWIndex();
-  m_tmp[1] = matl1->getDWIndex();
-  mymatls = scinew MaterialSet();
-                                                                                
-  if( m_tmp[0] != 0 && m_tmp[1] != 0){
-    vector<int> m(3);
-    m[0] = 0;    // needed for the pressure and NC_CCWeight
-    m[1] = m_tmp[0];
-    m[2] = m_tmp[1];
-    mymatls->addAll(m);
-  }else{
-    vector<int> m(2);
-    m[0] = m_tmp[0];
-    m[1] = m_tmp[1];
-    mymatls->addAll(m);
-  }
-  mymatls->addReference();
+  d_mymatls = scinew MaterialSet();
+
+  vector<int> m;
+  m.push_back(0);                                 // needed for the pressure and NC_CCWeight
+  m.push_back(d_matl0->getDWIndex());
+  m.push_back(d_matl1->getDWIndex());
+
+  d_mymatls->addAll_unique(m);                    // elimiate duplicate entries
+  d_mymatls->addReference();
 }
 
 //______________________________________________________________________
@@ -265,10 +244,10 @@ void DDT0::scheduleInitialize(SchedulerP& sched,
 {
   printSchedule(level,"DDT0::scheduleInitialize\t\t\t");
   Task* t = scinew Task("DDT0::initialize", this, &DDT0::initialize);
-  const MaterialSubset* react_matl = matl0->thisMaterial();
+  const MaterialSubset* react_matl = d_matl0->thisMaterial();
   t->computes(reactedFractionLabel, react_matl);
   t->computes(burningLabel,         react_matl);
-  sched->addTask(t, level->eachPatch(), mymatls);
+  sched->addTask(t, level->eachPatch(), d_mymatls);
 }
 
 //______________________________________________________________________
@@ -278,7 +257,7 @@ void DDT0::initialize(const ProcessorGroup*,
                              const MaterialSubset* /*matls*/,
                              DataWarehouse*,
                              DataWarehouse* new_dw){
-  int m0 = matl0->getDWIndex();
+  int m0 = d_matl0->getDWIndex();
   for(int p=0;p<patches->size();p++) {
     const Patch* patch = patches->get(p);
     cout_doing << "Doing Initialize on patch " << patch->getID()<< "\t\t\t STEADY_BURN" << endl;
@@ -314,12 +293,9 @@ void DDT0::scheduleComputeModelSources(SchedulerP& sched,
     cout_doing << "DDT0::scheduleComputeModelSources "<<  endl;  
     Ghost::GhostType  gac = Ghost::AroundCells;
     Ghost::GhostType  gn  = Ghost::None;
-    const MaterialSubset* react_matl = matl0->thisMaterial();
-    const MaterialSubset* prod_matl  = matl1->thisMaterial();
-    MaterialSubset* one_matl     = scinew MaterialSubset();
-    one_matl->add(0);
-    one_matl->addReference();
-  
+    const MaterialSubset* react_matl = d_matl0->thisMaterial();
+    const MaterialSubset* prod_matl  = d_matl1->thisMaterial();
+
     const MaterialSet* all_matls = d_sharedState->allMaterials();
     const MaterialSubset* all_matls_sub = all_matls->getUnion();
     Task::DomainSpec oms = Task::OutOfDomain;
@@ -340,8 +316,8 @@ void DDT0::scheduleComputeModelSources(SchedulerP& sched,
     t->requires(Task::NewDW,  Ilb->TempX_FCLabel,   prod_matl, gac,2);    
     t->requires(Task::NewDW,  Ilb->TempY_FCLabel,   prod_matl, gac,2);    
     t->requires(Task::NewDW,  Ilb->TempZ_FCLabel,   prod_matl, gac,2);
-    t->requires(Task::NewDW,  Ilb->press_equil_CCLabel, one_matl,  gn);
-    t->requires(Task::OldDW,  MIlb->NC_CCweightLabel,   one_matl,  gac, 1);
+    t->requires(Task::NewDW,  Ilb->press_equil_CCLabel, d_one_matl,  gn);
+    t->requires(Task::OldDW,  MIlb->NC_CCweightLabel,   d_one_matl,  gac, 1);
         
   
     //__________________________________
@@ -384,13 +360,11 @@ void DDT0::scheduleComputeModelSources(SchedulerP& sched,
     t->modifies(mi->modelMom_srcLabel);
     t->modifies(mi->modelEng_srcLabel);
     t->modifies(mi->modelVol_srcLabel); 
-    sched->addTask(t, level->eachPatch(), mymatls);
-
-    if (one_matl->removeReference())
-      delete one_matl;
+    sched->addTask(t, level->eachPatch(), d_mymatls);
   }
 }
 
+//______________________________________________________________________
 void DDT0::scheduleCheckNeedAddMaterial(SchedulerP& sched,
                                          const LevelP& level,
                                          const ModelInfo* mi)
@@ -402,25 +376,21 @@ void DDT0::scheduleCheckNeedAddMaterial(SchedulerP& sched,
     Ghost::GhostType  gn  = Ghost::None;
     Ghost::GhostType  gac = Ghost::AroundCells;
 
-    const MaterialSubset* react_matl = matl0->thisMaterial();
-    MaterialSubset* one_matl     = scinew MaterialSubset();
-    one_matl->add(0);
-    one_matl->addReference();
+    const MaterialSubset* react_matl = d_matl0->thisMaterial();
 
-    t->requires(Task::NewDW, Ilb->press_equil_CCLabel, one_matl,   gn);
-    t->requires(Task::OldDW, MIlb->NC_CCweightLabel,   one_matl,   gac,1);
+
+    t->requires(Task::NewDW, Ilb->press_equil_CCLabel, d_one_matl, gn);
+    t->requires(Task::OldDW, MIlb->NC_CCweightLabel,   d_one_matl, gac,1);
     t->requires(Task::NewDW, Mlb->gMassLabel,          react_matl, gac,1);
     t->requires(Task::NewDW, MIlb->temp_CCLabel,       react_matl, gn);
     
-    t->computes(DDT0::surfaceTempLabel,   one_matl);
+    t->computes(DDT0::surfaceTempLabel,   d_one_matl);
     t->computes(Ilb->NeedAddIceMaterialLabel);
 
-    sched->addTask(t, level->eachPatch(), mymatls);
-
-    if (one_matl->removeReference())
-      delete one_matl;
+    sched->addTask(t, level->eachPatch(), d_mymatls);
 }
 
+//______________________________________________________________________
 void
 DDT0::checkNeedAddMaterial(const ProcessorGroup*,
                             const PatchSubset* patches,
@@ -437,7 +407,7 @@ DDT0::checkNeedAddMaterial(const ProcessorGroup*,
 
     Ghost::GhostType  gn  = Ghost::None;
     Ghost::GhostType  gac = Ghost::AroundCells;
-    int m0 = matl0->getDWIndex();
+    int m0 = d_matl0->getDWIndex();
 
     constCCVariable<double> solidTemp;
     CCVariable<double> surfaceTemp;
@@ -523,8 +493,8 @@ void DDT0::computeModelSources(const ProcessorGroup*,
   old_dw->get(delT, mi->delT_Label, level);
 
  
-  int m0 = matl0->getDWIndex();
-  int m1 = matl1->getDWIndex();
+  int m0 = d_matl0->getDWIndex();
+  int m1 = d_matl1->getDWIndex();
   double totalBurnedMass = 0;
   double totalHeatReleased = 0;
  
@@ -659,7 +629,7 @@ void DDT0::computeModelSources(const ProcessorGroup*,
         momentum_src_0[c] -= momX;
         momentum_src_1[c] += momX;
       
-        double energyX   = dynamic_cast<const MPMMaterial*>(matl0)->getSpecificHeat()*rctTemp[c]*burnedMass;//*cv_reactant[c]; 
+        double energyX   = dynamic_cast<const MPMMaterial*>(d_matl0)->getSpecificHeat()*rctTemp[c]*burnedMass;//*cv_reactant[c]; 
         double releasedHeat = burnedMass * d_E0;
         energy_src_0[c] -= energyX;
         energy_src_1[c] += energyX + releasedHeat;

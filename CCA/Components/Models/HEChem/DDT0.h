@@ -163,14 +163,16 @@ WARNING
 
     ProblemSpecP d_prob_spec;
     ProblemSpecP d_params;
-    const Material* matl0;
-    const Material* matl1;
+    const Material* d_matl0;
+    const Material* d_matl1;
     SimulationStateP d_sharedState;   
 
     ICELabel* Ilb;
     MPMICELabel* MIlb;
     MPMLabel* Mlb;
-    MaterialSet* mymatls;
+    MaterialSet* d_mymatls;
+    MaterialSubset* d_one_matl;
+   
 
     string fromMaterial, toMaterial;
     bool d_active;
