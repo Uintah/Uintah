@@ -131,13 +131,6 @@ WARNING
     void computeNumPPC(const ProcessorGroup*, const PatchSubset*,
                              const MaterialSubset*, DataWarehouse*, 
                              DataWarehouse*, const ModelInfo*);
-
-    double computeSurfaceArea(Vector &rhoGradVector, Vector &dx);
-      
-    Vector computeDensityGradientVector(IntVector *nodeIdx, 
-                                        constNCVariable<double> &NCsolidMass,
-                                        constNCVariable<double> &NC_CCweight,
-                                        Vector &dx);
       
     double computeBurnedMass(double To, double& Ts,  double P, double Vc,
                              double surfArea, double delT, double solidMass);

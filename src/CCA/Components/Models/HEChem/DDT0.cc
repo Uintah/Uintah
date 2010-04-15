@@ -30,6 +30,7 @@ DEALINGS IN THE SOFTWARE.
 
 
 #include <CCA/Components/Models/HEChem/DDT0.h>
+#include <CCA/Components/Models/HEChem/Common.h>
 #include <CCA/Ports/Scheduler.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Grid/Variables/CellIterator.h>
@@ -571,76 +572,6 @@ void DDT0::computeModelSources(const ProcessorGroup*,
   if(d_saveConservedVars->energy){
       new_dw->put(sum_vartype(totalHeatReleased),DDT0::totalHeatReleasedLabel);
   }
-}
-
-
-//______________________________________________________________________
-double DDT0::computeSurfaceArea(Vector &rhoGradVector, Vector &dx){
-    double delX = dx.x();
-    double delY = dx.y();
-    double delZ = dx.z();
-    double rgvX = fabs(rhoGradVector.x());
-    double rgvY = fabs(rhoGradVector.y());
-    double rgvZ = fabs(rhoGradVector.z());
-    
-    double max = rgvX;
-    if(rgvY > max)   max = rgvY;
-    if(rgvZ > max)   max = rgvZ;
-    
-    double coeff = pow(1.0/max, 1.0/3.0);
-    
-    double TmpX = delX*rgvX;
-    double TmpY = delY*rgvY;
-    double TmpZ = delZ*rgvZ;
-    
-    return delX*delY*delZ / (TmpX+TmpY+TmpZ) * coeff; 
-}
-
-//______________________________________________________________________
-//
-Vector DDT0::computeDensityGradientVector(IntVector *nodeIdx, 
-                                                 constNCVariable<double> &NCsolidMass, 
-                                                 constNCVariable<double> &NC_CCweight, 
-                                                 Vector &dx){
-    double gradRhoX = 0.25 * (
-                              (NCsolidMass[nodeIdx[0]]*NC_CCweight[nodeIdx[0]]+
-                               NCsolidMass[nodeIdx[1]]*NC_CCweight[nodeIdx[1]]+
-                               NCsolidMass[nodeIdx[2]]*NC_CCweight[nodeIdx[2]]+
-                               NCsolidMass[nodeIdx[3]]*NC_CCweight[nodeIdx[3]])
-                              -
-                              (NCsolidMass[nodeIdx[4]]*NC_CCweight[nodeIdx[4]]+
-                               NCsolidMass[nodeIdx[5]]*NC_CCweight[nodeIdx[5]]+
-                               NCsolidMass[nodeIdx[6]]*NC_CCweight[nodeIdx[6]]+
-                               NCsolidMass[nodeIdx[7]]*NC_CCweight[nodeIdx[7]])
-                              )/dx.x();
-    
-    double gradRhoY = 0.25 * (
-                              (NCsolidMass[nodeIdx[0]]*NC_CCweight[nodeIdx[0]]+
-                               NCsolidMass[nodeIdx[1]]*NC_CCweight[nodeIdx[1]]+
-                               NCsolidMass[nodeIdx[4]]*NC_CCweight[nodeIdx[4]]+
-                               NCsolidMass[nodeIdx[5]]*NC_CCweight[nodeIdx[5]])
-                              -
-                              (NCsolidMass[nodeIdx[2]]*NC_CCweight[nodeIdx[2]]+
-                               NCsolidMass[nodeIdx[3]]*NC_CCweight[nodeIdx[3]]+
-                               NCsolidMass[nodeIdx[6]]*NC_CCweight[nodeIdx[6]]+
-                               NCsolidMass[nodeIdx[7]]*NC_CCweight[nodeIdx[7]])
-                              )/dx.y();
-    
-    double gradRhoZ = 0.25 * (
-                              (NCsolidMass[nodeIdx[1]]*NC_CCweight[nodeIdx[1]]+
-                               NCsolidMass[nodeIdx[3]]*NC_CCweight[nodeIdx[3]]+
-                               NCsolidMass[nodeIdx[5]]*NC_CCweight[nodeIdx[5]]+
-                               NCsolidMass[nodeIdx[7]]*NC_CCweight[nodeIdx[7]])
-                              -
-                              (NCsolidMass[nodeIdx[0]]*NC_CCweight[nodeIdx[0]]+
-                               NCsolidMass[nodeIdx[2]]*NC_CCweight[nodeIdx[2]]+
-                               NCsolidMass[nodeIdx[4]]*NC_CCweight[nodeIdx[4]]+
-                               NCsolidMass[nodeIdx[6]]*NC_CCweight[nodeIdx[6]])
-                              )/dx.z();
-    
-    double absGradRho = sqrt(gradRhoX*gradRhoX + gradRhoY*gradRhoY + gradRhoZ*gradRhoZ );
-    
-    return Vector(gradRhoX/absGradRho, gradRhoY/absGradRho, gradRhoZ/absGradRho);
 }
 
 //______________________________________________________________________
