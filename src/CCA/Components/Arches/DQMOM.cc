@@ -49,6 +49,9 @@ d_fieldLabels(fieldLabels)
   varname = "normB";
   d_normBLabel = VarLabel::create(varname, CCVariable<double>::getTypeDescription());
 
+  varname = "normX";
+  d_normXLabel = VarLabel::create(varname, CCVariable<double>::getTypeDescription());
+
   varname = "normRes";
   d_normResLabel = VarLabel::create(varname, CCVariable<double>::getTypeDescription());
 
@@ -58,9 +61,6 @@ d_fieldLabels(fieldLabels)
   varname = "normResNormalizedX";
   d_normResNormalizedLabelX = VarLabel::create(varname, CCVariable<double>::getTypeDescription());
   
-  varname = "normX";
-  d_normXLabel = VarLabel::create(varname, CCVariable<double>::getTypeDescription());
-
   varname = "conditionNumber";
   d_conditionNumberLabel = VarLabel::create(varname, CCVariable<double>::getTypeDescription());
 }
@@ -73,10 +73,6 @@ DQMOM::~DQMOM()
   VarLabel::destroy(d_normResNormalizedLabelB);
   VarLabel::destroy(d_normResNormalizedLabelX);
   VarLabel::destroy(d_conditionNumberLabel);
-
-  for ( ArchesLabel::MomentMap::iterator iter = d_fieldLabels->DQMOMMoments.begin(); iter!= d_fieldLabels->DQMOMMoments.end(); iter++){
-    VarLabel::destroy(iter->second); 
-  }
 }
 //---------------------------------------------------------------------------
 // Method: Problem setup
