@@ -174,11 +174,10 @@ WARNING
     double d_G;
     double d_b;
     double d_E0;
-    double d_rho0;
-    double d_threshold_pressure;    // JWL++
+    double d_threshold_press_JWL;    // JWL++
     double d_threshold_volFrac;
     double d_thresholdTemp;
-    double d_thresholdPress;    // Simple Burn
+    double d_thresholdPress_SB;     // Simple Burn
     double d_Enthalpy;
     double d_BurnCoeff;
     double d_refPress;
