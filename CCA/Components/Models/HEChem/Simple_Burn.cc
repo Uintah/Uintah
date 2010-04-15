@@ -360,8 +360,6 @@ void Simple_Burn::computeModelSources(const ProcessorGroup*,
     constCCVariable<Vector> vel_CC;
     
     Vector dx = patch->dCell();
-    double delX = dx.x();
-    double delY = dx.y();
     Ghost::GhostType  gn  = Ghost::None;    
     Ghost::GhostType  gac = Ghost::AroundCells;   
    
@@ -436,26 +434,17 @@ void Simple_Burn::computeModelSources(const ProcessorGroup*,
         double Temp = 0;
 
         // Check if any material occupies more than 20 % of cell and has temperature larger than
-	// ignition temperature, use that temperature as the criteria for burning
+        //  ignition temperature, use that temperature as the criteria for burning
         for (int m = 0; m < numAllMatls; m++){
           if(vol_frac_CC[m][c] > 0.2 && temp_CC[m][c] > d_thresholdTemp && temp_CC[m][c] > Temp){
             Temp = temp_CC[m][c];
           }
         }
-/*
-        if (gasVol_frac[c] < 0.2){             //--------------KNOB 2
-          Temp =solidTemp[c];
-        }else {
-          Temp =std::max(Temp, gasTempX_FC[c] );    //L
-          Temp =std::max(Temp, gasTempY_FC[c] );    //Bot
-          Temp =std::max(Temp, gasTempZ_FC[c] );    //BK
-          Temp =std::max(Temp, gasTempX_FC[c + IntVector(1,0,0)] );
-          Temp =std::max(Temp, gasTempY_FC[c + IntVector(0,1,0)] );          
-          Temp =std::max(Temp, gasTempZ_FC[c + IntVector(0,0,1)] );
-        }*/
+
         surfaceTemp[c] = Temp;
 
-        double surfArea = delX*delY;  
+        Vector rhoGradVector = computeDensityGradientVector(nodeIdx, NCsolidMass, NC_CCweight, dx);
+        double surfArea = computeSurfaceArea(rhoGradVector, dx);  
         onSurface[c] = surfArea; // debugging var
 
         //__________________________________
@@ -613,6 +602,76 @@ void Simple_Burn::checkNeedAddMaterial(const ProcessorGroup*,
   }
   new_dw->put(sum_vartype(need_add),     Ilb->NeedAddIceMaterialLabel);
 }
+
+//______________________________________________________________________
+double Simple_Burn::computeSurfaceArea(Vector &rhoGradVector, Vector &dx){
+    double delX = dx.x();
+    double delY = dx.y();
+    double delZ = dx.z();
+    double rgvX = fabs(rhoGradVector.x());
+    double rgvY = fabs(rhoGradVector.y());
+    double rgvZ = fabs(rhoGradVector.z());
+    
+    double max = rgvX;
+    if(rgvY > max)   max = rgvY;
+    if(rgvZ > max)   max = rgvZ;
+    
+    double coeff = pow(1.0/max, 1.0/3.0);
+    
+    double TmpX = delX*rgvX;
+    double TmpY = delY*rgvY;
+    double TmpZ = delZ*rgvZ;
+    
+    return delX*delY*delZ / (TmpX+TmpY+TmpZ) * coeff; 
+}
+
+//______________________________________________________________________
+//
+Vector Simple_Burn::computeDensityGradientVector(IntVector *nodeIdx, 
+                                                 constNCVariable<double> &NCsolidMass, 
+                                                 constNCVariable<double> &NC_CCweight, 
+                                                 Vector &dx){
+    double gradRhoX = 0.25 * (
+                              (NCsolidMass[nodeIdx[0]]*NC_CCweight[nodeIdx[0]]+
+                               NCsolidMass[nodeIdx[1]]*NC_CCweight[nodeIdx[1]]+
+                               NCsolidMass[nodeIdx[2]]*NC_CCweight[nodeIdx[2]]+
+                               NCsolidMass[nodeIdx[3]]*NC_CCweight[nodeIdx[3]])
+                              -
+                              (NCsolidMass[nodeIdx[4]]*NC_CCweight[nodeIdx[4]]+
+                               NCsolidMass[nodeIdx[5]]*NC_CCweight[nodeIdx[5]]+
+                               NCsolidMass[nodeIdx[6]]*NC_CCweight[nodeIdx[6]]+
+                               NCsolidMass[nodeIdx[7]]*NC_CCweight[nodeIdx[7]])
+                              )/dx.x();
+    
+    double gradRhoY = 0.25 * (
+                              (NCsolidMass[nodeIdx[0]]*NC_CCweight[nodeIdx[0]]+
+                               NCsolidMass[nodeIdx[1]]*NC_CCweight[nodeIdx[1]]+
+                               NCsolidMass[nodeIdx[4]]*NC_CCweight[nodeIdx[4]]+
+                               NCsolidMass[nodeIdx[5]]*NC_CCweight[nodeIdx[5]])
+                              -
+                              (NCsolidMass[nodeIdx[2]]*NC_CCweight[nodeIdx[2]]+
+                               NCsolidMass[nodeIdx[3]]*NC_CCweight[nodeIdx[3]]+
+                               NCsolidMass[nodeIdx[6]]*NC_CCweight[nodeIdx[6]]+
+                               NCsolidMass[nodeIdx[7]]*NC_CCweight[nodeIdx[7]])
+                              )/dx.y();
+    
+    double gradRhoZ = 0.25 * (
+                              (NCsolidMass[nodeIdx[1]]*NC_CCweight[nodeIdx[1]]+
+                               NCsolidMass[nodeIdx[3]]*NC_CCweight[nodeIdx[3]]+
+                               NCsolidMass[nodeIdx[5]]*NC_CCweight[nodeIdx[5]]+
+                               NCsolidMass[nodeIdx[7]]*NC_CCweight[nodeIdx[7]])
+                              -
+                              (NCsolidMass[nodeIdx[0]]*NC_CCweight[nodeIdx[0]]+
+                               NCsolidMass[nodeIdx[2]]*NC_CCweight[nodeIdx[2]]+
+                               NCsolidMass[nodeIdx[4]]*NC_CCweight[nodeIdx[4]]+
+                               NCsolidMass[nodeIdx[6]]*NC_CCweight[nodeIdx[6]])
+                              )/dx.z();
+    
+    double absGradRho = sqrt(gradRhoX*gradRhoX + gradRhoY*gradRhoY + gradRhoZ*gradRhoZ );
+    
+    return Vector(gradRhoX/absGradRho, gradRhoY/absGradRho, gradRhoZ/absGradRho);
+}
+
 
 //______________________________________________________________________
 //

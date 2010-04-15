@@ -34,6 +34,7 @@ DEALINGS IN THE SOFTWARE.
 
 #include <CCA/Ports/ModelInterface.h>
 #include <Core/Grid/Variables/ComputeSet.h>
+#include <Core/Grid/Variables/NCVariable.h>
 
 namespace Uintah {
   class ICELabel;
@@ -133,7 +134,13 @@ WARNING
                              DataWarehouse* new_dw,
                              const ModelInfo*);
 
-
+    double computeSurfaceArea(Vector &rhoGradVector, Vector &dx);
+      
+    Vector computeDensityGradientVector(IntVector *nodeIdx, 
+                                        constNCVariable<double> &NCsolidMass,
+                                        constNCVariable<double> &NC_CCweight,
+                                        Vector &dx);
+      
     DDT0(const DDT0&);
     DDT0& operator=(const DDT0&);
 
