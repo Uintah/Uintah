@@ -956,7 +956,6 @@ void MPMICE::scheduleComputePressure(SchedulerP& sched,
   t->computes(Ilb->press_equil_CCLabel, press_matl);  
   t->computes(Ilb->sum_imp_delPLabel,   press_matl);  // needed by implicit ICE
   t->modifies(Ilb->sp_vol_CCLabel,      mpm_matls);
-  t->modifies(Ilb->rho_CCLabel,         mpm_matls); 
   t->computes(Ilb->sp_vol_CCLabel,      ice_matls);
   t->computes(Ilb->rho_CCLabel,         ice_matls);
   
