@@ -567,6 +567,56 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
 
         int z=0; // equation loop counter
 
+#if defined(DEBUG_MATRICES)
+
+        if( pc->myrank() == 0 ) {
+          if( b_writefile ) {
+            char filename[28];
+            int currentTimeStep;
+            if( b_isFirstTimeStep ) {
+              currentTimeStep = 0;
+            } else {
+              currentTimeStep = d_fieldLabels->d_sharedState->getCurrentTopLevelTimeStep();
+            }
+            int sizeofit;
+            ofstream oStream;
+
+            double start_FileWriteTime = Time::currentSeconds();
+
+            // write Aopt
+            sizeofit = sprintf( filename, "Aopt_%.2d.mat", currentTimeStep );
+            oStream.open(filename);
+            for( int iRow = 0; iRow < dimension; ++iRow ) {
+              for( int iCol = 0; iCol < dimension; ++iCol ) {
+                oStream << scientific << setw(20) << setprecision(20) << " " << (*AAopt)[iRow][iCol];
+              }
+              oStream << endl;
+            }
+            oStream.close();
+
+            // write X matrix
+            sizeofit = sprintf( filename, "X_%.2d.mat", currentTimeStep );
+            oStream.open(filename);
+            for( int iRow = 0; iRow < dimension; ++iRow ) {
+              oStream << scientific << setw(20) << setprecision(20) << " " << (*XX)[iRow] << endl;
+            }
+            oStream.close();
+
+            // write B matrix 
+            sizeofit = sprintf( filename, "B_%.2d.mat", currentTimeStep );
+            oStream.open(filename);
+            for( int iRow = 0; iRow < dimension; ++iRow ) {
+              oStream << scientific << setw(20) << setprecision(20) << " " << (*BB)[iRow] << endl;
+            }
+            oStream.close();
+
+            total_FileWriteTime += Time::currentSeconds() - start_FileWriteTime;
+          }
+          b_writefile = false;
+        }
+
+#endif
+
         // Weight equations:
         for( vector<DQMOMEqn*>::iterator iEqn = weightEqns.begin();
              iEqn != weightEqns.end(); ++iEqn ) {
