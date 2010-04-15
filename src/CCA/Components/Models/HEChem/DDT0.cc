@@ -128,13 +128,12 @@ void DDT0::problemSetup(GridP&, SimulationStateP& sharedState,
   d_sharedState = sharedState;
   
   // Required for JWL++
-  d_params->require("ThresholdPressureJWL",   d_threshold_pressure);
+  d_params->require("ThresholdPressureJWL",   d_threshold_press_JWL);
   d_params->require("fromMaterial",fromMaterial);
   d_params->require("toMaterial",toMaterial);
   d_params->require("G",    d_G);
   d_params->require("b",    d_b);
   d_params->require("E0",   d_E0);
-  d_params->require("rho0", d_rho0);
   d_params->getWithDefault("ThresholdVolFrac",d_threshold_volFrac, 0.01);
 
   // Required for Simple Burn
@@ -144,7 +143,7 @@ void DDT0::problemSetup(GridP&, SimulationStateP& sharedState,
   d_params->require("BurnCoeff",        d_BurnCoeff);
   d_params->require("refPressure",      d_refPress);
   d_params->require("ThresholdTemp",    d_thresholdTemp);
-  d_params->require("ThresholdPressureSB",d_thresholdPress);
+  d_params->require("ThresholdPressureSB",d_thresholdPress_SB);
 
   //__________________________________
   //  define the materialSet
@@ -185,15 +184,15 @@ void DDT0::outputProblemSpec(ProblemSpecP& ps)
   ProblemSpecP model_ps = ps->appendChild("Model");
   model_ps->setAttribute("type","DDT0");
 
-  model_ps->appendElement("ThresholdPressureJWL",d_threshold_pressure);
+  model_ps->appendElement("ThresholdPressureJWL",d_threshold_press_JWL);
   model_ps->appendElement("fromMaterial",fromMaterial);
   model_ps->appendElement("toMaterial",  toMaterial);
   model_ps->appendElement("G",    d_G);
   model_ps->appendElement("b",    d_b);
   model_ps->appendElement("E0",   d_E0);
-  model_ps->appendElement("rho0", d_rho0);
+
   model_ps->appendElement("ThresholdTemp",       d_thresholdTemp);
-  model_ps->appendElement("ThresholdPressureSB", d_thresholdPress);
+  model_ps->appendElement("ThresholdPressureSB", d_thresholdPress_SB);
   model_ps->appendElement("ThresholdVolFrac",    d_threshold_volFrac);
   model_ps->appendElement("fromMaterial",        d_matl0->getName());
   model_ps->appendElement("toMaterial",          d_matl1->getName());
@@ -441,7 +440,7 @@ void DDT0::computeModelSources(const ProcessorGroup*,
       Fr[c]=rctFr[c];
 
       // JWL++ Model For explosions
-      if (press_CC[c] > d_threshold_pressure && rctVolFrac[c] > d_threshold_volFrac){
+      if (press_CC[c] > d_threshold_press_JWL && rctVolFrac[c] > d_threshold_volFrac){
         
         detonating[c] = 1;   // Flag for detonating
 
@@ -479,7 +478,7 @@ void DDT0::computeModelSources(const ProcessorGroup*,
         sp_vol_src_0[c]    -= createdVolx;
         sp_vol_src_1[c]    += createdVolx;
         
-      } else if(press_CC[c] < d_threshold_pressure && press_CC[c] > d_thresholdPress) {
+      } else if(press_CC[c] < d_threshold_press_JWL && press_CC[c] > d_thresholdPress_SB) {
         //__________________________________
         // Find if the cell contains surface:
         IntVector nodeIdx[8];
@@ -521,7 +520,7 @@ void DDT0::computeModelSources(const ProcessorGroup*,
           //__________________________________
           //  Simple Burn Model
           double burnedMass = 0.0;
-          if ((Temp > d_thresholdTemp) && (press_CC[c] > d_thresholdPress)) {
+          if ((Temp > d_thresholdTemp) && (press_CC[c] > d_thresholdPress_SB)) {
             // Flag for burning
             burning[c] = 1;
             burnedMass = delT *surfArea * d_BurnCoeff 
