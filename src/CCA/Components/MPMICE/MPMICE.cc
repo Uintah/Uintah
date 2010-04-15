@@ -935,7 +935,6 @@ void MPMICE::scheduleComputePressure(SchedulerP& sched,
   t->requires(Task::NewDW,MIlb->temp_CCLabel,      mpm_matls, gn);  
   t->requires(Task::NewDW,Ilb->rho_CCLabel,        mpm_matls, gn);  
   t->requires(Task::NewDW,Ilb->sp_vol_CCLabel,     mpm_matls, gn);  
-  t->requires(Task::NewDW,MIlb->cMassLabel,        mpm_matls, gn);  
 
   t->requires(Task::OldDW,Ilb->press_CCLabel,      press_matl, gn);
   t->requires(Task::OldDW,Ilb->vel_CCLabel,        ice_matls,  gn);
@@ -1743,7 +1742,6 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
       }
       if(mpm_matl[m]){                    // M P M
         new_dw->get(Temp[m],     MIlb->temp_CCLabel, indx,patch,gn,0);
-        new_dw->get(mass_CC[m],  MIlb->cMassLabel,   indx,patch,gn,0);
         new_dw->get(vel_CC[m],   MIlb->vel_CCLabel,  indx,patch,gn,0);
         new_dw->get(sp_vol_CC[m],Ilb->sp_vol_CCLabel,indx,patch,gn,0); 
         new_dw->get(rho_CC_old[m],Ilb->rho_CCLabel,  indx,patch,gn,0);
