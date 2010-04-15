@@ -33,6 +33,7 @@
 SRCDIR   := CCA/Components/Models/HEChem
 
 SRCS	+= \
+       $(SRCDIR)/Common.cc        \
        $(SRCDIR)/Simple_Burn.cc   \
        $(SRCDIR)/Steady_Burn.cc   \
        $(SRCDIR)/Unsteady_Burn.cc \
