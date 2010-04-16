@@ -119,41 +119,16 @@ void Simple_Burn::problemSetup(GridP&, SimulationStateP& sharedState,
 
     //__________________________________
     //  define the materialSet
-    vector<int> m_tmp(2);
-    m_tmp[0] = matl0->getDWIndex();
-    m_tmp[1] = matl1->getDWIndex();
-    mymatls = scinew MaterialSet();            
- 
-    if( m_tmp[0] != 0 && m_tmp[1] != 0){
-      vector<int> m(3);
-      m[0] = 0;    // needed for the pressure and NC_CCWeight 
-      m[1] = m_tmp[0];
-      m[2] = m_tmp[1];
-      mymatls->addAll(m);
-    }else{
-      vector<int> m(2);
-      m[0] = m_tmp[0];
-      m[1] = m_tmp[1];
-      mymatls->addAll(m);
-    }
+    mymatls = scinew MaterialSet();
+
+    vector<int> m;
+    m.push_back(0);                                // needed for the pressure and NC_CCWeight
+    m.push_back(matl0->getDWIndex());
+    m.push_back(matl1->getDWIndex());
+
+    mymatls->addAll_unique(m);                    // elimiate duplicate entries
     mymatls->addReference();
   }
-  else{
-    int matl0_DWI = matl0->getDWIndex();
-    mymatls = scinew MaterialSet();            
-    if( matl0_DWI != 0){
-      vector<int> m(2);
-      m[0] = 0;    // needed for the pressure and NC_CCWeight 
-      m[1] = matl0_DWI;
-      mymatls->addAll(m);
-    }else{
-      vector<int> m(1);
-      m[0] = matl0_DWI;
-      mymatls->addAll(m);
-    }
-    mymatls->addReference();
-  }
-  
   //__________________________________
   //  Are we saving the total burned mass and total burned energy
   ProblemSpecP DA_ps = d_prob_spec->findBlock("DataArchiver");
@@ -198,26 +173,15 @@ void Simple_Burn::activateModel(GridP&, SimulationStateP& sharedState,
   d_params->require("refPressure",      d_refPress);
                                                                               
   //__________________________________
-  //  REdefine the materialSet
-  if(mymatls->removeReference())
-    delete mymatls;
-  vector<int> m_tmp(2);
-  m_tmp[0] = matl0->getDWIndex();
-  m_tmp[1] = matl1->getDWIndex();
-  mymatls = scinew MaterialSet();            
+  //  define the materialSet
+  mymatls = scinew MaterialSet();
 
-  if( m_tmp[0] != 0 && m_tmp[1] != 0){
-    vector<int> m(3);
-    m[0] = 0;    // needed for the pressure and NC_CCWeight 
-    m[1] = m_tmp[0];
-    m[2] = m_tmp[1];
-    mymatls->addAll(m);
-  }else{
-    vector<int> m(2);
-    m[0] = m_tmp[0];
-    m[1] = m_tmp[1];
-    mymatls->addAll(m);
-  }
+  vector<int> m;
+  m.push_back(0);                                 // needed for the pressure and NC_CCWeight
+  m.push_back(matl0->getDWIndex());
+  m.push_back(matl1->getDWIndex());
+
+  mymatls->addAll_unique(m);                    // elimiate duplicate entries
   mymatls->addReference();
 }
 //______________________________________________________________________
