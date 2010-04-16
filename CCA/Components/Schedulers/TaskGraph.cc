@@ -411,12 +411,12 @@ void TaskGraph::addDependencyEdges( Task* task, GraphSortInfoMap& sortinfo,
 
           if (!sortinfo.find(edge->comp->task)->second.visited &&
               !edge->comp->task->isReductionTask()) {
-            cout << "\nWARNING: A task, '" << task->getName() << "', that ";
+            cout << "\nWARNING: The task, '" << task->getName() << "', that ";
             if (modifies)
               cout << "modifies '";
             else
               cout << "requires '";
-            cout << req->var->getName() << "' was added before computing task";
+            cout << req->var->getName() << "' was added before the computing task";
             cout << ", '" << edge->comp->task->getName() << "'\n";
             cout << "  Required/modified by: " << *task << '\n';
             cout << "  req: " << *req << '\n';
@@ -440,47 +440,37 @@ void TaskGraph::addDependencyEdges( Task* task, GraphSortInfoMap& sortinfo,
           && !(req->lookInOldTG && type_ == Scheduler::IntermediateTaskGraph)){
         // if this is an Intermediate TG and the requested data is done from another TG,
         // we need to look in this TG first, but don't worry if you don't find it
-        cout << "  Cannot find compute for the following variable with the following patch or material sets\n";
+        
+        cout << "ERROR: Cannot find the task that computes the variable ("
+             << req->var->getName() << ")\n"; 
+             
+        cout << "The task ("<<task->getName() << ") is requesting data from:\n";
+        cout << "  Level:           " << getLevel(task->getPatchSet())->getIndex() << "\n";
+        cout << "  Task:PatchSet    " << *(task->getPatchSet()) << "\n";
+        cout << "  Task:MaterialSet " << *(task->getMaterialSet()) << "\n \n";
+        
+        cout << "The variable (" <<req->var->getName() << ") is requiring data from:\n";
+        
         if(req->patches){
-          cout << req->patches->size() << " Patches from 'requires': ";
-          for(int i=0;i<req->patches->size();i++)
-            cout << req->patches->get(i)->getID() << " ";
-          cout << '\n';
-        } else if(req->reductionLevel) {
-          cout << "On level " << req->reductionLevel->getIndex() << '\n';
-        } else if(task->getPatchSet()){
-          cout << "Patches from task: ";
-          const PatchSet* patches = task->getPatchSet();
-          for(int i=0;i<patches->size();i++){
-            const PatchSubset* pat=patches->getSubset(i);
-            for(int i=0;i<pat->size();i++)
-              cout << pat->get(i)->getID() << " ";
-            cout << " ";
-          }
-          cout << '\n';
-        } else {
-          cout << "On global level\n";
+          cout << "  Level: " << getLevel(req->patches)->getIndex() << "\n";
+          cout << "  Patches': "<< *(req->patches) << "\n";
+        }else{
+          cout << "  Patches:  All \n";
         }
+        
         if(req->matls){
-          cout << req->matls->size() << " Matls from 'requires': ";
-          for(int i=0;i<req->matls->size();i++)
-            cout << req->matls->get(i) << " ";
-          cout << '\n';
-        } else if(task->getMaterialSet()){
-          cout << "Matls from task: ";
-          const MaterialSet* matls = task->getMaterialSet();
-          for(int i=0;i<matls->size();i++){
-            const MaterialSubset* mat = matls->getSubset(i);
-            for(int i=0;i<mat->size();i++)
-              cout << mat->get(i) << " ";
-            cout << " ";
-          }
-          cout << '\n';
-        } else {
-          cout << "No matls\n";
+          cout << "  Materials: "<< *(req->matls) << "\n";
+        } else{
+          cout << "  Materials:  All \n";
         }
-        SCI_THROW(InternalError("Scheduler could not find specific production for variable: "+req->var->getName()+", required for task: "+task->getName(), __FILE__, __LINE__));
+        
+        cout << "\nTask Details:\n";
+        task->display(cout);
+        cout << "\nRequirement Details:\n"<< *req << "\n";
+
+        SCI_THROW(InternalError("Scheduler could not find  production for variable: "+req->var->getName()+", required for task: "+task->getName(), __FILE__, __LINE__));
       }
+      
       if (modifies) {
         // not just requires, but modifies, so the comps map must be
         // updated so future modifies or requires will link to this one.
