@@ -74,6 +74,11 @@ ScalarEqn::problemSetup(const ProblemSpecP& inputdb)
   db->getWithDefault( "doConv", d_doConv, false);
   db->getWithDefault( "doDiff", d_doDiff, false);
   db->getWithDefault( "addSources", d_addSources, true); 
+  
+  // algorithmic knobs
+  d_use_density_guess = false; // use the density guess rather than the new density from the table...implies that the equation is updated BEFORE properties are computed. 
+  if (db->findBlock("use_density_guess"))
+    d_use_density_guess = true; 
 
   // Source terms:
   if (db->findBlock("src")){
@@ -437,7 +442,10 @@ ScalarEqn::sched_solveTransportEqn( const LevelP& level, SchedulerP& sched, int 
   tsk->modifies(d_transportVarLabel);
   tsk->modifies(d_oldtransportVarLabel); 
   tsk->requires(Task::NewDW, d_RHSLabel, Ghost::None, 0);
-  tsk->requires(Task::NewDW, d_fieldLabels->d_densityCPLabel, Ghost::None, 0);
+  if ( d_use_density_guess ) 
+    tsk->requires(Task::NewDW, d_fieldLabels->d_densityGuessLabel, Ghost::None, 0);
+  else 
+    tsk->requires(Task::NewDW, d_fieldLabels->d_densityCPLabel, Ghost::None, 0);
 
   //Old
   tsk->requires(Task::OldDW, d_transportVarLabel, Ghost::None, 0);
@@ -481,7 +489,10 @@ ScalarEqn::solveTransportEqn( const ProcessorGroup* pc,
     new_dw->getModifiable(oldphi, d_oldtransportVarLabel, matlIndex, patch); 
     old_dw->get(rk1_phi, d_transportVarLabel, matlIndex, patch, gn, 0);
     new_dw->get(RHS, d_RHSLabel, matlIndex, patch, gn, 0);
-    new_dw->get(new_den, d_fieldLabels->d_densityCPLabel, matlIndex, patch, gn, 0);
+    if (d_use_density_guess) 
+      new_dw->get(new_den, d_fieldLabels->d_densityGuessLabel, matlIndex, patch, gn, 0); 
+    else 
+      new_dw->get(new_den, d_fieldLabels->d_densityCPLabel, matlIndex, patch, gn, 0);
     old_dw->get(old_den, d_fieldLabels->d_densityCPLabel, matlIndex, patch, gn, 0);
 
     d_timeIntegrator->singlePatchFEUpdate( patch, phi, old_den, new_den, RHS, dt, curr_ssp_time, d_eqnName);

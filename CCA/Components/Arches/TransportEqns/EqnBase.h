@@ -126,6 +126,11 @@ public:
   inline const double getScalingConstant(){
     return d_scalingConstant; };
 
+  /** @brief Return the density guess boolean */
+  inline const bool getDensityGuessBool(){
+    return d_use_density_guess; 
+  };
+
   /** @brief Compute the boundary conditions for this transport equation object */
   template<class phiType> void
   computeBCsSpecial( const Patch* patch, 
@@ -202,6 +207,8 @@ protected:
   double d_scalingConstant;         ///< Value by which to scale values 
   double curr_ssp_time;             ///< Current value of time considering ssp averaging  
   double curr_time;                 ///< "old" time (t)
+  bool d_use_density_guess;         ///< Tells the solver to use the guessed density rather than the new density from the table
+                                    ///<  Also, if true, the the equation is solved BEFORE the properties are computed. 
 
 private:
 

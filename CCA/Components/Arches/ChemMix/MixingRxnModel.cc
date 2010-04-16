@@ -62,7 +62,8 @@ using namespace Uintah;
 using namespace SCIRun;
 
 //---------------------------------------------------------------------------
-MixingRxnModel::MixingRxnModel()
+MixingRxnModel::MixingRxnModel( const ArchesLabel* labels ):
+  d_lab(labels)
 {
 }
 
@@ -70,3 +71,51 @@ MixingRxnModel::MixingRxnModel()
 MixingRxnModel::~MixingRxnModel()
 {
 }
+
+//---------------------------------------------------------------------------
+void 
+MixingRxnModel::setMixDVMap( const ProblemSpecP& root_params )
+{
+
+  const ProblemSpecP db = root_params; 
+  ProblemSpecP db_vars  = db->findBlock("DataArchiver");
+
+  string table_lookup; 
+  string var_name; 
+
+  if (db_vars) {
+
+    cout << "The following table variables are requested by the user: " << endl; 
+
+    for (ProblemSpecP db_dv = db_vars->findBlock("save"); 
+          db_dv !=0; db_dv = db_dv->findNextBlock("save")){
+
+      table_lookup = "false";
+      var_name     = "false";
+      
+      db_dv->getAttribute( "table_lookup", table_lookup );
+      db_dv->getAttribute( "label", var_name );
+
+      if ( table_lookup == "true" )
+        insertIntoMap( var_name ); 
+
+    }
+  }
+
+  // Add a few extra variables to the dependent variable map that are required by the algorithm 
+  cout << "(below required by the algorithm)" << endl; 
+  var_name = "density"; 
+  insertIntoMap( var_name ); 
+  var_name = "temperature"; 
+  insertIntoMap( var_name ); 
+  var_name = "heat_capacity"; 
+  insertIntoMap( var_name ); 
+  var_name = "CO2"; 
+  insertIntoMap( var_name ); 
+  var_name = "H2O"; 
+  insertIntoMap( var_name ); 
+
+  cout << "----------------------------------------------------------" << endl;
+}
+
+
