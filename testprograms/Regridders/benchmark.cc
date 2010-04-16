@@ -2,6 +2,7 @@
 #include <iostream>
 #include <ostream>
 #include <fstream>
+#include <iomanip>
 using namespace std;
 
 #include <Core/Geometry/IntVector.h>
@@ -21,7 +22,7 @@ using namespace Uintah;
 
 #include <testprograms/Regridders/common.h>
 
-#define REPEAT 100
+#define REPEAT 200
 void outputTime(double time, int alg);
 
 int main(int argc, char **argv) 
@@ -151,6 +152,7 @@ int main(int argc, char **argv)
   LBNRRegridder lbnr(.85,rr);
   GBRv1Regridder gbrv1(.85,rr,rank,num_procs);
 
+  cout << setprecision(20);
   clock_t start;
   double time;
 #if 1
