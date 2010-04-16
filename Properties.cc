@@ -33,7 +33,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Arches/Properties.h>
 #include <CCA/Components/Arches/Arches.h>
 #include <CCA/Components/Arches/ArchesLabel.h>
-#include <CCA/Components/Arches/ChemMix/TabPropsTable.h>
+#include <CCA/Components/Arches/ChemMix/TabPropsInterface.h>
 #include <CCA/Components/Arches/Mixing/MixingModel.h>
 #include <CCA/Components/Arches/Mixing/ColdflowMixingModel.h>
 #include <CCA/Components/Arches/Mixing/MOMColdflowMixingModel.h>
@@ -46,6 +46,8 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Arches/PhysicalConstants.h>
 #include <CCA/Components/Arches/TimeIntegratorLabel.h>
 #include <CCA/Components/MPMArches/MPMArchesLabel.h>
+#include <CCA/Components/Arches/TransportEqns/EqnFactory.h>
+#include <CCA/Components/Arches/TransportEqns/EqnBase.h>
 
 #include <CCA/Ports/Scheduler.h>
 #include <CCA/Ports/DataWarehouse.h>
@@ -101,25 +103,6 @@ Properties::Properties(const ArchesLabel* label,
 Properties::~Properties()
 {
   delete d_mixingModel;
-
-  // delete temporary state-space variables
-  for (LabelMap::iterator iLabel = d_dvLabelMap.begin(); 
-        iLabel != d_dvLabelMap.end(); ++iLabel) 
-  {
-    VarLabel::destroy((*iLabel).second); 
-  } 
-  
-  for (LabelMap::iterator iLabel = d_ivLabelMap.begin(); 
-        iLabel != d_ivLabelMap.end(); ++iLabel) 
-  {
-    VarLabel::destroy((*iLabel).second); 
-  } 
-
-  for(VarMap::iterator iter = d_dvVarMap.begin();
-      iter != d_dvVarMap.end(); iter++)
-  {
-    delete iter->second; 
-  }
 }
 
 //****************************************************************************
@@ -142,8 +125,6 @@ Properties::problemSetup(const ProblemSpecP& params)
   }
 
   // read type of mixing model
-  string mixModel;
-
   if (db->findBlock("NewStaticMixingTable"))
     mixModel = "NewStaticMixingTable"; 
   else if (db->findBlock("ColdFlowMixingModel"))
@@ -152,8 +133,8 @@ Properties::problemSetup(const ProblemSpecP& params)
     mixModel = "StandardTable"; 
   else if (db->findBlock("MOMColdFlowMixingModel"))
     mixModel = "MOMcoldFlowMixingModel"; 
-  else if (db->findBlock("TabPropsTable"))
-    mixModel = "TabPropsTable";
+  else if (db->findBlock("TabProps"))
+    mixModel = "TabProps";
   else
     throw InvalidValue("ERROR!: No mixing/reaction table specified!",__FILE__,__LINE__);
 
@@ -184,11 +165,10 @@ Properties::problemSetup(const ProblemSpecP& params)
                                                   d_calcVariance);
     d_reactingFlow = false;
   }
-  else if (mixModel == "TabPropsTable") {
-    // New TabPropsTable stuff...
-
-    d_mixingRxnTable = scinew TabPropsTable();
-    d_mixingRxnTable->problemSetup(db);
+  else if (mixModel == "TabProps") {
+    // New TabPropsInterface stuff...
+    d_mixingRxnTable = scinew TabPropsInterface( d_lab );
+    d_mixingRxnTable->problemSetup( db ); 
   }
   else if (mixModel == "pdfMixingModel" || mixModel == "SteadyFlameletsTable"
         || mixModel == "flameletModel"  || mixModel == "StaticMixingTable"
@@ -197,8 +177,9 @@ Properties::problemSetup(const ProblemSpecP& params)
   }else{
     throw InvalidValue("Mixing Model not supported: " + mixModel, __FILE__, __LINE__);
   }
-  
-  d_mixingModel->problemSetup(db);
+ 
+  if (mixModel != "TabProps") {
+    d_mixingModel->problemSetup(db);
 
   if (d_calcEnthalpy){
     d_H_air = d_mixingModel->getAdiabaticAirEnthalpy();
@@ -217,6 +198,7 @@ Properties::problemSetup(const ProblemSpecP& params)
   d_soot_precursors = d_mixingModel->getSootPrecursors();
   d_tabulated_soot  = d_mixingModel->getTabulatedSoot();  
   d_radiationCalc = false;
+  }
 
   if (d_calcEnthalpy) {
     ProblemSpecP params_non_constant = params;
@@ -261,171 +243,7 @@ Properties::problemSetup(const ProblemSpecP& params)
 
       }
     }
-
   }
-
-  /////////////////////////////////////
-  //New table interface stuff:
-  // This bit of code parses the input file and any saved label with 
-  // a "table_lookup = true" attribute will be added to the list of dependent 
-  // variables to be obtained from the table.
-  // Note that the VarLabels are created on the fly here.
-  const ProblemSpecP params_root = db->getRootNode(); 
-  ProblemSpecP db_dvs = params_root->findBlock("DataArchiver"); 
-
-  string dvTableLookup;
-  string dvName; 
-
-  if (db_dvs) {
-    for (ProblemSpecP db_dv = db_dvs->findBlock("save"); 
-          db_dv !=0; db_dv = db_dv->findNextBlock("save")){
-      
-      db_dv->getAttribute("table_lookup", dvTableLookup);
-      db_dv->getAttribute("label", dvName);
-
-      // Populate depVarNames, d_dvLabelMap, and d_dvVarMap
-      if (dvTableLookup=="true") {
-        //This variable is added to the table lookup list (assumes that all table variables are doubles)
-
-        // if variable is unique
-        vector<string>::iterator iString = find(depVarNames.begin(), depVarNames.end(), dvName);
-        if(iString == depVarNames.end()) {
-          // add to dependent variable list
-          depVarNames.push_back(dvName);
-
-          // VarLabel create
-          const VarLabel* dvTempLabel = VarLabel::create(dvName, CCVariable<double>::getTypeDescription());
-          // LabelMap.insert
-          LabelMap::iterator iLabel = d_dvLabelMap.insert(make_pair(depVarNames.size(), dvTempLabel)).first;
-          
-          // CCVariable create
-          CCVariable<double>* dvTempVar = new CCVariable<double>;
-          // VarMap.insert
-          VarMap::iterator iVar = d_dvVarMap.insert(make_pair(depVarNames.size(), dvTempVar)).first;  
-        }
-      }
-    } //end dependent variable loop
-
-    // add density to dependent variables list
-    dvName = "Density";
-    depVarNames.push_back(dvName);
-    
-    // density - create/insert label into LabelMap
-    LabelMap::iterator iLabel = d_dvLabelMap.insert(make_pair(depVarNames.size(), d_lab->d_densityCPLabel)).first;
-    d_lab->d_densityCPLabel->addReference();
-
-    // density - create/insert CCVariable into VarMap
-    CCVariable<double>* dvTempVar = new CCVariable<double>;
-    VarMap::iterator iVar = d_dvVarMap.insert(make_pair(depVarNames.size(), dvTempVar)).first;
-
-    // add temperature to dependent variables list if energy equation is on
-    if (d_calcEnthalpy) {
-      // add to dependent variable list
-      dvName = "Temperature";
-      depVarNames.push_back(dvName);
-      
-      // VarLabel is already created (d_lab->d_tempINLabel)
-      // LabelMap insert
-      LabelMap::iterator iLabel = d_dvLabelMap.insert(make_pair(depVarNames.size(), d_lab->d_tempINLabel)).first;
-      d_lab->d_tempINLabel->addReference(); //What does this do? 
-      // CCVariable create
-      CCVariable<double>* dvTempVar = new CCVariable<double>;
-      // VarMap insert
-      VarMap::iterator iVar = d_dvVarMap.insert(make_pair(depVarNames.size(), dvTempVar)).first;
-    } else {
-      // energy equation is off, so turn on the heat loss independent variable so that it can be initialized
-    }
-  } //end DataWarehouse (dependent variable) if
-  
-  /////////////////////////////////////////////////////////////////
-  // Create a list of independent variables 
-  // Put the map in the SAME order as the table
-  
-  // <Properties>
-  //  ...
-  //  <independent_variable name="mixture_fraction" />                    <!-- indep. var. is active -->
-  //  <independent_variable active="yes" name="scalar_variance" />        <!-- indep. var. is active -->
-  //  <independent_variable active="no" name="heat_loss" />               <!-- indep. var. is not active, default value is 0 -->
-  //  <independent_variable active="no" value="0.10" name="heat_loss" />  <!-- indep. var. is not active, default value is 0.10 -->
-  //  <independent_variable active="adsiuoeiwur" name="heat_loss" />      <!-- indep. var. is active (should throw exception) -->
-  //  ...
-  // </Properties>
-  
-  if(mixModel == "TabPropsTable") {
-    indepVarNames = d_mixingRxnTable->getIndepVars();
-  }
-
-  // for each element of independent variable vector passed in from TabPropsTable,
-  //   findBlock("independent_variable")
-  //   if name matches index i of independent variable vector, get its info, and use i as the map's key
-  //   otherwise, findNextBlock("independent_variable")
-  if (db) {
-    for(unsigned int i = 0; i < indepVarNames.size(); ++i) {
-      for(ProblemSpecP db_iv = db->findBlock("independent_variable");
-          db_iv != 0; db_iv = db_iv->findNextBlock("independent_variable")) {
-        
-        string ivName;
-        db_iv->getAttribute("name",ivName);
-        
-        if(indepVarNames[i] == ivName) {
-          // we have the right independent_variable block
-          // get active/not active info and put it into boolmap
-          string ivIsActive;
-          db_iv->getAttribute("active",ivIsActive);
-          
-          // Create Labels/CCVariables (if necessary) and insert into Label/Var maps
-          // (CCVariable names are consistent with Arches.cc)
-          if(indepVarNames[i] == "MixtureFraction") {
-            LabelMap::iterator iLabel = d_ivLabelMap.insert(make_pair(i, d_lab->d_scalarSPLabel)).first;
-            d_lab->d_scalarSPLabel->addReference();
-            CCVariable<double>* scalar = new CCVariable<double>;
-            VarMap::iterator iVar = d_ivVarMap.insert(make_pair(i, scalar)).first;
-
-          } else if(indepVarNames[i] == "MixtureFractionVariance") {
-            LabelMap::iterator iLabl = d_ivLabelMap.insert(make_pair(i, d_lab->d_scalarSPLabel)).first;
-            d_lab->d_scalarSPLabel->addReference();
-            CCVariable<double>* scalarVar_new = new CCVariable<double>;
-            VarMap::iterator iVar = d_ivVarMap.insert(make_pair(i, scalarVar_new)).first;
-
-          } else if(indepVarNames[i] == "HeatLoss") {
-            LabelMap::iterator iLabel = d_ivLabelMap.insert(make_pair(i, d_lab->d_heatLossLabel)).first;
-            d_lab->d_heatLossLabel->addReference();
-            CCVariable<double>* heatLoss = new CCVariable<double>;
-            VarMap::iterator iVar = d_ivVarMap.insert(make_pair(i, heatLoss)).first;
-
-          } else {
-            const VarLabel* ivTempLabel = VarLabel::create(ivName, CCVariable<double>::getTypeDescription());
-            LabelMap::iterator iLabel = d_ivLabelMap.insert(make_pair(i, ivTempLabel)).first;
-            
-            CCVariable<double>* ivTempVar = new CCVariable<double>;
-            VarMap::iterator iVar = d_ivVarMap.insert(make_pair(i, ivTempVar)).first;
-          }
-
-          // Check/record if variable is active and if it has an initialization value
-          bool ivTempBool;
-          if (ivIsActive.compare("yes")==0 || ivIsActive.compare("true")==0 || ivIsActive.empty()) {
-            ivTempBool = true;
-          } else if (ivIsActive.compare("no")==0 || ivIsActive.compare("false")==0) {
-            ivTempBool = false;
-            // get default value and initialize CCVariable with that value
-            double ivNotActiveValue; 
-            db_iv->getWithDefault("value", ivNotActiveValue, 0.0);
-            VarMap::iterator iVar = d_ivVarMap.find(i);
-            iVar->second->initialize(ivNotActiveValue);
-          } else {
-            throw InvalidValue("ERROR:Arches:TabProps - invalid value for independent variable active tag - "
-                               "active attribute must be set to yes, no, true, or false.",__FILE__,__LINE__);
-          }
-          BoolMap::iterator iBool = d_ivBoolMap.insert(make_pair(i, ivTempBool)).first;
-
-        } else {
-          // Incorrect independent variable block, so continue on to the next one
-        }
-
-      } //end independent_variable for
-    } //end indepVarNames for
-  } //end db if
-  
 }
 
 //****************************************************************************
@@ -446,6 +264,11 @@ Properties::computeInletProperties(const InletStream& inStream,
   }
   else if (dynamic_cast<const StandardTable*>(d_mixingModel)) {
     d_mixingModel->computeProps(inStream, outStream);
+  }
+  else if ( mixModel == "TabProps"){
+
+    d_mixingRxnTable->oldTableHack( inStream, outStream, d_calcEnthalpy ); 
+    
   }
   else {
     throw InvalidValue("Mixing Model not supported", __FILE__, __LINE__);
@@ -471,21 +294,8 @@ Properties::sched_computeProps(SchedulerP& sched,
   Task* tsk = scinew Task(taskname, this,
                           &Properties::computeProps,
                           timelabels, modify_ref_density); 
-  //Ghost::GhostType  gn = Ghost::None;
-  
-  if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First){
-    //compute variables on the first time step
-    for (LabelMap::iterator iLabel = d_dvLabelMap.begin(); 
-        iLabel != d_dvLabelMap.end(); ++iLabel){
-      tsk->computes((*iLabel).second); 
-    }
-  } else {
-    //modify variables
-    for (LabelMap::iterator iLabel = d_dvLabelMap.begin(); 
-        iLabel != d_dvLabelMap.end(); ++iLabel){
-      tsk->modifies((*iLabel).second);
-    } 
-  }
+  Ghost::GhostType  gn = Ghost::None;
+
   sched->addTask(tsk, patches, matls);
 }   
 
@@ -509,21 +319,8 @@ Properties::computeProps(const ProcessorGroup* pc,
     int archIndex = 0; // only one arches material
     int indx = d_lab->d_sharedState->
                      getArchesMaterial(archIndex)->getDWIndex(); 
+    Ghost::GhostType  gn = Ghost::None;
 
-    // allocate/get dependent variable values in data warehouse
-    for (unsigned int i=0; i<depVarNames.size(); ++i) {
-      VarMap::iterator iVar = d_dvVarMap.find(i);
-      LabelMap::iterator iLabel = d_dvLabelMap.find(i);
-      
-      if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First){
-        new_dw->allocateAndPut(*((*iVar).second), (*iLabel).second, indx, patch);
-      } else {
-        new_dw->getModifiable(*((*iVar).second), (*iLabel).second, indx, patch);
-      }
-    }
-    if (d_mixingRxnTable != NULL) {
-      d_mixingRxnTable->getState(d_ivVarMap, d_dvVarMap, patch);
-    }
   }
 }                  
   
@@ -2521,3 +2318,28 @@ Properties::computeDrhodt(const ProcessorGroup* pc,
     }
   }
 }
+
+void
+Properties::sched_reComputeProps_new( const LevelP& level,
+                                      SchedulerP& sched,
+                                      const TimeIntegratorLabel* time_labels, 
+                                      const bool initialize, 
+                                      const bool modify_ref_den )
+{
+
+  // this method is temporary while we get rid of properties.cc 
+  if (d_calcEnthalpy)
+    d_mixingRxnTable->sched_computeHeatLoss( level, sched, initialize );
+
+  d_mixingRxnTable->sched_getState( level, sched, time_labels, initialize, d_calcEnthalpy, modify_ref_den ); 
+  
+}
+
+void 
+Properties::sched_initEnthalpy( const LevelP& level, SchedulerP& sched )
+{
+  d_mixingRxnTable->sched_computeFirstEnthalpy( level, sched ) ; 
+
+}
+
+

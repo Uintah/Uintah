@@ -516,16 +516,34 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 //    sched_syncRhoF(sched, patches, matls, d_timeIntegratorLabels[curr_level]);
 //    sched_updateDensityGuess(sched, patches, matls,
 //                                    d_timeIntegratorLabels[curr_level]);
-    d_props->sched_reComputeProps(sched, patches, matls,
-                                  d_timeIntegratorLabels[curr_level],
-                                  true, false,
-                                  d_EKTCorrection, doing_EKT_now);
 
     EqnFactory& eqn_factory = EqnFactory::self();
     EqnFactory::EqnMap& scalar_eqns = eqn_factory.retrieve_all_eqns(); 
     for (EqnFactory::EqnMap::iterator iter = scalar_eqns.begin(); iter != scalar_eqns.end(); iter++){
       EqnBase* eqn = iter->second; 
-      eqn->sched_evalTransportEqn( level, sched, curr_level ); 
+      if ( eqn->getDensityGuessBool() ) 
+        eqn->sched_evalTransportEqn( level, sched, curr_level ); 
+    }
+
+    string mixmodel = d_props->getMixingModelType(); 
+    if ( mixmodel != "TabProps")
+      d_props->sched_reComputeProps(sched, patches, matls,
+                                    d_timeIntegratorLabels[curr_level],
+                                    true, false,
+                                    d_EKTCorrection, doing_EKT_now);
+    else {
+
+      bool initialize_it  = false;
+      bool modify_ref_den = true; 
+      if ( curr_level == 0 ) initialize_it = true; 
+      d_props->sched_reComputeProps_new( level, sched, d_timeIntegratorLabels[curr_level], initialize_it, modify_ref_den ); 
+
+    }
+
+    for (EqnFactory::EqnMap::iterator iter = scalar_eqns.begin(); iter != scalar_eqns.end(); iter++){
+      EqnBase* eqn = iter->second; 
+      if ( !eqn->getDensityGuessBool() )
+        eqn->sched_evalTransportEqn( level, sched, curr_level ); 
     }
 
     if (d_standAloneRMCRT) { 
@@ -564,11 +582,19 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
                                             d_timeIntegratorLabels[curr_level],
                                             d_EKTCorrection, doing_EKT_now);
       }
-      
-      d_props->sched_reComputeProps(sched, patches, matls,
-                                    d_timeIntegratorLabels[curr_level],
-                                    false, false,
-                                    d_EKTCorrection, doing_EKT_now);
+    
+      if (mixmodel != "TabProps")
+        d_props->sched_reComputeProps(sched, patches, matls,
+                                      d_timeIntegratorLabels[curr_level],
+                                      false, false,
+                                      d_EKTCorrection, doing_EKT_now);
+      else {
+
+        bool initialize_it  = false;
+        bool modify_ref_den = false; 
+        d_props->sched_reComputeProps_new( level, sched, d_timeIntegratorLabels[curr_level], initialize_it, modify_ref_den ); 
+
+      }
 
                                    
       sched_computeDensityLag(sched, patches, matls,

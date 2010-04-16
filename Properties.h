@@ -70,7 +70,7 @@ POSSIBLE REVISIONS
 #include <CCA/Components/Arches/ArchesLabel.h>
 #include <CCA/Components/Arches/BoundaryCondition.h>
 #include <CCA/Components/Arches/ChemMix/MixingRxnModel.h>
-#include <CCA/Components/Arches/ChemMix/TabPropsTable.h>
+#include <CCA/Components/Arches/ChemMix/TabPropsInterface.h>
 #ifdef PetscFilter
 #include <CCA/Components/Arches/Filter.h>
 #endif
@@ -83,7 +83,8 @@ POSSIBLE REVISIONS
 namespace Uintah {
 class MixingModel;
 class MixingRxnTable;
-class TabPropsTable;
+class TabPropsInterface;
+class MixingRxnModel; 
 class TimeIntegratorLabel;
 class ExtraScalarSolver;
 class PhysicalConstants;
@@ -230,7 +231,18 @@ public:
   inline void setSulfurBalanceES(bool sulfur_balance_es){
         d_sulfur_balance_es = sulfur_balance_es;
   }
+  inline const string getMixingModelType(){
+    return mixModel; 
+  }
 
+  //for the new table:
+  void sched_reComputeProps_new( const LevelP&,
+                                 SchedulerP&,
+                                 const TimeIntegratorLabel* timelabels,
+                                 const bool initialize, 
+                                 const bool modify_ref_den ); 
+
+  void sched_initEnthalpy( const LevelP&, SchedulerP& ); 
 
 protected :
 
@@ -336,7 +348,7 @@ private:
       
       MixingModel* d_mixingModel;
       //MixingRxnTable* d_mixingRxnTable;
-      TabPropsTable* d_mixingRxnTable;
+      TabPropsInterface* d_mixingRxnTable;
 
       BoundaryCondition* d_bc;
       bool d_empirical_soot;
@@ -357,25 +369,11 @@ private:
       const ProcessorGroup* d_myworld;
 
       // New Table Interface Stuff:
-      typedef map< unsigned int, const VarLabel* > LabelMap;
-      typedef map< unsigned int, CCVariable<double>* > VarMap;
-      typedef map<unsigned int, bool> BoolMap;
-
-      // Dependent variable maps:
-      VarMap d_dvVarMap;
-      LabelMap d_dvLabelMap;
-
-      // Independent variable maps:
-      VarMap d_ivVarMap;
-      LabelMap d_ivLabelMap;
-      BoolMap d_ivBoolMap;
-
-      // string vectors to hold names
-      vector<string> indepVarNames;
-      vector<string> depVarNames;
 
       // for doing adiabatic gas with non-adiabatic particles
       bool d_adiabGas_nonadiabPart;
+
+      string mixModel; 
 
 }; // end class Properties
 } // End namespace Uintah

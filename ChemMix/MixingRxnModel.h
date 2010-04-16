@@ -35,7 +35,11 @@ DEALINGS IN THE SOFTWARE.
 
 // Uintah includes
 #include <Core/ProblemSpec/ProblemSpec.h>
+#include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Grid/Variables/CCVariable.h>
+#include <CCA/Components/Arches/ArchesLabel.h>
+#include <CCA/Components/Arches/TimeIntegratorLabel.h>
+#include <CCA/Ports/Scheduler.h>
 
 // C++ includes
 #include     <vector>
@@ -65,13 +69,18 @@ DEALINGS IN THE SOFTWARE.
 
 
 namespace Uintah {
+ 
+class ArchesLabel; 
+class TimeIntegratorLabel; 
 class MixingRxnModel{
 
 public:
 
-  typedef map<unsigned int, CCVariable<double>* > VarMap;
+  // Useful typedefs
+  typedef std::map<string, const VarLabel* >           VarMap;
+  typedef std::map<string, CCVariable<double>* >       CCMap; 
 
-  MixingRxnModel();
+  MixingRxnModel( const ArchesLabel* labels ); 
 
   virtual ~MixingRxnModel();
 
@@ -79,7 +88,12 @@ public:
   virtual void problemSetup( const ProblemSpecP& params ) = 0;
 
   /** @brief Returns a vector of the state space for a given set of independent parameters */
-  virtual void getState( VarMap ivVars, VarMap dvVars, const Patch* patch ) = 0;
+  virtual void sched_getState( const LevelP& level, 
+                                SchedulerP& sched, 
+                                const TimeIntegratorLabel* time_labels, 
+                                const bool initialize,
+                                const bool with_energy_exch,
+                                const bool modify_ref_den ) = 0;
 
   /** @brief Checks for consistency between the requested independent variables and those actually in the table along with the 
    *    dependent variables and those in the table */
@@ -87,16 +101,48 @@ public:
                             bool strictMode )  = 0;
 
   /** @brief Returns a list of dependent variables */
-  virtual const std::vector<std::string> & getDepVars() = 0;
+  virtual const std::vector<std::string> & getAllDepVars() = 0;
 
   /** @brief Returns a list of independent variables */ 
-  virtual const std::vector<std::string> & getIndepVars() = 0;
+  virtual const std::vector<std::string> & getAllIndepVars() = 0;
 
+  /** @brief Computes the heat loss value */ 
+  virtual void sched_computeHeatLoss( const LevelP& level, 
+                                      SchedulerP& sched,
+                                      const bool initialize ) = 0;
 
+  /** @brief Initializes the enthalpy for the first time step */ 
+  virtual void sched_computeFirstEnthalpy( const LevelP& level, 
+                                          SchedulerP& sched ) = 0; 
 protected :
+
+  VarMap d_dvVarMap; 
+  VarMap d_ivVarMap; 
+
+  /** @brief Sets the mixing table's dependent variable list. */
+  void setMixDVMap( const ProblemSpecP& root_params ); 
+
+  const ArchesLabel* d_lab; 
 
 
 private:
+
+  inline void insertIntoMap( const string var_name ){
+
+    VarMap::iterator i = d_dvVarMap.find( var_name ); 
+
+    if ( i == d_dvVarMap.end() ) {
+
+      const VarLabel* the_label = VarLabel::create( var_name, CCVariable<double>::getTypeDescription() ); 
+
+      i = d_dvVarMap.insert( make_pair( var_name, the_label ) ).first; 
+
+      cout << " ---> " << var_name << endl; 
+
+    } 
+    return; 
+  };
+
 
 }; // end class MixingRxnModel
   

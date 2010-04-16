@@ -2503,8 +2503,18 @@ BoundaryCondition::FlowInlet::problemSetup(ProblemSpecP& params)
   //}
 
   double mixfrac;
+  double mixfrac2; 
   params->require("mixture_fraction", mixfrac);
   streamMixturefraction.d_mixVars.push_back(mixfrac);
+
+  mixfrac2 = 0.0; 
+  streamMixturefraction.d_has_second_mixfrac = false; 
+  if (params->findBlock("mixture_fraction_2")){
+    params->require("mixture_fraction_2", mixfrac2); 
+    streamMixturefraction.d_f2 = mixfrac2; 
+    streamMixturefraction.d_has_second_mixfrac = true;
+  }
+
   if (d_calcVariance){
     streamMixturefraction.d_mixVarVariance.push_back(0.0);
   }
