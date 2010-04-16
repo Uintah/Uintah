@@ -108,6 +108,11 @@ WARNING
       d_lowIndex=Min(p,d_lowIndex);
       d_highIndex=Max(p+IntVector(1,1,1),d_highIndex);
     }
+    inline void extend(Region b)
+    {
+      d_lowIndex=Min(b.d_lowIndex,d_lowIndex);
+      d_highIndex=Max(b.d_highIndex,d_highIndex);
+    }
 
     //Get refrences to the indices
     inline IntVector& low()
