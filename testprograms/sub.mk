@@ -41,6 +41,7 @@ SUBDIRS := \
         $(SRCDIR)/TestRangeTree           \
         $(SRCDIR)/TestBoxGrouper          \
         $(SRCDIR)/BNRRegridder            \
+        $(SRCDIR)/Regridders              \
         $(SRCDIR)/IteratorTest            \
         $(SRCDIR)/RegionTest              \
         $(SRCDIR)/CubeRootTest            \
