@@ -679,7 +679,7 @@ namespace Uintah {
   std::ostream &
   operator << ( std::ostream & out, const Uintah::Task::Dependency & dep )
   {
-    out << "[" << *(dep.var);
+    out << "[" << *(dep.var) << ", ";
     if(dep.var->typeDescription()->isReductionVariable()){
       if(dep.reductionLevel) {
         out << " Level: " << dep.reductionLevel->getIndex();
@@ -688,6 +688,7 @@ namespace Uintah {
       }
     } else {
       if( dep.patches ){
+        out << " Level: " << getLevel(dep.patches)->getIndex();
         out << " Patches: ";
         for(int i=0;i<dep.patches->size();i++){
           if(i > 0)
