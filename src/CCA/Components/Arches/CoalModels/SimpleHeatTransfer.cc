@@ -81,8 +81,11 @@ SimpleHeatTransfer::problemSetup(const ProblemSpecP& params, int qn)
   if (params_root->findBlock("PhysicalConstants")) {
     ProblemSpecP db_phys = params_root->findBlock("PhysicalConstants");
     db_phys->require("viscosity", visc);
+    if( visc == 0 ) {
+      throw InvalidValue("ERROR: SimpleHeatTransfer: problemSetup(): Zero viscosity specified in <PhysicalConstants> section of input file.",__FILE__,__LINE__);
+    }
   } else {
-    throw InvalidValue("Missing <PhysicalConstants> section in input file!",__FILE__,__LINE__);
+    throw InvalidValue("ERROR: SimpleHeatTransfer: problemSetup(): Missing <PhysicalConstants> section in input file!",__FILE__,__LINE__);
   }
 
   if (params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("Coal_Properties")) {
@@ -94,7 +97,7 @@ SimpleHeatTransfer::problemSetup(const ProblemSpecP& params, int qn)
     db_coal->require("S", yelem[4]);
     db_coal->require("initial_ash_mass", ash_mass_init);
   } else {
-    throw InvalidValue("Missing <Coal_Properties> section in input file!",__FILE__,__LINE__);
+    throw InvalidValue("ERROR: SimpleHeatTransfer: problemSetup(): Missing <Coal_Properties> section in input file!",__FILE__,__LINE__);
   }
 
   // Check for radiation 
@@ -143,7 +146,7 @@ SimpleHeatTransfer::problemSetup(const ProblemSpecP& params, int qn)
                || role_name == "particle_temperature" ) {
         LabelToRoleMap[temp_label_name] = role_name;
       } else {
-        std::string errmsg = "Invalid variable role for Simple Heat Transfer model!";
+        std::string errmsg = "ERROR: SimpleHeatTransfer: problemSetup(): Invalid variable role for Simple Heat Transfer model!";
         throw InvalidValue(errmsg,__FILE__,__LINE__);
       }
 
@@ -346,7 +349,7 @@ SimpleHeatTransfer::sched_computeModel( const LevelP& level, SchedulerP& sched, 
           d_pt_scaling_constant = current_eqn.getScalingConstant();
           tsk->requires(Task::OldDW, d_particle_temperature_label, Ghost::None, 0);
         } else {
-          std::string errmsg = "ARCHES: SimpleHeatTransfer: Invalid variable given in <ICVars> block, for <variable> tag for SimpleHeatTransfer model.";
+          std::string errmsg = "ARCHES: SimpleHeatTransfer: sched_computeModel(): Invalid variable given in <ICVars> block, for <variable> tag for SimpleHeatTransfer model.";
           errmsg += "\nCould not find given particle temperature variable \"";
           errmsg += *iter;
           errmsg += "\" in DQMOMEqnFactory.";
@@ -361,7 +364,7 @@ SimpleHeatTransfer::sched_computeModel( const LevelP& level, SchedulerP& sched, 
           d_pl_scaling_constant = current_eqn.getScalingConstant();
           tsk->requires(Task::OldDW, d_particle_length_label, Ghost::None, 0);
         } else {
-          std::string errmsg = "ARCHES: SimpleHeatTransfer: Invalid variable given in <ICVars> block, for <variable> tag for SimpleHeatTransfer model.";
+          std::string errmsg = "ARCHES: SimpleHeatTransfer: sched_computeModel(): Invalid variable given in <ICVars> block, for <variable> tag for SimpleHeatTransfer model.";
           errmsg += "\nCould not find given particle length variable \"";
           errmsg += *iter;
           errmsg += "\" in DQMOMEqnFactory.";
@@ -376,7 +379,7 @@ SimpleHeatTransfer::sched_computeModel( const LevelP& level, SchedulerP& sched, 
           d_rc_scaling_constant = current_eqn.getScalingConstant();
           tsk->requires(Task::OldDW, d_raw_coal_mass_label, Ghost::None, 0);
         } else {
-          std::string errmsg = "ARCHES: SimpleHeatTransfer: Invalid variable given in <ICVars> block, for <variable> tag for SimpleHeatTransfer model.";
+          std::string errmsg = "ARCHES: SimpleHeatTransfer: sched_computeModel(): Invalid variable given in <ICVars> block, for <variable> tag for SimpleHeatTransfer model.";
           errmsg += "\nCould not find given coal mass  variable \"";
           errmsg += *iter;
           errmsg += "\" in DQMOMEqnFactory.";
@@ -385,7 +388,7 @@ SimpleHeatTransfer::sched_computeModel( const LevelP& level, SchedulerP& sched, 
       } 
     } else {
       // can't find this required variable in the labels-to-roles map!
-      std::string errmsg = "ARCHES: SimpleHeatTransfer: You specified that the variable \"" + *iter + 
+      std::string errmsg = "ARCHES: SimpleHeatTransfer: sched_computeModel(): You specified that the variable \"" + *iter + 
                            "\" was required, but you did not specify a role for it!\n";
       throw InvalidValue( errmsg, __FILE__, __LINE__);
     }
@@ -667,11 +670,11 @@ SimpleHeatTransfer::computeModel( const ProcessorGroup * pc,
         Q_radiation = 0.0;
         if (b_radiation) {
           double Qabs = 0.8;
-	  double Apsc = (pi/4)*Qabs*pow(unscaled_length,2);
-	  double Eb = 4*sigma*pow(unscaled_particle_temperature,4);
+	        double Apsc = (pi/4)*Qabs*pow(unscaled_length,2);
+	        double Eb = 4*sigma*pow(unscaled_particle_temperature,4);
           FSum = radiationVolqIN[c];    
-	  Q_radiation = Apsc*(FSum - Eb);
-	  abskp_ = pi/4*Qabs*unscaled_weight*pow(unscaled_length,2); 
+	        Q_radiation = Apsc*(FSum - Eb);
+	        abskp_ = pi/4*Qabs*unscaled_weight*pow(unscaled_length,2); 
         } else {
           abskp_ = 0.0;
         }

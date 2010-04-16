@@ -56,12 +56,17 @@ HeatTransfer::problemSetup(const ProblemSpecP& params, int qn)
   // Check for radiation 
   b_radiation = false;
   const ProblemSpecP params_root = db->getRootNode(); 
-  if(params_root->findBlock("CFD"))
-    if(params_root->findBlock("CFD")->findBlock("ARCHES"))
-      if(params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ExplicitSolver"))
-        if(params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ExplicitSolver")->findBlock("EnthalpySolver"))
-          if(params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ExplicitSolver")->findBlock("EnthalpySolver")->findBlock("DORadiationModel"))
+  if(params_root->findBlock("CFD")) {
+    if(params_root->findBlock("CFD")->findBlock("ARCHES")) {
+      if(params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ExplicitSolver")) {
+        if(params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ExplicitSolver")->findBlock("EnthalpySolver")) {
+          if(params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ExplicitSolver")->findBlock("EnthalpySolver")->findBlock("DORadiationModel")) {
             b_radiation = true; //if gas phase radiation is turned on
+          }
+        }
+      }
+    }
+  }
 
   //user can specifically turn off radiation heat transfer
   if (db->findBlock("noRadiation"))
