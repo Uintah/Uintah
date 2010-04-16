@@ -35,7 +35,7 @@ int main(int argc, char **argv)
   if(argc!=5)
   {
     if(rank==0)
-      cout << "Usage: benchmark patch_size patches_in_each_dim flag_inner_rad(0-1) flag_outter_rad(0-1)\n";
+      cout << "Usage: benchmark patch_size number_of_patches flag_inner_rad(0-1) flag_outter_rad(0-1)\n";
     MPI_Finalize();
     return 1;
   }
@@ -43,8 +43,16 @@ int main(int argc, char **argv)
   //get command line arguements
   IntVector patch_size;
   patch_size[0]=patch_size[1]=patch_size[2]=atoi(argv[1]);
-  IntVector num_patches;
-  num_patches[0]=num_patches[1]=num_patches[2]=atoi(argv[2]);
+  IntVector num_patches(1,1,1);
+
+  int target_patches=atoi(argv[2]);
+  int d=0;
+  while(num_patches[0]*num_patches[1]*num_patches[2]<target_patches)
+  {
+    num_patches[d]*=2;
+    d=(d+1)%3;
+  }
+  cout << "Num patches: " << num_patches << " total:" << num_patches[0]*num_patches[1]*num_patches[2] << endl;
   IntVector cells;
   cells[0]=cells[1]=cells[2]=num_patches[0]*patch_size[0];
   IntVector rr(4,4,4);
