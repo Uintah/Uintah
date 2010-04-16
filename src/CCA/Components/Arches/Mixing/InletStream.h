@@ -71,6 +71,8 @@ namespace Uintah {
       ~InletStream();
       std::vector<double> d_mixVars;
       std::vector<double> d_mixVarVariance;
+      double d_f2; 
+      bool d_has_second_mixfrac; 
       double d_enthalpy;
       bool d_initEnthalpy;
       std::vector<double> d_rxnVars;

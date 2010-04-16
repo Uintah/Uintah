@@ -282,6 +282,76 @@ Arches::problemSetup(const ProblemSpecP& params,
       d_extraScalars.push_back(d_extraScalarSolver);
     }
   }
+
+  //create a time integrator.
+  d_timeIntegrator = scinew ExplicitTimeInt(d_lab);
+  ProblemSpecP time_db = db->findBlock("TimeIntegrator");
+  if (time_db) {
+    string time_order; 
+    time_db->findBlock("ExplicitIntegrator")->getAttribute("order", time_order); 
+    if (time_order == "first")
+      d_tOrder = 1;
+    else if (time_order == "second")
+      d_tOrder = 2; 
+    else if (time_order == "third")
+      d_tOrder = 3; 
+    else 
+      throw InvalidValue("Explicit time integrator must be one of: first, second, third!  Please fix input file",__FILE__,__LINE__);
+
+    d_timeIntegrator->problemSetup(time_db);
+  }
+
+  ProblemSpecP transportEqn_db = db->findBlock("TransportEqns");
+  if (transportEqn_db) {
+    // register source terms
+    ProblemSpecP sources_db = transportEqn_db->findBlock("Sources");
+    if (sources_db)
+      Arches::registerSources(sources_db);
+    //register all equations
+    Arches::registerTransportEqns(transportEqn_db); 
+  }
+  else
+    proc0cout << "No *extra* transport equations found." << endl;
+
+  //create user specified transport eqns
+  if (transportEqn_db) {
+    // Go through eqns and intialize all defined eqns and call their respective 
+    // problem setup
+    EqnFactory& eqn_factory = EqnFactory::self();
+    for (ProblemSpecP eqn_db = transportEqn_db->findBlock("Eqn"); eqn_db != 0; eqn_db = eqn_db->findNextBlock("Eqn")){
+
+      std::string eqnname; 
+      eqn_db->getAttribute("label", eqnname);
+      d_scalarEqnNames.push_back(eqnname);
+      if (eqnname == ""){
+        throw InvalidValue( "The label attribute must be specified for the eqns!", __FILE__, __LINE__); 
+      }
+      EqnBase& an_eqn = eqn_factory.retrieve_scalar_eqn( eqnname ); 
+      an_eqn.problemSetup( eqn_db ); 
+
+    }
+
+    // Now go through sources and initialize all defined sources and call 
+    // their respective problemSetup
+    ProblemSpecP sources_db = transportEqn_db->findBlock("Sources");
+    if (sources_db) {
+
+      SourceTermFactory& src_factory = SourceTermFactory::self(); 
+      for (ProblemSpecP src_db = sources_db->findBlock("src"); 
+          src_db !=0; src_db = src_db->findNextBlock("src")){
+
+        std::string srcname; 
+        src_db->getAttribute("label", srcname);
+        if (srcname == "") {
+          throw InvalidValue( "The label attribute must be specified for the source terms!", __FILE__, __LINE__); 
+        }
+        SourceTermBase& a_src = src_factory.retrieve_source_term( srcname );
+        a_src.problemSetup( src_db );  
+      
+      }
+    }
+  }
+
   // read properties
   // d_MAlab = multimaterial arches common labels
   d_props = scinew Properties(d_lab, d_MAlab, d_physicalConsts,
@@ -430,74 +500,7 @@ Arches::problemSetup(const ProblemSpecP& params,
   }
 
   // ----- DQMOM STUFF:
-  //create a time integrator.
-  d_timeIntegrator = scinew ExplicitTimeInt(d_lab);
-  ProblemSpecP time_db = db->findBlock("TimeIntegrator");
-  if (time_db) {
-    string time_order; 
-    time_db->findBlock("ExplicitIntegrator")->getAttribute("order", time_order); 
-    if (time_order == "first")
-      d_tOrder = 1;
-    else if (time_order == "second")
-      d_tOrder = 2; 
-    else if (time_order == "third")
-      d_tOrder = 3; 
-    else 
-      throw InvalidValue("Explicit time integrator must be one of: first, second, third!  Please fix input file",__FILE__,__LINE__);
 
-    d_timeIntegrator->problemSetup(time_db);
-  }
-
-  //register all source terms
-  ProblemSpecP transportEqn_db = db->findBlock("TransportEqns");
-  if (transportEqn_db) {
-    ProblemSpecP sources_db = transportEqn_db->findBlock("Sources");
-    if (sources_db)
-      Arches::registerSources(sources_db);
-    //register all equations
-    Arches::registerTransportEqns(transportEqn_db); 
-  }
-  else
-    proc0cout << "No *extra* transport equations found." << endl;
-
-  //create user specified transport eqns
-  if (transportEqn_db) {
-    // Go through eqns and intialize all defined eqns and call their respective 
-    // problem setup
-    EqnFactory& eqn_factory = EqnFactory::self();
-    for (ProblemSpecP eqn_db = transportEqn_db->findBlock("Eqn"); eqn_db != 0; eqn_db = eqn_db->findNextBlock("Eqn")){
-
-      std::string eqnname; 
-      eqn_db->getAttribute("label", eqnname);
-      d_scalarEqnNames.push_back(eqnname);
-      if (eqnname == ""){
-        throw InvalidValue( "The label attribute must be specified for the eqns!", __FILE__, __LINE__); 
-      }
-      EqnBase& an_eqn = eqn_factory.retrieve_scalar_eqn( eqnname ); 
-      an_eqn.problemSetup( eqn_db ); 
-
-    }
-
-    // Now go through sources and initialize all defined sources and call 
-    // their respective problemSetup
-    ProblemSpecP sources_db = transportEqn_db->findBlock("Sources");
-    if (sources_db) {
-
-      SourceTermFactory& src_factory = SourceTermFactory::self(); 
-      for (ProblemSpecP src_db = sources_db->findBlock("src"); 
-          src_db !=0; src_db = src_db->findNextBlock("src")){
-
-        std::string srcname; 
-        src_db->getAttribute("label", srcname);
-        if (srcname == "") {
-          throw InvalidValue( "The label attribute must be specified for the source terms!", __FILE__, __LINE__); 
-        }
-        SourceTermBase& a_src = src_factory.retrieve_source_term( srcname );
-        a_src.problemSetup( src_db );  
-      
-      }
-    }
-  }
 
   ProblemSpecP dqmom_db = db->findBlock("DQMOM"); 
   if (dqmom_db) {
@@ -609,6 +612,7 @@ Arches::scheduleInitialize(const LevelP& level,
   // compute : [u,v,w]VelocityIN, pressureIN, scalarIN, densityIN,
   //           viscosityIN
   sched_paramInit(level, sched);
+  sched_scalarInit(level, sched);
 
   if (d_set_initial_condition) {
     sched_readCCInitialCondition(level, sched);
@@ -664,8 +668,17 @@ Arches::scheduleInitialize(const LevelP& level,
                                                 TimeIntegratorStepType::FE);
   init_timelabel_allocated = true;
 
-  d_props->sched_reComputeProps(sched, patches, matls,
+
+  string mixmodel = d_props->getMixingModelType(); 
+  if ( mixmodel != "TabProps")
+    d_props->sched_reComputeProps(sched, patches, matls,
                                 init_timelabel, true, true, false,false);
+  else {
+    bool initialize_it = true; 
+    bool modify_ref_den = true; 
+    d_props->sched_initEnthalpy( level, sched ); 
+    d_props->sched_reComputeProps_new( level, sched, init_timelabel, initialize_it, modify_ref_den ); 
+  }
 
   d_boundaryCondition->sched_initInletBC(sched, patches, matls);
 
@@ -719,7 +732,6 @@ Arches::scheduleInitialize(const LevelP& level,
 
   }
 
-  sched_scalarInit(level, sched);
 
   // check to make sure that all the scalar variables have BCs set. 
   EqnFactory& eqnFactory = EqnFactory::self(); 
