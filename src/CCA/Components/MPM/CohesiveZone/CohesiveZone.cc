@@ -183,45 +183,45 @@ CohesiveZone::countCohesiveZones(const Patch* patch, const string filename)
 
 vector<const VarLabel* > CohesiveZone::returnCohesiveZoneState()
 {
-  return cz_state;
+  return d_cz_state;
 }
 
 vector<const VarLabel* > CohesiveZone::returnCohesiveZoneStatePreReloc()
 {
-  return cz_state_preReloc;
+  return d_cz_state_preReloc;
 }
 
 void CohesiveZone::registerPermanentCohesiveZoneState(CZMaterial* czmat)
 {
-  cz_state.push_back(d_lb->czLengthLabel);
-  cz_state_preReloc.push_back(d_lb->czLengthLabel_preReloc);
+  d_cz_state.push_back(d_lb->czLengthLabel);
+  d_cz_state_preReloc.push_back(d_lb->czLengthLabel_preReloc);
 
-  cz_state.push_back(d_lb->czNormLabel);
-  cz_state_preReloc.push_back(d_lb->czNormLabel_preReloc);
+  d_cz_state.push_back(d_lb->czNormLabel);
+  d_cz_state_preReloc.push_back(d_lb->czNormLabel_preReloc);
 
-  cz_state.push_back(d_lb->czTangLabel);
-  cz_state_preReloc.push_back(d_lb->czTangLabel_preReloc);
+  d_cz_state.push_back(d_lb->czTangLabel);
+  d_cz_state_preReloc.push_back(d_lb->czTangLabel_preReloc);
 
-  cz_state.push_back(d_lb->czDispTopLabel);
-  cz_state_preReloc.push_back(d_lb->czDispTopLabel_preReloc);
+  d_cz_state.push_back(d_lb->czDispTopLabel);
+  d_cz_state_preReloc.push_back(d_lb->czDispTopLabel_preReloc);
 
-  cz_state.push_back(d_lb->czDispBottomLabel);
-  cz_state_preReloc.push_back(d_lb->czDispBottomLabel_preReloc);
+  d_cz_state.push_back(d_lb->czDispBottomLabel);
+  d_cz_state_preReloc.push_back(d_lb->czDispBottomLabel_preReloc);
 
-  cz_state.push_back(d_lb->czSeparationLabel);
-  cz_state_preReloc.push_back(d_lb->czSeparationLabel_preReloc);
+  d_cz_state.push_back(d_lb->czSeparationLabel);
+  d_cz_state_preReloc.push_back(d_lb->czSeparationLabel_preReloc);
 
-  cz_state.push_back(d_lb->czForceLabel);
-  cz_state_preReloc.push_back(d_lb->czForceLabel_preReloc);
+  d_cz_state.push_back(d_lb->czForceLabel);
+  d_cz_state_preReloc.push_back(d_lb->czForceLabel_preReloc);
 
-  cz_state.push_back(d_lb->czTopMatLabel);
-  cz_state_preReloc.push_back(d_lb->czTopMatLabel_preReloc);
+  d_cz_state.push_back(d_lb->czTopMatLabel);
+  d_cz_state_preReloc.push_back(d_lb->czTopMatLabel_preReloc);
 
-  cz_state.push_back(d_lb->czBotMatLabel);
-  cz_state_preReloc.push_back(d_lb->czBotMatLabel_preReloc);
+  d_cz_state.push_back(d_lb->czBotMatLabel);
+  d_cz_state_preReloc.push_back(d_lb->czBotMatLabel_preReloc);
 
-  cz_state.push_back(d_lb->czIDLabel);
-  cz_state_preReloc.push_back(d_lb->czIDLabel_preReloc);
+  d_cz_state.push_back(d_lb->czIDLabel);
+  d_cz_state_preReloc.push_back(d_lb->czIDLabel_preReloc);
 }
 
 void CohesiveZone::scheduleInitialize(const LevelP& level, SchedulerP& sched,
@@ -262,7 +262,7 @@ void CohesiveZone::scheduleInitialize(const LevelP& level, SchedulerP& sched,
 
 void CohesiveZone::initialize(const ProcessorGroup*,
                               const PatchSubset* patches,
-                              const MaterialSubset* matls,
+                              const MaterialSubset* cz_matls,
                               DataWarehouse* ,
                               DataWarehouse* new_dw)
 {
@@ -274,9 +274,9 @@ void CohesiveZone::initialize(const ProcessorGroup*,
 
     CCVariable<short int> cellNACZID;
     new_dw->allocateAndPut(cellNACZID, d_lb->pCellNACZIDLabel, 0, patch);
-    cellNACZID.initialize(0.);
+    cellNACZID.initialize(0);
 
-    for(int m=0;m<matls->size();m++){
+    for(int m=0;m<cz_matls->size();m++){
       CZMaterial* cz_matl = d_sharedState->getCZMaterial( m );
       string filename = cz_matl->getCohesiveFilename();
       particleIndex numCZs = countCohesiveZones(patch,filename);

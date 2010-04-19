@@ -101,7 +101,7 @@ namespace Uintah {
     MPMFlags* d_flags;
     SimulationStateP d_sharedState;
 
-    vector<const VarLabel* > cz_state, cz_state_preReloc;
+    vector<const VarLabel* > d_cz_state, d_cz_state_preReloc;
   };
 
 } // End of namespace Uintah
