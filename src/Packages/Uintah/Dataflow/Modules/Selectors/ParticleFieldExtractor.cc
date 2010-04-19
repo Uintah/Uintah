@@ -180,7 +180,11 @@ ParticleFieldExtractor::setVars( DataArchiveHandle& archive, int timestep,
   }
 
   LevelP level = grid->getLevel( (guilevel == levels ? levels-1 : guilevel) );
-  if( guilevel == levels ) { level_.set( levels - 1 ); }
+  if( guilevel == levels ) { 
+    level_.set( levels - 1 ); 
+  }
+  
+  
   
   // get the number of materials for the particle Variables
   ConsecutiveRangeSet matls;
@@ -248,7 +252,7 @@ ParticleFieldExtractor::setVars( DataArchiveHandle& archive, int timestep,
             matls = archive->queryMaterials(names[j], *iter, timestep);
             ConsecutiveRangeSet::iterator it = matls.begin();
             
-            while( it != matls.end() ){
+            while( it != matls.end() && found_particles == false ){
               archive->query( var, names[j], *it, *iter, timestep); 
               
               int numParticles = var.getParticleSubset()->numParticles();
@@ -256,7 +260,7 @@ ParticleFieldExtractor::setVars( DataArchiveHandle& archive, int timestep,
               if( numParticles > 0){
                 level_os << lev << " ";
                 found_particles = true; 
-                cout << " Level-"<< level->getIndex() << " numParticles " << numParticles << endl;
+                cout << "Particles exist on Level-"<< level->getIndex() << endl;
               }
               ++it;
             } // end while
@@ -387,7 +391,7 @@ ParticleFieldExtractor::setVars( DataArchiveHandle& archive, int timestep,
       get_gui()->execute(get_id() + " destroyFrames");
       get_gui()->execute(get_id() + " build");
       get_gui()->execute(get_id() + " buildLevels "+ level_os.str());
-//      get_gui()->execute(get_id() + " buildLevel "+ level_os.str());
+      
       //      get_gui()->execute(get_id() + " setParticleScalars " + psNames.c_str());
       //      get_gui()->execute(get_id() + " setParticleVectors " + pvNames.c_str());
       //      get_gui()->execute(get_id() + " setParticleTensors " + ptNames.c_str());
