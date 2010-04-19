@@ -141,7 +141,8 @@ void gatherPatches(vector<Region> &patches, vector<Region> &global_patches)
 
 void splitPatches(vector<Region> &patches, vector<Region> &split_patches, double p)
 {
-  split_patches=patches;
+  list<Region> to_split_patches(patches.begin(),patches.end());
+  split_patches.clear();
   long long vol=0;
   for(size_t i=0;i<patches.size();i++)
     vol+=patches[i].getVolume();
@@ -158,9 +159,10 @@ void splitPatches(vector<Region> &patches, vector<Region> &split_patches, double
   if(thresh==0)
     thresh=1;
 
-  for(size_t i=0;i<split_patches.size();i++)
+  while(!to_split_patches.empty())
   {
-    Region patch=split_patches[i];
+    Region patch=to_split_patches.back();
+    to_split_patches.pop_back();
     //cout << "thresh: " << thresh << " vol: " << patch.getVolume() << endl;
     if( patch.getVolume()>thresh)
     {
@@ -177,8 +179,12 @@ void splitPatches(vector<Region> &patches, vector<Region> &split_patches, double
       left.high()[max_d]=right.low()[max_d]=mid;
       //cout << "low: " << low << " high: " << high << " max_d: " << max_d << " mid: " << mid << endl;
       //cout << "Patch: " << patch << " left: " << left << " right: " << right << endl;
-      split_patches.push_back(left);
-      split_patches.push_back(right);
+      to_split_patches.push_back(left);
+      to_split_patches.push_back(right);
+    }
+    else 
+    {
+      split_patches.push_back(patch);
     }
   }
   //cout << "Patches before: " << patches.size() << " patches after: " << split_patches.size() << endl;
