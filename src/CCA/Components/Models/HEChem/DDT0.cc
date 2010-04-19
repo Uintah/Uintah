@@ -253,6 +253,10 @@ void DDT0::scheduleComputeModelSources(SchedulerP& sched,
                                        const LevelP& level,
                                        const ModelInfo* mi)
 {
+  if (level->hasFinerLevel()){
+    return;    // only schedule on the finest level
+  }
+
   Task* t = scinew Task("DDT0::computeModelSources", this, 
                         &DDT0::computeModelSources, mi);
   cout_doing << "DDT0::scheduleComputeModelSources "<<  endl;  
@@ -289,9 +293,7 @@ void DDT0::scheduleComputeModelSources(SchedulerP& sched,
   t->requires(Task::NewDW, Ilb->sp_vol_CCLabel,   react_matl, gn);
   t->requires(Task::NewDW, MIlb->vel_CCLabel,     react_matl, gn);
   t->requires(Task::NewDW, Ilb->rho_CCLabel,      react_matl, gn);
-  t->requires(Task::NewDW, Mlb->gMassLabel,       react_matl, gac,1); 
-  t->requires(Task::OldDW, reactedFractionLabel,  react_matl, gn); 
-
+  t->requires(Task::NewDW, Mlb->gMassLabel,       react_matl, gac,1);
 
   //__________________________________
   // Computes
@@ -376,13 +378,11 @@ void DDT0::computeModelSources(const ProcessorGroup*,
    
     //__________________________________
     // Reactant data
-    new_dw->get(rctTemp,       MIlb->temp_CCLabel,  m0,patch,gn, 0);
-    new_dw->get(rctvel_CC,     MIlb->vel_CCLabel,   m0,patch,gn, 0);
-    new_dw->get(rctRho,        Ilb->rho_CCLabel,    m0,patch,gn, 0);
-    new_dw->get(rctSpvol,      Ilb->sp_vol_CCLabel, m0,patch,gn, 0);
-    new_dw->get(rctMass_NC,    Mlb->gMassLabel,     m0,patch,gac,1);
-    
-    old_dw->get(rctFr,         reactedFractionLabel,  m0,patch,gn,0);
+    new_dw->get(rctTemp,       MIlb->temp_CCLabel,    m0,patch,gn, 0);
+    new_dw->get(rctvel_CC,     MIlb->vel_CCLabel,     m0,patch,gn, 0);
+    new_dw->get(rctRho,        Ilb->rho_CCLabel,      m0,patch,gn, 0);
+    new_dw->get(rctSpvol,      Ilb->sp_vol_CCLabel,   m0,patch,gn, 0);
+    new_dw->get(rctMass_NC,    Mlb->gMassLabel,       m0,patch,gac,1);
     new_dw->get(rctVolFrac,    Ilb->vol_frac_CCLabel, m0,patch,gn, 0);
    
     //__________________________________
@@ -437,21 +437,17 @@ void DDT0::computeModelSources(const ProcessorGroup*,
     //  Loop over cells
     for (CellIterator iter = patch->getCellIterator();!iter.done();iter++){
       IntVector c = *iter;
-      // Copy old Fr in case pressure threshold is not met
-      Fr[c]=rctFr[c];
-
+      
       // JWL++ Model For explosions
       if (press_CC[c] > d_threshold_press_JWL && rctVolFrac[c] > d_threshold_volFrac){
         
-        detonating[c] = 1;   // Flag for detonating
-
-        double F = prodRho[c]/(rctRho[c]+prodRho[c]);
+        detonating[c] = 1;   // Flag for detonating 
         
-        if(F >= 0. && F < .99){
-          delF[c] = d_G*pow(press_CC[c], d_b)*(1.0 - F);
+        Fr[c] = prodRho[c]/(rctRho[c]+prodRho[c]);   
+        if(Fr[c] >= 0. && Fr[c] < .99){
+          delF[c] = d_G*pow(press_CC[c], d_b)*(1.0 - Fr[c]);
         }
         delF[c]*=delT;
-        Fr[c] = F;
         
         double rctMass    = rctRho[c]*cell_vol;
         double prdMass    = prodRho[c]*cell_vol;
