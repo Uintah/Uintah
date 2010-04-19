@@ -22,7 +22,8 @@ using namespace Uintah;
 
 #include <testprograms/Regridders/common.h>
 
-#define REPEAT 200
+#define REPEAT1 5
+#define REPEAT2 400
 void outputTime(double time, int alg);
 
 int main(int argc, char **argv) 
@@ -35,7 +36,13 @@ int main(int argc, char **argv)
   if(argc!=5)
   {
     if(rank==0)
+    {
       cout << "Usage: benchmark patch_size number_of_patches flag_inner_rad(0-1) flag_outter_rad(0-1)\n";
+      cout << " Command was: ";
+      for(int i=0;i<argc;i++)
+        cout << argv[i] << " ";
+      cout << endl;
+    }
     MPI_Finalize();
     return 1;
   }
@@ -52,7 +59,7 @@ int main(int argc, char **argv)
     num_patches[d]*=2;
     d=(d+1)%3;
   }
-  cout << "Num patches: " << num_patches << " total:" << num_patches[0]*num_patches[1]*num_patches[2] << endl;
+  //cout << "Num patches: " << num_patches << " total:" << num_patches[0]*num_patches[1]*num_patches[2] << endl;
   IntVector cells;
   cells[0]=cells[1]=cells[2]=num_patches[0]*patch_size[0];
   IntVector rr(4,4,4);
@@ -166,53 +173,53 @@ int main(int argc, char **argv)
 #if 1
   MPI_Barrier(MPI_COMM_WORLD);
   start=clock();
-  for(int i=0;i<REPEAT;i++)
+  for(int i=0;i<REPEAT2;i++)
     tiled.regrid(patches,flags,fine_patches);
-  time=(clock()-start)/(double) CLOCKS_PER_SEC / REPEAT;
+  time=(clock()-start)/(double) CLOCKS_PER_SEC / REPEAT2;
   outputTime(time,0);
 
 #endif
 #if 1
   MPI_Barrier(MPI_COMM_WORLD);
   start=clock();
-  for(int i=0;i<REPEAT;i++)
-    gbrv1.regrid(gflags,fine_patches);
-  time=(clock()-start)/(double) CLOCKS_PER_SEC / REPEAT;
-  outputTime(time,1);
-
-#endif
-#if 1
-  MPI_Barrier(MPI_COMM_WORLD);
-  start=clock();
-  for(int i=0;i<REPEAT;i++)
+  for(int i=0;i<REPEAT2;i++)
     lbnr.regrid(lflags,fine_patches);
-  time=(clock()-start)/(double) CLOCKS_PER_SEC / REPEAT;
-  outputTime(time,2);
+  time=(clock()-start)/(double) CLOCKS_PER_SEC / REPEAT2;
+  outputTime(time,1);
 #endif
 #if 1
   vector<IntVector> tmpflags;
   MPI_Barrier(MPI_COMM_WORLD);
   start=clock();
-  for(int i=0;i<REPEAT;i++)
+  for(int i=0;i<REPEAT2;i++)
     makeFlagsList(patches, flags, tmpflags);
-  time=(clock()-start)/(double) CLOCKS_PER_SEC / REPEAT;
+  time=(clock()-start)/(double) CLOCKS_PER_SEC / REPEAT2;
+  outputTime(time,2);
+#endif
+#if 1
+  MPI_Barrier(MPI_COMM_WORLD);
+  start=clock();
+  for(int i=0;i<REPEAT2;i++)
+    gatherPatches(fine_patches, global_patches);
+  time=(clock()-start)/(double) CLOCKS_PER_SEC / REPEAT2;
   outputTime(time,3);
 #endif
 #if 1
   MPI_Barrier(MPI_COMM_WORLD);
   start=clock();
-  for(int i=0;i<REPEAT;i++)
-    gatherPatches(fine_patches, global_patches);
-  time=(clock()-start)/(double) CLOCKS_PER_SEC / REPEAT;
+  for(int i=0;i<REPEAT2;i++)
+    splitPatches(fine_patches, global_patches,.25);
+  time=(clock()-start)/(double) CLOCKS_PER_SEC / REPEAT2;
   outputTime(time,4);
 #endif
 #if 1
   MPI_Barrier(MPI_COMM_WORLD);
   start=clock();
-  for(int i=0;i<REPEAT;i++)
-    splitPatches(fine_patches, global_patches,.25);
-  time=(clock()-start)/(double) CLOCKS_PER_SEC / REPEAT;
+  for(int i=0;i<REPEAT1;i++)
+    gbrv1.regrid(gflags,fine_patches);
+  time=(clock()-start)/(double) CLOCKS_PER_SEC / REPEAT1;
   outputTime(time,5);
+
 #endif
 
   MPI_Finalize();
@@ -232,7 +239,7 @@ void outputTime(double time, int alg)
   getTime(time,mint,maxt,avgt);
 
   if(rank==0)
-    cout << alg << " " << avgt << " " << mint << " " << maxt << endl; 
+    cout << num_procs << " " << alg << " " << avgt << " " << mint << " " << maxt << endl; 
 
 }
 
