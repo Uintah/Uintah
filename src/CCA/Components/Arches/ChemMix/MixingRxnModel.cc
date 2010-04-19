@@ -43,6 +43,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Exceptions/InvalidValue.h>
 #include <Core/Exceptions/ProblemSetupException.h>
+#include <Core/Parallel/Parallel.h>
 
 // includes for C++
 #include <fstream>
@@ -85,7 +86,7 @@ MixingRxnModel::setMixDVMap( const ProblemSpecP& root_params )
 
   if (db_vars) {
 
-    cout << "The following table variables are requested by the user: " << endl; 
+    proc0cout << "The following table variables are requested by the user: " << endl; 
 
     for (ProblemSpecP db_dv = db_vars->findBlock("save"); 
           db_dv !=0; db_dv = db_dv->findNextBlock("save")){
@@ -103,7 +104,7 @@ MixingRxnModel::setMixDVMap( const ProblemSpecP& root_params )
   }
 
   // Add a few extra variables to the dependent variable map that are required by the algorithm 
-  cout << "(below required by the algorithm)" << endl; 
+  proc0cout << "(below required by the algorithm)" << endl; 
   var_name = "density"; 
   insertIntoMap( var_name ); 
   var_name = "temperature"; 
@@ -115,7 +116,7 @@ MixingRxnModel::setMixDVMap( const ProblemSpecP& root_params )
   var_name = "H2O"; 
   insertIntoMap( var_name ); 
 
-  cout << "----------------------------------------------------------" << endl;
+  proc0cout << "----------------------------------------------------------" << endl;
 }
 
 

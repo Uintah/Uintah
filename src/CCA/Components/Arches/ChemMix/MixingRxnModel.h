@@ -40,6 +40,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Arches/ArchesLabel.h>
 #include <CCA/Components/Arches/TimeIntegratorLabel.h>
 #include <CCA/Ports/Scheduler.h>
+#include <Core/Parallel/Parallel.h>
 
 // C++ includes
 #include     <vector>
@@ -137,7 +138,7 @@ private:
 
       i = d_dvVarMap.insert( make_pair( var_name, the_label ) ).first; 
 
-      cout << " ---> " << var_name << endl; 
+      proc0cout << " ---> " << var_name << endl; 
 
     } 
     return; 
