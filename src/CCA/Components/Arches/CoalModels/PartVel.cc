@@ -269,15 +269,6 @@ void PartVel::ComputePartVel( const ProcessorGroup* pc,
 
         partVel.initialize(Vector(0.,0.,0.));
 
-        // set boundary conditions. 
-        name = "vel_qn";
-        name += node; 
-        if ( d_gasBC )  // assume gas vel =  part vel on boundary 
-          d_boundaryCond->setVectorValueBC( 0, patch, partVel, gasVel, name ); 
-        else           // part vel set by user.  
-          d_boundaryCond->setVectorValueBC( 0, patch, partVel, name );  
-      
-
         // now loop over all cells
         for (CellIterator iter=patch->getCellIterator(0); !iter.done(); iter++){
           IntVector c = *iter;
@@ -347,8 +338,16 @@ void PartVel::ComputePartVel( const ProcessorGroup* pc,
             partVel[c] = new_v_part; 
           }
         }
-      }
 
+        // set boundary conditions now that the velocity field is set.  
+        name = "vel_qn";
+        name += node; 
+        if ( d_gasBC )  // assume gas vel =  part vel on boundary 
+          d_boundaryCond->setVectorValueBC( 0, patch, partVel, gasVel, name ); 
+        else           // part vel set by user.  
+          d_boundaryCond->setVectorValueBC( 0, patch, partVel, name ); 
+
+      }
     } else if (d_drag) {
      
       constCCVariable<Vector> gasVel;
@@ -403,14 +402,6 @@ void PartVel::ComputePartVel( const ProcessorGroup* pc,
           new_dw->getModifiable( partVel, iter->second, matlIndex, patch );
         partVel.initialize(Vector(0.,0.,0.));
 
-        // set boundary conditions. 
-        name = "vel_qn";
-        name += node;
-        if ( d_gasBC )  // assume gas vel =  part vel on boundary 
-          d_boundaryCond->setVectorValueBC( 0, patch, partVel, gasVel, name );
-        else           // part vel set by user.  
-          d_boundaryCond->setVectorValueBC( 0, patch, partVel, name );
-
         // now loop over all cells
         for (CellIterator iter=patch->getCellIterator(0); !iter.done(); iter++){
           IntVector c = *iter;
@@ -429,6 +420,15 @@ void PartVel::ComputePartVel( const ProcessorGroup* pc,
 
           partVel[c] = Vector(ux,uy,uz);
         }
+
+        // Now set boundary conditions after velocities are set.  
+        name = "vel_qn";
+        name += node;
+        if ( d_gasBC )  // assume gas vel =  part vel on boundary 
+          d_boundaryCond->setVectorValueBC( 0, patch, partVel, gasVel, name );
+        else           // part vel set by user.  
+          d_boundaryCond->setVectorValueBC( 0, patch, partVel, name );
+
       } 
     }  
   } 
