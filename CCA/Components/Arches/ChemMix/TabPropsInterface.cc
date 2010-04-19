@@ -195,7 +195,7 @@ TabPropsInterface::problemSetup( const ProblemSpecP& propertiesParameters )
       d_ivVarMap.insert(make_pair(varName, d_lab->d_heatLossLabel)).first; 
 
     } else {
-      cout << "For table indep. variable: " <<  varName << endl;
+      proc0cout << "For table indep. variable: " <<  varName << endl;
       throw ProblemSetupException("ERROR! I currently don't know how to deal with this variable (ie, I can't map it to a transported variable.)", __FILE__, __LINE__); 
     }
   }
