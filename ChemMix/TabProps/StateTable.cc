@@ -31,6 +31,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Arches/ChemMix/TabProps/StateTable.h>
 
 #include <Core/Exceptions/InternalError.h>
+#include <Core/Parallel/Parallel.h>
 
 #include <sci_defs/hdf5_defs.h>
 
@@ -89,7 +90,7 @@ StateTable::add_entry( const string & name,
   // disallow duplicates.
   const BSpline * const entry = find_entry( name );
   if( entry == NULL ){
-    //cout << "adding entry: '" << name << "' to table." << endl;
+    //proc0cout << "adding entry: '" << name << "' to table." << endl;
     if( createCopy ){
       splineTbl_[name] = spline->clone();
     }else{              
@@ -293,6 +294,9 @@ StateTable::read_hdf5( const string & prefix,
 
   H5Gclose( baseGroup );
   H5Fclose( fid );
+#else
+  std::string err_msg = "ERROR: StateTable: read_hdf5: HAVE_HDF5 is not defined! Please make sure you've configured sus with HDF5.\n";
+  throw InternalError(err_msg,__FILE__,__LINE__);
 #endif
 }
 
@@ -394,6 +398,9 @@ StateTable::read_hdf5( const hid_t & group )
     //
     add_entry( spGroupName, entry, indepVarNames_ );
   }
+#else
+  std::string err_msg = "ERROR: StateTable: read_hdf5: HAVE_HDF5 is not defined! Please make sure you've configured sus with HDF5.\n";
+  throw InternalError(err_msg,__FILE__,__LINE__);
 #endif
 }
 

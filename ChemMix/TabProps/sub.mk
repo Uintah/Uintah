@@ -44,6 +44,7 @@ SRCS := \
 
 PSELIBS := \
     Core/Exceptions \
+	Core/Parallel \
     Core/Geometry   \
     Core/Thread
 
