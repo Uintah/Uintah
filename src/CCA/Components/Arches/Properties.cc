@@ -294,7 +294,7 @@ Properties::sched_computeProps(SchedulerP& sched,
   Task* tsk = scinew Task(taskname, this,
                           &Properties::computeProps,
                           timelabels, modify_ref_density); 
-  Ghost::GhostType  gn = Ghost::None;
+  //Ghost::GhostType  gn = Ghost::None;
 
   sched->addTask(tsk, patches, matls);
 }   
@@ -315,11 +315,11 @@ Properties::computeProps(const ProcessorGroup* pc,
 {
   for (int p = 0; p < patches->size(); ++p) {
 
-    const Patch* patch = patches->get(p);
-    int archIndex = 0; // only one arches material
-    int indx = d_lab->d_sharedState->
-                     getArchesMaterial(archIndex)->getDWIndex(); 
-    Ghost::GhostType  gn = Ghost::None;
+    //const Patch* patch = patches->get(p);
+    //int archIndex = 0; // only one arches material
+    //int indx = d_lab->d_sharedState->
+    //                 getArchesMaterial(archIndex)->getDWIndex(); 
+    //Ghost::GhostType  gn = Ghost::None;
 
   }
 }                  
