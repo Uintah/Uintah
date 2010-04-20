@@ -645,13 +645,13 @@ TabPropsInterface::oldTableHack( const InletStream& inStream, Stream& outStream,
   //This is a temporary hack to get the table stuff working with the new interface
   const std::vector<string>& iv_names = getAllIndepVars();
   std::vector<double> iv(iv_names.size());
-  double dv = 0.0; 
+  //double dv = 0.0; 
 
   int num_streams = 0; 
 
-  for ( int i = 0; i < iv_names.size(); i++){
+  for ( int i = 0; i < (int) iv_names.size(); i++){
 
-    if ( iv_names[i] == "mixture_fraction" | iv_names[i] == "coal_gas_mix_frac"){
+    if ( (iv_names[i] == "mixture_fraction") || (iv_names[i] == "coal_gas_mix_frac")){
       iv[i] = inStream.d_mixVars[0]; 
       num_streams = 2; 
     } else if (iv_names[i] == "mixture_fraction_variance") {
@@ -679,7 +679,7 @@ TabPropsInterface::oldTableHack( const InletStream& inStream, Stream& outStream,
 
   if (calcEnthalpy) {
 
-    double zero_heat_loss    = 0.0; 
+    //double zero_heat_loss    = 0.0; 
     double enthalpy          = 0.0; 
     double sensible_enthalpy = 0.0; 
 
@@ -696,7 +696,7 @@ TabPropsInterface::oldTableHack( const InletStream& inStream, Stream& outStream,
 
     }
 
-    if ( inStream.d_initEnthalpy || (abs(adiab_enthalpy - enthalpy)/abs(adiab_enthalpy) < 1.0e-4 ) && f < 1.0e-4 ) {
+    if ( inStream.d_initEnthalpy || ((abs(adiab_enthalpy - enthalpy)/abs(adiab_enthalpy) < 1.0e-4 ) && f < 1.0e-4) ) {
 
       current_heat_loss = 0.0; 
 

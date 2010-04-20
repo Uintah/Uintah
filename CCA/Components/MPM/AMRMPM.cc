@@ -1020,7 +1020,7 @@ void AMRMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       Vector pmom;
       int n8or27=flags->d_8or27;
 
-      double pSp_vol = 1./mpm_matl->getInitialDensity();
+      //double pSp_vol = 1./mpm_matl->getInitialDensity();
       for (ParticleSubset::iterator iter = pset->begin();
            iter != pset->end(); 
            iter++){
