@@ -29,6 +29,7 @@ DEALINGS IN THE SOFTWARE.
 
 
 #include <CCA/Components/MPM/CohesiveZone/CohesiveZone.h>
+#include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/GeometryPiece/GeometryObject.h>
 #include <Core/Grid/Box.h>
@@ -88,11 +89,36 @@ CohesiveZone::createCohesiveZones(CZMaterial* matl,
                                   __FILE__, __LINE__);
     }
 
-    // Field for position, normal, tangential and length.
+    // needed for bulletproofing
+    vector<int> mpmMatlIndex;
+    int numMPM = d_sharedState->getNumMPMMatls();
+    
+    for(int m = 0; m < numMPM; m++){
+      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+      int dwi = mpm_matl->getDWIndex();
+      mpmMatlIndex.push_back(dwi);
+    }
+    
+     // Field for position, normal, tangential and length.
     // Everything else is assumed to be zero.
+    
     double p1,p2,p3,l4,n5,n6,n7,t8,t9,t10;
     int mt, mb;
     while(is >> p1 >> p2 >> p3 >> l4 >> n5 >> n6 >> n7 >> t8 >> t9 >> t10 >> mb >> mt){
+    
+      //__________________________________
+      // bulletproofing
+      //  the top
+      int test1 = count (mpmMatlIndex.begin(), mpmMatlIndex.end(), mb);
+      int test2 = count (mpmMatlIndex.begin(), mpmMatlIndex.end(), mt);
+      
+      if(test1 == 0 || test2 == 0 ){
+        ostringstream warn;
+        warn<<"ERROR:MPM:createCohesiveZones\n In the cohesive zone file ("+filename+ ") either the top/bottom material";
+        warn<< "(top: " << mt << " bottom: " << mb<< ") is not a MPM material ";
+        throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+      }
+      
       Point pos = Point(p1,p2,p3);
       IntVector cell_idx;
       if(patch->containsPoint(pos)){
