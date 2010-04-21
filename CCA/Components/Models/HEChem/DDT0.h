@@ -168,11 +168,16 @@ WARNING
     double d_E0;
     double d_threshold_press_JWL;    // JWL++
     double d_threshold_volFrac;
-    double d_thresholdTemp;
-    double d_thresholdPress_SB;     // Simple Burn
+    double d_thresholdTemp;          // Simple Burn
+    double d_thresholdPress_SB;      
     double d_Enthalpy;
     double d_BurnCoeff;
     double d_refPress;
+    bool d_useCrackModel;
+    double d_Gcrack;            // Crack Burning Rate Constant
+    double d_nCrack;            // Crack Burning Pressure Exponent
+    double d_crackVolThreshold; // for cracking
+
       
     bool d_is_mpm_matl;  // Is matl 0 a mpm_matl?
     double d_cv_0;      //specific heat

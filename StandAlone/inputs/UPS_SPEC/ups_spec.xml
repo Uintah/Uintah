@@ -781,11 +781,13 @@
       <BurnrateModCoef        spec="OPTIONAL DOUBLE" />
       <CondPhaseHeat          spec="OPTIONAL DOUBLE" />
       <CondUnsteadyCoef       spec="OPTIONAL DOUBLE" />
+      <CrackVolThreshold      spec="OPTIONAL DOUBLE" />
       
       <Enthalpy               spec="OPTIONAL DOUBLE" />
       <fromMaterial           spec="OPTIONAL STRING" />
       <GasPhaseHeat           spec="OPTIONAL DOUBLE" />
       <GasUnsteadyCoef        spec="OPTIONAL DOUBLE" />
+      <Gcrack                 spec="OPTIONAL DOUBLE" />
       <HeatConductGasPh       spec="OPTIONAL DOUBLE" />
       <HeatConductCondPh      spec="OPTIONAL DOUBLE" />
       <IdealGasConst          spec="OPTIONAL DOUBLE" />
@@ -793,6 +795,7 @@
       <material               spec="OPTIONAL STRING" />
 
       <MoleWeightGasPh        spec="OPTIONAL DOUBLE" />
+      <nCrack                 spec="OPTIONAL DOUBLE" />
       <PreExpCondPh           spec="OPTIONAL DOUBLE" />
       <PreExpGasPh            spec="OPTIONAL DOUBLE" />
       
@@ -873,7 +876,8 @@
       <ThresholdTemp          spec="OPTIONAL DOUBLE 'positive'" />
       <varianceMax            spec="OPTIONAL DOUBLE" /> <!-- FIXME: double? -->
       <varianceScale          spec="OPTIONAL DOUBLE" /> <!-- FIXME: double? -->
-      
+      <useCrackModel          spec="OPTIONAL BOOLEAN" />  
+     
       <IandG                  spec="OPTIONAL NO_DATA">
         <fromMaterial         spec="REQUIRED STRING" />
         <toMaterial           spec="REQUIRED STRING" />

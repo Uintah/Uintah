@@ -46,6 +46,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/ICE/ICEMaterial.h>
 #include <CCA/Components/ICE/BoundaryCond.h>
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
+#include <CCA/Components/MPM/ConstitutiveModel/ViscoScram.h>
 #include <iostream>
 #include <Core/Util/DebugStream.h>
 
@@ -145,6 +146,13 @@ void DDT0::problemSetup(GridP&, SimulationStateP& sharedState,
   d_params->require("refPressure",      d_refPress);
   d_params->require("ThresholdTemp",    d_thresholdTemp);
   d_params->require("ThresholdPressureSB",d_thresholdPress_SB);
+  d_params->getWithDefault("useCrackModel",    d_useCrackModel, false); 
+  if(d_useCrackModel)
+  {
+    d_params->require("Gcrack",           d_Gcrack);
+    d_params->getWithDefault("CrackVolThreshold",     d_crackVolThreshold, 1e-14 );
+    d_params->require("nCrack",           d_nCrack);
+  }
 
   //__________________________________
   //  define the materialSet
@@ -199,7 +207,14 @@ void DDT0::outputProblemSpec(ProblemSpecP& ps)
   model_ps->appendElement("toMaterial",          d_matl1->getName());
   model_ps->appendElement("Enthalpy",            d_Enthalpy);   
   model_ps->appendElement("BurnCoeff",           d_BurnCoeff);  
-  model_ps->appendElement("refPressure",         d_refPress);   
+  model_ps->appendElement("refPressure",         d_refPress);  
+  if(d_useCrackModel)
+  {
+    model_ps->appendElement("useCrackModel",     d_useCrackModel);
+    model_ps->appendElement("Gcrack",            d_Gcrack);
+    model_ps->appendElement("nCrack",            d_nCrack);
+    model_ps->appendElement("CrackVolThreshold",      d_crackVolThreshold);
+  }
 }
 
 //______________________________________________________________________
@@ -281,6 +296,12 @@ void DDT0::scheduleComputeModelSources(SchedulerP& sched,
   t->requires(Task::OldDW, Ilb->temp_CCLabel,     ice_matls, oms, gn);
   t->requires(Task::NewDW, Ilb->temp_CCLabel,     mpm_matls, oms, gn);
   t->requires(Task::NewDW, Ilb->vol_frac_CCLabel, all_matls, oms, gn);
+  if(d_useCrackModel)
+  {
+    ViscoScram *VS = new ViscoScram(dynamic_cast<ViscoScram *>(dynamic_cast<const MPMMaterial *>(d_matl0)->getConstitutiveModel()));
+    t->requires(Task::OldDW, Mlb->pXLabel, gn);
+    t->requires(Task::OldDW, VS->pCrackRadiusLabel, gn);
+  }
 
   //__________________________________
   // Products
@@ -346,9 +367,14 @@ void DDT0::computeModelSources(const ProcessorGroup*,
   double totalHeatReleased = 0;
   int numAllMatls = d_sharedState->getNumMatls();
 
+  // visco scram material if cracking is enabled
+  ViscoScram *VS;
+  if(d_useCrackModel)
+    VS = new ViscoScram(dynamic_cast<ViscoScram *>(dynamic_cast<const MPMMaterial *>(d_matl0)->getConstitutiveModel()));
 
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);  
+    ParticleSubset* pset = old_dw->getParticleSubset(m0, patch); 
     
     cout_doing << "Doing computeModelSources on patch "<< patch->getID()
                <<"\t\t\t\t  DDT0" << endl;
@@ -367,7 +393,10 @@ void DDT0::computeModelSources(const ProcessorGroup*,
     constCCVariable<double> rctTemp,rctRho,rctSpvol,prodRho, rctFr;
     constCCVariable<Vector> rctvel_CC;
     constNCVariable<double> NC_CCweight,rctMass_NC;
-    
+
+    // Stores level of cracking in particles
+    constParticleVariable<double> crackRad;   
+ 
     StaticArray<constCCVariable<double> > vol_frac_CC(numAllMatls);
     StaticArray<constCCVariable<double> > temp_CC(numAllMatls);
 	    
@@ -384,7 +413,10 @@ void DDT0::computeModelSources(const ProcessorGroup*,
     new_dw->get(rctSpvol,      Ilb->sp_vol_CCLabel,   m0,patch,gn, 0);
     new_dw->get(rctMass_NC,    Mlb->gMassLabel,       m0,patch,gac,1);
     new_dw->get(rctVolFrac,    Ilb->vol_frac_CCLabel, m0,patch,gn, 0);
-   
+    if(d_useCrackModel)
+      old_dw->get(crackRad,       VS->pCrackRadiusLabel, pset);
+  
+ 
     //__________________________________
     // Product Data, 
     new_dw->get(prodRho,         Ilb->rho_CCLabel,   m1,patch,gn, 0);
@@ -488,14 +520,34 @@ void DDT0::computeModelSources(const ProcessorGroup*,
           MaxMass = std::max(MaxMass, tmp);
           MinMass = std::min(MinMass, tmp); 
         }               
-          
+         
+        //__________________________________
+        // Determine if Cracking should be accounted for
+        bool crackedEnough = false;
+        double crackWidthThreshold = std::sqrt(8.0e8/std::pow(press_CC[c],2.84));
+        constParticleVariable<Point> px;
+        old_dw->get(px, Mlb->pXLabel, pset);
+        if(d_useCrackModel)
+        {
+          for(ParticleSubset::iterator iter = pset->begin(); iter != pset->end(); iter++ )
+          {
+            if((patch->getLevel()->getCellIndex(px[*iter]) == c)  && (crackRad[*iter] > crackWidthThreshold))
+            {
+              //std::cout << "Cracked enough in cell: " << c << " with crack width and threshold: " << crackRad[*iter] << " " << crackWidthThreshold << " and Pressure: " << press_CC[c] << " and temperature: " << gasTempX_FC[c]<<endl;
+              crackedEnough = true;
+              break;
+            }
+          }
+        }
+ 
         //===============================================
         //If you change the burning criteria logic you must also modify
         //CCA/Components/SwitchCriteria
         //===============================================
-        if ( (MaxMass-MinMass)/MaxMass > 0.4  &&          //--------------KNOB 1
-             (MaxMass-MinMass)/MaxMass < 1.0 &&
-              MaxMass > d_TINY_RHO){
+        if ( ((MaxMass-MinMass)/MaxMass > 0.4  &&          //--------------KNOB 1
+              (MaxMass-MinMass)/MaxMass < 1.0 &&
+               MaxMass > d_TINY_RHO) || 
+               crackedEnough ){
 
           //__________________________________
           //  Determine the temperature
@@ -517,11 +569,31 @@ void DDT0::computeModelSources(const ProcessorGroup*,
           //__________________________________
           //  Simple Burn Model
           double burnedMass = 0.0;
-          if ((Temp > d_thresholdTemp) && (press_CC[c] > d_thresholdPress_SB)) {
+          if ((press_CC[c] > d_thresholdPress_SB)) {
             // Flag for burning
             burning[c] = 1;
-            burnedMass = delT *surfArea * d_BurnCoeff 
-                       * pow((press_CC[c]/d_refPress),0.778);
+            if(Temp > d_thresholdTemp)
+            {
+              burnedMass = delT *surfArea * d_BurnCoeff 
+                         * pow((press_CC[c]/d_refPress),0.778);
+ 
+              double F = prodRho[c]/(rctRho[c]+prodRho[c]);
+              burnedMass += d_Gcrack*(1-F)*pow((press_CC[c]/d_refPress),d_nCrack);
+            }
+
+            // Special Temperature criteria for cracking
+            if(crackedEnough && Temp < d_thresholdTemp)
+            {  // if there is appreciable amount of gas above temperature use that temp
+               for (int m = 0; m < numAllMatls; m++) {
+                  if(vol_frac_CC[m][c] > d_crackVolThreshold && temp_CC[m][c] > 400 && temp_CC[m][c] > Temp )
+                    Temp = temp_CC[m][c];
+                }
+                double F = prodRho[c]/(rctRho[c]+prodRho[c]);
+                burnedMass += d_Gcrack*(1-F)*pow((press_CC[c]/d_refPress),d_nCrack);
+
+                // std::cout << "Cracked but not regularly burning. Cell: " << c << " Burned Mass: " << burnedMass << " Temperature: " << Temp << endl;
+            }
+
 
             double rctMass = rctRho[c] * cell_vol;
             if(burnedMass > rctMass){
