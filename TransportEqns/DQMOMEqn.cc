@@ -541,8 +541,6 @@ DQMOMEqn::buildTransportEqn( const ProcessorGroup* pc,
     Fdiff.initialize(0.0); 
 
     //----BOUNDARY CONDITIONS
-    // Note: BC's are set here on phi (not phiOld) because phi will be 
-    // copied to phiOld at the end of the rk sub-step.  
     // For first time step, bc's have been set in dqmomInit
     computeBCs( patch, d_eqnName, phi );
 
@@ -648,6 +646,10 @@ DQMOMEqn::solveTransportEqn( const ProcessorGroup* pc,
     double factor = d_timeIntegrator->time_factor[timeSubStep]; 
     curr_ssp_time = curr_time + factor * dt; 
     d_timeIntegrator->timeAvePhi( patch, phi, rk1_phi, timeSubStep, curr_ssp_time ); 
+
+    //----BOUNDARY CONDITIONS
+    // For first time step, bc's have been set in dqmomInit
+    computeBCs( patch, d_eqnName, phi );
 
     if (d_doClipping) 
       clipPhi( patch, phi ); 
