@@ -500,6 +500,10 @@ ScalarEqn::solveTransportEqn( const ProcessorGroup* pc,
     curr_ssp_time = curr_time + factor * dt; 
     d_timeIntegrator->timeAvePhi( patch, phi, rk1_phi, timeSubStep, curr_ssp_time ); 
 
+    //----BOUNDARY CONDITIONS
+    // must update BCs for next substep
+    computeBCs( patch, d_eqnName, phi );
+
     if (d_doClipping) 
       clipPhi( patch, phi ); 
     

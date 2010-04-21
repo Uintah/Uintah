@@ -56,7 +56,7 @@
       </Turbulence>
 
       <Properties                       spec="REQUIRED NO_DATA"
-                                          children1="ONE_OF(CHILD ColdFlowMixingModel, NewStaticMixingTable, TabPropsTable)" >
+                                          children1="ONE_OF(CHILD ColdFlowMixingModel, NewStaticMixingTable, TabProps)" >
 
         <use_mixing_model               spec="REQUIRED BOOLEAN" /> 
         <empirical_soot                 spec="OPTIONAL BOOLEAN" />
@@ -86,11 +86,11 @@
 
         <optically_thin_model_opl      spec="OPTIONAL DOUBLE" />
 
-        <TabPropsTable                  spec="OPTIONAL NO_DATA" >
-          <table_file_name              spec="REQUIRED STRING" />
+        <TabProps                       spec="OPTIONAL NO_DATA" >
+          <inputfile                    spec="REQUIRED STRING" />
           <strict_mode                  spec="OPTIONAL BOOLEAN" />
           <diagnostic_mode              spec="OPTIONAL BOOLEAN" />
-        </TabPropsTable>
+        </TabProps>
 
         <emperical_soot               spec="OPTIONAL BOOLEAN" />
         <soot_factor                  spec="OPTIONAL DOUBLE '0,100'"/>
@@ -295,6 +295,7 @@
           <addSources                   spec="OPTIONAL BOOLEAN"/>
           <conv_scheme                  spec="OPTIONAL STRING 'upwind, super_bee, central'"/> 
           <scaling_const                spec="OPTIONAL DOUBLE"/>                              
+          <use_density_guess            spec="OPTIONAL NO_DATA"/>
           <src                          spec="MULTIPLE NO_DATA" 
                                         attribute1="label REQUIRED STRING"/>
           <initialization               spec="OPTIONAL NO_DATA"
