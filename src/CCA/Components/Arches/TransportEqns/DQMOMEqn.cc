@@ -752,7 +752,7 @@ DQMOMEqn::getUnscaledValues( const ProcessorGroup* pc,
       new_dw->getModifiable(w, mywLabel, matlIndex, patch ); 
 
       // now loop over all cells
-      for (CellIterator iter=patch->getExtraCellIterator(0); !iter.done(); iter++){
+      for (CellIterator iter=patch->getCellIterator(0); !iter.done(); iter++){
   
         IntVector c = *iter;
 
