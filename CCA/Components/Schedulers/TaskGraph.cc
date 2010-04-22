@@ -67,6 +67,7 @@ using namespace Uintah;
 using namespace SCIRun;
 using namespace std;
 
+static DebugStream dbg0("TaskGraph0", false);
 static DebugStream dbg("TaskGraph", false);
 static DebugStream compdbg("FindComp", false);
 
@@ -592,10 +593,24 @@ TaskGraph::addTask(Task* task, const PatchSet* patchset,
       dbg << d_myworld->myrank() << " Killing empty task: " << *task << "\n";
   } else {
     d_tasks.push_back(task);
-    if(dbg.active()) {
-      dbg << d_myworld->myrank() << " Adding task:\n";
-      task->displayAll( dbg );
+    
+    // debugging Code
+    if(dbg0.active()) {
+      dbg0 << d_myworld->myrank() << " Adding task: ";
+      task->displayAll( dbg0 );
     }
+    
+#if 0    
+    // This snippet will find all the tasks that require a label
+    for(Task::Dependency* req = task->getRequires(); req != 0; req=req->next){
+      const VarLabel* label = req->var;
+      string name = label->getName();
+      if( name == "p.size"){
+        cout << "\n" << Parallel::getMPIRank() << "This Task Requires label p.size" << endl;
+        task->display(cout);
+      }
+    }
+#endif
   }
 }
 
