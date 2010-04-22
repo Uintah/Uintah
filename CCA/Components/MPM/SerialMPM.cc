@@ -782,8 +782,6 @@ void SerialMPM::scheduleAddCohesiveZoneForces(SchedulerP& sched,
 
   Ghost::GhostType  gan = Ghost::AroundNodes;
   t->requires(Task::OldDW, lb->pXLabel,                     cz_matls, gan,NGP);
-  t->requires(Task::OldDW, lb->pDeformationMeasureLabel,    cz_matls, gan,NGP);
-  t->requires(Task::OldDW, lb->pSizeLabel,                  cz_matls, gan,NGP);
   t->requires(Task::NewDW, lb->czLengthLabel_preReloc,      cz_matls, gan,NGP);
   t->requires(Task::NewDW, lb->czForceLabel_preReloc,       cz_matls, gan,NGP);
   t->requires(Task::NewDW, lb->czTopMatLabel_preReloc,      cz_matls, gan,NGP);
@@ -2220,11 +2218,8 @@ void SerialMPM::addCohesiveZoneForces(const ProcessorGroup*,
       constParticleVariable<Vector> czforce;
       constParticleVariable<int> czTopMat, czBotMat;
       constParticleVariable<Matrix3> pDeformationMeasure;
-      constParticleVariable<Vector> psize;
 
       old_dw->get(czx,          lb->pXLabel,                          pset);
-      //old_dw->get(psize,        lb->pSizeLabel,                       pset);
-      //old_dw->get(pDeformationMeasure, lb->pDeformationMeasureLabel,  pset);
       new_dw->get(czlength,     lb->czLengthLabel_preReloc,           pset);
       new_dw->get(czforce,      lb->czForceLabel_preReloc,            pset);
       new_dw->get(czTopMat,     lb->czTopMatLabel_preReloc,           pset);
@@ -4047,7 +4042,7 @@ void SerialMPM::updateCohesiveZones(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     printTask(patches, patch,cout_doing,
-              "Doing updateCohesiveZones\t\t\t");
+              "Doing updateCohesiveZones\t\t\t\t");
 
     // The following is adapted from "Simulation of dynamic crack growth
     // using the generalized interpolation material point (GIMP) method"
@@ -4063,8 +4058,8 @@ void SerialMPM::updateCohesiveZones(const ProcessorGroup*,
     int numMPMMatls=d_sharedState->getNumMPMMatls();
     StaticArray<constNCVariable<Vector> > gvelocity(numMPMMatls);
     for(int m = 0; m < numMPMMatls; m++){
-      MPMMaterial* cz_matl = d_sharedState->getMPMMaterial( m );
-      int dwi = cz_matl->getDWIndex();
+      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+      int dwi = mpm_matl->getDWIndex();
 
       Ghost::GhostType  gac = Ghost::AroundCells;
       new_dw->get(gvelocity[m], lb->gVelocityLabel,dwi, patch,gac,NGP);
@@ -4155,11 +4150,11 @@ void SerialMPM::updateCohesiveZones(const ProcessorGroup*,
 //        double length = sqrt(czlength[idx]);
 //        Vector size(length,length,length);
         Vector size(0.1,0.1,0.1);
-	Matrix3 defgrad;
-	defgrad.Identity();
+	 Matrix3 defgrad;
+	 defgrad.Identity();
 
         // Get the node indices that surround the cell
-	  interpolator->findCellAndWeights(czx[idx],ni,S,size,defgrad);
+        interpolator->findCellAndWeights(czx[idx],ni,S,size,defgrad);
 
         Vector velTop(0.0,0.0,0.0);
         Vector velBot(0.0,0.0,0.0);
