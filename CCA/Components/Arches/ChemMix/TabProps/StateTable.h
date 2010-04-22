@@ -37,6 +37,7 @@ DEALINGS IN THE SOFTWARE.
 #include <stdexcept>
 
 #include <CCA/Components/Arches/ChemMix/TabProps/BSpline.h>
+#include <Core/Exceptions/InvalidValue.h>
 
 #include <sci_defs/hdf5_defs.h>
 
@@ -132,7 +133,7 @@ class StateTable{
   inline double query( const BSpline * const sp,
 		       const double * indepVars ) const{
     if( sp == NULL )
-      throw std::runtime_error("ERROR: NULL pointer to BSpline in StateTable::query()");
+      throw InvalidValue("ERROR: NULL pointer to BSpline in StateTable::query()",__FILE__,__LINE__);
     return sp->value( indepVars );
   }
 
