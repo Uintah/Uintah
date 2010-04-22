@@ -32,6 +32,7 @@ DEALINGS IN THE SOFTWARE.
 #define LU_h
 
 #include <assert.h>
+#include <Core/Exceptions/InvalidValue.h>
 
 /**
  *  @class LU

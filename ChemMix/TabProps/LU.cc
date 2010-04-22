@@ -34,6 +34,9 @@ DEALINGS IN THE SOFTWARE.
 #include <stdexcept>
 
 #include <CCA/Components/Arches/ChemMix/TabProps/LU.h>
+#include <Core/Exceptions/InvalidValue.h>
+
+using namespace Uintah;
 
 //--------------------------------------------------------------------
 LU::LU( const int dim, const int bandwidth )
@@ -80,7 +83,7 @@ void
 LU::back_subs( double * rhs )
 {
   if( ! isReady_ ){
-    throw std::runtime_error( "LU::back_subs() cannot be executed until LU::decompose() has been called!" );
+    throw InvalidValue( "LU::back_subs() cannot be executed until LU::decompose() has been called!", __FILE__, __LINE__);
   }
   // AA_ now contains the LU-decomposition of the original "A" matrix.
   // rhs[0] is untouched for now since L(0,0) = 1.
