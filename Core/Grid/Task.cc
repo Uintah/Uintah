@@ -36,6 +36,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Util/FancyAssert.h>
 #include <Core/Containers/StringUtil.h>
+#include <Core/Parallel/Parallel.h>
 #include <set>
 
 
@@ -662,7 +663,7 @@ Task::doit(const ProcessorGroup* pc, const PatchSubset* patches,
 void
 Task::display( ostream & out ) const
 {
-  out << getName() << " (" << d_tasktype << "): [";
+  out <<  Parallel::getMPIRank()<< " " << getName() << " (" << d_tasktype << "): [";
   out << *patch_set;
   out << ", ";
   out << *matl_set;
@@ -808,11 +809,11 @@ Task::displayAll(ostream& out) const
    display(out);
    out << '\n';
    for(Task::Dependency* req = req_head; req != 0; req = req->next)
-      out << "  requires: " << *req << '\n';
+      out << Parallel::getMPIRank() << "  requires: " << *req << '\n';
    for(Task::Dependency* comp = comp_head; comp != 0; comp = comp->next)
-      out << "  computes: " << *comp << '\n';
+      out << Parallel::getMPIRank() <<"  computes: " << *comp << '\n';
    for(Task::Dependency* mod = mod_head; mod != 0; mod = mod->next)
-      out << "  modifies: " << *mod << '\n';
+      out << Parallel::getMPIRank() <<"  modifies: " << *mod << '\n';
 }
 
 void Task::setMapping(int dwmap[TotalDWs])
