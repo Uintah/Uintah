@@ -1877,6 +1877,20 @@ DQMOM::calculateMoments( const ProcessorGroup* pc,
             for( unsigned int j = 0; j < N_xi; ++j ) {
               double base = (weightedAbscissas[j*(N_)+alpha]/weights[alpha])*(d_weighted_abscissa_scaling_constants[j*(N_)+alpha]); // don't need 1/d_weight_scaling_constant 
                                                                                                                                     // because it's already in the weighted abscissa!
+              // calculating moments about the mean... so find the mean
+              if( thisMoment[j] != 0 && thisMoment[j] != 1 ) {
+                double mean = 0.0;
+                double mean_numerator = 0.0;
+                double mean_divisor = 0.0;
+                for( unsigned int alpha2 = 0; alpha2 < N_; ++alpha2 ) {
+                  mean_numerator += weightedAbscissas[j*(N_)+alpha2]*d_weighted_abscissa_scaling_constants[j*(N_)+alpha2];
+                  mean_divisor += weights[alpha2];
+                }
+                if (mean_divisor != 0 ) {
+                  mean = mean_numerator/mean_divisor;
+                }
+                base -= mean;
+              }
               double exponent = thisMoment[j];
               running_product *= pow( base, exponent );
             }
