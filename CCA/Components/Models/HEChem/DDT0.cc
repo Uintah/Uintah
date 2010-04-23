@@ -29,26 +29,28 @@ DEALINGS IN THE SOFTWARE.
 
 
 
-#include <CCA/Components/Models/HEChem/DDT0.h>
+
+#include <CCA/Components/ICE/BoundaryCond.h>
+#include <CCA/Components/ICE/ICEMaterial.h>
 #include <CCA/Components/Models/HEChem/Common.h>
+#include <CCA/Components/Models/HEChem/DDT0.h>
+#include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <CCA/Ports/Scheduler.h>
-#include <Core/ProblemSpec/ProblemSpec.h>
-#include <Core/Grid/Variables/CellIterator.h>
-#include <Core/Grid/Variables/CCVariable.h>
+#include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/Level.h>
 #include <Core/Grid/Material.h>
 #include <Core/Grid/SimulationState.h>
+#include <Core/Grid/Variables/CCVariable.h>
+#include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Labels/ICELabel.h>
-#include <Core/Labels/MPMLabel.h>
 #include <Core/Labels/MPMICELabel.h>
+#include <Core/Labels/MPMLabel.h>
 #include <Core/Parallel/Parallel.h>
-#include <CCA/Components/ICE/ICEMaterial.h>
-#include <CCA/Components/ICE/BoundaryCond.h>
-#include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
-#include <CCA/Components/MPM/ConstitutiveModel/ViscoScram.h>
-#include <iostream>
+#include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Util/DebugStream.h>
+#include <iostream>
+
 
 using namespace Uintah;
 using namespace std;
@@ -147,11 +149,19 @@ void DDT0::problemSetup(GridP&, SimulationStateP& sharedState,
   d_params->require("ThresholdTemp",    d_thresholdTemp);
   d_params->require("ThresholdPressureSB",d_thresholdPress_SB);
   d_params->getWithDefault("useCrackModel",    d_useCrackModel, false); 
-  if(d_useCrackModel)
-  {
+  
+  if(d_useCrackModel){
     d_params->require("Gcrack",           d_Gcrack);
     d_params->getWithDefault("CrackVolThreshold",     d_crackVolThreshold, 1e-14 );
     d_params->require("nCrack",           d_nCrack);
+      
+    pCrackRadiusLabel = VarLabel::find("p.crackRad");
+    if(!pCrackRadiusLabel){
+      ostringstream msg;
+      msg << "\n ERROR:Model:DDT0: The constitutive model for the MPM reactant must be visco_scram in order to burn in cracks. \n";
+      msg << " No other constitutive models are currently supported "; 
+      throw ProblemSetupException(msg.str(),__FILE__, __LINE__);
+    }
   }
 
   //__________________________________
@@ -208,12 +218,11 @@ void DDT0::outputProblemSpec(ProblemSpecP& ps)
   model_ps->appendElement("Enthalpy",            d_Enthalpy);   
   model_ps->appendElement("BurnCoeff",           d_BurnCoeff);  
   model_ps->appendElement("refPressure",         d_refPress);  
-  if(d_useCrackModel)
-  {
+  if(d_useCrackModel){
     model_ps->appendElement("useCrackModel",     d_useCrackModel);
     model_ps->appendElement("Gcrack",            d_Gcrack);
     model_ps->appendElement("nCrack",            d_nCrack);
-    model_ps->appendElement("CrackVolThreshold",      d_crackVolThreshold);
+    model_ps->appendElement("CrackVolThreshold", d_crackVolThreshold);
   }
 }
 
@@ -296,11 +305,9 @@ void DDT0::scheduleComputeModelSources(SchedulerP& sched,
   t->requires(Task::OldDW, Ilb->temp_CCLabel,     ice_matls, oms, gn);
   t->requires(Task::NewDW, Ilb->temp_CCLabel,     mpm_matls, oms, gn);
   t->requires(Task::NewDW, Ilb->vol_frac_CCLabel, all_matls, oms, gn);
-  if(d_useCrackModel)
-  {
-    ViscoScram *VS = new ViscoScram(dynamic_cast<ViscoScram *>(dynamic_cast<const MPMMaterial *>(d_matl0)->getConstitutiveModel()));
-    t->requires(Task::OldDW, Mlb->pXLabel, gn);
-    t->requires(Task::OldDW, VS->pCrackRadiusLabel, gn);
+  if(d_useCrackModel){
+    t->requires(Task::OldDW, Mlb->pXLabel,      mpm_matls,  gn);
+    t->requires(Task::OldDW, pCrackRadiusLabel, react_matl, gn);
   }
 
   //__________________________________
@@ -367,11 +374,6 @@ void DDT0::computeModelSources(const ProcessorGroup*,
   double totalHeatReleased = 0;
   int numAllMatls = d_sharedState->getNumMatls();
 
-  // visco scram material if cracking is enabled
-  ViscoScram *VS;
-  if(d_useCrackModel)
-    VS = new ViscoScram(dynamic_cast<ViscoScram *>(dynamic_cast<const MPMMaterial *>(d_matl0)->getConstitutiveModel()));
-
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);  
     ParticleSubset* pset = old_dw->getParticleSubset(m0, patch); 
@@ -413,9 +415,9 @@ void DDT0::computeModelSources(const ProcessorGroup*,
     new_dw->get(rctSpvol,      Ilb->sp_vol_CCLabel,   m0,patch,gn, 0);
     new_dw->get(rctMass_NC,    Mlb->gMassLabel,       m0,patch,gac,1);
     new_dw->get(rctVolFrac,    Ilb->vol_frac_CCLabel, m0,patch,gn, 0);
-    if(d_useCrackModel)
-      old_dw->get(crackRad,       VS->pCrackRadiusLabel, pset);
-  
+    if(d_useCrackModel){
+      old_dw->get(crackRad,    pCrackRadiusLabel, pset);
+    }
  
     //__________________________________
     // Product Data, 
@@ -527,12 +529,9 @@ void DDT0::computeModelSources(const ProcessorGroup*,
         double crackWidthThreshold = std::sqrt(8.0e8/std::pow(press_CC[c],2.84));
         constParticleVariable<Point> px;
         old_dw->get(px, Mlb->pXLabel, pset);
-        if(d_useCrackModel)
-        {
-          for(ParticleSubset::iterator iter = pset->begin(); iter != pset->end(); iter++ )
-          {
-            if((patch->getLevel()->getCellIndex(px[*iter]) == c)  && (crackRad[*iter] > crackWidthThreshold))
-            {
+        if(d_useCrackModel){
+          for(ParticleSubset::iterator iter = pset->begin(); iter != pset->end(); iter++ ){
+            if((patch->getLevel()->getCellIndex(px[*iter]) == c)  && (crackRad[*iter] > crackWidthThreshold)) {
               //std::cout << "Cracked enough in cell: " << c << " with crack width and threshold: " << crackRad[*iter] << " " << crackWidthThreshold << " and Pressure: " << press_CC[c] << " and temperature: " << gasTempX_FC[c]<<endl;
               crackedEnough = true;
               break;
