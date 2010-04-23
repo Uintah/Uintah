@@ -74,11 +74,6 @@ DEALINGS IN THE SOFTWARE.
 #include <cstdio>
 #include <cstring>
 
-//#define WAYNE_DEBUG
-
-#ifdef WAYNE_DEBUG
-int totalGridAlloc = 0;
-#endif
 
 using std::cerr;
 using std::string;
@@ -179,17 +174,11 @@ bool OnDemandDataWarehouse::isFinalized() const
 
 void OnDemandDataWarehouse::finalize()
 {
-  d_lock.writeLock();
+   d_lock.writeLock();
 
    d_varDB.cleanForeign();
-   d_finalized=true;
-
-#ifdef WAYNE_DEBUG   
-   cerr << "Total Grid alloc: " << totalGridAlloc << "\n";
-   totalGridAlloc = 0;
-#endif
-   
-  d_lock.writeUnlock();
+   d_finalized=true;   
+   d_lock.writeUnlock();
 }
 
 void OnDemandDataWarehouse::unfinalize()
@@ -1381,15 +1370,9 @@ allocateTemporary(GridVariableBase& var, const Patch* patch,
   Patch::VariableBasis basis = Patch::translateTypeToBasis(var.virtualGetTypeDescription()->getType(), false);
   Patch::getGhostOffsets(var.virtualGetTypeDescription()->getType(), gtype,
 			 numGhostCells, lowOffset, highOffset);
-  patch->computeExtents(basis, boundaryLayer, lowOffset, highOffset,
-			lowIndex, highIndex);
+                      
+  patch->computeExtents(basis, boundaryLayer, lowOffset, highOffset,lowIndex, highIndex);
 
-#ifdef WAYNE_DEBUG
-  IntVector diff = highIndex - lowIndex;
-  int allocSize = diff.x() * diff.y() * diff.z();
-  totalGridAlloc += allocSize;
-  cerr << "Allocate temporary: " << lowIndex << " - " << highIndex << " = " << allocSize << "\n";
-#endif
   var.allocate(lowIndex, highIndex);
 }
 
@@ -1468,15 +1451,6 @@ allocateAndPut(GridVariableBase& var, const VarLabel* label,
                                       superLowIndex, superHighIndex);
 
   ASSERT(superPatchGroup != 0);
-
-#ifdef WAYNE_DEBUG
-  IntVector diff = superHighIndex - superLowIndex;
-  int allocSize = diff.x() * diff.y() * diff.z();
-  //totalGridAlloc += allocSize;
-  cerr << d_myworld->myrank() << " Allocate " << label->getName() << ", matl " << matlIndex 
-       << ": " << superLowIndex << " - " << superHighIndex << " = " 
-       << allocSize << "\n";  
-#endif
   
   var.allocate(superLowIndex, superHighIndex);
 
