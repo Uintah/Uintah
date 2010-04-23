@@ -149,6 +149,8 @@ WARNING
     const VarLabel* totalMassConvertedLabel;
     const VarLabel* detonatingLabel;
 
+    const VarLabel* pCrackRadiusLabel;
+    
     ProblemSpecP d_prob_spec;
     ProblemSpecP d_params;
     const Material* d_matl0;
