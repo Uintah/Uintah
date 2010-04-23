@@ -1289,8 +1289,8 @@ OnDemandDataWarehouse::put(ParticleVariableBase& var,
      SCI_THROW(InternalError("ParticleVariable cannot use put with ghost cells", __FILE__, __LINE__));
    int matlIndex = pset->getMatlIndex();
 
-  dbg << "Putting: " << *label << " MI: " << matlIndex << " patch: " 
-       << *patch << " into DW: " << d_generation << "\n";
+  dbg << d_myworld->myrank() << " Putting: " << *label << " MI: " << matlIndex << " patch: " 
+       << *patch << " \t\t into DW: " << d_generation << "\n";
 
   d_lock.writeLock();   
   checkPutAccess(label, matlIndex, patch, replace);
@@ -2290,6 +2290,7 @@ OnDemandDataWarehouse::checkGetAccess(const VarLabel* label,
     for (list<RunningTaskInfo>::iterator iter = runningTasks->begin();
         iter != runningTasks->end(); iter++) {
       RunningTaskInfo& runningTaskInfo = *iter;
+      
       //   RunningTaskInfo& runningTaskInfo = runningTasks->back();
       const Task* runningTask = runningTaskInfo.d_task;
       if (runningTask == 0) {
@@ -2299,35 +2300,31 @@ OnDemandDataWarehouse::checkGetAccess(const VarLabel* label,
 
       IntVector lowOffset, highOffset;
       Patch::getGhostOffsets(label->typeDescription()->getType(), gtype,
-          numGhostCells, lowOffset, highOffset);
+                             numGhostCells, lowOffset, highOffset);
 
       VarAccessMap& runningTaskAccesses = runningTaskInfo.d_accesses;
 
       map<VarLabelMatl<Patch>, AccessInfo>::iterator findIter;
-      findIter = runningTaskAccesses.find(VarLabelMatl<Patch>(label, matlIndex,
-            patch));
+      findIter = runningTaskAccesses.find(VarLabelMatl<Patch>(label, matlIndex, patch));
+      
 
       if (!hasGetAccess(runningTask, label, matlIndex, patch, lowOffset,highOffset,&runningTaskInfo) &&
           !hasPutAccess(runningTask, label, matlIndex, patch, true) &&
-          !hasPutAccess(runningTask, label, matlIndex, patch, false)
-         ) {
+          !hasPutAccess(runningTask, label, matlIndex, patch, false)) {
 
         // If it was accessed by the current task already, then it should
         // have get access (i.e. if you put it in, you should be able to get it
         // right back out).
         if (findIter != runningTaskAccesses.end() &&
-            lowOffset == IntVector(0, 0, 0) && 
+            lowOffset  == IntVector(0, 0, 0) && 
             highOffset == IntVector(0, 0, 0)){
           // allow non ghost cell get if any access (get, put, or modify) is allowed
           //cout << "allowing non-ghost cell access\n";
           return;
         }
-        if (runningTask == 0 ||
-            !(
-              string(runningTask->getName()) == "Relocate::relocateParticles" ||
-              string(runningTask->getName()) == "SchedulerCommon::copyDataToNewGrid"
-             )
-           ){
+        
+        if (runningTask == 0 ||!(string(runningTask->getName()) == "Relocate::relocateParticles" ||
+                                 string(runningTask->getName()) == "SchedulerCommon::copyDataToNewGrid")){
           string has;
           switch (getWhichDW(&runningTaskInfo))
           {
@@ -2347,12 +2344,15 @@ OnDemandDataWarehouse::checkGetAccess(const VarLabel* label,
               has="UnknownDW";
           }
           has += " datawarehouse get";
+          
           if (numGhostCells > 0) {
             ostringstream ghost_str;
             ghost_str << " for " << numGhostCells << " layer";
-            if (numGhostCells > 1) ghost_str << "s";
-            ghost_str << " of ghosts around "
-              << Ghost::getGhostTypeName(gtype);
+            
+            if (numGhostCells > 1){
+             ghost_str << "s";
+            }
+            ghost_str << " of ghosts around " << Ghost::getGhostTypeName(gtype);
             has += ghost_str.str();
           }     
           string needs = "task requires";
@@ -2360,11 +2360,11 @@ OnDemandDataWarehouse::checkGetAccess(const VarLabel* label,
           SCI_THROW(DependencyException(runningTask, label, matlIndex, patch,
                 has, needs, __FILE__, __LINE__));
 #else
-          if ( d_myworld->myrank()  == 0 )
-            cout << DependencyException::makeMessage(runningTask, label, matlIndex, patch,
-               has, needs) << endl;
-          //WAIT_FOR_DEBUGGER();
-#endif
+          if ( d_myworld->myrank()  == 0 ){
+            cout << DependencyException::makeMessage(runningTask, label, matlIndex, patch,has, needs) << endl;
+            //WAIT_FOR_DEBUGGER();
+          }
+#endif    
         }
       } else {
         // access granted
@@ -2375,19 +2375,21 @@ OnDemandDataWarehouse::checkGetAccess(const VarLabel* label,
           accessInfo.encompassOffsets(lowOffset, highOffset);
 
           int ID = 0;
-          if( patch ) ID = patch->getID();
+          if( patch ){ 
+            ID = patch->getID();
+          }
           string varname = "noname";
-          if( label ) varname = label->getName();
-
-          dbg << "Task running is: " << runningTask->getName() << "\n";
-          dbg << "data " << varname << " on patch " << ID
-            << " and matl: " << matlIndex << " has been gotten\n";
+          if( label ){
+            varname = label->getName();
+          }
+          dbg << d_myworld->myrank() << " Task running is: " << runningTask->getName();
+          dbg<< "\t "<< varname << " \t\t on patch " << ID << " and matl: " << matlIndex << " has been gotten\n";
         } else {
           findIter->second.encompassOffsets(lowOffset, highOffset);
         }
       }
     }
-  }
+  }  // running task loop
 #endif
 #endif
 }
