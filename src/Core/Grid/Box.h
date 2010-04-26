@@ -92,6 +92,10 @@ using namespace SCIRun;
       }
 
       UINTAHSHARE bool overlaps(const Box&, double epsilon=1.e-6) const;
+      
+      
+      // Do not use this for determining if a point is within a patch
+      // The logic is incorrect if there are multiple patches
       UINTAHSHARE bool contains(const Point& p) const {
          return p.x() >= d_lower.x() && p.y() >= d_lower.y()
             && p.z() >= d_lower.z() && p.x() < d_upper.x()
