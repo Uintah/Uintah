@@ -1152,39 +1152,46 @@ OnDemandDataWarehouse::get(constParticleVariableBase& constVar,
 
   // a null patch means that there is no patch center for the pset
   // (probably on an AMR copy data timestep)
-  if((patch && pset->getLow() == patch->getExtraCellLowIndex() && pset->getHigh() == patch->getExtraCellHighIndex()) ||
-     pset->getNeighbors().size() == 0){
+  if((patch && 
+      pset->getLow()  == patch->getExtraCellLowIndex()   && 
+      pset->getHigh() == patch->getExtraCellHighIndex()) ||
+      pset->getNeighbors().size() == 0){
     get(constVar, label, matlIndex, patch);
   }
   else {
-   d_lock.readLock();
+    d_lock.readLock();
     checkGetAccess(label, matlIndex, patch);
     ParticleVariableBase* var = constVar.cloneType();
 
-    const vector<const Patch*>& neighbors = pset->getNeighbors();
+    const vector<const Patch*>& neighborPatches     = pset->getNeighbors();
     const vector<ParticleSubset*>& neighbor_subsets = pset->getNeighborSubsets();
 
-    vector<ParticleVariableBase*> neighborvars(neighbors.size());
-    for(int i=0;i<(int)neighbors.size();i++){
-      const Patch* neighbor=neighbors[i];
-      if(!d_varDB.exists(label, matlIndex, neighbors[i]))
-	SCI_THROW(UnknownVariable(label->getName(), getID(), neighbor, matlIndex,
-			      neighbor == patch?"on patch":"on neighbor", __FILE__, __LINE__));
+    vector<ParticleVariableBase*> neighborvars(neighborPatches.size());
+    
+    for(int i=0;i<(int)neighborPatches.size();i++){
+      const Patch* neighborPatch=neighborPatches[i];
+      
+      if(!d_varDB.exists(label, matlIndex, neighborPatches[i])){
+	 SCI_THROW(UnknownVariable(label->getName(), getID(), neighborPatch, matlIndex,
+			             neighborPatch == patch?"on patch":"on neighbor", __FILE__, __LINE__));
+      }
+      
       neighborvars[i] = var->cloneType();
 
-      d_varDB.get(label, matlIndex, neighbors[i], *neighborvars[i]);
+      d_varDB.get(label, matlIndex, neighborPatch, *neighborvars[i]);
     }
 
     // Note that when the neighbors are virtual patches (i.e. periodic
     // boundaries), then if var is a ParticleVariable<Point>, the points
     // of neighbors will be translated by its virtualOffset.
     
-    var->gather(pset, neighbor_subsets, neighborvars, neighbors);
+    var->gather(pset, neighbor_subsets, neighborvars, neighborPatches);
     
     constVar = *var;
     
-    for (int i=0;i<(int)neighbors.size();i++)
+    for (int i=0;i<(int)neighborPatches.size();i++){
       delete neighborvars[i];
+    }
     delete var;
     
    d_lock.readUnlock();    
