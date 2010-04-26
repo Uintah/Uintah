@@ -74,6 +74,7 @@ using namespace SCIRun;
                                        const vector<const Patch*>& srcPatches,
                                        particleIndex extra)
   {
+    
     if(d_pdata && d_pdata->removeReference())
       delete d_pdata;
     if(d_pset && d_pset->removeReference())
@@ -83,46 +84,67 @@ using namespace SCIRun;
     // a null patch means that there is no patch center for the pset
     // (probably on an AMR copy data timestep)
     const Patch* patch = pset->getPatch();
-    if (!patch)
+    if (!patch){
       patch = srcPatches[0];
-
-    IntVector lowIndex(pset->getLow()), highIndex(pset->getHigh());
-    Box box = patch->getLevel()->getBox(lowIndex, highIndex);
+    }
 #endif
+    
+    IntVector lowIndex(pset->getLow()), highIndex(pset->getHigh());
     
     d_pset = pset;
     pset->addReference();
-    d_pdata=scinew ParticleData<Point>(pset->numParticles());
+    
+    d_pdata = scinew ParticleData<Point>(pset->numParticles());
     d_pdata->addReference();
+    
     ASSERTEQ(subsets.size(), srcs.size());
-    ParticleSubset::iterator dstiter = pset->begin();
+    ParticleSubset::iterator dst_iter = pset->begin();
+    
     for(int i=0;i<(int)subsets.size();i++){
-      ParticleVariable<Point>* srcptr =
-        dynamic_cast<ParticleVariable<Point>*>(srcs[i]);
-      if(!srcptr)
+      ParticleVariable<Point>* srcptr = dynamic_cast<ParticleVariable<Point>*>(srcs[i]);
+      
+      if(!srcptr){
         SCI_THROW(TypeMismatchException("Type mismatch in ParticleVariable::gather", __FILE__, __LINE__));
+      }
+      
       ParticleVariable<Point>& src = *srcptr;
       ParticleSubset* subset = subsets[i];
-      const Patch* srcPatch = srcPatches[i];
+      const Patch* srcPatch  = srcPatches[i];
+      
+      // no or real srcPatch
       if (srcPatch == 0 || !srcPatch->isVirtual()) {
-        for(ParticleSubset::iterator srciter = subset->begin();
-            srciter != subset->end(); srciter++){
-          (*this)[*dstiter] = src[*srciter];
-          ASSERT(box.contains(src[*srciter]));    
-          dstiter++;
+        for(ParticleSubset::iterator src_iter = subset->begin(); src_iter != subset->end(); src_iter++){
+        
+          (*this)[*dst_iter] = src[*src_iter];         
+      
+          IntVector ptIndex =  patch->getLevel()->getCellIndex(src[*src_iter]);
+          bool doesIntersect = (lowIndex.x() <= ptIndex.x() && ptIndex.x() <= highIndex.x()) &&
+                               (lowIndex.y() <= ptIndex.y() && ptIndex.y() <= highIndex.y()) &&
+                               (lowIndex.z() <= ptIndex.z() && ptIndex.z() <= highIndex.z()); 
+
+          ASSERT( doesIntersect);    
+          dst_iter++;
         }
       }
       else if (subset->numParticles() != 0) {
         Vector offset = srcPatch->getVirtualOffsetVector();
-        for(ParticleSubset::iterator srciter = subset->begin();
-            srciter != subset->end(); srciter++){
-          (*this)[*dstiter] = src[*srciter] + offset;
-          ASSERT(box.contains((*this)[*dstiter]));
-          dstiter++;
+      
+        for(ParticleSubset::iterator src_iter = subset->begin();
+            src_iter != subset->end(); src_iter++){
+            
+          (*this)[*dst_iter] = src[*src_iter] + offset;
+          
+          
+          IntVector ptIndex =  patch->getLevel()->getCellIndex((*this)[*dst_iter]);
+          bool doesIntersect = (lowIndex.x() <= ptIndex.x() && ptIndex.x() <= highIndex.x()) &&
+                               (lowIndex.y() <= ptIndex.y() && ptIndex.y() <= highIndex.y()) &&
+                               (lowIndex.z() <= ptIndex.z() && ptIndex.z() <= highIndex.z());          
+          ASSERT( doesIntersect);
+          dst_iter++;
         }
       }
-    }
-    ASSERTEQ(dstiter+extra,pset->end());    
+    }  // subset loop
+    ASSERTEQ(dst_iter+extra,pset->end());    
   }
 
 
