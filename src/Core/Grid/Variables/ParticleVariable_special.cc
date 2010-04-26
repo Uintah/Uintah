@@ -80,14 +80,12 @@ using namespace SCIRun;
     if(d_pset && d_pset->removeReference())
       delete d_pset;
 
-#if SCI_ASSERTION_LEVEL >= 2
     // a null patch means that there is no patch center for the pset
     // (probably on an AMR copy data timestep)
     const Patch* patch = pset->getPatch();
     if (!patch){
       patch = srcPatches[0];
     }
-#endif
     
     IntVector lowIndex(pset->getLow()), highIndex(pset->getHigh());
     
