@@ -387,6 +387,7 @@ void DDT0::computeModelSources(const ProcessorGroup*,
     CCVariable<double> energy_src_0, energy_src_1;
     CCVariable<double> sp_vol_src_0, sp_vol_src_1;
     CCVariable<double> onSurface, surfaceTemp;
+    CCVariable<int>    crackedEnough;
     CCVariable<double> Fr;
     CCVariable<double> delF;
     CCVariable<double> burning, detonating;
@@ -417,8 +418,7 @@ void DDT0::computeModelSources(const ProcessorGroup*,
     new_dw->get(rctMass_NC,    Mlb->gMassLabel,       m0,patch,gac,1);
     new_dw->get(rctVolFrac,    Ilb->vol_frac_CCLabel, m0,patch,gn, 0);
     if(d_useCrackModel){
-      old_dw->get(crackRad,    pCrackRadiusLabel, pset);  
-      old_dw->get(px,          Mlb->pXLabel,      pset);
+      old_dw->get(crackRad,    pCrackRadiusLabel, pset); 
     }
  
     //__________________________________
@@ -461,11 +461,27 @@ void DDT0::computeModelSources(const ProcessorGroup*,
     new_dw->allocateAndPut(onSurface,  DDT0::onSurfaceLabel,   m0, patch);
     new_dw->allocateAndPut(surfaceTemp,DDT0::surfaceTempLabel, m0, patch);
     
+    new_dw->allocateTemporary(crackedEnough, patch);
+    
     Fr.initialize(0.);
     delF.initialize(0.);
     burning.initialize(0.);
     detonating.initialize(0.);
-
+    crackedEnough.initialize(0);
+    
+    // determing which cells have a crack radius > threshold
+    if(d_useCrackModel){
+      for(ParticleSubset::iterator iter = pset->begin(); iter != pset->end(); iter++ ){
+        IntVector c = level->getCellIndex(px[*iter]);
+        
+        double crackWidthThreshold = sqrt(8.0e8/pow(press_CC[c],2.84));
+        
+        if(crackRad[*iter] > crackWidthThreshold) {
+          crackedEnough[c] = 1;
+        }
+      }
+    }
+    
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m0);
     double cv_rct = mpm_matl->getSpecificHeat();
          
@@ -525,25 +541,6 @@ void DDT0::computeModelSources(const ProcessorGroup*,
           MinMass = std::min(MinMass, tmp); 
         }               
          
-        //__________________________________
-        // Determine if Cracking should be accounted for
-        bool crackedEnough = false;
-
-        if(d_useCrackModel){
-
-          cout << " Joseph, please see me.  -Todd" << endl;
-          
-          double crackWidthThreshold = sqrt(8.0e8/pow(press_CC[c],2.84));
-        
-          for(ParticleSubset::iterator iter = pset->begin(); iter != pset->end(); iter++ ){
-            if((patch->getLevel()->getCellIndex(px[*iter]) == c)  && (crackRad[*iter] > crackWidthThreshold)) {
-              //std::cout << "Cracked enough in cell: " << c << " with crack width and threshold: " << crackRad[*iter] << " " << crackWidthThreshold << " and Pressure: " << press_CC[c] << " and temperature: " << gasTempX_FC[c]<<endl;
-              crackedEnough = true;
-              break;
-            }
-          }
-        }
- 
         //===============================================
         //If you change the burning criteria logic you must also modify
         //CCA/Components/SwitchCriteria
@@ -551,7 +548,7 @@ void DDT0::computeModelSources(const ProcessorGroup*,
         if ( ((MaxMass-MinMass)/MaxMass > 0.4  &&          //--------------KNOB 1
               (MaxMass-MinMass)/MaxMass < 1.0 &&
                MaxMass > d_TINY_RHO) || 
-               crackedEnough ){
+               crackedEnough[c] ){
 
           //__________________________________
           //  Determine the temperature
@@ -586,11 +583,12 @@ void DDT0::computeModelSources(const ProcessorGroup*,
             }
 
             // Special Temperature criteria for cracking
-            if(crackedEnough && Temp < d_thresholdTemp){  
+            if(crackedEnough[c] && Temp < d_thresholdTemp){  
                // if there is appreciable amount of gas above temperature use that temp
                for (int m = 0; m < numAllMatls; m++) {
-                  if(vol_frac_CC[m][c] > d_crackVolThreshold && temp_CC[m][c] > 400 && temp_CC[m][c] > Temp )
+                  if(vol_frac_CC[m][c] > d_crackVolThreshold && temp_CC[m][c] > 400 && temp_CC[m][c] > Temp ){
                     Temp = temp_CC[m][c];
+                  }
                 }
                 double F = prodRho[c]/(rctRho[c]+prodRho[c]);
                 burnedMass += d_Gcrack*(1-F)*pow((press_CC[c]/d_refPress),d_nCrack);
