@@ -395,6 +395,7 @@ void DDT0::computeModelSources(const ProcessorGroup*,
     constCCVariable<double> rctTemp,rctRho,rctSpvol,prodRho, rctFr;
     constCCVariable<Vector> rctvel_CC;
     constNCVariable<double> NC_CCweight,rctMass_NC;
+    constParticleVariable<Point> px;
 
     // Stores level of cracking in particles
     constParticleVariable<double> crackRad;   
@@ -416,7 +417,8 @@ void DDT0::computeModelSources(const ProcessorGroup*,
     new_dw->get(rctMass_NC,    Mlb->gMassLabel,       m0,patch,gac,1);
     new_dw->get(rctVolFrac,    Ilb->vol_frac_CCLabel, m0,patch,gn, 0);
     if(d_useCrackModel){
-      old_dw->get(crackRad,    pCrackRadiusLabel, pset);
+      old_dw->get(crackRad,    pCrackRadiusLabel, pset);  
+      old_dw->get(px,          Mlb->pXLabel,      pset);
     }
  
     //__________________________________
@@ -526,10 +528,13 @@ void DDT0::computeModelSources(const ProcessorGroup*,
         //__________________________________
         // Determine if Cracking should be accounted for
         bool crackedEnough = false;
-        double crackWidthThreshold = std::sqrt(8.0e8/std::pow(press_CC[c],2.84));
-        constParticleVariable<Point> px;
-        old_dw->get(px, Mlb->pXLabel, pset);
+
         if(d_useCrackModel){
+
+          cout << " Joseph, please see me.  -Todd" << endl;
+          
+          double crackWidthThreshold = sqrt(8.0e8/pow(press_CC[c],2.84));
+        
           for(ParticleSubset::iterator iter = pset->begin(); iter != pset->end(); iter++ ){
             if((patch->getLevel()->getCellIndex(px[*iter]) == c)  && (crackRad[*iter] > crackWidthThreshold)) {
               //std::cout << "Cracked enough in cell: " << c << " with crack width and threshold: " << crackRad[*iter] << " " << crackWidthThreshold << " and Pressure: " << press_CC[c] << " and temperature: " << gasTempX_FC[c]<<endl;
