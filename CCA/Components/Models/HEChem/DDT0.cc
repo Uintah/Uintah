@@ -418,6 +418,7 @@ void DDT0::computeModelSources(const ProcessorGroup*,
     new_dw->get(rctMass_NC,    Mlb->gMassLabel,       m0,patch,gac,1);
     new_dw->get(rctVolFrac,    Ilb->vol_frac_CCLabel, m0,patch,gn, 0);
     if(d_useCrackModel){
+      old_dw->get(px,          Mlb->pXLabel,      pset);
       old_dw->get(crackRad,    pCrackRadiusLabel, pset); 
     }
  
