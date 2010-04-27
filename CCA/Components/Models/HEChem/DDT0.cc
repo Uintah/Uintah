@@ -301,18 +301,18 @@ void DDT0::scheduleComputeModelSources(SchedulerP& sched,
   //__________________________________
   // Requires
   //__________________________________
-  t->requires(Task::OldDW, mi->delT_Label,       level.get_rep());
+  t->requires(Task::OldDW, mi->delT_Label,        level.get_rep());
   t->requires(Task::OldDW, Ilb->temp_CCLabel,     ice_matls, oms, gn);
   t->requires(Task::NewDW, Ilb->temp_CCLabel,     mpm_matls, oms, gn);
   t->requires(Task::NewDW, Ilb->vol_frac_CCLabel, all_matls, oms, gn);
   if(d_useCrackModel){
-    t->requires(Task::OldDW, Mlb->pXLabel,      mpm_matls,  gn);
-    t->requires(Task::OldDW, pCrackRadiusLabel, react_matl, gn);
+    t->requires(Task::OldDW, Mlb->pXLabel,        mpm_matls,  gn);
+    t->requires(Task::OldDW, pCrackRadiusLabel,   react_matl, gn);
   }
 
   //__________________________________
   // Products
-  t->requires(Task::NewDW,  Ilb->rho_CCLabel,         prod_matl, gn); 
+  t->requires(Task::NewDW,  Ilb->rho_CCLabel,         prod_matl,   gn); 
   t->requires(Task::NewDW,  Ilb->press_equil_CCLabel, d_one_matl,  gn);
   t->requires(Task::OldDW,  MIlb->NC_CCweightLabel,   d_one_matl,  gac, 1);
 
@@ -392,9 +392,9 @@ void DDT0::computeModelSources(const ProcessorGroup*,
     CCVariable<double> burning, detonating;
 
     constCCVariable<double> press_CC, cv_reactant, rctVolFrac;
-    constCCVariable<double> rctTemp,rctRho,rctSpvol,prodRho, rctFr;
+    constCCVariable<double> rctTemp, rctRho, rctSpvol, prodRho, rctFr;
     constCCVariable<Vector> rctvel_CC;
-    constNCVariable<double> NC_CCweight,rctMass_NC;
+    constNCVariable<double> NC_CCweight, rctMass_NC;
     constParticleVariable<Point> px;
 
     // Stores level of cracking in particles
@@ -575,9 +575,9 @@ void DDT0::computeModelSources(const ProcessorGroup*,
           double burnedMass = 0.0;
           if ((press_CC[c] > d_thresholdPress_SB)) {
             // Flag for burning
-            burning[c] = 1;
-            if(Temp > d_thresholdTemp)
-            {
+            
+            if(Temp > d_thresholdTemp){
+              burning[c] = 1;
               burnedMass = delT *surfArea * d_BurnCoeff 
                          * pow((press_CC[c]/d_refPress),0.778);
  
@@ -586,8 +586,8 @@ void DDT0::computeModelSources(const ProcessorGroup*,
             }
 
             // Special Temperature criteria for cracking
-            if(crackedEnough && Temp < d_thresholdTemp)
-            {  // if there is appreciable amount of gas above temperature use that temp
+            if(crackedEnough && Temp < d_thresholdTemp){  
+               // if there is appreciable amount of gas above temperature use that temp
                for (int m = 0; m < numAllMatls; m++) {
                   if(vol_frac_CC[m][c] > d_crackVolThreshold && temp_CC[m][c] > 400 && temp_CC[m][c] > Temp )
                     Temp = temp_CC[m][c];
