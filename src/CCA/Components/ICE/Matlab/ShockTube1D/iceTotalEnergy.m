@@ -214,8 +214,8 @@ press_CC    = setBoundaryConditions(press_CC,'press_CC', G);
 
 %================ Plot Initial conditions ================
 if (P.plotInitialData)
-  figure(1);
-  set(gcf,'position',[100,1000,1000,400]);
+  fig1 = sfigure(1);
+  set(fig1 ,'position',[100,1000,1000,400]);
 
   subplot(2,2,1), plot(x_CC,rho_CC);
   xlim([P.boxLower(1) P.boxUpper(1)]);
@@ -492,13 +492,13 @@ end
 
   if(P.plotResults)
     plotResults;
-    figure(1);
+    sfigure(1);
     print -depsc iceResult1.eps
-    figure(2);
+    sfigure(2);
     print -depsc iceResult2.eps
   end
   % Show a movie of the results
-  %hFig = figure(2);
+  %hFig = sfigure(2);
   %movie(hFig,M,1,10)
 
 end  % end of ICE
