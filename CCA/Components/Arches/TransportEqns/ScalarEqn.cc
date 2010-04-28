@@ -301,10 +301,9 @@ ScalarEqn::sched_buildTransportEqn( const LevelP& level, SchedulerP& sched, int 
 {
   string taskname = "ScalarEqn::buildTransportEqn"; 
 
-  Task* tsk = scinew Task(taskname, this, &ScalarEqn::buildTransportEqn);
+  Task* tsk = scinew Task(taskname, this, &ScalarEqn::buildTransportEqn, timeSubStep);
 
   //----NEW----
-  tsk->modifies(d_transportVarLabel);
   tsk->modifies(d_FdiffLabel);
   tsk->modifies(d_FconvLabel);
   tsk->modifies(d_RHSLabel);
@@ -323,9 +322,11 @@ ScalarEqn::sched_buildTransportEqn( const LevelP& level, SchedulerP& sched, int 
   }
   
   //-----OLD-----
-  //tsk->requires(Task::OldDW, d_transportVarLabel, Ghost::AroundCells, 2);
   tsk->requires(Task::OldDW, d_fieldLabels->d_areaFractionLabel, Ghost::AroundCells, 1); 
-  tsk->requires(Task::OldDW, d_fieldLabels->d_densityCPLabel, Ghost::AroundCells, 1); 
+  if ( timeSubStep == 0 ) 
+    tsk->requires(Task::OldDW, d_fieldLabels->d_densityCPLabel, Ghost::AroundCells, 1); 
+  else
+    tsk->requires(Task::NewDW, d_fieldLabels->d_densityTempLabel, Ghost::AroundCells, 1); 
   tsk->requires(Task::OldDW, d_fieldLabels->d_viscosityCTSLabel, Ghost::AroundCells, 1);
   tsk->requires(Task::OldDW, d_fieldLabels->d_uVelocitySPBCLabel, Ghost::AroundCells, 1);   
 #ifdef YDIM
@@ -345,7 +346,8 @@ ScalarEqn::buildTransportEqn( const ProcessorGroup* pc,
                               const PatchSubset* patches, 
                               const MaterialSubset* matls, 
                               DataWarehouse* old_dw, 
-                              DataWarehouse* new_dw )
+                              DataWarehouse* new_dw,
+                              int timeSubStep )
 {
   //patch loop
   for (int p=0; p < patches->size(); p++){
@@ -368,13 +370,16 @@ ScalarEqn::buildTransportEqn( const ProcessorGroup* pc,
     constSFCZVariable<double> wVel; 
     constCCVariable<Vector> areaFraction; 
 
-    CCVariable<double> phi;
+    //CCVariable<double> phi;
     CCVariable<double> Fdiff; 
     CCVariable<double> Fconv; 
     CCVariable<double> RHS; 
 
     new_dw->get(oldPhi, d_oldtransportVarLabel, matlIndex, patch, gac, 2);
-    old_dw->get(den, d_fieldLabels->d_densityCPLabel, matlIndex, patch, gac, 1); 
+    if ( timeSubStep == 0 ) 
+      old_dw->get(den, d_fieldLabels->d_densityCPLabel, matlIndex, patch, gac, 1); 
+    else 
+      new_dw->get(den, d_fieldLabels->d_densityTempLabel, matlIndex, patch, gac, 1); 
     old_dw->get(mu_t, d_fieldLabels->d_viscosityCTSLabel, matlIndex, patch, gac, 1); 
     old_dw->get(uVel,   d_fieldLabels->d_uVelocitySPBCLabel, matlIndex, patch, gac, 1); 
     old_dw->get(areaFraction, d_fieldLabels->d_areaFractionLabel, matlIndex, patch, gac, 1); 
@@ -388,16 +393,12 @@ ScalarEqn::buildTransportEqn( const ProcessorGroup* pc,
     vol *= Dx.z();
 #endif
 
-    new_dw->getModifiable(phi, d_transportVarLabel, matlIndex, patch);
     new_dw->getModifiable(Fdiff, d_FdiffLabel, matlIndex, patch);
     new_dw->getModifiable(Fconv, d_FconvLabel, matlIndex, patch); 
     new_dw->getModifiable(RHS, d_RHSLabel, matlIndex, patch);
     RHS.initialize(0.0); 
     Fconv.initialize(0.0); 
     Fdiff.initialize(0.0);
-
-    //----BOUNDARY CONDITIONS
-    computeBCs( patch, d_eqnName, phi );
 
     //----CONVECTION
     if (d_doConv)
@@ -450,7 +451,10 @@ ScalarEqn::sched_solveTransportEqn( const LevelP& level, SchedulerP& sched, int 
   //Old
   tsk->requires(Task::OldDW, d_transportVarLabel, Ghost::None, 0);
   tsk->requires(Task::OldDW, d_fieldLabels->d_sharedState->get_delt_label(), Ghost::None, 0);
-  tsk->requires(Task::OldDW, d_fieldLabels->d_densityCPLabel, Ghost::None, 0);
+  if ( timeSubStep == 0 ) 
+    tsk->requires(Task::OldDW, d_fieldLabels->d_densityCPLabel, Ghost::None, 0);
+  else 
+    tsk->requires(Task::NewDW, d_fieldLabels->d_densityTempLabel, Ghost::None, 0); 
 
   sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
 }
@@ -478,37 +482,54 @@ ScalarEqn::solveTransportEqn( const ProcessorGroup* pc,
     old_dw->get(DT, d_fieldLabels->d_sharedState->get_delt_label());
     double dt = DT; 
 
-    CCVariable<double> phi;
-    CCVariable<double> oldphi; 
+    // Here, j is the rk step and n is the time step.  
+    //
+    CCVariable<double> phi_at_jp1;   // phi^{(j+1)}
+    CCVariable<double> phi_at_j;     // phi^{(j)}
+    constCCVariable<double> rk1_phi; // phi^{n}
     constCCVariable<double> RHS; 
     constCCVariable<double> old_den; 
     constCCVariable<double> new_den; 
-    constCCVariable<double> rk1_phi;
 
-    new_dw->getModifiable(phi, d_transportVarLabel, matlIndex, patch);
-    new_dw->getModifiable(oldphi, d_oldtransportVarLabel, matlIndex, patch); 
+    new_dw->getModifiable(phi_at_jp1, d_transportVarLabel, matlIndex, patch);
+    new_dw->getModifiable(phi_at_j,   d_oldtransportVarLabel, matlIndex, patch); 
     old_dw->get(rk1_phi, d_transportVarLabel, matlIndex, patch, gn, 0);
     new_dw->get(RHS, d_RHSLabel, matlIndex, patch, gn, 0);
     if (d_use_density_guess) 
       new_dw->get(new_den, d_fieldLabels->d_densityGuessLabel, matlIndex, patch, gn, 0); 
     else 
       new_dw->get(new_den, d_fieldLabels->d_densityCPLabel, matlIndex, patch, gn, 0);
-    old_dw->get(old_den, d_fieldLabels->d_densityCPLabel, matlIndex, patch, gn, 0);
+    if ( timeSubStep == 0 )
+      old_dw->get(old_den, d_fieldLabels->d_densityCPLabel, matlIndex, patch, gn, 0);
+    else 
+      new_dw->get(old_den, d_fieldLabels->d_densityTempLabel, matlIndex, patch, gn, 0); 
 
-    d_timeIntegrator->singlePatchFEUpdate( patch, phi, old_den, new_den, RHS, dt, curr_ssp_time, d_eqnName);
+    // ----FE UPDATE
+    //     to get phi^{(j+1)}
+    d_timeIntegrator->singlePatchFEUpdate( patch, phi_at_jp1, old_den, new_den, RHS, dt, curr_ssp_time, d_eqnName);
+    
+    // Compute the current RK time. 
     double factor = d_timeIntegrator->time_factor[timeSubStep]; 
-    curr_ssp_time = curr_time + factor * dt; 
-    d_timeIntegrator->timeAvePhi( patch, phi, rk1_phi, timeSubStep, curr_ssp_time ); 
+    curr_ssp_time = curr_time + factor * dt;
+
+    // ----RK AVERAGING
+    //     to get the time averaged phi^{time averaged}
+    //     See: Gettlieb et al., SIAM Review, vol 43, No 1, pp 89-112
+    //          Strong Stability-Preserving High-Order Time Discretization Methods
+    //     Here, for convenience we assign the time averaged phi to phi_at_jp1 so:
+    //     phi^{j+1} = alpha*(phi^{n}) + beta*(phi^{j+1})
+    //
+    d_timeIntegrator->timeAvePhi( patch, phi_at_jp1, rk1_phi, timeSubStep, curr_ssp_time ); 
 
     //----BOUNDARY CONDITIONS
-    // must update BCs for next substep
-    computeBCs( patch, d_eqnName, phi );
+    //    must update BCs for next substep
+    computeBCs( patch, d_eqnName, phi_at_jp1 );
 
     if (d_doClipping) 
-      clipPhi( patch, phi ); 
+      clipPhi( patch, phi_at_jp1 ); 
     
-    // copy averaged phi into oldphi
-    oldphi.copyData(phi); 
+    //----COPY averaged phi into oldphi
+    phi_at_j.copyData(phi_at_jp1); 
 
   }
 }
