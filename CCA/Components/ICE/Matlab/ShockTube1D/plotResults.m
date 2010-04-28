@@ -19,8 +19,8 @@ if (P.compareUintah)
   %================ Plot results ================
 
   if ((mod(tstep,P.plotInterval) == 0) | (tstep == P.maxTimeSteps))
-    figure(1);
-    set(gcf,'position',[100,600,700,700]);
+    fig1 = sfigure(1);
+    set(fig1,'position',[100,600,700,700]);
 
     xlo = 0.1;
     xhi = 0.8;
@@ -45,8 +45,8 @@ if (P.compareUintah)
     legend('p', 'p Uintah',2);
     grid on;
 
-    figure(2);
-    set(gcf,'position',[100,100,700,700]);
+    fig2 = sfigure(2);
+    set(fig2,'position',[100,100,700,700]);
 
     subplot(3,1,1), plot(x_FC, xvel_FC, '+',x_FC_ice, uvel_FC_ice, 'o');
     xlim([xlo xhi]);
@@ -88,8 +88,8 @@ end
 if (P.plotResults)
   if ((mod(tstep,P.plotInterval) == 0) | (tstep == P.maxTimeSteps))
     %================ Plot results ================
-    figure(1);
-    set(gcf,'position',[100,100,900,900]);
+    fig1 = sfigure(1);
+    set(fig1,'position',[100,100,900,900]);
 
     subplot(2,2,1), plot(x_CC,rho_CC);
     xlim([P.boxLower(1) P.boxUpper(1)]);
@@ -111,8 +111,8 @@ if (P.plotResults)
     legend('p',2);
     grid on;
 
-    figure(2);
-    set(gcf,'position',[300,100,900,900]);
+    fig2 = sfigure(2);
+    set(fig2,'position',[300,100,900,900]);
 
     subplot(2,2,1), plot(x_CC,delPDilatate);
     xlim([P.boxLower(1) P.boxUpper(1)]);
