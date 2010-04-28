@@ -68,11 +68,12 @@ public:
   void sched_buildTransportEqn( const LevelP& level, 
                                 SchedulerP& sched, int timeSubStep );
   /** @brief Actually build the transport equation */ 
-  void buildTransportEqn(const ProcessorGroup*, 
-                         const PatchSubset* patches, 
-                         const MaterialSubset*, 
-                         DataWarehouse* old_dw, 
-                         DataWarehouse* new_dw);
+  void buildTransportEqn( const ProcessorGroup*, 
+                          const PatchSubset* patches, 
+                          const MaterialSubset*, 
+                          DataWarehouse* old_dw, 
+                          DataWarehouse* new_dw, 
+                          int timeSubStep );
 
   /** @brief Schedule the solution the transport equation */
   void sched_solveTransportEqn(const LevelP& level, 
