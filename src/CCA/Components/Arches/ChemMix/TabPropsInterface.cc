@@ -103,9 +103,6 @@ MixingRxnModel( labels )
 //****************************************************************************
 TabPropsInterface::~TabPropsInterface()
 {
-  for ( VarMap::iterator i = d_dvVarMap.begin(); i != d_dvVarMap.end(); ++i ){
-    VarLabel::destroy( i->second ); 
-  }
 }
 
 //****************************************************************************
@@ -414,7 +411,16 @@ TabPropsInterface::getState( const ProcessorGroup* pc,
 
 
       }
+
+      iv.clear(); 
+
     }
+
+    indep_storage.clear(); 
+    for ( CCMap::iterator i = depend_storage.begin(); i != depend_storage.end(); ++i ){
+      delete i->second;
+    }
+
     // reference density modification 
     if ( modify_ref_den ) {
 
