@@ -646,7 +646,6 @@ void BNRTask::BoundSignatures()
     if(low[0]>high[0] || low[1]>high[1] || low[2]>high[2])
     {
       cout << "Error negative bounds\n";
-      while(1);
       exit(0);
     }
 }
