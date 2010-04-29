@@ -727,7 +727,7 @@ Split BNRTask::FindSplit()
         if(last_s!=s)
         {
           int change=abs(last_d2-d2);
-          int dist=abs(mid[d]-index);
+          int dist=abs(mid[d]-index+offset_[d]);
           //compare to max found sign change and update max
           if(change>=max_change)
           {
