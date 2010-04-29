@@ -30,7 +30,6 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Schedulers/Relocate.h>
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Containers/Array2.h>
-#include <Core/Grid/Box.h>            // Why can't I remove this when it isn't used???
 #include <Core/Grid/Variables/ParticleVariable.h>
 #include <Core/Thread/Mutex.h>
 #include <Core/Util/DebugStream.h>
@@ -44,13 +43,15 @@ DEALINGS IN THE SOFTWARE.
 
 using namespace std;
 using namespace Uintah;
+using namespace SCIRun;
 
 #undef UINTAHSHARE
 #if defined(_WIN32) && !defined(BUILD_UINTAH_STATIC)
-#define UINTAHSHARE __declspec(dllimport)
+#  define UINTAHSHARE __declspec(dllimport)
 #else
-#define UINTAHSHARE
+#  define UINTAHSHARE
 #endif
+
 // Debug: Used to sync cerr so it is readable (when output by
 // multiple threads at the same time)  From sus.cc:
 extern UINTAHSHARE SCIRun::Mutex       cerrLock;
