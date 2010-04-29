@@ -27,27 +27,14 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-
-
 #include <CCA/Components/Schedulers/Relocate.h>
-
-#include <CCA/Ports/DataWarehouse.h>
 #include <CCA/Ports/Scheduler.h>
-#include <Core/Grid/Variables/ParticleVariable.h>
-#include <Core/Grid/Grid.h>
-#include <Core/Grid/Level.h>
-#include <Core/Grid/Patch.h>
-#include <Core/Grid/Task.h>
-#include <Core/Grid/Box.h>
-#include <Core/Parallel/Parallel.h>
-#include <CCA/Ports/LoadBalancer.h>
-#include <Core/Util/ProgressiveWarning.h>
-
 #include <Core/Containers/Array2.h>
+#include <Core/Grid/Box.h>            // Why can't I remove this when it isn't used???
+#include <Core/Grid/Variables/ParticleVariable.h>
 #include <Core/Thread/Mutex.h>
 #include <Core/Util/DebugStream.h>
-
-#include <sci_defs/config_defs.h>
+#include <Core/Util/ProgressiveWarning.h>
 #include <sci_algorithm.h>
 
 #include <map>
@@ -675,7 +662,7 @@ void Relocate::finalizeCommunication()
 //
 const Patch* findFinePatch(const Point& pos, const Patch* guess, Level* fineLevel)
 {
-  if (guess && guess->getExtraBox().contains(pos)){
+  if (guess && guess->containsPointInExtraCells(pos)){
     return guess;
   }
   bool includeExtraCells = false;
@@ -685,7 +672,7 @@ const Patch* findFinePatch(const Point& pos, const Patch* guess, Level* fineLeve
 //
 const Patch* findCoarsePatch(const Point& pos, const Patch* guess, Level* coarseLevel)
 {
-  if (guess && guess->getExtraBox().contains(pos)){
+  if (guess && guess->containsPointInExtraCells(pos)){
     return guess;
   }
   bool includeExtraCells = false;
@@ -932,7 +919,7 @@ Relocate::relocateParticles(const ProcessorGroup* pg,
             //__________________________________
             //  Did the particle move to the same patch as the previous particle?
             //  (optimization)
-            if (PP_ToPatch && PP_ToPatch->getExtraBox().contains(px[idx])){
+            if (PP_ToPatch && PP_ToPatch->containsPointInExtraCells(px[idx])){
               toPatch = PP_ToPatch;
             }else { 
               //__________________________________
@@ -1239,8 +1226,9 @@ Relocate::relocateParticles(const ProcessorGroup* pg,
     }
     if(pg->myrank() == 0){
       ASSERTEQ(alltotal[1], alltotal[2]);
-      if(alltotal[0] != 0)
+      if(alltotal[0] != 0){
         cerr << "Particles crossing patch boundaries: " << alltotal[0] << ", crossing processor boundaries: " << alltotal[1] << '\n';
+      }
     }
   }
 #endif
