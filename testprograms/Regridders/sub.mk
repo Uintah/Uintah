@@ -97,7 +97,7 @@ SRCS    := $(SRCDIR)/outputpatches.cc   \
            $(SRCDIR)/GBRv2Regridder.cc 
 
 ifeq ($(IS_STATIC_BUILD),yes)
-  PSELIBS := CCA/Components/Regridder $(CORE_STATIC_PSELIBS) QWERasdfasdf
+  PSELIBS := CCA/Components/Regridder $(CORE_STATIC_PSELIBS)
 else # Non-static build
   PSELIBS := \
         Core/Exceptions   \
