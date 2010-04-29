@@ -33,10 +33,14 @@
 
 SRCDIR := testprograms/Regridders
 
+#################################################################
+# Benchmark
+
 PROGRAM := $(SRCDIR)/benchmark
-SRCS    := $(SRCDIR)/benchmark.cc \
-					 $(SRCDIR)/BNRTask.cc \
-					 $(SRCDIR)/GBRv2Regridder.cc 
+
+SRCS    := $(SRCDIR)/benchmark.cc       \
+           $(SRCDIR)/BNRTask.cc         \
+           $(SRCDIR)/GBRv2Regridder.cc 
 
 ifeq ($(IS_STATIC_BUILD),yes)
   PSELIBS := CCA/Components/Regridder $(CORE_STATIC_PSELIBS)
@@ -44,7 +48,9 @@ else # Non-static build
   PSELIBS := \
         Core/Exceptions          \
         Core/Geometry            \
-				Core/Grid
+        Core/Grid                \
+        Core/Math                \
+        Core/Util
 endif
 
 ifeq ($(IS_STATIC_BUILD),yes)
@@ -55,7 +61,8 @@ endif
 
 include $(SCIRUN_SCRIPTS)/program.mk
 
-SRCDIR := testprograms/Regridders
+#################################################################
+# Patch Quality
 
 PROGRAM := $(SRCDIR)/patchquality
 SRCS    := $(SRCDIR)/patchquality.cc
@@ -65,9 +72,11 @@ ifeq ($(IS_STATIC_BUILD),yes)
 else # Non-static build
   PSELIBS := \
         Core/Exceptions          \
-				Core/Parallel            \
         Core/Geometry            \
-				Core/Grid
+        Core/Grid                \
+        Core/Math                \
+        Core/Parallel            \
+        Core/Util
 endif
 
 ifeq ($(IS_STATIC_BUILD),yes)
@@ -78,20 +87,24 @@ endif
 
 include $(SCIRUN_SCRIPTS)/program.mk
 
-SRCDIR := testprograms/Regridders
+#################################################################
+# Output Patches
 
 PROGRAM := $(SRCDIR)/outputpatches
-SRCS    := $(SRCDIR)/outputpatches.cc \
-					 $(SRCDIR)/BNRTask.cc \
-					 $(SRCDIR)/GBRv2Regridder.cc 
+
+SRCS    := $(SRCDIR)/outputpatches.cc   \
+           $(SRCDIR)/BNRTask.cc         \
+           $(SRCDIR)/GBRv2Regridder.cc 
 
 ifeq ($(IS_STATIC_BUILD),yes)
-  PSELIBS := CCA/Components/Regridder $(CORE_STATIC_PSELIBS)
+  PSELIBS := CCA/Components/Regridder $(CORE_STATIC_PSELIBS) QWERasdfasdf
 else # Non-static build
   PSELIBS := \
-        Core/Exceptions          \
-        Core/Geometry            \
-				Core/Grid
+        Core/Exceptions   \
+        Core/Geometry     \
+        Core/Grid         \
+        Core/Math         \
+        Core/Util
 endif
 
 ifeq ($(IS_STATIC_BUILD),yes)
