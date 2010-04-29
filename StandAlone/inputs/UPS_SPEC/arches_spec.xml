@@ -323,13 +323,25 @@
         <Sources                        spec="OPTIONAL NO_DATA">
           <src                          spec="MULTIPLE NO_DATA"
                                         attribute1="label REQUIRED STRING"
-                                        attribute2="type REQUIRED STRING 'coal_gas_devol, constant_src'">
+                                        attribute2="type REQUIRED STRING 'coal_gas_devol, constant_src, westbrook_dryer'">
 
             <!-- Specs for coal gas devol model -->
             <devol_model_name           spec="OPTIONAL STRING" />
 
             <!-- Spec for constant source term model -->
             <constant                   spec="OPTIONAL DOUBLE" />
+
+            <!-- Westbrook Dryer Global Hydrocarbon reaction rate model -->
+            <!-- see Turns, pg. 156-157 -->
+            <A                          spec="OPTIONAL DOUBLE" />
+            <E_R                        spec="OPTIONAL DOUBLE" />
+            <X                          spec="OPTIONAL DOUBLE" />
+            <Y                          spec="OPTIONAL DOUBLE" />
+            <m                          spec="OPTIONAL DOUBLE" />
+            <n                          spec="OPTIONAL DOUBLE" />
+            <MW_HydroCarbon             spec="OPTIONAL DOUBLE" />
+            <MF_HC_F1                   spec="OPTIONAL DOUBLE" />
+            <MF_O2_F0                   spec="OPTIONAL DOUBLE" />
 
           </src>
 
