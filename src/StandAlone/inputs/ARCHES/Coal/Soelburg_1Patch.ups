@@ -2,7 +2,7 @@
 <!-- @version: -->
 <Uintah_specification>
     <Meta>
-        <title>Soelburg_1Patch_3ic_3env</title>
+        <title>Soelburg Gasification Case, 1-Patch</title>
     </Meta>
     <SimulationComponent type="arches" />
     <Time>
@@ -801,7 +801,7 @@
                 <use_mixing_model>false</use_mixing_model>
 
                 <TabProps>
-                    <inputfile>CoalModel.h5</inputfile>
+                    <inputfile>Soelburg.h5</inputfile>
                     <strict_mode>false</strict_mode>
                     <diagnostic_mode>false</diagnostic_mode>
                 </TabProps>
