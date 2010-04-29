@@ -34,7 +34,9 @@
 SRCDIR := testprograms/Regridders
 
 PROGRAM := $(SRCDIR)/benchmark
-SRCS    := $(SRCDIR)/benchmark.cc
+SRCS    := $(SRCDIR)/benchmark.cc \
+					 $(SRCDIR)/BNRTask.cc \
+					 $(SRCDIR)/GBRv2Regridder.cc 
 
 ifeq ($(IS_STATIC_BUILD),yes)
   PSELIBS := CCA/Components/Regridder $(CORE_STATIC_PSELIBS)
@@ -63,6 +65,7 @@ ifeq ($(IS_STATIC_BUILD),yes)
 else # Non-static build
   PSELIBS := \
         Core/Exceptions          \
+				Core/Parallel            \
         Core/Geometry            \
 				Core/Grid
 endif
@@ -78,7 +81,9 @@ include $(SCIRUN_SCRIPTS)/program.mk
 SRCDIR := testprograms/Regridders
 
 PROGRAM := $(SRCDIR)/outputpatches
-SRCS    := $(SRCDIR)/outputpatches.cc
+SRCS    := $(SRCDIR)/outputpatches.cc \
+					 $(SRCDIR)/BNRTask.cc \
+					 $(SRCDIR)/GBRv2Regridder.cc 
 
 ifeq ($(IS_STATIC_BUILD),yes)
   PSELIBS := CCA/Components/Regridder $(CORE_STATIC_PSELIBS)

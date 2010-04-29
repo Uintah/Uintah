@@ -41,7 +41,7 @@ int main(int argc, char **argv)
   IntVector rr(4,4,4);
 
  
-  for(int np=12;np<max_p;np++)
+  for(int np=6;np<max_p;np++)
   {
     //get command line arguements
     IntVector num_patches;
@@ -51,7 +51,7 @@ int main(int argc, char **argv)
     double radin=cells[0]/2.0*atof(argv[3]);
     double radout=cells[0]/2.0*atof(argv[4]);
 
-#if 1
+#if 0
     num_patches[2]=1;
     cells[2]=1;
     rr[2]=1;

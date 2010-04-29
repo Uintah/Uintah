@@ -36,6 +36,7 @@ class BNRRegridder
   
 };
 
+#include <fstream>
 
 void BNRRegridder::regrid(const vector<IntVector> &flags, vector<Region> &patches)
 {
@@ -145,6 +146,8 @@ Split BNRRegridder::findSplit(vector<vector<unsigned int> > &hist)
       if(size[dims[i]]>size[dims[j]])
         swap(dims[i],dims[j]);
 #endif
+  
+  //search for zero split in each dimension
 
   //cout << "dimension order: " << dims[0] << " " << dims[1] << " " << dims[2] << endl;
 
@@ -162,11 +165,11 @@ Split BNRRegridder::findSplit(vector<vector<unsigned int> > &hist)
     }
   }
 
-  int max_change=INT_MIN;
+  int max_change=-1;
   Split split(-1,-1);
 
   //search for largest sign change in the second derivative
-  for(size_t dim=0;dim<hist.size()-1;dim++)
+  for(size_t dim=0;dim<hist.size();dim++)
   {
     int d=dims[dim];
     int last_d2=hist[d][1]-hist[d][0];
@@ -185,11 +188,11 @@ Split BNRRegridder::findSplit(vector<vector<unsigned int> > &hist)
           split.d=d;
           split.i=i;
         }
-#if 0
+#if 1
         else if(change==max_change && d==split.d)
         {
-          double mid=hist.size()/2.0;
-          if(fabs(mid-i)<fabs(mid-split.i))
+          int mid=hist[d].size()/2;
+          if(abs(mid-(int)i)<abs(mid-(int)split.i))
           {
             split.d=d;
             split.i=i;

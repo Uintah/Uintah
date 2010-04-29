@@ -19,6 +19,7 @@ using namespace Uintah;
 #include <testprograms/Regridders/BNRRegridder.h>
 #include <testprograms/Regridders/LBNRRegridder.h>
 #include <testprograms/Regridders/GBRv1Regridder.h>
+#include <testprograms/Regridders/GBRv2Regridder.h>
 
 #include <testprograms/Regridders/common.h>
 
@@ -166,6 +167,7 @@ int main(int argc, char **argv)
   TiledRegridder tiled(patch_size,rr);
   LBNRRegridder lbnr(.85,rr);
   GBRv1Regridder gbrv1(.85,rr,rank,num_procs);
+  GBRv2Regridder gbrv2(.85,rr,rank,num_procs);
 
   cout << setprecision(20);
   clock_t start;
@@ -216,10 +218,17 @@ int main(int argc, char **argv)
   MPI_Barrier(MPI_COMM_WORLD);
   start=clock();
   for(int i=0;i<REPEAT1;i++)
-    gbrv1.regrid(gflags,fine_patches);
+    gbrv2.regrid(gflags,fine_patches);
   time=(clock()-start)/(double) CLOCKS_PER_SEC / REPEAT1;
   outputTime(time,5);
-
+#endif
+#if 1
+  MPI_Barrier(MPI_COMM_WORLD);
+  start=clock();
+  for(int i=0;i<REPEAT1;i++)
+    gbrv1.regrid(gflags,fine_patches);
+  time=(clock()-start)/(double) CLOCKS_PER_SEC / REPEAT1;
+  outputTime(time,6);
 #endif
 
   MPI_Finalize();

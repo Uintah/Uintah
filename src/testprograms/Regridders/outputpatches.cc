@@ -18,6 +18,7 @@ using namespace Uintah;
 #include <testprograms/Regridders/BNRRegridder.h>
 #include <testprograms/Regridders/LBNRRegridder.h>
 #include <testprograms/Regridders/GBRv1Regridder.h>
+#include <testprograms/Regridders/GBRv2Regridder.h>
 
 #include <testprograms/Regridders/common.h>
 
@@ -51,7 +52,6 @@ int main(int argc, char **argv)
     rr[2]=1;
     
 #endif 
-
   double radin=cells[0]/2.0*atof(argv[3]);
   double radout=cells[0]/2.0*atof(argv[4]);
 
@@ -159,6 +159,7 @@ int main(int argc, char **argv)
   BNRRegridder bnr(.85,rr);
   LBNRRegridder lbnr(.85,rr);
   GBRv1Regridder gbrv1(.85,rr,rank,num_procs);
+  GBRv2Regridder gbrv2(.85,rr,rank,num_procs);
 
   long long vol;
 
@@ -228,6 +229,23 @@ int main(int argc, char **argv)
     cout << "GBRv1 number of patches: " << fine_patches.size() << " number of cells: " << vol << " Flags: " << fflags << endl;
   }
 #endif
+
+#if 0
+  MPI_Barrier(MPI_COMM_WORLD);
+  //global bnr in parallel
+  gbrv2.regrid(gflags,fine_patches);
+  if(rank==0)
+  {
+    fout.open("gbrv2patches");
+    outputPatches(fine_patches,fout);
+    fout.close();
+    vol=0;
+    for(size_t i=0;i<fine_patches.size();i++)
+      vol+=fine_patches[i].getVolume();
+    cout << "GBRv2 number of patches: " << fine_patches.size() << " number of cells: " << vol << " Flags: " << fflags << endl;
+  }
+#endif
+
   MPI_Finalize();
 }
 
