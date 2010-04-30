@@ -504,7 +504,7 @@ void DDT0::computeModelSources(const ProcessorGroup*,
         
         double rctMass    = rctRho[c]*cell_vol;
         double prdMass    = prodRho[c]*cell_vol;
-        double burnedMass = delF[c]*(rctMass);
+        double burnedMass = delF[c]*(prdMass+rctMass);
         
         burnedMass = min(burnedMass, rctMass);
         totalBurnedMass += burnedMass;

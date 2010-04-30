@@ -792,8 +792,8 @@
       <HeatConductCondPh      spec="OPTIONAL DOUBLE" />
       <IdealGasConst          spec="OPTIONAL DOUBLE" />
       <IgnitionTemp           spec="OPTIONAL DOUBLE" />
+      
       <material               spec="OPTIONAL STRING" />
-
       <MoleWeightGasPh        spec="OPTIONAL DOUBLE" />
       <nCrack                 spec="OPTIONAL DOUBLE" />
       <PreExpCondPh           spec="OPTIONAL DOUBLE" />
@@ -874,6 +874,7 @@
       <ThresholdPressureJWL   spec="OPTIONAL DOUBLE 'positive'"/>
       <ThresholdPressureSB    spec="OPTIONAL DOUBLE 'positive'" />
       <ThresholdTemp          spec="OPTIONAL DOUBLE 'positive'" />
+      <ThresholdVolFrac       spec="OPTIONAL DOUBLE 'positive'" />
       <varianceMax            spec="OPTIONAL DOUBLE" /> <!-- FIXME: double? -->
       <varianceScale          spec="OPTIONAL DOUBLE" /> <!-- FIXME: double? -->
       <useCrackModel          spec="OPTIONAL BOOLEAN" />  
