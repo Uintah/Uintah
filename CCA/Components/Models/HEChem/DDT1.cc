@@ -536,7 +536,7 @@ void DDT1::computeModelSources(const ProcessorGroup*,
       // Copy old Fr in case pressure threshold is not met
       Fr[c]=rctFr[c];
       // JWL++ Model For explosions
-      if (press_CC[c] > d_threshold_pressure){
+      if (press_CC[c] > d_threshold_pressure && rctRho[c]/(rctRho[c]+prodRho[c]) > 0.01 ){
         // Flag for detonating
         detonating[c] = 1;
         double burnedMass;
@@ -549,7 +549,7 @@ void DDT1::computeModelSources(const ProcessorGroup*,
         Fr[c] = F;
         double rctMass = rctRho[c]*cell_vol;
         double prdMass = prodRho[c]*cell_vol;
-        burnedMass = min(delF[c]*(prdMass+rctMass), rctMass);
+        burnedMass = min(delF[c]*(rctMass), rctMass);
         burnedMass = min(burnedMass, .2*d_rho0*cell_vol);
 
         //__________________________________
