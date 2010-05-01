@@ -286,6 +286,12 @@ SCI_ARG_WITH(petsc,
   [with_petsc="$withval"
    sci_required_petsc=yes],
   [with_petsc=""])
+SCI_ARG_WITH(tabprops,
+  AC_HELP_STRING(--with-tabprops=DIR,
+                 Use the TabProps library in DIR),
+  [with_tabprops="$withval"
+   sci_required_tabprops=yes],
+  [with_tabprops=""])
 SCI_ARG_WITH(zoltan,
   AC_HELP_STRING(--with-zoltan=DIR,
                  Use the Zoltan installation in DIR),
@@ -1008,6 +1014,39 @@ AC_SUBST(DEF_ZOLTAN)
 AC_SUBST(INC_ZOLTAN_H)
 AC_SUBST(ZOLTAN_LIB_FLAG)
 AC_SUBST(ZOLTAN_LIB_DIR_FLAG)
+
+## -----------------------------------------------
+
+##  --  search for TabProps ------------------------
+
+if test "$with_tabprops"; then
+  if test "$with_tabprops" = "yes"; then
+    AC_MSG_ERROR( --with-tabprops=DIR requires a DIRectory be provided. )
+  else
+    AC_MSG_CHECKING(for TabProps files (For now we are just verifying the existence of lib and .h files)) 
+    if test ! -d $with_tabprops; then
+      AC_MSG_ERROR( '$with_tabprops' directory does not exist. )
+    fi
+    if test ! -f $with_tabprops/lib/libtabprops.a; then
+      AC_MSG_ERROR( '$with_tabprops/lib/libtabprops.a' does not exist. )
+    fi
+    for file in BSpline.h LU.h StateTable.h; do
+      if test ! -f $with_tabprops/include/$file; then
+        AC_MSG_ERROR( '$with_tabprops/include/$file' does not exist. )
+      fi
+    done
+  fi
+  AC_MSG_RESULT(yes)
+  DEF_TABPROPS="#define HAVE_TABPROPS 1"
+  INC_TABPROPS_H="-I$with_tabprops/include"
+  TABPROPS_LIB_DIR_FLAG="-L$with_tabprops/lib"
+  TABPROPS_LIB_FLAG="-ltabprops"
+
+fi
+AC_SUBST(DEF_TABPROPS)
+AC_SUBST(INC_TABPROPS_H)
+AC_SUBST(TABPROPS_LIB_FLAG)
+AC_SUBST(TABPROPS_LIB_DIR_FLAG)
 
 ## -----------------------------------------------
 
