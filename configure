@@ -745,6 +745,10 @@ DEF_ZOLTAN
 INC_ZOLTAN_H
 ZOLTAN_LIB_FLAG
 ZOLTAN_LIB_DIR_FLAG
+DEF_TABPROPS
+INC_TABPROPS_H
+TABPROPS_LIB_FLAG
+TABPROPS_LIB_DIR_FLAG
 PATH_TO_VC
 PATH_TO_PSDK
 PATH_TO_MSYS_BIN
@@ -1524,6 +1528,7 @@ Optional Packages:
 --with-mpiuni=DIR       Use the mpiuni installation in DIR
 --with-hypre=DIR        Use the hypre installation in DIR
 --with-petsc=DIR        Use the petsc installation in DIR
+--with-tabprops=DIR     Use the TabProps library in DIR
 --with-zoltan=DIR       Use the Zoltan installation in DIR
 --with-unipetsc=DIR     Use the unipetsc installation in DIR
 --with-tau=<tau-makefile>
@@ -2521,6 +2526,24 @@ fi
   if test -n "$petsc" -a ! -e "$petsc"; then
     { { echo "$as_me:$LINENO: error: The file or directory parameter ($petsc) specified for --with-petsc does not exist!  Please verify that the path and file are correct." >&5
 echo "$as_me: error: The file or directory parameter ($petsc) specified for --with-petsc does not exist!  Please verify that the path and file are correct." >&2;}
+   { (exit 1); exit 1; }; }
+  fi
+
+
+
+
+# Check whether --with-tabprops was given.
+if test "${with_tabprops+set}" = set; then
+  withval=$with_tabprops; with_tabprops="$withval"
+   sci_required_tabprops=yes
+else
+  with_tabprops=""
+fi
+
+  sci_arg_with_list="$sci_arg_with_list --with-tabprops --without-tabprops"
+  if test -n "$tabprops" -a ! -e "$tabprops"; then
+    { { echo "$as_me:$LINENO: error: The file or directory parameter ($tabprops) specified for --with-tabprops does not exist!  Please verify that the path and file are correct." >&5
+echo "$as_me: error: The file or directory parameter ($tabprops) specified for --with-tabprops does not exist!  Please verify that the path and file are correct." >&2;}
    { (exit 1); exit 1; }; }
   fi
 
@@ -7276,6 +7299,49 @@ echo "${ECHO_T}yes" >&6; }
   INC_ZOLTAN_H="-I$with_zoltan/include"
   ZOLTAN_LIB_DIR_FLAG="-L$with_zoltan/lib"
   ZOLTAN_LIB_FLAG="-lzoltan"
+
+fi
+
+
+
+
+
+## -----------------------------------------------
+
+##  --  search for TabProps ------------------------
+
+if test "$with_tabprops"; then
+  if test "$with_tabprops" = "yes"; then
+    { { echo "$as_me:$LINENO: error: --with-tabprops=DIR requires a DIRectory be provided. " >&5
+echo "$as_me: error: --with-tabprops=DIR requires a DIRectory be provided. " >&2;}
+   { (exit 1); exit 1; }; }
+  else
+    { echo "$as_me:$LINENO: checking for TabProps files (For now we are just verifying the existence of lib and .h files)" >&5
+echo $ECHO_N "checking for TabProps files (For now we are just verifying the existence of lib and .h files)... $ECHO_C" >&6; }
+    if test ! -d $with_tabprops; then
+      { { echo "$as_me:$LINENO: error: '$with_tabprops' directory does not exist. " >&5
+echo "$as_me: error: '$with_tabprops' directory does not exist. " >&2;}
+   { (exit 1); exit 1; }; }
+    fi
+    if test ! -f $with_tabprops/lib/libtabprops.a; then
+      { { echo "$as_me:$LINENO: error: '$with_tabprops/lib/libtabprops.a' does not exist. " >&5
+echo "$as_me: error: '$with_tabprops/lib/libtabprops.a' does not exist. " >&2;}
+   { (exit 1); exit 1; }; }
+    fi
+    for file in BSpline.h LU.h StateTable.h; do
+      if test ! -f $with_tabprops/include/$file; then
+        { { echo "$as_me:$LINENO: error: '$with_tabprops/include/$file' does not exist. " >&5
+echo "$as_me: error: '$with_tabprops/include/$file' does not exist. " >&2;}
+   { (exit 1); exit 1; }; }
+      fi
+    done
+  fi
+  { echo "$as_me:$LINENO: result: yes" >&5
+echo "${ECHO_T}yes" >&6; }
+  DEF_TABPROPS="#define HAVE_TABPROPS 1"
+  INC_TABPROPS_H="-I$with_tabprops/include"
+  TABPROPS_LIB_DIR_FLAG="-L$with_tabprops/lib"
+  TABPROPS_LIB_FLAG="-ltabprops"
 
 fi
 
@@ -46208,6 +46274,10 @@ DEF_ZOLTAN!$DEF_ZOLTAN$ac_delim
 INC_ZOLTAN_H!$INC_ZOLTAN_H$ac_delim
 ZOLTAN_LIB_FLAG!$ZOLTAN_LIB_FLAG$ac_delim
 ZOLTAN_LIB_DIR_FLAG!$ZOLTAN_LIB_DIR_FLAG$ac_delim
+DEF_TABPROPS!$DEF_TABPROPS$ac_delim
+INC_TABPROPS_H!$INC_TABPROPS_H$ac_delim
+TABPROPS_LIB_FLAG!$TABPROPS_LIB_FLAG$ac_delim
+TABPROPS_LIB_DIR_FLAG!$TABPROPS_LIB_DIR_FLAG$ac_delim
 PATH_TO_VC!$PATH_TO_VC$ac_delim
 PATH_TO_PSDK!$PATH_TO_PSDK$ac_delim
 PATH_TO_MSYS_BIN!$PATH_TO_MSYS_BIN$ac_delim
@@ -46297,10 +46367,6 @@ HAVE_CBLAS!$HAVE_CBLAS$ac_delim
 INC_BLAS_H!$INC_BLAS_H$ac_delim
 BLAS_LIB_FLAG!$BLAS_LIB_FLAG$ac_delim
 BLAS_LIB_DIR_FLAG!$BLAS_LIB_DIR_FLAG$ac_delim
-DEF_BLAS!$DEF_BLAS$ac_delim
-DEF_CBLAS!$DEF_CBLAS$ac_delim
-HAVE_LAPACK!$HAVE_LAPACK$ac_delim
-DEF_LAPACK!$DEF_LAPACK$ac_delim
 _ACEOF
 
   if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 97; then
@@ -46342,6 +46408,10 @@ _ACEOF
 ac_delim='%!_!# '
 for ac_last_try in false false false false false :; do
   cat >conf$$subs.sed <<_ACEOF
+DEF_BLAS!$DEF_BLAS$ac_delim
+DEF_CBLAS!$DEF_CBLAS$ac_delim
+HAVE_LAPACK!$HAVE_LAPACK$ac_delim
+DEF_LAPACK!$DEF_LAPACK$ac_delim
 LAPACK_LIB_FLAG!$LAPACK_LIB_FLAG$ac_delim
 LAPACK_LIB_DIR_FLAG!$LAPACK_LIB_DIR_FLAG$ac_delim
 HAVE_LAPACKMP!$HAVE_LAPACKMP$ac_delim
@@ -46393,7 +46463,7 @@ LIBOBJS!$LIBOBJS$ac_delim
 LTLIBOBJS!$LTLIBOBJS$ac_delim
 _ACEOF
 
-  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 49; then
+  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 53; then
     break
   elif $ac_last_try; then
     { { echo "$as_me:$LINENO: error: could not make $CONFIG_STATUS" >&5
