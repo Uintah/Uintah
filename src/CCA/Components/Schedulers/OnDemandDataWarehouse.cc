@@ -337,11 +337,10 @@ OnDemandDataWarehouse::sendMPI(DependencyBatch* batch,
           ssLock.unlock();  // Dd: ??
           constParticleVariable<Point> pos;
           old_dw->get(pos, pos_var, pset);
-          Box box=pset->getPatch()->getLevel()->getBox(low, high);
           for(ParticleSubset::iterator iter = pset->begin();
               iter != pset->end(); iter++){
             particleIndex idx = *iter;
-            if(box.contains(pos[idx])) {
+            if(Patch::containsIndex(low,high,patch->getCellIndex(pos[idx]))) {
               ssLock.lock();  // Dd: ??
               sendset->addParticle(idx);
               ssLock.unlock();  // Dd: ??
@@ -448,9 +447,8 @@ OnDemandDataWarehouse::exchangeParticleQuantities(DetailedTasks* dts, LoadBalanc
           constParticleVariable<Point> pos;
           get(pos, pos_var, pmg.matl_, pmg.patch_);
           ParticleSubset* pset = pos.getParticleSubset();
-          Box box = pmg.patch_->getLevel()->getBox(pmg.low_, pmg.high_);
           for(ParticleSubset::iterator piter = pset->begin(); piter != pset->end(); piter++){
-            if(box.contains(pos[*piter])) {
+            if(Patch::containsIndex(pmg.low_,pmg.high_,pmg.patch_->getCellIndex(pos[*piter]))) {
               sendset->addParticle(*piter);
             }
           }
@@ -837,6 +835,7 @@ OnDemandDataWarehouse::createParticleSubset(particleIndex numParticles,
     high = patch->getExtraCellHighIndex();
   }
 
+
   dbg << d_myworld->myrank() << " DW ID " << getID() << " createParticleSubset: MI: " << matlIndex << " P: " << patch->getID() << " (" << low << ", " << high << ")\n";
 
   ASSERT(!patch->isVirtual());
@@ -1048,7 +1047,6 @@ OnDemandDataWarehouse::getParticleSubset(int matlIndex, IntVector lowIndex, IntV
     neighbors.push_back(relPatch);
   else
     level->selectPatches(lowIndex, highIndex, neighbors);
-  Box box = level->getBox(lowIndex, highIndex);
   
   particleIndex totalParticles = 0;
   vector<ParticleVariableBase*> neighborvars;
@@ -1072,14 +1070,11 @@ OnDemandDataWarehouse::getParticleSubset(int matlIndex, IntVector lowIndex, IntV
         newHigh = Min(highIndex, neighbor->getHighIndexWithDomainLayer(Patch::CellBased));
       }
 
-      Box adjustedBox = box;
       if (neighbor->isVirtual()) {
         // rather than offsetting each point of pos_var's data,
         // just adjust the box to compare it with.
         Vector offset = neighbor->getVirtualOffsetVector();
         IntVector cellOffset = neighbor->getVirtualOffset();
-        adjustedBox = Box(box.lower() - offset,
-                          box.upper() - offset);
         newLow -= cellOffset;
         newHigh -= cellOffset;
       }
@@ -1105,7 +1100,7 @@ OnDemandDataWarehouse::getParticleSubset(int matlIndex, IntVector lowIndex, IntV
       for(ParticleSubset::iterator iter = pset->begin();
           iter != pset->end(); iter++){
         particleIndex idx = *iter;
-        if(adjustedBox.contains(pos[idx])) {
+        if(Patch::containsIndex(newLow,newHigh,neighbor->getCellIndex(pos[idx]))) {
           subset->addParticle(idx);
         }
       }
@@ -1115,11 +1110,9 @@ OnDemandDataWarehouse::getParticleSubset(int matlIndex, IntVector lowIndex, IntV
 
     }
   }
-
-  
+ 
   ParticleSubset* newsubset = scinew ParticleSubset(totalParticles, matlIndex, relPatch,
                                                     lowIndex, highIndex, vneighbors, subsets);
-
   return newsubset;
 }
 
