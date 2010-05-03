@@ -252,7 +252,7 @@ inline IntVector Abs(const IntVector& v)
 /**
 * Returns true if the given ranges intersect
 */
-static inline bool doesIntersect(const IntVector& low1, const IntVector &high1, const IntVector& low2, const IntVector &high2)
+inline bool doesIntersect(const IntVector& low1, const IntVector &high1, const IntVector& low2, const IntVector &high2)
 {
   return low1.x()<high2.x() && 
          low1.y()<high2.y() && 
