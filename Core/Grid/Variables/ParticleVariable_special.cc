@@ -116,11 +116,8 @@ using namespace SCIRun;
           (*this)[*dst_iter] = src[*src_iter];         
       
           IntVector ptIndex =  patch->getLevel()->getCellIndex(src[*src_iter]);
-          bool doesIntersect = (lowIndex.x() <= ptIndex.x() && ptIndex.x() <= highIndex.x()) &&
-                               (lowIndex.y() <= ptIndex.y() && ptIndex.y() <= highIndex.y()) &&
-                               (lowIndex.z() <= ptIndex.z() && ptIndex.z() <= highIndex.z()); 
 
-          ASSERT( doesIntersect);    
+          ASSERT( Patch::containsIndex(lowIndex,highIndex,ptIndex));
           dst_iter++;
         }
       }
@@ -134,10 +131,7 @@ using namespace SCIRun;
           
           
           IntVector ptIndex =  patch->getLevel()->getCellIndex((*this)[*dst_iter]);
-          bool doesIntersect = (lowIndex.x() <= ptIndex.x() && ptIndex.x() <= highIndex.x()) &&
-                               (lowIndex.y() <= ptIndex.y() && ptIndex.y() <= highIndex.y()) &&
-                               (lowIndex.z() <= ptIndex.z() && ptIndex.z() <= highIndex.z());          
-          ASSERT( doesIntersect);
+          ASSERT( Patch::containsIndex(lowIndex,highIndex,ptIndex));
           dst_iter++;
         }
       }
