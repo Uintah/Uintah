@@ -1303,6 +1303,14 @@ WARNING
       {
         return getLevel()->getCellPosition(idx);
       }
+      
+      /**
+       * Returns the cell index of the coordinate pos
+       */
+      inline IntVector getCellIndex(const Point& pos) const 
+      {
+        return getLevel()->getCellIndex(pos);
+      }
 
       //Below for Fracture *************************************************
 
