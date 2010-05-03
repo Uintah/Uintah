@@ -1324,8 +1324,7 @@ WARNING
         IntVector l(getExtraCellLowIndex());
         IntVector h(getExtraCellHighIndex());
         IntVector c=getLevel()->getCellIndex(p);          
-        return c.x() >= l.x() && c.y() >= l.y() && c.z() >= l.z()
-          && c.x() < h.x() && c.y() < h.y() && c.z() < h.z();
+        return containsIndex(l,h,c);
       }
       /**
        * Returns true if the point p is contained within the patch
@@ -1335,11 +1334,20 @@ WARNING
         IntVector l(getCellLowIndex());
         IntVector h(getCellHighIndex());
         IntVector c=getLevel()->getCellIndex(p);          
-        return c.x() >= l.x() && c.y() >= l.y() && c.z() >= l.z()
-          && c.x() < h.x() && c.y() < h.y() && c.z() < h.z();
+        return containsIndex(l,h,c);
       }
       //Above for Fracture *************************************************
 
+      static inline bool containsIndex(const IntVector &low, const IntVector &high, const IntVector &cell)
+      {
+        return  low.x() <= cell.x() && 
+                low.y() <= cell.y() &&
+                low.z() <= cell.z() &&
+                high.x() > cell.x() && 
+                high.y() > cell.y() &&
+                high.z() > cell.z();
+
+      }
       /**
        * Returns the cell that contains the point pos
        */
@@ -1377,8 +1385,7 @@ WARNING
       inline bool containsNode(const IntVector& idx) const {
         IntVector l(getExtraNodeLowIndex());
         IntVector h(getExtraNodeHighIndex());
-        return idx.x() >= l.x() && idx.y() >= l.y() && idx.z() >= l.z()
-          && idx.x() < h.x() && idx.y() < h.y() && idx.z() < h.z();
+        return containsIndex(l,h,idx);
       }
 
       /**
@@ -1388,8 +1395,7 @@ WARNING
       inline bool containsCell(const IntVector& idx) const {
         IntVector l(getExtraCellLowIndex());
         IntVector h(getExtraCellHighIndex());
-        return idx.x() >= l.x() && idx.y() >= l.y() && idx.z() >= l.z()
-          && idx.x() < h.x() && idx.y() < h.y() && idx.z() < h.z();
+        return containsIndex(l,h,idx);
       }
 
       /**
@@ -1399,8 +1405,7 @@ WARNING
       inline bool containsSFCX(const IntVector& idx) const {
         IntVector l(getExtraSFCXLowIndex());
         IntVector h(getExtraSFCXHighIndex());
-        return idx.x() >= l.x() && idx.y() >= l.y() && idx.z() >= l.z()
-          && idx.x() < h.x() && idx.y() < h.y() && idx.z() < h.z();
+        return containsIndex(l,h,idx);
       }
 
       /**
@@ -1410,8 +1415,7 @@ WARNING
       inline bool containsSFCY(const IntVector& idx) const {
         IntVector l(getExtraSFCYLowIndex());
         IntVector h(getExtraSFCYHighIndex());
-        return idx.x() >= l.x() && idx.y() >= l.y() && idx.z() >= l.z()
-          && idx.x() < h.x() && idx.y() < h.y() && idx.z() < h.z();
+        return containsIndex(l,h,idx);
       }
 
       /**
@@ -1421,8 +1425,7 @@ WARNING
       inline bool containsSFCZ(const IntVector& idx) const {
         IntVector l(getExtraSFCZLowIndex());
         IntVector h(getExtraSFCZHighIndex());
-        return idx.x() >= l.x() && idx.y() >= l.y() && idx.z() >= l.z()
-          && idx.x() < h.x() && idx.y() < h.y() && idx.z() < h.z();
+        return containsIndex(l,h,idx);
       }
 
       /**
@@ -2039,7 +2042,6 @@ WARNING
    {
     return face=static_cast<Patch::FaceType>(face+1);
    }
-
 
 } // End namespace Uintah
 
