@@ -1108,14 +1108,16 @@ Arches::paramInit(const ProcessorGroup* pg,
       ffState.d_mixVarVariance.push_back(0.0);
       ffState.d_mixVars.push_back(d_init_mix_frac);
 
-      d_props->computeInletProperties( ffState, calculatedStream ); 
+      string bc_type = "scalar_init"; 
+      d_props->computeInletProperties( ffState, calculatedStream, bc_type ); 
 
       init_enthalpy = calculatedStream.getEnthalpy(); 
 
       for (CellIterator iter=patch->getCellIterator(); 
            !iter.done(); iter++){
-        scalar[*iter] = d_init_mix_frac; 
-        //enthalpy[*iter] = init_enthalpy; 
+
+        scalar[*iter] = d_init_mix_frac;  
+
       }
     }
 

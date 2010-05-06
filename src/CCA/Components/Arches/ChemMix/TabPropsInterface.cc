@@ -125,9 +125,9 @@ TabPropsInterface::problemSetup( const ProblemSpecP& propertiesParameters )
   db_tabprops->getWithDefault( "strict_mode", d_strict_mode, false );
   db_tabprops->getWithDefault( "diagnostic_mode", d_diagnostic_mode, false );
 
-  db_tabprops->getWithDefault( "H_fuel", d_H_fuel, 0.0 ); 
-  db_tabprops->getWithDefault( "H_p_air", d_H_pair, 0.0 ); 
-  db_tabprops->getWithDefault( "H_s_air", d_H_sair, 0.0 ); 
+  db_tabprops->getWithDefault( "hl_pressure", d_hl_pressure, 0.0); 
+  db_tabprops->getWithDefault( "hl_outlet",   d_hl_outlet,   0.0); 
+  db_tabprops->getWithDefault( "hl_scalar_init", d_hl_scalar_init, 0.0); 
 
   // need the reference denisty point: (also in PhysicalPropteries object but this was easier than passing it around)
   const ProblemSpecP db_root = db_tabprops->getRootNode(); 
@@ -409,7 +409,6 @@ TabPropsInterface::getState( const ProcessorGroup* pc,
           arches_h2o[c] = table_value; 
         }
 
-
       }
 
       iv.clear(); 
@@ -577,13 +576,13 @@ TabPropsInterface::computeFirstEnthalpy( const ProcessorGroup* pc,
     std::vector<constCCVariable<double> > the_variables; 
     for ( VarMap::iterator i = d_ivVarMap.begin(); i != d_ivVarMap.end(); i++ ){
 
-      if ( i->first != "heat_loss" ){
+      if ( i->first != "heat_loss" ){ // heat loss hasn't been computed yet so this is why we have an "if" here. 
         constCCVariable<double> test_Var; 
         new_dw->get( test_Var, i->second, matlIndex, patch, gn, 0 );  
 
         the_variables.push_back( test_Var ); 
       } else {
-        constCCVariable<double> a_null_var; 
+        constCCVariable<double> a_null_var;
         the_variables.push_back( a_null_var ); // to preserve the total number of IV otherwise you will have problems below
       }
     }
@@ -598,12 +597,15 @@ TabPropsInterface::computeFirstEnthalpy( const ProcessorGroup* pc,
         if ( d_allIndepVarNames[index] != "heat_loss" ) 
           iv.push_back( (*i)[c] );
         else 
-          iv.push_back( 0.0 ); 
+          iv.push_back( d_hl_scalar_init ); 
 
         index++; 
       }
 
-      enthalpy[c] = getSingleState( "adiabatic_enthalpy", iv );  
+      double current_heat_loss = d_hl_scalar_init; // may want to make this more sophisticated later(?)
+      double sensible_enthalpy = getSingleState( "sensible_heat", iv ); 
+      double adiab_enthalpy    = getSingleState( "adiabatic_enthalpy", iv ); 
+      enthalpy[c]     = adiab_enthalpy - current_heat_loss * sensible_enthalpy; 
 
     }
   }
@@ -645,30 +647,35 @@ TabPropsInterface::getState( MixingRxnModel::ConstVarMap ivVar, MixingRxnModel::
 */
 
 void 
-TabPropsInterface::oldTableHack( const InletStream& inStream, Stream& outStream, bool calcEnthalpy )
+TabPropsInterface::oldTableHack( const InletStream& inStream, Stream& outStream, bool calcEnthalpy, const string bc_type )
 {
 
   //This is a temporary hack to get the table stuff working with the new interface
   const std::vector<string>& iv_names = getAllIndepVars();
   std::vector<double> iv(iv_names.size());
-  //double dv = 0.0; 
 
-  int num_streams = 0; 
+  // notes: 
+  // mixture fraction 2 is being set to zero always!...fix it!
 
   for ( int i = 0; i < (int) iv_names.size(); i++){
 
     if ( (iv_names[i] == "mixture_fraction") || (iv_names[i] == "coal_gas_mix_frac")){
       iv[i] = inStream.d_mixVars[0]; 
-      num_streams = 2; 
     } else if (iv_names[i] == "mixture_fraction_variance") {
       iv[i] = 0.0;
     } else if (iv_names[i] == "mixture_fraction_2") {
       iv[i] = 0.0; 
-      num_streams = 3; 
     } else if (iv_names[i] == "mixture_fraction_variance_2") {
       iv[i] = 0.0; 
     } else if (iv_names[i] == "heat_loss") {
-      iv[i] = 0.0; 
+      if ( bc_type == "pressure" )
+        iv[i] = d_hl_pressure; 
+      else if ( bc_type == "outlet" )
+        iv[i] = d_hl_outlet; 
+      else if ( bc_type == "scalar_init" )
+        iv[i] = d_hl_scalar_init; 
+      else
+        iv[i] = 0.0; 
     }
   }
 
@@ -677,6 +684,7 @@ TabPropsInterface::oldTableHack( const InletStream& inStream, Stream& outStream,
   double small             = 1.0e-10; 
   double adiab_enthalpy    = 0.0; 
   double current_heat_loss = 0.0;
+  double init_enthalpy     = 0.0; 
 
   f  = inStream.d_mixVars[0]; 
   if (inStream.d_has_second_mixfrac){
@@ -685,46 +693,40 @@ TabPropsInterface::oldTableHack( const InletStream& inStream, Stream& outStream,
 
   if (calcEnthalpy) {
 
-    //double zero_heat_loss    = 0.0; 
     double enthalpy          = 0.0; 
     double sensible_enthalpy = 0.0; 
 
     sensible_enthalpy = getSingleState( "sensible_heat", iv ); 
+    adiab_enthalpy    = getSingleState( "adiabatic_enthalpy", iv ); 
+
     enthalpy          = inStream.d_enthalpy; 
-
-    if (num_streams == 2){
-
-      adiab_enthalpy = d_H_fuel * f + d_H_pair * (  1.0 - f ); 
-
-    } else if (num_streams == 3){
-
-      adiab_enthalpy = d_H_fuel * f + ( 1.0 - f )*( f_2 * d_H_pair + ( 1.0 - f_2 )*d_H_sair ); 
-
-    }
 
     if ( inStream.d_initEnthalpy || ((abs(adiab_enthalpy - enthalpy)/abs(adiab_enthalpy) < 1.0e-4 ) && f < 1.0e-4) ) {
 
-      current_heat_loss = 0.0; 
+      if ( bc_type == "pressure" )
+        current_heat_loss = d_hl_pressure; 
+      else if ( bc_type == "outlet" )
+        current_heat_loss = d_hl_outlet; 
+      else if ( bc_type == "scalar_init" )
+        current_heat_loss = d_hl_scalar_init; 
+      else
+        current_heat_loss = 0.0; 
+
+      init_enthalpy = adiab_enthalpy - current_heat_loss * sensible_enthalpy; 
 
     } else {
-      //HEAT LOSS
-      current_heat_loss = ( adiab_enthalpy - enthalpy ) / ( sensible_enthalpy +  small ); 
 
-      // need to add check for HL exceeding table bounds...
-      if ( current_heat_loss < -1.0 )
-        current_heat_loss = -1.0; 
-      else if (current_heat_loss > 1.0 )
-        current_heat_loss = 1.0; 
+      throw ProblemSetupException("ERROR! I shouldn't be in this part of the code.", __FILE__, __LINE__); 
 
     }
 
     outStream.d_temperature = getSingleState( "temperature", iv ); 
     outStream.d_density     = getSingleState( "density", iv ); 
     outStream.d_cp          = getSingleState( "heat_capacity", iv ); 
-    outStream.d_enthalpy    = adiab_enthalpy; 
     outStream.d_h2o         = getSingleState( "H2O", iv); 
     outStream.d_co2         = getSingleState( "CO2", iv);
     outStream.d_heatLoss    = current_heat_loss; 
+    if (inStream.d_initEnthalpy) outStream.d_enthalpy = init_enthalpy; 
 
   }
 }

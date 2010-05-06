@@ -252,7 +252,7 @@ Properties::problemSetup(const ProblemSpecP& params)
 
 void
 Properties::computeInletProperties(const InletStream& inStream, 
-                                   Stream& outStream)
+                                   Stream& outStream, const string bc_type)
 {
   if (dynamic_cast<const ColdflowMixingModel*>(d_mixingModel))
     d_mixingModel->computeProps(inStream, outStream);
@@ -267,7 +267,7 @@ Properties::computeInletProperties(const InletStream& inStream,
   }
   else if ( mixModel == "TabProps"){
 
-    d_mixingRxnTable->oldTableHack( inStream, outStream, d_calcEnthalpy ); 
+    d_mixingRxnTable->oldTableHack( inStream, outStream, d_calcEnthalpy, bc_type ); 
     
   }
   else {

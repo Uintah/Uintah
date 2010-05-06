@@ -90,6 +90,9 @@
           <inputfile                    spec="REQUIRED STRING" />
           <strict_mode                  spec="OPTIONAL BOOLEAN" />
           <diagnostic_mode              spec="OPTIONAL BOOLEAN" />
+          <hl_scalar_init               spec="OPTIONAL DOUBLE" />
+          <hl_pressure                  spec="OPTIONAL DOUBLE" />
+          <hl_outlet                    spec="OPTIONAL DOUBLE" />
         </TabProps>
 
         <emperical_soot               spec="OPTIONAL BOOLEAN" />

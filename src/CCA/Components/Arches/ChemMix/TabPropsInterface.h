@@ -119,7 +119,7 @@ public:
 
 
   /** @brief A temporary solution to deal with boundary conditions on properties until Properties.cc is eliminated */ 
-  void oldTableHack( const InletStream& inStream, Stream& outStream, bool calcEnthalpy );
+  void oldTableHack( const InletStream& inStream, Stream& outStream, bool calcEnthalpy, const string bc_type );
 
   /** @brief This will initialize the enthalpy to a table value for the first timestep */ 
   void sched_computeFirstEnthalpy( const LevelP& level, SchedulerP& sched ); 
@@ -155,9 +155,11 @@ private:
   bool d_diagnostic_mode;
   bool d_strict_mode;
 
-  double d_H_fuel; 
-  double d_H_pair;  //primary air 
-  double d_H_sair;  //secondary air
+
+  // heat loss values for non-adiabatic conditions 
+  double d_hl_outlet; 
+  double d_hl_pressure; 
+  double d_hl_scalar_init; 
 
   IntVector d_ijk_den_ref; 
 
@@ -170,7 +172,6 @@ private:
   vector<string> d_allUserIndepVarNames;
     
   // vector to store independent variable values for call to StateTable::query
-  // HOW TO INITIALIZE TO BE CORREC SIZE?
   vector<double> d_indepVarValues;
 
   // StateTable object to represent the table data
