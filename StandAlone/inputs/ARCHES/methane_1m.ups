@@ -65,8 +65,7 @@
    <CFD>
 
         <ARCHES>
-            <turbulence_model>compdynamicprocedure</turbulence_model>
-            <Turbulence>
+            <Turbulence model = "compdynamicprocedure">
                 <variance_coefficient>0.1</variance_coefficient>
                 <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
             </Turbulence>
@@ -74,7 +73,7 @@
             <Properties>
                 <use_mixing_model>true</use_mixing_model>
                 <NewStaticMixingTable>
-                  <inputfile>inputs/ARCHES/NewStaticMixingTables/methane/CH4_equil_clipped.mxn</inputfile>
+                  <inputfile>inputs/ARCHES/NewStaticMixingTables/methane/CH4_equil_clipped.mxn.gz</inputfile>
                 </NewStaticMixingTable>
             </Properties>
 
