@@ -203,8 +203,9 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
         d_sourceBoundaryInfo[d_numSourceBoundaries]->streamMixturefraction.d_initEnthalpy = true;
         d_sourceBoundaryInfo[d_numSourceBoundaries]->streamMixturefraction.d_scalarDisp=0.0;
         d_sourceBoundaryInfo[d_numSourceBoundaries]->streamMixturefraction.d_mixVarVariance.push_back(0.0);
+        string bc_type = "bc_source"; 
         d_props->computeInletProperties(d_sourceBoundaryInfo[d_numSourceBoundaries]->streamMixturefraction,
-            d_sourceBoundaryInfo[d_numSourceBoundaries]->calcStream);
+            d_sourceBoundaryInfo[d_numSourceBoundaries]->calcStream, bc_type);
         ++d_numSourceBoundaries;
 
       }
@@ -337,9 +338,10 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
         // compute density and other dependent properties
         d_flowInlets[d_numInlets]->streamMixturefraction.d_initEnthalpy=true;
         d_flowInlets[d_numInlets]->streamMixturefraction.d_scalarDisp=0.0;
+        string bc_type = "flow_inlet"; 
         d_props->computeInletProperties(
             d_flowInlets[d_numInlets]->streamMixturefraction,
-            d_flowInlets[d_numInlets]->calcStream);
+            d_flowInlets[d_numInlets]->calcStream, bc_type);
         double f = d_flowInlets[d_numInlets]->streamMixturefraction.d_mixVars[0];
         if (f > 0.0){
           d_flowInlets[d_numInlets]->fcr = d_props->getCarbonContent(f);
@@ -404,8 +406,9 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
       // compute density and other dependent properties
       d_pressureBC->streamMixturefraction.d_initEnthalpy=true;
       d_pressureBC->streamMixturefraction.d_scalarDisp=0.0;
+      string bc_type = "pressure"; 
       d_props->computeInletProperties(d_pressureBC->streamMixturefraction, 
-          d_pressureBC->calcStream);
+          d_pressureBC->calcStream, bc_type);
       if (d_calcExtraScalars) {
 
         ProblemSpecP extra_scalar_db = press_db->findBlock("ExtraScalars");
@@ -464,8 +467,9 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
       // compute density and other dependent properties
       d_outletBC->streamMixturefraction.d_initEnthalpy=true;
       d_outletBC->streamMixturefraction.d_scalarDisp=0.0;
+      string bc_type = "outlet"; 
       d_props->computeInletProperties(d_outletBC->streamMixturefraction, 
-          d_outletBC->calcStream);
+          d_outletBC->calcStream, bc_type);
       if (d_calcExtraScalars) {
 
         ProblemSpecP extra_scalar_db = outlet_db->findBlock("ExtraScalars");

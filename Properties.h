@@ -122,7 +122,7 @@ public:
   // Compute properties for inlet/outlet streams
 
   void computeInletProperties(const InletStream& inStream,
-                              Stream& outStream);
+                              Stream& outStream, const string bc_type);
 
   // GROUP: Schedule Action :
   ///////////////////////////////////////////////////////////////////////
