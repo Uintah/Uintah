@@ -44842,13 +44842,13 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 ##  --  search for TabProps ------------------------
 
-if test "$HAVE_HDF5" != "yes"; then
-  { { echo "$as_me:$LINENO: error: --with-tabprops=DIR requires HDF5. " >&5
+if test "$with_tabprops"; then
+  if test "$HAVE_HDF5" != "yes"; then
+    { { echo "$as_me:$LINENO: error: --with-tabprops=DIR requires HDF5. " >&5
 echo "$as_me: error: --with-tabprops=DIR requires HDF5. " >&2;}
    { (exit 1); exit 1; }; }
-fi
+  fi
 
-if test "$with_tabprops"; then
   if test "$with_tabprops" = "yes"; then
     { { echo "$as_me:$LINENO: error: --with-tabprops=DIR requires a DIRectory be provided. " >&5
 echo "$as_me: error: --with-tabprops=DIR requires a DIRectory be provided. " >&2;}
