@@ -3402,11 +3402,11 @@ sci_defs_files="$sci_defs_files include/sci_defs/hdf5_testdefs.h"
 AC_LANG(C)
 ##  --  search for TabProps ------------------------
 
-if test "$HAVE_HDF5" != "yes"; then
-  AC_MSG_ERROR( --with-tabprops=DIR requires HDF5. )
-fi
-
 if test "$with_tabprops"; then
+  if test "$HAVE_HDF5" != "yes"; then
+    AC_MSG_ERROR( --with-tabprops=DIR requires HDF5. )
+  fi
+
   if test "$with_tabprops" = "yes"; then
     AC_MSG_ERROR( --with-tabprops=DIR requires a DIRectory be provided. )
   else
