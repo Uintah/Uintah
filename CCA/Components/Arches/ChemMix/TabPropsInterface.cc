@@ -311,14 +311,16 @@ TabPropsInterface::getState( const ProcessorGroup* pc,
 
     //independent variables:
     std::vector<constCCVariable<double> > indep_storage; 
-    for ( VarMap::iterator i = d_ivVarMap.begin(); i != d_ivVarMap.end(); i++ ) { 
-    //for ( std::vector<string>::iterator i = d_allIndepVarNames.begin(); i != d_allIndepVarNames.end(); i++){
+    const std::vector<string>& iv_names = getAllIndepVars();
+
+    for ( int i = 0; i < (int) iv_names.size(); i++ ){
+
+      VarMap::iterator ivar = d_ivVarMap.find( iv_names[i] ); 
 
       constCCVariable<double> the_var; 
-
-      new_dw->get( the_var, i->second, matlIndex, patch, gn, 0 ); 
-
+      new_dw->get( the_var, ivar->second, matlIndex, patch, gn, 0 );
       indep_storage.push_back( the_var ); 
+
     }
 
     // dependent variables:
@@ -388,8 +390,9 @@ TabPropsInterface::getState( const ProcessorGroup* pc,
 
       // fill independent variables
       std::vector<double> iv; 
-      for ( std::vector<constCCVariable<double> >::iterator i = indep_storage.begin(); i != indep_storage.end(); ++i )
+      for ( std::vector<constCCVariable<double> >::iterator i = indep_storage.begin(); i != indep_storage.end(); ++i ) {
         iv.push_back( (*i)[c] );
+      }
 
       // retrieve all depenedent variables from table
       for ( std::map< string, CCVariable<double>* >::iterator i = depend_storage.begin(); i != depend_storage.end(); ++i ){
@@ -411,11 +414,8 @@ TabPropsInterface::getState( const ProcessorGroup* pc,
 
       }
 
-      iv.clear(); 
-
     }
 
-    indep_storage.clear(); 
     for ( CCMap::iterator i = depend_storage.begin(); i != depend_storage.end(); ++i ){
       delete i->second;
     }
@@ -489,11 +489,14 @@ TabPropsInterface::computeHeatLoss( const ProcessorGroup* pc,
     new_dw->get(enthalpy, d_lab->d_enthalpySPLabel, matlIndex, patch, gn, 0 ); 
 
     std::vector<constCCVariable<double> > the_variables; 
-    for ( VarMap::iterator i = d_ivVarMap.begin(); i != d_ivVarMap.end(); i++ ){
+    const std::vector<string>& iv_names = getAllIndepVars();
 
-      if ( i->first != "heat_loss" ){
+    for ( int i = 0; i < (int) iv_names.size(); i++ ){
+
+      VarMap::iterator ivar = d_ivVarMap.find( iv_names[i] ); 
+      if ( ivar->first != "heat_loss" ){
         constCCVariable<double> test_Var; 
-        new_dw->get( test_Var, i->second, matlIndex, patch, gn, 0 );  
+        new_dw->get( test_Var, ivar->second, matlIndex, patch, gn, 0 );  
 
         the_variables.push_back( test_Var ); 
       } else {
