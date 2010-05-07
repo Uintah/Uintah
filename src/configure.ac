@@ -1017,39 +1017,6 @@ AC_SUBST(ZOLTAN_LIB_DIR_FLAG)
 
 ## -----------------------------------------------
 
-##  --  search for TabProps ------------------------
-
-if test "$with_tabprops"; then
-  if test "$with_tabprops" = "yes"; then
-    AC_MSG_ERROR( --with-tabprops=DIR requires a DIRectory be provided. )
-  else
-    AC_MSG_CHECKING(for TabProps files (For now we are just verifying the existence of lib and .h files)) 
-    if test ! -d $with_tabprops; then
-      AC_MSG_ERROR( '$with_tabprops' directory does not exist. )
-    fi
-    if test ! -f $with_tabprops/lib/libtabprops.a; then
-      AC_MSG_ERROR( '$with_tabprops/lib/libtabprops.a' does not exist. )
-    fi
-    for file in BSpline.h LU.h StateTable.h; do
-      if test ! -f $with_tabprops/include/$file; then
-        AC_MSG_ERROR( '$with_tabprops/include/$file' does not exist. )
-      fi
-    done
-  fi
-  AC_MSG_RESULT(yes)
-  DEF_TABPROPS="#define HAVE_TABPROPS 1"
-  INC_TABPROPS_H="-I$with_tabprops/include"
-  TABPROPS_LIB_DIR_FLAG="-L$with_tabprops/lib"
-  TABPROPS_LIB_FLAG="-ltabprops"
-
-fi
-AC_SUBST(DEF_TABPROPS)
-AC_SUBST(INC_TABPROPS_H)
-AC_SUBST(TABPROPS_LIB_FLAG)
-AC_SUBST(TABPROPS_LIB_DIR_FLAG)
-
-## -----------------------------------------------
-
 sci_defs_files="$sci_defs_files include/sci_defs/uintah_testdefs.h"
 
 # This flag is for the windows compiler - so it can generate correct
@@ -3401,7 +3368,7 @@ AC_SUBST(TEEM_LIB_DIR_FLAG)
 sci_defs_files="$sci_defs_files include/sci_defs/teem_testdefs.h"
 
 ##  --  search for hdf5  -------------------------------------------------
-
+AC_LANG(C++)
 # The sci_required_hdf5 could have been set to yes when using the
 # with_hdf5 agument or from a package in the aclocal.m4 it.
 # These are the only two locations that the sci_required_* should be set.
@@ -3417,7 +3384,7 @@ if test "$sci_required_hdf5" = "yes"; then
     fi
   fi
 
-  SCI_TRY_LINK(HDF5,hdf5 library and headers,hdf5.h,$_sci_inc,hdf5,$_sci_lib,,,$_sci_optional)
+  SCI_TRY_LINK(HDF5,hdf5 library and headers,hdf5.h H5Cpp.h,$_sci_inc,hdf5 hdf5_cpp,$_sci_lib,,,$_sci_optional)
 
   # Set the DEF_HDF5 var which is placed in the hdf5_testdefs.h.in
   # Incude hdf5_defs.h in your code to optionally use the library.
@@ -3432,6 +3399,40 @@ AC_SUBST(INC_HDF5_H)		# Place this var in the configVars.mk.in
 AC_SUBST(HDF5_LIB_FLAG)		# Place this var in the configVars.mk.in
 AC_SUBST(HDF5_LIB_DIR_FLAG)	# Place this var in the configVars.mk.in
 sci_defs_files="$sci_defs_files include/sci_defs/hdf5_testdefs.h"
+AC_LANG(C)
+##  --  search for TabProps ------------------------
+
+if test "$HAVE_HDF5" != "yes"; then
+  AC_MSG_ERROR( --with-tabprops=DIR requires HDF5. )
+fi
+
+if test "$with_tabprops"; then
+  if test "$with_tabprops" = "yes"; then
+    AC_MSG_ERROR( --with-tabprops=DIR requires a DIRectory be provided. )
+  else
+    AC_MSG_CHECKING(for TabProps files (For now we are just verifying the existence of lib and .h files)) 
+    if test ! -d $with_tabprops; then
+      AC_MSG_ERROR( '$with_tabprops' directory does not exist. )
+    fi
+    for file in include/tabprops/BSpline.h include/tabprops/LU.h include/tabprops/StateTable.h lib/tabprops/libtabprops.a; do
+      if test ! -f $with_tabprops/$file; then
+        AC_MSG_ERROR( '$with_tabprops/$file' does not exist. )
+      fi
+    done
+  fi
+  AC_MSG_RESULT(yes)
+  DEF_TABPROPS="#define HAVE_TABPROPS 1"
+  INC_TABPROPS_H="-I$with_tabprops/include"
+  TABPROPS_LIB_DIR_FLAG="-L$with_tabprops/lib/tabprops"
+  TABPROPS_LIB_FLAG="-ltabprops"
+
+fi
+AC_SUBST(DEF_TABPROPS)
+AC_SUBST(INC_TABPROPS_H)
+AC_SUBST(TABPROPS_LIB_FLAG)
+AC_SUBST(TABPROPS_LIB_DIR_FLAG)
+
+## -----------------------------------------------
 
 ##  --  search for hypre stuff  ------------------------------------------
 
