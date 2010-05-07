@@ -684,7 +684,6 @@ TabPropsInterface::oldTableHack( const InletStream& inStream, Stream& outStream,
 
   double f                 = 0.0; 
   double f_2               = 0.0; 
-  double small             = 1.0e-10; 
   double adiab_enthalpy    = 0.0; 
   double current_heat_loss = 0.0;
   double init_enthalpy     = 0.0; 
