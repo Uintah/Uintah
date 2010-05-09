@@ -796,6 +796,7 @@ ScalarSolver::scalarLinearSolve(const ProcessorGroup* pc,
 
       if (scalarVars.scalar[c] > 1.0) {
         if (scalarVars.scalar[c] > 1.0 + epsilon) {
+          scalarVars.scalar[c] = 1.0; 
           scalar_clipped = 1.0;
           cout << "scalar got clipped to 1 at " << c
           << " , scalar value was " << scalarVars.scalar[c] 
@@ -807,6 +808,7 @@ ScalarSolver::scalarLinearSolve(const ProcessorGroup* pc,
       else if (scalarVars.scalar[c] < 0.0) {
         if (scalarVars.scalar[c] < - epsilon) {
           scalar_clipped = 1.0;
+          scalarVars.scalar[c] = 0.0; 
           cout << "scalar got clipped to 0 at " << c
           << " , scalar value was " << scalarVars.scalar[c]
           << " , density guess was " 
