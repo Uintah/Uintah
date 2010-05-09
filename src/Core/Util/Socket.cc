@@ -36,6 +36,7 @@
 #include <string>
 
 #include <cstring>
+#include <cstdio>
 #include <cerrno>
 
 #ifdef _WIN32

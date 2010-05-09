@@ -29,6 +29,7 @@
 
 
 #include <cstdlib>
+#include <cstdio>
 #include <iostream>
 using std::cerr;
 #include <Core/Malloc/Allocator.h>
