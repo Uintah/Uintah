@@ -789,35 +789,51 @@ ScalarSolver::scalarLinearSolve(const ProcessorGroup* pc,
     //__________________________________
     //  CLAMP
     double scalar_clipped = 0.0;
-    double epsilon = 1.0e-15;
+    bool did_clipping_low = false;
+    bool did_clipping_high = false;  
 
     for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
       IntVector c = *iter;
 
       if (scalarVars.scalar[c] > 1.0) {
-        if (scalarVars.scalar[c] > 1.0 + epsilon) {
-          scalarVars.scalar[c] = 1.0; 
-          scalar_clipped = 1.0;
-          cout << "scalar got clipped to 1 at " << c
-          << " , scalar value was " << scalarVars.scalar[c] 
-          << " , density guess was " 
-          << constScalarVars.density_guess[c] << endl;
-        }
-        scalarVars.scalar[c] = 1.0;
+
+        scalarVars.scalar[c] = 1.0; 
+        scalar_clipped = 1.0;
+        did_clipping_low = true; 
+
+        // uncomment this if you want to debug your clipping:
+        //cout << "scalar got clipped to 1 at " << c
+        //<< " , scalar value was " << scalarVars.scalar[c] 
+        //<< " , density guess was " 
+        //<< constScalarVars.density_guess[c] << endl;
+
       }  
       else if (scalarVars.scalar[c] < 0.0) {
-        if (scalarVars.scalar[c] < - epsilon) {
-          scalar_clipped = 1.0;
-          scalarVars.scalar[c] = 0.0; 
-          cout << "scalar got clipped to 0 at " << c
-          << " , scalar value was " << scalarVars.scalar[c]
-          << " , density guess was " 
-          << constScalarVars.density_guess[c] << endl;
-          cout << "Try setting <scalarUnderflowCheck>true</scalarUnderflowCheck> "
-          << "in the <ARCHES> section of the input file, "
-          <<"but it would only help for first time substep if RKSSP is used" << endl;
-        }
+
+        scalar_clipped = 1.0;
+        scalarVars.scalar[c] = 0.0; 
+        did_clipping_high = true; 
+
+        // uncomment this if you want to debug your clipping: 
+        //cout << "scalar got clipped to 0 at " << c
+        //<< " , scalar value was " << scalarVars.scalar[c]
+        //<< " , density guess was " 
+        //<< constScalarVars.density_guess[c] << endl;
+        //cout << "Try setting <scalarUnderflowCheck>true</scalarUnderflowCheck> "
+        //<< "in the <ARCHES> section of the input file, "
+        //<<"but it would only help for first time substep if RKSSP is used" << endl;
       }
+    }
+
+    IntVector low = patch->getCellLowIndex(); 
+    IntVector high = patch->getCellHighIndex(); 
+    if ( did_clipping_low ) {
+      cout << "NOTICE: This patch had scalar UNDERflow that required clipping!" << endl;
+      cout << "Patch bounds: " << low << " to " << high << endl;
+    } 
+    if ( did_clipping_high ) {
+      cout << "NOTICE: This patch had scalar OVERflow that required clipping!" << endl;
+      cout << "Patch bounds: " << low << " to " << high << endl;
     }
     
     if (timelabels->recursion){
