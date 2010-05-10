@@ -51,7 +51,7 @@ ifeq ($(BUILD_ICE),yes)
 endif
 ifeq ($(BUILD_ARCHES),yes)
   ARCHES   := $(SRCDIR)/Arches \
-	      $(ADIR)/ChemMix/TabProps $(ADIR)/fortran           $(ADIR)/Mixing \
+	      $(ADIR)/fortran           $(ADIR)/Mixing \
 	      $(ADIR)/Radiation        $(ADIR)/Radiation/fortran $(ADIR)/MCRT/ArchesRMCRT \
               $(SRCDIR)/SpatialOps 
   ifeq ($(BUILD_MPM),yes)

@@ -34,7 +34,7 @@ DEALINGS IN THE SOFTWARE.
 #define Uintah_Component_Arches_TabPropsInterface_h
 
 // includes for Arches
-#include <CCA/Components/Arches/ChemMix/TabProps/StateTable.h>
+#include <tabprops/StateTable.h>
 #include <CCA/Components/Arches/Mixing/InletStream.h>
 #include <CCA/Components/Arches/Mixing/Stream.h>
 #include <CCA/Components/Arches/ArchesMaterial.h>

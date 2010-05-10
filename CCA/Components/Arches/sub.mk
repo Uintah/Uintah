@@ -100,7 +100,6 @@ PSELIBS := \
         CCA/Components/Arches/Mixing    \
         CCA/Components/Arches/MCRT/ArchesRMCRT  \
         CCA/Components/Arches/Radiation \
-        CCA/Components/Arches/ChemMix/TabProps  \
         CCA/Components/OnTheFlyAnalysis \
         CCA/Ports     \
         Core/Parallel \
@@ -121,9 +120,11 @@ ifneq ($(HAVE_HYPRE),)
 endif
 
 LIBS := $(LIBS) $(XML2_LIBRARY) $(F_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) \
-        $(LAPACK_LIBRARY) $(BLAS_LIBRARY) $(THREAD_LIBRARY) $(TABPROPS_LIBRARY)
+        $(LAPACK_LIBRARY) $(BLAS_LIBRARY) $(THREAD_LIBRARY) $(TABPROPS_LIBRARY) $(HDF5_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
+
+INCLUDES := $(INCLUDES) $(HDF5_INCLUDE) $(TABPROPS_INCLUDE)
 
 $(SRCDIR)/BoundaryCondition.$(OBJEXT): $(SRCDIR)/fortran/areain_fort.h
 $(SRCDIR)/BoundaryCondition.$(OBJEXT): $(SRCDIR)/fortran/inlpresbcinout_fort.h
