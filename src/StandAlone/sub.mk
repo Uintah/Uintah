@@ -53,8 +53,10 @@ ifeq ($(BUILD_ARCHES),yes)
   endif
   ARCHES_LIBS        = $(COMPONENTS)/Arches                  \
                        $(COMPONENTS)/Arches/MCRT/ArchesRMCRT \
-                       $(COMPONENTS)/Arches/ChemMix/TabProps \
                        $(COMPONENTS)/SpatialOps
+  ifeq ($(HAVE_TABPROPS),yes)
+     ARCHES_LIBS +=    $(COMPONENTS)/Arches/ChemMix/TabProps
+  endif
 endif
 ifeq ($(BUILD_MPM),yes)
   MPM_LIB            = CCA/Components/MPM
