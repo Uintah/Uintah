@@ -749,7 +749,6 @@ Arches::scheduleInitialize(const LevelP& level,
 void
 Arches::restartInitialize()
 {
-  printf( "Arches::restartInitialize()\n" );
 }
 
 // ****************************************************************************
