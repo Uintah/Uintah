@@ -3425,8 +3425,9 @@ if test "$with_tabprops"; then
   INC_TABPROPS_H="-I$with_tabprops/include"
   TABPROPS_LIB_DIR_FLAG="-L$with_tabprops/lib/tabprops"
   TABPROPS_LIB_FLAG="-ltabprops"
-
+  HAVE_TABPROPS="yes"
 fi
+AC_SUBST(HAVE_TABPROPS)
 AC_SUBST(DEF_TABPROPS)
 AC_SUBST(INC_TABPROPS_H)
 AC_SUBST(TABPROPS_LIB_FLAG)

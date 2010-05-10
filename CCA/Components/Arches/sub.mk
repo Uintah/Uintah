@@ -84,7 +84,12 @@ ifeq ($(HAVE_HYPRE),yes)
   SRCS += $(SRCDIR)/HypreSolver.cc
 endif
 
-SUBDIRS := $(SRCDIR)/CoalModels $(SRCDIR)/SourceTerms $(SRCDIR)/TransportEqns $(SRCDIR)/ChemMix
+SUBDIRS := $(SRCDIR)/CoalModels $(SRCDIR)/SourceTerms $(SRCDIR)/TransportEqns
+
+ifeq ($(HAVE_TABPROPS),yes)
+  SUBDIRS += $(SRCDIR)/ChemMix
+endif
+
 include $(SCIRUN_SCRIPTS)/recurse.mk
 
 PSELIBS := \

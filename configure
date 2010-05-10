@@ -877,6 +877,7 @@ DEF_HDF5
 INC_HDF5_H
 HDF5_LIB_FLAG
 HDF5_LIB_DIR_FLAG
+HAVE_TABPROPS
 DEF_TABPROPS
 INC_TABPROPS_H
 TABPROPS_LIB_FLAG
@@ -44875,8 +44876,9 @@ echo "${ECHO_T}yes" >&6; }
   INC_TABPROPS_H="-I$with_tabprops/include"
   TABPROPS_LIB_DIR_FLAG="-L$with_tabprops/lib/tabprops"
   TABPROPS_LIB_FLAG="-ltabprops"
-
+  HAVE_TABPROPS="yes"
 fi
+
 
 
 
@@ -46458,6 +46460,7 @@ DEF_HDF5!$DEF_HDF5$ac_delim
 INC_HDF5_H!$INC_HDF5_H$ac_delim
 HDF5_LIB_FLAG!$HDF5_LIB_FLAG$ac_delim
 HDF5_LIB_DIR_FLAG!$HDF5_LIB_DIR_FLAG$ac_delim
+HAVE_TABPROPS!$HAVE_TABPROPS$ac_delim
 DEF_TABPROPS!$DEF_TABPROPS$ac_delim
 INC_TABPROPS_H!$INC_TABPROPS_H$ac_delim
 TABPROPS_LIB_FLAG!$TABPROPS_LIB_FLAG$ac_delim
@@ -46474,7 +46477,7 @@ LIBOBJS!$LIBOBJS$ac_delim
 LTLIBOBJS!$LTLIBOBJS$ac_delim
 _ACEOF
 
-  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 53; then
+  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 54; then
     break
   elif $ac_last_try; then
     { { echo "$as_me:$LINENO: error: could not make $CONFIG_STATUS" >&5
