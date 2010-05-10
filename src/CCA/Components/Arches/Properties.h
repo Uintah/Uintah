@@ -27,9 +27,6 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-
-
-
 #ifndef Uintah_Component_Arches_Properties_h
 #define Uintah_Component_Arches_Properties_h
 
@@ -66,13 +63,14 @@ POSSIBLE REVISIONS
     None
 ***************************************************************************/
 
+#include <sci_defs/uintah_defs.h>
+
 #include <CCA/Components/Arches/Arches.h>
 #include <CCA/Components/Arches/ArchesLabel.h>
 #include <CCA/Components/Arches/BoundaryCondition.h>
 #include <CCA/Components/Arches/ChemMix/MixingRxnModel.h>
-#include <CCA/Components/Arches/ChemMix/TabPropsInterface.h>
 #ifdef PetscFilter
-#include <CCA/Components/Arches/Filter.h>
+#  include <CCA/Components/Arches/Filter.h>
 #endif
 #include <Core/Parallel/UintahParallelComponent.h>
 #include <Core/Grid/Patch.h>
@@ -348,8 +346,9 @@ private:
       
       MixingModel* d_mixingModel;
       //MixingRxnTable* d_mixingRxnTable;
+#if HAVE_TABPROPS
       TabPropsInterface* d_mixingRxnTable;
-
+#endif
       BoundaryCondition* d_bc;
       bool d_empirical_soot;
       double d_sootFactor;
