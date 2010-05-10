@@ -81,8 +81,7 @@ static DebugStream amr_doing("AMRMPM", false);
 // From ThreadPool.cc:  Used for syncing cerr'ing so it is easier to read.
 extern Mutex cerrLock;
 
-AMRMPM::AMRMPM(const ProcessorGroup* myworld) :
-  SerialMPM(myworld)
+AMRMPM::AMRMPM(const ProcessorGroup* myworld) :SerialMPM(myworld)
 {
   lb = scinew MPMLabel();
   flags = scinew MPMFlags(myworld);
@@ -154,6 +153,16 @@ void AMRMPM::problemSetup(const ProblemSpecP& prob_spec,
     mpm_amr_ps->getWithDefault("min_grid_level", flags->d_minGridLevel, 0);
     mpm_amr_ps->getWithDefault("max_grid_level", flags->d_maxGridLevel, 1000);
   }
+    
+  //__________________________________
+  //  bulletproofing
+  if(!d_sharedState->isLockstepAMR()){
+    ostringstream msg;
+    msg << "\n ERROR: You must add \n"
+        << " <useLockStep> true </useLockStep> \n"
+        << " inside of the <AMR> section. \n"; 
+    throw ProblemSetupException(msg.str(),__FILE__, __LINE__);
+  }  
     
   if(flags->d_8or27==8){
     NGP=1;
@@ -301,7 +310,6 @@ void AMRMPM::scheduleTimeAdvance(const LevelP & inlevel,
   int maxLevels = inlevel->getGrid()->numLevels();
   GridP grid = inlevel->getGrid();
   
-   // maxLevels = 1;
   
   for (int l = 0; l < maxLevels; l++) {
     const LevelP& level = grid->getLevel(l);
@@ -2045,7 +2053,6 @@ void AMRMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
          IntVector cl, ch, fl, fh;
          getCoarseLevelRangeNodes(patch, coarseLevel, cl, ch, fl, fh, 1);
          
-         cout << " cl: " << cl << " ch: " << ch << " fl: " << fl << " fh: " << fh << endl;
          new_dw->getRegion(gv_star_coarse, lb->gVelocityStarLabel, dwi,
                                            coarseLevel, cl, ch, false);
          new_dw->getRegion(gacc_coarse,    lb->gAccelerationLabel, dwi,
