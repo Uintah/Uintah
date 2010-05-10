@@ -32,7 +32,7 @@ DEALINGS IN THE SOFTWARE.
 
 // includes for Arches
 #include <CCA/Components/Arches/ChemMix/MixingRxnModel.h>
-#include <CCA/Components/Arches/ChemMix/TabProps/StateTable.h>
+#include <tabprops/StateTable.h>
 #include <CCA/Components/Arches/ChemMix/TabPropsInterface.h>
 #include <CCA/Components/Arches/TransportEqns/EqnFactory.h>
 #include <CCA/Components/Arches/TransportEqns/EqnBase.h>
