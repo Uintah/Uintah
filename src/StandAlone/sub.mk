@@ -54,9 +54,6 @@ ifeq ($(BUILD_ARCHES),yes)
   ARCHES_LIBS        = $(COMPONENTS)/Arches                  \
                        $(COMPONENTS)/Arches/MCRT/ArchesRMCRT \
                        $(COMPONENTS)/SpatialOps
-  ifeq ($(HAVE_TABPROPS),yes)
-     ARCHES_LIBS +=    $(COMPONENTS)/Arches/ChemMix/TabProps
-  endif
 endif
 ifeq ($(BUILD_MPM),yes)
   MPM_LIB            = CCA/Components/MPM
@@ -161,7 +158,7 @@ else
 endif
 
 ifeq ($(IS_STATIC_BUILD),yes)
-  LIBS := $(CORE_STATIC_LIBS) $(ZOLTAN_LIBRARY)
+  LIBS := $(CORE_STATIC_LIBS) $(ZOLTAN_LIBRARY) $(TABPROPS_LIBRARY) $(HDF5_LIBRARY)
 else
   LIBS := $(XML2_LIBRARY) $(F_LIBRARY) $(HYPRE_LIBRARY)      \
           $(CANTERA_LIBRARY) $(ZOLTAN_LIBRARY)               \
