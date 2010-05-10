@@ -49,6 +49,7 @@ SRCS += $(SRCDIR)/Clipper.cc                    \
         $(SRCDIR)/SearchGrid.cc                 \
         $(SRCDIR)/SparseRowMatrix.cc            \
         $(SRCDIR)/String.cc                     \
+	$(SRCDIR)/FieldInterfaceAux.cc          \
         $(SRCDIR)/TypeName.cc                   
 
 

@@ -56,6 +56,7 @@ POSSIBLE REVISIONS
 #include <Core/Util/Assert.h>
 #include <Core/Math/MiscMath.h>
 #include <cmath>
+#include <cstdio>
 #include <iostream>
 
 namespace SCIRun {

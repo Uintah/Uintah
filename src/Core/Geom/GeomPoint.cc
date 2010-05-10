@@ -49,6 +49,7 @@
 
 #include <iostream>
 #include <algorithm>
+#include <cstdio>
 
 using std::cerr;
 using std::cout;
@@ -266,7 +267,7 @@ GeomTimedParticles::GeomTimedParticles(const GeomTimedParticles&)
   cerr << "No real Copy Constructor...\n";
 }
 
-#include <cstdio>
+
 
 GeomTimedParticles::GeomTimedParticles(char *fname)
 :drawMode(0),cmap(0)

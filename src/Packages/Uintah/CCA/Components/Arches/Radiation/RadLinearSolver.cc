@@ -444,10 +444,9 @@ RadLinearSolver::radLinearSolve()
   ierr = MatMult(A, d_x, u_tmp);
   if(ierr)
     throw UintahPetscError(ierr, "MatMult", __FILE__, __LINE__);
-#if (PETSC_VERSION_MINOR == 2)
+#if (PETSC_VERSION_MAJOR == 2 && PETSC_VERSION_MINOR == 2)
   ierr = VecAXPY(&neg_one, d_b, u_tmp);
-#endif
-#if (PETSC_VERSION_MINOR == 3)
+#else
   ierr = VecAXPY(u_tmp,neg_one,d_b);
 #endif
   if(ierr)
@@ -495,14 +494,20 @@ RadLinearSolver::radLinearSolve()
     ierr = PCSetType(peqnpc, PCILU);
     if(ierr)
       throw UintahPetscError(ierr, "PCSetType", __FILE__, __LINE__);
-#if (PETSC_VERSION_MINOR == 3 && PETSC_VERSION_SUBMINOR >= 1) // 2.3.1
+#if (PETSC_VERSION_MAJOR == 2)
+  #if (PETSC_VERSION_MINOR == 3 && PETSC_VERSION_SUBMINOR >= 1) // 2.3.1
     ierr = PCFactorSetFill(peqnpc, d_fill);
     if(ierr)
       throw UintahPetscError(ierr, "PCFactorSetFill", __FILE__, __LINE__);
-#else
+  #else
     ierr = PCILUSetFill(peqnpc, d_fill);
     if(ierr)
       throw UintahPetscError(ierr, "PCILUSetFill", __FILE__, __LINE__);
+  #endif
+#else //3.*.*
+    ierr = PCFactorSetFill(peqnpc, d_fill);
+    if(ierr)
+      throw UintahPetscError(ierr, "PCFactorSetFill", __FILE__, __LINE__);
 #endif
   }
   else {
@@ -552,10 +557,9 @@ RadLinearSolver::radLinearSolve()
   ierr = MatMult(A, d_x, d_u);
   if(ierr)
     throw UintahPetscError(ierr, "MatMult", __FILE__, __LINE__);
-#if (PETSC_VERSION_MINOR == 2)
+#if (PETSC_VERSION_MAJOR== 2 && PETSC_VERSION_MINOR == 2)
   ierr = VecAXPY(&neg_one, d_b, d_u);
-#endif
-#if (PETSC_VERSION_MINOR == 3)
+#else
   ierr = VecAXPY(d_u,neg_one, d_b);
 #endif
   if(ierr)

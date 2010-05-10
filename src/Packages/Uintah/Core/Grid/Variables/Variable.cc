@@ -49,6 +49,7 @@ DEALINGS IN THE SOFTWARE.
 
 #include <zlib.h>
 #include <cmath>
+#include <cstdio>
 #include <cerrno>
 #include <cstring>
 

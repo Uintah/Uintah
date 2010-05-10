@@ -49,6 +49,7 @@
 #include <Core/Geom/Material.h>
 #include <Core/Math/MiscMath.h>
 #include <iostream>
+#include <cstdio>
 
 #ifndef _WIN32
 #include <X11/X.h>

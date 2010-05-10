@@ -32,6 +32,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Packages/Uintah/StandAlone/tools/uda2nrrd/particles.h>
 
 #include <Core/Geometry/Point.h>
+#include <cstdio>
 
 using namespace SCIRun;
 

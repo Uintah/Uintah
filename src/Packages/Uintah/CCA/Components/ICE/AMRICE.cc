@@ -49,6 +49,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Math/MiscMath.h>
 #include <Core/Util/DebugStream.h>
 #include <iomanip>
+#include <cstdio>
 
 
 using namespace Uintah;

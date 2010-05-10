@@ -33,6 +33,7 @@ DEALINGS IN THE SOFTWARE.
 #include <sci_defs/mpi_defs.h>
 
 #include <cstdlib>
+#include <cstdio>
 #include <iostream>
 #include <vector>
 #include <queue>

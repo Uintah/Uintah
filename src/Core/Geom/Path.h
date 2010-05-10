@@ -74,6 +74,7 @@
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geom/share.h>
+#include <cstdio>
 
 namespace SCIRun {
 

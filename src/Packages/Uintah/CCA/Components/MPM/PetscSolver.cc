@@ -414,11 +414,20 @@ void MPMPetscSolver::createMatrix(const ProcessorGroup* d_myworld,
     //the stash is used by nodes that neighbor my patches on the + faces.
     MatStashSetInitialSize(d_A,1000000,0);
     if(d_DOFsPerNode>=1){
+#if (PETSC_VERSION_MAJOR==3)
+      MatSetOption(d_A, MAT_USE_INODES, PETSC_TRUE);
+#else
       MatSetOption(d_A, MAT_USE_INODES);
+#endif
     }
     
+#if (PETSC_VERSION_MAJOR==3)
+    MatSetOption(d_A, MAT_KEEP_ZEROED_ROWS, PETSC_TRUE);
+    MatSetOption(d_A,MAT_IGNORE_ZERO_ENTRIES, PETSC_TRUE);
+#else
     MatSetOption(d_A, MAT_KEEP_ZEROED_ROWS);
     MatSetOption(d_A,MAT_IGNORE_ZERO_ENTRIES);
+#endif
 
     // Create vectors.  Note that we form 1 vector from scratch and
     // then duplicate as needed.

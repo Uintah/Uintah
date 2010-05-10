@@ -42,6 +42,7 @@ DEALINGS IN THE SOFTWARE.
 using namespace Uintah;
 
 #include <iomanip>
+#include <cstdio>
 using namespace std;
 
 static DebugStream grid_dbg("GridDBG",false);
