@@ -64,7 +64,7 @@ EqnFactory::retrieve_scalar_eqn( const std::string name )
   const BuildMap::iterator ibuilder = builders_.find( name );
 
   if( ibuilder == builders_.end() ){
-    string errmsg = "ERROR: Arches: EqnBuilder: No source term registered for " + name + "\n";
+    string errmsg = "ERROR: Arches: EqnBuilder: No registered " + name + " transport eqn!\n";
     throw InvalidValue(errmsg,__FILE__,__LINE__);
   }
 
