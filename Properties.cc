@@ -33,7 +33,9 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Arches/Properties.h>
 #include <CCA/Components/Arches/Arches.h>
 #include <CCA/Components/Arches/ArchesLabel.h>
-#include <CCA/Components/Arches/ChemMix/TabPropsInterface.h>
+#if HAVE_TABPROPS
+# include <CCA/Components/Arches/ChemMix/TabPropsInterface.h>
+#endif
 #include <CCA/Components/Arches/Mixing/MixingModel.h>
 #include <CCA/Components/Arches/Mixing/ColdflowMixingModel.h>
 #include <CCA/Components/Arches/Mixing/MOMColdflowMixingModel.h>
@@ -133,8 +135,10 @@ Properties::problemSetup(const ProblemSpecP& params)
     mixModel = "StandardTable"; 
   else if (db->findBlock("MOMColdFlowMixingModel"))
     mixModel = "MOMcoldFlowMixingModel"; 
+#if HAVE_TABPROPS
   else if (db->findBlock("TabProps"))
     mixModel = "TabProps";
+#endif
   else
     throw InvalidValue("ERROR!: No mixing/reaction table specified!",__FILE__,__LINE__);
 
@@ -165,11 +169,13 @@ Properties::problemSetup(const ProblemSpecP& params)
                                                   d_calcVariance);
     d_reactingFlow = false;
   }
+#if HAVE_TABPROPS
   else if (mixModel == "TabProps") {
     // New TabPropsInterface stuff...
     d_mixingRxnTable = scinew TabPropsInterface( d_lab );
     d_mixingRxnTable->problemSetup( db ); 
   }
+#endif
   else if (mixModel == "pdfMixingModel" || mixModel == "SteadyFlameletsTable"
         || mixModel == "flameletModel"  || mixModel == "StaticMixingTable"
         || mixModel == "meanMixingModel" ){
@@ -178,27 +184,28 @@ Properties::problemSetup(const ProblemSpecP& params)
     throw InvalidValue("Mixing Model not supported: " + mixModel, __FILE__, __LINE__);
   }
  
+#if HAVE_TABPROPS
   if (mixModel != "TabProps") {
     d_mixingModel->problemSetup(db);
 
-  if (d_calcEnthalpy){
-    d_H_air = d_mixingModel->getAdiabaticAirEnthalpy();
-  }
+    if (d_calcEnthalpy){
+      d_H_air = d_mixingModel->getAdiabaticAirEnthalpy();
+    }
   
-  if (d_reactingFlow) {
-    d_f_stoich    = d_mixingModel->getFStoich();
-    d_carbon_fuel = d_mixingModel->getCarbonFuel();
-    d_carbon_air  = d_mixingModel->getCarbonAir();
-  }
+    if (d_reactingFlow) {
+      d_f_stoich    = d_mixingModel->getFStoich();
+      d_carbon_fuel = d_mixingModel->getCarbonFuel();
+      d_carbon_air  = d_mixingModel->getCarbonAir();
+    }
 
-
-  d_mixingModel->setCalcExtraScalars(d_calcExtraScalars);
-  d_co_output       = d_mixingModel->getCOOutput();
-  d_sulfur_chem     = d_mixingModel->getSulfurChem();
-  d_soot_precursors = d_mixingModel->getSootPrecursors();
-  d_tabulated_soot  = d_mixingModel->getTabulatedSoot();  
-  d_radiationCalc = false;
+    d_mixingModel->setCalcExtraScalars(d_calcExtraScalars);
+    d_co_output       = d_mixingModel->getCOOutput();
+    d_sulfur_chem     = d_mixingModel->getSulfurChem();
+    d_soot_precursors = d_mixingModel->getSootPrecursors();
+    d_tabulated_soot  = d_mixingModel->getTabulatedSoot();  
+    d_radiationCalc = false;
   }
+#endif
 
   if (d_calcEnthalpy) {
     ProblemSpecP params_non_constant = params;
@@ -265,11 +272,11 @@ Properties::computeInletProperties(const InletStream& inStream,
   else if (dynamic_cast<const StandardTable*>(d_mixingModel)) {
     d_mixingModel->computeProps(inStream, outStream);
   }
+#if HAVE_TABPROPS
   else if ( mixModel == "TabProps"){
-
     d_mixingRxnTable->oldTableHack( inStream, outStream, d_calcEnthalpy, bc_type ); 
-    
   }
+#endif
   else {
     throw InvalidValue("Mixing Model not supported", __FILE__, __LINE__);
   }
@@ -2326,20 +2333,21 @@ Properties::sched_reComputeProps_new( const LevelP& level,
                                       const bool initialize, 
                                       const bool modify_ref_den )
 {
-
+#if HAVE_TABPROPS
   // this method is temporary while we get rid of properties.cc 
   if (d_calcEnthalpy)
     d_mixingRxnTable->sched_computeHeatLoss( level, sched, initialize );
 
   d_mixingRxnTable->sched_getState( level, sched, time_labels, initialize, d_calcEnthalpy, modify_ref_den ); 
-  
+#endif  
 }
 
 void 
 Properties::sched_initEnthalpy( const LevelP& level, SchedulerP& sched )
 {
+#if HAVE_TABPROPS
   d_mixingRxnTable->sched_computeFirstEnthalpy( level, sched ) ; 
-
+#endif
 }
 
 
