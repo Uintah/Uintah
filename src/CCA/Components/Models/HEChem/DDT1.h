@@ -34,7 +34,6 @@ DEALINGS IN THE SOFTWARE.
 
 #include <CCA/Ports/ModelInterface.h>
 #include <Core/Grid/Variables/ComputeSet.h>
-#include <Core/Grid/Variables/NCVariable.h>
 
 namespace Uintah {
   class ICELabel;
@@ -59,10 +58,10 @@ GENERAL INFORMATION
    Copyright (C) 2000 SCI Group
 
 KEYWORDS
-   "DDT1" "JWL++" "Reactive Flow Model" "Simple Burn"
+   "DDT1" "JWL++" "Reactive Flow Model" "WSB"
 
 DESCRIPTION
-   Model for deflagration to detonation transition using WSB combustion rate
+   Model for deflagration to detonation transition using WSB model for
    equation for deflagration and the detonation model based on "JWL++:  A Simple
    Reactive Flow Code Package for Detonation", P.Clark Souers, Steve Anderson,
    James Mercer, Estella McGuire and Peter Vitello, Propellants,
@@ -83,6 +82,7 @@ WARNING
 
     virtual void problemSetup(GridP& grid, SimulationStateP& sharedState,
 			      ModelSetup* setup);
+
       
     virtual void scheduleInitialize(SchedulerP&,
 				    const LevelP& level,
@@ -115,6 +115,7 @@ WARNING
                                     
    virtual void scheduleErrorEstimate(const LevelP& coarseLevel,
                                       SchedulerP& sched);
+
                                              
    virtual void scheduleTestConservation(SchedulerP&,
                                          const PatchSet* patches,
@@ -122,15 +123,13 @@ WARNING
 
 
   private:    
-    void computeModelSources(const ProcessorGroup*, 
-                             const PatchSubset* patches,
-                             const MaterialSubset* matls,
-                             DataWarehouse*,
-                             DataWarehouse* new_dw,
-                             const ModelInfo*);
-    void computeNumPPC(const ProcessorGroup*, const PatchSubset*,
+    void computeModelSources(const ProcessorGroup*, const PatchSubset*,
                              const MaterialSubset*, DataWarehouse*, 
                              DataWarehouse*, const ModelInfo*);
+      
+    void computeNumPPC(const ProcessorGroup*, const PatchSubset*,
+                       const MaterialSubset*, DataWarehouse*, 
+                       DataWarehouse*, const ModelInfo*);
       
     double computeBurnedMass(double To, double& Ts,  double P, double Vc,
                              double surfArea, double delT, double solidMass);
@@ -141,46 +140,55 @@ WARNING
     void printTask(const PatchSubset* patches,
                    const Patch* patch,
                    const string& where);
-
+      
     DDT1(const DDT1&);
     DDT1& operator=(const DDT1&);
 
       
-    // Steady Burn
-    const VarLabel* BurningCellLabel;
-    const VarLabel* TsLabel;
-    const VarLabel* numPPCLabel;
-    const VarLabel* burningLabel;
-    const VarLabel* onSurfaceLabel;
+    // Simple Burn
+    const VarLabel* onSurfaceLabel; // diagnostic labels
     const VarLabel* surfaceTempLabel;
     const VarLabel* totalMassBurnedLabel;
-    const VarLabel* totalHeatReleasedLabel;  
+    const VarLabel* totalHeatReleasedLabel;
+    const VarLabel* burningLabel;   
+    const VarLabel* TsLabel;
+    const VarLabel* numPPCLabel;
     // JWL++
     const VarLabel* reactedFractionLabel;   // diagnostic labels
     const VarLabel* delFLabel;   // diagnostic labels
     const VarLabel* totalMassConvertedLabel;
     const VarLabel* detonatingLabel;
 
+    const VarLabel* pCrackRadiusLabel;
+    
     ProblemSpecP d_prob_spec;
     ProblemSpecP d_params;
-    const Material* matl0;
-    const Material* matl1;
+    const Material* d_matl0;
+    const Material* d_matl1;
     SimulationStateP d_sharedState;   
 
     ICELabel* Ilb;
     MPMICELabel* MIlb;
     MPMLabel* Mlb;
-    MaterialSet* mymatls;
+    MaterialSet* d_mymatls;
+    MaterialSubset* d_one_matl;
+   
 
     string fromMaterial, toMaterial;
-    // JWL++ based parameters
+    // Detonation Model
     double d_G;
     double d_b;
     double d_E0;
-    double d_rho0;
-    double d_threshold_pressure;
+    double d_threshold_press_JWL;    // JWL++
+    double d_threshold_volFrac;
 
-    // Steady Burn-Based Parameters
+    // Cracking Model
+    bool d_useCrackModel;
+    double d_Gcrack;            // Crack Burning Rate Constant
+    double d_nCrack;            // Crack Burning Pressure Exponent
+    double d_crackVolThreshold; // for cracking
+
+    // Burn Model
     double R ;  /* IdealGasConst      */
     double Ac;  /* PreExpCondPh       */
     double Ec;  /* ActEnergyCondPh in unit of Temperature    */
@@ -192,11 +200,11 @@ WARNING
     double Cp;  /* SpecificHeatCondPh */
     double MW;  /* MoleWeightGasPh    */
     double BP;  /* Number of Particles at Boundary          */
-    double ThresholdPressure; /*Threshold Press for burning */
-    double ignitionTemp;      /* IgnitionTemp  */
+    double d_thresholdPress_SB; /*Threshold Press for burning */
+    double ignitionTemp;        /* IgnitionTemp  */
       
     double MIN_MASS_IN_A_CELL;
-      
+    
     double CC1; /* CC1 = Ac*R*Kc*Ec/Cp        */
     double CC2; /* CC2 = Qc/Cp/2              */
     double CC3; /* CC3 = 4*Kg*Bg*W*W/Cp/R/R;  */
@@ -209,15 +217,16 @@ WARNING
     double C3; /* C3 = CC3 * P * P  */
     double C4; /* C4 = To + CC4     */
     double C5; /* C5 = CC5 * C3     */
-      
+    
     double Tmin, Tmax; /* define the range of Ts */
     double IL, IR;     /* for interval update, left values and right values */
-      
+    
+    // computeBurnedMass helper functions
     void UpdateConstants(double To, double P, double Vc);
     double F_Ts(double  Ts); /* function Ts = Ts(m(Ts))    */                    
     double Ts_m(double m); /* function Ts = Ts(m)    */
     double m_Ts(double Ts); /* function  m = m(Ts)    */
-      
+    
     double Func(double Ts);  /* function f = Ts - F_Ts(Ts) */
     double Deri(double Ts);  /* derivative of Func dF_dTs  */
       
@@ -225,12 +234,10 @@ WARNING
     void SetInterval(double f, double Ts);
     double BisectionNewton(double Ts);
       
-    static const double EPSILON;   /* stop epsilon for Bisection-Newton method */
-      
     bool d_is_mpm_matl;  // Is matl 0 a mpm_matl?
     double d_cv_0;      //specific heat
-    
     // flags for the conservation test
+      
     struct saveConservedVars{
         bool onOff;
         bool mass;
@@ -238,6 +245,8 @@ WARNING
     };
     saveConservedVars* d_saveConservedVars;
       
+      
+    static const double EPSILON;   /* stop epsilon for Bisection-Newton method */   
     #define d_SMALL_NUM 1e-100
     #define d_TINY_RHO 1e-12
   };
