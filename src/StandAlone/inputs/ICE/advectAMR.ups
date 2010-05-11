@@ -269,7 +269,7 @@
         <timeStop>          100  </timeStop>
        
         <Variables>
-          <analyze label="press_CC"/> 
+          <analyze label="press_CC" matl="0"/> 
           <analyze label="rho_CC"/>
           <analyze label="temp_CC"/>
           <analyze label="delP_Dilatate"/>
