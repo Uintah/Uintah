@@ -543,7 +543,7 @@ void DDT1::computeModelSources(const ProcessorGroup*,
     new_dw->allocateAndPut(surfTemp,     DDT1::surfaceTempLabel,  m0,patch);
     
     new_dw->allocateTemporary(crackedEnough, patch);
-    cout << "Prior to special variable initialize" << endl;
+
     Fr.initialize(0.);
     delF.initialize(0.);
     burningCell.initialize(0.);
@@ -568,7 +568,7 @@ void DDT1::computeModelSources(const ProcessorGroup*,
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m0);
     double cv_rct = mpm_matl->getSpecificHeat();
     IntVector nodeIdx[8];
-       cout << "Just before Cell Iteration Loop" << endl;  
+
     //__________________________________
     //  Loop over cells
     for (CellIterator iter = patch->getCellIterator();!iter.done();iter++){
