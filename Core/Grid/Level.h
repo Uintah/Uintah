@@ -160,8 +160,8 @@ public:
   int numPatches() const;
   long totalCells() const;
 
-  void getSpatialRange(BBox& b) const {b=d_spatial_range;};
-  void getInteriorSpatialRange(BBox& b) const {b=d_int_spatial_range;};
+  void getSpatialRange(BBox& b) const {b.extend(d_spatial_range);};
+  void getInteriorSpatialRange(BBox& b) const {b.extend(d_int_spatial_range);};
   void findIndexRange(IntVector& lowIndex, IntVector& highIndex) const
   { findNodeIndexRange(lowIndex, highIndex); }
   void findNodeIndexRange(IntVector& lowIndex, IntVector& highIndex) const;
