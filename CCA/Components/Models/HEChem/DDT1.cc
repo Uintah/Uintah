@@ -29,24 +29,28 @@ DEALINGS IN THE SOFTWARE.
 
 
 
-#include <CCA/Components/Models/HEChem/DDT1.h>
+
+#include <CCA/Components/ICE/BoundaryCond.h>
+#include <CCA/Components/ICE/ICEMaterial.h>
 #include <CCA/Components/Models/HEChem/Common.h>
+#include <CCA/Components/Models/HEChem/DDT1.h>
+#include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <CCA/Ports/Scheduler.h>
-#include <Core/ProblemSpec/ProblemSpec.h>
-#include <Core/Grid/Variables/CellIterator.h>
-#include <Core/Grid/Variables/CCVariable.h>
+#include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/Level.h>
 #include <Core/Grid/Material.h>
 #include <Core/Grid/SimulationState.h>
+#include <Core/Grid/Variables/CCVariable.h>
+#include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Labels/ICELabel.h>
-#include <Core/Labels/MPMLabel.h>
 #include <Core/Labels/MPMICELabel.h>
-#include <CCA/Components/ICE/ICEMaterial.h>
-#include <CCA/Components/ICE/BoundaryCond.h>
-#include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
-#include <iostream>
+#include <Core/Labels/MPMLabel.h>
+#include <Core/Parallel/Parallel.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Util/DebugStream.h>
+#include <iostream>
+
 
 using namespace Uintah;
 using namespace std;
@@ -62,10 +66,13 @@ DDT1::DDT1(const ProcessorGroup* myworld,
                          const ProblemSpecP& prob_spec)
   : ModelInterface(myworld), d_prob_spec(prob_spec), d_params(params)
 {
-  mymatls = 0;
+  d_mymatls  = 0;
+  d_one_matl = 0;
   Ilb  = scinew ICELabel();
   MIlb = scinew MPMICELabel();
   Mlb  = scinew MPMLabel();
+  
+
   //__________________________________
   //  diagnostic labels JWL++
   reactedFractionLabel   = VarLabel::create("F",
@@ -77,25 +84,26 @@ DDT1::DDT1(const ProcessorGroup* myworld,
   detonatingLabel = VarLabel::create("detonating",
                                       CCVariable<double>::getTypeDescription());
   //__________________________________
-  //  diagnostic labels Simple Burn    
+  //  diagnostic labels Steady Burn    
   d_saveConservedVars = scinew saveConservedVars();
-  BurningCellLabel = VarLabel::create("DDT1.BurningCell",
-                                      CCVariable<double>::getTypeDescription());
-  TsLabel          = VarLabel::create("DDT1.SurfTemp",
-                                      CCVariable<double>::getTypeDescription());
-  numPPCLabel      = VarLabel::create("DDT1.numPPC",
-                                      CCVariable<double>::getTypeDescription());
-  surfaceTempLabel      = VarLabel::create("DDT1.surfaceTemp",
-                                      CCVariable<double>::getTypeDescription());
+  onSurfaceLabel   = VarLabel::create("DDT1::onSurface",
+                                       CCVariable<double>::getTypeDescription());
+    
+  surfaceTempLabel = VarLabel::create("DDT1::surfaceTemp",
+                                       CCVariable<double>::getTypeDescription());
+    
+  numPPCLabel      = VarLabel::create("SteadyBurn.numPPC",
+                                       CCVariable<double>::getTypeDescription());
+
   burningLabel = VarLabel::create("burning",
-                                      CCVariable<double>::getTypeDescription());
-  onSurfaceLabel = VarLabel::create("DDT1.onSurface",
-                                      CCVariable<double>::getTypeDescription());
+                     CCVariable<double>::getTypeDescription());
     
   totalMassBurnedLabel  = VarLabel::create( "totalMassBurned",
                                              sum_vartype::getTypeDescription() );
+    
   totalHeatReleasedLabel= VarLabel::create( "totalHeatReleased",
                                              sum_vartype::getTypeDescription() );
+
 }
 
 DDT1::~DDT1()
@@ -103,38 +111,45 @@ DDT1::~DDT1()
   delete Ilb;
   delete MIlb;
   delete Mlb;
+  delete d_saveConservedVars;
 
   // JWL++
   VarLabel::destroy(reactedFractionLabel);
   VarLabel::destroy(delFLabel);
   VarLabel::destroy(detonatingLabel);
   // Simple Burn
-  VarLabel::destroy(BurningCellLabel);
-  VarLabel::destroy(burningLabel);
-  VarLabel::destroy(TsLabel);
-  VarLabel::destroy(numPPCLabel);
   VarLabel::destroy(surfaceTempLabel);
   VarLabel::destroy(onSurfaceLabel);
+  VarLabel::destroy(burningLabel);
   VarLabel::destroy(totalMassBurnedLabel);
   VarLabel::destroy(totalHeatReleasedLabel);
+  VarLabel::destroy(numPPCLabel);
 
-  if(mymatls && mymatls->removeReference())
-    delete mymatls;
+
+  if(d_mymatls && d_mymatls->removeReference())
+    delete d_mymatls;
+    
+  if (d_one_matl && d_one_matl->removeReference())
+    delete d_one_matl;
 }
 
 void DDT1::problemSetup(GridP&, SimulationStateP& sharedState,
 			     ModelSetup*)
 {
   d_sharedState = sharedState;
+  
   // Required for JWL++
-  d_params->require("ThresholdPressureJWL",   d_threshold_pressure);
+  d_params->require("ThresholdPressureJWL",   d_threshold_press_JWL);
   d_params->require("fromMaterial",fromMaterial);
   d_params->require("toMaterial",toMaterial);
   d_params->require("G",    d_G);
   d_params->require("b",    d_b);
   d_params->require("E0",   d_E0);
-  d_params->require("rho0", d_rho0);
+  d_params->getWithDefault("ThresholdVolFrac",d_threshold_volFrac, 0.01);
 
+  // Required for Simple Burn
+  d_matl0 = sharedState->parseAndLookupMaterial(d_params, "fromMaterial");
+  d_matl1 = sharedState->parseAndLookupMaterial(d_params, "toMaterial");
   d_params->require("IdealGasConst",     R );
   d_params->require("PreExpCondPh",      Ac);
   d_params->require("ActEnergyCondPh",   Ec);
@@ -146,45 +161,61 @@ void DDT1::problemSetup(GridP&, SimulationStateP& sharedState,
   d_params->require("SpecificHeatBoth",  Cp);
   d_params->require("MoleWeightGasPh",   MW);
   d_params->require("BoundaryParticles", BP);
-  d_params->require("ThresholdPressure", ThresholdPressure);
   d_params->require("IgnitionTemp",      ignitionTemp);
- 
-   
+  d_params->require("ThresholdPressureSB",d_thresholdPress_SB);
+  d_params->getWithDefault("useCrackModel",    d_useCrackModel, false); 
+  
+  if(d_useCrackModel){
+    d_params->require("Gcrack",           d_Gcrack);
+    d_params->getWithDefault("CrackVolThreshold",     d_crackVolThreshold, 1e-14 );
+    d_params->require("nCrack",           d_nCrack);
+      
+    pCrackRadiusLabel = VarLabel::find("p.crackRad");
+    if(!pCrackRadiusLabel){
+      ostringstream msg;
+      msg << "\n ERROR:Model:DDT1: The constitutive model for the MPM reactant must be visco_scram in order to burn in cracks. \n";
+      msg << " No other constitutive models are currently supported "; 
+      throw ProblemSetupException(msg.str(),__FILE__, __LINE__);
+    }
+  }
+
   /* initialize constants */
   CC1 = Ac*R*Kc/Ec/Cp;        
   CC2 = Qc/Cp/2;              
   CC3 = 4*Kg*Bg*MW*MW/Cp/R/R;  
   CC4 = Qc/Cp;                
-  CC5 = Qg/Cp;                
+  CC5 = Qg/Cp;           
     
+  //__________________________________
+  //  define the materialSet
+  d_mymatls = scinew MaterialSet();
+
+  vector<int> m;
+  m.push_back(0);                                 // needed for the pressure and NC_CCWeight
+  m.push_back(d_matl0->getDWIndex());
+  m.push_back(d_matl1->getDWIndex());
+
+  d_mymatls->addAll_unique(m);                    // elimiate duplicate entries
+  d_mymatls->addReference();
+
+  d_one_matl = scinew MaterialSubset();
+  d_one_matl->add(0);
+  d_one_matl->addReference();
+
   //__________________________________
   //  Are we saving the total burned mass and total burned energy
   ProblemSpecP DA_ps = d_prob_spec->findBlock("DataArchiver");
   for (ProblemSpecP child = DA_ps->findBlock("save"); child != 0;
-       child = child->findNextBlock("save") ){
+                    child = child->findNextBlock("save")) {
     map<string,string> var_attr;
     child->getAttributes(var_attr);
     if (var_attr["label"] == "totalMassBurned"){
-     d_saveConservedVars->mass  = true;
+      d_saveConservedVars->mass  = true;
     }
     if (var_attr["label"] == "totalHeatReleased"){
-     d_saveConservedVars->energy = true;
+      d_saveConservedVars->energy = true;
     }
   }
-    
-  //__________________________________
-  //  define the materialSet
-  matl0 = sharedState->parseAndLookupMaterial(d_params, "fromMaterial");
-  matl1 = sharedState->parseAndLookupMaterial(d_params, "toMaterial");
-  mymatls = scinew MaterialSet();
-
-  vector<int> m;
-  m.push_back(0);                       // needed for the pressure and NC_CCWeight
-  m.push_back(matl0->getDWIndex());
-  m.push_back(matl1->getDWIndex());
-
-  mymatls->addAll_unique(m);            // elimiate duplicate entries
-  mymatls->addReference(); 
 }
 
 //______________________________________________________________________
@@ -194,19 +225,13 @@ void DDT1::outputProblemSpec(ProblemSpecP& ps)
   ProblemSpecP model_ps = ps->appendChild("Model");
   model_ps->setAttribute("type","DDT1");
 
-  // JWL++ inputs
-  model_ps->appendElement("ThresholdPressureJWL",d_threshold_pressure);
+  model_ps->appendElement("ThresholdPressureJWL",d_threshold_press_JWL);
   model_ps->appendElement("fromMaterial",fromMaterial);
-  model_ps->appendElement("toMaterial",toMaterial);
+  model_ps->appendElement("toMaterial",  toMaterial);
   model_ps->appendElement("G",    d_G);
   model_ps->appendElement("b",    d_b);
   model_ps->appendElement("E0",   d_E0);
-  model_ps->appendElement("rho0", d_rho0);
-  model_ps->appendElement("ThresholdTemp",     ignitionTemp);
-  model_ps->appendElement("ThresholdPressureSB", ThresholdPressure);
-  model_ps->appendElement("fromMaterial",      matl0->getName());
 
-  // Steady Burn inputs
   model_ps->appendElement("IdealGasConst",     R );
   model_ps->appendElement("PreExpCondPh",      Ac);
   model_ps->appendElement("ActEnergyCondPh",   Ec);
@@ -218,10 +243,15 @@ void DDT1::outputProblemSpec(ProblemSpecP& ps)
   model_ps->appendElement("SpecificHeatBoth",  Cp);
   model_ps->appendElement("MoleWeightGasPh",   MW);
   model_ps->appendElement("BoundaryParticles", BP);
-  model_ps->appendElement("ThresholdPressure", ThresholdPressure);
+  model_ps->appendElement("ThresholdPressureSB", d_thresholdPress_SB);
   model_ps->appendElement("IgnitionTemp",      ignitionTemp);
+  if(d_useCrackModel){
+    model_ps->appendElement("useCrackModel",     d_useCrackModel);
+    model_ps->appendElement("Gcrack",            d_Gcrack);
+    model_ps->appendElement("nCrack",            d_nCrack);
+    model_ps->appendElement("CrackVolThreshold", d_crackVolThreshold);
+  }
 }
-
 
 //______________________________________________________________________
 //     
@@ -231,13 +261,11 @@ void DDT1::scheduleInitialize(SchedulerP& sched,
 {
   printSchedule(level,"DDT1::scheduleInitialize\t\t\t");
   Task* t = scinew Task("DDT1::initialize", this, &DDT1::initialize);
-  const MaterialSubset* react_matl = matl0->thisMaterial();
+  const MaterialSubset* react_matl = d_matl0->thisMaterial();
   t->computes(reactedFractionLabel, react_matl);
   t->computes(burningLabel,         react_matl);
-  t->computes(TsLabel,              react_matl);
-  t->computes(BurningCellLabel,     react_matl);
   t->computes(surfaceTempLabel,     react_matl);
-  sched->addTask(t, level->eachPatch(), mymatls);
+  sched->addTask(t, level->eachPatch(), d_mymatls);
 }
 
 //______________________________________________________________________
@@ -247,19 +275,20 @@ void DDT1::initialize(const ProcessorGroup*,
                              const MaterialSubset* /*matls*/,
                              DataWarehouse*,
                              DataWarehouse* new_dw){
-  int m0 = matl0->getDWIndex();
+  int m0 = d_matl0->getDWIndex();
   for(int p=0;p<patches->size();p++) {
     const Patch* patch = patches->get(p);
-    cout_doing << "Doing Initialize on patch " << patch->getID()<< "\t\t\t DDT1" << endl;
+    cout_doing << "Doing Initialize on patch " << patch->getID()<< "\t\t\t STEADY_BURN" << endl;
     
-    // This section is needed for outputting F, burn, Ts on initial timestep
-    CCVariable<double> F, burn, Ts, surfTemp;
-    new_dw->allocateAndPut(F,    reactedFractionLabel, m0, patch);
-    new_dw->allocateAndPut(burn, BurningCellLabel,     m0, patch);
-    new_dw->allocateAndPut(Ts,   TsLabel,              m0, patch);
-    Ts.initialize(0.0);
+    // This section is needed for outputting F and burn on each timestep
+    CCVariable<double> F, burn, Ts;
+    new_dw->allocateAndPut(F, reactedFractionLabel, m0, patch);
+    new_dw->allocateAndPut(burn, burningLabel,      m0, patch);
+    new_dw->allocateAndPut(Ts, surfaceTempLabel,    m0, patch);
+ 
     F.initialize(0.0);
     burn.initialize(0.0);
+    Ts.initialize(0.0);
   }
 }
 
@@ -278,102 +307,95 @@ void DDT1::scheduleComputeModelSources(SchedulerP& sched,
                                        const LevelP& level,
                                        const ModelInfo* mi)
 {
-    Task* t = scinew Task("DDT1::computeModelSources", this, 
-                          &DDT1::computeModelSources, mi);
-    cout_doing << "DDT1::scheduleComputeModelSources "<<  endl;  
-    Ghost::GhostType  gac = Ghost::AroundCells;
-    Ghost::GhostType  gn  = Ghost::None;
-    const MaterialSubset* react_matl = matl0->thisMaterial();
-    const MaterialSubset* prod_matl  = matl1->thisMaterial();
-    MaterialSubset* one_matl     = scinew MaterialSubset();
-    one_matl->add(0);
-    one_matl->addReference();
-  
-    const MaterialSet* all_matls = d_sharedState->allMaterials();
-    const MaterialSubset* all_matls_sub = all_matls->getUnion();
-    Task::DomainSpec oms = Task::OutOfDomain;
+  if (level->hasFinerLevel()){
+    return;    // only schedule on the finest level
+  }
 
-    // Particle Per Cell Task
-    Task* t1 = scinew Task("DDT1::computeNumPPC", this, 
+  Task* t = scinew Task("DDT1::computeModelSources", this, 
+                        &DDT1::computeModelSources, mi);
+  cout_doing << "DDT1::scheduleComputeModelSources "<<  endl;  
+  Ghost::GhostType  gac = Ghost::AroundCells;
+  Ghost::GhostType  gn  = Ghost::None;
+  const MaterialSubset* react_matl = d_matl0->thisMaterial();
+  const MaterialSubset* prod_matl  = d_matl1->thisMaterial();
+
+  const MaterialSubset* all_matls = d_sharedState->allMaterials()->getUnion();
+  const MaterialSubset* ice_matls = d_sharedState->allICEMaterials()->getUnion();
+  const MaterialSubset* mpm_matls = d_sharedState->allMPMMaterials()->getUnion();
+  Task::DomainSpec oms = Task::OutOfDomain;
+
+  proc0cout << "\nDDT1:scheduleComputeModelSources oneMatl " << *d_one_matl<< " react_matl " << *react_matl 
+                                               << " prod_matl " << *prod_matl 
+                                               << " all_matls " << *all_matls 
+                                               << " ice_matls " << *ice_matls <<" mpm_matls " << *mpm_matls << "\n"<<endl;
+
+  // Task for computing the particles in a cell
+  Task* t1 = scinew Task("DDT1::computeNumPPC", this, 
                            &DDT1::computeNumPPC, mi);
-      
-    printSchedule(level,"DDT1::scheduleComputeNumPPC\t\t\t");  
-      
-    t1->requires(Task::OldDW, Mlb->pXLabel,          react_matl, gn);
-    t1->computes(numPPCLabel, react_matl);
-      
-    sched->addTask(t1, level->eachPatch(), mymatls);
-      
-    //__________________________________
-    // Requires
-    //__________________________________
-    t->requires( Task::OldDW, mi->delT_Label,       level.get_rep());
-    t->requires(Task::OldDW, Ilb->temp_CCLabel,     all_matls_sub, oms, gac,1);
-    t->requires(Task::NewDW, Ilb->vol_frac_CCLabel, all_matls_sub, oms, gac,1);
     
-
-    //__________________________________
-    // Products
-    t->requires(Task::NewDW,  Ilb->rho_CCLabel,     prod_matl, gn);
-    t->requires(Task::OldDW,  Ilb->temp_CCLabel,    prod_matl, gac,1);       
-    t->requires(Task::NewDW,  Ilb->vol_frac_CCLabel,prod_matl, gn);       
-    t->requires(Task::NewDW,  Ilb->TempX_FCLabel,   prod_matl, gac,2);    
-    t->requires(Task::NewDW,  Ilb->TempY_FCLabel,   prod_matl, gac,2);    
-    t->requires(Task::NewDW,  Ilb->TempZ_FCLabel,   prod_matl, gac,2);
-    t->requires(Task::NewDW,  Ilb->press_equil_CCLabel, one_matl,  gac,1);
-    t->requires(Task::OldDW,  MIlb->NC_CCweightLabel,   one_matl,  gac, 1);
-        
-  
-    //__________________________________
-    // Reactants
-    t->requires(Task::NewDW, Ilb->sp_vol_CCLabel,   react_matl, gn);
-    t->requires(Task::OldDW, MIlb->vel_CCLabel,     react_matl, gn);
-    t->requires(Task::OldDW, MIlb->temp_CCLabel,    react_matl, gac,1);
-    t->requires(Task::NewDW, MIlb->temp_CCLabel,    react_matl, gac,1);
-    t->requires(Task::NewDW, Ilb->rho_CCLabel,      react_matl, gn);
-    t->requires(Task::OldDW, Mlb->pXLabel,          react_matl, gn);
-    t->requires(Task::NewDW, MIlb->cMassLabel,      react_matl, gn);
-    t->requires(Task::NewDW, Mlb->gMassLabel,       react_matl, gac,1); 
-    t->requires(Task::OldDW, reactedFractionLabel,  react_matl, gn); 
-    t->requires(Task::NewDW, numPPCLabel,           react_matl, gac,1);
+  printSchedule(level,"DDT1::scheduleComputeNumPPC\t\t\t");  
     
-    //__________________________________
-    // Computes
-    //__________________________________
-    t->computes(reactedFractionLabel, react_matl);
-    t->computes(delFLabel,            react_matl);
-    t->computes(burningLabel,         react_matl);
-    t->computes(BurningCellLabel,         react_matl);
-    t->computes(detonatingLabel,      react_matl);
-    t->computes(onSurfaceLabel,    react_matl);
-    t->computes(surfaceTempLabel,  react_matl);
-    t->computes(TsLabel,          react_matl);
-
-    //__________________________________
-    // Conserved Variables
-    //__________________________________
-    if(d_saveConservedVars->mass ){
-        t->computes(DDT1::totalMassBurnedLabel);
-    }
-    if(d_saveConservedVars->energy){
-        t->computes(DDT1::totalHeatReleasedLabel);
-    }
+  t1->requires(Task::OldDW, Mlb->pXLabel,          react_matl, gn);
+  t1->computes(numPPCLabel, react_matl);
     
-    //__________________________________
-    // Modifies  
-    //__________________________________
-    t->modifies(mi->modelMass_srcLabel);
-    t->modifies(mi->modelMom_srcLabel);
-    t->modifies(mi->modelEng_srcLabel);
-    t->modifies(mi->modelVol_srcLabel); 
-    sched->addTask(t, level->eachPatch(), mymatls);
+  sched->addTask(t1, level->eachPatch(), d_mymatls);
+    
+  //__________________________________
+  // Requires
+  //__________________________________
+  t->requires(Task::OldDW, mi->delT_Label,            level.get_rep());
+  t->requires(Task::OldDW, Ilb->temp_CCLabel,         ice_matls, oms, gn);
+  t->requires(Task::NewDW, MIlb->temp_CCLabel,         mpm_matls, oms, gn);
+  t->requires(Task::NewDW, Ilb->vol_frac_CCLabel,     all_matls, oms, gn);
+  if(d_useCrackModel){
+    t->requires(Task::OldDW, Mlb->pXLabel,            mpm_matls,  gn);
+    t->requires(Task::OldDW, pCrackRadiusLabel,       react_matl, gn);
+  }
 
-    if (one_matl->removeReference())
-      delete one_matl;
+  //__________________________________
+  // Products
+  t->requires(Task::NewDW,  Ilb->rho_CCLabel,         prod_matl,   gn); 
+  t->requires(Task::NewDW,  Ilb->press_equil_CCLabel, d_one_matl,  gn);
+  t->requires(Task::OldDW,  MIlb->NC_CCweightLabel,   d_one_matl,  gac, 1);
+
+  //__________________________________
+  // Reactants
+  t->requires(Task::NewDW, Ilb->sp_vol_CCLabel,       react_matl, gn);
+  t->requires(Task::NewDW, MIlb->vel_CCLabel,         react_matl, gn);
+  t->requires(Task::NewDW, Ilb->rho_CCLabel,          react_matl, gn);
+  t->requires(Task::NewDW, Mlb->gMassLabel,           react_matl, gac,1);
+  t->requires(Task::NewDW, numPPCLabel,               react_matl, gac,1);
+
+  //__________________________________
+  // Computes
+  //__________________________________
+  t->computes(reactedFractionLabel,    react_matl);
+  t->computes(delFLabel,               react_matl);
+  t->computes(burningLabel,            react_matl);
+  t->computes(detonatingLabel,         react_matl);
+  t->computes(DDT1::onSurfaceLabel,    react_matl);
+  t->computes(DDT1::surfaceTempLabel,  react_matl);
+
+  //__________________________________
+  // Conserved Variables
+  //__________________________________
+  if(d_saveConservedVars->mass ){
+      t->computes(DDT1::totalMassBurnedLabel);
+  }
+  if(d_saveConservedVars->energy){
+      t->computes(DDT1::totalHeatReleasedLabel);
+  }
+
+  //__________________________________
+  // Modifies  
+  //__________________________________
+  t->modifies(mi->modelMass_srcLabel);
+  t->modifies(mi->modelMom_srcLabel);
+  t->modifies(mi->modelEng_srcLabel);
+  t->modifies(mi->modelVol_srcLabel); 
+
+  sched->addTask(t, level->eachPatch(), d_mymatls);
 }
-
-//______________________________________________________________________
-//
 
 void DDT1::computeNumPPC(const ProcessorGroup*, 
                                 const PatchSubset* patches,
@@ -382,7 +404,7 @@ void DDT1::computeNumPPC(const ProcessorGroup*,
                                 DataWarehouse* new_dw,
                                 const ModelInfo* mi)
 {
-    int m0 = matl0->getDWIndex(); /* reactant material */
+    int m0 = d_matl0->getDWIndex(); /* reactant material */
     
     /* Patch Iteration */
     for(int p=0;p<patches->size();p++){
@@ -410,8 +432,8 @@ void DDT1::computeNumPPC(const ProcessorGroup*,
         }    
         setBC(pFlag, "zeroNeumann", patch, d_sharedState, m0, new_dw);
     }
-    
 }
+
 //______________________________________________________________________
 //
 void DDT1::computeModelSources(const ProcessorGroup*, 
@@ -421,32 +443,88 @@ void DDT1::computeModelSources(const ProcessorGroup*,
                                 DataWarehouse* new_dw,
                                 const ModelInfo* mi)
 {
+
   delt_vartype delT;
   const Level* level = getLevel(patches);
   old_dw->get(delT, mi->delT_Label, level);
 
  
-  int m0 = matl0->getDWIndex();
-  int m1 = matl1->getDWIndex();
+  int m0 = d_matl0->getDWIndex();
+  int m1 = d_matl1->getDWIndex();
   double totalBurnedMass = 0;
   double totalHeatReleased = 0;
- 
-  double massConv = 0;
-
+  int numAllMatls = d_sharedState->getNumMatls();
 
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);  
+    ParticleSubset* pset = old_dw->getParticleSubset(m0, patch); 
     
     cout_doing << "Doing computeModelSources on patch "<< patch->getID()
                <<"\t\t\t\t  DDT1" << endl;
 
-    // Variable to modify
+    // Variable to modify or compute
     CCVariable<double> mass_src_0, mass_src_1, mass_0;
     CCVariable<Vector> momentum_src_0, momentum_src_1;
     CCVariable<double> energy_src_0, energy_src_1;
     CCVariable<double> sp_vol_src_0, sp_vol_src_1;
-    CCVariable<double> onSurface, surfaceTemp;
+    CCVariable<double> onSurface;
+    CCVariable<int>    crackedEnough;
+    CCVariable<double> Fr;
+    CCVariable<double> delF;
+    CCVariable<double> surfTemp;
+    CCVariable<double> burningCell, detonating;
 
+    constCCVariable<double> press_CC, cv_reactant, rctVolFrac;
+    constCCVariable<double> rctTemp, rctRho, rctSpvol, prodRho, rctFr, pFlag;
+    constCCVariable<Vector> rctvel_CC;
+    constNCVariable<double> NC_CCweight, rctMass_NC;
+    constParticleVariable<Point> px;
+
+    // Stores level of cracking in particles
+    constParticleVariable<double> crackRad;   
+ 
+    StaticArray<constCCVariable<double> > vol_frac_CC(numAllMatls);
+    StaticArray<constCCVariable<double> > temp_CC(numAllMatls);
+	    
+    Vector dx = patch->dCell();
+    double cell_vol = dx.x()*dx.y()*dx.z();
+    Ghost::GhostType  gn  = Ghost::None;
+    Ghost::GhostType  gac = Ghost::AroundCells;
+    //__________________________________
+    // Reactant data
+    new_dw->get(rctTemp,       MIlb->temp_CCLabel,    m0,patch,gn, 0);
+    new_dw->get(rctvel_CC,     MIlb->vel_CCLabel,     m0,patch,gn, 0);
+    new_dw->get(rctRho,        Ilb->rho_CCLabel,      m0,patch,gn, 0);
+    new_dw->get(rctSpvol,      Ilb->sp_vol_CCLabel,   m0,patch,gn, 0);
+    new_dw->get(rctMass_NC,    Mlb->gMassLabel,       m0,patch,gac,1);
+    new_dw->get(rctVolFrac,    Ilb->vol_frac_CCLabel, m0,patch,gn, 0);
+    new_dw->get(pFlag,           numPPCLabel,           m0, patch, gac, 1);
+    if(d_useCrackModel){
+      old_dw->get(px,          Mlb->pXLabel,      pset);
+      old_dw->get(crackRad,    pCrackRadiusLabel, pset); 
+    }
+    //__________________________________
+    // Product Data, 
+    new_dw->get(prodRho,         Ilb->rho_CCLabel,   m1,patch,gn, 0);
+    
+    //__________________________________
+    //   Misc.
+    new_dw->get(press_CC,         Ilb->press_equil_CCLabel,0,  patch,gn, 0);
+    old_dw->get(NC_CCweight,      MIlb->NC_CCweightLabel,  0,  patch,gac,1);   
+    
+    for(int m = 0; m < numAllMatls; m++) {
+      Material* matl = d_sharedState->getMaterial(m);
+      ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
+      int indx = matl->getDWIndex();
+      if(ice_matl){
+        old_dw->get(temp_CC[m],   MIlb->temp_CCLabel,    indx, patch,gn,0);
+      }else {
+        new_dw->get(temp_CC[m],   MIlb->temp_CCLabel,    indx, patch,gn,0);
+      }
+      new_dw->get(vol_frac_CC[m], Ilb->vol_frac_CCLabel, indx, patch,gn,0);
+    }
+    //__________________________________
+    //  What is computed
     new_dw->getModifiable(mass_src_0,    mi->modelMass_srcLabel,  m0,patch);
     new_dw->getModifiable(momentum_src_0,mi->modelMom_srcLabel,   m0,patch);
     new_dw->getModifiable(energy_src_0,  mi->modelEng_srcLabel,   m0,patch);
@@ -456,222 +534,183 @@ void DDT1::computeModelSources(const ProcessorGroup*,
     new_dw->getModifiable(momentum_src_1,mi->modelMom_srcLabel,   m1,patch);
     new_dw->getModifiable(energy_src_1,  mi->modelEng_srcLabel,   m1,patch);
     new_dw->getModifiable(sp_vol_src_1,  mi->modelVol_srcLabel,   m1,patch);
-
-    // New Variables to store for this timestep
-    constCCVariable<double> press_CC, cv_reactant, gasTemp,gasVol_frac,solidTemp,solidMass;
-    constCCVariable<double> rctTemp,rctRho,rctSpvol,prodRho, rctFr;
-    constCCVariable<Vector> rctvel_CC;
-    constCCVariable<double> pFlag;
-    CCVariable<double> Fr;
-    CCVariable<double> delF;
-    CCVariable<double> burning, detonating;
-    CCVariable<double> BurningCell, surfTemp;
-    constNCVariable<double> NC_CCweight,NCsolidMass;
-    constSFCXVariable<double> gasTempX_FC;
-    constSFCYVariable<double> gasTempY_FC;
-    constSFCZVariable<double> gasTempZ_FC;
-	    
-    Vector dx = patch->dCell();
-    double cell_vol = dx.x()*dx.y()*dx.z();
-    Ghost::GhostType  gn  = Ghost::None;
-    Ghost::GhostType  gac = Ghost::AroundCells;
-   
-    //__________________________________
-    // Reactant data
-    old_dw->get(rctTemp,       MIlb->temp_CCLabel,  m0,patch,gn, 0);
-    old_dw->get(rctvel_CC,     MIlb->vel_CCLabel,   m0,patch,gn, 0);
-    new_dw->get(rctRho,        Ilb->rho_CCLabel,    m0,patch,gn, 0);
-    new_dw->get(rctSpvol,      Ilb->sp_vol_CCLabel, m0,patch,gn, 0);
-    new_dw->get(solidTemp,     MIlb->temp_CCLabel,  m0,patch,gac, 1);
-    new_dw->get(solidMass,     MIlb->cMassLabel,    m0,patch,gn, 0);
-    new_dw->get(NCsolidMass,   Mlb->gMassLabel,     m0,patch,gac,1);
-    new_dw->get(pFlag,         numPPCLabel,         m0,patch,gac,1);
-    //new_dw->get(cv_reactant,   Ilb->specific_heatLabel,m0,patch,gn, 0);
-    old_dw->get(rctFr,         reactedFractionLabel,  m0,patch,gac,0);
-    new_dw->allocateAndPut(Fr,   reactedFractionLabel,m0,patch);
-    new_dw->allocateAndPut(delF, delFLabel,           m0,patch);
+    
+    new_dw->allocateAndPut(burningCell,  burningLabel,            m0,patch);  
+    new_dw->allocateAndPut(detonating,   detonatingLabel,         m0,patch);
+    new_dw->allocateAndPut(Fr,           reactedFractionLabel,    m0,patch);
+    new_dw->allocateAndPut(delF,         delFLabel,               m0,patch);
+    new_dw->allocateAndPut(onSurface,    DDT1::onSurfaceLabel,    m0,patch);
+    new_dw->allocateAndPut(surfTemp,     DDT1::surfaceTempLabel,  m0,patch);
+    
+    new_dw->allocateTemporary(crackedEnough, patch);
+    cout << "Prior to special variable initialize" << endl;
     Fr.initialize(0.);
     delF.initialize(0.);
-    //__________________________________
-    // Product Data, 
-    new_dw->get(prodRho,         Ilb->rho_CCLabel,   m1,patch,gn, 0);
-    new_dw->get(gasTempX_FC,      Ilb->TempX_FCLabel,m1,patch,gac,2);
-    new_dw->get(gasTempY_FC,      Ilb->TempY_FCLabel,m1,patch,gac,2);
-    new_dw->get(gasTempZ_FC,      Ilb->TempZ_FCLabel,m1,patch,gac,2);
-    old_dw->get(gasTemp,          Ilb->temp_CCLabel, m1,patch,gn, 0);
-    new_dw->get(gasVol_frac,      Ilb->vol_frac_CCLabel,  m1, patch,gn, 0);
-    //__________________________________
-    //   Misc.
-    new_dw->get(press_CC,         Ilb->press_equil_CCLabel,0,  patch,gac, 1);
-    old_dw->get(NC_CCweight,      MIlb->NC_CCweightLabel,  0,   patch,gac,1);   
-   
-    new_dw->allocateAndPut(burning,    burningLabel,           m0, patch,gn,0);  
-    new_dw->allocateAndPut(detonating, detonatingLabel,        m0, patch);
-    new_dw->allocateAndPut(BurningCell, BurningCellLabel, m0, patch, gn, 0);
-    new_dw->allocateAndPut(surfTemp,    TsLabel,          m0, patch, gn, 0);
-    burning.initialize(0.);
+    burningCell.initialize(0.);
     detonating.initialize(0.);
-    BurningCell.initialize(0.0);
-    surfTemp.initialize(0.0);
+    crackedEnough.initialize(0.);
+    surfTemp.initialize(0.);
+    onSurface.initialize(0.);
 
-    new_dw->allocateAndPut(onSurface,  onSurfaceLabel,   m0, patch);
-    new_dw->allocateAndPut(surfaceTemp,surfaceTempLabel, m0, patch);
-      
-    IntVector nodeIdx[8];
-      
-     
-    // Get Temperatures for burning check
-    int numAllMatls = d_sharedState->getNumMatls();
-    StaticArray<constCCVariable<double> > vol_frac_CC(numAllMatls);
-    StaticArray<constCCVariable<double> > temp_CC(numAllMatls);
-    for(int m = 0; m < numAllMatls; m++) {
-      Material* matl = d_sharedState->getMaterial(m);
-      int indx = matl->getDWIndex();
-      old_dw->get(temp_CC[m],     MIlb->temp_CCLabel,    indx, patch, gac, 1);
-      new_dw->get(vol_frac_CC[m], Ilb->vol_frac_CCLabel, indx, patch, gac, 1);
+    // determing which cells have a crack radius > threshold
+    if(d_useCrackModel){
+      for(ParticleSubset::iterator iter = pset->begin(); iter != pset->end(); iter++ ){
+        IntVector c = level->getCellIndex(px[*iter]);
+        
+        double crackWidthThreshold = sqrt(8.0e8/pow(press_CC[c],2.84));
+        
+        if(crackRad[*iter] > crackWidthThreshold) {
+          crackedEnough[c] = 1;
+        }
+      }
     }
 
+    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m0);
+    double cv_rct = mpm_matl->getSpecificHeat();
+    IntVector nodeIdx[8];
+       cout << "Just before Cell Iteration Loop" << endl;  
+    //__________________________________
+    //  Loop over cells
     for (CellIterator iter = patch->getCellIterator();!iter.done();iter++){
       IntVector c = *iter;
-      // Copy old Fr in case pressure threshold is not met
-      Fr[c]=rctFr[c];
+      
       // JWL++ Model For explosions
-      if (press_CC[c] > d_threshold_pressure && rctRho[c]/(rctRho[c]+prodRho[c]) > 0.01 ){
-        // Flag for detonating
-        detonating[c] = 1;
-        double burnedMass;
-
-        double F = prodRho[c]/(rctRho[c]+prodRho[c]);
-        if(F >= 0. && F < .99){
-          delF[c] = d_G*pow(press_CC[c],d_b)*(1.-F);
+      if (press_CC[c] > d_threshold_press_JWL && rctVolFrac[c] > d_threshold_volFrac){
+        
+        detonating[c] = 1;   // Flag for detonating 
+        
+        Fr[c] = prodRho[c]/(rctRho[c]+prodRho[c]);   
+        if(Fr[c] >= 0. && Fr[c] < .99){
+          delF[c] = d_G*pow(press_CC[c], d_b)*(1.0 - Fr[c]);
         }
         delF[c]*=delT;
-        Fr[c] = F;
-        double rctMass = rctRho[c]*cell_vol;
-        double prdMass = prodRho[c]*cell_vol;
-        burnedMass = min(delF[c]*(prdMass+rctMass), rctMass);
-        burnedMass = min(burnedMass, .2*d_rho0*cell_vol);
+        
+        double rctMass    = rctRho[c]*cell_vol;
+        double prdMass    = prodRho[c]*cell_vol;
+        double burnedMass = delF[c]*(prdMass+rctMass);
+        
+        burnedMass = min(burnedMass, rctMass);
+        totalBurnedMass += burnedMass;
 
         //__________________________________
         // conservation of mass, momentum and energy                           
         mass_src_0[c] -= burnedMass;
-        mass_src_1[c] += burnedMass;
-        massConv += burnedMass;           
+        mass_src_1[c] += burnedMass;         
 
         Vector momX        = rctvel_CC[c] * burnedMass;
         momentum_src_0[c] -= momX;
         momentum_src_1[c] += momX;
       
-        double energyX   = dynamic_cast<const MPMMaterial*>(matl0)->getSpecificHeat()*rctTemp[c]*burnedMass;//*cv_reactant[c]; 
-        double releasedHeat = burnedMass * d_E0;
-        energy_src_0[c] -= energyX;
-        energy_src_1[c] += energyX + releasedHeat;
+        double energyX       = cv_rct * rctTemp[c] * burnedMass; 
+        double releasedHeat  = burnedMass * d_E0;
+        energy_src_0[c]     -= energyX;
+        energy_src_1[c]     += energyX + releasedHeat;
+        totalHeatReleased   += releasedHeat;
 
         double createdVolx  = burnedMass * rctSpvol[c];
-        sp_vol_src_0[c] -= createdVolx;
-        sp_vol_src_1[c] += createdVolx;
-      } else if(press_CC[c] < d_threshold_pressure && press_CC[c] > ThresholdPressure) {
-        //__________________________________
-        // Find if the cell contains surface:
-        patch->findNodesFromCell(*iter,nodeIdx);
-        double MaxMass = d_SMALL_NUM;
-        double MinMass = 1.0/d_SMALL_NUM;                 
-        for (int nN=0; nN<8; nN++) {
-            MaxMass = std::max(MaxMass,NC_CCweight[nodeIdx[nN]]*
-                               NCsolidMass[nodeIdx[nN]]);
-            MinMass = std::min(MinMass,NC_CCweight[nodeIdx[nN]]*
-                               NCsolidMass[nodeIdx[nN]]); 
-        }               
-        //===============================================
-        //If you change the burning criteria logic you must also modify
-        //CCA/Components/SwitchCriteria
-        //===============================================
-        if ( (MaxMass-MinMass)/MaxMass > 0.4            //--------------KNOB 1
-            && (MaxMass-MinMass)/MaxMass < 1.0
-            &&  MaxMass > d_TINY_RHO){
-            /* test whether the current cell satisfies burning criteria */
-            bool   burning = 0;
-            double maxProductVolFrac  = -1.0;
-            double maxReactantVolFrac = -1.0;
-            double productPress = 0.0;
-            double Tzero = 0.0;
-            double temp_vf = 0.0;      
-            /*if( (MaxMass-MinMass)/MaxMass>0.4 && (MaxMass-MinMass)/MaxMass<1.0 && pFlag[c]>0 ){ */
-            if( MinMass/MaxMass<0.7 && pFlag[c]>0 ){ 
-                /* near interface and containing particles */
-                for(int i = -1; i<=1; i++){
-                    for(int j = -1; j<=1; j++){
-                        for(int k = -1; k<=1; k++){
-                            IntVector cell = c + IntVector(i,j,k);
-                            /* Search for Tzero from max_vol_frac reactant cell */
-                            temp_vf = vol_frac_CC[m0][cell]; 
-                            if( temp_vf > maxReactantVolFrac ){
-                                maxReactantVolFrac = temp_vf;
-                                Tzero = solidTemp[cell];
-                            }//endif
-                            
-                            /* Search for pressure from max_vol_frac product cell */
-                            temp_vf = vol_frac_CC[m1][cell]; 
-                            if( temp_vf > maxProductVolFrac ){
-                                maxProductVolFrac = temp_vf;
-                                productPress = press_CC[cell];
-                            }//endif
-                            
-                            if(burning == 0 && pFlag[cell] <= BP){
-                                for (int m = 0; m < numAllMatls; m++){
-                                    if(vol_frac_CC[m][cell] > 0.2 && temp_CC[m][cell] > ignitionTemp){
-                                        burning = 1;
-                                        break;
-                                    }
-                                }
-                            }//endif
-                            
-                        }//end 3rd for
-                    }//end 2nd for
-                }//end 1st for
-            }//endif
-            if(burning == 1 && productPress >= ThresholdPressure){
-                BurningCell[c]=1.0;
-                
-                Vector rhoGradVector = computeDensityGradientVector(nodeIdx,
-                                                                    NCsolidMass, NC_CCweight,dx);
-                
-                double surfArea = computeSurfaceArea(rhoGradVector, dx); 
-                double Tsurf = 850.0;  // initial guess for the surface temperature.
-                
-                double burnedMass = computeBurnedMass(Tzero, Tsurf, productPress,
-                                                      rctSpvol[c], surfArea, delT,
-                                                      solidMass[c]);
-                
-                surfTemp[c] = Tsurf;
-                
-                /* conservation of mass, momentum and energy   */
-                mass_src_0[c]   -= burnedMass;
-                mass_src_1[c]   += burnedMass;
-                totalBurnedMass += burnedMass;
-                
-                Vector momX = rctvel_CC[c] * burnedMass;
-                momentum_src_0[c]  -= momX;
-                momentum_src_1[c]  += momX;
-                
-                double energyX   = Cp*solidTemp[c]*burnedMass; 
-                double releasedHeat = burnedMass * (Qc + Qg);
-                energy_src_0[c]   -= energyX;
-                energy_src_1[c]   += energyX + releasedHeat;
-                totalHeatReleased += releasedHeat;
-                
-                double createdVolx = burnedMass * rctSpvol[c];
-                sp_vol_src_0[c]  -= createdVolx;
-                sp_vol_src_1[c]  += createdVolx;
-	    }
-        }  // if (maxMass-MinMass....)
-      }// if (pressure)
+        sp_vol_src_0[c]    -= createdVolx;
+        sp_vol_src_1[c]    += createdVolx;
+        
+      } else if(press_CC[c] < d_threshold_press_JWL && press_CC[c] > d_thresholdPress_SB) {
+          // Steady Burn Model for deflagration
+          IntVector c = *iter;
+          patch->findNodesFromCell(*iter,nodeIdx);
+          
+          double MaxMass = d_SMALL_NUM;
+          double MinMass = 1.0/d_SMALL_NUM; 
+          for (int nN=0; nN<8; nN++){
+              MaxMass = std::max(MaxMass,
+                                 NC_CCweight[nodeIdx[nN]]*rctMass_NC[nodeIdx[nN]]);
+              MinMass = std::min(MinMass,
+                                 NC_CCweight[nodeIdx[nN]]*rctMass_NC[nodeIdx[nN]]); 
+          }
+          
+          /* test whether the current cell satisfies burning criteria */
+          bool   burning = 0;
+          double maxProductVolFrac  = -1.0;
+          double maxReactantVolFrac = -1.0;
+          double productPress = 0.0;
+          double Tzero = 0.0;
+          double temp_vf = 0.0;      
+          /*if( (MaxMass-MinMass)/MaxMass>0.4 && (MaxMass-MinMass)/MaxMass<1.0 && pFlag[c]>0 ){ */
+          if( MinMass/MaxMass<0.7 && pFlag[c]>0 ){ 
+              /* near interface and containing particles */
+              for(int i = -1; i<=1; i++){
+                  for(int j = -1; j<=1; j++){
+                      for(int k = -1; k<=1; k++){
+                          IntVector cell = c + IntVector(i,j,k);
+                          
+                          /* Search for Tzero from max_vol_frac reactant cell */
+                          temp_vf = vol_frac_CC[m0][cell]; 
+                          if( temp_vf > maxReactantVolFrac ){
+                              maxReactantVolFrac = temp_vf;
+                              Tzero = rctTemp[cell];
+                          }//endif
+                          
+                          /* Search for pressure from max_vol_frac product cell */
+                          temp_vf = vol_frac_CC[m1][cell]; 
+                          if( temp_vf > maxProductVolFrac ){
+                              maxProductVolFrac = temp_vf;
+                              productPress = press_CC[cell];
+                          }//endif
+                          
+                          if(burning == 0 && pFlag[cell] <= BP){
+                              for (int m = 0; m < numAllMatls; m++){
+                                  if(vol_frac_CC[m][cell] > 0.2 && temp_CC[m][cell] > ignitionTemp){
+                                      burning = 1;
+                                      break;
+                                  }
+                              }
+                          }//endif
+                          
+                      }//end 3rd for
+                  }//end 2nd for
+              }//end 1st for
+          }//endif
+          if(burning == 1 && productPress >= d_thresholdPress_SB){
+              burningCell[c]=1.0;
+              
+              Vector rhoGradVector = computeDensityGradientVector(nodeIdx,
+                                                                  rctMass_NC, NC_CCweight,dx);
+              
+              double surfArea = computeSurfaceArea(rhoGradVector, dx); 
+              double Tsurf = 850.0;  // initial guess for the surface temperature.
+              
+              double burnedMass = computeBurnedMass(Tzero, Tsurf, productPress,
+                                                    rctSpvol[c], surfArea, delT,
+                                                    rctRho[c]/rctVolFrac[c]);
+             
+              // Store debug variables
+              onSurface[c] = surfArea;
+              surfTemp[c] = Tsurf;
+              
+              /* conservation of mass, momentum and energy   */
+              mass_src_0[c]   -= burnedMass;
+              mass_src_1[c]   += burnedMass;
+              totalBurnedMass += burnedMass;
+              
+              Vector momX = rctvel_CC[c] * burnedMass;
+              momentum_src_0[c]  -= momX;
+              momentum_src_1[c]  += momX;
+              
+              double energyX   = cv_rct*rctTemp[c]*burnedMass; 
+              double releasedHeat = burnedMass * (Qc + Qg);
+              energy_src_0[c]   -= energyX;
+              energy_src_1[c]   += energyX + releasedHeat;
+              totalHeatReleased += releasedHeat;
+              
+              double createdVolx = burnedMass * rctSpvol[c];
+              sp_vol_src_0[c]  -= createdVolx;
+              sp_vol_src_1[c]  += createdVolx;
+          }  // if (cell is ignited)
+       }
     }  // cell iterator  
+
     //__________________________________
     //  set symetric BC
     setBC(mass_src_0, "set_if_sym_BC",patch, d_sharedState, m0, new_dw);
     setBC(mass_src_1, "set_if_sym_BC",patch, d_sharedState, m1, new_dw);
-    setBC(delF,       "set_if_sym_BC",patch, d_sharedState, m0, new_dw);
+    setBC(delF,       "set_if_sym_BC",patch, d_sharedState, m0, new_dw);  // I'm not sure you need these???? Todd
     setBC(Fr,         "set_if_sym_BC",patch, d_sharedState, m0, new_dw);
   }
   //__________________________________
@@ -683,7 +722,7 @@ void DDT1::computeModelSources(const ProcessorGroup*,
       new_dw->put(sum_vartype(totalHeatReleased),DDT1::totalHeatReleasedLabel);
   }
 }
-        
+
 //______________________________________________________________________
 //
 void DDT1::scheduleModifyThermoTransportProperties(SchedulerP&,
@@ -717,31 +756,31 @@ void DDT1::scheduleTestConservation(SchedulerP&,
 //______________________________________________________________________
 //
 void DDT1::printSchedule(const LevelP& level,
-                                const string& where){
+                         const string& where){
   if (cout_doing.active()){
     cout_doing << d_myworld->myrank() << " "
                << where << "L-"
                << level->getIndex()<< endl;
   }
 }
-    
+
 //______________________________________________________________________
 void DDT1::printTask(const PatchSubset* patches,
                             const Patch* patch,
                             const string& where){
     if (cout_doing.active()){
         cout_doing << d_myworld->myrank() << " " 
-        << where << " DDT1 L-"
+        << where << " STEADY_BURN L-"
         << getLevel(patches)->getIndex()
         << " patch " << patch->getGridIndex()<< endl;
     }  
 }
-
+    
 /****************************************************************************/
-/******************* Bisection Newton Solver ********************************/
+/******************* Bisection Newton Solver ********************************/    
 /****************************************************************************/
 double DDT1::computeBurnedMass(double To, double& Ts, double P, double Vc, double surfArea, 
-                                    double delT, double solidMass){  
+                                        double delT, double solidMass){  
     UpdateConstants(To, P, Vc);
     Ts = BisectionNewton(Ts);
     double m =  m_Ts(Ts);
@@ -765,18 +804,17 @@ void DDT1::UpdateConstants(double To, double P, double Vc){
     C3 = CC3 * P*P;
     C4 = To + CC4; 
     C5 = CC5 * C3; 
-    
+        
     Tmin = C4;
     double Tsmax = Ts_max();
     if (Tmin < Tsmax)
         Tmax =  F_Ts(Tsmax);
     else
         Tmax = F_Ts(Tmin);
-    
+        
     IL = Tmin;
     IR = Tmax;
 }
-    
     
 /***   
  ***   Ts = F_Ts(Ts) = Ts_m(m_Ts(Ts))                                              
@@ -837,7 +875,7 @@ double DDT1::BisectionNewton(double Ts){
     double df_dTs = 0;
     double delta_old = 0;
     double delta_new = 0;
-    
+        
     int iter = 0;
     if(Ts>Tmax || Ts<Tmin)
         Ts = (Tmin+Tmax)/2;
@@ -846,10 +884,10 @@ double DDT1::BisectionNewton(double Ts){
         iter++;
         y = Func(Ts);
         SetInterval(y, Ts);
-        
+            
         if(fabs(y)<EPSILON)
             return Ts;
-        
+            
         delta_new = 1e100;
         while(1){
             if(iter>100){
@@ -860,22 +898,23 @@ double DDT1::BisectionNewton(double Ts){
             df_dTs = Deri(Ts);
             if(df_dTs==0) 
                 break;
-            
+                
             delta_old = delta_new;
             delta_new = -y/df_dTs; //Newton Step
             Ts += delta_new;
             y = Func(Ts);
-            
+                
             if(fabs(y)<EPSILON)
                 return Ts;
-            
+                
             if(Ts<IL || Ts>IR || fabs(delta_new)>fabs(delta_old*0.7))
                 break;
             
             iter++; 
             SetInterval(y, Ts);  
         }
-        
+            
         Ts = (IL+IR)/2.0; //Bisection Step
     }
 }
+
