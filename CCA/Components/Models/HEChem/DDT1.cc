@@ -543,7 +543,6 @@ void DDT1::computeModelSources(const ProcessorGroup*,
     new_dw->allocateAndPut(surfTemp,     DDT1::surfaceTempLabel,  m0,patch);
     
     new_dw->allocateTemporary(crackedEnough, patch);
-
     Fr.initialize(0.);
     delF.initialize(0.);
     burningCell.initialize(0.);
@@ -568,7 +567,6 @@ void DDT1::computeModelSources(const ProcessorGroup*,
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m0);
     double cv_rct = mpm_matl->getSpecificHeat();
     IntVector nodeIdx[8];
-
     //__________________________________
     //  Loop over cells
     for (CellIterator iter = patch->getCellIterator();!iter.done();iter++){
@@ -667,7 +665,7 @@ void DDT1::computeModelSources(const ProcessorGroup*,
                   }//end 2nd for
               }//end 1st for
           }//endif
-          if(burning == 1 && productPress >= d_thresholdPress_SB){
+          if((burning == 1 && productPress >= d_thresholdPress_SB) || (crackedEnough[c])){
               burningCell[c]=1.0;
               
               Vector rhoGradVector = computeDensityGradientVector(nodeIdx,
@@ -676,10 +674,24 @@ void DDT1::computeModelSources(const ProcessorGroup*,
               double surfArea = computeSurfaceArea(rhoGradVector, dx); 
               double Tsurf = 850.0;  // initial guess for the surface temperature.
               
-              double burnedMass = computeBurnedMass(Tzero, Tsurf, productPress,
-                                                    rctSpvol[c], surfArea, delT,
-                                                    rctRho[c]/rctVolFrac[c]);
+              double solidMass = rctRho[c]/rctVolFrac[c];
+              double burnedMass = 0.0;
+              if(burning == 1 && productPress >= d_thresholdPress_SB){                  
+                computeBurnedMass(Tzero, Tsurf, productPress,
+                                  rctSpvol[c], surfArea, delT,
+                                  solidMass);
+              }
              
+              // If cracking applies, add to mass
+              if(crackedEnough[c]){
+                burnedMass += d_Gcrack * (1-prodRho[c]/(rctRho[c]+prodRho[c]))*pow(press_CC[c]/101325.0,d_nCrack);              
+              }
+
+              // Clamp burned mass to total convertable mass in cell
+              if(burnedMass + MIN_MASS_IN_A_CELL > solidMass){
+                 burnedMass = solidMass - MIN_MASS_IN_A_CELL;
+              }
+
               // Store debug variables
               onSurface[c] = surfArea;
               surfTemp[c] = Tsurf;
@@ -785,8 +797,7 @@ double DDT1::computeBurnedMass(double To, double& Ts, double P, double Vc, doubl
     Ts = BisectionNewton(Ts);
     double m =  m_Ts(Ts);
     double burnedMass = delT * surfArea * m;
-    if (burnedMass + MIN_MASS_IN_A_CELL > solidMass) 
-        burnedMass = solidMass - MIN_MASS_IN_A_CELL;  
+
     return burnedMass;
 }
     
