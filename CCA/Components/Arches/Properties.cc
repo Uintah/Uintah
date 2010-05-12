@@ -184,7 +184,6 @@ Properties::problemSetup(const ProblemSpecP& params)
     throw InvalidValue("Mixing Model not supported: " + mixModel, __FILE__, __LINE__);
   }
  
-#if HAVE_TABPROPS
   if (mixModel != "TabProps") {
     d_mixingModel->problemSetup(db);
 
@@ -205,7 +204,6 @@ Properties::problemSetup(const ProblemSpecP& params)
     d_tabulated_soot  = d_mixingModel->getTabulatedSoot();  
     d_radiationCalc = false;
   }
-#endif
 
   if (d_calcEnthalpy) {
     ProblemSpecP params_non_constant = params;
@@ -281,56 +279,6 @@ Properties::computeInletProperties(const InletStream& inStream,
     throw InvalidValue("Mixing Model not supported", __FILE__, __LINE__);
   }
 }
-
-//****************************************************************************
-// New compute props interface:
-// Schedule compute properties
-//****************************************************************************
-
-void 
-Properties::sched_computeProps(SchedulerP& sched, 
-                         const PatchSet* patches, 
-                         const MaterialSet* matls, 
-                         const TimeIntegratorLabel* timelabels, 
-                         bool modify_ref_density)
-{
-  string md = ""; 
-  if (!(modify_ref_density)) md += "RKSSP";
-  string taskname =  "Properties::computeProps" +
-                     timelabels->integrator_step_name + md;
-  Task* tsk = scinew Task(taskname, this,
-                          &Properties::computeProps,
-                          timelabels, modify_ref_density); 
-  //Ghost::GhostType  gn = Ghost::None;
-
-  sched->addTask(tsk, patches, matls);
-}   
-
-//****************************************************************************
-// New compute props interface:
-// Actually compute props
-//****************************************************************************
-
-void 
-Properties::computeProps(const ProcessorGroup* pc, 
-                         const PatchSubset* patches, 
-                         const MaterialSubset*, 
-                         DataWarehouse*, 
-                         DataWarehouse* new_dw, 
-                         const TimeIntegratorLabel* timelabels, 
-                         bool modify_ref_density)
-{
-  for (int p = 0; p < patches->size(); ++p) {
-
-    //const Patch* patch = patches->get(p);
-    //int archIndex = 0; // only one arches material
-    //int indx = d_lab->d_sharedState->
-    //                 getArchesMaterial(archIndex)->getDWIndex(); 
-    //Ghost::GhostType  gn = Ghost::None;
-
-  }
-}                  
-  
 
 //****************************************************************************
 // Schedule the recomputation of properties

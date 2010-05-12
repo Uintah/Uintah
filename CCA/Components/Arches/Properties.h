@@ -135,22 +135,6 @@ public:
                             bool d_EKTCorrection,
                             bool doing_EKT_now);
 
-  void sched_computeProps(SchedulerP&, 
-                          const PatchSet* patches,
-                          const MaterialSet* matls,
-                          const TimeIntegratorLabel* timelabels,
-                          bool modify_density);
- 
-  void computeProps(const ProcessorGroup* pc, 
-                    const PatchSubset* patches, 
-                    const MaterialSubset*, 
-                    DataWarehouse*, 
-                    DataWarehouse* new_dw, 
-                    const TimeIntegratorLabel* timelabels, 
-                    bool modify_ref_density);
-
-
-
   ///////////////////////////////////////////////////////////////////////
   // Schedule the computation of proprties for the first actual time 
   // step in an MPMArches run
