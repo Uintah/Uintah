@@ -75,9 +75,6 @@ DEALINGS IN THE SOFTWARE.
 #include <fstream>
 #include <sstream>
 
-#ifdef _WIN32
-#include <process.h>
-#endif
 
 #define USL
 //#undef USL

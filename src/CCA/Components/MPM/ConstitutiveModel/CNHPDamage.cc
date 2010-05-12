@@ -49,9 +49,6 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Malloc/Allocator.h>
 #include <iostream>
 
-#ifdef _WIN32
-#include <process.h>
-#endif
 
 using std::cerr;
 using namespace Uintah;

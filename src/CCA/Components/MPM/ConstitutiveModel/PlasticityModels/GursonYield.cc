@@ -33,9 +33,6 @@ DEALINGS IN THE SOFTWARE.
 #include <iostream>
 #include <cmath>
 
-#ifdef _WIN32
-#define copysign _copysign
-#endif
 
 using namespace std;
 using namespace Uintah;

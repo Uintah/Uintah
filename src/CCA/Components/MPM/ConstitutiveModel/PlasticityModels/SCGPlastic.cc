@@ -43,10 +43,6 @@ DEALINGS IN THE SOFTWARE.
 
 #include <Core/Exceptions/InvalidValue.h>
 
-#ifdef _WIN32
-#include <cfloat>
-#define isnan _isnan
-#endif
 
 using namespace Uintah;
 using namespace SCIRun;

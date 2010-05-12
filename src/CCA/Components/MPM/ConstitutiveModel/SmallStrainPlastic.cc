@@ -73,11 +73,6 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Exceptions/ParameterNotFound.h>
 #include <Core/Exceptions/InvalidValue.h>
 
-#ifdef _WIN32
-#include <process.h>
-#include <cfloat>
-#define isnan _isnan
-#endif
 
 using std::cerr;
 using namespace Uintah;
