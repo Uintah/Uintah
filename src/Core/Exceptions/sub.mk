@@ -52,11 +52,6 @@ SRCS   += \
           $(SRCDIR)/UintahPetscError.cc       \
           $(SRCDIR)/VariableNotFoundInGrid.cc 
 
-
-ifeq ($(IS_WIN),yes)
-  SRCS +=$(SRCDIR)/StackWalker.cc
-endif
-
 PSELIBS := 
 LIBS := $(TRACEBACK_LIB) $(DL_LIBRARY)
 
