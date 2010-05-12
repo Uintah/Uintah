@@ -120,6 +120,7 @@ Arches::Arches(const ProcessorGroup* myworld) :
   d_calcReactingScalar = 0;
   d_calcScalar = 0;
   d_calcEnthalpy =0;
+  d_doingRestart = false; 
 #ifdef multimaterialform
   d_mmInterface = 0;
 #endif
@@ -749,6 +750,7 @@ Arches::scheduleInitialize(const LevelP& level,
 void
 Arches::restartInitialize()
 {
+  d_doingRestart = true; 
 }
 
 // ****************************************************************************
@@ -1360,6 +1362,7 @@ Arches::scheduleTimeAdvance( const LevelP& level,
 {
   double time = d_lab->d_sharedState->getElapsedTime();
   nofTimeSteps++ ;
+
   if (d_MAlab) {
 #ifndef ExactMPMArchesInitialize
     //    if (nofTimeSteps < 2) {
@@ -1380,6 +1383,20 @@ Arches::scheduleTimeAdvance( const LevelP& level,
   if (d_analysisModule) {
     d_analysisModule->scheduleDoAnalysis(sched, level);
   }
+
+  if (d_doingRestart) {
+
+    const PatchSet* patches= level->eachPatch();
+    const MaterialSet* matls = d_sharedState->allArchesMaterials();
+
+    //Reapply BC in case there was a modification to input.xml in the uda. 
+    if (d_boundaryCondition->getInletBC()){
+      d_boundaryCondition->sched_calculateArea(sched, patches, matls);
+    }
+    d_boundaryCondition->sched_setProfile(sched, patches, matls); 
+    d_doingRestart = false;
+    d_recompile = true; //This will be set to false after the first timestep.
+  }
 }
 
 // ****************************************************************************
@@ -1387,7 +1404,17 @@ Arches::scheduleTimeAdvance( const LevelP& level,
 // ****************************************************************************
 bool Arches::needRecompile(double time, double dt, 
                             const GridP& grid) {
- return d_recompile;
+  bool temp; 
+  if ( d_recompile ) {
+   temp = d_recompile;
+   proc0cout << endl;
+   proc0cout << "NOTICE!:Recompile Taskgraph is set to true.  Taskgraph will be recompiled once first timestep but not after." << endl; 
+   proc0cout << endl;
+   d_recompile = false; 
+   return temp; 
+  }
+  else 
+    return d_recompile;
 }
 // ****************************************************************************
 // schedule reading of initial condition for velocity and pressure
