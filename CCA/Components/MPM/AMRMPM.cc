@@ -85,6 +85,8 @@ AMRMPM::AMRMPM(const ProcessorGroup* myworld) :SerialMPM(myworld)
 {
   lb = scinew MPMLabel();
   flags = scinew MPMFlags(myworld);
+  flags->d_minGridLevel = 0;
+  flags->d_maxGridLevel = 1000;
 
   d_nextOutputTime=0.;
   d_SMALL_NUM_MPM=1e-200;
@@ -143,15 +145,6 @@ void AMRMPM::problemSetup(const ProblemSpecP& prob_spec,
           cerr << "warning: ignoring unknown face '" << *ftit<< "'" << endl;
         }
     }
-  }
-
-
-  // read in AMR flags from the main ups file
-  ProblemSpecP amr_ps = prob_spec->findBlock("AMR");
-  if (amr_ps) {
-    ProblemSpecP mpm_amr_ps = amr_ps->findBlock("MPM");
-    mpm_amr_ps->getWithDefault("min_grid_level", flags->d_minGridLevel, 0);
-    mpm_amr_ps->getWithDefault("max_grid_level", flags->d_maxGridLevel, 1000);
   }
     
   //__________________________________
