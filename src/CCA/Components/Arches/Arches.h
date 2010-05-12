@@ -390,6 +390,8 @@ private:
     PartVel* d_partVel; 
     DQMOM* d_dqmomSolver; 
 
+    bool d_doingRestart; 
+
 
 }; // end class Arches
 
