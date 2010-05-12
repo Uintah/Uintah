@@ -70,11 +70,6 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Exceptions/ParameterNotFound.h>
 
-#ifdef _WIN32
-#include <process.h>
-#include <cfloat>
-#define isnan _isnan
-#endif
 
 using std::cerr;
 using namespace Uintah;

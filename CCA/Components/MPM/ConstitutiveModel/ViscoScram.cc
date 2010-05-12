@@ -54,9 +54,6 @@ DEALINGS IN THE SOFTWARE.
 #include <fstream>
 #include <iostream>
 
-#ifdef _WIN32
-#include <process.h>
-#endif
 
 using std::cerr;
 using namespace Uintah;

@@ -55,9 +55,6 @@ using std::cerr;
 using namespace Uintah;
 using namespace SCIRun;
 
-#ifdef _WIN32
-#include <process.h>
-#endif
 
 CNHDamage::CNHDamage(ProblemSpecP& ps, MPMFlags* Mflag)
   : CompNeoHook(ps, Mflag), ImplicitCM()

@@ -73,11 +73,6 @@ DEALINGS IN THE SOFTWARE.
 
 #include <cfloat>
 
-#ifdef _WIN32
-#  undef max
-#  undef min
-#  define isnan _isnan
-#endif
 
 #define SET_CFI_BC 0
 

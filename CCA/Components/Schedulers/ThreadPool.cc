@@ -51,9 +51,6 @@ DEALINGS IN THE SOFTWARE.
 #include <sstream>
 #include <cstdio>
 
-#ifdef _WIN32
-#include <process.h>
-#endif
 
 using std::cerr;
 

@@ -71,9 +71,6 @@ DEALINGS IN THE SOFTWARE.
 #include <iostream>
 #include <fstream>
 
-#ifdef _WIN32
-#include <process.h>
-#endif
 #undef KUMAR
 //#define KUMAR
 

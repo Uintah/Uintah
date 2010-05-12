@@ -42,11 +42,6 @@ DEALINGS IN THE SOFTWARE.
 #include <iostream>
 #include <sstream>
 
-#ifdef _WIN32
-#include <process.h>
-#include <cfloat>
-#define finite _finite
-#endif
 
 using namespace Uintah;
 using namespace SCIRun;

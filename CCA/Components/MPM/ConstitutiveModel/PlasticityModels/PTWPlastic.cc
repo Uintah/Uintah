@@ -33,10 +33,6 @@ DEALINGS IN THE SOFTWARE.
 #include <iostream>
 #include <Core/Exceptions/InvalidValue.h>
 
-#ifdef _WIN32
-// FIX - windows doesn't have erf
-#define erf(x) 1
-#endif
 
 using namespace Uintah;
 using namespace SCIRun;

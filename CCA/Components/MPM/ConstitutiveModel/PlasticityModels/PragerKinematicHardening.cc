@@ -38,11 +38,6 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/PragerKinematicHardening.h>
 #include <cmath>
 
-#ifdef _WIN32
-#include <process.h>
-#include <cfloat>
-#define isnan _isnan
-#endif
 
 using namespace Uintah;
 using namespace SCIRun;

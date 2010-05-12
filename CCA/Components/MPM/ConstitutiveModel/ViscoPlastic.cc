@@ -70,11 +70,6 @@ DEALINGS IN THE SOFTWARE.
 
 #include <iostream>
 
-#ifdef _WIN32
-#include <process.h>
-#include <cfloat.h>
-#define isnan _isnan
-#endif
 
 using std::cerr;
 using namespace Uintah;
