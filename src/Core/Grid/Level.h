@@ -218,7 +218,7 @@ public:
       
 
   void selectPatches(const IntVector&, const IntVector&,
-                     selectType&, bool cache=true) const;
+                     selectType&, bool withExtraCells=false, bool cache=true) const;
 
   bool containsPointIncludingExtraCells(const Point&) const;
   bool containsPoint(const Point&) const;

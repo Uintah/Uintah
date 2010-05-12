@@ -205,7 +205,7 @@ void printData(DataArchive* archive, string& variable_name, const Uintah::TypeDe
           
         // find the corresponding patches
         Level::selectType patches;
-        level->selectPatches(var_start, var_end + IntVector(1,1,1), patches);
+        level->selectPatches(var_start, var_end + IntVector(1,1,1), patches,true);
         if( patches.size() == 0){
           cerr << " Could not find any patches on Level " << level->getIndex()
                << " that contain cells along line: " << var_start << " and " << var_end 
@@ -445,7 +445,7 @@ void printData_PV(DataArchive* archive, string& variable_name, const Uintah::Typ
       
       // find the corresponding patches
       Level::selectType patches;
-      level->selectPatches(var_start, var_end + IntVector(1,1,1), patches);
+      level->selectPatches(var_start, var_end + IntVector(1,1,1), patches,true);
       if( patches.size() == 0){
         cerr << " Could not find any patches on Level " << level->getIndex()
              << " that contain cells along line: " << var_start << " and " << var_end 

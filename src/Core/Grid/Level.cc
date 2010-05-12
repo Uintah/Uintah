@@ -392,7 +392,7 @@ Point Level::positionToIndex(const Point& p) const
 }
 
 void Level::selectPatches(const IntVector& low, const IntVector& high,
-                          selectType& neighbors, bool cache) const
+                          selectType& neighbors, bool withExtraCells, bool cache) const
 {
  TAU_PROFILE("Level::selectPatches", " ", TAU_USER);
     
@@ -410,7 +410,7 @@ void Level::selectPatches(const IntVector& low, const IntVector& high,
  }
 
    //cout << Parallel::getMPIRank() << " Level Quesy: " << low << " " << high << endl;
-   d_bvh->query(low, high, neighbors);
+   d_bvh->query(low, high, neighbors, withExtraCells);
    sort(neighbors.begin(), neighbors.end(), Patch::Compare());
 
 #ifdef CHECK_SELECT
@@ -816,6 +816,12 @@ void Level::setBCTypes()
     }
   }
 
+  //recreate BVH with extracells
+  if (d_bvh != NULL)
+    delete d_bvh;
+  d_bvh = scinew PatchBVH(d_virtualAndRealPatches);
+  
+
 
 }
 
@@ -872,7 +878,7 @@ const Patch* Level::selectPatchForCellIndex( const IntVector& idx) const
 {
   selectType pv;
   IntVector i(1,1,1);
-  selectPatches(idx - i,idx + i,pv,false);
+  selectPatches(idx - i,idx + i,pv,false,false);
   if(pv.size() == 0)
     return 0;
   else {
@@ -887,7 +893,7 @@ const Patch* Level::selectPatchForNodeIndex( const IntVector& idx) const
 {
   selectType pv;
   IntVector i(1,1,1);
-  selectPatches(idx - i,idx + i,pv,false);
+  selectPatches(idx - i,idx + i,pv,false,false);
   if(pv.size() == 0)
     return 0;
   else {
