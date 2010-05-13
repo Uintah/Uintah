@@ -545,6 +545,13 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
       if ( !eqn->getDensityGuessBool() )
         eqn->sched_evalTransportEqn( level, sched, curr_level ); 
     }
+    // Clean up after Scalar equation evaluations  
+    if (curr_level == numTimeIntegratorLevels-1){
+      for (EqnFactory::EqnMap::iterator iter = scalar_eqns.begin(); iter != scalar_eqns.end(); iter++){
+        EqnBase* eqn = iter->second; 
+        eqn->sched_cleanUp( level, sched ); 
+      }
+    }
 
     if (d_standAloneRMCRT) { 
       d_RMCRTRadiationModel->sched_solve( level, sched, d_timeIntegratorLabels[curr_level] );  
