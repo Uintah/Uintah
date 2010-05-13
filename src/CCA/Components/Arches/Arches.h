@@ -391,6 +391,7 @@ private:
     DQMOM* d_dqmomSolver; 
 
     bool d_doingRestart; 
+    bool d_newBC_on_Restart; 
 
 
 }; // end class Arches
