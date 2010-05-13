@@ -353,14 +353,8 @@ server.
 \subsubsection{Prebuilt binaries}
 \label{subsec:PrebuiltBinaries}
 
-Warning, most of these binaries are for v1.12... If you need v2.x, then you
-will need to build from source.
-
-If you have a system that matches the prebuilt binaries, found at
-\url{https://wci.llnl.gov/codes/visit/executables.html}, you may want
-to try one. In most cases you will want to build your own
-binaries. There are currently no universal binaries available for Mac
-OS X 10.5 (leopard).
+Until VisIt 2.0 is officially released, binary distributions should not be
+used.  Instead, VisIt must be build from svn source revision 9152 (see below).
 
 \subsubsection{Building Version 2.0}
 \label{subsec:VisItVersion2_Build}
@@ -460,54 +454,6 @@ If so, add in the line:
 
 to the file, ./include/visit-config.h and run make again.
 
-\subsubsection{Using the build script (Version 1.11) }
-\label{subsec:UsingTheBuildScript}
-
-Note, the following instructions are slightly different from the instructions
-for building version 2.x:
-
-We recommend that you first try the visit build script (WARNING, make
-sure you get the must recent version of this script. The build script
-must correspond to the version of VisIt you wish to install. The
-latest version is 1.11.2). This is a link to the script,
-\url{https://wci.llnl.gov/codes/visit/1.11.2/build\_visit}.
-
-You can also use the following command on the terminal (from most
-Linux boxes), to download the file directly,
-
-\begin{verbatim}
-wget https://wci.llnl.gov/codes/visit/1.11.2/build_visit
-chmod +x build_visit
-\end{verbatim}
-The chmod is used to set execute permissions on the file.
-
-\emph{build\_visit} is a bash build script that downloads and builds VisIt as
-well as all of the necessary third party libraries. The script makes
-use of the dialog program which allows you to customize your build.
-
-Once you have the script, you would need to execute the following on
-the terminal,
-
-\begin{verbatim}
-./build_visit --makeflags '-j#'
-\end{verbatim}
-where '\#' is the number of processors to use, while building VisIt.
-
-This would launch a dialog window and would require you to select some
-options (using the Space bar). You should select the 'Parallel'
-option, if you wish to have a parallel build of the engine. Once you
-have selected the parallel option, you may be required to specify the
-path to the include and lib directories of your MPI installation.
-
-The process of building VisIt may be slow and it may appear that
-nothing is happening. To verify the build script is not hanging, open
-another terminal and tail the file build\_visit\_log .
-
-\begin{verbatim}
-tail -f build_visit_log
-\end{verbatim}
-
-\normalfont  
 \subsubsection{Parallel OS X build}
 \label{sec:ParallelOSXBuild}
 
