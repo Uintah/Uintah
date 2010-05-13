@@ -121,6 +121,7 @@ Arches::Arches(const ProcessorGroup* myworld) :
   d_calcScalar = 0;
   d_calcEnthalpy =0;
   d_doingRestart = false; 
+  d_newBC_on_Restart = false; 
 #ifdef multimaterialform
   d_mmInterface = 0;
 #endif
@@ -184,6 +185,13 @@ Arches::problemSetup(const ProblemSpecP& params,
   ArchesMaterial* mat= scinew ArchesMaterial();
   sharedState->registerArchesMaterial(mat);
   ProblemSpecP db = params->findBlock("CFD")->findBlock("ARCHES");
+
+  // This will allow for changing the BC's on restart:
+  if ( db->findBlock("new_BC_on_restart") )
+    d_newBC_on_Restart = true; 
+  else 
+    d_newBC_on_Restart = false; 
+
   // not sure, do we need to reduce and put in datawarehouse
   if (db->findBlock("ExplicitSolver")){
     if (db->findBlock("ExplicitSolver")->findBlock("MixtureFractionSolver"))
@@ -1386,16 +1394,18 @@ Arches::scheduleTimeAdvance( const LevelP& level,
 
   if (d_doingRestart) {
 
-    const PatchSet* patches= level->eachPatch();
-    const MaterialSet* matls = d_sharedState->allArchesMaterials();
+    if (d_newBC_on_Restart) {
+      const PatchSet* patches= level->eachPatch();
+      const MaterialSet* matls = d_sharedState->allArchesMaterials();
 
-    //Reapply BC in case there was a modification to input.xml in the uda. 
-    if (d_boundaryCondition->getInletBC()){
-      d_boundaryCondition->sched_calculateArea(sched, patches, matls);
+      //Reapply BC in case there was a modification to input.xml in the uda. 
+      if (d_boundaryCondition->getInletBC()){
+        d_boundaryCondition->sched_calculateArea(sched, patches, matls);
+      }
+      d_boundaryCondition->sched_setProfile(sched, patches, matls); 
+      d_doingRestart = false;
+      d_recompile = true; //This will be set to false after the first timestep.
     }
-    d_boundaryCondition->sched_setProfile(sched, patches, matls); 
-    d_doingRestart = false;
-    d_recompile = true; //This will be set to false after the first timestep.
   }
 }
 
