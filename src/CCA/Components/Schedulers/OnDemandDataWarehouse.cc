@@ -1349,11 +1349,12 @@ OnDemandDataWarehouse::get(constGridVariableBase& constVar,
 void
 OnDemandDataWarehouse::getModifiable(GridVariableBase& var,
                                      const VarLabel* label,
-                                     int matlIndex, const Patch* patch)
+                                     int matlIndex, const Patch* patch,
+                                     Ghost::GhostType gtype, int numGhostCells)
 {
  d_lock.readLock();  
  //checkModifyAccess(label, matlIndex, patch);
-  getGridVar(var, label, matlIndex, patch, Ghost::None, 0);
+  getGridVar(var, label, matlIndex, patch, gtype, numGhostCells);
  d_lock.readUnlock();  
 }
 

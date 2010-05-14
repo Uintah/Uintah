@@ -186,7 +186,7 @@ public:
                     Ghost::GhostType gtype, int numGhostCells ) = 0;
   
   virtual void getModifiable( GridVariableBase& var,
-                              const VarLabel* label, int matlIndex, const Patch* patch ) = 0;
+                              const VarLabel* label, int matlIndex, const Patch* patch, Ghost::GhostType gtype=Ghost::None, int numGhostCells=0 ) = 0;
 
   virtual void allocateTemporary( GridVariableBase& var, const Patch* patch,
                                   Ghost::GhostType gtype = Ghost::None, int numGhostCells = 0 ) = 0;
