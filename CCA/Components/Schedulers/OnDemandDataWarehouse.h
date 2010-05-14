@@ -184,7 +184,7 @@ public:
             const Patch* patch, Ghost::GhostType gtype, int numGhostCells);
 
    void getModifiable(GridVariableBase& var, const VarLabel* label, int matlIndex, 
-                      const Patch* patch);
+                      const Patch* patch, Ghost::GhostType gtype=Ghost::None, int numGhostCells=0);
 
    void allocateTemporary(GridVariableBase& var, const Patch* patch,
                           Ghost::GhostType gtype, int numGhostCells );
