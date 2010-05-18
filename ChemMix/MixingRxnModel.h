@@ -110,7 +110,7 @@ public:
   /** @brief Computes the heat loss value */ 
   virtual void sched_computeHeatLoss( const LevelP& level, 
                                       SchedulerP& sched,
-                                      const bool initialize ) = 0;
+                                      const bool initialize, const bool calcEnthalpy ) = 0;
 
   /** @brief Initializes the enthalpy for the first time step */ 
   virtual void sched_computeFirstEnthalpy( const LevelP& level, 
