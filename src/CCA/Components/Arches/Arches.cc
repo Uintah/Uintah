@@ -685,7 +685,8 @@ Arches::scheduleInitialize(const LevelP& level,
   else {
     bool initialize_it = true; 
     bool modify_ref_den = true; 
-    d_props->sched_initEnthalpy( level, sched ); 
+    if ( d_calcEnthalpy) 
+      d_props->sched_initEnthalpy( level, sched ); 
     d_props->sched_reComputeProps_new( level, sched, init_timelabel, initialize_it, modify_ref_den ); 
   }
 

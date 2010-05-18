@@ -107,7 +107,7 @@ public:
   /** @brief Gets the thermochemical state for a patch */
   void sched_computeHeatLoss( const LevelP& level, 
                               SchedulerP& sched, 
-                              const bool intialize_me ); 
+                              const bool intialize_me, const bool calcEnthalpy ); 
 
   /** @brief See sched_computeHeatLoss */ 
   void computeHeatLoss( const ProcessorGroup* pc, 
@@ -115,7 +115,7 @@ public:
                         const MaterialSubset* matls, 
                         DataWarehouse* old_dw, 
                         DataWarehouse* new_dw, 
-                        const bool intialize_me ); 
+                        const bool intialize_me, const bool calcEnthalpy ); 
 
 
   /** @brief A temporary solution to deal with boundary conditions on properties until Properties.cc is eliminated */ 
