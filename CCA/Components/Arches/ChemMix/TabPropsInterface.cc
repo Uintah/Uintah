@@ -437,12 +437,12 @@ TabPropsInterface::getState( const ProcessorGroup* pc,
 }
 
 void 
-TabPropsInterface::sched_computeHeatLoss( const LevelP& level, SchedulerP& sched, const bool initialize_me )
+TabPropsInterface::sched_computeHeatLoss( const LevelP& level, SchedulerP& sched, const bool initialize_me, const bool calcEnthalpy )
 {
   string taskname = "TabPropsInterface::computeHeatLoss"; 
   Ghost::GhostType  gn = Ghost::None;
 
-  Task* tsk = scinew Task(taskname, this, &TabPropsInterface::computeHeatLoss, initialize_me );
+  Task* tsk = scinew Task(taskname, this, &TabPropsInterface::computeHeatLoss, initialize_me, calcEnthalpy );
 
   // independent variables
   for (MixingRxnModel::VarMap::iterator i = d_ivVarMap.begin(); i != d_ivVarMap.end(); ++i) {
@@ -458,7 +458,8 @@ TabPropsInterface::sched_computeHeatLoss( const LevelP& level, SchedulerP& sched
   else 
     tsk->modifies( d_lab->d_heatLossLabel ); 
 
-  tsk->requires( Task::NewDW, d_lab->d_enthalpySPLabel, gn, 0 ); 
+  if ( calcEnthalpy )
+    tsk->requires( Task::NewDW, d_lab->d_enthalpySPLabel, gn, 0 ); 
 
   sched->addTask( tsk, level->eachPatch(), d_lab->d_sharedState->allArchesMaterials() ); 
 }
@@ -469,7 +470,8 @@ TabPropsInterface::computeHeatLoss( const ProcessorGroup* pc,
                                     const MaterialSubset* matls, 
                                     DataWarehouse* old_dw, 
                                     DataWarehouse* new_dw, 
-                                    const bool initialize_me )
+                                    const bool initialize_me,
+                                    const bool calcEnthalpy )
 {
   for (int p=0; p < patches->size(); p++){
 
@@ -486,7 +488,8 @@ TabPropsInterface::computeHeatLoss( const ProcessorGroup* pc,
     heat_loss.initialize(0.0); 
 
     constCCVariable<double> enthalpy; 
-    new_dw->get(enthalpy, d_lab->d_enthalpySPLabel, matlIndex, patch, gn, 0 ); 
+    if ( calcEnthalpy ) 
+      new_dw->get(enthalpy, d_lab->d_enthalpySPLabel, matlIndex, patch, gn, 0 ); 
 
     std::vector<constCCVariable<double> > the_variables; 
     const std::vector<string>& iv_names = getAllIndepVars();
@@ -523,8 +526,10 @@ TabPropsInterface::computeHeatLoss( const ProcessorGroup* pc,
       // actually compute the heat loss: 
       double sensible_enthalpy  = getSingleState( "sensible_heat", iv ); 
       double adiabatic_enthalpy = getSingleState( "adiabatic_enthalpy", iv );  
+      double current_heat_loss  = 0.0;
       double small = 1e-10; 
-      double current_heat_loss = ( adiabatic_enthalpy - enthalpy[c] ) / ( sensible_enthalpy + small ); 
+      if ( calcEnthalpy )
+        current_heat_loss = ( adiabatic_enthalpy - enthalpy[c] ) / ( sensible_enthalpy + small ); 
 
       if ( current_heat_loss < -1.0 )
         current_heat_loss = -1.0; 
@@ -679,6 +684,11 @@ TabPropsInterface::oldTableHack( const InletStream& inStream, Stream& outStream,
         iv[i] = d_hl_scalar_init; 
       else
         iv[i] = 0.0; 
+      if (!calcEnthalpy) {
+        iv[i] = 0.0; // override any user input because case is adiabatic
+        if ( d_hl_scalar_init > 0.0 || d_hl_outlet > 0.0 || d_hl_pressure > 0.0 )
+          proc0cout << "NOTICE!: Case is adiabatic so we will ignore your heat loss initialization." << endl;
+      }
     }
   }
 
@@ -695,6 +705,7 @@ TabPropsInterface::oldTableHack( const InletStream& inStream, Stream& outStream,
 
   if (calcEnthalpy) {
 
+    // non-adiabatic case
     double enthalpy          = 0.0; 
     double sensible_enthalpy = 0.0; 
 
@@ -721,16 +732,22 @@ TabPropsInterface::oldTableHack( const InletStream& inStream, Stream& outStream,
       throw ProblemSetupException("ERROR! I shouldn't be in this part of the code.", __FILE__, __LINE__); 
 
     }
+  } else {
 
-    outStream.d_temperature = getSingleState( "temperature", iv ); 
-    outStream.d_density     = getSingleState( "density", iv ); 
-    outStream.d_cp          = getSingleState( "heat_capacity", iv ); 
-    outStream.d_h2o         = getSingleState( "H2O", iv); 
-    outStream.d_co2         = getSingleState( "CO2", iv);
-    outStream.d_heatLoss    = current_heat_loss; 
-    if (inStream.d_initEnthalpy) outStream.d_enthalpy = init_enthalpy; 
+    // adiabatic case
+    init_enthalpy = 0.0;
+    current_heat_loss = 0.0; 
 
   }
+
+  outStream.d_temperature = getSingleState( "temperature", iv ); 
+  outStream.d_density     = getSingleState( "density", iv ); 
+  outStream.d_cp          = getSingleState( "heat_capacity", iv ); 
+  outStream.d_h2o         = getSingleState( "H2O", iv); 
+  outStream.d_co2         = getSingleState( "CO2", iv);
+  outStream.d_heatLoss    = current_heat_loss; 
+  if (inStream.d_initEnthalpy) outStream.d_enthalpy = init_enthalpy; 
+
 }
 
 

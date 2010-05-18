@@ -140,7 +140,7 @@ Properties::problemSetup(const ProblemSpecP& params)
     mixModel = "TabProps";
 #endif
   else
-    throw InvalidValue("ERROR!: No mixing/reaction table specified!",__FILE__,__LINE__);
+    throw InvalidValue("ERROR!: No mixing/reaction table specified! If you are attempting to use the new TabProps interface, ensure that you configured properly with TabProps.",__FILE__,__LINE__);
 
   if (mixModel == "ColdFlowMixingModel") {
     d_mixingModel = scinew ColdflowMixingModel(d_calcReactingScalar,
@@ -2283,8 +2283,7 @@ Properties::sched_reComputeProps_new( const LevelP& level,
 {
 #if HAVE_TABPROPS
   // this method is temporary while we get rid of properties.cc 
-  if (d_calcEnthalpy)
-    d_mixingRxnTable->sched_computeHeatLoss( level, sched, initialize );
+  d_mixingRxnTable->sched_computeHeatLoss( level, sched, initialize, d_calcEnthalpy );
 
   d_mixingRxnTable->sched_getState( level, sched, time_labels, initialize, d_calcEnthalpy, modify_ref_den ); 
 #endif  
