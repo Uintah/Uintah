@@ -144,7 +144,6 @@ namespace Uintah{
         IntVector l,h; 
         p->getFaceCells( face, 0, l, h ); 
 
-        //dont want edge cells:
         if ( face == Patch::xminus || face == Patch::xplus ){
 
           bool yminus = p->getBCType(Patch::yminus) == Patch::None;
@@ -173,9 +172,9 @@ namespace Uintah{
           if (xplus)
             h[0] -= 2;
           if (zminus)
-            l[2] += 2;
+            l[2] += 1;
           if (zplus)
-            h[2] -= 2;
+            h[2] -= 1;
         } else if ( face == Patch::zminus || face == Patch::zplus ){
 
           bool yminus = p->getBCType(Patch::yminus) == Patch::None;
@@ -385,39 +384,6 @@ namespace Uintah{
 
             face_values.minus = 0.5 * (den[c] + den[cxm]); 
             face_values.plus  = 0.5 * (den[c] + den[cxp]); 
-          } else {
-            // assume the only other type is a face type...
-            IntVector cxm = c - coord; 
-
-            face_values.minus = den[cxm];
-            face_values.plus  = den[c]; 
-          }
-
-          return face_values; 
-        }
-      /** @brief Return the face density if there is a boundary for all cell types */
-      template< class phiT > 
-        inline FaceData1D getDensityOnFace( const IntVector c, const IntVector coord, 
-            phiT& phi, constCCVariable<double>& den , FaceBoundaryBool isBoundary){
-
-          FaceData1D face_values; 
-          face_values.minus = 0.0;
-          face_values.plus  = 0.0;
-
-          TypeDescription::Type type = phi.getTypeDescription()->getType(); 
-
-          if ( type == TypeDescription::CCVariable ) {
-            IntVector cxm = c - coord; 
-            IntVector cxp = c + coord; 
-
-            if (isBoundary.minus)
-              face_values.minus = den[cxm];
-            else
-              face_values.minus = 0.5 * (den[c] + den[cxm]); 
-            if (isBoundary.plus)
-              face_values.plus = den[cxp];
-            else
-              face_values.plus  = 0.5 * (den[c] + den[cxp]); 
           } else {
             // assume the only other type is a face type...
             IntVector cxm = c - coord; 
@@ -812,7 +778,7 @@ namespace Uintah{
             area = Dx.y()*Dx.z();            
 
             faceIsBoundary = checkFacesForBoundaries( p, c, coord ); 
-            face_den       = getDensityOnFace( c, coord, Fconv, den, faceIsBoundary ); 
+            face_den       = getDensityOnFace( c, coord, Fconv, den ); 
             face_vel       = getFaceVelocity( c, Fconv, uVel ); 
             face_phi       = upwindInterp( c, coord, oldPhi, face_vel, faceIsBoundary ); 
             Fconv[c]       = getFlux( area, face_den, face_vel, face_phi, areaFraction, coord, c ); 
@@ -823,7 +789,7 @@ namespace Uintah{
             area = Dx.x()*Dx.z(); 
 
             faceIsBoundary = checkFacesForBoundaries( p, c, coord ); 
-            face_den       = getDensityOnFace( c, coord, Fconv, den, faceIsBoundary ); 
+            face_den       = getDensityOnFace( c, coord, Fconv, den ); 
             face_vel       = getFaceVelocity( c, Fconv, vVel ); 
             face_phi       = upwindInterp( c, coord, oldPhi, face_vel, faceIsBoundary ); 
             Fconv[c]      += getFlux( area, face_den, face_vel, face_phi, areaFraction, coord, c ); 
@@ -835,7 +801,7 @@ namespace Uintah{
             area = Dx.x()*Dx.y(); 
 
             faceIsBoundary = checkFacesForBoundaries( p, c, coord ); 
-            face_den       = getDensityOnFace( c, coord, Fconv, den, faceIsBoundary ); 
+            face_den       = getDensityOnFace( c, coord, Fconv, den ); 
             face_vel       = getFaceVelocity( c, Fconv, wVel ); 
             face_phi       = upwindInterp( c, coord, oldPhi, face_vel, faceIsBoundary ); 
             Fconv[c]      += getFlux( area, face_den, face_vel, face_phi, areaFraction, coord, c ); 
@@ -926,7 +892,7 @@ namespace Uintah{
             area = Dx.y()*Dx.z(); 
 
             faceIsBoundary = checkFacesForBoundaries( p, c, coord ); 
-            face_den       = getDensityOnFace( c, coord, Fconv, den, faceIsBoundary ); 
+            face_den       = getDensityOnFace( c, coord, Fconv, den ); 
             face_vel       = getFaceVelocity( c, Fconv, uVel ); 
             face_phi       = superBeeInterp( c, coord, oldPhi, face_vel, faceIsBoundary ); 
             Fconv[c]       = getFlux( area, face_den, face_vel, face_phi, areaFraction, coord, c ); 
@@ -937,7 +903,7 @@ namespace Uintah{
             area = Dx.x()*Dx.z(); 
 
             faceIsBoundary = checkFacesForBoundaries( p, c, coord ); 
-            face_den       = getDensityOnFace( c, coord, Fconv, den, faceIsBoundary ); 
+            face_den       = getDensityOnFace( c, coord, Fconv, den ); 
             face_vel       = getFaceVelocity( c, Fconv, vVel ); 
             face_phi       = superBeeInterp( c, coord, oldPhi, face_vel, faceIsBoundary ); 
             Fconv[c]      += getFlux( area, face_den, face_vel, face_phi, areaFraction, coord, c ); 
@@ -949,7 +915,7 @@ namespace Uintah{
             area = Dx.x()*Dx.y(); 
 
             faceIsBoundary = checkFacesForBoundaries( p, c, coord ); 
-            face_den       = getDensityOnFace( c, coord, Fconv, den, faceIsBoundary ); 
+            face_den       = getDensityOnFace( c, coord, Fconv, den ); 
             face_vel       = getFaceVelocity( c, Fconv, wVel ); 
             face_phi       = superBeeInterp( c, coord, oldPhi, face_vel, faceIsBoundary ); 
             Fconv[c]      += getFlux( area, face_den, face_vel, face_phi, areaFraction, coord, c ); 

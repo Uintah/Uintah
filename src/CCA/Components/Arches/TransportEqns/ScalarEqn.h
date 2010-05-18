@@ -143,7 +143,9 @@ public:
 private:
 
   vector<std::string> d_sources;
-
+  struct constCCVarWrapper {
+    constCCVariable<double> data; 
+  };  
 
 }; // class ScalarEqn
 } // namespace Uintah

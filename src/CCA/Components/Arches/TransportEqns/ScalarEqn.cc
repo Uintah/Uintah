@@ -370,7 +370,6 @@ ScalarEqn::buildTransportEqn( const ProcessorGroup* pc,
     constSFCZVariable<double> wVel; 
     constCCVariable<Vector> areaFraction; 
 
-    //CCVariable<double> phi;
     CCVariable<double> Fdiff; 
     CCVariable<double> Fconv; 
     CCVariable<double> RHS; 
@@ -396,6 +395,16 @@ ScalarEqn::buildTransportEqn( const ProcessorGroup* pc,
     new_dw->getModifiable(Fdiff, d_FdiffLabel, matlIndex, patch);
     new_dw->getModifiable(Fconv, d_FconvLabel, matlIndex, patch); 
     new_dw->getModifiable(RHS, d_RHSLabel, matlIndex, patch);
+    vector<constCCVarWrapper> sourceVars; 
+    if (d_addSources) { 
+      SourceTermFactory& src_factory = SourceTermFactory::self(); 
+      for (vector<std::string>::iterator src_iter = d_sources.begin(); src_iter != d_sources.end(); src_iter++){
+        constCCVarWrapper temp_var;  // Outside of this scope src is no longer available 
+        SourceTermBase& temp_src = src_factory.retrieve_source_term( *src_iter ); 
+        new_dw->get(temp_var.data, temp_src.getSrcLabel(), matlIndex, patch, gn, 0);
+        sourceVars.push_back(temp_var); 
+      }
+    }
     RHS.initialize(0.0); 
     Fconv.initialize(0.0); 
     Fdiff.initialize(0.0);
@@ -416,15 +425,9 @@ ScalarEqn::buildTransportEqn( const ProcessorGroup* pc,
 
       //-----ADD SOURCES
       if (d_addSources) {
-        // Get the factory of source terms
-        SourceTermFactory& src_factory = SourceTermFactory::self(); 
-        for (vector<std::string>::iterator src_iter = d_sources.begin(); src_iter != d_sources.end(); src_iter++){
-          constCCVariable<double> src;  // Outside of this scope src is no longer available 
-          SourceTermBase& temp_src = src_factory.retrieve_source_term( *src_iter ); 
-          new_dw->get(src, temp_src.getSrcLabel(), matlIndex, patch, gn, 0);
-          // Add to the RHS
-          RHS[c] += src[c]*vol; 
-        }            
+        for (vector<constCCVarWrapper>::iterator siter = sourceVars.begin(); siter != sourceVars.end(); siter++){
+          RHS[c] += (siter->data)[c] * vol; 
+        }
       }
     }
   }
