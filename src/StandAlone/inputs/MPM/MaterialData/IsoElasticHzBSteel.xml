@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!-- 4340 Steel -->
+<Uintah_Include>
+  <shear_modulus>77.8e9</shear_modulus>
+  <bulk_modulus>158.3e9</bulk_modulus>
+</Uintah_Include>
+

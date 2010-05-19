@@ -1,0 +1,11 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!-- Ta - Preston,Tonks,Wallace,JAP,93(1),2003 p.219 -->
+<Uintah_Include>
+  <shear_modulus_model type="ptw_shear">
+    <mu_0> 71.5e9 </mu_0>
+    <slope_mu_p_over_mu0> 14.5e-12 </slope_mu_p_over_mu0>
+    <zeta>0.02</zeta>
+    <C> 0.056 </C>
+    <m> 180.194 </m>
+  </shear_modulus_model>
+</Uintah_Include>
