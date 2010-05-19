@@ -12,6 +12,23 @@
 \graphicspath{ {../figures/}}
 \usepackage{color}
 
+\hypersetup{%
+	bookmarksnumbered,
+	pdftitle={Uintah Installation Guide},
+	pdfauthor={Jim Guilkey, Todd Harman, Justin Luitjens, John Schmidt, Jeremy Thornock, J. Davison de St. Germain, Siddharth Shankar, Joseph Peterson,  Carson Brownlee, Tony Saad},
+	pdfsubject={Installation Guide},
+	pdfkeywords={Uintah},
+	pdfview=FitH,
+	pdfborder=0 0 0,        % make all links invisible, so the pdf looks good when printed
+	pdffitwindow=false,     % window fit to page when opened
+	pdfstartview={FitH},    % fits the width of the page to the window
+	pdfnewwindow=true,      % links in new window
+	colorlinks=true,        % false: boxed links; true: colored links
+	linkcolor=blue,         % color of internal links
+	citecolor=darkred,      % color of links to bibliography
+	filecolor=darkred,      % color of file links
+	urlcolor=magenta           % color of external links
+}
 %__________________________________
 % new commands for all sections --- !!!! FIXME: This should be pulled in from
 % user_guide.tex... not sure how to do this !!!!
@@ -25,7 +42,8 @@
   \\ Jeremy Thornock,
   J. Davison de St. Germain, Siddharth Shankar, \\
   Joseph Peterson,  
-  Carson Brownlee}
+  Carson Brownlee,
+  Tony Saad}
 
 \date{Version 1.2}
 
@@ -40,7 +58,6 @@
 \newpage
 
 \section{Overview of Uintah} \label{sec:overview}
-
 The \textbf{Uintah} library is composed of several executables and a
 generic library framework for solving PDEs on structured AMR grids on
 large parallel supercomputers. The \textbf{\emph{VisIt}} and
@@ -803,7 +820,7 @@ Put package in root directory and extract.  Extracting from / puts
 everything in the correct places.  Extract using:
 
 \begin{verbatim}
-tar -xvf gfortran-*-bin.tar.gz
+	tar -xvf gfortran-*-bin.tar.gz
 \end{verbatim}
 
 \subsection{Installing Subversion/libpng3/libxml2/other dependencies}
@@ -817,10 +834,10 @@ Download the appropriate version of fink for your version of OSX from
 "y" are version numbers, extract and install with:
 
 \begin{verbatim}
-tar -xvf fink-0.x.y-full.tar 
-cd fink-0.x.y-full
-./bootstrap 
-pathsetup.sh
+	tar -xvf fink-0.x.y-full.tar 
+	cd fink-0.x.y-full
+	./bootstrap 
+	pathsetup.sh
 \end{verbatim}
 
 For a GUI version of fink, download Fink Commander and install from
@@ -852,13 +869,13 @@ documentation assumes this directory is
 \textasciitilde/Uintah/installs
 
 \begin{verbatim}
-cd ~/Uintah/installs
-tar -xvf lam-7.1.4.tar.gz
-cd lam-7.1.4
-./configure --prefix=/Users/<username>/Uintah/installs/lam-7.1.4 \
-            --enable-shared=yes --with-fc=gfortran
-make
-make install
+	cd ~/Uintah/installs
+	tar -xvf lam-7.1.4.tar.gz
+	cd lam-7.1.4
+	./configure --prefix=/Users/<username>/Uintah/installs/lam-7.1.4 \
+	            --enable-shared=yes --with-fc=gfortran
+	make
+	make install
 \end{verbatim}
 
 These last two commands will build LAM in the directory to which
@@ -873,13 +890,13 @@ Unarchive it in \textasciitilde/Uintah/installs directory using a
 similar tar command as is found above.  Configure using:
 
 \begin{verbatim}
-./config/configure.py \
-   --prefix=/Users/<username>/Uintah/installs/petsc-2.3.3-p13 \
-   --with-matlab=false \
-   --with-x=false \
-   --with-shared=0 \
-   --with-debugging=0 \
-   --with-mpi-dir=/Users/<username>/Uintah/installs/lam-7.1.4
+	./config/configure.py \
+	   --prefix=/Users/<username>/Uintah/installs/petsc-2.3.3-p13 \
+	   --with-matlab=false \
+	   --with-x=false \
+	   --with-shared=0 \
+	   --with-debugging=0 \
+	   --with-mpi-dir=/Users/<username>/Uintah/installs/lam-7.1.4
 \end{verbatim}
 
 Set the environmental variables the configuring process asks you to
@@ -1059,7 +1076,100 @@ to src/include/visit-config.h
 make -j# 
 \end{verbatim}
 \end{enumerate}  
+ % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+\section{Mac OSX Snow Leopard Installation (10.6.3)}
+	What follows is a working configuration for installing Uintah on Mac OSX Snow Leopard (10.6.3) under 64 bit. In this example, it is assumed that Uintah is installed under
+	\begin{verbatim}
+		/Users/username/uintah
+	\end{verbatim}
+	Also, all packages will be downloaded and installed under 
+	\begin{verbatim}
+		/Users/username/uintah/packages
+	\end{verbatim}
 
-
-
+	\subsection{Fink}
+		At the time of writing of this documentation, there is no binary version of the latest Fink distribution for Mac OSX. One must compile from the source by following the instructions on the website \url{http://www.finkproject.org/download/srcdist.php}. Make sure you select 64 bit mode when prompted. Keep all other options to default.
+	
+	\subsection{gfortran}
+		Install the binary package for gfortran from: \url{http://hpc.sourceforge.net/}. Then, set the path properly. If you are using bash, this is done as:
+		\begin{verbatim}
+			export PATH=/usr/local/bin:$PATH
+		\end{verbatim}
+	
+	\subsection{openmpi}
+		Download the latest version of openmpi from: \url{http://www.open-mpi.org/}. Then configure using:
+		\begin{verbatim}
+			cd ~/uintah/packages
+			tar -xvf openmpi-1.4.x
+			cd openmpi-1.4.x
+			./configure --prefix=/Users/username/uintah/packages/openmpi-1.4.x-install 
+			\F77=gfortran CFLAGS=-m64 CXXFLAGS=-m64 FFLAGS=-m64
+		\end{verbatim}
+		Then
+		\begin{verbatim}
+			make
+			make install
+		\end{verbatim}
+		
+		\subsection{hypre}
+		Download the latest version of Hypre from here: \url{https://computation.llnl.gov/casc/hypre/software.html}. Then, configure using:
+		\begin{verbatim}
+			cd ~/uintah/packages
+			tar -xvf hypre-2.6.0b
+			cd hypre-2.6.0b/src
+			./configure --prefix=/Users/username/uintah/packages/hypre-2.6.0b-install 
+												 \--with-MPI-include=/Users/username/uintah/packages/openmpi-1.4.1-install/include 
+												 \--with-MPI-lib-dirs=/Users/username/uintah/packages/openmpi-1.4.1-install/lib 
+												 \CC='gcc -arch x86_64' \CXX='g++ -arch x86_64' \F77='gfortran -arch x86_64' 
+		\end{verbatim}
+		Then
+		\begin{verbatim}
+			make
+			make install
+		\end{verbatim}
+		
+		\subsection{PETSc}
+		For the current release of Uintah, Petsc2.3.3 has been found to work well. Download the source from here: \url{http://www.mcs.anl.gov/petsc/petsc-as/download/index.html}.
+		Then browse to the packages directory and configure as follows:
+		{\small
+		\begin{verbatim}
+			cd ~/uintah/packages
+			tar -xvf petsc-2.2.0b-p15.tar.gz
+			cd petsc-2.2.0b-p15
+			./config/configure.py \--with-shared \--with-debugging=0 
+			\--with-mpi-include=/Users/username/uintah/packages/openmpi-1.4.1-install/include 
+			\--with-mpi-lib=/Users/username/uintah/packages/openmpi-1.4.1-install/lib/libmpi.dylib 
+			\--without-fortran \--prefix=/Users/username/uintah/packages/petsc-2.3.3-p15-install
+		\end{verbatim}}
+		Finally,
+		{\small
+		\begin{verbatim}
+			make all test
+			make install
+			PETSC_DIR=/Users/username/uintah/packages/petsc-2.3.3-p15-install; export PETSC_DIR
+		\end{verbatim}}
+		
+		\subsection{Uintah}
+		Finally, create a directory in uintah
+		{\small 
+		\begin{verbatim}
+			mkdir ~/uintah/mac64opt
+		\end{verbatim}} %
+		\noindent Now browse to the mac64opt directory and configure Uintah using the following:
+		{\small
+		\begin{verbatim}
+			cd ~/uintah/mac64opt
+			../src/configure --with-mpi=/Users/username/uintah/packages/openmpi-1.4.1-install 
+			\--with-hypre=/Users/username/uintah/packages/hypre-2.6.0b-install 
+			\--with-petsc=/Users/username/uintah/packages/petsc-2.3.3-p15-install 
+			\--enable-optimized='-02' \--enable-64bit 
+			\--with-teem=/Users/username/uintah/packages/teem-install 
+			CC=gcc CXX=g++ F77=gfortran CFLAGS=-m64 CXXFLAGS=-m64 FFLAGS=-m64
+			PETSC_ARCH=darwin10.3.1-c-opt USES_ICE=yes USES_MPM=yes
+		\end{verbatim}} %
+		\noindent Finally
+		{\small
+		\begin{verbatim}
+			make all
+		\end{verbatim}}
 \end{document}
