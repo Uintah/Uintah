@@ -1,8 +1,0 @@
-<?xml version='1.0' encoding='ISO-8859-1' ?>
-<!-- Annealed Copper -->
-<Uintah_Include>
-  <plasticity_model type="isotropic_hardening">
-    <sigma_Y>89.6e6</sigma_Y>
-    <K>2.0e3</K>
-  </plasticity_model>
-</Uintah_Include>
