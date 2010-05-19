@@ -206,6 +206,13 @@ public:
                               int conv_scheme);
 
 
+  // Add particles source term     
+   void computeParticleSource(const ProcessorGroup* pc,
+                               const Patch* patch,
+                               CellInformation* cellinfo,
+                               ArchesVariables* vars,
+                               ArchesConstVariables* constvars);
+
   ////////////////////////////////////////////////////////////////////////
   // Add multimaterial source term
   void computemmMomentumSource(const ProcessorGroup* pc,

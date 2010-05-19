@@ -81,8 +81,16 @@ XDragModel::problemSetup(const ProblemSpecP& params, int qn)
   if (params_root->findBlock("PhysicalConstants")) {
     ProblemSpecP db_phys = params_root->findBlock("PhysicalConstants");
     db_phys->require("gravity", gravity);
+    db_phys->require("viscosity", kvisc);
   } else {
     throw InvalidValue("Missing <PhysicalConstants> section in input file!",__FILE__,__LINE__);
+  }
+
+  if (params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("Coal_Properties")) {
+    ProblemSpecP db_coal = params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("Coal_Properties");
+    db_coal->require("particle_density", rhop);
+  } else {
+    throw InvalidValue("ERROR: XDragmodel: problemSetup(): Missing <Coal_Properties> section in input file!",__FILE__,__LINE__);
   }
 
   // Look for required internal coordinates
@@ -402,8 +410,6 @@ XDragModel::computeModel( const ProcessorGroup* pc,
         sphGas = cart2sph( cartGas );
         sphPart = cart2sph( cartPart );
 
-        double kvisc = 2.0e-5;
-        double rhop = 1000.0;
         double diff = sphGas.z() - sphPart.z();
         double Re  = abs(diff)*length / kvisc;
         double phi;
@@ -421,12 +427,11 @@ XDragModel::computeModel( const ProcessorGroup* pc,
 
         model[c] = (phi/t_p*(cartGas.x()-cartPart.x())+gravity.x())/(d_xvel_scaling_factor);
 
-        //gas_source[c] = -weight[c]*d_w_scaling_factor*rhop*4/3*pi*phi/t_p*(cartGas.x()-cartPart.x())*pow(length,3);
+        gas_source[c] = -weight[c]*d_w_scaling_factor*rhop/6*pi*phi/t_p*(cartGas.x()-cartPart.x())*pow(length,3);
         
         if(isnan(model[c])){
           model[c] = 0.;
         }
-        gas_source[c] = 0.0;
 
         /*
         //KLUDGE: more implicit clipping

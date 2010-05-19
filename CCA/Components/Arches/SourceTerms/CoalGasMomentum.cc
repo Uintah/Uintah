@@ -53,7 +53,7 @@ CoalGasMomentum::problemSetup(const ProblemSpecP& inputdb)
   ProblemSpecP db = inputdb; 
 
   //db->getWithDefault("constant",d_constant, 0.1); 
-  db->getWithDefault( "drag_model_name", d_dragModelName, "dragforce" );
+  //db->getWithDefault( "drag_model_name", d_dragModelName, "dragforce" );
 
 }
 //---------------------------------------------------------------------------
@@ -80,7 +80,7 @@ CoalGasMomentum::sched_computeSource( const LevelP& level, SchedulerP& sched, in
   
   for (int iqn = 0; iqn < dqmomFactory.get_quad_nodes(); iqn++){
     std::string weight_name = "w_qn";
-    std::string model_name = d_dragModelName; 
+    std::string model_name = "xdragforce"; 
     std::string node;  
     std::stringstream out; 
     out << iqn; 
@@ -94,13 +94,38 @@ CoalGasMomentum::sched_computeSource( const LevelP& level, SchedulerP& sched, in
     const VarLabel* tempLabel_w = eqn.getTransportEqnLabel();
     tsk->requires( Task::OldDW, tempLabel_w, Ghost::None, 0 ); 
 
-    ModelBase& model = modelFactory.retrieve_model( model_name ); 
+    ModelBase& modelx = modelFactory.retrieve_model( model_name ); 
 
-    const VarLabel* tempLabel_m = model.getModelLabel(); 
-    tsk->requires( Task::OldDW, tempLabel_m, Ghost::None, 0 );
+    const VarLabel* tempLabel_x = modelx.getModelLabel(); 
+    tsk->requires( Task::OldDW, tempLabel_x, Ghost::None, 0 );
 
-    const VarLabel* tempgasLabel_m = model.getGasSourceLabel();
-    tsk->requires( Task::OldDW, tempgasLabel_m, Ghost::None, 0 );
+    const VarLabel* tempgasLabel_x = modelx.getGasSourceLabel();
+    tsk->requires( Task::OldDW, tempgasLabel_x, Ghost::None, 0 );
+
+    model_name = "ydragforce"; 
+    model_name += "_qn";
+    model_name += node;
+
+    ModelBase& modely = modelFactory.retrieve_model( model_name );
+
+    const VarLabel* tempLabel_y = modely.getModelLabel();
+    tsk->requires( Task::OldDW, tempLabel_y, Ghost::None, 0 );
+
+    const VarLabel* tempgasLabel_y = modely.getGasSourceLabel();
+    tsk->requires( Task::OldDW, tempgasLabel_y, Ghost::None, 0 );
+
+    model_name = "zdragforce";
+    model_name += "_qn";
+    model_name += node;
+
+    ModelBase& modelz = modelFactory.retrieve_model( model_name );
+
+    const VarLabel* tempLabel_z = modelz.getModelLabel();
+    tsk->requires( Task::OldDW, tempLabel_z, Ghost::None, 0 );
+
+    const VarLabel* tempgasLabel_z = modelz.getGasSourceLabel();
+    tsk->requires( Task::OldDW, tempgasLabel_z, Ghost::None, 0 );
+
 
   }
   
@@ -157,21 +182,56 @@ CoalGasMomentum::computeSource( const ProcessorGroup* pc,
       IntVector c = *iter; 
 
        for (int iqn = 0; iqn < dqmomFactory.get_quad_nodes(); iqn++){
-        std::string model_name = d_dragModelName; 
-        std::string node;  
-        std::stringstream out; 
-        out << iqn; 
-        node = out.str(); 
+        //std::string model_name = d_dragModelName; 
+        //std::string node;  
+        //std::stringstream out; 
+        //out << iqn; 
+        //node = out.str(); 
+        //model_name += "_qn";
+        //model_name += node;
+
+        //ModelBase& model = modelFactory.retrieve_model( model_name ); 
+
+        Vector qn_gas_drag;
+
+        constCCVariable<double> qn_gas_xdrag;
+        std::string model_name = "xdragforce";
+        std::string node;
+        std::stringstream out;
+        out << iqn;
+        node = out.str();
         model_name += "_qn";
         model_name += node;
 
-        ModelBase& model = modelFactory.retrieve_model( model_name ); 
+        ModelBase& modelx = modelFactory.retrieve_model( model_name );
 
-        constCCVariable<Vector> qn_gas_drag;
-        const VarLabel* DragGasLabel = model.getGasSourceLabel();  
-        new_dw->get( qn_gas_drag, DragGasLabel, matlIndex, patch, gn, 0 );
+        const VarLabel* XDragGasLabel = modelx.getGasSourceLabel();  
+        old_dw->get( qn_gas_xdrag, XDragGasLabel, matlIndex, patch, gn, 0 );
 
-        dragSrc[c] += qn_gas_drag[c]; // All the work is performed in Drag model
+        constCCVariable<double> qn_gas_ydrag;
+        model_name = "ydragforce";
+        model_name += "_qn";
+        model_name += node;
+
+        ModelBase& modely = modelFactory.retrieve_model( model_name );
+
+        const VarLabel* YDragGasLabel = modely.getGasSourceLabel();
+        old_dw->get( qn_gas_ydrag, YDragGasLabel, matlIndex, patch, gn, 0 );
+
+        constCCVariable<double> qn_gas_zdrag;
+        model_name = "zdragforce";
+        model_name += "_qn";
+        model_name += node;
+
+        ModelBase& modelz = modelFactory.retrieve_model( model_name );
+
+        const VarLabel* ZDragGasLabel = modelz.getGasSourceLabel();
+        old_dw->get( qn_gas_zdrag, ZDragGasLabel, matlIndex, patch, gn, 0 );
+
+        qn_gas_drag = Vector(qn_gas_xdrag[c],qn_gas_ydrag[c],qn_gas_zdrag[c]);
+
+        dragSrc[c] += qn_gas_drag; // All the work is performed in Drag model
+
        }
     }
   }

@@ -334,6 +334,7 @@ private:
       bool d_doMMS;
       bool d_extraProjection;
       bool d_EKTCorrection;
+      bool d_momentum_coupling;
       ScaleSimilarityModel* d_scaleSimilarityModel;
       CompLocalDynamicProcedure* d_initTurb;
       PhysicalConstants* d_physicalConsts;

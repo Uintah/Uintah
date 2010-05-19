@@ -138,7 +138,7 @@ ExplicitSolver::~ExplicitSolver()
 void 
 ExplicitSolver::problemSetup(const ProblemSpecP& params)
   // MultiMaterialInterface* mmInterface
-{
+{ 
   ProblemSpecP db = params->findBlock("ExplicitSolver");
   ProblemSpecP test_probe_db = db->findBlock("ProbePoints"); 
   if ( test_probe_db ) {
@@ -170,6 +170,7 @@ ExplicitSolver::problemSetup(const ProblemSpecP& params)
                                         d_turbModel, d_boundaryCondition,
                                         d_physicalConsts);
   d_momSolver->setMMS(d_doMMS);
+  d_momSolver->setMomentumCoupling(d_momentum_coupling);
   d_momSolver->problemSetup(db); // d_mmInterface
 
   d_pressure_correction = d_momSolver->getPressureCorrectionFlag();
@@ -390,6 +391,15 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
       //  imodel->second->sched_computeModel( level, sched, curr_level );  
       //}
       modelFactory.sched_coalParticleCalculation( level, sched, curr_level );
+
+      // Kluge
+      if(d_momentum_coupling){
+        SourceTermFactory& factory = SourceTermFactory::self();
+        SourceTermBase& src = factory.retrieve_source_term( "coal_gas_momentum" );
+        src.sched_computeSource(level, sched, curr_level );
+      }
+      // Kludge
+
 
       // schedule DQMOM linear solve
       d_dqmomSolver->sched_solveLinearSystem( level, sched, curr_level );
