@@ -1,9 +1,0 @@
-<?xml version='1.0' encoding='ISO-8859-1' ?>
-<!-- 6061-T6 Aluminum -->
-<Uintah_Include>
-  <melting_temp_model type="scg_Tm">
-    <T_m0> 1220.0 </T_m0> 
-    <Gamma_0> 1.97 </Gamma_0>
-    <a> 1.5 </a>
-  </melting_temp_model>
-</Uintah_Include>

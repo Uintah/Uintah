@@ -1,2 +1,0 @@
-void arrass(Array3<double> aa, double alpha,
-     IntVector valid_lo, IntVector valid_hi);

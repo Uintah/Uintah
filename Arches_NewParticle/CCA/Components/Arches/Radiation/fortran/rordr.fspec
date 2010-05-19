@@ -1,3 +1,0 @@
-void rordr(int sn, OffsetArray1<double> oxi, 
-	OffsetArray1<double> omu , OffsetArray1<double> oeta, 
-	OffsetArray1<double> wt);
