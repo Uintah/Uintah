@@ -239,6 +239,9 @@ public:
   inline void setMMS(bool doMMS) {
     d_doMMS=doMMS;
   }
+  inline void setMomentumCoupling(bool doMC) {
+    d_momentum_coupling = doMC;
+  }
   inline bool getMMS() const {
     return d_doMMS;
   }
@@ -429,6 +432,7 @@ private:
   bool d_reactingScalarSolve;
   bool d_enthalpySolve;
   bool d_calcVariance;
+  bool d_momentum_coupling;
   vector<IntVector> d_probePoints;
   // Pressure Eqn Solver
   PressureSolver* d_pressSolver;

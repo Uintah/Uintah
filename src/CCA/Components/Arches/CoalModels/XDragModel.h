@@ -115,6 +115,8 @@ private:
   const VarLabel* d_weight_label;
 
   Vector gravity;
+  double kvisc;
+  double rhop;
   double d_lowModelClip;
   double d_highModelClip;
   double d_pl_scaling_factor;

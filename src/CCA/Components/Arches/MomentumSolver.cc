@@ -109,8 +109,6 @@ MomentumSolver::problemSetup(const ProblemSpecP& params)
     throw InvalidValue("Convection scheme not supported: " + conv_scheme, __FILE__, __LINE__);
   }
   
-  
-  
   db->getWithDefault("pressure_correction",         d_pressure_correction,false);
   db->getWithDefault("filter_divergence_constraint",d_filter_divergence_constraint,false);
 
@@ -471,10 +469,12 @@ MomentumSolver::sched_buildLinearMatrixVelHat(SchedulerP& sched,
 
   // TOTAL KLUDGE FOR REACTING COAL---------------------------
     // Keep commented out unless you know what you are doing!
-    //SourceTermFactory& factory = SourceTermFactory::self();
-    //SourceTermBase& src = factory.retrieve_source_term( "coal_gas_momentum" ); 
-    //const VarLabel* srcLabel = src.getSrcLabel();
-    //tsk->requires(Task::NewDW, srcLabel, gn, 0);
+    if(d_momentum_coupling){
+      SourceTermFactory& factory = SourceTermFactory::self();
+      SourceTermBase& src = factory.retrieve_source_term( "coal_gas_momentum" );
+      const VarLabel* srcLabel = src.getSrcLabel();
+      tsk->requires(Task::NewDW, srcLabel, gn, 0);
+    }
   // END KLUDGE ---------------------------------------------- 
 
   sched->addTask(tsk, patches, matls);
@@ -655,13 +655,15 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
       velocityVars.wFmms.initialize(0.0);
     }
 
-  // TOTAL KLUDGE FOR REACTING COAL---------------------------
-  // Keep commented out unless you know what you are doing!
-  //   SourceTermFactory& factory = SourceTermFactory::self();
-  //   SourceTermBase& src = factory.retrieve_source_term( "coal_gas_momentum" ); 
-  //   const VarLabel* srcLabel = src.getSrcLabel();
-  //   new_dw->get( velocityVars.otherVectorSource, srcLabel, indx, patch, Ghost::None, 0);
-  // END KLUDGE ----------------------------------------------    
+    // TOTAL KLUDGE FOR REACTING COAL---------------------------
+    // Keep commented out unless you know what you are doing!
+    if(d_momentum_coupling){
+       SourceTermFactory& factory = SourceTermFactory::self();
+       SourceTermBase& src = factory.retrieve_source_term( "coal_gas_momentum" );
+       const VarLabel* srcLabel = src.getSrcLabel();
+       new_dw->get( velocityVars.otherVectorSource, srcLabel, indx, patch, Ghost::None, 0);
+    }
+    // END KLUDGE ----------------------------------------------    
 
     //__________________________________
     //  compute coefficients
@@ -820,9 +822,11 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
                                         &velocityVars, &constVelocityVars);
     }
 
-    //Kludge
-    //d_source->computeParticleSource(pc, patch, cellinfo,
-    //                                   &velocityVars, &constVelocityVars);
+    //KLUDGE
+    if(d_momentum_coupling){
+      d_source->computeParticleSource(pc, patch, cellinfo,
+                                       &velocityVars, &constVelocityVars);
+    }
     // end Kludge
 
     // Calculate the Velocity BCS

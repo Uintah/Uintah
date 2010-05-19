@@ -173,6 +173,10 @@ public:
   inline void setMMS(bool doMMS) {
     d_doMMS=doMMS;
   }
+  inline void setMomentumCoupling(bool doMC) {
+    d_momentum_coupling = doMC;
+  }
+
 protected: 
 
 private:
@@ -225,6 +229,7 @@ private:
   // const VarLabel* (required)
   const ArchesLabel* d_lab;
   const MPMArchesLabel* d_MAlab;
+  bool d_momentum_coupling;
   bool d_central;
   bool d_pressure_correction;
   // computes coefficients
