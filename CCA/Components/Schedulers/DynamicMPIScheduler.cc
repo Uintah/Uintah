@@ -34,6 +34,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Schedulers/OnDemandDataWarehouse.h>
 #include <CCA/Components/Schedulers/TaskGraph.h>
 
+#include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Thread/Time.h>
 #include <Core/Thread/Mutex.h>
 
@@ -97,44 +98,43 @@ void
 DynamicMPIScheduler::problemSetup(const ProblemSpecP& prob_spec,
                            SimulationStateP& state)
 {
-  //default taskReadyQueueAlg
-  taskQueueAlg_ = MostMessages;
+  string taskQueueAlg = "";
 
   ProblemSpecP params = prob_spec->findBlock("Scheduler");
   if(params){
-    string taskQueueAlg;
     params->get("taskReadyQueueAlg", taskQueueAlg);
-    if (taskQueueAlg == "FCFS") 
-      taskQueueAlg_ =  FCFS;
-    else if (taskQueueAlg == "Random")
-      taskQueueAlg_ =  Random;
-    else if (taskQueueAlg == "Stack")
-      taskQueueAlg_ =  Stack;
-    else if (taskQueueAlg == "MostChildren")
-      taskQueueAlg_ =  MostChildren;
-    else if (taskQueueAlg == "LeastChildren")
-      taskQueueAlg_ =  LeastChildren;
-    else if (taskQueueAlg == "MostAllChildren")
-      taskQueueAlg_ =  MostChildren;
-    else if (taskQueueAlg == "LeastAllChildren")
-      taskQueueAlg_ =  LeastChildren;
-    else if (taskQueueAlg == "MostL2Children")
-      taskQueueAlg_ =  MostL2Children;
-    else if (taskQueueAlg == "LeastL2Children")
-      taskQueueAlg_ =  LeastL2Children;
-    else if (taskQueueAlg == "MostMessages")
-      taskQueueAlg_ =  MostMessages;
-    else if (taskQueueAlg == "LeastMessages")
-      taskQueueAlg_ =  LeastMessages;
-    else if (taskQueueAlg == "PatchOrder")
-      taskQueueAlg_ =  PatchOrder;
-    else if (taskQueueAlg == "PatchOrderRandom")
-      taskQueueAlg_ =  PatchOrderRandom;
-    else {
-      if (d_myworld->myrank() == 0)
-        cout << "Invalid Task Queue Algorithm: " << taskQueueAlg
-             << "\nUsing 'MostMessages' Algorithm\n";
-    }
+  }
+  if (taskQueueAlg == "") 
+    taskQueueAlg = "MostMessages"; //default taskReadyQueueAlg
+
+  if (taskQueueAlg == "FCFS") 
+    taskQueueAlg_ =  FCFS;
+  else if (taskQueueAlg == "Random")
+    taskQueueAlg_ =  Random;
+  else if (taskQueueAlg == "Stack")
+    taskQueueAlg_ =  Stack;
+  else if (taskQueueAlg == "MostChildren")
+    taskQueueAlg_ =  MostChildren;
+  else if (taskQueueAlg == "LeastChildren")
+    taskQueueAlg_ =  LeastChildren;
+  else if (taskQueueAlg == "MostAllChildren")
+    taskQueueAlg_ =  MostChildren;
+  else if (taskQueueAlg == "LeastAllChildren")
+    taskQueueAlg_ =  LeastChildren;
+  else if (taskQueueAlg == "MostL2Children")
+    taskQueueAlg_ =  MostL2Children;
+  else if (taskQueueAlg == "LeastL2Children")
+    taskQueueAlg_ =  LeastL2Children;
+  else if (taskQueueAlg == "MostMessages")
+    taskQueueAlg_ =  MostMessages;
+  else if (taskQueueAlg == "LeastMessages")
+    taskQueueAlg_ =  LeastMessages;
+  else if (taskQueueAlg == "PatchOrder")
+    taskQueueAlg_ =  PatchOrder;
+  else if (taskQueueAlg == "PatchOrderRandom")
+    taskQueueAlg_ =  PatchOrderRandom;
+  else {
+    throw ProblemSetupException("Unknown scheduler", __FILE__, __LINE__);
   }
   log.problemSetup(prob_spec);
   SchedulerCommon::problemSetup(prob_spec, state);

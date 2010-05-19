@@ -1469,11 +1469,11 @@ bool DetailedTaskPriorityComparison::operator() (DetailedTask*& ltask, DetailedT
     int rmsg=0;
     for (DependencyBatch* batch = ltask->getComputes(); batch != 0; batch = batch->comp_next) {
       for (DetailedDep* dep = batch->head; dep != 0; dep = dep->next)
-        rmsg++;
+        lmsg++;
     }
     for (DependencyBatch* batch = rtask->getComputes(); batch != 0; batch = batch->comp_next) {
       for (DetailedDep* dep = batch->head; dep != 0; dep = dep->next)
-        lmsg++;
+        rmsg++;
     }
     if (alg == MostMessages){
      // cout << "msg " <<  lmsg << "<>" << rmsg << endl;
