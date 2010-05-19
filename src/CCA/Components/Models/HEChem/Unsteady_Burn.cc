@@ -533,8 +533,8 @@ void Unsteady_Burn::computeModelSources(const ProcessorGroup*,
            (Ts and Beta) are copied from a neighboring cell that has been 
            burning the longest time. Or, if no such cell, they take the 
            INIT values */ 
-        IntVector mostBurntCell;
-        double maxBurning = 0.0;
+        IntVector mostBurntCell=c;
+        double maxBurning = OldBurningCell[c];
         /* if the cell did not burn in the last timestep */
         if(NewBeta[c] == 0.0 || NewTs[c] == 0.0){
           /* find cell has been burnt the longest */ 
