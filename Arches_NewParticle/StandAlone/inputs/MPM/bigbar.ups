@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!-- <!DOCTYPE Uintah_specification SYSTEM "input.dtd"> -->
+
+<!-- @version: -->
+
+<Uintah_specification>
+
+   <Meta>
+       <title>Slender Bar Three Point Bending Problem</title>
+   </Meta>
+  
+   <SimulationComponent type="mpm" />
+
+   <Time>
+       <maxTime>0.01</maxTime>
+        <max_Timesteps> 10 </max_Timesteps>
+       <initTime>0.0</initTime>
+       <delt_min>0.00001</delt_min>
+       <delt_max>0.001</delt_max>
+       <timestep_multiplier>0.8</timestep_multiplier>
+   </Time>
+
+   <DataArchiver>
+        <filebase>bigbar.uda</filebase>
+        <outputInterval>.02</outputInterval>
+        <save label = "p.x"/>
+        <save label = "p.volume"/>
+        <save label = "p.stress"/>
+        <save label = "p.deformationMeasure"/>
+        <save label = "p.externalforce" />
+        <checkpoint cycle = "2" interval = "0.01"/>
+   </DataArchiver>
+
+   <MPM>
+       <time_integrator>explicit</time_integrator>
+       <interpolator>gimp</interpolator>
+       <DoExplicitHeatConduction>true</DoExplicitHeatConduction>
+   </MPM>
+
+
+    <PhysicalConstants>
+       <gravity>[0,0,0]</gravity>
+    </PhysicalConstants>
+
+    <MaterialProperties>
+       <MPM>
+           <material>
+                <density>1000.0</density>
+                <thermal_conductivity>237.0</thermal_conductivity>
+                <specific_heat>903</specific_heat>
+              <constitutive_model type="comp_mooney_rivlin"> 
+                 <he_constant_1>100000.0</he_constant_1>
+                 <he_constant_2>20000.0</he_constant_2>
+                 <he_PR>.49</he_PR>
+               </constitutive_model>
+              <geom_object>
+                  <box label="gp1">
+                     <min>[ 0.0, 0.0, 0.0 ]</min>
+                     <max>[ 20.0, 1.0, 1.0 ]</max>
+                  </box>
+                  <res>[4,4,4]</res>
+                  <velocity>[0.,0.,0.]</velocity>
+                  <temperature>300.</temperature>
+               </geom_object>
+
+
+           </material>
+
+            <contact>
+               <type>single_velocity</type>
+               <materials>[1,2,3]</materials>
+            </contact>
+
+            <thermal_contact></thermal_contact>
+
+       </MPM>
+
+    </MaterialProperties>
+       
+    <Grid>
+     <BoundaryConditions>
+     <Face side = "x-">
+      <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+     </Face>
+     <Face side = "x+">
+      <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+     </Face>
+     <Face side = "y-">
+      <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+     </Face>
+     <Face side = "y+">
+      <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+     </Face>
+     <Face side = "z-">
+      <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+     </Face>
+     <Face side = "z+">
+      <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+     </Face>
+     </BoundaryConditions>
+
+       <Level>
+           <Box label="1">
+              <lower>[ -2.5, -1.0, -0.5   ]</lower>
+              <upper>[  22.5, 2.0, 1.5]</upper>
+<!--            <resolution>[22,20,1]</resolution> -->
+               <resolution>[100,36,8]</resolution>
+              <patches>[4,1,1]</patches>
+              <extraCells>[1,1,1]</extraCells>
+           </Box>
+       </Level>
+    </Grid>
+
+    <PhysicalBC>
+       <MPM>
+              <force>
+                     <lower>[0.0, 0.0, 0.0]</lower>
+                     <upper>[0.0, 0.0, 1.0]</upper>
+                      <force_density>[0,50,0]</force_density>
+              </force>
+              <force>
+                     <lower>[20.0, 0.0, 0.0]</lower>
+                     <upper>[20.0, 0.0, 1.0]</upper>
+                      <force_density>[0,50,0]</force_density>
+              </force>
+              <force>
+                     <lower>[10.0, 1.0, 0.0]</lower>
+                     <upper>[10.0, 1.0, 1.0]</upper>
+                      <force_density>[0,-50,0]</force_density>
+              </force>
+       </MPM>
+    </PhysicalBC>
+    
+    <InitialConditions>
+
+       <MPM>
+       </MPM>
+
+    </InitialConditions>
+
+</Uintah_specification>

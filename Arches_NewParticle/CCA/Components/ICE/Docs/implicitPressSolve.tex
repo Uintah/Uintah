@@ -1,0 +1,224 @@
+\documentclass[fleqn]{article}
+\usepackage{amsmath}
+\usepackage{setspace}
+\usepackage{algorithmic}
+\usepackage{vmargin}
+%\setpapersize{USletter}
+\setmarginsrb{1.0in}{1.0in}{1.0in}{1.0in}{0pt}{0mm}{0pt}{0mm}
+\doublespacing
+%..............................
+% Alias commands
+%..............................    
+\newcommand{\SUM}[1]    {\ensuremath{\sum \limits_{{#1}=1}^N }}
+\newcommand{\bigS}[1]   {\ensuremath{S^{r \leftrightarrow m}_{#1}}  } 
+\newcommand{\B}[1]      {\biggr{#1}}            
+\newcommand{\U}         {{\vec{U}}}                    
+\newcommand{\uo}        {\ensuremath{\vec{U}_o}}      
+\newcommand{\rhoM}      {\ensuremath{\rho^{o}_m}} 
+\newcommand{\rhoMFC}    {\ensuremath{\langle \rhoM \rangle}}                
+\newcommand{\delt}      {\ensuremath{\Delta{t}} }                 
+\newcommand{\delx}      {\ensuremath{\Delta{x}} }
+\newcommand{\dely}      {\ensuremath{\Delta{y}} }
+\newcommand{\delz}      {\ensuremath{\Delta{z}} } 
+\newcommand{\f}         {\ensuremath{f^{\theta}_m} }
+\newcommand{\sv}[1]     {\ensuremath{v^o_{m_{#1}} }} 
+\newcommand{\dpdrho}    {\ensuremath{ \frac{dP}{d\rhoM}} }
+\newcommand{\velFC}     {\ensuremath{\vec{U_m}^{*^{f}} } }
+\newcommand{\thetaUW}   {\ensuremath{\widehat{\theta_m}} }
+\newcommand{\iter}      {\ensuremath{\text{ iter}}}
+\newcommand{\massSrc}   {\ensuremath{ \SUM{m}  \frac{\dot{m}} {V \rhoM} } }
+\newcommand{\termA}     {\ensuremath { \B{\langle} \frac{ \rho_m \U_m }{\rho_m} \B{\rangle} } }
+\newcommand{\termB}     {\ensuremath{ \frac{ \delt }{\rhoMFC} \nabla^{f} } }
+ %.....................................................
+% This command is necessary so that the subscripts, some of which are
+% in capital letters come out
+%\DeclareMathSizes{10}{10}{6}{5}
+%______________________________________________________________________
+\begin{document}
+\setlength{\abovedisplayskip}{0.1in}
+\setlength{\mathindent}{0.0in}
+
+\section{\underline{Overview of implicit ICE\hspace{ 0.5in}12/14/05}  }
+
+\begin{algorithmic}
+\STATE --Compute $ \velFC$ (add Exchange contribution, set boundary
+             conditions on $\velFC$ )
+             
+\STATE --Form RHS $B = -$\text{Advection} $(\theta_m \velFC)$
+    
+\WHILE{ $| \text{outer residual} | <$ convergence criteria}
+
+    \STATE --Compute $A$ matrix \\ \quad
+      $A_r = \frac{\dely\delz\delt^2}{\delx} \SUM{m} \frac{\thetaUW}{\rhoMFC} \B{|}_{r}$ \quad
+      $A_l = \frac{\dely\delz\delt^2}{\delx} \SUM{m} \frac{\thetaUW}{\rhoMFC} \B{|}_{l}$ \\ \quad
+      $A_t = \frac{\delx\delz\delt^2}{\dely} \SUM{m} \frac{\thetaUW}{\rhoMFC} \B{|}_{t}$ \quad
+      $A_b = \frac{\delx\delz\delt^2}{\dely} \SUM{m} \frac{\thetaUW}{\rhoMFC} \B{|}_{b}$ \\ \quad
+      $A_f = \frac{\delx\dely\delt^2}{\delz} \SUM{m} \frac{\thetaUW}{\rhoMFC} \B{|}_{f}$ \quad
+      $A_{bk} = \frac{\delx\dely\delt^2}{\delz} \SUM{m} \frac{\thetaUW}{\rhoMFC} \B{|}_{bk}$ \\ \quad
+      $A_{p} =V\SUM{m} \theta_m \kappa_m +( A_r + A_l + A_t + A_b + A_f + A_ {bk})$
+      
+    \STATE --Solve for $\delta{P}$
+    \STATE --Update pressure $\Delta{P} = \sum \limits_{n=1}^{iter} \delta{P}, \quad P = P^{Old} + \Delta{P}$, set boundary condition on $P$ and $\delta{P}$
+    \STATE --Recompute $ \velFC$ (using $\delta {p}$ ), add Exchange contribution, set boundary
+             conditions on $\velFC$, compute $ \rhoMFC $)
+             
+    \STATE --Form RHS $B = -V\SUM{m} \theta_m \kappa_m \Delta{P} - \SUM{m}$ V\text{Advection} $(\theta_m \velFC)$,\\ \quad
+             where outer residual = $Max(RHS), \kappa_m = \frac{v^o_m}{c_m^2}$
+    
+\ENDWHILE
+
+\end{algorithmic}
+%______________________________________________________________________
+\newpage
+\section{\underline{Derivation of the matrix stencil \hspace{3in}}}  
+Step 1: \hspace{0.25in} Derive the implicit form of the pressure, starting with
+change equation
+\begin{equation}
+     \label{GE}\frac{dP}{dt} = 
+     \frac{\massSrc -  \SUM{m} \nabla \cdot \thetaUW \velFC}
+                      {\SUM{m} \frac{\theta_m}{\rhoM c_m^2} }
+\end{equation}
+%
+and the face-centered velocity
+\[
+    \vec{U_m}^{*^{f}} 
+    = \termA - \termB{P^{\iter}} + \text{Exchange term}   + \delt\vec{g}
+\]
+%
+Write eq.{\ref{GE}} in terms of $P^{\iter} = P^{\iter -1 } + \delta{P}$, $\Delta{P} = P^{\iter} - P^{old}$ 
+\begin{equation}
+\label{eq2}
+\SUM{m} \theta_m \kappa_m (P^{\iter} -P^{old}) =
+     \delt \massSrc 
+  -  \delt \nabla \cdot \thetaUW \B{(} \termA -\termB{P^{\iter}} +\text{Exch} + \delt\vec{g} \B{)}
+\end{equation}
+Substitite in for$P^{\iter} = P^{\iter -1 } + \delta{P}$
+\[
+  \SUM{m} \theta_m \kappa_m ((P^{\iter -1 } + \delta{P}) -P^{old}) =
+    \delt \massSrc 
+  - \delt \nabla \cdot \thetaUW \B{(} \termA -\termB{(P^{\iter -1 } + \delta{P})} 
+  +\text{Exch} + \delt\vec{g} \B{)}
+\]
+Now factor out $\delta{P}$
+\begin{align}
+  \SUM{m} \theta_m \kappa_m \delta{P} - 
+  \delt^2 \nabla \cdot \SUM{m} \frac{\thetaUW}{\rhoMFC} \nabla \delta{P} \notag
+  & = 
+     \SUM{m} \theta_m \kappa_m(P^{\iter} - P^{old} ) + \delt \massSrc \notag \\
+  &- \delt \nabla \cdot \SUM{m} \thetaUW  \notag
+  \overbrace {\B{(} \termA -\termB{P^{\iter}} +\text{Exch} + \delt\vec{g} \B{)} }^{\velFC} \notag
+\end{align}
+%
+%
+The ODE we have to solve is
+\begin{equation}
+\label{eq3}
+  \SUM{m} \theta_m \kappa_m \delta{P} - 
+  \delt^2 \nabla \cdot \SUM{m} \frac{\thetaUW}{\rhoMFC} \nabla \delta{P}
+  =
+  -\SUM{m} \theta_m \kappa_m(P^{\iter} - P^{old} )
+  + \delt \massSrc
+  -  \delt \nabla \cdot \B{(} \SUM{m} \thetaUW \velFC \B{)} ^{\iter}
+\end{equation}
+%
+%-------------------------------------------------------------------
+\newpage
+Step 2: \hspace{0.25in} Integrate eq. {\ref{eq3}} over a cell volume
+\begin{align}
+  \int_{V} \SUM{m} \theta_m \kappa_m \delta{P} dV 
+  - \delt^2 \int_{V} \nabla \cdot \SUM{m} \frac{\thetaUW}{\rhoMFC} \nabla \delta{P} dV
+  = 
+  &- \int_{V} \SUM{m} \theta_m \kappa_m(P^{\iter} - P^{old} ) dV \notag\\
+  &+ \int_{V} \delt \massSrc \notag \\
+  &- \delt \int_{V} \nabla \cdot \B{(} \SUM{m} \thetaUW \velFC \B{)} ^{\iter} dV \notag
+\end{align}
+%
+%
+Invoke the divergence theorem  
+    $\int_V \nabla \cdot \vec{f} dV = \int_S \vec{f} \cdot d\vec{s}$
+to convert the volume to surface integrals.
+%
+\begin{align}
+  V \SUM{m} \theta_m \kappa_m \delta{P} 
+  - \delt^2 \int_{S}  \SUM{m} \frac{\thetaUW}{\rhoMFC} \nabla \delta{P} \cdot d\vec{s}
+  =
+  &-V \SUM{m} \theta_m \kappa_m(P^{\iter} - P^{old} )
+  + \delt  \SUM{m}  \frac{\dot{m}} {\rhoM} \notag \\
+  - \delt \int_{S}  \B{(} \SUM{m} \thetaUW \velFC \B{)} ^{\iter} \cdot d\vec{S} \notag
+\end{align}
+%
+%
+Step 3: \hspace{0.25in} Write out the contributions for each face of the computational cell
+\begin{align}
+\label{eq4}
+\delt^2 \int_{S}  \SUM{m} \frac{\thetaUW}{\rhoMFC} \nabla \delta{P} \cdot d\vec{s}
+ = \delt^2 \B{[}
+  &\SUM{m} \frac{\thetaUW}{\rhoMFC} \B{|}_R \dely \delz \frac {( \delta{P_R}  - \delta{P} )}{\delx} \quad
+-  \SUM{m} \frac{\thetaUW}{\rhoMFC} \B{|}_L \dely \delz \frac {( \delta{P}    - \delta{P_L} )}{\delx}   \notag \\
++ &\SUM{m} \frac{\thetaUW}{\rhoMFC} \B{|}_T \delx \delz \frac {( \delta{P_T}  - \delta{P} )}{\dely} \quad
+-  \SUM{m} \frac{\thetaUW}{\rhoMFC} \B{|}_B \delx \delz \frac {( \delta{P}    - \delta{P_B} )}{\dely} \notag\\
++ &\SUM{m} \frac{\thetaUW}{\rhoMFC} \B{|}_F \delx \dely \frac {( \delta{P_F}  - \delta{P} )}{\delz} \quad
+-  \SUM{m} \frac{\thetaUW}{\rhoMFC} \B{|}_{BK} \delx \dely \frac {( \delta{P} - \delta{P_{BK}} )}{\delz}
+\B{]}
+\end{align}
+%
+%
+Form the stencil of Matrix A from eq. {\ref{eq4}}\\
+  $A_{R/L}  = \frac{\dely \delz \delt^2}{\delx} \SUM{m} \frac{\thetaUW}{\rhoMFC} \B{|}_{R/L}  \quad  
+   A_{T/B}  = \frac{\delx \delz \delt^2}{\dely} \SUM{m} \frac{\thetaUW}{\rhoMFC} \B{|}_{T/B}  \quad  
+   A_{F/BK} = \frac{\dely \delx \delt^2}{\delz} \SUM{m} \frac{\thetaUW}{\rhoMFC} \B{|}_{F/BK}$ \\    
+%
+%
+\begin{align}
+V \SUM{m} \theta_m \kappa_m \delta{P} 
+- \B{[}
+   &A_R(\delta{P_R} - \delta{P} ) - A_L(\delta{P} - \delta{P_L} )  \\
++  &A_T(\delta{P_T} - \delta{P})  - A_B(\delta{P} - \delta{P_B} ) \notag \\
+   &A_F(\delta{P_F} - \delta{P} ) - A_{BK}(\delta{P} - \delta{P_{BK}} )
+\B{]}
+= 
+-V \SUM{m} \theta_m \kappa_m(P^{\iter} - P^{old} )
++ \delt  \SUM{m}  \frac{\dot{m}} {\rhoM}
+- \delt \text{Advection}  \B{(} \SUM{m} \thetaUW \velFC \B{)} ^{\iter} \notag
+\end{align}
+%
+Factor out $\delta{P}$ the equation (In impICE.cc we don't normalize
+by $V$ to make it non-dimensional.  We need to keep it dimensional for implicit AMRICE)\\
+%
+$\B{(} V\SUM{m} \theta_m \kappa_m + \B{[} A_R +A_L+ A_T + A_B + A_F + A_{BK} \B{]}  \B{)}\delta{p}
+- 
+\B{[} A_R \delta{P_R} + A_L \delta{P_L} + A_T \delta{P_T} + A_B \delta{P_B}
++ A_F \delta{P_F} + A_{BK} \delta{P_{BK}} \B{]}
+= \\
+- V \SUM{m} \theta_m \kappa_m(P^{\iter} - P^{old} )
++ \delt  \SUM{m}  \frac{\dot{m}} {\rhoM}
+- \delt V \text{Advection}  \B{(} \SUM{m} \thetaUW \velFC \B{)} ^{\iter} 
+$
+%-------------------------------------------------------------
+\newpage
+\section{Nomenclature}
+\begin{tabular}{lll}
+\\
+\underline{Variable} & \underline{Dimensions} & \underline{Description }\\
+$\Delta{t}$   &  $[t]$      &    Timestep\\
+$\rho$        &  $[M/L^3]$  &    Density of material\\
+$\rhoMFC$     &  $[M/L^3]$  &    Microscopic density at the face center\\
+$\vec{U}$     &  $[L/t]$    &    Velocity vector\\
+$V$           &  $[L^3]$    &    Cell Volume\\
+$P$           &  $[M/L^2]$ &     Pressure\\ 
+$\theta_m$    &             &    volume fraction of material $m$\\
+$\thetaUW$    &             &    upwinded volume fraction\\
+\\
+\textsf{\underline{Superscript}}\\
+$old$         &             &    Previous timestep\\
+$n$           &             &    Current timestep\\
+$iter$        &             &    outer iteration number \\
+
+\textsf{\underline{Subscript}}\\
+$m$           &             &    Material index\\
+$o$           &             &    Pure material\\
+$l,r,t,b,f,bk $       &     &    Left, right, top and bottom, front and back cell faces\\
+\textsf{\underline{Misc}}\\
+$\langle\rangle$ &          &    value averaged to the face\\
+\end{tabular}
+\end{document}
