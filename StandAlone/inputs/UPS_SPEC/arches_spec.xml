@@ -289,6 +289,17 @@
                                         attribute1="order REQUIRED STRING 'first, second, third'"/>
       </TimeIntegrator>  
 
+      <Coupling                         spec="OPTIONAL NO_DATA" >
+        <Sources                        spec="OPTIONAL NO_DATA">
+          <src                          spec="MULTIPLE NO_DATA"
+                                        attribute1="label REQUIRED STRING"
+                                        attribute2="type REQUIRED STRING 'coal_gas_momentum'">
+          </src>
+        </Sources>
+      </Coupling>
+
+
+
       <TransportEqns                    spec="OPTIONAL NO_DATA" >
 
         <Eqn                            spec="MULTIPLE NO_DATA"
