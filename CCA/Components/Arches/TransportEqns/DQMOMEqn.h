@@ -204,11 +204,14 @@ private:
 
   const VarLabel* d_sourceLabel;  ///< DQMOM Eqns only have ONE source term; this is the VarLabel for it
   const VarLabel* d_icLabel;      ///< This is the label that holds the unscaled and (if applicable) unweighted DQMOM scalar value 
+  const VarLabel* d_weightLabel;  ///< Label for weight corresponding to this quadrature node
+
   std::vector<string> d_models;   ///< This is the list of models for this internal coordinate
   int d_quadNode;                 ///< The quadrature node for this equation object 
   bool d_weight;                  ///< Boolean: is this equation object for a weight?
   vector<std::string> d_sources;
   bool d_addExtraSources; 
+  double d_w_small;               ///< Value of "small" weights
 
 
 

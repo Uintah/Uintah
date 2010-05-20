@@ -79,6 +79,24 @@ DQMOMEqn::problemSetup(const ProblemSpecP& inputdb, int qn)
 
   db->getWithDefault("turbulentPrandtlNumber",d_turbPrNo,0.4);
 
+  if( !d_weight ) {
+    // save the weight label instead of having to find it every time
+    DQMOMEqnFactory& dqmomFactory = DQMOMEqnFactory::self();
+    string name = "w_qn";
+    string node; 
+    std::stringstream out;
+    out << d_quadNode;
+    node = out.str();
+    name += node;
+    EqnBase& temp_eqn = dqmomFactory.retrieve_scalar_eqn(name);
+    DQMOMEqn& eqn = dynamic_cast<DQMOMEqn&>(temp_eqn);
+    d_weightLabel = eqn.getTransportEqnLabel();
+    d_w_small = eqn.getSmallClip();
+    if( d_w_small == 0.0 ) {
+      d_w_small = 1e-16;
+    }
+  }
+
   // Discretization information:
   db->getWithDefault( "conv_scheme", d_convScheme, "upwind");
   db->getWithDefault( "doConv", d_doConv, false);
@@ -148,7 +166,6 @@ DQMOMEqn::problemSetup(const ProblemSpecP& inputdb, int qn)
   // Scaling information:
   db->require( "scaling_const", d_scalingConstant ); 
 
-
   // Extra Source terms (for mms and other tests):
   if (db->findBlock("src")){
     string srcname; 
@@ -164,7 +181,6 @@ DQMOMEqn::problemSetup(const ProblemSpecP& inputdb, int qn)
 
   // There should be some mechanism to make sure that when environment-specific
   // initialization functions are used, ALL environments are specified
-  // (Maybe in Arches, not here, since here it would be repeated for every single equation)
   // (Charles)
 
 
@@ -728,42 +744,25 @@ DQMOMEqn::getUnscaledValues( const ProcessorGroup* pc,
       }
 
     } else {
-      CCVariable<double> wa;
-      CCVariable<double> w;  
+
       CCVariable<double> ic; 
-
       new_dw->getModifiable(ic, d_icLabel, matlIndex, patch);
-
+      
+      CCVariable<double> wa;
       new_dw->getModifiable(wa, d_transportVarLabel, matlIndex, patch); 
-      DQMOMEqnFactory& dqmomFactory  = DQMOMEqnFactory::self(); 
-      string name = "w_qn"; 
-      string node;
-      std::stringstream out;
-      out << d_quadNode;
-      node = out.str();
-      name += node;
 
-      EqnBase& temp_eqn = dqmomFactory.retrieve_scalar_eqn( name );
-      DQMOMEqn& eqn = dynamic_cast<DQMOMEqn&>(temp_eqn);
-      const VarLabel* mywLabel = eqn.getTransportEqnLabel();  
-      double smallWeight = eqn.getSmallClip(); 
-
-      if ( smallWeight == 0.0 )
-        smallWeight = 1e-16; //to avoid numbers smaller than machine precision. 
-
-      new_dw->getModifiable(w, mywLabel, matlIndex, patch ); 
+      CCVariable<double> w;  
+      new_dw->getModifiable(w, d_weightLabel, matlIndex, patch ); 
 
       // now loop over all cells
       for (CellIterator iter=patch->getCellIterator(0); !iter.done(); iter++){
   
         IntVector c = *iter;
 
-        if (w[c] > smallWeight)
-          ic[c] = wa[c]/w[c]*d_scalingConstant;
+        if (w[c] > d_w_small)
+          ic[c] = (wa[c]/w[c])*d_scalingConstant;
         else {
           ic[c] = 0.0;
-          wa[c] = 0.0; // if the weight is small (near zero) , then the product must also be small (near zero)
-          w[c] = 0.0; 
         }
       }
 
