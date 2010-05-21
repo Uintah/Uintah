@@ -28,17 +28,23 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include <Core/Grid/Variables/PSPatchMatlGhost.h>
+#include <Core/Grid/Variables/PSPatchMatlGhostRange.h>
 #include <Core/Grid/Ghost.h>
 #include <Core/Grid/Patch.h>
 
 using namespace Uintah;
 
-bool PSPatchMatlGhost::operator<(const PSPatchMatlGhost& other) const
+bool PSPatchMatlGhostRange::operator<(const PSPatchMatlGhostRange& other) const
 {
   if (matl_ == other.matl_)
     if (patch_->getID() == other.patch_->getID())
-      return dwid_ < other.dwid_;
+      if (low_ == other.low_)
+        if (high_ == other.high_)
+          return dwid_ < other.dwid_;
+        else
+          return high_ < other.high_;
+      else
+        return low_ < other.low_;
     else
       return patch_->getID() < other.patch_->getID();
   else
@@ -46,10 +52,12 @@ bool PSPatchMatlGhost::operator<(const PSPatchMatlGhost& other) const
 }
 namespace Uintah
 {
-  ostream& operator<<(ostream &out, const PSPatchMatlGhost &pmg)
+  ostream& operator<<(ostream &out, const PSPatchMatlGhostRange &pmg)
   {
     out << "Patch: " << *pmg.patch_ << " ";
     out << "Matl: " << pmg.matl_ << " ";
+    out << "low: " << pmg.low_ << " ";
+    out << "high: " << pmg.high_ << " ";
     out << "dwid: " << pmg.dwid_ << " ";
     out << "count: " << pmg.count_ << " ";
     return out;

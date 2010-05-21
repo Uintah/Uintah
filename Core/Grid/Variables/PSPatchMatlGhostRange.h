@@ -29,8 +29,8 @@ DEALINGS IN THE SOFTWARE.
 
 
 
-#ifndef UINTAH_HOMEBREW_PSPatchMatlGhost_H
-#define UINTAH_HOMEBREW_PSPatchMatlGhost_H
+#ifndef UINTAH_HOMEBREW_PSPatchMatlGhostRange_H
+#define UINTAH_HOMEBREW_PSPatchMatlGhostRange_H
 
 #include <Core/Grid/Patch.h>
 #include <Core/Geometry/IntVector.h>
@@ -44,14 +44,14 @@ namespace Uintah {
     /**************************************
       
       struct
-        PSPatchMatlGhost
+        PSPatchMatlGhostRange
       
-        Patch, Material, Ghost info
+        Patch, Material, Ghost, Range info
         
       
       GENERAL INFORMATION
       
-        PSPatchMatlGhost.h
+        PSPatchMatlGhostRange.h
       
         Bryan Worthen
         Department of Computer Science
@@ -62,7 +62,7 @@ namespace Uintah {
         Copyright (C) 2002 SCI Group
       
       KEYWORDS
-        Patch, Material, Ghost
+        Patch, Material, Ghost, Range
       
       DESCRIPTION
         Has all the important information for identifying a particle subset
@@ -72,30 +72,34 @@ namespace Uintah {
       
       ****************************************/
 
-struct UINTAHSHARE PSPatchMatlGhost {
-  PSPatchMatlGhost(const Patch* patch, int matl, int dwid, int count=1)
-    : patch_(patch), matl_(matl), dwid_(dwid), count_(count)
+struct UINTAHSHARE PSPatchMatlGhostRange {
+  PSPatchMatlGhostRange(const Patch* patch, int matl, 
+                   IntVector low, IntVector high, int dwid, int count=1)
+    : patch_(patch), matl_(matl), low_(low), high_(high), dwid_(dwid), count_(count)
   {}
-  PSPatchMatlGhost(const PSPatchMatlGhost& copy)
-    : patch_(copy.patch_), matl_(copy.matl_), dwid_(copy.dwid_), count_(copy.count_)
+  PSPatchMatlGhostRange(const PSPatchMatlGhostRange& copy)
+    : patch_(copy.patch_), matl_(copy.matl_), low_(copy.low_), 
+       high_(copy.high_), dwid_(copy.dwid_), count_(copy.count_)
   {}
   
-  bool operator<(const PSPatchMatlGhost& other) const;
-  bool operator==(const PSPatchMatlGhost& other) const
+  bool operator<(const PSPatchMatlGhostRange& other) const;
+  bool operator==(const PSPatchMatlGhostRange& other) const
   {
-    return patch_==other.patch_ && matl_ == other.matl_ && dwid_ == other.dwid_;
+    return patch_==other.patch_ && matl_ == other.matl_ && low_ == other.low_ && high_ == other.high_ && dwid_ == other.dwid_;
   }
-  bool operator!=(const PSPatchMatlGhost& other) const
+  bool operator!=(const PSPatchMatlGhostRange& other) const
   {
     return !operator==(other);
   }
   const Patch* patch_;
   int matl_;
+  IntVector low_;
+  IntVector high_;
   int dwid_;
   mutable int count_; //a count of how many times this has been created
 };  
 
-  ostream& operator<<(ostream &out, const PSPatchMatlGhost &pmg);
+  ostream& operator<<(ostream &out, const PSPatchMatlGhostRange &pmg);
 } // End namespace Uintah
 
 #endif

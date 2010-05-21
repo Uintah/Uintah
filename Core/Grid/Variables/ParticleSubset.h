@@ -150,6 +150,13 @@ WARNING
       d_particles[idx] = value;
     }
 
+    void setLow(const IntVector low) {
+      d_low=low;
+    }
+    void setHigh(const IntVector high) {
+      d_high=high;
+    }
+
     IntVector getLow() const {
       return d_low;
     }
