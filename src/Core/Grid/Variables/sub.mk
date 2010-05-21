@@ -50,6 +50,7 @@ SRCS += \
         $(SRCDIR)/ParticleVariable_special.cc   \
         $(SRCDIR)/PerPatchBase.cc               \
         $(SRCDIR)/PSPatchMatlGhost.cc           \
+        $(SRCDIR)/PSPatchMatlGhostRange.cc      \
         $(SRCDIR)/ReductionVariableBase.cc      \
         $(SRCDIR)/ReductionVariable_special.cc  \
         $(SRCDIR)/ScrubItem.cc                  \

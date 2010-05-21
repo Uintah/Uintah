@@ -33,7 +33,7 @@ DEALINGS IN THE SOFTWARE.
 
 #include <map>
 #include <Core/Grid/Ghost.h>
-#include <Core/Grid/Variables/PSPatchMatlGhost.h>
+#include <Core/Grid/Variables/PSPatchMatlGhostRange.h>
 
 namespace Uintah {
   using namespace std;
@@ -86,7 +86,7 @@ namespace Uintah {
 
   private:
 
-    typedef map<pair<PSPatchMatlGhost, int>, ParticleSubset*> maptype;
+    typedef map<pair<PSPatchMatlGhostRange, int>, ParticleSubset*> maptype;
     maptype sendSubsets;
     SendState(const SendState&);
     SendState& operator=(const SendState&);

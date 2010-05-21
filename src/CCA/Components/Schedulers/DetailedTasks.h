@@ -36,7 +36,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/Task.h>
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/Variables/ScrubItem.h>
-#include <Core/Grid/Variables/PSPatchMatlGhost.h>
+#include <Core/Grid/Variables/PSPatchMatlGhostRange.h>
 #include <Core/Containers/FastHashTable.h>
 #include <Core/Thread/Mutex.h>
 #include <Core/Thread/Semaphore.h>
@@ -61,7 +61,7 @@ namespace Uintah {
   class TaskGraph;
   class SchedulerCommon;
 
-  typedef std::map<int, std::set<PSPatchMatlGhost> > ParticleExchangeVar;
+  typedef std::map<int, std::set<PSPatchMatlGhostRange> > ParticleExchangeVar;
   enum ProfileType {Normal,Fine};
   enum QueueAlg {FCFS, Stack, Random, MostChildren, LeastChildren, MostAllChildren, LeastAllChildren, MostMessages, LeastMessages, MostL2Children, LeastL2Children, CritialPath, PatchOrder, PatchOrderRandom};
   

@@ -401,7 +401,7 @@ OnDemandDataWarehouse::exchangeParticleQuantities(DetailedTasks* dts, LoadBalanc
 
   int data_index = 0;
   for (ParticleExchangeVar::iterator iter = recvs.begin(); iter != recvs.end(); iter++) {
-    set<PSPatchMatlGhost>& r = iter->second;
+    set<PSPatchMatlGhostRange>& r = iter->second;
     if (r.size() > 0) {
       recvdata[data_index].resize(r.size());
       // particles << d_myworld->myrank() << " Posting PARTICLES receives for " << r.size() 
@@ -416,13 +416,13 @@ OnDemandDataWarehouse::exchangeParticleQuantities(DetailedTasks* dts, LoadBalanc
 
   data_index = 0;
   for (ParticleExchangeVar::iterator iter = sends.begin(); iter != sends.end(); iter++) {
-    set<PSPatchMatlGhost>& s = iter->second;
+    set<PSPatchMatlGhostRange>& s = iter->second;
     if (s.size() > 0) {
       vector<int>& data = senddata[data_index];
       data.resize(s.size());
       int i = 0;
-      for (set<PSPatchMatlGhost>::iterator siter = s.begin(); siter != s.end(); siter++, i++) {
-        const PSPatchMatlGhost& pmg = *siter;
+      for (set<PSPatchMatlGhostRange>::iterator siter = s.begin(); siter != s.end(); siter++, i++) {
+        const PSPatchMatlGhostRange& pmg = *siter;
         if ((pmg.dwid_ == DetailedDep::FirstIteration && iteration > 0) || 
             (pmg.dwid_ == DetailedDep::SubsequentIterations && iteration == 0)) {
           // not used
@@ -475,12 +475,12 @@ OnDemandDataWarehouse::exchangeParticleQuantities(DetailedTasks* dts, LoadBalanc
   data_index = 0;
   // create particle subsets from recvs
   for (ParticleExchangeVar::iterator iter = recvs.begin(); iter != recvs.end(); iter++) {
-    set<PSPatchMatlGhost>& r = iter->second;
+    set<PSPatchMatlGhostRange>& r = iter->second;
     if (r.size() > 0) {
       vector<int>& data = recvdata[data_index];
       int i = 0;
-      for (set<PSPatchMatlGhost>::iterator riter = r.begin(); riter != r.end(); riter++, i++) {
-        const PSPatchMatlGhost& pmg = *riter;
+      for (set<PSPatchMatlGhostRange>::iterator riter = r.begin(); riter != r.end(); riter++, i++) {
+        const PSPatchMatlGhostRange& pmg = *riter;
         particles2 << d_myworld->myrank() << " Recving PARTICLES from proc " << iter->first << ": patch " 
                    << pmg.patch_->getID() << " matl " << pmg.matl_ << " low " << pmg.low_ << " high " << pmg.high_ 
                    << ": " << data[i] << "\n";
@@ -828,7 +828,6 @@ OnDemandDataWarehouse::createParticleSubset(particleIndex numParticles,
                                             IntVector high /* = (0,0,0) */)
 {
   MALLOC_TRACE_TAG_SCOPE("OnDemandDataWarehouse::createParticleSubset):");
-  d_lock.writeLock();
 
   if (low == high && high == IntVector(0,0,0)) {
     low = patch->getExtraCellLowIndex();
@@ -843,18 +842,8 @@ OnDemandDataWarehouse::createParticleSubset(particleIndex numParticles,
   ParticleSubset* psubset = 
     scinew ParticleSubset(numParticles, matlIndex, patch, low, high);
 
-  psetDBType::key_type key(patch, matlIndex, low, high, getID());
-  if(d_psetDB.find(key) != d_psetDB.end()) {
-    if (d_myworld->myrank() == 0) {
-      cout << d_myworld->myrank() << "  Duplicate: " << patch->getID() << " matl " << matlIndex << " " << low << " " << high << endl;
-      printParticleSubsets();
-    }
-    SCI_THROW(InternalError("createParticleSubset called twice for patch", __FILE__, __LINE__));
-  }
-  
-  d_psetDB[key]=psubset;
-  psubset->addReference();
-  d_lock.writeUnlock();
+  insertPSetRecord(d_psetDB,patch,low,high,matlIndex,psubset);
+
   return psubset;
 }
 
@@ -867,21 +856,13 @@ OnDemandDataWarehouse::saveParticleSubset(ParticleSubset* psubset,
   ASSERTEQ(psubset->getPatch(), patch);
   ASSERTEQ(psubset->getMatlIndex(), matlIndex);
   ASSERT(!patch->isVirtual());  
-  d_lock.writeLock();
 
   if (low == high && high == IntVector(0,0,0)) {
     low = patch->getExtraCellLowIndex();
     high = patch->getExtraCellHighIndex();
   }
 
-  psetDBType::key_type key(patch, matlIndex, low, high, getID());
-  if(d_psetDB.find(key) != d_psetDB.end())
-    SCI_THROW(InternalError("saveParticleSubset called twice for patch", __FILE__, __LINE__));
-
-  d_psetDB[key]=psubset;
-  psubset->addReference();
-
-  d_lock.writeUnlock();
+  insertPSetRecord(d_psetDB,patch,low,high,matlIndex,psubset);
 }
 
 void
@@ -903,65 +884,105 @@ OnDemandDataWarehouse::getParticleSubset(int matlIndex, const Patch* patch)
   return getParticleSubset(matlIndex, patch, patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex());
 }
 
+void OnDemandDataWarehouse::insertPSetRecord(psetDBType &subsetDB,const Patch* patch,IntVector low, IntVector high,int matlIndex, ParticleSubset *psubset)
+{
+  psubset->setLow(low);
+  psubset->setHigh(high);
+
+#if SCI_ASSERTION_LEVEL >= 1
+  ParticleSubset *subset=queryPSetDB(subsetDB,patch,matlIndex,low,high,true);
+  if(subset!=0) {
+    if (d_myworld->myrank() == 0) {
+      cout << d_myworld->myrank() << "  Duplicate: " << patch->getID() << " matl " << matlIndex << " " << low << " " << high << endl;
+      printParticleSubsets();
+    }
+    SCI_THROW(InternalError("tried to create a particle subset that already exists", __FILE__, __LINE__));
+  }
+#endif
+  d_lock.writeLock();
+  psetDBType::key_type key(patch->getRealPatch(), matlIndex, getID());
+  subsetDB.insert(pair<psetDBType::key_type,ParticleSubset*>(key,psubset));
+  psubset->addReference();
+  d_lock.writeUnlock();
+}
+
+ParticleSubset* OnDemandDataWarehouse::queryPSetDB(psetDBType &subsetDB, const Patch* patch, int matlIndex, IntVector low, IntVector high, bool exact)
+{
+  ParticleSubset* subset=0;
+
+  
+  psetDBType::key_type key(patch->getRealPatch(), matlIndex, getID());
+  int best_volume = INT_MAX;
+  int target_volume = Region::getVolume(low,high);
+  
+  d_lock.readLock();
+  
+  pair<psetDBType::const_iterator, psetDBType::const_iterator> ret = subsetDB.equal_range(key);
+  //search multimap for best subset
+  for(psetDBType::const_iterator iter=ret.first; iter!=ret.second; ++iter){
+    ParticleSubset *ss=iter->second;
+    IntVector sslow=ss->getLow();
+    IntVector sshigh=ss->getHigh();
+    int vol=Region::getVolume(sslow,sshigh);
+    //check if volume is better than current best
+    if(vol<best_volume)
+    {
+      //intersect ranges
+      if(low.x() >= sslow.x() && low.y() >= sslow.y() && low.z() >= sslow.z() &&
+         sshigh.x() >= high.x() && sshigh.y() >= high.y() && sshigh.z() >= high.z() )
+      {
+        //take this range
+        subset=ss;
+
+        //short circuit out if we have already found the best possible solution
+        if(vol==target_volume)
+          break;
+
+        best_volume=vol;
+      }
+    }
+  }
+  d_lock.readUnlock();
+  
+  if(exact && best_volume!=target_volume)
+    return 0;
+  else
+    return subset;
+}
 ParticleSubset*
 OnDemandDataWarehouse::getParticleSubset(int matlIndex, const Patch* patch,
                                          IntVector low, IntVector high)
 {
   TAU_PROFILE("OnDemandDataWarehouse::getParticleSubset-a", " ", TAU_USER);
-  d_lock.readLock();
   const Patch* realPatch = (patch != 0) ? patch->getRealPatch() : 0;
   ParticleSubset* subset = 0;
 
-  psetDBType::key_type key(realPatch, matlIndex, low, high, getID());
-  psetDBType::iterator iter = d_psetDB.find(key);
-  if(iter != d_psetDB.end()){
-    subset = iter->second;
-  }
-  else {
-    int best_volume = INT_MAX;
-    // if not found, look for the smallest encompassing particle subset
-    for (iter = d_psetDB.begin(); iter != d_psetDB.end(); iter++) {
-      const PSPatchMatlGhost& pmg = iter->first;
-      if (pmg.patch_ == realPatch && pmg.matl_ == matlIndex &&
-          pmg.dwid_ == getID() && 
-          low.x() >= pmg.low_.x() && low.y() >= pmg.low_.y() && low.z() >= pmg.low_.z() &&
-          high.x() <= pmg.high_.x() && high.y() <= pmg.high_.y() && high.z() <= pmg.high_.z()) {
-        IntVector range = pmg.high_ - pmg.low_;
-        int vol = range.x() * range.y() * range.z();
-        if (vol < best_volume) {
-          best_volume = vol;
-          subset = iter->second;
-        }
-      }
-    }
-    
-    if (!subset){
-      printParticleSubsets();
-      d_lock.readUnlock();
-      ostringstream s;
-      s << "ParticleSubset, (low: " << low << ", high: " << high <<  " DWID " << getID() << ')';
-      SCI_THROW(UnknownVariable(s.str().c_str(), getID(), realPatch, matlIndex,
+  subset=queryPSetDB(d_psetDB,realPatch,matlIndex,low,high);
+
+  if (!subset){
+    printParticleSubsets();
+    d_lock.readUnlock();
+    ostringstream s;
+    s << "ParticleSubset, (low: " << low << ", high: " << high <<  " DWID " << getID() << ')';
+    SCI_THROW(UnknownVariable(s.str().c_str(), getID(), realPatch, matlIndex,
                                 "Cannot find particle set on patch", __FILE__, __LINE__));
-    }
   }
-  d_lock.readUnlock();
   return subset;
 }
 
 ParticleSubset*
 OnDemandDataWarehouse::getDeleteSubset(int matlIndex, const Patch* patch)
 {
-  d_lock.readLock();
+  
   const Patch* realPatch = (patch != 0) ? patch->getRealPatch() : 0;
-   psetDBType::key_type key(realPatch, matlIndex, realPatch->getExtraCellLowIndex(), realPatch->getExtraCellHighIndex(), getID());
-   psetDBType::iterator iter = d_delsetDB.find(key);
-   if(iter == d_delsetDB.end()){
+  ParticleSubset *subset=queryPSetDB(d_delsetDB,realPatch,matlIndex,patch->getExtraCellLowIndex(),patch->getExtraCellHighIndex());
+  
+  if(subset==0){
      d_lock.readUnlock();
      SCI_THROW(UnknownVariable("DeleteSet", getID(), realPatch, matlIndex,
 			   "Cannot find delete set on patch", __FILE__, __LINE__));
    }
-  d_lock.readUnlock();
-   return iter->second;
+   return subset;
 }
 
 map<const VarLabel*, ParticleVariableBase*>* 
@@ -986,38 +1007,22 @@ OnDemandDataWarehouse::haveParticleSubset(int matlIndex, const Patch* patch,
                                           IntVector low /* = (0,0,0) */,
                                           IntVector high /* = (0,0,0) */, bool exact /*=false*/)
 {
-  d_lock.readLock();
-
   if (low == high && high == IntVector(0,0,0)) {
     low = patch->getExtraCellLowIndex();
     high = patch->getExtraCellHighIndex();
   }
   const Patch* realPatch = patch->getRealPatch();
+  //query subset
+  ParticleSubset *subset=queryPSetDB(d_psetDB,realPatch,matlIndex,low,high);
 
-   psetDBType::key_type key(realPatch, matlIndex, low, high, getID());
-   psetDBType::iterator iter = d_psetDB.find(key);
-   if (iter != d_psetDB.end()) {
-     d_lock.readUnlock();
-     return true;
-   }
+  //if no subset was returned there are no suitable subsets
+  if(subset==0)
+    return false;
 
-   if (exact) {
-     d_lock.readUnlock();
-     return false;
-   }
-
-   // if not found, look for an encompassing particle subset
-   for (iter = d_psetDB.begin(); iter != d_psetDB.end(); iter++) {
-     const PSPatchMatlGhost& pmg = iter->first;
-     if (pmg.patch_ == realPatch && pmg.matl_ == matlIndex &&
-         pmg.dwid_ == getID() && 
-         low.x() >= pmg.low_.x() && low.y() >= pmg.low_.y() && low.z() >= pmg.low_.z() &&
-         high.x() <= pmg.high_.x() && high.y() <= pmg.high_.y() && high.z() <= pmg.high_.z())
-       break;
-   }
-   
-  d_lock.readUnlock();
-  return iter != d_psetDB.end();
+  if(exact) //check if the user wanted an exact match
+    return subset->getLow()==low && subset->getHigh()==high;
+  else
+    return true;
 }
 
 ParticleSubset*
@@ -1882,30 +1887,33 @@ void OnDemandDataWarehouse::print(ostream& intout, const VarLabel* label,
 void
 OnDemandDataWarehouse::deleteParticles(ParticleSubset* delset)
 {
- d_lock.writeLock();
   int matlIndex = delset->getMatlIndex();
   Patch* patch = (Patch*) delset->getPatch();
   const Patch* realPatch = (patch != 0) ? patch->getRealPatch() : 0;
 
-  psetDBType::key_type key(patch, matlIndex, realPatch->getExtraCellLowIndex(), realPatch->getExtraCellHighIndex(), getID());
+  d_lock.writeLock();
+  psetDBType::key_type key(realPatch, matlIndex, getID());
   psetDBType::iterator iter = d_delsetDB.find(key);
   ParticleSubset* currentDelset;
-  if(iter != d_delsetDB.end()) {
+  if(iter != d_delsetDB.end()) { //update existing delset
     //    SCI_THROW(InternalError("deleteParticles called twice for patch", __FILE__, __LINE__));
     // Concatenate the delsets into the delset that already exists in the DB.
     currentDelset = iter->second;
     for (ParticleSubset::iterator d=delset->begin(); d != delset->end(); d++)
       currentDelset->addParticle(*d);
-    d_delsetDB[key]=currentDelset;
-    //currentDelset->addReference();
+   
+    d_delsetDB.erase(key);
+    d_delsetDB.insert(pair<psetDBType::key_type,ParticleSubset*>(key,currentDelset));
+    currentDelset->addReference();
+
     delete delset;
+
   } else {
-    d_delsetDB[key]=delset;
+    d_delsetDB.insert(pair<psetDBType::key_type,ParticleSubset*>(key,delset));
     delset->addReference();
   }
   d_lock.writeUnlock();
 }
-
 
 void
 OnDemandDataWarehouse::addParticles(const Patch* patch, int matlIndex,
