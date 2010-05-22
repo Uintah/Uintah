@@ -1904,7 +1904,6 @@ OnDemandDataWarehouse::deleteParticles(ParticleSubset* delset)
    
     d_delsetDB.erase(key);
     d_delsetDB.insert(pair<psetDBType::key_type,ParticleSubset*>(key,currentDelset));
-    currentDelset->addReference();
 
     delete delset;
 
