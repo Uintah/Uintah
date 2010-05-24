@@ -890,7 +890,7 @@ void OnDemandDataWarehouse::insertPSetRecord(psetDBType &subsetDB,const Patch* p
   psubset->setHigh(high);
 
 #if SCI_ASSERTION_LEVEL >= 1
-  ParticleSubset *subset=queryPSetDB(subsetDB,patch,matlIndex,low,high,true);
+  ParticleSubset *subset=queryPSetDB(subsetDB,patch,matlIndex,low,high,0,true);
   if(subset!=0) {
     if (d_myworld->myrank() == 0) {
       cout << d_myworld->myrank() << "  Duplicate: " << patch->getID() << " matl " << matlIndex << " " << low << " " << high << endl;
@@ -906,17 +906,16 @@ void OnDemandDataWarehouse::insertPSetRecord(psetDBType &subsetDB,const Patch* p
   d_lock.writeUnlock();
 }
 
-ParticleSubset* OnDemandDataWarehouse::queryPSetDB(psetDBType &subsetDB, const Patch* patch, int matlIndex, IntVector low, IntVector high, bool exact)
+ParticleSubset* OnDemandDataWarehouse::queryPSetDB(psetDBType &subsetDB, const Patch* patch, int matlIndex, IntVector low, IntVector high, const VarLabel* pos_var, bool exact)
 {
   ParticleSubset* subset=0;
 
-  
+
   psetDBType::key_type key(patch->getRealPatch(), matlIndex, getID());
   int best_volume = INT_MAX;
   int target_volume = Region::getVolume(low,high);
-  
+
   d_lock.readLock();
-  
   pair<psetDBType::const_iterator, psetDBType::const_iterator> ret = subsetDB.equal_range(key);
   //search multimap for best subset
   for(psetDBType::const_iterator iter=ret.first; iter!=ret.second; ++iter){
@@ -929,25 +928,47 @@ ParticleSubset* OnDemandDataWarehouse::queryPSetDB(psetDBType &subsetDB, const P
     {
       //intersect ranges
       if(low.x() >= sslow.x() && low.y() >= sslow.y() && low.z() >= sslow.z() &&
-         sshigh.x() >= high.x() && sshigh.y() >= high.y() && sshigh.z() >= high.z() )
+          sshigh.x() >= high.x() && sshigh.y() >= high.y() && sshigh.z() >= high.z() )
       {
         //take this range
         subset=ss;
+        best_volume=vol;
 
         //short circuit out if we have already found the best possible solution
-        if(vol==target_volume)
+        if(best_volume==target_volume)
           break;
 
-        best_volume=vol;
       }
     }
   }
   d_lock.readUnlock();
-  
+
   if(exact && best_volume!=target_volume)
     return 0;
-  else
+
+  //if we don't need to filter or we already have an exact match just return this subset
+  if(pos_var==0 || best_volume==target_volume)
     return subset;
+
+  //otherwise filter out particles that are not within this range
+  constParticleVariable<Point> pos;
+
+  get(pos, pos_var, subset);
+
+  ParticleSubset* newsubset=scinew ParticleSubset(0, matlIndex, patch->getRealPatch(),low,high);
+
+  for(ParticleSubset::iterator iter = subset->begin();iter != subset->end(); iter++){
+    particleIndex idx = *iter;
+    if(Patch::containsIndex(low,high,patch->getCellIndex(pos[idx]))) {
+      newsubset->addParticle(idx);
+    }
+  }
+
+  //save subset for future queries
+  subsetDB.insert(pair<psetDBType::key_type,ParticleSubset*>(key,newsubset));
+  newsubset->addReference();
+
+  return newsubset;
 }
 ParticleSubset*
 OnDemandDataWarehouse::getParticleSubset(int matlIndex, const Patch* patch,
@@ -957,7 +978,27 @@ OnDemandDataWarehouse::getParticleSubset(int matlIndex, const Patch* patch,
   const Patch* realPatch = (patch != 0) ? patch->getRealPatch() : 0;
   ParticleSubset* subset = 0;
 
-  subset=queryPSetDB(d_psetDB,realPatch,matlIndex,low,high);
+  subset=queryPSetDB(d_psetDB,realPatch,matlIndex,low,high,0);
+
+  if (!subset){
+    printParticleSubsets();
+    d_lock.readUnlock();
+    ostringstream s;
+    s << "ParticleSubset, (low: " << low << ", high: " << high <<  " DWID " << getID() << ')';
+    SCI_THROW(UnknownVariable(s.str().c_str(), getID(), realPatch, matlIndex,
+                                "Cannot find particle set on patch", __FILE__, __LINE__));
+  }
+  return subset;
+}
+ParticleSubset*
+OnDemandDataWarehouse::getParticleSubset(int matlIndex, const Patch* patch,
+                                         IntVector low, IntVector high, const VarLabel *pos_var)
+{
+  TAU_PROFILE("OnDemandDataWarehouse::getParticleSubset-a", " ", TAU_USER);
+  const Patch* realPatch = (patch != 0) ? patch->getRealPatch() : 0;
+  ParticleSubset* subset = 0;
+
+  subset=queryPSetDB(d_psetDB,realPatch,matlIndex,low,high,pos_var);
 
   if (!subset){
     printParticleSubsets();
@@ -975,7 +1016,7 @@ OnDemandDataWarehouse::getDeleteSubset(int matlIndex, const Patch* patch)
 {
   
   const Patch* realPatch = (patch != 0) ? patch->getRealPatch() : 0;
-  ParticleSubset *subset=queryPSetDB(d_delsetDB,realPatch,matlIndex,patch->getExtraCellLowIndex(),patch->getExtraCellHighIndex());
+  ParticleSubset *subset=queryPSetDB(d_delsetDB,realPatch,matlIndex,patch->getExtraCellLowIndex(),patch->getExtraCellHighIndex(),0);
   
   if(subset==0){
      d_lock.readUnlock();
@@ -1013,7 +1054,7 @@ OnDemandDataWarehouse::haveParticleSubset(int matlIndex, const Patch* patch,
   }
   const Patch* realPatch = patch->getRealPatch();
   //query subset
-  ParticleSubset *subset=queryPSetDB(d_psetDB,realPatch,matlIndex,low,high);
+  ParticleSubset *subset=queryPSetDB(d_psetDB,realPatch,matlIndex,low,high,0);
 
   //if no subset was returned there are no suitable subsets
   if(subset==0)
@@ -1092,30 +1133,18 @@ OnDemandDataWarehouse::getParticleSubset(int matlIndex, IntVector lowIndex, IntV
         }
       }
 
-      pset = getParticleSubset(matlIndex, neighbor, newLow, newHigh);
-
-      constParticleVariable<Point> pos;
-
-      get(pos, pos_var, pset);
-
-      particleIndex sizeHint = (relPatch && realNeighbor == relPatch) ? pset->numParticles():0;
-      ParticleSubset* subset = 
-        scinew ParticleSubset(0, -1, 0);
-      subset->expand(sizeHint);
-      for(ParticleSubset::iterator iter = pset->begin();
-          iter != pset->end(); iter++){
-        particleIndex idx = *iter;
-        if(Patch::containsIndex(newLow,newHigh,neighbor->getCellIndex(pos[idx]))) {
-          subset->addParticle(idx);
-        }
-      }
-      totalParticles+=subset->numParticles();
-      subsets.push_back(subset);
+      //get the particle subset for this patch
+      pset = getParticleSubset(matlIndex, neighbor, newLow, newHigh, pos_var);
+      
+      //add subset to our current list
+      totalParticles+=pset->numParticles();
+      subsets.push_back(pset);
       vneighbors.push_back(neighbors[i]);
 
     }
   }
  
+  //create a new subset
   ParticleSubset* newsubset = scinew ParticleSubset(totalParticles, matlIndex, relPatch,
                                                     lowIndex, highIndex, vneighbors, subsets);
   return newsubset;
