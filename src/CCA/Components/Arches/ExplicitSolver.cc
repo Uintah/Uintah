@@ -863,7 +863,7 @@ ExplicitSolver::sched_setInitialGuess(SchedulerP& sched,
 {
   //copies old db to new_db and then uses non-linear
   //solver to compute new values
-  Task* tsk = scinew Task( "ExplicitSolver::initialGuess",this, 
+  Task* tsk = scinew Task( "ExplicitSolver::setInitialGuess",this, 
                            &ExplicitSolver::setInitialGuess);
 
   Ghost::GhostType  gn = Ghost::None;
@@ -910,9 +910,7 @@ ExplicitSolver::sched_setInitialGuess(SchedulerP& sched,
   if (d_reactingScalarSolve) {
     tsk->requires(Task::OldDW, d_lab->d_reactscalarSPLabel, gn, 0);
     tsk->computes(d_lab->d_reactscalarSPLabel);
-    if (d_timeIntegratorLabels[0]->multiple_steps){
-      tsk->computes(d_lab->d_reactscalarTempLabel);
-    }
+    tsk->computes(d_lab->d_reactscalarTempLabel);
   }
 
   //__________________________________
@@ -921,9 +919,7 @@ ExplicitSolver::sched_setInitialGuess(SchedulerP& sched,
     tsk->requires(Task::OldDW, d_lab->d_radiationVolqINLabel,  gn, 0); 
     tsk->computes(d_lab->d_enthalpySPLabel);
     tsk->computes(d_lab->d_radiationVolqINLabel);
-    if (d_timeIntegratorLabels[0]->multiple_steps){
-      tsk->computes(d_lab->d_enthalpyTempLabel);
-    }
+    tsk->computes(d_lab->d_enthalpyTempLabel);
   }
 
   //__________________________________
@@ -1991,10 +1987,8 @@ ExplicitSolver::setInitialGuess(const ProcessorGroup* ,
     new_areaFraction.copyData(old_areaFraction); // copy old into new
    
  
-    if (d_timeIntegratorLabels[0]->multiple_steps) {
-      new_dw->allocateAndPut(scalar_temp, d_lab->d_scalarTempLabel, indx, patch);
-      scalar_temp.copyData(scalar); // copy old into new
-    }
+    new_dw->allocateAndPut(scalar_temp, d_lab->d_scalarTempLabel, indx, patch);
+    scalar_temp.copyData(scalar); // copy old into new
 
     constCCVariable<double> reactscalar;
     CCVariable<double> new_reactscalar;
@@ -2003,10 +1997,8 @@ ExplicitSolver::setInitialGuess(const ProcessorGroup* ,
       old_dw->get(reactscalar,                 d_lab->d_reactscalarSPLabel, indx, patch, gn, 0);
       new_dw->allocateAndPut(new_reactscalar,  d_lab->d_reactscalarSPLabel, indx, patch);
       new_reactscalar.copyData(reactscalar);
-      if (d_timeIntegratorLabels[0]->multiple_steps) {
-        new_dw->allocateAndPut(temp_reactscalar, d_lab->d_reactscalarTempLabel, indx, patch);
-        temp_reactscalar.copyData(reactscalar);
-      }
+      new_dw->allocateAndPut(temp_reactscalar, d_lab->d_reactscalarTempLabel, indx, patch);
+      temp_reactscalar.copyData(reactscalar);
     }
 
     CCVariable<double> new_enthalpy;
@@ -2015,10 +2007,8 @@ ExplicitSolver::setInitialGuess(const ProcessorGroup* ,
       new_dw->allocateAndPut(new_enthalpy, d_lab->d_enthalpySPLabel, indx, patch);
       new_enthalpy.copyData(enthalpy);
       
-      if (d_timeIntegratorLabels[0]->multiple_steps) {
-        new_dw->allocateAndPut(temp_enthalpy, d_lab->d_enthalpyTempLabel, indx, patch);
-        temp_enthalpy.copyData(enthalpy);
-      }
+      new_dw->allocateAndPut(temp_enthalpy, d_lab->d_enthalpyTempLabel, indx, patch);
+      temp_enthalpy.copyData(enthalpy);
     }
     CCVariable<double> density_new;
     new_dw->allocateAndPut(density_new, d_lab->d_densityCPLabel, indx, patch);
