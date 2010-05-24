@@ -943,10 +943,8 @@ ExplicitSolver::sched_setInitialGuess(SchedulerP& sched,
   }
   
   //__________________________________
-  if (d_timeIntegratorLabels[0]->multiple_steps){
-    tsk->computes(d_lab->d_scalarTempLabel);
-    tsk->computes(d_lab->d_densityTempLabel);
-  }
+  tsk->computes(d_lab->d_scalarTempLabel);
+  tsk->computes(d_lab->d_densityTempLabel);
 
   //__________________________________
   if (d_doMMS) {
@@ -2026,11 +2024,9 @@ ExplicitSolver::setInitialGuess(const ProcessorGroup* ,
     new_dw->allocateAndPut(density_new, d_lab->d_densityCPLabel, indx, patch);
     density_new.copyData(density); // copy old into new
     
-    if (d_timeIntegratorLabels[0]->multiple_steps) {
-      CCVariable<double> density_temp;
-      new_dw->allocateAndPut(density_temp, d_lab->d_densityTempLabel, indx, patch);
-      density_temp.copyData(density); // copy old into new
-    }
+    CCVariable<double> density_temp;
+    new_dw->allocateAndPut(density_temp, d_lab->d_densityTempLabel, indx, patch);
+    density_temp.copyData(density); // copy old into new
 
     CCVariable<double> viscosity_new;
     new_dw->allocateAndPut(viscosity_new, d_lab->d_viscosityCTSLabel, indx, patch);
