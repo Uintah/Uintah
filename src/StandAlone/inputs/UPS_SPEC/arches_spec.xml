@@ -128,11 +128,13 @@
         <sulfur_balance_es              spec="OPTIONAL BOOLEAN" />
         <ramping_inlet_flowrate         spec="OPTIONAL BOOLEAN" />
         <FlowInlet                      spec="MULTIPLE NO_DATA" >
+          <name                         spec="OPTIONAL STRING" />
           <ramping_inlet_flowrate       spec="OPTIONAL BOOLEAN" />
           <SulfurMassFractionInFuel     spec="OPTIONAL DOUBLE '0,1'" />
           <Flow_rate                    spec="OPTIONAL DOUBLE" />
           <InletVelocity                spec="OPTIONAL DOUBLE" />
           <mixture_fraction             spec="REQUIRED DOUBLE" />
+          <mixture_fraction_2           spec="OPTIONAL DOUBLE" />
           <Prefill                      spec="OPTIONAL NO_DATA"
                                           attribute1="direction REQUIRED STRING 'X, Y, Z'" >
             <geom_object />

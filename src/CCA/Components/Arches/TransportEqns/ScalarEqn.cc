@@ -205,7 +205,9 @@ ScalarEqn::sched_evalTransportEqn( const LevelP& level,
 
   sched_buildTransportEqn( level, sched, timeSubStep );
 
-  sched_solveTransportEqn( level, sched, timeSubStep );
+  if (d_use_density_guess)
+    sched_solveTransportEqn( level, sched, timeSubStep );
+  // else we have to do it in ExplicitSolver.cc after properties are updated.
 }
 //---------------------------------------------------------------------------
 // Method: Schedule the intialization of the variables. 
@@ -304,6 +306,16 @@ ScalarEqn::sched_buildTransportEqn( const LevelP& level, SchedulerP& sched, int 
   Task* tsk = scinew Task(taskname, this, &ScalarEqn::buildTransportEqn, timeSubStep);
 
   //----NEW----
+  // note that rho and U are copied into new DW in ExplicitSolver::setInitialGuess
+  tsk->requires(Task::NewDW, d_fieldLabels->d_densityCPLabel, Ghost::AroundCells, 1); 
+  tsk->requires(Task::NewDW, d_fieldLabels->d_viscosityCTSLabel, Ghost::AroundCells, 1);
+  tsk->requires(Task::NewDW, d_fieldLabels->d_uVelocitySPBCLabel, Ghost::AroundCells, 1);   
+#ifdef YDIM
+  tsk->requires(Task::NewDW, d_fieldLabels->d_vVelocitySPBCLabel, Ghost::AroundCells, 1); 
+#endif
+#ifdef ZDIM
+  tsk->requires(Task::NewDW, d_fieldLabels->d_wVelocitySPBCLabel, Ghost::AroundCells, 1); 
+#endif
   tsk->modifies(d_FdiffLabel);
   tsk->modifies(d_FconvLabel);
   tsk->modifies(d_RHSLabel);
@@ -323,18 +335,6 @@ ScalarEqn::sched_buildTransportEqn( const LevelP& level, SchedulerP& sched, int 
   
   //-----OLD-----
   tsk->requires(Task::OldDW, d_fieldLabels->d_areaFractionLabel, Ghost::AroundCells, 1); 
-  if ( timeSubStep == 0 ) 
-    tsk->requires(Task::OldDW, d_fieldLabels->d_densityCPLabel, Ghost::AroundCells, 1); 
-  else
-    tsk->requires(Task::NewDW, d_fieldLabels->d_densityTempLabel, Ghost::AroundCells, 1); 
-  tsk->requires(Task::OldDW, d_fieldLabels->d_viscosityCTSLabel, Ghost::AroundCells, 1);
-  tsk->requires(Task::OldDW, d_fieldLabels->d_uVelocitySPBCLabel, Ghost::AroundCells, 1);   
-#ifdef YDIM
-  tsk->requires(Task::OldDW, d_fieldLabels->d_vVelocitySPBCLabel, Ghost::AroundCells, 1); 
-#endif
-#ifdef ZDIM
-  tsk->requires(Task::OldDW, d_fieldLabels->d_wVelocitySPBCLabel, Ghost::AroundCells, 1); 
-#endif
 
   sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
 }
@@ -375,20 +375,17 @@ ScalarEqn::buildTransportEqn( const ProcessorGroup* pc,
     CCVariable<double> RHS; 
 
     new_dw->get(oldPhi, d_oldtransportVarLabel, matlIndex, patch, gac, 2);
-    if ( timeSubStep == 0 ) 
-      old_dw->get(den, d_fieldLabels->d_densityCPLabel, matlIndex, patch, gac, 1); 
-    else 
-      new_dw->get(den, d_fieldLabels->d_densityTempLabel, matlIndex, patch, gac, 1); 
-    old_dw->get(mu_t, d_fieldLabels->d_viscosityCTSLabel, matlIndex, patch, gac, 1); 
-    old_dw->get(uVel,   d_fieldLabels->d_uVelocitySPBCLabel, matlIndex, patch, gac, 1); 
+    new_dw->get(den, d_fieldLabels->d_densityCPLabel, matlIndex, patch, gac, 1); 
+    new_dw->get(mu_t,         d_fieldLabels->d_viscosityCTSLabel, matlIndex, patch, gac, 1); 
+    new_dw->get(uVel,         d_fieldLabels->d_uVelocitySPBCLabel, matlIndex, patch, gac, 1); 
     old_dw->get(areaFraction, d_fieldLabels->d_areaFractionLabel, matlIndex, patch, gac, 1); 
     double vol = Dx.x();
 #ifdef YDIM
-    old_dw->get(vVel,   d_fieldLabels->d_vVelocitySPBCLabel, matlIndex, patch, gac, 1); 
+    new_dw->get(vVel,   d_fieldLabels->d_vVelocitySPBCLabel, matlIndex, patch, gac, 1); 
     vol *= Dx.y();
 #endif
 #ifdef ZDIM
-    old_dw->get(wVel,   d_fieldLabels->d_wVelocitySPBCLabel, matlIndex, patch, gac, 1); 
+    new_dw->get(wVel,   d_fieldLabels->d_wVelocitySPBCLabel, matlIndex, patch, gac, 1); 
     vol *= Dx.z();
 #endif
 
@@ -450,14 +447,12 @@ ScalarEqn::sched_solveTransportEqn( const LevelP& level, SchedulerP& sched, int 
     tsk->requires(Task::NewDW, d_fieldLabels->d_densityGuessLabel, Ghost::None, 0);
   else 
     tsk->requires(Task::NewDW, d_fieldLabels->d_densityCPLabel, Ghost::None, 0);
+  // DensityTemp is the density from the last substep (or timestep if substep = 0).
+  tsk->requires(Task::NewDW, d_fieldLabels->d_densityTempLabel, Ghost::None, 0); 
 
   //Old
   tsk->requires(Task::OldDW, d_transportVarLabel, Ghost::None, 0);
   tsk->requires(Task::OldDW, d_fieldLabels->d_sharedState->get_delt_label(), Ghost::None, 0);
-  if ( timeSubStep == 0 ) 
-    tsk->requires(Task::OldDW, d_fieldLabels->d_densityCPLabel, Ghost::None, 0);
-  else 
-    tsk->requires(Task::NewDW, d_fieldLabels->d_densityTempLabel, Ghost::None, 0); 
 
   sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
 }
@@ -502,10 +497,7 @@ ScalarEqn::solveTransportEqn( const ProcessorGroup* pc,
       new_dw->get(new_den, d_fieldLabels->d_densityGuessLabel, matlIndex, patch, gn, 0); 
     else 
       new_dw->get(new_den, d_fieldLabels->d_densityCPLabel, matlIndex, patch, gn, 0);
-    if ( timeSubStep == 0 )
-      old_dw->get(old_den, d_fieldLabels->d_densityCPLabel, matlIndex, patch, gn, 0);
-    else 
-      new_dw->get(old_den, d_fieldLabels->d_densityTempLabel, matlIndex, patch, gn, 0); 
+    new_dw->get(old_den, d_fieldLabels->d_densityTempLabel, matlIndex, patch, gn, 0); 
 
     // ----FE UPDATE
     //     to get phi^{(j+1)}
