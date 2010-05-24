@@ -414,8 +414,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     }
 
 
-    if (curr_level > 0)
-      sched_saveTempCopies(sched, patches, matls,d_timeIntegratorLabels[curr_level]);
+    sched_saveTempCopies(sched, patches, matls,d_timeIntegratorLabels[curr_level]);
 
     bool doing_EKT_now = false;
     if (d_EKTCorrection) {
@@ -487,6 +486,13 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
                           d_timeIntegratorLabels[curr_level],
                           d_EKTCorrection, doing_EKT_now);
 
+    EqnFactory& eqn_factory = EqnFactory::self();
+    EqnFactory::EqnMap& scalar_eqns = eqn_factory.retrieve_all_eqns(); 
+    for (EqnFactory::EqnMap::iterator iter = scalar_eqns.begin(); iter != scalar_eqns.end(); iter++){
+      EqnBase* eqn = iter->second; 
+        eqn->sched_evalTransportEqn( level, sched, curr_level ); 
+    }
+
     if (d_reactingScalarSolve) {
       // in this case we're only solving for one scalar...but
       // the same subroutine can be used to solve multiple scalars
@@ -527,13 +533,6 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 //    sched_updateDensityGuess(sched, patches, matls,
 //                                    d_timeIntegratorLabels[curr_level]);
 
-    EqnFactory& eqn_factory = EqnFactory::self();
-    EqnFactory::EqnMap& scalar_eqns = eqn_factory.retrieve_all_eqns(); 
-    for (EqnFactory::EqnMap::iterator iter = scalar_eqns.begin(); iter != scalar_eqns.end(); iter++){
-      EqnBase* eqn = iter->second; 
-      if ( eqn->getDensityGuessBool() ) 
-        eqn->sched_evalTransportEqn( level, sched, curr_level ); 
-    }
 
     string mixmodel = d_props->getMixingModelType(); 
     if ( mixmodel != "TabProps")
@@ -552,8 +551,9 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
     for (EqnFactory::EqnMap::iterator iter = scalar_eqns.begin(); iter != scalar_eqns.end(); iter++){
       EqnBase* eqn = iter->second; 
-      if ( !eqn->getDensityGuessBool() )
-        eqn->sched_evalTransportEqn( level, sched, curr_level ); 
+      //Transport is constructed above.  Here we only solve if densityGuess is not used. 
+      if ( eqn->getDensityGuessBool() )
+        eqn->sched_solveTransportEqn( level, sched, curr_level ); 
     }
     // Clean up after Scalar equation evaluations  
     if (curr_level == numTimeIntegratorLevels-1){
