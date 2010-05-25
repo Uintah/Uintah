@@ -349,6 +349,7 @@ GridVisualizer::get_current_node_position(Point &location)
     return 1;
   }
   LevelP level = grid_->getLevel(currentNode_.level_);
+  
   // From here we can query the location of the index from the level.
   switch (var_orientation_.get()) {
   case NC_VAR:
@@ -361,6 +362,7 @@ GridVisualizer::get_current_node_position(Point &location)
     error("GridVisualizer::get_current_node_position: "
           "unknown variable orientation");
   }
+  cerr << "Patch ID: " << level->getPatchFromPoint(location)->getID() << endl;      
   return 0;
 }
 
