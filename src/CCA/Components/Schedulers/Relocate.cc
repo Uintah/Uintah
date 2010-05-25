@@ -992,7 +992,7 @@ Relocate::relocateParticles(const ProcessorGroup* pg,
     for(int p=0;p<patches->size();p++){
       const Patch* toPatch = patches->get(p);
       const Level* level   = toPatch->getLevel();
-      cout << "toPatch: " << toPatch->getID() << endl;
+      //cout << "toPatch: " << toPatch->getID() << endl;
       
       // AMR related
       const Level* curLevel = toPatch->getLevel();
