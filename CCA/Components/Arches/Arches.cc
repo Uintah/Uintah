@@ -311,16 +311,6 @@ Arches::problemSetup(const ProblemSpecP& params,
     d_timeIntegrator->problemSetup(time_db);
   }
 
-  //register source terms for Particle-Gas phase coupling
-  ProblemSpecP coupling_db = db->findBlock("Coupling");
-  if (coupling_db) {
-    ProblemSpecP sources_db = coupling_db->findBlock("Sources");
-    if (sources_db)
-      Arches::registerSources(sources_db);
-  }
-  else
-    proc0cout << "No coupling between gas phase and particles" << endl;
-
   ProblemSpecP transportEqn_db = db->findBlock("TransportEqns");
   if (transportEqn_db) {
     // register source terms
@@ -368,28 +358,6 @@ Arches::problemSetup(const ProblemSpecP& params,
         SourceTermBase& a_src = src_factory.retrieve_source_term( srcname );
         a_src.problemSetup( src_db );  
       
-      }
-    }
-  }
-  
-  d_momentum_coupling = false;
-  if (coupling_db) {
-    ProblemSpecP sources_db = coupling_db->findBlock("Sources");
-    if (sources_db) {
-      SourceTermFactory& src_factory = SourceTermFactory::self();
-      for (ProblemSpecP src_db = sources_db->findBlock("src");
-          src_db !=0; src_db = src_db->findNextBlock("src")){
-
-        std::string srcname;
-        src_db->getAttribute("label", srcname);
-        if (srcname == "coal_gas_momentum") {
-            d_momentum_coupling = true;
-          }
-        if (srcname == "") {
-          throw InvalidValue( "The label attribute must be specified for the source terms!", __FILE__, __LINE__);
-        }
-        SourceTermBase& a_src = src_factory.retrieve_source_term( srcname );
-        a_src.problemSetup( src_db );
       }
     }
   }
@@ -513,7 +481,6 @@ Arches::problemSetup(const ProblemSpecP& params,
   d_nlSolver->setExtraProjection(d_extraProjection);
   d_nlSolver->setEKTCorrection(d_EKTCorrection);
   d_nlSolver->setMMS(d_doMMS);
-  d_nlSolver->setMomentumCoupling(d_momentum_coupling);
   d_nlSolver->problemSetup(db);
   d_nlSolver->setCarbonBalanceES(d_carbon_balance_es);
   d_nlSolver->setSulfurBalanceES(d_sulfur_balance_es);

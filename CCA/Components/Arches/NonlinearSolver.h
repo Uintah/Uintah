@@ -136,8 +136,6 @@ public:
 
   virtual void setMMS(bool doMMS) = 0;
 
-  virtual void setMomentumCoupling(bool doMC) = 0;
-
   virtual bool getMMS() const = 0;
 
   virtual void setExtraProjection(bool extraProjection) = 0;

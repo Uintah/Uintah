@@ -144,6 +144,11 @@ public:
                               ArchesVariables* vars,
                               ArchesConstVariables* constvars); 
 
+  void addOtherScalarSource( const ProcessorGroup* pc, 
+                             const Patch* patch, 
+                             CellInformation* cellinfo, 
+                             ArchesVariables* vars );
+
   void calculateExtraScalarSource(const ProcessorGroup* pc,
                              const Patch* patch,
                              double delta_t, 

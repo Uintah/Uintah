@@ -248,6 +248,7 @@ private:
   bool d_filter_divergence_constraint;
   bool d_mixedModel;
   bool d_doMMS;
+  vector<string> d_new_sources; 
 
 }; // End class MomentumSolver
 } // End namespace Uintah
