@@ -147,8 +147,6 @@ public:
   /// Schedule to mark initial flags for AMR regridding
   void scheduleInitialErrorEstimate(const LevelP& coarseLevel, SchedulerP& sched);
 
-  void setSharedState(SimulationStateP& ssp);
-
 
   void setMPMLabel(MPMLabel* Mlb)
   {
