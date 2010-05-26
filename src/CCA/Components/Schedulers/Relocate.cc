@@ -681,20 +681,24 @@ const Patch* findCoarsePatch(const Point& pos, const Patch* guess, Level* coarse
 }
 
 //______________________________________________________________________
-// find all of the neighboring patches on the current level and the adjacent fine 
-// and coarse levels
-// example:
-//            L-0
-//         +-------+--------+
-//         |       |        |
-//         |   +---+---+    |
-//         | 0 |  L-1  | 1  |
-//         |   | 2 | 3 |    |
-//         |   +---+---+    |
-//         |       |        |
-//         +-------+--------+
-// 
-//  L-0 patches have neighbors   2 & 3
+// find all of patches on the current level and the adjacent fine 
+// and coarse levels.  The current algorithm finds ALL patches on the adjacent
+// fine/coarse level.  Ideally, you only need to return the patches along the
+// coarse fine interface.  If this function is ever optimized the patch 
+// configurations below are the most challenging.
+//
+// examples:                                corner case between L-0 P1 & L-1 P2      
+//            L-0                               |                    |    
+//         +-------+--------+                   |____________________|__  
+//         |       |        |                   |      |             |    
+//         |   +---+---+    |                   |      |     L-0     |    
+//         | 0 |  L-1  | 1  |                   |      |     1       |    
+//         |   | 2 | 3 |    |                   |      |             |    
+//         |   +---+---+    |                   |------+------+------+-   
+//         |       |        |                   |      |      |      |    
+//         +-------+--------+                   |  2   |  L-1 |      |    
+//                                              |      |      |      |    
+//  L-0 patches have neighbors   2 & 3          |______|______|______|
 //  L-1 patches have neighbors   0 & 1
 
 void
@@ -710,6 +714,7 @@ Relocate::findNeighboringPatches(const Patch* patch,
   // delete any duplicate patch entries
   set<const Patch*> neighborSet;
   
+  //__________________________________
   // current level
   Patch::selectType neighborPatches;
 
@@ -723,90 +728,45 @@ Relocate::findNeighboringPatches(const Patch* patch,
     neighborSet.insert(neighbor);
   }
   
-  
   //__________________________________
-  //  Look for neighboring coarse level patches
+  //  Find coarse level patches
   if(hasCoarser){
-    //cout << " hasCoarser" << endl;
-    const Level* coarseLevel = level->getCoarserLevel().get_rep();
-
     IntVector refineRatio = level->getRefinementRatio();
-    // coarse level patches
-    vector<Patch::FaceType> cf;
-    patch->getCoarseFaces(cf);     // find all CFI faces
-    vector<Patch::FaceType>::const_iterator iter;  
-    for (iter  = cf.begin(); iter != cf.end(); ++iter){
-      Patch::FaceType patchFace = *iter;
-      
-      Patch::FaceIteratorType IFC = Patch::InteriorFaceCells;
-      CellIterator f_iter=patch->getFaceIterator(patchFace, IFC);
+    const Level* coarseLevel = level->getCoarserLevel().get_rep();  
 
-      IntVector lo_face = f_iter.begin() - IntVector(1,1,1);   
-      IntVector hi_face = f_iter.end()   + refineRatio; 
+    IntVector fl = patch->getExtraCellLowIndex()  - refineRatio;
+    IntVector fh = patch->getExtraCellHighIndex() + refineRatio;
+    IntVector cl = level->mapCellToCoarser(fl);     
+    IntVector ch = level->mapCellToCoarser(fh);
 
-      IntVector cl = level->mapCellToCoarser(lo_face);     
-      IntVector ch = level->mapCellToCoarser(hi_face);
-      
-      //cout << patch->getFaceName(patchFace)<< " L-"<< coarseLevel->getID() << " lo_face " << lo_face << " cl " << cl << " hi_face " << hi_face << " ch " << ch<< endl;
-      
-      Patch::selectType CL_neighborPatches;
-      coarseLevel->selectPatches(cl, ch, CL_neighborPatches);
-      
-      ASSERT(CL_neighborPatches.size() != 0);
+    Patch::selectType coarsePatches;
+    coarseLevel->selectPatches(cl, ch, coarsePatches);
 
-      for(int i=0; i<CL_neighborPatches.size(); i++){
-        const Patch* neighbor=CL_neighborPatches[i];
-        neighborSet.insert(neighbor);
-        //cout << "    neighborPatch " << neighbor->getID()<< endl;
-      }
-    }  // face iterator
+    ASSERT(coarsePatches.size() != 0);
+
+    for(int i=0; i<coarsePatches.size(); i++){
+      const Patch* neighbor=coarsePatches[i];
+      neighborSet.insert(neighbor);
+    }
   }
   
   //__________________________________
-  // Find the adjacent fine level neighboring patches.
-  // If a fine patch shares a coarse fine interface with the
-  // coarse patch then add it as a neighbor
+  // Find the fine level patches.
   if(hasFiner){
-    //cout << " hasFiner" << endl;
     const Level* fineLevel = level->getFinerLevel().get_rep();
-    
-    Patch::selectType finePatches;
     
     // Particles are only allowed to be one cell out
     IntVector cl = patch->getExtraCellLowIndex()  - IntVector(1,1,1);
     IntVector ch = patch->getExtraCellHighIndex() + IntVector(1,1,1);
     IntVector fl = level->mapCellToFiner(cl);
     IntVector fh = level->mapCellToFiner(ch);
-   
+    
+    Patch::selectType finePatches;
     fineLevel->selectPatches(fl, fh,finePatches); 
 
     for(int i=0;i<finePatches.size();i++){
       const Patch* finePatch = finePatches[i];
-      
-      //cout << "   finePatch: " << finePatch->getID() << endl;
-      vector<Patch::FaceType> cf;
-      finePatch->getCoarseFaces(cf);
-      vector<Patch::FaceType>::const_iterator iter;  
-      
-
-      for (iter  = cf.begin(); iter != cf.end(); ++iter){
-        Patch::FaceType patchFace = *iter;
-        //cout << "       L-"<< level->getID() << " patch-" << finePatch->getID()<<  " face: " << patch->getFaceName(patchFace) << endl;
-        Patch::FaceIteratorType IFC = Patch::InteriorFaceCells;
-        CellIterator f_iter=finePatch->getFaceIterator(patchFace, IFC);
-
-        IntVector fpl = f_iter.begin() - IntVector(1,1,1);  // fine patch lo/hi   
-        IntVector fph = f_iter.end()   + IntVector(1,1,1);
-        IntVector CFI_lo = fineLevel->mapCellToCoarser(fpl);
-        IntVector CFI_hi = fineLevel->mapCellToCoarser(fph);
-        
-        bool test = doesIntersect(cl, ch, CFI_lo, CFI_hi);
-        
-        if(test){
-          neighborSet.insert(finePatch);
-          //cout << "    neighborPatch " << finePatch->getID()<< endl;
-        } 
-      }  // face iterator
+      neighborSet.insert(finePatch);
     }  // fine patches loop
   }
 
@@ -846,7 +806,7 @@ Relocate::relocateParticles(const ProcessorGroup* pg,
       const Patch* patch = patches->get(p);
       const Level* level = patch->getLevel();
 
-      // AMR stuff
+      // AMR
       const Level* curLevel = patch->getLevel();
       bool hasFiner   = curLevel->hasFinerLevel();
       bool hasCoarser = curLevel->hasCoarserLevel() && curLevel->getIndex() > coarsestLevel->getIndex();
