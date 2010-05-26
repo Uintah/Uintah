@@ -122,6 +122,17 @@ MomentumSolver::problemSetup(const ProblemSpecP& params)
   d_source->setBoundary(d_boundaryCondition);
 // -- jeremy --            
 
+  // New Source terms (ala the new transport eqn):
+  if (db->findBlock("src")){
+    string srcname; 
+    for (ProblemSpecP src_db = db->findBlock("src"); src_db != 0; src_db = src_db->findNextBlock("src")){
+      src_db->getAttribute("label", srcname);
+      //which sources are turned on for this equation
+      d_new_sources.push_back( srcname ); 
+
+    }
+  }
+
   d_rhsSolver = scinew RHSSolver();
   d_rhsSolver->setMMS(d_doMMS);
 
@@ -467,15 +478,16 @@ MomentumSolver::sched_buildLinearMatrixVelHat(SchedulerP& sched,
     tsk->modifies(d_lab->d_wFmmsLabel);
   }
 
-  // TOTAL KLUDGE FOR REACTING COAL---------------------------
-    // Keep commented out unless you know what you are doing!
-    if(d_momentum_coupling){
-      SourceTermFactory& factory = SourceTermFactory::self();
-      SourceTermBase& src = factory.retrieve_source_term( "coal_gas_momentum" );
-      const VarLabel* srcLabel = src.getSrcLabel();
-      tsk->requires(Task::NewDW, srcLabel, gn, 0);
-    }
-  // END KLUDGE ---------------------------------------------- 
+  // Adding new sources from factory:
+  SourceTermFactory& factor = SourceTermFactory::self(); 
+  for (vector<std::string>::iterator iter = d_new_sources.begin(); 
+      iter != d_new_sources.end(); iter++){
+
+    SourceTermBase& src = factor.retrieve_source_term( *iter ); 
+    const VarLabel* srcLabel = src.getSrcLabel(); 
+    tsk->requires(Task::NewDW, srcLabel, gn, 0); 
+
+  }
 
   sched->addTask(tsk, patches, matls);
 }
@@ -655,15 +667,18 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
       velocityVars.wFmms.initialize(0.0);
     }
 
-    // TOTAL KLUDGE FOR REACTING COAL---------------------------
-    // Keep commented out unless you know what you are doing!
-    if(d_momentum_coupling){
-       SourceTermFactory& factory = SourceTermFactory::self();
-       SourceTermBase& src = factory.retrieve_source_term( "coal_gas_momentum" );
-       const VarLabel* srcLabel = src.getSrcLabel();
-       new_dw->get( velocityVars.otherVectorSource, srcLabel, indx, patch, Ghost::None, 0);
+    // Adding new sources from factory:
+    SourceTermFactory& factor = SourceTermFactory::self(); 
+    for (vector<std::string>::iterator iter = d_new_sources.begin(); 
+       iter != d_new_sources.end(); iter++){
+
+      SourceTermBase& src = factor.retrieve_source_term( *iter ); 
+      const VarLabel* srcLabel = src.getSrcLabel(); 
+      // here we have made the assumption that the momentum source is always a vector... 
+      // and that we only have one.  probably want to fix this. 
+      new_dw->get( velocityVars.otherVectorSource, srcLabel, indx, patch, Ghost::None, 0); 
+
     }
-    // END KLUDGE ----------------------------------------------    
 
     //__________________________________
     //  compute coefficients
@@ -822,12 +837,11 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
                                         &velocityVars, &constVelocityVars);
     }
 
-    //KLUDGE
-    if(d_momentum_coupling){
+    if (d_new_sources.size() > 0){
+      // this is making an assumption about the source being a vector. 
       d_source->computeParticleSource(pc, patch, cellinfo,
-                                       &velocityVars, &constVelocityVars);
+                                      &velocityVars, &constVelocityVars);
     }
-    // end Kludge
 
     // Calculate the Velocity BCS
     //  inputs : densityCP, [u,v,w]VelocitySIVBC, [u,v,w]VelCoefPBLM

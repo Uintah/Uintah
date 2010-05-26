@@ -221,6 +221,7 @@ private:
    MultiMaterialInterface* d_mmInterface;
    MultiMaterialSGSModel* d_mmSGSModel;
 #endif
+   vector<string> d_new_sources; 
 
 
 }; // End class ScalarSolver

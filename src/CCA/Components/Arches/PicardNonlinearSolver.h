@@ -213,9 +213,6 @@ public:
   inline void setMMS(bool doMMS) {
     d_doMMS=doMMS;
   }
-  inline void setMomentumCoupling(bool doMC) {
-    d_momentum_coupling = doMC;
-  }
   inline bool getMMS() const {
     return d_doMMS;
   }
@@ -368,7 +365,6 @@ private:
   BoundaryCondition* d_boundaryCondition;
   // Turbulence Model
   TurbulenceModel* d_turbModel;
-  bool d_momentum_coupling;
   bool d_calScalar;
   bool d_reactingScalarSolve;
   bool d_enthalpySolve;
