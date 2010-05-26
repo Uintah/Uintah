@@ -67,7 +67,6 @@ DEALINGS IN THE SOFTWARE.
 #include <fstream>
 #include <sstream>
 
-
 using namespace Uintah;
 using namespace SCIRun;
 using namespace std;
@@ -85,11 +84,9 @@ AMRMPM::AMRMPM(const ProcessorGroup* myworld) :SerialMPM(myworld)
   flags->d_minGridLevel = 0;
   flags->d_maxGridLevel = 1000;
 
-  d_nextOutputTime=0.;
   d_SMALL_NUM_MPM=1e-200;
   NGP     = 1;
   NGN     = 1;
-  d_recompile = false;
   dataArchiver = 0;
 }
 
@@ -124,24 +121,6 @@ void AMRMPM::problemSetup(const ProblemSpecP& prob_spec,
       throw ProblemSetupException("Can't use implicit integration with -mpm",
                                    __FILE__, __LINE__);
     }
-
-    std::vector<std::string> bndy_face_txt_list;
-    mpm_soln_ps->get("boundary_traction_faces", bndy_face_txt_list);
-    
-    // convert text representation of face into FaceType
-    for(std::vector<std::string>::const_iterator ftit(bndy_face_txt_list.begin());
-        ftit!=bndy_face_txt_list.end();ftit++) {
-        Patch::FaceType face = Patch::invalidFace;
-        for(Patch::FaceType ft=Patch::startFace;ft<=Patch::endFace;
-            ft=Patch::nextFace(ft)) {
-          if(Patch::getFaceName(ft)==*ftit) face =  ft;
-        }
-        if(face!=Patch::invalidFace) {
-          d_bndy_traction_faces.push_back(face);
-        } else {
-          cerr << "warning: ignoring unknown face '" << *ftit<< "'" << endl;
-        }
-    }
   }
     
   //__________________________________
@@ -163,11 +142,6 @@ void AMRMPM::problemSetup(const ProblemSpecP& prob_spec,
   }
 
   d_sharedState->setParticleGhostLayer(Ghost::AroundNodes, NGP);
-
-  ProblemSpecP p = prob_spec->findBlock("DataArchiver");
-  if(!p->get("outputInterval", d_outputInterval))
-    d_outputInterval = 1.0;
-
 
   materialProblemSetup(restart_mat_ps, d_sharedState,flags);
 }
@@ -862,18 +836,6 @@ void AMRMPM::scheduleInitialErrorEstimate(const LevelP& coarseLevel,
   scheduleErrorEstimate(coarseLevel, sched);
 }
 
-//______________________________________________________________________
-//
-void AMRMPM::scheduleSwitchTest(const LevelP& level, 
-                                 SchedulerP& sched)
-{
-  Task* task = scinew Task("AMRMPM::switchTest",this, &AMRMPM::switchTest);
-
-  task->requires(Task::OldDW, d_sharedState->get_delt_label() );
-  task->computes(d_sharedState->get_switch_label(), level.get_rep());
-  sched->addTask(task, level->eachPatch(),d_sharedState->allMaterials());
-
-}
 //______________________________________________________________________
 //
 void AMRMPM::printParticleCount(const ProcessorGroup* pg,
@@ -1931,7 +1893,7 @@ void AMRMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
     vector<IntVector> ni(interpolator->size());
     vector<double> S(interpolator->size());
     Ghost::GhostType  gac = Ghost::AroundCells;
-
+//cout << " 111 " << endl;
     constNCVariable<Stencil7> ZOI_CUR,ZOI_FINE;
     new_dw->get(ZOI_CUR, lb->gZOILabel, 0, patch, gac, NGN);
 
@@ -1969,7 +1931,7 @@ void AMRMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       constNCVariable<Vector> gvelocity_star, gacceleration;
       constNCVariable<Vector> gv_star_coarse, gacc_coarse;
       constNCVariable<Vector> gv_star_fine, gacc_fine;
-      
+//cout << " 222 " << endl;      
       double Cp =mpm_matl->getSpecificHeat();
 
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
@@ -2008,24 +1970,26 @@ void AMRMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       new_dw->get(gvelocity_star,  lb->gVelocityStarLabel,   dwi,patch,gac,NGP);
       new_dw->get(gacceleration,   lb->gAccelerationLabel,   dwi,patch,gac,NGP);
 
+#if 0
       // Get finer level data
-      const Patch* finePatch = NULL;
-      // FIX: finePatch business
-      
+      const Patch* finePatch = NULL;  
+      Level::selectType finePatches; 
       
       if(getLevel(patches)->hasFinerLevel()){
+        patch->getFineLevelPatches(finePatches);
+      }
+      
+      if(finePatches.size() > 0){
          const Level* fineLevel = getLevel(patches)->getFinerLevel().get_rep();
-         Level::selectType finePatches;
-         patch->getFineLevelPatches(finePatches);
-         IntVector one(1,1,1);
+         
+         IntVector ghostCells(1,1,1);
          IntVector FH(-9999,-9999,-9999);
          IntVector FL(9999,9999,9999);
          
          for(int i=0;i<finePatches.size();i++){
             finePatch = finePatches[i];
-
             IntVector cl, ch, fl, fh;
-            getFineLevelRangeNodes(patch, finePatch, cl, ch, fl, fh, one);
+            getFineLevelRangeNodes(patch, finePatch, cl, ch, fl, fh, ghostCells);
             FL=Min(fl,FL);
             FH=Max(fh,FH);
          }
@@ -2036,7 +2000,7 @@ void AMRMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
          new_dw->getRegion(ZOI_FINE,      lb->gZOILabel, 0,
                                           fineLevel, FL, FH, false);
       }
-
+      
       // Get coarser level data
       if(getLevel(patches)->hasCoarserLevel()){
          const Level* coarseLevel = getLevel(patches)->getCoarserLevel().get_rep();
@@ -2050,15 +2014,13 @@ void AMRMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 //         new_dw->getRegion(zoi_coarse,     lb->gZOILabel, 0,
 //                                           coarseLevel, cl, ch, false);
       }
-
+#endif
       // Loop over particles
       //bool get_finer = true;
       //bool coarse_part = false;
       //int num_cur, num_fine, num_coarse;
       int n8or27=flags->d_8or27;
-
-      
-      
+         
       for(ParticleSubset::iterator iter = pset->begin();
           iter != pset->end(); iter++){
         particleIndex idx = *iter;
@@ -2075,21 +2037,24 @@ void AMRMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         interpolator->findCellAndWeights(px[idx],ni,S,psize[idx],pDeformationMeasure[idx]);    
 /*===========TESTING==========`*/
 
-        Vector vel(0.0,0.0,0.0);
+        Vector vel(-100.0,-100.0,0.0);
         Vector acc(0.0,0.0,0.0);
 
         // Accumulate the contribution from vertices on this level
  /*`==========TESTING==========*/
 #if 0
-       for (int k = 0; k < num_cur; k++) { 
-#endif
+//       for (int k = 0; k < num_cur; k++) { 
+
        for(int k = 0; k < n8or27; k++) {
-/*===========TESTING==========`*/
+
           IntVector node = ni[k];
           S[k] *= pErosion[idx];
           vel      += gvelocity_star[node]  * S[k];
           acc      += gacceleration[node]   * S[k];
         }
+#endif
+/*===========TESTING==========`*/        
+
         
         
 /*`==========TESTING==========*/
@@ -2141,69 +2106,7 @@ void AMRMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
     delete interpolator;
   }
 }
-//______________________________________________________________________
-//
-void AMRMPM::setParticleDefault(ParticleVariable<double>& pvar,
-                                const VarLabel* label, 
-                                ParticleSubset* pset,
-                                DataWarehouse* new_dw,
-                                double val)
-{
-  new_dw->allocateAndPut(pvar, label, pset);
-  ParticleSubset::iterator iter = pset->begin();
-  for (; iter != pset->end(); iter++) {
-    pvar[*iter] = val;
-  }
-}
 
-//______________________________________________________________________
-//
-void  AMRMPM::setParticleDefault(ParticleVariable<Vector>& pvar,
-                                 const VarLabel* label, 
-                                 ParticleSubset* pset,
-                                 DataWarehouse* new_dw,
-                              const Vector& val)
-{
-  new_dw->allocateAndPut(pvar, label, pset);
-  ParticleSubset::iterator iter = pset->begin();
-  for (; iter != pset->end(); iter++) {
-    pvar[*iter] = val;
-  }
-}
-//______________________________________________________________________
-//
-void 
-AMRMPM::setParticleDefault(ParticleVariable<Matrix3>& pvar,
-                              const VarLabel* label, 
-                              ParticleSubset* pset,
-                              DataWarehouse* new_dw,
-                              const Matrix3& val)
-{
-  new_dw->allocateAndPut(pvar, label, pset);
-  ParticleSubset::iterator iter = pset->begin();
-  for (; iter != pset->end(); iter++) {
-    pvar[*iter] = val;
-  }
-}
-//______________________________________________________________________
-//
-void AMRMPM::setSharedState(SimulationStateP& ssp)
-{
-  d_sharedState = ssp;
-}
-
-void AMRMPM::printParticleLabels(vector<const VarLabel*> labels,
-                                 DataWarehouse* dw, int dwi, 
-                                 const Patch* patch)
-{
-  for (vector<const VarLabel*>::const_iterator it = labels.begin(); 
-       it != labels.end(); it++) {
-    if (dw->exists(*it,dwi,patch))
-      cout << (*it)->getName() << " does exists" << endl;
-    else
-      cout << (*it)->getName() << " does NOT exists" << endl;
-  }
-}
 
 //______________________________________________________________________
 void
@@ -2370,98 +2273,5 @@ void AMRMPM::refine(const ProcessorGroup*,
 
 } // end refine()
 //______________________________________________________________________
-//
-void AMRMPM::scheduleCheckNeedAddMPMMaterial(SchedulerP& sched,
-                                             const PatchSet* patches,
-                                             const MaterialSet* matls)
-{
-  printSchedule(patches,cout_doing,"AMRMPM::scheduleCheckNeedAddMPMMateria\t\t");
 
-  int numMatls = d_sharedState->getNumMPMMatls();
-  Task* t = scinew Task("ARMMPM::checkNeedAddMPMMaterial",
-                  this, &AMRMPM::checkNeedAddMPMMaterial);
-  for(int m = 0; m < numMatls; m++){
-    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
-    ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
-    cm->scheduleCheckNeedAddMPMMaterial(t, mpm_matl, patches);
-  }
 
-  sched->addTask(t, patches, matls);
-}
-//______________________________________________________________________
-//
-void AMRMPM::checkNeedAddMPMMaterial(const ProcessorGroup*,
-                                     const PatchSubset* patches,
-                                     const MaterialSubset* ,
-                                     DataWarehouse* old_dw,
-                                     DataWarehouse* new_dw)
-{
-  for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
-    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
-    ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
-    cm->checkNeedAddMPMMaterial(patches, mpm_matl, old_dw, new_dw);
-  }
-}
-//______________________________________________________________________
-//
-void AMRMPM::scheduleSetNeedAddMaterialFlag(SchedulerP& sched,
-                                            const LevelP& level,
-                                            const MaterialSet* all_matls)
-{
-  printSchedule(level,cout_doing,"AMRMPM::scheduleSetNeedAddMaterialFlag\t\t");
-
-  Task* t= scinew Task("AMRMPM::setNeedAddMaterialFlag",
-                 this, &AMRMPM::setNeedAddMaterialFlag);
-  t->requires(Task::NewDW, lb->NeedAddMPMMaterialLabel);
-  sched->addTask(t, level->eachPatch(), all_matls);
-}
-//______________________________________________________________________
-//
-void AMRMPM::setNeedAddMaterialFlag(const ProcessorGroup*,
-                                       const PatchSubset* ,
-                                       const MaterialSubset* ,
-                                       DataWarehouse* ,
-                                       DataWarehouse* new_dw)
-{
-    sum_vartype need_add_flag;
-    new_dw->get(need_add_flag, lb->NeedAddMPMMaterialLabel);
-
-    if(need_add_flag < -0.1){
-      d_sharedState->setNeedAddMaterial(-99);
-      flags->d_canAddMPMMaterial=false;
-      cout << "AMRMPM setting NAM to -99" << endl;
-    }
-    else{
-      d_sharedState->setNeedAddMaterial(0);
-    }
-}
-//______________________________________________________________________
-//
-bool AMRMPM::needRecompile(double , double , const GridP& )
-{
-  if(d_recompile){
-    d_recompile = false;
-    return true;
-  }
-  else{
-    return false;
-  }
-}
-//______________________________________________________________________
-//
-void AMRMPM::switchTest(const ProcessorGroup* group,
-                        const PatchSubset* patches,
-                        const MaterialSubset* matls,
-                        DataWarehouse* old_dw,
-                        DataWarehouse* new_dw)
-{
-  int time_step = d_sharedState->getCurrentTopLevelTimeStep();
-  double sw = 0;
-  if (time_step == 6 )
-    sw = 1;
-  else
-    sw = 0;
-
-  max_vartype switch_condition(sw);
-  new_dw->put(switch_condition,d_sharedState->get_switch_label(),getLevel(patches));
-}
