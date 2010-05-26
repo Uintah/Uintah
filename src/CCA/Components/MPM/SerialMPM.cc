@@ -4389,10 +4389,6 @@ SerialMPM::setParticleDefault(ParticleVariable<Matrix3>& pvar,
   }
 }
 
-void SerialMPM::setSharedState(SimulationStateP& ssp)
-{
-  d_sharedState = ssp;
-}
 
 void SerialMPM::printParticleLabels(vector<const VarLabel*> labels,
                                     DataWarehouse* dw, int dwi, 
