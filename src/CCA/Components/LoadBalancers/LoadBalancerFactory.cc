@@ -33,6 +33,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/LoadBalancers/RoundRobinLoadBalancer.h>
 #include <CCA/Components/LoadBalancers/SimpleLoadBalancer.h>
 #include <CCA/Components/LoadBalancers/SingleProcessorLoadBalancer.h>
+#include <CCA/Components/LoadBalancers/ParticleLoadBalancer.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
@@ -77,9 +78,10 @@ LoadBalancerCommon* LoadBalancerFactory::create(ProblemSpecP& ps,
     bal = scinew RoundRobinLoadBalancer(world);
   } else if(loadbalancer == "SimpleLoadBalancer") {
     bal = scinew SimpleLoadBalancer(world);
-  } else if( (loadbalancer == "DLB") ||
-             (loadbalancer == "PLB") /* backward-compatibility*/) {
+  } else if(loadbalancer == "DLB") {
     bal = scinew DynamicLoadBalancer(world);
+  } else if(loadbalancer == "PLB") {
+    bal = scinew ParticleLoadBalancer(world);
   } else {
     bal = 0;   
     throw ProblemSetupException("Unknown load balancer", __FILE__, __LINE__);
