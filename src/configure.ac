@@ -1749,14 +1749,11 @@ AC_SUBST(CFLAGS)
 ##  --  Enable VisIt -----------------------------
 
 if test "$with_visit"; then
-   if test -z "$with_teem"; then
-      AC_MSG_ERROR( You must specify --with-teem=DIR when using --with-visit. )
-   fi                
    if test "$with_visit" == "yes"; then 
       AC_MSG_ERROR( You must provide a DIRECTORY when using --with-visit=DIR. )
    fi
-   if ! test -f "$with_visit/src/bin/xml2makefile"; then 
-      AC_MSG_ERROR( Could not find xml2makefile in $with_visit/src/bin/... )
+   if ! test -f "$with_visit/bin/xml2cmake"; then 
+      AC_MSG_ERROR( Could not find xml2cmake in $with_visit/bin/... )
    fi
 
    if test -f "./VisIt/udaReaderMTMD/Makefile.visit"; then

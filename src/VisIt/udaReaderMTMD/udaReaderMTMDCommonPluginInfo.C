@@ -1,6 +1,6 @@
 /*****************************************************************************
 *
-* Copyright (c) 2000 - 2009, Lawrence Livermore National Security, LLC
+* Copyright (c) 2000 - 2010, Lawrence Livermore National Security, LLC
 * Produced at the Lawrence Livermore National Laboratory
 * LLNL-CODE-400124
 * All rights reserved.
@@ -78,7 +78,14 @@ avtDatabase *
 udaReaderMTMDCommonPluginInfo::SetupDatabase(const char *const *list,
                                    int nList, int nBlock)
 {
-    return new avtGenericDatabase(
-               new avtMTMDFileFormatInterface(
-                   new avtudaReaderMTMDFileFormat(list[0])));
+    // ignore any nBlocks past 1
+    int nTimestepGroups = nList / nBlock;
+    avtMTMDFileFormat **ffl = new avtMTMDFileFormat*[nTimestepGroups];
+    for (int i = 0 ; i < nTimestepGroups ; i++)
+    {
+        ffl[i] = new avtudaReaderMTMDFileFormat(list[i*nBlock]);
+    }
+    avtMTMDFileFormatInterface *inter 
+           = new avtMTMDFileFormatInterface(ffl, nTimestepGroups);
+    return new avtGenericDatabase(inter);
 }

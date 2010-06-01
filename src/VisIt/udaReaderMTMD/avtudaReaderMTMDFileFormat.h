@@ -73,7 +73,7 @@ DEALINGS IN THE SOFTWARE.
 #ifndef AVT_udaReaderMTMD_FILE_FORMAT_H
 #define AVT_udaReaderMTMD_FILE_FORMAT_H
 
-#include <StandAlone/tools/uda2vis/particleData.h>
+#include <../../../StandAlone/tools/uda2vis/particleData.h>
 
 #include <avtMTMDFileFormat.h>
 

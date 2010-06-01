@@ -1,6 +1,6 @@
 /*****************************************************************************
 *
-* Copyright (c) 2000 - 2009, Lawrence Livermore National Security, LLC
+* Copyright (c) 2000 - 2010, Lawrence Livermore National Security, LLC
 * Produced at the Lawrence Livermore National Laboratory
 * LLNL-CODE-400124
 * All rights reserved.
@@ -71,7 +71,9 @@ class udaReaderMTMDGeneralPluginInfo : public virtual GeneralDatabasePluginInfo
     virtual const char *GetID() const;
     virtual bool  EnabledByDefault() const;
     virtual bool  HasWriter() const;
-    virtual std::vector<std::string>  GetDfltExtsFromGen() const;
+    virtual std::vector<std::string> GetDefaultFilePatterns() const;
+    virtual bool  AreDefaultFilePatternsStrict() const;
+    virtual bool  OpensWholeDirectory() const;
 };
 
 class udaReaderMTMDCommonPluginInfo : public virtual CommonDatabasePluginInfo, public virtual udaReaderMTMDGeneralPluginInfo

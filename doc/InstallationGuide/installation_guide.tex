@@ -332,23 +332,30 @@ ln -s ../lib/libteem.so libteem.so
 
 \subsection{VisIt Installation}
 
-\subsubsection{Client/Server}
-\label{subsec:ClientServer}
+The latest official release of VisIt is 2.0.0.  In this release, their build
+system has been changed to CMake, so building the UDA reader plugin for
+previous versions of VisIt will no longer be supported, and CMake is now also
+required to build the plugin.
 
-You will most likely want to install a VisIt server on a
-multiprocessor machine. This requires you to build the server from
-source (as it is needed to compile the UDA reading plugin). You can
-then install any client on your local machine and attach to the
-server.
+The UDA reader plugin must be built against an installed version of VisIt. 
+VisIt can be installed either from one of their binary distributions, or by
+compiling and installing it from source.  Building the plugin against a
+VisIt source tree no longer works.  Building VisIt from source may include
+fixes for bugs in the official releases, but is much more complicated and
+time consuming.  You may also need to build VisIt from source if a binary is
+not provided for your exact OS and MPI versions.  
+
+The VisIt source code is available two ways: a package for each official release, or from
+the svn repository maintained at NERSC.  The svn code may have bug fixes that
+are not in the official releases, but may have additional bugs and should not
+be considered stable.  The svn repository also includes all of the third party
+libraries that VisIt requires.  The script used to build VisIt is setup to 
+automatically download these dependencies, but often fails.
+
 
 \subsubsection{Caveats}
 \label{subsec:VisIt_Caveats}
 \begin{itemize}
-\item The official release of VisIt is version 1.12.  However, a
-  number of changes have been made to the VisIt trunk to support
-  Uintah data. To get these changes it is necessary to install version
-  2.0.  Make sure to use the v2.0 instructions below if this is the
-  version you wish to use.
 \item Before you install VisIt, a number of dependency files are
   required.  These include X11, GL, GLU, GLX, and libz libraries (it is possible
   that you will find these libraries in the following rpms:
@@ -363,49 +370,106 @@ server.
   make sure you specify the correct installation location in the
   beginning.
 \item Building VisIt from scratch can take a while.  As mentioned
-  below, you can \begin{verbatim}tail -f build_visit_log\end{verbatim} to watch the progress.
+  below, you can \begin{verbatim}tail -f build_visit_log\end{verbatim}
+  to watch the progress.
 
 \end{itemize}
 
 \subsubsection{Prebuilt binaries}
 \label{subsec:PrebuiltBinaries}
 
-Until VisIt 2.0 is officially released, binary distributions should not be
-used.  Instead, VisIt must be build from svn source revision 9152 (see below).
-
-\subsubsection{Building Version 2.0}
-\label{subsec:VisItVersion2_Build}
-
-The VisIt source code (the 'trunk') can be checked out from the
-repository maintained at NERSC:
-
+VisIt binary distributions consist of two files: a tarball and a install script,
+which are available from https://wci.llnl.gov/codes/visit/executables.html.  Download
+both to the same directory.  The tarball does not need to be extracted -- the 
+install script will do all of the work for you.  The syntax for the install script is:
 \begin{verbatim}
-mkdir ``new_visit_dir''
-cd ``new_visit_dir'' 
-svn co -r 9152 http://portal.nersc.gov/svn/visit/trunk/ .
+visit-install version platform directory
 \end{verbatim}
 
-Create a new 'build' directory inside ''new\_visit\_dir'':
+The version and platform should be apparent from the name of the tarball.  
+You may need to make the script executable, and may need to run it as root, depending
+on what directory you are installing it to.  For example, the 2.0.0 release for 
+Ubuntu could be installed with:
+\begin{verbatim}
+chmod +x visit-install
+./visit-install 2.0.0 linux-x86_64-ubuntu8 ``visit_bin_dir''
+\end{verbatim}
+
+If you are installing version 2.0.0, there was a bug in the release that
+hard codes an incorrect path to gcc and g++.  To fix it, open the file:
+\begin{verbatim}
+emacs ``visit_bin_dir''/2.0.0/``platform''/include/PluginVsInstall.cmake
+\end{verbatim}
+
+Comment out the following lines near the top of the file:
+\begin{verbatim}
+# Force the same compiler as VisIt
+SET(CMAKE_C_COMPILER /home/js9/bin/gcc)
+SET(CMAKE_CXX_COMPILER /home/js9/bin/g++)
+\end{verbatim}
+
+
+\subsubsection{Building from source}
+\label{subsec:VisItVersion2_Build}
+
+There are two ways to get the source for VisIt: download a packaged version from
+the VisIt webpage, or checkout a copy from the NERSC repository.
+
+If using a packaged version, download the source tarball (version 2.0
+or later) and the build\_visit script from
+https://wci.llnl.gov/codes/visit/source.html.  Extract the tarball,
+make a build directory inside the visit directory, and copy
+build\_visit into it:
+
+\begin{verbatim}
+tar xzf visit2.0.0.tar.gz
+cd visit2.0.0
+mkdir build
+cd build
+cp ../../build_visit .
+chmod +x build_visit
+\end{verbatim}
+
+The packaged VisIt source code includes code to generate example data
+files for testing, but building them often fails.  To avoid building them,
+delete or rename the data directory:
+
+\begin{verbatim}
+mv ../data ../data_ignore
+\end{verbatim}
+
+
+If building from svn source, check out the code from the svn repository:
+
+\begin{verbatim}
+mkdir ``visit_src_dir''
+cd ``visit_src_dir'' 
+svn co http://portal.nersc.gov/svn/visit/trunk/ .
+\end{verbatim}
+
+Just as with the packaged source, we will create a build directory in 
+the VisIt directory, and copy build\_visit into it.  In this case,
+the build\_visit script is inculded in the svn source code:
 
 \begin{verbatim}
 mkdir build
 cd build
-\end{verbatim}
-
-Copy the 'build\_visit' script into the build directory:
-
-\begin{verbatim}
 cp ../src/svn_bin/build_visit .
 chmod +x build_visit
 \end{verbatim}
 
 Copy the dependencies into the build directory. The build\_visit script
-normally fails when trying to download the dependencies.  Copying them
-skips the downloading phase.
+will download them if needed, but will sometimes fail (particularly when
+building from svn source).  Copying them
+skips the downloading phase.  These dependencies are included in svn, but
+not in the source code packaged for the official releases.
 
 \begin{verbatim}
 cp ../third_party/*.tar.gz .
+cp ../third_party/*.tgz .
 \end{verbatim}
+
+The remaining directions are the same for both svn and packaged builds.
 
 Run the 'build\_visit' script (in order to just build the dependencies):
 
@@ -413,63 +477,55 @@ Run the 'build\_visit' script (in order to just build the dependencies):
 ./build_visit --makeflags -j# --no-visit
 \end{verbatim}
 
-Replace '\#' with the number of processors you want to use.
+Replace '\#' with the number of processors you want to use.  This
+will launch the normal dialog window, where you should select
+the ``Parallel'' option.  (Use the arrow keys and the space bar.)
 
-This would launch the normal dialog window, where you should select
-the ''Parallel'' option.  (Use the arrow keys and the space bar.)
-
-At the end of this process, a config file would be generated. It will
-be named ``your\_machine\_name''.conf. Copy this into the
-''../src/config-site'' folder,
+At the end of this process, cmake a config file would be generated. It will
+be named ``your\_machine\_name''.cmake. Copy this into the
+``../src/config-site'' folder:
 
 \begin{verbatim}
-cp ``your_machine_name''.conf ../src/config-site
+cp ``your_machine_name''.cmake ../src/config-site
 \end{verbatim}
 
-Change directory to the ''src'' folder and run configure,
+
+Before you run cmake, check your ``your\_machine\_name''.cmake
+and make sure that the VISIT\_MPI\_COMPILER variable is set, and add
+a line to set it if it isn't.  It should look something like this:
+
+\begin{verbatim}
+VISIT_OPTION_DEFAULT(VISIT_MPI_COMPILER /usr/bin/mpic++)
+\end{verbatim}
+
+Change directory to the ``src'' folder and run cmake (version 2.8 or
+later of cmake is required for VisIt 2.0, which is included in the 
+third party dependencies that the build\_visit script builds:
 
 \begin{verbatim}
 cd ../src
-./configure --enable-parallel
+../build/visit/cmake/2.8.0/linux-x86_64_gcc-4.4/bin/cmake \
+ -DVISIT_PARALLEL:BOOL=ON \
+ -DCMAKE_INSTALL_PREFIX:PATH=/path/to/``visit_bin_dir'' \
+ .
 \end{verbatim}
 
-Before you run configure, check your ``your\_machine\_name''.conf
-file: Both The CFLAGS and the CXXFLAGS compiler flags should have the
-'-I/<your\_open\_mpi\_path>/include' set. If not please set them on the
-''configure'' command, i.e. something like:
 
-\begin{verbatim}
-./configure --enable-parallel CXXFLAGS=-I/usr/local/openmpi/include CFLAGS=-I/usr/local/openmpi
-\end{verbatim}
-
-Note, you can alternatively set these in your .conf file.
-
-After the configure process is over, run make:  (See below for
+After the cmake process is over, run make:  (See below for
 information on common errors that occur during the 'make' process.)
 
 \begin{verbatim}
 make -j#
+make install
 \end{verbatim}
 
-where '\#' is the number of processors to use while building.
+where '\#' is the number of processors to use while building.  You
+may need to be root to install it, depending on where your
+``visit\_bin\_dir'' is.
 
 As usual, cross your fingers. If everything goes fine, you can find
-the visit executable in the ''bin'' folder, which is inside the
-''src'' folder.
+the visit executable in ``visit\_bin\_dir''/bin.
 
-P.S.: When you run 'make', you may encounter this error:
-
-\begin{verbatim}
-error: `VERSION' was not declared in this scope
-\end{verbatim}
-
-If so, add in the line:
-
-\begin{verbatim}
-#define VERSION ``2.0.0''
-\end{verbatim}
-
-to the file, ./include/visit-config.h and run make again.
 
 \subsubsection{Parallel OS X build}
 \label{sec:ParallelOSXBuild}
@@ -485,10 +541,10 @@ instructions for building in parallel on a Mac.
 Note particularly the changes that need to be made in the file, 
 
 \begin{verbatim}
-<path\_to\_visit>/visit1.11.2/src/config-site/<your_machine_name>.conf
+<path\_to\_visit\_src>/config-site/<your_machine_name>.cmake
 \end{verbatim}
 
-\normalfont Once you make these edits, you can then finish building VisIt by typing make in the \tt <path\_to\_visit>/visit1.11.2/src \normalfont directory.  
+\normalfont Once you make these edits, you can then finish building VisIt by typing make in the \tt <path\_to\_visit>/src \normalfont directory.  
 
 \subsubsection{When the build script fails}
 \label{sec:WhenTheBuildsSriptFails}
@@ -499,7 +555,7 @@ by hand. The instructions for doing this are carefully outlined in the
 VisIt Build Notes file,
 
 \begin{verbatim}
-https://wci.llnl.gov/codes/visit/1.11.2/BUILD_NOTES
+https://wci.llnl.gov/codes/visit/2.0.0/BUILD_NOTES
 \end{verbatim}
 
 \subsubsection{VisIt executable}
@@ -508,8 +564,12 @@ https://wci.llnl.gov/codes/visit/1.11.2/BUILD_NOTES
 After a successful build, the executable will be placed in,
 
 \begin{verbatim}
-<path\to\visit>/visit1.11.2/src/bin
+``visit_bin_dir''/bin/
 \end{verbatim}
+
+where ``visit\_bin\_dir'' is the directory specified either for the
+visit\_install script if using a prebuilt binary, or for cmake if
+building VisIt from source.
 
 \subsubsection{Building and installing the UDA reader plugin}
 \label{sec:BuildingAndInstallingUDAPlugin}
@@ -517,21 +577,19 @@ After a successful build, the executable will be placed in,
 Add the following arguments to the \textbf{Uintah} configure line,
 
 \begin{verbatim}
---with-visit=/path/to/visit 
---with-teem=/path/to/teem
+--with-visit=/path/to/visit
 \end{verbatim}
 
 For example,
 
 \begin{verbatim}
---with-teem=/usr/sci/projects/Manta/Thirdparty/Linux/gcc-4.1.2-64bit/teem \
---with-visit=/home/csafe/dav/VisIt/blaze/visit1.11.2 \
+--with-visit=/home/csafe/dav/VisIt/blaze/visit \
 \end{verbatim}
 
-Note, the \tt visit1.11.2 \normalfont directory you point at should
-have \tt data\normalfont , and \tt src \normalfont sub-directories;
-and the \tt teem \normalfont directory should have \tt bin\normalfont
-, \tt include\normalfont , and \tt lib \normalfont sub-directories.
+Note, the \tt visit \normalfont directory you point at should
+have \tt data\normalfont , and \tt bin \normalfont sub-directories,
+and a sub-directory for each version of visit installed.  This is the
+installation directory, not the source directory.
 
 \subsubsection{How it works}
 By specifying the above configure arguments (to the \textbf{Uintah}
@@ -732,7 +790,7 @@ then do NOT use the \TT{--with-team} and \TT{--with-visit} shown below!)
 ../src/configure                 \
           --enable-debug         \
           --with-teem=/usr/local \
-          --with-visit=/home/user_name/VisIt/visit1.11.2
+          --with-visit=/home/user_name/VisIt/
 \end{verbatim}
 
 If building on a 64bit platform, append \TT{--enable-64bit} to the
@@ -748,7 +806,7 @@ enter the following configure line:
           '--enable-optimize=-03 -mfpmath=sse' \
           --enable-assertion-level=0          \
           --with-teem=/usr/local              \
-          --with-visit=/home/user_name/VisIt/visit1.11.2
+          --with-visit=/home/user_name/VisIt/
 \end{verbatim}
 
 The debug/optimize flags do the following:  --enable-debug adds ``-g''
