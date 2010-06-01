@@ -70,12 +70,13 @@ $(links_to_create) :
 ${VISIT_SRCDIR}/Makefile.visit : lib/libStandAlone_tools_uda2vis.${SO_OR_A_FILE}
 	@echo create visit makefile
 	@cd ${VISIT_SRCDIR}; \
-	  rm -f Makefile.visit; \
-	  mv Makefile Makefile.sci; \
-	  ${VISIT_INSTALL_DIR}/src/bin/xml2makefile -private -clobber udaReaderMTMD.xml; \
-	  ${VISIT_INSTALL_DIR}/src/bin/xml2info -clobber udaReaderMTMD.xml; \
-	  sed -e "s,^CPPFLAGS=,CPPFLAGS=-I${OBJTOP_ABS} -I${SRCTOP_ABS} ," Makefile > Makefile.visit; \
-	  mv Makefile.sci Makefile
+ 	  rm -f Makefile.visit; \
+ 	  mv Makefile Makefile.sci; \
+ 	  ${VISIT_INSTALL_DIR}/bin/xml2cmake -private -clobber udaReaderMTMD.xml; \
+ 	  ${VISIT_INSTALL_DIR}/bin/xml2info -clobber udaReaderMTMD.xml; \
+	  cmake .; \
+	  sed -e "s,^CPPFLAGS=,CPPFLAGS=-I${OBJTOP_ABS} -I${SRCTOP_ABS} ," Makefile > Makefile.visit; 
+
 
 #
 # The following says that the .C file is dependent on the .C.in file.  If the .C file is out of date,

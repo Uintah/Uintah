@@ -11506,19 +11506,14 @@ sci_defs_files="$sci_defs_files include/sci_defs/thread_testdefs.h"
 ##  --  Enable VisIt -----------------------------
 
 if test "$with_visit"; then
-   if test -z "$with_teem"; then
-      { { echo "$as_me:$LINENO: error: You must specify --with-teem=DIR when using --with-visit. " >&5
-echo "$as_me: error: You must specify --with-teem=DIR when using --with-visit. " >&2;}
-   { (exit 1); exit 1; }; }
-   fi
    if test "$with_visit" == "yes"; then
       { { echo "$as_me:$LINENO: error: You must provide a DIRECTORY when using --with-visit=DIR. " >&5
 echo "$as_me: error: You must provide a DIRECTORY when using --with-visit=DIR. " >&2;}
    { (exit 1); exit 1; }; }
    fi
-   if ! test -f "$with_visit/src/bin/xml2makefile"; then
-      { { echo "$as_me:$LINENO: error: Could not find xml2makefile in $with_visit/src/bin/... " >&5
-echo "$as_me: error: Could not find xml2makefile in $with_visit/src/bin/... " >&2;}
+   if ! test -f "$with_visit/bin/xml2cmake"; then
+      { { echo "$as_me:$LINENO: error: Could not find xml2cmake in $with_visit/bin/... " >&5
+echo "$as_me: error: Could not find xml2cmake in $with_visit/bin/... " >&2;}
    { (exit 1); exit 1; }; }
    fi
 
