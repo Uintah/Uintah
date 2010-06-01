@@ -133,7 +133,6 @@ Kayenta::Kayenta(ProblemSpecP& ps,MPMFlags* Mflag)
   int nx;
   char* namea[5000];
   char* keya[5000];
-  double rinit[100];
   double rdim[700];
   int iadvct[100];
   int itype[100];
@@ -142,6 +141,9 @@ Kayenta::Kayenta(ProblemSpecP& ps,MPMFlags* Mflag)
 
   d_NINSV=nx;
   cout << "d_NINSV = " << d_NINSV << endl;
+//  for(int i = 0;i<d_NINSV; i++){
+//    cout << rinit[i] << endl;
+//  }
 
   initializeLocalMPMLabels();
 }
@@ -383,8 +385,9 @@ void Kayenta::initializeCMData(const Patch* patch,
     new_dw->allocateAndPut(ISVs[i],ISVLabels[i], pset);
     ParticleSubset::iterator iter = pset->begin();
     for(;iter != pset->end(); iter++){
-      ISVs[i][*iter] = 0.0;
+      ISVs[i][*iter] = rinit[i];
     }
+//    cout << "RINIT[" << i << "] = " << rinit[i] << endl;
   }
 
   ParticleVariable<double> peakI1IDist;
