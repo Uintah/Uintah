@@ -337,6 +337,7 @@ TabPropsInterface::getState( const ProcessorGroup* pc,
        
         CCVariable<double>* the_var = new CCVariable<double>; 
         new_dw->allocateAndPut( *the_var, i->second, matlIndex, patch ); 
+        (*the_var).initialize(0.0);
 
         depend_storage.insert( make_pair( i->first, the_var )).first; 
         
