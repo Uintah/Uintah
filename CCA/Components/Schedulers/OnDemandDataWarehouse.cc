@@ -1747,10 +1747,14 @@ OnDemandDataWarehouse::getRegion(constGridVariableBase& constVar,
   Patch::VariableBasis basis = Patch::translateTypeToBasis(label->typeDescription()->getType(), false);
 
   IntVector adjustment = IntVector(1,1,1);
-  if (basis == Patch::XFaceBased) adjustment = IntVector(1,0,0);
-  else if (basis == Patch::YFaceBased) adjustment = IntVector(0,1,0);
-  else if (basis == Patch::ZFaceBased) adjustment = IntVector(0,0,1);
-
+  if (basis == Patch::XFaceBased){
+     adjustment = IntVector(1,0,0);
+  }else if (basis == Patch::YFaceBased){
+    adjustment = IntVector(0,1,0);
+  }else if (basis == Patch::ZFaceBased){ 
+    adjustment = IntVector(0,0,1);
+  }
+  
   Patch::selectType patches;
   
   // if in AMR and one node intersects from another patch and that patch is missing
@@ -1780,21 +1784,27 @@ OnDemandDataWarehouse::getRegion(constGridVariableBase& constVar,
       l = Max(patch->getLowIndex(basis), low);
       h = Min(patch->getHighIndex(basis), high);
     }
-    if (l.x() >= h.x() || l.y() >= h.y() || l.z() >= h.z())
+    
+    if (l.x() >= h.x() || l.y() >= h.y() || l.z() >= h.z()){
       continue;
-
+    }
     vector<Variable*> varlist;
     d_varDB.getlist(label, matlIndex, patch, varlist);
     GridVariableBase* v=NULL;
+    
     for (int i = static_cast<int>(varlist.size()) -1 ; i >=0; --i) {
       v = dynamic_cast<GridVariableBase*>(varlist[i]);
       //verify that the variable is valid and matches the dependencies requirements.
-      if (v->isValid() && Min(l, v->getLow()) == v->getLow()  &&  Max(h, v->getHigh()) == v->getHigh())  //find a completed region
+      if (v->isValid() && Min(l, v->getLow()) == v->getLow()  &&  Max(h, v->getHigh()) == v->getHigh()){  //find a completed region
         break;
-      if (i == 0) v = NULL;
+      }
+      if (i == 0){
+        v = NULL;
+      }
     }
-      // just like a "missing patch": got data on this patch, but it either corresponds to a different
-      // region or is incomplete"
+    
+    // just like a "missing patch": got data on this patch, but it either corresponds to a different
+    // region or is incomplete"
     if (v == NULL){
       missing_patches.push_back(patch->getRealPatch());
       continue;
@@ -1819,7 +1829,8 @@ OnDemandDataWarehouse::getRegion(constGridVariableBase& constVar,
     delete tmpVar;
     IntVector diff(h-l);
     totalCells += diff.x()*diff.y()*diff.z();
-  }
+  }  // patches loop
+  
   IntVector diff(high-low);
 
   if (diff.x()*diff.y()*diff.z() > totalCells && missing_patches.size() > 0) {
