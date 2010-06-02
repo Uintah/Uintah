@@ -174,10 +174,10 @@ void AMRMPM::scheduleInitialize(const LevelP& level, SchedulerP& sched)
 {
 
   if (flags->doMPMOnLevel(level->getIndex(), level->getGrid()->numLevels())){
-    cout << "doMPMOnLevel = " << level->getIndex() << endl;
+    proc0cout << "doMPMOnLevel = " << level->getIndex() << endl;
   }
   else{
-    cout << "DontDoMPMOnLevel = " << level->getIndex() << endl;
+    proc0cout << "DontDoMPMOnLevel = " << level->getIndex() << endl;
   }
   
   if (!flags->doMPMOnLevel(level->getIndex(), level->getGrid()->numLevels()))
@@ -319,6 +319,10 @@ void AMRMPM::scheduleTimeAdvance(const LevelP & inlevel,
 //
 void AMRMPM::scheduleFinalizeTimestep( const LevelP& level, SchedulerP& sched)
 {
+
+  const PatchSet* patches = level->eachPatch();
+  scheduleCountParticles(patches,sched);
+  
   if (level->getIndex() == 0) {
     const MaterialSet* matls = d_sharedState->allMPMMaterials();
     sched->scheduleParticleRelocation(level, lb->pXLabel_preReloc,
@@ -408,7 +412,6 @@ void AMRMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
   t->computes(lb->gVelocityLabel);
   t->computes(lb->gTemperatureLabel);
   t->computes(lb->gExternalForceLabel);
-  t->computes(lb->TotalMassLabel);
   
   sched->addTask(t, patches, matls);
 }
@@ -500,7 +503,6 @@ void AMRMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
   t->computes(lb->gVolumeLabel);
   t->computes(lb->gVelocityLabel);
   t->computes(lb->gExternalForceLabel);
-  t->computes(lb->TotalMassLabel);
 
   sched->addTask(t, patches, matls);
 
@@ -724,6 +726,7 @@ void AMRMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->computes(lb->pSizeLabel_preReloc);
   t->computes(lb->pXXLabel);
 
+  t->computes(lb->TotalMassLabel);
   t->computes(lb->KineticEnergyLabel);
   t->computes(lb->ThermalEnergyLabel);
   t->computes(lb->CenterOfMassPositionLabel);
@@ -975,8 +978,7 @@ void AMRMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       // Vector from the individual mass matrix and velocity vector
       // GridMass * GridVelocity =  S^T*M_D*ParticleVelocity
       
-      double totalmass = 0;
-      Vector total_mom(0.0,0.0,0.0);
+      
       Vector pmom;
       int n8or27=flags->d_8or27;
 
@@ -990,7 +992,6 @@ void AMRMPM::interpolateParticlesToGrid(const ProcessorGroup*,
         interpolator->findCellAndWeights(px[idx],ni,S,psize[idx],pDeformationMeasure[idx]);
 
         pmom = pvelocity[idx]*pmass[idx];
-        total_mom += pmom;
 
         // Add each particles contribution to the local mass & velocity 
         // Must use the node indices
@@ -1011,7 +1012,6 @@ void AMRMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       for(NodeIterator iter=patch->getExtraNodeIterator();
                        !iter.done();iter++){
         IntVector c = *iter; 
-        totalmass         += gmass[c];
         gvelocity[c]      /= gmass[c];
         gTemperature[c]   /= gmass[c];
       }
@@ -1020,8 +1020,6 @@ void AMRMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       MPMBoundCond bc;
       bc.setBoundaryCondition(patch,dwi,"Temperature",gTemperature,interp_type);
       bc.setBoundaryCondition(patch,dwi,"Symmetric",  gvelocity,   interp_type);
-
-      new_dw->put(sum_vartype(totalmass), lb->TotalMassLabel);
     }  // End loop over materials
 
     delete interpolator;
@@ -1882,7 +1880,7 @@ void AMRMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     printTask(patches, patch,cout_doing, "Doing interpolateToParticlesAndUpdate\t\t\t");
-
+    double totalmass = 0;
     double thermal_energy = 0.0;
     double ke = 0;
     Vector CMX(0.0,0.0,0.0);
@@ -1893,7 +1891,7 @@ void AMRMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
     vector<IntVector> ni(interpolator->size());
     vector<double> S(interpolator->size());
     Ghost::GhostType  gac = Ghost::AroundCells;
-//cout << " 111 " << endl;
+
     constNCVariable<Stencil7> ZOI_CUR,ZOI_FINE;
     new_dw->get(ZOI_CUR, lb->gZOILabel, 0, patch, gac, NGN);
 
@@ -1931,7 +1929,6 @@ void AMRMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       constNCVariable<Vector> gvelocity_star, gacceleration;
       constNCVariable<Vector> gv_star_coarse, gacc_coarse;
       constNCVariable<Vector> gv_star_fine, gacc_fine;
-//cout << " 222 " << endl;      
       double Cp =mpm_matl->getSpecificHeat();
 
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
@@ -2080,19 +2077,21 @@ void AMRMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         pmassNew[idx]        = pmass[idx];
         pvolumeNew[idx]      = pvolume[idx];
         
-
+        totalmass      += pmass[idx];
         thermal_energy += pTemperature[idx] * pmass[idx] * Cp;
-        ke += .5*pmass[idx]*pvelocitynew[idx].length2();
-        CMX = CMX + (pxnew[idx]*pmass[idx]).asVector();
-        totalMom += pvelocitynew[idx]*pmass[idx];
+        ke             += .5*pmass[idx] * pvelocitynew[idx].length2();
+        CMX            = CMX + (pxnew[idx] * pmass[idx]).asVector();
+        totalMom       += pvelocitynew[idx] * pmass[idx];
         
       }
       new_dw->deleteParticles(delset);  
-     
+      
+      new_dw->put(sum_vartype(totalmass),       lb->TotalMassLabel);
       new_dw->put(sum_vartype(ke),              lb->KineticEnergyLabel);
       new_dw->put(sum_vartype(thermal_energy),  lb->ThermalEnergyLabel);
       new_dw->put(sumvec_vartype(CMX),          lb->CenterOfMassPositionLabel);
       new_dw->put(sumvec_vartype(totalMom),     lb->TotalMomentumLabel);
+      
       //__________________________________
       //  particle debugging label-- carry forward
       if (flags->d_with_color) {
@@ -2116,14 +2115,15 @@ AMRMPM::initialErrorEstimate(const ProcessorGroup*,
                                 DataWarehouse*,
                                 DataWarehouse* new_dw)
 {
+  const Level* level = getLevel(patches);
+    
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     printTask(patches, patch,cout_doing,"Doing initialErrorEstimate\t\t\t\t");
 
     CCVariable<int> refineFlag;
     PerPatch<PatchFlagP> refinePatchFlag;
-    new_dw->getModifiable(refineFlag, d_sharedState->get_refineFlag_label(),
-                          0, patch);
+    new_dw->getModifiable(refineFlag, d_sharedState->get_refineFlag_label(), 0, patch);
     new_dw->get(refinePatchFlag, d_sharedState->get_refinePatchFlag_label(),
                 0, patch);
 
@@ -2133,14 +2133,16 @@ AMRMPM::initialErrorEstimate(const ProcessorGroup*,
     for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
+      
       // Loop over particles
       ParticleSubset* pset = new_dw->getParticleSubset(dwi, patch);
+      
       constParticleVariable<Point> px;
       new_dw->get(px, lb->pXLabel, pset);
       
-      for(ParticleSubset::iterator iter = pset->begin();
-          iter != pset->end(); iter++){
-        refineFlag[patch->getLevel()->getCellIndex(px[*iter])] = true;
+      for(ParticleSubset::iterator iter = pset->begin(); iter != pset->end(); iter++){
+        IntVector c = level->getCellIndex(px[*iter]);
+        refineFlag[c] = true;
         refinePatch->set();
       }
     }
@@ -2273,5 +2275,39 @@ void AMRMPM::refine(const ProcessorGroup*,
 
 } // end refine()
 //______________________________________________________________________
-
-
+// Debugging Task that counts the number of particles in the domain.
+void AMRMPM::scheduleCountParticles(const PatchSet* patches,
+                                    SchedulerP& sched)
+{
+  printSchedule(patches,cout_doing,"AMRMPM::scheduleCountParticles\t\t\t");
+  Task* t = scinew Task("AMRMPM::countParticles",this, 
+                        &AMRMPM::countParticles);
+  t->computes(lb->partCountLabel);
+  sched->addTask(t, patches, d_sharedState->allMPMMaterials());                      
+}
+//______________________________________________________________________
+//
+void AMRMPM::countParticles(const ProcessorGroup*,
+                            const PatchSubset* patches,                      
+                            const MaterialSubset*,             
+                            DataWarehouse* old_dw,                           
+                            DataWarehouse* new_dw)                           
+{
+  long int totalParticles=0;
+  int numMPMMatls = d_sharedState->getNumMPMMatls();
+  
+  for (int p = 0; p<patches->size(); p++) {
+    const Patch* patch = patches->get(p);
+    
+    printTask(patches,patch,cout_doing,"Doing countParticles\t\t\t");
+    
+    for(int m = 0; m < numMPMMatls; m++){
+      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+      int dwi = mpm_matl->getDWIndex();
+      
+      ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
+      totalParticles += pset->end() - pset->begin();
+    }
+  }
+  new_dw->put(sumlong_vartype(totalParticles), lb->partCountLabel);
+}                                
