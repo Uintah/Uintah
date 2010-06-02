@@ -976,43 +976,26 @@ to find explicit examples of the use of these models, and others not
 described below.
 
 \begin{enumerate}
-\item{\bf Compressible Neo-Hookean Models} There are a number of implementations
-based on a hyperelastic-plastic model described by Simo and
-Hughes\cite{simo1998} (pp. 307 -- 321).  Several of these models should be 
-combined, but for now, they are separate.  Below the usage for each is
-given.  These models are very robust, and hyperelastic models don't
-require rotation back and forth between laboratory and material frames of
-reference.
+\item{\bf Compressible Neo-Hookean Model} There are implementations of several
+hyperelastic-plastic model described by Simo and Hughes\cite{simo1998} (pp. 307 -- 321). 
+ The model is dubbed "Unified Compressible Neo-Nookean Model" or UCNH for short. 
+ Plastic flow and failure can be modelled in addition to elasticity by  specifying 
+several additional options with input flags. This models is very robust, and relatively 
+straightforward because hyperelastic models don't require rotation back and forth 
+between laboratory and material frames of reference.
 
-\tt <comp\_neo\_hook> \normalfont is a basic elastic model.
+\tt <UCNH> \normalfont is a basic elastic model.
 
-\begin{Verbatim}[fontsize=\footnotesize]
-                <constitutive_model type="comp_neo_hook">
-                    <bulk_modulus>2000.0</bulk_modulus>
-                    <shear_modulus>1500.0</shear_modulus>
-                </constitutive_model>
-\end{Verbatim}
-
-\tt <comp\_neo\_hook\_plastic> \normalfont is the basic elastic model extended
+\tt <usePlasticity> \normalfont tells Uintah to use the basic elastic model extended
 to include plasticity with isotropic linear hardening.
 
-\begin{Verbatim}[fontsize=\footnotesize]
-                <constitutive_model type="comp_neo_hook_plastic">
-                  <bulk_modulus>2000.0</bulk_modulus>
-                  <shear_modulus>1500.0</shear_modulus>
-                  <yield_stress>100.0</yield_stress>
-                  <hardening_modulus>500.0</hardening_modulus>
-                  <alpha> 0.0 </alpha>  <!-- optional defaults to 0.0 -->
-                </constitutive_model>
-\end{Verbatim}
-
-\tt <cnh\_damage> \normalfont is a basic elastic model, with an extension
+\tt <useDamage> \normalfont tells Uintah to use a basic elastic model, with an extension
 to failure based on a stress or strain as given below, thus yielding an
 elastic-brittle failure model.  This model also allows a distribution
 of failure strain (or stress) based on normal or Weibull distributions.
 Note that the post-failure behaviour of simulations is not always robust.
 
-When either this or the subsequent model is chosen, one must also specify
+When specifying \tt <useDamage> \normalfont, one must also specify
 the following MPMFlag
 \begin{Verbatim}[fontsize=\footnotesize]
      <!-- choices are: "AllowNoTension", "ZeroStress" -->
@@ -1020,35 +1003,25 @@ the following MPMFlag
 \end{Verbatim}
 in the \tt <MPM> \normalfont section of the input file.
 
-\begin{Verbatim}[fontsize=\footnotesize]
-            <constitutive_model type="cnh_damage">
-                 <bulk_modulus> 8.9e9  </bulk_modulus>
-                 <shear_modulus>3.52e9  </shear_modulus>
-
-                  <!-- choices are true or false (default) -->
-                  <failure_by_stress>true </failure_by_stress>
-
-                 <!-- when failure_by_stress is true, values are stress not strain -->
-                 <failure_strain_mean> 900 </failure_strain_mean>
-                 <failure_strain_std> 0.1 </failure_strain_std>
-
-                 <!-- choices are "constant", "gauss" or "weibull" -->
-                 <failure_strain_distrib> "constant" </failure_strain_distrib>
-            </constitutive_model>
-\end{Verbatim}
-
-\tt <cnhp\_damage> \normalfont is the elastic plastic model above, with an extension
+\tt <useDamage> \normalfont and \tt <usePlasticity> \normalfont has an extension
 to failure based on a stress or strain as given below, thus yielding an
 elastic-plastic model with failure.  Note that the post-failure behaviour of
 simulations is not always robust.
 
 \begin{Verbatim}[fontsize=\footnotesize]
-            <constitutive_model type="cnhp_damage">
+            <constitutive_model type="UCNH"> 
+              <!-- Necessary flags for all CNH models -->
                <bulk_modulus> 8.9e9  </bulk_modulus>
                <shear_modulus>3.52e9  </shear_modulus>
+               <useModifiedEOS> true  </useModifiedEOS>
+                
+              <!-- Plasticity Parameters -->
+               <usePlasticity> true </usePlasticity>
                <yield_stress>100.0</yield_stress>
                <hardening_modulus>500.0</hardening_modulus>
 
+              <!-- Damage Parameters -->
+               <useDamage> true </useDamage>
                <!-- choices are true or false (default) -->
                <failure_by_stress>true </failure_by_stress>
 
