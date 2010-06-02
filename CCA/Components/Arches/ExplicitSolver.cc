@@ -542,7 +542,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     for (EqnFactory::EqnMap::iterator iter = scalar_eqns.begin(); iter != scalar_eqns.end(); iter++){
       EqnBase* eqn = iter->second; 
       //Transport is constructed above.  Here we only solve if densityGuess is not used. 
-      if ( eqn->getDensityGuessBool() )
+      if ( !eqn->getDensityGuessBool() )
         eqn->sched_solveTransportEqn( level, sched, curr_level ); 
     }
     // Clean up after Scalar equation evaluations  
