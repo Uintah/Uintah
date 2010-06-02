@@ -251,6 +251,20 @@ protected:
                                                        const PatchSet*,
                                                        const MaterialSet*);
   
+  //
+  //  count the total number of particles in the domain
+  //
+  void scheduleCountParticles(const PatchSet* patches,
+                               SchedulerP& sched);
+                                                                                         
+  void countParticles(const ProcessorGroup*,
+                      const PatchSubset* patches,                            
+                      const MaterialSubset*,                   
+                      DataWarehouse* old_dw,                                 
+                      DataWarehouse* new_dw);                 
+                            
+
+  
   
   SimulationStateP d_sharedState;
   MPMLabel* lb;
