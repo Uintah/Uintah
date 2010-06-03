@@ -225,9 +225,9 @@ void CompMooneyRivlin::computeStressTensor(const PatchSubset* patches,
     old_dw->get(delT, lb->delTLabel, getLevel(patches));
 
     Ghost::GhostType  gac   = Ghost::AroundCells;
-    old_dw->get(psize,               lb->pSizeLabel,                     pset);
     old_dw->get(px,                  lb->pXLabel,                        pset);
     old_dw->get(pmass,               lb->pMassLabel,                     pset);
+    old_dw->get(psize,               lb->pSizeLabel,                     pset);
     old_dw->get(pvelocity,           lb->pVelocityLabel,                 pset);
     old_dw->get(deformationGradient, lb->pDeformationMeasureLabel,       pset);
     new_dw->allocateAndPut(pstress,  lb->pStressLabel_preReloc,          pset);

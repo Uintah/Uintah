@@ -334,9 +334,6 @@ void SoilFoam::computeStressTensor(const PatchSubset* patches,
     delt_vartype delT;
     old_dw->get(delT, lb->delTLabel, getLevel(patches));
 
-    // for thermal stress
-    constParticleVariable<double> pTempPrevious; 
-
     Ghost::GhostType  gac   = Ghost::AroundCells;
 
     old_dw->get(px,                  lb->pXLabel,                  pset);
