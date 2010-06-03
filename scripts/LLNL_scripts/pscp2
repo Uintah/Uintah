@@ -152,7 +152,7 @@ echo "yes."
 echo -n "  Testing: does $REMOTEDIR_PARENT exist on the remote machine... "
 
 #create a script that checks if a file exists and outputs 0 if it does
-command="echo -e '#!/bin/sh\n[ -d $REMOTEDIR_PARENT ] && echo 0' > .testfile"
+command="echo -e '#!/bin/sh\n[ -d $REMOTEDIR_PARENT ] && echo 0' > .testfile.abcdefg"
 #actually create the script on the remote host
 $SSH -x $LOGIN $command
 #execute the script
