@@ -1,7 +1,7 @@
 #! /bin/sh
 #
 #.......................................................................
-# pscp2 <num Processors> < remove remote directory> < localDirectory> <login@Machine>:<remote dir>
+# pscp2 <num Processors> <transfer entire uda (y/n)> < remove remote directory> < localDirectory> <login@Machine>:<remote dir>
 # You must be able to ssh onto the remote machine without a password
 # or it won't work.
 #.......................................................................
@@ -15,9 +15,9 @@ unalias -a cd
 
 #------------------
 # error checking
-if test "$#" -ne 4; then
+if test "$#" -ne 5; then
   echo ""
-  echo "Usage: pscp2 < number of Processors> < remove remote directory (y/n) > < local dir to be copied> <login@Remote Machine>:<remote dir>"
+  echo "Usage: pscp2 < number of Processors> <transfer entire uda (y/n) > < remove remote directory (y/n) > < local dir to be copied> <login@Remote Machine>:<remote dir>"
   echo ""
   exit 1
 fi
@@ -43,15 +43,16 @@ pscp2fulldir=`readlink -f $0`
 pscp2dir=`dirname $pscp2fulldir`
 
 nproc=$1
-rmDir=$2
-localDir=$3
+transferWholeUda=$2
+rmDir=$3
+localDir=$4
 
 if test `echo $localDir | cut -c1` != "/"; then
   # Not absolute path... fix it.
-  localDir=`pwd`/$3
+  localDir=`pwd`/$4
 fi
 
-string=$4
+string=$5
 remote_machine=`echo $string |cut -d\@ -f2 | cut -d\: -f1`
 user_test=`echo $string |cut  -s -d\@ -f1`
 
@@ -64,14 +65,18 @@ export REMOTEDIR_PARENT=`echo $string |cut -d\: -f2`
 export REMOTEDIR=$REMOTEDIR_PARENT/`basename $localDir`
 export PSCP_FILES=/tmp/pscp_files_`basename $localDir`_`whoami`
 
-echo "LOGIN:        $LOGIN"
-echo "# processors: $nproc"
-echo "localDir:     $localDir"
-echo "REMOTEDIR:    $REMOTEDIR"
-echo "remove the remote directory?: " $rmDir
-echo "PSCP_FILES:   $PSCP_FILES"
-echo "pscp2dir:     $pscp2dir"
-
+echo "_____________________________________"
+echo "Inputs:"
+echo "	login:                 $LOGIN"
+echo "	# processors:          $nproc"
+echo "	transfer whole uda:    $transferWholeUda"
+echo "	localDir:              $localDir"
+echo "	remoteDir:             $REMOTEDIR"
+echo "	remove the remote directory?: " $rmDir
+echo "	PSCP_FILES:            $PSCP_FILES"
+echo "	pscp2dir:              $pscp2dir"
+echo "_____________________________________"
+echo ""
 #------------------
 # Bulletproofing
 echo "Bullet proof tests:"
@@ -152,18 +157,20 @@ echo "yes."
 echo -n "  Testing: does $REMOTEDIR_PARENT exist on the remote machine... "
 
 #create a script that checks if a file exists and outputs 0 if it does
-command="echo -e '#!/bin/sh\n[ -d $REMOTEDIR_PARENT ] && echo 0' > .testfile.abcdefg"
-#actually create the script on the remote host
-$SSH -x $LOGIN $command
+cat > .testfile.abcdefg << fin
+#!/bin/sh
+test -d $REMOTEDIR_PARENT;  echo $?
+fin
+
+scp -q .testfile.abcdefg $LOGIN:
+
 #execute the script
 command="sh .testfile.abcdefg"
 test=`$SSH -x $LOGIN $command`
-#remove the script
-$SSH -x $LOGIN "rm -f .testfile.abcdefg"
 
-#Old way that is not shell independent
-#command="ls $REMOTEDIR_PARENT > /dev/null 2>&1 ; echo $?"
-#test=`$SSH -x $LOGIN $command`
+#remove the scripts both locally & remote
+$SSH -x $LOGIN "/bin/rm -f .testfile.abcdefg"
+/bin/rm -f .testfile.abcdefg
 
 if test "$test" != "0"; then
   echo ""
@@ -263,13 +270,16 @@ $FIND .             -maxdepth 1 -type f -exec basename {} \; | grep -v .transfer
 $FIND ./t*          -maxdepth 0 -type d -exec basename {} \; | sort -r                    >>$PSCP_FILES
 $FIND ./checkpoints -maxdepth 1                                                                     >>$PSCP_FILES
 
-echo "Now starting an editor:  Remove the files you don't want transferred"
 
-if test ! $?EDITOR || test "$EDITOR" == ""; then
-  echo
-  echo WARNING: \$EDITOR is not defined... defaulting to 'vi'
-  echo "And 'vi' sometimes doesn't work well..."
-  export EDITOR=vi
+if test "$transferWholeUda" == "n" -o "$transferWholeUda" == "N"; then
+  echo "Now starting an editor:  Remove the files you don't want transferred"
+
+  if test ! $?EDITOR || test "$EDITOR" == ""; then
+    echo
+    echo WARNING: \$EDITOR is not defined... defaulting to 'vi'
+    echo "And 'vi' sometimes doesn't work well..."
+    export EDITOR=vi
+  fi
 fi
 
 $EDITOR $PSCP_FILES
