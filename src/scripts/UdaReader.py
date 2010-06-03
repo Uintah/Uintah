@@ -1,7 +1,7 @@
 from xml.etree import ElementTree as ET
 from numpy import *
 import os,sys
-import re
+import re,operator
 
 
 def indent(elem, level=0):
@@ -176,7 +176,7 @@ class Uda:
             data_set.attrib['file'] = str(self.output_file_names[i])
                   
         indent(root_element)         
-        ET.dump(root_element)
+        # ET.dump(root_element)
         tree = ET.ElementTree(root_element)
         name = self.name.split('.')[0]
         tree.write(name + '.pvd')
@@ -313,7 +313,7 @@ class Grid:
 
         rectilinear_elem.append(grid_elem)
         indent(rectilinear_elem)
-        ET.dump(rectilinear_elem)
+        # ET.dump(rectilinear_elem)
         return rectilinear_elem
 
     # def output_vtk(self,filename):
@@ -340,6 +340,8 @@ class Level:
         self.patches = []
         patch_iter = level.getiterator('Patch')
         self.read_patch(patch_iter)
+        for p in self.patches:
+            p.find_neighbors(self.patches)
 
 
     def print_level(self):
@@ -402,7 +404,7 @@ class Level:
                 
         vtkfile_elem.append(image_data_elem)
         indent(vtkfile_elem)
-        ET.dump(vtkfile_elem)
+        # ET.dump(vtkfile_elem)
         return vtkfile_elem
     
 
@@ -419,6 +421,7 @@ class Patch:
         self.upper = Vector(patch.findtext('upper'))
         self.totalCells = int(patch.findtext('totalCells'))
         self.variables = []
+        self.plus_neighbor = [0,0,0]
 
     def print_patch(self):
         print "Patch id = %s" % self.id
@@ -442,13 +445,30 @@ class Patch:
     def generate_grid(self):
         pass
 
+    def find_neighbors(self,neighbors):
+        for n in neighbors:
+            if self.id == n.id:
+                continue
+            else:
+                if self.highIndex[0] == n.lowIndex[0]:
+                    self.plus_neighbor[0] = 1
+                if self.highIndex[1] == n.lowIndex[1]:
+                    self.plus_neighbor[1] = 1
+                if self.highIndex[2] == n.lowIndex[2]:
+                    self.plus_neighbor[2] = 1
+                
+
+
     def get_extent(self):
         return (self.lowIndex, self.highIndex)
 
     def vtk_element(self,root_elem):
         extent = self.get_extent()
         lo = extent[0]
-        hi = extent[1]
+        # subtract off the plus_neighbor values from the hi extent
+        # hi = extent[1] - plus_neighbor
+        hi = map(operator.sub,extent[1],self.plus_neighbor)
+        
         string_extent = repr(lo[0]) + ' ' + repr(hi[0]) \
             + ' ' + repr(lo[1]) + ' ' + repr(hi[1]) \
             + ' ' + repr(lo[2]) + ' ' + repr(hi[2]) 
@@ -516,7 +536,7 @@ class Patch:
         patch_elem.append(point_elem)
 
         indent(patch_elem)
-        ET.dump(patch_elem)
+        # ET.dump(patch_elem)
         return patch_elem
 
 
@@ -570,7 +590,7 @@ class Variable:
     def vtk_element(self):
 
         variable_type = self.type.split('<')[0]
-        print variable_type
+        # print variable_type
 
         if variable_type != 'CCVariable' and variable_type != 'NCVariable':
             return None
@@ -588,5 +608,5 @@ class Variable:
         var_elem.text = string_var_elem
 
         indent(var_elem)
-        ET.dump(var_elem)
+        # ET.dump(var_elem)
         return var_elem
