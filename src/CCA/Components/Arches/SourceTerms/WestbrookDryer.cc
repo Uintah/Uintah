@@ -74,7 +74,7 @@ WestbrookDryer::problemSetup(const ProblemSpecP& inputdb)
   db->require("MF_O2_F0", d_MF_O2_f0);    // Mass fraction of O2 when f=0
 
   // hard set some values...may want to change some of these to be inputs
-  d_MW_O2 = 16.0; 
+  d_MW_O2 = 32.0; 
   d_R     = 8.314472; 
   d_Press = 101325; 
 
