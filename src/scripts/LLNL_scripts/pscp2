@@ -151,8 +151,19 @@ echo "yes."
 
 echo -n "  Testing: does $REMOTEDIR_PARENT exist on the remote machine... "
 
-command="ls $REMOTEDIR_PARENT > /dev/null 2>&1 ; echo $?"
+#create a script that checks if a file exists and outputs 0 if it does
+command="echo -e '#!/bin/sh\n[ -d $REMOTEDIR_PARENT ] && echo 0' > .testfile"
+#actually create the script on the remote host
+$SSH -x $LOGIN $command
+#execute the script
+command="sh .testfile.abcdefg"
 test=`$SSH -x $LOGIN $command`
+#remove the script
+$SSH -x $LOGIN "rm -f .testfile.abcdefg"
+
+#Old way that is not shell independent
+#command="ls $REMOTEDIR_PARENT > /dev/null 2>&1 ; echo $?"
+#test=`$SSH -x $LOGIN $command`
 
 if test "$test" != "0"; then
   echo ""
