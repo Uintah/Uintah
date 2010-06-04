@@ -31,8 +31,9 @@ DEALINGS IN THE SOFTWARE.
 #ifndef __MPM_MATERIAL_H__
 #define __MPM_MATERIAL_H__
 
-// Do not EVER put a #include for anything in CCA/Components in here.
-// Ask steve for a better way
+// Do not EVER put a #include for anything in another CCA/Components in here.
+// (#includes of other MPM files is ok.  However, if you #include'd ARCHES
+// or something, then a circular dependency would be created.)
 
 #include <Core/Grid/Material.h>
 #include <Core/Grid/Variables/ParticleVariable.h>
