@@ -1454,6 +1454,7 @@ void SerialMPM::scheduleUpdateCohesiveZones(SchedulerP& sched,
   t->requires(Task::OldDW, lb->czForceLabel,       cz_matls,    gnone);
   t->requires(Task::OldDW, lb->czTopMatLabel,      cz_matls,    gnone);
   t->requires(Task::OldDW, lb->czBotMatLabel,      cz_matls,    gnone);
+  t->requires(Task::OldDW, lb->czFailedLabel,      cz_matls,    gnone);
   t->requires(Task::OldDW, lb->czIDLabel,          cz_matls,    gnone);
 
   t->computes(lb->pXLabel_preReloc,           cz_matls);
@@ -1466,6 +1467,7 @@ void SerialMPM::scheduleUpdateCohesiveZones(SchedulerP& sched,
   t->computes(lb->czForceLabel_preReloc,      cz_matls);
   t->computes(lb->czTopMatLabel_preReloc,     cz_matls);
   t->computes(lb->czBotMatLabel_preReloc,     cz_matls);
+  t->computes(lb->czFailedLabel_preReloc,     cz_matls);
   t->computes(lb->czIDLabel_preReloc,         cz_matls);
 
   sched->addTask(t, patches, matls);
@@ -4094,8 +4096,8 @@ void SerialMPM::updateCohesiveZones(const ProcessorGroup*,
       ParticleVariable<Vector> cznorm_new, cztang_new, czDispTop_new;
       constParticleVariable<Vector> czDispBot, czsep, czforce;
       ParticleVariable<Vector> czDispBot_new, czsep_new, czforce_new;
-      constParticleVariable<int> czTopMat, czBotMat;
-      ParticleVariable<int> czTopMat_new, czBotMat_new;
+      constParticleVariable<int> czTopMat, czBotMat, czFailed;
+      ParticleVariable<int> czTopMat_new, czBotMat_new, czFailed_new;
 
       old_dw->get(czx,          lb->pXLabel,                         pset);
       old_dw->get(czlength,     lb->czLengthLabel,                   pset);
@@ -4108,6 +4110,7 @@ void SerialMPM::updateCohesiveZones(const ProcessorGroup*,
       old_dw->get(czids,        lb->czIDLabel,                       pset);
       old_dw->get(czTopMat,     lb->czTopMatLabel,                   pset);
       old_dw->get(czBotMat,     lb->czBotMatLabel,                   pset);
+      old_dw->get(czFailed,     lb->czFailedLabel,                   pset);
 
       new_dw->allocateAndPut(czx_new,      lb->pXLabel_preReloc,          pset);
       new_dw->allocateAndPut(czlength_new, lb->czLengthLabel_preReloc,    pset);
@@ -4120,6 +4123,7 @@ void SerialMPM::updateCohesiveZones(const ProcessorGroup*,
       new_dw->allocateAndPut(czids_new,    lb->czIDLabel_preReloc,        pset);
       new_dw->allocateAndPut(czTopMat_new, lb->czTopMatLabel_preReloc,    pset);
       new_dw->allocateAndPut(czBotMat_new, lb->czBotMatLabel_preReloc,    pset);
+      new_dw->allocateAndPut(czFailed_new, lb->czFailedLabel_preReloc,    pset);
 
       czlength_new.copyData(czlength);
       cznorm_new.copyData(cznorm);
@@ -4147,8 +4151,8 @@ void SerialMPM::updateCohesiveZones(const ProcessorGroup*,
 //        double length = sqrt(czlength[idx]);
 //        Vector size(length,length,length);
         Vector size(0.1,0.1,0.1);
-	 Matrix3 defgrad;
-	 defgrad.Identity();
+	Matrix3 defgrad;
+	defgrad.Identity();
 
         // Get the node indices that surround the cell
         interpolator->findCellAndWeights(czx[idx],ni,S,size,defgrad);
@@ -4172,6 +4176,15 @@ void SerialMPM::updateCohesiveZones(const ProcessorGroup*,
         czsep_new[idx]       = czDispTop_new[idx] - czDispBot_new[idx];
         double D_n = Dot(czsep_new[idx],cznorm[idx]);
         double D_t = Dot(czsep_new[idx],cztang[idx]);
+
+        // Determine if a CZ has failed.  Currently hardwiring failure criteria
+        // to fail zone if normal sep is > 4*delta_n or 2*delta_t
+        if(czFailed[idx]>0 || D_n > 4.0*delta_n || D_t > 2.0*delta_t){
+          czFailed_new[idx]=1;
+        } else {
+          czFailed_new[idx]=0;
+        }
+
         double normal_stress  = (phi_n/delta_n)*exp(-D_n/delta_n)*
                               ((D_n/delta_n)*exp((-D_t*D_t)/(delta_t*delta_t))
                               + ((1.-q)/(r-1.))
@@ -4182,8 +4195,9 @@ void SerialMPM::updateCohesiveZones(const ProcessorGroup*,
                               + ((r-q)/(r-1.))*(D_n/delta_n))
                               * exp(-D_n/delta_n)
                               * exp(-D_t*D_t/(delta_t*delta_t));
-        czforce_new[idx]     = normal_stress*cznorm[idx]*czlength_new[idx]
-                             + tang_stress*cztang[idx]*czlength_new[idx];
+        czforce_new[idx]     = (normal_stress*cznorm[idx]*czlength_new[idx]
+                             + tang_stress*cztang[idx]*czlength_new[idx])
+                             * (1.0 - ((double) czFailed_new[idx]));
 
 /*
         dest << time << " " << czsep_new[idx].x() << " " << czsep_new[idx].y() << " " << czforce_new[idx].x() << " " << czforce_new[idx].y() << endl;

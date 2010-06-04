@@ -269,6 +269,8 @@ using std::vector;
       const VarLabel* czTopMatLabel_preReloc; 
       const VarLabel* czBotMatLabel; 
       const VarLabel* czBotMatLabel_preReloc; 
+      const VarLabel* czFailedLabel; 
+      const VarLabel* czFailedLabel_preReloc; 
       const VarLabel* czIDLabel; 
       const VarLabel* czIDLabel_preReloc; 
       const VarLabel* pCellNACZIDLabel;
