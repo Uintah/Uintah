@@ -9,7 +9,7 @@
        <title>Advection test for a MPM and ICE material</title>
    </Meta>
 
-   <SimulationComponent type="mpmice" />
+   <SimulationComponent type="rmpmice" />
     
     
     <!--____________________________________________________________________-->
@@ -22,6 +22,7 @@
        <delt_max>           1.0         </delt_max>
        <delt_init>          1.0e-4      </delt_init>
        <max_delt_increase>  2.0        </max_delt_increase>
+       <max_Timesteps>      50          </max_Timesteps>
        <timestep_multiplier>1.0         </timestep_multiplier>
    </Time>
    
@@ -171,7 +172,7 @@
     <!--    I  C  E     P  A  R  A  M  E  T  E  R  S                        -->
     <!--____________________________________________________________________-->
     <CFD>
-         <cfl>0.75</cfl>
+         <cfl>0.45</cfl>
        <ICE>
         <advection type = "FirstOrder" />
        
@@ -211,6 +212,7 @@
     <!--    MATERIAL PROPERTIES INITIAL CONDITIONS                          -->
     <!--____________________________________________________________________-->
     <MaterialProperties>
+
        <MPM>
          <material>
                 <density>   1.1792946927374306000e+00   </density>
@@ -255,7 +257,7 @@
                 </box>
               </difference>
                <res>                      [2,2,2]        </res>
-               <velocity>           [1.0,0.0,0.0]     </velocity>
+               <velocity>           [1.0,1.0,0.0]     </velocity>
                <temperature>        300.0               </temperature>
                <density>    1.1792946927374306000e+00   </density>
                <pressure>           101325.0            </pressure>
@@ -263,12 +265,12 @@
          </material>
       </ICE>       
        
-            <exchange_properties> 
+      <exchange_properties> 
          <exchange_coefficients>
               <momentum>               [1e10]         </momentum>
               <heat>                  [1e10]           </heat>
-        </exchange_coefficients>
-            </exchange_properties> 
+          </exchange_coefficients>
+       </exchange_properties> 
     </MaterialProperties>
             
 
