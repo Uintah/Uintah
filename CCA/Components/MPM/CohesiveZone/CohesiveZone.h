@@ -96,6 +96,7 @@ namespace Uintah {
     ParticleVariable<long64> czID;
     ParticleVariable<Vector> czSeparation, czForce;
     ParticleVariable<int> czTopMat, czBotMat;
+    ParticleVariable<int> czFailed;
 
     MPMLabel* d_lb;
     MPMFlags* d_flags;

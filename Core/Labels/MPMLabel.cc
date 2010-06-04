@@ -614,6 +614,11 @@ MPMLabel::MPMLabel()
   czBotMatLabel_preReloc = VarLabel::create("cz.botmat+",
                      ParticleVariable<int>::getTypeDescription());
 
+  czFailedLabel = VarLabel::create("cz.failed",
+                     ParticleVariable<int>::getTypeDescription());
+  czFailedLabel_preReloc = VarLabel::create("cz.failed+",
+                     ParticleVariable<int>::getTypeDescription());
+
   czIDLabel = VarLabel::create("cz.CZID",
 			ParticleVariable<long64>::getTypeDescription() );
 
