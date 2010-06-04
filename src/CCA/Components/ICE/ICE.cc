@@ -1236,7 +1236,7 @@ void ICE::scheduleComputeModelSources(SchedulerP& sched,
 {
   int levelIndex = level->getIndex();
   if(d_models.size() != 0){
-    cout_doing << d_myworld->myrank() << " ICE::scheduleModelMassExchange" 
+    cout_doing << d_myworld->myrank() << " ICE::scheduleComputeModelSources" 
                << "\t\t\tL-"<< levelIndex<< endl;
     
     
@@ -3753,8 +3753,13 @@ void ICE::zeroModelSources(const ProcessorGroup*,
                             DataWarehouse* /*old_dw*/,
                             DataWarehouse* new_dw)
 {
+  const Level* level = getLevel(patches);
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
+    
+    cout_doing << d_myworld->myrank() << " Doing zeroModelSources on patch " 
+               << patch->getID() << "\t\t\t ICE \tL-" <<level->getIndex()<< endl;
+      
     for(int m=0;m<matls->size();m++){
       int matl = matls->get(m);
       CCVariable<double> mass_src, energy_src, vol_src;
@@ -3769,18 +3774,23 @@ void ICE::zeroModelSources(const ProcessorGroup*,
       mass_src.initialize(0.0);
       vol_src.initialize(0.0);
       mom_src.initialize(Vector(0.0, 0.0, 0.0));
-      for(vector<TransportedVariable*>::iterator
-                                    iter = d_modelSetup->tvars.begin();
-                                    iter != d_modelSetup->tvars.end(); iter++){
-        TransportedVariable* tvar = *iter;
+    }
+
+    for(vector<TransportedVariable*>::iterator
+                                  iter = d_modelSetup->tvars.begin();
+                                  iter != d_modelSetup->tvars.end(); iter++){
+      TransportedVariable* tvar = *iter;
+      for(int m=0;m<tvar->matls->size();m++){
+        int matl = tvar->matls->get(m);
+
         if(tvar->src){
           CCVariable<double> model_src;
           new_dw->allocateAndPut(model_src, tvar->src, matl, patch);
           model_src.initialize(0.0);
         }
-      }
-    }
-  }
+      }  // matl loop
+    }  // transported Variables
+  }  // patches loop
 }
 
 /* _____________________________________________________________________
