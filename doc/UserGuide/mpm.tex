@@ -979,8 +979,8 @@ described below.
 \item{\bf Compressible Neo-Hookean Model} There are implementations of several
 hyperelastic-plastic model described by Simo and Hughes\cite{simo1998} (pp. 307 -- 321). 
  The model is dubbed "Unified Compressible Neo-Nookean Model" or UCNH for short.  Models can 
-still be specified with old input file specifications, (i.e. comp_neo_hook, comp_neo_hook_plastic,
-cnh_damage, cnhp_damage) however these are merely wrappers for the underyling UCNH model.
+still be specified with old input file specifications, (i.e. comp\_neo\_hook, comp\_neo\_hook\_plastic,
+cnh\_damage, cnhp\_damage) however these are merely wrappers for the underyling UCNH model.
  Plastic flow and failure can be modelled in addition to elasticity by  specifying 
 several additional options with input flags. This models is very robust, and relatively 
 straightforward because hyperelastic models don't require rotation back and forth 
@@ -1047,7 +1047,7 @@ The specifications for CNHP are:
 \end{Verbatim}
 
 
-\tt <cnh_damage> \normalfont as the constiutive model or \tt <useDamage> \normalfont 
+\tt <cnh\_damage> \normalfont as the constiutive model or \tt <useDamage> \normalfont 
 tells Uintah to use a basic elastic model, with an extension
 to failure based on a stress or strain as given below, thus yielding an
 elastic-brittle failure model.  This model also allows a distribution
@@ -1075,7 +1075,7 @@ The specification for CNHD are:
 \end{Verbatim}
 
 
-When specifying \tt <cnh_damage> \normalfont, or using \tt <useDamage> \normalfont one must also specify
+When specifying \tt <cnh\_damage> \normalfont, or using \tt <useDamage> \normalfont one must also specify
 the following MPMFlag
 \begin{Verbatim}[fontsize=\footnotesize]
      <!-- choices are: "AllowNoTension", "ZeroStress" -->
@@ -1083,7 +1083,7 @@ the following MPMFlag
 \end{Verbatim}
 in the \tt <MPM> \normalfont section of the input file.
 
-\tt <cnhp_damage> \normalfont as the constitutive model (or both damage and plasticity
+\tt <cnhp\_damage> \normalfont as the constitutive model (or both damage and plasticity
  flags discussed above) uses an extension
 to failure based on a stress or strain as given below, thus yielding an
 elastic-plastic model with failure.  Note that the post-failure behaviour of
