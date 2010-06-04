@@ -39,6 +39,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Math/MiscMath.h>
+#include <Core/Parallel/Parallel.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/Math/MiscMath.h>
 #include <typeinfo>
@@ -168,10 +169,8 @@ bool read_LODI_BC_inputs(const ProblemSpecP& prob_spec,
   }
   
   if (usingLODI) {
-    cout << "\n WARNING:  LODI boundary conditions are "
-         << " NOT set during the problem initialization \n " 
-         << " THESE BOUNDARY CONDITIONS ONLY WORK FOR 1 MATL ICE PROBLEMS \n"
-         << " (The material index has been hard coded in preprocess_Lodi_BCs)\n" <<endl;
+    proc0cout << "\n WARNING:  LODI boundary conditions are "
+              << " NOT set during the problem initialization \n " <<endl;
   }
   return usingLODI;
 }
