@@ -42,7 +42,8 @@ DEALINGS IN THE SOFTWARE.
 
 namespace Uintah {
   // Structures for Plasticitity 
-  struct UCNHStateData {
+
+struct UCNHStateData {
     double Alpha;
   };
   class TypeDescription;
@@ -82,13 +83,13 @@ namespace Uintah {
     // Create datatype for storing model parameters
     struct CMData {
       double Bulk;
-      double Shear;
+      double tauDev;
       // For Plasticity
       double FlowStress;
       double K;
       double Alpha;
     };
-    typedef UCNHStateData StateData;   // Definition for shorter code, from Plasticity
+    //typedef UCNHStateData StateData;   // Definition for shorter code, from Plasticity
       
     const VarLabel* bElBarLabel;
     const VarLabel* bElBarLabel_preReloc;
@@ -110,11 +111,13 @@ namespace Uintah {
     const VarLabel* pFailureStrainLabel_preReloc;
     const VarLabel* pLocalizedLabel_preReloc;
     const VarLabel* pDeformRateLabel_preReloc;
+    const VarLabel* bBeBarLabel;
+    const VarLabel* bBeBarLabel_preReloc;
       
     // Plasticity Requirements //
     /////////////////////////////
-    const VarLabel* p_statedata_label;
-    const VarLabel* p_statedata_label_preReloc;
+    const VarLabel* pPlasticStrain_label;
+    const VarLabel* pPlasticStrain_label_preReloc;
       
   protected:
     // Flags indicating if damage and/or plasticity should be used
@@ -148,11 +151,12 @@ namespace Uintah {
     UCNH& operator=(const UCNH &cm);
       
     // Plasticity requirements
-    friend const TypeDescription* fun_getTypeDescriptiont(StateData*);
+    //friend const TypeDescription* fun_getTypeDescriptiont(StateData*);
 
   public:
     // constructors
     UCNH(ProblemSpecP& ps, MPMFlags* flag);
+    UCNH(ProblemSpecP& ps, MPMFlags* flag, bool plas, bool dam);
     UCNH(const UCNH* cm);
 
     // clone

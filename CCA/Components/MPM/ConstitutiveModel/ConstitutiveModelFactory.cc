@@ -105,7 +105,7 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
       return(scinew CompNeoHookImplicit(child,flags));
   }
   else if (mat_type ==  "cnh_damage") 
-    return(scinew CNHDamage(child,flags,false,true));
+    return(scinew CNHDamage(child,flags));
   
   else if (mat_type ==  "UCNH") 
     return(scinew UCNH(child,flags));
@@ -114,7 +114,7 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
     return(scinew CNH_MMS(child,flags));
 
   else if (mat_type ==  "cnhp_damage") 
-    return(scinew CNHPDamage(child,flags,true,true));
+    return(scinew CNHPDamage(child,flags));
 
   else if (mat_type ==  "trans_iso_hyper") {
     if (flags->d_integrator_type == "explicit" ||
@@ -139,7 +139,7 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
     return(scinew Water(child,flags));
 
   else if (mat_type == "comp_neo_hook_plastic")
-    return(scinew CompNeoHookPlas(child,flags,true,false));
+    return(scinew CompNeoHookPlas(child,flags));
    
   else if (mat_type ==  "visco_scram"){
     if (flags->d_integrator_type == "explicit" || 
