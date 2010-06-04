@@ -182,9 +182,11 @@
         
         <ImplicitSolver>
            <max_outer_iterations>      10    </max_outer_iterations>
-           <outer_iteration_tolerance> 1e-12 </outer_iteration_tolerance>
+           <outer_iteration_tolerance> 1e-10 </outer_iteration_tolerance>
+           <iters_before_timestep_restart> 3 </iters_before_timestep_restart>
            <Parameters>
-              <tolerance>1.e-12    </tolerance> 
+              <solver>         cg   </solver>
+              <tolerance>1.e-12     </tolerance> 
               <norm>     LInfinity  </norm>
               <criteria> Absolute   </criteria>
            </Parameters>
