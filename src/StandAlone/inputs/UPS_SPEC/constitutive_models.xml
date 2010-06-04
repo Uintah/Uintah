@@ -6,7 +6,8 @@
                                                                         elastic_plastic, hypo_elastic, hypoelastic_plastic, elastic_plastic_hp, 
                                                                         ideal_gas, membrane, murnahanMPM, mw_visco_elastic, rigid, shell_CNH, 
                                                                         small_strain_plastic, trans_iso_hyper, visco_plastic, 
-                                                                        visco_scram, visco_trans_iso_hyper, water, kayenta, cnh_mms cnh_damage cnhp_damage'">
+                                                                        visco_scram, visco_trans_iso_hyper, water, kayenta, cnh_mms, cnh_damage, 
+                                                                        cnhp_damage, UCNH'">
     <allow_no_tension              spec="OPTIONAL BOOLEAN" />
     <alpha                         spec="OPTIONAL DOUBLE" />
     <Beta                          spec="OPTIONAL DOUBLE" />
@@ -267,9 +268,11 @@
     <taylor_quinney_coeff          spec="OPTIONAL DOUBLE" />
     <tolerance                     spec="OPTIONAL DOUBLE" />
     <useModifiedEOS                spec="OPTIONAL BOOLEAN" />
+    <useDamage                     spec="OPTIONAL BOOLEAN" />
+    <usePlasticity                 spec="OPTIONAL BOOLEAN" />
     <useObjectiveRate              spec="OPTIONAL BOOLEAN" />        <!-- FIXME: What is the default -->
     <UseArtificialViscosity        spec="OPTIONAL BOOLEAN" />        <!-- FIXME: What is the default -->
-    <use_polar_decomposition_RMB  spec="OPTIONAL BOOLEAN" /> 
+    <use_polar_decomposition_RMB   spec="OPTIONAL BOOLEAN" /> 
     <use_time_temperature_equation spec="OPTIONAL BOOLEAN" />   <!-- FIXME: What is the default -->
     <viscosity                     spec="OPTIONAL DOUBLE" />
     <volfracHE                     spec="OPTIONAL DOUBLE" />

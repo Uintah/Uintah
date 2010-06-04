@@ -67,6 +67,7 @@ SRCS   += \
         $(SRCDIR)/ViscoPlastic.cc               \
         $(SRCDIR)/Kayenta.cc                    \
         $(SRCDIR)/MurnahanMPM.cc                \
+        $(SRCDIR)/UCNH.cc                       \
         $(SRCDIR)/SoilFoam.cc
 
 SUBDIRS := \

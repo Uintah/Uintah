@@ -59,6 +59,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/MPM/ConstitutiveModel/IdealGasMP.h>
 #include <CCA/Components/MPM/ConstitutiveModel/SoilFoam.h>
 #include <CCA/Components/MPM/ConstitutiveModel/Water.h>
+#include <CCA/Components/MPM/ConstitutiveModel/UCNH.h>
 #include <CCA/Components/MPM/ConstitutiveModel/ViscoPlastic.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <CCA/Components/MPM/MPMFlags.h>
@@ -104,13 +105,16 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
       return(scinew CompNeoHookImplicit(child,flags));
   }
   else if (mat_type ==  "cnh_damage") 
-    return(scinew CNHDamage(child,flags));
+    return(scinew CNHDamage(child,flags,false,true));
+  
+  else if (mat_type ==  "UCNH") 
+    return(scinew UCNH(child,flags));
 
   else if (mat_type ==  "cnh_mms") 
     return(scinew CNH_MMS(child,flags));
 
   else if (mat_type ==  "cnhp_damage") 
-    return(scinew CNHPDamage(child,flags));
+    return(scinew CNHPDamage(child,flags,true,true));
 
   else if (mat_type ==  "trans_iso_hyper") {
     if (flags->d_integrator_type == "explicit" ||
@@ -135,7 +139,7 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
     return(scinew Water(child,flags));
 
   else if (mat_type == "comp_neo_hook_plastic")
-    return(scinew CompNeoHookPlas(child,flags));
+    return(scinew CompNeoHookPlas(child,flags,true,false));
    
   else if (mat_type ==  "visco_scram"){
     if (flags->d_integrator_type == "explicit" || 
