@@ -209,11 +209,7 @@ WARNING
     //__________________________________
     // global constants
     bool d_doAMR;
-    vector<Vector> d_probePts;
-    vector<string> d_probePtsNames;
-    bool d_usingProbePts;
     bool d_test_conservation;
-    double d_probeFreq;
   };
 }
 
