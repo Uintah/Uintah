@@ -166,11 +166,6 @@ void PassiveScalar::problemSetup(GridP&, SimulationStateP& in_state,
   d_scalar->mag_grad_scalarLabel = 
                                VarLabel::create("mag_grad_scalar-f",td_CCdouble);                                 
   
-                               
-                                 
-                                 
-  Slb->lastProbeDumpTimeLabel =  VarLabel::create("lastProbeDumpTime", 
-                                            max_vartype::getTypeDescription());
   Slb->sum_scalar_fLabel      =  VarLabel::create("sum_scalar_f", 
                                             sum_vartype::getTypeDescription());
   
