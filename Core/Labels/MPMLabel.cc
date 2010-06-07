@@ -853,4 +853,6 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(czTopMatLabel_preReloc);
   VarLabel::destroy(czBotMatLabel);
   VarLabel::destroy(czBotMatLabel_preReloc);
+  VarLabel::destroy(czFailedLabel);
+  VarLabel::destroy(czFailedLabel_preReloc);
 }
