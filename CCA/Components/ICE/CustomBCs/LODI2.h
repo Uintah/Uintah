@@ -92,6 +92,7 @@ namespace Uintah {
                            
 
   bool read_LODI_BC_inputs(const ProblemSpecP&,
+                           SimulationStateP& sharedState,
                            Lodi_variable_basket*);
                                                
   VarLabel* getMaxMach_face_VarLabel( Patch::FaceType face);                                           

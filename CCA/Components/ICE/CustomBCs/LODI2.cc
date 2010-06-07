@@ -61,6 +61,7 @@ static DebugStream cout_dbg("LODI_DBG_COUT", false);
             sets which boundaries are lodi
  ______________________________________________________________________  */
 bool read_LODI_BC_inputs(const ProblemSpecP& prob_spec,
+                         SimulationStateP& sharedState,
                          Lodi_variable_basket* vb)
 {
   //__________________________________
@@ -107,7 +108,6 @@ bool read_LODI_BC_inputs(const ProblemSpecP& prob_spec,
           matl_index.push_back(atoi(bc_type["id"].c_str()));
         }
       }
-      
 
       if (bc_type["var"] == "LODI" && !is_a_Lodi_face) {
         usingLODI = true;
@@ -136,42 +136,71 @@ bool read_LODI_BC_inputs(const ProblemSpecP& prob_spec,
       string warn="ERROR:\n Inputs:Boundary Conditions: Cannot find LODI block";
       throw ProblemSetupException(warn, __FILE__, __LINE__);
     }
-    lodi->require("ice_material_index", vb->iceMatl_indx);
     lodi->require("press_infinity",     vb->press_infinity);
     lodi->getWithDefault("sigma",       vb->sigma, 0.27);
     
+    ProblemSpecP params = lodi;
+    Material* matl = sharedState->parseAndLookupMaterial(params, "material");
+    vb->iceMatl_indx = matl->getDWIndex();
+      
     //__________________________________
     //  bulletproofing
     vector<int>::iterator iter;
     for( iter  = matl_index.begin();iter != matl_index.end(); iter++){
       if(*iter != vb->iceMatl_indx){
-        string warn="ERROR:\n Inputs: LODI Boundary Conditions: One of the material indices is not <ice_material_index>";
-        throw ProblemSetupException(warn, __FILE__, __LINE__);
+        ostringstream warn;
+        warn << "ERROR:\n Inputs: LODI Boundary Conditions: One of the material indices is not the specified ice_material_index: "<< vb->iceMatl_indx;
+        throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
       }
     }
-  }
-  //__________________________________
-  //  Save Li Terms?
-  vb->saveLiTerms = false;
-  ProblemSpecP DA_ps = prob_spec->findBlock("DataArchiver");
-  for (ProblemSpecP child = DA_ps->findBlock("save"); child != 0;
-                    child = child->findNextBlock("save")) {
-    map<string,string> var_attr;
-    child->getAttributes(var_attr);
-    if( ( var_attr["label"] == "Li1" ||
-          var_attr["label"] == "Li2" ||
-          var_attr["label"] == "Li3" ||
-          var_attr["label"] == "Li4" ||
-          var_attr["label"] == "Li5" )
-        && usingLODI ) {
-      vb->saveLiTerms = true;
+    
+    int numICEMatls = sharedState->getNumICEMatls();
+    bool foundMatl = false;
+    ostringstream indicies;
+    
+    for(int m = 0; m < numICEMatls; m++){
+      ICEMaterial* matl = sharedState->getICEMaterial( m );
+      int indx = matl->getDWIndex();
+      indicies << " " << indx ;
+      if(indx == vb->iceMatl_indx){
+        foundMatl = true;
+      }
     }
-  }
+    
+    if(foundMatl==false){
+      ostringstream warn;                                                                                              
+      warn << "ERROR:\n Inputs: LODI Boundary Conditions: The ice_material_index: "<< vb->iceMatl_indx<< " is not "    
+           << "\n an ICE material: " << indicies.str() << endl;
+      throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+    }
+    
+    if(numICEMatls > 1){
+      ostringstream warn;                                                                                              
+      warn << "ERROR:\n Inputs: LODI Boundary Conditions: These BCs currently only work with 1 ICE material: "<< endl;
+      throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+    }
+    
+    //__________________________________
+    //  Save Li Terms?
+    vb->saveLiTerms = false;
+    ProblemSpecP DA_ps = prob_spec->findBlock("DataArchiver");
+    for (ProblemSpecP child = DA_ps->findBlock("save"); child != 0;
+                      child = child->findNextBlock("save")) {
+      map<string,string> var_attr;
+      child->getAttributes(var_attr);
+      if( ( var_attr["label"] == "Li1" ||
+            var_attr["label"] == "Li2" ||
+            var_attr["label"] == "Li3" ||
+            var_attr["label"] == "Li4" ||
+            var_attr["label"] == "Li5" )
+          && usingLODI ) {
+        vb->saveLiTerms = true;
+      }
+    }
   
-  if (usingLODI) {
     proc0cout << "\n WARNING:  LODI boundary conditions are "
               << " NOT set during the problem initialization \n " <<endl;
-  }
+  }  // usingLODI
   return usingLODI;
 }
 
@@ -212,7 +241,10 @@ void addRequires_Lodi(Task* t,
     t->requires(Task::NewDW, lb->speedSound_CCLabel,ice_matls, gn);
   }
   if(where == "implicitPressureSolve"){
-    setLODI_bcs=true;
+    setLODI_bcs = true;
+    t->requires(Task::OldDW, lb->vel_CCLabel,        ice_matls, gn);
+    t->requires(Task::NewDW, lb->speedSound_CCLabel, ice_matls, gn);
+    t->requires(Task::NewDW, lb->rho_CCLabel,        ice_matls, gn);
   }
    
   if(where == "imp_update_press_CC"){
@@ -277,10 +309,9 @@ void  preprocess_Lodi_BCs(DataWarehouse* old_dw,
 {
   cout_doing << "preprocess_Lodi_BCs on patch "<<patch->getID()<< endl;
   Ghost::GhostType  gn  = Ghost::None;
-/*`==========TESTING==========*/
+
   Material* matl = sharedState->getMaterial(var_basket->iceMatl_indx);
   int indx = matl->getDWIndex();  
-/*===========TESTING==========`*/
 
   //__________________________________
   // bulletproofing
