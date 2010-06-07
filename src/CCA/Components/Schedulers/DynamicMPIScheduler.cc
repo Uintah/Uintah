@@ -65,6 +65,8 @@ static DebugStream dbg("DynamicMPIScheduler", false);
 static DebugStream timeout("DynamicMPIScheduler.timings", false);
 static DebugStream queuelength("QueueLength",false);
 
+ofstream wout;
+
 static
 void
 printTask( ostream& out, DetailedTask* task )
@@ -657,14 +659,19 @@ DynamicMPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
     //only output the wait times every so many timesteps
     if(++count%100==0)
     {
+      char fname[100];
+      sprintf(fname,"WaitTimes.%d.%d",d_myworld->size(),d_myworld->myrank());
+      wout.open(fname);
+
       for(map<string,double>::iterator iter=waittimes.begin();iter!=waittimes.end();iter++)
-        waitout << fixed << d_myworld->myrank() << ": TaskWaitTime(TO): " << iter->second << " Task:" << iter->first << endl;
+        wout << fixed << d_myworld->myrank() << ": TaskWaitTime(TO): " << iter->second << " Task:" << iter->first << endl;
 
       for(map<string,double>::iterator iter=DependencyBatch::waittimes.begin();iter!=DependencyBatch::waittimes.end();iter++)
-        waitout << fixed << d_myworld->myrank() << ": TaskWaitTime(FROM): " << iter->second << " Task:" << iter->first << endl;
+        wout << fixed << d_myworld->myrank() << ": TaskWaitTime(FROM): " << iter->second << " Task:" << iter->first << endl;
       
-      waittimes.clear();
-      DependencyBatch::waittimes.clear();
+      wout.close();
+      //waittimes.clear();
+      //DependencyBatch::waittimes.clear();
     }
   }
 
