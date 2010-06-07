@@ -89,7 +89,6 @@ PassiveScalar::~PassiveScalar()
   VarLabel::destroy(d_scalar->scalar_source_CCLabel);
   VarLabel::destroy(d_scalar->diffusionCoefLabel);
   VarLabel::destroy(d_scalar->mag_grad_scalarLabel);
-  VarLabel::destroy(Slb->lastProbeDumpTimeLabel);
   VarLabel::destroy(Slb->sum_scalar_fLabel);
 
   delete lb;
@@ -164,7 +163,7 @@ void PassiveScalar::problemSetup(GridP&, SimulationStateP& in_state,
   d_scalar->scalar_source_CCLabel = 
                                  VarLabel::create("scalar-f_src",   td_CCdouble);
   d_scalar->mag_grad_scalarLabel = 
-                               VarLabel::create("mag_grad_scalar-f",td_CCdouble);                                 
+                                 VarLabel::create("mag_grad_scalar-f",td_CCdouble);                                 
   
   Slb->sum_scalar_fLabel      =  VarLabel::create("sum_scalar_f", 
                                             sum_vartype::getTypeDescription());
@@ -265,7 +264,6 @@ void PassiveScalar::scheduleInitialize(SchedulerP& sched,
                   this, &PassiveScalar::initialize);
   
   t->computes(d_scalar->scalar_CCLabel);
-  t->computes(Slb->lastProbeDumpTimeLabel);
   
   sched->addTask(t, level->eachPatch(), d_matl_set);
 }
