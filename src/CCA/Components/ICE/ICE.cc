@@ -456,7 +456,7 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec,
   d_customBC_var_basket->sharedState  = sharedState;
   
   d_customBC_var_basket->usingLodi = 
-        read_LODI_BC_inputs(prob_spec,       d_customBC_var_basket->Lodi_var_basket);
+        read_LODI_BC_inputs(prob_spec,       sharedState, d_customBC_var_basket->Lodi_var_basket);
   d_customBC_var_basket->usingMicroSlipBCs =
         read_MicroSlip_BC_inputs(prob_spec,  d_customBC_var_basket->Slip_var_basket);
   d_customBC_var_basket->using_MMS_BCs =
