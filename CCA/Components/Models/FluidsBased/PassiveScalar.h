@@ -198,7 +198,6 @@ WARNING
     // general labels
     class PassiveScalarLabel {
     public:
-      VarLabel* lastProbeDumpTimeLabel;
       VarLabel* sum_scalar_fLabel;
     };
     
