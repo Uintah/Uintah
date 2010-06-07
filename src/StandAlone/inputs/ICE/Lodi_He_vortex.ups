@@ -29,9 +29,9 @@
     <BoundaryConditions>
       
       <LODI>
-        <press_infinity>  101267.2  </press_infinity>
-        <sigma>           0.27      </sigma>
-        <ice_material_index> 0      </ice_material_index>
+        <press_infinity>  101267.2      </press_infinity>
+        <sigma>           0.27          </sigma>
+        <material>    BackgroundGas     </material>
       </LODI>
  
       <Face side = "x-">
