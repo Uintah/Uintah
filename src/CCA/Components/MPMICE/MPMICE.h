@@ -44,6 +44,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/MPM/SerialMPM.h>
 #include <CCA/Components/MPM/RigidMPM.h>
 #include <CCA/Components/MPM/PhysicalBC/MPMPhysicalBC.h>
+#include <CCA/Components/OnTheFlyAnalysis/AnalysisModule.h>
 #include <CCA/Ports/SwitchingCriteria.h>
 #include <Core/Geometry/Vector.h>
 
@@ -467,6 +468,8 @@ protected:
 
   int              pbx_matl_num;
   MaterialSubset*  pbx_matl;
+
+  AnalysisModule*  d_analysisModule;
 
   SwitchingCriteria* d_switchCriteria;
 

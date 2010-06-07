@@ -61,7 +61,9 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Exceptions/ParameterNotFound.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Exceptions/InvalidValue.h>
+#include <Core/Parallel/Parallel.h>
 #include <Core/Parallel/ProcessorGroup.h>
+
 #include <Core/Math/FastMatrix.h>
 #include <Core/Containers/StaticArray.h>
 #include <Core/Math/Expon.h>
@@ -237,22 +239,6 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec,
     d_gravity=Vector(0,0,0);
   }
 
-
-  //__________________________________
-  //  Custom BC setup
-
-  d_customBC_var_basket->d_gravity = d_gravity;
-
-  d_customBC_var_basket->usingLodi = 
-        read_LODI_BC_inputs(prob_spec,      d_customBC_var_basket->Lodi_var_basket);
-  d_customBC_var_basket->usingMicroSlipBCs =
-        read_MicroSlip_BC_inputs(prob_spec, d_customBC_var_basket->Slip_var_basket);
-  d_customBC_var_basket->using_MMS_BCs =
-        read_MMS_BC_inputs(prob_spec,       d_customBC_var_basket->mms_var_basket);
-  d_customBC_var_basket->using_Sine_BCs =
-        read_Sine_BC_inputs(prob_spec,       d_customBC_var_basket->sine_var_basket);  
-  d_customBC_var_basket->sharedState    = sharedState;
-
   //__________________________________
   // read in all the printData switches
   printData_problemSetup( prob_spec);
@@ -414,14 +400,12 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec,
 
   //_________________________________
   // Exchange Coefficients
-  if (d_myworld->myrank() == 0){
-    cout << "numMatls " << d_sharedState->getNumMatls() << endl;
-  }
+  proc0cout << "numMatls " << d_sharedState->getNumMatls() << endl;
   
   d_exchCoeff->problemSetup(mat_ps, sharedState);
   
-  if (d_myworld->myrank() == 0 && (d_exchCoeff->d_heatExchCoeffModel != "constant")){
-    cout << "------------------------------Using Variable heat exchange coefficients"<< endl;
+  if (d_exchCoeff->d_heatExchCoeffModel != "constant"){
+    proc0cout << "------------------------------Using Variable heat exchange coefficients"<< endl;
   }
   
   //__________________________________
@@ -464,7 +448,21 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec,
     cout << " to a) prevent rapid fluctuations in the timestep and "<< endl;
     cout << "    b) to prevent outflux Vol > cell volume \n \n" <<endl;
   } 
+  
+  //__________________________________
+  //  Custom BC setup
 
+  d_customBC_var_basket->d_gravity    = d_gravity;
+  d_customBC_var_basket->sharedState  = sharedState;
+  
+  d_customBC_var_basket->usingLodi = 
+        read_LODI_BC_inputs(prob_spec,       sharedState, d_customBC_var_basket->Lodi_var_basket);
+  d_customBC_var_basket->usingMicroSlipBCs =
+        read_MicroSlip_BC_inputs(prob_spec,  d_customBC_var_basket->Slip_var_basket);
+  d_customBC_var_basket->using_MMS_BCs =
+        read_MMS_BC_inputs(prob_spec,        d_customBC_var_basket->mms_var_basket);
+  d_customBC_var_basket->using_Sine_BCs =
+        read_Sine_BC_inputs(prob_spec,       d_customBC_var_basket->sine_var_basket);
   //__________________________________
   //  boundary condition warnings
   BC_bulletproofing(prob_spec,sharedState);
@@ -518,9 +516,11 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec,
   
   //__________________________________
   //  Set up data analysis modules
-  d_analysisModule = AnalysisModuleFactory::create(prob_spec, sharedState, dataArchiver);
-  if(d_analysisModule){
-    d_analysisModule->problemSetup(prob_spec, grid, sharedState);
+  if(!d_with_mpm){
+    d_analysisModule = AnalysisModuleFactory::create(prob_spec, sharedState, dataArchiver);
+    if(d_analysisModule){
+      d_analysisModule->problemSetup(prob_spec, grid, sharedState);
+    }
   }
 
 }

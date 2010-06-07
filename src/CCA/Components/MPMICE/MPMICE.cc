@@ -29,31 +29,33 @@ DEALINGS IN THE SOFTWARE.
 
 
 // MPMICE.cc
-#include <CCA/Components/MPMICE/MPMICE.h>
 #include <CCA/Components/ICE/AMRICE.h>
-#include <CCA/Components/ICE/ICE.h>
-#include <CCA/Components/MPM/SerialMPM.h>
-#include <CCA/Components/MPM/RigidMPM.h>
-#include <CCA/Components/MPM/ShellMPM.h>
-#include <CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
-#include <CCA/Components/MPM/ThermalContact/ThermalContact.h>
-#include <CCA/Components/MPM/MPMBoundCond.h>
 #include <CCA/Components/ICE/BoundaryCond.h>
 #include <CCA/Components/ICE/EOS/EquationOfState.h>
-#include <Core/Labels/ICELabel.h>
-#include <Core/Labels/MPMLabel.h>
-#include <Core/Labels/MPMICELabel.h>
-#include <CCA/Ports/Scheduler.h>
+#include <CCA/Components/ICE/ICE.h>
+#include <CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
+#include <CCA/Components/MPMICE/MPMICE.h>
+#include <CCA/Components/MPM/MPMBoundCond.h>
+#include <CCA/Components/MPM/RigidMPM.h>
+#include <CCA/Components/MPM/SerialMPM.h>
+#include <CCA/Components/MPM/ShellMPM.h>
+#include <CCA/Components/MPM/ThermalContact/ThermalContact.h>
+#include <CCA/Components/OnTheFlyAnalysis/AnalysisModuleFactory.h>
 #include <CCA/Ports/ModelMaker.h>
+#include <CCA/Ports/Scheduler.h>
+#include <Core/Exceptions/InvalidValue.h>
+#include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/AMR.h>
 #include <Core/Grid/Task.h>
-#include <Core/Grid/Variables/NodeIterator.h>
 #include <Core/Grid/Variables/CellIterator.h>
+#include <Core/Grid/Variables/NodeIterator.h>
 #include <Core/Grid/Variables/SoleVariable.h>
 #include <Core/Grid/Variables/VarTypes.h>
+#include <Core/Labels/ICELabel.h>
+#include <Core/Labels/MPMICELabel.h>
+#include <Core/Labels/MPMLabel.h>
 #include <Core/Math/MiscMath.h>
-#include <Core/Exceptions/ProblemSetupException.h>
-#include <Core/Exceptions/InvalidValue.h>
+
 
 #include <Core/Containers/StaticArray.h>
 #include <cfloat>
@@ -113,6 +115,7 @@ MPMICE::MPMICE(const ProcessorGroup* myworld,
   
 
   d_switchCriteria = 0;
+  d_analysisModule = 0;
 
   // Turn off all the debuging switches
   switchDebug_InterpolateNCToCC_0 = false;
@@ -125,6 +128,9 @@ MPMICE::~MPMICE()
   delete MIlb;
   delete d_mpm;
   delete d_ice;
+  if(d_analysisModule){
+    delete d_analysisModule;
+  }
 }
 
 //__________________________________
@@ -226,7 +232,6 @@ void MPMICE::problemSetup(const ProblemSpecP& prob_spec,
     }
   }
   
-  
   ProblemSpecP mpm_ps = 0;
   mpm_ps = prob_spec->findBlock("MPM");
   
@@ -248,6 +253,13 @@ void MPMICE::problemSetup(const ProblemSpecP& prob_spec,
   if (cout_norm.active()) {
     cout_norm << "Done with problemSetup \t\t\t MPMICE" <<endl;
     cout_norm << "--------------------------------\n"<<endl;
+  }
+  
+  //__________________________________
+  //  Set up data analysis modules
+  d_analysisModule = AnalysisModuleFactory::create(prob_spec, sharedState, dataArchiver);
+  if(d_analysisModule){
+    d_analysisModule->problemSetup(prob_spec, grid, sharedState);
   }
 }
 
@@ -288,10 +300,18 @@ void MPMICE::scheduleInitialize(const LevelP& level,
   if (d_switchCriteria) {
     d_switchCriteria->scheduleInitialize(level,sched);
   }
+  
+  //__________________________________
+  // dataAnalysis 
+  if(d_analysisModule){
+    d_analysisModule->scheduleInitialize( sched, level);
+  }
     
   sched->addTask(t, level->eachPatch(), d_sharedState->allMPMMaterials());
 }
 
+//______________________________________________________________________
+//
 void MPMICE::restartInitialize()
 {
   if (cout_doing.active())
@@ -299,6 +319,10 @@ void MPMICE::restartInitialize()
 
   d_mpm->restartInitialize();
   d_ice->restartInitialize();
+  
+  if(d_analysisModule){
+    d_analysisModule->restartInitialize();
+  }
 }
 
 //______________________________________________________________________
@@ -604,8 +628,8 @@ MPMICE::scheduleFinalizeTimestep( const LevelP& level, SchedulerP& sched)
                                   Mlb->pXLabel, d_sharedState->d_particleState,
                                   Mlb->pParticleIDLabel, mpm_matls);
   
-  if(d_ice->d_analysisModule){                                                        
-    d_ice->d_analysisModule->scheduleDoAnalysis( sched, level);
+  if(d_analysisModule){                                                        
+    d_analysisModule->scheduleDoAnalysis( sched, level);
   }
   cout_doing << "---------------------------------------------------------"<<endl;
 }
