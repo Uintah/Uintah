@@ -40,7 +40,7 @@
 //                            avtudaReaderMTMDFileFormat.C                   //
 // ************************************************************************* //
 
-#include <../../../VisIt/udaReaderMTMD/avtudaReaderMTMDFileFormat.h>
+#include <VisIt/udaReaderMTMD/avtudaReaderMTMDFileFormat.h>
 
 #include <stdio.h>
 #include <cstring>
