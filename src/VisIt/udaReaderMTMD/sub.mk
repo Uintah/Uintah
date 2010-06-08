@@ -74,8 +74,8 @@ ${VISIT_SRCDIR}/Makefile.visit : lib/libStandAlone_tools_uda2vis.${SO_OR_A_FILE}
  	  mv Makefile Makefile.sci; \
  	  ${VISIT_INSTALL_DIR}/bin/xml2cmake -private -clobber udaReaderMTMD.xml; \
  	  ${VISIT_INSTALL_DIR}/bin/xml2info -clobber udaReaderMTMD.xml; \
-	  cmake .; \
-	  sed -e "s,^CPPFLAGS=,CPPFLAGS=-I${OBJTOP_ABS} -I${SRCTOP_ABS} ," Makefile > Makefile.visit; 
+	  cmake . -DCMAKE_CXX_FLAGS="-I${OBJTOP_ABS} -I${SRCTOP_ABS}"; \
+	  cp Makefile Makefile.visit
 
 
 #
