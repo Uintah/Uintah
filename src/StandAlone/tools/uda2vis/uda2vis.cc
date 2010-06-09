@@ -39,7 +39,7 @@
  *  Copyright (C) 2003-2007 U of U
  */
 
-#include <StandAlone/tools/uda2vis/particleData.h>
+#include <StandAlone/tools/uda2vis/udaData.h>
 
 #include <Core/DataArchive/DataArchive.h>
 
