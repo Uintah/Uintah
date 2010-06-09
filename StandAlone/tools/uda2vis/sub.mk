@@ -60,13 +60,7 @@ else
 endif
 
 SRCS := \
-	$(SRCDIR)/bc.cc                  \
-	$(SRCDIR)/build.cc               \
-	$(SRCDIR)/handleVariable.cc      \
-	$(SRCDIR)/uda2nrrd.cc            \
-	$(SRCDIR)/update_mesh_handle.cc  \
-	$(SRCDIR)/particles.cc           \
-	$(SRCDIR)/wrap_nrrd.cc 
+	$(SRCDIR)/uda2vis.cc
 
 LIBS := $(XML2_LIBRARY) $(Z_LIBRARY) $(M_LIBRARY) $(MPI_LIBRARY) $(F_LIBRARY)
 

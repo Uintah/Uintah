@@ -80,10 +80,10 @@ ${VISIT_SRCDIR}/Makefile.visit : lib/libStandAlone_tools_uda2vis.${SO_OR_A_FILE}
 
 #
 # The following says that the .C file is dependent on the .C.in file.  If the .C file is out of date,
-# then run the 'config.status' command with the argument "--file=...C:...test.C.in, which will
-# use the src_side/.../test...C.in file to generate the bin_side/.../...C file.
+# then run the 'config.status' command with the argument "--file=...C:...C.in, which will
+# use the src_side/.../...C.in file to generate the bin_side/.../...C file.
 #
-${VISIT_SRCDIR}/avtudaReaderMTMDFileFormat.C: ${VISIT_SRCDIR}/testavtudaReaderMTMDFileFormat.C.in
+${VISIT_SRCDIR}/avtudaReaderMTMDFileFormat.C: ${VISIT_SRCDIR}/avtudaReaderMTMDFileFormat.C.in
 	${OBJTOP}/config.status --file=${OBJTOP_ABS}/$@:$<
 
 endif
