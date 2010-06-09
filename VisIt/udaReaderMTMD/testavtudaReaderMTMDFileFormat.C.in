@@ -424,13 +424,41 @@ avtudaReaderMTMDFileFormat::ReadMetaData(avtDatabaseMetaData *md, int timeState)
             AddVectorVarToMetaData(md, newVarname, mesh_for_this_var, cent, 3); // 3 -> vector dimension
           else if (vartype.find("Matrix3") != string::npos)
             AddTensorVarToMetaData(md, newVarname, mesh_for_this_var, cent, 9); // 9 -> tensor 
-          else  
+          else 
             AddScalarVarToMetaData(md, newVarname, mesh_for_this_var, cent);
         }
       }
     }   
   }
+
+
+  // add a proc id enum variable for CC_Mesh
+  int max_proc = 0;
+  for (int l=0; l<numLevels; l++) {
+    for (int p=0; p<stepInfo->levelInfo[l].patchInfo.size(); p++) {
+      max_proc = std::max(max_proc, stepInfo->levelInfo[l].patchInfo[p].proc_id);
+    }
+  }
+
+  {
+    avtScalarMetaData *scalar = new avtScalarMetaData();
+
+    scalar->SetEnumerationType(avtScalarMetaData::ByValue);
+    for (int p=0; p<=max_proc; p++) {
+      char tmp[100];
+      sprintf(tmp, "%d", p);
+      scalar->AddEnumNameValue(tmp,p);
+    }
+
+    scalar->name = "proc_id";
+    scalar->meshName = "CC_Mesh";
+    scalar->centering = AVT_ZONECENT;
+    scalar->hasDataExtents = false;
+    scalar->treatAsASCII = false;
+    md->Add(scalar);
+  }
   
+
   // Nothing needs to be modifed for particle data, as they exist only on a single level
   for (int i=0; i<stepInfo->varInfo.size(); i++) {
     if (stepInfo->varInfo[i].type.find("ParticleVariable") != string::npos) {
@@ -491,7 +519,7 @@ avtudaReaderMTMDFileFormat::ReadMetaData(avtDatabaseMetaData *md, int timeState)
             AddVectorVarToMetaData(md, newVarname, mesh_for_this_var, cent, 3); // 3 -> vector dimension
           else if (vartype.find("Matrix3") != string::npos)
             AddTensorVarToMetaData(md, newVarname, mesh_for_this_var, cent, 9); // 9 -> tensor 
-          else  
+          else
             AddScalarVarToMetaData(md, newVarname, mesh_for_this_var, cent);
         }
       }
@@ -1125,42 +1153,59 @@ avtudaReaderMTMDFileFormat::GetVar(int timestate, int domain, const char *varnam
 
     GridDataRaw *gd=NULL;
 
+    if (strcmp(varname, "proc_id")==0) {
+      gd = new GridDataRaw;
+      for (int i=0; i<3; i++) {
+        gd->low[i ] = qlow[i];
+        gd->high[i] = qhigh[i];
+      }
+      gd->components=1;
+
+      int ncells = (qhigh[0]-qlow[0])*(qhigh[1]-qlow[1])*(qhigh[2]-qlow[2]);
+      gd->data = new float[ncells];
+      for (int i=0; i<ncells; i++) 
+        gd->data[i] = patchInfo.proc_id;
+    }
+
+    else {
 #ifdef SERIALIZED_READS
-    int numProcs, rank;
-    int msg = 128, tag = 256;
-    MPI_Status status;
+      int numProcs, rank;
+      int msg = 128, tag = 256;
+      MPI_Status status;
 
-    MPI_Comm_size(VISIT_MPI_COMM, &numProcs);
-    MPI_Comm_rank(VISIT_MPI_COMM, &rank);
+      MPI_Comm_size(VISIT_MPI_COMM, &numProcs);
+      MPI_Comm_rank(VISIT_MPI_COMM, &rank);
 
-    int totalPatches = 0;
-    for (int i = 0; i < stepInfo->levelInfo.size(); i++)
-      totalPatches += stepInfo->levelInfo[i].patchInfo.size();
+      int totalPatches = 0;
+      for (int i = 0; i < stepInfo->levelInfo.size(); i++)
+        totalPatches += stepInfo->levelInfo[i].patchInfo.size();
 
-    // calculate which process we should wait for a message from
-    // if we're processing doiman 0 don't wait for anyone else
-    int prev = (rank+numProcs-1)%numProcs;
-    int next = (rank+1)%numProcs;
+      // calculate which process we should wait for a message from
+      // if we're processing doiman 0 don't wait for anyone else
+      int prev = (rank+numProcs-1)%numProcs;
+      int next = (rank+1)%numProcs;
 
-    // domain 0 always reads right away
-    if (domain==0)
-      prev = -1;
+      // domain 0 always reads right away
+      if (domain==0)
+        prev = -1;
     
-    debug5 << "Proc: " << rank << " sent to GetVar" << endl;
+      debug5 << "Proc: " << rank << " sent to GetVar" << endl;
 
-    // wait for previous read to finish
-    if (prev>=0)
-      MPI_Recv(&msg, 1, MPI_INT, prev, tag, VISIT_MPI_COMM, &status);
+      // wait for previous read to finish
+      if (prev>=0)
+        MPI_Recv(&msg, 1, MPI_INT, prev, tag, VISIT_MPI_COMM, &status);
 
-    gd = (*getGridData)(archive, grid, level, local_patch, varName, atoi(matl.c_str()), timestate, qlow, qhigh);
+      gd = (*getGridData)(archive, grid, level, local_patch, varName, atoi(matl.c_str()), timestate, qlow, qhigh);
 
-    // let the next read go
-    if (next>=0)
-      MPI_Send(&msg, 1, MPI_INT, next, tag, VISIT_MPI_COMM);
+      // let the next read go
+      if (next>=0)
+        MPI_Send(&msg, 1, MPI_INT, next, tag, VISIT_MPI_COMM);
 
 #else
-    gd = (*getGridData)(archive, grid, level, local_patch, varName, atoi(matl.c_str()), timestate, qlow, qhigh);
+      gd = (*getGridData)(archive, grid, level, local_patch, varName, atoi(matl.c_str()), timestate, qlow, qhigh);
 #endif
+    }
+
 
     bool correct_size = true;
     for (int i=0; i<3; i++) {

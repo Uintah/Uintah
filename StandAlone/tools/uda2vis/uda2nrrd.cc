@@ -254,6 +254,8 @@ getTimeStepInfo(DataArchive *archive, GridP *grid, int timestep) {
       copyIntVector(patchInfo.nc_high, patch->getNodeHighIndex());
       copyIntVector(patchInfo.nc_extra_low, patch->getExtraNodeLowIndex());
       copyIntVector(patchInfo.nc_extra_high, patch->getExtraNodeHighIndex());
+
+      patchInfo.proc_id = archive->queryPatchwiseProcessor(patch, timestep);
     }
   }
 
