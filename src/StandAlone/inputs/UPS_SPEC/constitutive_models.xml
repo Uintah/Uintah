@@ -3,11 +3,10 @@
 
   <constitutive_model              spec="REQUIRED NO_DATA"
                                            attribute1="type REQUIRED STRING 'comp_mooney_rivlin, comp_neo_hook, comp_neo_hook_plastic,
-                                                                        elastic_plastic, hypo_elastic, hypoelastic_plastic, elastic_plastic_hp, 
-                                                                        ideal_gas, membrane, murnahanMPM, mw_visco_elastic, rigid, shell_CNH, 
-                                                                        small_strain_plastic, trans_iso_hyper, visco_plastic, 
-                                                                        visco_scram, visco_trans_iso_hyper, water, kayenta, cnh_mms, cnh_damage, 
-                                                                        cnhp_damage, UCNH'">
+                                                                        elastic_plastic, hypo_elastic, hypoelastic_plastic, elastic_plastic_hp,
+                                                                        ideal_gas, membrane, murnahanMPM, mw_visco_elastic, rigid, shell_CNH,
+                                                                        small_strain_plastic, trans_iso_hyper, visco_plastic,
+                                                                        visco_scram, visco_trans_iso_hyper, water, kayenta, diamm, cnh_mms cnh_damage cnhp_damage'">
     <allow_no_tension              spec="OPTIONAL BOOLEAN" />
     <alpha                         spec="OPTIONAL DOUBLE" />
     <Beta                          spec="OPTIONAL DOUBLE" />
@@ -58,15 +57,15 @@
     <direction_of_symm             spec="OPTIONAL VECTOR" />
     <do_melting                    spec="OPTIONAL BOOLEAN" />
     <dynamic_coeff_friction        spec="OPTIONAL DOUBLE" />
-    <e_shear_modulus               spec="OPTIONAL DOUBLE" /> <!-- qwerty need_applies_to='type ALL' --> 
-    <e_bulk_modulus                spec="OPTIONAL DOUBLE" /> <!-- qwerty need_applies_to='type ALL' --> 
-    <ve_bulk_modulus               spec="OPTIONAL DOUBLE" /> <!-- qwerty need_applies_to='type ALL' --> 
-    <ve_shear_modulus              spec="OPTIONAL DOUBLE" /> <!-- qwerty need_applies_to='type ALL' --> 
-    <ve_volumetric_viscosity       spec="OPTIONAL DOUBLE" /> <!-- qwerty need_applies_to='type ALL' --> 
-    <ve_deviatoric_viscosity       spec="OPTIONAL DOUBLE" /> <!-- qwerty need_applies_to='type ALL' --> 
+    <e_shear_modulus               spec="OPTIONAL DOUBLE" /> <!-- qwerty need_applies_to='type ALL' -->
+    <e_bulk_modulus                spec="OPTIONAL DOUBLE" /> <!-- qwerty need_applies_to='type ALL' -->
+    <ve_bulk_modulus               spec="OPTIONAL DOUBLE" /> <!-- qwerty need_applies_to='type ALL' -->
+    <ve_shear_modulus              spec="OPTIONAL DOUBLE" /> <!-- qwerty need_applies_to='type ALL' -->
+    <ve_volumetric_viscosity       spec="OPTIONAL DOUBLE" /> <!-- qwerty need_applies_to='type ALL' -->
+    <ve_deviatoric_viscosity       spec="OPTIONAL DOUBLE" /> <!-- qwerty need_applies_to='type ALL' -->
     <EoverR                        spec="OPTIONAL DOUBLE" /> <!-- FIXME: what is this for? -->
-    <equation_of_state             spec="OPTIONAL NO_DATA" 
-                                     attribute1="type REQUIRED STRING 'default_hyper, default_hypo, mie_gruneisen, mie_gruneisen_energy'" > 
+    <equation_of_state             spec="OPTIONAL NO_DATA"
+                                     attribute1="type REQUIRED STRING 'default_hyper, default_hypo, mie_gruneisen, mie_gruneisen_energy'" >
       <C_0                         spec="OPTIONAL DOUBLE" />    <!-- FIXME: what is this? optional (DefaultHypoEOS.xml)? Default value? -->
       <Gamma_0                     spec="OPTIONAL DOUBLE" />
       <S_alpha                     spec="OPTIONAL DOUBLE" />
@@ -228,7 +227,7 @@
     <RTau4                         spec="OPTIONAL DOUBLE" />
     <RTau5                         spec="OPTIONAL DOUBLE" />
     <shear_modulus                 spec="OPTIONAL DOUBLE" />
-    <shear_modulus_model           spec="OPTIONAL NO_DATA" 
+    <shear_modulus_model           spec="OPTIONAL NO_DATA"
                                      attribute1="type REQUIRED STRING 'constant_shear, mts_shear, np_shear, ptw_shear, scg_shear'" >
       <mu_0                        spec="OPTIONAL DOUBLE" />
       <A                           spec="OPTIONAL DOUBLE" />
@@ -241,7 +240,7 @@
       <zeta                        spec="OPTIONAL DOUBLE" />
     </shear_modulus_model>
     <specific_heat                 spec="OPTIONAL DOUBLE" />
-    <specific_heat_model           spec="OPTIONAL NO_DATA" 
+    <specific_heat_model           spec="OPTIONAL NO_DATA"
                                      attribute1="type REQUIRED STRING 'constant_Cp, copper_Cp, steel_Cp'">
       <T_transition                spec="OPTIONAL DOUBLE" />
       <A_LowT                spec="OPTIONAL DOUBLE" />
@@ -268,15 +267,13 @@
     <taylor_quinney_coeff          spec="OPTIONAL DOUBLE" />
     <tolerance                     spec="OPTIONAL DOUBLE" />
     <useModifiedEOS                spec="OPTIONAL BOOLEAN" />
-    <useDamage                     spec="OPTIONAL BOOLEAN" />
-    <usePlasticity                 spec="OPTIONAL BOOLEAN" />
     <useObjectiveRate              spec="OPTIONAL BOOLEAN" />        <!-- FIXME: What is the default -->
     <UseArtificialViscosity        spec="OPTIONAL BOOLEAN" />        <!-- FIXME: What is the default -->
-    <use_polar_decomposition_RMB   spec="OPTIONAL BOOLEAN" /> 
+    <use_polar_decomposition_RMB  spec="OPTIONAL BOOLEAN" />
     <use_time_temperature_equation spec="OPTIONAL BOOLEAN" />   <!-- FIXME: What is the default -->
     <viscosity                     spec="OPTIONAL DOUBLE" />
     <volfracHE                     spec="OPTIONAL DOUBLE" />
-    <yield_condition               spec="OPTIONAL NO_DATA" 
+    <yield_condition               spec="OPTIONAL NO_DATA"
                                      attribute1="type REQUIRED STRING 'gurson, rousselier, vonMises'" >
       <f_c                         spec="OPTIONAL DOUBLE" />   <!-- FIXME: really optional? -->
       <k                           spec="OPTIONAL DOUBLE" />   <!-- FIXME: really optional? -->
@@ -433,10 +430,59 @@
     <WFREE08   spec="OPTIONAL STRING" />
     <WYSLOPEI  spec="OPTIONAL STRING" />
     <WYSLOPEF  spec="OPTIONAL STRING" />
-  
-  
-  
+
+
+
     <PEAKI1IDIST spec="OPTIONAL STRING" />
+
+  <!-- The following are for the Diamm model -->
+    <B0       spec="OPTIONAL DOUBLE" />
+    <B1       spec="OPTIONAL DOUBLE" />
+    <B2       spec="OPTIONAL DOUBLE" />
+    <G0       spec="OPTIONAL DOUBLE" />
+    <G1       spec="OPTIONAL DOUBLE" />
+    <G2       spec="OPTIONAL DOUBLE" />
+    <G3       spec="OPTIONAL DOUBLE" />
+    <A1       spec="OPTIONAL DOUBLE" />
+    <A2       spec="OPTIONAL DOUBLE" />
+    <A3       spec="OPTIONAL DOUBLE" />
+    <A4       spec="OPTIONAL DOUBLE" />
+    <A5       spec="OPTIONAL DOUBLE" />
+    <A6       spec="OPTIONAL DOUBLE" />
+    <AN       spec="OPTIONAL DOUBLE" />
+    <R0       spec="OPTIONAL DOUBLE" />
+    <T0       spec="OPTIONAL DOUBLE" />
+    <C0       spec="OPTIONAL DOUBLE" />
+    <S1       spec="OPTIONAL DOUBLE" />
+    <GP       spec="OPTIONAL DOUBLE" />
+    <CV       spec="OPTIONAL DOUBLE" />
+    <TM       spec="OPTIONAL DOUBLE" />
+    <T1       spec="OPTIONAL DOUBLE" />
+    <T2       spec="OPTIONAL DOUBLE" />
+    <T3       spec="OPTIONAL DOUBLE" />
+    <T4       spec="OPTIONAL DOUBLE" />
+    <XP       spec="OPTIONAL DOUBLE" />
+    <SC       spec="OPTIONAL DOUBLE" />
+    <IDK      spec="OPTIONAL DOUBLE" />
+    <IDG      spec="OPTIONAL DOUBLE" />
+    <A2PF     spec="OPTIONAL DOUBLE" />
+    <TQC      spec="OPTIONAL DOUBLE" />
+    <F1       spec="OPTIONAL DOUBLE" />
+    <TEST     spec="OPTIONAL DOUBLE" />
+    <DEJAVU   spec="OPTIONAL DOUBLE" />
+    <DC1      spec="OPTIONAL DOUBLE" />
+    <DC2      spec="OPTIONAL DOUBLE" />
+    <DC3      spec="OPTIONAL DOUBLE" />
+    <DC4      spec="OPTIONAL DOUBLE" />
+    <DC5      spec="OPTIONAL DOUBLE" />
+    <DC6      spec="OPTIONAL DOUBLE" />
+    <DC7      spec="OPTIONAL DOUBLE" />
+    <DC8      spec="OPTIONAL DOUBLE" />
+    <DC9      spec="OPTIONAL DOUBLE" />
+    <DC10     spec="OPTIONAL DOUBLE" />
+    <DC11     spec="OPTIONAL DOUBLE" />
+    <DC12     spec="OPTIONAL DOUBLE" />
+    <DC13     spec="OPTIONAL DOUBLE" />
   </constitutive_model>
 
 </Uintah_Include>

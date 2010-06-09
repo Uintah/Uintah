@@ -47,6 +47,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/MPM/ConstitutiveModel/HypoElastic.h>
 #include <CCA/Components/MPM/ConstitutiveModel/HypoElasticFortran.h>
 #include <CCA/Components/MPM/ConstitutiveModel/Kayenta.h>
+#include <CCA/Components/MPM/ConstitutiveModel/Diamm.h>
 #include <CCA/Components/MPM/ConstitutiveModel/HypoElasticImplicit.h>
 #include <CCA/Components/MPM/ConstitutiveModel/MWViscoElastic.h>
 #include <CCA/Components/MPM/ConstitutiveModel/Membrane.h>
@@ -172,7 +173,10 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
    
   else if (mat_type == "kayenta")
     return(scinew Kayenta(child,flags));
-   
+
+  else if (mat_type == "diamm")
+    return(scinew Diamm(child,flags));
+
   else if (mat_type ==  "mw_visco_elastic")
     return(scinew MWViscoElastic(child,flags));
    
