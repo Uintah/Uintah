@@ -252,20 +252,25 @@ Source::calculateScalarSource(const ProcessorGroup* pc,
                constvars->old_density, constvars->old_scalar,
                cellinfo->sew, cellinfo->sns, cellinfo->stb, delta_t);
 
-  // TOTAL KLUDGE FOR REACTING COAL---------------------------
-  // Keep commented out unless you know what you are doing!
-  //for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
-  //  Vector Dx = patch->dCell();
-  //  double volume = Dx.x()*Dx.y()*Dx.z();
-  //  vars->scalarNonlinearSrc[*iter] += vars->otherSource[*iter]*volume;
-  //}
-  // END KLUDGE ----------------------------------------------
-
 // Here we need to add the boundary source term if there are some.
   if (d_boundaryCondition->getNumSourceBndry() > 0){
     for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
       vars->scalarNonlinearSrc[*iter] += vars->scalarBoundarySrc[*iter];
     }
+  }
+}
+void 
+Source::addOtherScalarSource( const ProcessorGroup* pc, 
+                              const Patch* patch, 
+                              CellInformation* cellinfo, 
+                              ArchesVariables* vars )
+{
+  for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
+
+    Vector Dx = patch->dCell(); 
+    double volume = Dx.x()*Dx.y()*Dx.z(); 
+    vars->scalarNonlinearSrc[*iter] += vars->otherSource[*iter]*volume; 
+
   }
 }
 //-----------------------------------------------
@@ -686,4 +691,26 @@ Source::calculatePressMMSSourcePred(const ProcessorGroup* ,
     }
   }
 }
+
+//****************************************************************************
+// Add the momentum source from particle-gas momentum exchange
+//****************************************************************************
+void
+Source::computeParticleSource(const ProcessorGroup*,
+                                const Patch* patch,
+                                CellInformation*,
+                                ArchesVariables* vars,
+                                ArchesConstVariables* constvars)
+{
+
+  for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
+    Vector Dx = patch->dCell();
+    double volume = Dx.x()*Dx.y()*Dx.z();
+    IntVector c = *iter;
+    vars->uVelNonlinearSrc[c] += vars->otherVectorSource[c].x()*volume;
+    vars->vVelNonlinearSrc[c] += vars->otherVectorSource[c].y()*volume;
+    vars->wVelNonlinearSrc[c] += vars->otherVectorSource[c].z()*volume;
+  }
+}
+
 

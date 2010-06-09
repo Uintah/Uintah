@@ -116,10 +116,10 @@ ScalarEqn::problemSetup(const ProblemSpecP& inputdb)
       throw InvalidValue("A low or high clipping must be specified if the <Clipping> section is activated!", __FILE__, __LINE__);
   } 
 
-  // Scaling information:
+  // Scaling information
   db->getWithDefault( "scaling_const", d_scalingConstant, 1.0 ); 
 
-  // Initialization (new way):
+  // Initialization function
   ProblemSpecP db_initialValue = db->findBlock("initialization");
   if (db_initialValue) {
 

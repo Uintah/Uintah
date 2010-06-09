@@ -16,7 +16,8 @@ MMS1Builder::MMS1Builder(std::string srcName,
                                          vector<std::string> reqLabelNames, 
                                          SimulationStateP& sharedState)
 : SourceTermBuilder(srcName, reqLabelNames, sharedState)
-{}
+{ 
+}
 
 MMS1Builder::~MMS1Builder(){}
 
@@ -30,7 +31,9 @@ MMS1Builder::build(){
 MMS1::MMS1( std::string srcName, SimulationStateP& sharedState,
                             vector<std::string> reqLabelNames ) 
 : SourceTermBase(srcName, sharedState, reqLabelNames)
-{}
+{
+  d_srcLabel = VarLabel::create(srcName, CCVariable<double>::getTypeDescription()); 
+}
 
 MMS1::~MMS1()
 {}
@@ -50,7 +53,7 @@ MMS1::problemSetup(const ProblemSpecP& inputdb)
 void 
 MMS1::sched_computeSource( const LevelP& level, SchedulerP& sched, int timeSubStep )
 {
-  std::string taskname = "MMS1::eval";
+  std::string taskname = "MMS1::computeSource";
   Task* tsk = scinew Task(taskname, this, &MMS1::computeSource, timeSubStep);
 
   if (timeSubStep == 0 && !d_labelSchedInit) {

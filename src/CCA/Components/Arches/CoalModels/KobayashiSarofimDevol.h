@@ -16,11 +16,10 @@
   * @date     May 2009        Check-in of initial version
   *           November 2009   Verification
   *
-  * @brief    A class for calculating the DQMOM model term for the 
-  *           Kobayashi-Sarofim coal devolatilization model.
+  * @brief    A class for calculating the raw coal internal coordinate
+  *           model term for the Kobayashi-Sarofim coal devolatilization model.
   *
-  * The Builder is required because of the Model Factory; the Factory needs
-  * some way to create the model term and register it.
+  * @todo     Add calculation of char production model term.
   *
   */
 
@@ -66,9 +65,24 @@ public:
   // Initialization method
 
   /** @brief Interface for the inputfile and set constants */ 
-  void problemSetup(const ProblemSpecP& db, int qn);
+  void problemSetup(const ProblemSpecP& db);
 
-  // No initVars() method because no special variables needed
+  /** @brief  Actually do dummy initialization (sched_dummyInit is defined in ModelBase parent class) */
+  void dummyInit( const ProcessorGroup* pc, 
+                  const PatchSubset* patches, 
+                  const MaterialSubset* matls, 
+                  DataWarehouse* old_dw, 
+                  DataWarehouse* new_dw );
+
+  /** @brief Schedule the initialization of special/local variables unique to model */
+  void sched_initVars( const LevelP& level, SchedulerP& sched );
+
+  /** @brief  Actually initialize special variables unique to model */
+  void initVars( const ProcessorGroup * pc, 
+                 const PatchSubset    * patches, 
+                 const MaterialSubset * matls, 
+                 DataWarehouse        * old_dw, 
+                 DataWarehouse        * new_dw );
 
   ////////////////////////////////////////////////
   // Model computation method
@@ -106,10 +120,6 @@ public:
 
 private:
 
-  const VarLabel* d_raw_coal_mass_label;
-  const VarLabel* d_weight_label;
-  const VarLabel* d_particle_temperature_label;
-
   double A1;        ///< Pre-exponential factors for devolatilization rate constants
   double A2;        ///< Pre-exponential factors for devolatilization rate constants
   double E1;        ///< Activation energy for devolatilization rate constant
@@ -124,8 +134,6 @@ private:
   bool compute_part_temp; ///< Boolean: is particle temperature computed? 
                           //   (if not, gas temp = particle temp)
 
-  double d_rc_scaling_factor;   ///< Scaling factor for raw coal internal coordinate
-  double d_pt_scaling_factor;   ///< Scaling factor for particle temperature internal coordinate
 
 }; // end ConstSrcTerm
 } // end namespace Uintah

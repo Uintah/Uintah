@@ -3,7 +3,7 @@
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/Variables/CCVariable.h>
-#include <CCA/Components/Arches/SourceTerms/ConstSrcTerm.h>
+#include <CCA/Components/Arches/SourceTerms/ConstantSourceTerm.h>
 
 //===========================================================================
 
@@ -12,33 +12,36 @@ using namespace Uintah;
 
 //---------------------------------------------------------------------------
 // Builder:
-ConstSrcTermBuilder::ConstSrcTermBuilder(std::string srcName, 
+ConstantSourceTermBuilder::ConstantSourceTermBuilder(std::string srcName, 
                                          vector<std::string> reqLabelNames, 
                                          SimulationStateP& sharedState)
 : SourceTermBuilder(srcName, reqLabelNames, sharedState)
-{}
+{
+}
 
-ConstSrcTermBuilder::~ConstSrcTermBuilder(){}
+ConstantSourceTermBuilder::~ConstantSourceTermBuilder(){}
 
 SourceTermBase*
-ConstSrcTermBuilder::build(){
-  return scinew ConstSrcTerm( d_srcName, d_sharedState, d_requiredLabels );
+ConstantSourceTermBuilder::build(){
+  return scinew ConstantSourceTerm( d_srcName, d_sharedState, d_requiredLabels );
 }
 // End Builder
 //---------------------------------------------------------------------------
 
-ConstSrcTerm::ConstSrcTerm( std::string srcName, SimulationStateP& sharedState,
+ConstantSourceTerm::ConstantSourceTerm( std::string srcName, SimulationStateP& sharedState,
                             vector<std::string> reqLabelNames ) 
 : SourceTermBase(srcName, sharedState, reqLabelNames)
-{}
+{
+  d_srcLabel = VarLabel::create(srcName, CCVariable<double>::getTypeDescription()); 
+}
 
-ConstSrcTerm::~ConstSrcTerm()
+ConstantSourceTerm::~ConstantSourceTerm()
 {}
 //---------------------------------------------------------------------------
 // Method: Problem Setup
 //---------------------------------------------------------------------------
 void 
-ConstSrcTerm::problemSetup(const ProblemSpecP& inputdb)
+ConstantSourceTerm::problemSetup(const ProblemSpecP& inputdb)
 {
 
   ProblemSpecP db = inputdb; 
@@ -50,10 +53,10 @@ ConstSrcTerm::problemSetup(const ProblemSpecP& inputdb)
 // Method: Schedule the calculation of the source term 
 //---------------------------------------------------------------------------
 void 
-ConstSrcTerm::sched_computeSource( const LevelP& level, SchedulerP& sched, int timeSubStep )
+ConstantSourceTerm::sched_computeSource( const LevelP& level, SchedulerP& sched, int timeSubStep )
 {
-  std::string taskname = "ConstSrcTerm::eval";
-  Task* tsk = scinew Task(taskname, this, &ConstSrcTerm::computeSource, timeSubStep);
+  std::string taskname = "ConstantSourceTerm::computeSource";
+  Task* tsk = scinew Task(taskname, this, &ConstantSourceTerm::computeSource, timeSubStep);
 
   if (timeSubStep == 0 && !d_labelSchedInit) {
     // Every source term needs to set this flag after the varLabel is computed. 
@@ -78,7 +81,7 @@ ConstSrcTerm::sched_computeSource( const LevelP& level, SchedulerP& sched, int t
 // Method: Actually compute the source term 
 //---------------------------------------------------------------------------
 void
-ConstSrcTerm::computeSource( const ProcessorGroup* pc, 
+ConstantSourceTerm::computeSource( const ProcessorGroup* pc, 
                    const PatchSubset* patches, 
                    const MaterialSubset* matls, 
                    DataWarehouse* old_dw, 
@@ -120,11 +123,11 @@ ConstSrcTerm::computeSource( const ProcessorGroup* pc,
 // Method: Schedule dummy initialization
 //---------------------------------------------------------------------------
 void
-ConstSrcTerm::sched_dummyInit( const LevelP& level, SchedulerP& sched )
+ConstantSourceTerm::sched_dummyInit( const LevelP& level, SchedulerP& sched )
 {
-  string taskname = "ConstSrcTerm::dummyInit"; 
+  string taskname = "ConstantSourceTerm::dummyInit"; 
 
-  Task* tsk = scinew Task(taskname, this, &ConstSrcTerm::dummyInit);
+  Task* tsk = scinew Task(taskname, this, &ConstantSourceTerm::dummyInit);
 
   tsk->computes(d_srcLabel);
 
@@ -136,7 +139,7 @@ ConstSrcTerm::sched_dummyInit( const LevelP& level, SchedulerP& sched )
 
 }
 void 
-ConstSrcTerm::dummyInit( const ProcessorGroup* pc, 
+ConstantSourceTerm::dummyInit( const ProcessorGroup* pc, 
                       const PatchSubset* patches, 
                       const MaterialSubset* matls, 
                       DataWarehouse* old_dw, 

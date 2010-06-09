@@ -1,4 +1,4 @@
-#include <CCA/Components/Arches/CoalModels/Devolatilization.h>
+#include <CCA/Components/Arches/CoalModels/CharOxidation.h>
 #include <CCA/Components/Arches/TransportEqns/EqnFactory.h>
 #include <CCA/Components/Arches/TransportEqns/EqnBase.h>
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqn.h>
@@ -17,12 +17,12 @@
 using namespace std;
 using namespace Uintah; 
 
-Devolatilization::Devolatilization( std::string modelName, 
-                                              SimulationStateP& sharedState,
-                                              const ArchesLabel* fieldLabels,
-                                              vector<std::string> icLabelNames, 
-                                              vector<std::string> scalarLabelNames,
-                                              int qn ) 
+CharOxidation::CharOxidation( std::string modelName, 
+                              SimulationStateP& sharedState,
+                              const ArchesLabel* fieldLabels,
+                              vector<std::string> icLabelNames, 
+                              vector<std::string> scalarLabelNames,
+                              int qn ) 
 : ModelBase(modelName, sharedState, fieldLabels, icLabelNames, scalarLabelNames, qn)
 {
   d_quadNode = qn;
@@ -35,16 +35,16 @@ Devolatilization::Devolatilization( std::string modelName,
   d_gasLabel = VarLabel::create( gasSourceName, CCVariable<double>::getTypeDescription() );
 }
 
-Devolatilization::~Devolatilization()
+CharOxidation::~CharOxidation()
 {}
 
 //---------------------------------------------------------------------------
 // Method: Problem Setup
 //---------------------------------------------------------------------------
   void 
-Devolatilization::problemSetup(const ProblemSpecP& params)
+CharOxidation::problemSetup(const ProblemSpecP& params)
 {
-  // This method is called by all devolatilization classes' problemSetup()
+  // This method is called by all char oxiation classes' problemSetup()
 
   ProblemSpecP db = params; 
 
@@ -85,11 +85,11 @@ This method was originally in ModelBase, but it requires creating CCVariables
 @see ExplicitSolver::noSolve()
  */
 void
-Devolatilization::dummyInit( const ProcessorGroup* pc,
-                             const PatchSubset* patches, 
-                             const MaterialSubset* matls, 
-                             DataWarehouse* old_dw, 
-                             DataWarehouse* new_dw )
+CharOxidation::dummyInit( const ProcessorGroup* pc,
+                          const PatchSubset* patches, 
+                          const MaterialSubset* matls, 
+                          DataWarehouse* old_dw, 
+                          DataWarehouse* new_dw )
 {
   for( int p=0; p < patches->size(); ++p ) {
 
@@ -120,10 +120,10 @@ Devolatilization::dummyInit( const ProcessorGroup* pc,
 // Method: Schedule the initialization of special variables unique to model
 //---------------------------------------------------------------------------
 void 
-Devolatilization::sched_initVars( const LevelP& level, SchedulerP& sched )
+CharOxidation::sched_initVars( const LevelP& level, SchedulerP& sched )
 {
-  std::string taskname = "Devolatilization::initVars";
-  Task* tsk = scinew Task(taskname, this, &Devolatilization::initVars);
+  std::string taskname = "CharOxidation::initVars";
+  Task* tsk = scinew Task(taskname, this, &CharOxidation::initVars);
 
   tsk->computes( d_modelLabel );
   tsk->computes( d_gasLabel   );
@@ -135,11 +135,11 @@ Devolatilization::sched_initVars( const LevelP& level, SchedulerP& sched )
 // Method: Initialize special variables unique to the model
 //-------------------------------------------------------------------------
 void
-Devolatilization::initVars( const ProcessorGroup * pc, 
-                            const PatchSubset    * patches, 
-                            const MaterialSubset * matls, 
-                            DataWarehouse        * old_dw, 
-                            DataWarehouse        * new_dw )
+CharOxidation::initVars( const ProcessorGroup * pc, 
+                         const PatchSubset    * patches, 
+                         const MaterialSubset * matls, 
+                         DataWarehouse        * old_dw, 
+                         DataWarehouse        * new_dw )
 {
   for( int p=0; p < patches->size(); p++ ) {  // Patch loop
 
@@ -156,3 +156,4 @@ Devolatilization::initVars( const ProcessorGroup * pc,
     gas_value.initialize(0.0);
   }
 }
+

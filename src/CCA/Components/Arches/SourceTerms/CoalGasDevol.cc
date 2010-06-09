@@ -36,7 +36,9 @@ CoalGasDevolBuilder::build(){
 CoalGasDevol::CoalGasDevol( std::string srcName, SimulationStateP& sharedState,
                             vector<std::string> reqLabelNames ) 
 : SourceTermBase(srcName, sharedState, reqLabelNames)
-{}
+{
+  d_srcLabel = VarLabel::create(srcName, CCVariable<double>::getTypeDescription()); 
+}
 
 CoalGasDevol::~CoalGasDevol()
 {}

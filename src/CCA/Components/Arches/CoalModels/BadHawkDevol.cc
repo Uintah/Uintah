@@ -65,7 +65,7 @@ BadHawkDevol::~BadHawkDevol()
 // Method: Problem Setup
 //---------------------------------------------------------------------------
   void 
-BadHawkDevol::problemSetup(const ProblemSpecP& params, int qn)
+BadHawkDevol::problemSetup(const ProblemSpecP& params)
 {
   ProblemSpecP db = params; 
   compute_part_temp = false;
@@ -85,7 +85,7 @@ BadHawkDevol::problemSetup(const ProblemSpecP& params, int qn)
     
     string node;
     std::stringstream out;
-    out << qn;
+    out << d_quadNode;
     node = out.str();
     temp_label_name += "_qn";
     temp_label_name += node;
@@ -129,7 +129,7 @@ BadHawkDevol::problemSetup(const ProblemSpecP& params, int qn)
 
     string node;
     std::stringstream out;
-    out << qn;
+    out << d_quadNode;
     node = out.str();
     temp_label_name += "_qn";
     temp_label_name += node;
@@ -160,7 +160,7 @@ BadHawkDevol::problemSetup(const ProblemSpecP& params, int qn)
 
     std::string node;
     std::stringstream out;
-    out << qn;
+    out << d_quadNode;
     node = out.str();
     temp_ic_name_full += "_qn";
     temp_ic_name_full += node;
@@ -176,7 +176,7 @@ BadHawkDevol::problemSetup(const ProblemSpecP& params, int qn)
     temp_ic_name      = (*iString);
     temp_ic_name_full = temp_ic_name;
 
-    out << qn;
+    out << d_quadNode;
     node = out.str();
     temp_ic_name_full += "_qn";
     temp_ic_name_full += node;
@@ -212,73 +212,44 @@ BadHawkDevol::sched_dummyInit( const LevelP& level, SchedulerP& sched )
 // Method: Actually do the dummy initialization
 //-------------------------------------------------------------------------
 /** @details
-This is called from ExplicitSolver::noSolve(), which skips the first timestep
- so that the initial conditions are correct.
-
-This method was originally in ModelBase, but it requires creating CCVariables
- for the model and gas source terms, and the CCVariable type (double, Vector, &c.)
- is model-dependent.  Putting the method here eliminates if statements in 
- ModelBase and keeps the ModelBase class as generic as possible.
- */
+This method intentionally left blank. 
+@seealso Devolatilization::dummyInit
+*/
 void
 BadHawkDevol::dummyInit( const ProcessorGroup* pc,
-                                  const PatchSubset* patches, 
-                                  const MaterialSubset* matls, 
-                                  DataWarehouse* old_dw, 
-                                  DataWarehouse* new_dw )
+                         const PatchSubset* patches, 
+                         const MaterialSubset* matls, 
+                         DataWarehouse* old_dw, 
+                         DataWarehouse* new_dw )
 {
-  for( int p=0; p < patches->size(); ++p ) {
-
-    Ghost::GhostType  gn = Ghost::None;
-
-    const Patch* patch = patches->get(p);
-    int archIndex = 0;
-    int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
-
-    CCVariable<double> model;
-    CCVariable<double> gasSource;
-    
-    constCCVariable<double> oldModel;
-    constCCVariable<double> oldGasSource;
-
-    new_dw->allocateAndPut( model,     d_modelLabel, matlIndex, patch );
-    new_dw->allocateAndPut( gasSource, d_gasLabel,   matlIndex, patch ); 
-
-    old_dw->get( oldModel,     d_modelLabel, matlIndex, patch, gn, 0 );
-    old_dw->get( oldGasSource, d_gasLabel,   matlIndex, patch, gn, 0 );
-
-    model.copyData(oldModel);
-    gasSource.copyData(oldGasSource);
-
-  }
 }
 
 //---------------------------------------------------------------------------
 // Method: Schedule the initialization of some variables 
 //---------------------------------------------------------------------------
+/** @details
+This method intentionally left blank. 
+@seealso Devolatilization::sched_initVars
+*/
 void 
 BadHawkDevol::sched_initVars( const LevelP& level, SchedulerP& sched )
 {
-
-  std::string taskname = "BadHawkDevol::initVars";
-  Task* tsk = scinew Task(taskname, this, &BadHawkDevol::initVars);
-
-  sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials()); 
 }
 
 //-------------------------------------------------------------------------
 // Method: Initialize variables
 //-------------------------------------------------------------------------
+/** @details
+This method intentionally left blank. 
+@seealso Devolatilization::initVars
+*/
 void
 BadHawkDevol::initVars( const ProcessorGroup * pc, 
-                                 const PatchSubset    * patches, 
-                                 const MaterialSubset * matls, 
-                                 DataWarehouse        * old_dw, 
-                                 DataWarehouse        * new_dw )
+                        const PatchSubset    * patches, 
+                        const MaterialSubset * matls, 
+                        DataWarehouse        * old_dw, 
+                        DataWarehouse        * new_dw )
 {
-  // No special local variables for this model...
-  for( int p=0; p < patches->size(); p++ ) {  // Patch loop
-  }
 }
 
 //---------------------------------------------------------------------------

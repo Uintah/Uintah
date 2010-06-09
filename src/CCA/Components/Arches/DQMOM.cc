@@ -16,7 +16,6 @@
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/IntVector.h>
 #include <Core/Grid/SimulationState.h>
-#include <Core/Exceptions/InvalidValue.h>
 #include <CCA/Components/Arches/DQMOM.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Parallel/Parallel.h>
@@ -24,16 +23,13 @@
 #include <Core/Thread/Time.h>
 #include <Core/Exceptions/FileNotFound.h>
 #include <Core/Exceptions/ProblemSetupException.h>
+#include <Core/Exceptions/InvalidValue.h>
 #include <Core/Datatypes/Matrix.h>
 #include <Core/Datatypes/DenseMatrix.h>
 #include <Core/Datatypes/ColumnMatrix.h>
 #include <Core/Datatypes/SparseRowMatrix.h>
 #include <Core/Datatypes/MatrixOperations.h>
 #include <CCA/Components/Arches/Directives.h>
-
-#include <iostream>
-#include <sstream>
-#include <fstream>
 
 //===========================================================================
 
@@ -189,14 +185,14 @@ void DQMOM::problemSetup(const ProblemSpecP& params)
   
   // Check to make sure number of total moments specified in input file is correct
   if ( moments != (N_xi+1)*N_ ) {
-    proc0cout << "ERROR:DQMOM:ProblemSetup: You specified " << moments << " moments, but you need " << (N_xi+1)*N_ << " moments." << endl;
-    throw InvalidValue( "ERROR:DQMOM:ProblemSetup: The number of moments specified was incorrect!",__FILE__,__LINE__);
+    proc0cout << "ERROR: DQMOM: ProblemSetup: You specified " << moments << " moments, but you need " << (N_xi+1)*N_ << " moments." << endl;
+    throw InvalidValue( "ERROR: DQMOM: ProblemSetup: The number of moments specified was incorrect!",__FILE__,__LINE__);
   }
 
   // Check to make sure number of moment indices matches the number of internal coordinates
   if ( index_length != N_xi ) {
-    proc0cout << "ERROR:DQMOM:ProblemSetup: You specified " << index_length << " moment indices, but there are " << N_xi << " internal coordinates." << endl;
-    throw InvalidValue( "ERROR:DQMOM:ProblemSetup: The number of moment indices specified was incorrect! Need ",__FILE__,__LINE__);
+    proc0cout << "ERROR: DQMOM:ProblemSetup: You specified " << index_length << " moment indices, but there are " << N_xi << " internal coordinates." << endl;
+    throw InvalidValue( "ERROR: DQMOM: ProblemSetup: The number of moment indices specified was incorrect! Need ",__FILE__,__LINE__);
   }
 
 #if defined(VERIFY_AB_CONSTRUCTION)
@@ -288,6 +284,11 @@ DQMOM::populateMomentsMap( std::vector<MomentVector> allMoments )
     // e.g. moment_001 &c.
     //d_fieldLabels->DQMOMMoments[tempMomentVector] = tempVarLabel;
     d_fieldLabels->DQMOMMoments[thisMoment] = tempVarLabel;
+
+    name += "_mean";
+    /*const VarLabel* */ tempVarLabel = VarLabel::create(name, CCVariable<double>::getTypeDescription());
+    proc0cout << "Creating label for " << name << endl;
+    d_fieldLabels->DQMOMMomentsMean[thisMoment] = tempVarLabel;
   }
   proc0cout << endl;
 }
@@ -1717,16 +1718,28 @@ DQMOM::sched_calculateMoments( const LevelP& level, SchedulerP& sched, int timeS
   string taskname = "DQMOM::calculateMoments";
   Task* tsk = scinew Task(taskname, this, &DQMOM::calculateMoments);
 
-  if( timeSubStep == 0 )
+  if( timeSubStep == 0 ) {
     proc0cout << "Requesting DQMOM moment labels" << endl;
+  }
   
   // computing/modifying the actual moments
   for( ArchesLabel::MomentMap::iterator iMoment = d_fieldLabels->DQMOMMoments.begin();
        iMoment != d_fieldLabels->DQMOMMoments.end(); ++iMoment ) {
-    if( timeSubStep == 0 )
+    if( timeSubStep == 0 ) {
       tsk->computes( iMoment->second );
-    else
+    } else {
       tsk->modifies( iMoment->second );
+    }
+  }
+
+  // computing/modifying the moments about the mean
+  for( ArchesLabel::MomentMap::iterator iMoment = d_fieldLabels->DQMOMMomentsMean.begin();
+       iMoment != d_fieldLabels->DQMOMMomentsMean.end(); ++iMoment ) {
+    if( timeSubStep == 0 ) {
+      tsk->computes( iMoment->second );
+    } else {
+      tsk->modifies( iMoment->second );
+    }
   }
 
   // require the weights and weighted abscissas
@@ -1825,6 +1838,8 @@ DQMOM::calculateMoments( const ProcessorGroup* pc,
 
         MomentVector thisMoment = (*iAllMoments);
 
+
+
         // Grab the corresponding moment from the DQMOMMoment map (to get the VarLabel associated with this moment)
         const VarLabel* moment_label;
         ArchesLabel::MomentMap::iterator iMoment = d_fieldLabels->DQMOMMoments.find( thisMoment );
@@ -1902,9 +1917,93 @@ DQMOM::calculateMoments( const ProcessorGroup* pc,
         if (running_weights_sum == 0) {
           moment_k[c] = 0.0;
         } else if (is_zeroth_moment) {
-          moment_k[c] = temp_moment_k; // don't normalize zeroth moment! otherwise it's always 1...
+          moment_k[c] = temp_moment_k; // don't normalize the zeroth moment - otherwise it will always be 1...
         } else {
           moment_k[c] = temp_moment_k/running_weights_sum; // normalize environment weight to get environment probability
+        }
+
+
+
+        // Grab the corresponding moment from the DQMOMMomentsMean map (to get the VarLabel associated with this moment)
+        const VarLabel* mean_moment_label;
+        ArchesLabel::MomentMap::iterator iMomentMean = d_fieldLabels->DQMOMMomentsMean.find( thisMoment );
+        if( iMomentMean != d_fieldLabels->DQMOMMomentsMean.end() ) {
+          // grab the corresponding label
+          mean_moment_label = iMomentMean->second;
+        } else {
+          string index;
+          std::stringstream out;
+          for( MomentVector::iterator iMomentIndex = thisMoment.begin();
+               iMomentIndex != thisMoment.end(); ++iMomentIndex ) {
+            out << (*iMomentIndex);
+            index += out.str();
+          }
+          string errmsg = "ERROR: DQMOM: calculateMoments: could not find moment (about the mean) index " + index + " in DQMOMMomentsMean map!\nIf you are running verification, you must turn off calculation of moments using <calculate_moments>false</calculate_moments>";
+          throw InvalidValue( errmsg,__FILE__,__LINE__);
+        }
+
+        // Associate a CCVariable<double> with this moment 
+        CCVariable<double> mean_moment_k;
+        if( new_dw->exists( mean_moment_label, matlIndex, patch ) ) {
+          // running getModifiable once for each cell
+          new_dw->getModifiable( mean_moment_k, mean_moment_label, matlIndex, patch );
+        } else {
+          // only run for first cell - so this doesn't wipe out previous calculations
+          new_dw->allocateAndPut( mean_moment_k, mean_moment_label, matlIndex, patch );
+          mean_moment_k.initialize(0.0);
+        }
+
+        // Calculate the value of the moment
+        /*double*/ temp_moment_k = 0.0;
+        /*double*/ running_weights_sum = 0.0; // this is the denominator of p_alpha
+        /*double*/ running_product = 0.0; // this is w_alpha * xi_1_alpha^k1 * xi_2_alpha^k2 * ...
+
+        /*bool*/ is_zeroth_moment = true;
+        for( MomentVector::iterator iM = thisMoment.begin(); iM != thisMoment.end(); ++iM ) {
+          if ( (*iM) != 0 ) {
+            is_zeroth_moment = false;
+            break;
+          }
+        }
+
+        for( unsigned int alpha = 0; alpha < N_; ++alpha ) {
+          if( weights[alpha] < d_w_small ) {
+            running_product = 0.0;
+          } else {
+            double weight = weights[alpha]*d_weight_scaling_constant;
+            running_weights_sum += weight;
+            running_product = weight;
+            for( unsigned int j = 0; j < N_xi; ++j ) {
+              double base = (weightedAbscissas[j*(N_)+alpha]/weights[alpha])*(d_weighted_abscissa_scaling_constants[j*(N_)+alpha]); // don't need 1/d_weight_scaling_constant 
+                                                                                                                                    // because it's already in the weighted abscissa!
+              // calculating moments about the mean... so find the mean
+              if( thisMoment[j] != 0 && thisMoment[j] != 1 ) {
+                double mean = 0.0;
+                double mean_numerator = 0.0;
+                double mean_divisor = 0.0;
+                for( unsigned int alpha2 = 0; alpha2 < N_; ++alpha2 ) {
+                  mean_numerator += weightedAbscissas[j*(N_)+alpha2]*d_weighted_abscissa_scaling_constants[j*(N_)+alpha2];
+                  mean_divisor += weights[alpha2];
+                }
+                if (mean_divisor != 0 ) {
+                  mean = mean_numerator/mean_divisor;
+                }
+                base -= mean;
+              }
+              double exponent = thisMoment[j];
+              running_product *= pow( base, exponent );
+            }
+          }
+          temp_moment_k += running_product;
+          running_product = 0.0;
+        }
+
+        if (running_weights_sum == 0) {
+          mean_moment_k[c] = 0.0;
+        } else if (is_zeroth_moment) {
+          mean_moment_k[c] = temp_moment_k; // don't normalize zeroth moment! otherwise it's always 1...
+        } else {
+          mean_moment_k[c] = temp_moment_k/running_weights_sum; // normalize environment weight to get environment probability
         }
 
       }//end all moments

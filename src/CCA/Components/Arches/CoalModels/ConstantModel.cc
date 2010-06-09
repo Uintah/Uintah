@@ -62,7 +62,7 @@ ConstantModel::~ConstantModel()
 // Method: Problem Setup
 //---------------------------------------------------------------------------
 void 
-ConstantModel::problemSetup(const ProblemSpecP& inputdb, int qn)
+ConstantModel::problemSetup(const ProblemSpecP& inputdb )
 {
 
   ProblemSpecP db = inputdb; 
@@ -126,6 +126,9 @@ ConstantModel::sched_initVars( const LevelP& level, SchedulerP& sched )
   std::string taskname = "ConstantModel::initVars";
   Task* tsk = scinew Task(taskname, this, &ConstantModel::initVars);
 
+  tsk->computes( d_modelLabel );
+  tsk->computes( d_gasLabel   );
+
   sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials()); 
 }
 
@@ -139,21 +142,21 @@ ConstantModel::initVars( const ProcessorGroup * pc,
                             DataWarehouse        * old_dw, 
                             DataWarehouse        * new_dw )
 {
-  // This method left intentionally blank...
-  // It has the form:
-  /*
   for( int p=0; p < patches->size(); p++ ) {  // Patch loop
 
     const Patch* patch = patches->get(p);
     int archIndex = 0;
     int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
 
-    CCVariable<double> something; 
-    new_dw->allocateAndPut( something, d_something_label, matlIndex, patch ); 
-    something.initialize(0.0)
+    CCVariable<double> model_value; 
+    new_dw->allocateAndPut( model_value, d_modelLabel, matlIndex, patch ); 
+    model_value.initialize(0.0);
+
+    CCVariable<double> gas_value; 
+    new_dw->allocateAndPut( gas_value, d_gasLabel, matlIndex, patch ); 
+    gas_value.initialize(0.0);
 
   }
-  */
 }
 
 

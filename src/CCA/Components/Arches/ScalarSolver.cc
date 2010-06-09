@@ -192,6 +192,18 @@ ScalarSolver::problemSetup(const ProblemSpecP& params)
   d_source->setBoundary(d_boundaryCondition);
 // -- jeremy --        
 
+//TODO - look at this stuff
+  // New Source terms (ala the new transport eqn):
+  if (db->findBlock("src")){
+    string srcname; 
+    for (ProblemSpecP src_db = db->findBlock("src"); src_db != 0; src_db = src_db->findNextBlock("src")){
+      src_db->getAttribute("label", srcname);
+      //which sources are turned on for this equation
+      d_new_sources.push_back( srcname ); 
+
+    }
+  }
+
   d_discretize->setTurbulentPrandtlNumber(d_turbPrNo);
 }
 
@@ -305,13 +317,17 @@ ScalarSolver::sched_buildLinearMatrix(SchedulerP& sched,
 //#endif
     tsk->modifies(d_lab->d_scalarBoundarySrcLabel);
 
-    // TOTAL KLUDGE FOR REACTING COAL---------------------------
-    // Keep commented out unless you know what you are doing!
-    //SourceTermFactory& factory = SourceTermFactory::self();
-    //SourceTermBase& src = factory.retrieve_source_term( "eta_source" ); 
-    //const VarLabel* srcLabel = src.getSrcLabel();
-    //tsk->requires(Task::OldDW, srcLabel, gn, 0);
-    // END KLUDGE ----------------------------------------------
+    // TODO - look at this stuff //cmr
+    // Adding new sources from factory:
+    SourceTermFactory& factor = SourceTermFactory::self(); 
+    for (vector<std::string>::iterator iter = d_new_sources.begin(); 
+        iter != d_new_sources.end(); iter++){
+
+      SourceTermBase& src = factor.retrieve_source_term( *iter ); 
+      const VarLabel* srcLabel = src.getSrcLabel(); 
+      tsk->requires(Task::OldDW, srcLabel, gn, 0); 
+
+    }
   }else {
 
     // -------- New Coefficient Stuff -------------
@@ -327,13 +343,17 @@ ScalarSolver::sched_buildLinearMatrix(SchedulerP& sched,
 //#endif
     tsk->modifies(d_lab->d_scalarBoundarySrcLabel);
 
-    // TOTAL KLUDGE FOR REACTING COAL---------------------------
-    // Keep commented out unless you know what you are doing!
-    //SourceTermFactory& factory = SourceTermFactory::self();
-    //SourceTermBase& src = factory.retrieve_source_term( "eta_source" ); 
-    //const VarLabel* srcLabel = src.getSrcLabel();
-    //tsk->requires(Task::OldDW, srcLabel, gn, 0);
-    // END KLUDGE ----------------------------------------------
+    // TODO - look at this stuff //cmr
+    // Adding new sources from factory:
+    SourceTermFactory& factor = SourceTermFactory::self(); 
+    for (vector<std::string>::iterator iter = d_new_sources.begin(); 
+        iter != d_new_sources.end(); iter++){
+
+      SourceTermBase& src = factor.retrieve_source_term( *iter ); 
+      const VarLabel* srcLabel = src.getSrcLabel(); 
+      tsk->requires(Task::NewDW, srcLabel, gn, 0); 
+
+    }
   }
   if (doing_EKT_now){
     if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
@@ -445,13 +465,19 @@ void ScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
     new_dw->getModifiable(scalarVars.scalarBoundarySrc,
                                 d_lab->d_scalarBoundarySrcLabel, indx, patch);
 
-  // TOTAL KLUDGE FOR REACTING COAL---------------------------
-  // Keep commented out unless you know what you are doing!
-  //SourceTermFactory& factory = SourceTermFactory::self();
-  //SourceTermBase& src = factory.retrieve_source_term( "eta_source" ); 
-  //const VarLabel* srcLabel = src.getSrcLabel();
-  //old_dw->get( scalarVars.otherSource, srcLabel, indx, patch, Ghost::None, 0);
-  // END KLUDGE ----------------------------------------------
+    // TODO - look at this stuff //cmr
+    // Adding new sources from factory:
+    SourceTermFactory& factor = SourceTermFactory::self(); 
+    for (vector<std::string>::iterator iter = d_new_sources.begin(); 
+       iter != d_new_sources.end(); iter++){
+
+      SourceTermBase& src = factor.retrieve_source_term( *iter ); 
+      const VarLabel* srcLabel = src.getSrcLabel(); 
+      // here we have made the assumption that there is only one scalar source.
+      // probably want to fix this. 
+      old_dw->get( scalarVars.otherSource, srcLabel, indx, patch, Ghost::None, 0); 
+
+    }
 
 
   }else {
@@ -480,13 +506,19 @@ void ScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
     new_dw->getModifiable(scalarVars.scalarBoundarySrc,
                           d_lab->d_scalarBoundarySrcLabel, indx, patch);
  
-    // TOTAL KLUDGE FOR REACTING COAL---------------------------
-    // Keep commented out unless you know what you are doing!
-    //SourceTermFactory& factory = SourceTermFactory::self();
-    //SourceTermBase& src = factory.retrieve_source_term( "eta_source" ); 
-    //const VarLabel* srcLabel = src.getSrcLabel();
-    //old_dw->get( scalarVars.otherSource, srcLabel, indx, patch, Ghost::None, 0);
-    // END KLUDGE ----------------------------------------------
+    // TODO - look through this //cmr
+    // Adding new sources from factory:
+    SourceTermFactory& factor = SourceTermFactory::self(); 
+    for (vector<std::string>::iterator iter = d_new_sources.begin(); 
+       iter != d_new_sources.end(); iter++){
+
+      SourceTermBase& src = factor.retrieve_source_term( *iter ); 
+      const VarLabel* srcLabel = src.getSrcLabel(); 
+      // here we have made the assumption that the momentum source is always a vector... 
+      // and that we only have one.  probably want to fix this. 
+      new_dw->get( scalarVars.otherSource, srcLabel, indx, patch, Ghost::None, 0); 
+
+    }
   }
 
   for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++) {
@@ -518,6 +550,9 @@ void ScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
    d_source->calculateScalarSource(pc, patch,
                                   delta_t, cellinfo, 
                                   &scalarVars, &constScalarVars);
+   if (d_new_sources.size() > 0) {
+     d_source->addOtherScalarSource(pc, patch, cellinfo, &scalarVars); 
+   }
 
    //---NEW Source term calculation **DONE**
    //d_source->calculateScalarSource__new(pc, patch,

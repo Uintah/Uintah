@@ -400,9 +400,6 @@ private:
                       DataWarehouse* new_dw,
                       const TimeIntegratorLabel* timelabels);
 
-  void setPartVel( PartVel* partVel ) {
-    d_partVel = partVel; };
-
   void setDQMOMSolver( DQMOM* dqmomSolver ) { 
     d_dqmomSolver = dqmomSolver; }; 
 
@@ -484,7 +481,6 @@ private:
 
   //DQMOM 
   bool d_doDQMOM; 
-  PartVel* d_partVel; 
   DQMOM* d_dqmomSolver; 
 
 }; // End class ExplicitSolver

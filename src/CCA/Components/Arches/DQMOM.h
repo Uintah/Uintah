@@ -100,6 +100,8 @@ public:
     /** @brief Access function for boolean, whether to calculate/save moments */
     bool getSaveMoments() {
       return b_save_moments; }
+  
+    const VarLabel* d_normBLabel; 
 
 private:
 
@@ -151,7 +153,6 @@ private:
   vector<double> d_opt_abscissas;
   DenseMatrix* AAopt;
 
-  const VarLabel* d_normBLabel; 
   const VarLabel* d_normXLabel; 
   const VarLabel* d_normResLabel;
   const VarLabel* d_normResNormalizedLabelB;

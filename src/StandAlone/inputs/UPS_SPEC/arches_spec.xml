@@ -327,7 +327,7 @@
         <Sources                        spec="OPTIONAL NO_DATA">
           <src                          spec="MULTIPLE NO_DATA"
                                         attribute1="label REQUIRED STRING"
-                                        attribute2="type REQUIRED STRING 'coal_gas_devol, constant_src, westbrook_dryer'">
+                                        attribute2="type REQUIRED STRING 'ConstantSourceTerm, CoalGasDevol, WestbrookDryer, MMS1, ParticleGasMomentumSource, coal_gas_devol, constant_src, westbrook_dryer, mms1'">
 
             <!-- Specs for coal gas devol model -->
             <devol_model_name           spec="OPTIONAL STRING" />
@@ -424,7 +424,6 @@
 
           <upper_limit_multiplier       spec="OPTIONAL DOUBLE"/>
           <clip_low                     spec="OPTIONAL DOUBLE"/>
-          <partvelBC_eq_gasvelBC        spec="OPTIONAL BOOLEAN"/>
           <min_vel_ratio                spec="OPTIONAL DOUBLE 'positive'"/>
 
           <iter                         spec="OPTIONAL INTEGER 'positive'"/>
@@ -436,7 +435,7 @@
         
           <model                        spec="MULTIPLE NO_DATA"
                                         attribute1="label REQUIRED STRING"
-                                        attribute2="type REQUIRED STRING 'KobayashiSarofimDevol, ConstantModel, SimpleHeatTransfer, XDrag, YDrag, ZDrag'">
+                                        attribute2="type REQUIRED STRING 'KobayashiSarofimDevol, ConstantModel, ConstantSize, SimpleHeatTransfer, XDrag, YDrag, ZDrag'">
 
             <ICVars                     spec="OPTIONAL NO_DATA"> <!-- block containing list of internal coordinates the DQMOM model depends on -->
               <variable                 spec="MULTIPLE NO_DATA"
@@ -457,6 +456,26 @@
 
             <!-- Constant Model -->
             <constant                   spec="OPTIONAL DOUBLE"/>
+
+            <!-- Kobayashi Sarofim Model -->
+            <A1                         spec="OPTIONAL DOUBLE" />
+            <E1                         spec="OPTIONAL DOUBLE" />
+            <Y1                         spec="OPTIONAL DOUBLE" />
+            <A2                         spec="OPTIONAL DOUBLE" />
+            <E2                         spec="OPTIONAL DOUBLE" />
+            <Y2                         spec="OPTIONAL DOUBLE" />
+
+            <!-- Particle Velocity Models -->
+            <!-- WARNING: DO NOT USE! WILL CAUSE ERRORS! -->
+            <partvelBC_eq_gasvelBC      spec="OPTIONAL BOOLEAN"/>
+
+            <!-- Balachandar Model -->
+            <iter                       spec="OPTIONAL INTEGER" />
+            <tol                        spec="OPTIONAL DOUBLE 'positive'"/>
+            <L                          spec="OPTIONAL DOUBLE 'positive'"/>
+            <eta                        spec="OPTIONAL DOUBLE 'positive'"/>
+            <regime                     spec="OPTIONAL INTEGER '1 3'"/>
+            <min_vel_ratio              spec="OPTIONAL DOUBLE 'positive'"/>
 
             
 

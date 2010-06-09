@@ -1,4 +1,4 @@
-#include <CCA/Components/Arches/CoalModels/Devolatilization.h>
+#include <CCA/Components/Arches/CoalModels/ParticleVelocity.h>
 #include <CCA/Components/Arches/TransportEqns/EqnFactory.h>
 #include <CCA/Components/Arches/TransportEqns/EqnBase.h>
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqn.h>
@@ -17,40 +17,57 @@
 using namespace std;
 using namespace Uintah; 
 
-Devolatilization::Devolatilization( std::string modelName, 
-                                              SimulationStateP& sharedState,
-                                              const ArchesLabel* fieldLabels,
-                                              vector<std::string> icLabelNames, 
-                                              vector<std::string> scalarLabelNames,
-                                              int qn ) 
+ParticleVelocity::ParticleVelocity( std::string modelName, 
+                                    SimulationStateP& sharedState,
+                                    const ArchesLabel* fieldLabels,
+                                    vector<std::string> icLabelNames, 
+                                    vector<std::string> scalarLabelNames,
+                                    int qn ) 
 : ModelBase(modelName, sharedState, fieldLabels, icLabelNames, scalarLabelNames, qn)
 {
   d_quadNode = qn;
 
   // Create a label for this model
-  d_modelLabel = VarLabel::create( modelName, CCVariable<double>::getTypeDescription() );
+  d_modelLabel = VarLabel::create( modelName, CCVariable<Vector>::getTypeDescription() );
 
   // Create the gas phase source term associated with this model
   std::string gasSourceName = modelName + "_gasSource";
-  d_gasLabel = VarLabel::create( gasSourceName, CCVariable<double>::getTypeDescription() );
+  d_gasLabel = VarLabel::create( gasSourceName, CCVariable<Vector>::getTypeDescription() );
+
+  // Create velocity vector label (to store velocity components into a vector)
+  std::string qnode;
+  std::stringstream out;
+  out << d_quadNode;
+  qnode = out.str();
+  std::string velname = "vel_qn";
+  d_velocity_label = VarLabel::create( velname+qnode, CCVariable<Vector>::getTypeDescription() );
 }
 
-Devolatilization::~Devolatilization()
+ParticleVelocity::~ParticleVelocity()
 {}
 
 //---------------------------------------------------------------------------
 // Method: Problem Setup
 //---------------------------------------------------------------------------
   void 
-Devolatilization::problemSetup(const ProblemSpecP& params)
+ParticleVelocity::problemSetup(const ProblemSpecP& params)
 {
-  // This method is called by all devolatilization classes' problemSetup()
+  // This method is called by child class problemSetup()'s
 
   ProblemSpecP db = params; 
 
+  const ProblemSpecP db_root = db->getRootNode();
+  ProblemSpecP db_physicalConstants = db_root->findBlock("PhysicalConstants");
+  db_physicalConstants->get("viscosity",d_visc);
+
   // set model clipping (not used yet...)
-  db->getWithDefault( "low_clip",  d_lowModelClip,  1.0e-6 );
-  db->getWithDefault( "high_clip", d_highModelClip, 999999 );
+  //db->getWithDefault( "low_clip",  d_lowModelClip,  1.0e-6 );
+  //db->getWithDefault( "high_clip", d_highModelClip, 999999 );
+
+  db->getWithDefault( "partvelBC_eq_gasvelBC", d_gasBC, false ); 
+  if(d_gasBC) {
+    proc0cout << endl << " WARNING: Arches: ParticleVelocity: Setting particle velocities equal to gas velocities at the boundary using the <partvelBC_eq_gasvelBC> tag will cause errors!" << endl << endl;
+  }
 
   // grab weight scaling factor and small value
   DQMOMEqnFactory& dqmom_eqn_factory = DQMOMEqnFactory::self();
@@ -67,6 +84,7 @@ Devolatilization::problemSetup(const ProblemSpecP& params)
   d_w_small = weight_eqn.getSmallClip();
   d_w_scaling_factor = weight_eqn.getScalingConstant();
   d_weight_label = weight_eqn.getTransportEqnLabel();
+
 }
 
 
@@ -85,7 +103,7 @@ This method was originally in ModelBase, but it requires creating CCVariables
 @see ExplicitSolver::noSolve()
  */
 void
-Devolatilization::dummyInit( const ProcessorGroup* pc,
+ParticleVelocity::dummyInit( const ProcessorGroup* pc,
                              const PatchSubset* patches, 
                              const MaterialSubset* matls, 
                              DataWarehouse* old_dw, 
@@ -99,11 +117,11 @@ Devolatilization::dummyInit( const ProcessorGroup* pc,
     int archIndex = 0;
     int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
 
-    CCVariable<double> ModelTerm;
-    CCVariable<double> GasModelTerm;
+    CCVariable<Vector> ModelTerm;
+    CCVariable<Vector> GasModelTerm;
     
-    constCCVariable<double> oldModelTerm;
-    constCCVariable<double> oldGasModelTerm;
+    constCCVariable<Vector> oldModelTerm;
+    constCCVariable<Vector> oldGasModelTerm;
 
     new_dw->allocateAndPut( ModelTerm,    d_modelLabel, matlIndex, patch );
     new_dw->allocateAndPut( GasModelTerm, d_gasLabel,   matlIndex, patch ); 
@@ -120,10 +138,10 @@ Devolatilization::dummyInit( const ProcessorGroup* pc,
 // Method: Schedule the initialization of special variables unique to model
 //---------------------------------------------------------------------------
 void 
-Devolatilization::sched_initVars( const LevelP& level, SchedulerP& sched )
+ParticleVelocity::sched_initVars( const LevelP& level, SchedulerP& sched )
 {
-  std::string taskname = "Devolatilization::initVars";
-  Task* tsk = scinew Task(taskname, this, &Devolatilization::initVars);
+  std::string taskname = "ParticleVelocity::initVars";
+  Task* tsk = scinew Task(taskname, this, &ParticleVelocity::initVars);
 
   tsk->computes( d_modelLabel );
   tsk->computes( d_gasLabel   );
@@ -135,24 +153,25 @@ Devolatilization::sched_initVars( const LevelP& level, SchedulerP& sched )
 // Method: Initialize special variables unique to the model
 //-------------------------------------------------------------------------
 void
-Devolatilization::initVars( const ProcessorGroup * pc, 
+ParticleVelocity::initVars( const ProcessorGroup * pc, 
                             const PatchSubset    * patches, 
                             const MaterialSubset * matls, 
                             DataWarehouse        * old_dw, 
                             DataWarehouse        * new_dw )
 {
-  for( int p=0; p < patches->size(); p++ ) {  // Patch loop
+  for( int p=0; p < patches->size(); p++ ) {
 
     const Patch* patch = patches->get(p);
     int archIndex = 0;
     int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
 
-    CCVariable<double> model_value; 
+    CCVariable<Vector> model_value; 
     new_dw->allocateAndPut( model_value, d_modelLabel, matlIndex, patch ); 
-    model_value.initialize(0.0);
+    model_value.initialize( Vector(0.0,0.0,0.0) );
 
-    CCVariable<double> gas_value; 
+    CCVariable<Vector> gas_value; 
     new_dw->allocateAndPut( gas_value, d_gasLabel, matlIndex, patch ); 
-    gas_value.initialize(0.0);
+    gas_value.initialize( Vector(0.0,0.0,0.0) );
   }
 }
+

@@ -64,7 +64,7 @@ ZDragModel::~ZDragModel()
 // Method: Problem Setup
 //---------------------------------------------------------------------------
 void
-ZDragModel::problemSetup(const ProblemSpecP& params, int qn)
+ZDragModel::problemSetup(const ProblemSpecP& params)
 {
   pi = 3.141592653589793;
 
@@ -96,7 +96,7 @@ ZDragModel::problemSetup(const ProblemSpecP& params, int qn)
 
     string node;
     std::stringstream out;
-    out << qn;
+    out << d_quadNode;
     node = out.str();
     temp_label_name += "_qn";
     temp_label_name += node;
@@ -127,7 +127,7 @@ ZDragModel::problemSetup(const ProblemSpecP& params, int qn)
 
     std::string node;
     std::stringstream out;
-    out << qn;
+    out << d_quadNode;
     node = out.str();
     temp_ic_name_full += "_qn";
     temp_ic_name_full += node;

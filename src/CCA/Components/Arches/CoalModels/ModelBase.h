@@ -16,8 +16,7 @@
   * @author Jeremy Thornock, Charles Reid
   * @date   November 2008, November 2009
   * 
-  * @brief A base class for models for a transport 
-  *        equation. 
+  * @brief A base class for DQMOM internal coordinate model terms.
   * 
   */ 
 
@@ -41,7 +40,7 @@ public:
   // Initialization methods
 
   /** @brief  Input file interface */
-  virtual void problemSetup(const ProblemSpecP& db, int qn) = 0;  
+  virtual void problemSetup(const ProblemSpecP& db) = 0;  
 
   /** @brief  Pure virtual function: schedule initialization of any special variables unique to the model. */ 
   virtual void sched_initVars( const LevelP&  level, 
@@ -92,6 +91,10 @@ public:
 
   /** @brief  Return a string containing the model type (pure virtual) */
   virtual string getType() = 0;
+
+  //inline int getQuadNode() {
+  //  return d_quadNode;
+  //};
 
   /** @brief  Return the VarLabel for the model term for particle */
   inline const VarLabel* getModelLabel() {

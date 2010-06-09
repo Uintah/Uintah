@@ -1,11 +1,11 @@
-#include <CCA/Components/Arches/SourceTerms/CoalGasMomentum.h>
+#include <CCA/Components/Arches/SourceTerms/ParticleGasMomentum.h>
 
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqnFactory.h>
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqn.h>
 #include <CCA/Components/Arches/TransportEqns/EqnBase.h>
 #include <CCA/Components/Arches/CoalModels/CoalModelFactory.h>
 #include <CCA/Components/Arches/CoalModels/ModelBase.h>
-#include <CCA/Components/Arches/CoalModels/DragModel.h>
+#include <CCA/Components/Arches/CoalModels/ParticleVelocity.h>
 #include <CCA/Components/Arches/CoalModels/HeatTransfer.h>
 
 #include <Core/ProblemSpec/ProblemSpec.h>
@@ -21,49 +21,48 @@ using namespace Uintah;
 
 //---------------------------------------------------------------------------
 // Builder:
-CoalGasMomentumBuilder::CoalGasMomentumBuilder(std::string srcName, 
+ParticleGasMomentumBuilder::ParticleGasMomentumBuilder(std::string srcName, 
                                          vector<std::string> reqLabelNames, 
                                          SimulationStateP& sharedState)
 : SourceTermBuilder(srcName, reqLabelNames, sharedState)
 {}
 
-CoalGasMomentumBuilder::~CoalGasMomentumBuilder(){}
+ParticleGasMomentumBuilder::~ParticleGasMomentumBuilder(){}
 
 SourceTermBase*
-CoalGasMomentumBuilder::build(){
-  return scinew CoalGasMomentum( d_srcName, d_sharedState, d_requiredLabels );
+ParticleGasMomentumBuilder::build(){
+  return scinew ParticleGasMomentum( d_srcName, d_sharedState, d_requiredLabels );
 }
 // End Builder
 //---------------------------------------------------------------------------
 
-CoalGasMomentum::CoalGasMomentum( std::string srcName, SimulationStateP& sharedState,
-                            vector<std::string> reqLabelNames ) 
+ParticleGasMomentum::ParticleGasMomentum( std::string srcName, 
+                                          SimulationStateP& sharedState,
+                                          vector<std::string> reqLabelNames ) 
 : SourceTermBase(srcName, sharedState, reqLabelNames)
-{}
+{
+  d_srcLabel = VarLabel::create(srcName, CCVariable<Vector>::getTypeDescription()); 
+}
 
-CoalGasMomentum::~CoalGasMomentum()
+ParticleGasMomentum::~ParticleGasMomentum()
 {}
 //---------------------------------------------------------------------------
 // Method: Problem Setup
 //---------------------------------------------------------------------------
 void 
-CoalGasMomentum::problemSetup(const ProblemSpecP& inputdb)
+ParticleGasMomentum::problemSetup(const ProblemSpecP& inputdb)
 {
 
   ProblemSpecP db = inputdb; 
-
-  //db->getWithDefault("constant",d_constant, 0.1); 
-  db->getWithDefault( "drag_model_name", d_dragModelName, "dragforce" );
-
 }
 //---------------------------------------------------------------------------
 // Method: Schedule the calculation of the source term 
 //---------------------------------------------------------------------------
 void 
-CoalGasMomentum::sched_computeSource( const LevelP& level, SchedulerP& sched, int timeSubStep )
+ParticleGasMomentum::sched_computeSource( const LevelP& level, SchedulerP& sched, int timeSubStep )
 { 
-  std::string taskname = "CoalGasMomentum::eval";
-  Task* tsk = scinew Task(taskname, this, &CoalGasMomentum::computeSource, timeSubStep);
+  std::string taskname = "ParticleGasMomentum::computeSource";
+  Task* tsk = scinew Task(taskname, this, &ParticleGasMomentum::computeSource, timeSubStep);
 
   if (timeSubStep == 0 && !d_labelSchedInit) {
     // Every source term needs to set this flag after the varLabel is computed. 
@@ -75,39 +74,23 @@ CoalGasMomentum::sched_computeSource( const LevelP& level, SchedulerP& sched, in
     tsk->modifies(d_srcLabel); 
   }
 
-  DQMOMEqnFactory& dqmomFactory  = DQMOMEqnFactory::self(); 
-  CoalModelFactory& modelFactory = CoalModelFactory::self(); 
-  
-  for (int iqn = 0; iqn < dqmomFactory.get_quad_nodes(); iqn++){
-    std::string weight_name = "w_qn";
-    std::string model_name = d_dragModelName; 
-    std::string node;  
-    std::stringstream out; 
-    out << iqn; 
-    node = out.str(); 
-    weight_name += node; 
-    model_name += "_qn";
-    model_name += node; 
+  CoalModelFactory& coal_model_factory = CoalModelFactory::self(); 
 
-    EqnBase& eqn = dqmomFactory.retrieve_scalar_eqn( weight_name );
-
-    const VarLabel* tempLabel_w = eqn.getTransportEqnLabel();
-    tsk->requires( Task::OldDW, tempLabel_w, Ghost::None, 0 ); 
-
-    ModelBase& model = modelFactory.retrieve_model( model_name ); 
-
-    const VarLabel* tempLabel_m = model.getModelLabel(); 
-    tsk->requires( Task::OldDW, tempLabel_m, Ghost::None, 0 );
-
-    const VarLabel* tempgasLabel_m = model.getGasSourceLabel();
-    tsk->requires( Task::OldDW, tempgasLabel_m, Ghost::None, 0 );
-
+  // only require weight eqn and particle velocity labels 
+  // if there is actually a particle velocity model
+  if( coal_model_factory.useParticleVelocityModel() ) {
+ 
+    DQMOMEqnFactory& dqmom_factory  = DQMOMEqnFactory::self(); 
+    for (int iqn = 0; iqn < dqmom_factory.get_quad_nodes(); iqn++){
+      ParticleVelocity* vel_model = coal_model_factory.getParticleVelocityModel( iqn );
+      tsk->requires( Task::OldDW, vel_model->getGasSourceLabel(), Ghost::None, 0 );
+    }
   }
   
   for (vector<std::string>::iterator iter = d_requiredLabels.begin(); 
        iter != d_requiredLabels.end(); iter++) { 
-    // HERE I WOULD REQUIRE ANY VARIABLES NEEDED TO COMPUTE THE SOURCe
-    //tsk->requires( Task::OldDW, .... ); 
+    // Require any variables needed to compute the source here
+    //tsk->requires( Task::OldDW, *iter, Ghost::None, 0 ); 
   }
 
   sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
@@ -117,7 +100,7 @@ CoalGasMomentum::sched_computeSource( const LevelP& level, SchedulerP& sched, in
 // Method: Actually compute the source term 
 //---------------------------------------------------------------------------
 void
-CoalGasMomentum::computeSource( const ProcessorGroup* pc, 
+ParticleGasMomentum::computeSource( const ProcessorGroup* pc, 
                    const PatchSubset* patches, 
                    const MaterialSubset* matls, 
                    DataWarehouse* old_dw, 
@@ -135,9 +118,6 @@ CoalGasMomentum::computeSource( const ProcessorGroup* pc,
     int archIndex = 0;
     int matlIndex = d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
     
-    DQMOMEqnFactory& dqmomFactory  = DQMOMEqnFactory::self(); 
-    CoalModelFactory& modelFactory = CoalModelFactory::self(); 
-    
     CCVariable<Vector> dragSrc; 
     if ( new_dw->exists(d_srcLabel, matlIndex, patch ) ){
       new_dw->getModifiable( dragSrc, d_srcLabel, matlIndex, patch ); 
@@ -153,38 +133,50 @@ CoalGasMomentum::computeSource( const ProcessorGroup* pc,
       //old_dw->get( *iter.... ); 
     }
 
-    for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
-      IntVector c = *iter; 
+    CoalModelFactory& coal_model_factory = CoalModelFactory::self(); 
 
-       for (int iqn = 0; iqn < dqmomFactory.get_quad_nodes(); iqn++){
-        std::string model_name = d_dragModelName; 
-        std::string node;  
-        std::stringstream out; 
-        out << iqn; 
-        node = out.str(); 
-        model_name += "_qn";
-        model_name += node;
+    if( coal_model_factory.useParticleVelocityModel() ) {
 
-        ModelBase& model = modelFactory.retrieve_model( model_name ); 
+      DQMOMEqnFactory& dqmom_factory  = DQMOMEqnFactory::self(); 
+      int numEnvironments = dqmom_factory.get_quad_nodes();
+ 
+      vector< constCCVariable<Vector>* > gas_drag_vec(numEnvironments);
 
-        constCCVariable<Vector> qn_gas_drag;
-        const VarLabel* DragGasLabel = model.getGasSourceLabel();  
-        new_dw->get( qn_gas_drag, DragGasLabel, matlIndex, patch, gn, 0 );
+      // Store the momentum source terms from the particle velocity model for each quadrature node
+      for( int iqn=0; iqn < numEnvironments; ++iqn ) {
+        ParticleVelocity* vel_model = coal_model_factory.getParticleVelocityModel( iqn );
 
-        dragSrc[c] += qn_gas_drag[c]; // All the work is performed in Drag model
-       }
+        constCCVariable<Vector> temp_gas_drag;
+        old_dw->get( temp_gas_drag, vel_model->getGasSourceLabel(), matlIndex, patch, gn, 0);
+        gas_drag_vec[iqn] = &temp_gas_drag;
+      }
+
+      // Now add the source terms for each quadrature node together
+      for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
+        IntVector c = *iter; 
+
+        for (int iqn = 0; iqn < numEnvironments; iqn++){
+          // CCVariables are stored in gas_drag_vec (see ln 146-ish)
+          constCCVariable<Vector> gas_drag_iqn = *gas_drag_vec[iqn];
+          dragSrc[c] += gas_drag_iqn[c];
+        }
+      }
+
+
     }
+
+
   }
 }
 //---------------------------------------------------------------------------
 // Method: Schedule dummy initialization
 //---------------------------------------------------------------------------
 void
-CoalGasMomentum::sched_dummyInit( const LevelP& level, SchedulerP& sched )
+ParticleGasMomentum::sched_dummyInit( const LevelP& level, SchedulerP& sched )
 {
-  string taskname = "CoalGasMomentum::dummyInit"; 
+  string taskname = "ParticleGasMomentum::dummyInit"; 
 
-  Task* tsk = scinew Task(taskname, this, &CoalGasMomentum::dummyInit);
+  Task* tsk = scinew Task(taskname, this, &ParticleGasMomentum::dummyInit);
 
   tsk->computes(d_srcLabel);
 
@@ -196,7 +188,7 @@ CoalGasMomentum::sched_dummyInit( const LevelP& level, SchedulerP& sched )
 
 }
 void 
-CoalGasMomentum::dummyInit( const ProcessorGroup* pc, 
+ParticleGasMomentum::dummyInit( const ProcessorGroup* pc, 
                             const PatchSubset* patches, 
                             const MaterialSubset* matls, 
                             DataWarehouse* old_dw, 

@@ -2,11 +2,8 @@
 #define UT_DQMOMEqnFactory_h
 
 #include <CCA/Components/Arches/ArchesLabel.h>
-#include <CCA/Components/Arches/ExplicitTimeInt.h> // should this be here?
+#include <CCA/Components/Arches/ExplicitTimeInt.h> // should this be here?  -Jeremy
 #include <Core/Grid/Variables/VarLabel.h>
-#include <map>
-#include <vector>
-#include <string>
 
 //---------------------------------------------------------------------------
 // Builder 
@@ -61,29 +58,83 @@ public:
 
   /** @brief Return an instance of the factory.  */
   static DQMOMEqnFactory& self(); 
-  /** @brief Register a scalar eqn with the builder.    */
+
+  /////////////////////////////////////////////////
+  // Initialization/setup methods
+
+  /** @brief  Grab input parameters from the ups file */
+  void problemSetup( const ProblemSpecP & params );
+
+  /** @brief  Schedule/perform initialization of weight equations */
+  void sched_weightInit( const LevelP& level, 
+                         SchedulerP& ); 
+
+  void weightInit( const ProcessorGroup*,
+                   const PatchSubset* patches,
+                   const MaterialSubset*,
+                   DataWarehouse* old_dw,
+                   DataWarehouse* new_dw);
+
+  /** @brief  Schedule initialization of weighted abscissa equations */
+  void sched_weightedAbscissaInit( const LevelP& level, 
+                                   SchedulerP& ); 
+
+  void weightedAbscissaInit( const ProcessorGroup*,
+                             const PatchSubset* patches,
+                             const MaterialSubset*,
+                             DataWarehouse* old_dw,
+                             DataWarehouse* new_dw);
+
+
+  ////////////////////////////////////////////
+  // Equation retrieval
+
+  /** @brief  Register a scalar eqn with the builder.    */
   void register_scalar_eqn( const std::string name, 
                             DQMOMEqnBuilderBase* builder);
-  /** @brief Retrieve a given scalar eqn.    */
+
+  /** @brief  Retrieve a given scalar eqn.    */
   EqnBase& retrieve_scalar_eqn( const std::string name ); 
 
-  /** @brief Determine if a given scalar eqn is contained in the factory. */
+  /** @brief  Determine if a given scalar eqn is contained in the factory. */
   bool find_scalar_eqn( const std::string name );
 
-  /** @brief Get access to the eqn map */ 
+
+  /////////////////////////////////////////////////////////
+  // Set/Get methods
+
+  /** @brief  Get access to the eqn map */ 
   EqnMap& retrieve_all_eqns(){
     return eqns_; };
 
-  /** @brief Set number quadrature nodes */ 
+  /** @brief  Set number quadrature nodes */ 
   inline void set_quad_nodes( int qn ) {
-    n_quad_ = qn; };
+    d_quadNodes = qn; };
 
-  /** @brief Get the number of quadrature nodes */ 
+  /** @brief  Get the number of quadrature nodes */ 
   inline const int get_quad_nodes( ) {
-    return n_quad_; };
+    return d_quadNodes; };
+
+  /** @brief  Set the field labels for the DQMOM equation factory */
+  inline void setArchesLabel( ArchesLabel* fieldLabels ) {
+    d_fieldLabels = fieldLabels;
+    d_labelSet = true;
+  }
+
+  inline void setTimeIntegrator( ExplicitTimeInt* timeIntegrator ){
+    d_timeIntegrator = timeIntegrator;
+    d_timeIntegratorSet = true;
+  };
 
 private:
   typedef std::map< std::string, DQMOMEqnBuilderBase* >  BuildMap; 
+
+  ArchesLabel* d_fieldLabels;
+
+  ExplicitTimeInt* d_timeIntegrator;
+  
+  bool d_timeIntegratorSet; ///< Boolean: has the time integrator been set?
+  bool d_labelSet; ///< Boolean: has the ArchesLabel been set using setArchesLabel()?
 
   BuildMap builders_; 
   EqnMap eqns_; 
@@ -91,7 +142,7 @@ private:
   DQMOMEqnFactory(); 
   ~DQMOMEqnFactory(); 
 
-  int n_quad_; 
+  int d_quadNodes;
 
 }; // class DQMOMEqnFactory 
 } // end namespace Uintah

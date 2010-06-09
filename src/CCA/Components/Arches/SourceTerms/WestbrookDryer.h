@@ -7,6 +7,17 @@
 
 //===========================================================================
 
+/**
+  * @class    WestbrookDyer Source Term
+  * @author   Jeremy Thornock
+  * @date     
+  *           
+  * @brief    
+  * Computes a global reaction rate for a hydrocarbon.
+  * See Turns, equation 5.1, 5.2
+  *
+  */
+
 //---------------------------------------------------------------------------
 // Builder
 namespace Uintah{
@@ -33,25 +44,36 @@ public:
                 vector<std::string> reqLabelNames );
 
   ~WestbrookDryer();
-  /** @brief Interface for the inputfile and set constants */ 
+
+
+  /** @brief  Interface for the inputfile and set constants */ 
   void problemSetup(const ProblemSpecP& db);
-  /** @brief Schedule the calculation of the source term */ 
+
+  /** @brief  Schedule the calculation of the source term */ 
   void sched_computeSource( const LevelP& level, SchedulerP& sched, 
                             int timeSubStep );
-  /** @brief Actually compute the source term */ 
+
+  /** @brief  Actually compute the source term */ 
   void computeSource( const ProcessorGroup* pc, 
                       const PatchSubset* patches, 
                       const MaterialSubset* matls, 
                       DataWarehouse* old_dw, 
                       DataWarehouse* new_dw, 
                       int timeSubStep );
-  /** @brief Schedule a dummy initialization */ 
+
+  /** @brief  Schedule a dummy initialization */ 
   void sched_dummyInit( const LevelP& level, SchedulerP& sched );
+
   void dummyInit( const ProcessorGroup* pc, 
                   const PatchSubset* patches, 
                   const MaterialSubset* matls, 
                   DataWarehouse* old_dw, 
                   DataWarehouse* new_dw );
+
+  /** @brief  Return a string with the model type */
+  string getType() {
+    return "WestbrookDryer";
+  };
 
 private:
 

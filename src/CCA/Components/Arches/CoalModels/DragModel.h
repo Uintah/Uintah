@@ -10,11 +10,12 @@
 
 /**
   * @class    DragModel
-  * @author   Julien Pedel
-  * @date     September 2009
+  * @author   Julien Pedel, Charles Reid
+  * @date     September 2009, May 2010
   *
   * @brief    A class for calculating the two-way coupling between
-  *           particle velocities and the gas phase velocities.
+  *           particle velocities and the gas phase velocities using
+  *           Stokes' drag law.
   *
   */
 
@@ -44,7 +45,7 @@ private:
 // End Builder
 //---------------------------------------------------------------------------
 
-class DragModel: public ModelBase {
+class DragModel: public ParticleVelocity {
 public: 
 
   DragModel( std::string modelName, 
@@ -60,9 +61,9 @@ public:
   // Initialization stuff
 
   /** @brief Interface for the inputfile and set constants */ 
-  void problemSetup(const ProblemSpecP& db, int qn);
+  void problemSetup(const ProblemSpecP& db);
 
-   /** @brief Schedule the initialization of some special/local variables */ 
+  /** @brief Schedule the initialization of special/local variables unique to model */
   void sched_initVars( const LevelP& level, SchedulerP& sched );
 
   /** @brief  Actually initialize special/local variables */
@@ -72,9 +73,6 @@ public:
                  DataWarehouse        * old_dw, 
                  DataWarehouse        * new_dw );
 
-
-  /** @brief  Schedule the dummy solve for MPMArches - see ExplicitSolver::noSolve */
-  void sched_dummyInit( const LevelP& level, SchedulerP& sched );
 
   /** @brief  Actually do dummy solve */
   void dummyInit( const ProcessorGroup* pc, 
@@ -87,40 +85,71 @@ public:
   // Model computation 
 
   /** @brief Schedule the calculation of the source term */ 
-  void sched_computeModel( const LevelP& level, SchedulerP& sched, 
-                            int timeSubStep );
+  void sched_computeModel( const LevelP& level, 
+                           SchedulerP& sched, 
+                           int timeSubStep );
   
-  /** @brief Actually compute the source term */ 
+  /** @brief Compute the source term (this method is empty but MUST be defined
+             because it's a virtual function. */ 
   void computeModel( const ProcessorGroup* pc, 
                      const PatchSubset* patches, 
                      const MaterialSubset* matls, 
                      DataWarehouse* old_dw, 
                      DataWarehouse* new_dw );
 
+  /** @brief Actually compute the source term */ 
+  void computeModel( const ProcessorGroup* pc, 
+                     const PatchSubset* patches, 
+                     const MaterialSubset* matls, 
+                     DataWarehouse* old_dw, 
+                     DataWarehouse* new_dw,
+                     int timeSubStep );
+
+  void sched_computeParticleVelocity( const LevelP& level,
+                                      SchedulerP& sched,
+                                      int timeSubStep );
+
+  void computeParticleVelocity( const ProcessorGroup* pc,
+                                const PatchSubset*    patches,
+                                const MaterialSubset* matls,
+                                DataWarehouse*        old_dw,
+                                DataWarehouse*        new_dw );
+
   //////////////////////////////////////////////////
   // Access functions
 
-  inline string getType() {
-    return "Drag"; }
+  /* getType method is defined in parent class... */
+  
+  const VarLabel* getParticleUVelocityLabel() {
+    return d_uvel_label; };
+
+  const VarLabel* getParticleVVelocityLabel() {
+    return d_vvel_label; };
+
+  const VarLabel* getParticleWVelocityLabel() {
+    return d_wvel_label; };
+
 
 private:
 
-  const ArchesLabel* d_fieldLabels; 
-  
-  map<string, string> LabelToRoleMap;
-
-  const VarLabel* d_particle_length_label;
-  const VarLabel* d_particle_velocity_label;
-  const VarLabel* d_gas_velocity_label;
-  const VarLabel* d_weight_label;
-
-  double d_pl_scaling_factor;
-  double d_pv_scaling_factor;
-  double d_w_scaling_factor;
-  double d_w_small; // "small" clip value for zero weights
-
   double pi;
+
+  bool d_length_set;
+  bool d_uvel_set;
+  bool d_vvel_set;
+  bool d_wvel_set;
+
+  // Velocity internal coordinate labels
+  const VarLabel* d_uvel_label;     ///< Velocity x-component (internal coordinate) label
+  const VarLabel* d_vvel_label;     ///< Velocity y-component (internal coordinate) label
+  const VarLabel* d_wvel_label;     ///< Velocity z-component (internal coordinate) label
+
+  // Internal coordinate scaling factors
+  double d_uvel_scaling_factor;
+  double d_vvel_scaling_factor;
+  double d_wvel_scaling_factor;
 
 };
 } // end namespace Uintah
 #endif
+

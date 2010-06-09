@@ -56,7 +56,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <CCA/Components/Arches/SourceTerms/SourceTermFactory.h>
 #include <CCA/Components/Arches/SourceTerms/SourceTermBase.h>
-#include <CCA/Components/Arches/SourceTerms/ConstSrcTerm.h>
+#include <CCA/Components/Arches/CoalModels/CoalModelFactory.h>
 using namespace Uintah;
 using namespace std;
 
@@ -109,8 +109,6 @@ MomentumSolver::problemSetup(const ProblemSpecP& params)
     throw InvalidValue("Convection scheme not supported: " + conv_scheme, __FILE__, __LINE__);
   }
   
-  
-  
   db->getWithDefault("pressure_correction",         d_pressure_correction,false);
   db->getWithDefault("filter_divergence_constraint",d_filter_divergence_constraint,false);
 
@@ -123,6 +121,18 @@ MomentumSolver::problemSetup(const ProblemSpecP& params)
 // ++ jeremy ++
   d_source->setBoundary(d_boundaryCondition);
 // -- jeremy --            
+
+  /*
+  // add source terms using new SourceTerm and TransportEqn framework
+  if( db->findBlock("src") ){
+    string srcname;
+    for( ProblemSpecP src_db = db->findBlock("src");
+         src_db != 0; src_db = src_db->findNextBlock("src") ) {
+      src_db->getAttribute("label",srcname);
+      d_new_sources.push_back( srcname );
+    }
+  }
+  */
 
   d_rhsSolver = scinew RHSSolver();
   d_rhsSolver->setMMS(d_doMMS);
@@ -429,7 +439,7 @@ MomentumSolver::sched_buildLinearMatrixVelHat(SchedulerP& sched,
     if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First){
       tsk->requires(Task::OldDW, d_lab->d_stressTensorCompLabel,
                                 d_lab->d_tensorMatl,  oams,   gac, 1);
-   }else {
+   } else {
       tsk->requires(Task::NewDW, d_lab->d_stressTensorCompLabel,
                                 d_lab->d_tensorMatl,  oams,   gac, 1);
     }
@@ -469,13 +479,24 @@ MomentumSolver::sched_buildLinearMatrixVelHat(SchedulerP& sched,
     tsk->modifies(d_lab->d_wFmmsLabel);
   }
 
-  // TOTAL KLUDGE FOR REACTING COAL---------------------------
-    // Keep commented out unless you know what you are doing!
-    //SourceTermFactory& factory = SourceTermFactory::self();
-    //SourceTermBase& src = factory.retrieve_source_term( "coal_gas_momentum" ); 
-    //const VarLabel* srcLabel = src.getSrcLabel();
-    //tsk->requires(Task::NewDW, srcLabel, gn, 0);
-  // END KLUDGE ---------------------------------------------- 
+  // Add a particle momentum source term from coal particles (if there is one)
+  //cmr
+  CoalModelFactory& coalFactory = CoalModelFactory::self();
+  SourceTermFactory& srcFactory = SourceTermFactory::self(); 
+  // Add particle-gas momentum source term
+  if( coalFactory.useParticleVelocityModel() ) {
+    SourceTermBase* src = srcFactory.getParticleMomentumSource();
+    tsk->requires( Task::NewDW, src->getSrcLabel(), gn, 0 );
+  }
+  /*
+  // Add non-particle-gas momentum source terms specified in input file
+  for( vector<string>::iterator iter = d_new_sources.begin(); iter != d_new_sources.end(); ++iter ) {
+    SourcetermBase& src = srcFactory.retrieve_source_term( *iter );
+    if( src->getType() != "ParticleGasMomentum" ) {
+      tsk->requires(Task::NewDW, src.getSrcLabel(), gn, 0);
+    }
+  }
+  */
 
   sched->addTask(tsk, patches, matls);
 }
@@ -655,13 +676,28 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
       velocityVars.wFmms.initialize(0.0);
     }
 
-  // TOTAL KLUDGE FOR REACTING COAL---------------------------
-  // Keep commented out unless you know what you are doing!
-  //   SourceTermFactory& factory = SourceTermFactory::self();
-  //   SourceTermBase& src = factory.retrieve_source_term( "coal_gas_momentum" ); 
-  //   const VarLabel* srcLabel = src.getSrcLabel();
-  //   new_dw->get( velocityVars.otherVectorSource, srcLabel, indx, patch, Ghost::None, 0);
-  // END KLUDGE ----------------------------------------------    
+    // Adding new sources from factory:
+    // cmr
+    CoalModelFactory& coalFactory = CoalModelFactory::self();
+    SourceTermFactory& srcFactory = SourceTermFactory::self();
+    // add particle-gas momentum source term
+    if( coalFactory.useParticleVelocityModel() ) {
+      SourceTermBase* src = srcFactory.getParticleMomentumSource();
+      new_dw->get( velocityVars.otherVectorSource, src->getSrcLabel(), indx, patch, Ghost::None, 0 );
+    }
+    /*
+    // add non-particle-gas momentum source terms
+    for (vector<std::string>::iterator iter = d_new_sources.begin(); 
+       iter != d_new_sources.end(); iter++){
+
+      SourceTermBase& src = factor.retrieve_source_term( *iter ); 
+      const VarLabel* srcLabel = src.getSrcLabel(); 
+      // here we have made the assumption that the momentum source is always a vector... 
+      // and that we only have one.  probably want to fix this. 
+      new_dw->get( velocityVars.otherVectorSource, srcLabel, indx, patch, Ghost::None, 0); 
+
+    }
+    */
 
     //__________________________________
     //  compute coefficients
@@ -820,10 +856,13 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
                                         &velocityVars, &constVelocityVars);
     }
 
-    //Kludge
-    //d_source->computeParticleSource(pc, patch, cellinfo,
-    //                                   &velocityVars, &constVelocityVars);
-    // end Kludge
+    //CoalModelFactory& coalFactory = CoalModelFactory::self();
+    if( coalFactory.useParticleVelocityModel() ) {
+      // this is making an assumption about the source being a vector. 
+      // cmr
+      d_source->computeParticleSource(pc, patch, cellinfo,
+                                      &velocityVars, &constVelocityVars);
+    }
 
     // Calculate the Velocity BCS
     //  inputs : densityCP, [u,v,w]VelocitySIVBC, [u,v,w]VelCoefPBLM
