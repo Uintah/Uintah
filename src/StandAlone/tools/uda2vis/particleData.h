@@ -70,6 +70,8 @@ public:
   int nc_high[3];
   int nc_extra_low[3];
   int nc_extra_high[3];
+
+  int proc_id;
 };
 
 
