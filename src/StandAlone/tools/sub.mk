@@ -49,9 +49,7 @@ ifeq ($(HAVE_TEEM),yes)
 endif 
 
 ifeq ($(BUILD_VISIT),yes)
-        ifeq ($(HAVE_TEEM),yes)
-                SUBDIRS += $(SRCDIR)/uda2vis
-        endif 
+  SUBDIRS += $(SRCDIR)/uda2vis
 endif
 
 ########################################################
