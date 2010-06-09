@@ -517,7 +517,8 @@ namespace Uintah {
       // DQMOM moments ( populated in Arches.cc::registerDQMOMEqns() )
       typedef std::vector<int> MomentVector;
       typedef std::map<const MomentVector, const VarLabel* > MomentMap;
-      MomentMap DQMOMMoments;
+      MomentMap DQMOMMoments; // DQMOM moment valuess
+      MomentMap DQMOMMomentsMean; // DQMOM moment values, about the mean
 
       const VarLabel* d_areaFractionLabel; 
 

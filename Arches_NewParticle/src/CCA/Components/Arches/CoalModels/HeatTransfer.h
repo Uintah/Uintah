@@ -18,7 +18,7 @@
   * @author   Charles Reid
   * @date     November 2009
   *
-  * @brief    A heat transfer model parent class 
+  * @brief    A heat transfer model parent class .
   *
   */
 
@@ -40,7 +40,7 @@ public:
   // Initialization methods
   
   /** @brief Interface for the inputfile and set constants */ 
-  void problemSetup(const ProblemSpecP& db, int qn);
+  void problemSetup(const ProblemSpecP& db);
   
   /** @brief Schedule the initialization of special/local variables unique to model; 
              blank for HeatTransfer parent class, intended to be re-defined by child classes if needed. */

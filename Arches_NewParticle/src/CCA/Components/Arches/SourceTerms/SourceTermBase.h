@@ -61,6 +61,10 @@ public:
   inline const vector<const VarLabel*> getExtraLocalLabels(){
     return d_extraLocalLabels; }; 
 
+  /* @brief   Return a string containing the model type (pure virtual) */
+  virtual string getType() = 0;
+
+
 protected:
   std::string d_srcName; 
   const VarLabel* d_srcLabel; //The label storing the value of this source term

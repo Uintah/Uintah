@@ -1,5 +1,5 @@
-#ifndef Uintah_Component_Arches_CoalGasMomentum_h
-#define Uintah_Component_Arches_CoalGasMomentum_h
+#ifndef Uintah_Component_Arches_ConstantSourceTerm_h
+#define Uintah_Component_Arches_ConstantSourceTerm_h
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Grid/SimulationStateP.h>
 #include <CCA/Components/Arches/SourceTerms/SourceTermBase.h>
@@ -10,13 +10,13 @@
 //---------------------------------------------------------------------------
 // Builder
 namespace Uintah{
-class CoalGasMomentumBuilder: public SourceTermBuilder
+class ConstantSourceTermBuilder: public SourceTermBuilder
 {
 public: 
-  CoalGasMomentumBuilder(std::string srcName, 
+  ConstantSourceTermBuilder(std::string srcName, 
                       vector<std::string> reqLabelNames, 
                       SimulationStateP& sharedState);
-  ~CoalGasMomentumBuilder(); 
+  ~ConstantSourceTermBuilder(); 
 
   SourceTermBase* build(); 
 
@@ -26,19 +26,22 @@ private:
 // End Builder
 //---------------------------------------------------------------------------
 
-class CoalGasMomentum: public SourceTermBase {
+class ConstantSourceTerm: public SourceTermBase {
 public: 
 
-  CoalGasMomentum( std::string srcName, SimulationStateP& shared_state, 
+  ConstantSourceTerm( std::string srcName, SimulationStateP& shared_state, 
                 vector<std::string> reqLabelNames );
 
-  ~CoalGasMomentum();
-  /** @brief Interface for the inputfile and set constants */ 
+  ~ConstantSourceTerm();
+
+  /** @brief  Interface for the inputfile and set constants */ 
   void problemSetup(const ProblemSpecP& db);
-  /** @brief Schedule the calculation of the source term */ 
+
+  /** @brief  Schedule the calculation of the source term */ 
   void sched_computeSource( const LevelP& level, SchedulerP& sched, 
                             int timeSubStep );
-  /** @brief Actually compute the source term */ 
+
+  /** @brief  Actually compute the source term */ 
   void computeSource( const ProcessorGroup* pc, 
                       const PatchSubset* patches, 
                       const MaterialSubset* matls, 
@@ -46,18 +49,24 @@ public:
                       DataWarehouse* new_dw, 
                       int timeSubStep );
 
-  /** @brief Schedule a dummy initialization */ 
+  /** @brief  Schedule a dummy initialization */ 
   void sched_dummyInit( const LevelP& level, SchedulerP& sched );
+
   void dummyInit( const ProcessorGroup* pc, 
                   const PatchSubset* patches, 
                   const MaterialSubset* matls, 
                   DataWarehouse* old_dw, 
                   DataWarehouse* new_dw );
+
+  /** @brief  Return a string with the model type */
+  string getType() {
+    return "ConstantSourceTerm";
+  };
+
 private:
 
-  //double d_constant; 
-  std::string d_dragModelName;
+  double d_constant; 
 
-}; // end CoalGasMomentum
+}; // end ConstantSourceTerm
 } // end namespace Uintah
 #endif

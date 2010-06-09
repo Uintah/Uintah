@@ -10,8 +10,8 @@ SourceTermBase::SourceTermBase( std::string srcName, SimulationStateP& sharedSta
                         vector<std::string> reqLabelNames ) : 
 d_srcName(srcName), d_sharedState( sharedState ), d_requiredLabels(reqLabelNames)
 {
-  //Create a label for this source term. 
-  d_srcLabel = VarLabel::create(srcName, CCVariable<double>::getTypeDescription()); 
+  // Create source term labels in child classes
+  // (some have different types, e.g. CCVariable<Vector>)
   d_labelSchedInit  = false; 
 }
 

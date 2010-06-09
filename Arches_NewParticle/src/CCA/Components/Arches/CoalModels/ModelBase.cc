@@ -13,8 +13,8 @@ ModelBase::ModelBase( std::string modelName,
                       vector<std::string> reqICLabelNames, 
                       vector<std::string> reqScalarLabelNames,
                       int qn ) : 
-            d_modelName(modelName),  d_sharedState( sharedState ), d_fieldLabels(fieldLabels), 
-            d_icLabels(reqICLabelNames), d_scalarLabels(reqScalarLabelNames), d_quadNode(qn)
+                      d_modelName(modelName),  d_sharedState( sharedState ), d_fieldLabels(fieldLabels), 
+                      d_icLabels(reqICLabelNames), d_scalarLabels(reqScalarLabelNames), d_quadNode(qn)
 {
   // The type and number of d_modelLabel and d_gasLabel
   // is model-dependent, so the creation of these labels 
@@ -51,8 +51,8 @@ This method is the same for all models, as all models must require() and compute
  the gas phase source term and the actual model term.
 
 However, the implementation (as opposed to the schedule) requires knowledge of the 
- variable type, so the dummyInit() method must be defined explicitly in the 
- particular model classes - not here.
+ variable type (e.g. double or Vector), so the dummyInit() method must be defined 
+ explicitly in the particular model classes - not here.
  */
 void
 ModelBase::sched_dummyInit( const LevelP& level, SchedulerP& sched )
@@ -70,6 +70,5 @@ ModelBase::sched_dummyInit( const LevelP& level, SchedulerP& sched )
   tsk->computes(d_gasLabel); 
 
   sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
-
 }
 

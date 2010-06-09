@@ -41,6 +41,9 @@ public:
 
   virtual ~EqnBase();
 
+  //////////////////////////////////////////////////
+  // Initialization/setup methods
+
   /** @brief Set any parameters from input file, initialize any constants, etc.. */
   virtual void problemSetup(const ProblemSpecP& inputdb) = 0;
   virtual void problemSetup(const ProblemSpecP& inputdb, int qn) = 0;
@@ -48,6 +51,15 @@ public:
   /** @brief Creates instances of variables in the new_dw at the begining of the timestep 
              and copies old data into the new variable */
   virtual void sched_initializeVariables( const LevelP&, SchedulerP& sched ) = 0;
+  
+  /** @brief Dummy init for MPMArches */ 
+  virtual void sched_dummyInit( const LevelP&, SchedulerP& sched ) = 0; 
+
+
+
+
+  ////////////////////////////////////////////////
+  // Calculation methods
   
   /** @brief Schedule a transport equation to be built and solved */
   virtual void sched_evalTransportEqn( const LevelP&, 
@@ -59,12 +71,10 @@ public:
   /** @brief Solve the transport equation */
   virtual void sched_solveTransportEqn( const LevelP&, SchedulerP& sched, int timeSubStep ) = 0;
 
-  /** @brief Dummy init for MPMArches */ 
-  virtual void sched_dummyInit( const LevelP&, SchedulerP& sched ) = 0; 
-
   /** @brief Checks that boundary conditions for this variable are set for every 
    * face for every child */ 
   void sched_checkBCs( const LevelP&, SchedulerP& sched ); 
+
   void checkBCs( const ProcessorGroup* pc, 
                  const PatchSubset* patches, 
                  const MaterialSubset* matls, 
@@ -86,16 +96,31 @@ public:
 
   /** @brief Apply boundary conditions */
   // probably want to make this is a template
-  template <class phiType> void computeBCs( const Patch* patch, string varName, phiType& phi );
+  template <class phiType> 
+  void computeBCs( const Patch* patch, string varName, phiType& phi );
 
   /** @brief Set the initial value of the transported variable to some function */
-  template <class phiType> void initializationFunction( const Patch* patch, phiType& phi ); 
+  template <class phiType> 
+  void initializationFunction( const Patch* patch, phiType& phi ); 
   
   /** @brief Set the initial value of the DQMOM transported variable to some function */
   template <class phiType, class constPhiType>  
   void initializationFunction( const Patch* patch, phiType& phi, constPhiType& weight  );
 
-  // Access functions:
+  /** @brief Compute the boundary conditions for this transport equation object */
+  template<class phiType> void
+  computeBCsSpecial( const Patch* patch, 
+                       string varName,
+                       phiType& phi )
+  {
+    d_boundaryCond->setScalarValueBC( 0, patch, phi, varName ); 
+  }
+
+
+
+  ////////////////////////////////////////////
+  // Get/set methods
+
   /** @brief Set the boundary condition object associated with this transport equation object */
   inline void setBoundaryCond( BoundaryCondition_new* boundaryCond ) {
     d_boundaryCond = boundaryCond; 
@@ -130,15 +155,6 @@ public:
   inline const bool getDensityGuessBool(){
     return d_use_density_guess; 
   };
-
-  /** @brief Compute the boundary conditions for this transport equation object */
-  template<class phiType> void
-  computeBCsSpecial( const Patch* patch, 
-                       string varName,
-                       phiType& phi )
-  {
-    d_boundaryCond->setScalarValueBC( 0, patch, phi, varName ); 
-  }
 
 protected:
 

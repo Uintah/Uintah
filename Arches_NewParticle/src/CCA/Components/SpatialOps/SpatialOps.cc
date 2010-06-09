@@ -12,7 +12,7 @@
 #include <CCA/Components/Arches/DQMOM.h>
 #include <CCA/Components/Arches/ExplicitTimeInt.h>
 #include <CCA/Components/Arches/TransportEqns/EqnBase.h>
-#include <CCA/Components/Arches/SourceTerms/ConstSrcTerm.h>
+#include <CCA/Components/Arches/SourceTerms/ConstantSourceTerm.h>
 #include <CCA/Components/Arches/TransportEqns/ScalarEqn.h>
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqn.h>
 #include <CCA/Components/SpatialOps/SpatialOpsMaterial.h>

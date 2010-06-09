@@ -78,7 +78,6 @@ class BoundaryCondition;
 class PhysicalConstants;
 class EnthalpySolver;
 class ExtraScalarSolver;
-class PartVel; 
 class DQMOM; 
 class PicardNonlinearSolver: public NonlinearSolver {
 
@@ -233,9 +232,6 @@ public:
   inline void setSulfurBalanceES(bool sulfur_balance_es){
     d_sulfur_balance_es = sulfur_balance_es;
   }
-
-  void setPartVel( PartVel* partVel ) {
-    d_partVel = partVel; };
 
   void setDQMOMSolver( DQMOM* dqmomSolver ) { 
     d_dqmomSolver = dqmomSolver; }; 
@@ -402,8 +398,8 @@ private:
   bool d_carbon_balance_es;
   bool d_sulfur_balance_es;
 
-  PartVel* d_partVel; 
   DQMOM* d_dqmomSolver; 
+
 }; // End class PicardNonlinearSolver
 } // End namespace Uintah
 

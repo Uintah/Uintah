@@ -42,7 +42,7 @@ HeatTransfer::~HeatTransfer()
 // Method: Problem Setup
 //---------------------------------------------------------------------------
   void 
-HeatTransfer::problemSetup(const ProblemSpecP& params, int qn)
+HeatTransfer::problemSetup(const ProblemSpecP& params)
 {
   ProblemSpecP db = params; 
 
@@ -78,7 +78,7 @@ HeatTransfer::problemSetup(const ProblemSpecP& params, int qn)
 
   string node;
   std::stringstream out;
-  out << qn; 
+  out << d_quadNode; 
   node = out.str();
 
   string temp_weight_name = "w_qn";
@@ -94,8 +94,9 @@ HeatTransfer::problemSetup(const ProblemSpecP& params, int qn)
 //-------------------------------------------------------------------------
 // Method: Actually do the dummy initialization
 //-------------------------------------------------------------------------
-/** @details
- This is called from ExplicitSolver::noSolve(), which skips the first timestep
+/** 
+@details
+This is called from ExplicitSolver::noSolve(), which skips the first timestep
  so that the initial conditions are correct.
 
 This method was originally in ModelBase, but it requires creating CCVariables
@@ -140,16 +141,14 @@ HeatTransfer::dummyInit( const ProcessorGroup* pc,
 //---------------------------------------------------------------------------
 // Method: Schedule the initialization of special variables unique to model
 //---------------------------------------------------------------------------
-/** @details
-This method intentionally does nothing.
-
-@see HeatTransfer::initVars()
-*/
 void 
 HeatTransfer::sched_initVars( const LevelP& level, SchedulerP& sched )
 {
   std::string taskname = "HeatTransfer::initVars";
   Task* tsk = scinew Task(taskname, this, &HeatTransfer::initVars);
+
+  tsk->computes( d_modelLabel );
+  tsk->computes( d_gasLabel   );
 
   sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials()); 
 }
@@ -157,15 +156,6 @@ HeatTransfer::sched_initVars( const LevelP& level, SchedulerP& sched )
 //-------------------------------------------------------------------------
 // Method: Initialize special variables unique to the model
 //-------------------------------------------------------------------------
-/** @details
-This method is left intentionally blank.  This way, if the method is
- called for a heat transfer model, and that heat transfer model
- doesn't require the initialization of any variables, the child 
- class will not need to re-define this (empty) method.
-
-If additional variables are needed, and initVars needs to do stuff,
- the model can redefine it.
-*/
 void
 HeatTransfer::initVars( const ProcessorGroup * pc, 
                         const PatchSubset    * patches, 
@@ -173,20 +163,19 @@ HeatTransfer::initVars( const ProcessorGroup * pc,
                         DataWarehouse        * old_dw, 
                         DataWarehouse        * new_dw )
 {
-  // This method left intentionally blank...
-  // It has the form:
-  /*
   for( int p=0; p < patches->size(); p++ ) {  // Patch loop
 
     const Patch* patch = patches->get(p);
     int archIndex = 0;
     int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
 
-    CCVariable<double> something; 
-    new_dw->allocateAndPut( something, d_something_label, matlIndex, patch ); 
-    something.initialize(0.0)
+    CCVariable<double> model_value; 
+    new_dw->allocateAndPut( model_value, d_modelLabel, matlIndex, patch ); 
+    model_value.initialize(0.0);
 
+    CCVariable<double> gas_value; 
+    new_dw->allocateAndPut( gas_value, d_gasLabel, matlIndex, patch ); 
+    gas_value.initialize(0.0);
   }
-  */
 }
 

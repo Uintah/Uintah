@@ -11,8 +11,10 @@
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Exceptions/InvalidValue.h>
 #include <Core/Parallel/Parallel.h>
-#include <iostream>
-#include <iomanip>
+//#include <iostream>
+//#include <iomanip>
+
+//===========================================================================
 
 using namespace std;
 using namespace Uintah; 
@@ -70,9 +72,9 @@ SimpleHeatTransfer::~SimpleHeatTransfer()
 // Method: Problem Setup
 //---------------------------------------------------------------------------
 void 
-SimpleHeatTransfer::problemSetup(const ProblemSpecP& params, int qn)
+SimpleHeatTransfer::problemSetup(const ProblemSpecP& params)
 {
-  HeatTransfer::problemSetup( params, qn );
+  HeatTransfer::problemSetup( params );
 
   ProblemSpecP db = params; 
   
@@ -85,7 +87,7 @@ SimpleHeatTransfer::problemSetup(const ProblemSpecP& params, int qn)
       throw InvalidValue("ERROR: SimpleHeatTransfer: problemSetup(): Zero viscosity specified in <PhysicalConstants> section of input file.",__FILE__,__LINE__);
     }
   } else {
-    throw InvalidValue("ERROR: SimpleHeatTransfer: problemSetup(): Missing <PhysicalConstants> section in input file!",__FILE__,__LINE__);
+    throw InvalidValue("ERROR: SimpleHeatTransfer: problemSetup(): Missing <PhysicalConstants> section in input file, no viscosity value specified.",__FILE__,__LINE__);
   }
 
   if (params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("Coal_Properties")) {
@@ -96,8 +98,16 @@ SimpleHeatTransfer::problemSetup(const ProblemSpecP& params, int qn)
     db_coal->require("O", yelem[3]);
     db_coal->require("S", yelem[4]);
     db_coal->require("initial_ash_mass", ash_mass_init);
+
+    // normalize amounts
+    double ysum = yelem[0] + yelem[1] + yelem[2] + yelem[3] + yelem[4];
+    yelem[0] = yelem[0]/ysum;
+    yelem[1] = yelem[1]/ysum;
+    yelem[2] = yelem[2]/ysum;
+    yelem[3] = yelem[3]/ysum;
+    yelem[4] = yelem[4]/ysum;
   } else {
-    throw InvalidValue("ERROR: SimpleHeatTransfer: problemSetup(): Missing <Coal_Properties> section in input file!",__FILE__,__LINE__);
+    throw InvalidValue("ERROR: SimpleHeatTransfer: problemSetup(): Missing <Coal_Properties> section in input file. Please specify the elemental composition of the coal and the initial ash mass.",__FILE__,__LINE__);
   }
 
   // Check for radiation 
@@ -119,6 +129,10 @@ SimpleHeatTransfer::problemSetup(const ProblemSpecP& params, int qn)
   string temp_ic_name;
   string temp_ic_name_full;
 
+  std::stringstream out;
+  out << d_quadNode; 
+  string node = out.str();
+
   // Look for required internal coordinates
   ProblemSpecP db_icvars = params->findBlock("ICVars");
   if (db_icvars) {
@@ -128,11 +142,6 @@ SimpleHeatTransfer::problemSetup(const ProblemSpecP& params, int qn)
       variable->getAttribute("role",role_name);
 
       temp_label_name = label_name;
-      
-      std::stringstream out;
-      out << qn;
-      string node = out.str();
-      temp_label_name += "_qn";
       temp_label_name += node;
 
       // user specifies "role" of each internal coordinate
@@ -168,11 +177,6 @@ SimpleHeatTransfer::problemSetup(const ProblemSpecP& params, int qn)
       variable->getAttribute("role",  role_name);
 
       temp_label_name = label_name;
-
-      std::stringstream out;
-      out << qn;
-      string node = out.str();
-      temp_label_name += "_qn";
       temp_label_name += node;
 
       // user specifies "role" of each scalar
@@ -199,11 +203,6 @@ SimpleHeatTransfer::problemSetup(const ProblemSpecP& params, int qn)
     
     temp_ic_name      = (*iString);
     temp_ic_name_full = temp_ic_name;
-
-    std::stringstream out;
-    out << qn;
-    string node = out.str();
-    temp_ic_name_full += "_qn";
     temp_ic_name_full += node;
 
     std::replace( d_icLabels.begin(), d_icLabels.end(), temp_ic_name, temp_ic_name_full);
@@ -215,19 +214,11 @@ SimpleHeatTransfer::problemSetup(const ProblemSpecP& params, int qn)
 
     temp_ic_name      = (*iString);
     temp_ic_name_full = temp_ic_name;
-
-    std::stringstream out;
-    out << qn;
-    string node = out.str();
-    temp_ic_name_full += "_qn";
     temp_ic_name_full += node;
 
     std::replace( d_scalarLabels.begin(), d_scalarLabels.end(), temp_ic_name, temp_ic_name_full);
   }
 
-  std::stringstream out;
-  out << qn; 
-  string node = out.str();
 
   // thermal conductivity (of particles, I think???)
   std::string abskpName = "abskp_qn";
@@ -688,7 +679,7 @@ SimpleHeatTransfer::computeModel( const ProcessorGroup * pc,
 
 #if defined(VERIFY_SIMPLEHEATTRANSFER_MODEL)
       proc0cout << "****************************************************************" << endl;
-      proc0cout << "Verification error, Simple Heat Trasnfer model: " << endl;
+      proc0cout << "Verification error, Simple Heat Transfer model: " << endl;
       proc0cout << endl;
 
       double error; 

@@ -64,7 +64,7 @@ YDragModel::~YDragModel()
 // Method: Problem Setup
 //---------------------------------------------------------------------------
 void
-YDragModel::problemSetup(const ProblemSpecP& params, int qn)
+YDragModel::problemSetup(const ProblemSpecP& params)
 {
   pi = 3.141592653589793;
 
@@ -93,12 +93,6 @@ YDragModel::problemSetup(const ProblemSpecP& params, int qn)
     variable->getAttribute("role", role_name);
 
     temp_label_name = label_name;
-
-    string node;
-    std::stringstream out;
-    out << qn;
-    node = out.str();
-    temp_label_name += "_qn";
     temp_label_name += node;
 
     // user specifies "role" of each internal coordinate
@@ -124,12 +118,6 @@ YDragModel::problemSetup(const ProblemSpecP& params, int qn)
         iString != d_icLabels.end(); ++iString) {
     std::string temp_ic_name        = (*iString);
     std::string temp_ic_name_full   = temp_ic_name;
-
-    std::string node;
-    std::stringstream out;
-    out << qn;
-    node = out.str();
-    temp_ic_name_full += "_qn";
     temp_ic_name_full += node;
     std::replace( d_icLabels.begin(), d_icLabels.end(), temp_ic_name, temp_ic_name_full);
   }

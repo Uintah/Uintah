@@ -1,12 +1,14 @@
 #ifndef UT_SourceTermFactory_h
 #define UT_SourceTermFactory_h
-
+#include <CCA/Components/Arches/ArchesLabel.h>
+#include <CCA/Components/Arches/ArchesVariables.h>
+#include <CCA/Ports/DataWarehouseP.h>
 #include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/SimulationStateP.h>
-#include <map>
-#include <vector>
-#include <string>
+//#include <map>
+//#include <vector>
+//#include <string>
 
 //====================================================================
 
@@ -70,19 +72,36 @@ private:
 class SourceTermFactory
 {
 public:
-  /**
-   *  @brief obtain a reference to the SourceTermFactory.
-   */
+  
+  typedef std::map< std::string, SourceTermBuilder* > BuildMap;
+  typedef std::map< std::string, SourceTermBase*    > SourceMap;
+
+  /** @brief obtain a reference to the SourceTermFactory. */
   static SourceTermFactory& self();
 
-  /**
-   *  @brief Register a source term on the specified transport equation.
+  //////////////////////////////////////////////////
+  // Initialization/setup methods
+
+  /** @brief  Grab input file parameters from the UPS file */
+  void problemSetup( const ProblemSpecP & params );
+
+  /** @brief  Schedule/do initialization of source terms */
+  void sched_sourceInit( const LevelP& level, 
+                         SchedulerP& sched );
+
+  void sourceInit( const ProcessorGroup* ,
+                   const PatchSubset* patches,
+                   const MaterialSubset*,
+                   DataWarehouse* old_dw,
+                   DataWarehouse* new_dw );
+
+  /////////////////////////////////////////////////////
+  // Source term access methods
+
+  /** @brief Register a source term on the specified transport equation.
    *
-   *  @param eqnName The name of the transport equation to place the source term on.
+   *  @param eqnName The name of the transport equation to which we are adding the source term.
    *  @param builder The SourceTermBuilder object to build the SourceTerm object.
-   *
-   *  SourceTermBuilder objects should be heap-allocated using "new".
-   *  Memory management will be transfered to the SourceTermFactory.
    */
   void register_source_term( const std::string name,
                              SourceTermBuilder* builder );
@@ -93,27 +112,47 @@ public:
    *  objects that have been assigned to the transport equation with
    *  the specified name.
    *
-   *  @param eqnName The name of the transport equation to retrieve
-   *  SourceTerm objects for.
-   *
-   *  Note that this will construct new objects only as needed.
+   *  @param eqnName The transport equation whose SourceTerm object we are retrieving
    */
   SourceTermBase& retrieve_source_term( const std::string name );
 
-  typedef std::map< std::string, SourceTermBuilder* > BuildMap;
-  typedef std::map< std::string, SourceTermBase*        > SourceMap;
+  /** @brief  Get a pointer to to the source term corresponding to
+    *         particle-gas momentum coupling (see CoalModels/ParticleVelocity.{cc,h})
+    *
+    * If there is no particle momentum source, this method won't be called in the first place.
+    */
+  SourceTermBase* getParticleMomentumSource() {
+    return d_particleGasMomentumSource;
+  };
 
-  // get all source terms
+  /////////////////////////////////////////////
+  // Get/set methods
+
+  /* @brief Get all SourceTerm objects in a map */
   SourceMap& retrieve_all_sources(){
     return sources_; }; 
+
+  /* @brief Set the ArchesLabel class so that SourceTermFactory can get a shared state */
+  void setArchesLabel( ArchesLabel* fieldLabels ) {
+    d_fieldLabels = fieldLabels;
+    d_labelSet = true;
+  }
 
 private:
 
   BuildMap builders_;
   SourceMap sources_;
 
+  ArchesLabel* d_fieldLabels;
+
+  bool d_labelSet; ///< Boolean: has the ArchesLabel been set using setArchesLabel()?
+  bool d_useParticleGasMomentumSource; ///< Bool: is there a source term for particle-gas momentum coupling?
+
+  SourceTermBase* d_particleGasMomentumSource;
+
   SourceTermFactory();
   ~SourceTermFactory();
 }; // class SourceTermFactory
 }  //Namespace Uintah
 #endif
+

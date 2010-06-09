@@ -32,6 +32,7 @@ WestbrookDryer::WestbrookDryer( std::string srcName, SimulationStateP& sharedSta
                             vector<std::string> reqLabelNames ) 
 : SourceTermBase(srcName, sharedState, reqLabelNames)
 { 
+  d_srcLabel = VarLabel::create(srcName, CCVariable<double>::getTypeDescription()); 
 
   d_extraLocalLabels.resize(3); 
   d_WDstrippingLabel = VarLabel::create( "WDstrip",  CCVariable<double>::getTypeDescription() ); 
@@ -85,7 +86,7 @@ WestbrookDryer::problemSetup(const ProblemSpecP& inputdb)
 void 
 WestbrookDryer::sched_computeSource( const LevelP& level, SchedulerP& sched, int timeSubStep )
 {
-  std::string taskname = "WestbrookDryer::eval";
+  std::string taskname = "WestbrookDryer::computeSource";
   Task* tsk = scinew Task(taskname, this, &WestbrookDryer::computeSource, timeSubStep);
 
   if (timeSubStep == 0 && !d_labelSchedInit) {
@@ -115,7 +116,7 @@ WestbrookDryer::sched_computeSource( const LevelP& level, SchedulerP& sched, int
   const VarLabel* mixMWLabel = VarLabel::find( "mixMW" ); 
   const VarLabel* denLabel = VarLabel::find( "densityCP" ); 
   // KLUDGE
-  const VarLabel* hcMassFracLabel = VarLabel::find( "hcMassFrac" ); // this needs to me generalized
+  const VarLabel* hcMassFracLabel = VarLabel::find( "hcMassFrac" ); // this needs to be generalized
 
   tsk->requires( Task::OldDW, temperatureLabel, Ghost::None, 0 ); 
   tsk->requires( Task::OldDW, fLabel,           Ghost::None, 0 ); 

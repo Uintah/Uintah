@@ -66,7 +66,7 @@ public:
   // Initialization methods
 
   /** @brief Interface for the inputfile and set constants */ 
-  void problemSetup(const ProblemSpecP& db, int qn);
+  void problemSetup(const ProblemSpecP& db);
 
   /** @brief Schedule the initialization of special/local variables unique to model */
   void sched_initVars( const LevelP& level, SchedulerP& sched );

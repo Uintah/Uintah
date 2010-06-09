@@ -35,7 +35,6 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Arches/TransportEqns/EqnFactory.h>
 #include <CCA/Components/Arches/TransportEqns/EqnBase.h>
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqn.h>
-#include <CCA/Components/Arches/CoalModels/PartVel.h>
 #include <CCA/Components/Arches/CoalModels/CoalModelFactory.h>
 #include <CCA/Components/Arches/CoalModels/ModelBase.h>
 #include <CCA/Components/Arches/DQMOM.h>
@@ -347,8 +346,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
   else 
     d_doDQMOM = false; // probably need to sync this better with the bool being set in Arches
 
-  for (int curr_level = 0; curr_level < numTimeIntegratorLevels; curr_level ++)
-  {
+  for (int curr_level = 0; curr_level < numTimeIntegratorLevels; curr_level ++) {
 
     if (d_doDQMOM) {
 
@@ -356,7 +354,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
       DQMOMEqnFactory::EqnMap& dqmom_eqns = dqmomFactory.retrieve_all_eqns(); 
 
       // Compute the particle velocities
-      d_partVel->schedComputePartVel( level, sched, curr_level ); 
+      modelFactory.sched_computeVelocity( level, sched, curr_level );
 
       // ---- schedule the solution of the transport equations ----
       
@@ -385,27 +383,18 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
       }
 
       // schedule the models for evaluation
-      //CoalModelFactory::ModelMap allModels = modelFactory.retrieve_all_models();
-      //for (CoalModelFactory::ModelMap::iterator imodel = allModels.begin(); imodel != allModels.end(); imodel++){
-      //  imodel->second->sched_computeModel( level, sched, curr_level );  
-      //}
       modelFactory.sched_coalParticleCalculation( level, sched, curr_level );
 
       // schedule DQMOM linear solve
       d_dqmomSolver->sched_solveLinearSystem( level, sched, curr_level );
-
-      // calculate the moments
-      bool saveMoments = d_dqmomSolver->getSaveMoments();
-      if( saveMoments ) {
-        // schedule DQMOM moment calculation
+      if( d_dqmomSolver->getSaveMoments() ) {
         d_dqmomSolver->sched_calculateMoments( level, sched, curr_level );
       }
 
     }
 
 
-    if (curr_level > 0)
-      sched_saveTempCopies(sched, patches, matls,d_timeIntegratorLabels[curr_level]);
+    sched_saveTempCopies(sched, patches, matls,d_timeIntegratorLabels[curr_level]);
 
     bool doing_EKT_now = false;
     if (d_EKTCorrection) {
@@ -477,6 +466,13 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
                           d_timeIntegratorLabels[curr_level],
                           d_EKTCorrection, doing_EKT_now);
 
+    EqnFactory& eqn_factory = EqnFactory::self();
+    EqnFactory::EqnMap& scalar_eqns = eqn_factory.retrieve_all_eqns(); 
+    for (EqnFactory::EqnMap::iterator iter = scalar_eqns.begin(); iter != scalar_eqns.end(); iter++){
+      EqnBase* eqn = iter->second; 
+        eqn->sched_evalTransportEqn( level, sched, curr_level ); 
+    }
+
     if (d_reactingScalarSolve) {
       // in this case we're only solving for one scalar...but
       // the same subroutine can be used to solve multiple scalars
@@ -517,13 +513,6 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 //    sched_updateDensityGuess(sched, patches, matls,
 //                                    d_timeIntegratorLabels[curr_level]);
 
-    EqnFactory& eqn_factory = EqnFactory::self();
-    EqnFactory::EqnMap& scalar_eqns = eqn_factory.retrieve_all_eqns(); 
-    for (EqnFactory::EqnMap::iterator iter = scalar_eqns.begin(); iter != scalar_eqns.end(); iter++){
-      EqnBase* eqn = iter->second; 
-      if ( eqn->getDensityGuessBool() ) 
-        eqn->sched_evalTransportEqn( level, sched, curr_level ); 
-    }
 
     string mixmodel = d_props->getMixingModelType(); 
     if ( mixmodel != "TabProps")
@@ -542,8 +531,9 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
     for (EqnFactory::EqnMap::iterator iter = scalar_eqns.begin(); iter != scalar_eqns.end(); iter++){
       EqnBase* eqn = iter->second; 
-      if ( !eqn->getDensityGuessBool() )
-        eqn->sched_evalTransportEqn( level, sched, curr_level ); 
+      //Transport is constructed above.  Here we only solve if densityGuess is not used. 
+      if ( eqn->getDensityGuessBool() )
+        eqn->sched_solveTransportEqn( level, sched, curr_level ); 
     }
     // Clean up after Scalar equation evaluations  
     if (curr_level == numTimeIntegratorLevels-1){
@@ -853,7 +843,7 @@ ExplicitSolver::sched_setInitialGuess(SchedulerP& sched,
 {
   //copies old db to new_db and then uses non-linear
   //solver to compute new values
-  Task* tsk = scinew Task( "ExplicitSolver::initialGuess",this, 
+  Task* tsk = scinew Task( "ExplicitSolver::setInitialGuess",this, 
                            &ExplicitSolver::setInitialGuess);
 
   Ghost::GhostType  gn = Ghost::None;
@@ -900,9 +890,7 @@ ExplicitSolver::sched_setInitialGuess(SchedulerP& sched,
   if (d_reactingScalarSolve) {
     tsk->requires(Task::OldDW, d_lab->d_reactscalarSPLabel, gn, 0);
     tsk->computes(d_lab->d_reactscalarSPLabel);
-    if (d_timeIntegratorLabels[0]->multiple_steps){
-      tsk->computes(d_lab->d_reactscalarTempLabel);
-    }
+    tsk->computes(d_lab->d_reactscalarTempLabel);
   }
 
   //__________________________________
@@ -911,9 +899,7 @@ ExplicitSolver::sched_setInitialGuess(SchedulerP& sched,
     tsk->requires(Task::OldDW, d_lab->d_radiationVolqINLabel,  gn, 0); 
     tsk->computes(d_lab->d_enthalpySPLabel);
     tsk->computes(d_lab->d_radiationVolqINLabel);
-    if (d_timeIntegratorLabels[0]->multiple_steps){
-      tsk->computes(d_lab->d_enthalpyTempLabel);
-    }
+    tsk->computes(d_lab->d_enthalpyTempLabel);
   }
 
   //__________________________________
@@ -933,10 +919,8 @@ ExplicitSolver::sched_setInitialGuess(SchedulerP& sched,
   }
   
   //__________________________________
-  if (d_timeIntegratorLabels[0]->multiple_steps){
-    tsk->computes(d_lab->d_scalarTempLabel);
-    tsk->computes(d_lab->d_densityTempLabel);
-  }
+  tsk->computes(d_lab->d_scalarTempLabel);
+  tsk->computes(d_lab->d_densityTempLabel);
 
   //__________________________________
   if (d_doMMS) {
@@ -1983,10 +1967,8 @@ ExplicitSolver::setInitialGuess(const ProcessorGroup* ,
     new_areaFraction.copyData(old_areaFraction); // copy old into new
    
  
-    if (d_timeIntegratorLabels[0]->multiple_steps) {
-      new_dw->allocateAndPut(scalar_temp, d_lab->d_scalarTempLabel, indx, patch);
-      scalar_temp.copyData(scalar); // copy old into new
-    }
+    new_dw->allocateAndPut(scalar_temp, d_lab->d_scalarTempLabel, indx, patch);
+    scalar_temp.copyData(scalar); // copy old into new
 
     constCCVariable<double> reactscalar;
     CCVariable<double> new_reactscalar;
@@ -1995,10 +1977,8 @@ ExplicitSolver::setInitialGuess(const ProcessorGroup* ,
       old_dw->get(reactscalar,                 d_lab->d_reactscalarSPLabel, indx, patch, gn, 0);
       new_dw->allocateAndPut(new_reactscalar,  d_lab->d_reactscalarSPLabel, indx, patch);
       new_reactscalar.copyData(reactscalar);
-      if (d_timeIntegratorLabels[0]->multiple_steps) {
-        new_dw->allocateAndPut(temp_reactscalar, d_lab->d_reactscalarTempLabel, indx, patch);
-        temp_reactscalar.copyData(reactscalar);
-      }
+      new_dw->allocateAndPut(temp_reactscalar, d_lab->d_reactscalarTempLabel, indx, patch);
+      temp_reactscalar.copyData(reactscalar);
     }
 
     CCVariable<double> new_enthalpy;
@@ -2007,20 +1987,16 @@ ExplicitSolver::setInitialGuess(const ProcessorGroup* ,
       new_dw->allocateAndPut(new_enthalpy, d_lab->d_enthalpySPLabel, indx, patch);
       new_enthalpy.copyData(enthalpy);
       
-      if (d_timeIntegratorLabels[0]->multiple_steps) {
-        new_dw->allocateAndPut(temp_enthalpy, d_lab->d_enthalpyTempLabel, indx, patch);
-        temp_enthalpy.copyData(enthalpy);
-      }
+      new_dw->allocateAndPut(temp_enthalpy, d_lab->d_enthalpyTempLabel, indx, patch);
+      temp_enthalpy.copyData(enthalpy);
     }
     CCVariable<double> density_new;
     new_dw->allocateAndPut(density_new, d_lab->d_densityCPLabel, indx, patch);
     density_new.copyData(density); // copy old into new
     
-    if (d_timeIntegratorLabels[0]->multiple_steps) {
-      CCVariable<double> density_temp;
-      new_dw->allocateAndPut(density_temp, d_lab->d_densityTempLabel, indx, patch);
-      density_temp.copyData(density); // copy old into new
-    }
+    CCVariable<double> density_temp;
+    new_dw->allocateAndPut(density_temp, d_lab->d_densityTempLabel, indx, patch);
+    density_temp.copyData(density); // copy old into new
 
     CCVariable<double> viscosity_new;
     new_dw->allocateAndPut(viscosity_new, d_lab->d_viscosityCTSLabel, indx, patch);

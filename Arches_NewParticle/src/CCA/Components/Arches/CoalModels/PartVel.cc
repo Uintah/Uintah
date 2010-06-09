@@ -232,6 +232,8 @@ void PartVel::ComputePartVel( const ProcessorGroup* pc,
       // now loop for all qn's
       int N = dqmomFactory.get_quad_nodes();  
       for ( int iqn = 0; iqn < N; iqn++){
+
+        // This MUST be changed, particle size is not always called "length"!
         std::string name = "length_qn"; 
         std::string node; 
         std::stringstream out; 

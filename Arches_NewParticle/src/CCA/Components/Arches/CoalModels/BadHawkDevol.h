@@ -20,9 +20,6 @@
   * @brief    A class for calculating the DQMOM model term for the 
   *           Badzioch and Hawksley coal devolatilization model.
   *
-  * The Builder is required because of the Model Factory; the Factory needs
-  * some way to create the model term and register it.
-  *
   */
 
 //---------------------------------------------------------------------------
@@ -48,32 +45,23 @@ private:
 // End Builder
 //---------------------------------------------------------------------------
 
-class BadHawkDevol: public ModelBase {
+class BadHawkDevol: public Devolatilization {
 public: 
 
   BadHawkDevol( std::string modelName, 
-                    SimulationStateP& shared_state, 
-                    const ArchesLabel* fieldLabels,
-                    vector<std::string> reqICLabelNames, 
-                    vector<std::string> reqScalarLabelNames,
-                    int qn );
+                SimulationStateP& shared_state, 
+                const ArchesLabel* fieldLabels,
+                vector<std::string> reqICLabelNames, 
+                vector<std::string> reqScalarLabelNames,
+                int qn );
 
   ~BadHawkDevol();
 
-  /** @brief Interface for the inputfile and set constants */ 
-  void problemSetup(const ProblemSpecP& db, int qn);
+  ////////////////////////////////////////////////
+  // Initialization/setup methods
 
-  /** @brief Schedule the calculation of the source term */ 
-  void sched_computeModel( const LevelP& level, 
-                           SchedulerP& sched, 
-                           int timeSubStep );
-  
-  /** @brief Actually compute the source term */ 
-  void computeModel( const ProcessorGroup* pc, 
-                     const PatchSubset* patches, 
-                     const MaterialSubset* matls, 
-                     DataWarehouse* old_dw, 
-                     DataWarehouse* new_dw );
+  /** @brief Interface for the inputfile and set constants */ 
+  void problemSetup(const ProblemSpecP& db);
 
   /** @brief  Schedule the initialization of some special/local vars */ 
   void sched_initVars( const LevelP& level, SchedulerP& sched );
@@ -95,16 +83,25 @@ public:
                   DataWarehouse* old_dw, 
                   DataWarehouse* new_dw );
 
+  ////////////////////////////////////////////////
+  // Model computation methods
+
+  /** @brief Schedule the calculation of the source term */ 
+  void sched_computeModel( const LevelP& level, 
+                           SchedulerP& sched, 
+                           int timeSubStep );
+  
+  /** @brief Actually compute the source term */ 
+  void computeModel( const ProcessorGroup* pc, 
+                     const PatchSubset* patches, 
+                     const MaterialSubset* matls, 
+                     DataWarehouse* old_dw, 
+                     DataWarehouse* new_dw );
+
 private:
 
   const ArchesLabel* d_fieldLabels; 
   
-  map<string, string> LabelToRoleMap;
-
-  const VarLabel* d_raw_coal_mass_label;
-  const VarLabel* d_weight_label;
-  const VarLabel* d_particle_temperature_label;
-
   double A1;
   double A2;
   
@@ -117,13 +114,6 @@ private:
 
   double c_o;      // initial mass of raw coal
   double alpha_o;  // initial mass fraction of raw coal
-
-  int d_quad_node;   // store which quad node this model is for
-
-  double d_rc_scaling_factor;
-  double d_pt_scaling_factor;
-  double d_w_scaling_factor; 
-  double d_w_small; // "small" clip value for zero weights
 
 }; // end ConstSrcTerm
 } // end namespace Uintah

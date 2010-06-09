@@ -118,6 +118,7 @@ public:
                                    ArchesVariables* vars,
                                    ArchesConstVariables* constvars,
                                    bool doing_EKT_now); 
+
   ////////////////////////////////////////////////////////////////////////
   // Set source terms. Will need more parameters...like velocity and
   // scalars
@@ -143,6 +144,11 @@ public:
                               CellInformation* cellinfo,
                               ArchesVariables* vars,
                               ArchesConstVariables* constvars); 
+
+  void addOtherScalarSource( const ProcessorGroup* pc, 
+                             const Patch* patch, 
+                             CellInformation* cellinfo, 
+                             ArchesVariables* vars );
 
   void calculateExtraScalarSource(const ProcessorGroup* pc,
                              const Patch* patch,
@@ -205,6 +211,13 @@ public:
                               ArchesConstVariables* constvars,
                               int conv_scheme);
 
+
+  // Add particles source term     
+   void computeParticleSource(const ProcessorGroup* pc,
+                               const Patch* patch,
+                               CellInformation* cellinfo,
+                               ArchesVariables* vars,
+                               ArchesConstVariables* constvars);
 
   ////////////////////////////////////////////////////////////////////////
   // Add multimaterial source term

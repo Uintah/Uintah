@@ -12,6 +12,15 @@
 
 //===========================================================================
 
+/**
+  * @class    Constant Model
+  * @author   Jeremy Thornock
+  * @date     ???
+  *
+  * @brief    A simple constant "growth" model.  G = constant.
+  *
+  */
+
 namespace Uintah{
 
 //---------------------------------------------------------------------------
@@ -51,7 +60,7 @@ public:
   // Initialization methods
 
   /** @brief Interface for the inputfile and set constants */ 
-  void problemSetup(const ProblemSpecP& db, int qn);
+  void problemSetup(const ProblemSpecP& db);
 
   /** @brief Schedule the initialization of special/local variables unique to model */
   void sched_initVars( const LevelP& level, SchedulerP& sched );

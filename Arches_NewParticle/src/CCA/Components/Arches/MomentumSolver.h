@@ -166,13 +166,20 @@ public:
     d_discretize->setFilter(filter);
   }
 #endif
+
   const bool& getPressureCorrectionFlag() const
-    {
-      return d_pressure_correction;
-    }
+  {
+    return d_pressure_correction;
+  }
+
   inline void setMMS(bool doMMS) {
     d_doMMS=doMMS;
   }
+
+  inline void setMomentumCoupling(bool doMC) {
+    d_momentum_coupling = doMC;
+  }
+
 protected: 
 
 private:
@@ -225,6 +232,7 @@ private:
   // const VarLabel* (required)
   const ArchesLabel* d_lab;
   const MPMArchesLabel* d_MAlab;
+  bool d_momentum_coupling;
   bool d_central;
   bool d_pressure_correction;
   // computes coefficients
@@ -243,6 +251,7 @@ private:
   bool d_filter_divergence_constraint;
   bool d_mixedModel;
   bool d_doMMS;
+  vector<string> d_new_sources; 
 
 }; // End class MomentumSolver
 } // End namespace Uintah

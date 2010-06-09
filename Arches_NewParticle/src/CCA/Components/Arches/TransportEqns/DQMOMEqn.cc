@@ -1,6 +1,7 @@
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqn.h>
 #include <CCA/Components/Arches/SourceTerms/SourceTermFactory.h>
 #include <CCA/Components/Arches/SourceTerms/SourceTermBase.h>
+#include <CCA/Components/Arches/CoalModels/CoalModelFactory.h>
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/Variables/VarTypes.h>
@@ -71,7 +72,7 @@ DQMOMEqn::~DQMOMEqn()
 // Method: Problem Setup 
 //---------------------------------------------------------------------------
 void
-DQMOMEqn::problemSetup(const ProblemSpecP& inputdb, int qn)
+DQMOMEqn::problemSetup(const ProblemSpecP& inputdb, int qn )
 {
   // NOTE: some of this may be better off in the EqnBase.cc class
   ProblemSpecP db = inputdb; 
@@ -431,6 +432,8 @@ DQMOMEqn::sched_buildTransportEqn( const LevelP& level, SchedulerP& sched, int t
   string taskname = "DQMOMEqn::buildTransportEqn"; 
 
   Task* tsk = scinew Task(taskname, this, &DQMOMEqn::buildTransportEqn);
+  
+  CoalModelFactory& coalFactory = CoalModelFactory::self();
 
   //----NEW----
   tsk->modifies(d_transportVarLabel);
@@ -438,8 +441,11 @@ DQMOMEqn::sched_buildTransportEqn( const LevelP& level, SchedulerP& sched, int t
   tsk->modifies(d_FdiffLabel);
   tsk->modifies(d_FconvLabel);
   tsk->modifies(d_RHSLabel);
-  ArchesLabel::PartVelMap::iterator iter = d_fieldLabels->partVel.find(d_quadNode);
-  tsk->requires(Task::NewDW, iter->second, Ghost::AroundCells, 1); 
+  if( coalFactory.useParticleVelocityModel() ) {
+    tsk->requires(Task::NewDW, coalFactory.getParticleVelocityLabel(d_quadNode), Ghost::AroundCells, 1);
+  } else {
+    tsk->requires(Task::OldDW, d_fieldLabels->d_newCCVelocityLabel, Ghost::AroundCells, 1);
+  }
  
   //-----OLD-----
   tsk->requires(Task::OldDW, d_fieldLabels->d_areaFractionLabel, Ghost::AroundCells, 1); 
@@ -529,9 +535,13 @@ DQMOMEqn::buildTransportEqn( const ProcessorGroup* pc,
     vol *= Dx.z(); 
 #endif
 
-    ArchesLabel::PartVelMap::iterator iter = d_fieldLabels->partVel.find(d_quadNode);
-    new_dw->get( partVel, iter->second, matlIndex, patch, gac, 1 ); 
- 
+    CoalModelFactory& coalFactory = CoalModelFactory::self();
+
+    if( coalFactory.useParticleVelocityModel() ) {
+      new_dw->get( partVel, coalFactory.getParticleVelocityLabel(d_quadNode), matlIndex, patch, gac, 1 );
+    } else {
+      old_dw->get( partVel, d_fieldLabels->d_newCCVelocityLabel, matlIndex, patch, gac, 1 );
+    }
     new_dw->getModifiable(phi, d_transportVarLabel, matlIndex, patch);
     new_dw->getModifiable(Fdiff, d_FdiffLabel, matlIndex, patch);
     new_dw->getModifiable(Fconv, d_FconvLabel, matlIndex, patch); 
@@ -633,8 +643,6 @@ DQMOMEqn::solveTransportEqn( const ProcessorGroup* pc,
     CCVariable<double> phi;    // phi @ current sub-level 
     CCVariable<double> oldphi; // phi @ last update for rk substeps
     constCCVariable<double> RHS; 
-    // why isn't DQMOMEqn using variable-density update?
-    // (ScalarEqn is)
     constCCVariable<double> rk1_phi; // phi @ n for averaging 
 
     new_dw->getModifiable(phi, d_transportVarLabel, matlIndex, patch);

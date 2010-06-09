@@ -1,4 +1,4 @@
-#include <CCA/Components/Arches/CoalModels/Devolatilization.h>
+#include <CCA/Components/Arches/CoalModels/ParticleDensity.h>
 #include <CCA/Components/Arches/TransportEqns/EqnFactory.h>
 #include <CCA/Components/Arches/TransportEqns/EqnBase.h>
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqn.h>
@@ -17,12 +17,12 @@
 using namespace std;
 using namespace Uintah; 
 
-Devolatilization::Devolatilization( std::string modelName, 
-                                              SimulationStateP& sharedState,
-                                              const ArchesLabel* fieldLabels,
-                                              vector<std::string> icLabelNames, 
-                                              vector<std::string> scalarLabelNames,
-                                              int qn ) 
+ParticleDensity::ParticleDensity( std::string modelName, 
+                  SimulationStateP& sharedState,
+                  const ArchesLabel* fieldLabels,
+                  vector<std::string> icLabelNames, 
+                  vector<std::string> scalarLabelNames,
+                  int qn ) 
 : ModelBase(modelName, sharedState, fieldLabels, icLabelNames, scalarLabelNames, qn)
 {
   d_quadNode = qn;
@@ -33,20 +33,42 @@ Devolatilization::Devolatilization( std::string modelName,
   // Create the gas phase source term associated with this model
   std::string gasSourceName = modelName + "_gasSource";
   d_gasLabel = VarLabel::create( gasSourceName, CCVariable<double>::getTypeDescription() );
+
+  DQMOMEqnFactory& eqn_factory = DQMOMEqnFactory::self();
+  numQuadNodes = eqn_factory.get_quad_nodes();
+
+//  d_densityLabels.resize(numQuadNodes);
+  
+  std::string density_name = "rhop_qn";
+
+  std::string qnode;
+  std::stringstream out;
+  out << qn;
+  qnode = out.str();
+
+  d_density_label = VarLabel::create( density_name+qnode, CCVariable<double>::getTypeDescription() );
 }
 
-Devolatilization::~Devolatilization()
+ParticleDensity::~ParticleDensity()
 {}
 
 //---------------------------------------------------------------------------
 // Method: Problem Setup
 //---------------------------------------------------------------------------
-  void 
-Devolatilization::problemSetup(const ProblemSpecP& params)
+void 
+ParticleDensity::problemSetup(const ProblemSpecP& params )
 {
-  // This method is called by all devolatilization classes' problemSetup()
+  // This method is called by problemSetup() in child classes
 
   ProblemSpecP db = params; 
+
+  const ProblemSpecP params_root = db->getRootNode();
+  if( params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("Coal_Properties") ) {
+    ProblemSpecP db_coal = params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("Coal_Properties");
+    db_coal->require("initial_ash_mass", ash_mass);
+  } else {
+    throw InvalidValue("Missing <Coal_Properties> section in input file!",__FILE__,__LINE__);
+  }
 
   // set model clipping (not used yet...)
   db->getWithDefault( "low_clip",  d_lowModelClip,  1.0e-6 );
@@ -66,7 +88,7 @@ Devolatilization::problemSetup(const ProblemSpecP& params)
 
   d_w_small = weight_eqn.getSmallClip();
   d_w_scaling_factor = weight_eqn.getScalingConstant();
-  d_weight_label = weight_eqn.getTransportEqnLabel();
+
 }
 
 
@@ -85,11 +107,11 @@ This method was originally in ModelBase, but it requires creating CCVariables
 @see ExplicitSolver::noSolve()
  */
 void
-Devolatilization::dummyInit( const ProcessorGroup* pc,
-                             const PatchSubset* patches, 
-                             const MaterialSubset* matls, 
-                             DataWarehouse* old_dw, 
-                             DataWarehouse* new_dw )
+ParticleDensity::dummyInit( const ProcessorGroup* pc,
+                    const PatchSubset* patches, 
+                    const MaterialSubset* matls, 
+                    DataWarehouse* old_dw, 
+                    DataWarehouse* new_dw )
 {
   for( int p=0; p < patches->size(); ++p ) {
 
@@ -120,10 +142,10 @@ Devolatilization::dummyInit( const ProcessorGroup* pc,
 // Method: Schedule the initialization of special variables unique to model
 //---------------------------------------------------------------------------
 void 
-Devolatilization::sched_initVars( const LevelP& level, SchedulerP& sched )
+ParticleDensity::sched_initVars( const LevelP& level, SchedulerP& sched )
 {
-  std::string taskname = "Devolatilization::initVars";
-  Task* tsk = scinew Task(taskname, this, &Devolatilization::initVars);
+  std::string taskname = "ParticleDensity::initVars";
+  Task* tsk = scinew Task(taskname, this, &ParticleDensity::initVars);
 
   tsk->computes( d_modelLabel );
   tsk->computes( d_gasLabel   );
@@ -135,11 +157,11 @@ Devolatilization::sched_initVars( const LevelP& level, SchedulerP& sched )
 // Method: Initialize special variables unique to the model
 //-------------------------------------------------------------------------
 void
-Devolatilization::initVars( const ProcessorGroup * pc, 
-                            const PatchSubset    * patches, 
-                            const MaterialSubset * matls, 
-                            DataWarehouse        * old_dw, 
-                            DataWarehouse        * new_dw )
+ParticleDensity::initVars( const ProcessorGroup * pc, 
+                   const PatchSubset    * patches, 
+                   const MaterialSubset * matls, 
+                   DataWarehouse        * old_dw, 
+                   DataWarehouse        * new_dw )
 {
   for( int p=0; p < patches->size(); p++ ) {  // Patch loop
 
@@ -156,3 +178,44 @@ Devolatilization::initVars( const ProcessorGroup * pc,
     gas_value.initialize(0.0);
   }
 }
+
+/*
+void 
+ParticleDensity::sched_computeParticleDensity( const LevelP&  level,
+                                               SchedulerP&    sched,
+                                               int            timeSubStep )
+{
+  std::string taskname = "ParticleDensity::computeParticleDensity";
+  Task* tsk = scinew Task(taskname, this, &ParticleDensity::computeParticleDensity);
+
+  for( vector<VarLabel*>::iterator iLabel = d_densityLabels.begin();
+       iLabel != d_densityLabels.end(); ++iLabel ) {
+    if( timeSubStep == 0 && !d_labelSchedInit ) {
+      tsk->computes(*iLabel);
+    } else {
+      tsk->modifies(*iLabel);
+    }
+  }
+
+  if( timeSubStep == 0 && !d_labelSchedInit) {
+    // Every model term needs to set this flag after the varLabel is computed. 
+    // transportEqn.cleanUp should reinitialize this flag at the end of the time step. 
+    d_labelSchedInit = true;
+  }
+
+  sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials()); 
+}
+*/
+
+/*
+void 
+ParticleDensity::computeParticleDensity( const ProcessorGroup* pc,
+                                         const PatchSubset* patches,
+                                         const MaterialSubset* matls,
+                                         DataWarehouse* old_dw,
+                                         DataWarehouse* new_dw )
+{
+  // This method left intentionally blank
+}
+*/
+

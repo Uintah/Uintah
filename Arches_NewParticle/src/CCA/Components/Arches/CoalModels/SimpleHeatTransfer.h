@@ -12,14 +12,13 @@
 #include <vector>
 #include <string>
 
-// FIXME: more descriptive name
 /**
   * @class    SimpleHeatTransfer
   * @author   Julien Pedel, Jeremy Thornock, Charles Reid
   * @date     November 2009
   *
   * @brief    A simple heat transfer model for coal paticles.
-  *           (This needs a more descriptive name)
+  *           (a more descriptive name would be good)
   *
   */
 
@@ -65,7 +64,7 @@ public:
   // Initialization methods
 
   /** @brief Interface for the inputfile and set constants */ 
-  void problemSetup(const ProblemSpecP& db, int qn);
+  void problemSetup(const ProblemSpecP& db);
 
   /** @brief Schedule the initialization of some special/local variables */
   void sched_initVars( const LevelP& level, SchedulerP& sched );
@@ -160,9 +159,9 @@ private:
   const VarLabel* d_abskp;  ///< Label for thermal conductivity (of the particles, I think???)
 
   double visc;
-  double yelem[5];              ///< Fractions of each element in coal (C, H, N, O, S respectively)
-  vector<double>  ash_mass_init;         ///< Initial ash mass
-  double rhop;                  ///< Density of particle 
+  double yelem[5];                ///< Mass fractions of each element in coal (C, H, N, O, S respectively)
+  vector<double>  ash_mass_init;  ///< Initial ash mass
+  double rhop;                    ///< Density of particle 
 
   double Pr;
   double blow;

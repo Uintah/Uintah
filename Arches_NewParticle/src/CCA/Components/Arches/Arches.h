@@ -108,7 +108,7 @@ namespace Uintah {
   class TimeIntegratorLabel;
   class ExtraScalarSolver;
   class ExplicitTimeInt; 
-  class PartVel; 
+  //class PartVel;  //cmr
   class DQMOM; 
 #ifdef PetscFilter
   class Filter;
@@ -186,12 +186,6 @@ public:
                                          SchedulerP&);
   virtual void sched_blobInit(const LevelP& level,
                               SchedulerP&);
-  virtual void sched_weightInit( const LevelP& level, 
-                                SchedulerP& ); 
-  virtual void sched_weightedAbsInit( const LevelP& level, 
-                                SchedulerP& ); 
-  virtual void sched_scalarInit( const LevelP& level, 
-                                 SchedulerP& sched );
 
   // GROUP: Access Functions :
   ///////////////////////////////////////////////////////////////////////
@@ -287,40 +281,9 @@ private:
                 DataWarehouse* ,
                 DataWarehouse* new_dw);
 
-  void weightInit( const ProcessorGroup*,
-                  const PatchSubset* patches,
-                  const MaterialSubset*,
-                  DataWarehouse* old_dw,
-                  DataWarehouse* new_dw);
-  void weightedAbsInit( const ProcessorGroup*,
-                  const PatchSubset* patches,
-                  const MaterialSubset*,
-                  DataWarehouse* old_dw,
-                  DataWarehouse* new_dw);
-
-  void scalarInit( const ProcessorGroup* ,
-                   const PatchSubset* patches,
-                   const MaterialSubset*,
-                   DataWarehouse* old_dw,
-                   DataWarehouse* new_dw );
-
 
 
 private:
-
-  /** @brief Registers all possible source terms by instantiating a builder in the factory */     
-  void registerSources(ProblemSpecP& db);
-
-  /** @brief Registers all possible models for DQMOM */ 
-  void registerModels( ProblemSpecP& db ); 
-
-  /** @brief Registers all possible equations by instantiating a builder in the factory */     
-  void registerTransportEqns(ProblemSpecP& db);
-
-  /** @brief Registers all possible DQMOM equations by instantiating a builder in the factory */     
-  void registerDQMOMEqns(ProblemSpecP& db);
-
-
 
       double d_init_dt; // The initial dt from input file. 
       double d_init_mix_frac; // The initial value of mixture fraction in the domain (for paramInit)
@@ -387,8 +350,8 @@ private:
     bool d_doDQMOM; // do we need this as a private member?
     int d_tOrder; 
     ExplicitTimeInt* d_timeIntegrator;
-    PartVel* d_partVel; 
-    DQMOM* d_dqmomSolver; 
+    DQMOM* d_dqmomSolver;  //cmr
+    //vector<DQMOM*> d_dqmomSolvers; //cmr
 
     bool d_doingRestart; 
     bool d_newBC_on_Restart; 
