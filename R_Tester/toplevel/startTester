@@ -30,9 +30,9 @@ TEMP_DIR=/usr/local/home/csafe-tester/"$OS"
 
 # test OS, if Linux or IRIX, set appropriate compiler env. vars, else, abort
 if [ "$OS" == "Linux" ]; then
-  CC=gcc-4.3
-  CXX=g++-4.3
-  F77=gfortran-4.3
+  CC=gcc-4.2
+  CXX=g++-4.2
+  F77=gfortran-4.2
 elif [ "$OS" == "Darwin" ]; then
   CC=gcc
   CXX=c++
