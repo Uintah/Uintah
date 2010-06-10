@@ -462,8 +462,26 @@ class Patch:
     def get_extent(self):
         return (self.lowIndex, self.highIndex)
 
+
+    def get_num_materials(self):
+        num_mat = 0
+        for v in variables:
+            if v.type == 'ParticleVariable<Point>':
+                num_mat = num_mat + 1
+
+        return num_mat
+
+    def get_num_particles(self, mat_index):
+        for v in variables:
+            if v.index == mat_index:
+                if v.type == 'ParticleVariable<Point>':
+                    return v.numParticles
+
+                
+
     def vtk_element(self,root_elem):
         extent = self.get_extent()
+        num_points = self.get_num_particles(mat_id)
         lo = extent[0]
         # subtract off the plus_neighbor values from the hi extent
         # hi = extent[1] - plus_neighbor
@@ -548,6 +566,10 @@ class Variable:
         self.index = int(variable.findtext('index'))
         self.patch = int(variable.findtext('patch'))
         self.start = int(variable.findtext('start'))
+        numParticles = variable.findtext('numParticles')
+        if numParticles is not None:
+            numParticles = int(numParticles)
+        self.numParticles = numParticles
         self.end = int(variable.findtext('end'))
         self.filename = variable.findtext('filename')
 
@@ -559,6 +581,7 @@ class Variable:
         print "Variable index = %s" % self.index
         print "Variable patch = %s" % self.patch
         print "Variable start = %s" % self.start
+        print "Variable numParticles = %s" % self.numParticles
         print "Variable end = %s" % self.end
         print "Variable filename = %s" % self.filename
 
