@@ -674,6 +674,39 @@
         <ThresholdPressure>    50000        </ThresholdPressure>
         <IgnitionTemp>         500.0        </IgnitionTemp>
       </Model>
+      <!-- 
+      <Model type="DDT1">
+       <!-- JWL++ Stuff -->
+        <fromMaterial> reactant   </fromMaterial> 
+        <toMaterial>   product    </toMaterial>
+        <G>   3.75e-16 </G>
+        <b>       2.0    </b>
+        <rho0> 1840.0     </rho0>
+        <E0>      5.0e6 </E0>
+        <useCrackModel>   false </useCrackModel>
+        <!-- Crack parameter not yet fit for new det. b and G--> 
+        <Gcrack>   7.0e-18 </Gcrack>
+        <CrackVolThreshold>   1e-14 </CrackVolThreshold>
+        <nCrack>   1.84 </nCrack>
+
+        <ThresholdPressureJWL>    5.3e9      </ThresholdPressureJWL>
+        <!-- Simple Burn Stuff -->
+        <IdealGasConst>        8.314        </IdealGasConst>
+        <PreExpCondPh>         1.637e15     </PreExpCondPh>
+        <ActEnergyCondPh>      1.76e5       </ActEnergyCondPh>
+        <PreExpGasPh>          1.6e-3       </PreExpGasPh>
+        <CondPhaseHeat>        4.0e5        </CondPhaseHeat>
+        <GasPhaseHeat>         3.018e6      </GasPhaseHeat>
+        <HeatConductGasPh>     0.07         </HeatConductGasPh>
+        <HeatConductCondPh>    0.2          </HeatConductCondPh>
+        <SpecificHeatBoth>     1.4e3        </SpecificHeatBoth>
+        <MoleWeightGasPh>      0.0342       </MoleWeightGasPh>
+        <BoundaryParticles>    3            </BoundaryParticles>
+        <IgnitionTemp>         550.0        </IgnitionTemp>
+        <ThresholdPressureSB>       50000.          </ThresholdPressureSB>
+      </Model>
+       -->
+
     </Models>
 
     <PhysicalBC>
