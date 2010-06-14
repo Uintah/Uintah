@@ -30,7 +30,7 @@ DEALINGS IN THE SOFTWARE.
 
 #ifndef __MPM_FLAGS_H__
 #define __MPM_FLAGS_H__
-
+#include <CCA/Ports/Output.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Grid/ParticleInterpolator.h>
 #include <string>
@@ -114,6 +114,20 @@ namespace Uintah {
 
     bool        d_with_ice;
     bool        d_with_arches;
+    
+    // flags for turning on/off the reduction variable calculations
+    struct reductionVars{
+     bool mass;
+     bool momentum;
+     bool thermalEnergy;
+     bool strainEnergy;
+     bool KE;
+     bool volDeformed;
+     bool centerOfMass;
+    };
+    reductionVars* d_reductionVars;
+    
+    
     const ProcessorGroup* d_myworld;
 
     std::vector<std::string> d_bndy_face_txt_list; 
@@ -124,7 +138,7 @@ namespace Uintah {
 
     virtual ~MPMFlags();
 
-    virtual void readMPMFlags(ProblemSpecP& ps);
+    virtual void readMPMFlags(ProblemSpecP& ps, Output* dataArchive);
     virtual void outputProblemSpec(ProblemSpecP& ps);
 
   private:

@@ -174,7 +174,7 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec,
   }
  
   // Read all MPM flags (look in MPMFlags.cc)
-  flags->readMPMFlags(restart_mat_ps);
+  flags->readMPMFlags(restart_mat_ps, dataArchiver);
   if (flags->d_integrator_type == "implicit"){
     throw ProblemSetupException("Can't use implicit integration with -mpm",
                                  __FILE__, __LINE__);
@@ -755,7 +755,9 @@ void SerialMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
   t->computes(lb->gTemperatureRateLabel);
   t->computes(lb->gExternalHeatRateLabel);
   t->computes(lb->gNumNearParticlesLabel);
-  t->computes(lb->TotalMassLabel);
+  if(flags->d_reductionVars->mass){
+    t->computes(lb->TotalMassLabel);
+  }
 
   if(flags->d_with_ice){
     t->computes(lb->gVelocityBCLabel);
@@ -1010,7 +1012,11 @@ void SerialMPM::scheduleComputeInternalForce(SchedulerP& sched,
   }
 
   t->computes(lb->gInternalForceLabel);
-  t->computes(lb->TotalVolumeDeformedLabel);
+  
+  
+  if(flags->d_reductionVars->volDeformed){
+    t->computes(lb->TotalVolumeDeformedLabel);
+  }
   
   for(std::list<Patch::FaceType>::const_iterator ftit(d_bndy_traction_faces.begin());
       ftit!=d_bndy_traction_faces.end();ftit++) {
@@ -1293,11 +1299,21 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->computes(lb->pSizeLabel_preReloc);
   t->computes(lb->pXXLabel);
 
-  t->computes(lb->KineticEnergyLabel);
-  t->computes(lb->ThermalEnergyLabel);
-  t->computes(lb->CenterOfMassPositionLabel);
-  t->computes(lb->TotalMomentumLabel);
-  
+  //__________________________________
+  //  reduction variables
+  if(flags->d_reductionVars->momentum){
+    t->computes(lb->TotalMomentumLabel);
+  }
+  if(flags->d_reductionVars->KE){
+    t->computes(lb->KineticEnergyLabel);
+  }
+  if(flags->d_reductionVars->thermalEnergy){
+    t->computes(lb->ThermalEnergyLabel);
+  }
+  if(flags->d_reductionVars->centerOfMass){
+    t->computes(lb->CenterOfMassPositionLabel);
+  }
+
   // debugging scalar
   if(flags->d_with_color) {
     t->requires(Task::OldDW, lb->pColorLabel,  Ghost::None);
@@ -1401,10 +1417,20 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdateMom2(SchedulerP& sched,
   t->computes(lb->pMassLabel_preReloc);
   t->computes(lb->pSizeLabel_preReloc);
 
-  t->computes(lb->KineticEnergyLabel);
-  t->computes(lb->ThermalEnergyLabel);
-  t->computes(lb->CenterOfMassPositionLabel);
-  t->computes(lb->TotalMomentumLabel);
+  //__________________________________
+  //  reduction variables
+  if(flags->d_reductionVars->KE){
+    t->computes(lb->KineticEnergyLabel);
+  }
+  if(flags->d_reductionVars->thermalEnergy){
+    t->computes(lb->ThermalEnergyLabel);
+  }
+  if(flags->d_reductionVars->centerOfMass){
+    t->computes(lb->CenterOfMassPositionLabel);
+  }
+  if(flags->d_reductionVars->momentum){
+    t->computes(lb->TotalMomentumLabel);
+  }
 
   // debugging scalar
   if(flags->d_with_color) {
@@ -2165,8 +2191,11 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
         bc.setBoundaryCondition(patch,dwi,"Velocity", gvelocityWBC,interp_type);
         bc.setBoundaryCondition(patch,dwi,"Symmetric",gvelocityWBC,interp_type);
       }
-
-      new_dw->put(sum_vartype(totalmass), lb->TotalMassLabel);
+      
+      if(flags->d_reductionVars->mass){
+        new_dw->put(sum_vartype(totalmass), lb->TotalMassLabel);
+      }
+      
     }  // End loop over materials
 
     for(NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
@@ -2743,8 +2772,10 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
     }
     delete interpolator;
   }
-  new_dw->put(sum_vartype(partvoldef), lb->TotalVolumeDeformedLabel);
   
+  if(flags->d_reductionVars->volDeformed){
+    new_dw->put(sum_vartype(partvoldef), lb->TotalVolumeDeformedLabel);
+  }
   // be careful only to put the fields that we have built
   // that way if the user asks to output a field that has not been built
   // it will fail early rather than just giving zeros.
@@ -3684,10 +3715,20 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
     }
 
     // DON'T MOVE THESE!!!
-    new_dw->put(sum_vartype(ke),             lb->KineticEnergyLabel);
-    new_dw->put(sum_vartype(thermal_energy), lb->ThermalEnergyLabel);
-    new_dw->put(sumvec_vartype(CMX),         lb->CenterOfMassPositionLabel);
-    new_dw->put(sumvec_vartype(totalMom),    lb->TotalMomentumLabel);
+    //__________________________________
+    //  reduction variables
+    if(flags->d_reductionVars->momentum){
+      new_dw->put(sumvec_vartype(totalMom),    lb->TotalMomentumLabel);
+    }
+    if(flags->d_reductionVars->KE){
+      new_dw->put(sum_vartype(ke),             lb->KineticEnergyLabel);
+    }
+    if(flags->d_reductionVars->thermalEnergy){
+      new_dw->put(sum_vartype(thermal_energy), lb->ThermalEnergyLabel);
+    }
+    if(flags->d_reductionVars->centerOfMass){
+      new_dw->put(sumvec_vartype(CMX),         lb->CenterOfMassPositionLabel);
+    }
 
     // cout << "Solid mass lost this timestep = " << massLost << endl;
     // cout << "Solid momentum after advection = " << totalMom << endl;
@@ -3818,11 +3859,19 @@ void SerialMPM::interpolateToParticlesAndUpdateMom1(const ProcessorGroup*,
     }
 
     // DON'T MOVE THESE!!!
-    new_dw->put(sum_vartype(ke),     lb->KineticEnergyLabel);
-    new_dw->put(sumvec_vartype(CMX), lb->CenterOfMassPositionLabel);
-    new_dw->put(sumvec_vartype(totalMom), lb->TotalMomentumLabel);
+    //__________________________________
+    //  reduction variables
+    if(flags->d_reductionVars->momentum){
+      new_dw->put(sumvec_vartype(totalMom),    lb->TotalMomentumLabel);
+    }
+    if(flags->d_reductionVars->KE){
+      new_dw->put(sum_vartype(ke),             lb->KineticEnergyLabel);
+    }
+    if(flags->d_reductionVars->centerOfMass){
+      new_dw->put(sumvec_vartype(CMX),         lb->CenterOfMassPositionLabel);
+    }    
 
-      delete interpolator;
+    delete interpolator;
   }
 
 }
@@ -4028,8 +4077,13 @@ void SerialMPM::interpolateToParticlesAndUpdateMom2(const ProcessorGroup*,
     }
 
     // DON'T MOVE THESE!!!
-    new_dw->put(sum_vartype(thermal_energy), lb->ThermalEnergyLabel);
-
+    
+    //__________________________________
+    //  reduction variables
+    if(flags->d_reductionVars->thermalEnergy){
+      new_dw->put(sum_vartype(thermal_energy), lb->ThermalEnergyLabel);
+    }
+    
     delete interpolator;
   }
 }

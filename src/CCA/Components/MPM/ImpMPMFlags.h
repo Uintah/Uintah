@@ -55,7 +55,7 @@ namespace Uintah {
 
     virtual ~ImpMPMFlags();
 
-    virtual void readMPMFlags(ProblemSpecP& ps);
+    virtual void readMPMFlags(ProblemSpecP& ps, Output* dataArchive);
     virtual void outputProblemSpec(ProblemSpecP& ps);
 
 
