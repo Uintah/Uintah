@@ -82,6 +82,7 @@ extern DebugStream mixedDebug;
 
 static DebugStream dbg("MPIScheduler", false);
 static DebugStream timeout("MPIScheduler.timings", false);
+static DebugStream reductionout("ReductionTasks", false);
 DebugStream waitout("WaitTimes", false);
 DebugStream execout("ExecTimes", false);
 DebugStream taskdbg("TaskDBG", false);
@@ -243,6 +244,9 @@ MPIScheduler::initiateReduction( DetailedTask          * task )
 {
   TAU_PROFILE("MPIScheduler::initiateReduction()", " ", TAU_USER); 
   {
+    if(reductionout.active() && d_myworld->myrank()==0)
+      reductionout << "Running Reduction Task: " << task->getName() << endl;
+
 #ifdef USE_PERFEX_COUNTERS
     start_counters(0, 19);
 #endif
