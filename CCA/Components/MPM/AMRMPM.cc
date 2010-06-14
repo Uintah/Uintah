@@ -2016,7 +2016,7 @@ void AMRMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       //bool get_finer = true;
       //bool coarse_part = false;
       //int num_cur, num_fine, num_coarse;
-      int n8or27=flags->d_8or27;
+      //int n8or27=flags->d_8or27;
          
       for(ParticleSubset::iterator iter = pset->begin();
           iter != pset->end(); iter++){
