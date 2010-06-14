@@ -97,15 +97,26 @@ MPMFlags::MPMFlags(const ProcessorGroup* myworld)
   d_with_ice = false;
   d_with_arches = false;
   d_myworld = myworld;
+  
+  d_reductionVars = scinew reductionVars();
+  d_reductionVars->mass          = false;
+  d_reductionVars->momentum      = false;
+  d_reductionVars->thermalEnergy = false;
+  d_reductionVars->strainEnergy  = false;
+  d_reductionVars->KE            = false;
+  d_reductionVars->volDeformed   = false;
+  d_reductionVars->centerOfMass  = false;
+  
 }
 
 MPMFlags::~MPMFlags()
 {
   delete d_interpolator;
+  delete d_reductionVars;
 }
 
 void
-MPMFlags::readMPMFlags(ProblemSpecP& ps)
+MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
 {
   ProblemSpecP root = ps->getRootNode();
   ProblemSpecP mpm_flag_ps = root->findBlock("MPM");
@@ -119,7 +130,17 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps)
     d_gravity=Vector(0,0,0);
   }
 
-
+  //__________________________________
+  //  Set the on/off flags to determine which
+  // reduction variables are computed
+  d_reductionVars->mass           = dataArchive->isLabelSaved( "TotalMass" );
+  d_reductionVars->momentum       = dataArchive->isLabelSaved( "TotalMomentum" );
+  d_reductionVars->thermalEnergy  = dataArchive->isLabelSaved( "ThermalEnergy" );
+  d_reductionVars->KE             = dataArchive->isLabelSaved( "KineticEnergy" );
+  d_reductionVars->strainEnergy   = dataArchive->isLabelSaved( "StrainEnergy" );
+  d_reductionVars->volDeformed    = dataArchive->isLabelSaved( "TotalVolumeDeformed" );
+  d_reductionVars->centerOfMass   = dataArchive->isLabelSaved( "CenterOfMassPosition" );
+ 
   if (!mpm_flag_ps)
     return;
 

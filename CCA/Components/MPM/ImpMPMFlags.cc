@@ -59,9 +59,9 @@ ImpMPMFlags::~ImpMPMFlags()
 }
 
 void
-ImpMPMFlags::readMPMFlags(ProblemSpecP& ps)
+ImpMPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
 {
-  MPMFlags::readMPMFlags(ps);
+  MPMFlags::readMPMFlags(ps, dataArchive);
 
   ProblemSpecP root = ps->getRootNode();
   ProblemSpecP mpm_flag_ps = root->findBlock("MPM");
