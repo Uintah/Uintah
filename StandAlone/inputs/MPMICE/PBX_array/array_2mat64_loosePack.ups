@@ -676,21 +676,18 @@
       </Model>
       <!-- 
       <Model type="DDT1">
-       <!-- JWL++ Stuff -->
-        <fromMaterial> reactant   </fromMaterial> 
+        <fromMaterial> PBX9501    </fromMaterial> 
         <toMaterial>   product    </toMaterial>
-        <G>   3.75e-16 </G>
-        <b>       2.0    </b>
-        <rho0> 1840.0     </rho0>
-        <E0>      5.0e6 </E0>
+        <G>       3.75e-16 </G>
+        <b>       2.0      </b>
+        <rho0>    1840.0   </rho0>
+        <E0>      5.0e6    </E0>
         <useCrackModel>   false </useCrackModel>
-        <!-- Crack parameter not yet fit for new det. b and G--> 
         <Gcrack>   7.0e-18 </Gcrack>
         <CrackVolThreshold>   1e-14 </CrackVolThreshold>
         <nCrack>   1.84 </nCrack>
 
         <ThresholdPressureJWL>    5.3e9      </ThresholdPressureJWL>
-        <!-- Simple Burn Stuff -->
         <IdealGasConst>        8.314        </IdealGasConst>
         <PreExpCondPh>         1.637e15     </PreExpCondPh>
         <ActEnergyCondPh>      1.76e5       </ActEnergyCondPh>
@@ -705,7 +702,6 @@
         <IgnitionTemp>         550.0        </IgnitionTemp>
         <ThresholdPressureSB>       50000.          </ThresholdPressureSB>
       </Model>
-       -->
 
     </Models>
 
