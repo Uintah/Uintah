@@ -4,6 +4,7 @@ Name              type               Description
 ______________________________________________________________________
 
 ExecTimes         SCI_DEBUG     outputs the time for execution on each task.
+ReductionTasks    SCI_DEBUG     outputs a message on processor 0 whenever a reduction task occurs.
 RELOCATE_DBG      SCI_DEBUG     prints out debugging information in the code that finds the neighboring patches inside of particle relocation task.
 AMR               SCI_DEBUG     prints out the patch layout
 TaskGraph         SCI_DEBUG     prints out details of computes and requires
