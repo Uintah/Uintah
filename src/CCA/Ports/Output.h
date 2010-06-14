@@ -148,6 +148,9 @@ class SimulationState;
     // Returns true if data will be checkpointed this timestep
     virtual bool isCheckpointTimestep() = 0;
 
+    // Returns true if the label is being saved
+    virtual bool isLabelSaved(std::string label) = 0;
+
     //////////
     // Get the directory of the current time step for outputting info.
     virtual const std::string& getLastTimestepOutputLocation() const = 0;

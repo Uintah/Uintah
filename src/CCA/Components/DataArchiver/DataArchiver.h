@@ -192,6 +192,8 @@ using std::pair;
        virtual const string& getLastTimestepOutputLocation() const
        { return d_lastTimestepLocation; }
 
+       bool isLabelSaved( string label );
+
      public:
 
        //! problemSetup parses the ups file into a list of these
