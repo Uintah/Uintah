@@ -114,63 +114,22 @@ GeometryPieceP EllipsoidGeometryPiece::clone() const
 bool EllipsoidGeometryPiece::inside(const Point& p) const
 {
   // Variable initialization
-  double thetaz = 0.0, thetay = 0.0, thetax = 0.0;
-  double xnew = 0.0, ynew = 0.0, znew = 0.0;
   Point *pRotated = new Point(p.x()-d_origin.x(),p.y()-d_origin.y(),p.z()-d_origin.z());
-  Vector unitX = *(new Vector(1.0,0.0,0.0));
-  Vector unitY = *(new Vector(0.0,1.0,0.0));
-  Vector unitZ = *(new Vector(0.0,0.0,1.0));
-  Vector temporary = *(new Vector(d_v1));
-  
-  
   
   // create rotate
   if(!xyzAligned)
   {
-    // Find rotation about Z
-    Vector projection = temporary - unitZ*(Dot(unitZ,temporary));
-    if(projection[0] > 0.0)
-      thetaz = atan(projection[1]/projection[0]);
-    else 
-      thetaz = 0.0;
-    
-    xnew = cos(thetaz)*(temporary[0]) + sin(thetaz)*(temporary[1]);
-    ynew = cos(thetaz)*(temporary[1]) - sin(thetaz)*(temporary[0]);
-    temporary = *(new Vector(xnew,ynew,(temporary[2])));
-    
-    // Find rotation about Y
-    projection = (temporary) - (unitY)*(Dot((unitY),(temporary)));
-    if(projection[0] > 0.0 )
-      thetay = atan(projection[2]/projection[0]);
-    else
-      thetay = 0.0;
-    
-    znew = cos(thetay)*(temporary[2]) - sin(thetay)*(temporary[0]);
-    xnew = cos(thetay)*(temporary[0]) + sin(thetay)*(temporary[2]);
-    temporary = *(new Vector(xnew,temporary[1],znew));
-    
-    // Find rotation about X
-    projection = temporary - unitX*(Dot(unitX,temporary));
-    if(projection[1] > 0.0)
-      thetax = atan(projection[2]/projection[1]);
-    else
-      thetax = 0.0;
-    
-    znew = cos(thetax)*(temporary[2]) - sin(thetax)*(temporary[1]);
-    ynew = cos(thetax)*(temporary[1]) + sin(thetax)*(temporary[2]);
-    temporary = *(new Vector(temporary[0],ynew,znew));
-    
-    
     // Rotate point
-    pRotated = new Point(cos(thetaz)*pRotated->x() - sin(thetaz)*pRotated->y(), 
-                         cos(thetaz)*pRotated->y() + sin(thetaz)*pRotated->x(), 
+    // Note, angles are negated so that it's opposite of what ellipse is rotated
+    pRotated = new Point(cos(-thetaz)*pRotated->x() - sin(-thetaz)*pRotated->y(), 
+                         cos(-thetaz)*pRotated->y() + sin(-thetaz)*pRotated->x(), 
                          pRotated->z());
-    pRotated = new Point(cos(thetay)*pRotated->x() + sin(thetay)*pRotated->z(), 
+    pRotated = new Point(cos(-thetay)*pRotated->x() + sin(-thetay)*pRotated->z(), 
                          pRotated->y(), 
-                         cos(thetay)*pRotated->z() - sin(thetay)*pRotated->x());
+                         cos(-thetay)*pRotated->z() - sin(-thetay)*pRotated->x());
     pRotated = new Point(pRotated->x(),
-                         cos(thetax)*pRotated->y() + sin(thetax)*pRotated->z(),
-                         cos(thetax)*pRotated->z() - sin(thetax)*pRotated->y());
+                         cos(-thetax)*pRotated->y() + sin(-thetax)*pRotated->z(),
+                         cos(-thetax)*pRotated->z() - sin(-thetax)*pRotated->y());
   }
   
   // Check if in unit distance from sphere center of sphere after scaling
@@ -236,6 +195,50 @@ void EllipsoidGeometryPiece::initializeEllipsoidData()
     d_radiusX = d_v1.length();
     d_radiusY = d_v2.length();
     d_radiusZ = d_v3.length();
+    
+    
+    // Initialize variables for rotation
+    double xnew = 0.0, ynew = 0.0, znew = 0.0;
+    thetaz = 0.0, thetay = 0.0, thetax = 0.0;
+    
+    Vector unitX = *(new Vector(1.0,0.0,0.0));
+    Vector unitY = *(new Vector(0.0,1.0,0.0));
+    Vector unitZ = *(new Vector(0.0,0.0,1.0));
+    Vector temporary = *(new Vector(d_v1));
+    
+    // Compute degree to which it is rotated
+    // Find rotation about Z
+    Vector projection = temporary - unitZ*(Dot(unitZ,temporary));
+    if(projection[0] > 0.0)
+      thetaz = atan(projection[1]/projection[0]);
+    else 
+      thetaz = 0.0;
+    
+    xnew = cos(thetaz)*(temporary[0]) - sin(thetaz)*(temporary[1]);
+    ynew = cos(thetaz)*(temporary[1]) + sin(thetaz)*(temporary[0]);
+    temporary = *(new Vector(xnew,ynew,(temporary[2])));
+    
+    // Find rotation about Y
+    projection = (temporary) - (unitY)*(Dot((unitY),(temporary)));
+    if(projection[0] > 0.0 )
+      thetay = atan(projection[2]/projection[0]);
+    else
+      thetay = 0.0;
+    
+    znew = cos(thetay)*(temporary[2]) - sin(thetay)*(temporary[0]);
+    xnew = cos(thetay)*(temporary[0]) + sin(thetay)*(temporary[2]);
+    temporary = *(new Vector(xnew,temporary[1],znew));
+    
+    // Find rotation about X
+    projection = temporary - unitX*(Dot(unitX,temporary));
+    if(projection[1] > 0.0)
+      thetax = atan(projection[2]/projection[1]);
+    else
+      thetax = 0.0;
+    
+    znew = cos(thetax)*(temporary[2]) - sin(thetax)*(temporary[1]);
+    ynew = cos(thetax)*(temporary[1]) + sin(thetax)*(temporary[2]);
+    temporary = *(new Vector(temporary[0],ynew,znew));
     
     xyzAligned = false;
   } else if(d_radiusX > 0.0 &&

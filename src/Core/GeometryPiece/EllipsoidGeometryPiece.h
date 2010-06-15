@@ -178,6 +178,8 @@ private:
   double d_radiusX;
   double d_radiusY;
   double d_radiusZ;
+  
+  double thetax, thetay, thetaz;
 
   // Vectors of each axis
   Vector d_v1;
