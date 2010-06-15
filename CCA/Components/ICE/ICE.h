@@ -1035,6 +1035,7 @@ namespace Uintah {
       // flags for the conservation test
        struct conservationTest_flags{
         bool onOff;
+        bool mass;
         bool momentum;
         bool energy;
         bool exchange;
