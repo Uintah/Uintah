@@ -79,7 +79,6 @@ ParticleLoadBalancer::ParticleLoadBalancer(const ProcessorGroup* myworld)
   d_lbTimestepInterval = 0;
   d_lastLbTimestep = 0;
   d_checkAfterRestart = false;
-
   d_pspec = 0;
 
   d_assignmentBasePatch = -1;
@@ -686,12 +685,13 @@ bool ParticleLoadBalancer::loadBalanceGrid(const GridP& grid, bool force)
     //split patches into particle/cell patches
     for(int p=0;p<num_patches;p++)
     {
-      if(particleCosts[l][order[p]]>0)
+      if(particleCosts[l][order[p]]*d_particleCost>cellCosts[l][order[p]]*d_cellCost)
         particlePatches.push_back(order[p]);
       else
         cellPatches.push_back(order[p]);
     }
 
+    proc0cout << "ParticleCost: " << d_particleCost << " CellCost: " << d_cellCost << endl;
     proc0cout << "ParticleLoadBalancer: ParticlePatches: " << particlePatches.size() << " cellPatches: " << cellPatches.size() << endl;
 
     vector<double> procCosts(numProcs);
@@ -1213,6 +1213,8 @@ ParticleLoadBalancer::problemSetup(ProblemSpecP& pspec, GridP& grid,  Simulation
       interval = 0.0; // default
     p->getWithDefault("gainThreshold", threshold, 0.05);
     p->getWithDefault("doSpaceCurve", spaceCurve, true);
+    p->getWithDefault("particleCost",d_particleCost, 2);
+    p->getWithDefault("cellCost",d_cellCost, 1);
    
   }
 

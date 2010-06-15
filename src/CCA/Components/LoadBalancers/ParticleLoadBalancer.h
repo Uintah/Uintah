@@ -177,6 +177,11 @@ namespace Uintah {
     bool d_doSpaceCurve;
     bool d_checkAfterRestart;
 
+    //the weighting factor placed on particles and cells, for example if d_particleCost is 2 
+    //and d_cellCost is 1 then a particle has twice as much weight as a cell
+    double d_particleCost,d_cellCost; 
+    
+
     SFC <double> sfc;
 
   };
