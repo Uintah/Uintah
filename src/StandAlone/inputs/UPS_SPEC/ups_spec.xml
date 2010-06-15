@@ -658,7 +658,7 @@
   </Wave>
 
   <LoadBalancer            spec="OPTIONAL NO_DATA" 
-                             attribute1="type REQUIRED STRING 'DLB SimpleLoadBalancer'" >
+                             attribute1="type REQUIRED STRING 'DLB PLB SimpleLoadBalancer'" >
     <cellCost              spec="OPTIONAL DOUBLE 'positive'" /> <!--The weight per cell -->
     <cellFactor            spec="OPTIONAL DOUBLE" />  <!-- FIXME: What is this?  What is the default? -->
     <collectParticles      spec="OPTIONAL BOOLEAN" />
