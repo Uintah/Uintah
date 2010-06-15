@@ -755,9 +755,6 @@ void SerialMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
   t->computes(lb->gTemperatureRateLabel);
   t->computes(lb->gExternalHeatRateLabel);
   t->computes(lb->gNumNearParticlesLabel);
-  if(flags->d_reductionVars->mass){
-    t->computes(lb->TotalMassLabel);
-  }
 
   if(flags->d_with_ice){
     t->computes(lb->gVelocityBCLabel);
@@ -1012,11 +1009,6 @@ void SerialMPM::scheduleComputeInternalForce(SchedulerP& sched,
   }
 
   t->computes(lb->gInternalForceLabel);
-  
-  
-  if(flags->d_reductionVars->volDeformed){
-    t->computes(lb->TotalVolumeDeformedLabel);
-  }
   
   for(std::list<Patch::FaceType>::const_iterator ftit(d_bndy_traction_faces.begin());
       ftit!=d_bndy_traction_faces.end();ftit++) {
@@ -1312,6 +1304,12 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   }
   if(flags->d_reductionVars->centerOfMass){
     t->computes(lb->CenterOfMassPositionLabel);
+  }
+  if(flags->d_reductionVars->mass){
+    t->computes(lb->TotalMassLabel);
+  }
+  if(flags->d_reductionVars->volDeformed){
+    t->computes(lb->TotalVolumeDeformedLabel);
   }
 
   // debugging scalar
@@ -2126,11 +2124,9 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       // Vector from the individual mass matrix and velocity vector
       // GridMass * GridVelocity =  S^T*M_D*ParticleVelocity
       
-      double totalmass = 0;
       Vector total_mom(0.0,0.0,0.0);
       Vector pmom;
       int n8or27=flags->d_8or27; 
-                                 
 
       double pSp_vol = 1./mpm_matl->getInitialDensity();
       for (ParticleSubset::iterator iter = pset->begin(); //loop over all particles in the patch:
@@ -2167,7 +2163,6 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       for(NodeIterator iter=patch->getExtraNodeIterator();
                        !iter.done();iter++){
         IntVector c = *iter; 
-        totalmass         += gmass[c];
         gmassglobal[c]    += gmass[c];
         gvolumeglobal[c]  += gvolume[c];
         gvelglobal[c]     += gvelocity[c];
@@ -2191,11 +2186,6 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
         bc.setBoundaryCondition(patch,dwi,"Velocity", gvelocityWBC,interp_type);
         bc.setBoundaryCondition(patch,dwi,"Symmetric",gvelocityWBC,interp_type);
       }
-      
-      if(flags->d_reductionVars->mass){
-        new_dw->put(sum_vartype(totalmass), lb->TotalMassLabel);
-      }
-      
     }  // End loop over materials
 
     for(NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
@@ -2564,8 +2554,7 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
     bndyForce   [iface]  = Vector(0.);
     bndyTraction[iface]  = Vector(0.);
   }
-  double partvoldef = 0.;
-  
+
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     printTask(patches, patch,cout_doing,"Doing computeInternalForce\t\t\t\t");
@@ -2672,7 +2661,6 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
           interpolator->findCellAndWeightsAndShapeDerivatives(px[idx],ni,S,d_S,psize[idx],pDeformationMeasure[idx]);
           stressvol  = pstress[idx]*pvol[idx];
           stresspress = pstress[idx] + Id*(p_pressure[idx] - p_q[idx]);
-          partvoldef += pvol[idx];
 
           for (int k = 0; k < n8or27; k++){
             if(patch->containsNode(ni[k])){
@@ -2697,7 +2685,6 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
           interpolator->findCellAndWeightsAndShapeDerivatives(px[idx],ni,S,d_S,psize[idx],pDeformationMeasure[idx]);
           stressvol  = pstress[idx]*pvol[idx];
           stresspress = pstress[idx] + Id*(p_pressure[idx] - p_q[idx]);
-          partvoldef += pvol[idx];
   
           // r is the x direction, z (axial) is the y direction
           double IFr=0.,IFz=0.;
@@ -2773,9 +2760,6 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
     delete interpolator;
   }
   
-  if(flags->d_reductionVars->volDeformed){
-    new_dw->put(sum_vartype(partvoldef), lb->TotalVolumeDeformedLabel);
-  }
   // be careful only to put the fields that we have built
   // that way if the user asks to output a field that has not been built
   // it will fail early rather than just giving zeros.
@@ -3499,6 +3483,8 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
  
     // DON'T MOVE THESE!!!
     double thermal_energy = 0.0;
+    double totalmass = 0;
+    double partvoldef = 0.;
     Vector CMX(0.0,0.0,0.0);
     Vector totalMom(0.0,0.0,0.0);
     double ke=0;
@@ -3673,8 +3659,10 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
         thermal_energy += pTemperature[idx] * pmass[idx] * Cp;
         ke += .5*pmass[idx]*pvelocitynew[idx].length2();
-        CMX = CMX + (pxnew[idx]*pmass[idx]).asVector();
-        totalMom += pvelocitynew[idx]*pmass[idx];
+        CMX         = CMX + (pxnew[idx]*pmass[idx]).asVector();
+        totalMom   += pvelocitynew[idx]*pmass[idx];
+        totalmass  += pmass[idx];
+        partvoldef += pvolume[idx];
       }
 
       // Delete particles that have left the domain
@@ -3717,6 +3705,12 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
     // DON'T MOVE THESE!!!
     //__________________________________
     //  reduction variables
+    if(flags->d_reductionVars->mass){
+      new_dw->put(sum_vartype(totalmass),      lb->TotalMassLabel);
+    }
+    if(flags->d_reductionVars->volDeformed){
+      new_dw->put(sum_vartype(partvoldef),     lb->TotalVolumeDeformedLabel);
+    }
     if(flags->d_reductionVars->momentum){
       new_dw->put(sumvec_vartype(totalMom),    lb->TotalMomentumLabel);
     }
