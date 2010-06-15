@@ -414,28 +414,23 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec,
 
   //__________________________________
   //  conservationTest
-  ProblemSpecP DA_ps = prob_spec->findBlock("DataArchiver");
-  for (ProblemSpecP child = DA_ps->findBlock("save"); child != 0;
-                    child = child->findNextBlock("save")) {
-    map<string,string> var_attr;
-    child->getAttributes(var_attr);
-    if (var_attr["label"] == "TotalMass"){
-      d_conservationTest->onOff    = true;
-    }
-    if (var_attr["label"] == "TotalMomentum"){
-      d_conservationTest->momentum = true;
-      d_conservationTest->onOff    = true;
-    }
-    if (var_attr["label"] == "TotalIntEng"   || 
-        var_attr["label"] == "KineticEnergy"){
-      d_conservationTest->energy   = true;
-      d_conservationTest->onOff    = true;
-    }
-    if (var_attr["label"] == "eng_exch_error"||
-        var_attr["label"] == "mom_exch_error"){
-      d_conservationTest->exchange = true;
-      d_conservationTest->onOff    = true;
-    }
+  if (dataArchiver->isLabelSaved("TotalMass") ){
+    d_conservationTest->mass     = true;
+    d_conservationTest->onOff    = true;
+  }
+  if (dataArchiver->isLabelSaved("TotalMomentum") ){
+    d_conservationTest->momentum = true;
+    d_conservationTest->onOff    = true;
+  }
+  if (dataArchiver->isLabelSaved("TotalIntEng")   || 
+      dataArchiver->isLabelSaved("KineticEnergy") ){
+    d_conservationTest->energy   = true;
+    d_conservationTest->onOff    = true;
+  }
+  if (dataArchiver->isLabelSaved("eng_exch_error") ||
+      dataArchiver->isLabelSaved("mom_exch_error") ){
+    d_conservationTest->exchange = true;
+    d_conservationTest->onOff    = true;
   }
 
   //__________________________________
@@ -1861,14 +1856,21 @@ void ICE::scheduleTestConservation(SchedulerP& sched,
     t->requires(Task::NewDW,lb->int_eng_L_CCLabel,       gn);    
     t->requires(Task::NewDW,lb->mom_L_ME_CCLabel,        gn);         
     t->requires(Task::NewDW,lb->eng_L_ME_CCLabel,        gn); 
-
-    t->computes(lb->mom_exch_errorLabel);
-    t->computes(lb->eng_exch_errorLabel);
-    t->computes(lb->TotalMassLabel);
+    
+    if(d_conservationTest->exchange){
+      t->computes(lb->mom_exch_errorLabel);
+      t->computes(lb->eng_exch_errorLabel);
+    }
+    if(d_conservationTest->mass){
+      t->computes(lb->TotalMassLabel);
+    }
+    if(d_conservationTest->energy){
     t->computes(lb->KineticEnergyLabel);
     t->computes(lb->TotalIntEngLabel);
-    t->computes(lb->TotalMomentumLabel); //momentum
-
+    }
+    if(d_conservationTest->momentum){
+      t->computes(lb->TotalMomentumLabel);
+    }
     sched->addTask(t, patches, all_matls);
   }
   //__________________________________
@@ -5459,6 +5461,13 @@ void ICE::TestConservation(const ProcessorGroup*,
   const Level* level = getLevel(patches);
   delt_vartype delT;
   old_dw->get(delT, d_sharedState->get_delt_label(),level);
+     
+  double total_mass     = 0.0;      
+  double total_KE       = 0.0;      
+  double total_int_eng  = 0.0;      
+  Vector total_mom(0.0, 0.0, 0.0);  
+  Vector mom_exch_error(0,0,0);     
+  double eng_exch_error = 0;        
           
   for(int p=0; p<patches->size(); p++)  {
     const Patch* patch = patches->get(p);
@@ -5484,34 +5493,30 @@ void ICE::TestConservation(const ProcessorGroup*,
       new_dw->get(wvel_FC[m], lb->wvel_FCMELabel, indx,patch,gn,0);
     }
     
-    double total_mass     = 0.0;
-    double total_KE       = 0.0;
-    double total_int_eng  = 0.0;
-    Vector total_mom(0.0, 0.0, 0.0);
-    Vector mom_exch_error(0,0,0);
-    double eng_exch_error = 0;
-    
     //__________________________________
-    // conservation of mass  (Always computed)
+    // conservation of mass
     constCCVariable<double> rho_CC;
-    StaticArray<CCVariable<double> > mass(numICEmatls);
-    
+    StaticArray<CCVariable<double> > mass(numICEmatls);   
     for (int m = 0; m < numICEmatls; m++ ) {
-      
+
       ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
       int indx = ice_matl->getDWIndex();
       new_dw->allocateTemporary(mass[m],patch);
       new_dw->get(rho_CC, lb->rho_CCLabel,   indx, patch, gn,0);
-      
+
       for (CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++){
         IntVector c = *iter;
         mass[m][c] = rho_CC[c] * cell_vol;
       }
-      
-      double mat_mass = 0;
-      conservationTest<double>(patch, delT, mass[m], 
-                               uvel_FC[m], vvel_FC[m], wvel_FC[m],mat_mass);
-      total_mass += mat_mass;
+    }
+    
+    if(d_conservationTest->mass){    
+      for (int m = 0; m < numICEmatls; m++ ) {
+        double mat_mass = 0;
+        conservationTest<double>(patch, delT, mass[m], 
+                                 uvel_FC[m], vvel_FC[m], wvel_FC[m],mat_mass);
+        total_mass += mat_mass; 
+      }
     }
     //__________________________________
     // conservation of momentum
@@ -5535,7 +5540,7 @@ void ICE::TestConservation(const ProcessorGroup*,
         conservationTest<Vector>(patch, delT, mom,
                                   uvel_FC[m],vvel_FC[m],wvel_FC[m], mat_mom);
         total_mom += mat_mom;
-      }  
+      } 
     }
     //__________________________________
     // conservation of internal_energy
@@ -5618,14 +5623,22 @@ void ICE::TestConservation(const ProcessorGroup*,
       }
       mom_exch_error = sum_mom_L_CC     - sum_mom_L_ME_CC;
       eng_exch_error = sum_int_eng_L_CC - sum_eng_L_ME_CC;
-    } 
-    new_dw->put(sum_vartype(total_mass),        lb->TotalMassLabel);
-    new_dw->put(sumvec_vartype(total_mom),      lb->TotalMomentumLabel);
-    new_dw->put(sum_vartype(total_int_eng),     lb->TotalIntEngLabel);
-    new_dw->put(sum_vartype(total_KE),          lb->KineticEnergyLabel);
-    new_dw->put(sumvec_vartype(mom_exch_error), lb->mom_exch_errorLabel);
-    new_dw->put(sum_vartype(eng_exch_error),    lb->eng_exch_errorLabel);
+    }
   }  // patch loop
+  if(d_conservationTest->mass){
+    new_dw->put(sum_vartype(total_mass),        lb->TotalMassLabel);
+  }
+  if(d_conservationTest->exchange){
+    new_dw->put(sumvec_vartype(mom_exch_error), lb->mom_exch_errorLabel);  
+    new_dw->put(sum_vartype(eng_exch_error),    lb->eng_exch_errorLabel);  
+  }
+  if(d_conservationTest->energy){
+    new_dw->put(sum_vartype(total_KE),          lb->KineticEnergyLabel);  
+    new_dw->put(sum_vartype(total_int_eng),     lb->TotalIntEngLabel);    
+  }
+  if(d_conservationTest->momentum){
+    new_dw->put(sumvec_vartype(total_mom),      lb->TotalMomentumLabel);
+  }
 }
 
 /*_____________________________________________________________________
