@@ -294,6 +294,14 @@ right circular cone/frustum.
 \tt cylinder \normalfont has a tag for the top and bottom origins
 (vector) plus a tag for the radius (float).
 
+\tt ellipsoid \normalfont has an origin tag specified as a vector.  There are 
+two ways to assign axis lengths depending on the orientation of the ellipsoid.
+If the axes are aligned with the Cartesian grid, they may be specified as 
+floating point values with tagnames: rx, ry, rz.  For all other orientation, 
+three vector quantities must be specified in the \tt [a,b,c] \normalfont format. 
+These vectors must be orthogonal to within 1e-12 after dot product or the 
+simulation will throw an exception.
+
 \tt parallelepiped \normalfont requires that four points be specified as
 illustrated by the ASCII art snippet taken from the source code:
 
