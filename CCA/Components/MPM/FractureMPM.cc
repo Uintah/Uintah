@@ -192,7 +192,7 @@ void FractureMPM::scheduleInitialize(const LevelP& level,
     t->computes(lb->pLoadCurveIDLabel);
   }
 
-  if (flags->d_accStrainEnergy) {
+  if (flags->d_reductionVars->accStrainEnergy) {
     // Computes accumulated strain energy
     t->computes(lb->AccStrainEnergyLabel);
   }
@@ -262,7 +262,7 @@ void FractureMPM::scheduleInitializeAddedMaterial(const LevelP& level,
   t->computes(lb->pStressLabel,            add_matl);
   t->computes(lb->pSizeLabel,              add_matl);
 
-  if (flags->d_accStrainEnergy) {
+  if (flags->d_reductionVars->accStrainEnergy) {
     // Computes accumulated strain energy
     t->computes(lb->AccStrainEnergyLabel);
   }
@@ -544,7 +544,7 @@ void FractureMPM::scheduleComputeStressTensor(SchedulerP& sched,
 
   sched->addTask(t, patches, matls);
 
-  if (flags->d_accStrainEnergy) {
+  if (flags->d_reductionVars->accStrainEnergy) {
     scheduleComputeAccStrainEnergy(sched, patches, matls);
   } 
   if(flags->d_artificial_viscosity){
@@ -1261,7 +1261,7 @@ void FractureMPM::actuallyInitialize(const ProcessorGroup*,
     }
   }
 
-  if (flags->d_accStrainEnergy) {
+  if (flags->d_reductionVars->accStrainEnergy) {
     // Initialize the accumulated strain energy
     new_dw->put(max_vartype(0.0), lb->AccStrainEnergyLabel);
   }

@@ -227,7 +227,7 @@ void AMRMPM::scheduleInitialize(const LevelP& level, SchedulerP& sched)
     t->computes(lb->pLoadCurveIDLabel);
   }
 
-  if (flags->d_accStrainEnergy) {
+  if (flags->d_reductionVars->accStrainEnergy) {
     // Computes accumulated strain energy
     t->computes(lb->AccStrainEnergyLabel);
   }
@@ -555,7 +555,7 @@ void AMRMPM::scheduleComputeStressTensor(SchedulerP& sched,
   // Schedule update of the erosion parameter
   scheduleUpdateErosionParameter(sched, patches, matls);
 
-  if (flags->d_accStrainEnergy) 
+  if (flags->d_reductionVars->accStrainEnergy) 
     scheduleComputeAccStrainEnergy(sched, patches, matls);
 }
 //______________________________________________________________________
@@ -778,7 +778,7 @@ void AMRMPM::scheduleRefine(const PatchSet* patches,
     t->computes(lb->pLoadCurveIDLabel);
   }
                                                                                 
-  if (flags->d_accStrainEnergy) {
+  if (flags->d_reductionVars->accStrainEnergy) {
     // Computes accumulated strain energy
     t->computes(lb->AccStrainEnergyLabel);
   }
@@ -896,7 +896,7 @@ void AMRMPM::actuallyInitialize(const ProcessorGroup*,
     }
   }
 
-  if (flags->d_accStrainEnergy) {
+  if (flags->d_reductionVars->accStrainEnergy) {
     // Initialize the accumulated strain energy
     new_dw->put(max_vartype(0.0), lb->AccStrainEnergyLabel);
   }

@@ -70,8 +70,7 @@ namespace Uintah {
     IntegratorType d_integrator;
 
     bool        d_artificial_viscosity; // Turn artificial viscosity on/off
-    bool        d_artificial_viscosity_heating; // Include heating due to AV 
-    bool        d_accStrainEnergy; // Flag for accumulating strain energy
+    bool        d_artificial_viscosity_heating; // Include heating due to AV
     bool        d_useLoadCurves; // Flag for using load curves
     bool        d_useCohesiveZones; // Flag for using cohesive zones
     bool        d_createNewParticles; // Flag to decide whether to create
@@ -121,6 +120,7 @@ namespace Uintah {
      bool momentum;
      bool thermalEnergy;
      bool strainEnergy;
+     bool accStrainEnergy;
      bool KE;
      bool volDeformed;
      bool centerOfMass;
