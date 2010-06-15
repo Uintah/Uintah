@@ -134,6 +134,17 @@
       <origin                 spec="OPTIONAL VECTOR" />
       <radius                 spec="OPTIONAL DOUBLE 'positive'" />
     </sphere>
+    
+    <ellipsoid                   spec="OPTIONAL NO_DATA"
+                                attribute1="label    OPTIONAL STRING" >
+      <origin                 spec="OPTIONAL VECTOR" />
+      <rx                     spec="OPTIONAL DOUBLE 'positive'" />
+      <ry                     spec="OPTIONAL DOUBLE 'positive'" />
+      <rz                     spec="OPTIONAL DOUBLE 'positive'" />
+      <v1                     spec="OPTIONAL VECTOR" />
+      <v2                     spec="OPTIONAL VECTOR" />
+      <v3                     spec="OPTIONAL VECTOR" />
+    </ellipsoid>
 
     <sphere_membrane          spec="OPTIONAL NO_DATA"
                                 attribute1="label    OPTIONAL STRING" >
@@ -199,6 +210,7 @@
       <cylinder               spec="MULTIPLE" />
       <difference             spec="MULTIPLE" />
       <intersection           spec="MULTIPLE" />
+      <ellipsoid              spec="MULTIPLE" />
       <sphere                 spec="MULTIPLE" />
       <sphere_membrane        spec="MULTIPLE" />
       <sphere_shell           spec="MULTIPLE" />
@@ -217,6 +229,7 @@
       <cylinder               spec="MULTIPLE" />
       <difference             spec="MULTIPLE" />
       <intersection           spec="MULTIPLE" />
+      <ellipsoid              spec="MULTIPLE" />
       <sphere                 spec="MULTIPLE" />
       <sphere_membrane        spec="MULTIPLE" />
       <sphere_shell           spec="MULTIPLE" />
@@ -234,6 +247,7 @@
       <cylinder               spec="MULTIPLE" />
       <difference             spec="MULTIPLE" />
       <intersection           spec="MULTIPLE" />
+      <ellipsoid              spec="MULTIPLE" />
       <sphere                 spec="MULTIPLE" />
       <sphere_membrane        spec="MULTIPLE" />
       <sphere_shell           spec="MULTIPLE" />
@@ -251,6 +265,7 @@
       <cylinder               spec="MULTIPLE" />
       <difference             spec="MULTIPLE" />
       <intersection           spec="MULTIPLE" />
+      <ellipsoid              spec="MULTIPLE" />
       <sphere                 spec="MULTIPLE" />
       <sphere_membrane        spec="MULTIPLE" />
       <sphere_shell           spec="MULTIPLE" />

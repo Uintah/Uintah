@@ -2,7 +2,7 @@
 
 The MIT License
 
-Copyright (c) 1997-2009 Center for the Simulation of Accidental Fires and 
+Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
 Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 University of Utah.
 
@@ -38,6 +38,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/GeometryPiece/SphereGeometryPiece.h>
 #include <Core/GeometryPiece/SphereMembraneGeometryPiece.h>
 #include <Core/GeometryPiece/CylinderGeometryPiece.h>
+#include <Core/GeometryPiece/EllipsoidGeometryPiece.h>
 #include <Core/GeometryPiece/SmoothCylGeomPiece.h>
 #include <Core/GeometryPiece/CorrugEdgeGeomPiece.h>
 #include <Core/GeometryPiece/ConeGeometryPiece.h>
@@ -160,6 +161,9 @@ GeometryPieceFactory::create( const ProblemSpecP& ps,
     }
     else if ( go_type ==  SmoothCylGeomPiece::TYPE_NAME ) {
       newGeomPiece = scinew SmoothCylGeomPiece(child);
+    }
+    else if ( go_type == EllipsoidGeometryPiece::TYPE_NAME ) {
+      newGeomPiece = scinew EllipsoidGeometryPiece(child);
     }
     else if ( go_type == CorrugEdgeGeomPiece::TYPE_NAME ) {
       newGeomPiece = scinew CorrugEdgeGeomPiece(child);

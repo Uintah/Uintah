@@ -59,7 +59,8 @@ SRCS     += \
 	$(SRCDIR)/GUVSphereShellPiece.cc \
 	$(SRCDIR)/SmoothGeomPiece.cc \
 	$(SRCDIR)/SmoothCylGeomPiece.cc \
-	$(SRCDIR)/CorrugEdgeGeomPiece.cc
+	$(SRCDIR)/CorrugEdgeGeomPiece.cc \
+        $(SRCDIR)/EllipsoidGeometryPiece.cc 
 
 PSELIBS := \
 	Core/Exceptions \
