@@ -123,22 +123,11 @@ bool EllipsoidGeometryPiece::inside(const Point& p) const
   Vector temporary = *(new Vector(d_v1));
   
   
-  //cout << "src x: " << p.x() << "  y: " << p.y() << "  z: " << p.z() << endl;
   
   // create rotate
   if(!xyzAligned)
   {
-    cout << "Temp vec before rot: " << endl << temporary << endl;
-    
     // Find rotation about Z
-    /*
-    Vector projection = temporary - unitZ*(Dot(unitZ,temporary));
-    thetaz = atan(projection[0]/projection[1]);
-    
-    xnew = cos(thetaz)*(temporary[0]) - sin(thetaz)*(temporary[1]);
-    ynew = cos(thetaz)*(temporary[1]) + sin(thetaz)*(temporary[0]);
-    temporary = *(new Vector(xnew,ynew,(temporary[2])));
-    */
     Vector projection = temporary - unitZ*(Dot(unitZ,temporary));
     if(projection[0] > 0.0)
       thetaz = atan(projection[1]/projection[0]);
@@ -148,10 +137,6 @@ bool EllipsoidGeometryPiece::inside(const Point& p) const
     xnew = cos(thetaz)*(temporary[0]) + sin(thetaz)*(temporary[1]);
     ynew = cos(thetaz)*(temporary[1]) - sin(thetaz)*(temporary[0]);
     temporary = *(new Vector(xnew,ynew,(temporary[2])));
-    
-    
-    cout << thetaz << endl;
-    cout << "Temp vec after Z rot: " << endl << temporary << endl;
     
     // Find rotation about Y
     projection = (temporary) - (unitY)*(Dot((unitY),(temporary)));
@@ -164,9 +149,6 @@ bool EllipsoidGeometryPiece::inside(const Point& p) const
     xnew = cos(thetay)*(temporary[0]) + sin(thetay)*(temporary[2]);
     temporary = *(new Vector(xnew,temporary[1],znew));
     
-    cout << thetay << endl;
-    cout << "Temp vec after Y rot: " << endl << temporary << endl;
-    
     // Find rotation about X
     projection = temporary - unitX*(Dot(unitX,temporary));
     if(projection[1] > 0.0)
@@ -177,9 +159,6 @@ bool EllipsoidGeometryPiece::inside(const Point& p) const
     znew = cos(thetax)*(temporary[2]) - sin(thetax)*(temporary[1]);
     ynew = cos(thetax)*(temporary[1]) + sin(thetax)*(temporary[2]);
     temporary = *(new Vector(temporary[0],ynew,znew));
-    
-    cout << thetax << endl;
-    cout << "Temp vec after X rot: " << endl << temporary << endl;
     
     
     // Rotate point
@@ -194,16 +173,10 @@ bool EllipsoidGeometryPiece::inside(const Point& p) const
                          cos(thetax)*pRotated->z() - sin(thetax)*pRotated->y());
   }
   
-  //cout << thetay << thetax << thetaz << endl;
-  //cout << "dev x: " << pRotated->x() << "  y: " << pRotated->y() << "  z: " << pRotated->z() << endl;
-  
   // Check if in unit distance from sphere center of sphere after scaling
   if (sqrt(pRotated->x()*pRotated->x()/(d_radiusX*d_radiusX) +
            pRotated->y()*pRotated->y()/(d_radiusY*d_radiusY) +
            pRotated->z()*pRotated->z()/(d_radiusZ*d_radiusZ)) <= 1.0) {
-    //cout << "Inside..." << endl;
-     //cout << "dev x: " << p.x() << "  y: " << p.y() << "  z: " << p.z() << endl;
-    //exit(0);
     return true;                           
   } else {
     return false;
@@ -279,8 +252,4 @@ void EllipsoidGeometryPiece::initializeEllipsoidData()
   } else {
       throw new ProblemSetupException("Input must have axis lengths greater than zero.", __FILE__, __LINE__, false );
   }
-  
-  cout << getBoundingBox();
-  
-  cout << "x: " << d_radiusX << "  y: " << d_radiusY << "  z: " << d_radiusZ << endl;
 }
