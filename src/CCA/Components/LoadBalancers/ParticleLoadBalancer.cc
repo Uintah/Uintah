@@ -685,13 +685,12 @@ bool ParticleLoadBalancer::loadBalanceGrid(const GridP& grid, bool force)
     //split patches into particle/cell patches
     for(int p=0;p<num_patches;p++)
     {
-      if(particleCosts[l][order[p]]*d_particleCost>cellCosts[l][order[p]]*d_cellCost)
+      if(particleCosts[l][order[p]]>cellCosts[l][order[p]])
         particlePatches.push_back(order[p]);
       else
         cellPatches.push_back(order[p]);
     }
 
-    proc0cout << "ParticleCost: " << d_particleCost << " CellCost: " << d_cellCost << endl;
     proc0cout << "ParticleLoadBalancer: ParticlePatches: " << particlePatches.size() << " cellPatches: " << cellPatches.size() << endl;
 
     vector<double> procCosts(numProcs);
@@ -1085,8 +1084,8 @@ void ParticleLoadBalancer::getCosts(const Grid* grid, vector<vector<double> >&pa
     particle_costs.push_back(vector<double>());
     for (int p = 0; p < grid->getLevel(l)->numPatches(); p++) 
     {
-      cell_costs[l].push_back(level->getPatch(p)->getNumCells());
-      particle_costs[l].push_back(num_particles[l][p]);
+      cell_costs[l].push_back(level->getPatch(p)->getNumCells()*d_cellCost);
+      particle_costs[l].push_back(num_particles[l][p]*d_particleCost);
     }
 #if 0
     if(d_myworld->myrank()==0)
