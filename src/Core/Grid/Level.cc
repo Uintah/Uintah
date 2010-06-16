@@ -1003,9 +1003,11 @@ namespace Uintah {
   {
     ASSERT(subset->size()>0);
     const Level* level = subset->get(0)->getLevel();
+#if SCI_ASSERTION_LEVEL>0
     for(int i=1;i<subset->size();i++){
       ASSERT(level == subset->get(i)->getLevel());
     }
+#endif
     return level;
   }
 
