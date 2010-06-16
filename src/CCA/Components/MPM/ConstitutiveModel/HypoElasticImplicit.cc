@@ -475,7 +475,11 @@ HypoElasticImplicit::computeStressTensor(const PatchSubset* patches,
       
       se += e;
       }
-      new_dw->put(sum_vartype(se),     lb->StrainEnergyLabel);
+      
+      if (flag->d_reductionVars->accStrainEnergy ||
+          flag->d_reductionVars->strainEnergy) {
+        new_dw->put(sum_vartype(se),     lb->StrainEnergyLabel);
+      }
     }
     delete interpolator;
    }

@@ -853,8 +853,12 @@ void SerialMPM::scheduleComputeStressTensor(SchedulerP& sched,
   }
 
   t->computes(d_sharedState->get_delt_label(),getLevel(patches));
-  t->computes(lb->StrainEnergyLabel);
-
+  
+  if (flags->d_reductionVars->accStrainEnergy ||
+      flags->d_reductionVars->strainEnergy) {
+    t->computes(lb->StrainEnergyLabel);
+  }
+  
   sched->addTask(t, patches, matls);
 
   // Schedule update of the erosion parameter
