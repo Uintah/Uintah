@@ -191,16 +191,13 @@ void MPMICE::problemSetup(const ProblemSpecP& prob_spec,
   }
   d_ice->attachPort("solver", solver);
   
-//  port* models = getPort("modelmaker");
   ModelMaker* models = dynamic_cast<ModelMaker*>(getPort("modelmaker"));
 
-//  port* models = dynamic_cast<port*>(getPort("modelmaker"));
   if(models){  // of there are models then push the port down to ICE
     d_ice->attachPort("modelmaker",models);
   }
   
   d_ice->problemSetup(prob_spec, restart_prob_spec,grid, d_sharedState);
-
 
   if(models){  // some models may need to have access to MPMLabels
     for(vector<ModelInterface*>::iterator iter = d_ice->d_models.begin();
@@ -209,11 +206,6 @@ void MPMICE::problemSetup(const ProblemSpecP& prob_spec,
     }
   }
   
-//  Need to add some means of checking whether or not this is a
-//  restart, and if it is, execute the following
-//  d_mpm->addMaterial(prob_spec, grid, d_sharedState);
-//  d_ice->updateExchangeCoefficients(prob_spec, grid, d_sharedState);
-//  cout << "Adding an MPM material" << endl;
   
   //__________________________________
   //  M P M I C E
@@ -261,9 +253,13 @@ void MPMICE::problemSetup(const ProblemSpecP& prob_spec,
   if(d_analysisModule){
     d_analysisModule->problemSetup(prob_spec, grid, sharedState);
   }
+  
+
+  
 }
 
-
+//______________________________________________________________________
+//
 void MPMICE::outputProblemSpec(ProblemSpecP& root_ps)
 {
   d_mpm->outputProblemSpec(root_ps);
@@ -272,6 +268,7 @@ void MPMICE::outputProblemSpec(ProblemSpecP& root_ps)
   // Global flags required by mpmice
   ProblemSpecP mpm_ps = root_ps->findBlock("MPM");
   mpm_ps->appendElement("testForNegTemps_mpm", d_testForNegTemps_mpm);
+
 }
 
 
@@ -1005,6 +1002,20 @@ void MPMICE::actuallyInitialize(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){ 
     const Patch* patch = patches->get(p);
     printTask(patches, patch, "Doing actuallyInitialize \t\t\t\t");
+    //__________________________________
+    //output material indices
+    if(patch->getID() == 0){
+      cout << "Materials Indicies:   MPM ["<< *(d_sharedState->allMPMMaterials())  << "] " 
+           << "ICE["<< *(d_sharedState->allICEMaterials()) << "]" << endl;
+
+      cout << "Material Names:";
+      int numAllMatls = d_sharedState->getNumMatls();
+      for (int m = 0; m < numAllMatls; m++) {
+        Material* matl = d_sharedState->getMaterial( m );
+        cout <<" " << matl->getDWIndex() << ") " << matl->getName();
+      }
+      cout << "\n";
+    }
 
     //__________________________________
     //  Initialize CCVaribles for MPM Materials
