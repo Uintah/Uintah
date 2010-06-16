@@ -72,6 +72,11 @@ EllipsoidGeometryPiece::EllipsoidGeometryPiece(const Point& origin,
   d_radiusY = rady;
   d_radiusZ = radz;
   
+  // Make sure there is no uninitialized variables going into initialization routine
+  d_v1 = *(new Vector(0.0, 0.0, 0.0));
+  d_v2 = *(new Vector(0.0, 0.0, 0.0));
+  d_v3 = *(new Vector(0.0, 0.0, 0.0));
+  
   // Run helper function to determine if inputs are correct
   initializeEllipsoidData();
 }
@@ -83,6 +88,11 @@ EllipsoidGeometryPiece::EllipsoidGeometryPiece(const Point& origin,
   d_v1 = one;
   d_v2 = two;
   d_v3 = three;
+  
+  // Make sure there is no uninitialized variables going into initialization routine
+  d_radiusX = 0.0;
+  d_radiusY = 0.0;
+  d_radiusZ = 0.0;
   
   // Run helper function to determine if inputs are correct
   initializeEllipsoidData();
@@ -114,28 +124,28 @@ GeometryPieceP EllipsoidGeometryPiece::clone() const
 bool EllipsoidGeometryPiece::inside(const Point& p) const
 {
   // Variable initialization
-  Point *pRotated = new Point(p.x()-d_origin.x(),p.y()-d_origin.y(),p.z()-d_origin.z());
+  Point *pTransformed = new Point(p.x()-d_origin.x(),p.y()-d_origin.y(),p.z()-d_origin.z());
   
   // create rotate
   if(!xyzAligned)
   {
     // Rotate point
     // Note, angles are negated so that it's opposite of what ellipse is rotated
-    pRotated = new Point(cos(-thetaz)*pRotated->x() - sin(-thetaz)*pRotated->y(), 
-                         cos(-thetaz)*pRotated->y() + sin(-thetaz)*pRotated->x(), 
-                         pRotated->z());
-    pRotated = new Point(cos(-thetay)*pRotated->x() + sin(-thetay)*pRotated->z(), 
-                         pRotated->y(), 
-                         cos(-thetay)*pRotated->z() - sin(-thetay)*pRotated->x());
-    pRotated = new Point(pRotated->x(),
-                         cos(-thetax)*pRotated->y() + sin(-thetax)*pRotated->z(),
-                         cos(-thetax)*pRotated->z() - sin(-thetax)*pRotated->y());
+    pTransformed = new Point(cos(-thetaz)*pTransformed->x() - sin(-thetaz)*pTransformed->y(), 
+                             cos(-thetaz)*pTransformed->y() + sin(-thetaz)*pTransformed->x(), 
+                             pTransformed->z());
+    pTransformed = new Point(cos(-thetay)*pTransformed->x() + sin(-thetay)*pTransformed->z(), 
+                             pTransformed->y(), 
+                             cos(-thetay)*pTransformed->z() - sin(-thetay)*pTransformed->x());
+    pTransformed = new Point(pTransformed->x(),
+                             cos(-thetax)*pTransformed->y() + sin(-thetax)*pTransformed->z(),
+                             cos(-thetax)*pTransformed->z() - sin(-thetax)*pTransformed->y());
   }
   
-  // Check if in unit distance from sphere center of sphere after scaling
-  if (sqrt(pRotated->x()*pRotated->x()/(d_radiusX*d_radiusX) +
-           pRotated->y()*pRotated->y()/(d_radiusY*d_radiusY) +
-           pRotated->z()*pRotated->z()/(d_radiusZ*d_radiusZ)) <= 1.0) {
+  // Check if in unit distance from sphere center after scaling
+  if (sqrt(pTransformed->x()*pTransformed->x()/(d_radiusX*d_radiusX) +
+           pTransformed->y()*pTransformed->y()/(d_radiusY*d_radiusY) +
+           pTransformed->z()*pTransformed->z()/(d_radiusZ*d_radiusZ) ) <= 1.0) {
     return true;                           
   } else {
     return false;
@@ -184,13 +194,13 @@ void EllipsoidGeometryPiece::initializeEllipsoidData()
      d_v2.length() > 0.0 &&
      d_v3.length() > 0.0){
     // Check for orthagonality
-    if(Dot(d_v1,d_v2) > 1e-12 ||
-       Dot(d_v2,d_v3) > 1e-12 ||
-       Dot(d_v3,d_v1) > 1e-12 )
+    if((abs(Dot(d_v1,d_v2)) >= 1e-12) ||
+       (abs(Dot(d_v2,d_v3)) >= 1e-12) ||
+       (abs(Dot(d_v3,d_v1)) >= 1e-12) )
     {
-      throw new ProblemSetupException("Input vectors are not orthagonal to within 1e-12 or each other", __FILE__, __LINE__, false);
+      throw ProblemSetupException("Input File Error: (Ellipsoid initialization) input vectors (v1,v2,v3) are not orthagonal to within 1e-12 or each other", __FILE__, __LINE__, false);
     }
-    
+     
     // compute radius of each vector when aligned to grid
     d_radiusX = d_v1.length();
     d_radiusY = d_v2.length();
@@ -198,14 +208,42 @@ void EllipsoidGeometryPiece::initializeEllipsoidData()
     
     
     // Initialize variables for rotation
-    double xnew = 0.0, ynew = 0.0, znew = 0.0;
     thetaz = 0.0, thetay = 0.0, thetax = 0.0;
     
     Vector unitX = *(new Vector(1.0,0.0,0.0));
     Vector unitY = *(new Vector(0.0,1.0,0.0));
     Vector unitZ = *(new Vector(0.0,0.0,1.0));
-    Vector temporary = *(new Vector(d_v1));
     
+    // Find vector with largest deviation in each direction
+    Vector one = d_v1;
+    double highX = d_v1.x();
+    if(abs(d_v2.x()) > highX){
+      highX = abs(d_v2.x());
+      one = d_v2;
+    }
+    if(abs(d_v3.x()) > highX){
+      one = d_v3;
+    }
+    Vector two = d_v1;
+    double highY = d_v1.y();
+    if(abs(d_v2.y()) > highY){
+      highY = abs(d_v2.y());
+      two = d_v2;
+    }
+    if(abs(d_v3.y()) > highY){
+      two = d_v3;
+    }    
+    Vector three = d_v1;
+    double highZ = d_v1.z();
+    if(abs(d_v2.z()) > highZ){
+      highZ = abs(d_v2.z());
+      three = d_v2;
+    }
+    if(abs(d_v3.z()) > highZ){
+      three = d_v3;
+    }
+    
+    Vector temporary = *(new Vector(two));
     // Compute degree to which it is rotated
     // Find rotation about Z
     Vector projection = temporary - unitZ*(Dot(unitZ,temporary));
@@ -214,32 +252,32 @@ void EllipsoidGeometryPiece::initializeEllipsoidData()
     else 
       thetaz = 0.0;
     
-    xnew = cos(thetaz)*(temporary[0]) - sin(thetaz)*(temporary[1]);
-    ynew = cos(thetaz)*(temporary[1]) + sin(thetaz)*(temporary[0]);
-    temporary = *(new Vector(xnew,ynew,(temporary[2])));
-    
     // Find rotation about Y
-    projection = (temporary) - (unitY)*(Dot((unitY),(temporary)));
-    if(projection[0] > 0.0 )
-      thetay = atan(projection[2]/projection[0]);
-    else
+    // rotate second vector about z and then find rotation about y
+    temporary = *(new Vector(cos(-thetaz)*one.x() - sin(-thetaz)*one.y(), 
+                           cos(-thetaz)*one.y() + sin(-thetaz)*one.x(), 
+                           one.z()));
+    
+    projection = temporary - unitY*(Dot(unitY,temporary));
+    if(projection[0] > 0.0)
+      thetay = -atan(projection[2]/projection[0]);
+    else 
       thetay = 0.0;
     
-    znew = cos(thetay)*(temporary[2]) - sin(thetay)*(temporary[0]);
-    xnew = cos(thetay)*(temporary[0]) + sin(thetay)*(temporary[2]);
-    temporary = *(new Vector(xnew,temporary[1],znew));
-    
     // Find rotation about X
+    temporary = *(new Vector(cos(-thetay)*three.z() - sin(-thetay)*three.y(), 
+                             three.y(),
+                             cos(-thetay)*three.y() + sin(-thetay)*three.z()));
+    
     projection = temporary - unitX*(Dot(unitX,temporary));
     if(projection[1] > 0.0)
       thetax = atan(projection[2]/projection[1]);
-    else
+    else 
       thetax = 0.0;
     
-    znew = cos(thetax)*(temporary[2]) - sin(thetax)*(temporary[1]);
-    ynew = cos(thetax)*(temporary[1]) + sin(thetax)*(temporary[2]);
-    temporary = *(new Vector(temporary[0],ynew,znew));
     
+    // set flag so that each time a point is checked using inside() the 
+    //   point is rotated the correct amount
     xyzAligned = false;
   } else if(d_radiusX > 0.0 &&
             d_radiusY > 0.0 &&
@@ -253,6 +291,6 @@ void EllipsoidGeometryPiece::initializeEllipsoidData()
     xyzAligned = true;
       
   } else {
-      throw new ProblemSetupException("Input must have axis lengths greater than zero.", __FILE__, __LINE__, false );
+      throw ProblemSetupException("Input File Error: (Ellipsoid initialization) input radii (rx,ry,rz) must have values > 0.0", __FILE__, __LINE__, false );
   }
 }
