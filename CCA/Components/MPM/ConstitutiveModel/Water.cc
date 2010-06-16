@@ -302,8 +302,11 @@ void Water::computeStressTensor(const PatchSubset* patches,
     WaveSpeed = dx/WaveSpeed;
     double delT_new = WaveSpeed.minComponent();
     new_dw->put(delt_vartype(delT_new), lb->delTLabel, patch->getLevel());
-    new_dw->put(sum_vartype(se),        lb->StrainEnergyLabel);
-
+    
+    if (flag->d_reductionVars->accStrainEnergy ||
+        flag->d_reductionVars->strainEnergy) {
+      new_dw->put(sum_vartype(se),      lb->StrainEnergyLabel);
+    }
     delete interpolator;
   }
 }
@@ -325,7 +328,11 @@ void Water::carryForward(const PatchSubset* patches,
 
     // Carry forward the data local to this constitutive model 
     new_dw->put(delt_vartype(1.e10), lb->delTLabel, patch->getLevel());
-    new_dw->put(sum_vartype(0.),     lb->StrainEnergyLabel);
+    
+    if (flag->d_reductionVars->accStrainEnergy ||
+        flag->d_reductionVars->strainEnergy) {
+      new_dw->put(sum_vartype(0.),     lb->StrainEnergyLabel);
+    }
   }
 }
 
