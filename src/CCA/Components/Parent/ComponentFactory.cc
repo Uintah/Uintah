@@ -27,6 +27,7 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
+#include <sci_defs/uintah_defs.h>
 
 #include <CCA/Components/Parent/ComponentFactory.h>
 #include <CCA/Components/Parent/Switcher.h>
@@ -50,6 +51,9 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Examples/RegridderTest.h>
 #include <CCA/Components/Examples/Poisson3.h>
 #include <CCA/Components/Examples/Benchmark.h>
+#ifndef NO_WASATCH
+#include <CCA/Components/Wasatch/Wasatch.h>
+#endif
 #include <CCA/Components/Angio/Angio.h>
 #include <CCA/Components/Examples/SolverTest1.h>
 #include <CCA/Components/PatchCombiner/PatchCombiner.h>
@@ -65,8 +69,6 @@ DEALINGS IN THE SOFTWARE.
 
 #include <iosfwd>
 #include <string>
-
-#include <sci_defs/uintah_defs.h>
 
 using namespace Uintah;
 using namespace std;
@@ -164,7 +166,12 @@ ComponentFactory::create( ProblemSpecP& ps, const ProcessorGroup* world,
       return scinew AMRWave(world);
     else
       return scinew Wave(world);
+  }
+#ifndef NO_WASATCH
+  if (sim_comp == "wasatch") {
+    return scinew Wasatch::Wasatch(world);
   } 
+#endif
   if (sim_comp == "poisson1" || sim_comp == "POISSON1") {
     return scinew Poisson1(world);
   } 
