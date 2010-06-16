@@ -155,6 +155,24 @@ libglui-dev libxmu-dev
 Once these libraries are installed, Teem and VisIt can be installed
 followed by installation of \textbf{Uintah}.
 
+To install the latest \TT{Nvidia}video drivers:
+\begin{verbatim}
+  As root run the following commands:
+  aptitude install module-assistant module-init-tools
+  
+  Change the repository in /etc/apt/sources.list from {lenny/squeeze} -> unstable
+  aptitude clean
+  aptitude update
+  uname -r
+  
+  apt-get install nvidia-kernel-common
+  m-a auto-install nvidia-kernel${VERSION}-source
+  apt-get install nvidia-glx${VERSION}
+  apt-get install nvidia-xconfig
+  nvidia-xconfig
+\end{verbatim}
+See: \url{http://wiki.debian.org/NvidiaGraphicsDrivers#Libraries} for additional details
+
 \subsection{Fedora Core 9 Dependencies}
 
 \textbf{Fedora Core 9} \url{http://fedoraproject.org/} offers all the
