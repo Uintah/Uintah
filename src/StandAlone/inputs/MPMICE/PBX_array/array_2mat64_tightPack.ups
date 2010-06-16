@@ -676,15 +676,22 @@
         <IgnitionTemp>         500.0        </IgnitionTemp>
       </Model>
       <!-- 
+
+      Note:  These parameters are for PBX 9501.  They should give a Detonation velocity slightly higher than experimental,
+      perhaps as much as 500 m/s too large (5%) but they give about the right detonation pressure: ~35 GPa.  They do not exhibit
+      large pressure spikes.  Maximum spike size is approximately 40 GPa which follows experimental data.  run distance to detonation
+      is likely too large in inpact situations, indicating a need for larger Gcrack.  However, these should give a good representation
+      of what the model can do.
+
       <Model type="DDT1">
         <fromMaterial> PBX9501   </fromMaterial> 
         <toMaterial>   product   </toMaterial>
-        <G>       3.8e-16 </G>
-        <b>       2.0     </b>
+        <G>       3.0e-10 </G>
+        <b>       1.5     </b>
         <rho0>    1840.0  </rho0>
         <E0>      5.0e6   </E0>
-        <useCrackModel>      false   </useCrackModel>
-        <Gcrack>             7.0e-18 </Gcrack>
+        <useCrackModel>      true   </useCrackModel>
+        <Gcrack>             4.0e-18 </Gcrack>
         <CrackVolThreshold>  1e-14   </CrackVolThreshold>
         <nCrack>             1.84    </nCrack>
 
