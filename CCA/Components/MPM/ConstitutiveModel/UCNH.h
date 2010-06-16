@@ -159,53 +159,65 @@ namespace Uintah {
     UCNH(ProblemSpecP& ps, MPMFlags* flag, bool plas, bool dam);
     UCNH(const UCNH* cm);
 
+    // specifcy what to output from the constitutive model to an .xml file
+    virtual void outputProblemSpec(ProblemSpecP& ps, bool output_cm_tag = true);
+    
     // clone
     UCNH* clone();
       
     // destructor
     virtual ~UCNH();
-
     
+    
+    // Initialization Functions //
+    //////////////////////////////
+    virtual void allocateCMDataAdd(DataWarehouse* new_dw,
+                                   ParticleSubset* subset,
+                                   map<const VarLabel*, ParticleVariableBase*>* newState,
+                                   ParticleSubset* delset,
+                                   DataWarehouse* old_dw);
+    
+    virtual void allocateCMDataAddRequires(Task* task, const MPMMaterial* matl,
+                                           const PatchSet* patch, 
+                                           MPMLabel* lb) const;
+    
+    // carry forward CM data for RigidMPM
+    virtual void carryForward(const PatchSubset* patches,
+                              const MPMMaterial* matl,
+                              DataWarehouse* old_dw,
+                              DataWarehouse* new_dw);
+    
+    virtual void initializeCMData(const Patch* patch,
+                                  const MPMMaterial* matl,
+                                  DataWarehouse* new_dw);
+    
+    
+    // Scheduling Functions //
+    //////////////////////////
     virtual void addComputesAndRequires(Task* task,
                                         const MPMMaterial* matl,
                                         const PatchSet* patches) const;
-      
+    
     virtual void addComputesAndRequires(Task* task,
                                         const MPMMaterial* matl,
                                         const PatchSet* patches,
                                         const bool recursion,
                                         const bool schedPar = true) const;
-      
+    
     virtual void addInitialComputesAndRequires(Task* task,
                                                const MPMMaterial* matl,
                                                const PatchSet* patches) const;
-      
-    virtual void addParticleState(std::vector<const VarLabel*>& from,
-                                  std::vector<const VarLabel*>& to);
-      
+    
     ////////////////////////////////////////////////////////////////////////
     /*! \\brief Add the requires for failure simulation. */
     ////////////////////////////////////////////////////////////////////////
     virtual void addRequiresDamageParameter(Task* task,
                                             const MPMMaterial* matl,
                                             const PatchSet* patches) const;
-      
-    virtual void allocateCMDataAdd(DataWarehouse* new_dw,
-                                   ParticleSubset* subset,
-                                   map<const VarLabel*, ParticleVariableBase*>* newState,
-                                   ParticleSubset* delset,
-                                   DataWarehouse* old_dw);
-      
-    virtual void allocateCMDataAddRequires(Task* task, const MPMMaterial* matl,
-                                           const PatchSet* patch, 
-                                           MPMLabel* lb) const;
-      
-    // carry forward CM data for RigidMPM
-    virtual void carryForward(const PatchSubset* patches,
-                              const MPMMaterial* matl,
-                              DataWarehouse* old_dw,
-                              DataWarehouse* new_dw);
-      
+    
+    
+    // Compute Functions //
+    ///////////////////////
     // main computation of pressure from constitutive model's equation of state
     virtual void computePressEOSCM(double rho_m, double& press_eos,
                                    double p_ref,
@@ -216,18 +228,18 @@ namespace Uintah {
     virtual double computeRhoMicroCM(double pressure,
                                      const double p_ref,
                                      const MPMMaterial* matl);
-      
+    
     // compute stable timestep for this patch
     virtual void computeStableTimestep(const Patch* patch,
                                        const MPMMaterial* matl,
                                        DataWarehouse* new_dw);
-      
+    
     // compute stress at each particle in the patch
     virtual void computeStressTensor(const PatchSubset* patches,
                                      const MPMMaterial* matl,
                                      DataWarehouse* old_dw,
                                      DataWarehouse* new_dw);
-      
+    
     // Damage specific CST for solver
     virtual void computeStressTensor(const PatchSubset* patches,
                                      const MPMMaterial* matl,
@@ -235,7 +247,15 @@ namespace Uintah {
                                      DataWarehouse* new_dw,
                                      Solver* solver,
                                      const bool );
+    
+    
+    // Helper Functions //
+    //////////////////////
+    virtual void addParticleState(std::vector<const VarLabel*>& from,
+                                  std::vector<const VarLabel*>& to);
       
+
+    
     // Returns the compressibility of the material
     virtual double getCompressibility();
       
@@ -248,14 +268,6 @@ namespace Uintah {
                                     DataWarehouse* new_dw);
     
     
-    virtual void initializeCMData(const Patch* patch,
-                                  const MPMMaterial* matl,
-                                  DataWarehouse* new_dw);
- 
-    // specifcy what to output from the constitutive model to an .xml file
-    virtual void outputProblemSpec(ProblemSpecP& ps, bool output_cm_tag = true);
-
-      
   private:
     // Damage requirements //
     /////////////////////////

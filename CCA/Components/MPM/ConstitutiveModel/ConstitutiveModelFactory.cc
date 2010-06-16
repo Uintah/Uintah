@@ -101,12 +101,12 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
   else if (mat_type ==  "comp_neo_hook") {
     if (flags->d_integrator_type == "explicit" || 
         flags->d_integrator_type == "fracture")
-      return(scinew CompNeoHook(child,flags));
+      return(scinew UCNH(child,flags,false,false));
     else if (flags->d_integrator_type == "implicit")
       return(scinew CompNeoHookImplicit(child,flags));
   }
   else if (mat_type ==  "cnh_damage") 
-    return(scinew CNHDamage(child,flags));
+    return(scinew UCNH(child,flags,false,true));
   
   else if (mat_type ==  "UCNH") 
     return(scinew UCNH(child,flags));
@@ -115,7 +115,7 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
     return(scinew CNH_MMS(child,flags));
 
   else if (mat_type ==  "cnhp_damage") 
-    return(scinew CNHPDamage(child,flags));
+    return(scinew UCNH(child,flags,true,true));
 
   else if (mat_type ==  "trans_iso_hyper") {
     if (flags->d_integrator_type == "explicit" ||
