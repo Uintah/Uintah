@@ -1,0 +1,64 @@
+<Uintah_Include>
+
+  <Wasatch				spec="OPTIONAL NO_DATA">
+
+    <BasicExpression			spec="MULTIPLE" />
+    
+    <!-- ============================ -->
+    <!-- Spec for a TransportEquation -->
+    <!-- ============================ -->
+    <TransportEquation			spec="MULTIPLE NO_DATA"
+                                        attribute1="label REQUIRED STRING 'temperature">
+
+      <ConvectiveFluxExpression		spec="OPTIONAL NO_DATA">
+        <NameTag			spec="REQUIRED" />
+        <AdvectingVelocity		spec="REQUIRED NO_DATA"
+                                        children1="ONE_OF(CHILD NameTag)">
+          <NameTag			spec="REQUIRED" />
+        </AdvectingVelocity>
+        <method				spec="REQUIRED STRING 'central, upwind, superbee'" />
+      </ConvectiveFluxExpression>
+
+      <DiffusiveFluxExpression		spec="OPTIONAL NO_DATA">
+        <NameTag			spec="REQUIRED" />
+      </DiffusiveFluxExpression>
+
+      <SourceTerm			spec="OPTIONAL NO_DATA">
+        <NameTag			spec="REQUIRED" />
+      </SourceTerm>
+
+    </TransportEquation>
+
+
+    <!-- ================== -->
+    <!-- Initial Conditions -->
+    <!-- ================== -->
+    <InitialCondition			spec="MULTIPLE NO_DATA">
+      <NameTag				spec="REQUIRED" />
+      <BasicExpression			spec="REQUIRED" />
+    </InitialCondition>
+
+
+    <!-- ================= -->
+    <!-- PropertyEvaluator -->
+    <!-- ================= -->
+    <PropertyEvaluator			spec="OPTIONAL NO_DATA"
+                                        children1="ONE_OF( CHILD TabProps, BasicExpression )" >
+      <TabProps				spec="OPTIONAL NO_DATA" >
+        <FileName			spec="REQUIRED STRING" />
+        <IndepVars			spec="OPTIONAL NO_DATA" >  <!-- allow renaming of independent variables from TabProps file - incomplete -->
+          <alias			spec="MULTIPLE NO_DATA"
+                                        attribute1="name REQUIRED STRING"
+                                        attribute2="to REQUIRED STRING" />
+        </IndepVars>
+      </TabProps>
+
+      <BasicExpression			spec="OPTIONAL" />
+
+      <!-- jcs should also support basic functions that we have Expression support for -->
+    </PropertyEvaluator>
+
+  </Wasatch>
+
+
+</Uintah_Include>

@@ -895,10 +895,13 @@ BUILD_ARCHES=yes
 BUILD_ICE=yes
 BUILD_MPM=yes
 BUILD_RADIATION=yes
+BUILD_WASATCH=no
 DEF_ARCHES=""
 DEF_ICE=""
 DEF_MPM=""
 DEF_RADIATION=""
+DEF_WASATCH=""
+
 if test "$USE_ARCHES" = no; then BUILD_ARCHES=no; DEF_ARCHES="#define NO_ARCHES"; fi
 if test "$USE_ICE" = no; then BUILD_ICE=no; DEF_ICE="#define NO_ICE"; fi
 if test "$USE_MPM" = no; then BUILD_MPM=no; DEF_MPM="#define NO_MPM"; fi
@@ -906,15 +909,19 @@ if test "$USE_RADIATION" = no; then BUILD_RADIATION=no; DEF_RADIATION="#define N
 if test "$with_fortran" = no; then BUILD_ARCHES=no; BUILD_RADIATION=no;
                                    DEF_RADIATION="#define NO_RADIATION"; DEF_ARCHES="#define NO_ARCHES";
 fi
+if test "$USE_WASATCH" = yes; then BUILD_WASATCH=yes; fi
+if test "$BUILD_WASATCH" = no; then DEF_WASATCH="#define NO_WASATCH"; fi
 
 AC_SUBST(BUILD_ARCHES)
 AC_SUBST(BUILD_ICE)
 AC_SUBST(BUILD_MPM)
 AC_SUBST(BUILD_RADIATION)
+AC_SUBST(BUILD_WASATCH)
 AC_SUBST(DEF_ARCHES)
 AC_SUBST(DEF_ICE)
 AC_SUBST(DEF_MPM)
 AC_SUBST(DEF_RADIATION)
+AC_SUBST(DEF_WASATCH)
 
 if test "$BUILD_ARCHES" = no -a "$BUILD_RADIATION" = no; then
   sci_required_fortran=no

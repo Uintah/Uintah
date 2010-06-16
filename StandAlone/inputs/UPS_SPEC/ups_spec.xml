@@ -321,6 +321,7 @@
     <SimulationComponent          spec="REQUIRED NO_DATA"
                                     attribute1="type REQUIRED STRING 'angio, arches, burger, ice, impm, mpm, mpmarches, 
                                                                       mpmf, mpmice, amrmpm,
+                                                                      wasatch,
                                                                       poisson1, poisson2, poisson3, poisson4, benchmark, rigidmpmice, 
                                                                       rmpmice, smpm, smpmice, spatialops, switcher, wave, solvertest'" >
                                   <!-- The 'type' above is used in CCA/Components/Parent/ComponentFactory.cc -->
@@ -347,7 +348,30 @@
           <SimulationComponent          spec="OPTIONAL" />
         </subcomponent>
     </SimulationComponent>
-     
+
+    <!-- ========================================= -->
+    <!-- Wasatch common tags - to be relocated soon -->
+
+    <NameTag				spec="OPTIONAL NO_DATA"
+                                        attribute1="name REQUIRED STRING"
+                                        attribute2="state REQUIRED STRING 'STATE_NONE,STATE_NP1,STATE_N'" />
+    <!-- Spec for basic expression types -->
+    <BasicExpression			spec="MULTIPLE NO_DATA"
+                                        attribute1="label REQUIRED STRING"
+                                        attribute2="type REQUIRED STRING 'Cell,XFace,YFace,ZFace'"
+                                        children1="ONE_OF(CHILD Constant,LinearFunction)" >
+      <TaskList				spec="REQUIRED STRING 'initialization,timestep_size,advance_solution'" />
+      <NameTag				spec="REQUIRED" />
+      <Constant				spec="OPTIONAL DOUBLE" />
+      <LinearFunction			spec="OPTIONAL NO_DATA"
+                                        attribute1="slope REQUIRED DOUBLE"      
+                                        attribute2="intercept REQUIRED DOUBLE" >
+        <!-- jcs need to specify independent variable for this function -->
+        <NameTag			spec="REQUIRED" />
+      </LinearFunction>
+      
+    </BasicExpression>
+    <!-- ========================================= -->
 
   </CommonTags>
   <!-- End Common Block -->
@@ -958,4 +982,8 @@
     </Parameters>
     
   </SolverTest>
+
+  <!-- Wasatch Component -->
+  <include href="wasatch_spec.xml" section="" />
+
 </Uintah_specification>
