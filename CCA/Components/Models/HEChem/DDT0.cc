@@ -84,10 +84,10 @@ DDT0::DDT0(const ProcessorGroup* myworld,
   //__________________________________
   //  diagnostic labels Simple Burn    
   d_saveConservedVars = scinew saveConservedVars();
-  onSurfaceLabel   = VarLabel::create("DDT0::onSurface",
+  onSurfaceLabel   = VarLabel::create("onSurface",
                                        CCVariable<double>::getTypeDescription());
     
-  surfaceTempLabel = VarLabel::create("DDT0::surfaceTemp",
+  surfaceTempLabel = VarLabel::create("surfaceTemp",
                                        CCVariable<double>::getTypeDescription());
 
   burningLabel = VarLabel::create("burning",
@@ -330,8 +330,8 @@ void DDT0::scheduleComputeModelSources(SchedulerP& sched,
   t->computes(delFLabel,               react_matl);
   t->computes(burningLabel,            react_matl);
   t->computes(detonatingLabel,         react_matl);
-  t->computes(DDT0::onSurfaceLabel,    react_matl);
-  t->computes(DDT0::surfaceTempLabel,  react_matl);
+  t->computes(onSurfaceLabel,    react_matl);
+  t->computes(surfaceTempLabel,  react_matl);
 
   //__________________________________
   // Conserved Variables
@@ -459,8 +459,8 @@ void DDT0::computeModelSources(const ProcessorGroup*,
     new_dw->allocateAndPut(detonating, detonatingLabel,        m0, patch);
     new_dw->allocateAndPut(Fr,         reactedFractionLabel,   m0, patch);
     new_dw->allocateAndPut(delF,       delFLabel,              m0, patch);
-    new_dw->allocateAndPut(onSurface,  DDT0::onSurfaceLabel,   m0, patch);
-    new_dw->allocateAndPut(surfaceTemp,DDT0::surfaceTempLabel, m0, patch);
+    new_dw->allocateAndPut(onSurface,  onSurfaceLabel,         m0, patch);
+    new_dw->allocateAndPut(surfaceTemp,surfaceTempLabel,       m0, patch);
     
     new_dw->allocateTemporary(crackedEnough, patch);
     
