@@ -555,7 +555,7 @@
        </MPM>
 <!--__________________________________-->
        <ICE>
-         <material name = "product">
+         <material name = "atmosphere">
            <EOS type = "ideal_gas"> </EOS>
            <dynamic_viscosity>          0.0            </dynamic_viscosity>
            <thermal_conductivity>       0.0            </thermal_conductivity>
@@ -644,13 +644,42 @@
              <pressure>           101325.0            </pressure>
            </geom_object>
          </material>
+
+         <material name="product">
+           <EOS type="JWLC">
+             <!-- Urtiew's fit parameters -->
+             <A>    1668.9e9 </A>
+             <B>    5.969e9  </B>
+             <C>    6.43e8   </C>
+             <R1>   5.9      </R1>
+             <R2>   2.1      </R2>
+             <om>   0.45     </om>
+             <rho0> 1894     </rho0>
+           </EOS>
+           <dynamic_viscosity>      0.0                 </dynamic_viscosity>
+           <thermal_conductivity>   0.0                 </thermal_conductivity>
+           <specific_heat>          544.96              </specific_heat>
+           <gamma>                  1.4                 </gamma>
+           <geom_object>
+             <box label="outOfDomain">
+               <min>           [99.0, 99.0, 99.0 ]   </min>
+               <max>           [100.0, 100.0, 100.0 ]</max>
+             </box>
+             <res>            [2,2,2]                 </res>
+             <velocity>       [0.0,0.0,0.0]           </velocity>
+             <temperature>    300.0                   </temperature>
+             <density>        1.1792946927374306      </density>
+             <pressure>       101325.0                </pressure>
+           </geom_object>
+         </material>
+
       </ICE>       
 
       <exchange_properties>
         <heatExchangeCoeff>  variable  </heatExchangeCoeff>
         <exchange_coefficients>
-          <momentum>  [ 1e10 ]   </momentum>
-          <heat>      [  1e5  ]   </heat>
+          <momentum>  [ 1e10, 1e10, 1e10 ]   </momentum>
+          <heat>      [  1e5, 1e5,  1e5  ]   </heat>
         </exchange_coefficients>
       </exchange_properties>
     </MaterialProperties>
