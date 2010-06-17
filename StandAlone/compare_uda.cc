@@ -1175,7 +1175,7 @@ main(int argc, char** argv)
     }
 
     vartypes1.resize(vars.size());
-    vartypes2.resize(vars.size());
+    vartypes2.resize(vars2.size());
     int count = 0;
     //__________________________________
     //  eliminate the variable to be ignored
