@@ -1210,6 +1210,12 @@ main(int argc, char** argv)
     vars2.resize(count);
     vartypes2.resize(vars2.size()); 
     
+    if (vartypes1.size() != vartypes2.size() )  {
+      cerr << filebase1 << " has " << vars.size() << " variables\n";
+      cerr << filebase2 << " has " << vars2.size() << " variables\n";
+      abort_uncomparable();
+    }
+    
     //__________________________________
     // sort vars so uda's can be compared if their index files have
     // different orders of variables.
