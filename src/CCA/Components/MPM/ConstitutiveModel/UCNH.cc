@@ -307,15 +307,17 @@ UCNH::~UCNH()
   
   if(d_useDamage) {
     VarLabel::destroy(pFailureStrainLabel);
-    VarLabel::destroy(pLocalizedLabel);
-    VarLabel::destroy(pDeformRateLabel);
     VarLabel::destroy(pFailureStrainLabel_preReloc);
+    VarLabel::destroy(pLocalizedLabel);
     VarLabel::destroy(pLocalizedLabel_preReloc);
+    VarLabel::destroy(bBeBarLabel);
+    VarLabel::destroy(bBeBarLabel_preReloc);
   }
   
   // Universal Deletes
   VarLabel::destroy(bElBarLabel);
   VarLabel::destroy(bElBarLabel_preReloc);
+  VarLabel::destroy(pDeformRateLabel);
   VarLabel::destroy(pDeformRateLabel_preReloc);
 }
 
