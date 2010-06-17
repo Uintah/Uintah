@@ -78,7 +78,7 @@ DDT1::DDT1(const ProcessorGroup* myworld,
   reactedFractionLabel   = VarLabel::create("F",
                                       CCVariable<double>::getTypeDescription());
                      
-  delFLabel   = VarLabel::create("delF",
+  delFLabel       = VarLabel::create("delF",
                                       CCVariable<double>::getTypeDescription());
 
   detonatingLabel = VarLabel::create("detonating",
@@ -86,17 +86,17 @@ DDT1::DDT1(const ProcessorGroup* myworld,
   //__________________________________
   //  diagnostic labels Steady Burn    
   d_saveConservedVars = scinew saveConservedVars();
-  onSurfaceLabel   = VarLabel::create("DDT1::onSurface",
+  onSurfaceLabel   = VarLabel::create("onSurface",
                                        CCVariable<double>::getTypeDescription());
     
-  surfaceTempLabel = VarLabel::create("DDT1::surfaceTemp",
+  surfaceTempLabel = VarLabel::create("surfaceTemp",
                                        CCVariable<double>::getTypeDescription());
     
   numPPCLabel      = VarLabel::create("SteadyBurn.numPPC",
                                        CCVariable<double>::getTypeDescription());
 
-  burningLabel = VarLabel::create("burning",
-                     CCVariable<double>::getTypeDescription());
+  burningLabel     = VarLabel::create("burning",
+                                       CCVariable<double>::getTypeDescription());
     
   totalMassBurnedLabel  = VarLabel::create( "totalMassBurned",
                                              sum_vartype::getTypeDescription() );
@@ -373,8 +373,8 @@ void DDT1::scheduleComputeModelSources(SchedulerP& sched,
   t->computes(delFLabel,               react_matl);
   t->computes(burningLabel,            react_matl);
   t->computes(detonatingLabel,         react_matl);
-  t->computes(DDT1::onSurfaceLabel,    react_matl);
-  t->computes(DDT1::surfaceTempLabel,  react_matl);
+  t->computes(onSurfaceLabel,          react_matl);
+  t->computes(surfaceTempLabel,        react_matl);
 
   //__________________________________
   // Conserved Variables
@@ -540,8 +540,8 @@ void DDT1::computeModelSources(const ProcessorGroup*,
     new_dw->allocateAndPut(detonating,   detonatingLabel,         m0,patch);
     new_dw->allocateAndPut(Fr,           reactedFractionLabel,    m0,patch);
     new_dw->allocateAndPut(delF,         delFLabel,               m0,patch);
-    new_dw->allocateAndPut(onSurface,    DDT1::onSurfaceLabel,    m0,patch);
-    new_dw->allocateAndPut(surfTemp,     DDT1::surfaceTempLabel,  m0,patch);
+    new_dw->allocateAndPut(onSurface,    onSurfaceLabel,          m0,patch);
+    new_dw->allocateAndPut(surfTemp,     surfaceTempLabel,        m0,patch);
     
     new_dw->allocateTemporary(crackedEnough, patch);
     Fr.initialize(0.);
