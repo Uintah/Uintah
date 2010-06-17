@@ -8,8 +8,6 @@
    </Meta>  
    <SimulationComponent type="mpmice" />
    
-   <doAMR>true</doAMR>
-   
    
    <LoadBalancer type="DLB">
      <dynamicAlgorithm> patchFactor </dynamicAlgorithm>
@@ -26,8 +24,7 @@
        <initTime>           0.0       </initTime>
        <delt_min>           0.0       </delt_min>
        <delt_max>           1.0       </delt_max>
-       <delt_init>          1e-16    </delt_init>
-<!--   <max_iterations>     300       </max_iterations> -->
+       <delt_init>          1e-20    </delt_init>
        <timestep_multiplier>0.2       </timestep_multiplier>
        <max_delt_increase>  0.5      </max_delt_increase>
    </Time>    
@@ -92,8 +89,8 @@
               <lower>        [ 0.000, 0.000, 0.0000] </lower>
               <upper>        [ 0.48, 0.48,  0.01]    </upper>
               <extraCells>   [1,1,1]                 </extraCells>
-              <patches>      [2,2,1]                 </patches> 
-              <resolution>   [30,30,1]               </resolution>
+              <patches>      [16,16,1]                 </patches> 
+              <resolution>   [480,480,1]               </resolution>
            </Box>
        </Level>
     </Grid>
@@ -105,7 +102,8 @@
       <filebase>2DArray64_tight.uda</filebase>
       <outputInterval> 0.00005 </outputInterval>
       
-      <!--<outputTimestepInterval> 5 </outputTimestepInterval> -->
+      <!--<outputTimestepInterval> 3 </outputTimestepInterval> -->
+      <outputInitTimestep/>
       <save label="press_CC"/>
       <save label="temp_CC"/>
       <save label="rho_CC"/>
@@ -113,11 +111,16 @@
       <save label="vol_frac_CC"/>
       <save label="KineticEnergy"/>
       <save label="totalMassBurned"/>
+      <save label="totalHeatReleased"/>
+      <save label="detonating"/>
+      <save label="delF"/>
+      <save label="F"/>
 
-      <save label="p.x"           levels="-1"/>
-      <save label="p.temperature" levels="-1"/>
-      <save label="p.particleID"  levels="-1"/>
-      <save label="p.mass"        levels="-1"/>
+      <save label="p.x"/>
+      <save label="p.temperature"/>
+      <save label="p.particleID"/>
+      <save label="p.mass"/>
+      <save label="p.stress"/>
       <checkpoint cycle = "2" timestepInterval = "1000"/>
     </DataArchiver>
 
@@ -133,42 +136,7 @@
         <ClampSpecificVolume>true</ClampSpecificVolume>
        </ICE>        
     </CFD>
-    <!--____________________________________________________________________-->
-    <!--    A M R   G R I D                                                 -->
-    <!--____________________________________________________________________-->
-    <AMR>
-      <ICE>
-        <do_Refluxing>        false    </do_Refluxing>
-        <orderOfInterpolation>1        </orderOfInterpolation>
-        
-        <Refinement_Criteria_Thresholds>         
-          <!--  
-          <Variable name="press_CC" value="1e5" matl="0"/>
-            examples
-          <Variable name = "vol_frac_CC"  value = "10"  matl = "1" />
-          <Variable name = "rho_CC"       value = "1e3" matl = "all" />
-          -->
-        </Refinement_Criteria_Thresholds>
-        <orderOf_CFI_Interpolation>1</orderOf_CFI_Interpolation>
-      </ICE>
-      <MPM>
-        <min_grid_level>-1</min_grid_level>
-        <max_grid_level>-1</max_grid_level>
-      </MPM>
 
-      <Regridder type="BNR">
-        <min_patch_size> [[8,8,1]] </min_patch_size>
-        <max_levels>                  2       </max_levels>
-        <cell_refinement_ratio>    [[4,4,1]]  </cell_refinement_ratio>
-        <cell_stability_dilation>   [2,2,0]   </cell_stability_dilation>
-        <cell_regrid_dilation>      [1,1,0]   </cell_regrid_dilation>
-        <min_boundary_cells>        [1,1,0]   </min_boundary_cells>
-        <max_timestep_interval>    10 </max_timestep_interval>
-      </Regridder>
-
-      <useLockStep>       true </useLockStep>
-      <!--<doMultiTaskgraphing>true</doMultiTaskgraphing> -->
-    </AMR>
     <!--____________________________________________________________________-->
     <!--     P  H  Y  S  I  C  A  L     C  O  N  S  T  A  N  T  S           -->
     <!--____________________________________________________________________-->   
@@ -181,7 +149,7 @@
       <time_integrator>                explicit   </time_integrator>
       <interpolator>                   gimp        </interpolator>
       <minimum_particle_mass>          3.e-12     </minimum_particle_mass>
-      <maximum_particle_velocity>      1.e3       </maximum_particle_velocity>
+      <maximum_particle_velocity>      10000      </maximum_particle_velocity>
       <artificial_damping_coeff>       0.0        </artificial_damping_coeff>
       <artificial_viscosity>           true       </artificial_viscosity>
       <artificial_viscosity_coeff1>    0.07       </artificial_viscosity_coeff1>
@@ -211,14 +179,21 @@
            </constitutive_model>
            
            <geom_object>
-               <cylinder label = "0">
-                  <bottom>  [0.000000, 0.000000, 0.000000]  </bottom>
-                  <top>     [0.000000, 0.000000, 0.010000]  </top>
-                  <radius>       0.025400       </radius>
-              </cylinder>
+             <difference>
+                <cylinder label = "0">
+                   <bottom>  [0.000000, 0.000000, 0.000000]  </bottom>
+                   <top>     [0.000000, 0.000000, 0.010000]  </top>
+                   <radius>       0.025400       </radius>
+                </cylinder>
+                <cylinder label = "hole">
+                   <bottom>  [0.000000, 0.000000, 0.000000]  </bottom>
+                   <top>     [0.000000, 0.000000, 0.010000]  </top>
+                   <radius>       0.0075       </radius>
+                </cylinder> 
+             </difference>
              <res>                 [2,2,2]         </res>
              <velocity>            [0.0,0.0,0.0]   </velocity>
-             <temperature>         510.0           </temperature>
+             <temperature>         600.0           </temperature>
            </geom_object>
 
            <geom_object>
@@ -561,7 +536,6 @@
            <thermal_conductivity>       0.0            </thermal_conductivity>
            <specific_heat>              1156.900585    </specific_heat>
            <gamma>                      1.21012991     </gamma>
-
            <geom_object>
              <difference>
                <box>
@@ -569,82 +543,90 @@
                  <max>           [1.0,  1.0,  1.0] </max>
                </box>
                <union>
-                 <cylinder label = "0">     </cylinder>
-                 <cylinder label = "1">     </cylinder>
-                 <cylinder label = "2">     </cylinder>
-                 <cylinder label = "3">     </cylinder>
-                 <cylinder label = "4">     </cylinder>
-                 <cylinder label = "5">     </cylinder>
-                 <cylinder label = "6">     </cylinder>
-                 <cylinder label = "7">     </cylinder>                   
-                 <cylinder label = "8">     </cylinder>
-                 <cylinder label = "9">     </cylinder>
-                 <cylinder label = "10">     </cylinder>
-                 <cylinder label = "11">     </cylinder>
-                 <cylinder label = "12">     </cylinder>
-                 <cylinder label = "13">     </cylinder>
-                 <cylinder label = "14">     </cylinder>
-                 <cylinder label = "15">     </cylinder>
-                 <cylinder label = "16">     </cylinder>
-                 <cylinder label = "17">     </cylinder>
-                 <cylinder label = "18">     </cylinder>
-                 <cylinder label = "19">     </cylinder>
-                 <cylinder label = "20">     </cylinder>
-                 <cylinder label = "21">     </cylinder>
-                 <cylinder label = "22">     </cylinder>
-                 <cylinder label = "23">     </cylinder>
-                 <cylinder label = "24">     </cylinder>
-                 <cylinder label = "25">     </cylinder>
-                 <cylinder label = "26">     </cylinder>
-                 <cylinder label = "27">     </cylinder>
-                 <cylinder label = "28">     </cylinder>
-                 <cylinder label = "29">     </cylinder>
-                 <cylinder label = "30">     </cylinder>
-                 <cylinder label = "31">     </cylinder>
-                 <cylinder label = "32">     </cylinder>
-                 <cylinder label = "33">     </cylinder>
-                 <cylinder label = "34">     </cylinder>
-                 <cylinder label = "35">     </cylinder>
-                 <cylinder label = "36">     </cylinder>
-                 <cylinder label = "37">     </cylinder>
-                 <cylinder label = "38">     </cylinder>
-                 <cylinder label = "39">     </cylinder>
-                 <cylinder label = "40">     </cylinder>
-                 <cylinder label = "41">     </cylinder>
-                 <cylinder label = "42">     </cylinder>
-                 <cylinder label = "43">     </cylinder>
-                 <cylinder label = "44">     </cylinder>
-                 <cylinder label = "45">     </cylinder>
-                 <cylinder label = "46">     </cylinder>
-                 <cylinder label = "47">     </cylinder>
-                 <cylinder label = "48">     </cylinder>
-                 <cylinder label = "49">     </cylinder>
-                 <cylinder label = "50">     </cylinder>
-                 <cylinder label = "51">     </cylinder>
-                 <cylinder label = "52">     </cylinder>
-                 <cylinder label = "53">     </cylinder>
-                 <cylinder label = "54">     </cylinder>
-                 <cylinder label = "55">     </cylinder>
-                 <cylinder label = "56">     </cylinder>
-                 <cylinder label = "57">     </cylinder>
-                 <cylinder label = "58">     </cylinder>
-                 <cylinder label = "59">     </cylinder>
-                 <cylinder label = "60">     </cylinder>
-                 <cylinder label = "61">     </cylinder>
-                 <cylinder label = "62">     </cylinder>
-                 <cylinder label = "63">     </cylinder>
-
+                   <cylinder label = "0">     </cylinder>
+                   <cylinder label = "1">     </cylinder>
+                   <cylinder label = "2">     </cylinder>
+                   <cylinder label = "3">     </cylinder>
+                   <cylinder label = "4">     </cylinder>
+                   <cylinder label = "5">     </cylinder>
+                   <cylinder label = "6">     </cylinder>
+                   <cylinder label = "7">     </cylinder>
+                   <cylinder label = "8">     </cylinder>
+                   <cylinder label = "9">     </cylinder>
+                   <cylinder label = "10">     </cylinder>
+                   <cylinder label = "11">     </cylinder>
+                   <cylinder label = "12">     </cylinder>
+                   <cylinder label = "13">     </cylinder>
+                   <cylinder label = "14">     </cylinder>
+                   <cylinder label = "15">     </cylinder>
+                   <cylinder label = "16">     </cylinder>
+                   <cylinder label = "17">     </cylinder>
+                   <cylinder label = "18">     </cylinder>
+                   <cylinder label = "19">     </cylinder>
+                   <cylinder label = "20">     </cylinder>
+                   <cylinder label = "21">     </cylinder>
+                   <cylinder label = "22">     </cylinder>
+                   <cylinder label = "23">     </cylinder>
+                   <cylinder label = "24">     </cylinder>
+                   <cylinder label = "25">     </cylinder>
+                   <cylinder label = "26">     </cylinder>
+                   <cylinder label = "27">     </cylinder>
+                   <cylinder label = "28">     </cylinder>
+                   <cylinder label = "29">     </cylinder>
+                   <cylinder label = "30">     </cylinder>
+                   <cylinder label = "31">     </cylinder>
+                   <cylinder label = "32">     </cylinder>
+                   <cylinder label = "33">     </cylinder>
+                   <cylinder label = "34">     </cylinder>
+                   <cylinder label = "35">     </cylinder>
+                   <cylinder label = "36">     </cylinder>
+                   <cylinder label = "37">     </cylinder>
+                   <cylinder label = "38">     </cylinder>
+                   <cylinder label = "39">     </cylinder>
+                   <cylinder label = "40">     </cylinder>
+                   <cylinder label = "41">     </cylinder>
+                   <cylinder label = "42">     </cylinder>
+                   <cylinder label = "43">     </cylinder>
+                   <cylinder label = "44">     </cylinder>
+                   <cylinder label = "45">     </cylinder>
+                   <cylinder label = "46">     </cylinder>
+                   <cylinder label = "47">     </cylinder>
+                   <cylinder label = "48">     </cylinder>
+                   <cylinder label = "49">     </cylinder>
+                   <cylinder label = "50">     </cylinder>
+                   <cylinder label = "51">     </cylinder>
+                   <cylinder label = "52">     </cylinder>
+                   <cylinder label = "53">     </cylinder>
+                   <cylinder label = "54">     </cylinder>
+                   <cylinder label = "55">     </cylinder>
+                   <cylinder label = "56">     </cylinder>
+                   <cylinder label = "57">     </cylinder>
+                   <cylinder label = "58">     </cylinder>
+                   <cylinder label = "59">     </cylinder>
+                   <cylinder label = "60">     </cylinder>
+                   <cylinder label = "61">     </cylinder>
+                   <cylinder label = "62">     </cylinder>
+                   <cylinder label = "63">     </cylinder>
                </union>
              </difference>
-
              <res>                [2,2,2]             </res>
              <velocity>           [0.0,0.0,0.0]       </velocity>
              <temperature>        300.0               </temperature>
              <density>            1.38934929e+00      </density>
              <pressure>           101325.0            </pressure>
            </geom_object>
+           
+           <geom_object>
+             <cylinder label = "hole"/>
+             <res>                [2,2,2]             </res>
+             <velocity>           [0.0,0.0,0.0]       </velocity>
+             <temperature>        16000.0             </temperature>
+             <density>            1380.                </density>
+             <pressure>           5.4e9               </pressure>
+           </geom_object>
+           
          </material>
-
+         
          <material name="product">
            <EOS type="JWLC">
              <!-- Urtiew's fit parameters -->
@@ -686,7 +668,8 @@
 
 
     <Models>
-   
+ 
+<!--
       <Model type="Steady_Burn">
         <fromMaterial>         PBX9501      </fromMaterial>
         <toMaterial>           product      </toMaterial>
@@ -704,14 +687,14 @@
         <ThresholdPressure>    50000        </ThresholdPressure>
         <IgnitionTemp>         500.0        </IgnitionTemp>
       </Model>
-      <!-- 
+     
 
       Note:  These parameters are for PBX 9501.  They should give a Detonation velocity slightly higher than experimental,
       perhaps as much as 500 m/s too large (5%) but they give about the right detonation pressure: ~35 GPa.  They do not exhibit
       large pressure spikes.  Maximum spike size is approximately 40 GPa which follows experimental data.  run distance to detonation
       is likely too large in inpact situations, indicating a need for larger Gcrack.  However, these should give a good representation
       of what the model can do.
-
+-->
       <Model type="DDT1">
         <fromMaterial> PBX9501   </fromMaterial> 
         <toMaterial>   product   </toMaterial>
@@ -719,7 +702,7 @@
         <b>       1.5     </b>
         <rho0>    1840.0  </rho0>
         <E0>      5.0e6   </E0>
-        <useCrackModel>      true   </useCrackModel>
+        <useCrackModel>      false   </useCrackModel>
         <Gcrack>             4.0e-18 </Gcrack>
         <CrackVolThreshold>  1e-14   </CrackVolThreshold>
         <nCrack>             1.84    </nCrack>
@@ -736,10 +719,9 @@
         <SpecificHeatBoth>     1.4e3        </SpecificHeatBoth>
         <MoleWeightGasPh>      0.0342       </MoleWeightGasPh>
         <BoundaryParticles>    3            </BoundaryParticles>
-        <IgnitionTemp>         550.0        </IgnitionTemp>
+        <IgnitionTemp>         1e100        </IgnitionTemp>    <!-- turn off deflagration -->
         <ThresholdPressureSB>  50000.       </ThresholdPressureSB>
-      </Model>
-      -->
+      </Model>  
     </Models>
 
     <PhysicalBC>
