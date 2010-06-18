@@ -103,7 +103,6 @@
       <outputInterval> 0.00005 </outputInterval>
       
       <!--<outputTimestepInterval> 3 </outputTimestepInterval> -->
-      <outputInitTimestep/>
       <save label="press_CC"/>
       <save label="temp_CC"/>
       <save label="rho_CC"/>
@@ -621,7 +620,7 @@
              <res>                [2,2,2]             </res>
              <velocity>           [0.0,0.0,0.0]       </velocity>
              <temperature>        16000.0             </temperature>
-             <density>            1380.                </density>
+             <density>            1600.                </density>
              <pressure>           5.4e9               </pressure>
            </geom_object>
            
