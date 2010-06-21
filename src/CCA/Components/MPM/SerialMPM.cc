@@ -4233,8 +4233,18 @@ void SerialMPM::updateCohesiveZones(const ProcessorGroup*,
 
         // Determine if a CZ has failed.  Currently hardwiring failure criteria
         // to fail zone if normal sep is > 4*delta_n or 2*delta_t
-        if(czFailed[idx]>0 || D_n > 4.0*delta_n || D_t > 2.0*delta_t){
+        double czf=0.0;
+        if(czFailed[idx]>0 ){
+          czFailed_new[idx]=czFailed[idx];
+          czf=1.0;
+        }
+        else if(D_n > 4.0*delta_n){
           czFailed_new[idx]=1;
+          czf=1.0;
+        }
+        else if( fabs(D_t) > 20.0*delta_t){
+          czFailed_new[idx]=2;
+          czf=1.0;
         } else {
           czFailed_new[idx]=0;
         }
@@ -4251,7 +4261,7 @@ void SerialMPM::updateCohesiveZones(const ProcessorGroup*,
                               * exp(-D_t*D_t/(delta_t*delta_t));
         czforce_new[idx]     = (normal_stress*cznorm[idx]*czlength_new[idx]
                              + tang_stress*cztang[idx]*czlength_new[idx])
-                             * (1.0 - ((double) czFailed_new[idx]));
+                             * (1.0 - czf);
 
 /*
         dest << time << " " << czsep_new[idx].x() << " " << czsep_new[idx].y() << " " << czforce_new[idx].x() << " " << czforce_new[idx].y() << endl;
