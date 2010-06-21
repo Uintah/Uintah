@@ -1040,44 +1040,49 @@ void UCNH::computeStressTensor(const PatchSubset* patches,
         computeAxiSymVelocityGradient(velGrad_new,ni,d_S,S,oodx,gVelocity,px[idx]);
       }
       
+      velGrad[idx] = velGrad_new;
+    }
       
-      // The following is used only for pressure stabilization
-      CCVariable<double> J_CC;
-      new_dw->allocateTemporary(J_CC,     patch);
-      J_CC.initialize(0.);
-      if(flag->d_doPressureStabilization) {
-        CCVariable<double> vol_0_CC;
-        CCVariable<double> vol_CC;
-        new_dw->allocateTemporary(vol_0_CC, patch);
-        new_dw->allocateTemporary(vol_CC, patch);
+    // The following is used only for pressure stabilization
+    CCVariable<double> J_CC;
+    new_dw->allocateTemporary(J_CC,     patch);
+    J_CC.initialize(0.);
+    if(flag->d_doPressureStabilization) {
+      CCVariable<double> vol_0_CC;
+      CCVariable<double> vol_CC;
+      new_dw->allocateTemporary(vol_0_CC, patch);
+      new_dw->allocateTemporary(vol_CC, patch);
         
-        vol_0_CC.initialize(0.);
-        vol_CC.initialize(0.);
-        for(ParticleSubset::iterator iter = pset->begin();
-            iter != pset->end(); iter++){
-          particleIndex idx = *iter;
+      vol_0_CC.initialize(0.);
+      vol_CC.initialize(0.);
+      for(ParticleSubset::iterator iter = pset->begin();
+          iter != pset->end(); iter++){
+        particleIndex idx = *iter;
           
-          // get the volumetric part of the deformation
-          J = pDefGrad_new[idx].Determinant();
+        // get the volumetric part of the deformation
+        J = pDefGrad_new[idx].Determinant();
           
-          // Get the deformed volume
-          pVolume_new[idx]=(pMass[idx]/rho_orig)*J;
+        // Get the deformed volume
+        pVolume_new[idx]=(pMass[idx]/rho_orig)*J;
           
-          IntVector cell_index;
-          patch->findCell(px[idx],cell_index);
+        IntVector cell_index;
+        patch->findCell(px[idx],cell_index);
           
-          vol_CC[cell_index]+=pVolume_new[idx];
-          vol_0_CC[cell_index]+=pMass[idx]/rho_orig;
-        }
+        vol_CC[cell_index]+=pVolume_new[idx];
+        vol_0_CC[cell_index]+=pMass[idx]/rho_orig;
+      }
         
-        for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++){
-          IntVector c = *iter;
-          J_CC[c]=vol_CC[c]/vol_0_CC[c];
-        }
-      } //end of pressureStabilization loop  at the patch level
+      for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++){
+        IntVector c = *iter;
+        J_CC[c]=vol_CC[c]/vol_0_CC[c];
+      }
+    } //end of pressureStabilization loop  at the patch level
       
-      
-      pDeformRate[idx] = (velGrad_new + velGrad_new.Transpose())*0.5;
+    iter = pset->begin();
+    for(; iter != pset->end(); iter++){
+      particleIndex idx = *iter;  
+    
+      pDeformRate[idx] = (velGrad[idx] + velGrad[idx].Transpose())*0.5;
      
       
       // More Pressure Stabilization
@@ -1096,9 +1101,9 @@ void UCNH::computeStressTensor(const PatchSubset* patches,
       // 1) Compute the deformation gradient increment using the time_step
       //    velocity gradient (F_n^np1 = dudx * dt + Identity)
       // 2) Update the deformation gradient tensor to its time n+1 value.
-      pDefGradInc = velGrad_new*delT + Identity;    // suspect :       deformationGradientInc = deformationGradient_new[idx]*deformationGradient[idx].Inverse();
+      pDefGradInc = velGrad[idx]*delT + Identity;    // suspect :       deformationGradientInc = deformationGradient_new[idx]*deformationGradient[idx].Inverse();
       if(d_usePlasticity && !d_useDamage){
-        Matrix3 d = (velGrad_new*delT+Identity)*pDefGrad[idx];
+        Matrix3 d = (velGrad[idx]*delT+Identity)*pDefGrad[idx];
         pDefGradInc = d*pDefGrad[idx].Inverse();
       }
       Jinc = pDefGradInc.Determinant();
