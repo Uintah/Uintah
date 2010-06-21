@@ -140,7 +140,7 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
     return(scinew Water(child,flags));
 
   else if (mat_type == "comp_neo_hook_plastic")
-    return(scinew CompNeoHookPlas(child,flags));
+    return(scinew UCNH(child,flags,true,fasle));
    
   else if (mat_type ==  "visco_scram"){
     if (flags->d_integrator_type == "explicit" || 
