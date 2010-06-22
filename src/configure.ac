@@ -2362,7 +2362,7 @@ elif test "$with_fortran" -a "$with_fortran" != "no"; then
   _sci_optional=specific
 fi
 
-if test "$with_fortran" -a "$with_fortran" != "no"; then
+if test "$with_fortran" != "no"; then
   case $host in 
     *aix*)
       # AIX Fortran Library Check
@@ -2394,11 +2394,11 @@ if test "$with_fortran" -a "$with_fortran" != "no"; then
     *-darwin*)
       # OSX Library Check
       if test "$F77" = "xlf"; then
-        SCI_TRY_LINK(F,fortran libraries,,$_sci_inc,xlf90,$_sci_lib,,,$_sci_optional)
+        SCI_TRY_LINK(F,Mac fortran library - xlf90,,$_sci_inc,xlf90,$_sci_lib,,,$_sci_optional)
       else
-        SCI_TRY_LINK(F,fortran libraries,,$_sci_inc,gfortran,$_sci_lib,,,optional)
+        SCI_TRY_LINK(F,Mac fortran library - gfortran,,$_sci_inc,gfortran,$_sci_lib,,,optional)
         if test "$HAVE_F" = "no"; then
-              SCI_TRY_LINK(F,fortran libraries,,$_sci_inc,g2c,$_sci_lib,,,$_sci_optional)
+             SCI_TRY_LINK(F,mac fortran library - g2c,,$_sci_inc,g2c,$_sci_lib,,,$_sci_optional)
         fi
       fi
       ;;
