@@ -52,7 +52,6 @@ SRCS   += \
         $(SRCDIR)/ViscoScram.cc                 \
         $(SRCDIR)/ViscoSCRAMHotSpot.cc          \
         $(SRCDIR)/HypoElastic.cc                \
-        $(SRCDIR)/HypoElasticFortran.cc         \
         $(SRCDIR)/HypoElasticImplicit.cc        \
         $(SRCDIR)/ViscoScramImplicit.cc         \
         $(SRCDIR)/MWViscoElastic.cc             \
@@ -65,14 +64,22 @@ SRCS   += \
         $(SRCDIR)/SmallStrainPlastic.cc         \
         $(SRCDIR)/Water.cc                      \
         $(SRCDIR)/ViscoPlastic.cc               \
-        $(SRCDIR)/Kayenta.cc                    \
-	$(SRCDIR)/Diamm.cc                      \
         $(SRCDIR)/MurnahanMPM.cc                \
         $(SRCDIR)/UCNH.cc                       \
         $(SRCDIR)/SoilFoam.cc
 
+ifneq ($(NO_FORTRAN),yes)
+  SRCS   += \
+       $(SRCDIR)/Diamm.cc                      \
+       $(SRCDIR)/HypoElasticFortran.cc         \
+       $(SRCDIR)/Kayenta.cc                    
+endif
+
 SUBDIRS := \
         $(SRCDIR)/PlasticityModels \
-        $(SRCDIR)/fortran
+
+ifneq ($(NO_FORTRAN),yes)
+  SUBDIRS += $(SRCDIR)/fortran
+endif
 
 include $(SCIRUN_SCRIPTS)/recurse.mk

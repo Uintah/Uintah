@@ -27,8 +27,10 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-
 #include <CCA/Components/MPM/ConstitutiveModel/ConstitutiveModelFactory.h>
+
+#include <sci_defs/uintah_defs.h> // For NO_FORTRAN
+
 #include <CCA/Components/MPM/ConstitutiveModel/RigidMaterial.h>
 #include <CCA/Components/MPM/ConstitutiveModel/CompMooneyRivlin.h>
 #include <CCA/Components/MPM/ConstitutiveModel/CompNeoHook.h>
@@ -45,7 +47,11 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/MPM/ConstitutiveModel/ViscoScramImplicit.h>
 #include <CCA/Components/MPM/ConstitutiveModel/ViscoSCRAMHotSpot.h>
 #include <CCA/Components/MPM/ConstitutiveModel/HypoElastic.h>
-#include <CCA/Components/MPM/ConstitutiveModel/HypoElasticFortran.h>
+
+#if !defined(NO_FORTRAN)
+#  include <CCA/Components/MPM/ConstitutiveModel/HypoElasticFortran.h>
+#endif
+
 #include <CCA/Components/MPM/ConstitutiveModel/Kayenta.h>
 #include <CCA/Components/MPM/ConstitutiveModel/Diamm.h>
 #include <CCA/Components/MPM/ConstitutiveModel/HypoElasticImplicit.h>
@@ -62,13 +68,16 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/MPM/ConstitutiveModel/Water.h>
 #include <CCA/Components/MPM/ConstitutiveModel/UCNH.h>
 #include <CCA/Components/MPM/ConstitutiveModel/ViscoPlastic.h>
-#include <Core/Exceptions/ProblemSetupException.h>
 #include <CCA/Components/MPM/MPMFlags.h>
+
+#include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Malloc/Allocator.h>
+
 #include <fstream>
 #include <iostream>
 #include <string>
+
 using std::cerr;
 using std::ifstream;
 using std::ofstream;
@@ -168,14 +177,16 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
     }
   }
 
+#if !defined(NO_FORTRAN)
   else if (mat_type == "hypo_elastic_fortran")
     return(scinew HypoElasticFortran(child,flags));
-   
+
   else if (mat_type == "kayenta")
     return(scinew Kayenta(child,flags));
 
   else if (mat_type == "diamm")
     return(scinew Diamm(child,flags));
+#endif
 
   else if (mat_type ==  "mw_visco_elastic")
     return(scinew MWViscoElastic(child,flags));
