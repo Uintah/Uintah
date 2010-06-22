@@ -906,11 +906,16 @@ if test "$USE_ARCHES" = no; then BUILD_ARCHES=no; DEF_ARCHES="#define NO_ARCHES"
 if test "$USE_ICE" = no; then BUILD_ICE=no; DEF_ICE="#define NO_ICE"; fi
 if test "$USE_MPM" = no; then BUILD_MPM=no; DEF_MPM="#define NO_MPM"; fi
 if test "$USE_RADIATION" = no; then BUILD_RADIATION=no; DEF_RADIATION="#define NO_RADIATION"; fi
-if test "$with_fortran" = no; then BUILD_ARCHES=no; BUILD_RADIATION=no;
-                                   DEF_RADIATION="#define NO_RADIATION"; DEF_ARCHES="#define NO_ARCHES";
+if test "$with_fortran" = no; then 
+            BUILD_ARCHES=no; BUILD_RADIATION=no;
+            DEF_RADIATION="#define NO_RADIATION"; DEF_ARCHES="#define NO_ARCHES";
+            DEF_NO_FORTRAN="#define NO_FORTRAN";
+            NO_FORTRAN="yes";
 fi
 if test "$USE_WASATCH" = yes; then BUILD_WASATCH=yes; fi
 if test "$BUILD_WASATCH" = no; then DEF_WASATCH="#define NO_WASATCH"; fi
+
+# NO_FORTRAN is used in configVars.mk[.in] and DEF_NO_FORTRAN is used in uintah_testdefs.h.in
 
 AC_SUBST(BUILD_ARCHES)
 AC_SUBST(BUILD_ICE)
@@ -920,8 +925,10 @@ AC_SUBST(BUILD_WASATCH)
 AC_SUBST(DEF_ARCHES)
 AC_SUBST(DEF_ICE)
 AC_SUBST(DEF_MPM)
+AC_SUBST(DEF_NO_FORTRAN)
 AC_SUBST(DEF_RADIATION)
 AC_SUBST(DEF_WASATCH)
+AC_SUBST(NO_FORTRAN)
 
 if test "$BUILD_ARCHES" = no -a "$BUILD_RADIATION" = no; then
   sci_required_fortran=no
@@ -1562,8 +1569,10 @@ if test "$sci_required_tools" = "yes" ; then
   fi
 fi
 
-AC_MSG_CHECKING(fortran underscore policy)
-AC_MSG_RESULT($FORTRAN_UNDERSCORE)
+if test "$with_fortran" != no; then 
+  AC_MSG_CHECKING(fortran underscore policy)
+  AC_MSG_RESULT($FORTRAN_UNDERSCORE)
+fi
 
 AC_SUBST(FORTRAN_UNDERSCORE)
 AC_SUBST(DEF_FORTRAN_UNDERSCORE)
@@ -2353,54 +2362,56 @@ elif test "$with_fortran" -a "$with_fortran" != "no"; then
   _sci_optional=specific
 fi
 
-case $host in 
-  *aix*)
-    # AIX Fortran Library Check
-    SCI_TRY_LINK(F,fortran libraries,,,xlf90,$_sci_lib,,,$_sci_optional)
-    ;;
-  *linux*)
-    # Linux Library Check
-    case $F77 in
-      *pgf77*)
-        SCI_TRY_LINK(F,fortran libraries,,,pgftnrtl,$_sci_lib,$RT_LIB_FLAG,,$_sci_optional)
-        ;;
-      *gfortran*)
-        SCI_TRY_LINK(F,fortran libraries,,,gfortran,$_sci_lib,,,$_sci_optional)
-        ;;
-      *ifort*)
-        SCI_TRY_LINK(F,fortran libraries,,,ifcore,$_sci_lib,,,$_sci_optional)
-        ;;
-      *ftn*)
-        SCI_TRY_LINK(F,fortran libraries,,,,$_sci_lib,,,$_sci_optional)
-        ;;
-      *)
-        SCI_TRY_LINK(F,fortran libraries,,,g2c,$_sci_lib,,,$_sci_optional)
-        ;;
-     esac
-    ;;
-  *dec*)
-    SCI_TRY_LINK(F,fortran libraries,,,for Ufor,$_sci_lib,,,$_sci_optional)
-    ;;
-  *-darwin*)
-    # OSX Library Check
-    if test "$F77" = "xlf"; then
-      SCI_TRY_LINK(F,fortran libraries,,$_sci_inc,xlf90,$_sci_lib,,,$_sci_optional)
-    else
-      SCI_TRY_LINK(F,fortran libraries,,$_sci_inc,gfortran,$_sci_lib,,,optional)
-      if test "$HAVE_F" = "no"; then
-            SCI_TRY_LINK(F,fortran libraries,,$_sci_inc,g2c,$_sci_lib,,,$_sci_optional)
+if test "$with_fortran" -a "$with_fortran" != "no"; then
+  case $host in 
+    *aix*)
+      # AIX Fortran Library Check
+      SCI_TRY_LINK(F,fortran libraries,,,xlf90,$_sci_lib,,,$_sci_optional)
+      ;;
+    *linux*)
+      # Linux Library Check
+      case $F77 in
+        *pgf77*)
+          SCI_TRY_LINK(F,fortran libraries,,,pgftnrtl,$_sci_lib,$RT_LIB_FLAG,,$_sci_optional)
+          ;;
+        *gfortran*)
+          SCI_TRY_LINK(F,fortran libraries,,,gfortran,$_sci_lib,,,$_sci_optional)
+          ;;
+        *ifort*)
+          SCI_TRY_LINK(F,fortran libraries,,,ifcore,$_sci_lib,,,$_sci_optional)
+          ;;
+        *ftn*)
+          SCI_TRY_LINK(F,fortran libraries,,,,$_sci_lib,,,$_sci_optional)
+          ;;
+        *)
+          SCI_TRY_LINK(F,fortran libraries,,,g2c,$_sci_lib,,,$_sci_optional)
+          ;;
+       esac
+      ;;
+    *dec*)
+      SCI_TRY_LINK(F,fortran libraries,,,for Ufor,$_sci_lib,,,$_sci_optional)
+      ;;
+    *-darwin*)
+      # OSX Library Check
+      if test "$F77" = "xlf"; then
+        SCI_TRY_LINK(F,fortran libraries,,$_sci_inc,xlf90,$_sci_lib,,,$_sci_optional)
+      else
+        SCI_TRY_LINK(F,fortran libraries,,$_sci_inc,gfortran,$_sci_lib,,,optional)
+        if test "$HAVE_F" = "no"; then
+              SCI_TRY_LINK(F,fortran libraries,,$_sci_inc,g2c,$_sci_lib,,,$_sci_optional)
+        fi
       fi
-    fi
-    ;;
-  *-pc-mingw*)
-    # Mingw g77 and libg2c
-    SCI_TRY_LINK(F,fortran libraries,,,g2c,$_sci_lib,,,$_sci_optional)
-    ;;
-  *)
-    SCI_TRY_LINK(F,fortran libraries,,,F77,$_sci_lib,,,$_sci_optional)
-    ;;
-esac
-
+      ;;
+    *-pc-mingw*)
+      # Mingw g77 and libg2c
+      SCI_TRY_LINK(F,fortran libraries,,,g2c,$_sci_lib,,,$_sci_optional)
+      ;;
+    *)
+      SCI_TRY_LINK(F,fortran libraries,,,F77,$_sci_lib,,,$_sci_optional)
+      ;;
+  esac
+fi
+  
 AC_SUBST(F_LIB_FLAG)
 AC_SUBST(F_LIB_DIR_FLAG)
 
@@ -2409,6 +2420,13 @@ MPI_EXTRA_LIB_DIR="$MPI_EXTRA_LIB_DIR $F_LIB_DIR_FLAG"
 
 AC_LANG(C)
 
+# Clean up all the fortran flags that don't have individual without-fortran guards on them...
+if test "$with_fortran" = no; then 
+  FFLAGS="fortran_disabled";
+  extra_fflags="fortran_disabled";
+  FORTRAN_UNDERSCORE="// FORTRAN_UNDERSCORE => fortran_disabled";
+  DEF_FORTRAN_UNDERSCORE="// DEF_FORTRAN_UNDERSCORE => fortran_disabled";
+fi
 
 ##  --  Electric Fence  -------------------------------------
 
