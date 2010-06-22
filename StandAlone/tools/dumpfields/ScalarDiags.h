@@ -44,7 +44,6 @@ DEALINGS IN THE SOFTWARE.
 #include "FieldSelection.h"
 
 namespace Uintah {
-  //using namespace SCIRun;
   
   // produce scalar some field
   class ScalarDiag : public FieldDiag

@@ -44,8 +44,6 @@ DEALINGS IN THE SOFTWARE.
 #include "FieldSelection.h"
 
 namespace Uintah {
-  //using namespace SCIRun;
-  using SCIRun::FieldSelection;
 
   // produce tensor diagnostic from tensor field
   class TensorDiag : public FieldDiag
@@ -81,11 +79,11 @@ namespace Uintah {
   
   // list of requested tensor diagnostics
   list<const Uintah::TensorDiag*> createTensorDiags(const Uintah::TypeDescription * fldtype, 
-                                             const FieldSelection & fldselection,
+                                             const SCIRun::FieldSelection & fldselection,
                                              const Uintah::TensorDiag * preop=0);
   
   // create single tensor op, or null if none requested
-  const TensorDiag * createTensorOp(const FieldSelection & fldselection);
+  const TensorDiag * createTensorOp(const SCIRun::FieldSelection & fldselection);
   
 }
 
