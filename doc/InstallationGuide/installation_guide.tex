@@ -374,6 +374,10 @@ automatically download these dependencies, but often fails.
 \subsubsection{Caveats}
 \label{subsec:VisIt_Caveats}
 \begin{itemize}
+\item If you are upgrading to 2.0 from an earlier version of VisIt
+  (1.x or 2.0 beta), remove your uintah/build/VisIt directory before
+  rerunning uintah's configure script, so it gets regenerated for
+  the updated version of VisIt.
 \item Before you install VisIt, a number of dependency files are
   required.  These include X11, GL, GLU, GLX, and libz libraries (it is possible
   that you will find these libraries in the following rpms:
