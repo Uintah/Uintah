@@ -4,7 +4,7 @@
 
 #include <CCA/Components/Wasatch/StringNames.h>
 
-#include <CCA/Components/Wasatch/Expressions/HeatFlux.h>
+#include <CCA/Components/Wasatch/Expressions/DiffusiveFlux.h>
 #include <CCA/Components/Wasatch/Expressions/ScalarRHS.h>
 
 
@@ -39,10 +39,18 @@ namespace Wasatch{
       heatFluxZtag( sName.zHeatFlux, STATE_NONE ),
       tcondTag( sName.thermalConductivity, STATE_NONE );
 
+    typedef DiffusiveFlux2< Ops::GradX, Ops::InterpC2FX >::Builder HeatFluxX;
+    typedef DiffusiveFlux2< Ops::GradY, Ops::InterpC2FY >::Builder HeatFluxY;
+    typedef DiffusiveFlux2< Ops::GradZ, Ops::InterpC2FZ >::Builder HeatFluxZ;
+
+//     typedef DiffusiveFlux< Ops::GradX >::Builder HeatFluxX;
+//     typedef DiffusiveFlux< Ops::GradY >::Builder HeatFluxY;
+//     typedef DiffusiveFlux< Ops::GradZ >::Builder HeatFluxZ;
+
     // fourier heat flux
-    solnExprFactory.register_expression( heatFluxXtag, new HeatFlux< Ops::GradX, Ops::InterpC2FX >::Builder( tcondTag, tempTag ) );
-    solnExprFactory.register_expression( heatFluxYtag, new HeatFlux< Ops::GradY, Ops::InterpC2FY >::Builder( tcondTag, tempTag ) );
-    solnExprFactory.register_expression( heatFluxZtag, new HeatFlux< Ops::GradZ, Ops::InterpC2FZ >::Builder( tcondTag, tempTag ) );
+    solnExprFactory.register_expression( heatFluxXtag, new HeatFluxX( tcondTag, tempTag ) );
+    solnExprFactory.register_expression( heatFluxYtag, new HeatFluxY( tcondTag, tempTag ) );
+    solnExprFactory.register_expression( heatFluxZtag, new HeatFluxZ( tcondTag, tempTag ) );
 
     // species heat flux
 
