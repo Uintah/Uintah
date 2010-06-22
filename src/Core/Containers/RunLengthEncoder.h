@@ -51,7 +51,6 @@ typedef long ssize_t;
 #include <Core/Util/SizeTypeConvert.h>
 
 namespace SCIRun {
-  using namespace std;
 
   //  template <class T> class list;
   
@@ -168,9 +167,6 @@ private:
 
     // make a non-run group from the first n items of the list
     // popping items off the list as it goes.
-    ///// NOTE: Even with 'using namespace std' above, the icpc compiler
-    /////       on thunder doesn't like list... so we have to explicitly
-    /////       use the 'std::' on it...  *shrug*.  -Dd
     Group(typename std::list<T>& itemList, unsigned long n)
       : data_(n), sequenceRule_(), length_(n)
     {
@@ -254,7 +250,7 @@ public:
     : size_(0)
   { addItems(begin, end); }
    
-  RunLengthEncoder(istream& in, bool swapBytes = false /* endianness swap */,
+  RunLengthEncoder(std::istream& in, bool swapBytes = false /* endianness swap */,
 		   int nByteMode = sizeof(unsigned long)  /* 32bit/64bit
 							     conversion */)
     : size_(0)
@@ -306,7 +302,7 @@ public:
   // these return the number of bytes written/read
   long write(ostream& out) throw(ErrnoException);
 
-  long read(istream& in, bool swapBytes = false,
+  long read(std::istream& in, bool swapBytes = false,
 	    int nByteMode = sizeof(unsigned long)) throw(InternalError)
   {
     if (swapBytes || nByteMode != sizeof(unsigned long))
@@ -332,7 +328,7 @@ private:
 
   // should optimize itself when no conversion is needed
   template <bool needConversion>
-  long readPriv(istream& in, bool swapBytes, int nByteMode)
+  long readPriv(std::istream& in, bool swapBytes, int nByteMode)
     throw(InternalError);
 
   template <bool needConversion>
@@ -341,7 +337,7 @@ private:
     throw(InternalError);
 
   template<class SIZE_T>
-  inline void readSizeType(istream& in, bool needConversion, bool swapBytes,
+  inline void readSizeType(std::istream& in, bool needConversion, bool swapBytes,
 			   int nByteMode, SIZE_T& s);
   
   template<class SIZE_T>
@@ -673,7 +669,7 @@ long RunLengthEncoder<T, Sequencer>::write(ostream& out) throw(ErrnoException)
   unsigned long index = 0;
 
   // write the header  
-  for (typename list<Group>::iterator groupIter = groups_.begin();
+  for (typename std::list<Group>::iterator groupIter = groups_.begin();
        groupIter != groups_.end(); groupIter++) {
     // write each header item (one per group):
     // [start_data_pos][start_index]
@@ -696,7 +692,7 @@ long RunLengthEncoder<T, Sequencer>::write(ostream& out) throw(ErrnoException)
   out.write((char*)&index, sizeof(unsigned long));
   
   // write the data
-  for (typename list<Group>::iterator groupIter = groups_.begin();
+  for (typename std::list<Group>::iterator groupIter = groups_.begin();
        groupIter != groups_.end(); groupIter++) {
     Group& group = *groupIter;
     out.write((char*)&group.data_[0],
@@ -716,7 +712,7 @@ long RunLengthEncoder<T, Sequencer>::write(ostream& out) throw(ErrnoException)
 template<class T, class Sequencer>
 template<class SIZE_T> // should either be unsigned long or ssize_t
 inline void RunLengthEncoder<T, Sequencer>::
-readSizeType(istream& in, bool needConversion, bool swapBytes, int nByteMode,
+readSizeType(std::istream& in, bool needConversion, bool swapBytes, int nByteMode,
 	     SIZE_T& s)
 {
   if (needConversion) {
@@ -763,7 +759,7 @@ pReadSizeType(int fd, bool needConversion, bool swapBytes, int nByteMode,
 
 template<class T, class Sequencer>
 template<bool needConversion>
-long RunLengthEncoder<T, Sequencer>::readPriv(istream& in, bool swapBytes,
+long RunLengthEncoder<T, Sequencer>::readPriv(std::istream& in, bool swapBytes,
 					      int nByteMode)
   throw(InternalError)
 {
@@ -821,7 +817,7 @@ long RunLengthEncoder<T, Sequencer>::readPriv(istream& in, bool swapBytes,
 
   // read the data
   i = 0;
-  for (typename list<Group>::iterator groupIter = groups_.begin();
+  for (typename std::list<Group>::iterator groupIter = groups_.begin();
        groupIter != groups_.end(); groupIter++, i++) {      
     vector<T>& data = (*groupIter).data_;
     if ((*groupIter).isRun()) {
@@ -912,7 +908,7 @@ T RunLengthEncoder<T, Sequencer>::seekPriv(int fd, unsigned long index,
   if (group_index >= group_length) {
     // index out of bounds
     ASSERT(low == num_runs - 1);
-    ostringstream index_str;
+    std::ostringstream index_str;
     index_str << index << " >= " << group_end_index;
     throw InternalError(string("RunLengthEncoder<T>::seek (index out of bounds, ") + index_str.str() + ")",
                         __FILE__, __LINE__);
@@ -955,7 +951,7 @@ void RunLengthEncoder<T, Sequencer>::testPrint(ostream& out)
     out << ", " << getMinRunLength(true) << " for default runs.\n";
   else
     out << "\n";
-  for (typename list<Group>::iterator groupIter = groups_.begin();
+  for (typename std::list<Group>::iterator groupIter = groups_.begin();
        groupIter != groups_.end(); groupIter++) {
     Group& group = *groupIter;
     if (group.isRun()) {
@@ -969,7 +965,7 @@ void RunLengthEncoder<T, Sequencer>::testPrint(ostream& out)
     else {
       ASSERT(group.length_ == group.data_.size());
       out << group.length_ << ": ";
-      typename vector<T>::iterator dataIter = group.data_.begin();
+      typename std::vector<T>::iterator dataIter = group.data_.begin();
       if (dataIter != group.data_.end())
 	out << *dataIter;
       for (dataIter++; dataIter != group.data_.end(); dataIter++)
