@@ -112,7 +112,7 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
         flags->d_integrator_type == "fracture")
       return(scinew UCNH(child,flags,false,false));
     else if (flags->d_integrator_type == "implicit")
-      return(scinew CompNeoHookImplicit(child,flags));
+      return(scinew UCNH(child,flags));
   }
   else if (mat_type ==  "cnh_damage") 
     return(scinew UCNH(child,flags,false,true));
