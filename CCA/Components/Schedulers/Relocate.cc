@@ -462,7 +462,7 @@ Relocate::exchangeParticles(const ProcessorGroup* pg,
       
       for(int m=0;m<numMatls;m++){
         int matl = matls->get(m);
-        
+
         int numVars = (int)reloc_old_labels[m].size();
         int numParticles = 0;
         
@@ -518,7 +518,7 @@ Relocate::exchangeParticles(const ProcessorGroup* pg,
         for(;pr.first != pr.second; pr.first++){
           int patchid = toPatch->getID();
           MPI_Pack(&patchid, 1, MPI_INT, buf, sendsize, &position, pg->getComm());
-          MPI_Pack(&m,       1, MPI_INT, buf, sendsize, &position, pg->getComm());
+          MPI_Pack(&matl,    1, MPI_INT, buf, sendsize, &position, pg->getComm());
           
           ScatterRecord* record = pr.first->second;
           int totalParticles = record->send_pset->numParticles();
@@ -554,7 +554,7 @@ Relocate::exchangeParticles(const ProcessorGroup* pg,
           }
           idx++;
         }
-      }
+      } // matl loop
     }  // patch loop
     ASSERT(position <= sendsize);
     ASSERT(sendsize > 0); 
@@ -604,11 +604,11 @@ Relocate::exchangeParticles(const ProcessorGroup* pg,
     int position=0;
     int numrecords;
     
-    MPI_Unpack(buf, size, &position, &numrecords,     1, MPI_INT, pg->getComm());
+    MPI_Unpack(buf, size, &position, &numrecords,    1, MPI_INT, pg->getComm());
     
     for(int i=0;i<numrecords;i++){
       int patchid;
-      MPI_Unpack(buf, size, &position, &patchid,      1, MPI_INT, pg->getComm());
+      MPI_Unpack(buf, size, &position, &patchid,     1, MPI_INT, pg->getComm());
 
       // find the patch from the id
       const Patch* toPatch = grid->getPatchByID(patchid, coarsestLevel->getIndex());;
@@ -616,14 +616,15 @@ Relocate::exchangeParticles(const ProcessorGroup* pg,
       ASSERT(toPatch != 0 && toPatch->getID() == patchid);
       
       int matl;
-      MPI_Unpack(buf, size, &position, &matl,         1, MPI_INT, pg->getComm());
-      ASSERTRANGE(matl, 0, numMatls);
+      MPI_Unpack(buf, size, &position, &matl,        1, MPI_INT, pg->getComm());
+      //This assertion isn't right, commented out.  JG
+      //ASSERTRANGE(matl, 0, numMatls);
       
       int numParticles;
-      MPI_Unpack(buf, size, &position, &numParticles, 1, MPI_INT, pg->getComm());
+      MPI_Unpack(buf, size, &position, &numParticles,1, MPI_INT, pg->getComm());
       
       int datasize;
-      MPI_Unpack(buf, size, &position, &datasize,     1, MPI_INT, pg->getComm());
+      MPI_Unpack(buf, size, &position, &datasize,    1, MPI_INT, pg->getComm());
       
       char* databuf=buf+position;
       ASSERTEQ(lb->getPatchwiseProcessorAssignment(toPatch), me);
@@ -938,7 +939,7 @@ Relocate::relocateParticles(const ProcessorGroup* pg,
         }
         keep_pset->addReference();
         keep_psets(p, m)=keep_pset;
-      }
+      } // matls loop
     }  // patches loop
     
     //__________________________________
@@ -952,8 +953,7 @@ Relocate::relocateParticles(const ProcessorGroup* pg,
     for(int p=0;p<patches->size();p++){
       const Patch* toPatch = patches->get(p);
       const Level* level   = toPatch->getLevel();
-      //cout << "toPatch: " << toPatch->getID() << endl;
-      
+
       // AMR related
       const Level* curLevel = toPatch->getLevel();
       bool hasFiner   = curLevel->hasFinerLevel();
@@ -989,23 +989,21 @@ Relocate::relocateParticles(const ProcessorGroup* pg,
         // on this processor
         for(int i=0;i<(int)neighborPatches.size();i++){
           const Patch* fromPatch=neighborPatches[i];
-          
+
           int fromProc = lb->getPatchwiseProcessorAssignment(fromPatch->getRealPatch());
           ASSERTRANGE(fromProc, 0, pg->size());
           
-          if(fromProc == me){  
+          if(fromProc == me){
             ScatterRecord* record = scatter_records.findRecord(fromPatch, toPatch, matl);
- 
-          
             if(record){
               fromPatches.push_back(fromPatch);
               subsets.push_back(record->send_pset);
             }
-          }
+          } // fromProc==me
         }  // neighbor patches
-        
+
         MPIRecvBuffer* recvs = scatter_records.findRecv(toPatch, matl);
-        
+
         // create a map for the new particles
         map<const VarLabel*, ParticleVariableBase*>* newParticles_map = 0;
         newParticles_map = new_dw->getNewParticleState(matl, toPatch);
@@ -1111,7 +1109,6 @@ Relocate::relocateParticles(const ProcessorGroup* pg,
               piter = newParticles_map->find(reloc_new_labels[m][v]);
               
               if(piter == newParticles_map->end()) {
-                cout << "reloc_new_labels = " << reloc_new_labels[m][v]->getName() << endl;
                 throw InternalError("didnt create new variable of this type", __FILE__, __LINE__);
               }
               
@@ -1161,7 +1158,7 @@ Relocate::relocateParticles(const ProcessorGroup* pg,
   
           // Put the data back in the data warehouse
           new_dw->put(*newpos, reloc_new_posLabel);
-          
+
           delete newpos;
           
           for(int v=0;v<numVars;v++){
@@ -1214,4 +1211,3 @@ Relocate::relocateParticles(const ProcessorGroup* pg,
   }
 
 } // end relocateParticles()
-
