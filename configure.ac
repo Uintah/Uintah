@@ -1765,6 +1765,11 @@ AC_SUBST(CFLAGS)
 ##  --  Enable VisIt -----------------------------
 
 if test "$with_visit"; then
+
+   if !test -x `which cmake`; then
+      AC_MSG_ERROR( VisIt requires CMake. Please make sure 'cmake' is in your path!)
+   fi
+
    if test "$with_visit" == "yes"; then 
       AC_MSG_ERROR( You must provide a DIRECTORY when using --with-visit=DIR. )
    fi
