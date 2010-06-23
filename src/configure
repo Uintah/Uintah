@@ -11527,7 +11527,8 @@ sci_defs_files="$sci_defs_files include/sci_defs/thread_testdefs.h"
 
 if test "$with_visit"; then
 
-   if test ! -x `which cmake > /dev/null 2>&1`; then
+   which cmake > /dev/null 2>&1
+   if test $? != 0; then
       { { echo "$as_me:$LINENO: error: VisIt requires CMake. Please make sure 'cmake' is in your path!" >&5
 echo "$as_me: error: VisIt requires CMake. Please make sure 'cmake' is in your path!" >&2;}
    { (exit 1); exit 1; }; }
