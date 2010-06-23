@@ -49,7 +49,7 @@ ALLTARGETS := $(ALLTARGETS) visit_stuff
 #
 links_to_create := $(addprefix $(OBJTOP_ABS)/$(VISIT_SRCDIR)/, $(notdir $(wildcard $(SRCTOP)/$(VISIT_SRCDIR)/*.? $(SRCTOP)/$(VISIT_SRCDIR)/*.xml)))
 
-visit_stuff : $(links_to_create) ${VISIT_SRCDIR}/Makefile.visit ${VISIT_SRCDIR}/avtudaReaderMTMDFileFormat.C
+visit_stuff : $(links_to_create) ${VISIT_SRCDIR}/avtudaReaderMTMDFileFormat.C ${VISIT_SRCDIR}/Makefile.visit 
 	@cd ${VISIT_SRCDIR}; \
            make -f Makefile.visit 
 
@@ -70,12 +70,12 @@ $(links_to_create) :
 ${VISIT_SRCDIR}/Makefile.visit : lib/libStandAlone_tools_uda2vis.${SO_OR_A_FILE}
 	@echo create visit makefile
 	@cd ${VISIT_SRCDIR}; \
- 	  rm -f Makefile.visit; \
- 	  mv Makefile Makefile.sci; \
- 	  ${VISIT_INSTALL_DIR}/bin/xml2cmake -private -clobber udaReaderMTMD.xml; \
- 	  ${VISIT_INSTALL_DIR}/bin/xml2info -clobber udaReaderMTMD.xml; \
-	  cmake . -DCMAKE_CXX_FLAGS="-I${OBJTOP_ABS} -I${SRCTOP_ABS}"; \
-	  cp Makefile Makefile.visit
+          rm -f Makefile.visit; \
+          mv Makefile Makefile.sci; \
+          ${VISIT_INSTALL_DIR}/bin/xml2cmake -private -clobber udaReaderMTMD.xml; \
+          ${VISIT_INSTALL_DIR}/bin/xml2info -clobber udaReaderMTMD.xml; \
+          cmake . -DCMAKE_CXX_FLAGS="-I${OBJTOP_ABS} -I${SRCTOP_ABS}"; \
+          cp Makefile Makefile.visit;
 
 
 #
