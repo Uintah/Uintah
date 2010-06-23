@@ -11526,6 +11526,13 @@ sci_defs_files="$sci_defs_files include/sci_defs/thread_testdefs.h"
 ##  --  Enable VisIt -----------------------------
 
 if test "$with_visit"; then
+
+   if !test -x `which cmake`; then
+      { { echo "$as_me:$LINENO: error: VisIt requires CMake. Please make sure 'cmake' is in your path!" >&5
+echo "$as_me: error: VisIt requires CMake. Please make sure 'cmake' is in your path!" >&2;}
+   { (exit 1); exit 1; }; }
+   fi
+
    if test "$with_visit" == "yes"; then
       { { echo "$as_me:$LINENO: error: You must provide a DIRECTORY when using --with-visit=DIR. " >&5
 echo "$as_me: error: You must provide a DIRECTORY when using --with-visit=DIR. " >&2;}
