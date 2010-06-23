@@ -11527,6 +11527,9 @@ sci_defs_files="$sci_defs_files include/sci_defs/thread_testdefs.h"
 
 if test "$with_visit"; then
 
+   { echo "$as_me:$LINENO: checking for VisIt" >&5
+echo $ECHO_N "checking for VisIt... $ECHO_C" >&6; }
+
    which cmake > /dev/null 2>&1
    if test $? != 0; then
       { { echo "$as_me:$LINENO: error: VisIt requires CMake. Please make sure 'cmake' is in your path!" >&5
