@@ -1766,6 +1766,8 @@ AC_SUBST(CFLAGS)
 
 if test "$with_visit"; then
 
+   AC_MSG_CHECKING(for VisIt)
+
    which cmake > /dev/null 2>&1
    if test $? != 0; then
       AC_MSG_ERROR( VisIt requires CMake. Please make sure 'cmake' is in your path!)
