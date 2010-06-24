@@ -59,8 +59,6 @@ using namespace SCIRun;
 UCNH::UCNH(ProblemSpecP& ps, MPMFlags* Mflag)
   : ConstitutiveModel(Mflag), ImplicitCM()
 {
-  first = false;
-
   d_useModifiedEOS = false;
   ps->require("bulk_modulus",         d_initialData.Bulk);
   ps->require("shear_modulus",        d_initialData.tauDev);
@@ -107,8 +105,6 @@ UCNH::UCNH(ProblemSpecP& ps, MPMFlags* Mflag)
 UCNH::UCNH(ProblemSpecP& ps, MPMFlags* Mflag, bool plas, bool dam)
 : ConstitutiveModel(Mflag), ImplicitCM()
 {
-  first = false;
-
   d_useModifiedEOS = false;
   ps->require("bulk_modulus",         d_initialData.Bulk);
   ps->require("shear_modulus",        d_initialData.tauDev);
@@ -243,7 +239,7 @@ void UCNH::setErosionAlgorithm()
   d_setStressToZero = false;
   d_allowNoTension  = false;
   d_removeMass      = false;
-  d_allowNoShear   = false;
+  d_allowNoShear    = false;
   if (flag->d_doErosion) {
     if (flag->d_erosionAlgorithm      == "RemoveMass") 
       d_removeMass      = true;
@@ -252,7 +248,7 @@ void UCNH::setErosionAlgorithm()
     else if (flag->d_erosionAlgorithm == "ZeroStress") 
       d_setStressToZero = true;
     else if (flag->d_erosionAlgorithm == "AllowNoShear") 
-      d_allowNoShear   = true;
+      d_allowNoShear    = true;
   }
 }
 
@@ -339,20 +335,18 @@ void UCNH::allocateCMDataAdd(DataWarehouse* new_dw,
   if(flag->d_integrator != MPMFlags::Implicit){
     copyDelToAddSetForConvertExplicit(new_dw, delset, addset, newState);
   } else {  // Implicit
-    ParticleVariable<Matrix3>      deformationGradient,   pstress;
-    constParticleVariable<Matrix3> o_deformationGradient, o_stress;
-    
+    ParticleVariable<Matrix3>     deformationGradient, pstress;
     new_dw->allocateTemporary(deformationGradient,addset);
     new_dw->allocateTemporary(pstress,            addset);
     
-    new_dw->get(o_deformationGradient,lb->pDeformationMeasureLabel_preReloc,
-                delset);
-    new_dw->get(o_stress,lb->pStressLabel_preReloc,                delset);
+    constParticleVariable<Matrix3> o_deformationGradient, o_stress;
+    new_dw->get(o_deformationGradient,lb->pDeformationMeasureLabel_preReloc, delset);
+    new_dw->get(o_stress,             lb->pStressLabel_preReloc,             delset);
     
     ParticleSubset::iterator o,n = addset->begin();
     for (o=delset->begin(); o != delset->end(); o++, n++) {
       deformationGradient[*n] = o_deformationGradient[*o];
-      pstress[*n] = o_stress[*o];
+      pstress[*n]             = o_stress[*o];
     }
     
     (*newState)[lb->pDeformationMeasureLabel]=deformationGradient.clone();
@@ -368,10 +362,9 @@ void UCNH::allocateCMDataAdd(DataWarehouse* new_dw,
   // Plasticity
   if(d_usePlasticity) {
     ParticleVariable<double>      pPlasticStrain;
-    constParticleVariable<double> o_pPlasticStrain;
-    
     new_dw->allocateTemporary(pPlasticStrain,addset);
     
+    constParticleVariable<double> o_pPlasticStrain;
     new_dw->get(o_pPlasticStrain,pPlasticStrain_label_preReloc,delset);
     
     ParticleSubset::iterator o;
@@ -412,12 +405,11 @@ void UCNH::allocateCMDataAdd(DataWarehouse* new_dw,
   // Universal
   ParticleVariable<Matrix3>        bElBar;
   ParticleVariable<Matrix3>        pDeformRate;
-  constParticleVariable<Matrix3>   o_bElBar;
-  constParticleVariable<Matrix3>   o_pDeformRate;
-  
   new_dw->allocateTemporary(pDeformRate, addset);
   new_dw->allocateTemporary(bElBar,      addset);
   
+  constParticleVariable<Matrix3>   o_bElBar;
+  constParticleVariable<Matrix3>   o_pDeformRate;
   new_dw->get(o_bElBar,      bElBarLabel_preReloc,      delset);
   new_dw->get(o_pDeformRate, pDeformRateLabel_preReloc, delset);
   
@@ -445,31 +437,24 @@ void UCNH::allocateCMDataAddRequires(Task* task,
   // Add requires local to this model
   // Plasticity
   if(d_usePlasticity) {
-    task->requires(Task::NewDW, pPlasticStrain_label_preReloc,matlset, 
-                   Ghost::None);
+    task->requires(Task::NewDW, pPlasticStrain_label_preReloc,matlset, Ghost::None);
   }
   
   // Damage
   if(d_useDamage) {  
-    task->requires(Task::NewDW, bBeBarLabel_preReloc,         matlset, 
-                   Ghost::None);
-    task->requires(Task::NewDW, pFailureStrainLabel_preReloc, matlset, 
-                   Ghost::None);
-    task->requires(Task::NewDW, pLocalizedLabel_preReloc,     matlset, 
-                   Ghost::None);
+    task->requires(Task::NewDW, bBeBarLabel_preReloc,         matlset, Ghost::None);
+    task->requires(Task::NewDW, pFailureStrainLabel_preReloc, matlset, Ghost::None);
+    task->requires(Task::NewDW, pLocalizedLabel_preReloc,     matlset, Ghost::None);
   }
   
   // Universal
-  task->requires(Task::NewDW,bElBarLabel_preReloc,            matlset, 
-                 Ghost::None);
+  task->requires(Task::NewDW,bElBarLabel_preReloc,            matlset, Ghost::None);
   if (flag->d_integrator != MPMFlags::Implicit) { // non implicit
     addSharedRForConvertExplicit(task, matlset, patches);
-    task->requires(Task::NewDW, pDeformRateLabel_preReloc,    matlset, 
-                   Ghost::None);
+    task->requires(Task::NewDW, pDeformRateLabel_preReloc,    matlset, Ghost::None);
   } else { // Implicit only stuff
-    task->requires(Task::NewDW,lb->pStressLabel_preReloc, matlset, Ghost::None);
-    task->requires(Task::NewDW,lb->pDeformationMeasureLabel_preReloc,
-                   matlset, Ghost::None);
+    task->requires(Task::NewDW,lb->pStressLabel_preReloc,             matlset, Ghost::None);
+    task->requires(Task::NewDW,lb->pDeformationMeasureLabel_preReloc, matlset, Ghost::None);
   }
 }
 
@@ -663,8 +648,8 @@ void UCNH::addComputesAndRequires(Task* task,
   // Plasticity
   if(d_usePlasticity)
   {
-    task->requires(Task::OldDW, pPlasticStrain_label, matlset, gnone);
-    task->computes(pPlasticStrain_label_preReloc,     matlset);
+    task->requires(Task::OldDW, pPlasticStrain_label,   matlset, gnone);
+    task->computes(pPlasticStrain_label_preReloc,       matlset);
   }
   
   if(d_useDamage)
@@ -681,7 +666,7 @@ void UCNH::addComputesAndRequires(Task* task,
     task->computes(pFailureStrainLabel_preReloc,        matlset);
     task->computes(pLocalizedLabel_preReloc,            matlset);
     
-    task->requires(Task::OldDW, lb->pErosionLabel,     matlset, gnone);
+    task->requires(Task::OldDW, lb->pErosionLabel,      matlset, gnone);
   }
   
   // Universal
@@ -707,14 +692,14 @@ void UCNH::addComputesAndRequires(Task* task,
     if(SchedParent){
       task->requires(Task::ParentOldDW, pPlasticStrain_label, matlset, Ghost::None);
     }else{
-      task->requires(Task::OldDW, pPlasticStrain_label, matlset, Ghost::None);
+      task->requires(Task::OldDW,       pPlasticStrain_label, matlset, Ghost::None);
     }
   }
 
   if(SchedParent){
-    task->requires(Task::ParentOldDW, bElBarLabel, matlset, Ghost::None);
+    task->requires(Task::ParentOldDW,   bElBarLabel,          matlset, Ghost::None);
   }else{
-    task->requires(Task::OldDW, bElBarLabel, matlset, Ghost::None);
+    task->requires(Task::OldDW,         bElBarLabel,          matlset, Ghost::None);
   }
   
   if(d_useDamage){
@@ -1067,7 +1052,7 @@ void UCNH::computeStressTensor(const PatchSubset* patches,
         IntVector cell_index;
         patch->findCell(px[idx],cell_index);
           
-        vol_CC[cell_index]+=pVolume_new[idx];
+        vol_CC[cell_index]  +=pVolume_new[idx];
         vol_0_CC[cell_index]+=pMass[idx]/rho_orig;
       }
         
@@ -1102,10 +1087,10 @@ void UCNH::computeStressTensor(const PatchSubset* patches,
       // 2) Update the deformation gradient tensor to its time n+1 value.
       pDefGradInc = velGrad[idx]*delT + Identity;
       if(d_usePlasticity && !d_useDamage){
-        Matrix3 d = (velGrad[idx]*delT+Identity)*pDefGrad[idx];
+        Matrix3 d   = (velGrad[idx]*delT+Identity)*pDefGrad[idx];
         pDefGradInc = d*pDefGrad[idx].Inverse();
       }
-      Jinc = pDefGradInc.Determinant();
+      Jinc    = pDefGradInc.Determinant();
       defGrad = pDefGradInc*pDefGrad[idx];
 
       
@@ -1118,9 +1103,9 @@ void UCNH::computeStressTensor(const PatchSubset* patches,
       
       // 1) Get the volumetric part of the deformation
       // 2) Compute the deformed volume and new density
-      J = defGrad.Determinant();
-      double rho_cur = rho_orig/J;
-      pVolume_new[idx]=(pMass[idx]/rho_orig)*J;
+      J               = defGrad.Determinant();
+      double rho_cur  = rho_orig/J;
+      pVolume_new[idx]= (pMass[idx]/rho_orig)*J;
       
       // Check 1: Look at Jacobian
       if (!(J > 0.0)) {
@@ -1149,41 +1134,41 @@ void UCNH::computeStressTensor(const PatchSubset* patches,
       // part of the left Cauchy-Green deformation tensor
       bElBarTrial = fBar*bElBar[idx]*fBar.Transpose();
       if(!d_usePlasticity){
-        double cubeRootJ=cbrt(J);
-        double Jtothetwothirds=cubeRootJ*cubeRootJ;
-        bElBarTrial = pDefGrad_new[idx]* pDefGrad_new[idx].Transpose()/Jtothetwothirds;
+        double cubeRootJ       = cbrt(J);
+        double Jtothetwothirds = cubeRootJ*cubeRootJ;
+        bElBarTrial            = pDefGrad_new[idx]* pDefGrad_new[idx].Transpose()
+                                 /Jtothetwothirds;
       }
-      IEl = onethird*bElBarTrial.Trace();
+      IEl   = onethird*bElBarTrial.Trace();
       muBar = IEl*shear;
       
       // tauDevTrial is equal to the shear modulus times dev(bElBar)
       // Compute ||tauDevTrial||
       tauDevTrial = (bElBarTrial - Identity*IEl)*shear;
-      sTnorm = tauDevTrial.Norm();
+      sTnorm      = tauDevTrial.Norm();
       
       // Check for plastic loading
       double alpha;
       if(d_usePlasticity)
       { 
-        alpha = pPlasticStrain[idx];
+        alpha  = pPlasticStrain[idx];
         fTrial = sTnorm - sqtwthds*(K*alpha + flow);
       }
-      if (d_usePlasticity && fTrial > 0.0 ) {
+      if (d_usePlasticity && (fTrial > 0.0) ) {
         // plastic
         // Compute increment of slip in the direction of flow
-        delgamma = (fTrial/(2.0*muBar))/(1.0 + (K/(3.0*muBar)));
-        normal = tauDevTrial/sTnorm;
+        delgamma = (fTrial/(2.0*muBar)) / (1.0 + (K/(3.0*muBar)));
+        normal   = tauDevTrial/sTnorm;
         
         // The actual shear stress
         tauDev = tauDevTrial - normal*2.0*muBar*delgamma;
         
         // Deal with history variables
         pPlasticStrain[idx] = alpha + sqtwthds*delgamma;
-        bElBar_new[idx] = tauDev/shear + Identity*IEl;
+        bElBar_new[idx]     = tauDev/shear + Identity*IEl;
       } else { 
         // The actual shear stress
-        tauDev = tauDevTrial;
-        
+        tauDev          = tauDevTrial; 
         bElBar_new[idx] = bElBarTrial;
       }
       
@@ -1251,16 +1236,15 @@ void UCNH::computeStressTensor(const PatchSubset* patches,
 
 {
   // Constants
-  int dwi = matl->getDWIndex();
+  int dwi         = matl->getDWIndex();
   double onethird = (1.0/3.0);
-  double shear = d_initialData.tauDev;
-  double bulk  = d_initialData.Bulk;
+  double shear    = d_initialData.tauDev;
+  double bulk     = d_initialData.Bulk;
   double rho_orig = matl->getInitialDensity();
   
   Ghost::GhostType gac = Ghost::AroundCells;
   Matrix3 Identity; Identity.Identity();
-  DataWarehouse* parent_old_dw = 
-  new_dw->getOtherDataWarehouse(Task::ParentOldDW);
+  DataWarehouse* parent_old_dw = new_dw->getOtherDataWarehouse(Task::ParentOldDW);
   
   // Particle and grid variables
   constParticleVariable<double>  pVol,pMass,pvolumeold;
@@ -1276,23 +1260,20 @@ void UCNH::computeStressTensor(const PatchSubset* patches,
   double D[6][6];
   double B[6][24];
   double Bnl[3][24];
-  double Kmatrix[24][24];
+  // Unused because not using computeStiffnessMatrix() as in CNHPDamage
+  //     double Kmatrix[24][24];
   int dof[24];
-  double v[576];
+  // Unused because each 8 and 27 option have their owndouble v[576];
   
   for(int pp=0;pp<patches->size();pp++){
     const Patch* patch = patches->get(pp);
     
-    ParticleInterpolator* interpolator = flag->d_interpolator->clone(patch);
-    vector<IntVector> ni(interpolator->size());
-    vector<Vector> d_S(interpolator->size());
-    
     IntVector lowIndex,highIndex;
     if(d_8or27==8){
-      lowIndex = patch->getNodeLowIndex();
+      lowIndex  = patch->getNodeLowIndex();
       highIndex = patch->getNodeHighIndex()+IntVector(1,1,1);
     } else if(d_8or27==27){
-      lowIndex = patch->getExtraNodeLowIndex();
+      lowIndex  = patch->getExtraNodeLowIndex();
       highIndex = patch->getExtraNodeHighIndex()+IntVector(1,1,1);
     }
     
@@ -1329,6 +1310,11 @@ void UCNH::computeStressTensor(const PatchSubset* patches,
       }
     }
     else{
+      ParticleInterpolator* interpolator = flag->d_interpolator->clone(patch);
+      vector<IntVector> ni(interpolator->size());
+      vector<Vector> d_S(interpolator->size());
+
+
       if(flag->d_doGridReset){
         constNCVariable<Vector> dispNew;
         old_dw->get(dispNew,lb->dispNewLabel,dwi,patch, gac, 1);
@@ -1349,7 +1335,8 @@ void UCNH::computeStressTensor(const PatchSubset* patches,
       }
 
     
-      double time = d_sharedState->getElapsedTime();
+      // No "Active Stress" so don't need time
+      //      double time = d_sharedState->getElapsedTime();
       for(iter = pset->begin(); iter != pset->end(); iter++){
         particleIndex idx = *iter;
       
@@ -1368,7 +1355,7 @@ void UCNH::computeStressTensor(const PatchSubset* patches,
 
         // Update the particle volume
         volold = (pMass[idx]/rho_orig);
-        double volnew = volold*J;
+        volnew = volold*J;
         //pVolume_new[idx] = volnew;
       
         // Compute BeBar
@@ -1470,9 +1457,8 @@ void UCNH::computeStressTensor(const PatchSubset* patches,
         }
         pVolume_new[idx] = volnew;
       }
+      delete interpolator;
     } // end rigid
-    
-    delete interpolator;
   }  // end of loop over particles
   
   solver->flushMatrix();
@@ -1584,10 +1570,14 @@ void UCNH::updateFailedParticlesAndModifyStress(const Matrix3& defGrad,
   if (flag->d_doErosion) {
     if (pLocalized || pLocalized_new) {
       if (d_allowNoTension) {
-        if (pressure > 0.0) pStress = zero;
-        else pStress = Identity*pressure;
-      } else if (d_allowNoShear) pStress = Identity*pressure;
-      else if (d_setStressToZero) pStress = zero;
+        if (pressure > 0.0) 
+            pStress = zero;
+          else 
+            pStress = Identity*pressure;
+      } else if (d_allowNoShear) 
+         pStress = Identity*pressure;
+      else if (d_setStressToZero) 
+        pStress = zero;
     }
   }
 }
@@ -1603,12 +1593,12 @@ void UCNH::computeStressTensorImplicit(const PatchSubset* patches,
   Matrix3 Identity; Identity.Identity();
   Ghost::GhostType gac = Ghost::AroundCells;
   
-  double rho_orig = matl->getInitialDensity();
-  double shear = d_initialData.tauDev;
-  double bulk  = d_initialData.Bulk;
+  double rho_orig    = matl->getInitialDensity();
+  double shear       = d_initialData.tauDev;
+  double bulk        = d_initialData.Bulk;
   double flowStress  = d_initialData.FlowStress;
   double hardModulus = d_initialData.K;
-  double se = 0.0;
+  double se          = 0.0;
   
   int dwi = matl->getDWIndex();
   
@@ -1632,12 +1622,7 @@ void UCNH::computeStressTensorImplicit(const PatchSubset* patches,
   
   // Loop thru patches
   for(int pp=0;pp<patches->size();pp++){
-
     const Patch* patch = patches->get(pp);
-    
-    ParticleInterpolator* interpolator = flag->d_interpolator->clone(patch);
-    vector<IntVector> ni(interpolator->size());
-    vector<Vector> d_S(interpolator->size());
     
     // Get particle info
     ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
@@ -1649,13 +1634,13 @@ void UCNH::computeStressTensorImplicit(const PatchSubset* patches,
     
     // Get patch info
     Vector dx = patch->dCell();
-    double oodx[3] = {1./dx.x(), 1./dx.y(), 1./dx.z()};
+    // Unused    double oodx[3] = {1./dx.x(), 1./dx.y(), 1./dx.z()};
     
     // Plastic gets and allocates
     if(d_usePlasticity){
-      old_dw->get(pPlasticStrain,           pPlasticStrain_label,          pset);
+      old_dw->get(pPlasticStrain,           pPlasticStrain_label,       pset);
       new_dw->allocateAndPut(pPlasticStrain_new, 
-                             pPlasticStrain_label_preReloc,          pset);
+                             pPlasticStrain_label_preReloc,             pset);
 
       // Copy failure strains to new dw
       pFailureStrain_new.copyData(pFailureStrain);
@@ -1663,13 +1648,13 @@ void UCNH::computeStressTensorImplicit(const PatchSubset* patches,
     
     // Damage gets and allocates
     if(d_useDamage){
-      old_dw->get(pLocalized,               pLocalizedLabel,              pset);
-      old_dw->get(pFailureStrain,           pFailureStrainLabel,          pset);
+      old_dw->get(pLocalized,               pLocalizedLabel,            pset);
+      old_dw->get(pFailureStrain,           pFailureStrainLabel,        pset);
       
       new_dw->allocateAndPut(pLocalized_new,
-                             pLocalizedLabel_preReloc,              pset);
+                             pLocalizedLabel_preReloc,                  pset);
       new_dw->allocateAndPut(pFailureStrain_new, 
-                             pFailureStrainLabel_preReloc,          pset);
+                             pFailureStrainLabel_preReloc,              pset);
     }
     
     // Universal gets and allocates
@@ -1686,7 +1671,7 @@ void UCNH::computeStressTensorImplicit(const PatchSubset* patches,
     new_dw->allocateAndPut(pVolume_new, 
                            lb->pVolumeDeformedLabel,              pset);
     new_dw->allocateAndPut(pdTdt, 
-                           lb->pdTdtLabel_preReloc,   pset);
+                           lb->pdTdtLabel_preReloc,               pset);
     new_dw->allocateAndPut(pDefGrad_new,
                            lb->pDeformationMeasureLabel_preReloc, pset);
     new_dw->allocateAndPut(pBeBar_new, 
@@ -1698,14 +1683,16 @@ void UCNH::computeStressTensorImplicit(const PatchSubset* patches,
       for(iter = pset->begin(); iter != pset->end(); iter++){
         particleIndex idx = *iter;
         // Assign zero internal heating by default - modify if necessary.
-        pdTdt[idx] = 0.0;
-        pStress_new[idx] = Matrix3(0.0);
+        pdTdt[idx]        = 0.0;
+        pStress_new[idx]  = Matrix3(0.0);
         pDefGrad_new[idx] = Identity;
-        pVolume_new[idx] = pMass[idx]/rho_orig;
+        pVolume_new[idx]  = pMass[idx]/rho_orig;
       }
     } else { /*if(!matl->getIsRigid()) */
       // Compute the displacement gradient and the deformation gradient
       ParticleInterpolator* interpolator = flag->d_interpolator->clone(patch);
+      vector<IntVector> ni(interpolator->size());
+      vector<Vector> d_S(interpolator->size());
       if(flag->d_doGridReset){
         constNCVariable<Vector> dispNew;
         new_dw->get(dispNew,lb->dispNewLabel,dwi,patch, gac, 1);
@@ -1724,15 +1711,16 @@ void UCNH::computeStressTensorImplicit(const PatchSubset* patches,
                                                         dx, pSize,interpolator);
       }
       
-      double time = d_sharedState->getElapsedTime();
+      // Unused because no "active stress carried over from CNHImplicit    
+      //     double time = d_sharedState->getElapsedTime();
     
       for(iter = pset->begin(); iter != pset->end(); iter++){
         particleIndex idx = *iter;
       
         // Assign zero internal heating by default - modify if necessary.
-        pdTdt[idx] = 0.0;
+        pdTdt[idx]  = 0.0;
       
-        defGradInc = dispGrad + Identity;         
+        defGradInc  = dispGrad + Identity;         
         double Jinc = defGradInc.Determinant();
       
         // Update the deformation gradient tensor to its time n+1 value.
@@ -1750,7 +1738,7 @@ void UCNH::computeStressTensorImplicit(const PatchSubset* patches,
         }
       
         // Compute the deformed volume 
-        double rho_cur = rho_orig/J;
+        double rho_cur   = rho_orig/J;
         pVolume_new[idx] = (pMass[idx]/rho_orig)*J;
         if(d_usePlasticity){
           pVolume_new[idx]=pMass[idx]/rho_cur;
@@ -1765,15 +1753,15 @@ void UCNH::computeStressTensorImplicit(const PatchSubset* patches,
           beBarTrial = relDefGradBar*pBeBar[idx]*relDefGradBar.Transpose();
         } else {
           beBarTrial = pDefGrad_new[idx]
-                     * pDefGrad_new[idx].Transpose()
-                     * pow(J,-(2./3.));
+                       * pDefGrad_new[idx].Transpose()
+                       * pow(J,-(2./3.));
         }
-        double IEl = onethird*beBarTrial.Trace();
+        double IEl   = onethird*beBarTrial.Trace();
         double muBar = IEl*shear;
       
         // tauDevTrial is equal to the shear modulus times dev(bElBar)
         // Compute ||tauDevTrial||
-        tauDevTrial = (beBarTrial - Identity*IEl)*shear;
+        tauDevTrial   = (beBarTrial - Identity*IEl)*shear;
         double sTnorm = tauDevTrial.Norm();
       
         // Check for plastic loading
@@ -1786,8 +1774,8 @@ void UCNH::computeStressTensorImplicit(const PatchSubset* patches,
         if (d_usePlasticity && (fTrial > 0.0)) {
           // plastic
           // Compute increment of slip in the direction of flow
-          double delgamma = (fTrial/(2.0*muBar))/
-          (1.0 + (hardModulus/(3.0*muBar)));
+          double delgamma = (fTrial/(2.0*muBar)) /
+                            (1.0 + (hardModulus/(3.0*muBar)));
           normal = tauDevTrial/sTnorm;
         
           // The actual shear stress
@@ -1795,18 +1783,18 @@ void UCNH::computeStressTensorImplicit(const PatchSubset* patches,
         
           // Deal with history variables
           pPlasticStrain_new[idx] = alpha + sqtwthds*delgamma;
-          pBeBar_new[idx] = tauDev/shear + Identity*IEl;
+          pBeBar_new[idx]         = tauDev/shear + Identity*IEl;
         }
         else {
         
           // The actual shear stress
           tauDev = tauDevTrial;
+          pBeBar_new[idx] = beBarTrial;
         
           // elastic
           if(d_usePlasticity){
             pPlasticStrain_new[idx] = alpha;
           }
-          pBeBar_new[idx] = beBarTrial;
         }
       
         // get the hydrostatic part of the stress
@@ -1828,7 +1816,8 @@ void UCNH::computeStressTensorImplicit(const PatchSubset* patches,
         double U = .5*bulk*(.5*(J*J - 1.0) - log(J));
         double W = .5*shear*(pBeBar_new[idx].Trace() - 3.0);
         double e = (U + W)*pVolume_new[idx]/J;
-        se += e;      
+        se += e;     
+        // Don't save strain energy if particle is not localized to point 
         if(d_useDamage && pLocalized_new[idx] != 0){
           se -= e;
         }
@@ -1837,9 +1826,9 @@ void UCNH::computeStressTensorImplicit(const PatchSubset* patches,
           flag->d_reductionVars->strainEnergy) {
         new_dw->put(sum_vartype(se), lb->StrainEnergyLabel);
       }
+      delete interpolator;
     } // End rigid else
-    delete interpolator;
-  }
+  } // End Patch For Loop
 }
 
 /*! Compute tangent stiffness matrix */
@@ -1937,15 +1926,15 @@ void UCNH::BnlTSigBnl(const Matrix3& sig, const double Bnl[3][24],
   double t75, t77, t78, t8, t81, t85, t88, t9, t90;
   double t79, t82, t83, t86, t87, t89;
   
-  t1 = Bnl[0][0]*sig(0,0);
-  t4 = Bnl[0][0]*sig(0,0);
-  t2 = Bnl[0][0]*sig(0,1);
-  t3 = Bnl[0][0]*sig(0,2);
-  t5 = Bnl[1][1]*sig(1,1);
-  t8 = Bnl[1][1]*sig(1,1);
-  t6 = Bnl[1][1]*sig(1,2);
-  t7 = Bnl[1][1]*sig(0,1);
-  t9 = Bnl[2][2]*sig(2,2);
+  t1  = Bnl[0][0]*sig(0,0);
+  t4  = Bnl[0][0]*sig(0,0);
+  t2  = Bnl[0][0]*sig(0,1);
+  t3  = Bnl[0][0]*sig(0,2);
+  t5  = Bnl[1][1]*sig(1,1);
+  t8  = Bnl[1][1]*sig(1,1);
+  t6  = Bnl[1][1]*sig(1,2);
+  t7  = Bnl[1][1]*sig(0,1);
+  t9  = Bnl[2][2]*sig(2,2);
   t12 = Bnl[2][2]*sig(2,2);
   t10 = Bnl[2][2]*sig(0,2);
   t11 = Bnl[2][2]*sig(1,2);
@@ -2025,256 +2014,256 @@ void UCNH::BnlTSigBnl(const Matrix3& sig, const double Bnl[3][24],
   t89 = Bnl[1][22]*sig(1,2);
   t90 = Bnl[2][23]*sig(2,2);
   
-  Kgeo[0][0] = t1*Bnl[0][0];
-  Kgeo[0][1] = t2*Bnl[1][1];
-  Kgeo[0][2] = t3*Bnl[2][2];
-  Kgeo[0][3] = t4*Bnl[0][3];
-  Kgeo[0][4] = t2*Bnl[1][4];
-  Kgeo[0][5] = t3*Bnl[2][5];
-  Kgeo[0][6] = t4*Bnl[0][6];
-  Kgeo[0][7] = t2*Bnl[1][7];
-  Kgeo[0][8] = t3*Bnl[2][8];
-  Kgeo[0][9] = t4*Bnl[0][9];
-  Kgeo[0][10] = t2*Bnl[1][10];
-  Kgeo[0][11] = t3*Bnl[2][11];
-  Kgeo[0][12] = t4*Bnl[0][12];
-  Kgeo[0][13] = t2*Bnl[1][13];
-  Kgeo[0][14] = t3*Bnl[2][14];
-  Kgeo[0][15] = t4*Bnl[0][15];
-  Kgeo[0][16] = t2*Bnl[1][16];
-  Kgeo[0][17] = t3*Bnl[2][17];
-  Kgeo[0][18] = t4*Bnl[0][18];
-  Kgeo[0][19] = t2*Bnl[1][19];
-  Kgeo[0][20] = t3*Bnl[2][20];
-  Kgeo[0][21] = t4*Bnl[0][21];
-  Kgeo[0][22] = t2*Bnl[1][22];
-  Kgeo[0][23] = t3*Bnl[2][23];
-  Kgeo[1][0] = Kgeo[0][1];
-  Kgeo[1][1] = t5*Bnl[1][1];
-  Kgeo[1][2] = t6*Bnl[2][2];
-  Kgeo[1][3] = t7*Bnl[0][3];
-  Kgeo[1][4] = Bnl[1][4]*t8;
-  Kgeo[1][5] = t6*Bnl[2][5];
-  Kgeo[1][6] = t7*Bnl[0][6];
-  Kgeo[1][7] = Bnl[1][7]*t8;
-  Kgeo[1][8] = t6*Bnl[2][8];
-  Kgeo[1][9] = t7*Bnl[0][9];
-  Kgeo[1][10] = Bnl[1][10]*t8;
-  Kgeo[1][11] = t6*Bnl[2][11];
-  Kgeo[1][12] = t7*Bnl[0][12];
-  Kgeo[1][13] = Bnl[1][13]*t8;
-  Kgeo[1][14] = t6*Bnl[2][14];
-  Kgeo[1][15] = t7*Bnl[0][15];
-  Kgeo[1][16] = Bnl[1][16]*t8;
-  Kgeo[1][17] = t6*Bnl[2][17];
-  Kgeo[1][18] = t7*Bnl[0][18];
-  Kgeo[1][19] = Bnl[1][19]*t8;
-  Kgeo[1][20] = t6*Bnl[2][20];
-  Kgeo[1][21] = t7*Bnl[0][21];
-  Kgeo[1][22] = Bnl[1][22]*t8;
-  Kgeo[1][23] = t6*Bnl[2][23];
-  Kgeo[2][0] = Kgeo[0][2];
-  Kgeo[2][1] = Kgeo[1][2];
-  Kgeo[2][2] = t9*Bnl[2][2];
-  Kgeo[2][3] = t10*Bnl[0][3];
-  Kgeo[2][4] = Bnl[1][4]*t11;
-  Kgeo[2][5] = t12*Bnl[2][5];
-  Kgeo[2][6] = t10*Bnl[0][6];
-  Kgeo[2][7] = Bnl[1][7]*t11;
-  Kgeo[2][8] = t12*Bnl[2][8];
-  Kgeo[2][9] = t10*Bnl[0][9];
-  Kgeo[2][10] = Bnl[1][10]*t11;
-  Kgeo[2][11] = t12*Bnl[2][11];
-  Kgeo[2][12] = t10*Bnl[0][12];
-  Kgeo[2][13] = Bnl[1][13]*t11;
-  Kgeo[2][14] = t12*Bnl[2][14];
-  Kgeo[2][15] = t10*Bnl[0][15];
-  Kgeo[2][16] = Bnl[1][16]*t11;
-  Kgeo[2][17] = t12*Bnl[2][17];
-  Kgeo[2][18] = t10*Bnl[0][18];
-  Kgeo[2][19] = t11*Bnl[1][19];
-  Kgeo[2][20] = t12*Bnl[2][20];
-  Kgeo[2][21] = t10*Bnl[0][21];
-  Kgeo[2][22] = t11*Bnl[1][22];
-  Kgeo[2][23] = t12*Bnl[2][23];
-  Kgeo[3][0] = Kgeo[0][3];
-  Kgeo[3][1] = Kgeo[1][3];
-  Kgeo[3][2] = Kgeo[2][3];
-  Kgeo[3][3] = t13*Bnl[0][3];
-  Kgeo[3][4] = t14*Bnl[1][4];
-  Kgeo[3][5] = Bnl[2][5]*t15;
-  Kgeo[3][6] = t16*Bnl[0][6];
-  Kgeo[3][7] = t14*Bnl[1][7];
-  Kgeo[3][8] = Bnl[2][8]*t15;
-  Kgeo[3][9] = t16*Bnl[0][9];
-  Kgeo[3][10] = t14*Bnl[1][10];
-  Kgeo[3][11] = Bnl[2][11]*t15;
-  Kgeo[3][12] = t16*Bnl[0][12];
-  Kgeo[3][13] = t14*Bnl[1][13];
-  Kgeo[3][14] = Bnl[2][14]*t15;
-  Kgeo[3][15] = t16*Bnl[0][15];
-  Kgeo[3][16] = t14*Bnl[1][16];
-  Kgeo[3][17] = Bnl[2][17]*t15;
-  Kgeo[3][18] = t16*Bnl[0][18];
-  Kgeo[3][19] = t14*Bnl[1][19];
-  Kgeo[3][20] = Bnl[2][20]*t15;
-  Kgeo[3][21] = t16*Bnl[0][21];
-  Kgeo[3][22] = t14*Bnl[1][22];
-  Kgeo[3][23] = Bnl[2][23]*t15;
-  Kgeo[4][0] = Kgeo[0][4];
-  Kgeo[4][1] = Kgeo[1][4];
-  Kgeo[4][2] = Kgeo[2][4];
-  Kgeo[4][3] = Kgeo[3][4];
-  Kgeo[4][4] = t17*Bnl[1][4];
-  Kgeo[4][5] = t18*Bnl[2][5];
-  Kgeo[4][6] = t19*Bnl[0][6];
-  Kgeo[4][7] = t20*Bnl[1][7];
-  Kgeo[4][8] = t18*Bnl[2][8];
-  Kgeo[4][9] = t19*Bnl[0][9];
-  Kgeo[4][10] = t20*Bnl[1][10];
-  Kgeo[4][11] = t18*Bnl[2][11];
-  Kgeo[4][12] = t19*Bnl[0][12];
-  Kgeo[4][13] = t20*Bnl[1][13];
-  Kgeo[4][14] = t18*Bnl[2][14];
-  Kgeo[4][15] = t19*Bnl[0][15];
-  Kgeo[4][16] = t20*Bnl[1][16];
-  Kgeo[4][17] = t18*Bnl[2][17];
-  Kgeo[4][18] = t19*Bnl[0][18];
-  Kgeo[4][19] = t20*Bnl[1][19];
-  Kgeo[4][20] = t18*Bnl[2][20];
-  Kgeo[4][21] = t19*Bnl[0][21];
-  Kgeo[4][22] = t20*Bnl[1][22];
-  Kgeo[4][23] = t18*Bnl[2][23];
-  Kgeo[5][0] = Kgeo[0][5];
-  Kgeo[5][1] = Kgeo[1][5];
-  Kgeo[5][2] = Kgeo[2][5];
-  Kgeo[5][3] = Kgeo[3][5];
-  Kgeo[5][4] = Kgeo[4][5];
-  Kgeo[5][5] = t21*Bnl[2][5];
-  Kgeo[5][6] = t22*Bnl[0][6];
-  Kgeo[5][7] = t23*Bnl[1][7];
-  Kgeo[5][8] = t24*Bnl[2][8];
-  Kgeo[5][9] = t22*Bnl[0][9];
-  Kgeo[5][10] = t23*Bnl[1][10];
-  Kgeo[5][11] = t24*Bnl[2][11];
-  Kgeo[5][12] = t22*Bnl[0][12];
-  Kgeo[5][13] = t23*Bnl[1][13];
-  Kgeo[5][14] = t24*Bnl[2][14];
-  Kgeo[5][15] = t22*Bnl[0][15];
-  Kgeo[5][16] = t23*Bnl[1][16];
-  Kgeo[5][17] = t24*Bnl[2][17];
-  Kgeo[5][18] = t22*Bnl[0][18];
-  Kgeo[5][19] = t23*Bnl[1][19];
-  Kgeo[5][20] = t24*Bnl[2][20];
-  Kgeo[5][21] = t22*Bnl[0][21];
-  Kgeo[5][22] = t23*Bnl[1][22];
-  Kgeo[5][23] = t24*Bnl[2][23];
-  Kgeo[6][0] = Kgeo[0][6];
-  Kgeo[6][1] = Kgeo[1][6];
-  Kgeo[6][2] = Kgeo[2][6];
-  Kgeo[6][3] = Kgeo[3][6];
-  Kgeo[6][4] = Kgeo[4][6];
-  Kgeo[6][5] = Kgeo[5][6];
-  Kgeo[6][6] = t25*Bnl[0][6];
-  Kgeo[6][7] = t26*Bnl[1][7];
-  Kgeo[6][8] = t27*Bnl[2][8];
-  Kgeo[6][9] = t28*Bnl[0][9];
-  Kgeo[6][10] = t26*Bnl[1][10];
-  Kgeo[6][11] = t27*Bnl[2][11];
-  Kgeo[6][12] = t28*Bnl[0][12];
-  Kgeo[6][13] = t26*Bnl[1][13];
-  Kgeo[6][14] = t27*Bnl[2][14];
-  Kgeo[6][15] = t28*Bnl[0][15];
-  Kgeo[6][16] = t26*Bnl[1][16];
-  Kgeo[6][17] = t27*Bnl[2][17];
-  Kgeo[6][18] = t28*Bnl[0][18];
-  Kgeo[6][19] = t26*Bnl[1][19];
-  Kgeo[6][20] = t27*Bnl[2][20];
-  Kgeo[6][21] = t28*Bnl[0][21];
-  Kgeo[6][22] = t26*Bnl[1][22];
-  Kgeo[6][23] = t27*Bnl[2][23];
-  Kgeo[7][0] = Kgeo[0][7];
-  Kgeo[7][1] = Kgeo[1][7];
-  Kgeo[7][2] = Kgeo[2][7];
-  Kgeo[7][3] = Kgeo[3][7];
-  Kgeo[7][4] = Kgeo[4][7];
-  Kgeo[7][5] = Kgeo[5][7];
-  Kgeo[7][6] = Kgeo[6][7];
-  Kgeo[7][7] = t29*Bnl[1][7];
-  Kgeo[7][8] = t30*Bnl[2][8];
-  Kgeo[7][9] = t31*Bnl[0][9];
-  Kgeo[7][10] = t32*Bnl[1][10];
-  Kgeo[7][11] = t30*Bnl[2][11];
-  Kgeo[7][12] = t31*Bnl[0][12];
-  Kgeo[7][13] = t32*Bnl[1][13];
-  Kgeo[7][14] = t30*Bnl[2][14];
-  Kgeo[7][15] = t31*Bnl[0][15];
-  Kgeo[7][16] = t32*Bnl[1][16];
-  Kgeo[7][17] = t30*Bnl[2][17];
-  Kgeo[7][18] = t31*Bnl[0][18];
-  Kgeo[7][19] = t32*Bnl[1][19];
-  Kgeo[7][20] = t30*Bnl[2][20];
-  Kgeo[7][21] = t31*Bnl[0][21];
-  Kgeo[7][22] = t32*Bnl[1][22];
-  Kgeo[7][23] = t30*Bnl[2][23];
-  Kgeo[8][0] = Kgeo[0][8];
-  Kgeo[8][1] = Kgeo[1][8];
-  Kgeo[8][2] = Kgeo[2][8];
-  Kgeo[8][3] = Kgeo[3][8];
-  Kgeo[8][4] = Kgeo[4][8];
-  Kgeo[8][5] = Kgeo[5][8];
-  Kgeo[8][6] = Kgeo[6][8];
-  Kgeo[8][7] = Kgeo[7][8];
-  Kgeo[8][8] = t33*Bnl[2][8];
-  Kgeo[8][9] = t34*Bnl[0][9];
-  Kgeo[8][10] = t35*Bnl[1][10];
-  Kgeo[8][11] = t36*Bnl[2][11];
-  Kgeo[8][12] = t34*Bnl[0][12];
-  Kgeo[8][13] = t35*Bnl[1][13];
-  Kgeo[8][14] = t36*Bnl[2][14];
-  Kgeo[8][15] = t34*Bnl[0][15];
-  Kgeo[8][16] = t35*Bnl[1][16];
-  Kgeo[8][17] = t36*Bnl[2][17];
-  Kgeo[8][18] = t34*Bnl[0][18];
-  Kgeo[8][19] = t35*Bnl[1][19];
-  Kgeo[8][20] = t36*Bnl[2][20];
-  Kgeo[8][21] = t34*Bnl[0][21];
-  Kgeo[8][22] = t35*Bnl[1][22];
-  Kgeo[8][23] = t36*Bnl[2][23];
-  Kgeo[9][0] = Kgeo[0][9];
-  Kgeo[9][1] = Kgeo[1][9];
-  Kgeo[9][2] = Kgeo[2][9];
-  Kgeo[9][3] = Kgeo[3][9];
-  Kgeo[9][4] = Kgeo[4][9];
-  Kgeo[9][5] = Kgeo[5][9];
-  Kgeo[9][6] = Kgeo[6][9];
-  Kgeo[9][7] = Kgeo[7][9];
-  Kgeo[9][8] = Kgeo[8][9];
-  Kgeo[9][9] = t37*Bnl[0][9];
-  Kgeo[9][10] = t38*Bnl[1][10];
-  Kgeo[9][11] = t39*Bnl[2][11];
-  Kgeo[9][12] = t40*Bnl[0][12];
-  Kgeo[9][13] = t38*Bnl[1][13];
-  Kgeo[9][14] = t39*Bnl[2][14];
-  Kgeo[9][15] = t40*Bnl[0][15];
-  Kgeo[9][16] = t38*Bnl[1][16];
-  Kgeo[9][17] = t39*Bnl[2][17];
-  Kgeo[9][18] = t40*Bnl[0][18];
-  Kgeo[9][19] = t38*Bnl[1][19];
-  Kgeo[9][20] = t39*Bnl[2][20];
-  Kgeo[9][21] = t40*Bnl[0][21];
-  Kgeo[9][22] = t38*Bnl[1][22];
-  Kgeo[9][23] = t39*Bnl[2][23];
-  Kgeo[10][0] = Kgeo[0][10];
-  Kgeo[10][1] = Kgeo[1][10];
-  Kgeo[10][2] = Kgeo[2][10];
-  Kgeo[10][3] = Kgeo[3][10];
-  Kgeo[10][4] = Kgeo[4][10];
-  Kgeo[10][5] = Kgeo[5][10];
-  Kgeo[10][6] = Kgeo[6][10];
-  Kgeo[10][7] = Kgeo[7][10];
-  Kgeo[10][8] = Kgeo[8][10];
-  Kgeo[10][9] = Kgeo[9][10];
+  Kgeo[0][0]   = t1*Bnl[0][0];
+  Kgeo[0][1]   = t2*Bnl[1][1];
+  Kgeo[0][2]   = t3*Bnl[2][2];
+  Kgeo[0][3]   = t4*Bnl[0][3];
+  Kgeo[0][4]   = t2*Bnl[1][4];
+  Kgeo[0][5]   = t3*Bnl[2][5];
+  Kgeo[0][6]   = t4*Bnl[0][6];
+  Kgeo[0][7]   = t2*Bnl[1][7];
+  Kgeo[0][8]   = t3*Bnl[2][8];
+  Kgeo[0][9]   = t4*Bnl[0][9];
+  Kgeo[0][10]  = t2*Bnl[1][10];
+  Kgeo[0][11]  = t3*Bnl[2][11];
+  Kgeo[0][12]  = t4*Bnl[0][12];
+  Kgeo[0][13]  = t2*Bnl[1][13];
+  Kgeo[0][14]  = t3*Bnl[2][14];
+  Kgeo[0][15]  = t4*Bnl[0][15];
+  Kgeo[0][16]  = t2*Bnl[1][16];
+  Kgeo[0][17]  = t3*Bnl[2][17];
+  Kgeo[0][18]  = t4*Bnl[0][18];
+  Kgeo[0][19]  = t2*Bnl[1][19];
+  Kgeo[0][20]  = t3*Bnl[2][20];
+  Kgeo[0][21]  = t4*Bnl[0][21];
+  Kgeo[0][22]  = t2*Bnl[1][22];
+  Kgeo[0][23]  = t3*Bnl[2][23];
+  Kgeo[1][0]   = Kgeo[0][1];
+  Kgeo[1][1]   = t5*Bnl[1][1];
+  Kgeo[1][2]   = t6*Bnl[2][2];
+  Kgeo[1][3]   = t7*Bnl[0][3];
+  Kgeo[1][4]   = Bnl[1][4]*t8;
+  Kgeo[1][5]   = t6*Bnl[2][5];
+  Kgeo[1][6]   = t7*Bnl[0][6];
+  Kgeo[1][7]   = Bnl[1][7]*t8;
+  Kgeo[1][8]   = t6*Bnl[2][8];
+  Kgeo[1][9]   = t7*Bnl[0][9];
+  Kgeo[1][10]  = Bnl[1][10]*t8;
+  Kgeo[1][11]  = t6*Bnl[2][11];
+  Kgeo[1][12]  = t7*Bnl[0][12];
+  Kgeo[1][13]  = Bnl[1][13]*t8;
+  Kgeo[1][14]  = t6*Bnl[2][14];
+  Kgeo[1][15]  = t7*Bnl[0][15];
+  Kgeo[1][16]  = Bnl[1][16]*t8;
+  Kgeo[1][17]  = t6*Bnl[2][17];
+  Kgeo[1][18]  = t7*Bnl[0][18];
+  Kgeo[1][19]  = Bnl[1][19]*t8;
+  Kgeo[1][20]  = t6*Bnl[2][20];
+  Kgeo[1][21]  = t7*Bnl[0][21];
+  Kgeo[1][22]  = Bnl[1][22]*t8;
+  Kgeo[1][23]  = t6*Bnl[2][23];
+  Kgeo[2][0]   = Kgeo[0][2];
+  Kgeo[2][1]   = Kgeo[1][2];
+  Kgeo[2][2]   = t9*Bnl[2][2];
+  Kgeo[2][3]   = t10*Bnl[0][3];
+  Kgeo[2][4]   = Bnl[1][4]*t11;
+  Kgeo[2][5]   = t12*Bnl[2][5];
+  Kgeo[2][6]   = t10*Bnl[0][6];
+  Kgeo[2][7]   = Bnl[1][7]*t11;
+  Kgeo[2][8]   = t12*Bnl[2][8];
+  Kgeo[2][9]   = t10*Bnl[0][9];
+  Kgeo[2][10]  = Bnl[1][10]*t11;
+  Kgeo[2][11]  = t12*Bnl[2][11];
+  Kgeo[2][12]  = t10*Bnl[0][12];
+  Kgeo[2][13]  = Bnl[1][13]*t11;
+  Kgeo[2][14]  = t12*Bnl[2][14];
+  Kgeo[2][15]  = t10*Bnl[0][15];
+  Kgeo[2][16]  = Bnl[1][16]*t11;
+  Kgeo[2][17]  = t12*Bnl[2][17];
+  Kgeo[2][18]  = t10*Bnl[0][18];
+  Kgeo[2][19]  = t11*Bnl[1][19];
+  Kgeo[2][20]  = t12*Bnl[2][20];
+  Kgeo[2][21]  = t10*Bnl[0][21];
+  Kgeo[2][22]  = t11*Bnl[1][22];
+  Kgeo[2][23]  = t12*Bnl[2][23];
+  Kgeo[3][0]   = Kgeo[0][3];
+  Kgeo[3][1]   = Kgeo[1][3];
+  Kgeo[3][2]   = Kgeo[2][3];
+  Kgeo[3][3]   = t13*Bnl[0][3];
+  Kgeo[3][4]   = t14*Bnl[1][4];
+  Kgeo[3][5]   = Bnl[2][5]*t15;
+  Kgeo[3][6]   = t16*Bnl[0][6];
+  Kgeo[3][7]   = t14*Bnl[1][7];
+  Kgeo[3][8]   = Bnl[2][8]*t15;
+  Kgeo[3][9]   = t16*Bnl[0][9];
+  Kgeo[3][10]  = t14*Bnl[1][10];
+  Kgeo[3][11]  = Bnl[2][11]*t15;
+  Kgeo[3][12]  = t16*Bnl[0][12];
+  Kgeo[3][13]  = t14*Bnl[1][13];
+  Kgeo[3][14]  = Bnl[2][14]*t15;
+  Kgeo[3][15]  = t16*Bnl[0][15];
+  Kgeo[3][16]  = t14*Bnl[1][16];
+  Kgeo[3][17]  = Bnl[2][17]*t15;
+  Kgeo[3][18]  = t16*Bnl[0][18];
+  Kgeo[3][19]  = t14*Bnl[1][19];
+  Kgeo[3][20]  = Bnl[2][20]*t15;
+  Kgeo[3][21]  = t16*Bnl[0][21];
+  Kgeo[3][22]  = t14*Bnl[1][22];
+  Kgeo[3][23]  = Bnl[2][23]*t15;
+  Kgeo[4][0]   = Kgeo[0][4];
+  Kgeo[4][1]   = Kgeo[1][4];
+  Kgeo[4][2]   = Kgeo[2][4];
+  Kgeo[4][3]   = Kgeo[3][4];
+  Kgeo[4][4]   = t17*Bnl[1][4];
+  Kgeo[4][5]   = t18*Bnl[2][5];
+  Kgeo[4][6]   = t19*Bnl[0][6];
+  Kgeo[4][7]   = t20*Bnl[1][7];
+  Kgeo[4][8]   = t18*Bnl[2][8];
+  Kgeo[4][9]   = t19*Bnl[0][9];
+  Kgeo[4][10]  = t20*Bnl[1][10];
+  Kgeo[4][11]  = t18*Bnl[2][11];
+  Kgeo[4][12]  = t19*Bnl[0][12];
+  Kgeo[4][13]  = t20*Bnl[1][13];
+  Kgeo[4][14]  = t18*Bnl[2][14];
+  Kgeo[4][15]  = t19*Bnl[0][15];
+  Kgeo[4][16]  = t20*Bnl[1][16];
+  Kgeo[4][17]  = t18*Bnl[2][17];
+  Kgeo[4][18]  = t19*Bnl[0][18];
+  Kgeo[4][19]  = t20*Bnl[1][19];
+  Kgeo[4][20]  = t18*Bnl[2][20];
+  Kgeo[4][21]  = t19*Bnl[0][21];
+  Kgeo[4][22]  = t20*Bnl[1][22];
+  Kgeo[4][23]  = t18*Bnl[2][23];
+  Kgeo[5][0]   = Kgeo[0][5];
+  Kgeo[5][1]   = Kgeo[1][5];
+  Kgeo[5][2]   = Kgeo[2][5];
+  Kgeo[5][3]   = Kgeo[3][5];
+  Kgeo[5][4]   = Kgeo[4][5];
+  Kgeo[5][5]   = t21*Bnl[2][5];
+  Kgeo[5][6]   = t22*Bnl[0][6];
+  Kgeo[5][7]   = t23*Bnl[1][7];
+  Kgeo[5][8]   = t24*Bnl[2][8];
+  Kgeo[5][9]   = t22*Bnl[0][9];
+  Kgeo[5][10]  = t23*Bnl[1][10];
+  Kgeo[5][11]  = t24*Bnl[2][11];
+  Kgeo[5][12]  = t22*Bnl[0][12];
+  Kgeo[5][13]  = t23*Bnl[1][13];
+  Kgeo[5][14]  = t24*Bnl[2][14];
+  Kgeo[5][15]  = t22*Bnl[0][15];
+  Kgeo[5][16]  = t23*Bnl[1][16];
+  Kgeo[5][17]  = t24*Bnl[2][17];
+  Kgeo[5][18]  = t22*Bnl[0][18];
+  Kgeo[5][19]  = t23*Bnl[1][19];
+  Kgeo[5][20]  = t24*Bnl[2][20];
+  Kgeo[5][21]  = t22*Bnl[0][21];
+  Kgeo[5][22]  = t23*Bnl[1][22];
+  Kgeo[5][23]  = t24*Bnl[2][23];
+  Kgeo[6][0]   = Kgeo[0][6];
+  Kgeo[6][1]   = Kgeo[1][6];
+  Kgeo[6][2]   = Kgeo[2][6];
+  Kgeo[6][3]   = Kgeo[3][6];
+  Kgeo[6][4]   = Kgeo[4][6];
+  Kgeo[6][5]   = Kgeo[5][6];
+  Kgeo[6][6]   = t25*Bnl[0][6];
+  Kgeo[6][7]   = t26*Bnl[1][7];
+  Kgeo[6][8]   = t27*Bnl[2][8];
+  Kgeo[6][9]   = t28*Bnl[0][9];
+  Kgeo[6][10]  = t26*Bnl[1][10];
+  Kgeo[6][11]  = t27*Bnl[2][11];
+  Kgeo[6][12]  = t28*Bnl[0][12];
+  Kgeo[6][13]  = t26*Bnl[1][13];
+  Kgeo[6][14]  = t27*Bnl[2][14];
+  Kgeo[6][15]  = t28*Bnl[0][15];
+  Kgeo[6][16]  = t26*Bnl[1][16];
+  Kgeo[6][17]  = t27*Bnl[2][17];
+  Kgeo[6][18]  = t28*Bnl[0][18];
+  Kgeo[6][19]  = t26*Bnl[1][19];
+  Kgeo[6][20]  = t27*Bnl[2][20];
+  Kgeo[6][21]  = t28*Bnl[0][21];
+  Kgeo[6][22]  = t26*Bnl[1][22];
+  Kgeo[6][23]  = t27*Bnl[2][23];
+  Kgeo[7][0]   = Kgeo[0][7];
+  Kgeo[7][1]   = Kgeo[1][7];
+  Kgeo[7][2]   = Kgeo[2][7];
+  Kgeo[7][3]   = Kgeo[3][7];
+  Kgeo[7][4]   = Kgeo[4][7];
+  Kgeo[7][5]   = Kgeo[5][7];
+  Kgeo[7][6]   = Kgeo[6][7];
+  Kgeo[7][7]   = t29*Bnl[1][7];
+  Kgeo[7][8]   = t30*Bnl[2][8];
+  Kgeo[7][9]   = t31*Bnl[0][9];
+  Kgeo[7][10]  = t32*Bnl[1][10];
+  Kgeo[7][11]  = t30*Bnl[2][11];
+  Kgeo[7][12]  = t31*Bnl[0][12];
+  Kgeo[7][13]  = t32*Bnl[1][13];
+  Kgeo[7][14]  = t30*Bnl[2][14];
+  Kgeo[7][15]  = t31*Bnl[0][15];
+  Kgeo[7][16]  = t32*Bnl[1][16];
+  Kgeo[7][17]  = t30*Bnl[2][17];
+  Kgeo[7][18]  = t31*Bnl[0][18];
+  Kgeo[7][19]  = t32*Bnl[1][19];
+  Kgeo[7][20]  = t30*Bnl[2][20];
+  Kgeo[7][21]  = t31*Bnl[0][21];
+  Kgeo[7][22]  = t32*Bnl[1][22];
+  Kgeo[7][23]  = t30*Bnl[2][23];
+  Kgeo[8][0]   = Kgeo[0][8];
+  Kgeo[8][1]   = Kgeo[1][8];
+  Kgeo[8][2]   = Kgeo[2][8];
+  Kgeo[8][3]   = Kgeo[3][8];
+  Kgeo[8][4]   = Kgeo[4][8];
+  Kgeo[8][5]   = Kgeo[5][8];
+  Kgeo[8][6]   = Kgeo[6][8];
+  Kgeo[8][7]   = Kgeo[7][8];
+  Kgeo[8][8]   = t33*Bnl[2][8];
+  Kgeo[8][9]   = t34*Bnl[0][9];
+  Kgeo[8][10]  = t35*Bnl[1][10];
+  Kgeo[8][11]  = t36*Bnl[2][11];
+  Kgeo[8][12]  = t34*Bnl[0][12];
+  Kgeo[8][13]  = t35*Bnl[1][13];
+  Kgeo[8][14]  = t36*Bnl[2][14];
+  Kgeo[8][15]  = t34*Bnl[0][15];
+  Kgeo[8][16]  = t35*Bnl[1][16];
+  Kgeo[8][17]  = t36*Bnl[2][17];
+  Kgeo[8][18]  = t34*Bnl[0][18];
+  Kgeo[8][19]  = t35*Bnl[1][19];
+  Kgeo[8][20]  = t36*Bnl[2][20];
+  Kgeo[8][21]  = t34*Bnl[0][21];
+  Kgeo[8][22]  = t35*Bnl[1][22];
+  Kgeo[8][23]  = t36*Bnl[2][23];
+  Kgeo[9][0]   = Kgeo[0][9];
+  Kgeo[9][1]   = Kgeo[1][9];
+  Kgeo[9][2]   = Kgeo[2][9];
+  Kgeo[9][3]   = Kgeo[3][9];
+  Kgeo[9][4]   = Kgeo[4][9];
+  Kgeo[9][5]   = Kgeo[5][9];
+  Kgeo[9][6]   = Kgeo[6][9];
+  Kgeo[9][7]   = Kgeo[7][9];
+  Kgeo[9][8]   = Kgeo[8][9];
+  Kgeo[9][9]   = t37*Bnl[0][9];
+  Kgeo[9][10]  = t38*Bnl[1][10];
+  Kgeo[9][11]  = t39*Bnl[2][11];
+  Kgeo[9][12]  = t40*Bnl[0][12];
+  Kgeo[9][13]  = t38*Bnl[1][13];
+  Kgeo[9][14]  = t39*Bnl[2][14];
+  Kgeo[9][15]  = t40*Bnl[0][15];
+  Kgeo[9][16]  = t38*Bnl[1][16];
+  Kgeo[9][17]  = t39*Bnl[2][17];
+  Kgeo[9][18]  = t40*Bnl[0][18];
+  Kgeo[9][19]  = t38*Bnl[1][19];
+  Kgeo[9][20]  = t39*Bnl[2][20];
+  Kgeo[9][21]  = t40*Bnl[0][21];
+  Kgeo[9][22]  = t38*Bnl[1][22];
+  Kgeo[9][23]  = t39*Bnl[2][23];
+  Kgeo[10][0]  = Kgeo[0][10];
+  Kgeo[10][1]  = Kgeo[1][10];
+  Kgeo[10][2]  = Kgeo[2][10];
+  Kgeo[10][3]  = Kgeo[3][10];
+  Kgeo[10][4]  = Kgeo[4][10];
+  Kgeo[10][5]  = Kgeo[5][10];
+  Kgeo[10][6]  = Kgeo[6][10];
+  Kgeo[10][7]  = Kgeo[7][10];
+  Kgeo[10][8]  = Kgeo[8][10];
+  Kgeo[10][9]  = Kgeo[9][10];
   Kgeo[10][10] = t41*Bnl[1][10];
   Kgeo[10][11] = t42*Bnl[2][11];
   Kgeo[10][12] = t43*Bnl[0][12];
@@ -2289,16 +2278,16 @@ void UCNH::BnlTSigBnl(const Matrix3& sig, const double Bnl[3][24],
   Kgeo[10][21] = t43*Bnl[0][21];
   Kgeo[10][22] = t44*Bnl[1][22];
   Kgeo[10][23] = t42*Bnl[2][23];
-  Kgeo[11][0] = Kgeo[0][11];
-  Kgeo[11][1] = Kgeo[1][11];
-  Kgeo[11][2] = Kgeo[2][11];
-  Kgeo[11][3] = Kgeo[3][11];
-  Kgeo[11][4] = Kgeo[4][11];
-  Kgeo[11][5] = Kgeo[5][11];
-  Kgeo[11][6] = Kgeo[6][11];
-  Kgeo[11][7] = Kgeo[7][11];
-  Kgeo[11][8] = Kgeo[8][11];
-  Kgeo[11][9] = Kgeo[9][11];
+  Kgeo[11][0]  = Kgeo[0][11];
+  Kgeo[11][1]  = Kgeo[1][11];
+  Kgeo[11][2]  = Kgeo[2][11];
+  Kgeo[11][3]  = Kgeo[3][11];
+  Kgeo[11][4]  = Kgeo[4][11];
+  Kgeo[11][5]  = Kgeo[5][11];
+  Kgeo[11][6]  = Kgeo[6][11];
+  Kgeo[11][7]  = Kgeo[7][11];
+  Kgeo[11][8]  = Kgeo[8][11];
+  Kgeo[11][9]  = Kgeo[9][11];
   Kgeo[11][10] = Kgeo[10][11];
   Kgeo[11][11] = t45*Bnl[2][11];
   Kgeo[11][12] = t46*Bnl[0][12];
@@ -2313,16 +2302,16 @@ void UCNH::BnlTSigBnl(const Matrix3& sig, const double Bnl[3][24],
   Kgeo[11][21] = t46*Bnl[0][21];
   Kgeo[11][22] = t47*Bnl[1][22];
   Kgeo[11][23] = t48*Bnl[2][23];
-  Kgeo[12][0] = Kgeo[0][12];
-  Kgeo[12][1] = Kgeo[1][12];
-  Kgeo[12][2] = Kgeo[2][12];
-  Kgeo[12][3] = Kgeo[3][12];
-  Kgeo[12][4] = Kgeo[4][12];
-  Kgeo[12][5] = Kgeo[5][12];
-  Kgeo[12][6] = Kgeo[6][12];
-  Kgeo[12][7] = Kgeo[7][12];
-  Kgeo[12][8] = Kgeo[8][12];
-  Kgeo[12][9] = Kgeo[9][12];
+  Kgeo[12][0]  = Kgeo[0][12];
+  Kgeo[12][1]  = Kgeo[1][12];
+  Kgeo[12][2]  = Kgeo[2][12];
+  Kgeo[12][3]  = Kgeo[3][12];
+  Kgeo[12][4]  = Kgeo[4][12];
+  Kgeo[12][5]  = Kgeo[5][12];
+  Kgeo[12][6]  = Kgeo[6][12];
+  Kgeo[12][7]  = Kgeo[7][12];
+  Kgeo[12][8]  = Kgeo[8][12];
+  Kgeo[12][9]  = Kgeo[9][12];
   Kgeo[12][10] = Kgeo[10][12];
   Kgeo[12][11] = Kgeo[11][12];
   Kgeo[12][12] = t49*Bnl[0][12];
@@ -2337,16 +2326,16 @@ void UCNH::BnlTSigBnl(const Matrix3& sig, const double Bnl[3][24],
   Kgeo[12][21] = t52*Bnl[0][21];
   Kgeo[12][22] = t50*Bnl[1][22];
   Kgeo[12][23] = t51*Bnl[2][23];
-  Kgeo[13][0] = Kgeo[0][13];
-  Kgeo[13][1] = Kgeo[1][13];
-  Kgeo[13][2] = Kgeo[2][13];
-  Kgeo[13][3] = Kgeo[3][13];
-  Kgeo[13][4] = Kgeo[4][13];
-  Kgeo[13][5] = Kgeo[5][13];
-  Kgeo[13][6] = Kgeo[6][13];
-  Kgeo[13][7] = Kgeo[7][13];
-  Kgeo[13][8] = Kgeo[8][13];
-  Kgeo[13][9] = Kgeo[9][13];
+  Kgeo[13][0]  = Kgeo[0][13];
+  Kgeo[13][1]  = Kgeo[1][13];
+  Kgeo[13][2]  = Kgeo[2][13];
+  Kgeo[13][3]  = Kgeo[3][13];
+  Kgeo[13][4]  = Kgeo[4][13];
+  Kgeo[13][5]  = Kgeo[5][13];
+  Kgeo[13][6]  = Kgeo[6][13];
+  Kgeo[13][7]  = Kgeo[7][13];
+  Kgeo[13][8]  = Kgeo[8][13];
+  Kgeo[13][9]  = Kgeo[9][13];
   Kgeo[13][10] = Kgeo[10][13];
   Kgeo[13][11] = Kgeo[11][13];
   Kgeo[13][12] = Kgeo[12][13];
@@ -2361,16 +2350,16 @@ void UCNH::BnlTSigBnl(const Matrix3& sig, const double Bnl[3][24],
   Kgeo[13][21] = t55*Bnl[0][21];
   Kgeo[13][22] = t56*Bnl[1][22];
   Kgeo[13][23] = t54*Bnl[2][23];
-  Kgeo[14][0] = Kgeo[0][14];
-  Kgeo[14][1] = Kgeo[1][14];
-  Kgeo[14][2] = Kgeo[2][14];
-  Kgeo[14][3] = Kgeo[3][14];
-  Kgeo[14][4] = Kgeo[4][14];
-  Kgeo[14][5] = Kgeo[5][14];
-  Kgeo[14][6] = Kgeo[6][14];
-  Kgeo[14][7] = Kgeo[7][14];
-  Kgeo[14][8] = Kgeo[8][14];
-  Kgeo[14][9] = Kgeo[9][14];
+  Kgeo[14][0]  = Kgeo[0][14];
+  Kgeo[14][1]  = Kgeo[1][14];
+  Kgeo[14][2]  = Kgeo[2][14];
+  Kgeo[14][3]  = Kgeo[3][14];
+  Kgeo[14][4]  = Kgeo[4][14];
+  Kgeo[14][5]  = Kgeo[5][14];
+  Kgeo[14][6]  = Kgeo[6][14];
+  Kgeo[14][7]  = Kgeo[7][14];
+  Kgeo[14][8]  = Kgeo[8][14];
+  Kgeo[14][9]  = Kgeo[9][14];
   Kgeo[14][10] = Kgeo[10][14];
   Kgeo[14][11] = Kgeo[11][14];
   Kgeo[14][12] = Kgeo[12][14];
@@ -2385,16 +2374,16 @@ void UCNH::BnlTSigBnl(const Matrix3& sig, const double Bnl[3][24],
   Kgeo[14][21] = t58*Bnl[0][21];
   Kgeo[14][22] = t59*Bnl[1][22];
   Kgeo[14][23] = t60*Bnl[2][23];
-  Kgeo[15][0] = Kgeo[0][15];
-  Kgeo[15][1] = Kgeo[1][15];
-  Kgeo[15][2] = Kgeo[2][15];
-  Kgeo[15][3] = Kgeo[3][15];
-  Kgeo[15][4] = Kgeo[4][15];
-  Kgeo[15][5] = Kgeo[5][15];
-  Kgeo[15][6] = Kgeo[6][15];
-  Kgeo[15][7] = Kgeo[7][15];
-  Kgeo[15][8] = Kgeo[8][15];
-  Kgeo[15][9] = Kgeo[9][15];
+  Kgeo[15][0]  = Kgeo[0][15];
+  Kgeo[15][1]  = Kgeo[1][15];
+  Kgeo[15][2]  = Kgeo[2][15];
+  Kgeo[15][3]  = Kgeo[3][15];
+  Kgeo[15][4]  = Kgeo[4][15];
+  Kgeo[15][5]  = Kgeo[5][15];
+  Kgeo[15][6]  = Kgeo[6][15];
+  Kgeo[15][7]  = Kgeo[7][15];
+  Kgeo[15][8]  = Kgeo[8][15];
+  Kgeo[15][9]  = Kgeo[9][15];
   Kgeo[15][10] = Kgeo[10][15];
   Kgeo[15][11] = Kgeo[11][15];
   Kgeo[15][12] = Kgeo[12][15];
@@ -2409,16 +2398,16 @@ void UCNH::BnlTSigBnl(const Matrix3& sig, const double Bnl[3][24],
   Kgeo[15][21] = t64*Bnl[0][21];
   Kgeo[15][22] = t62*Bnl[1][22];
   Kgeo[15][23] = t63*Bnl[2][23];
-  Kgeo[16][0] = Kgeo[0][16];
-  Kgeo[16][1] = Kgeo[1][16];
-  Kgeo[16][2] = Kgeo[2][16];
-  Kgeo[16][3] = Kgeo[3][16];
-  Kgeo[16][4] = Kgeo[4][16];
-  Kgeo[16][5] = Kgeo[5][16];
-  Kgeo[16][6] = Kgeo[6][16];
-  Kgeo[16][7] = Kgeo[7][16];
-  Kgeo[16][8] = Kgeo[8][16];
-  Kgeo[16][9] = Kgeo[9][16];
+  Kgeo[16][0]  = Kgeo[0][16];
+  Kgeo[16][1]  = Kgeo[1][16];
+  Kgeo[16][2]  = Kgeo[2][16];
+  Kgeo[16][3]  = Kgeo[3][16];
+  Kgeo[16][4]  = Kgeo[4][16];
+  Kgeo[16][5]  = Kgeo[5][16];
+  Kgeo[16][6]  = Kgeo[6][16];
+  Kgeo[16][7]  = Kgeo[7][16];
+  Kgeo[16][8]  = Kgeo[8][16];
+  Kgeo[16][9]  = Kgeo[9][16];
   Kgeo[16][10] = Kgeo[10][16];
   Kgeo[16][11] = Kgeo[11][16];
   Kgeo[16][12] = Kgeo[12][16];
@@ -2433,16 +2422,16 @@ void UCNH::BnlTSigBnl(const Matrix3& sig, const double Bnl[3][24],
   Kgeo[16][21] = t67*Bnl[0][21];
   Kgeo[16][22] = t68*Bnl[1][22];
   Kgeo[16][23] = t66*Bnl[2][23];
-  Kgeo[17][0] = Kgeo[0][17];
-  Kgeo[17][1] = Kgeo[1][17];
-  Kgeo[17][2] = Kgeo[2][17];
-  Kgeo[17][3] = Kgeo[3][17];
-  Kgeo[17][4] = Kgeo[4][17];
-  Kgeo[17][5] = Kgeo[5][17];
-  Kgeo[17][6] = Kgeo[6][17];
-  Kgeo[17][7] = Kgeo[7][17];
-  Kgeo[17][8] = Kgeo[8][17];
-  Kgeo[17][9] = Kgeo[9][17];
+  Kgeo[17][0]  = Kgeo[0][17];
+  Kgeo[17][1]  = Kgeo[1][17];
+  Kgeo[17][2]  = Kgeo[2][17];
+  Kgeo[17][3]  = Kgeo[3][17];
+  Kgeo[17][4]  = Kgeo[4][17];
+  Kgeo[17][5]  = Kgeo[5][17];
+  Kgeo[17][6]  = Kgeo[6][17];
+  Kgeo[17][7]  = Kgeo[7][17];
+  Kgeo[17][8]  = Kgeo[8][17];
+  Kgeo[17][9]  = Kgeo[9][17];
   Kgeo[17][10] = Kgeo[10][17];
   Kgeo[17][11] = Kgeo[11][17];
   Kgeo[17][12] = Kgeo[12][17];
@@ -2457,16 +2446,16 @@ void UCNH::BnlTSigBnl(const Matrix3& sig, const double Bnl[3][24],
   Kgeo[17][21] = t70*Bnl[0][21];
   Kgeo[17][22] = t71*Bnl[1][22];
   Kgeo[17][23] = t72*Bnl[2][23];
-  Kgeo[18][0] = Kgeo[0][18];
-  Kgeo[18][1] = Kgeo[1][18];
-  Kgeo[18][2] = Kgeo[2][18];
-  Kgeo[18][3] = Kgeo[3][18];
-  Kgeo[18][4] = Kgeo[4][18];
-  Kgeo[18][5] = Kgeo[5][18];
-  Kgeo[18][6] = Kgeo[6][18];
-  Kgeo[18][7] = Kgeo[7][18];
-  Kgeo[18][8] = Kgeo[8][18];
-  Kgeo[18][9] = Kgeo[9][18];
+  Kgeo[18][0]  = Kgeo[0][18];
+  Kgeo[18][1]  = Kgeo[1][18];
+  Kgeo[18][2]  = Kgeo[2][18];
+  Kgeo[18][3]  = Kgeo[3][18];
+  Kgeo[18][4]  = Kgeo[4][18];
+  Kgeo[18][5]  = Kgeo[5][18];
+  Kgeo[18][6]  = Kgeo[6][18];
+  Kgeo[18][7]  = Kgeo[7][18];
+  Kgeo[18][8]  = Kgeo[8][18];
+  Kgeo[18][9]  = Kgeo[9][18];
   Kgeo[18][10] = Kgeo[10][18];
   Kgeo[18][11] = Kgeo[11][18];
   Kgeo[18][12] = Kgeo[12][18];
@@ -2481,16 +2470,16 @@ void UCNH::BnlTSigBnl(const Matrix3& sig, const double Bnl[3][24],
   Kgeo[18][21] = t73*Bnl[0][21];
   Kgeo[18][22] = t74*Bnl[1][22];
   Kgeo[18][23] = t75*Bnl[2][23];
-  Kgeo[19][0] = Kgeo[0][19];
-  Kgeo[19][1] = Kgeo[1][19];
-  Kgeo[19][2] = Kgeo[2][19];
-  Kgeo[19][3] = Kgeo[3][19];
-  Kgeo[19][4] = Kgeo[4][19];
-  Kgeo[19][5] = Kgeo[5][19];
-  Kgeo[19][6] = Kgeo[6][19];
-  Kgeo[19][7] = Kgeo[7][19];
-  Kgeo[19][8] = Kgeo[8][19];
-  Kgeo[19][9] = Kgeo[9][19];
+  Kgeo[19][0]  = Kgeo[0][19];
+  Kgeo[19][1]  = Kgeo[1][19];
+  Kgeo[19][2]  = Kgeo[2][19];
+  Kgeo[19][3]  = Kgeo[3][19];
+  Kgeo[19][4]  = Kgeo[4][19];
+  Kgeo[19][5]  = Kgeo[5][19];
+  Kgeo[19][6]  = Kgeo[6][19];
+  Kgeo[19][7]  = Kgeo[7][19];
+  Kgeo[19][8]  = Kgeo[8][19];
+  Kgeo[19][9]  = Kgeo[9][19];
   Kgeo[19][10] = Kgeo[10][19];
   Kgeo[19][11] = Kgeo[11][19];
   Kgeo[19][12] = Kgeo[12][19];
@@ -2505,16 +2494,16 @@ void UCNH::BnlTSigBnl(const Matrix3& sig, const double Bnl[3][24],
   Kgeo[19][21] = t79*Bnl[0][21];
   Kgeo[19][22] = t77*Bnl[1][22];
   Kgeo[19][23] = t78*Bnl[2][23];
-  Kgeo[20][0] = Kgeo[0][20];
-  Kgeo[20][1] = Kgeo[1][20];
-  Kgeo[20][2] = Kgeo[2][20];
-  Kgeo[20][3] = Kgeo[3][20];
-  Kgeo[20][4] = Kgeo[4][20];
-  Kgeo[20][5] = Kgeo[5][20];
-  Kgeo[20][6] = Kgeo[6][20];
-  Kgeo[20][7] = Kgeo[7][20];
-  Kgeo[20][8] = Kgeo[8][20];
-  Kgeo[20][9] = Kgeo[9][20];
+  Kgeo[20][0]  = Kgeo[0][20];
+  Kgeo[20][1]  = Kgeo[1][20];
+  Kgeo[20][2]  = Kgeo[2][20];
+  Kgeo[20][3]  = Kgeo[3][20];
+  Kgeo[20][4]  = Kgeo[4][20];
+  Kgeo[20][5]  = Kgeo[5][20];
+  Kgeo[20][6]  = Kgeo[6][20];
+  Kgeo[20][7]  = Kgeo[7][20];
+  Kgeo[20][8]  = Kgeo[8][20];
+  Kgeo[20][9]  = Kgeo[9][20];
   Kgeo[20][10] = Kgeo[10][20];
   Kgeo[20][11] = Kgeo[11][20];
   Kgeo[20][12] = Kgeo[12][20];
@@ -2529,16 +2518,16 @@ void UCNH::BnlTSigBnl(const Matrix3& sig, const double Bnl[3][24],
   Kgeo[20][21] = t82*Bnl[0][21];
   Kgeo[20][22] = t83*Bnl[1][22];
   Kgeo[20][23] = t81*Bnl[2][23];
-  Kgeo[21][0] = Kgeo[0][21];
-  Kgeo[21][1] = Kgeo[1][21];
-  Kgeo[21][2] = Kgeo[2][21];
-  Kgeo[21][3] = Kgeo[3][21];
-  Kgeo[21][4] = Kgeo[4][21];
-  Kgeo[21][5] = Kgeo[5][21];
-  Kgeo[21][6] = Kgeo[6][21];
-  Kgeo[21][7] = Kgeo[7][21];
-  Kgeo[21][8] = Kgeo[8][21];
-  Kgeo[21][9] = Kgeo[9][21];
+  Kgeo[21][0]  = Kgeo[0][21];
+  Kgeo[21][1]  = Kgeo[1][21];
+  Kgeo[21][2]  = Kgeo[2][21];
+  Kgeo[21][3]  = Kgeo[3][21];
+  Kgeo[21][4]  = Kgeo[4][21];
+  Kgeo[21][5]  = Kgeo[5][21];
+  Kgeo[21][6]  = Kgeo[6][21];
+  Kgeo[21][7]  = Kgeo[7][21];
+  Kgeo[21][8]  = Kgeo[8][21];
+  Kgeo[21][9]  = Kgeo[9][21];
   Kgeo[21][10] = Kgeo[10][21];
   Kgeo[21][11] = Kgeo[11][21];
   Kgeo[21][12] = Kgeo[12][21];
@@ -2553,16 +2542,16 @@ void UCNH::BnlTSigBnl(const Matrix3& sig, const double Bnl[3][24],
   Kgeo[21][21] = t85*Bnl[0][21];
   Kgeo[21][22] = t86*Bnl[1][22];
   Kgeo[21][23] = t87*Bnl[2][23];
-  Kgeo[22][0] = Kgeo[0][22];
-  Kgeo[22][1] = Kgeo[1][22];
-  Kgeo[22][2] = Kgeo[2][22];
-  Kgeo[22][3] = Kgeo[3][22];
-  Kgeo[22][4] = Kgeo[4][22];
-  Kgeo[22][5] = Kgeo[5][22];
-  Kgeo[22][6] = Kgeo[6][22];
-  Kgeo[22][7] = Kgeo[7][22];
-  Kgeo[22][8] = Kgeo[8][22];
-  Kgeo[22][9] = Kgeo[9][22];
+  Kgeo[22][0]  = Kgeo[0][22];
+  Kgeo[22][1]  = Kgeo[1][22];
+  Kgeo[22][2]  = Kgeo[2][22];
+  Kgeo[22][3]  = Kgeo[3][22];
+  Kgeo[22][4]  = Kgeo[4][22];
+  Kgeo[22][5]  = Kgeo[5][22];
+  Kgeo[22][6]  = Kgeo[6][22];
+  Kgeo[22][7]  = Kgeo[7][22];
+  Kgeo[22][8]  = Kgeo[8][22];
+  Kgeo[22][9]  = Kgeo[9][22];
   Kgeo[22][10] = Kgeo[10][22];
   Kgeo[22][11] = Kgeo[11][22];
   Kgeo[22][12] = Kgeo[12][22];
@@ -2577,16 +2566,16 @@ void UCNH::BnlTSigBnl(const Matrix3& sig, const double Bnl[3][24],
   Kgeo[22][21] = Kgeo[21][22];
   Kgeo[22][22] = t88*Bnl[1][22];
   Kgeo[22][23] = t89*Bnl[2][23];
-  Kgeo[23][0] = Kgeo[0][23];
-  Kgeo[23][1] = Kgeo[1][23];
-  Kgeo[23][2] = Kgeo[2][23];
-  Kgeo[23][3] = Kgeo[3][23];
-  Kgeo[23][4] = Kgeo[4][23];
-  Kgeo[23][5] = Kgeo[5][23];
-  Kgeo[23][6] = Kgeo[6][23];
-  Kgeo[23][7] = Kgeo[7][23];
-  Kgeo[23][8] = Kgeo[8][23];
-  Kgeo[23][9] = Kgeo[9][23];
+  Kgeo[23][0]  = Kgeo[0][23];
+  Kgeo[23][1]  = Kgeo[1][23];
+  Kgeo[23][2]  = Kgeo[2][23];
+  Kgeo[23][3]  = Kgeo[3][23];
+  Kgeo[23][4]  = Kgeo[4][23];
+  Kgeo[23][5]  = Kgeo[5][23];
+  Kgeo[23][6]  = Kgeo[6][23];
+  Kgeo[23][7]  = Kgeo[7][23];
+  Kgeo[23][8]  = Kgeo[8][23];
+  Kgeo[23][9]  = Kgeo[9][23];
   Kgeo[23][10] = Kgeo[10][23];
   Kgeo[23][11] = Kgeo[11][23];
   Kgeo[23][12] = Kgeo[12][23];
