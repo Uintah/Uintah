@@ -108,7 +108,6 @@ namespace Uintah {
   class TimeIntegratorLabel;
   class ExtraScalarSolver;
   class ExplicitTimeInt; 
-  //class PartVel;  //cmr
   class DQMOM; 
 #ifdef PetscFilter
   class Filter;
@@ -199,6 +198,7 @@ public:
     d_MAlab = MAlb;
   }
 
+  // What is the point of putting "get" methods in the Arches class?  No lower-level classes can use these methods
   const ArchesLabel* getArchesLabel(){
     return d_lab;
   }
@@ -347,10 +347,10 @@ private:
 
     // Variables----
     vector<string> d_scalarEqnNames; 
-    bool d_doDQMOM; // do we need this as a private member?
+    bool d_doDQMOM;  // why make it public?  nothing lower-level than arches can access it
     int d_tOrder; 
     ExplicitTimeInt* d_timeIntegrator;
-    DQMOM* d_dqmomSolver;  //cmr
+    DQMOM* d_dqmomSolver; 
     //vector<DQMOM*> d_dqmomSolvers; //cmr
 
     bool d_doingRestart; 

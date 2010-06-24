@@ -502,25 +502,26 @@ namespace Uintah {
       const VarLabel* d_umomBoundarySrcLabel;
       const VarLabel* d_vmomBoundarySrcLabel;
       const VarLabel* d_wmomBoundarySrcLabel;
+      
+      // area fraction
+      const VarLabel* d_areaFractionLabel; 
 
 
       // DQMOM Variables:
 
-      // Particle velocity map ( populated in Arches.cc::registerDQMOMEqns() )
-      typedef std::map<int, const VarLabel* > PartVelMap;
-      PartVelMap partVel;
+      //// Particle velocity map ( populated in Arches.cc::registerDQMOMEqns() )
+      //typedef std::map<int, const VarLabel* > PartVelMap;
+      //PartVelMap partVel;
 
-      // Particle masses ( populated in Arches.cc::registerDQMOMEqns() )
-      typedef std::map<int, const VarLabel* > ParticleMassMap;
-      ParticleMassMap particleMasses;
+      //// Particle masses ( populated in Arches.cc::registerDQMOMEqns() )
+      //typedef std::map<int, const VarLabel* > ParticleMassMap;
+      //ParticleMassMap particleMasses;
 
-      // DQMOM moments ( populated in Arches.cc::registerDQMOMEqns() )
-      typedef std::vector<int> MomentVector;
-      typedef std::map<const MomentVector, const VarLabel* > MomentMap;
-      MomentMap DQMOMMoments; // DQMOM moment valuess
-      MomentMap DQMOMMomentsMean; // DQMOM moment values, about the mean
-
-      const VarLabel* d_areaFractionLabel; 
+      //// DQMOM moments ( populated in Arches.cc::registerDQMOMEqns() )
+      //typedef std::vector<int> MomentVector;
+      //typedef std::map<const MomentVector, const VarLabel* > MomentMap;
+      //MomentMap DQMOMMoments; // DQMOM moment valuess
+      //MomentMap DQMOMMomentsMean; // DQMOM moment values, about the mean
 
     }; // End class ArchesLabel
 } // End namespace Uintah

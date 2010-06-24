@@ -1,15 +1,14 @@
-#include <Core/ProblemSpec/ProblemSpec.h>
-#include <CCA/Ports/Scheduler.h>
-#include <Core/Grid/SimulationState.h>
-#include <Core/Grid/Variables/VarTypes.h>
-#include <Core/Grid/Variables/CCVariable.h>
 #include <CCA/Components/Arches/SourceTerms/CoalGasDevol.h>
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqnFactory.h>
 #include <CCA/Components/Arches/CoalModels/CoalModelFactory.h>
 #include <CCA/Components/Arches/TransportEqns/EqnBase.h>
 #include <CCA/Components/Arches/CoalModels/ModelBase.h>
 #include <CCA/Components/Arches/CoalModels/KobayashiSarofimDevol.h>
-#include <CCA/Components/Arches/TransportEqns/DQMOMEqn.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
+#include <CCA/Ports/Scheduler.h>
+#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/Variables/VarTypes.h>
+#include <Core/Grid/Variables/CCVariable.h>
 
 //===========================================================================
 
@@ -90,15 +89,15 @@ CoalGasDevol::sched_computeSource( const LevelP& level, SchedulerP& sched, int t
     EqnBase& eqn = dqmomFactory.retrieve_scalar_eqn( weight_name );
 
     const VarLabel* tempLabel_w = eqn.getTransportEqnLabel();
-    tsk->requires( Task::OldDW, tempLabel_w, Ghost::None, 0 ); 
+    tsk->requires( Task::NewDW, tempLabel_w, Ghost::None, 0 ); 
 
     ModelBase& model = modelFactory.retrieve_model( model_name ); 
     
     const VarLabel* tempLabel_m = model.getModelLabel(); 
-    tsk->requires( Task::OldDW, tempLabel_m, Ghost::None, 0 );
+    tsk->requires( Task::NewDW, tempLabel_m, Ghost::None, 0 );
 
     const VarLabel* tempgasLabel_m = model.getGasSourceLabel();
-    tsk->requires( Task::OldDW, tempgasLabel_m, Ghost::None, 0 );
+    tsk->requires( Task::NewDW, tempgasLabel_m, Ghost::None, 0 );
 
   }
 
@@ -110,11 +109,11 @@ CoalGasDevol::sched_computeSource( const LevelP& level, SchedulerP& sched, int t
 //---------------------------------------------------------------------------
 void
 CoalGasDevol::computeSource( const ProcessorGroup* pc, 
-                   const PatchSubset* patches, 
-                   const MaterialSubset* matls, 
-                   DataWarehouse* old_dw, 
-                   DataWarehouse* new_dw, 
-                   int timeSubStep )
+                             const PatchSubset* patches, 
+                             const MaterialSubset* matls, 
+                             DataWarehouse* old_dw, 
+                             DataWarehouse* new_dw, 
+                             int timeSubStep )
 {
   //patch loop
   for (int p=0; p < patches->size(); p++){
@@ -127,9 +126,6 @@ CoalGasDevol::computeSource( const ProcessorGroup* pc,
     int archIndex = 0;
     int matlIndex = d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
 
-    DQMOMEqnFactory& dqmomFactory  = DQMOMEqnFactory::self(); 
-    CoalModelFactory& modelFactory = CoalModelFactory::self(); 
-
     CCVariable<double> devolSrc; 
     if ( new_dw->exists(d_srcLabel, matlIndex, patch ) ){
       new_dw->getModifiable( devolSrc, d_srcLabel, matlIndex, patch ); 
@@ -138,30 +134,46 @@ CoalGasDevol::computeSource( const ProcessorGroup* pc,
       new_dw->allocateAndPut( devolSrc, d_srcLabel, matlIndex, patch );
       devolSrc.initialize(0.0);
     } 
+    
+    CoalModelFactory& modelFactory = CoalModelFactory::self(); 
+    DQMOMEqnFactory& dqmomFactory  = DQMOMEqnFactory::self(); 
+    int numEnvironments = dqmomFactory.get_quad_nodes();
 
+    // vector holding model constCCvariables 
+    vector< constCCVariable<double>* > modelCCVars(numEnvironments);
+    
+    // populate vector holding model constCCVariables
+    for (int iqn = 0; iqn < dqmomFactory.get_quad_nodes(); iqn++) {
+      modelCCVars[iqn] = scinew constCCVariable<double>;
 
+      std::string model_name = d_devolModelName; 
+      std::string node;  
+      std::stringstream out; 
+      out << iqn; 
+      node = out.str(); 
+      model_name += "_qn";
+      model_name += node;
+
+      ModelBase& model = modelFactory.retrieve_model( model_name ); 
+
+      new_dw->get( *(modelCCVars[iqn]), model.getGasSourceLabel(), matlIndex, patch, gn, 0 );
+    }
+        
     for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
       IntVector c = *iter;
 
-
-      for (int iqn = 0; iqn < dqmomFactory.get_quad_nodes(); iqn++){
-        std::string model_name = d_devolModelName; 
-        std::string node;  
-        std::stringstream out; 
-        out << iqn; 
-        node = out.str(); 
-        model_name += "_qn";
-        model_name += node;
-
-        ModelBase& model = modelFactory.retrieve_model( model_name ); 
-
-        constCCVariable<double> qn_gas_devol;
-        const VarLabel* gasModelLabel = model.getGasSourceLabel(); 
- 
-        old_dw->get( qn_gas_devol, gasModelLabel, matlIndex, patch, gn, 0 );
-
-        devolSrc[c] += qn_gas_devol[c]; // All the work is performed in Devol model
+      double running_sum = 0.0;
+      for( vector< constCCVariable<double>* >::iterator iModel = modelCCVars.begin(); 
+           iModel != modelCCVars.end(); ++iModel ) {
+        running_sum += (**iModel)[c];
       }
+      
+      devolSrc[c] = running_sum;
+    }
+
+    for( vector< constCCVariable<double>* >::iterator i = modelCCVars.begin();
+         i != modelCCVars.end(); ++i ) {
+      delete *i;
     }
   }
 }

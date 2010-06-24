@@ -63,24 +63,6 @@ public:
   /** @brief Interface for the inputfile and set constants */ 
   void problemSetup(const ProblemSpecP& db);
 
-  /** @brief Schedule the initialization of special/local variables unique to model */
-  void sched_initVars( const LevelP& level, SchedulerP& sched );
-
-  /** @brief  Actually initialize special/local variables */
-  void initVars( const ProcessorGroup * pc, 
-                 const PatchSubset    * patches, 
-                 const MaterialSubset * matls, 
-                 DataWarehouse        * old_dw, 
-                 DataWarehouse        * new_dw );
-
-
-  /** @brief  Actually do dummy solve */
-  void dummyInit( const ProcessorGroup* pc, 
-                  const PatchSubset* patches, 
-                  const MaterialSubset* matls, 
-                  DataWarehouse* old_dw, 
-                  DataWarehouse* new_dw );
-
   ////////////////////////////////////////////////
   // Model computation 
 
@@ -89,15 +71,14 @@ public:
                            SchedulerP& sched, 
                            int timeSubStep );
   
-  /** @brief Compute the source term (this method is empty but MUST be defined
-             because it's a virtual function. */ 
+  /** @brief Compute the source term (EMPTY! This method is empty but MUST be defined because it's a virtual function in the parent class.) */ 
   void computeModel( const ProcessorGroup* pc, 
                      const PatchSubset* patches, 
                      const MaterialSubset* matls, 
                      DataWarehouse* old_dw, 
                      DataWarehouse* new_dw );
 
-  /** @brief Actually compute the source term */ 
+  /** @brief Actually compute the source term (the time sub-step is required for this method) */ 
   void computeModel( const ProcessorGroup* pc, 
                      const PatchSubset* patches, 
                      const MaterialSubset* matls, 

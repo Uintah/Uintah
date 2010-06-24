@@ -63,26 +63,6 @@ public:
   /** @brief Interface for the inputfile and set constants */ 
   void problemSetup(const ProblemSpecP& db);
 
-  /** @brief  Schedule the initialization of some special/local vars */ 
-  void sched_initVars( const LevelP& level, SchedulerP& sched );
-
-  /** @brief  Actually initialize some special/local vars */
-  void initVars( const ProcessorGroup * pc, 
-                 const PatchSubset    * patches, 
-                 const MaterialSubset * matls, 
-                 DataWarehouse        * old_dw, 
-                 DataWarehouse        * new_dw );
-
-  /** @brief  Schedule the dummy solve for MPMArches - see ExplicitSolver::noSolve */
-  void sched_dummyInit( const LevelP& level, SchedulerP& sched );
-
-  /** @brief  Actually do dummy solve */
-  void dummyInit( const ProcessorGroup* pc, 
-                  const PatchSubset* patches, 
-                  const MaterialSubset* matls, 
-                  DataWarehouse* old_dw, 
-                  DataWarehouse* new_dw );
-
   ////////////////////////////////////////////////
   // Model computation methods
 

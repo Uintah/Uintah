@@ -15,6 +15,7 @@
   * @brief    
   * This is a source term (for a coal gas mixture fraction)
   * coming from devolatilization.
+  *
   * This should probably be renamed to
   * "DevolMixtureFraction" or something a little more
   * descriptive, since there will be a matching mass source

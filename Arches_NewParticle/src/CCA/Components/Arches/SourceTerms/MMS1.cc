@@ -86,6 +86,7 @@ MMS1::computeSource( const ProcessorGroup* pc,
                    DataWarehouse* new_dw, 
                    int timeSubStep )
 {
+  double pi = acos(-1.0); 
   //patch loop
   for (int p=0; p < patches->size(); p++){
 
@@ -108,11 +109,7 @@ MMS1::computeSource( const ProcessorGroup* pc,
       //old_dw->get( *iter.... ); 
     }
 
-
-    double pi = acos(-1.0); 
-
     for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
-      
       IntVector c = *iter; 
       double x = c[0]*Dx.x() + Dx.x()/2.; 
       double y = c[1]*Dx.y() + Dx.y()/2.;

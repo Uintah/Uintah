@@ -104,6 +104,10 @@ public:
   inline const VarLabel* getGasSourceLabel() {
     return d_gasLabel; }; 
 
+  /** @brief  Return the model name */
+  inline const string getModelName() {
+    return d_modelName; };
+
 
 protected:
 

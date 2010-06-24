@@ -233,51 +233,6 @@ DragModel::problemSetup(const ProblemSpecP& params)
 }
 
 
-//-------------------------------------------------------------------------
-// Method: Actually do the dummy initialization
-//-------------------------------------------------------------------------
-/** @details
-This method intentionally left blank. 
-@seealso ParticleVelocity::dummyInit
-*/
-void
-DragModel::dummyInit( const ProcessorGroup* pc,
-                      const PatchSubset* patches, 
-                      const MaterialSubset* matls, 
-                      DataWarehouse* old_dw, 
-                      DataWarehouse* new_dw )
-{
-}
-
-//---------------------------------------------------------------------------
-// Method: Schedule the initialization of some variables 
-//---------------------------------------------------------------------------
-/** @details
-This method intentionally left blank. 
-@seealso ParticleVelocity::sched_initVars
-*/
-void 
-DragModel::sched_initVars( const LevelP& level, SchedulerP& sched )
-{
-}
-
-//-------------------------------------------------------------------------
-// Method: Initialize variables
-//-------------------------------------------------------------------------
-/** @details
-This method intentionally left blank. 
-@seealso ParticleVelocity::initVars
-*/
-void
-DragModel::initVars( const ProcessorGroup * pc, 
-                     const PatchSubset    * patches, 
-                     const MaterialSubset * matls, 
-                     DataWarehouse        * old_dw, 
-                     DataWarehouse        * new_dw )
-{
-}
-
-
 //---------------------------------------------------------------------------
 // Method: Schedule the calculation of the Model 
 //---------------------------------------------------------------------------
@@ -310,26 +265,27 @@ DragModel::sched_computeModel( const LevelP& level,
   
   // require gas density
   if ( timeSubStep == 0 ) {
-    tsk->requires(Task::OldDW, d_fieldLabels->d_densityCPLabel,   Ghost::None, 0);
+    tsk->requires(Task::OldDW, d_fieldLabels->d_densityCPLabel,   gn, 0);
   } else {
-    tsk->requires(Task::NewDW, d_fieldLabels->d_densityTempLabel, Ghost::None, 0);
+    tsk->requires(Task::NewDW, d_fieldLabels->d_densityTempLabel, gn, 0);
   }
-
-  // require particle density
-  tsk->requires( Task::OldDW, coal_model_factory.getParticleDensityLabel( d_quadNode ), Ghost::None, 0);
-
-  // require weights
-  tsk->requires( Task::OldDW, d_weight_label, Ghost::None, 0);
 
   // require gas velocity
   tsk->requires( Task::OldDW, d_fieldLabels->d_newCCVelocityLabel, gn, 0 );
 
-  // require particle velocity
-  ArchesLabel::PartVelMap::const_iterator i = d_fieldLabels->partVel.find(d_quadNode);
-  tsk->requires( Task::OldDW, i->second, gn, 0 );
+  // require particle velocity (this quantity is calculated from the internal coordinate values)
+  tsk->requires( Task::OldDW, d_velocity_label, gn, 0 );
+
+  // require particle density
+  tsk->requires( Task::OldDW, coal_model_factory.getParticleDensityLabel( d_quadNode ), gn, 0);
+
+  // require weights
+  tsk->requires( Task::OldDW, d_weight_label, gn, 0);
 
   // reqiure internal coordiantes
-  tsk->requires(Task::OldDW, d_velocity_label, gn, 0);
+  //tsk->requires(Task::OldDW, d_uvel_label, gn, 0);  // <-- These are available via d_velocity_label
+  //tsk->requires(Task::OldDW, d_vvel_label, gn, 0);  //     (that quantity is calculated from the internal coordinate values
+  //tsk->requires(Task::OldDW, d_wvel_label, gn, 0);  //      in DragModel::computeParticleVelocity() )
   tsk->requires(Task::OldDW, d_length_label, gn, 0);
 
   sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials()); 
@@ -347,8 +303,6 @@ DragModel::computeModel( const ProcessorGroup* pc,
 {
   for (int p=0; p < patches->size(); p++){
 
-    //Ghost::GhostType  gaf = Ghost::AroundFaces;
-    //Ghost::GhostType  gac = Ghost::AroundCells;
     Ghost::GhostType  gn  = Ghost::None;
 
     const Patch* patch = patches->get(p);
@@ -395,7 +349,6 @@ DragModel::computeModel( const ProcessorGroup* pc,
     constCCVariable<double> weight;
     old_dw->get( weight, d_weight_label, matlIndex, patch, gn, 0 );
     
-
     for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
       IntVector c = *iter; 
 

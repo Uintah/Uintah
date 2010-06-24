@@ -67,23 +67,6 @@ public:
   /** @brief Interface for the inputfile and set constants */ 
   void problemSetup(const ProblemSpecP& db);
 
-  /** @brief  Actually do dummy initialization (sched_dummyInit is defined in ModelBase parent class) */
-  void dummyInit( const ProcessorGroup* pc, 
-                  const PatchSubset* patches, 
-                  const MaterialSubset* matls, 
-                  DataWarehouse* old_dw, 
-                  DataWarehouse* new_dw );
-
-  /** @brief Schedule the initialization of special/local variables unique to model */
-  void sched_initVars( const LevelP& level, SchedulerP& sched );
-
-  /** @brief  Actually initialize special variables unique to model */
-  void initVars( const ProcessorGroup * pc, 
-                 const PatchSubset    * patches, 
-                 const MaterialSubset * matls, 
-                 DataWarehouse        * old_dw, 
-                 DataWarehouse        * new_dw );
-
   ////////////////////////////////////////////////
   // Model computation method
 
@@ -99,7 +82,7 @@ public:
                      DataWarehouse* old_dw, 
                      DataWarehouse* new_dw );
 
-  // FIXME: add Glacier computation methods
+  // TODO: add Glacier computation methods
 
   /** @brief  Get raw coal reaction rate (see Glacier) */
   double calcRawCoalReactionRate() {
@@ -131,10 +114,10 @@ private:
   
   double R;         ///< Ideal gas constant
   
-  bool compute_part_temp; ///< Boolean: is particle temperature computed? 
-                          //   (if not, gas temp = particle temp)
+  bool d_compute_particle_temp; ///< Boolean: is particle temperature computed? 
+                                //   (if not, gas temp = particle temp)
 
 
-}; // end ConstSrcTerm
+}; // end KobyaashiSarofimDevol
 } // end namespace Uintah
 #endif

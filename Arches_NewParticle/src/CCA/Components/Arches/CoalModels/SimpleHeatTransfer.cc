@@ -1,5 +1,4 @@
 #include <CCA/Components/Arches/CoalModels/SimpleHeatTransfer.h>
-#include <CCA/Components/Arches/CoalModels/PartVel.h>
 #include <CCA/Components/Arches/TransportEqns/EqnFactory.h>
 #include <CCA/Components/Arches/TransportEqns/EqnBase.h>
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqn.h>
@@ -11,7 +10,6 @@
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Exceptions/InvalidValue.h>
 #include <Core/Parallel/Parallel.h>
-//#include <iostream>
 //#include <iomanip>
 
 //===========================================================================
@@ -47,12 +45,7 @@ SimpleHeatTransfer::SimpleHeatTransfer( std::string modelName,
                                         int qn ) 
 : HeatTransfer(modelName, sharedState, fieldLabels, icLabelNames, scalarLabelNames, qn)
 {
-  // Create a label for this model
-  d_modelLabel = VarLabel::create( modelName, CCVariable<double>::getTypeDescription() );
-
-  // Create the gas phase source term associated with this model
-  std::string gasSourceName = modelName + "_gasSource";
-  d_gasLabel = VarLabel::create( gasSourceName, CCVariable<double>::getTypeDescription() );
+  // Model/gas labels created in parent class
 
   // Set constants
   Pr = 0.7;
@@ -133,6 +126,7 @@ SimpleHeatTransfer::problemSetup(const ProblemSpecP& params)
   out << d_quadNode; 
   string node = out.str();
 
+  // -----------------------------------------------------------------
   // Look for required internal coordinates
   ProblemSpecP db_icvars = params->findBlock("ICVars");
   if (db_icvars) {
@@ -145,14 +139,12 @@ SimpleHeatTransfer::problemSetup(const ProblemSpecP& params)
       temp_label_name += node;
 
       // user specifies "role" of each internal coordinate
-      // if it isn't an internal coordinate or a scalar, it's required explicitly
-      // ( see comments in Arches::registerModels() for details )
-      if( role_name == "gas_temperature" ) {
-        // tempIN will be required explicitly
-      } else if ( role_name == "particle_length" 
-               || role_name == "raw_coal_mass"
+      if( role_name == "particle_length" 
+               //|| role_name == "char_mass"
                //|| role_name == "ash_mass"
-               || role_name == "particle_temperature" ) {
+               //|| role_name == "moisture_mass"
+               || role_name == "particle_temperature"
+               || role_name == "raw_coal_mass" ) {
         LabelToRoleMap[temp_label_name] = role_name;
       } else {
         std::string errmsg = "ERROR: SimpleHeatTransfer: problemSetup(): Invalid variable role for Simple Heat Transfer model!";
@@ -162,38 +154,6 @@ SimpleHeatTransfer::problemSetup(const ProblemSpecP& params)
       // set model clipping
       db->getWithDefault( "low_clip",  d_lowModelClip,  1.0e-6 );
       db->getWithDefault( "high_clip", d_highModelClip, 999999 );
-    }
-  }
-
-  // Look for required scalars
-  //   ( SimpleHeatTransfer model doesn't use any extra scalars (yet)
-  //     but if it did, this "for" loop would have to be un-commented )
-  ProblemSpecP db_scalarvars = params->findBlock("scalarVars");
-  if (db_scalarvars) {
-    for( ProblemSpecP variable = db_scalarvars->findBlock("variable");
-         variable != 0; variable = variable->findNextBlock("variable") ) {
-
-      variable->getAttribute("label", label_name);
-      variable->getAttribute("role",  role_name);
-
-      temp_label_name = label_name;
-      temp_label_name += node;
-
-      // user specifies "role" of each scalar
-      // if it isn't an internal coordinate or a scalar, it's required explicitly
-      // ( see comments in Arches::registerModels() for details )
-      /*
-      if ( role_name == "raw_coal_mass") {
-        LabelToRoleMap[temp_label_name] = role_name;
-      } else if( role_name == "particle_temperature" ) {  
-        LabelToRoleMap[temp_label_name] = role_name;
-        compute_part_temp = true;
-      } else {
-        std::string errmsg;
-        errmsg = "Invalid variable role for Simple Heat Transfer model: must be \"particle_temperature\" or \"raw_coal_mass\", you specified \"" + role_name + "\".";
-        throw InvalidValue(errmsg,__FILE__,__LINE__);
-      }
-      */
     }
   }
 
@@ -208,19 +168,99 @@ SimpleHeatTransfer::problemSetup(const ProblemSpecP& params)
     std::replace( d_icLabels.begin(), d_icLabels.end(), temp_ic_name, temp_ic_name_full);
   }
 
-  // fix the d_scalarLabels to point to the correct quadrature node (since there is 1 model per quad node)
-  for ( vector<std::string>::iterator iString = d_scalarLabels.begin(); 
-        iString != d_scalarLabels.end(); ++iString) {
+  // -----------------------------------------------------------------
+  // Look for required scalars
+  ProblemSpecP db_scalarvars = params->findBlock("scalarVars");
+  if (db_scalarvars) {
+    for( ProblemSpecP variable = db_scalarvars->findBlock("variable");
+         variable != 0; variable = variable->findNextBlock("variable") ) {
 
-    temp_ic_name      = (*iString);
-    temp_ic_name_full = temp_ic_name;
-    temp_ic_name_full += node;
+      variable->getAttribute("label", label_name);
+      variable->getAttribute("role",  role_name);
 
-    std::replace( d_scalarLabels.begin(), d_scalarLabels.end(), temp_ic_name, temp_ic_name_full);
+      temp_label_name = label_name;
+      temp_label_name += node;
+
+      // user specifies "role" of each scalar
+      if( role_name == "particle_temperature" 
+          || role_name == "gas_temperature" ) {
+        LabelToRoleMap[temp_label_name] = role_name;
+      } else {
+        std::string errmsg;
+        errmsg = "Invalid scalar variable role for Simple Heat Transfer model: must be \"particle_temperature\" or \"gas_temperature\", you specified \"" + role_name + "\".";
+        throw InvalidValue(errmsg,__FILE__,__LINE__);
+      }
+    }
   }
 
 
-  // thermal conductivity (of particles, I think???)
+  ///////////////////////////////////////////
+
+
+  DQMOMEqnFactory& dqmom_eqn_factory = DQMOMEqnFactory::self();
+  EqnFactory& eqn_factory = EqnFactory::self();
+
+  // assign labels for each required internal coordinate
+  for( map<string,string>::iterator iter = LabelToRoleMap.begin();
+       iter != LabelToRoleMap.end(); ++iter ) {
+
+    if ( iter->second == "particle_temperature") {
+      if( dqmom_eqn_factory.find_scalar_eqn(iter->first) ) {
+        EqnBase& t_current_eqn = dqmom_eqn_factory.retrieve_scalar_eqn(iter->first);
+        DQMOMEqn& current_eqn = dynamic_cast<DQMOMEqn&>(t_current_eqn);
+        d_particle_temperature_label = current_eqn.getTransportEqnLabel();
+        d_pt_scaling_constant = current_eqn.getScalingConstant();
+
+      } else if( eqn_factory.find_scalar_eqn(iter->first) ) {
+        EqnBase& t_current_eqn = eqn_factory.retrieve_scalar_eqn(iter->first);
+        d_particle_temperature_label = t_current_eqn.getTransportEqnLabel();
+        d_pt_scaling_constant = t_current_eqn.getScalingConstant();
+      
+      } else {
+        std::string errmsg = "ARCHES: SimpleHeatTransfer: Invalid variable given for <variable> tag in SimpleHeatTransfer model.";
+        errmsg += "\nCould not find given particle temperature variable \"";
+        errmsg += iter->second;
+        errmsg += "\" in DQMOMEqnFactory.";
+        throw ProblemSetupException(errmsg,__FILE__,__LINE__);
+      }
+
+    } else if( iter->second == "particle_length" ) {
+      if (dqmom_eqn_factory.find_scalar_eqn(iter->first) ) {
+        EqnBase& t_current_eqn = dqmom_eqn_factory.retrieve_scalar_eqn(iter->first);
+        DQMOMEqn& current_eqn = dynamic_cast<DQMOMEqn&>(t_current_eqn);
+        d_particle_length_label = current_eqn.getTransportEqnLabel();
+        d_pl_scaling_constant = current_eqn.getScalingConstant();
+      } else {
+        std::string errmsg = "ARCHES: SimpleHeatTransfer: Invalid variable given for <variable> tag in SimpleHeatTransfer model.";
+        errmsg += "\nCould not find given particle length variable \"";
+        errmsg += iter->second;
+        errmsg += "\" in DQMOMEqnFactory.";
+        throw ProblemSetupException(errmsg,__FILE__,__LINE__);
+      }
+    
+    } else if ( iter->second == "raw_coal_mass") {
+      if (dqmom_eqn_factory.find_scalar_eqn(iter->first) ) {
+        EqnBase& t_current_eqn = dqmom_eqn_factory.retrieve_scalar_eqn(iter->first);
+        DQMOMEqn& current_eqn = dynamic_cast<DQMOMEqn&>(t_current_eqn);
+        d_raw_coal_mass_label = current_eqn.getTransportEqnLabel();
+        d_rc_scaling_constant = current_eqn.getScalingConstant();
+      } else {
+        std::string errmsg = "ARCHES: SimpleHeatTransfer: Invalid variable given for <variable> tag in SimpleHeatTransfer model.";
+        errmsg += "\nCould not find given coal mass  variable \"";
+        errmsg += iter->second;
+        errmsg += "\" in DQMOMEqnFactory.";
+        throw ProblemSetupException(errmsg,__FILE__,__LINE__);
+      }
+    } else {
+      // can't find this required variable in the labels-to-roles map!
+      std::string errmsg = "ARCHES: SimpleHeatTransfer: You specified that the variable \"" + iter->first + 
+                           "\" was required, but you did not specify a role for it!\n";
+      throw ProblemSetupException( errmsg, __FILE__, __LINE__);
+    }
+  }
+
+
+  // thermal conductivity of particles
   std::string abskpName = "abskp_qn";
   abskpName += node; 
   d_abskp = VarLabel::create(abskpName, CCVariable<double>::getTypeDescription());
@@ -236,6 +276,8 @@ SimpleHeatTransfer::sched_initVars( const LevelP& level, SchedulerP& sched )
   std::string taskname = "SimpleHeatTransfer::initVars";
   Task* tsk = scinew Task(taskname, this, &SimpleHeatTransfer::initVars);
 
+  tsk->computes( d_modelLabel );
+  tsk->computes( d_gasLabel   );
   tsk->computes(d_abskp);
 
   sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials()); 
@@ -256,6 +298,14 @@ SimpleHeatTransfer::initVars( const ProcessorGroup * pc,
     const Patch* patch = patches->get(p);
     int archIndex = 0;
     int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+
+    CCVariable<double> model_value; 
+    new_dw->allocateAndPut( model_value, d_modelLabel, matlIndex, patch ); 
+    model_value.initialize(0.0);
+
+    CCVariable<double> gas_value; 
+    new_dw->allocateAndPut( gas_value, d_gasLabel, matlIndex, patch ); 
+    gas_value.initialize(0.0);
 
     CCVariable<double> abskp; 
     new_dw->allocateAndPut( abskp, d_abskp, matlIndex, patch ); 
@@ -289,24 +339,12 @@ SimpleHeatTransfer::sched_computeModel( const LevelP& level, SchedulerP& sched, 
     tsk->modifies(d_abskp);
   }
 
-  //EqnFactory& eqn_factory = EqnFactory::self();
-  DQMOMEqnFactory& dqmom_eqn_factory = DQMOMEqnFactory::self();
+  CoalModelFactory& coalFactory = CoalModelFactory::self();
 
-  // construct the weight label corresponding to this quad node
-  std::string temp_weight_name = "w_qn";
-  std::string node;
-  std::stringstream out;
-  out << d_quadNode;
-  node = out.str();
-  temp_weight_name += node;
-  EqnBase& t_weight_eqn = dqmom_eqn_factory.retrieve_scalar_eqn( temp_weight_name );
-  DQMOMEqn& weight_eqn = dynamic_cast<DQMOMEqn&>(t_weight_eqn);
-  d_weight_label = weight_eqn.getTransportEqnLabel();
-  tsk->requires(Task::OldDW, d_weight_label, Ghost::None, 0);
-  
   // also require paticle velocity, gas velocity, and density
-  ArchesLabel::PartVelMap::const_iterator iQuad = d_fieldLabels->partVel.find(d_quadNode);
-  tsk->requires(Task::OldDW, iQuad->second, Ghost::None, 0);
+  if( coalFactory.useParticleVelocityModel() ) {
+    tsk->requires( Task::OldDW, coalFactory.getParticleVelocityLabel( d_quadNode), Ghost::None, 0 );
+  }
   tsk->requires( Task::OldDW, d_fieldLabels->d_newCCVelocityLabel, Ghost::None, 0);
   tsk->requires(Task::OldDW, d_fieldLabels->d_densityCPLabel, Ghost::None, 0);
   tsk->requires(Task::OldDW, d_fieldLabels->d_cpINLabel, Ghost::None, 0);
@@ -317,103 +355,13 @@ SimpleHeatTransfer::sched_computeModel( const LevelP& level, SchedulerP& sched, 
     tsk->requires(Task::OldDW, d_fieldLabels->d_radiationVolqINLabel, Ghost::None, 0);
   }
 
-  // always require the gas-phase temperature
+  tsk->requires(Task::OldDW, d_particle_temperature_label, Ghost::None, 0);
   tsk->requires(Task::OldDW, d_fieldLabels->d_tempINLabel, Ghost::None, 0);
 
-  // For each required variable, determine what role it plays
-  // - "particle_temperature" - look in DQMOMEqnFactory
-  // - "particle_length" - look in DQMOMEqnFactory
-  // - "raw_coal_mass_fraction" - look in DQMOMEqnFactory
-
-  // for each required internal coordinate:
-  for (vector<std::string>::iterator iter = d_icLabels.begin(); 
-       iter != d_icLabels.end(); ++iter) { 
-
-    map<string, string>::iterator iMap = LabelToRoleMap.find(*iter);
-
-    if( iMap != LabelToRoleMap.end() ) {
-      if ( iMap->second == "particle_temperature") {
-        if( dqmom_eqn_factory.find_scalar_eqn(*iter) ) {
-          EqnBase& t_current_eqn = dqmom_eqn_factory.retrieve_scalar_eqn(*iter);
-          DQMOMEqn& current_eqn = dynamic_cast<DQMOMEqn&>(t_current_eqn);
-          d_particle_temperature_label = current_eqn.getTransportEqnLabel();
-          d_pt_scaling_constant = current_eqn.getScalingConstant();
-          tsk->requires(Task::OldDW, d_particle_temperature_label, Ghost::None, 0);
-        } else {
-          std::string errmsg = "ARCHES: SimpleHeatTransfer: sched_computeModel(): Invalid variable given in <ICVars> block, for <variable> tag for SimpleHeatTransfer model.";
-          errmsg += "\nCould not find given particle temperature variable \"";
-          errmsg += *iter;
-          errmsg += "\" in DQMOMEqnFactory.";
-          throw InvalidValue(errmsg,__FILE__,__LINE__);
-        }
-
-      } else if( iMap->second == "particle_length" ) {
-        if (dqmom_eqn_factory.find_scalar_eqn(*iter) ) {
-          EqnBase& t_current_eqn = dqmom_eqn_factory.retrieve_scalar_eqn(*iter);
-          DQMOMEqn& current_eqn = dynamic_cast<DQMOMEqn&>(t_current_eqn);
-          d_particle_length_label = current_eqn.getTransportEqnLabel();
-          d_pl_scaling_constant = current_eqn.getScalingConstant();
-          tsk->requires(Task::OldDW, d_particle_length_label, Ghost::None, 0);
-        } else {
-          std::string errmsg = "ARCHES: SimpleHeatTransfer: sched_computeModel(): Invalid variable given in <ICVars> block, for <variable> tag for SimpleHeatTransfer model.";
-          errmsg += "\nCould not find given particle length variable \"";
-          errmsg += *iter;
-          errmsg += "\" in DQMOMEqnFactory.";
-          throw InvalidValue(errmsg,__FILE__,__LINE__);
-        }
-
-      } else if ( iMap->second == "raw_coal_mass") {
-        if (dqmom_eqn_factory.find_scalar_eqn(*iter) ) {
-          EqnBase& t_current_eqn = dqmom_eqn_factory.retrieve_scalar_eqn(*iter);
-          DQMOMEqn& current_eqn = dynamic_cast<DQMOMEqn&>(t_current_eqn);
-          d_raw_coal_mass_label = current_eqn.getTransportEqnLabel();
-          d_rc_scaling_constant = current_eqn.getScalingConstant();
-          tsk->requires(Task::OldDW, d_raw_coal_mass_label, Ghost::None, 0);
-        } else {
-          std::string errmsg = "ARCHES: SimpleHeatTransfer: sched_computeModel(): Invalid variable given in <ICVars> block, for <variable> tag for SimpleHeatTransfer model.";
-          errmsg += "\nCould not find given coal mass  variable \"";
-          errmsg += *iter;
-          errmsg += "\" in DQMOMEqnFactory.";
-          throw InvalidValue(errmsg,__FILE__,__LINE__);
-        }
-      } 
-    } else {
-      // can't find this required variable in the labels-to-roles map!
-      std::string errmsg = "ARCHES: SimpleHeatTransfer: sched_computeModel(): You specified that the variable \"" + *iter + 
-                           "\" was required, but you did not specify a role for it!\n";
-      throw InvalidValue( errmsg, __FILE__, __LINE__);
-    }
-  }
-
-  // for each required scalar variable:
-  for( vector<std::string>::iterator iter = d_scalarLabels.begin();
-       iter != d_scalarLabels.end(); ++iter) {
-    map<string, string>::iterator iMap = LabelToRoleMap.find(*iter);
-    
-    /*
-    if( iMap != LabelToRoleMap.end() ) {
-      if( iMap->second == <insert role name here> ) {
-        if( eqn_factory.find_scalar_eqn(*iter) ) {
-          EqnBase& current_eqn = eqn_factory.retrieve_scalar_eqn(*iter);
-          d_<insert role name here>_label = current_eqn.getTransportEqnLabel();
-          tsk->requires(Task::OldDW, d_<insert role name here>_label, Ghost::None, 0);
-        } else {
-          std::string errmsg = "ARCHES: SimpleHeatTransfer: Invalid variable given in <scalarVars> block for <variable> tag for SimpleHeatTransfer model.";
-          errmsg += "\nCould not find given <insert role name here> variable \"";
-          errmsg += *iter;
-          errmsg += "\" in EqnFactory.";
-          throw InvalidValue(errmsg,__FILE__,__LINE__);
-        }
-      }
-    } else {
-      // can't find this required variable in the labels-to-roles map!
-      std::string errmsg = "ARCHES: SimpleHeatTransfer: You specified that the variable \"" + *iter + 
-                           "\" was required, but you did not specify a role for it!\n";
-      throw InvalidValue( errmsg, __FILE__, __LINE__);
-    }
-    */
-
-  } //end for
+  // require internal coordinates
+  tsk->requires(Task::OldDW, d_weight_label, Ghost::None, 0);
+  tsk->requires(Task::OldDW, d_particle_length_label, Ghost::None, 0);
+  tsk->requires(Task::OldDW, d_raw_coal_mass_label, Ghost::None, 0);
 
   sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials()); 
 
@@ -463,11 +411,16 @@ SimpleHeatTransfer::computeModel( const ProcessorGroup * pc,
       abskp.initialize(0.0);
     }
     
+    
+    CoalModelFactory& coalFactory = CoalModelFactory::self();
 
     // get particle velocity used to calculate Reynolds number
     constCCVariable<Vector> partVel;  
-    ArchesLabel::PartVelMap::const_iterator iQuad = d_fieldLabels->partVel.find(d_quadNode);
-    old_dw->get( partVel, iQuad->second, matlIndex, patch, gn, 0);
+    if( coalFactory.useParticleVelocityModel() ) {
+      old_dw->get( partVel, coalFactory.getParticleVelocityLabel( d_quadNode ), matlIndex, patch, gn, 0 );
+    } else {
+      old_dw->get( partVel, d_fieldLabels->d_newCCVelocityLabel, matlIndex, patch, gn, 0 );
+    }
     
     // gas velocity used to calculate Reynolds number
     constCCVariable<Vector> gasVel; 
@@ -481,7 +434,6 @@ SimpleHeatTransfer::computeModel( const ProcessorGroup * pc,
     constCCVariable<double> radiationSRCIN;
     constCCVariable<double> abskgIN;
     constCCVariable<double> radiationVolqIN;
-    CCVariable<double> enthNonLinSrc;
 
     if(b_radiation){
       old_dw->get(radiationSRCIN, d_fieldLabels->d_radiationSRCINLabel, matlIndex, patch, gn, 0);
@@ -634,7 +586,8 @@ SimpleHeatTransfer::computeModel( const ProcessorGroup * pc,
         abskp_ = 0.0;
       } else {
 
-        // Convection part: -----------------------
+        // ---------------------------------------------
+        // Convection part: 
 
         // Reynolds number
         Re = abs(gas_velocity.length() - particle_velocity.length())*unscaled_length*density/visc;
@@ -657,7 +610,10 @@ SimpleHeatTransfer::computeModel( const ProcessorGroup * pc,
         // Q_convection (see Section 5.4 of LES_Coal document)
         Q_convection = Nu*pi*blow*rkg*unscaled_length*(gas_temperature - unscaled_particle_temperature);
 
-        // Radiation part: -------------------------
+
+        // ---------------------------------------------
+        // Radiation part: 
+
         Q_radiation = 0.0;
         if (b_radiation) {
           double Qabs = 0.8;
@@ -671,7 +627,6 @@ SimpleHeatTransfer::computeModel( const ProcessorGroup * pc,
         }
       
         heat_rate_ = (Q_convection + Q_radiation)/(mp_Cp*d_pt_scaling_constant);
-        //cout << "Qconv " << Q_convection << " Qrad " << Q_radiation << endl;
         gas_heat_rate_ = 0.0;
  
       }

@@ -187,70 +187,7 @@ BadHawkDevol::problemSetup(const ProblemSpecP& params)
   
 }
 
-//---------------------------------------------------------------------------
-// Method: Schedule dummy initialization
-//---------------------------------------------------------------------------
-void
-BadHawkDevol::sched_dummyInit( const LevelP& level, SchedulerP& sched ) 
-{
-  string taskname = "BadHawkDevol::dummyInit"; 
 
-  Ghost::GhostType  gn = Ghost::None;
-
-  Task* tsk = scinew Task(taskname, this, &BadHawkDevol::dummyInit);
-
-  tsk->computes(d_modelLabel);
-  tsk->computes(d_gasLabel); 
-
-  tsk->requires( Task::OldDW, d_modelLabel, gn, 0);
-  tsk->requires( Task::OldDW, d_gasLabel,   gn, 0);
-
-  sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
-}
-
-//-------------------------------------------------------------------------
-// Method: Actually do the dummy initialization
-//-------------------------------------------------------------------------
-/** @details
-This method intentionally left blank. 
-@seealso Devolatilization::dummyInit
-*/
-void
-BadHawkDevol::dummyInit( const ProcessorGroup* pc,
-                         const PatchSubset* patches, 
-                         const MaterialSubset* matls, 
-                         DataWarehouse* old_dw, 
-                         DataWarehouse* new_dw )
-{
-}
-
-//---------------------------------------------------------------------------
-// Method: Schedule the initialization of some variables 
-//---------------------------------------------------------------------------
-/** @details
-This method intentionally left blank. 
-@seealso Devolatilization::sched_initVars
-*/
-void 
-BadHawkDevol::sched_initVars( const LevelP& level, SchedulerP& sched )
-{
-}
-
-//-------------------------------------------------------------------------
-// Method: Initialize variables
-//-------------------------------------------------------------------------
-/** @details
-This method intentionally left blank. 
-@seealso Devolatilization::initVars
-*/
-void
-BadHawkDevol::initVars( const ProcessorGroup * pc, 
-                        const PatchSubset    * patches, 
-                        const MaterialSubset * matls, 
-                        DataWarehouse        * old_dw, 
-                        DataWarehouse        * new_dw )
-{
-}
 
 //---------------------------------------------------------------------------
 // Method: Schedule the calculation of the Model 

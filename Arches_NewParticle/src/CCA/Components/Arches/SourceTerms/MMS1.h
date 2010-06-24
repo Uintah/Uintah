@@ -7,6 +7,21 @@
 
 //===========================================================================
 
+/**
+  * @class    MMS 1 Source Term
+  * @author   Jeremy Thornock
+  * @date     
+  *           
+  * @brief    
+  * This source term is for an MMS verification.
+  * The MMS function is:
+  * \f[ 
+    RHS = 2*\pi*cos(2*\pi*x)*cos(2*\pi*y) - 2*\pi*sin(2*\pi*x)*sin(2*\pi*y)
+  * \f]
+  * This MMS can be used by pretty much any scalar equation.
+  *
+  */
+
 //---------------------------------------------------------------------------
 // Builder
 namespace Uintah{

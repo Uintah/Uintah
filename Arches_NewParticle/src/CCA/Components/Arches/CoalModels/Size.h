@@ -48,12 +48,10 @@ public:
   /** @brief  Grab model-independent length parameters */
   void problemSetup(const ProblemSpecP& db, int qn);
 
-  /** @brief Schedule the initialization of special/local variables unique to model; 
-             blank for Size parent class, intended to be re-defined by child classes if needed. */
+  /** @brief Schedule the initialization of special/local variables unique to model */
   void sched_initVars( const LevelP& level, SchedulerP& sched );
 
-  /** @brief  Actually initialize special variables unique to model; 
-              blank for Size parent class, intended to be re-defined by child classes if needed. */
+  /** @brief  Actually initialize special variables unique to model */
   void initVars( const ProcessorGroup * pc, 
                  const PatchSubset    * patches, 
                  const MaterialSubset * matls, 

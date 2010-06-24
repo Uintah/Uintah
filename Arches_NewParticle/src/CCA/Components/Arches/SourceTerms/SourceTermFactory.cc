@@ -141,6 +141,14 @@ void SourceTermFactory::problemSetup(const ProblemSpecP& params)
   }
 }
 
+void
+SourceTermFactory::sched_computeSourceTerms( const LevelP& level, SchedulerP& sched, int timeSubStep ) 
+{
+  for( SourceMap::iterator iSrc = sources_.begin(); iSrc != sources_.end(); ++iSrc ) {
+    iSrc->second->sched_computeSource( level, sched, timeSubStep );
+  }
+}
+
 //---------------------------------------------------------------------------
 // Method: Schedule initialization of source terms
 //---------------------------------------------------------------------------
@@ -202,7 +210,22 @@ SourceTermFactory::sourceInit( const ProcessorGroup* ,
     }
 
   }//end patch loop
+
+  proc0cout << endl;
 }
+
+
+//---------------------------------------------------------------------------
+// Method: Schedule dummy initialization of source terms for MPM Arches
+//---------------------------------------------------------------------------
+void
+SourceTermFactory::sched_dummyInit( const LevelP& level, SchedulerP& sched )
+{
+  for( SourceMap::iterator iSource = sources_.begin(); iSource != sources_.end(); ++iSource ) {
+    iSource->second->sched_dummyInit( level, sched );
+  }
+}
+
 
 //---------------------------------------------------------------------------
 // Method: Register a source term  

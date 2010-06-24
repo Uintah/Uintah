@@ -63,8 +63,6 @@ public:
   /** @brief Interface for the inputfile and set constants */ 
   void problemSetup(const ProblemSpecP& db);
 
-  // No initVars() method because no special variables needed
-
   ////////////////////////////////////////////////
   // Model computation method
 

@@ -216,14 +216,15 @@ ScalarEqn::sched_initializeVariables( const LevelP& level, SchedulerP& sched )
   string taskname = "ScalarEqn::initializeVariables";
   Task* tsk = scinew Task(taskname, this, &ScalarEqn::initializeVariables);
   Ghost::GhostType gn = Ghost::None;
-  //New
+  
+  // New DW
   tsk->computes(d_transportVarLabel);
   tsk->computes(d_oldtransportVarLabel); // for rk sub stepping 
   tsk->computes(d_RHSLabel); 
   tsk->computes(d_FconvLabel);
   tsk->computes(d_FdiffLabel);
 
-  //Old
+  //Old DW
   tsk->requires(Task::OldDW, d_transportVarLabel, gn, 0);
   sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
 }
@@ -498,17 +499,20 @@ ScalarEqn::solveTransportEqn( const ProcessorGroup* pc,
     new_dw->getModifiable(phi_at_j,   d_oldtransportVarLabel, matlIndex, patch); 
     old_dw->get(rk1_phi, d_transportVarLabel, matlIndex, patch, gn, 0);
     new_dw->get(RHS, d_RHSLabel, matlIndex, patch, gn, 0);
-    if (d_use_density_guess) 
-      new_dw->get(new_den, d_fieldLabels->d_densityGuessLabel, matlIndex, patch, gn, 0); 
-    else 
-      new_dw->get(new_den, d_fieldLabels->d_densityCPLabel, matlIndex, patch, gn, 0);
-    if ( timeSubStep == 0 )
-      old_dw->get(old_den, d_fieldLabels->d_densityCPLabel, matlIndex, patch, gn, 0);
-    else 
-      new_dw->get(old_den, d_fieldLabels->d_densityTempLabel, matlIndex, patch, gn, 0); 
 
-    // ----FE UPDATE
-    //     to get phi^{(j+1)}
+    if (d_use_density_guess) {
+      new_dw->get(new_den, d_fieldLabels->d_densityGuessLabel, matlIndex, patch, gn, 0); 
+    } else {
+      new_dw->get(new_den, d_fieldLabels->d_densityCPLabel, matlIndex, patch, gn, 0);
+    }
+
+    if ( timeSubStep == 0 ) {
+      old_dw->get(old_den, d_fieldLabels->d_densityCPLabel, matlIndex, patch, gn, 0);
+    } else {
+      new_dw->get(old_den, d_fieldLabels->d_densityTempLabel, matlIndex, patch, gn, 0); 
+    }
+
+    // update to get phi^{(j+1)}
     d_timeIntegrator->singlePatchFEUpdate( patch, phi_at_jp1, old_den, new_den, RHS, dt, curr_ssp_time, d_eqnName);
     
     // Compute the current RK time. 

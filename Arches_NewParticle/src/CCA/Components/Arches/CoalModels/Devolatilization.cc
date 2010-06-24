@@ -82,7 +82,9 @@ This method was originally in ModelBase, but it requires creating CCVariables
  is model-dependent.  Putting the method here eliminates if statements in 
  ModelBase and keeps the ModelBase class as generic as possible.
 
+@see ModelBase::sched_dummyInit()
 @see ExplicitSolver::noSolve()
+
  */
 void
 Devolatilization::dummyInit( const ProcessorGroup* pc,

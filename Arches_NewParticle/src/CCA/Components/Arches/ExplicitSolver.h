@@ -400,8 +400,8 @@ private:
                       DataWarehouse* new_dw,
                       const TimeIntegratorLabel* timelabels);
 
-  void setDQMOMSolver( DQMOM* dqmomSolver ) { 
-    d_dqmomSolver = dqmomSolver; }; 
+  //void setDQMOMSolver( DQMOM* dqmomSolver ) { 
+  //  d_dqmomSolver = dqmomSolver; }; 
 
 private:
   // const VarLabel*
@@ -480,8 +480,8 @@ private:
   RMCRTRadiationModel* d_RMCRTRadiationModel;  
 
   //DQMOM 
-  bool d_doDQMOM; 
-  DQMOM* d_dqmomSolver; 
+  //bool d_doDQMOM; 
+  //DQMOM* d_dqmomSolver; 
 
 }; // End class ExplicitSolver
 } // End namespace Uintah

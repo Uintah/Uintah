@@ -238,13 +238,11 @@ ConstantModel::computeModel( const ProcessorGroup* pc,
 
     for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
       IntVector c = *iter;
-      //if(d_quadNode ==1){
-      //  model[c] = -d_constant;
-      //} else { 
-      //  model[c] = d_constant;
-      //}
       model[c] = d_constant;
       gas_source[c] = 0.0;
+      if( c == IntVector(1,2,3) ) {
+        int a = 2 + 2;
+      }
     }
   }
 }

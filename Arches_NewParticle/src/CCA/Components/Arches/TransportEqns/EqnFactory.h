@@ -78,6 +78,23 @@ public:
                    DataWarehouse* old_dw,
                    DataWarehouse* new_dw );
 
+  void sched_dummyInit( const LevelP& level,
+                        SchedulerP& sched );
+
+
+  //////////////////////////////////////////////
+  // Evaluate the transport equations
+
+  /** @brief  Schedule the evaluation of the scalar equations and their source terms 
+      @param  evalDensityGuessEqns    (Boolean) If  true, only equations with a density guess are evaluated;
+                                      if false, only equations without a density guess are evaluated
+      @param  cleanup                 (Boolean) If true, clean up after the equation (only done for last sub-step of time integrator) */
+  void sched_evalTransportEqns( const LevelP& level,
+                                SchedulerP&,
+                                int timeSubStep,
+                                bool evalDensityGuessEqns,
+                                bool cleanup);
+
   ///////////////////////////////////////////////
   // Equation retrieval methods
 

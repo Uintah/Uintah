@@ -14,7 +14,7 @@
 
 /**
  *  @class  SourceTermBuilder
- *  @author James C. Sutherland and Jeremy Thornock
+ *  @author James C. Sutherland, Jeremy Thornock, Charles Reid
  *  @date   November, 2006
  *
  *  @brief Abstract base class to support source term
@@ -95,6 +95,9 @@ public:
                    DataWarehouse* old_dw,
                    DataWarehouse* new_dw );
 
+  void sched_dummyInit( const LevelP& level,
+                        SchedulerP& sched );
+
   /////////////////////////////////////////////////////
   // Source term access methods
 
@@ -124,6 +127,12 @@ public:
   SourceTermBase* getParticleMomentumSource() {
     return d_particleGasMomentumSource;
   };
+
+  /////////////////////////////////////////////
+  // Source term computation
+
+  /** @brief  Schedule computation of all source terms */
+  void sched_computeSourceTerms( const LevelP& level, SchedulerP& sched, int timeSubStep );
 
   /////////////////////////////////////////////
   // Get/set methods

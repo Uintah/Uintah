@@ -2,6 +2,10 @@
 //#include <CCA/Components/Arches/Directives.h>
 
 // used by:
+// KobayashiSarofimDevol
+#define TINY    1e-16
+
+// used by:
 // BoundaryCond_new
 // DQMOMEqn
 // Discretization_new

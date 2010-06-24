@@ -10,6 +10,8 @@
 #include <CCA/Components/Arches/CoalModels/ParticleVelocity.h> 
 #include <CCA/Components/Arches/CoalModels/DragModel.h> 
 #include <CCA/Components/Arches/CoalModels/Balachandar.h> 
+#include <CCA/Components/Arches/CoalModels/ParticleDensity.h>
+#include <CCA/Components/Arches/CoalModels/ConstantSize.h>
 #include <CCA/Components/Arches/CoalModels/CharOxidation.h> 
 #include <CCA/Components/Arches/ArchesLabel.h>
 #include <Core/Exceptions/InvalidValue.h>
@@ -22,16 +24,12 @@ using namespace Uintah;
 CoalModelFactory::CoalModelFactory()
 {
   d_labelSet = false;
-  d_useParticleDensityModel = false;
-  d_useParticleVelocityModel = false;
   yelem.resize(5);
+  
+  d_useParticleVelocityModel = false;
+  d_useHeatTransferModel = false;
+  d_useParticleDensityModel = false;
 
-  ParticleDensityModel.resize(numQuadNodes);
-  ParticleVelocityModel.resize(numQuadNodes);
-  SizeModel.resize(numQuadNodes);
-  DevolModel.resize(numQuadNodes);
-  HeatModel.resize(numQuadNodes);
-  CharModel.resize(numQuadNodes);
 }
 
 CoalModelFactory::~CoalModelFactory()
@@ -68,9 +66,15 @@ void CoalModelFactory::problemSetup(const ProblemSpecP& params)
 
   if( d_labelSet == false ) {
     std::string err_msg;
-    err_msg = "ERROR: Arches: EqnFactory: You must set the EqnFactory field labels using setArchesLabel() before you run the problem setup method!";
+    err_msg = "ERROR: Arches: EqnFactory: You must set the CoalModelFactory field labels using CoalModelFactory::setArchesLabel() before you run the problem setup method!";
     throw ProblemSetupException(err_msg, __FILE__, __LINE__);
   }
+
+  DQMOMEqnFactory& dqmom_factory = DQMOMEqnFactory::self(); 
+  numQuadNodes = dqmom_factory.get_quad_nodes();  
+
+  d_ParticleDensityModel.resize(numQuadNodes);
+  d_ParticleVelocityModel.resize(numQuadNodes);
 
   // ----------------------------------------------
   // Step 1: CoalModelFactory problem setup
@@ -104,19 +108,15 @@ void CoalModelFactory::problemSetup(const ProblemSpecP& params)
     if( calculation_type=="split" || calculation_type == "separable" ) {
       d_coupled_physics = false;
       proc0cout << endl << "DQMOM coal particle calculation: using separable multiphysics calculation." << endl << endl;
+
     } else if( calculation_type == "coupled" ) {
       d_coupled_physics = true;
       proc0cout << endl << "DQMOM coal particle calculation: using coupled multiphysics calculation." << endl << endl;
+
     } else {
       string err_msg = "ERROR: Arches: CoalModelFactory: Unrecognized <coalParticleIterator> type: " + calculation_type + ": should be 'coupled' or 'separable'.";
       throw ProblemSetupException(err_msg,__FILE__,__LINE__);
     }
-  
-    // Now grab specific internal coordinates (only if using coupled algorithm)
-    b_useParticleTemperature = false;
-    b_useParticleEnthalpy = false; 
-    b_useMoisture = false;
-    b_useAsh = false;
   }
 
 
@@ -124,7 +124,6 @@ void CoalModelFactory::problemSetup(const ProblemSpecP& params)
   // ----------------------------------------------
   // Step 2: register all models with the CoalModelFactory
   ProblemSpecP models_db = db->findBlock("Models");
-  DQMOMEqnFactory& dqmom_factory = DQMOMEqnFactory::self(); 
   
   proc0cout << endl;
   proc0cout << "******* Model Registration ********" << endl; 
@@ -138,8 +137,6 @@ void CoalModelFactory::problemSetup(const ProblemSpecP& params)
   // for 2) you specify this in the <scalarVars> tag
   // for 3) you specify this in the implementation of the model itself (ie, no user input)
 
-  const int numQuadNodes = dqmom_factory.get_quad_nodes();  
-  
   if (models_db) {
     for (ProblemSpecP model_db = models_db->findBlock("model"); model_db != 0; model_db = model_db->findNextBlock("model")){
       
@@ -149,7 +146,7 @@ void CoalModelFactory::problemSetup(const ProblemSpecP& params)
       std::string model_type;
       model_db->getAttribute("type", model_type);
 
-      proc0cout << endl << "Found  a model: " << model_name << endl;
+      proc0cout << "Found a model: " << model_name << endl;
 
       vector<string> requiredICVarLabels;
       ProblemSpecP icvar_db = model_db->findBlock("ICVars"); 
@@ -171,7 +168,6 @@ void CoalModelFactory::problemSetup(const ProblemSpecP& params)
       // This section is not immediately useful.
       // However, if any new models start to depend on scalar variables, this must be commented in
       vector<string> requiredScalarVarLabels;
-      /*
       ProblemSpecP scalarvar_db = model_db->findBlock("scalarVars");
 
       if ( scalarvar_db ) {
@@ -188,7 +184,6 @@ void CoalModelFactory::problemSetup(const ProblemSpecP& params)
       } else {
         proc0cout << "Model does not require any scalar variables. " << endl;
       }
-      */
       
       // --- looping over quadrature nodes ---
       // This will make a model for each quadrature node. 
@@ -205,10 +200,11 @@ void CoalModelFactory::problemSetup(const ProblemSpecP& params)
         
         ModelBuilder* modelBuilder;
         
+//-------- Constant models
         if ( model_type == "ConstantModel" ) {
           modelBuilder = scinew ConstantModelBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_fieldLabels, d_fieldLabels->d_sharedState, iqn);
 
-        // Devolatilization
+//-------- Devolatilization models
         } else if ( model_type == "BadHawkDevol" ) {
           //modelBuilder = scinew BadHawkDevolBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_fieldLabels, d_fieldLabels->d_sharedState, iqn );
           throw InvalidValue("ERROR: Arches: CoalModelFactory: BadHawkDevol model is not supported.\n",__FILE__,__LINE__);
@@ -216,26 +212,37 @@ void CoalModelFactory::problemSetup(const ProblemSpecP& params)
         } else if ( model_type == "KobayashiSarofimDevol" ) {
           modelBuilder = scinew KobayashiSarofimDevolBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_fieldLabels, d_fieldLabels->d_sharedState, iqn);
 
-        // Heat transfer
+//-------- Heat transfer models
         } else if ( model_type == "SimpleHeatTransfer" ) {
           modelBuilder = scinew SimpleHeatTransferBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_fieldLabels, d_fieldLabels->d_sharedState, iqn);
+          d_useHeatTransferModel = true;
 
-        // Velocity model
-        } else if (model_type == "Drag" ) {
+//-------- Velocity models
+        } else if (model_type == "DragModel" ) {
           modelBuilder = scinew DragModelBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_fieldLabels, d_fieldLabels->d_sharedState, iqn);
+          d_useParticleVelocityModel = true;
 
         } else if (model_type == "Balachandar" ) {
           modelBuilder = scinew BalachandarBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_fieldLabels, d_fieldLabels->d_sharedState, iqn);
+          d_useParticleVelocityModel = true;
+        
+//-------- Char oxidation models
+        //} else if (model_type == "CharOxidation" ) {
+        //  modelBuilder = scinew CharOxidationBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_fieldLabels, d_fieldLabels->d_sharedState, iqn);
+
+//-------- Density models
+        } else if (model_type == "ConstantSize" ) {
+          modelBuilder = scinew ConstantSizeBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_fieldLabels, d_fieldLabels->d_sharedState, iqn);
 
         } else {
           proc0cout << "For model named: " << temp_model_name << endl;
           proc0cout << "with type: " << model_type << endl;
-          std::string errmsg;
-          errmsg = model_type + ": This model type not recognized or not supported.";
-          throw InvalidValue(errmsg, __FILE__, __LINE__);
+          string errmsg;
+          errmsg = "ERROR: CoalModelFactory: " + model_type + ": This model type not recognized or not supported.";
+          throw ProblemSetupException(errmsg, __FILE__, __LINE__);
         }
 
-        CoalModelFactory::register_model( temp_model_name, modelBuilder, iqn );
+        register_model( temp_model_name, modelBuilder, iqn );
 
         // ----------------------------------------------
         // Step 3: run ModelBase::problemSetup() for each model
@@ -250,6 +257,36 @@ void CoalModelFactory::problemSetup(const ProblemSpecP& params)
 
     }//end for each model
 
+    // if a model using density is included, assert that a density model is specified
+    if( !d_useParticleDensityModel ) {
+      // no particle density model is specified
+      // but a density model is required for some models 
+      if( d_useParticleVelocityModel || d_useHeatTransferModel ) {
+        string err = "ERROR: CoalModelFactory: You specified a coal model that requires density (particle velocity or heat transfer), but you did not specify a density model!  Please specify a density model before proceeding.";
+        throw ProblemSetupException(err,__FILE__,__LINE__);
+      }
+    }
+
+    // if using a devolatilization or char oxidation model, check if there is a corresponding <src> tag in <MixtureFractionSolver> block
+    if( d_useDevolatilizationModel || d_useCharOxidationModel ) {
+      const ProblemSpecP params_root = db->getRootNode();
+      if( params_root->findBlock("CFD") ) {
+        if( params_root->findBlock("CFD")->findBlock("ARCHES") ) {
+          if( params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ExplicitSolver") ) {
+            if( params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ExplicitSolver")->findBlock("MixtureFractionSolver") ) {
+              // check for a <src> tag
+              if( !params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ExplicitSolver")->findBlock("MixtureFractionSolver")->findBlock("src") ) {
+                proc0cout << endl;
+                proc0cout << "WARNING: CoalModelFactory: You are using a devolatilization model, but you have not included any source terms (via SourceTermFactory) using <src> tags in the mixture fraction solver block." << endl;
+                proc0cout << "         No source term will be added to the mixture fraction equation." << endl;
+                proc0cout << "         Continuing..." << endl;
+              }
+            }
+          }
+        }
+      }
+    }
+
   } else {
     proc0cout << "No models were found by CoalModelFactory." << endl;
 
@@ -263,35 +300,26 @@ void CoalModelFactory::problemSetup(const ProblemSpecP& params)
   // Step 4: check model types with associated internal coordinates (if coupled)
 
   // ----------------------------------------------
-  // Step 5: Set CoalParticle objects/labels/variables/etc.
+  // Step 5: Set CoalParticle objects
 
+  // ----------------------------------------------
 
-
-}
-
-//---------------------------------------------------------------------------
-// Method: Schedule initialization of models
-//---------------------------------------------------------------------------
-/* @details
-This calls sched_initVars for each model, which in turn
- initializes the DQMOM-phase source terms (model terms G)
- and the gas-phase source terms. This must be done by the
- individual models, and not the Factory, because only the 
- model knows what variable type it is (e.g. double or Vector)
-*/
-void
-CoalModelFactory::sched_modelInit( const LevelP& level, SchedulerP& sched)
-{
-  for( ModelMap::iterator iModel = models_.begin(); iModel != models_.end(); ++iModel ) {
-    ModelBase* model = iModel->second;
-    model->sched_initVars( level, sched );
-  }
 }
 
 
 //---------------------------------------------------------------------------
 // Method: Register a model  
 //---------------------------------------------------------------------------
+/** @details
+This method checks for a couple of different model types.  The reason for this is,
+certain model types require a particle density model (these include particle velocity
+and heat transfer models).  
+
+Additionally, the factory checks to see if the mixture fraction, momentum, and mass 
+solvers "should have" source terms (i.e. if models are being used that create source terms).
+If there are, and there is no <src> tag in the corresponding block, a warning will be printed.
+This happens in CoalModelFactory::problemSetup(), right after registration of all models.
+*/
 void
 CoalModelFactory::register_model( const std::string name,
                                   ModelBuilder* builder,
@@ -317,65 +345,30 @@ CoalModelFactory::register_model( const std::string name,
   ModelBase* model = builder->build();
   models_[name] = model;
 
-  if( model->getType() == "ParticleDensity" ) {
-    ParticleDensityModel[quad_node] = dynamic_cast<ParticleDensity*>(model);
+  string modelType = model->getType();
+
+  if( modelType == "ParticleDensity" ) {
+    d_ParticleDensityModel[quad_node] = dynamic_cast<ParticleDensity*>(model);
     d_useParticleDensityModel = true;
   }
 
-  string modelType = model->getType();
-
-  /*
-  // this is for when CoalParticle is a class that's being used...
-  if( d_coupled_physics ) {
-
-    if( modelType == "Size" ) {
-      coal_particle->setSizeModel(model);
-
-    } else if( modelType == "Devolatilization" ) {
-      coal_particle->setDevolModel(model);
-
-    } else if( modelType == "HeatTransfer" ) {
-      coal_particle->setHeatTransferModel(model);
-
-    } else if( modelType == "CharOxidation" ) {
-      coal_particle->setCharOxidationModel(model);
-
-    } else if( modelType == "Drag" ) { // FIXME Drag
-      coal_particle->setDragModel(model);
-
-    } else if( modelType == "Evaporation" ) {
-      coal_particle->setEvaporationModel(model);
-
-    } else {
-      proc0cout << "WARNING: Arches: CoalModelFactory: Unrecognized model type " << name << " for coupled particle iterator! This model will not be used in the iterative procedure." << endl;
-      proc0cout << "Continuing..." << endl;
-
-    }
-  }
-  */
-
-  if( modelType == "Size" ) {
-    SizeModel[quad_node] = dynamic_cast<Size*>(model);
-
-  } else if( modelType == "ParticleVelocity" ) {
-    ParticleVelocityModel[quad_node] = dynamic_cast<ParticleVelocity*>(model);
+  if( modelType == "ParticleVelocity" ) {
+    d_ParticleVelocityModel[quad_node] = dynamic_cast<ParticleVelocity*>(model);
     d_useParticleVelocityModel = true;
-    
-  } else if( modelType == "Devolatilization" ) {
-    DevolModel[quad_node] = dynamic_cast<Devolatilization*>(model);
-  
-  } else if( modelType == "HeatTransfer" ) {
-    HeatModel[quad_node] = dynamic_cast<HeatTransfer*>(model);
-  
-  } else if( modelType == "CharOxidation" ) {
-    CharModel[quad_node] = dynamic_cast<CharOxidation*>(model);
-  
-  } else {
-    proc0cout << "WARNING: Arches: CoalModelFactory: Unrecognized model type "+name+" for coupled multiphysics particle algorithm!" << endl;
-    proc0cout << "Continuing..." << endl;
+  }
+
+  if( modelType == "HeatTransfer" ) {
+    d_useHeatTransferModel = true;
+  }
+
+  if( modelType == "Devolatilization" ) {
+    d_useDevolatilizationModel = true;
+  }
+
+  if( modelType == "CharOxidation" ) {
+    d_useCharOxidationModel = true;
   }
 }
-
 
 
 //---------------------------------------------------------------------------
@@ -400,7 +393,13 @@ CoalModelFactory::sched_computeVelocity( const LevelP& level,
                                          SchedulerP& sched,
                                          int timeSubStep )
 {
-  // schedule particle velocity model's computevelocity method();
+  // schedule particle velocity model's compute velocity method
+  if( d_useParticleVelocityModel ) {
+    for( vector<ParticleVelocity*>::iterator iPV = d_ParticleVelocityModel.begin();
+         iPV != d_ParticleVelocityModel.end(); ++iPV) {
+      (*iPV)->sched_computeParticleVelocity(level, sched, timeSubStep);
+    }
+  }
 }
 
 //---------------------------------------------------------------------------
@@ -414,12 +413,14 @@ CoalModelFactory::sched_coalParticleCalculation( const LevelP& level,
   if( d_coupled_physics ) {
     // require all internal coordinate and gas source variables
     // leave any other model-specific calculated variables for model to take care of
+    string err = "ERROR: CoalModelFactory: Coupled physics particle calculation is not implemented yet!\n";
+    throw InvalidValue(err,__FILE__,__LINE__);
   } else {
     
     if( d_useParticleDensityModel ) {
       // evaluate the density
-      for( vector<ParticleDensity*>::iterator iPD = ParticleDensityModel.begin();
-           iPD != ParticleDensityModel.end(); ++iPD ) {
+      for( vector<ParticleDensity*>::iterator iPD = d_ParticleDensityModel.begin();
+           iPD != d_ParticleDensityModel.end(); ++iPD ) {
         (*iPD)->sched_computeParticleDensity( level, sched, timeSubStep );
       }
     }
@@ -500,3 +501,36 @@ CoalModelFactory::coalParticleCalculation(  const ProcessorGroup  * pc,
   */
 }
 
+
+
+
+
+//---------------------------------------------------------------------------
+// Method: Schedule initialization of models
+//---------------------------------------------------------------------------
+/* @details
+This calls sched_initVars for each model, which in turn
+ initializes the DQMOM-phase source terms (model terms G)
+ and the gas-phase source terms. This must be done by the
+ individual models, and not the Factory, because only the 
+ model knows what variable type it is (e.g. double or Vector)
+*/
+void
+CoalModelFactory::sched_modelInit( const LevelP& level, SchedulerP& sched)
+{
+  for( ModelMap::iterator iModel = models_.begin(); iModel != models_.end(); ++iModel ) {
+    iModel->second->sched_initVars( level, sched );
+  }
+}
+
+
+//---------------------------------------------------------------------------
+// Method: Schedule dummy initialization of models
+//---------------------------------------------------------------------------
+void
+CoalModelFactory::sched_dummyInit( const LevelP& level, SchedulerP& sched )
+{
+  for( ModelMap::iterator iModel = models_.begin(); iModel != models_.end(); ++iModel ) {
+    iModel->second->sched_dummyInit( level, sched );
+  }
+}

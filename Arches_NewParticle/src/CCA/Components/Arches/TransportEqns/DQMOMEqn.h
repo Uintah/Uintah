@@ -1,15 +1,16 @@
 #ifndef Uintah_Component_Arches_DQMOMEqn_h
 #define Uintah_Component_Arches_DQMOMEqn_h
+#include <CCA/Components/Arches/TransportEqns/EqnBase.h>
+#include <CCA/Components/Arches/TransportEqns/DQMOMEqnFactory.h>
+#include <CCA/Components/Arches/Directives.h>
+
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/Variables/VarTypes.h>
-#include <CCA/Components/Arches/TransportEqns/EqnBase.h>
-#include <CCA/Components/Arches/TransportEqns/DQMOMEqnFactory.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Variables/SFCXVariable.h>
 #include <Core/Grid/Variables/SFCYVariable.h>
 #include <Core/Grid/Variables/SFCZVariable.h>
-#include <CCA/Components/Arches/Directives.h>
 
 //==========================================================================
 
@@ -59,10 +60,9 @@ public:
   void problemSetup(const ProblemSpecP& inputdb) {};
   void problemSetup(const ProblemSpecP& inputdb, int qn);
 
-  
   /** @brief Schedule a transport equation to be built and solved */
   void sched_evalTransportEqn( const LevelP&, 
-                               SchedulerP& sched, int timeSubStep );
+                               SchedulerP& sched, int timeSubStep ){};
 
   /** @brief Schedule the build for the terms needed in the transport equation */
   void sched_buildTransportEqn( const LevelP& level, 
@@ -198,6 +198,10 @@ public:
   /** @brief Get the quadrature node value. */
   inline const int getQuadNode(){
     return d_quadNode; };
+
+  /** @breif  Get boolean: add extra sources? */
+  inline const bool getAddExtraSources() {
+    return d_addExtraSources; };
 
  
 private:

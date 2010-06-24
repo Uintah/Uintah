@@ -19,7 +19,8 @@
 /**
  *  @class  ModelBuilder
  *  @author James C. Sutherland, Jeremy Thornock, Charles Reid
- *  @date   November 2006, May 2010
+ *  @date   November 2006
+ *          June 2010
  *
  *  @brief Abstract base class to support source term
  *  additions. Should be used in conjunction with the
@@ -111,11 +112,12 @@ public:
 	/** @brief	Grab input parameters from the ups file. */
 	void problemSetup( const ProblemSpecP & params);
 
-  /** @brief  Schedule initialization of models
-    */
-  void sched_modelInit( const LevelP& level, 
-                        SchedulerP& ); 
+  /** @brief  Schedule initialization of models */
+  void sched_modelInit( const LevelP& level, SchedulerP& ); 
   
+  /** @brief  Schedule dummy initialization of models */
+  void sched_dummyInit( const LevelP& level, SchedulerP& );
+
   /////////////////////////////////////////////////////
   // Model retrieval
 	
@@ -148,12 +150,14 @@ public:
                                       SchedulerP& sched, 
                                       int timeSubStep );
 
+  /** @brief  This method left intentionally blank */
   void coalParticleCalculation( const ProcessorGroup * pc, 
                                 const PatchSubset    * patches, 
                                 const MaterialSubset * matls, 
                                 DataWarehouse        * old_dw, 
                                 DataWarehouse        * new_dw );
   
+  /** @brief  Schedule computation of particle velocities */
   void sched_computeVelocity( const LevelP& level,
                               SchedulerP& sched,
                               int timeSubStep );
@@ -175,50 +179,55 @@ public:
     d_labelSet = true;
   };
 
-  /* @brief   Returns true if there is a particle density model specified in the input file. */
-  const inline bool useParticleDensityModel() {
-    return d_useParticleDensityModel; }
+  // ------------------------------------
+  // Get methods for particle velocity 
 
-  /* @brief   Returns true if there is a particle velocity model specified in the input file. */
+  /** @brief   Returns true if there is a particle velocity model specified in the input file. */
   const inline bool useParticleVelocityModel() {
     return d_useParticleVelocityModel; }
-
-
-  /** @brief  Return the vector containing the particle density VarLabel for quad node "qn" */
-  const VarLabel* getParticleDensityLabel( int qn ) {
-    if( d_useParticleDensityModel ) {
-      vector<ParticleDensity*>::iterator iPD = ParticleDensityModel.begin() + qn;
-      return (*iPD)->getParticleDensityLabel();
-    } else {
-      throw InvalidValue("You asked for density of the dispersed phase, but no dispersed phase density model was specified in the input file.\n",__FILE__,__LINE__);
-    }
-  };
 
   /** @brief    Return label for particle velocity vector */
   const VarLabel* getParticleVelocityLabel( int qn ) {
     if( d_useParticleVelocityModel ) {
-      vector<ParticleVelocity*>::iterator iPV = ParticleVelocityModel.begin() + qn;
+      vector<ParticleVelocity*>::iterator iPV = d_ParticleVelocityModel.begin() + qn;
       return (*iPV)->getParticleVelocityLabel();
     } else {
       return d_fieldLabels->d_newCCVelocityLabel;
     }
   };
 
-  /** @brief    Return the model object for particle density model */
-  ParticleDensity* getParticleDensityModel( int qn ) {
-    if( d_useParticleDensityModel ) {
-      vector<ParticleDensity*>::iterator iPD = ParticleDensityModel.begin() + qn;
-      return (*iPD);
+  /** @brief    Return the model object for particle velocity model */
+  ParticleVelocity* getParticleVelocityModel( int qn ) {
+    if( d_useParticleVelocityModel ) {
+      vector<ParticleVelocity*>::iterator iPV = d_ParticleVelocityModel.begin() + qn;
+      return (*iPV);
     } else {
       return NULL;
     }
   };
 
-  /** @brief    Return the model object for particle velocity model */
-  ParticleVelocity* getParticleVelocityModel( int qn ) {
-    if( d_useParticleVelocityModel ) {
-      vector<ParticleVelocity*>::iterator iPV = ParticleVelocityModel.begin() + qn;
-      return (*iPV);
+  // --------------------------------------
+  // Get methods for particle density
+
+  /* @brief   Returns true if there is a particle density model specified in the input file. */
+  const inline bool useParticleDensityModel() {
+    return d_useParticleDensityModel; }
+
+  /** @brief  Return the vector containing the particle density VarLabel for quad node "qn" */
+  const VarLabel* getParticleDensityLabel( int qn ) {
+    if( d_useParticleDensityModel ) {
+      vector<ParticleDensity*>::iterator iPD = d_ParticleDensityModel.begin() + qn;
+      return (*iPD)->getParticleDensityLabel();
+    } else {
+      throw InvalidValue("ERROR: CoalModelFactory: You asked for density of the dispersed phase, but no dispersed phase density model was specified in the input file.\n",__FILE__,__LINE__);
+    }
+  };
+
+  /** @brief    Return the model object for particle density model */
+  ParticleDensity* getParticleDensityModel( int qn ) {
+    if( d_useParticleDensityModel ) {
+      vector<ParticleDensity*>::iterator iPD = d_ParticleDensityModel.begin() + qn;
+      return (*iPD);
     } else {
       return NULL;
     }
@@ -234,34 +243,20 @@ private:
 	bool d_coupled_physics;		///< Boolean: use coupled physics and iterative procedure?
   bool d_labelSet;          ///< Boolean: has the ArchesLabel been set using setArchesLabel()?
 
-  //vector<VarLabel*> d_densityLabels;
-  int numQuadNodes;
+  int numQuadNodes;         ///< Number of quadrature nodes
 
   vector<double> yelem;			///< Vector containing initial composition of coal particle
   ArchesLabel* d_fieldLabels;
+
+  bool d_useParticleVelocityModel;  ///< Boolean: using a particle velocity model?
+  bool d_useHeatTransferModel;      ///< Boolean: using a heat transfer model?
+  bool d_useDevolatilizationModel;  ///< Boolean: using a devolatilization model? (used to see whether there should be a <src> tag in the <MixtureFractionSolver> block)
+  bool d_useCharOxidationModel;     ///< Boolean: using a char oxidation model? (used to see whether there should be a <src> tag in the <MixtureFractionSolver> block)
+  bool d_useParticleDensityModel;   ///< Boolean: using a particle density model? (This is set automatically, based on whether any models require a particle density)
+
+  vector<ParticleVelocity*> d_ParticleVelocityModel;
+  vector<ParticleDensity*>  d_ParticleDensityModel;
   
-  // If using coupled physics, specific internal coordinates are needed.
-  bool b_useParticleTemperature;
-  bool b_useParticleEnthalpy;
-  bool b_useMoisture;
-  bool b_useAsh;
-  bool d_useParticleDensityModel;
-  bool d_useParticleVelocityModel;
-
-  // Model pointers to corresponding models are also needed for coupled physics.
-  vector<ParticleDensity*>  ParticleDensityModel;
-  vector<ParticleVelocity*> ParticleVelocityModel;
-  vector<Size*>             SizeModel;
-  vector<Devolatilization*> DevolModel;
-  vector<HeatTransfer*>     HeatModel;
-  vector<CharOxidation*>    CharModel;
-
-  // If using separable physics, no specific internal coordinates are needed.
-  // Use the existing framework of using tag
-  // <Models>
-  //    <model label="..." type="...">
-  // which is used to construct a model of type "..." by Arches
- 
   CoalModelFactory();
   ~CoalModelFactory();
 	

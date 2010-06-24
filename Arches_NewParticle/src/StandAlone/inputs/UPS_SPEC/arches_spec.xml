@@ -255,12 +255,16 @@
           <limiter_type                 spec="OPTIONAL STRING 'superbee, vanLeer, upwind, none'"/>
           <boundary_limiter_type        spec="OPTIONAL STRING 'central-upwind, upwind'" />
           <central_limiter              spec="OPTIONAL BOOLEAN" /> <!-- unrecognized option -->
+          <src                          spec="MULTIPLE NO_DATA" 
+                                        attribute1="label REQUIRED STRING"/>
         </MixtureFractionSolver>
 
         <MomentumSolver                 spec="REQUIRED NO_DATA" >
           <pressure_correction          spec="OPTIONAL BOOLEAN" />
           <filter_divergence_constraint spec="OPTIONAL BOOLEAN" />
           <convection_scheme            spec="REQUIRED STRING 'central, upwind'" />
+          <src                          spec="MULTIPLE NO_DATA" 
+                                        attribute1="label REQUIRED STRING"/>
         </MomentumSolver>
 
         <PressureSolver                 spec="REQUIRED NO_DATA" >
@@ -412,7 +416,7 @@
         <adiabGas_nonadiabPart          spec="OPTIONAL BOOLEAN"/> <!-- FIXME: What is this for? -->
         <save_moments                   spec="OPTIONAL BOOLEAN"/> <!-- Allows saving any moments being used for DQMOM -->
 
-        <VelModel                       spec="MULTIPLE NO_DATA"
+        <!--VelModel                       spec="MULTIPLE NO_DATA"
                                         attribute1="label OPTIONAL STRING"
                                         attribute2="type REQUIRED STRING 'Balachandar, Dragforce'">
 
@@ -429,19 +433,20 @@
           <iter                         spec="OPTIONAL INTEGER 'positive'"/>
           <tol                          spec="OPTIONAL DOUBLE  'positive'"/>
 
-        </VelModel>
+        </VelModel-->
 
         <Models                         spec="OPTIONAL NO_DATA">
         
           <model                        spec="MULTIPLE NO_DATA"
                                         attribute1="label REQUIRED STRING"
-                                        attribute2="type REQUIRED STRING 'KobayashiSarofimDevol, ConstantModel, ConstantSize, SimpleHeatTransfer, XDrag, YDrag, ZDrag'">
+                                        attribute2="type REQUIRED STRING 'ConstantModel, BadHawkDevol, KobayashiSarofimDevol, SimpleHeatTransfer, DragModel, Balachandar, ConstantSize, CharOxidation'">
 
             <ICVars                     spec="OPTIONAL NO_DATA"> <!-- block containing list of internal coordinates the DQMOM model depends on -->
               <variable                 spec="MULTIPLE NO_DATA"
                                         attribute1="label REQUIRED STRING"
                                         attribute2="role REQUIRED STRING"/>
             </ICVars>
+
             <scalarVars                 spec="OPTIONAL NO_DATA"> <!-- block containing list of scalar variables the DQMOM model depends on -->
               <variable                 spec="MULTIPLE NO_DATA"
                                         attribute1="label REQUIRED STRING"

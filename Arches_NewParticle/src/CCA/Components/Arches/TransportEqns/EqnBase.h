@@ -156,6 +156,10 @@ public:
     return d_use_density_guess; 
   };
 
+  /** @brief  Return a boolean: add sources? */
+  inline const bool getAddSources() {
+    return d_addSources; };
+
 protected:
 
   template<class T> 
@@ -178,7 +182,7 @@ protected:
   std::string d_eqnName;                  ///< Human-readable label for this equation
 
   const VarLabel* d_transportVarLabel;    ///< Label for scalar being transported, in NEW data warehouse
-  const VarLabel* d_oldtransportVarLabel; ///< Label for scalar being transported, in OLD data warehouse
+  const VarLabel* d_oldtransportVarLabel; ///< Label for scalar being transported, in OLD data warehouse ("old" refers to old value within RK substeps)
   bool d_doConv;                          ///< Boolean: do convection for this equation object?
   bool d_doDiff;                          ///< Boolean: do diffusion for this equation object?
   bool d_addSources;                      ///< Boolean: add a right-hand side (i.e. convection, diffusion, source terms) to this equation object?

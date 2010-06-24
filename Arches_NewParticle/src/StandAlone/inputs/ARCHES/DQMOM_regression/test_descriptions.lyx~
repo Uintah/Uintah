@@ -749,13 +749,6 @@ To keep the tests efficient, total run time is kept to 0.2 seconds and only
 \end_layout
 
 \begin_layout Standard
-\begin_inset Newpage newpage
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
 \begin_inset Float table
 wide false
 sideways false

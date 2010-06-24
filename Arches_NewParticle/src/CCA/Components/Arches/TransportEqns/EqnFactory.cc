@@ -6,9 +6,6 @@
 #include <Core/Exceptions/InvalidValue.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Parallel/Parallel.h>
-//#include <sstream>
-//#include <iostream>
-//#include <stdexcept>
 
 //===========================================================================
 
@@ -172,6 +169,62 @@ EqnFactory::scalarInit( const ProcessorGroup* ,
     }
 
   }//end patch loop
+  
+  proc0cout << endl;
+}
+
+//---------------------------------------------------------------------------
+// Method: Schedule dummy initialization for MPM Arches
+//---------------------------------------------------------------------------
+void
+EqnFactory::sched_dummyInit( const LevelP& level, SchedulerP& sched )
+{
+  for( EqnMap::iterator iEqn = eqns_.begin(); iEqn != eqns_.end(); ++iEqn ) {
+    iEqn->second->sched_dummyInit( level, sched );
+  }
+}
+
+
+//---------------------------------------------------------------------------
+// Method: Evaluation the ScalarEqns and their source terms
+//---------------------------------------------------------------------------
+/* @details
+This method was created so that the ExplicitSolver could schedule the evaluation
+of ScalarEqns but still abstract the details to the EqnFactory.
+
+The procedure for this method is as follows:
+1. Initialize scalar equation variables, if necessary
+2. Calculate source terms
+3. Update the scalar equation variables using the source terms
+4. (Last time sub-step only) Clean up after the equation evaluation
+*/
+void
+EqnFactory::sched_evalTransportEqns( const LevelP& level, SchedulerP& sched, int timeSubStep, bool evalDensityGuessEqns, bool cleanup )
+{
+  for( EqnMap::iterator iEqn = eqns_.begin(); iEqn != eqns_.end(); ++iEqn ) {
+    if( evalDensityGuessEqns == iEqn->second->getDensityGuessBool() ) {
+
+      // Step 1
+      if( timeSubStep == 0 ) {
+        iEqn->second->sched_initializeVariables( level, sched );
+      }
+
+      // cmr
+      //// Step 2
+      //if( iEqn->second->getAddSources() ) {
+      //  dynamic_cast<ScalarEqn*>(iEqn->second)->sched_computeSources( level, sched, timeSubStep );
+      //}
+
+      // Step 3
+      iEqn->second->sched_buildTransportEqn( level, sched, timeSubStep );
+      iEqn->second->sched_solveTransportEqn( level, sched, timeSubStep );
+
+      // Step 4
+      if( cleanup ) {
+        iEqn->second->sched_cleanUp( level, sched );
+      }
+    }
+  }
 }
 
 //---------------------------------------------------------------------------
