@@ -66,10 +66,10 @@ public:
   /** @brief Interface for the inputfile and set constants */ 
   void problemSetup(const ProblemSpecP& db);
 
-  /** @brief Schedule the initialization of some special/local variables */
+  /** @brief Schedule the initialization of special/local variables unique to model */
   void sched_initVars( const LevelP& level, SchedulerP& sched );
 
-  /** @brief  Actually initialize some special/local variables */
+  /** @brief  Actually initialize special variables unique to model */
   void initVars( const ProcessorGroup * pc, 
                  const PatchSubset    * patches, 
                  const MaterialSubset * matls, 
@@ -90,7 +90,7 @@ public:
                      DataWarehouse* old_dw, 
                      DataWarehouse* new_dw );
 
-  // FIXME: add Glacier computation methods
+  // TODO: add Glacier computation methods
 
   /** @brief  Get the particle heating rate (see Glacier) */
   double calcParticleHeatingRate() {
@@ -162,6 +162,8 @@ private:
   double yelem[5];                ///< Mass fractions of each element in coal (C, H, N, O, S respectively)
   vector<double>  ash_mass_init;  ///< Initial ash mass
   double rhop;                    ///< Density of particle 
+
+  bool d_compute_particle_temp;
 
   double Pr;
   double blow;

@@ -37,7 +37,6 @@ class ScalarEqn;
 class BoundaryCond;
 class EqnBase;
 class EqnFactory;
-class PartVel; 
 class DQMOM; 
 class ArchesLabel; 
 class SpatialOps : public UintahParallelComponent, public SimulationInterface {
@@ -93,7 +92,6 @@ private:
   ExplicitTimeInt* d_timeIntegrator;
   ScalarEqn* d_temperatureEqnMan; 
   BoundaryCond* d_boundaryCond;
-  PartVel* d_partVel; 
   DQMOM* d_dqmomSolver; 
 
   bool d_recompile;

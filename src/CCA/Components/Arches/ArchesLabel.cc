@@ -829,10 +829,6 @@ ArchesLabel::~ArchesLabel()
 
   VarLabel::destroy(d_areaFractionLabel); 
 
-  for (PartVelMap::iterator i = partVel.begin(); i != partVel.end(); i++){
-    VarLabel::destroy(i->second); 
-  }
-  
 }           
 
 void ArchesLabel::setSharedState(SimulationStateP& sharedState)

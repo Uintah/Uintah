@@ -54,8 +54,10 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/Task.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
+#include <Core/Parallel/Parallel.h>
 #include <CCA/Components/Arches/SourceTerms/SourceTermFactory.h>
 #include <CCA/Components/Arches/SourceTerms/SourceTermBase.h>
+#include <CCA/Components/Arches/CoalModels/CoalModelFactory.h>
 
 using namespace Uintah;
 using namespace std;
@@ -192,7 +194,6 @@ ScalarSolver::problemSetup(const ProblemSpecP& params)
   d_source->setBoundary(d_boundaryCondition);
 // -- jeremy --        
 
-//TODO - look at this stuff
   // New Source terms (ala the new transport eqn):
   if (db->findBlock("src")){
     string srcname; 
@@ -200,9 +201,9 @@ ScalarSolver::problemSetup(const ProblemSpecP& params)
       src_db->getAttribute("label", srcname);
       //which sources are turned on for this equation
       d_new_sources.push_back( srcname ); 
-
     }
   }
+
 
   d_discretize->setTurbulentPrandtlNumber(d_turbPrNo);
 }
@@ -317,7 +318,6 @@ ScalarSolver::sched_buildLinearMatrix(SchedulerP& sched,
 //#endif
     tsk->modifies(d_lab->d_scalarBoundarySrcLabel);
 
-    // TODO - look at this stuff //cmr
     // Adding new sources from factory:
     SourceTermFactory& factor = SourceTermFactory::self(); 
     for (vector<std::string>::iterator iter = d_new_sources.begin(); 
@@ -325,9 +325,12 @@ ScalarSolver::sched_buildLinearMatrix(SchedulerP& sched,
 
       SourceTermBase& src = factor.retrieve_source_term( *iter ); 
       const VarLabel* srcLabel = src.getSrcLabel(); 
-      tsk->requires(Task::OldDW, srcLabel, gn, 0); 
+      //tsk->requires(Task::OldDW, srcLabel, gn, 0); 
+      tsk->requires(Task::NewDW, srcLabel, gn, 0); 
+      // cmr - using the new DW because the source term is always calculated before the code gets to this point
 
     }
+
   }else {
 
     // -------- New Coefficient Stuff -------------
@@ -343,7 +346,6 @@ ScalarSolver::sched_buildLinearMatrix(SchedulerP& sched,
 //#endif
     tsk->modifies(d_lab->d_scalarBoundarySrcLabel);
 
-    // TODO - look at this stuff //cmr
     // Adding new sources from factory:
     SourceTermFactory& factor = SourceTermFactory::self(); 
     for (vector<std::string>::iterator iter = d_new_sources.begin(); 
@@ -465,7 +467,6 @@ void ScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
     new_dw->getModifiable(scalarVars.scalarBoundarySrc,
                                 d_lab->d_scalarBoundarySrcLabel, indx, patch);
 
-    // TODO - look at this stuff //cmr
     // Adding new sources from factory:
     SourceTermFactory& factor = SourceTermFactory::self(); 
     for (vector<std::string>::iterator iter = d_new_sources.begin(); 
@@ -475,7 +476,10 @@ void ScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
       const VarLabel* srcLabel = src.getSrcLabel(); 
       // here we have made the assumption that there is only one scalar source.
       // probably want to fix this. 
-      old_dw->get( scalarVars.otherSource, srcLabel, indx, patch, Ghost::None, 0); 
+      //old_dw->get( scalarVars.otherSource, srcLabel, indx, patch, Ghost::None, 0); 
+      new_dw->get( scalarVars.otherSource, srcLabel, indx, patch, Ghost::None, 0); 
+      // cmr - using the new data warehouse because the source term is always calculated before the code gets to this point
+      
 
     }
 
@@ -506,7 +510,6 @@ void ScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
     new_dw->getModifiable(scalarVars.scalarBoundarySrc,
                           d_lab->d_scalarBoundarySrcLabel, indx, patch);
  
-    // TODO - look through this //cmr
     // Adding new sources from factory:
     SourceTermFactory& factor = SourceTermFactory::self(); 
     for (vector<std::string>::iterator iter = d_new_sources.begin(); 

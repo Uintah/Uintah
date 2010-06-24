@@ -1,4 +1,3 @@
-
 #include <CCA/Components/Arches/SourceTerms/SourceTermBase.h>
 #include <CCA/Components/Arches/SourceTerms/SourceTermFactory.h>
 #include <Core/Grid/Variables/CCVariable.h>

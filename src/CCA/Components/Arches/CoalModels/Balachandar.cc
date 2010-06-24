@@ -111,6 +111,7 @@ Balachandar::problemSetup(const ProblemSpecP& params)
       temp_label_name += node;
 
       // user specifies "role" of each internal coordinate
+
       if ( role_name == "length" ) {
         LabelToRoleMap[temp_label_name] = role_name;
       } else {
@@ -137,91 +138,86 @@ Balachandar::problemSetup(const ProblemSpecP& params)
     std::replace( d_icLabels.begin(), d_icLabels.end(), temp_ic_name, temp_ic_name_full);
   }
  
+  // -----------------------------------------------------------------
+  // Look for required scalars
+  ProblemSpecP db_scalarvars = params->findBlock("scalarVars");
+  if (db_scalarvars) {
+    for( ProblemSpecP variable = db_scalarvars->findBlock("variable");
+         variable != 0; variable = variable->findNextBlock("variable") ) {
+
+      variable->getAttribute("label", label_name);
+      variable->getAttribute("role",  role_name);
+
+      temp_label_name = label_name;
+
+      std::stringstream out; 
+      out << d_quadNode;
+      string node = out.str();
+      temp_label_name += "_qn";
+      temp_label_name += node;
+
+      // user specifies "role" of each scalar
+      // if it isn't an internal coordinate or a scalar, it's required explicitly
+      // ( see comments in Arches::registerModels() for details )
+      if ( role_name == "length") {
+        LabelToRoleMap[temp_label_name] = role_name;
+      } else {
+        std::string errmsg;
+        errmsg = "Invalid variable role for Balachandar particle velocity model: must be \"length\", you specified \"" + role_name + "\".";
+        throw InvalidValue(errmsg,__FILE__,__LINE__);
+      }
+    }
+  }
+
+
+  ///////////////////////////////////////////
+
+
   DQMOMEqnFactory& dqmom_eqn_factory = DQMOMEqnFactory::self();
+  EqnFactory& eqn_factory = EqnFactory::self();
 
   // assign labels for each internal coordinate
-  for (vector<std::string>::iterator iter = d_icLabels.begin(); 
-      iter != d_icLabels.end(); iter++) { 
+  for( map<string,string>::iterator iter = LabelToRoleMap.begin();
+       iter != LabelToRoleMap.end(); ++iter ) {
 
-    map<string, string>::iterator iMap = LabelToRoleMap.find(*iter);
-    
-    if ( iMap != LabelToRoleMap.end() ) {
-      if ( iMap->second == "length") {
-        if (dqmom_eqn_factory.find_scalar_eqn(*iter) ) {
-          EqnBase& t_current_eqn = dqmom_eqn_factory.retrieve_scalar_eqn(*iter);
-          DQMOMEqn& current_eqn = dynamic_cast<DQMOMEqn&>(t_current_eqn);
-          d_length_label = current_eqn.getTransportEqnLabel();
-          d_length_scaling_factor = current_eqn.getScalingConstant();
-        } else {
-          std::string errmsg = "ARCHES: Balachandar: Invalid variable given in <variable> tag for Balachandar model";
-          errmsg += "\nCould not find given particle length variable \"";
-          errmsg += *iter;
-          errmsg += "\" in EqnFactory or in DQMOMEqnFactory.";
-          throw InvalidValue(errmsg,__FILE__,__LINE__);
-        }
+    if( iter->second == "length" ){
+
+      if( dqmom_eqn_factory.find_scalar_eqn(iter->first) ){
+        EqnBase& t_current_eqn = dqmom_eqn_factory.retrieve_scalar_eqn(iter->first);
+        DQMOMEqn& current_eqn = dynamic_cast<DQMOMEqn&>(t_current_eqn);
+        d_length_label = current_eqn.getTransportEqnLabel();
+        d_length_scaling_factor = current_eqn.getScalingConstant();
+
+      } else if (eqn_factory.find_scalar_eqn(iter->first) ) {
+        EqnBase& t_current_eqn = eqn_factory.retrieve_scalar_eqn(iter->first);
+        d_length_label = t_current_eqn.getTransportEqnLabel();
+        d_length_scaling_factor = t_current_eqn.getScalingConstant();
+
+      } else {
+        std::string errmsg = "ARCHES: Balachandar: Invalid variable given in <variable> tag for Balachandar model";
+        errmsg += "\nCould not find given particle length variable \"";
+        errmsg += iter->first;
+        errmsg += "\" in EqnFactory or in DQMOMEqnFactory.";
+        throw InvalidValue(errmsg,__FILE__,__LINE__);
       }
+  
     } else {
       // can't find this required variable in the labels-to-roles map!
-      std::string errmsg = "ARCHES: Balachandar: You specified that the variable \"" + *iter + 
+      std::string errmsg = "ARCHES: Balachandar: You specified that the variable \"" + iter->second + 
                            "\" was required, but you did not specify a role for it!\n";
       throw InvalidValue( errmsg, __FILE__, __LINE__);
     }
   }//end for ic labels
 
-  // FIXME
-  // set the x-, y-, and z-velocity VarLabels
   
   // // set model clipping (not used)
-  // db->getWithDefault( "low_clip", d_lowModelClip,   1.0e-6 );
-  // db->getWithDefault( "high_clip", d_highModelClip, 999999 );  
+  //db->getWithDefault( "low_clip", d_lowModelClip,   1.0e-6 );
+  //db->getWithDefault( "high_clip", d_highModelClip, 999999 );  
 
 
 }
 
 
-//-------------------------------------------------------------------------
-// Method: Actually do the dummy initialization
-//-------------------------------------------------------------------------
-/** @details
-This method intentionally left blank. 
-@seealso ParticleVelocity::dummyInit
-*/
-void
-Balachandar::dummyInit( const ProcessorGroup* pc,
-                        const PatchSubset* patches, 
-                        const MaterialSubset* matls, 
-                        DataWarehouse* old_dw, 
-                        DataWarehouse* new_dw )
-{
-}
-
-//---------------------------------------------------------------------------
-// Method: Schedule the initialization of special variables unique to model
-//---------------------------------------------------------------------------
-/** @details
-This method intentionally left blank. 
-@seealso ParticleVelocity::sched_initVars
-*/
-void 
-Balachandar::sched_initVars( const LevelP& level, SchedulerP& sched )
-{
-}
-
-//-------------------------------------------------------------------------
-// Method: Initialize special variables unique to the model
-//-------------------------------------------------------------------------
-/** @details
-This method intentionally left blank. 
-@seealso ParticleVelocity::initVars
-*/
-void
-Balachandar::initVars( const ProcessorGroup * pc, 
-                       const PatchSubset    * patches, 
-                       const MaterialSubset * matls, 
-                       DataWarehouse        * old_dw, 
-                       DataWarehouse        * new_dw )
-{
-}
 
 //---------------------------------------------------------------------------
 // Method: Schedule the calculation of the Model 
@@ -354,14 +350,6 @@ Balachandar::computeParticleVelocity( const ProcessorGroup* pc,
 
     CoalModelFactory& coal_model_factory = CoalModelFactory::self();
 
-    //CCVariable<Vector> particle_velocity;
-    //if( new_dw->exists( d_velocity_label, matlIndex, patch) ) {
-    //  new_dw->getModifiable( particle_velocity, d_velocity_label, matlIndex, patch );
-    //} else {
-    //  new_dw->allocateAndPut( particle_velocity, d_velocity_label, matlIndex, patch );
-    //  particle_velocity.initialize(Vector(0.0,0.0,0.0));
-    //}
-
     constCCVariable<double> weight;
     old_dw->get(weight, d_weight_label, matlIndex, patch, gn, 0);
 
@@ -376,45 +364,8 @@ Balachandar::computeParticleVelocity( const ProcessorGroup* pc,
       particle_velocity.initialize( Vector(0.0,0.0,0.0) );
     }
 
-    /*
-    CCVariable<double> particle_u_velocity;
-    if( new_dw->exists( d_uvel_label, matlIndex, patch) ) {
-      new_dw->getModifiable( particle_u_velocity, d_uvel_label, matlIndex, patch );
-    } else {
-      new_dw->allocateAndPut( particle_u_velocity, d_uvel_label, matlIndex, patch );
-      particle_u_velocity.initialize(0.0);
-    }
-
-    CCVariable<double> particle_v_velocity;
-    if( new_dw->exists( d_vvel_label, matlIndex, patch) ) {
-      new_dw->getModifiable( particle_v_velocity, d_vvel_label, matlIndex, patch );
-    } else {
-      new_dw->allocateAndPut( particle_v_velocity, d_vvel_label, matlIndex, patch );
-      particle_v_velocity.initialize(0.0);
-    }
-
-    CCVariable<double> particle_w_velocity;
-    if( new_dw->exists( d_wvel_label, matlIndex, patch) ) {
-      new_dw->getModifiable( particle_w_velocity, d_wvel_label, matlIndex, patch );
-    } else {
-      new_dw->allocateAndPut( particle_w_velocity, d_wvel_label, matlIndex, patch );
-      particle_w_velocity.initialize(0.0);
-    }
-    */
-
     constCCVariable<Vector> old_particle_velocity;
     old_dw->get( old_particle_velocity, d_velocity_label, matlIndex, patch, gn, 0 );
-
-    /*
-    constCCVariable<double> old_particle_u_velocity;
-    old_dw->get( old_particle_u_velocity, d_uvel_label, matlIndex, patch, gn, 0 );
-
-    constCCVariable<double> old_particle_v_velocity;
-    old_dw->get( old_particle_v_velocity, d_vvel_label, matlIndex, patch, gn, 0 );
-
-    constCCVariable<double> old_particle_w_velocity;
-    old_dw->get( old_particle_w_velocity, d_wvel_label, matlIndex, patch, gn, 0 );
-    */
 
     constCCVariable<Vector> gas_velocity;
     old_dw->get( gas_velocity, d_fieldLabels->d_newCCVelocityLabel, matlIndex, patch, gn, 0 );

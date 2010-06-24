@@ -1,13 +1,8 @@
 #include <CCA/Components/Arches/SourceTerms/ParticleGasMomentum.h>
-
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqnFactory.h>
-#include <CCA/Components/Arches/TransportEqns/DQMOMEqn.h>
-#include <CCA/Components/Arches/TransportEqns/EqnBase.h>
 #include <CCA/Components/Arches/CoalModels/CoalModelFactory.h>
 #include <CCA/Components/Arches/CoalModels/ModelBase.h>
 #include <CCA/Components/Arches/CoalModels/ParticleVelocity.h>
-#include <CCA/Components/Arches/CoalModels/HeatTransfer.h>
-
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Grid/SimulationState.h>
@@ -140,26 +135,28 @@ ParticleGasMomentum::computeSource( const ProcessorGroup* pc,
       DQMOMEqnFactory& dqmom_factory  = DQMOMEqnFactory::self(); 
       int numEnvironments = dqmom_factory.get_quad_nodes();
  
-      vector< constCCVariable<Vector>* > gas_drag_vec(numEnvironments);
+      // vector holding drag model constCCVariables
+      vector< constCCVariable<Vector>* > dragCCVars(numEnvironments);
 
-      // Store the momentum source terms from the particle velocity model for each quadrature node
+      // populate vector holding drag model constCCVariables
       for( int iqn=0; iqn < numEnvironments; ++iqn ) {
+        dragCCVars[iqn] = scinew constCCVariable<Vector>;
         ParticleVelocity* vel_model = coal_model_factory.getParticleVelocityModel( iqn );
-
-        constCCVariable<Vector> temp_gas_drag;
-        old_dw->get( temp_gas_drag, vel_model->getGasSourceLabel(), matlIndex, patch, gn, 0);
-        gas_drag_vec[iqn] = &temp_gas_drag;
+        new_dw->get( *(dragCCVars[iqn]), vel_model->getGasSourceLabel(), matlIndex, patch, gn, 0);
       }
 
       // Now add the source terms for each quadrature node together
       for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
         IntVector c = *iter; 
 
-        for (int iqn = 0; iqn < numEnvironments; iqn++){
-          // CCVariables are stored in gas_drag_vec (see ln 146-ish)
-          constCCVariable<Vector> gas_drag_iqn = *gas_drag_vec[iqn];
-          dragSrc[c] += gas_drag_iqn[c];
+        Vector running_sum = Vector(0.0, 0.0, 0.0);
+        for (vector< constCCVariable<Vector>* >::iterator iDrag = dragCCVars.begin();
+             iDrag != dragCCVars.end(); ++iDrag ) {
+          running_sum += (**iDrag)[c];
         }
+
+        dragSrc[c] = running_sum;
+
       }
 
 

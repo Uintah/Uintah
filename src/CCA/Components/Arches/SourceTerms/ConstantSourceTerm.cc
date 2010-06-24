@@ -28,6 +28,8 @@ ConstantSourceTermBuilder::build(){
 // End Builder
 //---------------------------------------------------------------------------
 
+
+
 ConstantSourceTerm::ConstantSourceTerm( std::string srcName, SimulationStateP& sharedState,
                             vector<std::string> reqLabelNames ) 
 : SourceTermBase(srcName, sharedState, reqLabelNames)
@@ -37,6 +39,8 @@ ConstantSourceTerm::ConstantSourceTerm( std::string srcName, SimulationStateP& s
 
 ConstantSourceTerm::~ConstantSourceTerm()
 {}
+
+
 //---------------------------------------------------------------------------
 // Method: Problem Setup
 //---------------------------------------------------------------------------
@@ -49,75 +53,7 @@ ConstantSourceTerm::problemSetup(const ProblemSpecP& inputdb)
   db->getWithDefault("constant",d_constant, 0.); 
 
 }
-//---------------------------------------------------------------------------
-// Method: Schedule the calculation of the source term 
-//---------------------------------------------------------------------------
-void 
-ConstantSourceTerm::sched_computeSource( const LevelP& level, SchedulerP& sched, int timeSubStep )
-{
-  std::string taskname = "ConstantSourceTerm::computeSource";
-  Task* tsk = scinew Task(taskname, this, &ConstantSourceTerm::computeSource, timeSubStep);
 
-  if (timeSubStep == 0 && !d_labelSchedInit) {
-    // Every source term needs to set this flag after the varLabel is computed. 
-    // transportEqn.cleanUp should reinitialize this flag at the end of the time step. 
-    d_labelSchedInit = true;
-
-    tsk->computes(d_srcLabel);
-  } else {
-    tsk->modifies(d_srcLabel); 
-  }
-
-  for (vector<std::string>::iterator iter = d_requiredLabels.begin(); 
-       iter != d_requiredLabels.end(); iter++) { 
-    // HERE I WOULD REQUIRE ANY VARIABLES NEEDED TO COMPUTE THE SOURCe
-    //tsk->requires( Task::OldDW, .... ); 
-  }
-
-  sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials()); 
-
-}
-//---------------------------------------------------------------------------
-// Method: Actually compute the source term 
-//---------------------------------------------------------------------------
-void
-ConstantSourceTerm::computeSource( const ProcessorGroup* pc, 
-                   const PatchSubset* patches, 
-                   const MaterialSubset* matls, 
-                   DataWarehouse* old_dw, 
-                   DataWarehouse* new_dw, 
-                   int timeSubStep )
-{
-  //patch loop
-  for (int p=0; p < patches->size(); p++){
-
-    const Patch* patch = patches->get(p);
-    int archIndex = 0;
-    int matlIndex = d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
-
-    CCVariable<double> constSrc; 
-    if ( new_dw->exists(d_srcLabel, matlIndex, patch ) ){
-      new_dw->getModifiable( constSrc, d_srcLabel, matlIndex, patch ); 
-      constSrc.initialize(0.0);
-    } else {
-      new_dw->allocateAndPut( constSrc, d_srcLabel, matlIndex, patch );
-      constSrc.initialize(0.0);
-    } 
-
-    for (vector<std::string>::iterator iter = d_requiredLabels.begin(); 
-         iter != d_requiredLabels.end(); iter++) { 
-      //CCVariable<double> temp; 
-      //old_dw->get( *iter.... ); 
-    }
-
-
-
-    for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
-      IntVector c = *iter; 
-      constSrc[c] += d_constant; 
-    }
-  }
-}
 
 //---------------------------------------------------------------------------
 // Method: Schedule dummy initialization
@@ -165,3 +101,71 @@ ConstantSourceTerm::dummyInit( const ProcessorGroup* pc,
   }
 }
 
+
+//---------------------------------------------------------------------------
+// Method: Schedule the calculation of the source term 
+//---------------------------------------------------------------------------
+void 
+ConstantSourceTerm::sched_computeSource( const LevelP& level, SchedulerP& sched, int timeSubStep )
+{
+  std::string taskname = "ConstantSourceTerm::computeSource";
+  Task* tsk = scinew Task(taskname, this, &ConstantSourceTerm::computeSource, timeSubStep);
+
+  if (timeSubStep == 0 && !d_labelSchedInit) {
+    // Every source term needs to set this flag after the varLabel is computed. 
+    // transportEqn.cleanUp should reinitialize this flag at the end of the time step. 
+    d_labelSchedInit = true;
+
+    tsk->computes(d_srcLabel);
+  } else {
+    tsk->modifies(d_srcLabel); 
+  }
+
+  //for (vector<std::string>::iterator iter = d_requiredLabels.begin(); 
+  //     iter != d_requiredLabels.end(); iter++) { 
+  //  // require any variables needed to compute the source
+  //  //tsk->requires( Task::OldDW, .... ); 
+  //}
+
+  sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials()); 
+
+}
+//---------------------------------------------------------------------------
+// Method: Actually compute the source term 
+//---------------------------------------------------------------------------
+void
+ConstantSourceTerm::computeSource( const ProcessorGroup* pc, 
+                   const PatchSubset* patches, 
+                   const MaterialSubset* matls, 
+                   DataWarehouse* old_dw, 
+                   DataWarehouse* new_dw, 
+                   int timeSubStep )
+{
+  //patch loop
+  for (int p=0; p < patches->size(); p++){
+
+    const Patch* patch = patches->get(p);
+    int archIndex = 0;
+    int matlIndex = d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+
+    CCVariable<double> constSrc; 
+    if ( new_dw->exists(d_srcLabel, matlIndex, patch ) ){
+      new_dw->getModifiable( constSrc, d_srcLabel, matlIndex, patch ); 
+      constSrc.initialize(0.0);
+    } else {
+      new_dw->allocateAndPut( constSrc, d_srcLabel, matlIndex, patch );
+      constSrc.initialize(0.0);
+    } 
+
+    //for (vector<std::string>::iterator iter = d_requiredLabels.begin(); 
+    //     iter != d_requiredLabels.end(); iter++) { 
+    //  //CCVariable<double> temp; 
+    //  //old_dw->get( *iter.... ); 
+    //}
+
+    for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
+      IntVector c = *iter; 
+      constSrc[c] += d_constant; 
+    }
+  }
+}

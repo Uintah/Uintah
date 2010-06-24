@@ -339,56 +339,25 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     //add other ones here too.
   } 
 
-  // Get a reference to all the DQMOM equations
-  DQMOMEqnFactory& dqmomFactory  = DQMOMEqnFactory::self(); 
-  if (dqmomFactory.get_quad_nodes() > 0) 
-    d_doDQMOM = true; 
-  else 
-    d_doDQMOM = false; // probably need to sync this better with the bool being set in Arches
-
   for (int curr_level = 0; curr_level < numTimeIntegratorLevels; curr_level ++) {
 
-    if (d_doDQMOM) {
+    DQMOMEqnFactory& dqmomFactory = DQMOMEqnFactory::self();
+    
+    if ( dqmomFactory.getDoDQMOM() ) {
 
       CoalModelFactory& modelFactory = CoalModelFactory::self(); 
-      DQMOMEqnFactory::EqnMap& dqmom_eqns = dqmomFactory.retrieve_all_eqns(); 
 
       // Compute the particle velocities
       modelFactory.sched_computeVelocity( level, sched, curr_level );
 
-      // ---- schedule the solution of the transport equations ----
-      
-      // Evaluate DQMOM equations
-      for ( DQMOMEqnFactory::EqnMap::iterator iEqn = dqmom_eqns.begin(); 
-            iEqn != dqmom_eqns.end(); iEqn++){
-        
-        DQMOMEqn* dqmom_eqn = dynamic_cast<DQMOMEqn*>(iEqn->second);
-
-        dqmom_eqn->sched_evalTransportEqn( level, sched, curr_level ); 
-      }
-     
-      // Clean up after DQMOM equation evaluations & calculate unscaled DQMOM scalar values 
-      // (also, putting this in its own separate loop makes sure you don't require() before you compute())
-      if (curr_level == numTimeIntegratorLevels-1){
-        for( DQMOMEqnFactory::EqnMap::iterator iEqn = dqmom_eqns.begin();
-             iEqn!=dqmom_eqns.end(); ++iEqn ) {
-
-          DQMOMEqn* dqmom_eqn = dynamic_cast<DQMOMEqn*>(iEqn->second);
-
-          // last time sub-step: so cleanup.
-          dqmom_eqn->sched_cleanUp( level, sched ); 
-          //also get the abscissa values
-          dqmom_eqn->sched_getUnscaledValues( level, sched ); 
-        }
-      }
-
-      // schedule the models for evaluation
+      // Compute the particle model terms
       modelFactory.sched_coalParticleCalculation( level, sched, curr_level );
 
-      // schedule DQMOM linear solve
-      d_dqmomSolver->sched_solveLinearSystem( level, sched, curr_level );
-      if( d_dqmomSolver->getSaveMoments() ) {
-        d_dqmomSolver->sched_calculateMoments( level, sched, curr_level );
+      // Evaluate DQMOM scalar equations
+      if (curr_level != numTimeIntegratorLevels-1) {
+        dqmomFactory.sched_evalTransportEqns( level, sched, curr_level );
+      } else {
+        dqmomFactory.sched_evalTransportEqnsWithCleanup( level, sched, curr_level );
       }
 
     }
@@ -453,6 +422,13 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
       doing_EKT_now = false;
     }
 
+    
+    // calculating source terms here because otherwise source terms added to mixture fraction equation are the old values for the first time sub-step (which leads to incorrect source terms after time-averaging)
+    // the values of the gas-phase source terms from DQMOM models are already calculated above
+    // the source term calculation is simply being moved out of the equation solver and executed earlier
+    // using this approach, the source term for the mixture fraction "eta" (extra scalar) will now match the source term for the mixture fraction "scalarSP" (calculated in ScalarSolver class)
+    SourceTermFactory& srcFactory = SourceTermFactory::self();
+    srcFactory.sched_computeSourceTerms( level, sched, curr_level );
 
 
     sched_getDensityGuess(sched, patches, matls,
@@ -466,12 +442,17 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
                           d_timeIntegratorLabels[curr_level],
                           d_EKTCorrection, doing_EKT_now);
 
-    EqnFactory& eqn_factory = EqnFactory::self();
-    EqnFactory::EqnMap& scalar_eqns = eqn_factory.retrieve_all_eqns(); 
-    for (EqnFactory::EqnMap::iterator iter = scalar_eqns.begin(); iter != scalar_eqns.end(); iter++){
-      EqnBase* eqn = iter->second; 
-        eqn->sched_evalTransportEqn( level, sched, curr_level ); 
-    }
+    bool evalDensityGuessEqns; ///< Boolean: evaluate transport equations that use a density guess?
+    bool cleanup;              ///< Boolean: clean up after solving the transport equation?
+    EqnFactory& eqnFactory = EqnFactory::self();
+
+    cleanup = false;
+    if( curr_level == numTimeIntegratorLevels-1 ) { cleanup = true; }
+
+    // Evaluate scalar equations that do have a density guess
+    evalDensityGuessEqns = true;
+    eqnFactory.sched_evalTransportEqns( level, sched, curr_level, evalDensityGuessEqns, cleanup );
+
 
     if (d_reactingScalarSolve) {
       // in this case we're only solving for one scalar...but
@@ -513,14 +494,13 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 //    sched_updateDensityGuess(sched, patches, matls,
 //                                    d_timeIntegratorLabels[curr_level]);
 
-
     string mixmodel = d_props->getMixingModelType(); 
-    if ( mixmodel != "TabProps")
+    if ( mixmodel != "TabProps") {
       d_props->sched_reComputeProps(sched, patches, matls,
                                     d_timeIntegratorLabels[curr_level],
                                     true, false,
                                     d_EKTCorrection, doing_EKT_now);
-    else {
+    } else {
 
       bool initialize_it  = false;
       bool modify_ref_den = true; 
@@ -529,19 +509,9 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
     }
 
-    for (EqnFactory::EqnMap::iterator iter = scalar_eqns.begin(); iter != scalar_eqns.end(); iter++){
-      EqnBase* eqn = iter->second; 
-      //Transport is constructed above.  Here we only solve if densityGuess is not used. 
-      if ( eqn->getDensityGuessBool() )
-        eqn->sched_solveTransportEqn( level, sched, curr_level ); 
-    }
-    // Clean up after Scalar equation evaluations  
-    if (curr_level == numTimeIntegratorLevels-1){
-      for (EqnFactory::EqnMap::iterator iter = scalar_eqns.begin(); iter != scalar_eqns.end(); iter++){
-        EqnBase* eqn = iter->second; 
-        eqn->sched_cleanUp( level, sched ); 
-      }
-    }
+    // Evaluate scalar equations that don't have a density guess
+    evalDensityGuessEqns = false;
+    eqnFactory.sched_evalTransportEqns( level, sched, curr_level, evalDensityGuessEqns, cleanup );
 
     if (d_standAloneRMCRT) { 
       d_RMCRTRadiationModel->sched_solve( level, sched, d_timeIntegratorLabels[curr_level] );  
@@ -550,10 +520,12 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     sched_computeDensityLag(sched, patches, matls,
                            d_timeIntegratorLabels[curr_level],
                            false);
-    if (d_maxDensityLag > 0.0)
+    if (d_maxDensityLag > 0.0) {
       sched_checkDensityLag(sched, patches, matls,
                             d_timeIntegratorLabels[curr_level],
                             false);
+    }
+
 //    d_timeIntegratorLabels[curr_level]->integrator_step_number = TimeIntegratorStepNumber::First;
     d_props->sched_computeDenRefArray(sched, patches, matls,
                                       d_timeIntegratorLabels[curr_level]);
@@ -580,12 +552,12 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
                                             d_EKTCorrection, doing_EKT_now);
       }
     
-      if (mixmodel != "TabProps")
+      if (mixmodel != "TabProps") {
         d_props->sched_reComputeProps(sched, patches, matls,
                                       d_timeIntegratorLabels[curr_level],
                                       false, false,
                                       d_EKTCorrection, doing_EKT_now);
-      else {
+      } else {
 
         bool initialize_it  = false;
         bool modify_ref_den = false; 
@@ -779,49 +751,18 @@ int ExplicitSolver::noSolve(const LevelP& level,
  
   // Get a reference to all the DQMOM equations
   DQMOMEqnFactory& dqmomFactory  = DQMOMEqnFactory::self(); 
-  if (dqmomFactory.get_quad_nodes() > 0) 
-    d_doDQMOM = true; 
-  else 
-    d_doDQMOM = false; // probably need to sync this better with the bool being set in Arches
-
-  if (d_doDQMOM) {
-
-    DQMOMEqnFactory::EqnMap& dqmom_eqns = dqmomFactory.retrieve_all_eqns(); 
-   
-    for (DQMOMEqnFactory::EqnMap::iterator ieqn = dqmom_eqns.begin(); ieqn != dqmom_eqns.end(); ieqn++){
-      
-      std::string currname = ieqn->first; 
-      EqnBase* eqn = ieqn->second;
-      eqn->sched_dummyInit( level, sched ); 
-
-    }
-
-    CoalModelFactory& modelFactory = CoalModelFactory::self(); 
-    CoalModelFactory::ModelMap allModels = modelFactory.retrieve_all_models();
-    for (CoalModelFactory::ModelMap::iterator imodel = allModels.begin(); imodel != allModels.end(); imodel++){
-
-      imodel->second->sched_dummyInit( level, sched );  
-
-    }
+  CoalModelFactory& modelFactory = CoalModelFactory::self(); 
+  EqnFactory& eqnFactory = EqnFactory::self();
+  SourceTermFactory& sourceFactory = SourceTermFactory::self();
+    
+  if ( dqmomFactory.getDoDQMOM() ) {
+    dqmomFactory.sched_dummyInit( level, sched );
+    modelFactory.sched_dummyInit( level, sched );
   }
+  eqnFactory.sched_dummyInit( level, sched );
+  sourceFactory.sched_dummyInit( level, sched );
 
-  EqnFactory& eqn_factory = EqnFactory::self();
-  EqnFactory::EqnMap& scalar_eqns = eqn_factory.retrieve_all_eqns(); 
-  for (EqnFactory::EqnMap::iterator iter = scalar_eqns.begin(); iter != scalar_eqns.end(); iter++){
 
-    EqnBase* eqn = iter->second; 
-    eqn->sched_dummyInit( level, sched ); 
-
-  }
-
-  SourceTermFactory& src_factory = SourceTermFactory::self();
-  SourceTermFactory::SourceMap& sources = src_factory.retrieve_all_sources(); 
-  for (SourceTermFactory::SourceMap::iterator iter = sources.begin(); iter != sources.end(); iter++){
-
-    SourceTermBase* src = iter->second; 
-    src->sched_dummyInit( level, sched ); 
-
-  }
   // Schedule an interpolation of the face centered velocity data 
   // to a cell centered vector for used by the viz tools
 

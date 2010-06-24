@@ -24,10 +24,11 @@ namespace Uintah {
 
 /** 
   * @class    DQMOM
-  * @author   Charles Reid (charlesreid1@gmail.com)
+  * @author   Charles Reid, Julien Pedel
   * @date     March 2009      "Initial" Arches version
   *           July 2009       Iterative Refinement
   *           November 2009   LAPACK (via DenseMatrix in Uintah framework)
+  * `         March 2010      Optimized moment solver
   *
   * @brief    This class constructs and solves the AX=B linear system for DQMOM scalars.
   *
@@ -37,6 +38,9 @@ namespace Uintah {
   *           of the weights and abscissas of the quadrature approximation, and re-cast as a linear system,
   *           \f$ \mathbf{AX} = \mathbf{B} \f$.  This class solves the linear system to yield the source terms
   *           for the weight and weighted abscissa transport equations (the variables contained in \f$\mathbf{X}\f$).
+  *
+  *           The optimized moment solver uses the algorithm described in Fox (2009), "Optimal moment sets for
+  *           multivariate DQMOM" (Ind. Eng. Chem. Res. 2009, 48, 9686-9696)
   *
   */
 
@@ -128,14 +132,15 @@ private:
                       vector<double> &models);
 
 
+  vector<MomentVector> momentIndexes;           ///< Vector containing all moment indices
+  vector<DQMOMEqn* > weightEqns;           ///< Weight equation labels, IN SAME ORDER AS GIVEN IN INPUT FILE
+  vector<DQMOMEqn* > weightedAbscissaEqns; ///< Weighted abscissa equation labels, IN SAME ORDER AS GIVEN IN INPUT FILE
   vector<string> InternalCoordinateEqnNames;
-  
-  vector<MomentVector> momentIndexes; ///< Vector containing all moment indices
-
-  std::vector<DQMOMEqn* > weightEqns;           ///< Weight equation labels, IN SAME ORDER AS GIVEN IN INPUT FILE
-  std::vector<DQMOMEqn* > weightedAbscissaEqns; ///< Weighted abscissa equation labels, IN SAME ORDER AS GIVEN IN INPUT FILE
-
   vector< vector<ModelBase> > weightedAbscissaModels;
+
+  typedef map<const MomentVector, const VarLabel*> MomentMap;
+  MomentMap DQMOMMoments;     ///< DQMOM moment values
+  MomentMap DQMOMMomentsMean; ///< DQMOM moment values, for moments about the mean
 
   ArchesLabel* d_fieldLabels; 
   
@@ -165,16 +170,6 @@ private:
   bool b_optimize;
   string d_solverType;
 
-  struct constCCVarWrapper {
-    constCCVariable<double> data;
-  };
-
-  typedef constCCVarWrapper constCCVarWrapperTypeDef;
-
-  struct constCCVarWrapper_withModels {
-    constCCVariable<double> data;
-    vector<constCCVarWrapperTypeDef> models;
-  };
 
 #if defined(VERIFY_LINEAR_SOLVER)
   /** @brief  Get an A and B matrix from a file, then solve the linear system

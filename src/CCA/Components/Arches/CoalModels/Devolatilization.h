@@ -37,12 +37,10 @@ public:
   /** @brief  Grab model-independent devolatilization parameters */
   void problemSetup(const ProblemSpecP& db);
 
-  /** @brief Schedule the initialization of special/local variables unique to model; 
-             blank for Devolatilization parent class, intended to be re-defined by child classes if needed. */
+  /** @brief Schedule the initialization of special/local variables unique to model */
   void sched_initVars( const LevelP& level, SchedulerP& sched );
 
-  /** @brief  Actually initialize special variables unique to model; 
-              blank for Devolatilization parent class, intended to be re-defined by child classes if needed. */
+  /** @brief  Actually initialize special variables unique to model */
   void initVars( const ProcessorGroup * pc, 
                  const PatchSubset    * patches, 
                  const MaterialSubset * matls, 
@@ -75,15 +73,16 @@ public:
   inline string getType() {
     return "Devolatilization"; }
 
-
 protected:
 
   const VarLabel* d_raw_coal_mass_label;
   const VarLabel* d_particle_temperature_label;
+  const VarLabel* d_gas_temperature_label;
   const VarLabel* d_weight_label;
 
   double d_rc_scaling_factor;   ///< Scaling factor for raw coal internal coordinate
   double d_pt_scaling_factor;   ///< Scaling factor for particle temperature internal coordinate
+  double d_gt_scaling_factor;   ///< Scaling factor for gas temperature 
   double d_w_scaling_factor; 
   double d_w_small; // "small" clip value for zero weights
 

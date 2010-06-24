@@ -153,10 +153,8 @@ Arches::~Arches()
 
   delete d_timeIntegrator; 
 
-  // FIXME
   if (d_doDQMOM) { 
     delete d_dqmomSolver; 
-    //delete d_partVel;  //cmr
   }
 }
 
@@ -493,10 +491,10 @@ Arches::problemSetup(const ProblemSpecP& params,
     d_dqmomSolver->problemSetup( dqmom_db ); 
     //d_dqmomSolvers.push_back(dqmomSolver);
 
-    d_nlSolver->setDQMOMSolver( d_dqmomSolver ); 
+    dqmomFactory.setDQMOMSolver( d_dqmomSolver );
   }
 
-  // FIXME
+  // TODO
   // Looping over all <DQMOM> blocks will require changing DQMOMEqnFactory
   // (e.g. getting the number of quad nodes)
   //

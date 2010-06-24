@@ -1,0 +1,267 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!-- DOCTYPE Uintah_specification SYSTEM "input.dtd" -->
+<!-- @version: -->
+
+<Uintah_specification>
+  
+  <Meta>
+    <title>DQMOM Model Test 2a - Constant DQMOM model term (c = 1), No Convection, No Diffusion (2 IC, 3 Env, Optimized Solver)</title>
+  </Meta>
+
+  <SimulationComponent type="arches" />
+
+  <Time>
+    <maxTime>5.0</maxTime>
+    <max_Timesteps>10</max_Timesteps>
+    <initTime>0.0</initTime>
+    <delt_min>0.00001</delt_min>
+    <delt_max>5</delt_max>
+    <timestep_multiplier>0.5</timestep_multiplier>
+  </Time>
+
+  <DataArchiver>
+    <filebase>uda_model_test_2a.uda</filebase>
+    <outputTimestepInterval>1</outputTimestepInterval>
+    <outputInitTimestep />
+
+    <save label = "totalKineticEnergy"/>
+    <save label = "totalummsLnError"/>
+    <save label = "totalvmmsLnError"/>
+    <save label = "totalummsExactSol"/>
+    <save label = "totalvmmsExactSol"/>
+    <save label = "pressurePS"/>
+    <save label = "scalarSP"/>
+    <save label = "newCCUVelocity"/>  
+    <save label = "newCCVVelocity"/>  
+    <save label = "newCCVelocity" />
+    <save label = "uVelocitySPBC"/>
+    <save label = "vVelocitySPBC"/>
+    <save label = "continuityResidual"/>
+    <save label = "velocityDivergence"/>
+
+    <!-- EXTRA SCALARS -->
+    <save label = "inert" />
+
+    <!-- DQMOM Vars -->
+    <save label = "w_qn0"/>
+    <save label = "w_qn1"/>
+    <save label = "w_qn2"/>
+
+    <save label = "w_qn0_src"/>
+    <save label = "w_qn1_src"/>
+    <save label = "w_qn2_src"/>
+
+    <save label = "A_qn0"/>
+    <save label = "A_qn1"/>
+    <save label = "A_qn2"/>
+
+    <save label = "A_qn0_src"/>
+    <save label = "A_qn1_src"/>
+    <save label = "A_qn2_src"/>
+
+    <save label = "B_qn0"/>
+    <save label = "B_qn1"/>
+    <save label = "B_qn2"/>
+
+    <save label = "B_qn0_src"/>
+    <save label = "B_qn1_src"/>
+    <save label = "B_qn2_src"/>
+
+    <checkpoint cycle = "2" interval = "5"/>
+    <compression>gzip</compression>
+  </DataArchiver>
+
+  <Grid>
+    <Level>
+      <Box label = "1">
+        <lower>[0,0,0]</lower>
+        <upper>[1.0,1.0,1.0]</upper>
+        <resolution>[8,8,8]</resolution>
+        <extraCells>[0,0,0]</extraCells>
+        <patches>[1,1,1]</patches>
+      </Box>
+      <periodic>[1,1,1]</periodic>
+    </Level>
+  </Grid>
+
+  <PhysicalConstants>
+    <gravity>[0,0,0]</gravity>
+    <reference_point>[0,0,0]</reference_point>
+    <viscosity>0.0002</viscosity>
+  </PhysicalConstants>
+
+  <CFD>
+
+    <!-- ARCHES specification -->
+    <ARCHES>
+      <MMS whichMMS="almgrenMMS" >
+        <mmsErrorType>L2</mmsErrorType>
+        <almgrenMMS>
+          <!--Note: This viscosity needs to be set twice for now, both here
+                    and in the PhysicalConstant section. -->
+          <viscosity>0.0002</viscosity>
+          <amplitude>1.0</amplitude>
+        </almgrenMMS>
+      </MMS>
+
+      <!-- TIME INTEGRATOR -->
+      <TimeIntegrator>
+          <ExplicitIntegrator order="second"/>
+      </TimeIntegrator>
+
+      <!-- EXTRA SCALARS -->
+      <TransportEqns>
+
+        <Eqn label = "inert" type = "CCscalar">
+            <doDiff>false</doDiff>
+            <doConv>false</doConv>
+            <addSources>true</addSources>
+            <conv_scheme>super_bee</conv_scheme>
+            <src label = "constant_source"/>
+            <initialization type="constant">
+                <constant>1.0</constant>
+            </initialization>
+        </Eqn>
+
+        <Sources>
+            <src label = "constant_source" type = "ConstantSourceTerm">
+                <constant>1.0</constant>
+            </src>
+        </Sources>
+                
+      </TransportEqns>
+
+      <Coal_Properties>
+          <C>0.75</C>
+          <H>0.05</H>
+          <N>0.0</N>
+          <O>0.2</O>
+          <S>0.0</S>
+          <initial_ash_mass>[1e-12,2e-12,3e-12]</initial_ash_mass>
+      </Coal_Properties>  
+
+      <!-- DQMOM -->
+      <DQMOM>
+        <number_quad_nodes>3</number_quad_nodes>
+        <save_moments>false</save_moments>
+
+        <LinearSolver>
+            <type>Optimize</type>
+            <tolerance>1e-5</tolerance>
+            <Optimization>
+                <Optimal_abscissas>[0,1,1,-1,1,0]</Optimal_abscissas>
+            </Optimization>
+        </LinearSolver>
+
+        <!-- particle models --> 
+        <Models>
+            <model label="constant_model" type="ConstantModel">
+                <constant>1.0</constant>
+            </model>
+        </Models>
+
+
+        <Weights>
+            <!-- w [=] #/m^3 -->
+            <doDiff>false</doDiff>
+            <doConv>false</doConv>
+            <initialization type="constant">
+                <constant>1.0</constant>
+            </initialization>
+            <scaling_const>1.0</scaling_const>
+        </Weights>
+
+        <Ic label="A">
+            <!-- l [=] m -->
+            <doDiff>false</doDiff>
+            <doConv>false</doConv>
+            <model label="constant_model"/>
+            <initialization type="env_constant">
+                <env_constant qn="0" value="1"></env_constant>
+                <env_constant qn="1" value="2"></env_constant>
+                <env_constant qn="2" value="3"></env_constant>
+            </initialization>
+            <scaling_const>1.0</scaling_const>
+        </Ic>
+
+        <Ic label="B">
+            <!-- l [=] m -->
+            <doDiff>false</doDiff>
+            <doConv>false</doConv>
+            <initialization type="env_constant">
+                <env_constant qn="0" value="1"></env_constant>
+                <env_constant qn="1" value="2"></env_constant>
+                <env_constant qn="2" value="3"></env_constant>
+            </initialization>
+            <scaling_const>1.0</scaling_const>
+        </Ic>
+
+        <Moment><m>[0,0]</m></Moment>
+        <Moment><m>[0,1]</m></Moment>
+        <Moment><m>[1,0]</m></Moment>
+        <Moment><m>[0,2]</m></Moment>
+        <Moment><m>[2,0]</m></Moment>
+        <Moment><m>[1,2]</m></Moment>
+        <Moment><m>[2,2]</m></Moment>
+        <Moment><m>[3,2]</m></Moment>
+        <Moment><m>[2,3]</m></Moment>
+
+      </DQMOM>
+
+
+      <Turbulence model = "smagorinsky">
+        <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
+        <cf>0.0</cf>
+        <fac_mesh>1.0</fac_mesh>
+        <filterl>0.000001</filterl>
+        <var_const>0.1</var_const>
+      </Turbulence>
+
+      <Properties>
+        <use_mixing_model>false</use_mixing_model>
+        <ColdFlowMixingModel>
+          <Stream>
+            <density>1.00</density>
+            <temperature>298</temperature>
+          </Stream>
+          <Stream>
+            <density>1.00</density>
+            <temperature>298</temperature>
+          </Stream>
+        </ColdFlowMixingModel>
+      </Properties>
+
+<!--
+      <BoundaryConditions>
+      </BoundaryConditions>
+-->
+  
+      <ExplicitSolver>
+
+      <initial_dt>1</initial_dt>
+      <variable_dt>true</variable_dt>
+        <timeIntegratorType>RK2SSP</timeIntegratorType> 
+
+        <PressureSolver>
+          <linear_solver>hypre</linear_solver>
+          <parameters>
+            <solver>cg</solver>
+            <preconditioner>pfmg</preconditioner>
+            <res_tol>1.0e-10</res_tol>
+            <max_iter>75</max_iter>
+          </parameters>
+        </PressureSolver>
+
+        <MomentumSolver>
+          <convection_scheme>central</convection_scheme>
+        </MomentumSolver>
+
+        <MixtureFractionSolver>
+          <convection_scheme>central-upwind</convection_scheme>
+        </MixtureFractionSolver>
+
+      </ExplicitSolver>
+    </ARCHES>
+  </CFD>
+</Uintah_specification>
+

@@ -7,6 +7,17 @@
 
 //===========================================================================
 
+/**
+  * @class    Constant Source Term
+  * @author   ?
+  * @date     
+  *           
+  * @brief    
+  * This is a constant source term.  
+  * It make the RHS of a scalar equation equal to a constant.
+  *
+  */
+
 //---------------------------------------------------------------------------
 // Builder
 namespace Uintah{

@@ -1,11 +1,11 @@
+#ifndef Uintah_Component_Arches_DQMOMEqnFactory_h
+#define Uintah_Component_Arches_DQMOMEqnFactory_h
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqnFactory.h>
 #include <CCA/Components/Arches/TransportEqns/EqnBase.h> 
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqn.h>
+#include <CCA/Components/Arches/DQMOM.h>
 #include <Core/Exceptions/InvalidValue.h>
 #include <Core/Parallel/Parallel.h>
-//#include <sstream>
-//#include <iostream>
-//#include <stdexcept>
 
 //===========================================================================
 
@@ -15,6 +15,7 @@ DQMOMEqnFactory::DQMOMEqnFactory()
 { 
   d_labelSet = false;
   d_quadNodes = 0; // initialize this to zero 
+  d_doDQMOM = false;
 }
 
 DQMOMEqnFactory::~DQMOMEqnFactory()
@@ -47,6 +48,10 @@ void DQMOMEqnFactory::problemSetup(const ProblemSpecP& params)
 {
   ProblemSpecP dqmom_db = params;
 
+  if( dqmom_db ) {
+    d_doDQMOM = true;
+  }
+
   if( d_labelSet == false ){
     string err_msg = "ERROR: Arches: EqnFactory: You must set the EqnFactory field labels using setArchesLabel() before you run the problem setup method!";
     throw ProblemSetupException(err_msg,__FILE__,__LINE__);
@@ -74,7 +79,7 @@ void DQMOMEqnFactory::problemSetup(const ProblemSpecP& params)
       node = out.str(); 
       weight_name += node; 
 
-      proc0cout << "creating a weight for: " << weight_name << endl;
+      proc0cout << "Creating a weight for: " << weight_name << endl;
 
       DQMOMEqnBuilderBase* eqnBuilder = scinew DQMOMEqnBuilder( d_fieldLabels, d_timeIntegrator, weight_name ); 
       register_scalar_eqn( weight_name, eqnBuilder );     
@@ -99,12 +104,12 @@ void DQMOMEqnFactory::problemSetup(const ProblemSpecP& params)
       ic_db->getAttribute("label", ic_name);
       std::string eqn_type = "dqmom"; // by default 
 
-      proc0cout << "Found  an internal coordinate: " << ic_name << endl;
+      proc0cout << "Found an internal coordinate: " << ic_name << endl;
 
       // loop over quad nodes. 
       for (int iqn = 0; iqn < d_quadNodes; iqn++){
 
-        // need to make a name on the fly for this ic and quad node. 
+        // make a name on the fly for this ic and quad node. 
         std::string final_name = ic_name + "_qn"; 
         std::string node; 
         std::stringstream out; 
@@ -112,7 +117,7 @@ void DQMOMEqnFactory::problemSetup(const ProblemSpecP& params)
         node = out.str(); 
         final_name += node; 
 
-        proc0cout << "created a weighted abscissa for: " << final_name << endl; 
+        proc0cout << "Created a weighted abscissa for: " << final_name << endl; 
 
         DQMOMEqnBuilderBase* eqnBuilder = scinew DQMOMEqnBuilder( d_fieldLabels, d_timeIntegrator, final_name ); 
         register_scalar_eqn( final_name, eqnBuilder );     
@@ -181,11 +186,7 @@ DQMOMEqnFactory::weightInit( const ProcessorGroup* ,
     int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
     const Patch* patch = patches->get(p);
 
-    DQMOMEqnFactory& dqmomFactory = DQMOMEqnFactory::self();
-
-    EqnMap& dqmomEqns = dqmomFactory.retrieve_all_eqns();
-
-    for( EqnMap::iterator iEqn = dqmomEqns.begin(); iEqn != dqmomEqns.end(); ++iEqn) {
+    for( EqnMap::iterator iEqn = eqns_.begin(); iEqn != eqns_.end(); ++iEqn) {
 
       DQMOMEqn* eqn = dynamic_cast<DQMOMEqn*>(iEqn->second);
       string eqn_name = iEqn->first;
@@ -272,11 +273,7 @@ DQMOMEqnFactory::weightedAbscissaInit( const ProcessorGroup* ,
     int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
     const Patch* patch = patches->get(p);
 
-    DQMOMEqnFactory& dqmomFactory = DQMOMEqnFactory::self();
-
-    EqnMap& dqmomEqns = dqmomFactory.retrieve_all_eqns();
-
-    for( EqnMap::iterator iEqn = dqmomEqns.begin(); iEqn != dqmomEqns.end(); ++iEqn) {
+    for( EqnMap::iterator iEqn = eqns_.begin(); iEqn != eqns_.end(); ++iEqn) {
 
       DQMOMEqn* eqn = dynamic_cast<DQMOMEqn*>(iEqn->second);
       string eqn_name = iEqn->first;
@@ -295,7 +292,7 @@ DQMOMEqnFactory::weightedAbscissaInit( const ProcessorGroup* ,
         node = out.str(); 
         weight_name = "w_qn";
         weight_name += node; 
-        EqnBase& w_eqn = dqmomFactory.retrieve_scalar_eqn(weight_name); 
+        EqnBase& w_eqn = retrieve_scalar_eqn(weight_name); 
 
         const VarLabel* weightLabel = w_eqn.getTransportEqnLabel(); 
       
@@ -324,6 +321,86 @@ DQMOMEqnFactory::weightedAbscissaInit( const ProcessorGroup* ,
       }
     }
     proc0cout << endl;
+  }
+}
+
+//---------------------------------------------------------------------------
+// Method: Dummy initialization for MPM Arches
+//---------------------------------------------------------------------------
+void
+DQMOMEqnFactory::sched_dummyInit( const LevelP& level, SchedulerP& sched )
+{
+  for( EqnMap::iterator iEqn = eqns_.begin(); iEqn != eqns_.end(); ++iEqn ) {
+    iEqn->second->sched_dummyInit( level, sched );
+  }
+}
+
+
+//---------------------------------------------------------------------------
+// Method: Evaluation the DQMOMEqns and their source terms
+//---------------------------------------------------------------------------
+/* @details
+This method was created so that the ExplicitSolver could schedule the evaluation
+of DQMOMEqns but still abstract the details to the DQMOMEqnFactory.
+
+The procedure for this method is as follows:
+1. Initialize DQMOM equation variables, if necessary
+2. Solve the DQMOM linear system AX=B
+3. Update the DQMOM equation variables using the results from AX=B
+4. Clean up after the equation evaluations, if necessary
+*/
+void 
+DQMOMEqnFactory::sched_evalTransportEqns( const LevelP& level, SchedulerP& sched, int timeSubStep )
+{
+  // Step 1
+  if( timeSubStep == 0 ) {
+    for( EqnMap::iterator iEqn = eqns_.begin(); iEqn != eqns_.end(); ++iEqn ) {
+      iEqn->second->sched_initializeVariables( level, sched );
+#ifdef VERIFY_DQMOM_TRANSPORT
+      proc0cout << endl << endl << endl << "NOTICE: You have DQMOM transport verification turned on." << endl << endl;
+      if( iEqn->second->getAddExtraSources() ) {
+        iEqn->second->sched_computeSources(level, sched, timeSubStep );
+      }
+#endif
+    }
+  }
+
+  // Step 2
+  d_dqmomSolver->sched_solveLinearSystem( level, sched, timeSubStep );
+  if( d_dqmomSolver->getSaveMoments() ) {
+    d_dqmomSolver->sched_calculateMoments( level, sched, timeSubStep );
+  }
+
+  // Step 3
+  for( EqnMap::iterator iEqn = eqns_.begin(); iEqn != eqns_.end(); ++iEqn ) {
+    iEqn->second->sched_buildTransportEqn( level, sched, timeSubStep );
+    iEqn->second->sched_solveTransportEqn( level, sched, timeSubStep );
+  }
+}
+
+//---------------------------------------------------------------------------
+// Method: Evaluation the DQMOMEqns and their source terms, and clean up
+//---------------------------------------------------------------------------
+/* @details
+This method is implemented because the DQMOMEqnFactory must clean up
+after all the transport equations at the end of each timestep.
+
+It's separate from the sched_evalTransportEqns model because
+the factory only needs to clean up after the transport equations
+at the end of each timestep, and only the ExplicitSolver knows when 
+the time sub-step is the last time sub-step.
+
+Alternatively, the ExplicitSolver could set a variable for the maximun
+number of time sub-steps, and the above method combined with this one.
+*/
+void
+DQMOMEqnFactory::sched_evalTransportEqnsWithCleanup( const LevelP& level, SchedulerP& sched, int timeSubStep ) 
+{
+  sched_evalTransportEqns( level, sched, timeSubStep );
+
+  for( EqnMap::iterator iEqn = eqns_.begin(); iEqn != eqns_.end(); ++iEqn ) {
+    iEqn->second->sched_cleanUp( level, sched );
+    dynamic_cast<DQMOMEqn*>(iEqn->second)->sched_getUnscaledValues( level, sched );
   }
 }
 
@@ -402,4 +479,5 @@ DQMOMEqnFactory::find_scalar_eqn( const std::string name )
   return return_value;
 }
 
+#endif
 

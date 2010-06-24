@@ -5,7 +5,6 @@ SRCDIR := CCA/Components/Arches/CoalModels
 SRCS += \
   $(SRCDIR)/CoalModelFactory.cc \
   $(SRCDIR)/ModelBase.cc \
-  $(SRCDIR)/PartVel.cc \
   $(SRCDIR)/ConstantModel.cc  \
   $(SRCDIR)/Size.cc \
   $(SRCDIR)/ParticleDensity.cc \

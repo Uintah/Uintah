@@ -50,6 +50,7 @@ protected:
   * @brief  A Factory for building eqns. 
   * 
   */
+class DQMOM;
 class DQMOMEqnFactory
 {
 public:
@@ -85,6 +86,21 @@ public:
                              DataWarehouse* old_dw,
                              DataWarehouse* new_dw);
 
+  void sched_dummyInit( const LevelP& level, SchedulerP& );
+
+
+  //////////////////////////////////////////////
+  // Evaluate the transport equations
+
+  /** @brief  Schedule the evaluation of the DQMOMEqns and their source terms */
+  void sched_evalTransportEqns( const LevelP& level,
+                                         SchedulerP&,
+                                         int timeSubStep );
+
+  /** @brief  Schedule the evaluation of the DQMOMEqns and their source terms, and clean up after the evaluation is done */
+  void sched_evalTransportEqnsWithCleanup( const LevelP& level,
+                                                    SchedulerP&,
+                                                    int timeSubStep );
 
   ////////////////////////////////////////////
   // Equation retrieval
@@ -107,13 +123,13 @@ public:
   EqnMap& retrieve_all_eqns(){
     return eqns_; };
 
-  /** @brief  Set number quadrature nodes */ 
-  inline void set_quad_nodes( int qn ) {
-    d_quadNodes = qn; };
-
   /** @brief  Get the number of quadrature nodes */ 
   inline const int get_quad_nodes( ) {
     return d_quadNodes; };
+
+  /** @brief  Set number quadrature nodes */ 
+  inline void set_quad_nodes( int qn ) {
+    d_quadNodes = qn; };
 
   /** @brief  Set the field labels for the DQMOM equation factory */
   inline void setArchesLabel( ArchesLabel* fieldLabels ) {
@@ -126,15 +142,26 @@ public:
     d_timeIntegratorSet = true;
   };
 
+  inline bool getDoDQMOM() {
+    return d_doDQMOM; };
+
+  inline void setDQMOMSolver( DQMOM* solver ) {
+    d_dqmomSolver = solver; }; 
+
+//  inline void setDQMOMSolvers( vector<DQMOM*> solvers ) {
+//    d_dqmomSolvers = solvers; };
+    
+
 private:
   typedef std::map< std::string, DQMOMEqnBuilderBase* >  BuildMap; 
 
   ArchesLabel* d_fieldLabels;
-
   ExplicitTimeInt* d_timeIntegrator;
+  DQMOM* d_dqmomSolver;
   
   bool d_timeIntegratorSet; ///< Boolean: has the time integrator been set?
   bool d_labelSet; ///< Boolean: has the ArchesLabel been set using setArchesLabel()?
+  bool d_doDQMOM;  ///< Boolean: is DQMOM being used?
 
   BuildMap builders_; 
   EqnMap eqns_; 
