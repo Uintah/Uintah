@@ -138,7 +138,7 @@ void OnDemandDataWarehouse::clear()
 {
   for (dataLocationDBtype::const_iterator iter = d_dataLocation.begin();
        iter != d_dataLocation.end(); iter++) {
-    for (int i = 0; i<(int)iter->second->size(); i++ )
+    for (size_t i = 0; i<iter->second->size(); i++ )
       delete &(iter->second[i]);
     delete iter->second;
   }
@@ -1099,7 +1099,7 @@ OnDemandDataWarehouse::getParticleSubset(int matlIndex, IntVector lowIndex, IntV
   vector<ParticleSubset*> subsets;
   vector<const Patch*> vneighbors;
   
-  for(int i=0;i<(int)neighbors.size();i++){
+  for(size_t i=0;i<neighbors.size();i++){
     const Patch* neighbor = neighbors[i];
     const Patch* realNeighbor = neighbor->getRealPatch();
     if(neighbor){
@@ -1195,7 +1195,7 @@ OnDemandDataWarehouse::get(constParticleVariableBase& constVar,
 
     vector<ParticleVariableBase*> neighborvars(neighborPatches.size());
     
-    for(int i=0;i<(int)neighborPatches.size();i++){
+    for(size_t i=0;i<neighborPatches.size();i++){
       const Patch* neighborPatch=neighborPatches[i];
       
       if(!d_varDB.exists(label, matlIndex, neighborPatches[i])){
@@ -1216,7 +1216,7 @@ OnDemandDataWarehouse::get(constParticleVariableBase& constVar,
     
     constVar = *var;
     
-    for (int i=0;i<(int)neighborPatches.size();i++){
+    for (size_t i=0;i<neighborPatches.size();i++){
       delete neighborvars[i];
     }
     delete var;
@@ -1500,7 +1500,7 @@ allocateAndPut(GridVariableBase& var, const VarLabel* label,
     deque<Box> b1, b2, difference;
     b1.push_back(Box(Point(superLowIndex(0), superLowIndex(1), superLowIndex(2)), 
                      Point(superHighIndex(0), superHighIndex(1), superHighIndex(2))));
-    for (unsigned i = 0; i < (*superPatchGroup).size(); i++) {
+    for (size_t i = 0; i < (*superPatchGroup).size(); i++) {
       const Patch* p = (*superPatchGroup)[i];
       IntVector low = p->getExtraLowIndex(basis, label->getBoundaryLayer());
       IntVector high = p->getExtraHighIndex(basis, label->getBoundaryLayer());
@@ -1511,18 +1511,18 @@ allocateAndPut(GridVariableBase& var, const VarLabel* label,
 #if 0
     if (difference.size() > 0) {
       cout << "Box difference: " << superLowIndex << " " << superHighIndex << " with patches " << endl;
-      for (unsigned i = 0; i < (*superPatchGroup).size(); i++) {
+      for (size_t i = 0; i < (*superPatchGroup).size(); i++) {
         const Patch* p = (*superPatchGroup)[i];
         cout << p->getExtraLowIndex(basis, label->getBoundaryLayer()) << " " << p->getExtraHighIndex(basis, label->getBoundaryLayer()) << endl;
       }
 
-      for (unsigned i = 0; i < difference.size(); i++) {
+      for (size_t i = 0; i < difference.size(); i++) {
         cout << difference[i].lower() << " " << difference[i].upper() << endl;
       }
     }
 #endif
     // get more efficient way of doing this...
-    for (unsigned i = 0; i < difference.size(); i++) {
+    for (size_t i = 0; i < difference.size(); i++) {
       Box b = difference[i];
       IntVector low((int)b.lower()(0), (int)b.lower()(1), (int)b.lower()(2));
       IntVector high((int)b.upper()(0), (int)b.upper()(1), (int)b.upper()(2));
@@ -1554,7 +1554,7 @@ allocateAndPut(GridVariableBase& var, const VarLabel* label,
   // Make a set of the non ghost patches that
   // has quicker lookup than the vector.
   set<const Patch*> nonGhostPatches;
-  for (unsigned int i = 0; i < superPatchGroup->size(); ++i) {
+  for (size_t i = 0; i < superPatchGroup->size(); ++i) {
     nonGhostPatches.insert((*superPatchGroup)[i]);
   }
   
@@ -1770,7 +1770,7 @@ OnDemandDataWarehouse::getRegion(constGridVariableBase& constVar,
   
   d_lock.readLock();
   int totalCells=0;
-  for(int i=0;i<patches.size();i++){
+  for(size_t i=0;i<patches.size();i++){
     const Patch* patch = patches[i];
     IntVector l, h;
 
@@ -1792,7 +1792,7 @@ OnDemandDataWarehouse::getRegion(constGridVariableBase& constVar,
     d_varDB.getlist(label, matlIndex, patch, varlist);
     GridVariableBase* v=NULL;
     
-    for (int i = static_cast<int>(varlist.size()) -1 ; i >=0; --i) {
+    for (size_t i = varlist.size() -1 ; i >=0; --i) {
       v = dynamic_cast<GridVariableBase*>(varlist[i]);
       //verify that the variable is valid and matches the dependencies requirements.
       if (v->isValid() && Min(l, v->getLow()) == v->getLow()  &&  Max(h, v->getHigh()) == v->getHigh()){  //find a completed region
@@ -1835,7 +1835,7 @@ OnDemandDataWarehouse::getRegion(constGridVariableBase& constVar,
 
   if (diff.x()*diff.y()*diff.z() > totalCells && missing_patches.size() > 0) {
     cout << d_myworld->myrank() << "  Unknown Variable " << *label << " matl " << matlIndex << " for patch(es): ";
-    for (unsigned i = 0; i < missing_patches.size(); i++) 
+    for (size_t i = 0; i < missing_patches.size(); i++) 
       cout << *missing_patches[i] << " ";
     cout << endl << " Original region: " << low << " " << high << endl;
     cout << " copied cells: " << totalCells << " requested cells: " << diff.x()*diff.y()*diff.z() << endl;
@@ -1875,7 +1875,7 @@ void OnDemandDataWarehouse::emit(OutputContext& oc, const VarLabel* label,
       case TypeDescription::SFCXVariable:
       case TypeDescription::SFCYVariable:
       case TypeDescription::SFCZVariable:
-        for (int i = static_cast<int>(varlist.size()) -1 ; i >=0; --i) {
+        for (size_t i = varlist.size() -1 ; i >=0; --i) {
           v = dynamic_cast<GridVariableBase*>(varlist[i]);
           //verify that the variable is valid and matches the dependencies requirements.
           if (v->isValid() && Min(l, v->getLow()) == v->getLow()  &&  Max(h, v->getHigh()) == v->getHigh())  //find a completed region
@@ -2151,7 +2151,7 @@ getGridVar(GridVariableBase& var, const VarLabel* label, int matlIndex, const Pa
       }
     }
 
-    for(int i=0;i<(int)neighbors.size();i++){
+    for(size_t i=0;i<neighbors.size();i++){
       const Patch* neighbor = neighbors[i];
       if(neighbor && (neighbor != patch)){
         IntVector low = Max(neighbor->getExtraLowIndex(basis, label->getBoundaryLayer()), lowIndex);
@@ -2174,7 +2174,7 @@ getGridVar(GridVariableBase& var, const VarLabel* label, int matlIndex, const Pa
     d_varDB.getlist(label, matlIndex, neighbor, varlist);
     GridVariableBase* v=NULL;
 
-    for (unsigned int i = varlist.size() -1 ; i >=0; --i) {
+    for (size_t i = varlist.size() -1 ; i >=0; --i) {
       v = dynamic_cast<GridVariableBase*>(varlist[i]);
       //verify that the variable is valid and matches the depedencies requirements
       if(v->isValid())
