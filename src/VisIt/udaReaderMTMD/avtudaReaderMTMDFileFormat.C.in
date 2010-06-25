@@ -48,7 +48,7 @@
 #include <string>
 
 #ifdef PARALLEL
-#include <mpi.h>
+#  include <mpi.h>
 #endif
 
 #include <vtkPoints.h>
@@ -74,10 +74,10 @@
 #include <InvalidDBTypeException.h>
 
 
-#ifdef PARALLEL
+//#ifdef PARALLEL
 // we only get the option for  serialized reads if compiling the parallel version
-//#define SERIALIZED_READS
-#endif
+//#  define SERIALIZED_READS
+//#endif
 
 //#define USE_EXTRA_CELLS
 
