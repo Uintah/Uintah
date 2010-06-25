@@ -286,7 +286,10 @@ input file.  In the case of ICE simulations, this looks like:
 %
 near the top of the inputfile.  The system of units \bf{must }\normalfont be
 consistent (mks, cgs) and the majority of input files will be in Meter-Kilogram-Sec
-system.
+system.  For small length scale simulations, it is advantageous to use "bomb units", 
+which are a consistent set of units for microgram mass scales, centimeter length scales
+and micosecond timescales.  A conversion table of relevant physical quantities from mks
+to bomb units can be found in Appendix \ref{appendixBombUnits}.
 
 %FIXME
 %\red{ discuss  first order and second order advection}
@@ -1241,7 +1244,6 @@ reactant.  Note the curvature of the reaction zone.
 %\label{results.CH4}
 %\end{figure}
 %\newpage
-
 
 %\section{References}
 \bibliographystyle{plain}
