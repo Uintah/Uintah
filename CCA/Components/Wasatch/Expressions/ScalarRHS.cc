@@ -10,6 +10,18 @@
 
 namespace Wasatch{
 
+  Expr::Tag
+  resolve_field_tag( const ScalarRHS::FieldSelector field,
+                     const ScalarRHS::FieldTagInfo& info )
+  {
+    Expr::Tag tag;
+    const ScalarRHS::FieldTagInfo::const_iterator ifld = info.find( field );
+    if( ifld != info.end() ) tag = ifld->second;
+    return tag;
+  }
+
+  //------------------------------------------------------------------
+
   ScalarRHS::ScalarRHS( const FieldTagInfo& fieldTags,
                         const std::vector<Expr::Tag>& srcTags,
                         const Expr::ExpressionID& id,
@@ -162,20 +174,6 @@ namespace Wasatch{
       rhs += **isrc;
     }
 
-  }
-
-  //------------------------------------------------------------------
-
-  Expr::Tag
-  ScalarRHS::resolve_field_tag( const FieldSelector field,
-                                const ScalarRHS::FieldTagInfo& info )
-  {
-    Expr::Tag tag;
-    const FieldTagInfo::const_iterator ifld = info.find( field );
-    if( ifld != info.end() ){
-      tag = ifld->second;
-    }
-    return tag;
   }
 
   //------------------------------------------------------------------

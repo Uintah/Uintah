@@ -17,8 +17,7 @@ namespace Wasatch{
   //------------------------------------------------------------------
 
   TemperatureTransportEquation::
-  TemperatureTransportEquation( Expr::ExpressionFactory& solnExprFactory,
-                                Uintah::ProblemSpecP params )
+  TemperatureTransportEquation( Expr::ExpressionFactory& solnExprFactory )
     : Expr::TransportEquation( StringNames::self().temperature,
                                get_rhs_id( solnExprFactory ) )
   {

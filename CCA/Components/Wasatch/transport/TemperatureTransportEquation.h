@@ -14,10 +14,6 @@
 #include <CCA/Components/Wasatch/FieldTypes.h>
 
 
-//-- Uintah includes --//
-#include <Core/ProblemSpec/ProblemSpecP.h>
-
-
 namespace Expr{
   class ExpressionFactory;
   class ExpressionID;
@@ -26,17 +22,25 @@ namespace Expr{
 
 namespace Wasatch{
 
+  /**
+   *  \class TemperatureTransportEquation
+   *  \author James C. Sutherland
+   *  \date June, 2010
+   *
+   *  \brief A basic transport equation for temperature.
+   *
+   */
   class TemperatureTransportEquation : public Expr::TransportEquation
   {
   public:
 
+    // define the types of fields that this TransportEquation deals with.
     typedef ScalarVolField            FieldT;
     typedef FaceTypes<FieldT>::XFace  XFaceT;
     typedef FaceTypes<FieldT>::YFace  YFaceT;
     typedef FaceTypes<FieldT>::ZFace  ZFaceT;
 
-    TemperatureTransportEquation( Expr::ExpressionFactory& solnExprFactory,
-                                  Uintah::ProblemSpecP params );
+    TemperatureTransportEquation( Expr::ExpressionFactory& solnExprFactory );
 
     ~TemperatureTransportEquation();
 

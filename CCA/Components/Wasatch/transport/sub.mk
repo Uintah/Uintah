@@ -4,4 +4,5 @@ SRCDIR   := CCA/Components/Wasatch/transport
 
 SRCS     +=                             		\
 	$(SRCDIR)/TemperatureTransportEquation.cc	\
+	$(SRCDIR)/ScalarTransportEquation.cc		\
 	$(SRCDIR)/ParseEquation.cc

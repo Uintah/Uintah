@@ -8,6 +8,8 @@
 
 #include <expression/TransportEquation.h>
 
+/** \file */
+
 namespace Wasatch{
 
   /**
@@ -39,7 +41,7 @@ namespace Wasatch{
    *  \date June, 2010
    *
    *  \brief Strongly typed adaptor provides the key functionality to
-   *  plug a transport equation into a TimeStepper.
+   *         plug a transport equation into a TimeStepper.
    */
   template< typename FieldT >
   class EqnTimestepAdaptor : public EqnTimestepAdaptorBase
