@@ -10,16 +10,16 @@
 
 
 /**
- *  \class DiffusiveFlux
+ *  \class  DiffusiveFlux
  *  \author James C. Sutherland
  *  \date   June, 2010
  *
  *  \brief Calculates a simple diffusive flux of the form
  *         \f$ J = -\Gamma \frac{\partial \phi}{\partial x} \f$
  *
- *  Note that this requires the diffusion coefficient, \f$\Gamma$\f,
- *  to be evaluated at the same location as \f$J$\f and \f$\nabla
- *  \phi$\f.
+ *  Note that this requires the diffusion coefficient, \f$\Gamma\f$,
+ *  to be evaluated at the same location as \f$J\f$ and \f$\nabla
+ *  \phi\f$.
  */
 template< typename GradT >
 class DiffusiveFlux
@@ -57,7 +57,7 @@ public:
   public:
     /**
      *  \brief Construct a diffusive flux given expressions for
-     *         \f$\phi$\f and \f$\Gamma$\f
+     *         \f$\phi\f$ and \f$\Gamma$\f
      *
      *  \param phiTag  the Expr::Tag for the scalar field
      *
@@ -73,7 +73,7 @@ public:
 
     /**
      *  \brief Construct a diffusive flux given an expression for
-     *         \f$\phi$\f and a constant value for \f$\Gamma$\f.
+     *         \f$\phi\f$ and a constant value for \f$\Gamma\f$.
      *
      *  \param phiTag  the Expr::Tag for the scalar field
      *
@@ -115,16 +115,16 @@ public:
  *  \date   June, 2010
  *
  *  \brief Calculates a generic diffusive flux, \f$J = -\Gamma
- *         \frac{\partial \phi}{\partial x}$\f, where \f$\Gamma$\f is
- *         located at the same locationas \f$\phi$\f.
+ *         \frac{\partial \phi}{\partial x}\f$, where \f$\Gamma\f$ is
+ *         located at the same location as \f$\phi\f$.
  *
  *  \par Template Parameters
  *  <ul>
  *  <li> \b GradT The type of operator used in forming
- *       \f$\frac{\partial \phi}{\partial x}$\f
+ *       \f$\frac{\partial \phi}{\partial x}\f$
  *  <li> \b InterpT The type of operator used in interpolating
- *       \f$\Gamma$\f from the location of \f$\phi$\f to the location
- *       of \f$\frac{\partial \phi}{\partial x}$\f
+ *       \f$\Gamma\f$ from the location of \f$\phi\f$ to the location
+ *       of \f$\frac{\partial \phi}{\partial x}\f$
  *  </ul>
  */
 template< typename GradT,
@@ -158,7 +158,10 @@ public:
   {
   public:
     /**
-     *  \param phiTag   the Expr::Tag for the scalar field
+     *  \brief Construct a DiffusiveFlux2::Builder object for
+     *         registration with an Expr::ExpressionFactory.
+     *
+     *  \param phiTag the Expr::Tag for the scalar field.
      *
      *  \param coefTag the Expr::Tag for the diffusion coefficient
      *         (located at same points as the scalar field).
@@ -202,7 +205,8 @@ DiffusiveFlux( const Expr::Tag phiTag,
   : Expr::Expression<FluxT>( id, reg ),
     isConstCoef_( false ),
     phiTag_ ( phiTag  ),
-    coefTag_( coefTag )
+    coefTag_( coefTag ),
+    coefVal_( 0.0 )
 {}
 
 //--------------------------------------------------------------------
@@ -215,7 +219,8 @@ DiffusiveFlux( const Expr::Tag phiTag,
                const Expr::ExpressionRegistry& reg  )
   : Expr::Expression<FluxT>( id, reg ),
     isConstCoef_( true ),
-    phiTag_ ( phiTag  ),
+    phiTag_ ( phiTag ),
+    coefTag_( "NULL", Expr::INVALID_CONTEXT ),
     coefVal_( coef )
 {}
 

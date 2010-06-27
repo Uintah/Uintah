@@ -53,6 +53,7 @@
 #include "StringNames.h"
 #include "TaskInterface.h"
 #include "TimeStepper.h"
+#include "Properties.h"
 #include "Operators/Operators.h"
 #include "Expressions/BasicExprBuilder.h"
 #include "Expressions/SetCurrentTime.h"
@@ -147,6 +148,8 @@ namespace Wasatch{
     // are typically associated with, e.g. initial conditions.
     //
     create_expressions_from_input( wasatchParams, graphCategories_ );
+
+    setup_property_evaluation( wasatchParams, *graphCategories_[ADVANCE_SOLUTION] );
 
     //
     // Build transport equations.  This registers all expressions as

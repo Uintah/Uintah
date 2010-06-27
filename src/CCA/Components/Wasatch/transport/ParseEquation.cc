@@ -9,12 +9,13 @@
 #include <CCA/Components/Wasatch/StringNames.h>
 
 //-- Add headers for individual transport equations here --//
+#include "ScalarTransportEquation.h"
 #include "TemperatureTransportEquation.h"
 
 
 namespace Wasatch{
 
-  //------------------------------------------------------------------
+  //==================================================================
 
   EqnTimestepAdaptorBase::EqnTimestepAdaptorBase( Expr::TransportEquation* eqn )
     : eqn_(eqn)
@@ -37,11 +38,11 @@ namespace Wasatch{
     EqnTimestepAdaptorBase* adaptor = NULL;
     Expr::TransportEquation* transeqn = NULL;
 
-    std::string eqnLabel;
+    std::string eqnLabel, solnVariable;
 
-    params->getAttribute( "label", eqnLabel );
-    std::cout << "Building equation with label '" << eqnLabel << "'" << std::endl;
-
+    params->getAttribute( "equation", eqnLabel );
+    params->get( "SolutionVariable", solnVariable );
+    
     GraphHelper* const solnGraphHelper = gc[ADVANCE_SOLUTION];
     GraphHelper* const icGraphHelper   = gc[INITIALIZATION  ];
 
@@ -49,9 +50,13 @@ namespace Wasatch{
     // resolve the transport equation to be solved and create the adaptor for it.
     //
     std::cout << "Creating transport equation for '" << eqnLabel << "'" << std::endl;
-    // jcs get this timestepper stuff working...
-    if( eqnLabel == sName.temperature ){
-      transeqn = new TemperatureTransportEquation( *solnGraphHelper->exprFactory, params );
+
+    if( eqnLabel == "scalar" ){
+      transeqn = new ScalarTransportEquation( *solnGraphHelper->exprFactory, params );
+      adaptor = new EqnTimestepAdaptor<ScalarTransportEquation::FieldT>( transeqn );
+    }
+    else if( eqnLabel == sName.temperature ){
+      transeqn = new TemperatureTransportEquation( *solnGraphHelper->exprFactory );
       adaptor = new EqnTimestepAdaptor<TemperatureTransportEquation::FieldT>( transeqn );
     }
 

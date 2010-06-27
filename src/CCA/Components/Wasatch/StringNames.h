@@ -41,7 +41,8 @@ namespace Wasatch{
     const std::string
       species,
       rhoyi,
-      xSpeciesDiffFlux, ySpeciesDiffFlux, zSpeciesDiffFlux;
+      xSpeciesDiffFlux, ySpeciesDiffFlux, zSpeciesDiffFlux,
+      mixtureFraction;
 
     // thermochemistry related variables
     const std::string

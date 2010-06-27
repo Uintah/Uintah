@@ -35,17 +35,21 @@ namespace Wasatch{
   {
   protected:
 
-    typedef Wasatch::ScalarVolField           FieldT;
-    typedef Wasatch::FaceTypes<FieldT>::XFace XFluxT;
-    typedef Wasatch::FaceTypes<FieldT>::YFace YFluxT;
-    typedef Wasatch::FaceTypes<FieldT>::ZFace ZFluxT;
+    typedef Wasatch::ScalarVolField           FieldT; ///< The type of field for the scalar solution variable.
+    typedef Wasatch::FaceTypes<FieldT>::XFace XFluxT; ///< The type of field for the x-face variables.
+    typedef Wasatch::FaceTypes<FieldT>::YFace YFluxT; ///< The type of field for the y-face variables.
+    typedef Wasatch::FaceTypes<FieldT>::ZFace ZFluxT; ///< The type of field for the z-face variables.
 
-    typedef Wasatch::OpTypes<FieldT>::DivX   DivX;
-    typedef Wasatch::OpTypes<FieldT>::DivY   DivY;
-    typedef Wasatch::OpTypes<FieldT>::DivZ   DivZ;
+    typedef Wasatch::OpTypes<FieldT>::DivX   DivX; ///< Divergence operator (surface integral) in the x-direction
+    typedef Wasatch::OpTypes<FieldT>::DivY   DivY; ///< Divergence operator (surface integral) in the y-direction
+    typedef Wasatch::OpTypes<FieldT>::DivZ   DivZ; ///< Divergence operator (surface integral) in the z-direction
 
   public:
 
+    /**
+     *  \enum FieldSelector
+     *  \brief Use this enum to populate information in the FieldTagInfo type.
+     */
     enum FieldSelector{
       CONVECTIVE_FLUX_X,
       CONVECTIVE_FLUX_Y,
@@ -56,17 +60,45 @@ namespace Wasatch{
       SOURCE_TERM
     };
 
-    // jcs currently we only allow one of each info type.  But there
-    // are cases where we may want multiple ones.  Example: diffusive
-    // terms in energy equation.
-    typedef std::map< FieldSelector, Expr::Tag >  FieldTagInfo;
+    /**
+     * \todo currently we only allow one of each info type.  But there
+     *       are cases where we may want multiple ones.  Example:
+     *       diffusive terms in energy equation.  Expand this
+     *       capability.
+     */
+    typedef std::map< FieldSelector, Expr::Tag >
+    FieldTagInfo; ///< Defines a map to hold information on ExpressionIDs for the RHS.
+   
 
+    /**
+     *  \class Builder
+     *  \author James C. Sutherland
+     *  \date   June, 2010
+     *
+     *  \brief builder for ScalarRHS objecst.
+     */
     class Builder : public Expr::ExpressionBuilder
     {
     public:
 
+      /**
+       *  \brief Constructs a builder for a ScalarRHS object.
+       *
+       *  \param fieldInfo the FieldTagInfo object that holds
+       *         information for the various expressions that form the
+       *         RHS.
+       */
       Builder( const FieldTagInfo& fieldInfo );
 
+      /**
+       *  \brief Constructs a builder for a ScalarRHS object.
+       *
+       *  \param fieldInfo the FieldTagInfo object that holds
+       *         information for the various expressions that form the
+       *         RHS.
+       *
+       *  \param srcTags extra source terms to attach to this RHS.
+       */
       Builder( const FieldTagInfo& fieldInfo,
                const std::vector<Expr::Tag>& srcTags );
 
@@ -106,9 +138,6 @@ namespace Wasatch{
     SrcVec srcTerm_;
 
     void nullify_fields();
-
-    static Expr::Tag resolve_field_tag( const FieldSelector,
-                                        const FieldTagInfo& fieldTags );
 
     ScalarRHS( const FieldTagInfo& fieldTags,
                const std::vector<Expr::Tag>& srcTags,

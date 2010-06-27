@@ -3,7 +3,7 @@
   The MIT License
 
   Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
-  Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
+  Explosions (CSAFE), and  Institute for Clean and Secure Energy (ICSE), 
   University of Utah.
 
   License for the specific language governing rights and limitations under
@@ -27,6 +27,49 @@
 
 */
 
+
+/**
+   \file
+ 
+   \mainpage
+ 
+   \author James C. Sutherland
+   \date June, 2010
+ 
+   Wasatch is a Uintah component that interfaces to the Expression
+   library and SpatialOps library to facilitate more rapid
+   development of time-dependent PDE solvers.
+ 
+ 
+   \par Development in Wasatch
+ 
+   Most developers will need to focus on the Expression library and
+   not on Wasatch directly.  Typically, development should focus on
+   creating Expressions that encapsulate a concise bit of
+   functionality.  These should be written to be as generic as
+   possible.  Notably:
+
+    - Expressions should NOT be cognizant of ANYTHING within Uintah.
+      This includes parser objects, exception handling, etc.  They are
+      meant to be portable.
+
+    - Exressions should use Expr::Tag objects to define dependencies,
+      and should NOT use hard-coded strings for naming of any
+      variables.  This also destroys portability and can lead to
+      fragile code dependencies.
+
+   For developers that need to deal with details in Wasatch, it
+   interfaces to Uintah through several key areas:
+ 
+    - Parsing.  Uintah has its own XML parser (Uintah::ProblemSpec).
+      Developers should work to minimize the intrusion of parser
+      objects into application code as much as possible, as it
+      destroys portability of the code.
+ 
+    - Task creation.  Uintah tasks are typically created by wrapping
+      Expression tree objects using the Wasatch::TaskInterface class.
+*/
+
 #ifndef Packages_Uintah_CCA_Components_Examples_Wasatch_h
 #define Packages_Uintah_CCA_Components_Examples_Wasatch_h
 
@@ -42,6 +85,7 @@
 //-- Wasatch includes --//
 #include "PatchInfo.h"
 #include "GraphHelperTools.h"
+
 
 namespace Expr{ class ExpressionID; }
 
@@ -79,6 +123,10 @@ namespace Wasatch{
    *  SpatialOps.  These have been developed by James S. Sutherland
    *  and support graph construction as well as field/operator
    *  operations, respectively.
+   *
+   * \todo Create a tree on the initialization that duplicates the
+   *       "advance solution" tree so that we have everything required
+   *       for output at the initial time step.
    */
   class UINTAHSHARE Wasatch :
     public Uintah::UintahParallelComponent,

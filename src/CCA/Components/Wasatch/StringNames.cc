@@ -24,6 +24,7 @@ namespace Wasatch{
     // species related variables
     species("species"),
     rhoyi("rhoy"),
+    mixtureFraction("mixture fraction"),
 
     // thermochemistry related variables
     heatCapacity("heat capacity"),

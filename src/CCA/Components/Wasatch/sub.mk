@@ -37,6 +37,7 @@ SRCDIR   := CCA/Components/Wasatch
 SRCS     +=                             \
         $(SRCDIR)/GraphHelperTools.cc	\
         $(SRCDIR)/ParseTools.cc		\
+	$(SRCDIR)/Properties.cc		\
 	$(SRCDIR)/StringNames.cc	\
         $(SRCDIR)/TaskInterface.cc	\
 	$(SRCDIR)/TimeStepper.cc	\
@@ -70,9 +71,13 @@ EXPRLIB_LIBRARY    := /Users/u0033394/projects/ExprLib/buildUintah/install_dir/l
 BOOST_LIBRARY      := /jcs/apps/lib/boost-1.41.0/libboost_thread-mt.a /jcs/apps/lib/boost-1.41.0/libboost_signals-mt.a
 #------------------------------------------------------------------------
 
-LIBS := $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) $(EXPRLIB_LIBRARY) $(SPATIALOPS_LIBRARY) $(BOOST_LIBRARY)
+LIBS := $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) 	\
+        $(EXPRLIB_LIBRARY) $(SPATIALOPS_LIBRARY) 	\
+        $(TABPROPS_LIBRARY) $(HDF5_LIBRARY)		\
+        $(BOOST_LIBRARY)
 
-INCLUDES := $(INCLUDES) $(SPATIALOPS_INCLUDE) $(EXPRLIB_INCLUDE)
+INCLUDES := $(INCLUDES) $(SPATIALOPS_INCLUDE) $(EXPRLIB_INCLUDE) \
+            $(HDF5_INCLUDE) $(TABPROPS_INCLUDE)
 
 SUBDIRS := \
         $(SRCDIR)/Operators	\
