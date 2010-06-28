@@ -1099,7 +1099,7 @@ OnDemandDataWarehouse::getParticleSubset(int matlIndex, IntVector lowIndex, IntV
   vector<ParticleSubset*> subsets;
   vector<const Patch*> vneighbors;
   
-  for(size_t i=0;i<neighbors.size();i++){
+  for(int i=0;i<neighbors.size();i++){
     const Patch* neighbor = neighbors[i];
     const Patch* realNeighbor = neighbor->getRealPatch();
     if(neighbor){
@@ -1770,7 +1770,7 @@ OnDemandDataWarehouse::getRegion(constGridVariableBase& constVar,
   
   d_lock.readLock();
   int totalCells=0;
-  for(size_t i=0;i<patches.size();i++){
+  for(int i=0;i<patches.size();i++){
     const Patch* patch = patches[i];
     IntVector l, h;
 
@@ -1792,7 +1792,7 @@ OnDemandDataWarehouse::getRegion(constGridVariableBase& constVar,
     d_varDB.getlist(label, matlIndex, patch, varlist);
     GridVariableBase* v=NULL;
     
-    for (size_t i = varlist.size() -1 ; i >=0; --i) {
+    for (int i = (int)varlist.size() -1 ; i >=0; --i) {
       v = dynamic_cast<GridVariableBase*>(varlist[i]);
       //verify that the variable is valid and matches the dependencies requirements.
       if (v->isValid() && Min(l, v->getLow()) == v->getLow()  &&  Max(h, v->getHigh()) == v->getHigh()){  //find a completed region
@@ -1875,7 +1875,7 @@ void OnDemandDataWarehouse::emit(OutputContext& oc, const VarLabel* label,
       case TypeDescription::SFCXVariable:
       case TypeDescription::SFCYVariable:
       case TypeDescription::SFCZVariable:
-        for (size_t i = varlist.size() -1 ; i >=0; --i) {
+        for (int i = (int)varlist.size() -1 ; i >=0; --i) {
           v = dynamic_cast<GridVariableBase*>(varlist[i]);
           //verify that the variable is valid and matches the dependencies requirements.
           if (v->isValid() && Min(l, v->getLow()) == v->getLow()  &&  Max(h, v->getHigh()) == v->getHigh())  //find a completed region
@@ -2151,7 +2151,7 @@ getGridVar(GridVariableBase& var, const VarLabel* label, int matlIndex, const Pa
       }
     }
 
-    for(size_t i=0;i<neighbors.size();i++){
+    for(int i=0;i<neighbors.size();i++){
       const Patch* neighbor = neighbors[i];
       if(neighbor && (neighbor != patch)){
         IntVector low = Max(neighbor->getExtraLowIndex(basis, label->getBoundaryLayer()), lowIndex);
@@ -2174,7 +2174,7 @@ getGridVar(GridVariableBase& var, const VarLabel* label, int matlIndex, const Pa
     d_varDB.getlist(label, matlIndex, neighbor, varlist);
     GridVariableBase* v=NULL;
 
-    for (size_t i = varlist.size() -1 ; i >=0; --i) {
+    for (int i = (int)varlist.size() -1 ; i >=0; --i) {
       v = dynamic_cast<GridVariableBase*>(varlist[i]);
       //verify that the variable is valid and matches the depedencies requirements
       if(v->isValid())
