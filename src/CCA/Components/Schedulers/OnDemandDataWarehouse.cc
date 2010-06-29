@@ -1792,8 +1792,8 @@ OnDemandDataWarehouse::getRegion(constGridVariableBase& constVar,
     d_varDB.getlist(label, matlIndex, patch, varlist);
     GridVariableBase* v=NULL;
     
-    for (int i = (int)varlist.size() -1 ; i >=0; --i) {
-      v = dynamic_cast<GridVariableBase*>(varlist[i]);
+    for (vector<Variable*>::reverse_iterator rit = varlist.rbegin(); rit < varlist.rend(); ++rit){
+      v = dynamic_cast<GridVariableBase*>(*rit);
       //verify that the variable is valid and matches the dependencies requirements.
       if (v->isValid() && Min(l, v->getLow()) == v->getLow()  &&  Max(h, v->getHigh()) == v->getHigh()){  //find a completed region
         break;
@@ -1875,19 +1875,19 @@ void OnDemandDataWarehouse::emit(OutputContext& oc, const VarLabel* label,
       case TypeDescription::SFCXVariable:
       case TypeDescription::SFCYVariable:
       case TypeDescription::SFCZVariable:
-        for (int i = (int)varlist.size() -1 ; i >=0; --i) {
-          v = dynamic_cast<GridVariableBase*>(varlist[i]);
+        for (vector<Variable*>::reverse_iterator rit = varlist.rbegin(); rit < varlist.rend(); ++rit){
+          v = dynamic_cast<GridVariableBase*>(*rit);
           //verify that the variable is valid and matches the dependencies requirements.
           if (v->isValid() && Min(l, v->getLow()) == v->getLow()  &&  Max(h, v->getHigh()) == v->getHigh())  //find a completed region
             break;
-          if (i == 0) v = NULL;
+          if (rit == varlist.rend()) v = NULL;
         }
         var=v;
         break;
       default:
         ASSERT(varlist.size()==1);
         //set to first item in list
-        var = varlist[0];
+        var = *(varlist.begin());
         break;
     }
   }
@@ -2174,8 +2174,8 @@ getGridVar(GridVariableBase& var, const VarLabel* label, int matlIndex, const Pa
     d_varDB.getlist(label, matlIndex, neighbor, varlist);
     GridVariableBase* v=NULL;
 
-    for (int i = (int)varlist.size() -1 ; i >=0; --i) {
-      v = dynamic_cast<GridVariableBase*>(varlist[i]);
+    for (vector<Variable*>::reverse_iterator rit = varlist.rbegin(); rit < varlist.rend(); ++rit){
+      v = dynamic_cast<GridVariableBase*>(*rit);
       //verify that the variable is valid and matches the depedencies requirements
       if(v->isValid())
       {
@@ -2191,7 +2191,7 @@ getGridVar(GridVariableBase& var, const VarLabel* label, int matlIndex, const Pa
           }
         }
       }
-      if (i == 0) v = NULL;
+      if (rit == varlist.rend()) v = NULL;
     } //end for vars
     if (v==NULL) {
      // cout << d_myworld->myrank()  << " cannot copy var " << *label << " from patch " << neighbor->getID()
