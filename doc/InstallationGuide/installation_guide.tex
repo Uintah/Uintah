@@ -620,6 +620,28 @@ configure), \textbf{Uintah} will automatically build a VisIt plugin
 of) \textasciitilde/.visit. When VisIt is run, it will find the plugin
 and allow for reading UDA's.
 
+
+There is a configure error that occurs when CMake is unable to find the
+right compilers when building the plugin.  An infinite loop will result
+as a consequence of this error.  If the error:
+
+\begin{verbatim}
+You have changed variables that require your cache to be deleted.
+Configure will be re-run and you may have to reset some variables.
+The following variables have changed:
+CMAKE_CXX_COMPILER= g++
+\end{verbatim}
+
+\noindent or a similar error occurs (this is a snippet of the output), you will 
+need to explicitly point the \textbf{Uintah} CC and CXX flags to gcc 
+and g++.  Example, add something similar to:
+
+\begin{verbatim}
+CC=/path/to/gcc CXX=/path/to/g++
+\end{verbatim}
+
+\noindent to the configure line. 
+
 \subsubsection{Remote visualization}
 In order to read data on a remote machine, you will need to have a
 version of VisIt and the UDA reader plugin installed on that
