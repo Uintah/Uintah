@@ -142,43 +142,43 @@ avtudaReaderMTMDFileFormat::avtudaReaderMTMDFileFormat(const char *filename) :
   // All possible function calls - check here
   char *error;
 
-  *(void **)(&openDataArchive) = dlsym(libHandle, "openDataArchive");
+  openDataArchive = (DataArchive* (*)(const std::string&)) dlsym(libHandle, "openDataArchive");
   if((error = dlerror()) != NULL) {
     EXCEPTION1(InvalidDBTypeException, "The function openDataArchive could not be located in the library!!!");
   }
 
-  *(void **)(&closeDataArchive) = dlsym(libHandle, "closeDataArchive");
+  closeDataArchive = (void (*)(DataArchive*)) dlsym(libHandle, "closeDataArchive");
   if((error = dlerror()) != NULL) {
     EXCEPTION1(InvalidDBTypeException, "The function closeDataArchive could not be located in the library!!!");
   }
 
-  *(void **)(&getGrid) = dlsym(libHandle, "getGrid");
+  getGrid = (GridP* (*)(DataArchive*, int)) dlsym(libHandle, "getGrid");
   if((error = dlerror()) != NULL) {
     EXCEPTION1(InvalidDBTypeException, "The function getGrid could not be located in the library!!!");
   }
 
-  *(void **)(&releaseGrid) = dlsym(libHandle, "releaseGrid");
+  releaseGrid = (void (*)(GridP*)) dlsym(libHandle, "releaseGrid");
   if((error = dlerror()) != NULL) {
     EXCEPTION1(InvalidDBTypeException, "The function releaseGrid could not be located in the library!!!");
   }
 
 
-  *(void **)(&getCycleTimes) = dlsym(libHandle, "getCycleTimes");
+  getCycleTimes = (std::vector<double> (*)(DataArchive*)) dlsym(libHandle, "getCycleTimes");
   if((error = dlerror()) != NULL) {
     EXCEPTION1(InvalidDBTypeException, "The function getCycleTimes could not be located in the library!!!");
   }
 
-  *(void **)(&getTimeStepInfo) = dlsym(libHandle, "getTimeStepInfo");
+  getTimeStepInfo = (TimeStepInfo* (*)(DataArchive*, GridP*, int)) dlsym(libHandle, "getTimeStepInfo");
   if((error = dlerror()) != NULL) {
     EXCEPTION1(InvalidDBTypeException, "The function getTimeStepInfo could not be located in the library!!!");
   }
 
-  *(void **)(&getGridData) = dlsym(libHandle, "getGridData");
+  getGridData = (GridDataRaw* (*)(DataArchive*, GridP*, int, int, std::string, int, int, int[3], int[3])) dlsym(libHandle, "getGridData");
   if((error = dlerror()) != NULL) {
     EXCEPTION1(InvalidDBTypeException, "The function getGridData could not be located in the library!!!");
   }
 
-  *(void **)(&getParticleData) = dlsym(libHandle, "getParticleData");
+  getParticleData = (ParticleDataRaw* (*)(DataArchive*, GridP*, int, int, std::string, int, int)) dlsym(libHandle, "getParticleData");
   if((error = dlerror()) != NULL) {
     EXCEPTION1(InvalidDBTypeException, "The function getParticleData could not be located in the library!!!");
   }
@@ -328,7 +328,7 @@ avtudaReaderMTMDFileFormat::ReadMetaData(avtDatabaseMetaData *md, int timeState)
   int index_high[3] = { level0Info.patchInfo[0].cc_extra_high[0],
                         level0Info.patchInfo[0].cc_extra_high[1],
                         level0Info.patchInfo[0].cc_extra_high[2] };
-  for (int i=1; i<level0Info.patchInfo.size(); i++) {
+  for (int i=1; i<(int)level0Info.patchInfo.size(); i++) {
     for (int j=0; j<3; j++) {
       index_low[j]  = min(index_low[j],  level0Info.patchInfo[i].cc_extra_low[j]);
       index_high[j] = max(index_high[j], level0Info.patchInfo[i].cc_extra_high[j]);
@@ -352,13 +352,13 @@ avtudaReaderMTMDFileFormat::ReadMetaData(avtDatabaseMetaData *md, int timeState)
   std::set<string> mesh_vars_added;
 
 
-  for (int i=0; i<stepInfo->varInfo.size(); i++) {
+  for (int i=0; i<(int)stepInfo->varInfo.size(); i++) {
     if (stepInfo->varInfo[i].type.find("ParticleVariable") == string::npos) {
       string varname = stepInfo->varInfo[i].name;
       string vartype = stepInfo->varInfo[i].type;
 
       string mesh_for_this_var;
-      avtCentering cent;
+      avtCentering cent=AVT_ZONECENT;
 
       if (vartype.find("NC") != string::npos) {
         cent = AVT_NODECENT;
@@ -409,7 +409,7 @@ avtudaReaderMTMDFileFormat::ReadMetaData(avtDatabaseMetaData *md, int timeState)
         meshes_added.insert(mesh_for_this_var);
       }
 
-      for (int j=0; j<stepInfo->varInfo[i].materials.size(); j++) {
+      for (int j=0; j<(int)stepInfo->varInfo[i].materials.size(); j++) {
         char buffer[128];
         string newVarname = varname;
         sprintf(buffer, "%d", stepInfo->varInfo[i].materials[j]);
@@ -435,7 +435,7 @@ avtudaReaderMTMDFileFormat::ReadMetaData(avtDatabaseMetaData *md, int timeState)
   // add a proc id enum variable for CC_Mesh
   int max_proc = 0;
   for (int l=0; l<numLevels; l++) {
-    for (int p=0; p<stepInfo->levelInfo[l].patchInfo.size(); p++) {
+    for (int p=0; p<(int)stepInfo->levelInfo[l].patchInfo.size(); p++) {
       max_proc = std::max(max_proc, stepInfo->levelInfo[l].patchInfo[p].proc_id);
     }
   }
@@ -460,7 +460,7 @@ avtudaReaderMTMDFileFormat::ReadMetaData(avtDatabaseMetaData *md, int timeState)
   
 
   // Nothing needs to be modifed for particle data, as they exist only on a single level
-  for (int i=0; i<stepInfo->varInfo.size(); i++) {
+  for (int i=0; i<(int)stepInfo->varInfo.size(); i++) {
     if (stepInfo->varInfo[i].type.find("ParticleVariable") != string::npos) {
       string varname = stepInfo->varInfo[i].name;
       string vartype = stepInfo->varInfo[i].type;
@@ -732,12 +732,12 @@ avtudaReaderMTMDFileFormat::CalculateDomainNesting(int timestate, const std::str
     LevelInfo &levelInfoParent = stepInfo->levelInfo[prev_level];
     LevelInfo &levelInfoChild = stepInfo->levelInfo[level];
 
-    for (int child=0; child<levelInfoChild.patchInfo.size(); child++) {
+    for (int child=0; child<(int)levelInfoChild.patchInfo.size(); child++) {
       PatchInfo &childPatchInfo = levelInfoChild.patchInfo[child];
       const int *child_low = childPatchInfo.cc_low;
       const int *child_high = childPatchInfo.cc_high;
 
-      for (int parent=0; parent<levelInfoParent.patchInfo.size(); parent++) {
+      for (int parent=0; parent<(int)levelInfoParent.patchInfo.size(); parent++) {
         PatchInfo &parentPatchInfo = levelInfoParent.patchInfo[parent];
         const int *parent_low = parentPatchInfo.cc_low;
         const int *parent_high = parentPatchInfo.cc_high;
@@ -1045,6 +1045,8 @@ avtudaReaderMTMDFileFormat::GetMesh(int timestate, int domain, const char *meshn
 
     return ugrid;
   }
+
+  return NULL;
 }
 
 
@@ -1084,7 +1086,7 @@ avtudaReaderMTMDFileFormat::GetVar(int timestate, int domain, const char *varnam
     
   string varType;
 
-  for (int k=0; k<stepInfo->varInfo.size(); k++) {
+  for (int k=0; k<(int)stepInfo->varInfo.size(); k++) {
     if (stepInfo->varInfo[k].name == varName) {
       varType = stepInfo->varInfo[k].type;
       if (stepInfo->varInfo[k].type.find("ParticleVariable") != string::npos) {
