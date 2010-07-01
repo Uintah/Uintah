@@ -120,13 +120,14 @@ ICE::ICE(const ProcessorGroup* myworld, const bool doAMR) :
   d_modelSetup = 0;
   d_analysisModule = 0;
   d_recompile               = false;
-  d_conservationTest->onOff = false;
   d_canAddICEMaterial       = false;
   d_with_mpm                = false;
-  d_clampSpecificVolume     =false;
+  d_clampSpecificVolume     = false;
   
-  d_conservationTest = scinew conservationTest_flags();
   d_exchCoeff = scinew ExchangeCoefficients();
+  
+  d_conservationTest         = scinew conservationTest_flags();
+  d_conservationTest->onOff = false;
 
   d_customInitialize_basket  = scinew customInitialize_basket();
   d_customBC_var_basket  = scinew customBC_var_basket();
