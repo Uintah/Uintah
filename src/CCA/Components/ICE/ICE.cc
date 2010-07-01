@@ -119,12 +119,13 @@ ICE::ICE(const ProcessorGroup* myworld, const bool doAMR) :
   d_modelInfo = 0;
   d_modelSetup = 0;
   d_analysisModule = 0;
-  d_recompile = false;
-  d_conservationTest = scinew conservationTest_flags();
+  d_recompile               = false;
   d_conservationTest->onOff = false;
-  d_with_mpm=false;
-  d_clampSpecificVolume=false;
- 
+  d_canAddICEMaterial       = false;
+  d_with_mpm                = false;
+  d_clampSpecificVolume     =false;
+  
+  d_conservationTest = scinew conservationTest_flags();
   d_exchCoeff = scinew ExchangeCoefficients();
 
   d_customInitialize_basket  = scinew customInitialize_basket();
@@ -232,11 +233,15 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec,
 
   ProblemSpecP phys_cons_ps = prob_spec->findBlock("PhysicalConstants");
   if(phys_cons_ps){
-    phys_cons_ps->get("reference_pressure",d_ref_press);
+    phys_cons_ps->require("reference_pressure",d_ref_press);
     phys_cons_ps->require("gravity",d_gravity);
   } else {
-    d_ref_press=0.;
-    d_gravity=Vector(0,0,0);
+    throw ProblemSetupException(                                                
+     "\n Could not find the <PhysicalConstants> section in the input file.  This section contains <gravity> and <reference pressure> \n"  
+     " This pressure is used during the problem intialization and when\n"       
+     " the pressure gradient is interpolated to the MPM particles \n"           
+     " you must have it for all MPMICE and multimaterial ICE problems\n",       
+     __FILE__, __LINE__);                                                       
   }
 
   //__________________________________
@@ -245,26 +250,22 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec,
 
   //__________________________________
   // Pull out from CFD-ICE section
-  //__________________________________
-  // with ICE or MPMICE you must a reference pressure
   ProblemSpecP cfd_ps = prob_spec->findBlock("CFD");
 
-  if(cfd_ps){
-    ProblemSpecP ice_ps=cfd_ps->findBlock("ICE");
-    if(ice_ps && d_ref_press == 0.0){
-      throw ProblemSetupException(
-       "\n Could not find <reference_pressure> inside of <PhysicalConstants> \n"
-       " This pressure is used during the problem intialization and when\n"
-       " the pressure gradient is interpolated to the MPM particles \n"
-       " you must have it for all MPMICE and multimaterial ICE problems\n",
-       __FILE__, __LINE__);  
-    }
+  if(!cfd_ps){
+    throw ProblemSetupException(                                                                    
+     "\n Could not find the <CFD> section in the input file\n",__FILE__, __LINE__);    
   }
 
   cfd_ps->require("cfl",d_CFL);
-  d_canAddICEMaterial=false;
   cfd_ps->get("CanAddICEMaterial",d_canAddICEMaterial);
-  ProblemSpecP cfd_ice_ps = cfd_ps->findBlock("ICE"); 
+  
+  ProblemSpecP cfd_ice_ps = cfd_ps->findBlock("ICE");
+  if(!cfd_ice_ps){
+    throw ProblemSetupException(                                                                    
+     "\n Could not find the <CFD> <ICE> section in the input file\n",__FILE__, __LINE__);    
+  }
+   
   
   cfd_ice_ps->get("max_iteration_equilibration",d_max_iter_equilibration);
   cfd_ice_ps->get("ClampSpecificVolume",d_clampSpecificVolume);
