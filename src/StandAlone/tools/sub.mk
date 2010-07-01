@@ -81,7 +81,7 @@ ifeq ($(IS_STATIC_BUILD),yes)
   LIBS := \
 	$(CORE_STATIC_LIBS)
 else
-  LIBS :=
+  LIBS := $(MPI_LIBRARY)
 endif
 
 SRCS := $(SRCDIR)/compute_Lnorm_udas.cc 
