@@ -11537,6 +11537,33 @@ echo "$as_me: error: VisIt requires CMake. Please make sure 'cmake' is in your p
    { (exit 1); exit 1; }; }
    fi
 
+   CMAKE_LOCATION=`which cmake`
+
+   # Verify that cmake is new enough:
+   #
+   # Need this ugly hack to handle different types of version strings returned by cmake's different versions... sigh.
+   # The first 'sed' removes all alphabetical characters (leaves numbers, spaces, and periods).  The second 'sed'
+   # removes leading and trailing space.  The final 'sed' replaces (potential) spaces with a perions (.).
+   # Eg: The version string from cmake 2.4.8 is 'cmake version 2.4-patch 8'.
+   # Note: autoconf removes one set of [], thus the below sed commands have one extra set of [] around each portion.
+   CMAKE_VERSION_STRING=`cmake --version | sed 's/[^0-9. ]//g' | sed 's/^[[:space:]]*\(.*\)[[:space:]]*$/\1/' | sed 's/ /./g'`
+
+   CMAKE_VERSION_MAJOR=`echo "$CMAKE_VERSION_STRING" | awk -F. '{print $1}'`
+   CMAKE_VERSION_MINOR=`echo "$CMAKE_VERSION_STRING" | awk -F. '{print $2}'`
+
+   if   test "$CMAKE_VERSION_MAJOR" -ge 3; then
+      { echo "$as_me:$LINENO: WARNING: Have not tried using cmake v3.x... It might work..." >&5
+echo "$as_me: WARNING: Have not tried using cmake v3.x... It might work..." >&2;}
+   elif test "$CMAKE_VERSION_MAJOR" -lt 2; then
+      { { echo "$as_me:$LINENO: error: CMake must be version 2.8 or better.  $CMAKE_LOCATION is version $CMAKE_VERSION_STRING." >&5
+echo "$as_me: error: CMake must be version 2.8 or better.  $CMAKE_LOCATION is version $CMAKE_VERSION_STRING." >&2;}
+   { (exit 1); exit 1; }; }
+   elif test "$CMAKE_VERSION_MINOR" -lt 8; then
+      { { echo "$as_me:$LINENO: error: CMake must be version 2.8 or better.  $CMAKE_LOCATION is version $CMAKE_VERSION_STRING." >&5
+echo "$as_me: error: CMake must be version 2.8 or better.  $CMAKE_LOCATION is version $CMAKE_VERSION_STRING." >&2;}
+   { (exit 1); exit 1; }; }
+   fi
+
    if test "$with_visit" == "yes"; then
       { { echo "$as_me:$LINENO: error: You must provide a DIRECTORY when using --with-visit=DIR. " >&5
 echo "$as_me: error: You must provide a DIRECTORY when using --with-visit=DIR. " >&2;}
@@ -11562,6 +11589,8 @@ echo "$as_me: WARNING: VisIt target directory has changed - removing old VisIt b
    BUILD_VISIT=yes
    UINTAH_UDA_TO_VIS_LIB=`pwd`/lib/libStandAlone_tools_uda2vis.$SO_OR_ARCHIVE_EXTENSION
    VISIT_INSTALL_DIR=$with_visit
+   { echo "$as_me:$LINENO: result: found" >&5
+echo "${ECHO_T}found" >&6; }
 fi
 
 

@@ -1773,6 +1773,28 @@ if test "$with_visit"; then
       AC_MSG_ERROR( VisIt requires CMake. Please make sure 'cmake' is in your path!)
    fi
 
+   CMAKE_LOCATION=`which cmake`
+
+   # Verify that cmake is new enough:
+   #
+   # Need this ugly hack to handle different types of version strings returned by cmake's different versions... sigh.
+   # The first 'sed' removes all alphabetical characters (leaves numbers, spaces, and periods).  The second 'sed'
+   # removes leading and trailing space.  The final 'sed' replaces (potential) spaces with a perions (.).
+   # Eg: The version string from cmake 2.4.8 is 'cmake version 2.4-patch 8'.
+   # Note: autoconf removes one set of [], thus the below sed commands have one extra set of [] around each portion.
+   CMAKE_VERSION_STRING=`cmake --version | sed 's/[[^0-9. ]]//g' | sed 's/^[[[:space:]]]*\(.*\)[[[:space:]]]*$/\1/' | sed 's/ /./g'`
+
+   CMAKE_VERSION_MAJOR=`echo "$CMAKE_VERSION_STRING" | awk -F. '{print $1}'`
+   CMAKE_VERSION_MINOR=`echo "$CMAKE_VERSION_STRING" | awk -F. '{print $2}'`
+
+   if   test "$CMAKE_VERSION_MAJOR" -ge 3; then
+      AC_MSG_WARN(Have not tried using cmake v3.x... It might work...)
+   elif test "$CMAKE_VERSION_MAJOR" -lt 2; then
+      AC_MSG_ERROR(CMake must be version 2.8 or better.  $CMAKE_LOCATION is version $CMAKE_VERSION_STRING.)
+   elif test "$CMAKE_VERSION_MINOR" -lt 8; then
+      AC_MSG_ERROR(CMake must be version 2.8 or better.  $CMAKE_LOCATION is version $CMAKE_VERSION_STRING.)
+   fi
+
    if test "$with_visit" == "yes"; then 
       AC_MSG_ERROR( You must provide a DIRECTORY when using --with-visit=DIR. )
    fi
@@ -1793,6 +1815,7 @@ if test "$with_visit"; then
    BUILD_VISIT=yes
    UINTAH_UDA_TO_VIS_LIB=`pwd`/lib/libStandAlone_tools_uda2vis.$SO_OR_ARCHIVE_EXTENSION
    VISIT_INSTALL_DIR=$with_visit
+   AC_MSG_RESULT(found)
 fi
 
 AC_SUBST(BUILD_VISIT)
