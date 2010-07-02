@@ -114,6 +114,7 @@ namespace Uintah {
                  const Patch* patch,
                  DataWarehouse* new_dw,
                  SimulationStateP& sharedState,
+                 const int indx,
                  const Lodi_variable_basket* user_inputs, 
                  const bool recursiveTasks);
 
