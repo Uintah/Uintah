@@ -29,7 +29,7 @@
       <LODI>
            <press_infinity> 1.0132500000010138e+05  </press_infinity>
            <sigma>          0.27                    </sigma>
-           <ice_material_index> 1                   </ice_material_index>
+           <material> atmosphere                   </material>
       </LODI>
     
     
@@ -162,14 +162,15 @@
       <save label="uvel_FC"/>
       <save label="vvel_FC"/>
       <save label="wvel_FC"/>
-      <save label="uvel_FCME"/>
-      <save label="vvel_FCME"/>
-      <save label="wvel_FCME"/>
       <save label="delP_Dilatate"/>
       <save label="press_CC"/>
-      <save label="mom_L_ME_CC"/>
       <save label="rho_CC"/>
       <save label="vel_CC"/>
+      <save label="Li1"/>
+      <save label="Li2"/>
+      <save label="Li3"/>
+      <save label="Li4"/>
+      <save label="Li5"/>
       <save label="p.x"/>
       <save label="p.volume"/>
       <save label="p.velocity"/>
@@ -279,7 +280,7 @@
       </MPM>
       <!--_______________________________________________________-->
        <ICE>
-         <material>
+         <material name="atmosphere">
            <EOS type = "ideal_gas">                     </EOS>
            <dynamic_viscosity>          0.0             </dynamic_viscosity>
            <thermal_conductivity>       0.0             </thermal_conductivity>
