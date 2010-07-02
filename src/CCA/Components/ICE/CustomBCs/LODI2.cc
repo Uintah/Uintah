@@ -174,12 +174,6 @@ bool read_LODI_BC_inputs(const ProblemSpecP& prob_spec,
       throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
     }
     
-    if(numICEMatls > 1){
-      ostringstream warn;                                                                                              
-      warn << "ERROR:\n Inputs: LODI Boundary Conditions: These BCs currently only work with 1 ICE material: "<< endl;
-      throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
-    }
-    
     //__________________________________
     //  Save Li Terms?
     vb->saveLiTerms = false;
@@ -301,7 +295,7 @@ void  preprocess_Lodi_BCs(DataWarehouse* old_dw,
                           ICELabel* lb,
                           const Patch* patch,
                           const string& where,
-                          const int /*indx*/,
+                          const int matl_indx,
                           SimulationStateP& sharedState,
                           bool& setLodiBcs,
                           Lodi_vars* lv,
@@ -312,14 +306,7 @@ void  preprocess_Lodi_BCs(DataWarehouse* old_dw,
 
   Material* matl = sharedState->getMaterial(var_basket->iceMatl_indx);
   int indx = matl->getDWIndex();  
-
-  //__________________________________
-  // bulletproofing
-  int numICEMatls  = sharedState->getNumICEMatls();
-  if(numICEMatls > 1){
-      string warn="ERROR:\n LODI boundary conditions only works with 1 ICE material\n";
-      throw ProblemSetupException(warn, __FILE__, __LINE__);
-  }
+  
   //__________________________________
   //    Equilibration pressure
   if(where == "EqPress"){
@@ -336,7 +323,6 @@ void  preprocess_Lodi_BCs(DataWarehouse* old_dw,
   //    FC exchange
   if(where == "velFC_Exchange"){
     setLodiBcs = false;
-    // require(maxMach_face_varlabel);
   }
   //__________________________________
   //    update pressure (explicit and implicit)
@@ -347,7 +333,7 @@ void  preprocess_Lodi_BCs(DataWarehouse* old_dw,
     new_dw->get(lv->rho_CC,     lb->rho_CCLabel,        indx,patch,gn,0);
     new_dw->get(lv->speedSound, lb->speedSound_CCLabel, indx,patch,gn,0); 
   }
-    if(where == "imp_update_press_CC"){ 
+  if(where == "imp_update_press_CC"){ 
     setLodiBcs = true;
     DataWarehouse* sub_new_dw = new_dw->getOtherDataWarehouse(Task::NewDW);
     old_dw->get(lv->vel_CC,     lb->vel_CCLabel,        indx,patch,gn,0); 
@@ -357,7 +343,7 @@ void  preprocess_Lodi_BCs(DataWarehouse* old_dw,
   }
   //__________________________________
   //    cc_ Exchange
-  if(where == "CC_Exchange"){
+  if(where == "CC_Exchange" && matl_indx == indx){
     setLodiBcs = true;
     new_dw->get(lv->vel_CC,     lb->vel_CC_XchangeLabel,indx,patch,gn,0);
     new_dw->get(lv->press_CC,   lb->press_CCLabel,      0,   patch,gn,0);  
@@ -365,9 +351,11 @@ void  preprocess_Lodi_BCs(DataWarehouse* old_dw,
     new_dw->get(lv->gamma,      lb->gammaLabel,         indx,patch,gn,0);
     new_dw->get(lv->speedSound, lb->speedSound_CCLabel, indx,patch,gn,0);
   }
+  
+
   //__________________________________
   //    Advection
-  if(where == "Advection"){
+  if(where == "Advection" && matl_indx == indx){
     setLodiBcs = true;
     new_dw->get(lv->rho_CC,    lb->rho_CCLabel,        indx,patch,gn,0); 
     new_dw->get(lv->vel_CC,    lb->vel_CCLabel,        indx,patch,gn,0);
@@ -385,7 +373,7 @@ void  preprocess_Lodi_BCs(DataWarehouse* old_dw,
     }
 
     computeLi(lv->Li, lv->rho_CC,  lv->press_CC, lv->vel_CC, lv->speedSound, 
-              patch, new_dw, sharedState, var_basket, false);
+              patch, new_dw, sharedState, indx,var_basket, false);
               
     if(var_basket->saveLiTerms  && where == "Advection"){
       CCVariable<Vector> Li1, Li2, Li3, Li4, Li5;
@@ -738,16 +726,12 @@ void computeLi(StaticArray<CCVariable<Vector> >& L,
                const Patch* patch,
                DataWarehouse* new_dw,
                SimulationStateP& sharedState,
+               const int indx,
                const Lodi_variable_basket* user_inputs,
                const bool recursion)                              
 {
   cout_doing << "LODI computeLi "<< endl;
   Vector dx = patch->dCell();
-  
-  /*`==========TESTING==========*/
-  Material* matl = sharedState->getMaterial(user_inputs->iceMatl_indx);
-  int indx = matl->getDWIndex();  
-  /*===========TESTING==========`*/
   
   // Characteristic Length of the overall domain
   Vector domainLength;
@@ -770,8 +754,8 @@ void computeLi(StaticArray<CCVariable<Vector> >& L,
     Patch::FaceType face = *iter;
     
     if (is_LODI_face(patch,face, sharedState) ) {
-      cout_dbg << " computing LI on face " << face 
-               << " patch " << patch->getID()<<endl;
+      cout_dbg << "   computing LI on face " << patch->getFaceName(face) 
+               << " patch " << patch->getID()<< " matl_indx " << indx << endl;
       //_____________________________________
       // S I D E S
       IntVector dir = patch->getFaceAxes(face);

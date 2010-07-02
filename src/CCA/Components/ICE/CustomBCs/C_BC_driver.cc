@@ -77,6 +77,7 @@ void preprocess_CustomBCs(const string& where,
    C_BC_basket->setMicroSlipBcs = false;
    C_BC_basket->set_MMS_BCs     = false;
    C_BC_basket->set_Sine_BCs    = false;
+   C_BC_basket->setLodiBcs      = false;
   //__________________________________
   //   LODI
   if(C_BC_basket->usingLodi){  

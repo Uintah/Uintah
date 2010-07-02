@@ -3440,20 +3440,20 @@ void ICE::addExchangeContributionToFCVel(const ProcessorGroup*,
 
     //________________________________
     //  Boundary Conditons 
-    preprocess_CustomBCs("velFC_Exchange",pOldDW, pNewDW, lb,  patch, 999,
-                          d_customBC_var_basket);   
-    
     for (int m = 0; m < numMatls; m++)  {
       Material* matl = d_sharedState->getMaterial( m );
       int indx = matl->getDWIndex();
+      preprocess_CustomBCs("velFC_Exchange",pOldDW, pNewDW, lb,  patch, indx,
+                            d_customBC_var_basket);
+      
       setBC<SFCXVariable<double> >(uvel_FCME[m],"Velocity",patch,indx,
                                     d_sharedState, d_customBC_var_basket); 
       setBC<SFCYVariable<double> >(vvel_FCME[m],"Velocity",patch,indx,
                                     d_sharedState, d_customBC_var_basket);
       setBC<SFCZVariable<double> >(wvel_FCME[m],"Velocity",patch,indx,
                                     d_sharedState, d_customBC_var_basket);
+      delete_CustomBCs(d_customBC_var_basket);
     }
-    delete_CustomBCs(d_customBC_var_basket);
 
    //---- P R I N T   D A T A ------ 
     if (switchDebug_Exchange_FC ) {
@@ -4957,14 +4957,13 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
         temp_CC_Xchange[m].copy(Temp_CC[m]);
       }
     }
-    
-    preprocess_CustomBCs("CC_Exchange",old_dw, new_dw, lb, patch, 
-                          999,d_customBC_var_basket);
-    
-/*===========TESTING==========`*/  
+/*===========TESTING==========`*/ 
+ 
     for (int m = 0; m < numALLMatls; m++)  {
       Material* matl = d_sharedState->getMaterial( m );
       int indx = matl->getDWIndex();
+      preprocess_CustomBCs("CC_Exchange",old_dw, new_dw, lb, patch, indx, d_customBC_var_basket);
+       
       setBC(vel_CC[m], "Velocity",   patch, d_sharedState, indx, new_dw,
                                                         d_customBC_var_basket);
       setBC(Temp_CC[m],"Temperature",gamma[m], cv[m], patch, d_sharedState, 
@@ -4973,9 +4972,10 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
 //      set_CFI_BC<Vector>(vel_CC[m],  patch);
 //      set_CFI_BC<double>(Temp_CC[m], patch);
 #endif
+      delete_CustomBCs(d_customBC_var_basket);
     }
     
-    delete_CustomBCs(d_customBC_var_basket);
+    
     //__________________________________
     // Convert vars. primitive-> flux 
     for(CellIterator iter = patch->getExtraCellIterator(); !iter.done();iter++){
@@ -5393,7 +5393,7 @@ void ICE::conservedtoPrimitive_Vars(const ProcessorGroup* /*pg*/,
       
       //__________________________________
       // set the boundary conditions
-      preprocess_CustomBCs("Advection",old_dw, new_dw, lb,  patch, 999,
+      preprocess_CustomBCs("Advection",old_dw, new_dw, lb,  patch, indx,
                            d_customBC_var_basket);
        
       setBC(rho_CC, "Density",  placeHolder, placeHolder,
