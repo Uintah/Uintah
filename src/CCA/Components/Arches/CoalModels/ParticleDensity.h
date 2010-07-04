@@ -59,6 +59,9 @@ public:
                   DataWarehouse* old_dw, 
                   DataWarehouse* new_dw );
 
+  ////////////////////////////////////////////////
+  // Model computation
+
   virtual void sched_computeParticleDensity( const LevelP& level,
                                              SchedulerP&   sched,
                                              int           timeSubStep ) = 0;
@@ -67,10 +70,8 @@ public:
                                        const PatchSubset* patches,
                                        const MaterialSubset* matls,
                                        DataWarehouse* old_dw,
-                                       DataWarehouse* new_dw ) = 0;
-
-  ////////////////////////////////////////////////
-  // Model computation
+                                       DataWarehouse* new_dw, 
+                                       int timeSubStep ) = 0;
 
   /** @brief  Calculate the new particle size */
   virtual double calcSize() = 0;
@@ -94,16 +95,14 @@ protected:
 
   double d_lowModelClip; 
   double d_highModelClip; 
-
-  double d_w_scaling_factor; 
-  double d_w_small; // "small" clip value for zero weights
-
-  const VarLabel* d_density_label;
-
-  vector<double> ash_mass;
-
   int numQuadNodes;
   double pi;
+
+  const VarLabel* d_density_label;
+  const VarLabel* d_weight_label;
+
+  double d_w_scaling_constant; 
+  double d_w_small; // "small" clip value for zero weights
 
 }; // end ParticleDensity
 } // end namespace Uintah

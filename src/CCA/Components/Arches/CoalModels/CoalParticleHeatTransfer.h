@@ -1,5 +1,5 @@
-#ifndef Uintah_Component_Arches_SimpleHeatTransfer_h
-#define Uintah_Component_Arches_SimpleHeatTransfer_h
+#ifndef Uintah_Component_Arches_CoalParticleHeatTransfer_h
+#define Uintah_Component_Arches_CoalParticleHeatTransfer_h
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Grid/SimulationStateP.h>
 #include <CCA/Components/Arches/CoalModels/HeatTransfer.h>
@@ -9,35 +9,45 @@
 #include <CCA/Components/Arches/ArchesVariables.h>
 #include <CCA/Components/Arches/Directives.h>
 
-#include <vector>
-#include <string>
-
-/**
-  * @class    SimpleHeatTransfer
-  * @author   Julien Pedel, Jeremy Thornock, Charles Reid
-  * @date     November 2009
-  *
-  * @brief    A simple heat transfer model for coal paticles.
-  *           (a more descriptive name would be good)
-  *
-  */
+//===========================================================================
 
 namespace Uintah{
+
+/**
+  * @class    CoalParticleHeatTransfer
+  * @author   Julien Pedel, Jeremy Thornock, Charles Reid
+  * @date     November 2009
+  *           June 2010
+  *
+  * @brief    A heat transfer model for coal paticles.
+  *
+  * @details
+  * This class requires coal-specific internal coordinates/information.
+  * For heat transfer to "inert" (plain) particles, define a different class.
+  *
+  * @todo
+  * Check for the right internal coordinates
+  * Add booleans for each internal coordinate so we don't request/get variables we're not using
+  * Use particle density the RIGHT way
+  * Add gas temperature as scalar - to initialize gas temp and particle temp
+  * Test it out to see how it works
+  *
+  */
 
 //---------------------------------------------------------------------------
 // Builder
 
-class SimpleHeatTransferBuilder: public ModelBuilder
+class CoalParticleHeatTransferBuilder: public ModelBuilder
 {
 public: 
-  SimpleHeatTransferBuilder( const std::string          & modelName,
+  CoalParticleHeatTransferBuilder( const std::string          & modelName,
                              const vector<std::string>  & reqICLabelNames,
                              const vector<std::string>  & reqScalarLabelNames,
                              const ArchesLabel          * fieldLabels,
                              SimulationStateP           & sharedState,
                              int qn );
 
-  ~SimpleHeatTransferBuilder(); 
+  ~CoalParticleHeatTransferBuilder(); 
 
   ModelBase* build(); 
 
@@ -48,17 +58,17 @@ private:
 // End Builder
 //---------------------------------------------------------------------------
 
-class SimpleHeatTransfer: public HeatTransfer {
+class CoalParticleHeatTransfer: public HeatTransfer {
 public: 
 
-  SimpleHeatTransfer( std::string modelName, 
+  CoalParticleHeatTransfer( std::string modelName, 
                 SimulationStateP& shared_state, 
                 const ArchesLabel* fieldLabels,
                 vector<std::string> reqICLabelNames, 
                 vector<std::string> reqScalarLabelNames, 
                 int qn );
 
-  ~SimpleHeatTransfer();
+  ~CoalParticleHeatTransfer();
 
   /////////////////////////////////////////
   // Initialization methods
@@ -88,7 +98,8 @@ public:
                      const PatchSubset* patches, 
                      const MaterialSubset* matls, 
                      DataWarehouse* old_dw, 
-                     DataWarehouse* new_dw );
+                     DataWarehouse* new_dw,
+                     int timeSubStep );
 
   // TODO: add Glacier computation methods
 
@@ -139,42 +150,49 @@ private:
   // Private methods for calculation
 
   /** @brief  Funtion for calculation of heat capacity (from Merrick) */
-  double g1( double z);
-
-  /** @brief  Calculate heat capacity of ash */
-  double heatap(double Tp);
+  double g1(double z);
 
   /** @brief  Calculate gas properties of N2 at atmospheric pressure (see Holman, p. 505) */
   double props(double Tg, double Tp);
 
-  /** @brief  Calculate heat capacity of particle */
-  double heatcp(double Tp);
-
+  /** @brief  Calculate the heat capacity of raw coal */
+  double calc_Cp_rawcoal(double Tp);
   
-  const VarLabel* d_raw_coal_mass_label;        ///< Label for raw coal mass
-  const VarLabel* d_particle_temperature_label; ///< Label for particle temperature
-  const VarLabel* d_particle_length_label;      ///< Label for particle length
-  const VarLabel* d_weight_label;               ///< Weight label
+  /** @brief  Calculate the heat capacity of ash */
+  double calc_Cp_ash(double Tp);
 
-  const VarLabel* d_abskp;  ///< Label for thermal conductivity (of the particles, I think???)
-
-  double visc;
+  vector<double>  d_ash_mass;     ///< Initial ash mass
+  double visc;                    ///< Viscosity of gas
   double yelem[5];                ///< Mass fractions of each element in coal (C, H, N, O, S respectively)
-  vector<double>  ash_mass_init;  ///< Initial ash mass
   double rhop;                    ///< Density of particle 
+  double Pr;                      ///< Prandtl number 
+  double blow;                    ///< Blowing parameter
+  double sigma;                   ///< [=] J/s/m^2/K^4 : Stefan-Boltzmann constant (from white book)
 
-  bool d_compute_particle_temp;
-
-  double Pr;
-  double blow;
-  double sigma;
   double pi;
 
-  double d_rc_scaling_constant;   ///< Scaling factor for raw coal
-  double d_ash_scaling_constant;  ///< Scaling factor for ash mass
-  double d_pl_scaling_constant;   ///< Scaling factor for particle size (length)
-  double d_pt_scaling_constant;   ///< Scaling factor for particle temperature
+  const VarLabel* d_abskp;                      ///< Label for thermal conductivity (of the particles, I think???)
 
-}; // end SimpleHeatTransfer
+  const VarLabel* d_length_label;               ///< Label for particle length
+  const VarLabel* d_raw_coal_mass_label;        ///< Label for raw coal mass
+  const VarLabel* d_char_mass_label;            ///< Label for char mass
+  const VarLabel* d_moisture_mass_label;        ///< Label for moisture mass
+  const VarLabel* d_particle_temperature_label; ///< Label for particle temperature
+  const VarLabel* d_gas_temperature_label;
+ 
+  double d_length_scaling_constant;   ///< Scaling factor for particle size (length)
+  double d_rc_scaling_constant;       ///< Scaling factor for raw coal mass variable
+  double d_char_scaling_constant;     ///< Scaling constant for char mass variable 
+  double d_moisture_scaling_constant; ///< Scaling constant for moisture mass variable 
+  double d_pt_scaling_constant;       ///< Scaling factor for particle temperature variable 
+
+  bool d_useLength;    ///< Boolean: is length a scalar/DQMOM variable?
+  bool d_useRawCoal;   ///< Boolean: is raw coal mass a scalar/DQMOM variable?
+  bool d_useChar;      ///< Boolean: is char mass a scalar/DQMOM variable?
+  bool d_useMoisture;  ///< Boolean: is moisture mass a scalar/DQMOM variable?
+  bool d_useTp;        ///< Boolean: is particle temperature a DQMOM variable?
+  bool d_useTgas;      ///< Boolean: is gas temperature a scalar variable?
+
+}; // end CoalParticleHeatTransfer
 } // end namespace Uintah
 #endif

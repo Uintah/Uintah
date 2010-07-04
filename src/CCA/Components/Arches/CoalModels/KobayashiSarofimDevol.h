@@ -8,6 +8,8 @@
 #include <CCA/Components/Arches/ArchesVariables.h>
 #include <CCA/Components/Arches/Directives.h>
 
+namespace Uintah{
+
 //===========================================================================
 
 /**
@@ -25,7 +27,6 @@
 
 //---------------------------------------------------------------------------
 // Builder
-namespace Uintah{
 
 class ArchesLabel;
 class KobayashiSarofimDevolBuilder: public ModelBuilder 
@@ -80,7 +81,8 @@ public:
                      const PatchSubset* patches, 
                      const MaterialSubset* matls, 
                      DataWarehouse* old_dw, 
-                     DataWarehouse* new_dw );
+                     DataWarehouse* new_dw,
+                     int timeSubStep );
 
   // TODO: add Glacier computation methods
 
@@ -114,9 +116,13 @@ private:
   
   double R;         ///< Ideal gas constant
   
-  bool d_compute_particle_temp; ///< Boolean: is particle temperature computed? 
+  //bool d_compute_particle_temp; ///< Boolean: is particle temperature computed? 
                                 //   (if not, gas temp = particle temp)
 
+  bool d_useRawCoal;   ///< Boolean: is a DQMOM internal coordinate specified for raw coal mass?
+  bool d_useChar;      ///< Boolean: is a DQMOM internal coordinate specified for char mass?
+  bool d_useTparticle; ///< Boolean: is a DQMOM internal coordinate specified for particle temperature?
+  bool d_useTgas;      ///< Boolean: is a scalar variable specified for gas temperature?
 
 }; // end KobyaashiSarofimDevol
 } // end namespace Uintah

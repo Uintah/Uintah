@@ -4,6 +4,7 @@
 #include <Core/Grid/SimulationStateP.h>
 #include <CCA/Components/Arches/CoalModels/ModelBase.h>
 #include <CCA/Components/Arches/ArchesVariables.h>
+#include <CCA/Components/Arches/BoundaryCond_new.h>
 
 //===========================================================================
 
@@ -25,7 +26,6 @@
 
 namespace Uintah{
 
-class BoundaryCondition_new;
 class ParticleVelocity: public ModelBase {
 public: 
 
@@ -72,7 +72,15 @@ public:
                                         const PatchSubset* patches,
                                         const MaterialSubset* matls,
                                         DataWarehouse* old_dw,
-                                        DataWarehouse* new_dw ) = 0;
+                                        DataWarehouse* new_dw,
+                                        int timeSubStep ) = 0;
+
+  /** @brief  Set the velocity vector boundary conditions */
+  void computeBCs( const Patch* patch,
+                   string varName,
+                   CCVariable<Vector>& vel ) {
+    d_boundaryCond->setVectorValueBC( 0, patch, vel, varName );
+  }
 
   ///////////////////////////////////////////////////
   // Access methods
@@ -102,7 +110,7 @@ protected:
   double d_w_scaling_factor; 
   double d_w_small; // "small" clip value for zero weights
 
-  BoundaryCondition_new* d_boundaryCond;
+  BoundaryCondition_new* d_boundaryCond; 
 
 }; // end ParticleVelocity
 } // end namespace Uintah

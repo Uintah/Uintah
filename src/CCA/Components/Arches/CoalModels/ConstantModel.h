@@ -7,8 +7,7 @@
 
 #include <CCA/Components/Arches/ArchesVariables.h>
 
-#include <vector>
-#include <string>
+namespace Uintah{
 
 //===========================================================================
 
@@ -20,8 +19,6 @@
   * @brief    A simple constant "growth" model.  G = constant.
   *
   */
-
-namespace Uintah{
 
 //---------------------------------------------------------------------------
 // Builder
@@ -92,7 +89,8 @@ public:
                      const PatchSubset* patches, 
                      const MaterialSubset* matls, 
                      DataWarehouse* old_dw, 
-                     DataWarehouse* new_dw );
+                     DataWarehouse* new_dw,
+                     int timeSubStep );
 
   ///////////////////////////////////////////////
   // Access methods

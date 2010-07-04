@@ -94,13 +94,13 @@ public:
 
   /** @brief  Schedule the evaluation of the DQMOMEqns and their source terms */
   void sched_evalTransportEqns( const LevelP& level,
-                                         SchedulerP&,
-                                         int timeSubStep );
+                                SchedulerP&,
+                                int timeSubStep );
 
   /** @brief  Schedule the evaluation of the DQMOMEqns and their source terms, and clean up after the evaluation is done */
   void sched_evalTransportEqnsWithCleanup( const LevelP& level,
-                                                    SchedulerP&,
-                                                    int timeSubStep );
+                                           SchedulerP&,
+                                           int timeSubStep );
 
   ////////////////////////////////////////////
   // Equation retrieval

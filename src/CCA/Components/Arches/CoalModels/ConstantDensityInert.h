@@ -1,5 +1,5 @@
-#ifndef Uintah_Component_Arches_ConstantSize_h
-#define Uintah_Component_Arches_ConstantSize_h
+#ifndef Uintah_Component_Arches_ConstantDensityInert_h
+#define Uintah_Component_Arches_ConstantDensityInert_h
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Grid/SimulationStateP.h>
 #include <CCA/Components/Arches/CoalModels/ParticleDensity.h>
@@ -8,33 +8,38 @@
 #include <CCA/Components/Arches/ArchesVariables.h>
 #include <CCA/Components/Arches/Directives.h>
 
+namespace Uintah{
+
 //===========================================================================
 
 /**
-  * @class    ConstantSize
+  * @class    ConstantDensityInert
   * @author   Charles Reid
   * @date     April 2010
   *
-  * @brief    Calculates the density based on the assumption of a constant
-  *           particle size.
+  * @brief    Calculates the coal particle size based on the assumption of a constant
+  *           particle density. 
+  *
+  * @details
+  * Eventually this will not be stored in "Coalmodels" but will instead
+  * go into a directory for more generic two-phase models.
   *
   */
 
 //---------------------------------------------------------------------------
 // Builder
-namespace Uintah{
 
 class ArchesLabel;
-class ConstantSizeBuilder: public ModelBuilder {
+class ConstantDensityInertBuilder: public ModelBuilder {
 public: 
-  ConstantSizeBuilder( const std::string          & modelName,
-                       const vector<std::string>  & reqICLabelNames,
-                       const vector<std::string>  & reqScalarLabelNames,
-                       const ArchesLabel          * fieldLabels,
-                       SimulationStateP           & sharedState,
-                       int qn );
+  ConstantDensityInertBuilder( const std::string          & modelName,
+                          const vector<std::string>  & reqICLabelNames,
+                          const vector<std::string>  & reqScalarLabelNames,
+                          const ArchesLabel          * fieldLabels,
+                          SimulationStateP           & sharedState,
+                          int qn );
 
-  ~ConstantSizeBuilder(); 
+  ~ConstantDensityInertBuilder(); 
 
   ModelBase* build(); 
 
@@ -45,17 +50,17 @@ private:
 // End Builder
 //---------------------------------------------------------------------------
 
-class ConstantSize: public ParticleDensity {
+class ConstantDensityInert: public ParticleDensity {
 public: 
 
-  ConstantSize( std::string modelName, 
-                SimulationStateP& shared_state, 
-                const ArchesLabel* fieldLabels,
-                vector<std::string> reqICLabelNames, 
-                vector<std::string> reqScalarLabelNames,
-                int qn );
+  ConstantDensityInert( std::string modelName, 
+                   SimulationStateP& shared_state, 
+                   const ArchesLabel* fieldLabels,
+                   vector<std::string> reqICLabelNames, 
+                   vector<std::string> reqScalarLabelNames,
+                   int qn );
 
-  ~ConstantSize();
+  ~ConstantDensityInert();
 
   ////////////////////////////////////////////////
   // Initialization method
@@ -76,7 +81,8 @@ public:
                      const PatchSubset* patches, 
                      const MaterialSubset* matls, 
                      DataWarehouse* old_dw, 
-                     DataWarehouse* new_dw );
+                     DataWarehouse* new_dw,
+                     int timeSubStep );
 
   /** @brief  Schedule the calculation of the density */
   void sched_computeParticleDensity( const LevelP& level,
@@ -88,10 +94,8 @@ public:
                                const PatchSubset* patches,
                                const MaterialSubset* matls,
                                DataWarehouse* old_dw,
-                               DataWarehouse* new_dw );
-
-  ///////////////////////////////////////////////////
-  // Model calculation methods
+                               DataWarehouse* new_dw,
+                               int timeSubStep );
 
   double calcSize() {
     return 0.0; };
@@ -109,18 +113,19 @@ public:
 
 private:
 
+  double d_density;
+  vector<const VarLabel*> massLabels; ///< Vector of VarLabels for all mass internal coordinates (used to grab the mass source terms, which are used to calculate the length model term \f$ G_{L} \f$ )
+
   const VarLabel* d_length_label;
-  const VarLabel* d_raw_coal_mass_label;
-  //const VarLabel* d_char_mass_label;
-  //const VarLabel* d_moisture_mass_label;
-  const VarLabel* d_weight_label;
+  const VarLabel* d_particle_mass_label;
 
-  double d_length_scaling_factor; ///< Scaling factor for particle length internal coordinate
-  double d_rc_scaling_factor;     ///< Scaling factor for raw coal internal coordinate
-  //double d_char_scaling_factor;
-  //double d_moisture_scaling_factor;
+  double d_length_scaling_constant;
+  double d_mass_scaling_constant;
 
-}; // end ConstantSize
+  bool d_useLength;
+  bool d_useMass;
+
+}; // end ConstantDensityInert
 } // end namespace Uintah
 #endif
 

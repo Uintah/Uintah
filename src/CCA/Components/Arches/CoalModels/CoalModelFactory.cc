@@ -6,12 +6,15 @@
 #include <CCA/Components/Arches/CoalModels/Devolatilization.h> 
 #include <CCA/Components/Arches/CoalModels/KobayashiSarofimDevol.h> 
 #include <CCA/Components/Arches/CoalModels/HeatTransfer.h> 
-#include <CCA/Components/Arches/CoalModels/SimpleHeatTransfer.h> 
+#include <CCA/Components/Arches/CoalModels/CoalParticleHeatTransfer.h> 
 #include <CCA/Components/Arches/CoalModels/ParticleVelocity.h> 
 #include <CCA/Components/Arches/CoalModels/DragModel.h> 
 #include <CCA/Components/Arches/CoalModels/Balachandar.h> 
 #include <CCA/Components/Arches/CoalModels/ParticleDensity.h>
-#include <CCA/Components/Arches/CoalModels/ConstantSize.h>
+#include <CCA/Components/Arches/CoalModels/ConstantSizeCoal.h>
+#include <CCA/Components/Arches/CoalModels/ConstantDensityCoal.h>
+#include <CCA/Components/Arches/CoalModels/ConstantSizeInert.h>
+#include <CCA/Components/Arches/CoalModels/ConstantDensityInert.h>
 #include <CCA/Components/Arches/CoalModels/CharOxidation.h> 
 #include <CCA/Components/Arches/ArchesLabel.h>
 #include <Core/Exceptions/InvalidValue.h>
@@ -199,6 +202,11 @@ void CoalModelFactory::problemSetup(const ProblemSpecP& params)
         temp_model_name += node; 
         
         ModelBuilder* modelBuilder;
+
+        // This ModelBuilder stuff is pointless here!
+        // It was designed so that models were only built as needed, when needed
+        // But we're building everything right away, there's no situation where we WOULDN'T build the model...
+        // cmr
         
 //-------- Constant models
         if ( model_type == "ConstantModel" ) {
@@ -211,10 +219,11 @@ void CoalModelFactory::problemSetup(const ProblemSpecP& params)
 
         } else if ( model_type == "KobayashiSarofimDevol" ) {
           modelBuilder = scinew KobayashiSarofimDevolBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_fieldLabels, d_fieldLabels->d_sharedState, iqn);
+          //what about computedVarLabels?
 
 //-------- Heat transfer models
-        } else if ( model_type == "SimpleHeatTransfer" ) {
-          modelBuilder = scinew SimpleHeatTransferBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_fieldLabels, d_fieldLabels->d_sharedState, iqn);
+        } else if ( model_type == "CoalParticleHeatTransfer" ) {
+          modelBuilder = scinew CoalParticleHeatTransferBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_fieldLabels, d_fieldLabels->d_sharedState, iqn);
           d_useHeatTransferModel = true;
 
 //-------- Velocity models
@@ -231,8 +240,17 @@ void CoalModelFactory::problemSetup(const ProblemSpecP& params)
         //  modelBuilder = scinew CharOxidationBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_fieldLabels, d_fieldLabels->d_sharedState, iqn);
 
 //-------- Density models
-        } else if (model_type == "ConstantSize" ) {
-          modelBuilder = scinew ConstantSizeBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_fieldLabels, d_fieldLabels->d_sharedState, iqn);
+        } else if (model_type == "ConstantSizeCoal" ) {
+          modelBuilder = scinew ConstantSizeCoalBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_fieldLabels, d_fieldLabels->d_sharedState, iqn);
+
+        } else if (model_type == "ConstantDensityCoal" ) {
+          modelBuilder = scinew ConstantDensityCoalBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_fieldLabels, d_fieldLabels->d_sharedState, iqn);
+
+        } else if (model_type == "ConstantSizeInert" ) {
+          modelBuilder = scinew ConstantSizeInertBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_fieldLabels, d_fieldLabels->d_sharedState, iqn);
+
+        } else if (model_type == "ConstantDensityInert" ) {
+          modelBuilder = scinew ConstantDensityInertBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_fieldLabels, d_fieldLabels->d_sharedState, iqn);
 
         } else {
           proc0cout << "For model named: " << temp_model_name << endl;
@@ -261,7 +279,7 @@ void CoalModelFactory::problemSetup(const ProblemSpecP& params)
     if( !d_useParticleDensityModel ) {
       // no particle density model is specified
       // but a density model is required for some models 
-      if( d_useParticleVelocityModel || d_useHeatTransferModel ) {
+      if( d_useParticleVelocityModel ) {
         string err = "ERROR: CoalModelFactory: You specified a coal model that requires density (particle velocity or heat transfer), but you did not specify a density model!  Please specify a density model before proceeding.";
         throw ProblemSetupException(err,__FILE__,__LINE__);
       }
@@ -398,6 +416,7 @@ CoalModelFactory::sched_computeVelocity( const LevelP& level,
     for( vector<ParticleVelocity*>::iterator iPV = d_ParticleVelocityModel.begin();
          iPV != d_ParticleVelocityModel.end(); ++iPV) {
       (*iPV)->sched_computeParticleVelocity(level, sched, timeSubStep);
+      //(*iPV)->sched_dummyVel(level, sched, timeSubStep);
     }
   }
 }
@@ -424,7 +443,7 @@ CoalModelFactory::sched_coalParticleCalculation( const LevelP& level,
         (*iPD)->sched_computeParticleDensity( level, sched, timeSubStep );
       }
     }
-    
+
     // Model evaluation order matches order in input file
     for( ModelMap::iterator iModel = models_.begin(); iModel != models_.end(); ++iModel ) {
       iModel->second->sched_computeModel( level, sched, timeSubStep );

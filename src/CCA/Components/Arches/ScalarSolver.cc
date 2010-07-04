@@ -325,9 +325,8 @@ ScalarSolver::sched_buildLinearMatrix(SchedulerP& sched,
 
       SourceTermBase& src = factor.retrieve_source_term( *iter ); 
       const VarLabel* srcLabel = src.getSrcLabel(); 
-      //tsk->requires(Task::OldDW, srcLabel, gn, 0); 
       tsk->requires(Task::NewDW, srcLabel, gn, 0); 
-      // cmr - using the new DW because the source term is always calculated before the code gets to this point
+      //NOTE: use the new data warehouse, since the source term is always calculated by this point
 
     }
 
@@ -474,11 +473,9 @@ void ScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
 
       SourceTermBase& src = factor.retrieve_source_term( *iter ); 
       const VarLabel* srcLabel = src.getSrcLabel(); 
-      // here we have made the assumption that there is only one scalar source.
-      // probably want to fix this. 
-      //old_dw->get( scalarVars.otherSource, srcLabel, indx, patch, Ghost::None, 0); 
+      // TODO - assuming there is only one scalar source... need to change that 
       new_dw->get( scalarVars.otherSource, srcLabel, indx, patch, Ghost::None, 0); 
-      // cmr - using the new data warehouse because the source term is always calculated before the code gets to this point
+      // NOTE: use the new data warehouse because the source term is always calculated by this point 
       
 
     }

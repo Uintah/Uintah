@@ -44,7 +44,9 @@ ParticleVelocity::ParticleVelocity( std::string modelName,
 }
 
 ParticleVelocity::~ParticleVelocity()
-{}
+{
+  delete d_boundaryCond;
+}
 
 //---------------------------------------------------------------------------
 // Method: Problem Setup
@@ -84,6 +86,14 @@ ParticleVelocity::problemSetup(const ProblemSpecP& params)
   d_w_small = weight_eqn.getSmallClip();
   d_w_scaling_factor = weight_eqn.getScalingConstant();
   d_weight_label = weight_eqn.getTransportEqnLabel();
+
+  if( db->findBlock("scaling_const") ) {
+    // several classes use particle velocity without dealing with scaling... This should be changed, but for now don't allow the user to scale particle velocity to prevent inadvertent errors
+    string err = "ERROR: Arches: ParticleVelocity: You specified a scaling constant for the particle velocity internal coordinate.  This is not allowed.";
+    throw ProblemSetupException(err,__FILE__,__LINE__);
+  }
+
+  d_boundaryCond = scinew BoundaryCondition_new( d_fieldLabels );
 
 }
 
@@ -174,4 +184,5 @@ ParticleVelocity::initVars( const ProcessorGroup * pc,
     gas_value.initialize( Vector(0.0,0.0,0.0) );
   }
 }
+
 

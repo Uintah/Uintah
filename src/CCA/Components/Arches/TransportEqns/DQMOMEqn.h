@@ -150,9 +150,13 @@ public:
     d_timeIntegrator = timeIntegrator; 
   }
 
-  /** @brief Return the list of models associated with this equation. */
+  /** @brief    Return the list of models associated with this equation; this method is used exclusively by the DQMOM class
+      @seealso  DQMOM */
   inline const vector<string> getModelsList(){
     return d_models; };
+
+  inline void addModel( string modelName ) {
+    d_models.push_back(modelName); };
 
   /** @brief Return the VarLabel for this equation's source term. */ 
   inline const VarLabel* getSourceLabel(){
@@ -162,12 +166,11 @@ public:
   inline const VarLabel* getUnscaledLabel(){
     return d_icLabel; };
 
-  /** @brief return a bool to tell if this equation is a weight.
-   If false, this eqn is a weighted abscissa */
+  /** @brief  Return a bool to tell if this equation is a weight. If false, this eqn is a weighted abscissa */
   inline bool weight(){
     return d_weight; };
 
-  /** @brief Get the low clipping value. */ 
+  /** @brief  Get the low clipping value. */ 
   inline double getLowClip(){
     if(d_doClipping && d_doLowClip) return d_lowClip;
     else return 0.0; };
@@ -176,7 +179,7 @@ public:
     if(d_doClipping && d_doHighClip) return d_highClip;
     else return 0.0; };
 
-  /** @brief Get the small clipping value (for weights only). */
+  /** @brief  Get the small clipping value (for weights only). */
   inline double getSmallClip(){
     if( d_doClipping && d_doLowClip ) {
       if( weight() && d_lowClip < d_smallClip )
@@ -186,8 +189,7 @@ public:
     } else {
       return 0.0; } }; 
 
-  /** @brief Set this equation as a weight.
-   this seems a little dangerous.  Is there a better way? */
+  /** @brief  Set this equation as a weight.  (This seems a little dangerous.  Is there a better way? - Jeremy) */
   inline void setAsWeight(){
     d_weight = true; }; 
 

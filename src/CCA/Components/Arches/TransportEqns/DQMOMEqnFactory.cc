@@ -385,7 +385,7 @@ DQMOMEqnFactory::sched_evalTransportEqns( const LevelP& level, SchedulerP& sched
 This method is implemented because the DQMOMEqnFactory must clean up
 after all the transport equations at the end of each timestep.
 
-It's separate from the sched_evalTransportEqns model because
+It's separate from the sched_evalTransportEqns method because
 the factory only needs to clean up after the transport equations
 at the end of each timestep, and only the ExplicitSolver knows when 
 the time sub-step is the last time sub-step.
@@ -450,7 +450,7 @@ DQMOMEqnFactory::retrieve_scalar_eqn( const std::string name )
   const BuildMap::iterator ibuilder = builders_.find( name );
 
   if( ibuilder == builders_.end() ){
-    std::string errmsg = "ERROR: No source term registered for \"" + name + "\". \n";
+    std::string errmsg = "ERROR: Arches: DQMOMEqnFactory: No DQMOM transport equation registered with label \"" + name + "\". \n";
     throw InvalidValue(errmsg,__FILE__,__LINE__);
   }
 

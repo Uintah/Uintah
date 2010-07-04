@@ -28,11 +28,3 @@
 // ExplicitTimeInt
 //#define VERIFY_TIMEINT
 
-// used by:
-// KobayashiSarofimDevol
-//#define VERIFY_KOBAYASHI_MODEL
-
-// used by:
-// SimpleHeatTransfer
-//#define VERIFY_SIMPLEHEATTRANSFER_MODEL
-

@@ -77,7 +77,8 @@ public:
                      const PatchSubset* patches, 
                      const MaterialSubset* matls, 
                      DataWarehouse* old_dw, 
-                     DataWarehouse* new_dw );
+                     DataWarehouse* new_dw,
+                     int timeSubStep );
 
   void sched_computeParticleVelocity( const LevelP& level,
                                       SchedulerP& sched,
@@ -87,7 +88,8 @@ public:
                                 const PatchSubset*    patches,
                                 const MaterialSubset* matls,
                                 DataWarehouse*        old_dw,
-                                DataWarehouse*        new_dw );
+                                DataWarehouse*        new_dw,
+                                int timeSubStep );
 
   ///////////////////////////////////////////////////
   // Get/set methods
@@ -116,6 +118,8 @@ private:
   double d_tol;
   
   int    d_totIter; 
+
+  bool d_useLength;
 
 }; // end ConstSrcTerm
 } // end namespace Uintah

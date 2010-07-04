@@ -48,9 +48,6 @@ Balachandar::Balachandar( std::string modelName,
                           int qn ) 
 : ParticleVelocity(modelName, sharedState, fieldLabels, icLabelNames, scalarLabelNames, qn)
 {
-  // NOTE: there is one Balachandar object for each quad node
-  // so, no need to have a vector of VarLabels
-
   // particle velocity label is created in parent class
 }
 
@@ -112,12 +109,14 @@ Balachandar::problemSetup(const ProblemSpecP& params)
 
       // user specifies "role" of each internal coordinate
 
-      if ( role_name == "length" ) {
+      if ( role_name == "particle_length" ) {
         LabelToRoleMap[temp_label_name] = role_name;
+        d_useLength = true;
       } else {
         std::string errmsg;
-        errmsg = "Invalid variable role for Balachandar particle velocity model: must be \"length\", \"u_velocity\", \"v_velocity\", or \"w_velocity\", you specified \"" + role_name + "\".";
-        throw InvalidValue(errmsg,__FILE__,__LINE__);
+        errmsg = "ERROR: Arches: Invalid variable role for Balachandar particle velocity model: ";
+        errmsg += "must be \"particle_length\", \"u_velocity\", \"v_velocity\", or \"w_velocity\", you specified \"" + role_name + "\".";
+        throw ProblemSetupException(errmsg,__FILE__,__LINE__);
       }
     }
   }
@@ -140,6 +139,8 @@ Balachandar::problemSetup(const ProblemSpecP& params)
  
   // -----------------------------------------------------------------
   // Look for required scalars
+  // (Not used by Balachandar)
+  /*
   ProblemSpecP db_scalarvars = params->findBlock("scalarVars");
   if (db_scalarvars) {
     for( ProblemSpecP variable = db_scalarvars->findBlock("variable");
@@ -148,25 +149,23 @@ Balachandar::problemSetup(const ProblemSpecP& params)
       variable->getAttribute("label", label_name);
       variable->getAttribute("role",  role_name);
 
-      temp_label_name = label_name;
-
-      std::stringstream out; 
-      out << d_quadNode;
-      string node = out.str();
-      temp_label_name += "_qn";
-      temp_label_name += node;
-
       // user specifies "role" of each scalar
       // if it isn't an internal coordinate or a scalar, it's required explicitly
       // ( see comments in Arches::registerModels() for details )
       if ( role_name == "length") {
-        LabelToRoleMap[temp_label_name] = role_name;
+        LabelToRoleMap[label_name] = role_name;
       } else {
         std::string errmsg;
         errmsg = "Invalid variable role for Balachandar particle velocity model: must be \"length\", you specified \"" + role_name + "\".";
         throw InvalidValue(errmsg,__FILE__,__LINE__);
       }
     }
+  }
+  */
+
+  if(!d_useLength) {
+    string errmsg = "ERROR: Arches: Balachandar: No particle length internal coordinate was specified.  Quitting...";
+    throw ProblemSetupException(errmsg,__FILE__,__LINE__);
   }
 
 
@@ -180,43 +179,34 @@ Balachandar::problemSetup(const ProblemSpecP& params)
   for( map<string,string>::iterator iter = LabelToRoleMap.begin();
        iter != LabelToRoleMap.end(); ++iter ) {
 
-    if( iter->second == "length" ){
+    EqnBase* current_eqn;
+    if( dqmom_eqn_factory.find_scalar_eqn(iter->first) ) {
+      current_eqn = &(dqmom_eqn_factory.retrieve_scalar_eqn(iter->first));
+    } else if( eqn_factory.find_scalar_eqn(iter->first) ) {
+      current_eqn = &(eqn_factory.retrieve_scalar_eqn(iter->first));
+    } else {
+      string errmsg = "ERROR: Arches: Balachandar: Invalid variable \"" + iter->first + 
+                      "\" given for \""+iter->second+"\" role, could not find in EqnFactory or DQMOMEqnFactory!";
+      throw ProblemSetupException(errmsg,__FILE__,__LINE__);
+    }
 
-      if( dqmom_eqn_factory.find_scalar_eqn(iter->first) ){
-        EqnBase& t_current_eqn = dqmom_eqn_factory.retrieve_scalar_eqn(iter->first);
-        DQMOMEqn& current_eqn = dynamic_cast<DQMOMEqn&>(t_current_eqn);
-        d_length_label = current_eqn.getTransportEqnLabel();
-        d_length_scaling_factor = current_eqn.getScalingConstant();
 
-      } else if (eqn_factory.find_scalar_eqn(iter->first) ) {
-        EqnBase& t_current_eqn = eqn_factory.retrieve_scalar_eqn(iter->first);
-        d_length_label = t_current_eqn.getTransportEqnLabel();
-        d_length_scaling_factor = t_current_eqn.getScalingConstant();
-
-      } else {
-        std::string errmsg = "ARCHES: Balachandar: Invalid variable given in <variable> tag for Balachandar model";
-        errmsg += "\nCould not find given particle length variable \"";
-        errmsg += iter->first;
-        errmsg += "\" in EqnFactory or in DQMOMEqnFactory.";
-        throw InvalidValue(errmsg,__FILE__,__LINE__);
-      }
-  
+    if( iter->second == "particle_length" ){
+      d_length_label = current_eqn->getTransportEqnLabel();
+      d_length_scaling_factor = current_eqn->getScalingConstant();
     } else {
       // can't find this required variable in the labels-to-roles map!
-      std::string errmsg = "ARCHES: Balachandar: You specified that the variable \"" + iter->second + 
-                           "\" was required, but you did not specify a role for it!\n";
-      throw InvalidValue( errmsg, __FILE__, __LINE__);
+      std::string errmsg = "ERROR: Arches: Balachandar: You specified that the variable \"" + iter->first + 
+                           "\" was required, but you did not specify a valid role for it! (You specified \"" + iter->second + "\"\n";
+      throw ProblemSetupException( errmsg, __FILE__, __LINE__);
     }
-  }//end for ic labels
+  }
 
-  
   // // set model clipping (not used)
   //db->getWithDefault( "low_clip", d_lowModelClip,   1.0e-6 );
   //db->getWithDefault( "high_clip", d_highModelClip, 999999 );  
 
-
 }
-
 
 
 //---------------------------------------------------------------------------
@@ -226,26 +216,23 @@ void
 Balachandar::sched_computeModel( const LevelP& level, SchedulerP& sched, int timeSubStep )
 {
   std::string taskname = "Balachandar::computeModel";
-  Task* tsk = scinew Task(taskname, this, &Balachandar::computeModel);
+  Task* tsk = scinew Task(taskname, this, &Balachandar::computeModel, timeSubStep);
 
   //Ghost::GhostType gn = Ghost::None;
 
-  d_timeSubStep = timeSubStep; 
-
-  if (d_timeSubStep == 0 && !d_labelSchedInit) {
+  if( timeSubStep == 0 && !d_labelSchedInit) {
     // Every model term needs to set this flag after the varLabel is computed. 
     // transportEqn.cleanUp should reinitialize this flag at the end of the time step. 
     d_labelSchedInit = true;
-
+  }
+  
+  if( timeSubStep == 0 ) {
     tsk->computes(d_modelLabel);
     tsk->computes(d_gasLabel); 
   } else {
     tsk->modifies(d_modelLabel);
     tsk->modifies(d_gasLabel);  
   }
-
-  // The Balachandar model is not associated with any internal coordinates
-  // So, it doesn't have any model term to calculate
 
   sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials()); 
 
@@ -266,7 +253,8 @@ Balachandar::computeModel( const ProcessorGroup * pc,
                            const PatchSubset    * patches, 
                            const MaterialSubset * matls, 
                            DataWarehouse        * old_dw, 
-                           DataWarehouse        * new_dw )
+                           DataWarehouse        * new_dw,
+                           int timeSubStep )
 {
   for( int p=0; p < patches->size(); p++ ) {
 
@@ -275,20 +263,18 @@ Balachandar::computeModel( const ProcessorGroup * pc,
     int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
 
     CCVariable<Vector> model;
-    if( new_dw->exists( d_modelLabel, matlIndex, patch ) ) {
-      new_dw->getModifiable( model, d_modelLabel, matlIndex, patch ); 
-    } else {
+    CCVariable<Vector> model_gasSource;
+
+    if( timeSubStep == 0 ) {
       new_dw->allocateAndPut( model, d_modelLabel, matlIndex, patch );
-      model.initialize(Vector(0.0,0.0,0.0));
+      new_dw->allocateAndPut( model_gasSource, d_gasLabel, matlIndex, patch ); 
+    } else {
+      new_dw->getModifiable( model, d_modelLabel, matlIndex, patch ); 
+      new_dw->getModifiable( model_gasSource, d_gasLabel, matlIndex, patch ); 
     }
 
-    CCVariable<Vector> model_gasSource;
-    if (new_dw->exists( d_gasLabel, matlIndex, patch )){
-      new_dw->getModifiable( model_gasSource, d_gasLabel, matlIndex, patch ); 
-    } else {
-      new_dw->allocateAndPut( model_gasSource, d_gasLabel, matlIndex, patch ); 
-      model_gasSource.initialize(Vector(0.0,0.0,0.0));
-    }
+    model.initialize( Vector(0.0,0.0,0.0) );
+    model_gasSource.initialize( Vector(0.0,0.0,0.0) );
 
   }//end patch loop
 }
@@ -299,49 +285,50 @@ Balachandar::sched_computeParticleVelocity( const LevelP& level,
                                             const int timeSubStep )
 {
   string taskname = "Balachandar::computeParticleVelocity";
-  Task* tsk = scinew Task(taskname, this, &Balachandar::computeParticleVelocity);
+  Task* tsk = scinew Task(taskname, this, &Balachandar::computeParticleVelocity, timeSubStep);
 
   Ghost::GhostType gn = Ghost::None;
 
   CoalModelFactory& coal_model_factory = CoalModelFactory::self();
 
+  const VarLabel* density_label = coal_model_factory.getParticleDensityLabel(d_quadNode);
+
   if( timeSubStep == 0 ) {
+
     tsk->computes( d_velocity_label );
+
+    tsk->requires( Task::OldDW, d_fieldLabels->d_newCCVelocityLabel, Ghost::None, 0); // gas velocity
+    tsk->requires( Task::OldDW, d_fieldLabels->d_densityCPLabel, Ghost::None, 0); // gas density
+    tsk->requires( Task::OldDW, density_label, gn, 0); // density label for this environment
+    tsk->requires( Task::OldDW, d_weight_label, gn, 0); // require weight label
+    tsk->requires( Task::OldDW, d_length_label, Ghost::None, 0); // require internal coordinates
+
   } else {
+
     tsk->modifies( d_velocity_label );
+
+    tsk->requires( Task::NewDW, d_fieldLabels->d_newCCVelocityLabel, Ghost::None, 0); // gas velocity
+    tsk->requires( Task::NewDW, d_fieldLabels->d_densityCPLabel, Ghost::None, 0); // gas density
+    tsk->requires( Task::NewDW, density_label, gn, 0); // density label for this environment
+    tsk->requires( Task::NewDW, d_weight_label, gn, 0); // require weight label
+    tsk->requires( Task::NewDW, d_length_label, Ghost::None, 0); // require internal coordinates
+
   }
 
-  // use the old particle velocity
-  tsk->requires( Task::OldDW, d_velocity_label, gn, 0);
-
-  // gas velocity
-  tsk->requires(Task::OldDW, d_fieldLabels->d_newCCVelocityLabel, Ghost::None, 0);
-
-  // gas density
-  tsk->requires(Task::OldDW, d_fieldLabels->d_densityCPLabel, Ghost::None, 0);
-
-  // density label for this environment/quad node
-  const VarLabel* density_label = coal_model_factory.getParticleDensityLabel(d_quadNode);
-  tsk->requires( Task::OldDW, density_label, gn, 0);
-
-  // require weight label
-  tsk->requires(Task::OldDW, d_weight_label, gn, 0);
-
-  // require internal coordinates
-  tsk->requires(Task::OldDW, d_length_label, Ghost::None, 0);
+  sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
 }
+
 
 void
 Balachandar::computeParticleVelocity( const ProcessorGroup* pc,
                                       const PatchSubset*    patches,
                                       const MaterialSubset* matls,
                                       DataWarehouse*        old_dw,
-                                      DataWarehouse*        new_dw )
+                                      DataWarehouse*        new_dw,
+                                      int timeSubStep )
 {
   for( int p=0; p < patches->size(); p++ ) {  // Patch loop
 
-    //Ghost::GhostType  gaf = Ghost::AroundFaces;
-    //Ghost::GhostType  gac = Ghost::AroundCells;
     Ghost::GhostType  gn  = Ghost::None;
 
     const Patch* patch = patches->get(p);
@@ -351,107 +338,108 @@ Balachandar::computeParticleVelocity( const ProcessorGroup* pc,
     CoalModelFactory& coal_model_factory = CoalModelFactory::self();
 
     constCCVariable<double> weight;
-    old_dw->get(weight, d_weight_label, matlIndex, patch, gn, 0);
-
     constCCVariable<double> wtd_length;
-    old_dw->get(wtd_length, d_length_label, matlIndex, patch, gn, 0);
-
+    constCCVariable<double> gas_density;
+    constCCVariable<double> particle_density;
+    constCCVariable<Vector> gas_velocity;
     CCVariable<Vector> particle_velocity;
-    if( new_dw->exists( d_velocity_label, matlIndex, patch) ) {
-      new_dw->getModifiable( particle_velocity, d_velocity_label, matlIndex, patch );
-    } else {
+
+    const VarLabel* particle_density_label = coal_model_factory.getParticleDensityLabel(d_quadNode);
+
+    if( timeSubStep == 0 ) {
+
+      old_dw->get( weight, d_weight_label, matlIndex, patch, gn, 0 );
+      old_dw->get( wtd_length, d_length_label, matlIndex, patch, gn, 0 );
+
+      old_dw->get( gas_density, d_fieldLabels->d_densityCPLabel, matlIndex, patch, gn, 0 );
+      old_dw->get( particle_density, particle_density_label, matlIndex, patch, gn, 0 );
+
+      old_dw->get( gas_velocity, d_fieldLabels->d_newCCVelocityLabel, matlIndex, patch, gn, 0 );
+
       new_dw->allocateAndPut( particle_velocity, d_velocity_label, matlIndex, patch );
       particle_velocity.initialize( Vector(0.0,0.0,0.0) );
+
+    } else {
+
+      new_dw->get( weight, d_weight_label, matlIndex, patch, gn, 0 );
+      new_dw->get( wtd_length, d_length_label, matlIndex, patch, gn, 0 );
+
+      new_dw->get( gas_density, d_fieldLabels->d_densityCPLabel, matlIndex, patch, gn, 0 );
+      new_dw->get( particle_density, particle_density_label, matlIndex, patch, gn, 0 );
+
+      new_dw->get( gas_velocity, d_fieldLabels->d_newCCVelocityLabel, matlIndex, patch, gn, 0 );
+
+      new_dw->getModifiable( particle_velocity, d_velocity_label, matlIndex, patch );
+
     }
-
-    constCCVariable<Vector> old_particle_velocity;
-    old_dw->get( old_particle_velocity, d_velocity_label, matlIndex, patch, gn, 0 );
-
-    constCCVariable<Vector> gas_velocity;
-    old_dw->get( gas_velocity, d_fieldLabels->d_newCCVelocityLabel, matlIndex, patch, gn, 0 );
-
-    constCCVariable<double> gas_density;
-    old_dw->get( gas_density, d_fieldLabels->d_densityCPLabel, matlIndex, patch, gn, 0 );
-
-    constCCVariable<double> particle_density;
-    old_dw->get( particle_density, coal_model_factory.getParticleDensityLabel(d_quadNode), matlIndex, patch, gn, 0 );
 
     for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
       IntVector c = *iter; 
 
-      Vector gasvel = gas_velocity[c];
-      double length;
+      Vector gasVel = gas_velocity[c];
 
       if( weight[c] < d_w_small ) {
-        particle_velocity[c] = gas_velocity[c];
+        particle_velocity[c] = gasVel;
+
       } else {
-        length = (wtd_length[c]/weight[c])*d_length_scaling_factor;
 
-        Vector gasVel = gas_velocity[c];
-        Vector oldPartVel = old_particle_velocity[c];
-        Vector newPartVel = Vector(0.0, 0.0, 0.0);
-
-        // do a loop over each velocity component
-        for( int j=0; j<3; ++j) {
-
-          double length_ratio = 0.0;
-          epsilon = pow(gasVel[j], 3);
-          epsilon /= d_L;
-
-          length_ratio = length / d_eta;
-          double uk = 0.0;
-
-          if (length > 0.0) {
-            uk = pow(d_eta/d_L, 1.0/3.0);
-            uk *= gasVel[j];
-          }
-
-          double diff = 0.0;
-          double prev_diff = 0.0;
-
-          // now iterate to convergence
-          for (int iter=0; iter<d_totIter; ++iter) {
-            prev_diff = diff;
-            double Re = fabs(diff)*length / kvisc; // do we really want a componentwise Re?
-            double phi = 1.0 + 0.15*pow(Re, 0.687);
-            double t_p_by_t_k = ( (2*rhoRatio + 1)/36.0 )*( 1/phi )*( pow(length_ratio,2) );
-
-            diff = uk*(1-beta)*pow(t_p_by_t_k, d_power);
-            double error = abs(diff - prev_diff)/diff;
-
-            if( abs(diff) < 1e-16 ) {
-              error = 0.0;
-            }
-            if( abs(error) < d_tol ) {
-              break;
-            }
-          }
-
-          double newPartMag = gasVel[j] - diff;
-
-          newPartVel[j] = newPartMag;
+        if( gas_density[c] > TINY ) {
+          rhoRatio = particle_density[c]/gas_density[c];
+          //rhoRatio = particle_density/gas_density[c];
+        } else {
+          rhoRatio = particle_density[c]/TINY;
+          //rhoRatio = particle_density/TINY;
         }
 
-        particle_velocity[c] = newPartVel;
+        double length = (wtd_length[c]/weight[c])*d_length_scaling_factor;
+
+        double length_ratio = length/d_eta;
+
+        //double epsilon = pow(gasVel.length(),3) / d_L;
+
+        double uk = 0.0;
+        if( length>0.0 ) {
+          uk = pow(d_eta/d_L, 1.0/3.0);
+          uk *= gasVel.length();
+        }
+
+        double diff = 0.0;
+        double prev_diff = 0.0;
+
+        // now iterate to convergence
+        for (int iter=0; iter<d_totIter; ++iter) {
+          prev_diff = diff;
+          double Re = fabs(diff)*length / kvisc;
+          double phi = 1.0 + 0.15*pow(Re, 0.687);
+          double t_p_by_t_k = ( (2*rhoRatio + 1)/36.0 )*( 1/phi )*( pow(length_ratio,2) );
+
+          diff = uk*(1-beta)*pow(t_p_by_t_k, d_power);
+          double error = abs(diff - prev_diff)/diff;
+
+          if( abs(diff) < 1e-16 ) {
+            error = 0.0;
+          }
+          if( abs(error) < d_tol ) {
+            break;
+          }
+        }
+
+        double newPartMag = gasVel.length() - diff;
+
+        particle_velocity[c] = ( gasVel.safe_normalize() )*(newPartMag);
 
       }//end if weight is small
 
     }//end cell iterator
 
-    // now that vel field is set, apply boundary conditions
-    string name = "vel_qn";
-    string node;
-    std::stringstream out; 
-    out << d_quadNode; 
-    node = out.str(); 
-    name += node; 
+    // Now apply boundary conditions
     if (d_gasBC) {
       // assume particle velocity = gas velocity at boundary
       // DON'T DO THIS, IT'S WRONG!
-      d_boundaryCond->setVectorValueBC( 0, patch, particle_velocity, gas_velocity, name );
+      d_boundaryCond->setVectorValueBC( 0, patch, particle_velocity, gas_velocity, d_velocity_label->getName() );
     } else {
       // Particle velocity at boundary is set by user
-      d_boundaryCond->setVectorValueBC( 0, patch, particle_velocity, name);
+      d_boundaryCond->setVectorValueBC( 0, patch, particle_velocity, d_velocity_label->getName() );
     }
 
   }//end patch loop

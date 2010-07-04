@@ -8,13 +8,19 @@ SRCS += \
   $(SRCDIR)/ConstantModel.cc  \
   $(SRCDIR)/Size.cc \
   $(SRCDIR)/ParticleDensity.cc \
-  $(SRCDIR)/ConstantSize.cc \
+  $(SRCDIR)/ConstantSizeCoal.cc \
+  $(SRCDIR)/ConstantDensityCoal.cc \
+  $(SRCDIR)/ConstantSizeInert.cc \
+  $(SRCDIR)/ConstantDensityInert.cc \
   $(SRCDIR)/ParticleVelocity.cc \
   $(SRCDIR)/Balachandar.cc \
   $(SRCDIR)/Devolatilization.cc \
   $(SRCDIR)/KobayashiSarofimDevol.cc \
   $(SRCDIR)/CharOxidation.cc \
   $(SRCDIR)/HeatTransfer.cc \
-  $(SRCDIR)/SimpleHeatTransfer.cc \
+  $(SRCDIR)/CoalParticleHeatTransfer.cc \
   $(SRCDIR)/DragModel.cc \
+
+
+  #$(SRCDIR)/InertParticleHeatTransfer.cc \
 
