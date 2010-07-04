@@ -71,13 +71,6 @@ public:
                            SchedulerP& sched, 
                            int timeSubStep );
   
-  /** @brief Compute the source term (EMPTY! This method is empty but MUST be defined because it's a virtual function in the parent class.) */ 
-  void computeModel( const ProcessorGroup* pc, 
-                     const PatchSubset* patches, 
-                     const MaterialSubset* matls, 
-                     DataWarehouse* old_dw, 
-                     DataWarehouse* new_dw );
-
   /** @brief Actually compute the source term (the time sub-step is required for this method) */ 
   void computeModel( const ProcessorGroup* pc, 
                      const PatchSubset* patches, 
@@ -94,7 +87,8 @@ public:
                                 const PatchSubset*    patches,
                                 const MaterialSubset* matls,
                                 DataWarehouse*        old_dw,
-                                DataWarehouse*        new_dw );
+                                DataWarehouse*        new_dw,
+                                int timeSubStep );
 
   //////////////////////////////////////////////////
   // Access functions
@@ -115,10 +109,10 @@ private:
 
   double pi;
 
-  bool d_length_set;
-  bool d_uvel_set;
-  bool d_vvel_set;
-  bool d_wvel_set;
+  bool d_useLength;
+  bool d_useUVelocity;
+  bool d_useVVelocity;
+  bool d_useWVelocity;
 
   // Velocity internal coordinate labels
   const VarLabel* d_uvel_label;     ///< Velocity x-component (internal coordinate) label

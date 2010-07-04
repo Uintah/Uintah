@@ -26,6 +26,10 @@
 #include <Core/Datatypes/MatrixOperations.h>
 #include <CCA/Components/Arches/Directives.h>
 
+#ifdef DEBUG_MATRICES
+#include <fstream>
+#endif
+
 //===========================================================================
 
 using namespace Uintah;
@@ -391,8 +395,6 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
 #endif
 #endif
 
-  CoalModelFactory& model_factory = CoalModelFactory::self();
-
   // patch loop
   for (int p=0; p < patches->size(); ++p) {
     const Patch* patch = patches->get(p);
@@ -473,7 +475,7 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
     // ----------------------------
 
     // Populate the vector of weight & weight source term CCVariables with new/empty CCVariables
-    for( int cc = 0; cc < weightEqns.size(); ++cc ) {
+    for( unsigned int cc = 0; cc < weightEqns.size(); ++cc ) {
       weightCCVars.push_back( scinew constCCVariable<double> );
       weightSourceCCVars.push_back( scinew CCVariable<double> );
     }
@@ -502,7 +504,7 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
     // ----------------------------
   
     // Populate the vector of weighted abscissa source term CCVariables with new/empty CCVariables
-    for( int cc = 0; cc < weightedAbscissaEqns.size(); ++cc ) {
+    for( unsigned int cc = 0; cc < weightedAbscissaEqns.size(); ++cc ) {
       weightedAbscissaCCVars.push_back( scinew constCCVariable<double> );
       weightedAbscissaSourceCCVars.push_back( scinew CCVariable<double> );
 
@@ -537,7 +539,7 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
       // link the w.a. model term CCVariable with the VarLabel
       vector<string> modelsList = weightedAbscissaEqns[counter]->getModelsList();
       vector< constCCVariable<double>* > tempCCVector = weightedAbscissaModelsCCVars[counter];
-      for( int ss=0; ss < modelsList.size(); ++ss ) {
+      for( unsigned int ss=0; ss < modelsList.size(); ++ss ) {
         ModelBase& model_base = modelFactory.retrieve_model( modelsList[ss] );
         const VarLabel* model_label = model_base.getModelLabel();
         new_dw->get( (*tempCCVector[ss]), model_label, matlIndex, patch, Ghost::None, 0 );
@@ -577,7 +579,6 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
         }
 
         models.push_back(runningsum);
-
       }
 
 #if !defined(VERIFY_LINEAR_SOLVER) && !defined(VERIFY_AB_CONSTRUCTION)
@@ -658,7 +659,7 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
           }
 
           (**iter)[c] = (*XX)[z];
-
+          
           ++z;
         }
 
@@ -1519,8 +1520,6 @@ DQMOM::constructLinearSystem( LU             &A,
                               vector<double> &models,
                               int             verbosity)
 {
-  // TODO
-  // This construction process needs to be using d_w_small to check for small weights!
   // construct AX=B
   for ( unsigned int k = 0; k < momentIndexes.size(); ++k) {
     MomentVector thisMoment = momentIndexes[k];
@@ -2119,6 +2118,21 @@ DQMOM::calculateMoments( const ProcessorGroup* pc,
       }//end all moments
 
     }//end cells
+
+    //now delete CCVariables that were created on the heap using the "scinew" operator
+    for( vector< constCCVariable<double>* >::iterator iter = weightCCVars.begin(); iter != weightCCVars.end(); ++iter ) {
+      delete *iter;
+    }
+    for( vector< constCCVariable<double>* >::iterator iter = weightedAbscissaCCVars.begin(); iter != weightedAbscissaCCVars.end(); ++iter ) {
+      delete *iter;
+    }
+    for( vector< CCVariable<double>* >::iterator iter = momentCCVars.begin(); iter != momentCCVars.end(); ++iter ) {
+      delete *iter;
+    }
+    for( vector< CCVariable<double>* >::iterator iter = meanMomentCCVars.begin(); iter != meanMomentCCVars.end(); ++iter ) { 
+      delete *iter;
+    }
+
   }//end patches
 }
 

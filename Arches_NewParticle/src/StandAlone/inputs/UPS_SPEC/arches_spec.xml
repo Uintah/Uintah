@@ -16,12 +16,14 @@
                                           children1="ONE_OF(CHILD constantMMS, almgrenMMS)">
         <mmsErrorType                   spec="REQUIRED STRING 'Linf, L2'" />  
         <constantMMS                    spec="OPTIONAL NO_DATA" need_applies_to="whichMMS constantMMS" >
-          <cu                           spec="REQUIRED DOUBLE" />
-          <cv                           spec="REQUIRED DOUBLE" />
-          <cw                           spec="REQUIRED DOUBLE" />
-          <cp                           spec="REQUIRED DOUBLE" />
-          <phi0                         spec="REQUIRED DOUBLE" />
-          <esphi0                       spec="REQUIRED DOUBLE" />
+          <!-- the tags below are obtained using "getWithDefault", so there's no need to require them -->
+          <cu                           spec="OPTIONAL DOUBLE" />
+          <cv                           spec="OPTIONAL DOUBLE" />
+          <cw                           spec="OPTIONAL DOUBLE" />
+          <cp                           spec="OPTIONAL DOUBLE" />
+          <phi0                         spec="OPTIONAL DOUBLE" />
+          <useTable                     spec="OPTIONAL NO_DATA" />
+          <esphi0                       spec="OPTIONAL DOUBLE" />
         </constantMMS>
         <almgrenMMS                     spec="OPTIONAL NO_DATA" need_applies_to="whichMMS almgrenMMS" >
           <amplitude                    spec="REQUIRED DOUBLE" />
@@ -439,7 +441,10 @@
         
           <model                        spec="MULTIPLE NO_DATA"
                                         attribute1="label REQUIRED STRING"
-                                        attribute2="type REQUIRED STRING 'ConstantModel, BadHawkDevol, KobayashiSarofimDevol, SimpleHeatTransfer, DragModel, Balachandar, ConstantSize, CharOxidation'">
+                                        attribute2="type REQUIRED STRING 'ConstantModel, BadHawkDevol, KobayashiSarofimDevol, 
+                                                                          CoalParticleHeatTransfer, DragModel, Balachandar, 
+                                                                          ConstantDensityCoal, ConstantDensityInert, ConstantSizeCoal, ConstantSizeInert, 
+                                                                          CharOxidation'">
 
             <ICVars                     spec="OPTIONAL NO_DATA"> <!-- block containing list of internal coordinates the DQMOM model depends on -->
               <variable                 spec="MULTIPLE NO_DATA"
@@ -456,13 +461,13 @@
             <low_clip                   spec="OPTIONAL DOUBLE 'positive'"/> <!-- lowest value the DQMOM model term can have -->
             <high_clip                  spec="OPTIONAL DOUBLE 'positive'"/> <!-- highest value the DQMOM model term can have -->
 
-            <!-- Heat Transfer Model -->
+            <!-- Heat Transfer model -->
             <noRadiation                spec="OPTIONAL NO_DATA"/>
 
-            <!-- Constant Model -->
+            <!-- Constant model -->
             <constant                   spec="OPTIONAL DOUBLE"/>
 
-            <!-- Kobayashi Sarofim Model -->
+            <!-- Kobayashi Sarofim model -->
             <A1                         spec="OPTIONAL DOUBLE" />
             <E1                         spec="OPTIONAL DOUBLE" />
             <Y1                         spec="OPTIONAL DOUBLE" />
@@ -470,17 +475,20 @@
             <E2                         spec="OPTIONAL DOUBLE" />
             <Y2                         spec="OPTIONAL DOUBLE" />
 
-            <!-- Particle Velocity Models -->
+            <!-- Particle Velocity models -->
             <!-- WARNING: DO NOT USE! WILL CAUSE ERRORS! -->
             <partvelBC_eq_gasvelBC      spec="OPTIONAL BOOLEAN"/>
 
-            <!-- Balachandar Model -->
+            <!-- Balachandar model -->
             <iter                       spec="OPTIONAL INTEGER" />
             <tol                        spec="OPTIONAL DOUBLE 'positive'"/>
             <L                          spec="OPTIONAL DOUBLE 'positive'"/>
             <eta                        spec="OPTIONAL DOUBLE 'positive'"/>
             <regime                     spec="OPTIONAL INTEGER '1 3'"/>
             <min_vel_ratio              spec="OPTIONAL DOUBLE 'positive'"/>
+
+            <!-- Constant density models -->
+            <density                    spec="OPTIONAL DOUBLE 'positive'" />
 
             
 

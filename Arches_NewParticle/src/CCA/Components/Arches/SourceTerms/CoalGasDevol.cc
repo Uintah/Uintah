@@ -171,8 +171,8 @@ CoalGasDevol::computeSource( const ProcessorGroup* pc,
       devolSrc[c] = running_sum;
     }
 
-    for( vector< constCCVariable<double>* >::iterator i = modelCCVars.begin();
-         i != modelCCVars.end(); ++i ) {
+    // now delete CCVariables created on the heap with the "scinew" operator
+    for( vector< constCCVariable<double>* >::iterator i = modelCCVars.begin(); i != modelCCVars.end(); ++i ) {
       delete *i;
     }
   }

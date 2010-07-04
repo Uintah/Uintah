@@ -84,7 +84,8 @@ public:
                              const PatchSubset    * patches,
                              const MaterialSubset * matls, 
                              DataWarehouse        * old_dw, 
-                             DataWarehouse        * new_dw ) = 0;
+                             DataWarehouse        * new_dw,
+                             int timeSubStep ) = 0;
 
   ///////////////////////////////////////////////////
   // Access methods

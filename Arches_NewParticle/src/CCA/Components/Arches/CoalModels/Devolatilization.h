@@ -76,13 +76,16 @@ public:
 protected:
 
   const VarLabel* d_raw_coal_mass_label;
+  const VarLabel* d_char_mass_label;
+  //const VarLabel* d_moisture_mass_label; // not used for devol (not yet anyway)
   const VarLabel* d_particle_temperature_label;
   const VarLabel* d_gas_temperature_label;
   const VarLabel* d_weight_label;
 
   double d_rc_scaling_factor;   ///< Scaling factor for raw coal internal coordinate
+  double d_char_scaling_factor; ///< Scaling factor for char mass internal coordinate
   double d_pt_scaling_factor;   ///< Scaling factor for particle temperature internal coordinate
-  double d_gt_scaling_factor;   ///< Scaling factor for gas temperature 
+
   double d_w_scaling_factor; 
   double d_w_small; // "small" clip value for zero weights
 

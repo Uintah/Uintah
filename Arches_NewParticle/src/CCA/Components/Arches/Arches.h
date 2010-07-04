@@ -295,6 +295,8 @@ private:
       bool d_calcVariance;
       bool d_mixedModel;
       bool d_doMMS;
+      bool d_useMMSScalar;
+      bool d_useMMSTable; 
       bool d_extraProjection;
       bool d_EKTCorrection;
       ScaleSimilarityModel* d_scaleSimilarityModel;

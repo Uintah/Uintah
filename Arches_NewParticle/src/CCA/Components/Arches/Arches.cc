@@ -240,6 +240,10 @@ Arches::problemSetup(const ProblemSpecP& params,
   }
 
   if(db->findBlock("MMS")) {
+
+    d_useMMSScalar = false;
+    d_useMMSTable = false;
+
     d_doMMS = true;
     ProblemSpecP db_mms = db->findBlock("MMS");
     if( !db_mms->getAttribute( "whichMMS", d_mms ) ) {
@@ -251,7 +255,16 @@ Arches::problemSetup(const ProblemSpecP& params,
       db_mms0->getWithDefault("cv",d_cv,0.0);
       db_mms0->getWithDefault("cw",d_cw,0.0);
       db_mms0->getWithDefault("cp",d_cp,0.0);
-      db_mms0->getWithDefault("phi0",d_phi0,0.0);
+      
+      // Allow a choice to either specify mixture fraction or specify a table 
+      if( db_mms0->findBlock("phi0") ) {
+        db_mms0->getWithDefault("phi0",d_phi0,0.0);
+        d_useMMSScalar = true;
+      } else if( db_mms0->findBlock("useTable") ) {
+        d_useMMSTable = true;
+      } else {
+        throw ProblemSetupException("ERROR: Arches: You must specify either an MMS scalar using <phi0>, or an MMS table using <useTable>, but you did not specify either!\n",__FILE__,__LINE__);
+      }
       db_mms0->getWithDefault("esphi0",d_esphi0,0.0);
     }
     else if (d_mms == "almgrenMMS") {
@@ -558,6 +571,24 @@ Arches::scheduleInitialize(const LevelP& level,
   //           viscosityIN
   sched_paramInit(level, sched);
 
+
+  // -----------------------------------
+  // Scalar equations (and source terms) initialization
+  EqnFactory& eqnFactory = EqnFactory::self(); 
+  eqnFactory.sched_scalarInit(level, sched);
+
+  // check to make sure that all the scalar variables have BCs set. 
+  EqnFactory::EqnMap& scalar_eqns = eqnFactory.retrieve_all_eqns(); 
+  for (EqnFactory::EqnMap::iterator ieqn=scalar_eqns.begin(); ieqn != scalar_eqns.end(); ieqn++){
+    EqnBase* eqn = ieqn->second; 
+    eqn->sched_checkBCs( level, sched ); 
+  }
+
+  SourceTermFactory& sourceFactory = SourceTermFactory::self();
+  sourceFactory.sched_sourceInit(level, sched);
+
+
+  // ----------------------------------
   if (d_set_initial_condition) {
     sched_readCCInitialCondition(level, sched);
     sched_interpInitialConditionToStaggeredGrid(level, sched);
@@ -614,10 +645,10 @@ Arches::scheduleInitialize(const LevelP& level,
 
 
   string mixmodel = d_props->getMixingModelType(); 
-  if ( mixmodel != "TabProps")
+  if ( mixmodel != "TabProps") {
     d_props->sched_reComputeProps(sched, patches, matls,
                                 init_timelabel, true, true, false,false);
-  else {
+  } else {
     bool initialize_it = true; 
     bool modify_ref_den = true; 
     if ( d_calcEnthalpy) 
@@ -661,23 +692,6 @@ Arches::scheduleInitialize(const LevelP& level,
   }
 
 
-  // -----------------------------------
-  // Scalar equations (and source terms) initialization
-  EqnFactory& eqnFactory = EqnFactory::self(); 
-  eqnFactory.sched_scalarInit(level, sched);
-
-  // check to make sure that all the scalar variables have BCs set. 
-  EqnFactory::EqnMap& scalar_eqns = eqnFactory.retrieve_all_eqns(); 
-  for (EqnFactory::EqnMap::iterator ieqn=scalar_eqns.begin(); ieqn != scalar_eqns.end(); ieqn++){
-    EqnBase* eqn = ieqn->second; 
-    eqn->sched_checkBCs( level, sched ); 
-  }
-
-  SourceTermFactory& sourceFactory = SourceTermFactory::self();
-  sourceFactory.sched_sourceInit(level, sched);
-
-
-
   //----------------------
   //DQMOM initialization 
   if(d_doDQMOM) {
@@ -699,8 +713,6 @@ Arches::scheduleInitialize(const LevelP& level,
     }
 
   }
-
-
 
   // compute the cell area fraction 
   d_boundaryCondition->sched_setAreaFraction( sched, patches, matls ); 
@@ -1549,7 +1561,7 @@ Arches::sched_mmsInitialCondition(const LevelP& level,
   tsk->modifies(d_lab->d_vVelocitySPBCLabel);
   tsk->modifies(d_lab->d_wVelocitySPBCLabel);
   tsk->modifies(d_lab->d_pressurePSLabel);
-  tsk->modifies(d_lab->d_scalarSPLabel);
+  //tsk->modifies(d_lab->d_scalarSPLabel);
   tsk->requires(Task::NewDW, d_lab->d_cellInfoLabel, Ghost::None);
 
   if (d_calcExtraScalars){
@@ -1580,13 +1592,13 @@ Arches::mmsInitialCondition(const ProcessorGroup* ,
     SFCYVariable<double> vVelocity;
     SFCZVariable<double> wVelocity;
     CCVariable<double> pressure;
-    CCVariable<double> scalar;
+    //CCVariable<double> scalar;
     
     new_dw->getModifiable(uVelocity, d_lab->d_uVelocitySPBCLabel, indx, patch);
     new_dw->getModifiable(vVelocity, d_lab->d_vVelocitySPBCLabel, indx, patch);
     new_dw->getModifiable(wVelocity, d_lab->d_wVelocitySPBCLabel, indx, patch);
     new_dw->getModifiable(pressure,  d_lab->d_pressurePSLabel,    indx, patch);
-    new_dw->getModifiable(scalar,    d_lab->d_scalarSPLabel,      indx, patch);
+    //new_dw->getModifiable(scalar,    d_lab->d_scalarSPLabel,      indx, patch);
    
     PerPatch<CellInformationP> cellInfoP;
     new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
@@ -1600,7 +1612,7 @@ Arches::mmsInitialCondition(const ProcessorGroup* ,
     
       if (d_mms == "constantMMS") { 
         pressure[*iter] = d_cp;
-        scalar[*iter]   = d_phi0;
+        //scalar[*iter]   = d_phi0;
         if (d_calcExtraScalars) {
       
           for (int i=0; i < static_cast<int>(d_extraScalars.size()); i++) {
@@ -1613,7 +1625,7 @@ Arches::mmsInitialCondition(const ProcessorGroup* ,
       } else if (d_mms == "almgrenMMS") {         
         pressure[*iter] = -d_amp*d_amp/4 * (cos(4.0*pi*cellinfo->xx[currCell.x()])
                           + cos(4.0*pi*cellinfo->yy[currCell.y()]));
-        scalar[*iter]   = 0.0;
+        //scalar[*iter]   = 0.0;
       }
     }
 

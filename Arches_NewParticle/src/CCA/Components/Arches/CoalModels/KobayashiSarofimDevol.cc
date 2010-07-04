@@ -75,7 +75,12 @@ KobayashiSarofimDevol::KobayashiSarofimDevol( std::string modelName,
   Y2_ = 0.80; // fraction devolatilized at higher temperatures
   */
 
-  d_compute_particle_temp = false;
+  //d_compute_particle_temp = false;
+
+  d_useRawCoal = false;
+  d_useChar = false;
+  d_useTparticle = false;
+  d_useTgas = false;
 }
 
 KobayashiSarofimDevol::~KobayashiSarofimDevol()
@@ -117,12 +122,15 @@ KobayashiSarofimDevol::problemSetup(const ProblemSpecP& params)
       temp_label_name += node;
 
       // user specifies "role" of each internal coordinate
-      if ( role_name == "raw_coal_mass" 
-           || role_name == "char_mass" ) {
+      if( role_name == "raw_coal_mass" ) {
         LabelToRoleMap[temp_label_name] = role_name;
+        d_useRawCoal = true;
+      } else if( role_name == "char_mass" ) {
+        LabelToRoleMap[temp_label_name] = role_name;
+        d_useChar = true;
       } else if( role_name == "particle_temperature" ) {  
         LabelToRoleMap[temp_label_name] = role_name;
-        d_compute_particle_temp = true;
+        d_useTparticle = true;
       } else {
         std::string errmsg;
         errmsg = "ERROR: Arches: KobayashiSarofimDevol: Invalid variable role for DQMOM equation: must be \"particle_temperature\" or \"raw_coal_mass\", you specified \"" + role_name + "\".";
@@ -160,9 +168,7 @@ KobayashiSarofimDevol::problemSetup(const ProblemSpecP& params)
       // user specifies "role" of each scalar
       if ( role_name == "gas_temperature" ) {
         LabelToRoleMap[label_name] = role_name;
-      } else if ( role_name == "particle_temperature" ) {
-        LabelToRoleMap[label_name] = role_name;
-        d_compute_particle_temp = true;
+        d_useTgas = true;
       } else {
         std::string errmsg;
         errmsg = "ERROR: Arches: KobayashiSarofimDevol: Invalid variable role for scalar equation: must be \"gas_tempeature\" or \"particle_temperature\", you specified \"" + role_name + "\".";
@@ -182,62 +188,41 @@ KobayashiSarofimDevol::problemSetup(const ProblemSpecP& params)
   for( map<string,string>::iterator iter = LabelToRoleMap.begin();
        iter != LabelToRoleMap.end(); ++iter ) {
 
-    if( iter->second == "particle_temperature" ){
-      if( dqmom_eqn_factory.find_scalar_eqn(iter->first) ){
-        EqnBase& t_current_eqn = dqmom_eqn_factory.retrieve_scalar_eqn(iter->first);
-        DQMOMEqn& current_eqn = dynamic_cast<DQMOMEqn&>(t_current_eqn);
-        d_particle_temperature_label = current_eqn.getTransportEqnLabel();
-        d_pt_scaling_factor = current_eqn.getScalingConstant();
-      } else if (eqn_factory.find_scalar_eqn(iter->first) ) {
-        EqnBase& t_current_eqn = eqn_factory.retrieve_scalar_eqn(iter->first);
-        d_particle_temperature_label = t_current_eqn.getTransportEqnLabel();
-        d_pt_scaling_factor = t_current_eqn.getScalingConstant();
-      } else {
-        std::string errmsg = "ARCHES: KobayashiSarofimDevol: Invalid variable given in <variable> tag for KobayashiSarofimDevol model";
-        errmsg += "\nCould not find given particle temperature variable \"";
-        errmsg += iter->first;
-        errmsg += "\" in EqnFactory or in DQMOMEqnFactory.";
-        throw InvalidValue(errmsg,__FILE__,__LINE__);
-      }
-
-    } else if( iter->second == "raw_coal_mass" ){
-      if( dqmom_eqn_factory.find_scalar_eqn(iter->first) ){
-        EqnBase& t_current_eqn = dqmom_eqn_factory.retrieve_scalar_eqn(iter->first);
-        DQMOMEqn& current_eqn = dynamic_cast<DQMOMEqn&>(t_current_eqn);
-        d_raw_coal_mass_label = current_eqn.getTransportEqnLabel();
-        d_rc_scaling_factor = current_eqn.getScalingConstant();
-      } else {
-        std::string errmsg = "ARCHES: KobayashiSarofimDevol: Invalid variable given in <variable> tag for KobayashiSarofimDevol model";
-        errmsg += "\nCould not find given raw coal mass variable \"";
-        errmsg += iter->first;
-        errmsg += "\" in DQMOMEqnFactory.";
-        throw InvalidValue(errmsg,__FILE__,__LINE__);
-      }
-    
-    } else if( iter->second == "gas_temperature" ){
-      if( dqmom_eqn_factory.find_scalar_eqn(iter->first) ) {
-        EqnBase& t_current_eqn = dqmom_eqn_factory.retrieve_scalar_eqn(iter->first);
-        DQMOMEqn& current_eqn = dynamic_cast<DQMOMEqn&>(t_current_eqn);
-        d_gas_temperature_label = current_eqn.getTransportEqnLabel();
-        d_gt_scaling_factor = current_eqn.getScalingConstant();
-      } else if( eqn_factory.find_scalar_eqn(iter->first) ) {
-        EqnBase& t_current_eqn = eqn_factory.retrieve_scalar_eqn(iter->first);
-        d_gas_temperature_label = t_current_eqn.getTransportEqnLabel();
-        d_gt_scaling_factor = t_current_eqn.getScalingConstant();
-      } else {
-        std::string errmsg = "ARCHES: KobayashiSarofimDevol: Invalid variable given in <variable> tag for KobayashiSarofimDevol model";
-        errmsg += "\nCould not find given gas temperature variable \"";
-        errmsg += iter->first;
-        errmsg += "\" in EqnFactory or in DQMOMEqnFactory.";
-        throw InvalidValue(errmsg,__FILE__,__LINE__);
-      }
-
+    EqnBase* current_eqn;
+    if( dqmom_eqn_factory.find_scalar_eqn(iter->first) ) {
+      current_eqn = &(dqmom_eqn_factory.retrieve_scalar_eqn(iter->first));
+    } else if( eqn_factory.find_scalar_eqn(iter->first) ) {
+      current_eqn = &(eqn_factory.retrieve_scalar_eqn(iter->first));
     } else {
-      // can't find this required variable in the labels-to-roles map!
-      std::string errmsg = "ARCHES: KobayashiSarofimDevol: You specified that the variable \"" + iter->first+ 
-                           "\" was required, but you did not specify a valid role for it!\n";
-      throw InvalidValue( errmsg, __FILE__, __LINE__);
+      string errmsg = "ERROR: Arches: CoalParticleHeatTransfer: Invalid variable \"" + iter->first + "\" given for \""+iter->second+"\" role, could not find in EqnFactory or DQMOMEqnFactory!";
+      throw ProblemSetupException(errmsg,__FILE__,__LINE__);
     }
+
+    if( iter->second == "raw_coal_mass" ) {
+      d_raw_coal_mass_label = current_eqn->getTransportEqnLabel();
+      d_rc_scaling_factor = current_eqn->getScalingConstant();
+    } else if( iter->second == "char_mass" ) {
+      d_char_mass_label = current_eqn->getTransportEqnLabel();
+      d_char_scaling_factor = current_eqn->getScalingConstant();
+    } else if( iter->second == "particle_temperature" ) {
+      d_particle_temperature_label = current_eqn->getTransportEqnLabel();
+      d_pt_scaling_factor = current_eqn->getScalingConstant();
+    } else if( iter->second == "gas_temperature" ) {
+      d_gas_temperature_label = current_eqn->getTransportEqnLabel();
+    } else {
+      string errmsg = "ERROR: Arches: KobayashiSarofimDevol: Could not identify specified variable role \""+iter->second+"\".";
+      throw ProblemSetupException(errmsg,__FILE__,__LINE__);
+    }
+
+  }
+
+  if(!d_useRawCoal) {
+    string errmsg = "ERROR: Arches: KobayashiSarofimDevol: No raw coal variable was specified. Quitting...";
+    throw ProblemSetupException(errmsg,__FILE__,__LINE__);
+  }
+
+  if(!d_useTgas) {
+    d_gas_temperature_label = d_fieldLabels->d_tempINLabel;
   }
 
 }
@@ -251,7 +236,7 @@ void
 KobayashiSarofimDevol::sched_computeModel( const LevelP& level, SchedulerP& sched, int timeSubStep )
 {
   std::string taskname = "KobayashiSarofimDevol::computeModel";
-  Task* tsk = scinew Task(taskname, this, &KobayashiSarofimDevol::computeModel);
+  Task* tsk = scinew Task(taskname, this, &KobayashiSarofimDevol::computeModel, timeSubStep );
 
   Ghost::GhostType gn = Ghost::None;
 
@@ -272,14 +257,24 @@ KobayashiSarofimDevol::sched_computeModel( const LevelP& level, SchedulerP& sche
     tsk->modifies(d_gasLabel);  
   }
 
-  tsk->requires(Task::OldDW, d_weight_label, gn, 0);
+  if( d_timeSubStep == 0 ) {
+    tsk->requires(Task::OldDW, d_gas_temperature_label, gn, 0);
+    tsk->requires(Task::OldDW, d_weight_label, gn, 0);
+    tsk->requires(Task::OldDW, d_raw_coal_mass_label, gn, 0);
 
-  tsk->requires(Task::OldDW, d_raw_coal_mass_label, gn, 0);
+    if(d_useTparticle) {
+      tsk->requires(Task::OldDW, d_particle_temperature_label, gn, 0);
+    }
 
-  if(d_compute_particle_temp) {
-    tsk->requires(Task::OldDW, d_particle_temperature_label, gn, 0);
   } else {
-    tsk->requires(Task::OldDW, d_fieldLabels->d_tempINLabel, gn, 0);
+    tsk->requires(Task::NewDW, d_gas_temperature_label, gn, 0);
+    tsk->requires(Task::NewDW, d_weight_label, gn, 0);
+    tsk->requires(Task::NewDW, d_raw_coal_mass_label, gn, 0);
+
+    if(d_useTparticle) {
+      tsk->requires(Task::NewDW, d_particle_temperature_label, gn, 0);
+    }
+
   }
 
   sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials()); 
@@ -296,7 +291,8 @@ KobayashiSarofimDevol::computeModel( const ProcessorGroup * pc,
                                      const PatchSubset    * patches, 
                                      const MaterialSubset * matls, 
                                      DataWarehouse        * old_dw, 
-                                     DataWarehouse        * new_dw )
+                                     DataWarehouse        * new_dw,
+                                     int timeSubStep )
 {
   for( int p=0; p < patches->size(); p++ ) {  // Patch loop
 
@@ -311,33 +307,44 @@ KobayashiSarofimDevol::computeModel( const ProcessorGroup * pc,
     double dt = delta_t;
 
     CCVariable<double> devol_rate;
-    if( new_dw->exists( d_modelLabel, matlIndex, patch ) ) {
-      new_dw->getModifiable( devol_rate, d_modelLabel, matlIndex, patch ); 
-    } else {
-      new_dw->allocateAndPut( devol_rate, d_modelLabel, matlIndex, patch );
-      devol_rate.initialize(0.0);
-    }
-
     CCVariable<double> gas_devol_rate; 
-    if (new_dw->exists( d_gasLabel, matlIndex, patch )){
-      new_dw->getModifiable( gas_devol_rate, d_gasLabel, matlIndex, patch ); 
-    } else {
-      new_dw->allocateAndPut( gas_devol_rate, d_gasLabel, matlIndex, patch ); 
-      gas_devol_rate.initialize(0.0);
-    }
-
-    constCCVariable<double> temperature; // holds gas OR particle temperature...
-    if (d_compute_particle_temp) {
-      old_dw->get( temperature, d_particle_temperature_label, matlIndex, patch, gn, 0 );
-    } else {
-      old_dw->get( temperature, d_fieldLabels->d_tempINLabel, matlIndex, patch, gn, 0 );
-    }
- 
-    constCCVariable<double> wa_raw_coal_mass;
-    old_dw->get( wa_raw_coal_mass, d_raw_coal_mass_label, matlIndex, patch, gn, 0 );
 
     constCCVariable<double> weight;
-    old_dw->get( weight, d_weight_label, matlIndex, patch, gn, 0 );
+    constCCVariable<double> wa_raw_coal_mass;
+    constCCVariable<double> temperature; // holds gas OR particle temperature...
+
+    if( timeSubStep == 0 ) {
+
+      new_dw->allocateAndPut( devol_rate, d_modelLabel, matlIndex, patch );
+      devol_rate.initialize(0.0);
+
+      new_dw->allocateAndPut( gas_devol_rate, d_gasLabel, matlIndex, patch ); 
+      gas_devol_rate.initialize(0.0);
+
+      old_dw->get( weight, d_weight_label, matlIndex, patch, gn, 0 );
+      old_dw->get( wa_raw_coal_mass, d_raw_coal_mass_label, matlIndex, patch, gn, 0 );
+
+      if(d_useTparticle) {
+        old_dw->get( temperature, d_particle_temperature_label, matlIndex, patch, gn, 0 );
+      } else {
+        old_dw->get( temperature, d_gas_temperature_label, matlIndex, patch, gn, 0 );
+      }
+
+    } else {
+
+      new_dw->getModifiable( devol_rate, d_modelLabel, matlIndex, patch ); 
+      new_dw->getModifiable( gas_devol_rate, d_gasLabel, matlIndex, patch ); 
+
+      new_dw->get( weight, d_weight_label, matlIndex, patch, gn, 0 );
+      new_dw->get( wa_raw_coal_mass, d_raw_coal_mass_label, matlIndex, patch, gn, 0 );
+      
+      if(d_useTparticle) {
+        new_dw->get( temperature, d_particle_temperature_label, matlIndex, patch, gn, 0 );
+      } else {
+        new_dw->get( temperature, d_gas_temperature_label, matlIndex, patch, gn, 0 );
+      }
+
+    }
 
     for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
 
@@ -347,40 +354,37 @@ KobayashiSarofimDevol::computeModel( const ProcessorGroup * pc,
       bool weight_is_small = (weight[c] < d_w_small);
 
       double unscaled_weight;
-      if (weight_is_small) {
-        unscaled_weight = 0.0;
-      } else {
-        unscaled_weight = weight[c]*d_w_scaling_factor;
-      }
 
-      // temperature - particle or gas
       double unscaled_temperature;
+      
+      double scaled_raw_coal_mass;
+      double unscaled_raw_coal_mass;
+
       if (weight_is_small) {
-        // no particles
+
+        unscaled_weight = 0.0;
+
         unscaled_temperature = 0.0;
+
+        scaled_raw_coal_mass = 0.0;
+        unscaled_raw_coal_mass = 0.0;
+
       } else {
-        if (d_compute_particle_temp) {
+
+        unscaled_weight = weight[c]*d_w_scaling_factor;
+
+        if (d_useTparticle) {
           // particle temp
           unscaled_temperature = temperature[c]*d_pt_scaling_factor/weight[c];
         } else {
           // particle temp = gas temp
           unscaled_temperature = temperature[c];
         }
-      }
- 
-      // raw coal mass - de-scaled, de-weighted
-      double scaled_raw_coal_mass;
-      double unscaled_raw_coal_mass;
-      if (weight_is_small) {
-        // no particles
-        scaled_raw_coal_mass = 0.0;
-        unscaled_raw_coal_mass = 0.0;
-      } else {
+
         scaled_raw_coal_mass = wa_raw_coal_mass[c]/weight[c];
         unscaled_raw_coal_mass = scaled_raw_coal_mass*d_rc_scaling_factor;
+
       }
-
-
 
       // devol_rate: particle source
       double devol_rate_;
@@ -404,9 +408,6 @@ KobayashiSarofimDevol::computeModel( const ProcessorGroup * pc,
         if( fabs(testVal_part*dt) > scaled_raw_coal_mass ) {
 
           // too much devolatilization! set to maximum possible
-          if( dt < TINY ) {
-            dt = TINY;
-          }
           testVal_part = -scaled_raw_coal_mass/dt;
           devol_rate_ = testVal_part;
           // -----------------

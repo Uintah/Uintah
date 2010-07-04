@@ -45,12 +45,14 @@ ConstantModel::ConstantModel( std::string           modelName,
                               int qn ) 
 : ModelBase(modelName, sharedState, fieldLabels, icLabelNames, scalarLabelNames, qn)
 {
+  /*
   // Create a label for this model
   d_modelLabel = VarLabel::create( modelName, CCVariable<double>::getTypeDescription() );
 
   // Create the gas phase source term associated with this model
   std::string gasSourceName = modelName + "_gasSource";
   d_gasLabel = VarLabel::create( gasSourceName, CCVariable<double>::getTypeDescription() );
+  */
 }
 
 ConstantModel::~ConstantModel()
@@ -64,11 +66,9 @@ ConstantModel::~ConstantModel()
 void 
 ConstantModel::problemSetup(const ProblemSpecP& inputdb )
 {
-
   ProblemSpecP db = inputdb; 
 
   db->require("constant",d_constant); 
-
 }
 
 //-------------------------------------------------------------------------
@@ -137,10 +137,10 @@ ConstantModel::sched_initVars( const LevelP& level, SchedulerP& sched )
 //-------------------------------------------------------------------------
 void
 ConstantModel::initVars( const ProcessorGroup * pc, 
-                            const PatchSubset    * patches, 
-                            const MaterialSubset * matls, 
-                            DataWarehouse        * old_dw, 
-                            DataWarehouse        * new_dw )
+                         const PatchSubset    * patches, 
+                         const MaterialSubset * matls, 
+                         DataWarehouse        * old_dw, 
+                         DataWarehouse        * new_dw )
 {
   for( int p=0; p < patches->size(); p++ ) {  // Patch loop
 
@@ -168,15 +168,15 @@ void
 ConstantModel::sched_computeModel( const LevelP& level, SchedulerP& sched, int timeSubStep )
 {
   std::string taskname = "ConstantModel::computeModel";
-  Task* tsk = scinew Task(taskname, this, &ConstantModel::computeModel);
+  Task* tsk = scinew Task(taskname, this, &ConstantModel::computeModel, timeSubStep );
 
-  d_timeSubStep = timeSubStep; 
-
-  if (d_timeSubStep == 0 && !d_labelSchedInit) {
+  if( timeSubStep == 0 && !d_labelSchedInit ) {
     // Every model term needs to set this flag after the varLabel is computed. 
     // transportEqn.cleanUp should reinitialize this flag at the end of the time step. 
     d_labelSchedInit = true;
+  }
 
+  if( timeSubStep == 0 ) {
     tsk->computes(d_modelLabel);
     tsk->computes(d_gasLabel);
   } else {
@@ -184,6 +184,7 @@ ConstantModel::sched_computeModel( const LevelP& level, SchedulerP& sched, int t
     tsk->modifies(d_gasLabel); 
   }
 
+  /*
   for (vector<std::string>::iterator iter = d_icLabels.begin(); 
        iter != d_icLabels.end(); iter++) { 
     // require any internal coordinates needed to compute the model
@@ -193,6 +194,7 @@ ConstantModel::sched_computeModel( const LevelP& level, SchedulerP& sched, int t
        iter != d_scalarLabels.end(); ++iter ) {
     // require any scalars needed to compute the model
   }
+  */
 
   sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials()); 
 
@@ -202,17 +204,14 @@ ConstantModel::sched_computeModel( const LevelP& level, SchedulerP& sched, int t
 //---------------------------------------------------------------------------
 void
 ConstantModel::computeModel( const ProcessorGroup* pc, 
-                   const PatchSubset* patches, 
-                   const MaterialSubset* matls, 
-                   DataWarehouse* old_dw, 
-                   DataWarehouse* new_dw )
+                             const PatchSubset* patches, 
+                             const MaterialSubset* matls, 
+                             DataWarehouse* old_dw, 
+                             DataWarehouse* new_dw,
+                             int timeSubStep )
 {
   //patch loop
   for (int p=0; p < patches->size(); p++){
-
-    //Ghost::GhostType  gaf = Ghost::AroundFaces;
-    //Ghost::GhostType  gac = Ghost::AroundCells;
-    //Ghost::GhostType  gn  = Ghost::None;
 
     const Patch* patch = patches->get(p);
     int archIndex = 0;
@@ -221,28 +220,16 @@ ConstantModel::computeModel( const ProcessorGroup* pc,
     CCVariable<double> model; 
     CCVariable<double> gas_source;
 
-    if (new_dw->exists( d_modelLabel, matlIndex, patch )){
-      new_dw->getModifiable( model, d_modelLabel, matlIndex, patch ); 
-    } else {
-      new_dw->allocateAndPut( model, d_modelLabel, matlIndex, patch );
-      model.initialize(0.0);
-    }
-
-    if (new_dw->exists( d_gasLabel, matlIndex, patch )){
-      new_dw->getModifiable( gas_source, d_gasLabel, matlIndex, patch ); 
-    } else {
+    if( timeSubStep == 0 ) {
       new_dw->allocateAndPut( gas_source, d_gasLabel, matlIndex, patch );
-      gas_source.initialize(0.0);
+      new_dw->allocateAndPut( model, d_modelLabel, matlIndex, patch );
+    } else {
+      new_dw->getModifiable( model, d_modelLabel, matlIndex, patch ); 
+      new_dw->getModifiable( gas_source, d_gasLabel, matlIndex, patch ); 
     }
 
+    gas_source.initialize(0.0);
+    model.initialize(d_constant);
 
-    for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
-      IntVector c = *iter;
-      model[c] = d_constant;
-      gas_source[c] = 0.0;
-      if( c == IntVector(1,2,3) ) {
-        int a = 2 + 2;
-      }
-    }
   }
 }

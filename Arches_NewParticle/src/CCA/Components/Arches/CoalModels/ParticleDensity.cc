@@ -37,16 +37,14 @@ ParticleDensity::ParticleDensity( std::string modelName,
   DQMOMEqnFactory& eqn_factory = DQMOMEqnFactory::self();
   numQuadNodes = eqn_factory.get_quad_nodes();
 
-//  d_densityLabels.resize(numQuadNodes);
-  
   std::string density_name = "rhop_qn";
-
   std::string qnode;
   std::stringstream out;
   out << qn;
   qnode = out.str();
-
   d_density_label = VarLabel::create( density_name+qnode, CCVariable<double>::getTypeDescription() );
+
+  pi = 3.1415926535;
 }
 
 ParticleDensity::~ParticleDensity()
@@ -62,19 +60,7 @@ ParticleDensity::problemSetup(const ProblemSpecP& params )
 
   ProblemSpecP db = params; 
 
-  const ProblemSpecP params_root = db->getRootNode();
-  if( params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("Coal_Properties") ) {
-    ProblemSpecP db_coal = params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("Coal_Properties");
-    db_coal->require("initial_ash_mass", ash_mass);
-  } else {
-    throw InvalidValue("Missing <Coal_Properties> section in input file!",__FILE__,__LINE__);
-  }
-
-  // set model clipping (not used yet...)
-  db->getWithDefault( "low_clip",  d_lowModelClip,  1.0e-6 );
-  db->getWithDefault( "high_clip", d_highModelClip, 999999 );
-
-  // grab weight scaling factor and small value
+  // grab weight scaling constant and small value
   DQMOMEqnFactory& dqmom_eqn_factory = DQMOMEqnFactory::self();
 
   std::string temp_weight_name = "w_qn";
@@ -83,11 +69,13 @@ ParticleDensity::problemSetup(const ProblemSpecP& params )
   out << d_quadNode;
   node = out.str();
   temp_weight_name += node;
+
   EqnBase& t_weight_eqn = dqmom_eqn_factory.retrieve_scalar_eqn( temp_weight_name );
   DQMOMEqn& weight_eqn = dynamic_cast<DQMOMEqn&>(t_weight_eqn);
-
+  
+  d_weight_label = weight_eqn.getTransportEqnLabel();
   d_w_small = weight_eqn.getSmallClip();
-  d_w_scaling_factor = weight_eqn.getScalingConstant();
+  d_w_scaling_constant = weight_eqn.getScalingConstant();
 
 }
 
@@ -149,6 +137,7 @@ ParticleDensity::sched_initVars( const LevelP& level, SchedulerP& sched )
 
   tsk->computes( d_modelLabel );
   tsk->computes( d_gasLabel   );
+  tsk->computes( d_density_label );
 
   sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials()); 
 }
@@ -176,46 +165,11 @@ ParticleDensity::initVars( const ProcessorGroup * pc,
     CCVariable<double> gas_value; 
     new_dw->allocateAndPut( gas_value, d_gasLabel, matlIndex, patch ); 
     gas_value.initialize(0.0);
+
+    CCVariable<double> density;
+    new_dw->allocateAndPut( density, d_density_label, matlIndex, patch );
+    density.initialize(0.0);
+
   }
 }
-
-/*
-void 
-ParticleDensity::sched_computeParticleDensity( const LevelP&  level,
-                                               SchedulerP&    sched,
-                                               int            timeSubStep )
-{
-  std::string taskname = "ParticleDensity::computeParticleDensity";
-  Task* tsk = scinew Task(taskname, this, &ParticleDensity::computeParticleDensity);
-
-  for( vector<VarLabel*>::iterator iLabel = d_densityLabels.begin();
-       iLabel != d_densityLabels.end(); ++iLabel ) {
-    if( timeSubStep == 0 && !d_labelSchedInit ) {
-      tsk->computes(*iLabel);
-    } else {
-      tsk->modifies(*iLabel);
-    }
-  }
-
-  if( timeSubStep == 0 && !d_labelSchedInit) {
-    // Every model term needs to set this flag after the varLabel is computed. 
-    // transportEqn.cleanUp should reinitialize this flag at the end of the time step. 
-    d_labelSchedInit = true;
-  }
-
-  sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials()); 
-}
-*/
-
-/*
-void 
-ParticleDensity::computeParticleDensity( const ProcessorGroup* pc,
-                                         const PatchSubset* patches,
-                                         const MaterialSubset* matls,
-                                         DataWarehouse* old_dw,
-                                         DataWarehouse* new_dw )
-{
-  // This method left intentionally blank
-}
-*/
 

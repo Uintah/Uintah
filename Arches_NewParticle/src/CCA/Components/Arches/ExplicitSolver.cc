@@ -353,6 +353,10 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
       // Compute the particle model terms
       modelFactory.sched_coalParticleCalculation( level, sched, curr_level );
 
+      //cmr
+      // previous location of sourcetermfactory.sched_computeSourceTerms()
+      // make sure this jives with the other stuffs
+
       // Evaluate DQMOM scalar equations
       if (curr_level != numTimeIntegratorLevels-1) {
         dqmomFactory.sched_evalTransportEqns( level, sched, curr_level );
@@ -362,6 +366,13 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
     }
 
+    // calculating source terms here because otherwise source terms added to mixture fraction equation are the old values for the first time sub-step 
+    // (which leads to incorrect source terms after time-averaging)
+    // the values of the gas-phase source terms from DQMOM models are already calculated above
+    // the source term calculation is simply being moved out of the equation solver and executed earlier
+    // using this approach, the source term for the mixture fraction "eta" (extra scalar) will now match the source term for the mixture fraction "scalarSP" (calculated in ScalarSolver class)
+    SourceTermFactory& srcFactory = SourceTermFactory::self();
+    srcFactory.sched_computeSourceTerms( level, sched, curr_level );
 
     sched_saveTempCopies(sched, patches, matls,d_timeIntegratorLabels[curr_level]);
 
@@ -423,14 +434,6 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     }
 
     
-    // calculating source terms here because otherwise source terms added to mixture fraction equation are the old values for the first time sub-step (which leads to incorrect source terms after time-averaging)
-    // the values of the gas-phase source terms from DQMOM models are already calculated above
-    // the source term calculation is simply being moved out of the equation solver and executed earlier
-    // using this approach, the source term for the mixture fraction "eta" (extra scalar) will now match the source term for the mixture fraction "scalarSP" (calculated in ScalarSolver class)
-    SourceTermFactory& srcFactory = SourceTermFactory::self();
-    srcFactory.sched_computeSourceTerms( level, sched, curr_level );
-
-
     sched_getDensityGuess(sched, patches, matls,
                                       d_timeIntegratorLabels[curr_level],
                                       d_EKTCorrection, doing_EKT_now);
@@ -754,13 +757,15 @@ int ExplicitSolver::noSolve(const LevelP& level,
   CoalModelFactory& modelFactory = CoalModelFactory::self(); 
   EqnFactory& eqnFactory = EqnFactory::self();
   SourceTermFactory& sourceFactory = SourceTermFactory::self();
+
+  sourceFactory.sched_dummyInit( level, sched );
     
   if ( dqmomFactory.getDoDQMOM() ) {
     dqmomFactory.sched_dummyInit( level, sched );
     modelFactory.sched_dummyInit( level, sched );
   }
+
   eqnFactory.sched_dummyInit( level, sched );
-  sourceFactory.sched_dummyInit( level, sched );
 
 
   // Schedule an interpolation of the face centered velocity data 

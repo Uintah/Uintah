@@ -288,6 +288,7 @@ DQMOMEqn::sched_cleanUp( const LevelP& level, SchedulerP& sched )
 
   sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
 }
+
 //---------------------------------------------------------------------------
 // Method: Actually clean up. 
 //---------------------------------------------------------------------------
@@ -298,35 +299,6 @@ void DQMOMEqn::cleanUp( const ProcessorGroup* pc,
                         DataWarehouse* new_dw )
 {
 }
-//---------------------------------------------------------------------------
-// Method: Schedule the evaluation of the transport equation. 
-//---------------------------------------------------------------------------
-//void
-//DQMOMEqn::sched_evalTransportEqn( const LevelP& level, 
-//                                  SchedulerP& sched, int timeSubStep )
-//{
-//
-//  if (timeSubStep == 0) 
-//    sched_initializeVariables( level, sched );
-//
-//#ifdef VERIFY_DQMOM_TRANSPORT
-//  if (d_addExtraSources) { 
-//    proc0cout << endl;
-//    proc0cout << endl;
-//    proc0cout << "NOTICE: You have verification turned ON in your DQMOMEqn.h " << endl;
-//    proc0cout << "Equation " << d_eqnName << " reporting" << endl;
-//    proc0cout << endl;
-//    proc0cout << endl;
-//
-//    sched_computeSources( level, sched, timeSubStep ); 
-//  }
-//#endif
-//
-//  sched_buildTransportEqn( level, sched, timeSubStep );
-//
-//  sched_solveTransportEqn( level, sched, timeSubStep );
-//
-//}
 
 //---------------------------------------------------------------------------
 // Method: Schedule the intialization of the variables. 
@@ -349,6 +321,7 @@ DQMOMEqn::sched_initializeVariables( const LevelP& level, SchedulerP& sched )
   tsk->requires(Task::OldDW, d_transportVarLabel, gn, 0);
   sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
 }
+
 //---------------------------------------------------------------------------
 // Method: Actually initialize the variables. 
 //---------------------------------------------------------------------------
@@ -413,11 +386,8 @@ DQMOMEqn::sched_computeSources( const LevelP& level, SchedulerP& sched, int time
   // This scheduler only calls other schedulers
   SourceTermFactory& factory = SourceTermFactory::self(); 
   for (vector<std::string>::iterator iter = d_sources.begin(); iter != d_sources.end(); iter++){
- 
     SourceTermBase& temp_src = factory.retrieve_source_term( *iter ); 
-   
     temp_src.sched_computeSource( level, sched, timeSubStep ); 
-
   }
 }
 #endif

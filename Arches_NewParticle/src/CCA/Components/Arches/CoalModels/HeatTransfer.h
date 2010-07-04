@@ -98,6 +98,8 @@ protected:
 
   bool b_radiation;
 
+  const VarLabel* d_weight_label;
+
   double d_w_scaling_constant;
   double d_w_small; // "small" clip value for zero weights
 

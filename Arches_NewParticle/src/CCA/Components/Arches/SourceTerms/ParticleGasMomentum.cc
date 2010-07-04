@@ -159,6 +159,10 @@ ParticleGasMomentum::computeSource( const ProcessorGroup* pc,
 
       }
 
+      // now delete CCVariables created on the stack with the "scinew" operator
+      for( vector< constCCVariable<Vector>* >::iterator ii = dragCCVars.begin(); ii != dragCCVars.end(); ++ii ) {
+        delete *ii;
+      }
 
     }
 

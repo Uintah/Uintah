@@ -74,20 +74,47 @@ private:
 //---------------------------------------------------------------------------
 
 /**
-  *  @class  CoalModelFactory
-  *  @author James C. Sutherland and Jeremy Thornock
-  *  @date   November 2006, November 2009
-  *  @brief  Factory for DQMOM model term generation.
+  * @class  CoalModelFactory
+  * @author James C. Sutherland, Jeremy Thornock, Charles Reid
+  * @date   November 2006
+  *         November 2009
+  *         June 2010
   *
-  *  Allows easy addition of models.
-  *  Simply register the builder object for your Model with
-  *  the factory and it will automatically be added to the DQMOM RHS vector B.
-  *  Multiple models may be implemented for a single internal coordinate.
+  * @brief  Factory for DQMOM model term generation.
   *
-  *  Currently each model is independent (no multiphysics coupling).
-  *  This will change in the near future.
+  * Allows easy addition of models.
+  * Simply register the builder object for your Model with
+  * the factory and it will automatically be added to the DQMOM RHS vector B.
+  * Multiple models may be implemented for a single internal coordinate.
   *
-  *  Implemented as a singleton.
+  * A single model cannot be implemented for multiple internal coordinates.
+  * Fixing this will either require a kludge or fixing a big mess.
+  * Fortunately the DQMOM class is the only place that interfaces with the models
+  * So, we could potentially have DQMOMEqns hold a vector of model VarLabels
+  * Then these could be handled/added to the right DQMOMEqn by the models, 
+  *   and it would only require a minor change in the DQMOM class.
+  * But it isn't clear how the model would know which internal coordinates
+  *   to add the model term for, and which to leave alone.
+  * Get rid of stupid idea of <model> tag in the <Ic> block...
+  * Let the models take care of business themselves, don't tie them to ICs
+  * //cmr
+  *
+  * Currently each model is independent (no multiphysics coupling).
+  * This will change in the near future.
+  *
+  * Implemented as a singleton.
+  *
+  * @todo
+  *
+  * - Fix the interface with "getModelsList()" and the d_models member of each model
+  *   to be a vector of VarLabels, not a vector of strings
+  *   (This would allow models to apply to multiple internal coordinates)
+  *   (classes using this are DQMOM and ConstantDensity*)
+  *
+  * - Get rid of the builders, since they serve no function or purpose
+  *
+  * - Get rid of the "requiredIClabel" and "requiredscalarlabel" stuff, since we don't use them
+  * 
   */
 
 class Size;
