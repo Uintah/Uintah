@@ -63,12 +63,13 @@ DEALINGS IN THE SOFTWARE.
 
 namespace Uintah {
 class ArchesLabel; 
+class MPMArchesLabel; 
 class TimeIntegratorLabel; 
 class TabPropsInterface : public MixingRxnModel {
 
 public:
 
-  TabPropsInterface( const ArchesLabel* labels );
+  TabPropsInterface( const ArchesLabel* labels, const MPMArchesLabel* MAlabels );
 
   ~TabPropsInterface();
 
@@ -142,6 +143,16 @@ public:
     double result = 0.0; 
     return result = d_statetbl.query(  dv, &iv[0] ); 
   };
+
+  // -- for mpm --
+  //
+  void sched_dummyInit( const LevelP& level, SchedulerP& sched );
+
+  void dummyInit( const ProcessorGroup* pc, 
+                  const PatchSubset* patches, 
+                  const MaterialSubset* matls, 
+                  DataWarehouse* old_dw, 
+                  DataWarehouse* new_dw );
 
 
 protected :

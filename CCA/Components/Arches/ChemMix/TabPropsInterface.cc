@@ -93,8 +93,8 @@ The code will throw exceptions for the following reasons:
 //****************************************************************************
 // Default constructor for TabPropsInterface
 //****************************************************************************
-TabPropsInterface::TabPropsInterface( const ArchesLabel* labels ) :
-MixingRxnModel( labels )
+TabPropsInterface::TabPropsInterface( const ArchesLabel* labels, const MPMArchesLabel* MAlabels ) :
+MixingRxnModel( labels, MAlabels )
 {
 }
 
@@ -266,6 +266,9 @@ TabPropsInterface::sched_getState( const LevelP& level,
     tsk->computes( d_lab->d_h2oINLabel ); 
     tsk->computes( d_lab->d_sootFVINLabel ); 
 
+    if (d_MAlab)
+      tsk->computes( d_lab->d_densityMicroLabel ); 
+
   } else {
 
     for ( MixingRxnModel::VarMap::iterator i = d_dvVarMap.begin(); i != d_dvVarMap.end(); ++i ) {
@@ -279,6 +282,9 @@ TabPropsInterface::sched_getState( const LevelP& level,
     tsk->modifies( d_lab->d_co2INLabel ); 
     tsk->modifies( d_lab->d_h2oINLabel ); 
     tsk->modifies( d_lab->d_sootFVINLabel ); 
+
+    if (d_MAlab)
+      tsk->modifies( d_lab->d_densityMicroLabel ); 
 
   }
 
@@ -329,6 +335,7 @@ TabPropsInterface::getState( const ProcessorGroup* pc,
     CCVariable<double> arches_co2; 
     CCVariable<double> arches_h2o; 
     CCVariable<double> arches_soot; 
+    CCVariable<double> mpmarches_denmicro; 
 
     CCMap depend_storage; 
     if ( initialize_me ) {
@@ -352,6 +359,10 @@ TabPropsInterface::getState( const ProcessorGroup* pc,
       new_dw->allocateAndPut( arches_co2, d_lab->d_co2INLabel, matlIndex, patch ); 
       new_dw->allocateAndPut( arches_h2o, d_lab->d_h2oINLabel, matlIndex, patch ); 
       new_dw->allocateAndPut( arches_soot, d_lab->d_sootFVINLabel, matlIndex, patch ); 
+      if (d_MAlab) {
+        new_dw->allocateAndPut( mpmarches_denmicro, d_lab->d_densityMicroLabel, matlIndex, patch ); 
+        mpmarches_denmicro.initialize(0.0);
+      }
 
       drho_df.initialize(0.0);  // this variable might not be actually used anywhere any may just be polution  
       arches_temperature.initialize(0.0); 
@@ -359,6 +370,7 @@ TabPropsInterface::getState( const ProcessorGroup* pc,
       arches_co2.initialize(0.0); 
       arches_h2o.initialize(0.0);
       arches_soot.initialize(0.0); 
+
 
     } else { 
 
@@ -379,6 +391,8 @@ TabPropsInterface::getState( const ProcessorGroup* pc,
       new_dw->getModifiable( arches_co2, d_lab->d_co2INLabel, matlIndex, patch ); 
       new_dw->getModifiable( arches_h2o, d_lab->d_h2oINLabel, matlIndex, patch ); 
       new_dw->getModifiable( arches_soot, d_lab->d_sootFVINLabel, matlIndex, patch ); 
+      if (d_MAlab) 
+        new_dw->getModifiable( mpmarches_denmicro, d_lab->d_densityMicroLabel, matlIndex, patch ); 
     }
 
     CCVariable<double> arches_density; 
@@ -403,6 +417,8 @@ TabPropsInterface::getState( const ProcessorGroup* pc,
 
         if (i->first == "density") {
           arches_density[c] = table_value; 
+          if (d_MAlab)
+            mpmarches_denmicro[c] = table_value; 
         } else if (i->first == "temperature") {
           arches_temperature[c] = table_value; 
         } else if (i->first == "heat_capacity") {
@@ -802,6 +818,51 @@ TabPropsInterface::getAllIndepVars()
     exception << "Error: You requested a list of independent variables " <<
                  "before specifying the table that you were using. " << endl;
     throw InternalError(exception.str(),__FILE__,__LINE__);
+  }
+}
+//--------------------------
+//
+void 
+TabPropsInterface::sched_dummyInit( const LevelP& level, 
+                                    SchedulerP& sched )
+
+{
+  string taskname = "TabPropsInterface::dummyInit"; 
+  Ghost::GhostType  gn = Ghost::None;
+
+  Task* tsk = scinew Task(taskname, this, &TabPropsInterface::dummyInit ); 
+
+  // dependent variables
+  for ( MixingRxnModel::VarMap::iterator i = d_dvVarMap.begin(); i != d_dvVarMap.end(); ++i ) {
+      tsk->computes( i->second ); 
+  }
+
+  sched->addTask( tsk, level->eachPatch(), d_lab->d_sharedState->allArchesMaterials() ); 
+}
+
+void 
+TabPropsInterface::dummyInit( const ProcessorGroup* pc, 
+                              const PatchSubset* patches, 
+                              const MaterialSubset* matls, 
+                              DataWarehouse* old_dw, 
+                              DataWarehouse* new_dw )
+{
+  for (int p=0; p < patches->size(); p++){
+
+    Ghost::GhostType gn = Ghost::None; 
+    const Patch* patch = patches->get(p); 
+    int archIndex = 0; 
+    int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+
+
+    // dependent variables:
+    for ( VarMap::iterator i = d_dvVarMap.begin(); i != d_dvVarMap.end(); ++i ){
+     
+      CCVariable<double>* the_var = new CCVariable<double>; 
+      new_dw->allocateAndPut( *the_var, i->second, matlIndex, patch ); 
+      (*the_var).initialize(0.0);
+      
+    }
   }
 }
 

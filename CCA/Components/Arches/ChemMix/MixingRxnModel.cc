@@ -63,8 +63,8 @@ using namespace Uintah;
 using namespace SCIRun;
 
 //---------------------------------------------------------------------------
-MixingRxnModel::MixingRxnModel( const ArchesLabel* labels ):
-  d_lab(labels)
+MixingRxnModel::MixingRxnModel( const ArchesLabel* labels, const MPMArchesLabel* MAlab ):
+  d_lab(labels), d_MAlab(MAlab)
 {
 }
 

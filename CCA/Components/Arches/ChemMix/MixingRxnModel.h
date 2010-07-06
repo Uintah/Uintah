@@ -39,6 +39,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/Variables/CCVariable.h>
 #include <CCA/Components/Arches/ArchesLabel.h>
 #include <CCA/Components/Arches/TimeIntegratorLabel.h>
+#include <CCA/Components/MPMArches/MPMArchesLabel.h>
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Parallel/Parallel.h>
 
@@ -72,6 +73,7 @@ DEALINGS IN THE SOFTWARE.
 namespace Uintah {
  
 class ArchesLabel; 
+class MPMArchesLabel; 
 class TimeIntegratorLabel; 
 class MixingRxnModel{
 
@@ -81,7 +83,7 @@ public:
   typedef std::map<string, const VarLabel* >           VarMap;
   typedef std::map<string, CCVariable<double>* >       CCMap; 
 
-  MixingRxnModel( const ArchesLabel* labels ); 
+  MixingRxnModel( const ArchesLabel* labels, const MPMArchesLabel* MAlabels ); 
 
   virtual ~MixingRxnModel();
 
@@ -124,6 +126,7 @@ protected :
   void setMixDVMap( const ProblemSpecP& root_params ); 
 
   const ArchesLabel* d_lab; 
+  const MPMArchesLabel* d_MAlab;
 
 
 private:
