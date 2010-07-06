@@ -374,11 +374,12 @@ Patch::haveBC(FaceType face,int mat_id,const string& bc_type,
     v_itr = itr->d_BCDataArray.find(mat_id);
     if (v_itr != itr->d_BCDataArray.end()) { 
       for (it = v_itr->second.begin(); it != v_itr->second.end(); ++it) {
-      BCData bc;
-      (*it)->getBCData(bc);
-      bool found_variable = bc.find(bc_type,bc_variable);
-      if (found_variable)
-        return true;
+        BCData bc;
+        (*it)->getBCData(bc);
+        bool found_variable = bc.find(bc_type,bc_variable);
+        if (found_variable){
+          return true;
+        }
       }
     } 
     // Check the mat_it = "all" case
@@ -388,8 +389,9 @@ Patch::haveBC(FaceType face,int mat_id,const string& bc_type,
         BCData bc;
         (*it)->getBCData(bc);
         bool found_variable = bc.find(bc_type,bc_variable);
-        if (found_variable)
+        if (found_variable){
           return true;
+        }
       }
     }
   }
