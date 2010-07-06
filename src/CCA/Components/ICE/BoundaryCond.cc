@@ -370,7 +370,7 @@ void get_rho_micro(StaticArray<CCVariable<double> >& rho_micro,
                    DataWarehouse* new_dw,
                    customBC_var_basket* custom_BC_basket)
 {
-  BC_doing << "get_rho_micro: Which_var " << which_Var << endl;
+  BC_doing << " get_rho_micro: (" << which_Var <<")"<< endl;
   
   if( which_Var !="rho_micro" && which_Var !="sp_vol" ){
     throw InternalError("setBC (pressure): Invalid option for which_var", __FILE__, __LINE__);
@@ -452,7 +452,10 @@ void setBC(CCVariable<double>& press_CC,
            DataWarehouse* new_dw,
            customBC_var_basket* custom_BC_basket)
 {
-  BC_doing << "setBC (press_CC) "<< kind <<" " << which_Var
+  if(patch->hasBoundaryFaces() == false){
+    return;
+  }
+  BC_doing << "setBC (press_CC) \t"<< kind <<" " << which_Var
            << " mat_id = " << mat_id << endl;
 
   int numALLMatls = sharedState->getNumMatls();
@@ -628,7 +631,11 @@ void setBC(CCVariable<double>& var_CC,
            DataWarehouse*,
            customBC_var_basket* custom_BC_basket)    // NG hack
 {
-  BC_doing << "setBC (double) "<< desc << " mat_id = " << mat_id << endl;
+
+  if(patch->hasBoundaryFaces() == false){
+    return;
+  }
+  BC_doing << "setBC (double) \t"<< desc << " mat_id = " << mat_id << endl;
   Vector cell_dx = patch->dCell();
   int topLevelTimestep = sharedState->getCurrentTopLevelTimeStep();
 
@@ -752,7 +759,10 @@ void setBC(CCVariable<Vector>& var_CC,
            DataWarehouse* ,
            customBC_var_basket* custom_BC_basket)
 {
-  BC_doing <<"setBC (Vector_CC) "<< desc <<" mat_id = " <<mat_id<< endl;
+ if(patch->hasBoundaryFaces() == false){
+    return;
+  }
+  BC_doing <<"setBC (Vector_CC) \t"<< desc <<" mat_id = " <<mat_id<< endl;
   Vector cell_dx = patch->dCell();
   //__________________________________
   //  -Set the LODI BC's first, then let the other BC's wipe out what
@@ -865,7 +875,10 @@ void setSpecificVolBC(CCVariable<double>& sp_vol_CC,
                       SimulationStateP& sharedState,
                       const int mat_id)
 {
-  BC_doing << "setSpecificVolBC "<< kind <<" "
+  if(patch->hasBoundaryFaces() == false){
+    return;
+  }
+  BC_doing << "setSpecificVolBC \t"<< kind <<" "
            << " mat_id = " << mat_id << endl;
                 
   Vector dx = patch->dCell();

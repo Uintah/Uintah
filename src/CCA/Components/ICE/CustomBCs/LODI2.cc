@@ -51,7 +51,7 @@ namespace Uintah {
 //__________________________________
 //  To turn on couts
 //  setenv SCI_DEBUG "LODI_DOING_COUT:+, LODI_DBG_COUT:+"
-static DebugStream cout_doing("LODI_DOING_COUT", false);
+static DebugStream cout_doing("ICE_BC_DOING", false);
 static DebugStream cout_dbg("LODI_DBG_COUT", false);
 
 /* ______________________________________________________________________
@@ -369,7 +369,6 @@ void  preprocess_Lodi_BCs(DataWarehouse* old_dw,
   if(setLodiBcs){
     for (int i = 0; i <= 5; i++){ 
       new_dw->allocateTemporary(lv->Li[i], patch);
-      lv->Li[i].initialize(Vector(-9e30,-9e30,-9e30));
     }
 
     computeLi(lv->Li, lv->rho_CC,  lv->press_CC, lv->vel_CC, lv->speedSound, 
@@ -730,7 +729,6 @@ void computeLi(StaticArray<CCVariable<Vector> >& L,
                const Lodi_variable_basket* user_inputs,
                const bool recursion)                              
 {
-  cout_doing << "LODI computeLi "<< endl;
   Vector dx = patch->dCell();
   
   // Characteristic Length of the overall domain
@@ -754,7 +752,7 @@ void computeLi(StaticArray<CCVariable<Vector> >& L,
     Patch::FaceType face = *iter;
     
     if (is_LODI_face(patch,face, sharedState) ) {
-      cout_dbg << "   computing LI on face " << patch->getFaceName(face) 
+      cout_doing << "   computing LI \t\t " << patch->getFaceName(face) 
                << " patch " << patch->getID()<< " matl_indx " << indx << endl;
       //_____________________________________
       // S I D E S
@@ -876,7 +874,7 @@ void FaceDensity_LODI(const Patch* patch,
                 Lodi_vars* lv,
                 const Vector& DX)
 {
-  cout_doing << "Setting FaceDensity_LODI on face " << face<<endl;
+  cout_doing << "   FaceDensity_LODI  \t\t" << patch->getFaceName(face)<<endl;
   // bulletproofing
   if (!lv){
     throw InternalError("FaceDensityLODI: Lodi_vars = null", __FILE__, __LINE__);
@@ -957,7 +955,7 @@ void FaceVel_LODI(const Patch* patch,
                  SimulationStateP& sharedState)                     
 
 {
-  cout_doing << "Setting FaceVel_LODI on face " << face << endl;
+  cout_doing << "   FaceVel_LODI  \t\t" << patch->getFaceName(face) << endl;
   // bulletproofing
   if (!lv){
     throw InternalError("FaceVelLODI: Lodi_vars = null", __FILE__, __LINE__);
@@ -1058,7 +1056,7 @@ void FaceTemp_LODI(const Patch* patch,
              const Vector& DX,
              SimulationStateP& sharedState)
 {
-  cout_doing << "Setting FaceTemp_LODI on face " <<face<< endl; 
+  cout_doing << "   FaceTemp_LODI \t\t" <<patch->getFaceName(face)<< endl; 
   
   // bulletproofing
   if (!lv){
@@ -1149,7 +1147,7 @@ void FacePress_LODI(const Patch* patch,
                     Patch::FaceType face,
                     Lodi_vars* lv)
 {
-  cout_doing << " I am in FacePress_LODI on face " <<face<< endl;
+  cout_doing << "   FacePress_LODI \t\t" <<patch->getFaceName(face)<< endl;
   // bulletproofing
   if (!lv){
     throw InternalError("FacePress_LODI: Lodi_vars = null", __FILE__, __LINE__);
