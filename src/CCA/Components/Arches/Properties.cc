@@ -172,7 +172,7 @@ Properties::problemSetup(const ProblemSpecP& params)
 #if HAVE_TABPROPS
   else if (mixModel == "TabProps") {
     // New TabPropsInterface stuff...
-    d_mixingRxnTable = scinew TabPropsInterface( d_lab );
+    d_mixingRxnTable = scinew TabPropsInterface( d_lab, d_MAlab );
     d_mixingRxnTable->problemSetup( db ); 
   }
 #endif
@@ -1161,7 +1161,7 @@ Properties::sched_computePropsFirst_mm(SchedulerP& sched,
     tsk->requires(Task::OldDW, d_lab->d_cpINLabel,     gn, 0);
     tsk->requires(Task::OldDW, d_lab->d_co2INLabel,    gn, 0);
     tsk->requires(Task::OldDW, d_lab->d_heatLossLabel, gn, 0);
-    tsk->requires(Task::OldDW, d_lab->d_mixMWLabel,    gn, 0); 
+    //tsk->requires(Task::OldDW, d_lab->d_mixMWLabel,    gn, 0); 
     /*
     tsk->requires(Task::OldDW, d_lab->d_enthalpyRXNLabel, gn, 0);
     */
@@ -1199,7 +1199,7 @@ Properties::sched_computePropsFirst_mm(SchedulerP& sched,
     tsk->computes(d_lab->d_co2INLabel);
     tsk->computes(d_lab->d_heatLossLabel);
     tsk->computes(d_lab->d_enthalpyRXNLabel);
-    tsk->computes(d_lab->d_mixMWLabel); 
+    //tsk->computes(d_lab->d_mixMWLabel); 
     if (d_calcReactingScalar){
       tsk->computes(d_lab->d_reactscalarSRCINLabel);
     }
@@ -1420,7 +1420,7 @@ Properties::computePropsFirst_mm(const ProcessorGroup*,
       old_dw->get(cpIN,     d_lab->d_cpINLabel,     indx, patch,gn, 0);
       old_dw->get(co2IN,    d_lab->d_co2INLabel,    indx, patch,gn, 0);
       old_dw->get(heatLoss, d_lab->d_heatLossLabel, indx, patch,gn, 0);
-      old_dw->get(mixMW,    d_lab->d_mixMWLabel,    indx, patch,gn, 0); 
+      //old_dw->get(mixMW,    d_lab->d_mixMWLabel,    indx, patch,gn, 0); 
 
       /*
       old_dw->get(enthalpyRXN, d_lab->d_enthalpyRXNLabel, indx, patch,
@@ -1445,8 +1445,8 @@ Properties::computePropsFirst_mm(const ProcessorGroup*,
       new_dw->allocateAndPut(enthalpyRXN_new, d_lab->d_enthalpyRXNLabel, indx, patch);
       enthalpyRXN_new.initialize(0.0);
 
-      new_dw->allocateAndPut(mixMW_new, d_lab->d_mixMWLabel, indx, patch); 
-      mixMW_new.copyData(mixMW); 
+      //new_dw->allocateAndPut(mixMW_new, d_lab->d_mixMWLabel, indx, patch); 
+      //mixMW_new.copyData(mixMW); 
 
       if (d_calcReactingScalar) {
         new_dw->allocateAndPut(reactScalarSrc_new, d_lab->d_reactscalarSRCINLabel,indx, patch);
@@ -2296,5 +2296,10 @@ Properties::sched_initEnthalpy( const LevelP& level, SchedulerP& sched )
   d_mixingRxnTable->sched_computeFirstEnthalpy( level, sched ) ; 
 #endif
 }
-
-
+void 
+Properties::sched_doTPDummyInit( const LevelP& level, SchedulerP& sched )
+{
+#if HAVE_TABPROPS
+  d_mixingRxnTable->sched_dummyInit( level, sched ); 
+#endif 
+}
