@@ -33,6 +33,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Arches/SourceTerms/SourceTermFactory.h>
 #include <CCA/Components/Arches/SourceTerms/SourceTermBase.h>
 #include <CCA/Components/Arches/SourceTerms/ConstSrcTerm.h>
+#include <CCA/Components/Arches/SourceTerms/UnweightedSrcTerm.h>
 #include <CCA/Components/Arches/SourceTerms/MMS1.h>
 #include <CCA/Components/Arches/SourceTerms/CoalGasDevol.h>
 #include <CCA/Components/Arches/SourceTerms/CoalGasMomentum.h> 
@@ -514,6 +515,18 @@ Arches::problemSetup(const ProblemSpecP& params,
 
   ProblemSpecP dqmom_db = db->findBlock("DQMOM"); 
   if (dqmom_db) {
+    b_unweighted = false;
+    ProblemSpecP db_linear_solver = dqmom_db->findBlock("LinearSolver");
+    if( db_linear_solver ) {
+      string d_solverType;
+      db_linear_solver->getWithDefault("type", d_solverType, "LU");
+      if( d_solverType == "Optimize" ) {
+        ProblemSpecP db_optimize = db_linear_solver->findBlock("Optimization");
+        if(db_optimize){
+          db_optimize->getWithDefault("unweighted_abscissas", b_unweighted, false);
+        }
+      }
+    }
 
     proc0cout << endl;
     proc0cout << "WARNING: If you are trying to do DQMOM make sure you added the <TimeIntegrator> section!\n"; 
@@ -523,6 +536,9 @@ Arches::problemSetup(const ProblemSpecP& params,
     //register all equations. 
     Arches::registerDQMOMEqns(dqmom_db);
     //register all models
+    CoalModelFactory& model_factory = CoalModelFactory::self();
+    model_factory.problemSetup(dqmom_db);
+
     Arches::registerModels(dqmom_db); 
 
     // Create a velocity model 
@@ -533,8 +549,8 @@ Arches::problemSetup(const ProblemSpecP& params,
     DQMOMEqnFactory& eqn_factory = DQMOMEqnFactory::self(); 
     const int numQuadNodes = eqn_factory.get_quad_nodes();  
 
-    CoalModelFactory& model_factory = CoalModelFactory::self();
-		model_factory.problemSetup(dqmom_db);
+    //CoalModelFactory& model_factory = CoalModelFactory::self();
+    //		model_factory.problemSetup(dqmom_db);
     model_factory.setArchesLabel( d_lab ); 
 
     ProblemSpecP w_db = dqmom_db->findBlock("Weights");
@@ -572,8 +588,27 @@ Arches::problemSetup(const ProblemSpecP& params,
         EqnBase& an_ic = eqn_factory.retrieve_scalar_eqn( final_name );
         an_ic.problemSetup( ic_db, iqn );  
 
+        if(b_unweighted == true){
+        // register source terms for unweighted abscissas
+
+          SourceTermFactory& factory = SourceTermFactory::self();
+
+          std::string src_name = "unw_src" + final_name;
+          //std::string src_type = "unweighted_src";
+
+          vector<string> required_varLabels;
+ 
+          std::string label_name = final_name; 
+          proc0cout << "label = " << label_name << endl;
+          required_varLabels.push_back(label_name);
+
+          SourceTermBuilder* srcBuilder = scinew UnweightedSrcTermBuilder(src_name, required_varLabels, d_lab->d_sharedState);
+          factory.register_source_term( src_name, srcBuilder );
+
+        }
       }
     }
+
     
     // Now go through models and initialize all defined models and call 
     // their respective problemSetup
@@ -1857,7 +1892,11 @@ Arches::weightedAbsInit( const ProcessorGroup* ,
         phi_icv.initialize(0.0);
       
         // initialize phi
-        eqn->initializationFunction( patch, phi, weight );
+        if(b_unweighted == true){
+          eqn->initializationFunction( patch, phi);
+        } else {
+          eqn->initializationFunction( patch, phi, weight );
+        }
 
         // do boundary conditions
         eqn->computeBCs( patch, eqn_name, phi );

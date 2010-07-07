@@ -396,10 +396,16 @@ ZDragModel::computeModel( const ProcessorGroup* pc,
         model[c] = 0.0;
         gas_source[c] = 0.0;
       } else {
-        double length = w_particle_length[c]/weight[c]*d_pl_scaling_factor;
+ 
+        double length;
+        if(b_unweighted) {
+          length = w_particle_length[c]*d_pl_scaling_factor;
+        } else {
+          length = w_particle_length[c]/weight[c]*d_pl_scaling_factor;
+        }
 
         // KLUDGE: implicit clipping
-        length = max(min(length,1e-3),1e-6);
+        //length = max(min(length,1e-3),1e-6);
 
         Vector sphGas = Vector(0.,0.,0.);
         Vector cartGas = gasVel[c];

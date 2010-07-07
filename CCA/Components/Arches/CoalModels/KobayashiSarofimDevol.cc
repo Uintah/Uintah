@@ -402,7 +402,11 @@ KobayashiSarofimDevol::computeModel( const ProcessorGroup * pc,
       } else {
         if (compute_part_temp) {
           // particle temp
-          unscaled_temperature = temperature[c]*d_pt_scaling_factor/weight[c];
+          if(b_unweighted){
+            unscaled_temperature = temperature[c]*d_pt_scaling_factor;
+          } else {
+            unscaled_temperature = temperature[c]*d_pt_scaling_factor/weight[c];
+          }
         } else {
           // gas temp
           unscaled_temperature = temperature[c];
@@ -417,8 +421,13 @@ KobayashiSarofimDevol::computeModel( const ProcessorGroup * pc,
         scaled_raw_coal_mass = 0.0;
         unscaled_raw_coal_mass = 0.0;
       } else {
-        scaled_raw_coal_mass = wa_raw_coal_mass[c]/weight[c];
-        unscaled_raw_coal_mass = scaled_raw_coal_mass*d_rc_scaling_factor;
+        if(b_unweighted){
+          scaled_raw_coal_mass = wa_raw_coal_mass[c];
+          unscaled_raw_coal_mass = scaled_raw_coal_mass*d_rc_scaling_factor;
+        } else {
+          scaled_raw_coal_mass = wa_raw_coal_mass[c]/weight[c];
+          unscaled_raw_coal_mass = scaled_raw_coal_mass*d_rc_scaling_factor;
+        }
       }
 
       // devol_rate: particle source

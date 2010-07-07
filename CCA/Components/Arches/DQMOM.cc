@@ -229,9 +229,14 @@ void DQMOM::problemSetup(const ProblemSpecP& params)
       if(db_optimize){
         b_optimize = true;
         db_optimize->get("Optimal_abscissas",d_opt_abscissas);
+        db_optimize->getWithDefault("unweighted_abscissas", b_unweighted, false);
         AAopt = scinew DenseMatrix((N_xi+1)*N_,(N_xi+1)*N_);
         AAopt->zero();
-        constructAopt( AAopt, d_opt_abscissas );
+        if(b_unweighted == true){
+          constructAopt_unw( AAopt, d_opt_abscissas );
+        } else {
+          constructAopt( AAopt, d_opt_abscissas );
+        }
         AAopt->invert();
       }
     } else {
@@ -562,7 +567,12 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
         ColumnMatrix* BB = scinew ColumnMatrix( dimension );
         ColumnMatrix* XX = scinew ColumnMatrix( dimension );
         BB->zero();
-        constructBopt( BB, weights, d_opt_abscissas, models );
+        if(b_unweighted == true){
+          constructBopt_unw( BB, d_opt_abscissas, models );
+        } else {
+          constructBopt( BB, weights, d_opt_abscissas, models );
+        }
+
         Mult( (*XX), (*AAopt), (*BB) );
 
         int z=0; // equation loop counter
@@ -1593,6 +1603,124 @@ DQMOM::constructBopt( ColumnMatrix*  &BB,
   } // end moments
 }
   
+
+// **********************************************
+// Construct A optimized for unweighted abscissas
+// **********************************************
+void
+DQMOM::constructAopt_unw( DenseMatrix*   &AA,
+                          vector<double> &Abscissas)
+{
+  for ( unsigned int k = 0; k < momentIndexes.size(); ++k) {
+    MomentVector thisMoment = momentIndexes[k];
+
+    // weights
+    for ( unsigned int alpha = 0; alpha < N_; ++alpha) {
+      double prefixA = 1;
+      double productA = 1;
+      for ( unsigned int i = 0; i < thisMoment.size(); ++i) {
+        // Appendix C, C.9 (A1 matrix)
+        //prefixA = prefixA - (thisMoment[i]);
+        double base = Abscissas[i*(N_)+alpha];
+        double exponent = thisMoment[i];
+        productA = productA*( pow(base, exponent) );
+      }
+
+      (*AA)[k][alpha] = prefixA*productA;
+    } //end weights sub-matrix
+
+    // weighted abscissas
+    for( unsigned int j = 0; j < N_xi; ++j ) {
+      double prefixA    = 1;
+      double productA   = 1;
+
+      for( unsigned int alpha = 0; alpha < N_; ++alpha ) {
+        if ( Abscissas[j*(N_)+alpha] == 0 && thisMoment[j] == 0) {
+          //FIXME:
+          // both prefixes contain 0^(-1)
+          prefixA = 0;
+        } else {
+          // Appendix C, C.11 (A_j+1 matrix)
+          double base = Abscissas[j*(N_)+alpha];
+          double exponent = thisMoment[j] - 1;
+          prefixA = (thisMoment[j])*(pow(base, exponent));
+          productA = 1;
+
+          // calculate product containing all internal coordinates except j
+          for (unsigned int n = 0; n < N_xi; ++n) {
+            if (n != j) {
+              // the if statements checking these same conditions (above) are only
+              // checking internal coordinate j, so we need them again for internal
+              // coordinate n
+              double base2 = Abscissas[n*(N_)+alpha];
+              double exponent2 = thisMoment[n];
+              productA = productA*( pow(base2, exponent2));
+            }
+          }//end int coord n
+        }//end divide by zero conditionals
+
+        int col = (j+1)*N_ + alpha;
+        (*AA)[k][col] = prefixA*productA;
+      }//end quad nodes
+    }//end int coords j sub-matrix
+  } // end moments
+}
+
+// **********************************************
+// Construct B optimized for unweighted abscissas
+// **********************************************
+void
+DQMOM::constructBopt_unw( ColumnMatrix*  &BB,
+                          vector<double> &Abscissas,
+                          vector<double> &models)
+{
+  for ( unsigned int k = 0; k < momentIndexes.size(); ++k) {
+    MomentVector thisMoment = momentIndexes[k];
+
+    double totalsumS = 0;
+    for( unsigned int j = 0; j < N_xi; ++j ) {
+      double prefixS    = 1;
+      double productS   = 1;
+      double modelsumS  = 0;
+
+      double quadsumS = 0;
+      for( unsigned int alpha = 0; alpha < N_; ++alpha ) {
+        if ( Abscissas[j*(N_)+alpha] == 0 && thisMoment[j] == 0) {
+          //FIXME:
+          // both prefixes contain 0^(-1)
+          prefixS = 0;
+        } else {
+          // Appendix C, C.11 (A_j+1 matrix)
+          double base = Abscissas[j*(N_)+alpha];
+          double exponent = thisMoment[j] - 1;
+
+          // Appendix C, C.16 (S matrix)
+          prefixS = -(thisMoment[j])*(pow(base, exponent));
+          productS = 1;
+          // calculate product containing all internal coordinates except j
+          for (unsigned int n = 0; n < N_xi; ++n) {
+            if (n != j) {
+              // the if statements checking these same conditions (above) are only
+              // checking internal coordinate j, so we need them again for internal
+              // coordinate n
+              double base2 = Abscissas[n*(N_)+alpha];
+              double exponent2 = thisMoment[n];
+              productS = productS*( pow(base2, exponent2));
+            }
+          }//end int coord n
+        }//end divide by zero conditionals
+
+        modelsumS = - models[j*(N_)+alpha];
+        //quadsumS = quadsumS + weights[alpha]*modelsumS*prefixS*productS;
+        quadsumS = quadsumS + modelsumS*prefixS*productS;
+      }//end quad nodes
+      totalsumS = totalsumS + quadsumS;
+    }//end int coords j sub-matrix
+
+    (*BB)[k] = totalsumS;
+  } // end moments
+}
+
 
 
 // **********************************************
