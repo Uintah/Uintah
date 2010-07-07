@@ -43,7 +43,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/MPMArches/MPMArches.h>
 #include <CCA/Components/Examples/Poisson1.h>
 #include <CCA/Components/Examples/Poisson2.h>
-#include <CCA/Components/Examples/Poisson4.h>
+//#include <CCA/Components/Examples/Poisson4.h>
 #include <CCA/Components/Examples/Burger.h>
 #include <CCA/Components/Examples/Wave.h>
 #include <CCA/Components/Examples/AMRWave.h>
@@ -184,9 +184,9 @@ ComponentFactory::create( ProblemSpecP& ps, const ProcessorGroup* world,
   if (sim_comp == "poisson3" || sim_comp == "POISSON3") {
     return scinew Poisson3(world);
   } 
-  if (sim_comp == "poisson4" || sim_comp == "POISSON4") {
-    return scinew Poisson4(world);
-  } 
+//  if (sim_comp == "poisson4" || sim_comp == "POISSON4") {
+//    return scinew Poisson4(world);
+//  } 
   if (sim_comp == "benchmark" || sim_comp == "BENCHMARK") {
     return scinew Benchmark(world);
   } 
