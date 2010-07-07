@@ -29,6 +29,21 @@ void PartVel::problemSetup(const ProblemSpecP& inputdb)
 {
   ProblemSpecP db = inputdb; 
 
+  ProblemSpecP db_root = db->getRootNode();
+  ProblemSpecP dqmom_db = db_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("DQMOM");
+  b_unweighted = false;
+  ProblemSpecP db_linear_solver = dqmom_db->findBlock("LinearSolver");
+  if( db_linear_solver ) {
+    string d_solverType;
+    db_linear_solver->getWithDefault("type", d_solverType, "LU");
+    if( d_solverType == "Optimize" ) {
+      ProblemSpecP db_optimize = db_linear_solver->findBlock("Optimization");
+      if(db_optimize){
+        db_optimize->getWithDefault("unweighted_abscissas", b_unweighted, false);
+      }
+    }
+  }
+
   ProblemSpecP vel_db = db->findBlock("VelModel");
   if (vel_db) {
 
@@ -281,7 +296,11 @@ void PartVel::ComputePartVel( const ProcessorGroup* pc,
 
           } else {
 
-            length = (wlength[c]/weight[c])*eqn.getScalingConstant();
+            if(b_unweighted == true) {
+              length = wlength[c]*eqn.getScalingConstant();
+            } else {
+              length = (wlength[c]/weight[c])*eqn.getScalingConstant();
+            }
 
             Vector v_gas = gasVel[c];
             Vector v_part = old_partVel[c]; 
@@ -365,8 +384,10 @@ void PartVel::ComputePartVel( const ProcessorGroup* pc,
         std::string name = "w_qn";
         name += node;
         EqnBase& eqn2 = dqmomFactory.retrieve_scalar_eqn( name );
-        constCCVariable<double> weight;
         const VarLabel* mywLabel = eqn2.getTransportEqnLabel();
+        DQMOMEqn& weight_eqn = dynamic_cast<DQMOMEqn&>(eqn2);
+        constCCVariable<double> weight;
+        double small_weight = weight_eqn.getSmallClip();
         old_dw->get(weight, mywLabel, matlIndex, patch, gn, 0);
         
         name = "ux_qn";
@@ -408,14 +429,21 @@ void PartVel::ComputePartVel( const ProcessorGroup* pc,
           double ux;
           double uy;
           double uz;
-          if( weight[c] < 1e-20 ) {
-            ux = 0;
-            uy = 0;
-            uz = 0;
+          
+          if(b_unweighted == true){
+            ux = vel_x[c]*eqn3.getScalingConstant();
+            uy = vel_y[c]*eqn4.getScalingConstant();
+            uz = vel_z[c]*eqn5.getScalingConstant();
           } else {
-            ux = (vel_x[c]/weight[c])*eqn3.getScalingConstant();
-            uy = (vel_y[c]/weight[c])*eqn4.getScalingConstant();
-            uz = (vel_z[c]/weight[c])*eqn5.getScalingConstant();
+            if( weight[c] < small_weight ) {
+              ux = 0;
+              uy = 0;
+              uz = 0;
+            } else {
+              ux = (vel_x[c]/weight[c])*eqn3.getScalingConstant();
+              uy = (vel_y[c]/weight[c])*eqn4.getScalingConstant();
+              uz = (vel_z[c]/weight[c])*eqn5.getScalingConstant();
+            }
           }
 
           partVel[c] = Vector(ux,uy,uz);

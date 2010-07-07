@@ -130,7 +130,7 @@ private:
   double d_tol;
   bool d_bala;
   bool d_drag; 
-
+  bool b_unweighted;
 
  }; //end class PartVel
 

@@ -100,7 +100,10 @@ public:
   /** @brief  Return the VarLabel for the model term for gas */
   inline const VarLabel* getGasSourceLabel() {
     return d_gasLabel; }; 
-
+ 
+  inline void setUnweightedAbscissas(bool b_unw){
+    b_unweighted = b_unw;
+  };
 
 protected:
 
@@ -123,6 +126,7 @@ protected:
 
   bool d_labelSchedInit;
   bool d_labelActualInit;   
+  bool b_unweighted;
 
   int d_quadNode; 
 

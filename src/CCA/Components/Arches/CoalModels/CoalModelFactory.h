@@ -157,6 +157,7 @@ private:
 
 	bool b_coupled_physics;		///< Boolean: use coupled physics and iterative procedure?
   bool b_labelSet;          ///< Boolean: has the ArchesLabel been set using setArchesLabel()?
+  bool b_unweighted;
 
   vector<double> yelem;			///< Vector containing initial composition of coal particle
   ArchesLabel* d_fieldLabels;

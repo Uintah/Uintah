@@ -472,7 +472,12 @@ BadHawkDevol::computeModel( const ProcessorGroup * pc,
         gas_devol_rate[c] = 0.0;
       } else {
         if(compute_part_temp) {
-	        double particle_temperature = temperature[c]*d_pt_scaling_factor/weight[c];     
+          double particle_temperature;
+          if(b_unweighted){
+            particle_temperature = temperature[c]*d_pt_scaling_factor;
+          } else {
+	    particle_temperature = temperature[c]*d_pt_scaling_factor/weight[c];  
+          }   
           k1 = A1*exp(E1/(R*particle_temperature)); // 1/s
           k2 = A2*exp(E2/(R*particle_temperature)); // 1/s     
         } else {   
@@ -480,7 +485,12 @@ BadHawkDevol::computeModel( const ProcessorGroup * pc,
           k2 = A2*exp(E2/(R*temperature[c])); // 1/s
         }
 
-        double raw_coal_mass = wa_raw_coal_mass[c] / weight[c];
+        double raw_coal_mass = wa_raw_coal_mass[c];
+        if(b_unweighted){
+          raw_coal_mass = wa_raw_coal_mass[c];
+        } else {
+          raw_coal_mass = wa_raw_coal_mass[c] / weight[c];
+        }
         double testVal = -1.0*(k1+k2)*(raw_coal_mass);  
         if (testVal < -1.0e-16 )
           devol_rate[c] = -1.0*(k1+k2)*(raw_coal_mass);  

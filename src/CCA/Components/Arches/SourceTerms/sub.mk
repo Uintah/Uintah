@@ -7,9 +7,10 @@ SRCS += \
 	$(SRCDIR)/SourceTermBase.cc \
 	$(SRCDIR)/CoalGasDevol.cc \
 	$(SRCDIR)/ConstSrcTerm.cc \
-  $(SRCDIR)/WestbrookDryer.cc \
+        $(SRCDIR)/UnweightedSrcTerm.cc \
+        $(SRCDIR)/WestbrookDryer.cc \
 	$(SRCDIR)/CoalGasMomentum.cc \
-  $(SRCDIR)/MMS1.cc
+        $(SRCDIR)/MMS1.cc
 
 
 

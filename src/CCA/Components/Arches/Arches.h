@@ -385,6 +385,7 @@ private:
     // Variables----
     vector<string> d_scalarEqnNames; 
     bool d_doDQMOM; // do we need this as a private member?
+    bool b_unweighted;
     int d_tOrder; 
     ExplicitTimeInt* d_timeIntegrator;
     PartVel* d_partVel; 

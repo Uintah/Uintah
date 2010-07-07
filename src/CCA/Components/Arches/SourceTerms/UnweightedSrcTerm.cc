@@ -3,7 +3,11 @@
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/Variables/CCVariable.h>
-#include <CCA/Components/Arches/SourceTerms/ConstSrcTerm.h>
+#include <CCA/Components/Arches/SourceTerms/UnweightedSrcTerm.h>
+#include <CCA/Components/Arches/TransportEqns/DQMOMEqnFactory.h>
+#include <CCA/Components/Arches/TransportEqns/EqnBase.h>
+#include <CCA/Components/Arches/TransportEqns/DQMOMEqn.h>
+#include <CCA/Components/Arches/ArchesLabel.h>
 
 //===========================================================================
 
@@ -12,48 +16,46 @@ using namespace Uintah;
 
 //---------------------------------------------------------------------------
 // Builder:
-ConstSrcTermBuilder::ConstSrcTermBuilder(std::string srcName, 
+UnweightedSrcTermBuilder::UnweightedSrcTermBuilder(std::string srcName, 
                                          vector<std::string> reqLabelNames, 
                                          SimulationStateP& sharedState)
 : SourceTermBuilder(srcName, reqLabelNames, sharedState)
 {}
 
-ConstSrcTermBuilder::~ConstSrcTermBuilder(){}
+UnweightedSrcTermBuilder::~UnweightedSrcTermBuilder(){}
 
 SourceTermBase*
-ConstSrcTermBuilder::build(){
-  return scinew ConstSrcTerm( d_srcName, d_sharedState, d_requiredLabels );
+UnweightedSrcTermBuilder::build(){
+  return scinew UnweightedSrcTerm( d_srcName, d_sharedState, d_requiredLabels );
 }
 // End Builder
 //---------------------------------------------------------------------------
 
-ConstSrcTerm::ConstSrcTerm( std::string srcName, SimulationStateP& sharedState,
+UnweightedSrcTerm::UnweightedSrcTerm( std::string srcName, SimulationStateP& sharedState,
                             vector<std::string> reqLabelNames ) 
 : SourceTermBase(srcName, sharedState, reqLabelNames)
 {}
 
-ConstSrcTerm::~ConstSrcTerm()
+UnweightedSrcTerm::~UnweightedSrcTerm()
 {}
 //---------------------------------------------------------------------------
 // Method: Problem Setup
 //---------------------------------------------------------------------------
 void 
-ConstSrcTerm::problemSetup(const ProblemSpecP& inputdb)
+UnweightedSrcTerm::problemSetup(const ProblemSpecP& inputdb)
 {
 
   ProblemSpecP db = inputdb; 
-
-  db->getWithDefault("constant",d_constant, 0.); 
 
 }
 //---------------------------------------------------------------------------
 // Method: Schedule the calculation of the source term 
 //---------------------------------------------------------------------------
 void 
-ConstSrcTerm::sched_computeSource( const LevelP& level, SchedulerP& sched, int timeSubStep )
+UnweightedSrcTerm::sched_computeSource( const LevelP& level, SchedulerP& sched, int timeSubStep )
 {
-  std::string taskname = "ConstSrcTerm::eval";
-  Task* tsk = scinew Task(taskname, this, &ConstSrcTerm::computeSource, timeSubStep);
+  std::string taskname = "UnweightedSrcTerm::eval";
+  Task* tsk = scinew Task(taskname, this, &UnweightedSrcTerm::computeSource, timeSubStep);
 
   if (timeSubStep == 0 && !d_labelSchedInit) {
     // Every source term needs to set this flag after the varLabel is computed. 
@@ -65,10 +67,36 @@ ConstSrcTerm::sched_computeSource( const LevelP& level, SchedulerP& sched, int t
     tsk->modifies(d_srcLabel); 
   }
 
+  DQMOMEqnFactory& dqmomFactory  = DQMOMEqnFactory::self();
+
   for (vector<std::string>::iterator iter = d_requiredLabels.begin(); 
        iter != d_requiredLabels.end(); iter++) { 
-    // HERE I WOULD REQUIRE ANY VARIABLES NEEDED TO COMPUTE THE SOURCe
-    //tsk->requires( Task::OldDW, .... ); 
+
+    std::string label_name = (*iter);
+    EqnBase& eqn = dqmomFactory.retrieve_scalar_eqn( label_name );
+
+    const VarLabel* unwaLabel = eqn.getTransportEqnLabel();
+    tsk->requires( Task::OldDW, unwaLabel, Ghost::None, 0 );
+
+    //DQMOMEqnFactory::EqnMap& dqmom_eqns = dqmomFactory.retrieve_all_eqns();
+
+    //for (DQMOMEqnFactory::EqnMap::iterator ieqn=dqmom_eqns.begin();
+    //     ieqn != dqmom_eqns.end(); ieqn++){
+          
+    DQMOMEqn* dqmom_eqn = dynamic_cast<DQMOMEqn*>(&eqn);
+    int d_quadNode = dqmom_eqn->getQuadNode(); 
+
+    // require particle velocity
+    string partVel_name = "vel_qn";
+    std::string node;
+    std::stringstream out;
+    out << d_quadNode;
+    node = out.str();
+    partVel_name += node;
+
+    const VarLabel* partVelLabel = VarLabel::find( partVel_name );
+    tsk->requires( Task::NewDW, partVelLabel, Ghost::AroundCells, 1 );
+
   }
 
   sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials()); 
@@ -78,7 +106,7 @@ ConstSrcTerm::sched_computeSource( const LevelP& level, SchedulerP& sched, int t
 // Method: Actually compute the source term 
 //---------------------------------------------------------------------------
 void
-ConstSrcTerm::computeSource( const ProcessorGroup* pc, 
+UnweightedSrcTerm::computeSource( const ProcessorGroup* pc, 
                    const PatchSubset* patches, 
                    const MaterialSubset* matls, 
                    DataWarehouse* old_dw, 
@@ -101,17 +129,56 @@ ConstSrcTerm::computeSource( const ProcessorGroup* pc,
       constSrc.initialize(0.0);
     } 
 
+    DQMOMEqnFactory& dqmomFactory  = DQMOMEqnFactory::self();
+    constCCVariable<double> unwa;
+    constCCVariable<Vector> partVel;
+    std::string label_name;
+
     for (vector<std::string>::iterator iter = d_requiredLabels.begin(); 
          iter != d_requiredLabels.end(); iter++) { 
-      //CCVariable<double> temp; 
-      //old_dw->get( *iter.... ); 
+   
+      label_name = (*iter);
+      EqnBase& eqn = dqmomFactory.retrieve_scalar_eqn( label_name );
+
+      const VarLabel* unwaLabel = eqn.getTransportEqnLabel();
+      old_dw->get( unwa, unwaLabel, matlIndex, patch, Ghost::None, 0 );
+
+      DQMOMEqn* dqmom_eqn = dynamic_cast<DQMOMEqn*>(&eqn);
+      int d_quadNode = dqmom_eqn->getQuadNode();
+
+      //ArchesLabel::PartVelMap::const_iterator iter = d_fieldLabels->partVel.find(d_quadNode);
+      //old_dw->get(partVel, iter->second, matlIndex, patch, Ghost::None, 0 );
+ 
+      string partVel_name = "vel_qn";
+      std::string node;
+      std::stringstream out;
+      out << d_quadNode;
+      node = out.str();
+      partVel_name += node;
+
+      const VarLabel* partVelLabel = VarLabel::find( partVel_name );
+      new_dw->get(partVel, partVelLabel, matlIndex, patch, Ghost::AroundCells, 1 );
     }
 
 
+    Vector Dx = patch->dCell();
 
     for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
-      IntVector c = *iter; 
-      constSrc[c] += d_constant; 
+      IntVector c = *iter;
+      IntVector cxm = c - IntVector(1,0,0);
+      IntVector cxp = c + IntVector(1,0,0);
+      IntVector cym = c - IntVector(0,1,0);
+      IntVector cyp = c + IntVector(0,1,0);
+      IntVector czm = c - IntVector(0,0,1);
+      IntVector czp = c + IntVector(0,0,1);
+ 
+      constSrc[c] += unwa[c]*( (partVel[cxp].x()-partVel[cxm].x())/(2*Dx.x()) +
+                               (partVel[cyp].y()-partVel[cym].y())/(2*Dx.y()) +
+                               (partVel[czp].z()-partVel[czm].z())/(2*Dx.z()) );
+      //cout << "label_name " << label_name << endl;
+      //cout << "unwa " << unwa[c] << endl;
+      //cout << "partvel " << partVel[cxp].x() << " " << partVel[cxm].x() << endl;
+      //cout << "Dx " << Dx.x() << endl; 
     }
   }
 }
@@ -120,11 +187,11 @@ ConstSrcTerm::computeSource( const ProcessorGroup* pc,
 // Method: Schedule dummy initialization
 //---------------------------------------------------------------------------
 void
-ConstSrcTerm::sched_dummyInit( const LevelP& level, SchedulerP& sched )
+UnweightedSrcTerm::sched_dummyInit( const LevelP& level, SchedulerP& sched )
 {
-  string taskname = "ConstSrcTerm::dummyInit"; 
+  string taskname = "UnweightedSrcTerm::dummyInit"; 
 
-  Task* tsk = scinew Task(taskname, this, &ConstSrcTerm::dummyInit);
+  Task* tsk = scinew Task(taskname, this, &UnweightedSrcTerm::dummyInit);
 
   tsk->computes(d_srcLabel);
 
@@ -136,7 +203,7 @@ ConstSrcTerm::sched_dummyInit( const LevelP& level, SchedulerP& sched )
 
 }
 void 
-ConstSrcTerm::dummyInit( const ProcessorGroup* pc, 
+UnweightedSrcTerm::dummyInit( const ProcessorGroup* pc, 
                       const PatchSubset* patches, 
                       const MaterialSubset* matls, 
                       DataWarehouse* old_dw, 
@@ -148,7 +215,6 @@ ConstSrcTerm::dummyInit( const ProcessorGroup* pc,
     const Patch* patch = patches->get(p);
     int archIndex = 0;
     int matlIndex = d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
-
 
     CCVariable<double> src;
 

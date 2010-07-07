@@ -77,6 +77,21 @@ DQMOMEqn::problemSetup(const ProblemSpecP& inputdb, int qn)
   ProblemSpecP db = inputdb; 
   d_quadNode = qn; 
 
+  ProblemSpecP db_root = db->getRootNode();
+  ProblemSpecP dqmom_db = db_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("DQMOM");
+  b_unweighted = false;
+  ProblemSpecP db_linear_solver = dqmom_db->findBlock("LinearSolver");
+  if( db_linear_solver ) {
+    string d_solverType;
+    db_linear_solver->getWithDefault("type", d_solverType, "LU");
+    if( d_solverType == "Optimize" ) {
+      ProblemSpecP db_optimize = db_linear_solver->findBlock("Optimization");
+      if(db_optimize){
+        db_optimize->getWithDefault("unweighted_abscissas", b_unweighted, false);
+      }
+    }
+  }
+
   db->getWithDefault("turbulentPrandtlNumber",d_turbPrNo,0.4);
 
   if( !d_weight ) {
@@ -92,9 +107,9 @@ DQMOMEqn::problemSetup(const ProblemSpecP& inputdb, int qn)
     DQMOMEqn& eqn = dynamic_cast<DQMOMEqn&>(temp_eqn);
     d_weightLabel = eqn.getTransportEqnLabel();
     d_w_small = eqn.getSmallClip();
-    if( d_w_small == 0.0 ) {
-      d_w_small = 1e-16;
-    }
+    //if( d_w_small == 0.0 ) {
+    //  d_w_small = 1e-16;
+    //}
   }
 
   // Discretization information:
@@ -178,6 +193,11 @@ DQMOMEqn::problemSetup(const ProblemSpecP& inputdb, int qn)
     }
   }
 
+  if(b_unweighted == true && d_weight == false){
+    string srcname =  "unw_src" + d_eqnName;
+    d_addExtraSources = true;
+    d_sources.push_back( srcname );
+  }
 
   // There should be some mechanism to make sure that when environment-specific
   // initialization functions are used, ALL environments are specified
@@ -342,7 +362,9 @@ DQMOMEqn::sched_evalTransportEqn( const LevelP& level,
     sched_computeSources( level, sched, timeSubStep ); 
   }
 #endif
-
+  if (d_addExtraSources) {
+    sched_computeSources( level, sched, timeSubStep );
+  }
   sched_buildTransportEqn( level, sched, timeSubStep );
 
   sched_solveTransportEqn( level, sched, timeSubStep );
@@ -516,7 +538,8 @@ DQMOMEqn::buildTransportEqn( const ProcessorGroup* pc,
     constSFCXVariable<double> uVel; 
     constSFCYVariable<double> vVel; 
     constSFCZVariable<double> wVel; 
-    constCCVariable<double> src; 
+    constCCVariable<double> src;
+    constCCVariable<double> extra_src; 
     constCCVariable<Vector> partVel; 
     constCCVariable<Vector> areaFraction; 
 
@@ -596,6 +619,20 @@ DQMOMEqn::buildTransportEqn( const ProcessorGroup* pc,
           }            
         }
 #endif
+        if (d_addExtraSources) {
+
+          // Get the factory of source terms
+          SourceTermFactory& src_factory = SourceTermFactory::self();
+          for (vector<std::string>::iterator src_iter = d_sources.begin(); src_iter != d_sources.end(); src_iter++){
+           //constCCVariable<double> extra_src; 
+           SourceTermBase& temp_src = src_factory.retrieve_source_term( *src_iter );
+           new_dw->get(extra_src, temp_src.getSrcLabel(), matlIndex, patch, gn, 0);
+
+           // Add to the RHS
+           RHS[c] += extra_src[c]*vol;
+          }
+        }
+
 
       }
     } 
@@ -758,11 +795,15 @@ DQMOMEqn::getUnscaledValues( const ProcessorGroup* pc,
       for (CellIterator iter=patch->getCellIterator(0); !iter.done(); iter++){
   
         IntVector c = *iter;
-
-        if (w[c] > d_w_small)
-          ic[c] = (wa[c]/w[c])*d_scalingConstant;
-        else {
-          ic[c] = 0.0;
+         
+        if(b_unweighted == true){
+          ic[c] = wa[c]*d_scalingConstant;
+        } else {
+          if (w[c] > d_w_small){
+            ic[c] = (wa[c]/w[c])*d_scalingConstant;
+          }  else {
+            ic[c] = 0.0;
+          }
         }
       }
 

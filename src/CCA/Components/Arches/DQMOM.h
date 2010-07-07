@@ -120,10 +120,17 @@ private:
   void constructAopt( DenseMatrix*   &AA,
                       vector<double> &Abscissas);
 
+  void constructAopt_unw( DenseMatrix*   &AA,
+                          vector<double> &Abscissas);
+
   void constructBopt( ColumnMatrix*  &BB,
                       vector<double> &weights,
                       vector<double> &Abscissas,
                       vector<double> &models);
+
+  void constructBopt_unw( ColumnMatrix*  &BB,
+                          vector<double> &Abscissas,
+                          vector<double> &models);
 
 
   vector<string> InternalCoordinateEqnNames;
@@ -162,6 +169,7 @@ private:
   bool b_useLapack;
   bool b_calcConditionNumber;
   bool b_optimize;
+  bool b_unweighted;
   string d_solverType;
 
   struct constCCVarWrapper {

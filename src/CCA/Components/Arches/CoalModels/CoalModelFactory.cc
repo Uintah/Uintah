@@ -64,6 +64,20 @@ void CoalModelFactory::problemSetup(const ProblemSpecP& params)
   ProblemSpecP db = params; // Should be the <DQMOM> block
   ProblemSpecP params_root = db->getRootNode(); 
 
+  ProblemSpecP dqmom_db = params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("DQMOM");
+  b_unweighted = false;
+  ProblemSpecP db_linear_solver = dqmom_db->findBlock("LinearSolver");
+  if( db_linear_solver ) {
+    string d_solverType;
+    db_linear_solver->getWithDefault("type", d_solverType, "LU");
+    if( d_solverType == "Optimize" ) {
+      ProblemSpecP db_optimize = db_linear_solver->findBlock("Optimization");
+      if(db_optimize){
+        db_optimize->getWithDefault("unweighted_abscissas", b_unweighted, false);
+      } 
+    }   
+  }
+
   // Grab coal properties from input file
   ProblemSpecP db_coalProperties = params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("CoalProperties");
   if( db_coalProperties ) {
@@ -206,6 +220,8 @@ CoalModelFactory::register_model( const std::string name,
   
   ModelBase* model = builder->build();
   models_[name] = model;
+
+  model->setUnweightedAbscissas(b_unweighted);
 
   if( b_coupled_physics ) {
     string modelType = model->getType();
