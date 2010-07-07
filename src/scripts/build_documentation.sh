@@ -22,12 +22,12 @@ cd /tmp/uintah
 
 cd src/scripts/doxygen
 
-#sed -e 's/OUTPUT_DIRECTORY/#OUTPUT_DIRECTORY/g' < doxygen_config > doxy_config
-sed -e 's#/usr/sci/projects/Uintah/www/dist/doxygen/uintah#/var/www/uintah/htdocs/uintah_doxygen/#g' < doxygen_config > doxy_config
+sed -e 's/#OUTPUT_DIRECTORY/OUTPUT_DIRECTORY/g' < doxygen_config > doxy_config.temp
+sed -e 's#/usr/sci/projects/Uintah/www/dist/doxygen/uintah#/var/www/uintah/htdocs/uintah_doxygen/#g' < doxy_config.temp > doxy_config
 
-cd /tmp/uintah
+cd /tmp/uintah/src
 
-doxygen src/scripts/doxygen/doxy_config
+doxygen scripts/doxygen/doxy_config
 
 #if [ -d /var/www/uintah/htdocs/uintah_doxygen ]; then
 #	rm -rf /var/www/uintah/htdocs/uintah_doxygen
