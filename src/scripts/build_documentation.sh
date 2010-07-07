@@ -6,7 +6,10 @@ if [ -d uintah ] ; then
 	rm -rf uintah
 fi
 
-svn checkout https://gforge.sci.utah.edu/svn/uintah/trunk uintah
+#SVN_SOURCE=https://gforge.sci.utah.edu/svn/uintah/trunk 
+SVN_SOURCE=file:///usr/local/uintah_subversion/trunk
+#svn checkout https://gforge.sci.utah.edu/svn/uintah/trunk uintah
+svn checkout $SVN_SOURCE uintah
 
 cd uintah/doc
 
