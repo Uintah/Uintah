@@ -33,16 +33,11 @@ DEALINGS IN THE SOFTWARE.
 
 #include <CCA/Components/MPM/ConstitutiveModel/RigidMaterial.h>
 #include <CCA/Components/MPM/ConstitutiveModel/CompMooneyRivlin.h>
-#include <CCA/Components/MPM/ConstitutiveModel/CompNeoHook.h>
 #include <CCA/Components/MPM/ConstitutiveModel/CNH_MMS.h>
-#include <CCA/Components/MPM/ConstitutiveModel/CNHDamage.h>
-#include <CCA/Components/MPM/ConstitutiveModel/CNHPDamage.h>
-#include <CCA/Components/MPM/ConstitutiveModel/CompNeoHookImplicit.h>
 #include <CCA/Components/MPM/ConstitutiveModel/TransIsoHyper.h>
 #include <CCA/Components/MPM/ConstitutiveModel/TransIsoHyperImplicit.h>
 #include <CCA/Components/MPM/ConstitutiveModel/ViscoTransIsoHyper.h>
 #include <CCA/Components/MPM/ConstitutiveModel/ViscoTransIsoHyperImplicit.h>
-#include <CCA/Components/MPM/ConstitutiveModel/CompNeoHookPlas.h>
 #include <CCA/Components/MPM/ConstitutiveModel/ViscoScram.h>
 #include <CCA/Components/MPM/ConstitutiveModel/ViscoScramImplicit.h>
 #include <CCA/Components/MPM/ConstitutiveModel/ViscoSCRAMHotSpot.h>
@@ -62,6 +57,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/MPM/ConstitutiveModel/ElasticPlastic.h>
 #include <CCA/Components/MPM/ConstitutiveModel/ElasticPlasticHP.h>
 #include <CCA/Components/MPM/ConstitutiveModel/HypoElasticPlastic.h>
+#include <CCA/Components/MPM/ConstitutiveModel/MurnahanMPM.h>
 #include <CCA/Components/MPM/ConstitutiveModel/SmallStrainPlastic.h>
 #include <CCA/Components/MPM/ConstitutiveModel/IdealGasMP.h>
 #include <CCA/Components/MPM/ConstitutiveModel/SoilFoam.h>
@@ -217,6 +213,9 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
 
   else if (mat_type ==  "visco_plastic")
     return(scinew ViscoPlastic(child,flags));
+  
+  else if (mat_type ==  "murnahanMPM")
+    return(scinew MurnahanMPM(child,flags));
   
   else 
     throw ProblemSetupException("Unknown Material Type R ("+mat_type+")", __FILE__, __LINE__);
