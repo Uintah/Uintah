@@ -139,19 +139,56 @@ namespace Wasatch{
     ~Wasatch();
 
     /**
-     *  Required method from base class. Sets up the problem.
+     *  \brief Required method from base class. Sets up the problem.
+     *
+     *  Performs the following tasks:
+     *  <ul>
+     *  <li> Registers the material(s) for use in solving this problem.
+     *  <li> Creates any expressions triggered directly from the input
+     *       file.  These are typically associated with calculating
+     *       initial conditions.
+     *  <li> Sets up property evaluation.
+     *  <li> Creates a time integrator for solving the set of PDEs.
+     *  <li> Parses and constructs transport equations.  This, in
+     *       turn, registers relevant expressions required to solve
+     *       each transport equation and also plugs them into the time
+     *       integrator.
+     *  </ul>
      */
     void problemSetup( const Uintah::ProblemSpecP& params, 
                        const Uintah::ProblemSpecP& restart_prob_spec, 
                        Uintah::GridP& grid,
                        Uintah::SimulationStateP& );
 
+    /**
+     *  \brief Set up initial condition task(s)
+     *
+     *  Performs the following:
+     *  <ul>
+     *  <li> Set up spatial operators associated with each patch and
+     *       store them for use by expressions later on.
+     *  <li> Set up the Uintah::Task(s) that will set the initial conditions.
+     *  </ul>
+     */
     void scheduleInitialize( const Uintah::LevelP& level,
                              Uintah::SchedulerP& sched );
 
+    /**
+     *  \brief Set up the Uintah::Task that will calculate the timestep.
+     */
     void scheduleComputeStableTimestep( const Uintah::LevelP& level,
                                         Uintah::SchedulerP& );
 
+    /**
+     *  <ul>
+     *  <li> Plug each transport equation that has been set up into
+     *       the time stepper and generate the full ExpressionTree
+     *       that will calculate the RHS for all of the equations.
+     *  <li> Create the Uintah::Task(s) associated with the
+     *       ExpressionTree to advance the solution for the PDE system
+     *       forward one time step.
+     *  </ul>
+     */
     void scheduleTimeAdvance( const Uintah::LevelP& level, 
                               Uintah::SchedulerP& );
 
