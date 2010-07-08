@@ -353,8 +353,9 @@ Patch::getArrayBCValues(Patch::FaceType face,
       bcd->getNodeFaceIterator(mat_id,node_ptr,child);
     }
     return bc;
-  } else
+  } else {
     return 0;
+  }
 }
 
 bool 
