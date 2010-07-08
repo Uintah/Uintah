@@ -15,10 +15,11 @@ OnDemandDataWarehouse           outputs when a variable is retrieved or put into
 ICE:
 __________________________________
 ICE_DOING_COUT    SCI_DEBUG     Outputs the name of each task as it's being     
-                                scheduled and executed.                         
-                                    
-
-
+                                scheduled and executed.
+ICE_BC_CC         SCI_DEBUG     output boundary condition debugging information for
+                                Cell-centered variables.                         
+ICE_BC_FC         SCI_DEBUG     output boundary condition debugging information for
+                                Face-centered variables. 
 
 ARCHES:
 __________________________________
