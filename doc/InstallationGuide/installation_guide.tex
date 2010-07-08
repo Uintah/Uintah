@@ -1237,8 +1237,8 @@ make -j#
 		{\small
 		\begin{verbatim}
 			cd ~/uintah/packages
-			tar -xvf petsc-2.x.yb-p15.tar.gz
-			cd petsc-2.x.yb-p15
+			tar -xvf petsc-2.x.y-p15.tar.gz
+			cd petsc-2.x.y-p15
 			./config/configure.py \--with-shared \--with-debugging=0 
 			\--with-mpi-include=/Users/username/uintah/packages/openmpi-1.4.x-install/include 
 			\--with-mpi-lib=/Users/username/uintah/packages/openmpi-1.4.x-install/lib/libmpi.dylib 
@@ -1267,7 +1267,7 @@ make -j#
 			\--with-petsc=/Users/username/uintah/packages/petsc-2.3.3-p15-install 
 			\--enable-optimized='-02' \--enable-64bit 
 			CC=gcc CXX=g++ F77=gfortran CFLAGS=-m64 CXXFLAGS=-m64 FFLAGS=-m64
-			PETSC_ARCH=darwin10.3.1-c-opt USES_ICE=yes USES_MPM=yes
+			PETSC_ARCH=darwin10.3.1-c-opt USE_ICE=yes USE_MPM=yes
 		\end{verbatim}} %
 		\noindent Finally
 		{\small
