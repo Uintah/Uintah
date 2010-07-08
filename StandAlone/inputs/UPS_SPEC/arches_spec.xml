@@ -373,7 +373,8 @@
 
       </TransportEqns>
 
-      <DQMOM                            spec="OPTIONAL NO_DATA">
+      <DQMOM                            spec="OPTIONAL NO_DATA"
+                                        attribute1="type REQUIRED STRING 'unweightedAbs, weightedAbs">
 
         <!-- Tags for verification of DQMOM AX=B solution procedure -->
         <Verify_Linear_Solver           spec="OPTIONAL NO_DATA">
@@ -404,7 +405,6 @@
           <type                         spec="OPTIONAL STRING 'Lapack-invert, Lapack-svd, LU, Optimize'" />
           <Optimization                 spec="OPTIONAL NO_DATA" >
             <Optimal_abscissas          spec="REQUIRED MULTIPLE_DOUBLES" />
-            <unweighted_abscissas        spec="OPTIONAL BOOLEAN" />
           </Optimization>
           <maxConditionNumber           spec="OPTIONAL DOUBLE 'positive'" />
           <calcConditionNumber          spec="OPTIONAL BOOLEAN" /> <!-- this tag can be added if the linear solver you choose doesn't do an SVD, but you still want a condition number -->
