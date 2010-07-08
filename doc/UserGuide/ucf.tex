@@ -628,7 +628,6 @@ for what are frequently referred to as ``ghost-cells".
 %__________________________________
 
 \input{amr}
-
 \section{Regridder}
 
 The regridder creates a multilevel grid from the refinement flags.
@@ -666,86 +665,7 @@ and can also be specified on a per level basis.
 
 %
 %__________________________________
-\section{Load Balancer}
-
-The load balancer assigns patches to processors such that work is 
-evenly distributed.  Uintah currently supports a wide array of 
-load balancing algorithms.  To specify a load balancing algorithm 
-add a block similar to the following:
-
-\begin{Verbatim}[fontsize=\footnotesize]
-  <LoadBalancer type="DLB">
-       <dynamicAlgorithm>patchFactor</dynamicAlgorithm>
-       <timestepInterval>50</timestepInterval>
-       <gainThreshold>0.05</gainThreshold>
-  </LoadBalancer>
-\end{Verbatim}
-
-The type specifies which load balancer is used.  The type can be
-\TT{DLB,} \TT{RoundRobin,} \TT{SimpleLoadBalancer,} or
-\TT{SingleProcessorLoadBalancer.}  If no load balancer is specified
-than either the SimpleLoadBalancer or the SingleProcessorLoadBalancer
-will be used.  For complex problems including AMR the DLB load
-balancer should be used.  This load balancer uses advanced algorithms
-to achieve more efficient patch assignments.  To use the DLB load
-balancer you must include the \TT{dynamicAlgorithm} tag. This tag can
-be \TT{PatchFactor} or \TT{Zoltan.}
-
-\begin{Verbatim}[fontsize=\footnotesize]
-       <dynamicAlgorithm>patchFactor</dynamicAlgorithm>
-\end{Verbatim}
-
-Both of these algorithms compute the weight of a patch using either a profiling model 
-or an algorithm cost model.  By default  the profiling model is used as it provides 
-highly accurate estimates and does not require the specification of model parameters.  
-To disable profiling add the tag
-
-\begin{Verbatim}[fontsize=\footnotesize]
-       <doCostProfiling>false</doCostProfiling>
-\end{Verbatim}
-
-This will cause the load balancer to use the cost model $W_p=N_pc_1+N_cc_2+c_3$ to 
-determine the weight of a patch, where $N_p$ is the number of particles 
-in the patch, $N_c$ is the number of cells on the patch, $c_1$ is the weight per
-particle, $c_2$ is the weight per cell, and $c_3$ is a constant cost on the
-patch.  These constants can be specified with the following tags:
-
-\begin{Verbatim}[fontsize=\footnotesize]
-       <cellCost>1</cellCost>
-       <particleCost>1.25</particleCost>
-       <patchCost>4</patchCost>
-\end{Verbatim}
-
-The number of particles will always be zero unless the algorithm is instructed to
-collect particles with the collectParticles tag.  
-
-\begin{Verbatim}[fontsize=\footnotesize]
-       <collectParticles>true</collectParticles>
-\end{Verbatim}
-
-The following are a couple of extra load balancer parameters that may be useful.
-\begin{Verbatim}[fontsize=\footnotesize]
-       <timestepInterval>50</timestepInterval>
-       <gainThreshold>0.05</gainThreshold>
-       <outputNthProc>8</outputNthProc>
-\end{Verbatim}
-
-The \TT{timestepInterval} tag specifies the maximum number of timesteps the simulation
-can run without attempting to load balance.  The \TT{gainThreshold} tag specifies the 
-percent improvement that a load balance must provide over the old load balance in 
-order for the new load balance to be used.  Finally the \TT{outputNthProc} tag causes
-the data archive to be written to by every Nth processor instead of every processor.  
-This can alleviate problems caused by having to many processors attempting to write 
-to the same file system at the same time. 
-
-If the dynamic algorithm is set to \TT{Zoltan} then the user must also specify which
-Zoltan algorithm to use with the \TT{zoltanAlgorithm} tag.  
-
-\begin{Verbatim}[fontsize=\footnotesize]
-       <zoltanAlgorithm>HSFC</zoltanAlgorithm>
-\end{Verbatim}
-
-The Zoltan algorithm can be set to \TT{HSFC,} \TT{RIB,} \TT{RCB.}
+\input{LoadBalancing}
 
 %__________________________________
 \section{UDA}

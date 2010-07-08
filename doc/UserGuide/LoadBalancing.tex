@@ -9,7 +9,7 @@ to processors. This is not ideal in most cases and should be avoided.
 
 \subsection{Input File Specs}
 \begin{Verbatim}[fontsize=\footnotesize]
-   <LoadBalancer type="DLB"> <!-- type can be "DLB" or "PLB">
+   <LoadBalancer type="DLB"> 
         <!-- DLB specific flags -->
         <dynamicAlgorithm>patchFactorParticles</dynamicAlgorithm>
         <doCostProfiling>true</doCostProfiling>
@@ -61,9 +61,8 @@ curve.
 
 The following list describes other flags utilized by these load balancers:
 \begin{itemize}
-  timestepInterval - how many timesteps must pass before reevaluating the load balance.  \\
-  gainThreshold - the predicted percent improvement that is required to reload balance.  \\
-  outputNthProc - output data on only every Nth processor (experimental). \\
-
+  \item timestepInterval - how many timesteps must pass before reevaluating the load balance.  
+  \item gainThreshold - the predicted percent improvement that is required to reload balance.  
+  \item outputNthProc - output data on only every Nth processor (experimental). 
 \end{itemize}
 
