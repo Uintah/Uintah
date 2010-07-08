@@ -308,8 +308,11 @@ private:
 
 private:
 
-  /** @brief Registers all possible source terms by instantiating a builder in the factory */     
-  void registerSources(ProblemSpecP& db);
+  /** @brief Registers all possible user defined source terms by instantiating a builder in the factory */     
+  void registerUDSources(ProblemSpecP& db);
+
+  /** @brief Registers developer specific sources that may not have an input file specification */ 
+  void registerSources(); 
 
   /** @brief Registers all possible models for DQMOM */ 
   void registerModels( ProblemSpecP& db ); 
@@ -385,7 +388,7 @@ private:
     // Variables----
     vector<string> d_scalarEqnNames; 
     bool d_doDQMOM; // do we need this as a private member?
-    bool b_unweighted;
+    std::string d_which_dqmom;
     int d_tOrder; 
     ExplicitTimeInt* d_timeIntegrator;
     PartVel* d_partVel; 

@@ -398,7 +398,7 @@ XDragModel::computeModel( const ProcessorGroup* pc,
       } else {
 
         double length;
-        if(b_unweighted) {
+        if(d_unweighted) {
           length = w_particle_length[c]*d_pl_scaling_factor;
         } else {
           length = w_particle_length[c]/weight[c]*d_pl_scaling_factor;

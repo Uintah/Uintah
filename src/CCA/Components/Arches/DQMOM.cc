@@ -40,8 +40,8 @@
 using namespace Uintah;
 using namespace SCIRun;
 
-DQMOM::DQMOM(ArchesLabel* fieldLabels):
-d_fieldLabels(fieldLabels)
+DQMOM::DQMOM(ArchesLabel* fieldLabels, std::string which_dqmom):
+d_fieldLabels(fieldLabels), d_which_dqmom(which_dqmom)
 {
 
   string varname;
@@ -80,6 +80,11 @@ DQMOM::~DQMOM()
 void DQMOM::problemSetup(const ProblemSpecP& params)
 {
   ProblemSpecP db = params; 
+
+  if ( d_which_dqmom == "unweightedAbs" ) 
+    d_unweighted = true; 
+  else 
+    d_unweighted = false; 
 
 #if defined(VERIFY_LINEAR_SOLVER)
   // grab the name of the file containing the test matrices
@@ -229,10 +234,9 @@ void DQMOM::problemSetup(const ProblemSpecP& params)
       if(db_optimize){
         b_optimize = true;
         db_optimize->get("Optimal_abscissas",d_opt_abscissas);
-        db_optimize->getWithDefault("unweighted_abscissas", b_unweighted, false);
         AAopt = scinew DenseMatrix((N_xi+1)*N_,(N_xi+1)*N_);
         AAopt->zero();
-        if(b_unweighted == true){
+        if(d_unweighted == true){
           constructAopt_unw( AAopt, d_opt_abscissas );
         } else {
           constructAopt( AAopt, d_opt_abscissas );
@@ -567,7 +571,7 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
         ColumnMatrix* BB = scinew ColumnMatrix( dimension );
         ColumnMatrix* XX = scinew ColumnMatrix( dimension );
         BB->zero();
-        if(b_unweighted == true){
+        if(d_unweighted == true){
           constructBopt_unw( BB, d_opt_abscissas, models );
         } else {
           constructBopt( BB, weights, d_opt_abscissas, models );

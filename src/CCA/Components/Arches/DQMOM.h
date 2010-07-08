@@ -50,7 +50,7 @@ class DQMOM {
 
 public:
 
-  DQMOM( ArchesLabel* fieldLabels );
+  DQMOM( ArchesLabel* fieldLabels, std::string which_dqmom );
 
   ~DQMOM();
 
@@ -169,8 +169,9 @@ private:
   bool b_useLapack;
   bool b_calcConditionNumber;
   bool b_optimize;
-  bool b_unweighted;
-  string d_solverType;
+  bool d_unweighted;
+  std::string d_which_dqmom; 
+  std::string d_solverType;
 
   struct constCCVarWrapper {
     constCCVariable<double> data;

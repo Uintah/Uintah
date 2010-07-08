@@ -317,7 +317,7 @@ Arches::problemSetup(const ProblemSpecP& params,
     // register source terms
     ProblemSpecP sources_db = transportEqn_db->findBlock("Sources");
     if (sources_db)
-      Arches::registerSources(sources_db);
+      Arches::registerUDSources(sources_db);
     //register all equations
     Arches::registerTransportEqns(transportEqn_db); 
   }
@@ -515,17 +515,20 @@ Arches::problemSetup(const ProblemSpecP& params,
 
   ProblemSpecP dqmom_db = db->findBlock("DQMOM"); 
   if (dqmom_db) {
-    b_unweighted = false;
+    // require that we have weighted or unweighted explicitly specified as an attribute to DQMOM
+    // type = "unweightedAbs" or type = "weighedAbs" 
+    dqmom_db->getAttribute( "type", d_which_dqmom ); 
+
     ProblemSpecP db_linear_solver = dqmom_db->findBlock("LinearSolver");
     if( db_linear_solver ) {
       string d_solverType;
       db_linear_solver->getWithDefault("type", d_solverType, "LU");
-      if( d_solverType == "Optimize" ) {
-        ProblemSpecP db_optimize = db_linear_solver->findBlock("Optimization");
-        if(db_optimize){
-          db_optimize->getWithDefault("unweighted_abscissas", b_unweighted, false);
-        }
+
+      // currently, unweighted abscissas only work with the optimized solver -- remove this check when other solvers work: 
+      if( d_which_dqmom == "unweightedAbs" && d_solverType != "Optimize" ) {
+        throw ProblemSetupException("Error!: The unweighted abscissas only work with the optimized solver.", __FILE__, __LINE__);
       }
+
     }
 
     proc0cout << endl;
@@ -549,8 +552,6 @@ Arches::problemSetup(const ProblemSpecP& params,
     DQMOMEqnFactory& eqn_factory = DQMOMEqnFactory::self(); 
     const int numQuadNodes = eqn_factory.get_quad_nodes();  
 
-    //CoalModelFactory& model_factory = CoalModelFactory::self();
-    //		model_factory.problemSetup(dqmom_db);
     model_factory.setArchesLabel( d_lab ); 
 
     ProblemSpecP w_db = dqmom_db->findBlock("Weights");
@@ -588,27 +589,8 @@ Arches::problemSetup(const ProblemSpecP& params,
         EqnBase& an_ic = eqn_factory.retrieve_scalar_eqn( final_name );
         an_ic.problemSetup( ic_db, iqn );  
 
-        if(b_unweighted == true){
-        // register source terms for unweighted abscissas
-
-          SourceTermFactory& factory = SourceTermFactory::self();
-
-          std::string src_name = "unw_src" + final_name;
-          //std::string src_type = "unweighted_src";
-
-          vector<string> required_varLabels;
- 
-          std::string label_name = final_name; 
-          proc0cout << "label = " << label_name << endl;
-          required_varLabels.push_back(label_name);
-
-          SourceTermBuilder* srcBuilder = scinew UnweightedSrcTermBuilder(src_name, required_varLabels, d_lab->d_sharedState);
-          factory.register_source_term( src_name, srcBuilder );
-
-        }
       }
     }
-
     
     // Now go through models and initialize all defined models and call 
     // their respective problemSetup
@@ -633,13 +615,16 @@ Arches::problemSetup(const ProblemSpecP& params,
     }
 
     // set up the linear solver:
-    d_dqmomSolver = scinew DQMOM(d_lab);
+    d_dqmomSolver = scinew DQMOM( d_lab, d_which_dqmom );
     d_dqmomSolver->problemSetup( dqmom_db ); 
     
     // now pass it off to the nonlinear solver:
     d_nlSolver->setDQMOMSolver( d_dqmomSolver ); 
 
   } 
+
+  // register any other source terms:
+  registerSources(); 
 }
 
 // ****************************************************************************
@@ -1892,7 +1877,7 @@ Arches::weightedAbsInit( const ProcessorGroup* ,
         phi_icv.initialize(0.0);
       
         // initialize phi
-        if(b_unweighted == true){
+        if( d_which_dqmom == "unweightedAbs" ){
           eqn->initializationFunction( patch, phi);
         } else {
           eqn->initializationFunction( patch, phi, weight );
@@ -2372,9 +2357,9 @@ bool Arches::restartableTimesteps() {
 //---------------------------------------------------------------------------
 // Builder methods 
 //---------------------------------------------------------------------------
-// Method: Register Sources 
+// Method: Register User Defined Sources 
 //---------------------------------------------------------------------------
-void Arches::registerSources(ProblemSpecP& db)
+void Arches::registerUDSources(ProblemSpecP& db)
 {
 
   ProblemSpecP srcs_db = db;
@@ -2446,8 +2431,43 @@ void Arches::registerSources(ProblemSpecP& db)
       
     }
   } else {
-
     proc0cout << "No sources found for transport equations." << endl;
+  }
+}
+//---------------------------------------------------------------------------
+// Method: Register developer specific source terms 
+//---------------------------------------------------------------------------
+void Arches::registerSources(){
+  // These sources are case/method specific (typically driven by input file information):
+  //
+  // Get reference to the source factory
+  SourceTermFactory& factory = SourceTermFactory::self();
+
+  // Unweighted abscissa src term 
+  if ( d_doDQMOM ) {
+    if ( d_which_dqmom == "unweightedAbs" ) {
+
+      DQMOMEqnFactory& dqmomFactory  = DQMOMEqnFactory::self(); 
+      DQMOMEqnFactory::EqnMap& dqmom_eqns = dqmomFactory.retrieve_all_eqns(); 
+      for ( DQMOMEqnFactory::EqnMap::iterator iEqn = dqmom_eqns.begin(); 
+            iEqn != dqmom_eqns.end(); iEqn++){
+
+        EqnBase* temp_eqn = iEqn->second; 
+        DQMOMEqn* eqn = dynamic_cast<DQMOMEqn*>(temp_eqn);
+
+        if (!eqn->weight()) { 
+
+          std::string eqn_name = eqn->getEqnName(); 
+          std::string src_name = eqn_name + "_unw_src"; 
+          vector<std::string> required_varLabels;  
+          required_varLabels.push_back( eqn_name ); 
+
+          SourceTermBuilder* srcBuilder = scinew UnweightedSrcTermBuilder( src_name, required_varLabels, d_lab->d_sharedState ); 
+          factory.register_source_term( src_name, srcBuilder ); 
+
+        }
+      }
+    }
   }
 }
 //---------------------------------------------------------------------------
