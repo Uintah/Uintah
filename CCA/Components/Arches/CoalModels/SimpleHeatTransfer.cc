@@ -546,7 +546,7 @@ SimpleHeatTransfer::computeModel( const ProcessorGroup * pc,
         scaled_particle_temperature = 0.0;
         unscaled_particle_temperature = 0.0;
       } else {
-        if(b_unweighted){
+        if(d_unweighted){
           scaled_particle_temperature = w_particle_temperature[c];
           unscaled_particle_temperature = w_particle_temperature[c]*d_pt_scaling_constant;
         } else {
@@ -565,7 +565,7 @@ SimpleHeatTransfer::computeModel( const ProcessorGroup * pc,
         scaled_length = 0.0;
         unscaled_length = 0.0;
       } else {
-        if(b_unweighted){
+        if(d_unweighted){
           scaled_length = w_particle_length[c];
           unscaled_length = w_particle_length[c]*d_pl_scaling_constant;
         } else {
@@ -581,7 +581,7 @@ SimpleHeatTransfer::computeModel( const ProcessorGroup * pc,
         scaled_raw_coal_mass = 0.0;
         unscaled_raw_coal_mass = 0.0;
       } else {
-        if(b_unweighted){
+        if(d_unweighted){
           scaled_raw_coal_mass = w_raw_coal_mass[c]/scaled_weight;
           unscaled_raw_coal_mass = (w_raw_coal_mass[c]*d_rc_scaling_constant)/scaled_weight;
         } else {

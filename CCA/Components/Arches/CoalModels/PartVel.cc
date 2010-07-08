@@ -31,18 +31,12 @@ void PartVel::problemSetup(const ProblemSpecP& inputdb)
 
   ProblemSpecP db_root = db->getRootNode();
   ProblemSpecP dqmom_db = db_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("DQMOM");
-  b_unweighted = false;
-  ProblemSpecP db_linear_solver = dqmom_db->findBlock("LinearSolver");
-  if( db_linear_solver ) {
-    string d_solverType;
-    db_linear_solver->getWithDefault("type", d_solverType, "LU");
-    if( d_solverType == "Optimize" ) {
-      ProblemSpecP db_optimize = db_linear_solver->findBlock("Optimization");
-      if(db_optimize){
-        db_optimize->getWithDefault("unweighted_abscissas", b_unweighted, false);
-      }
-    }
-  }
+  std::string which_dqmom; 
+  dqmom_db->getAttribute( "type", which_dqmom ); 
+  if ( which_dqmom == "unweightedAbs" )
+    d_unweighted = true; 
+  else 
+    d_unweighted = false; 
 
   ProblemSpecP vel_db = db->findBlock("VelModel");
   if (vel_db) {
@@ -296,7 +290,7 @@ void PartVel::ComputePartVel( const ProcessorGroup* pc,
 
           } else {
 
-            if(b_unweighted == true) {
+            if(d_unweighted == true) {
               length = wlength[c]*eqn.getScalingConstant();
             } else {
               length = (wlength[c]/weight[c])*eqn.getScalingConstant();
@@ -430,7 +424,7 @@ void PartVel::ComputePartVel( const ProcessorGroup* pc,
           double uy;
           double uz;
           
-          if(b_unweighted == true){
+          if(d_unweighted == true){
             ux = vel_x[c]*eqn3.getScalingConstant();
             uy = vel_y[c]*eqn4.getScalingConstant();
             uz = vel_z[c]*eqn5.getScalingConstant();

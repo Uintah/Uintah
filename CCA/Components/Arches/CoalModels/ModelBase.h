@@ -101,8 +101,8 @@ public:
   inline const VarLabel* getGasSourceLabel() {
     return d_gasLabel; }; 
  
-  inline void setUnweightedAbscissas(bool b_unw){
-    b_unweighted = b_unw;
+  inline void setUnweightedAbscissas(bool d_unw){
+    d_unweighted = d_unw;
   };
 
 protected:
@@ -126,7 +126,7 @@ protected:
 
   bool d_labelSchedInit;
   bool d_labelActualInit;   
-  bool b_unweighted;
+  bool d_unweighted;
 
   int d_quadNode; 
 

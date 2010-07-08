@@ -473,7 +473,7 @@ BadHawkDevol::computeModel( const ProcessorGroup * pc,
       } else {
         if(compute_part_temp) {
           double particle_temperature;
-          if(b_unweighted){
+          if(d_unweighted){
             particle_temperature = temperature[c]*d_pt_scaling_factor;
           } else {
 	    particle_temperature = temperature[c]*d_pt_scaling_factor/weight[c];  
@@ -486,7 +486,7 @@ BadHawkDevol::computeModel( const ProcessorGroup * pc,
         }
 
         double raw_coal_mass = wa_raw_coal_mass[c];
-        if(b_unweighted){
+        if(d_unweighted){
           raw_coal_mass = wa_raw_coal_mass[c];
         } else {
           raw_coal_mass = wa_raw_coal_mass[c] / weight[c];

@@ -212,7 +212,7 @@ private:
   vector<std::string> d_sources;
   bool d_addExtraSources; 
   double d_w_small;               ///< Value of "small" weights
-  bool b_unweighted;
+  bool d_unweighted;
 
 
 }; // class DQMOMEqn
