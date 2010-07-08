@@ -58,8 +58,9 @@ flexible load balancing mechanisms and a separation of application
 concerns from parallelism concerns. However, it creates a challenge
 for scalability which we overcome by creating an implicit definition
 of this graph and representing it in a distributed fashion.
+
 \begin{figure}
-  \includegraphics[scale=1]{Taskgraph-diagram.png}
+  \includegraphics{Taskgraph-diagram.png}
   \caption{Example Task Graph}
   \label{fig:TaskGraph}
 \end{figure}
@@ -222,8 +223,6 @@ scheduling method, i.e. \texttt{scheduleInitialize},
 
 \subsubsection{ProblemSetup}
 
-
-
 The purpose of this method is to read a problem specification which
 requires a minimum of information about the grid used, time
 information, i.e. time step size, length of time for simulation, etc,
@@ -259,12 +258,132 @@ individual computational methods.
 \subsection{Data Storage Concepts}
 
 During the course of the simulation, data is computed and stored in a
-data structure called the DataWarehouse.  Data that is from a previous
-timestep is stored in the Old DataWarehouse, called \texttt{OldDW},
-and data that is computed in current timestep is stored in the New
-DataWarehouse, called \texttt{NewDW}.  At the end of the timestep,
-current timestep data is moved to the old data warehouse for the next
-timestep in the simulation.
+data structure called the DataWarehouse.  The DataWarehouse is an abstraction
+for storage, retrieval, and access of Uintah simulation data. The Data warehouse 
+presents a localized view of the global data distribution.  
+
+\subsubsection{Data Archiver}
+
+The Data Archiver is a component of the UCF that allows for reading, saving, and accessing simulation data. 
+It presents a global shared memory abstraction to the simulation data. The component developer does not have 
+to worry about retrieving data that has been produced on a remote processor or sending data from a local processor 
+to another processor for use. The UCF takes care of these tasks implicitly for the component. 
+
+\subsubsection{Two Data Warehouses}
+
+During each time step (assuming a single level problem), there are two data warehouses associated with the simulations. 
+The ``new\_dw'' and the ``old\_dw'' (as they are commonly referred to in the code). The ``old\_dw'' contains data that 
+was generated in the previous timestep, and may not be modified. Data that is generated during the current timestep will 
+be placed in the ``new\_dw''. At the end of a timestep, the current ``old\_dw'' is deleted, and then replaced with the 
+current ``new\_dw''. Then a new (empty) ``new\_dw'' is created.
+
+At the end of a time step, some data is automatically transferred from the current time step's ``new\_dw'' into the next 
+time step's ``old\_dw''. 
+
+\subsubsection{Storing and Retrieving Variables}
+
+In order to store data to the data warehouse, or to retrieve data, several things are required. First, the task (which 
+procedure wishes access to the data) must have registered this information with the Scheduler during task creation time. 
+Then, inside of the task, the following call is used to pull the data from the data warehouse: 
+
+\begin{verbatim}
+
+SFCXVariable<double> uVelocity;
+
+new_dw->get( uVelocity, d_lab->d_uVelocitySPBCLabel, matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL ); 
+
+\end{verbatim}
+
+Similarly, to put data into the data warehouse, use this call: 
+
+\begin{verbatim}
+
+PerPatch<CellInformationP> cellInfoP;
+
+new_dw->put( cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch ); 
+
+\end{verbatim}
+
+Note, you cannot put data into the "old\_dw". 
+
+\subsubsection{Variables}
+
+There are three (general) types of variables in Uintah: Particle, Grid, and Reduction. Each type of variable is discussed 
+below. Remember, in order to interact with the Data Warehouse, each variable must have a corresponding label. 
+
+Particle variables contain information about particles. 
+
+A grid variable is a representation of data across (usually) the entire computational domain. It can be used to represent 
+temperature, volume, velocity, etc. It is implemented using a 3D array. 
+
+A "reduction", in terms of distributed software (using, for example, MPI) is a point in which all (or some defined set of) processors all communicate with each other. It usually is an expensive operation (because it requires all processors to synchronize with each other and pass data). However, many times this operation cannot be avoided. Uintah provides a "Reduction Variable" to facilitate this operation. Common reductions operations include finding the min or max of a single number on all processors, or creating the sum of a number from every processor, and returning the result to all processors. 
+
+Variables can be stored at several different locations. Variables are defined with respect to how they relate to a single cell in the computational domain. They may be located on the faces (FC) or nodes (NC) of the cell, or in the center (CC) of the cell (see Figure \ref{Fig:DWVariablesCell}). 
+
+\begin{figure}
+  \includegraphics{DWVariablesCell.png}
+  \caption{Variable locations with respect to a single cell.}
+  \label{Fig:DWVariablesCell}
+\end{figure}
+
+
+
+\section{Grid}
+
+Data (Variables) used by the UCF are stored on the 'Grid'. The Grid is comprised of one or more (in the case of AMR) Levels. Each level contains one or more patches; and each patch contains a number of cells. The simulation data itself exists in (at) each cell (and is stored in a 'variable' which is implemented as a 3D array of the data in each cell across the patch).
+[edit] 
+
+\subsection{Cells}
+
+Data in (at) each cell can be specified in several ways. Specifically the data can be Node centered (NC), Cell centered (CC), or Face centered (FC). For CC data, there is one value associated with each cell; for NC data, 4 values; and for FC data, 6 values. 
+
+\subsection{Patches}
+
+For calculations to take place on a patch, information from bordering patches is required. This information is stored in boundary cells. 
+
+\subsubsection{Boundary Cells}
+
+\begin{figure}
+  \includegraphics{GhostCells.png}
+  \caption{Schematic of ghost cell locations laid out with respect to patches.}
+  \label{Fig:GhostCells}
+\end{figure}
+
+Boundary cells (Figure \ref{Fig:GhostCells}) represent portions of the computational domain outside the boundaries of the data assigned to a given processor. Specifically, they are almost always used as boundary cells to a patch that are necessary for computation, but are not "owned" by the patch that is currently being computed. As can be seen in Figure \ref{Fig:GhostCells}, patch A owns all the cells within the orange rectangle, but also has two layers of ghost cells. Portions of these cells are actually owned by patches B, C, and D. (The data found in these cells is automatically transfered (by the UCF) from processors 2, 3, and 4 to processor 1 in order for the cell data to be available for use in computations on patch A.)
+
+Many operations will require a stencil consisting of several cells in order to perform calculations at a given cell. However, at the border of a patch, there are no cells belonging to that patch that contain the required information - that information is ``owned'' by another processor.  In this situation, data that belongs to another patch must be accessed. This is the purpose of ghost cells. The Data Warehouse takes care of moving the required ghost data from the ``owner'' processor to the neighbor processor so that the individual task can assume the required data is available. 
+
+In summary, ghost cells exist between patches on the same level.  They are cells that are owned by the neighboring patch but are required for computation due to the stencil width.
+
+Extra cells exist at the edge of the computational domain and are used for boundary conditions.  Extra cells exist on the boundaries of the level where no neighboring patches exist. This can either be the edge of a domain or on a coarse-fine interface.
+
+\subsection{Indexing}
+
+Uintah uses a straightforward indexing scheme. Each cell on a given level is uniquely identified by an x,y,z coordinate (stored in an IntVector).  An IntVector is a vector of 3 integers that represent an X,Y,Z coordinate.  See Core/Grid/Level.cc/h for more information.  The following pseudo code shows how indices across levels are mapped to each other.
+
+\begin{verbatim}
+IntVector
+Level::mapCellToCoarser(const IntVector& idx) const
+{ 
+  IntVector ratio = idx/d_refinementRatio;
+  
+  return ratio;
+}
+
+IntVector
+Level::mapCellToFiner(const IntVector& idx) const
+{
+  IntVector r_ratio = grid->getLevel(d_index+1)->d_refinementRatio;
+  IntVector fineCell = idx*r_ratio;
+
+  return fineCell;
+}
+\end{verbatim}
+
+
+
+
+
 
 \chapter{Examples}
 

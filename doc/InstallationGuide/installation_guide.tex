@@ -816,7 +816,7 @@ is a program that checks the computer's environment and looks for the
 location of libraries and header files, etc.  When it finishes
 running, it will create the \TT{configVars.mk} file which will include all
 the information it has determined about the computer.  The following
-lines show <b>generically</b> how to use ``configure''.
+lines show \textbf{generically} how to use ``configure''.
 
 cd to \TT{ \textasciitilde/uintah} and create the following directories:
 \TT{dbg} (debug) and \TT{opt} (optimized)
@@ -841,6 +841,15 @@ If building on a 64bit platform, append \TT{--enable-64bit} to the
 configure line.
 
 After the configuration process, type \TT{make} to compile Uintah.
+
+If you wish to attach a debugger to Uintah, make sure you use the \TT{--enable-debug} configure option.
+
+If you would like to reduce the amount of output given by the make system when making Uintah, 
+you can set the environment variable \TT{SCI\_MAKE\_BE\_QUIET} to true:
+
+\begin{verbatim}
+setenv SCI_MAKE_BE_QUIET true
+\end{verbatim}
 
 Once a debug build has finished, change to the \TT{opt} directory and
 enter the following configure line:
