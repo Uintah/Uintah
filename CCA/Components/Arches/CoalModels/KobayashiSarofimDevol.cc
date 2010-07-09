@@ -388,68 +388,56 @@ KobayashiSarofimDevol::computeModel( const ProcessorGroup * pc,
       bool weight_is_small = (weight[c] < d_w_small);
 
       double unscaled_weight;
-      if (weight_is_small) {
-        unscaled_weight = 0.0;
-      } else {
-        unscaled_weight = weight[c]*d_w_scaling_factor;
-      }
-
-      // temperature - particle or gas
       double unscaled_temperature;
-      if (weight_is_small) {
-        // no particles
-        unscaled_temperature = 0.0;
-      } else {
-        if (compute_part_temp) {
-          // particle temp
-          if(d_unweighted){
-            unscaled_temperature = temperature[c]*d_pt_scaling_factor;
-          } else {
-            unscaled_temperature = temperature[c]*d_pt_scaling_factor/weight[c];
-          }
-        } else {
-          // gas temp
-          unscaled_temperature = temperature[c];
-        }
-      }
- 
       // raw coal mass - de-scaled, de-weighted
       double scaled_raw_coal_mass;
       double unscaled_raw_coal_mass;
-      if (weight_is_small) {
-        // no particles
-        scaled_raw_coal_mass = 0.0;
-        unscaled_raw_coal_mass = 0.0;
-      } else {
-        if(d_unweighted){
-          scaled_raw_coal_mass = wa_raw_coal_mass[c];
-          unscaled_raw_coal_mass = scaled_raw_coal_mass*d_rc_scaling_factor;
-        } else {
-          scaled_raw_coal_mass = wa_raw_coal_mass[c]/weight[c];
-          unscaled_raw_coal_mass = scaled_raw_coal_mass*d_rc_scaling_factor;
-        }
-      }
-
+ 
       // devol_rate: particle source
       double devol_rate_;
 
       // gase_devol_rate: gas source
       double gas_devol_rate_;
 
-#else
-      bool weight_is_small = false;
-      double unscaled_weight = 1e6;
-      double unscaled_temperature = 2000;
-      double unscaled_raw_coal_mass = 1e-8;
-      double scaled_raw_coal_mass = unscaled_raw_coal_mass;
-      double devol_rate_;
-      double gas_devol_rate_;
-#endif
-
-      if (weight_is_small) {
+      if (weight_is_small  && !d_unweighted) {
         devol_rate_ = 0.0;
         gas_devol_rate_ = 0.0;
       } else {
+
+        if(d_unweighted){
+          unscaled_weight = weight[c]*d_w_scaling_factor;
+          scaled_raw_coal_mass = wa_raw_coal_mass[c];
+          unscaled_raw_coal_mass = scaled_raw_coal_mass*d_rc_scaling_factor;
+          if (compute_part_temp) {
+            // particle temp
+            unscaled_temperature = temperature[c]*d_pt_scaling_factor;
+          } else {
+            // gas temp
+            unscaled_temperature = temperature[c];
+          }
+        } else {
+          unscaled_weight = weight[c]*d_w_scaling_factor;
+          if (compute_part_temp) {
+            // particle temp
+            unscaled_temperature = temperature[c]*d_pt_scaling_factor/weight[c];
+          } else {
+            // gas temp
+            unscaled_temperature = temperature[c];
+          }
+          scaled_raw_coal_mass = wa_raw_coal_mass[c]/weight[c];
+          unscaled_raw_coal_mass = scaled_raw_coal_mass*d_rc_scaling_factor;
+        }
+
+#else
+        bool weight_is_small = false;
+        double unscaled_weight = 1e6;
+        double unscaled_temperature = 2000;
+        double unscaled_raw_coal_mass = 1e-8;
+        double scaled_raw_coal_mass = unscaled_raw_coal_mass;
+        double devol_rate_;
+        double gas_devol_rate_;
+#endif
+
         k1 = A1*exp(-E1/(R*unscaled_temperature)); // [=] 1/s
         k2 = A2*exp(-E2/(R*unscaled_temperature)); // [=] 1/s
         

@@ -531,64 +531,18 @@ SimpleHeatTransfer::computeModel( const ProcessorGroup * pc,
 
       double scaled_weight;
       double unscaled_weight;
-      if (weight_is_small) {
-        scaled_weight = 0.0;
-        unscaled_weight = 0.0;
-      } else {
-        scaled_weight = weight[c];
-        unscaled_weight = weight[c]*d_w_scaling_constant;
-      }
-
       // temperature - particle
       double scaled_particle_temperature;
       double unscaled_particle_temperature;
-      if (weight_is_small) {
-        scaled_particle_temperature = 0.0;
-        unscaled_particle_temperature = 0.0;
-      } else {
-        if(d_unweighted){
-          scaled_particle_temperature = w_particle_temperature[c];
-          unscaled_particle_temperature = w_particle_temperature[c]*d_pt_scaling_constant;
-        } else {
-          scaled_particle_temperature = (w_particle_temperature[c])/scaled_weight;
-          unscaled_particle_temperature = (w_particle_temperature[c]*d_pt_scaling_constant)/scaled_weight;
-        }
-      }
-
-      // temperature - gas
-      double gas_temperature = temperature[c];
-
       // paticle length
       double scaled_length;
       double unscaled_length;
-      if (weight_is_small) {
-        scaled_length = 0.0;
-        unscaled_length = 0.0;
-      } else {
-        if(d_unweighted){
-          scaled_length = w_particle_length[c];
-          unscaled_length = w_particle_length[c]*d_pl_scaling_constant;
-        } else {
-          scaled_length = w_particle_length[c]/scaled_weight;
-          unscaled_length = (w_particle_length[c]*d_pl_scaling_constant)/scaled_weight;
-        }
-      }
-
       // particle raw coal mass
       double scaled_raw_coal_mass;
       double unscaled_raw_coal_mass;
-      if (weight_is_small) {
-        scaled_raw_coal_mass = 0.0;
-        unscaled_raw_coal_mass = 0.0;
-      } else {
-        if(d_unweighted){
-          scaled_raw_coal_mass = w_raw_coal_mass[c]/scaled_weight;
-          unscaled_raw_coal_mass = (w_raw_coal_mass[c]*d_rc_scaling_constant)/scaled_weight;
-        } else {
-          scaled_raw_coal_mass = w_raw_coal_mass[c]/scaled_weight;
-          unscaled_raw_coal_mass = (w_raw_coal_mass[c]*d_rc_scaling_constant)/scaled_weight;
-        }
-      }
+
+      // temperature - gas
+      double gas_temperature = temperature[c];
 
       double unscaled_ash_mass = ash_mass_init[d_quadNode];
       double density = den[c];
@@ -600,48 +554,6 @@ SimpleHeatTransfer::computeModel( const ProcessorGroup * pc,
       double gas_heat_rate_;
       double abskp_;
 
-#else
-      Vector gas_velocity       = Vector(3.0);
-      Vector particle_velocity  = Vector(1.0);
-
-      bool weight_is_small = false;
-
-      double unscaled_weight = 1.0e6;
-      double scaled_weight = unscaled_weight;
-
-      double unscaled_particle_temperature = 2000.0;
-      double scaled_particle_temperature = unscaled_particle_temperature;
-      double d_pt_scaling_constant = 1.0;
-
-      double gas_temperature = 2050;
-
-      double unscaled_length = 1.0e-5;
-      double scaled_length = unscaled_length;
-
-      double unscaled_raw_coal_mass = 1.0e-8;
-      double scaled_raw_coal_mass = unscaled_raw_coal_mass;
-
-      double unscaled_ash_mass = 1.0e-9;
-      double scaled_ash_mass = unscaled_ash_mass;
-
-      double density = 1;
-      visc = 1.0e-5;
-
-      // redefine composition array
-      yelem[0] = 0.75; // C
-      yelem[1] = 0.05; // H
-      yelem[2] = 0.00; // N
-      yelem[3] = 0.20; // O
-      yelem[4] = 0.00; // S
-
-      double FSum = 0.0;
-
-      double heat_rate_;
-      double gas_heat_rate_;
-      double abskp_;
-
-#endif
-
       // intermediate calculation values
       double Re;
       double Nu;
@@ -652,11 +564,61 @@ SimpleHeatTransfer::computeModel( const ProcessorGroup * pc,
       double Q_convection;
       double Q_radiation;
 
-      if (weight_is_small) {
+      if (weight_is_small && !d_unweighted) {
         heat_rate_ = 0.0;
         gas_heat_rate_ = 0.0;
         abskp_ = 0.0;
       } else {
+
+        if(d_unweighted){
+          scaled_weight = weight[c];
+          unscaled_weight = weight[c]*d_w_scaling_constant;
+          scaled_particle_temperature = w_particle_temperature[c];
+          unscaled_particle_temperature = w_particle_temperature[c]*d_pt_scaling_constant;
+          scaled_length = w_particle_length[c];
+          unscaled_length = w_particle_length[c]*d_pl_scaling_constant;
+          scaled_raw_coal_mass = w_raw_coal_mass[c]/scaled_weight;
+          unscaled_raw_coal_mass = w_raw_coal_mass[c]*d_rc_scaling_constant;
+        } else {
+          scaled_weight = weight[c];
+          unscaled_weight = weight[c]*d_w_scaling_constant;
+          scaled_particle_temperature = (w_particle_temperature[c])/scaled_weight;
+          unscaled_particle_temperature = (w_particle_temperature[c]*d_pt_scaling_constant)/scaled_weight;
+          scaled_length = w_particle_length[c]/scaled_weight;
+          unscaled_length = (w_particle_length[c]*d_pl_scaling_constant)/scaled_weight;
+          scaled_raw_coal_mass = w_raw_coal_mass[c]/scaled_weight;
+          unscaled_raw_coal_mass = (w_raw_coal_mass[c]*d_rc_scaling_constant)/scaled_weight;
+        }
+
+#else
+        Vector gas_velocity       = Vector(3.0);
+        Vector particle_velocity  = Vector(1.0);
+        bool weight_is_small = false;
+        double unscaled_weight = 1.0e6;
+        double scaled_weight = unscaled_weight;
+        double unscaled_particle_temperature = 2000.0;
+        double scaled_particle_temperature = unscaled_particle_temperature;
+        double d_pt_scaling_constant = 1.0;
+        double gas_temperature = 2050;
+        double unscaled_length = 1.0e-5;
+        double scaled_length = unscaled_length;
+        double unscaled_raw_coal_mass = 1.0e-8;
+        double scaled_raw_coal_mass = unscaled_raw_coal_mass;
+        double unscaled_ash_mass = 1.0e-9;
+        double scaled_ash_mass = unscaled_ash_mass;
+        double density = 1;
+        visc = 1.0e-5;
+        // redefine composition array
+        yelem[0] = 0.75; // C
+        yelem[1] = 0.05; // H
+        yelem[2] = 0.00; // N
+        yelem[3] = 0.20; // O
+        yelem[4] = 0.00; // S
+        double FSum = 0.0;
+        double heat_rate_;
+        double gas_heat_rate_;
+        double abskp_;
+#endif
 
         // Convection part: -----------------------
 
@@ -685,11 +647,11 @@ SimpleHeatTransfer::computeModel( const ProcessorGroup * pc,
         Q_radiation = 0.0;
         if (b_radiation) {
           double Qabs = 0.8;
-	        double Apsc = (pi/4)*Qabs*pow(unscaled_length,2);
-	        double Eb = 4*sigma*pow(unscaled_particle_temperature,4);
+	  double Apsc = (pi/4)*Qabs*pow(unscaled_length,2);
+	  double Eb = 4*sigma*pow(unscaled_particle_temperature,4);
           FSum = radiationVolqIN[c];    
-	        Q_radiation = Apsc*(FSum - Eb);
-	        abskp_ = pi/4*Qabs*unscaled_weight*pow(unscaled_length,2); 
+	  Q_radiation = Apsc*(FSum - Eb);
+	  abskp_ = pi/4*Qabs*unscaled_weight*pow(unscaled_length,2); 
         } else {
           abskp_ = 0.0;
         }
