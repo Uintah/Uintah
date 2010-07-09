@@ -494,7 +494,7 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec,
                                     iter != d_modelSetup->tvars.end(); iter++){
       TransportedVariable* tvar = *iter;
       string Labelname = tvar->var->getName();
-      is_BC_specified(prob_spec, Labelname);
+      is_BC_specified(prob_spec, Labelname, tvar->matls);
     }
     
     d_modelInfo = scinew ModelInfo(d_sharedState->get_delt_label(),

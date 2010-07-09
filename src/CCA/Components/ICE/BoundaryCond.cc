@@ -991,19 +991,30 @@ void setSpecificVolBC(CCVariable<double>& sp_vol_CC,
             of the input file and verifies that each (variable)
             has a boundary conditions specified.
  ---------------------------------------------------------------------  */
-void is_BC_specified(const ProblemSpecP& prob_spec, string variable)
+void is_BC_specified(const ProblemSpecP& prob_spec, string variable, const MaterialSubset* matls)
 {
   // search the BoundaryConditions problem spec
   // determine if variable bcs have been specified
-  
   ProblemSpecP grid_ps= prob_spec->findBlock("Grid");
-  ProblemSpecP bc_ps  = grid_ps->findBlock("BoundaryConditions");
  
+  ProblemSpecP level_ps = grid_ps->findBlock("Level");
+  Vector periodic;
+  level_ps->getWithDefault("periodic", periodic, Vector(0,0,0));
+  
+  // If a face is periodic then is_BC_set = true
+  map<string,bool> is_BC_set;
+  is_BC_set["x-"] = (periodic.x() ==1) ? true:false;
+  is_BC_set["x+"] = (periodic.x() ==1) ? true:false;
+  is_BC_set["y-"] = (periodic.y() ==1) ? true:false;
+  is_BC_set["y+"] = (periodic.y() ==1) ? true:false;
+  is_BC_set["z-"] = (periodic.z() ==1) ? true:false;
+  is_BC_set["z+"] = (periodic.z() ==1) ? true:false;
+   
+  ProblemSpecP bc_ps  = grid_ps->findBlock("BoundaryConditions"); 
   // loop over all faces
   for (ProblemSpecP face_ps = bc_ps->findBlock("Face");face_ps != 0; 
                     face_ps=face_ps->findNextBlock("Face")) {
    
-    bool bc_specified = false;
     map<string,string> face;
     face_ps->getAttributes(face);
     
@@ -1013,16 +1024,34 @@ void is_BC_specified(const ProblemSpecP& prob_spec, string variable)
       map<string,string> bc_type;
       bc_iter->getAttributes(bc_type);
       
-      if (bc_type["label"] == variable || bc_type["label"] == "Symmetric") {
-         bc_specified = true;
+      // was the matl specified?
+      string id = bc_type["id"];
+      int matlIndx = atoi(id.c_str());
+      
+      bool foundMatl = false;
+      if( id == "all" || matls->contains(matlIndx)){
+        foundMatl = true;
+      }
+     
+      if ((bc_type["label"] == variable || 
+           bc_type["label"] == "Symmetric") &&
+           foundMatl ) {
+        is_BC_set[face["side"]] = true; 
       }
     }
-    //  I haven't found them so get mad.
-    if (!bc_specified){
+  }
+
+  //__________________________________
+  //Now check if the variable on this face was set
+  for( map<string,bool>::iterator iter = is_BC_set.begin();iter !=  is_BC_set.end(); iter++ ){
+    string face = (*iter).first;
+    bool isSet = (*iter).second;
+    if (!isSet){
       ostringstream warn;
       warn <<"\n__________________________________\n"  
            << "ERROR: The boundary condition for ( " << variable
-           << " ) was not specified on face " << face["side"] << endl;
+           << " ) was not specified on face (" << face 
+           << ") for  materialSubset " << *matls << endl;
       throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
     }
   }
