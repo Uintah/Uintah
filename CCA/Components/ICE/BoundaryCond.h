@@ -60,7 +60,7 @@ static DebugStream cout_BC_FC("ICE_BC_FC", false);
 
   class DataWarehouse;
 
-  void is_BC_specified(const ProblemSpecP& prob_spec, string variable);
+  void is_BC_specified(const ProblemSpecP& prob_spec, string variable, const MaterialSubset* matls);
   
   void BC_bulletproofing(const ProblemSpecP& prob_spec,SimulationStateP& sharedState );
   
