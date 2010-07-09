@@ -762,7 +762,7 @@ void setBC(CCVariable<Vector>& var_CC,
  if(patch->hasBoundaryFaces() == false){
     return;
   }
-  BC_doing <<"setBC (Vector_CC) \t"<< desc <<" mat_id = " <<mat_id<< endl;
+  cout_BC_CC <<"setBC (Vector_CC) \t"<< desc <<" mat_id = " <<mat_id<< endl;
   Vector cell_dx = patch->dCell();
   //__________________________________
   //  -Set the LODI BC's first, then let the other BC's wipe out what
@@ -775,7 +775,7 @@ void setBC(CCVariable<Vector>& var_CC,
   patch->getBoundaryFaces(bf);
   for( vector<Patch::FaceType>::const_iterator iter  = bf.begin(); iter != bf.end(); ++iter ){
     Patch::FaceType face = *iter;
-    bool is_velBC_lodi   =  patch->haveBC(face,mat_id,"LODI","Velocity");
+    bool is_velBC_lodi   = patch->haveBC(face,mat_id,"LODI","Velocity");
     int topLevelTimestep = sharedState->getCurrentTopLevelTimeStep();
     
     Lodi_vars* lv = custom_BC_basket->lv;
@@ -791,64 +791,57 @@ void setBC(CCVariable<Vector>& var_CC,
   // Iterate over the faces encompassing the domain
   for( vector<Patch::FaceType>::const_iterator iter = bf.begin(); iter != bf.end(); ++iter ){
     Patch::FaceType face = *iter;
-    bool IveSetBC = false;
-    
+    int IveSetBC = 0;
+    string bc_kind = "NotSet";
 
     IntVector oneCell = patch->faceDirection(face);
     int numChildren = patch->getBCDataArray(face)->getNumberChildren(mat_id);
-
+    
+    // loop over the geometry objects on a face
     for (int child = 0;  child < numChildren; child++) {
       Vector bc_value = Vector(-9,-9,-9);
-      string bc_kind = "NotSet";
-      Iterator bound_ptr;
       
+      Iterator bound_ptr;
+
       bool foundIterator = 
           getIteratorBCValueBCKind<Vector>(patch, face, child, desc, mat_id,
-                                                bc_value, bound_ptr ,bc_kind);
+                                            bc_value, bound_ptr ,bc_kind);
      
       if (foundIterator && bc_kind != "LODI") {
- 
-        IveSetBC = setNeumanDirichletBC<Vector>(patch, face, var_CC, bound_ptr, 
-                                                bc_kind, bc_value, cell_dx,
-                                                mat_id,child);
+        
+        //__________________________________
+        // Dirichlet
+        if(bc_kind == "Dirichlet"){
+           IveSetBC += setDirichletBC_CC<Vector>( var_CC, bound_ptr, bc_value);
+        }
+        //__________________________________
+        // Neumann
+        else if(bc_kind == "Neumann"){
+           IveSetBC += setNeumannBC_CC<Vector>( patch, face, var_CC, bound_ptr, bc_value, cell_dx);
+        }                                   
+        //__________________________________
+        //  Symmetry
+        else if ( bc_kind == "symmetric" ) {
+          IveSetBC += setSymmetryBC_CC( patch, face, var_CC, bound_ptr);
+        }
         //__________________________________
         //  Custom Boundary Conditions
-        if ( custom_BC_basket->setMicroSlipBcs) {
-          set_MicroSlipVelocity_BC(patch,face,var_CC,desc,
-                            bound_ptr, bc_kind, bc_value,
-                            custom_BC_basket->sv);
+        else if (custom_BC_basket->setMicroSlipBcs) {
+          IveSetBC += set_MicroSlipVelocity_BC(patch,face,var_CC,desc,
+                                               bound_ptr, bc_kind, bc_value,
+                                               custom_BC_basket->sv);
         }
-        
-        if ( custom_BC_basket->set_MMS_BCs) {
-          set_MMS_Velocity_BC(patch, face, var_CC, desc,
-                            bound_ptr, bc_kind, sharedState,
-                            custom_BC_basket->mms_var_basket,
-                            custom_BC_basket->mms_v);
+        else if ( custom_BC_basket->set_MMS_BCs) {
+          IveSetBC += set_MMS_Velocity_BC(patch, face, var_CC, desc,
+                                          bound_ptr, bc_kind, sharedState,
+                                          custom_BC_basket->mms_var_basket,
+                                          custom_BC_basket->mms_v);
         }
-        if ( custom_BC_basket->set_Sine_BCs) {
-          set_Sine_Velocity_BC(patch, face, var_CC, desc,
-                            bound_ptr, bc_kind, sharedState,
-                            custom_BC_basket->sine_var_basket,
-                            custom_BC_basket->sine_v);
-        }
-         
-        //__________________________________
-        //  Tangent components Neumann = 0
-        //  Normal components = -variable[Interior]
-        //  It's negInterior since it's on the opposite side of the
-        //  plane of symetry  
-        if ( bc_kind == "symmetric" &&
-            (desc == "Velocity" || desc == "set_if_sym_BC" ) ) {
-          int P_dir = patch->getFaceAxes(face)[0];  // principal direction
-          IntVector sign = IntVector(1,1,1);
-          sign[P_dir] = -1;
-
-          for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
-            IntVector adjCell = *bound_ptr - oneCell;
-            var_CC[*bound_ptr] = sign.asVector() * var_CC[adjCell];
-          }
-          IveSetBC = true;
-          bc_value = Vector(0,0,0); // so the debugging output is accurate
+        else if ( custom_BC_basket->set_Sine_BCs) {
+          IveSetBC += set_Sine_Velocity_BC(patch, face, var_CC, desc,
+                                           bound_ptr, bc_kind, sharedState,
+                                           custom_BC_basket->sine_var_basket,
+                                           custom_BC_basket->sine_v);
         }
         //__________________________________
         //  debugging
@@ -856,11 +849,30 @@ void setBC(CCVariable<Vector>& var_CC,
           BC_dbg <<"Face: "<< patch->getFaceName(face) <<" I've set BC " << IveSetBC
                <<"\t child " << child  <<" NumChildren "<<numChildren 
                <<"\t BC kind "<< bc_kind <<" \tBC value "<< bc_value
-                 <<"\t bound limits = " <<bound_ptr.begin()<<" "<< bound_ptr.end()
-                << endl;
+               <<"\t bound limits = " <<bound_ptr.begin()<<" "<< bound_ptr.end()
+               << endl;
         }
-      }  // if (bcKind != "notSet") 
+      }  // found iterator
     }  // child loop
+    cout_BC_CC << "    "<< patch->getFaceName(face) << " \t " << bc_kind << " numChildren: " << numChildren << " IveSetBC: " << IveSetBC << endl;
+    //__________________________________
+    //  bulletproofing
+    bool throwEx = false;
+    if(IveSetBC != numChildren){
+      if( desc == "set_if_sym_BC" && bc_kind == "NotSet" && IveSetBC == 0){
+        throwEx = false;
+      }else{
+        throwEx = true;
+      }
+    }
+   
+    if(throwEx){
+      ostringstream warn;
+      warn << "ERROR: ICE: SetBC(Vector_CC) Boundary conditions were not set correctly ("<< desc<< ", " 
+           << patch->getFaceName(face) << ", " << bc_kind  << " numChildren: " << numChildren 
+           << " IveSetBC: " << IveSetBC << ") " << endl;
+      throw InternalError(warn.str(), __FILE__, __LINE__);
+    }
   }  // faces loop
 }
 /* --------------------------------------------------------------------- 
@@ -949,10 +961,34 @@ void setSpecificVolBC(CCVariable<double>& sp_vol_CC,
  
   }  // faces loop
 }
+
+/* --------------------------------------------------------------------- 
+ Function~  setSymmetryBC_CC--
+ Tangent components Neumann = 0
+ Normal components = -variable[Interior]
+ ---------------------------------------------------------------------  */
+ int setSymmetryBC_CC( const Patch* patch,
+                       const Patch::FaceType face,
+                       CCVariable<Vector>& var_CC,               
+                       Iterator& bound_ptr)                  
+{
+   IntVector oneCell = patch->faceDirection(face);
+   int P_dir = patch->getFaceAxes(face)[0];  // principal direction
+   IntVector sign = IntVector(1,1,1);
+   sign[P_dir] = -1;
+
+   for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
+     IntVector adjCell = *bound_ptr - oneCell;
+     var_CC[*bound_ptr] = sign.asVector() * var_CC[adjCell];
+   }
+   int IveSetBC = 1;
+   return IveSetBC;
+}
+
 /* --------------------------------------------------------------------- 
  Function~  is_BC_specified--
- Purpose~   examines the each face in the boundary condition section
-            of the input file and tests to make sure that each (variable)
+ Purpose~   Parses each face in the boundary condition section
+            of the input file and verifies that each (variable)
             has a boundary conditions specified.
  ---------------------------------------------------------------------  */
 void is_BC_specified(const ProblemSpecP& prob_spec, string variable)

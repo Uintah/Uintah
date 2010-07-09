@@ -182,7 +182,7 @@ void  preprocess_Sine_BCs(DataWarehouse* new_dw,
  Function~ set_Sine_Velocity_BC--
  Purpose~  Set velocity boundary conditions
 ___________________________________________________________________*/
-void set_Sine_Velocity_BC(const Patch* patch,
+int  set_Sine_Velocity_BC(const Patch* patch,
                           const Patch::FaceType face,
                           CCVariable<Vector>& vel_CC,
                           const string& var_desc,
@@ -193,6 +193,7 @@ void set_Sine_Velocity_BC(const Patch* patch,
                           sine_vars* sine_v)                     
 
 {
+  int IveSetBC = 0;
   if (var_desc == "Velocity" && bc_kind == "Sine") {
     cout_doing << "Setting Vel_BC (Sine) on face " << face << endl;
     
@@ -219,7 +220,9 @@ void set_Sine_Velocity_BC(const Patch* patch,
       vel_CC[c].y(vel_ref.y() +  one_or_zero.y() * change);  
       vel_CC[c].z(vel_ref.z() +  one_or_zero.z() * change);                                               
     }
-  } 
+    IveSetBC = 1;
+  }
+  return IveSetBC; 
 }
 
 /*_________________________________________________________________

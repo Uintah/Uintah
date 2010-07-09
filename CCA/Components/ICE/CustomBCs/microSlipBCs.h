@@ -88,7 +88,7 @@ namespace Uintah {
                          Patch::FaceType face,
                          SimulationStateP& sharedState);
                   
-  void set_MicroSlipVelocity_BC(const Patch* patch,
+  int set_MicroSlipVelocity_BC(const Patch* patch,
                               const Patch::FaceType face,
                               CCVariable<Vector>& vel_CC,
                               const string& var_desc,
