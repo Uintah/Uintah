@@ -284,7 +284,8 @@ void PartVel::ComputePartVel( const ProcessorGroup* pc,
           IntVector cxm = *iter - IntVector(1,0,0); 
 
           double length;
-          if( weight[c] <= small_weight ) {
+ 
+          if( weight[c] <= small_weight && !d_unweighted) {
 
             partVel[c] = Vector(0.0,0.0,0.0); //could end up in a step
 

@@ -392,7 +392,7 @@ ZDragModel::computeModel( const ProcessorGroup* pc,
     for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
       IntVector c = *iter;
 
-      if( weight[c] < d_w_small ) {
+      if( weight[c] < d_w_small && !d_unweighted) {
         model[c] = 0.0;
         gas_source[c] = 0.0;
       } else {
