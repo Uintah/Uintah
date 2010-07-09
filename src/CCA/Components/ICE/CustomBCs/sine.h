@@ -82,7 +82,7 @@ namespace Uintah {
                             bool& setSine_BCs,
                             sine_vars* mss_v);
                            
-  void set_Sine_Velocity_BC(const Patch* patch,
+  int set_Sine_Velocity_BC(const Patch* patch,
                             const Patch::FaceType face,
                             CCVariable<Vector>& vel_CC,
                             const string& var_desc,

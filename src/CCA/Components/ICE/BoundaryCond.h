@@ -162,25 +162,19 @@ template<class T>
                             const Vector& cell_dx,
                             const int mat_id,
                             const int child);
-                            
+
+ int setSymmetryBC_CC( const Patch* patch,
+                       const Patch::FaceType face,
+                       CCVariable<Vector>& var_CC,               
+                       Iterator& bound_ptr);
+
  template<class T>
  int setDirichletBC_FC( const Patch* patch,
                         const Patch::FaceType face,       
                         T& vel_FC,                        
                         Iterator& bound_ptr,                  
                         double& value,          
-                        const string& whichVel);          
-                            
- template<class T>
- int setNeumanDirichletBC_FC( const Patch* patch,
-                               const Patch::FaceType face,
-                               T& vel_FC,
-                               Iterator& bound_ptr,
-                               string& bc_kind,
-                               double& value,
-                               const Vector& cell_dx,
-                               const IntVector& P_dir,
-                               const string& whichVel);
+                        const string& whichVel);
   
   void ImplicitMatrixBC(CCVariable<Stencil7>& var, const Patch* patch);
  
@@ -217,7 +211,7 @@ bool getIteratorBCValueBCKind( const Patch* patch,
   bc_kind="NotSet";
   if (new_bcs != 0) {      // non-symmetric
     bc_value = new_bcs->getValue();
-    bc_kind = new_bcs->getBCType__NEW();
+    bc_kind  = new_bcs->getBCType__NEW();
   }        
   if (sym_bc != 0 && sym_bc->getBCType__NEW() == "symmetry") {  // symmetric
     bc_kind = "symmetric";
@@ -234,6 +228,55 @@ bool getIteratorBCValueBCKind( const Patch* patch,
   }else{
     return true;
   }    
+}
+
+/* --------------------------------------------------------------------- 
+ Function~  setNeumanBC_CC--
+ ---------------------------------------------------------------------  */
+ template<class T>
+ int setNeumannBC_CC( const Patch* patch,
+                      const Patch::FaceType face,
+                      CCVariable<T>& var,               
+                      Iterator& bound_ptr,                 
+                      T& value,                         
+                      const Vector& cell_dx)                  
+{
+ IntVector oneCell = patch->faceDirection(face);
+ IntVector dir= patch->getFaceAxes(face);
+ double dx = cell_dx[dir[0]];
+
+ int IveSetBC = 0;
+
+ if (value == T(0)) {   //    Z E R O  N E U M A N N
+   for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
+     IntVector adjCell = *bound_ptr - oneCell;
+     var[*bound_ptr] = var[adjCell];
+   }
+   IveSetBC += 1;
+ }else{                //    N E U M A N N
+   for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
+     IntVector adjCell = *bound_ptr - oneCell;
+     var[*bound_ptr] = var[adjCell] - value * dx;
+   }
+   IveSetBC += 1;
+ }
+ return IveSetBC;
+}
+
+/* --------------------------------------------------------------------- 
+ Function~  setDirichletBC_CC--
+ ---------------------------------------------------------------------  */
+ template<class T>
+ int setDirichletBC_CC( CCVariable<T>& var,     
+                        Iterator& bound_ptr,    
+                        T& value) 
+{
+ for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
+   var[*bound_ptr] = value;
+ }
+ int IveSetBC = 1;
+ return IveSetBC;
+
 }
 /* --------------------------------------------------------------------- 
  Function~  setNeumanDirichletBC--
@@ -314,8 +357,6 @@ bool getIteratorBCValueBCKind( const Patch* patch,
  return IveSetBC;
 
 }
-
-
 /* --------------------------------------------------------------------- 
  Function~  setDirichletBC_FC--
  Purpose~   does the actual work of setting the BC for face-centered 

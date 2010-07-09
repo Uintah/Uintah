@@ -83,7 +83,7 @@ namespace Uintah {
                            bool& setMMS_BCs,
                            mms_vars* mss_v);
                            
-  void set_MMS_Velocity_BC(const Patch* patch,
+  int  set_MMS_Velocity_BC(const Patch* patch,
                            const Patch::FaceType face,
                            CCVariable<Vector>& vel_CC,
                            const string& var_desc,

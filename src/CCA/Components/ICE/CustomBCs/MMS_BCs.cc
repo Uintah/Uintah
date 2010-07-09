@@ -176,7 +176,7 @@ void  preprocess_MMS_BCs(DataWarehouse* new_dw,
  Purpose~  Set velocity boundary conditions using method of manufactured
            solution boundary conditions
 ___________________________________________________________________*/
-void set_MMS_Velocity_BC(const Patch* patch,
+int set_MMS_Velocity_BC(const Patch* patch,
                          const Patch::FaceType face,
                          CCVariable<Vector>& vel_CC,
                          const string& var_desc,
@@ -187,6 +187,7 @@ void set_MMS_Velocity_BC(const Patch* patch,
                          mms_vars* mms_v)                     
 
 {
+  int IveSetBC = 0;
   if (var_desc == "Velocity" && bc_kind == "MMS_1") {
     cout_doing << "Setting Vel_MMS on face " << face << endl;
     
@@ -210,8 +211,10 @@ void set_MMS_Velocity_BC(const Patch* patch,
         vel_CC[c].y( 1.0 + A * sin(x-t) * cos(y -t) * exp(-2.0*nu*t));
         vel_CC[c].z(0.0);
       }
+      IveSetBC = 1;
     }
   } 
+  return IveSetBC;
 }
 
 /*_________________________________________________________________
