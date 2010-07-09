@@ -4581,7 +4581,8 @@ void ICE::computeLagrangian_Transported_Vars(const ProcessorGroup*,
             }
           }
           // Set boundary conditions on q_L_CC
-          string Labelname = tvar->var_Lagrangian->getName();
+          // must use var Labelname not var_Lagrangian
+          string Labelname = tvar->var->getName();
           setBC(q_L_CC, Labelname,  patch, d_sharedState, indx, new_dw);
 
           // multiply by mass so advection is conserved
