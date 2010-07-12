@@ -5,6 +5,8 @@
 
 #include <Core/Grid/Variables/VarLabel.h>
 
+/** \file */
+
 namespace SpatialOps{ class OperatorDatabase; }
 
 namespace Wasatch{
@@ -24,6 +26,12 @@ namespace Wasatch{
     int patchID;
   };
 
+  /**
+   *  Defines a map between the patch index (Uintah assigns this) and
+   *  the PatchInfo object associated with the patch.  This is
+   *  generally only required by Wasatch when pairing operators with
+   *  their associated patch.
+   */
   typedef std::map< int, PatchInfo > PatchInfoMap;
 
 }

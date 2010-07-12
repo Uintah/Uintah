@@ -7,6 +7,8 @@
 
 #include <expression/Expr_ExpressionID.h>
 
+/** \file */
+
 namespace Expr{
   class ExpressionBuilder;
   class ExpressionFactory;
@@ -18,6 +20,11 @@ namespace Wasatch{
   /**
    *  \enum Category
    *  \brief defines the broad categories for various kinds of tasks.
+   *
+   *  Tasks associated with a particular category are registered in
+   *  the associated Wasatch method that Uintah calls to register
+   *  tasks.  They are generally combined into one or more Expression
+   *  trees that are wrapped using the Wasatch::TaskInterface.
    */
   enum Category{
     INITIALIZATION,
@@ -25,8 +32,15 @@ namespace Wasatch{
     ADVANCE_SOLUTION
   };
 
+  /**
+   *  \brief a list of transport equations to be solved.
+   */
   typedef std::list<Expr::TransportEquation*> TransEqns;
 
+  /**
+   *  \brief a set of ExpressionID generally to be used to store the
+   *  "root" nodes of an ExpressionTree.
+   */
   typedef std::set< Expr::ExpressionID > IDSet;
 
   /**
@@ -38,11 +52,15 @@ namespace Wasatch{
    */
   struct GraphHelper
   {
-    Expr::ExpressionFactory* const exprFactory;
-    IDSet rootIDs;
+    Expr::ExpressionFactory* const exprFactory;  ///< The factory used to build expressions
+    IDSet rootIDs;                               ///< The root IDs used to create the graph
     GraphHelper( Expr::ExpressionFactory* ef );
   };
 
+  /**
+   *  Defines a map that provides GraphHelper objects given the \ref
+   *  Wasatch::Category "Category" that they belong to.
+   */
   typedef std::map< Category, GraphHelper* > GraphCategories;
 
 } // namespace Wasatch

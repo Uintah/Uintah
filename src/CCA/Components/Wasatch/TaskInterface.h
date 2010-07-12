@@ -86,17 +86,17 @@ namespace Wasatch{
    
   private:
 
-    Expr::ExpressionTree* const tree_;
+    Expr::ExpressionTree* const tree_;  ///< the underlying ExpressionTree associated with this task.
 
-    const std::string taskName_;
+    const std::string taskName_;        ///< the name of the task
 
     const PatchInfoMap& patchInfoMap_;  ///< information for each individual patch.
 
-    const bool builtFML_;
+    const bool builtFML_;               ///< true if we constructed a FieldManagerList internally.
     Expr::FieldManagerList* const fml_; ///< the FieldManagerList for this TaskInterface
 
     Uintah::Task* const uintahTask_;    ///< the Uintah::Task that is created from this TaskInterface.
-    bool hasBeenScheduled_;
+    bool hasBeenScheduled_;             ///< true after the call to schedule().  Must be true prior to add_fields_to_task().
 
     /** advertises field requirements to Uintah. */
     void add_fields_to_task( const Uintah::PatchSet* const patches,
