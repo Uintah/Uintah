@@ -233,7 +233,6 @@ namespace Wasatch{
                                                Uintah::SchedulerP& sched )
   {
     GraphHelper* const tsGraphHelper = graphCategories_[ TIMESTEP_SELECTION ];
-    Expr::ExpressionFactory* const tsFactory = tsGraphHelper->exprFactory;
 
     // jcs: was getting patch set this way (from discussions with Justin).
     // sched->getLoadBalancer()->getPerProcessorPatchSet(level),
@@ -273,8 +272,6 @@ namespace Wasatch{
   Wasatch::scheduleTimeAdvance( const Uintah::LevelP& level,
                                 Uintah::SchedulerP& sched )
   {
-    GraphHelper* const solngh = graphCategories_[ ADVANCE_SOLUTION ];
-
     create_timestepper_on_patches( sched->getLoadBalancer()->getPerProcessorPatchSet(level),
                                    sharedState_->allMaterials(),
                                    sched );

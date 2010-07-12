@@ -65,9 +65,8 @@ SPATIALOPS_LIBRARY := /Users/u0033394/projects/SpatialOps/build/lib/spatialops/l
 
 EXPRLIB_INCLUDE    := -I/Users/u0033394/projects/ExprLib/buildUintah/install_dir/include
 EXPRLIB_LIBRARY    := /Users/u0033394/projects/ExprLib/buildUintah/install_dir/lib/expression/libexprlib.a
-#EXPRLIB_INCLUDE    := -I/Users/u0033394/tmp/nobackup/expr2/include
-#EXPRLIB_LIBRARY    := /Users/u0033394/tmp/nobackup/expr2/lib/expression/libexprlib.a
 
+BOOST_INCLUDE      := /jcs/apps/include/boost-1.41.0
 BOOST_LIBRARY      := /jcs/apps/lib/boost-1.41.0/libboost_thread-mt.a /jcs/apps/lib/boost-1.41.0/libboost_signals-mt.a
 #------------------------------------------------------------------------
 
@@ -77,7 +76,7 @@ LIBS := $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) 	\
         $(BOOST_LIBRARY)
 
 INCLUDES := $(INCLUDES) $(SPATIALOPS_INCLUDE) $(EXPRLIB_INCLUDE) \
-            $(HDF5_INCLUDE) $(TABPROPS_INCLUDE)
+            $(HDF5_INCLUDE) $(TABPROPS_INCLUDE) $(BOOST_INCLUDE)
 
 SUBDIRS := \
         $(SRCDIR)/Operators	\
