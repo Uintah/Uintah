@@ -9,7 +9,7 @@
     <SimulationComponent type="mpmarches" />
     
     <Time>
-        <maxTime>2.5</maxTime>
+        <maxTime>1.5</maxTime>
         <initTime>0.0</initTime>
         <delt_min>0.00001</delt_min>
         <delt_max>0.01</delt_max>
@@ -292,7 +292,7 @@
     <Multimaterial>
         
         <fluidThermalConductivity>0.03</fluidThermalConductivity>
-        <heatExchange>false</heatExchange>
+        <heatExchange>true</heatExchange>
         <turbulentPrandtNo>0.7</turbulentPrandtNo>
         <fluidHeatCapacity>1007.</fluidHeatCapacity>
         <IfCutCell>false</IfCutCell>
