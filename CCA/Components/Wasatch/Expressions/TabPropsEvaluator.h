@@ -77,8 +77,8 @@ TabPropsEvaluator( const BSpline* const spline,
                    const Expr::ExpressionID& id,
                    const Expr::ExpressionRegistry& reg  )
   : Expr::Expression<FieldT>(id,reg),
-    indepVarNames_  ( ivarNames   ),
-    indepVarContext_( ivarContext )
+    indepVarContext_( ivarContext ),
+    indepVarNames_  ( ivarNames   )
 {
   evaluators_.push_back( spline );
 }

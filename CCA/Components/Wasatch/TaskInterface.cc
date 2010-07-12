@@ -107,7 +107,6 @@ namespace Wasatch{
       for( Expr::IDInfoMap::iterator ii=infomap.begin(); ii!=infomap.end(); ++ii ){
 
         Expr::FieldInfo& fieldInfo = ii->second;
-        const Expr::FieldID& fieldID = ii->first;
 
         // set field mode 
         // 
