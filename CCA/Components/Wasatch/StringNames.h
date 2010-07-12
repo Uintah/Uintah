@@ -12,7 +12,7 @@ namespace Wasatch{
    *
    *  \brief Defines names for variables used in Wasatch.
    *
-   *  Access this as follows:
+   *  Note: this class is implemented in a singleton.  Access it as follows:
    *  <code>const StringNames& sName = StringNames::self();</code>
    */
   class StringNames

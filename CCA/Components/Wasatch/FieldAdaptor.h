@@ -9,8 +9,26 @@
 #include <Core/Grid/Variables/CCVariable.h>    /* cell variable   */
 #include <Core/Disclosure/TypeDescription.h>
 
+
+/**
+ *  \file
+ *
+ *  Translate between Uintah field types and SpatialOps-compatible
+ *  field types.  This information is provided for the interface to
+ *  the Expression library.  There should be no reason to use it
+ *  otherwise.
+ */
+
 namespace Wasatch{
 
+  /**
+   *  \struct SelectUintahFieldType
+   *
+   *  This struct template provides two typedefs that define Uintah
+   *  field types from SpatialOps field types:
+   *   - \b type : the Uintah type
+   *   - \b const_type : the Uintah const field type.
+   */
   template<typename FieldT> struct SelectUintahFieldType;
 
   template<> struct SelectUintahFieldType<SpatialOps::structured::SVolField  >{ typedef Uintah::CCVariable  <double> type;  typedef Uintah::constCCVariable  <double> const_type; };
@@ -34,15 +52,31 @@ namespace Wasatch{
   template<> struct SelectUintahFieldType<SpatialOps::structured::ZSurfZField>{ typedef Uintah::CCVariable  <double> type;  typedef Uintah::constCCVariable  <double> const_type; };
 
 
+  /**
+   *  \brief Given the SpatialOps field type, this returns the
+   *         Uintah::TypeDescription for the corresponding Uintah
+   *         field type.
+   */
   template<typename FieldT>
   inline const Uintah::TypeDescription* getUintahFieldTypeDescriptor()
   {
     return SelectUintahFieldType<FieldT>::type::getTypeDescription();
   }
 
+  /**
+   *  \brief Obtain the number of ghost cells for a given SpatialOps
+   *         field type.
+   */
   template<typename FieldT> inline int getNGhost(){ return FieldT::Ghost::NM; }
   template<> inline int getNGhost<double>(){ return 0; };
-  
+
+  /**
+   *  \brief Obtain the number of ghost cells in each direction for
+   *         the given SpatialOps field type as a template parameter.
+   *
+   *  \return the Uintah::IntVector describing the number of ghost
+   *          cells in each direction.
+   */  
   template<typename FieldT>
   inline Uintah::IntVector getUintahGhostDescriptor()
   {
@@ -52,6 +86,12 @@ namespace Wasatch{
 
   //====================================================================
 
+  /**
+   *  \brief Given the SpatialOps field type as a template parameter,
+   *         determine the Uintah GhostType information.
+   *
+   *  \return The Uintah::Ghost::GhostType for this field type.
+   */
   template<typename FieldT> Uintah::Ghost::GhostType getUintahGhostType();
 
   template<> inline Uintah::Ghost::GhostType getUintahGhostType<SpatialOps::structured::SVolField  >(){ return Uintah::Ghost::AroundCells; }

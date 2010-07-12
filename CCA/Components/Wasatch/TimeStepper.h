@@ -26,10 +26,20 @@ namespace Wasatch{
    *  \date   June 2010
    *
    *  \brief Support for integrating a set of transport equations
-   *  (explicit time integration methods for now).
+   *         (explicit time integration methods for now).
    */
   class TimeStepper
   {
+
+    /**
+     *  \struct FieldInfo
+     *  \author James C. Sutherland
+     *
+     *  \brief provides strongly typed information about a field.
+     *         These are used to provide information about what fields
+     *         we are advancing in the time integrator, and their
+     *         associated RHS expressions.
+     */
     template<typename FieldT>
     struct FieldInfo
     {
@@ -48,17 +58,22 @@ namespace Wasatch{
     typedef std::vector< FieldInfo<SpatialOps::structured::YVolField> > YVolFields;
     typedef std::vector< FieldInfo<SpatialOps::structured::ZVolField> > ZVolFields;
 
-    ScalarFields scalarFields_;
-    XVolFields   xVolFields_;
-    YVolFields   yVolFields_;
-    ZVolFields   zVolFields_;
+    ScalarFields scalarFields_;  ///< A vector of the scalar fields being solved by this time integrator.
+    XVolFields   xVolFields_;    ///< A vector of the x-volume fields being solved by this time integrator.
+    YVolFields   yVolFields_;    ///< A vector of the y-volume fields being solved by this time integrator.
+    ZVolFields   zVolFields_;    ///< A vector of the z-volume fields being solved by this time integrator.
 
     typedef std::vector< Expr::ExpressionID > RHSIDList;
-    RHSIDList rhsIDs_;
+    RHSIDList rhsIDs_;  ///< A list of all of the RHS evaluators associated with this integrator.
 
     Expr::ExpressionFactory* const factory_;  ///< the factory that is associated with this time stepper.
     const Uintah::VarLabel* const deltaTLabel_;  ///< label for the time step variable.
 
+    /**
+     *  \brief used internally to obtain the appropriate vector
+     *         (e.g. scalarFields_) given the type of field we are
+     *         considering.
+     */
     template<typename FieldT>
     std::vector< FieldInfo<FieldT> >& field_info_selctor();
 
