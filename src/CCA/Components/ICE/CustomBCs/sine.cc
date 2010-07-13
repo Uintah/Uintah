@@ -263,7 +263,7 @@ int set_Sine_Temperature_BC(const Patch* /*patch*/,
  Function~ set_Sine_press_BC--
  Purpose~  Set press boundary conditions
 ___________________________________________________________________*/
-void set_Sine_press_BC(const Patch* patch,
+int set_Sine_press_BC(const Patch* patch,
                       const Patch::FaceType face,
                       CCVariable<double>& press_CC,
                       Iterator& bound_ptr,
@@ -278,7 +278,8 @@ void set_Sine_press_BC(const Patch* patch,
   if (!sine_var_basket || !sine_v){
     throw InternalError("set_Sine_press_BC: sine_vars = null", __FILE__, __LINE__);
   }
-                            
+  
+  int IveSetBC = 0;      
   double A     =  sine_var_basket->A;
   double omega =  sine_var_basket->omega;   
   double p_ref =  sine_var_basket->p_ref;                               
@@ -289,7 +290,9 @@ void set_Sine_press_BC(const Patch* patch,
   for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {  
     IntVector c = *bound_ptr;                                    
     press_CC[c] = p_ref + change;                 
-  }                                                                  
+  }
+  IveSetBC = 1;
+  return IveSetBC;                                                  
 }
   
 }  // using namespace Uintah

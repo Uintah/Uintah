@@ -208,8 +208,7 @@ void addRequires_Lodi(Task* t,
                       const MaterialSubset* ice_matls,
                       Lodi_variable_basket* var_basket)
 {
-  cout_doing<< "Doing addRequires_Lodi: \t\t" <<t->getName()
-            << " " << where << endl;
+
   
   Ghost::GhostType  gn  = Ghost::None;
   Task::DomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
@@ -270,6 +269,8 @@ void addRequires_Lodi(Task* t,
   //__________________________________
   //   All tasks Lodi faces require(maxMach_<face>)
   if(setLODI_bcs){
+  
+    cout_doing<< "Doing addRequires_Lodi: \t\t" <<t->getName() << " " << where << endl;
     vector<Patch::FaceType>::iterator f ;
     for( f = var_basket->LodiFaces.begin();
          f !=var_basket->LodiFaces.end(); ++f) {
@@ -1140,7 +1141,7 @@ void FaceTemp_LODI(const Patch* patch,
  Function~  FacePress_LODI--
  Purpose~   Back out the pressure See Table 6 of Sutherland and Kennedy
 ______________________________________________________________________  */
-void FacePress_LODI(const Patch* patch,
+int FacePress_LODI(const Patch* patch,
                     CCVariable<double>& press_CC,
                     StaticArray<CCVariable<double> >& rho_micro,
                     SimulationStateP& sharedState, 
@@ -1155,6 +1156,7 @@ void FacePress_LODI(const Patch* patch,
 
   StaticArray<CCVariable<Vector> >& L = lv->Li;
  
+  
   Vector DX =patch->dCell();
   IntVector axes = patch->getFaceAxes(face);
   int P_dir = axes[0];  // principal direction
@@ -1183,6 +1185,9 @@ void FacePress_LODI(const Patch* patch,
              << " dpress_dx " << dpress_dx << " press_CC[in] " << press_CC[in]<<endl;
 
   }
+  int IveSetBC = 1;
+  
+  #if 0
   //__________________________________
   //    E D G E S  -- on boundaryFaces only
   vector<Patch::FaceType> b_faces;
@@ -1212,6 +1217,8 @@ void FacePress_LODI(const Patch* patch,
     IntVector c = *itr;
     press_CC[c] = 101325;
   }
+  #endif
+  return IveSetBC;
 } 
    
 }  // using namespace Uintah

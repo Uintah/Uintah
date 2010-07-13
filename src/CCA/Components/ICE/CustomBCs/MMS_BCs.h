@@ -101,7 +101,7 @@ namespace Uintah {
                               mms_variable_basket* mms_var_basket,
                               mms_vars* mms_v);
                               
-  void set_MMS_press_BC(const Patch* patch,
+  int  set_MMS_press_BC(const Patch* patch,
                         const Patch::FaceType face,
                         CCVariable<double>& press_CC,
                         Iterator& bound_ptr,

@@ -144,7 +144,7 @@ namespace Uintah {
                     const Vector& dx,
                     SimulationStateP& sharedState);
                
-  void FacePress_LODI(const Patch* patch,
+  int  FacePress_LODI(const Patch* patch,
                       CCVariable<double>& press_CC,
                       SCIRun::StaticArray<CCVariable<double> >& rho_micro,
                       SimulationStateP& sharedState, 

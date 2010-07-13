@@ -257,7 +257,7 @@ int set_MMS_Temperature_BC(const Patch* /*patch*/,
  Purpose~  Set press boundary conditions using method of 
            manufactured solutions
 ___________________________________________________________________*/
-void set_MMS_press_BC(const Patch* patch,
+int set_MMS_press_BC(const Patch* patch,
                       const Patch::FaceType face,
                       CCVariable<double>& press_CC,
                       Iterator& bound_ptr,
@@ -272,7 +272,8 @@ void set_MMS_press_BC(const Patch* patch,
   if (!mms_var_basket || !mms_v){
     throw InternalError("set_MMS_press_BC: mms_vars = null", __FILE__, __LINE__);
   }
-
+  
+  int IveSetBC = 0;
   if(bc_kind == "MMS_1") {
     double nu = mms_var_basket->viscosity;
     double A =  mms_var_basket->A;
@@ -288,7 +289,9 @@ void set_MMS_press_BC(const Patch* patch,
       press_CC[c] = p_ref - A*A/4.0 * exp(-4.0*nu*t)
                  *( cos(2.0*(x-t)) + cos(2.0*(y-t)) );
     }
+    IveSetBC = 1;
   }
+  return IveSetBC;
 }
   
 }  // using namespace Uintah
