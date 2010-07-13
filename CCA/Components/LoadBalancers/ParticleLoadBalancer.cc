@@ -854,7 +854,7 @@ bool ParticleLoadBalancer::thresholdExceeded(const vector<vector<double> >& cell
   if (d_myworld->myrank() == 0)
     stats << "Total:"  << " Load Balance:  Cell Improvement:" << cellImp << " Particle Improvement:"  << partImp << endl;
 
-  if((cellImp+partImp)/2>0)
+  if((cellImp+partImp)/2>d_lbThreshold)
   {
     return true;
   }
