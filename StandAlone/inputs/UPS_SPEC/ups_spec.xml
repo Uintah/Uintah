@@ -698,22 +698,27 @@
 
   <LoadBalancer            spec="OPTIONAL NO_DATA" 
                              attribute1="type REQUIRED STRING 'DLB PLB SimpleLoadBalancer'" >
-    <cellCost              spec="OPTIONAL DOUBLE 'positive'" /> <!--The weight per cell -->
-    <cellFactor            spec="OPTIONAL DOUBLE" />  <!-- FIXME: What is this?  What is the default? -->
-    <collectParticles      spec="OPTIONAL BOOLEAN" />
-    <doCostProfiling       spec="OPTIONAL BOOLEAN" /> <!-- use cost profiling instead of the cost model-->
-    <doSpaceCurve          spec="OPTIONAL BOOLEAN" /> <!-- FIXME: default? -->
-    <dynamicAlgorithm      spec="REQUIRED STRING 'particle3, patchFactor, patchFactorParticles, random, Zoltan'" />
-    <extraCellCost         spec="OPTIONAL DOUBLE 'positive'" /> <!--The weight extra cell -->
-    <gainThreshold         spec="OPTIONAL DOUBLE '0,1'" /> <!-- the percent improvement that a reloadbalance must have over an old load balance to be used-->
-    <levelIndependent      spec="OPTIONAL BOOLEAN" /> <!-- FIXME: Is this optional? If so, what is default? -->
-    <particleCost          spec="OPTIONAL DOUBLE 'positive'" /> <!-- The weight per particle -->
-    <patchCost             spec="OPTIONAL DOUBLE 'positive'" /> <!-- The weight per patch -->
-    <profileTimestepWindow spec="OPTIONAL INTEGER 'positive'" /> <!-- the number of timesteps that the profiled weight will take up 99% of the weight -->
+                             
+    <costAlgorithm         spec="OPTIONAL STRING 'Model,ModelLS,Kalman,Memory'" />
+    <dynamicAlgorithm      spec="OPTIONAL STRING 'particle3, patchFactor, patchFactorParticles, random, Zoltan'" />
+    <doSpaceCurve          spec="OPTIONAL BOOLEAN" /> <!-- default is true-->
+    <hasParticles          spec="OPTIONAL BOOLEAN" /> <!-- should the cost algorithms take into account particles-->
     <timestepInterval      spec="REQUIRED INTEGER 'positive'" />
+
+    <profileTimestepWindow spec="OPTIONAL INTEGER 'positive'" /> <!-- the number of timesteps that the profiled weight will take up 99% of the weight -->
+    <gainThreshold         spec="OPTIONAL DOUBLE '0,1'" /> <!-- the percent improvement that a reloadbalance must have over an old load balance to be used-->
+    <levelIndependent      spec="OPTIONAL BOOLEAN" /> <!-- default is true -->
     <outputNthProc         spec="OPTIONAL INTEGER 'positive'"/>
+
     <zoltanAlgorithm       spec="OPTIONAL STRING 'HSFC RIB RCB'" />
     <zoltanIMBTol          spec="OPTIONAL DOUBLE 'positive'" />
+    
+    <!--The remaining tags should not need to be set unless using "Model"-->
+    <cellCost              spec="OPTIONAL DOUBLE 'positive'" /> <!--The weight per cell -->
+    <particleCost          spec="OPTIONAL DOUBLE 'positive'" /> <!-- The weight per particle -->
+    <patchCost             spec="OPTIONAL DOUBLE 'positive'" /> <!-- The weight per patch -->
+    <extraCellCost         spec="OPTIONAL DOUBLE 'positive'" /> <!--The weight extra cell -->
+    
 
   </LoadBalancer>
 
