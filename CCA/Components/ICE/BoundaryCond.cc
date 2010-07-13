@@ -437,6 +437,81 @@ void get_rho_micro(StaticArray<CCVariable<double> >& rho_micro,
   }  // face iter 
 }
 
+ //__________________________________________________________
+ // Tack on hydrostatic pressure correction after Dirichlet 
+ // or Neumann BC have been applied.  During the intializaton 
+ // phase the hydrostatic pressure adjustment is  handled by a
+ // separate task, therefore ignore it        
+ // 
+ // Hydrostatic pressure adjustment (HPA) = 
+ //   gravity*<rho_micro>*distance_from_ref_point.
+ // R: is BC location, L: is adjacent to BC location
+ // 
+ // On Dirichlet side walls you still have to add HPA
+  
+void HydrostaticPressureAdjustment(CCVariable<double>& press_CC,
+                                   StaticArray<CCVariable<double> >& rho_micro,
+                                   const Vector gravity,
+                                   const int surroundingMatl_indx,
+                                   const string& bc_kind, 
+                                   const Patch* patch,
+                                   const Patch::FaceType face,
+                                   Iterator bound_ptr,
+                                   const bool isNotInitialTimestep)
+{  
+  if ( isNotInitialTimestep ){
+    const Level* level = patch->getLevel();
+    GridP grid = level->getGrid();
+    BBox b;
+    grid->getSpatialRange(b);
+    Vector gridMin = b.min().asVector();
+    Vector dx_L0 = grid->getLevel(0)->dCell();
+    Vector cell_dx = patch->dCell();
+
+    // Pressure reference point is assumed to be 
+    // at the cell-center of cell 0,0,0 
+    Vector press_ref_pt = gridMin + 1.5*dx_L0;
+
+    int p_dir = patch->getFaceAxes(face)[0];     // normal  face direction
+
+    //__________________________________
+    //Neumann
+    bool Neumann_BC = (bc_kind=="Neumann" || bc_kind=="zeroNeumann");
+    if ((gravity[p_dir] != 0 && Neumann_BC) ){
+
+      Vector faceDir    = patch->faceDirection(face).asVector();
+      double grav       = gravity[p_dir] * (double)faceDir[p_dir]; 
+      IntVector oneCell = patch->faceDirection(face);
+
+      for (bound_ptr.reset();!bound_ptr.done(); bound_ptr++) { 
+        IntVector L = *bound_ptr - oneCell;
+        IntVector R = *bound_ptr;
+        double rho_R = rho_micro[surroundingMatl_indx][R];
+        double rho_L = rho_micro[surroundingMatl_indx][L];
+        double rho_micro_brack = (rho_L + rho_R)/2.0;
+        
+        press_CC[R] += grav * cell_dx[p_dir] * rho_micro_brack; 
+      }     
+    }
+    //__________________________________
+    //  Dirichlet
+    if(gravity.length() != 0 && bc_kind =="Dirichlet"){  
+
+      for (bound_ptr.reset();!bound_ptr.done(); bound_ptr++) {
+        IntVector R = *bound_ptr;
+        Point here_R  = level->getCellPosition(R);
+        Vector dist_R = (here_R.asVector() - press_ref_pt);
+        double rho_R  = rho_micro[surroundingMatl_indx][R];
+        
+        // Need the dot product to get the sideWall dirichlet BC's right
+        double correction_R = Dot(gravity,dist_R) * rho_R;
+
+        press_CC[R] += correction_R;
+      }
+    } 
+  } //  not initialization step 
+}
+
 /* --------------------------------------------------------------------- 
  Function~  setBC-- (pressure)
  ---------------------------------------------------------------------  */
@@ -455,11 +530,12 @@ void setBC(CCVariable<double>& press_CC,
   if(patch->hasBoundaryFaces() == false){
     return;
   }
-  BC_doing << "setBC (press_CC) \t"<< kind <<" " << which_Var
-           << " mat_id = " << mat_id << endl;
+  
+  cout_BC_CC << "setBC (press_CC) \t"<< kind <<" " << which_Var
+            << " mat_id = " << mat_id << endl;
 
   int numALLMatls = sharedState->getNumMatls();
-  int topLevelTimestep = sharedState->getCurrentTopLevelTimeStep();  
+  bool isNotInitialTimestep = (sharedState->getCurrentTopLevelTimeStep() > 0);  
   Vector gravity = custom_BC_basket->d_gravity;
   StaticArray<CCVariable<double> > rho_micro(numALLMatls);
   
@@ -476,18 +552,23 @@ void setBC(CCVariable<double>& press_CC,
   //  -Ignore lodi bcs during intialization phase AND when
   //   lv->setLodiBcs = false              
   //__________________________________
-  // Iterate over the faces encompassing the domain
+  vector<int> IveSetLODIBC(Patch::numFaces);
+  for (int f = 0; f < Patch::numFaces; f++) {
+    IveSetLODIBC[f] = 0;  // bulletproofing
+  }
+  
   vector<Patch::FaceType> bf;
   patch->getBoundaryFaces(bf);
-
+  // Iterate over the faces encompassing the domain  
   for( vector<Patch::FaceType>::const_iterator iter = bf.begin(); iter != bf.end(); ++iter ) {
     Patch::FaceType face = *iter;
     
     bool is_lodi_pressBC = patch->haveBC(face,mat_id,"LODI","Pressure");
-    int topLevelTimestep = sharedState->getCurrentTopLevelTimeStep();
     
-    if(kind == "Pressure"      && is_lodi_pressBC 
-       && topLevelTimestep > 0 && custom_BC_basket->setLodiBcs){
+    if(kind == "Pressure"       && is_lodi_pressBC 
+       && isNotInitialTimestep  && custom_BC_basket->setLodiBcs){
+       
+       IveSetLODIBC[face] += 
        FacePress_LODI(patch, press_CC, rho_micro, sharedState,face,
                       custom_BC_basket->lv);
     }
@@ -499,110 +580,58 @@ void setBC(CCVariable<double>& press_CC,
   // Iterate over the faces encompassing the domain
   for( vector<Patch::FaceType>::const_iterator iter = bf.begin(); iter != bf.end(); ++iter ){
     Patch::FaceType face = *iter;
-    bool IveSetBC = false;
+    int IveSetBC   = 0;
+    string bc_kind = "NotSet";
    
-    IntVector dir= patch->getFaceAxes(face);
     Vector cell_dx = patch->dCell();
     int numChildren = patch->getBCDataArray(face)->getNumberChildren(mat_id);
 
     for (int child = 0;  child < numChildren; child++) {
       double bc_value = -9;
-      string bc_kind = "NotSet";
       Iterator bound_ptr;
       
       bool foundIterator = 
         getIteratorBCValueBCKind<double>( patch, face, child, kind, mat_id,
                                                bc_value, bound_ptr,bc_kind); 
                                    
-      if(foundIterator && bc_kind != "LODI") {
-        // define what a symmetric  pressure BC means
-        if( bc_kind == "symmetric"){
-          bc_kind = "zeroNeumann";
+      if(foundIterator && bc_kind != "LODI") {                                            
+        //__________________________________
+        // Dirichlet
+        if(bc_kind == "Dirichlet"){
+           IveSetBC += setDirichletBC_CC<double>( press_CC, bound_ptr, bc_value);
         }
-
-        IveSetBC = setNeumanDirichletBC<double>(patch, face, press_CC,bound_ptr, 
-                                                  bc_kind, bc_value, cell_dx,
-                                                  mat_id,child);
+        //__________________________________
+        // Neumann
+        else if(bc_kind == "Neumann"){
+           IveSetBC += setNeumannBC_CC<double >( patch, face, press_CC, bound_ptr, bc_value, cell_dx);
+        } 
+        //__________________________________
+        //  Symmetry
+        else if ( bc_kind == "symmetric" || bc_kind == "zeroNeumann" ) {
+          bc_value = 0.0;
+          IveSetBC += setNeumannBC_CC<double >( patch, face, press_CC, bound_ptr, bc_value, cell_dx);
+        }
                                           
         //__________________________________
-        //  method of manufactured solutions
-        if (bc_kind == "MMS_1" && custom_BC_basket->set_MMS_BCs) {
-          set_MMS_press_BC(patch, face, press_CC, bound_ptr,  bc_kind,
-                           sharedState, 
-                           custom_BC_basket->mms_var_basket,
-                           custom_BC_basket->mms_v);
+        //  Custom Boundary Conditions
+        else if (bc_kind == "MMS_1" && custom_BC_basket->set_MMS_BCs) {
+          IveSetBC += set_MMS_press_BC(patch, face, press_CC, bound_ptr,  bc_kind,
+                                       sharedState, 
+                                       custom_BC_basket->mms_var_basket,
+                                       custom_BC_basket->mms_v);
         }                    
         //__________________________________
         //  Sine
-        if (bc_kind == "Sine" && custom_BC_basket->set_Sine_BCs) {
-          set_Sine_press_BC(patch, face, press_CC, bound_ptr,  bc_kind,
-                           sharedState, 
-                           custom_BC_basket->sine_var_basket,
-                           custom_BC_basket->sine_v);
+        else if (bc_kind == "Sine" && custom_BC_basket->set_Sine_BCs) {
+          IveSetBC += set_Sine_press_BC(patch, face, press_CC, bound_ptr,  bc_kind,
+                                        sharedState, 
+                                        custom_BC_basket->sine_var_basket,
+                                        custom_BC_basket->sine_v);
         }
-        //__________________________________________________________
-        // Tack on hydrostatic pressure correction after Dirichlet 
-        // or Neumann BC have been applied.  Note, during the intializaton 
-        //phase the hydrostatic pressure adjustment is  handled by a completely
-        // separate task, therefore ignore it        
-        // 
-        // Hydrostatic pressure adjustment (HPA): 
-        //   gravity*<rho_micro>*distance_from_ref_point.
-        // R is BC location, L is adjacent to BC location
-        // 
-        // On Dirichlet side walls you still have to add HPA
-        const Level* level = patch->getLevel();
-        GridP grid = level->getGrid();
-        BBox b;
-        grid->getSpatialRange(b);
-        Vector gridMin = b.min().asVector();
-        Vector dx_L0 = grid->getLevel(0)->dCell();
- 
-        // Pressure reference point is assumed to be 
-        //at the cell center of cell 0,0,0 
-        Vector press_ref_pt = gridMin + 1.5*dx_L0;
-
-        int p_dir = patch->getFaceAxes(face)[0];     // normal  face direction
         
-        // Only apply this correction in case of Neumann or Dirichlet BC
-        bool Neumann_BC = (bc_kind=="Neumann" || bc_kind=="zeroNeumann");
-        if ( topLevelTimestep > 0 ){
-          IntVector oneCell = patch->faceDirection(face);
-          //__________________________________
-          //Neumann
-          if ((gravity[p_dir] != 0 && Neumann_BC) ){
-          
-            Vector faceDir = patch->faceDirection(face).asVector();
-            double grav = gravity[p_dir] * (double)faceDir[p_dir]; 
-            IntVector oneCell = patch->faceDirection(face);
-
-            for (bound_ptr.reset();!bound_ptr.done(); bound_ptr++) { 
-              IntVector L = *bound_ptr - oneCell;
-              IntVector R = *bound_ptr;
-              double rho_R = rho_micro[surroundingMatl_indx][R];
-              double rho_L = rho_micro[surroundingMatl_indx][L];
-              double rho_micro_brack = (rho_L + rho_R)/2.0;
-              press_CC[R] += grav * cell_dx[p_dir] * rho_micro_brack; 
-            }
-            IveSetBC = true;      
-          }
-          //__________________________________
-          //  Dirichlet
-          if(gravity.length() != 0 && bc_kind =="Dirichlet"){  
-          
-            for (bound_ptr.reset();!bound_ptr.done(); bound_ptr++) {
-              IntVector R = *bound_ptr;
-              Point here_R = level->getCellPosition(R);
-              Vector dist_R = (here_R.asVector() - press_ref_pt);
-              double rho_R = rho_micro[surroundingMatl_indx][R];
-              // Need the dot product to get the sideWall dirichlet BC's right
-              double correction_R = Dot(gravity,dist_R) * rho_R;
-
-              press_CC[R] += correction_R;
-            }
-            IveSetBC = true;    
-          } //
-        } // // not initialization step 
+        
+        HydrostaticPressureAdjustment(press_CC, rho_micro, gravity, surroundingMatl_indx,
+                                      bc_kind, patch, face, bound_ptr, isNotInitialTimestep);
 
         //__________________________________
         //  debugging
@@ -613,8 +642,20 @@ void setBC(CCVariable<double>& press_CC,
                <<"\t bound limits = "<< bound_ptr.begin()<< " "<< bound_ptr.end()
                 << endl;
         }
-      }  // if bcKind != notSet
+      }  // if bcKind != LODI
     }  // child loop
+    
+    cout_BC_CC << "    "<< patch->getFaceName(face) << " \t " << bc_kind << " numChildren: " << numChildren 
+                        << " IveSetBC: " << IveSetBC << " IveSetLODIBC: " << IveSetLODIBC[face] << endl;
+    //__________________________________
+    //  bulletproofing   
+    if(IveSetBC != numChildren && (IveSetLODIBC[face] != 1 && isNotInitialTimestep)){
+      ostringstream warn;
+      warn << "ERROR: ICE: SetBC(press_CC) Boundary conditions were not set correctly ("
+           << patch->getFaceName(face) << ", " << bc_kind  << " numChildren: " << numChildren 
+           << " IveSetBC: " << IveSetBC << " IveSetLODIBC: " << IveSetLODIBC[face] <<") " << endl;
+      throw InternalError(warn.str(), __FILE__, __LINE__);
+    }
   }  // faces loop
 }
 /* --------------------------------------------------------------------- 

@@ -100,7 +100,7 @@ namespace Uintah {
                                sine_variable_basket* sine_var_basket,
                                sine_vars* sine_v);
                               
-  void set_Sine_press_BC(const Patch* patch,
+  int  set_Sine_press_BC(const Patch* patch,
                          const Patch::FaceType face,
                          CCVariable<double>& press_CC,
                          Iterator& bound_ptr,
