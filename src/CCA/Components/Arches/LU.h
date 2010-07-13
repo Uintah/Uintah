@@ -67,8 +67,8 @@ class LU{
 
     /** @brief      Access function for final relative norm (error estimate)
       * @returns    final_relative_norm variable, which contains the relative norm of 
-      *             \f$ \Vert dx \Vert_{\infty} / \Vert x \Vert_{\infty} \f$ for the last step 
-      *             of iterative refinement   */
+      *             $\f \Vert dx \Vert_{\infty} / \Vert x \Vert_{\infty} \f$ 
+      *             for the last step of iterative refinement   */
     double getConvergenceRate() {
       if(isRefined_)
         return condition_estimate;
@@ -261,7 +261,7 @@ class LU{
     double rho_max;                 /// Maximum convergence rate obtained during the 
                                     /// iterative refinement procedure.  This value 
                                     /// provides an estimate of the condition number:
-                                    /// \f[ \rho^{(i)} = \epsilon*c_n*g*\text{cond}(A) \f]
+                                    /// $ f [ \rho^{(i)} = \epsilon*c_n*g*\text{cond}(A) f] $
                                     /// (not sure what c_n or g are...)
     
     double condition_estimate;      /// Estimate of condition number
