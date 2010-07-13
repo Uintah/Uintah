@@ -27,6 +27,18 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
+/** 
+ * \file 
+ *
+ * \mainpage
+ *
+ * \author Various Generations of CRSim
+ * \date   September 1997 (?)
+ *
+ * Arches is a variable density, low-mach (pressure projection) CFD formulation, with radiation, chemistry and 
+ * turbulence subgrid closure. 
+ *
+ */ 
 
 //----- Arches.h -----------------------------------------------
 
