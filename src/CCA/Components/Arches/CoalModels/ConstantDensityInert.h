@@ -21,7 +21,17 @@ namespace Uintah{
   *           particle density. 
   *
   * @details
-  * Eventually this will not be stored in "Coalmodels" but will instead
+  * The user cannot specify particle size, particle mass, and particle density.
+  * This class does not allow the user to specify the value of density.
+  * The reason for this is becuase the ConstantDensityCoal model does not
+  * allow the user to specify the value of density, and this class is meant to
+  * exercise the same mechaism as the ConstantDensityCoal class.
+  * 
+  * In the case of particles entering from a boundary, the domain is initialized
+  * with very small numbers of particles, so the domain may be initialized
+  * with the correct density.
+  *
+  * Eventually this will not be stored in "CoalModels" directory but will instead
   * go into a directory for more generic two-phase models.
   *
   */
@@ -68,6 +78,16 @@ public:
   /** @brief Interface for the inputfile and set constants */ 
   void problemSetup(const ProblemSpecP& db);
 
+  /** @brief Schedule the initialization of special/local variables unique to model */
+  void sched_initVars( const LevelP& level, SchedulerP& sched );
+
+  /** @brief  Actually initialize special variables unique to model */ 
+  void initVars( const ProcessorGroup * pc, 
+                 const PatchSubset    * patches, 
+                 const MaterialSubset * matls, 
+                 DataWarehouse        * old_dw, 
+                 DataWarehouse        * new_dw );
+
   ////////////////////////////////////////////////
   // Model computation method
 
@@ -113,17 +133,22 @@ public:
 
 private:
 
-  double d_density;
-  vector<const VarLabel*> massLabels; ///< Vector of VarLabels for all mass internal coordinates (used to grab the mass source terms, which are used to calculate the length model term \f$ G_{L} \f$ )
+  double d_density;                       ///< (Constant) value of particle density
+  vector<const VarLabel*> d_massLabels;   ///< Vector of VarLabels for all mass internal coordinates (used to grab the mass source terms, which are used to calculate the length model term \f$ G_{L} \f$ )
+  vector<double> d_massScalingConstants;  ///< Vector of scaling constants for all mass internal coordinates (used to scale the mass source terms)
 
-  const VarLabel* d_length_label;
-  const VarLabel* d_particle_mass_label;
+  const VarLabel* d_length_label;         ///< Variable label for particle length internal coordinate
+  const VarLabel* d_particle_mass_label;  ///< Variable label for particle mass internal coordinate
 
-  double d_length_scaling_constant;
-  double d_mass_scaling_constant;
+  double d_length_low;                    ///< Low clip value for length (if applicable)
+  double d_length_hi;                     ///< High clip value for length (if applicable)
+  double d_length_scaling_constant;       ///< Scaling constant for particle length internal coordinate
+  double d_mass_scaling_constant;         ///< Scaling constant for particle mass internal coordinate
 
-  bool d_useLength;
-  bool d_useMass;
+  bool d_doLengthLowClip;  ///< Boolean: do low clipping for length?
+  bool d_doLengthHighClip; ///< Boolean: do high clipping for length?
+  bool d_useLength;        ///< Boolean: use particle length internal coordinate?
+  bool d_useMass;          ///< Boolean: use particle mass internal coordinate?
 
 }; // end ConstantDensityInert
 } // end namespace Uintah

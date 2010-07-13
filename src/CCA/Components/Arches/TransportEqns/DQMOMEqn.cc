@@ -1,7 +1,8 @@
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqn.h>
-#include <CCA/Components/Arches/SourceTerms/SourceTermFactory.h>
+#include <CCA/Components/Arches/TransportEqns/EqnFactory.h>
 #include <CCA/Components/Arches/SourceTerms/SourceTermBase.h>
 #include <CCA/Components/Arches/CoalModels/CoalModelFactory.h>
+#include <CCA/Components/Arches/SourceTerms/SourceTermFactory.h>
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/Variables/VarTypes.h>
@@ -14,23 +15,38 @@ using namespace Uintah;
 
 //---------------------------------------------------------------------------
 // Builder:
+/**
+  * @class DQMOMEqnBuilder
+  * @author Jeremy Thornock, Adapted from James Sutherland's code
+  * @date November 19, 2008
+  *
+  * @brief Abstract base class to support scalar equation additions.  Meant to
+  * be used with the DQMOMEqnFactory. 
+  *
+  */
 DQMOMEqnBuilder::DQMOMEqnBuilder( ArchesLabel* fieldLabels, 
                                   ExplicitTimeInt* timeIntegrator,
-                                  string eqnName ) : 
-DQMOMEqnBuilderBase( fieldLabels, timeIntegrator, eqnName )
-{}
-DQMOMEqnBuilder::~DQMOMEqnBuilder(){}
+                                  string eqnName,
+                                  int quadNode,
+                                  bool isWeight ):
+                                  EqnBuilder( fieldLabels, timeIntegrator, eqnName),
+                                  d_fieldLabels(fieldLabels),
+                                  d_timeIntegrator(timeIntegrator),
+                                  d_eqnName(eqnName),
+                                  d_quadNode(quadNode),
+                                  d_weight(isWeight) {} 
 
-EqnBase*
-DQMOMEqnBuilder::build(){
-  return scinew DQMOMEqn(d_fieldLabels, d_timeIntegrator, d_eqnName);
-}
+DQMOMEqnBuilder::~DQMOMEqnBuilder(){}
+    
+EqnBase* DQMOMEqnBuilder::build() {
+  return scinew DQMOMEqn(d_fieldLabels, d_timeIntegrator, d_eqnName, d_quadNode, d_weight);
+};
 // End Builder
 //---------------------------------------------------------------------------
 
-DQMOMEqn::DQMOMEqn( ArchesLabel* fieldLabels, ExplicitTimeInt* timeIntegrator, string eqnName )
+DQMOMEqn::DQMOMEqn( ArchesLabel* fieldLabels, ExplicitTimeInt* timeIntegrator, string eqnName, int quadNode, bool isWeight )
 : 
-EqnBase( fieldLabels, timeIntegrator, eqnName )
+EqnBase( fieldLabels, timeIntegrator, eqnName ), d_quadNode(quadNode), d_weight(isWeight)
 {
   
   string varname = eqnName+"_Fdiff"; 
@@ -54,8 +70,6 @@ EqnBase( fieldLabels, timeIntegrator, eqnName )
   varname = eqnName+"_src";
   d_sourceLabel = VarLabel::create(varname, 
             CCVariable<double>::getTypeDescription());
-
-  d_weight = false; 
 }
 
 DQMOMEqn::~DQMOMEqn()
@@ -72,11 +86,10 @@ DQMOMEqn::~DQMOMEqn()
 // Method: Problem Setup 
 //---------------------------------------------------------------------------
 void
-DQMOMEqn::problemSetup(const ProblemSpecP& inputdb, int qn )
+DQMOMEqn::problemSetup(const ProblemSpecP& inputdb )
 {
   // NOTE: some of this may be better off in the EqnBase.cc class
   ProblemSpecP db = inputdb; 
-  d_quadNode = qn; 
 
   db->getWithDefault("turbulentPrandtlNumber",d_turbPrNo,0.4);
 
@@ -86,22 +99,6 @@ DQMOMEqn::problemSetup(const ProblemSpecP& inputdb, int qn )
   db->getWithDefault( "doDiff", d_doDiff, false);
   d_addSources = true; 
   d_addExtraSources = false; 
-
-  // Models (source terms):
-  for (ProblemSpecP m_db = db->findBlock("model"); m_db !=0; m_db = m_db->findNextBlock("model")){
-    string model_name; 
-    m_db->getAttribute("label", model_name); 
-
-    // now tag on the internal coordinate
-    string node;  
-    std::stringstream out; 
-    out << d_quadNode; 
-    node = out.str(); 
-    model_name += "_qn";
-    model_name += node; 
-    // put it in the list
-    d_models.push_back(model_name); 
-  }  
 
   // Clipping:
   d_doClipping = false; 
@@ -147,17 +144,18 @@ DQMOMEqn::problemSetup(const ProblemSpecP& inputdb, int qn )
   } 
 
   // Scaling information:
-  db->require( "scaling_const", d_scalingConstant ); 
+  db->getWithDefault( "scaling_const", d_scalingConstant, 1.0); 
 
 
   // Extra Source terms (for mms and other tests):
+  SourceTermFactory& srcFactory = SourceTermFactory::self();
   if (db->findBlock("src")){
     string srcname; 
     d_addExtraSources = true; 
     for (ProblemSpecP src_db = db->findBlock("src"); src_db != 0; src_db = src_db->findNextBlock("src")){
       src_db->getAttribute("label", srcname);
       //which sources are turned on for this equation
-      d_sources.push_back( srcname ); 
+      d_sources.push_back( srcFactory.retrieve_source_term(srcname).getSrcLabel() ); 
 
     }
   }
@@ -202,8 +200,9 @@ DQMOMEqn::problemSetup(const ProblemSpecP& inputdb, int qn )
         string s_constant;
         db_env_constants->getAttribute("value", s_constant);
         double constantValue = atof( s_constant.c_str() );
-        if( i_tempQuadNode == d_quadNode )
+        if( i_tempQuadNode == d_quadNode ) {
           d_constant_init = constantValue / d_scalingConstant;
+        }
       }
  
 
@@ -211,7 +210,7 @@ DQMOMEqn::problemSetup(const ProblemSpecP& inputdb, int qn )
     // NOTE: Right now the only environment-specific attribute of the step function
     //       is the value.  This can be changed later, if someone wants to have
     //       unique step function directions/start/stop for each environment.
-    // (Charles)
+    // - Charles
     } else if (d_initFunction == "step" || d_initFunction == "env_step") {
 
       // Step functions: prevent uniform steps for abscissa values
@@ -432,13 +431,8 @@ DQMOMEqn::sched_buildTransportEqn( const LevelP& level, SchedulerP& sched, int t
 #ifdef VERIFY_DQMOM_TRANSPORT
   // extra srcs
   if (d_addExtraSources) {
-    SourceTermFactory& src_factory = SourceTermFactory::self(); 
-    for (vector<std::string>::iterator iter = d_sources.begin(); 
-         iter != d_sources.end(); iter++){
-      SourceTermBase& temp_src = src_factory.retrieve_source_term( *iter ); 
-      const VarLabel* temp_varLabel; 
-      temp_varLabel = temp_src.getSrcLabel(); 
-      tsk->requires( Task::NewDW, temp_src.getSrcLabel(), Ghost::None, 0 ); 
+    for (vector<std::string>::iterator iter = d_sources.begin(); iter != d_sources.end(); iter++){
+      tsk->requires( Task::NewDW, (*iter), Ghost::None, 0 ); 
     }
   }
 #endif
@@ -536,6 +530,10 @@ DQMOMEqn::buildTransportEqn( const ProcessorGroup* pc,
 
       if (d_addSources) {
 
+        ////cmr
+        //if( d_eqnName == "mass_qn0" && c == IntVector(1,2,3) ) {
+        //  cout << "Adding source: RHS += " << src[c] << "*" << vol << " = " << src[c]*vol << endl;
+        //}
         RHS[c] += src[c]*vol;           
 
 #ifdef VERIFY_DQMOM_TRANSPORT
@@ -545,11 +543,8 @@ DQMOMEqn::buildTransportEqn( const ProcessorGroup* pc,
           RHS[c] -= src[c]*vol;
 
           // Get the factory of source terms
-          SourceTermFactory& src_factory = SourceTermFactory::self(); 
-          for (vector<std::string>::iterator src_iter = d_sources.begin(); src_iter != d_sources.end(); src_iter++){
-           constCCVariable<double> extra_src;  // Outside of this scope src is no longer available 
-           SourceTermBase& temp_src = src_factory.retrieve_source_term( *src_iter ); 
-           new_dw->get(extra_src, temp_src.getSrcLabel(), matlIndex, patch, gn, 0);
+          for (vector<std::string>::iterator src_iter = d_sources.begin(); src_iter != d_sources.end(); src_iter++) {
+            new_dw->get(extra_src, (*src_iter), matlIndex, patch, gn, 0);
 
            // Add to the RHS
            RHS[c] += extra_src[c]*vol; 
@@ -617,29 +612,59 @@ DQMOMEqn::solveTransportEqn( const ProcessorGroup* pc,
     old_dw->get(rk1_phi, d_transportVarLabel, matlIndex, patch, gn, 0);
     new_dw->get(RHS, d_RHSLabel, matlIndex, patch, gn, 0);
 
+    ////cmr
+    //if( d_eqnName == "mass_qn0" ) {
+    //  cout << "Before update: phi_old = " << phi_at_j[IntVector(1,2,3)] << endl;
+    //}
+
     // update to get phi^{(j+1)}
     d_timeIntegrator->singlePatchFEUpdate( patch, phi_at_jp1, RHS, dt, curr_ssp_time, d_eqnName );
+
+    ////cmr
+    //if( d_eqnName == "mass_qn0" ) {
+    //  cout << "After update: phi_new = " << phi_at_jp1[IntVector(1,2,3)] << endl;
+    //}
     
     // Compute the current RK time
     double factor = d_timeIntegrator->time_factor[timeSubStep]; 
     curr_ssp_time = curr_time + factor * dt; 
 
-    // ----RK AVERAGING
-    //     to get the time averaged phi^{time averaged}
-    //     See: Gettlieb et al., SIAM Review, vol 43, No 1, pp 89-112
-    //          Strong Stability-Preserving High-Order Time Discretization Methods
-    //     Here, for convenience we assign the time averaged phi to phi_at_jp1 so:
-    //     phi^{j+1} = alpha*(phi^{n}) + beta*(phi^{j+1})
-    //
+    /// For the RK Averaging procedure, computing the time averaged phi^{time averaged}.
+    /// Here, for convenience we assign the time averaged phi to phi_at_jp1, so:
+    /// phi^{j+1} = alpha*(phi^{n}) + beta*(phi^{j+1})
+    /// @seealso 
+    /// Sigal Gottlieb, Chi-Wang Shu and Eitan Tadmor
+    /// SIAM Review, Vol. 43, No. 1 (Mar., 2001), pp. 89-112 
+    ///
+
+    ////cmr
+    //double temp_storage = curr_ssp_time;
+    //if(d_eqnName == "mass_qn0" ) {
+    //  //cout << "Time averaging with phi_old = " << rk1_phi[IntVector(1,2,3)] << " and phi_new = " << phi_at_jp1[IntVector(1,2,3)] << endl;
+    //  cout << "Time averaging with phi_old = " << phi_at_j[IntVector(1,2,3)] << " and phi_new = " << phi_at_jp1[IntVector(1,2,3)] << endl;
+    //  curr_ssp_time = -999999;
+    //}
     d_timeIntegrator->timeAvePhi( patch, phi_at_jp1, rk1_phi, timeSubStep, curr_ssp_time ); 
+    ////cmr
+    //if(d_eqnName == "mass_qn0" ) {
+    //  curr_ssp_time = temp_storage;
+    //  //cout << "Time averaging with phi_old = " << rk1_phi[IntVector(1,2,3)] << " yielded phi_new = " << phi_at_jp1[IntVector(1,2,3)] << endl;
+    //  cout << "Time averaging with phi_old = " << phi_at_j[IntVector(1,2,3)] << " yielded phi_new = " << phi_at_jp1[IntVector(1,2,3)] << endl;
+    //}
 
     //----BOUNDARY CONDITIONS
     // For first time step, bc's have been set in dqmomInit
     computeBCs( patch, d_eqnName, phi_at_jp1 );
 
-    if (d_doClipping) {
-      clipPhi( patch, phi_at_jp1 ); 
-    } 
+    ////cmr
+    //if (d_doClipping) {
+    //  clipPhi( patch, phi_at_jp1 ); 
+    //} 
+
+    ////cmr
+    //if( d_eqnName == "mass_qn0" ) {
+    //  cout << " --- phi_new = " << phi_at_jp1[IntVector(1,2,3)] << endl;
+    //}
     
     // copy averaged phi into oldphi
     phi_at_j.copyData(phi_at_jp1); 
@@ -656,7 +681,7 @@ DQMOMEqn::sched_getUnscaledValues( const LevelP& level, SchedulerP& sched )
 
   Task* tsk = scinew Task(taskname, this, &DQMOMEqn::getUnscaledValues);
   
-  //Ghost::GhostType  gn  = Ghost::None;
+  Ghost::GhostType  gn  = Ghost::None;
   DQMOMEqnFactory& dqmomFactory  = DQMOMEqnFactory::self(); 
 
   //NEW
@@ -672,9 +697,8 @@ DQMOMEqn::sched_getUnscaledValues( const LevelP& level, SchedulerP& sched )
     name += node; 
 
     EqnBase& eqn = dqmomFactory.retrieve_scalar_eqn( name ); 
-    const VarLabel* weightLabel = eqn.getTransportEqnLabel(); 
     
-    tsk->modifies( weightLabel ); 
+    tsk->requires( Task::NewDW, eqn.getTransportEqnLabel(), gn, 0 ); 
   }
  
   sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
@@ -694,7 +718,7 @@ DQMOMEqn::getUnscaledValues( const ProcessorGroup* pc,
   //patch loop
   for (int p=0; p < patches->size(); p++){
 
-    //Ghost::GhostType  gn  = Ghost::None;
+    Ghost::GhostType  gn  = Ghost::None;
 
     const Patch* patch = patches->get(p);
     int archIndex = 0;
@@ -715,12 +739,12 @@ DQMOMEqn::getUnscaledValues( const ProcessorGroup* pc,
       }
 
     } else {
-      CCVariable<double> wa;
-      CCVariable<double> w;  
+      constCCVariable<double> w;  
+      constCCVariable<double> wa;
       CCVariable<double> ic; 
 
       new_dw->getModifiable(ic, d_icLabel, matlIndex, patch);
-      new_dw->getModifiable(wa, d_transportVarLabel, matlIndex, patch); 
+      new_dw->get(wa, d_transportVarLabel, matlIndex, patch, gn, 0 ); 
 
       DQMOMEqnFactory& dqmomFactory  = DQMOMEqnFactory::self(); 
       string name = "w_qn"; 
@@ -739,7 +763,7 @@ DQMOMEqn::getUnscaledValues( const ProcessorGroup* pc,
         smallWeight = TINY;
       }
 
-      new_dw->getModifiable(w, mywLabel, matlIndex, patch ); 
+      new_dw->get(w, mywLabel, matlIndex, patch, gn, 0 ); 
 
       // now loop over all cells
       for (CellIterator iter=patch->getCellIterator(0); !iter.done(); iter++){
@@ -762,9 +786,66 @@ DQMOMEqn::getUnscaledValues( const ProcessorGroup* pc,
 //---------------------------------------------------------------------------
 // -- See header file. 
 
+
+//---------------------------------------------------------------------------
+// Method: schedule clipping
+//---------------------------------------------------------------------------
+void DQMOMEqn::sched_clipPhi( const LevelP& level,
+                         SchedulerP& sched )
+{
+  string taskname = "DQMOMEqn::clipPhi"; 
+
+  Task* tsk = scinew Task(taskname, this, &DQMOMEqn::clipPhi);
+
+  //Ghost::GhostType gn = Ghost::None;
+  //DQMOMEqnFactory& dqmomFactory = DQMOMEqnFactory::self();
+
+  tsk->modifies(d_transportVarLabel);
+
+  sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
+}
+
+void DQMOMEqn::clipPhi( const ProcessorGroup* pc,
+                        const PatchSubset* patches,
+                        const MaterialSubset* matls,
+                        DataWarehouse* old_dw,
+                        DataWarehouse* new_dw )
+{
+
+  for (int p=0; p < patches->size(); p++){
+
+    const Patch* patch = patches->get(p);
+    int archIndex = 0;
+    int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+
+    CCVariable<double> phi;
+    new_dw->getModifiable( phi, d_transportVarLabel, matlIndex, patch );
+
+    if( d_doLowClip ) {
+      for( CellIterator iter = patch->getCellIterator(); !iter.done(); ++iter ) {
+        if( phi[*iter] < d_lowClip ) {
+          phi[*iter] = d_lowClip;
+        }
+      }//end cells
+    }//end if low clip
+
+    if( d_doHighClip ) {
+      for( CellIterator iter = patch->getCellIterator(); !iter.done(); ++iter ) {
+        if( phi[*iter] > d_highClip ) {
+          phi[*iter] = d_highClip;
+        }
+      }//end cells
+    }//end if high clip
+
+  }//end patches
+
+}
+
+
 //---------------------------------------------------------------------------
 // Method: Clip the scalar 
 //---------------------------------------------------------------------------
+/*
 template<class phiType> void
 DQMOMEqn::clipPhi( const Patch* p, 
                    phiType& phi )
@@ -789,6 +870,7 @@ DQMOMEqn::clipPhi( const Patch* p,
   }
 
 }
+*/
 
 //---------------------------------------------------------------------------
 // Method: Schedule dummy initialization

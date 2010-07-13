@@ -1,0 +1,435 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!-- DOCTYPE Uintah_specification SYSTEM "input.dtd" -->
+<!-- @version: -->
+
+<Uintah_specification>
+  
+  <Meta>
+    <title>DQMOM Particle Drag Particle Velocity Test 1a - Constant Density, Constant Mass, Positive Gas Velocity (2 IC, 3 Env, Optimized Solver)</title>
+  </Meta>
+
+  <SimulationComponent type="arches" />
+
+  <Time>
+    <maxTime>5.0</maxTime>
+    <max_Timesteps>20</max_Timesteps>
+    <initTime>0.0</initTime>
+    <delt_min>0.00001</delt_min>
+    <delt_max>5</delt_max>
+    <timestep_multiplier>0.5</timestep_multiplier>
+  </Time>
+
+  <DataArchiver>
+    <filebase>uda_drag_test_1a.uda</filebase>
+    <outputTimestepInterval>1</outputTimestepInterval>
+    <outputInitTimestep />
+
+    <save label = "totalKineticEnergy"/>
+    <save label = "totalummsLnError"/>
+    <save label = "totalvmmsLnError"/>
+    <save label = "totalummsExactSol"/>
+    <save label = "totalvmmsExactSol"/>
+    <save label = "pressurePS"/>
+    <save label = "scalarSP"/>
+    <save label = "newCCUVelocity"/>  
+    <save label = "newCCVVelocity"/>  
+    <save label = "newCCWVelocity"/>  
+    <save label = "newCCVelocity" />
+    <save label = "uVelocitySPBC"/>
+    <save label = "vVelocitySPBC"/>
+    <save label = "continuityResidual"/>
+    <save label = "velocityDivergence"/>
+
+    <!-- DQMOM Vars -->
+    <save label = "w_qn0"/>
+    <save label = "w_qn1"/>
+    <save label = "w_qn2"/>
+    <save label = "w_qn3"/>
+    <save label = "w_qn4"/>
+
+    <save label = "w_qn0_src"/>
+    <save label = "w_qn1_src"/>
+    <save label = "w_qn2_src"/>
+    <save label = "w_qn3_src"/>
+    <save label = "w_qn4_src"/>
+
+    <save label = "length_qn0"/>
+    <save label = "length_qn1"/>
+    <save label = "length_qn2"/>
+    <save label = "length_qn3"/>
+    <save label = "length_qn4"/>
+
+    <save label = "length_qn0_src"/>
+    <save label = "length_qn1_src"/>
+    <save label = "length_qn2_src"/>
+    <save label = "length_qn3_src"/>
+    <save label = "length_qn4_src"/>
+
+    <save label = "mass_qn0"/>
+    <save label = "mass_qn1"/>
+    <save label = "mass_qn2"/>
+    <save label = "mass_qn3"/>
+    <save label = "mass_qn4"/>
+
+    <save label = "mass_qn0_src"/>
+    <save label = "mass_qn1_src"/>
+    <save label = "mass_qn2_src"/>
+    <save label = "mass_qn3_src"/>
+    <save label = "mass_qn4_src"/>
+
+    <save label = "uvel_qn0" />
+    <save label = "uvel_qn1" />
+    <save label = "uvel_qn2" />
+    <save label = "uvel_qn3" />
+    <save label = "uvel_qn4" />
+
+    <save label = "vvel_qn0" />
+    <save label = "vvel_qn1" />
+    <save label = "vvel_qn2" />
+    <save label = "vvel_qn3" />
+    <save label = "vvel_qn4" />
+
+    <save label = "wvel_qn0" />
+    <save label = "wvel_qn1" />
+    <save label = "wvel_qn2" />
+    <save label = "wvel_qn3" />
+    <save label = "wvel_qn4" />
+
+    <save label = "vel_qn0" />
+    <save label = "vel_qn1" />
+    <save label = "vel_qn2" />
+    <save label = "vel_qn3" />
+    <save label = "vel_qn4" />
+
+    <save label = "rhop_qn0" />
+    <save label = "rhop_qn1" />
+    <save label = "rhop_qn2" />
+    <save label = "rhop_qn3" />
+    <save label = "rhop_qn4" />
+    
+    <save label = "my_density_qn0" />
+    <save label = "my_density_qn1" />
+    <save label = "my_density_qn2" />
+    <save label = "my_density_qn3" />
+    <save label = "my_density_qn4" />
+    
+    <save label = "drag_qn0" />
+    <save label = "drag_qn1" />
+    <save label = "drag_qn2" />
+    <save label = "drag_qn3" />
+    <save label = "drag_qn4" />
+
+    <checkpoint cycle = "2" interval = "5"/>
+    <compression>gzip</compression>
+  </DataArchiver>
+
+  <Grid>
+    <Level>
+      <Box label = "1">
+        <lower>[0,0,0]</lower>
+        <upper>[1.0,1.0,1.0]</upper>
+        <resolution>[8,8,8]</resolution>
+        <extraCells>[0,0,0]</extraCells>
+        <patches>[1,1,1]</patches>
+      </Box>
+      <periodic>[1,1,1]</periodic>
+    </Level>
+  </Grid>
+
+  <PhysicalConstants>
+    <gravity>[0,0,0]</gravity>
+    <reference_point>[0,0,0]</reference_point>
+    <viscosity>0.0002</viscosity>
+  </PhysicalConstants>
+
+  <CFD>
+
+    <!-- ARCHES specification -->
+    <ARCHES>
+        <MMS whichMMS="constantMMS" >
+            <mmsErrorType>Linf</mmsErrorType>
+            <constantMMS>
+                <cu>1.0</cu>
+                <cv>2.0</cv>
+                <cw>3.0</cw>
+                <cp>100</cp>
+                <esphi0>0.0</esphi0>
+                <phi0>0.0</phi0>
+            </constantMMS>
+        </MMS>
+
+      <!-- TIME INTEGRATOR -->
+      <TimeIntegrator>
+          <ExplicitIntegrator order="second"/>
+      </TimeIntegrator>
+
+      <!-- EXTRA SCALARS -->
+      <TransportEqns>
+      </TransportEqns>
+
+      <!--
+      <Coal_Properties>
+          <C>0.75</C>
+          <H>0.05</H>
+          <N>0.0</N>
+          <O>0.2</O>
+          <S>0.0</S>
+          <initial_ash_mass>[1e-12,2e-12,3e-12]</initial_ash_mass>
+      </Coal_Properties>  
+      -->
+
+      <!-- DQMOM -->
+      <DQMOM>
+        <number_quad_nodes>5</number_quad_nodes>
+
+        <LinearSolver>
+            <type>Optimize</type>
+            <tolerance>1e-5</tolerance>
+            <Optimization>
+                <Optimal_abscissas>[-1, 0, 0, 1, 1, -1, 1, 0, 1, 1, -1, 1, -1, 0, 1, -1, 0, -1, 0, 1, 0, 0, 1, 1, 1]</Optimal_abscissas>
+            </Optimization>
+        </LinearSolver>
+
+        <!-- particle models --> 
+        <Models>
+            
+            <model label="drag" type="DragModel">
+                <ICVars>
+                    <variable label="length" role="particle_length" />
+                    <variable label="uvel"   role="u_velocity" />
+                    <variable label="vvel"   role="v_velocity" />
+                    <variable label="wvel"   role="w_velocity" />
+                </ICVars>
+            </model>
+            
+            <model label="my_density" type="ConstantDensityInert">
+                <ICVars>
+                    <variable label="length" role="particle_length" />
+                    <variable label="mass" role="particle_mass" />
+                </ICVars>
+            </model>
+
+        </Models>
+
+
+        <Weights>
+            <!-- w [=] #/m^3 -->
+            <doDiff>false</doDiff>
+            <doConv>false</doConv>
+            <initialization type="constant">
+                <constant>1.0e8</constant>
+            </initialization>
+            <scaling_const>1.0e8</scaling_const>
+        </Weights>
+
+        <Ic label="length">
+            <!-- l [=] m -->
+            <doDiff>false</doDiff>
+            <doConv>false</doConv>
+            <initialization type="env_constant">
+                <env_constant qn="0" value="30.0e-6"></env_constant>
+                <env_constant qn="1" value="55.0e-6"></env_constant>
+                <env_constant qn="2" value="70.0e-6"></env_constant>
+                <env_constant qn="3" value="100.0e-6"></env_constant>
+                <env_constant qn="4" value="105.0e-6"></env_constant>
+            </initialization>
+            <scaling_const>1.0e-6</scaling_const>
+        </Ic>
+
+        <Ic label="mass">
+            <!-- l [=] m -->
+            <doDiff>false</doDiff>
+            <doConv>false</doConv>
+            <initialization type="env_constant">
+                <env_constant qn="0" value="10.0e-10"></env_constant>
+                <env_constant qn="1" value="20.0e-10"></env_constant>
+                <env_constant qn="2" value="30.0e-10"></env_constant>
+                <env_constant qn="3" value="40.0e-10"></env_constant>
+                <env_constant qn="4" value="50.0e-10"></env_constant>
+            </initialization>
+            <scaling_const>1.0e-8</scaling_const>
+        </Ic>
+
+        <Ic label="uvel">
+            <!-- l [=] m -->
+            <doDiff>false</doDiff>
+            <doConv>false</doConv>
+            <initialization type="env_constant">
+                <env_constant qn="0" value="0.000"></env_constant>
+                <env_constant qn="1" value="0.001"></env_constant>
+                <env_constant qn="2" value="0.002"></env_constant>
+                <env_constant qn="3" value="0.003"></env_constant>
+                <env_constant qn="4" value="0.004"></env_constant>
+            </initialization>
+        </Ic>
+
+        <Ic label="vvel">
+            <!-- l [=] m -->
+            <doDiff>false</doDiff>
+            <doConv>false</doConv>
+            <initialization type="env_constant">
+                <env_constant qn="0" value="0.000"></env_constant>
+                <env_constant qn="1" value="0.001"></env_constant>
+                <env_constant qn="2" value="0.002"></env_constant>
+                <env_constant qn="3" value="0.003"></env_constant>
+                <env_constant qn="4" value="0.004"></env_constant>
+            </initialization>
+        </Ic>
+
+        <Ic label="wvel">
+            <!-- l [=] m -->
+            <doDiff>false</doDiff>
+            <doConv>false</doConv>
+            <initialization type="env_constant">
+                <env_constant qn="0" value="0.000"></env_constant>
+                <env_constant qn="1" value="0.001"></env_constant>
+                <env_constant qn="2" value="0.002"></env_constant>
+                <env_constant qn="3" value="0.003"></env_constant>
+                <env_constant qn="4" value="0.004"></env_constant>
+            </initialization>
+        </Ic>
+
+        <!-- 5 quad nodes + 5 i.c.s = 30 moments -->
+        <Moment><m>[0,0,0,0,0]</m></Moment> 
+        <Moment><m>[1,0,0,0,0]</m></Moment>
+        <Moment><m>[2,0,0,0,0]</m></Moment>
+        <Moment><m>[0,1,0,0,0]</m></Moment>
+        <Moment><m>[0,2,0,0,0]</m></Moment>
+        <Moment><m>[0,0,1,0,0]</m></Moment>
+        <Moment><m>[0,0,2,0,0]</m></Moment>
+        <Moment><m>[0,0,0,1,0]</m></Moment>
+        <Moment><m>[0,0,0,2,0]</m></Moment>
+        <Moment><m>[0,0,0,0,1]</m></Moment>
+
+        <Moment><m>[0,0,0,0,2]</m></Moment>
+        <Moment><m>[4,2,0,4,0]</m></Moment>
+        <Moment><m>[1,6,0,1,1]</m></Moment>
+        <Moment><m>[5,2,0,0,1]</m></Moment>
+        <Moment><m>[1,1,0,4,1]</m></Moment>
+        <Moment><m>[2,4,1,0,1]</m></Moment>
+        <Moment><m>[0,2,3,2,0]</m></Moment>
+        <Moment><m>[0,9,0,0,1]</m></Moment>
+        <Moment><m>[5,3,1,0,0]</m></Moment>
+        <Moment><m>[0,0,2,3,2]</m></Moment>
+
+        <Moment><m>[2,2,2,3,1]</m></Moment>
+        <Moment><m>[2,1,3,0,1]</m></Moment>
+        <Moment><m>[0,1,2,1,4]</m></Moment>
+        <Moment><m>[2,2,5,1,0]</m></Moment>
+        <Moment><m>[1,2,3,4,0]</m></Moment>
+        <Moment><m>[1,0,1,5,1]</m></Moment>
+        <Moment><m>[3,2,0,0,5]</m></Moment>
+        <Moment><m>[0,6,0,2,2]</m></Moment>
+        <Moment><m>[0,6,2,1,1]</m></Moment>
+        <Moment><m>[0,0,0,0,3]</m></Moment>
+
+
+        <!--
+        <Moment><m>[0,0,0,0,1]</m></Moment>
+        <Moment><m>[0,0,0,1,0]</m></Moment>
+        <Moment><m>[0,0,1,0,0]</m></Moment>
+		<Moment><m>[0,1,0,0,0]</m></Moment>
+		<Moment><m>[1,0,0,0,0]</m></Moment>
+		
+        <Moment><m>[0,0,0,0,2]</m></Moment>
+        <Moment><m>[0,0,0,2,0]</m></Moment>
+        <Moment><m>[0,0,2,0,0]</m></Moment>
+		<Moment><m>[0,2,0,0,0]</m></Moment>
+		<Moment><m>[2,0,0,0,0]</m></Moment>
+		
+        <Moment><m>[0,0,0,0,3]</m></Moment>
+        <Moment><m>[0,0,0,3,0]</m></Moment>
+        <Moment><m>[0,0,3,0,0]</m></Moment>
+		<Moment><m>[0,3,0,0,0]</m></Moment>
+		<Moment><m>[3,0,0,0,0]</m></Moment>
+		
+        <Moment><m>[0,0,0,0,4]</m></Moment>
+        <Moment><m>[0,0,0,4,0]</m></Moment>
+        <Moment><m>[0,0,4,0,0]</m></Moment>
+		<Moment><m>[0,4,0,0,0]</m></Moment>
+		<Moment><m>[4,0,0,0,0]</m></Moment>
+		
+        <Moment><m>[0,0,0,0,5]</m></Moment>
+        <Moment><m>[0,0,0,5,0]</m></Moment>
+        <Moment><m>[0,0,5,0,0]</m></Moment>
+		<Moment><m>[0,5,0,0,0]</m></Moment>
+		<Moment><m>[5,0,0,0,0]</m></Moment>
+		
+        <Moment><m>[0,0,0,0,6]</m></Moment>
+        <Moment><m>[0,0,0,6,0]</m></Moment>
+        <Moment><m>[0,0,6,0,0]</m></Moment>
+		<Moment><m>[0,6,0,0,0]</m></Moment>
+		<Moment><m>[6,0,0,0,0]</m></Moment>
+
+
+		<Moment><m>[3,0,0,0,2,1]</m></Moment>
+        <Moment><m>[0,0,0,2,1,0]</m></Moment>
+        <Moment><m>[0,3,2,1,0,0]</m></Moment>
+        <Moment><m>[0,2,1,0,3,0]</m></Moment>
+		<Moment><m>[2,1,0,5,0,0]</m></Moment>
+		<Moment><m>[1,0,4,0,0,2]</m></Moment>
+        -->
+
+
+        <save_moments>false</save_moments>
+
+      </DQMOM>
+
+
+      <Turbulence model = "smagorinsky">
+        <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
+        <cf>0.0</cf>
+        <fac_mesh>1.0</fac_mesh>
+        <filterl>0.000001</filterl>
+        <var_const>0.1</var_const>
+      </Turbulence>
+
+      <Properties>
+        <use_mixing_model>false</use_mixing_model>
+        <ColdFlowMixingModel>
+          <Stream>
+            <density>1.00</density>
+            <temperature>298</temperature>
+          </Stream>
+          <Stream>
+            <density>1.00</density>
+            <temperature>298</temperature>
+          </Stream>
+        </ColdFlowMixingModel>
+      </Properties>
+
+<!--
+      <BoundaryConditions>
+      </BoundaryConditions>
+-->
+  
+      <ExplicitSolver>
+
+        <initial_dt>1</initial_dt>
+        <variable_dt>true</variable_dt>
+        <timeIntegratorType>RK2SSP</timeIntegratorType> 
+
+        <PressureSolver>
+          <linear_solver>hypre</linear_solver>
+          <parameters>
+            <solver>cg</solver>
+            <preconditioner>pfmg</preconditioner>
+            <res_tol>1.0e-10</res_tol>
+            <max_iter>75</max_iter>
+          </parameters>
+        </PressureSolver>
+
+        <MomentumSolver>
+          <convection_scheme>central</convection_scheme>
+          <!--src label = "bala" /-->
+        </MomentumSolver>
+
+        <MixtureFractionSolver>
+          <convection_scheme>central-upwind</convection_scheme>
+        </MixtureFractionSolver>
+
+      </ExplicitSolver>
+    </ARCHES>
+  </CFD>
+</Uintah_specification>
+

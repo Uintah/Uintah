@@ -281,6 +281,23 @@ SourceTermFactory::register_source_term( const std::string name,
 
 }
 
+
+//---------------------------------------------------------------------------
+// Method: Find a source term in the map
+//---------------------------------------------------------------------------
+bool
+SourceTermFactory::find_source_term( const string name )
+{
+  const SourceMap::iterator isource= sources_.find( name );
+
+  if( isource != sources_.end() ) {
+    return true;
+  } else {
+    return false;
+  }
+}
+
+
 //---------------------------------------------------------------------------
 // Method: Retrieve a source term from the map. 
 //---------------------------------------------------------------------------

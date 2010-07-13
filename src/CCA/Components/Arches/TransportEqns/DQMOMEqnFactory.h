@@ -5,52 +5,25 @@
 #include <CCA/Components/Arches/ExplicitTimeInt.h> // should this be here?  -Jeremy
 #include <Core/Grid/Variables/VarLabel.h>
 
-//---------------------------------------------------------------------------
-// Builder 
-
-/**
-  * @class DQMOMEqnBuilder
-  * @author Jeremy Thornock, Adapted from James Sutherland's code
-  * @date November 19, 2008
-  *
-  * @brief Abstract base class to support scalar equation additions.  Meant to
-  * be used with the DQMOMEqnFactory. 
-  *
-  */
 namespace Uintah {
-class EqnBase; 
-class DQMOMEqnBuilderBase
-{
-public:
-  DQMOMEqnBuilderBase( ArchesLabel* fieldLabels, 
-                       ExplicitTimeInt* timeIntegrator,
-                       string eqnName ) : 
-                       d_fieldLabels(fieldLabels), 
-                       d_eqnName(eqnName), 
-                       d_timeIntegrator(timeIntegrator) {};
 
-  virtual ~DQMOMEqnBuilderBase(){};
-
-  virtual EqnBase* build() = 0;  
-
-protected: 
-  ArchesLabel* d_fieldLabels; 
-  string d_eqnName; 
-  ExplicitTimeInt* d_timeIntegrator; 
-}; // class DQMOMEqnBuilder
-
-// End builder 
-//---------------------------------------------------------------------------
+//==========================================================================
 
 /**
-  * @class  DQMOMEqnFactory
-  * @author Jeremy Thornock, Adapted from James Sutherland's code
-  * @date   November 19, 2008
-  * 
-  * @brief  A Factory for building eqns. 
-  * 
-  */
+* @class  DQMOMEqnFactory
+* @author Jeremy Thornock
+* @date   October 2008 : Initial version 
+*
+* @brief  Factory to manage DQMOM scalar transport equations (weights and weighted abscissas).
+*
+* @details
+* This class is implemented as a singleton.
+* 
+*/
+
 class DQMOM;
+class EqnBase;
+class DQMOMEqnBuilder;
 class DQMOMEqnFactory
 {
 public:
@@ -80,6 +53,7 @@ public:
   void sched_weightedAbscissaInit( const LevelP& level, 
                                    SchedulerP& ); 
 
+  /** @brief  Actually initialize weighted abscissa equations */
   void weightedAbscissaInit( const ProcessorGroup*,
                              const PatchSubset* patches,
                              const MaterialSubset*,
@@ -107,7 +81,7 @@ public:
 
   /** @brief  Register a scalar eqn with the builder.    */
   void register_scalar_eqn( const std::string name, 
-                            DQMOMEqnBuilderBase* builder);
+                            DQMOMEqnBuilder* builder);
 
   /** @brief  Retrieve a given scalar eqn.    */
   EqnBase& retrieve_scalar_eqn( const std::string name ); 
@@ -137,34 +111,38 @@ public:
     d_labelSet = true;
   }
 
+  /** @brief  Set the time integrator object for the DQMOM equation factory */
   inline void setTimeIntegrator( ExplicitTimeInt* timeIntegrator ){
     d_timeIntegrator = timeIntegrator;
     d_timeIntegratorSet = true;
   };
 
+  /** @brief  Get a boolean: is DQMOM used? (Is there a <DQMOM> block?) */
   inline bool getDoDQMOM() {
     return d_doDQMOM; };
 
+  /** @brief  Set the DQMOM solver object (this is managed by the DQMOM equation factory becuase it generates source terms for the DQMOM equations) */
   inline void setDQMOMSolver( DQMOM* solver ) {
     d_dqmomSolver = solver; }; 
 
+//cmr
 //  inline void setDQMOMSolvers( vector<DQMOM*> solvers ) {
 //    d_dqmomSolvers = solvers; };
     
 
 private:
-  typedef std::map< std::string, DQMOMEqnBuilderBase* >  BuildMap; 
+  typedef std::map< std::string, DQMOMEqnBuilder* >  BuildMap; 
 
   ArchesLabel* d_fieldLabels;
   ExplicitTimeInt* d_timeIntegrator;
   DQMOM* d_dqmomSolver;
   
   bool d_timeIntegratorSet; ///< Boolean: has the time integrator been set?
-  bool d_labelSet; ///< Boolean: has the ArchesLabel been set using setArchesLabel()?
-  bool d_doDQMOM;  ///< Boolean: is DQMOM being used?
+  bool d_labelSet;          ///< Boolean: has the ArchesLabel been set using setArchesLabel()?
+  bool d_doDQMOM;           ///< Boolean: is DQMOM being used?
 
-  BuildMap builders_; 
-  EqnMap eqns_; 
+  BuildMap builders_;       ///< Structure to hold the equation builder objects
+  EqnMap eqns_;             ///< Structure to hold the equation objects
 
   DQMOMEqnFactory(); 
   ~DQMOMEqnFactory(); 

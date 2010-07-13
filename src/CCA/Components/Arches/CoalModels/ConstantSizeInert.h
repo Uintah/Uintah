@@ -26,8 +26,8 @@ namespace Uintah{
   * 
   * The mass of the particle is an internal coordinate.
   *
-  * Eventually this will not be stored in "CoalModels", but rather will
-  * go into a directory for more generic two-phase models.
+  * Eventually this will not be stored in the "CoalModels/" directory, but rather 
+  * will go into a directory for more generic two-phase models.
   * 
   */
 
@@ -121,13 +121,13 @@ public:
 
 private:
 
-  vector<double> d_ash_mass;    ///< Vector of mass of ash in each environment
+  vector<double> d_ash_mass;              ///< Vector of mass of ash in each environment
 
-  const VarLabel* d_length_label;
-  const VarLabel* d_particle_mass_label;
+  const VarLabel* d_length_label;         ///< Variable label for particle length internal coordinate
+  const VarLabel* d_particle_mass_label;  ///< Variable label for particle mass internal coordinate
 
-  double d_length_scaling_constant;   ///< Scaling constant for particle length internal coordinate
-  double d_mass_scaling_constant;     ///< Scaling constant for particle mass internal coordinate
+  double d_length_scaling_constant;       ///< Scaling constant for particle length internal coordinate
+  double d_mass_scaling_constant;         ///< Scaling constant for particle mass internal coordinate
 
   bool d_useLength;    ///< Boolean: use length internal coordinate?
   bool d_useMass;      ///< Boolean: use mass inernal coordinate?

@@ -28,6 +28,7 @@
 
 #ifdef DEBUG_MATRICES
 #include <fstream>
+#include <iomanip>
 #endif
 
 //===========================================================================
@@ -225,13 +226,13 @@ void DQMOM::problemSetup(const ProblemSpecP& params)
 
       ProblemSpecP db_optimize = db_linear_solver->findBlock("Optimization");
 
-      if(db_optimize){
+      if(db_optimize) {
         b_optimize = true;
         db_optimize->get("Optimal_abscissas",d_opt_abscissas);
 
         if ( d_opt_abscissas.size() != N_xi*N_ ) {
           stringstream err;
-          err << "ERROR: DQMOM: problemSetup: You specified" << d_opt_abscissas.size() << " optimal abscissas, but you need " << N_xi*N_ << " abscissas." << endl;
+          err << "ERROR: DQMOM: problemSetup: You specified " << d_opt_abscissas.size() << " optimal abscissas, but you need " << N_xi*N_ << " abscissas." << endl;
           throw InvalidValue( err.str(),__FILE__,__LINE__);
         }
 
@@ -239,7 +240,9 @@ void DQMOM::problemSetup(const ProblemSpecP& params)
         AAopt->zero();
         constructAopt( AAopt, d_opt_abscissas );
         AAopt->invert();
+
       }
+
     } else {
       string err_msg = "ERROR: Arches: DQMOM: Unrecognized solver type "+d_solverType+": must be 'Lapack-invert', 'Lapack-svd', or 'LU'.\n";
       throw ProblemSetupException(err_msg,__FILE__,__LINE__);
@@ -310,8 +313,6 @@ DQMOM::sched_solveLinearSystem( const LevelP& level, SchedulerP& sched, int time
   string taskname = "DQMOM::solveLinearSystem";
   Task* tsk = scinew Task(taskname, this, &DQMOM::solveLinearSystem);
 
-  CoalModelFactory& model_factory = CoalModelFactory::self();
-
   if (timeSubStep == 0) {
     proc0cout << "Asking for norm labels" << endl; 
     tsk->computes(d_normBLabel); 
@@ -360,11 +361,10 @@ DQMOM::sched_solveLinearSystem( const LevelP& level, SchedulerP& sched, int time
     }
     
     // require model terms
-    vector<string> modelsList = (*iEqn)->getModelsList();
-    for ( vector<string>::iterator iModels = modelsList.begin(); iModels != modelsList.end(); ++iModels ) {
-      ModelBase& model_base = model_factory.retrieve_model(*iModels);
-      const VarLabel* model_label = model_base.getModelLabel();
-      tsk->requires( Task::NewDW, model_label, Ghost::None, 0 );
+    vector<const VarLabel*> modelsList = (*iEqn)->getModelsList();
+    int ss = 0;
+    for( vector<const VarLabel*>::iterator iModels = modelsList.begin(); iModels != modelsList.end(); ++iModels, ++ss ) {
+      tsk->requires( Task::NewDW, modelsList[ss], Ghost::None, 0);
     }
   }
 
@@ -519,7 +519,6 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
     
     // Put the weighted abscissa source term CCVariables in a vector
     counter = 0;
-    CoalModelFactory& modelFactory = CoalModelFactory::self();
     for( vector<DQMOMEqn*>::iterator iEqn = weightedAbscissaEqns.begin();
          iEqn != weightedAbscissaEqns.end(); ++iEqn ) {
       
@@ -537,12 +536,10 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
       (*weightedAbscissaSourceCCVars[counter]).initialize(0.0);
 
       // link the w.a. model term CCVariable with the VarLabel
-      vector<string> modelsList = weightedAbscissaEqns[counter]->getModelsList();
+      vector<const VarLabel*> modelsList = weightedAbscissaEqns[counter]->getModelsList();
       vector< constCCVariable<double>* > tempCCVector = weightedAbscissaModelsCCVars[counter];
       for( unsigned int ss=0; ss < modelsList.size(); ++ss ) {
-        ModelBase& model_base = modelFactory.retrieve_model( modelsList[ss] );
-        const VarLabel* model_label = model_base.getModelLabel();
-        new_dw->get( (*tempCCVector[ss]), model_label, matlIndex, patch, Ghost::None, 0 );
+        new_dw->get( (*tempCCVector[ss]), modelsList[ss], matlIndex, patch, Ghost::None, 0 );
       }
 
       ++counter;
@@ -659,7 +656,7 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
           }
 
           (**iter)[c] = (*XX)[z];
-          
+
           ++z;
         }
 

@@ -91,7 +91,13 @@ ConstantDensityCoal::problemSetup(const ProblemSpecP& params)
   out << d_quadNode; 
   string node = out.str();
 
-  db->require("density",d_density);
+  // NOTE: If user specifies density, the user cannot also specify both mass and length
+  // (or, alternatively, they can, but they must specify which of the two will have its 
+  //  initial conditions overwritten by the ConstantDensity model)
+  //
+  // maybe use initVars
+  //
+  //db->require("density",d_density);
 
   // -----------------------------------------------------------------
   // Look for required internal coordinates
@@ -167,6 +173,16 @@ ConstantDensityCoal::problemSetup(const ProblemSpecP& params)
   }
   */
 
+  if(!d_useRawCoal) {
+    string errmsg = "ERROR: Arches: ConstantDensityCoal: You did not specify a raw coal internal coordinate!\n";
+    throw ProblemSetupException(errmsg,__FILE__,__LINE__);
+  }
+
+  if(!d_useLength) {
+    string errmsg = "ERROR: Arches: ConstantDensityCoal: You did not specify a particle length internal coordinate!\n";
+    throw ProblemSetupException(errmsg,__FILE__,__LINE__);
+  }
+
 
   ///////////////////////////////////////////
 
@@ -191,6 +207,8 @@ ConstantDensityCoal::problemSetup(const ProblemSpecP& params)
     if( iter->second == "particle_length" ) {
       d_length_label = current_eqn->getTransportEqnLabel();
       d_length_scaling_constant = current_eqn->getScalingConstant();
+      DQMOMEqn* dqmom_eqn = (dynamic_cast<DQMOMEqn*>(current_eqn));
+      dqmom_eqn->addModel( d_modelLabel );
     } else if( iter->second == "raw_coal_mass" ) {
       d_raw_coal_mass_label = current_eqn->getTransportEqnLabel();
       d_rc_scaling_constant = current_eqn->getScalingConstant();
@@ -212,13 +230,16 @@ ConstantDensityCoal::problemSetup(const ProblemSpecP& params)
   //db->getWithDefault( "high_clip", d_highModelClip, 999999 );
 
   if( d_useRawCoal ) {
-    massLabels.push_back( d_raw_coal_mass_label );
+    d_massLabels.push_back( d_raw_coal_mass_label );
+    d_massScalingConstants.push_back( d_rc_scaling_constant );
   }
   if( d_useChar ) {
-    massLabels.push_back( d_char_mass_label );
+    d_massLabels.push_back( d_char_mass_label );
+    d_massScalingConstants.push_back( d_char_scaling_constant );
   } 
   if( d_useMoisture ) {
-    massLabels.push_back( d_moisture_mass_label );
+    d_massLabels.push_back( d_moisture_mass_label );
+    d_massScalingConstants.push_back( d_moisture_scaling_constant );
   }
 
 }
@@ -305,25 +326,25 @@ ConstantDensityCoal::sched_computeModel( const LevelP& level, SchedulerP& sched,
 
   Ghost::GhostType gn = Ghost::None;
 
-  d_timeSubStep = timeSubStep; 
-
-  if (d_timeSubStep == 0 && !d_labelSchedInit) {
+  if( timeSubStep == 0 && !d_labelSchedInit) {
     // Every model term needs to set this flag after the varLabel is computed. 
     // transportEqn.cleanUp should reinitialize this flag at the end of the time step. 
     d_labelSchedInit = true;
-
-    tsk->computes(d_modelLabel);
-    tsk->computes(d_gasLabel); 
-  } else {
-    tsk->modifies(d_modelLabel);
-    tsk->modifies(d_gasLabel);  
   }
 
   if( d_timeSubStep == 0 ) {
+    
+    tsk->computes(d_modelLabel);
+    tsk->computes(d_gasLabel); 
+
     tsk->requires(Task::OldDW, d_weight_label, gn, 0 );
     tsk->requires(Task::OldDW, d_length_label, gn, 0 );
 
   } else {
+
+    tsk->modifies(d_modelLabel);
+    tsk->modifies(d_gasLabel);  
+
     tsk->requires(Task::NewDW, d_weight_label, gn, 0 );
     tsk->requires(Task::NewDW, d_length_label, gn, 0 );
 
@@ -331,18 +352,16 @@ ConstantDensityCoal::sched_computeModel( const LevelP& level, SchedulerP& sched,
 
   // also need the source terms "G" for each mass internal coordinate
   DQMOMEqnFactory& dqmomFactory = DQMOMEqnFactory::self();
-  CoalModelFactory& coalFactory = CoalModelFactory::self();
   DQMOMEqn* eqn;
-  vector<string> models;
-  for( vector<const VarLabel*>::iterator iL = massLabels.begin(); iL != massLabels.end(); ++iL ) {
+  vector<const VarLabel*> models;
+  for( vector<const VarLabel*>::iterator iL = d_massLabels.begin(); iL != d_massLabels.end(); ++iL ) {
     eqn = dynamic_cast<DQMOMEqn*>( &dqmomFactory.retrieve_scalar_eqn((*iL)->getName()) );
     models = eqn->getModelsList();
-    for( vector<string>::iterator iS = models.begin(); iS != models.end(); ++iS ) {
-      const VarLabel* lab = (coalFactory.retrieve_model( *iS )).getModelLabel();
+    for( vector<const VarLabel*>::iterator iS = models.begin(); iS != models.end(); ++iS ) {
       if( d_timeSubStep == 0 ) { 
-        tsk->requires(Task::OldDW, lab, gn, 0);
+        tsk->requires(Task::OldDW, (*iS), gn, 0);
       } else { 
-        tsk->requires(Task::NewDW, lab, gn, 0);
+        tsk->requires(Task::NewDW, (*iS), gn, 0);
       }
     }
 
@@ -402,56 +421,49 @@ ConstantDensityCoal::computeModel( const ProcessorGroup * pc,
     int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
 
     CCVariable<double> model;
-    if( new_dw->exists(d_modelLabel, matlIndex, patch) ) {
-      new_dw->getModifiable( model, d_modelLabel, matlIndex, patch ); 
-    } else {
-      new_dw->allocateAndPut( model, d_modelLabel, matlIndex, patch );
-    }
-    model.initialize(0.0);
-
-    // This term is always 0 for density...
-    CCVariable<double> model_gasSource;
-    if( new_dw->exists(d_gasLabel, matlIndex, patch) ) {
-      new_dw->getModifiable( model_gasSource, d_gasLabel, matlIndex, patch ); 
-    } else {
-      new_dw->allocateAndPut( model_gasSource, d_gasLabel, matlIndex, patch ); 
-    }
-    model_gasSource.initialize(0.0);
+    CCVariable<double> model_gasSource; // always 0 for density
 
     constCCVariable<double> wa_length;
-    if( new_dw->exists(d_length_label, matlIndex, patch) ) {
-      new_dw->get(wa_length, d_length_label, matlIndex, patch, gn, 0 );
-    } else {
-      old_dw->get(wa_length, d_length_label, matlIndex, patch, gn, 0 );
-    }
-
     constCCVariable<double> weight;
-    if( new_dw->exists(d_weight_label, matlIndex, patch) ) {
-      new_dw->get( weight, d_weight_label, matlIndex, patch, gn, 0 );
-    } else {
+
+    if( timeSubStep == 0 ) {
+
+      new_dw->allocateAndPut( model, d_modelLabel, matlIndex, patch );
+      new_dw->allocateAndPut( model_gasSource, d_gasLabel, matlIndex, patch ); 
+
+      old_dw->get(wa_length, d_length_label, matlIndex, patch, gn, 0 );
       old_dw->get( weight, d_weight_label, matlIndex, patch, gn, 0 );
+
+    } else {
+
+      new_dw->getModifiable( model, d_modelLabel, matlIndex, patch ); 
+      new_dw->getModifiable( model_gasSource, d_gasLabel, matlIndex, patch ); 
+
+      new_dw->get(wa_length, d_length_label, matlIndex, patch, gn, 0 );
+      new_dw->get( weight, d_weight_label, matlIndex, patch, gn, 0 );
+
     }
+    model.initialize(0.0);
+    model_gasSource.initialize(0.0);
 
     // make a vector of all the mass internal coordinate model terms
     DQMOMEqnFactory& dqmomFactory = DQMOMEqnFactory::self();
-    CoalModelFactory& coalFactory = CoalModelFactory::self();
     DQMOMEqn* eqn;
-    vector<string> models;
+    vector<const VarLabel*> models;
     int z = 0;
     
     vector< constCCVariable<double>* > modelCCVars;
 
     // put the model terms into constCCVariables, and the constCCVariables into a vector
-    for( vector<const VarLabel*>::iterator iL = massLabels.begin(); iL != massLabels.end(); ++iL ) {
+    for( vector<const VarLabel*>::iterator iL = d_massLabels.begin(); iL != d_massLabels.end(); ++iL ) {
       eqn = dynamic_cast<DQMOMEqn*>( &dqmomFactory.retrieve_scalar_eqn((*iL)->getName()) );
       models = eqn->getModelsList();
-      for( vector<string>::iterator iS = models.begin(); iS != models.end(); ++iS ) {
-        const VarLabel* lab = (coalFactory.retrieve_model(*iS)).getModelLabel();
+      for( vector<const VarLabel*>::iterator iS = models.begin(); iS != models.end(); ++iS ) {
         modelCCVars[z] = scinew constCCVariable<double>;
-        if( new_dw->exists(lab, matlIndex, patch) ) {
-          new_dw->get( (*modelCCVars[z]), lab, matlIndex, patch, gn, 0 );
+        if( timeSubStep == 0 ) {
+          old_dw->get( (*modelCCVars[z]), (*iS), matlIndex, patch, gn, 0 );
         } else {
-          old_dw->get( (*modelCCVars[z]), lab, matlIndex, patch, gn, 0 );
+          new_dw->get( (*modelCCVars[z]), (*iS), matlIndex, patch, gn, 0 );
         }
       }//end models for those i.c.s
     }//end mass labels
@@ -465,8 +477,9 @@ ConstantDensityCoal::computeModel( const ProcessorGroup * pc,
 
       double model_sum = 0.0;
 
-      for( vector< constCCVariable<double>* >::iterator iM = modelCCVars.begin(); iM != modelCCVars.end(); ++iM ) {
-        model_sum += (**iM)[c];
+      int z=0;
+      for( vector< constCCVariable<double>* >::iterator iM = modelCCVars.begin(); iM != modelCCVars.end(); ++iM, ++z ) {
+        model_sum += (**iM)[c] * d_massScalingConstants[z];
       }
 
       double unscaled_length;

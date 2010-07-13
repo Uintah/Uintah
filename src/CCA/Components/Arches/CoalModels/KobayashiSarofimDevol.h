@@ -15,19 +15,20 @@ namespace Uintah{
 /**
   * @class    KobayashiSarofimDevol
   * @author   Jeremy Thornock, Julien Pedel, Charles Reid
-  * @date     May 2009        Check-in of initial version
-  *           November 2009   Verification
+  * @date     May 2009      : Check-in of initial version \n
+  *           November 2009 : Verification \n
+  *           July 2010     : Cleanup \n
   *
   * @brief    A class for calculating the raw coal internal coordinate
   *           model term for the Kobayashi-Sarofim coal devolatilization model.
   *
-  * @todo     Add calculation of char production model term.
+  * @todo     
+  * Add calculation of char production model term. (But first, the model list storage in DQMOMEqn class must be fixed)
   *
   */
 
 //---------------------------------------------------------------------------
 // Builder
-
 class ArchesLabel;
 class KobayashiSarofimDevolBuilder: public ModelBuilder 
 {
@@ -116,9 +117,6 @@ private:
   
   double R;         ///< Ideal gas constant
   
-  //bool d_compute_particle_temp; ///< Boolean: is particle temperature computed? 
-                                //   (if not, gas temp = particle temp)
-
   bool d_useRawCoal;   ///< Boolean: is a DQMOM internal coordinate specified for raw coal mass?
   bool d_useChar;      ///< Boolean: is a DQMOM internal coordinate specified for char mass?
   bool d_useTparticle; ///< Boolean: is a DQMOM internal coordinate specified for particle temperature?

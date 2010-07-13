@@ -5,7 +5,7 @@
 <Uintah_specification>
   
   <Meta>
-    <title>DQMOM Coal Devolatilization Test 1a - Constant Gas Temp, Tparticles = Tgas (2 IC, 3 Env, Optimized Solver)</title>
+    <title>DQMOM Balachandar Particle Velocity Test 1a - Constant Density, Constant Mass (2 IC, 3 Env, Optimized Solver)</title>
   </Meta>
 
   <SimulationComponent type="arches" />
@@ -20,7 +20,7 @@
   </Time>
 
   <DataArchiver>
-    <filebase>uda_devol_test_1a.uda</filebase>
+    <filebase>uda_bala_test_1a.uda</filebase>
     <outputTimestepInterval>1</outputTimestepInterval>
     <outputInitTimestep />
 
@@ -39,11 +39,6 @@
     <save label = "continuityResidual"/>
     <save label = "velocityDivergence"/>
 
-    <!-- EXTRA SCALARS -->
-    <save label = "scalar_temperature"/>
-    <save label = "eta" />
-    <save label = "inert" />
-
     <!-- DQMOM Vars -->
     <save label = "w_qn0"/>
     <save label = "w_qn1"/>
@@ -61,31 +56,34 @@
     <save label = "length_qn1_src"/>
     <save label = "length_qn2_src"/>
 
-    <save label = "RCmass_qn0"/>
-    <save label = "RCmass_qn1"/>
-    <save label = "RCmass_qn2"/>
+    <save label = "mass_qn0"/>
+    <save label = "mass_qn1"/>
+    <save label = "mass_qn2"/>
 
-    <save label = "RCmass_qn0_src"/>
-    <save label = "RCmass_qn1_src"/>
-    <save label = "RCmass_qn2_src"/>
+    <save label = "mass_qn0_src"/>
+    <save label = "mass_qn1_src"/>
+    <save label = "mass_qn2_src"/>
 
-    <save label = "sarofim_qn0" />
-    <save label = "sarofim_qn1" />
-    <save label = "sarofim_qn2" />
+    <save label = "vel_qn0" />
+    <save label = "vel_qn1" />
+    <save label = "vel_qn2" />
 
-    <save label = "sarofim_qn0_gasSource" />
-    <save label = "sarofim_qn1_gasSource" />
-    <save label = "sarofim_qn2_gasSource" />
+    <save label = "rhop_qn0" />
+    <save label = "rhop_qn1" />
+    <save label = "rhop_qn2" />
+    
+    <!-- these should be 0 -->
+    <save label = "bala_qn0" />
+    <save label = "bala_qn1" />
+    <save label = "bala_qn2" />
+
+    <save label = "my_density_qn0" />
+    <save label = "my_density_qn1" />
+    <save label = "my_density_qn2" />
 
     <save label = "moment_00" />
     <save label = "moment_01" />
     <save label = "moment_10" />
-    <save label = "moment_02" />
-    <save label = "moment_20" />
-    <save label = "moment_12" />
-    <save label = "moment_22" />
-    <save label = "moment_32" />
-    <save label = "moment_23" />
 
     <checkpoint cycle = "2" interval = "5"/>
     <compression>gzip</compression>
@@ -114,15 +112,17 @@
 
     <!-- ARCHES specification -->
     <ARCHES>
-      <MMS whichMMS="almgrenMMS" >
-        <mmsErrorType>L2</mmsErrorType>
-        <almgrenMMS>
-          <!--Note: This viscosity needs to be set twice for now, both here
-                    and in the PhysicalConstant section. -->
-          <viscosity>0.0002</viscosity>
-          <amplitude>1.0</amplitude>
-        </almgrenMMS>
-      </MMS>
+        <MMS whichMMS="constantMMS" >
+            <mmsErrorType>Linf</mmsErrorType>
+            <constantMMS>
+                <cu>1.0</cu>
+                <cv>2.0</cv>
+                <cw>3.0</cw>
+                <cp>100</cp>
+                <esphi0>0.0</esphi0>
+                <phi0>0.0</phi0>
+            </constantMMS>
+        </MMS>
 
       <!-- TIME INTEGRATOR -->
       <TimeIntegrator>
@@ -131,47 +131,6 @@
 
       <!-- EXTRA SCALARS -->
       <TransportEqns>
-
-        <Eqn label="scalar_temperature" type = "CCscalar">
-          <doDiff>false</doDiff>
-          <doConv>false</doConv>
-          <conv_scheme>super_bee</conv_scheme>
-          <initialization type = "constant">
-            <constant>1800</constant>
-          </initialization>
-        </Eqn>
-
-        <Eqn label = "eta" type = "CCscalar">
-            <doDiff>false</doDiff>
-            <doConv>false</doConv>
-            <addSources>true</addSources>
-            <conv_scheme>super_bee</conv_scheme>
-            <src label = "eta_source"/>
-            <initialization type="constant">
-                <constant>0.0</constant>
-            </initialization>
-        </Eqn>
-
-        <Eqn label = "inert" type = "CCscalar">
-            <doDiff>false</doDiff>
-            <doConv>false</doConv>
-            <addSources>true</addSources>
-            <conv_scheme>super_bee</conv_scheme>
-            <src label = "const_source"/>
-            <initialization type="constant">
-                <constant>0.0</constant>
-            </initialization>
-        </Eqn>
-
-        <Sources>
-            <src label = "eta_source" type = "CoalGasDevol">
-                <devol_model_name>sarofim</devol_model_name>
-            </src>
-            <src label = "const_source" type = "ConstantSourceTerm">
-                <constant>1.0</constant>
-            </src>
-        </Sources>
-                
       </TransportEqns>
 
       <Coal_Properties>
@@ -199,23 +158,21 @@
         <!-- particle models --> 
         <Models>
             
-            <model label="sarofim" type="KobayashiSarofimDevol">
+            <model label="bala" type="Balachandar">
                 <ICVars>
-                    <variable label="RCmass" role="raw_coal_mass" />
+                    <variable label="length" role="particle_length" />
                 </ICVars>
-                <scalarVars>
-                    <variable label="scalar_temperature" role="gas_temperature"/>
-                </scalarVars>
+                <L>.2</L>
+                <eta>1.0e-2</eta>
+                <regime>2</regime>
             </model>
-
-            <!--
-            <model label="my_density" type="ConstantSize">
+            
+            <model label="my_density" type="ConstantDensityInert">
                 <ICVars>
-                    <variable label="RCmass" role="raw_coal_mass" />
-                    <variable lable="length" role="length" />
+                    <variable label="length" role="particle_length" />
+                    <variable label="mass" role="particle_mass" />
                 </ICVars>
             </model>
-            -->
 
         </Models>
 
@@ -242,20 +199,16 @@
             <scaling_const>1.0e-6</scaling_const>
         </Ic>
 
-        <Ic label="RCmass">
+        <Ic label="mass">
             <!-- l [=] m -->
             <doDiff>false</doDiff>
             <doConv>false</doConv>
             <initialization type="env_constant">
-                <env_constant qn="0" value="30.0e-10"></env_constant>
-                <env_constant qn="1" value="70.0e-10"></env_constant>
-                <env_constant qn="2" value="100.0e-10"></env_constant>
+                <env_constant qn="0" value="10.0e-8"></env_constant>
+                <env_constant qn="1" value="20.0e-8"></env_constant>
+                <env_constant qn="2" value="30.0e-8"></env_constant>
             </initialization>
-            <scaling_const>1.0e-10</scaling_const>
-            <model label="sarofim" />
-            <Clipping>
-              <low>0.0</low>
-            </Clipping>
+            <scaling_const>1.0e-8</scaling_const>
         </Ic>
 
         <Moment><m>[0,0]</m></Moment>
@@ -316,11 +269,11 @@
 
         <MomentumSolver>
           <convection_scheme>central</convection_scheme>
+          <!--src label = "bala" /-->
         </MomentumSolver>
 
         <MixtureFractionSolver>
           <convection_scheme>central-upwind</convection_scheme>
-          <src label = "eta_source" />
         </MixtureFractionSolver>
 
       </ExplicitSolver>

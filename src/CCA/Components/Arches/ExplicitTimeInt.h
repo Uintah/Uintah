@@ -12,6 +12,11 @@
 
 namespace Uintah {
 
+/** @class    ExplicitTimeInt
+  * @author   Jeremy Thornock
+  *
+  */
+
 using namespace SCIRun; 
 class ArchesLabel;   
 class ExplicitTimeInt {
@@ -156,7 +161,7 @@ private:
   {
 		for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
       IntVector c = *iter; 
-			phi[*iter] = ssp_alpha[step]*old_phi[c] + ssp_beta[step]*phi[c];	
+			phi[c] = ssp_alpha[step]*old_phi[c] + ssp_beta[step]*phi[c];	
     }
 
 

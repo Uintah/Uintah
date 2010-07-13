@@ -211,7 +211,6 @@ ConstantSizeInert::sched_computeParticleDensity( const LevelP& level,
 
   d_timeSubStep = timeSubStep;
 
-  // Density labels
   if( timeSubStep == 0 ) {
     tsk->computes( d_density_label );
   } else {
@@ -293,13 +292,11 @@ ConstantSizeInert::computeParticleDensity( const ProcessorGroup* pc,
       double unscaled_mass;
 
       if(weight_is_small) {
-
         unscaled_weight = 0.0;
         unscaled_length = 0.0;
         unscaled_mass = 0.0;
 
       } else {
-
         unscaled_weight = weight[c]*d_w_scaling_constant;
         unscaled_length = (wa_length[c]*d_length_scaling_constant)/weight[c];
         unscaled_mass = (wa_particle_mass[c]*d_mass_scaling_constant)/weight[c];

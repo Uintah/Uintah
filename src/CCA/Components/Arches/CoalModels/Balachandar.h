@@ -8,6 +8,8 @@
 #include <CCA/Components/Arches/ArchesVariables.h>
 #include <CCA/Components/Arches/Directives.h>
 
+namespace Uintah{
+
 //===========================================================================
 
 /**
@@ -23,7 +25,6 @@
 
 //---------------------------------------------------------------------------
 // Builder
-namespace Uintah{
 
 class BalachandarBuilder: public ModelBuilder
 {

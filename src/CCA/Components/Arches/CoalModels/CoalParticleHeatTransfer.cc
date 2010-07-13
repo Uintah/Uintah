@@ -224,6 +224,25 @@ CoalParticleHeatTransfer::problemSetup(const ProblemSpecP& params)
     }//end for scalar variables
   }
 
+  if(!d_useRawCoal) {
+    string errmsg = "ERROR: Arches: CoalParticleHeatTransfer: No raw coal variable was specified. Quitting...";
+    throw ProblemSetupException(errmsg,__FILE__,__LINE__);
+  }
+
+  if(!d_useTp) { 
+    string errmsg = "ERROR: Arches: CoalParticleHeatTransfer: No particle temperature variable was specified. Quitting...";
+    throw ProblemSetupException(errmsg,__FILE__,__LINE__);
+  }
+
+	if(!d_useLength) {
+    string errmsg = "ERROR: Arches: CoalParticleHeatTransfer: No particle length variable was specified. Quitting...";
+    throw ProblemSetupException(errmsg,__FILE__,__LINE__);
+	}
+
+  if(!d_useTgas) {
+    d_gas_temperature_label = d_fieldLabels->d_tempINLabel;
+  }
+
 
   ///////////////////////////////////////////
 
@@ -260,6 +279,9 @@ CoalParticleHeatTransfer::problemSetup(const ProblemSpecP& params)
     } else if( iter->second == "particle_temperature" ) {
       d_particle_temperature_label = current_eqn->getTransportEqnLabel();
       d_pt_scaling_constant = current_eqn->getScalingConstant();
+
+      DQMOMEqn* dqmom_eqn = dynamic_cast<DQMOMEqn*>(current_eqn);
+      dqmom_eqn->addModel( d_modelLabel );
     } else if( iter->second == "gas_temperature" ) {
       d_gas_temperature_label = current_eqn->getTransportEqnLabel();
     } else {
@@ -267,26 +289,6 @@ CoalParticleHeatTransfer::problemSetup(const ProblemSpecP& params)
       throw ProblemSetupException(errmsg,__FILE__,__LINE__);
     }
 
-  }
-
-
-  if(!d_useRawCoal) {
-    string errmsg = "ERROR: Arches: CoalParticleHeatTransfer: No raw coal variable was specified. Quitting...";
-    throw ProblemSetupException(errmsg,__FILE__,__LINE__);
-  }
-
-  if(!d_useTp) { 
-    string errmsg = "ERROR: Arches: CoalParticleHeatTransfer: No particle temperature variable was specified. Quitting...";
-    throw ProblemSetupException(errmsg,__FILE__,__LINE__);
-  }
-
-	if(!d_useLength) {
-    string errmsg = "ERROR: Arches: CoalParticleHeatTransfer: No particle length variable was specified. Quitting...";
-    throw ProblemSetupException(errmsg,__FILE__,__LINE__);
-	}
-
-  if(!d_useTgas) {
-    d_gas_temperature_label = d_fieldLabels->d_tempINLabel;
   }
 
   // set model clipping
@@ -322,91 +324,91 @@ CoalParticleHeatTransfer::sched_computeModel( const LevelP& level, SchedulerP& s
 
   Ghost::GhostType gn = Ghost::None;
 
-  d_timeSubStep = timeSubStep; 
+  CoalModelFactory& coalFactory = CoalModelFactory::self();
 
   if (d_timeSubStep == 0 && !d_labelSchedInit) {
     // Every model term needs to set this flag after the varLabel is computed. 
     // transportEqn.cleanUp should reinitialize this flag at the end of the time step. 
     d_labelSchedInit = true;
+  }
 
+  if( timeSubStep == 0 ) {
+  
+    // calculated quantities
     tsk->computes(d_modelLabel);
     tsk->computes(d_gasLabel); 
     tsk->computes(d_abskp);
-  } else {
-    tsk->modifies(d_modelLabel);
-    tsk->modifies(d_gasLabel);  
-    tsk->modifies(d_abskp);
-  }
 
-  // required variables:
-  // gas temp
-  // particle temp
-  // gas density
-  // gas heat capacity
-  // (particle heat capacity depends on internal coordinates)
-  // radiation variables
-  // particle internal coordinates and weights
+    // density
+    tsk->requires(Task::OldDW, d_fieldLabels->d_densityCPLabel, gn, 0);
 
-  CoalModelFactory& coalFactory = CoalModelFactory::self();
-
-  // gas density
-  tsk->requires(Task::OldDW, d_fieldLabels->d_densityCPLabel, gn, 0);
-
-  if( timeSubStep == 0 ) {
-
-    // velocities - gas and particle velocities 
+    // velocity
     if( coalFactory.useParticleVelocityModel() ) {
       tsk->requires( Task::OldDW, coalFactory.getParticleVelocityLabel(d_quadNode), gn, 0 );
     }
     tsk->requires( Task::OldDW, d_fieldLabels->d_newCCVelocityLabel, gn, 0);
 
-    // temperatures
+    // temperature
     tsk->requires( Task::OldDW, d_particle_temperature_label, gn, 0 );
     tsk->requires( Task::OldDW, d_gas_temperature_label, gn, 0 );
 
-    // radiation variables
+    // radiation
     if(b_radiation){
       tsk->requires(Task::OldDW, d_fieldLabels->d_radiationSRCINLabel,  gn, 0);
       tsk->requires(Task::OldDW, d_fieldLabels->d_abskgINLabel,  gn, 0);   
       tsk->requires(Task::OldDW, d_fieldLabels->d_radiationVolqINLabel, gn, 0);
     }
 
-    //// particle internal coordinates and weights
+    // DQMOM internal coordinates
     tsk->requires(Task::OldDW, d_weight_label, gn, 0 );
     tsk->requires(Task::OldDW, d_raw_coal_mass_label, gn, 0);
-    if(d_useLength) {
-      tsk->requires(Task::OldDW, d_length_label, gn, 0);
-    }
+    tsk->requires(Task::OldDW, d_length_label, gn, 0);
     tsk->requires(Task::OldDW, d_particle_temperature_label, gn, 0);
-    tsk->requires(Task::OldDW, d_gas_temperature_label, gn, 0);
+    if( d_useChar ) {
+      tsk->requires(Task::OldDW, d_char_mass_label, gn, 0);
+    }
+    if( d_useMoisture ) {
+      tsk->requires(Task::OldDW, d_moisture_mass_label, gn, 0);
+    }
 
   } else {
 
-    // velocities - gas and particle velocities 
+    // calculated quantities
+    tsk->modifies(d_modelLabel);
+    tsk->modifies(d_gasLabel);  
+    tsk->modifies(d_abskp);
+
+    // density
+    tsk->requires(Task::NewDW, d_fieldLabels->d_densityCPLabel, gn, 0);
+
+    // velocity
     if( coalFactory.useParticleVelocityModel() ) {
       tsk->requires( Task::NewDW, coalFactory.getParticleVelocityLabel(d_quadNode), gn, 0 );
     }
     tsk->requires( Task::NewDW, d_fieldLabels->d_newCCVelocityLabel, gn, 0);
 
-    // temperatures
+    // temperature
     tsk->requires( Task::NewDW, d_particle_temperature_label, gn, 0 );
     tsk->requires( Task::NewDW, d_gas_temperature_label, gn, 0 );
 
-    // radiation variables
+    // radiation 
     if(b_radiation){
       tsk->requires(Task::NewDW, d_fieldLabels->d_radiationSRCINLabel,  gn, 0);
       tsk->requires(Task::NewDW, d_fieldLabels->d_abskgINLabel,  gn, 0);   
       tsk->requires(Task::NewDW, d_fieldLabels->d_radiationVolqINLabel, gn, 0);
     }
 
-    // particle internal coordinates and weights
+    // DQMOM internal coordinates 
     tsk->requires(Task::NewDW, d_weight_label, gn, 0 );
     tsk->requires(Task::NewDW, d_raw_coal_mass_label, gn, 0);
-    if(d_useLength) {
-      tsk->requires(Task::NewDW, d_length_label, gn, 0);
-    }
+    tsk->requires(Task::NewDW, d_length_label, gn, 0);
     tsk->requires(Task::NewDW, d_particle_temperature_label, gn, 0);
-    tsk->requires(Task::NewDW, d_gas_temperature_label, gn, 0);
+    if( d_useChar ) {
+      tsk->requires(Task::NewDW, d_char_mass_label, gn, 0);
+    }
+    if( d_useMoisture ) {
+      tsk->requires(Task::NewDW, d_moisture_mass_label, gn, 0);
+    }
 
   }
 
@@ -435,22 +437,28 @@ CoalParticleHeatTransfer::computeModel( const ProcessorGroup * pc,
 
     CoalModelFactory& coalFactory = CoalModelFactory::self();
 
+    // calculated quantities
     CCVariable<double> heat_rate;
     CCVariable<double> gas_heat_rate; 
     CCVariable<double> abskp; 
 
+    // density
+    constCCVariable<double> gas_density;
+    
+    // velocity
     constCCVariable<Vector> particle_velocity;
     constCCVariable<Vector> gas_velocity;
 
-    constCCVariable<double> gas_density;
-
+    // temperature
     constCCVariable<double> wa_particle_temperature;
     constCCVariable<double> gas_temperature;
 
+    // radiation
     constCCVariable<double> radiationSRCIN;
     constCCVariable<double> abskgIN;
     constCCVariable<double> radiationVolqIN;
 
+    // DQMOM internal coordinates
     constCCVariable<double> weight;
     constCCVariable<double> wa_raw_coal_mass;
     constCCVariable<double> wa_particle_length;
@@ -459,6 +467,7 @@ CoalParticleHeatTransfer::computeModel( const ProcessorGroup * pc,
 
     if( timeSubStep == 0 ) {
 
+      // calculated quantities
       new_dw->allocateAndPut( heat_rate, d_modelLabel, matlIndex, patch );
       heat_rate.initialize(0.0);
 
@@ -468,6 +477,10 @@ CoalParticleHeatTransfer::computeModel( const ProcessorGroup * pc,
       new_dw->allocateAndPut( abskp, d_abskp, matlIndex, patch );
       abskp.initialize(0.0);
 
+      // density
+      old_dw->get( gas_density, d_fieldLabels->d_densityCPLabel, matlIndex, patch, gn, 0 ); 
+
+      // velocity
       if( coalFactory.useParticleVelocityModel() ) {
         old_dw->get( particle_velocity, coalFactory.getParticleVelocityLabel( d_quadNode ), matlIndex, patch, gn, 0 );
       } else {
@@ -475,15 +488,18 @@ CoalParticleHeatTransfer::computeModel( const ProcessorGroup * pc,
       }
       old_dw->get( gas_velocity, d_fieldLabels->d_newCCVelocityLabel, matlIndex, patch, gn, 0 );
 
-      old_dw->get( gas_density, d_fieldLabels->d_densityCPLabel, matlIndex, patch, gn, 0 ); 
+      // temperature
       old_dw->get( wa_particle_temperature, d_particle_temperature_label, matlIndex, patch, gn, 0);
+      old_dw->get( gas_temperature, d_gas_temperature_label, matlIndex, patch, gn, 0 );
 
+      // radiation
       if(b_radiation) { 
         old_dw->get(radiationSRCIN, d_fieldLabels->d_radiationSRCINLabel, matlIndex, patch, gn, 0);
         old_dw->get(abskgIN, d_fieldLabels->d_abskgINLabel, matlIndex, patch, gn, 0);
         old_dw->get(radiationVolqIN, d_fieldLabels->d_radiationVolqINLabel, matlIndex, patch, gn, 0);
       }
 
+      // DQMOM internal coordinates
       old_dw->get( weight, d_weight_label, matlIndex, patch, gn, 0 );
       old_dw->get( wa_raw_coal_mass, d_raw_coal_mass_label, matlIndex, patch, gn, 0 );
       if(d_useLength) {
@@ -499,10 +515,15 @@ CoalParticleHeatTransfer::computeModel( const ProcessorGroup * pc,
 
     } else {
 
+      // calculated quantities
       new_dw->getModifiable( heat_rate, d_modelLabel, matlIndex, patch ); 
       new_dw->getModifiable( gas_heat_rate, d_gasLabel, matlIndex, patch ); 
       new_dw->getModifiable( abskp, d_abskp, matlIndex, patch ); 
 
+      // density
+      new_dw->get( gas_density, d_fieldLabels->d_densityCPLabel, matlIndex, patch, gn, 0 ); 
+
+      // velocity
       if( coalFactory.useParticleVelocityModel() ) {
         new_dw->get( particle_velocity, coalFactory.getParticleVelocityLabel( d_quadNode ), matlIndex, patch, gn, 0 );
       } else {
@@ -510,15 +531,18 @@ CoalParticleHeatTransfer::computeModel( const ProcessorGroup * pc,
       }
       new_dw->get( gas_velocity, d_fieldLabels->d_newCCVelocityLabel, matlIndex, patch, gn, 0 );
 
-      new_dw->get( gas_density, d_fieldLabels->d_densityCPLabel, matlIndex, patch, gn, 0 ); 
+      // temperature
       new_dw->get( wa_particle_temperature, d_particle_temperature_label, matlIndex, patch, gn, 0);
+      new_dw->get( gas_temperature, d_gas_temperature_label, matlIndex, patch, gn, 0 );
 
+      // radiation
       if(b_radiation) {
         new_dw->get(radiationSRCIN, d_fieldLabels->d_radiationSRCINLabel, matlIndex, patch, gn, 0);
         new_dw->get(abskgIN, d_fieldLabels->d_abskgINLabel, matlIndex, patch, gn, 0);
         new_dw->get(radiationVolqIN, d_fieldLabels->d_radiationVolqINLabel, matlIndex, patch, gn, 0);
       }
 
+      // DQMOM internal coordinates
       new_dw->get( weight, d_weight_label, matlIndex, patch, gn, 0 );
       new_dw->get( wa_raw_coal_mass, d_raw_coal_mass_label, matlIndex, patch, gn, 0 );
       if(d_useLength) {

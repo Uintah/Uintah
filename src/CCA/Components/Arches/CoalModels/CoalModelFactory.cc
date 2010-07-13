@@ -206,7 +206,7 @@ void CoalModelFactory::problemSetup(const ProblemSpecP& params)
         // This ModelBuilder stuff is pointless here!
         // It was designed so that models were only built as needed, when needed
         // But we're building everything right away, there's no situation where we WOULDN'T build the model...
-        // cmr
+        // -cmr
         
 //-------- Constant models
         if ( model_type == "ConstantModel" ) {

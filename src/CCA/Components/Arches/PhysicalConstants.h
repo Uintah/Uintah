@@ -138,9 +138,9 @@ private:
 
 private:
 
-  Vector d_gravity;
-  IntVector d_ref_point;
-  double d_viscosity;
+  Vector d_gravity;       ///< [=] m/s^2 : Gravitational force components (vector)
+  IntVector d_ref_point;  ///< Reference point for pressure
+  double d_viscosity;     ///< [=] m^2/s : molecular viscosity; as far as I can tell, this is kinematic viscosity, but I'm not entirely sure.  --Charles
     
 }; // end class PhysicalConstants
 } // End namespace Uintah

@@ -14,6 +14,8 @@
 #include <CCA/Components/Arches/Directives.h>
 #include <Core/Parallel/Parallel.h>
 
+namespace Uintah{
+
 //==========================================================================
 
 /**
@@ -23,11 +25,11 @@
  *
  * @brief A discretization toolbox.
  *       
- *
+ * @details
+ * (More information goes here)
  *
  */
 
-namespace Uintah{
   class Discretization_new {
 
     // Functionally includes:
@@ -74,7 +76,7 @@ namespace Uintah{
             std::string convScheme);
 
       /** @brief Computes the diffusion term for a scalar:
-       * \int_S \grad \phi \cdot \dS */
+          \f$ \int_S \grad \phi \cdot \dS \f$ */
       template <class fT, class oldPhiT, class gammaT> void 
         computeDiff( const Patch* p, fT& Fdiff, oldPhiT& oldPhi, gammaT& gamma,
         constCCVariable<Vector>& areaFraction, double turbPr, int mat_id, string varName );

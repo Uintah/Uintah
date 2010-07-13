@@ -533,7 +533,7 @@
     <gravity            spec="REQUIRED VECTOR" /> <!-- THIS IS OPTIONAL IN ICE AND MPM, DEFAULT IS 0,0,0 -->
     <reference_pressure spec="OPTIONAL DOUBLE" />
     <reference_point    spec="OPTIONAL VECTOR" />
-    <viscosity          spec="OPTIONAL DOUBLE" />
+    <viscosity          spec="OPTIONAL DOUBLE" /> <!-- [=] m^2/s : kinematic viscosity -->
   </PhysicalConstants>
 
   <CFD                                  spec="OPTIONAL NO_DATA" >

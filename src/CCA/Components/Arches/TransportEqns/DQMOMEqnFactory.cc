@@ -65,7 +65,7 @@ void DQMOMEqnFactory::problemSetup(const ProblemSpecP& params)
   proc0cout << "******* DQMOM Equation Registration ********" << endl; 
 
   // ---------------------------------------------------------------
-  // Step 1: register all equations with the DQMOMEqnFactory 
+  // Step 1: register all weight equations with the DQMOMEqnFactory 
 
   if( dqmom_db ) {
     // Make the weight transport equations
@@ -81,24 +81,22 @@ void DQMOMEqnFactory::problemSetup(const ProblemSpecP& params)
 
       proc0cout << "Creating a weight for: " << weight_name << endl;
 
-      DQMOMEqnBuilderBase* eqnBuilder = scinew DQMOMEqnBuilder( d_fieldLabels, d_timeIntegrator, weight_name ); 
+      bool isWeight = true;
+      DQMOMEqnBuilder* eqnBuilder = scinew DQMOMEqnBuilder( d_fieldLabels, d_timeIntegrator, weight_name, iqn, isWeight ); 
       register_scalar_eqn( weight_name, eqnBuilder );     
 
-
-      // ---------------------------------------------------------
-      // Step 2: run EqnBase::problemSetup() for each weight equation
-
+   // ---------------------------------------------------------
+   // Step 2: run EqnBase::problemSetup() for each weight equation
       EqnMap::iterator iE = eqns_.find(weight_name);
       if( iE != eqns_.end() ) {
         DQMOMEqn* dqmom_eqn = dynamic_cast<DQMOMEqn*>(iE->second);
-        dqmom_eqn->setAsWeight();
-        dqmom_eqn->setQuadNode(iqn);
-        dqmom_eqn->problemSetup( w_db, iqn );
+        dqmom_eqn->problemSetup( w_db );
       }
       
     }
 
-    // Make the weighted abscissa 
+  // ---------------------------------------------------------------
+  // Step 1: register all weighted abscissa equations with the DQMOMEqnFactory 
     for (ProblemSpecP ic_db = dqmom_db->findBlock("Ic"); ic_db != 0; ic_db = ic_db->findNextBlock("Ic")){
       std::string ic_name;
       ic_db->getAttribute("label", ic_name);
@@ -119,17 +117,16 @@ void DQMOMEqnFactory::problemSetup(const ProblemSpecP& params)
 
         proc0cout << "Created a weighted abscissa for: " << final_name << endl; 
 
-        DQMOMEqnBuilderBase* eqnBuilder = scinew DQMOMEqnBuilder( d_fieldLabels, d_timeIntegrator, final_name ); 
+        bool isWeight = false;
+        DQMOMEqnBuilder* eqnBuilder = scinew DQMOMEqnBuilder( d_fieldLabels, d_timeIntegrator, final_name, iqn, isWeight ); 
         register_scalar_eqn( final_name, eqnBuilder );     
 
-        // ---------------------------------------------------------
-        // Step 2: run EqnBase::problemSetup() for each abscissa equation
-
+      // ---------------------------------------------------------
+      // Step 2: run EqnBase::problemSetup() for each abscissa equation
         EqnMap::iterator iE = eqns_.find(final_name);
         if( iE != eqns_.end() ) {
           DQMOMEqn* dqmom_eqn = dynamic_cast<DQMOMEqn*>(iE->second);
-          dqmom_eqn->setQuadNode(iqn);
-          dqmom_eqn->problemSetup( ic_db, iqn );
+          dqmom_eqn->problemSetup( ic_db );
         }
 
       } 
@@ -347,7 +344,8 @@ The procedure for this method is as follows:
 1. Initialize DQMOM equation variables, if necessary
 2. Solve the DQMOM linear system AX=B
 3. Update the DQMOM equation variables using the results from AX=B
-4. Clean up after the equation evaluations, if necessary
+4. Clip
+5. Clean up after the equation evaluations, if necessary
 */
 void 
 DQMOMEqnFactory::sched_evalTransportEqns( const LevelP& level, SchedulerP& sched, int timeSubStep )
@@ -375,6 +373,16 @@ DQMOMEqnFactory::sched_evalTransportEqns( const LevelP& level, SchedulerP& sched
   for( EqnMap::iterator iEqn = eqns_.begin(); iEqn != eqns_.end(); ++iEqn ) {
     iEqn->second->sched_buildTransportEqn( level, sched, timeSubStep );
     iEqn->second->sched_solveTransportEqn( level, sched, timeSubStep );
+  }
+  
+  // Step 4
+  if( timeSubStep == 1 ) {
+    for( EqnMap::iterator iEqn = eqns_.begin(); iEqn != eqns_.end(); ++iEqn ) {
+      DQMOMEqn* dqmom_eqn = dynamic_cast<DQMOMEqn*>(iEqn->second);
+      if( dqmom_eqn->doLowClip() || dqmom_eqn->doHighClip() ) {
+        dqmom_eqn->sched_clipPhi( level, sched );
+      }
+    }
   }
 }
 
@@ -410,7 +418,7 @@ DQMOMEqnFactory::sched_evalTransportEqnsWithCleanup( const LevelP& level, Schedu
 //---------------------------------------------------------------------------
 void 
 DQMOMEqnFactory::register_scalar_eqn( const std::string name, 
-                                      DQMOMEqnBuilderBase* builder ) 
+                                      DQMOMEqnBuilder* builder ) 
 {
   ASSERT( builder != NULL );
 
@@ -418,7 +426,7 @@ DQMOMEqnFactory::register_scalar_eqn( const std::string name,
   if( i == builders_.end() ){
     builders_[name] = builder;
   } else{
-    string err_msg = "ARCHES: DQMOMEqnFactory: A duplicate EqnBuilder object named "+name+" was already built. This is forbidden. \n";
+    string err_msg = "ERROR: Arches: DQMOMEqnFactory: A duplicate EqnBuilder object named "+name+" was already built. This is forbidden. \n";
     throw InvalidValue(err_msg,__FILE__,__LINE__);
   }
 
@@ -454,7 +462,7 @@ DQMOMEqnFactory::retrieve_scalar_eqn( const std::string name )
     throw InvalidValue(errmsg,__FILE__,__LINE__);
   }
 
-  DQMOMEqnBuilderBase* builder = ibuilder->second;
+  DQMOMEqnBuilder* builder = ibuilder->second;
   EqnBase* eqn = builder->build();
   eqns_[name] = eqn;
 

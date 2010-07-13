@@ -16,21 +16,14 @@ namespace Uintah{
 /**
   * @class    CoalParticleHeatTransfer
   * @author   Julien Pedel, Jeremy Thornock, Charles Reid
-  * @date     November 2009
-  *           June 2010
+  * @date     November 2009 : Initial version \n
+  *           June 2010 : Cleanup/rename
   *
-  * @brief    A heat transfer model for coal paticles.
+  * @brief    A heat transfer model for coal particles.
   *
   * @details
   * This class requires coal-specific internal coordinates/information.
   * For heat transfer to "inert" (plain) particles, define a different class.
-  *
-  * @todo
-  * Check for the right internal coordinates
-  * Add booleans for each internal coordinate so we don't request/get variables we're not using
-  * Use particle density the RIGHT way
-  * Add gas temperature as scalar - to initialize gas temp and particle temp
-  * Test it out to see how it works
   *
   */
 
@@ -152,13 +145,17 @@ private:
   /** @brief  Funtion for calculation of heat capacity (from Merrick) */
   double g1(double z);
 
-  /** @brief  Calculate gas properties of N2 at atmospheric pressure (see Holman, p. 505) */
+  /** @brief  Calculate gas properties of N2 at atmospheric pressure (see Holman, p. 505)
+      @param  Tg    Gas temperature
+      @param  Tp    Particle temperature */
   double props(double Tg, double Tp);
 
-  /** @brief  Calculate the heat capacity of raw coal */
+  /** @brief  Calculate the heat capacity of raw coal
+      @param  Tp    Particle temperature */
   double calc_Cp_rawcoal(double Tp);
   
-  /** @brief  Calculate the heat capacity of ash */
+  /** @brief  Calculate the heat capacity of ash 
+      @param  Tp    Particle temperature */
   double calc_Cp_ash(double Tp);
 
   vector<double>  d_ash_mass;     ///< Initial ash mass
@@ -171,7 +168,7 @@ private:
 
   double pi;
 
-  const VarLabel* d_abskp;                      ///< Label for thermal conductivity (of the particles, I think???)
+  const VarLabel* d_abskp;                      ///< Label for thermal conductivity of the particles
 
   const VarLabel* d_length_label;               ///< Label for particle length
   const VarLabel* d_raw_coal_mass_label;        ///< Label for raw coal mass
