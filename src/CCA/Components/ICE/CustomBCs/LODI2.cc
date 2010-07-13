@@ -869,11 +869,11 @@ int remainingVectorComponent(int dir1, int dir2)
  Function~ FaceDensity_LODI--
  Purpose~  Compute density in boundary cells on any face
 ___________________________________________________________________*/
-void FaceDensity_LODI(const Patch* patch,
-                const Patch::FaceType face,
-                CCVariable<double>& rho_CC,
-                Lodi_vars* lv,
-                const Vector& DX)
+int FaceDensity_LODI(const Patch* patch,
+                     const Patch::FaceType face,
+                     CCVariable<double>& rho_CC,
+                     Lodi_vars* lv,
+                     const Vector& DX)
 {
   cout_doing << "   FaceDensity_LODI  \t\t" << patch->getFaceName(face)<<endl;
   // bulletproofing
@@ -910,8 +910,9 @@ void FaceDensity_LODI(const Patch* patch,
     cout_dbg << " c " << c << " in " << in << " rho_CC[c] "<< rho_CC[c] 
              << " drho_dx " << drho_dx << " rho_CC[in] " << rho_CC[in]<<endl;
   }
+  return 1;
   
-  
+#if 0  
   //__________________________________
   //    E D G E S  -- on boundaryFaces only
   vector<Patch::FaceType> b_faces;
@@ -941,14 +942,15 @@ void FaceDensity_LODI(const Patch* patch,
   for(itr = corner.begin(); itr != corner.end(); ++ itr ) {
     IntVector c = *itr;
     rho_CC[c] =  1.7899909957225715000;
-  }      
+  }  
+#endif    
 }
 
 /*_________________________________________________________________
  Function~ FaceVel_LODI--
  Purpose~  Compute velocity in boundary cells on face
 ___________________________________________________________________*/
-void FaceVel_LODI(const Patch* patch,
+int FaceVel_LODI(const Patch* patch,
                  Patch::FaceType face,
                  CCVariable<Vector>& vel_CC,                 
                  Lodi_vars* lv,
@@ -1013,7 +1015,8 @@ void FaceVel_LODI(const Patch* patch,
     cout_dbg << " dvel_ " << dvel << endl;
   
   }
-#if 1
+  return 1;
+#if 0
   //__________________________________
   //    E D G E S  -- on boundaryFaces only
   vector<Patch::FaceType> b_faces;
@@ -1050,7 +1053,7 @@ void FaceVel_LODI(const Patch* patch,
  Function~ FaceTemp_LODI--
  Purpose~  Compute temperature in boundary cells on faces
 ___________________________________________________________________*/
-void FaceTemp_LODI(const Patch* patch,
+int FaceTemp_LODI(const Patch* patch,
              const Patch::FaceType face,
              CCVariable<double>& temp_CC,
              Lodi_vars* lv, 
@@ -1103,7 +1106,8 @@ void FaceTemp_LODI(const Patch* patch,
              << " term5 " << term5
              << " dtemp_dx " << dtemp_dx << endl;
   }
-
+  return 1;
+#if 0
   //__________________________________
   //    E D G E S  -- on boundaryFaces only
   vector<Patch::FaceType> b_faces;
@@ -1133,7 +1137,7 @@ void FaceTemp_LODI(const Patch* patch,
     IntVector c = *itr;
     temp_CC[c] = 300;
   }
-
+#endif
 } //end of function FaceTempLODI()  
 
 
@@ -1185,7 +1189,7 @@ int FacePress_LODI(const Patch* patch,
              << " dpress_dx " << dpress_dx << " press_CC[in] " << press_CC[in]<<endl;
 
   }
-  int IveSetBC = 1;
+  return 1;
   
   #if 0
   //__________________________________
@@ -1218,7 +1222,6 @@ int FacePress_LODI(const Patch* patch,
     press_CC[c] = 101325;
   }
   #endif
-  return IveSetBC;
 } 
    
 }  // using namespace Uintah

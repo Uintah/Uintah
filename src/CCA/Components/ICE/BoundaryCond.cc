@@ -678,7 +678,7 @@ void setBC(CCVariable<double>& var_CC,
   }
   cout_BC_CC << "setBC (double) \t"<< desc << " mat_id = " << mat_id << endl;
   Vector cell_dx = patch->dCell();
-  int topLevelTimestep = sharedState->getCurrentTopLevelTimeStep();
+  bool isNotInitialTimestep = (sharedState->getCurrentTopLevelTimeStep() > 0);
 
   //__________________________________
   //  -Set the LODI BC's first, then let the other BC's wipe out what
@@ -686,6 +686,11 @@ void setBC(CCVariable<double>& var_CC,
   //  -Ignore lodi bcs during intialization phase and when
   //   lv->setLodiBcs = false
   //__________________________________
+  vector<int> IveSetLODIBC(Patch::numFaces);
+  for (int f = 0; f < Patch::numFaces; f++) {
+    IveSetLODIBC[f] = 0;  // bulletproofing
+  }
+  
   // Iterate over the faces encompassing the domain
   vector<Patch::FaceType> bf;
   patch->getBoundaryFaces(bf);
@@ -697,11 +702,13 @@ void setBC(CCVariable<double>& var_CC,
     
     Lodi_vars* lv = custom_BC_basket->lv;
     if( desc == "Temperature"  && is_tempBC_lodi 
-        && topLevelTimestep >0 && custom_BC_basket->setLodiBcs ){
+        && isNotInitialTimestep && custom_BC_basket->setLodiBcs ){
+      IveSetLODIBC[face] +=
       FaceTemp_LODI(patch, face, var_CC, lv, cell_dx, sharedState);
     }   
     if (desc == "Density"  && is_rhoBC_lodi 
-        && topLevelTimestep >0 && custom_BC_basket->setLodiBcs){
+        && isNotInitialTimestep && custom_BC_basket->setLodiBcs){
+      IveSetLODIBC[face] +=
       FaceDensity_LODI(patch, face, var_CC, lv, cell_dx);
     }
   }
@@ -771,7 +778,7 @@ void setBC(CCVariable<double>& var_CC,
         int P_dir =  patch->getFaceAxes(face)[0];  // principal direction
         
         if (gravity[P_dir] != 0 && desc == "Temperature" && ice_matl 
-             && topLevelTimestep >0) {
+             && isNotInitialTimestep) {
           ice_matl->getEOS()->
               hydrostaticTempAdjustment(face, patch, bound_ptr, gravity,
                                         gamma, cv, cell_dx, var_CC);
@@ -788,11 +795,12 @@ void setBC(CCVariable<double>& var_CC,
       }
     }  // child loop
     
-    cout_BC_CC << "    "<< patch->getFaceName(face) << " \t " << bc_kind << " numChildren: " << numChildren << " IveSetBC: " << IveSetBC << endl;
+    cout_BC_CC << "    "<< patch->getFaceName(face) << " \t " << bc_kind << " numChildren: " << numChildren 
+                        << " IveSetBC: " << IveSetBC << " IveSetLODIBC: " << IveSetLODIBC[face] << endl;
     //__________________________________
     //  bulletproofing
     bool throwEx = false;
-    if(IveSetBC != numChildren){
+    if(IveSetBC != numChildren && (IveSetLODIBC[face] != 1 && isNotInitialTimestep)){
       if( desc == "set_if_sym_BC" && bc_kind == "NotSet" && IveSetBC == 0){
         throwEx = false;
       }else{
@@ -804,7 +812,7 @@ void setBC(CCVariable<double>& var_CC,
       ostringstream warn;
       warn << "ERROR: ICE: SetBC(double_CC) Boundary conditions were not set correctly ("<< desc<< ", " 
            << patch->getFaceName(face) << ", " << bc_kind  << " numChildren: " << numChildren 
-           << " IveSetBC: " << IveSetBC << ") " << endl;
+           << " IveSetBC: " << IveSetBC << " IveSetLODIBC: " << IveSetLODIBC[face] <<") " << endl;
       throw InternalError(warn.str(), __FILE__, __LINE__);
     }
   }  // faces loop
@@ -826,6 +834,8 @@ void setBC(CCVariable<Vector>& var_CC,
     return;
   }
   cout_BC_CC <<"setBC (Vector_CC) \t"<< desc <<" mat_id = " <<mat_id<< endl;
+  
+  bool isNotInitialTimestep = (sharedState->getCurrentTopLevelTimeStep() > 0);
   Vector cell_dx = patch->dCell();
   //__________________________________
   //  -Set the LODI BC's first, then let the other BC's wipe out what
@@ -833,18 +843,24 @@ void setBC(CCVariable<Vector>& var_CC,
   //  -Ignore lodi bcs during intialization phase and when
   //   lv->setLodiBcs = false
   //__________________________________
+  vector<int> IveSetLODIBC(Patch::numFaces);
+  for (int f = 0; f < Patch::numFaces; f++) {
+    IveSetLODIBC[f] = 0;  // bulletproofing
+  }
+  
   // Iterate over the faces encompassing the domain
   vector<Patch::FaceType> bf;
   patch->getBoundaryFaces(bf);
   for( vector<Patch::FaceType>::const_iterator iter  = bf.begin(); iter != bf.end(); ++iter ){
     Patch::FaceType face = *iter;
     bool is_velBC_lodi   = patch->haveBC(face,mat_id,"LODI","Velocity");
-    int topLevelTimestep = sharedState->getCurrentTopLevelTimeStep();
     
     Lodi_vars* lv = custom_BC_basket->lv;
     
     if( desc == "Velocity"      && is_velBC_lodi 
-        && topLevelTimestep > 0 && custom_BC_basket->setLodiBcs) {
+        && isNotInitialTimestep && custom_BC_basket->setLodiBcs) {
+        
+      IveSetLODIBC[face] +=
       FaceVel_LODI( patch, face, var_CC, lv, cell_dx, sharedState);
     }
   }
@@ -917,11 +933,12 @@ void setBC(CCVariable<Vector>& var_CC,
         }
       }  // found iterator
     }  // child loop
-    cout_BC_CC << "    "<< patch->getFaceName(face) << " \t " << bc_kind << " numChildren: " << numChildren << " IveSetBC: " << IveSetBC << endl;
+    cout_BC_CC << "    "<< patch->getFaceName(face) << " \t " << bc_kind << " numChildren: " << numChildren 
+                        << " IveSetBC: " << IveSetBC <<" IveSetLODIBC: " << IveSetLODIBC[face] << endl;
     //__________________________________
     //  bulletproofing
     bool throwEx = false;
-    if(IveSetBC != numChildren){
+    if(IveSetBC != numChildren && (IveSetLODIBC[face] != 1 && isNotInitialTimestep)){
       if( desc == "set_if_sym_BC" && bc_kind == "NotSet" && IveSetBC == 0){
         throwEx = false;
       }else{
@@ -933,7 +950,7 @@ void setBC(CCVariable<Vector>& var_CC,
       ostringstream warn;
       warn << "ERROR: ICE: SetBC(Vector_CC) Boundary conditions were not set correctly ("<< desc<< ", " 
            << patch->getFaceName(face) << ", " << bc_kind  << " numChildren: " << numChildren 
-           << " IveSetBC: " << IveSetBC << ") " << endl;
+           << " IveSetBC: " << IveSetBC << " IveSetLODIBC: " << IveSetLODIBC[face] <<") " << endl;
       throw InternalError(warn.str(), __FILE__, __LINE__);
     }
   }  // faces loop

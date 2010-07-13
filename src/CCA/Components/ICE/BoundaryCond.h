@@ -502,7 +502,7 @@ void setBC(T& vel_FC,
       cout_BC_FC << patch->getFaceName(face) << " \t " << whichVel << " \t" << bc_kind << " faceDir: " << faceDir << " numChildren: " << numChildren << " IveSetBC: " << IveSetBC << endl;
       //__________________________________
       //  bulletproofing
-      if(IveSetBC != numChildren){
+      if(IveSetBC != numChildren && bc_kind != "LODI"){
         ostringstream warn;
         warn << "ERROR ICE: Boundary conditions were not set for ("<< whichVel << ", " 
              << patch->getFaceName(face) << ", " << bc_kind  << " numChildren: " << numChildren 
