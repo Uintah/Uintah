@@ -202,11 +202,8 @@
     
     
     <LoadBalancer type="DLB" >
-      <dynamicAlgorithm> patchFactorParticles</dynamicAlgorithm>
-      <doSpaceCurve>         true            </doSpaceCurve>
-      <timestepInterval>     1             </timestepInterval>
-      <doCostProfiling>      false         </doCostProfiling>
-      <particleCost>          5            </particleCost>
+      <timestepInterval>     10             </timestepInterval>
+      <hasParticles>      true         </hasParticles>
     </LoadBalancer>                                                                                                                 
 
     <!--____________________________________________________________________-->

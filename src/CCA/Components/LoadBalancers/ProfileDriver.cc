@@ -334,24 +334,21 @@ void ProfileDriver::finalizeContributions(const GridP currentGrid)
         data.timestep=0;
       }
       else
-      {
-#if 0
-        //update exponential average
-        data.weight=d_alpha*data.current+(1-d_alpha)*data.weight;
-#else
-        double m=data.p+phi;
-        double k=m/(m+r);
-        //cout << setprecision(12);
-        data.p=(1-k)*m;  //computing covariance
+      { 
+        if(d_type==MEMORY)
+        {
+          //update exponential average
+          data.weight=d_alpha*data.current+(1-d_alpha)*data.weight;
+        }
+        else //TYPE IS KALMAN
+        {
+          double m=data.p+phi;
+          double k=m/(m+r);
+          //cout << setprecision(12);
+          data.p=(1-k)*m;  //computing covariance
 
-//        if(it->first==IntVector( 23, 43, 0))
-//          cout << d_myworld->myrank() << " key: " << it->first << " predicted: " << data.weight << " " << " measured: " << data.current << " m:" << m << " k: " << k << " p: " << data.p << " r: " << r << " updated prediction: ";
-        data.weight=data.weight+k*(data.current-data.weight);
-//        if(it->first==IntVector( 23, 43, 0))
-//          cout << data.weight << endl;
-       
-#endif
-        
+          data.weight=data.weight+k*(data.current-data.weight);
+        }
 
       }
       

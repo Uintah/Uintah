@@ -99,7 +99,8 @@ namespace Uintah {
       }
     };
   public:
-    ProfileDriver(const ProcessorGroup* myworld, LoadBalancer *lb) : d_lb(lb), d_myworld(myworld), d_timestepWindow(20), timesteps(0), r(4.5e-5) ,phi(.01) {updateAlpha();};
+    enum FILTER_TYPE {KALMAN,MEMORY};
+    ProfileDriver(const ProcessorGroup* myworld, FILTER_TYPE type, LoadBalancer *lb) : d_lb(lb), d_myworld(myworld), d_timestepWindow(20), timesteps(0), r(4.5e-5) ,phi(.01), d_type(type){updateAlpha();};
     void setMinPatchSize(const vector<IntVector> &min_patch_size);
     //add the contribution for region r on level l
     void addContribution(const PatchSubset* patches, double cost);
@@ -131,7 +132,7 @@ namespace Uintah {
     int timesteps;
     double r;
     double phi;
-    
+    FILTER_TYPE d_type;
   };
 } // End namespace Uintah
 

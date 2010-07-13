@@ -1198,7 +1198,6 @@ ParticleLoadBalancer::problemSetup(ProblemSpecP& pspec, GridP& grid,  Simulation
   LoadBalancerCommon::problemSetup(pspec, grid, state);
   
   ProblemSpecP p = pspec->findBlock("LoadBalancer");
-  string dynamicAlgo;
   double interval = 0;
   int timestepInterval = 10;
   double threshold = 0.0;

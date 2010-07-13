@@ -8,11 +8,8 @@
    <SimulationComponent type="mpmice" />
 
    <LoadBalancer type="DLB">
-     <doSpaceCurve>true</doSpaceCurve>
-     <dynamicAlgorithm>patchFactor</dynamicAlgorithm>
-     <levelIndependent>true</levelIndependent>
      <timestepInterval>200</timestepInterval>
-     <doCostProfiling>true</doCostProfiling>
+     <hasParticles>true</hasParticles>
    </LoadBalancer>
 
     <!--____________________________________________________________________-->

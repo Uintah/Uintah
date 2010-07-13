@@ -1583,26 +1583,45 @@ DynamicLoadBalancer::problemSetup(ProblemSpecP& pspec, GridP& grid,  SimulationS
       timestepInterval = 0;
     if (timestepInterval != 0 && !p->get("interval", interval))
       interval = 0.0; // default
-    p->getWithDefault("dynamicAlgorithm", dynamicAlgo, "static");
+    p->getWithDefault("dynamicAlgorithm", dynamicAlgo, "patchFactor");
     p->getWithDefault("cellCost", d_cellCost, 1);
     p->getWithDefault("extraCellCost", d_extraCellCost, 1);
     p->getWithDefault("particleCost", d_particleCost, 1.25);
     p->getWithDefault("patchCost", d_patchCost, 16);
     p->getWithDefault("gainThreshold", threshold, 0.05);
     p->getWithDefault("doSpaceCurve", spaceCurve, true);
-    bool profile;
-    p->getWithDefault("doCostProfiling",profile,true);
-    if(profile)
+
+    p->getWithDefault("hasParticles", d_collectParticles, false);
+    
+    string costAlgo="ModelLS";
+    p->get("costAlgorithm",costAlgo);
+    if(costAlgo=="ModelLS")
+    {
+      d_costForecaster= scinew CostModelForecaster(d_myworld,this,d_patchCost,d_cellCost,d_extraCellCost,d_particleCost);
+    }
+    else if(costAlgo=="Kalman")
     {
       int timestepWindow;
       p->getWithDefault("profileTimestepWindow",timestepWindow,10);
-      d_costForecaster=scinew CostProfiler(d_myworld,this);
+      d_costForecaster=scinew CostProfiler(d_myworld,ProfileDriver::KALMAN,this);
       d_costForecaster->setTimestepWindow(timestepWindow);
+      d_collectParticles=false;
+    }
+    else if(costAlgo=="Memory")
+    {
+      int timestepWindow;
+      p->getWithDefault("profileTimestepWindow",timestepWindow,10);
+      d_costForecaster=scinew CostProfiler(d_myworld,ProfileDriver::MEMORY,this);
+      d_costForecaster->setTimestepWindow(timestepWindow);
+      d_collectParticles=false;
+    }
+    else if(costAlgo=="Model")
+    {
+      d_costForecaster=scinew CostModeler(d_patchCost,d_cellCost,d_extraCellCost,d_particleCost);
     }
     else
     {
-      //if were not profiling just use the simple cost model
-      d_costForecaster=scinew CostModeler(d_patchCost,d_cellCost,d_extraCellCost,d_particleCost);
+      throw InternalError("Invalid CostAlgorithm in Dynamic Load Balancer\n",__FILE__,__LINE__);
     }
    
     p->getWithDefault("levelIndependent",d_levelIndependent,true);
@@ -1651,15 +1670,6 @@ DynamicLoadBalancer::problemSetup(ProblemSpecP& pspec, GridP& grid,  SimulationS
   sfc.SetMergeMode(1);
   sfc.SetCleanup(BATCHERS);
   sfc.SetMergeParameters(3000,500,2,.15);  //Should do this by profiling
-
-#if 0
-    //////////////////////////////////////////////////////////////////////
-    //this is for temperary testing only and should not be on
-    delete d_costForecaster;
-    d_collectParticles = true;
-    d_costForecaster= scinew CostModelForecaster(d_myworld,this,d_patchCost,d_cellCost,d_extraCellCost,d_particleCost);
-    ///////////////////////////////////////////////////////////////////////
-#endif 
 
   //set costProfiler mps
   Regridder *regridder = dynamic_cast<Regridder*>(getPort("regridder"));

@@ -10,10 +10,8 @@
    
    
    <LoadBalancer type="DLB">
-     <dynamicAlgorithm> patchFactor </dynamicAlgorithm>
-     <levelIndependent> true        </levelIndependent>
-     <doSpaceCurve>     true        </doSpaceCurve>
      <timestepInterval> 200         </timestepInterval>
+     <hasParticles>true</hasParticles>
    </LoadBalancer>
    
     <!--____________________________________________________________________-->
