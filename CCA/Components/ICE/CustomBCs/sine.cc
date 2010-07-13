@@ -229,16 +229,16 @@ int  set_Sine_Velocity_BC(const Patch* patch,
  Function~ set_Sine_Temperature_BC--
  Purpose~  Set temperature boundary conditions
 ___________________________________________________________________*/
-void set_Sine_Temperature_BC(const Patch* /*patch*/,
+int set_Sine_Temperature_BC(const Patch* /*patch*/,
                             const Patch::FaceType face,
                             CCVariable<double>& temp_CC,
-                            const string& var_desc,
                             Iterator& bound_ptr,
                             const string& bc_kind,
                             sine_variable_basket* sine_var_basket,
                             sine_vars* sine_v)  
 {
-  if (var_desc == "Temperature" && bc_kind == "Sine") {
+  int IveSetBC = 0;
+  if (bc_kind == "Sine") {
     cout_doing << "Setting Temp_CC (Sine) on face " <<face<< endl;
 
     // bulletproofing
@@ -253,8 +253,10 @@ void set_Sine_Temperature_BC(const Patch* /*patch*/,
     for (bound_ptr.reset(); bound_ptr.done(); bound_ptr++) {  
       IntVector c = *bound_ptr;                                             
       temp_CC[c]= press_CC[c]/((gamma - 1.0) * cv * rho_CC[c]);
-    }                                                                  
+    }
+    IveSetBC = 1;                                                   
   }
+  return IveSetBC;
 } 
 
 /*_________________________________________________________________

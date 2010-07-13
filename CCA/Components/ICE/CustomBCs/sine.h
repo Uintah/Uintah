@@ -92,10 +92,9 @@ namespace Uintah {
                             sine_variable_basket* sine_var_basket,
                             sine_vars* sine_v);
                            
-  void set_Sine_Temperature_BC(const Patch* patch,
+  int  set_Sine_Temperature_BC(const Patch* patch,
                                const Patch::FaceType face,
                                CCVariable<double>& temp_CC,
-                               const string& var_desc,
                                Iterator& bound_ptr,
                                const string& bc_kind,
                                sine_variable_basket* sine_var_basket,

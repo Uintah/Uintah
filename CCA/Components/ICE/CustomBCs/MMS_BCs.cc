@@ -222,35 +222,34 @@ int set_MMS_Velocity_BC(const Patch* patch,
  Purpose~  Set temperature boundary conditions using method of 
            manufactured solutions
 ___________________________________________________________________*/
-void set_MMS_Temperature_BC(const Patch* /*patch*/,
+int set_MMS_Temperature_BC(const Patch* /*patch*/,
                             const Patch::FaceType face,
                             CCVariable<double>& temp_CC,
-                            const string& var_desc,
                             Iterator& bound_ptr,
                             const string& bc_kind,
                             mms_variable_basket* mms_var_basket,
                             mms_vars* mms_v)  
 {
-  if (var_desc == "Temperature" && bc_kind == "MMS_1") {
-    cout_doing << "Setting Temp_MMS on face " <<face<< endl;
-
-    // bulletproofing
-    if (!mms_var_basket || !mms_v){
-      throw InternalError("set_MMS_Temperature_BC", __FILE__, __LINE__);
-    }
-
-    if(bc_kind == "MMS_1") {    // backout temperature from pressure
-      double cv = mms_var_basket->cv;
-      double gamma = mms_var_basket->gamma;
-      constCCVariable<double> press_CC = mms_v->press_CC;
-      constCCVariable<double> rho_CC   = mms_v->rho_CC;
-        
-      for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
-        IntVector c = *bound_ptr;
-        temp_CC[c]= press_CC[c]/((gamma - 1.0) * cv * rho_CC[c]);
-      }
-    }
+  // bulletproofing
+  if (!mms_var_basket || !mms_v){
+    throw InternalError("set_MMS_Temperature_BC", __FILE__, __LINE__);
   }
+  
+  int IveSetBC = 0;
+  if (bc_kind == "MMS_1") {
+    cout_doing << "Setting Temp_MMS on face " <<face<< endl;
+    double cv = mms_var_basket->cv;
+    double gamma = mms_var_basket->gamma;
+    constCCVariable<double> press_CC = mms_v->press_CC;
+    constCCVariable<double> rho_CC   = mms_v->rho_CC;
+
+    for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
+      IntVector c = *bound_ptr;
+      temp_CC[c]= press_CC[c]/((gamma - 1.0) * cv * rho_CC[c]);
+    }
+    IveSetBC = 1;
+  }
+  return IveSetBC;
 } 
 
 /*_________________________________________________________________

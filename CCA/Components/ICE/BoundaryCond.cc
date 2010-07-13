@@ -635,7 +635,7 @@ void setBC(CCVariable<double>& var_CC,
   if(patch->hasBoundaryFaces() == false){
     return;
   }
-  BC_doing << "setBC (double) \t"<< desc << " mat_id = " << mat_id << endl;
+  cout_BC_CC << "setBC (double) \t"<< desc << " mat_id = " << mat_id << endl;
   Vector cell_dx = patch->dCell();
   int topLevelTimestep = sharedState->getCurrentTopLevelTimeStep();
 
@@ -670,15 +670,13 @@ void setBC(CCVariable<double>& var_CC,
   // Iterate over the faces encompassing the domain
   for( vector<Patch::FaceType>::const_iterator iter = bf.begin(); iter != bf.end(); ++iter ){
     Patch::FaceType face = *iter;
-          
-    bool IveSetBC = false;
+    string bc_kind = "NotSet";      
+    int IveSetBC = 0;
 
     int numChildren = patch->getBCDataArray(face)->getNumberChildren(mat_id);
 
     for (int child = 0;  child < numChildren; child++) {
       double bc_value = -9;
-      string bc_kind = "NotSet";
-
       Iterator bound_ptr;
 
       bool foundIterator = 
@@ -686,37 +684,41 @@ void setBC(CCVariable<double>& var_CC,
                                                bc_value, bound_ptr,bc_kind); 
                                                 
       if (foundIterator && bc_kind != "LODI") {
-        //__________________________________
-        // LOGIC
-        // Any CC Variable
-        if (desc == "set_if_sym_BC" && bc_kind == "symmetric"){
-          bc_kind = "zeroNeumann";
-        }
-        if ( bc_kind == "symmetric"){
-          bc_kind = "zeroNeumann";
-        }
 
         //__________________________________
-        // Apply the boundary condition
-        IveSetBC =  setNeumanDirichletBC<double>
-          (patch, face, var_CC,bound_ptr, bc_kind, bc_value, cell_dx,mat_id,child);
-        
+        // Dirichlet
+        if(bc_kind == "Dirichlet"){
+           IveSetBC += setDirichletBC_CC<double>( var_CC, bound_ptr, bc_value);
+        }
+        //__________________________________
+        // Neumann
+        else if(bc_kind == "Neumann"){
+           IveSetBC += setNeumannBC_CC<double >( patch, face, var_CC, bound_ptr, bc_value, cell_dx);
+        }                                   
+        //__________________________________
+        //  Symmetry
+        else if ( bc_kind == "symmetric" || bc_kind == "zeroNeumann" ) {
+          bc_value = 0.0;
+          IveSetBC += setNeumannBC_CC<double >( patch, face, var_CC, bound_ptr, bc_value, cell_dx);
+        }
+        //__________________________________
+        //  Custom Boundary Conditions
         if ( desc == "Temperature" &&custom_BC_basket->setMicroSlipBcs) {
-          set_MicroSlipTemperature_BC(patch,face,var_CC,
-                              desc, bound_ptr, bc_kind, bc_value,
-                              custom_BC_basket->sv);
+          IveSetBC += set_MicroSlipTemperature_BC(patch,face,var_CC,
+                                                  bound_ptr, bc_kind, bc_value,
+                                                  custom_BC_basket->sv);
         }
-        if ( desc == "Temperature" && custom_BC_basket->set_MMS_BCs) {
-          set_MMS_Temperature_BC(patch, face, var_CC, 
-                              desc, bound_ptr, bc_kind, 
-                              custom_BC_basket->mms_var_basket,
-                              custom_BC_basket->mms_v);
+        else if ( desc == "Temperature" && custom_BC_basket->set_MMS_BCs) {
+          IveSetBC += set_MMS_Temperature_BC(patch, face, var_CC, 
+                                             bound_ptr, bc_kind, 
+                                             custom_BC_basket->mms_var_basket,
+                                             custom_BC_basket->mms_v);
         }
-        if ( desc == "Temperature" && custom_BC_basket->set_Sine_BCs) {
-          set_Sine_Temperature_BC(patch, face, var_CC, 
-                              desc, bound_ptr, bc_kind, 
-                              custom_BC_basket->sine_var_basket,
-                              custom_BC_basket->sine_v);
+        else if ( desc == "Temperature" && custom_BC_basket->set_Sine_BCs) {
+          IveSetBC += set_Sine_Temperature_BC(patch, face, var_CC, 
+                                              bound_ptr, bc_kind, 
+                                              custom_BC_basket->sine_var_basket,
+                                              custom_BC_basket->sine_v);
         }
         //__________________________________
         // Temperature and Gravity and ICE Matls
@@ -733,17 +735,37 @@ void setBC(CCVariable<double>& var_CC,
               hydrostaticTempAdjustment(face, patch, bound_ptr, gravity,
                                         gamma, cv, cell_dx, var_CC);
         }
-        //__________________________________
-        //  debugging
-        if( BC_dbg.active() ) {
-          BC_dbg <<"Face: "<< patch->getFaceName(face) <<" I've set BC " << IveSetBC
-               <<"\t child " << child  <<" NumChildren "<<numChildren 
-               <<"\t BC kind "<< bc_kind <<" \tBC value "<< bc_value
-               <<"\t bound limits = "<< bound_ptr.begin()<< " "<< bound_ptr.end()
-                << endl;
-        }
-      }  // if bc_kind != notSet  
+      }  // found iterator
+      //__________________________________
+      //  debugging
+      if( BC_dbg.active() ) {
+        cout  <<"Face: "<< patch->getFaceName(face) <<" I've set BC " << IveSetBC
+             <<"\t child " << child  <<" NumChildren "<<numChildren 
+             <<"\t BC kind "<< bc_kind <<" \tBC value "<< bc_value
+             <<"\t bound limits = "<< bound_ptr.begin()<< " "<< bound_ptr.end()
+              << endl;
+      }
     }  // child loop
+    
+    cout_BC_CC << "    "<< patch->getFaceName(face) << " \t " << bc_kind << " numChildren: " << numChildren << " IveSetBC: " << IveSetBC << endl;
+    //__________________________________
+    //  bulletproofing
+    bool throwEx = false;
+    if(IveSetBC != numChildren){
+      if( desc == "set_if_sym_BC" && bc_kind == "NotSet" && IveSetBC == 0){
+        throwEx = false;
+      }else{
+        throwEx = true;
+      }
+    }
+   
+    if(throwEx){
+      ostringstream warn;
+      warn << "ERROR: ICE: SetBC(double_CC) Boundary conditions were not set correctly ("<< desc<< ", " 
+           << patch->getFaceName(face) << ", " << bc_kind  << " numChildren: " << numChildren 
+           << " IveSetBC: " << IveSetBC << ") " << endl;
+      throw InternalError(warn.str(), __FILE__, __LINE__);
+    }
   }  // faces loop
 }
 

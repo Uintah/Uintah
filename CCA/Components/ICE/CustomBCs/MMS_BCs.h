@@ -93,10 +93,9 @@ namespace Uintah {
                            mms_variable_basket* mms_var_basket,
                            mms_vars* mms_v);
                            
-  void set_MMS_Temperature_BC(const Patch* patch,
+  int  set_MMS_Temperature_BC(const Patch* patch,
                               const Patch::FaceType face,
                               CCVariable<double>& temp_CC,
-                              const string& var_desc,
                               Iterator& bound_ptr,
                               const string& bc_kind,
                               mms_variable_basket* mms_var_basket,
