@@ -93,10 +93,6 @@ public:
   /** @brief  Return a string containing the model type (pure virtual) */
   virtual string getType() = 0;
 
-  //inline int getQuadNode() {
-  //  return d_quadNode;
-  //};
-
   /** @brief  Return the VarLabel for the model term for particle */
   inline const VarLabel* getModelLabel() {
     return d_modelLabel; };
@@ -112,10 +108,9 @@ public:
 
 protected:
 
-  std::string d_modelName; 
-  
-  SimulationStateP& d_sharedState; 
+  std::string d_modelName;            ///< Name of model (this includes the _qn# suffix)
 
+  SimulationStateP& d_sharedState; 
   const ArchesLabel* d_fieldLabels;
 
   vector<string> d_icLabels;          ///< All required internal coordinate labels (from DQMOM factory) needed to compute this model

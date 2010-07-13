@@ -8,7 +8,7 @@
 //===========================================================================
 
 /**
-  * @class    Coal Gas Devolatilization Source Term
+  * @class    CoalGasDevol
   * @author   Jeremy Thornock
   * @date     
   *           

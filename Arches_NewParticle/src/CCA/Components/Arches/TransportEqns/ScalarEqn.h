@@ -12,6 +12,8 @@
 #include <CCA/Components/Arches/TransportEqns/EqnFactory.h>
 #include <CCA/Components/Arches/Directives.h>
 
+namespace Uintah{
+
 //==========================================================================
 
 /**
@@ -19,12 +21,13 @@
 * @author Jeremy Thornock
 * @date Oct 16, 2008
 *
-* @brief Transport equation class for a CCVariable scalar
+* @brief  Scalar transport equation class 
 *
+* @details
+* This class is currently only implemented for cell-centered (CC) variables.
+* Eventually it could be extended to face-centered variables.
 *
 */
-
-namespace Uintah{
 
 //---------------------------------------------------------------------------
 // Builder 
@@ -35,6 +38,7 @@ public:
   CCScalarEqnBuilder( ArchesLabel* fieldLabels, 
                       ExplicitTimeInt* timeIntegrator, 
                       string eqnName );
+
   ~CCScalarEqnBuilder();
 
   EqnBase* build(); 
@@ -58,11 +62,11 @@ public:
 
   /** @brief Set any parameters from input file, initialize any constants, etc.. */
   void problemSetup(const ProblemSpecP& inputdb);
-  void problemSetup(const ProblemSpecP& inputdb, int iqn) {};
   
   /** @brief Schedule a transport equation to be built and solved */
   void sched_evalTransportEqn( const LevelP&, 
-                               SchedulerP& sched, int timeSubStep);
+                               SchedulerP& sched, 
+                               int timeSubStep);
 
   /** @brief Schedule the build for the terms needed in the transport equation */
   void sched_buildTransportEqn( const LevelP& level, 
@@ -99,7 +103,9 @@ public:
                             DataWarehouse* new_dw );
 
   /** @brief Compute all source terms for this scalar eqn */
-  void sched_computeSources( const LevelP& level, SchedulerP& sched, int timeSubStep);
+  void sched_computeSources( const LevelP& level, 
+                             SchedulerP& sched, 
+                             int timeSubStep);
 
   /** @brief Return a list of all sources associated with this transport equation */ 
   inline const vector<string> getSourcesList(){
@@ -110,6 +116,7 @@ public:
 
   /** @brief Schedule the cleanup after this equation. */ 
   void sched_cleanUp( const LevelP&, SchedulerP& sched ); 
+
   /** @brief Actually clean up after the equation. This just reinitializes 
              source term booleans so that the code can determine if the source
              term label should be allocated or just retrieved from the data 

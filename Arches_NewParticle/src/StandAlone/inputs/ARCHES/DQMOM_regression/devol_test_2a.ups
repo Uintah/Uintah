@@ -5,7 +5,7 @@
 <Uintah_specification>
   
   <Meta>
-    <title>DQMOM Coal Devolatilization Test 2a - Linearly Increasing T, Uniform Particles (2 IC, 3 Env, Optimized Solver)</title>
+    <title>DQMOM Coal Devolatilization Test 2a - Linearly Increasing Gas Temp, Tparticles = Tgas (2 IC, 3 Env, Optimized Solver)</title>
   </Meta>
 
   <SimulationComponent type="arches" />
@@ -182,7 +182,7 @@
                     <variable label="RCmass" role="raw_coal_mass" />
                 </ICVars>
                 <scalarVars>
-                    <variable label="scalar_temperature" role="particle_temperature"/>
+                    <variable label="scalar_temperature" role="gas_temperature"/>
                 </scalarVars>
             </model>
         </Models>

@@ -6,6 +6,8 @@
 #include <CCA/Components/Arches/CoalModels/CoalModelFactory.h>
 #include <CCA/Components/Arches/ArchesVariables.h>
 
+namespace Uintah{
+
 //===========================================================================
 
 /**
@@ -16,8 +18,6 @@
   * @brief    A parent class for char oxidation models
   *
   */
-
-namespace Uintah{
 
 class CharOxidation: public ModelBase {
 public: 

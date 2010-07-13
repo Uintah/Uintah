@@ -12,11 +12,17 @@ namespace Uintah{
 //===========================================================================
 
 /**
-  * @class    Constant Model
-  * @author   Jeremy Thornock
-  * @date     ???
+  * @class    ConstantModel
+  * @author   Jeremy Thornock, Charles Reid
+  * @date     July 2010: Cleaning up
   *
-  * @brief    A simple constant "growth" model.  G = constant.
+  * @brief    A simple constant "growth" model; G = constant.
+  *
+  * @details
+  * The ConstantModel class is a simple constant model. 
+  * The user provides a constant that is the value for the UNSCALED internal coordinate.
+  * The ConstantModel class then adjusts it to be for the SCALED internal coordinate,
+  * since that is the way it must be treated to be added properly to the RHS.
   *
   */
 
@@ -57,7 +63,7 @@ public:
   // Initialization methods
 
   /** @brief Interface for the inputfile and set constants */ 
-  void problemSetup(const ProblemSpecP& db);
+  virtual void problemSetup(const ProblemSpecP& db);
 
   /** @brief Schedule the initialization of special/local variables unique to model */
   void sched_initVars( const LevelP& level, SchedulerP& sched );
@@ -80,12 +86,12 @@ public:
   // Model computation methods
 
   /** @brief Schedule the calculation of the source term */ 
-  void sched_computeModel( const LevelP& level, 
+  virtual void sched_computeModel( const LevelP& level, 
                            SchedulerP& sched, 
                            int timeSubStep );
 
   /** @brief Actually compute the source term */ 
-  void computeModel( const ProcessorGroup* pc, 
+  virtual void computeModel( const ProcessorGroup* pc, 
                      const PatchSubset* patches, 
                      const MaterialSubset* matls, 
                      DataWarehouse* old_dw, 
@@ -99,11 +105,26 @@ public:
     return "Constant"; }
 
 
-private:
+protected:
 
-  double d_constant; 
+  const VarLabel* d_ic_label;     ///< The internal coordinate label for the internal coordinate to which the constant model is being applied
+  const VarLabel* d_weight_label; ///< The DQMOM weight label
 
-}; // end ConstSrcTerm
+  double d_constant;             ///< The model term (G) value
+  double d_ic_scaling_constant;  ///< Scaling constant for the internal coordinate to which the constant model is being applied
+  double d_w_scaling_constant;   ///< Scaling constant for the DQMOM weight
+  double d_w_small;              ///< Value at which weights are considered approx. 0
+  
+  double d_low;      ///< Low clip value for length (if applicable)
+  double d_high;     ///< High clip value for length (if applicable)
+
+  bool d_doLowClip;  ///< Boolean: do low clipping for length?
+  bool d_doHighClip; ///< Boolean: do high clipping for length?
+
+  bool d_reachedLowClip;  ///< Boolean: has the low clip been reached?
+  bool d_reachedHighClip; ///< Boolean: has the high clip been reached?
+
+}; // end ConstantModel
 } // end namespace Uintah
 #endif
 

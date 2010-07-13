@@ -27,7 +27,7 @@
         </constantMMS>
         <almgrenMMS                     spec="OPTIONAL NO_DATA" need_applies_to="whichMMS almgrenMMS" >
           <amplitude                    spec="REQUIRED DOUBLE" />
-          <viscosity                    spec="REQUIRED DOUBLE" />
+          <viscosity                    spec="REQUIRED DOUBLE" /> 
         </almgrenMMS>
       </MMS>
       
@@ -441,7 +441,7 @@
         
           <model                        spec="MULTIPLE NO_DATA"
                                         attribute1="label REQUIRED STRING"
-                                        attribute2="type REQUIRED STRING 'ConstantModel, BadHawkDevol, KobayashiSarofimDevol, 
+                                        attribute2="type REQUIRED STRING 'ConstantModel, ConstantModelWithFluxLimiter, BadHawkDevol, KobayashiSarofimDevol, 
                                                                           CoalParticleHeatTransfer, DragModel, Balachandar, 
                                                                           ConstantDensityCoal, ConstantDensityInert, ConstantSizeCoal, ConstantSizeInert, 
                                                                           CharOxidation'">
@@ -519,7 +519,7 @@
                                         attribute1="qn REQUIRED INTEGER 'positive'"
                                         attribute2="value REQUIRED DOUBLE" />     <!-- for environment (qn), step from 0 to (value) -->
           </initialization>                              
-          <scaling_const                spec="REQUIRED DOUBLE"/>                              
+          <scaling_const                spec="OPTIONAL DOUBLE"/>                              
           <Clipping                     spec="OPTIONAL NO_DATA">
             <low                        spec="OPTIONAL DOUBLE"/> <!-- Low clipping value for SCALED value of DQMOM internal coordinate -->
             <small                      spec="OPTIONAL DOUBLE"/> <!-- this defaults to 1e-16, and is probably best left alone (but it can be changed, just in case) -->
@@ -551,9 +551,7 @@
                                         attribute1="qn REQUIRED INTEGER 'positive'"
                                         attribute2="value REQUIRED DOUBLE" />     <!-- for environment (qn), step from 0 to (value) -->
           </initialization>                              
-          <scaling_const                spec="REQUIRED DOUBLE"/>                              
-          <model                        spec="MULTIPLE NO_DATA"
-                                        attribute1="label REQUIRED STRING"/>
+          <scaling_const                spec="OPTIONAL DOUBLE"/>                              
           <Clipping                     spec="OPTIONAL NO_DATA">
             <low                        spec="OPTIONAL DOUBLE"/>    <!-- Low clipping value for SCALED value of DQMOM internal coordinate -->
             <high                       spec="OPTIONAL DOUBLE"/>    <!-- High clipping value for SCALED value of DQMOM internal coordinate -->

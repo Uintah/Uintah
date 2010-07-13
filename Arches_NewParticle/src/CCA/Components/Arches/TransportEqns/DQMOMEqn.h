@@ -2,6 +2,7 @@
 #define Uintah_Component_Arches_DQMOMEqn_h
 #include <CCA/Components/Arches/TransportEqns/EqnBase.h>
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqnFactory.h>
+#include <CCA/Components/Arches/TransportEqns/EqnFactory.h>
 #include <CCA/Components/Arches/Directives.h>
 
 #include <CCA/Ports/Scheduler.h>
@@ -12,35 +13,52 @@
 #include <Core/Grid/Variables/SFCYVariable.h>
 #include <Core/Grid/Variables/SFCZVariable.h>
 
+namespace Uintah{
+
 //==========================================================================
 
 /**
 * @class DQMOMEqn
 * @author Jeremy Thornock
-* @date Oct 16, 2008
+* @date Oct 16, 2008 : Initial version 
 *
 * @brief Transport equation class for a DQMOM scalar (weight or weighted 
 *        abscissa)
+* 
+* @todo
+* Fix the getModelsList() method
 *
+* @todo
+* Fix the addModel() method (this should accept a VarLabel, and should be used by models 
+* (instead of the <Ic><model></Ic> block) to correlate an internal coordinate and a model term G.
+*
+* @todo
+* Fix population of d_models (should be VarLabel vector instead of string vector)
 *
 */
-
-namespace Uintah{
 
 //---------------------------------------------------------------------------
 // Builder 
 class DQMOMEqn; 
-class DQMOMEqnBuilder: public DQMOMEqnBuilderBase
+class DQMOMEqnBuilder: public EqnBuilder
 {
 public:
   DQMOMEqnBuilder( ArchesLabel* fieldLabels, 
                    ExplicitTimeInt* timeIntegrator, 
-                   string eqnName );
+                   string eqnName,
+                   int quadNode,
+                   bool isWeight );
+
   ~DQMOMEqnBuilder();
 
   EqnBase* build(); 
-private:
 
+protected: 
+  ArchesLabel* d_fieldLabels; 
+  ExplicitTimeInt* d_timeIntegrator; 
+  string d_eqnName; 
+  int d_quadNode;
+  bool d_weight;
 }; 
 // End Builder
 //---------------------------------------------------------------------------
@@ -52,13 +70,12 @@ public EqnBase{
 
 public: 
 
-  DQMOMEqn( ArchesLabel* fieldLabels, ExplicitTimeInt* timeIntegrator, string eqnName );
+  DQMOMEqn( ArchesLabel* fieldLabels, ExplicitTimeInt* timeIntegrator, string eqnName, int quadNode, bool isWeight );
 
   ~DQMOMEqn();
 
   /** @brief Set any parameters from input file, initialize any constants, etc.. */
-  void problemSetup(const ProblemSpecP& inputdb) {};
-  void problemSetup(const ProblemSpecP& inputdb, int qn);
+  void problemSetup(const ProblemSpecP& inputdb);
 
   /** @brief Schedule a transport equation to be built and solved */
   void sched_evalTransportEqn( const LevelP&, 
@@ -120,7 +137,6 @@ public:
   
   /** @brief  Compute unweighted and unscaled values of DQMOM scalars (wts and wtd abscissas)
     *         by un-scaling and (if applicable) dividing by weights */
-  // previously called getAbscissaValues, but renamed because this is used for weights too
   void getUnscaledValues( const ProcessorGroup* pc, 
                     const PatchSubset* patches, 
                     const MaterialSubset* matls, 
@@ -132,31 +148,46 @@ public:
   
   /** @brief Do dummy initialization for MPMArches. */
   void dummyInit( const ProcessorGroup* pc, 
-                     const PatchSubset* patches, 
-                     const MaterialSubset* matls, 
-                     DataWarehouse* old_dw, 
-                     DataWarehouse* new_dw );
+                  const PatchSubset* patches, 
+                  const MaterialSubset* matls, 
+                  DataWarehouse* old_dw, 
+                  DataWarehouse* new_dw );
 
   /** @brief Clip values of phi that are too high or too low (after RK time averaging). */
-  template<class phiType>
-  void clipPhi( const Patch* p, 
-                     phiType& phi );
+  void sched_clipPhi( const LevelP& level, SchedulerP& sched );
 
-  // --------------------------------------
-  // Access functions:
+  void clipPhi( const ProcessorGroup* pc, 
+                const PatchSubset* patches, 
+                const MaterialSubset* matls, 
+                DataWarehouse* old_dw, 
+                DataWarehouse* new_dw );
+
+  ////////////////////////////////////////////
+  // Get/set methods
 
   /** @brief Set the time integrator. */ 
   inline void setTimeInt( ExplicitTimeInt* timeIntegrator ) {
     d_timeIntegrator = timeIntegrator; 
   }
 
-  /** @brief    Return the list of models associated with this equation; this method is used exclusively by the DQMOM class
+  //cmr
+  /** @brief    Return a vector of VarLabel* pointers populated with VarLabels for model terms for this DQMOM equation
       @seealso  DQMOM */
+  inline const vector<const VarLabel*> getModelsList() {
+    return d_models; };
+
+  /*
   inline const vector<string> getModelsList(){
     return d_models; };
 
   inline void addModel( string modelName ) {
-    d_models.push_back(modelName); };
+    d_models.push_back(modelName); }
+  */
+
+  //cmr
+  /** @brief  Add a VarLabel* pointer to a model term to the vector of model labels */
+  inline void addModel( const VarLabel* var_label ) {
+    d_models.push_back( var_label ); }
 
   /** @brief Return the VarLabel for this equation's source term. */ 
   inline const VarLabel* getSourceLabel(){
@@ -170,11 +201,20 @@ public:
   inline bool weight(){
     return d_weight; };
 
-  /** @brief  Get the low clipping value. */ 
+  /** @brief  Get boolean: do low clipping? */
+  inline bool doLowClip() {
+    return d_doLowClip; };
+
+  /** @brief  Get the low clipping value. WARNING: This can get you into trouble if you aren't careful! It returns 0.0 if it's NOT doing clipping. Be sure and use doLowClip() too. */ 
   inline double getLowClip(){
     if(d_doClipping && d_doLowClip) return d_lowClip;
     else return 0.0; };
 
+  /** @brief  Get boolean: do high clipping? */
+  inline bool doHighClip() {
+    return d_doHighClip; };
+
+  /** @brief  Get the high clipping value. WARNING: This can get you into trouble if you aren't careful! It returns 0.0 if it's NOT doing clipping. Be sure and use doHighClip() too. */ 
   inline double getHighClip(){
     if(d_doClipping && d_doHighClip) return d_highClip;
     else return 0.0; };
@@ -189,31 +229,26 @@ public:
     } else {
       return 0.0; } }; 
 
-  /** @brief  Set this equation as a weight.  (This seems a little dangerous.  Is there a better way? - Jeremy) */
-  inline void setAsWeight(){
-    d_weight = true; }; 
-
-  /** @brief Set the quadrature node value. */
-  inline void setQuadNode(int node){
-    d_quadNode = node; };
-
   /** @brief Get the quadrature node value. */
   inline const int getQuadNode(){
     return d_quadNode; };
 
-  /** @breif  Get boolean: add extra sources? */
+  /** @brief  Get boolean: add extra sources?  */
   inline const bool getAddExtraSources() {
     return d_addExtraSources; };
 
  
 private:
 
-  const VarLabel* d_sourceLabel;  ///< DQMOM Eqns only have ONE source term; this is the VarLabel for it
-  const VarLabel* d_icLabel;      ///< This is the label that holds the unscaled and (if applicable) unweighted DQMOM scalar value 
-  std::vector<string> d_models;   ///< This is the list of models for this internal coordinate
-  int d_quadNode;                 ///< The quadrature node for this equation object 
-  bool d_weight;                  ///< Boolean: is this equation object for a weight?
-  vector<std::string> d_sources;
+  const VarLabel* d_sourceLabel;      ///< DQMOM Eqns only have ONE source term; this is the VarLabel for it
+  const VarLabel* d_icLabel;          ///< This is the label that holds the unscaled and (if applicable) unweighted DQMOM scalar value 
+  //vector<string> d_models;   
+  vector<const VarLabel*> d_models;   ///< List of variable labels corresponding to model terms for this DQMOM internal coordinate/environment
+  //vector<string> d_sources;
+  vector<const VarLabel*> d_sources;  ///< List of variable labels corresponding to source terms for this DQMOM internal coordinate/environment
+                                      /// (not sure if this is ever even used...)
+  int d_quadNode;                     ///< The quadrature node for this equation object 
+  bool d_weight;                      ///< Boolean: is this equation object for a weight?
   bool d_addExtraSources; 
 
 

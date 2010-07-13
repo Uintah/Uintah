@@ -5,7 +5,7 @@
 <Uintah_specification>
   
   <Meta>
-    <title>DQMOM Coal Devolatilization Test 1a - Constant Gas Temp, Tparticles = Tgas (2 IC, 3 Env, Optimized Solver)</title>
+    <title>DQMOM Coal Devolatilization Test 4a - Table Gas Temp (MF=0.8, T~900 K), With Mix Frac Src, Tparticle = Tgas, No Convection (2 IC, 3 Env, Optimized Solver)</title>
   </Meta>
 
   <SimulationComponent type="arches" />
@@ -20,7 +20,7 @@
   </Time>
 
   <DataArchiver>
-    <filebase>uda_devol_test_1a.uda</filebase>
+    <filebase>uda_devol_test_4a.uda</filebase>
     <outputTimestepInterval>1</outputTimestepInterval>
     <outputInitTimestep />
 
@@ -38,11 +38,11 @@
     <save label = "vVelocitySPBC"/>
     <save label = "continuityResidual"/>
     <save label = "velocityDivergence"/>
+    <save label = "tempIN" />
 
     <!-- EXTRA SCALARS -->
-    <save label = "scalar_temperature"/>
     <save label = "eta" />
-    <save label = "inert" />
+    <save label = "mixture_fraction_2" />
 
     <!-- DQMOM Vars -->
     <save label = "w_qn0"/>
@@ -80,12 +80,6 @@
     <save label = "moment_00" />
     <save label = "moment_01" />
     <save label = "moment_10" />
-    <save label = "moment_02" />
-    <save label = "moment_20" />
-    <save label = "moment_12" />
-    <save label = "moment_22" />
-    <save label = "moment_32" />
-    <save label = "moment_23" />
 
     <checkpoint cycle = "2" interval = "5"/>
     <compression>gzip</compression>
@@ -95,7 +89,7 @@
     <Level>
       <Box label = "1">
         <lower>[0,0,0]</lower>
-        <upper>[1.0,1.0,1.0]</upper>
+        <upper>[0.01,0.01,0.01]</upper>
         <resolution>[8,8,8]</resolution>
         <extraCells>[0,0,0]</extraCells>
         <patches>[1,1,1]</patches>
@@ -114,15 +108,19 @@
 
     <!-- ARCHES specification -->
     <ARCHES>
-      <MMS whichMMS="almgrenMMS" >
-        <mmsErrorType>L2</mmsErrorType>
-        <almgrenMMS>
-          <!--Note: This viscosity needs to be set twice for now, both here
-                    and in the PhysicalConstant section. -->
-          <viscosity>0.0002</viscosity>
-          <amplitude>1.0</amplitude>
-        </almgrenMMS>
-      </MMS>
+            <!-- NOTE: Constant MMS works with tables (doesn't reset the tempIN label's value),
+                       but Almgren MMS does NOT work with tables (it does reset the tempIN label's value) -->
+            <MMS whichMMS="constantMMS" >
+              <mmsErrorType>Linf</mmsErrorType>
+              <constantMMS>
+                <cu>1.0</cu>
+                <cv>11.0</cv>
+                <cw>.1</cw>
+                <cp>100</cp>
+                <phi0>0.3</phi0>
+                <esphi0>0.0</esphi0>
+              </constantMMS>
+            </MMS>
 
       <!-- TIME INTEGRATOR -->
       <TimeIntegrator>
@@ -132,43 +130,31 @@
       <!-- EXTRA SCALARS -->
       <TransportEqns>
 
-        <Eqn label="scalar_temperature" type = "CCscalar">
-          <doDiff>false</doDiff>
-          <doConv>false</doConv>
+        <Eqn label="mixture_fraction_2" type = "CCscalar">
+          <!-- diffusive scalar -->
+          <doDiff>true</doDiff>
+          <doConv>true</doConv>
           <conv_scheme>super_bee</conv_scheme>
+          <use_density_guess/>
           <initialization type = "constant">
-            <constant>1800</constant>
+            <constant>0.0</constant>
           </initialization>
         </Eqn>
 
         <Eqn label = "eta" type = "CCscalar">
-            <doDiff>false</doDiff>
-            <doConv>false</doConv>
-            <addSources>true</addSources>
-            <conv_scheme>super_bee</conv_scheme>
-            <src label = "eta_source"/>
-            <initialization type="constant">
-                <constant>0.0</constant>
-            </initialization>
-        </Eqn>
-
-        <Eqn label = "inert" type = "CCscalar">
-            <doDiff>false</doDiff>
-            <doConv>false</doConv>
-            <addSources>true</addSources>
-            <conv_scheme>super_bee</conv_scheme>
-            <src label = "const_source"/>
-            <initialization type="constant">
-                <constant>0.0</constant>
-            </initialization>
+          <doDiff>false</doDiff>
+          <doConv>false</doConv>
+          <addSources>true</addSources>
+          <conv_scheme>super_bee</conv_scheme>
+          <src label = "eta_source"/>
+          <initialization type="constant">
+            <constant>0.0</constant>
+          </initialization>
         </Eqn>
 
         <Sources>
             <src label = "eta_source" type = "CoalGasDevol">
                 <devol_model_name>sarofim</devol_model_name>
-            </src>
-            <src label = "const_source" type = "ConstantSourceTerm">
-                <constant>1.0</constant>
             </src>
         </Sources>
                 
@@ -186,7 +172,6 @@
       <!-- DQMOM -->
       <DQMOM>
         <number_quad_nodes>3</number_quad_nodes>
-        <save_moments>true</save_moments>
 
         <LinearSolver>
             <type>Optimize</type>
@@ -198,36 +183,22 @@
 
         <!-- particle models --> 
         <Models>
-            
             <model label="sarofim" type="KobayashiSarofimDevol">
                 <ICVars>
                     <variable label="RCmass" role="raw_coal_mass" />
-                </ICVars>
-                <scalarVars>
-                    <variable label="scalar_temperature" role="gas_temperature"/>
-                </scalarVars>
-            </model>
-
-            <!--
-            <model label="my_density" type="ConstantSize">
-                <ICVars>
-                    <variable label="RCmass" role="raw_coal_mass" />
-                    <variable lable="length" role="length" />
+                    <!-- no Tp, use Tgas = Tparticle -->
                 </ICVars>
             </model>
-            -->
-
         </Models>
-
 
         <Weights>
             <!-- w [=] #/m^3 -->
             <doDiff>false</doDiff>
             <doConv>false</doConv>
             <initialization type="constant">
-                <constant>1.0e8</constant>
+                <constant>1.0e4</constant>
             </initialization>
-            <scaling_const>1.0e8</scaling_const>
+            <scaling_const>1.0e4</scaling_const>
         </Weights>
 
         <Ic label="length">
@@ -247,15 +218,12 @@
             <doDiff>false</doDiff>
             <doConv>false</doConv>
             <initialization type="env_constant">
-                <env_constant qn="0" value="30.0e-10"></env_constant>
-                <env_constant qn="1" value="70.0e-10"></env_constant>
-                <env_constant qn="2" value="100.0e-10"></env_constant>
+                <env_constant qn="0" value="30.0e-15"></env_constant>
+                <env_constant qn="1" value="70.0e-15"></env_constant>
+                <env_constant qn="2" value="100.0e-15"></env_constant>
             </initialization>
             <scaling_const>1.0e-10</scaling_const>
             <model label="sarofim" />
-            <Clipping>
-              <low>0.0</low>
-            </Clipping>
         </Ic>
 
         <Moment><m>[0,0]</m></Moment>
@@ -280,28 +248,19 @@
       </Turbulence>
 
       <Properties>
-        <use_mixing_model>false</use_mixing_model>
-        <ColdFlowMixingModel>
-          <Stream>
-            <density>1.00</density>
-            <temperature>298</temperature>
-          </Stream>
-          <Stream>
-            <density>1.00</density>
-            <temperature>298</temperature>
-          </Stream>
-        </ColdFlowMixingModel>
+          <empirical_soot>false</empirical_soot>
+          <use_mixing_model>false</use_mixing_model>
+          <TabProps>
+              <inputfile>CoalModel.h5</inputfile>
+              <strict_mode>false</strict_mode>
+              <diagnostic_mode>false</diagnostic_mode>
+          </TabProps>
       </Properties>
 
-<!--
-      <BoundaryConditions>
-      </BoundaryConditions>
--->
-  
       <ExplicitSolver>
 
-        <initial_dt>1</initial_dt>
-        <variable_dt>true</variable_dt>
+      <initial_dt>1</initial_dt>
+      <variable_dt>true</variable_dt>
         <timeIntegratorType>RK2SSP</timeIntegratorType> 
 
         <PressureSolver>
@@ -320,6 +279,7 @@
 
         <MixtureFractionSolver>
           <convection_scheme>central-upwind</convection_scheme>
+          <initial_value>0.90</initial_value>
           <src label = "eta_source" />
         </MixtureFractionSolver>
 

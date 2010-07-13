@@ -295,15 +295,6 @@ InertParticleHeatTransfer::sched_computeModel( const LevelP& level, SchedulerP& 
     tsk->modifies(d_abskp);
   }
 
-  // required variables:
-  // gas temp
-  // particle temp
-  // gas density
-  // gas heat capacity
-  // (particle heat capacity depends on internal coordinates)
-  // radiation variables
-  // particle internal coordinates and weights
-
   CoalModelFactory& coalFactory = CoalModelFactory::self();
 
   // gas density
@@ -524,8 +515,6 @@ InertParticleHeatTransfer::computeModel( const ProcessorGroup * pc,
       // intermediate calculation values
       double Re;
       double Nu;
-      double Cpc;
-      double Cpa; 
       double mp_Cp;
       double rkg;
       double Q_convection;

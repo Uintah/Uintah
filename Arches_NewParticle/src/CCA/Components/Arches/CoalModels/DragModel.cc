@@ -29,8 +29,7 @@ DragModelBuilder::DragModelBuilder( const std::string         & modelName,
                                     SimulationStateP          & sharedState,
                                     int qn ) :
   ModelBuilder( modelName, reqICLabelNames, reqScalarLabelNames, fieldLabels, sharedState, qn )
-{
-}
+{}
 
 DragModelBuilder::~DragModelBuilder(){}
 
@@ -48,6 +47,10 @@ DragModel::DragModel( std::string modelName,
                       int qn ) 
 : ParticleVelocity(modelName, sharedState, fieldLabels, icLabelNames, scalarLabelNames, qn)
 {
+  d_uvel_model_label = VarLabel::create( modelName + "_uvel", CCVariable<double>::getTypeDescription() );
+  d_vvel_model_label = VarLabel::create( modelName + "_vvel", CCVariable<double>::getTypeDescription() );
+  d_wvel_model_label = VarLabel::create( modelName + "_wvel", CCVariable<double>::getTypeDescription() );
+
   // particle velocity label is created in parent class
   pi = 3.141592653589793;
 }
@@ -177,15 +180,28 @@ DragModel::problemSetup(const ProblemSpecP& params)
     if( iter->second == "particle_length" ) {
       d_length_label = current_eqn->getTransportEqnLabel();
       d_length_scaling_factor = current_eqn->getScalingConstant();
+
     } else if( iter->second == "u_velocity" ) {
       d_uvel_label = current_eqn->getTransportEqnLabel();
       d_uvel_scaling_factor = current_eqn->getScalingConstant();
+
+      DQMOMEqn* dqmom_eqn = dynamic_cast<DQMOMEqn*>(current_eqn);
+      dqmom_eqn->addModel(d_uvel_model_label);
+
     } else if( iter->second == "v_velocity" ) {
       d_vvel_label = current_eqn->getTransportEqnLabel();
       d_vvel_scaling_factor = current_eqn->getScalingConstant();
+
+      DQMOMEqn* dqmom_eqn = dynamic_cast<DQMOMEqn*>(current_eqn);
+      dqmom_eqn->addModel(d_vvel_model_label);
+
     } else if( iter->second == "w_velocity" ) {
       d_wvel_label = current_eqn->getTransportEqnLabel();
       d_wvel_scaling_factor = current_eqn->getScalingConstant();
+
+      DQMOMEqn* dqmom_eqn = dynamic_cast<DQMOMEqn*>(current_eqn);
+      dqmom_eqn->addModel(d_wvel_model_label);
+
     } else {
       // can't find this required variable in the labels-to-roles map!
       std::string errmsg = "ERROR: Arches: DragModel: You specified that the variable \"" + iter->first + 
@@ -221,6 +237,7 @@ DragModel::sched_computeModel( const LevelP& level,
   std::string taskname = "DragModel::computeModel";
   Task* tsk = scinew Task(taskname, this, &DragModel::computeModel, timeSubStep);
 
+  // move this assignment to a private member
   CoalModelFactory& coalFactory = CoalModelFactory::self();
   const VarLabel* particle_density_label = coalFactory.getParticleDensityLabel(d_quadNode);
 
@@ -236,11 +253,16 @@ DragModel::sched_computeModel( const LevelP& level,
 
     tsk->computes(d_modelLabel);
     tsk->computes(d_gasLabel);
+
+    tsk->computes(d_uvel_model_label);  
+    tsk->computes(d_vvel_model_label); 
+    tsk->computes(d_wvel_model_label); 
     
     tsk->requires( Task::OldDW, d_fieldLabels->d_densityCPLabel,   gn, 0);   // gas density
     tsk->requires( Task::OldDW, d_fieldLabels->d_newCCVelocityLabel, gn, 0 ); // gas velocity
     tsk->requires( Task::OldDW, d_velocity_label, gn, 0 ); // particle velocity
-    tsk->requires( Task::OldDW, particle_density_label, gn, 0); // particle density 
+    // particle density is always calculated FIRST, so get it from the new DW
+    tsk->requires( Task::NewDW, particle_density_label, gn, 0); // particle density 
 
     tsk->requires( Task::OldDW, d_weight_label, gn, 0);
     tsk->requires( Task::OldDW, d_length_label, gn, 0);
@@ -253,9 +275,13 @@ DragModel::sched_computeModel( const LevelP& level,
     tsk->modifies(d_modelLabel); 
     tsk->modifies(d_gasLabel);
 
-    tsk->requires( Task::NewDW, d_fieldLabels->d_densityCPLabel,   gn, 0);   // gas density
-    tsk->requires( Task::NewDW, d_fieldLabels->d_newCCVelocityLabel, gn, 0 ); // gas velocity
-    tsk->requires( Task::NewDW, d_velocity_label, gn, 0 ); // particle velocity
+    tsk->modifies(d_uvel_model_label);  
+    tsk->modifies(d_vvel_model_label); 
+    tsk->modifies(d_wvel_model_label); 
+
+    tsk->requires( Task::NewDW, d_fieldLabels->d_densityTempLabel,   gn, 0);   // gas density
+    tsk->requires( Task::NewDW, d_fieldLabels->d_newCCVelocityLabel, gn, 0); // gas velocity
+    tsk->requires( Task::NewDW, d_velocity_label,       gn, 0); // particle velocity
     tsk->requires( Task::NewDW, particle_density_label, gn, 0); // particle density 
 
     tsk->requires( Task::NewDW, d_weight_label, gn, 0);
@@ -288,9 +314,9 @@ DragModel::computeModel( const ProcessorGroup* pc,
     int archIndex = 0;
     int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
 
+    // move this assignment to a private member
     CoalModelFactory& coalFactory = CoalModelFactory::self();
     const VarLabel* particle_density_label = coalFactory.getParticleDensityLabel(d_quadNode);
-
 
     constCCVariable<double> gas_density;
     constCCVariable<double> particle_density;
@@ -303,11 +329,16 @@ DragModel::computeModel( const ProcessorGroup* pc,
 
     CCVariable<Vector> drag_particle;
     CCVariable<Vector> drag_gas; 
+    CCVariable<double> uvel_model;
+    CCVariable<double> vvel_model;
+    CCVariable<double> wvel_model;
 
     if( timeSubStep == 0 ) {
 
       old_dw->get( gas_density, d_fieldLabels->d_densityCPLabel, matlIndex, patch, gn, 0);
-      old_dw->get( particle_density, particle_density_label, matlIndex, patch, gn, 0);
+
+      // particle density is always calculated FIRST, so get from new DW
+      new_dw->get( particle_density, particle_density_label, matlIndex, patch, gn, 0);
 
       old_dw->get( gas_velocity, d_fieldLabels->d_newCCVelocityLabel, matlIndex, patch, gn, 0);
       old_dw->get( particle_velocity, d_velocity_label, matlIndex, patch, gn, 0);
@@ -320,6 +351,15 @@ DragModel::computeModel( const ProcessorGroup* pc,
 
       new_dw->allocateAndPut( drag_gas, d_gasLabel, matlIndex, patch );
       drag_gas.initialize(Vector(0.,0.,0.));
+
+      new_dw->allocateAndPut( uvel_model, d_uvel_model_label, matlIndex, patch );
+      uvel_model.initialize(0.0);
+
+      new_dw->allocateAndPut( vvel_model, d_vvel_model_label, matlIndex, patch );
+      vvel_model.initialize(0.0);
+
+      new_dw->allocateAndPut( wvel_model, d_wvel_model_label, matlIndex, patch );
+      wvel_model.initialize(0.0);
 
     } else { 
 
@@ -335,8 +375,11 @@ DragModel::computeModel( const ProcessorGroup* pc,
       new_dw->getModifiable( drag_particle, d_modelLabel, matlIndex, patch ); 
       new_dw->getModifiable( drag_gas, d_gasLabel, matlIndex, patch ); 
 
-    }
+      new_dw->getModifiable( uvel_model, d_uvel_model_label, matlIndex, patch );
+      new_dw->getModifiable( vvel_model, d_vvel_model_label, matlIndex, patch );
+      new_dw->getModifiable( wvel_model, d_wvel_model_label, matlIndex, patch );
 
+    }
 
 
     for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
@@ -353,28 +396,52 @@ DragModel::computeModel( const ProcessorGroup* pc,
 
         double rhop = particle_density[c];
 
-        double diff = fabs(gasVel.length() - partVel.length());
-        double Re  = (diff*length)/d_visc;
+        double x_diff = gasVel.x() - partVel.x();
+        double y_diff = gasVel.y() - partVel.y();
+        double z_diff = gasVel.z() - partVel.z();
+        double diff   = fabs(gasVel.length() - partVel.length());
+        double Re     = (diff*length)/d_visc;
 
         double phi;
-
         if(Re < 1) {
           phi = 1;
+        } else if(Re>1000) {
+          phi = 0.0183*Re;
         } else {
-          phi = 1.0 + 0.15*pow(Re, 0.687);
+          phi = 1. + .15*pow(Re, 0.687);
         }
 
-        double t_p = particle_density[c]/(18*d_visc)*pow(length,2); 
+        double t_p;
 
-        double part_src_mag = phi/t_p*diff;
-        drag_particle[c] = ( partVel.safe_normalize() )*(part_src_mag);
-        
-        double gas_src_mag = -(weight[c]*d_w_scaling_factor)*rhop*(4/3)*pi*(phi/t_p)*diff*pow(length,3);
-        drag_gas[c] = ( gasVel.safe_normalize() )*(gas_src_mag);
+        if( length > TINY ) {
 
-       }  
-    }
-  }
+          t_p = (rhop/(18*d_visc))*pow(length,2); 
+
+          uvel_model[c]    = (phi/t_p)*(x_diff + d_gravity.x());
+          vvel_model[c]    = (phi/t_p)*(y_diff + d_gravity.y());
+          wvel_model[c]    = (phi/t_p)*(z_diff + d_gravity.z());
+          drag_particle[c] = Vector( uvel_model[c], vvel_model[c], wvel_model[c] );
+
+  
+          double prefix = -(weight[c]*d_w_scaling_factor)*(rhop/6)*pi*(phi/t_p)*pow(length,3);
+          double gasSrc_x = prefix*x_diff;
+          double gasSrc_y = prefix*y_diff;
+          double gasSrc_z = prefix*z_diff;
+          drag_gas[c] = Vector( gasSrc_x, gasSrc_y, gasSrc_z );
+
+        } else {
+
+          uvel_model[c]    = 0.0;
+          vvel_model[c]    = 0.0;
+          wvel_model[c]    = 0.0;
+          drag_particle[c] = 0.0;
+          drag_gas[c]      = 0.0;
+
+        }
+
+      }//end if small weight  
+    }// end cells
+  }//end patches
 }
 
 void
@@ -450,7 +517,8 @@ DragModel::computeParticleVelocity( const ProcessorGroup* pc,
       old_dw->get( wtd_particle_vvel, d_vvel_label, matlIndex, patch, gn, 0 );
       old_dw->get( wtd_particle_wvel, d_wvel_label, matlIndex, patch, gn, 0 );
 
-      new_dw->getModifiable( particle_velocity, d_velocity_label, matlIndex, patch );
+      new_dw->allocateAndPut( particle_velocity, d_velocity_label, matlIndex, patch );
+      particle_velocity.initialize( Vector(0.0, 0.0, 0.0) );
 
     } else {
 
@@ -461,8 +529,7 @@ DragModel::computeParticleVelocity( const ProcessorGroup* pc,
       new_dw->get( wtd_particle_vvel, d_vvel_label, matlIndex, patch, gn, 0 );
       new_dw->get( wtd_particle_wvel, d_wvel_label, matlIndex, patch, gn, 0 );
 
-      new_dw->allocateAndPut( particle_velocity, d_velocity_label, matlIndex, patch );
-      particle_velocity.initialize( Vector(0.0, 0.0, 0.0) );
+      new_dw->getModifiable( particle_velocity, d_velocity_label, matlIndex, patch );
 
     }
 
@@ -518,5 +585,4 @@ DragModel::computeParticleVelocity( const ProcessorGroup* pc,
 
   }//end patch loop
 }
-
 

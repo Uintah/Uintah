@@ -9,16 +9,14 @@
 #include <CCA/Components/Arches/ArchesVariables.h>
 #include <CCA/Components/Arches/Directives.h>
 
-#include <vector>
-#include <string>
+namespace Uintah{
 
 /**
   * @class    InertParticleHeatTransfer
   * @author   Charles Reid
-  * @date     November 2009
-  *           June 2010
+  * @date     June 2010
   *
-  * @brief    A heat transfer model for inert paticles.
+  * @brief    A heat transfer model for inert particles.
   *
   * @details
   * 
@@ -38,13 +36,7 @@
   * only requires the total mass of the particle (as either a normal scalar variable
   * or as a DQMOM scalar variable).
   *
-  * @todo
-  * Check for the right internal coordinates
-  * Add gas temperature as scalar - to initialize gas temp and particle temp
-  *
   */
-
-namespace Uintah{
 
 //---------------------------------------------------------------------------
 // Builder
@@ -160,23 +152,20 @@ private:
   //////////////////////////////////////////////////
   // Private methods for calculation
 
-  /** @brief  Calculate heat capacity of particle */
+  /** @brief  Calculate heat capacity of particle (constant, for now) */
   double calc_Cp() {
     return d_Cp; }
 
-  /** @brief  Calculate gas properties of N2 at atmospheric pressure (see Holman, p. 505) */
+  /** @brief  Calculate gas properties of N2 at atmospheric pressure (see Holman, p. 505) 
+      @param  Tg  Gas temperature
+      @param  Tp  Particle temperature */
   double props(double Tg, double Tp);
-
-  //vector<double>  d_ash_mass;     ///< Initial ash mass
-  //double yelem[5];                ///< Mass fractions of each element in coal (C, H, N, O, S respectively)
-  //double rhop;                    ///< Density of particle 
 
   double d_visc;    ///< Viscosity of gas
   double d_Pr;      ///< Prandtl number 
   double d_blow;    ///< Blowing parameter
   double d_sigma;   ///< [=] J/s/m^2/K^4 : Stefan-Boltzmann constant (from white book)
   double d_Cp;      ///< Coal particle heat capacity
-
   double pi;
 
   const VarLabel* d_abskp;                      ///< Label for thermal conductivity of the particles

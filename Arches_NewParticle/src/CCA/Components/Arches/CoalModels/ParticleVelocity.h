@@ -16,6 +16,7 @@
   * @brief    This class cleans up the previous particle velocity 
   *           implementation, and makes it more consistent.
   * 
+  * @details
   * There is one instance of the ParticleVelocity model for each 
   * environment (quad node). Each environment's particle velocity
   * is stored and calculated as a set of 3 scalars. This is done
@@ -64,10 +65,12 @@ public:
   ////////////////////////////////////////////////
   // Model computation method
 
+  /** @brief  Schedule computation of particle velocity */
   virtual void sched_computeParticleVelocity( const LevelP& level,
                                               SchedulerP&   sched,
                                               int           timeSubStep ) = 0;
 
+  /** @brief  Actually compute particle velocity */
   virtual void computeParticleVelocity( const ProcessorGroup* pc,
                                         const PatchSubset* patches,
                                         const MaterialSubset* matls,
@@ -89,28 +92,30 @@ public:
   inline string getType() {
     return "ParticleVelocity"; };
 
+  /** @brief  Return the variable label corresponding to the particle velocity for this environment */
   const VarLabel* getParticleVelocityLabel() {
     return d_velocity_label; };
 
 protected:
 
-  bool d_gasBC;   ///< Do particle velocities at boundary equal gas velocities at boundary?
-  double d_visc;  ///< Viscosity
+  bool d_gasBC;                     ///< Boolean: Do particle velocities at boundary equal gas velocities at boundary?
+  double d_visc;                    ///< [=] m^2/s : Viscosity
+  Vector d_gravity;                 ///< [=] m/s^2 : Gravitational acceleration
 
   // Velocity and length labels 
-  const VarLabel* d_velocity_label; ///< Velocity vector label
-  const VarLabel* d_length_label;
+  const VarLabel* d_velocity_label; ///< Variable label for particle velocity internal coordinate (this is an agglomerated Vector() with each component equal to the particle velocity internal coordinate value corresponding to that component)
+  const VarLabel* d_length_label;   ///< Variable label for particle length internal coordinate
 
   // Scaling factors
-  double d_length_scaling_factor;
+  double d_length_scaling_factor;   ///< Scaling factor for particle length internal coordinate
 
   // Weights
-  const VarLabel* d_weight_label;
+  const VarLabel* d_weight_label;   ///< Variable label for weights
 
-  double d_w_scaling_factor; 
-  double d_w_small; // "small" clip value for zero weights
+  double d_w_scaling_factor;        ///< Scaling factor for weights
+  double d_w_small;                 ///< "small" clip value for weights; if weights < d_w_small, model value is not computed
 
-  BoundaryCondition_new* d_boundaryCond; 
+  BoundaryCondition_new* d_boundaryCond;  ///< Boundary conditions for particle velocity
 
 }; // end ParticleVelocity
 } // end namespace Uintah

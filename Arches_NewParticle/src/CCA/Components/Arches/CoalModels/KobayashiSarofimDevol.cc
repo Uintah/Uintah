@@ -171,7 +171,7 @@ KobayashiSarofimDevol::problemSetup(const ProblemSpecP& params)
         d_useTgas = true;
       } else {
         std::string errmsg;
-        errmsg = "ERROR: Arches: KobayashiSarofimDevol: Invalid variable role for scalar equation: must be \"gas_tempeature\" or \"particle_temperature\", you specified \"" + role_name + "\".";
+        errmsg = "ERROR: Arches: KobayashiSarofimDevol: Invalid variable role for scalar equation: must be \"gas_tempeature\", you specified \"" + role_name + "\".";
         throw InvalidValue(errmsg,__FILE__,__LINE__);
       }
     }
@@ -201,6 +201,10 @@ KobayashiSarofimDevol::problemSetup(const ProblemSpecP& params)
     if( iter->second == "raw_coal_mass" ) {
       d_raw_coal_mass_label = current_eqn->getTransportEqnLabel();
       d_rc_scaling_factor = current_eqn->getScalingConstant();
+      
+      DQMOMEqn* dqmom_eqn = dynamic_cast<DQMOMEqn*>(current_eqn);
+      dqmom_eqn->addModel( d_modelLabel );
+
     } else if( iter->second == "char_mass" ) {
       d_char_mass_label = current_eqn->getTransportEqnLabel();
       d_char_scaling_factor = current_eqn->getScalingConstant();
@@ -397,6 +401,9 @@ KobayashiSarofimDevol::computeModel( const ProcessorGroup * pc,
         gas_devol_rate_ = 0.0;
 
       } else {
+        if( unscaled_temperature < TINY ) {
+          unscaled_temperature = TINY;
+        }
         k1 = A1*exp(-E1/(R*unscaled_temperature)); // [=] 1/s
         k2 = A2*exp(-E2/(R*unscaled_temperature)); // [=] 1/s
         
@@ -418,7 +425,7 @@ KobayashiSarofimDevol::computeModel( const ProcessorGroup * pc,
           // there is no -(k1+k2) contained in it... 
           // so divide it out to get total amt into gas's (unscaled_raw_coal_mass*unscaled_weight)
           testVal_gas = (Y1_*k1 + Y2_*k2)*((unscaled_raw_coal_mass*unscaled_weight)/(k1+k2)); // [=] kg/m^3
-          if( testVal_gas > 1e-16 ) {
+          if( testVal_gas > TINY ) {
             gas_devol_rate_ = testVal_gas;
           } else {
             gas_devol_rate_ = 0.0;
@@ -438,14 +445,14 @@ KobayashiSarofimDevol::computeModel( const ProcessorGroup * pc,
         } else {
 
           // treat devolatilization like normal
-          if( testVal_part < -1e-16 ) {
+          if( testVal_part < TINY ) {
             devol_rate_ = testVal_part;
           } else {
             devol_rate_ = 0.0;
           }
 
           testVal_gas = (Y1_*k1 + Y2_*k2)*unscaled_raw_coal_mass*unscaled_weight; // [=] kg/m^3
-          if( testVal_gas > 1e-16 ) {
+          if( testVal_gas > TINY ) {
             gas_devol_rate_ = testVal_gas;
           } else {
             gas_devol_rate_ = 0.0;

@@ -353,10 +353,6 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
       // Compute the particle model terms
       modelFactory.sched_coalParticleCalculation( level, sched, curr_level );
 
-      //cmr
-      // previous location of sourcetermfactory.sched_computeSourceTerms()
-      // make sure this jives with the other stuffs
-
       // Evaluate DQMOM scalar equations
       if (curr_level != numTimeIntegratorLevels-1) {
         dqmomFactory.sched_evalTransportEqns( level, sched, curr_level );

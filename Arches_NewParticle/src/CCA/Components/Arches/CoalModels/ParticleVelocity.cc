@@ -60,7 +60,8 @@ ParticleVelocity::problemSetup(const ProblemSpecP& params)
 
   const ProblemSpecP db_root = db->getRootNode();
   ProblemSpecP db_physicalConstants = db_root->findBlock("PhysicalConstants");
-  db_physicalConstants->get("viscosity",d_visc);
+  db_physicalConstants->require("viscosity", d_visc );
+  db_physicalConstants->require("gravity", d_gravity );
 
   // set model clipping (not used yet...)
   //db->getWithDefault( "low_clip",  d_lowModelClip,  1.0e-6 );
@@ -155,6 +156,7 @@ ParticleVelocity::sched_initVars( const LevelP& level, SchedulerP& sched )
 
   tsk->computes( d_modelLabel );
   tsk->computes( d_gasLabel   );
+  tsk->computes( d_velocity_label );
 
   sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials()); 
 }
@@ -182,6 +184,11 @@ ParticleVelocity::initVars( const ProcessorGroup * pc,
     CCVariable<Vector> gas_value; 
     new_dw->allocateAndPut( gas_value, d_gasLabel, matlIndex, patch ); 
     gas_value.initialize( Vector(0.0,0.0,0.0) );
+
+    CCVariable<Vector> particle_velocity; 
+    new_dw->allocateAndPut( particle_velocity, d_velocity_label, matlIndex, patch ); 
+    particle_velocity.initialize( Vector(0.0,0.0,0.0) );
+
   }
 }
 

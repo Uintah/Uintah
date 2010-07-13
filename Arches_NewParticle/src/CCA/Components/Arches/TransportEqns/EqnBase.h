@@ -17,18 +17,20 @@
 #include <Core/Exceptions/ParameterNotFound.h>
 #include <CCA/Components/Arches/Directives.h>
 
+namespace Uintah {
+
 //========================================================================
 
 /** 
 * @class TransportEquationBase
 * @author Jeremy Thornock
-* @date Oct 16, 2008
+* @date Oct 16, 2008 : Initial version \n
+*       July 2010    : Cleanup
 *
 * @brief A base class for a transport equations.
 *
 */
 
-namespace Uintah {
 class ArchesLabel; 
 class BoundaryCondition_new;
 class Discretization_new; 
@@ -46,7 +48,6 @@ public:
 
   /** @brief Set any parameters from input file, initialize any constants, etc.. */
   virtual void problemSetup(const ProblemSpecP& inputdb) = 0;
-  virtual void problemSetup(const ProblemSpecP& inputdb, int qn) = 0;
 
   /** @brief Creates instances of variables in the new_dw at the begining of the timestep 
              and copies old data into the new variable */
@@ -146,6 +147,10 @@ public:
   /** @brief Return a string containing the name of the initialization function being used (e.g. "constant") */ 
   inline const string getInitFcn(){
     return d_initFunction; }; 
+
+  /** @brief  Return initialization value for constant initialization function */
+  inline const double getInitializationConstant() {
+    return d_constant_init; };
 
   /** @brief Return the scaling constant for the given equation. */
   inline const double getScalingConstant(){

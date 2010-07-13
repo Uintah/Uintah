@@ -4,11 +4,9 @@
 #include <Core/Grid/SimulationStateP.h>
 #include <CCA/Components/Arches/CoalModels/ModelBase.h>
 #include <CCA/Components/Arches/CoalModels/CoalModelFactory.h>
-
 #include <CCA/Components/Arches/ArchesVariables.h>
 
-#include <vector>
-#include <string>
+namespace Uintah{
 
 //===========================================================================
 
@@ -24,7 +22,6 @@
 
 //---------------------------------------------------------------------------
 // Builder
-namespace Uintah{
 class BadHawkDevolBuilder: public ModelBuilder
 {
 public: 

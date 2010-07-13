@@ -6,6 +6,8 @@
 #include <CCA/Components/Arches/CoalModels/CoalModelFactory.h>
 #include <CCA/Components/Arches/ArchesVariables.h>
 
+namespace Uintah{
+
 //===========================================================================
 
 /**
@@ -13,11 +15,9 @@
   * @author   Charles Reid
   * @date     October 2009
   *
-  * @brief    A parent class for devolatilization models
+  * @brief    A parent class for devolatilization models.
   *
   */
-
-namespace Uintah{
 
 class Devolatilization: public ModelBase {
 public: 
@@ -75,19 +75,19 @@ public:
 
 protected:
 
-  const VarLabel* d_raw_coal_mass_label;
-  const VarLabel* d_char_mass_label;
-  //const VarLabel* d_moisture_mass_label; // not used for devol (not yet anyway)
-  const VarLabel* d_particle_temperature_label;
-  const VarLabel* d_gas_temperature_label;
-  const VarLabel* d_weight_label;
+  const VarLabel* d_raw_coal_mass_label;        ///< Variable label for raw coal mass internal coordinate
+  const VarLabel* d_char_mass_label;            ///< Variable label for char mass internal coordinate 
+  const VarLabel* d_moisture_mass_label;        ///< Variable label for moisture mass internal coordinate  
+  const VarLabel* d_particle_temperature_label; ///< Variable label for particle temperature internal coordinate   
+  const VarLabel* d_gas_temperature_label;      ///< Variable label for gas temperature internal coordinate    
+  const VarLabel* d_weight_label;               ///< Variable label for weight internal coordinate 
 
-  double d_rc_scaling_factor;   ///< Scaling factor for raw coal internal coordinate
-  double d_char_scaling_factor; ///< Scaling factor for char mass internal coordinate
-  double d_pt_scaling_factor;   ///< Scaling factor for particle temperature internal coordinate
+  double d_rc_scaling_factor;                   ///< Scaling factor for raw coal internal coordinate
+  double d_char_scaling_factor;                 ///< Scaling factor for char mass internal coordinate
+  double d_pt_scaling_factor;                   ///< Scaling factor for particle temperature internal coordinate
 
-  double d_w_scaling_factor; 
-  double d_w_small; // "small" clip value for zero weights
+  double d_w_scaling_factor;                    ///< Scaling factor for weight
+  double d_w_small;                             ///< "small" clip value for weights (model is not calculated if weight value is < d_w_small)
 
 }; // end Devolatilization
 } // end namespace Uintah

@@ -5,11 +5,9 @@
 #include <Core/Parallel/Parallel.h>
 #include <CCA/Components/Arches/CoalModels/ModelBase.h>
 #include <CCA/Components/Arches/CoalModels/CoalModelFactory.h>
-
 #include <CCA/Components/Arches/ArchesVariables.h>
 
-#include <vector>
-#include <string>
+namespace Uintah{
 
 //===========================================================================
 
@@ -19,16 +17,16 @@
   * @date     April 2010
   *
   * @brief    A parent class for models related to length internal coordinate.
-  *           As size models increase the amount of things they're doing, we'll
-  *           have to make more Size-derived classes, which contain these effects. 
-  *           e.g. Size derived classes for:
-  *           - Breakage
-  *           - Swelling
-  *           - etc.
+  *
+  * @details
+  * As size models increase the amount of things they're doing, we'll
+  * have to make more Size-derived classes, which contain these effects. 
+  * e.g. Size derived classes for:
+  * - Breakage
+  * - Swelling
+  * - etc.
   *
   */
-
-namespace Uintah{
 
 class Size: public ModelBase {
 public: 

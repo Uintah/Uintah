@@ -1,5 +1,5 @@
-#ifndef UT_CoalModelFactory_h
-#define UT_CoalModelFactory_h
+#ifndef Uintah_Component_Arches_CoalModelFactory_h
+#define Uintah_Component_Arches_CoalModelFactory_h
 #include <CCA/Components/Arches/ArchesLabel.h>
 #include <CCA/Components/Arches/ArchesVariables.h>
 #include <CCA/Components/Arches/CoalModels/ParticleVelocity.h>
@@ -12,15 +12,16 @@
 #include <Core/Parallel/Parallel.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Exceptions/InvalidValue.h>
-//#include <map>
+
+namespace Uintah {
 
 //====================================================================
 
 /**
  *  @class  ModelBuilder
  *  @author James C. Sutherland, Jeremy Thornock, Charles Reid
- *  @date   November 2006
- *          June 2010
+ *  @date   November 2006 : Initial version \n
+ *          June 2010     : Cleanup
  *
  *  @brief Abstract base class to support source term
  *  additions. Should be used in conjunction with the
@@ -30,7 +31,7 @@
  *  equation.  The ModelBuilder object is passed to the factory to provide 
  *  a mechanism to instantiate the Model object.
  */
-namespace Uintah {
+
 //---------------------------------------------------------------------------
 // Builder
 class ModelBase; 
@@ -87,33 +88,16 @@ private:
   * the factory and it will automatically be added to the DQMOM RHS vector B.
   * Multiple models may be implemented for a single internal coordinate.
   *
-  * A single model cannot be implemented for multiple internal coordinates.
-  * Fixing this will either require a kludge or fixing a big mess.
-  * Fortunately the DQMOM class is the only place that interfaces with the models
-  * So, we could potentially have DQMOMEqns hold a vector of model VarLabels
-  * Then these could be handled/added to the right DQMOMEqn by the models, 
-  *   and it would only require a minor change in the DQMOM class.
-  * But it isn't clear how the model would know which internal coordinates
-  *   to add the model term for, and which to leave alone.
-  * Get rid of stupid idea of <model> tag in the <Ic> block...
-  * Let the models take care of business themselves, don't tie them to ICs
-  * //cmr
-  *
   * Currently each model is independent (no multiphysics coupling).
   * This will change in the near future.
   *
   * Implemented as a singleton.
   *
   * @todo
+  * Get rid of the builders, since they serve no function or purpose
   *
-  * - Fix the interface with "getModelsList()" and the d_models member of each model
-  *   to be a vector of VarLabels, not a vector of strings
-  *   (This would allow models to apply to multiple internal coordinates)
-  *   (classes using this are DQMOM and ConstantDensity*)
-  *
-  * - Get rid of the builders, since they serve no function or purpose
-  *
-  * - Get rid of the "requiredIClabel" and "requiredscalarlabel" stuff, since we don't use them
+  * @todo
+  * Get rid of the "requiredIClabel" and "requiredscalarlabel" stuff, since it's never used anywwhere
   * 
   */
 
@@ -151,8 +135,8 @@ public:
   /**
    *  @brief Register a source term on the specified transport equation.
    *
-   *  @param name The name of the model.
-   *  @param builder The ModelBuilder object to build the Model object.
+   *  @param   name       The name of the model.
+   *  @param  builder   The ModelBuilder object to build the Model object.
    *
    *  ModelBuilder objects should be heap-allocated using "new".
    *  Memory management will be transfered to the CoalModelFactory.
@@ -164,11 +148,10 @@ public:
   /**
    *  @brief Retrieve a vector of pointers to all Model
    *  objects that have been assigned to the transport equation with
-   *  the specified name.
-   *
-   *  @param eqnName The name of the model.
-   *
+   *  the specified name. \n
    *  Note that this will construct new objects only as needed.
+   *
+   *  @param  eqnName   The name of the model.
    */
   ModelBase& retrieve_model( const std::string name );
 
@@ -246,7 +229,7 @@ public:
       vector<ParticleDensity*>::iterator iPD = d_ParticleDensityModel.begin() + qn;
       return (*iPD)->getParticleDensityLabel();
     } else {
-      throw InvalidValue("ERROR: CoalModelFactory: You asked for density of the dispersed phase, but no dispersed phase density model was specified in the input file.\n",__FILE__,__LINE__);
+      throw InvalidValue("ERROR: Arches: CoalModelFactory: You asked for density of the dispersed phase, but no dispersed phase density model was specified in the input file.\n",__FILE__,__LINE__);
     }
   };
 
@@ -267,13 +250,14 @@ private:
   BuildMap builders_;
   ModelMap models_;
 
+  ArchesLabel* d_fieldLabels;
+
 	bool d_coupled_physics;		///< Boolean: use coupled physics and iterative procedure?
   bool d_labelSet;          ///< Boolean: has the ArchesLabel been set using setArchesLabel()?
 
   int numQuadNodes;         ///< Number of quadrature nodes
 
   vector<double> yelem;			///< Vector containing initial composition of coal particle
-  ArchesLabel* d_fieldLabels;
 
   bool d_useParticleVelocityModel;  ///< Boolean: using a particle velocity model?
   bool d_useHeatTransferModel;      ///< Boolean: using a heat transfer model?
@@ -281,8 +265,8 @@ private:
   bool d_useCharOxidationModel;     ///< Boolean: using a char oxidation model? (used to see whether there should be a <src> tag in the <MixtureFractionSolver> block)
   bool d_useParticleDensityModel;   ///< Boolean: using a particle density model? (This is set automatically, based on whether any models require a particle density)
 
-  vector<ParticleVelocity*> d_ParticleVelocityModel;
-  vector<ParticleDensity*>  d_ParticleDensityModel;
+  vector<ParticleVelocity*> d_ParticleVelocityModel; ///< Vector containing particle velocity models for each environment 
+  vector<ParticleDensity*>  d_ParticleDensityModel;  ///< Vector containing particle density models for each environment 
   
   CoalModelFactory();
   ~CoalModelFactory();

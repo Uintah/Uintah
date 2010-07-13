@@ -1,5 +1,3 @@
-//------------------------ DQMOM.h -----------------------------------
-
 #ifndef Uintah_Components_Arches_DQMOM_h
 #define Uintah_Components_Arches_DQMOM_h
 
@@ -16,8 +14,6 @@
 #include <Core/Datatypes/ColumnMatrix.h>
 #include <CCA/Components/Arches/Directives.h>
 
-#include <map>
-
 namespace Uintah {
 
 //-------------------------------------------------------
@@ -32,16 +28,19 @@ namespace Uintah {
   *
   * @brief    This class constructs and solves the AX=B linear system for DQMOM scalars.
   *
-  * @details  Using the direct quadrature method of moments (DQMOM), the NDF transport equation is represented
-  *           by a set of delta functions times weights.  The moment transform of this NDF transport equation
-  *           yields a set of (closed) moment transport equations. These equations can be expressed in terms 
-  *           of the weights and abscissas of the quadrature approximation, and re-cast as a linear system,
-  *           \f$ \mathbf{AX} = \mathbf{B} \f$.  This class solves the linear system to yield the source terms
-  *           for the weight and weighted abscissa transport equations (the variables contained in \f$\mathbf{X}\f$).
+  * @details  
+  * Using the direct quadrature method of moments (DQMOM), the NDF transport equation is represented
+  * by a set of delta functions times weights.  The moment transform of this NDF transport equation
+  * yields a set of (closed) moment transport equations. These equations can be expressed in terms 
+  * of the weights and abscissas of the quadrature approximation, and re-cast as a linear system,
+  * \f$ \mathbf{AX} = \mathbf{B} \f$.  This class solves the linear system to yield the source terms
+  * for the weight and weighted abscissa transport equations (the variables contained in \f$\mathbf{X}\f$).
   *
-  *           The optimized moment solver uses the algorithm described in Fox (2009), "Optimal moment sets for
-  *           multivariate DQMOM" (Ind. Eng. Chem. Res. 2009, 48, 9686-9696)
+  * The optimized moment solver uses the algorithm described in Fox (2009), "Optimal moment sets for
+  * multivariate DQMOM" (Ind. Eng. Chem. Res. 2009, 48, 9686-9696)
   *
+  * @todo
+  * Fix the getModelList() function call - it will be changed to return a vector of VarLabels, not a vector of strings
   */
 
 //-------------------------------------------------------

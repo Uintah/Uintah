@@ -96,12 +96,12 @@ public:
 
 protected:
 
-  bool b_radiation;
+  bool b_radiation;               ///< Boolean: do radiation calculations?
 
-  const VarLabel* d_weight_label;
+  const VarLabel* d_weight_label; ///< Variable label for weights
 
-  double d_w_scaling_constant;
-  double d_w_small; // "small" clip value for zero weights
+  double d_w_scaling_constant;    ///< Scaling constant for weight
+  double d_w_small;               ///< "small" clip value for weights; if weights are < d_w_small, no model value is computed 
 
 }; // end HeatTransfer
 } // end namespace Uintah

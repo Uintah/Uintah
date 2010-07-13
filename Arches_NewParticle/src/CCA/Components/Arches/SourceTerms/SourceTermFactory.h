@@ -109,6 +109,8 @@ public:
   void register_source_term( const std::string name,
                              SourceTermBuilder* builder );
 
+  /** @brief  Search the source term list for a source term with this name; if found return true, else return false */
+  bool find_source_term( const string name );
 
   /**
    *  @brief Retrieve a vector of pointers to all SourceTerm

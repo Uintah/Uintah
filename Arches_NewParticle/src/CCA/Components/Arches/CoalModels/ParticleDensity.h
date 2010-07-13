@@ -98,11 +98,11 @@ protected:
   int numQuadNodes;
   double pi;
 
-  const VarLabel* d_density_label;
-  const VarLabel* d_weight_label;
+  const VarLabel* d_density_label;  ///< Variable label for particle density (this is the quantity the the model calculates)
+  const VarLabel* d_weight_label;   ///< Variable label for weight
 
-  double d_w_scaling_constant; 
-  double d_w_small; // "small" clip value for zero weights
+  double d_w_scaling_constant;      ///< Scaling constant for weight
+  double d_w_small;                 ///< "small" clip value for weights; if weight < d_w_small, no model value is calculated
 
 }; // end ParticleDensity
 } // end namespace Uintah

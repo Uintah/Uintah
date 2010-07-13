@@ -45,14 +45,14 @@ ConstantModel::ConstantModel( std::string           modelName,
                               int qn ) 
 : ModelBase(modelName, sharedState, fieldLabels, icLabelNames, scalarLabelNames, qn)
 {
-  /*
   // Create a label for this model
   d_modelLabel = VarLabel::create( modelName, CCVariable<double>::getTypeDescription() );
 
   // Create the gas phase source term associated with this model
   std::string gasSourceName = modelName + "_gasSource";
   d_gasLabel = VarLabel::create( gasSourceName, CCVariable<double>::getTypeDescription() );
-  */
+
+  d_reachedLowClip = false;
 }
 
 ConstantModel::~ConstantModel()
@@ -69,6 +69,63 @@ ConstantModel::problemSetup(const ProblemSpecP& inputdb )
   ProblemSpecP db = inputdb; 
 
   db->require("constant",d_constant); 
+
+  if( d_icLabels.size() != 1 ) {
+    std::stringstream errmsg;
+    errmsg << "ERROR: Arches: ConstantModel: You did not specify the correct number of internal coordinates in the <ICVars> block. ";
+    errmsg << "You specified " << d_icLabels.size() << ", ConstantModel was expecting 1 dependent internal coordinate.\n";
+    errmsg << "The \"label\" attribute of the internal coordinate variable's block must be the label of the internal coordinate. The \"role\" attribute does not matter.";
+    throw ProblemSetupException(errmsg.str(),__FILE__,__LINE__);
+  }
+
+
+  string temp_label_name;
+
+  std::stringstream out;
+  out << d_quadNode; 
+  string node = out.str();
+
+  temp_label_name = d_icLabels[0];
+  
+  temp_label_name += "_qn";
+  temp_label_name += node;
+
+  DQMOMEqnFactory& dqmomFactory = DQMOMEqnFactory::self();
+
+  // get weight information
+  string temp_weight_name = "w_qn";
+  temp_weight_name += node;
+  EqnBase& t_weight_eqn = dqmomFactory.retrieve_scalar_eqn( temp_weight_name );
+  DQMOMEqn& weight_eqn = dynamic_cast<DQMOMEqn&>(t_weight_eqn);
+
+  d_w_small = weight_eqn.getSmallClip();
+  d_w_scaling_constant = weight_eqn.getScalingConstant();
+  d_weight_label = weight_eqn.getTransportEqnLabel();
+
+  // get internal coordinate information
+  if( dqmomFactory.find_scalar_eqn( temp_label_name ) ) {
+    DQMOMEqn* eqn = dynamic_cast<DQMOMEqn*>(&dqmomFactory.retrieve_scalar_eqn(temp_label_name) );
+
+    d_ic_label = eqn->getTransportEqnLabel();
+    d_ic_scaling_constant = eqn->getScalingConstant();
+
+    eqn->addModel(d_modelLabel);
+
+    d_doLowClip  = eqn->doLowClip();
+    d_doHighClip = eqn->doHighClip();
+    if(d_doLowClip) {
+      d_low  = eqn->getLowClip();
+    }
+    if(d_doHighClip) {
+      d_high = eqn->getHighClip();
+    }
+  } else {
+    string errmsg = "ERROR: Arches: ConstantModel: Could not find internal coordinate "+temp_label_name+" as a registered equation in DQMOMEqnFactory.\n";
+    throw ProblemSetupException(errmsg,__FILE__,__LINE__);
+  }
+
+  d_constant /= d_ic_scaling_constant;
+
 }
 
 //-------------------------------------------------------------------------
@@ -150,11 +207,16 @@ ConstantModel::initVars( const ProcessorGroup * pc,
 
     CCVariable<double> model_value; 
     new_dw->allocateAndPut( model_value, d_modelLabel, matlIndex, patch ); 
-    model_value.initialize(0.0);
 
     CCVariable<double> gas_value; 
     new_dw->allocateAndPut( gas_value, d_gasLabel, matlIndex, patch ); 
-    gas_value.initialize(0.0);
+
+    model_value.initialize( d_constant );
+    gas_value.initialize( 0.0 );
+    //for( CellIterator iter = patch->getCellIterator(); !iter.done(); ++iter ) {
+    //  IntVector c = *iter;
+    //  gas_value[c] = -(d_constant*d_ic_scaling_constant)*(weight[c]*d_w_scaling_constant);
+    //}
 
   }
 }
@@ -170,6 +232,8 @@ ConstantModel::sched_computeModel( const LevelP& level, SchedulerP& sched, int t
   std::string taskname = "ConstantModel::computeModel";
   Task* tsk = scinew Task(taskname, this, &ConstantModel::computeModel, timeSubStep );
 
+  Ghost::GhostType gn = Ghost::None;
+
   if( timeSubStep == 0 && !d_labelSchedInit ) {
     // Every model term needs to set this flag after the varLabel is computed. 
     // transportEqn.cleanUp should reinitialize this flag at the end of the time step. 
@@ -177,24 +241,22 @@ ConstantModel::sched_computeModel( const LevelP& level, SchedulerP& sched, int t
   }
 
   if( timeSubStep == 0 ) {
+    
     tsk->computes(d_modelLabel);
     tsk->computes(d_gasLabel);
+
+    tsk->requires(Task::OldDW, d_weight_label, gn, 0);
+    tsk->requires(Task::OldDW, d_ic_label, gn, 0);
+
   } else {
+
     tsk->modifies(d_modelLabel); 
     tsk->modifies(d_gasLabel); 
-  }
 
-  /*
-  for (vector<std::string>::iterator iter = d_icLabels.begin(); 
-       iter != d_icLabels.end(); iter++) { 
-    // require any internal coordinates needed to compute the model
-  }
+    tsk->requires(Task::NewDW, d_weight_label, gn, 0);
+    tsk->requires(Task::NewDW, d_ic_label, gn, 0);
 
-  for( vector<string>::iterator iter = d_scalarLabels.begin();
-       iter != d_scalarLabels.end(); ++iter ) {
-    // require any scalars needed to compute the model
   }
-  */
 
   sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials()); 
 
@@ -210,6 +272,8 @@ ConstantModel::computeModel( const ProcessorGroup* pc,
                              DataWarehouse* new_dw,
                              int timeSubStep )
 {
+  Ghost::GhostType gn = Ghost::None;
+
   //patch loop
   for (int p=0; p < patches->size(); p++){
 
@@ -219,17 +283,60 @@ ConstantModel::computeModel( const ProcessorGroup* pc,
 
     CCVariable<double> model; 
     CCVariable<double> gas_source;
+    constCCVariable<double> wa_internal_coordinate;
+    constCCVariable<double> weight;
+    CCVariable<double> internal_coordinate;
 
     if( timeSubStep == 0 ) {
+
       new_dw->allocateAndPut( gas_source, d_gasLabel, matlIndex, patch );
       new_dw->allocateAndPut( model, d_modelLabel, matlIndex, patch );
+
+      old_dw->get( wa_internal_coordinate, d_ic_label, matlIndex, patch, gn, 0 );
+      old_dw->get( weight, d_weight_label, matlIndex, patch, gn, 0 );
+
     } else {
+
       new_dw->getModifiable( model, d_modelLabel, matlIndex, patch ); 
       new_dw->getModifiable( gas_source, d_gasLabel, matlIndex, patch ); 
+
+      new_dw->get( wa_internal_coordinate, d_ic_label, matlIndex, patch, gn, 0 );
+      new_dw->get( weight, d_weight_label, matlIndex, patch, gn, 0 );
+
     }
 
-    gas_source.initialize(0.0);
-    model.initialize(d_constant);
+    model.initialize( d_constant );
+    
+    for( CellIterator iter = patch->getCellIterator(); !iter.done(); ++iter ) {
+      IntVector c = *iter;
+      gas_source[c] = -(d_constant*d_ic_scaling_constant)*(weight[c]*d_w_scaling_constant);
+    }
+
+    if( d_doLowClip ) { 
+      for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
+        IntVector c = *iter;
+        double icval = (wa_internal_coordinate[c]/weight[c])*d_ic_scaling_constant;
+        if( icval <= d_low ) {
+          model[c] = 0.0;
+          gas_source[c] = 0.0;
+        }
+      }
+    }
+  
+    if( d_doHighClip ) {
+      for( CellIterator iter = patch->getCellIterator(); !iter.done(); ++iter) {
+        IntVector c = *iter;
+        double icval = (wa_internal_coordinate[c]/weight[c])*d_ic_scaling_constant;
+        if( icval >= d_high ) {
+          model[c] = 0.0;
+          gas_source[c] = 0.0;
+        }
+      }
+    }
+
+    if( d_quadNode == 0 ) {
+      cout << "Constant model = " << model[IntVector(1,2,3)] << " and gas source = " << gas_source[IntVector(1,2,3)] << endl;
+    }
 
   }
 }

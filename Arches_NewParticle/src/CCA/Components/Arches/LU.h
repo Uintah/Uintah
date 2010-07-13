@@ -2,23 +2,21 @@
 #define Uintah_Components_Arches_LU_h
 
 #include <Core/Grid/Variables/VarTypes.h>
-#include <iostream>
 #include <iomanip>
+
+namespace Uintah {
 
 /**
   * @class    LU
   * 
   * @brief    Performs LU decomposition of a matrix system using Crout's method with partial pivoting;
   *           additionally, the class can optionally implement iterative refinement of X=A\B.
-  * @details  This class may be extended in the future to also use QR decomposition.
   *
   * @author   Charles Reid and James Sutherland
-  * @date     November 2005   Crout's Method
-  *           April 2009      Crout's Method with Partial Pivoting
-  *           July 2009       Iterative Refinement, templated matrix operations
+  * @date     November 2005 : Crout's Method \n
+  *           April 2009    : Crout's Method with Partial Pivoting \n
+  *           July 2009     : Iterative Refinement, templated matrix operations \n
   */
-
-namespace Uintah {
 
 class LU{
   public:
@@ -67,7 +65,7 @@ class LU{
 
     /** @brief      Access function for final relative norm (error estimate)
       * @returns    final_relative_norm variable, which contains the relative norm of 
-      *             \f$ \Vert dx \Vert_{\infty} / \Vert x \Vert_{\infty} \f$ for the last step 
+      *             \f$\latexonly \Vert dx \Vert_{\infty} / \Vert x \Vert_{\infty} \endlatexonly\f$ for the last step 
       *             of iterative refinement   */
     double getConvergenceRate() {
       if(isRefined_)
@@ -195,7 +193,11 @@ class LU{
       * @param normdXi      Norm (Linfty) of dX(i) (prior iteration)
       * @param normdXip1    Norm (Linfty) of dX(i+1) (current iteration)
       * @param finRelNorm   Norm (Linfty) of final relative error:
-      *                     \f[ \text{FinalRelativeNorm} = \Vert dx^{(i+1)} \Vert / \Vert x^{(i)} \Vert \f]
+      *                     \f[
+                             \latexonly
+                             \text{FinalRelativeNorm} = \Vert dx^{(i+1)} \Vert / \Vert x^{(i)} \Vert 
+                             \endlatexonly
+                             \f]
       */
     void update_xstate( double norm_X_i, 
                         double norm_dX_i, 
@@ -238,15 +240,15 @@ class LU{
     // Determinant:
     double determinant;
     
-    const int dim_;                 /// Dimension of LU object
-    DenseMatrix AA_;               /// Private instance of DenseMatrix 
+    const int dim_;                 ///< Dimension of LU object
+    DenseMatrix AA_;                ///< Private instance of DenseMatrix 
     
-    bool isDecomposed_;             /// Flag set when LU object has been decomposed (is ready for back-substitution)
-    bool isSingular_;               /// Flag set if a row of the LU object contains all zeros
-    bool isRefined_;                /// Flag set when iterative refinement has been run
+    bool isDecomposed_;             ///< Flag set when LU object has been decomposed (is ready for back-substitution)
+    bool isSingular_;               ///< Flag set if a row of the LU object contains all zeros
+    bool isRefined_;                ///< Flag set when iterative refinement has been run
   
     // Iterative refinement members
-    double rho_thresh;              /// Threshold convergence rate;           \n
+    double rho_thresh;              ///<Threshold convergence rate;           \n
                                     /// this value measures the "similarity"
                                     /// of dX for step (i) and step (i+1)
                                     /// (1 is totally similar, etc...).       \n
@@ -256,25 +258,25 @@ class LU{
                                     /// ill-conditioned matrices, but it converges
                                     /// more slowly and has a less accurate condition
                                     /// number estimate).
-                                    /// ***This value is set by the user.
+                                    /// This value is set by the user.
 
-    double rho_max;                 /// Maximum convergence rate obtained during the 
+    double rho_max;                 ///<Maximum convergence rate obtained during the 
                                     /// iterative refinement procedure.  This value 
                                     /// provides an estimate of the condition number:
-                                    /// \f[ \rho^{(i)} = \epsilon*c_n*g*\text{cond}(A) \f]
+                                    /// \f[\latexonly \rho^{(i)} = \epsilon*c_n*g*\text{cond}(A) \endlatexonly\f]
                                     /// (not sure what c_n or g are...)
     
-    double condition_estimate;      /// Estimate of condition number
+    double condition_estimate;      ///<Estimate of condition number
 
-    double norm_dX_i;               /// Relative L_infty norm of dX at previous iteration
-    double norm_dX_ip1;             /// Relative L_infty norm of dX at current iteration
-    double norm_dX_final;           /// Relative L_infty norm of dX at last iteration
-    double norm_X_i;                /// Relative L_infty norm of X 
+    double norm_dX_i;               ///<Relative L_infty norm of dX at previous iteration
+    double norm_dX_ip1;             ///<Relative L_infty norm of dX at current iteration
+    double norm_dX_final;           ///<Relative L_infty norm of dX at last iteration
+    double norm_X_i;                ///<Relative L_infty norm of X 
 
-    bool increase_precision;        /// Boolean switch: increase precision for X?
+    bool increase_precision;        ///<Boolean switch: increase precision for X?
   
-    int imax;                       /// Maximum number of iterations.
-                                    /// ***This value is set by the user.
+    int imax;                       ///<Maximum number of iterations.
+                                    /// This value is set by the user.
 
 };
 

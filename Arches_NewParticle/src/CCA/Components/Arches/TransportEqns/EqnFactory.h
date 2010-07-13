@@ -2,7 +2,8 @@
 #define UT_EqnFactory_h
 #include <CCA/Components/Arches/ArchesVariables.h>
 #include <CCA/Ports/DataWarehouseP.h>
-//#include <Core/Parallel/Parallel.h>
+
+namespace Uintah {
 
 //---------------------------------------------------------------------------
 // Builder 
@@ -16,7 +17,6 @@
   * be used with the EqnFactory. 
   *
   */
-namespace Uintah {
 class ExplicitTimeInt;
 class ArchesLabel;
 class EqnBase; 
@@ -29,6 +29,7 @@ public:
               d_fieldLabels(fieldLabels), 
               d_timeIntegrator(timeIntegrator),
               d_eqnName(eqnName) {};
+
   virtual ~EqnBuilder(){};
 
   virtual EqnBase* build() = 0;  
@@ -47,7 +48,10 @@ protected:
   * @author Jeremy Thornock, Adapted from James Sutherland's code
   * @date   November 19, 2008
   * 
-  * @brief  A Factory for building eqns. 
+  * @brief  A factory to manage non-DQMOM scalar transport equations.
+  *
+  * @details
+  * This class is implemented as a singleton.
   * 
   */
 class ArchesLabel;
@@ -68,10 +72,11 @@ public:
   /** @brief  Grab input parameters from the ups file */
   void problemSetup( const ProblemSpecP & params );
 
-  /** @brief  Schedule/do initialization of scalar equations */
+  /** @brief  Schedule initialization of scalar equations */
   void sched_scalarInit( const LevelP& level, 
                          SchedulerP& sched );
 
+  /** @brief  Actually initialize scalar equations */
   void scalarInit( const ProcessorGroup* ,
                    const PatchSubset* patches,
                    const MaterialSubset*,
@@ -115,11 +120,13 @@ public:
   /////////////////////////////////////////////
   // Get/set methods
 
+  /** @brief  Set the label object associated with the EqnFactory */ 
   inline void setArchesLabel( ArchesLabel* fieldLabels ) {
     d_fieldLabels = fieldLabels;
     d_labelSet = true;
   };
 
+  /** @brief  Set the time integrator object associated with the EqnFactory */ 
   inline void setTimeIntegrator( ExplicitTimeInt* timeIntegrator ){
     d_timeIntegrator = timeIntegrator;
     d_timeIntegratorSet = true;
@@ -133,11 +140,11 @@ private:
 
   ExplicitTimeInt* d_timeIntegrator;
 
-  bool d_labelSet; ///< Boolean: has the ArchesLabel been set using setArchesLabel()?
+  bool d_labelSet;          ///< Boolean: has the ArchesLabel been set using setArchesLabel()?
   bool d_timeIntegratorSet; ///< Boolean: has the time integrator been set using setTimeIntegrator()?
 
-  BuildMap builders_; 
-  EqnMap eqns_; 
+  BuildMap builders_;       ///< Storage container for equation builder objects
+  EqnMap eqns_;             ///< Storage container for equation objects
 
   EqnFactory(); 
   ~EqnFactory(); 

@@ -123,17 +123,17 @@ public:
 
 private:
 
-  vector<double> d_ash_mass;    ///< Vector of mass of ash in each environment
+  vector<double> d_ash_mass;              ///< Vector of mass of ash in each environment
 
-  const VarLabel* d_length_label;
-  const VarLabel* d_raw_coal_mass_label;
-  const VarLabel* d_char_mass_label;
-  const VarLabel* d_moisture_mass_label;
+  const VarLabel* d_length_label;         ///< Variable label for particle length internal coordinate 
+  const VarLabel* d_raw_coal_mass_label;  ///< Variable label for raw coal mass internal coordinate 
+  const VarLabel* d_char_mass_label;      ///< Variable label for char mass internal coordinate 
+  const VarLabel* d_moisture_mass_label;  ///< Variable label for moisture mass internal coordinate 
 
-  double d_length_scaling_constant;   ///< Scaling constant for particle length internal coordinate
-  double d_rc_scaling_constant;       ///< Scaling constant for raw coal internal coordinate
-  double d_char_scaling_constant;     ///< Scaling constant for char internal coordinate
-  double d_moisture_scaling_constant; ///< Scaling constant for moisture internal coordinate
+  double d_length_scaling_constant;       ///< Scaling constant for particle length internal coordinate
+  double d_rc_scaling_constant;           ///< Scaling constant for raw coal internal coordinate
+  double d_char_scaling_constant;         ///< Scaling constant for char internal coordinate
+  double d_moisture_scaling_constant;     ///< Scaling constant for moisture internal coordinate
 
   bool d_useLength;    ///< Boolean: use length internal coordinate?
   bool d_useRawCoal;   ///< Boolean: use raw coal internal coordinate?
