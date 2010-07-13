@@ -124,20 +124,20 @@ namespace Uintah {
                                  
   int remainingVectorComponent(int dir1, int dir2);
   
-  void FaceDensity_LODI(const Patch* patch,
+  int FaceDensity_LODI(const Patch* patch,
                        const Patch::FaceType face,
                        CCVariable<double>& rho_CC,
                        Lodi_vars* lv,
                        const Vector& dx);
                   
-  void FaceVel_LODI(const Patch* patch,
+  int FaceVel_LODI(const Patch* patch,
                    Patch::FaceType face,                 
                    CCVariable<Vector>& vel_CC,           
                    Lodi_vars* lv,
                    const Vector& dx,
                    SimulationStateP& sharedState);
                     
-  void FaceTemp_LODI(const Patch* patch,
+  int FaceTemp_LODI(const Patch* patch,
                     const Patch::FaceType face,
                     CCVariable<double>& temp_CC,
                     Lodi_vars* lv, 
