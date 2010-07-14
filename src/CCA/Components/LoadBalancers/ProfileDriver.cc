@@ -168,7 +168,8 @@ void ProfileDriver::outputError(const GridP currentGrid)
       if(d_myworld->myrank()==0 && stats2.active())
       {
         IntVector low(patch->getCellLowIndex()), high(patch->getCellHighIndex());
-        stats2 << iter << " " << patch->getID() << " " << (measured_sum[l][p]-predicted_sum[l][p])/measured_sum[l][p] << " " << measured_sum[l][p] << " " << l << " " 
+        stats2 << iter << " " << patch->getID() << " " << (measured_sum[l][p]-predicted_sum[l][p])/(measured_sum[l][p]+predicted_sum[l][p]) << " " 
+          << measured_sum[l][p] << " " << predicted_sum[l][p] << " " << l << " " 
           << low[0] << " " << low[1] << " " << low[2] << " " << high[0] << " " << high[1] << " " << high[2] << endl;
       }
     }
@@ -346,6 +347,7 @@ void ProfileDriver::finalizeContributions(const GridP currentGrid)
           double k=m/(m+r);
           //cout << setprecision(12);
           data.p=(1-k)*m;  //computing covariance
+        //cout << "m: " << m << " k:" << k << " p:" << data.p << endl;
 
           data.weight=data.weight+k*(data.current-data.weight);
         }
@@ -447,7 +449,7 @@ void ProfileDriver::initializeWeights(const Grid* oldgrid, const Grid* newgrid)
       if(weights[r]/old_level[r].getVolume()<weight)
         weight=weights[r]/old_level[r].getVolume();
     }
-    double initial_cost=weight*d_minPatchSizeVolume[l];
+    double initial_cost=weight*d_minPatchSizeVolume[l]*2;
 #else
     double weight=0;
     //compute maximum cost per datapoint
@@ -502,7 +504,6 @@ void ProfileDriver::initializeWeights(const Grid* oldgrid, const Grid* newgrid)
 
       //compute number of regions
       size+=recvs[p];
-
 
       //convert to bytes
       recvs[p]*=sizeof(Region);
@@ -577,7 +578,6 @@ void ProfileDriver::initializeWeights(const Grid* oldgrid, const Grid* newgrid)
       //add regions to my map
       IntVector low=it->getLow()/d_minPatchSize[l];
       IntVector high=it->getHigh()/d_minPatchSize[l];
-
       //loop through datapoints
       for(CellIterator iter(low,high); !iter.done(); iter++)
       {
@@ -592,6 +592,8 @@ void ProfileDriver::initializeWeights(const Grid* oldgrid, const Grid* newgrid)
         {
           //add cost to current contribution
           costs[l][*iter].weight=initial_cost;
+//          if(l==2)
+//            cout << " initializing " << *iter*d_minPatchSize[l] << " to " << initial_cost << endl;
         }
       } //end cell iteration
     } //end region iteration
