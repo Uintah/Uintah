@@ -972,7 +972,7 @@ void setBC(CCVariable<Vector>& var_CC,
  Function~  setSpecificVolBC-- 
  ---------------------------------------------------------------------  */
 void setSpecificVolBC(CCVariable<double>& sp_vol_CC,
-                      const string& kind,
+                      const string& desc,
                       const bool isMassSp_vol,
                       constCCVariable<double> rho_CC,
                       constCCVariable<double> vol_frac,
@@ -983,8 +983,8 @@ void setSpecificVolBC(CCVariable<double>& sp_vol_CC,
   if(patch->hasBoundaryFaces() == false){
     return;
   }
-  BC_doing << "setSpecificVolBC \t"<< kind <<" "
-           << " mat_id = " << mat_id << endl;
+  cout_BC_CC << "setSpecificVolBC \t"<< desc <<" "
+             << " mat_id = " << mat_id << endl;
                 
   Vector dx = patch->dCell();
   double cellVol = dx.x() * dx.y() * dx.z();
@@ -995,7 +995,8 @@ void setSpecificVolBC(CCVariable<double>& sp_vol_CC,
   
   for( vector<Patch::FaceType>::const_iterator iter = bf.begin(); iter != bf.end(); ++iter ){
     Patch::FaceType face = *iter;
-    bool IveSetBC = false;
+    int IveSetBC = 0;
+    string bc_kind = "NotSet";
        
     IntVector dir= patch->getFaceAxes(face);
     Vector cell_dx = patch->dCell();
@@ -1004,23 +1005,32 @@ void setSpecificVolBC(CCVariable<double>& sp_vol_CC,
     // iterate over each geometry object along that face
     for (int child = 0;  child < numChildren; child++) {
       double bc_value = -9;
-      string bc_kind = "NotSet";
       Iterator bound_ptr;
       
       bool foundIterator = 
-        getIteratorBCValueBCKind<double>( patch, face, child, kind, mat_id,
-                                               bc_value, bound_ptr,bc_kind); 
+        getIteratorBCValueBCKind<double>( patch, face, child, desc, mat_id,
+                                          bc_value, bound_ptr,bc_kind); 
                                    
       if(foundIterator) {
-        if( bc_kind == "symmetric"){
-          bc_kind = "zeroNeumann";
+        //__________________________________
+        // Dirichlet
+        if(bc_kind == "Dirichlet"){
+           IveSetBC += setDirichletBC_CC<double>( sp_vol_CC, bound_ptr, bc_value);
         }
-       
-        IveSetBC = setNeumanDirichletBC<double>(patch, face, sp_vol_CC, bound_ptr, 
-                                                  bc_kind, bc_value, cell_dx,
-                                                  mat_id,child);
-
-        if(bc_kind == "computeFromDensity"){
+        //__________________________________
+        // Neumann
+        else if(bc_kind == "Neumann"){
+           IveSetBC += setNeumannBC_CC<double >( patch, face, sp_vol_CC, bound_ptr, bc_value, cell_dx);
+        }                                   
+        //__________________________________
+        //  Symmetry
+        else if ( bc_kind == "symmetric" || bc_kind == "zeroNeumann" ) {
+          bc_value = 0.0;
+          IveSetBC += setNeumannBC_CC<double >( patch, face, sp_vol_CC, bound_ptr, bc_value, cell_dx);
+        }
+        //__________________________________
+        //  Symmetry
+        else if(bc_kind == "computeFromDensity"){
         
           for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
             IntVector c = *bound_ptr;
@@ -1033,7 +1043,7 @@ void setSpecificVolBC(CCVariable<double>& sp_vol_CC,
               sp_vol_CC[c] = sp_vol_CC[c]*(rho_CC[c]*cellVol);
             }
           }
-          IveSetBC = true;
+          IveSetBC += 1;
         }
 
         //__________________________________
@@ -1047,6 +1057,17 @@ void setSpecificVolBC(CCVariable<double>& sp_vol_CC,
         }
       }  // if iterator found
     }  // child loop
+    
+    cout_BC_CC << "    "<< patch->getFaceName(face) << " \t " << bc_kind << " numChildren: " << numChildren 
+                    << " IveSetBC: " << IveSetBC << endl;
+                    
+    if(IveSetBC != numChildren){
+      ostringstream warn;
+      warn << "ERROR: ICE: setSpecificVolBC Boundary conditions were not set correctly ("<< desc<< ", " 
+           << patch->getFaceName(face) << ", " << bc_kind  << " numChildren: " << numChildren 
+           << " IveSetBC: " << IveSetBC<<") " << endl;
+      throw InternalError(warn.str(), __FILE__, __LINE__);
+    }
   }  // faces loop
 }
 
