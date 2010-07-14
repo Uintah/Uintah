@@ -151,17 +151,6 @@ template<class T>
              const string& comp,    
              const Patch* patch,    
              const int mat_id);
-                        
-template<class T>
- bool setNeumanDirichletBC( const Patch* patch,
-                            const Patch::FaceType face,
-                            CCVariable<T>& var,
-                            Iterator& bound_ptr,
-                            const string& bc_kind,
-                            const T& value,
-                            const Vector& cell_dx,
-                            const int mat_id,
-                            const int child);
 
  int setSymmetryBC_CC( const Patch* patch,
                        const Patch::FaceType face,
@@ -278,85 +267,7 @@ bool getIteratorBCValueBCKind( const Patch* patch,
  return IveSetBC;
 
 }
-/* --------------------------------------------------------------------- 
- Function~  setNeumanDirichletBC--
- Purpose~   does the actual work of setting the BC for the simple BC
- ---------------------------------------------------------------------  */
- template<class T>
- bool setNeumanDirichletBC( const Patch* patch,
-                            const Patch::FaceType face,
-                            CCVariable<T>& var,
-                            Iterator& bound_ptr,
-                            string& bc_kind,
-                            T& value,
-                            const Vector& cell_dx,
-                            const int mat_id,
-                            const int child)
-{
- IntVector oneCell = patch->faceDirection(face);
- IntVector dir= patch->getFaceAxes(face);
- double dx = cell_dx[dir[0]];
 
- bool IveSetBC = false;
-
- if (bc_kind == "Neumann" && value == T(0)) { 
-   bc_kind = "zeroNeumann";  // for speed
- }
- //__________________________________        
- if (bc_kind == "Dirichlet") {    //   D I R I C H L E T 
-   for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
-     var[*bound_ptr] = value;
-   }
-   IveSetBC = true;
- }
- //__________________________________
- // Random variations for density
- if (bc_kind == "Dirichlet_perturbed") {
-   Iterator nu1,nu2;  // not used
-   const BoundCondBase* bc = patch->getArrayBCValues(face,mat_id,
-						     "Density", 
-                                                     nu1,nu2,child);
-
-
-   const BoundCond<double> *density_bcs = 
-     dynamic_cast<const BoundCond<double> *>(bc);
-   
-   double K=0.;
-   if (density_bcs)
-     K = density_bcs->getValue();
-
-
-   // Seed the random number generator with the number of seconds since 
-   // midnight Jan. 1, 1970.
-
-   time_t seconds = time(NULL);
-   srand(seconds);
-
-   for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
-     var[*bound_ptr] = value + K*((double(rand())/RAND_MAX)*2.- 1.)*value;
-   }
-   IveSetBC = true;
-   delete bc;
- }
-
- if (bc_kind == "Neumann") {       //    N E U M A N N
-   for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
-     IntVector adjCell = *bound_ptr - oneCell;
-     var[*bound_ptr] = var[adjCell] - value * dx;
-   }
-   IveSetBC = true;
- }
- if (bc_kind == "zeroNeumann") {   //    Z E R O  N E U M A N N
-   for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
-     IntVector adjCell = *bound_ptr - oneCell;
-     var[*bound_ptr] = var[adjCell];
-   }
-   IveSetBC = true;
-   value = T(0.0);   // so the debugging output is accurate
- }
- return IveSetBC;
-
-}
 /* --------------------------------------------------------------------- 
  Function~  setDirichletBC_FC--
  Purpose~   does the actual work of setting the BC for face-centered 
