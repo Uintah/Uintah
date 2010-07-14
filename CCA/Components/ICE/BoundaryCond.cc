@@ -102,7 +102,7 @@ void ImplicitMatrixBC( CCVariable<Stencil7>& A,
         //  Neumann or Dirichlet Press_BC;
         double one_or_zero = -999;
         if(bc_kind == "zeroNeumann" || bc_kind == "Neumann" ||
-           bc_kind == "symmetric" ||bc_kind == "MMS_1"){
+           bc_kind == "symmetry"    ||bc_kind == "MMS_1"){
           one_or_zero = 1.0;      // subtract from A.p
         }
 
@@ -620,7 +620,7 @@ void setBC(CCVariable<double>& press_CC,
         } 
         //__________________________________
         //  Symmetry
-        else if ( bc_kind == "symmetric" || bc_kind == "zeroNeumann" ) {
+        else if ( bc_kind == "symmetry" || bc_kind == "zeroNeumann" ) {
           bc_value = 0.0;
           IveSetBC += setNeumannBC_CC<double >( patch, face, press_CC, bound_ptr, bc_value, cell_dx);
         }
@@ -758,7 +758,7 @@ void setBC(CCVariable<double>& var_CC,
         }                                   
         //__________________________________
         //  Symmetry
-        else if ( bc_kind == "symmetric" || bc_kind == "zeroNeumann" ) {
+        else if ( bc_kind == "symmetry" || bc_kind == "zeroNeumann" ) {
           bc_value = 0.0;
           IveSetBC += setNeumannBC_CC<double >( patch, face, var_CC, bound_ptr, bc_value, cell_dx);
         }
@@ -913,7 +913,7 @@ void setBC(CCVariable<Vector>& var_CC,
         }                                   
         //__________________________________
         //  Symmetry
-        else if ( bc_kind == "symmetric" ) {
+        else if ( bc_kind == "symmetry" ) {
           IveSetBC += setSymmetryBC_CC( patch, face, var_CC, bound_ptr);
         }
         //__________________________________
@@ -1024,7 +1024,7 @@ void setSpecificVolBC(CCVariable<double>& sp_vol_CC,
         }                                   
         //__________________________________
         //  Symmetry
-        else if ( bc_kind == "symmetric" || bc_kind == "zeroNeumann" ) {
+        else if ( bc_kind == "symmetry" || bc_kind == "zeroNeumann" ) {
           bc_value = 0.0;
           IveSetBC += setNeumannBC_CC<double >( patch, face, sp_vol_CC, bound_ptr, bc_value, cell_dx);
         }

@@ -169,7 +169,6 @@ template<class T>
  
 /* --------------------------------------------------------------------- 
  Function~  getIteratorBCValueBCKind--
- Purpose~   does the actual work
  ---------------------------------------------------------------------  */
 template <class T>
 bool getIteratorBCValueBCKind( const Patch* patch, 
@@ -181,42 +180,57 @@ bool getIteratorBCValueBCKind( const Patch* patch,
                                Iterator& bound_ptr,
                                string& bc_kind)
 { 
-  //__________________________________
-  //  find the iterator, BC value and BC kind
-  Iterator nu;  // not used
-
-  const BoundCondBase* bc = patch->getArrayBCValues(face,mat_id,
-						    desc, bound_ptr,
-                                                    nu, child);
-
-  const BoundCondBase* sym_bc = patch->getArrayBCValues(face,mat_id,
-						       "Symmetric", bound_ptr, 
-							nu, child);
-
-
-  const BoundCond<T> *new_bcs =  dynamic_cast<const BoundCond<T> *>(bc);       
-
   bc_value=T(-9);
   bc_kind="NotSet";
-  if (new_bcs != 0) {      // non-symmetric
-    bc_value = new_bcs->getValue();
-    bc_kind  = new_bcs->getBCType__NEW();
-  }        
-  if (sym_bc != 0 && sym_bc->getBCType__NEW() == "symmetry") {  // symmetric
-    bc_kind = "symmetric";
-  }
+  bool foundBC = false;
+
+  //__________________________________
+  //  Any variable with zero Neumann BC
   if (desc == "zeroNeumann" ){
     bc_kind = "zeroNeumann";
+    bc_value = T(0.0);
+    foundBC = true;
   }
-  delete bc;
-  delete sym_bc;
+  
+  const BoundCondBase* bc;
+  const BoundCond<T>* new_bcs;
+  const BCDataArray* bcd = patch->getBCDataArray(face);
+  //__________________________________
+  //  non-symmetric BCs
+  // find the bc_value and kind
+  if( !foundBC ){
+    bc = bcd->getBoundCondData(mat_id,desc,child);
+    new_bcs = dynamic_cast<const BoundCond<T> *>(bc);
 
-  // Did I find an iterator
-  if( bc_kind == "NotSet" ){
-    return false;
-  }else{
+    if (new_bcs != 0) {
+      bc_value = new_bcs->getValue();
+      bc_kind  = new_bcs->getBCType__NEW();
+      delete bc;
+      foundBC = true;
+    }
+  }
+  
+  //__________________________________
+  // Symmetry
+  if( !foundBC ){
+    bc = bcd->getBoundCondData(mat_id,"Symmetric",child);
+    string test  = bc->getBCType__NEW();
+
+    if (test == "symmetry") {
+      bc_kind  = "symmetry";
+      bc_value = T(0.0);
+      delete bc;
+      foundBC = true;
+    }
+  }
+
+  if(foundBC){
+    // For this face find the iterator
+    bcd->getCellFaceIterator(mat_id,bound_ptr,child);
     return true;
-  }    
+  }else{
+    return false;
+  }
 }
 
 /* --------------------------------------------------------------------- 
@@ -374,7 +388,7 @@ void setBC(T& vel_FC,
           //__________________________________
           //  Symmetry boundary conditions
           //  -- faces in the principal dir:     vel[c] = 0
-          else if (bc_kind == "symmetric") { 
+          else if (bc_kind == "symmetry") { 
             value = 0.0;                                                                           
             IveSetBC += setDirichletBC_FC<T>( patch, face, vel_FC, bound_ptr, value);    
           }
