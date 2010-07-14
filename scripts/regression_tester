@@ -348,7 +348,7 @@ run_test () {
 
 
     if [ $n = "explode2D_amr" ]; then
-        echo; echo "Running: $MPI $NICE sus $opts $GOLD_STANDARD/$DIR/$CASE/$n/$n.uda.000"
+        echo; echo "Running: $MPI $NICE sus $opts $CHECKPOINTS/$CASE/$n/$n.uda.000"
         $MPI $NICE ../sus $opts $CHECKPOINTS/$CASE/$n/$n.uda.000 &> $n.out
     else
         echo; echo "Running: $MPI $NICE sus $opts $n.ups"
