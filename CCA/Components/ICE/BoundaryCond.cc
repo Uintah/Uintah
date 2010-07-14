@@ -79,17 +79,21 @@ namespace Uintah {
 void ImplicitMatrixBC( CCVariable<Stencil7>& A, 
                    const Patch* patch)        
 { 
+  cout_BC_CC << "ImplicitMatrixBC "<< endl;
+  
   vector<Patch::FaceType> bf;
   patch->getBoundaryFaces(bf);
   for( vector<Patch::FaceType>::const_iterator itr = bf.begin(); itr != bf.end(); ++itr ){
     Patch::FaceType face = *itr;
+    string bc_kind  = "NotSet";
+    int IveSetBC = 0;
     
     int mat_id = 0; // hard coded for pressure
     
     int numChildren = patch->getBCDataArray(face)->getNumberChildren(mat_id);
     for (int child = 0;  child < numChildren; child++) {
       double bc_value = -9;
-      string bc_kind  = "NotSet";
+      
       Iterator bound_ptr;  
       
       bool foundIterator =       
@@ -119,6 +123,7 @@ void ImplicitMatrixBC( CCVariable<Stencil7>& A,
             A[c].p = A[c].p + one_or_zero * A[c].e;
             A[c].e = 0.0;
           }
+          IveSetBC += 1;
           break;
         case Patch::xminus:
           for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) { 
@@ -126,6 +131,7 @@ void ImplicitMatrixBC( CCVariable<Stencil7>& A,
             A[c].p = A[c].p + one_or_zero * A[c].w;
             A[c].w = 0.0;
           }
+          IveSetBC += 1;
           break;
         case Patch::yplus:
           for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) { 
@@ -133,6 +139,7 @@ void ImplicitMatrixBC( CCVariable<Stencil7>& A,
             A[c].p = A[c].p + one_or_zero * A[c].n;
             A[c].n = 0.0;
           }
+          IveSetBC += 1;
           break;
         case Patch::yminus:
           for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
@@ -140,6 +147,7 @@ void ImplicitMatrixBC( CCVariable<Stencil7>& A,
             A[c].p = A[c].p + one_or_zero * A[c].s;
             A[c].s = 0.0;
           }
+          IveSetBC += 1;
           break;
         case Patch::zplus:
           for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
@@ -147,6 +155,7 @@ void ImplicitMatrixBC( CCVariable<Stencil7>& A,
             A[c].p = A[c].p + one_or_zero * A[c].t;
             A[c].t = 0.0;
           }
+          IveSetBC += 1;
           break;
         case Patch::zminus:
           for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
@@ -154,6 +163,7 @@ void ImplicitMatrixBC( CCVariable<Stencil7>& A,
             A[c].p = A[c].p + one_or_zero * A[c].b;
             A[c].b = 0.0;
           }
+          IveSetBC += 1;
           break;
         case Patch::numFaces:
           break;
@@ -169,8 +179,17 @@ void ImplicitMatrixBC( CCVariable<Stencil7>& A,
              <<"\t bound limits = "<< *bound_ptr.begin()<< " "<< *(bound_ptr.end()-1)
               << endl;
         #endif
-      } // if (bc_kind !=notSet)
+      } // if iterator found
     } // child loop
+    cout_BC_CC << "    "<< patch->getFaceName(face) << " \t " << bc_kind << " numChildren: " << numChildren 
+                    << " IveSetBC: " << IveSetBC <<  endl;
+    if(IveSetBC != numChildren){
+      ostringstream warn;
+      warn << "ERROR: ICE: ImplicitMatrixBC Boundary conditions were not set correctly (" 
+           << patch->getFaceName(face) << ", " << bc_kind  << " numChildren: " << numChildren 
+           << " IveSetBC: " << IveSetBC << endl;
+      throw InternalError(warn.str(), __FILE__, __LINE__);
+    }
   }  // face loop
   
  /*`==========TESTING==========*/
