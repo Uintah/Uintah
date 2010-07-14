@@ -43,22 +43,33 @@ DEALINGS IN THE SOFTWARE.
 
 /**
  * @class  TabPropsInterface
- * @author Charles Reid
- * @date   Nov 11, 2008
+ * @author Jeremy Thornock
+ * @date   May 2009 
  *
  * @brief Table interface for those created with TabProps.
  *
-    Dependent variables are B-Splined, and spline coefficients are put into an
-    HDF5 formated file.  This class creates a TabProps StateTable object,
-    reads datafrom a table into the StateTable object, and can query the
-    StateTable object for the value of a dependent variable given values
-    for independent variables, as well as return names for independent
-    and dependent variables, and verify tables by checking the names of
-    the dependent variables requested by the user in the input file to
-    dependent variables tabulated in the table. Functionality will also be
-    added to utilize the StateTable functions to convert the table data to
-    a matlab file to easily investigate the results of the table creation.
+ *
+The UPS interface for TabProps is: 
+\code
+    <Properties>
+        <TabProps>
+            <inputfile>REQUIRED STRING</inputfile>
+            <strict_mode>OPTIONAL BOOL</strict_mode>
+            <diagnostic_mode>OPTIONAL BOOL</diagnostic_mode>
+        </TabProps>
+    </Properties>
 
+    <DataArchiver>
+        <save name=STRING table_lookup="true"> <!-- note that STRING must match the name in the table -->
+    </DataArchiver>
+ \endcode
+ * Any variable that is saved to the UDA in the dataarchiver block is automatically given a VarLabel.  
+ *
+ * To-do's: 
+ *  - Need to add support for multiple scalar variance
+ * 
+ *
+ *
  */
 
 namespace Uintah {
@@ -73,8 +84,7 @@ public:
 
   ~TabPropsInterface();
 
-
-  //see MixingRxnModel.h
+  /** @brief See MixingRxnModel.h */ 
   void problemSetup( const ProblemSpecP& params );
   
   /** @brief Compare dependent variables found in input file to dependent variables found in table file */
@@ -83,7 +93,7 @@ public:
   /** @brief Compare independent variables found in input file to independent variables found in table file */
   void const verifyIV( bool diagnosticMode, bool strictMode );
 
-  //see MixingRxnModel.h
+  /// @brief See MixingRxnModel.h 
   void const verifyTable( bool diagnosticMode, bool strictMode );
 
   /** @brief Gets the thermochemical state for a patch */
@@ -131,12 +141,10 @@ public:
                              DataWarehouse* old_dw, 
                              DataWarehouse* new_dw ); 
 
-  // Load list of dependent variables from the table
-  // Return vector<string>& (reference to allDepVarNames())
+  /** @brief Returns a list of all tabulated dependent variables */ 
   const vector<string> & getAllDepVars();
 
-  // Load list of independent variables from the table
-  // Return vector<string>& (reference to allIndepVarNames())
+  /** @brief Returns a list of all independent variables */ 
   const vector<string> & getAllIndepVars();
 
   inline double getSingleState( string dv, vector<double> iv ) {
@@ -144,10 +152,9 @@ public:
     return result = d_statetbl.query(  dv, &iv[0] ); 
   };
 
-  // -- for mpm --
-  //
+  /** @brief Dummy initialization as required by MPMArches */
   void sched_dummyInit( const LevelP& level, SchedulerP& sched );
-
+  /** @brief See sched_dummyInit */ 
   void dummyInit( const ProcessorGroup* pc, 
                   const PatchSubset* patches, 
                   const MaterialSubset* matls, 
@@ -159,39 +166,37 @@ protected :
 
 private:
 
-  // boolean to tell you if table has been loaded
-  bool d_table_isloaded;
-  
-  // booleans for verification methods
-  bool d_diagnostic_mode;
+  /// Indicates if the table has been loaded. 
+  bool d_table_isloaded; 
+ 
+  /// Checks saved variables from UPS against those in the table
+  bool d_diagnostic_mode;  
+  /// Causes the code to exit if saved variables indicated in UPS do not match with those in the table
   bool d_strict_mode;
 
 
-  // heat loss values for non-adiabatic conditions 
+  /// Heat loss value at outlet boundary types
   double d_hl_outlet; 
+  /// Heat loss value at pressure boundary types
   double d_hl_pressure; 
+  /// Initial heat loss value in the domain 
   double d_hl_scalar_init; 
 
+  /// Reference density location 
   IntVector d_ijk_den_ref; 
 
-  // vectors to store independent, dependent variable names from table file
+  /// All independent variable names
   vector<string> d_allIndepVarNames;
+  /// All dependent variable names
   vector<string> d_allDepVarNames;
-
-  // vectors to store independent, dependent variable names from input file
+  
+  /// All user requested dependent variable names
   vector<string> d_allUserDepVarNames;
-  vector<string> d_allUserIndepVarNames;
     
-  // vector to store independent variable values for call to StateTable::query
-  vector<double> d_indepVarValues;
-
-  // StateTable object to represent the table data
+  /// StateTable object representing the tabular information 
   StateTable d_statetbl;
 
-  // string to hold filename
-  string d_tableFileName;
-
-  // A dependent variable container
+  /// A dependent variable container
   struct ADepVar {
 
     string name; 

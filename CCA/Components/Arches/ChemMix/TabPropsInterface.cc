@@ -54,65 +54,27 @@ using namespace std;
 using namespace Uintah;
 using namespace SCIRun;
 
+//--------------------------------------------------------------------------- 
+// TabPropInterface
+//--------------------------------------------------------------------------- 
 
 
-/**************************************************************************
- TabPropsInterface.cc
-
-INPUT FILE TAGS
-This code checks for the following tags/attributes in the input file:
-    <Properties>
-        <TabProps>
-            <table_file_name>THIS FIELD IS REQUIRED</table_file_name>
-            <strict_mode>true/false (not required)</strict_mode>
-            <diagnostic_mode>true/false (not required)</diagnostic_mode>
-        </TabProps>
-    </Properties>
-
-    <DataArchiver>
-        <save name="BlahBlahBlah" table_lookup="true/false">
-    </DataArchiver>
-
-This is used to construct the vector of user-requested dependent variables.
-
-WARNINGS
-The code will throw exceptions for the following reasons:
-- no <table_file_name> specified in the intput file
-- the getState method is run without the problemSetup method being run (b/c the problemSetup sets 
-  the boolean d_table_isloaded to true when a table is loaded, and you can't run getState without 
-  first loading a table)
-- if bool strictMode is true, and a dependent variable specified in the input file does not
-  match the names of any of the dependent variables in the table
-- the getDepVars or getIndepVars methods are run on a TabPropsInterface object which hasn't loaded
-  a table yet (i.e. hasn't run problemSetup method yet) 
-
-***************************************************************************/
-
-
-
-//****************************************************************************
-// Default constructor for TabPropsInterface
-//****************************************************************************
+//--------------------------------------------------------------------------- 
+// Default Constructor 
+//--------------------------------------------------------------------------- 
 TabPropsInterface::TabPropsInterface( const ArchesLabel* labels, const MPMArchesLabel* MAlabels ) :
 MixingRxnModel( labels, MAlabels )
-{
-}
+{}
 
-//****************************************************************************
-// Destructor
-//****************************************************************************
+//--------------------------------------------------------------------------- 
+// Default Destructor
+//--------------------------------------------------------------------------- 
 TabPropsInterface::~TabPropsInterface()
-{
-}
+{}
 
-//****************************************************************************
-// TabPropsInterface problemSetup
-//
-// Obtain parameters from the input file
-// Construct lists of independent and dependent variables (from user and from table)
-// Verify that these variables match
-// 
-//****************************************************************************
+//--------------------------------------------------------------------------- 
+// Problem Setup
+//--------------------------------------------------------------------------- 
 void
 TabPropsInterface::problemSetup( const ProblemSpecP& propertiesParameters )
 {
@@ -155,47 +117,30 @@ TabPropsInterface::problemSetup( const ProblemSpecP& propertiesParameters )
   d_allIndepVarNames = d_statetbl.get_indepvar_names();
   d_allDepVarNames   = d_statetbl.get_depvar_names();
 
+  proc0cout << " Matching user-defined IV's with table IV's" << endl;
+  proc0cout << " If sus crashes here, check to make sure your <TransportEqns><eqn> names match those in the table. " << endl;
+
   for ( unsigned int i = 0; i < d_allIndepVarNames.size(); ++i ){
 
     //put the right labels in the label map
     string varName = d_allIndepVarNames[i];  
 
-    if (varName == "mixture_fraction") {
-
-      d_ivVarMap.insert(make_pair(varName, d_lab->d_scalarSPLabel)).first;
-
-    } else if (varName == "coal_gas_mix_frac"){
-
-      d_ivVarMap.insert(make_pair(varName, d_lab->d_scalarSPLabel)).first;
-
-    } else if (varName == "mixture_fraction_2") {
-
-      //second mixture fraction coming from the extra transport mechanism 
-      EqnFactory& eqn_factory = EqnFactory::self();
-      EqnBase& eqn = eqn_factory.retrieve_scalar_eqn( varName );
-      d_ivVarMap.insert(make_pair(varName, eqn.getTransportEqnLabel())).first; 
-
-
-    } else if (varName == "mixture_fraction_variance") {
-
-      d_ivVarMap.insert(make_pair(varName, d_lab->d_scalarVarSPLabel)).first;
-
-    } else if (varName == "mixture_fraction_variance_2") {
-
-      //second mixture fraction variance coming from the extra transport mechanism 
-      EqnFactory& eqn_factory = EqnFactory::self();
-      EqnBase& eqn = eqn_factory.retrieve_scalar_eqn( varName );
-      d_ivVarMap.insert(make_pair(varName, eqn.getTransportEqnLabel())).first; 
-
-    } else if (varName == "heat_loss") {
+    // !! need to add support for variance !!
+    if (varName == "heat_loss") {
 
       d_ivVarMap.insert(make_pair(varName, d_lab->d_heatLossLabel)).first; 
 
     } else {
-      proc0cout << "For table indep. variable: " <<  varName << endl;
-      throw ProblemSetupException("ERROR! I currently don't know how to deal with this variable (ie, I can't map it to a transported variable.)", __FILE__, __LINE__); 
+
+      // then it must be a mixture fraction 
+      EqnFactory& eqn_factory = EqnFactory::self();
+      EqnBase& eqn = eqn_factory.retrieve_scalar_eqn( varName );
+      d_ivVarMap.insert(make_pair(varName, eqn.getTransportEqnLabel())).first; 
+
     }
   }
+
+  proc0cout << " Matching complete!" << endl;
 
   // Confirm that table has been loaded into memory
   d_table_isloaded = true;
@@ -206,8 +151,9 @@ TabPropsInterface::problemSetup( const ProblemSpecP& propertiesParameters )
   //verifyTable( d_diagnostic_mode, d_strict_mode );
 }
 
-
-
+//--------------------------------------------------------------------------- 
+// verify Table
+//--------------------------------------------------------------------------- 
 void const 
 TabPropsInterface::verifyTable(  bool diagnosticMode,
                              bool strictMode )
@@ -216,20 +162,27 @@ TabPropsInterface::verifyTable(  bool diagnosticMode,
   //verifyDV(diagnosticMode, strictMode);
 }
 
-
+//--------------------------------------------------------------------------- 
+// verify DV
+//--------------------------------------------------------------------------- 
 void const
 TabPropsInterface::verifyDV( bool diagnosticMode, bool strictMode )
 {
 // To be done later.
 }
 
+//--------------------------------------------------------------------------- 
+// verify IV
+//--------------------------------------------------------------------------- 
 void const 
 TabPropsInterface::verifyIV( bool diagnosticMode, bool strictMode ) 
 {
 // To be done later.
 }
 
-// --------------------------------------------------------------------------------
+//--------------------------------------------------------------------------- 
+// schedule get State
+//--------------------------------------------------------------------------- 
 void 
 TabPropsInterface::sched_getState( const LevelP& level, 
                                    SchedulerP& sched, 
@@ -297,6 +250,9 @@ TabPropsInterface::sched_getState( const LevelP& level,
   sched->addTask( tsk, level->eachPatch(), d_lab->d_sharedState->allArchesMaterials() ); 
 }
 
+//--------------------------------------------------------------------------- 
+// get State
+//--------------------------------------------------------------------------- 
 void 
 TabPropsInterface::getState( const ProcessorGroup* pc, 
                              const PatchSubset* patches, 
@@ -453,6 +409,9 @@ TabPropsInterface::getState( const ProcessorGroup* pc,
   }
 }
 
+//--------------------------------------------------------------------------- 
+// schedule Compute Heat Loss
+//--------------------------------------------------------------------------- 
 void 
 TabPropsInterface::sched_computeHeatLoss( const LevelP& level, SchedulerP& sched, const bool initialize_me, const bool calcEnthalpy )
 {
@@ -481,6 +440,9 @@ TabPropsInterface::sched_computeHeatLoss( const LevelP& level, SchedulerP& sched
   sched->addTask( tsk, level->eachPatch(), d_lab->d_sharedState->allArchesMaterials() ); 
 }
 
+//--------------------------------------------------------------------------- 
+// Compute Heat Loss
+//--------------------------------------------------------------------------- 
 void 
 TabPropsInterface::computeHeatLoss( const ProcessorGroup* pc, 
                                     const PatchSubset* patches, 
@@ -559,6 +521,9 @@ TabPropsInterface::computeHeatLoss( const ProcessorGroup* pc,
   }
 }
 
+//--------------------------------------------------------------------------- 
+// schedule Compute First Enthalpy
+//--------------------------------------------------------------------------- 
 void 
 TabPropsInterface::sched_computeFirstEnthalpy( const LevelP& level, SchedulerP& sched )
 {
@@ -580,6 +545,10 @@ TabPropsInterface::sched_computeFirstEnthalpy( const LevelP& level, SchedulerP& 
   sched->addTask( tsk, level->eachPatch(), d_lab->d_sharedState->allArchesMaterials() ); 
 
 }
+
+//--------------------------------------------------------------------------- 
+// Compute First Enthalpy
+//--------------------------------------------------------------------------- 
 void 
 TabPropsInterface::computeFirstEnthalpy( const ProcessorGroup* pc, 
                                          const PatchSubset* patches, 
@@ -636,41 +605,9 @@ TabPropsInterface::computeFirstEnthalpy( const ProcessorGroup* pc,
   }
 }
 
-//****************************************************************************
-// TabPropsInterface getState 
-//
-// Call the StateTable::query method for each cell on a given patch
-// Called from Properties::computeProps
-//
-//****************************************************************************
-/*
-void
-TabPropsInterface::getState( MixingRxnModel::ConstVarMap ivVar, MixingRxnModel::VarMap dvVar, const Patch* patch )
-{
-  if( d_table_isloaded == false ) {
-    throw InternalError("ERROR:Arches:TabPropsInterface - You requested a thermodynamic state, but no "
-                        "table has been loaded. You must specify a table filename in your input file.",__FILE__,__LINE__);
-  }
-  
-  for (CellIterator iCell = patch->getCellIterator(); !iCell.done(); ++iCell) {
-    IntVector currCell = *iCell;
-    
-    // loop over all independent variables to extract IV values at currCell
-    for (unsigned int i=0; i<ivVar.size(); ++i) { 
-      MixingRxnModel::ConstVarMap::iterator iVar = ivVar.find(i);
-      d_indepVarValues[i] = (*iVar->second)[currCell];
-    }
- 
-    // loop over all dependent variables to query table and record values
-    for (unsigned int i=0; i<d_allDepVarNames.size(); ++i) {
-      MixingRxnModel::VarMap::iterator iVar = dvVar.find(i);
-      (*iVar->second)[currCell] = d_statetbl.query(d_allDepVarNames[i], &d_indepVarValues[0]);
-    }
-
-  }
-}
-*/
-
+//--------------------------------------------------------------------------- 
+// Old Table Hack -- to be removed with Properties.cc
+//--------------------------------------------------------------------------- 
 void 
 TabPropsInterface::oldTableHack( const InletStream& inStream, Stream& outStream, bool calcEnthalpy, const string bc_type )
 {
@@ -767,18 +704,9 @@ TabPropsInterface::oldTableHack( const InletStream& inStream, Stream& outStream,
 
 }
 
-
-//****************************************************************************
-// TabPropsInterface getDepVars
-//
-// This method will first check to see if the table is loaded; if it is, it
-// will return a reference to d_allDepVarNames, which is a private vector<string>
-// of the TabPropsInterface class
-//
-// (If it is a reference to a private class variable, can the reciever of
-//  the reference vector<string> still access it?)
-//
-//****************************************************************************
+//--------------------------------------------------------------------------- 
+// Get all Dependent variables 
+//--------------------------------------------------------------------------- 
 const vector<string> &
 TabPropsInterface::getAllDepVars()
 {
@@ -793,19 +721,9 @@ TabPropsInterface::getAllDepVars()
   }
 }
 
-
-
-//****************************************************************************
-// TabPropsInterface getIndepVars
-//
-// This method will first check to see if the table is loaded; if it is, it
-// will return a reference to d_allIndepVarNames, which is a private
-// vector<string> of the TabPropsInterface class
-// 
-// (If it is a reference to a private class variable, can the reciever of
-//  the reference vector<string> still access it?)
-// 
-//****************************************************************************
+//--------------------------------------------------------------------------- 
+// Get all independent Variables
+//--------------------------------------------------------------------------- 
 const vector<string> &
 TabPropsInterface::getAllIndepVars()
 {
@@ -820,8 +738,10 @@ TabPropsInterface::getAllIndepVars()
     throw InternalError(exception.str(),__FILE__,__LINE__);
   }
 }
-//--------------------------
-//
+
+//--------------------------------------------------------------------------- 
+// schedule Dummy Init
+//--------------------------------------------------------------------------- 
 void 
 TabPropsInterface::sched_dummyInit( const LevelP& level, 
                                     SchedulerP& sched )
@@ -840,6 +760,9 @@ TabPropsInterface::sched_dummyInit( const LevelP& level,
   sched->addTask( tsk, level->eachPatch(), d_lab->d_sharedState->allArchesMaterials() ); 
 }
 
+//--------------------------------------------------------------------------- 
+// Dummy Init
+//--------------------------------------------------------------------------- 
 void 
 TabPropsInterface::dummyInit( const ProcessorGroup* pc, 
                               const PatchSubset* patches, 

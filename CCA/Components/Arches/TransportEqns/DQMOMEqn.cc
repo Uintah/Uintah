@@ -895,5 +895,7 @@ DQMOMEqn::dummyInit( const ProcessorGroup* pc,
 
     old_dw->get(phi_oldDW, d_transportVarLabel, matlIndex, patch, gn, 0);
 
+    phi.copyData( phi_oldDW ); 
+
   }
 }
