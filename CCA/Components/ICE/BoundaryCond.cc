@@ -243,7 +243,7 @@ void set_imp_DelP_BC( CCVariable<double>& imp_delP,
                       const VarLabel* label,
                       DataWarehouse* new_dw)        
 { 
-  BC_doing << "set_imp_DelP_BC "<< endl;
+  cout_BC_CC << "set_imp_DelP_BC "<< endl;
   vector<Patch::FaceType> bf;
   patch->getBoundaryFaces(bf);
   for( vector<Patch::FaceType>::const_iterator itr = bf.begin(); itr != bf.end(); ++itr ){
@@ -251,11 +251,12 @@ void set_imp_DelP_BC( CCVariable<double>& imp_delP,
     
     int mat_id = 0; // hard coded for pressure
     IntVector oneCell = patch->faceDirection(face);
+    int IveSetBC = 0;
+    string bc_kind  = "NotSet";
     
     int numChildren = patch->getBCDataArray(face)->getNumberChildren(mat_id);
     for (int child = 0;  child < numChildren; child++) {
       double bc_value = -9;
-      string bc_kind  = "NotSet";
       Iterator bound_ptr;  
       
       bool foundIterator =       
@@ -268,10 +269,10 @@ void set_imp_DelP_BC( CCVariable<double>& imp_delP,
         //  Neumann or Dirichlet Press_BC;
         double one_or_zero = -999;
         if(bc_kind == "zeroNeumann" || bc_kind == "Neumann" ||
-           bc_kind == "symmetric" || bc_kind == "MMS_1"){
+           bc_kind == "symmetric"   || bc_kind == "MMS_1"){
           one_or_zero = 1.0;     
         }
-        if(bc_kind == "Dirichlet" || bc_kind == "LODI" || bc_kind == "Sine"){
+        else if(bc_kind == "Dirichlet" || bc_kind == "LODI" || bc_kind == "Sine"){
           one_or_zero = 0.0;
         }                                 
         //__________________________________
@@ -281,6 +282,7 @@ void set_imp_DelP_BC( CCVariable<double>& imp_delP,
           IntVector adj = c - oneCell;
           imp_delP[c] = one_or_zero * imp_delP[adj];
         }
+        IveSetBC +=1;
         //__________________________________
         //  debugging
         if( BC_dbg.active() ) {
@@ -292,6 +294,17 @@ void set_imp_DelP_BC( CCVariable<double>& imp_delP,
         }
       } // if(foundIterator)
     } // child loop
+    
+    cout_BC_CC << "    "<< patch->getFaceName(face) << " \t " << bc_kind << " numChildren: " << numChildren 
+                    << " IveSetBC: " << IveSetBC << endl;
+                    
+    if(IveSetBC != numChildren){
+      ostringstream warn;
+      warn << "ERROR: ICE: set_imp_DelP_BC Boundary conditions were not set correctly ("
+           << patch->getFaceName(face) << ", " << bc_kind  << " numChildren: " << numChildren 
+           << " IveSetBC: " << IveSetBC << endl;
+      throw InternalError(warn.str(), __FILE__, __LINE__);
+    }
   }  // face loop
   
   
@@ -1034,11 +1047,6 @@ void setSpecificVolBC(CCVariable<double>& sp_vol_CC,
         }
       }  // if iterator found
     }  // child loop
-    
-    
-    //__________________________________
-    //  conversion back
- 
   }  // faces loop
 }
 
