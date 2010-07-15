@@ -54,7 +54,6 @@ DEALINGS IN THE SOFTWARE.
 using namespace std;
 
 using namespace Uintah;
-using namespace SCIRun;
 
 
 //****************************************************************************

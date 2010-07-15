@@ -97,7 +97,6 @@ using std::endl;
 
 using std::string;
 using namespace Uintah;
-using namespace SCIRun;
 #ifdef PetscFilter
 #include <CCA/Components/Arches/Filter.h>
 #endif

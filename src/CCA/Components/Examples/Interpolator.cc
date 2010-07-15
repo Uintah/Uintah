@@ -33,7 +33,6 @@ DEALINGS IN THE SOFTWARE.
 
 
 using namespace Uintah;
-using namespace SCIRun;
 
 Interpolator::Interpolator(int /*factor*/)
 { 
