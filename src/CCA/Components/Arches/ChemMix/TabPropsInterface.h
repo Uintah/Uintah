@@ -52,16 +52,10 @@ DEALINGS IN THE SOFTWARE.
  * Add support for multiple scalar variance
  *
  * @details
- Dependent variables are B-Splined, and spline coefficients are put into an
- HDF5 formated file.  This class creates a TabProps StateTable object,
- reads datafrom a table into the StateTable object, and can query the
- StateTable object for the value of a dependent variable given values
- for independent variables, as well as return names for independent
- and dependent variables, and verify tables by checking the names of
- the dependent variables requested by the user in the input file to
- dependent variables tabulated in the table. Functionality will also be
- added to utilize the StateTable functions to convert the table data to
- a matlab file to easily investigate the results of the table creation.
+ * This class provides and interface to TabProps formatted tables.  See the
+ * TabProps project here: 
+ * https://software.crsim.utah.edu/trac/wiki/TabProps
+ * to get more information regarding TabProps and the its tabluar format.  
  
 This code checks for the following tags/attributes in the input file:
 The UPS interface for TabProps is: 
@@ -70,34 +64,23 @@ The UPS interface for TabProps is:
     <Properties>
         <TabProps>
             <inputfile>REQUIRED STRING</inputfile>
-            <strict_mode>OPTIONAL BOOL</strict_mode>
-            <diagnostic_mode>OPTIONAL BOOL</diagnostic_mode>
+            <hl_pressure>OPTIONAL DOUBLE</hl_pressure> 
+            <hl_outlet>OPTIONAL DOUBLE</hl_outlet> 
+            <hl_scalar_init>OPTIONAL DOUBLE</hl_scalar_init>
         </TabProps>
     </Properties>
 
     <DataArchiver>
         <save name=STRING table_lookup="true"> <!-- note that STRING must match the name in the table -->
     </DataArchiver>
- \endcode
+\endcode
 
-This is used to construct the vector of user-requested dependent variables.
-
-WARNINGS:
-
-The code will throw exceptions for the following reasons:
-
-- no <table_file_name> specified in the intput file
-
-- the getState method is run without the problemSetup method being run (b/c the problemSetup sets 
-  the boolean d_table_isloaded to true when a table is loaded, and you can't run getState without 
-  first loading a table)
-
-- if bool strictMode is true, and a dependent variable specified in the input file does not
-  match the names of any of the dependent variables in the table
-
-- the getDepVars or getIndepVars methods are run on a TabPropsInterface object which hasn't loaded
-  a table yet (i.e. hasn't run problemSetup method yet) 
- 
+ * Any variable that is saved to the UDA in the dataarchiver block is automatically given a VarLabel.  
+ *
+ * If you have trouble reading your table, you can "setenv SCI_DEBUG TABLE_DEBUG:+" to get a 
+ * report of what is going on in the table reader.
+ *
+ *
  */
 
 
@@ -210,17 +193,14 @@ private:
   double d_hl_pressure;     ///< Heat loss value for non-adiabatic conditions
   double d_hl_scalar_init;  ///< Heat loss value for non-adiabatic conditions
 
-  IntVector d_ijk_den_ref; 
+  IntVector d_ijk_den_ref;                ///< Reference density location
 
   vector<string> d_allIndepVarNames;      ///< Vector storing all independent variable names from table file
   vector<string> d_allDepVarNames;        ///< Vector storing all dependent variable names from the table file
 
   vector<string> d_allUserDepVarNames;    ///< Vector storing all independent varaible names requested in input file
-  vector<string> d_allUserIndepVarNames;  ///< Vector storing all independent varaible names requested in input file
 
-  vector<double> d_indepVarValues;        ///< vector to store independent variable values for call to StateTable::query
   StateTable d_statetbl;                  ///< StateTable object to represent the table data
-  string d_tableFileName;                 ///< string to hold filename
 
   /// A dependent variable wrapper
   struct ADepVar {
