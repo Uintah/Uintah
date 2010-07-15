@@ -585,38 +585,7 @@ namespace Uintah {
                                           const MaterialSubset*,
                                           DataWarehouse*,
                                           DataWarehouse*);
-//__________________________________ 
-//  A M R I C E 
-    template<class T>
-    void refluxOperator_computeCorrectionFluxes( 
-                              const string& fineVarLabel,
-                              const int indx,
-                              const Patch* coarsePatch,
-                              const Patch* finePatch,
-                              const Level* coarseLevel,
-                              const Level* fineLevel,
-                              DataWarehouse* new_dw,
-                              const int one_zero);
-                              
-    void refluxCoarseLevelIterator(Patch::FaceType patchFace,
-                                   const Patch* coarsePatch,
-                                   const Patch* finePatch,
-                                   const Level* fineLevel,
-                                   CellIterator& iter,
-                                   IntVector& coarse_FC_offset,
-                                   bool& CP_containsCell,
-                                   const string& whichTask);
-    template<class T>
-    void refluxOperator_applyCorrectionFluxes(                             
-                              CCVariable<T>& q_CC_coarse,
-                              const string& fineVarLabel,
-                              const int indx,
-                              const Patch* coarsePatch,
-                              const Patch* finePatch,
-                              const Level* coarseLevel,
-                              const Level* fineLevel,
-                              DataWarehouse* new_dw,
-                              const int one_zero);
+
 //__________________________________ 
 //  I M P L I C I T   I C E                                                                            
       void setupMatrix(const ProcessorGroup*,

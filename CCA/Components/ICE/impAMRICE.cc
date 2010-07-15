@@ -723,9 +723,11 @@ void ICE::compute_refluxFluxes_RHS(const ProcessorGroup*,
         const Patch* finePatch = finePatches[i];       
 
         if(finePatch->hasCoarseFaces() ){
+#if 0
           refluxOperator_computeCorrectionFluxes<double>("vol_frac", indx, 
                         coarsePatch, finePatch, coarseLevel, fineLevel,new_dw,
                         one_zero);
+#endif
         }
       }
     }  // matl loop
@@ -773,10 +775,12 @@ void ICE::apply_refluxFluxes_RHS(const ProcessorGroup*,
         if(finePatch->hasCoarseFaces() ){
 
           int one_zero = 1;
+#if 0
           refluxOperator_applyCorrectionFluxes<double>(
                         sumRefluxCorrection, "vol_frac",  indx, 
                         coarsePatch, finePatch, coarseLevel, fineLevel,new_dw,
                         one_zero);
+#endif
           // Note in the equations the rhs is multiplied by vol, which is automatically canceled
           // This cancelation is mystically handled inside of the the applyCorrectionFluxes
           // operator.  

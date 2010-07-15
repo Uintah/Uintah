@@ -1365,7 +1365,7 @@ void AMRICE::reflux_computeCorrectionFluxes(const ProcessorGroup*,
  Purpose:  returns the iterator and face-centered offset that the coarse 
            level uses to do refluxing.  THIS IS COMPILCATED AND CONFUSING
 _____________________________________________________________________*/
-void ICE::refluxCoarseLevelIterator(Patch::FaceType patchFace,
+void AMRICE::refluxCoarseLevelIterator(Patch::FaceType patchFace,
                                const Patch* coarsePatch,
                                const Patch* finePatch,
                                const Level* fineLevel,
@@ -1700,8 +1700,8 @@ void AMRICE::reflux_BP_zero_CFI_cells(const ProcessorGroup*,
       for (iter  = cf.begin(); iter != cf.end(); ++iter){
         Patch::FaceType patchFace = *iter;
           
-        finePatch->setFaceMark(0, patchFace, 0);
-        finePatch->setFaceMark(1, patchFace, 0);
+        setFaceMark(0, finePatch, patchFace, 0);
+        setFaceMark(1, finePatch, patchFace, 0);
       }
     }  // finePatch loop
   }  // coarsepatch loop
@@ -1750,7 +1750,7 @@ void AMRICE::reflux_BP_count_CFI_cells(const ProcessorGroup*,
         if(isRight_CP_FP_pair){
         
           int n_CFI_cells = 0;
-          int count = finePatch->getFaceMark(1,patchFace);
+          int count = getFaceMark(1,finePatch, patchFace);
           for(; !f_iter.done(); f_iter++) {
             n_CFI_cells +=1;
           }        
@@ -1762,7 +1762,7 @@ void AMRICE::reflux_BP_count_CFI_cells(const ProcessorGroup*,
           int z = dir[2];
           count += n_CFI_cells/(rr[y] * rr[z]);
           
-          finePatch->setFaceMark(1, patchFace, count);
+          setFaceMark(1, finePatch, patchFace, count);
         }  // right cp_fp_pair 
       }  // face loop
     }  // finePatch loop
@@ -1823,8 +1823,8 @@ void AMRICE::reflux_BP_check_CFI_cells(const ProcessorGroup*,
             if(isRight_CP_FP_pair){
 
               int n_ice_matls = d_sharedState->getNumICEMatls();
-              int n_touched_cells = (finePatch->getFaceMark(0, patchFace) )/n_ice_matls;
-              int n_CFI_cells     =  finePatch->getFaceMark(1, patchFace);
+              int n_touched_cells = (getFaceMark(0, finePatch, patchFace) )/n_ice_matls;
+              int n_CFI_cells     =  getFaceMark(1, finePatch, patchFace);
               //__________________________________
               //  If the number of "marked" cells/numICEMatls != n_CFI_cells
               // ignore if a timestep restart has already been requested
@@ -2114,3 +2114,4 @@ AMRICE::errorEstimate(const ProcessorGroup*,
     }
   }  // patches
 }
+
