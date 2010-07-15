@@ -1809,8 +1809,6 @@ WARNING
 
       /***This section is functions that have yet to be migrated to the new interface.
        * It also includes functions that may be removed from patch in the future*/
-
-      void setFaceMark(int markType, FaceType face, int mark) const { d_faceMarks[markType*numFaces + face] = mark; }
       
       void getFace(FaceType face, const IntVector& insideOffset,
           const IntVector& outsideOffset,
@@ -1828,8 +1826,6 @@ WARNING
 
       // get the index into the Level::d_patches array
       int getLevelIndex() const { return d_level_index; }
-
-      int getFaceMark(int markType, FaceType face) const { return d_faceMarks[markType*numFaces + face]; }
 
       /*  End the section of unupdated functions */
       /*  Bugged functions that are being kept around until fixed */
@@ -1991,10 +1987,6 @@ WARNING
       inline void setLevelIndex( int idx ){ d_level_index = idx;}
       
       vector<BCDataArray*>* d_arrayBCS;
-
-      //////////
-      // add a method for the user to mark a patch face (for his own purposes)
-      mutable int d_faceMarks[4*numFaces];
 
       /********************
         The following are needed in order to use Patch as a Box in
