@@ -206,10 +206,6 @@ private:
 
   bool d_table_isloaded;    ///< Boolean: has the table been loaded?
   
-  bool d_diagnostic_mode;   ///< Checks to see if the independent/dependent variables in the input file match those in the table
-  bool d_strict_mode;       ///< If an independent/dependent variable is specified in the input file, and it is not found in the table, an error is thrown (as opposed to the default behavior of ignoring the variable)
-
-
   double d_hl_outlet;       ///< Heat loss value for non-adiabatic conditions
   double d_hl_pressure;     ///< Heat loss value for non-adiabatic conditions
   double d_hl_scalar_init;  ///< Heat loss value for non-adiabatic conditions
