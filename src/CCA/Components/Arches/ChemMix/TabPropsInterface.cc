@@ -679,6 +679,12 @@ TabPropsInterface::oldTableHack( const InletStream& inStream, Stream& outStream,
 //--------------------------------------------------------------------------- 
 // Get all Dependent variables 
 //--------------------------------------------------------------------------- 
+/** @details
+
+This method will first check to see if the table is loaded; if it is, it
+will return a reference to d_allDepVarNames, which is a private vector<string>
+of the TabPropsInterface class
+*/
 const vector<string> &
 TabPropsInterface::getAllDepVars()
 {
@@ -696,6 +702,11 @@ TabPropsInterface::getAllDepVars()
 //--------------------------------------------------------------------------- 
 // Get all independent Variables
 //--------------------------------------------------------------------------- 
+/** @details
+This method will first check to see if the table is loaded; if it is, it
+will return a reference to d_allIndepVarNames, which is a private
+vector<string> of the TabPropsInterface class
+*/
 const vector<string> &
 TabPropsInterface::getAllIndepVars()
 {
