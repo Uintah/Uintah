@@ -5,7 +5,7 @@
 <Uintah_specification>
   
     <Meta>
-        <title>DQMOM Heat Transfer Test 4a - Gas Temperature from Table (Tgas~900K), Tparticles~300K, With Radiation, No Convection (3 IC, 3 Env, Optimized Solver)</title>
+        <title>DQMOM Coal Particle Heat Transfer Test 5a - Gas Temperature from Table (Tgas~900K), Tparticles~300K, With Radiation, With Convection (Bala Model) (3 IC, 3 Env, Optimized Solver)</title>
     </Meta>
 
     <SimulationComponent type="arches" />
@@ -20,7 +20,7 @@
     </Time>
 
     <DataArchiver>
-        <filebase>uda_heatxfer_test_4a.uda</filebase>
+        <filebase>uda_heatxfer_test_5a.uda</filebase>
         <outputTimestepInterval>1</outputTimestepInterval>
         <outputInitTimestep />
 
@@ -46,12 +46,11 @@
 =====================================-->
 
         <save label = "w_qn0" />
-        <save label = "w_qn0_src" />
-
         <save label = "w_qn1" />
-        <save label = "w_qn1_src" />
-
         <save label = "w_qn2" />
+
+        <save label = "w_qn1_src" />
+        <save label = "w_qn0_src" />
         <save label = "w_qn2_src" />
 
         <save label = "length_qn0"/>
@@ -94,9 +93,18 @@
         <save label = "heat_qn1"/>
         <save label = "heat_qn2"/>
 
-        <save label = "moment_000" />
-        <save label = "moment_100" />
-        <save label = "moment_010" />
+        <save label = "bala_qn0" />
+        <save label = "bala_qn1" />
+        <save label = "bala_qn2" />
+
+        <save label = "rhop_qn0" />
+        <save label = "rhop_qn1" />
+        <save label = "rhop_qn2" />
+    
+        <!-- should be 0 -->
+        <save label = "my_density_qn0" />
+        <save label = "my_density_qn1" />
+        <save label = "my_density_qn2" />
 
         <checkpoint cycle="3" walltimeStart="3600" walltimeInterval="3600"/>
         <outputDoubleAsFloat/>
@@ -120,6 +128,11 @@
         <gravity>[-9.8,0,0]</gravity>
         <reference_point>[0,0,0]</reference_point>
         <viscosity>0.000020</viscosity>
+      <!--
+      <gravity>[0,0,0]</gravity>
+      <reference_point>[0,0,0]</reference_point>
+      <viscosity>0.0002</viscosity>
+      -->
     </PhysicalConstants>
     
     <CFD>
@@ -167,7 +180,7 @@
                         <constant>0.0</constant>
                     </initialization>
                 </Eqn>
-
+                
             </TransportEqns>
 
             <Coal_Properties>
@@ -196,6 +209,22 @@
                 <adiabGas_nonadiabPart>true</adiabGas_nonadiabPart>
                 
                 <Models>
+
+                    <model label="bala" type="Balachandar">
+                        <ICVars>
+                            <variable label="length" role="particle_length" />
+                        </ICVars>
+                        <L>.2</L>
+                        <eta>1.0e-2</eta>
+                        <regime>2</regime>
+                    </model>
+
+                    <model label="my_density" type="ConstantDensityCoal">
+                        <ICVars>
+                            <variable label="length" role="particle_length" />
+                            <variable label="RCmass" role="raw_coal_mass" />
+                        </ICVars>
+                    </model>
                     
                     <model label="heat" type="CoalParticleHeatTransfer">
                         <ICVars>
@@ -210,7 +239,7 @@
                 <Weights>
                     <!-- w [=] #/m^3 -->
                     <doDiff>false</doDiff>
-                    <doConv>false</doConv>
+                    <doConv>true</doConv>
                     <initialization type="constant">
                         <constant>1.0e8</constant>
                     </initialization>
@@ -220,7 +249,7 @@
                 <Ic label="length">
                     <!-- l [=] m -->
                     <doDiff>false</doDiff>
-                    <doConv>false</doConv>
+                    <doConv>true</doConv>
                     <initialization type="env_constant">
                         <env_constant qn="0" value="30.0e-6"></env_constant>
                         <env_constant qn="1" value="70.0e-6"></env_constant>
@@ -232,7 +261,7 @@
                 <Ic label="Tp">
                     <!-- l [=] m -->
                     <doDiff>false</doDiff>
-                    <doConv>false</doConv>
+                    <doConv>true</doConv>
                     <initialization type="env_constant">
                         <env_constant qn="0" value="300"></env_constant>
                         <env_constant qn="1" value="330"></env_constant>
@@ -244,7 +273,7 @@
                 <Ic label="RCmass">
                     <!-- l [=] m -->
                     <doDiff>false</doDiff>
-                    <doConv>false</doConv>
+                    <doConv>true</doConv>
                     <initialization type="env_constant">
                         <env_constant qn="0" value="10.0e-9"></env_constant>
                         <env_constant qn="1" value="10.0e-8"></env_constant>

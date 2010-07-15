@@ -72,7 +72,6 @@
     <save label = "rhop_qn1" />
     <save label = "rhop_qn2" />
     
-    <!-- these should be 0 -->
     <save label = "bala_qn0" />
     <save label = "bala_qn1" />
     <save label = "bala_qn2" />
@@ -133,15 +132,6 @@
       <TransportEqns>
       </TransportEqns>
 
-      <Coal_Properties>
-          <C>0.75</C>
-          <H>0.05</H>
-          <N>0.0</N>
-          <O>0.2</O>
-          <S>0.0</S>
-          <initial_ash_mass>[1e-12,2e-12,3e-12]</initial_ash_mass>
-      </Coal_Properties>  
-
       <!-- DQMOM -->
       <DQMOM>
         <number_quad_nodes>3</number_quad_nodes>
@@ -180,7 +170,7 @@
         <Weights>
             <!-- w [=] #/m^3 -->
             <doDiff>false</doDiff>
-            <doConv>false</doConv>
+            <doConv>true</doConv>
             <initialization type="constant">
                 <constant>1.0e8</constant>
             </initialization>
@@ -190,7 +180,7 @@
         <Ic label="length">
             <!-- l [=] m -->
             <doDiff>false</doDiff>
-            <doConv>false</doConv>
+            <doConv>true</doConv>
             <initialization type="env_constant">
                 <env_constant qn="0" value="30.0e-6"></env_constant>
                 <env_constant qn="1" value="70.0e-6"></env_constant>
@@ -202,7 +192,7 @@
         <Ic label="mass">
             <!-- l [=] m -->
             <doDiff>false</doDiff>
-            <doConv>false</doConv>
+            <doConv>true</doConv>
             <initialization type="env_constant">
                 <env_constant qn="0" value="10.0e-8"></env_constant>
                 <env_constant qn="1" value="20.0e-8"></env_constant>
@@ -269,7 +259,6 @@
 
         <MomentumSolver>
           <convection_scheme>central</convection_scheme>
-          <!--src label = "bala" /-->
         </MomentumSolver>
 
         <MixtureFractionSolver>

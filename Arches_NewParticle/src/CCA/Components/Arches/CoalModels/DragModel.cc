@@ -422,6 +422,13 @@ DragModel::computeModel( const ProcessorGroup* pc,
           wvel_model[c]    = (phi/t_p)*(z_diff + d_gravity.z());
           drag_particle[c] = Vector( uvel_model[c], vvel_model[c], wvel_model[c] );
 
+          ////cmr
+          //if( c == IntVector(1,2,3) && d_quadNode == 0 ) {
+          //  cout << "tau_p = (rhop/(18*d_visc))*pow(length,2) = (" << rhop << "/(18*" << d_visc << "))*" << length*length << endl;
+          //  cout << "X-Vel Drag = (phi/t_p)*(x_diff + d_gravity.x()) = (" << phi << "/" << t_p << ")*(" << x_diff << ")" << endl;
+          //  cout << "Y-Vel Drag = (phi/t_p)*(y_diff + d_gravity.y()) = (" << phi << "/" << t_p << ")*(" << y_diff << ")" << endl;
+          //  cout << "Z-Vel Drag = (phi/t_p)*(z_diff + d_gravity.z()) = (" << phi << "/" << t_p << ")*(" << z_diff << ")" << endl;
+          //}
   
           double prefix = -(weight[c]*d_w_scaling_factor)*(rhop/6)*pi*(phi/t_p)*pow(length,3);
           double gasSrc_x = prefix*x_diff;

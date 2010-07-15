@@ -5,7 +5,7 @@
 <Uintah_specification>
   
   <Meta>
-    <title>DQMOM Particle Drag Particle Velocity Test 1a - Constant Density, Constant Mass, No Gas Coupling (5 IC, 5 Env, Optimized Solver)</title>
+    <title>DQMOM Particle Drag Particle Velocity Test 6a - Constant Size, Changing Mass --> Changing Density, With Coupling (5 IC, 5 Env, Optimized Solver)</title>
   </Meta>
 
   <SimulationComponent type="arches" />
@@ -20,7 +20,7 @@
   </Time>
 
   <DataArchiver>
-    <filebase>uda_drag_test_1a.uda</filebase>
+    <filebase>uda_drag_test_6a.uda</filebase>
     <outputTimestepInterval>1</outputTimestepInterval>
     <outputInitTimestep />
 
@@ -107,11 +107,11 @@
     <save label = "rhop_qn3" />
     <save label = "rhop_qn4" />
     
-    <save label = "my_density_qn0" />
-    <save label = "my_density_qn1" />
-    <save label = "my_density_qn2" />
-    <save label = "my_density_qn3" />
-    <save label = "my_density_qn4" />
+    <save label = "shrinking_density_qn0" />
+    <save label = "shrinking_density_qn1" />
+    <save label = "shrinking_density_qn2" />
+    <save label = "shrinking_density_qn3" />
+    <save label = "shrinking_density_qn4" />
     
     <save label = "drag_qn0" />
     <save label = "drag_qn1" />
@@ -149,9 +149,9 @@
         <MMS whichMMS="constantMMS" >
             <mmsErrorType>Linf</mmsErrorType>
             <constantMMS>
-                <cu>1.0</cu>
-                <cv>2.0</cv>
-                <cw>3.0</cw>
+                <cu>-1.0</cu>
+                <cv>-2.0</cv>
+                <cw>-3.0</cw>
                 <cp>100</cp>
                 <esphi0>0.0</esphi0>
                 <phi0>0.0</phi0>
@@ -165,7 +165,22 @@
 
       <!-- EXTRA SCALARS -->
       <TransportEqns>
+          <Sources>
+            <src label="particle_gas_source" type="ParticleGasMomentumSource">
+            </src>
+          </Sources>
       </TransportEqns>
+
+      <!--
+      <Coal_Properties>
+          <C>0.75</C>
+          <H>0.05</H>
+          <N>0.0</N>
+          <O>0.2</O>
+          <S>0.0</S>
+          <initial_ash_mass>[1e-12,2e-12,3e-12]</initial_ash_mass>
+      </Coal_Properties>  
+      -->
 
       <!-- DQMOM -->
       <DQMOM>
@@ -197,7 +212,7 @@
                 </ICVars>
             </model>
             
-            <model label="my_density" type="ConstantDensityInert">
+            <model label="shrinking_density" type="ConstantSizeInert">
                 <ICVars>
                     <variable label="length" role="particle_length" />
                     <variable label="mass" role="particle_mass" />
@@ -242,7 +257,7 @@
                 <env_constant qn="3" value="40.0e-10"></env_constant>
                 <env_constant qn="4" value="50.0e-10"></env_constant>
             </initialization>
-            <scaling_const>1.0e-8</scaling_const>
+            <scaling_const>1.0e-10</scaling_const>
         </Ic>
 
         <Ic label="uvel">
@@ -318,6 +333,45 @@
         <Moment><m>[0,6,2,1,1]</m></Moment>
         <Moment><m>[0,0,0,0,3]</m></Moment>
 
+
+        <!--
+        <Moment><m>[0,0,0,0,1]</m></Moment>
+        <Moment><m>[0,0,0,1,0]</m></Moment>
+        <Moment><m>[0,0,1,0,0]</m></Moment>
+		<Moment><m>[0,1,0,0,0]</m></Moment>
+		<Moment><m>[1,0,0,0,0]</m></Moment>
+		
+        <Moment><m>[0,0,0,0,2]</m></Moment>
+        <Moment><m>[0,0,0,2,0]</m></Moment>
+        <Moment><m>[0,0,2,0,0]</m></Moment>
+		<Moment><m>[0,2,0,0,0]</m></Moment>
+		<Moment><m>[2,0,0,0,0]</m></Moment>
+		
+        <Moment><m>[0,0,0,0,3]</m></Moment>
+        <Moment><m>[0,0,0,3,0]</m></Moment>
+        <Moment><m>[0,0,3,0,0]</m></Moment>
+		<Moment><m>[0,3,0,0,0]</m></Moment>
+		<Moment><m>[3,0,0,0,0]</m></Moment>
+		
+        <Moment><m>[0,0,0,0,4]</m></Moment>
+        <Moment><m>[0,0,0,4,0]</m></Moment>
+        <Moment><m>[0,0,4,0,0]</m></Moment>
+		<Moment><m>[0,4,0,0,0]</m></Moment>
+		<Moment><m>[4,0,0,0,0]</m></Moment>
+		
+        <Moment><m>[0,0,0,0,5]</m></Moment>
+        <Moment><m>[0,0,0,5,0]</m></Moment>
+        <Moment><m>[0,0,5,0,0]</m></Moment>
+		<Moment><m>[0,5,0,0,0]</m></Moment>
+		<Moment><m>[5,0,0,0,0]</m></Moment>
+		
+        <Moment><m>[0,0,0,0,6]</m></Moment>
+        <Moment><m>[0,0,0,6,0]</m></Moment>
+        <Moment><m>[0,0,6,0,0]</m></Moment>
+		<Moment><m>[0,6,0,0,0]</m></Moment>
+		<Moment><m>[6,0,0,0,0]</m></Moment>
+        -->
+
         <save_moments>false</save_moments>
 
       </DQMOM>
@@ -367,7 +421,8 @@
         </PressureSolver>
 
         <MomentumSolver>
-          <convection_scheme>central</convection_scheme>
+            <convection_scheme>central</convection_scheme>
+            <src label="particle_gas_source" />
         </MomentumSolver>
 
         <MixtureFractionSolver>

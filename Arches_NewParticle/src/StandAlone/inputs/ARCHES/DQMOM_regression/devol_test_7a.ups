@@ -1,0 +1,485 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!-- DOCTYPE Uintah_specification SYSTEM "input.dtd" -->
+<!-- @version: -->
+
+<Uintah_specification>
+  
+    <Meta>
+      <title>DQMOM Coal Devolatilization Test 7a - Gas Temp from Table (T~900 K), With Mix Frac Src, Tparticle != Tgas, With Convection (Drag Model) (6 IC, 6 Env, Optimized Solver)</title>
+    </Meta>
+  
+    <SimulationComponent type="arches" />
+  
+    <Time>
+      <maxTime>5.0</maxTime>
+      <max_Timesteps>10</max_Timesteps>
+      <initTime>0.0</initTime>
+      <delt_min>0.00001</delt_min>
+      <delt_max>5</delt_max>
+      <timestep_multiplier>0.5</timestep_multiplier>
+    </Time>
+  
+    <DataArchiver>
+        <filebase>uda_devol_test_7a.uda</filebase>
+        <outputTimestepInterval>1</outputTimestepInterval>
+        <outputInitTimestep />
+  
+        <save label = "totalKineticEnergy"/>
+        <save label = "totalummsLnError"/>
+        <save label = "totalvmmsLnError"/>
+        <save label = "totalummsExactSol"/>
+        <save label = "totalvmmsExactSol"/>
+        <save label = "pressurePS"/>
+        <save label = "scalarSP"/>
+        <save label = "newCCUVelocity"/>  
+        <save label = "newCCVVelocity"/>  
+        <save label = "newCCVelocity" />
+        <save label = "uVelocitySPBC"/>
+        <save label = "vVelocitySPBC"/>
+        <save label = "continuityResidual"/>
+        <save label = "velocityDivergence"/>
+        <save label = "tempIN" />
+  
+        <!-- EXTRA SCALARS -->
+        <save label = "eta" />
+        <save label = "mixture_fraction_2" />
+  
+        <!-- DQMOM Vars -->
+        <save label = "w_qn0"/>
+        <save label = "w_qn1"/>
+        <save label = "w_qn2"/>
+        <save label = "w_qn3"/>
+        <save label = "w_qn4"/>
+        <save label = "w_qn5"/>
+
+        <save label = "w_qn0_src"/>
+        <save label = "w_qn1_src"/>
+        <save label = "w_qn2_src"/>
+        <save label = "w_qn3_src"/>
+        <save label = "w_qn4_src"/>
+        <save label = "w_qn5_src"/>
+
+        <save label = "length_qn0"/>
+        <save label = "length_qn1"/>
+        <save label = "length_qn2"/>
+        <save label = "length_qn3"/>
+        <save label = "length_qn4"/>
+        <save label = "length_qn5"/>
+
+        <save label = "length_qn0_src"/>
+        <save label = "length_qn1_src"/>
+        <save label = "length_qn2_src"/>
+        <save label = "length_qn3_src"/>
+        <save label = "length_qn4_src"/>
+        <save label = "length_qn5_src"/>
+
+        <save label = "Tp_qn0"/>
+        <save label = "Tp_qn1"/>
+        <save label = "Tp_qn2"/>
+        <save label = "Tp_qn3"/>
+        <save label = "Tp_qn4"/>
+        <save label = "Tp_qn5"/>
+
+        <save label = "Tp_qn0_src"/>
+        <save label = "Tp_qn1_src"/>
+        <save label = "Tp_qn2_src"/>
+        <save label = "Tp_qn3_src"/>
+        <save label = "Tp_qn4_src"/>
+        <save label = "Tp_qn5_src"/>
+
+        <save label = "RCmass_qn0"/>
+        <save label = "RCmass_qn1"/>
+        <save label = "RCmass_qn2"/>
+        <save label = "RCmass_qn3"/>
+        <save label = "RCmass_qn4"/>
+        <save label = "RCmass_qn5"/>
+
+        <save label = "RCmass_qn0_src"/>
+        <save label = "RCmass_qn1_src"/>
+        <save label = "RCmass_qn2_src"/>
+        <save label = "RCmass_qn3_src"/>
+        <save label = "RCmass_qn4_src"/>
+        <save label = "RCmass_qn5_src"/>
+
+        <save label = "uvel_qn0" />
+        <save label = "uvel_qn1" />
+        <save label = "uvel_qn2" />
+        <save label = "uvel_qn3" />
+        <save label = "uvel_qn4" />
+        <save label = "uvel_qn5" />
+
+        <save label = "vvel_qn0" />
+        <save label = "vvel_qn1" />
+        <save label = "vvel_qn2" />
+        <save label = "vvel_qn3" />
+        <save label = "vvel_qn4" />
+        <save label = "vvel_qn5" />
+
+        <save label = "wvel_qn0" />
+        <save label = "wvel_qn1" />
+        <save label = "wvel_qn2" />
+        <save label = "wvel_qn3" />
+        <save label = "wvel_qn4" />
+        <save label = "wvel_qn5" />
+
+        <save label = "vel_qn0" />
+        <save label = "vel_qn1" />
+        <save label = "vel_qn2" />
+        <save label = "vel_qn3" />
+        <save label = "vel_qn4" />
+        <save label = "vel_qn5" />
+
+        <save label = "rhop_qn0" />
+        <save label = "rhop_qn1" />
+        <save label = "rhop_qn2" />
+        <save label = "rhop_qn3" />
+        <save label = "rhop_qn4" />
+        <save label = "rhop_qn5" />
+  
+        <save label = "sarofim_qn0" />
+        <save label = "sarofim_qn1" />
+        <save label = "sarofim_qn2" />
+        <save label = "sarofim_qn3" />
+        <save label = "sarofim_qn4" />
+        <save label = "sarofim_qn5" />
+  
+        <save label = "sarofim_qn0_gasSource" />
+        <save label = "sarofim_qn1_gasSource" />
+        <save label = "sarofim_qn2_gasSource" />
+        <save label = "sarofim_qn3_gasSource" />
+        <save label = "sarofim_qn4_gasSource" />
+        <save label = "sarofim_qn5_gasSource" />
+  
+        <checkpoint cycle = "2" interval = "5"/>
+        <compression>gzip</compression>
+    </DataArchiver>
+  
+    <Grid>
+      <Level>
+        <Box label = "1">
+          <lower>[0,0,0]</lower>
+          <upper>[0.01,0.01,0.01]</upper>
+          <resolution>[8,8,8]</resolution>
+          <extraCells>[0,0,0]</extraCells>
+          <patches>[1,1,1]</patches>
+        </Box>
+        <periodic>[1,1,1]</periodic>
+      </Level>
+    </Grid>
+  
+    <PhysicalConstants>
+      <gravity>[0,0,0]</gravity>
+      <reference_point>[0,0,0]</reference_point>
+      <viscosity>0.0002</viscosity>
+    </PhysicalConstants>
+  
+    <CFD>
+  
+        <!-- ARCHES specification -->
+        <ARCHES>
+            <!-- NOTE: Constant MMS works with tables (doesn't reset the tempIN label's value),
+                           but Almgren MMS does NOT work with tables (it does reset the tempIN label's value) -->
+            <MMS whichMMS="constantMMS" >
+              <mmsErrorType>Linf</mmsErrorType>
+              <constantMMS>
+                <cu>1.0</cu>
+                <cv>11.0</cv>
+                <cw>.1</cw>
+                <cp>100</cp>
+                <phi0>0.3</phi0>
+                <esphi0>0.0</esphi0>
+              </constantMMS>
+            </MMS>
+  
+            <!-- TIME INTEGRATOR -->
+            <TimeIntegrator>
+                <ExplicitIntegrator order="second"/>
+            </TimeIntegrator>
+  
+            <!-- EXTRA SCALARS -->
+            <TransportEqns>
+  
+                <Eqn label="mixture_fraction_2" type = "CCscalar">
+                    <!-- diffusive scalar -->
+                    <doDiff>true</doDiff>
+                    <doConv>true</doConv>
+                    <conv_scheme>super_bee</conv_scheme>
+                    <use_density_guess/>
+                    <initialization type = "constant">
+                        <constant>0.0</constant>
+                    </initialization>
+                </Eqn>
+  
+                <Eqn label = "eta" type = "CCscalar">
+                    <doDiff>false</doDiff>
+                    <doConv>false</doConv>
+                    <addSources>true</addSources>
+                    <conv_scheme>super_bee</conv_scheme>
+                    <src label = "eta_source"/>
+                    <initialization type="constant">
+                        <constant>0.0</constant>
+                    </initialization>
+                </Eqn>
+  
+                <Sources>
+
+                    <src label = "eta_source" type = "CoalGasDevol">
+                        <devol_model_name>sarofim</devol_model_name>
+                    </src>
+
+                    <src label="particle_gas_source" type="ParticleGasMomentumSource"></src>
+
+                </Sources>
+                      
+            </TransportEqns>
+  
+            <Coal_Properties>
+                <C>0.75</C>
+                <H>0.05</H>
+                <N>0.0</N>
+                <O>0.2</O>
+                <S>0.0</S>
+                <initial_ash_mass>[1e-12,2e-12,3e-12]</initial_ash_mass>
+            </Coal_Properties>  
+  
+            <!-- DQMOM -->
+            <DQMOM>
+                <number_quad_nodes>6</number_quad_nodes>
+  
+                <LinearSolver>
+                    <type>Optimize</type>
+                    <tolerance>1e-5</tolerance>
+                    <Optimization>
+                      <Optimal_abscissas>[
+                      -1,    1,   -1,   -1,    1,    0,
+                      -1,   -1,    1,    1,    0,    1,
+                      -1,   -1,   -1,    1,   -1,   -1,
+                      -1,   -1,   -1,    0,   -1,   -1,
+                       1,    1,   -1,    1,    0,    1,
+                       1,    1,    1,    1,    1,    0
+                      ]</Optimal_abscissas>
+                    </Optimization>
+                </LinearSolver>
+  
+                <Models>
+                    <model label="sarofim" type="KobayashiSarofimDevol">
+                        <ICVars>
+                            <variable label="RCmass" role="raw_coal_mass" />
+                            <variable label="Tp" role="particle_temperature" />
+                        </ICVars>
+                    </model>
+
+                    <model label="drag" type="DragModel">
+                        <ICVars>
+                            <variable label="length" role="particle_length" />
+                            <variable label="uvel"   role="u_velocity" />
+                            <variable label="vvel"   role="v_velocity" />
+                            <variable label="wvel"   role="w_velocity" />
+                        </ICVars>
+                    </model>
+
+                    <model label="my_density" type="ConstantDensityCoal">
+                        <ICVars>
+                            <variable label="length" role="particle_length" />
+                            <variable label="RCmass" role="raw_coal_mass" />
+                        </ICVars>
+                    </model>
+                    
+                </Models>
+  
+                <Weights>
+                    <!-- w [=] #/m^3 -->
+                    <doDiff>false</doDiff>
+                    <doConv>false</doConv>
+                    <initialization type="constant">
+                        <constant>1.0e3</constant>
+                    </initialization>
+                    <scaling_const>1.0e3</scaling_const>
+                </Weights>
+  
+                <Ic label="length">
+                    <!-- l [=] m -->
+                    <doDiff>false</doDiff>
+                    <doConv>false</doConv>
+                    <initialization type="env_constant">
+                        <env_constant qn="0" value="20.0e-6"></env_constant>
+                        <env_constant qn="1" value="40.0e-6"></env_constant>
+                        <env_constant qn="2" value="55.0e-6"></env_constant>
+                        <env_constant qn="3" value="75.0e-6"></env_constant>
+                        <env_constant qn="4" value="80.0e-6"></env_constant>
+                        <env_constant qn="5" value="100.0e-6"></env_constant>
+                    </initialization>
+                    <scaling_const>1.0e-6</scaling_const>
+                </Ic>
+  
+                <Ic label="RCmass">
+                    <!-- l [=] m -->
+                    <doDiff>false</doDiff>
+                    <doConv>false</doConv>
+                    <initialization type="env_constant">
+                        <env_constant qn="0" value="10.0e-8"></env_constant>
+                        <env_constant qn="1" value="20.0e-8"></env_constant>
+                        <env_constant qn="2" value="30.0e-8"></env_constant>
+                        <env_constant qn="3" value="40.0e-8"></env_constant>
+                        <env_constant qn="4" value="50.0e-8"></env_constant>
+                        <env_constant qn="5" value="60.0e-8"></env_constant>
+                    </initialization>
+                    <scaling_const>1.0e-10</scaling_const>
+                </Ic> 
+  
+  
+                <Ic label="Tp">
+                    <!-- l [=] m -->
+                    <doDiff>false</doDiff>
+                    <doConv>true</doConv>
+                    <initialization type="env_constant">
+                        <env_constant qn="0" value="300"></env_constant>
+                        <env_constant qn="1" value="310"></env_constant>
+                        <env_constant qn="2" value="320"></env_constant>
+                        <env_constant qn="3" value="330"></env_constant>
+                        <env_constant qn="4" value="340"></env_constant>
+                        <env_constant qn="5" value="350"></env_constant>
+                    </initialization>
+                    <scaling_const>1.0</scaling_const>
+                </Ic>
+
+                <Ic label="uvel">
+                    <!-- l [=] m -->
+                    <doDiff>false</doDiff>
+                    <doConv>true</doConv>
+                    <initialization type="env_constant">
+                        <env_constant qn="0" value="0.0000"></env_constant>
+                        <env_constant qn="1" value="0.0001"></env_constant>
+                        <env_constant qn="2" value="0.0002"></env_constant>
+                        <env_constant qn="3" value="0.0003"></env_constant>
+                        <env_constant qn="4" value="0.0004"></env_constant>
+                        <env_constant qn="5" value="0.0005"></env_constant>
+                    </initialization>
+                </Ic>
+
+                <Ic label="vvel">
+                    <!-- l [=] m -->
+                    <doDiff>false</doDiff>
+                    <doConv>true</doConv>
+                    <initialization type="env_constant">
+                        <env_constant qn="0" value="0.0000"></env_constant>
+                        <env_constant qn="1" value="0.0001"></env_constant>
+                        <env_constant qn="2" value="0.0002"></env_constant>
+                        <env_constant qn="3" value="0.0003"></env_constant>
+                        <env_constant qn="4" value="0.0004"></env_constant>
+                        <env_constant qn="5" value="0.0005"></env_constant>
+                    </initialization>
+                </Ic>
+
+                <Ic label="wvel">
+                    <!-- l [=] m -->
+                    <doDiff>false</doDiff>
+                    <doConv>true</doConv>
+                    <initialization type="env_constant">
+                        <env_constant qn="0" value="0.0000"></env_constant>
+                        <env_constant qn="1" value="0.0001"></env_constant>
+                        <env_constant qn="2" value="0.0002"></env_constant>
+                        <env_constant qn="3" value="0.0003"></env_constant>
+                        <env_constant qn="4" value="0.0004"></env_constant>
+                        <env_constant qn="5" value="0.0005"></env_constant>
+                    </initialization>
+                </Ic>
+  
+  
+                <Moment><m>[0,    0,    0,    0,    0,    0]</m></Moment>
+                <Moment><m>[1,    0,    0,    0,    0,    0]</m></Moment>
+                <Moment><m>[2,    0,    0,    0,    0,    0]</m></Moment>
+                <Moment><m>[0,    1,    0,    0,    0,    0]</m></Moment>
+                <Moment><m>[0,    2,    0,    0,    0,    0]</m></Moment>
+                <Moment><m>[0,    0,    1,    0,    0,    0]</m></Moment>
+                <Moment><m>[0,    0,    2,    0,    0,    0]</m></Moment>
+                <Moment><m>[0,    0,    0,    1,    0,    0]</m></Moment>
+                <Moment><m>[0,    0,    0,    2,    0,    0]</m></Moment>
+                <Moment><m>[0,    0,    0,    0,    1,    0]</m></Moment>
+                <Moment><m>[0,    0,    0,    0,    2,    0]</m></Moment>
+                <Moment><m>[0,    0,    0,    0,    0,    1]</m></Moment>
+                <Moment><m>[0,    0,    0,    0,    0,    2]</m></Moment>
+                <Moment><m>[0,    2,    1,    4,    5,    0]</m></Moment>
+                <Moment><m>[3,    1,    1,    5,    2,    0]</m></Moment>
+                <Moment><m>[2,    7,    0,    0,    1,    0]</m></Moment>
+                <Moment><m>[3,    0,    4,    2,    2,    0]</m></Moment>
+                <Moment><m>[0,    0,    3,    2,    5,    1]</m></Moment>
+                <Moment><m>[2,    1,    2,    0,    0,    5]</m></Moment>
+                <Moment><m>[0,    0,    0,    5,    3,    0]</m></Moment>
+                <Moment><m>[0,    1,    0,    3,    0,    1]</m></Moment>
+                <Moment><m>[2,    0,    2,    6,    0,    1]</m></Moment>
+                <Moment><m>[1,    2,    0,    1,    0,    3]</m></Moment>
+                <Moment><m>[1,    3,    0,    0,    0,    0]</m></Moment>
+                <Moment><m>[1,    2,    3,    0,    2,    3]</m></Moment>
+                <Moment><m>[3,    1,    1,    0,    6,    0]</m></Moment>
+                <Moment><m>[0,    0,    3,    6,    0,    2]</m></Moment>
+                <Moment><m>[4,    2,    1,    1,    1,    0]</m></Moment>
+                <Moment><m>[0,    0,    7,    0,    0,    1]</m></Moment>
+                <Moment><m>[0,    5,    4,    1,    0,    2]</m></Moment>
+                <Moment><m>[0,    2,    1,    2,    1,    4]</m></Moment>
+                <Moment><m>[0,    0,    7,    3,    2,    0]</m></Moment>
+                <Moment><m>[2,    6,    1,    1,    0,    2]</m></Moment>
+                <Moment><m>[0,    1,    2,    1,    4,    3]</m></Moment>
+                <Moment><m>[5,    2,    3,    1,    0,    1]</m></Moment>
+                <Moment><m>[4,    1,    4,    1,    1,    0]</m></Moment>
+                <Moment><m>[5,    4,    1,    0,    2,    0]</m></Moment>
+                <Moment><m>[2,    4,    1,    2,    0,    3]</m></Moment>
+                <Moment><m>[0,    7,    2,    1,    1,    1]</m></Moment>
+                <Moment><m>[2,    4,    0,    2,    0,    4]</m></Moment>
+                <Moment><m>[0,    4,    3,    1,    1,    2]</m></Moment>
+                <Moment><m>[2,    2,    2,    1,    1,    3]</m></Moment>
+
+                <save_moments>false</save_moments>
+  
+            </DQMOM>
+  
+  
+            <Turbulence model = "smagorinsky">
+              <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
+              <cf>0.0</cf>
+              <fac_mesh>1.0</fac_mesh>
+              <filterl>0.000001</filterl>
+              <var_const>0.1</var_const>
+            </Turbulence>
+  
+            <Properties>
+                <empirical_soot>false</empirical_soot>
+                <use_mixing_model>false</use_mixing_model>
+                <TabProps>
+                    <inputfile>CoalModel.h5</inputfile>
+                    <strict_mode>false</strict_mode>
+                    <diagnostic_mode>false</diagnostic_mode>
+                </TabProps>
+            </Properties>
+  
+            <ExplicitSolver>
+  
+            <initial_dt>1</initial_dt>
+            <variable_dt>true</variable_dt>
+              <timeIntegratorType>RK2SSP</timeIntegratorType> 
+  
+              <PressureSolver>
+                <linear_solver>hypre</linear_solver>
+                <parameters>
+                  <solver>cg</solver>
+                  <preconditioner>pfmg</preconditioner>
+                  <res_tol>1.0e-10</res_tol>
+                  <max_iter>75</max_iter>
+                </parameters>
+              </PressureSolver>
+  
+              <MomentumSolver>
+                <convection_scheme>central</convection_scheme>
+              </MomentumSolver>
+  
+              <MixtureFractionSolver>
+                <convection_scheme>central-upwind</convection_scheme>
+                <initial_value>0.90</initial_value>
+                <src label = "eta_source" />
+              </MixtureFractionSolver>
+  
+            </ExplicitSolver>
+        </ARCHES>
+    </CFD>
+</Uintah_specification>
+

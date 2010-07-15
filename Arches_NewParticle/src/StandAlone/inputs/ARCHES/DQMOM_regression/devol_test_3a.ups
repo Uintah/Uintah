@@ -5,7 +5,7 @@
 <Uintah_specification>
   
   <Meta>
-    <title>DQMOM Coal Devolatilization Test 3a - Table Gas Temp (MF=0.8, T~900 K), No Mix Frac Src, Tparticle = Tgas, No Convection (2 IC, 3 Env, Optimized Solver)</title>
+    <title>DQMOM Coal Devolatilization Test 3a - Gas Temp from Table (MF=0.8, T~900 K), No Mix Frac Src, Tparticle = Tgas, No Convection (2 IC, 3 Env, Optimized Solver)</title>
   </Meta>
 
   <SimulationComponent type="arches" />
@@ -223,7 +223,6 @@
                 <env_constant qn="2" value="100.0e-10"></env_constant>
             </initialization>
             <scaling_const>1.0e-10</scaling_const>
-            <model label="sarofim" />
         </Ic>
 
         <Moment><m>[0,0]</m></Moment>

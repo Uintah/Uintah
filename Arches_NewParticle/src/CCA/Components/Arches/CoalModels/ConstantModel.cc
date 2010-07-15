@@ -334,9 +334,10 @@ ConstantModel::computeModel( const ProcessorGroup* pc,
       }
     }
 
-    if( d_quadNode == 0 ) {
-      cout << "Constant model = " << model[IntVector(1,2,3)] << " and gas source = " << gas_source[IntVector(1,2,3)] << endl;
-    }
+    ////cmr
+    //if( d_quadNode == 0 ) {
+    //  cout << "Constant model = " << model[IntVector(1,2,3)] << " and gas source = " << gas_source[IntVector(1,2,3)] << endl;
+    //}
 
   }
 }
