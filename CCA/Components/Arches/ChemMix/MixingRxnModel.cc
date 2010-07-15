@@ -109,6 +109,9 @@ MixingRxnModel::setMixDVMap( const ProblemSpecP& root_params )
   }
 
   // Add a few extra variables to the dependent variable map that are required by the algorithm 
+  // NOTE: This is creating duplicate labels for each of these variables. 
+  //       There are already labels for each of these in ArchesLabel class.
+  //       So, this portion isn't really needed.
   proc0cout << "    (below required by the CFD algorithm)" << endl; 
   var_name = "density"; 
   insertIntoMap( var_name ); 
@@ -120,6 +123,15 @@ MixingRxnModel::setMixDVMap( const ProblemSpecP& root_params )
   insertIntoMap( var_name ); 
   var_name = "H2O"; 
   insertIntoMap( var_name ); 
+
+  // Adding variables required by coal gasification (is there a more graceful way to do this? -Charles)
+  proc0cout << "(below required by coal)" << endl; 
+  var_name = "H2";
+  insertIntoMap( var_name );
+  var_name = "O2";
+  insertIntoMap( var_name );
+  var_name = "CO";
+  insertIntoMap( var_name );
 
   proc0cout << endl;
 }
