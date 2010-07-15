@@ -67,6 +67,9 @@ UnweightedSrcTerm::sched_computeSource( const LevelP& level, SchedulerP& sched, 
     tsk->modifies(d_srcLabel); 
   }
 
+  const VarLabel* d_areaFractionLabel = VarLabel::find( "areaFraction" );
+  tsk->requires(Task::OldDW, d_areaFractionLabel, Ghost::AroundCells, 1);
+
   DQMOMEqnFactory& dqmomFactory  = DQMOMEqnFactory::self();
 
   for (vector<std::string>::iterator iter = d_requiredLabels.begin(); 
@@ -96,7 +99,6 @@ UnweightedSrcTerm::sched_computeSource( const LevelP& level, SchedulerP& sched, 
 
     const VarLabel* partVelLabel = VarLabel::find( partVel_name );
     tsk->requires( Task::NewDW, partVelLabel, Ghost::AroundCells, 1 );
-
   }
 
   sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials()); 
@@ -132,7 +134,11 @@ UnweightedSrcTerm::computeSource( const ProcessorGroup* pc,
     DQMOMEqnFactory& dqmomFactory  = DQMOMEqnFactory::self();
     constCCVariable<double> unwa;
     constCCVariable<Vector> partVel;
+    constCCVariable<Vector> areaFraction;
     std::string label_name;
+
+    const VarLabel* d_areaFractionLabel = VarLabel::find( "areaFraction" );
+    old_dw->get(areaFraction, d_areaFractionLabel, matlIndex, patch, Ghost::AroundCells, 1);
 
     for (vector<std::string>::iterator iter = d_requiredLabels.begin(); 
          iter != d_requiredLabels.end(); iter++) { 
@@ -172,13 +178,9 @@ UnweightedSrcTerm::computeSource( const ProcessorGroup* pc,
       IntVector czm = c - IntVector(0,0,1);
       IntVector czp = c + IntVector(0,0,1);
  
-      constSrc[c] += unwa[c]*( (partVel[cxp].x()-partVel[cxm].x())/(2*Dx.x()) +
-                               (partVel[cyp].y()-partVel[cym].y())/(2*Dx.y()) +
-                               (partVel[czp].z()-partVel[czm].z())/(2*Dx.z()) );
-      //cout << "label_name " << label_name << endl;
-      //cout << "unwa " << unwa[c] << endl;
-      //cout << "partvel " << partVel[cxp].x() << " " << partVel[cxm].x() << endl;
-      //cout << "Dx " << Dx.x() << endl; 
+      constSrc[c] += unwa[c]*( (areaFraction[cxp].x()*(partVel[cxp].x()+partVel[c].x())-areaFraction[c].x()*(partVel[c].x()+partVel[cxm].x()))/(2*Dx.x()) +
+                               (areaFraction[cyp].y()*(partVel[cyp].y()+partVel[c].y())-areaFraction[c].y()*(partVel[c].y()+partVel[cym].y()))/(2*Dx.y()) +
+                               (areaFraction[czp].z()*(partVel[czp].z()+partVel[c].z())-areaFraction[c].z()*(partVel[c].z()+partVel[czm].z()))/(2*Dx.z()) );
     }
   }
 }
