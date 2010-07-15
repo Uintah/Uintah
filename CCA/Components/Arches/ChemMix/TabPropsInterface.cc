@@ -83,8 +83,6 @@ TabPropsInterface::problemSetup( const ProblemSpecP& propertiesParameters )
   
   // Obtain object parameters
   db_tabprops->require( "inputfile", tableFileName );
-  db_tabprops->getWithDefault( "strict_mode", d_strict_mode, false );
-  db_tabprops->getWithDefault( "diagnostic_mode", d_diagnostic_mode, false );
 
   db_tabprops->getWithDefault( "hl_pressure", d_hl_pressure, 0.0); 
   db_tabprops->getWithDefault( "hl_outlet",   d_hl_outlet,   0.0); 
@@ -110,14 +108,19 @@ TabPropsInterface::problemSetup( const ProblemSpecP& propertiesParameters )
   ProblemSpecP db_rootnode = propertiesParameters;
   db_rootnode = db_rootnode->getRootNode();
 
+  proc0cout << endl;
+  proc0cout << "--- TabProps information --- " << endl;
+  proc0cout << endl;
+
   setMixDVMap( db_rootnode ); 
 
   // Extract independent and dependent variables from the table
   d_allIndepVarNames = d_statetbl.get_indepvar_names();
   d_allDepVarNames   = d_statetbl.get_depvar_names();
-
-  proc0cout << " Matching user-defined IV's with table IV's" << endl;
-  proc0cout << " If sus crashes here, check to make sure your <TransportEqns><eqn> names match those in the table. " << endl;
+ 
+  proc0cout << "  Now matching user-defined IV's with table IV's" << endl;
+  proc0cout << "     Note: If sus crashes here, check to make sure your" << endl;
+  proc0cout << "           <TransportEqns><eqn> names match those in the table. " << endl;
 
   for ( unsigned int i = 0; i < d_allIndepVarNames.size(); ++i ){
 
@@ -139,44 +142,14 @@ TabPropsInterface::problemSetup( const ProblemSpecP& propertiesParameters )
     }
   }
 
-  proc0cout << " Matching complete!" << endl;
+  proc0cout << "  Matching sucessful!" << endl;
+  proc0cout << endl;
 
   // Confirm that table has been loaded into memory
   d_table_isloaded = true;
 
-  // Verify table -- probably do this in MixingRxnTable.cc
-  // - diagnostic mode - checks variables requested saved in the input file to variables found in the table
-  // - strict mode - if a dependent variable is requested saved in the input file, but NOT found in the table, throw error
-  //verifyTable( d_diagnostic_mode, d_strict_mode );
-}
-
-//--------------------------------------------------------------------------- 
-// verify Table
-//--------------------------------------------------------------------------- 
-void const 
-TabPropsInterface::verifyTable(  bool diagnosticMode,
-                             bool strictMode )
-{
-  //verifyIV(diagnosticMode, strictMode);
-  //verifyDV(diagnosticMode, strictMode);
-}
-
-//--------------------------------------------------------------------------- 
-// verify DV
-//--------------------------------------------------------------------------- 
-void const
-TabPropsInterface::verifyDV( bool diagnosticMode, bool strictMode )
-{
-// To be done later.
-}
-
-//--------------------------------------------------------------------------- 
-// verify IV
-//--------------------------------------------------------------------------- 
-void const 
-TabPropsInterface::verifyIV( bool diagnosticMode, bool strictMode ) 
-{
-// To be done later.
+  proc0cout << "--- End TabProps information --- " << endl;
+  proc0cout << endl;
 }
 
 //--------------------------------------------------------------------------- 
@@ -366,7 +339,7 @@ TabPropsInterface::getState( const ProcessorGroup* pc,
 
       // retrieve all depenedent variables from table
       for ( std::map< string, CCVariable<double>* >::iterator i = depend_storage.begin(); i != depend_storage.end(); ++i ){
-
+  
         double table_value = getSingleState( i->first, iv ); 
         (*i->second)[c] = table_value;
 

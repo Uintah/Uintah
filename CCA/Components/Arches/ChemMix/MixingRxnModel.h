@@ -98,11 +98,6 @@ public:
                                 const bool with_energy_exch,
                                 const bool modify_ref_den ) = 0;
 
-  /** @brief Checks for consistency between the requested independent variables and those actually in the table along with the 
-   *    dependent variables and those in the table */
-  virtual void const verifyTable( bool diagnosticMode,
-                            bool strictMode )  = 0;
-
   /** @brief Returns a list of dependent variables */
   virtual const std::vector<std::string> & getAllDepVars() = 0;
 
@@ -141,7 +136,7 @@ private:
 
       i = d_dvVarMap.insert( make_pair( var_name, the_label ) ).first; 
 
-      proc0cout << " ---> " << var_name << endl; 
+      proc0cout << "    ---> " << var_name << endl; 
 
     } 
     return; 
