@@ -76,6 +76,7 @@ DEALINGS IN THE SOFTWARE.
 
 using std::cerr;
 using namespace Uintah;
+using namespace SCIRun;
 
 static DebugStream cout_EP("SSEP",false);
 static DebugStream cout_EP1("SSEP1",false);

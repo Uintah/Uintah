@@ -37,6 +37,7 @@ DEALINGS IN THE SOFTWARE.
 #include <iostream>
 
 using namespace Uintah;
+using namespace SCIRun;
 using std::vector;
 using std::cout;
 using std::endl;

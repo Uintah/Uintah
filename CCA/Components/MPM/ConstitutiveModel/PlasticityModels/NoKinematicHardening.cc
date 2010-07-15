@@ -40,6 +40,7 @@ DEALINGS IN THE SOFTWARE.
 
 
 using namespace Uintah;
+using namespace SCIRun;
 
 NoKinematicHardening::NoKinematicHardening()
 {

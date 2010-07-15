@@ -33,6 +33,7 @@ DEALINGS IN THE SOFTWARE.
 #include <cmath>
 
 using namespace Uintah;
+using namespace SCIRun;
 
 HancockMacKenzieDamage::HancockMacKenzieDamage(ProblemSpecP& ps)
 {

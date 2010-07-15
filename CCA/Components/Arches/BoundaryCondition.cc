@@ -72,6 +72,7 @@ DEALINGS IN THE SOFTWARE.
 
 using namespace std;
 using namespace Uintah;
+using namespace SCIRun;
 
 #include <CCA/Components/Arches/fortran/celltypeInit_fort.h>
 #include <CCA/Components/Arches/fortran/areain_fort.h>

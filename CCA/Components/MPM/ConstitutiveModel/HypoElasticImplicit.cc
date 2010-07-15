@@ -51,6 +51,7 @@ DEALINGS IN THE SOFTWARE.
 
 using std::cerr;
 using namespace Uintah;
+using namespace SCIRun;
 
 HypoElasticImplicit::HypoElasticImplicit(ProblemSpecP& ps, MPMFlags* Mflag)
   : ConstitutiveModel(Mflag), ImplicitCM()

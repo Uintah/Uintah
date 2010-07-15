@@ -53,6 +53,7 @@ DEALINGS IN THE SOFTWARE.
 
 using std::cerr;
 using namespace Uintah;
+using namespace SCIRun;
 
 HyperElasticPlastic::HyperElasticPlastic(ProblemSpecP& ps, 
                                          MPMLabel* Mlb, 

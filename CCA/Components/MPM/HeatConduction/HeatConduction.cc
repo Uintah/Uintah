@@ -43,6 +43,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Util/DebugStream.h>
 
 using namespace Uintah;
+using namespace SCIRun;
 
 #define EROSION
 #undef EROSION

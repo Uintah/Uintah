@@ -94,7 +94,7 @@ extern "C"{
 
 // End fortran functions.
 ////////////////////////////////////////////////////////////////////////////////
-using std::cerr; using namespace Uintah;
+using std::cerr; using namespace Uintah; using namespace SCIRun;
 
 Kayenta::Kayenta(ProblemSpecP& ps,MPMFlags* Mflag)
   : ConstitutiveModel(Mflag)

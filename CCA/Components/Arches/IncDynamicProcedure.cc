@@ -60,6 +60,7 @@ DEALINGS IN THE SOFTWARE.
 
 using namespace std;
 using namespace Uintah;
+using namespace SCIRun;
 
 // flag to enable filter check
 // need even grid size, unfiltered values are +-1; filtered value should be 0

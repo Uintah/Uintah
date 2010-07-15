@@ -55,6 +55,7 @@ DEALINGS IN THE SOFTWARE.
 
 using std::cerr;
 using namespace Uintah;
+using namespace SCIRun;
 
 // _________________this is a transversely isotropic hyperelastic material [JW]
 //__________________see Material 18 in LSDYNA manual

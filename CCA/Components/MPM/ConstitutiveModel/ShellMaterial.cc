@@ -52,6 +52,7 @@ DEALINGS IN THE SOFTWARE.
 
 using std::cerr;
 using namespace Uintah;
+using namespace SCIRun;
 
 
 static DebugStream debug("ShellMat", false);

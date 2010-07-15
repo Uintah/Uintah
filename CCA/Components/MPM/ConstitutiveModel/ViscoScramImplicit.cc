@@ -54,6 +54,7 @@ DEALINGS IN THE SOFTWARE.
 
 using std::cerr;
 using namespace Uintah;
+using namespace SCIRun;
 
 ViscoScramImplicit::ViscoScramImplicit(ProblemSpecP& ps, MPMFlags* Mflag)
   : ConstitutiveModel(Mflag), ImplicitCM()

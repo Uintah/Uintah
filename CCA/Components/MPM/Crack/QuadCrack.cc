@@ -34,6 +34,7 @@ DEALINGS IN THE SOFTWARE.
 using std::cout;
 using std::endl;
 
+using namespace SCIRun;
 using namespace Uintah;
 
 QuadCrack::QuadCrack(ProblemSpecP& ps)
