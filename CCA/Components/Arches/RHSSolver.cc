@@ -46,7 +46,6 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/ProblemSpec/ProblemSpec.h>
 
 using namespace Uintah;
-using namespace SCIRun;
 using namespace std;
 
 #include <CCA/Components/Arches/fortran/explicit_scalar_fort.h>

@@ -60,7 +60,6 @@ DEALINGS IN THE SOFTWARE.
 
 using namespace std;
 using namespace Uintah;
-using namespace SCIRun;
 
 //---------------------------------------------------------------------------
 MixingRxnModel::MixingRxnModel( const ArchesLabel* labels, const MPMArchesLabel* MAlab ):

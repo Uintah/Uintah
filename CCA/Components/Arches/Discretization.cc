@@ -52,7 +52,6 @@ DEALINGS IN THE SOFTWARE.
 
 using namespace std;
 using namespace Uintah;
-using namespace SCIRun;
 
 #include <CCA/Components/Arches/fortran/apcal_all_fort.h>
 #ifdef divergenceconstraint

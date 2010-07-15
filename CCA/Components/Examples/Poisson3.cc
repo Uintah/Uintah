@@ -48,7 +48,6 @@ DEALINGS IN THE SOFTWARE.
 
 
 using namespace Uintah;
-using namespace SCIRun;
 
 static DebugStream dbg("Poisson3", false);
 
