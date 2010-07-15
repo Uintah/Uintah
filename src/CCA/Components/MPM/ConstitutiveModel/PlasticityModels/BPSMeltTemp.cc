@@ -36,7 +36,6 @@ DEALINGS IN THE SOFTWARE.
 #include <sstream>
 
 using namespace Uintah;
-using namespace SCIRun;
 using namespace std;
 
 // Construct a melt temp model.  

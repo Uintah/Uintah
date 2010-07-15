@@ -21,7 +21,6 @@
 
 using std::cerr;
 using namespace Uintah;
-using namespace SCIRun;
 
 CNH_MMS::CNH_MMS(ProblemSpecP& ps, MPMFlags* Mflag)
   : ConstitutiveModel(Mflag)

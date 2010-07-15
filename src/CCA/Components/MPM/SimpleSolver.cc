@@ -36,7 +36,6 @@ DEALINGS IN THE SOFTWARE.
 #include <vector>
 
 using namespace Uintah;
-using namespace SCIRun;
 using namespace std;
 
 SimpleSolver::SimpleSolver()

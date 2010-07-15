@@ -64,7 +64,6 @@ DEALINGS IN THE SOFTWARE.
 #include <iostream>
 using namespace std;
 using namespace Uintah;
-using namespace SCIRun;
 
 HyperElasticDamage::HyperElasticDamage(ProblemSpecP& ps)
 {

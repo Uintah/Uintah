@@ -52,7 +52,6 @@ DEALINGS IN THE SOFTWARE.
 
 using std::cerr;
 using namespace Uintah;
-using namespace SCIRun;
 
 HypoElastic::HypoElastic(ProblemSpecP& ps,MPMFlags* Mflag)
   : ConstitutiveModel(Mflag)
