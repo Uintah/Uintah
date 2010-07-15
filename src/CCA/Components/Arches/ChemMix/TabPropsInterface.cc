@@ -731,7 +731,7 @@ TabPropsInterface::sched_dummyInit( const LevelP& level,
 
 {
   string taskname = "TabPropsInterface::dummyInit"; 
-  Ghost::GhostType  gn = Ghost::None;
+  //Ghost::GhostType  gn = Ghost::None;
 
   Task* tsk = scinew Task(taskname, this, &TabPropsInterface::dummyInit ); 
 
@@ -755,7 +755,7 @@ TabPropsInterface::dummyInit( const ProcessorGroup* pc,
 {
   for (int p=0; p < patches->size(); p++){
 
-    Ghost::GhostType gn = Ghost::None; 
+    //Ghost::GhostType gn = Ghost::None; 
     const Patch* patch = patches->get(p); 
     int archIndex = 0; 
     int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
