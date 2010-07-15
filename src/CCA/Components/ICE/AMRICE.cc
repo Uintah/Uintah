@@ -1590,7 +1590,6 @@ void AMRICE::reflux_applyCorrectionFluxes(const ProcessorGroup*,
     for(int m = 0;m<matls->size();m++){
       int indx = matls->get(m);     
       CCVariable<double> mass_adv, eng_adv, sp_vol_adv;
-      constCCVariable<double> cv;
       CCVariable<Vector> mom_adv;
 
       Ghost::GhostType  gn  = Ghost::None;
@@ -1598,7 +1597,6 @@ void AMRICE::reflux_applyCorrectionFluxes(const ProcessorGroup*,
       new_dw->getModifiable(sp_vol_adv, lb->sp_vol_advLabel,  indx, coarsePatch);
       new_dw->getModifiable(eng_adv,    lb->eng_advLabel,     indx, coarsePatch);
       new_dw->getModifiable(mom_adv,    lb->mom_advLabel,     indx, coarsePatch);
-      new_dw->get(cv,                   lb->specific_heatLabel,indx,coarsePatch, gn,0);
       
       Level::selectType finePatches;
       coarsePatch->getOtherLevelPatches(1, finePatches, 1); // get with a ghost cell to make sure you get all patches 
