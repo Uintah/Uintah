@@ -40,6 +40,7 @@ DEALINGS IN THE SOFTWARE.
 
 using namespace std;
 using namespace Uintah;
+using namespace SCIRun;
 
 #ifndef _WIN32 // no fortran
 #  include <CCA/Components/Models/Radiation/fortran/m_cellg_fort.h>

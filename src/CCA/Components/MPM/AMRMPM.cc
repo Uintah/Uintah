@@ -68,6 +68,7 @@ DEALINGS IN THE SOFTWARE.
 #include <sstream>
 
 using namespace Uintah;
+using namespace SCIRun;
 using namespace std;
 
 static DebugStream cout_doing("AMRMPM", false);

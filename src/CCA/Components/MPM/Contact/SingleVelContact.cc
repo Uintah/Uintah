@@ -58,6 +58,7 @@ DEALINGS IN THE SOFTWARE.
 
 using namespace std;
 using namespace Uintah;
+using namespace SCIRun;
 using std::vector;
 
 SingleVelContact::SingleVelContact(const ProcessorGroup* myworld,

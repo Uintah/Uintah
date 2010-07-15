@@ -61,6 +61,7 @@ DEALINGS IN THE SOFTWARE.
 #include <sys/stat.h>
 
 using namespace Uintah;
+using namespace SCIRun;
 using namespace std;
 
 using std::vector;

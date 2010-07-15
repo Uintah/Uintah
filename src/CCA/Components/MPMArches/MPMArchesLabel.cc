@@ -42,6 +42,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/Variables/PerPatch.h>
 #include <Core/Malloc/Allocator.h>
 
+using namespace SCIRun;
 using namespace Uintah;
 
 MPMArchesLabel::MPMArchesLabel()

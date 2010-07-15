@@ -40,6 +40,7 @@ DEALINGS IN THE SOFTWARE.
 
 using namespace std;
 using namespace Uintah;
+using namespace SCIRun;
 
 #include <CCA/Components/Arches/fortran/cellg_fort.h>
 

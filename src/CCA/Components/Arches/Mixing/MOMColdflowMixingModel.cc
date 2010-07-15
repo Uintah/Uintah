@@ -37,6 +37,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Exceptions/InvalidValue.h>
 #include <Core/Geometry/IntVector.h>
 using namespace Uintah;
+using namespace SCIRun;
 
 //****************************************************************************
 // Default constructor for MOMColdflowMixingModel

@@ -57,6 +57,7 @@ DEALINGS IN THE SOFTWARE.
 using namespace std;
 
 using namespace Uintah;
+using namespace SCIRun;
 
 #include <CCA/Components/Arches/fortran/smagmodel_fort.h>
 #include <CCA/Components/Arches/fortran/scalarvarmodel_fort.h>

@@ -34,6 +34,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Exceptions/InvalidValue.h>
 
 using namespace Uintah;
+using namespace SCIRun;
 using namespace std;
 
 

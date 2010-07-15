@@ -42,6 +42,7 @@ DEALINGS IN THE SOFTWARE.
 
 
 using namespace Uintah;
+using namespace SCIRun;
 ////////////////////////////////////////////////////////////////////////////////
 
 ZAPlastic::ZAPlastic(ProblemSpecP& ps)

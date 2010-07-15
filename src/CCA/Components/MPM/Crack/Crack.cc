@@ -60,6 +60,7 @@ DEALINGS IN THE SOFTWARE.
 #include <fstream>
 
 using namespace Uintah;
+using namespace SCIRun;
 using namespace std;
 
 using std::vector;

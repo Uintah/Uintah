@@ -41,6 +41,7 @@ DEALINGS IN THE SOFTWARE.
 #include <iostream>
 
 using namespace Uintah;
+using namespace SCIRun;
 using namespace std;
 
 static DebugStream dbg("MPMFlags", false);
@@ -120,7 +121,6 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
   ProblemSpecP mpm_flag_ps = root->findBlock("MPM");
   ProblemSpecP phys_cons_ps = root->findBlock("PhysicalConstants");
 
-#if 0
   if(phys_cons_ps){
     phys_cons_ps->require("gravity",d_gravity);
   } else if (mpm_flag_ps) {
@@ -128,7 +128,6 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
   } else{
     d_gravity=Vector(0,0,0);
   }
-#endif
 
   //__________________________________
   //  Set the on/off flags to determine which

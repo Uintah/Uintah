@@ -51,6 +51,7 @@ DEALINGS IN THE SOFTWARE.
 
 using std::cerr;
 using namespace Uintah;
+using namespace SCIRun;
 
 MurnahanMPM::MurnahanMPM(ProblemSpecP& ps, MPMFlags* Mflag)
   : ConstitutiveModel(Mflag)

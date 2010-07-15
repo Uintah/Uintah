@@ -48,6 +48,7 @@ DEALINGS IN THE SOFTWARE.
 
 using namespace std;
 using namespace Uintah;
+using namespace SCIRun;
 
 // Standard Constructor
 CZMaterial::CZMaterial(ProblemSpecP& ps, SimulationStateP& ss,MPMFlags* flags)
