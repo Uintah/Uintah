@@ -39,6 +39,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/MPM/ImpMPM.h>
 #include <CCA/Components/ICE/ICE.h>
 #include <CCA/Components/ICE/AMRICE.h>
+#include <CCA/Components/ICE/impAMRICE.h>
 #include <CCA/Components/MPMICE/MPMICE.h>
 #include <CCA/Components/MPMArches/MPMArches.h>
 #include <CCA/Components/Examples/Poisson1.h>
@@ -120,10 +121,20 @@ ComponentFactory::create( ProblemSpecP& ps, const ProcessorGroup* world,
 #endif
 #ifndef NO_ICE
   if (sim_comp == "ice" || sim_comp == "ICE") {
-    if (doAMR)
-      return scinew AMRICE(world);
-    else
+    ProblemSpecP cfd_ps = ps->findBlock("CFD");
+    ProblemSpecP ice_ps = cfd_ps->findBlock("ICE");
+    ProblemSpecP imp_ps = ice_ps->findBlock("ImplicitSolver");
+    bool doImplicitSolver = (imp_ps);
+    
+    if (doAMR){
+      if(doImplicitSolver){
+        return scinew impAMRICE(world);
+      }else{
+        return scinew AMRICE(world);
+      }
+    }else{
       return scinew ICE(world);
+    }
   } 
 #else
   turned_off_options += "ICE ";

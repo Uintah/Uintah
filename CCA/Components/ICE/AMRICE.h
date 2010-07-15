@@ -73,9 +73,9 @@ namespace Uintah {
                                                
     virtual void scheduleErrorEstimate(const LevelP& coarseLevel,
                                        SchedulerP& sched);
-    inline void clearFaceMarks() {
-      faceMarks_map[0].clear();
-      faceMarks_map[1].clear();
+                                       
+    inline void clearFaceMarks(const int whichMap, const Patch* patch) {
+      faceMarks_map[whichMap].erase(patch);
     }
     
   
