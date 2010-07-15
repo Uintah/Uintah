@@ -35,6 +35,7 @@ DEALINGS IN THE SOFTWARE.
 #define _CPP_CMATH
 #endif
 #include <CCA/Components/ICE/ICE.h>
+#include <CCA/Components/ICE/impAMRICE.h>
 #include <CCA/Components/ICE/CustomBCs/C_BC_driver.h>
 #include <CCA/Components/ICE/ConservationTest.h>
 #include <CCA/Components/ICE/Diffusion.h>
@@ -865,11 +866,6 @@ void
 ICE::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
 {
   MALLOC_TRACE_TAG_SCOPE("ICE::scheduleTimeAdvance()");
-  if (d_sharedState->isLockstepAMR()) {
-    if (level->getIndex() == 0)
-      scheduleLockstepTimeAdvance(level->getGrid(), sched);
-    return;
-  }
   // for AMR, we need to reset the initial Delt otherwise some unsuspecting level will
   // get the init delt when it didn't compute delt on L0.
   

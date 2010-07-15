@@ -113,7 +113,6 @@ namespace Uintah {
                                              
       virtual void scheduleFinalizeTimestep(const LevelP& level, SchedulerP&);
 
-      virtual void scheduleLockstepTimeAdvance( const GridP& grid, SchedulerP& sched);
 
       void scheduleComputePressure(SchedulerP&, 
                                    const PatchSet*,
@@ -896,6 +895,7 @@ namespace Uintah {
     private:
       friend class MPMICE;
       friend class AMRICE;
+      friend class impAMRICE;
                    
        void printData_FC(int indx,
                       const  Patch* patch,

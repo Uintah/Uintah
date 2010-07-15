@@ -1846,7 +1846,10 @@ void AMRICE::reflux_BP_check_CFI_cells(const ProcessorGroup*,
           }
         }  // face iter
       }  // has CFI
+      clearFaceMarks(0,finePatch);
+      clearFaceMarks(1,finePatch);
     }  // //finePatches
+    
   }  // coarsePatches
 }
 
