@@ -205,9 +205,9 @@ bool getIteratorBCValueBCKind( const Patch* patch,
     if (new_bcs != 0) {
       bc_value = new_bcs->getValue();
       bc_kind  = new_bcs->getBCType__NEW();
-      delete bc;
       foundBC = true;
     }
+    delete bc;
   }
   
   //__________________________________
@@ -219,11 +219,12 @@ bool getIteratorBCValueBCKind( const Patch* patch,
     if (test == "symmetry") {
       bc_kind  = "symmetry";
       bc_value = T(0.0);
-      delete bc;
       foundBC = true;
     }
+    delete bc;
   }
-
+ 
+ 
   if(foundBC){
     // For this face find the iterator
     bcd->getCellFaceIterator(mat_id,bound_ptr,child);
