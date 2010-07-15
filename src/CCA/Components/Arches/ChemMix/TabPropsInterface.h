@@ -33,12 +33,12 @@ DEALINGS IN THE SOFTWARE.
 #ifndef Uintah_Component_Arches_TabPropsInterface_h
 #define Uintah_Component_Arches_TabPropsInterface_h
 
-// includes for Arches
 #include <tabprops/StateTable.h>
 #include <CCA/Components/Arches/Mixing/InletStream.h>
 #include <CCA/Components/Arches/Mixing/Stream.h>
 #include <CCA/Components/Arches/ArchesMaterial.h>
 #include <CCA/Components/Arches/TimeIntegratorLabel.h>
+#include <Core/Util/DebugStream.h>
 
 
 /**
@@ -65,6 +65,9 @@ The UPS interface for TabProps is:
  \endcode
  * Any variable that is saved to the UDA in the dataarchiver block is automatically given a VarLabel.  
  *
+ * If you have trouble reading your table, you can "setenv SCI_DEBUG TABLE_DEBUG:+" to get a 
+ * report of what is going on in the table reader. 
+ *
  * To-do's: 
  *  - Need to add support for multiple scalar variance
  * 
@@ -72,7 +75,13 @@ The UPS interface for TabProps is:
  *
  */
 
+
 namespace Uintah {
+
+// setenv SCI_DEBUG TABLE_DEBUG:+ 
+static DebugStream cout_tabledbg("TABLE_DEBUG",false);
+
+
 class ArchesLabel; 
 class MPMArchesLabel; 
 class TimeIntegratorLabel; 
@@ -87,15 +96,6 @@ public:
   /** @brief See MixingRxnModel.h */ 
   void problemSetup( const ProblemSpecP& params );
   
-  /** @brief Compare dependent variables found in input file to dependent variables found in table file */
-  void const verifyDV( bool diagnosticMode, bool strictMode );
-
-  /** @brief Compare independent variables found in input file to independent variables found in table file */
-  void const verifyIV( bool diagnosticMode, bool strictMode );
-
-  /// @brief See MixingRxnModel.h 
-  void const verifyTable( bool diagnosticMode, bool strictMode );
-
   /** @brief Gets the thermochemical state for a patch */
   void sched_getState( const LevelP& level, 
                        SchedulerP& sched, 
@@ -134,6 +134,7 @@ public:
 
   /** @brief This will initialize the enthalpy to a table value for the first timestep */ 
   void sched_computeFirstEnthalpy( const LevelP& level, SchedulerP& sched ); 
+
   /** @brief See sched_computeFirstEnthalpy */ 
   void computeFirstEnthalpy( const ProcessorGroup* pc, 
                              const PatchSubset* patches, 
@@ -149,11 +150,13 @@ public:
 
   inline double getSingleState( string dv, vector<double> iv ) {
     double result = 0.0; 
+    cout_tabledbg << "From your table, looking up: " << dv << endl;
     return result = d_statetbl.query(  dv, &iv[0] ); 
   };
 
   /** @brief Dummy initialization as required by MPMArches */
   void sched_dummyInit( const LevelP& level, SchedulerP& sched );
+
   /** @brief See sched_dummyInit */ 
   void dummyInit( const ProcessorGroup* pc, 
                   const PatchSubset* patches, 
@@ -169,12 +172,6 @@ private:
   /// Indicates if the table has been loaded. 
   bool d_table_isloaded; 
  
-  /// Checks saved variables from UPS against those in the table
-  bool d_diagnostic_mode;  
-  /// Causes the code to exit if saved variables indicated in UPS do not match with those in the table
-  bool d_strict_mode;
-
-
   /// Heat loss value at outlet boundary types
   double d_hl_outlet; 
   /// Heat loss value at pressure boundary types
