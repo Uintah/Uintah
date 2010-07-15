@@ -66,7 +66,6 @@ DEALINGS IN THE SOFTWARE.
 #include <iostream>
 using namespace std;
 using namespace Uintah;
-using namespace SCIRun;
 
 ViscoElasticDamage::ViscoElasticDamage(ProblemSpecP& ps)
 {

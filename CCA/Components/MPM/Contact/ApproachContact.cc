@@ -51,7 +51,6 @@ DEALINGS IN THE SOFTWARE.
 #include <fstream>
 
 using namespace Uintah;
-using namespace SCIRun;
 using std::vector;
 using std::string;
 

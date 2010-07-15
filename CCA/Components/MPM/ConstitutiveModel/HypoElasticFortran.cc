@@ -82,7 +82,6 @@ extern "C"{
 
 using std::cerr;
 using namespace Uintah;
-using namespace SCIRun;
 
 HypoElasticFortran::HypoElasticFortran( ProblemSpecP& ps,MPMFlags* Mflag ) :
   ConstitutiveModel(Mflag)
