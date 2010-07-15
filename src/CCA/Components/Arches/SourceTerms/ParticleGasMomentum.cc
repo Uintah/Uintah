@@ -47,8 +47,7 @@ ParticleGasMomentum::~ParticleGasMomentum()
 void 
 ParticleGasMomentum::problemSetup(const ProblemSpecP& inputdb)
 {
-
-  ProblemSpecP db = inputdb; 
+  //ProblemSpecP db = inputdb; 
 }
 //---------------------------------------------------------------------------
 // Method: Schedule the calculation of the source term 
@@ -63,7 +62,9 @@ ParticleGasMomentum::sched_computeSource( const LevelP& level, SchedulerP& sched
     // Every source term needs to set this flag after the varLabel is computed. 
     // transportEqn.cleanUp should reinitialize this flag at the end of the time step. 
     d_labelSchedInit = true;
+  }
 
+  if( timeSubStep == 0 ) {
     tsk->computes(d_srcLabel);
   } else {
     tsk->modifies(d_srcLabel); 
@@ -78,16 +79,10 @@ ParticleGasMomentum::sched_computeSource( const LevelP& level, SchedulerP& sched
     DQMOMEqnFactory& dqmom_factory  = DQMOMEqnFactory::self(); 
     for (int iqn = 0; iqn < dqmom_factory.get_quad_nodes(); iqn++){
       ParticleVelocity* vel_model = coal_model_factory.getParticleVelocityModel( iqn );
-      tsk->requires( Task::OldDW, vel_model->getGasSourceLabel(), Ghost::None, 0 );
+      tsk->requires( Task::NewDW, vel_model->getGasSourceLabel(), Ghost::None, 0 );
     }
   }
   
-  for (vector<std::string>::iterator iter = d_requiredLabels.begin(); 
-       iter != d_requiredLabels.end(); iter++) { 
-    // Require any variables needed to compute the source here
-    //tsk->requires( Task::OldDW, *iter, Ghost::None, 0 ); 
-  }
-
   sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
 
 }
@@ -114,19 +109,13 @@ ParticleGasMomentum::computeSource( const ProcessorGroup* pc,
     int matlIndex = d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
     
     CCVariable<Vector> dragSrc; 
-    if ( new_dw->exists(d_srcLabel, matlIndex, patch ) ){
-      new_dw->getModifiable( dragSrc, d_srcLabel, matlIndex, patch ); 
-      dragSrc.initialize(Vector(0.,0.,0.)); 
-    } else {
+    if( timeSubStep == 0 ) {
       new_dw->allocateAndPut( dragSrc, d_srcLabel, matlIndex, patch );
-      dragSrc.initialize(Vector(0.,0.,0.));
-    } 
-    
-    for (vector<std::string>::iterator iter = d_requiredLabels.begin(); 
-         iter != d_requiredLabels.end(); iter++) { 
-      //CCVariable<double> temp; 
-      //old_dw->get( *iter.... ); 
+    } else {
+      new_dw->getModifiable( dragSrc, d_srcLabel, matlIndex, patch ); 
     }
+    dragSrc.initialize(Vector(0.,0.,0.));
+
 
     CoalModelFactory& coal_model_factory = CoalModelFactory::self(); 
 
@@ -156,6 +145,10 @@ ParticleGasMomentum::computeSource( const ProcessorGroup* pc,
         }
 
         dragSrc[c] = running_sum;
+
+        if( c == IntVector(1,2,3) ) {
+          cout << "The drag source term is " << dragSrc[c] << endl;
+        }
 
       }
 

@@ -274,6 +274,7 @@ DQMOMEqn::problemSetup(const ProblemSpecP& inputdb )
     // ------------ Other initialization function --------------------
     }
   }
+  cout << "Init function " << d_initFunction << " has value " << d_constant_init << endl;
 }
 //---------------------------------------------------------------------------
 // Method: Schedule clean up. 

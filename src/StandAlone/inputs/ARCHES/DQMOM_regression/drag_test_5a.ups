@@ -5,7 +5,7 @@
 <Uintah_specification>
   
   <Meta>
-    <title>DQMOM Particle Drag Particle Velocity Test 1a - Constant Density, Constant Mass, No Gas Coupling (5 IC, 5 Env, Optimized Solver)</title>
+    <title>DQMOM Particle Drag Particle Velocity Test 5a - Constant Density, Changing Mass --> Changing Size, With Coupling (5 IC, 5 Env, Optimized Solver)</title>
   </Meta>
 
   <SimulationComponent type="arches" />
@@ -20,7 +20,7 @@
   </Time>
 
   <DataArchiver>
-    <filebase>uda_drag_test_1a.uda</filebase>
+    <filebase>uda_drag_test_5a.uda</filebase>
     <outputTimestepInterval>1</outputTimestepInterval>
     <outputInitTimestep />
 
@@ -149,9 +149,9 @@
         <MMS whichMMS="constantMMS" >
             <mmsErrorType>Linf</mmsErrorType>
             <constantMMS>
-                <cu>1.0</cu>
-                <cv>2.0</cv>
-                <cw>3.0</cw>
+                <cu>-1.0</cu>
+                <cv>-2.0</cv>
+                <cw>-3.0</cw>
                 <cp>100</cp>
                 <esphi0>0.0</esphi0>
                 <phi0>0.0</phi0>
@@ -165,6 +165,10 @@
 
       <!-- EXTRA SCALARS -->
       <TransportEqns>
+          <Sources>
+            <src label="particle_gas_source" type="ParticleGasMomentumSource">
+            </src>
+          </Sources>
       </TransportEqns>
 
       <!-- DQMOM -->
@@ -202,6 +206,13 @@
                     <variable label="length" role="particle_length" />
                     <variable label="mass" role="particle_mass" />
                 </ICVars>
+            </model>
+
+            <model label="shrinking_mass" type="ConstantModel">
+                <ICVars>
+                    <variable label="mass" role="none" />
+                </ICVars>
+                <constant>-5.0e-10</constant>
             </model>
 
         </Models>
@@ -242,7 +253,7 @@
                 <env_constant qn="3" value="40.0e-10"></env_constant>
                 <env_constant qn="4" value="50.0e-10"></env_constant>
             </initialization>
-            <scaling_const>1.0e-8</scaling_const>
+            <scaling_const>1.0e-10</scaling_const>
         </Ic>
 
         <Ic label="uvel">
@@ -345,11 +356,6 @@
         </ColdFlowMixingModel>
       </Properties>
 
-<!--
-      <BoundaryConditions>
-      </BoundaryConditions>
--->
-  
       <ExplicitSolver>
 
         <initial_dt>1</initial_dt>
@@ -367,7 +373,8 @@
         </PressureSolver>
 
         <MomentumSolver>
-          <convection_scheme>central</convection_scheme>
+            <convection_scheme>central</convection_scheme>
+            <src label="particle_gas_source" />
         </MomentumSolver>
 
         <MixtureFractionSolver>

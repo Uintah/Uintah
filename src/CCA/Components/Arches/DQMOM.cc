@@ -540,6 +540,8 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
       vector< constCCVariable<double>* > tempCCVector = weightedAbscissaModelsCCVars[counter];
       for( unsigned int ss=0; ss < modelsList.size(); ++ss ) {
         new_dw->get( (*tempCCVector[ss]), modelsList[ss], matlIndex, patch, Ghost::None, 0 );
+        ////cmr
+        //cout << "Model " << modelsList[ss]->getName() << " has value " << (*tempCCVector[ss])[IntVector(1,2,3)] << endl;
       }
 
       ++counter;

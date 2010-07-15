@@ -219,7 +219,6 @@
             <!-- l [=] m -->
             <doDiff>false</doDiff>
             <doConv>false</doConv>
-            <model label="heat" />
             <initialization type="env_constant">
                 <env_constant qn="0" value="300"></env_constant>
                 <env_constant qn="1" value="330"></env_constant>

@@ -299,8 +299,8 @@ Balachandar::sched_computeParticleVelocity( const LevelP& level,
 
     tsk->requires( Task::OldDW, d_fieldLabels->d_newCCVelocityLabel, Ghost::None, 0); // gas velocity
     tsk->requires( Task::OldDW, d_fieldLabels->d_densityCPLabel, Ghost::None, 0); // gas density
-    // Particle density is always calculated FIRST, so get from the new DW
-    tsk->requires( Task::NewDW, density_label, gn, 0); // density label for this environment
+    // Particle density is calculated before other models... but not before particle velocity
+    tsk->requires( Task::OldDW, density_label, gn, 0); // density label for this environment
     tsk->requires( Task::OldDW, d_weight_label, gn, 0); // require weight label
     tsk->requires( Task::OldDW, d_length_label, Ghost::None, 0); // require internal coordinates
 
@@ -352,8 +352,8 @@ Balachandar::computeParticleVelocity( const ProcessorGroup* pc,
       old_dw->get( wtd_length, d_length_label, matlIndex, patch, gn, 0 );
 
       old_dw->get( gas_density, d_fieldLabels->d_densityCPLabel, matlIndex, patch, gn, 0 );
-      // particle density is always calculated FIRST, so get from new DW
-      new_dw->get( particle_density, particle_density_label, matlIndex, patch, gn, 0 );
+      // particle density is calculated before other models... but not before particle velocity
+      old_dw->get( particle_density, particle_density_label, matlIndex, patch, gn, 0 );
 
       old_dw->get( gas_velocity, d_fieldLabels->d_newCCVelocityLabel, matlIndex, patch, gn, 0 );
 

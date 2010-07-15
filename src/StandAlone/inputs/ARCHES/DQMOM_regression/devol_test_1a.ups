@@ -208,15 +208,6 @@
                 </scalarVars>
             </model>
 
-            <!--
-            <model label="my_density" type="ConstantSize">
-                <ICVars>
-                    <variable label="RCmass" role="raw_coal_mass" />
-                    <variable lable="length" role="length" />
-                </ICVars>
-            </model>
-            -->
-
         </Models>
 
 
@@ -252,7 +243,6 @@
                 <env_constant qn="2" value="100.0e-10"></env_constant>
             </initialization>
             <scaling_const>1.0e-10</scaling_const>
-            <model label="sarofim" />
             <Clipping>
               <low>0.0</low>
             </Clipping>

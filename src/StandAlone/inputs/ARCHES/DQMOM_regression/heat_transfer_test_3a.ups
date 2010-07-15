@@ -5,7 +5,7 @@
 <Uintah_specification>
   
     <Meta>
-        <title>DQMOM Heat Transfer Test 3a - Table Gas Temperature (MF=0.8, Tgas~900K), Tparticles~300K, No Radiation, No Convection (3 IC, 3 Env, Optimized Solver)</title>
+        <title>DQMOM Heat Transfer Test 3a - Gas Temperature from Table (Tgas~900K), Tparticles~300K, No Radiation, No Convection (3 IC, 3 Env, Optimized Solver)</title>
     </Meta>
 
     <SimulationComponent type="arches" />
@@ -208,6 +208,7 @@
                             <variable label="RCmass" role="raw_coal_mass" />
                             <variable label="Tp"     role="particle_temperature"/>
                         </ICVars>
+                        <noRadiation />
                     </model>
 
                 </Models>
@@ -238,7 +239,6 @@
                     <!-- l [=] m -->
                     <doDiff>false</doDiff>
                     <doConv>false</doConv>
-                    <model label="heat" />
                     <initialization type="env_constant">
                         <env_constant qn="0" value="300"></env_constant>
                         <env_constant qn="1" value="330"></env_constant>

@@ -91,14 +91,6 @@ ConstantDensityCoal::problemSetup(const ProblemSpecP& params)
   out << d_quadNode; 
   string node = out.str();
 
-  // NOTE: If user specifies density, the user cannot also specify both mass and length
-  // (or, alternatively, they can, but they must specify which of the two will have its 
-  //  initial conditions overwritten by the ConstantDensity model)
-  //
-  // maybe use initVars
-  //
-  //db->require("density",d_density);
-
   // -----------------------------------------------------------------
   // Look for required internal coordinates
   ProblemSpecP db_icvars = params->findBlock("ICVars");
@@ -243,6 +235,105 @@ ConstantDensityCoal::problemSetup(const ProblemSpecP& params)
   }
 
 }
+
+
+//---------------------------------------------------------------------------
+// Method: Schedule the initialization of special variables unique to model
+//---------------------------------------------------------------------------
+void
+ConstantDensityCoal::sched_initVars( const LevelP& level, SchedulerP& sched )
+{
+  std::string taskname = "ConstantDensityCoal::initVars";
+  Task* tsk = scinew Task(taskname, this, &ConstantDensityCoal::initVars);
+
+  tsk->computes( d_modelLabel );
+  tsk->computes( d_gasLabel   );
+  tsk->computes( d_density_label );
+
+  sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials()); 
+}
+
+
+//-------------------------------------------------------------------------
+// Method: Initialize special variables unique to the model
+//-------------------------------------------------------------------------
+void
+ConstantDensityCoal::initVars( const ProcessorGroup * pc, 
+                               const PatchSubset    * patches, 
+                               const MaterialSubset * matls, 
+                               DataWarehouse        * old_dw, 
+                               DataWarehouse        * new_dw )
+{
+  DQMOMEqnFactory& dqmomFactory = DQMOMEqnFactory::self();
+
+  EqnBase* length_eqn = &dqmomFactory.retrieve_scalar_eqn(d_length_label->getName());
+  EqnBase* rawcoal_eqn = &dqmomFactory.retrieve_scalar_eqn(d_raw_coal_mass_label->getName());
+  EqnBase* moisture_eqn;
+  EqnBase* char_eqn;
+
+  if(   length_eqn->getInitFcn() == "step" 
+     || length_eqn->getInitFcn() == "env_step"
+     || rawcoal_eqn->getInitFcn() == "step"
+     || rawcoal_eqn->getInitFcn() == "env_step" ) {
+    string errmsg = "ERROR: Arches: ConstantDensityCoal: Internal coordinates cannot be initialized with a step function when using constant density models, otherwise no density value can be obtained.\n";
+    throw InvalidValue(errmsg,__FILE__,__LINE__);
+  }
+
+  if( d_useMoisture ) {
+    moisture_eqn = &dqmomFactory.retrieve_scalar_eqn(d_moisture_mass_label->getName());
+    if( moisture_eqn->getInitFcn() == "step" || moisture_eqn->getInitFcn() == "env_step" ) {
+      string errmsg = "ERROR: Arches: ConstantDensityCoal: Internal coordinates cannot be initialized with a step function when using constant density models, otherwise no density value can be obtained.\n";
+      throw InvalidValue(errmsg,__FILE__,__LINE__);
+    }
+  }
+
+  if( d_useChar ) {
+    char_eqn = &dqmomFactory.retrieve_scalar_eqn(d_char_mass_label->getName());
+    if( char_eqn->getInitFcn() == "step" || char_eqn->getInitFcn() == "env_step" ) {
+      string errmsg = "ERROR: Arches: ConstantDensityCoal: Internal coordinates cannot be initialized with a step function when using constant density models, otherwise no density value can be obtained.\n";
+      throw InvalidValue(errmsg,__FILE__,__LINE__);
+    }
+  }
+
+  for( int p=0; p < patches->size(); p++ ) {  // Patch loop
+
+    const Patch* patch = patches->get(p);
+    int archIndex = 0;
+    int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+
+    double mass = 0.0;
+    mass += rawcoal_eqn->getInitializationConstant()*rawcoal_eqn->getScalingConstant();
+    if( d_useChar ) {
+      mass += char_eqn->getInitializationConstant()*char_eqn->getScalingConstant();
+    }
+    if( d_useMoisture ) {
+      mass += moisture_eqn->getInitializationConstant()*moisture_eqn->getScalingConstant();
+    }
+
+    double length = length_eqn->getInitializationConstant()*length_eqn->getScalingConstant();
+    if( length < TINY ) {
+      length = TINY;
+    }
+    d_density = mass / ( 4.0/3.0 * pi * pow(length/2.0,3) );
+
+    CCVariable<double> model_value; 
+    new_dw->allocateAndPut( model_value, d_modelLabel, matlIndex, patch ); 
+    model_value.initialize(0.0);
+
+    CCVariable<double> gas_value; 
+    new_dw->allocateAndPut( gas_value, d_gasLabel, matlIndex, patch ); 
+    gas_value.initialize(0.0);
+
+    CCVariable<double> density;
+    new_dw->allocateAndPut( density, d_density_label, matlIndex, patch );
+    density.initialize(d_density);
+
+  }
+}
+
+
+
+
 
 //---------------------------------------------------------------------------
 //Schedule computation of the particle density
@@ -458,8 +549,8 @@ ConstantDensityCoal::computeModel( const ProcessorGroup * pc,
     for( vector<const VarLabel*>::iterator iL = d_massLabels.begin(); iL != d_massLabels.end(); ++iL ) {
       eqn = dynamic_cast<DQMOMEqn*>( &dqmomFactory.retrieve_scalar_eqn((*iL)->getName()) );
       models = eqn->getModelsList();
-      for( vector<const VarLabel*>::iterator iS = models.begin(); iS != models.end(); ++iS ) {
-        modelCCVars[z] = scinew constCCVariable<double>;
+      for( vector<const VarLabel*>::iterator iS = models.begin(); iS != models.end(); ++iS, ++z ) {
+        modelCCVars.push_back(scinew constCCVariable<double>);
         if( timeSubStep == 0 ) {
           old_dw->get( (*modelCCVars[z]), (*iS), matlIndex, patch, gn, 0 );
         } else {

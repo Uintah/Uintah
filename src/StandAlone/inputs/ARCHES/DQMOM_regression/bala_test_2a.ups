@@ -72,7 +72,6 @@
     <save label = "rhop_qn1" />
     <save label = "rhop_qn2" />
     
-    <!-- these should be 0 -->
     <save label = "bala_qn0" />
     <save label = "bala_qn1" />
     <save label = "bala_qn2" />
@@ -80,8 +79,6 @@
     <save label = "my_density_qn0" />
     <save label = "my_density_qn1" />
     <save label = "my_density_qn2" />
-
-    <save label = "eta_source" />
 
     <save label = "shrinking_mass_qn0" />
     <save label = "shrinking_mass_qn1" />
@@ -142,20 +139,11 @@
       <!-- EXTRA SCALARS -->
       <TransportEqns>
         <Sources>
-            <src label = "eta_source" type = "CoalGasDevol">
+            <src label = "mix_frac_source" type = "CoalGasDevol">
                 <devol_model_name>shrinking_mass</devol_model_name>
             </src>
         </Sources>
       </TransportEqns>
-
-      <Coal_Properties>
-          <C>0.75</C>
-          <H>0.05</H>
-          <N>0.0</N>
-          <O>0.2</O>
-          <S>0.0</S>
-          <initial_ash_mass>[1e-12,2e-12,3e-12]</initial_ash_mass>
-      </Coal_Properties>  
 
       <!-- DQMOM -->
       <DQMOM>
@@ -196,9 +184,6 @@
                     <variable label="mass" role="none" />
                 </ICVars>
                 <constant>-1.0e-10</constant>
-                <!--
-                <constant>0.0</constant>
-                -->
             </model>
 
         </Models>
@@ -207,7 +192,7 @@
         <Weights>
             <!-- w [=] #/m^3 -->
             <doDiff>false</doDiff>
-            <doConv>false</doConv>
+            <doConv>true</doConv>
             <initialization type="constant">
                 <constant>1.0e8</constant>
             </initialization>
@@ -217,7 +202,7 @@
         <Ic label="length">
             <!-- l [=] m -->
             <doDiff>false</doDiff>
-            <doConv>false</doConv>
+            <doConv>true</doConv>
             <initialization type="env_constant">
                 <env_constant qn="0" value="30.0e-6"></env_constant>
                 <env_constant qn="1" value="70.0e-6"></env_constant>
@@ -233,8 +218,7 @@
         <Ic label="mass">
             <!-- l [=] m -->
             <doDiff>false</doDiff>
-            <doConv>false</doConv>
-            <model label="shrinking_mass"/>
+            <doConv>true</doConv>
             <initialization type="env_constant">
                 <env_constant qn="0" value="1e-11"></env_constant>
                 <env_constant qn="1" value="2e-10"></env_constant>
@@ -305,12 +289,11 @@
 
         <MomentumSolver>
           <convection_scheme>central</convection_scheme>
-          <!--src label = "bala" /-->
         </MomentumSolver>
 
         <MixtureFractionSolver>
           <convection_scheme>central-upwind</convection_scheme>
-          <src label="eta_source"/>
+          <src label="mix_frac_source"/>
         </MixtureFractionSolver>
 
       </ExplicitSolver>

@@ -219,7 +219,6 @@
                 <env_constant qn="2" value="100.0e-10"></env_constant>
             </initialization>
             <scaling_const>1.0e-10</scaling_const>
-            <model label="sarofim" />
         </Ic>
 
         <Moment><m>[0,0]</m></Moment>
