@@ -33,6 +33,7 @@ DEALINGS IN THE SOFTWARE.
 
 #include <Core/Grid/Variables/Array3Window.h>
 #include <Core/Grid/Variables/Stencil7.h>
+#include <Core/Exceptions/InternalError.h>
 #include <Core/Math/Matrix3.h>
 
 #include <Core/Util/Endian.h>
@@ -247,6 +248,10 @@ namespace Uintah {
       void copy(const Array3<T>& from, const IntVector& low, const IntVector& high) {
         ASSERT(d_window != 0);
         ASSERT(from.d_window != 0);
+        if(d_window==0)
+          throw SCIRun::InternalError("d_window is 0",__FILE__,__LINE__);
+        if(from.d_window==0)
+          throw SCIRun::InternalError("from.d_window is 0",__FILE__,__LINE__);
         d_window->copy(from.d_window, low, high);
       }
 
