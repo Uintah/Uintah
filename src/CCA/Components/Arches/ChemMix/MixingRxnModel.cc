@@ -110,9 +110,8 @@ MixingRxnModel::setMixDVMap( const ProblemSpecP& root_params )
   }
 
   // Add a few extra variables to the dependent variable map that are required by the algorithm 
-  // NOTE: This is creating duplicate labels for each of these variables. 
-  //       There are already labels for each of these in ArchesLabel class.
-  //       So, this portion isn't really needed.
+  // NOTE: These are required FOR NOW by the algorithm while NewStaticMixingTable still lives. 
+  //       They will be removed once the conversion to TabProps is complete. 
   proc0cout << "    (below required by the CFD algorithm)" << endl; 
   var_name = "density"; 
   insertIntoMap( var_name ); 
