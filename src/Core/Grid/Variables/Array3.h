@@ -248,10 +248,12 @@ namespace Uintah {
       void copy(const Array3<T>& from, const IntVector& low, const IntVector& high) {
         ASSERT(d_window != 0);
         ASSERT(from.d_window != 0);
+#if 0
         if(d_window==0)
           throw SCIRun::InternalError("d_window is 0",__FILE__,__LINE__);
         if(from.d_window==0)
           throw SCIRun::InternalError("from.d_window is 0",__FILE__,__LINE__);
+#endif
         d_window->copy(from.d_window, low, high);
       }
 
