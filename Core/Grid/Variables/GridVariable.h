@@ -235,12 +235,6 @@ template<class T>
                            const IntVector& lowIndex,
                            const IntVector& highIndex)
   {
-#if 0
-    if(src.getWindow()==0)
-      throw InternalError("Error window is null",__FILE__,__LINE__);
-    if(src.getWindow()->getLowIndex()==src.getWindow()->getHighIndex())
-      throw InternalError("Error window zero sized",__FILE__,__LINE__);
-#endif
     if (this->getWindow()->getData() == src.getWindow()->getData() &&
         this->getWindow()->getOffset() == src.getWindow()->getOffset()) {
       // No copy needed
