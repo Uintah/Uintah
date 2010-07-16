@@ -1592,7 +1592,7 @@ void AMRICE::reflux_applyCorrectionFluxes(const ProcessorGroup*,
       CCVariable<double> mass_adv, eng_adv, sp_vol_adv;
       CCVariable<Vector> mom_adv;
 
-      Ghost::GhostType  gn  = Ghost::None;
+      //Ghost::GhostType  gn  = Ghost::None;
       new_dw->getModifiable(mass_adv,   lb->mass_advLabel,    indx, coarsePatch);
       new_dw->getModifiable(sp_vol_adv, lb->sp_vol_advLabel,  indx, coarsePatch);
       new_dw->getModifiable(eng_adv,    lb->eng_advLabel,     indx, coarsePatch);
