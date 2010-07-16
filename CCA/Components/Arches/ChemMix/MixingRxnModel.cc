@@ -125,15 +125,6 @@ MixingRxnModel::setMixDVMap( const ProblemSpecP& root_params )
   var_name = "H2O"; 
   insertIntoMap( var_name ); 
 
-  // Adding variables required by coal gasification (is there a more graceful way to do this? -Charles)
-  proc0cout << "(below required by coal)" << endl; 
-  var_name = "H2";
-  insertIntoMap( var_name );
-  var_name = "O2";
-  insertIntoMap( var_name );
-  var_name = "CO";
-  insertIntoMap( var_name );
-
   proc0cout << endl;
 }
 
