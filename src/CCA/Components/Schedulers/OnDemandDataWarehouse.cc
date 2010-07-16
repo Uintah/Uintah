@@ -1798,7 +1798,7 @@ OnDemandDataWarehouse::getRegion(constGridVariableBase& constVar,
       if (v->isValid() && Min(l, v->getLow()) == v->getLow()  &&  Max(h, v->getHigh()) == v->getHigh()){  //find a completed region
         break;
       }
-      if (i == 0){
+      if (rit == varlist.rend()){
         v = NULL;
       }
     }
