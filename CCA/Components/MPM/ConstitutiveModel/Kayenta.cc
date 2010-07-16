@@ -635,7 +635,7 @@ void Kayenta::computeStressTensor(const PatchSubset* patches,
                                      deformationGradient[idx];
 
       // get the volumetric part of the deformation
-      double J = deformationGradient[idx].Determinant();
+      double J = deformationGradient_new[idx].Determinant();
       // Check 1: Look at Jacobian
       if (!(J > 0.0)) {
         cerr << getpid() ;
