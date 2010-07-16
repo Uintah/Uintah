@@ -54,7 +54,6 @@ DEALINGS IN THE SOFTWARE.
 using std::cerr;
 using std::string;
 using namespace Uintah;
-using namespace SCIRun;
 
 ViscoScramForBinder::ViscoScramForBinder(ProblemSpecP& ps, 
                                          MPMLabel* Mlb, 

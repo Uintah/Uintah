@@ -70,7 +70,6 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Exceptions/VariableNotFoundInGrid.h>
 
 using namespace Uintah;
-using namespace SCIRun;
 using namespace std;
 
 #include <CCA/Components/MPMArches/fortran/collect_drag_cc_fort.h>

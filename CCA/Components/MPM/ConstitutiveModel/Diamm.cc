@@ -91,7 +91,7 @@ extern "C"{
 
 // End fortran functions.
 ////////////////////////////////////////////////////////////////////////////////
-using std::cerr; using namespace Uintah; using namespace SCIRun;
+using std::cerr; using namespace Uintah;
 
 Diamm::Diamm(ProblemSpecP& ps,MPMFlags* Mflag)
   : ConstitutiveModel(Mflag)

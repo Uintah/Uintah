@@ -33,7 +33,6 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Arches/PhysicalConstants.h>
 #include <CCA/Components/Arches/BoundaryCondition.h>
 using namespace Uintah;
-using namespace SCIRun;
 
 #include <CCA/Components/Arches/fortran/mascal_scalar_fort.h>
 #ifdef divergenceconstraint

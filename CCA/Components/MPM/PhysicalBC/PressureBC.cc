@@ -41,7 +41,6 @@ DEALINGS IN THE SOFTWARE.
 #include <iostream>
 
 using namespace Uintah;
-using namespace SCIRun;
 using namespace std;
 
 // Store the geometry object and the load curve

@@ -52,7 +52,6 @@ DEALINGS IN THE SOFTWARE.
 
 using std::cerr;
 using namespace Uintah;
-using namespace SCIRun;
 
 CNHPDamage::CNHPDamage(ProblemSpecP& ps, MPMFlags* Mflag)
   :CNHDamage(ps, Mflag)

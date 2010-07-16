@@ -53,7 +53,6 @@ DEALINGS IN THE SOFTWARE.
 using std::cerr;
 
 using namespace Uintah;
-using namespace SCIRun;
 
 // Material Constants are C1, C2 and PR (poisson's ratio).  
 // The shear modulus = 2(C1 + C2).

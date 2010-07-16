@@ -51,7 +51,6 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Containers/StaticArray.h>
 
 using namespace Uintah;
-using namespace SCIRun;
 
 
 static DebugStream cout_doing("ImplicitHeatConduction", false);

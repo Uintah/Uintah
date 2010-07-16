@@ -50,7 +50,6 @@ DEALINGS IN THE SOFTWARE.
 
 #include <cmath>
 
-using namespace SCIRun;
 using namespace Uintah;
 using namespace std;
 
