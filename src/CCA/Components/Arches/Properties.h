@@ -216,6 +216,9 @@ public:
   inline const string getMixingModelType(){
     return mixModel; 
   }
+  inline TabPropsInterface* getMixRxnModel(){
+    return d_mixingRxnTable; 
+  }
 
   //for the new table:
   void sched_reComputeProps_new( const LevelP&,
@@ -306,6 +309,8 @@ private:
   //        const Properties&   
 
   Properties& operator=(const Properties&);
+
+
 
 private:
 

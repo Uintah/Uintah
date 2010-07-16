@@ -80,6 +80,8 @@ MixingRxnModel::~MixingRxnModel()
 }
 
 //---------------------------------------------------------------------------
+// Set Mix Dependent Variable Map
+//---------------------------------------------------------------------------
 void 
 MixingRxnModel::setMixDVMap( const ProblemSpecP& root_params )
 {
@@ -126,5 +128,16 @@ MixingRxnModel::setMixDVMap( const ProblemSpecP& root_params )
 
   proc0cout << endl;
 }
+//---------------------------------------------------------------------------
+// Add Additional Table Lookup Variables
+//---------------------------------------------------------------------------
+void 
+MixingRxnModel::addAdditionalDV( std::vector<string>& vars )
+{
+  proc0cout << "  Adding these additional variables for table lookup: " << endl; 
+  for ( std::vector<string>::iterator ivar = vars.begin(); ivar != vars.end(); ivar++ ) { 
 
+    insertIntoMap( *ivar ); 
 
+  }
+}

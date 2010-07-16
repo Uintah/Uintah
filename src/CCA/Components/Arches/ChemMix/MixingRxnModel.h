@@ -111,6 +111,10 @@ public:
   /** @brief Initializes the enthalpy for the first time step */ 
   virtual void sched_computeFirstEnthalpy( const LevelP& level, 
                                           SchedulerP& sched ) = 0; 
+
+  /** @brief Provides access for models, algorithms, etc. to add additional table lookup variables. */
+  void addAdditionalDV( std::vector<string>& vars );
+
 protected :
 
   VarMap d_dvVarMap; 
