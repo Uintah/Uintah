@@ -216,9 +216,11 @@ public:
   inline const string getMixingModelType(){
     return mixModel; 
   }
+#if HAVE_TABPROPS
   inline TabPropsInterface* getMixRxnModel(){
     return d_mixingRxnTable; 
   }
+#endif
 
   //for the new table:
   void sched_reComputeProps_new( const LevelP&,
