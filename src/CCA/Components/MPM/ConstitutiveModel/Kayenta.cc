@@ -569,7 +569,7 @@ void Kayenta::computeStressTensor(const PatchSubset* patches,
     old_dw->get(pvelocity,           lb->pVelocityLabel,           pset);
     old_dw->get(ptemperature,        lb->pTemperatureLabel,        pset);
     old_dw->get(deformationGradient, lb->pDeformationMeasureLabel, pset);
-    old_dw->get(peakI1IDist,       peakI1IDistLabel,         pset);
+    old_dw->get(peakI1IDist,         peakI1IDistLabel,             pset);
 
     StaticArray<constParticleVariable<double> > ISVs(d_NINSV+1);
     for(int i=0;i<d_NINSV;i++){
@@ -586,9 +586,9 @@ void Kayenta::computeStressTensor(const PatchSubset* patches,
     new_dw->allocateAndPut(p_q,             lb->p_qLabel_preReloc,       pset);
     new_dw->allocateAndPut(deformationGradient_new,
                            lb->pDeformationMeasureLabel_preReloc,        pset);
-    new_dw->allocateAndPut(peakI1IDist_new, peakI1IDistLabel_preReloc,    pset);
+    new_dw->allocateAndPut(peakI1IDist_new, peakI1IDistLabel_preReloc,   pset);
 
-        peakI1IDist_new.copyData(peakI1IDist);
+    peakI1IDist_new.copyData(peakI1IDist);
 
     StaticArray<ParticleVariable<double> > ISVs_new(d_NINSV+1);
     for(int i=0;i<d_NINSV;i++){
@@ -606,14 +606,16 @@ void Kayenta::computeStressTensor(const PatchSubset* patches,
 
       if(!flag->d_axisymmetric){
         // Get the node indices that surround the cell
-        interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx],deformationGradient[idx]);
+        interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx],
+                                                  deformationGradient[idx]);
 
         computeVelocityGradient(velGrad,ni,d_S,oodx,gvelocity);
 
       } else {  // axi-symmetric kinematics
         // Get the node indices that surround the cell
         interpolator->findCellAndWeightsAndShapeDerivatives(px[idx],ni,S,d_S,
-                                                                    psize[idx],deformationGradient[idx]);
+                                                            psize[idx],
+                                                      deformationGradient[idx]);
         // x -> r, y -> z, z -> theta
         computeAxiSymVelocityGradient(velGrad,ni,d_S,S,oodx,gvelocity,px[idx]);
       }
@@ -655,11 +657,8 @@ void Kayenta::computeStressTensor(const PatchSubset* patches,
        
       // NEED TO FIND R
       Matrix3 tensorR, tensorU;
-      double d_tol = 1.0e-10;
 
-      // Look into using Rebecca's PD algorithm
-      deformationGradient_new[idx].polarDecomposition(tensorU, tensorR,
-                                                      d_tol, true);
+      deformationGradient_new[idx].polarDecompositionRMB(tensorU, tensorR);
 
       // This is the previous timestep Cauchy stress
       // unrotated tensorSig=R^T*pstress*R
@@ -725,10 +724,6 @@ void Kayenta::computeStressTensor(const PatchSubset* patches,
 
       // ROTATE pstress_new: S=R*tensorSig*R^T
       pstress_new[idx] = (tensorR*tensorSig)*(tensorR.Transpose());
-
-#if 0
-      cout << pstress_new[idx] << endl;
-#endif
 
       c_dil = sqrt(USM/rho_cur);
 
@@ -826,8 +821,6 @@ void Kayenta::addInitialComputesAndRequires(Task* task,
   // constitutive models.  The method is defined in the ConstitutiveModel
   // base class.
   const MaterialSubset* matlset = matl->thisMaterial();
-
-  cout << "In add InitialComputesAnd" << endl;
 
   // Other constitutive model and input dependent computes and requires
   for(int i=0;i<d_NINSV;i++){
