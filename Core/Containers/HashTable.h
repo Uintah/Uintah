@@ -403,6 +403,7 @@ HashTableIter<Key, Data>::HashTableIter(HashTable<Key, Data>* hash_table)
   : hash_table(hash_table)
 {
   current_key=0;
+  current_index=0;
 }
 
 // Set the iterator to the beginning
