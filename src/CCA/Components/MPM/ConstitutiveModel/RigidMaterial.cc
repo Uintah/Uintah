@@ -52,7 +52,6 @@ DEALINGS IN THE SOFTWARE.
 
 using std::cerr;
 using namespace Uintah;
-using namespace SCIRun;
 
 RigidMaterial::RigidMaterial(ProblemSpecP& ps, MPMFlags* Mflag) : 
   ConstitutiveModel(Mflag), ImplicitCM()

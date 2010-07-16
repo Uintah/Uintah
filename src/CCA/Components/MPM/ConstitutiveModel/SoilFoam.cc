@@ -54,7 +54,6 @@ DEALINGS IN THE SOFTWARE.
 using std::cerr;
 
 using namespace Uintah;
-using namespace SCIRun;
 
 SoilFoam::SoilFoam(ProblemSpecP& ps, MPMFlags* Mflag) 
   : ConstitutiveModel(Mflag)

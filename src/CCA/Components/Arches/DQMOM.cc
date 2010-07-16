@@ -38,7 +38,6 @@
 //===========================================================================
 
 using namespace Uintah;
-using namespace SCIRun;
 
 DQMOM::DQMOM(ArchesLabel* fieldLabels, std::string which_dqmom):
 d_fieldLabels(fieldLabels), d_which_dqmom(which_dqmom)

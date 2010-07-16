@@ -84,7 +84,6 @@ using std::max;
 using std::min;
 using std::istringstream;
  
-using namespace SCIRun;
 using namespace Uintah;
 
 //__________________________________

@@ -82,7 +82,6 @@ DEALINGS IN THE SOFTWARE.
 #undef MOM_FORM
 
 using namespace Uintah;
-using namespace SCIRun;
 
 using namespace std;
 

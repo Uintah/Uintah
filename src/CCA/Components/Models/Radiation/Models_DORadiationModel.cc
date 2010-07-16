@@ -56,7 +56,6 @@ DEALINGS IN THE SOFTWARE.
 
 using namespace std;
 using namespace Uintah;
-using namespace SCIRun;
 
 #ifndef _WIN32
 #  include <CCA/Components/Models/Radiation/fortran/m_rordr_fort.h>

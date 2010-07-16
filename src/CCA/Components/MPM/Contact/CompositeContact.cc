@@ -34,7 +34,6 @@ DEALINGS IN THE SOFTWARE.
 
 using namespace std;
 using namespace Uintah;
-using namespace SCIRun;
 
 CompositeContact::CompositeContact(const ProcessorGroup* myworld, MPMLabel* Mlb,MPMFlags* MFlag)
   : Contact(myworld, Mlb, MFlag, 0)

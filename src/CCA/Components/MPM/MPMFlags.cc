@@ -41,7 +41,6 @@ DEALINGS IN THE SOFTWARE.
 #include <iostream>
 
 using namespace Uintah;
-using namespace SCIRun;
 using namespace std;
 
 static DebugStream dbg("MPMFlags", false);

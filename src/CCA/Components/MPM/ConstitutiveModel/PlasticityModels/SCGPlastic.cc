@@ -45,7 +45,6 @@ DEALINGS IN THE SOFTWARE.
 
 
 using namespace Uintah;
-using namespace SCIRun;
 using namespace std;
 
 SCGPlastic::SCGPlastic(ProblemSpecP& ps)

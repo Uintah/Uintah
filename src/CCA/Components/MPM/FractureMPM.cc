@@ -75,7 +75,6 @@ DEALINGS IN THE SOFTWARE.
 //#define KUMAR
 
 using namespace Uintah;
-using namespace SCIRun;
 
 using namespace std;
 

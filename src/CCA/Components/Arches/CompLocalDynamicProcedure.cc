@@ -65,7 +65,6 @@ DEALINGS IN THE SOFTWARE.
 using namespace std;
 
 using namespace Uintah;
-using namespace SCIRun;
 //#define use_fortran
 #ifdef use_fortran
 #include <CCA/Components/Arches/fortran/comp_dynamic_1loop_fort.h>

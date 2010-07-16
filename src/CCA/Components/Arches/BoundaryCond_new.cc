@@ -14,7 +14,6 @@
 
 using namespace std;
 using namespace Uintah;
-using namespace SCIRun; 
 
 BoundaryCondition_new::BoundaryCondition_new(const ArchesLabel* fieldLabels):
   d_fieldLabels(fieldLabels)
