@@ -243,36 +243,58 @@ void AMRICE::initialize(const ProcessorGroup*,
 {
 }
 /*___________________________________________________________________
- Function~  AMRICE::addRefineDependencies--
+ Function~  AMRICE::scheduleRefineInterface_Variable--
  Purpose:  
 _____________________________________________________________________*/
-void AMRICE::addRefineDependencies(Task* task, 
-                                   const VarLabel* var,
-                                   Task::DomainSpec DS,
-                                   const MaterialSubset* matls,
-                                   bool needCoarseOld,
-                                   bool needCoarseNew)
+void AMRICE::scheduleRefineInterface_Variable(const LevelP& fineLevel,
+                                              SchedulerP& sched,
+                                              const VarLabel* variable,
+                                              Task::DomainSpec DS,
+                                              const MaterialSet* matls,
+                                              bool needCoarseOld,
+                                              bool needCoarseNew)
 {
-  cout_dbg << d_myworld->myrank() << " \t addRefineDependencies (" << var->getName()
-           << ")"<< endl;
+  cout_doing << d_myworld->myrank() << " \t scheduleRefineInterface_Variable (" 
+             << variable->getName() << ") matls: \t"<< *matls<< endl;
+
+  ostringstream taskName;
+  taskName << "AMRICE::refineCoarseFineInterface("<<variable->getName()<<")";
+  Task* t;
   
+  void (AMRICE::*func)(const ProcessorGroup*, const PatchSubset*, const MaterialSubset*,
+                     DataWarehouse*, DataWarehouse*, const VarLabel*);
+  
+  switch(variable->typeDescription()->getSubType()->getType()){
+    case TypeDescription::double_type:
+      func = &AMRICE::refineCoarseFineInterface<double>;
+      t =    scinew Task(taskName.str().c_str(), this, func, variable);
+      break;
+    case TypeDescription::Vector:
+      func = &AMRICE::refineCoarseFineInterface<Vector>;
+      t =    scinew Task(taskName.str().c_str(), this, func, variable);
+      break;
+    default:
+      throw InternalError("Unknown variable type for AMRICE::scheduleRefineInterface_Variable", __FILE__, __LINE__);
+  }
+     
   Ghost::GhostType  gac = Ghost::AroundCells;
   bool  fat = true;  // data possibly needed (F)rom (A)nother (T)askgraph
+  const MaterialSubset* matls_sub = matls->getUnion();
   
   if(needCoarseOld) {
     cout_dbg << " requires from CoarseOldDW ";
-    task->requires(Task::CoarseOldDW, var, 0, 
-                   Task::CoarseLevel, matls, DS, gac, 1);
+    t->requires(Task::CoarseOldDW, variable, 0, 
+                Task::CoarseLevel, matls_sub, DS, gac, 1);
   }
   if(needCoarseNew) {
     cout_dbg << " requires from CoarseNewDW ";
-    task->requires(Task::CoarseNewDW, var, 0, 
-                   Task::CoarseLevel, matls, DS, gac, 1, fat);
+    t->requires(Task::CoarseNewDW, variable, 0, 
+                Task::CoarseLevel, matls_sub, DS, gac, 1, fat);
   }
+  
+  t->modifies(variable, matls_sub, DS, fat);
 
-  task->modifies(var, matls, DS, fat);
-
-  cout_dbg <<""<<endl;
+  sched->addTask(t, fineLevel->eachPatch(), matls);
 }
 /*___________________________________________________________________
  Function~  AMRICE::scheduleRefineInterface--
@@ -288,23 +310,24 @@ void AMRICE::scheduleRefineInterface(const LevelP& fineLevel,
                << fineLevel->getIndex() 
                << " coarseOld: " << needCoarseOld 
                << " coarseNew: " << needCoarseNew << endl;
-               
-    Task* task = scinew Task("AMRICE::refineCoarseFineInterface", 
-                       this, &AMRICE::refineCoarseFineInterface);
-  
   
     Task::DomainSpec ND   = Task::NormalDomain;
     Task::DomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
     const MaterialSet* all_matls = d_sharedState->allMaterials();
-    const MaterialSubset* all_matls_sub = all_matls->getUnion();
-    const MaterialSubset* ice_matls = d_sharedState->allICEMaterials()->getUnion();
+    const MaterialSet* ice_matls = d_sharedState->allICEMaterials();
 
-    addRefineDependencies(task, lb->press_CCLabel, oims,d_press_matl, needCoarseOld, needCoarseNew);
-    addRefineDependencies(task, lb->rho_CCLabel,   ND,  ice_matls,    needCoarseOld, needCoarseNew);
-    addRefineDependencies(task, lb->sp_vol_CCLabel,ND,  all_matls_sub,needCoarseOld, needCoarseNew);
-    addRefineDependencies(task, lb->temp_CCLabel,  ND,  all_matls_sub,needCoarseOld, needCoarseNew);
-    addRefineDependencies(task, lb->vel_CCLabel,   ND,  ice_matls,    needCoarseOld, needCoarseNew);
-    
+    vector<int> m;
+    m.push_back(0);
+    MaterialSet* press_matl = scinew MaterialSet();
+    press_matl->addAll(m);
+    press_matl->addReference();
+
+    scheduleRefineInterface_Variable(fineLevel, sched, lb->press_CCLabel, oims,press_matl,   needCoarseOld, needCoarseNew);
+    scheduleRefineInterface_Variable(fineLevel, sched, lb->rho_CCLabel,   ND,  ice_matls,    needCoarseOld, needCoarseNew);
+    scheduleRefineInterface_Variable(fineLevel, sched, lb->sp_vol_CCLabel,ND,  all_matls,    needCoarseOld, needCoarseNew);
+    scheduleRefineInterface_Variable(fineLevel, sched, lb->temp_CCLabel,  ND,  all_matls,    needCoarseOld, needCoarseNew);
+    scheduleRefineInterface_Variable(fineLevel, sched, lb->vel_CCLabel,   ND,  ice_matls,    needCoarseOld, needCoarseNew);
+   
     //__________________________________
     // Model Variables.
     if(d_modelSetup && d_modelSetup->tvars.size() > 0){
@@ -313,151 +336,50 @@ void AMRICE::scheduleRefineInterface(const LevelP& fineLevel,
       for(iter = d_modelSetup->tvars.begin();
          iter != d_modelSetup->tvars.end(); iter++){
         TransportedVariable* tvar = *iter;
-        addRefineDependencies(task, tvar->var,ND, tvar->matls, needCoarseOld, needCoarseNew);
+        scheduleRefineInterface_Variable(fineLevel, sched, tvar->var,ND, tvar->matlSet, needCoarseOld, needCoarseNew);
       }
-    }
-    sched->addTask(task, fineLevel->eachPatch(), all_matls);
-  }
+    }  // transported Vars
+  }  // finer level
 }
+
+
 /*______________________________________________________________________
  Function~  AMRICE::refineCoarseFineInterface
  Purpose~   
 ______________________________________________________________________*/
+template<typename T>
 void AMRICE::refineCoarseFineInterface(const ProcessorGroup*,
                                        const PatchSubset* patches,
-                                       const MaterialSubset*,
+                                       const MaterialSubset* matls,
                                        DataWarehouse* fine_old_dw,
-                                       DataWarehouse* fine_new_dw)
+                                       DataWarehouse* fine_new_dw,
+                                       const VarLabel* variable)
 {
   double subCycleProgress = getSubCycleProgress(fine_new_dw);
   const Level* fineLevel = getLevel(patches);
   if(fineLevel->getIndex() > 0){     
     cout_doing << d_myworld->myrank() 
-               << " Doing refineCoarseFineInterface"<< "\t\t\t AMRICE L-" 
+               << " Doing refineCoarseFineInterface("<< variable->getName() <<")\t\t\t AMRICE L-" 
                << fineLevel->getIndex() << " Patches: " << *patches << " progressVar " << subCycleProgress
                << endl;
-    int  numMatls = d_sharedState->getNumMatls();
     bool dbg_onOff = cout_dbg.active();      // is cout_dbg switch on or off
       
     for(int p=0;p<patches->size();p++){
       const Patch* finePatch = patches->get(p);
-
-      //__________________________________
-      //pressure
-      CCVariable<double> press_CC;
-      fine_new_dw->getModifiable(press_CC, lb->press_CCLabel,  0,   finePatch);
-      if(switchDebug_AMR_refineInterface){
-        ostringstream desc;
-        desc << "TOP_refineInterface_patch_"
-               << finePatch->getID()<< " step " << subCycleProgress;
-        printData(0, finePatch,   1, desc.str(), "press_CC",    press_CC);
+      
+      for(int m = 0;m<matls->size();m++){
+        int indx = matls->get(m);
+      
+        CCVariable<T> Q_CC;
+        fine_new_dw->getModifiable(Q_CC, variable, indx, finePatch);
+      
+        refineCoarseFineBoundaries(finePatch, Q_CC,fine_new_dw, variable, indx,subCycleProgress);
+      
       }
-      refineCoarseFineBoundaries(finePatch, press_CC, fine_new_dw,
-                                 lb->press_CCLabel,  0,   subCycleProgress);
-
-      for (int m = 0; m < numMatls; m++) {
-        Material* matl = d_sharedState->getMaterial(m);
-        ICEMaterial* ice_matl;
-        ice_matl = dynamic_cast<ICEMaterial*>(matl);
-        int indx = matl->getDWIndex();    
-        CCVariable<double> rho_CC, sp_vol_CC, temp_CC;
-        CCVariable<Vector> vel_CC;
-
-        if(ice_matl){
-          fine_new_dw->getModifiable(rho_CC,   lb->rho_CCLabel,    indx,finePatch);
-          fine_new_dw->getModifiable(vel_CC,   lb->vel_CCLabel,    indx,finePatch);
-        }
-        fine_new_dw->getModifiable(temp_CC,  lb->temp_CCLabel,   indx,finePatch);
-        fine_new_dw->getModifiable(sp_vol_CC,lb->sp_vol_CCLabel, indx,finePatch);
-
-        //__________________________________
-        //  Print Data 
-        if(switchDebug_AMR_refineInterface){
-          ostringstream desc;     
-          desc << "TOP_refineInterface_Mat_" << indx << "_patch_"
-               << finePatch->getID()<< " step " << subCycleProgress;
-
-          if(ice_matl){
-            printVector(indx, finePatch, 1, desc.str(), "vel_CC", 0,   vel_CC);
-            printData(indx, finePatch,   1, desc.str(), "rho_CC",      rho_CC);
-          }
-          printData(indx, finePatch,   1, desc.str(), "sp_vol_CC",   sp_vol_CC);
-          printData(indx, finePatch,   1, desc.str(), "Temp_CC",     temp_CC);
-        }
-
-        refineCoarseFineBoundaries(finePatch, sp_vol_CC,fine_new_dw,
-                                   lb->sp_vol_CCLabel, indx,subCycleProgress);
-
-        refineCoarseFineBoundaries(finePatch, temp_CC,  fine_new_dw,
-                                   lb->temp_CCLabel,   indx,subCycleProgress);
-        if(ice_matl){
-          refineCoarseFineBoundaries(finePatch, rho_CC,   fine_new_dw, 
-                                     lb->rho_CCLabel,    indx,subCycleProgress);
-
-          refineCoarseFineBoundaries(finePatch, vel_CC,   fine_new_dw,
-                                     lb->vel_CCLabel,    indx,subCycleProgress);
-          //__________________________________
-          //    Model Variables                     
-          if(d_modelSetup && d_modelSetup->tvars.size() > 0){
-           vector<TransportedVariable*>::iterator t_iter;
-            for( t_iter  = d_modelSetup->tvars.begin();
-                 t_iter != d_modelSetup->tvars.end(); t_iter++){
-              TransportedVariable* tvar = *t_iter;
-
-              if(tvar->matls->contains(indx)){
-                string Labelname = tvar->var->getName();
-                CCVariable<double> q_CC;
-                fine_new_dw->getModifiable(q_CC, tvar->var, indx, finePatch);
-
-                if(switchDebug_AMR_refineInterface){ 
-                  string name = tvar->var->getName();
-                  printData(indx,finePatch,1,"TOP_refineInterface",Labelname,q_CC);
-                }
-
-                refineCoarseFineBoundaries(finePatch, q_CC, fine_new_dw,
-                                           tvar->var,    indx,subCycleProgress);
-
-                if(switchDebug_AMR_refineInterface){ 
-                  string name = tvar->var->getName();
-                  printData(indx, finePatch,1,"BOT_refineInterface",Labelname,q_CC);
-                }
-              } // if
-            }  // for
-          }   // if models
-        }   // ice_matl
-        //__________________________________
-        // Interpolator test
-#if 0
-        const Level* coarseLevel = fineLevel->getCoarserLevel().get_rep();
-        vector<Patch::FaceType> cf;
-        finePatch->getCoarseFaces(cf);
-        vector<Patch::FaceType>::const_iterator iter;  
-        for (iter  = cf.begin(); iter != cf.end(); ++iter){
-          Patch::FaceType face = *iter;
-          testInterpolators<double>(fine_new_dw,d_orderOfInterpolation,coarseLevel,fineLevel,
-                              finePatch, face, "CFI");
-        }
-#endif
-        //__________________________________
-        //  Print Data 
-        if(switchDebug_AMR_refineInterface){
-          ostringstream desc;    
-          desc << "BOT_refineInterface_Mat_" << indx << "_patch_"
-               << finePatch->getID()<< " step " << subCycleProgress;
-          if(ice_matl){
-            printData(  indx, finePatch, 1, desc.str(), "rho_CC",    rho_CC);
-            printVector(indx, finePatch, 1, desc.str(), "vel_CC", 0, vel_CC);
-          }
-          printData(indx, finePatch,   1, desc.str(), "sp_vol_CC", sp_vol_CC);
-          printData(indx, finePatch,   1, desc.str(), "Temp_CC",   temp_CC);
-        } // dbg
-      }  // matls
-    }   // patches
-    cout_dbg.setActive(dbg_onOff);  // reset on/off switch for cout_dbg
-  }
+    }
+  } 
 }
-
-
+ 
 /*___________________________________________________________________
  Function~  AMRICE::refineCoarseFineBoundaries--    D O U B L E  
 _____________________________________________________________________*/
