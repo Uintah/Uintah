@@ -35,11 +35,15 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/Variables/UnionIterator.h>
 #include <Core/Grid/Level.h>
 #include <Core/Malloc/Allocator.h>
+#include <Core/Util/DebugStream.h>
 #include <iostream>
 #include <algorithm>
 
 using namespace SCIRun;
 using namespace Uintah;
+
+// export SCI_DEBUG="BC_dbg:+"
+static DebugStream BC_dbg("BC_dbg",false);
 
 UnionBCData::UnionBCData() : BCGeomBase()
 {
@@ -139,7 +143,7 @@ bool UnionBCData::inside(const Point &p) const
 
 void UnionBCData::print()
 {
-  cout << "Geometry type = " << typeid(this).name() << endl;
+  BC_dbg << "Geometry type = " << typeid(this).name() << endl;
   for (vector<BCGeomBase*>::const_iterator i = child.begin(); i != child.end();
        ++i)
     (*i)->print();
