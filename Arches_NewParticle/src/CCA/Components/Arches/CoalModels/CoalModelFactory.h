@@ -107,6 +107,7 @@ class HeatTransfer;
 class ParticleVelocity;
 class ParticleDensity;
 class CharOxidation;
+class TabPropsInterface;
 
 class CoalModelFactory
 {
@@ -189,6 +190,13 @@ public:
     d_labelSet = true;
   };
 
+  /** @brief  Set the MixingRxnModel so that child classes that need a chemical species can request it.
+              This method will go away when Properties goes away. */
+  void setTabPropsInterface( TabPropsInterface* mixing_rxn_model ) {
+    d_TabPropsInterface = mixing_rxn_model;
+    d_TabPropsInterfaceSet = true;
+  };
+
   // ------------------------------------
   // Get methods for particle velocity 
 
@@ -251,9 +259,11 @@ private:
   ModelMap models_;
 
   ArchesLabel* d_fieldLabels;
+  TabPropsInterface* d_TabPropsInterface;
 
+  bool d_TabPropsInterfaceSet; ///< Boolean: has the MixingRxnModel been set using setMixingRxnModel() method?
 	bool d_coupled_physics;		///< Boolean: use coupled physics and iterative procedure?
-  bool d_labelSet;          ///< Boolean: has the ArchesLabel been set using setArchesLabel()?
+  bool d_labelSet;          ///< Boolean: has the ArchesLabel been set using setArchesLabel() method?
 
   int numQuadNodes;         ///< Number of quadrature nodes
 

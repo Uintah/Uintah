@@ -69,6 +69,16 @@ public:
   /** @brief Interface for the inputfile and set constants */ 
   void problemSetup(const ProblemSpecP& db);
 
+  /** @brief Schedule the initialization of special/local variables unique to model */
+  void sched_initVars( const LevelP& level, SchedulerP& sched );
+
+  /** @brief  Actually initialize special variables unique to model */
+  void initVars( const ProcessorGroup * pc, 
+                 const PatchSubset    * patches, 
+                 const MaterialSubset * matls, 
+                 DataWarehouse        * old_dw, 
+                 DataWarehouse        * new_dw );
+
   ////////////////////////////////////////////////
   // Model computation method
 
@@ -106,6 +116,8 @@ public:
 
 private:
 
+  const VarLabel* d_charModelLabel; ///< VarLabel for model term G for char creation
+
   double A1;        ///< Pre-exponential factors for devolatilization rate constants
   double A2;        ///< Pre-exponential factors for devolatilization rate constants
   double E1;        ///< Activation energy for devolatilization rate constant
@@ -115,7 +127,7 @@ private:
   double k1;        ///< Rate constant for devolatilization reaction 1
   double k2;        ///< Rate constant for devolatilization reaction 2
   
-  double R;         ///< Ideal gas constant
+  double R_;        ///< Ideal gas constant
   
   bool d_useRawCoal;   ///< Boolean: is a DQMOM internal coordinate specified for raw coal mass?
   bool d_useChar;      ///< Boolean: is a DQMOM internal coordinate specified for char mass?

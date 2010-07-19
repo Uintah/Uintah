@@ -134,9 +134,6 @@ ConstantSizeCoal::problemSetup(const ProblemSpecP& params)
     temp_ic_name        = (*iString);
     temp_ic_name_full   = temp_ic_name;
 
-    std::stringstream out;
-    out << d_quadNode;
-    string node = out.str();
     temp_ic_name_full += "_qn";
     temp_ic_name_full += node;
 
@@ -275,6 +272,13 @@ ConstantSizeCoal::sched_computeParticleDensity( const LevelP& level,
   sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials()); 
 }
 
+//---------------------------------------------------------------------------
+// Schedule computation of the particle density
+//---------------------------------------------------------------------------
+/**
+@details
+
+*/
 void
 ConstantSizeCoal::computeParticleDensity( const ProcessorGroup* pc,
                                           const PatchSubset* patches,
@@ -292,11 +296,12 @@ ConstantSizeCoal::computeParticleDensity( const ProcessorGroup* pc,
     int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
 
     CCVariable<double> density;
+
+    constCCVariable<double> weight;
     constCCVariable<double> wa_length;
     constCCVariable<double> wa_raw_coal_mass;
     constCCVariable<double> wa_char_mass;
     constCCVariable<double> wa_moisture_mass;
-    constCCVariable<double> weight;
 
     if( timeSubStep == 0 ) {
 

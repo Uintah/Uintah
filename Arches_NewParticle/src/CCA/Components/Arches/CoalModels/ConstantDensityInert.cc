@@ -374,6 +374,7 @@ ConstantDensityInert::sched_computeModel( const LevelP& level, SchedulerP& sched
 
     tsk->requires(Task::OldDW, d_weight_label, gn, 0 );
     tsk->requires(Task::OldDW, d_length_label, gn, 0 );
+    tsk->requires(Task::OldDW, d_particle_mass_label, gn, 0 );
 
   } else {
     tsk->modifies(d_modelLabel);
@@ -381,6 +382,7 @@ ConstantDensityInert::sched_computeModel( const LevelP& level, SchedulerP& sched
 
     tsk->requires(Task::NewDW, d_weight_label, gn, 0 );
     tsk->requires(Task::NewDW, d_length_label, gn, 0 );
+    tsk->requires(Task::NewDW, d_particle_mass_label, gn, 0 );
 
   }
 
@@ -459,24 +461,27 @@ ConstantDensityInert::computeModel( const ProcessorGroup * pc,
     CCVariable<double> model;
     CCVariable<double> model_gasSource; // always 0 for density
 
-    constCCVariable<double> wa_length;
     constCCVariable<double> weight;
+    constCCVariable<double> wa_length;
+    constCCVariable<double> wa_mass;
 
     if( timeSubStep == 0 ) {
 
       new_dw->allocateAndPut( model, d_modelLabel, matlIndex, patch );
       new_dw->allocateAndPut( model_gasSource, d_gasLabel, matlIndex, patch ); 
 
-      old_dw->get(wa_length, d_length_label, matlIndex, patch, gn, 0 );
-      old_dw->get( weight, d_weight_label, matlIndex, patch, gn, 0 );
+      old_dw->get( weight,   d_weight_label,        matlIndex, patch, gn, 0 );
+      old_dw->get(wa_length, d_length_label,        matlIndex, patch, gn, 0 );
+      old_dw->get(wa_mass,   d_particle_mass_label, matlIndex, patch, gn, 0 );
 
     } else {
 
       new_dw->getModifiable( model, d_modelLabel, matlIndex, patch ); 
       new_dw->getModifiable( model_gasSource, d_gasLabel, matlIndex, patch ); 
     
-      new_dw->get(wa_length, d_length_label, matlIndex, patch, gn, 0 );
-      new_dw->get( weight, d_weight_label, matlIndex, patch, gn, 0 );
+      new_dw->get( weight,   d_weight_label,        matlIndex, patch, gn, 0 );
+      new_dw->get(wa_length, d_length_label,        matlIndex, patch, gn, 0 );
+      new_dw->get(wa_mass,   d_particle_mass_label, matlIndex, patch, gn, 0 );
 
     }
     model.initialize(0.0);
@@ -507,20 +512,22 @@ ConstantDensityInert::computeModel( const ProcessorGroup * pc,
     for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
       IntVector c = *iter; 
 
-      if( c == IntVector(1,2,3) && (d_quadNode==3 || d_quadNode==4) ) {
-        int a=0; ++a;
-      }
-      
       bool weight_is_small = (weight[c] < d_w_small);
+      //bool mass_is_small = fabs(wa_mass[c] < TINY);
       double model_sum = 0.0;
       int z=0;
       for( vector< constCCVariable<double>* >::iterator iM = modelCCVars.begin(); iM != modelCCVars.end(); ++iM, ++z ) {
         model_sum += (**iM)[c] * d_massScalingConstants[z] ;
       }
 
-      if(weight_is_small) {
+      if(weight_is_small /*|| mass_is_small */ ) {
 
         model[c] = 0.0;
+
+        ////cmr
+        //if( c==IntVector(1,2,3) && d_quadNode==0 ) {
+        //  cout << "ConstantDensityInert model has value " << model[c] << " (small weight)" << endl;
+        //}
 
       } else {
         double unscaled_length_old = (wa_length[c]*d_length_scaling_constant)/weight[c];
@@ -534,6 +541,11 @@ ConstantDensityInert::computeModel( const ProcessorGroup * pc,
 
         model[c] = scaled_RHS;
 
+        ////cmr
+        //if( c==IntVector(1,2,3) && d_quadNode==0 ) {
+        //  cout << "ConstantDensityInert model has value " << model[c] << " for a particle mass of " << (wa_mass[c]/weight[c]) << endl;
+        //}
+
         double unscaled_length_new = unscaled_length_old + dt*unscaled_RHS;
 
         if( d_doLengthLowClip && (unscaled_length_new < d_length_low) ) {
@@ -545,6 +557,12 @@ ConstantDensityInert::computeModel( const ProcessorGroup * pc,
           double scaled_RHS_max   = unscaled_RHS_max/d_length_scaling_constant;
 
           model[c] = scaled_RHS_max;
+
+          ////cmr
+          //if( c==IntVector(1,2,3) && d_quadNode==0 ) {
+          //  cout << "ConstantDensityInert model low-clipped at " << model[c] << " for a particle mass of " << (wa_mass[c]/weight[c]) << endl;
+          //}
+
         }
 
         if( d_doLengthHighClip && (unscaled_length_new > d_length_hi) ) {
@@ -557,6 +575,7 @@ ConstantDensityInert::computeModel( const ProcessorGroup * pc,
 
           model[c] = scaled_RHS_max;
         }
+
 
       }
 

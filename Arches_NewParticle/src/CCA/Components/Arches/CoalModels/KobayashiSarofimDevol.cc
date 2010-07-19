@@ -63,7 +63,7 @@ KobayashiSarofimDevol::KobayashiSarofimDevol( std::string modelName,
   E2  =  -40000;      // [=] kcal/kmol;  k2 activation energy
   */
 
-  R   =  1.987;       // [=] kcal/kmol; ideal gas constant
+  R_   =  1.987;       // [=] kcal/kmol; ideal gas constant
 
   // Y values from white book:
   Y1_ = 0.3; // volatile fraction from proximate analysis
@@ -74,6 +74,12 @@ KobayashiSarofimDevol::KobayashiSarofimDevol( std::string modelName,
   Y1_ = 0.39; // volatile fraction from proximate analysis
   Y2_ = 0.80; // fraction devolatilized at higher temperatures
   */
+
+
+  // Create a char model label (for char creation)
+  d_charModelLabel    = VarLabel::create( modelName+"_char",    CCVariable<double>::getTypeDescription() );
+  cout << "name of char label in kobayashi model: " << d_charModelLabel->getName() << endl;
+
 
   //d_compute_particle_temp = false;
 
@@ -178,6 +184,16 @@ KobayashiSarofimDevol::problemSetup(const ProblemSpecP& params)
   }
 
 
+  if(!d_useRawCoal) {
+    string errmsg = "ERROR: Arches: KobayashiSarofimDevol: No raw coal variable was specified. Quitting...";
+    throw ProblemSetupException(errmsg,__FILE__,__LINE__);
+  }
+
+  if(!d_useTgas) {
+    d_gas_temperature_label = d_fieldLabels->d_tempINLabel;
+  }
+
+
   ///////////////////////////////////////////
 
 
@@ -200,17 +216,21 @@ KobayashiSarofimDevol::problemSetup(const ProblemSpecP& params)
 
     if( iter->second == "raw_coal_mass" ) {
       d_raw_coal_mass_label = current_eqn->getTransportEqnLabel();
-      d_rc_scaling_factor = current_eqn->getScalingConstant();
+      d_rc_scaling_constant = current_eqn->getScalingConstant();
       
       DQMOMEqn* dqmom_eqn = dynamic_cast<DQMOMEqn*>(current_eqn);
       dqmom_eqn->addModel( d_modelLabel );
 
     } else if( iter->second == "char_mass" ) {
       d_char_mass_label = current_eqn->getTransportEqnLabel();
-      d_char_scaling_factor = current_eqn->getScalingConstant();
+      d_char_scaling_constant = current_eqn->getScalingConstant();
+
+      DQMOMEqn* dqmom_eqn = dynamic_cast<DQMOMEqn*>(current_eqn);
+      dqmom_eqn->addModel( d_charModelLabel );
+
     } else if( iter->second == "particle_temperature" ) {
       d_particle_temperature_label = current_eqn->getTransportEqnLabel();
-      d_pt_scaling_factor = current_eqn->getScalingConstant();
+      d_pt_scaling_constant = current_eqn->getScalingConstant();
     } else if( iter->second == "gas_temperature" ) {
       d_gas_temperature_label = current_eqn->getTransportEqnLabel();
     } else {
@@ -220,17 +240,56 @@ KobayashiSarofimDevol::problemSetup(const ProblemSpecP& params)
 
   }
 
-  if(!d_useRawCoal) {
-    string errmsg = "ERROR: Arches: KobayashiSarofimDevol: No raw coal variable was specified. Quitting...";
-    throw ProblemSetupException(errmsg,__FILE__,__LINE__);
-  }
-
-  if(!d_useTgas) {
-    d_gas_temperature_label = d_fieldLabels->d_tempINLabel;
-  }
 
 }
 
+//---------------------------------------------------------------------------
+// Method: Schedule the initialization of special variables unique to model
+//---------------------------------------------------------------------------
+void 
+KobayashiSarofimDevol::sched_initVars( const LevelP& level, SchedulerP& sched )
+{
+  //Devolatilization::sched_initVars( level, sched );
+
+  string taskname = "KobayashiSarofimDevol::initVars";
+  Task* tsk = scinew Task(taskname, this, &KobayashiSarofimDevol::initVars);
+
+  tsk->computes( d_modelLabel );
+  tsk->computes( d_gasLabel   );
+  tsk->computes( d_charModelLabel );
+
+  sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
+}
+
+//-------------------------------------------------------------------------
+// Method: Initialize special variables unique to the model
+//-------------------------------------------------------------------------
+void
+KobayashiSarofimDevol::initVars( const ProcessorGroup * pc, 
+                                 const PatchSubset    * patches, 
+                                 const MaterialSubset * matls, 
+                                 DataWarehouse        * old_dw, 
+                                 DataWarehouse        * new_dw )
+{
+  for( int p=0; p < patches->size(); p++ ) {  // Patch loop
+
+    const Patch* patch = patches->get(p);
+    int archIndex = 0;
+    int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+
+    CCVariable<double> model_value; 
+    new_dw->allocateAndPut( model_value, d_modelLabel, matlIndex, patch ); 
+    model_value.initialize(0.0);
+
+    CCVariable<double> gas_value; 
+    new_dw->allocateAndPut( gas_value, d_gasLabel, matlIndex, patch ); 
+    gas_value.initialize(0.0);
+
+    CCVariable<double> char_model_value; 
+    new_dw->allocateAndPut( char_model_value, d_charModelLabel, matlIndex, patch ); 
+    char_model_value.initialize(0.0);
+  }
+}
 
 
 //-----------------------------------------------------------------------------
@@ -246,22 +305,22 @@ KobayashiSarofimDevol::sched_computeModel( const LevelP& level, SchedulerP& sche
 
   d_timeSubStep = timeSubStep; 
 
-  // require timestep label
-  tsk->requires(Task::OldDW, d_fieldLabels->d_sharedState->get_delt_label() );
+  //// require timestep label
+  //tsk->requires(Task::OldDW, d_fieldLabels->d_sharedState->get_delt_label() );
 
   if (d_timeSubStep == 0 && !d_labelSchedInit) {
     // Every model term needs to set this flag after the varLabel is computed. 
     // transportEqn.cleanUp should reinitialize this flag at the end of the time step. 
     d_labelSchedInit = true;
-
-    tsk->computes(d_modelLabel);
-    tsk->computes(d_gasLabel); 
-  } else {
-    tsk->modifies(d_modelLabel);
-    tsk->modifies(d_gasLabel);  
   }
 
   if( d_timeSubStep == 0 ) {
+    tsk->computes(d_modelLabel);
+    tsk->computes(d_gasLabel); 
+    if(d_useChar) { 
+      tsk->computes(d_charModelLabel);
+    }
+
     tsk->requires(Task::OldDW, d_gas_temperature_label, gn, 0);
     tsk->requires(Task::OldDW, d_weight_label, gn, 0);
     tsk->requires(Task::OldDW, d_raw_coal_mass_label, gn, 0);
@@ -271,6 +330,12 @@ KobayashiSarofimDevol::sched_computeModel( const LevelP& level, SchedulerP& sche
     }
 
   } else {
+    tsk->modifies(d_modelLabel);
+    tsk->modifies(d_gasLabel);  
+    if(d_useChar) {
+      tsk->modifies(d_charModelLabel);
+    }
+
     tsk->requires(Task::NewDW, d_gas_temperature_label, gn, 0);
     tsk->requires(Task::NewDW, d_weight_label, gn, 0);
     tsk->requires(Task::NewDW, d_raw_coal_mass_label, gn, 0);
@@ -306,12 +371,13 @@ KobayashiSarofimDevol::computeModel( const ProcessorGroup * pc,
     int archIndex = 0;
     int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
 
-    delt_vartype delta_t;
-    old_dw->get( delta_t, d_fieldLabels->d_sharedState->get_delt_label() );
-    double dt = delta_t;
+    //delt_vartype delta_t;
+    //old_dw->get( delta_t, d_fieldLabels->d_sharedState->get_delt_label() );
+    //double dt = delta_t;
 
     CCVariable<double> devol_rate;
     CCVariable<double> gas_devol_rate; 
+    CCVariable<double> char_production_rate;
 
     constCCVariable<double> weight;
     constCCVariable<double> wa_raw_coal_mass;
@@ -324,6 +390,11 @@ KobayashiSarofimDevol::computeModel( const ProcessorGroup * pc,
 
       new_dw->allocateAndPut( gas_devol_rate, d_gasLabel, matlIndex, patch ); 
       gas_devol_rate.initialize(0.0);
+
+      if(d_useChar) {
+        new_dw->allocateAndPut( char_production_rate, d_charModelLabel, matlIndex, patch );
+        char_production_rate.initialize(0.0);
+      }
 
       old_dw->get( weight, d_weight_label, matlIndex, patch, gn, 0 );
       old_dw->get( wa_raw_coal_mass, d_raw_coal_mass_label, matlIndex, patch, gn, 0 );
@@ -338,6 +409,10 @@ KobayashiSarofimDevol::computeModel( const ProcessorGroup * pc,
 
       new_dw->getModifiable( devol_rate, d_modelLabel, matlIndex, patch ); 
       new_dw->getModifiable( gas_devol_rate, d_gasLabel, matlIndex, patch ); 
+
+      if(d_useChar) {
+        new_dw->getModifiable( char_production_rate, d_charModelLabel, matlIndex, patch );
+      }
 
       new_dw->get( weight, d_weight_label, matlIndex, patch, gn, 0 );
       new_dw->get( wa_raw_coal_mass, d_raw_coal_mass_label, matlIndex, patch, gn, 0 );
@@ -357,60 +432,70 @@ KobayashiSarofimDevol::computeModel( const ProcessorGroup * pc,
       // weight - check if small
       bool weight_is_small = (weight[c] < d_w_small);
 
-      double unscaled_weight;
+      // devol_rate: raw caol internal coordinate source G
+      double devol_rate_;
 
-      double unscaled_temperature;
-      
-      double scaled_raw_coal_mass;
-      double unscaled_raw_coal_mass;
+      // gas_devol_rate: gas source
+      double gas_devol_rate_;
+
+      // char_production_rate: char internal coordinate source G
+      double char_production_rate_;
+
 
       if (weight_is_small) {
 
-        unscaled_weight = 0.0;
-
-        unscaled_temperature = 0.0;
-
-        scaled_raw_coal_mass = 0.0;
-        unscaled_raw_coal_mass = 0.0;
+        devol_rate_ = 0.0;
+        gas_devol_rate_ = 0.0;
+        char_production_rate_ = 0.0;
 
       } else {
 
-        unscaled_weight = weight[c]*d_w_scaling_factor;
+        double unscaled_weight;
+        double unscaled_temperature;
+        double scaled_raw_coal_mass;
+        double unscaled_raw_coal_mass;
+
+
+        unscaled_weight = weight[c]*d_w_scaling_constant;
 
         if (d_useTparticle) {
           // particle temp
-          unscaled_temperature = temperature[c]*d_pt_scaling_factor/weight[c];
+          unscaled_temperature = temperature[c]*d_pt_scaling_constant/weight[c];
         } else {
           // particle temp = gas temp
           unscaled_temperature = temperature[c];
         }
-
-        scaled_raw_coal_mass = wa_raw_coal_mass[c]/weight[c];
-        unscaled_raw_coal_mass = scaled_raw_coal_mass*d_rc_scaling_factor;
-
-      }
-
-      // devol_rate: particle source
-      double devol_rate_;
-
-      // gase_devol_rate: gas source
-      double gas_devol_rate_;
-
-      if (weight_is_small) {
-        devol_rate_ = 0.0;
-        gas_devol_rate_ = 0.0;
-
-      } else {
         if( unscaled_temperature < TINY ) {
           unscaled_temperature = TINY;
         }
-        k1 = A1*exp(-E1/(R*unscaled_temperature)); // [=] 1/s
-        k2 = A2*exp(-E2/(R*unscaled_temperature)); // [=] 1/s
-        
-        double testVal_part = -(k1+k2)*scaled_raw_coal_mass;
-        double testVal_gas = 0.0;
-        
-        double big_rate = 1.0e10; // Limit model terms to 1e10
+
+        scaled_raw_coal_mass = wa_raw_coal_mass[c]/weight[c];
+        unscaled_raw_coal_mass = scaled_raw_coal_mass*d_rc_scaling_constant;
+
+        k1 = A1*exp(-E1/(R_*unscaled_temperature)); // [=] 1/s
+        k2 = A2*exp(-E2/(R_*unscaled_temperature)); // [=] 1/s
+
+        devol_rate_ = -(k1+k2)*scaled_raw_coal_mass;
+        if( devol_rate_ > TINY ) {
+          devol_rate_ = 0.0;
+        }
+
+        gas_devol_rate_ = (Y1_*k1 + Y2_*k2)*unscaled_raw_coal_mass*unscaled_weight; // [=] kg/m^3
+        if( gas_devol_rate_ < TINY ) {
+          gas_devol_rate_ = 0.0;
+        }
+
+        if(d_useChar) {
+          char_production_rate_ = ( (1-Y1_)*k1 + (1-Y2_)*k2)*unscaled_raw_coal_mass*(1/d_char_scaling_constant);
+          if( char_production_rate_ < TINY ) {
+            char_production_rate_ = 0.0;
+          }
+        }
+ 
+
+        // FIXME - see ConstantDensityInert class for details
+        /*
+        //double big_rate = 1.0e10; // Limit model terms to 1e10
 
         if( fabs(testVal_part*dt) > scaled_raw_coal_mass ) {
 
@@ -439,31 +524,24 @@ KobayashiSarofimDevol::computeModel( const ProcessorGroup * pc,
           testVal_part = -big_rate;
           devol_rate_ = testVal_part;
 
-          testVal_gas = (Y1_*k1 + Y2_*k2)*((big_rate*d_rc_scaling_factor)*(weight[c]*d_w_scaling_factor))/(-k1+k2);
+          testVal_gas = (Y1_*k1 + Y2_*k2)*((big_rate*d_rc_scaling_constant)*(weight[c]*d_w_scaling_constant))/(-k1+k2);
           gas_devol_rate_ = testVal_gas;
 
         } else {
-
           // treat devolatilization like normal
-          if( testVal_part < TINY ) {
-            devol_rate_ = testVal_part;
-          } else {
-            devol_rate_ = 0.0;
-          }
+          
+          [see code]
 
-          testVal_gas = (Y1_*k1 + Y2_*k2)*unscaled_raw_coal_mass*unscaled_weight; // [=] kg/m^3
-          if( testVal_gas > TINY ) {
-            gas_devol_rate_ = testVal_gas;
-          } else {
-            gas_devol_rate_ = 0.0;
-          }
-        
         }
+        */
 
       }
 
       devol_rate[c] = devol_rate_;
       gas_devol_rate[c] = gas_devol_rate_;
+      if(d_useChar) {
+        char_production_rate[c] = char_production_rate_;
+      }
 
 
     }//end cell loop

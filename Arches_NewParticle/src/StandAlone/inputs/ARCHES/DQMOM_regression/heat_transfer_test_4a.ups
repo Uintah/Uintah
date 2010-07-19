@@ -39,7 +39,8 @@
         <save label = "tempIN"/>
         <save label = "heatLoss"/>
 
-        <save label = "eta"/>
+        <save label = "coal_gas_mix_frac" />
+        <save label = "scalarSP" />
 
 <!-- ===================================
         DQMOM Coal Variables
@@ -158,7 +159,8 @@
                   </initialization>
                 </Eqn>
 
-                <Eqn label = "eta" type = "CCscalar">
+                <Eqn label = "coal_gas_mix_frac" type = "CCscalar">
+                    <use_density_guess/>
                     <doDiff>true</doDiff>
                     <doConv>true</doConv>
                     <addSources>true</addSources>
@@ -202,6 +204,13 @@
                             <variable label="length" role="particle_length" />
                             <variable label="RCmass" role="raw_coal_mass" />
                             <variable label="Tp"     role="particle_temperature"/>
+                        </ICVars>
+                    </model>
+
+                    <model label="my_density" type="ConstantDensityCoal">
+                        <ICVars>
+                            <variable label="length" role="particle_length" />
+                            <variable label="RCmass" role="raw_coal_mass" />
                         </ICVars>
                     </model>
 
@@ -317,7 +326,7 @@
                 
                 <MixtureFractionSolver>
                     <convection_scheme>central-upwind</convection_scheme>
-                    <initial_value>0.80</initial_value>
+                    <initial_value>0.30</initial_value>
                 </MixtureFractionSolver>
                 
                 <EnthalpySolver>

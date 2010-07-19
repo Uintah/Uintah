@@ -1,5 +1,6 @@
 #include <CCA/Components/Arches/SourceTerms/SourceTermFactory.h>
-#include <CCA/Components/Arches/SourceTerms/CoalGasDevol.h> 
+#include <CCA/Components/Arches/SourceTerms/DevolMixtureFraction.h> 
+#include <CCA/Components/Arches/SourceTerms/CharOxidationMixtureFraction.h> 
 #include <CCA/Components/Arches/SourceTerms/ConstantSourceTerm.h>
 #include <CCA/Components/Arches/SourceTerms/MMS1.h>
 #include <CCA/Components/Arches/SourceTerms/ParticleGasMomentum.h>
@@ -102,10 +103,15 @@ void SourceTermFactory::problemSetup(const ProblemSpecP& params)
         SourceTermBuilder* srcBuilder = scinew ConstantSourceTermBuilder(src_name, required_varLabels, d_fieldLabels->d_sharedState); 
         register_source_term( src_name, srcBuilder ); 
 
-      } else if (src_type == "CoalGasDevol" || src_type == "coal_gas_devol"){
-        // Sums up the devol. model terms * weights
-        SourceTermBuilder* srcBuilder = scinew CoalGasDevolBuilder(src_name, required_varLabels, d_fieldLabels->d_sharedState);
+      } else if (src_type == "DevolMixtureFraction" || src_type == "devol_mixture_frac"){
+        // Add a mixure fraction source due to devolatilization reactions
+        SourceTermBuilder* srcBuilder = scinew DevolMixtureFractionBuilder(src_name, required_varLabels, d_fieldLabels->d_sharedState);
         register_source_term( src_name, srcBuilder ); 
+
+      } else if (src_type == "CharOxidationMixtureFraction" ) {
+        // Add a mixure fraction source due to char oxidation reactions
+        SourceTermBuilder* srcBuilder = scinew CharOxidationMixtureFractionBuilder(src_name, required_varLabels, d_fieldLabels->d_sharedState);
+        register_source_term( src_name, srcBuilder );
 
       } else if (src_type == "WestbrookDryer" || src_type == "westbrook_dryer") {
         // Computes a global reaction rate for a hydrocarbon (see Turns, eqn 5.1,5.2)

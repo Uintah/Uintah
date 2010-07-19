@@ -63,11 +63,10 @@ public:
   /** @brief Set any parameters from input file, initialize any constants, etc.. */
   void problemSetup(const ProblemSpecP& inputdb);
   
-  /** @brief Schedule a transport equation to be built and solved */
-  void sched_evalTransportEqn( const LevelP&, 
-                               SchedulerP& sched, 
-                               int timeSubStep);
 
+  ////////////////////////////////////////////////
+  // Calculation methods
+  
   /** @brief Schedule the build for the terms needed in the transport equation */
   void sched_buildTransportEqn( const LevelP& level, 
                                 SchedulerP& sched, int timeSubStep );
@@ -82,15 +81,18 @@ public:
 
   /** @brief Schedule the solution the transport equation */
   void sched_solveTransportEqn(const LevelP& level, 
-                                SchedulerP& sched, int timeSubStep );
+                                SchedulerP& sched, 
+                                int timeSubStep,
+                                bool copyOldIntoNew );
 
-  /** @brief Solve the transport equation */ 
+  /** @brief  Solve the transport equation */ 
   void solveTransportEqn(const ProcessorGroup*, 
                          const PatchSubset* patches, 
                          const MaterialSubset*, 
                          DataWarehouse* old_dw, 
                          DataWarehouse* new_dw,
-                         int timeSubStep);
+                         int timeSubStep, 
+                         bool copyOldIntoNew );
 
   /** @brief Schedule the initialization of the variables */ 
   void sched_initializeVariables( const LevelP& level, SchedulerP& sched );
@@ -146,9 +148,13 @@ public:
                      DataWarehouse* new_dw );
 
   /** @brief Clip values of phi that are too high or too low (after RK time averaging). */
-  template<class phiType>
-  void clipPhi( const Patch* p, 
-           phiType& phi );
+  void sched_clipPhi( const LevelP& level, SchedulerP& sched );
+
+  void clipPhi( const ProcessorGroup* pc, 
+                const PatchSubset* patches, 
+                const MaterialSubset* matls, 
+                DataWarehouse* old_dw, 
+                DataWarehouse* new_dw );
 
 private:
 

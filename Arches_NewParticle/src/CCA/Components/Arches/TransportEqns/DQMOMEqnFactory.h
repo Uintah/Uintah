@@ -76,6 +76,11 @@ public:
                                            SchedulerP&,
                                            int timeSubStep );
 
+  void sched_evalTransportEqns( const LevelP& level,
+                                SchedulerP&,
+                                int timeSubStep,
+                                bool cleanup );
+
   ////////////////////////////////////////////
   // Equation retrieval
 
@@ -97,14 +102,6 @@ public:
   EqnMap& retrieve_all_eqns(){
     return eqns_; };
 
-  /** @brief  Get the number of quadrature nodes */ 
-  inline const int get_quad_nodes( ) {
-    return d_quadNodes; };
-
-  /** @brief  Set number quadrature nodes */ 
-  inline void set_quad_nodes( int qn ) {
-    d_quadNodes = qn; };
-
   /** @brief  Set the field labels for the DQMOM equation factory */
   inline void setArchesLabel( ArchesLabel* fieldLabels ) {
     d_fieldLabels = fieldLabels;
@@ -116,6 +113,14 @@ public:
     d_timeIntegrator = timeIntegrator;
     d_timeIntegratorSet = true;
   };
+
+  /** @brief  Get the number of quadrature nodes */ 
+  inline const int get_quad_nodes( ) {
+    return d_quadNodes; };
+
+  /** @brief  Set number quadrature nodes */ 
+  inline void set_quad_nodes( int qn ) {
+    d_quadNodes = qn; };
 
   /** @brief  Get a boolean: is DQMOM used? (Is there a <DQMOM> block?) */
   inline bool getDoDQMOM() {

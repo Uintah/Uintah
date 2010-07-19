@@ -341,6 +341,8 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
   for (int curr_level = 0; curr_level < numTimeIntegratorLevels; curr_level ++) {
 
+    bool lastTimeSubstep = (curr_level == numTimeIntegratorLevels-1);
+
     DQMOMEqnFactory& dqmomFactory = DQMOMEqnFactory::self();
     
     if ( dqmomFactory.getDoDQMOM() ) {
@@ -354,11 +356,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
       modelFactory.sched_coalParticleCalculation( level, sched, curr_level );
 
       // Evaluate DQMOM scalar equations
-      if (curr_level != numTimeIntegratorLevels-1) {
-        dqmomFactory.sched_evalTransportEqns( level, sched, curr_level );
-      } else {
-        dqmomFactory.sched_evalTransportEqnsWithCleanup( level, sched, curr_level );
-      }
+      dqmomFactory.sched_evalTransportEqns( level, sched, curr_level, lastTimeSubstep );
 
     }
 
@@ -450,7 +448,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
     // Evaluate scalar equations that do have a density guess
     evalDensityGuessEqns = true;
-    eqnFactory.sched_evalTransportEqns( level, sched, curr_level, evalDensityGuessEqns, cleanup );
+    eqnFactory.sched_evalTransportEqns( level, sched, curr_level, evalDensityGuessEqns, lastTimeSubstep );
 
 
     if (d_reactingScalarSolve) {
@@ -510,7 +508,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
     // Evaluate scalar equations that don't have a density guess
     evalDensityGuessEqns = false;
-    eqnFactory.sched_evalTransportEqns( level, sched, curr_level, evalDensityGuessEqns, cleanup );
+    eqnFactory.sched_evalTransportEqns( level, sched, curr_level, evalDensityGuessEqns, lastTimeSubstep );
 
     if (d_standAloneRMCRT) { 
       d_RMCRTRadiationModel->sched_solve( level, sched, d_timeIntegratorLabels[curr_level] );  

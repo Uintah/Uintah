@@ -1,5 +1,5 @@
-#ifndef Uintah_Component_Arches_CoalGasDevol_h
-#define Uintah_Component_Arches_CoalGasDevol_h
+#ifndef Uintah_Component_Arches_DevolMixtureFraction_h
+#define Uintah_Component_Arches_DevolMixtureFraction_h
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Grid/SimulationStateP.h>
 #include <CCA/Components/Arches/SourceTerms/SourceTermBase.h>
@@ -8,31 +8,26 @@
 //===========================================================================
 
 /**
-  * @class    CoalGasDevol
+  * @class    DevolMixtureFraction
   * @author   Jeremy Thornock
   * @date     
   *           
   * @brief    
-  * This is a source term (for a coal gas mixture fraction)
+  * This is a source term for a coal gas mixture fraction
   * coming from devolatilization.
-  *
-  * This should probably be renamed to
-  * "DevolMixtureFraction" or something a little more
-  * descriptive, since there will be a matching mass source
-  * term here eventually (mass coupling in continuity).
   *
   */
 
 //---------------------------------------------------------------------------
 // Builder
 namespace Uintah{
-class CoalGasDevolBuilder: public SourceTermBuilder
+class DevolMixtureFractionBuilder: public SourceTermBuilder
 {
 public: 
-  CoalGasDevolBuilder(std::string srcName, 
-                      vector<std::string> reqLabelNames, 
-                      SimulationStateP& sharedState);
-  ~CoalGasDevolBuilder(); 
+  DevolMixtureFractionBuilder(std::string srcName, 
+                              vector<std::string> reqLabelNames, 
+                              SimulationStateP& sharedState);
+  ~DevolMixtureFractionBuilder(); 
 
   SourceTermBase* build(); 
 
@@ -42,13 +37,13 @@ private:
 // End Builder
 //---------------------------------------------------------------------------
 
-class CoalGasDevol: public SourceTermBase {
+class DevolMixtureFraction: public SourceTermBase {
 public: 
 
-  CoalGasDevol( std::string srcName, SimulationStateP& shared_state, 
+  DevolMixtureFraction( std::string srcName, SimulationStateP& shared_state, 
                 vector<std::string> reqLabelNames );
 
-  ~CoalGasDevol();
+  ~DevolMixtureFraction();
 
   /** @brief  Interface for the inputfile and set constants */ 
   void problemSetup(const ProblemSpecP& db);
@@ -76,14 +71,14 @@ public:
 
   /** @brief  Return a string with the model type */
   string getType() {
-    return "CoalGasDevol";
+    return "DevolMixtureFraction";
   };
 
 private:
 
-  std::string d_devolModelName; 
+  string d_devolModelName; 
 
-}; // end CoalGasDevol
+}; // end DevolMixtureFraction
 } // end namespace Uintah
 #endif
 

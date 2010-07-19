@@ -274,7 +274,6 @@ DQMOMEqn::problemSetup(const ProblemSpecP& inputdb )
     // ------------ Other initialization function --------------------
     }
   }
-  cout << "Init function " << d_initFunction << " has value " << d_constant_init << endl;
 }
 //---------------------------------------------------------------------------
 // Method: Schedule clean up. 
@@ -283,10 +282,12 @@ DQMOMEqn::problemSetup(const ProblemSpecP& inputdb )
 void 
 DQMOMEqn::sched_cleanUp( const LevelP& level, SchedulerP& sched )
 {
+  /*
   string taskname = "DQMOMEqn::cleanUp";
   Task* tsk = scinew Task(taskname, this, &DQMOMEqn::cleanUp);
 
   sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
+  */
 }
 
 //---------------------------------------------------------------------------
@@ -297,8 +298,7 @@ void DQMOMEqn::cleanUp( const ProcessorGroup* pc,
                         const MaterialSubset* matls, 
                         DataWarehouse* old_dw, 
                         DataWarehouse* new_dw )
-{
-}
+{}
 
 //---------------------------------------------------------------------------
 // Method: Schedule the intialization of the variables. 
@@ -326,10 +326,10 @@ DQMOMEqn::sched_initializeVariables( const LevelP& level, SchedulerP& sched )
 // Method: Actually initialize the variables. 
 //---------------------------------------------------------------------------
 void DQMOMEqn::initializeVariables( const ProcessorGroup* pc, 
-                              const PatchSubset* patches, 
-                              const MaterialSubset* matls, 
-                              DataWarehouse* old_dw, 
-                              DataWarehouse* new_dw )
+                                    const PatchSubset* patches, 
+                                    const MaterialSubset* matls, 
+                                    DataWarehouse* old_dw, 
+                                    DataWarehouse* new_dw )
 {
 
   //patch loop
@@ -381,7 +381,9 @@ void DQMOMEqn::initializeVariables( const ProcessorGroup* pc,
 // Only used for verification of the DQMOM transport equations
 //--------------------------------------------------------------------------- 
 void 
-DQMOMEqn::sched_computeSources( const LevelP& level, SchedulerP& sched, int timeSubStep )
+DQMOMEqn::sched_computeSources( const LevelP& level, 
+                                SchedulerP& sched, 
+                                int timeSubStep )
 {
   // This scheduler only calls other schedulers
   SourceTermFactory& factory = SourceTermFactory::self(); 
@@ -396,7 +398,9 @@ DQMOMEqn::sched_computeSources( const LevelP& level, SchedulerP& sched, int time
 // Method: Schedule build the transport equation. 
 //---------------------------------------------------------------------------
 void
-DQMOMEqn::sched_buildTransportEqn( const LevelP& level, SchedulerP& sched, int timeSubStep )
+DQMOMEqn::sched_buildTransportEqn( const LevelP& level, 
+                                   SchedulerP& sched, 
+                                   int timeSubStep )
 {
   string taskname = "DQMOMEqn::buildTransportEqn"; 
 
@@ -447,10 +451,10 @@ DQMOMEqn::sched_buildTransportEqn( const LevelP& level, SchedulerP& sched, int t
 //---------------------------------------------------------------------------
 void 
 DQMOMEqn::buildTransportEqn( const ProcessorGroup* pc, 
-                              const PatchSubset* patches, 
-                              const MaterialSubset* matls, 
-                              DataWarehouse* old_dw, 
-                              DataWarehouse* new_dw )
+                             const PatchSubset* patches, 
+                             const MaterialSubset* matls, 
+                             DataWarehouse* old_dw, 
+                             DataWarehouse* new_dw )
 {
   //patch loop
   for (int p=0; p < patches->size(); p++){
@@ -557,15 +561,20 @@ DQMOMEqn::buildTransportEqn( const ProcessorGroup* pc,
     } 
   }
 }
+
+
 //---------------------------------------------------------------------------
 // Method: Schedule solve the transport equation. 
 //---------------------------------------------------------------------------
 void
-DQMOMEqn::sched_solveTransportEqn( const LevelP& level, SchedulerP& sched, int timeSubStep )
+DQMOMEqn::sched_solveTransportEqn( const LevelP& level, 
+                                   SchedulerP& sched, 
+                                   int timeSubStep, 
+                                   bool copyOldIntoNew )
 {
   string taskname = "DQMOMEqn::solveTransportEqn";
 
-  Task* tsk = scinew Task(taskname, this, &DQMOMEqn::solveTransportEqn, timeSubStep);
+  Task* tsk = scinew Task(taskname, this, &DQMOMEqn::solveTransportEqn, timeSubStep, copyOldIntoNew);
 
   //New
   tsk->modifies(d_transportVarLabel);
@@ -577,6 +586,8 @@ DQMOMEqn::sched_solveTransportEqn( const LevelP& level, SchedulerP& sched, int t
   tsk->requires(Task::OldDW, d_fieldLabels->d_sharedState->get_delt_label(), Ghost::None, 0 );
   sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
 }
+
+
 //---------------------------------------------------------------------------
 // Method: Actually solve the transport equation. 
 //---------------------------------------------------------------------------
@@ -586,7 +597,8 @@ DQMOMEqn::solveTransportEqn( const ProcessorGroup* pc,
                              const MaterialSubset* matls, 
                              DataWarehouse* old_dw, 
                              DataWarehouse* new_dw, 
-                             int timeSubStep )
+                             int timeSubStep,
+                             bool copyOldIntoNew )
 {
   //patch loop
   for (int p=0; p < patches->size(); p++){
@@ -667,8 +679,11 @@ DQMOMEqn::solveTransportEqn( const ProcessorGroup* pc,
     //  cout << " --- phi_new = " << phi_at_jp1[IntVector(1,2,3)] << endl;
     //}
     
-    // copy averaged phi into oldphi
-    phi_at_j.copyData(phi_at_jp1); 
+    // copy averaged phi into oldphi, unless it's the last time substep
+    // (in which case we need info for time substep jp1 and j
+    if( copyOldIntoNew ) {
+      phi_at_j.copyData(phi_at_jp1); 
+    }
 
   }
 }
@@ -792,16 +807,15 @@ DQMOMEqn::getUnscaledValues( const ProcessorGroup* pc,
 // Method: schedule clipping
 //---------------------------------------------------------------------------
 void DQMOMEqn::sched_clipPhi( const LevelP& level,
-                         SchedulerP& sched )
+                              SchedulerP& sched )
 {
   string taskname = "DQMOMEqn::clipPhi"; 
 
   Task* tsk = scinew Task(taskname, this, &DQMOMEqn::clipPhi);
 
-  //Ghost::GhostType gn = Ghost::None;
-  //DQMOMEqnFactory& dqmomFactory = DQMOMEqnFactory::self();
-
   tsk->modifies(d_transportVarLabel);
+
+  tsk->requires(Task::NewDW, d_oldtransportVarLabel, Ghost::None, 0);
 
   sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
 }
@@ -815,6 +829,8 @@ void DQMOMEqn::clipPhi( const ProcessorGroup* pc,
 
   for (int p=0; p < patches->size(); p++){
 
+    Ghost::GhostType  gn  = Ghost::None;
+
     const Patch* patch = patches->get(p);
     int archIndex = 0;
     int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
@@ -822,17 +838,45 @@ void DQMOMEqn::clipPhi( const ProcessorGroup* pc,
     CCVariable<double> phi;
     new_dw->getModifiable( phi, d_transportVarLabel, matlIndex, patch );
 
+    constCCVariable<double> old_phi;
+    new_dw->get( old_phi, d_oldtransportVarLabel, matlIndex, patch, gn, 0 );
+
     if( d_doLowClip ) {
+      ////cmr
+      ////cout << "Clipping instances of " << d_transportVarLabel->getName() << " at " << d_lowClip << endl;
+      //if( d_quadNode == 0 ) {
+      //  cout << "ClipPhi for " << d_transportVarLabel->getName() << ": equals " << phi[IntVector(1,1,1)] << endl;
+      //  cout << "ClipPhi for OLD label " << d_oldtransportVarLabel->getName() << ": equals " << old_phi[IntVector(1,1,1)] << endl;
+      //}
+
       for( CellIterator iter = patch->getCellIterator(); !iter.done(); ++iter ) {
-        if( phi[*iter] < d_lowClip ) {
+
+        //cmr
+        IntVector c = *iter;
+
+        // FIXME - correct for scaling constant (in low clip/high clip value)
+        if( phi[*iter] < d_lowClip+TINY || old_phi[*iter] < d_lowClip+TINY ) {
+
+          //cmr
+          if( d_quadNode == 0 && c==IntVector(1,1,1) ) {
+            cout << "Clipping for " << d_transportVarLabel->getName() << ": phi = " << phi[IntVector(1,1,1)] << " and phi_old = " << old_phi[IntVector(1,1,1)] << endl;
+          }
+
           phi[*iter] = d_lowClip;
+        } else {
+
+          //cmr
+          if( d_quadNode == 0 && c == IntVector(1,1,1) ) { 
+            cout << "Not clipping for " << d_transportVarLabel->getName() << ": phi = " << phi[IntVector(1,1,1)] << " and phi_old = " << old_phi[IntVector(1,1,1)] << endl;
+          }
+
         }
       }//end cells
     }//end if low clip
 
     if( d_doHighClip ) {
       for( CellIterator iter = patch->getCellIterator(); !iter.done(); ++iter ) {
-        if( phi[*iter] > d_highClip ) {
+        if( phi[*iter] > d_highClip || old_phi[*iter] > d_highClip ) {
           phi[*iter] = d_highClip;
         }
       }//end cells
@@ -842,36 +886,6 @@ void DQMOMEqn::clipPhi( const ProcessorGroup* pc,
 
 }
 
-
-//---------------------------------------------------------------------------
-// Method: Clip the scalar 
-//---------------------------------------------------------------------------
-/*
-template<class phiType> void
-DQMOMEqn::clipPhi( const Patch* p, 
-                   phiType& phi )
-{
-  // This makes the assumption that phi is cell-centered
-  // if phi is face-centered, we need a different cell iterator type
-
-  if( d_doLowClip ) {
-    for( CellIterator iter = p->getCellIterator(0); !iter.done(); ++iter ) {
-      if( phi[*iter] < d_lowClip ) {
-        phi[*iter] = d_lowClip;
-      }
-    }
-  }
-
-  if( d_doHighClip ) {
-    for( CellIterator iter = p->getCellIterator(0); !iter.done(); ++iter ) {
-      if( phi[*iter] > d_highClip ) {
-        phi[*iter] = d_highClip;
-      }
-    }
-  }
-
-}
-*/
 
 //---------------------------------------------------------------------------
 // Method: Schedule dummy initialization

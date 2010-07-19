@@ -1,4 +1,4 @@
-#include <CCA/Components/Arches/SourceTerms/CoalGasDevol.h>
+#include <CCA/Components/Arches/SourceTerms/DevolMixtureFraction.h>
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqnFactory.h>
 #include <CCA/Components/Arches/CoalModels/CoalModelFactory.h>
 #include <CCA/Components/Arches/TransportEqns/EqnBase.h>
@@ -17,35 +17,36 @@ using namespace Uintah;
 
 //---------------------------------------------------------------------------
 // Builder:
-CoalGasDevolBuilder::CoalGasDevolBuilder(std::string srcName, 
-                                         vector<std::string> reqLabelNames, 
-                                         SimulationStateP& sharedState)
+DevolMixtureFractionBuilder::DevolMixtureFractionBuilder(std::string srcName, 
+                                                         vector<std::string> reqLabelNames, 
+                                                         SimulationStateP& sharedState)
 : SourceTermBuilder(srcName, reqLabelNames, sharedState)
 {}
 
-CoalGasDevolBuilder::~CoalGasDevolBuilder(){}
+DevolMixtureFractionBuilder::~DevolMixtureFractionBuilder(){}
 
 SourceTermBase*
-CoalGasDevolBuilder::build(){
-  return scinew CoalGasDevol( d_srcName, d_sharedState, d_requiredLabels );
+DevolMixtureFractionBuilder::build(){
+  return scinew DevolMixtureFraction( d_srcName, d_sharedState, d_requiredLabels );
 }
 // End Builder
 //---------------------------------------------------------------------------
 
-CoalGasDevol::CoalGasDevol( std::string srcName, SimulationStateP& sharedState,
-                            vector<std::string> reqLabelNames ) 
+DevolMixtureFraction::DevolMixtureFraction( std::string srcName, 
+                                            SimulationStateP& sharedState,
+                                            vector<std::string> reqLabelNames ) 
 : SourceTermBase(srcName, sharedState, reqLabelNames)
 {
   d_srcLabel = VarLabel::create(srcName, CCVariable<double>::getTypeDescription()); 
 }
 
-CoalGasDevol::~CoalGasDevol()
+DevolMixtureFraction::~DevolMixtureFraction()
 {}
 //---------------------------------------------------------------------------
 // Method: Problem Setup
 //---------------------------------------------------------------------------
 void 
-CoalGasDevol::problemSetup(const ProblemSpecP& inputdb)
+DevolMixtureFraction::problemSetup(const ProblemSpecP& inputdb)
 {
 
   ProblemSpecP db = inputdb; 
@@ -57,10 +58,10 @@ CoalGasDevol::problemSetup(const ProblemSpecP& inputdb)
 // Method: Schedule the calculation of the source term 
 //---------------------------------------------------------------------------
 void 
-CoalGasDevol::sched_computeSource( const LevelP& level, SchedulerP& sched, int timeSubStep )
+DevolMixtureFraction::sched_computeSource( const LevelP& level, SchedulerP& sched, int timeSubStep )
 {
-  std::string taskname = "CoalGasDevol::eval";
-  Task* tsk = scinew Task(taskname, this, &CoalGasDevol::computeSource, timeSubStep);
+  std::string taskname = "DevolMixtureFraction::eval";
+  Task* tsk = scinew Task(taskname, this, &DevolMixtureFraction::computeSource, timeSubStep);
 
   if (timeSubStep == 0 && !d_labelSchedInit) {
     // Every source term needs to set this flag after the varLabel is computed. 
@@ -108,12 +109,12 @@ CoalGasDevol::sched_computeSource( const LevelP& level, SchedulerP& sched, int t
 // Method: Actually compute the source term 
 //---------------------------------------------------------------------------
 void
-CoalGasDevol::computeSource( const ProcessorGroup* pc, 
-                             const PatchSubset* patches, 
-                             const MaterialSubset* matls, 
-                             DataWarehouse* old_dw, 
-                             DataWarehouse* new_dw, 
-                             int timeSubStep )
+DevolMixtureFraction::computeSource( const ProcessorGroup* pc, 
+                                     const PatchSubset* patches, 
+                                     const MaterialSubset* matls, 
+                                     DataWarehouse* old_dw, 
+                                     DataWarehouse* new_dw, 
+                                     int timeSubStep )
 {
   //patch loop
   for (int p=0; p < patches->size(); p++){
@@ -181,11 +182,11 @@ CoalGasDevol::computeSource( const ProcessorGroup* pc,
 // Method: Schedule dummy initialization
 //---------------------------------------------------------------------------
 void
-CoalGasDevol::sched_dummyInit( const LevelP& level, SchedulerP& sched )
+DevolMixtureFraction::sched_dummyInit( const LevelP& level, SchedulerP& sched )
 {
-  string taskname = "CoalGasDevol::dummyInit"; 
+  string taskname = "DevolMixtureFraction::dummyInit"; 
 
-  Task* tsk = scinew Task(taskname, this, &CoalGasDevol::dummyInit);
+  Task* tsk = scinew Task(taskname, this, &DevolMixtureFraction::dummyInit);
 
   tsk->computes(d_srcLabel);
 
@@ -197,11 +198,11 @@ CoalGasDevol::sched_dummyInit( const LevelP& level, SchedulerP& sched )
 
 }
 void 
-CoalGasDevol::dummyInit( const ProcessorGroup* pc, 
-                         const PatchSubset* patches, 
-                         const MaterialSubset* matls, 
-                         DataWarehouse* old_dw, 
-                         DataWarehouse* new_dw )
+DevolMixtureFraction::dummyInit( const ProcessorGroup* pc, 
+                                 const PatchSubset* patches, 
+                                 const MaterialSubset* matls, 
+                                 DataWarehouse* old_dw, 
+                                 DataWarehouse* new_dw )
 {
   //patch loop
   for (int p=0; p < patches->size(); p++){

@@ -17,6 +17,7 @@ SRCS += \
   $(SRCDIR)/Devolatilization.cc \
   $(SRCDIR)/KobayashiSarofimDevol.cc \
   $(SRCDIR)/CharOxidation.cc \
+  $(SRCDIR)/GlobalCharOxidation.cc \
   $(SRCDIR)/HeatTransfer.cc \
   $(SRCDIR)/CoalParticleHeatTransfer.cc \
   $(SRCDIR)/DragModel.cc \

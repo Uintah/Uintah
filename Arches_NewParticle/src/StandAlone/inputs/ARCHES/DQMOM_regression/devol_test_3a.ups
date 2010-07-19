@@ -41,7 +41,7 @@
     <save label = "tempIN" />
 
     <!-- EXTRA SCALARS -->
-    <save label = "eta" />
+    <save label = "coal_gas_mix_frac" />
     <save label = "mixture_fraction_2" />
 
     <!-- DQMOM Vars -->
@@ -89,7 +89,7 @@
     <Level>
       <Box label = "1">
         <lower>[0,0,0]</lower>
-        <upper>[1.0,1.0,1.0]</upper>
+        <upper>[0.01,0.01,0.01]</upper>
         <resolution>[8,8,8]</resolution>
         <extraCells>[0,0,0]</extraCells>
         <patches>[1,1,1]</patches>
@@ -141,19 +141,20 @@
           </initialization>
         </Eqn>
 
-        <Eqn label = "eta" type = "CCscalar">
-          <doDiff>false</doDiff>
-          <doConv>false</doConv>
-          <addSources>true</addSources>
-          <conv_scheme>super_bee</conv_scheme>
-          <src label = "eta_source"/>
-          <initialization type="constant">
-            <constant>0.0</constant>
-          </initialization>
+        <Eqn label = "coal_gas_mix_frac" type = "CCscalar">
+            <use_density_guess/>
+            <doDiff>false</doDiff>
+            <doConv>false</doConv>
+            <addSources>true</addSources>
+            <conv_scheme>super_bee</conv_scheme>
+            <src label = "eta_source"/>
+            <initialization type="constant">
+                <constant>0.5</constant>
+            </initialization>
         </Eqn>
 
         <Sources>
-            <src label = "eta_source" type = "CoalGasDevol">
+            <src label = "eta_source" type = "DevolMixtureFraction">
                 <devol_model_name>sarofim</devol_model_name>
             </src>
         </Sources>
@@ -196,9 +197,9 @@
             <doDiff>false</doDiff>
             <doConv>false</doConv>
             <initialization type="constant">
-                <constant>1.0e8</constant>
+                <constant>1.0e4</constant>
             </initialization>
-            <scaling_const>1.0e8</scaling_const>
+            <scaling_const>1.0e4</scaling_const>
         </Weights>
 
         <Ic label="length">
@@ -218,9 +219,9 @@
             <doDiff>false</doDiff>
             <doConv>false</doConv>
             <initialization type="env_constant">
-                <env_constant qn="0" value="30.0e-10"></env_constant>
-                <env_constant qn="1" value="70.0e-10"></env_constant>
-                <env_constant qn="2" value="100.0e-10"></env_constant>
+                <env_constant qn="0"  value="30.0e-15"></env_constant>
+                <env_constant qn="1"  value="70.0e-15"></env_constant>
+                <env_constant qn="2" value="100.0e-15"></env_constant>
             </initialization>
             <scaling_const>1.0e-10</scaling_const>
         </Ic>
@@ -278,8 +279,7 @@
 
         <MixtureFractionSolver>
           <convection_scheme>central-upwind</convection_scheme>
-          <initial_value>0.80</initial_value>
-          <!--src label = "eta_source" /-->
+          <initial_value>0.20</initial_value>
         </MixtureFractionSolver>
 
       </ExplicitSolver>

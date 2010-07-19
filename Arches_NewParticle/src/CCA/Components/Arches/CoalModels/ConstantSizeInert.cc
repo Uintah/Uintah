@@ -328,13 +328,13 @@ ConstantSizeInert::sched_computeModel( const LevelP& level, SchedulerP& sched, i
   std::string taskname = "ConstantSizeInert::computeModel";
   Task* tsk = scinew Task(taskname, this, &ConstantSizeInert::computeModel, timeSubStep );
 
-  d_timeSubStep = timeSubStep; 
-
-  if (d_timeSubStep == 0 && !d_labelSchedInit) {
+  if( timeSubStep == 0 && !d_labelSchedInit) {
     // Every model term needs to set this flag after the varLabel is computed. 
     // transportEqn.cleanUp should reinitialize this flag at the end of the time step. 
     d_labelSchedInit = true;
+  }
 
+  if( timeSubStep == 0 ) {
     tsk->computes(d_modelLabel);
     tsk->computes(d_gasLabel); 
   } else {
@@ -364,19 +364,21 @@ ConstantSizeInert::computeModel( const ProcessorGroup * pc,
     int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
 
     CCVariable<double> constant_size_source;
-    if( new_dw->exists( d_modelLabel, matlIndex, patch ) ) {
-      new_dw->getModifiable( constant_size_source, d_modelLabel, matlIndex, patch ); 
-    } else {
-      new_dw->allocateAndPut( constant_size_source, d_modelLabel, matlIndex, patch );
-    }
-    constant_size_source.initialize(0.0);
-
     CCVariable<double> constant_size_gasSource;
-    if (new_dw->exists( d_gasLabel, matlIndex, patch )){
-      new_dw->getModifiable( constant_size_gasSource, d_gasLabel, matlIndex, patch ); 
-    } else {
+
+    if( timeSubStep == 0 ) {
+
+      new_dw->allocateAndPut( constant_size_source, d_modelLabel, matlIndex, patch );
       new_dw->allocateAndPut( constant_size_gasSource, d_gasLabel, matlIndex, patch ); 
+
+    } else {
+
+      new_dw->getModifiable( constant_size_source, d_modelLabel, matlIndex, patch ); 
+      new_dw->getModifiable( constant_size_gasSource, d_gasLabel, matlIndex, patch ); 
+
     }
+
+    constant_size_source.initialize(0.0);
     constant_size_gasSource.initialize(0.0);
 
     // ConstantSizeInert model does not change particle length

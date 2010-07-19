@@ -41,7 +41,7 @@
     <save label = "tempIN" />
 
     <!-- EXTRA SCALARS -->
-    <save label = "eta" />
+    <save label = "coal_gas_mix_frac" />
     <save label = "mixture_fraction_2" />
 
     <!-- DQMOM Vars -->
@@ -81,7 +81,7 @@
     <save label = "moment_01" />
     <save label = "moment_10" />
 
-    <checkpoint cycle = "2" interval = "5"/>
+    <checkpoint cycle = "2" interval = "5000"/>
     <compression>gzip</compression>
   </DataArchiver>
 
@@ -117,8 +117,8 @@
                 <cv>11.0</cv>
                 <cw>.1</cw>
                 <cp>100</cp>
-                <phi0>0.3</phi0>
                 <esphi0>0.0</esphi0>
+                <useTable />
               </constantMMS>
             </MMS>
 
@@ -141,19 +141,20 @@
           </initialization>
         </Eqn>
 
-        <Eqn label = "eta" type = "CCscalar">
-          <doDiff>false</doDiff>
-          <doConv>false</doConv>
-          <addSources>true</addSources>
-          <conv_scheme>super_bee</conv_scheme>
-          <src label = "eta_source"/>
-          <initialization type="constant">
-            <constant>0.0</constant>
-          </initialization>
+        <Eqn label = "coal_gas_mix_frac" type = "CCscalar">
+            <use_density_guess/>
+            <doDiff>false</doDiff>
+            <doConv>false</doConv>
+            <addSources>true</addSources>
+            <conv_scheme>super_bee</conv_scheme>
+            <src label = "eta_source"/>
+            <initialization type="constant">
+                <constant>0.9</constant>
+            </initialization>
         </Eqn>
 
         <Sources>
-            <src label = "eta_source" type = "CoalGasDevol">
+            <src label = "eta_source" type = "DevolMixtureFraction">
                 <devol_model_name>sarofim</devol_model_name>
             </src>
         </Sources>
@@ -217,8 +218,8 @@
             <doDiff>false</doDiff>
             <doConv>false</doConv>
             <initialization type="env_constant">
-                <env_constant qn="0" value="30.0e-15"></env_constant>
-                <env_constant qn="1" value="70.0e-15"></env_constant>
+                <env_constant qn="0"  value="30.0e-15"></env_constant>
+                <env_constant qn="1"  value="70.0e-15"></env_constant>
                 <env_constant qn="2" value="100.0e-15"></env_constant>
             </initialization>
             <scaling_const>1.0e-10</scaling_const>
