@@ -164,6 +164,11 @@ ImplicitCM::addSharedCRForImplicit(Task* task,
     task->computes(d_lb->pDeformationMeasureLabel_preReloc,     matlset);
     task->computes(d_lb->pVolumeDeformedLabel,                  matlset);
     task->computes(d_lb->pdTdtLabel_preReloc,                   matlset);
+    if(reset){
+      task->requires(Task::OldDW,     d_lb->dispNewLabel,      matlset, gac,1);
+    }else {
+      task->requires(Task::OldDW,     d_lb->gDisplacementLabel,matlset, gac,1);
+    }
   }
   else{
     // For scheduleIterate
@@ -173,11 +178,6 @@ ImplicitCM::addSharedCRForImplicit(Task* task,
     task->requires(Task::OldDW, d_lb->pVolumeLabel,             matlset, gnone);
     task->requires(Task::OldDW, d_lb->pTemperatureLabel,        matlset, gnone);
     task->requires(Task::OldDW, d_lb->pDeformationMeasureLabel, matlset, gnone);
-  }
-  if(reset){
-    task->requires(Task::OldDW,     d_lb->dispNewLabel,      matlset, gac,1);
-  }else {
-    task->requires(Task::OldDW,     d_lb->gDisplacementLabel,matlset, gac,1);
   }
 
 }
