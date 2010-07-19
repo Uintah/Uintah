@@ -392,7 +392,7 @@ CostModelForecaster::finalizeContributions( const GridP currentGrid )
   //update model coefficents
   setCosts(d_x[3], d_x[0], d_x[1], d_x[2]);
   
-  if(d_myworld->myrank()==0)
+  if(d_myworld->myrank()==0 && stats.active())
     cout << "Update: patchCost: " << d_patchCost << " cellCost: " << d_cellCost << " d_extraCellCost: " << d_extraCellCost << " particleCost: " << d_particleCost << endl;
   execTimes.clear();
 }
