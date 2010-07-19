@@ -45,7 +45,7 @@ namespace Uintah {
 //__________________________________
 //  To turn on couts
 //  setenv SCI_DEBUG "SINE_DOING_COUT:+"
-static DebugStream cout_doing("SINE_DOING_COUT", false);
+static DebugStream cout_doing("ICE_BC_CC", false);
 
 /* ______________________________________________________________________
  Function~  read_Sine_BC_inputs--   
@@ -195,7 +195,7 @@ int  set_Sine_Velocity_BC(const Patch* patch,
 {
   int IveSetBC = 0;
   if (var_desc == "Velocity" && bc_kind == "Sine") {
-    cout_doing << "Setting Vel_BC (Sine) on face " << face << endl;
+    cout_doing << "    Vel_CC (Sine) \t\t" <<patch->getFaceName(face)<< endl;
     
     // bulletproofing
     if (!sine_var_basket || !sine_v){
@@ -229,7 +229,7 @@ int  set_Sine_Velocity_BC(const Patch* patch,
  Function~ set_Sine_Temperature_BC--
  Purpose~  Set temperature boundary conditions
 ___________________________________________________________________*/
-int set_Sine_Temperature_BC(const Patch* /*patch*/,
+int set_Sine_Temperature_BC(const Patch* patch,
                             const Patch::FaceType face,
                             CCVariable<double>& temp_CC,
                             Iterator& bound_ptr,
@@ -239,7 +239,7 @@ int set_Sine_Temperature_BC(const Patch* /*patch*/,
 {
   int IveSetBC = 0;
   if (bc_kind == "Sine") {
-    cout_doing << "Setting Temp_CC (Sine) on face " <<face<< endl;
+    cout_doing << "    Temp_CC (Sine) \t\t" <<patch->getFaceName(face)<< endl;
 
     // bulletproofing
     if (!sine_var_basket || !sine_v){
@@ -250,7 +250,7 @@ int set_Sine_Temperature_BC(const Patch* /*patch*/,
     constCCVariable<double> press_CC = sine_v->press_CC;
     constCCVariable<double> rho_CC   = sine_v->rho_CC;
                                                                             
-    for (bound_ptr.reset(); bound_ptr.done(); bound_ptr++) {  
+    for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {  
       IntVector c = *bound_ptr;                                             
       temp_CC[c]= press_CC[c]/((gamma - 1.0) * cv * rho_CC[c]);
     }
@@ -272,7 +272,7 @@ int set_Sine_press_BC(const Patch* patch,
                       sine_variable_basket* sine_var_basket,
                       sine_vars* sine_v)  
 {
-  cout_doing << "Setting press_CC (Sine) on face " <<face<< endl;
+  cout_doing << "    press_CC (Sine) \t\t" <<patch->getFaceName(face)<< endl;
 
   // bulletproofing
   if (!sine_var_basket || !sine_v){
@@ -289,7 +289,7 @@ int set_Sine_press_BC(const Patch* patch,
 
   for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {  
     IntVector c = *bound_ptr;                                    
-    press_CC[c] = p_ref + change;                 
+    press_CC[c] = p_ref + change;           
   }
   IveSetBC = 1;
   return IveSetBC;                                                  
