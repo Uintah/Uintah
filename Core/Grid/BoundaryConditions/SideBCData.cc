@@ -34,12 +34,15 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Grid/Variables/NodeIterator.h>
 #include <Core/Grid/BoundaryConditions/BoundCondFactory.h>
+#include <Core/Util/DebugStream.h>
 #include <Core/Malloc/Allocator.h>
 #include <iostream>
 
 using namespace SCIRun;
 using namespace Uintah;
 
+// export SCI_DEBUG="BC_dbg:+"
+static DebugStream BC_dbg("BC_dbg",false);
 
 SideBCData::SideBCData() 
 {
@@ -91,7 +94,7 @@ bool SideBCData::inside(const Point &p) const
 
 void SideBCData::print()
 {
-  //cout << "Geometry type = " << typeid(this).name() << endl;
+  BC_dbg << "Geometry type = " << typeid(this).name() << endl;
   d_bc.print();
 }
 
