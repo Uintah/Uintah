@@ -133,7 +133,7 @@ void flameSheet_rxn::problemSetup(GridP&, SimulationStateP& in_state,
   d_scalar->sum_scalar_fLabel     =  VarLabel::create("sum_scalar_f", 
                                             sum_vartype::getTypeDescription());
                                             
-  setup->registerTransportedVariable(d_matl_set->getSubset(0),
+  setup->registerTransportedVariable(d_matl_set,
                                     d_scalar->scalar_CCLabel,
                                     d_scalar->scalar_source_CCLabel);
 

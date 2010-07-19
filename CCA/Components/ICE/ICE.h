@@ -1024,6 +1024,7 @@ namespace Uintah {
       
       struct TransportedVariable {
        const MaterialSubset* matls;
+       const MaterialSet* matlSet;
        const VarLabel* var;
        const VarLabel* src;
        const VarLabel* var_Lagrangian;
@@ -1031,6 +1032,7 @@ namespace Uintah {
       };
       struct AMR_refluxVariable {
        const MaterialSubset* matls;
+       const MaterialSet* matlSet;
        const VarLabel* var;
        const VarLabel* var_adv;
        const VarLabel* var_X_FC_flux;
@@ -1046,11 +1048,11 @@ namespace Uintah {
       public:
        ICEModelSetup();
        virtual ~ICEModelSetup();
-       virtual void registerTransportedVariable(const MaterialSubset* matls,
+       virtual void registerTransportedVariable(const MaterialSet* matlSet,
                                            const VarLabel* var,
                                            const VarLabel* src);
                                            
-       virtual void registerAMR_RefluxVariable(const MaterialSubset* matls,
+       virtual void registerAMR_RefluxVariable(const MaterialSet* matls,
 						     const VarLabel* var);  
                                                                                         
        std::vector<TransportedVariable*> tvars;

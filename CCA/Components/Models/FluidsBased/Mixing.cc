@@ -158,7 +158,7 @@ void Mixing::problemSetup(GridP&, SimulationStateP& sharedState,
       throw ProblemSetupException("Variable: "+stream->name+" does not have any initial value regions",
                                   __FILE__, __LINE__);
 
-    setup->registerTransportedVariable(mymatls->getSubset(0),
+    setup->registerTransportedVariable(mymatls,
                                        stream->massFraction_CCLabel,
                                        stream->massFraction_source_CCLabel);
     streams.push_back(stream);

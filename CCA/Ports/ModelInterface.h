@@ -82,11 +82,11 @@ WARNING
   class VarLabel;
   class ModelSetup {
     public:
-    virtual void registerTransportedVariable(const MaterialSubset* matls,
+    virtual void registerTransportedVariable(const MaterialSet* matlSet,
 					     const VarLabel* var,
 					     const VarLabel* src) = 0;
                                         
-    virtual void registerAMR_RefluxVariable(const MaterialSubset* matls,
+    virtual void registerAMR_RefluxVariable(const MaterialSet* matlSet,
 					         const VarLabel* var) = 0;
 
     virtual ~ModelSetup() {};

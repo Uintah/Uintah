@@ -143,7 +143,7 @@ void SimpleRxn::problemSetup(GridP&, SimulationStateP& in_state,
   
   d_modelComputesThermoTransportProps = true;
   
-  setup->registerTransportedVariable(d_matl_set->getSubset(0),
+  setup->registerTransportedVariable(d_matl_set,
                                      d_scalar->scalar_CCLabel,
                                      d_scalar->scalar_source_CCLabel);  
   //__________________________________
