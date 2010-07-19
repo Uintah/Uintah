@@ -625,6 +625,7 @@ void DDT1::computeModelSources(const ProcessorGroup*,
           
           /* test whether the current cell satisfies burning criteria */
           bool   burning = 0;
+          bool   detonatingLocalTo = 0;
           double maxProductVolFrac  = -1.0;
           double maxReactantVolFrac = -1.0;
           double productPress = 0.0;
@@ -660,12 +661,18 @@ void DDT1::computeModelSources(const ProcessorGroup*,
                                   }
                               }
                           }//endif
+
+                          // Detect detonation within one cell
+                          if( press_CC[cell] > d_threshold_press_JWL ) {
+                              detonatingLocalTo = 1;
+                          } // endif
                           
                       }//end 3rd for
                   }//end 2nd for
               }//end 1st for
           }//endif
-          if((burning == 1 && productPress >= d_thresholdPress_SB) || (crackedEnough[c])){
+          if((burning == 1 && productPress >= d_thresholdPress_SB) || 
+             (crackedEnough[c] && !detonatingLocalTo)){
               burningCell[c]=1.0;
               
               Vector rhoGradVector = computeDensityGradientVector(nodeIdx,
