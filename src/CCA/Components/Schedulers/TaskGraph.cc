@@ -656,7 +656,8 @@ TaskGraph::createDetailedTasks( bool useInternalDeps, DetailedTasks* first,
 
   TAU_PROFILE_START(dttimer);
 
-  dts_ = scinew DetailedTasks(sc, d_myworld, first, this, lb->getNeighborhoodProcessors(), useInternalDeps );
+  const set<int> neighborhood_procs=lb->getNeighborhoodProcessors();
+  dts_ = scinew DetailedTasks(sc, d_myworld, first, this, neighborhood_procs, useInternalDeps );
   
   for(int i=0;i<(int)sorted_tasks.size();i++){
   
@@ -667,13 +668,16 @@ TaskGraph::createDetailedTasks( bool useInternalDeps, DetailedTasks* first,
       //only create OncePerProc tasks and output tasks once on each processor.
       if(task->getType()==Task::OncePerProc)
       {
-        //use this processors patch subset
-        const PatchSubset* pss = ps->getSubset(d_myworld->myrank());
+        //only schedule this task on processors in the the neighborhood
+        for(set<int>::iterator p=neighborhood_procs.begin();p!=neighborhood_procs.end();p++)
         {
-          for(int m=0;m<ms->size();m++)
+          const PatchSubset* pss = ps->getSubset(*p);
           {
-            const MaterialSubset* mss = ms->getSubset(m);
-            createDetailedTask(task, pss, mss);
+            for(int m=0;m<ms->size();m++)
+            {
+              const MaterialSubset* mss = ms->getSubset(m);
+              createDetailedTask(task, pss, mss);
+            }
           }
         }
       }
