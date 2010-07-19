@@ -63,7 +63,6 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Util/DebugStream.h>
 
 using namespace Uintah;
-using namespace SCIRun;
 using namespace std;
 //__________________________________
 //  To turn on normal output
@@ -2010,7 +2009,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
     //   Don't set Lodi bcs, we already compute Press
     //   in all the extra cells.
     // - make copy of press for implicit calc.
-    preprocess_CustomBCs("EqPressMPMICE",old_dw, new_dw, Ilb, patch, 999,
+    preprocess_CustomBCs("EqPress",old_dw, new_dw, Ilb, patch, 999,
                           d_ice->d_customBC_var_basket);
     
     setBC(press_new,   rho_micro, placeHolder,d_ice->d_surroundingMatl_indx,
