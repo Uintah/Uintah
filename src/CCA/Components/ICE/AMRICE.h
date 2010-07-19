@@ -94,14 +94,15 @@ namespace Uintah {
                                     int matl, 
                                     double factor);
                                   
-//    using ICE::addRefineDependencies;
-    void addRefineDependencies(Task* task, 
-                               const VarLabel* var,
-                               Task::DomainSpec DS,
-                               const MaterialSubset* matls,
-                               bool needCoarseOld, 
-                               bool needCoarseNew);
-                               
+    void scheduleRefineInterface_Variable(const LevelP& fineLevel,  
+                                          SchedulerP& sched,        
+                                          const VarLabel* var,      
+                                          Task::DomainSpec DS,      
+                                          const MaterialSet* matls, 
+                                          bool needCoarseOld,       
+                                          bool needCoarseNew);      
+
+                              
     template<class T>
     void refluxOperator_computeCorrectionFluxes( 
                               const string& fineVarLabel,
@@ -152,12 +153,14 @@ namespace Uintah {
                                      DataWarehouse* fine_new_dw,
                                      DataWarehouse* coarse_old_dw,
                                      DataWarehouse* coarse_new_dw);
-                    
+            
+    template<class T>                
     void refineCoarseFineInterface(const ProcessorGroup*,
                                    const PatchSubset* patches,
                                    const MaterialSubset* matls,
                                    DataWarehouse*, 
-                                   DataWarehouse* new_dw);
+                                   DataWarehouse* new_dw,
+                                   const VarLabel* variable);
 
     void scheduleSetBC_FineLevel(const PatchSet* patches,
                                  SchedulerP& scheduler);
