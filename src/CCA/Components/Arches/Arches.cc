@@ -355,6 +355,8 @@ Arches::problemSetup(const ProblemSpecP& params,
   
   d_props->problemSetup(db);
 
+  coalFactory.setTabPropsInterface( d_props->getMixingRxnModel() );
+
   // read boundary condition information 
   d_boundaryCondition = scinew BoundaryCondition(d_lab, d_MAlab, d_physicalConsts,
                                                  d_props, d_calcReactingScalar,

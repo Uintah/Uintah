@@ -65,7 +65,7 @@ Devolatilization::problemSetup(const ProblemSpecP& params)
   DQMOMEqn& weight_eqn = dynamic_cast<DQMOMEqn&>(t_weight_eqn);
 
   d_w_small = weight_eqn.getSmallClip();
-  d_w_scaling_factor = weight_eqn.getScalingConstant();
+  d_w_scaling_constant = weight_eqn.getScalingConstant();
   d_weight_label = weight_eqn.getTransportEqnLabel();
 }
 

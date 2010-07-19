@@ -5,14 +5,14 @@
 <Uintah_specification>
   
     <Meta>
-      <title>DQMOM Coal Devolatilization Test 6a - Gas Temp from Table (T~900 K), With Mix Frac Src, Tparticle != Tgas, With Convection (Bala Model) (3 IC, 3 Env, Optimized Solver)</title>
+      <title>DQMOM Coal Char Test 3a - Char Production (Devolatilization), Char Oxidation, One Coal MixFrac, One Coal MixFrac Source Term, Scalar Gas Temp = 400 K, Tparticle = Tgas, No Convection (3 IC, 3 Env, Optimized Solver)</title>
     </Meta>
 
     <SimulationComponent type="arches" />
 
     <Time>
       <maxTime>5.0</maxTime>
-      <max_Timesteps>100</max_Timesteps>
+      <max_Timesteps>10</max_Timesteps>
       <initTime>0.0</initTime>
       <delt_min>0.00001</delt_min>
       <delt_max>5</delt_max>
@@ -20,8 +20,8 @@
     </Time>
 
     <DataArchiver>
-        <filebase>uda_devol_test_6a.uda</filebase>
-        <outputTimestepInterval>10</outputTimestepInterval>
+        <filebase>uda_char_test_3a.uda</filebase>
+        <outputTimestepInterval>1</outputTimestepInterval>
         <outputInitTimestep />
 
         <save label = "totalKineticEnergy"/>
@@ -43,6 +43,12 @@
         <!-- EXTRA SCALARS -->
         <save label = "coal_gas_mix_frac" />
         <save label = "mixture_fraction_2" />
+        <save label = "gasTemp" />
+
+        <!--
+        <save label = "eta_source" />
+        -->
+        <save label = "charox_source" />
 
         <!-- DQMOM Vars -->
         <save label = "w_qn0"/>
@@ -69,29 +75,31 @@
         <save label = "RCmass_qn1_src"/>
         <save label = "RCmass_qn2_src"/>
 
-        <save label = "Tp_qn0"/>
-        <save label = "Tp_qn1"/>
-        <save label = "Tp_qn2"/>
+        <save label = "CharMass_qn0"/>
+        <save label = "CharMass_qn1"/>
+        <save label = "CharMass_qn2"/>
 
-        <save label = "Tp_qn0_src"/>
-        <save label = "Tp_qn1_src"/>
-        <save label = "Tp_qn2_src"/>
+        <save label = "CharMass_qn0_src"/>
+        <save label = "CharMass_qn1_src"/>
+        <save label = "CharMass_qn2_src"/>
 
+        <save label = "charox_qn0" />
+        <save label = "charox_qn1" />
+        <save label = "charox_qn2" />
+
+        <!--
         <save label = "sarofim_qn0" />
         <save label = "sarofim_qn1" />
         <save label = "sarofim_qn2" />
 
-        <save label = "bala_qn0" />
-        <save label = "bala_qn1" />
-        <save label = "bala_qn2" />
-
-        <save label = "vel_qn0" />
-        <save label = "vel_qn1" />
-        <save label = "vel_qn2" />
+        <save label = "sarofim_qn0_char" />
+        <save label = "sarofim_qn1_char" />
+        <save label = "sarofim_qn2_char" />
 
         <save label = "sarofim_qn0_gasSource" />
         <save label = "sarofim_qn1_gasSource" />
         <save label = "sarofim_qn2_gasSource" />
+        -->
 
         <checkpoint cycle = "2" interval = "5"/>
         <compression>gzip</compression>
@@ -129,8 +137,8 @@
                     <cv>11.0</cv>
                     <cw>.1</cw>
                     <cp>100</cp>
+                    <phi0>0.3</phi0>
                     <esphi0>0.0</esphi0>
-                    <useTable />
                 </constantMMS>
             </MMS>
 
@@ -143,7 +151,6 @@
             <TransportEqns>
 
                 <Eqn label="mixture_fraction_2" type = "CCscalar">
-                    <!-- diffusive scalar -->
                     <doDiff>true</doDiff>
                     <doConv>true</doConv>
                     <conv_scheme>super_bee</conv_scheme>
@@ -153,22 +160,44 @@
                     </initialization>
                 </Eqn>
 
+                <Eqn label="gasTemp" type="CCscalar">
+                    <doDiff>false</doDiff>
+                    <doConv>false</doConv>
+                    <initialization type="constant">
+                        <constant>400</constant>
+                    </initialization>
+                </Eqn>
+                    
+
                 <Eqn label = "coal_gas_mix_frac" type = "CCscalar">
-                    <use_density_guess/>
                     <doDiff>false</doDiff>
                     <doConv>false</doConv>
                     <addSources>true</addSources>
+                    <use_density_guess/>
                     <conv_scheme>super_bee</conv_scheme>
+                    <!--
                     <src label = "eta_source"/>
+                    -->
                     <initialization type="constant">
-                        <constant>0.5</constant>
+                        <constant>0.0</constant>
                     </initialization>
                 </Eqn>
 
                 <Sources>
-                    <src label = "eta_source" type = "DevolMixtureFraction">
-                        <devol_model_name>sarofim</devol_model_name>
+
+                     <!--
+                     <src label = "eta_source" type = "DevolMixtureFraction"> 
+                         <devol_model_name>sarofim</devol_model_name>
+                     </src>
+                     -->
+
+                    <src label = "charox_source" type = "CharOxidationMixtureFraction">
+                        <char_model_name>charox</char_model_name>
+                        <oxidizer><species>O2</species></oxidizer>
+                        <oxidizer><species>CO2</species></oxidizer>
+                        <oxidizer><species>H2O</species></oxidizer>
                     </src>
+                    
                 </Sources>
                         
             </TransportEqns>
@@ -196,34 +225,33 @@
 
                 <Models>
 
+                    <!--
                     <model label="sarofim" type="KobayashiSarofimDevol">
                         <ICVars>
-                            <variable label="RCmass" role="raw_coal_mass" />
-                            <variable label="Tp" role="particle_temperature" />
+                            <variable label="RCmass"   role="raw_coal_mass" />
+                            <variable label="CharMass" role="char_mass" />
                         </ICVars>
+                        <scalarVars>
+                            <variable label="gasTemp" role="gas_temperature" />
+                        </scalarVars>
                     </model>
+                    -->
 
-                    <model label="heat" type="CoalParticleHeatTransfer">
-                        <ICVars>
-                            <variable label="RCmass" role="raw_coal_mass" />
-                            <variable label="Tp" role="particle_temperature" />
-                            <variable label="length" role="particle_length" />
-                        </ICVars>
-                    </model>
-
-                    <model label="bala" type="Balachandar">
+                    <model label="charox" type="GlobalCharOxidation">
                         <ICVars>
                             <variable label="length" role="particle_length" />
+                            <variable label="CharMass" role="char_mass" />
                         </ICVars>
-                        <L>.2</L>
-                        <eta>1.0e-2</eta>
-                        <regime>2</regime>
+                        <scalarVars>
+                            <variable label="gasTemp" role="gas_temperature" />
+                        </scalarVars>
                     </model>
 
                     <model label="my_density" type="ConstantDensityCoal">
                         <ICVars>
                             <variable label="length" role="particle_length" />
                             <variable label="RCmass" role="raw_coal_mass" />
+                            <variable label="CharMass" role="char_mass" />
                         </ICVars>
                     </model>
 
@@ -257,22 +285,22 @@
                     <doDiff>false</doDiff>
                     <doConv>false</doConv>
                     <initialization type="env_constant">
-                        <env_constant qn="0"  value="30.0e-13"></env_constant>
-                        <env_constant qn="1"  value="70.0e-13"></env_constant>
-                        <env_constant qn="2" value="100.0e-13"></env_constant>
+                        <env_constant qn="0"  value="30.0e-11"></env_constant>
+                        <env_constant qn="1"  value="70.0e-11"></env_constant>
+                        <env_constant qn="2" value="100.0e-11"></env_constant>
                     </initialization>
                     <scaling_const>1.0e-10</scaling_const>
                 </Ic> 
 
 
-                <Ic label="Tp">
+                <Ic label="CharMass">
                     <!-- l [=] m -->
                     <doDiff>false</doDiff>
                     <doConv>true</doConv>
                     <initialization type="env_constant">
-                        <env_constant qn="0" value="1000"></env_constant>
-                        <env_constant qn="1" value="1100"></env_constant>
-                        <env_constant qn="2" value="1200"></env_constant>
+                        <env_constant qn="0" value="1.0e-15"></env_constant>
+                        <env_constant qn="1" value="1.1e-15"></env_constant>
+                        <env_constant qn="2" value="1.2e-15"></env_constant>
                     </initialization>
                     <scaling_const>1.0</scaling_const>
                 </Ic>
@@ -335,7 +363,9 @@
               <MixtureFractionSolver>
                 <convection_scheme>central-upwind</convection_scheme>
                 <initial_value>0.90</initial_value>
+                <!--
                 <src label = "eta_source" />
+                -->
               </MixtureFractionSolver>
 
             </ExplicitSolver>

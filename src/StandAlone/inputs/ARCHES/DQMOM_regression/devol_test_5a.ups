@@ -12,7 +12,7 @@
 
   <Time>
     <maxTime>5.0</maxTime>
-    <max_Timesteps>10</max_Timesteps>
+    <max_Timesteps>100</max_Timesteps>
     <initTime>0.0</initTime>
     <delt_min>0.00001</delt_min>
     <delt_max>5</delt_max>
@@ -21,7 +21,7 @@
 
   <DataArchiver>
     <filebase>uda_devol_test_5a.uda</filebase>
-    <outputTimestepInterval>1</outputTimestepInterval>
+    <outputTimestepInterval>10</outputTimestepInterval>
     <outputInitTimestep />
 
     <save label = "totalKineticEnergy"/>
@@ -41,7 +41,7 @@
     <save label = "tempIN" />
 
     <!-- EXTRA SCALARS -->
-    <save label = "eta" />
+    <save label = "coal_gas_mix_frac" />
     <save label = "mixture_fraction_2" />
 
     <!-- DQMOM Vars -->
@@ -84,6 +84,11 @@
     <save label = "sarofim_qn0_gasSource" />
     <save label = "sarofim_qn1_gasSource" />
     <save label = "sarofim_qn2_gasSource" />
+
+    <save label = "moment_000" />
+    <save label = "moment_001" />
+    <save label = "moment_010" />
+    <save label = "moment_100" />
 
     <checkpoint cycle = "2" interval = "5"/>
     <compression>gzip</compression>
@@ -145,19 +150,20 @@
           </initialization>
         </Eqn>
 
-        <Eqn label = "eta" type = "CCscalar">
-          <doDiff>false</doDiff>
-          <doConv>false</doConv>
-          <addSources>true</addSources>
-          <conv_scheme>super_bee</conv_scheme>
-          <src label = "eta_source"/>
-          <initialization type="constant">
-            <constant>0.0</constant>
-          </initialization>
+        <Eqn label = "coal_gas_mix_frac" type = "CCscalar">
+            <use_density_guess/>
+            <doDiff>false</doDiff>
+            <doConv>false</doConv>
+            <addSources>true</addSources>
+            <conv_scheme>super_bee</conv_scheme>
+            <src label = "eta_source"/>
+            <initialization type="constant">
+                <constant>0.5</constant>
+            </initialization>
         </Eqn>
 
         <Sources>
-            <src label = "eta_source" type = "CoalGasDevol">
+            <src label = "eta_source" type = "DevolMixtureFraction">
                 <devol_model_name>sarofim</devol_model_name>
             </src>
         </Sources>
@@ -186,12 +192,22 @@
         </LinearSolver>
 
         <Models>
+
             <model label="sarofim" type="KobayashiSarofimDevol">
                 <ICVars>
                     <variable label="RCmass" role="raw_coal_mass" />
                     <variable label="Tp" role="particle_temperature" />
                 </ICVars>
             </model>
+
+            <model label="heat" type="CoalParticleHeatTransfer">
+                <ICVars>
+                    <variable label="RCmass" role="raw_coal_mass" />
+                    <variable label="Tp" role="particle_temperature" />
+                    <variable label="length" role="particle_length" />
+                </ICVars>
+            </model>
+
         </Models>
 
         <Weights>
@@ -221,9 +237,9 @@
             <doDiff>false</doDiff>
             <doConv>false</doConv>
             <initialization type="env_constant">
-                <env_constant qn="0" value="30.0e-15"></env_constant>
-                <env_constant qn="1" value="70.0e-15"></env_constant>
-                <env_constant qn="2" value="100.0e-15"></env_constant>
+                <env_constant qn="0"  value="30.0e-13"></env_constant>
+                <env_constant qn="1"  value="70.0e-13"></env_constant>
+                <env_constant qn="2" value="100.0e-13"></env_constant>
             </initialization>
             <scaling_const>1.0e-10</scaling_const>
         </Ic> 
@@ -234,9 +250,9 @@
             <doDiff>false</doDiff>
             <doConv>true</doConv>
             <initialization type="env_constant">
-                <env_constant qn="0" value="300"></env_constant>
-                <env_constant qn="1" value="330"></env_constant>
-                <env_constant qn="2" value="350"></env_constant>
+                <env_constant qn="0" value="1000"></env_constant>
+                <env_constant qn="1" value="1100"></env_constant>
+                <env_constant qn="2" value="1200"></env_constant>
             </initialization>
             <scaling_const>1.0</scaling_const>
         </Ic>
@@ -298,8 +314,7 @@
 
         <MixtureFractionSolver>
           <convection_scheme>central-upwind</convection_scheme>
-          <initial_value>0.90</initial_value>
-          <src label = "eta_source" />
+          <initial_value>0.00</initial_value>
         </MixtureFractionSolver>
 
       </ExplicitSolver>

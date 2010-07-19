@@ -189,24 +189,7 @@ void ScalarEqn::cleanUp( const ProcessorGroup* pc,
 
   }
 }
-//---------------------------------------------------------------------------
-// Method: Schedule the evaluation of the transport equation. 
-//---------------------------------------------------------------------------
-void
-ScalarEqn::sched_evalTransportEqn( const LevelP& level, 
-                                   SchedulerP& sched, int timeSubStep )
-{
 
-  if (timeSubStep == 0)
-    sched_initializeVariables( level, sched );
-
-  if (d_addSources) 
-    sched_computeSources( level, sched, timeSubStep ); 
-
-  sched_buildTransportEqn( level, sched, timeSubStep );
-
-  sched_solveTransportEqn( level, sched, timeSubStep );
-}
 //---------------------------------------------------------------------------
 // Method: Schedule the intialization of the variables. 
 //---------------------------------------------------------------------------
@@ -437,11 +420,14 @@ ScalarEqn::buildTransportEqn( const ProcessorGroup* pc,
 // Method: Schedule solve the transport equation. 
 //---------------------------------------------------------------------------
 void
-ScalarEqn::sched_solveTransportEqn( const LevelP& level, SchedulerP& sched, int timeSubStep )
+ScalarEqn::sched_solveTransportEqn( const LevelP& level,
+                                    SchedulerP& sched, 
+                                    int timeSubStep, 
+                                    bool copyOldIntoNew )
 {
   string taskname = "ScalarEqn::solveTransportEqn";
 
-  Task* tsk = scinew Task(taskname, this, &ScalarEqn::solveTransportEqn, timeSubStep);
+  Task* tsk = scinew Task(taskname, this, &ScalarEqn::solveTransportEqn, timeSubStep, copyOldIntoNew);
 
   //New
   tsk->modifies(d_transportVarLabel);
@@ -471,7 +457,8 @@ ScalarEqn::solveTransportEqn( const ProcessorGroup* pc,
                               const MaterialSubset* matls, 
                               DataWarehouse* old_dw, 
                               DataWarehouse* new_dw,
-                              int timeSubStep )
+                              int timeSubStep,
+                              bool copyOldIntoNew )
 {
   //patch loop
   for (int p=0; p < patches->size(); p++){
@@ -519,24 +506,23 @@ ScalarEqn::solveTransportEqn( const ProcessorGroup* pc,
     double factor = d_timeIntegrator->time_factor[timeSubStep]; 
     curr_ssp_time = curr_time + factor * dt;
 
-    // ----RK AVERAGING
-    //     to get the time averaged phi^{time averaged}
-    //     See: Gettlieb et al., SIAM Review, vol 43, No 1, pp 89-112
-    //          Strong Stability-Preserving High-Order Time Discretization Methods
-    //     Here, for convenience we assign the time averaged phi to phi_at_jp1 so:
-    //     phi^{j+1} = alpha*(phi^{n}) + beta*(phi^{j+1})
-    //
+    /// For the RK Averaging procedure, computing the time averaged phi^{time averaged}.
+    /// Here, for convenience we assign the time averaged phi to phi_at_jp1, so:
+    /// phi^{j+1} = alpha*(phi^{n}) + beta*(phi^{j+1})
+    /// @seealso 
+    /// Sigal Gottlieb, Chi-Wang Shu and Eitan Tadmor
+    /// SIAM Review, Vol. 43, No. 1 (Mar., 2001), pp. 89-112 
+    ///
     d_timeIntegrator->timeAvePhi( patch, phi_at_jp1, rk1_phi, timeSubStep, curr_ssp_time ); 
 
     //----BOUNDARY CONDITIONS
     //    must update BCs for next substep
     computeBCs( patch, d_eqnName, phi_at_jp1 );
 
-    if (d_doClipping) 
-      clipPhi( patch, phi_at_jp1 ); 
-    
     //----COPY averaged phi into oldphi
-    phi_at_j.copyData(phi_at_jp1); 
+    if( copyOldIntoNew ) {
+      phi_at_j.copyData(phi_at_jp1); 
+    }
 
   }
 }
@@ -551,29 +537,63 @@ ScalarEqn::computeBCs( const Patch* patch,
 {
   d_boundaryCond->setScalarValueBC( 0, patch, phi, varName ); 
 }
+
+
 //---------------------------------------------------------------------------
-// Method: Clip the scalar 
+// Method: schedule clipping
 //---------------------------------------------------------------------------
-template<class phiType> void
-ScalarEqn::clipPhi( const Patch* p, 
-                       phiType& phi )
+void ScalarEqn::sched_clipPhi( const LevelP& level,
+                               SchedulerP& sched )
 {
-  // probably should put these "if"s outside the loop   
-  for (CellIterator iter=p->getCellIterator(0); !iter.done(); iter++){
+  string taskname = "ScalarEqn::clipPhi"; 
 
-    IntVector c = *iter; 
+  Task* tsk = scinew Task(taskname, this, &ScalarEqn::clipPhi);
 
-    if (d_doLowClip) {
-      if (phi[c] < d_lowClip) 
-        phi[c] = d_lowClip; 
-    }
+  tsk->modifies(d_transportVarLabel);
+  tsk->requires(Task::NewDW, d_oldtransportVarLabel, Ghost::None, 0);
 
-    if (d_doHighClip) { 
-      if (phi[c] > d_highClip) 
-        phi[c] = d_highClip; 
-    } 
-  }
+  sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
 }
+
+void ScalarEqn::clipPhi( const ProcessorGroup* pc,
+                         const PatchSubset* patches,
+                         const MaterialSubset* matls,
+                         DataWarehouse* old_dw,
+                         DataWarehouse* new_dw )
+{
+
+  for (int p=0; p < patches->size(); p++){
+
+    const Patch* patch = patches->get(p);
+    int archIndex = 0;
+    int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+
+    CCVariable<double> phi;
+    new_dw->getModifiable( phi, d_transportVarLabel, matlIndex, patch );
+
+    constCCVariable<double> old_phi;
+    new_dw->get( old_phi, d_oldtransportVarLabel, matlIndex, patch, Ghost::None, 0 );
+
+    if( d_doLowClip ) {
+      for( CellIterator iter = patch->getCellIterator(); !iter.done(); ++iter ) {
+        if( phi[*iter] < d_lowClip || old_phi[*iter] < d_lowClip ) {
+          phi[*iter] = d_lowClip;
+        }
+      }//end cells
+    }//end if low clip
+
+    if( d_doHighClip ) {
+      for( CellIterator iter = patch->getCellIterator(); !iter.done(); ++iter ) {
+        if( phi[*iter] > d_highClip || old_phi[*iter] > d_highClip) {
+          phi[*iter] = d_highClip;
+        }
+      }//end cells
+    }//end if high clip
+
+  }//end patches
+
+}
+
 
 //---------------------------------------------------------------------------
 // Method: Schedule dummy initialization

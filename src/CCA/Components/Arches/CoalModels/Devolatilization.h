@@ -82,11 +82,11 @@ protected:
   const VarLabel* d_gas_temperature_label;      ///< Variable label for gas temperature internal coordinate    
   const VarLabel* d_weight_label;               ///< Variable label for weight internal coordinate 
 
-  double d_rc_scaling_factor;                   ///< Scaling factor for raw coal internal coordinate
-  double d_char_scaling_factor;                 ///< Scaling factor for char mass internal coordinate
-  double d_pt_scaling_factor;                   ///< Scaling factor for particle temperature internal coordinate
+  double d_rc_scaling_constant;                   ///< Scaling factor for raw coal internal coordinate
+  double d_char_scaling_constant;                 ///< Scaling factor for char mass internal coordinate
+  double d_pt_scaling_constant;                   ///< Scaling factor for particle temperature internal coordinate
 
-  double d_w_scaling_factor;                    ///< Scaling factor for weight
+  double d_w_scaling_constant;                    ///< Scaling factor for weight
   double d_w_small;                             ///< "small" clip value for weights (model is not calculated if weight value is < d_w_small)
 
 }; // end Devolatilization

@@ -33,67 +33,92 @@ DEALINGS IN THE SOFTWARE.
 #ifndef Uintah_Component_Arches_TabPropsInterface_h
 #define Uintah_Component_Arches_TabPropsInterface_h
 
-// includes for Arches
 #include <tabprops/StateTable.h>
 #include <CCA/Components/Arches/Mixing/InletStream.h>
 #include <CCA/Components/Arches/Mixing/Stream.h>
 #include <CCA/Components/Arches/ArchesMaterial.h>
 #include <CCA/Components/Arches/TimeIntegratorLabel.h>
+#include <Core/Util/DebugStream.h>
+#include <CCA/Components/Arches/ChemMix/MixingRxnModel.h>
 
 
 /**
  * @class  TabPropsInterface
- * @author Charles Reid
- * @date   Nov 11, 2008
+ * @author Jeremy Thornock, Charles Reid
+ * @date   May 2009
  *
  * @brief Table interface for those created with TabProps.
  *
-    Dependent variables are B-Splined, and spline coefficients are put into an
-    HDF5 formated file.  This class creates a TabProps StateTable object,
-    reads datafrom a table into the StateTable object, and can query the
-    StateTable object for the value of a dependent variable given values
-    for independent variables, as well as return names for independent
-    and dependent variables, and verify tables by checking the names of
-    the dependent variables requested by the user in the input file to
-    dependent variables tabulated in the table. Functionality will also be
-    added to utilize the StateTable functions to convert the table data to
-    a matlab file to easily investigate the results of the table creation.
+ * @todo
+ * Add support for multiple scalar variance
+ *
+ * @details
+ * This class provides and interface to TabProps formatted tables.  See the
+ * TabProps project here: 
+ * https://software.crsim.utah.edu/trac/wiki/TabProps
+ * to get more information regarding TabProps and the its tabluar format.  
+ 
+This code checks for the following tags/attributes in the input file:
+The UPS interface for TabProps is: 
 
+\code
+    <Properties>
+        <TabProps>
+            <inputfile>REQUIRED STRING</inputfile>
+            <hl_pressure>OPTIONAL DOUBLE</hl_pressure> 
+            <hl_outlet>OPTIONAL DOUBLE</hl_outlet> 
+            <hl_scalar_init>OPTIONAL DOUBLE</hl_scalar_init>
+        </TabProps>
+    </Properties>
+
+    <DataArchiver>
+        <save name=STRING table_lookup="true"> <!-- note that STRING must match the name in the table -->
+    </DataArchiver>
+\endcode
+
+ * Any variable that is saved to the UDA in the dataarchiver block is automatically given a VarLabel.  
+ *
+ * If you have trouble reading your table, you can "setenv SCI_DEBUG TABLE_DEBUG:+" to get a 
+ * report of what is going on in the table reader.
+ *
+ *
  */
 
+
 namespace Uintah {
+
+// setenv SCI_DEBUG TABLE_DEBUG:+ 
+static DebugStream cout_tabledbg("TABLE_DEBUG",false);
+
 class ArchesLabel; 
+class MPMArchesLabel; 
 class TimeIntegratorLabel; 
 class TabPropsInterface : public MixingRxnModel {
 
 public:
 
-  TabPropsInterface( const ArchesLabel* labels );
+  TabPropsInterface( const ArchesLabel* labels, const MPMArchesLabel* MAlabels );
 
   ~TabPropsInterface();
 
 
-  //see MixingRxnModel.h
   void problemSetup( const ProblemSpecP& params );
   
-  /** @brief Compare dependent variables found in input file to dependent variables found in table file */
-  void const verifyDV( bool diagnosticMode, bool strictMode );
-
-  /** @brief Compare independent variables found in input file to independent variables found in table file */
-  void const verifyIV( bool diagnosticMode, bool strictMode );
-
-  //see MixingRxnModel.h
-  void const verifyTable( bool diagnosticMode, bool strictMode );
-
-  /** @brief Gets the thermochemical state for a patch */
+  /** @brief Gets the thermochemical state for a patch 
+      @param initialize         Tells the method to allocateAndPut 
+      @param with_energy_exch   Tells the method that energy exchange is on
+      @param modify_ref_den     Tells the method to modify the reference density */
   void sched_getState( const LevelP& level, 
                        SchedulerP& sched, 
                        const TimeIntegratorLabel* time_labels, 
-                       const bool initialize,          // tells the method to allocateAndPut
-                       const bool with_energy_exch,    // tells the method that energy exchange is on
-                       const bool modify_ref_den );    // tells the method to modify the reference density 
+                       const bool initialize,
+                       const bool with_energy_exch,
+                       const bool modify_ref_den ); 
 
-  /** @brief See sched_get_state */ 
+  /** @brief Gets the thermochemical state for a patch 
+      @param initialize         Tells the method to allocateAndPut 
+      @param with_energy_exch   Tells the method that energy exchange is on
+      @param modify_ref_den     Tells the method to modify the reference density */
   void getState( const ProcessorGroup* pc, 
                  const PatchSubset* patches, 
                  const MaterialSubset* matls, 
@@ -104,88 +129,84 @@ public:
                  const bool with_energy_exch, 
                  const bool modify_ref_den );
 
-  /** @brief Gets the thermochemical state for a patch */
+  /** @brief Schedule computeHeatLoss */
   void sched_computeHeatLoss( const LevelP& level, 
                               SchedulerP& sched, 
                               const bool intialize_me, const bool calcEnthalpy ); 
 
-  /** @brief See sched_computeHeatLoss */ 
+  /** @brief  Computes the heat loss from the table */
   void computeHeatLoss( const ProcessorGroup* pc, 
                         const PatchSubset* patches, 
                         const MaterialSubset* matls, 
                         DataWarehouse* old_dw, 
                         DataWarehouse* new_dw, 
-                        const bool intialize_me, const bool calcEnthalpy ); 
+                        const bool intialize_me, 
+                        const bool calcEnthalpy ); 
 
 
   /** @brief A temporary solution to deal with boundary conditions on properties until Properties.cc is eliminated */ 
   void oldTableHack( const InletStream& inStream, Stream& outStream, bool calcEnthalpy, const string bc_type );
 
-  /** @brief This will initialize the enthalpy to a table value for the first timestep */ 
+  /** @brief  schedules computeFirstEnthalpy */
   void sched_computeFirstEnthalpy( const LevelP& level, SchedulerP& sched ); 
-  /** @brief See sched_computeFirstEnthalpy */ 
+
+  /** @brief This will initialize the enthalpy to a table value for the first timestep */
   void computeFirstEnthalpy( const ProcessorGroup* pc, 
                              const PatchSubset* patches, 
                              const MaterialSubset* matls, 
                              DataWarehouse* old_dw, 
                              DataWarehouse* new_dw ); 
 
-  // Load list of dependent variables from the table
-  // Return vector<string>& (reference to allDepVarNames())
+  /** @brief    Load list of dependent variables from the table 
+      @returns  A vector<string>& that is a reference to the list of all dependent variables */
   const vector<string> & getAllDepVars();
 
-  // Load list of independent variables from the table
-  // Return vector<string>& (reference to allIndepVarNames())
+  /** @brief    Load list of independent variables from the table
+      @returns  A vector<string>& that is a reference to the list of all independent variables */ 
   const vector<string> & getAllIndepVars();
 
+  /** @brief      Returns a single dependent variable, given a vector of independent variable values
+      @param dv   The name of the dependent variable to look up in the table
+      @param iv   The vector of indepenent variable values */
   inline double getSingleState( string dv, vector<double> iv ) {
     double result = 0.0; 
+    cout_tabledbg << "From your table, looking up: " << dv << endl;
     return result = d_statetbl.query(  dv, &iv[0] ); 
   };
 
+  /** @brief Dummy initialization as required by MPMArches */
+  void sched_dummyInit( const LevelP& level, SchedulerP& sched );
+
+  /** @brief Dummy initialization as required by MPMArches */
+  void dummyInit( const ProcessorGroup* pc, 
+                  const PatchSubset* patches, 
+                  const MaterialSubset* matls, 
+                  DataWarehouse* old_dw, 
+                  DataWarehouse* new_dw );
 
 protected :
 
 private:
 
-  // boolean to tell you if table has been loaded
-  bool d_table_isloaded;
+  bool d_table_isloaded;    ///< Boolean: has the table been loaded?
   
-  // booleans for verification methods
-  bool d_diagnostic_mode;
-  bool d_strict_mode;
+  double d_hl_outlet;       ///< Heat loss value for non-adiabatic conditions
+  double d_hl_pressure;     ///< Heat loss value for non-adiabatic conditions
+  double d_hl_scalar_init;  ///< Heat loss value for non-adiabatic conditions
 
+  IntVector d_ijk_den_ref;                ///< Reference density location
 
-  // heat loss values for non-adiabatic conditions 
-  double d_hl_outlet; 
-  double d_hl_pressure; 
-  double d_hl_scalar_init; 
+  vector<string> d_allIndepVarNames;      ///< Vector storing all independent variable names from table file
+  vector<string> d_allDepVarNames;        ///< Vector storing all dependent variable names from the table file
 
-  IntVector d_ijk_den_ref; 
+  vector<string> d_allUserDepVarNames;    ///< Vector storing all independent varaible names requested in input file
 
-  // vectors to store independent, dependent variable names from table file
-  vector<string> d_allIndepVarNames;
-  vector<string> d_allDepVarNames;
+  StateTable d_statetbl;                  ///< StateTable object to represent the table data
 
-  // vectors to store independent, dependent variable names from input file
-  vector<string> d_allUserDepVarNames;
-  vector<string> d_allUserIndepVarNames;
-    
-  // vector to store independent variable values for call to StateTable::query
-  vector<double> d_indepVarValues;
-
-  // StateTable object to represent the table data
-  StateTable d_statetbl;
-
-  // string to hold filename
-  string d_tableFileName;
-
-  // A dependent variable container
+  /// A dependent variable wrapper
   struct ADepVar {
-
     string name; 
     CCVariable<double> data; 
-
   };
 
 }; // end class TabPropsInterface

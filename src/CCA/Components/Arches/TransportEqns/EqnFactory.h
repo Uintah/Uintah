@@ -113,12 +113,12 @@ public:
   /** @brief Determine if a given scalar eqn is contained in the factory. */
   bool find_scalar_eqn( const std::string name );
 
+  /////////////////////////////////////////////
+  // Get/set methods
+
   /** @brief Get access to the eqn map */ 
   EqnMap& retrieve_all_eqns(){
     return eqns_; };
-
-  /////////////////////////////////////////////
-  // Get/set methods
 
   /** @brief  Set the label object associated with the EqnFactory */ 
   inline void setArchesLabel( ArchesLabel* fieldLabels ) {

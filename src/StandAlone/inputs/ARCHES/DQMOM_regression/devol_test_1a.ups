@@ -41,7 +41,7 @@
 
     <!-- EXTRA SCALARS -->
     <save label = "scalar_temperature"/>
-    <save label = "eta" />
+    <save label = "coal_gas_mix_frac" />
     <save label = "inert" />
 
     <!-- DQMOM Vars -->
@@ -141,7 +141,8 @@
           </initialization>
         </Eqn>
 
-        <Eqn label = "eta" type = "CCscalar">
+        <Eqn label = "coal_gas_mix_frac" type = "CCscalar">
+            <use_density_guess/>
             <doDiff>false</doDiff>
             <doConv>false</doConv>
             <addSources>true</addSources>
@@ -164,7 +165,7 @@
         </Eqn>
 
         <Sources>
-            <src label = "eta_source" type = "CoalGasDevol">
+            <src label = "eta_source" type = "DevolMixtureFraction">
                 <devol_model_name>sarofim</devol_model_name>
             </src>
             <src label = "const_source" type = "ConstantSourceTerm">

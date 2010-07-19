@@ -432,7 +432,20 @@ Balachandar::computeParticleVelocity( const ProcessorGroup* pc,
 
         double newPartMag = gasVel.length() - diff;
         
-        particle_velocity[c] = ( gasVel/gasVel.length() )*(newPartMag);
+        if( fabs(gasVel.length()) < TINY ) {
+          ////cmr
+          //if( c==IntVector(1,1,1) ) {
+          //  cout << "Balachandar = [ 0.0, 0.0, 0.0 ]" << endl; 
+          //}
+          particle_velocity[c] = Vector(0.0,0.0,0.0);
+        } else {
+          ////cmr
+          //if( c==IntVector(1,1,1) ) {
+          //  cout << "Balachandar = (gasVel/gasVel.length())*(newPartMag) = (" << gasVel << "/" << gasVel.length() << ")*(" << newPartMag << ") = " << (gasVel/gasVel.length())*newPartMag << endl;
+          //}
+          particle_velocity[c] = ( gasVel/gasVel.length() )*(newPartMag);
+        }
+
 
       }//end if weight is small
 

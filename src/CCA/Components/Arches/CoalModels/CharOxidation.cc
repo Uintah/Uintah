@@ -33,6 +33,9 @@ CharOxidation::CharOxidation( std::string modelName,
   // Create the gas phase source term associated with this model
   std::string gasSourceName = modelName + "_gasSource";
   d_gasLabel = VarLabel::create( gasSourceName, CCVariable<double>::getTypeDescription() );
+
+  R_   =  1.987;       // [=] kcal/kmol : ideal gas constant
+  pi_  = 3.1415926535;
 }
 
 CharOxidation::~CharOxidation()
@@ -65,7 +68,7 @@ CharOxidation::problemSetup(const ProblemSpecP& params)
   DQMOMEqn& weight_eqn = dynamic_cast<DQMOMEqn&>(t_weight_eqn);
 
   d_w_small = weight_eqn.getSmallClip();
-  d_w_scaling_factor = weight_eqn.getScalingConstant();
+  d_w_scaling_constant = weight_eqn.getScalingConstant();
   d_weight_label = weight_eqn.getTransportEqnLabel();
 }
 

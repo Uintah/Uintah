@@ -310,21 +310,28 @@ ConstantModel::computeModel( const ProcessorGroup* pc,
     for( CellIterator iter = patch->getCellIterator(); !iter.done(); ++iter ) {
       IntVector c = *iter;
       gas_source[c] = -(d_constant*d_ic_scaling_constant)*(weight[c]*d_w_scaling_constant);
+      //model[c] = d_constant;
     }
 
     if( d_doLowClip ) { 
-      for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
+      for( CellIterator iter=patch->getCellIterator(); !iter.done(); iter++ ) {
         IntVector c = *iter;
         double icval = (wa_internal_coordinate[c]/weight[c])*d_ic_scaling_constant;
-        if( icval <= d_low ) {
+        if( icval <= (d_low+TINY) ) {
           model[c] = 0.0;
           gas_source[c] = 0.0;
+
+          ////cmr
+          //if( d_quadNode == 0 && c==IntVector(1,1,1) ) {
+          //  cout << "Constant Model clipping the constant model at " << model[IntVector(1,1,1)] << " because internal coordinate is too small: " << (wa_internal_coordinate[c]/weight[c])*d_ic_scaling_constant << " smaller than " << (d_low+TINY) << endl;
+          //}
+
         }
       }
     }
   
     if( d_doHighClip ) {
-      for( CellIterator iter = patch->getCellIterator(); !iter.done(); ++iter) {
+      for( CellIterator iter = patch->getCellIterator(); !iter.done(); ++iter ) {
         IntVector c = *iter;
         double icval = (wa_internal_coordinate[c]/weight[c])*d_ic_scaling_constant;
         if( icval >= d_high ) {
@@ -336,7 +343,7 @@ ConstantModel::computeModel( const ProcessorGroup* pc,
 
     ////cmr
     //if( d_quadNode == 0 ) {
-    //  cout << "Constant model = " << model[IntVector(1,2,3)] << " and gas source = " << gas_source[IntVector(1,2,3)] << endl;
+    //  cout << "Constant Model: at the end of the day, the internal coordinate " << d_ic_label->getName() << " is " << wa_internal_coordinate[IntVector(1,1,1)]/weight[IntVector(1,1,1)] << " and the constant model is = " << model[IntVector(1,1,1)] << endl;
     //}
 
   }

@@ -16,6 +16,7 @@
 #include <CCA/Components/Arches/CoalModels/ConstantSizeInert.h>
 #include <CCA/Components/Arches/CoalModels/ConstantDensityInert.h>
 #include <CCA/Components/Arches/CoalModels/CharOxidation.h> 
+#include <CCA/Components/Arches/CoalModels/GlobalCharOxidation.h> 
 #include <CCA/Components/Arches/ArchesLabel.h>
 #include <Core/Exceptions/InvalidValue.h>
 #include <Core/Exceptions/ProblemSetupException.h>
@@ -236,8 +237,8 @@ void CoalModelFactory::problemSetup(const ProblemSpecP& params)
           d_useParticleVelocityModel = true;
         
 //-------- Char oxidation models
-        //} else if (model_type == "CharOxidation" ) {
-        //  modelBuilder = scinew CharOxidationBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_fieldLabels, d_fieldLabels->d_sharedState, iqn);
+        } else if (model_type == "GlobalCharOxidation" ) {
+          modelBuilder = scinew GlobalCharOxidationBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_fieldLabels, d_fieldLabels->d_sharedState, iqn);
 
 //-------- Density models
         } else if (model_type == "ConstantSizeCoal" ) {
@@ -385,6 +386,8 @@ CoalModelFactory::register_model( const std::string name,
 
   if( modelType == "CharOxidation" ) {
     d_useCharOxidationModel = true;
+    CharOxidation* char_model = dynamic_cast<CharOxidation*>(model);
+    char_model->setTabPropsInterface( d_TabPropsInterface );
   }
 }
 

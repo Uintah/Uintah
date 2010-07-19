@@ -1,3 +1,5 @@
+#ifndef Uintah_Component_Arches_EqnFactory_h
+#define Uintah_Component_Arches_EqnFactory_h
 #include <CCA/Components/Arches/TransportEqns/EqnFactory.h>
 #include <CCA/Components/Arches/TransportEqns/EqnBase.h> 
 #include <CCA/Components/Arches/TransportEqns/ScalarEqn.h>
@@ -194,29 +196,32 @@ of ScalarEqns but still abstract the details to the EqnFactory.
 
 The procedure for this method is as follows:
 1. Initialize scalar equation variables, if necessary
-(Source terms are already calculated)
 2. Update the scalar equation variables using the source terms
-3. (Last time sub-step only) Clean up after the equation evaluation
+3. (Last time sub-step only) Clip
+4. (Last time sub-step only) Clean up after the equation evaluation
 */
 void
-EqnFactory::sched_evalTransportEqns( const LevelP& level, SchedulerP& sched, int timeSubStep, bool evalDensityGuessEqns, bool cleanup )
+EqnFactory::sched_evalTransportEqns( const LevelP& level, SchedulerP& sched, int timeSubStep, bool evalDensityGuessEqns, bool lastTimeSubstep )
 {
   for( EqnMap::iterator iEqn = eqns_.begin(); iEqn != eqns_.end(); ++iEqn ) {
-    if( evalDensityGuessEqns == iEqn->second->getDensityGuessBool() ) {
 
-      // Step 1
-      if( timeSubStep == 0 ) {
-        iEqn->second->sched_initializeVariables( level, sched );
+    // Step 1
+    if( timeSubStep == 0 ) {
+      iEqn->second->sched_initializeVariables(level, sched);
+    }
+
+    // Step 2
+    iEqn->second->sched_buildTransportEqn( level, sched, timeSubStep );
+    iEqn->second->sched_solveTransportEqn( level, sched, timeSubStep, !lastTimeSubstep );
+
+    // Step 3
+    if( lastTimeSubstep ) { 
+
+      if( iEqn->second->doLowClip() || iEqn->second->doHighClip() ) {
+        iEqn->second->sched_clipPhi( level, sched );
       }
 
-      // Step 2
-      iEqn->second->sched_buildTransportEqn( level, sched, timeSubStep );
-      iEqn->second->sched_solveTransportEqn( level, sched, timeSubStep );
-
-      // Step 3
-      if( cleanup ) {
-        iEqn->second->sched_cleanUp( level, sched );
-      }
+      iEqn->second->sched_cleanUp( level, sched );
     }
   }
 }
@@ -292,4 +297,6 @@ EqnFactory::find_scalar_eqn( const std::string name )
 
   return return_value;
 }
+
+#endif
 

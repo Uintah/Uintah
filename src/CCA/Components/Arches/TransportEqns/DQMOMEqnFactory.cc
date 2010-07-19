@@ -144,9 +144,7 @@ DQMOMEqnFactory::sched_weightInit( const LevelP& level, SchedulerP& sched)
 {
   Task* tsk = scinew Task("DQMOMEqnFactory::weightInit",this,&DQMOMEqnFactory::weightInit);
 
-  EqnMap& dqmom_eqns = retrieve_all_eqns();
-
-  for(EqnMap::iterator iEqn = dqmom_eqns.begin(); iEqn != dqmom_eqns.end(); ++iEqn) {
+  for(EqnMap::iterator iEqn = eqns_.begin(); iEqn != eqns_.end(); ++iEqn) {
     DQMOMEqn* eqn = dynamic_cast<DQMOMEqn*>( iEqn->second );
 
     if( eqn->weight() ) {
@@ -344,11 +342,11 @@ The procedure for this method is as follows:
 1. Initialize DQMOM equation variables, if necessary
 2. Solve the DQMOM linear system AX=B
 3. Update the DQMOM equation variables using the results from AX=B
-4. Clip
-5. Clean up after the equation evaluations, if necessary
+4. (Last time sub-step only) Clip
+5. (Last time sub-step only) Clean up after the equation evaluation
 */
 void 
-DQMOMEqnFactory::sched_evalTransportEqns( const LevelP& level, SchedulerP& sched, int timeSubStep )
+DQMOMEqnFactory::sched_evalTransportEqns( const LevelP& level, SchedulerP& sched, int timeSubStep, bool lastTimeSubstep )
 {
   // Step 1
   if( timeSubStep == 0 ) {
@@ -372,43 +370,24 @@ DQMOMEqnFactory::sched_evalTransportEqns( const LevelP& level, SchedulerP& sched
   // Step 3
   for( EqnMap::iterator iEqn = eqns_.begin(); iEqn != eqns_.end(); ++iEqn ) {
     iEqn->second->sched_buildTransportEqn( level, sched, timeSubStep );
-    iEqn->second->sched_solveTransportEqn( level, sched, timeSubStep );
+
+    DQMOMEqn* dqmom_eqn = dynamic_cast<DQMOMEqn*>(iEqn->second);
+    dqmom_eqn->sched_solveTransportEqn( level, sched, timeSubStep, !lastTimeSubstep );
   }
   
   // Step 4
-  if( timeSubStep == 1 ) {
+  if( lastTimeSubstep ) {
     for( EqnMap::iterator iEqn = eqns_.begin(); iEqn != eqns_.end(); ++iEqn ) {
       DQMOMEqn* dqmom_eqn = dynamic_cast<DQMOMEqn*>(iEqn->second);
+
       if( dqmom_eqn->doLowClip() || dqmom_eqn->doHighClip() ) {
         dqmom_eqn->sched_clipPhi( level, sched );
       }
+
+      dqmom_eqn->sched_cleanUp( level, sched );
+      dqmom_eqn->sched_getUnscaledValues( level, sched );
+
     }
-  }
-}
-
-//---------------------------------------------------------------------------
-// Method: Evaluation the DQMOMEqns and their source terms, and clean up
-//---------------------------------------------------------------------------
-/* @details
-This method is implemented because the DQMOMEqnFactory must clean up
-after all the transport equations at the end of each timestep.
-
-It's separate from the sched_evalTransportEqns method because
-the factory only needs to clean up after the transport equations
-at the end of each timestep, and only the ExplicitSolver knows when 
-the time sub-step is the last time sub-step.
-
-Alternatively, the ExplicitSolver could set a variable for the maximun
-number of time sub-steps, and the above method combined with this one.
-*/
-void
-DQMOMEqnFactory::sched_evalTransportEqnsWithCleanup( const LevelP& level, SchedulerP& sched, int timeSubStep ) 
-{
-  sched_evalTransportEqns( level, sched, timeSubStep );
-
-  for( EqnMap::iterator iEqn = eqns_.begin(); iEqn != eqns_.end(); ++iEqn ) {
-    iEqn->second->sched_cleanUp( level, sched );
-    dynamic_cast<DQMOMEqn*>(iEqn->second)->sched_getUnscaledValues( level, sched );
   }
 }
 

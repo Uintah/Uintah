@@ -39,7 +39,7 @@
         <save label = "tempIN"/>
         <save label = "heatLoss"/>
 
-        <save label = "eta"/>
+        <save label = "coal_gas_mix_frac"/>
 
 <!-- ===================================
         DQMOM Coal Variables
@@ -54,39 +54,39 @@
         <save label = "w_qn2_src" />
 
         <save label = "length_qn0"/>
-        <save label = "length_qn0_icv"/>
-        <save label = "length_qn0_src"/>
-
         <save label = "length_qn1"/>
-        <save label = "length_qn1_icv"/>
-        <save label = "length_qn1_src"/>
-
         <save label = "length_qn2"/>
+
+        <save label = "length_qn0_icv"/>
+        <save label = "length_qn1_icv"/>
         <save label = "length_qn2_icv"/>
+
+        <save label = "length_qn0_src"/>
+        <save label = "length_qn1_src"/>
         <save label = "length_qn2_src"/>
 
         <save label = "RCmass_qn0"/>
-        <save label = "RCmass_qn0_icv"/>
-        <save label = "RCmass_qn0_src"/>
-
         <save label = "RCmass_qn1"/>
-        <save label = "RCmass_qn1_icv"/>
-        <save label = "RCmass_qn1_src"/>
-
         <save label = "RCmass_qn2"/>
+
+        <save label = "RCmass_qn0_icv"/>
+        <save label = "RCmass_qn1_icv"/>
         <save label = "RCmass_qn2_icv"/>
+
+        <save label = "RCmass_qn0_src"/>
+        <save label = "RCmass_qn1_src"/>
         <save label = "RCmass_qn2_src"/>
 
         <save label = "Tp_qn0"/>
-        <save label = "Tp_qn0_icv"/>
-        <save label = "Tp_qn0_src"/>
-
         <save label = "Tp_qn1"/>
-        <save label = "Tp_qn1_icv"/>
-        <save label = "Tp_qn1_src"/>
-
         <save label = "Tp_qn2"/>
+
+        <save label = "Tp_qn1_icv"/>
+        <save label = "Tp_qn0_icv"/>
         <save label = "Tp_qn2_icv"/>
+
+        <save label = "Tp_qn0_src"/>
+        <save label = "Tp_qn1_src"/>
         <save label = "Tp_qn2_src"/>
 
         <save label = "heat_qn0"/>
@@ -96,6 +96,10 @@
         <save label = "bala_qn0" />
         <save label = "bala_qn1" />
         <save label = "bala_qn2" />
+
+        <save label = "vel_qn0" />
+        <save label = "vel_qn1" />
+        <save label = "vel_qn2" />
 
         <save label = "rhop_qn0" />
         <save label = "rhop_qn1" />
@@ -143,9 +147,9 @@
             <MMS whichMMS="constantMMS" >
               <mmsErrorType>Linf</mmsErrorType>
               <constantMMS>
-                <cu>0.0</cu>
-                <cv>0.0</cv>
-                <cw>0.0</cw>
+                <cu>5.0</cu>
+                <cv>8.0</cv>
+                <cw>9.0</cw>
                 <cp>100</cp>
                 <esphi0>0.0</esphi0>
                 <useTable />
@@ -171,7 +175,8 @@
                   </initialization>
                 </Eqn>
 
-                <Eqn label = "eta" type = "CCscalar">
+                <Eqn label = "coal_gas_mix_frac" type = "CCscalar">
+                    <use_density_guess/>
                     <doDiff>true</doDiff>
                     <doConv>true</doConv>
                     <addSources>true</addSources>

@@ -77,13 +77,14 @@ public:
   /** @brief Set any parameters from input file, initialize any constants, etc.. */
   void problemSetup(const ProblemSpecP& inputdb);
 
-  /** @brief Schedule a transport equation to be built and solved */
-  void sched_evalTransportEqn( const LevelP&, 
-                               SchedulerP& sched, int timeSubStep ){};
 
+  ////////////////////////////////////////////////
+  // Calculation methods
+  
   /** @brief Schedule the build for the terms needed in the transport equation */
   void sched_buildTransportEqn( const LevelP& level, 
                                 SchedulerP& sched, int timeSubStep );
+
   /** @brief Actually build the transport equation */ 
   void buildTransportEqn(const ProcessorGroup*, 
                          const PatchSubset* patches, 
@@ -91,16 +92,24 @@ public:
                          DataWarehouse* old_dw, 
                          DataWarehouse* new_dw);
 
-  /** @brief Schedule the solution the transport equation */
+  /** @brief Schedule the solution the transport equation
+      @param  copyOldIntoNew    Boolean: should the new phi's (phi_jp1) be copied into the old phi's (phi_j)? This should only be false on the last time substep, 
+                                so that phi_j and phi_jp1 can both be accessed for the last time substep (this is important information for several calculations)  
+  */ 
   void sched_solveTransportEqn(const LevelP& level, 
-                                SchedulerP& sched, int timeSubStep );
+                                SchedulerP& sched, 
+                                int timeSubStep,
+                                bool copyOldIntoNew );
+
   /** @brief Solve the transport equation */ 
   void solveTransportEqn(const ProcessorGroup*, 
                          const PatchSubset* patches, 
                          const MaterialSubset*, 
                          DataWarehouse* old_dw, 
                          DataWarehouse* new_dw,
-                         int timeSubStep);
+                         int timeSubStep,
+                         bool copyOldIntoNew );
+
   /** @brief Schedule the initialization of the variables */ 
   void sched_initializeVariables( const LevelP& level, SchedulerP& sched );
 
@@ -200,24 +209,6 @@ public:
   /** @brief  Return a bool to tell if this equation is a weight. If false, this eqn is a weighted abscissa */
   inline bool weight(){
     return d_weight; };
-
-  /** @brief  Get boolean: do low clipping? */
-  inline bool doLowClip() {
-    return d_doLowClip; };
-
-  /** @brief  Get the low clipping value. WARNING: This can get you into trouble if you aren't careful! It returns 0.0 if it's NOT doing clipping. Be sure and use doLowClip() too. */ 
-  inline double getLowClip(){
-    if(d_doClipping && d_doLowClip) return d_lowClip;
-    else return 0.0; };
-
-  /** @brief  Get boolean: do high clipping? */
-  inline bool doHighClip() {
-    return d_doHighClip; };
-
-  /** @brief  Get the high clipping value. WARNING: This can get you into trouble if you aren't careful! It returns 0.0 if it's NOT doing clipping. Be sure and use doHighClip() too. */ 
-  inline double getHighClip(){
-    if(d_doClipping && d_doHighClip) return d_highClip;
-    else return 0.0; };
 
   /** @brief  Get the small clipping value (for weights only). */
   inline double getSmallClip(){

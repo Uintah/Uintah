@@ -12,7 +12,7 @@
 
     <Time>
       <maxTime>10.0</maxTime>
-      <max_Timesteps>10</max_Timesteps>
+      <max_Timesteps>40</max_Timesteps>
       <initTime>0.0</initTime>
       <delt_min>0.00001</delt_min>
       <delt_max>5</delt_max>
@@ -20,7 +20,7 @@
     </Time>
 
     <DataArchiver>
-        <filebase>uda_heatxfer_test_5a.uda</filebase>
+        <filebase>uda_heatxfer_test_6a.uda</filebase>
         <outputTimestepInterval>1</outputTimestepInterval>
         <outputInitTimestep />
 
@@ -39,7 +39,7 @@
         <save label = "tempIN"/>
         <save label = "heatLoss"/>
 
-        <save label = "eta"/>
+        <save label = "coal_gas_mix_frac"/>
 
 <!-- ===================================
         DQMOM Coal Variables
@@ -194,9 +194,9 @@
             <MMS whichMMS="constantMMS" >
               <mmsErrorType>Linf</mmsErrorType>
               <constantMMS>
-                <cu>0.0</cu>
-                <cv>0.0</cv>
-                <cw>0.0</cw>
+                <cu>1.0</cu>
+                <cv>2.0</cv>
+                <cw>3.0</cw>
                 <cp>100</cp>
                 <esphi0>0.0</esphi0>
                 <useTable />
@@ -222,7 +222,8 @@
                   </initialization>
                 </Eqn>
 
-                <Eqn label = "eta" type = "CCscalar">
+                <Eqn label = "coal_gas_mix_frac" type = "CCscalar">
+                    <use_density_guess/>
                     <doDiff>true</doDiff>
                     <doConv>true</doConv>
                     <addSources>true</addSources>
@@ -491,7 +492,7 @@
                 
                 <MixtureFractionSolver>
                     <convection_scheme>central-upwind</convection_scheme>
-                    <initial_value>0.80</initial_value>
+                    <initial_value>0.20</initial_value>
                 </MixtureFractionSolver>
                 
                 <EnthalpySolver>
