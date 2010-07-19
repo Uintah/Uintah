@@ -51,7 +51,7 @@ namespace Uintah {
 //__________________________________
 //  To turn on couts
 //  setenv SCI_DEBUG "LODI_DOING_COUT:+, LODI_DBG_COUT:+"
-static DebugStream cout_doing("ICE_BC_DOING", false);
+static DebugStream cout_doing("ICE_BC_CC", false);
 static DebugStream cout_dbg("LODI_DBG_COUT", false);
 
 /* ______________________________________________________________________
@@ -309,16 +309,13 @@ void  preprocess_Lodi_BCs(DataWarehouse* old_dw,
   int indx = matl->getDWIndex();  
   
   //__________________________________
-  //    Equilibration pressure
+  //    Equilibration pressure  ICE & MPMICE
   if(where == "EqPress"){
     setLodiBcs = true; 
     old_dw->get(lv->vel_CC,    lb->vel_CCLabel,        indx,patch,gn,0);
-    new_dw->get(lv->press_CC,  lb->press_equil_CCLabel, 0,   patch,gn,0);
+    new_dw->get(lv->press_CC,  lb->press_equil_CCLabel, 0,  patch,gn,0);
     new_dw->get(lv->rho_CC,    lb->rho_CCLabel,        indx,patch,gn,0);
     new_dw->get(lv->speedSound,lb->speedSound_CCLabel, indx,patch,gn,0);
-  }
-  if(where == "EqPressMPMICE"){
-    setLodiBcs = false;
   }
   //__________________________________
   //    FC exchange
@@ -418,19 +415,22 @@ bool is_LODI_face(const Patch* patch,
 {
   bool is_lodi_face = false;
   int numMatls = sharedState->getNumICEMatls();
-
+  bool lodi_pressure =    patch->haveBC(face,0,"LODI","Pressure");
+  
   for (int m = 0; m < numMatls; m++ ) {
     ICEMaterial* ice_matl = sharedState->getICEMaterial(m);
     int indx= ice_matl->getDWIndex();
-    bool lodi_pressure =    patch->haveBC(face,indx,"LODI","Pressure");
+
     bool lodi_density  =    patch->haveBC(face,indx,"LODI","Density");
     bool lodi_temperature = patch->haveBC(face,indx,"LODI","Temperature");
     bool lodi_velocity =    patch->haveBC(face,indx,"LODI","Velocity");
-
+    
     if (lodi_pressure || lodi_density || lodi_temperature || lodi_velocity) {
       is_lodi_face = true; 
+      cout_doing << "   "<< patch->getFaceName(face) <<  " Is a LODI face: "<< endl;
     }
   }
+  
   return is_lodi_face;
 }
 
@@ -910,9 +910,7 @@ int FaceDensity_LODI(const Patch* patch,
     cout_dbg << " c " << c << " in " << in << " rho_CC[c] "<< rho_CC[c] 
              << " drho_dx " << drho_dx << " rho_CC[in] " << rho_CC[in]<<endl;
   }
-  return 1;
   
-#if 0  
   //__________________________________
   //    E D G E S  -- on boundaryFaces only
   vector<Patch::FaceType> b_faces;
@@ -943,7 +941,7 @@ int FaceDensity_LODI(const Patch* patch,
     IntVector c = *itr;
     rho_CC[c] =  1.7899909957225715000;
   }  
-#endif    
+  return 1;
 }
 
 /*_________________________________________________________________
@@ -1015,8 +1013,7 @@ int FaceVel_LODI(const Patch* patch,
     cout_dbg << " dvel_ " << dvel << endl;
   
   }
-  return 1;
-#if 0
+  
   //__________________________________
   //    E D G E S  -- on boundaryFaces only
   vector<Patch::FaceType> b_faces;
@@ -1046,7 +1043,7 @@ int FaceVel_LODI(const Patch* patch,
     IntVector c = *itr;
     vel_CC[c] = Vector(0,0,0);
   }
-#endif
+  return 1;
 } //end of the function FaceVelLODI() 
 
 /*_________________________________________________________________
@@ -1106,8 +1103,7 @@ int FaceTemp_LODI(const Patch* patch,
              << " term5 " << term5
              << " dtemp_dx " << dtemp_dx << endl;
   }
-  return 1;
-#if 0
+
   //__________________________________
   //    E D G E S  -- on boundaryFaces only
   vector<Patch::FaceType> b_faces;
@@ -1137,7 +1133,8 @@ int FaceTemp_LODI(const Patch* patch,
     IntVector c = *itr;
     temp_CC[c] = 300;
   }
-#endif
+
+  return 1;
 } //end of function FaceTempLODI()  
 
 
@@ -1189,9 +1186,7 @@ int FacePress_LODI(const Patch* patch,
              << " dpress_dx " << dpress_dx << " press_CC[in] " << press_CC[in]<<endl;
 
   }
-  return 1;
   
-  #if 0
   //__________________________________
   //    E D G E S  -- on boundaryFaces only
   vector<Patch::FaceType> b_faces;
@@ -1221,7 +1216,7 @@ int FacePress_LODI(const Patch* patch,
     IntVector c = *itr;
     press_CC[c] = 101325;
   }
-  #endif
+  return 1;
 } 
    
 }  // using namespace Uintah
