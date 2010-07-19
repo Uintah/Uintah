@@ -290,20 +290,20 @@ void AdiabaticTable::problemSetup(GridP&, SimulationStateP& in_state,
 
   //__________________________________
   //  register transport variables scalar and the energy
-  setup->registerTransportedVariable(d_matl_set->getSubset(0),
+  setup->registerTransportedVariable(d_matl_set,
                                      d_scalar->scalar_CCLabel,
                                      d_scalar->scalar_src_CCLabel);
-  setup->registerTransportedVariable(d_matl_set->getSubset(0),
+  setup->registerTransportedVariable(d_matl_set,
                                      cumulativeEnergyReleased_CCLabel,
                                      cumulativeEnergyReleased_src_CCLabel);
 
   //__________________________________
   //  register the AMRrefluxing variables                               
   if(d_doAMR){
-   setup->registerAMR_RefluxVariable(d_matl_set->getSubset(0),
+   setup->registerAMR_RefluxVariable(d_matl_set,
                                      d_scalar->scalar_CCLabel);
 
-   setup->registerAMR_RefluxVariable(d_matl_set->getSubset(0),
+   setup->registerAMR_RefluxVariable(d_matl_set,
                                      cumulativeEnergyReleased_CCLabel);
   }
   //__________________________________

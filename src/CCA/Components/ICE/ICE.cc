@@ -5870,12 +5870,13 @@ ICE::ICEModelSetup::~ICEModelSetup()
 {
 }
 
-void ICE::ICEModelSetup::registerTransportedVariable(const MaterialSubset* matls,
+void ICE::ICEModelSetup::registerTransportedVariable(const MaterialSet* matlSet,
                                                      const VarLabel* var,
                                                      const VarLabel* src)
 {
   TransportedVariable* t = scinew TransportedVariable;
-  t->matls = matls;
+  t->matlSet = matlSet;
+  t->matls   = matlSet->getSubset(0);
   t->var = var;
   t->src = src;
   t->var_Lagrangian = VarLabel::create(var->getName()+"_L", var->typeDescription());
@@ -5887,11 +5888,12 @@ void ICE::ICEModelSetup::registerTransportedVariable(const MaterialSubset* matls
 //  Register scalar flux variables needed
 //  by the AMR refluxing task.  We're actually
 //  creating the varLabels and putting them is a vector
-void ICE::ICEModelSetup::registerAMR_RefluxVariable(const MaterialSubset* matls,
+void ICE::ICEModelSetup::registerAMR_RefluxVariable(const MaterialSet* matlSet,
                                                           const VarLabel* var)
 {
   AMR_refluxVariable* t = scinew AMR_refluxVariable;
-  t->matls = matls;
+  t->matlSet = matlSet;
+  t->matls   = matlSet->getSubset(0);
   string var_adv_name = var->getName() + "_adv";
   t->var_adv = VarLabel::find(var_adv_name);  //Advected conserved quantity
   if(t->var_adv==NULL){

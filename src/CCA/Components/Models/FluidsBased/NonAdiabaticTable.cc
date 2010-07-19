@@ -255,10 +255,10 @@ void NonAdiabaticTable::problemSetup(GridP&, SimulationStateP& in_state,
      d_scalar->scalar_src_CCLabel = 0;
 
    // Tell ICE to transport the scalar and the energy
-   setup->registerTransportedVariable(d_matl_set->getSubset(0),
+   setup->registerTransportedVariable(d_matl_set,
                                       d_scalar->scalar_CCLabel,
                                       d_scalar->scalar_src_CCLabel);
-   setup->registerTransportedVariable(d_matl_set->getSubset(0),
+   setup->registerTransportedVariable(d_matl_set,
                                       cumulativeEnergyReleased_CCLabel,
                                       cumulativeEnergyReleased_src_CCLabel);
   //__________________________________

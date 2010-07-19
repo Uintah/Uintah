@@ -141,7 +141,7 @@ void Mixing3::problemSetup(GridP&, SimulationStateP& in_state,
       string mfsname = "massFractionSource-"+stream->name;
       stream->massFraction_source_CCLabel = VarLabel::create(mfsname, CCVariable<double>::getTypeDescription());
       
-      setup->registerTransportedVariable(mymatls->getSubset(0),
+      setup->registerTransportedVariable(mymatls,
                                          stream->massFraction_CCLabel,
                                          stream->massFraction_source_CCLabel);
       streams.push_back(stream);
