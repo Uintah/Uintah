@@ -317,11 +317,11 @@ ScalarSolver::sched_buildLinearMatrix(SchedulerP& sched,
     tsk->modifies(d_lab->d_scalarBoundarySrcLabel);
 
     // Adding new sources from factory:
-    SourceTermFactory& factor = SourceTermFactory::self(); 
+    SourceTermFactory& factory = SourceTermFactory::self(); 
     for (vector<std::string>::iterator iter = d_new_sources.begin(); 
         iter != d_new_sources.end(); iter++){
 
-      SourceTermBase& src = factor.retrieve_source_term( *iter ); 
+      SourceTermBase& src = factory.retrieve_source_term( *iter ); 
       const VarLabel* srcLabel = src.getSrcLabel(); 
       tsk->requires(Task::OldDW, srcLabel, gn, 0); 
 
@@ -342,11 +342,11 @@ ScalarSolver::sched_buildLinearMatrix(SchedulerP& sched,
     tsk->modifies(d_lab->d_scalarBoundarySrcLabel);
 
     // Adding new sources from factory:
-    SourceTermFactory& factor = SourceTermFactory::self(); 
+    SourceTermFactory& factory = SourceTermFactory::self(); 
     for (vector<std::string>::iterator iter = d_new_sources.begin(); 
         iter != d_new_sources.end(); iter++){
 
-      SourceTermBase& src = factor.retrieve_source_term( *iter ); 
+      SourceTermBase& src = factory.retrieve_source_term( *iter ); 
       const VarLabel* srcLabel = src.getSrcLabel(); 
       tsk->requires(Task::NewDW, srcLabel, gn, 0); 
 
@@ -463,11 +463,11 @@ void ScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
                                 d_lab->d_scalarBoundarySrcLabel, indx, patch);
 
     // Adding new sources from factory:
-    SourceTermFactory& factor = SourceTermFactory::self(); 
+    SourceTermFactory& factory = SourceTermFactory::self(); 
     for (vector<std::string>::iterator iter = d_new_sources.begin(); 
        iter != d_new_sources.end(); iter++){
 
-      SourceTermBase& src = factor.retrieve_source_term( *iter ); 
+      SourceTermBase& src = factory.retrieve_source_term( *iter ); 
       const VarLabel* srcLabel = src.getSrcLabel(); 
       // here we have made the assumption that the momentum source is always a vector... 
       // and that we only have one.  probably want to fix this. 
@@ -502,11 +502,11 @@ void ScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
                           d_lab->d_scalarBoundarySrcLabel, indx, patch);
  
     // Adding new sources from factory:
-    SourceTermFactory& factor = SourceTermFactory::self(); 
+    SourceTermFactory& factory = SourceTermFactory::self(); 
     for (vector<std::string>::iterator iter = d_new_sources.begin(); 
        iter != d_new_sources.end(); iter++){
 
-      SourceTermBase& src = factor.retrieve_source_term( *iter ); 
+      SourceTermBase& src = factory.retrieve_source_term( *iter ); 
       const VarLabel* srcLabel = src.getSrcLabel(); 
       // here we have made the assumption that the momentum source is always a vector... 
       // and that we only have one.  probably want to fix this. 
