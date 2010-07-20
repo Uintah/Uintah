@@ -334,7 +334,7 @@ Data (Variables) used by the UCF are stored on the 'Grid'. The Grid is comprised
 [edit] 
 
 \subsection{Cells}
-
+n
 Data in (at) each cell can be specified in several ways. Specifically the data can be Node centered (NC), Cell centered (CC), or Face centered (FC). For CC data, there is one value associated with each cell; for NC data, 4 values; and for FC data, 6 values. 
 
 \subsection{Patches}
@@ -1272,6 +1272,92 @@ the following:
 A driver program must be developed that will then be compiled and
 linked with the Uintah framework libraries.
 
+\chapter{Saving Simulation Data}
+
+The UCF automatically saves data as specified in the .ups file.  This
+works for all data that is stored in the Data Warehouse.  However,
+there are times when a component will need to save its own data.  (It
+is preferable that the Data Warehouse be updated to manage this
+Component data, but sometimes this is not expedient...)  In these
+cases, here is an outline on how to save that data:
+
+\begin{itemize}
+\item Create a function that will save your data:
+
+\begin{Verbatim}
+void
+Component::saveMyData( const PatchSubset * patches )
+{
+  ...
+}
+\end{Verbatim}
+
+\item From the last <i>Task</i> in your algorithm, call the function:
+
+\begin{Verbatim}
+saveMyData( patches );
+\end{Verbatim}
+
+\item In the function, you need to do several things:
+
+  Make sure that it is an output timestep.  (Your component must have
+  saved a pointer to the Data Archiver.  Most components already do
+  this... if not, you can do it in Component::problemSetup().)
+
+\begin{Verbatim}
+if( dataArchiver_->isOutputTimestep() ) {
+  // Dump your data... (see below)
+}
+\end{Verbatim}
+
+\item You need to create a directory to put the data in:
+
+\begin{Verbatim}
+  const int     & timestep = d_sharedState->getCurrentTopLevelTimeStep();
+  ostringstream   data_dir;
+
+  // This gives you ".../simulation.uda.###/t#####/mydata/
+  data_dir << dataArchiver()->getOutputLocation() << "/t" << setw(5) << setfill('0') << timestep
+           << "/mydata";
+  
+  int result = MKDIR( data_dir.c_str(), 0777 );  // Make sure you #include <Core/OS/Dir.h>
+
+  if( result != 0 ) {
+    ostringstream error;
+    error << "Component::saveMyData(): couldn't create directory '") + data_dir.str() + "' (" << result << ").";
+    throw InternalError( error.str(), __FILE__, __LINE__);        
+  }
+\end{Verbatim}
+
+\item Loop over the patches and save your data... (Note, depending on
+  how much data you have, you need to determine whether you want to
+  write the files as a binary file, or as an ascii file.  Ascii files
+  are easier for a human to look at for errors, but take a lot more
+  time to read and space to write.)
+
+\begin{Verbatim}
+for( int pIndex = 0; pIndex < patches->size(); pIndex++ ){
+  const Patch * patch = patches->get( pIndex );
+  ostringstream file_name;
+  // WARNING... not sure this is the correct naming convention... PLEASE VERIFY AND UPDATE THIS DOC.
+  file_name << data_dir << "/p" << setw(5) << setfill('0') << pIndex;
+
+  ofstream output( ceFileName, ios::out | ios::binary);
+  if( !output ) {
+    throw InternalError( string( "Component::saveMyData(): couldn't open file '") + file_name.str() + "'.",
+                         __FILE__, __LINE__);        
+  }
+
+  // Output data
+  for( loop over data ) {
+    output << data...
+  }
+
+  output.close();
+} // end for pIndex
+\end{Verbatim}
+
+\end{itemize}
 
 \end{document}
 
