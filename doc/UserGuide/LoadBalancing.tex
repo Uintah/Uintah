@@ -11,17 +11,15 @@ to processors. This is not ideal in most cases and should be avoided.
 \begin{Verbatim}[fontsize=\footnotesize]
    <LoadBalancer type="DLB"> 
         <!-- DLB specific flags -->
-        <dynamicAlgorithm>patchFactorParticles</dynamicAlgorithm>
-        <doCostProfiling>true</doCostProfiling>
-        <patchCost>16</patchCost>
+        <costAlgorithm>ModelLS</costAlgorithm>
+        <hasParticles>true</hasParticles>
 
         <!-- DLB/PLB flags -->
         <timestepInterval>25</timestepInterval>
         <gainThreshold>0.15</gainThreshold>
         <outputNthProc>1</outputNthProc>
         <doSpaceCurve>true</doSpaceCurve>
-        <cellCost>1</cellCost>
-        <particleCost>1.25</particleCost>
+
    </LoadBalancer>
 \end{Verbatim}
 
@@ -30,23 +28,17 @@ This is a robust load balancer that is good for many problems.  In addition,
 this load balancer can utilize profiling in order to tune itself during the runtime
 in order to achieve better results.  
 
-To use this load balancer the user must specify the type as DLB and specify
-a dynamicAlgorithm.  The DLB has two algorithms the first is patchFactor which
-only accounts for cells and the second is patchFactorParticles which also accounts
-for particles.    
+To use this load balancer the user must specify the type as "DLB".  It is also suggested
+that the user specify a costAlgorithm which can be "Model", "ModelLS", "Memory", or
+"Kalman" with the default being "ModelLS".  If "hasParticles" is set to true then
+these cost algorithms will take the number of particles into account when determining
+the cost.
 
 This algorithm first orders the patches linearly.  If doSpaceCurve is set to true
 then this ordering is done according to a Hilbert Space-Filling curve, which will
 likely provide better clusterings.  Once the patches are ordered linearly, costs
 are assigned to each patch and the patches are distributed onto processors so that
 the costs on each processor are even.  
-
-The DLB can compute these costs using two different methods.  The first uses
-the model Cost=patchCost+cellCost*numCells+particleCost*numParticles.  This
-method is not ideal because estimating those costs is challenging.  A better
-method is to enable cost profiling by setting doCostProfiling to true.  The 
-load balancer will then profile the simulation to automatically determine the
-costs per patch.
 
 The PLB load balancer is an alterantive to the DLB load balancer which is
 likely more efficent for particle based calculations.  This load balancer
