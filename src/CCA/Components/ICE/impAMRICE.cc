@@ -363,9 +363,6 @@ void impAMRICE::multiLevelPressureSolve(const ProcessorGroup* pg,
   // define Matl sets and subsets
   const MaterialSet* all_matls = d_sharedState->allMaterials();
   MaterialSubset* one_matl    = d_press_matl;
-  MaterialSet* press_matlSet  = scinew MaterialSet();
-  press_matlSet->add(0);
-  press_matlSet->addReference(); 
   
   //__________________________________
   //  turn off parentDW scrubbing
@@ -441,7 +438,7 @@ void impAMRICE::multiLevelPressureSolve(const ProcessorGroup* pg,
       // so just pass in the coarsest level as it always exists.
       const VarLabel* whichInitialGuess = NULL; 
       
-      d_solver->scheduleSolve(grid->getLevel(0), d_subsched, press_matlSet,
+      d_solver->scheduleSolve(grid->getLevel(0), d_subsched, d_press_matlSet,
                             lb->matrixLabel,   Task::NewDW,
                             lb->imp_delPLabel, modifies_X,
                             lb->rhsLabel,      Task::OldDW,
@@ -626,13 +623,6 @@ void impAMRICE::multiLevelPressureSolve(const ProcessorGroup* pg,
   //  Turn scrubbing back on
   ParentOldDW->setScrubbing(ParentOldDW_scrubmode);
   ParentNewDW->setScrubbing(ParentNewDW_scrubmode);  
-
-  //__________________________________
-  // clean up memory  
-  if(press_matlSet->removeReference()){
-    delete press_matlSet;
-  }
-
 } // end multiLevelPressureSolve()
 
 

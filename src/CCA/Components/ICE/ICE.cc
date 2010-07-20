@@ -135,7 +135,8 @@ ICE::ICE(const ProcessorGroup* myworld, const bool doAMR) :
   d_customBC_var_basket->Slip_var_basket =  scinew Slip_variable_basket();
   d_customBC_var_basket->mms_var_basket  =  scinew mms_variable_basket();
   d_customBC_var_basket->sine_var_basket =  scinew sine_variable_basket();
-  d_press_matl=0;
+  d_press_matl    = 0;
+  d_press_matlSet = 0;
 }
 
 ICE::~ICE()
@@ -161,7 +162,9 @@ ICE::~ICE()
   if (d_press_matl && d_press_matl->removeReference()){
     delete d_press_matl;
   }
-  
+  if (d_press_matlSet && d_press_matlSet->removeReference()){
+    delete d_press_matlSet;
+  }
   //__________________________________
   // MODELS
   cout_doing << d_myworld->myrank() << " Doing: destorying Model Machinery " << endl;
@@ -220,7 +223,11 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec,
   d_press_matl = scinew MaterialSubset();
   d_press_matl->add(0);
   d_press_matl->addReference();
-
+  
+  d_press_matlSet  = scinew MaterialSet();
+  d_press_matlSet->add(0);
+  d_press_matlSet->addReference();
+  
   dataArchiver = dynamic_cast<Output*>(getPort("output"));
   if(!dataArchiver){
     throw InternalError("ICE:couldn't get output port", __FILE__, __LINE__);

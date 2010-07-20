@@ -891,6 +891,7 @@ namespace Uintah {
                                        int step, int nsteps);
 
     MaterialSubset* d_press_matl;
+    MaterialSet*    d_press_matlSet;
 
     private:
       friend class MPMICE;
