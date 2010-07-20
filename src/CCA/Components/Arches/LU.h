@@ -195,7 +195,7 @@ class LU{
       * @param normdXi      Norm (Linfty) of dX(i) (prior iteration)
       * @param normdXip1    Norm (Linfty) of dX(i+1) (current iteration)
       * @param finRelNorm   Norm (Linfty) of final relative error:
-      *                     \f[ \text{FinalRelativeNorm} = \Vert dx^{(i+1)} \Vert / \Vert x^{(i)} \Vert \f]
+      *                     $ f [ \text{FinalRelativeNorm} = \Vert dx^{(i+1)} \Vert / \Vert x^{(i)} \Vert f] $
       */
     void update_xstate( double norm_X_i, 
                         double norm_dX_i, 
