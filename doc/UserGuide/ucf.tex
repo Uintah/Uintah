@@ -740,6 +740,23 @@ include:
 
 \end{itemize}
 
+The 'validateUda' script (src/Packages/Uintah/scripts/) can be used to
+test the integrity of a UDA directory. It does not interogate the data
+for 'correctness', but it performs 5 basic tests on each uda:
+
+\begin{Verbatim}
+Usage validateUda  <udas>
+Test 0:  Does index.xml exist?                                        true or false
+Test 1:  Does each timestep in index.xml exist?                       true or false
+Test 2:  Do all timesteps.xml files exist?                            true or false
+Test 3:  Do all the level directories exist:                          true or false
+Test 4:  Do all of the pxxxx.xml files exist and have size >0:        true or false
+Test 5:  Do all of the pxxxx.data files exist and have size > 0:      true or false
+\end{Verbatim}
+
+If any of the tests fail then the corrupt output timestep should be removed from the index.xml file.
+
+
 See Section~\ref{Sec:DataArchiver} for a description of how to specify
 what data are saved and how frequently.
 
