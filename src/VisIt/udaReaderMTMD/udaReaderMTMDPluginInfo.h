@@ -82,6 +82,8 @@ class udaReaderMTMDCommonPluginInfo : public virtual CommonDatabasePluginInfo, p
     virtual DatabaseType              GetDatabaseType();
     virtual avtDatabase              *SetupDatabase(const char * const *list,
                                                     int nList, int nBlock);
+    virtual DBOptionsAttributes *GetReadOptions() const;
+    virtual DBOptionsAttributes *GetWriteOptions() const;
 };
 
 class udaReaderMTMDMDServerPluginInfo : public virtual MDServerDatabasePluginInfo, public virtual udaReaderMTMDCommonPluginInfo
