@@ -233,6 +233,8 @@ DragModel::sched_computeModel( const LevelP& level,
                                SchedulerP& sched, 
                                int timeSubStep )
 {
+  proc0cout << "Computing drag model." << endl;
+
   // calculate model source term for dqmom velocity internal coodinate
   std::string taskname = "DragModel::computeModel";
   Task* tsk = scinew Task(taskname, this, &DragModel::computeModel, timeSubStep);
@@ -422,19 +424,22 @@ DragModel::computeModel( const ProcessorGroup* pc,
           wvel_model[c]    = (phi/t_p)*(z_diff + d_gravity.z());
           drag_particle[c] = Vector( uvel_model[c], vvel_model[c], wvel_model[c] );
 
-          ////cmr
-          //if( c == IntVector(1,2,3) && d_quadNode == 0 ) {
-          //  cout << "tau_p = (rhop/(18*d_visc))*pow(length,2) = (" << rhop << "/(18*" << d_visc << "))*" << length*length << endl;
-          //  cout << "X-Vel Drag = (phi/t_p)*(x_diff + d_gravity.x()) = (" << phi << "/" << t_p << ")*(" << x_diff << ")" << endl;
-          //  cout << "Y-Vel Drag = (phi/t_p)*(y_diff + d_gravity.y()) = (" << phi << "/" << t_p << ")*(" << y_diff << ")" << endl;
-          //  cout << "Z-Vel Drag = (phi/t_p)*(z_diff + d_gravity.z()) = (" << phi << "/" << t_p << ")*(" << z_diff << ")" << endl;
-          //}
-  
           double prefix = -(weight[c]*d_w_scaling_factor)*(rhop/6)*pi*(phi/t_p)*pow(length,3);
           double gasSrc_x = prefix*x_diff;
           double gasSrc_y = prefix*y_diff;
           double gasSrc_z = prefix*z_diff;
           drag_gas[c] = Vector( gasSrc_x, gasSrc_y, gasSrc_z );
+
+          //cmr
+          if( c == IntVector(1,2,3) ) {
+            cout << "Drag Model: QN " << d_quadNode << ": Gas velocity = " << gasVel << " and particle velocity = " << partVel << endl;
+            cout << "Drag Model: QN " << d_quadNode << ": Gas drag = prefix*diff = " << prefix << "*" << Vector(x_diff,y_diff,z_diff) << " = " << drag_gas[c] << endl;
+            //cout << "tau_p = (rhop/(18*d_visc))*pow(length,2) = (" << rhop << "/(18*" << d_visc << "))*" << length*length << endl;
+            //cout << "X-Vel Drag = (phi/t_p)*(x_diff + d_gravity.x()) = (" << phi << "/" << t_p << ")*(" << x_diff << ")" << endl;
+            //cout << "Y-Vel Drag = (phi/t_p)*(y_diff + d_gravity.y()) = (" << phi << "/" << t_p << ")*(" << y_diff << ")" << endl;
+            //cout << "Z-Vel Drag = (phi/t_p)*(z_diff + d_gravity.z()) = (" << phi << "/" << t_p << ")*(" << z_diff << ")" << endl;
+          }
+  
 
         } else {
 
@@ -592,4 +597,85 @@ DragModel::computeParticleVelocity( const ProcessorGroup* pc,
 
   }//end patch loop
 }
+
+
+
+//---------------------------------------------------------------------------
+// Method: Schedule the initialization of special variables unique to model
+//---------------------------------------------------------------------------
+void 
+DragModel::sched_initVars( const LevelP& level, SchedulerP& sched )
+{
+  std::string taskname = "DragModel::initVars";
+  Task* tsk = scinew Task(taskname, this, &DragModel::initVars);
+
+  tsk->computes( d_modelLabel );
+  tsk->computes( d_gasLabel   );
+
+  tsk->computes( d_velocity_label );
+
+  tsk->requires( Task::NewDW, d_weight_label, Ghost::None, 0);
+  tsk->requires( Task::NewDW, d_uvel_label, Ghost::None, 0);
+  tsk->requires( Task::NewDW, d_vvel_label, Ghost::None, 0);
+  tsk->requires( Task::NewDW, d_wvel_label, Ghost::None, 0);
+
+  sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials()); 
+}
+
+//-------------------------------------------------------------------------
+// Method: Initialize special variables unique to the model
+//-------------------------------------------------------------------------
+void
+DragModel::initVars( const ProcessorGroup * pc, 
+                     const PatchSubset    * patches, 
+                     const MaterialSubset * matls, 
+                     DataWarehouse        * old_dw, 
+                     DataWarehouse        * new_dw )
+{
+  for( int p=0; p < patches->size(); p++ ) {
+
+    const Patch* patch = patches->get(p);
+    int archIndex = 0;
+    int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+
+    constCCVariable<double> weight;
+    constCCVariable<double> wa_uvel;
+    constCCVariable<double> wa_vvel;
+    constCCVariable<double> wa_wvel;
+
+    new_dw->get( weight,  d_weight_label, matlIndex, patch, Ghost::None, 0 );
+    new_dw->get( wa_uvel, d_uvel_label,   matlIndex, patch, Ghost::None, 0 );
+    new_dw->get( wa_vvel, d_vvel_label,   matlIndex, patch, Ghost::None, 0 );
+    new_dw->get( wa_wvel, d_wvel_label,   matlIndex, patch, Ghost::None, 0 );
+
+    CCVariable<Vector> model_value; 
+    new_dw->allocateAndPut( model_value, d_modelLabel, matlIndex, patch ); 
+    model_value.initialize( Vector(0.0,0.0,0.0) );
+
+    CCVariable<Vector> gas_value; 
+    new_dw->allocateAndPut( gas_value, d_gasLabel, matlIndex, patch ); 
+    gas_value.initialize( Vector(0.0,0.0,0.0) );
+
+    CCVariable<Vector> particle_velocity; 
+    new_dw->allocateAndPut( particle_velocity, d_velocity_label, matlIndex, patch ); 
+
+    for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
+      IntVector c = *iter; 
+
+      bool weight_is_small = ( weight[c] < TINY );
+      
+      if( weight_is_small ) {
+        particle_velocity[c] = Vector( 0.0, 0.0, 0.0 );
+      } else {
+        double uvel = wa_uvel[c]/weight[c];
+        double vvel = wa_vvel[c]/weight[c];
+        double wvel = wa_wvel[c]/weight[c];
+        particle_velocity[c] = Vector(uvel,vvel,wvel);
+      }
+
+    }//end cells
+
+  }//end patches
+}
+
 
