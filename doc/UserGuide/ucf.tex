@@ -122,27 +122,50 @@ attribute that must be specified with either \tt mpm, mpmice, ice, arches,
 Uintah components are time dependent codes.  As such, one of the first
 entries in each input file describes the time-stepping parameters.  An
 input file segment is given below that encompasses all of the possible
-parameters.  Most are self-explanatory, and not all are required, (e.g
-\tt <max\_Timestep>, <max\_delt\_increase>,
-<end\_on\_max\_time\_exactly> \normalfont and \tt <delt\_init>
-\normalfont are all optional).  \tt <timestep\_multiplier> \normalfont
-serves as a CFL number, that is, a number, usually less than 1.0, that
-is used to moderate the timestep automatically calculated by the
-individual components.
+parameters.  The function of each of these parameters is described below.
 
 \begin{Verbatim}[fontsize=\footnotesize]
 <Time>
     <maxTime>            1.0         </maxTime>
     <initTime>           0.0         </initTime>
-    <delt_min>           0.0         </delt_min>
-    <delt_max>           1.0         </delt_max>
-    <delt_init>          1.0e-9      </delt_init>
-    <max_delt_increase>  2.0         </max_delt_increase>
-    <timestep_multiplier>1.0         </timestep_multiplier>
-    <max_Timestep>       100         </max_Timestep>
-    <end_on_max_time_exactly>true    </end_on_max_time_exactly>
+    <delt\_min>           0.0         </delt\_min>
+    <delt\_max>           1.0         </delt\_max>
+    <delt\_init>          1.0e-9      </delt\_init>
+    <max\_delt\_increase>  2.0         </max\_delt\_increase>
+    <timestep\_multiplier>1.0         </timestep\_multiplier>
+    <max\_Timestep>       100         </max\_Timestep>
+    <end\_on\_max\_time\_exactly>true    </end\_on\_max\_time\_exactly>
 </Time>
 \end{Verbatim}
+
+The following fields are required:
+
+\begin{itemize}
+\item maxTime - how long in physical time to run the simulation for
+\item initTime - what time to begin the simulation at
+\item delt\_min - the smallest timestep the simulation will take
+\item delt\_max - the largest timestep the simulation will take
+\item timestep\_multiplier - multiplies the timestep by this number (before adjusting to min or max timestep)
+\end{itemize}
+
+The following fields are optional:
+
+\begin{itemize}
+\item delt\_init - The timestep to take initially (assuming it's less than the one computed by the simulation)
+\item initial\_delt\_range - The period of time to use the delt\_init (default = 0)
+\item max\_delt\_increase - Maximum amount to multiply the previous delt by (if the newly computed delt is greater than the previous one)
+\item max\_iterations - The number of timesteps to run the simulation for (even on a restart)
+\item max\_Timesteps - The timestep number to end the simulation on (not usually used with max\_iterations)
+\item override\_restart\_delt - On a restart, use this delt instead of the most-recently-used delt.
+\item clamp\_timesteps\_to\_output - Sync the delt with the DataArchiver - when an output timestep occurs, reduce the delt to have the time land on the timestep interval (default = false)
+\item end\_on\_max\_time\_exactly - clamp the delt such that the last timesteps end on what was specified in maxTime (default = false)
+\end{itemize}
+
+A word about timesteps: In general, the timestep (delt) is computed at various stages within a timestep, and the smallest one is used, unless it needs to raise the delt to the delt\_min.
+
+
+
+
 %
 %__________________________________
 \section{Data Archiver} \label{Sec:DataArchiver}
