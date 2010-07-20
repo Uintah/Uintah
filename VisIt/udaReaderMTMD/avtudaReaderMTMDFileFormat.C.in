@@ -72,6 +72,7 @@
 #include <DebugStream.h>
 #include <InvalidVariableException.h>
 #include <InvalidDBTypeException.h>
+#include <DBOptionsAttributes.h>
 
 
 //#ifdef PARALLEL
@@ -79,7 +80,6 @@
 //#  define SERIALIZED_READS
 //#endif
 
-//#define USE_EXTRA_CELLS
 
 
 // ****************************************************************************
@@ -89,12 +89,20 @@
 //  Creation:   Tue May 13 19:02:26 PST 2008
 //
 // ****************************************************************************
-avtudaReaderMTMDFileFormat::avtudaReaderMTMDFileFormat(const char *filename) :
+avtudaReaderMTMDFileFormat::avtudaReaderMTMDFileFormat(const char *filename, DBOptionsAttributes* attrs) :
   avtMTMDFileFormat(filename),
   archive(NULL),
-  grid(NULL)
+  grid(NULL),
+  useExtraCells(false)
 {
   debug5 << "\nIn avtudaReaderFileFormat\n";
+
+  for (int i=0; attrs!=0 && i<attrs->GetNumberOfOptions(); ++i) {
+    if (attrs->GetName(i) == "Load extra cells") {
+      useExtraCells = attrs->GetBool("Load extra cells");
+    }
+  }
+    
 
   // Verify that it is a UDA index.xml file:
   // The 2nd line should look like this <Uintah_DataArchive>.
@@ -847,16 +855,16 @@ avtudaReaderMTMDFileFormat::GetMesh(int timestate, int domain, const char *meshn
       extra_high[i] = high[i];
     }
 
-#ifdef USE_EXTRA_CELLS
+    if (useExtraCells) {
     // If there are extra cells, we need to store them on ALL sides.
-    int nextra = max(max(levelInfo.extraCells[0], levelInfo.extraCells[1]),
-                     levelInfo.extraCells[2]);
+      int nextra = max(max(levelInfo.extraCells[0], levelInfo.extraCells[1]),
+                       levelInfo.extraCells[2]);
 
-    for (int i=0; i<3; i++) {
-      extra_low[i]  -= nextra;
-      extra_high[i] += nextra;
+      for (int i=0; i<3; i++) {
+        extra_low[i]  -= nextra;
+        extra_high[i] += nextra;
+      }
     }
-#endif
 
 
     // Node centered data uses the same mesh as cell centered,
@@ -924,79 +932,77 @@ avtudaReaderMTMDFileFormat::GetMesh(int timestate, int domain, const char *meshn
     }
 
 
-#ifdef USE_EXTRA_CELLS
+    if (useExtraCells) {
+      // If we have extra cells, we need to specify where in the data chunk
+      // the interior cells lay.
+      vtkIntArray *baseIndex = vtkIntArray::New();
+      baseIndex->SetNumberOfTuples(3);
+      baseIndex->SetValue(0, low[0]);
+      baseIndex->SetValue(1, low[1]);
+      baseIndex->SetValue(2, low[2]);
+      baseIndex->SetName("base_index");
+      rgrid->GetFieldData()->AddArray(baseIndex);
+      baseIndex->Delete();
 
-    // If we have extra cells, we need to specify where in the data chunk
-    // the interior cells lay.
-    vtkIntArray *baseIndex = vtkIntArray::New();
-    baseIndex->SetNumberOfTuples(3);
-    baseIndex->SetValue(0, low[0]);
-    baseIndex->SetValue(1, low[1]);
-    baseIndex->SetValue(2, low[2]);
-    baseIndex->SetName("base_index");
-    rgrid->GetFieldData()->AddArray(baseIndex);
-    baseIndex->Delete();
+      vtkIntArray *realDims = vtkIntArray::New();
+      realDims->SetNumberOfTuples(6);
+      realDims->SetValue(0, low[0]-extra_low[0]);
+      realDims->SetValue(1, high[0]-extra_low[0]);
+      realDims->SetValue(2, low[1]-extra_low[1]);
+      realDims->SetValue(3, high[1]-extra_low[1]);
+      realDims->SetValue(4, low[2]-extra_low[2]);
+      realDims->SetValue(5, high[2]-extra_low[2]);
+      realDims->SetName("avtRealDims");
+      rgrid->GetFieldData()->AddArray(realDims);
+      realDims->Delete();
 
-    vtkIntArray *realDims = vtkIntArray::New();
-    realDims->SetNumberOfTuples(6);
-    realDims->SetValue(0, low[0]-extra_low[0]);
-    realDims->SetValue(1, high[0]-extra_low[0]);
-    realDims->SetValue(2, low[1]-extra_low[1]);
-    realDims->SetValue(3, high[1]-extra_low[1]);
-    realDims->SetValue(4, low[2]-extra_low[2]);
-    realDims->SetValue(5, high[2]-extra_low[2]);
-    realDims->SetName("avtRealDims");
-    rgrid->GetFieldData()->AddArray(realDims);
-    realDims->Delete();
-
-    // Mark all of the ghost cells.
-    unsigned char ghostExternal=0;
-    avtGhostData::AddGhostZoneType(ghostExternal,
-                                   ZONE_EXTERIOR_TO_PROBLEM);
-    unsigned char ghostInternal=0;
-    avtGhostData::AddGhostZoneType(ghostInternal,
-                                   DUPLICATED_ZONE_INTERNAL_TO_PROBLEM);
+      // Mark all of the ghost cells.
+      unsigned char ghostExternal=0;
+      avtGhostData::AddGhostZoneType(ghostExternal,
+                                     ZONE_EXTERIOR_TO_PROBLEM);
+      unsigned char ghostInternal=0;
+      avtGhostData::AddGhostZoneType(ghostInternal,
+                                     DUPLICATED_ZONE_INTERNAL_TO_PROBLEM);
 
 
-    vtkUnsignedCharArray *ghostCells = vtkUnsignedCharArray::New();
-    ghostCells->SetName("avtGhostZones");
-    ghostCells->Allocate(rgrid->GetNumberOfCells());
+      vtkUnsignedCharArray *ghostCells = vtkUnsignedCharArray::New();
+      ghostCells->SetName("avtGhostZones");
+      ghostCells->Allocate(rgrid->GetNumberOfCells());
 
-    for (int z=extra_low[2]; z<extra_high[2]; z++) {
-      bool extraz=(z<low[2] || z>=high[2]);
-      bool isboundaryz = (extraz &&
-                          (z>=patchInfo.cc_extra_low[2] && z<patchInfo.cc_extra_high[2]));
+      for (int z=extra_low[2]; z<extra_high[2]; z++) {
+        bool extraz=(z<low[2] || z>=high[2]);
+        bool isboundaryz = (extraz &&
+                            (z>=patchInfo.cc_extra_low[2] && z<patchInfo.cc_extra_high[2]));
 
-      for (int y=extra_low[1]; y<extra_high[1]; y++) {
-        bool extray=(y<low[1] || y>=high[1]);
-        bool isboundaryy = (extray &&
-                            (y>=patchInfo.cc_extra_low[1] && y<patchInfo.cc_extra_high[1]));
+        for (int y=extra_low[1]; y<extra_high[1]; y++) {
+          bool extray=(y<low[1] || y>=high[1]);
+          bool isboundaryy = (extray &&
+                              (y>=patchInfo.cc_extra_low[1] && y<patchInfo.cc_extra_high[1]));
 
-        for (int x=extra_low[0]; x<extra_high[0]; x++) {
-          bool extrax=(x<low[0] || x>=high[0]);
-          bool isboundaryx = (extrax &&
-                              (x>=patchInfo.cc_extra_low[0] && x<patchInfo.cc_extra_high[0]));
+          for (int x=extra_low[0]; x<extra_high[0]; x++) {
+            bool extrax=(x<low[0] || x>=high[0]);
+            bool isboundaryx = (extrax &&
+                                (x>=patchInfo.cc_extra_low[0] && x<patchInfo.cc_extra_high[0]));
 
-          bool extra = (extraz||extray||extrax);
-          bool isboundary = (isboundaryx||isboundaryy||isboundaryz);
+            bool extra = (extraz||extray||extrax);
+            bool isboundary = (isboundaryx||isboundaryy||isboundaryz);
 
-          if (extra) {
-            if (isboundary)
-              ghostCells->InsertNextValue(ghostExternal);
+            if (extra) {
+              if (isboundary)
+                ghostCells->InsertNextValue(ghostExternal);
+              else
+                ghostCells->InsertNextValue(ghostInternal);
+            }
             else
-              ghostCells->InsertNextValue(ghostInternal);
+              ghostCells->InsertNextValue(0);
           }
-          else
-            ghostCells->InsertNextValue(0);
         }
       }
-    }
      
-    rgrid->GetCellData()->AddArray(ghostCells);
-    rgrid->SetUpdateGhostLevel(level);
-    ghostCells->Delete();
-
-#endif
+      rgrid->GetCellData()->AddArray(ghostCells);
+      rgrid->SetUpdateGhostLevel(level);
+      ghostCells->Delete();
+    }
 
 
     return rgrid;
@@ -1119,19 +1125,18 @@ avtudaReaderMTMDFileFormat::GetVar(int timestate, int domain, const char *varnam
       qhigh[i] = high[i];
     }
 
-#ifdef USE_EXTRA_CELLS
+    if (useExtraCells) {
+      // If there are extra cells, we need to query for them on ALL sides.
+      nextra = max(max(levelInfo.extraCells[0], levelInfo.extraCells[1]),
+                   levelInfo.extraCells[2]);
 
-    // If there are extra cells, we need to query for them on ALL sides.
-    nextra = max(max(levelInfo.extraCells[0], levelInfo.extraCells[1]),
-                 levelInfo.extraCells[2]);
-
-    for (int i=0; i<3; i++) {
-      low[i]  -= nextra;
-      high[i] += nextra;
-      qlow[i]  = patchInfo.cc_extra_low[i];
-      qhigh[i] = patchInfo.cc_extra_high[i];
+      for (int i=0; i<3; i++) {
+        low[i]  -= nextra;
+        high[i] += nextra;
+        qlow[i]  = patchInfo.cc_extra_low[i];
+        qhigh[i] = patchInfo.cc_extra_high[i];
+      }
     }
-#endif
 
 
     // Node centered data needs an extra value in each direction,

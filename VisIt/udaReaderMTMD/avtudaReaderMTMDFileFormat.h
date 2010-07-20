@@ -95,11 +95,12 @@ DEALINGS IN THE SOFTWARE.
 // functions from uintah libs to allocate, free, and perform operations on them.
 class DataArchive;
 class GridP;
+class DBOptionsAttributes;
 
 class avtudaReaderMTMDFileFormat : public avtMTMDFileFormat
 {
 public:
-  avtudaReaderMTMDFileFormat( const char * filename );
+  avtudaReaderMTMDFileFormat( const char * filename, DBOptionsAttributes* attrs);
   virtual           ~avtudaReaderMTMDFileFormat();
 
   virtual double        GetTime( int timestep );
@@ -131,7 +132,7 @@ protected:
 
 
   // DATA MEMBERS
-        
+  bool useExtraCells;
   int currTimeStep;
 
   // data that is not dependent on time
