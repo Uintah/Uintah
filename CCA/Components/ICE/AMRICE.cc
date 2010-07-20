@@ -316,17 +316,11 @@ void AMRICE::scheduleRefineInterface(const LevelP& fineLevel,
     const MaterialSet* all_matls = d_sharedState->allMaterials();
     const MaterialSet* ice_matls = d_sharedState->allICEMaterials();
 
-    vector<int> m;
-    m.push_back(0);
-    MaterialSet* press_matl = scinew MaterialSet();
-    press_matl->addAll(m);
-    press_matl->addReference();
-
-    scheduleRefineInterface_Variable(fineLevel, sched, lb->press_CCLabel, oims,press_matl,   needCoarseOld, needCoarseNew);
-    scheduleRefineInterface_Variable(fineLevel, sched, lb->rho_CCLabel,   ND,  ice_matls,    needCoarseOld, needCoarseNew);
-    scheduleRefineInterface_Variable(fineLevel, sched, lb->sp_vol_CCLabel,ND,  all_matls,    needCoarseOld, needCoarseNew);
-    scheduleRefineInterface_Variable(fineLevel, sched, lb->temp_CCLabel,  ND,  all_matls,    needCoarseOld, needCoarseNew);
-    scheduleRefineInterface_Variable(fineLevel, sched, lb->vel_CCLabel,   ND,  ice_matls,    needCoarseOld, needCoarseNew);
+    scheduleRefineInterface_Variable(fineLevel, sched, lb->press_CCLabel, oims,d_press_matlSet, needCoarseOld, needCoarseNew);
+    scheduleRefineInterface_Variable(fineLevel, sched, lb->rho_CCLabel,   ND,  ice_matls,       needCoarseOld, needCoarseNew);
+    scheduleRefineInterface_Variable(fineLevel, sched, lb->sp_vol_CCLabel,ND,  all_matls,       needCoarseOld, needCoarseNew);
+    scheduleRefineInterface_Variable(fineLevel, sched, lb->temp_CCLabel,  ND,  all_matls,       needCoarseOld, needCoarseNew);
+    scheduleRefineInterface_Variable(fineLevel, sched, lb->vel_CCLabel,   ND,  ice_matls,       needCoarseOld, needCoarseNew);
    
     //__________________________________
     // Model Variables.
