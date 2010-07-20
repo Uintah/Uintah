@@ -464,3 +464,56 @@ Balachandar::computeParticleVelocity( const ProcessorGroup* pc,
   }//end patch loop
 }
 
+
+
+//---------------------------------------------------------------------------
+// Method: Schedule the initialization of special variables unique to model
+//---------------------------------------------------------------------------
+void 
+Balachandar::sched_initVars( const LevelP& level, SchedulerP& sched )
+{
+  std::string taskname = "Balachandar::initVars";
+  Task* tsk = scinew Task(taskname, this, &Balachandar::initVars);
+
+  tsk->computes( d_modelLabel );
+  tsk->computes( d_gasLabel   );
+
+  tsk->computes( d_velocity_label );
+
+  sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials()); 
+}
+
+//-------------------------------------------------------------------------
+// Method: Initialize special variables unique to the model
+//-------------------------------------------------------------------------
+void
+Balachandar::initVars( const ProcessorGroup * pc, 
+                       const PatchSubset    * patches, 
+                       const MaterialSubset * matls, 
+                       DataWarehouse        * old_dw, 
+                       DataWarehouse        * new_dw )
+{
+  for( int p=0; p < patches->size(); p++ ) {
+
+    const Patch* patch = patches->get(p);
+    int archIndex = 0;
+    int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+
+    CCVariable<Vector> model_value; 
+    new_dw->allocateAndPut( model_value, d_modelLabel, matlIndex, patch ); 
+    model_value.initialize( Vector(0.0,0.0,0.0) );
+
+    CCVariable<Vector> gas_value; 
+    new_dw->allocateAndPut( gas_value, d_gasLabel, matlIndex, patch ); 
+    gas_value.initialize( Vector(0.0,0.0,0.0) );
+
+    CCVariable<Vector> particle_velocity; 
+    new_dw->allocateAndPut( particle_velocity, d_velocity_label, matlIndex, patch ); 
+    particle_velocity.initialize( Vector(0.0,0.0,0.0) );
+
+  }//end patches
+}
+
+
+
+

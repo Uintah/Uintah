@@ -46,14 +46,14 @@ public:
   void problemSetup(const ProblemSpecP& db);
 
   /** @brief  Actually initialize special variables unique to model */
-  void initVars( const ProcessorGroup * pc, 
-                 const PatchSubset    * patches, 
-                 const MaterialSubset * matls, 
-                 DataWarehouse        * old_dw, 
-                 DataWarehouse        * new_dw );
+  virtual void initVars( const ProcessorGroup * pc, 
+                         const PatchSubset    * patches, 
+                         const MaterialSubset * matls, 
+                         DataWarehouse        * old_dw, 
+                         DataWarehouse        * new_dw ) = 0;
 
   /** @brief Schedule the initialization of special/local variables unique to model */
-  void sched_initVars( const LevelP& level, SchedulerP& sched );
+  virtual void sched_initVars( const LevelP& level, SchedulerP& sched ) = 0;
 
   /** @brief  Actually do dummy initialization (sched_dummyInit is defined in ModelBase parent class) */
   void dummyInit( const ProcessorGroup* pc, 
