@@ -786,7 +786,7 @@
 
       <Active                 spec="OPTIONAL BOOLEAN" need_applies_to="type JWLpp Simple_Burn DDT0" />
       <b                      spec="REQUIRED DOUBLE" need_applies_to="type hard_sphere_gas JWLpp Thomsen_Hartka_water Tillotson" />
-      <E0                     spec="REQUIRED DOUBLE" need_applies_to="type JWLpp LightTime Tillotson" />
+      <E0                     spec="REQUIRED DOUBLE" need_applies_to="type JWLpp Tillotson" />
       <energy_src             spec="REQUIRED DOUBLE" need_applies_to="type mass_momentum_energy_src"/>
       <G                      spec="REQUIRED DOUBLE" need_applies_to="type JWLpp" />
       <mass_src               spec="REQUIRED DOUBLE" need_applies_to="type mass_momentum_energy_src"/>
@@ -794,6 +794,19 @@
       
       <mme_src_t_start        spec="OPTIONAL DOUBLE" need_applies_to="type mass_momentum_energy_src"/>
       <mme_src_t_final        spec="OPTIONAL DOUBLE" need_applies_to="type mass_momentum_energy_src"/>
+      
+      
+      <!-- LightTime -->
+      <LightTime              spec="OPTIONAL NO_DATA">            
+        <fromMaterial         spec="OPTIONAL STRING" />           
+        <toMaterial           spec="OPTIONAL STRING" />           
+        <D                    spec="REQUIRED DOUBLE 'positive'"/>  
+        <E0                    spec="REQUIRED DOUBLE 'positive'"/>
+        <starting_location    spec="REQUIRED VECTOR" />           
+        <react_mixed_cells    spec="REQUIRED BOOLEAN"/>              
+        <direction_if_plane   spec="REQUIRED VECTOR"/>            
+      </LightTime>
+      
       <!--  SimpleRxn -->
       <SimpleRxn              spec="OPTIONAL NO_DATA">
         <material             spec="REQUIRED STRING"/>
