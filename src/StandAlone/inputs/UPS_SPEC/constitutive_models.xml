@@ -9,7 +9,12 @@
                                                                         visco_scram, visco_trans_iso_hyper, water, kayenta, diamm, cnh_mms, 
                                                                         cnh_damage, cnhp_damage, UCNH'">
     <allow_no_tension              spec="OPTIONAL BOOLEAN" />
+    <useMurnahanEOS              spec="OPTIONAL BOOLEAN" />
     <alpha                         spec="OPTIONAL DOUBLE" />
+    <Bulk_Modulus                         spec="OPTIONAL DOUBLE" />
+    <P0                         spec="OPTIONAL DOUBLE" />
+    <rho0                         spec="OPTIONAL DOUBLE" />
+    <gamma                         spec="OPTIONAL DOUBLE" />
     <Beta                          spec="OPTIONAL DOUBLE" />
     <bulk_modulus                  spec="OPTIONAL DOUBLE" />
     <c1                            spec="OPTIONAL DOUBLE" />
