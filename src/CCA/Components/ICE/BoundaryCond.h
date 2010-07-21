@@ -228,6 +228,15 @@ bool getIteratorBCValueBCKind( const Patch* patch,
   if(foundBC){
     // For this face find the iterator
     bcd->getCellFaceIterator(mat_id,bound_ptr,child);
+    
+    if (bound_ptr.done()){
+      ostringstream warn;
+      cout << "ERROR: ICE:boundary conditions ["<< patch->getFaceName(face)
+           << ", " << desc << ", matl: "<< mat_id << ", " << bc_kind 
+           << ", child: "<< child << "] the number of cells that the BC will be applied to is <=1."
+           << bound_ptr << endl;
+      throw InternalError(warn.str(), __FILE__, __LINE__);  
+    }
     return true;
   }else{
     return false;
@@ -417,11 +426,11 @@ void setBC(T& vel_FC,
           //__________________________________
           //  debugging
           if( BC_dbg.active() ) {
-            BC_dbg <<whichVel<< " Face: "<< face <<" I've set BC " << IveSetBC
+            bound_ptr.reset();
+            BC_dbg <<whichVel<< " Face: "<< patch->getFaceName(face) <<" I've set BC " << IveSetBC
                  <<"\t child " << child  <<" NumChildren "<<numChildren 
                  <<"\t BC kind "<< bc_kind <<" \tBC value "<< value
-                 <<"\t bound limits = " << bound_ptr.begin()<<" "<< (bound_ptr.end())
-	          << endl;
+                 <<"\t bound_ptr= " << bound_ptr<< endl;
           }              
         }  // Children loop
       }

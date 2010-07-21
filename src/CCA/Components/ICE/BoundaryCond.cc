@@ -172,13 +172,13 @@ void ImplicitMatrixBC( CCVariable<Stencil7>& A,
         }
         //__________________________________
         //  debugging
-        #if 0
-        cout <<"Face: "<< patch->getFaceName(face) << " one_or_zero " << one_or_zero
-             <<"\t child " << child  <<" NumChildren "<<numChildren 
-             <<"\t BC kind "<< bc_kind
-             <<"\t bound limits = "<< *bound_ptr.begin()<< " "<< *(bound_ptr.end()-1)
-              << endl;
-        #endif
+        if( BC_dbg.active() ) {
+          bound_ptr.reset();
+          BC_dbg <<"Face: "<< patch->getFaceName(face) << " one_or_zero " << one_or_zero
+               <<"\t child " << child  <<" NumChildren "<<numChildren 
+               <<"\t BC kind "<< bc_kind
+               <<"\t bound_ptr "<< bound_ptr<< endl;
+        }
       } // if iterator found
     } // child loop
     cout_BC_CC << "    "<< patch->getFaceName(face) << " \t " << bc_kind << " numChildren: " << numChildren 
@@ -305,11 +305,11 @@ void set_imp_DelP_BC( CCVariable<double>& imp_delP,
         //__________________________________
         //  debugging
         if( BC_dbg.active() ) {
+          bound_ptr.reset();
           BC_dbg <<"Face: "<< patch->getFaceName(face)
                <<"\t child " << child  <<" NumChildren "<<numChildren
                <<"\t BC kind "<< bc_kind <<" \tBC value "<< bc_value
-               <<"\t bound limits = "<< bound_ptr.begin()<< " "<< bound_ptr.end()
-                << endl;
+               <<"\t bound_ptr = "<< bound_ptr<< endl;
         }
       } // if(foundIterator)
     } // child loop
@@ -668,11 +668,11 @@ void setBC(CCVariable<double>& press_CC,
         //__________________________________
         //  debugging
         if( BC_dbg.active() ) {
+          bound_ptr.reset();
           BC_dbg <<"Face: "<< patch->getFaceName(face) <<" I've set BC " << IveSetBC
                <<"\t child " << child  <<" NumChildren "<<numChildren 
                <<"\t BC kind "<< bc_kind <<" \tBC value "<< bc_value
-               <<"\t bound limits = "<< bound_ptr.begin()<< " "<< bound_ptr.end()
-                << endl;
+               <<"\t bound_ptr = "<< bound_ptr<< endl;
         }
       }  // if bcKind != LODI
     }  // child loop
@@ -764,7 +764,6 @@ void setBC(CCVariable<double>& var_CC,
                                                bc_value, bound_ptr,bc_kind); 
                                                 
       if (foundIterator && bc_kind != "LODI") {
-
         //__________________________________
         // Dirichlet
         if(bc_kind == "Dirichlet"){
@@ -815,16 +814,17 @@ void setBC(CCVariable<double>& var_CC,
               hydrostaticTempAdjustment(face, patch, bound_ptr, gravity,
                                         gamma, cv, cell_dx, var_CC);
         }
+        
+        //__________________________________
+        //  debugging
+        if( BC_dbg.active() ) {
+          bound_ptr.reset();
+          cout  <<"Face: "<< patch->getFaceName(face) <<" I've set BC " << IveSetBC
+               <<"\t child " << child  <<" NumChildren "<<numChildren 
+               <<"\t BC kind "<< bc_kind <<" \tBC value "<< bc_value
+               <<"\t bound_itr "<< bound_ptr << endl;
+        }
       }  // found iterator
-      //__________________________________
-      //  debugging
-      if( BC_dbg.active() ) {
-        cout  <<"Face: "<< patch->getFaceName(face) <<" I've set BC " << IveSetBC
-             <<"\t child " << child  <<" NumChildren "<<numChildren 
-             <<"\t BC kind "<< bc_kind <<" \tBC value "<< bc_value
-             <<"\t bound limits = "<< bound_ptr.begin()<< " "<< bound_ptr.end()
-              << endl;
-      }
     }  // child loop
     
     cout_BC_CC << "    "<< patch->getFaceName(face) << " \t " << bc_kind << " numChildren: " << numChildren 
@@ -1031,6 +1031,7 @@ void setSpecificVolBC(CCVariable<double>& sp_vol_CC,
                                           bc_value, bound_ptr,bc_kind); 
                                    
       if(foundIterator) {
+
         //__________________________________
         // Dirichlet
         if(bc_kind == "Dirichlet"){
@@ -1071,8 +1072,7 @@ void setSpecificVolBC(CCVariable<double>& sp_vol_CC,
           BC_dbg <<"Face: "<< patch->getFaceName(face) <<" I've set BC " << IveSetBC
                <<"\t child " << child  <<" NumChildren "<<numChildren 
                <<"\t BC kind "<< bc_kind <<" \tBC value "<< bc_value
-               <<"\t bound limits = "<< bound_ptr.begin()<< " "<< bound_ptr.end()
-                << endl;
+               <<"\t bound limits = "<< bound_ptr << endl;
         }
       }  // if iterator found
     }  // child loop
