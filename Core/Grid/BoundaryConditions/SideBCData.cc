@@ -104,7 +104,7 @@ void SideBCData::determineIteratorLimits(Patch::FaceType face,
                                          vector<Point>& test_pts)
 {
 #if 0
-  cout << "SideBC determineIteratorLimits()" << endl;
+  cout << "SideBC determineIteratorLimits() " << patch->getFaceName(face)<<  endl;
 #endif
 
 
