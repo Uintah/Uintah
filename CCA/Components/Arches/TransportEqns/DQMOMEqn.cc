@@ -848,7 +848,10 @@ DQMOMEqn::sched_dummyInit( const LevelP& level, SchedulerP& sched )
   Ghost::GhostType  gn = Ghost::None;
 
   tsk->requires(Task::OldDW, d_transportVarLabel, gn, 0);
-  tsk->requires(Task::OldDW, d_sourceLabel,       gn, 0);
+  tsk->requires(Task::OldDW, d_FconvLabel, gn, 0);
+  tsk->requires(Task::OldDW, d_FdiffLabel, gn, 0);
+  tsk->requires(Task::OldDW, d_RHSLabel, gn, 0);
+  tsk->requires(Task::OldDW, d_sourceLabel, gn, 0);
 
   tsk->computes(d_transportVarLabel);
   tsk->computes(d_oldtransportVarLabel); 
@@ -859,6 +862,9 @@ DQMOMEqn::sched_dummyInit( const LevelP& level, SchedulerP& sched )
     tsk->requires(Task::OldDW, iter->second, gn, 0);
   } 
   tsk->computes(d_sourceLabel); 
+  tsk->computes(d_FconvLabel);
+  tsk->computes(d_FdiffLabel);
+  tsk->computes(d_RHSLabel);
 
   sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
 
@@ -883,6 +889,9 @@ DQMOMEqn::dummyInit( const ProcessorGroup* pc,
     CCVariable<double> ic; 
     CCVariable<Vector> pvel; 
     CCVariable<double> src; 
+    CCVariable<double> fconv;
+    CCVariable<double> fdiff;
+    CCVariable<double> rhs;
     constCCVariable<double> phi_oldDW; 
 
     ArchesLabel::PartVelMap::iterator iter = d_fieldLabels->partVel.find(d_quadNode);
@@ -892,10 +901,16 @@ DQMOMEqn::dummyInit( const ProcessorGroup* pc,
     new_dw->allocateAndPut( ic, d_icLabel, matlIndex, patch ); 
     if (d_weight) new_dw->allocateAndPut( pvel, iter->second, matlIndex, patch ); 
     new_dw->allocateAndPut( src, d_sourceLabel, matlIndex, patch ); 
+    new_dw->allocateAndPut( fconv, d_FconvLabel, matlIndex, patch );
+    new_dw->allocateAndPut( fdiff, d_FdiffLabel, matlIndex, patch );
+    new_dw->allocateAndPut( rhs, d_RHSLabel, matlIndex, patch );
+
+    src.initialize(0.0);
+    fconv.initialize(0.0);
+    fdiff.initialize(0.0);
+    rhs.initialize(0.0);
 
     old_dw->get(phi_oldDW, d_transportVarLabel, matlIndex, patch, gn, 0);
-
     phi.copyData( phi_oldDW ); 
-
   }
 }
