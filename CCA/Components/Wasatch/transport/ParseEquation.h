@@ -37,7 +37,7 @@ namespace Wasatch{
 
   /**
    *  \class EqnTimestepAdaptor
-   *  \Author James C. Sutherland
+   *  \author James C. Sutherland
    *  \date June, 2010
    *
    *  \brief Strongly typed adaptor provides the key functionality to
