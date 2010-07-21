@@ -35,8 +35,10 @@ namespace Uintah
 {
 
   std::ostream& operator<<(std::ostream& out, const Uintah::ListOfCellsIterator& b)
-  {
-    out << "[ListOfCellsIterator at index" << b.index_ << " of " << b.listOfCells_.size()-1 << "]" ;
+  {    
+    int last = b.listOfCells_.size()-2;
+    out << "[ListOfCellsIterator with " << b.listOfCells_.size()-1 << " elements, first cell in list: "<< b.begin() 
+        << " last cell in list: " << b.listOfCells_[last] << "]";
 
     return out;
 
