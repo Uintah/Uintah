@@ -1069,6 +1069,7 @@ void setSpecificVolBC(CCVariable<double>& sp_vol_CC,
         //__________________________________
         //  debugging
         if( BC_dbg.active() ) {
+          bound_ptr.reset();
           BC_dbg <<"Face: "<< patch->getFaceName(face) <<" I've set BC " << IveSetBC
                <<"\t child " << child  <<" NumChildren "<<numChildren 
                <<"\t BC kind "<< bc_kind <<" \tBC value "<< bc_value
