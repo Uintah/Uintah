@@ -12,6 +12,7 @@
     <alpha                         spec="OPTIONAL DOUBLE" />
     <Beta                          spec="OPTIONAL DOUBLE" />
     <bulk_modulus                  spec="OPTIONAL DOUBLE" />
+    <bulkPrime                     spec="OPTIONAL DOUBLE" />
     <c1                            spec="OPTIONAL DOUBLE" />
     <c2                            spec="OPTIONAL DOUBLE" />
     <c3                            spec="OPTIONAL DOUBLE" />
@@ -268,6 +269,7 @@
     <taylor_quinney_coeff          spec="OPTIONAL DOUBLE" />
     <tolerance                     spec="OPTIONAL DOUBLE" />
     <useDamage                     spec="OPTIONAL BOOLEAN" />
+    <useMurnahanEOS                spec="OPTIONAL BOOLEAN" />
     <useModifiedEOS                spec="OPTIONAL BOOLEAN" />
     <useObjectiveRate              spec="OPTIONAL BOOLEAN" />        <!-- FIXME: What is the default -->
     <usePlasticity                 spec="OPTIONAL BOOLEAN" />
