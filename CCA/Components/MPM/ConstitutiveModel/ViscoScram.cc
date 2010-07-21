@@ -94,16 +94,6 @@ ViscoScram::ViscoScram(ProblemSpecP& ps,MPMFlags* Mflag)
   ps->get("use_time_temperature_equation", d_doTimeTemperature);
   d_useModifiedEOS = false;
   ps->get("useModifiedEOS",d_useModifiedEOS);
-  // Murnahan EOS Initialization
-  ps->getWithDefault( "useMurnahanEOS", d_useMurnahanEOS, false);
-  if( d_useMurnahanEOS ) {
-    ps->require("Bulk_Modulus", d_MEOSData.d_Bulk); 
-    ps->require("gamma",        d_MEOSData.d_Gamma);
-    ps->require("viscosity",    d_MEOSData.d_Viscosity);
-    ps->require("pressure",     d_MEOSData.d_P0);
-    ps->require("rho0",         d_MEOSData.d_Rho0);
-  }
-
   d_useObjectiveRate = false;
   ps->get("useObjectiveRate",d_useObjectiveRate);
 
@@ -183,18 +173,7 @@ ViscoScram::ViscoScram(const ViscoScram* cm) : ConstitutiveModel(cm)
   d_initialData.Beta = cm->d_initialData.Beta;
   d_initialData.Gamma = cm->d_initialData.Gamma;
   d_initialData.DCp_DTemperature = cm->d_initialData.DCp_DTemperature;
- 
-  // Murnahan EOS Copy 
-  d_useMurnahanEOS = cm->d_useMurnahanEOS;
-  if( d_useMurnahanEOS ) {
-    d_MEOSData.d_Bulk = cm->d_MEOSData.d_Bulk;  
-    d_MEOSData.d_Gamma = cm->d_MEOSData.d_Gamma;
-    d_MEOSData.d_Viscosity = cm->d_MEOSData.d_Viscosity;
-    d_MEOSData.d_P0 = cm->d_MEOSData.d_P0;
-    d_MEOSData.d_Rho0 = cm->d_MEOSData.d_Rho0;
-  }
 
-  
   // Time-temperature data for relaxtion time calculation
   d_tt.T0_WLF = cm->d_tt.T0_WLF;
   d_tt.C1_WLF = cm->d_tt.C1_WLF;
@@ -286,17 +265,6 @@ void ViscoScram::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
   cm_ps->appendElement("use_time_temperature_equation", d_doTimeTemperature);
   cm_ps->appendElement("useModifiedEOS",d_useModifiedEOS);
   cm_ps->appendElement("useObjectiveRate",d_useObjectiveRate);
-
-  // Murnahan EOS output
-  cm_ps->appendElement( "useMurnahanEOS", d_useMurnahanEOS);
-  if( d_useMurnahanEOS ) {
-    cm_ps->appendElement("Bulk_Modulus", d_MEOSData.d_Bulk); 
-    cm_ps->appendElement("gamma",        d_MEOSData.d_Gamma);
-    cm_ps->appendElement("viscosity",    d_MEOSData.d_Viscosity);
-    cm_ps->appendElement("pressure",     d_MEOSData.d_P0);
-    cm_ps->appendElement("rho0",         d_MEOSData.d_Rho0);
-  }
-
 
   // Time-temperature data for relaxtion time calculation
   cm_ps->appendElement("T0", d_tt.T0_WLF);
@@ -1251,21 +1219,12 @@ double ViscoScram::computeRhoMicroCM(double pressure,
   double p_gauge = pressure - p_ref;
   double rho_cur;
 
-  if(d_useMurnahanEOS) {    // Murnahan EOS
-    double gamma = d_MEOSData.d_Gamma;
-    double bulk  = d_MEOSData.d_Bulk;
-    double P0    = d_MEOSData.d_P0;
-
-    if(pressure >= P0)
-      rho_cur = rho_orig * pow((gamma*bulk*(pressure-P0)+1.0),1.0/gamma);
-    else
-      rho_cur = rho_orig * pow((pressure/P0),bulk*P0);
-
-  } else if(d_useModifiedEOS && p_gauge < 0.0) {
+  if(d_useModifiedEOS && p_gauge < 0.0) {
     double A = p_ref;       // Modified EOS
     double n = p_ref/d_bulk;
     rho_cur  = rho_orig*pow(pressure/A,n);
-  } else {                  // STANDARD EOS
+  }
+  else {                      // STANDARD EOS
     double p_g_over_bulk = p_gauge/d_bulk;
     rho_cur=rho_orig*(p_g_over_bulk + sqrt(p_g_over_bulk*p_g_over_bulk +1.));
   }
@@ -1280,20 +1239,8 @@ void ViscoScram::computePressEOSCM(double rho_cur,double& pressure,
 {
   double rho_orig = matl->getInitialDensity();
   double inv_rho_orig = 1./rho_orig;
- 
-  if(d_useMurnahanEOS) {      // Murnahan EOS
-    double gamma = d_MEOSData.d_Gamma;
-    double bulk  = d_MEOSData.d_Bulk;
-    double P0    = d_MEOSData.d_P0;
-    
-    if(rho_cur >= rho_orig){
-      pressure = P0 + (1.0/(gamma*bulk)) * (pow(rho_cur/rho_orig, gamma)-1.0);
-      dp_drho  = (1.0/(bulk*rho_orig))  * pow((rho_cur/rho_orig), gamma-1.0);
-    } else {
-      pressure = P0 * pow(rho_cur/rho_orig, (1.0/(bulk*P0)));
-      dp_drho  = (1.0/(bulk*rho_orig))*pow(rho_cur/rho_orig, (1.0/(bulk*P0)-1));
-    }
-  } if(d_useModifiedEOS && rho_cur < rho_orig){
+
+  if(d_useModifiedEOS && rho_cur < rho_orig){
     double A = p_ref;         // MODIFIED EOS
     double n = d_bulk/p_ref;
     double rho_rat_to_the_n = pow(rho_cur*inv_rho_orig,n);
