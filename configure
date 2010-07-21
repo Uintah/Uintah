@@ -886,6 +886,11 @@ DEF_TABPROPS
 INC_TABPROPS_H
 TABPROPS_LIB_FLAG
 TABPROPS_LIB_DIR_FLAG
+HAVE_BOOST
+DEF_BOOST
+INC_BOOST_H
+BOOST_LIB_FLAG
+BOOST_LIB_DIR_FLAG
 HAVE_HYPRE
 DEF_HYPRE
 INC_HYPRE_H
@@ -1533,6 +1538,7 @@ Optional Packages:
 --with-mpiuni=DIR       Use the mpiuni installation in DIR
 --with-hypre=DIR        Use the hypre installation in DIR
 --with-petsc=DIR        Use the petsc installation in DIR
+--with-boost=DIR        Use the Boost library in DIR
 --with-tabprops=DIR     Use the TabProps library in DIR
 --with-zoltan=DIR       Use the Zoltan installation in DIR
 --with-unipetsc=DIR     Use the unipetsc installation in DIR
@@ -2535,6 +2541,36 @@ echo "$as_me: error: The file or directory parameter ($petsc) specified for --wi
   fi
 
 
+
+
+# Check whether --with-boost was given.
+if test "${with_boost+set}" = set; then
+  withval=$with_boost; with_boost="$withval"
+   sci_required_boost=yes
+else
+  with_boost=""
+fi
+
+  sci_arg_with_list="$sci_arg_with_list --with-boost --without-boost"
+  if test -n "$boost" -a ! -e "$boost"; then
+    { { echo "$as_me:$LINENO: error: The file or directory parameter ($boost) specified for --with-boost does not exist!  Please verify that the path and file are correct." >&5
+echo "$as_me: error: The file or directory parameter ($boost) specified for --with-boost does not exist!  Please verify that the path and file are correct." >&2;}
+   { (exit 1); exit 1; }; }
+  fi
+
+
+#SCI_ARG_WITH(spatialops,
+#  AC_HELP_STRING(--with-spatialops=DIR,
+#                 Use the SpatialOps library in DIR),
+#  [with_spatialops="$withval"
+#   sci_required_spatialops=yes],
+#  [with_spatialops=""])
+#SCI_ARG_WITH(exprlib,
+#  AC_HELP_STRING(--with-exprlib=DIR,
+#                 Use the ExprLib library in DIR),
+#  [with_exprlib="$withval"
+#   sci_required_exprlib=yes],
+#  [with_exprlib=""])
 
 
 # Check whether --with-tabprops was given.
@@ -41555,10 +41591,10 @@ if (test "$HAVE_MPI" = "yes" || test "$HAVE_MPI_UNI" = "yes") && test "$HAVE_BLA
       # The newer (2.3+) versions of petsc don't use the libO anymore...
       have23=`echo "$with_petsc" | grep "2.3."`
       if test -z "$have23" ; then
-         petsc_version_major=`grep PETSC_VERSION_MAJOR $with_petsc/include/petscversion.h | awk '{print $3}'`
-         petsc_version_minor=`grep PETSC_VERSION_MINOR $with_petsc/include/petscversion.h | awk '{print $3}'`
-         if test $petsc_version_major -eq 2 ; then
-            if test $petsc_version_minor -eq 3 ; then
+         petsc_version_major=`grep PETSC_VERSION_MAJOR $with_petsc/include/petscversion.h | grep define | awk '{print $3}'`
+         petsc_version_minor=`grep PETSC_VERSION_MINOR $with_petsc/include/petscversion.h | grep define | awk '{print $3}'`
+         if test "$petsc_version_major" -eq 2 ; then
+            if test "$petsc_version_minor" -eq 3 ; then
                have23=true
             fi
          fi
@@ -44905,6 +44941,7 @@ ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
 ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
 ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
+
 ##  --  search for TabProps ------------------------
 
 if test "$with_tabprops"; then
@@ -44948,7 +44985,42 @@ fi
 
 
 
-## -----------------------------------------------
+##  --  search for Boost ------------------------
+
+if test "$with_boost"; then
+  if test "$with_boost" = "yes"; then
+    { { echo "$as_me:$LINENO: error: --with-boost=DIR requires a DIRectory be provided. " >&5
+echo "$as_me: error: --with-boost=DIR requires a DIRectory be provided. " >&2;}
+   { (exit 1); exit 1; }; }
+  else
+    { echo "$as_me:$LINENO: checking for Boost files (For now we are just verifying the existence of lib and .h files)" >&5
+echo $ECHO_N "checking for Boost files (For now we are just verifying the existence of lib and .h files)... $ECHO_C" >&6; }
+    if test ! -d $with_boost; then
+      { { echo "$as_me:$LINENO: error: '$with_boost' directory does not exist. " >&5
+echo "$as_me: error: '$with_boost' directory does not exist. " >&2;}
+   { (exit 1); exit 1; }; }
+    fi
+    for file in include/boost/BSpline.h include/boost/LU.h include/boost/StateTable.h lib/boost/libboost.a; do
+      if test ! -f $with_boost/$file; then
+        { { echo "$as_me:$LINENO: error: '$with_boost/$file' does not exist. " >&5
+echo "$as_me: error: '$with_boost/$file' does not exist. " >&2;}
+   { (exit 1); exit 1; }; }
+      fi
+    done
+  fi
+  { echo "$as_me:$LINENO: result: yes" >&5
+echo "${ECHO_T}yes" >&6; }
+  DEF_BOOST="#define HAVE_BOOST 1"
+  INC_BOOST_H="-I$with_boost/include"
+  BOOST_LIB_DIR_FLAG="-L$with_boost/lib/boost"
+  BOOST_LIB_FLAG="-lboost"
+  HAVE_BOOST="yes"
+fi
+
+
+
+
+
 
 ##  --  search for hypre stuff  ------------------------------------------
 
@@ -46533,6 +46605,11 @@ DEF_TABPROPS!$DEF_TABPROPS$ac_delim
 INC_TABPROPS_H!$INC_TABPROPS_H$ac_delim
 TABPROPS_LIB_FLAG!$TABPROPS_LIB_FLAG$ac_delim
 TABPROPS_LIB_DIR_FLAG!$TABPROPS_LIB_DIR_FLAG$ac_delim
+HAVE_BOOST!$HAVE_BOOST$ac_delim
+DEF_BOOST!$DEF_BOOST$ac_delim
+INC_BOOST_H!$INC_BOOST_H$ac_delim
+BOOST_LIB_FLAG!$BOOST_LIB_FLAG$ac_delim
+BOOST_LIB_DIR_FLAG!$BOOST_LIB_DIR_FLAG$ac_delim
 HAVE_HYPRE!$HAVE_HYPRE$ac_delim
 DEF_HYPRE!$DEF_HYPRE$ac_delim
 INC_HYPRE_H!$INC_HYPRE_H$ac_delim
@@ -46545,7 +46622,7 @@ LIBOBJS!$LIBOBJS$ac_delim
 LTLIBOBJS!$LTLIBOBJS$ac_delim
 _ACEOF
 
-  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 58; then
+  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 63; then
     break
   elif $ac_last_try; then
     { { echo "$as_me:$LINENO: error: could not make $CONFIG_STATUS" >&5

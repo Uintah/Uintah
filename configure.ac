@@ -286,6 +286,24 @@ SCI_ARG_WITH(petsc,
   [with_petsc="$withval"
    sci_required_petsc=yes],
   [with_petsc=""])
+SCI_ARG_WITH(boost,
+  AC_HELP_STRING(--with-boost=DIR,
+                 Use the Boost library in DIR),
+  [with_boost="$withval"
+   sci_required_boost=yes],
+  [with_boost=""])
+#SCI_ARG_WITH(spatialops,
+#  AC_HELP_STRING(--with-spatialops=DIR,
+#                 Use the SpatialOps library in DIR),
+#  [with_spatialops="$withval"
+#   sci_required_spatialops=yes],
+#  [with_spatialops=""])
+#SCI_ARG_WITH(exprlib,
+#  AC_HELP_STRING(--with-exprlib=DIR,
+#                 Use the ExprLib library in DIR),
+#  [with_exprlib="$withval"
+#   sci_required_exprlib=yes],
+#  [with_exprlib=""])
 SCI_ARG_WITH(tabprops,
   AC_HELP_STRING(--with-tabprops=DIR,
                  Use the TabProps library in DIR),
@@ -3108,10 +3126,10 @@ if (test "$HAVE_MPI" = "yes" || test "$HAVE_MPI_UNI" = "yes") && test "$HAVE_BLA
       # The newer (2.3+) versions of petsc don't use the libO anymore...
       have23=`echo "$with_petsc" | grep "2.3."`
       if test -z "$have23" ; then
-         petsc_version_major=`grep PETSC_VERSION_MAJOR $with_petsc/include/petscversion.h | awk '{print $3}'`
-         petsc_version_minor=`grep PETSC_VERSION_MINOR $with_petsc/include/petscversion.h | awk '{print $3}'`
-         if test $petsc_version_major -eq 2 ; then
-            if test $petsc_version_minor -eq 3 ; then
+         petsc_version_major=`grep PETSC_VERSION_MAJOR $with_petsc/include/petscversion.h | grep define | awk '{print $3}'`
+         petsc_version_minor=`grep PETSC_VERSION_MINOR $with_petsc/include/petscversion.h | grep define | awk '{print $3}'`
+         if test "$petsc_version_major" -eq 2 ; then
+            if test "$petsc_version_minor" -eq 3 ; then
                have23=true
             fi
          fi
@@ -3453,6 +3471,7 @@ AC_SUBST(HDF5_LIB_FLAG)		# Place this var in the configVars.mk.in
 AC_SUBST(HDF5_LIB_DIR_FLAG)	# Place this var in the configVars.mk.in
 sci_defs_files="$sci_defs_files include/sci_defs/hdf5_testdefs.h"
 AC_LANG(C)
+
 ##  --  search for TabProps ------------------------
 
 if test "$with_tabprops"; then
@@ -3486,7 +3505,34 @@ AC_SUBST(INC_TABPROPS_H)
 AC_SUBST(TABPROPS_LIB_FLAG)
 AC_SUBST(TABPROPS_LIB_DIR_FLAG)
 
-## -----------------------------------------------
+##  --  search for Boost ------------------------
+
+if test "$with_boost"; then
+  if test "$with_boost" = "yes"; then
+    AC_MSG_ERROR( --with-boost=DIR requires a DIRectory be provided. )
+  else
+    AC_MSG_CHECKING(for Boost files (For now we are just verifying the existence of lib and .h files)) 
+    if test ! -d $with_boost; then
+      AC_MSG_ERROR( '$with_boost' directory does not exist. )
+    fi
+    for file in include/boost/BSpline.h include/boost/LU.h include/boost/StateTable.h lib/boost/libboost.a; do
+      if test ! -f $with_boost/$file; then
+        AC_MSG_ERROR( '$with_boost/$file' does not exist. )
+      fi
+    done
+  fi
+  AC_MSG_RESULT(yes)
+  DEF_BOOST="#define HAVE_BOOST 1"
+  INC_BOOST_H="-I$with_boost/include"
+  BOOST_LIB_DIR_FLAG="-L$with_boost/lib/boost"
+  BOOST_LIB_FLAG="-lboost"
+  HAVE_BOOST="yes"
+fi
+AC_SUBST(HAVE_BOOST)
+AC_SUBST(DEF_BOOST)
+AC_SUBST(INC_BOOST_H)
+AC_SUBST(BOOST_LIB_FLAG)
+AC_SUBST(BOOST_LIB_DIR_FLAG)
 
 ##  --  search for hypre stuff  ------------------------------------------
 
