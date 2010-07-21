@@ -111,15 +111,6 @@ namespace Uintah {
     const VarLabel* pRandLabel_preReloc;
     const VarLabel* pStrainRateLabel_preReloc;
 
-    // Murnahan EOS Variables
-    struct MurnahanEOSData {
-      double d_Bulk;
-      double d_Rho0;
-      double d_Gamma;
-      double d_P0;
-      double d_Viscosity;
-    };
-
   protected:
 
     friend const Uintah::TypeDescription* 
@@ -127,14 +118,12 @@ namespace Uintah {
 
     // Create datatype for storing model parameters
     bool d_useModifiedEOS;
-    bool d_useMurnahanEOS;
     bool d_random;
     bool d_doTimeTemperature;
     bool d_useObjectiveRate;
     double d_bulk;
 
     CMData d_initialData;
-    MurnahanEOSData d_MEOSData;
     TimeTemperatureData d_tt;
 
   private:
