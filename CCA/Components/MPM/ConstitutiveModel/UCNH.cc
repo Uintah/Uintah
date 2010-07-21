@@ -810,35 +810,23 @@ void UCNH::computeStableTimestep(const Patch* patch,
   double mu   = d_initialData.tauDev;
   double bulk = d_initialData.Bulk;
   
-  if(d_usePlasticity)
-  {
-    for(ParticleSubset::iterator iter = pset->begin(); iter != pset->end(); iter++){
-      particleIndex idx = *iter;
-      
-      // Compute wave speed at each particle, store the maximum
-      Vector pVelocity_idx = pVelocity[idx];
-      if(pMass[idx] > 0){
-        c_dil = sqrt((bulk + 4.*mu/3.)*pvolume[idx]/pMass[idx]);
-      }
-      else{
-        c_dil = 0.0;
-        pVelocity_idx = Vector(0.0,0.0,0.0);
-      }
-      WaveSpeed=Vector(Max(c_dil+fabs(pVelocity_idx.x()),WaveSpeed.x()),
-                       Max(c_dil+fabs(pVelocity_idx.y()),WaveSpeed.y()),
-                       Max(c_dil+fabs(pVelocity_idx.z()),WaveSpeed.z()));
-    }
-  } else {
-    for(ParticleSubset::iterator iter = pset->begin();iter != pset->end();iter++){
-      particleIndex idx = *iter;
+  for(ParticleSubset::iterator iter = pset->begin();iter != pset->end();iter++){
+    particleIndex idx = *iter;
 
-      // Compute wave speed at each particle, store the maximum
+    // Compute wave speed at each particle, store the maximum
+    Vector pVelocity_idx = pVelocity[idx];
+    if(pMass[idx] > 0){
       c_dil = sqrt((bulk + 4.*mu/3.)*pvolume[idx]/pMass[idx]);
-      WaveSpeed=Vector(Max(c_dil+fabs(pVelocity[idx].x()),WaveSpeed.x()),
-                       Max(c_dil+fabs(pVelocity[idx].y()),WaveSpeed.y()),
-                       Max(c_dil+fabs(pVelocity[idx].z()),WaveSpeed.z()));
     }
+    else{
+      c_dil = 0.0;
+      pVelocity_idx = Vector(0.0,0.0,0.0);
+    }
+    WaveSpeed=Vector(Max(c_dil+fabs(pVelocity[idx].x()),WaveSpeed.x()),
+                     Max(c_dil+fabs(pVelocity[idx].y()),WaveSpeed.y()),
+                     Max(c_dil+fabs(pVelocity[idx].z()),WaveSpeed.z()));
   }
+
   WaveSpeed = dx/WaveSpeed;
   double delT_new = WaveSpeed.minComponent();
   new_dw->put(delt_vartype(delT_new), lb->delTLabel, patch->getLevel());
@@ -1085,10 +1073,6 @@ void UCNH::computeStressTensor(const PatchSubset* patches,
       //    velocity gradient (F_n^np1 = dudx * dt + Identity)
       // 2) Update the deformation gradient tensor to its time n+1 value.
       pDefGradInc = velGrad[idx]*delT + Identity;
-      if(d_usePlasticity && !d_useDamage){
-        Matrix3 d   = (velGrad[idx]*delT+Identity)*pDefGrad[idx];
-        pDefGradInc = d*pDefGrad[idx].Inverse();
-      }
       Jinc    = pDefGradInc.Determinant();
       defGrad = pDefGradInc*pDefGrad[idx];
 
@@ -1118,12 +1102,6 @@ void UCNH::computeStressTensor(const PatchSubset* patches,
         cerr << "F_new = " << pDefGrad_new[idx] << endl;
         cerr << "J = "     << J                 << endl;
       }
-      
-      // NOTE //
-      // Maintain backwards compatibility with plasticity while in dev
-      //   Replace GoldStandards later
-      if(d_usePlasticity)
-        pVolume_new[idx] = pMass[idx]/rho_cur;
       
       // Get the volume preserving part of the deformation gradient increment
       //      fBar = pDefGradInc*pow(Jinc, -onethird);
@@ -1345,29 +1323,32 @@ void UCNH::computeStressTensor(const PatchSubset* patches,
       
           computeGradAndBmats(pDispGrad,ni,d_S, oodx, gDisp, l2g,B, Bnl, dof);
         }
+
         // Compute the deformation gradient increment using the pDispGrad
         // Update the deformation gradient tensor to its time n+1 value.
-        pDefGradInc = pDispGrad + Identity;
-        if(d_usePlasticity || d_useDamage)
-          pDefGrad_new[idx] = pDefGradInc*pDefGrad[idx];
-        double J = pDefGrad_new[idx].Determinant();
+        double J;
 
-        // Update the particle volume
-        volold = (pMass[idx]/rho_orig);
-        volnew = volold*J;
-        //pVolume_new[idx] = volnew;
-      
-        // Compute BeBar
-        pRelDefGradBar = pDefGradInc/cbrt(pDefGradInc.Determinant());
-        if(d_usePlasticity || d_useDamage)
-        {
+        pDefGradInc = pDispGrad + Identity;
+        if(d_usePlasticity || d_useDamage) {
+          pDefGrad_new[idx] = pDefGradInc*pDefGrad[idx];
+          J = pDefGrad_new[idx].Determinant();
+
+          // Compute BeBar
+          pRelDefGradBar = pDefGradInc/cbrt(pDefGradInc.Determinant());
+
           pBeBar_new[idx] = pRelDefGradBar*pBeBar[idx]*pRelDefGradBar.Transpose();
         } else {
+          J = pDefGrad_new[idx].Determinant();
           Matrix3 bElBar_new = pDefGrad_new[idx]
                                * pDefGrad_new[idx].Transpose()
                                * pow(J,-(2./3.));
           pBeBar_new[idx] = bElBar_new;
         }
+        
+        // Update the particle volume
+        volold = (pMass[idx]/rho_orig);
+        volnew = volold*J;
+
         // tauDev is equal to the shear modulus times dev(bElBar)
         double mubar   = onethird*pBeBar_new[idx].Trace()*shear;
         Matrix3 shrTrl = (pBeBar_new[idx]*shear - Identity*mubar);
@@ -1725,9 +1706,21 @@ void UCNH::computeStressTensorImplicit(const PatchSubset* patches,
         // Update the deformation gradient tensor to its time n+1 value.
         defGrad  = defGradInc*pDefGrad[idx];
         double J = pDefGrad_new[idx].Determinant();
+
         if(d_usePlasticity || d_useDamage) {
           J = defGrad.Determinant();
           pDefGrad_new[idx] = defGrad;
+        
+          // Compute trial BeBar
+          relDefGradBar = defGradInc/cbrt(Jinc);
+       
+          // Compute the trial elastic part of the volume preserving 
+          // part of the left Cauchy-Green deformation tensor
+          beBarTrial = relDefGradBar*pBeBar[idx]*relDefGradBar.Transpose();
+        } else {
+          beBarTrial = pDefGrad_new[idx]
+                       * pDefGrad_new[idx].Transpose()
+                       * pow(J,-(2./3.));
         }
         
         if (!(J > 0.0)) {
@@ -1735,26 +1728,11 @@ void UCNH::computeStressTensorImplicit(const PatchSubset* patches,
                << "**ERROR** Negative Jacobian of deformation gradient" << endl;
           throw ParameterNotFound("**ERROR**:UCNH", __FILE__, __LINE__);
         }
-      
+        
         // Compute the deformed volume 
         double rho_cur   = rho_orig/J;
         pVolume_new[idx] = (pMass[idx]/rho_orig)*J;
-        if(d_usePlasticity){
-          pVolume_new[idx]=pMass[idx]/rho_cur;
-        }
-      
-        // Compute trial BeBar
-        relDefGradBar = defGradInc/cbrt(Jinc);
-       
-        // Compute the trial elastic part of the volume preserving 
-        // part of the left Cauchy-Green deformation tensor
-        if(d_usePlasticity || d_useDamage) {
-          beBarTrial = relDefGradBar*pBeBar[idx]*relDefGradBar.Transpose();
-        } else {
-          beBarTrial = pDefGrad_new[idx]
-                       * pDefGrad_new[idx].Transpose()
-                       * pow(J,-(2./3.));
-        }
+
         double IEl   = onethird*beBarTrial.Trace();
         double muBar = IEl*shear;
       
@@ -1762,11 +1740,16 @@ void UCNH::computeStressTensorImplicit(const PatchSubset* patches,
         // Compute ||tauDevTrial||
         tauDevTrial   = (beBarTrial - Identity*IEl)*shear;
         double sTnorm = tauDevTrial.Norm();
+        
+        // get the hydrostatic part of the stress
+        double p = bulk*log(J)/J;
       
         // Check for plastic loading
         double alpha = 0.0;
         if(d_usePlasticity){
+          pVolume_new[idx]=pMass[idx]/rho_cur;  // To prevent Gold Standards from Crapping
           alpha = pPlasticStrain[idx];
+          p = 0.5*bulk*(J - 1.0/J);
         }
         double fTrial = sTnorm - sqtwthds*(hardModulus*alpha + flowStress);
       
@@ -1790,16 +1773,11 @@ void UCNH::computeStressTensorImplicit(const PatchSubset* patches,
           tauDev = tauDevTrial;
           pBeBar_new[idx] = beBarTrial;
         
-          // elastic
+          // carry forward in implicit
           if(d_usePlasticity){
             pPlasticStrain_new[idx] = alpha;
           }
         }
-      
-        // get the hydrostatic part of the stress
-        double p = bulk*log(J)/J;
-        if(d_usePlasticity)
-          p = 0.5*bulk*(J - 1.0/J);
       
         // compute the total stress (volumetric + deviatoric)
         pStress_new[idx] = Identity*p + tauDev/J;
