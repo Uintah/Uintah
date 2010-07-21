@@ -113,7 +113,7 @@ void CircleBCData::determineIteratorLimits(Patch::FaceType face,
                                            vector<Point>& test_pts)
 {
 #if 0
-  cout << "Circle determineIteratorLimits()" << endl;
+  cout << "Circle determineIteratorLimits() " << patch->getFaceName(face)<< endl;
 #endif
 
   BCGeomBase::determineIteratorLimits(face,patch,test_pts);

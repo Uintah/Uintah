@@ -142,7 +142,7 @@ void DifferenceBCData::determineIteratorLimits(Patch::FaceType face,
 {
 
 #if 0
-  cout << "DifferenceBC determineIteratorLimits()" << endl;
+  cout << "DifferenceBC determineIteratorLimits() " << patch->getFaceName(face)<< endl;
 #endif
 
 
