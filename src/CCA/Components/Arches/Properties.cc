@@ -174,6 +174,11 @@ Properties::problemSetup(const ProblemSpecP& params)
     // New TabPropsInterface stuff...
     d_mixingRxnTable = scinew TabPropsInterface( d_lab, d_MAlab );
     d_mixingRxnTable->problemSetup( db ); 
+    d_co_output       = false;
+    d_sulfur_chem     = false;
+    d_soot_precursors = false;
+    d_tabulated_soot  = false;
+    d_calcExtraScalars= false;
   }
 #endif
   else if (mixModel == "pdfMixingModel" || mixModel == "SteadyFlameletsTable"
@@ -203,7 +208,8 @@ Properties::problemSetup(const ProblemSpecP& params)
     d_soot_precursors = d_mixingModel->getSootPrecursors();
     d_tabulated_soot  = d_mixingModel->getTabulatedSoot();  
     d_radiationCalc = false;
-  }
+  } 
+
 
   if (d_calcEnthalpy) {
     ProblemSpecP params_non_constant = params;
