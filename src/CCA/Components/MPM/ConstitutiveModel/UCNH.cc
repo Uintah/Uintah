@@ -1514,9 +1514,6 @@ void UCNH::updateFailedParticlesAndModifyStress(const Matrix3& defGrad,
   // Compute Finger tensor (left Cauchy-Green) 
   Matrix3 bb = defGrad*defGrad.Transpose();
   
-  // Compute pressure
-  double pressure = (1.0/3.0)*pStress.Trace();
-  
   // Compute Eulerian strain tensor
   Matrix3 ee = (Identity - bb.Inverse())*0.5;      
   
@@ -1548,6 +1545,8 @@ void UCNH::updateFailedParticlesAndModifyStress(const Matrix3& defGrad,
   
   // If the particle has failed, apply various erosion algorithms
   if (flag->d_doErosion) {
+    // Compute pressure
+    double pressure = (1.0/3.0)*pStress.Trace();
     if (pLocalized || pLocalized_new) {
       if (d_allowNoTension) {
         if (pressure > 0.0) 
