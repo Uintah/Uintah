@@ -32,6 +32,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/ICE/BoundaryCond.h>
 #include <CCA/Components/Models/HEChem/LightTime.h>
 #include <CCA/Components/Regridder/PerPatchVars.h>
+#include <Core/Exceptions/ProblemSetupException.h>
 #include <CCA/Ports/Scheduler.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Grid/Variables/CellIterator.h>
@@ -87,54 +88,51 @@ void LightTime::outputProblemSpec(ProblemSpecP& ps)
 {
   ProblemSpecP model_ps = ps->appendChild("Model");
   model_ps->setAttribute("type","LightTime");
+  ProblemSpecP lt_ps = model_ps->appendChild("LightTime");
 
-  model_ps->appendElement("fromMaterial",         matl0->getName());
-  model_ps->appendElement("toMaterial",           matl1->getName());
-  model_ps->appendElement("starting_location",    d_start_place);
-  model_ps->appendElement("direction_if_plane",   d_direction);
-  model_ps->appendElement("D",                    d_D);
-  model_ps->appendElement("E0",                   d_E0);
-  model_ps->appendElement("react_mixed_cells",    d_react_mixed_cells);
+  lt_ps->appendElement("fromMaterial",         matl0->getName());
+  lt_ps->appendElement("toMaterial",           matl1->getName());
+  lt_ps->appendElement("starting_location",    d_start_place);
+  lt_ps->appendElement("direction_if_plane",   d_direction);
+  lt_ps->appendElement("D",                    d_D);
+  lt_ps->appendElement("E0",                   d_E0);
+  lt_ps->appendElement("react_mixed_cells",    d_react_mixed_cells);
 }
 //__________________________________
 void LightTime::problemSetup(GridP&, SimulationStateP& sharedState,
                              ModelSetup*)
 {
   d_sharedState = sharedState;
-  matl0 = sharedState->parseAndLookupMaterial(params, "fromMaterial");
-  matl1 = sharedState->parseAndLookupMaterial(params, "toMaterial");
-  params->require("starting_location",    d_start_place);
-  params->require("direction_if_plane",   d_direction);
-  params->require("D",    d_D);
-  params->require("E0",   d_E0);
-  params->getWithDefault("react_mixed_cells", d_react_mixed_cells,true);
-  params->getWithDefault("AMR_Refinement_Criteria", d_refineCriteria,1e100);
+  
+  ProblemSpecP lt_ps = params->findBlock("LightTime");
+  if (!lt_ps){
+    throw ProblemSetupException("LightTime: Couldn't find (LightTime) tag", __FILE__, __LINE__);    
+  }
+  matl0 = sharedState->parseAndLookupMaterial(lt_ps, "fromMaterial");
+  matl1 = sharedState->parseAndLookupMaterial(lt_ps, "toMaterial");
+  
+  lt_ps->require("starting_location",    d_start_place);
+  lt_ps->require("direction_if_plane",   d_direction);
+  lt_ps->require("D",    d_D);
+  lt_ps->require("E0",   d_E0);
+  lt_ps->getWithDefault("react_mixed_cells",       d_react_mixed_cells,true);
+  lt_ps->getWithDefault("AMR_Refinement_Criteria", d_refineCriteria,1e100);
 
 
   // if point  ignition is desired, direction_if_plane = (0.,0.,0)
   // if planar ignition is desired, direction_if_plane is normal in
   // the direction of burning
-
   //__________________________________
   //  define the materialSet
-  vector<int> m_tmp(2);
-  m_tmp[0] = matl0->getDWIndex();
-  m_tmp[1] = matl1->getDWIndex();
-  mymatls = scinew MaterialSet();            
- 
-  if( m_tmp[0] != 0 && m_tmp[1] != 0){
-    vector<int> m(3);
-    m[0] = 0;    // needed for the pressure and NC_CCWeight 
-    m[1] = m_tmp[0];
-    m[2] = m_tmp[1];
-    mymatls->addAll(m);
-  }else{
-    vector<int> m(2);
-    m[0] = m_tmp[0];
-    m[1] = m_tmp[1];
-    mymatls->addAll(m);
-  }
-  mymatls->addReference();
+  mymatls = scinew MaterialSet();
+
+  vector<int> m;
+  m.push_back(0);                                 // needed for the pressure and NC_CCWeight
+  m.push_back(matl0->getDWIndex());
+  m.push_back(matl1->getDWIndex());
+
+  mymatls->addAll_unique(m);                    // elimiate duplicate entries
+  mymatls->addReference(); 
 }
 //______________________________________________________________________
 //     
