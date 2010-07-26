@@ -49,6 +49,10 @@ if( $#ARGV == -1){
   exit;
 }
 
+# bulletproofing
+system("which octave")  == 0 ||  die("Cannot find the command octave $@");
+system("which gnuplot") == 0 ||  die("Cannot find the command gnuplot $@");
+
 # Define the paths
 my $base_path          = $ARGV[0];    # path to orderAccuracy scripts
 my $config_files_path  = $base_path . "/test_config_files";  # configurations files
