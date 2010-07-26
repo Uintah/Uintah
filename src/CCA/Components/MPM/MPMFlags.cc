@@ -355,6 +355,10 @@ MPMFlags::outputProblemSpec(ProblemSpecP& ps)
   if(d_prescribeDeformation){
     ps->appendElement("PresribedDeformationFile",d_prescribedDeformationFile);
   }
+  ps->appendElement("InsertParticles",d_insertParticles);
+  if(d_insertParticles){
+    ps->appendElement("InsertParticlesFile",d_insertParticlesFile);
+  }
 
   ps->appendElement("do_contact_friction_heating", d_do_contact_friction);
 
