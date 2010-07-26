@@ -47,6 +47,10 @@ montage $results -geometry 640x480 -tile 1x10  montage.png
 
 # email the results
 
-mutt -a montage.png -s "Order of accuracy results" t.harman@utah.edu,j.thornock@utah.edu < out
+if( -e montage.png) then
+  mutt -a montage.png -s "Order of accuracy results" t.harman@utah.edu,j.thornock@utah.edu< out
+else
+  mutt -s "ERROR: Order of accuracy results" t.harman@utah.edu,j.thornock@utah.edu < out
+endif
 
 exit
