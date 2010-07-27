@@ -588,6 +588,9 @@ void DDT1::computeModelSources(const ProcessorGroup*,
         double burnedMass = delF[c]*(prdMass+rctMass);
         
         burnedMass = min(burnedMass, rctMass);
+        // 20 % burned mass is a hard limit based p. 55
+        //   "JWL++: A Simple Reactive Flow Code Package for Detonation"
+        burnedMass = min(burnedMass, .2*mpm_matl->getInitialDensity()*cell_vol);
         totalBurnedMass += burnedMass;
 
         //__________________________________
