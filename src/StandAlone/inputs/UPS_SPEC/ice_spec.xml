@@ -90,10 +90,10 @@
                                 attribute1="name OPTIONAL STRING" >
         <dynamic_viscosity    spec="REQUIRED DOUBLE 'positive'" />
         <EOS                  spec="REQUIRED NO_DATA"
-                                attribute1="type REQUIRED STRING 'ideal_gas, hard_sphere_gas, TST, Thomsen_Hartka_water, JWL, JWLC, Murnahan, Gruneisen'" >
+                                attribute1="type REQUIRED STRING 'ideal_gas, hard_sphere_gas, TST, Thomsen_Hartka_water, JWL, JWLC, Murnahan, Gruneisen, Tillotson'" >
           <!--  TST  -->
-          <a                  spec="REQUIRED DOUBLE" need_applies_to='type  TST, Thomsen_Hartka_water' />
-          <b                  spec="REQUIRED DOUBLE" need_applies_to='type  TST, Thomsen_Hartka_water' />
+          <a                  spec="REQUIRED DOUBLE" need_applies_to='type  TST, Thomsen_Hartka_water Tillotson' />
+          <b                  spec="REQUIRED DOUBLE" need_applies_to='type  TST, Thomsen_Hartka_water Tillotson' />
           <Gamma              spec="REQUIRED DOUBLE" need_applies_to='type  TST' />
           <u                  spec="REQUIRED DOUBLE" need_applies_to='type  TST' />
           <w                  spec="REQUIRED DOUBLE" need_applies_to='type  TST' />
@@ -101,13 +101,13 @@
           <gas_constant       spec="OPTIONAL DOUBLE" need_applies_to='type  ideal_gas' />
           
           <!--  JWL & JWLC  -->
-          <A                  spec="REQUIRED DOUBLE 'positive'" need_applies_to='type JWL JWLC Gruneisen' />
-          <B                  spec="REQUIRED DOUBLE           " need_applies_to='type JWL JWLC Gruneisen' />
+          <A                  spec="REQUIRED DOUBLE 'positive'" need_applies_to='type JWL JWLC Gruneisen Tillotson' />
+          <B                  spec="REQUIRED DOUBLE           " need_applies_to='type JWL JWLC Gruneisen Tillotson' />
           <C                  spec="REQUIRED DOUBLE           " need_applies_to='type     JWLC' />
           <R1                 spec="REQUIRED DOUBLE 'positive'" need_applies_to='type JWL JWLC' /> 
           <R2                 spec="REQUIRED DOUBLE 'positive'" need_applies_to='type JWL JWLC' />
           <om                 spec="REQUIRED DOUBLE 'positive'" need_applies_to='type JWL JWLC' /> 
-          <rho0               spec="REQUIRED DOUBLE 'positive'" need_applies_to='type JWL JWLC Murnahan Gruneisen' />
+          <rho0               spec="REQUIRED DOUBLE 'positive'" need_applies_to='type JWL JWLC Murnahan Gruneisen Tillotson' />
           <!--  Murnahan  -->
           <n                  spec="REQUIRED DOUBLE 'positive'" need_applies_to='type Murnahan' />
           <K                  spec="REQUIRED DOUBLE 'positive'" need_applies_to='type Murnahan' />
@@ -119,6 +119,12 @@
           <To                 spec="REQUIRED DOUBLE 'positive'" need_applies_to='type Thomsen_Hartka_water' />
           <L                  spec="REQUIRED DOUBLE 'positive'" need_applies_to='type Thomsen_Hartka_water' />
           <vo                 spec="REQUIRED DOUBLE 'positive'" need_applies_to='type Thomsen_Hartka_water' />
+          
+          <E0                 spec="REQUIRED DOUBLE 'positive'" need_applies_to='type Tillotson' />
+          <Es                 spec="REQUIRED DOUBLE 'positive'" need_applies_to='type Tillotson' />
+          <Esp                spec="REQUIRED DOUBLE 'positive'" need_applies_to='type Tillotson' />
+          <alpha              spec="REQUIRED DOUBLE 'positive'" need_applies_to='type Tillotson' />
+          <beta               spec="REQUIRED DOUBLE 'positive'" need_applies_to='type Tillotson' />
           
         </EOS>
         <gamma                spec="REQUIRED DOUBLE 'positive'" />
