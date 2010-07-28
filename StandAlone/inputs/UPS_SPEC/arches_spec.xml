@@ -336,13 +336,18 @@
         <Sources                        spec="OPTIONAL NO_DATA">
           <src                          spec="MULTIPLE NO_DATA"
                                         attribute1="label REQUIRED STRING"
-                                        attribute2="type REQUIRED STRING 'coal_gas_devol, constant_src, westbrook_dryer'">
+                                        attribute2="type REQUIRED STRING 'coal_gas_devol, constant_src, westbrook_dryer, multi_point_const_src'">
 
             <!-- Specs for coal gas devol model -->
             <devol_model_name           spec="OPTIONAL STRING" />
 
-            <!-- Spec for constant source term model -->
+            <!-- Spec for constant and multi-point constant source term model -->
             <constant                   spec="OPTIONAL DOUBLE" />
+
+            <!-- Multi-point constant injection --> 
+            <injector                   spec="MULTIPLE NO_DATA">
+              <geom_object/>
+            </injector>
 
             <!-- Westbrook Dryer Global Hydrocarbon reaction rate model -->
             <!-- see Turns, pg. 156-157 -->
@@ -355,6 +360,7 @@
             <MW_HydroCarbon             spec="OPTIONAL DOUBLE" />
             <MF_HC_F1                   spec="OPTIONAL DOUBLE" />
             <MF_O2_F0                   spec="OPTIONAL DOUBLE" />
+
 
           </src>
 
