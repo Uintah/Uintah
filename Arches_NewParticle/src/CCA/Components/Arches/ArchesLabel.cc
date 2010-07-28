@@ -445,10 +445,12 @@ ArchesLabel::ArchesLabel()
   d_netflowOUTBCIntermLabel  =  VarLabel::create("netflowOUTBCInterm",  sum_variable);
   d_totalAreaOUTIntermLabel  =  VarLabel::create("totalAreaOUTInterm",  sum_variable);
 
-
-  d_oldDeltaTLabel = VarLabel::create("oldDeltaT",
-                                       delt_vartype::getTypeDescription());
-// test filtered terms for variable density dynamic Smagorinsky model
+  // Timestep labels
+  d_oldDeltaTLabel           = VarLabel::create("oldDeltaT",             delt_vartype::getTypeDescription());
+  d_MinDQMOMTimestepLabel    = VarLabel::create("MinimumDQMOMTimestep",  min_vartype::getTypeDescription() );
+  d_MinScalarTimestepLabel   = VarLabel::create("MinimumScalarTimestep", min_vartype::getTypeDescription() );
+  
+  // test filtered terms for variable density dynamic Smagorinsky model
   d_filterRhoULabel   =  VarLabel::create("filterRhoU",   SFCX_double);
   d_filterRhoVLabel   =  VarLabel::create("filterRhoV",   SFCY_double);
   d_filterRhoWLabel   =  VarLabel::create("filterRhoW",   SFCZ_double);

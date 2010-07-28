@@ -170,10 +170,10 @@
                     
 
                 <Eqn label = "coal_gas_mix_frac" type = "CCscalar">
+                    <use_density_guess/>
                     <doDiff>false</doDiff>
                     <doConv>false</doConv>
                     <addSources>true</addSources>
-                    <use_density_guess/>
                     <conv_scheme>super_bee</conv_scheme>
                     <!--
                     <src label = "eta_source"/>

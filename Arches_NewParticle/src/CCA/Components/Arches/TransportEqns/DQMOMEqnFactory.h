@@ -4,6 +4,7 @@
 #include <CCA/Components/Arches/ArchesLabel.h>
 #include <CCA/Components/Arches/ExplicitTimeInt.h> // should this be here?  -Jeremy
 #include <Core/Grid/Variables/VarLabel.h>
+#include <Core/Math/MinMax.h>
 
 namespace Uintah {
 
@@ -60,8 +61,23 @@ public:
                              DataWarehouse* old_dw,
                              DataWarehouse* new_dw);
 
+  /** @brief  Schedule dummy initialization for MPM nosolve (calls dummySolve of all objects owned/managed by the factory) */
   void sched_dummyInit( const LevelP& level, SchedulerP& );
 
+  /** @brief  Initialize the value of the minimum timestep label for DQMOM scalar equations IN THE DATA WAREHOUSE, as well as initializing the value of the private member d_MinTimestepVar. */
+  void initializeMinTimestepLabel( const ProcessorGroup*,
+                                   const PatchSubset* patches,
+                                   const MaterialSubset*,
+                                   DataWarehouse* old_dw,
+                                   DataWarehouse* new_dw );
+
+  /** @brief  Set the value of the minimum timestep label for DQMOM scalar equations IN THE DATA WAREHOUSE
+              (Contrast this with setMinTimestepVar() below, which merely sets the value of the private member d_MinTimestepVar. */
+  void setMinTimestepLabel( const ProcessorGroup*,
+                            const PatchSubset* patches,
+                            const MaterialSubset*,
+                            DataWarehouse* old_dw,
+                            DataWarehouse* new_dw );
 
   //////////////////////////////////////////////
   // Evaluate the transport equations
@@ -130,6 +146,9 @@ public:
   inline void setDQMOMSolver( DQMOM* solver ) {
     d_dqmomSolver = solver; }; 
 
+  /** @brief  Set the value of the private member d_MinTimestepVar, which is the minimum timestep required for stability by the DQMOM scalar equations */
+  void setMinTimestepVar( string eqnName, double new_min );
+
 //cmr
 //  inline void setDQMOMSolvers( vector<DQMOM*> solvers ) {
 //    d_dqmomSolvers = solvers; };
@@ -141,7 +160,10 @@ private:
   ArchesLabel* d_fieldLabels;
   ExplicitTimeInt* d_timeIntegrator;
   DQMOM* d_dqmomSolver;
-  
+
+  double d_MinTimestepVar;  ///< Since we can't modify a variable multiple times (the memory usage spikes after you modify a variable ~10 or more times), 
+                            ///  we have to modify a private member, then put that private member in a data warehouse variable ONCE
+
   bool d_timeIntegratorSet; ///< Boolean: has the time integrator been set?
   bool d_labelSet;          ///< Boolean: has the ArchesLabel been set using setArchesLabel()?
   bool d_doDQMOM;           ///< Boolean: is DQMOM being used?

@@ -540,8 +540,10 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
       vector< constCCVariable<double>* > tempCCVector = weightedAbscissaModelsCCVars[counter];
       for( unsigned int ss=0; ss < modelsList.size(); ++ss ) {
         new_dw->get( (*tempCCVector[ss]), modelsList[ss], matlIndex, patch, Ghost::None, 0 );
-        ////cmr
-        //cout << "Model " << modelsList[ss]->getName() << " has value " << (*tempCCVector[ss])[IntVector(1,2,3)] << endl;
+#ifdef DEBUG_MODELS
+        //cmr
+        cout << "Model " << modelsList[ss]->getName() << " has value " << (*tempCCVector[ss])[IntVector(1,2,3)] << endl;
+#endif
       }
 
       ++counter;
@@ -647,6 +649,13 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
         // Assign solution vector X (from AX=B) to weight and 
         // weighted abscissa source terms
 
+#ifdef DEBUG_MODELS
+        if( c == IntVector(1,2,3) ) {
+          proc0cout << endl;
+          proc0cout << "DQMOM solution vector: -------------------" << endl;
+        }
+#endif
+
         // Weights:
         for( vector< CCVariable<double>* >::iterator iter = weightSourceCCVars.begin();
              iter != weightSourceCCVars.end(); ++iter ) {
@@ -658,6 +667,12 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
           }
 
           (**iter)[c] = (*XX)[z];
+
+#ifdef DEBUG_MODELS
+          if( c == IntVector(1,2,3) ) {
+            proc0cout << "Wts: X[" << z << "] = " << (*XX)[z] << endl;
+          }
+#endif
 
           ++z;
         }
@@ -673,6 +688,12 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
           }
 
           (**iter)[c] = (*XX)[z];
+
+#ifdef DEBUG_MODELS
+          if( c == IntVector(1,2,3) ) {
+            proc0cout << "WAs: X[" << z << "] = " << (*XX)[z] << endl;
+          }
+#endif
 
           ++z;
         }

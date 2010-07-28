@@ -38,31 +38,25 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Util/Handle.h>
 #include <map>
 
-/**************************************
-CLASS
-   ArchesLabel
-   
-   Class ArchesLabel creates and stores the VarLabels that are used in Arches
+/**
+  @class    ArchesLabel
+  @author   Biswajit Banerjee
+  @date     July 18, 2000
 
-GENERAL INFORMATION
-   ArchesLabel.h - declaration of the class
-   
-   Author: Biswajit Banerjee (bbanerje@crsim.utah.edu)
-   
-   Creation Date:   July 18, 2000
-   
-   C-SAFE 
-   
-   Copyright U of U 2000
+  @brief    Creates and stores a large number of the VarLabels used in Arches
+  
+  @details
+  The idea behind ArchesLabel is to create a publicly-accessible list of variable labels accessible to any class that may need them.
+  Many objects' constructors have an instance of ArchesLabel in their initialization list.
 
-KEYWORDS
+  Some common prefixes/suffixes include:
 
-DESCRIPTION
+  CTS = Compute Turbulent Subgrid model
+  CP  = Compute Properties
+  EKT = "Echt Konservativer Transport" (German for "Fully Conservative Transport") (thanks to Stanislav Borodai for the complete lack of documentation or even an explanation of what EKT means)
 
-WARNING
-   none
-
-************************************************************************/
+  @seealso For EKT: Direct and large-eddy simulation V: proceedings of the fifth international ERCOFTAC Workshop on Direct and Large-eddy simulation, held at the Munich University of Technology, August 27-29, 2003, Volume 2003
+*/
 
 namespace Uintah {
   class VarLabel;
@@ -112,10 +106,10 @@ namespace Uintah {
 
       // Viscosity Labels
       // for old_dw in computeTurbModel
-      const VarLabel* d_viscosityCTSLabel;
-      const VarLabel* d_scalarDiffusivityLabel;
-      const VarLabel* d_enthalpyDiffusivityLabel;
-      const VarLabel* d_reactScalarDiffusivityLabel;
+      const VarLabel* d_viscosityCTSLabel;            ///< Turbulent subgrid eddy viscosity
+      const VarLabel* d_scalarDiffusivityLabel;       ///< 
+      const VarLabel* d_enthalpyDiffusivityLabel;     ///< 
+      const VarLabel* d_reactScalarDiffusivityLabel;  ///< 
 
 
       // Pressure Labels
@@ -443,8 +437,13 @@ namespace Uintah {
       const VarLabel* d_netflowOUTBCIntermLabel;
       const VarLabel* d_totalAreaOUTIntermLabel;
  
+
+      // Timestep labels
       const VarLabel* d_oldDeltaTLabel;
-       
+      const VarLabel* d_MinDQMOMTimestepLabel;  ///< VarLabel holding minimum timestep required for stability for DQMOM transport equations
+      const VarLabel* d_MinScalarTimestepLabel; ///< VarLabel holding minimum timestep required for stability for scalar transport equations
+
+
        // test filtered terms for variable density dynamic Smagorinsky model
       const VarLabel* d_filterRhoULabel;
       const VarLabel* d_filterRhoVLabel;
@@ -505,23 +504,6 @@ namespace Uintah {
       
       // area fraction
       const VarLabel* d_areaFractionLabel; 
-
-
-      // DQMOM Variables:
-
-      //// Particle velocity map ( populated in Arches.cc::registerDQMOMEqns() )
-      //typedef std::map<int, const VarLabel* > PartVelMap;
-      //PartVelMap partVel;
-
-      //// Particle masses ( populated in Arches.cc::registerDQMOMEqns() )
-      //typedef std::map<int, const VarLabel* > ParticleMassMap;
-      //ParticleMassMap particleMasses;
-
-      //// DQMOM moments ( populated in Arches.cc::registerDQMOMEqns() )
-      //typedef std::vector<int> MomentVector;
-      //typedef std::map<const MomentVector, const VarLabel* > MomentMap;
-      //MomentMap DQMOMMoments; // DQMOM moment valuess
-      //MomentMap DQMOMMomentsMean; // DQMOM moment values, about the mean
 
     }; // End class ArchesLabel
 } // End namespace Uintah

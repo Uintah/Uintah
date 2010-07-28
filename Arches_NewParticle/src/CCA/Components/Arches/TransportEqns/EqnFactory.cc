@@ -16,6 +16,7 @@ using namespace Uintah;
 EqnFactory::EqnFactory()
 {
   d_labelSet = false;
+  d_useScalarEqns = false;
 }
 
 EqnFactory::~EqnFactory()
@@ -61,6 +62,8 @@ void EqnFactory::problemSetup(const ProblemSpecP& params)
   if (eqns_db) {
 
     for (ProblemSpecP eqn_db = eqns_db->findBlock("Eqn"); eqn_db != 0; eqn_db = eqn_db->findNextBlock("Eqn")){
+      d_useScalarEqns = true;
+
       std::string eqn_name;
       eqn_db->getAttribute("label", eqn_name);
       std::string eqn_type;
@@ -116,6 +119,9 @@ EqnFactory::sched_scalarInit( const LevelP& level, SchedulerP& sched )
 {
   Task* tsk = scinew Task("EqnFactory::scalarInit", this, &EqnFactory::scalarInit);
 
+  //cmr
+  tsk->computes(d_fieldLabels->d_MinScalarTimestepLabel);
+
   for( EqnMap::iterator iEqn = eqns_.begin(); iEqn != eqns_.end(); ++iEqn ){
     EqnBase* eqn = iEqn->second;
 
@@ -141,6 +147,12 @@ EqnFactory::scalarInit( const ProcessorGroup* ,
                         DataWarehouse* old_dw,
                         DataWarehouse* new_dw )
 {
+  //cmr
+  double delta_t = 1.0e16;
+  new_dw->put( min_vartype(delta_t), d_fieldLabels->d_MinScalarTimestepLabel );
+  //cmr
+  cout << "Initializing minimum timestep label value to " << delta_t << endl;
+
   proc0cout << "Initializing all scalar equations." << endl;
   for (int p = 0; p < patches->size(); p++){
     //assume only one material for now
@@ -203,28 +215,119 @@ The procedure for this method is as follows:
 void
 EqnFactory::sched_evalTransportEqns( const LevelP& level, SchedulerP& sched, int timeSubStep, bool evalDensityGuessEqns, bool lastTimeSubstep )
 {
-  for( EqnMap::iterator iEqn = eqns_.begin(); iEqn != eqns_.end(); ++iEqn ) {
-
-    // Step 1
+  // Step 0
+  if( timeSubStep == 0 ) {
+    string taskname = "EqnFactory::initializeMinTimestepLabel";
+    Task* tsk = scinew Task(taskname, this, &EqnFactory::initializeMinTimestepLabel);
     if( timeSubStep == 0 ) {
-      iEqn->second->sched_initializeVariables(level, sched);
+      tsk->computes(d_fieldLabels->d_MinScalarTimestepLabel);
+    } else { 
+      tsk->modifies(d_fieldLabels->d_MinScalarTimestepLabel);
     }
+    sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
+  }
 
-    // Step 2
-    iEqn->second->sched_buildTransportEqn( level, sched, timeSubStep );
-    iEqn->second->sched_solveTransportEqn( level, sched, timeSubStep, !lastTimeSubstep );
+  for( EqnMap::iterator iEqn = eqns_.begin(); iEqn != eqns_.end(); ++iEqn ) {
+    if( iEqn->second->getDensityGuessBool() == evalDensityGuessEqns ) {
 
-    // Step 3
-    if( lastTimeSubstep ) { 
-
-      if( iEqn->second->doLowClip() || iEqn->second->doHighClip() ) {
-        iEqn->second->sched_clipPhi( level, sched );
+      // Step 1
+      if( timeSubStep == 0 ) {
+        iEqn->second->sched_initializeVariables( level, sched );
       }
 
-      iEqn->second->sched_cleanUp( level, sched );
+      // Step 2
+      iEqn->second->sched_buildTransportEqn( level, sched, timeSubStep );
+      iEqn->second->sched_solveTransportEqn( level, sched, timeSubStep, !lastTimeSubstep );
+
+
+      // Step 3
+      if( lastTimeSubstep ) {
+        if( iEqn->second->doLowClip() || iEqn->second->doHighClip() ) {
+          iEqn->second->sched_clipPhi( level, sched );
+        }
+
+        // Step 4
+        iEqn->second->sched_cleanUp( level, sched );
+
+      }
+
     }
+
+    if( lastTimeSubstep ) {
+      // Step 5
+      string taskname = "EqnFactory::setMinTimestepLabel";
+      Task* tsk = scinew Task(taskname, this, &EqnFactory::setMinTimestepLabel);
+      tsk->modifies(d_fieldLabels->d_MinScalarTimestepLabel);
+      sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
+    }
+
   }
+
 }
+
+
+/**
+@details
+Before any scalar equations have a chance to set d_MinTimestepVar,
+set the value of it to 1.0e16, and initialize the value in the data warehouse
+to be 1.0e16.
+*/
+void
+EqnFactory::initializeMinTimestepLabel( const ProcessorGroup* pc, 
+                                        const PatchSubset* patches, 
+                                        const MaterialSubset* matls, 
+                                        DataWarehouse* old_dw, 
+                                        DataWarehouse* new_dw ) 
+{
+  double value = 1.0e16;
+  new_dw->put( min_vartype(value), d_fieldLabels->d_MinScalarTimestepLabel);
+  d_MinTimestepVar = value;
+  //cmr
+  cout << "Initializing minimum timestep label value to " << value << endl;
+}
+
+
+/** 
+@details
+Once each scalar equation has had a chance to set d_MinTimestepVar, 
+set the value of the variable in the data warehouse equal to d_MinTimestepVar 
+*/
+void
+EqnFactory::setMinTimestepLabel( const ProcessorGroup* pc, 
+                                 const PatchSubset* patches, 
+                                 const MaterialSubset* matls, 
+                                 DataWarehouse* old_dw, 
+                                 DataWarehouse* new_dw )
+{
+  new_dw->put( min_vartype(d_MinTimestepVar), d_fieldLabels->d_MinScalarTimestepLabel);
+  //cmr
+  cout << "Setting minimum scalar timestep label value to " << d_MinTimestepVar << endl;
+}
+
+
+/** 
+@details
+This sets the value of a private member d_MinTimestepVar, which stores the value of the minimum timestep required for stability of the scalar equations.
+This method is called by each ScalarEqn object at the last RK time substep, after it computes the minimum timestep required for stability.
+
+The reason this method is used, rather than having each ScalarEqn modify a variable that is in the data warehouse, is because after about 10 "modifies" calls, 
+the memory usage of the program during the taskgraph compilation spikes extreemely high (i.e. > 2 GB).
+
+I don't know why this happens, but this is a (hopefully!) temporary and somewhat unelegant workaround.
+ */
+void
+EqnFactory::setMinTimestepVar( string eqnName, double new_min )
+{
+  //cmr
+  cout << "Equation " << eqnName << " is re-setting minimum scalar timestep var from " << d_MinTimestepVar;
+
+  d_MinTimestepVar = Min(new_min, d_MinTimestepVar );
+
+  //cmr
+  cout << " to " << d_MinTimestepVar << endl;
+}
+
+
 
 //---------------------------------------------------------------------------
 // Method: Register a scalar Eqn. 

@@ -492,7 +492,7 @@ InertParticleHeatTransfer::computeModel( const ProcessorGroup * pc,
       IntVector c = *iter; 
 
       // weight - check if small
-      bool weight_is_small = (weight[c] < d_w_small);
+      bool weight_is_small = (weight[c] < d_w_small) || (weight[c] == 0.0);
 
       double scaled_weight;
       double unscaled_weight;

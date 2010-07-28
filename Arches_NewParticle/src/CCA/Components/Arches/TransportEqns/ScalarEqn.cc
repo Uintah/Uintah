@@ -1,6 +1,7 @@
 #include <CCA/Components/Arches/TransportEqns/ScalarEqn.h>
 #include <CCA/Components/Arches/SourceTerms/SourceTermFactory.h>
 #include <CCA/Components/Arches/SourceTerms/SourceTermBase.h>
+#include <CCA/Components/Arches/Directives.h>
 #include <CCA/Ports/Scheduler.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Grid/SimulationState.h>
@@ -74,6 +75,7 @@ ScalarEqn::problemSetup(const ProblemSpecP& inputdb)
   db->getWithDefault( "doConv", d_doConv, false);
   db->getWithDefault( "doDiff", d_doDiff, false);
   db->getWithDefault( "addSources", d_addSources, true); 
+  db->getWithDefault( "timestepMultiplier", d_timestepMultiplier, 1.0);
   
   // algorithmic knobs
   d_use_density_guess = false; // use the density guess rather than the new density from the table...implies that the equation is updated BEFORE properties are computed. 
@@ -521,7 +523,56 @@ ScalarEqn::solveTransportEqn( const ProcessorGroup* pc,
 
     //----COPY averaged phi into oldphi
     if( copyOldIntoNew ) {
+      // this is NOT the last time substep
       phi_at_j.copyData(phi_at_jp1); 
+
+    } else {
+      // this IS the last time substep
+
+      // The procedure looks like this:
+      // 1. Compute the error between the last RK substeps
+      // 2. Use error to estimate new minimum timeestep
+
+      double new_min_delta_t = 1e16;
+
+      for( CellIterator iter = patch->getCellIterator(); !iter.done(); ++iter ) {
+        IntVector c = *iter;
+        
+        // Step 1: Compute error
+        // error = ( phi^{(1)}-phi^{n} )/delta_t - RHS(\phi^{(1)})
+        double error = (phi_at_j[c] - rk1_phi[c])/dt - RHS[c];
+        double deltat = fabs( phi_at_jp1[c]/(error+TINY) );
+
+        // Step 2: Estimate new min. timestep
+        // min_delta_t_stable = phi^{j+1} / error [=] phi/(phi/time) [=] time
+        if( fabs(error) > TINY ) {
+          new_min_delta_t = min( deltat, new_min_delta_t);
+        }
+        
+        /*
+        //cmr
+        if( c==IntVector(1,2,3) ) {
+          cout << "Equation " << d_eqnName << ": " << endl;
+          cout << "Error = [ phi^(j) - phi^(n) ]/dt - RHS  =  [ ";
+          cout << phi_at_j[c] << " - " << rk1_phi[c] << " ] / " << dt;
+          cout << " - " << RHS[c];
+          cout << " = " << error << endl;
+
+          cout << "Delta_t = phi^(j+1) / error = " << phi_at_jp1[c] << "/" << error;
+          cout << " = " << deltat << endl;
+
+          int a = 0; ++a;
+        }
+        */
+
+      }//end cells
+      
+      new_min_delta_t *= d_timestepMultiplier;
+      EqnFactory& eqnFactory  = EqnFactory::self(); 
+      //cmr
+      //cout << "Hi from equation " << d_eqnName << ", about to set minimum timestep var to " << new_min_delta_t << endl;
+      eqnFactory.setMinTimestepVar( d_eqnName, new_min_delta_t );
+
     }
 
   }

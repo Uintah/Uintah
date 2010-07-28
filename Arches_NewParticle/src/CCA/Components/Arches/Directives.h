@@ -2,8 +2,9 @@
 //#include <CCA/Components/Arches/Directives.h>
 
 // used by:
-// KobayashiSarofimDevol
+// CoalModels
 #define TINY    1e-16
+//#define DEBUG_MODELS
 
 // used by:
 // BoundaryCond_new

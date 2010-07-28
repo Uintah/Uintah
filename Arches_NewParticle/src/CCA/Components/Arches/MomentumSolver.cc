@@ -338,6 +338,22 @@ void MomentumSolver::solveVelHat(const LevelP& level,
   IntVector periodic_vector = level->getPeriodicBoundaries();
   d_3d_periodic = (periodic_vector == IntVector(1,1,1));
 
+  int timeSubStep = 0; 
+  if ( timelabels->integrator_step_number == TimeIntegratorStepNumber::Second )
+    timeSubStep = 1;
+  else if ( timelabels->integrator_step_number == TimeIntegratorStepNumber::Third )
+    timeSubStep = 2; 
+
+  /*
+  // Schedule additional sources for evaluation
+  SourceTermFactory& factory = SourceTermFactory::self(); 
+  for (vector<std::string>::iterator iter = d_new_sources.begin(); 
+      iter != d_new_sources.end(); iter++){
+    SourceTermBase& src = factory.retrieve_source_term( *iter ); 
+    src.sched_computeSource( level, sched, timeSubStep ); 
+  }
+  */
+
   sched_buildLinearMatrixVelHat(sched, patches, matls, 
                                 timelabels, d_EKTCorrection);
 

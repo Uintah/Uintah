@@ -205,11 +205,11 @@
             <doDiff>false</doDiff>
             <doConv>true</doConv>
             <initialization type="env_constant">
-                <env_constant qn="0" value="10.0e-5"></env_constant>
-                <env_constant qn="1" value="20.0e-5"></env_constant>
-                <env_constant qn="2" value="30.0e-5"></env_constant>
+                <env_constant qn="0" value="1e-11"></env_constant>
+                <env_constant qn="1" value="2e-10"></env_constant>
+                <env_constant qn="2" value="3e-9"></env_constant>
             </initialization>
-            <scaling_const>1.0e-8</scaling_const>
+            <scaling_const>1.0e-10</scaling_const>
         </Ic>
 
         <Moment><m>[0,0]</m></Moment>

@@ -12,7 +12,7 @@
 
   <Time>
     <maxTime>5.0</maxTime>
-    <max_Timesteps>20</max_Timesteps>
+    <max_Timesteps>100</max_Timesteps>
     <initTime>0.0</initTime>
     <delt_min>0.00001</delt_min>
     <delt_max>5</delt_max>
@@ -260,6 +260,7 @@
             <!-- l [=] m -->
             <doDiff>false</doDiff>
             <doConv>true</doConv>
+            <timestepMultiplier>0.5</timestepMultiplier>
             <initialization type="env_constant">
                 <env_constant qn="0" value="0.000"></env_constant>
                 <env_constant qn="1" value="0.001"></env_constant>
@@ -273,6 +274,7 @@
             <!-- l [=] m -->
             <doDiff>false</doDiff>
             <doConv>true</doConv>
+            <timestepMultiplier>0.5</timestepMultiplier>
             <initialization type="env_constant">
                 <env_constant qn="0" value="0.000"></env_constant>
                 <env_constant qn="1" value="0.001"></env_constant>
@@ -286,6 +288,7 @@
             <!-- l [=] m -->
             <doDiff>false</doDiff>
             <doConv>true</doConv>
+            <timestepMultiplier>0.5</timestepMultiplier>
             <initialization type="env_constant">
                 <env_constant qn="0" value="0.000"></env_constant>
                 <env_constant qn="1" value="0.001"></env_constant>

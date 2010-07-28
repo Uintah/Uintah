@@ -35,7 +35,6 @@
   * <BCtype id="0" label="u_velocity_internal_coordinate" var="Dirichlet"> \n
   *   <value>1.0</value> \n
   * \n
-  * etc...
   *
   */
 

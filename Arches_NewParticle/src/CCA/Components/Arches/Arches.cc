@@ -1115,6 +1115,8 @@ void
 Arches::scheduleComputeStableTimestep(const LevelP& level,
                                       SchedulerP& sched)
 {
+  proc0cout << "Computing stable timestep..." << endl;
+
   // primitive variable initialization
   Task* tsk = scinew Task( "Arches::computeStableTimeStep",this, 
                            &Arches::computeStableTimeStep);
@@ -1130,6 +1132,17 @@ Arches::scheduleComputeStableTimestep(const LevelP& level,
   tsk->requires(Task::NewDW, d_lab->d_viscosityCTSLabel,  gn,  0);
   tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,      gac, 1);
   tsk->requires(Task::NewDW, d_lab->d_cellInfoLabel, gn);
+
+  //cmr
+  DQMOMEqnFactory& dqmomFactory = DQMOMEqnFactory::self();
+  if( dqmomFactory.getDoDQMOM() ) {
+    tsk->requires(Task::NewDW, d_lab->d_MinDQMOMTimestepLabel,  gn);
+  }
+
+  EqnFactory& eqnFactory = EqnFactory::self();
+  if( eqnFactory.useScalarEqns() ) {
+    tsk->requires(Task::NewDW, d_lab->d_MinScalarTimestepLabel, gn);
+  }
 
   tsk->computes(d_sharedState->get_delt_label(),level.get_rep());
   sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
@@ -1156,7 +1169,6 @@ Arches::computeStableTimeStep(const ProcessorGroup* ,
     constCCVariable<double> den;
     constCCVariable<double> visc;
     constCCVariable<int> cellType;
-
 
     Ghost::GhostType  gac = Ghost::AroundCells;
     Ghost::GhostType  gaf = Ghost::AroundFaces;
@@ -1314,15 +1326,41 @@ Arches::computeStableTimeStep(const ProcessorGroup* ,
       }
     }
 
+    //cmr
+    EqnFactory& eqnFactory = EqnFactory::self();
+    if( eqnFactory.useScalarEqns() ) {
+      delt_vartype MinScalarTimestep;
+      new_dw->get( MinScalarTimestep, d_lab->d_MinScalarTimestepLabel );
+      double min_scalar_timestep = MinScalarTimestep;
+      /*
+      if( min_scalar_timestep < delta_t2 ) {
+        proc0cout << "Resetting minimum timestep from " << delta_t2 << " to " << min_scalar_timestep << " due to scalar transport equation Courant condition." << endl;
+      }
+      */
+      delta_t2 = Min(min_scalar_timestep,delta_t2);
+    }
+
+    //cmr
+    DQMOMEqnFactory& dqmomFactory = DQMOMEqnFactory::self();
+    if( dqmomFactory.getDoDQMOM() ) {
+      delt_vartype MinDQMOMTimestep;
+      new_dw->get( MinDQMOMTimestep, d_lab->d_MinDQMOMTimestepLabel );
+      double min_dqmom_timestep = MinDQMOMTimestep;
+      /*
+      if( min_dqmom_timestep < delta_t2 ) {
+        proc0cout << "Resetting minimum timestep from " << delta_t2 << " to " << min_dqmom_timestep << " due to DQMOM transport equation Courant condition." << endl;
+      }
+      */
+      delta_t2 = Min(min_dqmom_timestep,delta_t2);
+    }
 
     if (d_variableTimeStep) {
       delta_t = delta_t2;
-    }
-    else {
+    } else {
       proc0cout << " Courant condition for time step: " << delta_t2 << endl;
     }
 
-    //    proc0cout << "time step used: " << delta_t << endl;
+    //proc0cout << "time step used: " << delta_t << endl;
     new_dw->put(delt_vartype(delta_t),  d_sharedState->get_delt_label(),getLevel(patches)); 
   }
 }
