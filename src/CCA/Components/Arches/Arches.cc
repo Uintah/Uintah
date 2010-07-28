@@ -38,6 +38,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Arches/SourceTerms/CoalGasDevol.h>
 #include <CCA/Components/Arches/SourceTerms/CoalGasMomentum.h> 
 #include <CCA/Components/Arches/SourceTerms/WestbrookDryer.h>
+#include <CCA/Components/Arches/SourceTerms/MultiPointConst.h>
 #include <CCA/Components/Arches/CoalModels/CoalModelFactory.h>
 #include <CCA/Components/Arches/CoalModels/ModelBase.h>
 #include <CCA/Components/Arches/TransportEqns/EqnBase.h>
@@ -2420,6 +2421,11 @@ void Arches::registerUDSources(ProblemSpecP& db)
       } else if (src_type == "mms1"){
         // MMS1 builder 
         SourceTermBuilder* srcBuilder = scinew MMS1Builder(src_name, required_varLabels, d_lab->d_sharedState);
+        factory.register_source_term( src_name, srcBuilder ); 
+
+      } else if ( src_type == "multi_point_const_src" ) {
+        // Adds a constant to the RHS in specified geometric locations
+        SourceTermBuilder* srcBuilder = scinew MultiPointConstBuilder(src_name, required_varLabels, d_lab->d_sharedState);
         factory.register_source_term( src_name, srcBuilder ); 
 
       } else {
