@@ -287,6 +287,7 @@ void CoalModelFactory::problemSetup(const ProblemSpecP& params)
     }
 
     // if using a devolatilization or char oxidation model, check if there is a corresponding <src> tag in <MixtureFractionSolver> block
+    /*
     if( d_useDevolatilizationModel || d_useCharOxidationModel ) {
       const ProblemSpecP params_root = db->getRootNode();
       if( params_root->findBlock("CFD") ) {
@@ -305,6 +306,7 @@ void CoalModelFactory::problemSetup(const ProblemSpecP& params)
         }
       }
     }
+    */
 
   } else {
     proc0cout << "No models were found by CoalModelFactory." << endl;
@@ -449,6 +451,9 @@ CoalModelFactory::sched_coalParticleCalculation( const LevelP& level,
 
     // Model evaluation order matches order in input file
     for( ModelMap::iterator iModel = models_.begin(); iModel != models_.end(); ++iModel ) {
+#ifdef DEBUG_MODELS
+      proc0cout << "Scheduling model computation for model " << iModel->second->getModelName() << endl;
+#endif
       iModel->second->sched_computeModel( level, sched, timeSubStep );
     }
   }

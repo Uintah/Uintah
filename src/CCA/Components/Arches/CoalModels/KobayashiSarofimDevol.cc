@@ -430,7 +430,7 @@ KobayashiSarofimDevol::computeModel( const ProcessorGroup * pc,
       IntVector c = *iter; 
 
       // weight - check if small
-      bool weight_is_small = (weight[c] < d_w_small);
+      bool weight_is_small = (weight[c] < d_w_small) || (weight[c] == 0.0);
 
       // devol_rate: raw caol internal coordinate source G
       double devol_rate_;
@@ -442,6 +442,9 @@ KobayashiSarofimDevol::computeModel( const ProcessorGroup * pc,
       double char_production_rate_;
 
 
+      double unscaled_temperature;
+      double unscaled_raw_coal_mass;
+
       if (weight_is_small) {
 
         devol_rate_ = 0.0;
@@ -451,9 +454,7 @@ KobayashiSarofimDevol::computeModel( const ProcessorGroup * pc,
       } else {
 
         double unscaled_weight;
-        double unscaled_temperature;
         double scaled_raw_coal_mass;
-        double unscaled_raw_coal_mass;
 
 
         unscaled_weight = weight[c]*d_w_scaling_constant;
@@ -543,6 +544,16 @@ KobayashiSarofimDevol::computeModel( const ProcessorGroup * pc,
         char_production_rate[c] = char_production_rate_;
       }
 
+#ifdef DEBUG_MODELS
+      if( c == IntVector(1,2,3) ) {
+        proc0cout << endl;
+        proc0cout << "Kobayashi Model: ------------------" << endl;
+        proc0cout << "For temperature = " << unscaled_temperature << " and raw coal mass = " << unscaled_raw_coal_mass << endl;
+        proc0cout << "Coal devolatilization rate for qn " << d_quadNode << " = " << devol_rate_ << endl;
+        proc0cout << "Gas production rate for qn " << d_quadNode << " = " << gas_devol_rate_ << endl;
+        proc0cout << endl;
+      }
+#endif
 
     }//end cell loop
   

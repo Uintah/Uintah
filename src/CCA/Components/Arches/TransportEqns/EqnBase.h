@@ -277,7 +277,7 @@ private:
 template <class phiType, class constPhiType>  
 void EqnBase::initializationFunction( const Patch* patch, phiType& phi, constPhiType& weight  ) 
 {
-  proc0cout << "initializing scalar equation " << d_eqnName << endl;
+  proc0cout << "Initializing scalar equation " << d_eqnName << endl;
 
   // Initialization function bullet proofing 
   if( d_initFunction == "step" || d_initFunction == "env_step" ) {
@@ -370,7 +370,7 @@ void EqnBase::initializationFunction( const Patch* patch, phiType& phi, constPhi
 template <class phiType>  
 void EqnBase::initializationFunction( const Patch* patch, phiType& phi ) 
 {
-  proc0cout << "initializing scalar equation " << d_eqnName << endl;
+  proc0cout << "Initializing scalar equation " << d_eqnName << endl;
 
   // Initialization function bullet proofing 
   if( d_initFunction == "step" || d_initFunction == "env_step" ) {

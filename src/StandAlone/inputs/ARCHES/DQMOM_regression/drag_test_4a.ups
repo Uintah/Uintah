@@ -12,10 +12,10 @@
 
   <Time>
     <maxTime>5.0</maxTime>
-    <max_Timesteps>20</max_Timesteps>
+    <max_Timesteps>100</max_Timesteps>
     <initTime>0.0</initTime>
-    <delt_min>0.00001</delt_min>
-    <delt_max>5</delt_max>
+    <delt_min>1e-9</delt_min>
+    <delt_max>5e-0</delt_max>
     <timestep_multiplier>0.5</timestep_multiplier>
   </Time>
 
@@ -127,6 +127,9 @@
     <Level>
       <Box label = "1">
         <lower>[0,0,0]</lower>
+        <!--
+        <upper>[0.05,0.05,0.05]</upper>
+        -->
         <upper>[1.0,1.0,1.0]</upper>
         <resolution>[8,8,8]</resolution>
         <extraCells>[0,0,0]</extraCells>
@@ -149,9 +152,9 @@
         <MMS whichMMS="constantMMS" >
             <mmsErrorType>Linf</mmsErrorType>
             <constantMMS>
-                <cu>1.0</cu>
-                <cv>2.0</cv>
-                <cw>3.0</cw>
+                <cu>20.0</cu>
+                <cv>20.0</cv>
+                <cw>20.0</cw>
                 <cp>100</cp>
                 <esphi0>0.0</esphi0>
                 <phi0>0.0</phi0>
@@ -255,12 +258,13 @@
             <!-- l [=] m -->
             <doDiff>false</doDiff>
             <doConv>true</doConv>
+            <timestepMultiplier>0.5</timestepMultiplier>
             <initialization type="env_constant">
-                <env_constant qn="0" value="0.000"></env_constant>
-                <env_constant qn="1" value="0.001"></env_constant>
-                <env_constant qn="2" value="0.002"></env_constant>
-                <env_constant qn="3" value="0.003"></env_constant>
-                <env_constant qn="4" value="0.004"></env_constant>
+                <env_constant qn="0" value="0.0"></env_constant>
+                <env_constant qn="1" value="0.1"></env_constant>
+                <env_constant qn="2" value="0.2"></env_constant>
+                <env_constant qn="3" value="0.3"></env_constant>
+                <env_constant qn="4" value="0.4"></env_constant>
             </initialization>
         </Ic>
 
@@ -268,12 +272,13 @@
             <!-- l [=] m -->
             <doDiff>false</doDiff>
             <doConv>true</doConv>
+            <timestepMultiplier>0.5</timestepMultiplier>
             <initialization type="env_constant">
-                <env_constant qn="0" value="0.000"></env_constant>
-                <env_constant qn="1" value="0.001"></env_constant>
-                <env_constant qn="2" value="0.002"></env_constant>
-                <env_constant qn="3" value="0.003"></env_constant>
-                <env_constant qn="4" value="0.004"></env_constant>
+                <env_constant qn="0" value="0.0"></env_constant>
+                <env_constant qn="1" value="0.1"></env_constant>
+                <env_constant qn="2" value="0.2"></env_constant>
+                <env_constant qn="3" value="0.3"></env_constant>
+                <env_constant qn="4" value="0.4"></env_constant>
             </initialization>
         </Ic>
 
@@ -281,12 +286,13 @@
             <!-- l [=] m -->
             <doDiff>false</doDiff>
             <doConv>true</doConv>
+            <timestepMultiplier>0.5</timestepMultiplier>
             <initialization type="env_constant">
-                <env_constant qn="0" value="0.000"></env_constant>
-                <env_constant qn="1" value="0.001"></env_constant>
-                <env_constant qn="2" value="0.002"></env_constant>
-                <env_constant qn="3" value="0.003"></env_constant>
-                <env_constant qn="4" value="0.004"></env_constant>
+                <env_constant qn="0" value="0.0"></env_constant>
+                <env_constant qn="1" value="0.1"></env_constant>
+                <env_constant qn="2" value="0.2"></env_constant>
+                <env_constant qn="3" value="0.3"></env_constant>
+                <env_constant qn="4" value="0.4"></env_constant>
             </initialization>
         </Ic>
 

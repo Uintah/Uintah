@@ -558,12 +558,11 @@ CoalParticleHeatTransfer::computeModel( const ProcessorGroup * pc,
     }
 
 
-
     for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
       IntVector c = *iter; 
 
       // weight - check if small
-      bool weight_is_small = (weight[c] < d_w_small);
+      bool weight_is_small = (weight[c] < d_w_small) || (weight[c] == 0 );
 
       double scaled_weight;
       double unscaled_weight;
@@ -683,6 +682,17 @@ CoalParticleHeatTransfer::computeModel( const ProcessorGroup * pc,
       heat_rate[c] = heat_rate_;
       gas_heat_rate[c] = gas_heat_rate_;
       abskp[c] = abskp_;
+
+#ifdef DEBUG_MODELS
+      if( c == IntVector(1,2,3) ) {
+        proc0cout << endl;
+        proc0cout << "Coal particle heat transfer: -------------" << endl;
+        proc0cout << "Heating rate for qn " << d_quadNode << " is ~ Q_convection + Q_radiation = " << Q_convection << " + " << Q_radiation << " = " << heat_rate_ << endl;
+        proc0cout << "Gas heating rate for qn " << d_quadNode << " is " << gas_heat_rate_ << endl;
+        proc0cout << endl;
+      }
+
+#endif
  
     }//end cell loop
 

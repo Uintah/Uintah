@@ -303,6 +303,7 @@
           <doDiff                       spec="OPTIONAL BOOLEAN"/>
           <doConv                       spec="OPTIONAL BOOLEAN"/>
           <addSources                   spec="OPTIONAL BOOLEAN"/>
+          <timestepMultiplier           spec="OPTIONAL DOUBLE" />
           <conv_scheme                  spec="OPTIONAL STRING 'upwind, super_bee, central'"/> 
           <scaling_const                spec="OPTIONAL DOUBLE"/>                              
           <use_density_guess            spec="OPTIONAL NO_DATA"/>
@@ -522,6 +523,7 @@
           <doConv                       spec="OPTIONAL BOOLEAN"/>
           <conv_scheme                  spec="OPTIONAL STRING 'upwind, super_bee'"/>
           <turbulentPrandtlNumber       spec="OPTIONAL DOUBLE" />
+          <timestepMultiplier           spec="OPTIONAL DOUBLE" />
           <initialization               spec="OPTIONAL NO_DATA"
                                         attribute1="type REQUIRED STRING 'env_constant, constant, env_step'">
             <!-- environment constant value initialization -->

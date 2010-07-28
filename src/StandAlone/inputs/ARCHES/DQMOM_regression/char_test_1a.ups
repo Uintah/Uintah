@@ -12,9 +12,9 @@
 
     <Time>
       <maxTime>5.0</maxTime>
-      <max_Timesteps>10</max_Timesteps>
+      <max_Timesteps>20</max_Timesteps>
       <initTime>0.0</initTime>
-      <delt_min>0.00001</delt_min>
+      <delt_min>0.000001</delt_min>
       <delt_max>5</delt_max>
       <timestep_multiplier>0.5</timestep_multiplier>
     </Time>
@@ -99,7 +99,7 @@
         <Level>
             <Box label = "1">
                 <lower>[0,0,0]</lower>
-                <upper>[0.01,0.01,0.01]</upper>
+                <upper>[1.00,1.00,1.00]</upper>
                 <resolution>[8,8,8]</resolution>
                 <extraCells>[0,0,0]</extraCells>
                 <patches>[1,1,1]</patches>
@@ -160,10 +160,10 @@
                     
 
                 <Eqn label = "coal_gas_mix_frac" type = "CCscalar">
+                    <use_density_guess/>
                     <doDiff>false</doDiff>
                     <doConv>false</doConv>
                     <addSources>true</addSources>
-                    <use_density_guess/>
                     <conv_scheme>super_bee</conv_scheme>
                     <src label = "eta_source"/>
                     <initialization type="constant">

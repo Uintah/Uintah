@@ -2,9 +2,9 @@
 #define UT_EqnFactory_h
 #include <CCA/Components/Arches/ArchesVariables.h>
 #include <CCA/Ports/DataWarehouseP.h>
+#include <Core/Math/MinMax.h>
 
 namespace Uintah {
-
 //---------------------------------------------------------------------------
 // Builder 
 
@@ -20,6 +20,8 @@ namespace Uintah {
 class ExplicitTimeInt;
 class ArchesLabel;
 class EqnBase; 
+class ArchesLabel;
+class ExplicitTimeInt;
 class EqnBuilder
 {
 public:
@@ -53,10 +55,9 @@ protected:
   * @details
   * This class is implemented as a singleton.
   * 
+  * @todo Implement a minimum timestep thing, similar to DQMOMEqnFactory
+  * 
   */
-class ArchesLabel;
-class ExplicitTimeInt;
-
 class EqnFactory
 {
 public:
@@ -83,9 +84,24 @@ public:
                    DataWarehouse* old_dw,
                    DataWarehouse* new_dw );
 
+  /** @brief  Schedule dummy initialization for MPM nosolve (calls dummySolve of all objects owned/managed by the factory) */
   void sched_dummyInit( const LevelP& level,
                         SchedulerP& sched );
 
+  /** @brief  Initialize the value of the minimum timestep label for DQMOM scalar equations IN THE DATA WAREHOUSE, as well as initializing the value of the private member d_MinTimestepVar. */
+  void initializeMinTimestepLabel( const ProcessorGroup*,
+                                   const PatchSubset* patches,
+                                   const MaterialSubset*,
+                                   DataWarehouse* old_dw,
+                                   DataWarehouse* new_dw );
+
+  /** @brief  Set the value of the minimum timestep label for DQMOM scalar equations IN THE DATA WAREHOUSE
+              (Contrast this with setMinTimestepVar() below, which merely sets the value of the private member d_MinTimestepVar. */
+  void setMinTimestepLabel( const ProcessorGroup*,
+                            const PatchSubset* patches,
+                            const MaterialSubset*,
+                            DataWarehouse* old_dw,
+                            DataWarehouse* new_dw );
 
   //////////////////////////////////////////////
   // Evaluate the transport equations
@@ -132,14 +148,24 @@ public:
     d_timeIntegratorSet = true;
   };
 
+  /** @brief  Method to determine whether any scalar equations are used/registered with the EqnFactory */
+  inline bool useScalarEqns() {
+    return d_useScalarEqns; };
+
+  /** @brief  Set the value of the private member d_MinTimestepVar, which is the minimum timestep required for stability by the DQMOM scalar equations */
+  void setMinTimestepVar( string eqnName, double new_min );
+
 private:
 
   typedef std::map< std::string, EqnBuilder* >  BuildMap; 
 
   ArchesLabel* d_fieldLabels;
-
   ExplicitTimeInt* d_timeIntegrator;
 
+  double d_MinTimestepVar;  ///< Since we can't modify a variable multiple times (the memory usage spikes after you modify a variable ~10 or more times), 
+                            ///  we have to modify a private member, then put that private member in a data warehouse variable ONCE
+
+  bool d_useScalarEqns;     ///< Boolean: are any scalar equations being tracked?
   bool d_labelSet;          ///< Boolean: has the ArchesLabel been set using setArchesLabel()?
   bool d_timeIntegratorSet; ///< Boolean: has the time integrator been set using setTimeIntegrator()?
 
@@ -149,6 +175,9 @@ private:
   EqnFactory(); 
   ~EqnFactory(); 
 }; // class EqnFactory 
+
+
+
 } // end namespace Uintah
 
 #endif

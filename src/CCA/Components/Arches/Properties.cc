@@ -91,6 +91,11 @@ Properties::Properties(const ArchesLabel* label,
 {
   d_DORadiationCalc = false;
   d_radiationCalc = false;
+  d_co_output       = false;
+  d_sulfur_chem     = false;
+  d_soot_precursors = false;
+  d_tabulated_soot  = false;
+  d_calcExtraScalars= false;
   d_bc = 0;
 #ifdef PetscFilter
   d_filter = 0;
@@ -174,6 +179,20 @@ Properties::problemSetup(const ProblemSpecP& params)
     // New TabPropsInterface stuff...
     d_mixingRxnTable = scinew TabPropsInterface( d_lab, d_MAlab );
     d_mixingRxnTable->problemSetup( db ); 
+    // At this time, these all need to be false:
+    d_co_output       = false;
+    if (d_sulfur_chem) {
+      proc0cout << "Warning!: The old sulfur_chem boolean is not compatible with TabProps.  I am going to set it to false. " << endl;
+      d_sulfur_chem     = false;
+    }
+    if (d_soot_precursors) {
+      proc0cout << "Warning!: The soot_precursors boolean is not compatible with TabProps.  I am going to set it to false. " << endl; 
+      d_soot_precursors = false;
+    }
+    if (d_tabulated_soot) {
+      proc0cout << "Warning!: The tabulated soot mechanism (tabulated_soot) is not active yet when using TabProps.  I am going to set it to false. " << endl;
+      d_tabulated_soot  = false;
+    }
   }
 #endif
   else if (mixModel == "pdfMixingModel" || mixModel == "SteadyFlameletsTable"
@@ -203,7 +222,8 @@ Properties::problemSetup(const ProblemSpecP& params)
     d_soot_precursors = d_mixingModel->getSootPrecursors();
     d_tabulated_soot  = d_mixingModel->getTabulatedSoot();  
     d_radiationCalc = false;
-  }
+  } 
+
 
   if (d_calcEnthalpy) {
     ProblemSpecP params_non_constant = params;

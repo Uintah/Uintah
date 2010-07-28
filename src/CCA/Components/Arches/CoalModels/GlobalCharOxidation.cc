@@ -134,6 +134,8 @@ GlobalCharOxidation::GlobalCharOxidation( std::string modelName,
     Sc_.push_back(0.4);
   }
 
+  d_useTparticle = false;
+
 }
 
 GlobalCharOxidation::~GlobalCharOxidation()
@@ -467,12 +469,19 @@ GlobalCharOxidation::computeModel( const ProcessorGroup * pc,
 
       IntVector c = *iter; 
 
-      bool weight_is_small = (weight[c] < d_w_small);
+      bool weight_is_small = (weight[c] < d_w_small) || (weight[c] == 0.0);
 
       double char_rxn_rate_;
 
       if(weight_is_small) {
         char_rxn_rate_ = 0.0;
+
+        // set gas model terms (3 of them) equal to 0
+        int z=0;
+        for( vector< CCVariable<double>* >::iterator iGasModel = gasModelCCVars.begin(); iGasModel != gasModelCCVars.end(); ++iGasModel, ++z) {
+          (**iGasModel)[c] = 0.0;
+        }
+
       } else {
 
         double unscaled_weight;
@@ -524,6 +533,8 @@ GlobalCharOxidation::computeModel( const ProcessorGroup * pc,
         }
 
       }
+
+      char_model[c] = char_rxn_rate_;
 
     }//end cell loop
 

@@ -233,8 +233,6 @@ DragModel::sched_computeModel( const LevelP& level,
                                SchedulerP& sched, 
                                int timeSubStep )
 {
-  proc0cout << "Computing drag model." << endl;
-
   // calculate model source term for dqmom velocity internal coodinate
   std::string taskname = "DragModel::computeModel";
   Task* tsk = scinew Task(taskname, this, &DragModel::computeModel, timeSubStep);
@@ -398,9 +396,9 @@ DragModel::computeModel( const ProcessorGroup* pc,
 
         double rhop = particle_density[c];
 
-        double x_diff = gasVel.x() - partVel.x();
-        double y_diff = gasVel.y() - partVel.y();
-        double z_diff = gasVel.z() - partVel.z();
+        double x_diff = ( gasVel.x() - partVel.x() );
+        double y_diff = ( gasVel.y() - partVel.y() );
+        double z_diff = ( gasVel.z() - partVel.z() );
         double diff   = fabs(gasVel.length() - partVel.length());
         double Re     = (diff*length)/d_visc;
 
@@ -432,12 +430,20 @@ DragModel::computeModel( const ProcessorGroup* pc,
 
           //cmr
           if( c == IntVector(1,2,3) ) {
-            cout << "Drag Model: QN " << d_quadNode << ": Gas velocity = " << gasVel << " and particle velocity = " << partVel << endl;
-            cout << "Drag Model: QN " << d_quadNode << ": Gas drag = prefix*diff = " << prefix << "*" << Vector(x_diff,y_diff,z_diff) << " = " << drag_gas[c] << endl;
-            //cout << "tau_p = (rhop/(18*d_visc))*pow(length,2) = (" << rhop << "/(18*" << d_visc << "))*" << length*length << endl;
-            //cout << "X-Vel Drag = (phi/t_p)*(x_diff + d_gravity.x()) = (" << phi << "/" << t_p << ")*(" << x_diff << ")" << endl;
-            //cout << "Y-Vel Drag = (phi/t_p)*(y_diff + d_gravity.y()) = (" << phi << "/" << t_p << ")*(" << y_diff << ")" << endl;
-            //cout << "Z-Vel Drag = (phi/t_p)*(z_diff + d_gravity.z()) = (" << phi << "/" << t_p << ")*(" << z_diff << ")" << endl;
+            cout << endl;
+            cout << "Drag model: QN " << d_quadNode << ": diff = [ " << x_diff << ", " << y_diff << ", " << z_diff << " ] " << endl;
+            cout << "Drag model: QN " << d_quadNode << ": Gas velocity = " << gasVel << " and particle velocity = " << partVel << endl;
+            cout << endl;
+
+            /*
+            cout << endl;
+            cout << "Drag model: QN " << d_quadNode << ": Gas drag = prefix*diff = " << prefix << "*" << Vector(x_diff,y_diff,z_diff) << " = " << drag_gas[c] << endl;
+            cout << "tau_p = (rhop/(18*d_visc))*pow(length,2) = (" << rhop << "/(18*" << d_visc << "))*" << length*length << " = " << t_p << endl;
+            cout << "X-Vel = (phi/t_p)*(x_diff + d_gravity.x()) = (" << phi << "/" << t_p << ")*(" << x_diff << ") = " << drag_gas[c].x() << endl;
+            cout << "Y-Vel = (phi/t_p)*(y_diff + d_gravity.y()) = (" << phi << "/" << t_p << ")*(" << y_diff << ") = " << drag_gas[c].y() << endl;
+            cout << "Z-Vel = (phi/t_p)*(z_diff + d_gravity.z()) = (" << phi << "/" << t_p << ")*(" << z_diff << ") = " << drag_gas[c].z() << endl;
+            cout << endl;
+            */
           }
   
 
@@ -550,9 +556,17 @@ DragModel::computeParticleVelocity( const ProcessorGroup* pc,
     for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
       IntVector c = *iter; 
 
-      double U = (wtd_particle_uvel[c]/weight[c])*d_uvel_scaling_factor;
-      double V = (wtd_particle_vvel[c]/weight[c])*d_vvel_scaling_factor;
-      double W = (wtd_particle_wvel[c]/weight[c])*d_wvel_scaling_factor;
+      bool weight_is_small = (weight[c] <= d_w_small) || (weight[c] == 0.0);
+      double U, V, W;
+      if(weight_is_small) {
+        U = 0.0;
+        V = 0.0;
+        W = 0.0;
+      } else {
+        U = (wtd_particle_uvel[c]/weight[c])*d_uvel_scaling_factor;
+        V = (wtd_particle_vvel[c]/weight[c])*d_vvel_scaling_factor;
+        W = (wtd_particle_wvel[c]/weight[c])*d_wvel_scaling_factor;
+      }
       particle_velocity[c] = Vector(U,V,W);
 
     }
@@ -662,7 +676,7 @@ DragModel::initVars( const ProcessorGroup * pc,
     for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
       IntVector c = *iter; 
 
-      bool weight_is_small = ( weight[c] < TINY );
+      bool weight_is_small = ( weight[c] < TINY ) || (weight[c] == 0.0);
       
       if( weight_is_small ) {
         particle_velocity[c] = Vector( 0.0, 0.0, 0.0 );

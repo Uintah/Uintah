@@ -37,31 +37,6 @@ namespace Uintah{
 *
 */
 
-//---------------------------------------------------------------------------
-// Builder 
-class DQMOMEqn; 
-class DQMOMEqnBuilder: public EqnBuilder
-{
-public:
-  DQMOMEqnBuilder( ArchesLabel* fieldLabels, 
-                   ExplicitTimeInt* timeIntegrator, 
-                   string eqnName,
-                   int quadNode,
-                   bool isWeight );
-
-  ~DQMOMEqnBuilder();
-
-  EqnBase* build(); 
-
-protected: 
-  ArchesLabel* d_fieldLabels; 
-  ExplicitTimeInt* d_timeIntegrator; 
-  string d_eqnName; 
-  int d_quadNode;
-  bool d_weight;
-}; 
-// End Builder
-//---------------------------------------------------------------------------
 
 class ArchesLabel; 
 class ExplicitTimeInt; 
@@ -233,6 +208,7 @@ private:
 
   const VarLabel* d_sourceLabel;      ///< DQMOM Eqns only have ONE source term; this is the VarLabel for it
   const VarLabel* d_icLabel;          ///< This is the label that holds the unscaled and (if applicable) unweighted DQMOM scalar value 
+
   //vector<string> d_models;   
   vector<const VarLabel*> d_models;   ///< List of variable labels corresponding to model terms for this DQMOM internal coordinate/environment
   //vector<string> d_sources;
@@ -240,13 +216,53 @@ private:
                                       /// (not sure if this is ever even used...)
   int d_quadNode;                     ///< The quadrature node for this equation object 
   bool d_weight;                      ///< Boolean: is this equation object for a weight?
-  bool d_addExtraSources; 
+  bool d_addExtraSources;             ///< Boolean: add source terms that are associated with this equation?
 
+  double d_timestepMultiplier;
 
 
 }; // class DQMOMEqn
+
+
+//---------------------------------------------------------------------------
+// Builder 
+/**
+  * @class DQMOMEqnBuilder
+  * @author Jeremy Thornock, Adapted from James Sutherland's code
+  * @date November 19, 2008
+  *
+  * @brief Abstract base class to support scalar equation additions.  Meant to
+  * be used with the DQMOMEqnFactory. 
+  *
+  */
+class DQMOMEqn; 
+class DQMOMEqnBuilder: public EqnBuilder
+{
+public:
+  DQMOMEqnBuilder( ArchesLabel* fieldLabels, 
+                   ExplicitTimeInt* timeIntegrator, 
+                   string eqnName,
+                   int quadNode,
+                   bool isWeight );
+
+  ~DQMOMEqnBuilder();
+
+  EqnBase* build(); 
+
+protected: 
+  ArchesLabel* d_fieldLabels; 
+  ExplicitTimeInt* d_timeIntegrator; 
+  string d_eqnName; 
+  int d_quadNode;
+  bool d_weight;
+}; 
+// End Builder
+//---------------------------------------------------------------------------
+
+
 } // namespace Uintah
 
 #endif
+
 
 

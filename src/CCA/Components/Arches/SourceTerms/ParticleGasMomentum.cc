@@ -91,11 +91,11 @@ ParticleGasMomentum::sched_computeSource( const LevelP& level, SchedulerP& sched
 //---------------------------------------------------------------------------
 void
 ParticleGasMomentum::computeSource( const ProcessorGroup* pc, 
-                   const PatchSubset* patches, 
-                   const MaterialSubset* matls, 
-                   DataWarehouse* old_dw, 
-                   DataWarehouse* new_dw, 
-                   int timeSubStep )
+                                    const PatchSubset* patches, 
+                                    const MaterialSubset* matls, 
+                                    DataWarehouse* old_dw, 
+                                    DataWarehouse* new_dw, 
+                                    int timeSubStep )
 {
   //patch loop
   for (int p=0; p < patches->size(); p++){
@@ -146,9 +146,12 @@ ParticleGasMomentum::computeSource( const ProcessorGroup* pc,
 
         dragSrc[c] = running_sum;
 
+        /*
+        //cmr
         if( c == IntVector(1,2,3) ) {
           cout << "The drag source term is " << dragSrc[c] << endl;
         }
+        */
 
       }
 

@@ -512,7 +512,7 @@ ConstantDensityInert::computeModel( const ProcessorGroup * pc,
     for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
       IntVector c = *iter; 
 
-      bool weight_is_small = (weight[c] < d_w_small);
+      bool weight_is_small = (weight[c] < d_w_small) || (weight[c] == 0.0);
       //bool mass_is_small = fabs(wa_mass[c] < TINY);
       double model_sum = 0.0;
       int z=0;
