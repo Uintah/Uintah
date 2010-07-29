@@ -177,12 +177,7 @@
     <MaterialProperties>
        <ICE>
          <material>
-           <EOS type = "Murnahan">
-             <n>7.4</n>
-             <K>39.0e-11</K>
-             <rho0>1160.0</rho0>
-             <P0>101325.0</P0>
-           </EOS>
+           <include href="inputs/ICE/MurnahanEOSANFO.xml"/>
            <dynamic_viscosity>      0.0                 </dynamic_viscosity>
            <thermal_conductivity>   0.0                 </thermal_conductivity>
            <specific_heat>          544.96              </specific_heat>
