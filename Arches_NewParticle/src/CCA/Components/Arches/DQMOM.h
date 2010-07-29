@@ -108,6 +108,7 @@ public:
 
 private:
 
+  /** @brief    Construct the DQMOM linear system AX=B for LU and C++ vector A and B, which use Crout's method (slower) */
   void constructLinearSystem( LU              &A,
                               vector<double>  &B,
                               vector<double>  &weights,
@@ -115,6 +116,7 @@ private:
                               vector<double>  &models,
                               int              verbosity=0);
 
+  /** @brief    Construct the DQMOM linear system AX=B for ColumnMatrix and DenseMatrix A and B, which use Lapack (faster) */
   void constructLinearSystem( DenseMatrix*    &AA,
                               ColumnMatrix*   &BB,
                               vector<double>  &weights,
@@ -122,13 +124,18 @@ private:
                               vector<double>  &models,
                               int              verbosity=0);
 
+  /** @brief    Construct the A matrix (DenseMatrix) for the optimized DQMOM linear system */
   void constructAopt( DenseMatrix*   &AA,
                       vector<double> &Abscissas);
 
+  /** @brief    Construct the RHS (ColumnMatrix) vector for the optimized DQMOM linear system */
   void constructBopt( ColumnMatrix*  &BB,
                       vector<double> &weights,
                       vector<double> &Abscissas,
                       vector<double> &models);
+
+  /** @brief    Do a quick calculation of the powers of optimal abscissas (possible because optimal abscissas have values of -1, 0, or 1) */
+  int my_pow( int abscissa, int power );
 
 
   vector<MomentVector> momentIndexes;           ///< Vector containing all moment indices

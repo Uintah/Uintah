@@ -150,8 +150,6 @@ EqnFactory::scalarInit( const ProcessorGroup* ,
   //cmr
   double delta_t = 1.0e16;
   new_dw->put( min_vartype(delta_t), d_fieldLabels->d_MinScalarTimestepLabel );
-  //cmr
-  cout << "Initializing minimum timestep label value to " << delta_t << endl;
 
   proc0cout << "Initializing all scalar equations." << endl;
   for (int p = 0; p < patches->size(); p++){
@@ -282,8 +280,6 @@ EqnFactory::initializeMinTimestepLabel( const ProcessorGroup* pc,
   double value = 1.0e16;
   new_dw->put( min_vartype(value), d_fieldLabels->d_MinScalarTimestepLabel);
   d_MinTimestepVar = value;
-  //cmr
-  cout << "Initializing minimum timestep label value to " << value << endl;
 }
 
 
@@ -300,8 +296,6 @@ EqnFactory::setMinTimestepLabel( const ProcessorGroup* pc,
                                  DataWarehouse* new_dw )
 {
   new_dw->put( min_vartype(d_MinTimestepVar), d_fieldLabels->d_MinScalarTimestepLabel);
-  //cmr
-  cout << "Setting minimum scalar timestep label value to " << d_MinTimestepVar << endl;
 }
 
 
@@ -318,13 +312,7 @@ I don't know why this happens, but this is a (hopefully!) temporary and somewhat
 void
 EqnFactory::setMinTimestepVar( string eqnName, double new_min )
 {
-  //cmr
-  cout << "Equation " << eqnName << " is re-setting minimum scalar timestep var from " << d_MinTimestepVar;
-
   d_MinTimestepVar = Min(new_min, d_MinTimestepVar );
-
-  //cmr
-  cout << " to " << d_MinTimestepVar << endl;
 }
 
 
