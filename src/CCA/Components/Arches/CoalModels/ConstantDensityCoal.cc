@@ -594,10 +594,6 @@ ConstantDensityCoal::computeModel( const ProcessorGroup * pc,
         // see the White Book, Ch. 4, p. 93
         model[c] = ( 2/(pi*d_density*unscaled_length*unscaled_length) )*( model_sum );
 
-        //if( c==IntVector(1,2,3) ) {
-        //  cout << "ConstantDensityCoal = ( 2 / (pi*density*unscaled_length^2) )*(model_sum) = ( 2/(" << pi << "*" << d_density << "*" << pow(unscaled_length,2) << ") )*(" << model_sum << ")" << endl;
-        //}
-
       }
 
     }//end cell loop

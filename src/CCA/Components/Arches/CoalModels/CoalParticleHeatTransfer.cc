@@ -685,11 +685,11 @@ CoalParticleHeatTransfer::computeModel( const ProcessorGroup * pc,
 
 #ifdef DEBUG_MODELS
       if( c == IntVector(1,2,3) ) {
-        proc0cout << endl;
-        proc0cout << "Coal particle heat transfer: -------------" << endl;
-        proc0cout << "Heating rate for qn " << d_quadNode << " is ~ Q_convection + Q_radiation = " << Q_convection << " + " << Q_radiation << " = " << heat_rate_ << endl;
-        proc0cout << "Gas heating rate for qn " << d_quadNode << " is " << gas_heat_rate_ << endl;
-        proc0cout << endl;
+        cout << endl;
+        cout << "Coal particle heat transfer: -------------" << endl;
+        cout << "Heating rate for qn " << d_quadNode << " is ~ Q_convection + Q_radiation = " << Q_convection << " + " << Q_radiation << " = " << heat_rate_ << endl;
+        cout << "Gas heating rate for qn " << d_quadNode << " is " << gas_heat_rate_ << endl;
+        cout << endl;
       }
 
 #endif
