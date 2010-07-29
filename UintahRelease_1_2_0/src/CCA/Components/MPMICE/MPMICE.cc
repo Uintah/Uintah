@@ -73,6 +73,7 @@ using namespace std;
 
 static DebugStream cout_norm("MPMICE_NORMAL_COUT", false);  
 static DebugStream cout_doing("MPMICE_DOING_COUT", false);
+static DebugStream ds_EqPress("DBG_EqPress",false);
 
 MPMICE::MPMICE(const ProcessorGroup* myworld, 
                MPMType mpmtype, const bool doAMR)
@@ -1809,6 +1810,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
       bool converged  = false;
       double sum;
       count           = 0;
+      vector<EqPress_dbg> dbgEqPress;
 
       while ( count < d_ice->d_max_iter_equilibration && converged == false) {
         count++;
@@ -1891,6 +1893,27 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
            speedSound[m][c] = sqrt(c_2);         // Isentropic speed of sound
          }
        }
+       // Save iteration data for output in case of crash
+       if(ds_EqPress.active()){
+         EqPress_dbg dbg;
+         dbg.delPress     = delPress;
+         dbg.press_new    = press_new[c];
+         dbg.sumVolFrac   = sum;
+         dbg.count        = count;
+
+         for (int m = 0; m < numALLMatls; m++) {
+           EqPress_dbgMatl dmatl;
+           dmatl.press_eos   = press_eos[m];
+           dmatl.volFrac     = vol_frac[m][c];
+           dmatl.rhoMicro    = rho_micro[m][c];
+           dmatl.rho_CC      = rho_CC_new[m][c];
+           dmatl.temp_CC     = Temp[m][c];
+           dmatl.mat         = m;
+           dbg.matl.push_back(dmatl);
+         }
+         dbgEqPress.push_back(dbg);
+       }
+       
      }   // end of converged
 
       delPress_tmp[c] = delPress;
@@ -1899,7 +1922,10 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
      // If the pressure solution has stalled out 
      //  then try a binary search
      if(count >= d_ice->d_max_iter_equilibration) {
-
+        cout << "WARNING:MPMICE:ComputeEquilibrationPressure "
+             << " Cell : " << c << " having a difficutlt time converging. \n"
+             << " Now performing a binary pressure search " << endl;
+             
         binaryPressureSearch( Temp, rho_micro, vol_frac, rho_CC_new,
                               speedSound,  dp_drho,  dp_de, 
                               press_eos, press, press_new, press_ref,
@@ -1946,18 +1972,37 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
         warn << "\nMPMICE::ComputeEquilibrationPressure: Cell "<< c << ", L-"<<L_indx <<"\n"
              << message.str()
              <<"\nThis usually means that something much deeper has gone wrong with the simulation. "
-             <<"\nCompute equilibration pressure task is rarely the problem \n \n";
+             <<"\nCompute equilibration pressure task is rarely the problem. "
+             << "For more debugging information set the environmental variable:  \n"
+             << "   SCI_DEBUG DBG_EqPress:+\n\n";
+             
+        warn << "INPUTS: \n"; 
         for (int m = 0; m < numALLMatls; m++){
           warn<< "\n matl: " << m << "\n"
-               << "   rho_micro:     " << rho_micro[m][c] << "\n"
-               << "   vol_fraction:  "<< vol_frac[m][c]   << "\n"
-               << "   Temperature:   "<< Temp[m][c]       << "\n"
-               << "   Mat. volume:   "<< mat_volume[m]    << "\n";
+               << "   rho_CC:     " << rho_CC_new[m][c] << "\n"
+               << "   Temperature:   "<< Temp[m][c] << "\n";
         }
-        warn << "press new:     "<< press_new[c]   << "\n";
-        throw InvalidValue(warn.str(), __FILE__, __LINE__); 
-      }
-    }     // end of cell interator
+        if(ds_EqPress.active()){
+          warn << "\nDetails on iterations " << endl;
+          vector<EqPress_dbg>::iterator dbg_iter;
+          for( dbg_iter  = dbgEqPress.begin(); dbg_iter != dbgEqPress.end(); dbg_iter++){
+            EqPress_dbg & d = *dbg_iter;
+            warn << "Iteration:   " << d.count
+                 << "  press_new:   " << d.press_new
+                 << "  sumVolFrac:  " << d.sumVolFrac
+                 << "  delPress:    " << d.delPress << "\n";
+            for (int m = 0; m < numALLMatls; m++){
+              warn << "  matl: " << d.matl[m].mat
+                   << "  press_eos:  " << d.matl[m].press_eos
+                   << "  volFrac:    " << d.matl[m].volFrac
+                   << "  rhoMicro:   " << d.matl[m].rhoMicro
+                   << "  rho_CC:     " << d.matl[m].rho_CC
+                   << "  Temp:       " << d.matl[m].temp_CC << "\n";
+            }
+          }
+        } 
+      }  // all testsPassed
+    }  // end of cell interator
     if (cout_norm.active())
       cout_norm<<"max number of iterations in any cell \t"<<test_max_iter<<endl;
 
