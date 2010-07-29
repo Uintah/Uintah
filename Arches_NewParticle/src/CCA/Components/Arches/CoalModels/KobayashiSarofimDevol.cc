@@ -78,10 +78,6 @@ KobayashiSarofimDevol::KobayashiSarofimDevol( std::string modelName,
 
   // Create a char model label (for char creation)
   d_charModelLabel    = VarLabel::create( modelName+"_char",    CCVariable<double>::getTypeDescription() );
-  cout << "name of char label in kobayashi model: " << d_charModelLabel->getName() << endl;
-
-
-  //d_compute_particle_temp = false;
 
   d_useRawCoal = false;
   d_useChar = false;

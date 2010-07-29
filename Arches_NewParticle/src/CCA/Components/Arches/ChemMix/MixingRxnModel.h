@@ -140,6 +140,7 @@ private:
 
       i = d_dvVarMap.insert( make_pair( var_name, the_label ) ).first; 
 
+      proc0cout << "  Adding variables for table lookup: " << endl; 
       proc0cout << "    ---> " << var_name << endl; 
 
     } 
