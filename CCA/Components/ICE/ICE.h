@@ -73,6 +73,25 @@ namespace Uintah {
   class ModelInterface; 
   class Turbulence;
   class AnalysisModule;
+  
+    // The following two structs are used by computeEquilibrationPressure to store debug information:
+    //
+    struct  EqPress_dbgMatl{
+      int    mat;
+      double press_eos;
+      double volFrac;
+      double rhoMicro;
+      double temp_CC;
+      double rho_CC;
+    };
+
+    struct  EqPress_dbg{
+      int    count;
+      double sumVolFrac;
+      double press_new;
+      double delPress;
+      vector<EqPress_dbgMatl> matl;
+    };
     
     class UINTAHSHARE ICE : public UintahParallelComponent, public SimulationInterface {
     public:

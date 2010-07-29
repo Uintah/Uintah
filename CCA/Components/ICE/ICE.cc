@@ -94,6 +94,7 @@ using namespace Uintah;
 //  default is OFF
 static DebugStream cout_norm("ICE_NORMAL_COUT", false);  
 static DebugStream cout_doing("ICE_DOING_COUT", false);
+static DebugStream ds_EqPress("DBG_EqPress",false);
 
 
 ICE::ICE(const ProcessorGroup* myworld, const bool doAMR) :
@@ -2490,12 +2491,13 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
     if (switchDebug_equil_press) {
     
       new_dw->allocateTemporary(n_iters_equil_press,  patch);
-      ostringstream desc,desc1;
+      ostringstream desc1;
       desc1 << "TOP_equilibration_patch_" << patch->getID();
       printData( 0, patch, 1, desc1.str(), "Press_CC_top", press);
      for (int m = 0; m < numMatls; m++)  {
        ICEMaterial* matl = d_sharedState->getICEMaterial( m );
        int indx = matl->getDWIndex(); 
+       ostringstream desc;
        desc << "TOP_equilibration_Mat_" << indx << "_patch_"<<patch->getID();
        printData(indx, patch, 1, desc.str(), "rho_CC",       rho_CC[m]);    
        printData(indx, patch, 1, desc.str(), "rho_micro_CC", rho_micro[m]);  
@@ -2513,7 +2515,8 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
       double delPress = 0.;
       bool converged  = false;
       count           = 0;
-
+      vector<EqPress_dbg> dbgEqPress;
+    
       while ( count < d_max_iter_equilibration && converged == false) {
         count++;
 
@@ -2533,7 +2536,7 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
         for (int m = 0; m < numMatls; m++)   {
           double Q =  press_new[c] - press_eos[m];
           double div_y =  (vol_frac[m][c] * vol_frac[m][c])
-            / (dp_drho[m] * rho_CC[m][c] + d_SMALL_NUM);
+                        / (dp_drho[m] * rho_CC[m][c] + d_SMALL_NUM);
           A   +=  vol_frac[m][c];
           B   +=  Q*div_y;
           C   +=  div_y;
@@ -2578,6 +2581,27 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
             speedSound_new[m][c] = sqrt(tmp);
           }
         }
+        
+        // Save iteration data for output in case of crash
+        if(ds_EqPress.active()){
+          EqPress_dbg dbg;
+          dbg.delPress     = delPress;
+          dbg.press_new    = press_new[c];
+          dbg.sumVolFrac   = sum;
+          dbg.count        = count;
+
+          for (int m = 0; m < numMatls; m++) {
+            EqPress_dbgMatl dmatl;
+            dmatl.press_eos   = press_eos[m];
+            dmatl.volFrac     = vol_frac[m][c];
+            dmatl.rhoMicro    = rho_micro[m][c];
+            dmatl.rho_CC      = rho_CC[m][c];
+            dmatl.temp_CC     = Temp[m][c];
+            dmatl.mat         = m;
+            dbg.matl.push_back(dmatl);
+          }
+          dbgEqPress.push_back(dbg);
+        }
       }   // end of converged
 
       test_max_iter = std::max(test_max_iter, count);
@@ -2595,7 +2619,9 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
       }
       
       for (int m = 0; m < numMatls; m++) {
-        ASSERT(( vol_frac[m][c] > 0.0 ) ||( vol_frac[m][c] < 1.0));
+        if(( vol_frac[m][c] > 0.0 ) ||( vol_frac[m][c] < 1.0)){
+          message << " ( vol_frac[m][c] > 0.0 ) ||( vol_frac[m][c] < 1.0) ";
+        }
       }
       
       if ( fabs(sum - 1.0) > convergence_crit && !tsr) {  
@@ -2619,20 +2645,42 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
         warn << "\nICE::ComputeEquilibrationPressure: Cell "<< c << ", L-"<<L_indx <<"\n"
              << message.str()
              <<"\nThis usually means that something much deeper has gone wrong with the simulation. "
-             <<"\nCompute equilibration pressure task is rarely the problem \n \n";
+             <<"\nCompute equilibration pressure task is rarely the problem. "
+             << "For more debugging information set the environmental variable:  \n"
+             << "   SCI_DEBUG DBG_EqPress:+\n\n";
+             
+        warn << "INPUTS: \n"; 
         for (int m = 0; m < numMatls; m++){
           warn<< "\n matl: " << m << "\n"
-               << "   rho_micro:     " << rho_micro[m][c] << "\n"
-               << "   vol_fraction:  "<< vol_frac[m][c]   << "\n"
-               << "   Temperature:   "<< Temp[m][c]       << "\n";
+               << "   rho_CC:     " << rho_CC[m][c] << "\n"
+               << "   Temperature:   "<< Temp[m][c] << "\n";
         }
-        warn << "press new:     "<< press_new[c]   << "\n";
+        if(ds_EqPress.active()){
+          warn << "\nDetails on iterations " << endl;
+          vector<EqPress_dbg>::iterator dbg_iter;
+          for( dbg_iter  = dbgEqPress.begin(); dbg_iter != dbgEqPress.end(); dbg_iter++){
+            EqPress_dbg & d = *dbg_iter;
+            warn << "Iteration:   " << d.count
+                 << "  press_new:   " << d.press_new
+                 << "  sumVolFrac:  " << d.sumVolFrac
+                 << "  delPress:    " << d.delPress << "\n";
+            for (int m = 0; m < numMatls; m++){
+              warn << "  matl: " << d.matl[m].mat
+                   << "  press_eos:  " << d.matl[m].press_eos
+                   << "  volFrac:    " << d.matl[m].volFrac
+                   << "  rhoMicro:   " << d.matl[m].rhoMicro
+                   << "  rho_CC:     " << d.matl[m].rho_CC
+                   << "  Temp:       " << d.matl[m].temp_CC << "\n";
+            }
+          }
+        }
         throw InvalidValue(warn.str(), __FILE__, __LINE__); 
       }
 
       if (switchDebug_equil_press) {
         n_iters_equil_press[c] = count;
       }
+      
     } // end of cell interator
 
     cout_norm << "max. iterations in any cell " << test_max_iter << 

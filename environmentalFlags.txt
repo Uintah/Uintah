@@ -20,7 +20,8 @@ ICE_BC_CC         SCI_DEBUG     output boundary condition debugging information 
                                 Cell-centered variables.                         
 ICE_BC_FC         SCI_DEBUG     output boundary condition debugging information for
                                 Face-centered variables. 
-
+DBG_EqPress       SCI_DEBUG     Output debugging information about the iteration
+                                process in computeEquilibration if an exception is thrown.
 ARCHES:
 __________________________________
 
@@ -37,3 +38,5 @@ MPMICE:
 __________________________________
 MPMICE_DOING_COUT SCI_DEBUG     Outputs the name of each task as it's being  
                                 scheduled and executed. 
+DBG_EqPress       SCI_DEBUG     Output debugging information if computeEquilibration throws
+                                an exception.
