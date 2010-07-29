@@ -558,8 +558,8 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
       for( unsigned int ss=0; ss < modelsList.size(); ++ss ) {
         new_dw->get( (*tempCCVector[ss]), modelsList[ss], matlIndex, patch, Ghost::None, 0 );
 #ifdef DEBUG_MODELS
-        //cmr
-        cout << "Model " << modelsList[ss]->getName() << " has value " << (*tempCCVector[ss])[IntVector(1,2,3)] << endl;
+        ////cmr
+        //cout << "Model " << modelsList[ss]->getName() << " has value " << (*tempCCVector[ss])[IntVector(1,2,3)] << endl;
 #endif
       }
 
@@ -686,8 +686,8 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
 
 #ifdef DEBUG_MODELS
         if( c == IntVector(1,2,3) ) {
-          proc0cout << endl;
-          proc0cout << "DQMOM solution vector: -------------------" << endl;
+          cout << endl;
+          cout << "DQMOM solution vector: -------------------" << endl;
         }
 #endif
 
@@ -707,7 +707,7 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
 
 #ifdef DEBUG_MODELS
           if( c == IntVector(1,2,3) ) {
-            proc0cout << "Wts: X[" << z << "] = " << (*XX)[z] << endl;
+            cout << "Wts: X[" << z << "] = " << (*XX)[z] << endl;
           }
 #endif
 
@@ -734,7 +734,7 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
 
 #ifdef DEBUG_MODELS
           if( c == IntVector(1,2,3) ) {
-            proc0cout << "WAs: X[" << z << "] = " << (*XX)[z] << endl;
+            cout << "WAs: X[" << z << "] = " << (*XX)[z] << endl;
           }
 #endif
 
@@ -1738,12 +1738,12 @@ DQMOM::constructBopt( ColumnMatrix*  &BB,
           Sstuff = 0;
         } else {
           // Appendix C, C.11 (A_j+1 matrix)
-          Sstuff = -(thisMoment[j])*(my_pow(Abscissas[j*(N_)+alpha], thisMoment[j]-1));
+          Sstuff = -(thisMoment[j])*(my_pow((int)Abscissas[j*(N_)+alpha], thisMoment[j]-1));
 
           // calculate product containing all internal coordinates except j
           for (unsigned int n = 0; n < N_xi; ++n) {
             if (n != j) {
-              Sstuff *= my_pow(Abscissas[n*(N_)+alpha], thisMoment[n]);
+              Sstuff *= my_pow((int)Abscissas[n*(N_)+alpha], thisMoment[n]);
             }
           }//end int coord n
         }//end divide by zero conditionals

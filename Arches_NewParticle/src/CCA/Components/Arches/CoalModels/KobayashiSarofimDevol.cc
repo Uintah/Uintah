@@ -542,12 +542,12 @@ KobayashiSarofimDevol::computeModel( const ProcessorGroup * pc,
 
 #ifdef DEBUG_MODELS
       if( c == IntVector(1,2,3) ) {
-        proc0cout << endl;
-        proc0cout << "Kobayashi Model: ------------------" << endl;
-        proc0cout << "For temperature = " << unscaled_temperature << " and raw coal mass = " << unscaled_raw_coal_mass << endl;
-        proc0cout << "Coal devolatilization rate for qn " << d_quadNode << " = " << devol_rate_ << endl;
-        proc0cout << "Gas production rate for qn " << d_quadNode << " = " << gas_devol_rate_ << endl;
-        proc0cout << endl;
+        cout << endl;
+        cout << "Kobayashi Model: QN " << d_quadNode << endl;
+        cout << "  For temperature = " << unscaled_temperature << " and raw coal mass = " << unscaled_raw_coal_mass << endl;
+        cout << "  Coal devolatilization rate for qn " << d_quadNode << " = " << devol_rate_ << endl;
+        cout << "  Gas production rate for qn " << d_quadNode << " = " << gas_devol_rate_ << endl;
+        cout << endl;
       }
 #endif
 

@@ -524,10 +524,12 @@ ConstantDensityInert::computeModel( const ProcessorGroup * pc,
 
         model[c] = 0.0;
 
-        ////cmr
-        //if( c==IntVector(1,2,3) && d_quadNode==0 ) {
-        //  cout << "ConstantDensityInert model has value " << model[c] << " (small weight)" << endl;
-        //}
+#ifdef DEBUG_MODELS
+        //cmr
+        if( c==IntVector(1,2,3) && d_quadNode==0 ) {
+          cout << "ConstantDensityInert model QN " << d_quadNode << " has value " << model[c] << " (small weight)" << endl;
+        }
+#endif
 
       } else {
         double unscaled_length_old = (wa_length[c]*d_length_scaling_constant)/weight[c];
@@ -541,10 +543,12 @@ ConstantDensityInert::computeModel( const ProcessorGroup * pc,
 
         model[c] = scaled_RHS;
 
-        ////cmr
-        //if( c==IntVector(1,2,3) && d_quadNode==0 ) {
-        //  cout << "ConstantDensityInert model has value " << model[c] << " for a particle mass of " << (wa_mass[c]/weight[c]) << endl;
-        //}
+#ifdef DEBUG_MODELS
+        //cmr
+        if( c==IntVector(1,2,3) && d_quadNode==0 ) {
+          cout << "ConstantDensityInert model QN " << d_quadNode << " has value " << model[c] << " for a particle mass of " << (wa_mass[c]/weight[c]) << endl;
+        }
+#endif
 
         double unscaled_length_new = unscaled_length_old + dt*unscaled_RHS;
 
@@ -558,10 +562,12 @@ ConstantDensityInert::computeModel( const ProcessorGroup * pc,
 
           model[c] = scaled_RHS_max;
 
-          ////cmr
-          //if( c==IntVector(1,2,3) && d_quadNode==0 ) {
-          //  cout << "ConstantDensityInert model low-clipped at " << model[c] << " for a particle mass of " << (wa_mass[c]/weight[c]) << endl;
-          //}
+#ifdef DEBUG_MODELS
+          //cmr
+          if( c==IntVector(1,2,3) && d_quadNode==0 ) {
+            cout << "ConstantDensityInert model QN " << d_quadNode << " low-clipped at " << model[c] << " for a particle mass of " << (wa_mass[c]/weight[c]) << endl;
+          }
+#endif
 
         }
 

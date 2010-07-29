@@ -428,6 +428,7 @@ DragModel::computeModel( const ProcessorGroup* pc,
           double gasSrc_z = prefix*z_diff;
           drag_gas[c] = Vector( gasSrc_x, gasSrc_y, gasSrc_z );
 
+#ifdef DEBUG_MODELS
           //cmr
           if( c == IntVector(1,2,3) ) {
             cout << endl;
@@ -445,7 +446,7 @@ DragModel::computeModel( const ProcessorGroup* pc,
             cout << endl;
             */
           }
-  
+ #endif 
 
         } else {
 

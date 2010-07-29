@@ -549,22 +549,6 @@ ScalarEqn::solveTransportEqn( const ProcessorGroup* pc,
           new_min_delta_t = min( deltat, new_min_delta_t);
         }
         
-        /*
-        //cmr
-        if( c==IntVector(1,2,3) ) {
-          cout << "Equation " << d_eqnName << ": " << endl;
-          cout << "Error = [ phi^(j) - phi^(n) ]/dt - RHS  =  [ ";
-          cout << phi_at_j[c] << " - " << rk1_phi[c] << " ] / " << dt;
-          cout << " - " << RHS[c];
-          cout << " = " << error << endl;
-
-          cout << "Delta_t = phi^(j+1) / error = " << phi_at_jp1[c] << "/" << error;
-          cout << " = " << deltat << endl;
-
-          int a = 0; ++a;
-        }
-        */
-
       }//end cells
       
       new_min_delta_t *= d_timestepMultiplier;
