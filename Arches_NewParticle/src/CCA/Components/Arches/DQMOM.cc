@@ -1511,34 +1511,6 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
 
 /**
 @details
-This is a much faster "power" function for the optimal DQMOM abscissas.
-Since the optimal abscissas are KNOWN to be -1, 0, or 1, 
-calculating the powers of the optimal abscissas is very easy and doesn't need the actual
-power function pow().
-*/
-int 
-DQMOM::my_pow( int abscissa, int power )
-{
-  if( abscissa == -1 ) {
-    if( power%2 == 0 ) {
-      // -1^(even) = 1
-      return 1;
-    } else if( power%2 == 1 ) {
-      // -1^(odd) = -1
-      return -1;
-    }
-  } else if( abscissa == 0 && power == 0 ) {
-    // 0^0 = 1
-    return 1;
-  }
-
-  // 0^(anything but 0) = 0, 1^(anything) = 1
-  return abscissa;
-}
-
-
-/**
-@details
 Construct the DQMOM linear system AX=B given an LU object A, a vector B, and
 the values of the weights, weighted abscissas, and DQMOM model terms.
 */
@@ -1725,19 +1697,31 @@ DQMOM::constructBopt( ColumnMatrix*  &BB,
                       vector<double> &Abscissas,
                       vector<double> &models)
 {
-  for ( unsigned int k = 0; k < momentIndexes.size(); ++k) {
-    MomentVector thisMoment = momentIndexes[k];
+  // 0th moments
+  unsigned int kk=0;
+  (*BB)[kk] = 0.0;
+
+  // 1st moments
+  for( unsigned int k = 1; k <= N_xi; ++k ) {
+    double sum = 0.0;
+    for( unsigned int alpha = 0; alpha < N_; ++alpha ) {
+      sum += weights[alpha]*models[(k-1)*(N_)+alpha];
+    }
+    (*BB)[k] = sum;
+  }
+
+  // the rest of the moments
+  for( unsigned int k = (N_xi+1); k < momentIndexes.size(); ++k) {
+    vector<int> thisMoment = momentIndexes[k];
 
     // weighted abscissas
     double totalsumS = 0;
     for( unsigned int j = 0; j < N_xi; ++j ) {
       double Sstuff;
-
       for( unsigned int alpha = 0; alpha < N_; ++alpha ) {
         if ( Abscissas[j*(N_)+alpha] == 0 && thisMoment[j] == 0) {
           Sstuff = 0;
         } else {
-          // Appendix C, C.11 (A_j+1 matrix)
           Sstuff = -(thisMoment[j])*(my_pow((int)Abscissas[j*(N_)+alpha], thisMoment[j]-1));
 
           // calculate product containing all internal coordinates except j
@@ -1748,15 +1732,15 @@ DQMOM::constructBopt( ColumnMatrix*  &BB,
           }//end int coord n
         }//end divide by zero conditionals
 
-        totalsumS += weights[alpha]*(-models[j*(N_)+alpha])*Sstuff;
+        totalsumS += weights[alpha]*-models[j*(N_)+alpha]*Sstuff;
+
       }//end quad nodes
     }//end int coords j sub-matrix
 
     (*BB)[k] = totalsumS;
   } // end moments
-}
-  
 
+}
 
 
 /** 

@@ -134,8 +134,36 @@ private:
                       vector<double> &Abscissas,
                       vector<double> &models);
 
-  /** @brief    Do a quick calculation of the powers of optimal abscissas (possible because optimal abscissas have values of -1, 0, or 1) */
-  int my_pow( int abscissa, int power );
+  /** @brief    Do a quick calculation of the powers of optimal abscissas (possible because optimal abscissas have values of -1, 0, or 1)
+      @details
+      This is a much faster "power" function for the optimal DQMOM abscissas.
+      Since the optimal abscissas are KNOWN to be -1, 0, or 1, 
+      calculating the powers of the optimal abscissas is very easy and doesn't need the actual
+      power function pow().
+      */
+  inline int my_pow( int abscissa, int power )
+  {
+    int return_var;
+    switch( abscissa ) {
+      case -1:
+        if( power%2 == 0 ) {
+          return_var = 1;
+        } else if( abs(power%2) == 1 ) {
+          return_var = -1;
+        }
+        break;
+      case 0:
+        if( power == 0 ) {
+          return_var = 1;
+        } else { 
+          return_var = 0;
+        }
+        break;
+      case 1:
+        return_var = abscissa;
+    }
+    return return_var;
+  }
 
 
   vector<MomentVector> momentIndexes;           ///< Vector containing all moment indices
