@@ -4,7 +4,7 @@
     <!-- ANFO parameters -->
     <!-- This bulk modulus is from Souer's paper on JWL++ -->
     <!-- It corresponds to a K=2.56 GPa  -->
-    <k>        39e-11 </k>
+    <K>        39e-11 </K>
     <n>         7.4   </n>
     <P0>   101325.0   </P0>
     <rho0>   1840.0   </rho0>
