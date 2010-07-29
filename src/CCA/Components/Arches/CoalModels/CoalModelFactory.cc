@@ -165,6 +165,7 @@ void CoalModelFactory::problemSetup(const ProblemSpecP& params)
           // This map hold the labels that are required to compute this model term. 
           requiredICVarLabels.push_back(label_name);  
         }
+
       } else {
         proc0cout << "Model does not require any internal coordinates. " << endl;
       }
@@ -273,6 +274,8 @@ void CoalModelFactory::problemSetup(const ProblemSpecP& params)
         }
 
       }//end for each qn
+
+      proc0cout << endl;
 
     }//end for each model
 

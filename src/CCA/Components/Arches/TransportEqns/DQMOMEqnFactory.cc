@@ -366,8 +366,6 @@ DQMOMEqnFactory::sched_evalTransportEqns( const LevelP& level,
                                           int timeSubStep, 
                                           bool lastTimeSubstep )
 {
-  proc0cout << "Scheduling evaluation of transport equations" << endl;
-
   // Step 0
   if( timeSubStep == 0 ) {
     string taskname = "DQMOMEqnFactory::initializeMinTimestepLabel";
@@ -449,10 +447,6 @@ DQMOMEqnFactory::initializeMinTimestepLabel( const ProcessorGroup* pc,
   double value = 1.0e16;
   new_dw->put( min_vartype(value), d_fieldLabels->d_MinDQMOMTimestepLabel);
   d_MinTimestepVar = value;
-  /*
-  //cmr
-  proc0cout << "Initializing minimum DQMOM timestep label value to " << value << endl;
-  */
 }
 
 
@@ -469,10 +463,6 @@ DQMOMEqnFactory::setMinTimestepLabel( const ProcessorGroup* pc,
                                       DataWarehouse* new_dw )
 {
   new_dw->put( min_vartype(d_MinTimestepVar), d_fieldLabels->d_MinDQMOMTimestepLabel);
-  /*
-  //cmr
-  proc0cout << "Setting minimum DQMOM timestep label value to " << d_MinTimestepVar << endl;
-  */
 }
 
 

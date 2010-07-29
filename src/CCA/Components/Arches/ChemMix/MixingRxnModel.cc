@@ -135,7 +135,6 @@ void
 MixingRxnModel::addAdditionalDV( std::vector<string>& vars )
 {
   for ( std::vector<string>::iterator ivar = vars.begin(); ivar != vars.end(); ivar++ ) { 
-    proc0cout << "  Adding these additional variables for table lookup: " << endl; 
     insertIntoMap( *ivar ); 
   }
 }
