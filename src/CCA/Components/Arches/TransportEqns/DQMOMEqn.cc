@@ -890,34 +890,11 @@ void DQMOMEqn::clipPhi( const ProcessorGroup* pc,
     new_dw->get( old_phi, d_oldtransportVarLabel, matlIndex, patch, gn, 0 );
 
     if( d_doLowClip ) {
-      ////cmr
-      ////cout << "Clipping instances of " << d_transportVarLabel->getName() << " at " << d_lowClip << endl;
-      //if( d_quadNode == 0 ) {
-      //  cout << "ClipPhi for " << d_transportVarLabel->getName() << ": equals " << phi[IntVector(1,1,1)] << endl;
-      //  cout << "ClipPhi for OLD label " << d_oldtransportVarLabel->getName() << ": equals " << old_phi[IntVector(1,1,1)] << endl;
-      //}
-
       for( CellIterator iter = patch->getCellIterator(); !iter.done(); ++iter ) {
-
-        //cmr
         IntVector c = *iter;
-
-        // FIXME - correct for scaling constant (in low clip/high clip value)
+        
         if( phi[*iter] < d_lowClip+TINY || old_phi[*iter] < d_lowClip+TINY ) {
-
-          //cmr
-          if( d_quadNode == 0 && c==IntVector(1,1,1) ) {
-            cout << "Clipping for " << d_transportVarLabel->getName() << ": phi = " << phi[IntVector(1,1,1)] << " and phi_old = " << old_phi[IntVector(1,1,1)] << endl;
-          }
-
           phi[*iter] = d_lowClip;
-        } else {
-
-          //cmr
-          if( d_quadNode == 0 && c == IntVector(1,1,1) ) { 
-            cout << "Not clipping for " << d_transportVarLabel->getName() << ": phi = " << phi[IntVector(1,1,1)] << " and phi_old = " << old_phi[IntVector(1,1,1)] << endl;
-          }
-
         }
       }//end cells
     }//end if low clip

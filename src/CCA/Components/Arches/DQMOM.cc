@@ -388,6 +388,17 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
   double total_SVDTime = 0.0;
   double total_AXBConstructionTime = 0.0;
 
+  double total_GetPutTime  = 0.0;
+  double total_MatMultTime = 0.0;
+  double total_OtherTime   = 0.0;
+  double total_OtherTime1  = 0.0;
+  double total_OtherTime2  = 0.0;
+  double total_DeleteTime  = 0.0;
+  double total_ConstructionTime = 0.0;
+  double total_MultiplicationTime = 0.0;
+
+  int numtimesB = 0;
+
   bool do_iterative_refinement = false;
 #if defined(DEBUG_MATRICES)
   double total_FileWriteTime = 0.0;
@@ -401,6 +412,8 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
 
     int archIndex = 0;
     int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+
+    double start_GetPutTime=Time::currentSeconds();
 
     // get/allocate normB label
     CCVariable<double> normB; 
@@ -455,6 +468,10 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
       new_dw->allocateAndPut( conditionNumber, d_conditionNumberLabel, matlIndex, patch );
     }
     conditionNumber.initialize(0.0);
+
+    double end_GetPutTime=Time::currentSeconds();
+
+    total_GetPutTime += (end_GetPutTime - start_GetPutTime);
 
     ////////////////////////////////////////////////////////
     // Put CCVariables associated with weights, weighted abscissas, 
@@ -587,11 +604,29 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
       int dimension = (N_xi+1)*N_;
      
       if (b_optimize == true) {
+
+        double start_MatMultTime = Time::currentSeconds();
+
         ColumnMatrix* BB = scinew ColumnMatrix( dimension );
         ColumnMatrix* XX = scinew ColumnMatrix( dimension );
         BB->zero();
+
+        double start_ConstructionTime = Time::currentSeconds();
         constructBopt( BB, weights, d_opt_abscissas, models );
+        double end_ConstructionTime = Time::currentSeconds();
+        total_ConstructionTime += (end_ConstructionTime - start_ConstructionTime);
+        ++numtimesB;
+
+        double start_MultiplicationTime = Time::currentSeconds();
         Mult( (*XX), (*AAopt), (*BB) ); // AAopt is already inverted 
+        double end_MultiplicationTime = Time::currentSeconds();
+        total_MultiplicationTime += (end_MultiplicationTime - start_MultiplicationTime);
+
+        double end_MatMultTime = Time::currentSeconds();
+
+        total_MatMultTime += (end_MatMultTime - start_MatMultTime);
+
+        double start_OtherTime = Time::currentSeconds();
 
 #if defined(DEBUG_MATRICES)
 
@@ -656,6 +691,8 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
         }
 #endif
 
+        double start_OtherTime1 = Time::currentSeconds();
+
         // Weights:
         for( vector< CCVariable<double>* >::iterator iter = weightSourceCCVars.begin();
              iter != weightSourceCCVars.end(); ++iter ) {
@@ -676,6 +713,12 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
 
           ++z;
         }
+
+        double end_OtherTime1 = Time::currentSeconds();
+
+        total_OtherTime1 += (end_OtherTime1 - start_OtherTime1);
+
+        double start_OtherTime2 = Time::currentSeconds();
 
         // Weighted abscissas:
         for( vector< CCVariable<double>* >::iterator iter = weightedAbscissaSourceCCVars.begin();
@@ -698,9 +741,18 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
           ++z;
         }
 
+        double end_OtherTime2 = Time::currentSeconds();
+
+        total_OtherTime2 += (end_OtherTime2 - start_OtherTime2);
+
         delete BB;
         delete XX;
- 
+      
+        double end_OtherTime = Time::currentSeconds();
+
+        total_OtherTime += (end_OtherTime - start_OtherTime);
+        
+
       } else if( b_useLapack == false ) {
 
         ///////////////////////////////////////////////////////
@@ -911,63 +963,6 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
           }
           ++z;
         }
-
-        //for( vector<DQMOMEqn*>::iterator iEqn = weightEqns.begin(); 
-        //     iEqn != weightEqns.end(); ++iEqn ) {
-        //  const VarLabel* source_label = (*iEqn)->getSourceLabel();
-        //  CCVariable<double> tempCCVar;
-        //  if( new_dw->exists(source_label, matlIndex, patch) ) {
-        //    new_dw->getModifiable(tempCCVar, source_label, matlIndex, patch);
-        //  } else {
-        //    new_dw->allocateAndPut(tempCCVar, source_label, matlIndex, patch);
-        //  }
-
-        //  if (z >= dimension ) {
-        //    stringstream err_msg;
-        //    err_msg << "ERROR: Arches: DQMOM: Trying to access solution of AX=B system, but had array out of bounds! Accessing element " << z << " of " << dimension << endl;
-        //    throw InvalidValue(err_msg.str(),__FILE__,__LINE__);
-        //  } else if( fabs(normResNormalizedX[c]) > d_solver_tolerance ) {
-        //    tempCCVar[c] = 0.0;
-        //  } else if( isnan( Xlong[z] ) ) {
-        //    tempCCVar[c] = 0.0;
-        //  } else if( b_calcConditionNumber == true && conditionNumber[c] > d_maxConditionNumber ) {
-        //    tempCCVar[c] = 0.0;
-        //    conditionNumber[c] = -1.0; 
-        //  } else {
-        //    tempCCVar[c] = Xlong[z];
-        //  }
-        //  ++z;
-        //}
-  
-        //// Weighted abscissa equations:
-        //for( vector<DQMOMEqn*>::iterator iEqn = weightedAbscissaEqns.begin(); 
-        //     iEqn != weightedAbscissaEqns.end(); ++iEqn) {
-        //  const VarLabel* source_label = (*iEqn)->getSourceLabel();
-        //  CCVariable<double> tempCCVar;
-        //  if (new_dw->exists(source_label, matlIndex, patch)) {
-        //    new_dw->getModifiable(tempCCVar, source_label, matlIndex, patch);
-        //  } else {
-        //    new_dw->allocateAndPut(tempCCVar, source_label, matlIndex, patch);
-        //  }
-  
-        //  // Make sure several critera are met for an acceptable solution
-        //  if (z >= dimension ) {
-        //    stringstream err_msg;
-        //    err_msg << "ERROR: Arches: DQMOM: Trying to access solution of AX=B system, but had array out of bounds! Accessing element " << z << " of " << dimension << endl;
-        //    throw InvalidValue(err_msg.str(),__FILE__,__LINE__);
-        //  } else if(  fabs(normResNormalizedX[c]) > d_solver_tolerance ) {
-        //    tempCCVar[c] = 0.0;
-        //  } else if( isnan( Xlong[z] ) ){
-        //    tempCCVar[c] = 0.0;
-        //  } else if( b_calcConditionNumber == true && conditionNumber[c] > d_maxConditionNumber ) {
-        //    tempCCVar[c] = 0.0;
-        //    conditionNumber[c] = -1.0; 
-        //  } else {
-        //    tempCCVar[c] = Xlong[z];
-        //  }
-        //  ++z;
-        //}
-  
 
       } else {
 
@@ -1401,7 +1396,6 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
       }//end lapack/LU
 
 #else
-
       // doing verification, so don't need to update transport equations (source terms = 0)
 
       normB[c] = 0.0;
@@ -1416,40 +1410,17 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
         (**iter)[c] = 0.0;
       }
 
-
-      //for (vector<DQMOMEqn*>::iterator iEqn = weightEqns.begin();
-      //     iEqn != weightEqns.end(); iEqn++) {
-      //  const VarLabel* source_label = (*iEqn)->getSourceLabel();
-      //  CCVariable<double> tempCCVar;
-      //  if (new_dw->exists(source_label, matlIndex, patch)) {
-      //    new_dw->getModifiable(tempCCVar, source_label, matlIndex, patch);
-      //  } else {
-      //    new_dw->allocateAndPut(tempCCVar, source_label, matlIndex, patch);
-      //  }
-      //  tempCCVar[c] = 0.0;
-      //}
-
       // set weighted abscissa transport eqn source terms equal to results
       for( vector< CCVariable<double>* >::iterator iter = weightedAbscissaSourceCCVars.begin();
            iter != weightedAbscissaSourceCCVars.end(); ++iter ) {
         (**iter)[c] = 0.0;
       }
 
-      //for (vector<DQMOMEqn*>::iterator iEqn = weightedAbscissaEqns.begin();
-      //     iEqn != weightedAbscissaEqns.end(); ++iEqn) {
-      //  const VarLabel* source_label = (*iEqn)->getSourceLabel();
-      //  CCVariable<double> tempCCVar;
-      //  if (new_dw->exists(source_label, matlIndex, patch)) {
-      //    new_dw->getModifiable(tempCCVar, source_label, matlIndex, patch);
-      //  } else {
-      //    new_dw->allocateAndPut(tempCCVar, source_label, matlIndex, patch);
-      //  }
-      //  tempCCVar[c] = 0.0;
-      //}
-
 #endif //end if not verifying
 
     }//end for cells
+
+    double start_DeleteTime = Time::currentSeconds();
 
     // CCVariables were created using "scinew" so must be deleted using "delete"
     for( vector< constCCVariable<double>* >::iterator iter = weightCCVars.begin();
@@ -1478,14 +1449,17 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
       delete *iter;
     }
 
+    double end_DeleteTime = Time::currentSeconds();
+
+    total_DeleteTime += (end_DeleteTime - start_DeleteTime);
+
   }//end per patch
 
 
+  // Print all timings:
+  // ---------------------
 
-  // ---------------------------------------------
   // Verification Procedure:
-  // ---------------------------------------------
-  
 #if defined(VERIFY_LINEAR_SOLVER)
   verifyLinearSolver();
 #endif
@@ -1494,12 +1468,9 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
   verifyABConstruction();
 #endif
   
-  // ---------------------------------------------
-
 #if defined(DEBUG_MATRICES)
   b_isFirstTimeStep = false;
 #endif
-
 
   proc0cout << "Time in DQMOM::solveLinearSystem: " << Time::currentSeconds()-start_solveLinearSystemTime << " seconds \n";
 
@@ -1508,18 +1479,28 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
   proc0cout << "    Time for file write: " << total_FileWriteTime << " seconds\n";
 #endif
 
-  proc0cout << "    Time for AX=B construction: " << total_AXBConstructionTime << " seconds\n";
-
-  if( d_solverType == "Lapack-invert" ) { 
+  if ( b_optimize ) {
+    proc0cout << "    Time for putting/getting: " << total_GetPutTime << " seconds\n";
+    proc0cout << "    Time for matrix multiplication: " << total_MatMultTime << " seconds\n";
+    proc0cout << "        Time for construction of B (" << numtimesB << " times): " << total_ConstructionTime << " seconds\n";
+    proc0cout << "        Time for actual multiplication: " << total_MultiplicationTime << " seconds\n";
+    proc0cout << "    Time for other stuff: " << total_OtherTime << " seconds\n";
+    proc0cout << "        Time for other stuff 1: " << total_OtherTime1 << " seconds\n";
+    proc0cout << "        Time for other stuff 2: " << total_OtherTime2 << " seconds\n";
+    proc0cout << "    Time for deleting: " << total_DeleteTime << " seconds\n";
+  } else if( d_solverType == "Lapack-invert" ) { 
+    proc0cout << "    Time for AX=B construction: " << total_AXBConstructionTime << " seconds\n";
     proc0cout << "    Time for Lapack inversion-multiplication: " << total_SolveTime << " seconds\n";
     if( b_calcConditionNumber ) {
       proc0cout << "    Time for calculation of condition number: " << total_SVDTime << " seconds\n";
     }
 
   } else if( d_solverType == "Lapack-svd" ) {
+    proc0cout << "    Time for AX=B construction: " << total_AXBConstructionTime << " seconds\n";
     proc0cout << "    Time for Lapack singular value decomposition and solution: " << total_SolveTime << " seconds\n";
 
   } else if( d_solverType == "LU" ) {
+    proc0cout << "    Time for AX=B construction: " << total_AXBConstructionTime << " seconds\n";
     proc0cout << "    Time for Crout's Method solution: " << total_SolveTime << " seconds\n";
 
   }
@@ -1528,10 +1509,39 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
 }
 
 
+/**
+@details
+This is a much faster "power" function for the optimal DQMOM abscissas.
+Since the optimal abscissas are KNOWN to be -1, 0, or 1, 
+calculating the powers of the optimal abscissas is very easy and doesn't need the actual
+power function pow().
+*/
+int 
+DQMOM::my_pow( int abscissa, int power )
+{
+  if( abscissa == -1 ) {
+    if( power%2 == 0 ) {
+      // -1^(even) = 1
+      return 1;
+    } else if( power%2 == 1 ) {
+      // -1^(odd) = -1
+      return -1;
+    }
+  } else if( abscissa == 0 && power == 0 ) {
+    // 0^0 = 1
+    return 1;
+  }
 
-// **********************************************
-// Construct A and B matrices for DQMOM
-// **********************************************
+  // 0^(anything but 0) = 0, 1^(anything) = 1
+  return abscissa;
+}
+
+
+/**
+@details
+Construct the DQMOM linear system AX=B given an LU object A, a vector B, and
+the values of the weights, weighted abscissas, and DQMOM model terms.
+*/
 void
 DQMOM::constructLinearSystem( LU             &A, 
                               vector<double> &B, 
@@ -1640,9 +1650,10 @@ DQMOM::constructLinearSystem( LU             &A,
   } // end moments
 }
 
-// **********************************************
-// Construct A optimized
-// **********************************************
+/**
+@details
+Construct the A matrix for the optimized linear system A* X = B*.
+*/
 void
 DQMOM::constructAopt( DenseMatrix*   &AA,
                       vector<double> &Abscissas)
@@ -1703,9 +1714,11 @@ DQMOM::constructAopt( DenseMatrix*   &AA,
   } // end moments
 }
 
-// **********************************************
-// Construct B optimized
-// **********************************************
+
+/**
+@details
+Construct the optimized B vector for the optimized linear system A* X = B*.
+*/
 void
 DQMOM::constructBopt( ColumnMatrix*  &BB,
                       vector<double> &weights,
@@ -1718,52 +1731,25 @@ DQMOM::constructBopt( ColumnMatrix*  &BB,
     // weighted abscissas
     double totalsumS = 0;
     for( unsigned int j = 0; j < N_xi; ++j ) {
-      double prefixS    = 1;
-      double productS   = 1;
-      double modelsumS  = 0;
+      double Sstuff;
 
-      double quadsumS = 0;
       for( unsigned int alpha = 0; alpha < N_; ++alpha ) {
-        //if (weights[alpha] < d_w_small) {
-        if (weights[alpha] == 0) {
-          prefixS = 0;
-          productS = 0;
-        } else if ( Abscissas[j*(N_)+alpha] == 0 && thisMoment[j] == 0) {
-          //FIXME:
-          // both prefixes contain 0^(-1)
-          prefixS = 0;
+        if ( Abscissas[j*(N_)+alpha] == 0 && thisMoment[j] == 0) {
+          Sstuff = 0;
         } else {
           // Appendix C, C.11 (A_j+1 matrix)
-          double base = Abscissas[j*(N_)+alpha];
-          double exponent = thisMoment[j] - 1;
-
-          // Appendix C, C.16 (S matrix)
-          prefixS = -(thisMoment[j])*(pow(base, exponent));
-          productS = 1;
+          Sstuff = -(thisMoment[j])*(my_pow(Abscissas[j*(N_)+alpha], thisMoment[j]-1));
 
           // calculate product containing all internal coordinates except j
           for (unsigned int n = 0; n < N_xi; ++n) {
             if (n != j) {
-              // the if statements checking these same conditions (above) are only
-              // checking internal coordinate j, so we need them again for internal
-              // coordinate n
-              //if (weights[alpha] < d_w_small) {
-              if (weights[alpha] == 0) {
-                productS = 0;
-              } else {
-                double base2 = Abscissas[n*(N_)+alpha];
-                double exponent2 = thisMoment[n];
-                productS = productS*( pow(base2, exponent2));
-              }//end divide by zero conditionals
+              Sstuff *= my_pow(Abscissas[n*(N_)+alpha], thisMoment[n]);
             }
           }//end int coord n
         }//end divide by zero conditionals
 
-
-        modelsumS = - models[j*(N_)+alpha];
-        quadsumS = quadsumS + weights[alpha]*modelsumS*prefixS*productS;
+        totalsumS += weights[alpha]*(-models[j*(N_)+alpha])*Sstuff;
       }//end quad nodes
-      totalsumS = totalsumS + quadsumS;
     }//end int coords j sub-matrix
 
     (*BB)[k] = totalsumS;
@@ -1772,9 +1758,11 @@ DQMOM::constructBopt( ColumnMatrix*  &BB,
   
 
 
-// **********************************************
-// Construct A and B matrices for DQMOM
-// **********************************************
+
+/** 
+@details
+Construct the DQMOM linear system AX=B given a set of matrices that use Lapack, DenseMatrix and ColumnMatrix.
+*/
 void
 DQMOM::constructLinearSystem( DenseMatrix*   &AA, 
                               ColumnMatrix*  &BB, 
