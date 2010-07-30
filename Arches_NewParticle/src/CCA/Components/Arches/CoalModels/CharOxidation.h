@@ -110,7 +110,7 @@ protected:
 
   vector<const VarLabel*> GasModelLabels_;  ///< Vector of variable labels; holds the gas source terms, declared above (if the char oxidation class is extended to arbitrary oxidation reactions, this will allow for more generality)
 
-  vector<double> E_;  ///< Vector of activation energies for char reactions
+  vector<double> E_;  ///< [=] kcal/kmol : Vector of activation energies for char reactions
   vector<double> A_;  ///< Vector of pre-exponential factors for char reactions
   vector<double> Sc_; ///< Vector of Schmidt numbers for oxidizer species (O2, H2, CO2, and H2O, in that order)
 
@@ -149,7 +149,7 @@ protected:
   // -----------------------------
   // Other...
 
-  double R_;  ///< [=] kcal/kmol : Ideal gas constant
+  double R_;  ///< [=] kcal/K-kmol : Ideal gas constant
   double pi_; 
 
 }; // end CharOxidation
