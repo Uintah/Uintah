@@ -104,7 +104,6 @@ Unsteady_Burn::~Unsteady_Burn(){
 
 
 void Unsteady_Burn::problemSetup(GridP&, SimulationStateP& sharedState, ModelSetup*){
-  cout<<"I am in problem setup" << endl;
   d_sharedState = sharedState;
   matl0 = sharedState->parseAndLookupMaterial(d_params, "fromMaterial");
   matl1 = sharedState->parseAndLookupMaterial(d_params, "toMaterial");  
