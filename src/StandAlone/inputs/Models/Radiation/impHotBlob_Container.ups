@@ -1,0 +1,423 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+
+
+
+<Uintah_specification> 
+<!--Please use a consistent set of units, (mks, cgs,...)-->
+
+   <Meta>
+       <title>symetry test</title>
+   </Meta>    
+
+   <SimulationComponent type="mpmice" />
+    <!--____________________________________________________________________-->
+    <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
+    <!--____________________________________________________________________-->
+   <Time>
+       <maxTime>           1.0          </maxTime>
+       <initTime>           0.0         </initTime>
+       <delt_min>           0.0         </delt_min>
+       <delt_max>           1.0         </delt_max>
+       <delt_init>          1.0e-7      </delt_init>
+       <max_delt_increase>  2.0          </max_delt_increase>
+       <max_Timesteps>     50           </max_Timesteps>
+        <timestep_multiplier>1.0         </timestep_multiplier>
+   </Time>
+    <!--____________________________________________________________________-->
+    <!--   B O U N D A R Y   C O N D I T I O N S                            -->
+    <!--____________________________________________________________________-->
+    <Grid>
+    <BoundaryConditions>
+      <Face side = "x-">
+        <BCType id = "0"     label = "Pressure"     var = "Neumann">
+                              <value> 0 </value>
+        </BCType>
+        <BCType id = "all"   label = "Velocity"     var = "Neumann">
+                              <value> [0.0,0.0,0.0] </value>
+        </BCType>
+        <BCType id = "all"   label = "Temperature"  var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "all"   label = "Density"      var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "all"   label = "scalar-f"     var = "Neumann">
+                              <value> 0.0</value>
+        </BCType>
+      </Face>
+      <Face side = "x+">
+        <BCType id = "0"     label = "Pressure"     var = "Neumann">
+                              <value> 0 </value>
+        </BCType>
+        <BCType id = "all"   label = "Velocity"     var = "Neumann">
+                              <value> [0.0,0.0,0.0] </value>
+        </BCType>
+        <BCType id = "all"   label = "Temperature"  var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "all"   label = "Density"      var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "all" label = "scalar-f"       var = "Neumann">
+                              <value> 0.0</value>
+        </BCType>
+      </Face>
+      <Face side = "y-">
+        <BCType id = "0"     label = "Pressure"     var = "Neumann">
+                              <value> 0 </value>
+        </BCType>
+        <BCType id = "all"   label = "Velocity"     var = "Neumann">
+                              <value> [0.0,0.0,0.0] </value>
+        </BCType>
+        <BCType id = "all"   label = "Temperature"  var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "all"   label = "Density"      var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "all" label = "scalar-f"       var = "Neumann">
+                              <value> 0.0</value>
+        </BCType>
+      </Face>                  
+      <Face side = "y+">
+        <BCType id = "0"     label = "Pressure"     var = "Neumann">
+                              <value> 0 </value>
+        </BCType>
+        <BCType id = "all"   label = "Velocity"     var = "Neumann">
+                              <value> [0.0,0.0,0.0] </value>
+        </BCType>
+        <BCType id = "all"   label = "Temperature"  var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "all"   label = "Density"      var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "all"   label = "scalar-f"    var = "Neumann">
+                              <value> 0.0</value>
+        </BCType>
+      </Face>
+<!--
+      <Face side = "z-">
+        <BCType id = "0"     label = "Pressure"     var = "Neumann">
+                              <value> 0 </value>
+        </BCType>
+        <BCType id = "all"   label = "Velocity"     var = "Neumann">
+                              <value> [0.0,0.0,0.0] </value>
+        </BCType>
+        <BCType id = "all"   label = "Temperature"  var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "all"   label = "Density"      var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "all" label = "scalar-f"    var = "Neumann">
+                              <value> 0.0</value>
+        </BCType>
+      </Face>
+      <Face side = "z+">
+        <BCType id = "0"     label = "Pressure"     var = "Neumann">
+                              <value> 0 </value>
+        </BCType>
+        <BCType id = "all"   label = "Velocity"     var = "Neumann">
+                              <value> [0.0,0.0,0.0] </value>
+        </BCType>
+        <BCType id = "all"   label = "Temperature"  var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "all"   label = "Density"      var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "all" label = "scalar-f"    var = "Neumann">
+                              <value> 0.0</value>
+        </BCType>
+      </Face>
+    -->
+      
+ <!--        2D BOUNDARY CONDITONS -->        
+      <Face side = "z-"> 
+        <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+      </Face>  
+
+      <Face side = "z+">
+        <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+      </Face>
+    </BoundaryConditions>
+    <!--____________________________________________________________________-->
+    <!--      G  R  I  D     V  A  R  I  A  B  L  E  S                      -->
+    <!--____________________________________________________________________-->
+       <Level>
+           <Box label="1">
+              <lower>        [-1.0,-1.0,-1.0]    </lower>
+              <upper>        [1.0,  1.0, 1.0]    </upper>
+              <extraCells>   [1,1,1]              </extraCells>
+              <patches>      [1,1,1]              </patches>
+              <resolution>   [20,20,20]          </resolution>
+           </Box>
+       </Level>
+    </Grid>    
+    <!--____________________________________________________________________-->
+    <!--      O  U  P  U  T     V  A  R  I  A  B  L  E  S                   -->
+    <!--____________________________________________________________________-->
+   <DataArchiver>
+      <filebase>impHotBlob_Container.uda</filebase>
+      <outputTimestepInterval>1</outputTimestepInterval>
+      <save label="press_equil_CC"/>
+      <save label="vel_CC"/>
+      <save label="temp_CC"/>
+      <save label="press_CC"/>
+      <save label="delP_Dilatate"/>
+      <save label="scalar-f"/>
+      <save label="vol_frac_CC"/>
+      <save label="int_eng_L_CC"/>
+      <save label="eng_L_ME_CC"/>
+      <save label="heatRate_CC"/>
+      
+      
+      <save label= "cellType_CC"/>
+      <save label="modelEng_src"/>
+      <save label="abskg"/>
+      <save label="qfluxE"/>
+      <save label="qfluxW"/>
+      <save label="qfluxN"/>
+      <save label="qfluxS"/>
+      <save label="qfluxT"/>
+      <save label="qfluxB"/>
+      <save label="radiationSrc"/>
+      <save label="solidEmission"/>
+      <save label="insideSolid"/>
+      <save label="CO2"/>
+      <save label="H2O"/>     
+      
+      <save label="p.x"/>
+      <save label="p.particleID"/>
+      <save label="p.mass"/>
+      <save label="p.temperature"/>
+      
+      <compression>gzip</compression>
+      <checkpoint interval="0.05" cycle="2"/>
+   </DataArchiver>
+   
+    <!--____________________________________________________________________-->
+    <!--    I  C  E     P  A  R  A  M  E  T  E  R  S                        -->
+    <!--____________________________________________________________________-->
+    <CFD>
+         <cfl>0.2</cfl>
+       <ICE>
+        <advection type = "SecondOrder" />
+        
+        <TimeStepControl>
+          <Scheme_for_delT_calc> aggressive     </Scheme_for_delT_calc>
+          <knob_for_speedSound>  0.0            </knob_for_speedSound>
+        </TimeStepControl>
+        
+        <ImplicitSolver>
+           <max_outer_iterations>      20    </max_outer_iterations>
+           <outer_iteration_tolerance> 1e-8  </outer_iteration_tolerance>
+           <iters_before_timestep_restart> 5 </iters_before_timestep_restart>
+           <Parameters variable="implicitPressure">
+
+            <!-- CGSolver options -->
+              <norm>     LInfinity  </norm>
+              <criteria> Absolute   </criteria>
+
+            <!-- Hypre options -->
+            <solver>         cg      </solver>
+            <preconditioner> pfmg    </preconditioner>
+            <tolerance>      1.e-6  </tolerance>
+            <maxiterations>  200    </maxiterations>
+            <npre>           1       </npre>
+            <npost>          1       </npost>
+            <skip>           0       </skip>
+            <jump>           0       </jump>
+           </Parameters>
+        </ImplicitSolver>
+        
+      </ICE>        
+    </CFD>
+    <!--____________________________________________________________________-->
+    <!--     P  H  Y  S  I  C  A  L     C  O  N  S  T  A  N  T  S           -->
+    <!--____________________________________________________________________-->   
+    <PhysicalConstants>
+       <gravity>[0,0,0]</gravity>
+       <reference_pressure> 101325.0  </reference_pressure>
+    </PhysicalConstants>
+    <!--____________________________________________________________________-->
+    <!--     MATERIAL PROPERTIES AND INITIAL CONDITIONS                     -->
+    <!--____________________________________________________________________-->
+    <MaterialProperties>
+      <MPM>
+        <material name = "steelBall">    <!-- MATL 0 -->
+        <include href="inputs/MPM/MaterialData/MaterialConst4340Steel.xml"/>
+        <constitutive_model type="elastic_plastic">
+          <useModifiedEOS>                true  </useModifiedEOS>
+          <tolerance>                  1.0e-15  </tolerance>
+          <evolve_porosity>               true  </evolve_porosity>
+          <evolve_damage>                 true  </evolve_damage>
+          <compute_specific_heat>         true  </compute_specific_heat>
+          <do_melting>                    true  </do_melting>
+          <check_TEPLA_failure_criterion> true  </check_TEPLA_failure_criterion>
+       
+          <!-- Warning: you must copy link this input file into your sus directory -->
+          <!-- or these paths won't work.                                     -->
+          <include href="inputs/MPM/MaterialData/IsotropicElastic4340Steel.xml"/>
+          <include href="inputs/MPM/MaterialData/MieGruneisenEOS4340Steel.xml"/>
+          <include href="inputs/MPM/MaterialData/ConstantShear.xml"/>
+          <include href="inputs/MPM/MaterialData/ConstantTm.xml"/>
+          <include href="inputs/MPM/MaterialData/JohnsonCookPlastic4340Steel.xml"/>
+          <include href="inputs/MPM/MaterialData/GursonYieldSteel.xml"/>
+          <include href="inputs/MPM/MaterialData/DruckerBeckerStabilityCheck.xml"/>
+          <include href="inputs/MPM/MaterialData/JohnsonCookDamage4340Steel.xml"/>
+          <initial_material_temperature>  293.0 </initial_material_temperature>
+          <initial_mean_porosity>         0.005 </initial_mean_porosity>
+          <initial_std_porosity>          0.001 </initial_std_porosity>
+          <critical_porosity>             0.3   </critical_porosity>
+          <frac_nucleation>               0.1   </frac_nucleation>
+          <meanstrain_nucleation>         0.3   </meanstrain_nucleation>
+          <stddevstrain_nucleation>       0.1   </stddevstrain_nucleation>
+          <initial_porosity_distrib>      gauss </initial_porosity_distrib>
+          <initial_mean_scalar_damage>    0.005  </initial_mean_scalar_damage>
+          <initial_std_scalar_damage>     0.001 </initial_std_scalar_damage>
+          <critical_scalar_damage>        1.0   </critical_scalar_damage>
+          <initial_scalar_damage_distrib> gauss </initial_scalar_damage_distrib>
+        </constitutive_model>
+           <geom_object>
+              <difference>
+                <sphere label = "SteelBall">
+                   <origin>           [0.0,0.0,0.0]   </origin>
+                   <radius>           0.2             </radius>
+                </sphere>
+                <sphere label = "inside">
+                   <origin>           [0.0,0.0,0.0]   </origin>
+                   <radius>           0.1             </radius>
+                </sphere>                
+              </difference>  
+              <res>                 [2,2,2]            </res>
+              <velocity>            [0.0,0.0,0.0]      </velocity>
+              <temperature>        293.0               </temperature>
+            </geom_object>
+         </material>
+         <contact>
+           <type>null</type>
+         </contact>
+       </MPM>
+      <!--__________________________________-->
+       <ICE>
+         <material name ="BackgroundGas">
+           <EOS type = "ideal_gas">                     </EOS>
+           <dynamic_viscosity>      0.0                   </dynamic_viscosity>
+           <thermal_conductivity>   0.0                   </thermal_conductivity>
+           <specific_heat>          652.9                 </specific_heat>
+           <gamma>                  1.289                 </gamma>
+           <geom_object>
+              <union>
+                <difference>
+                  <box label="Whole grid">
+                      <min>    [ -1.0, -1.0, -1.0 ]       </min>
+                      <max>    [ 1.0, 1.0, 1.0 ]          </max>
+                  </box>
+                  <sphere label = "Steel ball"/>
+                </difference>
+                <sphere label = "inside"/>
+              </union>
+                
+                
+               <res>           [2,2,2]                  </res>
+               <velocity>      [0.0,0.0,0.0]            </velocity>
+               <density>       1.7899909957225715000    </density>
+               <pressure>      101325.0                 </pressure>
+               <temperature>   293.0                    </temperature>
+           </geom_object>
+           
+           <geom_object>
+           <difference>
+             <sphere label = "HotGas Donut">
+                 <origin>           [0.0,0.0,0.0]   </origin>
+                 <radius>           0.5             </radius>
+             </sphere>
+             <sphere label = "hole in middle">
+                 <origin>           [0.0,0.0,0.0]    </origin>
+                 <radius>           0.25             </radius>
+             </sphere>
+        
+            </difference>
+            <res>              [2,2,2]               </res>           
+            <velocity>         [0.0,0.0,0.0]         </velocity>      
+            <density>          1.7899909957225715000 </density>       
+            <pressure>         101325.0              </pressure>      
+            <temperature>      293                  </temperature>  
+            
+        <!--    <density>          0.268498649358386     </density>       
+            <pressure>         101325.0              </pressure>      
+            <temperature>      2000                  </temperature>  -->          
+             
+           </geom_object>
+         </material>
+      </ICE>       
+       
+       <exchange_properties> 
+         <exchange_coefficients>
+            <momentum>              [1e10]             </momentum>
+            <heat>                  [1e10]             </heat>
+         </exchange_coefficients>
+       </exchange_properties> 
+
+    </MaterialProperties>
+    <!--__________________________________-->
+
+    <Models>
+       <Model type="PassiveScalar">
+        <material>BackgroundGas</material>
+        <scalar name="f">
+        <constants>
+          <diffusivity>0</diffusivity>
+        </constants> 
+        <geom_object>
+          <box label="Whole grid"/>
+          <scalar>    1.00   </scalar>
+        </geom_object>
+        <geom_object>
+          <sphere label = "HotGas Donut"/>
+          <scalar>    1.00   </scalar>
+        </geom_object>
+        <geom_object>
+          <sphere label = "hole in middle"/>
+          <scalar>    0.00   </scalar>
+        </geom_object>
+       </scalar>
+      </Model>
+      <!--__________________________________-->     
+      <Model type = "Radiation">
+        <RadiationModel>
+          <radiatingGas>          BackgroundGas</radiatingGas>
+          <absorbingSolid>            steelBall</absorbingSolid>
+          <calcFreq>                  1     </calcFreq>
+          <table_or_ice_temp_density> ice   </table_or_ice_temp_density>
+          <useTableValues>            false </useTableValues>
+
+          <DORadiationModel>
+             <ordinates> 2       </ordinates>
+             <opl>       0.24    </opl>
+             <property_model>      radcoef </property_model>
+             <spherical_harmonics> false   </spherical_harmonics>
+             <linear_solver>       hypre   </linear_solver>
+             <LinearSolver>
+               <solver>         gmres      </solver>
+               <preconditioner> jacobi     </preconditioner>
+               <max_iter>       1000       </max_iter>
+               <tolerance>      1.0e-8     </tolerance>
+             </LinearSolver>
+          </DORadiationModel>
+            <!-- absorbing solid geometry -->
+            <geom_object>
+              <difference>
+                <sphere label = "SteelBall"/>
+                <sphere label = "inside"/>
+              </difference> 
+            </geom_object>
+        </RadiationModel>
+      </Model>
+ 
+    </Models>        
+   
+             
+</Uintah_specification>

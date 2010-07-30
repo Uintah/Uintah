@@ -1,0 +1,46 @@
+#_____________________________________________________________________.
+#      pscp_pull_driver
+#
+#   9/21/07
+#
+# This is a gmake file that does parallel scp.  It pulls
+# from the remote REMOTEDIR on LOGIN.
+#
+# NOTE: Many important environment variables used in this script are
+#       set from the 'pscp_pull' script.
+#_____________________________________________________________________.
+
+######################################################################
+# Hopefully the correct 'tar' is already in your path... so do NOT
+# set it here...  (One reason for relying on the tar in your path is
+# that TAR may not be in the same place on the local and remote 
+# systems...
+#
+#TAR               = /bin/tar
+
+######################################################################
+# Grab a list of files from the remote machine:
+#
+
+REMOTE_FILES_LIST = `$(SSH) $(LOGIN) "/bin/ls $(REMOTEDIR)"`
+
+######################################################################
+# Turn the list of files (the output from 'ls') into a single string:
+#
+
+REMOTE_FILES=$(shell for file in $(REMOTE_FILES_LIST); do echo $$file; done)
+
+######################################################################
+# Add the "LOCALDIR" to the beginning of the name of each of the files...
+#
+
+LOCAL_FILES=$(patsubst %,$(LOCALDIR)/%,$(REMOTE_FILES))
+
+######################################################################
+# Get the files:
+#
+all : $(LOCAL_FILES)
+
+$(LOCAL_FILES) :
+	@echo "Fetching $(patsubst $(LOCALDIR)/%,%,$@)..."
+	@$(SSH) -x $(LOGIN) "cd $(REMOTEDIR) && tar zcBf - $(patsubst $(LOCALDIR)/%,%,$@)" | (cd $(LOCALDIR); tar zxBf -)

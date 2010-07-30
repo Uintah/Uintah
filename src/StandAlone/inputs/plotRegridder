@@ -1,0 +1,170 @@
+#!/bin/csh
+#__________________________________
+#  This script pulls out data from sus 
+#   output and plot it using gnuplot.
+#  Usage:
+#     plotRegridder <sus output file> <dump postScript File (y/Y), default is no>
+#__________________________________
+
+if( $#argv == 0 ) then
+  echo "plotRegridder <sus output file> <dump postScript File (y/Y), default is no>"
+  exit(1)
+endif
+set out = $argv[1]
+if ( !(-e $out) ) then
+    echo "Couldn't find your file $out"
+  exit(1)
+endif
+
+set hardcopy = "n"
+if ( $#argv == 2 ) then
+  set hardcopy = $argv[2]
+endif 
+
+unalias rm
+#__________________________________
+# remove your droppings and make a copy of the output file
+rm -f gp .data .regridData .plotStats_tmp .tmp
+cp $out .tmpDirty
+echo "Cleaning out the excess spew from the output file"
+grep "regridding\|timestep\|DONE\|Compile\|REGRIDDING:" .tmpDirty |grep -v "Mass gained" >& .tmpClean 
+grep Time= .tmpClean |grep Mem >& .plotStats_tmp1
+
+#__________________________________
+# extract the data
+echo "Now extracting the data"
+
+# When running on frost, the mpirun utility will prepend all text output with "   n:" 
+# where n is the processor rank.  This extra colon screws up the grepping below. 
+# Check for this pattern of "  0:" and remove it from the .plotStats_tmp file.
+sed -e 's/^   0://' .plotStats_tmp1 >& .plotStats_tmp
+
+echo "?">&.meanTime
+echo "?">>.meanTime  # mean time data isn't collect the first 4 timestps
+echo "?">>.meanTime
+echo "?">>.meanTime
+
+grep -b1 REGRIDDING .tmpClean | grep Time | cut -d"=" -f4 | cut -d"," -f1 >& .elapsedTimeRegrid
+grep -b1 REGRIDDING .tmpClean | grep Time | cut -d"=" -f2 | cut -d" " -f1 >& .physicalTimeRegrid
+grep     REGRIDDING .tmpClean | tr -d "[:alpha:].:" >& .patches
+grep regridding .tmpClean | cut -d " " -f12 | tr ")" " " >& .scheduleCopy
+grep regridding .tmpClean | cut -d " " -f7 | tr "," " " >& .regridder
+grep regridding .tmpClean | cut -d " " -f3 | tr "(" " " >& .regridTotal
+grep TASKGRAPH .tmpClean | cut -d" " -f4 | tr "(" " "   >& .TG_recompile
+grep elap .plotStats_tmp | cut -d"=" -f4 | cut -d"," -f1 >& .elapsedTime
+grep mean .plotStats_tmp | cut -d":" -f2 | cut -d" " -f2 >> .meanTime
+grep elap .plotStats_tmp | cut -d"=" -f2 | cut -d" " -f1 >& .physicalTime
+
+#__________________________________
+# parse the total number cells per level
+@ nLevels = `grep levels .tmpClean | cut -d: -f2`
+@ count = 0
+set levels 
+
+foreach L ( $count < $nLevels)
+  @ count +=1
+  set level = "L-$count"
+  set levels = ($levels $level)
+  echo "Extracting number of cells for: "$levels
+  grep "L$count" $out | awk '{print $7}'>& $level
+end
+
+
+#__________________________________
+# glue the data together
+paste -d " " .elapsedTimeRegrid $levels >& .L-all
+paste -d "  " .elapsedTime .meanTime .physicalTime>& .data
+paste -d "  " .physicalTimeRegrid .elapsedTimeRegrid .scheduleCopy .regridder .regridTotal .TG_recompile >& .regridData
+
+#__________________________________
+# compute the total number of cells
+cat > .awk << +
+{
+  sum = 0
+  for (i=2; i<=NF; ++i)
+    sum += \$i
+  print \$1,sum
+}
++
+awk -f .awk .L-all > .L-sum
+
+#__________________________________
+# compute the total number of patches
+awk '{ sum = 0; for(i=2;i<=NF;i+=2) sum+=$i; print sum}' .patches >& .patchTmp
+paste -d " " .elapsedTimeRegrid .patchTmp >& .patchSum
+
+# remove all the temporary files
+rm -f .elapsedTime .meanTime .physicalTime .elapsedTimeRegrid .scheduleCopy .regridder .regridTotal .TG_recompile
+rm -f .plotStats_tmp .plotStats_tmp1 .tmpDirty .tmpClean
+rm -f $levels .awk .patches .patchTmp
+
+echo "Done extracting data"
+
+echo "" > gp
+#__________________________________
+# if making a hardcopy
+if( $hardcopy == "y" || $hardcopy == "Y" ) then 
+echo "Generating the postscript file plotRegriddingStats.ps"
+/bin/rm gp
+cat > gp << fin
+set terminal x11 1
+set terminal postscript color solid "Times-Roman" 12
+set output "plotRegriddingStats.ps"
+fin
+endif
+
+#__________________________________
+# generate the  plot script
+cat >> gp << fin
+set multiplot
+set size 1.0,0.3
+set origin 0.0,0.3
+set autoscale
+#set xdata time
+#set timefmt "%s"             ------- try turning these on
+set grid xtics ytics
+set y2tics
+set ylabel 'Physical Time'         textcolor lt 1
+set y2label 'Mean Time/timestep'   textcolor lt 2
+plot '.data'       using 1:3           t 'Physical Time' with lines,\
+     '.data'       using 1:2 axes x1y2 t 'meanTime/timestep' with lines,\
+     '.regridData' using 2:5 axes x1y2 t 'regridding Time ',\
+     '.regridData' using 2:6 axes x1y2 t 'Task graph recompile'
+     
+    #----------second plot-------------
+set size 1.0,0.3       
+set origin 0.0,0.6
+set ylabel 'Time [sec.]'
+set y2label
+
+plot '.regridData' using 2:5           t 'Regridding total',\
+     '.regridData' using 2:4           t 'Regridding',\
+     '.regridData' using 2:3           t 'Schedule and copy regridData'
+     
+
+
+#----------Third plot-------------
+set size 1.0,0.3       
+set origin 0.0,0.0
+set ylabel 'Cells'    textcolor lt 1
+set y2label 'Patches' textcolor lt 2
+plot '.L-sum'    using 1:2 t ' All Levels' with step,\
+     '.patchSum' using 1:2 t ' Patches' axis x1y2 with step
+
+set nomultiplot
+pause -1 "Hit return to exit"
+fin
+#__________________________________
+# plot it up
+gnuplot gp
+
+if($hardcopy == "y" || $hardcopy == "Y") then
+  convert plotRegriddingStats.ps plotRegriddingStats.jpg
+  mogrify -rotate 90 plotRegriddingStats.jpg
+endif
+
+#__________________________________
+# clean up
+rm -f gp .data .regridData .L-sum .patchSum
+
+exit(1)
