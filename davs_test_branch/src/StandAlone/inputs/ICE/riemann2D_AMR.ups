@@ -1,0 +1,277 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+
+
+
+<Uintah_specification> 
+<!--Please use a consistent set of units, (mks, cgs,...)-->
+    <!--____________________________________________________________________-->
+    <!-- This input files replicates test problem (1) in                    -->
+    <!-- Richard Liska and Burton Wendroff,                                 -->
+    <!-- "Composite Schemes for Conservations Laws,"  No Journal            -->
+    <!--____________________________________________________________________-->
+   <Meta>
+       <title>2D shock tube with 2 levels of refinement</title>
+   </Meta>    
+
+   <SimulationComponent type="ice" />
+
+   <doAMR>true</doAMR>
+   <LoadBalancer type="DLB">
+     <dynamicAlgorithm>   patchFactor</dynamicAlgorithm>
+     <levelIndependent>   true        </levelIndependent>
+     <doSpaceCurve>       true        </doSpaceCurve>
+     <timestepInterval>   200         </timestepInterval>
+   </LoadBalancer>
+
+    <!--____________________________________________________________________-->
+    <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
+    <!--____________________________________________________________________-->
+   <Time>
+       <maxTime>            0.30      </maxTime>
+       <initTime>           0.0         </initTime>
+       <delt_min>           0.0         </delt_min>
+       <delt_max>           1.0         </delt_max>
+       <delt_init>          1.0e-6      </delt_init>
+       <timestep_multiplier>1.0         </timestep_multiplier>
+       <end_on_max_time_exactly>true</end_on_max_time_exactly>
+   </Time>
+    <!--____________________________________________________________________-->
+    <!--      G  R  I  D     V  A  R  I  A  B  L  E  S                      -->
+    <!--____________________________________________________________________-->
+    <Grid>
+    <BoundaryConditions>
+      <Face side = "x-">
+        <BCType id = "0"   label = "Pressure"     var = "Neumann">
+                              <value> 0. </value>
+        </BCType>
+        <BCType id = "0"   label = "Velocity"     var = "Neumann">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "0"   label = "Temperature"  var = "Neumann">
+                              <value> 0. </value>
+        </BCType>
+        <BCType id = "0"   label = "Density"      var = "Neumann">
+                              <value> 0  </value>
+        </BCType>
+        <BCType id = "0" label = "SpecificVol"  var = "computeFromDensity">
+                              <value> 0.0  </value>
+        </BCType>
+      </Face>
+      <Face side = "x+">
+        <BCType id = "0"   label = "Pressure"     var = "Neumann">
+                              <value> 0. </value>
+        </BCType>
+        <BCType id = "0"   label = "Velocity"     var = "Neumann">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "0"   label = "Temperature"  var = "Neumann">
+                              <value> 0. </value>
+        </BCType>
+        <BCType id = "0"   label = "Density"      var = "Neumann">
+                              <value> 0  </value>
+        </BCType>
+        <BCType id = "0" label = "SpecificVol"  var = "computeFromDensity">
+                              <value> 0.0  </value>
+        </BCType>
+      </Face>
+
+      <Face side = "y-">
+        <BCType id = "0"   label = "Pressure"     var = "Neumann">
+                              <value> 0. </value>
+        </BCType>
+        <BCType id = "0"   label = "Velocity"     var = "Neumann">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "0"   label = "Temperature"  var = "Neumann">
+                              <value> 0. </value>
+        </BCType>
+        <BCType id = "0"   label = "Density"      var = "Neumann">
+                              <value> 0  </value>
+        </BCType>
+        <BCType id = "0" label = "SpecificVol"  var = "computeFromDensity">
+                              <value> 0.0  </value>
+        </BCType>
+      </Face>                  
+      <Face side = "y+">
+        <BCType id = "0"   label = "Pressure"     var = "Neumann">
+                              <value> 0. </value>
+        </BCType>
+        <BCType id = "0"   label = "Velocity"     var = "Neumann">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "0"   label = "Temperature"  var = "Neumann">
+                              <value> 0. </value>
+        </BCType>
+        <BCType id = "0"   label = "Density"      var = "Neumann">
+                              <value> 0  </value>
+        </BCType>
+        <BCType id = "0" label = "SpecificVol"  var = "computeFromDensity">
+                              <value> 0.0  </value>
+        </BCType>
+      </Face>
+        <Face side = "z-">
+          <BCType id = "0"   label = "Symmetric" var = "symmetry">
+          </BCType>
+        </Face> 
+        <Face side = "z+">
+          <BCType id = "0"   label = "Symmetric" var = "symmetry">
+          </BCType>
+        </Face>
+    </BoundaryConditions>
+
+       <Level>
+           <Box label="1">
+              <lower>        [-.48, -.48,-0.05]  </lower>
+              <upper>        [0.48, 0.48, 0.05]  </upper>
+              <extraCells>   [1,1,1]           </extraCells>
+              <patches>      [4,4,1]           </patches>
+           </Box>
+           <spacing>        [0.04,0.04,0.1]  </spacing>
+       </Level>    
+    </Grid>    
+    <!--____________________________________________________________________-->
+    <!--      O  U  P  U  T     V  A  R  I  A  B  L  E  S                   -->
+    <!--____________________________________________________________________-->
+   <DataArchiver>
+      <filebase>riemann2D_AMR.uda</filebase>
+      <outputTimestepInterval>1</outputTimestepInterval>
+      <save label="delP_Dilatate"/>
+      <save label="press_CC"/>
+      <save label="rho_CC"/>
+      <save label="vel_CC"/>
+      <save label="temp_CC"/>
+      <save label="sp_vol_CC"/>
+
+      <save label="mag_grad_rho_CC"/>
+      <save label="mag_grad_temp_CC"/>
+      <save label="mag_div_vel_CC"/>
+      <save label="refineFlag"/>
+   </DataArchiver>
+
+
+    <!--____________________________________________________________________-->
+    <!--    I  C  E     P  A  R  A  M  E  T  E  R  S                        -->
+    <!--____________________________________________________________________-->
+    <CFD>
+       <cfl>0.25</cfl>
+      <ICE>
+        <advection type = "SecondOrder"/>
+      </ICE>        
+    </CFD>
+
+    <AMR>
+      <ICE>
+        <orderOfInterpolation>1  </orderOfInterpolation>
+        <do_Refluxing>  false    </do_Refluxing>
+        <Refinement_Criteria_Thresholds>
+          <Variable name = "rho_CC"    value = "5" matl = "0" />
+          <Variable name = "temp_CC"   value = "5" matl = "0" />
+        </Refinement_Criteria_Thresholds>
+      </ICE>
+       
+      <Regridder type="BNR">
+        <max_levels>3</max_levels>
+        <cell_refinement_ratio>    [[4,4,1]]   </cell_refinement_ratio>
+        <cell_stability_dilation>   [1,1,0]    </cell_stability_dilation>   
+        <min_boundary_cells>       [1,1,0]     </min_boundary_cells>
+ 
+
+        <patch_split_tolerance>     1          </patch_split_tolerance>
+        <patch_combine_tolerance>   1          </patch_combine_tolerance>
+        <patches_per_level_per_proc> 8         </patches_per_level_per_proc>
+        <cell_regrid_dilation>     [1,1,0]     </cell_regrid_dilation>
+        <min_patch_size>          [[8,8,1]]    </min_patch_size>
+        <dynamic_dilation>      false          </dynamic_dilation>
+  
+      </Regridder>
+      
+    </AMR>
+    <!--____________________________________________________________________-->
+    <!--     P  H  Y  S  I  C  A  L     C  O  N  S  T  A  N  T  S           -->
+    <!--____________________________________________________________________-->   
+    <PhysicalConstants>
+       <gravity>            [0,0,0]   </gravity>
+       <reference_pressure> 101325.0  </reference_pressure>
+    </PhysicalConstants>
+
+    <!--____________________________________________________________________-->
+    <!--     Material Properties and Initial Conditions                     -->
+    <!--____________________________________________________________________-->
+    <MaterialProperties>
+       <ICE>
+         <material>
+           <EOS type = "ideal_gas">                     </EOS>
+           <dynamic_viscosity>      0.0                 </dynamic_viscosity>
+           <thermal_conductivity>   0.0                 </thermal_conductivity>
+           <specific_heat>          1.0               </specific_heat>
+           <gamma>                  1.4                  </gamma>
+           <geom_object>
+                <box label="LL">
+                    <min>           [-0.75, -0.75, -1.0 ]   </min>
+                    <max>           [ 0.0,  0.0, 2.0 ]   </max>
+                </box> 
+               <res>                  [2,2,2]            </res>
+
+               <velocity>       [-0.75,0.5,0.0]      </velocity>
+               <temperature>    2.5                   </temperature>
+               <density>        1.                      </density>
+               <pressure>       1.                      </pressure> 
+               
+         <!--  <velocity>       [0.8939,0.8939,0.0]      </velocity>
+               <temperature>    2.5                   </temperature>
+               <density>        1.1                      </density>
+               <pressure>       1.1                      </pressure> -->
+           </geom_object>
+          
+           <geom_object>
+                <box label="LR">  
+                    <min>           [0.0, -0.5, -1.0 ]  </min>
+                    <max>           [0.75,  0.0, 2.0 ]  </max>
+                </box>     
+                <res>           [2,2,2]                 </res>
+                
+               <velocity>       [-0.75,-0.5,0.0]        </velocity>
+               <temperature>    0.8333                  </temperature>
+               <density>        3.0                     </density>
+               <pressure>       1.0                     </pressure>
+                               
+          <!-- <velocity>       [0.0,0.8939,0.0]        </velocity>
+               <temperature>    1.7275                   </temperature>
+               <density>        .5065                   </density>
+               <pressure>       0.35                    </pressure> -->
+           </geom_object>
+           <geom_object>
+                <box label="UL">     
+                    <min>           [-0.5,  0.0, -1.0 ]   </min>
+                    <max>           [ 0.0,  0.75, 2.0 ]   </max>
+                </box>      
+                <res>           [2,2,2]                 </res>
+               <velocity>       [0.75,0.5,0.0]          </velocity>
+               <temperature>    1.25                    </temperature>
+               <density>        2.0                     </density>
+               <pressure>       1.0                     </pressure>
+          <!-- <velocity>       [0.8939,0.0,0.0]        </velocity>
+               <temperature>    1.7275                  </temperature>
+               <density>        .5065                   </density>
+               <pressure>       0.35                    </pressure> -->
+           </geom_object>
+           <geom_object>
+                <box label="UR"> 
+                    <min>           [0.0,  0.0, -1.0 ]    </min>
+                    <max>           [0.75,  0.75, 2.0 ]    </max>
+                </box>          
+                <res>           [2,2,2]                 </res>
+               <velocity>       [0.75,-0.5,0.0]         </velocity>
+               <temperature>    2.5                     </temperature>
+               <density>        1.                      </density>
+               <pressure>       1.                      </pressure> 
+           <!--<velocity>       [0.0,0.0,0.0]           </velocity>
+               <temperature>    2.5                     </temperature>
+               <density>        1.1                     </density>
+               <pressure>       1.1                     </pressure> -->
+           </geom_object> 
+         </material>
+      </ICE>       
+    </MaterialProperties>  
+                     
+</Uintah_specification>

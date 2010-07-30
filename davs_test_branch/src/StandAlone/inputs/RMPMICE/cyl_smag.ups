@@ -1,0 +1,184 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<Uintah_specification> 
+<!--Please use a consistent set of units, (mks, cgs,...)-->
+
+   <Meta>
+       <title>Advection test for a MPM and ICE material</title>
+   </Meta>
+
+   <SimulationComponent type="rmpmice" />
+    <!--____________________________________________________________________-->
+    <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
+    <!--____________________________________________________________________-->
+   <Time>
+       <maxTime>            0.01         </maxTime>
+       <initTime>           0.0         </initTime>
+       <delt_min>           0.0         </delt_min>
+       <delt_max>           1.0         </delt_max>
+       <delt_init>          1.0e-4      </delt_init>
+       <timestep_multiplier>1.0         </timestep_multiplier>
+   </Time>
+   
+    <!--____________________________________________________________________-->
+    <!--      G  R  I  D     V  A  R  I  A  B  L  E  S                      -->
+    <!--____________________________________________________________________-->
+    <Grid>
+    <BoundaryConditions>
+      <Face side = "x-">
+        <BCType id = "0"  var = "Neumann" label = "Pressure">
+                              <value> 0.0   </value>
+        </BCType>
+        <BCType id = "all" var = "Dirichlet" label = "Velocity">
+                              <value> [100.,0.,0.] </value>
+        </BCType>
+        <BCType id = "all" var = "Dirichlet" label = "Temperature">
+                              <value> 300.0  </value>
+        </BCType>
+        <BCType id = "all" var = "Dirichlet" label = "Density">
+                              <value> 1.1792947  </value>
+        </BCType>
+      </Face>
+      <Face side = "x+">
+        <BCType id = "0" var = "Dirichlet" label = "Pressure">
+                              <value> 101325.0   </value>
+        </BCType>
+        <BCType id = "all" var = "Neumann" label = "Velocity">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "all" var = "Neumann" label = "Temperature">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" var = "Neumann" label = "Density">
+                              <value> 0.0  </value>
+        </BCType>
+      </Face>
+      <Face side = "y-">
+        <BCType id = "all"   label = "Symmetric" var = "symmetry">
+        </BCType>
+      </Face>                  
+      <Face side = "y+">
+        <BCType id = "all"   label = "Symmetric" var = "symmetry">
+        </BCType>
+      </Face>
+    </BoundaryConditions>
+       <Level>
+           <Box label = "1">
+              <lower>        [-4.5,-7.0,0.0]    </lower>
+              <upper>        [15.5,7.0,1.0]     </upper>
+              <resolution>   [125,87,6]         </resolution>
+              <extraCells>   [1,1,0]            </extraCells>
+              <patches>      [2,3,1]            </patches>
+           </Box>
+           <periodic>       [0,0,1]                </periodic>
+       </Level>
+    </Grid>
+   
+    <!--____________________________________________________________________-->
+    <!--   O  U  P  U  T     V  A  R  I  A  B  L  E  S                      -->
+    <!--____________________________________________________________________-->
+   <DataArchiver>
+      <filebase>cyl.uda</filebase>
+      <outputInterval>0.001</outputInterval>
+      <save label = "vel_CC"/>
+      <save label = "press_CC"/>
+      <save label = "rho_CC"/>
+      <save label = "p.x"/>
+      <save label = "p.volume"/>
+      <save label = "p.velocity"/>
+      <save label = "turb_viscosity_CC"/>
+      <checkpoint interval="0.01" cycle="2"/>
+   </DataArchiver>
+
+    <!--____________________________________________________________________-->
+    <!--    I  C  E     P  A  R  A  M  E  T  E  R  S                        -->
+    <!--____________________________________________________________________-->
+    <CFD>
+         <cfl>0.5</cfl>
+       <ICE>
+        <advection type = "SecondOrder" />
+        <turbulence model = "Smagorinsky">           
+          <model_constant>0.1</model_constant>              
+          <filter_width>1.0</filter_width>
+          <turb_Pr>0.4</turb_Pr>                            
+        </turbulence>
+      </ICE>        
+    </CFD>
+
+    <!--____________________________________________________________________-->
+    <!--     P  H  Y  S  I  C  A  L     C  O  N  S  T  A  N  T  S           -->
+    <!--____________________________________________________________________-->   
+    <PhysicalConstants>
+       <gravity>            [0,0,0]   </gravity>
+       <reference_pressure> 101325.0  </reference_pressure>
+    </PhysicalConstants>
+    <MPM>
+        <time_integrator>explicit</time_integrator>
+    </MPM>
+
+    <!--____________________________________________________________________-->
+    <!--    MATERIAL PROPERTIES INITIAL CONDITIONS                          -->
+    <!--____________________________________________________________________-->
+    <MaterialProperties>
+       <MPM>
+         <material>
+                <density>   1.1792946927374306000e+00   </density>
+                <constitutive_model type="comp_neo_hook">
+                    <bulk_modulus>      40000.0          </bulk_modulus>
+                    <shear_modulus>     30000.0          </shear_modulus>
+                </constitutive_model>
+                <thermal_conductivity>  400.0           </thermal_conductivity>
+                <specific_heat>         716.0           </specific_heat>
+                <geom_object>
+                    <box label = "gpmpm">
+                        <min>           [-0.5,-0.5,0.0]   </min>
+                        <max>           [0.5,0.5,1.0]   </max>
+                    </box>
+                    <res>               [2,2,2]         </res>
+                    <velocity>          [0.0,0.0,0.0]   </velocity>
+                    <temperature>       300             </temperature>
+                </geom_object>
+         </material>
+
+            <contact>
+              <type>null</type>
+              <materials>              [0]         </materials>
+            </contact>
+      </MPM>
+       <ICE>
+         <material>
+            <EOS type = "ideal_gas">                     </EOS>
+           <dynamic_viscosity>          5.5e-3          </dynamic_viscosity>
+           <thermal_conductivity>       0.0             </thermal_conductivity>
+           <specific_heat>              716.0           </specific_heat>
+           <gamma>                      1.4             </gamma>           
+           <geom_object>
+              <difference>
+                <box label = "gpice">
+                    <min>           [-5.0,-8.0,-1.0]    </min>
+                    <max>           [16.0,8.0,2.0 ]      </max>
+                </box>
+              <box label = "gpicehole">
+                    <min>           [-0.5,-0.5,0.0]       </min>
+                    <max>           [0.5,0.5,1.0]       </max>
+                </box>
+              </difference>
+               <res>                      [2,2,2]          </res>
+               <velocity>           [100.0,0.0,0.0]       </velocity>
+               <temperature>        300.0               </temperature>
+               <density>            1.1792947                 </density>
+               <pressure>           101325.0            </pressure>
+           </geom_object>
+         </material>
+      </ICE>       
+       
+        <exchange_properties>
+         <exchange_coefficients>
+               <momentum>               [1e15]         </momentum>
+               <heat>                  [1e4]           </heat>
+         </exchange_coefficients>
+        </exchange_properties>
+    </MaterialProperties>
+            
+
+       
+</Uintah_specification>
