@@ -262,7 +262,7 @@ void set_imp_DelP_BC( CCVariable<double>& imp_delP,
                       const VarLabel* label,
                       DataWarehouse* new_dw)        
 { 
-  cout_BC_CC << "set_imp_DelP_BC "<< endl;
+  cout_BC_CC << "set_imp_DelP_BC, Patch: "<< patch->getID()<< endl;
   vector<Patch::FaceType> bf;
   patch->getBoundaryFaces(bf);
   for( vector<Patch::FaceType>::const_iterator itr = bf.begin(); itr != bf.end(); ++itr ){
@@ -564,7 +564,7 @@ void setBC(CCVariable<double>& press_CC,
   }
   
   cout_BC_CC << "setBC (press_CC) \t"<< kind <<" " << which_Var
-            << " mat_id = " << mat_id << endl;
+            << " mat_id = " << mat_id <<  ", Patch: "<< patch->getID() << endl;
 
   int numALLMatls = sharedState->getNumMatls();
   bool isNotInitialTimestep = (sharedState->getCurrentTopLevelTimeStep() > 0);  
@@ -708,7 +708,8 @@ void setBC(CCVariable<double>& var_CC,
   if(patch->hasBoundaryFaces() == false){
     return;
   }
-  cout_BC_CC << "setBC (double) \t"<< desc << " mat_id = " << mat_id << endl;
+  cout_BC_CC << "setBC (double) \t"<< desc << " mat_id = " 
+             << mat_id <<  ", Patch: "<< patch->getID() << endl;
   Vector cell_dx = patch->dCell();
   bool isNotInitialTimestep = (sharedState->getCurrentTopLevelTimeStep() > 0);
 
@@ -865,7 +866,8 @@ void setBC(CCVariable<Vector>& var_CC,
  if(patch->hasBoundaryFaces() == false){
     return;
   }
-  cout_BC_CC <<"setBC (Vector_CC) \t"<< desc <<" mat_id = " <<mat_id<< endl;
+  cout_BC_CC <<"setBC (Vector_CC) \t"<< desc <<" mat_id = " 
+              <<mat_id<<  ", Patch: "<< patch->getID() << endl;
   
   bool isNotInitialTimestep = (sharedState->getCurrentTopLevelTimeStep() > 0);
   Vector cell_dx = patch->dCell();
@@ -1003,7 +1005,7 @@ void setSpecificVolBC(CCVariable<double>& sp_vol_CC,
     return;
   }
   cout_BC_CC << "setSpecificVolBC \t"<< desc <<" "
-             << " mat_id = " << mat_id << endl;
+             << " mat_id = " << mat_id <<  ", Patch: "<< patch->getID() << endl;
                 
   Vector dx = patch->dCell();
   double cellVol = dx.x() * dx.y() * dx.z();
