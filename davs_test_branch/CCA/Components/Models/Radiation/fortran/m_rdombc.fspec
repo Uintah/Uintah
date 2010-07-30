@@ -1,7 +1,0 @@
-void m_rdombc(IntVector idxlo, IntVector idxhi,
-            CCVariable<double> tg,
-            CCVariable<double> ABSKG, 
-            constCCVariable<int> pcell, int ffield,
-	    bool xminus, bool xplus, bool yminus, bool yplus, bool zminus, bool zplus,
-	    bool l_testproblems,
-     	    bool lprobone, bool lprobtwo, bool lprobthree);
