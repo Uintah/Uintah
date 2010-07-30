@@ -333,12 +333,8 @@ Arches::problemSetup(const ProblemSpecP& params,
     // register transport eqns
     eqnFactory.problemSetup(transportEqn_db);
 
-    // register source terms
-    ProblemSpecP sources_db = transportEqn_db->findBlock("Sources");
-    if (sources_db) {
-      srcFactory.problemSetup(sources_db);
-    }
-  
+    // Wait until later to register source terms,
+    // since some source terms need DQMOM information
   }
 
   // read properties
@@ -554,6 +550,11 @@ Arches::problemSetup(const ProblemSpecP& params,
   }
   */
 
+  // Do problem setup stuff for TranpsortEqns that require DQMOM information
+  if( db->findBlock("TransportEqns")->findBlock("Sources") ) {
+    ProblemSpecP sources_db = db->findBlock("TransportEqns")->findBlock("Sources");
+    srcFactory.problemSetup( sources_db );
+  }
 
 }
 

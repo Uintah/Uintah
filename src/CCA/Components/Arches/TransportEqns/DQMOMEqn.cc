@@ -508,11 +508,6 @@ DQMOMEqn::buildTransportEqn( const ProcessorGroup* pc,
     Fconv.initialize(0.0);
     Fdiff.initialize(0.0); 
 
-#ifdef DEBUG_MODELS
-    proc0cout << "Particle velocity = " << partVel[IntVector(1,2,3)] << endl;
-    proc0cout << "Gas velocity = [" << uVel[IntVector(1,2,3)] << ", " << vVel[IntVector(1,2,3)] << ", " << wVel[IntVector(1,2,3)] << "]" << endl;
-#endif
-
     //----BOUNDARY CONDITIONS
     // For first time step, bc's have been set in dqmomInit
     computeBCs( patch, d_eqnName, phi );
@@ -554,8 +549,15 @@ DQMOMEqn::buildTransportEqn( const ProcessorGroup* pc,
 #endif
 
       }
-    } 
-  }
+    }//end cells
+
+#ifdef DEBUG_MODELS
+    proc0cout << "Particle velocity = " << partVel[IntVector(1,2,3)] << endl;
+    proc0cout << "Gas velocity = [" << uVel[IntVector(1,2,3)] << ", " << vVel[IntVector(1,2,3)] << ", " << wVel[IntVector(1,2,3)] << "]" << endl;
+    proc0cout << "RHS = Fconv + Fdiff + src*vol = " << Fconv[IntVector(1,2,3)] << " + " << Fdiff[IntVector(1,2,3)] << " + " << src[IntVector(1,2,3)] << "*" << vol << " = " << RHS[IntVector(1,2,3)] << endl;
+#endif
+
+  }//end patches
 }
 
 
@@ -645,7 +647,9 @@ DQMOMEqn::solveTransportEqn( const ProcessorGroup* pc,
 #ifdef DEBUG_MODELS
     proc0cout << "Eqn " << d_eqnName << ": forward euler update" << endl;
     proc0cout << "Before: phi = " << phi_at_jp1[IntVector(1,2,3)] << endl;
-    proc0cout << "RHS = " << RHS[IntVector(1,2,3)] << endl;
+    Vector dx=patch->dCell();
+    double vol= dx.x()*dx.y()*dx.z();
+    proc0cout << "RHS*(dt/vol) = " << RHS[IntVector(1,2,3)] << "*(" << dt << "/" << vol << ") = " << (RHS[IntVector(1,2,3)])*(dt/vol) << endl;
 #endif
 
     // update to get phi^{(j+1)}

@@ -77,7 +77,7 @@ CharOxidationMixtureFraction::problemSetup(const ProblemSpecP& inputdb)
 void 
 CharOxidationMixtureFraction::sched_computeSource( const LevelP& level, SchedulerP& sched, int timeSubStep )
 {
-  std::string taskname = "CharOxidationMixtureFraction::eval";
+  std::string taskname = "CharOxidationMixtureFraction::computeSource";
   Task* tsk = scinew Task(taskname, this, &CharOxidationMixtureFraction::computeSource, timeSubStep);
 
   if (timeSubStep == 0 && !d_labelSchedInit) {
@@ -88,16 +88,12 @@ CharOxidationMixtureFraction::sched_computeSource( const LevelP& level, Schedule
 
   if( timeSubStep == 0 ) {
     tsk->computes(d_srcLabel);
-    
-    for( vector<const VarLabel*>::iterator iGasModel = GasModelLabels_.begin(); iGasModel != GasModelLabels_.end(); ++iGasModel ) {
-      tsk->requires( Task::OldDW, *iGasModel, Ghost::None, 0 ); 
-    }
   } else {
     tsk->modifies(d_srcLabel); 
+  }
 
-    for( vector<const VarLabel*>::iterator iGasModel = GasModelLabels_.begin(); iGasModel != GasModelLabels_.end(); ++iGasModel ) {
-      tsk->requires( Task::NewDW, *iGasModel, Ghost::None, 0 ); 
-    }
+  for( vector<const VarLabel*>::iterator iGasModel = GasModelLabels_.begin(); iGasModel != GasModelLabels_.end(); ++iGasModel ) {
+    tsk->requires( Task::NewDW, *iGasModel, Ghost::None, 0 ); 
   }
 
   sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials()); 
@@ -126,11 +122,11 @@ CharOxidationMixtureFraction::computeSource( const ProcessorGroup* pc,
     int matlIndex = d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
 
     CCVariable<double> mixFracSrc; 
-    if ( new_dw->exists(d_srcLabel, matlIndex, patch ) ){
-      new_dw->getModifiable( mixFracSrc, d_srcLabel, matlIndex, patch ); 
+    if( timeSubStep == 0 ) {
+      new_dw->allocateAndPut( mixFracSrc, d_srcLabel, matlIndex, patch );
       mixFracSrc.initialize(0.0);
     } else {
-      new_dw->allocateAndPut( mixFracSrc, d_srcLabel, matlIndex, patch );
+      new_dw->getModifiable( mixFracSrc, d_srcLabel, matlIndex, patch ); 
       mixFracSrc.initialize(0.0);
     } 
 
@@ -150,7 +146,7 @@ CharOxidationMixtureFraction::computeSource( const ProcessorGroup* pc,
            iGasModel != gasModelCCVars.end(); ++iGasModel ) {
         running_sum += (**iGasModel)[c];
       }
-      
+
       mixFracSrc[c] = running_sum;
     }
 

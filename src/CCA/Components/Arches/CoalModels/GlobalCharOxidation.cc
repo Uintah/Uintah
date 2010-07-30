@@ -64,6 +64,8 @@ GlobalCharOxidation::GlobalCharOxidation( std::string modelName,
   @seealso CharOxidationMixtureFraction
   */
 
+  double JoulesToKiloCals = 0.0002390005736;
+
   // ========================================================================
   // O2 reactions
   
@@ -72,14 +74,14 @@ GlobalCharOxidation::GlobalCharOxidation( std::string modelName,
   nu.push_back( 2.0/2.0 );
   oxidizer_name_.push_back("O2");
 
-  A_.push_back( 2.30 );   E_.push_back( 9.29e7 ); ///< Baxter 1987 (all ranks)
-  //A_.push_back( 0.30 );   E_.push_back( 1.49e8 ); ///< Field et al 1967 (all ranks)
-  //A_.push_back( 1.03 );   E_.push_back( 7.49e7 ); ///< Baxter 1987 (hv Bituminous A)
-  //A_.push_back( 0.479);   E_.push_back( 5.25e7 ); ///< Baxter 1987 (hv Bituminous C)
-  //A_.push_back( 10.4 );   E_.push_back( 9.31e7 ); ///< Baxter 1987 (hv Bituminous C)
-  //A_.push_back( 2.25 );   E_.push_back( 8.52e7 ); ///< Goetz et al 1982 (hv Bituminous A)
-  //A_.push_back( 2.02 );   E_.push_back( 7.18e7 ); ///< Goetz et al 1982 (hv Bituminous C)
-  //A_.push_back( 4.96 );   E_.push_back( 8.36e7 ); ///< Goetz et al 1982 (hv Bituminous C)
+  A_.push_back( 2.30 );   E_.push_back( 9.29e7*(JoulesToKiloCals) ); ///< Baxter 1987 (all ranks)
+  //A_.push_back( 0.30 );   E_.push_back( 1.49e8*(JoulesToKiloCals) ); ///< Field et al 1967 (all ranks)
+  //A_.push_back( 1.03 );   E_.push_back( 7.49e7*(JoulesToKiloCals) ); ///< Baxter 1987 (hv Bituminous A)
+  //A_.push_back( 0.479);   E_.push_back( 5.25e7*(JoulesToKiloCals) ); ///< Baxter 1987 (hv Bituminous C)
+  //A_.push_back( 10.4 );   E_.push_back( 9.31e7*(JoulesToKiloCals) ); ///< Baxter 1987 (hv Bituminous C)
+  //A_.push_back( 2.25 );   E_.push_back( 8.52e7*(JoulesToKiloCals) ); ///< Goetz et al 1982 (hv Bituminous A)
+  //A_.push_back( 2.02 );   E_.push_back( 7.18e7*(JoulesToKiloCals) ); ///< Goetz et al 1982 (hv Bituminous C)
+  //A_.push_back( 4.96 );   E_.push_back( 8.36e7*(JoulesToKiloCals) ); ///< Goetz et al 1982 (hv Bituminous C)
 
 
 
@@ -102,14 +104,14 @@ GlobalCharOxidation::GlobalCharOxidation( std::string modelName,
   nu.push_back( 2.0/2.0 );
   oxidizer_name_.push_back("CO2");
 
-  A_.push_back( 3.419);   E_.push_back( 1.30e8 ); ///< Baxter 1987 (lignite)
-  //A_.push_back( 1160 );   E_.push_back( 2.59e8 ); ///< Baxter 1987 (hv Bituminous A)
-  //A_.push_back( 4890 );   E_.push_back( 2.60e8 ); ///< Baxter 1987 (hv Bituminous C)
-  //A_.push_back( 6188 );   E_.push_back( 2.40e8 ); ///< Baxter 1987 (Subbituminous C)
-  //A_.push_back( 45.0 );   E_.push_back( 1.65e8 ); ///< Goetz et al 1982 (lignite)
-  //A_.push_back( 95.14);   E_.push_back( 1.25e8 ); ///< Goetz et al 1982 (hv Bituminous A)
-  //A_.push_back( 88.5 );   E_.push_back( 2.36e8 ); ///< Goetz et al 1982 (hi Bituminous C)
-  //A_.push_back( 70.95);   E_.push_back( 1.78e8 ); ///< Goetz et al 1982 (Subbituminous C)
+  A_.push_back( 3.419);   E_.push_back( 1.30e8*(JoulesToKiloCals) ); ///< Baxter 1987 (lignite)
+  //A_.push_back( 1160 );   E_.push_back( 2.59e8*(JoulesToKiloCals) ); ///< Baxter 1987 (hv Bituminous A)
+  //A_.push_back( 4890 );   E_.push_back( 2.60e8*(JoulesToKiloCals) ); ///< Baxter 1987 (hv Bituminous C)
+  //A_.push_back( 6188 );   E_.push_back( 2.40e8*(JoulesToKiloCals) ); ///< Baxter 1987 (Subbituminous C)
+  //A_.push_back( 45.0 );   E_.push_back( 1.65e8*(JoulesToKiloCals) ); ///< Goetz et al 1982 (lignite)
+  //A_.push_back( 95.14);   E_.push_back( 1.25e8*(JoulesToKiloCals) ); ///< Goetz et al 1982 (hv Bituminous A)
+  //A_.push_back( 88.5 );   E_.push_back( 2.36e8*(JoulesToKiloCals) ); ///< Goetz et al 1982 (hi Bituminous C)
+  //A_.push_back( 70.95);   E_.push_back( 1.78e8*(JoulesToKiloCals) ); ///< Goetz et al 1982 (Subbituminous C)
 
 
 
@@ -121,8 +123,8 @@ GlobalCharOxidation::GlobalCharOxidation( std::string modelName,
   nu.push_back( 1.0/2.0 );
   oxidizer_name_.push_back("H2O");
 
-  A_.push_back( 4.26e4 );   E_.push_back( 3.16e8 ); ///< Otto et al 1979 (lignite)
-  //A_.push_back( 208    );   E_.push_back( 2.40e8 ); ///< Otto et al 1979 (lignite)
+  A_.push_back( 4.26e4 );   E_.push_back( 3.16e8*(JoulesToKiloCals) ); ///< Otto et al 1979 (lignite)
+  //A_.push_back( 208    );   E_.push_back( 2.40e8*(JoulesToKiloCals) ); ///< Otto et al 1979 (lignite)
 
 
   // ==============
@@ -471,11 +473,10 @@ GlobalCharOxidation::computeModel( const ProcessorGroup * pc,
 
       bool weight_is_small = (weight[c] < d_w_small) || (weight[c] == 0.0);
 
-      double char_rxn_rate_;
+      double char_rxn_rate_ = 0.0;
 
       if(weight_is_small) {
-        char_rxn_rate_ = 0.0;
-
+        
         // set gas model terms (3 of them) equal to 0
         int z=0;
         for( vector< CCVariable<double>* >::iterator iGasModel = gasModelCCVars.begin(); iGasModel != gasModelCCVars.end(); ++iGasModel, ++z) {
@@ -510,6 +511,11 @@ GlobalCharOxidation::computeModel( const ProcessorGroup * pc,
           unscaled_temperature = TINY;
         }
 
+        unscaled_length = (wa_length[c]/weight[c])*d_length_scaling_constant;
+        if( unscaled_length < TINY ) {
+          unscaled_length = TINY;
+        }
+
         A_p = (4*pi_*pow(unscaled_length/2.0,2));
 
         xi_p = 1.0;
@@ -528,11 +534,28 @@ GlobalCharOxidation::computeModel( const ProcessorGroup * pc,
           k_r[z] = A_[z] * unscaled_temperature * exp( - E_[z] / R_ / unscaled_temperature )*(**iOxidizer)[c];
 
           double rate = ( A_p*nu[z]*MW_carbon*xi_p*k_r[z]*k_m[z] )/( k_m[z] + k_r[z]*xi_p + TINY );
-          (**iGasModel)[c] = rate;
+
+          (**iGasModel)[c] = unscaled_weight*rate;
+
           char_rxn_rate_ += (-rate/d_char_scaling_constant);
+
+#ifdef DEBUG_MODELS
+          if( c == IntVector(1,2,3) ) {
+            cout << "Char QN " << d_quadNode << " oxidation by " << oxidizer_name_[z] << ": Setting k_m[z] = 2*(turb visc/Sc)/unscaled_length = (" << 2*turbulent_viscosity[c] << "/" << Sc_[z] << ")/" << unscaled_length << " = " << k_m[z] << endl;
+            cout << "Char QN " << d_quadNode << " oxidation by " << oxidizer_name_[z] << ": Setting k_r[z] = A_[z] * unscaled_temperature * exp( -E_[z]/R_/unscaled_temperature) * [Oxidizer] = " << A_[z] << "*" << unscaled_temperature << "*exp(" << -E_[z] << "/" << R_ << "/" << unscaled_temperature << ")*[" << (**iOxidizer)[c] << "] = " << k_r[z] << endl;
+            cout << "Char QN " << d_quadNode << " oxidation by " << oxidizer_name_[z] << ": reaction rate = ( A_p*nu[z]*MW_carbon*xi_p*k_r[z]*k_m[z])/(k_m[z] + k_r[z]*xi_p) = (" << A_p << "*" << nu[z] << "*" << MW_carbon << "*" << xi_p << "*" << k_r[z] << "*" << k_m[z] << ")/(" << k_m[z] << " + " << k_r[z] << "*" << xi_p << ") = " << rate << endl;
+            cout << "    Gas reaction rate = " << unscaled_weight*rate << endl;
+            cout << "    Particle reaction rate = " << char_rxn_rate_ << endl;
+            cout << "    Weight = " << unscaled_weight << endl;
+          }
+#endif
         }
 
       }
+
+#ifdef DEBUG_MODELS
+      if(c==IntVector(1,2,3)){cout << endl;}
+#endif
 
       char_model[c] = char_rxn_rate_;
 
