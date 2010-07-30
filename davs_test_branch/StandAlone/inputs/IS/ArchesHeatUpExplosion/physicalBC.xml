@@ -1,0 +1,44 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!--____________________________________________________________________-->
+<!--     This xml file contains the external heat flux specification    -->
+<!--____________________________________________________________________-->
+<Uintah_Include>
+<!--
+For fast heat tape experiment:
+   Power Input = 76 kW/m^2
+   Grid Spacing = .2/100  (resolution) = .002
+   Partical Spacing = Grid Spacing/#particles = .002/2 = .001
+   Particle Surface Area = (.001)^2 = 1e-6
+   Flux applied = PowerInput* Particle SA = 76,000 * 1e-6 = .076 Watts
+-->
+    <PhysicalBC>
+        <MPM>
+        <arches_heat_flux> 
+          <geom_object>
+              <cylinder>
+                <bottom>    [0.0,0.0,-.06985] </bottom>
+                <top>       [0.0,0.0, .06985] </top>
+                <radius>    0.05715           </radius>
+              </cylinder>
+          </geom_object>
+          <polynomial_data>
+            <file>inputs/IS/ArchesHeatUpExplosion/case3/curveFit_coefs_97.dat</file> 
+            <file>inputs/IS/ArchesHeatUpExplosion/case3/curveFit_coefs_98.dat</file> 
+            <file> inputs/IS/ArchesHeatUpExplosion/case3/curveFit_coefs_99.dat</file> 
+            <file> inputs/IS/ArchesHeatUpExplosion/case3/curveFit_coefs_100.dat</file> 
+            <file> inputs/IS/ArchesHeatUpExplosion/case3/curveFit_coefs_101.dat</file> 
+            <file> inputs/IS/ArchesHeatUpExplosion/case3/curveFit_coefs_102.dat</file> 
+            <file> inputs/IS/ArchesHeatUpExplosion/case3/endcap_averages.dat</file> 
+          </polynomial_data>
+          <!-- Only needed by to invoke the external heat flux machinery -->
+          <load_curve>
+            <id>1</id>
+            <time_point>
+              <time> 0 </time>
+              <load> 0</load>
+            </time_point>
+          </load_curve>
+        </arches_heat_flux> 
+        </MPM>
+    </PhysicalBC>
+</Uintah_Include>

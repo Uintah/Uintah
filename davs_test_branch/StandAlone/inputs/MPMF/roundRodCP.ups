@@ -1,0 +1,157 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!-- <!DOCTYPE Uintah_specification SYSTEM "input.dtd"> -->
+<!-- @version: Updated 8/9/2004-->
+<Uintah_specification>
+
+   <Meta>
+       <title>Crack propagation in a round rod with an inclined elliptic crack under tension</title>
+   </Meta>
+
+   <SimulationComponent type="mpmf" />
+
+   <Time>
+       <maxTime>40.0e-6</maxTime>
+       <initTime>0.0</initTime>
+       <delt_min>0.0</delt_min>
+       <delt_max>.5e-6</delt_max>
+       <timestep_multiplier>0.8</timestep_multiplier>
+   </Time>
+   <DataArchiver>
+        <filebase>roundRodCP.uda</filebase>
+       <outputInterval>.5e-6</outputInterval>
+        <save label = "p.x"/>
+        <save label = "p.volume"/>
+        <save label = "g.mass"/>
+        <save label = "G.mass"/>
+        <!--<save label = "p.stress"/>-->
+        <!--<save label = "p.deformationMeasure"/>-->
+        <!--<save label = "p.velocity"/>-->
+        <!--<save label = "p.externalforce"/>-->
+        <save_crack_geometry>true</save_crack_geometry>
+
+       <checkpoint cycle = "2" interval = "5e-6"/>
+   </DataArchiver>
+
+    <MPM>
+       <time_integrator>fracture</time_integrator>
+        <calculate_fracture_parameters>true</calculate_fracture_parameters>
+        <do_crack_propagation>true</do_crack_propagation>
+        <use_volume_integral>false</use_volume_integral>
+        <smooth_crack_front>false</smooth_crack_front>
+        <dadx>1.0</dadx>
+    </MPM>
+
+    <PhysicalConstants>
+       <gravity>[0,0,0]</gravity>
+    </PhysicalConstants>
+
+    <MaterialProperties>
+       <MPM>
+           <material>
+              <density>7900</density>
+              <constitutive_model type="hypo_elastic"> 
+                 <G>77e+9</G>
+                 <K>165e+9</K>
+                   <fracture_toughness_curve>
+                     <crack_propagation_criterion>max_hoop_stress</crack_propagation_criterion>
+                     <point>
+                       <Vc>0.</Vc>
+                       <KIc>20e6</KIc>
+                     </point>
+                   </fracture_toughness_curve>
+               </constitutive_model>
+              <thermal_conductivity>1.0</thermal_conductivity>
+              <specific_heat>5</specific_heat>
+                <geom_object>
+                  <cylinder label = "outer cylinder">
+                    <bottom>           [0.0,0.0,-100e-3]   </bottom>
+                    <top>              [0.0,0.0, 100e-3]   </top>
+                    <radius>           50e-3             </radius>
+                  </cylinder>
+                  <res>                 [2,2,2]         </res>
+                  <velocity>            [0.0,0.0,0.0]   </velocity>
+                  <temperature>         12             </temperature>
+                </geom_object>
+
+                <crack>
+                   <type>null</type>
+                   <mu>0.</mu>
+                   <crack_segments>
+                      <ellipse>
+                        <point1_axis1>[ 9.9e-3, 0.0,     9.9e-3] </point1_axis1>
+                        <point_axis2> [ 0.0,    6.95e-3, 0.0]    </point_axis2>
+                        <point2_axis1>[-9.9e-3, 0.0,    -9.9e-3] </point2_axis1>
+                        <resolution_circumference>32</resolution_circumference>
+                      </ellipse>
+                   </crack_segments>
+                </crack>
+           </material>
+
+           <contact>
+             <type>null</type>
+             <materials>[0]</materials>
+           </contact>
+       </MPM>
+
+    </MaterialProperties>
+       
+    <Grid>
+        <BoundaryConditions>
+           <Face side = "x-">
+                  <BCType id = "all" var = "Dirichlet" label = "Velocity">
+                      <value> [0.0,0.0,0.0] </value>
+                  </BCType>
+           </Face>
+           <Face side = "x+">
+                  <BCType id = "all" var = "Dirichlet" label = "Velocity">
+                      <value> [0.0,0.0,0.0] </value>
+                  </BCType>
+           </Face>
+           <Face side = "y-">
+                  <BCType id = "all" var = "Dirichlet" label = "Velocity">
+                        <value> [0.0,0.0,0.0] </value>
+                   </BCType>
+           </Face>
+           <Face side = "y+">
+                  <BCType id = "all" var = "Dirichlet" label = "Velocity">
+                        <value> [0.0,0.0,0.0] </value>
+                   </BCType>
+           </Face>
+           <Face side = "z-">
+                  <BCType id = "all" var = "Dirichlet" label = "Velocity">
+                        <value> [0.0,0.0,0.0] </value>
+                   </BCType>
+           </Face>
+           <Face side = "z+">
+                  <BCType id = "all" var = "Dirichlet" label = "Velocity">
+                        <value> [0.0,0.0,0.0] </value>
+                   </BCType>
+           </Face>
+        </BoundaryConditions>
+       <Level>
+           <Box label = "1">
+              <lower>[-60e-3, -60e-3, -120e-3]</lower>
+              <upper>[ 60e-3,  60e-3,  120e-3]</upper>
+               <resolution>[60,60,120]</resolution>
+              <patches>[4,4,4]</patches>
+           </Box>
+       </Level>
+    </Grid>
+
+    <PhysicalBC>
+      <MPM>
+           <force>
+             <lower>[-50.0e-3, -50.0e-3,  99.0e-3]</lower>
+             <upper>[ 50.0e-3,  50.0e-3, 100.0e-3]</upper>
+             <force_density>[0.0, 0.0, 50.6329e6]</force_density>
+           </force>
+           <force>
+             <lower>[-50.0e-3, -50.0e-3, -100.0e-3]</lower>
+             <upper>[ 50.0e-3,  50.0e-3,  -99.0e-3]</upper>
+             <force_density>[0.0, 0.0, -50.6329e6]</force_density>
+           </force>
+      </MPM>
+    </PhysicalBC>
+    
+</Uintah_specification>
+
