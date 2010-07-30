@@ -1,0 +1,272 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<Uintah_specification> 
+<!--Please use a consistent set of units, (mks, cgs,...)-->
+
+   <Meta>
+       <title> flow through a nozzle using pressure</title>
+   </Meta>
+
+   <SimulationComponent type="mpmice" />
+
+    <!--____________________________________________________________________-->
+    <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
+    <!--____________________________________________________________________-->
+   <Time>
+       <maxTime>            0.000547138 </maxTime>
+       <initTime>           0.0         </initTime>
+       <delt_min>           0.0         </delt_min>
+       <delt_max>           1.0         </delt_max>
+       <delt_init>          1.0e-7      </delt_init>
+       <max_Timesteps>      500         </max_Timesteps>
+       <timestep_multiplier>0.8         </timestep_multiplier>
+   </Time>
+
+    <!--____________________________________________________________________-->
+    <!--      G  R  I  D     V  A  R  I  A  B  L  E  S                      -->
+    <!--____________________________________________________________________-->
+    <Grid>
+    <BoundaryConditions>
+      <Face circle = "x-" origin = "0.0 0.0 0.0" radius = ".03683">
+        <BCType id = "0"   label = "Pressure"     var = "Dirichlet">
+                            <value> 4000000.0   </value>
+        </BCType>
+        <BCType id = "0" label = "Velocity" var = "Dirichlet">
+                              <value> [0.0,0.0,0.0] </value>
+        </BCType>
+        <BCType id = "0" label = "Temperature" var = "Dirichlet">
+                              <value> 300.0  </value>
+        </BCType>
+        <BCType id = "0" label = "Density" var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "1" label = "Velocity"     var = "Dirichlet">
+                            <value> [209.,0.,0.] </value>
+        </BCType>
+        <BCType id = "1" label = "Temperature"  var = "Dirichlet">
+                            <value> 1000.0  </value>
+        </BCType>
+        <BCType id = "1" label = "Density"          var = "Dirichlet">
+                            <value> 13.937 </value>
+        </BCType>
+        <BCType id = "all" label = "SpecificVol"  var = "computeFromDensity">
+                              <value> 0.0  </value>
+        </BCType>
+       </Face>
+      <Face side = "x-">
+        <BCType id = "0" label = "Pressure"     var = "Neumann">
+                              <value> 0.0   </value>
+        </BCType>
+        <BCType id = "all" label = "Velocity"   var = "Dirichlet">
+                              <value> [0.0,0.0,0.0] </value>
+        </BCType>
+      
+        <BCType id = "all" label = "Temperature" var = "Dirichlet">
+                              <value> 300.0  </value>
+        </BCType>
+        <BCType id = "all" label = "Density"      var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" label = "SpecificVol"  var = "computeFromDensity">
+                              <value> 0.0  </value>
+        </BCType>
+      </Face>
+      <Face side = "x+">
+        <BCType id = "0" label = "Pressure"     var = "Dirichlet">
+                              <value> 100000.0   </value>
+        </BCType>
+        <BCType id = "all" label = "Velocity"    var = "Neumann">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "all" label = "Temperature" var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" label = "Density"      var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" label = "SpecificVol"  var = "computeFromDensity">
+                              <value> 0.0  </value>
+        </BCType>
+      </Face>
+
+      <Face side = "y-">
+        <BCType id = "all" label = "Symmetric" var = "symmetry">
+        </BCType>
+       </Face>
+<!--        <BCType id = "0" label = "Velocity" var = "Dirichlet">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+-->
+
+<!--      <Face side = "y-">
+        <BCType id = "0" label = "Pressure" var = "Neumann">
+                              <value> 0.0   </value>
+        </BCType>
+        <BCType id = "all" label = "Velocity" var = "Dirichlet">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "all" label = "Temperature" var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" label = "Density" var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+      </Face>                  
+-->
+      <Face side = "y+">
+        <BCType id = "0" label = "Pressure" var = "Neumann">
+                              <value> 0.0   </value>
+        </BCType>
+        <BCType id = "all" label = "Velocity" var = "Neumann">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "all" label = "Temperature" var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" label = "Density" var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" label = "SpecificVol"  var = "computeFromDensity">
+                              <value> 0.0  </value>
+        </BCType>
+      </Face>
+      
+      <Face side = "z-">
+        <BCType id = "all" label = "Symmetric" var = "symmetry">
+        </BCType>
+      </Face>                  
+      <Face side = "z+">
+        <BCType id = "all" label = "Symmetric" var = "symmetry">
+        </BCType>
+      </Face>
+    </BoundaryConditions>
+       <Level>
+           <Box label = "1">
+              <lower>        [0.0,0.0,-0.005]   </lower>
+              <upper>        [1.0,0.25,0.005]   </upper>
+              <extraCells>   [1,1,1]                  </extraCells>
+              <patches>      [1,1,1]                  </patches>
+            </Box>
+           <spacing>         [0.01,0.01,0.01]       </spacing>
+       </Level>
+    </Grid>
+
+    <!--____________________________________________________________________-->
+    <!--   O  U  P  U  T     V  A  R  I  A  B  L  E  S                      -->
+    <!--____________________________________________________________________-->
+   <DataArchiver>
+      <filebase>TRWnoz.uda</filebase>
+      <outputTimestepInterval>10</outputTimestepInterval>
+      <save label = "press_equil_CC"/>
+      <save label = "vol_frac_CC"/>
+      <save label = "sp_vol_CC"/>
+      <save label = "sp_vol_src_CC"/>
+      <save label = "speedSound_CC"/>
+      <save label = "delP_Dilatate"/>
+      <save label = "vel_CC"/>
+      <save label = "mom_L_CC"/>
+      <save label = "rho_CC"/>
+      <save label = "temp_CC"/>  
+      <save label = "mach"/>  
+      <save label = "p.x"/>
+      <save label = "p.volume"/>
+      <save label = "p.velocity"/>
+      <checkpoint cycle = "2" timestepInterval = "50"/>
+   </DataArchiver>
+
+    <!--____________________________________________________________________-->
+    <!--    I  C  E     P  A  R  A  M  E  T  E  R  S                        -->
+    <!--____________________________________________________________________-->
+    <CFD>
+         <cfl>0.2</cfl>
+       <ICE>
+        <advection type = "FirstOrder"/>
+        <ClampSpecificVolume>true</ClampSpecificVolume>
+       </ICE>        
+    </CFD>
+    <MPM>
+        <time_integrator>explicit</time_integrator>
+    </MPM>
+
+    <!--____________________________________________________________________-->
+    <!--     P  H  Y  S  I  C  A  L     C  O  N  S  T  A  N  T  S           -->
+    <!--____________________________________________________________________-->   
+    <PhysicalConstants>
+       <gravity>            [0,0,0]   </gravity>
+       <reference_pressure> 100000.0  </reference_pressure>
+    </PhysicalConstants>
+
+    <!--____________________________________________________________________-->
+    <!--    MATERIAL PROPERTIES INITIAL CONDITIONS                          -->
+    <!--____________________________________________________________________-->
+    <MaterialProperties>
+       <MPM>
+         <material>
+              <density>             8900.0         </density>
+              <constitutive_model type = "comp_neo_hook_plastic">
+                  <useModifiedEOS>     true          </useModifiedEOS>
+                  <bulk_modulus>      117.0e9        </bulk_modulus>
+                  <shear_modulus>      43.8e9        </shear_modulus>
+                  <yield_stress>       70.0e6        </yield_stress>
+                  <hardening_modulus>  43.8e5        </hardening_modulus>
+                  <alpha>               0.0          </alpha>
+                  <strain_limit>       3.05          </strain_limit>
+                  <reduction_factor>   1.0           </reduction_factor>
+              </constitutive_model>
+                <thermal_conductivity>  400.0         </thermal_conductivity>
+                <specific_heat>         386.0         </specific_heat>
+               
+                
+               <geom_object>
+                    <tri>
+                      <name>inputs/MPMICE/complex_MPM_geometries/trwnozzlentop3_01mesh</name>
+                    </tri>
+                    <res>              [2,2,2]          </res>
+                    <velocity>         [0.,0.,0.]       </velocity>
+                    <temperature>      300.             </temperature>
+                </geom_object>
+         </material>
+            <contact>
+              <type>null</type>
+              <materials>              [0]         </materials>
+            </contact>
+      </MPM>
+       <ICE>
+         <material>
+           <EOS type = "ideal_gas">
+              <gas_constant>            287             </gas_constant>
+           </EOS>
+           <dynamic_viscosity>          0.000015        </dynamic_viscosity>
+           <thermal_conductivity>       0.0             </thermal_conductivity>
+           <specific_heat>              716.0           </specific_heat>
+           <gamma>                      1.4             </gamma>           
+           <geom_object>
+              <difference>
+                <box label = "the whole computational domain">
+                    <min>           [-10.0,-10.0,-10.0]    </min>
+                    <max>           [ 10.0, 10.0, 10.0]   </max>
+                </box>
+              <tri label = "gpicehole">
+                   <name>inputs/MPMICE/complex_MPM_geometries/trwnozzlentop3_01mesh</name>
+                </tri>
+              </difference>
+               <res>                      [2,2,2]       </res>
+               <velocity>           [0.0,0.0,0.0]    </velocity>
+               <temperature>        300.0               </temperature>
+               <density>    1.1614402e+00   </density>
+               <pressure>           100000.0            </pressure>
+           </geom_object>
+         </material>
+      </ICE>       
+       
+      <exchange_properties> 
+         <exchange_coefficients>
+              <momentum>               [1e15]         </momentum>
+              <heat>                   [1e15]         </heat>
+        </exchange_coefficients>
+     </exchange_properties> 
+    </MaterialProperties>
+            
+
+       
+</Uintah_specification>
+
