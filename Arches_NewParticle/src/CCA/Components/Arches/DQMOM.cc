@@ -136,6 +136,9 @@ void DQMOM::problemSetup(const ProblemSpecP& params)
     index_length = temp_moment_index.size();
   }
 
+  // Put the moments in lexicographic order
+  sort( momentIndexes.begin(), momentIndexes.end(), vector_lexicographic_sort);
+
   db->getWithDefault("save_moments", b_save_moments, true);
 #if defined(VERIFY_AB_CONSTRUCTION) || defined(VERIFY_LINEAR_SOLVER)
   b_save_moments = false;

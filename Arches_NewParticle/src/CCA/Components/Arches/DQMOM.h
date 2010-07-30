@@ -13,6 +13,7 @@
 #include <Core/Datatypes/ColumnMatrix.h>
 #include <Core/Datatypes/ColumnMatrix.h>
 #include <CCA/Components/Arches/Directives.h>
+#include <numeric>
 
 namespace Uintah {
 
@@ -165,7 +166,6 @@ private:
     return return_var;
   }
 
-
   vector<MomentVector> momentIndexes;           ///< Vector containing all moment indices
   vector<DQMOMEqn* > weightEqns;           ///< Weight equation labels, IN SAME ORDER AS GIVEN IN INPUT FILE
   vector<DQMOMEqn* > weightedAbscissaEqns; ///< Weighted abscissa equation labels, IN SAME ORDER AS GIVEN IN INPUT FILE
@@ -285,6 +285,55 @@ private:
 #endif
 
 }; // end class DQMOM
+
+
+/** @brief    Sort a vector of moment vectors in lexicographic order
+    @details
+    This puts the moment vector in lexicographic order, meaning moments are ordered by
+
+    1) Their global index (sum of all moment indices)
+
+    2) Ascending moment index order, from left to right
+
+    So, for example, the first few moments are ordered as:
+
+    [0,0,0]  \n 
+    [1,0,0]  \n
+    [0,1,0]  \n
+    [0,0,1]  \n
+    [2,0,0]  \n
+    [0,2,0]  \n
+    [0,0,2]  \n
+    etc...
+
+    The primary purpose is to accelerate the construction of the B matrix.
+    The entries of B for the zeroth and first moments are much easier to calculate,
+    so ordering the moments allows the indices of these moments to be known.
+    */
+inline bool vector_lexicographic_sort( vector<int> a, vector<int> b ) 
+{ 
+  bool a_lt_b;
+
+  int sum_a = accumulate( a.begin(), a.end(), 0 );
+  int sum_b = accumulate( b.begin(), b.end(), 0 );
+
+  if( sum_a == sum_b ) {
+    vector<int>::iterator ia = a.begin(); 
+    vector<int>::iterator ib = b.begin();
+    for( ; ia < a.end(); ++ia, ++ib ) {
+      if( (*ia) != (*ib) ) {
+        a_lt_b = (*ia) < (*ib);
+      }
+    }
+  } else {
+    a_lt_b = (sum_a < sum_b);
+  }
+
+  return a_lt_b;
+
+}
+
+
 
 } // end namespace Uintah
 
