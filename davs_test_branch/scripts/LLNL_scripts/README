@@ -1,9 +1,0 @@
-
-The scripts in this directory are part of the Uintah svn tree.  If you just want to check them 
-out type:
-
-svn checkout https://gforge.sci.utah.edu/svn/uintah/trunk/src/scripts/LLNL_scripts transferScripts
-
-Please make sure you commit your changes.
-
-Todd

@@ -1,9 +1,0 @@
-<?xml version='1.0' encoding='ISO-8859-1' ?>
-<!-- Annealed Copper -->
-<Uintah_Include>
-  <shear_modulus_model type="mts_shear">
-    <mu_0>47.7e9</mu_0>
-    <D>3.0e9</D>
-    <T_0>180</T_0>
-  </shear_modulus_model>
-</Uintah_Include>
