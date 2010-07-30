@@ -51,6 +51,8 @@ VarLabel::create(const string& name,
                  const IntVector& boundaryLayer /*= IntVector(0,0,0) */,
                  VarType vartype /*= Normal*/)
 {
+  cout << "VarLabel::create() for " << name << "\n";
+
   VarLabel* label = 0;
   lock.lock();
   map<string, VarLabel*>::iterator iter = allLabels.find(name);

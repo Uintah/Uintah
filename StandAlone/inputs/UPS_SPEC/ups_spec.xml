@@ -342,10 +342,10 @@
             <ThresholdTemperature   spec="REQUIRED INTEGER" need_applies_to="type steadyBurn" />
           </SwitchCriteria>
           <init                     spec="MULTIPLE NO_DATA" 
-                                    attribute1="var    REQUIRED STRING"
-                                    attribute2="matls  REQUIRED STRING"
-                                    attribute3="levels OPTIONAL STRING"/>
-          <SimulationComponent          spec="OPTIONAL" />
+                                      attribute1="var    REQUIRED STRING"
+                                      attribute2="matls  REQUIRED STRING"
+                                      attribute3="levels OPTIONAL STRING"/>
+          <SimulationComponent      spec="OPTIONAL" />
         </subcomponent>
     </SimulationComponent>
 

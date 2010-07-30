@@ -504,7 +504,7 @@ DataArchiver::initializeOutput(const ProblemSpecP& params)
       string inputname = d_dir.getName()+"/input.xml";
       params->output(inputname.c_str());
 
-      dynamic_cast<SimulationInterface*>(getPort("sim"))->outputPS(d_dir);
+      //      dynamic_cast<SimulationInterface*>(getPort("sim"))->outputPS(d_dir);
 
       createIndexXML(d_dir);
    
@@ -939,8 +939,10 @@ DataArchiver::finalizeTimestep(double time, double delt,
 #endif
 
   // we don't want to schedule more tasks unless we're recompiling
-  if (!recompile)
+  if ( !recompile ) {
     return;
+  }
+
   if ( (d_outputInterval != 0.0 || d_outputTimestepInterval != 0) && 
        (delt != 0 || d_outputInitTimestep)) {
     // Schedule task to dump out reduction variables at every timestep
@@ -1069,6 +1071,7 @@ DataArchiver::beginOutputTimestep( double time, double delt,
         // remove out-dated checkpoint directory
         Dir expiredDir(d_checkpointTimestepDirs.front());
 
+cout << "I am here: " << Parallel::getMPIRank() << "\n";
         // Try to remove the expired checkpoint directory...
         if( !Dir::removeDir( expiredDir.getName().c_str() ) ) {
           // Something strange happened... let's test the filesystem...
@@ -1630,12 +1633,12 @@ DataArchiver::outputReduction(const ProcessorGroup*,
 }
 
 void
-DataArchiver::output(const ProcessorGroup*,
-                     const PatchSubset* patches,
-                     const MaterialSubset* matls,
-                     DataWarehouse* /*old_dw*/,
-                     DataWarehouse* new_dw,
-                     int type)
+DataArchiver::output(const ProcessorGroup * /*world*/,
+                     const PatchSubset    * patches,
+                     const MaterialSubset * /*matls*/,
+                     DataWarehouse        * /*old_dw*/,
+                     DataWarehouse        * new_dw,
+                     int                    type)
 {
   // IMPORTANT - this function should only be called once per processor per level per type
   //   (files will be opened and closed, and those operations are heavy on 

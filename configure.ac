@@ -1791,6 +1791,21 @@ if test "$with_visit"; then
       AC_MSG_ERROR( VisIt requires CMake. Please make sure 'cmake' is in your path!)
    fi
 
+   if test "$with_visit" == "yes"; then 
+      AC_MSG_ERROR( You must provide a DIRECTORY when using --with-visit=DIR. )
+   fi
+   if ! test -f "$with_visit/bin/xml2cmake"; then 
+      AC_MSG_ERROR( Could not find xml2cmake in $with_visit/bin/... )
+   fi
+
+   if test -f "./VisIt/udaReaderMTMD/Makefile.visit"; then
+      old_visit_dir=`grep TOPDIR ./VisIt/udaReaderMTMD/Makefile.visit`
+      if test "$old_visit_dir" != "TOPDIR=$with_visit/src"; then
+      	 AC_MSG_WARN(VisIt target directory has changed - removing old VisIt build directory)
+	 rm -rf ./VisIt
+      fi
+   fi
+
    CMAKE_LOCATION=`which cmake`
 
    # Verify that cmake is new enough:
@@ -1811,13 +1826,6 @@ if test "$with_visit"; then
       AC_MSG_ERROR(CMake must be version 2.8 or better.  $CMAKE_LOCATION is version $CMAKE_VERSION_STRING.)
    elif test "$CMAKE_VERSION_MINOR" -lt 8; then
       AC_MSG_ERROR(CMake must be version 2.8 or better.  $CMAKE_LOCATION is version $CMAKE_VERSION_STRING.)
-   fi
-
-   if test "$with_visit" == "yes"; then 
-      AC_MSG_ERROR( You must provide a DIRECTORY when using --with-visit=DIR. )
-   fi
-   if ! test -f "$with_visit/bin/xml2cmake"; then 
-      AC_MSG_ERROR( Could not find xml2cmake in $with_visit/bin/... )
    fi
 
    if test -f "./VisIt/udaReaderMTMD/Makefile.visit"; then

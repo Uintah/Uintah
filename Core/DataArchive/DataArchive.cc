@@ -813,8 +813,15 @@ DataArchive::restartInitialize(int index, const GridP& grid, DataWarehouse* dw,
   
   map<string, VarLabel*> varMap;
   for (unsigned i = 0; i < names.size(); i++) {
+
+    cout << "inserting into varmap: " << names[i] << "\n";
+
+    VarLabel * abc = VarLabel::find(names[i]);
+
+
     varMap[names[i]] = VarLabel::find(names[i]);
   }
+  cout << "size of varMap is: " << varMap.size() << "\n";
 
   TimeData& timedata = getTimeData(index);
 

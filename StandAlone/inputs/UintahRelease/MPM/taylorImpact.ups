@@ -23,6 +23,7 @@
   </Time>
 
   <DataArchiver>
+    <compression>gzip</compression>
     <filebase>taylorImpact.uda</filebase>
     <outputInterval>10.0e-6</outputInterval>
     <!--

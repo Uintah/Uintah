@@ -43,6 +43,8 @@ SUBDIRS := \
         $(SRCDIR)/puda        \
         $(SRCDIR)/tracker     
 
+#        $(SRCDIR)/update_uda  
+
 ifeq ($(HAVE_TEEM),yes)
   SUBDIRS += $(SRCDIR)/uda2nrrd \
              $(SRCDIR)/radiusMaker 

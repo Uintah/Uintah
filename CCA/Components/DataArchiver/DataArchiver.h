@@ -168,8 +168,16 @@ using std::pair;
        virtual double getCurrentTime()
        { return  d_sharedState->getElapsedTime(); }
 
+       // HACK (maybe)... most people should not use this.  This is used for update_uda.cc.
+       void forceOutput() { d_isOutputTimestep = true; }
+
+       //! Returns true if data will be checkpointed this timestep
+       virtual bool isCheckpointTimestep()
+       { return d_isCheckpointTimestep; }
+
        //! Get the time the next output will occur
        virtual double getNextOutputTime() { return d_nextOutputTime; }
+
 
        //! Get the timestep the next output will occur
        virtual int getNextOutputTimestep() { return d_nextOutputTimestep; }
@@ -183,10 +191,6 @@ using std::pair;
        //! Returns true if data will be output this timestep
        virtual bool isOutputTimestep()
        { return d_isOutputTimestep; }
-
-       //! Returns true if data will be checkpointed this timestep
-       virtual bool isCheckpointTimestep()
-       { return d_isCheckpointTimestep; }
 
        //! Get the directory of the current time step for outputting info.
        virtual const string& getLastTimestepOutputLocation() const
@@ -216,10 +220,29 @@ using std::pair;
 
            const VarLabel* label_;
 
-           map<int, MaterialSetP> matlSet_;
-       };
+         //! creates the uda directory with a trailing version suffix
+         void makeVersionedDir();
+      
+         void initSaveLabels(SchedulerP& sched, bool initTimestep);
+         void initCheckpoints(SchedulerP& sched);
+     
+         //! helper for beginOutputTimestep - creates and writes
+         //! the necessary directories and xml files to begin the 
+         //! output timestep.
 
-     private:
+         map<int, MaterialSetP> matlSet_;
+       };
+public: // hack for now... (Dd)
+      void outputTimestep(Dir& dir, vector<SaveItem>& saveLabels,
+			  double time, double delt, const GridP& grid,
+			  string* pTimestepDir /* passed back */, bool hasGlobals = false);
+
+private:
+       //! helper for finalizeTimestep - schedules a task for each var's output
+       void scheduleOutputTimestep(vector<SaveItem>& saveLabels,
+	 			   const GridP& grid, SchedulerP& sched,
+                                   bool isThisCheckpoint);
+
        //! returns a ProblemSpecP reading the xml file xmlName.
        //! You will need to that you need to call ProblemSpec::releaseDocument
        ProblemSpecP loadDocument(std::string xmlName);     
@@ -230,17 +253,14 @@ using std::pair;
        void initSaveLabels(SchedulerP& sched, bool initTimestep);
        void initCheckpoints(SchedulerP& sched);
 
+#if 0
        //! helper for beginOutputTimestep - creates and writes
        //! the necessary directories and xml files to begin the 
        //! output timestep.
        void outputTimestep(Dir& dir, vector<SaveItem>& saveLabels,
            double time, double delt, const GridP& grid,
            string* pTimestepDir /* passed back */, bool hasGlobals = false);
-
-       //! helper for finalizeTimestep - schedules a task for each var's output
-       void scheduleOutputTimestep(vector<SaveItem>& saveLabels,
-           const GridP& grid, SchedulerP& sched,
-           bool isThisCheckpoint);
+#endif
 
        //! Helper for finalizeTimestep - determines if, based on the current
        //! time and timestep, this will be an output or checkpoint timestep.

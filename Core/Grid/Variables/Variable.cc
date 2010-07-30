@@ -286,9 +286,11 @@ Variable::read( InputContext& ic, long end, bool swapBytes, int nByteMode,
 
       // first read the uncompressed data size
       istringstream compressedStream(data);
-      uint64_t uncompressed_size_64;    
+      uint64_t uncompressed_size_64 = 0;
       compressedStream.read((char*)&uncompressed_size_64, nByteMode);
-      
+
+//      cout << "data size: " << data.size() << ", uncompressed size: " << uncompressed_size_64 << "\n";
+
       unsigned long uncompressed_size = convertSizeType(&uncompressed_size_64, swapBytes, nByteMode);
       const char* compressed_data = data.c_str() + nByteMode;
       
