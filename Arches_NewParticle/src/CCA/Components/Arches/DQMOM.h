@@ -144,7 +144,7 @@ private:
       */
   inline int my_pow( int abscissa, int power )
   {
-    int return_var;
+    int return_var = 0;
     switch( abscissa ) {
       case -1:
         if( power%2 == 0 ) {
@@ -162,6 +162,7 @@ private:
         break;
       case 1:
         return_var = abscissa;
+        break;
     }
     return return_var;
   }
@@ -312,7 +313,7 @@ private:
     */
 inline bool vector_lexicographic_sort( vector<int> a, vector<int> b ) 
 { 
-  bool a_lt_b;
+  bool a_lt_b = false;
 
   int sum_a = accumulate( a.begin(), a.end(), 0 );
   int sum_b = accumulate( b.begin(), b.end(), 0 );

@@ -49,8 +49,6 @@ GlobalCharOxidation::GlobalCharOxidation( std::string modelName,
                                           int qn ) 
 : CharOxidation(modelName, sharedState, fieldLabels, icLabelNames, scalarLabelNames, qn)
 {
-  d_modelLabel = VarLabel::create( modelName, CCVariable<double>::getTypeDescription() );
-
   /**
   This class creates a gas source term for each char oxidation reaction. The intention is to allow for
   later extension to the multiple solids progress variables (MSPV) formulation (see Brewster et al 1988).
@@ -71,6 +69,7 @@ GlobalCharOxidation::GlobalCharOxidation( std::string modelName,
   
   d_O2GasModelLabel = VarLabel::create( modelName+"_gasSource_O2",  CCVariable<double>::getTypeDescription() );
   GasModelLabels_.push_back(  d_O2GasModelLabel );
+  proc0cout << "Created gas label with name " << d_O2GasModelLabel->getName() << endl;
   nu.push_back( 2.0/2.0 );
   oxidizer_name_.push_back("O2");
 
@@ -141,7 +140,12 @@ GlobalCharOxidation::GlobalCharOxidation( std::string modelName,
 }
 
 GlobalCharOxidation::~GlobalCharOxidation()
-{}
+{
+  VarLabel::destroy( d_O2GasModelLabel );
+  VarLabel::destroy( d_CO2GasModelLabel );
+  VarLabel::destroy( d_H2OGasModelLabel );
+  //VarLabel::destroy( d_H2GasModelLabel );
+}
 
 //-----------------------------------------------------------------------------
 //Problem Setup
@@ -347,6 +351,7 @@ GlobalCharOxidation::sched_computeModel( const LevelP& level, SchedulerP& sched,
 
     tsk->requires(Task::OldDW, d_weight_label, gn, 0);
     tsk->requires(Task::OldDW, d_length_label, gn, 0);
+    tsk->requires(Task::OldDW,d_char_mass_label, gn, 0);
 
     if(d_useTparticle) {
       tsk->requires(Task::OldDW, d_particle_temperature_label, gn, 0);
@@ -370,6 +375,7 @@ GlobalCharOxidation::sched_computeModel( const LevelP& level, SchedulerP& sched,
 
     tsk->requires(Task::NewDW, d_weight_label, gn, 0);
     tsk->requires(Task::NewDW, d_length_label, gn, 0);
+    tsk->requires(Task::NewDW,d_char_mass_label, gn, 0);
 
     if(d_useTparticle) {
       tsk->requires(Task::NewDW, d_particle_temperature_label, gn, 0);
@@ -407,6 +413,7 @@ GlobalCharOxidation::computeModel( const ProcessorGroup * pc,
 
     constCCVariable<double> weight;
     constCCVariable<double> wa_length;
+    constCCVariable<double> wa_char_mass;
     constCCVariable<double> temperature; // holds gas OR particle temperature...
     constCCVariable<double> turbulent_viscosity;
 
@@ -434,6 +441,7 @@ GlobalCharOxidation::computeModel( const ProcessorGroup * pc,
 
       old_dw->get( weight,       d_weight_label,    matlIndex, patch, gn, 0 );
       old_dw->get( wa_length,    d_length_label,    matlIndex, patch, gn, 0 );
+      old_dw->get( wa_char_mass, d_char_mass_label, matlIndex, patch, gn, 0 );
       if(d_useTparticle) {
         old_dw->get( temperature, d_particle_temperature_label, matlIndex, patch, gn, 0 );
       } else {
@@ -458,6 +466,7 @@ GlobalCharOxidation::computeModel( const ProcessorGroup * pc,
 
       new_dw->get( weight,       d_weight_label,    matlIndex, patch, gn, 0 );
       new_dw->get( wa_length,    d_length_label,    matlIndex, patch, gn, 0 );
+      new_dw->get( wa_char_mass, d_char_mass_label, matlIndex, patch, gn, 0 );
       if(d_useTparticle) {
         new_dw->get( temperature, d_particle_temperature_label, matlIndex, patch, gn, 0 );
       } else {
@@ -471,7 +480,9 @@ GlobalCharOxidation::computeModel( const ProcessorGroup * pc,
 
       IntVector c = *iter; 
 
-      bool weight_is_small = (weight[c] < d_w_small) || (weight[c] == 0.0);
+      double unscaled_char_mass = (wa_char_mass[c]/(weight[c]+TINY))*d_char_scaling_constant;
+
+      bool weight_is_small = (weight[c] < d_w_small) || (weight[c] == 0.0) || (unscaled_char_mass < TINY);
 
       double char_rxn_rate_ = 0.0;
 
@@ -551,7 +562,7 @@ GlobalCharOxidation::computeModel( const ProcessorGroup * pc,
 #endif
         }
 
-      }
+      }//end if small weight
 
 #ifdef DEBUG_MODELS
       if(c==IntVector(1,2,3)){cout << endl;}
@@ -562,6 +573,9 @@ GlobalCharOxidation::computeModel( const ProcessorGroup * pc,
     }//end cell loop
 
     for( vector< CCVariable<double>* >::iterator iC = gasModelCCVars.begin(); iC != gasModelCCVars.end(); ++iC ) {
+      delete *iC;
+    }
+    for( vector< constCCVariable<double>* >::iterator iC = oxidizerCCVars.begin(); iC != oxidizerCCVars.end(); ++iC ) {
       delete *iC;
     }
   

@@ -226,13 +226,10 @@ public:
 
   void sched_initEnthalpy( const LevelP&, SchedulerP& ); 
 
-  void sched_doTPDummyInit( const LevelP&, SchedulerP& ); 
-
   /** @brief  Return the TabProps interface object; this method is added 
               as a kludge and will go away when Properties goes away */
   TabPropsInterface* getMixingRxnModel() {
     return d_mixingRxnTable; }
-
 
 protected :
 

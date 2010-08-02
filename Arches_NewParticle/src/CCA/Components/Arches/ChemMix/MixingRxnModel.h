@@ -39,7 +39,6 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/Variables/CCVariable.h>
 #include <CCA/Components/Arches/ArchesLabel.h>
 #include <CCA/Components/Arches/TimeIntegratorLabel.h>
-#include <CCA/Components/MPMArches/MPMArchesLabel.h>
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Parallel/Parallel.h>
 
@@ -82,7 +81,7 @@ public:
   typedef std::map<string, const VarLabel* >           VarMap;
   typedef std::map<string, CCVariable<double>* >       CCMap; 
 
-  MixingRxnModel( const ArchesLabel* labels, const MPMArchesLabel* MAlabels );
+  MixingRxnModel( const ArchesLabel* labels ); 
 
   virtual ~MixingRxnModel();
 
@@ -96,6 +95,11 @@ public:
                                 const bool initialize,
                                 const bool with_energy_exch,
                                 const bool modify_ref_den ) = 0;
+
+  /** @brief Checks for consistency between the requested independent variables and those actually in the table along with the 
+   *    dependent variables and those in the table */
+  virtual void const verifyTable( bool diagnosticMode,
+                            bool strictMode )  = 0;
 
   /** @brief Returns a list of dependent variables */
   virtual const std::vector<std::string> & getAllDepVars() = 0;
@@ -124,12 +128,10 @@ protected :
   void setMixDVMap( const ProblemSpecP& root_params ); 
 
   const ArchesLabel* d_lab; 
-  const MPMArchesLabel* d_MAlab;
 
 
 private:
 
-  /** @brief  Insert the name of a dependent variable into the dependent variable map (dvVarMap), which maps strings to VarLabels */
   inline void insertIntoMap( const string var_name ){
 
     VarMap::iterator i = d_dvVarMap.find( var_name ); 
