@@ -38,7 +38,11 @@ namespace Uintah {
 ostream&
 operator<<( ostream& out, const GridIterator& c )
 {
-   out << "[GridIterator at " << *c << " of " << c.end() << ']';
+  if(c.done()){
+    out << "[GridIterator at end or the size is 0]";
+  }else{
+    out << "[GridIterator at " << *c << " of " << c.end() << ']';
+  }
    return out;
 }
 
