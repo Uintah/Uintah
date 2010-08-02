@@ -223,24 +223,21 @@ bool getIteratorBCValueBCKind( const Patch* patch,
     }
     delete bc;
   }
- 
- 
+  
+  //__________________________________
+  //  Now deteriming the iterator
   if(foundBC){
     // For this face find the iterator
     bcd->getCellFaceIterator(mat_id,bound_ptr,child);
     
-    if (bound_ptr.done()){
-      ostringstream warn;
-      cout << "ERROR: ICE:boundary conditions ["<< patch->getFaceName(face)
-           << ", " << desc << ", matl: "<< mat_id << ", " << bc_kind 
-           << ", child: "<< child << "] the number of cells that the BC will be applied to is <=1."
-           << bound_ptr << endl;
-      throw InternalError(warn.str(), __FILE__, __LINE__);  
+    // bulletproofing
+    if (bound_ptr.done()){  // size of the iterator is 0
+      return false;
     }
     return true;
-  }else{
-    return false;
   }
+  
+  return false;
 }
 
 /* --------------------------------------------------------------------- 
@@ -439,10 +436,10 @@ void setBC(T& vel_FC,
       //  bulletproofing
       if(IveSetBC != numChildren && bc_kind != "LODI"){
         ostringstream warn;
-        warn << "ERROR ICE: Boundary conditions were not set for ("<< whichVel << ", " 
+        cout  << "ERROR ICE: Boundary conditions were not set for ("<< whichVel << ", " 
              << patch->getFaceName(face) << ", " << bc_kind  << " numChildren: " << numChildren 
              << " IveSetBC: " << IveSetBC << ") " << endl;
-        throw InternalError(warn.str(), __FILE__, __LINE__);
+        //throw InternalError(warn.str(), __FILE__, __LINE__);
       }
     }  // found iterator
   }  // face loop

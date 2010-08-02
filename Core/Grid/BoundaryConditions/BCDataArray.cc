@@ -167,20 +167,11 @@ void BCDataArray::determineIteratorLimits(Patch::FaceType face,
        mat_id_itr != d_BCDataArray.end(); ++mat_id_itr) {
     vector<BCGeomBase*>& bc_objects = mat_id_itr->second;
     for (vector<BCGeomBase*>::iterator obj = bc_objects.begin();
-         obj != bc_objects.end(); ) {
+         obj != bc_objects.end(); ++obj) {
       (*obj)->determineIteratorLimits(face,patch,test_pts);
 #if 0
       (*obj)->printLimits();
 #endif
-      Iterator node_itr,cell_itr;
-      (*obj)->getCellFaceIterator(cell_itr);
-      (*obj)->getNodeFaceIterator(node_itr);
-      if (cell_itr.done() && node_itr.done() ) {
-        delete (*obj);
-        bc_objects.erase(obj);
-      }
-      else
-        ++obj;
     }
   }
 
