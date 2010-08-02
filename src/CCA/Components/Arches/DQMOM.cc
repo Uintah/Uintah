@@ -71,6 +71,8 @@ DQMOM::~DQMOM()
   VarLabel::destroy(d_normResNormalizedLabelB);
   VarLabel::destroy(d_normResNormalizedLabelX);
   VarLabel::destroy(d_conditionNumberLabel);
+  
+  // Also need to delete moment labels
 }
 //---------------------------------------------------------------------------
 // Method: Problem setup
@@ -281,8 +283,10 @@ DQMOM::populateMomentsMap( std::vector<MomentVector> allMoments )
   proc0cout << "******* Moment Registration ********" << endl;
   proc0cout << endl;
 
-  for( vector<MomentVector>::iterator iAllMoments = allMoments.begin();
-       iAllMoments != allMoments.end(); ++iAllMoments ) {
+  vector<MomentVector>::iterator iAllMoments = allMoments.begin();
+  for( unsigned int zz = 0; zz <= 2*N_xi; ++zz, ++iAllMoments ) { 
+    // only saving moment 0, moment 1, and moment 2 (for now)
+
     string name = "moment_";
     std::stringstream out;
     MomentVector thisMoment = (*iAllMoments);

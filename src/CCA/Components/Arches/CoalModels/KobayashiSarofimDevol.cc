@@ -429,29 +429,22 @@ KobayashiSarofimDevol::computeModel( const ProcessorGroup * pc,
       bool weight_is_small = (weight[c] < d_w_small) || (weight[c] == 0.0);
 
       // devol_rate: raw caol internal coordinate source G
-      double devol_rate_;
+      double devol_rate_ = 0.0;
 
       // gas_devol_rate: gas source
-      double gas_devol_rate_;
+      double gas_devol_rate_ = 0.0;
 
       // char_production_rate: char internal coordinate source G
-      double char_production_rate_;
+      double char_production_rate_ = 0.0;
 
 
       double unscaled_temperature;
       double unscaled_raw_coal_mass;
 
-      if (weight_is_small) {
-
-        devol_rate_ = 0.0;
-        gas_devol_rate_ = 0.0;
-        char_production_rate_ = 0.0;
-
-      } else {
+      if (!weight_is_small) {
 
         double unscaled_weight;
         double scaled_raw_coal_mass;
-
 
         unscaled_weight = weight[c]*d_w_scaling_constant;
 
