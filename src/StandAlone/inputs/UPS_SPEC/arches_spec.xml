@@ -11,6 +11,17 @@
       <turnonMixedModel                 spec="OPTIONAL BOOLEAN" /> <!-- Move to Properties? not sure what this model is-->
       <recompileTaskgraph               spec="OPTIONAL BOOLEAN" />
 
+      <PropertyModels                   spec="OPTIONAL NO_DATA" >
+        <model                          spec="MULTIPLE NO_DATA" 
+                                        attribute1="label REQUIRED STRING"
+                                        attribute2="type REQUIRED STRING">
+          <!-- constant property model --> 
+          <constant                     spec="OPTIONAL DOUBLE"/>
+        </model>
+      </PropertyModels>
+
+
+
       <MMS                              spec="OPTIONAL NO_DATA"
                                           attribute1="whichMMS REQUIRED STRING 'constantMMS, almgrenMMS'" 
                                           children1="ONE_OF(CHILD constantMMS, almgrenMMS)">
