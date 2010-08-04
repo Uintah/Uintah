@@ -12,7 +12,7 @@
 #__________________________________
 
 if( $#argv == 0 ) then
-  echo "movie_lineExtract <sus output file> "
+  echo "movie_lineExtract <uda> "
   exit(1)
 endif
 set uda = $argv[1]
@@ -41,16 +41,23 @@ foreach X ( $ts[*]:q)
   echo "______________________________________________________________________"
   echo "$timestep) $X"
   
-  set fname = `printf 'movie.%04d.ppm\n' $timestep`
+  set fname = `printf 'movie.%04d.png\n' $timestep`
   echo $fname
+  /bin/rm -f $fname
   #__________________________________
   # ExtractData from the data file
-  lineextract -v temp_CC   -o temp.dat  -l 0 -cellCoords -timestep $timestep -istart 0 0 0 -iend 100000 0 0 -m 0 -uda $uda
-  lineextract -v vel_CC    -o vel.dat   -l 0 -cellCoords -timestep $timestep -istart 0 0 0 -iend 100000 0 0 -m 0 -uda $uda
-  lineextract -v press_CC  -o press.dat -l 0 -cellCoords -timestep $timestep -istart 0 0 0 -iend 100000 0 0 -m 0 -uda $uda
-  lineextract -v rho_CC    -o rho.dat   -l 0 -cellCoords -timestep $timestep -istart 0 0 0 -iend 100000 0 0 -m 0 -uda $uda
+  lineextract -v delP_Dilatate -o delP.dat  -l 0 -cellCoords -timestep $timestep -istart -1 0 0 -iend 100000 0 0 -m 0 -uda $uda
+  lineextract -v vel_CC        -o vel.dat   -l 0 -cellCoords -timestep $timestep -istart -1 0 0 -iend 100000 0 0 -m 0 -uda $uda
+  lineextract -v press_CC      -o press.dat -l 0 -cellCoords -timestep $timestep -istart -1 0 0 -iend 100000 0 0 -m 0 -uda $uda
+  lineextract -v rho_CC        -o rho.dat   -l 0 -cellCoords -timestep $timestep -istart -1 0 0 -iend 100000 0 0 -m 0 -uda $uda
+  lineextract -v temp_CC       -o temp.dat  -l 0 -cellCoords -timestep $timestep -istart -1 0 0 -iend 100000 0 0 -m 0 -uda $uda
 
-  inputs/ICE/Scripts/removeBraces vel.dat
+  inputs/ICE/Scripts/gradient.m -dat delP.dat  -pDir 1 > /dev/null
+  inputs/ICE/Scripts/gradient.m -dat vel.dat   -pDir 1 > /dev/null
+  inputs/ICE/Scripts/gradient.m -dat press.dat -pDir 1 > /dev/null
+  inputs/ICE/Scripts/gradient.m -dat rho.dat   -pDir 1 > /dev/null
+  inputs/ICE/Scripts/gradient.m -dat temp.dat  -pDir 1 > /dev/null
+  #inputs/ICE/Scripts/removeBraces vel.dat
 
   mv *.dat $uda/.
 
@@ -58,11 +65,12 @@ foreach X ( $ts[*]:q)
 
 cat > gp << fin
 set terminal x11 1
-set terminal postscript color solid "Times-Roman" 18 size 8.88889 in, 6.68 in
+set terminal postscript color solid "Times-Roman" 12 size 8.88889 in, 6.68 in
 set output "plot.ps"
 
 #__________________________________
 # generate the  plot script
+set autoscale
 set ytics
 set xtics
 set mxtics
@@ -70,41 +78,44 @@ set mytics
 set grid xtics ytics
 set pointsize 1.0
 set title ""
-
+set xrange [0.0:1.0]
 #__________________________________
 #   Pressure
 #__________________________________
-set autoscale
 set multiplot
 set size 0.51,0.51  
 set origin 0.0,0.0
-
+set yrange [101000:102000]
 set ylabel "Pressure"
 set y2tics
-plot  '$uda/press.dat'  using 1:4  t '' with linespoints
+plot  '$uda/press.dat'  using 1:4            t 'p' with linespoints,\
+      '$uda/press.dat'  using 1:5  axes x1y2 t 'grad p' with linespoints
 
 #__________________________________
 #   Temperature
 #__________________________________
 set origin 0.5,0.0
-
+set yrange [299.2:310.0]
 set ylabel "Temperature"
-plot  '$uda/temp.dat'     using 1:4 t '' with linespoints
+plot  '$uda/temp.dat'  using 1:4            t 'Temp' with linespoints,\
+      '$uda/temp.dat'  using 1:5  axes x1y2 t 'grad Temp' with linespoints
 
 #__________________________________
 #  velocity x-component
 #__________________________________
 set origin 0.0,0.5
-
+set yrange [-5:5]
 set ylabel "Velocity"
-plot  '$uda/vel.dat'      using 1:4 t '' with linespoints
+plot  '$uda/vel.dat'   using 1:4            t 'x-vel' with linespoints,\
+      '$uda/vel.dat'   using 1:7  axes x1y2 t 'grad x-vel' with linespoints
 #__________________________________
 #   density
 #__________________________________
 set origin 0.5,0.5
-
+set yrange [1.172:1.187]
 set ylabel "Density"
-plot  '$uda/rho.dat'       using 1:4 t '' with linespoints
+plot  '$uda/rho.dat'  using 1:4            t 'rho' with linespoints,\
+      '$uda/rho.dat'  using 1:5  axes x1y2 t 'grad rho' with linespoints
 
 set nomultiplot 
 fin
@@ -113,8 +124,8 @@ fin
   gnuplot gp
   
   convert plot.ps $fname
-#  mogrify -rotate 90 $fname
-#  mogrify -geometry 700x500 $fname
+  mogrify -rotate 90 $fname
+ # mogrify -geometry 700x500 $fname
 
   @ timestep = $timestep + 1
 end
