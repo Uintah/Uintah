@@ -12,6 +12,7 @@
 #include <Core/Grid/Variables/SFCZVariable.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/Exceptions/InvalidValue.h>
+#include <typeinfo>
 
 /** 
 * @class  PropertyModelBase
