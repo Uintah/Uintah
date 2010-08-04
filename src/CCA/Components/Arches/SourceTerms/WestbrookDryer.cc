@@ -33,7 +33,7 @@ WestbrookDryer::WestbrookDryer( std::string srcName, SimulationStateP& sharedSta
 : SourceTermBase(srcName, sharedState, reqLabelNames)
 { 
 
-  d_extraLocalLabels.resize(3); 
+  d_extraLocalLabels.resize(4); 
   d_WDstrippingLabel = VarLabel::create( "WDstrip",  CCVariable<double>::getTypeDescription() ); 
   d_extraLocalLabels[0] = d_WDstrippingLabel; 
   
@@ -43,6 +43,9 @@ WestbrookDryer::WestbrookDryer( std::string srcName, SimulationStateP& sharedSta
   d_WDO2Label        = VarLabel::create( "WDo2",     CCVariable<double>::getTypeDescription() ); 
   d_extraLocalLabels[2] = d_WDO2Label; 
 
+  d_WDverLabel = VarLabel::create( "WDver", CCVariable<double>::getTypeDescription() ); 
+  d_extraLocalLabels[3] = d_WDverLabel; 
+
 }
 
 WestbrookDryer::~WestbrookDryer()
@@ -51,6 +54,7 @@ WestbrookDryer::~WestbrookDryer()
   VarLabel::destroy( d_WDstrippingLabel ); 
   VarLabel::destroy( d_WDextentLabel ); 
   VarLabel::destroy( d_WDO2Label ); 
+  VarLabel::destroy( d_WDverLabel ); 
 
 }
 //---------------------------------------------------------------------------
@@ -97,11 +101,13 @@ WestbrookDryer::sched_computeSource( const LevelP& level, SchedulerP& sched, int
     tsk->computes(d_WDstrippingLabel); 
     tsk->computes(d_WDextentLabel); 
     tsk->computes(d_WDO2Label); 
+    tsk->computes(d_WDverLabel); 
   } else {
     tsk->modifies(d_srcLabel); 
     tsk->modifies(d_WDstrippingLabel); 
     tsk->modifies(d_WDextentLabel);   
     tsk->modifies(d_WDO2Label); 
+    tsk->modifies(d_WDverLabel); 
   }
 
   for (vector<std::string>::iterator iter = d_requiredLabels.begin(); 
@@ -148,26 +154,31 @@ WestbrookDryer::computeSource( const ProcessorGroup* pc,
     CCVariable<double> S; // stripping fraction 
     CCVariable<double> E; // extent of reaction 
     CCVariable<double> w_o2; // mass fraction of O2
+    CCVariable<double> ver; 
     
     if ( new_dw->exists(d_srcLabel, matlIndex, patch ) ){
       new_dw->getModifiable( CxHyRate, d_srcLabel, matlIndex, patch ); 
       new_dw->getModifiable( S, d_WDstrippingLabel, matlIndex, patch ); 
       new_dw->getModifiable( E, d_WDextentLabel, matlIndex, patch ); 
       new_dw->getModifiable( w_o2, d_WDO2Label, matlIndex, patch ); 
+      new_dw->getModifiable( ver, d_WDverLabel, matlIndex, patch );  
       CxHyRate.initialize(0.0);
       S.initialize(0.0);
       E.initialize(0.0); 
       w_o2.initialize(0.0); 
+      ver.initialize(0.0); 
     } else {
       new_dw->allocateAndPut( CxHyRate, d_srcLabel, matlIndex, patch );
       new_dw->allocateAndPut( S, d_WDstrippingLabel, matlIndex, patch );
       new_dw->allocateAndPut( E, d_WDextentLabel, matlIndex, patch );
       new_dw->allocateAndPut( w_o2, d_WDO2Label, matlIndex, patch ); 
+      new_dw->allocateAndPut( ver, d_WDverLabel, matlIndex, patch ); 
     
       CxHyRate.initialize(0.0);
       S.initialize(0.0); 
       E.initialize(0.0); 
       w_o2.initialize(0.0); 
+      ver.initialize(0.0); 
     } 
 
     for (vector<std::string>::iterator iter = d_requiredLabels.begin(); 
@@ -241,6 +252,8 @@ WestbrookDryer::computeSource( const ProcessorGroup* pc,
       if (isnan(CxHyRate[c])) {
         CxHyRate[c] = 0.0; 
       }
+
+      ver[c] = hc_wo_rxn * S[c]; 
 
     }
   }

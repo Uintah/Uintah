@@ -62,14 +62,14 @@ public:
     return d_extraLocalLabels; }; 
 
 protected:
-  std::string d_srcName; 
-  const VarLabel* d_srcLabel; //The label storing the value of this source term
-  SimulationStateP& d_sharedState; 
-  vector<std::string> d_requiredLabels;   //All labels needed to compute this source term  
-  vector<const VarLabel*> d_extraLocalLabels; //This array will hold local labels to the specific source term 
-                                          // and will be used to obtain vars from the DW for initialization 
 
-  bool d_labelSchedInit;
+  std::string d_srcName;                             ///< User assigned source name 
+  const VarLabel* d_srcLabel;                        ///< Source varlabel
+  bool d_labelSchedInit;                             ///< Boolean to clarify if a "computes" or "requires" is needed
+  SimulationStateP& d_sharedState;                   ///< Local copy of sharedState
+  vector<std::string> d_requiredLabels;              ///< Vector of required labels
+  vector<const VarLabel*> d_extraLocalLabels;        ///< Extra labels that might be useful for storage
+                                          
 
 }; // end SourceTermBase
 }  // end namespace Uintah
