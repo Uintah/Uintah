@@ -55,6 +55,9 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqnFactory.h>
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqn.h>
 #include <CCA/Components/Arches/TransportEqns/ScalarEqn.h>
+#include <CCA/Components/Arches/PropertyModels/PropertyModelBase.h>
+#include <CCA/Components/Arches/PropertyModels/PropertyModelFactory.h>
+#include <CCA/Components/Arches/PropertyModels/ConstProperty.h>
 
 #include <CCA/Components/Arches/Arches.h>
 #include <CCA/Components/Arches/ArchesLabel.h>
@@ -335,7 +338,7 @@ Arches::problemSetup(const ProblemSpecP& params,
       eqn_db->getAttribute("label", eqnname);
       d_scalarEqnNames.push_back(eqnname);
       if (eqnname == ""){
-        throw InvalidValue( "The label attribute must be specified for the eqns!", __FILE__, __LINE__); 
+        throw InvalidValue( "Error: The label attribute must be specified for the eqns!", __FILE__, __LINE__); 
       }
       EqnBase& an_eqn = eqn_factory.retrieve_scalar_eqn( eqnname ); 
       an_eqn.problemSetup( eqn_db ); 
@@ -354,12 +357,31 @@ Arches::problemSetup(const ProblemSpecP& params,
         std::string srcname; 
         src_db->getAttribute("label", srcname);
         if (srcname == "") {
-          throw InvalidValue( "The label attribute must be specified for the source terms!", __FILE__, __LINE__); 
+          throw InvalidValue( "Error: The label attribute must be specified for the source terms!", __FILE__, __LINE__); 
         }
         SourceTermBase& a_src = src_factory.retrieve_source_term( srcname );
         a_src.problemSetup( src_db );  
       
       }
+    }
+  }
+
+  if ( db->findBlock("PropertyModels") ){
+
+    ProblemSpecP propmodels_db = db->findBlock("PropertyModels"); 
+    PropertyModelFactory& prop_factory = PropertyModelFactory::self(); 
+    Arches::registerPropertyModels( propmodels_db ); 
+    for ( ProblemSpecP prop_db = propmodels_db->findBlock("model"); 
+        prop_db != 0; prop_db = prop_db->findNextBlock("model") ){
+
+      std::string model_name; 
+      prop_db->getAttribute("label", model_name); 
+      if ( model_name == "" ){
+        throw InvalidValue( "Error: The label attribute must be specified for the property models!", __FILE__, __LINE__); 
+      }
+      PropertyModelBase& a_model = prop_factory.retrieve_property_model( model_name ); 
+      a_model.problemSetup( prop_db ); 
+
     }
   }
 
@@ -774,7 +796,17 @@ Arches::scheduleInitialize(const LevelP& level,
 
   // compute the cell area fraction 
   d_boundaryCondition->sched_setAreaFraction( sched, patches, matls ); 
-    
+
+  // Property model initialization
+  PropertyModelFactory& propFactory = PropertyModelFactory::self(); 
+  PropertyModelFactory::PropMap& all_prop_models = propFactory.retrieve_all_property_models(); 
+  for ( PropertyModelFactory::PropMap::iterator iprop = all_prop_models.begin(); 
+      iprop != all_prop_models.end(); iprop++){
+
+    PropertyModelBase* prop_model = iprop->second; 
+    prop_model->sched_initialize( level, sched ); 
+
+  }
 }
 
 void
@@ -2652,6 +2684,51 @@ void Arches::registerTransportEqns(ProblemSpecP& db)
       }
     }
   }  
+}
+//---------------------------------------------------------------------------
+// Method: Register Property Models
+//---------------------------------------------------------------------------
+void Arches::registerPropertyModels(ProblemSpecP& db)
+{
+  ProblemSpecP propmodels_db = db; 
+  PropertyModelFactory& prop_factory = PropertyModelFactory::self(); 
+
+  if ( propmodels_db ) {
+
+    proc0cout << "\n"; 
+    proc0cout << "******* Property Model Registration *******" << endl;
+
+    for ( ProblemSpecP prop_db = propmodels_db->findBlock("model"); 
+        prop_db != 0; prop_db = prop_db->findNextBlock("model") ){
+
+      std::string prop_name; 
+      prop_db->getAttribute("label", prop_name); 
+      std::string prop_type; 
+      prop_db->getAttribute("type", prop_type); 
+
+      proc0cout << "Found a property model: " << prop_name << endl; 
+
+      if ( prop_type == "ConstantCC" ) {
+
+        // An example of a constant CC variable property 
+        PropertyModelBase::Builder* the_builder = new ConstProperty<CCVariable<double>, constCCVariable<double> >::Builder( prop_name, d_sharedState ); 
+        prop_factory.register_property_model( prop_name, the_builder ); 
+
+      } else if ( prop_type == "ConstantFCX" ) {
+
+        // An example of a constant FCX variable property 
+        PropertyModelBase::Builder* the_builder = new ConstProperty<SFCXVariable<double>, constCCVariable<double> >::Builder( prop_name, d_sharedState ); 
+        prop_factory.register_property_model( prop_name, the_builder ); 
+
+      } else {
+
+        proc0cout << "For property model named: " << prop_name << endl;
+        proc0cout << "with type: " << prop_type << endl;
+        throw InvalidValue("This property model is not recognized or supported! ", __FILE__, __LINE__); 
+
+      }
+    }
+  }
 }
 //---------------------------------------------------------------------------
 // Method: Register DQMOM Eqns

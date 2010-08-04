@@ -3683,7 +3683,7 @@ BoundaryCondition::velRhoHatInletBC(const Patch* patch,
                 idxLo, idxHi, constvars->new_density, constvars->cellType, 
                 fi->d_cellTypeID, current_time,
                 xminus, xplus, yminus, yplus, zminus, zplus,
-          fi->d_ramping_inlet_flowrate);
+                fi->d_ramping_inlet_flowrate);
   }
   
 }

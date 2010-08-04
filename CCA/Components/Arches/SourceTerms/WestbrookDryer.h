@@ -72,6 +72,7 @@ private:
   const VarLabel* d_WDstrippingLabel; // kg C stripped / kg C available for old timestep*
   const VarLabel* d_WDextentLabel;    // kg C reacted  / kg C available for old timestep*
   const VarLabel* d_WDO2Label;        // kg O2 / total kg -- consistent with the model
+  const VarLabel* d_WDverLabel; 
   // * but stored in the new_Dw
 
 }; // end WestbrookDryer
