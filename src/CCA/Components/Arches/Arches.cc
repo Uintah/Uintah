@@ -38,7 +38,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Arches/SourceTerms/CoalGasDevol.h>
 #include <CCA/Components/Arches/SourceTerms/CoalGasMomentum.h> 
 #include <CCA/Components/Arches/SourceTerms/WestbrookDryer.h>
-#include <CCA/Components/Arches/SourceTerms/MultiPointConst.h>
+#include <CCA/Components/Arches/SourceTerms/Inject.h>
 #include <CCA/Components/Arches/CoalModels/CoalModelFactory.h>
 #include <CCA/Components/Arches/CoalModels/ModelBase.h>
 #include <CCA/Components/Arches/TransportEqns/EqnBase.h>
@@ -2433,31 +2433,47 @@ void Arches::registerUDSources(ProblemSpecP& db)
       // The keys are currently strings which might be something we want to change if this becomes inefficient  
       if ( src_type == "constant_src" ) {
         // Adds a constant to RHS
-        SourceTermBuilder* srcBuilder = scinew ConstSrcTermBuilder(src_name, required_varLabels, d_lab->d_sharedState); 
+        SourceTermBase::Builder* srcBuilder = scinew ConstSrcTerm::Builder(src_name, required_varLabels, d_lab->d_sharedState); 
         factory.register_source_term( src_name, srcBuilder ); 
 
       } else if (src_type == "coal_gas_devol"){
         // Sums up the devol. model terms * weights
-        SourceTermBuilder* srcBuilder = scinew CoalGasDevolBuilder(src_name, required_varLabels, d_lab->d_sharedState);
-        factory.register_source_term( src_name, srcBuilder ); 
+        SourceTermBase::Builder* src_builder = scinew CoalGasDevol::Builder(src_name, required_varLabels, d_lab->d_sharedState);
+        factory.register_source_term( src_name, src_builder ); 
 
       } else if (src_type == "coal_gas_momentum"){
-        SourceTermBuilder* srcBuilder = scinew CoalGasMomentumBuilder(src_name, required_varLabels, d_lab->d_sharedState);
+        // Momentum coupling for ??? (coal gas or the particle?) 
+        SourceTermBase::Builder* srcBuilder = scinew CoalGasMomentum::Builder(src_name, required_varLabels, d_lab->d_sharedState);
         factory.register_source_term( src_name, srcBuilder );
 
       } else if (src_type == "westbrook_dryer") {
         // Computes a global reaction rate for a hydrocarbon (see Turns, eqn 5.1,5.2)
-        SourceTermBuilder* srcBuilder = scinew WestbrookDryerBuilder(src_name, required_varLabels, d_lab->d_sharedState); 
+        SourceTermBase::Builder* srcBuilder = scinew WestbrookDryer::Builder(src_name, required_varLabels, d_lab->d_sharedState); 
         factory.register_source_term( src_name, srcBuilder ); 
       
       } else if (src_type == "mms1"){
         // MMS1 builder 
-        SourceTermBuilder* srcBuilder = scinew MMS1Builder(src_name, required_varLabels, d_lab->d_sharedState);
+        SourceTermBase::Builder* srcBuilder = scinew MMS1::Builder(src_name, required_varLabels, d_lab->d_sharedState);
         factory.register_source_term( src_name, srcBuilder ); 
 
-      } else if ( src_type == "multi_point_const_src" ) {
+      } else if ( src_type == "cc_inject_src" ) {
         // Adds a constant to the RHS in specified geometric locations
-        SourceTermBuilder* srcBuilder = scinew MultiPointConstBuilder(src_name, required_varLabels, d_lab->d_sharedState);
+        SourceTermBase::Builder* srcBuilder = scinew Inject<CCVariable<double> >::Builder(src_name, required_varLabels, d_lab->d_sharedState);
+        factory.register_source_term( src_name, srcBuilder ); 
+
+      } else if ( src_type == "fx_inject_src" ) {
+        // Adds a constant to the RHS in specified geometric locations
+        SourceTermBase::Builder* srcBuilder = scinew Inject<SFCXVariable<double> >::Builder(src_name, required_varLabels, d_lab->d_sharedState);
+        factory.register_source_term( src_name, srcBuilder ); 
+
+      } else if ( src_type == "fy_inject_src" ) {
+        // Adds a constant to the RHS in specified geometric locations
+        SourceTermBase::Builder* srcBuilder = scinew Inject<SFCYVariable<double> >::Builder(src_name, required_varLabels, d_lab->d_sharedState);
+        factory.register_source_term( src_name, srcBuilder ); 
+
+      } else if ( src_type == "fz_inject_src" ) {
+        // Adds a constant to the RHS in specified geometric locations
+        SourceTermBase::Builder* srcBuilder = scinew Inject<SFCZVariable<double> >::Builder(src_name, required_varLabels, d_lab->d_sharedState);
         factory.register_source_term( src_name, srcBuilder ); 
 
       } else {
@@ -2499,8 +2515,8 @@ void Arches::registerSources(){
           vector<std::string> required_varLabels;  
           required_varLabels.push_back( eqn_name ); 
 
-          SourceTermBuilder* srcBuilder = scinew UnweightedSrcTermBuilder( src_name, required_varLabels, d_lab->d_sharedState ); 
-          factory.register_source_term( src_name, srcBuilder ); 
+          SourceTermBase::Builder* src_builder = scinew UnweightedSrcTerm::Builder( src_name, required_varLabels, d_lab->d_sharedState ); 
+          factory.register_source_term( src_name, src_builder ); 
 
         }
       }

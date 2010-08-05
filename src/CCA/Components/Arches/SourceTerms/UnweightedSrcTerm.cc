@@ -14,27 +14,12 @@
 using namespace std;
 using namespace Uintah; 
 
-//---------------------------------------------------------------------------
-// Builder:
-UnweightedSrcTermBuilder::UnweightedSrcTermBuilder(std::string srcName, 
-                                         vector<std::string> reqLabelNames, 
-                                         SimulationStateP& sharedState)
-: SourceTermBuilder(srcName, reqLabelNames, sharedState)
-{}
-
-UnweightedSrcTermBuilder::~UnweightedSrcTermBuilder(){}
-
-SourceTermBase*
-UnweightedSrcTermBuilder::build(){
-  return scinew UnweightedSrcTerm( d_srcName, d_sharedState, d_requiredLabels );
+UnweightedSrcTerm::UnweightedSrcTerm( std::string src_name, SimulationStateP& shared_state,
+                            vector<std::string> req_label_names ) 
+: SourceTermBase(src_name, shared_state, req_label_names)
+{
+  _src_label = VarLabel::create( src_name, CCVariable<double>::getTypeDescription() ); 
 }
-// End Builder
-//---------------------------------------------------------------------------
-
-UnweightedSrcTerm::UnweightedSrcTerm( std::string srcName, SimulationStateP& sharedState,
-                            vector<std::string> reqLabelNames ) 
-: SourceTermBase(srcName, sharedState, reqLabelNames)
-{}
 
 UnweightedSrcTerm::~UnweightedSrcTerm()
 {}
@@ -57,14 +42,14 @@ UnweightedSrcTerm::sched_computeSource( const LevelP& level, SchedulerP& sched, 
   std::string taskname = "UnweightedSrcTerm::eval";
   Task* tsk = scinew Task(taskname, this, &UnweightedSrcTerm::computeSource, timeSubStep);
 
-  if (timeSubStep == 0 && !d_labelSchedInit) {
+  if (timeSubStep == 0 && !_label_sched_init) {
     // Every source term needs to set this flag after the varLabel is computed. 
     // transportEqn.cleanUp should reinitialize this flag at the end of the time step. 
-    d_labelSchedInit = true;
+    _label_sched_init = true;
 
-    tsk->computes(d_srcLabel);
+    tsk->computes(_src_label);
   } else {
-    tsk->modifies(d_srcLabel); 
+    tsk->modifies(_src_label); 
   }
 
   const VarLabel* d_areaFractionLabel = VarLabel::find( "areaFraction" );
@@ -72,8 +57,8 @@ UnweightedSrcTerm::sched_computeSource( const LevelP& level, SchedulerP& sched, 
 
   DQMOMEqnFactory& dqmomFactory  = DQMOMEqnFactory::self();
 
-  for (vector<std::string>::iterator iter = d_requiredLabels.begin(); 
-       iter != d_requiredLabels.end(); iter++) { 
+  for (vector<std::string>::iterator iter = _required_labels.begin(); 
+       iter != _required_labels.end(); iter++) { 
 
     std::string label_name = (*iter);
     EqnBase& eqn = dqmomFactory.retrieve_scalar_eqn( label_name );
@@ -101,7 +86,7 @@ UnweightedSrcTerm::sched_computeSource( const LevelP& level, SchedulerP& sched, 
     tsk->requires( Task::NewDW, partVelLabel, Ghost::AroundCells, 1 );
   }
 
-  sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials()); 
+  sched->addTask(tsk, level->eachPatch(), _shared_state->allArchesMaterials()); 
 
 }
 //---------------------------------------------------------------------------
@@ -120,14 +105,14 @@ UnweightedSrcTerm::computeSource( const ProcessorGroup* pc,
 
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlIndex = d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    int matlIndex = _shared_state->getArchesMaterial(archIndex)->getDWIndex(); 
 
     CCVariable<double> constSrc; 
-    if ( new_dw->exists(d_srcLabel, matlIndex, patch ) ){
-      new_dw->getModifiable( constSrc, d_srcLabel, matlIndex, patch ); 
+    if ( new_dw->exists(_src_label, matlIndex, patch ) ){
+      new_dw->getModifiable( constSrc, _src_label, matlIndex, patch ); 
       constSrc.initialize(0.0);
     } else {
-      new_dw->allocateAndPut( constSrc, d_srcLabel, matlIndex, patch );
+      new_dw->allocateAndPut( constSrc, _src_label, matlIndex, patch );
       constSrc.initialize(0.0);
     } 
 
@@ -140,8 +125,8 @@ UnweightedSrcTerm::computeSource( const ProcessorGroup* pc,
     const VarLabel* d_areaFractionLabel = VarLabel::find( "areaFraction" );
     old_dw->get(areaFraction, d_areaFractionLabel, matlIndex, patch, Ghost::AroundCells, 1);
 
-    for (vector<std::string>::iterator iter = d_requiredLabels.begin(); 
-         iter != d_requiredLabels.end(); iter++) { 
+    for (vector<std::string>::iterator iter = _required_labels.begin(); 
+         iter != _required_labels.end(); iter++) { 
    
       label_name = (*iter);
       EqnBase& eqn = dqmomFactory.retrieve_scalar_eqn( label_name );
@@ -195,13 +180,13 @@ UnweightedSrcTerm::sched_dummyInit( const LevelP& level, SchedulerP& sched )
 
   Task* tsk = scinew Task(taskname, this, &UnweightedSrcTerm::dummyInit);
 
-  tsk->computes(d_srcLabel);
+  tsk->computes(_src_label);
 
-  for (std::vector<const VarLabel*>::iterator iter = d_extraLocalLabels.begin(); iter != d_extraLocalLabels.end(); iter++){
+  for (std::vector<const VarLabel*>::iterator iter = _extra_local_labels.begin(); iter != _extra_local_labels.end(); iter++){
     tsk->computes(*iter); 
   }
 
-  sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
+  sched->addTask(tsk, level->eachPatch(), _shared_state->allArchesMaterials());
 
 }
 void 
@@ -216,15 +201,15 @@ UnweightedSrcTerm::dummyInit( const ProcessorGroup* pc,
 
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlIndex = d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    int matlIndex = _shared_state->getArchesMaterial(archIndex)->getDWIndex(); 
 
     CCVariable<double> src;
 
-    new_dw->allocateAndPut( src, d_srcLabel, matlIndex, patch ); 
+    new_dw->allocateAndPut( src, _src_label, matlIndex, patch ); 
 
     src.initialize(0.0); 
 
-    for (std::vector<const VarLabel*>::iterator iter = d_extraLocalLabels.begin(); iter != d_extraLocalLabels.end(); iter++){
+    for (std::vector<const VarLabel*>::iterator iter = _extra_local_labels.begin(); iter != _extra_local_labels.end(); iter++){
       CCVariable<double> tempVar; 
       new_dw->allocateAndPut(tempVar, *iter, matlIndex, patch ); 
     }

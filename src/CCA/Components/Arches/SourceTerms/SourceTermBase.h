@@ -3,10 +3,17 @@
 
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Grid/Variables/VarTypes.h>
-#include <CCA/Ports/Scheduler.h>
 #include <Core/Grid/SimulationStateP.h>
 #include <Core/Grid/SimulationState.h>
+#include <Core/Grid/Variables/CCVariable.h>
+#include <Core/Grid/Variables/SFCXVariable.h>
+#include <Core/Grid/Variables/SFCYVariable.h>
+#include <Core/Grid/Variables/SFCZVariable.h>
+#include <Core/Parallel/Parallel.h>
+#include <Core/Exceptions/InvalidValue.h>
+#include <CCA/Ports/Scheduler.h>
 #include <CCA/Components/Arches/ArchesMaterial.h>
+#include <typeinfo>
 
 //===============================================================
 
@@ -53,22 +60,38 @@ public:
   /** @brief reinitialize the flags that tells the scheduler if the varLabel needs a compute or a modifies. */
   // Note I need two of these flags; 1 for scheduling and 1 for actual execution.
   inline void reinitializeLabel(){ 
-    d_labelSchedInit  = false; };
+    _label_sched_init  = false; };
 
   inline const VarLabel* getSrcLabel(){
-    return d_srcLabel; };
+    return _src_label; };
 
   inline const vector<const VarLabel*> getExtraLocalLabels(){
-    return d_extraLocalLabels; }; 
+    return _extra_local_labels; }; 
+
+  /** @brief Builder class containing instructions on how to build the property model */ 
+  class Builder { 
+
+    public: 
+
+      virtual ~Builder() {}
+
+      virtual SourceTermBase* build() = 0; 
+
+    protected: 
+
+      std::string _name;
+  }; 
 
 protected:
 
-  std::string d_srcName;                             ///< User assigned source name 
-  const VarLabel* d_srcLabel;                        ///< Source varlabel
-  bool d_labelSchedInit;                             ///< Boolean to clarify if a "computes" or "requires" is needed
-  SimulationStateP& d_sharedState;                   ///< Local copy of sharedState
-  vector<std::string> d_requiredLabels;              ///< Vector of required labels
-  vector<const VarLabel*> d_extraLocalLabels;        ///< Extra labels that might be useful for storage
+  std::string _src_name;                             ///< User assigned source name 
+  std::string _init_type;                            ///< Initialization type. 
+  const VarLabel* _src_label;                        ///< Source varlabel
+  bool _label_sched_init;                            ///< Boolean to clarify if a "computes" or "requires" is needed
+  SimulationStateP& _shared_state;                   ///< Local copy of sharedState
+  vector<std::string> _required_labels;              ///< Vector of required labels
+  vector<const VarLabel*> _extra_local_labels;       ///< Extra labels that might be useful for storage
+
                                           
 
 }; // end SourceTermBase
