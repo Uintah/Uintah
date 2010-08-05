@@ -49,7 +49,6 @@ DEALINGS IN THE SOFTWARE.
 #define CHKERRQ(x) if(x) throw PetscError(x, __FILE__, __FILE__, __LINE__);
 
 using namespace Uintah;
-using namespace SCIRun;
 using namespace std;
 
 #undef LOG
@@ -350,7 +349,17 @@ void MPMPetscSolver::createMatrix(const ProcessorGroup* d_myworld,
 #endif
 
   PetscTruth exists;
+#if ((PETSC_VERSION_MAJOR == 3) && (PETSC_VERSION_MINOR == 1))
+  PetscCookie cookie;
+  PetscObjectGetCookie((PetscObject)d_A,&cookie);
+  if (cookie)
+    exists = PETSC_TRUE;
+  else
+    exists = PETSC_FALSE;
+  
+#else
   PetscObjectExists((PetscObject)d_A,&exists);
+#endif
 #if 0
     // This one works
     MatCreateMPIAIJ(PETSC_COMM_WORLD, numlrows, numlcolumns, globalrows,
@@ -422,7 +431,11 @@ void MPMPetscSolver::createMatrix(const ProcessorGroup* d_myworld,
     }
     
 #if (PETSC_VERSION_MAJOR==3)
+#if (PETSC_VERSION_MINOR == 1)
+    MatSetOption(d_A,MAT_KEEP_NONZERO_PATTERN, PETSC_TRUE);
+#else
     MatSetOption(d_A, MAT_KEEP_ZEROED_ROWS, PETSC_TRUE);
+#endif
     MatSetOption(d_A,MAT_IGNORE_ZERO_ENTRIES, PETSC_TRUE);
 #else
     MatSetOption(d_A, MAT_KEEP_ZEROED_ROWS);
@@ -468,7 +481,16 @@ void MPMPetscSolver::destroyMatrix(bool recursion)
 #endif
   } else {
     PetscTruth exists;
+#if ((PETSC_VERSION_MAJOR == 3) && (PETSC_VERSION_MINOR == 1))
+  PetscCookie cookie;
+  PetscObjectGetCookie((PetscObject)d_A,&cookie);
+  if (cookie)
+    exists = PETSC_TRUE;
+  else
+    exists = PETSC_FALSE;
+#else
     PetscObjectExists((PetscObject)d_A,&exists);
+#endif
     if (exists == PETSC_TRUE) {
       MatDestroy(d_A);
       VecDestroy(d_B);

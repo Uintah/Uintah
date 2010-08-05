@@ -39,6 +39,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Math/MiscMath.h>
+#include <Core/Parallel/Parallel.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/Math/MiscMath.h>
 #include <typeinfo>
@@ -50,7 +51,7 @@ namespace Uintah {
 //__________________________________
 //  To turn on couts
 //  setenv SCI_DEBUG "LODI_DOING_COUT:+, LODI_DBG_COUT:+"
-static DebugStream cout_doing("LODI_DOING_COUT", false);
+static DebugStream cout_doing("ICE_BC_CC", false);
 static DebugStream cout_dbg("LODI_DBG_COUT", false);
 
 /* ______________________________________________________________________
@@ -60,6 +61,7 @@ static DebugStream cout_dbg("LODI_DBG_COUT", false);
             sets which boundaries are lodi
  ______________________________________________________________________  */
 bool read_LODI_BC_inputs(const ProblemSpecP& prob_spec,
+                         SimulationStateP& sharedState,
                          Lodi_variable_basket* vb)
 {
   //__________________________________
@@ -106,7 +108,6 @@ bool read_LODI_BC_inputs(const ProblemSpecP& prob_spec,
           matl_index.push_back(atoi(bc_type["id"].c_str()));
         }
       }
-      
 
       if (bc_type["var"] == "LODI" && !is_a_Lodi_face) {
         usingLODI = true;
@@ -135,44 +136,65 @@ bool read_LODI_BC_inputs(const ProblemSpecP& prob_spec,
       string warn="ERROR:\n Inputs:Boundary Conditions: Cannot find LODI block";
       throw ProblemSetupException(warn, __FILE__, __LINE__);
     }
-    lodi->require("ice_material_index", vb->iceMatl_indx);
     lodi->require("press_infinity",     vb->press_infinity);
     lodi->getWithDefault("sigma",       vb->sigma, 0.27);
     
+    ProblemSpecP params = lodi;
+    Material* matl = sharedState->parseAndLookupMaterial(params, "material");
+    vb->iceMatl_indx = matl->getDWIndex();
+      
     //__________________________________
     //  bulletproofing
     vector<int>::iterator iter;
     for( iter  = matl_index.begin();iter != matl_index.end(); iter++){
       if(*iter != vb->iceMatl_indx){
-        string warn="ERROR:\n Inputs: LODI Boundary Conditions: One of the material indices is not <ice_material_index>";
-        throw ProblemSetupException(warn, __FILE__, __LINE__);
+        ostringstream warn;
+        warn << "ERROR:\n Inputs: LODI Boundary Conditions: One of the material indices is not the specified ice_material_index: "<< vb->iceMatl_indx;
+        throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
       }
     }
-  }
-  //__________________________________
-  //  Save Li Terms?
-  vb->saveLiTerms = false;
-  ProblemSpecP DA_ps = prob_spec->findBlock("DataArchiver");
-  for (ProblemSpecP child = DA_ps->findBlock("save"); child != 0;
-                    child = child->findNextBlock("save")) {
-    map<string,string> var_attr;
-    child->getAttributes(var_attr);
-    if( ( var_attr["label"] == "Li1" ||
-          var_attr["label"] == "Li2" ||
-          var_attr["label"] == "Li3" ||
-          var_attr["label"] == "Li4" ||
-          var_attr["label"] == "Li5" )
-        && usingLODI ) {
-      vb->saveLiTerms = true;
+    
+    int numICEMatls = sharedState->getNumICEMatls();
+    bool foundMatl = false;
+    ostringstream indicies;
+    
+    for(int m = 0; m < numICEMatls; m++){
+      ICEMaterial* matl = sharedState->getICEMaterial( m );
+      int indx = matl->getDWIndex();
+      indicies << " " << indx ;
+      if(indx == vb->iceMatl_indx){
+        foundMatl = true;
+      }
     }
-  }
+    
+    if(foundMatl==false){
+      ostringstream warn;                                                                                              
+      warn << "ERROR:\n Inputs: LODI Boundary Conditions: The ice_material_index: "<< vb->iceMatl_indx<< " is not "    
+           << "\n an ICE material: " << indicies.str() << endl;
+      throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+    }
+    
+    //__________________________________
+    //  Save Li Terms?
+    vb->saveLiTerms = false;
+    ProblemSpecP DA_ps = prob_spec->findBlock("DataArchiver");
+    for (ProblemSpecP child = DA_ps->findBlock("save"); child != 0;
+                      child = child->findNextBlock("save")) {
+      map<string,string> var_attr;
+      child->getAttributes(var_attr);
+      if( ( var_attr["label"] == "Li1" ||
+            var_attr["label"] == "Li2" ||
+            var_attr["label"] == "Li3" ||
+            var_attr["label"] == "Li4" ||
+            var_attr["label"] == "Li5" )
+          && usingLODI ) {
+        vb->saveLiTerms = true;
+      }
+    }
   
-  if (usingLODI) {
-    cout << "\n WARNING:  LODI boundary conditions are "
-         << " NOT set during the problem initialization \n " 
-         << " THESE BOUNDARY CONDITIONS ONLY WORK FOR 1 MATL ICE PROBLEMS \n"
-         << " (The material index has been hard coded in preprocess_Lodi_BCs)\n" <<endl;
-  }
+    proc0cout << "\n WARNING:  LODI boundary conditions are "
+              << " NOT set during the problem initialization \n " <<endl;
+  }  // usingLODI
   return usingLODI;
 }
 
@@ -186,8 +208,7 @@ void addRequires_Lodi(Task* t,
                       const MaterialSubset* ice_matls,
                       Lodi_variable_basket* var_basket)
 {
-  cout_doing<< "Doing addRequires_Lodi: \t\t" <<t->getName()
-            << " " << where << endl;
+
   
   Ghost::GhostType  gn  = Ghost::None;
   Task::DomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
@@ -213,7 +234,10 @@ void addRequires_Lodi(Task* t,
     t->requires(Task::NewDW, lb->speedSound_CCLabel,ice_matls, gn);
   }
   if(where == "implicitPressureSolve"){
-    setLODI_bcs=true;
+    setLODI_bcs = true;
+    t->requires(Task::OldDW, lb->vel_CCLabel,        ice_matls, gn);
+    t->requires(Task::NewDW, lb->speedSound_CCLabel, ice_matls, gn);
+    t->requires(Task::NewDW, lb->rho_CCLabel,        ice_matls, gn);
   }
    
   if(where == "imp_update_press_CC"){
@@ -245,6 +269,8 @@ void addRequires_Lodi(Task* t,
   //__________________________________
   //   All tasks Lodi faces require(maxMach_<face>)
   if(setLODI_bcs){
+  
+    cout_doing<< "Doing addRequires_Lodi: \t\t" <<t->getName() << " " << where << endl;
     vector<Patch::FaceType>::iterator f ;
     for( f = var_basket->LodiFaces.begin();
          f !=var_basket->LodiFaces.end(); ++f) {
@@ -270,7 +296,7 @@ void  preprocess_Lodi_BCs(DataWarehouse* old_dw,
                           ICELabel* lb,
                           const Patch* patch,
                           const string& where,
-                          const int /*indx*/,
+                          const int matl_indx,
                           SimulationStateP& sharedState,
                           bool& setLodiBcs,
                           Lodi_vars* lv,
@@ -278,35 +304,23 @@ void  preprocess_Lodi_BCs(DataWarehouse* old_dw,
 {
   cout_doing << "preprocess_Lodi_BCs on patch "<<patch->getID()<< endl;
   Ghost::GhostType  gn  = Ghost::None;
-/*`==========TESTING==========*/
+
   Material* matl = sharedState->getMaterial(var_basket->iceMatl_indx);
   int indx = matl->getDWIndex();  
-/*===========TESTING==========`*/
-
+  
   //__________________________________
-  // bulletproofing
-  int numICEMatls  = sharedState->getNumICEMatls();
-  if(numICEMatls > 1){
-      string warn="ERROR:\n LODI boundary conditions only works with 1 ICE material\n";
-      throw ProblemSetupException(warn, __FILE__, __LINE__);
-  }
-  //__________________________________
-  //    Equilibration pressure
+  //    Equilibration pressure  ICE & MPMICE
   if(where == "EqPress"){
     setLodiBcs = true; 
     old_dw->get(lv->vel_CC,    lb->vel_CCLabel,        indx,patch,gn,0);
-    new_dw->get(lv->press_CC,  lb->press_equil_CCLabel, 0,   patch,gn,0);
+    new_dw->get(lv->press_CC,  lb->press_equil_CCLabel, 0,  patch,gn,0);
     new_dw->get(lv->rho_CC,    lb->rho_CCLabel,        indx,patch,gn,0);
     new_dw->get(lv->speedSound,lb->speedSound_CCLabel, indx,patch,gn,0);
-  }
-  if(where == "EqPressMPMICE"){
-    setLodiBcs = false;
   }
   //__________________________________
   //    FC exchange
   if(where == "velFC_Exchange"){
     setLodiBcs = false;
-    // require(maxMach_face_varlabel);
   }
   //__________________________________
   //    update pressure (explicit and implicit)
@@ -317,7 +331,7 @@ void  preprocess_Lodi_BCs(DataWarehouse* old_dw,
     new_dw->get(lv->rho_CC,     lb->rho_CCLabel,        indx,patch,gn,0);
     new_dw->get(lv->speedSound, lb->speedSound_CCLabel, indx,patch,gn,0); 
   }
-    if(where == "imp_update_press_CC"){ 
+  if(where == "imp_update_press_CC"){ 
     setLodiBcs = true;
     DataWarehouse* sub_new_dw = new_dw->getOtherDataWarehouse(Task::NewDW);
     old_dw->get(lv->vel_CC,     lb->vel_CCLabel,        indx,patch,gn,0); 
@@ -327,7 +341,7 @@ void  preprocess_Lodi_BCs(DataWarehouse* old_dw,
   }
   //__________________________________
   //    cc_ Exchange
-  if(where == "CC_Exchange"){
+  if(where == "CC_Exchange" && matl_indx == indx){
     setLodiBcs = true;
     new_dw->get(lv->vel_CC,     lb->vel_CC_XchangeLabel,indx,patch,gn,0);
     new_dw->get(lv->press_CC,   lb->press_CCLabel,      0,   patch,gn,0);  
@@ -335,9 +349,11 @@ void  preprocess_Lodi_BCs(DataWarehouse* old_dw,
     new_dw->get(lv->gamma,      lb->gammaLabel,         indx,patch,gn,0);
     new_dw->get(lv->speedSound, lb->speedSound_CCLabel, indx,patch,gn,0);
   }
+  
+
   //__________________________________
   //    Advection
-  if(where == "Advection"){
+  if(where == "Advection" && matl_indx == indx){
     setLodiBcs = true;
     new_dw->get(lv->rho_CC,    lb->rho_CCLabel,        indx,patch,gn,0); 
     new_dw->get(lv->vel_CC,    lb->vel_CCLabel,        indx,patch,gn,0);
@@ -351,11 +367,10 @@ void  preprocess_Lodi_BCs(DataWarehouse* old_dw,
   if(setLodiBcs){
     for (int i = 0; i <= 5; i++){ 
       new_dw->allocateTemporary(lv->Li[i], patch);
-      lv->Li[i].initialize(Vector(-9e30,-9e30,-9e30));
     }
 
     computeLi(lv->Li, lv->rho_CC,  lv->press_CC, lv->vel_CC, lv->speedSound, 
-              patch, new_dw, sharedState, var_basket, false);
+              patch, new_dw, sharedState, indx,var_basket, false);
               
     if(var_basket->saveLiTerms  && where == "Advection"){
       CCVariable<Vector> Li1, Li2, Li3, Li4, Li5;
@@ -400,19 +415,22 @@ bool is_LODI_face(const Patch* patch,
 {
   bool is_lodi_face = false;
   int numMatls = sharedState->getNumICEMatls();
-
+  bool lodi_pressure =    patch->haveBC(face,0,"LODI","Pressure");
+  
   for (int m = 0; m < numMatls; m++ ) {
     ICEMaterial* ice_matl = sharedState->getICEMaterial(m);
     int indx= ice_matl->getDWIndex();
-    bool lodi_pressure =    patch->haveBC(face,indx,"LODI","Pressure");
+
     bool lodi_density  =    patch->haveBC(face,indx,"LODI","Density");
     bool lodi_temperature = patch->haveBC(face,indx,"LODI","Temperature");
     bool lodi_velocity =    patch->haveBC(face,indx,"LODI","Velocity");
-
+    
     if (lodi_pressure || lodi_density || lodi_temperature || lodi_velocity) {
       is_lodi_face = true; 
+      cout_doing << "   "<< patch->getFaceName(face) <<  " Is a LODI face: "<< endl;
     }
   }
+  
   return is_lodi_face;
 }
 
@@ -708,16 +726,11 @@ void computeLi(StaticArray<CCVariable<Vector> >& L,
                const Patch* patch,
                DataWarehouse* new_dw,
                SimulationStateP& sharedState,
+               const int indx,
                const Lodi_variable_basket* user_inputs,
                const bool recursion)                              
 {
-  cout_doing << "LODI computeLi "<< endl;
   Vector dx = patch->dCell();
-  
-  /*`==========TESTING==========*/
-  Material* matl = sharedState->getMaterial(user_inputs->iceMatl_indx);
-  int indx = matl->getDWIndex();  
-  /*===========TESTING==========`*/
   
   // Characteristic Length of the overall domain
   Vector domainLength;
@@ -740,8 +753,8 @@ void computeLi(StaticArray<CCVariable<Vector> >& L,
     Patch::FaceType face = *iter;
     
     if (is_LODI_face(patch,face, sharedState) ) {
-      cout_dbg << " computing LI on face " << face 
-               << " patch " << patch->getID()<<endl;
+      cout_doing << "   computing LI \t\t " << patch->getFaceName(face) 
+               << " patch " << patch->getID()<< " matl_indx " << indx << endl;
       //_____________________________________
       // S I D E S
       IntVector dir = patch->getFaceAxes(face);
@@ -856,13 +869,13 @@ int remainingVectorComponent(int dir1, int dir2)
  Function~ FaceDensity_LODI--
  Purpose~  Compute density in boundary cells on any face
 ___________________________________________________________________*/
-void FaceDensity_LODI(const Patch* patch,
-                const Patch::FaceType face,
-                CCVariable<double>& rho_CC,
-                Lodi_vars* lv,
-                const Vector& DX)
+int FaceDensity_LODI(const Patch* patch,
+                     const Patch::FaceType face,
+                     CCVariable<double>& rho_CC,
+                     Lodi_vars* lv,
+                     const Vector& DX)
 {
-  cout_doing << "Setting FaceDensity_LODI on face " << face<<endl;
+  cout_doing << "   FaceDensity_LODI  \t\t" << patch->getFaceName(face)<<endl;
   // bulletproofing
   if (!lv){
     throw InternalError("FaceDensityLODI: Lodi_vars = null", __FILE__, __LINE__);
@@ -898,7 +911,6 @@ void FaceDensity_LODI(const Patch* patch,
              << " drho_dx " << drho_dx << " rho_CC[in] " << rho_CC[in]<<endl;
   }
   
-  
   //__________________________________
   //    E D G E S  -- on boundaryFaces only
   vector<Patch::FaceType> b_faces;
@@ -928,14 +940,15 @@ void FaceDensity_LODI(const Patch* patch,
   for(itr = corner.begin(); itr != corner.end(); ++ itr ) {
     IntVector c = *itr;
     rho_CC[c] =  1.7899909957225715000;
-  }      
+  }  
+  return 1;
 }
 
 /*_________________________________________________________________
  Function~ FaceVel_LODI--
  Purpose~  Compute velocity in boundary cells on face
 ___________________________________________________________________*/
-void FaceVel_LODI(const Patch* patch,
+int FaceVel_LODI(const Patch* patch,
                  Patch::FaceType face,
                  CCVariable<Vector>& vel_CC,                 
                  Lodi_vars* lv,
@@ -943,7 +956,7 @@ void FaceVel_LODI(const Patch* patch,
                  SimulationStateP& sharedState)                     
 
 {
-  cout_doing << "Setting FaceVel_LODI on face " << face << endl;
+  cout_doing << "   FaceVel_LODI  \t\t" << patch->getFaceName(face) << endl;
   // bulletproofing
   if (!lv){
     throw InternalError("FaceVelLODI: Lodi_vars = null", __FILE__, __LINE__);
@@ -975,7 +988,7 @@ void FaceVel_LODI(const Patch* patch,
     // normal direction velocity
     double term1 = L[5][in][P_dir]/(vel_CC[in][P_dir] + speedSound[in]);
     double term2 = L[1][in][P_dir]/(vel_CC[in][P_dir] - speedSound[in]);
-    double dvel_norm_dx = (1.0/(rho_CC[in] * speedSound[in]) )* (term1 - term2);
+    double dvel_norm_dx = (1.0/(rho_CC[in] * speedSound[in]) ) * (term1 - term2);
     vel_CC[c][P_dir] = vel_CC[in][P_dir] + plus_minus_one * dx * dvel_norm_dx; 
     
     // transverse velocities
@@ -984,23 +997,8 @@ void FaceVel_LODI(const Patch* patch,
     
     vel_CC[c][dir1] = vel_CC[in][dir1] + plus_minus_one * dx * dvel_dir1_dx;
     vel_CC[c][dir2] = vel_CC[in][dir2] + plus_minus_one * dx * dvel_dir2_dx;
-   
-    //__________________________________
-    //  debugging
-    Vector vel, dvel;
-    vel[P_dir] = vel_CC[c][P_dir];
-    vel[dir1]  = vel_CC[c][dir1];
-    vel[dir2]  = vel_CC[c][dir2];
-    
-    dvel[P_dir] = dvel_norm_dx;
-    dvel[dir1]  = dvel_dir1_dx;
-    dvel[dir2]  = dvel_dir2_dx;
-    
-    cout_dbg << " c " << c << " in " << in << " vel " << vel << endl;
-    cout_dbg << " dvel_ " << dvel << endl;
-  
   }
-#if 1
+  
   //__________________________________
   //    E D G E S  -- on boundaryFaces only
   vector<Patch::FaceType> b_faces;
@@ -1030,21 +1028,21 @@ void FaceVel_LODI(const Patch* patch,
     IntVector c = *itr;
     vel_CC[c] = Vector(0,0,0);
   }
-#endif
+  return 1;
 } //end of the function FaceVelLODI() 
 
 /*_________________________________________________________________
  Function~ FaceTemp_LODI--
  Purpose~  Compute temperature in boundary cells on faces
 ___________________________________________________________________*/
-void FaceTemp_LODI(const Patch* patch,
+int FaceTemp_LODI(const Patch* patch,
              const Patch::FaceType face,
              CCVariable<double>& temp_CC,
              Lodi_vars* lv, 
              const Vector& DX,
              SimulationStateP& sharedState)
 {
-  cout_doing << "Setting FaceTemp_LODI on face " <<face<< endl; 
+  cout_doing << "   FaceTemp_LODI \t\t" <<patch->getFaceName(face)<< endl; 
   
   // bulletproofing
   if (!lv){
@@ -1121,6 +1119,7 @@ void FaceTemp_LODI(const Patch* patch,
     temp_CC[c] = 300;
   }
 
+  return 1;
 } //end of function FaceTempLODI()  
 
 
@@ -1128,14 +1127,14 @@ void FaceTemp_LODI(const Patch* patch,
  Function~  FacePress_LODI--
  Purpose~   Back out the pressure See Table 6 of Sutherland and Kennedy
 ______________________________________________________________________  */
-void FacePress_LODI(const Patch* patch,
+int FacePress_LODI(const Patch* patch,
                     CCVariable<double>& press_CC,
                     StaticArray<CCVariable<double> >& rho_micro,
                     SimulationStateP& sharedState, 
                     Patch::FaceType face,
                     Lodi_vars* lv)
 {
-  cout_doing << " I am in FacePress_LODI on face " <<face<< endl;
+  cout_doing << "   FacePress_LODI \t\t" <<patch->getFaceName(face)<< endl;
   // bulletproofing
   if (!lv){
     throw InternalError("FacePress_LODI: Lodi_vars = null", __FILE__, __LINE__);
@@ -1143,6 +1142,7 @@ void FacePress_LODI(const Patch* patch,
 
   StaticArray<CCVariable<Vector> >& L = lv->Li;
  
+  
   Vector DX =patch->dCell();
   IntVector axes = patch->getFaceAxes(face);
   int P_dir = axes[0];  // principal direction
@@ -1171,6 +1171,7 @@ void FacePress_LODI(const Patch* patch,
              << " dpress_dx " << dpress_dx << " press_CC[in] " << press_CC[in]<<endl;
 
   }
+  
   //__________________________________
   //    E D G E S  -- on boundaryFaces only
   vector<Patch::FaceType> b_faces;
@@ -1200,6 +1201,7 @@ void FacePress_LODI(const Patch* patch,
     IntVector c = *itr;
     press_CC[c] = 101325;
   }
+  return 1;
 } 
    
 }  // using namespace Uintah

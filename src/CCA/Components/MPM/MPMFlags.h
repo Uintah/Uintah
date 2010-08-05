@@ -30,7 +30,7 @@ DEALINGS IN THE SOFTWARE.
 
 #ifndef __MPM_FLAGS_H__
 #define __MPM_FLAGS_H__
-
+#include <CCA/Ports/Output.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Grid/ParticleInterpolator.h>
 #include <string>
@@ -70,8 +70,7 @@ namespace Uintah {
     IntegratorType d_integrator;
 
     bool        d_artificial_viscosity; // Turn artificial viscosity on/off
-    bool        d_artificial_viscosity_heating; // Include heating due to AV 
-    bool        d_accStrainEnergy; // Flag for accumulating strain energy
+    bool        d_artificial_viscosity_heating; // Include heating due to AV
     bool        d_useLoadCurves; // Flag for using load curves
     bool        d_useCohesiveZones; // Flag for using cohesive zones
     bool        d_createNewParticles; // Flag to decide whether to create
@@ -114,6 +113,21 @@ namespace Uintah {
 
     bool        d_with_ice;
     bool        d_with_arches;
+    
+    // flags for turning on/off the reduction variable calculations
+    struct reductionVars{
+     bool mass;
+     bool momentum;
+     bool thermalEnergy;
+     bool strainEnergy;
+     bool accStrainEnergy;
+     bool KE;
+     bool volDeformed;
+     bool centerOfMass;
+    };
+    reductionVars* d_reductionVars;
+    
+    
     const ProcessorGroup* d_myworld;
 
     std::vector<std::string> d_bndy_face_txt_list; 
@@ -124,7 +138,7 @@ namespace Uintah {
 
     virtual ~MPMFlags();
 
-    virtual void readMPMFlags(ProblemSpecP& ps);
+    virtual void readMPMFlags(ProblemSpecP& ps, Output* dataArchive);
     virtual void outputProblemSpec(ProblemSpecP& ps);
 
   private:

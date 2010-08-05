@@ -38,6 +38,7 @@
         <O                              spec="REQUIRED DOUBLE" />
         <S                              spec="REQUIRED DOUBLE" />
         <initial_ash_mass               spec="REQUIRED MULTIPLE_DOUBLES" />
+        <particle_density               spec="OPTIONAL DOUBLE" />
       </Coal_Properties>
       
       <Turbulence                       spec="REQUIRED NO_DATA"
@@ -129,11 +130,13 @@
         <sulfur_balance_es              spec="OPTIONAL BOOLEAN" />
         <ramping_inlet_flowrate         spec="OPTIONAL BOOLEAN" />
         <FlowInlet                      spec="MULTIPLE NO_DATA" >
+          <name                         spec="OPTIONAL STRING" />
           <ramping_inlet_flowrate       spec="OPTIONAL BOOLEAN" />
           <SulfurMassFractionInFuel     spec="OPTIONAL DOUBLE '0,1'" />
           <Flow_rate                    spec="OPTIONAL DOUBLE" />
           <InletVelocity                spec="OPTIONAL DOUBLE" />
           <mixture_fraction             spec="REQUIRED DOUBLE" />
+          <mixture_fraction_2           spec="OPTIONAL DOUBLE" />
           <Prefill                      spec="OPTIONAL NO_DATA"
                                           attribute1="direction REQUIRED STRING 'X, Y, Z'" >
             <geom_object />
@@ -228,6 +231,8 @@
           <radiationCalcFreq            spec="OPTIONAL INTEGER" />
           <radCalcForAllRKSteps         spec="OPTIONAL BOOLEAN" />
           <radCalcForAllImplicitSteps   spec="OPTIONAL BOOLEAN" />
+          <src                          spec="MULTIPLE NO_DATA" 
+                                        attribute1="label REQUIRED STRING"/>
           <DORadiationModel             spec="OPTIONAL NO_DATA" >
             <opl                        spec="REQUIRED DOUBLE" />
             <ordinates                  spec="OPTIONAL INTEGER" />
@@ -346,8 +351,13 @@
                 <species                spec="OPTIONAL STRING" />
             </oxidizer>
 
-            <!-- Spec for constant source term model -->
+            <!-- Spec for constant and multi-point constant source term model -->
             <constant                   spec="OPTIONAL DOUBLE" />
+
+            <!-- Multi-point constant injection --> 
+            <injector                   spec="MULTIPLE NO_DATA">
+              <geom_object/>
+            </injector>
 
             <!-- Westbrook Dryer Global Hydrocarbon reaction rate model -->
             <!-- see Turns, pg. 156-157 -->
@@ -361,13 +371,16 @@
             <MF_HC_F1                   spec="OPTIONAL DOUBLE" />
             <MF_O2_F0                   spec="OPTIONAL DOUBLE" />
 
+
           </src>
 
         </Sources>
 
       </TransportEqns>
 
-      <DQMOM                            spec="OPTIONAL NO_DATA">
+      <DQMOM                            spec="OPTIONAL NO_DATA" >
+
+        <type                           spec="OPTIONAL STRING 'unweightedAbs, weightedAbs'" />
 
         <!-- Tags for verification of DQMOM AX=B solution procedure -->
         <Verify_Linear_Solver           spec="OPTIONAL NO_DATA">

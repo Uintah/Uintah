@@ -57,7 +57,6 @@ using std::cerr;
 
 using namespace std;
 using namespace Uintah;
-using namespace SCIRun;
 
 SpecifiedBodyContact::SpecifiedBodyContact(const ProcessorGroup* myworld,
                                            ProblemSpecP& ps,

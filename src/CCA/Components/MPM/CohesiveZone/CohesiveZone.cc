@@ -133,6 +133,7 @@ CohesiveZone::createCohesiveZones(CZMaterial* matl,
         czForce[pidx]     = Vector(0.0,0.0,0.0);
         czBotMat[pidx]    = mb;
         czTopMat[pidx]    = mt;
+        czFailed[pidx]    = 0;
 
         // Figure out unique ID for the CZ
         patch->findCell(pos,cell_idx);
@@ -176,6 +177,7 @@ CohesiveZone::allocateVariables(particleIndex numCZs,
   new_dw->allocateAndPut(czForce,        d_lb->czForceLabel,        subset);
   new_dw->allocateAndPut(czTopMat,       d_lb->czTopMatLabel,       subset);
   new_dw->allocateAndPut(czBotMat,       d_lb->czBotMatLabel,       subset);
+  new_dw->allocateAndPut(czFailed,       d_lb->czFailedLabel,       subset);
   
   return subset;
 }
@@ -246,6 +248,9 @@ void CohesiveZone::registerPermanentCohesiveZoneState(CZMaterial* czmat)
   d_cz_state.push_back(d_lb->czBotMatLabel);
   d_cz_state_preReloc.push_back(d_lb->czBotMatLabel_preReloc);
 
+  d_cz_state.push_back(d_lb->czFailedLabel);
+  d_cz_state_preReloc.push_back(d_lb->czFailedLabel_preReloc);
+
   d_cz_state.push_back(d_lb->czIDLabel);
   d_cz_state_preReloc.push_back(d_lb->czIDLabel_preReloc);
 }
@@ -270,6 +275,7 @@ void CohesiveZone::scheduleInitialize(const LevelP& level, SchedulerP& sched,
   t->computes(d_lb->czForceLabel);
   t->computes(d_lb->czTopMatLabel);
   t->computes(d_lb->czBotMatLabel);
+  t->computes(d_lb->czFailedLabel);
   t->computes(d_lb->czIDLabel);
   t->computes(d_lb->pCellNACZIDLabel,zeroth_matl);
 

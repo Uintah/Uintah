@@ -19,13 +19,9 @@
 
    <LoadBalancer type="DLB" >
        <!--dynamicAlgorithm>Zoltan</dynamicAlgorithm-->
-       <dynamicAlgorithm>patchFactor</dynamicAlgorithm>
        <zoltanAlgorithm>HSFC</zoltanAlgorithm>
-     <levelIndependent>true</levelIndependent>
-     <doSpaceCurve>true</doSpaceCurve>
-     <timestepInterval>8</timestepInterval>
-     <gainThreshold>.05</gainThreshold>
-     <doCostProfiling>true</doCostProfiling>
+       <timestepInterval>8</timestepInterval>
+       <gainThreshold>.15</gainThreshold>
    </LoadBalancer>
    
     <!--____________________________________________________________________-->

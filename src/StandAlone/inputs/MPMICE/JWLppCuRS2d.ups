@@ -138,7 +138,6 @@
       <artificial_viscosity>          true        </artificial_viscosity>
       <artificial_viscosity_coeff1>   0.07        </artificial_viscosity_coeff1>
       <artificial_viscosity_coeff2>   1.6         </artificial_viscosity_coeff2>
-      <accumulate_strain_energy>      false       </accumulate_strain_energy>
       <use_load_curves>               false       </use_load_curves>
       <do_contact_friction_heating>   false       </do_contact_friction_heating>
       <create_new_particles>          false       </create_new_particles>
@@ -209,12 +208,7 @@
        </MPM>
        <ICE>
          <material name = "reactant">
-           <EOS type = "Murnahan">
-             <n>      7.4       </n>
-             <K>      39.0e-11  </K>
-             <rho0>   1160.0    </rho0>
-             <P0>     101325.0  </P0>
-           </EOS>
+           <include href="inputs/ICE/MurnahanEOSANFO.xml"/>
            <dynamic_viscosity>      0.0                 </dynamic_viscosity>
            <thermal_conductivity>   0.0                 </thermal_conductivity>
            <specific_heat>          1515.31             </specific_heat>
@@ -230,15 +224,7 @@
          </material>
 
          <material name = "product">
-           <EOS type = "JWLC">
-             <A>  2.9867e11   </A>
-             <B>  4.11706e9   </B>
-             <C>  7.206147e8  </C>
-             <R1> 4.95        </R1>
-             <R2> 1.15        </R2>
-             <om> 0.35        </om>
-             <rho0> 1160.0    </rho0>
-           </EOS>
+           <include href="inputs/ICE/JWLEOSANFO.xml"/>
            <dynamic_viscosity>      0.0                 </dynamic_viscosity>
            <thermal_conductivity>   0.0                 </thermal_conductivity>
            <specific_heat>          544.96               </specific_heat>

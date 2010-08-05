@@ -138,7 +138,7 @@ void OnDemandDataWarehouse::clear()
 {
   for (dataLocationDBtype::const_iterator iter = d_dataLocation.begin();
        iter != d_dataLocation.end(); iter++) {
-    for (int i = 0; i<(int)iter->second->size(); i++ )
+    for (size_t i = 0; i<iter->second->size(); i++ )
       delete &(iter->second[i]);
     delete iter->second;
   }
@@ -401,7 +401,7 @@ OnDemandDataWarehouse::exchangeParticleQuantities(DetailedTasks* dts, LoadBalanc
 
   int data_index = 0;
   for (ParticleExchangeVar::iterator iter = recvs.begin(); iter != recvs.end(); iter++) {
-    set<PSPatchMatlGhost>& r = iter->second;
+    set<PSPatchMatlGhostRange>& r = iter->second;
     if (r.size() > 0) {
       recvdata[data_index].resize(r.size());
       // particles << d_myworld->myrank() << " Posting PARTICLES receives for " << r.size() 
@@ -416,13 +416,13 @@ OnDemandDataWarehouse::exchangeParticleQuantities(DetailedTasks* dts, LoadBalanc
 
   data_index = 0;
   for (ParticleExchangeVar::iterator iter = sends.begin(); iter != sends.end(); iter++) {
-    set<PSPatchMatlGhost>& s = iter->second;
+    set<PSPatchMatlGhostRange>& s = iter->second;
     if (s.size() > 0) {
       vector<int>& data = senddata[data_index];
       data.resize(s.size());
       int i = 0;
-      for (set<PSPatchMatlGhost>::iterator siter = s.begin(); siter != s.end(); siter++, i++) {
-        const PSPatchMatlGhost& pmg = *siter;
+      for (set<PSPatchMatlGhostRange>::iterator siter = s.begin(); siter != s.end(); siter++, i++) {
+        const PSPatchMatlGhostRange& pmg = *siter;
         if ((pmg.dwid_ == DetailedDep::FirstIteration && iteration > 0) || 
             (pmg.dwid_ == DetailedDep::SubsequentIterations && iteration == 0)) {
           // not used
@@ -475,12 +475,12 @@ OnDemandDataWarehouse::exchangeParticleQuantities(DetailedTasks* dts, LoadBalanc
   data_index = 0;
   // create particle subsets from recvs
   for (ParticleExchangeVar::iterator iter = recvs.begin(); iter != recvs.end(); iter++) {
-    set<PSPatchMatlGhost>& r = iter->second;
+    set<PSPatchMatlGhostRange>& r = iter->second;
     if (r.size() > 0) {
       vector<int>& data = recvdata[data_index];
       int i = 0;
-      for (set<PSPatchMatlGhost>::iterator riter = r.begin(); riter != r.end(); riter++, i++) {
-        const PSPatchMatlGhost& pmg = *riter;
+      for (set<PSPatchMatlGhostRange>::iterator riter = r.begin(); riter != r.end(); riter++, i++) {
+        const PSPatchMatlGhostRange& pmg = *riter;
         particles2 << d_myworld->myrank() << " Recving PARTICLES from proc " << iter->first << ": patch " 
                    << pmg.patch_->getID() << " matl " << pmg.matl_ << " low " << pmg.low_ << " high " << pmg.high_ 
                    << ": " << data[i] << "\n";
@@ -828,7 +828,6 @@ OnDemandDataWarehouse::createParticleSubset(particleIndex numParticles,
                                             IntVector high /* = (0,0,0) */)
 {
   MALLOC_TRACE_TAG_SCOPE("OnDemandDataWarehouse::createParticleSubset):");
-  d_lock.writeLock();
 
   if (low == high && high == IntVector(0,0,0)) {
     low = patch->getExtraCellLowIndex();
@@ -843,18 +842,8 @@ OnDemandDataWarehouse::createParticleSubset(particleIndex numParticles,
   ParticleSubset* psubset = 
     scinew ParticleSubset(numParticles, matlIndex, patch, low, high);
 
-  psetDBType::key_type key(patch, matlIndex, low, high, getID());
-  if(d_psetDB.find(key) != d_psetDB.end()) {
-    if (d_myworld->myrank() == 0) {
-      cout << d_myworld->myrank() << "  Duplicate: " << patch->getID() << " matl " << matlIndex << " " << low << " " << high << endl;
-      printParticleSubsets();
-    }
-    SCI_THROW(InternalError("createParticleSubset called twice for patch", __FILE__, __LINE__));
-  }
-  
-  d_psetDB[key]=psubset;
-  psubset->addReference();
-  d_lock.writeUnlock();
+  insertPSetRecord(d_psetDB,patch,low,high,matlIndex,psubset);
+
   return psubset;
 }
 
@@ -867,21 +856,13 @@ OnDemandDataWarehouse::saveParticleSubset(ParticleSubset* psubset,
   ASSERTEQ(psubset->getPatch(), patch);
   ASSERTEQ(psubset->getMatlIndex(), matlIndex);
   ASSERT(!patch->isVirtual());  
-  d_lock.writeLock();
 
   if (low == high && high == IntVector(0,0,0)) {
     low = patch->getExtraCellLowIndex();
     high = patch->getExtraCellHighIndex();
   }
 
-  psetDBType::key_type key(patch, matlIndex, low, high, getID());
-  if(d_psetDB.find(key) != d_psetDB.end())
-    SCI_THROW(InternalError("saveParticleSubset called twice for patch", __FILE__, __LINE__));
-
-  d_psetDB[key]=psubset;
-  psubset->addReference();
-
-  d_lock.writeUnlock();
+  insertPSetRecord(d_psetDB,patch,low,high,matlIndex,psubset);
 }
 
 void
@@ -903,65 +884,146 @@ OnDemandDataWarehouse::getParticleSubset(int matlIndex, const Patch* patch)
   return getParticleSubset(matlIndex, patch, patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex());
 }
 
+void OnDemandDataWarehouse::insertPSetRecord(psetDBType &subsetDB,const Patch* patch,IntVector low, IntVector high,int matlIndex, ParticleSubset *psubset)
+{
+  psubset->setLow(low);
+  psubset->setHigh(high);
+
+#if SCI_ASSERTION_LEVEL >= 1
+  ParticleSubset *subset=queryPSetDB(subsetDB,patch,matlIndex,low,high,0,true);
+  if(subset!=0) {
+    if (d_myworld->myrank() == 0) {
+      cout << d_myworld->myrank() << "  Duplicate: " << patch->getID() << " matl " << matlIndex << " " << low << " " << high << endl;
+      printParticleSubsets();
+    }
+    SCI_THROW(InternalError("tried to create a particle subset that already exists", __FILE__, __LINE__));
+  }
+#endif
+  d_lock.writeLock();
+  psetDBType::key_type key(patch->getRealPatch(), matlIndex, getID());
+  subsetDB.insert(pair<psetDBType::key_type,ParticleSubset*>(key,psubset));
+  psubset->addReference();
+  d_lock.writeUnlock();
+}
+
+ParticleSubset* OnDemandDataWarehouse::queryPSetDB(psetDBType &subsetDB, const Patch* patch, int matlIndex, IntVector low, IntVector high, const VarLabel* pos_var, bool exact)
+{
+  ParticleSubset* subset=0;
+
+
+  psetDBType::key_type key(patch->getRealPatch(), matlIndex, getID());
+  int best_volume = INT_MAX;
+  int target_volume = Region::getVolume(low,high);
+
+  d_lock.readLock();
+  pair<psetDBType::const_iterator, psetDBType::const_iterator> ret = subsetDB.equal_range(key);
+  //search multimap for best subset
+  for(psetDBType::const_iterator iter=ret.first; iter!=ret.second; ++iter){
+    ParticleSubset *ss=iter->second;
+    IntVector sslow=ss->getLow();
+    IntVector sshigh=ss->getHigh();
+    int vol=Region::getVolume(sslow,sshigh);
+    //check if volume is better than current best
+    if(vol<best_volume)
+    {
+      //intersect ranges
+      if(low.x() >= sslow.x() && low.y() >= sslow.y() && low.z() >= sslow.z() &&
+          sshigh.x() >= high.x() && sshigh.y() >= high.y() && sshigh.z() >= high.z() )
+      {
+        //take this range
+        subset=ss;
+        best_volume=vol;
+
+        //short circuit out if we have already found the best possible solution
+        if(best_volume==target_volume)
+          break;
+
+      }
+    }
+  }
+  d_lock.readUnlock();
+
+  if(exact && best_volume!=target_volume)
+    return 0;
+
+  //if we don't need to filter or we already have an exact match just return this subset
+  if(pos_var==0 || best_volume==target_volume)
+    return subset;
+
+  //otherwise filter out particles that are not within this range
+  constParticleVariable<Point> pos;
+
+  get(pos, pos_var, subset);
+
+  ParticleSubset* newsubset=scinew ParticleSubset(0, matlIndex, patch->getRealPatch(),low,high);
+
+  for(ParticleSubset::iterator iter = subset->begin();iter != subset->end(); iter++){
+    particleIndex idx = *iter;
+    if(Patch::containsIndex(low,high,patch->getCellIndex(pos[idx]))) {
+      newsubset->addParticle(idx);
+    }
+  }
+
+  //save subset for future queries
+  subsetDB.insert(pair<psetDBType::key_type,ParticleSubset*>(key,newsubset));
+  newsubset->addReference();
+
+  return newsubset;
+}
 ParticleSubset*
 OnDemandDataWarehouse::getParticleSubset(int matlIndex, const Patch* patch,
                                          IntVector low, IntVector high)
 {
   TAU_PROFILE("OnDemandDataWarehouse::getParticleSubset-a", " ", TAU_USER);
-  d_lock.readLock();
   const Patch* realPatch = (patch != 0) ? patch->getRealPatch() : 0;
   ParticleSubset* subset = 0;
 
-  psetDBType::key_type key(realPatch, matlIndex, low, high, getID());
-  psetDBType::iterator iter = d_psetDB.find(key);
-  if(iter != d_psetDB.end()){
-    subset = iter->second;
-  }
-  else {
-    int best_volume = INT_MAX;
-    // if not found, look for the smallest encompassing particle subset
-    for (iter = d_psetDB.begin(); iter != d_psetDB.end(); iter++) {
-      const PSPatchMatlGhost& pmg = iter->first;
-      if (pmg.patch_ == realPatch && pmg.matl_ == matlIndex &&
-          pmg.dwid_ == getID() && 
-          low.x() >= pmg.low_.x() && low.y() >= pmg.low_.y() && low.z() >= pmg.low_.z() &&
-          high.x() <= pmg.high_.x() && high.y() <= pmg.high_.y() && high.z() <= pmg.high_.z()) {
-        IntVector range = pmg.high_ - pmg.low_;
-        int vol = range.x() * range.y() * range.z();
-        if (vol < best_volume) {
-          best_volume = vol;
-          subset = iter->second;
-        }
-      }
-    }
-    
-    if (!subset){
-      printParticleSubsets();
-      d_lock.readUnlock();
-      ostringstream s;
-      s << "ParticleSubset, (low: " << low << ", high: " << high <<  " DWID " << getID() << ')';
-      SCI_THROW(UnknownVariable(s.str().c_str(), getID(), realPatch, matlIndex,
+  subset=queryPSetDB(d_psetDB,realPatch,matlIndex,low,high,0);
+
+  if (!subset){
+    printParticleSubsets();
+    d_lock.readUnlock();
+    ostringstream s;
+    s << "ParticleSubset, (low: " << low << ", high: " << high <<  " DWID " << getID() << ')';
+    SCI_THROW(UnknownVariable(s.str().c_str(), getID(), realPatch, matlIndex,
                                 "Cannot find particle set on patch", __FILE__, __LINE__));
-    }
   }
-  d_lock.readUnlock();
+  return subset;
+}
+ParticleSubset*
+OnDemandDataWarehouse::getParticleSubset(int matlIndex, const Patch* patch,
+                                         IntVector low, IntVector high, const VarLabel *pos_var)
+{
+  TAU_PROFILE("OnDemandDataWarehouse::getParticleSubset-a", " ", TAU_USER);
+  const Patch* realPatch = (patch != 0) ? patch->getRealPatch() : 0;
+  ParticleSubset* subset = 0;
+
+  subset=queryPSetDB(d_psetDB,realPatch,matlIndex,low,high,pos_var);
+
+  if (!subset){
+    printParticleSubsets();
+    d_lock.readUnlock();
+    ostringstream s;
+    s << "ParticleSubset, (low: " << low << ", high: " << high <<  " DWID " << getID() << ')';
+    SCI_THROW(UnknownVariable(s.str().c_str(), getID(), realPatch, matlIndex,
+                                "Cannot find particle set on patch", __FILE__, __LINE__));
+  }
   return subset;
 }
 
 ParticleSubset*
 OnDemandDataWarehouse::getDeleteSubset(int matlIndex, const Patch* patch)
 {
-  d_lock.readLock();
+  
   const Patch* realPatch = (patch != 0) ? patch->getRealPatch() : 0;
-   psetDBType::key_type key(realPatch, matlIndex, realPatch->getExtraCellLowIndex(), realPatch->getExtraCellHighIndex(), getID());
-   psetDBType::iterator iter = d_delsetDB.find(key);
-   if(iter == d_delsetDB.end()){
+  ParticleSubset *subset=queryPSetDB(d_delsetDB,realPatch,matlIndex,patch->getExtraCellLowIndex(),patch->getExtraCellHighIndex(),0);
+  
+  if(subset==0){
      d_lock.readUnlock();
      SCI_THROW(UnknownVariable("DeleteSet", getID(), realPatch, matlIndex,
 			   "Cannot find delete set on patch", __FILE__, __LINE__));
    }
-  d_lock.readUnlock();
-   return iter->second;
+   return subset;
 }
 
 map<const VarLabel*, ParticleVariableBase*>* 
@@ -986,38 +1048,22 @@ OnDemandDataWarehouse::haveParticleSubset(int matlIndex, const Patch* patch,
                                           IntVector low /* = (0,0,0) */,
                                           IntVector high /* = (0,0,0) */, bool exact /*=false*/)
 {
-  d_lock.readLock();
-
   if (low == high && high == IntVector(0,0,0)) {
     low = patch->getExtraCellLowIndex();
     high = patch->getExtraCellHighIndex();
   }
   const Patch* realPatch = patch->getRealPatch();
+  //query subset
+  ParticleSubset *subset=queryPSetDB(d_psetDB,realPatch,matlIndex,low,high,0);
 
-   psetDBType::key_type key(realPatch, matlIndex, low, high, getID());
-   psetDBType::iterator iter = d_psetDB.find(key);
-   if (iter != d_psetDB.end()) {
-     d_lock.readUnlock();
-     return true;
-   }
+  //if no subset was returned there are no suitable subsets
+  if(subset==0)
+    return false;
 
-   if (exact) {
-     d_lock.readUnlock();
-     return false;
-   }
-
-   // if not found, look for an encompassing particle subset
-   for (iter = d_psetDB.begin(); iter != d_psetDB.end(); iter++) {
-     const PSPatchMatlGhost& pmg = iter->first;
-     if (pmg.patch_ == realPatch && pmg.matl_ == matlIndex &&
-         pmg.dwid_ == getID() && 
-         low.x() >= pmg.low_.x() && low.y() >= pmg.low_.y() && low.z() >= pmg.low_.z() &&
-         high.x() <= pmg.high_.x() && high.y() <= pmg.high_.y() && high.z() <= pmg.high_.z())
-       break;
-   }
-   
-  d_lock.readUnlock();
-  return iter != d_psetDB.end();
+  if(exact) //check if the user wanted an exact match
+    return subset->getLow()==low && subset->getHigh()==high;
+  else
+    return true;
 }
 
 ParticleSubset*
@@ -1053,7 +1099,7 @@ OnDemandDataWarehouse::getParticleSubset(int matlIndex, IntVector lowIndex, IntV
   vector<ParticleSubset*> subsets;
   vector<const Patch*> vneighbors;
   
-  for(int i=0;i<(int)neighbors.size();i++){
+  for(int i=0;i<neighbors.size();i++){
     const Patch* neighbor = neighbors[i];
     const Patch* realNeighbor = neighbor->getRealPatch();
     if(neighbor){
@@ -1087,30 +1133,18 @@ OnDemandDataWarehouse::getParticleSubset(int matlIndex, IntVector lowIndex, IntV
         }
       }
 
-      pset = getParticleSubset(matlIndex, neighbor, newLow, newHigh);
-
-      constParticleVariable<Point> pos;
-
-      get(pos, pos_var, pset);
-
-      particleIndex sizeHint = (relPatch && realNeighbor == relPatch) ? pset->numParticles():0;
-      ParticleSubset* subset = 
-        scinew ParticleSubset(0, -1, 0);
-      subset->expand(sizeHint);
-      for(ParticleSubset::iterator iter = pset->begin();
-          iter != pset->end(); iter++){
-        particleIndex idx = *iter;
-        if(Patch::containsIndex(newLow,newHigh,neighbor->getCellIndex(pos[idx]))) {
-          subset->addParticle(idx);
-        }
-      }
-      totalParticles+=subset->numParticles();
-      subsets.push_back(subset);
+      //get the particle subset for this patch
+      pset = getParticleSubset(matlIndex, neighbor, newLow, newHigh, pos_var);
+      
+      //add subset to our current list
+      totalParticles+=pset->numParticles();
+      subsets.push_back(pset);
       vneighbors.push_back(neighbors[i]);
 
     }
   }
  
+  //create a new subset
   ParticleSubset* newsubset = scinew ParticleSubset(totalParticles, matlIndex, relPatch,
                                                     lowIndex, highIndex, vneighbors, subsets);
   return newsubset;
@@ -1161,7 +1195,7 @@ OnDemandDataWarehouse::get(constParticleVariableBase& constVar,
 
     vector<ParticleVariableBase*> neighborvars(neighborPatches.size());
     
-    for(int i=0;i<(int)neighborPatches.size();i++){
+    for(size_t i=0;i<neighborPatches.size();i++){
       const Patch* neighborPatch=neighborPatches[i];
       
       if(!d_varDB.exists(label, matlIndex, neighborPatches[i])){
@@ -1182,7 +1216,7 @@ OnDemandDataWarehouse::get(constParticleVariableBase& constVar,
     
     constVar = *var;
     
-    for (int i=0;i<(int)neighborPatches.size();i++){
+    for (size_t i=0;i<neighborPatches.size();i++){
       delete neighborvars[i];
     }
     delete var;
@@ -1466,7 +1500,7 @@ allocateAndPut(GridVariableBase& var, const VarLabel* label,
     deque<Box> b1, b2, difference;
     b1.push_back(Box(Point(superLowIndex(0), superLowIndex(1), superLowIndex(2)), 
                      Point(superHighIndex(0), superHighIndex(1), superHighIndex(2))));
-    for (unsigned i = 0; i < (*superPatchGroup).size(); i++) {
+    for (size_t i = 0; i < (*superPatchGroup).size(); i++) {
       const Patch* p = (*superPatchGroup)[i];
       IntVector low = p->getExtraLowIndex(basis, label->getBoundaryLayer());
       IntVector high = p->getExtraHighIndex(basis, label->getBoundaryLayer());
@@ -1477,18 +1511,18 @@ allocateAndPut(GridVariableBase& var, const VarLabel* label,
 #if 0
     if (difference.size() > 0) {
       cout << "Box difference: " << superLowIndex << " " << superHighIndex << " with patches " << endl;
-      for (unsigned i = 0; i < (*superPatchGroup).size(); i++) {
+      for (size_t i = 0; i < (*superPatchGroup).size(); i++) {
         const Patch* p = (*superPatchGroup)[i];
         cout << p->getExtraLowIndex(basis, label->getBoundaryLayer()) << " " << p->getExtraHighIndex(basis, label->getBoundaryLayer()) << endl;
       }
 
-      for (unsigned i = 0; i < difference.size(); i++) {
+      for (size_t i = 0; i < difference.size(); i++) {
         cout << difference[i].lower() << " " << difference[i].upper() << endl;
       }
     }
 #endif
     // get more efficient way of doing this...
-    for (unsigned i = 0; i < difference.size(); i++) {
+    for (size_t i = 0; i < difference.size(); i++) {
       Box b = difference[i];
       IntVector low((int)b.lower()(0), (int)b.lower()(1), (int)b.lower()(2));
       IntVector high((int)b.upper()(0), (int)b.upper()(1), (int)b.upper()(2));
@@ -1520,7 +1554,7 @@ allocateAndPut(GridVariableBase& var, const VarLabel* label,
   // Make a set of the non ghost patches that
   // has quicker lookup than the vector.
   set<const Patch*> nonGhostPatches;
-  for (unsigned int i = 0; i < superPatchGroup->size(); ++i) {
+  for (size_t i = 0; i < superPatchGroup->size(); ++i) {
     nonGhostPatches.insert((*superPatchGroup)[i]);
   }
   
@@ -1713,10 +1747,14 @@ OnDemandDataWarehouse::getRegion(constGridVariableBase& constVar,
   Patch::VariableBasis basis = Patch::translateTypeToBasis(label->typeDescription()->getType(), false);
 
   IntVector adjustment = IntVector(1,1,1);
-  if (basis == Patch::XFaceBased) adjustment = IntVector(1,0,0);
-  else if (basis == Patch::YFaceBased) adjustment = IntVector(0,1,0);
-  else if (basis == Patch::ZFaceBased) adjustment = IntVector(0,0,1);
-
+  if (basis == Patch::XFaceBased){
+     adjustment = IntVector(1,0,0);
+  }else if (basis == Patch::YFaceBased){
+    adjustment = IntVector(0,1,0);
+  }else if (basis == Patch::ZFaceBased){ 
+    adjustment = IntVector(0,0,1);
+  }
+  
   Patch::selectType patches;
   
   // if in AMR and one node intersects from another patch and that patch is missing
@@ -1746,21 +1784,27 @@ OnDemandDataWarehouse::getRegion(constGridVariableBase& constVar,
       l = Max(patch->getLowIndex(basis), low);
       h = Min(patch->getHighIndex(basis), high);
     }
-    if (l.x() >= h.x() || l.y() >= h.y() || l.z() >= h.z())
+    
+    if (l.x() >= h.x() || l.y() >= h.y() || l.z() >= h.z()){
       continue;
-
+    }
     vector<Variable*> varlist;
     d_varDB.getlist(label, matlIndex, patch, varlist);
     GridVariableBase* v=NULL;
-    for (int i = static_cast<int>(varlist.size()) -1 ; i >=0; --i) {
-      v = dynamic_cast<GridVariableBase*>(varlist[i]);
+    
+    for (vector<Variable*>::reverse_iterator rit = varlist.rbegin(); rit < varlist.rend(); ++rit){
+      v = dynamic_cast<GridVariableBase*>(*rit);
       //verify that the variable is valid and matches the dependencies requirements.
-      if (v->isValid() && Min(l, v->getLow()) == v->getLow()  &&  Max(h, v->getHigh()) == v->getHigh())  //find a completed region
+      if (v->isValid() && Min(l, v->getLow()) == v->getLow()  &&  Max(h, v->getHigh()) == v->getHigh()){  //find a completed region
         break;
-      if (i == 0) v = NULL;
+      }
+      if (rit == varlist.rend()){
+        v = NULL;
+      }
     }
-      // just like a "missing patch": got data on this patch, but it either corresponds to a different
-      // region or is incomplete"
+    
+    // just like a "missing patch": got data on this patch, but it either corresponds to a different
+    // region or is incomplete"
     if (v == NULL){
       missing_patches.push_back(patch->getRealPatch());
       continue;
@@ -1785,12 +1829,13 @@ OnDemandDataWarehouse::getRegion(constGridVariableBase& constVar,
     delete tmpVar;
     IntVector diff(h-l);
     totalCells += diff.x()*diff.y()*diff.z();
-  }
+  }  // patches loop
+  
   IntVector diff(high-low);
 
   if (diff.x()*diff.y()*diff.z() > totalCells && missing_patches.size() > 0) {
     cout << d_myworld->myrank() << "  Unknown Variable " << *label << " matl " << matlIndex << " for patch(es): ";
-    for (unsigned i = 0; i < missing_patches.size(); i++) 
+    for (size_t i = 0; i < missing_patches.size(); i++) 
       cout << *missing_patches[i] << " ";
     cout << endl << " Original region: " << low << " " << high << endl;
     cout << " copied cells: " << totalCells << " requested cells: " << diff.x()*diff.y()*diff.z() << endl;
@@ -1830,19 +1875,19 @@ void OnDemandDataWarehouse::emit(OutputContext& oc, const VarLabel* label,
       case TypeDescription::SFCXVariable:
       case TypeDescription::SFCYVariable:
       case TypeDescription::SFCZVariable:
-        for (int i = static_cast<int>(varlist.size()) -1 ; i >=0; --i) {
-          v = dynamic_cast<GridVariableBase*>(varlist[i]);
+        for (vector<Variable*>::reverse_iterator rit = varlist.rbegin(); rit < varlist.rend(); ++rit){
+          v = dynamic_cast<GridVariableBase*>(*rit);
           //verify that the variable is valid and matches the dependencies requirements.
           if (v->isValid() && Min(l, v->getLow()) == v->getLow()  &&  Max(h, v->getHigh()) == v->getHigh())  //find a completed region
             break;
-          if (i == 0) v = NULL;
+          if (rit == varlist.rend()) v = NULL;
         }
         var=v;
         break;
       default:
         ASSERT(varlist.size()==1);
         //set to first item in list
-        var = varlist[0];
+        var = *(varlist.begin());
         break;
     }
   }
@@ -1882,30 +1927,32 @@ void OnDemandDataWarehouse::print(ostream& intout, const VarLabel* label,
 void
 OnDemandDataWarehouse::deleteParticles(ParticleSubset* delset)
 {
- d_lock.writeLock();
   int matlIndex = delset->getMatlIndex();
   Patch* patch = (Patch*) delset->getPatch();
   const Patch* realPatch = (patch != 0) ? patch->getRealPatch() : 0;
 
-  psetDBType::key_type key(patch, matlIndex, realPatch->getExtraCellLowIndex(), realPatch->getExtraCellHighIndex(), getID());
+  d_lock.writeLock();
+  psetDBType::key_type key(realPatch, matlIndex, getID());
   psetDBType::iterator iter = d_delsetDB.find(key);
   ParticleSubset* currentDelset;
-  if(iter != d_delsetDB.end()) {
+  if(iter != d_delsetDB.end()) { //update existing delset
     //    SCI_THROW(InternalError("deleteParticles called twice for patch", __FILE__, __LINE__));
     // Concatenate the delsets into the delset that already exists in the DB.
     currentDelset = iter->second;
     for (ParticleSubset::iterator d=delset->begin(); d != delset->end(); d++)
       currentDelset->addParticle(*d);
-    d_delsetDB[key]=currentDelset;
-    //currentDelset->addReference();
+   
+    d_delsetDB.erase(key);
+    d_delsetDB.insert(pair<psetDBType::key_type,ParticleSubset*>(key,currentDelset));
+
     delete delset;
+
   } else {
-    d_delsetDB[key]=delset;
+    d_delsetDB.insert(pair<psetDBType::key_type,ParticleSubset*>(key,delset));
     delset->addReference();
   }
   d_lock.writeUnlock();
 }
-
 
 void
 OnDemandDataWarehouse::addParticles(const Patch* patch, int matlIndex,
@@ -2104,7 +2151,7 @@ getGridVar(GridVariableBase& var, const VarLabel* label, int matlIndex, const Pa
       }
     }
 
-    for(int i=0;i<(int)neighbors.size();i++){
+    for(int i=0;i<neighbors.size();i++){
       const Patch* neighbor = neighbors[i];
       if(neighbor && (neighbor != patch)){
         IntVector low = Max(neighbor->getExtraLowIndex(basis, label->getBoundaryLayer()), lowIndex);
@@ -2127,8 +2174,8 @@ getGridVar(GridVariableBase& var, const VarLabel* label, int matlIndex, const Pa
     d_varDB.getlist(label, matlIndex, neighbor, varlist);
     GridVariableBase* v=NULL;
 
-    for (unsigned int i = varlist.size() -1 ; i >=0; --i) {
-      v = dynamic_cast<GridVariableBase*>(varlist[i]);
+    for (vector<Variable*>::reverse_iterator rit = varlist.rbegin(); rit < varlist.rend(); ++rit){
+      v = dynamic_cast<GridVariableBase*>(*rit);
       //verify that the variable is valid and matches the depedencies requirements
       if(v->isValid())
       {
@@ -2144,7 +2191,7 @@ getGridVar(GridVariableBase& var, const VarLabel* label, int matlIndex, const Pa
           }
         }
       }
-      if (i == 0) v = NULL;
+      if (rit == varlist.rend()) v = NULL;
     } //end for vars
     if (v==NULL) {
      // cout << d_myworld->myrank()  << " cannot copy var " << *label << " from patch " << neighbor->getID()

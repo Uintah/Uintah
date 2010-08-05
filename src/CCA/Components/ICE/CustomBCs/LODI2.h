@@ -92,6 +92,7 @@ namespace Uintah {
                            
 
   bool read_LODI_BC_inputs(const ProblemSpecP&,
+                           SimulationStateP& sharedState,
                            Lodi_variable_basket*);
                                                
   VarLabel* getMaxMach_face_VarLabel( Patch::FaceType face);                                           
@@ -113,6 +114,7 @@ namespace Uintah {
                  const Patch* patch,
                  DataWarehouse* new_dw,
                  SimulationStateP& sharedState,
+                 const int indx,
                  const Lodi_variable_basket* user_inputs, 
                  const bool recursiveTasks);
 
@@ -122,27 +124,27 @@ namespace Uintah {
                                  
   int remainingVectorComponent(int dir1, int dir2);
   
-  void FaceDensity_LODI(const Patch* patch,
+  int FaceDensity_LODI(const Patch* patch,
                        const Patch::FaceType face,
                        CCVariable<double>& rho_CC,
                        Lodi_vars* lv,
                        const Vector& dx);
                   
-  void FaceVel_LODI(const Patch* patch,
+  int FaceVel_LODI(const Patch* patch,
                    Patch::FaceType face,                 
                    CCVariable<Vector>& vel_CC,           
                    Lodi_vars* lv,
                    const Vector& dx,
                    SimulationStateP& sharedState);
                     
-  void FaceTemp_LODI(const Patch* patch,
+  int FaceTemp_LODI(const Patch* patch,
                     const Patch::FaceType face,
                     CCVariable<double>& temp_CC,
                     Lodi_vars* lv, 
                     const Vector& dx,
                     SimulationStateP& sharedState);
                
-  void FacePress_LODI(const Patch* patch,
+  int  FacePress_LODI(const Patch* patch,
                       CCVariable<double>& press_CC,
                       SCIRun::StaticArray<CCVariable<double> >& rho_micro,
                       SimulationStateP& sharedState, 

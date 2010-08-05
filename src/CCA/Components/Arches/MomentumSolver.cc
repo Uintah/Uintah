@@ -118,16 +118,16 @@ MomentumSolver::problemSetup(const ProblemSpecP& params)
   if (d_doMMS){
     d_source->problemSetup(db);
   }
-// ++ jeremy ++
+
+  // ++ jeremy ++
   d_source->setBoundary(d_boundaryCondition);
-// -- jeremy --            
+  // -- jeremy --            
 
   // New source terms (a la TransportEqn framework)
   // add source terms using new SourceTerm and TransportEqn framework
   if( db->findBlock("src") ){
     string srcname;
-    for( ProblemSpecP src_db = db->findBlock("src");
-         src_db != 0; src_db = src_db->findNextBlock("src") ) {
+    for( ProblemSpecP src_db = db->findBlock("src"); src_db != 0; src_db = src_db->findNextBlock("src") ) {
       src_db->getAttribute("label",srcname);
       d_new_sources.push_back( srcname );
     }
@@ -339,12 +339,14 @@ void MomentumSolver::solveVelHat(const LevelP& level,
   d_3d_periodic = (periodic_vector == IntVector(1,1,1));
 
   int timeSubStep = 0; 
-  if ( timelabels->integrator_step_number == TimeIntegratorStepNumber::Second )
+  if ( timelabels->integrator_step_number == TimeIntegratorStepNumber::Second ) {
     timeSubStep = 1;
-  else if ( timelabels->integrator_step_number == TimeIntegratorStepNumber::Third )
+  } else if ( timelabels->integrator_step_number == TimeIntegratorStepNumber::Third ) {
     timeSubStep = 2; 
+  }
 
   /*
+  // NOTE: This is commented out because the calculation of the source term is the responsibility of the SourceTermFactory, not the MomentumSolver
   // Schedule additional sources for evaluation
   SourceTermFactory& factory = SourceTermFactory::self(); 
   for (vector<std::string>::iterator iter = d_new_sources.begin(); 
@@ -496,8 +498,7 @@ MomentumSolver::sched_buildLinearMatrixVelHat(SchedulerP& sched,
 
   // Adding new sources from factory:
   SourceTermFactory& srcFactory = SourceTermFactory::self(); 
-  for (vector<std::string>::iterator iter = d_new_sources.begin(); 
-      iter != d_new_sources.end(); iter++){
+  for (vector<std::string>::iterator iter = d_new_sources.begin(); iter != d_new_sources.end(); iter++){
 
     SourceTermBase& src = srcFactory.retrieve_source_term( *iter ); 
     const VarLabel* srcLabel = src.getSrcLabel(); 
@@ -685,15 +686,12 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
 
     // Adding new sources from factory:
     SourceTermFactory& srcFactory = SourceTermFactory::self(); 
-    for (vector<std::string>::iterator iter = d_new_sources.begin(); 
-       iter != d_new_sources.end(); iter++){
-
+    for (vector<std::string>::iterator iter = d_new_sources.begin(); iter != d_new_sources.end(); iter++){
       SourceTermBase& src = srcFactory.retrieve_source_term( *iter ); 
       const VarLabel* srcLabel = src.getSrcLabel(); 
       // here we have made the assumption that the momentum source is always a vector... 
       // and that we only have one.  probably want to fix this. 
       new_dw->get( velocityVars.otherVectorSource, srcLabel, indx, patch, Ghost::None, 0); 
-
     }
 
     //__________________________________

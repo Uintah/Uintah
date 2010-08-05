@@ -92,7 +92,7 @@ void BCGeomBase::determineIteratorLimits(Patch::FaceType face,
                                          vector<Point>& test_pts)
 {
 #if 0
-  cout << "BCGeomBase determineIteratorLimits()" << endl;
+  cout << "BCGeomBase determineIteratorLimits() " << patch->getFaceName(face)<< endl;
 #endif
 
   IntVector l,h;

@@ -105,7 +105,7 @@ void MassMomEng_src::problemSetup(GridP&, SimulationStateP& sharedState,
 void MassMomEng_src::outputProblemSpec(ProblemSpecP& ps)
 {
   ProblemSpecP model_ps = ps->appendChild("Model");
-  model_ps->setAttribute("type","MassMomEng_src");
+  model_ps->setAttribute("type","mass_momentum_energy_src");
   model_ps->appendElement("material",d_matl->getName());
   model_ps->appendElement("momentum_src", d_src->mom_src_rate);
   model_ps->appendElement("mass_src",     d_src->mass_src_rate);

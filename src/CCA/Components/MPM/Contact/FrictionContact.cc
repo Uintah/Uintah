@@ -51,7 +51,6 @@ DEALINGS IN THE SOFTWARE.
 #include <fstream>
 
 using namespace Uintah;
-using namespace SCIRun;
 using std::vector;
 using std::string;
 
@@ -74,7 +73,7 @@ FrictionContact::FrictionContact(const ProcessorGroup* myworld,
   if(flag->d_8or27==8){
     NGP=1;
     NGN=1;
-  } else if(flag->d_8or27==27){
+  } else if(flag->d_8or27==27 || flag->d_8or27==64){
     NGP=2;
     NGN=2;
   }

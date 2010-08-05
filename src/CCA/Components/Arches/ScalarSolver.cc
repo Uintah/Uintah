@@ -468,20 +468,17 @@ void ScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
 
     // Adding new sources from factory:
     SourceTermFactory& factory = SourceTermFactory::self(); 
-    for (vector<std::string>::iterator iter = d_new_sources.begin(); 
-       iter != d_new_sources.end(); iter++){
+    for (vector<std::string>::iterator iter = d_new_sources.begin(); iter != d_new_sources.end(); iter++){
 
       SourceTermBase& src = factory.retrieve_source_term( *iter ); 
       const VarLabel* srcLabel = src.getSrcLabel(); 
       // TODO - assuming there is only one scalar source... need to change that 
       new_dw->get( scalarVars.otherSource, srcLabel, indx, patch, Ghost::None, 0); 
       // NOTE: use the new data warehouse because the source term is always calculated by this point 
-      
 
     }
 
-
-  }else {
+  } else {
     for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++) {
       new_dw->getModifiable(scalarVars.scalarCoeff[ii],
                             d_lab->d_scalCoefSBLMLabel, ii, patch);

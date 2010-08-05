@@ -83,6 +83,15 @@ void CoalModelFactory::problemSetup(const ProblemSpecP& params)
   // ----------------------------------------------
   // Step 1: CoalModelFactory problem setup
 
+  ProblemSpecP dqmom_db = params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("DQMOM");
+  std::string which_dqmom; 
+  dqmom_db->getAttribute( "type", which_dqmom ); 
+  if ( which_dqmom == "unweightedAbs" ) {
+    d_unweighted = true; 
+  } else {
+    d_unweighted = false; 
+  }
+
   // Grab coal properties from input file
   ProblemSpecP db_coalProperties = params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("Coal_Properties");
   if( db_coalProperties ) {
@@ -368,6 +377,8 @@ CoalModelFactory::register_model( const std::string name,
   
   ModelBase* model = builder->build();
   models_[name] = model;
+
+  model->setUnweightedAbscissas(d_unweighted);
 
   string modelType = model->getType();
 

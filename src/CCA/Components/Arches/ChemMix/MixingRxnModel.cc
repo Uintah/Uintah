@@ -60,11 +60,10 @@ DEALINGS IN THE SOFTWARE.
 
 using namespace std;
 using namespace Uintah;
-using namespace SCIRun;
 
 //---------------------------------------------------------------------------
-MixingRxnModel::MixingRxnModel( const ArchesLabel* labels ):
-  d_lab(labels)
+MixingRxnModel::MixingRxnModel( const ArchesLabel* labels, const MPMArchesLabel* MAlab ):
+  d_lab(labels), d_MAlab(MAlab)
 {
 }
 
@@ -80,6 +79,8 @@ MixingRxnModel::~MixingRxnModel()
 }
 
 //---------------------------------------------------------------------------
+// Set Mix Dependent Variable Map
+//---------------------------------------------------------------------------
 void 
 MixingRxnModel::setMixDVMap( const ProblemSpecP& root_params )
 {
@@ -92,7 +93,7 @@ MixingRxnModel::setMixDVMap( const ProblemSpecP& root_params )
 
   if (db_vars) {
 
-    proc0cout << "The following table variables are requested by the user: " << endl; 
+    proc0cout << "  The following table variables are requested by the user: " << endl; 
 
     for (ProblemSpecP db_dv = db_vars->findBlock("save"); 
           db_dv !=0; db_dv = db_dv->findNextBlock("save")){
@@ -110,7 +111,9 @@ MixingRxnModel::setMixDVMap( const ProblemSpecP& root_params )
   }
 
   // Add a few extra variables to the dependent variable map that are required by the algorithm 
-  proc0cout << "(below required by the algorithm)" << endl; 
+  // NOTE: These are required FOR NOW by the algorithm while NewStaticMixingTable still lives. 
+  //       They will be removed once the conversion to TabProps is complete. 
+  proc0cout << "    (below required by the CFD algorithm)" << endl; 
   var_name = "density"; 
   insertIntoMap( var_name ); 
   var_name = "temperature"; 
@@ -122,8 +125,10 @@ MixingRxnModel::setMixDVMap( const ProblemSpecP& root_params )
   var_name = "H2O"; 
   insertIntoMap( var_name ); 
 
-  proc0cout << "----------------------------------------------------------" << endl;
+  proc0cout << endl;
 }
+
+
 //---------------------------------------------------------------------------
 // Add Additional Table Lookup Variables
 //---------------------------------------------------------------------------
@@ -134,5 +139,4 @@ MixingRxnModel::addAdditionalDV( std::vector<string>& vars )
     insertIntoMap( *ivar ); 
   }
 }
-
 

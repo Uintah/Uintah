@@ -42,15 +42,12 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Exceptions/ParameterNotFound.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
-#include   <iostream>
-#include   <string>
-#include   <list>
-
-#define d_TINY_RHO 1.0e-12 // also defined  ICE.cc and ICEMaterial.cc 
+#include <iostream>
+#include <string>
+#include <list>
 
 using namespace std;
 using namespace Uintah;
-using namespace SCIRun;
 
 // Standard Constructor
 CZMaterial::CZMaterial(ProblemSpecP& ps, SimulationStateP& ss,MPMFlags* flags)

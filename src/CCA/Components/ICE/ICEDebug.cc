@@ -52,7 +52,6 @@ DEALINGS IN THE SOFTWARE.
 #endif
 using std::ifstream;
 using std::cerr;
-using namespace SCIRun;
 using namespace Uintah;
 
 //__________________________________

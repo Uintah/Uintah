@@ -52,7 +52,6 @@ DEALINGS IN THE SOFTWARE.
 
 using std::cerr;
 using namespace Uintah;
-using namespace SCIRun;
 
 // _________________transversely isotropic hyperelastic material [Jeff Weiss's]
 
@@ -604,7 +603,11 @@ void TransIsoHyper::computeStressTensor(const PatchSubset* patches,
     WaveSpeed = dx/WaveSpeed;
     double delT_new = WaveSpeed.minComponent();
     new_dw->put(delt_vartype(delT_new), lb->delTLabel, patch->getLevel());
-    new_dw->put(sum_vartype(se),        lb->StrainEnergyLabel);
+    
+    if (flag->d_reductionVars->accStrainEnergy ||
+        flag->d_reductionVars->strainEnergy) {
+      new_dw->put(sum_vartype(se),        lb->StrainEnergyLabel);
+    }
     delete interpolator;
   }
 }
@@ -647,7 +650,11 @@ void TransIsoHyper::carryForward(const PatchSubset* patches,
       pfail[idx] = 0.0;
     }
     new_dw->put(delt_vartype(1.e10), lb->delTLabel, patch->getLevel());
-    new_dw->put(sum_vartype(0.),     lb->StrainEnergyLabel);
+    
+    if (flag->d_reductionVars->accStrainEnergy ||
+        flag->d_reductionVars->strainEnergy) {
+      new_dw->put(sum_vartype(0.),     lb->StrainEnergyLabel);
+    }
   }
 }
 

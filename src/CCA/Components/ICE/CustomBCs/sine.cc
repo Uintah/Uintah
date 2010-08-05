@@ -45,7 +45,7 @@ namespace Uintah {
 //__________________________________
 //  To turn on couts
 //  setenv SCI_DEBUG "SINE_DOING_COUT:+"
-static DebugStream cout_doing("SINE_DOING_COUT", false);
+static DebugStream cout_doing("ICE_BC_CC", false);
 
 /* ______________________________________________________________________
  Function~  read_Sine_BC_inputs--   
@@ -182,7 +182,7 @@ void  preprocess_Sine_BCs(DataWarehouse* new_dw,
  Function~ set_Sine_Velocity_BC--
  Purpose~  Set velocity boundary conditions
 ___________________________________________________________________*/
-void set_Sine_Velocity_BC(const Patch* patch,
+int  set_Sine_Velocity_BC(const Patch* patch,
                           const Patch::FaceType face,
                           CCVariable<Vector>& vel_CC,
                           const string& var_desc,
@@ -193,8 +193,9 @@ void set_Sine_Velocity_BC(const Patch* patch,
                           sine_vars* sine_v)                     
 
 {
+  int IveSetBC = 0;
   if (var_desc == "Velocity" && bc_kind == "Sine") {
-    cout_doing << "Setting Vel_BC (Sine) on face " << face << endl;
+    cout_doing << "    Vel_CC (Sine) \t\t" <<patch->getFaceName(face)<< endl;
     
     // bulletproofing
     if (!sine_var_basket || !sine_v){
@@ -219,24 +220,26 @@ void set_Sine_Velocity_BC(const Patch* patch,
       vel_CC[c].y(vel_ref.y() +  one_or_zero.y() * change);  
       vel_CC[c].z(vel_ref.z() +  one_or_zero.z() * change);                                               
     }
-  } 
+    IveSetBC = 1;
+  }
+  return IveSetBC; 
 }
 
 /*_________________________________________________________________
  Function~ set_Sine_Temperature_BC--
  Purpose~  Set temperature boundary conditions
 ___________________________________________________________________*/
-void set_Sine_Temperature_BC(const Patch* /*patch*/,
+int set_Sine_Temperature_BC(const Patch* patch,
                             const Patch::FaceType face,
                             CCVariable<double>& temp_CC,
-                            const string& var_desc,
                             Iterator& bound_ptr,
                             const string& bc_kind,
                             sine_variable_basket* sine_var_basket,
                             sine_vars* sine_v)  
 {
-  if (var_desc == "Temperature" && bc_kind == "Sine") {
-    cout_doing << "Setting Temp_CC (Sine) on face " <<face<< endl;
+  int IveSetBC = 0;
+  if (bc_kind == "Sine") {
+    cout_doing << "    Temp_CC (Sine) \t\t" <<patch->getFaceName(face)<< endl;
 
     // bulletproofing
     if (!sine_var_basket || !sine_v){
@@ -247,18 +250,20 @@ void set_Sine_Temperature_BC(const Patch* /*patch*/,
     constCCVariable<double> press_CC = sine_v->press_CC;
     constCCVariable<double> rho_CC   = sine_v->rho_CC;
                                                                             
-    for (bound_ptr.reset(); bound_ptr.done(); bound_ptr++) {  
+    for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {  
       IntVector c = *bound_ptr;                                             
       temp_CC[c]= press_CC[c]/((gamma - 1.0) * cv * rho_CC[c]);
-    }                                                                  
+    }
+    IveSetBC = 1;                                                   
   }
+  return IveSetBC;
 } 
 
 /*_________________________________________________________________
  Function~ set_Sine_press_BC--
  Purpose~  Set press boundary conditions
 ___________________________________________________________________*/
-void set_Sine_press_BC(const Patch* patch,
+int set_Sine_press_BC(const Patch* patch,
                       const Patch::FaceType face,
                       CCVariable<double>& press_CC,
                       Iterator& bound_ptr,
@@ -267,13 +272,14 @@ void set_Sine_press_BC(const Patch* patch,
                       sine_variable_basket* sine_var_basket,
                       sine_vars* sine_v)  
 {
-  cout_doing << "Setting press_CC (Sine) on face " <<face<< endl;
+  cout_doing << "    press_CC (Sine) \t\t" <<patch->getFaceName(face)<< endl;
 
   // bulletproofing
   if (!sine_var_basket || !sine_v){
     throw InternalError("set_Sine_press_BC: sine_vars = null", __FILE__, __LINE__);
   }
-                            
+  
+  int IveSetBC = 0;      
   double A     =  sine_var_basket->A;
   double omega =  sine_var_basket->omega;   
   double p_ref =  sine_var_basket->p_ref;                               
@@ -283,8 +289,10 @@ void set_Sine_press_BC(const Patch* patch,
 
   for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {  
     IntVector c = *bound_ptr;                                    
-    press_CC[c] = p_ref + change;                 
-  }                                                                  
+    press_CC[c] = p_ref + change;           
+  }
+  IveSetBC = 1;
+  return IveSetBC;                                                  
 }
   
 }  // using namespace Uintah

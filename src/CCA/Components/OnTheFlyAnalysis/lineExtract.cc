@@ -38,6 +38,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/Grid.h>
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/Variables/CellIterator.h>
+#include <Core/Math/MiscMath.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Parallel/UintahParallelComponent.h>
@@ -232,9 +233,10 @@ void lineExtract::problemSetup(const ProblemSpecP& prob_spec,
     string name = attribute["name"];
 
     Point start, end;
+    double stepSize;
     line_spec->require("startingPt", start);
     line_spec->require("endingPt",   end);
-    
+    line_spec->getWithDefault("stepSize", stepSize, 0.0);
     //__________________________________
     // bullet proofing
     // -every line must have a name
@@ -302,10 +304,11 @@ void lineExtract::problemSetup(const ProblemSpecP& prob_spec,
     
     // put input variables into the global struct
     line* l = scinew line;
-    l->name    = name;
-    l->startPt = start;
-    l->endPt   = end;
-    l->loopDir = loopDir;
+    l->name     = name;
+    l->startPt  = start;
+    l->endPt    = end;
+    l->loopDir  = loopDir;
+    l->stepSize = stepSize;
     d_lines.push_back(l);
   }
 }
@@ -522,6 +525,14 @@ void lineExtract::doAnalysis(const ProcessorGroup* pg,
         Point start_pt = d_lines[l]->startPt;
         Point end_pt   = d_lines[l]->endPt;
         
+        double stepSize(d_lines[l]->stepSize);
+        Vector dx = patch->dCell();
+        double dxDir = dx[d_lines[l]->loopDir];
+        double tmp = stepSize/dxDir;
+        
+        int step = RoundUp(tmp);
+        step = Max(step, 1);
+        
         Box patchDomain = patch->getExtraBox();
         if(level->getIndex() > 0){ // ignore extra cells on fine patches
           patchDomain = patch->getBox();
@@ -544,7 +555,7 @@ void lineExtract::doAnalysis(const ProcessorGroup* pg,
         // loop over each point in the line on this patch
         CellIterator iterLim = CellIterator(start_idx,end_idx);
   
-        for(CellIterator iter=iterLim; !iter.done();iter++) {
+        for(CellIterator iter=iterLim; !iter.done();iter+=step) {
           
           if (!patch->containsCell(*iter))
             continue;  // just in case - the point-to-cell logic might throw us off on patch boundaries...

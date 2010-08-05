@@ -286,6 +286,24 @@ SCI_ARG_WITH(petsc,
   [with_petsc="$withval"
    sci_required_petsc=yes],
   [with_petsc=""])
+SCI_ARG_WITH(boost,
+  AC_HELP_STRING(--with-boost=DIR,
+                 Use the Boost library in DIR),
+  [with_boost="$withval"
+   sci_required_boost=yes],
+  [with_boost=""])
+#SCI_ARG_WITH(spatialops,
+#  AC_HELP_STRING(--with-spatialops=DIR,
+#                 Use the SpatialOps library in DIR),
+#  [with_spatialops="$withval"
+#   sci_required_spatialops=yes],
+#  [with_spatialops=""])
+#SCI_ARG_WITH(exprlib,
+#  AC_HELP_STRING(--with-exprlib=DIR,
+#                 Use the ExprLib library in DIR),
+#  [with_exprlib="$withval"
+#   sci_required_exprlib=yes],
+#  [with_exprlib=""])
 SCI_ARG_WITH(tabprops,
   AC_HELP_STRING(--with-tabprops=DIR,
                  Use the TabProps library in DIR),
@@ -895,26 +913,40 @@ BUILD_ARCHES=yes
 BUILD_ICE=yes
 BUILD_MPM=yes
 BUILD_RADIATION=yes
+BUILD_WASATCH=no
 DEF_ARCHES=""
 DEF_ICE=""
 DEF_MPM=""
 DEF_RADIATION=""
+DEF_WASATCH=""
+
 if test "$USE_ARCHES" = no; then BUILD_ARCHES=no; DEF_ARCHES="#define NO_ARCHES"; fi
 if test "$USE_ICE" = no; then BUILD_ICE=no; DEF_ICE="#define NO_ICE"; fi
 if test "$USE_MPM" = no; then BUILD_MPM=no; DEF_MPM="#define NO_MPM"; fi
 if test "$USE_RADIATION" = no; then BUILD_RADIATION=no; DEF_RADIATION="#define NO_RADIATION"; fi
-if test "$with_fortran" = no; then BUILD_ARCHES=no; BUILD_RADIATION=no;
-                                   DEF_RADIATION="#define NO_RADIATION"; DEF_ARCHES="#define NO_ARCHES";
+if test "$with_fortran" = no; then 
+            BUILD_ARCHES=no; BUILD_RADIATION=no;
+            DEF_RADIATION="#define NO_RADIATION"; DEF_ARCHES="#define NO_ARCHES";
+            DEF_NO_FORTRAN="#define NO_FORTRAN";
+            NO_FORTRAN="yes";
 fi
+if test "$USE_WASATCH" = yes; then BUILD_WASATCH=yes; fi
+if test "$BUILD_WASATCH" = no; then DEF_WASATCH="#define NO_WASATCH"; fi
+
+# NO_FORTRAN is used in configVars.mk[.in] and DEF_NO_FORTRAN is used in uintah_testdefs.h.in
 
 AC_SUBST(BUILD_ARCHES)
 AC_SUBST(BUILD_ICE)
 AC_SUBST(BUILD_MPM)
 AC_SUBST(BUILD_RADIATION)
+AC_SUBST(BUILD_WASATCH)
 AC_SUBST(DEF_ARCHES)
 AC_SUBST(DEF_ICE)
 AC_SUBST(DEF_MPM)
+AC_SUBST(DEF_NO_FORTRAN)
 AC_SUBST(DEF_RADIATION)
+AC_SUBST(DEF_WASATCH)
+AC_SUBST(NO_FORTRAN)
 
 if test "$BUILD_ARCHES" = no -a "$BUILD_RADIATION" = no; then
   sci_required_fortran=no
@@ -1555,8 +1587,10 @@ if test "$sci_required_tools" = "yes" ; then
   fi
 fi
 
-AC_MSG_CHECKING(fortran underscore policy)
-AC_MSG_RESULT($FORTRAN_UNDERSCORE)
+if test "$with_fortran" != no; then 
+  AC_MSG_CHECKING(fortran underscore policy)
+  AC_MSG_RESULT($FORTRAN_UNDERSCORE)
+fi
 
 AC_SUBST(FORTRAN_UNDERSCORE)
 AC_SUBST(DEF_FORTRAN_UNDERSCORE)
@@ -1749,14 +1783,41 @@ AC_SUBST(CFLAGS)
 ##  --  Enable VisIt -----------------------------
 
 if test "$with_visit"; then
-   if test -z "$with_teem"; then
-      AC_MSG_ERROR( You must specify --with-teem=DIR when using --with-visit. )
-   fi                
+
+   AC_MSG_CHECKING(for VisIt)
+
+   which cmake > /dev/null 2>&1
+   if test $? != 0; then
+      AC_MSG_ERROR( VisIt requires CMake. Please make sure 'cmake' is in your path!)
+   fi
+
+   CMAKE_LOCATION=`which cmake`
+
+   # Verify that cmake is new enough:
+   #
+   # Need this ugly hack to handle different types of version strings returned by cmake's different versions... sigh.
+   # The first 'sed' removes all alphabetical characters (leaves numbers, spaces, and periods).  The second 'sed'
+   # removes leading and trailing space.  The final 'sed' replaces (potential) spaces with a perions (.).
+   # Eg: The version string from cmake 2.4.8 is 'cmake version 2.4-patch 8'.
+   # Note: autoconf removes one set of [], thus the below sed commands have one extra set of [] around each portion.
+   CMAKE_VERSION_STRING=`cmake --version | sed 's/[[^0-9. ]]//g' | sed 's/^[[[:space:]]]*\(.*\)[[[:space:]]]*$/\1/' | sed 's/ /./g'`
+
+   CMAKE_VERSION_MAJOR=`echo "$CMAKE_VERSION_STRING" | awk -F. '{print $1}'`
+   CMAKE_VERSION_MINOR=`echo "$CMAKE_VERSION_STRING" | awk -F. '{print $2}'`
+
+   if   test "$CMAKE_VERSION_MAJOR" -ge 3; then
+      AC_MSG_WARN(Have not tried using cmake v3.x... It might work...)
+   elif test "$CMAKE_VERSION_MAJOR" -lt 2; then
+      AC_MSG_ERROR(CMake must be version 2.8 or better.  $CMAKE_LOCATION is version $CMAKE_VERSION_STRING.)
+   elif test "$CMAKE_VERSION_MINOR" -lt 8; then
+      AC_MSG_ERROR(CMake must be version 2.8 or better.  $CMAKE_LOCATION is version $CMAKE_VERSION_STRING.)
+   fi
+
    if test "$with_visit" == "yes"; then 
       AC_MSG_ERROR( You must provide a DIRECTORY when using --with-visit=DIR. )
    fi
-   if ! test -f "$with_visit/src/bin/xml2makefile"; then 
-      AC_MSG_ERROR( Could not find xml2makefile in $with_visit/src/bin/... )
+   if ! test -f "$with_visit/bin/xml2cmake"; then 
+      AC_MSG_ERROR( Could not find xml2cmake in $with_visit/bin/... )
    fi
 
    if test -f "./VisIt/udaReaderMTMD/Makefile.visit"; then
@@ -1767,11 +1828,12 @@ if test "$with_visit"; then
       fi
    fi
 
-   sci_defs_files="$sci_defs_files VisIt/udaReaderMTMD/testavtudaReaderMTMDFileFormat.C"
+   sci_defs_files="$sci_defs_files VisIt/udaReaderMTMD/avtudaReaderMTMDFileFormat.C"
 
    BUILD_VISIT=yes
    UINTAH_UDA_TO_VIS_LIB=`pwd`/lib/libStandAlone_tools_uda2vis.$SO_OR_ARCHIVE_EXTENSION
    VISIT_INSTALL_DIR=$with_visit
+   AC_MSG_RESULT(found)
 fi
 
 AC_SUBST(BUILD_VISIT)
@@ -2349,54 +2411,56 @@ elif test "$with_fortran" -a "$with_fortran" != "no"; then
   _sci_optional=specific
 fi
 
-case $host in 
-  *aix*)
-    # AIX Fortran Library Check
-    SCI_TRY_LINK(F,fortran libraries,,,xlf90,$_sci_lib,,,$_sci_optional)
-    ;;
-  *linux*)
-    # Linux Library Check
-    case $F77 in
-      *pgf77*)
-        SCI_TRY_LINK(F,fortran libraries,,,pgftnrtl,$_sci_lib,$RT_LIB_FLAG,,$_sci_optional)
-        ;;
-      *gfortran*)
-        SCI_TRY_LINK(F,fortran libraries,,,gfortran,$_sci_lib,,,$_sci_optional)
-        ;;
-      *ifort*)
-        SCI_TRY_LINK(F,fortran libraries,,,ifcore,$_sci_lib,,,$_sci_optional)
-        ;;
-      *ftn*)
-        SCI_TRY_LINK(F,fortran libraries,,,,$_sci_lib,,,$_sci_optional)
-        ;;
-      *)
-        SCI_TRY_LINK(F,fortran libraries,,,g2c,$_sci_lib,,,$_sci_optional)
-        ;;
-     esac
-    ;;
-  *dec*)
-    SCI_TRY_LINK(F,fortran libraries,,,for Ufor,$_sci_lib,,,$_sci_optional)
-    ;;
-  *-darwin*)
-    # OSX Library Check
-    if test "$F77" = "xlf"; then
-      SCI_TRY_LINK(F,fortran libraries,,$_sci_inc,xlf90,$_sci_lib,,,$_sci_optional)
-    else
-      SCI_TRY_LINK(F,fortran libraries,,$_sci_inc,gfortran,$_sci_lib,,,optional)
-      if test "$HAVE_F" = "no"; then
-            SCI_TRY_LINK(F,fortran libraries,,$_sci_inc,g2c,$_sci_lib,,,$_sci_optional)
+if test "$with_fortran" != "no"; then
+  case $host in 
+    *aix*)
+      # AIX Fortran Library Check
+      SCI_TRY_LINK(F,fortran libraries,,,xlf90,$_sci_lib,,,$_sci_optional)
+      ;;
+    *linux*)
+      # Linux Library Check
+      case $F77 in
+        *pgf77*)
+          SCI_TRY_LINK(F,fortran libraries,,,pgftnrtl,$_sci_lib,$RT_LIB_FLAG,,$_sci_optional)
+          ;;
+        *gfortran*)
+          SCI_TRY_LINK(F,fortran libraries,,,gfortran,$_sci_lib,,,$_sci_optional)
+          ;;
+        *ifort*)
+          SCI_TRY_LINK(F,fortran libraries,,,ifcore,$_sci_lib,,,$_sci_optional)
+          ;;
+        *ftn*)
+          SCI_TRY_LINK(F,fortran libraries,,,,$_sci_lib,,,$_sci_optional)
+          ;;
+        *)
+          SCI_TRY_LINK(F,fortran libraries,,,g2c,$_sci_lib,,,$_sci_optional)
+          ;;
+       esac
+      ;;
+    *dec*)
+      SCI_TRY_LINK(F,fortran libraries,,,for Ufor,$_sci_lib,,,$_sci_optional)
+      ;;
+    *-darwin*)
+      # OSX Library Check
+      if test "$F77" = "xlf"; then
+        SCI_TRY_LINK(F,Mac fortran library - xlf90,,$_sci_inc,xlf90,$_sci_lib,,,$_sci_optional)
+      else
+        SCI_TRY_LINK(F,Mac fortran library - gfortran,,$_sci_inc,gfortran,$_sci_lib,,,optional)
+        if test "$HAVE_F" = "no"; then
+             SCI_TRY_LINK(F,mac fortran library - g2c,,$_sci_inc,g2c,$_sci_lib,,,$_sci_optional)
+        fi
       fi
-    fi
-    ;;
-  *-pc-mingw*)
-    # Mingw g77 and libg2c
-    SCI_TRY_LINK(F,fortran libraries,,,g2c,$_sci_lib,,,$_sci_optional)
-    ;;
-  *)
-    SCI_TRY_LINK(F,fortran libraries,,,F77,$_sci_lib,,,$_sci_optional)
-    ;;
-esac
-
+      ;;
+    *-pc-mingw*)
+      # Mingw g77 and libg2c
+      SCI_TRY_LINK(F,fortran libraries,,,g2c,$_sci_lib,,,$_sci_optional)
+      ;;
+    *)
+      SCI_TRY_LINK(F,fortran libraries,,,F77,$_sci_lib,,,$_sci_optional)
+      ;;
+  esac
+fi
+  
 AC_SUBST(F_LIB_FLAG)
 AC_SUBST(F_LIB_DIR_FLAG)
 
@@ -2405,6 +2469,13 @@ MPI_EXTRA_LIB_DIR="$MPI_EXTRA_LIB_DIR $F_LIB_DIR_FLAG"
 
 AC_LANG(C)
 
+# Clean up all the fortran flags that don't have individual without-fortran guards on them...
+if test "$with_fortran" = no; then 
+  FFLAGS="fortran_disabled";
+  extra_fflags="fortran_disabled";
+  FORTRAN_UNDERSCORE="// FORTRAN_UNDERSCORE => fortran_disabled";
+  DEF_FORTRAN_UNDERSCORE="// DEF_FORTRAN_UNDERSCORE => fortran_disabled";
+fi
 
 ##  --  Electric Fence  -------------------------------------
 
@@ -3055,10 +3126,10 @@ if (test "$HAVE_MPI" = "yes" || test "$HAVE_MPI_UNI" = "yes") && test "$HAVE_BLA
       # The newer (2.3+) versions of petsc don't use the libO anymore...
       have23=`echo "$with_petsc" | grep "2.3."`
       if test -z "$have23" ; then
-         petsc_version_major=`grep PETSC_VERSION_MAJOR $with_petsc/include/petscversion.h | awk '{print $3}'`
-         petsc_version_minor=`grep PETSC_VERSION_MINOR $with_petsc/include/petscversion.h | awk '{print $3}'`
-         if test $petsc_version_major -eq 2 ; then
-            if test $petsc_version_minor -eq 3 ; then
+         petsc_version_major=`grep PETSC_VERSION_MAJOR $with_petsc/include/petscversion.h | grep define | awk '{print $3}'`
+         petsc_version_minor=`grep PETSC_VERSION_MINOR $with_petsc/include/petscversion.h | grep define | awk '{print $3}'`
+         if test "$petsc_version_major" -eq 2 ; then
+            if test "$petsc_version_minor" -eq 3 ; then
                have23=true
             fi
          fi
@@ -3400,6 +3471,7 @@ AC_SUBST(HDF5_LIB_FLAG)		# Place this var in the configVars.mk.in
 AC_SUBST(HDF5_LIB_DIR_FLAG)	# Place this var in the configVars.mk.in
 sci_defs_files="$sci_defs_files include/sci_defs/hdf5_testdefs.h"
 AC_LANG(C)
+
 ##  --  search for TabProps ------------------------
 
 if test "$with_tabprops"; then
@@ -3433,7 +3505,34 @@ AC_SUBST(INC_TABPROPS_H)
 AC_SUBST(TABPROPS_LIB_FLAG)
 AC_SUBST(TABPROPS_LIB_DIR_FLAG)
 
-## -----------------------------------------------
+##  --  search for Boost ------------------------
+
+if test "$with_boost"; then
+  if test "$with_boost" = "yes"; then
+    AC_MSG_ERROR( --with-boost=DIR requires a DIRectory be provided. )
+  else
+    AC_MSG_CHECKING(for Boost files (For now we are just verifying the existence of lib and .h files)) 
+    if test ! -d $with_boost; then
+      AC_MSG_ERROR( '$with_boost' directory does not exist. )
+    fi
+    for file in include/boost/BSpline.h include/boost/LU.h include/boost/StateTable.h lib/boost/libboost.a; do
+      if test ! -f $with_boost/$file; then
+        AC_MSG_ERROR( '$with_boost/$file' does not exist. )
+      fi
+    done
+  fi
+  AC_MSG_RESULT(yes)
+  DEF_BOOST="#define HAVE_BOOST 1"
+  INC_BOOST_H="-I$with_boost/include"
+  BOOST_LIB_DIR_FLAG="-L$with_boost/lib/boost"
+  BOOST_LIB_FLAG="-lboost"
+  HAVE_BOOST="yes"
+fi
+AC_SUBST(HAVE_BOOST)
+AC_SUBST(DEF_BOOST)
+AC_SUBST(INC_BOOST_H)
+AC_SUBST(BOOST_LIB_FLAG)
+AC_SUBST(BOOST_LIB_DIR_FLAG)
 
 ##  --  search for hypre stuff  ------------------------------------------
 

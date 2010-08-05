@@ -57,7 +57,6 @@ DEALINGS IN THE SOFTWARE.
 
 using namespace std;
 using namespace Uintah;
-using namespace SCIRun;
 
 #include <CCA/Components/Arches/Radiation/fortran/rordr_fort.h>
 //#include <CCA/Components/Arches/Radiation/fortran/rordrss_fort.h>

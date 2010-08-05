@@ -191,7 +191,6 @@ namespace Uintah {
       constCCVariable<double> otherSource;
       constCCVariable<Vector> otherVectorSource;
       constCCVariable<Vector> particleGasMomentumSource;
-      // END KLUDGE --------------------
 
     }; // End class ArchesVariables
    

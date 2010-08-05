@@ -134,6 +134,17 @@
       <origin                 spec="OPTIONAL VECTOR" />
       <radius                 spec="OPTIONAL DOUBLE 'positive'" />
     </sphere>
+    
+    <ellipsoid                   spec="OPTIONAL NO_DATA"
+                                attribute1="label    OPTIONAL STRING" >
+      <origin                 spec="OPTIONAL VECTOR" />
+      <rx                     spec="OPTIONAL DOUBLE 'positive'" />
+      <ry                     spec="OPTIONAL DOUBLE 'positive'" />
+      <rz                     spec="OPTIONAL DOUBLE 'positive'" />
+      <v1                     spec="OPTIONAL VECTOR" />
+      <v2                     spec="OPTIONAL VECTOR" />
+      <v3                     spec="OPTIONAL VECTOR" />
+    </ellipsoid>
 
     <sphere_membrane          spec="OPTIONAL NO_DATA"
                                 attribute1="label    OPTIONAL STRING" >
@@ -199,6 +210,7 @@
       <cylinder               spec="MULTIPLE" />
       <difference             spec="MULTIPLE" />
       <intersection           spec="MULTIPLE" />
+      <ellipsoid              spec="MULTIPLE" />
       <sphere                 spec="MULTIPLE" />
       <sphere_membrane        spec="MULTIPLE" />
       <sphere_shell           spec="MULTIPLE" />
@@ -217,6 +229,7 @@
       <cylinder               spec="MULTIPLE" />
       <difference             spec="MULTIPLE" />
       <intersection           spec="MULTIPLE" />
+      <ellipsoid              spec="MULTIPLE" />
       <sphere                 spec="MULTIPLE" />
       <sphere_membrane        spec="MULTIPLE" />
       <sphere_shell           spec="MULTIPLE" />
@@ -234,6 +247,7 @@
       <cylinder               spec="MULTIPLE" />
       <difference             spec="MULTIPLE" />
       <intersection           spec="MULTIPLE" />
+      <ellipsoid              spec="MULTIPLE" />
       <sphere                 spec="MULTIPLE" />
       <sphere_membrane        spec="MULTIPLE" />
       <sphere_shell           spec="MULTIPLE" />
@@ -251,6 +265,7 @@
       <cylinder               spec="MULTIPLE" />
       <difference             spec="MULTIPLE" />
       <intersection           spec="MULTIPLE" />
+      <ellipsoid              spec="MULTIPLE" />
       <sphere                 spec="MULTIPLE" />
       <sphere_membrane        spec="MULTIPLE" />
       <sphere_shell           spec="MULTIPLE" />
@@ -306,6 +321,7 @@
     <SimulationComponent          spec="REQUIRED NO_DATA"
                                     attribute1="type REQUIRED STRING 'angio, arches, burger, ice, impm, mpm, mpmarches, 
                                                                       mpmf, mpmice, amrmpm,
+                                                                      wasatch,
                                                                       poisson1, poisson2, poisson3, poisson4, benchmark, rigidmpmice, 
                                                                       rmpmice, smpm, smpmice, spatialops, switcher, wave, solvertest'" >
                                   <!-- The 'type' above is used in CCA/Components/Parent/ComponentFactory.cc -->
@@ -332,7 +348,30 @@
           <SimulationComponent          spec="OPTIONAL" />
         </subcomponent>
     </SimulationComponent>
-     
+
+    <!-- ========================================= -->
+    <!-- Wasatch common tags - to be relocated soon -->
+
+    <NameTag				spec="OPTIONAL NO_DATA"
+                                        attribute1="name REQUIRED STRING"
+                                        attribute2="state REQUIRED STRING 'STATE_NONE,STATE_NP1,STATE_N'" />
+    <!-- Spec for basic expression types -->
+    <BasicExpression			spec="MULTIPLE NO_DATA"
+                                        attribute1="label REQUIRED STRING"
+                                        attribute2="type REQUIRED STRING 'Cell,XFace,YFace,ZFace'"
+                                        children1="ONE_OF(CHILD Constant,LinearFunction)" >
+      <TaskList				spec="REQUIRED STRING 'initialization,timestep_size,advance_solution'" />
+      <NameTag				spec="REQUIRED" />
+      <Constant				spec="OPTIONAL DOUBLE" />
+      <LinearFunction			spec="OPTIONAL NO_DATA"
+                                        attribute1="slope REQUIRED DOUBLE"      
+                                        attribute2="intercept REQUIRED DOUBLE" >
+        <!-- jcs need to specify independent variable for this function -->
+        <NameTag			spec="REQUIRED" />
+      </LinearFunction>
+      
+    </BasicExpression>
+    <!-- ========================================= -->
 
   </CommonTags>
   <!-- End Common Block -->
@@ -464,7 +503,7 @@
       <LODI                 spec="OPTIONAL NO_DATA">
         <press_infinity     spec="REQUIRED DOUBLE 'positive'" />
         <sigma              spec="REQUIRED DOUBLE '0, 1'"/>
-        <ice_material_index spec="REQUIRED INTEGER '0, 6'"/>
+        <material           spec="REQUIRED STRING"/>
       </LODI>    
       
       <SINE_BC              spec="OPTIONAL NO_DATA">
@@ -565,10 +604,10 @@
       </Variables>
 
       <lines                            spec="OPTIONAL NO_DATA" need_applies_to="name lineExtract">
-        <line                           spec="MULTIPLE NO_DATA" 
-                                          attribute1="name REQUIRED STRING" > 
+        <line                           spec="MULTIPLE NO_DATA" attribute1="name REQUIRED STRING" > 
           <startingPt                   spec="REQUIRED VECTOR" />
           <endingPt                     spec="REQUIRED VECTOR" />
+          <stepSize                     spec="OPTIONAL DOUBLE 'positive'"/>
         </line>
       </lines>
       <!--  container extract -->
@@ -658,23 +697,28 @@
   </Wave>
 
   <LoadBalancer            spec="OPTIONAL NO_DATA" 
-                             attribute1="type REQUIRED STRING 'DLB SimpleLoadBalancer'" >
-    <cellCost              spec="OPTIONAL DOUBLE 'positive'" /> <!--The weight per cell -->
-    <cellFactor            spec="OPTIONAL DOUBLE" />  <!-- FIXME: What is this?  What is the default? -->
-    <collectParticles      spec="OPTIONAL BOOLEAN" />
-    <doCostProfiling       spec="OPTIONAL BOOLEAN" /> <!-- use cost profiling instead of the cost model-->
-    <doSpaceCurve          spec="OPTIONAL BOOLEAN" /> <!-- FIXME: default? -->
-    <dynamicAlgorithm      spec="REQUIRED STRING 'particle3, patchFactor, patchFactorParticles, random, Zoltan'" />
-    <extraCellCost         spec="OPTIONAL DOUBLE 'positive'" /> <!--The weight extra cell -->
-    <gainThreshold         spec="OPTIONAL DOUBLE '0,1'" /> <!-- the percent improvement that a reloadbalance must have over an old load balance to be used-->
-    <levelIndependent      spec="OPTIONAL BOOLEAN" /> <!-- FIXME: Is this optional? If so, what is default? -->
-    <particleCost          spec="OPTIONAL DOUBLE 'positive'" /> <!-- The weight per particle -->
-    <patchCost             spec="OPTIONAL DOUBLE 'positive'" /> <!-- The weight per patch -->
-    <profileTimestepWindow spec="OPTIONAL INTEGER 'positive'" /> <!-- the number of timesteps that the profiled weight will take up 99% of the weight -->
+                             attribute1="type REQUIRED STRING 'DLB PLB SimpleLoadBalancer'" >
+                             
+    <costAlgorithm         spec="OPTIONAL STRING 'Model,ModelLS,Kalman,Memory'" />
+    <dynamicAlgorithm      spec="OPTIONAL STRING 'particle3, patchFactor, patchFactorParticles, random, Zoltan'" />
+    <doSpaceCurve          spec="OPTIONAL BOOLEAN" /> <!-- default is true-->
+    <hasParticles          spec="OPTIONAL BOOLEAN" /> <!-- should the cost algorithms take into account particles-->
     <timestepInterval      spec="REQUIRED INTEGER 'positive'" />
+
+    <profileTimestepWindow spec="OPTIONAL INTEGER 'positive'" /> <!-- the number of timesteps that the profiled weight will take up 99% of the weight -->
+    <gainThreshold         spec="OPTIONAL DOUBLE '0,1'" /> <!-- the percent improvement that a reloadbalance must have over an old load balance to be used-->
+    <levelIndependent      spec="OPTIONAL BOOLEAN" /> <!-- default is true -->
     <outputNthProc         spec="OPTIONAL INTEGER 'positive'"/>
+
     <zoltanAlgorithm       spec="OPTIONAL STRING 'HSFC RIB RCB'" />
     <zoltanIMBTol          spec="OPTIONAL DOUBLE 'positive'" />
+    
+    <!--The remaining tags should not need to be set unless using "Model"-->
+    <cellCost              spec="OPTIONAL DOUBLE 'positive'" /> <!--The weight per cell -->
+    <particleCost          spec="OPTIONAL DOUBLE 'positive'" /> <!-- The weight per particle -->
+    <patchCost             spec="OPTIONAL DOUBLE 'positive'" /> <!-- The weight per patch -->
+    <extraCellCost         spec="OPTIONAL DOUBLE 'positive'" /> <!--The weight extra cell -->
+    
 
   </LoadBalancer>
 
@@ -742,7 +786,7 @@
 
       <Active                 spec="OPTIONAL BOOLEAN" need_applies_to="type JWLpp Simple_Burn DDT0" />
       <b                      spec="REQUIRED DOUBLE" need_applies_to="type hard_sphere_gas JWLpp Thomsen_Hartka_water Tillotson" />
-      <E0                     spec="REQUIRED DOUBLE" need_applies_to="type JWLpp LightTime Tillotson" />
+      <E0                     spec="REQUIRED DOUBLE" need_applies_to="type JWLpp Tillotson" />
       <energy_src             spec="REQUIRED DOUBLE" need_applies_to="type mass_momentum_energy_src"/>
       <G                      spec="REQUIRED DOUBLE" need_applies_to="type JWLpp" />
       <mass_src               spec="REQUIRED DOUBLE" need_applies_to="type mass_momentum_energy_src"/>
@@ -750,6 +794,19 @@
       
       <mme_src_t_start        spec="OPTIONAL DOUBLE" need_applies_to="type mass_momentum_energy_src"/>
       <mme_src_t_final        spec="OPTIONAL DOUBLE" need_applies_to="type mass_momentum_energy_src"/>
+      
+      
+      <!-- LightTime -->
+      <LightTime              spec="OPTIONAL NO_DATA">            
+        <fromMaterial         spec="OPTIONAL STRING" />           
+        <toMaterial           spec="OPTIONAL STRING" />           
+        <D                    spec="REQUIRED DOUBLE 'positive'"/>  
+        <E0                    spec="REQUIRED DOUBLE 'positive'"/>
+        <starting_location    spec="REQUIRED VECTOR" />           
+        <react_mixed_cells    spec="REQUIRED BOOLEAN"/>              
+        <direction_if_plane   spec="REQUIRED VECTOR"/>            
+      </LightTime>
+      
       <!--  SimpleRxn -->
       <SimpleRxn              spec="OPTIONAL NO_DATA">
         <material             spec="REQUIRED STRING"/>
@@ -943,4 +1000,8 @@
     </Parameters>
     
   </SolverTest>
+
+  <!-- Wasatch Component -->
+  <include href="wasatch_spec.xml" section="" />
+
 </Uintah_specification>

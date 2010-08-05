@@ -73,12 +73,12 @@ DEALINGS IN THE SOFTWARE.
 #ifndef AVT_udaReaderMTMD_FILE_FORMAT_H
 #define AVT_udaReaderMTMD_FILE_FORMAT_H
 
-#include <StandAlone/tools/uda2vis/particleData.h>
+#include <StandAlone/tools/uda2vis/udaData.h>
 
 #include <avtMTMDFileFormat.h>
 
+#include <vector>
 #include <string>
-#include <map>
 
 // ****************************************************************************
 //  Class: avtudaReaderMTMDFileFormat
@@ -95,22 +95,23 @@ DEALINGS IN THE SOFTWARE.
 // functions from uintah libs to allocate, free, and perform operations on them.
 class DataArchive;
 class GridP;
+class DBOptionsAttributes;
 
 class avtudaReaderMTMDFileFormat : public avtMTMDFileFormat
 {
 public:
-  avtudaReaderMTMDFileFormat(const char *);
+  avtudaReaderMTMDFileFormat( const char * filename, DBOptionsAttributes* attrs);
   virtual           ~avtudaReaderMTMDFileFormat();
 
-  virtual double        GetTime(int);
-  virtual int           GetNTimesteps(void);
+  virtual double        GetTime( int timestep );
+  virtual int           GetNTimesteps( void );
 
-  virtual const char    *GetType(void)   { return "udaReaderMTMD"; };
-  virtual void          ActivateTimestep(int); 
+  virtual const char    *GetType( void )   { return "udaReaderMTMD"; };
+  virtual void          ActivateTimestep( int timestep ); 
 
-  virtual vtkDataSet    *GetMesh(int, int, const char *);
-  virtual vtkDataArray  *GetVar(int, int, const char *);
-  virtual vtkDataArray  *GetVectorVar(int, int, const char *);
+  virtual vtkDataSet    *GetMesh( int timestate, int domain, const char * meshname );
+  virtual vtkDataArray  *GetVar(  int timestate, int domain, const char * varname );
+  virtual vtkDataArray  *GetVectorVar( int timestate, int domain, const char * varname );
 
 
 protected:
@@ -131,12 +132,12 @@ protected:
 
 
   // DATA MEMBERS
-        
+  bool useExtraCells;
   int currTimeStep;
 
   // data that is not dependent on time
   DataArchive *archive;
-  vector<double> cycleTimes;
+  std::vector<double> cycleTimes;
 
   // data that is dependent on time
   GridP *grid;
@@ -151,11 +152,11 @@ protected:
   GridP*           (*getGrid)(DataArchive*, int);
   void             (*releaseGrid)(GridP*);
 
-  vector<double>   (*getCycleTimes)(DataArchive*);
+  std::vector<double>   (*getCycleTimes)(DataArchive*);
   TimeStepInfo*    (*getTimeStepInfo)(DataArchive*, GridP*, int);
 
-  GridDataRaw*     (*getGridData)(DataArchive*, GridP*, int, int, string, int, int, int[3], int[3]);
-  ParticleDataRaw* (*getParticleData)(DataArchive*, GridP*, int, int, string, int, int);
+  GridDataRaw*     (*getGridData)(DataArchive*, GridP*, int, int, std::string, int, int, int[3], int[3]);
+  ParticleDataRaw* (*getParticleData)(DataArchive*, GridP*, int, int, std::string, int, int);
 };
 
 #endif

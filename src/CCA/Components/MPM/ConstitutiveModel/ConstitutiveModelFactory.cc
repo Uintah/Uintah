@@ -27,26 +27,28 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-
 #include <CCA/Components/MPM/ConstitutiveModel/ConstitutiveModelFactory.h>
+
+#include <sci_defs/uintah_defs.h> // For NO_FORTRAN
+
 #include <CCA/Components/MPM/ConstitutiveModel/RigidMaterial.h>
 #include <CCA/Components/MPM/ConstitutiveModel/CompMooneyRivlin.h>
-#include <CCA/Components/MPM/ConstitutiveModel/CompNeoHook.h>
 #include <CCA/Components/MPM/ConstitutiveModel/CNH_MMS.h>
-#include <CCA/Components/MPM/ConstitutiveModel/CNHDamage.h>
-#include <CCA/Components/MPM/ConstitutiveModel/CNHPDamage.h>
-#include <CCA/Components/MPM/ConstitutiveModel/CompNeoHookImplicit.h>
 #include <CCA/Components/MPM/ConstitutiveModel/TransIsoHyper.h>
 #include <CCA/Components/MPM/ConstitutiveModel/TransIsoHyperImplicit.h>
 #include <CCA/Components/MPM/ConstitutiveModel/ViscoTransIsoHyper.h>
 #include <CCA/Components/MPM/ConstitutiveModel/ViscoTransIsoHyperImplicit.h>
-#include <CCA/Components/MPM/ConstitutiveModel/CompNeoHookPlas.h>
 #include <CCA/Components/MPM/ConstitutiveModel/ViscoScram.h>
 #include <CCA/Components/MPM/ConstitutiveModel/ViscoScramImplicit.h>
 #include <CCA/Components/MPM/ConstitutiveModel/ViscoSCRAMHotSpot.h>
 #include <CCA/Components/MPM/ConstitutiveModel/HypoElastic.h>
-#include <CCA/Components/MPM/ConstitutiveModel/HypoElasticFortran.h>
+
+#if !defined(NO_FORTRAN)
+#  include <CCA/Components/MPM/ConstitutiveModel/HypoElasticFortran.h>
+#endif
+
 #include <CCA/Components/MPM/ConstitutiveModel/Kayenta.h>
+#include <CCA/Components/MPM/ConstitutiveModel/Diamm.h>
 #include <CCA/Components/MPM/ConstitutiveModel/HypoElasticImplicit.h>
 #include <CCA/Components/MPM/ConstitutiveModel/MWViscoElastic.h>
 #include <CCA/Components/MPM/ConstitutiveModel/Membrane.h>
@@ -55,18 +57,23 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/MPM/ConstitutiveModel/ElasticPlastic.h>
 #include <CCA/Components/MPM/ConstitutiveModel/ElasticPlasticHP.h>
 #include <CCA/Components/MPM/ConstitutiveModel/HypoElasticPlastic.h>
+#include <CCA/Components/MPM/ConstitutiveModel/MurnahanMPM.h>
 #include <CCA/Components/MPM/ConstitutiveModel/SmallStrainPlastic.h>
 #include <CCA/Components/MPM/ConstitutiveModel/IdealGasMP.h>
 #include <CCA/Components/MPM/ConstitutiveModel/SoilFoam.h>
 #include <CCA/Components/MPM/ConstitutiveModel/Water.h>
+#include <CCA/Components/MPM/ConstitutiveModel/UCNH.h>
 #include <CCA/Components/MPM/ConstitutiveModel/ViscoPlastic.h>
-#include <Core/Exceptions/ProblemSetupException.h>
 #include <CCA/Components/MPM/MPMFlags.h>
+
+#include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Malloc/Allocator.h>
+
 #include <fstream>
 #include <iostream>
 #include <string>
+
 using std::cerr;
 using std::ifstream;
 using std::ofstream;
@@ -99,18 +106,21 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
   else if (mat_type ==  "comp_neo_hook") {
     if (flags->d_integrator_type == "explicit" || 
         flags->d_integrator_type == "fracture")
-      return(scinew CompNeoHook(child,flags));
+      return(scinew UCNH(child,flags,false,false));
     else if (flags->d_integrator_type == "implicit")
-      return(scinew CompNeoHookImplicit(child,flags));
+      return(scinew UCNH(child,flags));
   }
   else if (mat_type ==  "cnh_damage") 
-    return(scinew CNHDamage(child,flags));
+    return(scinew UCNH(child,flags,false,true));
+  
+  else if (mat_type ==  "UCNH") 
+    return(scinew UCNH(child,flags));
 
   else if (mat_type ==  "cnh_mms") 
     return(scinew CNH_MMS(child,flags));
 
   else if (mat_type ==  "cnhp_damage") 
-    return(scinew CNHPDamage(child,flags));
+    return(scinew UCNH(child,flags,true,true));
 
   else if (mat_type ==  "trans_iso_hyper") {
     if (flags->d_integrator_type == "explicit" ||
@@ -135,7 +145,7 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
     return(scinew Water(child,flags));
 
   else if (mat_type == "comp_neo_hook_plastic")
-    return(scinew CompNeoHookPlas(child,flags));
+    return(scinew UCNH(child,flags,true,false));
    
   else if (mat_type ==  "visco_scram"){
     if (flags->d_integrator_type == "explicit" || 
@@ -163,12 +173,17 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
     }
   }
 
+#if !defined(NO_FORTRAN)
   else if (mat_type == "hypo_elastic_fortran")
     return(scinew HypoElasticFortran(child,flags));
-   
+
   else if (mat_type == "kayenta")
     return(scinew Kayenta(child,flags));
-   
+
+  else if (mat_type == "diamm")
+    return(scinew Diamm(child,flags));
+#endif
+
   else if (mat_type ==  "mw_visco_elastic")
     return(scinew MWViscoElastic(child,flags));
    
@@ -198,6 +213,9 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
 
   else if (mat_type ==  "visco_plastic")
     return(scinew ViscoPlastic(child,flags));
+  
+  else if (mat_type ==  "murnahanMPM")
+    return(scinew MurnahanMPM(child,flags));
   
   else 
     throw ProblemSetupException("Unknown Material Type R ("+mat_type+")", __FILE__, __LINE__);

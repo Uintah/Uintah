@@ -70,7 +70,7 @@ public:
                   DataWarehouse* new_dw );
 
   /** @brief  Return a string with the model type */
-  string getType() {
+  inline string getType() {
     return "DevolMixtureFraction";
   };
 

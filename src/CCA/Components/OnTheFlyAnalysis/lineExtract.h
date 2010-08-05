@@ -126,9 +126,10 @@ WARNING
    
 
     struct line{
-      string name;  
-      Point startPt;
-      Point endPt;
+      string  name;  
+      Point   startPt;
+      Point   endPt;
+      double  stepSize;
       int loopDir;    // direction to loop over
     };
     

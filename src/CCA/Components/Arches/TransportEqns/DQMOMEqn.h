@@ -49,9 +49,11 @@ public:
 
   ~DQMOMEqn();
 
-  /** @brief Set any parameters from input file, initialize any constants, etc.. */
+  /** @brief  Set any parameters from input file, initialize any constants, etc.. */
   void problemSetup(const ProblemSpecP& inputdb);
 
+  /** @brief  Set up the extra source terms (if necessary) */
+  void problemSetupSources( const ProblemSpecP& inputdb );
 
   ////////////////////////////////////////////////
   // Calculation methods
@@ -206,8 +208,13 @@ public:
  
 private:
 
+
   const VarLabel* d_sourceLabel;      ///< DQMOM Eqns only have ONE source term; this is the VarLabel for it
   const VarLabel* d_icLabel;          ///< This is the label that holds the unscaled and (if applicable) unweighted DQMOM scalar value 
+  const VarLabel* d_weightLabel;  ///< Label for weight corresponding to this quadrature node
+
+  double d_w_small;               ///< Value of "small" weights
+  bool d_unweighted;
 
   //vector<string> d_models;   
   vector<const VarLabel*> d_models;   ///< List of variable labels corresponding to model terms for this DQMOM internal coordinate/environment
@@ -219,7 +226,6 @@ private:
   bool d_addExtraSources;             ///< Boolean: add source terms that are associated with this equation?
 
   double d_timestepMultiplier;
-
 
 }; // class DQMOMEqn
 
@@ -263,6 +269,4 @@ protected:
 } // namespace Uintah
 
 #endif
-
-
 

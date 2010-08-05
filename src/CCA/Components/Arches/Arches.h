@@ -27,6 +27,18 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
+/** 
+ * \file 
+ *
+ * \mainpage
+ *
+ * \author Various Generations of CRSim
+ * \date   September 1997 (?)
+ *
+ * Arches is a variable density, low-mach (pressure projection) CFD formulation, with radiation, chemistry and 
+ * turbulence subgrid closure. 
+ *
+ */ 
 
 //----- Arches.h -----------------------------------------------
 
@@ -350,6 +362,7 @@ private:
     // Variables----
     vector<string> d_scalarEqnNames; 
     bool d_doDQMOM;  // why make it public?  nothing lower-level than arches can access it
+    std::string d_which_dqmom;
     int d_tOrder; 
     ExplicitTimeInt* d_timeIntegrator;
     DQMOM* d_dqmomSolver; 

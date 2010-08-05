@@ -72,7 +72,6 @@ DEALINGS IN THE SOFTWARE.
 
 using namespace std;
 using namespace Uintah;
-using namespace SCIRun;
 
 #include <CCA/Components/Arches/fortran/celltypeInit_fort.h>
 #include <CCA/Components/Arches/fortran/areain_fort.h>
@@ -1289,6 +1288,9 @@ BoundaryCondition::setProfile(const ProcessorGroup*,
         // Get a copy of the current flow inlet
         // check if given patch intersects with the inlet boundary of type index
         FlowInlet* fi = d_flowInlets[indx];
+
+        proc0cout << "Actual area for inlet: " << fi->d_inlet_name << " = " << area << endl;
+        proc0cout << endl;
         
         fort_profv(uVelocity, vVelocity, wVelocity, idxLo, idxHi,
                    cellType, area, fi->d_cellTypeID, fi->flowRate, fi->inletVel,
@@ -2422,7 +2424,8 @@ BoundaryCondition::FlowInlet::FlowInlet( const FlowInlet& copy ) :
   streamMixturefraction(copy.streamMixturefraction),
   calcStream(copy.calcStream),
   d_area_label(copy.d_area_label),
-  d_flowRate_label(copy.d_flowRate_label)
+  d_flowRate_label(copy.d_flowRate_label),
+  d_inlet_name(copy.d_inlet_name)
 {
   for (vector<GeometryPieceP>::const_iterator it = copy.d_geomPiece.begin();
        it != copy.d_geomPiece.end(); ++it)
@@ -2490,6 +2493,7 @@ BoundaryCondition::FlowInlet::problemSetup(ProblemSpecP& params)
   params->getWithDefault("SulfurMassFractionInFuel", fsr, 0.0);
   // check to see if this will work
   ProblemSpecP geomObjPS = params->findBlock("geom_object");
+  params->getWithDefault("name",d_inlet_name,"not named"); 
   GeometryPieceFactory::create(geomObjPS, d_geomPiece);
   // loop thru all the inlet geometry objects
   //for (ProblemSpecP geom_obj_ps = params->findBlock("geom_object");
@@ -3679,7 +3683,7 @@ BoundaryCondition::velRhoHatInletBC(const Patch* patch,
                 idxLo, idxHi, constvars->new_density, constvars->cellType, 
                 fi->d_cellTypeID, current_time,
                 xminus, xplus, yminus, yplus, zminus, zplus,
-          fi->d_ramping_inlet_flowrate);
+                fi->d_ramping_inlet_flowrate);
   }
   
 }

@@ -787,6 +787,7 @@ private:
     // reduction variable label to get area
     VarLabel* d_area_label;
     VarLabel* d_flowRate_label;
+    string d_inlet_name; 
   };
 
   ////////////////////////////////////////////////////////////////////////

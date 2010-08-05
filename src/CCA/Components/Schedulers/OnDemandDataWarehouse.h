@@ -138,6 +138,7 @@ public:
 			 const Level* level = 0, int matIndex = -1);
 
    // Particle Variables
+   
    virtual ParticleSubset* createParticleSubset(particleIndex numParticles,
 						int matlIndex, const Patch*,
                                                 IntVector low = IntVector(0,0,0),
@@ -149,6 +150,8 @@ public:
                                    IntVector high = IntVector(0,0,0), bool exact = false);
    virtual ParticleSubset* getParticleSubset(int matlIndex, const Patch*,
                                             IntVector low, IntVector high);
+   virtual ParticleSubset* getParticleSubset(int matlIndex, const Patch*,
+                                            IntVector low, IntVector high, const VarLabel*);
    virtual ParticleSubset* getParticleSubset(int matlIndex, const Patch*);
    virtual ParticleSubset* getDeleteSubset(int matlIndex, const Patch*);
    virtual map<const VarLabel*, ParticleVariableBase*>* getNewParticleState(int matlIndex, const Patch*);
@@ -361,9 +364,12 @@ private:
 
    typedef std::vector<dataLocation*> variableListType;
    typedef map<const VarLabel*, variableListType*, VarLabel::Compare> dataLocationDBtype;
-   typedef map<PSPatchMatlGhost, ParticleSubset*> psetDBType;
+   typedef multimap<PSPatchMatlGhost, ParticleSubset*> psetDBType;
    typedef map<pair<int, const Patch*>, map<const VarLabel*, ParticleVariableBase*>* > psetAddDBType;
    typedef map<pair<int, const Patch*>, int> particleQuantityType;
+   
+   ParticleSubset* queryPSetDB( psetDBType &db, const Patch* patch, int matlIndex, IntVector low, IntVector high, const VarLabel* pos_var, bool exact=false);
+   void insertPSetRecord(psetDBType &subsetDB,const Patch* patch, IntVector low, IntVector high, int matlIndex, ParticleSubset *psubset);
 
    DWDatabase<Patch>  d_varDB;
    DWDatabase<Level>  d_levelDB;

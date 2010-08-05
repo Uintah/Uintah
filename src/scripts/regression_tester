@@ -8,6 +8,7 @@ if test "$GOLD_STANDARD" = "" ; then
 
 elif test -d ${GOLD_STANDARD}; then
     test_dir=${GOLD_STANDARD}
+    CHECKPOINTS=${GOLD_STANDARD}/CheckPoints
 fi
 
 
@@ -328,7 +329,7 @@ run_test () {
 
     if [ $n = "explode2D_amr" ]; then
         numproc=8
-        opts="-restart -t 0 -copy"
+        opts="-restart"
     else
         cp $in_file .
         num_proc
@@ -347,8 +348,8 @@ run_test () {
 
 
     if [ $n = "explode2D_amr" ]; then
-        echo; echo "Running: $MPI $NICE sus $opts $GOLD_STANDARD/$DIR/$CASE/$n/$n.uda"
-        $MPI $NICE ../sus $opts $GOLD_STANDARD/$DIR/$CASE/$n/$n.uda &> $n.out
+        echo; echo "Running: $MPI $NICE sus $opts $CHECKPOINTS/$CASE/$n/$n.uda.000"
+        $MPI $NICE ../sus $opts $CHECKPOINTS/$CASE/$n/$n.uda.000 &> $n.out
     else
         echo; echo "Running: $MPI $NICE sus $opts $n.ups"
         $MPI $NICE ../sus $opts $n.ups &> $n.out

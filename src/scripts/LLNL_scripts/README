@@ -1,9 +1,8 @@
-08/17/06
 
-The scripts in this directory are part of the svn tree.  If you just want to check them 
+The scripts in this directory are part of the Uintah svn tree.  If you just want to check them 
 out type:
 
-svn checkout https://code.sci.utah.edu/svn/SCIRun/trunk/src/Packages/Uintah/LLNL_scripts  scripts
+svn checkout https://gforge.sci.utah.edu/svn/uintah/trunk/src/scripts/LLNL_scripts transferScripts
 
 Please make sure you commit your changes.
 

@@ -35,7 +35,6 @@ DEALINGS IN THE SOFTWARE.
 #include <sstream>
 
 using namespace Uintah;
-using namespace SCIRun;
 using namespace std;
 
 static DebugStream cout_norm("ICE_NORMAL_COUT", false);  

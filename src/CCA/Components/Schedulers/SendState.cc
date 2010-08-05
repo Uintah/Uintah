@@ -31,7 +31,7 @@ DEALINGS IN THE SOFTWARE.
 
 #include <CCA/Components/Schedulers/SendState.h>
 #include <Core/Grid/Variables/ParticleSubset.h>
-#include <Core/Grid/Variables/PSPatchMatlGhost.h>
+#include <Core/Grid/Variables/PSPatchMatlGhostRange.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/Exceptions/InternalError.h>
 
@@ -55,7 +55,7 @@ ParticleSubset*
 SendState::find_sendset(int dest, const Patch* patch, int matlIndex,
                         IntVector low, IntVector high, int dwid /* =0 */) const
 {
-  maptype::const_iterator iter = sendSubsets.find( make_pair( PSPatchMatlGhost(patch, matlIndex, low, high, dwid), dest) );
+  maptype::const_iterator iter = sendSubsets.find( make_pair( PSPatchMatlGhostRange(patch, matlIndex, low, high, dwid), dest) );
 
   if( iter == sendSubsets.end() ) {
     return 0;
@@ -68,12 +68,12 @@ SendState::add_sendset(ParticleSubset* sendset, int dest, const Patch* patch,
                        int matlIndex, IntVector low, IntVector high, int dwid /*=0*/)
 {
   maptype::iterator iter = 
-    sendSubsets.find(make_pair(PSPatchMatlGhost(patch,matlIndex,low,high,dwid), dest));
+    sendSubsets.find(make_pair(PSPatchMatlGhostRange(patch,matlIndex,low,high,dwid), dest));
   if( iter != sendSubsets.end() ) {
     cout << "sendSubset Already exists for sendset:" << *sendset << " on patch:" << *patch << " matl:" << matlIndex << endl;
     SCI_THROW( InternalError( "sendSubset already exists", __FILE__, __LINE__ ) );
   }
-  sendSubsets[make_pair(PSPatchMatlGhost(patch, matlIndex, low, high, dwid), dest)]=sendset;
+  sendSubsets[make_pair(PSPatchMatlGhostRange(patch, matlIndex, low, high, dwid), dest)]=sendset;
   sendset->addReference();
 }
 

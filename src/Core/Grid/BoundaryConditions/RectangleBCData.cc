@@ -33,11 +33,15 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/Box.h>
 #include <Core/Grid/BoundaryConditions/BoundCondFactory.h>
 #include <Core/Malloc/Allocator.h>
+#include <Core/Util/DebugStream.h>
 #include <iostream>
 using namespace SCIRun;
 using namespace Uintah;
 using std::cout;
 using std::endl;
+
+// export SCI_DEBUG="BC_dbg:+"
+static DebugStream BC_dbg("BC_dbg",false);
 
 RectangleBCData::RectangleBCData() : BCGeomBase()
 {
@@ -114,7 +118,7 @@ bool RectangleBCData::inside(const Point &p) const
 
 void RectangleBCData::print() 
 {
-  cout << "Geometry type = " << typeid(this).name() << endl;
+  BC_dbg << "Geometry type = " << typeid(this).name() << endl;
   d_bc.print();
 }
 

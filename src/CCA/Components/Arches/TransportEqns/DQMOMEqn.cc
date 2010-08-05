@@ -83,7 +83,34 @@ DQMOMEqn::problemSetup(const ProblemSpecP& inputdb )
   // NOTE: some of this may be better off in the EqnBase.cc class
   ProblemSpecP db = inputdb; 
 
+  ProblemSpecP db_root = db->getRootNode();
+  ProblemSpecP dqmom_db = db_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("DQMOM");
+  std::string which_dqmom; 
+  dqmom_db->getAttribute( "type", which_dqmom ); 
+  if ( which_dqmom == "unweightedAbs" ) 
+    d_unweighted = true;
+  else 
+    d_unweighted = false; 
+
   db->getWithDefault("turbulentPrandtlNumber",d_turbPrNo,0.4);
+
+  if( !d_weight ) {
+    // save the weight label instead of having to find it every time
+    DQMOMEqnFactory& dqmomFactory = DQMOMEqnFactory::self();
+    string name = "w_qn";
+    string node; 
+    std::stringstream out;
+    out << d_quadNode;
+    node = out.str();
+    name += node;
+    EqnBase& temp_eqn = dqmomFactory.retrieve_scalar_eqn(name);
+    DQMOMEqn& eqn = dynamic_cast<DQMOMEqn&>(temp_eqn);
+    d_weightLabel = eqn.getTransportEqnLabel();
+    d_w_small = eqn.getSmallClip();
+    if( d_w_small == 0.0 ) {
+      d_w_small = 1e-16;
+    }
+  }
 
   // Discretization information:
   db->getWithDefault( "conv_scheme", d_convScheme, "upwind");
@@ -140,21 +167,6 @@ DQMOMEqn::problemSetup(const ProblemSpecP& inputdb )
 
   // Scaling information:
   db->getWithDefault( "scaling_const", d_scalingConstant, 1.0); 
-
-
-  // Extra Source terms (for mms and other tests):
-  SourceTermFactory& srcFactory = SourceTermFactory::self();
-  if (db->findBlock("src")){
-    string srcname; 
-    d_addExtraSources = true; 
-    for (ProblemSpecP src_db = db->findBlock("src"); src_db != 0; src_db = src_db->findNextBlock("src")){
-      src_db->getAttribute("label", srcname);
-      //which sources are turned on for this equation
-      d_sources.push_back( srcFactory.retrieve_source_term(srcname).getSrcLabel() ); 
-
-    }
-  }
-
 
   // Initialization:
   ProblemSpecP db_initialValue = db->findBlock("initialization");
@@ -270,6 +282,31 @@ DQMOMEqn::problemSetup(const ProblemSpecP& inputdb )
     }
   }
 }
+
+void
+DQMOMEqn::problemSetupSources( const ProblemSpecP& db ) 
+{
+  // Extra Source terms (for mms and other tests):
+  SourceTermFactory& srcFactory = SourceTermFactory::self();
+  if (db->findBlock("src")){
+    string srcname; 
+    d_addExtraSources = true; 
+    for (ProblemSpecP src_db = db->findBlock("src"); src_db != 0; src_db = src_db->findNextBlock("src")){
+      src_db->getAttribute("label", srcname);
+      //which sources are turned on for this equation
+      d_sources.push_back( srcFactory.retrieve_source_term(srcname).getSrcLabel() ); 
+
+    }
+  }
+
+  if(d_unweighted == true && d_weight == false){
+    string srcname =  d_eqnName + "_unw_src";
+    d_addExtraSources = true;
+    d_sources.push_back( srcFactory.retrieve_source_term(srcname).getSrcLabel() );
+  }
+}
+
+
 //---------------------------------------------------------------------------
 // Method: Schedule clean up. 
 // Probably not needed for DQMOM
@@ -294,6 +331,7 @@ void DQMOMEqn::cleanUp( const ProcessorGroup* pc,
                         DataWarehouse* old_dw, 
                         DataWarehouse* new_dw )
 {}
+
 
 //---------------------------------------------------------------------------
 // Method: Schedule the intialization of the variables. 
@@ -467,7 +505,8 @@ DQMOMEqn::buildTransportEqn( const ProcessorGroup* pc,
     constSFCXVariable<double> uVel; 
     constSFCYVariable<double> vVel; 
     constSFCZVariable<double> wVel; 
-    constCCVariable<double> src; 
+    constCCVariable<double> src; //DQMOM_src from Ax=b
+    constCCVariable<double> extra_src; // Any additional source (eg, mms or unweighted abscissa src)  
     constCCVariable<Vector> partVel; 
     constCCVariable<Vector> areaFraction; 
 
@@ -547,7 +586,19 @@ DQMOMEqn::buildTransportEqn( const ProcessorGroup* pc,
           }            
         }
 #endif
+        //if (d_addExtraSources) {
 
+        //  // Get the factory of source terms
+        //  SourceTermFactory& src_factory = SourceTermFactory::self();
+        //  for (vector<std::string>::iterator src_iter = d_sources.begin(); src_iter != d_sources.end(); src_iter++){
+        //   //constCCVariable<double> extra_src; 
+        //   SourceTermBase& temp_src = src_factory.retrieve_source_term( *src_iter );
+        //   new_dw->get(extra_src, temp_src.getSrcLabel(), matlIndex, patch, gn, 0);
+
+        //   // Add to the RHS
+        //   RHS[c] += extra_src[c]*vol;
+        //  }
+        //}
       }
     }//end cells
 
@@ -794,6 +845,7 @@ DQMOMEqn::getUnscaledValues( const ProcessorGroup* pc,
 
 
     if( d_weight ) {
+
       CCVariable<double> w;
       CCVariable<double> w_actual;
 
@@ -806,21 +858,29 @@ DQMOMEqn::getUnscaledValues( const ProcessorGroup* pc,
         w_actual[c] = w[c]*d_scalingConstant;
       }
 
-    } else {
-      constCCVariable<double> w;  
-      constCCVariable<double> wa;
+    } else if( d_unweighted ) {
+      
       CCVariable<double> ic; 
-
       new_dw->getModifiable(ic, d_icLabel, matlIndex, patch);
-      new_dw->get(wa, d_transportVarLabel, matlIndex, patch, gn, 0 ); 
 
-      DQMOMEqnFactory& dqmomFactory  = DQMOMEqnFactory::self(); 
+      constCCVariable<double> abscissa;
+      new_dw->get(abscissa, d_transportVarLabel, matlIndex, patch, gn, 0 ); 
+
+      for (CellIterator iter=patch->getCellIterator(0); !iter.done(); iter++){
+        IntVector c = *iter;
+
+        ic[c] = abscissa[c]*d_scalingConstant;
+      }
+
+    } else {
+
+      DQMOMEqnFactory& dqmomFactory = DQMOMEqnFactory::self();
       string name = "w_qn"; 
-      string node;
-      std::stringstream out;
-      out << d_quadNode;
-      node = out.str();
-      name += node;
+      string node; 
+      std::stringstream out; 
+      out << d_quadNode; 
+      node = out.str(); 
+      name += node; 
       EqnBase& temp_eqn = dqmomFactory.retrieve_scalar_eqn( name );
       DQMOMEqn& eqn = dynamic_cast<DQMOMEqn&>(temp_eqn);
 
@@ -830,29 +890,29 @@ DQMOMEqn::getUnscaledValues( const ProcessorGroup* pc,
       if ( smallWeight == 0.0 ) {
         smallWeight = TINY;
       }
-
+      
+      constCCVariable<double> w;  
       new_dw->get(w, mywLabel, matlIndex, patch, gn, 0 ); 
 
-      // now loop over all cells
-      for (CellIterator iter=patch->getCellIterator(0); !iter.done(); iter++){
-  
-        IntVector c = *iter;
+      constCCVariable<double> wa;
+      new_dw->get(wa, d_transportVarLabel, matlIndex, patch, gn, 0 ); 
 
-        if (w[c] > smallWeight)
+      CCVariable<double> ic; 
+      new_dw->getModifiable(ic, d_icLabel, matlIndex, patch);
+
+      for (CellIterator iter=patch->getCellIterator(0); !iter.done(); iter++){
+        IntVector c = *iter;
+       
+        if (w[c] > d_w_small){
           ic[c] = (wa[c]/w[c])*d_scalingConstant;
-        else {
+        }  else {
           ic[c] = 0.0;
         }
       }
 
-    } //end if weight
-
-  }
+    }
+  }//end patches
 }
-//---------------------------------------------------------------------------
-// Method: Compute the boundary conditions. 
-//---------------------------------------------------------------------------
-// -- See header file. 
 
 
 //---------------------------------------------------------------------------
@@ -933,7 +993,6 @@ DQMOMEqn::sched_dummyInit( const LevelP& level, SchedulerP& sched )
   tsk->requires(Task::OldDW, d_FdiffLabel, gn, 0);
   tsk->requires(Task::OldDW, d_RHSLabel, gn, 0);
   tsk->requires(Task::OldDW, d_sourceLabel, gn, 0);
-  tsk->requires(Task::OldDW, d_sourceLabel,       gn, 0);
 
   tsk->computes(d_transportVarLabel);
   tsk->computes(d_oldtransportVarLabel); 
@@ -942,6 +1001,9 @@ DQMOMEqn::sched_dummyInit( const LevelP& level, SchedulerP& sched )
   tsk->computes(d_FdiffLabel);
   tsk->computes(d_RHSLabel);
   tsk->computes(d_sourceLabel); 
+  tsk->computes(d_FconvLabel);
+  tsk->computes(d_FdiffLabel);
+  tsk->computes(d_RHSLabel);
 
   sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
 }
@@ -978,8 +1040,13 @@ DQMOMEqn::dummyInit( const ProcessorGroup* pc,
     new_dw->allocateAndPut( fdiff, d_FdiffLabel, matlIndex, patch );
     new_dw->allocateAndPut( rhs, d_RHSLabel, matlIndex, patch );
 
-    old_dw->get(phi_oldDW, d_transportVarLabel, matlIndex, patch, gn, 0);
+    src.initialize(0.0);
+    fconv.initialize(0.0);
+    fdiff.initialize(0.0);
+    rhs.initialize(0.0);
 
+    old_dw->get(phi_oldDW, d_transportVarLabel, matlIndex, patch, gn, 0);
+    phi.copyData( phi_oldDW ); 
     phi.copyData(phi_oldDW);
 
     old_phi.initialize(0.0);

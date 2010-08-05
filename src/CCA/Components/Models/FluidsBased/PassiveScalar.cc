@@ -89,7 +89,6 @@ PassiveScalar::~PassiveScalar()
   VarLabel::destroy(d_scalar->scalar_source_CCLabel);
   VarLabel::destroy(d_scalar->diffusionCoefLabel);
   VarLabel::destroy(d_scalar->mag_grad_scalarLabel);
-  VarLabel::destroy(Slb->lastProbeDumpTimeLabel);
   VarLabel::destroy(Slb->sum_scalar_fLabel);
 
   delete lb;
@@ -164,26 +163,21 @@ void PassiveScalar::problemSetup(GridP&, SimulationStateP& in_state,
   d_scalar->scalar_source_CCLabel = 
                                  VarLabel::create("scalar-f_src",   td_CCdouble);
   d_scalar->mag_grad_scalarLabel = 
-                               VarLabel::create("mag_grad_scalar-f",td_CCdouble);                                 
+                                 VarLabel::create("mag_grad_scalar-f",td_CCdouble);                                 
   
-                               
-                                 
-                                 
-  Slb->lastProbeDumpTimeLabel =  VarLabel::create("lastProbeDumpTime", 
-                                            max_vartype::getTypeDescription());
   Slb->sum_scalar_fLabel      =  VarLabel::create("sum_scalar_f", 
                                             sum_vartype::getTypeDescription());
   
   d_modelComputesThermoTransportProps = true;
   
-  setup->registerTransportedVariable(d_matl_set->getSubset(0),
+  setup->registerTransportedVariable(d_matl_set,
                                      d_scalar->scalar_CCLabel,
                                      d_scalar->scalar_source_CCLabel);  
 
   //__________________________________
   //  register the AMRrefluxing variables                               
   if(d_doAMR){
-    setup->registerAMR_RefluxVariable(d_matl_set->getSubset(0),
+    setup->registerAMR_RefluxVariable(d_matl_set,
                                       d_scalar->scalar_CCLabel);
   }
   //__________________________________
@@ -229,28 +223,6 @@ void PassiveScalar::problemSetup(GridP&, SimulationStateP& in_state,
   if(d_scalar->regions.size() == 0) {
     throw ProblemSetupException("Variable: scalar-f does not have any initial value regions",
                                 __FILE__, __LINE__);
-  }
-
-  //__________________________________
-  //  Read in probe locations for the scalar field
-  d_usingProbePts = false;
-  ProblemSpecP probe_ps = child->findBlock("probePoints");
-  if (probe_ps) {
-    probe_ps->require("probeSamplingFreq", d_probeFreq);
-     
-    Vector location = Vector(0,0,0);
-    map<string,string> attr;                    
-    for (ProblemSpecP prob_spec = probe_ps->findBlock("location"); prob_spec != 0; 
-                      prob_spec = prob_spec->findNextBlock("location")) {
-                      
-      prob_spec->get(location);
-      prob_spec->getAttributes(attr);
-      string name = attr["name"];
-      
-      d_probePts.push_back(location);
-      d_probePtsNames.push_back(name);
-      d_usingProbePts = true;
-    }
   } 
 }
 //__________________________________
@@ -278,17 +250,6 @@ void PassiveScalar::outputProblemSpec(ProblemSpecP& ps)
     (*iter)->piece->outputProblemSpec(geom_ps);
     geom_ps->appendElement("scalar",(*iter)->initialScalar);
   }
-
-  if (d_usingProbePts) {
-    ProblemSpecP probe_ps = scalar_ps->appendChild("probePoints");
-    probe_ps->appendElement("probeSamplingFreq",d_probeFreq);
-    
-    for (unsigned int i = 0; i < d_probePts.size(); i++) {
-      probe_ps->appendElement("location",d_probePts[i]);
-      probe_ps->setAttribute("name",d_probePtsNames[i]);
-    }
-  }
-
 }
 
 
@@ -303,7 +264,6 @@ void PassiveScalar::scheduleInitialize(SchedulerP& sched,
                   this, &PassiveScalar::initialize);
   
   t->computes(d_scalar->scalar_CCLabel);
-  t->computes(Slb->lastProbeDumpTimeLabel);
   
   sched->addTask(t, level->eachPatch(), d_matl_set);
 }
@@ -453,26 +413,6 @@ void PassiveScalar::initialize(const ProcessorGroup*,
       }  // sinusoidal Initialize  
     } // regions
     setBC(f,"scalar-f", patch, d_sharedState,indx, new_dw);
-     
-    //__________________________________
-    //  Dump out a header for the probe point files
-    new_dw->put(max_vartype(0.0), Slb->lastProbeDumpTimeLabel);
-    if (d_usingProbePts){
-      FILE *fp;
-      IntVector cell;
-      string udaDir = d_dataArchiver->getOutputLocation();
-      
-        for (unsigned int i =0 ; i < d_probePts.size(); i++) {
-          if(patch->findCell(Point(d_probePts[i]),cell) ) {
-            string filename=udaDir + "/" + d_probePtsNames[i].c_str() + ".dat";
-            fp = fopen(filename.c_str(), "a");
-            fprintf(fp, "%% Time Scalar Field at [%e, %e, %e], at cell [%i, %i, %i]\n", 
-                    d_probePts[i].x(),d_probePts[i].y(), d_probePts[i].z(),
-                    cell.x(), cell.y(), cell.z() );
-            fclose(fp);
-        }
-      }  // loop over probes
-    }  // if using probe points
   }  // patches
 }
 
@@ -532,12 +472,6 @@ void PassiveScalar::scheduleComputeModelSources(SchedulerP& sched,
   t->requires(Task::OldDW, d_scalar->scalar_CCLabel,     gac,1); 
   t->modifies(d_scalar->scalar_source_CCLabel);
 
-  //  if dumping out probePts
-  if (d_usingProbePts){
-    t->requires(Task::OldDW, Slb->lastProbeDumpTimeLabel);
-    t->computes(Slb->lastProbeDumpTimeLabel);
-  }
-
   sched->addTask(t, level->eachPatch(), d_matl_set);
 }
 
@@ -578,37 +512,7 @@ void PassiveScalar::computeModelSources(const ProcessorGroup*,
 
       scalarDiffusionOperator(new_dw, patch, use_vol_frac, f_old,
                               placeHolder, f_src, diff_coeff, delT);
-    }
-
-    //__________________________________
-    //  dump out the probe points
-    if (d_usingProbePts ) {
-      
-      max_vartype lastDumpTime;
-      old_dw->get(lastDumpTime, Slb->lastProbeDumpTimeLabel);
-      double oldProbeDumpTime = lastDumpTime;
-      
-      double time = d_dataArchiver->getCurrentTime();
-      double nextDumpTime = oldProbeDumpTime + 1.0/d_probeFreq;
-      
-      if (time >= nextDumpTime){        // is it time to dump the points
-        FILE *fp;
-        string udaDir = d_dataArchiver->getOutputLocation();
-        IntVector cell_indx;
-        
-        // loop through all the points and dump if that patch contains them
-        for (unsigned int i =0 ; i < d_probePts.size(); i++) {
-          if(patch->findCell(Point(d_probePts[i]),cell_indx) ) {
-            string filename=udaDir + "/" + d_probePtsNames[i].c_str() + ".dat";
-            fp = fopen(filename.c_str(), "a");
-            fprintf(fp, "%16.15E  %16.15E\n",time, f_old[cell_indx]);
-            fclose(fp);
-          }
-        }
-        oldProbeDumpTime = time;
-      }  // time to dump
-      new_dw->put(max_vartype(oldProbeDumpTime), Slb->lastProbeDumpTimeLabel);
-    } // if(probePts)  
+    }  
   }
 }
 //__________________________________      

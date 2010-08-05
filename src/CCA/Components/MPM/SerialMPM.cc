@@ -82,7 +82,6 @@ DEALINGS IN THE SOFTWARE.
 #undef MOM_FORM
 
 using namespace Uintah;
-using namespace SCIRun;
 
 using namespace std;
 
@@ -174,7 +173,7 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec,
   }
  
   // Read all MPM flags (look in MPMFlags.cc)
-  flags->readMPMFlags(restart_mat_ps);
+  flags->readMPMFlags(restart_mat_ps, dataArchiver);
   if (flags->d_integrator_type == "implicit"){
     throw ProblemSetupException("Can't use implicit integration with -mpm",
                                  __FILE__, __LINE__);
@@ -252,10 +251,12 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec,
   
   //__________________________________
   //  create analysis modules
-  // call problemSetup
-  d_analysisModule = AnalysisModuleFactory::create(prob_spec, sharedState, dataArchiver);
-  if(d_analysisModule){
-    d_analysisModule->problemSetup(prob_spec, grid, sharedState);
+  // call problemSetup  
+  if(!flags->d_with_ice){    // mpmice handles this
+    d_analysisModule = AnalysisModuleFactory::create(prob_spec, sharedState, dataArchiver);
+    if(d_analysisModule){
+      d_analysisModule->problemSetup(prob_spec, grid, sharedState);
+    }
   }
 }
 
@@ -364,7 +365,7 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
     t->computes(lb->pLoadCurveIDLabel);
   }
 
-  if (flags->d_accStrainEnergy) {
+  if (flags->d_reductionVars->accStrainEnergy) {
     // Computes accumulated strain energy
     t->computes(lb->AccStrainEnergyLabel);
   }
@@ -451,7 +452,7 @@ void SerialMPM::scheduleInitializeAddedMaterial(const LevelP& level,
   }
   
 
-  if (flags->d_accStrainEnergy) {
+  if (flags->d_reductionVars->accStrainEnergy) {
     // Computes accumulated strain energy
     t->computes(lb->AccStrainEnergyLabel);
   }
@@ -753,7 +754,6 @@ void SerialMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
   t->computes(lb->gTemperatureRateLabel);
   t->computes(lb->gExternalHeatRateLabel);
   t->computes(lb->gNumNearParticlesLabel);
-  t->computes(lb->TotalMassLabel);
 
   if(flags->d_with_ice){
     t->computes(lb->gVelocityBCLabel);
@@ -852,15 +852,19 @@ void SerialMPM::scheduleComputeStressTensor(SchedulerP& sched,
   }
 
   t->computes(d_sharedState->get_delt_label(),getLevel(patches));
-  t->computes(lb->StrainEnergyLabel);
-
+  
+  if (flags->d_reductionVars->accStrainEnergy ||
+      flags->d_reductionVars->strainEnergy) {
+    t->computes(lb->StrainEnergyLabel);
+  }
+  
   sched->addTask(t, patches, matls);
 
   // Schedule update of the erosion parameter
   scheduleUpdateErosionParameter(sched, patches, matls);
   scheduleFindRogueParticles(sched, patches, matls);
 
-  if (flags->d_accStrainEnergy) 
+  if (flags->d_reductionVars->accStrainEnergy) 
     scheduleComputeAccStrainEnergy(sched, patches, matls);
 
 }
@@ -1008,7 +1012,6 @@ void SerialMPM::scheduleComputeInternalForce(SchedulerP& sched,
   }
 
   t->computes(lb->gInternalForceLabel);
-  t->computes(lb->TotalVolumeDeformedLabel);
   
   for(std::list<Patch::FaceType>::const_iterator ftit(d_bndy_traction_faces.begin());
       ftit!=d_bndy_traction_faces.end();ftit++) {
@@ -1291,11 +1294,27 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->computes(lb->pSizeLabel_preReloc);
   t->computes(lb->pXXLabel);
 
-  t->computes(lb->KineticEnergyLabel);
-  t->computes(lb->ThermalEnergyLabel);
-  t->computes(lb->CenterOfMassPositionLabel);
-  t->computes(lb->TotalMomentumLabel);
-  
+  //__________________________________
+  //  reduction variables
+  if(flags->d_reductionVars->momentum){
+    t->computes(lb->TotalMomentumLabel);
+  }
+  if(flags->d_reductionVars->KE){
+    t->computes(lb->KineticEnergyLabel);
+  }
+  if(flags->d_reductionVars->thermalEnergy){
+    t->computes(lb->ThermalEnergyLabel);
+  }
+  if(flags->d_reductionVars->centerOfMass){
+    t->computes(lb->CenterOfMassPositionLabel);
+  }
+  if(flags->d_reductionVars->mass){
+    t->computes(lb->TotalMassLabel);
+  }
+  if(flags->d_reductionVars->volDeformed){
+    t->computes(lb->TotalVolumeDeformedLabel);
+  }
+
   // debugging scalar
   if(flags->d_with_color) {
     t->requires(Task::OldDW, lb->pColorLabel,  Ghost::None);
@@ -1399,10 +1418,20 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdateMom2(SchedulerP& sched,
   t->computes(lb->pMassLabel_preReloc);
   t->computes(lb->pSizeLabel_preReloc);
 
-  t->computes(lb->KineticEnergyLabel);
-  t->computes(lb->ThermalEnergyLabel);
-  t->computes(lb->CenterOfMassPositionLabel);
-  t->computes(lb->TotalMomentumLabel);
+  //__________________________________
+  //  reduction variables
+  if(flags->d_reductionVars->KE){
+    t->computes(lb->KineticEnergyLabel);
+  }
+  if(flags->d_reductionVars->thermalEnergy){
+    t->computes(lb->ThermalEnergyLabel);
+  }
+  if(flags->d_reductionVars->centerOfMass){
+    t->computes(lb->CenterOfMassPositionLabel);
+  }
+  if(flags->d_reductionVars->momentum){
+    t->computes(lb->TotalMomentumLabel);
+  }
 
   // debugging scalar
   if(flags->d_with_color) {
@@ -1454,6 +1483,7 @@ void SerialMPM::scheduleUpdateCohesiveZones(SchedulerP& sched,
   t->requires(Task::OldDW, lb->czForceLabel,       cz_matls,    gnone);
   t->requires(Task::OldDW, lb->czTopMatLabel,      cz_matls,    gnone);
   t->requires(Task::OldDW, lb->czBotMatLabel,      cz_matls,    gnone);
+  t->requires(Task::OldDW, lb->czFailedLabel,      cz_matls,    gnone);
   t->requires(Task::OldDW, lb->czIDLabel,          cz_matls,    gnone);
 
   t->computes(lb->pXLabel_preReloc,           cz_matls);
@@ -1466,6 +1496,7 @@ void SerialMPM::scheduleUpdateCohesiveZones(SchedulerP& sched,
   t->computes(lb->czForceLabel_preReloc,      cz_matls);
   t->computes(lb->czTopMatLabel_preReloc,     cz_matls);
   t->computes(lb->czBotMatLabel_preReloc,     cz_matls);
+  t->computes(lb->czFailedLabel_preReloc,     cz_matls);
   t->computes(lb->czIDLabel_preReloc,         cz_matls);
 
   sched->addTask(t, patches, matls);
@@ -1583,7 +1614,7 @@ void SerialMPM::scheduleRefine(const PatchSet* patches,
     t->computes(lb->pLoadCurveIDLabel);
   }
                                                                                 
-  if (flags->d_accStrainEnergy) {
+  if (flags->d_reductionVars->accStrainEnergy) {
     // Computes accumulated strain energy
     t->computes(lb->AccStrainEnergyLabel);
   }
@@ -1887,7 +1918,7 @@ void SerialMPM::actuallyInitialize(const ProcessorGroup*,
     }
   }
 
-  if (flags->d_accStrainEnergy) {
+  if (flags->d_reductionVars->accStrainEnergy) {
     // Initialize the accumulated strain energy
     new_dw->put(max_vartype(0.0), lb->AccStrainEnergyLabel);
   }
@@ -2096,11 +2127,9 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       // Vector from the individual mass matrix and velocity vector
       // GridMass * GridVelocity =  S^T*M_D*ParticleVelocity
       
-      double totalmass = 0;
       Vector total_mom(0.0,0.0,0.0);
       Vector pmom;
       int n8or27=flags->d_8or27; 
-                                 
 
       double pSp_vol = 1./mpm_matl->getInitialDensity();
       for (ParticleSubset::iterator iter = pset->begin(); //loop over all particles in the patch:
@@ -2137,7 +2166,6 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       for(NodeIterator iter=patch->getExtraNodeIterator();
                        !iter.done();iter++){
         IntVector c = *iter; 
-        totalmass         += gmass[c];
         gmassglobal[c]    += gmass[c];
         gvolumeglobal[c]  += gvolume[c];
         gvelglobal[c]     += gvelocity[c];
@@ -2161,8 +2189,6 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
         bc.setBoundaryCondition(patch,dwi,"Velocity", gvelocityWBC,interp_type);
         bc.setBoundaryCondition(patch,dwi,"Symmetric",gvelocityWBC,interp_type);
       }
-
-      new_dw->put(sum_vartype(totalmass), lb->TotalMassLabel);
     }  // End loop over materials
 
     for(NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
@@ -2531,8 +2557,7 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
     bndyForce   [iface]  = Vector(0.);
     bndyTraction[iface]  = Vector(0.);
   }
-  double partvoldef = 0.;
-  
+
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     printTask(patches, patch,cout_doing,"Doing computeInternalForce\t\t\t\t");
@@ -2639,7 +2664,6 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
           interpolator->findCellAndWeightsAndShapeDerivatives(px[idx],ni,S,d_S,psize[idx],pDeformationMeasure[idx]);
           stressvol  = pstress[idx]*pvol[idx];
           stresspress = pstress[idx] + Id*(p_pressure[idx] - p_q[idx]);
-          partvoldef += pvol[idx];
 
           for (int k = 0; k < n8or27; k++){
             if(patch->containsNode(ni[k])){
@@ -2664,7 +2688,6 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
           interpolator->findCellAndWeightsAndShapeDerivatives(px[idx],ni,S,d_S,psize[idx],pDeformationMeasure[idx]);
           stressvol  = pstress[idx]*pvol[idx];
           stresspress = pstress[idx] + Id*(p_pressure[idx] - p_q[idx]);
-          partvoldef += pvol[idx];
   
           // r is the x direction, z (axial) is the y direction
           double IFr=0.,IFz=0.;
@@ -2739,7 +2762,6 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
     }
     delete interpolator;
   }
-  new_dw->put(sum_vartype(partvoldef), lb->TotalVolumeDeformedLabel);
   
   // be careful only to put the fields that we have built
   // that way if the user asks to output a field that has not been built
@@ -3464,6 +3486,8 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
  
     // DON'T MOVE THESE!!!
     double thermal_energy = 0.0;
+    double totalmass = 0;
+    double partvoldef = 0.;
     Vector CMX(0.0,0.0,0.0);
     Vector totalMom(0.0,0.0,0.0);
     double ke=0;
@@ -3638,8 +3662,10 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
         thermal_energy += pTemperature[idx] * pmass[idx] * Cp;
         ke += .5*pmass[idx]*pvelocitynew[idx].length2();
-        CMX = CMX + (pxnew[idx]*pmass[idx]).asVector();
-        totalMom += pvelocitynew[idx]*pmass[idx];
+        CMX         = CMX + (pxnew[idx]*pmass[idx]).asVector();
+        totalMom   += pvelocitynew[idx]*pmass[idx];
+        totalmass  += pmass[idx];
+        partvoldef += pvolume[idx];
       }
 
       // Delete particles that have left the domain
@@ -3680,10 +3706,26 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
     }
 
     // DON'T MOVE THESE!!!
-    new_dw->put(sum_vartype(ke),             lb->KineticEnergyLabel);
-    new_dw->put(sum_vartype(thermal_energy), lb->ThermalEnergyLabel);
-    new_dw->put(sumvec_vartype(CMX),         lb->CenterOfMassPositionLabel);
-    new_dw->put(sumvec_vartype(totalMom),    lb->TotalMomentumLabel);
+    //__________________________________
+    //  reduction variables
+    if(flags->d_reductionVars->mass){
+      new_dw->put(sum_vartype(totalmass),      lb->TotalMassLabel);
+    }
+    if(flags->d_reductionVars->volDeformed){
+      new_dw->put(sum_vartype(partvoldef),     lb->TotalVolumeDeformedLabel);
+    }
+    if(flags->d_reductionVars->momentum){
+      new_dw->put(sumvec_vartype(totalMom),    lb->TotalMomentumLabel);
+    }
+    if(flags->d_reductionVars->KE){
+      new_dw->put(sum_vartype(ke),             lb->KineticEnergyLabel);
+    }
+    if(flags->d_reductionVars->thermalEnergy){
+      new_dw->put(sum_vartype(thermal_energy), lb->ThermalEnergyLabel);
+    }
+    if(flags->d_reductionVars->centerOfMass){
+      new_dw->put(sumvec_vartype(CMX),         lb->CenterOfMassPositionLabel);
+    }
 
     // cout << "Solid mass lost this timestep = " << massLost << endl;
     // cout << "Solid momentum after advection = " << totalMom << endl;
@@ -3814,11 +3856,19 @@ void SerialMPM::interpolateToParticlesAndUpdateMom1(const ProcessorGroup*,
     }
 
     // DON'T MOVE THESE!!!
-    new_dw->put(sum_vartype(ke),     lb->KineticEnergyLabel);
-    new_dw->put(sumvec_vartype(CMX), lb->CenterOfMassPositionLabel);
-    new_dw->put(sumvec_vartype(totalMom), lb->TotalMomentumLabel);
+    //__________________________________
+    //  reduction variables
+    if(flags->d_reductionVars->momentum){
+      new_dw->put(sumvec_vartype(totalMom),    lb->TotalMomentumLabel);
+    }
+    if(flags->d_reductionVars->KE){
+      new_dw->put(sum_vartype(ke),             lb->KineticEnergyLabel);
+    }
+    if(flags->d_reductionVars->centerOfMass){
+      new_dw->put(sumvec_vartype(CMX),         lb->CenterOfMassPositionLabel);
+    }    
 
-      delete interpolator;
+    delete interpolator;
   }
 
 }
@@ -4024,8 +4074,13 @@ void SerialMPM::interpolateToParticlesAndUpdateMom2(const ProcessorGroup*,
     }
 
     // DON'T MOVE THESE!!!
-    new_dw->put(sum_vartype(thermal_energy), lb->ThermalEnergyLabel);
-
+    
+    //__________________________________
+    //  reduction variables
+    if(flags->d_reductionVars->thermalEnergy){
+      new_dw->put(sum_vartype(thermal_energy), lb->ThermalEnergyLabel);
+    }
+    
     delete interpolator;
   }
 }
@@ -4094,8 +4149,8 @@ void SerialMPM::updateCohesiveZones(const ProcessorGroup*,
       ParticleVariable<Vector> cznorm_new, cztang_new, czDispTop_new;
       constParticleVariable<Vector> czDispBot, czsep, czforce;
       ParticleVariable<Vector> czDispBot_new, czsep_new, czforce_new;
-      constParticleVariable<int> czTopMat, czBotMat;
-      ParticleVariable<int> czTopMat_new, czBotMat_new;
+      constParticleVariable<int> czTopMat, czBotMat, czFailed;
+      ParticleVariable<int> czTopMat_new, czBotMat_new, czFailed_new;
 
       old_dw->get(czx,          lb->pXLabel,                         pset);
       old_dw->get(czlength,     lb->czLengthLabel,                   pset);
@@ -4108,6 +4163,7 @@ void SerialMPM::updateCohesiveZones(const ProcessorGroup*,
       old_dw->get(czids,        lb->czIDLabel,                       pset);
       old_dw->get(czTopMat,     lb->czTopMatLabel,                   pset);
       old_dw->get(czBotMat,     lb->czBotMatLabel,                   pset);
+      old_dw->get(czFailed,     lb->czFailedLabel,                   pset);
 
       new_dw->allocateAndPut(czx_new,      lb->pXLabel_preReloc,          pset);
       new_dw->allocateAndPut(czlength_new, lb->czLengthLabel_preReloc,    pset);
@@ -4120,6 +4176,7 @@ void SerialMPM::updateCohesiveZones(const ProcessorGroup*,
       new_dw->allocateAndPut(czids_new,    lb->czIDLabel_preReloc,        pset);
       new_dw->allocateAndPut(czTopMat_new, lb->czTopMatLabel_preReloc,    pset);
       new_dw->allocateAndPut(czBotMat_new, lb->czBotMatLabel_preReloc,    pset);
+      new_dw->allocateAndPut(czFailed_new, lb->czFailedLabel_preReloc,    pset);
 
       czlength_new.copyData(czlength);
       cznorm_new.copyData(cznorm);
@@ -4147,8 +4204,8 @@ void SerialMPM::updateCohesiveZones(const ProcessorGroup*,
 //        double length = sqrt(czlength[idx]);
 //        Vector size(length,length,length);
         Vector size(0.1,0.1,0.1);
-	 Matrix3 defgrad;
-	 defgrad.Identity();
+	Matrix3 defgrad;
+	defgrad.Identity();
 
         // Get the node indices that surround the cell
         interpolator->findCellAndWeights(czx[idx],ni,S,size,defgrad);
@@ -4172,6 +4229,25 @@ void SerialMPM::updateCohesiveZones(const ProcessorGroup*,
         czsep_new[idx]       = czDispTop_new[idx] - czDispBot_new[idx];
         double D_n = Dot(czsep_new[idx],cznorm[idx]);
         double D_t = Dot(czsep_new[idx],cztang[idx]);
+
+        // Determine if a CZ has failed.  Currently hardwiring failure criteria
+        // to fail zone if normal sep is > 4*delta_n or 2*delta_t
+        double czf=0.0;
+        if(czFailed[idx]>0 ){
+          czFailed_new[idx]=czFailed[idx];
+          czf=1.0;
+        }
+        else if(D_n > 4.0*delta_n){
+          czFailed_new[idx]=1;
+          czf=1.0;
+        }
+        else if( fabs(D_t) > 20.0*delta_t){
+          czFailed_new[idx]=2;
+          czf=1.0;
+        } else {
+          czFailed_new[idx]=0;
+        }
+
         double normal_stress  = (phi_n/delta_n)*exp(-D_n/delta_n)*
                               ((D_n/delta_n)*exp((-D_t*D_t)/(delta_t*delta_t))
                               + ((1.-q)/(r-1.))
@@ -4182,8 +4258,9 @@ void SerialMPM::updateCohesiveZones(const ProcessorGroup*,
                               + ((r-q)/(r-1.))*(D_n/delta_n))
                               * exp(-D_n/delta_n)
                               * exp(-D_t*D_t/(delta_t*delta_t));
-        czforce_new[idx]     = normal_stress*cznorm[idx]*czlength_new[idx]
-                             + tang_stress*cztang[idx]*czlength_new[idx];
+        czforce_new[idx]     = (normal_stress*cznorm[idx]*czlength_new[idx]
+                             + tang_stress*cztang[idx]*czlength_new[idx])
+                             * (1.0 - czf);
 
 /*
         dest << time << " " << czsep_new[idx].x() << " " << czsep_new[idx].y() << " " << czforce_new[idx].x() << " " << czforce_new[idx].y() << endl;
@@ -4389,10 +4466,6 @@ SerialMPM::setParticleDefault(ParticleVariable<Matrix3>& pvar,
   }
 }
 
-void SerialMPM::setSharedState(SimulationStateP& ssp)
-{
-  d_sharedState = ssp;
-}
 
 void SerialMPM::printParticleLabels(vector<const VarLabel*> labels,
                                     DataWarehouse* dw, int dwi, 

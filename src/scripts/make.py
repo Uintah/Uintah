@@ -10,7 +10,12 @@ def build(num):
                
         return make
 
-build(sys.argv[1])
+machine_name = os.uname()[1]
+
+if machine_name == 'inferno':
+	os.system('../src/scripts/pump_make.sh')
+else:
+	build(sys.argv[1])
 
 os.system('make link_inputs')
 

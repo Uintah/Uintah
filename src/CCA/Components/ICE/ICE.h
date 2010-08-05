@@ -73,6 +73,25 @@ namespace Uintah {
   class ModelInterface; 
   class Turbulence;
   class AnalysisModule;
+  
+    // The following two structs are used by computeEquilibrationPressure to store debug information:
+    //
+    struct  EqPress_dbgMatl{
+      int    mat;
+      double press_eos;
+      double volFrac;
+      double rhoMicro;
+      double temp_CC;
+      double rho_CC;
+    };
+
+    struct  EqPress_dbg{
+      int    count;
+      double sumVolFrac;
+      double press_new;
+      double delPress;
+      vector<EqPress_dbgMatl> matl;
+    };
     
     class UINTAHSHARE ICE : public UintahParallelComponent, public SimulationInterface {
     public:
@@ -113,7 +132,6 @@ namespace Uintah {
                                              
       virtual void scheduleFinalizeTimestep(const LevelP& level, SchedulerP&);
 
-      virtual void scheduleLockstepTimeAdvance( const GridP& grid, SchedulerP& sched);
 
       void scheduleComputePressure(SchedulerP&, 
                                    const PatchSet*,
@@ -585,38 +603,7 @@ namespace Uintah {
                                           const MaterialSubset*,
                                           DataWarehouse*,
                                           DataWarehouse*);
-//__________________________________ 
-//  A M R I C E 
-    template<class T>
-    void refluxOperator_computeCorrectionFluxes( 
-                              const string& fineVarLabel,
-                              const int indx,
-                              const Patch* coarsePatch,
-                              const Patch* finePatch,
-                              const Level* coarseLevel,
-                              const Level* fineLevel,
-                              DataWarehouse* new_dw,
-                              const int one_zero);
-                              
-    void refluxCoarseLevelIterator(Patch::FaceType patchFace,
-                                   const Patch* coarsePatch,
-                                   const Patch* finePatch,
-                                   const Level* fineLevel,
-                                   CellIterator& iter,
-                                   IntVector& coarse_FC_offset,
-                                   bool& CP_containsCell,
-                                   const string& whichTask);
-    template<class T>
-    void refluxOperator_applyCorrectionFluxes(                             
-                              CCVariable<T>& q_CC_coarse,
-                              const string& fineVarLabel,
-                              const int indx,
-                              const Patch* coarsePatch,
-                              const Patch* finePatch,
-                              const Level* coarseLevel,
-                              const Level* fineLevel,
-                              DataWarehouse* new_dw,
-                              const int one_zero);
+
 //__________________________________ 
 //  I M P L I C I T   I C E                                                                            
       void setupMatrix(const ProcessorGroup*,
@@ -923,10 +910,12 @@ namespace Uintah {
                                        int step, int nsteps);
 
     MaterialSubset* d_press_matl;
+    MaterialSet*    d_press_matlSet;
 
     private:
       friend class MPMICE;
       friend class AMRICE;
+      friend class impAMRICE;
                    
        void printData_FC(int indx,
                       const  Patch* patch,
@@ -1035,6 +1024,7 @@ namespace Uintah {
       // flags for the conservation test
        struct conservationTest_flags{
         bool onOff;
+        bool mass;
         bool momentum;
         bool energy;
         bool exchange;
@@ -1054,6 +1044,7 @@ namespace Uintah {
       
       struct TransportedVariable {
        const MaterialSubset* matls;
+       const MaterialSet* matlSet;
        const VarLabel* var;
        const VarLabel* src;
        const VarLabel* var_Lagrangian;
@@ -1061,6 +1052,7 @@ namespace Uintah {
       };
       struct AMR_refluxVariable {
        const MaterialSubset* matls;
+       const MaterialSet* matlSet;
        const VarLabel* var;
        const VarLabel* var_adv;
        const VarLabel* var_X_FC_flux;
@@ -1076,11 +1068,11 @@ namespace Uintah {
       public:
        ICEModelSetup();
        virtual ~ICEModelSetup();
-       virtual void registerTransportedVariable(const MaterialSubset* matls,
+       virtual void registerTransportedVariable(const MaterialSet* matlSet,
                                            const VarLabel* var,
                                            const VarLabel* src);
                                            
-       virtual void registerAMR_RefluxVariable(const MaterialSubset* matls,
+       virtual void registerAMR_RefluxVariable(const MaterialSet* matls,
 						     const VarLabel* var);  
                                                                                         
        std::vector<TransportedVariable*> tvars;

@@ -844,7 +844,7 @@ AMRSimulationController::executeTimestep(double t, double& delt, GridP& currentG
     for(int i=0;i<=totalFine;i++) {
       //AMRICE has a problem with scrubbing variables to early, getNthProc requires the variables after they would have been scrubbed
       //dynamic load balancing requires some particle variables for collectParticles that would be scrubbed
-      if ((d_doAMR && !d_sharedState->isLockstepAMR()) || d_lb->getNthProc() > 1 || d_lb->isDynamic() || d_reduceUda)
+      if (/*(d_doAMR && !d_sharedState->isLockstepAMR()) ||*/ d_lb->getNthProc() > 1 /*|| d_lb->isDynamic()*/ || d_reduceUda)
         d_scheduler->get_dw(i)->setScrubbing(DataWarehouse::ScrubNone);
       else {
         d_scheduler->get_dw(1)->setScrubbing(DataWarehouse::ScrubNonPermanent);

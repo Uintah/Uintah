@@ -56,7 +56,7 @@ DEALINGS IN THE SOFTWARE.
 #include <fstream>
 #include <iostream>
 #include <string>
-
+#include <cstring>
 ////////////////////////////////////////////////////////////////////////////////
 // The following functions are found in fortran/*.F
 //SUBROUTINE KAYENTA_CALC( NBLK, NINSV, DT, PROP,
@@ -87,14 +87,14 @@ extern "C"{
    void KAYENTA_CALC( int &nblk, int &ninsv, double &dt,
                                     double UI[], double stress[], double D[],
                                     double svarg[], double &USM );
-   void KMMRXV( double UI[], double UJ[], double UK[], int &nx, char* namea[],
-                char* keya[], double rinit[], double rdim[], int iadvct[], 
+   void KMMRXV( double UI[], double UJ[], double UK[], int &nx, char namea[],
+                char keya[], double rinit[], double rdim[], int iadvct[], 
                 int itype[] );
 }
 
 // End fortran functions.
 ////////////////////////////////////////////////////////////////////////////////
-using std::cerr; using namespace Uintah; using namespace SCIRun;
+using std::cerr; using namespace Uintah;
 
 Kayenta::Kayenta(ProblemSpecP& ps,MPMFlags* Mflag)
   : ConstitutiveModel(Mflag)
@@ -131,9 +131,8 @@ Kayenta::Kayenta(ProblemSpecP& ps,MPMFlags* Mflag)
 
   //Create VarLabels for GeoModel internal state variables (ISVs)
   int nx;
-  char* namea[5000];
-  char* keya[5000];
-  double rinit[100];
+  char namea[5000];
+  char keya[5000];
   double rdim[700];
   int iadvct[100];
   int itype[100];
@@ -142,6 +141,9 @@ Kayenta::Kayenta(ProblemSpecP& ps,MPMFlags* Mflag)
 
   d_NINSV=nx;
   cout << "d_NINSV = " << d_NINSV << endl;
+//  for(int i = 0;i<d_NINSV; i++){
+//    cout << rinit[i] << endl;
+//  }
 
   initializeLocalMPMLabels();
 }
@@ -383,8 +385,9 @@ void Kayenta::initializeCMData(const Patch* patch,
     new_dw->allocateAndPut(ISVs[i],ISVLabels[i], pset);
     ParticleSubset::iterator iter = pset->begin();
     for(;iter != pset->end(); iter++){
-      ISVs[i][*iter] = 0.0;
+      ISVs[i][*iter] = rinit[i];
     }
+//    cout << "RINIT[" << i << "] = " << rinit[i] << endl;
   }
 
   ParticleVariable<double> peakI1IDist;
@@ -566,7 +569,7 @@ void Kayenta::computeStressTensor(const PatchSubset* patches,
     old_dw->get(pvelocity,           lb->pVelocityLabel,           pset);
     old_dw->get(ptemperature,        lb->pTemperatureLabel,        pset);
     old_dw->get(deformationGradient, lb->pDeformationMeasureLabel, pset);
-    old_dw->get(peakI1IDist,       peakI1IDistLabel,         pset);
+    old_dw->get(peakI1IDist,         peakI1IDistLabel,             pset);
 
     StaticArray<constParticleVariable<double> > ISVs(d_NINSV+1);
     for(int i=0;i<d_NINSV;i++){
@@ -583,9 +586,9 @@ void Kayenta::computeStressTensor(const PatchSubset* patches,
     new_dw->allocateAndPut(p_q,             lb->p_qLabel_preReloc,       pset);
     new_dw->allocateAndPut(deformationGradient_new,
                            lb->pDeformationMeasureLabel_preReloc,        pset);
-    new_dw->allocateAndPut(peakI1IDist_new, peakI1IDistLabel_preReloc,    pset);
+    new_dw->allocateAndPut(peakI1IDist_new, peakI1IDistLabel_preReloc,   pset);
 
-        peakI1IDist_new.copyData(peakI1IDist);
+    peakI1IDist_new.copyData(peakI1IDist);
 
     StaticArray<ParticleVariable<double> > ISVs_new(d_NINSV+1);
     for(int i=0;i<d_NINSV;i++){
@@ -603,14 +606,16 @@ void Kayenta::computeStressTensor(const PatchSubset* patches,
 
       if(!flag->d_axisymmetric){
         // Get the node indices that surround the cell
-        interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx],deformationGradient[idx]);
+        interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx],
+                                                  deformationGradient[idx]);
 
         computeVelocityGradient(velGrad,ni,d_S,oodx,gvelocity);
 
       } else {  // axi-symmetric kinematics
         // Get the node indices that surround the cell
         interpolator->findCellAndWeightsAndShapeDerivatives(px[idx],ni,S,d_S,
-                                                                    psize[idx],deformationGradient[idx]);
+                                                            psize[idx],
+                                                      deformationGradient[idx]);
         // x -> r, y -> z, z -> theta
         computeAxiSymVelocityGradient(velGrad,ni,d_S,S,oodx,gvelocity,px[idx]);
       }
@@ -630,7 +635,7 @@ void Kayenta::computeStressTensor(const PatchSubset* patches,
                                      deformationGradient[idx];
 
       // get the volumetric part of the deformation
-      double J = deformationGradient[idx].Determinant();
+      double J = deformationGradient_new[idx].Determinant();
       // Check 1: Look at Jacobian
       if (!(J > 0.0)) {
         cerr << getpid() ;
@@ -652,11 +657,8 @@ void Kayenta::computeStressTensor(const PatchSubset* patches,
        
       // NEED TO FIND R
       Matrix3 tensorR, tensorU;
-      double d_tol = 1.0e-10;
 
-      // Look into using Rebecca's PD algorithm
-      deformationGradient_new[idx].polarDecomposition(tensorU, tensorR,
-                                                      d_tol, true);
+      deformationGradient_new[idx].polarDecompositionRMB(tensorU, tensorR);
 
       // This is the previous timestep Cauchy stress
       // unrotated tensorSig=R^T*pstress*R
@@ -723,10 +725,6 @@ void Kayenta::computeStressTensor(const PatchSubset* patches,
       // ROTATE pstress_new: S=R*tensorSig*R^T
       pstress_new[idx] = (tensorR*tensorSig)*(tensorR.Transpose());
 
-#if 0
-      cout << pstress_new[idx] << endl;
-#endif
-
       c_dil = sqrt(USM/rho_cur);
 
       // Compute the strain energy for all the particles
@@ -761,8 +759,12 @@ void Kayenta::computeStressTensor(const PatchSubset* patches,
     WaveSpeed = dx/WaveSpeed;
     double delT_new = WaveSpeed.minComponent();
     new_dw->put(delt_vartype(delT_new), lb->delTLabel, patch->getLevel());
-    new_dw->put(sum_vartype(se),     lb->StrainEnergyLabel);
-
+    
+    if (flag->d_reductionVars->accStrainEnergy ||
+        flag->d_reductionVars->strainEnergy) {
+      new_dw->put(sum_vartype(se),     lb->StrainEnergyLabel);
+    }
+    
     delete interpolator;
   }
 }
@@ -802,7 +804,11 @@ void Kayenta::carryForward(const PatchSubset* patches,
 
     // Don't affect the strain energy or timestep size
     new_dw->put(delt_vartype(1.e10), lb->delTLabel, patch->getLevel());
-    new_dw->put(sum_vartype(0.),     lb->StrainEnergyLabel);
+    
+    if (flag->d_reductionVars->accStrainEnergy ||
+        flag->d_reductionVars->strainEnergy) {
+      new_dw->put(sum_vartype(0.),   lb->StrainEnergyLabel);
+    }
   }
 
 }
@@ -815,8 +821,6 @@ void Kayenta::addInitialComputesAndRequires(Task* task,
   // constitutive models.  The method is defined in the ConstitutiveModel
   // base class.
   const MaterialSubset* matlset = matl->thisMaterial();
-
-  cout << "In add InitialComputesAnd" << endl;
 
   // Other constitutive model and input dependent computes and requires
   for(int i=0;i<d_NINSV;i++){
@@ -1086,54 +1090,32 @@ Kayenta::initializeLocalMPMLabels()
 {
   vector<string> ISVNames;
 
-  ISVNames.push_back("KAPPA");
-  ISVNames.push_back("INDEX");
-  ISVNames.push_back("EQDOT");
-  ISVNames.push_back("I1");
-  ISVNames.push_back("ROOTJ2");
-  ISVNames.push_back("ALXX");
-  ISVNames.push_back("ALYY");
-  ISVNames.push_back("ALZZ");
-  ISVNames.push_back("ALXY");
-  ISVNames.push_back("ALYZ");
-  ISVNames.push_back("ALXZ");
-  ISVNames.push_back("GFUN");
-  ISVNames.push_back("EQPS");
-  ISVNames.push_back("EQPV");
-  ISVNames.push_back("EL0");
-  ISVNames.push_back("HK");
-  ISVNames.push_back("EVOL");
-  ISVNames.push_back("BACKRN");
-  ISVNames.push_back("CRACK");
-  ISVNames.push_back("SHEAR");
-  ISVNames.push_back("YIELD");
-  ISVNames.push_back("LODE");
-  ISVNames.push_back("QSSIGXX");
-  ISVNames.push_back("QSSIGYY");
-  ISVNames.push_back("QSSIGZZ");
-  ISVNames.push_back("QSSIGXY");
-  ISVNames.push_back("QSSIGYZ");
-  ISVNames.push_back("QSSIGXZ");
-  ISVNames.push_back("DSCP");
-  ISVNames.push_back("QSEL");
-  ISVNames.push_back("QSBSXX");
-  ISVNames.push_back("QSBSYY");
-  ISVNames.push_back("QSBSZZ");
-  ISVNames.push_back("QSBSXY");
-  ISVNames.push_back("QSBSYZ");
-  ISVNames.push_back("QSBSXZ");
-  ISVNames.push_back("TGROW");
-  ISVNames.push_back("COHER");
-  ISVNames.push_back("TMPR");  //KTMPR  - Temperature
-  ISVNames.push_back("TMPRM");  //KTMPR  - Temperature
-  ISVNames.push_back("SNDSP");  //KSNDSP - Soundspeed
-  ISVNames.push_back("RHO");  //KRHO   - Density
-  ISVNames.push_back("ENRGY");  //KENRGY - Internal energy
-  ISVNames.push_back("ALPHAMG");  //Free place for EOS ISV
-  ISVNames.push_back("EOS1");  //Free place for EOS ISV
-  ISVNames.push_back("EOS2");  //Free place for EOS ISV
-  ISVNames.push_back("EOS3");  //Free place for EOS ISV
-  ISVNames.push_back("EOS4");  //Free place for EOS ISV
+// These lines of code are added by KC to replace the currently hard-coded
+// internal variable allocation with a proper call to KMMRXV routine.
+//Create VarLabels for GeoModel internal state variables (ISVs)
+  int nx;
+  char namea[5000];
+  char keya[5000];
+  double rinit[100];
+  double rdim[700];
+  int iadvct[100];
+  int itype[100];
+  
+  KMMRXV( UI, UI, UI, nx, namea, keya, rinit, rdim, iadvct, itype );
+
+  char *ISV[d_NINSV];
+  ISV[0] = strtok(keya, "|"); // Splits | between words in string
+  //cout << "ISV's Requested are :: " << ISV[0] << endl; 
+  ISVNames.push_back(ISV[0]);
+  for(int i = 1; i < d_NINSV ; i++)
+  {
+// If you specify NULL, by default it will start again from the previous stop.
+        ISV[i] = strtok (NULL, "|"); 
+        //cout << "ISV's Requested are :: " << ISV[i] << endl; //
+	ISVNames.push_back(ISV[i]);
+  }
+
+// Code ends here.KC
 
   
   for(int i=0;i<d_NINSV;i++){

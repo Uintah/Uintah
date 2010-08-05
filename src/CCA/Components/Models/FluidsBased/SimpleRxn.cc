@@ -143,14 +143,14 @@ void SimpleRxn::problemSetup(GridP&, SimulationStateP& in_state,
   
   d_modelComputesThermoTransportProps = true;
   
-  setup->registerTransportedVariable(d_matl_set->getSubset(0),
+  setup->registerTransportedVariable(d_matl_set,
                                      d_scalar->scalar_CCLabel,
                                      d_scalar->scalar_source_CCLabel);  
   //__________________________________
   // Read in the constants for the scalar
-   ProblemSpecP child = params->findBlock("scalar");
+   ProblemSpecP child = params->findBlock("SimpleRxn")->findBlock("scalar");
    if (!child){
-     throw ProblemSetupException("SimpleRxn: Couldn't find scalar tag", __FILE__, __LINE__);    
+     throw ProblemSetupException("SimpleRxn: Couldn't find (SimpleRxn) or (scalar) tag", __FILE__, __LINE__);    
    }
    child->getWithDefault("test_conservation", d_test_conservation, false);
    

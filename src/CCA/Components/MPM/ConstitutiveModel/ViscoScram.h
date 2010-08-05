@@ -93,6 +93,11 @@ namespace Uintah {
       double C2_WLF;
     };
 
+    // Murnaghan Equation of State Variables 
+    double d_P0;
+    double d_gamma;
+    double d_bulkPrime;
+
     typedef ViscoScramStateData StateData;
     
     const VarLabel* pVolChangeHeatRateLabel;
@@ -118,6 +123,7 @@ namespace Uintah {
 
     // Create datatype for storing model parameters
     bool d_useModifiedEOS;
+    bool d_useMurnahanEOS;
     bool d_random;
     bool d_doTimeTemperature;
     bool d_useObjectiveRate;

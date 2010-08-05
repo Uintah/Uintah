@@ -104,7 +104,8 @@ EqnBase::checkBCs( const ProcessorGroup* pc,
           cout << "Variable = " << d_eqnName << endl;
           cout << "Face = " << whichface << endl; 
           cout << "Child = " << child << endl;
-          throw ProblemSetupException("Please correct your input file for this variable", __FILE__,__LINE__); 
+          cout << "Material = " << matlIndex << endl;
+          throw ProblemSetupException("Please correct your <BoundaryCondition> section in your input file for this variable", __FILE__,__LINE__); 
         }
       }
     }

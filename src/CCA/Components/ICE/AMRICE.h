@@ -73,6 +73,12 @@ namespace Uintah {
                                                
     virtual void scheduleErrorEstimate(const LevelP& coarseLevel,
                                        SchedulerP& sched);
+                                       
+    inline void clearFaceMarks(const int whichMap, const Patch* patch) {
+      faceMarks_map[whichMap].erase(patch);
+    }
+    
+  
   protected:
     void refineCoarseFineBoundaries(const Patch* patch,
                                     CCVariable<double>& val,
@@ -88,13 +94,45 @@ namespace Uintah {
                                     int matl, 
                                     double factor);
                                   
-    using ICE::addRefineDependencies;
-    void addRefineDependencies(Task* task, 
-                               const VarLabel* var,
-                               Task::DomainSpec DS,
-                               const MaterialSubset* matls,
-                               bool needCoarseOld, 
-                               bool needCoarseNew);
+    void scheduleRefineInterface_Variable(const LevelP& fineLevel,  
+                                          SchedulerP& sched,        
+                                          const VarLabel* var,      
+                                          Task::DomainSpec DS,      
+                                          const MaterialSet* matls, 
+                                          bool needCoarseOld,       
+                                          bool needCoarseNew);      
+
+                              
+    template<class T>
+    void refluxOperator_computeCorrectionFluxes( 
+                              const string& fineVarLabel,
+                              const int indx,
+                              const Patch* coarsePatch,
+                              const Patch* finePatch,
+                              const Level* coarseLevel,
+                              const Level* fineLevel,
+                              DataWarehouse* new_dw,
+                              const int one_zero);
+                              
+    void refluxCoarseLevelIterator(Patch::FaceType patchFace,
+                                   const Patch* coarsePatch,
+                                   const Patch* finePatch,
+                                   const Level* fineLevel,
+                                   CellIterator& iter,
+                                   IntVector& coarse_FC_offset,
+                                   bool& CP_containsCell,
+                                   const string& whichTask);
+    template<class T>
+    void refluxOperator_applyCorrectionFluxes(                             
+                              CCVariable<T>& q_CC_coarse,
+                              const string& fineVarLabel,
+                              const int indx,
+                              const Patch* coarsePatch,
+                              const Patch* finePatch,
+                              const Level* coarseLevel,
+                              const Level* fineLevel,
+                              DataWarehouse* new_dw,
+                              const int one_zero);
 
   private:
 
@@ -115,12 +153,14 @@ namespace Uintah {
                                      DataWarehouse* fine_new_dw,
                                      DataWarehouse* coarse_old_dw,
                                      DataWarehouse* coarse_new_dw);
-                    
+            
+    template<class T>                
     void refineCoarseFineInterface(const ProcessorGroup*,
                                    const PatchSubset* patches,
                                    const MaterialSubset* matls,
                                    DataWarehouse*, 
-                                   DataWarehouse* new_dw);
+                                   DataWarehouse* new_dw,
+                                   const VarLabel* variable);
 
     void scheduleSetBC_FineLevel(const PatchSet* patches,
                                  SchedulerP& scheduler);
@@ -225,7 +265,26 @@ namespace Uintah {
                           double threshold,
                           CCVariable<int>& refineFlag,
                           PerPatch<PatchFlagP>& refinePatchFlag,
-                          const Patch* patch);                                                  
+                          const Patch* patch);
+                          
+
+    inline int getFaceMark(int whichMap, 
+                           const Patch* patch, 
+                           Patch::FaceType face)
+    {
+      ASSERT(whichMap>=0 && whichMap<2);
+      return faceMarks_map[whichMap][patch][face];
+    };
+
+    inline void setFaceMark(int whichMap, 
+                            const Patch* patch, 
+                            Patch::FaceType face, 
+                            int value) 
+    {
+      ASSERT(whichMap>=0 && whichMap<2);
+      faceMarks_map[whichMap][patch][face]=value;
+    };
+                                                                  
     AMRICE(const AMRICE&);
     AMRICE& operator=(const AMRICE&);
     
@@ -240,15 +299,33 @@ namespace Uintah {
     
     int d_orderOfInterpolation;         // Order of interpolation for interior fine patch
     int d_orderOf_CFI_Interpolation;    // order of interpolation at CFI.
+
+    struct faceMarks {
+      int marks[Patch::numFaces];
+      int& operator[](Patch::FaceType face)
+      {
+        return marks[static_cast<int>(face)];
+      }
+      faceMarks()
+      {
+        marks[0]=0;
+        marks[1]=0;
+        marks[2]=0;
+        marks[3]=0;
+        marks[4]=0;
+        marks[5]=0;
+      }
+    };
+    map<const Patch*,faceMarks> faceMarks_map[2];
   };
 
 static DebugStream cout_dbg("AMRICE_DBG", false);
 /*_____________________________________________________________________
- Function~  ICE::refluxOperator_applyCorrectionFluxes
+ Function~  AMRICE::refluxOperator_applyCorrectionFluxes
  Purpose~   
 _____________________________________________________________________*/
 template<class T>
-void ICE::refluxOperator_applyCorrectionFluxes(                             
+void AMRICE::refluxOperator_applyCorrectionFluxes(                             
                               CCVariable<T>& q_CC_coarse,
                               const string& varLabel,
                               const int indx,
@@ -317,7 +394,7 @@ void ICE::refluxOperator_applyCorrectionFluxes(
       // Add fine patch face fluxes correction to the coarse cells
       // c_CC:    coarse level cell center index
       // c_FC:    coarse level face center index
-      int count = finePatch->getFaceMark(0, patchFace);
+      int count = getFaceMark(0, finePatch, patchFace);
       
       if(patchFace == Patch::xminus || patchFace == Patch::xplus){
         for(; !c_iter.done(); c_iter++){
@@ -329,7 +406,7 @@ void ICE::refluxOperator_applyCorrectionFluxes(
           q_CC_coarse[c_CC] += Q_X_coarse_corr[c_FC];
                 
           count += one_zero;                       // keep track of how that face                        
-          finePatch->setFaceMark(0,patchFace,count); // has been touched
+          setFaceMark(0, finePatch, patchFace, count); // has been touched
           
 #ifdef REFLUX_DBG
           if (c_CC.y() == half.y() && c_CC.z() == half.z() && is_rightFace_variable(name,varLabel) ) {
@@ -353,7 +430,7 @@ void ICE::refluxOperator_applyCorrectionFluxes(
           q_CC_coarse[c_CC] += Q_Y_coarse_corr[c_FC];
           
           count += one_zero;                              
-          finePatch->setFaceMark(0,patchFace,count);
+          setFaceMark(0, finePatch, patchFace, count);
           
 #ifdef REFLUX_DBG
           if (c_CC.x() == half.x() && c_CC.z() == half.z() && is_rightFace_variable(name,varLabel) ) {
@@ -376,7 +453,7 @@ void ICE::refluxOperator_applyCorrectionFluxes(
           q_CC_coarse[c_CC] += Q_Z_coarse_corr[c_FC];
           
           count += one_zero;                              
-          finePatch->setFaceMark(0,patchFace,count);
+          setFaceMark(0, finePatch, patchFace, count);
           
 #ifdef REFLUX_DBG
           if (c_CC.x() == half.x() && c_CC.y() == half.y() && is_rightFace_variable(name,varLabel) ) {
@@ -394,7 +471,7 @@ void ICE::refluxOperator_applyCorrectionFluxes(
 } 
 
 /*___________________________________________________________________
- Function~  AMRICE::refine_CF_interfaceOperator-- 
+ Function~  AMRrefine_CF_interfaceOperator-- 
 _____________________________________________________________________*/
 template<class varType>
 void AMRICE::refine_CF_interfaceOperator(const Patch* finePatch, 
@@ -619,7 +696,7 @@ void AMRICE::fineToCoarseOperator(CCVariable<T>& q_CC,
  it's part of the ICE object 
 _____________________________________________________________________*/
 template<class T>
-void ICE::refluxOperator_computeCorrectionFluxes( 
+void AMRICE::refluxOperator_computeCorrectionFluxes( 
                               const string& fineVarLabel,
                               const int indx,
                               const Patch* coarsePatch,
@@ -787,7 +864,7 @@ void ICE::refluxOperator_computeCorrectionFluxes(
       // Add fine patch face fluxes to the coarse cells
       // c_CC f_CC:    coarse/fine level cell center index
       // c_FC f_FC:    coarse/fine level face center index
-      int count = finePatch->getFaceMark(0, patchFace);
+      int count = getFaceMark(0, finePatch, patchFace);
       if(patchFace == Patch::xminus || patchFace == Patch::xplus){    // X+ X-
         
         //__________________________________
@@ -811,7 +888,7 @@ void ICE::refluxOperator_computeCorrectionFluxes(
            //Q_X_coarse_flux[c_FC] = ( Q_X_coarse_flux_org[c_FC] - coeff* sum_fineLevelFlux);
 
            count += one_zero;                              
-           finePatch->setFaceMark(0,patchFace,count);
+           setFaceMark(0, finePatch, patchFace,count);
 /*`==========TESTING==========*/
 #ifdef REFLUX_DBG
         if (c_CC.y() == half.y() && c_CC.z() == half.z() && is_rightFace_variable(name,fineVarLabel) ) {
@@ -845,7 +922,7 @@ void ICE::refluxOperator_computeCorrectionFluxes(
                                  + (f_FaceNormal*sum_fineLevelFlux)/nSubCycles);
 
            count += one_zero;                       // keep track of how many times              
-           finePatch->setFaceMark(0,patchFace,count); // the face has been touched
+           setFaceMark(0, finePatch, patchFace, count); // the face has been touched
 /*`==========TESTING==========*/
 #ifdef REFLUX_DBG
         if (c_CC.x() == half.x() && c_CC.z() == half.z() && is_rightFace_variable(name,fineVarLabel)) {
@@ -880,7 +957,7 @@ void ICE::refluxOperator_computeCorrectionFluxes(
                                  + (f_FaceNormal*sum_fineLevelFlux)/nSubCycles);
            
             count += one_zero;                              
-           finePatch->setFaceMark(0,patchFace,count);
+            setFaceMark(0, finePatch, patchFace,count);
 /*`==========TESTING==========*/
 #ifdef REFLUX_DBG
         if (c_CC.x() == half.x() && c_CC.y() == half.y() && is_rightFace_variable(name,fineVarLabel)) {

@@ -36,7 +36,7 @@
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/Grid/Grid.h>
-//#include <Core/Grid/Variables/PSPatchMatlGhost.h>
+#include <Core/Grid/Variables/PSPatchMatlGhostRange.h>
 #include <CCA/Components/Schedulers/MemoryLog.h>
 #include <CCA/Components/Schedulers/SchedulerCommon.h>
 #include <CCA/Components/Schedulers/CommRecMPI.h>
@@ -836,7 +836,7 @@ DetailedTasks::possiblyCreateDependency(DetailedTask* from,
 
     //erase particle sends/recvs
     if (req->var->typeDescription()->getType() == TypeDescription::ParticleVariable && req->whichdw == Task::OldDW) {
-      PSPatchMatlGhost pmg(fromPatch, matl, matching_dep->low, matching_dep->high, (int) cond);
+      PSPatchMatlGhostRange pmg(fromPatch, matl, matching_dep->low, matching_dep->high, (int) cond);
 
       if (req->var->getName() == "p.x")
         dbg << d_myworld->myrank() << " erasing particles from " << fromresource << " to " << toresource 
@@ -846,7 +846,7 @@ DetailedTasks::possiblyCreateDependency(DetailedTask* from,
 
 
       if (fromresource == d_myworld->myrank()) {
-        std::set<PSPatchMatlGhost>::iterator iter=particleSends_[toresource].find(pmg);
+        std::set<PSPatchMatlGhostRange>::iterator iter=particleSends_[toresource].find(pmg);
         ASSERT(iter!=particleSends_[toresource].end());
         //subtract one from the count
         iter->count_--;
@@ -858,7 +858,7 @@ DetailedTasks::possiblyCreateDependency(DetailedTask* from,
         }
       }
       else if (toresource == d_myworld->myrank()) {
-        std::set<PSPatchMatlGhost>::iterator iter=particleRecvs_[fromresource].find(pmg);
+        std::set<PSPatchMatlGhostRange>::iterator iter=particleRecvs_[fromresource].find(pmg);
         ASSERT(iter!=particleRecvs_[fromresource].end());
         //subtract one from the count
         iter->count_--;
@@ -915,11 +915,11 @@ DetailedTasks::possiblyCreateDependency(DetailedTask* from,
   // these are to post all the particle quantities up front - sort them in TG::createDetailedDepenedencies
   if (req->var->typeDescription()->getType() == TypeDescription::ParticleVariable && req->whichdw == Task::OldDW) 
   {
-    PSPatchMatlGhost pmg=PSPatchMatlGhost(fromPatch, matl, new_dep->low, new_dep->high, (int) cond,1);
+    PSPatchMatlGhostRange pmg=PSPatchMatlGhostRange(fromPatch, matl, new_dep->low, new_dep->high, (int) cond,1);
 
     if (fromresource == d_myworld->myrank())
     {
-      std::set<PSPatchMatlGhost>::iterator iter=particleSends_[toresource].find(pmg);
+      std::set<PSPatchMatlGhostRange>::iterator iter=particleSends_[toresource].find(pmg);
       if(iter==particleSends_[toresource].end()) //if does not exist
       {
         //add to the sends list
@@ -933,7 +933,7 @@ DetailedTasks::possiblyCreateDependency(DetailedTask* from,
     }
     else if (toresource == d_myworld->myrank())
     {
-      std::set<PSPatchMatlGhost>::iterator iter=particleRecvs_[fromresource].find(pmg);
+      std::set<PSPatchMatlGhostRange>::iterator iter=particleRecvs_[fromresource].find(pmg);
       if(iter==particleRecvs_[fromresource].end())
       {
         //add to the recvs list
@@ -1469,11 +1469,11 @@ bool DetailedTaskPriorityComparison::operator() (DetailedTask*& ltask, DetailedT
     int rmsg=0;
     for (DependencyBatch* batch = ltask->getComputes(); batch != 0; batch = batch->comp_next) {
       for (DetailedDep* dep = batch->head; dep != 0; dep = dep->next)
-        rmsg++;
+        lmsg++;
     }
     for (DependencyBatch* batch = rtask->getComputes(); batch != 0; batch = batch->comp_next) {
       for (DetailedDep* dep = batch->head; dep != 0; dep = dep->next)
-        lmsg++;
+        rmsg++;
     }
     if (alg == MostMessages){
      // cout << "msg " <<  lmsg << "<>" << rmsg << endl;

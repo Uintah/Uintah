@@ -82,7 +82,6 @@ using std::endl;
 
 using std::string;
 using namespace Uintah;
-using namespace SCIRun;
 #ifdef PetscFilter
 #include <CCA/Components/Arches/Filter.h>
 #endif
@@ -335,6 +334,8 @@ Arches::problemSetup(const ProblemSpecP& params,
 
     // Wait until later to register source terms,
     // since some source terms need DQMOM information
+  } else {
+    proc0cout << "No *extra* transport equations found." << endl;
   }
 
   // read properties
@@ -492,17 +493,44 @@ Arches::problemSetup(const ProblemSpecP& params,
   if ( db->findBlock("DQMOM") ) {
     d_doDQMOM = true;
     
+    // assume there is only 1 <DQMOM> for now...
     d_dqmomSolver = scinew DQMOM(d_lab);
 
-    // assume there is only 1 <DQMOM> for now...
-    ProblemSpecP dqmom_db = db->findBlock("DQMOM");
-    dqmomFactory.problemSetup( dqmom_db );
-		coalFactory.problemSetup(dqmom_db);
-
-    d_dqmomSolver->problemSetup( dqmom_db ); 
+    //cmr
+    // uncomment next line when that assumption changes
     //d_dqmomSolvers.push_back(dqmomSolver);
 
+    ProblemSpecP dqmom_db = db->findBlock("DQMOM");
+    dqmomFactory.problemSetup( dqmom_db );
+    coalFactory.problemSetup(dqmom_db);
+    d_dqmomSolver->problemSetup( dqmom_db ); 
+
+
     dqmomFactory.setDQMOMSolver( d_dqmomSolver );
+
+    /*
+    // Don't clutter up Arches.cc with DQMOM things
+    // DQMOM things go in the DQMOM class
+    
+    // require that we have weighted or unweighted explicitly specified as an attribute to DQMOM
+    // type = "unweightedAbs" or type = "weighedAbs" 
+    dqmom_db->getAttribute( "type", d_which_dqmom ); 
+
+    ProblemSpecP db_linear_solver = dqmom_db->findBlock("LinearSolver");
+    if( db_linear_solver ) {
+      string d_solverType;
+      db_linear_solver->getWithDefault("type", d_solverType, "LU");
+
+      // currently, unweighted abscissas only work with the optimized solver -- remove this check when other solvers work: 
+      if( d_which_dqmom == "unweightedAbs" && d_solverType != "Optimize" ) {
+        throw ProblemSetupException("Error!: The unweighted abscissas only work with the optimized solver.", __FILE__, __LINE__);
+      }
+    }
+
+    proc0cout << endl;
+    proc0cout << "WARNING: If you are trying to do DQMOM make sure you added the <TimeIntegrator> section!\n"; 
+    */
+
   }
 
   // TODO
@@ -532,7 +560,7 @@ Arches::problemSetup(const ProblemSpecP& params,
       // Set up coal model factory
       CoalModelFactory& model_factory = CoalModelFactory::self();
       model_factory.setArchesLabel( d_lab ); 
-		  model_factory.problemSetup(dqmom_db);
+      model_factory.problemSetup(dqmom_db);
 
     } else if (dqmom_type == "soot" ) {
       throw ProblemSetupException("ERROR: Arches: DQMOM for soot is not currently supported.",__FILE__,__LINE__);
@@ -550,10 +578,17 @@ Arches::problemSetup(const ProblemSpecP& params,
   }
   */
 
-  // Do problem setup stuff for TranpsortEqns that require DQMOM information
+  // Do problem setup stuff for TranpsortEqns (some of these require DQMOM information, which is why this goes after the DQMOM problem setup)
   if( db->findBlock("TransportEqns")->findBlock("Sources") ) {
     ProblemSpecP sources_db = db->findBlock("TransportEqns")->findBlock("Sources");
     srcFactory.problemSetup( sources_db );
+  }
+
+  if( db->findBlock("DQMOM") ) {
+    ProblemSpecP dqmom_db = db->findBlock("DQMOM");
+
+    // Now populate the list of "extra" (MMS and unweighted abscissa) source terms for DQMOMEqn's
+    dqmomFactory.problemSetupSources( dqmom_db );
   }
 
 }
@@ -1943,4 +1978,5 @@ double Arches::recomputeTimestep(double current_dt) {
 bool Arches::restartableTimesteps() {
   return d_nlSolver->restartableTimesteps();
 }
+ 
 

@@ -82,7 +82,7 @@ namespace Uintah {
                             bool& setSine_BCs,
                             sine_vars* mss_v);
                            
-  void set_Sine_Velocity_BC(const Patch* patch,
+  int set_Sine_Velocity_BC(const Patch* patch,
                             const Patch::FaceType face,
                             CCVariable<Vector>& vel_CC,
                             const string& var_desc,
@@ -92,16 +92,15 @@ namespace Uintah {
                             sine_variable_basket* sine_var_basket,
                             sine_vars* sine_v);
                            
-  void set_Sine_Temperature_BC(const Patch* patch,
+  int  set_Sine_Temperature_BC(const Patch* patch,
                                const Patch::FaceType face,
                                CCVariable<double>& temp_CC,
-                               const string& var_desc,
                                Iterator& bound_ptr,
                                const string& bc_kind,
                                sine_variable_basket* sine_var_basket,
                                sine_vars* sine_v);
                               
-  void set_Sine_press_BC(const Patch* patch,
+  int  set_Sine_press_BC(const Patch* patch,
                          const Patch::FaceType face,
                          CCVariable<double>& press_CC,
                          Iterator& bound_ptr,
@@ -116,44 +115,35 @@ namespace Uintah {
  Purpose~   Sets the face center velocity boundary conditions
  ______________________________________________________________________*/
  template<class T>
- bool set_Sine_BCs_FC( const Patch* patch,
+ int set_Sine_BCs_FC( const Patch* patch,
                        const Patch::FaceType face,
                        T& vel_FC,
                        Iterator& bound_ptr,
-                       string& bc_kind,
-                       const Vector& dx,
-                       const IntVector& /*P_dir*/,
-                       const string& whichVel,
                        SimulationStateP& sharedState,
                        sine_variable_basket* sine_var_basket,
                        sine_vars* sine_v)
 {
 //  cout<< "Doing set_sine_BCs_FC: \t\t" << whichVel   << " face " << face << endl;
   
-  bool IveSetBC = false;
- 
+  
+  
+  int IveSetBC = 1;
   //__________________________________
   // on (x,y,z)minus faces move in one cell
-  IntVector one_or_zero(0,0,0);
-  if ( (whichVel == "X_vel_FC" && face == Patch::xminus) || 
-       (whichVel == "Y_vel_FC" && face == Patch::yminus) || 
-       (whichVel == "Z_vel_FC" && face == Patch::zminus)){
-    one_or_zero = patch->faceDirection(face);
+  IntVector oneCell(0,0,0);
+  if ( (face == Patch::xminus) || 
+       (face == Patch::yminus) || 
+       (face == Patch::zminus)){
+    oneCell = patch->faceDirection(face);
   } 
+  Vector one_or_zero = oneCell.asVector();
+  
   //__________________________________
   //  set one or zero flags
-  double x_one_zero = 0.0;
-  if (whichVel =="X_vel_FC") 
-    x_one_zero = 1.0;
-  
-  double y_one_zero = 0.0;
-  if (whichVel =="Y_vel_FC") 
-    y_one_zero = 1.0;
-    
-  double z_one_zero = 0.0;
-  if (whichVel =="Z_vel_FC") 
-    z_one_zero = 1.0;
-  
+  double x_one_zero = abs(one_or_zero.x());
+  double y_one_zero = abs(one_or_zero.y());
+  double z_one_zero = abs(one_or_zero.z());
+
   //__________________________________
   //                            
   double A     = sine_var_basket->A;
@@ -164,7 +154,7 @@ namespace Uintah {
   double change =   A * sin(omega*t);
                                              
   for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {  
-    IntVector c = *bound_ptr - one_or_zero;                  
+    IntVector c = *bound_ptr - oneCell;                  
       
     Vector vel(0.0,0.0,0.0);                                         
     vel.x(vel_ref.x() +  change); 
@@ -174,8 +164,7 @@ namespace Uintah {
     vel_FC[c] = x_one_zero * vel.x()                                 
               + y_one_zero * vel.y()                                 
               + z_one_zero * vel.z();                                
-  }                                                                  
-  IveSetBC = true; 
+  } 
   return IveSetBC; 
 }                        
                                                 

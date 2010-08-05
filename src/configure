@@ -726,10 +726,14 @@ BUILD_ARCHES
 BUILD_ICE
 BUILD_MPM
 BUILD_RADIATION
+BUILD_WASATCH
 DEF_ARCHES
 DEF_ICE
 DEF_MPM
+DEF_NO_FORTRAN
 DEF_RADIATION
+DEF_WASATCH
+NO_FORTRAN
 ac_ct_F77
 STATIC_BUILD_DEF
 MAKE_ARCHIVES
@@ -882,6 +886,11 @@ DEF_TABPROPS
 INC_TABPROPS_H
 TABPROPS_LIB_FLAG
 TABPROPS_LIB_DIR_FLAG
+HAVE_BOOST
+DEF_BOOST
+INC_BOOST_H
+BOOST_LIB_FLAG
+BOOST_LIB_DIR_FLAG
 HAVE_HYPRE
 DEF_HYPRE
 INC_HYPRE_H
@@ -1529,6 +1538,7 @@ Optional Packages:
 --with-mpiuni=DIR       Use the mpiuni installation in DIR
 --with-hypre=DIR        Use the hypre installation in DIR
 --with-petsc=DIR        Use the petsc installation in DIR
+--with-boost=DIR        Use the Boost library in DIR
 --with-tabprops=DIR     Use the TabProps library in DIR
 --with-zoltan=DIR       Use the Zoltan installation in DIR
 --with-unipetsc=DIR     Use the unipetsc installation in DIR
@@ -2531,6 +2541,36 @@ echo "$as_me: error: The file or directory parameter ($petsc) specified for --wi
   fi
 
 
+
+
+# Check whether --with-boost was given.
+if test "${with_boost+set}" = set; then
+  withval=$with_boost; with_boost="$withval"
+   sci_required_boost=yes
+else
+  with_boost=""
+fi
+
+  sci_arg_with_list="$sci_arg_with_list --with-boost --without-boost"
+  if test -n "$boost" -a ! -e "$boost"; then
+    { { echo "$as_me:$LINENO: error: The file or directory parameter ($boost) specified for --with-boost does not exist!  Please verify that the path and file are correct." >&5
+echo "$as_me: error: The file or directory parameter ($boost) specified for --with-boost does not exist!  Please verify that the path and file are correct." >&2;}
+   { (exit 1); exit 1; }; }
+  fi
+
+
+#SCI_ARG_WITH(spatialops,
+#  AC_HELP_STRING(--with-spatialops=DIR,
+#                 Use the SpatialOps library in DIR),
+#  [with_spatialops="$withval"
+#   sci_required_spatialops=yes],
+#  [with_spatialops=""])
+#SCI_ARG_WITH(exprlib,
+#  AC_HELP_STRING(--with-exprlib=DIR,
+#                 Use the ExprLib library in DIR),
+#  [with_exprlib="$withval"
+#   sci_required_exprlib=yes],
+#  [with_exprlib=""])
 
 
 # Check whether --with-tabprops was given.
@@ -6874,17 +6914,31 @@ BUILD_ARCHES=yes
 BUILD_ICE=yes
 BUILD_MPM=yes
 BUILD_RADIATION=yes
+BUILD_WASATCH=no
 DEF_ARCHES=""
 DEF_ICE=""
 DEF_MPM=""
 DEF_RADIATION=""
+DEF_WASATCH=""
+
 if test "$USE_ARCHES" = no; then BUILD_ARCHES=no; DEF_ARCHES="#define NO_ARCHES"; fi
 if test "$USE_ICE" = no; then BUILD_ICE=no; DEF_ICE="#define NO_ICE"; fi
 if test "$USE_MPM" = no; then BUILD_MPM=no; DEF_MPM="#define NO_MPM"; fi
 if test "$USE_RADIATION" = no; then BUILD_RADIATION=no; DEF_RADIATION="#define NO_RADIATION"; fi
-if test "$with_fortran" = no; then BUILD_ARCHES=no; BUILD_RADIATION=no;
-                                   DEF_RADIATION="#define NO_RADIATION"; DEF_ARCHES="#define NO_ARCHES";
+if test "$with_fortran" = no; then
+            BUILD_ARCHES=no; BUILD_RADIATION=no;
+            DEF_RADIATION="#define NO_RADIATION"; DEF_ARCHES="#define NO_ARCHES";
+            DEF_NO_FORTRAN="#define NO_FORTRAN";
+            NO_FORTRAN="yes";
 fi
+if test "$USE_WASATCH" = yes; then BUILD_WASATCH=yes; fi
+if test "$BUILD_WASATCH" = no; then DEF_WASATCH="#define NO_WASATCH"; fi
+
+# NO_FORTRAN is used in configVars.mk[.in] and DEF_NO_FORTRAN is used in uintah_testdefs.h.in
+
+
+
+
 
 
 
@@ -9704,10 +9758,12 @@ echo "${ECHO_T}Creating tools directory" >&6; }
   fi
 fi
 
-{ echo "$as_me:$LINENO: checking fortran underscore policy" >&5
+if test "$with_fortran" != no; then
+  { echo "$as_me:$LINENO: checking fortran underscore policy" >&5
 echo $ECHO_N "checking fortran underscore policy... $ECHO_C" >&6; }
-{ echo "$as_me:$LINENO: result: $FORTRAN_UNDERSCORE" >&5
+  { echo "$as_me:$LINENO: result: $FORTRAN_UNDERSCORE" >&5
 echo "${ECHO_T}$FORTRAN_UNDERSCORE" >&6; }
+fi
 
 
 
@@ -11506,19 +11562,52 @@ sci_defs_files="$sci_defs_files include/sci_defs/thread_testdefs.h"
 ##  --  Enable VisIt -----------------------------
 
 if test "$with_visit"; then
-   if test -z "$with_teem"; then
-      { { echo "$as_me:$LINENO: error: You must specify --with-teem=DIR when using --with-visit. " >&5
-echo "$as_me: error: You must specify --with-teem=DIR when using --with-visit. " >&2;}
+
+   { echo "$as_me:$LINENO: checking for VisIt" >&5
+echo $ECHO_N "checking for VisIt... $ECHO_C" >&6; }
+
+   which cmake > /dev/null 2>&1
+   if test $? != 0; then
+      { { echo "$as_me:$LINENO: error: VisIt requires CMake. Please make sure 'cmake' is in your path!" >&5
+echo "$as_me: error: VisIt requires CMake. Please make sure 'cmake' is in your path!" >&2;}
    { (exit 1); exit 1; }; }
    fi
+
+   CMAKE_LOCATION=`which cmake`
+
+   # Verify that cmake is new enough:
+   #
+   # Need this ugly hack to handle different types of version strings returned by cmake's different versions... sigh.
+   # The first 'sed' removes all alphabetical characters (leaves numbers, spaces, and periods).  The second 'sed'
+   # removes leading and trailing space.  The final 'sed' replaces (potential) spaces with a perions (.).
+   # Eg: The version string from cmake 2.4.8 is 'cmake version 2.4-patch 8'.
+   # Note: autoconf removes one set of [], thus the below sed commands have one extra set of [] around each portion.
+   CMAKE_VERSION_STRING=`cmake --version | sed 's/[^0-9. ]//g' | sed 's/^[[:space:]]*\(.*\)[[:space:]]*$/\1/' | sed 's/ /./g'`
+
+   CMAKE_VERSION_MAJOR=`echo "$CMAKE_VERSION_STRING" | awk -F. '{print $1}'`
+   CMAKE_VERSION_MINOR=`echo "$CMAKE_VERSION_STRING" | awk -F. '{print $2}'`
+
+   if   test "$CMAKE_VERSION_MAJOR" -ge 3; then
+      { echo "$as_me:$LINENO: WARNING: Have not tried using cmake v3.x... It might work..." >&5
+echo "$as_me: WARNING: Have not tried using cmake v3.x... It might work..." >&2;}
+   elif test "$CMAKE_VERSION_MAJOR" -lt 2; then
+      { { echo "$as_me:$LINENO: error: CMake must be version 2.8 or better.  $CMAKE_LOCATION is version $CMAKE_VERSION_STRING." >&5
+echo "$as_me: error: CMake must be version 2.8 or better.  $CMAKE_LOCATION is version $CMAKE_VERSION_STRING." >&2;}
+   { (exit 1); exit 1; }; }
+   elif test "$CMAKE_VERSION_MINOR" -lt 8; then
+      { { echo "$as_me:$LINENO: error: CMake must be version 2.8 or better.  $CMAKE_LOCATION is version $CMAKE_VERSION_STRING." >&5
+echo "$as_me: error: CMake must be version 2.8 or better.  $CMAKE_LOCATION is version $CMAKE_VERSION_STRING." >&2;}
+   { (exit 1); exit 1; }; }
+   fi
+
    if test "$with_visit" == "yes"; then
       { { echo "$as_me:$LINENO: error: You must provide a DIRECTORY when using --with-visit=DIR. " >&5
 echo "$as_me: error: You must provide a DIRECTORY when using --with-visit=DIR. " >&2;}
    { (exit 1); exit 1; }; }
    fi
-   if ! test -f "$with_visit/src/bin/xml2makefile"; then
-      { { echo "$as_me:$LINENO: error: Could not find xml2makefile in $with_visit/src/bin/... " >&5
-echo "$as_me: error: Could not find xml2makefile in $with_visit/src/bin/... " >&2;}
+   if ! test -f "$with_visit/bin/xml2cmake"; then
+      { { echo "$as_me:$LINENO: error: Could not find xml2cmake in $with_visit/bin/... " >&5
+echo "$as_me: error: Could not find xml2cmake in $with_visit/bin/... " >&2;}
    { (exit 1); exit 1; }; }
    fi
 
@@ -11531,11 +11620,13 @@ echo "$as_me: WARNING: VisIt target directory has changed - removing old VisIt b
       fi
    fi
 
-   sci_defs_files="$sci_defs_files VisIt/udaReaderMTMD/testavtudaReaderMTMDFileFormat.C"
+   sci_defs_files="$sci_defs_files VisIt/udaReaderMTMD/avtudaReaderMTMDFileFormat.C"
 
    BUILD_VISIT=yes
    UINTAH_UDA_TO_VIS_LIB=`pwd`/lib/libStandAlone_tools_uda2vis.$SO_OR_ARCHIVE_EXTENSION
    VISIT_INSTALL_DIR=$with_visit
+   { echo "$as_me:$LINENO: result: found" >&5
+echo "${ECHO_T}found" >&6; }
 fi
 
 
@@ -22223,9 +22314,10 @@ elif test "$with_fortran" -a "$with_fortran" != "no"; then
   _sci_optional=specific
 fi
 
-case $host in
-  *aix*)
-    # AIX Fortran Library Check
+if test "$with_fortran" != "no"; then
+  case $host in
+    *aix*)
+      # AIX Fortran Library Check
 
 ##
 ## SCI_TRY_LINK (F):  fortran libraries
@@ -22669,11 +22761,11 @@ _sci_includes=''
 ##
 
 
-    ;;
-  *linux*)
-    # Linux Library Check
-    case $F77 in
-      *pgf77*)
+      ;;
+    *linux*)
+      # Linux Library Check
+      case $F77 in
+        *pgf77*)
 
 ##
 ## SCI_TRY_LINK (F):  fortran libraries
@@ -23117,8 +23209,8 @@ _sci_includes=''
 ##
 
 
-        ;;
-      *gfortran*)
+          ;;
+        *gfortran*)
 
 ##
 ## SCI_TRY_LINK (F):  fortran libraries
@@ -23562,8 +23654,8 @@ _sci_includes=''
 ##
 
 
-        ;;
-      *ifort*)
+          ;;
+        *ifort*)
 
 ##
 ## SCI_TRY_LINK (F):  fortran libraries
@@ -24007,8 +24099,8 @@ _sci_includes=''
 ##
 
 
-        ;;
-      *ftn*)
+          ;;
+        *ftn*)
 
 ##
 ## SCI_TRY_LINK (F):  fortran libraries
@@ -24452,8 +24544,8 @@ _sci_includes=''
 ##
 
 
-        ;;
-      *)
+          ;;
+        *)
 
 ##
 ## SCI_TRY_LINK (F):  fortran libraries
@@ -24897,10 +24989,10 @@ _sci_includes=''
 ##
 
 
-        ;;
-     esac
-    ;;
-  *dec*)
+          ;;
+       esac
+      ;;
+    *dec*)
 
 ##
 ## SCI_TRY_LINK (F):  fortran libraries
@@ -25344,13 +25436,13 @@ _sci_includes=''
 ##
 
 
-    ;;
-  *-darwin*)
-    # OSX Library Check
-    if test "$F77" = "xlf"; then
+      ;;
+    *-darwin*)
+      # OSX Library Check
+      if test "$F77" = "xlf"; then
 
 ##
-## SCI_TRY_LINK (F):  fortran libraries
+## SCI_TRY_LINK (F):  Mac fortran library - xlf90
 ##
 ## arguments mean:
 ## arg 1 : variable base name (e.g., MATH)
@@ -25382,7 +25474,7 @@ _sci_includes=''
 ## Here are the specific values for this invocation:
 ##
 ## arg 1 : F
-## arg 2 : fortran libraries
+## arg 2 : Mac fortran library - xlf90
 ## arg 3 :
 ## arg 4 : $_sci_inc
 ## arg 5 : xlf90
@@ -25402,14 +25494,14 @@ _sci_includes=''
 ##      HAVE_F_H         => yes or no
 
 if test 9 != 9; then
-     { { echo "$as_me:$LINENO: error: Wrong number of parameters (9) for SCI-TRY-LINK for fortran libraries.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
-echo "$as_me: error: Wrong number of parameters (9) for SCI-TRY-LINK for fortran libraries.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
+     { { echo "$as_me:$LINENO: error: Wrong number of parameters (9) for SCI-TRY-LINK for Mac fortran library - xlf90.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
+echo "$as_me: error: Wrong number of parameters (9) for SCI-TRY-LINK for Mac fortran library - xlf90.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
    { (exit 1); exit 1; }; }
 fi
 
 
-{ echo "$as_me:$LINENO: checking for fortran libraries ($_sci_optional)" >&5
-echo $ECHO_N "checking for fortran libraries ($_sci_optional)... $ECHO_C" >&6; }
+{ echo "$as_me:$LINENO: checking for Mac fortran library - xlf90 ($_sci_optional)" >&5
+echo $ECHO_N "checking for Mac fortran library - xlf90 ($_sci_optional)... $ECHO_C" >&6; }
 _sci_savelibs=$LIBS
 _sci_saveldflags=$LDFLAGS
 _sci_savecflags=$CFLAGS
@@ -25419,8 +25511,8 @@ _sci_includes=
 
 if test "$_sci_optional" != "optional" -a "$_sci_optional" != "required" -a "$_sci_optional" != "specific"; then
      echo
-     { { echo "$as_me:$LINENO: error: Last parameter of SCI-TRY-LINK for fortran libraries must be: optional or required or specific.  (You had $_sci_optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
-echo "$as_me: error: Last parameter of SCI-TRY-LINK for fortran libraries must be: optional or required or specific.  (You had $_sci_optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
+     { { echo "$as_me:$LINENO: error: Last parameter of SCI-TRY-LINK for Mac fortran library - xlf90 must be: optional or required or specific.  (You had $_sci_optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
+echo "$as_me: error: Last parameter of SCI-TRY-LINK for Mac fortran library - xlf90 must be: optional or required or specific.  (You had $_sci_optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
    { (exit 1); exit 1; }; }
 fi
 
@@ -25827,14 +25919,14 @@ _sci_libs=''
 _sci_includes=''
 
 ##
-## END of SCI_TRY_LINK (F):  fortran libraries
+## END of SCI_TRY_LINK (F):  Mac fortran library - xlf90
 ##
 
 
-    else
+      else
 
 ##
-## SCI_TRY_LINK (F):  fortran libraries
+## SCI_TRY_LINK (F):  Mac fortran library - gfortran
 ##
 ## arguments mean:
 ## arg 1 : variable base name (e.g., MATH)
@@ -25866,7 +25958,7 @@ _sci_includes=''
 ## Here are the specific values for this invocation:
 ##
 ## arg 1 : F
-## arg 2 : fortran libraries
+## arg 2 : Mac fortran library - gfortran
 ## arg 3 :
 ## arg 4 : $_sci_inc
 ## arg 5 : gfortran
@@ -25886,14 +25978,14 @@ _sci_includes=''
 ##      HAVE_F_H         => yes or no
 
 if test 9 != 9; then
-     { { echo "$as_me:$LINENO: error: Wrong number of parameters (9) for SCI-TRY-LINK for fortran libraries.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
-echo "$as_me: error: Wrong number of parameters (9) for SCI-TRY-LINK for fortran libraries.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
+     { { echo "$as_me:$LINENO: error: Wrong number of parameters (9) for SCI-TRY-LINK for Mac fortran library - gfortran.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
+echo "$as_me: error: Wrong number of parameters (9) for SCI-TRY-LINK for Mac fortran library - gfortran.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
    { (exit 1); exit 1; }; }
 fi
 
 
-{ echo "$as_me:$LINENO: checking for fortran libraries (optional)" >&5
-echo $ECHO_N "checking for fortran libraries (optional)... $ECHO_C" >&6; }
+{ echo "$as_me:$LINENO: checking for Mac fortran library - gfortran (optional)" >&5
+echo $ECHO_N "checking for Mac fortran library - gfortran (optional)... $ECHO_C" >&6; }
 _sci_savelibs=$LIBS
 _sci_saveldflags=$LDFLAGS
 _sci_savecflags=$CFLAGS
@@ -25903,8 +25995,8 @@ _sci_includes=
 
 if test "optional" != "optional" -a "optional" != "required" -a "optional" != "specific"; then
      echo
-     { { echo "$as_me:$LINENO: error: Last parameter of SCI-TRY-LINK for fortran libraries must be: optional or required or specific.  (You had optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
-echo "$as_me: error: Last parameter of SCI-TRY-LINK for fortran libraries must be: optional or required or specific.  (You had optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
+     { { echo "$as_me:$LINENO: error: Last parameter of SCI-TRY-LINK for Mac fortran library - gfortran must be: optional or required or specific.  (You had optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
+echo "$as_me: error: Last parameter of SCI-TRY-LINK for Mac fortran library - gfortran must be: optional or required or specific.  (You had optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
    { (exit 1); exit 1; }; }
 fi
 
@@ -26311,14 +26403,14 @@ _sci_libs=''
 _sci_includes=''
 
 ##
-## END of SCI_TRY_LINK (F):  fortran libraries
+## END of SCI_TRY_LINK (F):  Mac fortran library - gfortran
 ##
 
 
-      if test "$HAVE_F" = "no"; then
+        if test "$HAVE_F" = "no"; then
 
 ##
-## SCI_TRY_LINK (F):  fortran libraries
+## SCI_TRY_LINK (F):  mac fortran library - g2c
 ##
 ## arguments mean:
 ## arg 1 : variable base name (e.g., MATH)
@@ -26350,7 +26442,7 @@ _sci_includes=''
 ## Here are the specific values for this invocation:
 ##
 ## arg 1 : F
-## arg 2 : fortran libraries
+## arg 2 : mac fortran library - g2c
 ## arg 3 :
 ## arg 4 : $_sci_inc
 ## arg 5 : g2c
@@ -26370,14 +26462,14 @@ _sci_includes=''
 ##      HAVE_F_H         => yes or no
 
 if test 9 != 9; then
-     { { echo "$as_me:$LINENO: error: Wrong number of parameters (9) for SCI-TRY-LINK for fortran libraries.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
-echo "$as_me: error: Wrong number of parameters (9) for SCI-TRY-LINK for fortran libraries.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
+     { { echo "$as_me:$LINENO: error: Wrong number of parameters (9) for SCI-TRY-LINK for mac fortran library - g2c.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
+echo "$as_me: error: Wrong number of parameters (9) for SCI-TRY-LINK for mac fortran library - g2c.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
    { (exit 1); exit 1; }; }
 fi
 
 
-{ echo "$as_me:$LINENO: checking for fortran libraries ($_sci_optional)" >&5
-echo $ECHO_N "checking for fortran libraries ($_sci_optional)... $ECHO_C" >&6; }
+{ echo "$as_me:$LINENO: checking for mac fortran library - g2c ($_sci_optional)" >&5
+echo $ECHO_N "checking for mac fortran library - g2c ($_sci_optional)... $ECHO_C" >&6; }
 _sci_savelibs=$LIBS
 _sci_saveldflags=$LDFLAGS
 _sci_savecflags=$CFLAGS
@@ -26387,8 +26479,8 @@ _sci_includes=
 
 if test "$_sci_optional" != "optional" -a "$_sci_optional" != "required" -a "$_sci_optional" != "specific"; then
      echo
-     { { echo "$as_me:$LINENO: error: Last parameter of SCI-TRY-LINK for fortran libraries must be: optional or required or specific.  (You had $_sci_optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
-echo "$as_me: error: Last parameter of SCI-TRY-LINK for fortran libraries must be: optional or required or specific.  (You had $_sci_optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
+     { { echo "$as_me:$LINENO: error: Last parameter of SCI-TRY-LINK for mac fortran library - g2c must be: optional or required or specific.  (You had $_sci_optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
+echo "$as_me: error: Last parameter of SCI-TRY-LINK for mac fortran library - g2c must be: optional or required or specific.  (You had $_sci_optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
    { (exit 1); exit 1; }; }
 fi
 
@@ -26795,15 +26887,15 @@ _sci_libs=''
 _sci_includes=''
 
 ##
-## END of SCI_TRY_LINK (F):  fortran libraries
+## END of SCI_TRY_LINK (F):  mac fortran library - g2c
 ##
 
 
+        fi
       fi
-    fi
-    ;;
-  *-pc-mingw*)
-    # Mingw g77 and libg2c
+      ;;
+    *-pc-mingw*)
+      # Mingw g77 and libg2c
 
 ##
 ## SCI_TRY_LINK (F):  fortran libraries
@@ -27247,8 +27339,8 @@ _sci_includes=''
 ##
 
 
-    ;;
-  *)
+      ;;
+    *)
 
 ##
 ## SCI_TRY_LINK (F):  fortran libraries
@@ -27692,8 +27784,9 @@ _sci_includes=''
 ##
 
 
-    ;;
-esac
+      ;;
+  esac
+fi
 
 
 
@@ -27708,6 +27801,13 @@ ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $
 ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
+# Clean up all the fortran flags that don't have individual without-fortran guards on them...
+if test "$with_fortran" = no; then
+  FFLAGS="fortran_disabled";
+  extra_fflags="fortran_disabled";
+  FORTRAN_UNDERSCORE="// FORTRAN_UNDERSCORE => fortran_disabled";
+  DEF_FORTRAN_UNDERSCORE="// DEF_FORTRAN_UNDERSCORE => fortran_disabled";
+fi
 
 ##  --  Electric Fence  -------------------------------------
 
@@ -41491,10 +41591,10 @@ if (test "$HAVE_MPI" = "yes" || test "$HAVE_MPI_UNI" = "yes") && test "$HAVE_BLA
       # The newer (2.3+) versions of petsc don't use the libO anymore...
       have23=`echo "$with_petsc" | grep "2.3."`
       if test -z "$have23" ; then
-         petsc_version_major=`grep PETSC_VERSION_MAJOR $with_petsc/include/petscversion.h | awk '{print $3}'`
-         petsc_version_minor=`grep PETSC_VERSION_MINOR $with_petsc/include/petscversion.h | awk '{print $3}'`
-         if test $petsc_version_major -eq 2 ; then
-            if test $petsc_version_minor -eq 3 ; then
+         petsc_version_major=`grep PETSC_VERSION_MAJOR $with_petsc/include/petscversion.h | grep define | awk '{print $3}'`
+         petsc_version_minor=`grep PETSC_VERSION_MINOR $with_petsc/include/petscversion.h | grep define | awk '{print $3}'`
+         if test "$petsc_version_major" -eq 2 ; then
+            if test "$petsc_version_minor" -eq 3 ; then
                have23=true
             fi
          fi
@@ -44841,6 +44941,7 @@ ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
 ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
 ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
+
 ##  --  search for TabProps ------------------------
 
 if test "$with_tabprops"; then
@@ -44884,7 +44985,42 @@ fi
 
 
 
-## -----------------------------------------------
+##  --  search for Boost ------------------------
+
+if test "$with_boost"; then
+  if test "$with_boost" = "yes"; then
+    { { echo "$as_me:$LINENO: error: --with-boost=DIR requires a DIRectory be provided. " >&5
+echo "$as_me: error: --with-boost=DIR requires a DIRectory be provided. " >&2;}
+   { (exit 1); exit 1; }; }
+  else
+    { echo "$as_me:$LINENO: checking for Boost files (For now we are just verifying the existence of lib and .h files)" >&5
+echo $ECHO_N "checking for Boost files (For now we are just verifying the existence of lib and .h files)... $ECHO_C" >&6; }
+    if test ! -d $with_boost; then
+      { { echo "$as_me:$LINENO: error: '$with_boost' directory does not exist. " >&5
+echo "$as_me: error: '$with_boost' directory does not exist. " >&2;}
+   { (exit 1); exit 1; }; }
+    fi
+    for file in include/boost/BSpline.h include/boost/LU.h include/boost/StateTable.h lib/boost/libboost.a; do
+      if test ! -f $with_boost/$file; then
+        { { echo "$as_me:$LINENO: error: '$with_boost/$file' does not exist. " >&5
+echo "$as_me: error: '$with_boost/$file' does not exist. " >&2;}
+   { (exit 1); exit 1; }; }
+      fi
+    done
+  fi
+  { echo "$as_me:$LINENO: result: yes" >&5
+echo "${ECHO_T}yes" >&6; }
+  DEF_BOOST="#define HAVE_BOOST 1"
+  INC_BOOST_H="-I$with_boost/include"
+  BOOST_LIB_DIR_FLAG="-L$with_boost/lib/boost"
+  BOOST_LIB_FLAG="-lboost"
+  HAVE_BOOST="yes"
+fi
+
+
+
+
+
 
 ##  --  search for hypre stuff  ------------------------------------------
 
@@ -46227,10 +46363,14 @@ BUILD_ARCHES!$BUILD_ARCHES$ac_delim
 BUILD_ICE!$BUILD_ICE$ac_delim
 BUILD_MPM!$BUILD_MPM$ac_delim
 BUILD_RADIATION!$BUILD_RADIATION$ac_delim
+BUILD_WASATCH!$BUILD_WASATCH$ac_delim
 DEF_ARCHES!$DEF_ARCHES$ac_delim
 DEF_ICE!$DEF_ICE$ac_delim
 DEF_MPM!$DEF_MPM$ac_delim
+DEF_NO_FORTRAN!$DEF_NO_FORTRAN$ac_delim
 DEF_RADIATION!$DEF_RADIATION$ac_delim
+DEF_WASATCH!$DEF_WASATCH$ac_delim
+NO_FORTRAN!$NO_FORTRAN$ac_delim
 ac_ct_F77!$ac_ct_F77$ac_delim
 STATIC_BUILD_DEF!$STATIC_BUILD_DEF$ac_delim
 MAKE_ARCHIVES!$MAKE_ARCHIVES$ac_delim
@@ -46238,10 +46378,6 @@ SOFLAGS!$SOFLAGS$ac_delim
 IS_STATIC_BUILD!$IS_STATIC_BUILD$ac_delim
 SO_OR_ARCHIVE_EXTENSION!$SO_OR_ARCHIVE_EXTENSION$ac_delim
 DEF_MALLOC_TRACE!$DEF_MALLOC_TRACE$ac_delim
-INC_MALLOC_TRACE_H!$INC_MALLOC_TRACE_H$ac_delim
-MALLOC_TRACE_LIB_FLAG!$MALLOC_TRACE_LIB_FLAG$ac_delim
-MALLOC_TRACE_LIB_DIR_FLAG!$MALLOC_TRACE_LIB_DIR_FLAG$ac_delim
-MALLOC_TRACE_LIB_MPI_FLAG!$MALLOC_TRACE_LIB_MPI_FLAG$ac_delim
 _ACEOF
 
   if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 97; then
@@ -46283,6 +46419,10 @@ _ACEOF
 ac_delim='%!_!# '
 for ac_last_try in false false false false false :; do
   cat >conf$$subs.sed <<_ACEOF
+INC_MALLOC_TRACE_H!$INC_MALLOC_TRACE_H$ac_delim
+MALLOC_TRACE_LIB_FLAG!$MALLOC_TRACE_LIB_FLAG$ac_delim
+MALLOC_TRACE_LIB_DIR_FLAG!$MALLOC_TRACE_LIB_DIR_FLAG$ac_delim
+MALLOC_TRACE_LIB_MPI_FLAG!$MALLOC_TRACE_LIB_MPI_FLAG$ac_delim
 DEF_ZOLTAN!$DEF_ZOLTAN$ac_delim
 INC_ZOLTAN_H!$INC_ZOLTAN_H$ac_delim
 ZOLTAN_LIB_FLAG!$ZOLTAN_LIB_FLAG$ac_delim
@@ -46376,10 +46516,6 @@ HAVE_CBLAS!$HAVE_CBLAS$ac_delim
 INC_BLAS_H!$INC_BLAS_H$ac_delim
 BLAS_LIB_FLAG!$BLAS_LIB_FLAG$ac_delim
 BLAS_LIB_DIR_FLAG!$BLAS_LIB_DIR_FLAG$ac_delim
-DEF_BLAS!$DEF_BLAS$ac_delim
-DEF_CBLAS!$DEF_CBLAS$ac_delim
-HAVE_LAPACK!$HAVE_LAPACK$ac_delim
-DEF_LAPACK!$DEF_LAPACK$ac_delim
 _ACEOF
 
   if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 97; then
@@ -46421,6 +46557,10 @@ _ACEOF
 ac_delim='%!_!# '
 for ac_last_try in false false false false false :; do
   cat >conf$$subs.sed <<_ACEOF
+DEF_BLAS!$DEF_BLAS$ac_delim
+DEF_CBLAS!$DEF_CBLAS$ac_delim
+HAVE_LAPACK!$HAVE_LAPACK$ac_delim
+DEF_LAPACK!$DEF_LAPACK$ac_delim
 LAPACK_LIB_FLAG!$LAPACK_LIB_FLAG$ac_delim
 LAPACK_LIB_DIR_FLAG!$LAPACK_LIB_DIR_FLAG$ac_delim
 HAVE_LAPACKMP!$HAVE_LAPACKMP$ac_delim
@@ -46465,6 +46605,11 @@ DEF_TABPROPS!$DEF_TABPROPS$ac_delim
 INC_TABPROPS_H!$INC_TABPROPS_H$ac_delim
 TABPROPS_LIB_FLAG!$TABPROPS_LIB_FLAG$ac_delim
 TABPROPS_LIB_DIR_FLAG!$TABPROPS_LIB_DIR_FLAG$ac_delim
+HAVE_BOOST!$HAVE_BOOST$ac_delim
+DEF_BOOST!$DEF_BOOST$ac_delim
+INC_BOOST_H!$INC_BOOST_H$ac_delim
+BOOST_LIB_FLAG!$BOOST_LIB_FLAG$ac_delim
+BOOST_LIB_DIR_FLAG!$BOOST_LIB_DIR_FLAG$ac_delim
 HAVE_HYPRE!$HAVE_HYPRE$ac_delim
 DEF_HYPRE!$DEF_HYPRE$ac_delim
 INC_HYPRE_H!$INC_HYPRE_H$ac_delim
@@ -46477,7 +46622,7 @@ LIBOBJS!$LIBOBJS$ac_delim
 LTLIBOBJS!$LTLIBOBJS$ac_delim
 _ACEOF
 
-  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 54; then
+  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 63; then
     break
   elif $ac_last_try; then
     { { echo "$as_me:$LINENO: error: could not make $CONFIG_STATUS" >&5
