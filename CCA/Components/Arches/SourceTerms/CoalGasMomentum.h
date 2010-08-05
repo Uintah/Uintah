@@ -5,26 +5,7 @@
 #include <CCA/Components/Arches/SourceTerms/SourceTermBase.h>
 #include <CCA/Components/Arches/SourceTerms/SourceTermFactory.h>
 
-//===========================================================================
-
-//---------------------------------------------------------------------------
-// Builder
 namespace Uintah{
-class CoalGasMomentumBuilder: public SourceTermBuilder
-{
-public: 
-  CoalGasMomentumBuilder(std::string srcName, 
-                      vector<std::string> reqLabelNames, 
-                      SimulationStateP& sharedState);
-  ~CoalGasMomentumBuilder(); 
-
-  SourceTermBase* build(); 
-
-private:
-
-}; 
-// End Builder
-//---------------------------------------------------------------------------
 
 class CoalGasMomentum: public SourceTermBase {
 public: 
@@ -53,6 +34,26 @@ public:
                   const MaterialSubset* matls, 
                   DataWarehouse* old_dw, 
                   DataWarehouse* new_dw );
+
+  class Builder
+    : public SourceTermBase::Builder { 
+
+    public: 
+
+      Builder( std::string name, vector<std::string> required_label_names, SimulationStateP& shared_state ) 
+        : _name(name), _shared_state(shared_state), _required_label_names(required_label_names){};
+      ~Builder(){}; 
+
+      CoalGasMomentum* build()
+      { return scinew CoalGasMomentum( _name, _shared_state, _required_label_names ); };
+
+    private: 
+
+      std::string _name; 
+      SimulationStateP& _shared_state; 
+      vector<std::string> _required_label_names; 
+
+  }; // Builder
 private:
 
   //double d_constant; 

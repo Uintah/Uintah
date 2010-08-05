@@ -1,5 +1,4 @@
 #include <CCA/Components/Arches/SourceTerms/SourceTermFactory.h>
-#include <CCA/Components/Arches/SourceTerms/SourceTermBase.h> 
 #include <Core/Exceptions/InvalidValue.h>
 #include <sstream>
 #include <iostream>
@@ -15,12 +14,12 @@ SourceTermFactory::SourceTermFactory()
 SourceTermFactory::~SourceTermFactory()
 {
   // delete the builders
-  for( BuildMap::iterator i=builders_.begin(); i!=builders_.end(); ++i ){
+  for( BuildMap::iterator i=_builders.begin(); i!=_builders.end(); ++i ){
       delete i->second;
-    }
+  }
 
   // delete all constructed solvers
-  for( SourceMap::iterator i=sources_.begin(); i!=sources_.end(); ++i ){
+  for( SourceMap::iterator i=_sources.begin(); i!=_sources.end(); ++i ){
       delete i->second;
   }
 }
@@ -35,18 +34,18 @@ SourceTermFactory::self()
   return s;
 }
 //---------------------------------------------------------------------------
-// Method: Register a source term  
+// Method: Register a source term
 //---------------------------------------------------------------------------
 void
 SourceTermFactory::register_source_term( const std::string name,
-                                         SourceTermBuilder* builder )
+                                         SourceTermBase::Builder* builder )
 {
 
   ASSERT( builder != NULL );
 
-  BuildMap::iterator i = builders_.find( name );
-  if( i == builders_.end() ){
-    i = builders_.insert( std::make_pair(name,builder) ).first;
+  BuildMap::iterator i = _builders.find( name );
+  if( i == _builders.end() ){
+    i = _builders.insert( std::make_pair(name,builder) ).first;
   }
   else{
     string errmsg = "ERROR: Arches: SourceTermBuilder: A duplicate SourceTermBuilder object was loaded on equation\n";
@@ -60,20 +59,20 @@ SourceTermFactory::register_source_term( const std::string name,
 SourceTermBase&
 SourceTermFactory::retrieve_source_term( const std::string name )
 {
-  const SourceMap::iterator isource= sources_.find( name );
+  const SourceMap::iterator isource= _sources.find( name );
 
-  if( isource != sources_.end() ) return *(isource->second);
+  if( isource != _sources.end() ) return *(isource->second);
 
-  const BuildMap::iterator ibuilder = builders_.find( name );
+  const BuildMap::iterator ibuilder = _builders.find( name );
 
-  if( ibuilder == builders_.end() ){
+  if( ibuilder == _builders.end() ){
     string errmsg = "ERROR: Arches: SourceTermBuilder: No source term registered for " + name + "\n";
     throw InvalidValue(errmsg,__FILE__,__LINE__);
   }
 
-  SourceTermBuilder* builder = ibuilder->second;
-  SourceTermBase* src = builder->build();
-  sources_[name] = src;
+  SourceTermBase::Builder* builder = ibuilder->second;
+  SourceTermBase* prop = builder->build();
+  _sources[name] = prop;
 
-  return *src;
+  return *prop;
 }

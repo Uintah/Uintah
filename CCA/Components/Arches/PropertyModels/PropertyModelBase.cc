@@ -11,5 +11,7 @@ PropertyModelBase::PropertyModelBase( std::string prop_name, SimulationStateP& s
 }
 
 PropertyModelBase::~PropertyModelBase()
-{}
+{
+  VarLabel::destroy(_prop_label); 
+}
 

@@ -87,9 +87,7 @@ namespace Uintah{
   
   template <typename pT, typename constpT>
   ConstProperty<pT, constpT>::~ConstProperty( )
-  {
-    VarLabel::destroy( _prop_label ); 
-  }
+  {}
   
   template <typename pT, typename constpT>
   void ConstProperty<pT, constpT>::problemSetup( const ProblemSpecP& inputdb )
@@ -154,45 +152,16 @@ namespace Uintah{
       // PLEASE NOTE the bulletproofing below.  Any new property model should have 
       // similar bulletproofing.   
       //
-      if ( typeid(pT) == typeid(CCVariable<double>) ) {
 
-        // Note the iterator!
-        for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
-
-          prop[*iter] = _constant; 
-
-        }
-
-      } else if ( typeid(pT) == typeid(SFCXVariable<double>) ) {
-
-        // Note the iterator!
-        for (CellIterator iter=patch->getSFCXIterator(); !iter.done(); iter++){
-
-          prop[*iter] = _constant; 
-
-        }
-
-      } else if ( typeid(pT) == typeid(SFCYVariable<double>) ) {
-
-        // Note the iterator!
-        for (CellIterator iter=patch->getSFCYIterator(); !iter.done(); iter++){
-
-          prop[*iter] = _constant; 
-
-        }
-
-      } else if ( typeid(pT) == typeid(SFCZVariable<double>) ) { 
-
-        // Note the iterator!
-        for (CellIterator iter=patch->getSFCZIterator(); !iter.done(); iter++){
-
-          prop[*iter] = _constant; 
-
-        }
-
-      } else {
-
-        // Bulletproofing --> Please add for any unsupported type 
+      CellIterator iter = patch->getCellIterator(); 
+      if ( typeid(pT) == typeid(SFCXVariable<double>) )
+        iter = patch->getSFCXIterator(); 
+      else if ( typeid(pT) == typeid(SFCYVariable<double>) )
+        iter = patch->getSFCYIterator(); 
+      else if ( typeid(pT) == typeid(SFCZVariable<double>) )
+        iter = patch->getSFCZIterator(); 
+      else {
+        // Bulletproofing
         proc0cout << " While attempting to compute: ConstProperty.h " << endl;
         proc0cout << " Encountered a type mismatch error.  The current code cannot handle" << endl;
         proc0cout << " a type other than one of the following: " << endl;
@@ -201,6 +170,11 @@ namespace Uintah{
         proc0cout << " 3) SFCYVariable<double> " << endl;
         proc0cout << " 4) SFCZVariable<double> " << endl;
         throw InvalidValue( "Please check the builder (probably in Arches.cc) and try again. ", __FILE__, __LINE__); 
+      }
+
+      for (iter.begin(); !iter.done(); iter++){
+
+        prop[*iter] = _constant; 
 
       }
     }
