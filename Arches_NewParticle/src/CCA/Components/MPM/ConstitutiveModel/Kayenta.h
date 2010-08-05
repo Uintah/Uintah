@@ -81,6 +81,7 @@ namespace Uintah {
     const VarLabel* peakI1IDistLabel;
     const VarLabel* peakI1IDistLabel_preReloc;
     int d_NINSV;
+    double rinit[100];
 
   private:
     // Prevent copying of this class

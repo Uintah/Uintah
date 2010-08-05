@@ -38,13 +38,7 @@ bool PSPatchMatlGhost::operator<(const PSPatchMatlGhost& other) const
 {
   if (matl_ == other.matl_)
     if (patch_->getID() == other.patch_->getID())
-      if (low_ == other.low_)
-        if (high_ == other.high_)
-          return dwid_ < other.dwid_;
-        else
-          return high_ < other.high_;
-      else
-        return low_ < other.low_;
+      return dwid_ < other.dwid_;
     else
       return patch_->getID() < other.patch_->getID();
   else
@@ -56,8 +50,6 @@ namespace Uintah
   {
     out << "Patch: " << *pmg.patch_ << " ";
     out << "Matl: " << pmg.matl_ << " ";
-    out << "low: " << pmg.low_ << " ";
-    out << "high: " << pmg.high_ << " ";
     out << "dwid: " << pmg.dwid_ << " ";
     out << "count: " << pmg.count_ << " ";
     return out;

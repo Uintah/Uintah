@@ -29,31 +29,33 @@ DEALINGS IN THE SOFTWARE.
 
 
 // MPMICE.cc
-#include <CCA/Components/MPMICE/MPMICE.h>
 #include <CCA/Components/ICE/AMRICE.h>
-#include <CCA/Components/ICE/ICE.h>
-#include <CCA/Components/MPM/SerialMPM.h>
-#include <CCA/Components/MPM/RigidMPM.h>
-#include <CCA/Components/MPM/ShellMPM.h>
-#include <CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
-#include <CCA/Components/MPM/ThermalContact/ThermalContact.h>
-#include <CCA/Components/MPM/MPMBoundCond.h>
 #include <CCA/Components/ICE/BoundaryCond.h>
 #include <CCA/Components/ICE/EOS/EquationOfState.h>
-#include <Core/Labels/ICELabel.h>
-#include <Core/Labels/MPMLabel.h>
-#include <Core/Labels/MPMICELabel.h>
-#include <CCA/Ports/Scheduler.h>
+#include <CCA/Components/ICE/ICE.h>
+#include <CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
+#include <CCA/Components/MPMICE/MPMICE.h>
+#include <CCA/Components/MPM/MPMBoundCond.h>
+#include <CCA/Components/MPM/RigidMPM.h>
+#include <CCA/Components/MPM/SerialMPM.h>
+#include <CCA/Components/MPM/ShellMPM.h>
+#include <CCA/Components/MPM/ThermalContact/ThermalContact.h>
+#include <CCA/Components/OnTheFlyAnalysis/AnalysisModuleFactory.h>
 #include <CCA/Ports/ModelMaker.h>
+#include <CCA/Ports/Scheduler.h>
+#include <Core/Exceptions/InvalidValue.h>
+#include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/AMR.h>
 #include <Core/Grid/Task.h>
-#include <Core/Grid/Variables/NodeIterator.h>
 #include <Core/Grid/Variables/CellIterator.h>
+#include <Core/Grid/Variables/NodeIterator.h>
 #include <Core/Grid/Variables/SoleVariable.h>
 #include <Core/Grid/Variables/VarTypes.h>
+#include <Core/Labels/ICELabel.h>
+#include <Core/Labels/MPMICELabel.h>
+#include <Core/Labels/MPMLabel.h>
 #include <Core/Math/MiscMath.h>
-#include <Core/Exceptions/ProblemSetupException.h>
-#include <Core/Exceptions/InvalidValue.h>
+
 
 #include <Core/Containers/StaticArray.h>
 #include <cfloat>
@@ -61,7 +63,6 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Util/DebugStream.h>
 
 using namespace Uintah;
-using namespace SCIRun;
 using namespace std;
 //__________________________________
 //  To turn on normal output
@@ -73,6 +74,7 @@ using namespace std;
 
 static DebugStream cout_norm("MPMICE_NORMAL_COUT", false);  
 static DebugStream cout_doing("MPMICE_DOING_COUT", false);
+static DebugStream ds_EqPress("DBG_EqPress",false);
 
 MPMICE::MPMICE(const ProcessorGroup* myworld, 
                MPMType mpmtype, const bool doAMR)
@@ -113,6 +115,7 @@ MPMICE::MPMICE(const ProcessorGroup* myworld,
   
 
   d_switchCriteria = 0;
+  d_analysisModule = 0;
 
   // Turn off all the debuging switches
   switchDebug_InterpolateNCToCC_0 = false;
@@ -125,6 +128,9 @@ MPMICE::~MPMICE()
   delete MIlb;
   delete d_mpm;
   delete d_ice;
+  if(d_analysisModule){
+    delete d_analysisModule;
+  }
 }
 
 //__________________________________
@@ -185,16 +191,13 @@ void MPMICE::problemSetup(const ProblemSpecP& prob_spec,
   }
   d_ice->attachPort("solver", solver);
   
-//  port* models = getPort("modelmaker");
   ModelMaker* models = dynamic_cast<ModelMaker*>(getPort("modelmaker"));
 
-//  port* models = dynamic_cast<port*>(getPort("modelmaker"));
   if(models){  // of there are models then push the port down to ICE
     d_ice->attachPort("modelmaker",models);
   }
   
   d_ice->problemSetup(prob_spec, restart_prob_spec,grid, d_sharedState);
-
 
   if(models){  // some models may need to have access to MPMLabels
     for(vector<ModelInterface*>::iterator iter = d_ice->d_models.begin();
@@ -203,11 +206,6 @@ void MPMICE::problemSetup(const ProblemSpecP& prob_spec,
     }
   }
   
-//  Need to add some means of checking whether or not this is a
-//  restart, and if it is, execute the following
-//  d_mpm->addMaterial(prob_spec, grid, d_sharedState);
-//  d_ice->updateExchangeCoefficients(prob_spec, grid, d_sharedState);
-//  cout << "Adding an MPM material" << endl;
   
   //__________________________________
   //  M P M I C E
@@ -225,7 +223,6 @@ void MPMICE::problemSetup(const ProblemSpecP& prob_spec,
         switchDebug_InterpolatePAndGradP   = true;       
     }
   }
-  
   
   ProblemSpecP mpm_ps = 0;
   mpm_ps = prob_spec->findBlock("MPM");
@@ -249,9 +246,20 @@ void MPMICE::problemSetup(const ProblemSpecP& prob_spec,
     cout_norm << "Done with problemSetup \t\t\t MPMICE" <<endl;
     cout_norm << "--------------------------------\n"<<endl;
   }
+  
+  //__________________________________
+  //  Set up data analysis modules
+  d_analysisModule = AnalysisModuleFactory::create(prob_spec, sharedState, dataArchiver);
+  if(d_analysisModule){
+    d_analysisModule->problemSetup(prob_spec, grid, sharedState);
+  }
+  
+
+  
 }
 
-
+//______________________________________________________________________
+//
 void MPMICE::outputProblemSpec(ProblemSpecP& root_ps)
 {
   d_mpm->outputProblemSpec(root_ps);
@@ -260,6 +268,7 @@ void MPMICE::outputProblemSpec(ProblemSpecP& root_ps)
   // Global flags required by mpmice
   ProblemSpecP mpm_ps = root_ps->findBlock("MPM");
   mpm_ps->appendElement("testForNegTemps_mpm", d_testForNegTemps_mpm);
+
 }
 
 
@@ -288,10 +297,18 @@ void MPMICE::scheduleInitialize(const LevelP& level,
   if (d_switchCriteria) {
     d_switchCriteria->scheduleInitialize(level,sched);
   }
+  
+  //__________________________________
+  // dataAnalysis 
+  if(d_analysisModule){
+    d_analysisModule->scheduleInitialize( sched, level);
+  }
     
   sched->addTask(t, level->eachPatch(), d_sharedState->allMPMMaterials());
 }
 
+//______________________________________________________________________
+//
 void MPMICE::restartInitialize()
 {
   if (cout_doing.active())
@@ -299,6 +316,10 @@ void MPMICE::restartInitialize()
 
   d_mpm->restartInitialize();
   d_ice->restartInitialize();
+  
+  if(d_analysisModule){
+    d_analysisModule->restartInitialize();
+  }
 }
 
 //______________________________________________________________________
@@ -604,8 +625,8 @@ MPMICE::scheduleFinalizeTimestep( const LevelP& level, SchedulerP& sched)
                                   Mlb->pXLabel, d_sharedState->d_particleState,
                                   Mlb->pParticleIDLabel, mpm_matls);
   
-  if(d_ice->d_analysisModule){                                                        
-    d_ice->d_analysisModule->scheduleDoAnalysis( sched, level);
+  if(d_analysisModule){                                                        
+    d_analysisModule->scheduleDoAnalysis( sched, level);
   }
   cout_doing << "---------------------------------------------------------"<<endl;
 }
@@ -981,6 +1002,20 @@ void MPMICE::actuallyInitialize(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){ 
     const Patch* patch = patches->get(p);
     printTask(patches, patch, "Doing actuallyInitialize \t\t\t\t");
+    //__________________________________
+    //output material indices
+    if(patch->getID() == 0){
+      cout << "Materials Indicies:   MPM ["<< *(d_sharedState->allMPMMaterials())  << "] " 
+           << "ICE["<< *(d_sharedState->allICEMaterials()) << "]" << endl;
+
+      cout << "Material Names:";
+      int numAllMatls = d_sharedState->getNumMatls();
+      for (int m = 0; m < numAllMatls; m++) {
+        Material* matl = d_sharedState->getMaterial( m );
+        cout <<" " << matl->getDWIndex() << ") " << matl->getName();
+      }
+      cout << "\n";
+    }
 
     //__________________________________
     //  Initialize CCVaribles for MPM Materials
@@ -1809,6 +1844,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
       bool converged  = false;
       double sum;
       count           = 0;
+      vector<EqPress_dbg> dbgEqPress;
 
       while ( count < d_ice->d_max_iter_equilibration && converged == false) {
         count++;
@@ -1891,6 +1927,27 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
            speedSound[m][c] = sqrt(c_2);         // Isentropic speed of sound
          }
        }
+       // Save iteration data for output in case of crash
+       if(ds_EqPress.active()){
+         EqPress_dbg dbg;
+         dbg.delPress     = delPress;
+         dbg.press_new    = press_new[c];
+         dbg.sumVolFrac   = sum;
+         dbg.count        = count;
+
+         for (int m = 0; m < numALLMatls; m++) {
+           EqPress_dbgMatl dmatl;
+           dmatl.press_eos   = press_eos[m];
+           dmatl.volFrac     = vol_frac[m][c];
+           dmatl.rhoMicro    = rho_micro[m][c];
+           dmatl.rho_CC      = rho_CC_new[m][c];
+           dmatl.temp_CC     = Temp[m][c];
+           dmatl.mat         = m;
+           dbg.matl.push_back(dmatl);
+         }
+         dbgEqPress.push_back(dbg);
+       }
+       
      }   // end of converged
 
       delPress_tmp[c] = delPress;
@@ -1899,7 +1956,10 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
      // If the pressure solution has stalled out 
      //  then try a binary search
      if(count >= d_ice->d_max_iter_equilibration) {
-
+        cout << "WARNING:MPMICE:ComputeEquilibrationPressure "
+             << " Cell : " << c << " having a difficutlt time converging. \n"
+             << " Now performing a binary pressure search " << endl;
+             
         binaryPressureSearch( Temp, rho_micro, vol_frac, rho_CC_new,
                               speedSound,  dp_drho,  dp_de, 
                               press_eos, press, press_new, press_ref,
@@ -1946,18 +2006,37 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
         warn << "\nMPMICE::ComputeEquilibrationPressure: Cell "<< c << ", L-"<<L_indx <<"\n"
              << message.str()
              <<"\nThis usually means that something much deeper has gone wrong with the simulation. "
-             <<"\nCompute equilibration pressure task is rarely the problem \n \n";
+             <<"\nCompute equilibration pressure task is rarely the problem. "
+             << "For more debugging information set the environmental variable:  \n"
+             << "   SCI_DEBUG DBG_EqPress:+\n\n";
+             
+        warn << "INPUTS: \n"; 
         for (int m = 0; m < numALLMatls; m++){
           warn<< "\n matl: " << m << "\n"
-               << "   rho_micro:     " << rho_micro[m][c] << "\n"
-               << "   vol_fraction:  "<< vol_frac[m][c]   << "\n"
-               << "   Temperature:   "<< Temp[m][c]       << "\n"
-               << "   Mat. volume:   "<< mat_volume[m]    << "\n";
+               << "   rho_CC:     " << rho_CC_new[m][c] << "\n"
+               << "   Temperature:   "<< Temp[m][c] << "\n";
         }
-        warn << "press new:     "<< press_new[c]   << "\n";
-        throw InvalidValue(warn.str(), __FILE__, __LINE__); 
-      }
-    }     // end of cell interator
+        if(ds_EqPress.active()){
+          warn << "\nDetails on iterations " << endl;
+          vector<EqPress_dbg>::iterator dbg_iter;
+          for( dbg_iter  = dbgEqPress.begin(); dbg_iter != dbgEqPress.end(); dbg_iter++){
+            EqPress_dbg & d = *dbg_iter;
+            warn << "Iteration:   " << d.count
+                 << "  press_new:   " << d.press_new
+                 << "  sumVolFrac:  " << d.sumVolFrac
+                 << "  delPress:    " << d.delPress << "\n";
+            for (int m = 0; m < numALLMatls; m++){
+              warn << "  matl: " << d.matl[m].mat
+                   << "  press_eos:  " << d.matl[m].press_eos
+                   << "  volFrac:    " << d.matl[m].volFrac
+                   << "  rhoMicro:   " << d.matl[m].rhoMicro
+                   << "  rho_CC:     " << d.matl[m].rho_CC
+                   << "  Temp:       " << d.matl[m].temp_CC << "\n";
+            }
+          }
+        } 
+      }  // all testsPassed
+    }  // end of cell interator
     if (cout_norm.active())
       cout_norm<<"max number of iterations in any cell \t"<<test_max_iter<<endl;
 
@@ -1975,7 +2054,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
     //   Don't set Lodi bcs, we already compute Press
     //   in all the extra cells.
     // - make copy of press for implicit calc.
-    preprocess_CustomBCs("EqPressMPMICE",old_dw, new_dw, Ilb, patch, 999,
+    preprocess_CustomBCs("EqPress",old_dw, new_dw, Ilb, patch, 999,
                           d_ice->d_customBC_var_basket);
     
     setBC(press_new,   rho_micro, placeHolder,d_ice->d_surroundingMatl_indx,

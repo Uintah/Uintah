@@ -78,29 +78,6 @@ namespace Uintah {
       
      ****************************************/
 
-  struct PatchInfo {
-    PatchInfo(int i, int n) {id = i; numParticles = n;}
-    PatchInfo() {}
-    
-    int id;
-    int numParticles;
-  };
-
-  class ParticleCompare {
-  public:
-    inline bool operator()(const PatchInfo& p1, const PatchInfo& p2) const {
-      return p1.numParticles < p2.numParticles || 
-        ( p1.numParticles == p2.numParticles && p1.id < p2.id);
-    }
-  };
-
-  class PatchCompare {
-  public:
-    inline bool operator()(const PatchInfo& p1, const PatchInfo& p2) const {
-      return p1.id < p2.id;
-    }
-  };
-
 #if defined( HAVE_ZOLTAN )
   class ZoltanFuncs {
   public:

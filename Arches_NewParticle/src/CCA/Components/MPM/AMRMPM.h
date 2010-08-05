@@ -99,8 +99,6 @@ public:
   /// Schedule to mark initial flags for AMR regridding
   void scheduleInitialErrorEstimate(const LevelP& coarseLevel, SchedulerP& sched);
 
-  void setSharedState(SimulationStateP& ssp);
-
 
   void setMPMLabel(MPMLabel* Mlb)
   {
@@ -108,20 +106,9 @@ public:
     lb = Mlb;
   };
 
-  void setWithICE()
-  {
-    flags->d_with_ice = true;
-  };
-
-  enum bctype { NONE=0,
-                FIXED,
-                SYMMETRY,
-                NEIGHBOR };
-
   enum IntegratorType {
     Explicit,
     Implicit,
-    Fracture
   };
 
 protected:
@@ -138,27 +125,7 @@ protected:
                           DataWarehouse* old_dw,
                           DataWarehouse* new_dw);
 
-  //////////
-  // Initialize particle data with a default values in the
-  // new datawarehouse
-  void setParticleDefault(ParticleVariable<double>& pvar,
-                          const VarLabel* label,
-                          ParticleSubset* pset,
-                          DataWarehouse* new_dw,
-                          double val);
-                          
-  void setParticleDefault(ParticleVariable<Vector>& pvar,
-                          const VarLabel* label, 
-                          ParticleSubset* pset,
-                          DataWarehouse* new_dw,
-                          const Vector& val);
-                          
-  void setParticleDefault(ParticleVariable<Matrix3>& pvar,
-                          const VarLabel* label, 
-                          ParticleSubset* pset,
-                          DataWarehouse* new_dw,
-                          const Matrix3& val);
-
+  
   void printParticleLabels(vector<const VarLabel*> label,
                            DataWarehouse* dw,
                            int dwi, 
@@ -283,56 +250,32 @@ protected:
   virtual void scheduleInterpolateToParticlesAndUpdate(SchedulerP&, 
                                                        const PatchSet*,
                                                        const MaterialSet*);
+  
+  //
+  //  count the total number of particles in the domain
+  //
+  void scheduleCountParticles(const PatchSet* patches,
+                               SchedulerP& sched);
+                                                                                         
+  void countParticles(const ProcessorGroup*,
+                      const PatchSubset* patches,                            
+                      const MaterialSubset*,                   
+                      DataWarehouse* old_dw,                                 
+                      DataWarehouse* new_dw);                 
+                            
 
-  void scheduleCheckNeedAddMPMMaterial(SchedulerP&,
-                                        const PatchSet* patches,
-                                        const MaterialSet*);
-                                                                             
-  void checkNeedAddMPMMaterial(const ProcessorGroup*,
-                               const PatchSubset* patches,         
-                               const MaterialSubset* matls,        
-                               DataWarehouse* old_dw,              
-                               DataWarehouse* new_dw);             
-
-  void scheduleSetNeedAddMaterialFlag(SchedulerP&,
-                                      const LevelP& level,        
-                                      const MaterialSet*);        
   
-  
-  void setNeedAddMaterialFlag(const ProcessorGroup*,
-                              const PatchSubset* patches,         
-                              const MaterialSubset* matls,        
-                              DataWarehouse*,                     
-                              DataWarehouse*);                    
-  
-  bool needRecompile(double time, 
-                     double dt,
-                     const GridP& grid);
-  
-  
-  virtual void scheduleSwitchTest(const LevelP& level, 
-                                  SchedulerP& sched);
-  
-  virtual void switchTest(const ProcessorGroup*,
-                          const PatchSubset* patches,
-                          const MaterialSubset* matls,
-                          DataWarehouse*,
-                          DataWarehouse*);
   
   SimulationStateP d_sharedState;
   MPMLabel* lb;
   MPMFlags* flags;
   Output* dataArchiver;
 
-  double   d_nextOutputTime;
-  double   d_outputInterval;
   double   d_SMALL_NUM_MPM;
   int      NGP;      // Number of ghost particles needed.
   int      NGN;      // Number of ghost nodes     needed.
   
-  list<Patch::FaceType>  d_bndy_traction_faces; // list of xminus, xplus, yminus, ...
   vector<MPMPhysicalBC*> d_physicalBCs;
-  bool             d_recompile;
   IntegratorType d_integrator;
 
 private:

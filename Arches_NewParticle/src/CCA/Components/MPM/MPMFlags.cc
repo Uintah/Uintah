@@ -41,7 +41,6 @@ DEALINGS IN THE SOFTWARE.
 #include <iostream>
 
 using namespace Uintah;
-using namespace SCIRun;
 using namespace std;
 
 static DebugStream dbg("MPMFlags", false);
@@ -59,7 +58,6 @@ MPMFlags::MPMFlags(const ProcessorGroup* myworld)
   d_artificial_viscosity_heating = false;
   d_artificialViscCoeff1 = 0.2;
   d_artificialViscCoeff2 = 2.0;
-  d_accStrainEnergy = false;
   d_useLoadCurves = false;
   d_useCohesiveZones = false;
   d_createNewParticles = false;
@@ -97,15 +95,26 @@ MPMFlags::MPMFlags(const ProcessorGroup* myworld)
   d_with_ice = false;
   d_with_arches = false;
   d_myworld = myworld;
+  
+  d_reductionVars = scinew reductionVars();
+  d_reductionVars->mass             = false;
+  d_reductionVars->momentum         = false;
+  d_reductionVars->thermalEnergy    = false;
+  d_reductionVars->strainEnergy     = false;
+  d_reductionVars->accStrainEnergy  = false;
+  d_reductionVars->KE               = false;
+  d_reductionVars->volDeformed      = false;
+  d_reductionVars->centerOfMass     = false;
 }
 
 MPMFlags::~MPMFlags()
 {
   delete d_interpolator;
+  delete d_reductionVars;
 }
 
 void
-MPMFlags::readMPMFlags(ProblemSpecP& ps)
+MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
 {
   ProblemSpecP root = ps->getRootNode();
   ProblemSpecP mpm_flag_ps = root->findBlock("MPM");
@@ -119,7 +128,18 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps)
     d_gravity=Vector(0,0,0);
   }
 
-
+  //__________________________________
+  //  Set the on/off flags to determine which
+  // reduction variables are computed
+  d_reductionVars->mass           = dataArchive->isLabelSaved( "TotalMass" );
+  d_reductionVars->momentum       = dataArchive->isLabelSaved( "TotalMomentum" );
+  d_reductionVars->thermalEnergy  = dataArchive->isLabelSaved( "ThermalEnergy" );
+  d_reductionVars->KE             = dataArchive->isLabelSaved( "KineticEnergy" );
+  d_reductionVars->strainEnergy   = dataArchive->isLabelSaved( "StrainEnergy" );
+  d_reductionVars->accStrainEnergy= dataArchive->isLabelSaved( "AccStrainEnergy" );
+  d_reductionVars->volDeformed    = dataArchive->isLabelSaved( "TotalVolumeDeformed" );
+  d_reductionVars->centerOfMass   = dataArchive->isLabelSaved( "CenterOfMassPosition" );
+ 
   if (!mpm_flag_ps)
     return;
 
@@ -155,7 +175,6 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps)
   mpm_flag_ps->get("artificial_viscosity_heating",d_artificial_viscosity_heating);
   mpm_flag_ps->get("artificial_viscosity_coeff1", d_artificialViscCoeff1);
   mpm_flag_ps->get("artificial_viscosity_coeff2", d_artificialViscCoeff2);
-  mpm_flag_ps->get("accumulate_strain_energy", d_accStrainEnergy);
   mpm_flag_ps->get("use_load_curves", d_useLoadCurves);
   mpm_flag_ps->get("use_cohesive_zones", d_useCohesiveZones);
 
@@ -287,7 +306,6 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps)
     dbg << " Artificial Viscosity Htng   = " << d_artificial_viscosity_heating<< endl;
     dbg << " Artificial Viscosity Coeff1 = " << d_artificialViscCoeff1<< endl;
     dbg << " Artificial Viscosity Coeff2 = " << d_artificialViscCoeff2<< endl;
-    dbg << " Accumulate Strain Energy    = " << d_accStrainEnergy << endl;
     dbg << " Create New Particles        = " << d_createNewParticles << endl;
     dbg << " Add New Material            = " << d_addNewMaterial << endl;
     dbg << " Do Erosion ?                = " << d_doErosion << endl;
@@ -318,7 +336,6 @@ MPMFlags::outputProblemSpec(ProblemSpecP& ps)
   ps->appendElement("artificial_viscosity_heating", d_artificial_viscosity_heating);
   ps->appendElement("artificial_viscosity_coeff1", d_artificialViscCoeff1);
   ps->appendElement("artificial_viscosity_coeff2", d_artificialViscCoeff2);
-  ps->appendElement("accumulate_strain_energy", d_accStrainEnergy);
   ps->appendElement("use_cohesive_zones", d_useCohesiveZones);
   ps->appendElement("ForceBC_force_increment_factor", d_forceIncrementFactor);
   ps->appendElement("create_new_particles", d_createNewParticles);
@@ -337,6 +354,10 @@ MPMFlags::outputProblemSpec(ProblemSpecP& ps)
   ps->appendElement("UsePrescribedDeformation",d_prescribeDeformation);
   if(d_prescribeDeformation){
     ps->appendElement("PresribedDeformationFile",d_prescribedDeformationFile);
+  }
+  ps->appendElement("InsertParticles",d_insertParticles);
+  if(d_insertParticles){
+    ps->appendElement("InsertParticlesFile",d_insertParticlesFile);
   }
 
   ps->appendElement("do_contact_friction_heating", d_do_contact_friction);

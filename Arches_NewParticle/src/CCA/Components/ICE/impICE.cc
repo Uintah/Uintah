@@ -50,7 +50,6 @@ DEALINGS IN THE SOFTWARE.
 
 #include <cmath>
 
-using namespace SCIRun;
 using namespace Uintah;
 using namespace std;
 
@@ -985,9 +984,6 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
   const MaterialSet* all_matls = d_sharedState->allMaterials();
   const MaterialSubset* all_matls_sub = all_matls->getUnion();
   MaterialSubset* one_matl    = d_press_matl;
-  MaterialSet* press_matlSet  = scinew MaterialSet();
-  press_matlSet->add(0);
-  press_matlSet->addReference(); 
   
   //__________________________________
   //  turn off parentDW scrubbing
@@ -1058,7 +1054,7 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
       scheduleSetupMatrix(    d_subsched, level,  patch_set,  one_matl, 
                               all_matls);
       
-      d_solver->scheduleSolve(level, d_subsched, press_matlSet,
+      d_solver->scheduleSolve(level, d_subsched, d_press_matlSet,
                             lb->matrixLabel,   Task::NewDW,
                             lb->imp_delPLabel, modifies_X,
                             lb->rhsLabel,      Task::OldDW,
@@ -1199,11 +1195,5 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
   //__________________________________
   //  Turn scrubbing back on
   ParentOldDW->setScrubbing(ParentOldDW_scrubmode);
-  ParentNewDW->setScrubbing(ParentNewDW_scrubmode);  
-
-  //__________________________________
-  // clean up memory  
-  if(press_matlSet->removeReference()){
-    delete press_matlSet;
-  }
+  ParentNewDW->setScrubbing(ParentNewDW_scrubmode);
 }

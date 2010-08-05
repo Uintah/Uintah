@@ -131,7 +131,7 @@
       </TransportEqns>
 
       <!-- DQMOM -->
-      <DQMOM>
+      <DQMOM type="weightedAbs">
         <number_quad_nodes>2</number_quad_nodes>
         <save_moments>false</save_moments>
 

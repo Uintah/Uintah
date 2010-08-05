@@ -288,7 +288,7 @@ bool is_MicroSlip_face(const Patch* patch,
  Purpose~  Set velocity boundary conditions
  Reference:   Jennifer please fill this in.
 ___________________________________________________________________*/
-void set_MicroSlipVelocity_BC(const Patch* patch,
+int set_MicroSlipVelocity_BC(const Patch* patch,
                               const Patch::FaceType face,
                               CCVariable<Vector>& vel_CC,
                               const string& var_desc,
@@ -298,6 +298,7 @@ void set_MicroSlipVelocity_BC(const Patch* patch,
                               Slip_vars* sv)                     
 
 {
+  int IveSetBC = 0;
   if (var_desc == "Velocity" && (bc_kind == "slip" || bc_kind == "creep")) {
   
     cout_doing << "Setting FaceVel_MicroSlip on face " << face 
@@ -307,6 +308,7 @@ void set_MicroSlipVelocity_BC(const Patch* patch,
     if (!sv){
       throw InternalError("set_MicroSlipTemperature_BC: MicroSlip_vars = null", __FILE__, __LINE__);
     }
+
 
     // define shortcuts
     //CCVariable<double>& lamda  = sv->lamda;
@@ -343,6 +345,7 @@ void set_MicroSlipVelocity_BC(const Patch* patch,
         //vel_CC[c][dir1] = ???????;
         //vel_CC[c][dir2] = ???????;
       }
+      IveSetBC +=1;
     }
     //__________________________________
     //   CREEP 
@@ -362,24 +365,26 @@ void set_MicroSlipVelocity_BC(const Patch* patch,
         //vel_CC[c][dir1] = ???????;
         //vel_CC[c][dir2] = ???????;
       }
+      IveSetBC +=1;
     }
-  } 
+  }
+  return IveSetBC;
 }
 
 /*_________________________________________________________________
  Function~ set_MicroSlipTemperature_BC--
  Purpose~  Compute temperature in boundary cells on faces
 ___________________________________________________________________*/
-void set_MicroSlipTemperature_BC(const Patch* patch,
+int  set_MicroSlipTemperature_BC(const Patch* patch,
                                  const Patch::FaceType face,
                                  CCVariable<double>& temp_CC,
-                                 const string& var_desc,
                                  Iterator& bound_ptr,
                                  const string& bc_kind,
                                  const double wall_temp,
                                  Slip_vars* sv)  
 {
-  if (var_desc == "Temperature" && bc_kind == "slip") {
+  int IveSetBC = 0;
+  if (bc_kind == "slip") {
     cout_doing << "Setting FaceTemp_MicroSlip on face " <<face
                << " wall Temperature " << wall_temp << endl; 
 
@@ -418,7 +423,9 @@ void set_MicroSlipTemperature_BC(const Patch* patch,
       // TODO: Jennifer-- put equations here
       temp_CC[c] = Temp_CC[in];  
     }
+    IveSetBC = 1;
   }
+  return IveSetBC;
 } 
 
   

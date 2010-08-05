@@ -33,7 +33,6 @@ DEALINGS IN THE SOFTWARE.
 #include <cmath>
 
 using namespace Uintah;
-using namespace SCIRun;
 
 
 CrackGeometry::CrackGeometry()

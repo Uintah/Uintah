@@ -49,7 +49,7 @@ ALLTARGETS := $(ALLTARGETS) visit_stuff
 #
 links_to_create := $(addprefix $(OBJTOP_ABS)/$(VISIT_SRCDIR)/, $(notdir $(wildcard $(SRCTOP)/$(VISIT_SRCDIR)/*.? $(SRCTOP)/$(VISIT_SRCDIR)/*.xml)))
 
-visit_stuff : $(links_to_create) ${VISIT_SRCDIR}/Makefile.visit ${VISIT_SRCDIR}/avtudaReaderMTMDFileFormat.C
+visit_stuff : $(links_to_create) ${VISIT_SRCDIR}/avtudaReaderMTMDFileFormat.C ${VISIT_SRCDIR}/Makefile.visit 
 	@cd ${VISIT_SRCDIR}; \
            make -f Makefile.visit 
 
@@ -70,19 +70,20 @@ $(links_to_create) :
 ${VISIT_SRCDIR}/Makefile.visit : lib/libStandAlone_tools_uda2vis.${SO_OR_A_FILE}
 	@echo create visit makefile
 	@cd ${VISIT_SRCDIR}; \
-	  rm -f Makefile.visit; \
-	  mv Makefile Makefile.sci; \
-	  ${VISIT_INSTALL_DIR}/src/bin/xml2makefile -private -clobber udaReaderMTMD.xml; \
-	  ${VISIT_INSTALL_DIR}/src/bin/xml2info -clobber udaReaderMTMD.xml; \
-	  sed -e "s,^CPPFLAGS=,CPPFLAGS=-I${OBJTOP_ABS} -I${SRCTOP_ABS} ," Makefile > Makefile.visit; \
-	  mv Makefile.sci Makefile
+          rm -f Makefile.visit; \
+          mv Makefile Makefile.sci; \
+          ${VISIT_INSTALL_DIR}/bin/xml2cmake -private -clobber udaReaderMTMD.xml; \
+          ${VISIT_INSTALL_DIR}/bin/xml2info -clobber udaReaderMTMD.xml; \
+          cmake . -DCMAKE_CXX_COMPILER:FILEPATH=${CXX} -DCMAKE_CXX_FLAGS:STRING="-I${OBJTOP_ABS} -I${SRCTOP_ABS} ${CXXFLAGS}"; \
+          cp Makefile Makefile.visit;
+
 
 #
 # The following says that the .C file is dependent on the .C.in file.  If the .C file is out of date,
-# then run the 'config.status' command with the argument "--file=...C:...test.C.in, which will
-# use the src_side/.../test...C.in file to generate the bin_side/.../...C file.
+# then run the 'config.status' command with the argument "--file=...C:...C.in, which will
+# use the src_side/.../...C.in file to generate the bin_side/.../...C file.
 #
-${VISIT_SRCDIR}/avtudaReaderMTMDFileFormat.C: ${VISIT_SRCDIR}/testavtudaReaderMTMDFileFormat.C.in
+${VISIT_SRCDIR}/avtudaReaderMTMDFileFormat.C: ${VISIT_SRCDIR}/avtudaReaderMTMDFileFormat.C.in
 	${OBJTOP}/config.status --file=${OBJTOP_ABS}/$@:$<
 
 endif

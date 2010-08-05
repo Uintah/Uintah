@@ -83,7 +83,7 @@ namespace Uintah {
                            bool& setMMS_BCs,
                            mms_vars* mss_v);
                            
-  void set_MMS_Velocity_BC(const Patch* patch,
+  int  set_MMS_Velocity_BC(const Patch* patch,
                            const Patch::FaceType face,
                            CCVariable<Vector>& vel_CC,
                            const string& var_desc,
@@ -93,16 +93,15 @@ namespace Uintah {
                            mms_variable_basket* mms_var_basket,
                            mms_vars* mms_v);
                            
-  void set_MMS_Temperature_BC(const Patch* patch,
+  int  set_MMS_Temperature_BC(const Patch* patch,
                               const Patch::FaceType face,
                               CCVariable<double>& temp_CC,
-                              const string& var_desc,
                               Iterator& bound_ptr,
                               const string& bc_kind,
                               mms_variable_basket* mms_var_basket,
                               mms_vars* mms_v);
                               
-  void set_MMS_press_BC(const Patch* patch,
+  int  set_MMS_press_BC(const Patch* patch,
                         const Patch::FaceType face,
                         CCVariable<double>& press_CC,
                         Iterator& bound_ptr,
@@ -117,92 +116,78 @@ namespace Uintah {
  Purpose~   Sets the face center velocity boundary conditions
  ______________________________________________________________________*/
  template<class T>
- bool set_MMS_BCs_FC( const Patch* patch,
+int set_MMS_BCs_FC( const Patch* patch,
                       const Patch::FaceType face,
                       T& vel_FC,
                       Iterator& bound_ptr,
-                      string& bc_kind,
                       const Vector& dx,
-                      const IntVector& /*P_dir*/,
-                      const string& whichVel,
                       SimulationStateP& sharedState,
                       mms_variable_basket* mms_var_basket,
                       mms_vars* mms_v)
 {
   //cout<< "Doing set_MMS_BCs_FC: \t\t" << whichVel
   //          << " face " << face << endl;
-  
-  bool IveSetBC = false;
  
-  
   //__________________________________
   // on (x,y,z)minus faces move in one cell
-  IntVector one_or_zero(0,0,0);
-  if ( (whichVel == "X_vel_FC" && face == Patch::xminus) || 
-       (whichVel == "Y_vel_FC" && face == Patch::yminus) || 
-       (whichVel == "Z_vel_FC" && face == Patch::zminus)){
-    one_or_zero = patch->faceDirection(face);
+  IntVector oneCell(0,0,0);
+  if ( (face == Patch::xminus) || 
+       (face == Patch::yminus) || 
+       (face == Patch::zminus)){
+    oneCell = patch->faceDirection(face);
   } 
+  Vector one_or_zero = oneCell.asVector();
+  
   //__________________________________
   //  set one or zero flags
-  double x_one_zero = 0.0;
-  if (whichVel =="X_vel_FC") 
-    x_one_zero = 1.0;
-  
-  double y_one_zero = 0.0;
-  if (whichVel =="Y_vel_FC") 
-    y_one_zero = 1.0;
-    
-  double z_one_zero = 0.0;
-  if (whichVel =="Z_vel_FC") 
-    z_one_zero = 1.0;
+  double x_one_zero = abs(one_or_zero.x());
+  double y_one_zero = abs(one_or_zero.y());
+  double z_one_zero = abs(one_or_zero.z());
   
   //__________________________________
   // 
-  if (bc_kind == "MMS_1") {
-    double nu = mms_var_basket->viscosity;
-    double A =  mms_var_basket->A;
-    double t  = sharedState->getElapsedTime();
-    t += mms_v->delT;
+  double nu = mms_var_basket->viscosity;
+  double A =  mms_var_basket->A;
+  double t  = sharedState->getElapsedTime();
+  t += mms_v->delT;
     
-    for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
-      IntVector c = *bound_ptr - one_or_zero;
-      Point pt = patch->cellPosition(c);
-      double x_CC = pt.x(); 
-      double y_CC = pt.y();
-      
-      double x_FC = x_CC - (dx.x()/2) * x_one_zero;
-      double y_FC = y_CC - (dx.y()/2) * y_one_zero;
-      
+  for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
+    IntVector c = *bound_ptr - oneCell;
+    Point pt = patch->cellPosition(c);
+    double x_CC = pt.x(); 
+    double y_CC = pt.y();
+
+    double x_FC = x_CC - (dx.x()/2) * x_one_zero;
+    double y_FC = y_CC - (dx.y()/2) * y_one_zero;
+
 /*`==========TESTING==========*/
 #if 0
-      cout.setf(ios::scientific,ios::floatfield);
-      cout.precision(6);
-      if (c.y() ==25 && c.z() == 0 && (face == 0 || face == 1)){
-        cout << "face " << face << " " << c 
-              <<  " x_CC " << x_CC << " x_FC " << x_FC
-              <<  " y_CC " << y_CC << " y_FC " << y_FC 
-              << " t " << t << " nu " << nu << " A " << A <<endl;
-      }
-      
-      if (c.x() ==25 && c.z() == 0 && (face == 2 || face == 3)){
-        cout << "face " << face << " " << c 
-              <<  " x_CC " << x_CC << " x_FC " << x_FC
-              <<  " y_CC " << y_CC << " y_FC " << y_FC
-              << " t " << t << " nu " << nu << " A " << A <<endl;
-      }
+    cout.setf(ios::scientific,ios::floatfield);
+    cout.precision(6);
+    if (c.y() ==25 && c.z() == 0 && (face == 0 || face == 1)){
+      cout << "face " << face << " " << c 
+            <<  " x_CC " << x_CC << " x_FC " << x_FC
+            <<  " y_CC " << y_CC << " y_FC " << y_FC 
+            << " t " << t << " nu " << nu << " A " << A <<endl;
+    }
+
+    if (c.x() ==25 && c.z() == 0 && (face == 2 || face == 3)){
+      cout << "face " << face << " " << c 
+            <<  " x_CC " << x_CC << " x_FC " << x_FC
+            <<  " y_CC " << y_CC << " y_FC " << y_FC
+            << " t " << t << " nu " << nu << " A " << A <<endl;
+    }
 #endif
 /*===========TESTING==========`*/
-      Vector vel(0.0,0.0,0.0);
-      vel.x( 1.0 - A * cos(x_FC -t) * sin(y_FC -t) * exp(-2.0*nu*t));
-      vel.y( 1.0 + A * sin(x_FC -t) * cos(y_FC -t) * exp(-2.0*nu*t));
-      
-      vel_FC[c] = x_one_zero * vel.x() 
-                + y_one_zero * vel.y()
-                + z_one_zero * vel.z();
-    }
+    Vector vel(0.0,0.0,0.0);
+    vel.x( 1.0 - A * cos(x_FC -t) * sin(y_FC -t) * exp(-2.0*nu*t));
+    vel.y( 1.0 + A * sin(x_FC -t) * cos(y_FC -t) * exp(-2.0*nu*t));
+
+    vel_FC[c] = x_one_zero * vel.x() 
+              + y_one_zero * vel.y()
+              + z_one_zero * vel.z();
   }
-  IveSetBC = true; 
+  int IveSetBC = 1; 
   return IveSetBC; 
 }                        
                                                 

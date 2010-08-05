@@ -40,6 +40,10 @@ ADIR = $(SRCDIR)/Arches
 # do not modify...
 #
 
+ifeq ($(BUILD_WASATCH),yes)
+  WASATCH := $(SRCDIR)/Wasatch
+endif
+
 ifeq ($(BUILD_MPM),yes)
   MPM      := $(SRCDIR)/MPM
   ifeq ($(BUILD_ICE),yes)
@@ -72,6 +76,7 @@ SUBDIRS := \
         $(MPMICE)         \
         $(ARCHES)         \
         $(MPMARCHES)      \
+        $(WASATCH)        \
         $(SRCDIR)/Angio   \
         $(SRCDIR)/ProblemSpecification \
         $(SRCDIR)/PatchCombiner \

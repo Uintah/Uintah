@@ -38,9 +38,9 @@ SRCS    := $(SRCDIR)/CubeRootTest.cc
 
 PSELIBS := \
         Core/Exceptions          \
-				Core/Math
+	Core/Math
 
-LIBS :=
+LIBS := $(MPI_LIBRARY)
         
 
 include $(SCIRUN_SCRIPTS)/program.mk

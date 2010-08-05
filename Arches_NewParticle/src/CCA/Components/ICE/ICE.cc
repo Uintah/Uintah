@@ -35,6 +35,7 @@ DEALINGS IN THE SOFTWARE.
 #define _CPP_CMATH
 #endif
 #include <CCA/Components/ICE/ICE.h>
+#include <CCA/Components/ICE/impAMRICE.h>
 #include <CCA/Components/ICE/CustomBCs/C_BC_driver.h>
 #include <CCA/Components/ICE/ConservationTest.h>
 #include <CCA/Components/ICE/Diffusion.h>
@@ -61,7 +62,9 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Exceptions/ParameterNotFound.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Exceptions/InvalidValue.h>
+#include <Core/Parallel/Parallel.h>
 #include <Core/Parallel/ProcessorGroup.h>
+
 #include <Core/Math/FastMatrix.h>
 #include <Core/Containers/StaticArray.h>
 #include <Core/Math/Expon.h>
@@ -81,7 +84,6 @@ using std::max;
 using std::min;
 using std::istringstream;
  
-using namespace SCIRun;
 using namespace Uintah;
 
 //__________________________________
@@ -92,6 +94,7 @@ using namespace Uintah;
 //  default is OFF
 static DebugStream cout_norm("ICE_NORMAL_COUT", false);  
 static DebugStream cout_doing("ICE_DOING_COUT", false);
+static DebugStream ds_EqPress("DBG_EqPress",false);
 
 
 ICE::ICE(const ProcessorGroup* myworld, const bool doAMR) :
@@ -117,13 +120,15 @@ ICE::ICE(const ProcessorGroup* myworld, const bool doAMR) :
   d_modelInfo = 0;
   d_modelSetup = 0;
   d_analysisModule = 0;
-  d_recompile = false;
-  d_conservationTest = scinew conservationTest_flags();
-  d_conservationTest->onOff = false;
-  d_with_mpm=false;
-  d_clampSpecificVolume=false;
- 
+  d_recompile               = false;
+  d_canAddICEMaterial       = false;
+  d_with_mpm                = false;
+  d_clampSpecificVolume     = false;
+  
   d_exchCoeff = scinew ExchangeCoefficients();
+  
+  d_conservationTest         = scinew conservationTest_flags();
+  d_conservationTest->onOff = false;
 
   d_customInitialize_basket  = scinew customInitialize_basket();
   d_customBC_var_basket  = scinew customBC_var_basket();
@@ -131,7 +136,8 @@ ICE::ICE(const ProcessorGroup* myworld, const bool doAMR) :
   d_customBC_var_basket->Slip_var_basket =  scinew Slip_variable_basket();
   d_customBC_var_basket->mms_var_basket  =  scinew mms_variable_basket();
   d_customBC_var_basket->sine_var_basket =  scinew sine_variable_basket();
-  d_press_matl=0;
+  d_press_matl    = 0;
+  d_press_matlSet = 0;
 }
 
 ICE::~ICE()
@@ -157,7 +163,9 @@ ICE::~ICE()
   if (d_press_matl && d_press_matl->removeReference()){
     delete d_press_matl;
   }
-  
+  if (d_press_matlSet && d_press_matlSet->removeReference()){
+    delete d_press_matlSet;
+  }
   //__________________________________
   // MODELS
   cout_doing << d_myworld->myrank() << " Doing: destorying Model Machinery " << endl;
@@ -216,7 +224,11 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec,
   d_press_matl = scinew MaterialSubset();
   d_press_matl->add(0);
   d_press_matl->addReference();
-
+  
+  d_press_matlSet  = scinew MaterialSet();
+  d_press_matlSet->add(0);
+  d_press_matlSet->addReference();
+  
   dataArchiver = dynamic_cast<Output*>(getPort("output"));
   if(!dataArchiver){
     throw InternalError("ICE:couldn't get output port", __FILE__, __LINE__);
@@ -230,28 +242,16 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec,
 
   ProblemSpecP phys_cons_ps = prob_spec->findBlock("PhysicalConstants");
   if(phys_cons_ps){
-    phys_cons_ps->get("reference_pressure",d_ref_press);
+    phys_cons_ps->require("reference_pressure",d_ref_press);
     phys_cons_ps->require("gravity",d_gravity);
   } else {
-    d_ref_press=0.;
-    d_gravity=Vector(0,0,0);
+    throw ProblemSetupException(                                                
+     "\n Could not find the <PhysicalConstants> section in the input file.  This section contains <gravity> and <reference pressure> \n"  
+     " This pressure is used during the problem intialization and when\n"       
+     " the pressure gradient is interpolated to the MPM particles \n"           
+     " you must have it for all MPMICE and multimaterial ICE problems\n",       
+     __FILE__, __LINE__);                                                       
   }
-
-
-  //__________________________________
-  //  Custom BC setup
-
-  d_customBC_var_basket->d_gravity = d_gravity;
-
-  d_customBC_var_basket->usingLodi = 
-        read_LODI_BC_inputs(prob_spec,      d_customBC_var_basket->Lodi_var_basket);
-  d_customBC_var_basket->usingMicroSlipBCs =
-        read_MicroSlip_BC_inputs(prob_spec, d_customBC_var_basket->Slip_var_basket);
-  d_customBC_var_basket->using_MMS_BCs =
-        read_MMS_BC_inputs(prob_spec,       d_customBC_var_basket->mms_var_basket);
-  d_customBC_var_basket->using_Sine_BCs =
-        read_Sine_BC_inputs(prob_spec,       d_customBC_var_basket->sine_var_basket);  
-  d_customBC_var_basket->sharedState    = sharedState;
 
   //__________________________________
   // read in all the printData switches
@@ -259,26 +259,22 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec,
 
   //__________________________________
   // Pull out from CFD-ICE section
-  //__________________________________
-  // with ICE or MPMICE you must a reference pressure
   ProblemSpecP cfd_ps = prob_spec->findBlock("CFD");
 
-  if(cfd_ps){
-    ProblemSpecP ice_ps=cfd_ps->findBlock("ICE");
-    if(ice_ps && d_ref_press == 0.0){
-      throw ProblemSetupException(
-       "\n Could not find <reference_pressure> inside of <PhysicalConstants> \n"
-       " This pressure is used during the problem intialization and when\n"
-       " the pressure gradient is interpolated to the MPM particles \n"
-       " you must have it for all MPMICE and multimaterial ICE problems\n",
-       __FILE__, __LINE__);  
-    }
+  if(!cfd_ps){
+    throw ProblemSetupException(                                                                    
+     "\n Could not find the <CFD> section in the input file\n",__FILE__, __LINE__);    
   }
 
   cfd_ps->require("cfl",d_CFL);
-  d_canAddICEMaterial=false;
   cfd_ps->get("CanAddICEMaterial",d_canAddICEMaterial);
-  ProblemSpecP cfd_ice_ps = cfd_ps->findBlock("ICE"); 
+  
+  ProblemSpecP cfd_ice_ps = cfd_ps->findBlock("ICE");
+  if(!cfd_ice_ps){
+    throw ProblemSetupException(                                                                    
+     "\n Could not find the <CFD> <ICE> section in the input file\n",__FILE__, __LINE__);    
+  }
+   
   
   cfd_ice_ps->get("max_iteration_equilibration",d_max_iter_equilibration);
   cfd_ice_ps->get("ClampSpecificVolume",d_clampSpecificVolume);
@@ -414,14 +410,12 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec,
 
   //_________________________________
   // Exchange Coefficients
-  if (d_myworld->myrank() == 0){
-    cout << "numMatls " << d_sharedState->getNumMatls() << endl;
-  }
+  proc0cout << "numMatls " << d_sharedState->getNumMatls() << endl;
   
   d_exchCoeff->problemSetup(mat_ps, sharedState);
   
-  if (d_myworld->myrank() == 0 && (d_exchCoeff->d_heatExchCoeffModel != "constant")){
-    cout << "------------------------------Using Variable heat exchange coefficients"<< endl;
+  if (d_exchCoeff->d_heatExchCoeffModel != "constant"){
+    proc0cout << "------------------------------Using Variable heat exchange coefficients"<< endl;
   }
   
   //__________________________________
@@ -430,28 +424,23 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec,
 
   //__________________________________
   //  conservationTest
-  ProblemSpecP DA_ps = prob_spec->findBlock("DataArchiver");
-  for (ProblemSpecP child = DA_ps->findBlock("save"); child != 0;
-                    child = child->findNextBlock("save")) {
-    map<string,string> var_attr;
-    child->getAttributes(var_attr);
-    if (var_attr["label"] == "TotalMass"){
-      d_conservationTest->onOff    = true;
-    }
-    if (var_attr["label"] == "TotalMomentum"){
-      d_conservationTest->momentum = true;
-      d_conservationTest->onOff    = true;
-    }
-    if (var_attr["label"] == "TotalIntEng"   || 
-        var_attr["label"] == "KineticEnergy"){
-      d_conservationTest->energy   = true;
-      d_conservationTest->onOff    = true;
-    }
-    if (var_attr["label"] == "eng_exch_error"||
-        var_attr["label"] == "mom_exch_error"){
-      d_conservationTest->exchange = true;
-      d_conservationTest->onOff    = true;
-    }
+  if (dataArchiver->isLabelSaved("TotalMass") ){
+    d_conservationTest->mass     = true;
+    d_conservationTest->onOff    = true;
+  }
+  if (dataArchiver->isLabelSaved("TotalMomentum") ){
+    d_conservationTest->momentum = true;
+    d_conservationTest->onOff    = true;
+  }
+  if (dataArchiver->isLabelSaved("TotalIntEng")   || 
+      dataArchiver->isLabelSaved("KineticEnergy") ){
+    d_conservationTest->energy   = true;
+    d_conservationTest->onOff    = true;
+  }
+  if (dataArchiver->isLabelSaved("eng_exch_error") ||
+      dataArchiver->isLabelSaved("mom_exch_error") ){
+    d_conservationTest->exchange = true;
+    d_conservationTest->onOff    = true;
   }
 
   //__________________________________
@@ -464,7 +453,21 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec,
     cout << " to a) prevent rapid fluctuations in the timestep and "<< endl;
     cout << "    b) to prevent outflux Vol > cell volume \n \n" <<endl;
   } 
+  
+  //__________________________________
+  //  Custom BC setup
 
+  d_customBC_var_basket->d_gravity    = d_gravity;
+  d_customBC_var_basket->sharedState  = sharedState;
+  
+  d_customBC_var_basket->usingLodi = 
+        read_LODI_BC_inputs(prob_spec,       sharedState, d_customBC_var_basket->Lodi_var_basket);
+  d_customBC_var_basket->usingMicroSlipBCs =
+        read_MicroSlip_BC_inputs(prob_spec,  d_customBC_var_basket->Slip_var_basket);
+  d_customBC_var_basket->using_MMS_BCs =
+        read_MMS_BC_inputs(prob_spec,        d_customBC_var_basket->mms_var_basket);
+  d_customBC_var_basket->using_Sine_BCs =
+        read_Sine_BC_inputs(prob_spec,       d_customBC_var_basket->sine_var_basket);
   //__________________________________
   //  boundary condition warnings
   BC_bulletproofing(prob_spec,sharedState);
@@ -499,7 +502,7 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec,
                                     iter != d_modelSetup->tvars.end(); iter++){
       TransportedVariable* tvar = *iter;
       string Labelname = tvar->var->getName();
-      is_BC_specified(prob_spec, Labelname);
+      is_BC_specified(prob_spec, Labelname, tvar->matls);
     }
     
     d_modelInfo = scinew ModelInfo(d_sharedState->get_delt_label(),
@@ -518,9 +521,11 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec,
   
   //__________________________________
   //  Set up data analysis modules
-  d_analysisModule = AnalysisModuleFactory::create(prob_spec, sharedState, dataArchiver);
-  if(d_analysisModule){
-    d_analysisModule->problemSetup(prob_spec, grid, sharedState);
+  if(!d_with_mpm){
+    d_analysisModule = AnalysisModuleFactory::create(prob_spec, sharedState, dataArchiver);
+    if(d_analysisModule){
+      d_analysisModule->problemSetup(prob_spec, grid, sharedState);
+    }
   }
 
 }
@@ -868,11 +873,6 @@ void
 ICE::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
 {
   MALLOC_TRACE_TAG_SCOPE("ICE::scheduleTimeAdvance()");
-  if (d_sharedState->isLockstepAMR()) {
-    if (level->getIndex() == 0)
-      scheduleLockstepTimeAdvance(level->getGrid(), sched);
-    return;
-  }
   // for AMR, we need to reset the initial Delt otherwise some unsuspecting level will
   // get the init delt when it didn't compute delt on L0.
   
@@ -1236,7 +1236,7 @@ void ICE::scheduleComputeModelSources(SchedulerP& sched,
 {
   int levelIndex = level->getIndex();
   if(d_models.size() != 0){
-    cout_doing << d_myworld->myrank() << " ICE::scheduleModelMassExchange" 
+    cout_doing << d_myworld->myrank() << " ICE::scheduleComputeModelSources" 
                << "\t\t\tL-"<< levelIndex<< endl;
     
     
@@ -1861,14 +1861,21 @@ void ICE::scheduleTestConservation(SchedulerP& sched,
     t->requires(Task::NewDW,lb->int_eng_L_CCLabel,       gn);    
     t->requires(Task::NewDW,lb->mom_L_ME_CCLabel,        gn);         
     t->requires(Task::NewDW,lb->eng_L_ME_CCLabel,        gn); 
-
-    t->computes(lb->mom_exch_errorLabel);
-    t->computes(lb->eng_exch_errorLabel);
-    t->computes(lb->TotalMassLabel);
+    
+    if(d_conservationTest->exchange){
+      t->computes(lb->mom_exch_errorLabel);
+      t->computes(lb->eng_exch_errorLabel);
+    }
+    if(d_conservationTest->mass){
+      t->computes(lb->TotalMassLabel);
+    }
+    if(d_conservationTest->energy){
     t->computes(lb->KineticEnergyLabel);
     t->computes(lb->TotalIntEngLabel);
-    t->computes(lb->TotalMomentumLabel); //momentum
-
+    }
+    if(d_conservationTest->momentum){
+      t->computes(lb->TotalMomentumLabel);
+    }
     sched->addTask(t, patches, all_matls);
   }
   //__________________________________
@@ -2484,12 +2491,13 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
     if (switchDebug_equil_press) {
     
       new_dw->allocateTemporary(n_iters_equil_press,  patch);
-      ostringstream desc,desc1;
+      ostringstream desc1;
       desc1 << "TOP_equilibration_patch_" << patch->getID();
       printData( 0, patch, 1, desc1.str(), "Press_CC_top", press);
      for (int m = 0; m < numMatls; m++)  {
        ICEMaterial* matl = d_sharedState->getICEMaterial( m );
        int indx = matl->getDWIndex(); 
+       ostringstream desc;
        desc << "TOP_equilibration_Mat_" << indx << "_patch_"<<patch->getID();
        printData(indx, patch, 1, desc.str(), "rho_CC",       rho_CC[m]);    
        printData(indx, patch, 1, desc.str(), "rho_micro_CC", rho_micro[m]);  
@@ -2507,7 +2515,8 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
       double delPress = 0.;
       bool converged  = false;
       count           = 0;
-
+      vector<EqPress_dbg> dbgEqPress;
+    
       while ( count < d_max_iter_equilibration && converged == false) {
         count++;
 
@@ -2527,7 +2536,7 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
         for (int m = 0; m < numMatls; m++)   {
           double Q =  press_new[c] - press_eos[m];
           double div_y =  (vol_frac[m][c] * vol_frac[m][c])
-            / (dp_drho[m] * rho_CC[m][c] + d_SMALL_NUM);
+                        / (dp_drho[m] * rho_CC[m][c] + d_SMALL_NUM);
           A   +=  vol_frac[m][c];
           B   +=  Q*div_y;
           C   +=  div_y;
@@ -2572,6 +2581,27 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
             speedSound_new[m][c] = sqrt(tmp);
           }
         }
+        
+        // Save iteration data for output in case of crash
+        if(ds_EqPress.active()){
+          EqPress_dbg dbg;
+          dbg.delPress     = delPress;
+          dbg.press_new    = press_new[c];
+          dbg.sumVolFrac   = sum;
+          dbg.count        = count;
+
+          for (int m = 0; m < numMatls; m++) {
+            EqPress_dbgMatl dmatl;
+            dmatl.press_eos   = press_eos[m];
+            dmatl.volFrac     = vol_frac[m][c];
+            dmatl.rhoMicro    = rho_micro[m][c];
+            dmatl.rho_CC      = rho_CC[m][c];
+            dmatl.temp_CC     = Temp[m][c];
+            dmatl.mat         = m;
+            dbg.matl.push_back(dmatl);
+          }
+          dbgEqPress.push_back(dbg);
+        }
       }   // end of converged
 
       test_max_iter = std::max(test_max_iter, count);
@@ -2589,7 +2619,9 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
       }
       
       for (int m = 0; m < numMatls; m++) {
-        ASSERT(( vol_frac[m][c] > 0.0 ) ||( vol_frac[m][c] < 1.0));
+        if(( vol_frac[m][c] > 0.0 ) ||( vol_frac[m][c] < 1.0)){
+          message << " ( vol_frac[m][c] > 0.0 ) ||( vol_frac[m][c] < 1.0) ";
+        }
       }
       
       if ( fabs(sum - 1.0) > convergence_crit && !tsr) {  
@@ -2613,20 +2645,42 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
         warn << "\nICE::ComputeEquilibrationPressure: Cell "<< c << ", L-"<<L_indx <<"\n"
              << message.str()
              <<"\nThis usually means that something much deeper has gone wrong with the simulation. "
-             <<"\nCompute equilibration pressure task is rarely the problem \n \n";
+             <<"\nCompute equilibration pressure task is rarely the problem. "
+             << "For more debugging information set the environmental variable:  \n"
+             << "   SCI_DEBUG DBG_EqPress:+\n\n";
+             
+        warn << "INPUTS: \n"; 
         for (int m = 0; m < numMatls; m++){
           warn<< "\n matl: " << m << "\n"
-               << "   rho_micro:     " << rho_micro[m][c] << "\n"
-               << "   vol_fraction:  "<< vol_frac[m][c]   << "\n"
-               << "   Temperature:   "<< Temp[m][c]       << "\n";
+               << "   rho_CC:     " << rho_CC[m][c] << "\n"
+               << "   Temperature:   "<< Temp[m][c] << "\n";
         }
-        warn << "press new:     "<< press_new[c]   << "\n";
+        if(ds_EqPress.active()){
+          warn << "\nDetails on iterations " << endl;
+          vector<EqPress_dbg>::iterator dbg_iter;
+          for( dbg_iter  = dbgEqPress.begin(); dbg_iter != dbgEqPress.end(); dbg_iter++){
+            EqPress_dbg & d = *dbg_iter;
+            warn << "Iteration:   " << d.count
+                 << "  press_new:   " << d.press_new
+                 << "  sumVolFrac:  " << d.sumVolFrac
+                 << "  delPress:    " << d.delPress << "\n";
+            for (int m = 0; m < numMatls; m++){
+              warn << "  matl: " << d.matl[m].mat
+                   << "  press_eos:  " << d.matl[m].press_eos
+                   << "  volFrac:    " << d.matl[m].volFrac
+                   << "  rhoMicro:   " << d.matl[m].rhoMicro
+                   << "  rho_CC:     " << d.matl[m].rho_CC
+                   << "  Temp:       " << d.matl[m].temp_CC << "\n";
+            }
+          }
+        }
         throw InvalidValue(warn.str(), __FILE__, __LINE__); 
       }
 
       if (switchDebug_equil_press) {
         n_iters_equil_press[c] = count;
       }
+      
     } // end of cell interator
 
     cout_norm << "max. iterations in any cell " << test_max_iter << 
@@ -3436,20 +3490,20 @@ void ICE::addExchangeContributionToFCVel(const ProcessorGroup*,
 
     //________________________________
     //  Boundary Conditons 
-    preprocess_CustomBCs("velFC_Exchange",pOldDW, pNewDW, lb,  patch, 999,
-                          d_customBC_var_basket);   
-    
     for (int m = 0; m < numMatls; m++)  {
       Material* matl = d_sharedState->getMaterial( m );
       int indx = matl->getDWIndex();
+      preprocess_CustomBCs("velFC_Exchange",pOldDW, pNewDW, lb,  patch, indx,
+                            d_customBC_var_basket);
+      
       setBC<SFCXVariable<double> >(uvel_FCME[m],"Velocity",patch,indx,
                                     d_sharedState, d_customBC_var_basket); 
       setBC<SFCYVariable<double> >(vvel_FCME[m],"Velocity",patch,indx,
                                     d_sharedState, d_customBC_var_basket);
       setBC<SFCZVariable<double> >(wvel_FCME[m],"Velocity",patch,indx,
                                     d_sharedState, d_customBC_var_basket);
+      delete_CustomBCs(d_customBC_var_basket);
     }
-    delete_CustomBCs(d_customBC_var_basket);
 
    //---- P R I N T   D A T A ------ 
     if (switchDebug_Exchange_FC ) {
@@ -3753,8 +3807,13 @@ void ICE::zeroModelSources(const ProcessorGroup*,
                             DataWarehouse* /*old_dw*/,
                             DataWarehouse* new_dw)
 {
+  const Level* level = getLevel(patches);
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
+    
+    cout_doing << d_myworld->myrank() << " Doing zeroModelSources on patch " 
+               << patch->getID() << "\t\t\t ICE \tL-" <<level->getIndex()<< endl;
+      
     for(int m=0;m<matls->size();m++){
       int matl = matls->get(m);
       CCVariable<double> mass_src, energy_src, vol_src;
@@ -3769,18 +3828,23 @@ void ICE::zeroModelSources(const ProcessorGroup*,
       mass_src.initialize(0.0);
       vol_src.initialize(0.0);
       mom_src.initialize(Vector(0.0, 0.0, 0.0));
-      for(vector<TransportedVariable*>::iterator
-                                    iter = d_modelSetup->tvars.begin();
-                                    iter != d_modelSetup->tvars.end(); iter++){
-        TransportedVariable* tvar = *iter;
+    }
+
+    for(vector<TransportedVariable*>::iterator
+                                  iter = d_modelSetup->tvars.begin();
+                                  iter != d_modelSetup->tvars.end(); iter++){
+      TransportedVariable* tvar = *iter;
+      for(int m=0;m<tvar->matls->size();m++){
+        int matl = tvar->matls->get(m);
+
         if(tvar->src){
           CCVariable<double> model_src;
           new_dw->allocateAndPut(model_src, tvar->src, matl, patch);
           model_src.initialize(0.0);
         }
-      }
-    }
-  }
+      }  // matl loop
+    }  // transported Variables
+  }  // patches loop
 }
 
 /* _____________________________________________________________________
@@ -4567,7 +4631,8 @@ void ICE::computeLagrangian_Transported_Vars(const ProcessorGroup*,
             }
           }
           // Set boundary conditions on q_L_CC
-          string Labelname = tvar->var_Lagrangian->getName();
+          // must use var Labelname not var_Lagrangian
+          string Labelname = tvar->var->getName();
           setBC(q_L_CC, Labelname,  patch, d_sharedState, indx, new_dw);
 
           // multiply by mass so advection is conserved
@@ -4943,14 +5008,13 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
         temp_CC_Xchange[m].copy(Temp_CC[m]);
       }
     }
-    
-    preprocess_CustomBCs("CC_Exchange",old_dw, new_dw, lb, patch, 
-                          999,d_customBC_var_basket);
-    
-/*===========TESTING==========`*/  
+/*===========TESTING==========`*/ 
+ 
     for (int m = 0; m < numALLMatls; m++)  {
       Material* matl = d_sharedState->getMaterial( m );
       int indx = matl->getDWIndex();
+      preprocess_CustomBCs("CC_Exchange",old_dw, new_dw, lb, patch, indx, d_customBC_var_basket);
+       
       setBC(vel_CC[m], "Velocity",   patch, d_sharedState, indx, new_dw,
                                                         d_customBC_var_basket);
       setBC(Temp_CC[m],"Temperature",gamma[m], cv[m], patch, d_sharedState, 
@@ -4959,9 +5023,10 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
 //      set_CFI_BC<Vector>(vel_CC[m],  patch);
 //      set_CFI_BC<double>(Temp_CC[m], patch);
 #endif
+      delete_CustomBCs(d_customBC_var_basket);
     }
     
-    delete_CustomBCs(d_customBC_var_basket);
+    
     //__________________________________
     // Convert vars. primitive-> flux 
     for(CellIterator iter = patch->getExtraCellIterator(); !iter.done();iter++){
@@ -5379,7 +5444,7 @@ void ICE::conservedtoPrimitive_Vars(const ProcessorGroup* /*pg*/,
       
       //__________________________________
       // set the boundary conditions
-      preprocess_CustomBCs("Advection",old_dw, new_dw, lb,  patch, 999,
+      preprocess_CustomBCs("Advection",old_dw, new_dw, lb,  patch, indx,
                            d_customBC_var_basket);
        
       setBC(rho_CC, "Density",  placeHolder, placeHolder,
@@ -5449,6 +5514,13 @@ void ICE::TestConservation(const ProcessorGroup*,
   const Level* level = getLevel(patches);
   delt_vartype delT;
   old_dw->get(delT, d_sharedState->get_delt_label(),level);
+     
+  double total_mass     = 0.0;      
+  double total_KE       = 0.0;      
+  double total_int_eng  = 0.0;      
+  Vector total_mom(0.0, 0.0, 0.0);  
+  Vector mom_exch_error(0,0,0);     
+  double eng_exch_error = 0;        
           
   for(int p=0; p<patches->size(); p++)  {
     const Patch* patch = patches->get(p);
@@ -5474,34 +5546,30 @@ void ICE::TestConservation(const ProcessorGroup*,
       new_dw->get(wvel_FC[m], lb->wvel_FCMELabel, indx,patch,gn,0);
     }
     
-    double total_mass     = 0.0;
-    double total_KE       = 0.0;
-    double total_int_eng  = 0.0;
-    Vector total_mom(0.0, 0.0, 0.0);
-    Vector mom_exch_error(0,0,0);
-    double eng_exch_error = 0;
-    
     //__________________________________
-    // conservation of mass  (Always computed)
+    // conservation of mass
     constCCVariable<double> rho_CC;
-    StaticArray<CCVariable<double> > mass(numICEmatls);
-    
+    StaticArray<CCVariable<double> > mass(numICEmatls);   
     for (int m = 0; m < numICEmatls; m++ ) {
-      
+
       ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
       int indx = ice_matl->getDWIndex();
       new_dw->allocateTemporary(mass[m],patch);
       new_dw->get(rho_CC, lb->rho_CCLabel,   indx, patch, gn,0);
-      
+
       for (CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++){
         IntVector c = *iter;
         mass[m][c] = rho_CC[c] * cell_vol;
       }
-      
-      double mat_mass = 0;
-      conservationTest<double>(patch, delT, mass[m], 
-                               uvel_FC[m], vvel_FC[m], wvel_FC[m],mat_mass);
-      total_mass += mat_mass;
+    }
+    
+    if(d_conservationTest->mass){    
+      for (int m = 0; m < numICEmatls; m++ ) {
+        double mat_mass = 0;
+        conservationTest<double>(patch, delT, mass[m], 
+                                 uvel_FC[m], vvel_FC[m], wvel_FC[m],mat_mass);
+        total_mass += mat_mass; 
+      }
     }
     //__________________________________
     // conservation of momentum
@@ -5525,7 +5593,7 @@ void ICE::TestConservation(const ProcessorGroup*,
         conservationTest<Vector>(patch, delT, mom,
                                   uvel_FC[m],vvel_FC[m],wvel_FC[m], mat_mom);
         total_mom += mat_mom;
-      }  
+      } 
     }
     //__________________________________
     // conservation of internal_energy
@@ -5608,14 +5676,22 @@ void ICE::TestConservation(const ProcessorGroup*,
       }
       mom_exch_error = sum_mom_L_CC     - sum_mom_L_ME_CC;
       eng_exch_error = sum_int_eng_L_CC - sum_eng_L_ME_CC;
-    } 
-    new_dw->put(sum_vartype(total_mass),        lb->TotalMassLabel);
-    new_dw->put(sumvec_vartype(total_mom),      lb->TotalMomentumLabel);
-    new_dw->put(sum_vartype(total_int_eng),     lb->TotalIntEngLabel);
-    new_dw->put(sum_vartype(total_KE),          lb->KineticEnergyLabel);
-    new_dw->put(sumvec_vartype(mom_exch_error), lb->mom_exch_errorLabel);
-    new_dw->put(sum_vartype(eng_exch_error),    lb->eng_exch_errorLabel);
+    }
   }  // patch loop
+  if(d_conservationTest->mass){
+    new_dw->put(sum_vartype(total_mass),        lb->TotalMassLabel);
+  }
+  if(d_conservationTest->exchange){
+    new_dw->put(sumvec_vartype(mom_exch_error), lb->mom_exch_errorLabel);  
+    new_dw->put(sum_vartype(eng_exch_error),    lb->eng_exch_errorLabel);  
+  }
+  if(d_conservationTest->energy){
+    new_dw->put(sum_vartype(total_KE),          lb->KineticEnergyLabel);  
+    new_dw->put(sum_vartype(total_int_eng),     lb->TotalIntEngLabel);    
+  }
+  if(d_conservationTest->momentum){
+    new_dw->put(sumvec_vartype(total_mom),      lb->TotalMomentumLabel);
+  }
 }
 
 /*_____________________________________________________________________
@@ -5849,12 +5925,13 @@ ICE::ICEModelSetup::~ICEModelSetup()
 {
 }
 
-void ICE::ICEModelSetup::registerTransportedVariable(const MaterialSubset* matls,
+void ICE::ICEModelSetup::registerTransportedVariable(const MaterialSet* matlSet,
                                                      const VarLabel* var,
                                                      const VarLabel* src)
 {
   TransportedVariable* t = scinew TransportedVariable;
-  t->matls = matls;
+  t->matlSet = matlSet;
+  t->matls   = matlSet->getSubset(0);
   t->var = var;
   t->src = src;
   t->var_Lagrangian = VarLabel::create(var->getName()+"_L", var->typeDescription());
@@ -5866,11 +5943,12 @@ void ICE::ICEModelSetup::registerTransportedVariable(const MaterialSubset* matls
 //  Register scalar flux variables needed
 //  by the AMR refluxing task.  We're actually
 //  creating the varLabels and putting them is a vector
-void ICE::ICEModelSetup::registerAMR_RefluxVariable(const MaterialSubset* matls,
+void ICE::ICEModelSetup::registerAMR_RefluxVariable(const MaterialSet* matlSet,
                                                           const VarLabel* var)
 {
   AMR_refluxVariable* t = scinew AMR_refluxVariable;
-  t->matls = matls;
+  t->matlSet = matlSet;
+  t->matls   = matlSet->getSubset(0);
   string var_adv_name = var->getName() + "_adv";
   t->var_adv = VarLabel::find(var_adv_name);  //Advected conserved quantity
   if(t->var_adv==NULL){

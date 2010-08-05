@@ -35,12 +35,15 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/Variables/DifferenceIterator.h>
 #include <Core/Grid/BoundaryConditions/BCDataArray.h>
 #include <Core/Malloc/Allocator.h>
+#include <Core/Util/DebugStream.h>
 #include <set>
 #include <iostream>
 #include <algorithm>
 using namespace SCIRun;
 using namespace Uintah;
 
+// export SCI_DEBUG="BC_dbg:+"
+static DebugStream BC_dbg("BC_dbg",false);
 
 DifferenceBCData::DifferenceBCData(BCGeomBase* p1,BCGeomBase* p2)
   : BCGeomBase(), left(p1->clone()), right(p2->clone())
@@ -122,13 +125,13 @@ bool DifferenceBCData::inside(const Point &p) const
 
 void DifferenceBCData::print()
 {
-#if 0
-  cout << "Difference Geometry type = " << typeid(this).name() << endl;
-  cout << "Left" << endl;
+#if 1
+  BC_dbg << "Difference Geometry type = " << typeid(this).name() << endl;
+  BC_dbg << "Left" << endl;
 #endif
   left->print();
-#if 0
-  cout << "Right" << endl;
+#if 1
+  BC_dbg << "Right" << endl;
 #endif
   right->print();
 }
@@ -139,7 +142,7 @@ void DifferenceBCData::determineIteratorLimits(Patch::FaceType face,
 {
 
 #if 0
-  cout << "DifferenceBC determineIteratorLimits()" << endl;
+  cout << "DifferenceBC determineIteratorLimits() " << patch->getFaceName(face)<< endl;
 #endif
 
 

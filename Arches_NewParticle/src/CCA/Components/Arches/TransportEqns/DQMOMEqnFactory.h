@@ -40,6 +40,9 @@ public:
   /** @brief  Grab input parameters from the ups file */
   void problemSetup( const ProblemSpecP & params );
 
+  /** @brief  Set up the extra source terms (if necessary) */
+  void problemSetupSources( const ProblemSpecP& inputdb );
+
   /** @brief  Schedule/perform initialization of weight equations */
   void sched_weightInit( const LevelP& level, 
                          SchedulerP& ); 
@@ -131,7 +134,7 @@ public:
   };
 
   /** @brief  Get the number of quadrature nodes */ 
-  inline const int get_quad_nodes( ) {
+  inline const int get_quad_nodes() {
     return d_quadNodes; };
 
   /** @brief  Set number quadrature nodes */ 
@@ -141,6 +144,10 @@ public:
   /** @brief  Get a boolean: is DQMOM used? (Is there a <DQMOM> block?) */
   inline bool getDoDQMOM() {
     return d_doDQMOM; };
+
+  /** @brief  Return the DQMOM type, weightedAbscissas or unweightedAbscissas */
+  inline string getDQMOMType() {
+    return d_dqmom_type; };
 
   /** @brief  Set the DQMOM solver object (this is managed by the DQMOM equation factory becuase it generates source terms for the DQMOM equations) */
   inline void setDQMOMSolver( DQMOM* solver ) {
@@ -167,6 +174,7 @@ private:
   bool d_timeIntegratorSet; ///< Boolean: has the time integrator been set?
   bool d_labelSet;          ///< Boolean: has the ArchesLabel been set using setArchesLabel()?
   bool d_doDQMOM;           ///< Boolean: is DQMOM being used?
+  string d_dqmom_type;     ///< Which type of DQMOM, weightedAbscissas or unweightedAbscissas
 
   BuildMap builders_;       ///< Structure to hold the equation builder objects
   EqnMap eqns_;             ///< Structure to hold the equation objects

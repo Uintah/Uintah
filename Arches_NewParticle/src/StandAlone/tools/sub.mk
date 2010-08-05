@@ -49,9 +49,7 @@ ifeq ($(HAVE_TEEM),yes)
 endif 
 
 ifeq ($(BUILD_VISIT),yes)
-        ifeq ($(HAVE_TEEM),yes)
-                SUBDIRS += $(SRCDIR)/uda2vis
-        endif 
+  SUBDIRS += $(SRCDIR)/uda2vis
 endif
 
 ########################################################
@@ -83,7 +81,7 @@ ifeq ($(IS_STATIC_BUILD),yes)
   LIBS := \
 	$(CORE_STATIC_LIBS)
 else
-  LIBS :=
+  LIBS := $(MPI_LIBRARY)
 endif
 
 SRCS := $(SRCDIR)/compute_Lnorm_udas.cc 

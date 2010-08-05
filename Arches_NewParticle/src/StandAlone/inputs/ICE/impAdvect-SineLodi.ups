@@ -33,7 +33,7 @@
       <LODI>
            <press_infinity> 1.0132500000010138e+05  </press_infinity>
            <sigma>          0.27                    </sigma>
-           <ice_material_index> 0                   </ice_material_index>
+           <material>       gas                     </material>
       </LODI>
       
       <SINE_BC>
@@ -270,7 +270,7 @@
     <!--____________________________________________________________________-->                      
     <MaterialProperties>
        <ICE>
-         <material>
+         <material name="gas">
            <EOS type = "ideal_gas">                     </EOS>
            <dynamic_viscosity>   1e-5                     </dynamic_viscosity>
            <thermal_conductivity>0.0                    </thermal_conductivity>

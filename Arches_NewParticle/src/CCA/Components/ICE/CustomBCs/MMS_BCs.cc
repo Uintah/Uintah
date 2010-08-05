@@ -176,7 +176,7 @@ void  preprocess_MMS_BCs(DataWarehouse* new_dw,
  Purpose~  Set velocity boundary conditions using method of manufactured
            solution boundary conditions
 ___________________________________________________________________*/
-void set_MMS_Velocity_BC(const Patch* patch,
+int set_MMS_Velocity_BC(const Patch* patch,
                          const Patch::FaceType face,
                          CCVariable<Vector>& vel_CC,
                          const string& var_desc,
@@ -187,6 +187,7 @@ void set_MMS_Velocity_BC(const Patch* patch,
                          mms_vars* mms_v)                     
 
 {
+  int IveSetBC = 0;
   if (var_desc == "Velocity" && bc_kind == "MMS_1") {
     cout_doing << "Setting Vel_MMS on face " << face << endl;
     
@@ -210,8 +211,10 @@ void set_MMS_Velocity_BC(const Patch* patch,
         vel_CC[c].y( 1.0 + A * sin(x-t) * cos(y -t) * exp(-2.0*nu*t));
         vel_CC[c].z(0.0);
       }
+      IveSetBC = 1;
     }
   } 
+  return IveSetBC;
 }
 
 /*_________________________________________________________________
@@ -219,35 +222,34 @@ void set_MMS_Velocity_BC(const Patch* patch,
  Purpose~  Set temperature boundary conditions using method of 
            manufactured solutions
 ___________________________________________________________________*/
-void set_MMS_Temperature_BC(const Patch* /*patch*/,
+int set_MMS_Temperature_BC(const Patch* /*patch*/,
                             const Patch::FaceType face,
                             CCVariable<double>& temp_CC,
-                            const string& var_desc,
                             Iterator& bound_ptr,
                             const string& bc_kind,
                             mms_variable_basket* mms_var_basket,
                             mms_vars* mms_v)  
 {
-  if (var_desc == "Temperature" && bc_kind == "MMS_1") {
-    cout_doing << "Setting Temp_MMS on face " <<face<< endl;
-
-    // bulletproofing
-    if (!mms_var_basket || !mms_v){
-      throw InternalError("set_MMS_Temperature_BC", __FILE__, __LINE__);
-    }
-
-    if(bc_kind == "MMS_1") {    // backout temperature from pressure
-      double cv = mms_var_basket->cv;
-      double gamma = mms_var_basket->gamma;
-      constCCVariable<double> press_CC = mms_v->press_CC;
-      constCCVariable<double> rho_CC   = mms_v->rho_CC;
-        
-      for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
-        IntVector c = *bound_ptr;
-        temp_CC[c]= press_CC[c]/((gamma - 1.0) * cv * rho_CC[c]);
-      }
-    }
+  // bulletproofing
+  if (!mms_var_basket || !mms_v){
+    throw InternalError("set_MMS_Temperature_BC", __FILE__, __LINE__);
   }
+  
+  int IveSetBC = 0;
+  if (bc_kind == "MMS_1") {
+    cout_doing << "Setting Temp_MMS on face " <<face<< endl;
+    double cv = mms_var_basket->cv;
+    double gamma = mms_var_basket->gamma;
+    constCCVariable<double> press_CC = mms_v->press_CC;
+    constCCVariable<double> rho_CC   = mms_v->rho_CC;
+
+    for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
+      IntVector c = *bound_ptr;
+      temp_CC[c]= press_CC[c]/((gamma - 1.0) * cv * rho_CC[c]);
+    }
+    IveSetBC = 1;
+  }
+  return IveSetBC;
 } 
 
 /*_________________________________________________________________
@@ -255,7 +257,7 @@ void set_MMS_Temperature_BC(const Patch* /*patch*/,
  Purpose~  Set press boundary conditions using method of 
            manufactured solutions
 ___________________________________________________________________*/
-void set_MMS_press_BC(const Patch* patch,
+int set_MMS_press_BC(const Patch* patch,
                       const Patch::FaceType face,
                       CCVariable<double>& press_CC,
                       Iterator& bound_ptr,
@@ -270,7 +272,8 @@ void set_MMS_press_BC(const Patch* patch,
   if (!mms_var_basket || !mms_v){
     throw InternalError("set_MMS_press_BC: mms_vars = null", __FILE__, __LINE__);
   }
-
+  
+  int IveSetBC = 0;
   if(bc_kind == "MMS_1") {
     double nu = mms_var_basket->viscosity;
     double A =  mms_var_basket->A;
@@ -286,7 +289,9 @@ void set_MMS_press_BC(const Patch* patch,
       press_CC[c] = p_ref - A*A/4.0 * exp(-4.0*nu*t)
                  *( cos(2.0*(x-t)) + cos(2.0*(y-t)) );
     }
+    IveSetBC = 1;
   }
+  return IveSetBC;
 }
   
 }  // using namespace Uintah

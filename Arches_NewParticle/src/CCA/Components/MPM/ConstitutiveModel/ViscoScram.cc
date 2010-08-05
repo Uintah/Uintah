@@ -57,7 +57,6 @@ DEALINGS IN THE SOFTWARE.
 
 using std::cerr;
 using namespace Uintah;
-using namespace SCIRun;
 
 static DebugStream dbg("VS", false);
 static DebugStream dbgSig("VSSig", false);
@@ -97,6 +96,14 @@ ViscoScram::ViscoScram(ProblemSpecP& ps,MPMFlags* Mflag)
   ps->get("useModifiedEOS",d_useModifiedEOS);
   d_useObjectiveRate = false;
   ps->get("useObjectiveRate",d_useObjectiveRate);
+
+  // Murnaghan EOS inputs
+  ps->getWithDefault("useMurnahanEOS", d_useMurnahanEOS, false);
+  if(d_useMurnahanEOS) {
+    ps->require("gamma", d_gamma);
+    ps->require("P0",    d_P0);
+    ps->require("bulkPrime", d_bulkPrime);
+  }
 
   // Time-temperature data for relaxtion time calculation
   d_tt.T0_WLF = 298.0;
@@ -174,6 +181,14 @@ ViscoScram::ViscoScram(const ViscoScram* cm) : ConstitutiveModel(cm)
   d_initialData.Beta = cm->d_initialData.Beta;
   d_initialData.Gamma = cm->d_initialData.Gamma;
   d_initialData.DCp_DTemperature = cm->d_initialData.DCp_DTemperature;
+
+  // Murnaghan EOS inputs
+  d_useMurnahanEOS = cm->d_useMurnahanEOS;
+  if(d_useMurnahanEOS) {
+    d_gamma     = cm->d_gamma;
+    d_P0        = cm->d_P0;
+    d_bulkPrime = cm->d_bulkPrime;
+  }
 
   // Time-temperature data for relaxtion time calculation
   d_tt.T0_WLF = cm->d_tt.T0_WLF;
@@ -266,6 +281,14 @@ void ViscoScram::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
   cm_ps->appendElement("use_time_temperature_equation", d_doTimeTemperature);
   cm_ps->appendElement("useModifiedEOS",d_useModifiedEOS);
   cm_ps->appendElement("useObjectiveRate",d_useObjectiveRate);
+
+  // Murnaghan EOS inputs
+  cm_ps->appendElement("useMurnahanEOS", d_useMurnahanEOS);
+  if(d_useMurnahanEOS) {
+    cm_ps->appendElement("gamma", d_gamma);
+    cm_ps->appendElement("P0",    d_P0);
+    cm_ps->appendElement("bulkPrime", d_bulkPrime);
+  }
 
   // Time-temperature data for relaxtion time calculation
   cm_ps->appendElement("T0", d_tt.T0_WLF);
@@ -1020,7 +1043,11 @@ ViscoScram::computeStressTensor(const PatchSubset* patches,
     delT_new = min(1.e-6, delT_new);
 
     new_dw->put(delt_vartype(delT_new), lb->delTLabel, patch->getLevel());
-    new_dw->put(sum_vartype(se),     lb->StrainEnergyLabel);
+    
+    if (flag->d_reductionVars->accStrainEnergy ||
+        flag->d_reductionVars->strainEnergy) {
+      new_dw->put(sum_vartype(se),     lb->StrainEnergyLabel);
+    }
     delete interpolator;
   }
 }
@@ -1079,7 +1106,11 @@ ViscoScram::carryForward(const PatchSubset* patches,
       pStrainRate_new[idx] = zero;
     }
     new_dw->put(delt_vartype(1.e10), lb->delTLabel, patch->getLevel());
-    new_dw->put(sum_vartype(0.),     lb->StrainEnergyLabel);
+    
+    if (flag->d_reductionVars->accStrainEnergy ||
+        flag->d_reductionVars->strainEnergy) {
+      new_dw->put(sum_vartype(0.),   lb->StrainEnergyLabel);
+    }
   }
 }
          
@@ -1212,7 +1243,13 @@ double ViscoScram::computeRhoMicroCM(double pressure,
   double p_gauge = pressure - p_ref;
   double rho_cur;
 
-  if(d_useModifiedEOS && p_gauge < 0.0) {
+  if(d_useMurnahanEOS) {    // Murnaghan EOS
+    if( pressure >= d_P0 ) {
+      rho_cur = rho_orig * pow((d_bulkPrime*d_gamma*(pressure-d_P0)+1.0),1.0/d_gamma);
+    } else {
+      rho_cur = rho_orig * pow((pressure/d_P0), d_bulkPrime*d_P0);
+    } 
+  } else if(d_useModifiedEOS && p_gauge < 0.0) {
     double A = p_ref;       // Modified EOS
     double n = p_ref/d_bulk;
     rho_cur  = rho_orig*pow(pressure/A,n);
@@ -1233,7 +1270,19 @@ void ViscoScram::computePressEOSCM(double rho_cur,double& pressure,
   double rho_orig = matl->getInitialDensity();
   double inv_rho_orig = 1./rho_orig;
 
-  if(d_useModifiedEOS && rho_cur < rho_orig){
+  if(d_useMurnahanEOS) {
+    if(rho_cur >= rho_orig) {
+      pressure = d_P0 + (1.0/(d_bulkPrime*d_gamma))*(pow(rho_cur/rho_orig,d_gamma)-1.0);
+      dp_drho  = (1.0/(d_bulkPrime*rho_orig))*pow((rho_cur/rho_orig),d_gamma-1.0);
+      // is this the right speed of sound?
+      tmp      = d_bulk/rho_cur;
+    } else {
+      pressure = d_P0*pow(rho_cur/rho_cur, (1.0/(d_bulkPrime*d_P0)));
+      dp_drho  = (1.0/(d_bulkPrime*rho_orig))*pow(rho_cur/rho_orig,(1.0/(d_bulkPrime*d_P0)-1.0));
+      // is this the right speed of sound?
+      tmp      = d_bulk/rho_cur;
+    } 
+  } else if(d_useModifiedEOS && rho_cur < rho_orig){
     double A = p_ref;         // MODIFIED EOS
     double n = d_bulk/p_ref;
     double rho_rat_to_the_n = pow(rho_cur*inv_rho_orig,n);

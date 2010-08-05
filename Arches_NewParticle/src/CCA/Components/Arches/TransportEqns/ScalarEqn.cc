@@ -213,6 +213,7 @@ ScalarEqn::sched_initializeVariables( const LevelP& level, SchedulerP& sched )
   tsk->requires(Task::OldDW, d_transportVarLabel, gn, 0);
   sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
 }
+
 //---------------------------------------------------------------------------
 // Method: Actually initialize the variables. 
 //---------------------------------------------------------------------------
@@ -279,6 +280,7 @@ ScalarEqn::sched_computeSources( const LevelP& level, SchedulerP& sched, int tim
   }
 
 }
+
 //---------------------------------------------------------------------------
 // Method: Schedule build the transport equation. 
 //---------------------------------------------------------------------------
@@ -290,6 +292,16 @@ ScalarEqn::sched_buildTransportEqn( const LevelP& level, SchedulerP& sched, int 
   Task* tsk = scinew Task(taskname, this, &ScalarEqn::buildTransportEqn, timeSubStep);
 
   //----NEW----
+  // note that rho and U are copied into new DW in ExplicitSolver::setInitialGuess
+  tsk->requires(Task::NewDW, d_fieldLabels->d_densityCPLabel, Ghost::AroundCells, 1); 
+  tsk->requires(Task::NewDW, d_fieldLabels->d_viscosityCTSLabel, Ghost::AroundCells, 1);
+  tsk->requires(Task::NewDW, d_fieldLabels->d_uVelocitySPBCLabel, Ghost::AroundCells, 1);   
+#ifdef YDIM
+  tsk->requires(Task::NewDW, d_fieldLabels->d_vVelocitySPBCLabel, Ghost::AroundCells, 1); 
+#endif
+#ifdef ZDIM
+  tsk->requires(Task::NewDW, d_fieldLabels->d_wVelocitySPBCLabel, Ghost::AroundCells, 1); 
+#endif
   tsk->modifies(d_FdiffLabel);
   tsk->modifies(d_FconvLabel);
   tsk->modifies(d_RHSLabel);
@@ -309,21 +321,10 @@ ScalarEqn::sched_buildTransportEqn( const LevelP& level, SchedulerP& sched, int 
   
   //-----OLD-----
   tsk->requires(Task::OldDW, d_fieldLabels->d_areaFractionLabel, Ghost::AroundCells, 1); 
-  if ( timeSubStep == 0 ) 
-    tsk->requires(Task::OldDW, d_fieldLabels->d_densityCPLabel, Ghost::AroundCells, 1); 
-  else
-    tsk->requires(Task::NewDW, d_fieldLabels->d_densityTempLabel, Ghost::AroundCells, 1); 
-  tsk->requires(Task::OldDW, d_fieldLabels->d_viscosityCTSLabel, Ghost::AroundCells, 1);
-  tsk->requires(Task::OldDW, d_fieldLabels->d_uVelocitySPBCLabel, Ghost::AroundCells, 1);   
-#ifdef YDIM
-  tsk->requires(Task::OldDW, d_fieldLabels->d_vVelocitySPBCLabel, Ghost::AroundCells, 1); 
-#endif
-#ifdef ZDIM
-  tsk->requires(Task::OldDW, d_fieldLabels->d_wVelocitySPBCLabel, Ghost::AroundCells, 1); 
-#endif
 
   sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
 }
+
 //---------------------------------------------------------------------------
 // Method: Actually build the transport equation. 
 //---------------------------------------------------------------------------
@@ -340,7 +341,7 @@ ScalarEqn::buildTransportEqn( const ProcessorGroup* pc,
 
     //Ghost::GhostType  gaf = Ghost::AroundFaces;
     Ghost::GhostType  gac = Ghost::AroundCells;
-    Ghost::GhostType  gn  = Ghost::None;
+    //Ghost::GhostType  gn  = Ghost::None;
 
     const Patch* patch = patches->get(p);
     int archIndex = 0;
@@ -361,36 +362,33 @@ ScalarEqn::buildTransportEqn( const ProcessorGroup* pc,
     CCVariable<double> RHS; 
 
     new_dw->get(oldPhi, d_oldtransportVarLabel, matlIndex, patch, gac, 2);
-    if ( timeSubStep == 0 ) 
-      old_dw->get(den, d_fieldLabels->d_densityCPLabel, matlIndex, patch, gac, 1); 
-    else 
-      new_dw->get(den, d_fieldLabels->d_densityTempLabel, matlIndex, patch, gac, 1); 
-    old_dw->get(mu_t, d_fieldLabels->d_viscosityCTSLabel, matlIndex, patch, gac, 1); 
-    old_dw->get(uVel,   d_fieldLabels->d_uVelocitySPBCLabel, matlIndex, patch, gac, 1); 
+    new_dw->get(den, d_fieldLabels->d_densityCPLabel, matlIndex, patch, gac, 1); 
+    new_dw->get(mu_t,         d_fieldLabels->d_viscosityCTSLabel, matlIndex, patch, gac, 1); 
+    new_dw->get(uVel,         d_fieldLabels->d_uVelocitySPBCLabel, matlIndex, patch, gac, 1); 
     old_dw->get(areaFraction, d_fieldLabels->d_areaFractionLabel, matlIndex, patch, gac, 1); 
     double vol = Dx.x();
 #ifdef YDIM
-    old_dw->get(vVel,   d_fieldLabels->d_vVelocitySPBCLabel, matlIndex, patch, gac, 1); 
+    new_dw->get(vVel,   d_fieldLabels->d_vVelocitySPBCLabel, matlIndex, patch, gac, 1); 
     vol *= Dx.y();
 #endif
 #ifdef ZDIM
-    old_dw->get(wVel,   d_fieldLabels->d_wVelocitySPBCLabel, matlIndex, patch, gac, 1); 
+    new_dw->get(wVel,   d_fieldLabels->d_wVelocitySPBCLabel, matlIndex, patch, gac, 1); 
     vol *= Dx.z();
 #endif
 
     new_dw->getModifiable(Fdiff, d_FdiffLabel, matlIndex, patch);
     new_dw->getModifiable(Fconv, d_FconvLabel, matlIndex, patch); 
     new_dw->getModifiable(RHS, d_RHSLabel, matlIndex, patch);
-    vector<constCCVarWrapper> sourceVars; 
-    if (d_addSources) { 
-      SourceTermFactory& src_factory = SourceTermFactory::self(); 
-      for (vector<std::string>::iterator src_iter = d_sources.begin(); src_iter != d_sources.end(); src_iter++){
-        constCCVarWrapper temp_var;  // Outside of this scope src is no longer available 
-        SourceTermBase& temp_src = src_factory.retrieve_source_term( *src_iter ); 
-        new_dw->get(temp_var.data, temp_src.getSrcLabel(), matlIndex, patch, gn, 0);
-        sourceVars.push_back(temp_var); 
-      }
-    }
+    //vector<constCCVarWrapper> sourceVars; 
+    //if (d_addSources) { 
+    //  SourceTermFactory& src_factory = SourceTermFactory::self(); 
+    //  for (vector<std::string>::iterator src_iter = d_sources.begin(); src_iter != d_sources.end(); src_iter++){
+    //    constCCVarWrapper temp_var;  // Outside of this scope src is no longer available 
+    //    SourceTermBase& temp_src = src_factory.retrieve_source_term( *src_iter ); 
+    //    new_dw->get(temp_var.data, temp_src.getSrcLabel(), matlIndex, patch, gn, 0);
+    //    sourceVars.push_back(temp_var); 
+    //  }
+    //}
     RHS.initialize(0.0); 
     Fconv.initialize(0.0); 
     Fdiff.initialize(0.0);
@@ -410,14 +408,15 @@ ScalarEqn::buildTransportEqn( const ProcessorGroup* pc,
       RHS[c] += Fdiff[c] - Fconv[c];
 
       //-----ADD SOURCES
-      if (d_addSources) {
-        for (vector<constCCVarWrapper>::iterator siter = sourceVars.begin(); siter != sourceVars.end(); siter++){
-          RHS[c] += (siter->data)[c] * vol; 
-        }
-      }
+      //if (d_addSources) {
+      //  for (vector<constCCVarWrapper>::iterator siter = sourceVars.begin(); siter != sourceVars.end(); siter++){
+      //    RHS[c] += (siter->data)[c] * vol; 
+      //  }
+      //}
     }
   }
 }
+
 //---------------------------------------------------------------------------
 // Method: Schedule solve the transport equation. 
 //---------------------------------------------------------------------------
@@ -435,21 +434,26 @@ ScalarEqn::sched_solveTransportEqn( const LevelP& level,
   tsk->modifies(d_transportVarLabel);
   tsk->modifies(d_oldtransportVarLabel); 
   tsk->requires(Task::NewDW, d_RHSLabel, Ghost::None, 0);
-  if ( d_use_density_guess ) 
+  if ( d_use_density_guess ) {
     tsk->requires(Task::NewDW, d_fieldLabels->d_densityGuessLabel, Ghost::None, 0);
-  else 
+  } else {
     tsk->requires(Task::NewDW, d_fieldLabels->d_densityCPLabel, Ghost::None, 0);
+  }
+
+  // DensityTemp is the density from the last substep (or timestep if substep = 0).
+  if(timeSubStep == 0) {
+    tsk->requires(Task::OldDW, d_fieldLabels->d_densityCPLabel, Ghost::None, 0); 
+  } else {
+    tsk->requires(Task::NewDW, d_fieldLabels->d_densityTempLabel, Ghost::None, 0);
+  }
 
   //Old
   tsk->requires(Task::OldDW, d_transportVarLabel, Ghost::None, 0);
   tsk->requires(Task::OldDW, d_fieldLabels->d_sharedState->get_delt_label(), Ghost::None, 0);
-  if ( timeSubStep == 0 ) 
-    tsk->requires(Task::OldDW, d_fieldLabels->d_densityCPLabel, Ghost::None, 0);
-  else 
-    tsk->requires(Task::NewDW, d_fieldLabels->d_densityTempLabel, Ghost::None, 0); 
 
   sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
 }
+
 //---------------------------------------------------------------------------
 // Method: Actually solve the transport equation. 
 //---------------------------------------------------------------------------
@@ -691,3 +695,4 @@ ScalarEqn::dummyInit( const ProcessorGroup* pc,
 
   }
 }
+

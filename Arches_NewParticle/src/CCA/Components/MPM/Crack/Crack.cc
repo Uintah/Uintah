@@ -60,7 +60,6 @@ DEALINGS IN THE SOFTWARE.
 #include <fstream>
 
 using namespace Uintah;
-using namespace SCIRun;
 using namespace std;
 
 using std::vector;
@@ -83,7 +82,7 @@ Crack::Crack(const ProblemSpecP& ps,SimulationStateP& d_sS,
   
   if(n8or27==8) 
     {NGP=1; NGN=1;}
-  else if(n8or27==MAX_BASIS) 
+  else if(n8or27==MAX_BASIS || flags->d_8or27==64) 
     {NGP=2; NGN=2;} 
     
   d_calFractParameters = false;

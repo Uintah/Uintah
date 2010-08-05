@@ -51,7 +51,6 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Containers/StaticArray.h>
 
 using namespace Uintah;
-using namespace SCIRun;
 
 
 static DebugStream cout_doing("ImplicitHeatConduction", false);
@@ -73,7 +72,7 @@ ImplicitHeatConduction::ImplicitHeatConduction(SimulationStateP& sS,
   if(d_flag->d_8or27==8){
     NGP=1;
     NGN=1;
-  } else if(d_flag->d_8or27==27){
+  } else if(d_flag->d_8or27==27 || flags->d_8or27==64){
     NGP=2;
     NGN=2;
   }

@@ -262,8 +262,9 @@ private:
   TabPropsInterface* d_TabPropsInterface;
 
   bool d_TabPropsInterfaceSet; ///< Boolean: has the MixingRxnModel been set using setMixingRxnModel() method?
-	bool d_coupled_physics;		///< Boolean: use coupled physics and iterative procedure?
-  bool d_labelSet;          ///< Boolean: has the ArchesLabel been set using setArchesLabel() method?
+  bool d_coupled_physics;       ///< Boolean: use coupled physics and iterative procedure?
+  bool d_labelSet;              ///< Boolean: has the ArchesLabel been set using setArchesLabel() method?
+  bool d_unweighted;
 
   int numQuadNodes;         ///< Number of quadrature nodes
 

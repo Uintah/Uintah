@@ -137,7 +137,7 @@ ExplicitSolver::~ExplicitSolver()
 void 
 ExplicitSolver::problemSetup(const ProblemSpecP& params)
   // MultiMaterialInterface* mmInterface
-{
+{ 
   ProblemSpecP db = params->findBlock("ExplicitSolver");
   ProblemSpecP test_probe_db = db->findBlock("ProbePoints"); 
   if ( test_probe_db ) {
@@ -761,6 +761,11 @@ int ExplicitSolver::noSolve(const LevelP& level,
 
   eqnFactory.sched_dummyInit( level, sched );
 
+
+
+  string mixmodel = d_props->getMixingModelType(); 
+  if ( mixmodel == "TabProps" )
+    d_props->sched_doTPDummyInit( level, sched ); 
 
   // Schedule an interpolation of the face centered velocity data 
   // to a cell centered vector for used by the viz tools

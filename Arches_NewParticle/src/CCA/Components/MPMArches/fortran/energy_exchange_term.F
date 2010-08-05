@@ -79,7 +79,7 @@ C
      $     rfluxB,
      $     epsg, 
      $     epss,
-     $     sew, sns, stb,
+     $     dx, dy, dz, 
 c     $     heat_trans_coeff, 
      $     tcond,
      $     valid_lo, valid_hi,
@@ -298,9 +298,7 @@ C-----------------------------------------------------------------------
      $     dim_lo_epss(2):dim_hi_epss(2),
      $     dim_lo_epss(3):dim_hi_epss(3))
 
-      double precision sew(dim_lo_patch(1):dim_hi_patch(1))
-      double precision sns(dim_lo_patch(2):dim_hi_patch(2))
-      double precision stb(dim_lo_patch(3):dim_hi_patch(3))
+      double precision dx, dy, dz
 
       double precision heat_trans_coeff
 
@@ -377,8 +375,8 @@ c--------------------------------------------------------------------
 
                   if (pcell(i-1,j,k) .eq. ffield) then
 
-                     areayz = sns(j)*stb(k)
-                     dist = (xu(i)-xx(i-1))
+                     areayz = dy*dz
+                     dist = dx/2.0d0
                      qmult = 0.0d0
 #ifdef htwallmodel
 
@@ -494,8 +492,8 @@ c     as well.
 
                   if (pcell(i+1,j,k).eq.ffield) then
 
-                     areayz = sns(j)*stb(k)
-                     dist = (xx(i+1)-xu(i+1))
+                     areayz = dy*dz
+                     dist = dx/2.0d0
                      qmult = 0.0d0
 #ifdef htwallmodel
 
@@ -589,8 +587,8 @@ c     south face of intrusion
 
                   if (pcell(i,j-1,k) .eq. ffield) then
 
-                     areaxz = sew(i)*stb(k)
-                     dist = (yv(j)-yy(j-1))
+                     areaxz = dx*dz
+                     dist = dy/2.0d0
                      qmult = 0.0d0
 #ifdef htwallmodel
 
@@ -682,8 +680,8 @@ c     as well.
 
                   if (pcell(i,j+1,k).eq.ffield) then
 
-                     areaxz = sew(i)*stb(k)
-                     dist = (yy(j+1)-yv(j+1))
+                     areaxz = dx*dz
+                     dist = dy/2.0d0
                      qmult = 0.0d0
 #ifdef htwallmodel
 
@@ -777,8 +775,8 @@ c     as well.
 
                   if (pcell(i,j,k-1).eq.ffield) then
 
-                     areaxy = sew(i)*sns(j)
-                     dist = (zw(k)-zz(k-1))
+                     areaxy = dx*dy
+                     dist = dz/2.0d0
                      qmult = 0.0d0
 
 #ifdef htwallmodel
@@ -874,8 +872,8 @@ c     as well.
 
                   if (pcell(i,j,k+1).eq.ffield) then
 
-                     areaxy = sew(i)*sns(j)
-                     dist = (zz(k+1)-zw(k+1))
+                     areaxy = dx*dy
+                     dist = dz/2.d0
                      qmult = 0.0d0
 
 #ifdef htwallmodel
@@ -981,12 +979,12 @@ c     modif. for discrete fraction a la mom exch?
      $              pcell(i,j,k).ne.wall) then
 
                   darea = ((one - eps_gas_cont)*
-     $                 sew(i)*sns(j)*stb(k))**(1.0/3.0)
+     $                 vol)**(1.0/3.0)
                   areafactor = (one - eps_gas_cont)**(2.0/3.0)
                   area = darea*darea
 
                   drep = (eps_gas_cont*
-     $                 sew(i)*sns(j)*stb(k))**
+     $                 vol)**
      $                 (1.0/3.0)
                   dist = drep/two
 

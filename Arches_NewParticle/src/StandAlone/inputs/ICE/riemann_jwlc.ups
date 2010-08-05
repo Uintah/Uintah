@@ -173,15 +173,7 @@
     <MaterialProperties>
        <ICE>
          <material>
-           <EOS type = "JWLC">
-             <A>2.9867e11</A>
-             <B>4.11706e9</B>
-             <C>7.206147e8</C>
-             <R1>4.95</R1>
-             <R2>1.15</R2>
-             <om>0.35</om>
-             <rho0>1160.0</rho0>
-           </EOS>
+           <include href="inputs/ICE/JWLEOSANFO.xml"/>
            <dynamic_viscosity>      0.0                 </dynamic_viscosity>
            <thermal_conductivity>   0.0                 </thermal_conductivity>
            <specific_heat>          544.96               </specific_heat>

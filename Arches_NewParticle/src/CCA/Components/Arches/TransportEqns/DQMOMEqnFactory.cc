@@ -52,6 +52,8 @@ void DQMOMEqnFactory::problemSetup(const ProblemSpecP& params)
     d_doDQMOM = true;
   }
 
+  dqmom_db->getWithDefault("type", d_dqmom_type, "weightedAbs");
+
   if( d_labelSet == false ){
     string err_msg = "ERROR: Arches: EqnFactory: You must set the EqnFactory field labels using setArchesLabel() before you run the problem setup method!";
     throw ProblemSetupException(err_msg,__FILE__,__LINE__);
@@ -136,6 +138,15 @@ void DQMOMEqnFactory::problemSetup(const ProblemSpecP& params)
 
 }
 
+
+void
+DQMOMEqnFactory::problemSetupSources( const ProblemSpecP& inputdb ) 
+{
+  for( EqnMap::iterator iEqn = eqns_.begin(); iEqn != eqns_.end(); ++iEqn ) {
+    DQMOMEqn* eqn = dynamic_cast<DQMOMEqn*>(iEqn->second);
+    eqn->problemSetupSources( inputdb );
+  }
+}
 
 
 //---------------------------------------------------------------------------
@@ -351,14 +362,14 @@ DQMOMEqnFactory::sched_dummyInit( const LevelP& level, SchedulerP& sched )
 This method was created so that the ExplicitSolver could schedule the evaluation
 of DQMOMEqns but still abstract the details to the DQMOMEqnFactory.
 
-The procedure for this method is as follows:
-0. Initialize the minimum timestep label
-1. Initialize DQMOM equation variables, if necessary
-2. Solve the DQMOM linear system AX=B
-3. Update the DQMOM equation variables using the results from AX=B
-4. (Last time sub-step only) Clip
-5. (Last time sub-step only) Clean up after the equation evaluation
-6. (Last time sub-step only) Set the minimum timestep value
+The procedure for this method is as follows:                              \n
+0. Initialize the minimum timestep label                                  \n
+1. Initialize DQMOM equation variables, if necessary                      \n
+2. Solve the DQMOM linear system AX=B                                     \n
+3. Update the DQMOM equation variables using the results from AX=B        \n
+4. (Last time sub-step only) Clip                                         \n
+5. (Last time sub-step only) Clean up after the equation evaluation       \n
+6. (Last time sub-step only) Set the minimum timestep value               \n
 */
 void 
 DQMOMEqnFactory::sched_evalTransportEqns( const LevelP& level, 

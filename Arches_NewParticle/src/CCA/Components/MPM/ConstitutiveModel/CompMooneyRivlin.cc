@@ -53,7 +53,6 @@ DEALINGS IN THE SOFTWARE.
 using std::cerr;
 
 using namespace Uintah;
-using namespace SCIRun;
 
 // Material Constants are C1, C2 and PR (poisson's ratio).  
 // The shear modulus = 2(C1 + C2).
@@ -225,9 +224,9 @@ void CompMooneyRivlin::computeStressTensor(const PatchSubset* patches,
     old_dw->get(delT, lb->delTLabel, getLevel(patches));
 
     Ghost::GhostType  gac   = Ghost::AroundCells;
-    old_dw->get(psize,               lb->pSizeLabel,                     pset);
     old_dw->get(px,                  lb->pXLabel,                        pset);
     old_dw->get(pmass,               lb->pMassLabel,                     pset);
+    old_dw->get(psize,               lb->pSizeLabel,                     pset);
     old_dw->get(pvelocity,           lb->pVelocityLabel,                 pset);
     old_dw->get(deformationGradient, lb->pDeformationMeasureLabel,       pset);
     new_dw->allocateAndPut(pstress,  lb->pStressLabel_preReloc,          pset);
@@ -349,7 +348,11 @@ void CompMooneyRivlin::computeStressTensor(const PatchSubset* patches,
       new_dw->put(delt_vartype(DBL_MAX), lb->delTLabel);
     else
       new_dw->put(delt_vartype(delT_new), lb->delTLabel, patch->getLevel());
-    new_dw->put(sum_vartype(se),        lb->StrainEnergyLabel);
+
+    if (flag->d_reductionVars->accStrainEnergy ||
+        flag->d_reductionVars->strainEnergy) {
+      new_dw->put(sum_vartype(se),        lb->StrainEnergyLabel);
+    }
     delete interpolator;
   }
 }
@@ -371,7 +374,11 @@ void CompMooneyRivlin::carryForward(const PatchSubset* patches,
 
     // Carry forward the data local to this constitutive model 
     new_dw->put(delt_vartype(1.e10), lb->delTLabel, patch->getLevel());
-    new_dw->put(sum_vartype(0.),     lb->StrainEnergyLabel);
+    
+    if (flag->d_reductionVars->accStrainEnergy ||
+        flag->d_reductionVars->strainEnergy) {
+      new_dw->put(sum_vartype(0.),     lb->StrainEnergyLabel);
+    }
   }
 }
 

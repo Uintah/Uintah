@@ -34,31 +34,39 @@
 //===========================================================================
 
 using namespace Uintah;
-using namespace SCIRun;
 
-DQMOM::DQMOM(ArchesLabel* fieldLabels):
-d_fieldLabels(fieldLabels)
+DQMOM::DQMOM(ArchesLabel* fieldLabels) : d_fieldLabels(fieldLabels)
 {
-
   string varname;
-  
-  proc0cout << "Creating normB label" << endl;
-
   varname = "normB";
   d_normBLabel = VarLabel::create(varname, CCVariable<double>::getTypeDescription());
-
   varname = "normX";
   d_normXLabel = VarLabel::create(varname, CCVariable<double>::getTypeDescription());
-
   varname = "normRes";
   d_normResLabel = VarLabel::create(varname, CCVariable<double>::getTypeDescription());
-
   varname = "normResNormalizedB";
   d_normResNormalizedLabelB = VarLabel::create(varname, CCVariable<double>::getTypeDescription());
-
   varname = "normResNormalizedX";
   d_normResNormalizedLabelX = VarLabel::create(varname, CCVariable<double>::getTypeDescription());
-  
+  varname = "conditionNumber";
+  d_conditionNumberLabel = VarLabel::create(varname, CCVariable<double>::getTypeDescription());
+}
+
+
+DQMOM::DQMOM(ArchesLabel* fieldLabels, std::string which_dqmom):
+d_fieldLabels(fieldLabels), d_which_dqmom(which_dqmom)
+{
+  string varname;
+  varname = "normB";
+  d_normBLabel = VarLabel::create(varname, CCVariable<double>::getTypeDescription());
+  varname = "normX";
+  d_normXLabel = VarLabel::create(varname, CCVariable<double>::getTypeDescription());
+  varname = "normRes";
+  d_normResLabel = VarLabel::create(varname, CCVariable<double>::getTypeDescription());
+  varname = "normResNormalizedB";
+  d_normResNormalizedLabelB = VarLabel::create(varname, CCVariable<double>::getTypeDescription());
+  varname = "normResNormalizedX";
+  d_normResNormalizedLabelX = VarLabel::create(varname, CCVariable<double>::getTypeDescription());
   varname = "conditionNumber";
   d_conditionNumberLabel = VarLabel::create(varname, CCVariable<double>::getTypeDescription());
 }
@@ -80,6 +88,12 @@ DQMOM::~DQMOM()
 void DQMOM::problemSetup(const ProblemSpecP& params)
 {
   ProblemSpecP db = params; 
+
+  if ( d_which_dqmom == "unweightedAbs" ) {
+    d_unweighted = true; 
+  } else {
+    d_unweighted = false; 
+  }
 
 #if defined(VERIFY_LINEAR_SOLVER)
   // grab the name of the file containing the test matrices
@@ -145,9 +159,6 @@ void DQMOM::problemSetup(const ProblemSpecP& params)
 #if defined(VERIFY_AB_CONSTRUCTION) || defined(VERIFY_LINEAR_SOLVER)
   b_save_moments = false;
 #endif
-  if( b_save_moments ) {
-    DQMOM::populateMomentsMap(momentIndexes);
-  }
 
   // This block puts the labels in the same order as the input file, so the moment indices match up OK
   
@@ -202,6 +213,10 @@ void DQMOM::problemSetup(const ProblemSpecP& params)
     throw InvalidValue( "ERROR: DQMOM: ProblemSetup: The number of moment indices specified was incorrect! Need ",__FILE__,__LINE__);
   }
 
+  if( b_save_moments ) {
+    DQMOM::populateMomentsMap(momentIndexes);
+  }
+
 #if defined(VERIFY_AB_CONSTRUCTION)
   N_ = vab_N;
   N_xi = vab_N_xi;
@@ -243,7 +258,11 @@ void DQMOM::problemSetup(const ProblemSpecP& params)
 
         AAopt = scinew DenseMatrix((N_xi+1)*N_,(N_xi+1)*N_);
         AAopt->zero();
-        constructAopt( AAopt, d_opt_abscissas );
+        if(d_unweighted == true){
+          constructAopt_unw( AAopt, d_opt_abscissas );
+        } else {
+          constructAopt( AAopt, d_opt_abscissas );
+        }
         AAopt->invert();
 
       }
@@ -284,8 +303,9 @@ DQMOM::populateMomentsMap( std::vector<MomentVector> allMoments )
   proc0cout << endl;
 
   vector<MomentVector>::iterator iAllMoments = allMoments.begin();
-  for( unsigned int zz = 0; zz <= 2*N_xi; ++zz, ++iAllMoments ) { 
-    // only saving moment 0, moment 1, and moment 2 (for now)
+  //for( unsigned int zz = 0; zz <= 2*N_xi; ++zz, ++iAllMoments ) { 
+  //  // only saving moment 0, moment 1, and moment 2 (for now)
+  for( ; iAllMoments != allMoments.end(); ++iAllMoments ) {
 
     string name = "moment_";
     std::stringstream out;
@@ -620,7 +640,13 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
         BB->zero();
 
         //double start_ConstructionTime = Time::currentSeconds();
-        constructBopt( BB, weights, d_opt_abscissas, models );
+
+        if(d_unweighted == true){
+          constructBopt_unw( BB, d_opt_abscissas, models );
+        } else {
+          constructBopt( BB, weights, d_opt_abscissas, models );
+        }
+
         //total_ConstructionTime += (Time::currentSeconds() - start_ConstructionTime);
         //++numtimesB; //timing
 
@@ -1740,10 +1766,133 @@ DQMOM::constructBopt( ColumnMatrix*  &BB,
 
 }
 
+/** 
+@details
+Construct the A matrix for the DQMOM linear system AX=B given a set of matrices that use Lapack, DenseMatrix and ColumnMatrix.
+This constructs A given a vector<double> of unweighted abscissas.
+*/
+void
+DQMOM::constructAopt_unw( DenseMatrix*   &AA,
+                          vector<double> &Abscissas)
+{
+  for ( unsigned int k = 0; k < momentIndexes.size(); ++k) {
+    MomentVector thisMoment = momentIndexes[k];
+
+    // weights
+    for ( unsigned int alpha = 0; alpha < N_; ++alpha) {
+      double prefixA = 1;
+      double productA = 1;
+      for ( unsigned int i = 0; i < thisMoment.size(); ++i) {
+        // Appendix C, C.9 (A1 matrix)
+        //prefixA = prefixA - (thisMoment[i]);
+        double base = Abscissas[i*(N_)+alpha];
+        double exponent = thisMoment[i];
+        productA = productA*( pow(base, exponent) );
+      }
+
+      (*AA)[k][alpha] = prefixA*productA;
+    } //end weights sub-matrix
+
+    // weighted abscissas
+    for( unsigned int j = 0; j < N_xi; ++j ) {
+      double prefixA    = 1;
+      double productA   = 1;
+
+      for( unsigned int alpha = 0; alpha < N_; ++alpha ) {
+        if ( Abscissas[j*(N_)+alpha] == 0 && thisMoment[j] == 0) {
+          //FIXME:
+          // both prefixes contain 0^(-1)
+          prefixA = 0;
+        } else {
+          // Appendix C, C.11 (A_j+1 matrix)
+          double base = Abscissas[j*(N_)+alpha];
+          double exponent = thisMoment[j] - 1;
+          prefixA = (thisMoment[j])*(pow(base, exponent));
+          productA = 1;
+
+          // calculate product containing all internal coordinates except j
+          for (unsigned int n = 0; n < N_xi; ++n) {
+            if (n != j) {
+              // the if statements checking these same conditions (above) are only
+              // checking internal coordinate j, so we need them again for internal
+              // coordinate n
+              double base2 = Abscissas[n*(N_)+alpha];
+              double exponent2 = thisMoment[n];
+              productA = productA*( pow(base2, exponent2));
+            }
+          }//end int coord n
+        }//end divide by zero conditionals
+
+        int col = (j+1)*N_ + alpha;
+        (*AA)[k][col] = prefixA*productA;
+      }//end quad nodes
+    }//end int coords j sub-matrix
+  } // end moments
+}
+
 
 /** 
 @details
-Construct the DQMOM linear system AX=B given a set of matrices that use Lapack, DenseMatrix and ColumnMatrix.
+Construct the B vector for the DQMOM linear system AX=B given a set of matrices that use Lapack, DenseMatrix and ColumnMatrix.
+This constructs B given a vector<double> of unweighted abscissas.
+*/
+void
+DQMOM::constructBopt_unw( ColumnMatrix*  &BB,
+                          vector<double> &Abscissas,
+                          vector<double> &models)
+{
+  for ( unsigned int k = 0; k < momentIndexes.size(); ++k) {
+    MomentVector thisMoment = momentIndexes[k];
+
+    double totalsumS = 0;
+    for( unsigned int j = 0; j < N_xi; ++j ) {
+      double prefixS    = 1;
+      double productS   = 1;
+      double modelsumS  = 0;
+
+      double quadsumS = 0;
+      for( unsigned int alpha = 0; alpha < N_; ++alpha ) {
+        if ( Abscissas[j*(N_)+alpha] == 0 && thisMoment[j] == 0) {
+          //FIXME:
+          // both prefixes contain 0^(-1)
+          prefixS = 0;
+        } else {
+          // Appendix C, C.11 (A_j+1 matrix)
+          double base = Abscissas[j*(N_)+alpha];
+          double exponent = thisMoment[j] - 1;
+
+          // Appendix C, C.16 (S matrix)
+          prefixS = -(thisMoment[j])*(pow(base, exponent));
+          productS = 1;
+          // calculate product containing all internal coordinates except j
+          for (unsigned int n = 0; n < N_xi; ++n) {
+            if (n != j) {
+              // the if statements checking these same conditions (above) are only
+              // checking internal coordinate j, so we need them again for internal
+              // coordinate n
+              double base2 = Abscissas[n*(N_)+alpha];
+              double exponent2 = thisMoment[n];
+              productS = productS*( pow(base2, exponent2));
+            }
+          }//end int coord n
+        }//end divide by zero conditionals
+
+        modelsumS = - models[j*(N_)+alpha];
+        //quadsumS = quadsumS + weights[alpha]*modelsumS*prefixS*productS;
+        quadsumS = quadsumS + modelsumS*prefixS*productS;
+      }//end quad nodes
+      totalsumS = totalsumS + quadsumS;
+    }//end int coords j sub-matrix
+
+    (*BB)[k] = totalsumS;
+  } // end moments
+}
+
+
+
+/** 
+@details
+Construct the A matrix and B vector for the DQMOM linear system AX=B given a set of matrices that use Lapack, DenseMatrix and ColumnMatrix.
 */
 void
 DQMOM::constructLinearSystem( DenseMatrix*   &AA, 
@@ -1902,14 +2051,15 @@ DQMOM::sched_calculateMoments( const LevelP& level, SchedulerP& sched, int timeS
   sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
 }
 
-// **********************************************
-// actually calculate the moments
-// **********************************************
-/** @details  This calculates the value of each of the $\f(N_{\xi}+1)N$\f moments
-  *           given to the DQMOM class. For a given moment index $\f k = k_1, k_2, \dots $\f, 
-  *           the moment is calculated as:
-  *           \f[ m_{k} = \sum_{\alpha=1}^{N} w_{\alpha} \prod_{j=1}^{N_{\xi}} \xi_{j}^{k_j} \f]
-  */
+/** 
+@details  
+This calculates the value of each of the $\f(N_{\xi}+1)N$\f moments
+ given to the DQMOM class. For a given moment index $\f k = k_1, k_2, \dots $\f, 
+ the moment is calculated as:
+
+ \f[ m_{k} = \sum_{\alpha=1}^{N} w_{\alpha} \prod_{j=1}^{N_{\xi}} \xi_{j}^{k_j} \f]
+
+*/
 void
 DQMOM::calculateMoments( const ProcessorGroup* pc,  
                          const PatchSubset* patches,
@@ -1981,11 +2131,11 @@ DQMOM::calculateMoments( const ProcessorGroup* pc,
         mean_moment_label = iMeanMoment->second;
       } else {
         stringstream out;
-        out << "ERROR: DQMOM: calculateMoments: could not find moment index ";
+        out << "ERROR: DQMOM: calculateMoments: could not find moment index [";
         for( MomentVector::iterator iMomentIndex = thisMoment.begin(); iMomentIndex != thisMoment.end(); ++iMomentIndex ) {
-          out << (*iMomentIndex) << " " << endl;
+          out << (*iMomentIndex) << " ";
         }
-        out << " in DQMOMMoment map/DQMOMMeanMoment map!  If you are running verification, you must turn off calculation of moments using <calculate_moments>false</calculate_moments>";
+        out << "] in DQMOMMoment map/DQMOMMeanMoment map!  If you are running verification, you must turn off calculation of moments using <calculate_moments>false</calculate_moments>";
         throw InvalidValue( out.str(),__FILE__,__LINE__);
       }
       
@@ -2038,7 +2188,6 @@ DQMOM::calculateMoments( const ProcessorGroup* pc,
       vector< CCVariable<double>* >::iterator iter2 = meanMomentCCVars.begin();
       for( vector<MomentVector>::iterator iAllMoments = momentIndexes.begin(); 
            iAllMoments != momentIndexes.end(); ++iAllMoments, ++iter1, ++iter2 ) {
-// (**iter)[c] = (*XX)[z];
 
         MomentVector thisMoment = (*iAllMoments);
 

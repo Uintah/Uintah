@@ -67,6 +67,7 @@ PSELIBS := \
         $(COMPONENTS)/ProblemSpecification \
         $(COMPONENTS)/Solvers              \
         $(COMPONENTS)/SwitchingCriteria    \
+        $(WASATCH)                         \
         $(MORE_LIBS)
 
 LIBS := $(XML2_LIBRARY) $(MPI_LIBRARY)

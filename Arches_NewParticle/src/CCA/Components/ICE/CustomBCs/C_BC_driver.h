@@ -47,8 +47,25 @@ namespace Uintah {
 
     customBC_var_basket() {
       Lodi_var_basket = 0;
-      lv = 0;
-      sv = 0;
+      lv = NULL;
+      sv = NULL;
+      mms_v=NULL;
+      sine_v=NULL;
+
+      Slip_var_basket=NULL;
+      mms_var_basket=NULL;
+      sine_var_basket=NULL;
+
+      usingMicroSlipBCs=false;
+      using_MMS_BCs=false;
+      using_Sine_BCs=false;
+      usingLodi=false;
+      setLodiBcs=false;
+      setMicroSlipBcs=false;
+      set_MMS_BCs=false;
+      set_Sine_BCs=false;
+      d_gravity=Vector(0,0,0);
+
     };
     ~customBC_var_basket() {};
     // LODI boundary condtions

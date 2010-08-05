@@ -54,6 +54,8 @@ class DQMOM {
 
 public:
 
+  DQMOM( ArchesLabel* fieldLabels, std::string which_dqmom );
+
   DQMOM( ArchesLabel* fieldLabels );
 
   ~DQMOM();
@@ -129,7 +131,11 @@ private:
   void constructAopt( DenseMatrix*   &AA,
                       vector<double> &Abscissas);
 
-  /** @brief    Construct the RHS (ColumnMatrix) vector for the optimized DQMOM linear system */
+  /** @brief    Construct the coefficient matrix A (DenseMatrix) for the optimized DQMOM linear system */
+  void constructAopt_unw( DenseMatrix*   &AA,
+                          vector<double> &Abscissas);
+
+  /** @brief    Construct the RHS vector (ColumnMatrix) for the optimized DQMOM linear system */
   void constructBopt( ColumnMatrix*  &BB,
                       vector<double> &weights,
                       vector<double> &Abscissas,
@@ -167,10 +173,17 @@ private:
     return return_var;
   }
 
-  vector<MomentVector> momentIndexes;           ///< Vector containing all moment indices
-  vector<DQMOMEqn* > weightEqns;           ///< Weight equation labels, IN SAME ORDER AS GIVEN IN INPUT FILE
-  vector<DQMOMEqn* > weightedAbscissaEqns; ///< Weighted abscissa equation labels, IN SAME ORDER AS GIVEN IN INPUT FILE
-  vector<string> InternalCoordinateEqnNames;
+    
+  /** @brief    Construct the RHS vector (ColumnMatrix) for the optimized DQMOM linear system using unweighted abscissas */
+  void constructBopt_unw( ColumnMatrix*  &BB,
+                          vector<double> &Abscissas,
+                          vector<double> &models);
+
+
+  vector<MomentVector>  momentIndexes;              ///< Vector containing all moment indices
+  vector<DQMOMEqn* >    weightEqns;                 ///< Weight equation labels, IN SAME ORDER AS GIVEN IN INPUT FILE
+  vector<DQMOMEqn* >    weightedAbscissaEqns;       ///< Weighted abscissa equation labels, IN SAME ORDER AS GIVEN IN INPUT FILE
+  vector<string>        InternalCoordinateEqnNames;
   vector< vector<ModelBase> > weightedAbscissaModels;
 
   typedef map<const MomentVector, const VarLabel*> MomentMap;
@@ -203,7 +216,9 @@ private:
   bool b_useLapack;
   bool b_calcConditionNumber;
   bool b_optimize;
-  string d_solverType;
+  bool d_unweighted;
+  std::string d_which_dqmom; 
+  std::string d_solverType;
 
 
 #if defined(VERIFY_LINEAR_SOLVER)
@@ -324,6 +339,7 @@ inline bool vector_lexicographic_sort( vector<int> a, vector<int> b )
     for( ; ia < a.end(); ++ia, ++ib ) {
       if( (*ia) != (*ib) ) {
         a_lt_b = (*ia) < (*ib);
+	break;
       }
     }
   } else {

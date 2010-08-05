@@ -4,7 +4,10 @@
 #include <CCA/Components/Arches/SourceTerms/ConstantSourceTerm.h>
 #include <CCA/Components/Arches/SourceTerms/MMS1.h>
 #include <CCA/Components/Arches/SourceTerms/ParticleGasMomentum.h>
+#include <CCA/Components/Arches/SourceTerms/UnweightedSrcTerm.h>
 #include <CCA/Components/Arches/SourceTerms/WestbrookDryer.h>
+#include <CCA/Components/Arches/TransportEqns/DQMOMEqnFactory.h>
+#include <CCA/Components/Arches/TransportEqns/DQMOMEqn.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/Exceptions/InvalidValue.h>
 #include <Core/Exceptions/ProblemSetupException.h>
@@ -79,7 +82,7 @@ void SourceTermFactory::problemSetup(const ProblemSpecP& params)
 
       proc0cout << "Found  a source term: " << src_name << endl;
       proc0cout << "Requires the following variables: " << endl;
-      proc0cout << " \n"; // white space for output 
+      proc0cout << endl; 
 
       if ( var_db ) {
         // You may not have any labels that this source term depends on...hence the 'if' statement
@@ -145,6 +148,26 @@ void SourceTermFactory::problemSetup(const ProblemSpecP& params)
   } else {
     proc0cout << "No sources for transport equations found by SourceTermFactory." << endl;
   }
+
+  // Add source term for unweighted abscissa DQMOM formulation
+  // (this is the extra source term coming from the convection term changing forms)
+  DQMOMEqnFactory& dqmomFactory = DQMOMEqnFactory::self();
+  if( dqmomFactory.getDoDQMOM() ) {
+    if( dqmomFactory.getDQMOMType() == "unweightedAbs" ) {
+      DQMOMEqnFactory::EqnMap& dqmom_eqns = dqmomFactory.retrieve_all_eqns(); 
+      for( DQMOMEqnFactory::EqnMap::iterator iEqn = dqmom_eqns.begin(); iEqn != dqmom_eqns.end(); ++iEqn ) {
+        DQMOMEqn* eqn = dynamic_cast<DQMOMEqn*>(iEqn->second);
+        if( !eqn->weight() ) {
+          string eqn_name = eqn->getEqnName();
+          string src_name = eqn_name + "_unw_src";
+          vector<string> required_varLabels;
+          SourceTermBuilder* srcBuilder = scinew UnweightedSrcTermBuilder( src_name, required_varLabels, d_fieldLabels->d_sharedState );
+          register_source_term( src_name, srcBuilder );
+        }
+      }
+    }
+  }
+
 }
 
 void

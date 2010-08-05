@@ -34,6 +34,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Schedulers/OnDemandDataWarehouse.h>
 #include <CCA/Components/Schedulers/TaskGraph.h>
 
+#include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Thread/Time.h>
 #include <Core/Thread/Mutex.h>
 
@@ -63,6 +64,8 @@ extern DebugStream execout;
 static DebugStream dbg("DynamicMPIScheduler", false);
 static DebugStream timeout("DynamicMPIScheduler.timings", false);
 static DebugStream queuelength("QueueLength",false);
+
+ofstream wout;
 
 static
 void
@@ -97,44 +100,43 @@ void
 DynamicMPIScheduler::problemSetup(const ProblemSpecP& prob_spec,
                            SimulationStateP& state)
 {
-  //default taskReadyQueueAlg
-  taskQueueAlg_ = MostMessages;
+  string taskQueueAlg = "";
 
   ProblemSpecP params = prob_spec->findBlock("Scheduler");
   if(params){
-    string taskQueueAlg;
     params->get("taskReadyQueueAlg", taskQueueAlg);
-    if (taskQueueAlg == "FCFS") 
-      taskQueueAlg_ =  FCFS;
-    else if (taskQueueAlg == "Random")
-      taskQueueAlg_ =  Random;
-    else if (taskQueueAlg == "Stack")
-      taskQueueAlg_ =  Stack;
-    else if (taskQueueAlg == "MostChildren")
-      taskQueueAlg_ =  MostChildren;
-    else if (taskQueueAlg == "LeastChildren")
-      taskQueueAlg_ =  LeastChildren;
-    else if (taskQueueAlg == "MostAllChildren")
-      taskQueueAlg_ =  MostChildren;
-    else if (taskQueueAlg == "LeastAllChildren")
-      taskQueueAlg_ =  LeastChildren;
-    else if (taskQueueAlg == "MostL2Children")
-      taskQueueAlg_ =  MostL2Children;
-    else if (taskQueueAlg == "LeastL2Children")
-      taskQueueAlg_ =  LeastL2Children;
-    else if (taskQueueAlg == "MostMessages")
-      taskQueueAlg_ =  MostMessages;
-    else if (taskQueueAlg == "LeastMessages")
-      taskQueueAlg_ =  LeastMessages;
-    else if (taskQueueAlg == "PatchOrder")
-      taskQueueAlg_ =  PatchOrder;
-    else if (taskQueueAlg == "PatchOrderRandom")
-      taskQueueAlg_ =  PatchOrderRandom;
-    else {
-      if (d_myworld->myrank() == 0)
-        cout << "Invalid Task Queue Algorithm: " << taskQueueAlg
-             << "\nUsing 'MostMessages' Algorithm\n";
-    }
+  }
+  if (taskQueueAlg == "") 
+    taskQueueAlg = "MostMessages"; //default taskReadyQueueAlg
+
+  if (taskQueueAlg == "FCFS") 
+    taskQueueAlg_ =  FCFS;
+  else if (taskQueueAlg == "Random")
+    taskQueueAlg_ =  Random;
+  else if (taskQueueAlg == "Stack")
+    taskQueueAlg_ =  Stack;
+  else if (taskQueueAlg == "MostChildren")
+    taskQueueAlg_ =  MostChildren;
+  else if (taskQueueAlg == "LeastChildren")
+    taskQueueAlg_ =  LeastChildren;
+  else if (taskQueueAlg == "MostAllChildren")
+    taskQueueAlg_ =  MostChildren;
+  else if (taskQueueAlg == "LeastAllChildren")
+    taskQueueAlg_ =  LeastChildren;
+  else if (taskQueueAlg == "MostL2Children")
+    taskQueueAlg_ =  MostL2Children;
+  else if (taskQueueAlg == "LeastL2Children")
+    taskQueueAlg_ =  LeastL2Children;
+  else if (taskQueueAlg == "MostMessages")
+    taskQueueAlg_ =  MostMessages;
+  else if (taskQueueAlg == "LeastMessages")
+    taskQueueAlg_ =  LeastMessages;
+  else if (taskQueueAlg == "PatchOrder")
+    taskQueueAlg_ =  PatchOrder;
+  else if (taskQueueAlg == "PatchOrderRandom")
+    taskQueueAlg_ =  PatchOrderRandom;
+  else {
+    throw ProblemSetupException("Unknown scheduler", __FILE__, __LINE__);
   }
   log.problemSetup(prob_spec);
   SchedulerCommon::problemSetup(prob_spec, state);
@@ -657,14 +659,19 @@ DynamicMPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
     //only output the wait times every so many timesteps
     if(++count%100==0)
     {
+      char fname[100];
+      sprintf(fname,"WaitTimes.%d.%d",d_myworld->size(),d_myworld->myrank());
+      wout.open(fname);
+
       for(map<string,double>::iterator iter=waittimes.begin();iter!=waittimes.end();iter++)
-        waitout << fixed << d_myworld->myrank() << ": TaskWaitTime(TO): " << iter->second << " Task:" << iter->first << endl;
+        wout << fixed << d_myworld->myrank() << ": TaskWaitTime(TO): " << iter->second << " Task:" << iter->first << endl;
 
       for(map<string,double>::iterator iter=DependencyBatch::waittimes.begin();iter!=DependencyBatch::waittimes.end();iter++)
-        waitout << fixed << d_myworld->myrank() << ": TaskWaitTime(FROM): " << iter->second << " Task:" << iter->first << endl;
+        wout << fixed << d_myworld->myrank() << ": TaskWaitTime(FROM): " << iter->second << " Task:" << iter->first << endl;
       
-      waittimes.clear();
-      DependencyBatch::waittimes.clear();
+      wout.close();
+      //waittimes.clear();
+      //DependencyBatch::waittimes.clear();
     }
   }
 

@@ -42,7 +42,6 @@ DEALINGS IN THE SOFTWARE.
 #include "TensorDiags.h"
 
 namespace Uintah {
-  //using namespace SCIRun;
   
   // produce vector some field
   class VectorDiag : public FieldDiag

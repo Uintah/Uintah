@@ -77,6 +77,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Geometry/Point.h>
 #include <Core/Math/MinMax.h>
 #include <CCA/Ports/LoadBalancer.h>
+#include <CCA/Ports/Output.h>
 #include <Core/Util/DebugStream.h>
 #include <CCA/Components/MPM/PetscSolver.h>
 #include <CCA/Components/MPM/SimpleSolver.h>
@@ -94,7 +95,6 @@ DEALINGS IN THE SOFTWARE.
 
 
 using namespace Uintah;
-using namespace SCIRun;
 using namespace std;
 
 static DebugStream cout_doing("IMPM", false);
@@ -158,6 +158,11 @@ void ImpMPM::problemSetup(const ProblemSpecP& prob_spec,
 {
    d_sharedState = sharedState;
    dynamic_cast<Scheduler*>(getPort("scheduler"))->setPositionVar(lb->pXLabel);
+  
+   Output* dataArchiver = dynamic_cast<Output*>(getPort("output"));
+   if(!dataArchiver){
+     throw InternalError("ImpMPM:couldn't get output port", __FILE__, __LINE__);
+   }
 
    ProblemSpecP p = prob_spec->findBlock("DataArchiver");
    if(!p->get("outputInterval", d_outputInterval))
@@ -188,7 +193,7 @@ void ImpMPM::problemSetup(const ProblemSpecP& prob_spec,
    if (mpm_soln_ps) {
 
      // Read all MPM flags (look in MPMFlags.cc)
-     flags->readMPMFlags(restart_mat_ps);
+     flags->readMPMFlags(restart_mat_ps, dataArchiver);
      
      if (flags->d_integrator_type != "implicit")
        throw ProblemSetupException("Can't use explicit integration with -impm", __FILE__, __LINE__);

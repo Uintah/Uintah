@@ -6,7 +6,10 @@ if [ -d uintah ] ; then
 	rm -rf uintah
 fi
 
-svn checkout https://gforge.sci.utah.edu/svn/uintah/trunk uintah
+#SVN_SOURCE=https://gforge.sci.utah.edu/svn/uintah/trunk 
+SVN_SOURCE=file:///usr/local/uintah_subversion/trunk
+#svn checkout https://gforge.sci.utah.edu/svn/uintah/trunk uintah
+svn -q checkout $SVN_SOURCE uintah
 
 cd uintah/doc
 
@@ -22,12 +25,12 @@ cd /tmp/uintah
 
 cd src/scripts/doxygen
 
-#sed -e 's/OUTPUT_DIRECTORY/#OUTPUT_DIRECTORY/g' < doxygen_config > doxy_config
-sed -e 's#/usr/sci/projects/Uintah/www/dist/doxygen/uintah#/var/www/uintah/htdocs/uintah_doxygen/#g' < doxygen_config > doxy_config
+sed -e 's/#OUTPUT_DIRECTORY/OUTPUT_DIRECTORY/g' < doxygen_config > doxy_config.temp
+sed -e 's#/usr/sci/projects/Uintah/www/dist/doxygen/uintah#/var/www/uintah/htdocs/uintah_doxygen/#g' < doxy_config.temp > doxy_config
 
-cd /tmp/uintah
+cd /tmp/uintah/src
 
-doxygen src/scripts/doxygen/doxy_config
+doxygen scripts/doxygen/doxy_config
 
 #if [ -d /var/www/uintah/htdocs/uintah_doxygen ]; then
 #	rm -rf /var/www/uintah/htdocs/uintah_doxygen

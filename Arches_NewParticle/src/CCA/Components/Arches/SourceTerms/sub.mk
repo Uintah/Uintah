@@ -1,4 +1,6 @@
 # Makefile fragment for this subdirectory
+# FIXME!!! UnweightedSrcTerm probably doesn't have a tab
+# What is multipointconst?
 
 SRCDIR   := CCA/Components/Arches/SourceTerms
 
@@ -11,4 +13,6 @@ SRCS += \
 	$(SRCDIR)/WestbrookDryer.cc \
 	$(SRCDIR)/MMS1.cc \
 	$(SRCDIR)/ParticleGasMomentum.cc \
+	$(SRCDIR)/UnweightedSrcTerm.cc \
+	$(SRCDIR)/MultiPointConst.cc \
 

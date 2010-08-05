@@ -41,7 +41,7 @@ InletStream::InletStream()
   //d_scalarDisp = 0.0;
 
   d_currentCell = IntVector (-2, -2, -2); 
-
+  d_f2 = 0.;
 }
 
 InletStream::InletStream(int numMixVars, int numMixStatVars, int numRxnVars)
@@ -52,6 +52,7 @@ InletStream::InletStream(int numMixVars, int numMixStatVars, int numRxnVars)
   d_axialLoc = 0;
   d_enthalpy = 0;
   d_initEnthalpy = false;
+  d_f2 = 0.;
   
   /* For a grid [0,n] border cells are -1 and n+1.
    * Since -1 is taken by a border cell, we must use -2

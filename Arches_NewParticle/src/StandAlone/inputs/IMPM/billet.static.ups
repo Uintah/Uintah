@@ -126,7 +126,7 @@
            <Box label="1">
               <lower>[ 0.0, 0.0,0.0]</lower>
               <upper>[20.0,11.0,0.5]</upper>
-              <patches>[1,1,1]</patches>
+              <patches>[2,1,1]</patches>
            </Box>
             <spacing>[.5,.5,.5]</spacing>
        </Level>

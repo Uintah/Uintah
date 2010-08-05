@@ -32,27 +32,26 @@
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-SRCDIR   := CCA/Components/MPMICE
+SRCDIR := CCA/Components/MPMICE
 
-SRCS     += \
-	$(SRCDIR)/MPMICE.cc \
-       $(SRCDIR)/MPMICEDebug.cc \
+SRCS   += \
+        $(SRCDIR)/MPMICE.cc \
+        $(SRCDIR)/MPMICEDebug.cc \
 
 PSELIBS := \
-	CCA/Ports          \
-	Core/Disclosure    \
-	Core/Grid          \
-	Core/Util          \
-	Core/Labels        \
-	Core/Parallel      \
-	Core/ProblemSpec   \
-	Core/Exceptions    \
-	Core/Math          \
 	CCA/Components/MPM \
 	CCA/Components/ICE \
-	Core/Exceptions \
-	Core/Thread     \
-	Core/Geometry   \
+        CCA/Components/OnTheFlyAnalysis \
+	CCA/Ports          \
+	Core/Disclosure    \
+	Core/Exceptions    \
+	Core/Geometry      \
+	Core/Grid          \
+	Core/Labels        \
+	Core/Math          \
+	Core/Parallel      \
+	Core/ProblemSpec   \
+	Core/Thread        \
 	Core/Util
 
 LIBS := $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY)

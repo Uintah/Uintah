@@ -33,7 +33,7 @@
       <LODI>
         <press_infinity>  101325.0  </press_infinity>
         <sigma>           0.27      </sigma>
-        <ice_material_index> 0      </ice_material_index>
+        <material>      Atmosphere      </material>
       </LODI>
       <SINE_BC>
         <omega>    100 </omega>

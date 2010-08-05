@@ -82,12 +82,14 @@ extern DebugStream mixedDebug;
 
 static DebugStream dbg("MPIScheduler", false);
 static DebugStream timeout("MPIScheduler.timings", false);
+static DebugStream reductionout("ReductionTasks", false);
 DebugStream waitout("WaitTimes", false);
 DebugStream execout("ExecTimes", false);
 DebugStream taskdbg("TaskDBG", false);
 DebugStream mpidbg("MPIDBG",false);
 static Mutex sendsLock( "sendsLock" );
 
+extern ofstream wout;
 static double CurrentWaitTime=0;
 map<string,double> waittimes;
 map<string,double> exectimes;
@@ -242,6 +244,9 @@ MPIScheduler::initiateReduction( DetailedTask          * task )
 {
   TAU_PROFILE("MPIScheduler::initiateReduction()", " ", TAU_USER); 
   {
+    if(reductionout.active() && d_myworld->myrank()==0)
+      reductionout << "Running Reduction Task: " << task->getName() << endl;
+
 #ifdef USE_PERFEX_COUNTERS
     start_counters(0, 19);
 #endif
@@ -1107,14 +1112,19 @@ MPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
     //only output the wait times every so many timesteps
     if(++count%100==0)
     {
+      char fname[100];
+      sprintf(fname,"WaitTimes.%d.%d",d_myworld->size(),d_myworld->myrank());
+      wout.open(fname);
+
       for(map<string,double>::iterator iter=waittimes.begin();iter!=waittimes.end();iter++)
-        waitout << fixed << d_myworld->myrank() << ": TaskWaitTime(TO): " << iter->second << " Task:" << iter->first << endl;
+        wout << fixed << d_myworld->myrank() << ": TaskWaitTime(TO): " << iter->second << " Task:" << iter->first << endl;
 
       for(map<string,double>::iterator iter=DependencyBatch::waittimes.begin();iter!=DependencyBatch::waittimes.end();iter++)
-        waitout << fixed << d_myworld->myrank() << ": TaskWaitTime(FROM): " << iter->second << " Task:" << iter->first << endl;
-      
-      waittimes.clear();
-      DependencyBatch::waittimes.clear();
+        wout << fixed << d_myworld->myrank() << ": TaskWaitTime(FROM): " << iter->second << " Task:" << iter->first << endl;
+     
+      wout.close();
+      //waittimes.clear();
+      //DependencyBatch::waittimes.clear();
     }
   }
 

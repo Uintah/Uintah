@@ -70,7 +70,6 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Exceptions/VariableNotFoundInGrid.h>
 
 using namespace Uintah;
-using namespace SCIRun;
 using namespace std;
 
 #include <CCA/Components/MPMArches/fortran/collect_drag_cc_fort.h>
@@ -2273,8 +2272,7 @@ void MPMArches::scheduleMomExchange(SchedulerP& sched,
   // requires from Arches: celltype, pressure, velocity at cc.
   // also, from mpmarches, void fraction
   // use old_dw since using at the beginning of the time advance loop
-  
-  //t->requires(Task::OldDW, d_Alab->d_cellInfoLabel, Ghost::None);
+
   t->computes(d_Alab->d_cellInfoLabel);
 
   // use modified celltype
@@ -2678,7 +2676,6 @@ void MPMArches::doMomExchange(const ProcessorGroup*,
       old_dw->get(cellInfoP, d_Alab->d_cellInfoLabel, matlIndex, patch); }
     else {
       cellInfoP.setData(scinew CellInformation(patch));
-      //cout << "cellInfo MPMArches INIT" << endl;
     }
     new_dw->put(cellInfoP, d_Alab->d_cellInfoLabel, matlIndex, patch);
     CellInformation* cellinfo = cellInfoP.get().get_rep();
@@ -3672,6 +3669,7 @@ void MPMArches::doEnergyExchange(const ProcessorGroup*,
     int archIndex = 0;
     int matlIndex = d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
     int numMPMMatls  = d_sharedState->getNumMPMMatls();
+    Vector Dx = patch->dCell(); 
 
     // MPM stuff
 
@@ -3754,10 +3752,6 @@ void MPMArches::doEnergyExchange(const ProcessorGroup*,
     int numGhostCellsG = 1;
 
     // patch geometry information
-    
-    PerPatch<CellInformationP> cellInfoP;
-    new_dw->get(cellInfoP, d_Alab->d_cellInfoLabel, matlIndex, patch);
-    CellInformation* cellinfo = cellInfoP.get().get_rep();
 
     // memory for MPM
     
@@ -3995,6 +3989,10 @@ void MPMArches::doEnergyExchange(const ProcessorGroup*,
     IntVector valid_lo = patch->getFortranCellLowIndex();
     IntVector valid_hi = patch->getFortranCellHighIndex();
 
+    double dx = Dx.x();
+    double dy = Dx.y(); 
+    double dz = Dx.z(); 
+
     for (int m = 0; m < numMPMMatls; m++) {
 
       fort_energy_exchange_term(
@@ -4051,15 +4049,9 @@ void MPMArches::doEnergyExchange(const ProcessorGroup*,
 			      radfluxB,
 			      gas_fraction_cc, 
 			      solid_fraction_cc[m],
-			      cellinfo->sew,  
-			      cellinfo->sns, 
-			      cellinfo->stb,
-			      cellinfo->xx,
-			      cellinfo->xu,
-			      cellinfo->yy,
-			      cellinfo->yv,
-			      cellinfo->zz,
-			      cellinfo->zw,
+            dx, 
+            dy, 
+            dz, 
 			      d_tcond,
 			      csmag,
 			      prturb,

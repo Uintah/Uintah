@@ -2315,3 +2315,16 @@ DataArchiver::TranslateVariableType( string type, bool isThisCheckpoint )
   }
   return type;
 }
+
+bool DataArchiver::isLabelSaved( string label )
+{
+  if(d_outputInterval == 0.0 && d_outputTimestepInterval == 0)
+    return false;
+
+  for(list<SaveNameItem>::iterator it=d_saveLabelNames.begin();it!=d_saveLabelNames.end();it++)
+  {
+    if(it->labelName==label)
+      return true;
+  }
+  return false;
+}

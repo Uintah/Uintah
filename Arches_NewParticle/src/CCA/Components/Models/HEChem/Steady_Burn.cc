@@ -50,7 +50,6 @@ DEALINGS IN THE SOFTWARE.
 #define DEBUG_SCALAR
 
 using namespace Uintah;
-using namespace SCIRun;
 using namespace std;
 //__________________________________   
 //  MODELS_DOING_COUT:   dumps when tasks are scheduled and performed

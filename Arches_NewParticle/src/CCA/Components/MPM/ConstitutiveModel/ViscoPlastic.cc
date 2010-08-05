@@ -73,7 +73,6 @@ DEALINGS IN THE SOFTWARE.
 
 using std::cerr;
 using namespace Uintah;
-using namespace SCIRun;
 
 static DebugStream cout_CST("HEP",false);
 static DebugStream cout_CST1("HEP1",false);
@@ -1048,7 +1047,11 @@ ViscoPlastic::computeStressTensor(const PatchSubset* patches,
     WaveSpeed = dx/WaveSpeed;
     double delT_new = WaveSpeed.minComponent();
     new_dw->put(delt_vartype(delT_new), lb->delTLabel, patch->getLevel());
-    new_dw->put(sum_vartype(totalStrainEnergy), lb->StrainEnergyLabel);
+    
+    if (flag->d_reductionVars->accStrainEnergy ||
+        flag->d_reductionVars->strainEnergy) {
+      new_dw->put(sum_vartype(totalStrainEnergy), lb->StrainEnergyLabel);
+    }
     delete interpolator;
   } //end patch
 
@@ -1220,7 +1223,11 @@ ViscoPlastic::computeStressTensorImplicit(const PatchSubset* patches,
         pVolume_deformed[idx] = pMass[idx]/rho_0;
         pdTdt[idx] = 0.0;
       }
-      new_dw->put(sum_vartype(totalStrainEnergy), lb->StrainEnergyLabel);
+      
+      if (flag->d_reductionVars->accStrainEnergy ||
+          flag->d_reductionVars->strainEnergy) {
+        new_dw->put(sum_vartype(totalStrainEnergy), lb->StrainEnergyLabel);
+      }
       delete interpolator;
       continue;
     }
@@ -1430,8 +1437,11 @@ ViscoPlastic::computeStressTensorImplicit(const PatchSubset* patches,
 
       delete state;
     } //end iterator
-
-    new_dw->put(sum_vartype(totalStrainEnergy), lb->StrainEnergyLabel);
+    
+    if (flag->d_reductionVars->accStrainEnergy ||
+        flag->d_reductionVars->strainEnergy) {
+      new_dw->put(sum_vartype(totalStrainEnergy), lb->StrainEnergyLabel);
+    }
     delete interpolator;
   } //end patch
 }  //end method
@@ -2628,7 +2638,11 @@ ViscoPlastic::carryForward(const PatchSubset* patches,
     }
 
     new_dw->put(delt_vartype(1.e10), lb->delTLabel, patch->getLevel());
-    new_dw->put(sum_vartype(0.),     lb->StrainEnergyLabel);
+    
+    if (flag->d_reductionVars->accStrainEnergy ||
+        flag->d_reductionVars->strainEnergy) {
+      new_dw->put(sum_vartype(0.),     lb->StrainEnergyLabel);
+    }
   }
 }
 

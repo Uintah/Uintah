@@ -74,7 +74,6 @@ DEALINGS IN THE SOFTWARE.
 
 using std::cerr;
 using namespace Uintah;
-using namespace SCIRun;
 
 static DebugStream cout_EP("EP",false);
 static DebugStream cout_EP1("EP1",false);
@@ -1442,7 +1441,11 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset* patches,
     double delT_new = WaveSpeed.minComponent();
 
     new_dw->put(delt_vartype(delT_new), lb->delTLabel, patch->getLevel());
-    new_dw->put(sum_vartype(totalStrainEnergy), lb->StrainEnergyLabel);
+    
+    if (flag->d_reductionVars->accStrainEnergy ||
+        flag->d_reductionVars->strainEnergy) {
+      new_dw->put(sum_vartype(totalStrainEnergy), lb->StrainEnergyLabel);
+    }
     delete interpolator;
   }
 
@@ -1709,7 +1712,11 @@ ElasticPlasticHP::computeStressTensorImplicit(const PatchSubset* patches,
         pVolume_deformed[idx] = pVolume[idx];
         pdTdt[idx] = 0.0;
       }
-      new_dw->put(sum_vartype(totalStrainEnergy), lb->StrainEnergyLabel);
+      
+      if (flag->d_reductionVars->accStrainEnergy ||
+          flag->d_reductionVars->strainEnergy) {
+        new_dw->put(sum_vartype(totalStrainEnergy), lb->StrainEnergyLabel);
+      }
       delete interpolator;
       continue;
     }
@@ -1914,7 +1921,11 @@ ElasticPlasticHP::computeStressTensorImplicit(const PatchSubset* patches,
 
       delete state;
     }
-    new_dw->put(sum_vartype(totalStrainEnergy), lb->StrainEnergyLabel);
+    
+    if (flag->d_reductionVars->accStrainEnergy ||
+        flag->d_reductionVars->strainEnergy) {
+      new_dw->put(sum_vartype(totalStrainEnergy), lb->StrainEnergyLabel);
+    }
     delete interpolator;
   }
 }
@@ -3126,7 +3137,11 @@ ElasticPlasticHP::carryForward(const PatchSubset* patches,
     }
 
     new_dw->put(delt_vartype(1.e10), lb->delTLabel, patch->getLevel());
-    new_dw->put(sum_vartype(0.),     lb->StrainEnergyLabel);
+    
+    if (flag->d_reductionVars->accStrainEnergy ||
+        flag->d_reductionVars->strainEnergy) {
+      new_dw->put(sum_vartype(0.),   lb->StrainEnergyLabel);
+    }
   }
 }
 
