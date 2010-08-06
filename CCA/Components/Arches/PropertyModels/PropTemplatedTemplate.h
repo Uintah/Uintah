@@ -166,8 +166,7 @@ namespace Uintah{
 
       }
 
-      if ( !(_has_been_computed ) ) 
-        sched->addTask( tsk, level->eachPatch(), _shared_state->allArchesMaterials() ); 
+      sched->addTask( tsk, level->eachPatch(), _shared_state->allArchesMaterials() ); 
       
       _has_been_computed = true; 
 
