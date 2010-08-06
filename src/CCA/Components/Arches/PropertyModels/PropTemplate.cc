@@ -78,8 +78,7 @@ void CLASSNAME::sched_computeProp( const LevelP& level, SchedulerP& sched, int t
 
     }
 
-    if ( !(_has_been_computed ) ) 
-      sched->addTask( tsk, level->eachPatch(), _shared_state->allArchesMaterials() ); 
+    sched->addTask( tsk, level->eachPatch(), _shared_state->allArchesMaterials() ); 
     
     _has_been_computed = true; 
 

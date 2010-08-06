@@ -7,12 +7,17 @@ using namespace Uintah;
 //---------------------------------------------------------------------------
 LaminarPrNo::LaminarPrNo( std::string prop_name, SimulationStateP& shared_state ) : PropertyModelBase( prop_name, shared_state )
 {
+  // the prop is the pr number.  Along with this, we will also give access to D and mu
   _prop_label = VarLabel::create( prop_name, CCVariable<double>::getTypeDescription() ); 
 
   // additional local labels as needed by this class (delete this if it isn't used): 
-  //std::string name = "something"; 
-  //_something_label = VarLabel::create( name, CCVariable<double>::getTypeDescription() ); // Note: you need to add the label to the .h file
-  //_extra_local_labels.push_back( _something_label ); 
+  std::string name = "laminar_viscosity";
+  _mu_label = VarLabel::create( name, CCVariable<double>::getTypeDescription() ); // Note: you need to add the label to the .h file
+  _extra_local_labels.push_back( _mu_label ); 
+
+  name = "laminar_diffusion_coef";
+  _D_label = VarLabel::create( name, CCVariable<double>::getTypeDescription() ); // Note: you need to add the label to the .h file
+  _extra_local_labels.push_back( _D_label ); 
 
 }
 
@@ -37,6 +42,26 @@ LaminarPrNo::~LaminarPrNo( )
 void LaminarPrNo::problemSetup( const ProblemSpecP& inputdb )
 {
   ProblemSpecP db = inputdb; 
+
+  db->require( "mix_frac_label", _mix_frac_label_name ); 
+  db->require( "atm_pressure",   _pressure ); 
+
+  ProblemSpecP db_binary = db->findBlock("Binary"); 
+  if ( db_binary ) { 
+
+    db_binary->require( "molar_mass_a", _molar_mass_a ); 
+    db_binary->require( "molar_mass_b", _molar_mass_b ); 
+    db_binary->require( "normal_boil_pt_a", _norm_boil_pt_a ); 
+    db_binary->require( "normal_boil_pt_b", _norm_boil_pt_b ); 
+    // add the rest here 
+
+  } else {
+
+    throw InvalidValue( "Error: Could not find <Binary> in your Laminar Prandlt number property. Only binary mixture are supported.", __FILE__, __LINE__); 
+
+  } 
+
+
 }
 
 //---------------------------------------------------------------------------
@@ -53,14 +78,26 @@ void LaminarPrNo::sched_computeProp( const LevelP& level, SchedulerP& sched, int
       
       tsk->computes( _prop_label ); 
 
+      for (std::vector<const VarLabel*>::iterator iter = _extra_local_labels.begin(); iter != _extra_local_labels.end(); iter++){
+        tsk->computes( *iter ); 
+      }
+
     } else {
 
       tsk->modifies( _prop_label ); 
 
+      for (std::vector<const VarLabel*>::iterator iter = _extra_local_labels.begin(); iter != _extra_local_labels.end(); iter++){
+        tsk->modifies( *iter ); 
+      }
+
     }
 
-    if ( !(_has_been_computed ) ) 
-      sched->addTask( tsk, level->eachPatch(), _shared_state->allArchesMaterials() ); 
+    // Need to fix this. 
+    //tsk->requires( Task::NewDW, density,     Ghost::None, 0 );  
+    //tsk->requires( Task::NewDW, temperature, Ghost::None, 0 );  
+    //tsk->requires( Task::NewDW, mix_frac,    Ghost::None, 0 ); 
+
+    sched->addTask( tsk, level->eachPatch(), _shared_state->allArchesMaterials() ); 
     
     _has_been_computed = true; 
 
@@ -84,19 +121,43 @@ void LaminarPrNo::computeProp(const ProcessorGroup* pc,
     int archIndex = 0;
     int matlIndex = _shared_state->getArchesMaterial(archIndex)->getDWIndex(); 
 
-    CCVariable<double> prop; 
+    CCVariable<double> Pr;  // Prandlt number 
+    CCVariable<double> D;   // Diffusion coef
+    CCVariable<double> mu;  // viscosity
+    CCVariable<double> f;   // mixture fraction 
+    CCVariable<double> T;   // temperature 
+    CCVariable<double> rho; // density
+
     if ( new_dw->exists( _prop_label, matlIndex, patch ) ){
-      new_dw->getModifiable( prop, _prop_label, matlIndex, patch ); 
+      new_dw->getModifiable( Pr, _prop_label, matlIndex, patch ); 
+      new_dw->getModifiable( D,    _D_label, matlIndex, patch ); 
+      new_dw->getModifiable( mu,   _mu_label, matlIndex, patch ); 
     } else {
-      new_dw->allocateAndPut( prop, _prop_label, matlIndex, patch ); 
-      prop.initialize(0.0); 
+      new_dw->allocateAndPut( Pr, _prop_label, matlIndex, patch ); 
+      new_dw->allocateAndPut( D,    _D_label, matlIndex, patch ); 
+      new_dw->allocateAndPut( mu,   _mu_label, matlIndex, patch ); 
+      Pr.initialize(0.0); 
+      D.initialize(0.0); 
+      mu.initialize(0.0); 
     }
+
+    // Fix this too... 
+    //new_dw->get( f, f_label, matlIndex, patch, Ghost::None, 0 ); 
+    //new_dw->get( T, T_label, matlIndex, patch, Ghost::None, 0 ); 
+    //new_dw->get( rho, Rho_label, matlIndex, patch, Ghost::None, 0 ); 
 
     CellIterator iter = patch->getCellIterator(); 
 
     for (iter.begin(); !iter.done(); iter++){
 
-      prop[*iter] = 0.0; // <--- do something here. 
+      IntVector c = *iter; //i,j,k location
+
+      // viscosity 
+      mu[c] = getVisc( f[c], T[c] );
+      // diffusion coefficient 
+      D[c]  = getDiffCoef( f[c], T[c] );
+      // prandlt number
+      Pr[c] = mu[c] / ( rho[c] * D[c] ); 
 
     }
   }

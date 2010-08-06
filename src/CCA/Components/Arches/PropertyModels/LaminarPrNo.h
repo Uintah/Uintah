@@ -77,6 +77,48 @@ namespace Uintah{
 
     private: 
 
+      // extra local labels:
+      const VarLabel* _mu_label;            ///< viscosity label 
+      const VarLabel* _D_label;             ///< diffusion coefficient label
+
+      // input information
+      std::string _mix_frac_label_name;     ///< label name for the mixture fraction used for this model 
+      double      _pressure;                ///< atmospheric pressure
+      bool        _binary_mixture;          ///< if binary mixture 
+      // -- for binary mixtures: 
+      // mixture faction is defined as: 
+      // f = [kg of a] / [kg of a + kg of b]
+      double      _molar_mass_a;              ///< molar mass for species a (fuel)  
+      double      _molar_mass_b;              ///< molar mass for species b (air)
+      double      _norm_boil_pt_a;            ///< normal boiling point species a
+      double      _norm_boil_pt_b;            ///< normal boiling point species b
+      
+
+      //  -------------------->>> Inline property evaluators <<<--------------------- 
+      inline double getVisc( double f, double T ){
+
+        //  compute viscosity here 
+        if ( _binary_mixture ) {
+
+        } else {
+
+          throw InvalidValue("Error: For laminar Pr number property, only binary mixtures are currently supported", __FILE__, __LINE__); 
+        } 
+
+      }; 
+
+      inline double getDiffCoef( double f, double T ){
+
+        // compute diffusion coeffficient here
+        if ( _binary_mixture ) {
+
+        } else {
+
+          throw InvalidValue("Error: For laminar Pr number property, only binary mixtures are currently supported", __FILE__, __LINE__); 
+        } 
+
+      }; 
+
   }; // class LaminarPrNo
 }   // namespace Uintah
 
