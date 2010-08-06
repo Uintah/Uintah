@@ -49,10 +49,22 @@ void LaminarPrNo::problemSetup( const ProblemSpecP& inputdb )
   ProblemSpecP db_binary = db->findBlock("Binary"); 
   if ( db_binary ) { 
 
+
+    db_binary->getWithDefault( "air_b", _air_b, true);
     db_binary->require( "molar_mass_a", _molar_mass_a ); 
-    db_binary->require( "molar_mass_b", _molar_mass_b ); 
-    db_binary->require( "normal_boil_pt_a", _norm_boil_pt_a ); 
-    db_binary->require( "normal_boil_pt_b", _norm_boil_pt_b ); 
+    db_binary->getWithDefault( "molar_mass_b", _molar_mass_b, 29.1 );
+    db_binary->require( "critical_temperature_a", _crit_temperature_a );
+    db_binary->getWithDefault( "critical_temperature_b", _crit_temperature_b, 132.2 );
+    db_binary->require( "critical_pressure_a", _crit_pressure_a );
+    db_binary->getWithDefault( "critical_pressure_b", _crit_pressure_b, 37.45 ); 
+    db_binary->require( "dipole_moment_a", _dipole_moment_a);
+    db_binary->getWithDefault( "dipole_moment_b", _dipole_moment_b, 0.00 );
+    db_binary->require( "lennard_jones_length_a", _lj_sigma_a );
+    db_binary->getWithDefault( "lennard_jone_length_b", _lj_sigma_b, 3.62 );
+    db_binary->require( "lennard_jones_energy_a", _lj_ek_a);
+    db_binary->getWithDefault( "lennard_jones_energy_b", _lj_ek_b, 97.0 );
+    db_binary->require( "viscosity_a", _viscosity_a);
+    db_binary->getWithDefault( "viscosity_b", _viscosity_b, 1.8465e-5 );
     // add the rest here 
 
   } else {
@@ -155,7 +167,7 @@ void LaminarPrNo::computeProp(const ProcessorGroup* pc,
       // viscosity 
       mu[c] = getVisc( f[c], T[c] );
       // diffusion coefficient 
-      D[c]  = getDiffCoef( f[c], T[c] );
+      D[c]  = getDiffCoef( T[c] );
       // prandlt number
       Pr[c] = mu[c] / ( rho[c] * D[c] ); 
 
