@@ -128,7 +128,7 @@ namespace Uintah{
   CLASSNAME<TEMP_PARAMS>::~CLASSNAME( )
   {
     // Destroying all local VarLabels stored in _extra_local_labels: 
-    for ( std::vector<const VarLabel*>::iterator iter = _extra_local_labels.begin(); iter != _extra_local_labels.done(); ++iter ){
+    for (std::vector<const VarLabel*>::iterator iter = _extra_local_labels.begin(); iter != _extra_local_labels.end(); iter++){
 
       VarLabel::destroy( *iter ); 
 

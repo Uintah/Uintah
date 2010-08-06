@@ -1,44 +1,25 @@
-#include <CCA/Components/Arches/PropertyModels/CLASSNAME.h>
-
-// Instructions: 
-//  1) Make sure you add doxygen comments!!
-//  2) If this is not a CCVariable, then either replace with the appropriate 
-//     type or use the templated template.  
-//  2) Do a find and replace on CLASSNAME to change the your class name 
-//  3) Add implementaion details of your property. 
-//  4) Here is a brief checklist: 
-//     a) Any extra grid variables for this property need to be 
-//        given VarLabels in the constructor
-//     b) Any extra grid variable VarLabels need to be destroyed
-//        in the local destructor
-//     c) Add your input file details in problemSetup
-//     d) Add actual calculation of property in computeProp. 
-//     e) Make sure that you dummyInit any new variables that require OldDW 
-//        values.
-//   5) Please clean up unused code from this template in your final version
-//   6) Please add comments to this list as you see fit to help the next person
+#include <CCA/Components/Arches/PropertyModels/LaminarPrNo.h>
 
 using namespace Uintah; 
 
 //---------------------------------------------------------------------------
 //Method: Constructor
 //---------------------------------------------------------------------------
-CLASSNAME::CLASSNAME( std::string prop_name, SimulationStateP& shared_state ) : PropertyModelBase( prop_name, shared_state )
+LaminarPrNo::LaminarPrNo( std::string prop_name, SimulationStateP& shared_state ) : PropertyModelBase( prop_name, shared_state )
 {
   _prop_label = VarLabel::create( prop_name, CCVariable<double>::getTypeDescription() ); 
 
   // additional local labels as needed by this class (delete this if it isn't used): 
-  std::string name = "something"; 
-  _something_label = VarLabel::create( name, CCVariable<double>::getTypeDescription() ); // Note: you need to add the label to the .h file
-  _extra_local_labels.push_back( _something_label ); 
+  //std::string name = "something"; 
+  //_something_label = VarLabel::create( name, CCVariable<double>::getTypeDescription() ); // Note: you need to add the label to the .h file
+  //_extra_local_labels.push_back( _something_label ); 
 
-  // and so on ....
 }
 
 //---------------------------------------------------------------------------
 //Method: Destructor
 //---------------------------------------------------------------------------
-CLASSNAME::~CLASSNAME( )
+LaminarPrNo::~LaminarPrNo( )
 {
   // Destroying all local VarLabels stored in _extra_local_labels: 
   for (std::vector<const VarLabel*>::iterator iter = _extra_local_labels.begin(); iter != _extra_local_labels.end(); iter++){
@@ -53,7 +34,7 @@ CLASSNAME::~CLASSNAME( )
 //---------------------------------------------------------------------------
 //Method: Problem Setup
 //---------------------------------------------------------------------------
-void CLASSNAME::problemSetup( const ProblemSpecP& inputdb )
+void LaminarPrNo::problemSetup( const ProblemSpecP& inputdb )
 {
   ProblemSpecP db = inputdb; 
 }
@@ -61,10 +42,10 @@ void CLASSNAME::problemSetup( const ProblemSpecP& inputdb )
 //---------------------------------------------------------------------------
 //Method: Schedule Compute Property
 //---------------------------------------------------------------------------
-void CLASSNAME::sched_computeProp( const LevelP& level, SchedulerP& sched, int time_substep )
+void LaminarPrNo::sched_computeProp( const LevelP& level, SchedulerP& sched, int time_substep )
 {
-  std::string taskname = "CLASSNAME::computeProp"; 
-  Task* tsk = scinew Task( taskname, this, &CLASSNAME::computeProp, time_substep ); 
+  std::string taskname = "LaminarPrNo::computeProp"; 
+  Task* tsk = scinew Task( taskname, this, &LaminarPrNo::computeProp, time_substep ); 
 
   if ( !(_has_been_computed) ) {
 
@@ -89,7 +70,7 @@ void CLASSNAME::sched_computeProp( const LevelP& level, SchedulerP& sched, int t
 //---------------------------------------------------------------------------
 //Method: Actually Compute Property
 //---------------------------------------------------------------------------
-void CLASSNAME::computeProp(const ProcessorGroup* pc, 
+void LaminarPrNo::computeProp(const ProcessorGroup* pc, 
                                     const PatchSubset* patches, 
                                     const MaterialSubset* matls, 
                                     DataWarehouse* old_dw, 
@@ -124,12 +105,12 @@ void CLASSNAME::computeProp(const ProcessorGroup* pc,
 //---------------------------------------------------------------------------
 //Method: Scheduler for Dummy Initialization
 //---------------------------------------------------------------------------
-void CLASSNAME::sched_dummyInit( const LevelP& level, SchedulerP& sched )
+void LaminarPrNo::sched_dummyInit( const LevelP& level, SchedulerP& sched )
 {
 
-  std::string taskname = "CLASSNAME::dummyInit"; 
+  std::string taskname = "LaminarPrNo::dummyInit"; 
 
-  Task* tsk = scinew Task(taskname, this, &CLASSNAME::dummyInit);
+  Task* tsk = scinew Task(taskname, this, &LaminarPrNo::dummyInit);
   tsk->computes(_prop_label); 
   tsk->requires( Task::OldDW, _prop_label, Ghost::None, 0 ); 
 
@@ -140,7 +121,7 @@ void CLASSNAME::sched_dummyInit( const LevelP& level, SchedulerP& sched )
 //---------------------------------------------------------------------------
 //Method: Actually do the Dummy Initialization
 //---------------------------------------------------------------------------
-void CLASSNAME::dummyInit( const ProcessorGroup* pc, 
+void LaminarPrNo::dummyInit( const ProcessorGroup* pc, 
                                             const PatchSubset* patches, 
                                             const MaterialSubset* matls, 
                                             DataWarehouse* old_dw, 
@@ -168,11 +149,11 @@ void CLASSNAME::dummyInit( const ProcessorGroup* pc,
 //---------------------------------------------------------------------------
 //Method: Scheduler for Initializing the Property
 //---------------------------------------------------------------------------
-void CLASSNAME::sched_initialize( const LevelP& level, SchedulerP& sched )
+void LaminarPrNo::sched_initialize( const LevelP& level, SchedulerP& sched )
 {
-  std::string taskname = "CLASSNAME::initialize"; 
+  std::string taskname = "LaminarPrNo::initialize"; 
 
-  Task* tsk = scinew Task(taskname, this, &CLASSNAME::initialize);
+  Task* tsk = scinew Task(taskname, this, &LaminarPrNo::initialize);
   tsk->computes(_prop_label); 
 
   sched->addTask(tsk, level->eachPatch(), _shared_state->allArchesMaterials());
@@ -181,7 +162,7 @@ void CLASSNAME::sched_initialize( const LevelP& level, SchedulerP& sched )
 //---------------------------------------------------------------------------
 //Method: Actually Initialize the Property
 //---------------------------------------------------------------------------
-void CLASSNAME::initialize( const ProcessorGroup* pc, 
+void LaminarPrNo::initialize( const ProcessorGroup* pc, 
                                     const PatchSubset* patches, 
                                     const MaterialSubset* matls, 
                                     DataWarehouse* old_dw, 
