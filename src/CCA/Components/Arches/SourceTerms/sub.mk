@@ -10,7 +10,7 @@ SRCS += \
   $(SRCDIR)/UnweightedSrcTerm.cc \
   $(SRCDIR)/WestbrookDryer.cc \
 	$(SRCDIR)/CoalGasMomentum.cc \
-	$(SRCDIR)/MultiPointConst.cc \
+	$(SRCDIR)/Inject.cc \
   $(SRCDIR)/MMS1.cc
 
 

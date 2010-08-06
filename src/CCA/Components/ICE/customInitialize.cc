@@ -76,11 +76,22 @@ void customInitialization_problemSetup( const ProblemSpecP& cfd_ice_ps,
     }  // multiple vortices
     
     
-    ProblemSpecP linear_ps= c_init_ps->findBlock("hardWired");
-    if(linear_ps){
-      cib->which = "hardWired";
+    ProblemSpecP expTemp_ps= c_init_ps->findBlock("exponentialTemperature");
+    if(expTemp_ps){
+      cib->which = "exponentialTemp";
+      cib->expTemp_inputs = scinew expTemp();
+      Vector dir;
+      Point minPt,maxPt;
+      double coeff;
+      expTemp_ps->require("coefficient", coeff);
+      expTemp_ps->require("direction",   dir);
+      expTemp_ps->require("minPoint",    minPt);
+      expTemp_ps->require("maxPoint",    maxPt);
+      cib->expTemp_inputs->direction = dir;
+      cib->expTemp_inputs->coeff     = coeff;
+      cib->expTemp_inputs->minPoint  = minPt;
+      cib->expTemp_inputs->maxPoint  = maxPt;
     }
-    
     
     //__________________________________
     //  method of manufactured solutions 1
@@ -140,15 +151,28 @@ void customInitialization(const Patch* patch,
     }  // loop
   } // vortices
   //__________________________________
-  //  hardwired for debugging
-  if(cib->which == "hardWired"){
-    for(CellIterator iter=patch->getExtraCellIterator(); !iter.done();iter++) {
+  // exponential Temperature
+  if(cib->which == "exponentialTemp"){
+  
+    double coeff = cib->expTemp_inputs->coeff;
+    Vector dir   = cib->expTemp_inputs->direction;
+    Point minPt  = cib->expTemp_inputs->minPoint;
+    Point maxPt  = cib->expTemp_inputs->maxPoint;
+    
+    for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) {
       IntVector c = *iter;
       Point pt = patch->cellPosition(c);
-      double x = pt.x();
-      double coeff = 1000;
-       //temp_CC[c]  = 300 + coeff * x;
-       temp_CC[c]  = 300.0 + coeff * exp(-1.0/( x * ( 1.0 - x ) + 1e-100) );
+      
+      temp_CC[c] = 300;
+      
+      if( (pt.asVector() >= minPt.asVector()) && (pt.asVector() <= maxPt.asVector()) ){
+      
+       Vector n = (maxPt - minPt)/( (pt - minPt) * ( maxPt - pt ) );
+    
+       temp_CC[c]  += dir.x() * exp(coeff - n.x() + 1e-100)  
+                    + dir.y() * exp(coeff - n.y() + 1e-100)           
+                    + dir.z() * exp(coeff - n.z() + 1e-100);
+      }
     }
   } 
   //__________________________________

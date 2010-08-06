@@ -6,15 +6,14 @@
 using namespace std;
 using namespace Uintah; 
 
-SourceTermBase::SourceTermBase( std::string srcName, SimulationStateP& sharedState,
-                        vector<std::string> reqLabelNames ) : 
-d_srcName(srcName), d_sharedState( sharedState ), d_requiredLabels(reqLabelNames)
+SourceTermBase::SourceTermBase( std::string src_name, SimulationStateP& shared_state,
+                                vector<std::string> required_labels ) : 
+_src_name(src_name), _shared_state( shared_state ), _required_labels(required_labels)
 {
-  d_srcLabel = VarLabel::create(srcName, CCVariable<double>::getTypeDescription()); 
-  d_labelSchedInit  = false; 
+  _init_type = "constant"; 
 }
 
 SourceTermBase::~SourceTermBase()
 {
-  VarLabel::destroy(d_srcLabel); 
+  VarLabel::destroy(_src_label); 
 }

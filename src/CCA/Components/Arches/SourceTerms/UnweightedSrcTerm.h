@@ -1,3 +1,4 @@
+
 #ifndef Uintah_Component_Arches_UnweightedSrcTerm_h
 #define Uintah_Component_Arches_UnweightedSrcTerm_h
 #include <Core/ProblemSpec/ProblemSpec.h>
@@ -5,32 +6,13 @@
 #include <CCA/Components/Arches/SourceTerms/SourceTermBase.h>
 #include <CCA/Components/Arches/SourceTerms/SourceTermFactory.h>
 
-//===========================================================================
-
-//---------------------------------------------------------------------------
-// Builder
 namespace Uintah{
-class UnweightedSrcTermBuilder: public SourceTermBuilder
-{
-public: 
-  UnweightedSrcTermBuilder(std::string srcName, 
-                      vector<std::string> reqLabelNames, 
-                      SimulationStateP& sharedState);
-  ~UnweightedSrcTermBuilder(); 
-
-  SourceTermBase* build(); 
-
-private:
-
-}; 
-// End Builder
-//---------------------------------------------------------------------------
 
 class UnweightedSrcTerm: public SourceTermBase {
 public: 
 
   UnweightedSrcTerm( std::string srcName, SimulationStateP& shared_state, 
-                vector<std::string> reqLabelNames );
+                     vector<std::string> reqLabelNames );
 
   ~UnweightedSrcTerm();
   /** @brief Interface for the inputfile and set constants */ 
@@ -53,6 +35,26 @@ public:
                   const MaterialSubset* matls, 
                   DataWarehouse* old_dw, 
                   DataWarehouse* new_dw );
+
+  class Builder
+    : public SourceTermBase::Builder { 
+
+    public: 
+
+      Builder( std::string name, vector<std::string> required_label_names, SimulationStateP& shared_state ) 
+        : _name(name), _shared_state(shared_state), _required_label_names(required_label_names){};
+      ~Builder(){}; 
+
+      UnweightedSrcTerm* build()
+      { return scinew UnweightedSrcTerm( _name, _shared_state, _required_label_names ); };
+
+    private: 
+
+      std::string _name; 
+      SimulationStateP& _shared_state; 
+      vector<std::string> _required_label_names; 
+
+  }; // class Builder 
 private:
 
   double d_constant; 
