@@ -5,6 +5,8 @@
 #include <CCA/Components/Arches/SourceTerms/SourceTermBase.h>
 #include <CCA/Components/Arches/SourceTerms/SourceTermFactory.h>
 
+namespace Uintah{
+
 //===========================================================================
 
 /**
@@ -17,25 +19,6 @@
   * coming from devolatilization.
   *
   */
-
-//---------------------------------------------------------------------------
-// Builder
-namespace Uintah{
-class DevolMixtureFractionBuilder: public SourceTermBuilder
-{
-public: 
-  DevolMixtureFractionBuilder(std::string srcName, 
-                              vector<std::string> reqLabelNames, 
-                              SimulationStateP& sharedState);
-  ~DevolMixtureFractionBuilder(); 
-
-  SourceTermBase* build(); 
-
-private:
-
-}; 
-// End Builder
-//---------------------------------------------------------------------------
 
 class DevolMixtureFraction: public SourceTermBase {
 public: 
@@ -73,6 +56,22 @@ public:
   inline string getType() {
     return "DevolMixtureFraction";
   };
+  
+  class Builder : public SourceTermBase::Builder {
+    public:
+      Builder( std::string name, 
+               vector<std::string> required_label_names, 
+               SimulationStateP& shared_state ) : 
+               _name(name), d_sharedState(shared_state), _required_label_names(required_label_names){};
+      ~Builder(){};
+      DevolMixtureFraction* build() { 
+        return scinew DevolMixtureFraction( _name, d_sharedState, _required_label_names ); 
+      }
+    private:
+      std::string _name;
+      SimulationStateP& d_sharedState;
+      vector<std::string> _required_label_names;
+  }; // class Builder
 
 private:
 

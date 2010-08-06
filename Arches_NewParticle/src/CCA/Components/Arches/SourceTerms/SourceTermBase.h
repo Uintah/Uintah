@@ -3,10 +3,19 @@
 
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Grid/Variables/VarTypes.h>
-#include <CCA/Ports/Scheduler.h>
 #include <Core/Grid/SimulationStateP.h>
 #include <Core/Grid/SimulationState.h>
+#include <Core/Grid/Variables/CCVariable.h>
+#include <Core/Grid/Variables/SFCXVariable.h>
+#include <Core/Grid/Variables/SFCYVariable.h>
+#include <Core/Grid/Variables/SFCZVariable.h>
+#include <Core/Parallel/Parallel.h>
+#include <Core/Exceptions/InvalidValue.h>
+#include <CCA/Ports/Scheduler.h>
 #include <CCA/Components/Arches/ArchesMaterial.h>
+#include <typeinfo>
+
+namespace Uintah {
 
 //===============================================================
 
@@ -20,14 +29,20 @@
 * 
 */ 
 
-namespace Uintah {
-
+class ArchesLabel;
 class SourceTermBase{ 
 
 public: 
 
-  SourceTermBase( std::string srcName, SimulationStateP& sharedState, 
+  SourceTermBase( std::string srcName, 
+                  SimulationStateP& sharedState, 
                   vector<std::string> reqLabelNames );
+
+  SourceTermBase( std::string srcName, 
+                  SimulationStateP& sharedState, 
+                  vector<std::string> reqLabelNames,
+                  ArchesLabel* fieldLabels );
+
   virtual ~SourceTermBase();
 
   /** @brief Input file interface */
@@ -61,19 +76,35 @@ public:
   inline const vector<const VarLabel*> getExtraLocalLabels(){
     return d_extraLocalLabels; }; 
 
+  /** @brief Builder class containing instructions on how to build the property model */ 
+  class Builder { 
+
+    public: 
+
+      virtual ~Builder() {}
+
+      virtual SourceTermBase* build() = 0; 
+
+    protected: 
+
+      std::string _name;
+  }; 
+
   /* @brief   Return a string containing the model type (pure virtual) */
   virtual string getType() = 0;
 
 
 protected:
-  std::string d_srcName; 
-  const VarLabel* d_srcLabel; //The label storing the value of this source term
-  SimulationStateP& d_sharedState; 
-  vector<std::string> d_requiredLabels;   //All labels needed to compute this source term  
-  vector<const VarLabel*> d_extraLocalLabels; //This array will hold local labels to the specific source term 
-                                          // and will be used to obtain vars from the DW for initialization 
 
-  bool d_labelSchedInit;
+  std::string d_srcName;                             ///< User assigned source name 
+  std::string _init_type;                            ///< Initialization type. 
+  const VarLabel* d_srcLabel;                        ///< Source varlabel
+  bool d_labelSchedInit;                             ///< Boolean to clarify if a "computes" or "requires" is needed
+  SimulationStateP& d_sharedState;                   ///< Local copy of sharedState
+  vector<std::string> d_requiredLabels;              ///< Vector of required labels
+  vector<const VarLabel*> d_extraLocalLabels;        ///< Extra labels that might be useful for storage
+  ArchesLabel* d_fieldLabels;                        ///< Field labels (not used by default, only used when source term needs them)
+
 
 }; // end SourceTermBase
 }  // end namespace Uintah

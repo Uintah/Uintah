@@ -15,23 +15,6 @@
 using namespace std;
 using namespace Uintah; 
 
-//---------------------------------------------------------------------------
-// Builder:
-CharOxidationMixtureFractionBuilder::CharOxidationMixtureFractionBuilder(std::string srcName, 
-                                                                         vector<std::string> reqLabelNames, 
-                                                                         SimulationStateP& sharedState)
-: SourceTermBuilder(srcName, reqLabelNames, sharedState)
-{}
-
-CharOxidationMixtureFractionBuilder::~CharOxidationMixtureFractionBuilder(){}
-
-SourceTermBase*
-CharOxidationMixtureFractionBuilder::build(){
-  return scinew CharOxidationMixtureFraction( d_srcName, d_sharedState, d_requiredLabels );
-}
-// End Builder
-//---------------------------------------------------------------------------
-
 CharOxidationMixtureFraction::CharOxidationMixtureFraction( std::string srcName, 
                                                             SimulationStateP& sharedState,
                                                             vector<std::string> reqLabelNames ) 

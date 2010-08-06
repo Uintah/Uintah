@@ -10,26 +10,6 @@
 using namespace std;
 using namespace Uintah; 
 
-//---------------------------------------------------------------------------
-// Builder:
-ConstantSourceTermBuilder::ConstantSourceTermBuilder(std::string srcName, 
-                                         vector<std::string> reqLabelNames, 
-                                         SimulationStateP& sharedState)
-: SourceTermBuilder(srcName, reqLabelNames, sharedState)
-{
-}
-
-ConstantSourceTermBuilder::~ConstantSourceTermBuilder(){}
-
-SourceTermBase*
-ConstantSourceTermBuilder::build(){
-  return scinew ConstantSourceTerm( d_srcName, d_sharedState, d_requiredLabels );
-}
-// End Builder
-//---------------------------------------------------------------------------
-
-
-
 ConstantSourceTerm::ConstantSourceTerm( std::string srcName, SimulationStateP& sharedState,
                             vector<std::string> reqLabelNames ) 
 : SourceTermBase(srcName, sharedState, reqLabelNames)

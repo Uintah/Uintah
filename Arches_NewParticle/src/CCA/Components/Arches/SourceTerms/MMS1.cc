@@ -10,24 +10,6 @@
 using namespace std;
 using namespace Uintah; 
 
-//---------------------------------------------------------------------------
-// Builder:
-MMS1Builder::MMS1Builder(std::string srcName, 
-                                         vector<std::string> reqLabelNames, 
-                                         SimulationStateP& sharedState)
-: SourceTermBuilder(srcName, reqLabelNames, sharedState)
-{ 
-}
-
-MMS1Builder::~MMS1Builder(){}
-
-SourceTermBase*
-MMS1Builder::build(){
-  return scinew MMS1( d_srcName, d_sharedState, d_requiredLabels );
-}
-// End Builder
-//---------------------------------------------------------------------------
-
 MMS1::MMS1( std::string srcName, SimulationStateP& sharedState,
                             vector<std::string> reqLabelNames ) 
 : SourceTermBase(srcName, sharedState, reqLabelNames)

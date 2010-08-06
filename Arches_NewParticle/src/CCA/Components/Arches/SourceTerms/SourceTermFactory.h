@@ -1,64 +1,20 @@
 #ifndef UT_SourceTermFactory_h
 #define UT_SourceTermFactory_h
 #include <CCA/Components/Arches/ArchesLabel.h>
+#include <CCA/Components/Arches/SourceTerms/SourceTermBase.h>
 #include <CCA/Components/Arches/ArchesVariables.h>
 #include <CCA/Ports/DataWarehouseP.h>
 #include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/SimulationStateP.h>
-//#include <map>
-//#include <vector>
-//#include <string>
 
-//====================================================================
-
-/**
- *  @class  SourceTermBuilder
- *  @author James C. Sutherland, Jeremy Thornock, Charles Reid
- *  @date   November, 2006
- *
- *  @brief Abstract base class to support source term
- *  additions. Should be used in conjunction with the
- *  SourceTermFactory.
- *
- *  An arbitrary number of source terms may be added to a transport
- *  equation via the SourceTermFactory.  The SourceTermBuilder object
- *  is passed to the factory to provide a mechanism to instantiate the
- *  SourceTerm object.
- */
 namespace Uintah {
-//---------------------------------------------------------------------------
-// Builder
-class SourceTermBase; 
-class SourceTermBuilder
-{
-public:
-  SourceTermBuilder(std::string src_name, vector<std::string> reqLabelNames, 
-                    SimulationStateP& sharedState) : 
-                    d_srcName(src_name), d_requiredLabels(reqLabelNames), 
-                    d_sharedState(sharedState){};
-  virtual ~SourceTermBuilder(){};
-
-  /**
-   *  build the SourceTerm.  Should be implemented using the
-   *  "scinew" operator.  Ownership is transfered.
-   */
-  virtual SourceTermBase* build() = 0;
-
-protected: 
-  std::string d_srcName;
-  vector<string> d_requiredLabels; 
-  SimulationStateP& d_sharedState; 
-
-private: 
-};
-// End Builder
-//---------------------------------------------------------------------------
 
 /**
  *  @class  SourceTermFactory
- *  @author James C. Sutherland and Jeremy Thornock
- *  @date   November, 2006
+ *  @author James Sutherland, Jeremy Thornock
+ *  @date   November 2006 \n
+ *          August 2010
  *  @brief  Factory for source term generation.
  *
  *  Allows easy addition of source terms to a transport equation.
@@ -73,8 +29,8 @@ class SourceTermFactory
 {
 public:
   
-  typedef std::map< std::string, SourceTermBuilder* > BuildMap;
-  typedef std::map< std::string, SourceTermBase*    > SourceMap;
+  typedef std::map< std::string, SourceTermBase::Builder* > BuildMap;
+  typedef std::map< std::string, SourceTermBase*          > SourceMap;
 
   /** @brief obtain a reference to the SourceTermFactory. */
   static SourceTermFactory& self();
@@ -107,7 +63,7 @@ public:
    *  @param builder The SourceTermBuilder object to build the SourceTerm object.
    */
   void register_source_term( const std::string name,
-                             SourceTermBuilder* builder );
+                             SourceTermBase::Builder* builder );
 
   /** @brief  Search the source term list for a source term with this name; if found return true, else return false */
   bool find_source_term( const string name );

@@ -15,23 +15,6 @@
 using namespace std;
 using namespace Uintah; 
 
-//---------------------------------------------------------------------------
-// Builder:
-DevolMixtureFractionBuilder::DevolMixtureFractionBuilder(std::string srcName, 
-                                                         vector<std::string> reqLabelNames, 
-                                                         SimulationStateP& sharedState)
-: SourceTermBuilder(srcName, reqLabelNames, sharedState)
-{}
-
-DevolMixtureFractionBuilder::~DevolMixtureFractionBuilder(){}
-
-SourceTermBase*
-DevolMixtureFractionBuilder::build(){
-  return scinew DevolMixtureFraction( d_srcName, d_sharedState, d_requiredLabels );
-}
-// End Builder
-//---------------------------------------------------------------------------
-
 DevolMixtureFraction::DevolMixtureFraction( std::string srcName, 
                                             SimulationStateP& sharedState,
                                             vector<std::string> reqLabelNames ) 

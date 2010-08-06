@@ -5,6 +5,8 @@
 #include <CCA/Components/Arches/SourceTerms/SourceTermBase.h>
 #include <CCA/Components/Arches/SourceTerms/SourceTermFactory.h>
 
+namespace Uintah{
+
 //===========================================================================
 
 /**
@@ -15,25 +17,6 @@
   * @brief    This is a source term for a coal gas mixture fraction coming from char oxidation.
   *
   */
-
-//---------------------------------------------------------------------------
-// Builder
-namespace Uintah{
-class CharOxidationMixtureFractionBuilder: public SourceTermBuilder
-{
-public: 
-  CharOxidationMixtureFractionBuilder(std::string srcName, 
-                                      vector<std::string> reqLabelNames, 
-                                      SimulationStateP& sharedState);
-  ~CharOxidationMixtureFractionBuilder(); 
-
-  SourceTermBase* build(); 
-
-private:
-
-}; 
-// End Builder
-//---------------------------------------------------------------------------
 
 class CharOxidationMixtureFraction: public SourceTermBase {
 public: 
@@ -72,6 +55,23 @@ public:
   string getType() {
     return "CharOxidationMixtureFraction";
   };
+
+
+  class Builder : public SourceTermBase::Builder {
+    public:
+      Builder( std::string name, 
+               vector<std::string> required_label_names, 
+               SimulationStateP& shared_state ) : 
+               _name(name), d_sharedState(shared_state), _required_label_names(required_label_names){};
+      ~Builder(){};
+      CharOxidationMixtureFraction* build() { 
+        return scinew CharOxidationMixtureFraction( _name, d_sharedState, _required_label_names ); 
+      }
+    private:
+      std::string _name;
+      SimulationStateP& d_sharedState;
+      vector<std::string> _required_label_names;
+  }; // class Builder
 
 private:
 

@@ -5,10 +5,12 @@
 #include <CCA/Components/Arches/SourceTerms/SourceTermBase.h>
 #include <CCA/Components/Arches/SourceTerms/SourceTermFactory.h>
 
+namespace Uintah{
+
 //===========================================================================
 
 /**
-  * @class    MMS 1 Source Term
+  * @class    MMS1
   * @author   Jeremy Thornock
   * @date     
   *           
@@ -21,25 +23,6 @@
   * This MMS can be used by pretty much any scalar equation.
   *
   */
-
-//---------------------------------------------------------------------------
-// Builder
-namespace Uintah{
-class MMS1Builder: public SourceTermBuilder
-{
-public: 
-  MMS1Builder(std::string srcName, 
-              vector<std::string> reqLabelNames, 
-              SimulationStateP& sharedState);
-  ~MMS1Builder(); 
-
-  SourceTermBase* build(); 
-
-private:
-
-}; 
-// End Builder
-//---------------------------------------------------------------------------
 
 class MMS1: public SourceTermBase {
 public: 
@@ -77,6 +60,22 @@ public:
   string getType() {
     return "MMS1";
   };
+
+  class Builder : public SourceTermBase::Builder {
+    public:
+      Builder( std::string name, 
+               vector<std::string> required_label_names, 
+               SimulationStateP& shared_state ) : 
+               _name(name), d_sharedState(shared_state), _required_label_names(required_label_names){};
+      ~Builder(){};
+      MMS1* build() { 
+        return scinew MMS1( _name, d_sharedState, _required_label_names ); 
+      }
+    private:
+      std::string _name;
+      SimulationStateP& d_sharedState;
+      vector<std::string> _required_label_names;
+  }; // class Builder
 
 private:
 

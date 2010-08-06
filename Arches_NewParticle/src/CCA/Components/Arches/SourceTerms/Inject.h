@@ -84,16 +84,16 @@ public:
     public: 
 
       Builder( std::string name, vector<std::string> required_label_names, SimulationStateP& shared_state ) 
-        : _name(name), _shared_state(shared_state), _required_label_names(required_label_names){};
+        : _name(name), d_sharedState(shared_state), _required_label_names(required_label_names){};
       ~Builder(){}; 
 
       Inject<sT>* build()
-      { return scinew Inject<sT>( _name, _shared_state, _required_label_names ); };
+      { return scinew Inject<sT>( _name, d_sharedState, _required_label_names ); };
 
     private: 
 
       std::string _name; 
-      SimulationStateP& _shared_state; 
+      SimulationStateP& d_sharedState; 
       vector<std::string> _required_label_names; 
 
   }; // Builder
@@ -107,11 +107,11 @@ private:
   // ===================================>>> Functions <<<========================================
 
   template <typename sT>
-  Inject<sT>::Inject( std::string src_name, SimulationStateP& shared_state,
+  Inject<sT>::Inject( std::string srcName, SimulationStateP& shared_state,
                               vector<std::string> req_label_names ) 
-  : SourceTermBase(src_name, shared_state, req_label_names)
+  : SourceTermBase(srcName, shared_state, req_label_names)
   {
-    _src_label = VarLabel::create( src_name, sT::getTypeDescription() ); 
+    d_srcLabel = VarLabel::create( srcName, sT::getTypeDescription() ); 
   }
   
   template <typename sT>
@@ -146,17 +146,17 @@ private:
     std::string taskname = "Inject::eval";
     Task* tsk = scinew Task(taskname, this, &Inject::computeSource, timeSubStep);
   
-    if (timeSubStep == 0 && !_label_sched_init) {
+    if (timeSubStep == 0 && !d_labelSchedInit) {
       // Every source term needs to set this flag after the varLabel is computed. 
       // transportEqn.cleanUp should reinitialize this flag at the end of the time step. 
-      _label_sched_init = true;
+      d_labelSchedInit = true;
   
-      tsk->computes(_src_label);
+      tsk->computes(d_srcLabel);
     } else {
-      tsk->modifies(_src_label); 
+      tsk->modifies(d_srcLabel); 
     }
   
-    sched->addTask(tsk, level->eachPatch(), _shared_state->allArchesMaterials()); 
+    sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials()); 
   
   }
   //---------------------------------------------------------------------------
@@ -175,15 +175,15 @@ private:
   
       const Patch* patch = patches->get(p);
       int archIndex = 0;
-      int matlIndex = _shared_state->getArchesMaterial(archIndex)->getDWIndex(); 
+      int matlIndex = d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
       Box patchInteriorBox = patch->getBox(); 
   
       sT constSrc; 
-      if ( new_dw->exists(_src_label, matlIndex, patch ) ){
-        new_dw->getModifiable( constSrc, _src_label, matlIndex, patch ); 
+      if ( new_dw->exists(d_srcLabel, matlIndex, patch ) ){
+        new_dw->getModifiable( constSrc, d_srcLabel, matlIndex, patch ); 
         constSrc.initialize(0.0);
       } else {
-        new_dw->allocateAndPut( constSrc, _src_label, matlIndex, patch );
+        new_dw->allocateAndPut( constSrc, d_srcLabel, matlIndex, patch );
         constSrc.initialize(0.0);
       } 
   
@@ -247,13 +247,13 @@ private:
   
     Task* tsk = scinew Task(taskname, this, &Inject::dummyInit);
   
-    tsk->computes(_src_label);
+    tsk->computes(d_srcLabel);
   
-    for (std::vector<const VarLabel*>::iterator iter = _extra_local_labels.begin(); iter != _extra_local_labels.end(); iter++){
+    for (std::vector<const VarLabel*>::iterator iter = d_extraLocalLabels.begin(); iter != d_extraLocalLabels.end(); iter++){
       tsk->computes(*iter); 
     }
   
-    sched->addTask(tsk, level->eachPatch(), _shared_state->allArchesMaterials());
+    sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
   
   }
   template <typename sT>
@@ -268,17 +268,17 @@ private:
   
       const Patch* patch = patches->get(p);
       int archIndex = 0;
-      int matlIndex = _shared_state->getArchesMaterial(archIndex)->getDWIndex(); 
+      int matlIndex = d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
   
   
       sT src;
   
-      new_dw->allocateAndPut( src, _src_label, matlIndex, patch ); 
+      new_dw->allocateAndPut( src, d_srcLabel, matlIndex, patch ); 
   
       src.initialize(0.0); 
   
       // Note! Assuming that all dependent variables are the same class as the source. 
-      for (std::vector<const VarLabel*>::iterator iter = _extra_local_labels.begin(); iter != _extra_local_labels.end(); iter++){
+      for (std::vector<const VarLabel*>::iterator iter = d_extraLocalLabels.begin(); iter != d_extraLocalLabels.end(); iter++){
         sT tempVar; 
         new_dw->allocateAndPut(tempVar, *iter, matlIndex, patch ); 
       }
