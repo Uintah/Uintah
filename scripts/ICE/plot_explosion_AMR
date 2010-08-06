@@ -37,7 +37,7 @@ if ( $status ) then
   exit(0)
 endif
 
-if( ! -e inputs/ICE/Scripts/$whichDatFile ) then
+if( ! -e scripts/ICE/$whichDatFile ) then
   echo " ERROR: could not find the exact solution dat file ($whichDatFile)"
   echo " Please make sure there is a symbolic link to the inputs directory"
   echo " Try running:"
@@ -93,11 +93,11 @@ lineextract -v vel_CC    -o vel_L2.dat   -l 2 -cellCoords -timestep $timeStep -i
 lineextract -v press_CC  -o press_L2.dat -l 2 -cellCoords -timestep $timeStep -istart 256 256 0 -iend 10000 256 0 -m 0 -uda $uda
 lineextract -v rho_CC    -o rho_L2.dat   -l 2 -cellCoords -timestep $timeStep -istart 256 256 0 -iend 10000 256 0 -m 0 -uda $uda
 
-inputs/ICE/Scripts/removeBraces vel_L0.dat
-inputs/ICE/Scripts/removeBraces vel_L1.dat
-inputs/ICE/Scripts/removeBraces vel_L2.dat
+scripts/ICE/removeBraces vel_L0.dat
+scripts/ICE/removeBraces vel_L1.dat
+scripts/ICE/removeBraces vel_L2.dat
 
-cp inputs/ICE/Scripts/$whichDatFile $uda/exactSolution.dat
+cp scripts/ICE/$whichDatFile $uda/exactSolution.dat
 mv *.dat $uda/.
 
 
