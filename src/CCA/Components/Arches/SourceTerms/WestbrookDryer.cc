@@ -16,6 +16,7 @@ WestbrookDryer::WestbrookDryer( std::string src_name, SimulationStateP& shared_s
 : SourceTermBase(src_name, shared_state, req_label_names)
 { 
 
+  _label_sched_init = false; 
   _src_label = VarLabel::create( src_name, CCVariable<double>::getTypeDescription() ); 
 
   _extra_local_labels.resize(4); 
