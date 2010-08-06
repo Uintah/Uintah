@@ -76,21 +76,22 @@ void customInitialization_problemSetup( const ProblemSpecP& cfd_ice_ps,
     }  // multiple vortices
     
     
-    ProblemSpecP expTemp_ps= c_init_ps->findBlock("exponentialTemperature");
-    if(expTemp_ps){
-      cib->which = "exponentialTemp";
-      cib->expTemp_inputs = scinew expTemp();
-      Vector dir;
-      Point minPt,maxPt;
-      double coeff;
-      expTemp_ps->require("coefficient", coeff);
-      expTemp_ps->require("direction",   dir);
-      expTemp_ps->require("minPoint",    minPt);
-      expTemp_ps->require("maxPoint",    maxPt);
-      cib->expTemp_inputs->direction = dir;
-      cib->expTemp_inputs->coeff     = coeff;
-      cib->expTemp_inputs->minPoint  = minPt;
-      cib->expTemp_inputs->maxPoint  = maxPt;
+    ProblemSpecP gaussTemp_ps= c_init_ps->findBlock("gaussianTemperature");
+    if(gaussTemp_ps){
+      cib->which = "gaussianTemp";
+      cib->gaussTemp_inputs = scinew gaussTemp();
+      double spread_x;
+      double spread_y;
+      Point  origin;
+      double amp;
+      gaussTemp_ps->require("amplitude", amp); 
+      gaussTemp_ps->require("origin",    origin);      
+      gaussTemp_ps->require("spread_x",  spread_x);  
+      gaussTemp_ps->require("spread_y",  spread_y);  
+      cib->gaussTemp_inputs->amplitude = amp;
+      cib->gaussTemp_inputs->origin    = origin;
+      cib->gaussTemp_inputs->spread_x  = spread_x;
+      cib->gaussTemp_inputs->spread_y  = spread_y;
     }
     
     //__________________________________
@@ -151,28 +152,28 @@ void customInitialization(const Patch* patch,
     }  // loop
   } // vortices
   //__________________________________
-  // exponential Temperature
-  if(cib->which == "exponentialTemp"){
+  // gaussian Temperature
+  if(cib->which == "gaussianTemp"){
   
-    double coeff = cib->expTemp_inputs->coeff;
-    Vector dir   = cib->expTemp_inputs->direction;
-    Point minPt  = cib->expTemp_inputs->minPoint;
-    Point maxPt  = cib->expTemp_inputs->maxPoint;
+    double amp = cib->gaussTemp_inputs->amplitude;
+    Point origin     = cib->gaussTemp_inputs->origin;
+    double spread_x  = cib->gaussTemp_inputs->spread_x;
+    double spread_y  = cib->gaussTemp_inputs->spread_y;
+    
+    double x0 = origin.x();
+    double y0 = origin.y();
     
     for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) {
       IntVector c = *iter;
       Point pt = patch->cellPosition(c);
+      double x = pt.x();
+      double y = pt.y();
+
+      double a = ( (x-x0) * (x-x0) )/ (2*spread_x*spread_x + 1e-100);
+      double b = ( (y-y0) * (y-y0) )/ (2*spread_y*spread_y + 1e-100);
       
-      temp_CC[c] = 300;
-      
-      if( (pt.asVector() >= minPt.asVector()) && (pt.asVector() <= maxPt.asVector()) ){
-      
-       Vector n = (maxPt - minPt)/( (pt - minPt) * ( maxPt - pt ) );
-    
-       temp_CC[c]  += dir.x() * exp(coeff - n.x() + 1e-100)  
-                    + dir.y() * exp(coeff - n.y() + 1e-100)           
-                    + dir.z() * exp(coeff - n.z() + 1e-100);
-      }
+      double Z = amp*exp(-(a + b));
+      temp_CC[c] = 300 + Z;
     }
   } 
   //__________________________________
