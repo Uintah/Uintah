@@ -5,6 +5,8 @@
 #include <CCA/Components/Arches/SourceTerms/SourceTermBase.h>
 #include <CCA/Components/Arches/SourceTerms/SourceTermFactory.h>
 
+namespace Uintah{
+
 //===========================================================================
 
 /**
@@ -17,25 +19,6 @@
   * It make the RHS of a scalar equation equal to a constant.
   *
   */
-
-//---------------------------------------------------------------------------
-// Builder
-namespace Uintah{
-class ConstantSourceTermBuilder: public SourceTermBuilder
-{
-public: 
-  ConstantSourceTermBuilder(std::string srcName, 
-                      vector<std::string> reqLabelNames, 
-                      SimulationStateP& sharedState);
-  ~ConstantSourceTermBuilder(); 
-
-  SourceTermBase* build(); 
-
-private:
-
-}; 
-// End Builder
-//---------------------------------------------------------------------------
 
 class ConstantSourceTerm: public SourceTermBase {
 public: 
@@ -73,6 +56,22 @@ public:
   string getType() {
     return "ConstantSourceTerm";
   };
+
+  class Builder : public SourceTermBase::Builder {
+    public:
+      Builder( std::string name, 
+               vector<std::string> required_label_names, 
+               SimulationStateP& shared_state ) : 
+               _name(name), d_sharedState(shared_state), _required_label_names(required_label_names){};
+      ~Builder(){};
+      ConstantSourceTerm* build() { 
+        return scinew ConstantSourceTerm( _name, d_sharedState, _required_label_names ); 
+      }
+    private:
+      std::string _name;
+      SimulationStateP& d_sharedState;
+      vector<std::string> _required_label_names;
+  }; // class Builder
 
 private:
 

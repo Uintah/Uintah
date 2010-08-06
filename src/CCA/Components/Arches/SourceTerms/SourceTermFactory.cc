@@ -72,15 +72,15 @@ void SourceTermFactory::problemSetup(const ProblemSpecP& params)
     // Step 1: register source terms with the SourceTermFactory
     
     for (ProblemSpecP source_db = srcs_db->findBlock("src"); source_db != 0; source_db = source_db->findNextBlock("src")){
-      std::string src_name;
-      source_db->getAttribute("label", src_name);
+      std::string srcName;
+      source_db->getAttribute("label", srcName);
       std::string src_type;
       source_db->getAttribute("type", src_type);
 
       vector<string> required_varLabels;
       ProblemSpecP var_db = source_db->findBlock("RequiredVars"); 
 
-      proc0cout << "Found  a source term: " << src_name << endl;
+      proc0cout << "Found  a source term: " << srcName << endl;
       proc0cout << "Requires the following variables: " << endl;
       proc0cout << endl; 
 
@@ -103,41 +103,41 @@ void SourceTermFactory::problemSetup(const ProblemSpecP& params)
       // The keys are currently strings which might be something we want to change if this becomes inefficient  
       if ( src_type == "ConstantSourceTerm" || src_type == "constant_src" ) {
         // Adds a constant to RHS
-        SourceTermBuilder* srcBuilder = scinew ConstantSourceTermBuilder(src_name, required_varLabels, d_fieldLabels->d_sharedState); 
-        register_source_term( src_name, srcBuilder ); 
+        SourceTermBase::Builder* srcBuilder = scinew ConstantSourceTerm::Builder(srcName, required_varLabels, d_fieldLabels->d_sharedState); 
+        register_source_term( srcName, srcBuilder ); 
 
       } else if (src_type == "DevolMixtureFraction" || src_type == "devol_mixture_frac"){
         // Add a mixure fraction source due to devolatilization reactions
-        SourceTermBuilder* srcBuilder = scinew DevolMixtureFractionBuilder(src_name, required_varLabels, d_fieldLabels->d_sharedState);
-        register_source_term( src_name, srcBuilder ); 
+        SourceTermBase::Builder* srcBuilder = scinew DevolMixtureFraction::Builder(srcName, required_varLabels, d_fieldLabels->d_sharedState);
+        register_source_term( srcName, srcBuilder ); 
 
       } else if (src_type == "CharOxidationMixtureFraction" ) {
         // Add a mixure fraction source due to char oxidation reactions
-        SourceTermBuilder* srcBuilder = scinew CharOxidationMixtureFractionBuilder(src_name, required_varLabels, d_fieldLabels->d_sharedState);
-        register_source_term( src_name, srcBuilder );
+        SourceTermBase::Builder* srcBuilder = scinew CharOxidationMixtureFraction::Builder(srcName, required_varLabels, d_fieldLabels->d_sharedState);
+        register_source_term( srcName, srcBuilder );
 
       } else if (src_type == "WestbrookDryer" || src_type == "westbrook_dryer") {
         // Computes a global reaction rate for a hydrocarbon (see Turns, eqn 5.1,5.2)
-        SourceTermBuilder* srcBuilder = scinew WestbrookDryerBuilder(src_name, required_varLabels, d_fieldLabels->d_sharedState); 
-        register_source_term( src_name, srcBuilder ); 
+        SourceTermBase::Builder* srcBuilder = scinew WestbrookDryer::Builder(srcName, required_varLabels, d_fieldLabels->d_sharedState); 
+        register_source_term( srcName, srcBuilder ); 
       
       } else if (src_type == "MMS1" || src_type == "mms1"){
         // MMS1 builder 
-        SourceTermBuilder* srcBuilder = scinew MMS1Builder(src_name, required_varLabels, d_fieldLabels->d_sharedState);
-        register_source_term( src_name, srcBuilder ); 
+        SourceTermBase::Builder* srcBuilder = scinew MMS1::Builder(srcName, required_varLabels, d_fieldLabels->d_sharedState);
+        register_source_term( srcName, srcBuilder ); 
 
       } else if (src_type == "ParticleGasMomentumSource" ) {
         // Add a momentum source term due to particle-gas momentum coupling
-        SourceTermBuilder* srcBuilder = scinew ParticleGasMomentumBuilder(src_name, required_varLabels, d_fieldLabels->d_sharedState);
-        register_source_term( src_name, srcBuilder );
+        SourceTermBase::Builder* srcBuilder = scinew ParticleGasMomentum::Builder(srcName, required_varLabels, d_fieldLabels->d_sharedState);
+        register_source_term( srcName, srcBuilder );
 
       } else {
-        proc0cout << "For source term named: " << src_name << endl;
+        proc0cout << "For source term named: " << srcName << endl;
         proc0cout << "with type: " << src_type << endl;
         throw InvalidValue("This source term type not recognized or not supported! ", __FILE__, __LINE__);
       }
 
-      SourceMap::iterator iS = sources_.find(src_name);
+      SourceMap::iterator iS = sources_.find(srcName);
       if( iS != sources_.end() ) {
         SourceTermBase* source = iS->second;
         source->problemSetup(source_db);
@@ -159,10 +159,11 @@ void SourceTermFactory::problemSetup(const ProblemSpecP& params)
         DQMOMEqn* eqn = dynamic_cast<DQMOMEqn*>(iEqn->second);
         if( !eqn->weight() ) {
           string eqn_name = eqn->getEqnName();
-          string src_name = eqn_name + "_unw_src";
+          string srcName = eqn_name + "_unw_src";
           vector<string> required_varLabels;
-          SourceTermBuilder* srcBuilder = scinew UnweightedSrcTermBuilder( src_name, required_varLabels, d_fieldLabels->d_sharedState );
-          register_source_term( src_name, srcBuilder );
+          required_varLabels.push_back(eqn_name);
+          SourceTermBase::Builder* srcBuilder = scinew UnweightedSrcTerm::Builder( srcName, required_varLabels, d_fieldLabels->d_sharedState, d_fieldLabels );
+          register_source_term( srcName, srcBuilder );
         }
       }
     }
@@ -261,14 +262,13 @@ SourceTermFactory::sched_dummyInit( const LevelP& level, SchedulerP& sched )
 //---------------------------------------------------------------------------
 void
 SourceTermFactory::register_source_term( const std::string name,
-                                         SourceTermBuilder* builder )
+                                         SourceTermBase::Builder* builder )
 {
   ASSERT( builder != NULL );
 
   BuildMap::iterator i = builders_.find( name );
   if( i == builders_.end() ){
     builders_[name] = builder;
-    //i = builders_.insert( std::make_pair(name,builder) ).first;
   } else{
     string errmsg = "ERROR: Arches: SourceTermBuilder: A duplicate SourceTermBuilder object was loaded on equation\n";
     errmsg += "\t\t " + name + ". This is forbidden.\n";

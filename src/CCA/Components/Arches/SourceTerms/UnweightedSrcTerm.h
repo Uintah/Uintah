@@ -5,32 +5,22 @@
 #include <CCA/Components/Arches/SourceTerms/SourceTermBase.h>
 #include <CCA/Components/Arches/SourceTerms/SourceTermFactory.h>
 
+namespace Uintah{
+
 //===========================================================================
 
-//---------------------------------------------------------------------------
-// Builder
-namespace Uintah{
-class UnweightedSrcTermBuilder: public SourceTermBuilder
-{
-public: 
-  UnweightedSrcTermBuilder(std::string srcName, 
-                      vector<std::string> reqLabelNames, 
-                      SimulationStateP& sharedState);
-  ~UnweightedSrcTermBuilder(); 
-
-  SourceTermBase* build(); 
-
-private:
-
-}; 
-// End Builder
-//---------------------------------------------------------------------------
-
+class ArchesLabel;
 class UnweightedSrcTerm: public SourceTermBase {
 public: 
 
-  UnweightedSrcTerm( std::string srcName, SimulationStateP& shared_state, 
-                vector<std::string> reqLabelNames );
+  UnweightedSrcTerm( std::string srcName, 
+                     SimulationStateP& shared_state, 
+                     vector<std::string> reqLabelNames );
+
+  UnweightedSrcTerm( std::string srcName,
+                     SimulationStateP& shared_state,
+                     vector<string> reqLabelNames,
+                     ArchesLabel* fieldLabels );
 
   ~UnweightedSrcTerm();
 
@@ -62,9 +52,31 @@ public:
     return "UnweightedSrcTerm";
   };
 
+  class Builder : public SourceTermBase::Builder {
+    public:
+      Builder( std::string name, 
+               vector<std::string> required_label_names, 
+               SimulationStateP& shared_state,
+               ArchesLabel* fieldLabels ) : 
+               _name(name), d_sharedState(shared_state), _required_label_names(required_label_names), d_fieldLabels(fieldLabels) {};
+      ~Builder(){};
+      UnweightedSrcTerm* build() { 
+        return scinew UnweightedSrcTerm( _name, d_sharedState, _required_label_names, d_fieldLabels ); 
+      }
+    private:
+      std::string _name;
+      SimulationStateP& d_sharedState;
+      vector<std::string> _required_label_names;
+      ArchesLabel* d_fieldLabels;
+  }; // class Builder
+
 private:
 
   double d_constant; 
+
+  const VarLabel* d_particle_velocity_label;
+
+  ArchesLabel* d_fieldLabels;
 
 }; // end UnweightedSrcTerm
 } // end namespace Uintah

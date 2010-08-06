@@ -14,23 +14,6 @@
 using namespace std;
 using namespace Uintah; 
 
-//---------------------------------------------------------------------------
-// Builder:
-ParticleGasMomentumBuilder::ParticleGasMomentumBuilder(std::string srcName, 
-                                         vector<std::string> reqLabelNames, 
-                                         SimulationStateP& sharedState)
-: SourceTermBuilder(srcName, reqLabelNames, sharedState)
-{}
-
-ParticleGasMomentumBuilder::~ParticleGasMomentumBuilder(){}
-
-SourceTermBase*
-ParticleGasMomentumBuilder::build(){
-  return scinew ParticleGasMomentum( d_srcName, d_sharedState, d_requiredLabels );
-}
-// End Builder
-//---------------------------------------------------------------------------
-
 ParticleGasMomentum::ParticleGasMomentum( std::string srcName, 
                                           SimulationStateP& sharedState,
                                           vector<std::string> reqLabelNames ) 
@@ -41,6 +24,7 @@ ParticleGasMomentum::ParticleGasMomentum( std::string srcName,
 
 ParticleGasMomentum::~ParticleGasMomentum()
 {}
+
 //---------------------------------------------------------------------------
 // Method: Problem Setup
 //---------------------------------------------------------------------------
@@ -49,6 +33,7 @@ ParticleGasMomentum::problemSetup(const ProblemSpecP& inputdb)
 {
   //ProblemSpecP db = inputdb; 
 }
+
 //---------------------------------------------------------------------------
 // Method: Schedule the calculation of the source term 
 //---------------------------------------------------------------------------

@@ -5,6 +5,8 @@
 #include <CCA/Components/Arches/SourceTerms/SourceTermBase.h>
 #include <CCA/Components/Arches/SourceTerms/SourceTermFactory.h>
 
+namespace Uintah {
+
 //===========================================================================
 
 /**
@@ -18,30 +20,12 @@
   *
   */
 
-//---------------------------------------------------------------------------
-// Builder
-namespace Uintah{
-class WestbrookDryerBuilder: public SourceTermBuilder
-{
-public: 
-  WestbrookDryerBuilder(std::string srcName, 
-                      vector<std::string> reqLabelNames, 
-                      SimulationStateP& sharedState);
-  ~WestbrookDryerBuilder(); 
-
-  SourceTermBase* build(); 
-
-private:
-
-}; 
-// End Builder
-//---------------------------------------------------------------------------
-
 class WestbrookDryer: public SourceTermBase {
 public: 
 
-  WestbrookDryer( std::string srcName, SimulationStateP& shared_state, 
-                vector<std::string> reqLabelNames );
+  WestbrookDryer( std::string srcName, 
+                  SimulationStateP& shared_state, 
+                  vector<std::string> reqLabelNames );
 
   ~WestbrookDryer();
 
@@ -75,6 +59,22 @@ public:
     return "WestbrookDryer";
   };
 
+  class Builder : public SourceTermBase::Builder {
+    public:
+      Builder( std::string name, 
+               vector<std::string> required_label_names, 
+               SimulationStateP& shared_state ) : 
+               _name(name), d_sharedState(shared_state), _required_label_names(required_label_names){};
+      ~Builder(){};
+      WestbrookDryer* build() { 
+        return scinew WestbrookDryer( _name, d_sharedState, _required_label_names ); 
+      }
+    private:
+      std::string _name;
+      SimulationStateP& d_sharedState;
+      vector<std::string> _required_label_names;
+  }; // class Builder
+
 private:
 
   double d_A;     // Pre-exponential fractor
@@ -94,6 +94,7 @@ private:
   const VarLabel* d_WDstrippingLabel; // kg C stripped / kg C available for old timestep*
   const VarLabel* d_WDextentLabel;    // kg C reacted  / kg C available for old timestep*
   const VarLabel* d_WDO2Label;        // kg O2 / total kg -- consistent with the model
+  const VarLabel* d_WDverLabel; 
   // * but stored in the new_Dw
 
 }; // end WestbrookDryer

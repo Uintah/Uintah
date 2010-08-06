@@ -5,6 +5,7 @@
 #include <Core/Grid/Variables/CCVariable.h>
 #include <CCA/Components/Arches/SourceTerms/UnweightedSrcTerm.h>
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqnFactory.h>
+#include <CCA/Components/Arches/CoalModels/CoalModelFactory.h>
 #include <CCA/Components/Arches/TransportEqns/EqnBase.h>
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqn.h>
 #include <CCA/Components/Arches/ArchesLabel.h>
@@ -14,54 +15,41 @@
 using namespace std;
 using namespace Uintah; 
 
-//---------------------------------------------------------------------------
-// Builder:
-UnweightedSrcTermBuilder::UnweightedSrcTermBuilder(std::string srcName, 
-                                         vector<std::string> reqLabelNames, 
-                                         SimulationStateP& sharedState)
-: SourceTermBuilder(srcName, reqLabelNames, sharedState)
-{}
-
-UnweightedSrcTermBuilder::~UnweightedSrcTermBuilder(){}
-
-SourceTermBase*
-UnweightedSrcTermBuilder::build(){
-  return scinew UnweightedSrcTerm( d_srcName, d_sharedState, d_requiredLabels );
-}
-// End Builder
-//---------------------------------------------------------------------------
-
 UnweightedSrcTerm::UnweightedSrcTerm( std::string srcName, SimulationStateP& sharedState,
-                            vector<std::string> reqLabelNames ) 
-: SourceTermBase(srcName, sharedState, reqLabelNames)
-{}
+                            vector<std::string> reqLabelNames, ArchesLabel* fieldLabels ) 
+: SourceTermBase(srcName, sharedState, reqLabelNames, fieldLabels )
+{
+  d_srcLabel = VarLabel::create(srcName, CCVariable<double>::getTypeDescription()); 
+}
 
 UnweightedSrcTerm::~UnweightedSrcTerm()
 {}
+
 //---------------------------------------------------------------------------
 // Method: Problem Setup
 //---------------------------------------------------------------------------
 void 
 UnweightedSrcTerm::problemSetup(const ProblemSpecP& inputdb)
 {
-
-  ProblemSpecP db = inputdb; 
-
+  //ProblemSpecP db = inputdb; 
 }
+
 //---------------------------------------------------------------------------
 // Method: Schedule the calculation of the source term 
 //---------------------------------------------------------------------------
 void 
 UnweightedSrcTerm::sched_computeSource( const LevelP& level, SchedulerP& sched, int timeSubStep )
 {
-  std::string taskname = "UnweightedSrcTerm::eval";
+  std::string taskname = "UnweightedSrcTerm::computeSource";
   Task* tsk = scinew Task(taskname, this, &UnweightedSrcTerm::computeSource, timeSubStep);
 
   if (timeSubStep == 0 && !d_labelSchedInit) {
     // Every source term needs to set this flag after the varLabel is computed. 
     // transportEqn.cleanUp should reinitialize this flag at the end of the time step. 
     d_labelSchedInit = true;
-
+  }
+  
+  if( timeSubStep == 0 ) {
     tsk->computes(d_srcLabel);
   } else {
     tsk->modifies(d_srcLabel); 
@@ -70,35 +58,23 @@ UnweightedSrcTerm::sched_computeSource( const LevelP& level, SchedulerP& sched, 
   const VarLabel* d_areaFractionLabel = VarLabel::find( "areaFraction" );
   tsk->requires(Task::OldDW, d_areaFractionLabel, Ghost::AroundCells, 1);
 
-  DQMOMEqnFactory& dqmomFactory  = DQMOMEqnFactory::self();
+  DQMOMEqnFactory& dqmomFactory = DQMOMEqnFactory::self();
+  CoalModelFactory& coalFactory = CoalModelFactory::self();
 
-  for (vector<std::string>::iterator iter = d_requiredLabels.begin(); 
-       iter != d_requiredLabels.end(); iter++) { 
+  for( vector<std::string>::iterator iter = d_requiredLabels.begin();
+       iter != d_requiredLabels.end(); iter++) {
+    DQMOMEqn* dqmom_eqn = dynamic_cast<DQMOMEqn*>( &dqmomFactory.retrieve_scalar_eqn( *iter ) );
+    tsk->requires( Task::OldDW, dqmom_eqn->getTransportEqnLabel(), Ghost::None, 0 );
 
-    std::string label_name = (*iter);
-    EqnBase& eqn = dqmomFactory.retrieve_scalar_eqn( label_name );
-
-    const VarLabel* unwaLabel = eqn.getTransportEqnLabel();
-    tsk->requires( Task::OldDW, unwaLabel, Ghost::None, 0 );
-
-    //DQMOMEqnFactory::EqnMap& dqmom_eqns = dqmomFactory.retrieve_all_eqns();
-
-    //for (DQMOMEqnFactory::EqnMap::iterator ieqn=dqmom_eqns.begin();
-    //     ieqn != dqmom_eqns.end(); ieqn++){
-          
-    DQMOMEqn* dqmom_eqn = dynamic_cast<DQMOMEqn*>(&eqn);
-    int d_quadNode = dqmom_eqn->getQuadNode(); 
+    int quadNode = dqmom_eqn->getQuadNode();
 
     // require particle velocity
-    string partVel_name = "vel_qn";
-    std::string node;
-    std::stringstream out;
-    out << d_quadNode;
-    node = out.str();
-    partVel_name += node;
-
-    const VarLabel* partVelLabel = VarLabel::find( partVel_name );
-    tsk->requires( Task::NewDW, partVelLabel, Ghost::AroundCells, 1 );
+    if( coalFactory.useParticleVelocityModel() ) {
+      d_particle_velocity_label = coalFactory.getParticleVelocityLabel( quadNode );
+    } else {
+      d_particle_velocity_label = d_fieldLabels->d_newCCVelocityLabel;
+    }
+    tsk->requires( Task::NewDW, d_particle_velocity_label, Ghost::AroundCells, 1 );
   }
 
   sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials()); 
@@ -109,11 +85,11 @@ UnweightedSrcTerm::sched_computeSource( const LevelP& level, SchedulerP& sched, 
 //---------------------------------------------------------------------------
 void
 UnweightedSrcTerm::computeSource( const ProcessorGroup* pc, 
-                   const PatchSubset* patches, 
-                   const MaterialSubset* matls, 
-                   DataWarehouse* old_dw, 
-                   DataWarehouse* new_dw, 
-                   int timeSubStep )
+                                  const PatchSubset* patches, 
+                                  const MaterialSubset* matls, 
+                                  DataWarehouse* old_dw, 
+                                  DataWarehouse* new_dw, 
+                                  int timeSubStep )
 {
   //patch loop
   for (int p=0; p < patches->size(); p++){
@@ -123,49 +99,36 @@ UnweightedSrcTerm::computeSource( const ProcessorGroup* pc,
     int matlIndex = d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
 
     CCVariable<double> constSrc; 
-    if ( new_dw->exists(d_srcLabel, matlIndex, patch ) ){
-      new_dw->getModifiable( constSrc, d_srcLabel, matlIndex, patch ); 
-      constSrc.initialize(0.0);
-    } else {
+    if( timeSubStep == 0 ) {
       new_dw->allocateAndPut( constSrc, d_srcLabel, matlIndex, patch );
       constSrc.initialize(0.0);
-    } 
+    } else {
+      new_dw->getModifiable( constSrc, d_srcLabel, matlIndex, patch ); 
+    }
 
-    DQMOMEqnFactory& dqmomFactory  = DQMOMEqnFactory::self();
-    constCCVariable<double> unwa;
-    constCCVariable<Vector> partVel;
     constCCVariable<Vector> areaFraction;
-    std::string label_name;
-
     const VarLabel* d_areaFractionLabel = VarLabel::find( "areaFraction" );
     old_dw->get(areaFraction, d_areaFractionLabel, matlIndex, patch, Ghost::AroundCells, 1);
 
-    for (vector<std::string>::iterator iter = d_requiredLabels.begin(); 
-         iter != d_requiredLabels.end(); iter++) { 
-   
-      label_name = (*iter);
-      EqnBase& eqn = dqmomFactory.retrieve_scalar_eqn( label_name );
+    DQMOMEqnFactory& dqmomFactory  = DQMOMEqnFactory::self();
+    CoalModelFactory& coalFactory  = CoalModelFactory::self();
 
-      const VarLabel* unwaLabel = eqn.getTransportEqnLabel();
-      old_dw->get( unwa, unwaLabel, matlIndex, patch, Ghost::None, 0 );
+    constCCVariable<double> unwa;
+    constCCVariable<Vector> partVel;
 
-      DQMOMEqn* dqmom_eqn = dynamic_cast<DQMOMEqn*>(&eqn);
-      int d_quadNode = dqmom_eqn->getQuadNode();
+    // d_requiredLabels only has 1 element
+    for( vector<string>::iterator iter = d_requiredLabels.begin(); iter != d_requiredLabels.end(); ++iter ) {
+      DQMOMEqn* dqmom_eqn = dynamic_cast<DQMOMEqn*>( &dqmomFactory.retrieve_scalar_eqn(*iter) );
+      old_dw->get( unwa, dqmom_eqn->getTransportEqnLabel(), matlIndex, patch, Ghost::None, 0 );
 
-      //ArchesLabel::PartVelMap::const_iterator iter = d_fieldLabels->partVel.find(d_quadNode);
-      //old_dw->get(partVel, iter->second, matlIndex, patch, Ghost::None, 0 );
- 
-      string partVel_name = "vel_qn";
-      std::string node;
-      std::stringstream out;
-      out << d_quadNode;
-      node = out.str();
-      partVel_name += node;
-
-      const VarLabel* partVelLabel = VarLabel::find( partVel_name );
-      new_dw->get(partVel, partVelLabel, matlIndex, patch, Ghost::AroundCells, 1 );
-    }
-
+      int quadNode = dqmom_eqn->getQuadNode();
+      if( coalFactory.useParticleVelocityModel() ) {
+        d_particle_velocity_label = coalFactory.getParticleVelocityLabel( quadNode );
+      } else {
+        d_particle_velocity_label = d_fieldLabels->d_newCCVelocityLabel;
+      }
+      new_dw->get(partVel, d_particle_velocity_label, matlIndex, patch, Ghost::AroundCells, 1 );
+    }      
 
     Vector Dx = patch->dCell();
 

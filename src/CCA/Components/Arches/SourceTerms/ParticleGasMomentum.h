@@ -5,26 +5,18 @@
 #include <CCA/Components/Arches/SourceTerms/SourceTermBase.h>
 #include <CCA/Components/Arches/SourceTerms/SourceTermFactory.h>
 
+namespace Uintah{
+
 //===========================================================================
 
-//---------------------------------------------------------------------------
-// Builder
-namespace Uintah{
-class ParticleGasMomentumBuilder: public SourceTermBuilder
-{
-public: 
-  ParticleGasMomentumBuilder(std::string srcName, 
-                      vector<std::string> reqLabelNames, 
-                      SimulationStateP& sharedState);
-  ~ParticleGasMomentumBuilder(); 
-
-  SourceTermBase* build(); 
-
-private:
-
-}; 
-// End Builder
-//---------------------------------------------------------------------------
+/**
+  * @class    ParticleGasMomentum
+  * @author   Julien Pedel, Charles Reid
+  * @date     May 2010
+  *           
+  * @brief    Creates a source term for momentum coupling between particles and gas.
+  *
+  */
 
 class ParticleGasMomentum: public SourceTermBase {
 public: 
@@ -63,6 +55,22 @@ public:
   string getType() {
     return "ParticleGasMomentum";
   };
+
+  class Builder : public SourceTermBase::Builder {
+    public:
+      Builder( std::string name, 
+               vector<std::string> required_label_names, 
+               SimulationStateP& shared_state ) : 
+               _name(name), d_sharedState(shared_state), _required_label_names(required_label_names){};
+      ~Builder(){};
+      ParticleGasMomentum* build() { 
+        return scinew ParticleGasMomentum( _name, d_sharedState, _required_label_names ); 
+      }
+    private:
+      std::string _name;
+      SimulationStateP& d_sharedState;
+      vector<std::string> _required_label_names;
+  }; // class Builder
 
 private:
 
