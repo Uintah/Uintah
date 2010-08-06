@@ -5,39 +5,23 @@
 #include <CCA/Components/Arches/SourceTerms/SourceTermBase.h>
 #include <CCA/Components/Arches/SourceTerms/SourceTermFactory.h>
 
-//===========================================================================
-
-//---------------------------------------------------------------------------
-// Builder
-namespace Uintah{
-class CoalGasDevolBuilder: public SourceTermBuilder
-{
-public: 
-  CoalGasDevolBuilder(std::string srcName, 
-                      vector<std::string> reqLabelNames, 
-                      SimulationStateP& sharedState);
-  ~CoalGasDevolBuilder(); 
-
-  SourceTermBase* build(); 
-
-private:
-
-}; 
-// End Builder
-//---------------------------------------------------------------------------
+namespace Uintah{ 
 
 class CoalGasDevol: public SourceTermBase {
-public: 
 
-  CoalGasDevol( std::string srcName, SimulationStateP& shared_state, 
-                vector<std::string> reqLabelNames );
+  public: 
+
+  CoalGasDevol( std::string src_name, vector<std::string> required_label_names, SimulationStateP& shared_state );
 
   ~CoalGasDevol();
+
   /** @brief Interface for the inputfile and set constants */ 
   void problemSetup(const ProblemSpecP& db);
+
   /** @brief Schedule the calculation of the source term */ 
   void sched_computeSource( const LevelP& level, SchedulerP& sched, 
                             int timeSubStep );
+
   /** @brief Actually compute the source term */ 
   void computeSource( const ProcessorGroup* pc, 
                       const PatchSubset* patches, 
@@ -53,9 +37,30 @@ public:
                   const MaterialSubset* matls, 
                   DataWarehouse* old_dw, 
                   DataWarehouse* new_dw );
+
+  class Builder
+    : public SourceTermBase::Builder { 
+
+    public: 
+
+      Builder( std::string name, vector<std::string> required_label_names, SimulationStateP& shared_state ) 
+        : _name(name), _shared_state(shared_state), _required_label_names(required_label_names){};
+      ~Builder(){}; 
+
+      CoalGasDevol* build()
+      { return scinew CoalGasDevol( _name, _required_label_names, _shared_state ); };
+
+    private: 
+
+      std::string _name; 
+      SimulationStateP& _shared_state; 
+      vector<std::string> _required_label_names; 
+
+  }; // class Builder 
+
 private:
 
-  std::string d_devolModelName; 
+  std::string _devol_model_name; 
 
 }; // end CoalGasDevol
 } // end namespace Uintah

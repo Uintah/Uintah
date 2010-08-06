@@ -38,7 +38,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Arches/SourceTerms/CoalGasDevol.h>
 #include <CCA/Components/Arches/SourceTerms/CoalGasMomentum.h> 
 #include <CCA/Components/Arches/SourceTerms/WestbrookDryer.h>
-#include <CCA/Components/Arches/SourceTerms/MultiPointConst.h>
+#include <CCA/Components/Arches/SourceTerms/Inject.h>
 #include <CCA/Components/Arches/CoalModels/CoalModelFactory.h>
 #include <CCA/Components/Arches/CoalModels/ModelBase.h>
 #include <CCA/Components/Arches/TransportEqns/EqnBase.h>
@@ -55,6 +55,9 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqnFactory.h>
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqn.h>
 #include <CCA/Components/Arches/TransportEqns/ScalarEqn.h>
+#include <CCA/Components/Arches/PropertyModels/PropertyModelBase.h>
+#include <CCA/Components/Arches/PropertyModels/PropertyModelFactory.h>
+#include <CCA/Components/Arches/PropertyModels/ConstProperty.h>
 
 #include <CCA/Components/Arches/Arches.h>
 #include <CCA/Components/Arches/ArchesLabel.h>
@@ -337,7 +340,7 @@ Arches::problemSetup(const ProblemSpecP& params,
       eqn_db->getAttribute("label", eqnname);
       d_scalarEqnNames.push_back(eqnname);
       if (eqnname == ""){
-        throw InvalidValue( "The label attribute must be specified for the eqns!", __FILE__, __LINE__); 
+        throw InvalidValue( "Error: The label attribute must be specified for the eqns!", __FILE__, __LINE__); 
       }
       EqnBase& an_eqn = eqn_factory.retrieve_scalar_eqn( eqnname ); 
       an_eqn.problemSetup( eqn_db ); 
@@ -356,12 +359,31 @@ Arches::problemSetup(const ProblemSpecP& params,
         std::string srcname; 
         src_db->getAttribute("label", srcname);
         if (srcname == "") {
-          throw InvalidValue( "The label attribute must be specified for the source terms!", __FILE__, __LINE__); 
+          throw InvalidValue( "Error: The label attribute must be specified for the source terms!", __FILE__, __LINE__); 
         }
         SourceTermBase& a_src = src_factory.retrieve_source_term( srcname );
         a_src.problemSetup( src_db );  
       
       }
+    }
+  }
+
+  if ( db->findBlock("PropertyModels") ){
+
+    ProblemSpecP propmodels_db = db->findBlock("PropertyModels"); 
+    PropertyModelFactory& prop_factory = PropertyModelFactory::self(); 
+    Arches::registerPropertyModels( propmodels_db ); 
+    for ( ProblemSpecP prop_db = propmodels_db->findBlock("model"); 
+        prop_db != 0; prop_db = prop_db->findNextBlock("model") ){
+
+      std::string model_name; 
+      prop_db->getAttribute("label", model_name); 
+      if ( model_name == "" ){
+        throw InvalidValue( "Error: The label attribute must be specified for the property models!", __FILE__, __LINE__); 
+      }
+      PropertyModelBase& a_model = prop_factory.retrieve_property_model( model_name ); 
+      a_model.problemSetup( prop_db ); 
+
     }
   }
 
@@ -807,7 +829,17 @@ Arches::scheduleInitialize(const LevelP& level,
 
   // compute the cell area fraction 
   d_boundaryCondition->sched_setAreaFraction( sched, patches, matls ); 
-    
+
+  // Property model initialization
+  PropertyModelFactory& propFactory = PropertyModelFactory::self(); 
+  PropertyModelFactory::PropMap& all_prop_models = propFactory.retrieve_all_property_models(); 
+  for ( PropertyModelFactory::PropMap::iterator iprop = all_prop_models.begin(); 
+      iprop != all_prop_models.end(); iprop++){
+
+    PropertyModelBase* prop_model = iprop->second; 
+    prop_model->sched_initialize( level, sched ); 
+
+  }
 }
 
 void
@@ -2457,31 +2489,47 @@ void Arches::registerUDSources(ProblemSpecP& db)
       // The keys are currently strings which might be something we want to change if this becomes inefficient  
       if ( src_type == "constant_src" ) {
         // Adds a constant to RHS
-        SourceTermBuilder* srcBuilder = scinew ConstSrcTermBuilder(src_name, required_varLabels, d_lab->d_sharedState); 
+        SourceTermBase::Builder* srcBuilder = scinew ConstSrcTerm::Builder(src_name, required_varLabels, d_lab->d_sharedState); 
         factory.register_source_term( src_name, srcBuilder ); 
 
       } else if (src_type == "coal_gas_devol"){
         // Sums up the devol. model terms * weights
-        SourceTermBuilder* srcBuilder = scinew CoalGasDevolBuilder(src_name, required_varLabels, d_lab->d_sharedState);
-        factory.register_source_term( src_name, srcBuilder ); 
+        SourceTermBase::Builder* src_builder = scinew CoalGasDevol::Builder(src_name, required_varLabels, d_lab->d_sharedState);
+        factory.register_source_term( src_name, src_builder ); 
 
       } else if (src_type == "coal_gas_momentum"){
-        SourceTermBuilder* srcBuilder = scinew CoalGasMomentumBuilder(src_name, required_varLabels, d_lab->d_sharedState);
+        // Momentum coupling for ??? (coal gas or the particle?) 
+        SourceTermBase::Builder* srcBuilder = scinew CoalGasMomentum::Builder(src_name, required_varLabels, d_lab->d_sharedState);
         factory.register_source_term( src_name, srcBuilder );
 
       } else if (src_type == "westbrook_dryer") {
         // Computes a global reaction rate for a hydrocarbon (see Turns, eqn 5.1,5.2)
-        SourceTermBuilder* srcBuilder = scinew WestbrookDryerBuilder(src_name, required_varLabels, d_lab->d_sharedState); 
+        SourceTermBase::Builder* srcBuilder = scinew WestbrookDryer::Builder(src_name, required_varLabels, d_lab->d_sharedState); 
         factory.register_source_term( src_name, srcBuilder ); 
       
       } else if (src_type == "mms1"){
         // MMS1 builder 
-        SourceTermBuilder* srcBuilder = scinew MMS1Builder(src_name, required_varLabels, d_lab->d_sharedState);
+        SourceTermBase::Builder* srcBuilder = scinew MMS1::Builder(src_name, required_varLabels, d_lab->d_sharedState);
         factory.register_source_term( src_name, srcBuilder ); 
 
-      } else if ( src_type == "multi_point_const_src" ) {
+      } else if ( src_type == "cc_inject_src" ) {
         // Adds a constant to the RHS in specified geometric locations
-        SourceTermBuilder* srcBuilder = scinew MultiPointConstBuilder(src_name, required_varLabels, d_lab->d_sharedState);
+        SourceTermBase::Builder* srcBuilder = scinew Inject<CCVariable<double> >::Builder(src_name, required_varLabels, d_lab->d_sharedState);
+        factory.register_source_term( src_name, srcBuilder ); 
+
+      } else if ( src_type == "fx_inject_src" ) {
+        // Adds a constant to the RHS in specified geometric locations
+        SourceTermBase::Builder* srcBuilder = scinew Inject<SFCXVariable<double> >::Builder(src_name, required_varLabels, d_lab->d_sharedState);
+        factory.register_source_term( src_name, srcBuilder ); 
+
+      } else if ( src_type == "fy_inject_src" ) {
+        // Adds a constant to the RHS in specified geometric locations
+        SourceTermBase::Builder* srcBuilder = scinew Inject<SFCYVariable<double> >::Builder(src_name, required_varLabels, d_lab->d_sharedState);
+        factory.register_source_term( src_name, srcBuilder ); 
+
+      } else if ( src_type == "fz_inject_src" ) {
+        // Adds a constant to the RHS in specified geometric locations
+        SourceTermBase::Builder* srcBuilder = scinew Inject<SFCZVariable<double> >::Builder(src_name, required_varLabels, d_lab->d_sharedState);
         factory.register_source_term( src_name, srcBuilder ); 
 
       } else {
@@ -2523,8 +2571,8 @@ void Arches::registerSources(){
           vector<std::string> required_varLabels;  
           required_varLabels.push_back( eqn_name ); 
 
-          SourceTermBuilder* srcBuilder = scinew UnweightedSrcTermBuilder( src_name, required_varLabels, d_lab->d_sharedState ); 
-          factory.register_source_term( src_name, srcBuilder ); 
+          SourceTermBase::Builder* src_builder = scinew UnweightedSrcTerm::Builder( src_name, required_varLabels, d_lab->d_sharedState ); 
+          factory.register_source_term( src_name, src_builder ); 
 
         }
       }
@@ -2708,6 +2756,51 @@ void Arches::registerTransportEqns(ProblemSpecP& db)
       }
     }
   }  
+}
+//---------------------------------------------------------------------------
+// Method: Register Property Models
+//---------------------------------------------------------------------------
+void Arches::registerPropertyModels(ProblemSpecP& db)
+{
+  ProblemSpecP propmodels_db = db; 
+  PropertyModelFactory& prop_factory = PropertyModelFactory::self(); 
+
+  if ( propmodels_db ) {
+
+    proc0cout << "\n"; 
+    proc0cout << "******* Property Model Registration *******" << endl;
+
+    for ( ProblemSpecP prop_db = propmodels_db->findBlock("model"); 
+        prop_db != 0; prop_db = prop_db->findNextBlock("model") ){
+
+      std::string prop_name; 
+      prop_db->getAttribute("label", prop_name); 
+      std::string prop_type; 
+      prop_db->getAttribute("type", prop_type); 
+
+      proc0cout << "Found a property model: " << prop_name << endl; 
+
+      if ( prop_type == "ConstantCC" ) {
+
+        // An example of a constant CC variable property 
+        PropertyModelBase::Builder* the_builder = new ConstProperty<CCVariable<double>, constCCVariable<double> >::Builder( prop_name, d_sharedState ); 
+        prop_factory.register_property_model( prop_name, the_builder ); 
+
+      } else if ( prop_type == "ConstantFCX" ) {
+
+        // An example of a constant FCX variable property 
+        PropertyModelBase::Builder* the_builder = new ConstProperty<SFCXVariable<double>, constCCVariable<double> >::Builder( prop_name, d_sharedState ); 
+        prop_factory.register_property_model( prop_name, the_builder ); 
+
+      } else {
+
+        proc0cout << "For property model named: " << prop_name << endl;
+        proc0cout << "with type: " << prop_type << endl;
+        throw InvalidValue("This property model is not recognized or supported! ", __FILE__, __LINE__); 
+
+      }
+    }
+  }
 }
 //---------------------------------------------------------------------------
 // Method: Register DQMOM Eqns

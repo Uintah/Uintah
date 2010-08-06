@@ -38,6 +38,8 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Arches/CoalModels/PartVel.h>
 #include <CCA/Components/Arches/CoalModels/CoalModelFactory.h>
 #include <CCA/Components/Arches/CoalModels/ModelBase.h>
+#include <CCA/Components/Arches/PropertyModels/PropertyModelBase.h>
+#include <CCA/Components/Arches/PropertyModels/PropertyModelFactory.h>
 #include <CCA/Components/Arches/DQMOM.h>
 
 #include <CCA/Components/Arches/ExplicitSolver.h>
@@ -351,6 +353,17 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
   for (int curr_level = 0; curr_level < numTimeIntegratorLevels; curr_level ++)
   {
 
+    // Clean up all property models 
+     PropertyModelFactory& propFactory = PropertyModelFactory::self(); 
+     PropertyModelFactory::PropMap& all_prop_models = propFactory.retrieve_all_property_models(); 
+     for ( PropertyModelFactory::PropMap::iterator iprop = all_prop_models.begin(); 
+         iprop != all_prop_models.end(); iprop++){
+
+       PropertyModelBase* prop_model = iprop->second; 
+       prop_model->cleanUp(); 
+
+     }
+
     if (d_doDQMOM) {
 
       CoalModelFactory& modelFactory = CoalModelFactory::self(); 
@@ -403,7 +416,6 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
       }
 
     }
-
 
     sched_saveTempCopies(sched, patches, matls,d_timeIntegratorLabels[curr_level]);
 
@@ -537,6 +549,15 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
       bool modify_ref_den = true; 
       if ( curr_level == 0 ) initialize_it = true; 
       d_props->sched_reComputeProps_new( level, sched, d_timeIntegratorLabels[curr_level], initialize_it, modify_ref_den ); 
+
+    }
+
+    // By default, scheduling all property models for evaluation. 
+    for ( PropertyModelFactory::PropMap::iterator iprop = all_prop_models.begin(); 
+          iprop != all_prop_models.end(); iprop++){
+
+      PropertyModelBase* prop_model = iprop->second; 
+      prop_model->sched_computeProp( level, sched, curr_level ); 
 
     }
 
@@ -842,6 +863,16 @@ int ExplicitSolver::noSolve(const LevelP& level,
 
     SourceTermBase* src = iter->second; 
     src->sched_dummyInit( level, sched ); 
+
+  }
+
+  PropertyModelFactory& propFactory = PropertyModelFactory::self(); 
+  PropertyModelFactory::PropMap& all_prop_models = propFactory.retrieve_all_property_models(); 
+  for ( PropertyModelFactory::PropMap::iterator iprop = all_prop_models.begin(); 
+      iprop != all_prop_models.end(); iprop++){
+
+    PropertyModelBase* prop_model = iprop->second; 
+    prop_model->sched_dummyInit( level, sched ); 
 
   }
 

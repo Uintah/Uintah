@@ -34,8 +34,12 @@
             <radius                     spec="REQUIRED DOUBLE 'positive'" />
           </vortex>                
         </vortices>
-        <hardWired                      spec="OPTIONAL NO_DATA">
-        </hardWired>
+        <exponentialTemperature         spec="OPTIONAL NO_DATA">
+          <direction                    spec="REQUIRED VECTOR 'positive'"/>
+          <minPoint                     spec="REQUIRED VECTOR"/>
+          <maxPoint                     spec="REQUIRED VECTOR"/>
+          <coefficient                  spec="REQUIRED DOUBLE 'positive'"/>
+        </exponentialTemperature>
       </customInitialization>
       
       <ImplicitSolver                   spec="OPTIONAL NO_DATA">

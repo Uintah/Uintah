@@ -77,9 +77,9 @@ namespace Uintah {
        
  ---------------------------------------------------------------------  */
 void ImplicitMatrixBC( CCVariable<Stencil7>& A, 
-                   const Patch* patch)        
+                       const Patch* patch)        
 { 
-  cout_BC_CC << "ImplicitMatrixBC "<< endl;
+  cout_BC_CC << "ImplicitMatrixBC Patch: "<< patch->getID()<< endl;
   
   vector<Patch::FaceType> bf;
   patch->getBoundaryFaces(bf);
@@ -185,10 +185,10 @@ void ImplicitMatrixBC( CCVariable<Stencil7>& A,
                     << " IveSetBC: " << IveSetBC <<  endl;
     if(IveSetBC != numChildren){
       ostringstream warn;
-      warn << "ERROR: ICE: ImplicitMatrixBC Boundary conditions were not set correctly (" 
+      cout << "ERROR: ICE: ImplicitMatrixBC Boundary conditions were not set correctly (" 
            << patch->getFaceName(face) << ", " << bc_kind  << " numChildren: " << numChildren 
            << " IveSetBC: " << IveSetBC << endl;
-      throw InternalError(warn.str(), __FILE__, __LINE__);
+      //throw InternalError(warn.str(), __FILE__, __LINE__);
     }
   }  // face loop
   
@@ -319,10 +319,10 @@ void set_imp_DelP_BC( CCVariable<double>& imp_delP,
                     
     if(IveSetBC != numChildren){
       ostringstream warn;
-      warn << "ERROR: ICE: set_imp_DelP_BC Boundary conditions were not set correctly ("
+      cout << "ERROR: ICE: set_imp_DelP_BC Boundary conditions were not set correctly ("
            << patch->getFaceName(face) << ", " << bc_kind  << " numChildren: " << numChildren 
            << " IveSetBC: " << IveSetBC << endl;
-      throw InternalError(warn.str(), __FILE__, __LINE__);
+      //throw InternalError(warn.str(), __FILE__, __LINE__);
     }
   }  // face loop
   
@@ -683,10 +683,10 @@ void setBC(CCVariable<double>& press_CC,
     //  bulletproofing   
     if(IveSetBC != numChildren && (IveSetLODIBC[face] != 1 && isNotInitialTimestep)){
       ostringstream warn;
-      warn << "ERROR: ICE: SetBC(press_CC) Boundary conditions were not set correctly ("
+      cout << "ERROR: ICE: SetBC(press_CC) Boundary conditions were not set correctly ("
            << patch->getFaceName(face) << ", " << bc_kind  << " numChildren: " << numChildren 
            << " IveSetBC: " << IveSetBC << " IveSetLODIBC: " << IveSetLODIBC[face] <<") " << endl;
-      throw InternalError(warn.str(), __FILE__, __LINE__);
+      //throw InternalError(warn.str(), __FILE__, __LINE__);
     }
   }  // faces loop
 }
@@ -843,10 +843,10 @@ void setBC(CCVariable<double>& var_CC,
    
     if(throwEx){
       ostringstream warn;
-      warn << "ERROR: ICE: SetBC(double_CC) Boundary conditions were not set correctly ("<< desc<< ", " 
+      cout << "ERROR: ICE: SetBC(double_CC) Boundary conditions were not set correctly ("<< desc<< ", " 
            << patch->getFaceName(face) << ", " << bc_kind  << " numChildren: " << numChildren 
            << " IveSetBC: " << IveSetBC << " IveSetLODIBC: " << IveSetLODIBC[face] <<") " << endl;
-      throw InternalError(warn.str(), __FILE__, __LINE__);
+      //throw InternalError(warn.str(), __FILE__, __LINE__);
     }
   }  // faces loop
 }
@@ -982,10 +982,10 @@ void setBC(CCVariable<Vector>& var_CC,
    
     if(throwEx){
       ostringstream warn;
-      warn << "ERROR: ICE: SetBC(Vector_CC) Boundary conditions were not set correctly ("<< desc<< ", " 
+      cout << "ERROR: ICE: SetBC(Vector_CC) Boundary conditions were not set correctly ("<< desc<< ", " 
            << patch->getFaceName(face) << ", " << bc_kind  << " numChildren: " << numChildren 
            << " IveSetBC: " << IveSetBC << " IveSetLODIBC: " << IveSetLODIBC[face] <<") " << endl;
-      throw InternalError(warn.str(), __FILE__, __LINE__);
+      //throw InternalError(warn.str(), __FILE__, __LINE__);
     }
   }  // faces loop
 }
@@ -1085,10 +1085,10 @@ void setSpecificVolBC(CCVariable<double>& sp_vol_CC,
                     
     if(IveSetBC != numChildren){
       ostringstream warn;
-      warn << "ERROR: ICE: setSpecificVolBC Boundary conditions were not set correctly ("<< desc<< ", " 
+      cout  << "ERROR: ICE: setSpecificVolBC Boundary conditions were not set correctly ("<< desc<< ", " 
            << patch->getFaceName(face) << ", " << bc_kind  << " numChildren: " << numChildren 
            << " IveSetBC: " << IveSetBC<<") " << endl;
-      throw InternalError(warn.str(), __FILE__, __LINE__);
+      //throw InternalError(warn.str(), __FILE__, __LINE__);
     }
   }  // faces loop
 }

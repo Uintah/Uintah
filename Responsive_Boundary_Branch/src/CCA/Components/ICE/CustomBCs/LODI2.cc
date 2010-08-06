@@ -988,7 +988,7 @@ int FaceVel_LODI(const Patch* patch,
     // normal direction velocity
     double term1 = L[5][in][P_dir]/(vel_CC[in][P_dir] + speedSound[in]);
     double term2 = L[1][in][P_dir]/(vel_CC[in][P_dir] - speedSound[in]);
-    double dvel_norm_dx = (1.0/(rho_CC[in] * speedSound[in]) )* (term1 - term2);
+    double dvel_norm_dx = (1.0/(rho_CC[in] * speedSound[in]) ) * (term1 - term2);
     vel_CC[c][P_dir] = vel_CC[in][P_dir] + plus_minus_one * dx * dvel_norm_dx; 
     
     // transverse velocities
@@ -997,21 +997,6 @@ int FaceVel_LODI(const Patch* patch,
     
     vel_CC[c][dir1] = vel_CC[in][dir1] + plus_minus_one * dx * dvel_dir1_dx;
     vel_CC[c][dir2] = vel_CC[in][dir2] + plus_minus_one * dx * dvel_dir2_dx;
-   
-    //__________________________________
-    //  debugging
-    Vector vel, dvel;
-    vel[P_dir] = vel_CC[c][P_dir];
-    vel[dir1]  = vel_CC[c][dir1];
-    vel[dir2]  = vel_CC[c][dir2];
-    
-    dvel[P_dir] = dvel_norm_dx;
-    dvel[dir1]  = dvel_dir1_dx;
-    dvel[dir2]  = dvel_dir2_dx;
-    
-    cout_dbg << " c " << c << " in " << in << " vel " << vel << endl;
-    cout_dbg << " dvel_ " << dvel << endl;
-  
   }
   
   //__________________________________

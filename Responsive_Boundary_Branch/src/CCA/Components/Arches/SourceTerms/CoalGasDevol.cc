@@ -16,27 +16,11 @@
 using namespace std;
 using namespace Uintah; 
 
-//---------------------------------------------------------------------------
-// Builder:
-CoalGasDevolBuilder::CoalGasDevolBuilder(std::string srcName, 
-                                         vector<std::string> reqLabelNames, 
-                                         SimulationStateP& sharedState)
-: SourceTermBuilder(srcName, reqLabelNames, sharedState)
-{}
-
-CoalGasDevolBuilder::~CoalGasDevolBuilder(){}
-
-SourceTermBase*
-CoalGasDevolBuilder::build(){
-  return scinew CoalGasDevol( d_srcName, d_sharedState, d_requiredLabels );
+CoalGasDevol::CoalGasDevol( std::string src_name, vector<std::string> label_names, SimulationStateP& shared_state ) 
+: SourceTermBase( src_name, shared_state, label_names )
+{
+    _src_label = VarLabel::create( src_name, CCVariable<double>::getTypeDescription() ); 
 }
-// End Builder
-//---------------------------------------------------------------------------
-
-CoalGasDevol::CoalGasDevol( std::string srcName, SimulationStateP& sharedState,
-                            vector<std::string> reqLabelNames ) 
-: SourceTermBase(srcName, sharedState, reqLabelNames)
-{}
 
 CoalGasDevol::~CoalGasDevol()
 {}
@@ -49,7 +33,7 @@ CoalGasDevol::problemSetup(const ProblemSpecP& inputdb)
 
   ProblemSpecP db = inputdb; 
 
-  db->require( "devol_model_name", d_devolModelName ); 
+  db->require( "devol_model_name", _devol_model_name ); 
 
 }
 //---------------------------------------------------------------------------
@@ -61,14 +45,14 @@ CoalGasDevol::sched_computeSource( const LevelP& level, SchedulerP& sched, int t
   std::string taskname = "CoalGasDevol::eval";
   Task* tsk = scinew Task(taskname, this, &CoalGasDevol::computeSource, timeSubStep);
 
-  if (timeSubStep == 0 && !d_labelSchedInit) {
+  if (timeSubStep == 0 && !_label_sched_init) {
     // Every source term needs to set this flag after the varLabel is computed. 
     // transportEqn.cleanUp should reinitialize this flag at the end of the time step. 
-    d_labelSchedInit = true;
+    _label_sched_init = true;
 
-    tsk->computes(d_srcLabel);
+    tsk->computes(_src_label);
   } else {
-    tsk->modifies(d_srcLabel); 
+    tsk->modifies(_src_label); 
   }
 
   DQMOMEqnFactory& dqmomFactory  = DQMOMEqnFactory::self(); 
@@ -76,7 +60,7 @@ CoalGasDevol::sched_computeSource( const LevelP& level, SchedulerP& sched, int t
 
   for (int iqn = 0; iqn < dqmomFactory.get_quad_nodes(); iqn++){
     std::string weight_name = "w_qn";
-    std::string model_name = d_devolModelName; 
+    std::string model_name = _devol_model_name; 
     std::string node;  
     std::stringstream out; 
     out << iqn; 
@@ -100,7 +84,7 @@ CoalGasDevol::sched_computeSource( const LevelP& level, SchedulerP& sched, int t
 
   }
 
-  sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials()); 
+  sched->addTask(tsk, level->eachPatch(), _shared_state->allArchesMaterials()); 
 
 }
 //---------------------------------------------------------------------------
@@ -123,17 +107,17 @@ CoalGasDevol::computeSource( const ProcessorGroup* pc,
 
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlIndex = d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    int matlIndex = _shared_state->getArchesMaterial(archIndex)->getDWIndex(); 
 
     DQMOMEqnFactory& dqmomFactory  = DQMOMEqnFactory::self(); 
     CoalModelFactory& modelFactory = CoalModelFactory::self(); 
 
     CCVariable<double> devolSrc; 
-    if ( new_dw->exists(d_srcLabel, matlIndex, patch ) ){
-      new_dw->getModifiable( devolSrc, d_srcLabel, matlIndex, patch ); 
+    if ( new_dw->exists(_src_label, matlIndex, patch ) ){
+      new_dw->getModifiable( devolSrc, _src_label, matlIndex, patch ); 
       devolSrc.initialize(0.0);
     } else {
-      new_dw->allocateAndPut( devolSrc, d_srcLabel, matlIndex, patch );
+      new_dw->allocateAndPut( devolSrc, _src_label, matlIndex, patch );
       devolSrc.initialize(0.0);
     } 
 
@@ -143,7 +127,7 @@ CoalGasDevol::computeSource( const ProcessorGroup* pc,
 
 
       for (int iqn = 0; iqn < dqmomFactory.get_quad_nodes(); iqn++){
-        std::string model_name = d_devolModelName; 
+        std::string model_name = _devol_model_name; 
         std::string node;  
         std::stringstream out; 
         out << iqn; 
@@ -173,13 +157,13 @@ CoalGasDevol::sched_dummyInit( const LevelP& level, SchedulerP& sched )
 
   Task* tsk = scinew Task(taskname, this, &CoalGasDevol::dummyInit);
 
-  tsk->computes(d_srcLabel);
+  tsk->computes(_src_label);
 
-  for (std::vector<const VarLabel*>::iterator iter = d_extraLocalLabels.begin(); iter != d_extraLocalLabels.end(); iter++){
+  for (std::vector<const VarLabel*>::iterator iter = _extra_local_labels.begin(); iter != _extra_local_labels.end(); iter++){
     tsk->computes(*iter); 
   }
 
-  sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
+  sched->addTask(tsk, level->eachPatch(), _shared_state->allArchesMaterials());
 
 }
 void 
@@ -194,15 +178,15 @@ CoalGasDevol::dummyInit( const ProcessorGroup* pc,
 
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlIndex = d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    int matlIndex = _shared_state->getArchesMaterial(archIndex)->getDWIndex(); 
 
     CCVariable<double> src;
 
-    new_dw->allocateAndPut( src, d_srcLabel, matlIndex, patch ); 
+    new_dw->allocateAndPut( src, _src_label, matlIndex, patch ); 
 
     src.initialize(0.0); 
 
-    for (std::vector<const VarLabel*>::iterator iter = d_extraLocalLabels.begin(); iter != d_extraLocalLabels.end(); iter++){
+    for (std::vector<const VarLabel*>::iterator iter = _extra_local_labels.begin(); iter != _extra_local_labels.end(); iter++){
       CCVariable<double> tempVar; 
       new_dw->allocateAndPut(tempVar, *iter, matlIndex, patch ); 
     }

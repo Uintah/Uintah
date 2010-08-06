@@ -1,4 +1,4 @@
-#include <CCA/Components/Arches/SourceTerms/SourceTermFactory.h>
+#include <CCA/Components/Arches/PropertyModels/PropertyModelFactory.h>
 #include <Core/Exceptions/InvalidValue.h>
 #include <sstream>
 #include <iostream>
@@ -8,10 +8,10 @@
 
 using namespace Uintah;
 
-SourceTermFactory::SourceTermFactory()
+PropertyModelFactory::PropertyModelFactory()
 {}
 
-SourceTermFactory::~SourceTermFactory()
+PropertyModelFactory::~PropertyModelFactory()
 {
   // delete the builders
   for( BuildMap::iterator i=_builders.begin(); i!=_builders.end(); ++i ){
@@ -19,7 +19,7 @@ SourceTermFactory::~SourceTermFactory()
   }
 
   // delete all constructed solvers
-  for( SourceMap::iterator i=_sources.begin(); i!=_sources.end(); ++i ){
+  for( PropMap::iterator i=_property_models.begin(); i!=_property_models.end(); ++i ){
       delete i->second;
   }
 }
@@ -27,18 +27,18 @@ SourceTermFactory::~SourceTermFactory()
 //---------------------------------------------------------------------------
 // Method: Return a reference to itself. 
 //---------------------------------------------------------------------------
-SourceTermFactory&
-SourceTermFactory::self()
+PropertyModelFactory&
+PropertyModelFactory::self()
 {
-  static SourceTermFactory s;
+  static PropertyModelFactory s;
   return s;
 }
 //---------------------------------------------------------------------------
-// Method: Register a source term
+// Method: Register a property model
 //---------------------------------------------------------------------------
 void
-SourceTermFactory::register_source_term( const std::string name,
-                                         SourceTermBase::Builder* builder )
+PropertyModelFactory::register_property_model( const std::string name,
+                                               PropertyModelBase::Builder* builder )
 {
 
   ASSERT( builder != NULL );
@@ -48,31 +48,31 @@ SourceTermFactory::register_source_term( const std::string name,
     i = _builders.insert( std::make_pair(name,builder) ).first;
   }
   else{
-    string errmsg = "ERROR: Arches: SourceTermBuilder: A duplicate SourceTermBuilder object was loaded on equation\n";
+    string errmsg = "ERROR: Arches: PropertyModelBuilder: A duplicate PropertyModelBuilder object was loaded. \n";
     errmsg += "\t\t " + name + ". This is forbidden.\n";
     throw InvalidValue(errmsg,__FILE__,__LINE__);
   }
 }
 //---------------------------------------------------------------------------
-// Method: Retrieve a source term from the map. 
+// Method: Retrieve a property model from the map. 
 //---------------------------------------------------------------------------
-SourceTermBase&
-SourceTermFactory::retrieve_source_term( const std::string name )
+PropertyModelBase&
+PropertyModelFactory::retrieve_property_model( const std::string name )
 {
-  const SourceMap::iterator isource= _sources.find( name );
+  const PropMap::iterator isource= _property_models.find( name );
 
-  if( isource != _sources.end() ) return *(isource->second);
+  if( isource != _property_models.end() ) return *(isource->second);
 
   const BuildMap::iterator ibuilder = _builders.find( name );
 
   if( ibuilder == _builders.end() ){
-    string errmsg = "ERROR: Arches: SourceTermBuilder: No source term registered for " + name + "\n";
+    string errmsg = "ERROR: Arches: PropertyModelBuilder: No property model registered for " + name + "\n";
     throw InvalidValue(errmsg,__FILE__,__LINE__);
   }
 
-  SourceTermBase::Builder* builder = ibuilder->second;
-  SourceTermBase* prop = builder->build();
-  _sources[name] = prop;
+  PropertyModelBase::Builder* builder = ibuilder->second;
+  PropertyModelBase* prop = builder->build();
+  _property_models[name] = prop;
 
   return *prop;
 }

@@ -356,6 +356,9 @@ private:
   /** @brief Registers all possible DQMOM equations by instantiating a builder in the factory */     
   void registerDQMOMEqns(ProblemSpecP& db);
 
+  /** @brief Registers all possible Property Models by instantiating a builder in the factory */ 
+  void registerPropertyModels( ProblemSpecP& db ); 
+
 
 
       double d_init_dt; // The initial dt from input file. 
