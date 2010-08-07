@@ -460,6 +460,7 @@ Properties::sched_reComputeProps(SchedulerP& sched,
     tsk->computes(d_lab->d_poolMassFluxLabel);            //WME
     tsk->computes(d_lab->d_poolSurfaceTemperatureLabel);  //WME
     tsk->computes(d_lab->d_c7h16INLabel);                 //WME
+    tsk->computes(d_lab->d_ch3ohINLabel);                 //WME
   }
   else {
     tsk->modifies(d_lab->d_drhodfCPLabel);
@@ -526,6 +527,7 @@ Properties::sched_reComputeProps(SchedulerP& sched,
     tsk->modifies(d_lab->d_poolMassFluxLabel);            //WME
     tsk->modifies(d_lab->d_poolSurfaceTemperatureLabel);  //WME
     tsk->modifies(d_lab->d_c7h16INLabel);                 //WME 
+    tsk->modifies(d_lab->d_ch3ohINLabel);                 //WME
     //tsk->modifies(d_lab->d_tabReactionRateLabel);
   }
 
@@ -647,6 +649,7 @@ Properties::reComputeProps(const ProcessorGroup* pc,
     CCVariable<double> poolMF;  //WME
     CCVariable<double> poolST;  //WME
     CCVariable<double> c7h16;   //WME
+    CCVariable<double> ch3oh;   //WME
 
 
     bool foundExtrascalar = false;
@@ -810,6 +813,7 @@ Properties::reComputeProps(const ProcessorGroup* pc,
       new_dw->allocateAndPut(poolMF, d_lab->d_poolMassFluxLabel,           indx,patch); //WME
       new_dw->allocateAndPut(poolST, d_lab->d_poolSurfaceTemperatureLabel, indx,patch); //WME
       new_dw->allocateAndPut(c7h16,  d_lab->d_c7h16INLabel,                indx,patch); //WME
+      new_dw->allocateAndPut(ch3oh,  d_lab->d_ch3ohINLabel,                indx,patch); //WME
     }
     else {
       new_dw->getModifiable(drhodf, d_lab->d_drhodfCPLabel, indx, patch);
@@ -881,6 +885,7 @@ Properties::reComputeProps(const ProcessorGroup* pc,
       new_dw->getModifiable(poolMF, d_lab->d_poolMassFluxLabel,           indx,patch); //WME
       new_dw->getModifiable(poolST, d_lab->d_poolSurfaceTemperatureLabel, indx,patch); //WME
       new_dw->getModifiable(c7h16,  d_lab->d_c7h16INLabel,                indx,patch); //WME
+      new_dw->getModifiable(ch3oh,  d_lab->d_ch3ohINLabel,                indx,patch); //WME
     }
     drhodf.initialize(0.0);
     
@@ -950,6 +955,7 @@ Properties::reComputeProps(const ProcessorGroup* pc,
     poolMF.initialize(0.0); //WME
     poolST.initialize(0.0); //WME
     c7h16.initialize(0.0);  //WME 
+    ch3oh.initialize(0.0);  //WME
 
     if (d_MAlab && !initialize) {
       new_dw->get(voidFraction, d_lab->d_mmgasVolFracLabel,  indx, patch, gn, 0);
@@ -1151,6 +1157,7 @@ Properties::reComputeProps(const ProcessorGroup* pc,
           poolMF[currCell]  = 0.0;                //WME
           poolST[currCell]  = 0.0;                //WME      
           c7h16[currCell] = outStream.getC7H16(); //WME
+          ch3oh[currCell] = outStream.getCH3OH(); //WME
         }
       }
     }

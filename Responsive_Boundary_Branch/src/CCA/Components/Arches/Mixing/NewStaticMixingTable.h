@@ -194,6 +194,7 @@ private:
   int co2rate_index, so2rate_index;
   int mixmolweight_index; 
   int c7h16_index;          //WME
+  int ch3oh_index;          //WME
   bool d_co_output;
   bool d_sulfur_chem;
   bool d_soot_precursors;

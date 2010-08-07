@@ -290,6 +290,7 @@ namespace Uintah {
       const VarLabel* d_pressPlusHydroLabel;
 
       const VarLabel* d_c7h16INLabel;  // WME Fuel Label
+      const VarLabel* d_ch3ohINLabel;  // WME Fuel Label
       // predicted
 
       // for outlet bc

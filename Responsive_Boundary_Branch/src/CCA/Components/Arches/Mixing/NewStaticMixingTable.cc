@@ -187,7 +187,14 @@ NewStaticMixingTable::computeProps(const InletStream& inStream,
   outStream.d_enthalpy=adiab_enthalpy;
   outStream.d_co2=tableLookUp(mixFrac, mixFracVars, current_heat_loss, co2_index);  
   outStream.d_h2o=tableLookUp(mixFrac, mixFracVars, current_heat_loss, h2o_index);
-  outStream.d_c7h16=tableLookUp(mixFrac, mixFracVars, current_heat_loss, c7h16_index);  //WME
+  if (c7h16_index != -1)
+  {  
+    outStream.d_c7h16=tableLookUp(mixFrac, mixFracVars, current_heat_loss, c7h16_index);  //WME
+  }
+  if (ch3oh_index != -1)
+  { 
+    outStream.d_ch3oh=tableLookUp(mixFrac, mixFracVars, current_heat_loss, ch3oh_index);  //WME
+  }
 
   if (d_sulfur_chem) {
     outStream.d_h2s=tableLookUp(mixFrac, mixFracVars, current_heat_loss, h2s_index);
@@ -469,6 +476,7 @@ NewStaticMixingTable::readMixingTable( const string & inputfile )
   mixmolweight_index = -1;  
 
   c7h16_index = -1;   //WME
+  ch3oh_index = -1;   //WME
 
   for (int ii = 0; ii < d_varscount; ii++) {
     vars_names[ii] = getString( gzFp );
@@ -530,6 +538,9 @@ NewStaticMixingTable::readMixingTable( const string & inputfile )
 
     else if(vars_names[ii] == "NC7H16")   //WME
       c7h16_index = ii;                   //WME
+
+    else if(vars_names[ii] == "CH3OH")    //WME
+      ch3oh_index = ii;                   //WME
 
     if (d_calcExtraScalars){
       //This is going to be very source term specific.  
@@ -636,6 +647,7 @@ NewStaticMixingTable::readMixingTable( const string & inputfile )
     cout << "CO2 index is "  << co2_index  << endl;
     cout << "H2O index is "  << h2o_index  << endl;
     cout << "NC7H16 index is " << c7h16_index << endl; //WME
+    cout << "CH3OH index is "  << ch3oh_index << endl; //WME
   }
   
   if (d_sulfur_chem) {
