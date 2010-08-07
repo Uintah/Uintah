@@ -230,9 +230,13 @@ namespace Uintah {
       inline double getMixMW() const {
         return d_mixmw; 
       }
-      inline double getC7H16() const {
-        return d_c7h16;
-      }
+      inline double getC7H16() const {       //WME
+        return d_c7h16;                      //WME
+      }                                      //WME
+      inline double getCH3OH() const {       //WME
+        return d_ch3oh;                      //WME
+      }                                      //WME
+ 
     public:
       double d_pressure;          // Pa
       double d_density;           // kg/m^3
@@ -305,7 +309,8 @@ namespace Uintah {
                       //Value changed in ***MixingModel::computeProps     
       double d_heatLoss;
       
-      double d_c7h16;
+      double d_c7h16;           //WME
+      double d_ch3oh;           //WME
     private:
       // includes all the vars except vectors...
       // increase the value if want to increase number of variables

@@ -1692,7 +1692,16 @@ ResponsiveBoundary::sched_updateResponsiveBoundaryProfile(SchedulerP& sched,
   tsk->modifies(d_lab->d_poolConvectiveHeatFluxLabel);
   tsk->modifies(d_lab->d_poolMassFluxLabel);
   tsk->modifies(d_lab->d_poolSurfaceTemperatureLabel);
-  tsk->modifies(d_lab->d_c7h16INLabel);
+
+  if (RB_tempfuelvec[13])
+  {
+    tsk->modifies(d_lab->d_c7h16INLabel);
+  }
+  if (RB_tempfuelvec[14])
+  {
+    tsk->modifies(d_lab->d_ch3ohINLabel);
+  }
+
 
 //  tsk->modifies(d_lab->d_scalarSPLabel);
 
@@ -1745,7 +1754,7 @@ ResponsiveBoundary::updateResponsiveBoundaryProfile(const ProcessorGroup* /*pc*/
     CCVariable<double> poolConvectiveHeatFlux;
     CCVariable<double> poolMassFlux; 
     CCVariable<double> poolSurfaceTemperature;
-    CCVariable<double> Heptane;
+    CCVariable<double> Fuel;
 
     if (direction == 1) //(x-direction is vertical)
     {
@@ -1789,7 +1798,16 @@ ResponsiveBoundary::updateResponsiveBoundaryProfile(const ProcessorGroup* /*pc*/
     new_dw->getModifiable(poolConvectiveHeatFlux,d_lab->d_poolConvectiveHeatFluxLabel,index,patch);
     new_dw->getModifiable(poolMassFlux,          d_lab->d_poolMassFluxLabel,          index,patch);    
     new_dw->getModifiable(poolSurfaceTemperature,d_lab->d_poolSurfaceTemperatureLabel,index,patch);  
-    new_dw->getModifiable(Heptane,               d_lab->d_c7h16INLabel,               index,patch);
+
+    if (RB_tempfuelvec[13])
+    {
+      new_dw->getModifiable(Fuel,               d_lab->d_c7h16INLabel,               index,patch);
+    }
+
+    if (RB_tempfuelvec[14])
+    {
+      new_dw->getModifiable(Fuel,              d_lab->d_ch3ohINLabel,               index,patch);
+    }
 
 
     bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
@@ -1882,8 +1900,8 @@ from here: */
           double P = 1; // System Pressure (bar) //WME
           int NON = 200;  // number of liquid nodes for responsive boundary model (~200)
           vector<double> Y;
-          Y.push_back(Heptane[curCell]);  // bulk fuel composition (mass fraction)
 
+          Y.push_back(Fuel[curCell]);  // bulk fuel composition (mass fraction)
 
          Reset(RB_tempfuelvec,T,X,Y,height,rdelta_t,windspeed,P,
                 radiationFlux[curCell],RB_PoolDiameter,density[curCell],flame_temperature[curCell],NON);//WME
@@ -1912,7 +1930,7 @@ from here: */
           RB_mapX.find(curCell)->second = X;  //WME
           X = RB_mapX.find(curCell)->second;  //WME
 cout << "node: " << curCell << " radiation: " << radiationFlux[curCell] << endl; //WME
-cout << "Cell: " << curCell << "  Heptane: " << Heptane[curCell] << "  MassFlux: " << poolMassFlux[curCell] <<  endl;
+cout << "Cell: " << curCell << "  Fuel: " << Fuel[curCell] << "  MassFlux: " << poolMassFlux[curCell] <<  endl;
         } // end if (cellType == cellTypeID)                      //WME
       } // end for  (cellIterator)                                                //WME
     } // end if minus                                                 //WME

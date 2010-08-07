@@ -229,6 +229,7 @@ ArchesLabel::ArchesLabel()
   d_c2h2INLabel    =  VarLabel::create("c2h2IN",    CC_double);
   d_ch4INLabel     =  VarLabel::create("ch4IN",     CC_double); 
   d_c7h16INLabel   =  VarLabel::create("c7h16IN",   CC_double); //WME
+  d_ch3ohINLabel   =  VarLabel::create("ch3ohIN",   CC_double); //WME
   d_mixMWLabel     =  VarLabel::create("mixMW",     CC_double); 
 
   // Array containing the reference density multiplied by the void fraction
@@ -641,6 +642,7 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_c2h2INLabel);
   VarLabel::destroy(d_ch4INLabel);
   VarLabel::destroy(d_c7h16INLabel);   //WME
+  VarLabel::destroy(d_ch3ohINLabel);   //WME
   VarLabel::destroy(d_mixMWLabel); 
   VarLabel::destroy(d_denRefArrayLabel);
   VarLabel::destroy(d_densityMicroLabel);
