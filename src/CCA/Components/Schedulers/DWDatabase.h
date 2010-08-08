@@ -196,9 +196,7 @@ DWDatabase<DomainType>::cleanForeign()
     if(iter->second.var && iter->second.var->isForeign()){
       delete iter->second.var;
       iter->second.var=0;
-      typename varDBtype::iterator deliter = iter;
-      iter++;
-      vars.erase(deliter);
+      vars.erase(iter++);
     }
     else
       iter++;
@@ -273,9 +271,7 @@ DWDatabase<DomainType>::initializeScrubs(int dwid, const FastHashTable<ScrubItem
       ScrubItem* result = scrubcounts->lookup(&key);
       if(!result && !add){
         delete variter->second.var;
-        typename varDBtype::iterator deliter = variter;
-        variter++;
-        vars.erase(deliter);
+        vars.erase(variter++);
       } else {
         if (result){
           if (add)
