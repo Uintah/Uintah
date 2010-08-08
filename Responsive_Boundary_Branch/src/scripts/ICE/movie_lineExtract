@@ -52,12 +52,12 @@ foreach X ( $ts[*]:q)
   lineextract -v rho_CC        -o rho.dat   -l 0 -cellCoords -timestep $timestep -istart -1 0 0 -iend 100000 0 0 -m 0 -uda $uda
   lineextract -v temp_CC       -o temp.dat  -l 0 -cellCoords -timestep $timestep -istart -1 0 0 -iend 100000 0 0 -m 0 -uda $uda
 
-  inputs/ICE/Scripts/gradient.m -dat delP.dat  -pDir 1 > /dev/null
-  inputs/ICE/Scripts/gradient.m -dat vel.dat   -pDir 1 > /dev/null
-  inputs/ICE/Scripts/gradient.m -dat press.dat -pDir 1 > /dev/null
-  inputs/ICE/Scripts/gradient.m -dat rho.dat   -pDir 1 > /dev/null
-  inputs/ICE/Scripts/gradient.m -dat temp.dat  -pDir 1 > /dev/null
-  #inputs/ICE/Scripts/removeBraces vel.dat
+  scripts/ICE/gradient.m -dat delP.dat  -pDir 1 > /dev/null
+  scripts/ICE/gradient.m -dat vel.dat   -pDir 1 > /dev/null
+  scripts/ICE/gradient.m -dat press.dat -pDir 1 > /dev/null
+  scripts/ICE/gradient.m -dat rho.dat   -pDir 1 > /dev/null
+  scripts/ICE/gradient.m -dat temp.dat  -pDir 1 > /dev/null
+  #scripts/ICE/removeBraces vel.dat
 
   mv *.dat $uda/.
 

@@ -50,18 +50,18 @@ namespace Uintah {
     ~mms() {};
   };
 
-  struct expTemp{         
-    Vector direction;
-    Point minPoint;
-    Point maxPoint;
-    double coeff;
-    ~expTemp() {};
+  struct gaussTemp{         
+    double spread_x;
+    double spread_y;
+    double amplitude;
+    Point  origin;
+    ~gaussTemp() {};
   };
 
   struct customInitialize_basket{
     vortices* vortex_inputs;
     mms*      mms_inputs;
-    expTemp*  expTemp_inputs;
+    gaussTemp*  gaussTemp_inputs;
     string which;
   };
   void customInitialization_problemSetup( const ProblemSpecP& cfd_ice_ps,

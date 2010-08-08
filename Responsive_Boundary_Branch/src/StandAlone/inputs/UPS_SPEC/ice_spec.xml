@@ -33,13 +33,13 @@
             <strength                   spec="REQUIRED DOUBLE" />
             <radius                     spec="REQUIRED DOUBLE 'positive'" />
           </vortex>                
-        </vortices>
-        <exponentialTemperature         spec="OPTIONAL NO_DATA">
-          <direction                    spec="REQUIRED VECTOR 'positive'"/>
-          <minPoint                     spec="REQUIRED VECTOR"/>
-          <maxPoint                     spec="REQUIRED VECTOR"/>
-          <coefficient                  spec="REQUIRED DOUBLE 'positive'"/>
-        </exponentialTemperature>
+        </vortices>  
+        <gaussianTemperature            spec="OPTIONAL NO_DATA">
+          <origin                       spec="REQUIRED VECTOR "/>
+          <spread_x                     spec="REQUIRED DOUBLE"/>
+          <spread_y                     spec="REQUIRED DOUBLE"/>
+          <amplitude                    spec="REQUIRED DOUBLE 'positive'"/>
+        </gaussianTemperature>
       </customInitialization>
       
       <ImplicitSolver                   spec="OPTIONAL NO_DATA">

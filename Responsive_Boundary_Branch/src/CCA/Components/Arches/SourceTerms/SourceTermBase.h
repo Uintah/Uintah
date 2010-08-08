@@ -86,6 +86,7 @@ protected:
 
   std::string _src_name;                             ///< User assigned source name 
   std::string _init_type;                            ///< Initialization type. 
+  bool _compute_me; 
   const VarLabel* _src_label;                        ///< Source varlabel
   bool _label_sched_init;                            ///< Boolean to clarify if a "computes" or "requires" is needed
   SimulationStateP& _shared_state;                   ///< Local copy of sharedState
