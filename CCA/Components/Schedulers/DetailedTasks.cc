@@ -270,7 +270,7 @@ DetailedTask::doit(const ProcessorGroup* pg,
 void DetailedTasks::initializeScrubs(vector<OnDemandDataWarehouseP>& dws, int dwmap[])
 {
   vector<bool> initialized(dws.size(),false);
-  if(0&&scrubout.active())
+  if(scrubout.active())
     scrubout << Parallel::getMPIRank() << " Begin initialize scrubs\n";
   for(int i=0;i<(int)Task::TotalDWs;i++){
     if (dwmap[i] < 0)
