@@ -253,6 +253,7 @@ uintah: sus \
         timeextract \
         faceextract \
         link_inputs \
+	link_scripts \
         link_tools \
         link_regression_tester \
 	$(VISIT_STUFF)
@@ -264,7 +265,13 @@ link_inputs:
                echo "Creating link to inputs directory." ; \
 	       ln -sf $(SRCTOP_ABS)/StandAlone/inputs StandAlone/inputs; \
 	   fi )
-          
+	   
+link_scripts:
+	@( if ! test -L StandAlone/scripts; then \
+               echo "Creating link to scripts directory." ; \
+	       ln -sf $(SRCTOP_ABS)/scripts StandAlone/scripts; \
+	   fi )
+	             
 link_orderAccuracy:
 	@( if ! test -L StandAlone/orderAccuracy; then \
                echo "Creating link to orderAccuracy directory." ; \

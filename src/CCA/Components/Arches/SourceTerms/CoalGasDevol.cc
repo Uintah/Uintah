@@ -19,7 +19,8 @@ using namespace Uintah;
 CoalGasDevol::CoalGasDevol( std::string src_name, vector<std::string> label_names, SimulationStateP& shared_state ) 
 : SourceTermBase( src_name, shared_state, label_names )
 {
-    _src_label = VarLabel::create( src_name, CCVariable<double>::getTypeDescription() ); 
+  _label_sched_init = false; 
+  _src_label = VarLabel::create( src_name, CCVariable<double>::getTypeDescription() ); 
 }
 
 CoalGasDevol::~CoalGasDevol()

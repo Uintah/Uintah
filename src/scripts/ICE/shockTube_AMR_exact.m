@@ -54,7 +54,7 @@ nDumps = length(physicalTime) - 1;
 
 %_______________________________
 % Exact solution
-unix('grep -v # inputs/ICE/Scripts/riemann.dat > /tmp/exactSolution')
+unix('grep -v # scripts/ICE/riemann.dat > /tmp/exactSolution')
 exactSol = importdata('/tmp/exactSolution');
 x_exact = exactSol(:,1);
   

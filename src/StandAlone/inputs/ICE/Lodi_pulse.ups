@@ -67,7 +67,42 @@
                               <value> 0.0 </value>
         </BCType>
       </Face> 
-
+      
+      <Face side = "y-">
+        <BCType id = "0"   label = "Pressure"     var = "LODI">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0"   label = "Velocity"     var = "LODI">
+                              <value> [0.0,0.0,0.0] </value>
+        </BCType>
+        <BCType id = "0"   label = "Temperature"  var = "LODI">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0"   label = "Density"      var = "LODI">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0"   label = "SpecificVol"  var = "computeFromDensity">
+                              <value> 0.0 </value>
+        </BCType>
+      </Face>
+      <Face side = "y+">
+        <BCType id = "0"   label = "Pressure"     var = "LODI">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0"   label = "Velocity"     var = "LODI">
+                              <value> [0.0,0.0,0.0] </value>
+        </BCType>
+        <BCType id = "0"   label = "Temperature"  var = "LODI">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0"   label = "Density"      var = "LODI">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0"   label = "SpecificVol"  var = "computeFromDensity">
+                              <value> 0.0 </value>
+        </BCType>
+      </Face> 
+<!--
       <Face side = "y-">
         <BCType id = "0"   label = "Pressure"     var = "Neumann">
                               <value> 0.0 </value>
@@ -103,7 +138,7 @@
                               <value> 0.0 </value>
         </BCType>
       </Face>
-
+-->
       <Face side = "z-">
         <BCType id = "0"   label = "Symmetric" var = "symmetry">
         </BCType>
@@ -120,10 +155,10 @@
        <Level>
            <Box label="1">
               <lower>        [0,    0,    0]    </lower>
-              <upper>        [1, 0.01, 0.01]    </upper>
+              <upper>        [1, 1 , 0.01]    </upper>
               <extraCells>   [1,1,1]         </extraCells>
               <patches>      [1,1,1]         </patches>
-              <resolution>   [100,1,1]       </resolution>
+              <resolution>   [100,100,1]       </resolution>
            </Box>
        </Level>
     </Grid>    
@@ -131,7 +166,7 @@
     <!--      O  U  P  U  T     V  A  R  I  A  B  L  E  S                   -->
     <!--____________________________________________________________________-->
    <DataArchiver>
-      <filebase>pulse_Lodi_xdir.uda</filebase>
+      <filebase>pulse_Lodi_2d.uda</filebase>
       <outputInterval>0.0002</outputInterval>
       <save label="vel_CC"/>
       <save label="temp_CC"/>
@@ -153,12 +188,12 @@
         <advection type = "FirstOrder" />
         
         <customInitialization>
-          <exponentialTemperature>
-            <direction>   [1,0,0]     </direction>
-            <coefficient> 10          </coefficient>
-            <minPoint>   [0.25, 0, 0] </minPoint>
-            <maxPoint>   [1.0,  0, 0] </maxPoint>
-          </exponentialTemperature>
+          <gaussianTemperature>
+            <origin>   [0.5,0.5,0]  </origin>
+            <amplitude> 8      </amplitude>
+            <spread_x>  0.1  </spread_x>
+            <spread_y>  0.1 </spread_y>
+          </gaussianTemperature>
         </customInitialization>
       </ICE>        
     </CFD>

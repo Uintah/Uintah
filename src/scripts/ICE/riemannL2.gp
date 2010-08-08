@@ -14,8 +14,8 @@
 #__________________________________
 #   Move data to a central location
 #__________________________________
-!../inputs/ICE/Scripts/combinePatches
-!cp ../inputs/ICE/Scripts/riemann.dat /tmp/exactSolution
+!../scripts/ICE/combinePatches
+!cp ../scripts/ICE/riemann.dat /tmp/exactSolution
 !cp BOT_explicit_Pressure/873/L-0/patch_combined/Press_CC /tmp/.
 !cp BOT_Advection_after_BC/873/L-0/patch_combined/Mat_0/Temp_CC /tmp/.
 !cp BOT_Advection_after_BC/873/L-0/patch_combined/Mat_0/X_vel_CC /tmp/.

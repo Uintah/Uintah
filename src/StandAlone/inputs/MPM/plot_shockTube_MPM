@@ -56,7 +56,7 @@ mv partout* $out/partout1
 rm -f partout*
 rm -f junK
 
-cp inputs/ICE/Scripts/riemann.dat $out/exactSolution.dat
+cp scripts/ICE/riemann.dat $out/exactSolution.dat
 
 
 #__________________________________
