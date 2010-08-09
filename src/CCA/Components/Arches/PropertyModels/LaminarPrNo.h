@@ -15,7 +15,9 @@
 *
 * @details This code is currently only supporting binary mixtures.  It assumes that the 
 *          mixture fraction is computed as: 
-*           $ f = \frac{kg \; fuel}{kg \; fuel + kg \; air} $
+*           \f[ 
+*           f = \frac{kg \; fuel}{kg \; fuel + kg \; air} 
+*           \f]
 *
 *           The input parameters for this property model include:
 *             The system pressure in units of Bar.
@@ -70,22 +72,19 @@
 *                 is described on page 9.15 in the 5th edition of Poling et al.  
 *
 *
-*
-*
-*
 * The input file interface for this property should like this in your UPS file: 
 * \code 
 *   <PropertyModels>
 *     <model label = "label_name" type = "laminar_pr">
-*       <atm_pressure>DOUBLE</atm_pressure>
-*       <mix_frac_label>STRING</mix_frac_label>
+*       <atm_pressure>DOUBLE</atm_pressure>                     <!-- Atmospheric pressure [bar] --> 
+*       <mix_frac_label>STRING</mix_frac_label>                 <!-- Label name of the variable representing mixture fraction --> 
 *       <fuel>
-*         <molar_mass>DOUBLE</molar_mass>
-*         <critical_temperature>DOUBLE<critical_temperature>
-*         <dipole_moment>DOUBLE</dipole_moment>
-*         <lennard_jones_energy>DOUBLE</lennard_jones_energy>
-*         <lennard_jones_length>DOUBLE</lennard_jones_length>
-*         <viscosity>DOUBLE</viscosity>
+*         <molar_mass>DOUBLE</molar_mass>                       <!-- [g/mol] -->
+*         <critical_temperature>DOUBLE<critical_temperature>    <!-- [K] -->
+*         <dipole_moment>DOUBLE</dipole_moment>                 <!-- [debyes] --> 
+*         <lennard_jones_energy>DOUBLE</lennard_jones_energy>   <!-- [Angstroms] -->
+*         <lennard_jones_length>DOUBLE</lennard_jones_length>   <!-- [K] -->
+*         <viscosity>DOUBLE</viscosity>                         <!-- [kg/m/s] -->
 *       </fuel>
 *       <oxidizer>
 *         <!-- SAME INPUTS AS FUEL --> 
@@ -178,6 +177,7 @@ namespace Uintah{
       double      _viscosity_b;               ///< viscosity (kg/m/s) for pure species b; 
 
       //  -------------------->>> Inline property evaluators <<<--------------------- 
+      //
       inline double getVisc( double f, double T ){
 
         //  compute viscosity here 
