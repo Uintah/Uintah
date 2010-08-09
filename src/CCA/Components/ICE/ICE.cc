@@ -294,7 +294,7 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec,
  
  //__________________________________
  //  custom Initialization
-  customInitialization_problemSetup(cfd_ice_ps, d_customInitialize_basket);
+  customInitialization_problemSetup(cfd_ice_ps, d_customInitialize_basket, grid);
   
   //__________________________________
   // Pull out implicit solver parameters

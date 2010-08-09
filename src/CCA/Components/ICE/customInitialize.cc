@@ -43,7 +43,8 @@ namespace Uintah {
             the customInitialize_basket.
 _____________________________________________________________________*/
 void customInitialization_problemSetup( const ProblemSpecP& cfd_ice_ps,
-                                        customInitialize_basket* cib)
+                                        customInitialize_basket* cib,
+                                        GridP& grid)
 {
   //__________________________________
   //  search the ICE problem spec for 
@@ -102,6 +103,18 @@ void customInitialization_problemSetup( const ProblemSpecP& cfd_ice_ps,
       cib->mms_inputs = scinew mms();
       mms_ps->require("A", cib->mms_inputs->A);
     } 
+    
+    //__________________________________
+    //  2D counterflow in the x & y plane
+    ProblemSpecP cf_ps= c_init_ps->findBlock("counterflow");
+    if(cf_ps) {
+      cib->which = "counterflow";
+      cib->counterflow_inputs = scinew counterflow();
+      cf_ps->require("strainRate",   cib->counterflow_inputs->strainRate);
+      cf_ps->require("referenceCell", cib->counterflow_inputs->refCell);
+      
+      grid->getLength(cib->counterflow_inputs->domainLength, "minusExtraCells");
+    }
   }
 }
 /*_____________________________________________________________________ 
@@ -176,6 +189,44 @@ void customInitialization(const Patch* patch,
       temp_CC[c] = 300 + Z;
     }
   } 
+  
+   //__________________________________
+  // 2D counterflow flowfield
+  // See:  "Characteristic Boundary conditions for direct simulations
+  //        of turbulent counterflow flames" by Yoo, Wang Trouve and IM
+  //        Combustion Theory and Modelling, Vol 9. No 4., Nov. 2005, 617-646
+  if(cib->which == "counterflow"){
+  
+    double strainRate   = cib->counterflow_inputs->strainRate;
+    Vector domainLength = cib->counterflow_inputs->domainLength;
+    IntVector refCell   = cib->counterflow_inputs->refCell;
+    
+    double u_ref   = vel_CC[refCell].x();
+    double v_ref   = vel_CC[refCell].y();
+    double p_ref   = press_CC[refCell];
+    double rho_ref = rho_CC[refCell];
+    
+    for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) {
+      IntVector c = *iter;
+      Point pt = patch->cellPosition(c);
+      double x = pt.x();
+      double y = pt.y();
+
+      double u = -strainRate * (x - domainLength.x()/2.0);
+      double v =  strainRate * (y - domainLength.y()/2.0);
+      // for a purely converging flow 
+      //v = -strainRate * (y - domainLength.y()/2.0);
+      
+      vel_CC[c].x( u );
+      vel_CC[c].y( v );
+ 
+      press_CC[c] = p_ref
+                  + 0.5 * rho_ref * (u_ref * u_ref + v_ref * v_ref)
+                  - 0.5 * rho_ref * (u * u + v * v);
+    }
+  }
+  
+  
   //__________________________________
   // method of manufactured solution 1
   // See:  "A non-trival analytical solution to the 2d incompressible
