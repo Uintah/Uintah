@@ -10,14 +10,31 @@
 * @author Jeremy T. and Weston E. 
 * @date   August 2010
 * 
-* @brief Computes the laminar Pr number by : ... 
+* @brief Computes the laminar Pr number by evaluating a laminar diffusion coefficient 
+*        and viscosity based on local concentrations of species and local temperature. 
 *
-* ADD INPUT FILE INFORMATION HERE: 
+* @details This code is currently only supporting binary mixtures.  It assumes that the 
+*          mixture fraction is computed as: 
+*           $ f = \frac{kg \; fuel}{kg \; fuel + kg \; air} $
+*
+*
 * The input file interface for this property should like this in your UPS file: 
 * \code 
 *   <PropertyModels>
 *     <model label = "label_name" type = "laminar_pr">
-*       <temperature>298</temperature>
+*       <atm_pressure>DOUBLE</atm_pressure>
+*       <mix_frac_label>STRING</mix_frac_label>
+*       <fuel>
+*         <molar_mass>DOUBLE</molar_mass>
+*         <critical_temperature>DOUBLE<critical_temperature>
+*         <dipole_moment>DOUBLE</dipole_moment>
+*         <lennard_jones_energy>DOUBLE</lennard_jones_energy>
+*         <lennard_jones_length>DOUBLE</lennard_jones_length>
+*         <viscosity>DOUBLE</viscosity>
+*       </fuel>
+*       <oxidizer>
+*         <!-- SAME INPUTS AS FUEL --> 
+*       </oxidizer>
 *     </model>
 *   </PropertyModels>
 * \endcode 
