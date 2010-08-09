@@ -7,8 +7,9 @@ using namespace Uintah;
 //---------------------------------------------------------------------------
 LaminarPrNo::LaminarPrNo( std::string prop_name, SimulationStateP& shared_state ) : PropertyModelBase( prop_name, shared_state )
 {
+  std::string varlabel_name = "laminar_pr"; 
   // the prop is the pr number.  Along with this, we will also give access to D and mu
-  _prop_label = VarLabel::create( prop_name, CCVariable<double>::getTypeDescription() ); 
+  _prop_label = VarLabel::create( varlabel_name, CCVariable<double>::getTypeDescription() ); 
 
   // additional local labels as needed by this class (delete this if it isn't used): 
   std::string name = "laminar_viscosity";
@@ -43,36 +44,26 @@ void LaminarPrNo::problemSetup( const ProblemSpecP& inputdb )
 {
   ProblemSpecP db = inputdb; 
 
+  _binary_mixture = true; //set this to true for now.
+
   db->require( "mix_frac_label", _mix_frac_label_name ); 
   db->require( "atm_pressure",   _pressure ); 
 
-  ProblemSpecP db_binary = db->findBlock("Binary"); 
-  if ( db_binary ) { 
+  //Fuel
+  db->findBlock("fuel")->require( "molar_mass", _molar_mass_a ); 
+  db->findBlock("fuel")->require( "critical_temperature", _crit_pressure_a ); 
+  db->findBlock("fuel")->require( "dipole_moment", _dipole_moment_a ); 
+  db->findBlock("fuel")->require( "lennard_jones_length", _lj_sigma_a ); 
+  db->findBlock("fuel")->require( "lennard_jones_energy", _lj_ek_a ); 
+  db->findBlock("fuel")->require( "viscosity", _viscosity_a ); 
 
-
-    db_binary->getWithDefault( "air_b", _air_b, true);
-    db_binary->require( "molar_mass_a", _molar_mass_a ); 
-    db_binary->getWithDefault( "molar_mass_b", _molar_mass_b, 29.1 );
-    db_binary->require( "critical_temperature_a", _crit_temperature_a );
-    db_binary->getWithDefault( "critical_temperature_b", _crit_temperature_b, 132.2 );
-    db_binary->require( "critical_pressure_a", _crit_pressure_a );
-    db_binary->getWithDefault( "critical_pressure_b", _crit_pressure_b, 37.45 ); 
-    db_binary->require( "dipole_moment_a", _dipole_moment_a);
-    db_binary->getWithDefault( "dipole_moment_b", _dipole_moment_b, 0.00 );
-    db_binary->require( "lennard_jones_length_a", _lj_sigma_a );
-    db_binary->getWithDefault( "lennard_jone_length_b", _lj_sigma_b, 3.62 );
-    db_binary->require( "lennard_jones_energy_a", _lj_ek_a);
-    db_binary->getWithDefault( "lennard_jones_energy_b", _lj_ek_b, 97.0 );
-    db_binary->require( "viscosity_a", _viscosity_a);
-    db_binary->getWithDefault( "viscosity_b", _viscosity_b, 1.8465e-5 );
-    // add the rest here 
-
-  } else {
-
-    throw InvalidValue( "Error: Could not find <Binary> in your Laminar Prandlt number property. Only binary mixture are supported.", __FILE__, __LINE__); 
-
-  } 
-
+  //Oxidizer
+  db->findBlock("oxidizer")->require( "molar_mass", _molar_mass_b ); 
+  db->findBlock("oxidizer")->require( "critical_temperature", _crit_pressure_b ); 
+  db->findBlock("oxidizer")->require( "dipole_moment", _dipole_moment_b ); 
+  db->findBlock("oxidizer")->require( "lennard_jones_length", _lj_sigma_b ); 
+  db->findBlock("oxidizer")->require( "lennard_jones_energy", _lj_ek_b ); 
+  db->findBlock("oxidizer")->require( "viscosity", _viscosity_b ); 
 
 }
 
@@ -104,10 +95,12 @@ void LaminarPrNo::sched_computeProp( const LevelP& level, SchedulerP& sched, int
 
     }
 
-    // Need to fix this. 
-    //tsk->requires( Task::NewDW, density,     Ghost::None, 0 );  
-    //tsk->requires( Task::NewDW, temperature, Ghost::None, 0 );  
-    //tsk->requires( Task::NewDW, mix_frac,    Ghost::None, 0 ); 
+    const VarLabel* den_label = VarLabel::find("densityCP"); 
+    tsk->requires( Task::NewDW, den_label,     Ghost::None, 0 );  
+    //const VarLabel* T_label   = VarLabel::find("tempIN"); 
+    //tsk->requires( Task::NewDW, T_label,     Ghost::None, 0 );  
+    const VarLabel* f_label   = VarLabel::find("scalarSP"); 
+    tsk->requires( Task::NewDW, f_label,     Ghost::None, 0 );  
 
     sched->addTask( tsk, level->eachPatch(), _shared_state->allArchesMaterials() ); 
     
@@ -136,9 +129,9 @@ void LaminarPrNo::computeProp(const ProcessorGroup* pc,
     CCVariable<double> Pr;  // Prandlt number 
     CCVariable<double> D;   // Diffusion coef
     CCVariable<double> mu;  // viscosity
-    CCVariable<double> f;   // mixture fraction 
-    CCVariable<double> T;   // temperature 
-    CCVariable<double> rho; // density
+    constCCVariable<double> f;   // mixture fraction 
+    constCCVariable<double> T;   // temperature 
+    constCCVariable<double> rho; // density
 
     if ( new_dw->exists( _prop_label, matlIndex, patch ) ){
       new_dw->getModifiable( Pr, _prop_label, matlIndex, patch ); 
@@ -153,10 +146,12 @@ void LaminarPrNo::computeProp(const ProcessorGroup* pc,
       mu.initialize(0.0); 
     }
 
-    // Fix this too... 
-    //new_dw->get( f, f_label, matlIndex, patch, Ghost::None, 0 ); 
+    const VarLabel* f_label = VarLabel::find( "scalarSP" ); 
+    new_dw->get( f, f_label, matlIndex, patch, Ghost::None, 0 ); 
+    //const VarLabel* T_label = VarLabel::find( "tempIN" ); 
     //new_dw->get( T, T_label, matlIndex, patch, Ghost::None, 0 ); 
-    //new_dw->get( rho, Rho_label, matlIndex, patch, Ghost::None, 0 ); 
+    const VarLabel* den_label = VarLabel::find( "densityCP" ); 
+    new_dw->get( rho, den_label, matlIndex, patch, Ghost::None, 0 ); 
 
     CellIterator iter = patch->getCellIterator(); 
 
@@ -164,10 +159,12 @@ void LaminarPrNo::computeProp(const ProcessorGroup* pc,
 
       IntVector c = *iter; //i,j,k location
 
+      double T = 298.0; 
+
       // viscosity 
-      mu[c] = getVisc( f[c], T[c] );
+      mu[c] = getVisc( f[c], T );
       // diffusion coefficient 
-      D[c]  = getDiffCoef( T[c] );
+      D[c]  = getDiffCoef( T );
       // prandlt number
       Pr[c] = mu[c] / ( rho[c] * D[c] ); 
 
