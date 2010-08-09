@@ -58,6 +58,11 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Arches/PropertyModels/PropertyModelBase.h>
 #include <CCA/Components/Arches/PropertyModels/PropertyModelFactory.h>
 #include <CCA/Components/Arches/PropertyModels/ConstProperty.h>
+#include <CCA/Components/Arches/PropertyModels/ColdFlowMixing.h>
+#include <CCA/Components/Arches/PropertyModels/LaminarPrNo.h>
+#if HAVE_TABPROPS
+# include <CCA/Components/Arches/ChemMix/TabPropsInterface.h>
+#endif 
 
 #include <CCA/Components/Arches/Arches.h>
 #include <CCA/Components/Arches/ArchesLabel.h>
@@ -2724,13 +2729,25 @@ void Arches::registerPropertyModels(ProblemSpecP& db)
 
       proc0cout << "Found a property model: " << prop_name << endl; 
 
-      if ( prop_type == "ConstantCC" ) {
+      if ( prop_type == "cc_constant" ) {
 
         // An example of a constant CC variable property 
         PropertyModelBase::Builder* the_builder = new ConstProperty<CCVariable<double>, constCCVariable<double> >::Builder( prop_name, d_sharedState ); 
         prop_factory.register_property_model( prop_name, the_builder ); 
 
-      } else if ( prop_type == "ConstantFCX" ) {
+      } else if ( prop_type == "cfmm" ) {
+
+        // Cold flow mixing model
+        PropertyModelBase::Builder* the_builder = new ColdFlowMixing::Builder( prop_name, d_sharedState ); 
+        prop_factory.register_property_model( prop_name, the_builder ); 
+
+      } else if ( prop_type == "laminar_pr" ) {
+
+        // Laminar Pr number calculation
+        PropertyModelBase::Builder* the_builder = new LaminarPrNo::Builder( prop_name, d_sharedState ); 
+        prop_factory.register_property_model( prop_name, the_builder ); 
+
+      } else if ( prop_type == "fx_constant" ) {
 
         // An example of a constant FCX variable property 
         PropertyModelBase::Builder* the_builder = new ConstProperty<SFCXVariable<double>, constCCVariable<double> >::Builder( prop_name, d_sharedState ); 
@@ -2738,6 +2755,7 @@ void Arches::registerPropertyModels(ProblemSpecP& db)
 
       } else {
 
+        proc0cout << endl;
         proc0cout << "For property model named: " << prop_name << endl;
         proc0cout << "with type: " << prop_type << endl;
         throw InvalidValue("This property model is not recognized or supported! ", __FILE__, __LINE__); 
