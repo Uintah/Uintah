@@ -28,6 +28,7 @@
             <rho                        spec="OPTIONAL DOUBLE 'positive'"/>
             <!-- laminar pr --> 
             <molar_mass                 spec="OPTIONAL DOUBLE 'positive'"/>
+            <critical_pressure          spec="OPTIONAL DOUBLE 'positive'"/>
             <critical_temperature       spec="OPTIONAL DOUBLE 'positive'"/>
             <dipole_moment              spec="OPTIONAL DOUBLE 'positive'"/>
             <lennard_jones_length       spec="OPTIONAL DOUBLE 'positive'"/>
@@ -41,6 +42,7 @@
             <!-- laminar pr --> 
             <molar_mass                 spec="OPTIONAL DOUBLE 'positive'"/>
             <critical_temperature       spec="OPTIONAL DOUBLE 'positive'"/>
+            <critical_pressure          spec="OPTIONAL DOUBLE 'positive'"/>
             <dipole_moment              spec="OPTIONAL DOUBLE 'positive'"/>
             <lennard_jones_length       spec="OPTIONAL DOUBLE 'positive'"/>
             <lennard_jones_energy       spec="OPTIONAL DOUBLE 'positive'"/>

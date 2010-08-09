@@ -51,15 +51,17 @@ void LaminarPrNo::problemSetup( const ProblemSpecP& inputdb )
 
   //Fuel
   db->findBlock("fuel")->require( "molar_mass", _molar_mass_a ); 
-  db->findBlock("fuel")->require( "critical_temperature", _crit_pressure_a ); 
+  db->findBlock("fuel")->require( "critical_pressure", _crit_pressure_a );
+  db->findBlock("fuel")->require( "critical_temperature", _crit_temperature_a ); 
   db->findBlock("fuel")->require( "dipole_moment", _dipole_moment_a ); 
   db->findBlock("fuel")->require( "lennard_jones_length", _lj_sigma_a ); 
   db->findBlock("fuel")->require( "lennard_jones_energy", _lj_ek_a ); 
   db->findBlock("fuel")->require( "viscosity", _viscosity_a ); 
 
   //Oxidizer
-  db->findBlock("oxidizer")->require( "molar_mass", _molar_mass_b ); 
-  db->findBlock("oxidizer")->require( "critical_temperature", _crit_pressure_b ); 
+  db->findBlock("oxidizer")->require( "molar_mass", _molar_mass_b );
+  db->findBlock("oxidizer")->require( "critical_pressure", _crit_pressure_b );
+  db->findBlock("oxidizer")->require( "critical_temperature", _crit_temperature_b ); 
   db->findBlock("oxidizer")->require( "dipole_moment", _dipole_moment_b ); 
   db->findBlock("oxidizer")->require( "lennard_jones_length", _lj_sigma_b ); 
   db->findBlock("oxidizer")->require( "lennard_jones_energy", _lj_ek_b ); 
