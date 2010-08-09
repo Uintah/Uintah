@@ -233,16 +233,22 @@ namespace Uintah{
         double C_a = (pow((MW_a),0.25))/(sqrt(vis_a*U_a));
         double C_b = (pow((MW_b),0.25))/(sqrt(vis_b*U_b));
 
+
         double H1   = (sqrt(MW_a*MW_b/32.0))/(pow((MW_a + MW_b),1.5));
         double H2   = (pow((1.0 + 0.36*TR_ab*(TR_ab - 1.0)),0.16667))/(sqrt(TR_ab));
         double H3   = (pow((C_a + C_b),2.0))*FR_ab;
         double H_ab = H1*H2*H3;
 
+
+        double K_a1 = (Y_a*vis_a);
+        double K_a2 = (3.0 + (2.0*MW_a/MW_b));
+        double K_a3 = Y_a + vis_a*(Y_b*H_ab*K_a2);
         double K_a  = (Y_a*vis_a)/(Y_a + vis_a*(Y_b*H_ab*(3.0 + (2.0*MW_b/MW_a))));
         double K_b  = (Y_b*vis_b)/(Y_b + vis_b*(Y_a*H_ab*(3.0 + (2.0*MW_a/MW_b))));
 
+
         double viscosity = K_a*(1.0 + pow(H_ab,2.0)*pow(K_b,2.0)) + K_b*(1.0 + 2*H_ab*K_a + pow(H_ab,2.0)*pow(K_a,2.0));
- 
+
         return viscosity;  ///< units of kg/m/s
 
         } else {
@@ -290,8 +296,8 @@ namespace Uintah{
 
           MW_ab = 2/((1/MW_a) + (1/MW_b));
 
-          D_ab = (3.03 - (0.98/sqrt(MW_ab)))*(0.001)*(pow(T,1.5))/(P*sqrt(MW_ab)*pow(sigma_ab,2)*CI_d)/1e5;
- 
+          D_ab = (3.03 - (0.98/sqrt(MW_ab)))*(0.001)*(pow(T,1.5))/(P*sqrt(MW_ab)*pow(sigma_ab,2)*CI_d)/100/100;
+
           return D_ab; /// <units of m^2/s
 
         } else {
