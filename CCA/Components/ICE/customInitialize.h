@@ -57,15 +57,24 @@ namespace Uintah {
     Point  origin;
     ~gaussTemp() {};
   };
+  
+  struct counterflow{         
+    double strainRate;
+    Vector domainLength;
+    IntVector refCell;
+    ~counterflow() {};
+  };
 
   struct customInitialize_basket{
-    vortices* vortex_inputs;
-    mms*      mms_inputs;
-    gaussTemp*  gaussTemp_inputs;
+    vortices*     vortex_inputs;
+    mms*          mms_inputs;
+    gaussTemp*    gaussTemp_inputs;
+    counterflow*  counterflow_inputs;
     string which;
   };
   void customInitialization_problemSetup( const ProblemSpecP& cfd_ice_ps,
-                                        customInitialize_basket* cib);
+                                        customInitialize_basket* cib,
+                                        GridP& grid);
                                         
   void customInitialization(const Patch* patch,
                             CCVariable<double>& rho_CC,
