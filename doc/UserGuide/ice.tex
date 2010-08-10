@@ -1013,8 +1013,9 @@ results at time $t = 5msec$.
 \begin{description} 
 \footnotesize
 \item [Component used:] \hfill ICE
-\item [Input file name:] \hfill \TT{shocktube\_AMR.ups}
-\item [Command used to run input file:]\hfill\\ \TT{sus inputs/UintahRelease/ICE/shocktube\_AMR.ups}
+\item [Input file name:] \hfill \TT{shockTube\_AMR.ups}
+\item [Command used to run input file:]\hfill\\ \TT{sus
+inputs/UintahRelease/ICE/shockTube\_AMR.ups}
 \item [Postprocessing command:]\hfill \\
 \TT{inputs/UintahRelease/ICE/plot\_shockTube\_AMR shockTube\_AMR.uda y}\\
 This Octave script will generate a postscript file shockTube\_AMR.ps
@@ -1106,9 +1107,9 @@ $(p=0.1, \rho=0.125, u=0, v=0).$  The fluid was an ideal, inviscid, polytropic g
 \subsubsection*{\underline{Simulation Specifics}}
 \begin{description} 
 \item [Component used:] \hfill ICE
-\item [Input file name:] \hfill \TT{Explosion.ups}
+\item [Input file name:] \hfill \TT{explosion.ups}
 \item [Command used to run input file:]\hfill \\
-      \TT{mpirun -np 4 sus inputs/UintahRelease/ICE/Explosion.ups}
+      \TT{mpirun -np 4 sus inputs/UintahRelease/ICE/explosion.ups}
 \item [Visualization net file:]\hfill \TT{inputs/UintahRelease/ICE/Explosion.session}\\
 \item [Postprocessing command:]\hfill \\
 \tt scripts/ICE/plot\_explosion\_AMR Explosion\_AMR.uda y \normalfont \\
