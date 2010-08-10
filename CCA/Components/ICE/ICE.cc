@@ -2202,23 +2202,26 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
       setBC(press_CC, rho_micro, placeHolder, d_surroundingMatl_indx, 
             "rho_micro","Pressure", patch, d_sharedState, 0, new_dw);
             
-      for (CellIterator iter = patch->getExtraCellIterator();
-                                                        !iter.done();iter++){
+            
+      for (CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
         IntVector c = *iter;
         sp_vol_CC[indx][c] = 1.0/rho_micro[indx][c];
-        
+
         //needed for LODI BCs
         vol_frac_CC[indx][c] = rho_CC[indx][c]*sp_vol_CC[indx][c]; 
-        
-        double dp_drho, dp_de, c_2;
+
+        double dp_drho, dp_de, c_2, press_tmp;
         ice_matl->getEOS()->computePressEOS(rho_micro[indx][c],gamma[indx][c],
-                                          cv[indx][c], Temp_CC[indx][c], press_CC[c],
+                                          cv[indx][c], Temp_CC[indx][c], press_tmp,
                                           dp_drho, dp_de);
-                                          
+
+        if( !d_customInitialize_basket->doesComputePressure){
+          press_CC[c] = press_tmp;
+        }
+
         c_2 = dp_drho + dp_de * press_CC[c]/(rho_micro[indx][c] * rho_micro[indx][c]);
         speedSound[indx][c] = sqrt(c_2);
       }
-      
       //____ B U L L E T   P R O O F I N G----
       IntVector neg_cell;
       ostringstream warn, base;

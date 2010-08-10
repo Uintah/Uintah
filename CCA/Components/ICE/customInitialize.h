@@ -70,6 +70,7 @@ namespace Uintah {
     mms*          mms_inputs;
     gaussTemp*    gaussTemp_inputs;
     counterflow*  counterflow_inputs;
+    bool          doesComputePressure;
     string which;
   };
   void customInitialization_problemSetup( const ProblemSpecP& cfd_ice_ps,

@@ -50,7 +50,9 @@ void customInitialization_problemSetup( const ProblemSpecP& cfd_ice_ps,
   //  search the ICE problem spec for 
   // custom initialization inputs
   ProblemSpecP c_init_ps= cfd_ice_ps->findBlock("customInitialization");
-  cib->which = "none";  // default
+  // defaults
+  cib->which = "none"; 
+  cib->doesComputePressure = false;
   
   if(c_init_ps){
     //__________________________________
@@ -59,6 +61,7 @@ void customInitialization_problemSetup( const ProblemSpecP& cfd_ice_ps,
     if(vortices_ps) {
       cib->vortex_inputs = scinew vortices();
       cib->which = "vortices";
+      cib->doesComputePressure = true;
       
       for (ProblemSpecP vortex_ps = vortices_ps->findBlock("vortex"); vortex_ps != 0;
                         vortex_ps = vortex_ps->findNextBlock("vortex")) {
@@ -100,6 +103,7 @@ void customInitialization_problemSetup( const ProblemSpecP& cfd_ice_ps,
     ProblemSpecP mms_ps= c_init_ps->findBlock("manufacturedSolution");
     if(mms_ps) {
       cib->which = "mms_1";
+      cib->doesComputePressure = true;
       cib->mms_inputs = scinew mms();
       mms_ps->require("A", cib->mms_inputs->A);
     } 
@@ -109,6 +113,7 @@ void customInitialization_problemSetup( const ProblemSpecP& cfd_ice_ps,
     ProblemSpecP cf_ps= c_init_ps->findBlock("counterflow");
     if(cf_ps) {
       cib->which = "counterflow";
+      cib->doesComputePressure = true;
       cib->counterflow_inputs = scinew counterflow();
       cf_ps->require("strainRate",   cib->counterflow_inputs->strainRate);
       cf_ps->require("referenceCell", cib->counterflow_inputs->refCell);
@@ -203,10 +208,10 @@ void customInitialization(const Patch* patch,
     
     double u_ref   = vel_CC[refCell].x();
     double v_ref   = vel_CC[refCell].y();
-    double p_ref   = press_CC[refCell];
+    double p_ref   = 101325;
     double rho_ref = rho_CC[refCell];
     
-    for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) {
+    for(CellIterator iter=patch->getExtraCellIterator(); !iter.done();iter++) {
       IntVector c = *iter;
       Point pt = patch->cellPosition(c);
       double x = pt.x();
