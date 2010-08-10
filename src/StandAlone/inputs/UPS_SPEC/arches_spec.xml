@@ -14,7 +14,7 @@
       <PropertyModels                   spec="OPTIONAL NO_DATA" >
         <model                          spec="MULTIPLE NO_DATA" 
                                         attribute1="label REQUIRED STRING"
-                                        attribute2="type REQUIRED STRING 'cc_constant, fx_constant, cfmm, laminar_pr'">
+                                        attribute2="type REQUIRED STRING 'cc_constant, fx_constant, laminar_pr'">
           <!-- constant property model --> 
           <constant                     spec="OPTIONAL DOUBLE"/>
 
@@ -24,9 +24,6 @@
           <D                            spec="OPTIONAL DOUBLE"/>
 
           <fuel                         spec="OPTIONAL NO_DATA">
-            <!-- cold flow mixing --> 
-            <T                          spec="OPTIONAL DOUBLE 'positive'"/>
-            <rho                        spec="OPTIONAL DOUBLE 'positive'"/>
             <!-- laminar pr --> 
             <molar_mass                 spec="OPTIONAL DOUBLE 'positive'"/>
             <critical_pressure          spec="OPTIONAL DOUBLE 'positive'"/>
@@ -35,9 +32,6 @@
             <viscosity                  spec="OPTIONAL DOUBLE 'positive'"/>
           </fuel>
           <oxidizer                     spec="OPTIONAL NO_DATA">
-            <!-- cold flow mixing --> 
-            <T                          spec="OPTIONAL DOUBLE 'positive'"/>
-            <rho                        spec="OPTIONAL DOUBLE 'positive'"/>
             <!-- laminar pr --> 
             <molar_mass                 spec="OPTIONAL DOUBLE 'positive'"/>
             <critical_temperature       spec="OPTIONAL DOUBLE 'positive'"/>
