@@ -141,6 +141,14 @@ namespace Uintah {
         inline IntVector end() const {
           return d_e;
         }
+        /**
+        * Return the number of cells in the iterator
+        */
+        inline unsigned int size() 
+        {
+          IntVector size=d_e-d_s;
+          return size.x()*size.y()*size.z();
+        };
         inline NodeIterator(const NodeIterator& copy)
           : d_s(copy.d_s), d_e(copy.d_e),
           d_ix(copy.d_ix), d_iy(copy.d_iy), d_iz(copy.d_iz) {
