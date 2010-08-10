@@ -21,6 +21,7 @@
           <!-- laminar pr --> 
           <atm_pressure                 spec="OPTIONAL DOUBLE"/>
           <mix_frac_label               spec="OPTIONAL STRING"/>
+          <D                            spec="OPTIONAL DOUBLE"/>
 
           <fuel                         spec="OPTIONAL NO_DATA">
             <!-- cold flow mixing --> 
@@ -31,8 +32,6 @@
             <critical_pressure          spec="OPTIONAL DOUBLE 'positive'"/>
             <critical_temperature       spec="OPTIONAL DOUBLE 'positive'"/>
             <dipole_moment              spec="OPTIONAL DOUBLE 'positive'"/>
-            <lennard_jones_length       spec="OPTIONAL DOUBLE 'positive'"/>
-            <lennard_jones_energy       spec="OPTIONAL DOUBLE 'positive'"/>
             <viscosity                  spec="OPTIONAL DOUBLE 'positive'"/>
           </fuel>
           <oxidizer                     spec="OPTIONAL NO_DATA">
@@ -44,8 +43,6 @@
             <critical_temperature       spec="OPTIONAL DOUBLE 'positive'"/>
             <critical_pressure          spec="OPTIONAL DOUBLE 'positive'"/>
             <dipole_moment              spec="OPTIONAL DOUBLE 'positive'"/>
-            <lennard_jones_length       spec="OPTIONAL DOUBLE 'positive'"/>
-            <lennard_jones_energy       spec="OPTIONAL DOUBLE 'positive'"/>
             <viscosity                  spec="OPTIONAL DOUBLE 'positive'"/>
           </oxidizer>
 
@@ -134,6 +131,7 @@
 
         <TabProps                       spec="OPTIONAL NO_DATA" >
           <inputfile                    spec="REQUIRED STRING" />
+          <cold_flow                    spec="OPTIONAL BOOLEAN"/>
           <strict_mode                  spec="OPTIONAL BOOLEAN" />
           <diagnostic_mode              spec="OPTIONAL BOOLEAN" />
           <hl_scalar_init               spec="OPTIONAL DOUBLE" />
