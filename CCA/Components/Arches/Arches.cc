@@ -58,7 +58,6 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Arches/PropertyModels/PropertyModelBase.h>
 #include <CCA/Components/Arches/PropertyModels/PropertyModelFactory.h>
 #include <CCA/Components/Arches/PropertyModels/ConstProperty.h>
-#include <CCA/Components/Arches/PropertyModels/ColdFlowMixing.h>
 #include <CCA/Components/Arches/PropertyModels/LaminarPrNo.h>
 #if HAVE_TABPROPS
 # include <CCA/Components/Arches/ChemMix/TabPropsInterface.h>
@@ -2733,12 +2732,6 @@ void Arches::registerPropertyModels(ProblemSpecP& db)
 
         // An example of a constant CC variable property 
         PropertyModelBase::Builder* the_builder = new ConstProperty<CCVariable<double>, constCCVariable<double> >::Builder( prop_name, d_sharedState ); 
-        prop_factory.register_property_model( prop_name, the_builder ); 
-
-      } else if ( prop_type == "cfmm" ) {
-
-        // Cold flow mixing model
-        PropertyModelBase::Builder* the_builder = new ColdFlowMixing::Builder( prop_name, d_sharedState ); 
         prop_factory.register_property_model( prop_name, the_builder ); 
 
       } else if ( prop_type == "laminar_pr" ) {
