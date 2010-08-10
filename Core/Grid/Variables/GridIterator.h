@@ -164,7 +164,10 @@ namespace Uintah {
     inline unsigned int size() 
     {
       IntVector size=d_e-d_s;
-      return size.x()*size.y()*size.z();
+      if(size.x()<=0 || size.y()<=0 || size.z()<=0)
+        return 0;
+      else
+        return size.x()*size.y()*size.z();
     };
 
     inline GridIterator( const GridIterator & copy ) :
