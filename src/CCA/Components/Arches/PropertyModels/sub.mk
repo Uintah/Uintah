@@ -6,7 +6,6 @@ SRCS += \
 	$(SRCDIR)/PropertyModelBase.cc \
 	$(SRCDIR)/PropertyModelFactory.cc \
 	$(SRCDIR)/LaminarPrNo.cc \
-	$(SRCDIR)/ColdFlowMixing.cc \
 	$(SRCDIR)/ConstProperty.cc
 
 
