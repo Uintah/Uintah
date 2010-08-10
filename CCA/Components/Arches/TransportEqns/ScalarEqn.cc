@@ -46,8 +46,10 @@ EqnBase( fieldLabels, timeIntegrator, eqnName )
             CCVariable<double>::getTypeDescription());
   varname = eqnName;
   d_transportVarLabel = VarLabel::create(varname,
-            CCVariable<double>::getTypeDescription());
-
+            CCVariable<double>::getTypeDescription()); 
+  varname = eqnName+"_scalar_prNo"; 
+  d_prNo_label = VarLabel::create( varname, 
+            CCVariable<double>::getTypeDescription()); 
 }
 
 ScalarEqn::~ScalarEqn()
@@ -57,7 +59,7 @@ ScalarEqn::~ScalarEqn()
   VarLabel::destroy(d_RHSLabel);
   VarLabel::destroy(d_transportVarLabel);
   VarLabel::destroy(d_oldtransportVarLabel);
-
+  VarLabel::destroy(d_prNo_label); 
 }
 //---------------------------------------------------------------------------
 // Method: Problem Setup 
@@ -68,6 +70,11 @@ ScalarEqn::problemSetup(const ProblemSpecP& inputdb)
   ProblemSpecP db = inputdb; 
 
   db->getWithDefault("turbulentPrandtlNumber",d_turbPrNo,0.4);
+
+  if (db->findBlock("use_laminar_pr"))
+    d_laminar_pr = true; 
+  else
+    d_laminar_pr = false; 
  
   // Discretization information
   db->getWithDefault( "conv_scheme", d_convScheme, "upwind");
@@ -218,15 +225,23 @@ ScalarEqn::sched_initializeVariables( const LevelP& level, SchedulerP& sched )
   string taskname = "ScalarEqn::initializeVariables";
   Task* tsk = scinew Task(taskname, this, &ScalarEqn::initializeVariables);
   Ghost::GhostType gn = Ghost::None;
+
   //New
   tsk->computes(d_transportVarLabel);
   tsk->computes(d_oldtransportVarLabel); // for rk sub stepping 
   tsk->computes(d_RHSLabel); 
   tsk->computes(d_FconvLabel);
   tsk->computes(d_FdiffLabel);
+  tsk->computes(d_prNo_label); 
 
   //Old
   tsk->requires(Task::OldDW, d_transportVarLabel, gn, 0);
+  if (d_laminar_pr){
+    // This requires that the LaminarPrNo model is activated
+    const VarLabel* pr_label = VarLabel::find("laminar_pr"); 
+    tsk->requires(Task::OldDW, pr_label, gn, 0); 
+  }
+
   sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
 }
 //---------------------------------------------------------------------------
@@ -272,6 +287,22 @@ void ScalarEqn::initializeVariables( const ProcessorGroup* pc,
     Fdiff.initialize(0.0);
     Fconv.initialize(0.0);
     RHS.initialize(0.0);
+
+    CCVariable<double> pr_no; 
+    new_dw->allocateAndPut( pr_no, d_prNo_label, matlIndex, patch ); 
+
+    if ( d_laminar_pr ) { 
+      constCCVariable<double> lam_pr_no; 
+      const VarLabel* pr_label = VarLabel::find("laminar_pr"); 
+      old_dw->get( lam_pr_no, pr_label, matlIndex, patch, gn, 0 ); 
+
+      pr_no.copyData( lam_pr_no ); 
+
+    } else { 
+
+      pr_no.initialize( d_turbPrNo ); 
+
+    }
 
     curr_time = d_fieldLabels->d_sharedState->getElapsedTime(); 
     curr_ssp_time = curr_time; 
@@ -320,6 +351,7 @@ ScalarEqn::sched_buildTransportEqn( const LevelP& level, SchedulerP& sched, int 
   tsk->modifies(d_FconvLabel);
   tsk->modifies(d_RHSLabel);
   tsk->requires(Task::NewDW, d_oldtransportVarLabel, Ghost::AroundCells, 2);
+  tsk->requires(Task::NewDW, d_prNo_label, Ghost::None, 0); 
 
   // srcs
   if (d_addSources) {
@@ -369,6 +401,7 @@ ScalarEqn::buildTransportEqn( const ProcessorGroup* pc,
     constSFCYVariable<double> vVel; 
     constSFCZVariable<double> wVel; 
     constCCVariable<Vector> areaFraction; 
+    constCCVariable<double> prNo; 
 
     CCVariable<double> Fdiff; 
     CCVariable<double> Fconv; 
@@ -378,7 +411,9 @@ ScalarEqn::buildTransportEqn( const ProcessorGroup* pc,
     new_dw->get(den, d_fieldLabels->d_densityCPLabel, matlIndex, patch, gac, 1); 
     new_dw->get(mu_t,         d_fieldLabels->d_viscosityCTSLabel, matlIndex, patch, gac, 1); 
     new_dw->get(uVel,         d_fieldLabels->d_uVelocitySPBCLabel, matlIndex, patch, gac, 1); 
+    new_dw->get(prNo, d_prNo_label, matlIndex, patch, gn, 0); 
     old_dw->get(areaFraction, d_fieldLabels->d_areaFractionLabel, matlIndex, patch, gac, 1); 
+
     double vol = Dx.x();
 #ifdef YDIM
     new_dw->get(vVel,   d_fieldLabels->d_vVelocitySPBCLabel, matlIndex, patch, gac, 1); 
@@ -412,7 +447,7 @@ ScalarEqn::buildTransportEqn( const ProcessorGroup* pc,
   
     //----DIFFUSION
     if (d_doDiff)
-      d_disc->computeDiff( patch, Fdiff, oldPhi, mu_t, areaFraction, d_turbPrNo, matlIndex, d_eqnName );
+      d_disc->computeDiff( patch, Fdiff, oldPhi, mu_t, areaFraction, prNo, matlIndex, d_eqnName );
  
     //----SUM UP RHS
     for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){

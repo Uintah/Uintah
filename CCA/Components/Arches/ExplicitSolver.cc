@@ -624,6 +624,15 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
       }
 
+      // By default, scheduling all property models for evaluation. 
+      for ( PropertyModelFactory::PropMap::iterator iprop = all_prop_models.begin(); 
+            iprop != all_prop_models.end(); iprop++){
+
+        PropertyModelBase* prop_model = iprop->second; 
+        prop_model->sched_computeProp( level, sched, curr_level ); 
+
+      }
+
                                    
       sched_computeDensityLag(sched, patches, matls,
                               d_timeIntegratorLabels[curr_level],

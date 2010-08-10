@@ -16,10 +16,6 @@ LaminarPrNo::LaminarPrNo( std::string prop_name, SimulationStateP& shared_state 
   _mu_label = VarLabel::create( name, CCVariable<double>::getTypeDescription() ); // Note: you need to add the label to the .h file
   _extra_local_labels.push_back( _mu_label ); 
 
-  name = "laminar_diffusion_coef";
-  _D_label = VarLabel::create( name, CCVariable<double>::getTypeDescription() ); // Note: you need to add the label to the .h file
-  _extra_local_labels.push_back( _D_label ); 
-
 }
 
 //---------------------------------------------------------------------------
@@ -48,14 +44,13 @@ void LaminarPrNo::problemSetup( const ProblemSpecP& inputdb )
 
   db->require( "mix_frac_label", _mix_frac_label_name ); 
   db->require( "atm_pressure",   _pressure ); 
+  db->require( "D", _D); 
 
   //Fuel
   db->findBlock("fuel")->require( "molar_mass", _molar_mass_a ); 
   db->findBlock("fuel")->require( "critical_pressure", _crit_pressure_a );
   db->findBlock("fuel")->require( "critical_temperature", _crit_temperature_a ); 
   db->findBlock("fuel")->require( "dipole_moment", _dipole_moment_a ); 
-  db->findBlock("fuel")->require( "lennard_jones_length", _lj_sigma_a ); 
-  db->findBlock("fuel")->require( "lennard_jones_energy", _lj_ek_a ); 
   db->findBlock("fuel")->require( "viscosity", _viscosity_a ); 
 
   //Oxidizer
@@ -63,8 +58,6 @@ void LaminarPrNo::problemSetup( const ProblemSpecP& inputdb )
   db->findBlock("oxidizer")->require( "critical_pressure", _crit_pressure_b );
   db->findBlock("oxidizer")->require( "critical_temperature", _crit_temperature_b ); 
   db->findBlock("oxidizer")->require( "dipole_moment", _dipole_moment_b ); 
-  db->findBlock("oxidizer")->require( "lennard_jones_length", _lj_sigma_b ); 
-  db->findBlock("oxidizer")->require( "lennard_jones_energy", _lj_ek_b ); 
   db->findBlock("oxidizer")->require( "viscosity", _viscosity_b ); 
 
 }
@@ -97,11 +90,11 @@ void LaminarPrNo::sched_computeProp( const LevelP& level, SchedulerP& sched, int
 
     }
 
-    const VarLabel* den_label = VarLabel::find("densityCP"); 
+    const VarLabel* den_label = VarLabel::find("density"); 
     tsk->requires( Task::NewDW, den_label,     Ghost::None, 0 );  
-    //const VarLabel* T_label   = VarLabel::find("tempIN"); 
-    //tsk->requires( Task::NewDW, T_label,     Ghost::None, 0 );  
-    const VarLabel* f_label   = VarLabel::find("scalarSP"); 
+    const VarLabel* T_label   = VarLabel::find("temperature"); 
+    tsk->requires( Task::NewDW, T_label,     Ghost::None, 0 );  
+    const VarLabel* f_label   = VarLabel::find(_mix_frac_label_name); 
     tsk->requires( Task::NewDW, f_label,     Ghost::None, 0 );  
 
     sched->addTask( tsk, level->eachPatch(), _shared_state->allArchesMaterials() ); 
@@ -129,7 +122,6 @@ void LaminarPrNo::computeProp(const ProcessorGroup* pc,
     int matlIndex = _shared_state->getArchesMaterial(archIndex)->getDWIndex(); 
 
     CCVariable<double> Pr;  // Prandlt number 
-    CCVariable<double> D;   // Diffusion coef
     CCVariable<double> mu;  // viscosity
     constCCVariable<double> f;   // mixture fraction 
     constCCVariable<double> T;   // temperature 
@@ -137,22 +129,19 @@ void LaminarPrNo::computeProp(const ProcessorGroup* pc,
 
     if ( new_dw->exists( _prop_label, matlIndex, patch ) ){
       new_dw->getModifiable( Pr, _prop_label, matlIndex, patch ); 
-      new_dw->getModifiable( D,    _D_label, matlIndex, patch ); 
       new_dw->getModifiable( mu,   _mu_label, matlIndex, patch ); 
     } else {
       new_dw->allocateAndPut( Pr, _prop_label, matlIndex, patch ); 
-      new_dw->allocateAndPut( D,    _D_label, matlIndex, patch ); 
       new_dw->allocateAndPut( mu,   _mu_label, matlIndex, patch ); 
       Pr.initialize(0.0); 
-      D.initialize(0.0); 
       mu.initialize(0.0); 
     }
 
-    const VarLabel* f_label = VarLabel::find( "scalarSP" ); 
+    const VarLabel* f_label = VarLabel::find( _mix_frac_label_name ); 
     new_dw->get( f, f_label, matlIndex, patch, Ghost::None, 0 ); 
-    //const VarLabel* T_label = VarLabel::find( "tempIN" ); 
-    //new_dw->get( T, T_label, matlIndex, patch, Ghost::None, 0 ); 
-    const VarLabel* den_label = VarLabel::find( "densityCP" ); 
+    const VarLabel* T_label = VarLabel::find( "temperature" ); 
+    new_dw->get( T, T_label, matlIndex, patch, Ghost::None, 0 ); 
+    const VarLabel* den_label = VarLabel::find( "density" ); 
     new_dw->get( rho, den_label, matlIndex, patch, Ghost::None, 0 ); 
 
     CellIterator iter = patch->getCellIterator(); 
@@ -161,14 +150,10 @@ void LaminarPrNo::computeProp(const ProcessorGroup* pc,
 
       IntVector c = *iter; //i,j,k location
 
-      double T = 298.0; 
-
       // viscosity 
-      mu[c] = getVisc( f[c], T );
-      // diffusion coefficient 
-      D[c]  = getDiffCoef( T );
+      mu[c] = getVisc( f[c], T[c] );
       // prandlt number
-      Pr[c] = mu[c] / ( rho[c] * D[c] ); 
+      Pr[c] = mu[c] / ( rho[c] * _D ); 
 
     }
   }

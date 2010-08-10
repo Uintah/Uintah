@@ -126,6 +126,8 @@ protected :
   const ArchesLabel* d_lab; 
   const MPMArchesLabel* d_MAlab;
 
+  bool d_coldflow; 
+
 
 private:
 
