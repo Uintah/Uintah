@@ -147,7 +147,10 @@ namespace Uintah {
         inline unsigned int size() 
         {
           IntVector size=d_e-d_s;
-          return size.x()*size.y()*size.z();
+          if(size.x()<=0 || size.y()<=0 || size.z()<=0)
+            return 0;
+          else
+            return size.x()*size.y()*size.z();
         };
         inline NodeIterator(const NodeIterator& copy)
           : d_s(copy.d_s), d_e(copy.d_e),
