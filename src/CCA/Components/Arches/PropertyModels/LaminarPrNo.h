@@ -24,45 +24,20 @@
 *             The molar masses of the fuel and oxidizer in units of grams/mole,
 *             The critical Temperature for fuel and oxidizer in units of Kelvins,
 *             The dipole moment for both fuel and oxidizer in units of debyes
-*             
-*           The model also requires parameters for the from the Lennard-Jones Potential Model:
-*              This includes:  
-*              The Lennard-Jones length (often denoted as sigma) for fuel and oxidizer in units of Angstroms
-*              The Lennard-Jones energy (often divided by Boltzman's constant for fuel and oxidizer in units of Kelvins
 *
-*              Note that these parameters can be found in the literature for a number of species. One source is
-*              Appendix B of The fifth edition of The Properties of Gases and Liquids by Poling, Prausnitz, and O'Connell.
-*              In the case of helium the value of the length should be 2.551 Angstroms and the value of the energy
-*              (e/K) should be 10.22 K.  For Air, the length should be 3.62 Angstroms and the energy should be 97.0 K.
-*              If the values are not available for a species of interest, Poling et al. suggest that they can be estimated:
-*                         sigma = 1.18*Vb^(1.18)
-*                         (e/K) = 1.15*Tb
-*              Here, sigma is the lennard-jones length in Angstroms, Vb is the molar volume of the liquid (cm^3/mol) at the
-*              normal boiling point of the species (at 1 atm), (e/K) is the lennard-jones energy over Boltzman's constant in
-*              in Kelvins, and Tb is the normal boiling point of the species (at 1 atm) in units of Kelvins. These two equations
-*              should not be used for Hydrogen or Helium.
+*             The last parameters need for the model are the pure component viscosities for fuel and oxidizer in kg/m/s.
+*             For now the model takes the pure viscosities as direct inputs to the model.  This is done with the assumption
+*             that the system modelled does not vary greatly in temperature as pure viscosity is a relatively weak function of 
+*             temperature over short temperature ranges.  Eventually, to improve this model, a function will need to be written
+*             to estimate the viscosities of various species as a function of temperature.  For Air and Helium the viscosity can 
+*             be estimated by the following polynomial fits:
 *
-*              The last parameters need for the model are the pure component viscosities for fuel and oxidizer in kg/m/s.
-*              For now the model takes the pure viscosities as direct inputs to the model.  This is done with the assumption
-*              that the system modelled does not vary greatly in temperature as pure viscosity is a relatively weak function of 
-*              temperature over short temperature ranges.  Eventually, to improve this model, a function will need to be written
-*              to estimate the viscosities of various species as a function of temperature.  For Air and Helium the viscosity can 
-*              be estimated by the following polynomial fits:
+*                  Air:    Vis =  5.0477e-7 + 7.2825e-8*T + -4.8524e-11*T^2 + 1.7778e-14*T^3
 *
-*                   Air:    Vis =  5.0477e-7 + 7.2825e-8*T + -4.8524e-11*T^2 + 1.7778e-14*T^3
-*
-*                   Helium: Vis = -3.09667e-5 + 4.06341e-7*T + -1.15833e-9*T^2 + 1.23016e-12*T^3      
+*                  Helium: Vis = -3.09667e-5 + 4.06341e-7*T + -1.15833e-9*T^2 + 1.23016e-12*T^3      
 *    
-*              Viscosity in units of (kg/m/s) and T in units of (Kelvins).
+*             Viscosity in units of (kg/m/s) and T in units of (Kelvins).
 *
-*
-*
-*           Explanation of Method: getDiffCoeff(double T):
-*                 This method estimates the binary diffusivity of a gas phase binary system.  The diffusivity is computed in units
-*                 of (meters)^2/second, and it's only input is system Temperature, (T), in units of Kelvins.  The method for estimating
-*                 the diffusivity is formulated by Wilke and Lee (Ind. Eng. Chem., V47: 1253 (1955)), and is described by Poling et al
-*                 in the 5th edition of The Properties of Gases and Liquids (2001) on Page 11.10.        
-*            
 *           Explanation of Method: getVisc(double f, double T):
 *                 This method estimates the viscosity of a gas mixture.  The viscosity is in units of Kg/m/s or Pa-s (equivalent).  The
 *                 inputs to the method are mixture fraction (f) (or mass fraction of fuel), and system Temperature (T) in Kelvins.
@@ -150,7 +125,6 @@ namespace Uintah{
 
       // extra local labels:
       const VarLabel* _mu_label;            ///< viscosity label 
-      const VarLabel* _D_label;             ///< diffusion coefficient label
 
       // input information
       std::string _mix_frac_label_name;     ///< label name for the mixture fraction used for this model 
@@ -160,7 +134,8 @@ namespace Uintah{
       // mixture faction is defined as: 
       // f = [kg of a] / [kg of a + kg of b]
       //
-      double      _pressure;                ///< atmospheric pressure
+      double      _pressure;                  ///< atmospheric pressure
+      double      _D;                         ///< diffusion coefficient
       double      _molar_mass_a;              ///< molar mass for species (g/mol) a (fuel)  
       double      _molar_mass_b;              ///< molar mass for species (g/mol) b (air)
       double      _crit_temperature_a;        ///< critical temperature (Kelvins) species a
@@ -169,10 +144,6 @@ namespace Uintah{
       double      _crit_pressure_b;           ///< critical pressure (Bar) species b 
       double      _dipole_moment_a;           ///< dipole moment (debye) species a
       double      _dipole_moment_b;           ///< dipole moment (debye) species b 
-      double      _lj_sigma_a;                ///< lennard jones length (angstroms) species a
-      double      _lj_sigma_b;                ///< lennard jones length (angstroms) species b
-      double      _lj_ek_a;                   ///< lennard jones energy over boltzman constant (Kelvins) species a
-      double      _lj_ek_b;                   ///< lennard jones energy over boltzman constant (Kelvins) species b
       double      _viscosity_a;               ///< viscosity (kg/m/s) for pure species a;
       double      _viscosity_b;               ///< viscosity (kg/m/s) for pure species b; 
 
@@ -250,55 +221,6 @@ namespace Uintah{
         double viscosity = K_a*(1.0 + pow(H_ab,2.0)*pow(K_b,2.0)) + K_b*(1.0 + 2*H_ab*K_a + pow(H_ab,2.0)*pow(K_a,2.0));
 
         return viscosity;  ///< units of kg/m/s
-
-        } else {
-
-          throw InvalidValue("Error: For laminar Pr number property, only binary mixtures are currently supported", __FILE__, __LINE__); 
-        } 
-
-      }; 
-
-      inline double getDiffCoef( double T ){
-
-        // compute diffusion coeffficient here
-        if ( _binary_mixture ) {
-        
-          double sigma_a,sigma_b;
-          double MW_a,MW_b;
-          double ek_a,ek_b;
-
-          sigma_a = _lj_sigma_a;
-          ek_a    = _lj_ek_a;
-          MW_a    = _molar_mass_a;
-
-          sigma_b = _lj_sigma_b;
-          ek_b    = _lj_ek_b;
-          MW_b    = _molar_mass_b;
-
-          double sigma_ab, ek_ab,TS,CI_d,MW_ab,D_ab;
-          double P = _pressure;           
-
-          sigma_ab = sigma_a/2 + sigma_b/2;
-          ek_ab    = sqrt(ek_a*ek_b);
-
-          TS = T/ek_ab;
-
-          double A = 1.06036;
-          double B = 0.15610;
-          double C = 0.19300;
-          double D = 0.47635;
-          double E = 1.03587;
-          double F = 1.52996;
-          double G = 1.76474;
-          double H = 3.89411;
-
-          CI_d = (A/pow(TS,B)) + (C/exp(D*TS)) + (E/exp(F*TS)) + (G/exp(H*TS));
-
-          MW_ab = 2/((1/MW_a) + (1/MW_b));
-
-          D_ab = (3.03 - (0.98/sqrt(MW_ab)))*(0.001)*(pow(T,1.5))/(P*sqrt(MW_ab)*pow(sigma_ab,2)*CI_d)/100/100;
-
-          return D_ab; /// <units of m^2/s
 
         } else {
 

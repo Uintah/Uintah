@@ -1,23 +1,5 @@
 #include <CCA/Components/Arches/PropertyModels/ColdFlowMixing.h>
 
-// Instructions: 
-//  1) Make sure you add doxygen comments!!
-//  2) If this is not a CCVariable, then either replace with the appropriate 
-//     type or use the templated template.  
-//  2) Do a find and replace on ColdFlowMixing to change the your class name 
-//  3) Add implementaion details of your property. 
-//  4) Here is a brief checklist: 
-//     a) Any extra grid variables for this property need to be 
-//        given VarLabels in the constructor
-//     b) Any extra grid variable VarLabels need to be destroyed
-//        in the local destructor
-//     c) Add your input file details in problemSetup
-//     d) Add actual calculation of property in computeProp. 
-//     e) Make sure that you dummyInit any new variables that require OldDW 
-//        values.
-//   5) Please clean up unused code from this template in your final version
-//   6) Please add comments to this list as you see fit to help the next person
-
 using namespace Uintah; 
 
 //---------------------------------------------------------------------------
@@ -64,7 +46,7 @@ void ColdFlowMixing::problemSetup( const ProblemSpecP& inputdb )
   db->findBlock( "oxidizer" )->require( "rho", _rho_o); 
 
   // name of the mixture fraction label
-  db->require( "mix_frac_name", _f_name ); 
+  db->require( "mix_frac_label", _f_name ); 
 
 }
 

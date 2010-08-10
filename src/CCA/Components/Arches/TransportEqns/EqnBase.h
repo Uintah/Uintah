@@ -159,20 +159,19 @@ protected:
   BoundaryCondition_new* d_boundaryCond;  ///< Boundary condition object associated with equation object
   ExplicitTimeInt* d_timeIntegrator;      ///< Time integrator object associated with equation object
   Discretization_new* d_disc;             ///< Discretization object associated with equation object
-  std::string d_eqnName;                  ///< Human-readable label for this equation
 
   const VarLabel* d_transportVarLabel;    ///< Label for scalar being transported, in NEW data warehouse
   const VarLabel* d_oldtransportVarLabel; ///< Label for scalar being transported, in OLD data warehouse
-  bool d_doConv;                          ///< Boolean: do convection for this equation object?
-  bool d_doDiff;                          ///< Boolean: do diffusion for this equation object?
-  bool d_addSources;                      ///< Boolean: add a right-hand side (i.e. convection, diffusion, source terms) to this equation object?
-
   const VarLabel* d_FdiffLabel;           ///< Label for diffusion term of this equation object
   const VarLabel* d_FconvLabel;           ///< Label for convection term of this equation object
   const VarLabel* d_RHSLabel;             ///< Label for RHS of this equation object
 
-  std::string d_convScheme;               ///< Convection scheme (superbee, upwind, etc.)
+  bool d_doConv;                          ///< Boolean: do convection for this equation object?
+  bool d_doDiff;                          ///< Boolean: do diffusion for this equation object?
+  bool d_addSources;                      ///< Boolean: add a right-hand side (i.e. convection, diffusion, source terms) to this equation object?
 
+  std::string d_eqnName;                  ///< Human-readable label for this equation
+  std::string d_convScheme;               ///< Convection scheme (superbee, upwind, etc.)
   std::string d_initFunction;             ///< A functional form for initial value.
 
   // Clipping:
