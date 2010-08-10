@@ -113,6 +113,11 @@ namespace Uintah {
      * Return one past the last element of the iterator
      */
     inline IntVector end() const { return listOfCells_.back(); }
+    
+    /**
+     * Return the number of cells in the iterator
+     */
+    inline unsigned int size() {return listOfCells_.size()-1;};
 
     /**
      * adds a cell to the list of cells

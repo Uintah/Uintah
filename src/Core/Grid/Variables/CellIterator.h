@@ -138,6 +138,14 @@ WARNING
      inline IntVector end() const {
        return d_e;
      }
+     /**
+     * Return the number of cells in the iterator
+     */
+     inline unsigned int size() 
+     {
+       IntVector size=d_e-d_s;
+       return size.x()*size.y()*size.z();
+     };
      inline CellIterator(const CellIterator& copy)
        : d_s(copy.d_s), d_e(copy.d_e), d_cur(copy.d_cur), d_done(copy.d_done) {
        }
