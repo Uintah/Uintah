@@ -47,7 +47,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Util/DebugStream.h>
 #include <Core/Math/MiscMath.h>
 #include <Core/Exceptions/InternalError.h>
-
+#include <Core/Parallel/Parallel.h>
 #include <cmath>
 
 using namespace Uintah;
@@ -1103,24 +1103,20 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
     subNewDW->get(max_RHS,     lb->max_RHSLabel);
     subOldDW->get(max_RHS_old, lb->max_RHSLabel);
     
-    if(pg->myrank() == 0) {
-      cout << "Outer iteration " << counter
-           << " max_rhs before solve "<< max_RHS_old
-           << " after solve " << max_RHS<< endl;
-    }
+    proc0cout << "Outer iteration " << counter
+              << " max_rhs before solve "<< max_RHS_old
+              << " after solve " << max_RHS<< endl;
     
     //__________________________________
     // restart timestep
                                           //  too many outer iterations
     if (counter > d_iters_before_timestep_restart ){
       restart = true;
-      if(pg->myrank() == 0)
-        cout <<"\nWARNING: max iterations befor timestep restart reached\n"<<endl;
+      proc0cout <<"\nWARNING: max iterations befor timestep restart reached\n"<<endl;
     }
                                           //  solver has requested a restart
-    if (d_subsched->get_dw(3)->timestepRestarted() ) {
-      if(pg->myrank() == 0)
-        cout << "\nWARNING: Solver had requested a restart\n" <<endl;
+    if (d_subsched->get_dw(1)->timestepRestarted() ) {
+      proc0cout << "\nWARNING  impICE:implicitPressureSolve timestep restart.\n" <<endl;
       restart = true;
     }
     
@@ -1129,11 +1125,10 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
       smallest_max_RHS_sofar = max_RHS;
     }
     if(((max_RHS - smallest_max_RHS_sofar) > 100.0*smallest_max_RHS_sofar) ){
-      if(pg->myrank() == 0)
-        cout << "\nWARNING: outer interation is diverging now "
-             << "restarting the timestep"
-             << " Max_RHS " << max_RHS 
-             << " smallest_max_RHS_sofar "<< smallest_max_RHS_sofar<< endl;
+      proc0cout << "\nWARNING: outer interation is diverging now "
+                << "restarting the timestep"
+                << " Max_RHS " << max_RHS 
+                << " smallest_max_RHS_sofar "<< smallest_max_RHS_sofar<< endl;
       restart = true;
     }
     if(restart){
