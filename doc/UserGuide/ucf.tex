@@ -2064,8 +2064,37 @@ In order for the norms to be computed the physical times must satisfy
 | \text{physical Time}_{uda_1} - \text{physical Time}_{uda_2}| < 1e^{-5}.
 \end{equation*} 
 
-%\section{timeextract}
+%__________________________________
+\section{timeextract} 
 
+Timeextract is used to extract a user specified variable from a point in a computational
+domain.  
+
+Usage: \begin{Verbatim}[fontsize=\footnotesize]
+./timeextract [options] -uda <archive file>
+
+Valid options are:
+  -h,--help
+  -v,--variable <variable name>
+  -m,--material <material number> [defaults to 0]
+  -tlow,--timesteplow [int] (only outputs timestep from int) [defaults to 0]
+  -thigh,--timestephigh [int] (only outputs timesteps up to int) [defaults to last timestep]
+  -i,--index <x> <y> <z> (cell coordinates) [defaults to 0,0,0]
+  -p,--point <x> <y> <z> [doubles] (physical coordinates)
+  -l,--level [int] (level index to query range from) [defaults to 0]
+  -o,--out <outputfilename> [defaults to stdout]
+  -vv,--verbose (prints status of output)
+  -q,--quite (only print data values)
+  -noxml,--xml-cache-off (turn off XML caching in DataArchive)
+ \end{Verbatim} 
+
+The following example shows the usage of timeextract for extracting density data
+at the computationat cell coordinates 5,0,0, from timestep 0 to the last
+timestep. The variable containing the density data within the uda is "rho\_CC" and the output variable that
+will store the data for post processing is "rho." 
+\begin{Verbatim}[fontsize=\footnotesize]
+./timeextract -v rho_CC -i 5 0 0 -o rho -uda test01.uda.000
+\end{Verbatim}
 %\section{compare\_uda}
 
 %__________________________________
