@@ -211,8 +211,8 @@ namespace Uintah{
         double H_ab = H1*H2*H3;
 
 
-        double K_a1 = (Y_a*vis_a);
-        double K_a2 = (3.0 + (2.0*MW_a/MW_b));
+        //double K_a1 = (Y_a*vis_a);
+        //double K_a2 = (3.0 + (2.0*MW_a/MW_b));
         double K_a3 = Y_a + vis_a*(Y_b*H_ab*K_a2);
         double K_a  = (Y_a*vis_a)/(Y_a + vis_a*(Y_b*H_ab*(3.0 + (2.0*MW_b/MW_a))));
         double K_b  = (Y_b*vis_b)/(Y_b + vis_b*(Y_a*H_ab*(3.0 + (2.0*MW_a/MW_b))));
