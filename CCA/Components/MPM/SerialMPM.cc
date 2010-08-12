@@ -1432,6 +1432,12 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdateMom2(SchedulerP& sched,
   if(flags->d_reductionVars->momentum){
     t->computes(lb->TotalMomentumLabel);
   }
+  if(flags->d_reductionVars->mass){
+    t->computes(lb->TotalMassLabel);
+  }
+  if(flags->d_reductionVars->volDeformed){
+    t->computes(lb->TotalVolumeDeformedLabel);
+  }
 
   // debugging scalar
   if(flags->d_with_color) {
@@ -3895,6 +3901,8 @@ void SerialMPM::interpolateToParticlesAndUpdateMom2(const ProcessorGroup*,
 
     // DON'T MOVE THESE!!!
     double thermal_energy = 0.0;
+    double totalmass = 0;
+    double partvoldef = 0.;
     int numMPMMatls=d_sharedState->getNumMPMMatls();
     delt_vartype delT;
     old_dw->get(delT, d_sharedState->get_delt_label(), getLevel(patches) );
@@ -4074,9 +4082,14 @@ void SerialMPM::interpolateToParticlesAndUpdateMom2(const ProcessorGroup*,
     }
 
     // DON'T MOVE THESE!!!
-    
     //__________________________________
     //  reduction variables
+    if(flags->d_reductionVars->mass){
+      new_dw->put(sum_vartype(totalmass),      lb->TotalMassLabel);
+    }
+    if(flags->d_reductionVars->volDeformed){
+      new_dw->put(sum_vartype(partvoldef),     lb->TotalVolumeDeformedLabel);
+    }
     if(flags->d_reductionVars->thermalEnergy){
       new_dw->put(sum_vartype(thermal_energy), lb->ThermalEnergyLabel);
     }
