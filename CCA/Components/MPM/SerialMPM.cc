@@ -1362,9 +1362,7 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdateMom1(SchedulerP& sched,
   t->requires(Task::OldDW, lb->pVelocityLabel,                  gnone);
   t->requires(Task::OldDW, lb->pSizeLabel,                      gnone);
   t->requires(Task::OldDW, lb->pErosionLabel,                   gnone);
-
-  t->requires(Task::OldDW, lb->pDeformationMeasureLabel,   gnone);
-
+  t->requires(Task::OldDW, lb->pDeformationMeasureLabel,        gnone);
 
   t->computes(lb->pVelocityLabel_preReloc);
   t->computes(lb->pXLabel_preReloc);
@@ -1400,11 +1398,11 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdateMom2(SchedulerP& sched,
   t->requires(Task::OldDW, lb->pParticleIDLabel,                gnone);
   t->requires(Task::OldDW, lb->pTemperatureLabel,               gnone);
   t->requires(Task::OldDW, lb->pSizeLabel,                      gnone);
+  t->requires(Task::OldDW, lb->pDeformationMeasureLabel,        gnone);
   t->requires(Task::NewDW, lb->pdTdtLabel_preReloc,             gnone);
   t->requires(Task::NewDW, lb->pErosionLabel_preReloc,          gnone);
-  t->modifies(lb->pVolumeLabel_preReloc);
 
-  t->requires(Task::OldDW, lb->pDeformationMeasureLabel,   gnone);
+  t->modifies(lb->pVolumeLabel_preReloc);
 
 
   if(flags->d_with_ice){
@@ -1551,6 +1549,7 @@ void SerialMPM::scheduleInterpolateParticleVelToGridMom(SchedulerP& sched,
   t->requires(Task::OldDW, lb->pXLabel,                 gan,NGP);
   t->requires(Task::OldDW, lb->pErosionLabel,           gan,NGP);
   t->requires(Task::OldDW, lb->pSizeLabel,              gan,NGP);
+  t->requires(Task::OldDW, lb->pDeformationMeasureLabel,gan,NGP);
 
   t->requires(Task::NewDW, lb->gMassLabel,          Ghost::None);
   t->modifies(lb->gVelocityStarLabel);
