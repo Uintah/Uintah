@@ -26,6 +26,7 @@
 //     d) Add actual calculation of property in computeProp. 
 //     e) Make sure that you dummyInit any new variables that require OldDW 
 //        values.
+//     f) Make sure that _before_table_lookup is properly set for this property. 
 //   7) Please clean up unused code from this template in your final version
 //   8) Please add comments to this list as you see fit to help the next person
 
@@ -119,6 +120,9 @@ namespace Uintah{
 
     // and so on ....
       _prop_label = VarLabel::create( prop_name, pT::getTypeDescription() ); 
+
+    // Evaluated before or after table lookup? 
+    _before_table_lookup = false; 
   }
   
   //---------------------------------------------------------------------------

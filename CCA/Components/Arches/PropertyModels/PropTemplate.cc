@@ -15,6 +15,8 @@
 //     d) Add actual calculation of property in computeProp. 
 //     e) Make sure that you dummyInit any new variables that require OldDW 
 //        values.
+//     f) Make sure that _before_table_lookup is set propertly for this model.
+//        See _before_table_lookup variable. 
 //   5) Please clean up unused code from this template in your final version
 //   6) Please add comments to this list as you see fit to help the next person
 
@@ -33,6 +35,10 @@ CLASSNAME::CLASSNAME( std::string prop_name, SimulationStateP& shared_state ) : 
   _extra_local_labels.push_back( _something_label ); 
 
   // and so on ....
+  
+  // Evaluated before or after table lookup: 
+  _before_table_lookup = false; 
+
 }
 
 //---------------------------------------------------------------------------

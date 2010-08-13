@@ -128,6 +128,8 @@ protected :
 
   bool d_coldflow; 
 
+  const VarLabel* d_dissipation_rate_label; 
+
 
 private:
 
