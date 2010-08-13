@@ -74,14 +74,14 @@ namespace Uintah{
             std::string convScheme);
 
       /** @brief Computes the diffusion term for a scalar:
-       * \f[ \int_S \grad \phi \cdot \dS \f] 
+       * \f$ \int_{S} \nabla \phi \cdot dS \f$ 
        * for a non-constant pr number */
       template <class fT, class oldPhiT, class gammaT> void 
         computeDiff( const Patch* p, fT& Fdiff, oldPhiT& oldPhi, gammaT& gamma,
         constCCVariable<Vector>& areaFraction, constCCVariable<double>& prNo, int mat_id, string varName );
 
       /** @brief Computes the diffusion term for a scalar:
-       * \f[ \int_S \grad \phi \cdot \dS \f] 
+       * \f$ \int_{S} \nabla \phi \cdot dS \f$
        * assuming a constant pr number */
       template <class fT, class oldPhiT, class gammaT> void 
         computeDiff( const Patch* p, fT& Fdiff, oldPhiT& oldPhi, gammaT& gamma,
@@ -241,7 +241,7 @@ namespace Uintah{
       // These functions assemble other terms
       // --------------------------------------------------------------------------
 
-      /** @brief Computes the flux term, int_A div(\rho u \phi) \cdot dA, where u is the velocity
+      /** @brief Computes the flux term, \f$ int_A div{\rho u \phi} \cdot dA \f$, where u is the velocity
        *          in the normal (coord) direction.  Note version has density. */
       inline double getFlux( const double area, FaceData1D den, FaceData1D vel, 
           FaceData1D phi, constCCVariable<Vector> areaFraction, IntVector coord, IntVector c )
@@ -265,7 +265,7 @@ namespace Uintah{
         return F = area * (  areaFrac.plus * den.plus * vel.plus * phi.plus 
             - areaFrac.minus * den.minus * vel.minus * phi.minus ); 
       }
-      /** @brief Computes the flux term, int_A div(u \phi) \cdot dA, where u is the velocity
+      /** @brief Computes the flux term, \f$ int_A div{u \phi} \cdot dA \f$, where u is the velocity
        *          in the normal (coord) direction.  Note version does not have density. */
       inline double getFlux( const double area, FaceData1D vel, FaceData1D phi, 
           constCCVariable<Vector> areaFraction, IntVector coord, IntVector c )
@@ -1558,7 +1558,7 @@ namespace Uintah{
 
   //---------------------------------------------------------------------------
   // Method: Compute the diffusion term
-  // Simple diffusion term: \int_S \grad \phi \cdot dS 
+  // Simple diffusion term: \f$ \int_{S} \nabla \phi \cdot dS \f$ 
   //---------------------------------------------------------------------------
   template <class fT, class oldPhiT, class gammaT> void 
     Discretization_new::computeDiff( const Patch* p, fT& Fdiff, oldPhiT& oldPhi, gammaT& gamma,
@@ -1784,7 +1784,7 @@ namespace Uintah{
 
   //---------------------------------------------------------------------------
   // Method: Compute the diffusion term
-  // Simple diffusion term: \int_S \grad \phi \cdot dS 
+  // Simple diffusion term: \f$ \int_{S} \nabla \phi \cdot dS \f$
   //---------------------------------------------------------------------------
   template <class fT, class oldPhiT, class gammaT> void 
     Discretization_new::computeDiff( const Patch* p, fT& Fdiff, oldPhiT& oldPhi, gammaT& gamma,
