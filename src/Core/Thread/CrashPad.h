@@ -40,8 +40,8 @@
  *  Copyright (C) 1997 SCI Group
  */
 
-#ifndef Core_Util_CrashPad_h
-#define Core_Util_CrashPad_h
+#ifndef Core_Thread_CrashPad_h
+#define Core_Thread_CrashPad_h
 
 #include <ostream>
 #include <string>
