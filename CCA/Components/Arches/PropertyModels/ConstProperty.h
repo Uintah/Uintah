@@ -6,7 +6,7 @@
 #include <Core/Grid/SimulationState.h>
 
 /** 
-* @class  Constant Property
+* @class  ConstantProperty
 * @author Jeremy Thornock
 * @date   Aug. 2010
 * 

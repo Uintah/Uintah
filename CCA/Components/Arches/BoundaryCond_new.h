@@ -8,7 +8,7 @@
 //===========================================================================
 
 /**
-*   @class Boundary Condition 
+*   @class BoundaryCondition 
 *   @author Jeremy Thornock
 *   @brief This class sets the boundary conditions for scalars. 
 *

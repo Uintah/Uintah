@@ -54,28 +54,28 @@ namespace Uintah {
       \hat\tau = \hat\tau_s + \frac{1}{p} (s_0 - \hat\tau_y) \ln \left[ 1 - 
          \left[1 - \exp \left(-p \frac{\hat\tau_s-\hat\tau_y}{s_0 - \hat\tau_y}
                              \right) \right] \times
-         \exp\left(-\frac{p\theta\epsilon_p}{(s_0-\hat\tau_y)
+         \exp\left(-\frac{p\theta\epsilon_p}{(s_0-\hat\tau_y)}
          \left[
            \exp\left(p \frac{\hat\tau_s-\hat\tau_y}{s_0 - \hat\tau_y}\right)-1
          \right] \right)\right]
     \f]
     \f[
-      \hat\tau_s = \max\{s_0 - (s_0 - s_{\infty})\erf[\kappa \hat T 
-                 \ln\left(\frac{\gamma \dot\xi}{\dot\epsilon_p}\right),
-                 s_0 \left(\frac{\dot\epsilon_p}{\gamma\dot\xi}\right)^{\beta}\}
+      \hat\tau_s = \max\{s_0 - (s_0 - s_{\infty})\operatorname{erf}[\kappa \hat T 
+                 \ln\left(\frac{\gamma \dot{\xi}}{\dot{\epsilon_p}}\right),
+                 s_0 \left(\frac{\dot{\epsilon_p}}{\gamma\dot{\xi}}\right)^{\beta}\}
     \f]
     \f[
-      \hat\tau_y = \max\{y_0 - (y_0 - y_{\infty})\erf[\kappa \hat T 
-                 \ln\left(\frac{\gamma \dot\xi}{\dot\epsilon_p}\right),
-                 \min[y_1 \left(\frac{\dot\epsilon_p}{\gamma\dot\xi}
+      \hat\tau_y = \max\{y_0 - (y_0 - y_{\infty})\operatorname{erf}[\kappa \hat T 
+                 \ln\left(\frac{\gamma \dot{\xi}}{\dot{\epsilon_p}}\right),
+                 \min[y_1 \left(\frac{\dot{\epsilon_p}}{\gamma\dot{\xi}}
                                \right)^{y_2}\},
-                      s_0 \left(\frac{\dot\epsilon_p}{\gamma\dot\xi}
+                      s_0 \left(\frac{\dot{\epsilon_p}}{\gamma\dot{\xi}}
                                 \right)^{\beta}]\}
     \f]
     where, \n
     \f$ \epsilon_p \f$ is the equivalent plastic strain (an approximate
                        internal state variable) \n
-    \f$ \dot\epsilon_p \f$ is the rate of plastic strain \n
+    \f$ \dot{\epsilon_p} \f$ is the rate of plastic strain \n
     \f$ \tau = \sigma_{eq}/2 \f$ is the flow stress \n
     \f$ \hat\tau = \tau/\mu \f$ is the dimensionless flow stress, \n
     \f$ \mu = \mu(\rho,T) \f$ is the shear modulus,\n
@@ -83,14 +83,14 @@ namespace Uintah {
     \f$ T \f$ is the temperature, \n
     \f$ \hat T = T/T_m \f$ is the dimensionless temperature, \n
     \f$ T_m = T_m(\rho) \f$ is the melting temperature, \n
-    \f$ 1/\dot\xi = 2a/c_t \f$ is the time for a transverse wave to cross
+    \f$ 1/\dot{\xi} = 2a/c_t \f$ is the time for a transverse wave to cross
         an atom \n
     \f$ a \f$ is the atomic radius \n
     \f$ c_t \f$ is the transverse (shear) sound speed \n
-    \f$ \dot\xi = \frac{1}{2}\left(\frac{4\pi\rho}{3M}\right)^{1/3}
-                             \left(\frac{\mu}{\rho}\right)^{1/2} \n
+    \f$ \dot{\xi} = \frac{1}{2}\left(\frac{4\pi\rho}{3M}\right)^{1/3}
+                             \left(\frac{\mu}{\rho}\right)^{1/2} \f$ \n
     \f$ M \f$ is the atomic mass \n
-    \f$ \dot\epsilon_p/\dot\xi $ is the dimensionless strain rate \n
+    \f$ \dot{\epsilon_p} / \dot{\xi} \f$ is the dimensionless strain rate \n
     \f$ \kappa, \gamma \f$ are dimensionless constants (in the dimensionless
         version of the Arrhenius equation for the plastic strain rate) \n
     \f$ \hat\tau_s \f$ is the work hardening saturation stress \n
@@ -104,6 +104,7 @@ namespace Uintah {
     \f$ \theta \f$ is the Voce hardening law parameter \n
     \f$ p \f$ is a dimensionless material parameter \n 
     \f$ \beta, y_1, y_2 \f$ are parameters for overddriven shocks 
+    
   */
   ////////////////////////////////////////////////////////////////////////////
 
@@ -194,7 +195,9 @@ namespace Uintah {
     virtual void updatePlastic(const particleIndex idx, const double& delGamma);
 
     ///////////////////////////////////////////////////////////////////////////
-    /*! \brief Compute the flow stress */
+    /*! 
+      \brief Compute the flow stress 
+    */
     ///////////////////////////////////////////////////////////////////////////
     virtual double computeFlowStress(const PlasticityState* state,
                                      const double& delT,
@@ -203,7 +206,9 @@ namespace Uintah {
                                      const particleIndex idx);
 
     //////////
-    /*! \brief Calculate the plastic strain rate [epdot(tau,ep,T)] */
+    /*! 
+      \brief Calculate the plastic strain rate [epdot(tau,ep,T)] 
+    */
     //////////
     virtual double computeEpdot(const PlasticityState* state,
                                 const double& delT,
@@ -242,7 +247,7 @@ namespace Uintah {
       internal variables.
 
       \return Three derivatives in Vector deriv 
-      (deriv[0] = \f$d\sigma_Y/d\dot\epsilon_p\f$,
+      (deriv[0] = \f$d\sigma_Y/d \dot{\epsilon_p} \f$,
       deriv[1] = \f$d\sigma_Y/dT\f$, 
       deriv[2] = \f$d\sigma_Y/d\epsilon_p\f$)
     */
@@ -298,7 +303,6 @@ namespace Uintah {
       The derivative is given by
       \f[
       \frac{d\sigma_Y}{dT} := 
-      \right]
       \f]
 
       \return Derivative \f$ d\sigma_Y / dT \f$.
@@ -317,10 +321,10 @@ namespace Uintah {
 
       The derivative is given by
       \f[
-      \frac{d\sigma_Y}{d\dot\epsilon} := 
+      \frac{d\sigma_Y}{d\dot{\epsilon}} := 
       \f]
 
-      \return Derivative \f$ d\sigma_Y / d\dot\epsilon \f$.
+      \return Derivative \f$ d\sigma_Y / d\dot{\epsilon} \f$.
     */
     ///////////////////////////////////////////////////////////////////////////
     double evalDerivativeWRTStrainRate(const PlasticityState* state,

@@ -18,7 +18,7 @@
  *
  * @details 
    Values of constant source are added to the transport equation within prescribed geometric locations. The geometric 
-   locations are set using the <geom_object> node.  Note that you can have several injectors for one defined constant source. 
+   locations are set using the \code <geom_object> \endcode node.  Note that you can have several injectors for one defined constant source. 
    This code is templated to allow for source injection for all equation types.  
 
    The input file should look like this: 
