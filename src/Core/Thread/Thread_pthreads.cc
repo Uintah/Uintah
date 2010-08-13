@@ -53,6 +53,7 @@
 #endif
 
 #include <Core/Exceptions/Exception.h>
+#include <iostream>
 
 //////////////////////////////////////////////////////
 // begin: Danger Will Robinson! Danger Will Robinson!
@@ -82,6 +83,7 @@
 #include <Core/Thread/WorkQueue.h>
 #include <Core/Thread/Thread_unix.h>
 #include <Core/Util/Assert.h>
+#include <Core/Util/CrashPad.h>
 
 #include <cerrno>
 extern "C" {
@@ -706,7 +708,8 @@ handle_abort_signals(int sig, SigContext ctx)
 
   if(print)
     fprintf(stderr, "%c%c%cThread \"%s\"(pid %d) caught signal %s\n", 7,7,7,tname, getpid(), signam);
-  
+
+  Uintah::CrashPad::printMessages(std::cout);
   SCIRun::WAIT_FOR_DEBUGGER(true);
 
   Thread::niceAbort(NULL,print);
@@ -787,6 +790,7 @@ handle_quit(int sig, SigContext /*ctx*/)
   if(print)
     fprintf(stderr, "Thread \"%s\"(pid %d) caught signal %s\n", tname, pid, signam);
 
+  Uintah::CrashPad::printMessages(std::cout);
   SCIRun::WAIT_FOR_DEBUGGER(true);
 
   Thread::niceAbort(NULL, print); // Enter the monitor
