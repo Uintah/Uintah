@@ -272,7 +272,7 @@ the Makefile in \tt hypre-2.4.0/src/lapack \normalfont and add the
 -fPIC to line 128.  It should look like the following:
 
 \emph{Note: This may have been fixed... if there is
-  '${SHARED_COMPILE_FLAG}' on the compile line, then it should be good
+  '${SHARED\_COMPILE\_FLAG}$' on the compile line, then it should be good
 to go.}
 
 \begin{verbatim}
@@ -280,9 +280,10 @@ ${CC} -c -fPIC dlamch.c
 \end{verbatim}
 
 \emph{Note: However, it looks like another problem may have been
-  introduced.  /src/FEI_mv/SuperLU/SRC/Makefile line 209
-  $(SHARED_COMPILE_FLAG) needs to be added to the superlu_timer.o
-  build line...}
+  introduced.  /src/FEI\_mv/SuperLU/SRC/Makefile line 209
+  ${SHARED\_COMPILE\_FLAG}$ needs to be added to the superlutimer.o
+  build line.
+}
 
 Depending on the location of the MPI libraries, i.e. location of mpi.h
 and libmpi.so, the configure line for hypre should look like this:
@@ -362,43 +363,45 @@ ln -s ../lib/libteem.so libteem.so
 
 \subsection{VisIt Installation}
 
-The latest official release of VisIt is 2.0.1.  The VisIt build
-system has been changed to CMake, so building the UDA reader plugin for
-previous versions of VisIt (1.x) will no longer be supported, and CMake is now also
-required to build the plugin.
+The latest official release of VisIt is 2.0.2.  The VisIt build system
+has been changed to CMake, so building the UDA reader plugin for
+previous versions of VisIt (1.x) will no longer be supported, and
+CMake is now also required to build the plugin.
 
-The UDA reader plugin must be built against an installed version of VisIt. 
-VisIt can be installed either from one of their binary distributions, or by
-compiling and installing it from source.  Building the plugin against a
-VisIt source tree no longer works.  Building VisIt from source may include
-fixes for bugs in the official releases, but is much more complicated and
-time consuming.  You may also need to build VisIt from source if a binary is
-not provided for your exact OS and MPI versions.  
+The UDA reader plugin must be built against an installed version of
+VisIt.  VisIt can be installed either from one of their binary
+distributions, or by compiling and installing it from source.
+Building the plugin against a VisIt source tree no longer works.
+Building VisIt from source may include fixes for bugs in the official
+releases, but is much more complicated and time consuming.  You may
+also need to build VisIt from source if a binary is not provided for
+your exact OS and MPI versions.
 
-The VisIt source code is available two ways: a package for each official release, or from
-the svn repository maintained at NERSC.  The svn code may have bug fixes that
-are not in the official releases, but may have additional bugs and should not
-be considered stable.  The svn repository also includes all of the third party
-libraries that VisIt requires.  The script used to build VisIt is setup to 
-automatically download these dependencies, but often fails.  In is
-highly recommended to NOT use the SVN version of VisIt, but instead us
-one of the official tarball releases.
+The VisIt source code is available two ways: a package for each
+official release, or from the svn repository maintained at NERSC.  The
+svn code may have bug fixes that are not in the official releases, but
+may have additional bugs and should not be considered stable.  The svn
+repository also includes all of the third party libraries that VisIt
+requires.  The script used to build VisIt is setup to automatically
+download these dependencies, but often fails.  In is highly
+recommended to NOT use the SVN version of VisIt, but instead us one of
+the official tarball releases.
 
 \subsubsection{Caveats}
 \label{subsec:VisIt_Caveats}
 \begin{itemize}
 \item If you are upgrading to 2.0 from an earlier version of VisIt
   (1.x or 2.0 beta), remove your uintah/build/VisIt directory before
-  rerunning uintah's configure script, so it gets regenerated for
-  the updated version of VisIt.
+  rerunning uintah's configure script, so it gets regenerated for the
+  updated version of VisIt.
 \item Before you install VisIt, a number of dependency files are
-  required.  These include X11, GL, GLU, GLX, and libz libraries (it is possible
-  that you will find these libraries in the following rpms:
-  libx11-dev, libxext-dev, libxt-dev, libglu, zlib-dev -- notice that
-  most of these are the 'development' rpm).  You can either install
-  these directly and hope you get them right, or you can install the
-  files listed here~\ref{sec:debian_dependencies} (which will
-  hopefully pull in all the libraries that you need).
+  required.  These include X11, GL, GLU, GLX, and libz libraries (it
+  is possible that you will find these libraries in the following
+  rpms: libx11-dev, libxext-dev, libxt-dev, libglu, zlib-dev -- notice
+  that most of these are the 'development' rpm).  You can either
+  install these directly and hope you get them right, or you can
+  install the files listed here~\ref{sec:debian_dependencies} (which
+  will hopefully pull in all the libraries that you need).
 \item MPI must be installed and the MPI compilers (mpicc, etc) must be
   in your path.
 \item The VisIt executable is not relocatable once it is built, so
@@ -413,27 +416,29 @@ one of the official tarball releases.
 \subsubsection{Prebuilt binaries}
 \label{subsec:PrebuiltBinaries}
 
-VisIt binary distributions consist of two files: a tarball and a install script,
-which are available from https://wci.llnl.gov/codes/visit/executables.html.  Download
-both to the same directory.  The tarball does not need to be extracted -- the 
-install script will do all of the work for you.  The syntax for the install script is:
+VisIt binary distributions consist of two files: a tarball and a
+install script, which are available from
+https://wci.llnl.gov/codes/visit/executables.html.  Download both to
+the same directory.  The tarball does not need to be extracted -- the
+install script will do all of the work for you.  The syntax for the
+install script is:
 \begin{verbatim}
 visit-install version platform directory
 \end{verbatim}
 
-The version and platform should be apparent from the name of the tarball.  
-You may need to make the script executable, and may need to run it as root, depending
-on what directory you are installing it to.  For example, the 2.0.0 release for 
-Ubuntu could be installed with:
+The version and platform should be apparent from the name of the
+tarball.  You may need to make the script executable, and may need to
+run it as root, depending on what directory you are installing it to.
+For example, the 2.0.2 release for Ubuntu could be installed with:
 \begin{verbatim}
 chmod +x visit-install
-./visit-install 2.0.0 linux-x86_64-ubuntu8 ``visit_bin_dir''
+./visit-install 2.0.2 linux-x86_64-ubuntu8 ``visit_bin_dir''
 \end{verbatim}
 
-If you are installing version 2.0.0, there was a bug in the release that
+If you are installing version 2.0.2, there was a bug in the release that
 hard codes an incorrect path to gcc and g++.  To fix it, open the file:
 \begin{verbatim}
-emacs ``visit_bin_dir''/2.0.0/``platform''/include/PluginVsInstall.cmake
+emacs ``visit_bin_dir''/2.0.2/``platform''/include/PluginVsInstall.cmake
 \end{verbatim}
 
 Comment out the following lines near the top of the file:
@@ -442,7 +447,6 @@ Comment out the following lines near the top of the file:
 SET(CMAKE_C_COMPILER /home/js9/bin/gcc)
 SET(CMAKE_CXX_COMPILER /home/js9/bin/g++)
 \end{verbatim}
-
 
 \subsubsection{Building from source}
 \label{subsec:VisItVersion2_Build}
@@ -460,8 +464,8 @@ make a build directory inside the visit directory, and copy
 build\_visit into it:
 
 \begin{verbatim}
-tar xzf visit2.0.1.tar.gz
-cd visit2.0.1
+tar xzf visit2.0.2.tar.gz
+cd visit2.0.2
 mkdir build
 cd build
 cp ../src/svn_bin/build_visit .
@@ -596,8 +600,9 @@ the visit executable in ``visit\_bin\_dir''/bin.
 
 \emph{WARNING: Until a bug in the VisIt make system is fixed, you have
 to manually update
-/path/to/installation/2.0.1/linux-x86_64/include/PluginVsInstall.cmake
-and comment out these lines:
+/path/to/installation/2.0.2/linux-x86\_64/include/PluginVsInstall.cmake
+and comment out these lines:}
+
 
 \begin{verbatim}
 # Force the same compiler as VisIt, if we can
@@ -608,7 +613,7 @@ and comment out these lines:
 #    SET(CMAKE_CXX_COMPILER /usr/bin/g++4)
 #ENDIF(EXISTS /usr/bin/g++4)
 \end{verbatim}
-}
+
 
 
 \subsubsection{Parallel OS X build}
@@ -639,7 +644,7 @@ by hand. The instructions for doing this are carefully outlined in the
 VisIt Build Notes file,
 
 \begin{verbatim}
-https://wci.llnl.gov/codes/visit/2.0.0/BUILD_NOTES
+https://wci.llnl.gov/codes/visit/2.0.2/BUILD_NOTES
 \end{verbatim}
 
 \subsubsection{VisIt executable}
@@ -720,13 +725,16 @@ machine. Select 'Host Profiles' from the 'Options' menu and set up a
 new profile as shown in figure ~\ref{VisItHostProfile}.
 
 
-\begin{wrapfigure}{r}{100mm}
+\begin{wrapfigure}{r}{.50\textwidth}
 
 %\begin{figure}
+  \vspace{-30pt}
   \begin{center}
-  \includegraphics[scale=0.20]{VisItHostProfile.png}
+    \includegraphics[width=.425\textwidth]{VisItHostProfile.png}
   \end{center}
+  \vspace{-20pt}
   \caption{Setting up Host Profile}
+  \vspace{-10pt}
   \label{VisItHostProfile}
 %\end{figure}
 
@@ -739,12 +747,16 @@ through SSH' option. This is illustrated in
 figure~\ref{VisItHostProfileAdv}. Click on 'Apply' and then do a 'Save
 Settings' in the 'Options' menu on the gui.
 
-\begin{wrapfigure}{r}{100mm}
+\begin{wrapfigure}{r}{.50\textwidth}
 
 %\begin{figure}
-  \center 
-  \includegraphics[scale=0.20]{VisItHostProfileAdv.png}
+  \vspace{-30pt}
+  \begin{center}
+    \includegraphics[width=.5\textwidth]{VisItHostProfileAdv.png}
+  \end{center}
+  \vspace{-20pt}
   \caption{Setting up advanced options}
+  \vspace{-10pt}
   \label{VisItHostProfileAdv}
 %\end{figure}
 
@@ -755,8 +767,6 @@ For the remote visualization option to work, you must have ports 5600
 desktop (on Linux distributions),
 
 \begin{verbatim}
-
-
 traceroute -p 560[0-9] <remote machine>
 \end{verbatim}
 
@@ -764,12 +774,16 @@ If the tunneling option doesn't works, try the option as shown in
 figure~\ref{VisItHostProfileAdv2}.
 
 
-\begin{wrapfigure}{r}{100mm}
+\begin{wrapfigure}{r}{.50\textwidth}
 
 %\begin{figure}
-  \center
-  \includegraphics[scale=0.20]{VisItHostProfileAdv2.png}
+  \vspace{-30pt}
+  \begin{center}
+    \includegraphics[width=.5\textwidth]{VisItHostProfileAdv2.png}
+  \end{center}
+  \vspace{-20pt}
   \caption{Setting up advanced options}
+  \vspace{-10pt}
   \label{VisItHostProfileAdv2}
 %\end{figure}
 
@@ -1237,7 +1251,7 @@ cp <some name>.conf ../src/config-site/
 \item Type make again. It should finish successfully and the VisIt executable will be in visit/src/bin
 \item Add 
 \begin{verbatim}
-#define VERSION "2.0.0"
+#define VERSION "2.0.2"
 \end{verbatim}  
 to src/include/visit-config.h
 \item Configure Uintah with (for example): 
