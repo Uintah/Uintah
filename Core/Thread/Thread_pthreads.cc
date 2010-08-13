@@ -83,7 +83,7 @@
 #include <Core/Thread/WorkQueue.h>
 #include <Core/Thread/Thread_unix.h>
 #include <Core/Util/Assert.h>
-#include <Core/Util/CrashPad.h>
+#include <Core/Thread/CrashPad.h>
 
 #include <cerrno>
 extern "C" {

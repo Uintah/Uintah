@@ -50,8 +50,7 @@ SRCS += \
         $(SRCDIR)/TypeDescription.cc    \
         $(SRCDIR)/ProgressiveWarning.cc \
 				$(SRCDIR)/RefCounted.cc 	\
-				$(SRCDIR)/Util.cc \
-				$(SRCDIR)/CrashPad.cc
+				$(SRCDIR)/Util.cc 
 
 ifneq ($(IS_REDSTORM),yes)
   SRCS += \
