@@ -128,6 +128,10 @@ TabPropsInterface::problemSetup( const ProblemSpecP& propertiesParameters )
 
       d_ivVarMap.insert(make_pair(varName, d_lab->d_heatLossLabel)).first; 
 
+    } else if ( varName == "DissipationRate") {
+
+      d_ivVarMap.insert(make_pair(varName, d_dissipation_rate_label )).first; 
+
     } else {
 
       // then it must be a mixture fraction 

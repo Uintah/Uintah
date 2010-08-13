@@ -535,6 +535,16 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 //    sched_updateDensityGuess(sched, patches, matls,
 //                                    d_timeIntegratorLabels[curr_level]);
 
+    // Property models needed before table lookup: 
+    for ( PropertyModelFactory::PropMap::iterator iprop = all_prop_models.begin(); 
+          iprop != all_prop_models.end(); iprop++){
+
+      PropertyModelBase* prop_model = iprop->second; 
+      if ( prop_model->beforeTableLookUp() )
+        prop_model->sched_computeProp( level, sched, curr_level ); 
+
+    }
+
 
     string mixmodel = d_props->getMixingModelType(); 
     if ( mixmodel != "TabProps")
@@ -551,14 +561,6 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
     }
 
-    // By default, scheduling all property models for evaluation. 
-    for ( PropertyModelFactory::PropMap::iterator iprop = all_prop_models.begin(); 
-          iprop != all_prop_models.end(); iprop++){
-
-      PropertyModelBase* prop_model = iprop->second; 
-      prop_model->sched_computeProp( level, sched, curr_level ); 
-
-    }
 
     for (EqnFactory::EqnMap::iterator iter = scalar_eqns.begin(); iter != scalar_eqns.end(); iter++){
       EqnBase* eqn = iter->second; 
@@ -646,6 +648,22 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
                                             d_timeIntegratorLabels[curr_level],
                                             d_EKTCorrection);
     } 
+
+    // Re-Clean all property models and reevaluate after RK averaging to give final values
+    for ( PropertyModelFactory::PropMap::iterator iprop = all_prop_models.begin(); 
+         iprop != all_prop_models.end(); iprop++){
+
+       PropertyModelBase* prop_model = iprop->second; 
+       prop_model->cleanUp(); 
+
+    }
+    for ( PropertyModelFactory::PropMap::iterator iprop = all_prop_models.begin(); 
+          iprop != all_prop_models.end(); iprop++){
+
+      PropertyModelBase* prop_model = iprop->second; 
+      prop_model->sched_computeProp( level, sched, curr_level ); 
+
+    }
 
     d_props->sched_computeDrhodt(sched, patches, matls,
                                  d_timeIntegratorLabels[curr_level],

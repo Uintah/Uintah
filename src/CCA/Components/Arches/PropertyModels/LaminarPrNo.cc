@@ -16,6 +16,9 @@ LaminarPrNo::LaminarPrNo( std::string prop_name, SimulationStateP& shared_state 
   _mu_label = VarLabel::create( name, CCVariable<double>::getTypeDescription() ); // Note: you need to add the label to the .h file
   _extra_local_labels.push_back( _mu_label ); 
 
+  //Model must be evaluated after the table look up: 
+  _before_table_lookup = false; 
+
 }
 
 //---------------------------------------------------------------------------
