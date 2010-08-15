@@ -619,7 +619,7 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
   scheduleSetGridBoundaryConditions(      sched, patches, matls);
   scheduleSetPrescribedMotion(            sched, patches, matls);
   if(!flags->d_use_momentum_form){
-    scheduleComputeStressTensor(            sched, patches, matls);
+    scheduleComputeStressTensor(          sched, patches, matls);
   }
   if(flags->d_doExplicitHeatConduction){
     scheduleComputeHeatExchange(          sched, patches, matls);
@@ -636,6 +636,8 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
   if(flags->d_use_momentum_form){
     scheduleInterpolateToParticlesAndUpdateMom1(sched, patches, matls);
     scheduleInterpolateParticleVelToGridMom(    sched, patches, matls);
+    scheduleExMomIntegrated(                    sched, patches, matls);
+    scheduleSetGridBoundaryConditions(          sched, patches, matls);
     scheduleComputeStressTensor(                sched, patches, matls);
     scheduleInterpolateToParticlesAndUpdateMom2(sched, patches, matls);
   }
@@ -1373,7 +1375,6 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdateMom1(SchedulerP& sched,
 void SerialMPM::scheduleInterpolateToParticlesAndUpdateMom2(SchedulerP& sched,
                                                        const PatchSet* patches,
                                                        const MaterialSet* matls)
-
 {
   if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(),
                            getLevel(patches)->getGrid()->numLevels()))
@@ -1400,13 +1401,12 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdateMom2(SchedulerP& sched,
   t->requires(Task::NewDW, lb->pdTdtLabel_preReloc,             gnone);
   t->requires(Task::NewDW, lb->pErosionLabel_preReloc,          gnone);
 
-  t->modifies(lb->pVolumeLabel_preReloc);
-
-
   if(flags->d_with_ice){
     t->requires(Task::NewDW, lb->dTdt_NCLabel,         gac,NGN);
     t->requires(Task::NewDW, lb->massBurnFractionLabel,gac,NGN);
   }
+
+  t->modifies(lb->pVolumeLabel_preReloc);
 
   t->computes(lb->pParticleIDLabel_preReloc);
   t->computes(lb->pTemperatureLabel_preReloc);
@@ -4425,8 +4425,7 @@ void SerialMPM::interpolateParticleVelToGridMom(const ProcessorGroup*,
         gvelocity_star[c]      /= gmass[c];
       }
 
-      MPMBoundCond bc;
-      bc.setBoundaryCondition(patch,dwi,"Velocity", gvelocity_star,interp_type);
+//    setGridBoundaryConditions handles the BCs for gvelocity_star
     }  // end of materials loop
 
     delete interpolator;
