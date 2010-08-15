@@ -76,10 +76,8 @@ DEALINGS IN THE SOFTWARE.
 #include <sstream>
 
 
-#define USL
-//#undef USL
-//#define MOM_FORM
-#undef MOM_FORM
+//#define USL
+#undef USL
 
 using namespace Uintah;
 
@@ -620,9 +618,9 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
   scheduleExMomIntegrated(                sched, patches, matls);
   scheduleSetGridBoundaryConditions(      sched, patches, matls);
   scheduleSetPrescribedMotion(            sched, patches, matls);
-#ifdef USL
-  scheduleComputeStressTensor(            sched, patches, matls);
-#endif
+  if(!flags->d_use_momentum_form){
+    scheduleComputeStressTensor(            sched, patches, matls);
+  }
   if(flags->d_doExplicitHeatConduction){
     scheduleComputeHeatExchange(          sched, patches, matls);
     scheduleComputeInternalHeatRate(      sched, patches, matls);
@@ -632,15 +630,15 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
   }
   scheduleAddNewParticles(                sched, patches, matls);
   scheduleConvertLocalizedParticles(      sched, patches, matls);
-#ifdef USL
-  scheduleInterpolateToParticlesAndUpdate(sched, patches, matls);
-#endif
-#ifdef MOM_FORM
-  scheduleInterpolateToParticlesAndUpdateMom1(sched, patches, matls);
-  scheduleInterpolateParticleVelToGridMom(    sched, patches, matls);
-  scheduleComputeStressTensor(                sched, patches, matls);
-  scheduleInterpolateToParticlesAndUpdateMom2(sched, patches, matls);
-#endif
+  if(!flags->d_use_momentum_form){
+    scheduleInterpolateToParticlesAndUpdate(sched, patches, matls);
+  }
+  if(flags->d_use_momentum_form){
+    scheduleInterpolateToParticlesAndUpdateMom1(sched, patches, matls);
+    scheduleInterpolateParticleVelToGridMom(    sched, patches, matls);
+    scheduleComputeStressTensor(                sched, patches, matls);
+    scheduleInterpolateToParticlesAndUpdateMom2(sched, patches, matls);
+  }
   scheduleInsertParticles(                    sched, patches, matls);
 
   if(flags->d_canAddMPMMaterial){
