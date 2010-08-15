@@ -94,6 +94,7 @@ MPMFlags::MPMFlags(const ProcessorGroup* myworld)
   d_max_vel = 3.e105;
   d_with_ice = false;
   d_with_arches = false;
+  d_use_momentum_form = false;
   d_myworld = myworld;
   
   d_reductionVars = scinew reductionVars();
@@ -294,6 +295,8 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
 
   mpm_flag_ps->get("boundary_traction_faces", d_bndy_face_txt_list);
 
+  mpm_flag_ps->get("UseMomentumForm", d_use_momentum_form);
+
   if (dbg.active()) {
     dbg << "---------------------------------------------------------\n";
     dbg << "MPM Flags " << endl;
@@ -370,6 +373,8 @@ MPMFlags::outputProblemSpec(ProblemSpecP& ps)
   ps->appendElement("extra_solver_flushes", d_extraSolverFlushes);
 
   ps->appendElement("boundary_traction_faces", d_bndy_face_txt_list);
+
+  ps->appendElement("UseMomentumForm", d_use_momentum_form);
 }
 
 
