@@ -46,7 +46,8 @@ SRCS     += \
 	$(SRCDIR)/ThreadGroup.cc \
 	$(SRCDIR)/Thread_unix.cc \
 	$(SRCDIR)/ThreadPool.cc \
-	$(SRCDIR)/WorkQueue.cc 
+	$(SRCDIR)/WorkQueue.cc \
+	$(SRCDIR)/CrashPad.cc
 
 SRCS += $(TIME_IMPL) $(THREAD_IMPL)
 

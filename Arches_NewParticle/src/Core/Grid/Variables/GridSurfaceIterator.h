@@ -159,6 +159,16 @@ WARNING
      inline IntVector end() const {
        return d_ext_high;
      }
+     /**
+     * Return the number of cells in the iterator
+     */
+     inline unsigned int size() 
+     {
+      IntVector size_int=d_int_high-d_int_low;
+      IntVector size_ext=d_ext_high-d_ext_low;
+
+      return size_ext.x()*size_ext.y()*size_ext.z()-size_int.x()*size_int.y()*size_int.z();
+     };
      inline GridSurfaceIterator(const GridSurfaceIterator& copy)
        : d_int_low(copy.d_int_low), d_int_high(copy.d_int_high), d_ext_low(copy.d_ext_low), d_ext_high(copy.d_ext_high), d_curFace(copy.d_curFace), d_iter(copy.d_iter), d_done(copy.d_done) {
        }
