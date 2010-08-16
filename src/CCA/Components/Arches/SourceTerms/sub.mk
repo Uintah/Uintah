@@ -10,4 +10,3 @@ SRCS += \
 	$(SRCDIR)/MMS1.cc \
 	$(SRCDIR)/ParticleGasMomentum.cc \
 	$(SRCDIR)/UnweightedSrcTerm.cc \
-	$(SRCDIR)/Inject.cc \
