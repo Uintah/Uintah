@@ -39,6 +39,10 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqnFactory.h>
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqn.h>
 #include <CCA/Components/Arches/TransportEqns/ScalarEqn.h>
+#include <CCA/Components/Arches/PropertyModels/LaminarPrNo.h>
+#if HAVE_TABPROPS
+# include <CCA/Components/Arches/ChemMix/TabPropsInterface.h>
+#endif 
 
 #include <CCA/Components/Arches/Arches.h>
 #include <CCA/Components/Arches/ArchesLabel.h>

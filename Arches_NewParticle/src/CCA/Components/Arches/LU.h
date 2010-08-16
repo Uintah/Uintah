@@ -10,7 +10,7 @@ namespace Uintah {
   * @class    LU
   * 
   * @brief    Performs LU decomposition of a matrix system using Crout's method with partial pivoting;
-  *           additionally, the class can optionally implement iterative refinement of X=A\B.
+  *           additionally, the class can optionally implement iterative refinement of \f$X=A\\B\f$.
   *
   * @author   Charles Reid and James Sutherland
   * @date     November 2005 : Crout's Method \n

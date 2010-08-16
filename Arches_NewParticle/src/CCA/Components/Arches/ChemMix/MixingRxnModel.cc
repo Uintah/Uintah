@@ -65,17 +65,22 @@ using namespace Uintah;
 MixingRxnModel::MixingRxnModel( const ArchesLabel* labels, const MPMArchesLabel* MAlab ):
   d_lab(labels), d_MAlab(MAlab)
 {
+  std::string varlabel_name = "scalar_dissipation_rate"; 
+  d_dissipation_rate_label  = VarLabel::create( varlabel_name, CCVariable<double>::getTypeDescription() ); 
 }
 
 //---------------------------------------------------------------------------
 MixingRxnModel::~MixingRxnModel()
 {
+
   for ( VarMap::iterator i = d_dvVarMap.begin(); i != d_dvVarMap.end(); ++i ){
     VarLabel::destroy( i->second ); 
   }
   for ( VarMap::iterator i = d_ivVarMap.begin(); i != d_ivVarMap.end(); ++i ){
     VarLabel::destroy( i->second ); 
   }
+
+  VarLabel::destroy( d_dissipation_rate_label ); 
 }
 
 //---------------------------------------------------------------------------
@@ -116,14 +121,16 @@ MixingRxnModel::setMixDVMap( const ProblemSpecP& root_params )
   proc0cout << "    (below required by the CFD algorithm)" << endl; 
   var_name = "density"; 
   insertIntoMap( var_name ); 
-  var_name = "temperature"; 
-  insertIntoMap( var_name ); 
-  var_name = "heat_capacity"; 
-  insertIntoMap( var_name ); 
-  var_name = "CO2"; 
-  insertIntoMap( var_name ); 
-  var_name = "H2O"; 
-  insertIntoMap( var_name ); 
+  if ( !d_coldflow ){ 
+    var_name = "temperature"; 
+    insertIntoMap( var_name ); 
+    var_name = "heat_capacity"; 
+    insertIntoMap( var_name ); 
+    var_name = "CO2"; 
+    insertIntoMap( var_name ); 
+    var_name = "H2O"; 
+    insertIntoMap( var_name ); 
+  }
 
   proc0cout << endl;
 }
@@ -135,6 +142,7 @@ MixingRxnModel::setMixDVMap( const ProblemSpecP& root_params )
 void 
 MixingRxnModel::addAdditionalDV( std::vector<string>& vars )
 {
+  proc0cout << "  Adding these additional variables for table lookup: " << endl; 
   for ( std::vector<string>::iterator ivar = vars.begin(); ivar != vars.end(); ivar++ ) { 
     insertIntoMap( *ivar ); 
   }
