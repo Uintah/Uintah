@@ -11,6 +11,41 @@
       <turnonMixedModel                 spec="OPTIONAL BOOLEAN" /> <!-- Move to Properties? not sure what this model is-->
       <recompileTaskgraph               spec="OPTIONAL BOOLEAN" />
 
+      <PropertyModels                   spec="OPTIONAL NO_DATA" >
+        <model                          spec="MULTIPLE NO_DATA" 
+                                        attribute1="label REQUIRED STRING"
+                                        attribute2="type REQUIRED STRING 'cc_constant, fx_constant, laminar_pr'">
+          <!-- constant property model --> 
+          <constant                     spec="OPTIONAL DOUBLE"/>
+
+          <!-- laminar pr --> 
+          <atm_pressure                 spec="OPTIONAL DOUBLE"/>
+          <mix_frac_label               spec="OPTIONAL STRING"/>
+          <D                            spec="OPTIONAL DOUBLE"/>
+
+          <fuel                         spec="OPTIONAL NO_DATA">
+            <!-- laminar pr --> 
+            <molar_mass                 spec="OPTIONAL DOUBLE 'positive'"/>
+            <critical_pressure          spec="OPTIONAL DOUBLE 'positive'"/>
+            <critical_temperature       spec="OPTIONAL DOUBLE 'positive'"/>
+            <dipole_moment              spec="OPTIONAL DOUBLE 'positive'"/>
+            <viscosity                  spec="OPTIONAL DOUBLE 'positive'"/>
+          </fuel>
+          <oxidizer                     spec="OPTIONAL NO_DATA">
+            <!-- laminar pr --> 
+            <molar_mass                 spec="OPTIONAL DOUBLE 'positive'"/>
+            <critical_temperature       spec="OPTIONAL DOUBLE 'positive'"/>
+            <critical_pressure          spec="OPTIONAL DOUBLE 'positive'"/>
+            <dipole_moment              spec="OPTIONAL DOUBLE 'positive'"/>
+            <viscosity                  spec="OPTIONAL DOUBLE 'positive'"/>
+          </oxidizer>
+
+
+        </model>
+      </PropertyModels>
+
+
+
       <MMS                              spec="OPTIONAL NO_DATA"
                                           attribute1="whichMMS REQUIRED STRING 'constantMMS, almgrenMMS'" 
                                           children1="ONE_OF(CHILD constantMMS, almgrenMMS)">
@@ -92,6 +127,7 @@
 
         <TabProps                       spec="OPTIONAL NO_DATA" >
           <inputfile                    spec="REQUIRED STRING" />
+          <cold_flow                    spec="OPTIONAL BOOLEAN"/>
           <strict_mode                  spec="OPTIONAL BOOLEAN" />
           <diagnostic_mode              spec="OPTIONAL BOOLEAN" />
           <hl_scalar_init               spec="OPTIONAL DOUBLE" />
