@@ -605,7 +605,7 @@ TabPropsInterface::oldTableHack( const InletStream& inStream, Stream& outStream,
 
   for ( int i = 0; i < (int) iv_names.size(); i++){
 
-    if ( (iv_names[i] == "mixture_fraction") || (iv_names[i] == "coal_gas_mix_frac")){
+    if ( (iv_names[i] == "mixture_fraction") || (iv_names[i] == "coal_gas_mix_frac") || (iv_names[i] == "MixtureFraction")){
       iv[i] = inStream.d_mixVars[0]; 
     } else if (iv_names[i] == "mixture_fraction_variance") {
       iv[i] = 0.0;

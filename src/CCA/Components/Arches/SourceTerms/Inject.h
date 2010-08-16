@@ -213,7 +213,7 @@ private:
         throw InvalidValue( "Please check the builder (probably in Arches.cc) and try again. ", __FILE__, __LINE__); 
       }
 
-      for (int gp = 0; gp < d_geomPieces.size(); gp++){
+      for (unsigned int gp = 0; gp < d_geomPieces.size(); gp++){
   
         GeometryPieceP piece = d_geomPieces[gp];
         Box geomBox          = piece->getBoundingBox(); 
