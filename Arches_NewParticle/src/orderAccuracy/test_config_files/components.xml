@@ -6,4 +6,10 @@
  <!--<component>MPMICE</component>-->
  <sus_path>/usr/local/home/harman/Builds/Fresh/NB/opt_Linux/StandAlone/</sus_path>
  
+ <!-- path to any additional scripts that may be needed by all the components-->
+ <scripts_path>/usr/local/home/harman/Builds/Fresh/NB/src/scripts
+               /usr/local/home/harman/Builds/Fresh/NB/src/scripts/ICE
+ </scripts_path>
+ 
+ 
 </config>

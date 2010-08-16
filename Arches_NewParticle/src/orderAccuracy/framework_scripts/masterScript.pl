@@ -76,14 +76,15 @@ my $curr_path = cwd;
 #__________________________________
 # read in components.xml
 my $xml = $simple->XMLin($config_files_path . "/components.xml");
-my @components = @{$xml->{component}};
-my $sus_path   = $xml->{sus_path}[0];
+my @components   = @{$xml->{component}};
+my $sus_path     = $xml->{sus_path}[0];
+my $extraScripts_path = $xml->{scripts_path}[0];
 
 
 #__________________________________
 # add compare_path:sus_path and framework_scripts to the path
 my $orgPath = $ENV{"PATH"};
-$ENV{"PATH"} = "$compareUtil_path:$sus_path:$scripts_path:$orgPath";
+$ENV{"PATH"} = "$compareUtil_path:$sus_path:$scripts_path:$extraScripts_path:$orgPath";
 
 system("which sus") == 0 ||  die("Cannot find the command sus $@");
 
@@ -106,6 +107,11 @@ system("which sus") == 0 ||  die("Cannot find the command sus $@");
    my $p   = $whatToRun->{compareUtil_path}[0];
    my $orgPath = $ENV{"PATH"};
    $ENV{"PATH"} = "$p:$orgPath";
+   
+   # additional symbolic links to make
+   my $input = $whatToRun->{symbolicLinks}[0];
+   my @symLinks = split(/ /,$input);
+  
    
    #__________________________________
    # loop over all tests
@@ -155,6 +161,15 @@ system("which sus") == 0 ||  die("Cannot find the command sus $@");
      # make a symbolic link to sus
      my $sus = `which sus`;
      system("ln -s $sus");
+     
+     # make any symbolic Links needed by that component
+     my $j = 0;
+     foreach $j (@symLinks) {
+       if( $j gt "" && $j ne "."){
+         system("ln -s $j");
+       }
+     }
+     
      
      #__________________________________
      # run the tests
