@@ -258,13 +258,14 @@ void CompMooneyRivlin::computeStressTensor(const PatchSubset* patches,
         Matrix3 tensorL(0.0);
         if(!flag->d_axisymmetric){
          // Get the node indices that surround the cell
-         interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx],deformationGradient[idx]);
+         interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx],
+                                                   deformationGradient[idx]);
 
          computeVelocityGradient(tensorL,ni,d_S, oodx, gvelocity);
         } else {  // axi-symmetric kinematics
          // Get the node indices that surround the cell
          interpolator->findCellAndWeightsAndShapeDerivatives(px[idx],ni,S,d_S,
-                                                                    psize[idx],deformationGradient[idx]);
+                                          psize[idx],deformationGradient[idx]);
          // x -> r, y -> z, z -> theta
          computeAxiSymVelocityGradient(tensorL,ni,d_S,S,oodx,gvelocity,px[idx]);
         }
@@ -273,6 +274,7 @@ void CompMooneyRivlin::computeStressTensor(const PatchSubset* patches,
         deformationGradient_new[idx]=(tensorL*delT+Identity)
                                     *deformationGradient[idx];
       }
+
     }
     else if(!flag->d_doGridReset){
       constNCVariable<Vector> gdisplacement;
@@ -284,11 +286,59 @@ void CompMooneyRivlin::computeStressTensor(const PatchSubset* patches,
                                                  dx, interpolator);
     }
 
+    // The following is used only for pressure stabilization
+    CCVariable<double> J_CC;
+    new_dw->allocateTemporary(J_CC,       patch);
+    J_CC.initialize(0.);
+    if(flag->d_doPressureStabilization) {
+      CCVariable<double> vol_0_CC;
+      CCVariable<double> vol_CC;
+      new_dw->allocateTemporary(vol_0_CC, patch);
+      new_dw->allocateTemporary(vol_CC,   patch);
+
+      vol_0_CC.initialize(0.);
+      vol_CC.initialize(0.);
+      for(ParticleSubset::iterator iter = pset->begin();
+          iter != pset->end(); iter++){
+        particleIndex idx = *iter;
+
+        // get the volumetric part of the deformation
+        J = deformationGradient_new[idx].Determinant();
+
+        // Get the deformed volume
+        pvolume[idx]=(pmass[idx]/rho_orig)*J;
+
+        IntVector cell_index;
+        patch->findCell(px[idx],cell_index);
+
+        vol_CC[cell_index]  +=pvolume[idx];
+        vol_0_CC[cell_index]+=pmass[idx]/rho_orig;
+      }
+
+      for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++){
+        IntVector c = *iter;
+        J_CC[c]=vol_CC[c]/vol_0_CC[c];
+      }
+    } //end of pressureStabilization loop  at the patch level
+
+
     for(ParticleSubset::iterator iter = pset->begin();iter!=pset->end();iter++){
       particleIndex idx = *iter;
       
       // Assign zero internal heating by default - modify if necessary.
       pdTdt[idx] = 0.0;
+
+      if(flag->d_doPressureStabilization) {
+        IntVector cell_index;
+        patch->findCell(px[idx],cell_index);
+
+        // get the original volumetric part of the deformation
+        J = deformationGradient_new[idx].Determinant();
+
+        // Change F such that the determinant is equal to the average for
+        // the cell
+        deformationGradient_new[idx]*=cbrt(J_CC[cell_index])/cbrt(J);
+      }
 
       // Compute the left Cauchy-Green deformation tensor
       B = deformationGradient_new[idx]*deformationGradient_new[idx].Transpose();
