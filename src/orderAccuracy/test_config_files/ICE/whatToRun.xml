@@ -1,6 +1,10 @@
 <config>
 <compareUtil_path>/home/harman/Builds/Fresh/NB/opt_Linux/Packages/Uintah/StandAlone/tools/compare_mms:/home/harman/working_on/orderAccuracy/comparisonUtils</compareUtil_path>
 
+<symbolicLinks> 
+  /usr/local/home/harman/Builds/Fresh/NB/src/scripts/ /usr/local/home/harman/Builds/Fresh/NB/src/StandAlone/inputs
+</symbolicLinks>
+
 <test>
   <name>advect_X_FO</name>
   <ups>advectPS.ups</ups>
@@ -26,6 +30,12 @@
 </test>
 
 <!--
+<test>  
+  <name>Lodi_pulse</name>
+  <ups>Lodi_pulse.ups</ups>
+  <tst>Lodi.tst</tst>
+</test>
+
 <test>
   <name>Test1</name>
   <ups>riemann.ups</ups>

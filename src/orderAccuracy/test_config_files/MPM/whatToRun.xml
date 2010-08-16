@@ -1,5 +1,10 @@
 <config>
 <compareUtil_path></compareUtil_path>
+
+<symbolicLinks> 
+  /usr/local/home/harman/Builds/Fresh/NB/src/scripts/ /usr/local/home/harman/Builds/Fresh/NB/src/StandAlone/inputs
+</symbolicLinks>
+
 <test>
   <name>1D_MMS_X</name>
   <ups>1D_MMS.ups</ups>
