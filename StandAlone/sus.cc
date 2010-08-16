@@ -43,7 +43,6 @@ DEALINGS IN THE SOFTWARE.
  */
 
 #include <TauProfilerForSCIRun.h>
-
 #include <Core/Disclosure/TypeDescription.h>
 #include <Core/Exceptions/InvalidGrid.h>
 #include <Core/Exceptions/ProblemSetupException.h>
@@ -102,6 +101,7 @@ DEALINGS IN THE SOFTWARE.
 #include <cstdio>
 #include <string>
 #include <vector>
+#include <stdexcept>
 #include <sys/stat.h>
 
 #include <time.h>
@@ -687,8 +687,12 @@ main( int argc, char *argv[], char *env[] )
     cerr << Uintah::Parallel::getMPIRank() << " Caught std exception 'ios_base::failure': " << e.what() << '\n';
     cerrLock.unlock();
     thrownException = true;
+  } catch (std::runtime_error e){
+    cerrLock.lock();
+    cerr << Uintah::Parallel::getMPIRank() << " Caught std exception 'runtime_error': " << e.what() << '\n';
+    cerrLock.unlock();
+    thrownException = true;
   } catch (std::exception e){
-    
     cerrLock.lock();
     cerr << Uintah::Parallel::getMPIRank() << " Caught std exception: " << e.what() << '\n';
     cerrLock.unlock();
