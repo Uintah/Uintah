@@ -2316,10 +2316,12 @@ Properties::sched_initEnthalpy( const LevelP& level, SchedulerP& sched )
   d_mixingRxnTable->sched_computeFirstEnthalpy( level, sched ) ; 
 #endif
 }
+
 void 
 Properties::sched_doTPDummyInit( const LevelP& level, SchedulerP& sched )
 {
 #if HAVE_TABPROPS
-  d_mixingRxnTable->sched_dummyInit( level, sched ); 
+  d_mixingRxnTable->sched_dummyInit( level, sched );
 #endif 
 }
+

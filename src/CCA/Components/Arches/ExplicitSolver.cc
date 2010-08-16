@@ -37,6 +37,8 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqn.h>
 #include <CCA/Components/Arches/CoalModels/CoalModelFactory.h>
 #include <CCA/Components/Arches/CoalModels/ModelBase.h>
+#include <CCA/Components/Arches/PropertyModels/PropertyModelBase.h>
+#include <CCA/Components/Arches/PropertyModels/PropertyModelFactory.h>
 #include <CCA/Components/Arches/DQMOM.h>
 
 #include <CCA/Components/Arches/ExplicitSolver.h>
@@ -137,7 +139,7 @@ ExplicitSolver::~ExplicitSolver()
 void 
 ExplicitSolver::problemSetup(const ProblemSpecP& params)
   // MultiMaterialInterface* mmInterface
-{ 
+{
   ProblemSpecP db = params->findBlock("ExplicitSolver");
   ProblemSpecP test_probe_db = db->findBlock("ProbePoints"); 
   if ( test_probe_db ) {
@@ -343,6 +345,17 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
     bool lastTimeSubstep = (curr_level == numTimeIntegratorLevels-1);
 
+    // Clean up all property models 
+     PropertyModelFactory& propFactory = PropertyModelFactory::self(); 
+     PropertyModelFactory::PropMap& all_prop_models = propFactory.retrieve_all_property_models(); 
+     for ( PropertyModelFactory::PropMap::iterator iprop = all_prop_models.begin(); 
+         iprop != all_prop_models.end(); iprop++){
+
+       PropertyModelBase* prop_model = iprop->second; 
+       prop_model->cleanUp(); 
+
+     }
+
     DQMOMEqnFactory& dqmomFactory = DQMOMEqnFactory::self();
     
     if ( dqmomFactory.getDoDQMOM() ) {
@@ -491,6 +504,17 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 //    sched_updateDensityGuess(sched, patches, matls,
 //                                    d_timeIntegratorLabels[curr_level]);
 
+    // Property models needed before table lookup: 
+    for ( PropertyModelFactory::PropMap::iterator iprop = all_prop_models.begin(); 
+          iprop != all_prop_models.end(); iprop++){
+
+      PropertyModelBase* prop_model = iprop->second; 
+      if ( prop_model->beforeTableLookUp() )
+        prop_model->sched_computeProp( level, sched, curr_level ); 
+
+    }
+
+
     string mixmodel = d_props->getMixingModelType(); 
     if ( mixmodel != "TabProps") {
       d_props->sched_reComputeProps(sched, patches, matls,
@@ -562,6 +586,15 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
       }
 
+      // By default, scheduling all property models for evaluation. 
+      for ( PropertyModelFactory::PropMap::iterator iprop = all_prop_models.begin(); 
+            iprop != all_prop_models.end(); iprop++){
+
+        PropertyModelBase* prop_model = iprop->second; 
+        prop_model->sched_computeProp( level, sched, curr_level ); 
+
+      }
+
                                    
       sched_computeDensityLag(sched, patches, matls,
                               d_timeIntegratorLabels[curr_level],
@@ -575,6 +608,22 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
                                             d_timeIntegratorLabels[curr_level],
                                             d_EKTCorrection);
     } 
+
+    // Re-Clean all property models and reevaluate after RK averaging to give final values
+    for ( PropertyModelFactory::PropMap::iterator iprop = all_prop_models.begin(); 
+         iprop != all_prop_models.end(); iprop++){
+
+       PropertyModelBase* prop_model = iprop->second; 
+       prop_model->cleanUp(); 
+
+    }
+    for ( PropertyModelFactory::PropMap::iterator iprop = all_prop_models.begin(); 
+          iprop != all_prop_models.end(); iprop++){
+
+      PropertyModelBase* prop_model = iprop->second; 
+      prop_model->sched_computeProp( level, sched, curr_level ); 
+
+    }
 
     d_props->sched_computeDrhodt(sched, patches, matls,
                                  d_timeIntegratorLabels[curr_level],
@@ -761,7 +810,23 @@ int ExplicitSolver::noSolve(const LevelP& level,
 
   eqnFactory.sched_dummyInit( level, sched );
 
+  SourceTermFactory& src_factory = SourceTermFactory::self();
+  SourceTermFactory::SourceMap& sources = src_factory.retrieve_all_sources(); 
+  
+  for( SourceTermFactory::SourceMap::iterator iter = sources.begin(); iter != sources.end(); ++iter ){
+    SourceTermBase* src = iter->second; 
+    src->sched_dummyInit( level, sched ); 
+  }
 
+  PropertyModelFactory& propFactory = PropertyModelFactory::self(); 
+  PropertyModelFactory::PropMap& all_prop_models = propFactory.retrieve_all_property_models(); 
+  for ( PropertyModelFactory::PropMap::iterator iprop = all_prop_models.begin(); 
+      iprop != all_prop_models.end(); iprop++){
+
+    PropertyModelBase* prop_model = iprop->second; 
+    prop_model->sched_dummyInit( level, sched ); 
+
+  }
 
   string mixmodel = d_props->getMixingModelType(); 
   if ( mixmodel == "TabProps" )

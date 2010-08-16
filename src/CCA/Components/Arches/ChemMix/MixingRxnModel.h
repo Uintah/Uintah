@@ -44,10 +44,10 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Parallel/Parallel.h>
 
 // C++ includes
-#include     <vector>
-#include     <map>
-#include     <string>
-#include     <stdexcept>
+//#include     <vector>
+//#include     <map>
+//#include     <string>
+//#include     <stdexcept>
 
 
 /** 
@@ -113,7 +113,7 @@ public:
                                           SchedulerP& sched ) = 0; 
 
   /** @brief Provides access for models, algorithms, etc. to add additional table lookup variables. */
-  virtual void addAdditionalDV( std::vector<string>& vars );
+  void addAdditionalDV( std::vector<string>& vars );
 
 protected :
 
@@ -126,6 +126,10 @@ protected :
   const ArchesLabel* d_lab; 
   const MPMArchesLabel* d_MAlab;
 
+  bool d_coldflow; 
+
+  const VarLabel* d_dissipation_rate_label; 
+
 
 private:
 
@@ -134,13 +138,13 @@ private:
 
     VarMap::iterator i = d_dvVarMap.find( var_name ); 
 
+    proc0cout << "  Adding variables for table lookup: " << endl; 
     if ( i == d_dvVarMap.end() ) {
 
       const VarLabel* the_label = VarLabel::create( var_name, CCVariable<double>::getTypeDescription() ); 
 
-      i = d_dvVarMap.insert( make_pair( var_name, the_label ) ).first; 
+      d_dvVarMap[var_name] = the_label;
       
-      proc0cout << "  Adding variables for table lookup: " << endl; 
       proc0cout << "    ---> " << var_name << endl; 
 
     } 

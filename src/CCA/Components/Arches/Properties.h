@@ -70,7 +70,7 @@ POSSIBLE REVISIONS
 #include <CCA/Components/Arches/BoundaryCondition.h>
 #include <CCA/Components/Arches/ChemMix/MixingRxnModel.h>
 #ifdef PetscFilter
-#include <CCA/Components/Arches/Filter.h>
+#  include <CCA/Components/Arches/Filter.h>
 #endif
 #include <Core/Parallel/UintahParallelComponent.h>
 #include <Core/Grid/Patch.h>
@@ -216,11 +216,6 @@ public:
   inline const string getMixingModelType(){
     return mixModel; 
   }
-#if HAVE_TABPROPS
-  inline TabPropsInterface* getMixRxnModel(){
-    return d_mixingRxnTable; 
-  }
-#endif
 
   //for the new table:
   void sched_reComputeProps_new( const LevelP&,
@@ -236,7 +231,6 @@ public:
   TabPropsInterface* getMixingRxnModel() {
     return d_mixingRxnTable; }
 
-  /** @brief    Not sure what this is doing (Here's a novel idea: if you add a method, DOCUMENT IT.) */
   void sched_doTPDummyInit( const LevelP&, SchedulerP& ); 
 
 protected :
@@ -316,8 +310,6 @@ private:
   //        const Properties&   
 
   Properties& operator=(const Properties&);
-
-
 
 private:
 
