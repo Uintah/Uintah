@@ -1010,7 +1010,7 @@ void UCNH::computeStressTensor(const PatchSubset* patches,
         // x -> r, y -> z, z -> theta
         computeAxiSymVelocityGradient(velGrad_new,ni,d_S,S,oodx,gVelocity,px[idx]);
       }
-      
+      pDefGrad_new[idx] = (velGrad_new*delT + Identity)*pDefGrad[idx];  
       velGrad[idx] = velGrad_new;
     }
       
