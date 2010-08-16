@@ -1114,7 +1114,7 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
       restart = true;
       proc0cout <<"\nWARNING: max iterations befor timestep restart reached\n"<<endl;
     }
-                                          //  solver has requested a restart
+                                          //  solver or advection has requested a restart
     if (d_subsched->get_dw(1)->timestepRestarted() ) {
       proc0cout << "\nWARNING  impICE:implicitPressureSolve timestep restart.\n" <<endl;
       restart = true;
