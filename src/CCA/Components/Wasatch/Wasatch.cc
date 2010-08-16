@@ -216,6 +216,9 @@ namespace Wasatch{
     }
     //======================= </temporary> ======================
 
+    // jcs we may need to also execute the full time-advance tree
+    // (minus the actual solution update) during initialization.
+    // Otherwise, we cannot set all of the required variables...
     create_tree_on_patches( sched->getLoadBalancer()->getPerProcessorPatchSet(level),
                             sharedState_->allMaterials(),
                             sched,
