@@ -56,6 +56,9 @@ public:
   /** @brief A method for cleaning up property values */ 
   inline void cleanUp() { _has_been_computed = false; };
 
+  /** @brief Returns the boolean to indicate if the model is to be evaluated before or after the table lookup */
+  inline bool beforeTableLookUp() { return _before_table_lookup; }; 
+
   /** @brief Builder class containing instructions on how to build the property model */ 
   class Builder { 
 
@@ -74,12 +77,15 @@ public:
 protected:
 
   std::string _prop_name;                             ///< User assigned property name
+  std::vector<const VarLabel*> _extra_local_labels;   ///< Vector of extra local labels
+  std::string _init_type;                             ///< Initialization type
   
   const VarLabel* _prop_label;                        ///< Property varlabel
-  std::vector<const VarLabel*> _extra_local_labels;   ///< Vector of extra local labels
+
   bool _has_been_computed;                            ///< To determine if the property has been computed (to avoid computing twice)
+  bool _before_table_lookup;                          ///< To determine if the property model is evaluated before the table look up or after. 
+
   SimulationStateP& _shared_state;                    ///< Uintah shared state
-  std::string _init_type;                             ///< Initialization type
 
   /** @brief A common intialization proceedure that can be used by all derived types */ 
   template <class phiT > 

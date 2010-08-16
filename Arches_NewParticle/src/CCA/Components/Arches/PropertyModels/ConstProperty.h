@@ -6,7 +6,7 @@
 #include <Core/Grid/SimulationState.h>
 
 /** 
-* @class  Constant Property
+* @class  ConstantProperty
 * @author Jeremy Thornock
 * @date   Aug. 2010
 * 
@@ -83,6 +83,9 @@ namespace Uintah{
   ConstProperty<pT, constpT>::ConstProperty( std::string prop_name, SimulationStateP& shared_state ) : PropertyModelBase( prop_name, shared_state )
   {
     _prop_label = VarLabel::create( prop_name, pT::getTypeDescription() ); 
+
+    // evaluate after table lookup: 
+    _before_table_lookup = false; 
   }
   
   template <typename pT, typename constpT>
