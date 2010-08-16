@@ -706,10 +706,11 @@ handle_abort_signals(int sig, SigContext ctx)
   //and the problem was likely on another processor
   bool print=sig!=SIGINT;
 
+  Uintah::CrashPad::printMessages(std::cout);
+  
   if(print)
     fprintf(stderr, "%c%c%cThread \"%s\"(pid %d) caught signal %s\n", 7,7,7,tname, getpid(), signam);
 
-  Uintah::CrashPad::printMessages(std::cout);
   SCIRun::WAIT_FOR_DEBUGGER(true);
 
   Thread::niceAbort(NULL,print);
@@ -786,11 +787,12 @@ handle_quit(int sig, SigContext /*ctx*/)
   //don't print if the signal was SIGINT because the signal likely came from MPI aborting 
   //and the problem was likely on another processor
   bool print=sig!=SIGINT;
+  
+  Uintah::CrashPad::printMessages(std::cout);
 
   if(print)
     fprintf(stderr, "Thread \"%s\"(pid %d) caught signal %s\n", tname, pid, signam);
 
-  Uintah::CrashPad::printMessages(std::cout);
   SCIRun::WAIT_FOR_DEBUGGER(true);
 
   Thread::niceAbort(NULL, print); // Enter the monitor
