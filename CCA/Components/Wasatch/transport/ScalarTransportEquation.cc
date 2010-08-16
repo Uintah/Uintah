@@ -102,8 +102,42 @@ namespace Wasatch{
 
   //------------------------------------------------------------------
 
+  //==================================================================
+
+  //------------------------------------------------------------------
+
+  ScalarTransportEquation::
+  ScalarTransportEquation( const std::string phiName,
+                           const Expr::ExpressionID rhsID )
+    : Expr::TransportEquation( phiName, rhsID )
+  {}
+
+  //------------------------------------------------------------------
+
+  ScalarTransportEquation::~ScalarTransportEquation()
+  {}
+
+  //------------------------------------------------------------------
+
+  void
+  ScalarTransportEquation::
+  setup_boundary_conditions( Expr::ExpressionFactory& exprFactory )
+  {}
+
+  //------------------------------------------------------------------
+
+  Expr::ExpressionID
+  ScalarTransportEquation::
+  initial_condition( Expr::ExpressionFactory& icFactory )
+  {
+    return icFactory.get_registry().get_id( Expr::Tag( this->solution_variable_name(),
+                                                       Expr::STATE_N ) );
+  }
+
+  //------------------------------------------------------------------
+
   std::string
-  get_phi_name( Uintah::ProblemSpecP params )
+  ScalarTransportEquation::get_phi_name( Uintah::ProblemSpecP params )
   {
     std::string phiName;
     params->get("SolutionVariable",phiName);
@@ -113,8 +147,8 @@ namespace Wasatch{
   //------------------------------------------------------------------
 
   Expr::ExpressionID
-  get_rhs_expr_id( Expr::ExpressionFactory& factory,
-                   Uintah::ProblemSpecP params )
+  ScalarTransportEquation::get_rhs_expr_id( Expr::ExpressionFactory& factory,
+                                            Uintah::ProblemSpecP params )
   {
     ScalarRHS::FieldTagInfo info;
 
@@ -150,44 +184,8 @@ namespace Wasatch{
 
     }
 
-
     return factory.register_expression( Expr::Tag( phiName+"_rhs", Expr::STATE_NONE ),
                                         new ScalarRHS::Builder(info) );
-  }
-
-  //------------------------------------------------------------------
-
-  //==================================================================
-
-  //------------------------------------------------------------------
-
-  ScalarTransportEquation::
-  ScalarTransportEquation( Expr::ExpressionFactory& solnExprFactory,
-                           Uintah::ProblemSpecP params )
-    : Expr::TransportEquation( get_phi_name( params ),
-                               get_rhs_expr_id( solnExprFactory, params ) )
-  {}
-
-  //------------------------------------------------------------------
-
-  ScalarTransportEquation::~ScalarTransportEquation()
-  {}
-
-  //------------------------------------------------------------------
-
-  void
-  ScalarTransportEquation::
-  setup_boundary_conditions( Expr::ExpressionFactory& exprFactory )
-  {}
-
-  //------------------------------------------------------------------
-
-  Expr::ExpressionID
-  ScalarTransportEquation::
-  initial_condition( Expr::ExpressionFactory& icFactory )
-  {
-    return icFactory.get_registry().get_id( Expr::Tag( this->solution_variable_name(),
-                                                       Expr::STATE_N ) );
   }
 
   //------------------------------------------------------------------
