@@ -122,7 +122,8 @@ OnDemandDataWarehouse::OnDemandDataWarehouse(const ProcessorGroup* myworld,
      d_lock("DataWarehouse lock"),
      d_finalized( false ),
      d_grid(grid),
-     d_isInitializationDW(isInitializationDW)
+     d_isInitializationDW(isInitializationDW),
+     d_scrubMode(DataWarehouse::ScrubNone)
 {
   restart = false;
   hasRestarted_ = false;
