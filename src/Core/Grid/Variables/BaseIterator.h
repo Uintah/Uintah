@@ -117,6 +117,11 @@ namespace Uintah {
      */
     virtual IntVector end() const=0;
 
+    /**
+     * Return the number of cells in the iterator
+     */
+    virtual unsigned int size()=0;
+
     virtual ostream& limits(ostream&) const = 0;
 
 
