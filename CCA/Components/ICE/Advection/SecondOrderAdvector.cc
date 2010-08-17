@@ -220,19 +220,22 @@ SecondOrderAdvector::inFluxOutFluxVolume( const SFCXVariable<double>& uvel_FC,
   
   if (error && bulletProof_test && !tsr) {
     vector<IntVector> badCells;
-    vector<double>  badOutflux;
+    vector<fflux>  badOutflux;
   
     for(CellIterator iter = patch->getExtraCellIterator(NGC); !iter.done(); iter++) {
       const IntVector& c = *iter; 
       double total_fluxout = 0.0;
+      fflux ofs = d_OFS[c];
+      
       for(int face = TOP; face <= BACK; face++ )  {
         total_fluxout  += d_OFS[c].d_fflux[face];
         d_OFS[c].d_fflux[face] = 0.0;
       }
+      
       // keep track of which cells are bad
       if (vol - total_fluxout < 0.0) {
         badCells.push_back(c);
-        badOutflux.push_back(total_fluxout);
+        badOutflux.push_back(ofs);
       }
     }  // cell iter
     warning_restartTimestep( badCells,badOutflux, vol, indx, patch, new_dw);
@@ -240,11 +243,9 @@ SecondOrderAdvector::inFluxOutFluxVolume( const SFCXVariable<double>& uvel_FC,
   
   if (error && !bulletProof_test) {
     ostringstream mesg;
-    mesg << " WARNING: ICE Advection operator Influx/Outflux volume error:"
+    cout << " WARNING: ICE Advection operator Influx/Outflux volume error:"
          << " Patch " << patch->getID()
-         << ", Level " << patch->getLevel()->getIndex();
-    static SCIRun::ProgressiveWarning warn(mesg.str(),10); 
-    warn.invoke();
+         << ", Level " << patch->getLevel()->getIndex()<< endl;
   }
 }
 /*_____________________________________________________________________

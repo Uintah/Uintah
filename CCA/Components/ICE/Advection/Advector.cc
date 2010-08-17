@@ -60,15 +60,13 @@ Advector::~Advector()
 {
 }
 
-//______________________________________________________________________
-//
 
 //______________________________________________________________________
 //  
 namespace Uintah {
   //__________________________________
   void  warning_restartTimestep( vector<IntVector> badCells,
-                                 vector<double> badOutFlux,
+                                 vector<fflux> badOutFlux,
                                  const double vol,
                                  const int indx,
                                  const Patch* patch,
@@ -78,17 +76,26 @@ namespace Uintah {
          << " Influx_outflux error detected, "
          << " patch " << patch->getID()
          << ", Level " << patch->getLevel()->getIndex()
-         << ", matl indx "<< indx << " " << badCells.size() << " bad cells "
-         << endl;
-         
+         << ", matl indx "<< indx << ", number of bad cells: " << badCells.size() << endl;
+
     for (int i = 0; i<(int) badCells.size(); i++) {
-      cout << Parallel::getMPIRank() << "  cell " << badCells[i] 
-           << " \t\t total_outflux (" << badOutFlux[i]<< ") > cellVol (" 
-           << vol << ")" << endl;
-      break;
+      cout << Parallel::getMPIRank() << "  cell " <<  badCells[i] << " outflux: ";
+      
+      fflux& outflux_faces = badOutFlux[i];
+      double total_fluxout = 0.0;
+      
+      for(int f = TOP; f <= BACK; f++ )  {
+        double flux = outflux_faces.d_fflux[f];
+        total_fluxout += flux;
+        cout << " \t face: " << f << " (" << flux << ") ";
+      }
+      cout << " total_outflux: " << total_fluxout << endl;
     }
-    //cout << " A timestep restart has been requested \n " << endl;
-    new_dw->restartTimestep();
+    
+    if (new_dw->timestepRestarted() == false){
+      cout << "\nA timestep restart has been requested \n " << endl;
+      new_dw->restartTimestep();
+    }
   }
   
   //__________________________________
