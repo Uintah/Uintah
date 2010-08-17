@@ -134,7 +134,6 @@ void cpdiInterpolator::findCellAndWeights(const Point& pos,
   for(int i = 0; i < 27; i++)
   {
     S[i]         = 0.0;
-    d_S[i]       = zero;
     ni[i]        = niVec;
   }
   
@@ -296,7 +295,6 @@ void cpdiInterpolator::findCellAndShapeDerivatives(const Point& pos,
   IntVector niVec = IntVector(minX,minY,minZ);
   for(int i = 0; i < 27; i++)
   {
-    S[i]         = 0.0;
     d_S[i]       = zero;
     ni[i]        = niVec;
   }
