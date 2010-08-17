@@ -29,7 +29,7 @@
          <injector> 
            <geom_object> ... </geom_object>
          </injector>
-         <constant> 1.0 </constant>
+         <constant> DOUBLE </constant>
        </src>
      </SourceTerms>
    \endcode
@@ -196,12 +196,12 @@ private:
       // loop over all geometry pieces
       CellIterator iter = patch->getCellIterator(); 
       if ( typeid(sT) == typeid(SFCXVariable<double>) )
-        iter = patch->getSFCXIterator(); 
+        CellIterator iter = patch->getSFCXIterator(); 
       else if ( typeid(sT) == typeid(SFCYVariable<double>) )
-        iter = patch->getSFCYIterator(); 
+        CellIterator iter = patch->getSFCYIterator(); 
       else if ( typeid(sT) == typeid(SFCZVariable<double>) )
-        iter = patch->getSFCZIterator(); 
-      else {
+        CellIterator iter = patch->getSFCZIterator(); 
+      else if ( typeid(sT) != typeid(CCVariable<double> ) ) {
         // Bulletproofing
         proc0cout << " While attempting to compute: Inject.h " << endl;
         proc0cout << " Encountered a type mismatch error.  The current code cannot handle" << endl;
