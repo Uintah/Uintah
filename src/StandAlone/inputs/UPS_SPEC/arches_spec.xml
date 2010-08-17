@@ -14,9 +14,18 @@
       <PropertyModels                   spec="OPTIONAL NO_DATA" >
         <model                          spec="MULTIPLE NO_DATA" 
                                         attribute1="label REQUIRED STRING"
-                                        attribute2="type REQUIRED STRING 'cc_constant, fx_constant, laminar_pr'">
-          <!-- constant property model --> 
+                                        attribute2="type REQUIRED STRING 'cc_constant, fx_constant, 
+                                                                          scalar_diss, laminar_pr, 
+                                                                          extent_rxn, tab_strip_factor'">
+          <!-- constant property model and scalar dissipation rate model --> 
           <constant                     spec="OPTIONAL DOUBLE"/>
+
+          <!-- extent of reaction model --> 
+          <scalar_label                 spec="OPTIONAL STRING"/>
+          <fuel_mass_fraction           spec="OPTIONAL DOUBLE"/>
+
+          <!-- scalar dissipation rate model --> 
+          <constant_diss                spec="OPTIONAL NO_DATA"/>
 
           <!-- laminar pr --> 
           <atm_pressure                 spec="OPTIONAL DOUBLE"/>
@@ -40,6 +49,12 @@
             <viscosity                  spec="OPTIONAL DOUBLE 'positive'"/>
           </oxidizer>
 
+          <!-- Tabulated stripping factor --> 
+          <X                            spec="OPTIONAL DOUBLE 'positive'"/>
+          <Y                            spec="OPTIONAL DOUBLE 'positive'"/>
+          <co2_label                    spec="OPTIONAL STRING 'co2IN, CO2'"/>
+          <ch4_label                    spec="OPTIONAL STRING 'ch4IN, CH4'"/>
+          <small                        spec="OPTIONAL DOUBLE 'positive'"/>
 
         </model>
       </PropertyModels>
@@ -126,8 +141,7 @@
         <TabProps                       spec="OPTIONAL NO_DATA" >
           <inputfile                    spec="REQUIRED STRING" />
           <cold_flow                    spec="OPTIONAL BOOLEAN"/>
-          <strict_mode                  spec="OPTIONAL BOOLEAN" />
-          <diagnostic_mode              spec="OPTIONAL BOOLEAN" />
+          <adiabatic                    spec="OPTIONAL BOOLEAN"/>
           <hl_scalar_init               spec="OPTIONAL DOUBLE" />
           <hl_pressure                  spec="OPTIONAL DOUBLE" />
           <hl_outlet                    spec="OPTIONAL DOUBLE" />
@@ -373,10 +387,14 @@
           <src                          spec="MULTIPLE NO_DATA"
                                         attribute1="label REQUIRED STRING"
                                         attribute2="type REQUIRED STRING 'coal_gas_devol, constant_src, 
-                                        westbrook_dryer, cc_inject_src, fx_inject_src, fy_inject_src, fz_inject_src'">
+                                        westbrook_dryer, cc_inject_src, fx_inject_src, 
+                                        fy_inject_src, fz_inject_src, tab_rxn_rate'">
 
             <!-- Specs for coal gas devol model -->
             <devol_model_name           spec="OPTIONAL STRING" />
+
+            <!-- Tabulated reaction rate --> 
+            <rxn_rate                   spec="OPTIONAL STRING" />
 
             <!-- Spec for constant and multi-point constant source term model -->
             <constant                   spec="OPTIONAL DOUBLE" />
