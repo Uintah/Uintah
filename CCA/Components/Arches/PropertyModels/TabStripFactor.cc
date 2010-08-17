@@ -10,6 +10,8 @@ TabStripFactor::TabStripFactor( std::string prop_name, SimulationStateP& shared_
 
   _prop_label = VarLabel::create( prop_name, CCVariable<double>::getTypeDescription() ); 
 
+  _before_table_lookup = false; 
+
 }
 
 //---------------------------------------------------------------------------
