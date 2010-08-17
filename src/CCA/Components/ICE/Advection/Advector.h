@@ -118,7 +118,7 @@ namespace Uintah {
   
   //__________________________________
   void  warning_restartTimestep( vector<IntVector> badCells,
-                                 vector<double> badOutFlux,
+                                 vector<fflux> badOutFlux,
                                  const double vol,
                                  const int indx,
                                  const Patch* patch,
