@@ -507,8 +507,8 @@ TabPropsInterface::computeHeatLoss( const ProcessorGroup* pc,
         }
 
         // actually compute the heat loss: 
-        double sensible_enthalpy  = getSingleState( "sensible_heat", iv ); 
-        double adiabatic_enthalpy = getSingleState( "adiabatic_enthalpy", iv );  
+        double sensible_enthalpy  = getSingleState( "sensibleenthalpy", iv ); 
+        double adiabatic_enthalpy = getSingleState( "adiabaticenthalpy", iv );  
         double current_heat_loss  = 0.0;
         double small = 1e-10; 
         if ( calcEnthalpy )
@@ -564,6 +564,8 @@ TabPropsInterface::computeFirstEnthalpy( const ProcessorGroup* pc,
 
   for (int p=0; p < patches->size(); p++){
 
+    cout_tabledbg << " In TabPropsInterface::getFirstEnthalpy " << endl;
+
     Ghost::GhostType gn = Ghost::None; 
     const Patch* patch = patches->get(p); 
     int archIndex = 0; 
@@ -576,6 +578,8 @@ TabPropsInterface::computeFirstEnthalpy( const ProcessorGroup* pc,
     for ( VarMap::iterator i = d_ivVarMap.begin(); i != d_ivVarMap.end(); i++ ){
 
       if ( i->first != "heat_loss" ){ // heat loss hasn't been computed yet so this is why we have an "if" here. 
+        
+        cout_tabledbg << " Found label =  " << i->first <<  endl;
         constCCVariable<double> test_Var; 
         new_dw->get( test_Var, i->second, matlIndex, patch, gn, 0 );  
 
@@ -594,7 +598,8 @@ TabPropsInterface::computeFirstEnthalpy( const ProcessorGroup* pc,
       for ( std::vector<constCCVariable<double> >::iterator i = the_variables.begin(); i != the_variables.end(); i++){
 
         if ( d_allIndepVarNames[index] != "heat_loss" ) 
-          iv.push_back( (*i)[c] );
+          //iv.push_back( (*i)[c] ); // <--- I am not sure how this worked before. 
+          iv.push_back(0.0);
         else 
           iv.push_back( d_hl_scalar_init ); 
 
@@ -602,8 +607,8 @@ TabPropsInterface::computeFirstEnthalpy( const ProcessorGroup* pc,
       }
 
       double current_heat_loss = d_hl_scalar_init; // may want to make this more sophisticated later(?)
-      double sensible_enthalpy = getSingleState( "sensible_heat", iv ); 
-      double adiab_enthalpy    = getSingleState( "adiabatic_enthalpy", iv ); 
+      double sensible_enthalpy = getSingleState( "sensibleenthalpy", iv ); 
+      double adiab_enthalpy    = getSingleState( "adiabaticenthalpy", iv ); 
       enthalpy[c]     = adiab_enthalpy - current_heat_loss * sensible_enthalpy; 
 
     }
@@ -670,8 +675,8 @@ TabPropsInterface::oldTableHack( const InletStream& inStream, Stream& outStream,
     double enthalpy          = 0.0; 
     double sensible_enthalpy = 0.0; 
 
-    sensible_enthalpy = getSingleState( "sensible_heat", iv ); 
-    adiab_enthalpy    = getSingleState( "adiabatic_enthalpy", iv ); 
+    sensible_enthalpy = getSingleState( "sensibleenthalpy", iv ); 
+    adiab_enthalpy    = getSingleState( "adiabaticenthalpy", iv ); 
 
     enthalpy          = inStream.d_enthalpy; 
 
