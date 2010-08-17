@@ -278,7 +278,7 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
     d_8or27 = 64;
   } else if(d_interpolator_type=="cpdi"){
     d_interpolator = scinew cpdiInterpolator();
-    d_8or27 = 64;
+    d_8or27 = 27;
   }else{
     ostringstream warn;
     warn << "ERROR:MPM: invalid interpolation type ("<<d_interpolator_type << ")"
