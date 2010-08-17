@@ -35,6 +35,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Arches/SourceTerms/ConstSrcTerm.h>
 #include <CCA/Components/Arches/SourceTerms/UnweightedSrcTerm.h>
 #include <CCA/Components/Arches/SourceTerms/MMS1.h>
+#include <CCA/Components/Arches/SourceTerms/TabRxnRate.h>
 #include <CCA/Components/Arches/SourceTerms/CoalGasDevol.h>
 #include <CCA/Components/Arches/SourceTerms/CoalGasMomentum.h> 
 #include <CCA/Components/Arches/SourceTerms/WestbrookDryer.h>
@@ -59,6 +60,9 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Arches/PropertyModels/PropertyModelFactory.h>
 #include <CCA/Components/Arches/PropertyModels/ConstProperty.h>
 #include <CCA/Components/Arches/PropertyModels/LaminarPrNo.h>
+#include <CCA/Components/Arches/PropertyModels/ScalarDiss.h>
+#include <CCA/Components/Arches/PropertyModels/ExtentRxn.h>
+#include <CCA/Components/Arches/PropertyModels/TabStripFactor.h>
 #if HAVE_TABPROPS
 # include <CCA/Components/Arches/ChemMix/TabPropsInterface.h>
 #endif 
@@ -724,7 +728,18 @@ Arches::scheduleInitialize(const LevelP& level,
                                                 TimeIntegratorStepType::FE);
   init_timelabel_allocated = true;
 
+  // Property model initialization
+  PropertyModelFactory& propFactory = PropertyModelFactory::self(); 
+  PropertyModelFactory::PropMap& all_prop_models = propFactory.retrieve_all_property_models(); 
+  for ( PropertyModelFactory::PropMap::iterator iprop = all_prop_models.begin(); 
+      iprop != all_prop_models.end(); iprop++){
 
+    PropertyModelBase* prop_model = iprop->second; 
+    prop_model->sched_initialize( level, sched ); 
+
+  }
+
+  // Table Lookup 
   string mixmodel = d_props->getMixingModelType(); 
   if ( mixmodel != "TabProps")
     d_props->sched_reComputeProps(sched, patches, matls,
@@ -801,16 +816,6 @@ Arches::scheduleInitialize(const LevelP& level,
   // compute the cell area fraction 
   d_boundaryCondition->sched_setAreaFraction( sched, patches, matls ); 
 
-  // Property model initialization
-  PropertyModelFactory& propFactory = PropertyModelFactory::self(); 
-  PropertyModelFactory::PropMap& all_prop_models = propFactory.retrieve_all_property_models(); 
-  for ( PropertyModelFactory::PropMap::iterator iprop = all_prop_models.begin(); 
-      iprop != all_prop_models.end(); iprop++){
-
-    PropertyModelBase* prop_model = iprop->second; 
-    prop_model->sched_initialize( level, sched ); 
-
-  }
 }
 
 void
@@ -2480,6 +2485,11 @@ void Arches::registerUDSources(ProblemSpecP& db)
         SourceTermBase::Builder* srcBuilder = scinew Inject<SFCZVariable<double> >::Builder(src_name, required_varLabels, d_lab->d_sharedState);
         factory.register_source_term( src_name, srcBuilder ); 
 
+      } else if ( src_type == "tab_rxn_rate" ) {
+        // Adds the tabulated reaction rate 
+        SourceTermBase::Builder* srcBuilder = scinew TabRxnRate::Builder(src_name, required_varLabels, d_lab->d_sharedState);
+        factory.register_source_term( src_name, srcBuilder ); 
+
       } else {
         proc0cout << "For source term named: " << src_name << endl;
         proc0cout << "with type: " << src_type << endl;
@@ -2738,6 +2748,26 @@ void Arches::registerPropertyModels(ProblemSpecP& db)
 
         // Laminar Pr number calculation
         PropertyModelBase::Builder* the_builder = new LaminarPrNo::Builder( prop_name, d_sharedState ); 
+        prop_factory.register_property_model( prop_name, the_builder ); 
+
+      } else if ( prop_type == "scalar_diss" ) {
+
+        // Scalar dissipation rate calculation 
+        if ( prop_name != "scalar_dissipation_rate" )
+          proc0cout << "Note:  " << prop_name  << " renamed to scalar_dissipation_rate. " << endl;
+        PropertyModelBase::Builder* the_builder = new ScalarDiss::Builder( "scalar_dissipation_rate", d_sharedState ); 
+        prop_factory.register_property_model( prop_name, the_builder ); 
+
+      } else if ( prop_type == "extent_rxn" ) {
+
+        // Scalar dissipation rate calculation 
+        PropertyModelBase::Builder* the_builder = new ExtentRxn::Builder( prop_name, d_sharedState ); 
+        prop_factory.register_property_model( prop_name, the_builder ); 
+
+      } else if ( prop_type == "tab_strip_factor" ) {
+
+        // Scalar dissipation rate calculation 
+        PropertyModelBase::Builder* the_builder = new TabStripFactor::Builder( prop_name, d_sharedState ); 
         prop_factory.register_property_model( prop_name, the_builder ); 
 
       } else if ( prop_type == "fx_constant" ) {
