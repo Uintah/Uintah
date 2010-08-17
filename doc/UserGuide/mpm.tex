@@ -3361,7 +3361,10 @@ Figure~\ref{fig:holeInPlate} shows a snapshot of the equivalent stress
 throughout the plate, as well as the load applied to the vectors near the
 edge of the plate.  Expected maximum stress is $300 Pa$.  The $238 Pa$ maximum
 observed here is significantly lower, but upon doubling the resolution in the
-x and y directions, the maximum stress is $308 Pa$.
+x and y directions, the maximum stress is $308 Pa$.  To recreate this image, select
+Controls in the upper left corner of the screen.  Select Expressions, then click the New 
+button.  Now select Insert Function, then Tensor, then effective_tensor.  The last step is
+to select Insert Variable, then Tensor, then p. stress.  
 \begin{figure}
   \center
   \includegraphics[scale=.25]{holeInPlate.png}
