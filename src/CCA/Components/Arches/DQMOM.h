@@ -339,7 +339,7 @@ inline bool vector_lexicographic_sort( vector<int> a, vector<int> b )
     for( ; ia < a.end(); ++ia, ++ib ) {
       if( (*ia) != (*ib) ) {
         a_lt_b = (*ia) < (*ib);
-	break;
+	      break;
       }
     }
   } else {
