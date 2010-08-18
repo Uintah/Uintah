@@ -83,8 +83,8 @@ public:
         : _name(name), _shared_state(shared_state), _required_label_names(required_label_names){};
       ~Builder(){}; 
 
-      CLASSNAMETEMP_PARAMS* build()
-      { return scinew CLASSNAMETEMP_PARAMS( _name, _shared_state, _required_label_names ); };
+      CLASSNAME<TEMP_PARAMS>* build()
+      { return scinew CLASSNAME<TEMP_PARAMS>( _name, _shared_state, _required_label_names ); };
 
     private: 
 

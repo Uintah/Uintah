@@ -388,7 +388,9 @@
                                         attribute1="label REQUIRED STRING"
                                         attribute2="type REQUIRED STRING 'coal_gas_devol, constant_src, 
                                         westbrook_dryer, cc_inject_src, fx_inject_src, 
-                                        fy_inject_src, fz_inject_src, tab_rxn_rate'">
+                                        fy_inject_src, fz_inject_src, tab_rxn_rate, 
+                                        cc_intrusion_inlet, fx_intrusion_inlet, 
+                                        fy_intrusion_inlet, fz_intrusion_inlet'">
 
             <!-- Specs for coal gas devol model -->
             <devol_model_name           spec="OPTIONAL STRING" />
@@ -416,6 +418,10 @@
             <MF_HC_F1                   spec="OPTIONAL DOUBLE" />
             <MF_O2_F0                   spec="OPTIONAL DOUBLE" />
 
+            <!-- Intrusion inlets --> 
+            <normal                     spec="OPTIONAL STRING '+X,-X,+Y,-Y,+Z,-Z'"/>
+            <velocity                   spec="OPTIONAL DOUBLE"/>
+            <density                    spec="OPTIONAL DOUBLE"/>
 
           </src>
 

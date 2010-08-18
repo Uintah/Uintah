@@ -100,7 +100,7 @@ public:
 private:
 
   double d_constant; 
-  std::vector<GeometryPieceP> d_geomPieces; 
+  std::vector<GeometryPieceP> _geomPieces; 
 
 }; // end Inject
 
@@ -131,7 +131,7 @@ private:
     for (ProblemSpecP inject_db = db->findBlock("injector"); inject_db != 0; inject_db = inject_db->findNextBlock("injector")){
   
       ProblemSpecP geomObj = inject_db->findBlock("geom_object");
-      GeometryPieceFactory::create(geomObj, d_geomPieces); 
+      GeometryPieceFactory::create(geomObj, _geomPieces); 
   
     }
 
@@ -213,9 +213,9 @@ private:
         throw InvalidValue( "Please check the builder (probably in Arches.cc) and try again. ", __FILE__, __LINE__); 
       }
 
-      for (unsigned int gp = 0; gp < d_geomPieces.size(); gp++){
+      for (unsigned int gp = 0; gp < _geomPieces.size(); gp++){
   
-        GeometryPieceP piece = d_geomPieces[gp];
+        GeometryPieceP piece = _geomPieces[gp];
         Box geomBox          = piece->getBoundingBox(); 
         Box b                = geomBox.intersect(patchInteriorBox); 
         
