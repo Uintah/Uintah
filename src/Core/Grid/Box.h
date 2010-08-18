@@ -91,6 +91,12 @@ using namespace SCIRun;
          return *this;
       }
 
+      // A 'Box' is specified by two (3D) points.  However, all components (x,y,z) of the fist point (p1) must be less
+      // than the corresponding component of the 2nd point (p2), or the Box is considered 'degenerate()'.  If you know
+      // that your box is valid, this function will run through each component and make sure that the lesser value is
+      // stored in p1 and the greater value in p2.
+      void fixBoundingBox();
+
       UINTAHSHARE bool overlaps(const Box&, double epsilon=1.e-6) const;
       
       

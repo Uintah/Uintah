@@ -37,6 +37,22 @@ DEALINGS IN THE SOFTWARE.
 using namespace Uintah;
 
 
+// A 'Box' is specified by two (3D) points.  However, all components (x,y,z) of the fist point (p1) must be less
+// than the corresponding component of the 2nd point (p2), or the Box is considered 'degenerate()'.  If you know
+// that your box is valid, this function will run through each component and make sure that the lesser value is
+// stored in p1 and the greater value in p2.
+void
+Box::fixBoundingBox()
+{
+  for( int index = 0; index < 3; index++ ) {
+    if( d_upper( index ) < d_lower( index ) ) {
+      double temp = d_upper( index );
+      d_upper( index ) = d_lower( index );
+      d_lower( index ) = temp;
+    }
+  }
+}
+
 bool
 Box::overlaps(const Box& otherbox, double epsilon) const
 {
