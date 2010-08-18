@@ -155,6 +155,15 @@ void DQMOM::problemSetup(const ProblemSpecP& params)
   // Put the moments in lexicographic order
   sort( momentIndexes.begin(), momentIndexes.end(), vector_lexicographic_sort);
 
+  cout << "Size of momentIndexes is " << momentIndexes.size() << ", should be " << N_*(N_xi+1) << endl;
+
+  for( vector< vector<int> >::iterator iM = momentIndexes.begin(); iM != momentIndexes.end(); ++iM ) {
+    for( vector<int>::iterator iMM = iM->begin(); iMM != iM->end(); ++iMM ) {
+      proc0cout << " " << *iMM;
+    }
+    proc0cout << endl;
+  }
+
   db->getWithDefault("save_moments", b_save_moments, true);
 #if defined(VERIFY_AB_CONSTRUCTION) || defined(VERIFY_LINEAR_SOLVER)
   b_save_moments = false;
@@ -660,7 +669,8 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
 
 #if defined(DEBUG_MATRICES)
 
-        if( pc->myrank() == 0 ) {
+        //if( pc->myrank() == 0 ) {
+        if( c == IntVector(1,2,3) ) {
           if( b_writefile ) {
             char filename[28];
             int currentTimeStep;
@@ -715,6 +725,16 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
         // weighted abscissa source terms
 
 #ifdef DEBUG_MODELS
+        if( c == IntVector(1,2,3) ) {
+          cout << endl; 
+          cout << "DQMOM B vector: -------------------------" << endl;
+
+          for( int iRow = 0; iRow < dimension; ++iRow ) {
+            cout << " " << (*BB)[iRow] << endl;
+          }
+        }
+
+
         if( c == IntVector(1,2,3) ) {
           cout << endl;
           cout << "DQMOM solution vector: -------------------" << endl;
@@ -879,7 +899,8 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
         }
         
 #if defined(DEBUG_MATRICES)
-        if( pc->myrank() == 0 ) {
+        //if( pc->myrank() == 0 ) {
+        if( c == IntVector(1,2,3) ) {
           if( b_writefile ) {
             char filename[28];
             int currentTimeStep;
@@ -1055,7 +1076,8 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
           Mult( *XX, *Vt, *XXsvd2 );
 
 #if defined(DEBUG_MATRICES)
-          if( pc->myrank() == 0 ) {
+          //if( pc->myrank() == 0 ) {
+          if( c == IntVector(1,2,3) ) {
             if( b_writefile ) {
               char filename[28];
               int currentTimeStep;
@@ -1231,7 +1253,8 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
         normX[c] = this_normX;
   
 #if defined(DEBUG_MATRICES)
-        if( pc->myrank() == 0 ) {
+        //if( pc->myrank() == 0 ) {
+        if( c == IntVector(1,2,3) ) {
           if( b_writefile ) {
             char filename[28];
             int currentTimeStep;
@@ -1711,6 +1734,7 @@ DQMOM::constructAopt( DenseMatrix*   &AA,
 }
 
 
+
 /**
 @details
 Construct the optimized B vector for the optimized linear system A* X = B*.
@@ -1726,12 +1750,13 @@ DQMOM::constructBopt( ColumnMatrix*  &BB,
   (*BB)[kk] = 0.0;
 
   // 1st moments
-  for( unsigned int k = 1; k <= N_xi; ++k ) {
+  int c=1;
+  for( unsigned int k = N_xi; k >= 1; k--, c++ ) {
     double sum = 0.0;
     for( unsigned int alpha = 0; alpha < N_; ++alpha ) {
       sum += weights[alpha]*models[(k-1)*(N_)+alpha];
     }
-    (*BB)[k] = sum;
+    (*BB)[c] = sum;
   }
 
   // the rest of the moments
@@ -1765,6 +1790,70 @@ DQMOM::constructBopt( ColumnMatrix*  &BB,
   } // end moments
 
 }
+
+/*
+void
+DQMOM::constructBopt( ColumnMatrix*  &BB,
+                      vector<double> &weights,
+                      vector<double> &Abscissas,
+                      vector<double> &models)
+{
+  for ( unsigned int k = 0; k < momentIndexes.size(); ++k) {
+    MomentVector thisMoment = momentIndexes[k];
+
+    // weighted abscissas
+    double totalsumS = 0;
+    for( unsigned int j = 0; j < N_xi; ++j ) {
+      double prefixS    = 1;
+      double productS   = 1;
+      double modelsumS  = 0;
+
+      double quadsumS = 0;
+      for( unsigned int alpha = 0; alpha < N_; ++alpha ) {
+        if (weights[alpha] == 0) {
+          prefixS = 0;
+          productS = 0;
+        } else if ( Abscissas[j*(N_)+alpha] == 0 && thisMoment[j] == 0) {
+          //FIXME:
+          // both prefixes contain 0^(-1)
+          prefixS = 0;
+        } else {
+          // Appendix C, C.11 (A_j+1 matrix)
+          double base = Abscissas[j*(N_)+alpha];
+          double exponent = thisMoment[j] - 1;
+
+          // Appendix C, C.16 (S matrix)
+          prefixS = -(thisMoment[j])*(pow(base, exponent));
+          productS = 1;
+
+          // calculate product containing all internal coordinates except j
+          for (unsigned int n = 0; n < N_xi; ++n) {
+            if (n != j) {
+              // the if statements checking these same conditions (above) are only
+              // checking internal coordinate j, so we need them again for internal
+              // coordinate n
+              if (weights[alpha] == 0) {
+                productS = 0;
+              } else {
+                double base2 = Abscissas[n*(N_)+alpha];
+                double exponent2 = thisMoment[n];
+                productS = productS*( pow(base2, exponent2));
+              }//end divide by zero conditionals
+            }
+          }//end int coord n
+        }//end divide by zero conditionals
+
+
+        modelsumS = - models[j*(N_)+alpha];
+        quadsumS = quadsumS + weights[alpha]*modelsumS*prefixS*productS;
+      }//end quad nodes
+      totalsumS = totalsumS + quadsumS;
+    }//end int coords j sub-matrix
+
+    (*BB)[k] = totalsumS;
+  } // end moments
+}
+*/
 
 /** 
 @details
