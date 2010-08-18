@@ -1435,8 +1435,8 @@ RBMixerProperties::film_Flux_Main(double T,double Tinf,double P,vector<double> x
           film_Fluxes(T,Tinf,P,x,Yb,PD,U,RT);
           if (M_convergeFluxProblem)
           {
-            cout << "Flux failed to converge, try again." << endl;
-            cout << "Attempt: " << counter << endl;
+//            cout << "Flux failed to converge, try again." << endl;
+//            cout << "Attempt: " << counter << endl;
             T = T - perturb;
             counter++;
             M_convergeFluxProblem = 0;
@@ -1855,7 +1855,7 @@ RBMixerProperties::film_Fluxes(vector<double> Yb)
         {
           
           sentinel = 1;  
-          cout << "counted out: " << Error << endl;
+//          cout << "counted out: " << Error << endl;
           M_convergeFluxProblem = 1;
         }
 	

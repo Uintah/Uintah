@@ -288,15 +288,19 @@ ResponsiveBoundary::CalculateTimeStep()
 	double tend = RB_EndTime;
         int iteration = 1;
 
-	double maxDT = 0.05;
+	double maxDT = 0.005;
 	
 
         if (tend <= maxDT) RB_dt = tend;
-        if (tend > maxDT) {
+        if (tend > maxDT) 
+        {
          RB_dt = tend;
-         while (RB_dt > maxDT) {
-                RB_dt = RB_dt/2;
-                iteration = iteration*2;}}
+         while (RB_dt > maxDT) 
+         {
+           RB_dt = RB_dt/2;
+           iteration = iteration*2;
+         }
+        }
 cout << "Time Step: " << RB_dt << "\n";	
 
 
@@ -1585,6 +1589,7 @@ ResponsiveBoundary::problemSetup(ProblemSpecP& params,
   params->getWithDefault("PoolDiameter", RB_PoolDiameter, 1.0);  
   params->getWithDefault("SurfaceReflectivity", RB_Reflectivity, 0.07);
   params->getWithDefault("ReferenceTemperature", RB_RefTemp, 298.15);
+  params->getWithDefault("Accelerate", RB_Accelerate, false);
 
 //Obtain the liquid pool Composition 
   ProblemSpecP rb_db = params->findBlock("FuelComposition");                                     
@@ -1779,15 +1784,20 @@ ResponsiveBoundary::updateResponsiveBoundaryProfile(const ProcessorGroup* /*pc*/
 
     //Aquire the time step size:
     double rdelta_t;
+    double ElapsedTime = d_lab->d_sharedState->getElapsedTime();
+    double AccelTime = 3.0;
+    double TFACTOR = 10.0;
     if(initialStep)
     {
-    rdelta_t = 1e-6;
+      rdelta_t = 1e-6;
     }
     else
     {  
-    delt_vartype delT;   
-    old_dw->get(delT, d_lab->d_sharedState->get_delt_label());  
-    rdelta_t = delT;    
+      delt_vartype delT;   
+      old_dw->get(delT, d_lab->d_sharedState->get_delt_label());  
+      if (!RB_Accelerate) {rdelta_t = delT;}   
+      if ((RB_Accelerate) && (ElapsedTime >= AccelTime)) {rdelta_t = delT;}
+      if ((RB_Accelerate) && (ElapsedTime < AccelTime)) {rdelta_t = TFACTOR*delT;} 
     }
     
     // get cellType, density and velocity
@@ -1895,7 +1905,7 @@ from here: */
           for (int i = 0; i < 3; i++) { cout << "T[" << i << "]: " << T.at(i) << "\n";}
           vector<double> X = RB_mapX.find(curCell)->second;   //WME
           double height = RB_mapHeight.find(curCell)->second;//WME
-         // cout << "time step: " << rdelta_t << "\n";//WME
+          cout << "time step: " << rdelta_t << "\n";//WME
          // cout << "height:  " << height << "\n";  //WME
           double P = 1; // System Pressure (bar) //WME
           int NON = 200;  // number of liquid nodes for responsive boundary model (~200)
@@ -1911,13 +1921,14 @@ from here: */
 
 
           TimeStep();//WME
-
+//cout << "TIME: " << d_lab->d_sharedState->getElapsedTime() << "\n\n\n";
 
           Velocity[curCell] = getFV();//WME
           Velocity[mCell] = getFV();//WME
           
           poolConvectiveHeatFlux[curCell] = getConvectiveHeatFlux();
           poolMassFlux[curCell]           = getMassFlux();
+          poolMassFlux[mCell]             = getMassFlux();
           poolSurfaceTemperature[curCell] = getST();
  
           RB_mapHeight.find(curCell)->second = getHeight();//WME

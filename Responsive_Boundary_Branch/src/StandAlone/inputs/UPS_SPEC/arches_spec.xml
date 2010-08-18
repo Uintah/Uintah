@@ -161,6 +161,7 @@
           <PoolDiameter                  spec="OPTIONAL DOUBLE"/>
           <SurfaceReflectivity           spec="OPTIONAL DOUBLE"/>
           <ReferenceTemperature          spec="OPTIONAL DOUBLE"/>
+          <Accelerate                    spec="OPTIONAL BOOLEAN"/>
           <FuelComposition               spec="OPTIONAL NO_DATA">
             <N_OCTANE                    spec="OPTIONAL BOOLEAN"/>
             <N_OCTANEX                   spec="OPTIONAL DOUBLE"/>
