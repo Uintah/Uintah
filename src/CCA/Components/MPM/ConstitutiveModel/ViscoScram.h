@@ -94,9 +94,20 @@ namespace Uintah {
     };
 
     // Murnaghan Equation of State Variables 
-    double d_P0;
-    double d_gamma;
-    double d_bulkPrime;
+    struct MurnaghanEOS {
+      double P0;
+      double gamma;
+      double bulkPrime;
+    };
+    // JWL Equation of State Variables
+    struct JWLEOS {
+      double A;
+      double B;
+      double C;
+      double R1;
+      double R2;
+      double om;
+    };
 
     typedef ViscoScramStateData StateData;
     
@@ -122,6 +133,7 @@ namespace Uintah {
        fun_getTypeDescription(ViscoScramStateData*);
 
     // Create datatype for storing model parameters
+    bool d_useJWLEOS;
     bool d_useModifiedEOS;
     bool d_useMurnahanEOS;
     bool d_random;
@@ -131,7 +143,8 @@ namespace Uintah {
 
     CMData d_initialData;
     TimeTemperatureData d_tt;
-
+    MurnaghanEOS d_murnahanEOSData;
+    JWLEOS d_JWLEOSData;
   private:
 
     // Prevent assignment of this class
