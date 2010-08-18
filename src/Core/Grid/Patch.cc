@@ -881,6 +881,13 @@ Patch::getEdgeCellIterator(const FaceType& face0,
        
       break;
     default:
+
+      //set these values to quiet a compiler warning about unintialized variables
+      patchLow=IntVector(0,0,0);
+      patchHigh=IntVector(0,0,0);
+      patchExtraLow=IntVector(0,0,0);
+      patchExtraHigh=IntVector(0,0,0);
+
       throw SCIRun::InternalError("Invalid EdgeIteratorType Specified", __FILE__, __LINE__);
   };
   vector<IntVector>loPt(2), hiPt(2); 
