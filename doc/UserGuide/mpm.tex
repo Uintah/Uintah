@@ -3006,6 +3006,55 @@ the ``length" parameter described above is actually going to be an area.
 Namely, the length in the plane of the simulation multiplied by the domain
 thickness in the out of plane direction.
 
+\subsection{Particle Insertion} \label{particleInsert}
+MPM has the ability to insert a block of particles, defined by a color,
+ into the computational domain after an amount of simulation time.  Currently, 
+the capability allows the user to specify the time at which all particles of 
+a certain color are translated and given a new velocity.  This functionality 
+is defined in a text file in the order: 
+
+<time> <color> <translation in x> <translation in y> <translation in z> 
+<new x velocity> <new y velocity> <new z velocity>.  
+
+During the first timestep in which the current physical time plus the calculated 
+delt for the current timestep exceeds the time specified for a color block, the 
+particles of that color will be translated along the three coordinates and given 
+a new velocity.  For instance, if a file contained:
+
+0.1 1 10 10 0 0 0 8 
+
+after '0.1 s' of physical time any particle of color '1' will be translated 10 
+units in the positive x and y direction, 0 units in the positive z direction 
+and given a new velocity of 8 units/s in the positive z direction, with no 
+velocity in the x or y direction.
+
+The specified with the following flags within an MPM section of the input file:
+\begin{verbatim}
+<MPM>
+    <withColor>         true   </withColor>
+    <InsertParticles>   true   </InsertParticles>
+    <InsertParticlesFile>  "path/to/file.txt" </InsertParticlesFile>
+</MPM>
+\end{verbatim}
+
+An example file exists in "inputs/MPM/" named extrude.ups that demonstrates 
+particle insertion.  extrude.ups defines the problem setup, extrude.xml defines 
+the geometry objects (also where the color is defined) and insert.dat which 
+defines the times, translations and new velocity of the particle blocks.  
+Figure ~\ref{figinsertparticles} shows an image of a simulation in progress that uses particle insertion.  
+The image shows a stream of rubbery material flying into the domain and 
+folding on itself.  Another particularly useful idea to note from the image, 
+is the secondary box above the normal domain, in which the particles to be inserted 
+reside before they are inserted.  Current application of particle insertion tends to use this motif.
+
+\begin{figure}
+  \center
+  \includegraphics[scale=.25]{insertParticles.png}
+  \caption{Particles being inserted from top box into bottom box.}
+  \label{figinsertparticles}
+\end{figure}
+
+
 %
 %______________________________________________________________________
 \section{Examples} \label{Sec:ExamplesMPM}
