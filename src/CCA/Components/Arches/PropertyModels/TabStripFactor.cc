@@ -124,7 +124,6 @@ void TabStripFactor::computeProp(const ProcessorGroup* pc,
       IntVector c = *iter; 
 
       double hc_wo_rxn = f[c] * _HC_F1; 
-      double num = co2[c];
       double factor = _M_HC/_M_CO2; 
 
       if ( co2[c] > hc_wo_rxn ) 
