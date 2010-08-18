@@ -822,7 +822,7 @@ Patch::getEdgeCellIterator(const FaceType& face0,
 
   //the bounds of the patch iterators
   IntVector patchLow, patchHigh;
-  IntVector patchExtraLow, patchExtraHigh;
+  IntVector patchExtraLow(0,0,0), patchExtraHigh(0,0,0);
 
   //determine the correct query functions
   switch(type)
