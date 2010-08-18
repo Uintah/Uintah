@@ -322,7 +322,7 @@ namespace Uintah {
                                         constNCVariable<Vector>& gVelocity,
                                         constNCVariable<Vector>& GVelocity)
       {
-        Vector gvel;
+        Vector gvel(0.,0.,0);
         for(int k = 0; k < flag->d_8or27; k++) {
           if(pgFld[k]==1)  gvel = gVelocity[ni[k]];
           if(pgFld[k]==2)  gvel = GVelocity[ni[k]];

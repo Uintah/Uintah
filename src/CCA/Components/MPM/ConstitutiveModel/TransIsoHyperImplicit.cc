@@ -716,6 +716,11 @@ TransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
 
          //_________________________________________________Mooney-Rivlin term
          double cMR[6][6];
+         for(int i=0;i<6;i++){
+          for(int j=0;j<6;j++){
+            cMR[i][j]=0.0;
+          }
+         }
          cMR[0][0] = (4./J)*c2*RB(0,0)*RB(0,0)
                     -(4./J)*c2*(RB(0,0)*RB(0,0)+RB(0,0)*RB(0,0))
                     +(2./3.)*cc2MR+(4./9.)*(1./J)*2*c2*I2tilde

@@ -2837,7 +2837,7 @@ void ImpMPM::findFixedDOF(const ProcessorGroup*,
                  <<"\t\t\t\t IMPM"<< "\n" << "\n";
     }
 
-    IntVector lowIndex,highIndex;
+    IntVector lowIndex(0,0,0),highIndex(0,0,0);
     if(flags->d_8or27==8){
       lowIndex = patch->getNodeLowIndex();
       highIndex = patch->getNodeHighIndex()+IntVector(1,1,1);
@@ -2920,7 +2920,7 @@ void ImpMPM::formStiffnessMatrix(const ProcessorGroup*,
                  <<"\t\t\t\t IMPM"<< "\n" << "\n";
     }
 
-    IntVector lowIndex,highIndex;
+    IntVector lowIndex(0,0,0),highIndex(0,0,0);
     if(flags->d_8or27==8){
       lowIndex = patch->getNodeLowIndex();
       highIndex = patch->getNodeHighIndex()+IntVector(1,1,1);
@@ -3080,7 +3080,7 @@ void ImpMPM::formQ(const ProcessorGroup*, const PatchSubset* patches,
                  <<"\t\t\t\t\t IMPM"<< "\n" << "\n";
     }
 
-    IntVector lowIndex,highIndex;
+    IntVector lowIndex(0,0,0),highIndex(0,0,0);
     if(flags->d_8or27==8){
       lowIndex = patch->getNodeLowIndex();
       highIndex = patch->getNodeHighIndex()+IntVector(1,1,1);
@@ -3347,7 +3347,7 @@ void ImpMPM::checkConvergence(const ProcessorGroup*,
                 <<"\t\t\t IMPM"<< "\n" << "\n";
    }
 
-   IntVector lowIndex,highIndex;
+   IntVector lowIndex(0,0,0),highIndex(0,0,0);
    if(flags->d_8or27==8){
      lowIndex = patch->getNodeLowIndex();
      highIndex = patch->getNodeHighIndex()+IntVector(1,1,1);

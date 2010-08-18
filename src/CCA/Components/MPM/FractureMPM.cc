@@ -1655,7 +1655,7 @@ void FractureMPM::computeArtificialViscosity(const ProcessorGroup*,
         interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx],pDeformationMeasure[idx]);
 
         // get particle's velocity gradients 
-        Vector gvel;
+        Vector gvel(0.,0.,0.);
         velGrad.set(0.0);
         for(int k = 0; k < flags->d_8or27; k++) {
           if(pgCode[idx][k]==1) gvel = gvelocity[ni[k]];

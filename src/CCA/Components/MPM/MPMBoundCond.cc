@@ -145,7 +145,7 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
               }
               if(interp_type=="gimp" || interp_type=="cpdi"){
                 IntVector off = IntVector(0,1,0);
-                IntVector L,H;
+                IntVector L(0,0,0),H(0,0,0);
                 if(face==Patch::yminus){
                   L = l+off; H = h+off;
                 } else if(face==Patch::yplus){
@@ -184,7 +184,7 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
               }
               if(interp_type=="gimp"||interp_type=="cpdi"){
                 IntVector off = IntVector(0,0,1);
-                IntVector L,H;
+                IntVector L(0,0,0),H(0,0,0);
                 if(face==Patch::zminus){
                   L = l+off; H = h+off;
                 } else if(face==Patch::zplus){
