@@ -989,7 +989,7 @@ void    ICE::readData(const Patch* patch, int include_EC,
         CCVariable<double>& q_CC)
 {
   int i, j, k,xLo, yLo, zLo, xHi, yHi, zHi;
-  IntVector lowIndex, hiIndex; 
+  IntVector lowIndex(0,0,0), hiIndex(0,0,0);
   string text;
   double number;
   
