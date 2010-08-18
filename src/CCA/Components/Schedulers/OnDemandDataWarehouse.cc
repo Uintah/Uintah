@@ -386,7 +386,7 @@ void
 OnDemandDataWarehouse::exchangeParticleQuantities(DetailedTasks* dts, LoadBalancer* lb, const VarLabel* pos_var,
                                                   int iteration)
 {
-  MALLOC_TRACE_SCOPE_TAG("OnDemandDataWarehouse::exchangeParticleQuantities");
+  MALLOC_TRACE_TAG_SCOPE("OnDemandDataWarehouse::exchangeParticleQuantities");
   if( hasRestarted_ ) {
     // If this DW is being used for a timestep restart, then it has already done this...
     return;
