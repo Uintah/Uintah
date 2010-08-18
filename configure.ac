@@ -116,6 +116,16 @@ AC_COPYRIGHT(
 ##
 WOFF_NUMBERS=
 
+##
+## Used to store warnings that should be redisplayed to the user at the
+## end of configure in hopes that the user actually sees them.  Note, 
+## the syntax and use of IMPORTANT_WARNINGS is somewhat picky.  See the
+## 'Check for 64 vs 80 bit floating point number' section below for an
+## example of its use.  (Make sure to increment NUM_IMPORTANT_WARNINGS.)
+##
+declare -a IMPORTANT_WARNINGS
+NUM_IMPORTANT_WARNINGS=0
+
 ## Clean up files that could be left around if configure was 
 ## interrupted (by control-c, ^c) because I do not know how to add
 ## cleanup to the builtin AC function that uses the 'trap' command.
@@ -1028,12 +1038,6 @@ AC_SUBST(MALLOC_TRACE_LIB_MPI_FLAG)
 # This can cause some very strange and hard to track down errors in the code.  To turn this off, gnu
 # provides the -ffloat-store compiler argument.
 
-if test "$DO_NOT_USE_FP_REGISTERS" == "TRUE"; then
-   AC_MSG_WARN( Disabling use of floating point registers with '-ffloat-store' compiler flag. )
-   CFLAGS="$CFLAGS -ffloat-store"
-   CXXFLAGS="$CXXFLAGS -ffloat-store"
-fi
-
 # WARNING: The following test case was created by Justin Luitjens.  It seems to work, and I can't 
 # come up with a better version, but I am not convinced that it will catch the problem in all cases...
 
@@ -1053,15 +1057,25 @@ EOF
 
 $CXX $CXXFLAGS conftest-fpr.cc -o conftest-fpr
 ./conftest-fpr
-result=$?
-rm -f conftest-fpr conftest-fpr.cc
-if test $result != 0; then
+if test $? != 0; then
    AC_MSG_WARN( ----------------------------------------------------------------------------------------- )
    AC_MSG_WARN( Floating point - usually 64 vs 80 bit - register precission problem detected. )
-   AC_MSG_WARN( To fix this problem - assuming you are using a gnu compiler - add the following to your configure line: )
-   AC_MSG_WARN( DO_NOT_USE_FP_REGISTERS=TRUE )
-   AC_MSG_ERROR( --- (See previous lines) ----------------------------------------------------------------- )
+   AC_MSG_WARN( Disabling use of floating point registers with '-ffloat-store' compiler flag. )
+   AC_MSG_WARN( ----------------------------------------------------------------------------------------- )
+   # Note: need '[[' below to get autoconf to create a single '[' in the actual configure file.
+   IMPORTANT_WARNINGS[[$NUM_IMPORTANT_WARNINGS]]="Automatically added -ffloat-store compiler option to C/CXXFLAGS."
+   ((NUM_IMPORTANT_WARNINGS++))
+   CFLAGS="$CFLAGS -ffloat-store"
+   CXXFLAGS="$CXXFLAGS -ffloat-store"
+   # Verify that the compiler accepts the -ffloat-store flag:
+   $CXX $CXXFLAGS conftest-fpr.cc -o conftest-fpr 2>&5
+   if test $? != 0; then
+      rm -f conftest-fpr conftest-fpr.cc
+      AC_MSG_ERROR( Tried to add the -ffloat-store flag but the compiler ($CXX) failed to accept it...\nSee 'WARNING' message above. )
+   fi
 fi
+
+rm -f conftest-fpr conftest-fpr.cc
 
 ##  --  search for Zoltan ------------------------
 
@@ -3748,6 +3762,24 @@ for testfile in $sci_defs_files; do
 
   fi
 done
+
+###############
+## Re-display any IMPORTANT_WARNINGS that have been collected during configure in hopes
+## that the user actually sees them.
+
+if (( $NUM_IMPORTANT_WARNINGS > 0 )); then
+
+   echo ""
+   echo "NOTE: Some IMPORTANT WARNINGS were generated during configuration.  A summary of"
+   echo "these messages is presented below:"
+   echo
+
+   # Note: need '[[' below to get autoconf to create a single '[' in the actual configure file.
+   for (( i=0; i < $NUM_IMPORTANT_WARNINGS; i++ )); do
+      echo " - " ${IMPORTANT_WARNINGS[[${i}]]}
+   done
+   echo
+fi
 
 #### Clean up: ####
 ## Possible temporary template directories
