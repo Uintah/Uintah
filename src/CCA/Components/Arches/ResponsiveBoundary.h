@@ -508,6 +508,7 @@ class ResponsiveBoundary {
         double RB_Tinfinity;
         double RB_Reflectivity;
 //	vector<double> dz;
+        bool RB_Accelerate;
 	
 	
 	
