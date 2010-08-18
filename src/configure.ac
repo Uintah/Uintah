@@ -1056,9 +1056,11 @@ $CXX $CXXFLAGS conftest-fpr.cc -o conftest-fpr
 result=$?
 rm -f conftest-fpr conftest-fpr.cc
 if test $result != 0; then
+   AC_MSG_WARN( ----------------------------------------------------------------------------------------- )
    AC_MSG_WARN( Floating point - usually 64 vs 80 bit - register precission problem detected. )
    AC_MSG_WARN( To fix this problem - assuming you are using a gnu compiler - add the following to your configure line: )
-   AC_MSG_ERROR( DO_NOT_USE_FP_REGISTERS=TRUE )
+   AC_MSG_WARN( DO_NOT_USE_FP_REGISTERS=TRUE )
+   AC_MSG_ERROR( --- (See previous lines) ----------------------------------------------------------------- )
 fi
 
 ##  --  search for Zoltan ------------------------

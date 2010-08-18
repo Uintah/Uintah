@@ -7361,12 +7361,16 @@ $CXX $CXXFLAGS conftest-fpr.cc -o conftest-fpr
 result=$?
 rm -f conftest-fpr conftest-fpr.cc
 if test $result != 0; then
+   { echo "$as_me:$LINENO: WARNING: ----------------------------------------------------------------------------------------- " >&5
+echo "$as_me: WARNING: ----------------------------------------------------------------------------------------- " >&2;}
    { echo "$as_me:$LINENO: WARNING: Floating point - usually 64 vs 80 bit - register precission problem detected. " >&5
 echo "$as_me: WARNING: Floating point - usually 64 vs 80 bit - register precission problem detected. " >&2;}
    { echo "$as_me:$LINENO: WARNING: To fix this problem - assuming you are using a gnu compiler - add the following to your configure line: " >&5
 echo "$as_me: WARNING: To fix this problem - assuming you are using a gnu compiler - add the following to your configure line: " >&2;}
-   { { echo "$as_me:$LINENO: error: DO_NOT_USE_FP_REGISTERS=TRUE " >&5
-echo "$as_me: error: DO_NOT_USE_FP_REGISTERS=TRUE " >&2;}
+   { echo "$as_me:$LINENO: WARNING: DO_NOT_USE_FP_REGISTERS=TRUE " >&5
+echo "$as_me: WARNING: DO_NOT_USE_FP_REGISTERS=TRUE " >&2;}
+   { { echo "$as_me:$LINENO: error: --- (See previous lines) ----------------------------------------------------------------- " >&5
+echo "$as_me: error: --- (See previous lines) ----------------------------------------------------------------- " >&2;}
    { (exit 1); exit 1; }; }
 fi
 
