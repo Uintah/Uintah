@@ -3200,7 +3200,7 @@ void ImpMPM::getDisplacementIncrement(const ProcessorGroup* /*pg*/,
                  <<"\t\t\t\t IMPM"<< "\n" << "\n";
     }
 
-    IntVector lowIndex,highIndex;
+    IntVector lowIndex(0,0,0),highIndex(0,0,0);
     if(flags->d_8or27==8){
       lowIndex = patch->getNodeLowIndex();
       highIndex = patch->getNodeHighIndex()+IntVector(1,1,1);
