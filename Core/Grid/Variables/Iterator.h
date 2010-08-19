@@ -148,6 +148,15 @@ namespace Uintah {
         ASSERT(iter_!=NULL);  
         return iter_->end(); 
       }
+      
+      /**
+      * Return the number of cells in the iterator
+      */
+      inline unsigned int size() const 
+      { 
+        ASSERT(iter_!=NULL);  
+        return iter_->size(); 
+      }
 
       /**
        * Assignment operator - this is expensive as we have to allocate new memory
