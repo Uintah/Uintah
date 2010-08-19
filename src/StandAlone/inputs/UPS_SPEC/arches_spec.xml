@@ -419,9 +419,13 @@
             <MF_O2_F0                   spec="OPTIONAL DOUBLE" />
 
             <!-- Intrusion inlets --> 
+            <intrusion                  spec="OPTIONAL NO_DATA">
+              <geom_object/>
+            </intrusion>
             <normal                     spec="OPTIONAL STRING '+X,-X,+Y,-Y,+Z,-Z'"/>
             <velocity                   spec="OPTIONAL DOUBLE"/>
             <density                    spec="OPTIONAL DOUBLE"/>
+            <phi                        spec="OPTIONAL DOUBLE"/>
 
           </src>
 
