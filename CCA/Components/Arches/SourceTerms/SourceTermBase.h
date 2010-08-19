@@ -37,6 +37,9 @@ public:
                   vector<std::string> reqLabelNames );
   virtual ~SourceTermBase();
 
+  /** @brief Indicates the var type of source this is **/ 
+  enum MY_TYPE {CC_SRC, CCVECTOR_SRC, FX_SRC, FY_SRC, FZ_SRC}; 
+
   /** @brief Input file interface */
   virtual void problemSetup(const ProblemSpecP& db) = 0;  
 
@@ -62,11 +65,15 @@ public:
   inline void reinitializeLabel(){ 
     _label_sched_init  = false; };
 
+  /** @brief Returns the source label **/ 
   inline const VarLabel* getSrcLabel(){
     return _src_label; };
 
+  /** @brief Returns a list of any extra local labels this source may compute **/ 
   inline const vector<const VarLabel*> getExtraLocalLabels(){
     return _extra_local_labels; }; 
+
+  inline MY_TYPE getSourceType(){ _source_type; };
 
   /** @brief Builder class containing instructions on how to build the property model */ 
   class Builder { 
@@ -86,12 +93,13 @@ protected:
 
   std::string _src_name;                             ///< User assigned source name 
   std::string _init_type;                            ///< Initialization type. 
-  bool _compute_me; 
+  bool _compute_me;                                  ///< To indicate if calculating this source is needed or has already been computed. 
   const VarLabel* _src_label;                        ///< Source varlabel
   bool _label_sched_init;                            ///< Boolean to clarify if a "computes" or "requires" is needed
   SimulationStateP& _shared_state;                   ///< Local copy of sharedState
   vector<std::string> _required_labels;              ///< Vector of required labels
   vector<const VarLabel*> _extra_local_labels;       ///< Extra labels that might be useful for storage
+  MY_TYPE _source_type;                              ///< Source type
 
                                           
 

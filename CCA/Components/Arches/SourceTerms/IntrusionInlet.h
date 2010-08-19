@@ -33,10 +33,10 @@
  *
  * Note that one may choose one of the following for source types depending on which 
  * equation this source is being used: 
- *   TYPE = cc_intrusion_inject
- *   TYPE = fx_intrusion_inject
- *   TYPE = fy_intrusion_inject
- *   TYPE = fz_intrusion_inject
+ *   TYPE = cc_intrusion_inlet
+ *   TYPE = fx_intrusion_inlet
+ *   TYPE = fy_intrusion_inlet
+ *   TYPE = fz_intrusion_inlet
  * 
  * @todo
  * Add a mass flowrate condition. 
@@ -140,13 +140,18 @@ namespace Uintah{
       ProblemSpecP db = inputdb; 
 
       // add input file interface here 
+      int num_intrusions = 0; 
       for (ProblemSpecP intrusion_db = db->findBlock("intrusion"); 
            intrusion_db != 0; intrusion_db = intrusion_db->findNextBlock("intrusion")){
   
         ProblemSpecP geomObj = intrusion_db->findBlock("geom_object");
         GeometryPieceFactory::create(geomObj, _geomPieces); 
+
+        ++num_intrusions; 
   
       }
+
+      proc0cout << "Total number of intrusion inlets = " << num_intrusions << endl;
 
       //db->require( "mix_frac", _mix_frac ); 
       //db->require( "heat_loss", _heat_loss ); 
@@ -272,21 +277,27 @@ namespace Uintah{
                 case PLUS_X:
                   cn -= IntVector(1,0,0); 
                   area = Dx.y()*Dx.z(); 
+                  break;
                 case PLUS_Y:
                   cn -= IntVector(0,1,0); 
                   area = Dx.y()*Dx.z(); 
+                  break;
                 case PLUS_Z:
                   cn -= IntVector(0,0,1); 
                   area = Dx.x()*Dx.z(); 
+                  break;
                 case MINUS_X:
                   cn += IntVector(1,0,0); 
                   area = Dx.x()*Dx.z(); 
+                  break;
                 case MINUS_Y:
                   cn += IntVector(0,1,0); 
                   area = Dx.x()*Dx.y(); 
+                  break;
                 case MINUS_Z:
                   cn += IntVector(0,0,1); 
                   area = Dx.x()*Dx.y(); 
+                  break;
                 default:
                   throw InvalidValue("The specified normal direction was not one of: +X,-X,+Y,-Y,+Z,-Z",__FILE__,__LINE__); 
 

@@ -40,6 +40,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Arches/SourceTerms/CoalGasMomentum.h> 
 #include <CCA/Components/Arches/SourceTerms/WestbrookDryer.h>
 #include <CCA/Components/Arches/SourceTerms/Inject.h>
+#include <CCA/Components/Arches/SourceTerms/IntrusionInlet.h>
 #include <CCA/Components/Arches/CoalModels/CoalModelFactory.h>
 #include <CCA/Components/Arches/CoalModels/ModelBase.h>
 #include <CCA/Components/Arches/TransportEqns/EqnBase.h>
@@ -2488,6 +2489,26 @@ void Arches::registerUDSources(ProblemSpecP& db)
       } else if ( src_type == "tab_rxn_rate" ) {
         // Adds the tabulated reaction rate 
         SourceTermBase::Builder* srcBuilder = scinew TabRxnRate::Builder(src_name, required_varLabels, d_lab->d_sharedState);
+        factory.register_source_term( src_name, srcBuilder ); 
+
+      } else if ( src_type == "cc_intrusion_inlet" ) {
+        // Adds a constant to the RHS in specified geometric locations
+        SourceTermBase::Builder* srcBuilder = scinew IntrusionInlet<CCVariable<double> >::Builder(src_name, required_varLabels, d_lab->d_sharedState);
+        factory.register_source_term( src_name, srcBuilder ); 
+
+      } else if ( src_type == "fx_intrusion_inlet" ) {
+        // Adds a constant to the RHS in specified geometric locations
+        SourceTermBase::Builder* srcBuilder = scinew IntrusionInlet<SFCXVariable<double> >::Builder(src_name, required_varLabels, d_lab->d_sharedState);
+        factory.register_source_term( src_name, srcBuilder ); 
+
+      } else if ( src_type == "fy_intrusion_inlet" ) {
+        // Adds a constant to the RHS in specified geometric locations
+        SourceTermBase::Builder* srcBuilder = scinew IntrusionInlet<SFCYVariable<double> >::Builder(src_name, required_varLabels, d_lab->d_sharedState);
+        factory.register_source_term( src_name, srcBuilder ); 
+
+      } else if ( src_type == "fz_intrusion_inlet" ) {
+        // Adds a constant to the RHS in specified geometric locations
+        SourceTermBase::Builder* srcBuilder = scinew IntrusionInlet<SFCZVariable<double> >::Builder(src_name, required_varLabels, d_lab->d_sharedState);
         factory.register_source_term( src_name, srcBuilder ); 
 
       } else {
