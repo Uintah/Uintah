@@ -117,6 +117,22 @@ CLASSNAME<TEMP_PARAMS>::CLASSNAME( std::string src_name, SimulationStateP& share
   _another_label = VarLabel::create( "string", TEMP_PARAMS::getTypeDescription() ); 
   _extra_local_labels[0] = _another_label;
 
+  Declare the source type: 
+  if ( typeid(sT) == typeid(SFCXVariable<double>) )
+    _source_type = FX_SRC; 
+  else if ( typeid(sT) == typeid(SFCYVariable<double>) )
+    _source_type = FY_SRC; 
+  else if ( typeid(sT) == typeid(SFCZVariable<double>) )
+    _source_type = FZ_SRC; 
+  else if ( typeid(sT) == typeid(CCVariable<double> ) ) {
+    _source_type = CC_SRC; 
+  else if ( typeid(sT) 
+  } else {
+    throw InvalidValue( "Error: Attempting to instantiate source (IntrusionInlet) with unrecognized type.", __FILE__, __LINE__); 
+  }
+
+  _source_type = CC_SRC; // or FX_SRC, or FY_SRC, or FZ_SRC, or CCVECTOR_SRC
+
 }
 
 //---------------------------------------------------------------------------

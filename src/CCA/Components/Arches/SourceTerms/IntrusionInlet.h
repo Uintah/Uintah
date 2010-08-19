@@ -47,7 +47,7 @@
 namespace Uintah{
 
   template < typename sT >
-  class IntrusionInlet: public SourceTermBase {
+    class IntrusionInlet: public SourceTermBase {
       public: 
 
         enum DIRECTION { PLUS_X, MINUS_X, PLUS_Y, MINUS_Y, PLUS_Z, MINUS_Z }; 
@@ -94,17 +94,17 @@ namespace Uintah{
 
       private:
 
-      std::vector<GeometryPieceP> _geomPieces;                     ///< vector of geometry pieces
+        std::vector<GeometryPieceP> _geomPieces;                     ///< vector of geometry pieces
 
-      //double _mix_frac;                                            ///< inlet gas mixture fraction
-      //double _heat_loss;                                           ///< inlet heat loss 
-      double _velocity;                                            ///< inlet velocity
-      double _density;                                             ///< inlet density
-      double _phi;                                                 ///< value of phi (transported variable) at the inlet
+        //double _mix_frac;                                            ///< inlet gas mixture fraction
+        //double _heat_loss;                                           ///< inlet heat loss 
+        double _velocity;                                            ///< inlet velocity
+        double _density;                                             ///< inlet density
+        double _phi;                                                 ///< value of phi (transported variable) at the inlet
 
-      std::string _normal;                                         ///< normal direction of the inlet
-      DIRECTION _dir; 
-      
+        std::string _normal;                                         ///< normal direction of the inlet
+        DIRECTION _dir; 
+
 
     }; // end IntrusionInlet
 
@@ -122,6 +122,17 @@ namespace Uintah{
 
       _src_label = VarLabel::create( src_name, sT::getTypeDescription() ); 
 
+      if ( typeid(sT) == typeid(SFCXVariable<double>) )
+        _source_type = FX_SRC; 
+      else if ( typeid(sT) == typeid(SFCYVariable<double>) )
+        _source_type = FY_SRC; 
+      else if ( typeid(sT) == typeid(SFCZVariable<double>) )
+        _source_type = FZ_SRC; 
+      else if ( typeid(sT) == typeid(CCVariable<double> ) ) {
+        _source_type = CC_SRC; 
+      } else {
+        throw InvalidValue( "Error: Attempting to instantiate source (IntrusionInlet) with unrecognized type.", __FILE__, __LINE__); 
+      }
     }
 
   //---------------------------------------------------------------------------
@@ -142,13 +153,13 @@ namespace Uintah{
       // add input file interface here 
       int num_intrusions = 0; 
       for (ProblemSpecP intrusion_db = db->findBlock("intrusion"); 
-           intrusion_db != 0; intrusion_db = intrusion_db->findNextBlock("intrusion")){
-  
+          intrusion_db != 0; intrusion_db = intrusion_db->findNextBlock("intrusion")){
+
         ProblemSpecP geomObj = intrusion_db->findBlock("geom_object");
         GeometryPieceFactory::create(geomObj, _geomPieces); 
 
         ++num_intrusions; 
-  
+
       }
 
       proc0cout << "Total number of intrusion inlets = " << num_intrusions << endl;
@@ -257,14 +268,14 @@ namespace Uintah{
         }
 
         for (unsigned int gp = 0; gp < _geomPieces.size(); gp++){
-  
+
           GeometryPieceP piece = _geomPieces[gp];
           Box geomBox          = piece->getBoundingBox(); 
           Box b                = geomBox.intersect(patchInteriorBox); 
-          
+
           // patch and geometry intersect
           if ( !( b.degenerate() ) ){
-  
+
             // loop over all cells
             for (iter.begin(); !iter.done(); iter++){
 
@@ -307,7 +318,7 @@ namespace Uintah{
               Point pn = patch->cellPosition( cn ); 
 
               if ( !piece->inside(p) && piece->inside(pn) ) {
-  
+
                 src[c] += area * _density * _velocity * _phi; 
 
               }

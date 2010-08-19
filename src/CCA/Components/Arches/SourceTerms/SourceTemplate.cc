@@ -36,6 +36,9 @@ CLASSNAME::CLASSNAME( std::string src_name, SimulationStateP& shared_state,
   _another_label = VarLabel::create( "string", CCVariable<double>::getTypeDescription() ); 
   _extra_local_labels[0] = _another_label;
 
+  //Declare the source type: 
+  _source_type = CC_SRC; // or FX_SRC, or FY_SRC, or FZ_SRC, or CCVECTOR_SRC
+
 }
 
 CLASSNAME::~CLASSNAME()

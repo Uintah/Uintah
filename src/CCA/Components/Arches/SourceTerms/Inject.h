@@ -113,6 +113,18 @@ private:
   {
     _label_sched_init = false; 
     _src_label = VarLabel::create( src_name, sT::getTypeDescription() ); 
+
+    if ( typeid(sT) == typeid(SFCXVariable<double>) )
+      _source_type = FX_SRC; 
+    else if ( typeid(sT) == typeid(SFCYVariable<double>) )
+      _source_type = FY_SRC; 
+    else if ( typeid(sT) == typeid(SFCZVariable<double>) )
+      _source_type = FZ_SRC; 
+    else if ( typeid(sT) == typeid(CCVariable<double> ) ) {
+      _source_type = CC_SRC; 
+    } else {
+      throw InvalidValue( "Error: Attempting to instantiate source (Inject) with unrecognized type.", __FILE__, __LINE__); 
+    }
   }
   
   template <typename sT>
