@@ -25,6 +25,8 @@ CoalGasMomentum::CoalGasMomentum( std::string src_name, SimulationStateP& shared
 {
   _label_sched_init = false; 
   _src_label = VarLabel::create( src_name, CCVariable<Vector>::getTypeDescription() ); 
+
+  _source_type = CCVECTOR_SRC; 
 }
 
 CoalGasMomentum::~CoalGasMomentum()

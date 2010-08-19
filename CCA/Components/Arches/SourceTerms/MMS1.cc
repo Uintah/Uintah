@@ -29,6 +29,8 @@ MMS1::problemSetup(const ProblemSpecP& inputdb)
 
   ProblemSpecP db = inputdb; 
 
+  _source_type = CC_SRC; 
+
 }
 //---------------------------------------------------------------------------
 // Method: Schedule the calculation of the source term 
