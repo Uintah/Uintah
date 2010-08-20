@@ -120,7 +120,7 @@ namespace Uintah {
     /**
      * Return the number of cells in the iterator
      */
-    virtual unsigned int size()=0;
+    virtual unsigned int size() const =0;
 
     virtual ostream& limits(ostream&) const = 0;
 
@@ -136,8 +136,7 @@ namespace Uintah {
      * this should be used only by the Iterator class
      */
     virtual BaseIterator* clone() const = 0;
-    
-
+   
     private:
     
 

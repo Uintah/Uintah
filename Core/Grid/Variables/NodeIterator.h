@@ -144,7 +144,7 @@ namespace Uintah {
         /**
         * Return the number of cells in the iterator
         */
-        inline unsigned int size() 
+        inline unsigned int size() const
         {
           IntVector size=d_e-d_s;
           if(size.x()<=0 || size.y()<=0 || size.z()<=0)

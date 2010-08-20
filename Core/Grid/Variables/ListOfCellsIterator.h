@@ -117,7 +117,7 @@ namespace Uintah {
     /**
      * Return the number of cells in the iterator
      */
-    inline unsigned int size() {return listOfCells_.size()-1;};
+    inline unsigned int size() const {return listOfCells_.size()-1;};
 
     /**
      * adds a cell to the list of cells
