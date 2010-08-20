@@ -73,7 +73,7 @@ public:
   inline const vector<const VarLabel*> getExtraLocalLabels(){
     return _extra_local_labels; }; 
 
-  inline MY_TYPE getSourceType(){ _source_type; };
+  inline MY_TYPE getSourceType(){ return _source_type; };
 
   /** @brief Builder class containing instructions on how to build the property model */ 
   class Builder { 
