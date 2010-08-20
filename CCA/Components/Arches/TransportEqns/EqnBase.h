@@ -407,7 +407,11 @@ void EqnBase::initializationFunction( const Patch* patch, phiType& phi )
 
           if ( g_piece->inside(P) )
             phi[c] = d_constant_init; 
+          else 
+            phi[c] = 0.0;
 
+        } else {
+          phi[c] = 0.0;
         }
       }
     // ======= add other initialization functions below here ======

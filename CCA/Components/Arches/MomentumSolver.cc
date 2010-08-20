@@ -888,6 +888,7 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
           }} 
           break; 
         default: 
+          proc0cout << "For source term of type: " << src_type << endl;
           throw InvalidValue("Error: Trying to add a source term to momentum equation with incompatible type",__FILE__, __LINE__); 
 
       }
