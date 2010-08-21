@@ -2464,7 +2464,7 @@ void SerialMPM::findRogueParticles(const ProcessorGroup*,
           // If the localized particles are sufficiently isolated, set
           // a flag for deletion in interpolateToParticlesAndUpdate
           if (numLocInCell[c]<=3 && totalInCells<=3) {
-              isLocalized[*iter]=2;
+              isLocalized[*iter]=-999;
           }
         }  // if localized
       }  // particles
@@ -3681,7 +3681,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
                                    iter != pset->end(); iter++){
         particleIndex idx = *iter;
         if ((pmassNew[idx] <= flags->d_min_part_mass) || pTempNew[idx] < 0. ||
-             (pLocalized[idx]==2)){
+             (pLocalized[idx]==-999)){
           delset->addParticle(idx);
 //        cout << "Material = " << m << " Deleted Particle = " << idx 
 //             << " xold = " << px[idx] << " xnew = " << pxnew[idx]
