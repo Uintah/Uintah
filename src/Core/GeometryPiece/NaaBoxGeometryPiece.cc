@@ -106,7 +106,8 @@ NaaBoxGeometryPiece::init( const Point& p1,
       // If there are still problems, throw an exception...
 
       std::ostringstream error;
-      error << "NaaBoxGeometryPiece.cc: boundingBox_ for '" + name_ + "' is degenerate..." << boundingBox_;
+      error << "NaaBoxGeometryPiece.cc: boundingBox_ for '" + name_ + "' is degenerate..." << boundingBox_ << "\n";
+      error << "See src/Core/GeometryPiece/NaaBoxGeometryPiece.h or the Users Guide for details\n";
 
       throw ProblemSetupException( error.str(), __FILE__, __LINE__ );
     }
