@@ -208,6 +208,7 @@ cout << "Start TimeStep." << endl;
                 RungaKutta4();  
                 New_Height = RB_LiquidHeight;
 
+
                 if (!RB_Verification_Height)
                 {
                   LinearLevel();
@@ -1921,8 +1922,6 @@ from here: */
 
 
           TimeStep();//WME
-//cout << "TIME: " << d_lab->d_sharedState->getElapsedTime() << "\n\n\n";
-
           Velocity[curCell] = getFV();//WME
           Velocity[mCell] = getFV();//WME
           
