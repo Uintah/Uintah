@@ -1427,7 +1427,7 @@ RBMixerProperties::film_Flux_Main(double T,double Tinf,double P,vector<double> x
 
         M_convergeFluxProblem = 0;
         int counter = 0;
-        int Limit = 10;
+        int Limit = 25;
         double perturb = 2e-11;
       
         while (counter <= Limit)
@@ -1435,20 +1435,22 @@ RBMixerProperties::film_Flux_Main(double T,double Tinf,double P,vector<double> x
           film_Fluxes(T,Tinf,P,x,Yb,PD,U,RT);
           if (M_convergeFluxProblem)
           {
-//            cout << "Flux failed to converge, try again." << endl;
-//            cout << "Attempt: " << counter << endl;
+            cout << "Flux failed to converge, try again." << endl;
+            cout << "Attempt: " << counter << endl;
             T = T - perturb;
             counter++;
-            M_convergeFluxProblem = 0;
+//            M_convergeFluxProblem = 0;
           }
           else
           {
-            M_convergeFluxProblem = 0;
             break;
           }
         }
 
-
+        if (M_convergeFluxProblem) 
+        { 
+          cout << "FLUX HAS FAILED TO CONVERGE" << "   FLUX: " << getSumMflux() << endl;
+        }  
 }
 //---------------------------------------------------------------------------------------------------------------------
 //*********************************************************************************************************************
@@ -1532,8 +1534,6 @@ cout << "Energy: " << Energy << endl;
 void 
 RBMixerProperties::film_Fluxes(double T, double Tinf, double P, vector<double> x, vector<double> Yb, double PD, double U, double RT)
 {
-
-
 	int n = M_NOC;
 
 	double J[n]; // Diffusive Flux Array
@@ -1657,7 +1657,7 @@ for (unsigned int ii = 0; ii < Yb.size(); ii++)
 	for (int i = 0; i < n; i++){ Error = Error + abs(N[i] - Nnew[i]); }
 
 	if (Error < 1e-12) { sentinel = 1; converge = 1; }
-	if (count > 50) {sentinel = 1; }
+	if (count > 10) {sentinel = 1; }
 
 	for (int i = 0; i < n; i++) { NM[i] = N[i]/2 + Nnew[i]/2; }
 	for (int i = 0; i < n; i++) { N[i] = Nnew[i];} 
@@ -1752,7 +1752,6 @@ RBMixerProperties::film_Fluxes(vector<double> Yb)
 	for (int i = 0; i < n; i++){ N.push_back(M_NFLUX.at(i)); }
 
 
-
 	//Main Loop:
 
 	int sentinel = 0;
@@ -1845,13 +1844,13 @@ RBMixerProperties::film_Fluxes(vector<double> Yb)
 	//Now calculate the new value for N
 
 	for (int i = 0; i < n; i++){ N.at(i) = N.at(i) - DN[i];}
-
 	
 	if (Error < 1e-12) 
         { 
           sentinel = 1;
+          M_convergeFluxProblem = 0;
         }
-	if (count > 35) 
+	if (count > 100) 
         {
           
           sentinel = 1;  

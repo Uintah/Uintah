@@ -86,7 +86,7 @@ class RBMixerProperties {
 	double getSumMflux() { double sum = 0; for (int i = 0; i < M_NOC; i++){sum = sum + getMflux(i);} return sum;}
 	double getSumEflux() { double sum = 0; for (int i = 0; i < M_NOC; i++){sum = sum + getEflux(i);} return sum;}
 	double getRes(int i) { return M_Res.at(i); }
-	double getResNorm() { double sum; for (int i = 0; i < M_NOC; i++){sum = sum + abs(getRes(i));} return sum;}
+	double getResNorm() { double sum = 0; for (int i = 0; i < M_NOC; i++){sum = sum + abs(getRes(i));} return sum;}
 	double getFConc() { return M_filmConc; }
 	string getName(int i) { return M_Component[i]->getName(); }
 	double getLDEN() { return M_LDEN; }
