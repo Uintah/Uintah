@@ -681,18 +681,6 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
       velocityVars.wFmms.initialize(0.0);
     }
 
-    // Adding new sources from factory:
-    SourceTermFactory& factor = SourceTermFactory::self(); 
-    for (vector<std::string>::iterator iter = d_new_sources.begin(); 
-       iter != d_new_sources.end(); iter++){
-
-      SourceTermBase& src = factor.retrieve_source_term( *iter ); 
-      const VarLabel* srcLabel = src.getSrcLabel(); 
-      // here we have made the assumption that the momentum source is always a vector... 
-      // and that we only have one.  probably want to fix this. 
-      new_dw->get( velocityVars.otherVectorSource, srcLabel, indx, patch, Ghost::None, 0); 
-
-    }
 
     //__________________________________
     //  compute coefficients
@@ -851,10 +839,59 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
                                         &velocityVars, &constVelocityVars);
     }
 
-    if (d_new_sources.size() > 0){
-      // this is making an assumption about the source being a vector. 
-      d_source->computeParticleSource(pc, patch, cellinfo,
-                                      &velocityVars, &constVelocityVars);
+    // Adding new sources from factory:
+    SourceTermFactory& factor = SourceTermFactory::self(); 
+    for (vector<std::string>::iterator iter = d_new_sources.begin(); 
+       iter != d_new_sources.end(); iter++){
+
+      SourceTermBase& src = factor.retrieve_source_term( *iter ); 
+      const VarLabel* srcLabel = src.getSrcLabel(); 
+      SourceTermBase::MY_TYPE src_type = src.getSourceType(); 
+
+      switch (src_type) {
+        case SourceTermBase::CCVECTOR_SRC: 
+          { new_dw->get( velocityVars.otherVectorSource, srcLabel, indx, patch, Ghost::None, 0); 
+          Vector Dx  = patch->dCell();
+          double vol = Dx.x()*Dx.y()*Dx.z();
+          for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
+            IntVector c = *iter;
+            velocityVars.uVelNonlinearSrc[c]  += velocityVars.otherVectorSource[c].x()*vol;
+            velocityVars.vVelNonlinearSrc[c]  += velocityVars.otherVectorSource[c].y()*vol;
+            velocityVars.wVelNonlinearSrc[c]  += velocityVars.otherVectorSource[c].z()*vol;
+          }} 
+          break; 
+        case SourceTermBase::FX_SRC:
+          { new_dw->get( velocityVars.otherFxSource, srcLabel, indx, patch, Ghost::None, 0);
+          Vector Dx  = patch->dCell();
+          double vol = Dx.x()*Dx.y()*Dx.z();
+          for (CellIterator iter=patch->getSFCXIterator(); !iter.done(); iter++){
+            IntVector c = *iter;
+            velocityVars.uVelNonlinearSrc[c]  += velocityVars.otherFxSource[c]*vol;
+          }} 
+          break; 
+        case SourceTermBase::FY_SRC: 
+          { new_dw->get( velocityVars.otherFySource, srcLabel, indx, patch, Ghost::None, 0);
+          Vector Dx  = patch->dCell();
+          double vol = Dx.x()*Dx.y()*Dx.z();
+          for (CellIterator iter=patch->getSFCYIterator(); !iter.done(); iter++){
+            IntVector c = *iter;
+            velocityVars.vVelNonlinearSrc[c]  += velocityVars.otherFySource[c]*vol;
+          }} 
+          break; 
+        case SourceTermBase::FZ_SRC:
+          { new_dw->get( velocityVars.otherFzSource, srcLabel, indx, patch, Ghost::None, 0);
+          Vector Dx  = patch->dCell();
+          double vol = Dx.x()*Dx.y()*Dx.z();
+          for (CellIterator iter=patch->getSFCZIterator(); !iter.done(); iter++){
+            IntVector c = *iter;
+            velocityVars.wVelNonlinearSrc[c]  += velocityVars.otherFzSource[c]*vol;
+          }} 
+          break; 
+        default: 
+          proc0cout << "For source term of type: " << src_type << endl;
+          throw InvalidValue("Error: Trying to add a source term to momentum equation with incompatible type",__FILE__, __LINE__); 
+
+      }
     }
 
     // Calculate the Velocity BCS

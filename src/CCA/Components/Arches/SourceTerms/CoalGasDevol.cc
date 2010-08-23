@@ -36,6 +36,8 @@ CoalGasDevol::problemSetup(const ProblemSpecP& inputdb)
 
   db->require( "devol_model_name", _devol_model_name ); 
 
+  _source_type = CC_SRC; 
+
 }
 //---------------------------------------------------------------------------
 // Method: Schedule the calculation of the source term 

@@ -18,7 +18,7 @@
  *
  * @details 
    Values of constant source are added to the transport equation within prescribed geometric locations. The geometric 
-   locations are set using the <geom_object> node.  Note that you can have several injectors for one defined constant source. 
+   locations are set using the \code <geom_object> \endcode node.  Note that you can have several injectors for one defined constant source. 
    This code is templated to allow for source injection for all equation types.  
 
    The input file should look like this: 
@@ -29,7 +29,7 @@
          <injector> 
            <geom_object> ... </geom_object>
          </injector>
-         <constant> 1.0 </constant>
+         <constant> DOUBLE </constant>
        </src>
      </SourceTerms>
    \endcode
@@ -100,7 +100,7 @@ public:
 private:
 
   double d_constant; 
-  std::vector<GeometryPieceP> d_geomPieces; 
+  std::vector<GeometryPieceP> _geomPieces; 
 
 }; // end Inject
 
@@ -113,6 +113,18 @@ private:
   {
     _label_sched_init = false; 
     _src_label = VarLabel::create( src_name, sT::getTypeDescription() ); 
+
+    if ( typeid(sT) == typeid(SFCXVariable<double>) )
+      _source_type = FX_SRC; 
+    else if ( typeid(sT) == typeid(SFCYVariable<double>) )
+      _source_type = FY_SRC; 
+    else if ( typeid(sT) == typeid(SFCZVariable<double>) )
+      _source_type = FZ_SRC; 
+    else if ( typeid(sT) == typeid(CCVariable<double> ) ) {
+      _source_type = CC_SRC; 
+    } else {
+      throw InvalidValue( "Error: Attempting to instantiate source (Inject) with unrecognized type.", __FILE__, __LINE__); 
+    }
   }
   
   template <typename sT>
@@ -131,7 +143,7 @@ private:
     for (ProblemSpecP inject_db = db->findBlock("injector"); inject_db != 0; inject_db = inject_db->findNextBlock("injector")){
   
       ProblemSpecP geomObj = inject_db->findBlock("geom_object");
-      GeometryPieceFactory::create(geomObj, d_geomPieces); 
+      GeometryPieceFactory::create(geomObj, _geomPieces); 
   
     }
 
@@ -196,12 +208,12 @@ private:
       // loop over all geometry pieces
       CellIterator iter = patch->getCellIterator(); 
       if ( typeid(sT) == typeid(SFCXVariable<double>) )
-        iter = patch->getSFCXIterator(); 
+        CellIterator iter = patch->getSFCXIterator(); 
       else if ( typeid(sT) == typeid(SFCYVariable<double>) )
-        iter = patch->getSFCYIterator(); 
+        CellIterator iter = patch->getSFCYIterator(); 
       else if ( typeid(sT) == typeid(SFCZVariable<double>) )
-        iter = patch->getSFCZIterator(); 
-      else {
+        CellIterator iter = patch->getSFCZIterator(); 
+      else if ( typeid(sT) != typeid(CCVariable<double> ) ) {
         // Bulletproofing
         proc0cout << " While attempting to compute: Inject.h " << endl;
         proc0cout << " Encountered a type mismatch error.  The current code cannot handle" << endl;
@@ -213,9 +225,9 @@ private:
         throw InvalidValue( "Please check the builder (probably in Arches.cc) and try again. ", __FILE__, __LINE__); 
       }
 
-      for (int gp = 0; gp < d_geomPieces.size(); gp++){
+      for (unsigned int gp = 0; gp < _geomPieces.size(); gp++){
   
-        GeometryPieceP piece = d_geomPieces[gp];
+        GeometryPieceP piece = _geomPieces[gp];
         Box geomBox          = piece->getBoundingBox(); 
         Box b                = geomBox.intersect(patchInteriorBox); 
         

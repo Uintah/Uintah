@@ -52,7 +52,8 @@ namespace Wasatch{
     std::cout << "Creating transport equation for '" << eqnLabel << "'" << std::endl;
 
     if( eqnLabel == "scalar" ){
-      transeqn = new ScalarTransportEquation( *solnGraphHelper->exprFactory, params );
+      transeqn = new ScalarTransportEquation( ScalarTransportEquation::get_phi_name( params ),
+                                              ScalarTransportEquation::get_rhs_expr_id( *solnGraphHelper->exprFactory, params ) );
       adaptor = new EqnTimestepAdaptor<ScalarTransportEquation::FieldT>( transeqn );
     }
     else if( eqnLabel == sName.temperature ){

@@ -104,9 +104,19 @@ void CostModelForecaster::outputError(const GridP grid)
      }
   }
   double sum_error=0,sum_aerror=0,max_error=0;
-  MPI_Reduce(&sum_error_local,&sum_error,1,MPI_DOUBLE,MPI_SUM,0,d_myworld->getComm());
-  MPI_Reduce(&sum_aerror_local,&sum_aerror,1,MPI_DOUBLE,MPI_SUM,0,d_myworld->getComm());
-  MPI_Reduce(&max_error_local,&max_error,1,MPI_DOUBLE,MPI_MAX,0,d_myworld->getComm());
+  if(d_myworld->size()>1)
+  {
+    MPI_Reduce(&sum_error_local,&sum_error,1,MPI_DOUBLE,MPI_SUM,0,d_myworld->getComm());
+    MPI_Reduce(&sum_aerror_local,&sum_aerror,1,MPI_DOUBLE,MPI_SUM,0,d_myworld->getComm());
+    MPI_Reduce(&max_error_local,&max_error,1,MPI_DOUBLE,MPI_MAX,0,d_myworld->getComm());
+  }
+  else
+  {
+    sum_error=sum_error_local;
+    sum_aerror=sum_aerror_local;
+    max_error=max_error_local;
+  }
+
   if(d_myworld->myrank()==0 && stats.active())
   {
     sum_error/=size;
@@ -154,9 +164,16 @@ void CostModelForecaster::collectPatchInfo(const GridP grid, vector<PatchInfo> &
 
   patch_info.resize(total_patches);
   //allgather the patch info
-  MPI_Allgatherv(&patchList[0], patchList.size()*sizeof(PatchInfo),  MPI_BYTE,
+  if(d_myworld->size()>1)
+  {
+    MPI_Allgatherv(&patchList[0], patchList.size()*sizeof(PatchInfo),  MPI_BYTE,
                     &patch_info[0], &recvs[0], &displs[0], MPI_BYTE,
                     d_myworld->getComm());
+  }
+  else
+  {
+    patch_info=patchList;
+  }
 
 }
 

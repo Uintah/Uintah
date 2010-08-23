@@ -70,6 +70,7 @@ MixingRxnModel::MixingRxnModel( const ArchesLabel* labels, const MPMArchesLabel*
 //---------------------------------------------------------------------------
 MixingRxnModel::~MixingRxnModel()
 {
+
   for ( VarMap::iterator i = d_dvVarMap.begin(); i != d_dvVarMap.end(); ++i ){
     VarLabel::destroy( i->second ); 
   }
@@ -116,14 +117,17 @@ MixingRxnModel::setMixDVMap( const ProblemSpecP& root_params )
   proc0cout << "    (below required by the CFD algorithm)" << endl; 
   var_name = "density"; 
   insertIntoMap( var_name ); 
-  var_name = "temperature"; 
-  insertIntoMap( var_name ); 
-  var_name = "heat_capacity"; 
-  insertIntoMap( var_name ); 
-  var_name = "CO2"; 
-  insertIntoMap( var_name ); 
-  var_name = "H2O"; 
-  insertIntoMap( var_name ); 
+  if ( !d_coldflow ){ 
+    var_name = "temperature"; 
+    insertIntoMap( var_name ); 
+    //var_name = "heat_capacity"; 
+    var_name = "specificheat"; 
+    insertIntoMap( var_name ); 
+    var_name = "CO2"; 
+    insertIntoMap( var_name ); 
+    var_name = "H2O"; 
+    insertIntoMap( var_name ); 
+  }
 
   proc0cout << endl;
 }

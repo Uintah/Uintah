@@ -1,0 +1,62 @@
+
+<html>
+<head>
+   <title> Uintah Computational Framework </title>
+</head>
+
+<body>
+
+  <table cellspacing="0" cellpadding="0" border="0">
+    <tr>
+      <td><a href="http://www.csafe.utah.edu"><img src="Images/CSAFELarge.gif" alt="record.png" /></a></td>
+      <td valign="bottom" bgcolor="#353E49"><img src="Images/c-safe_text.jpg" alt="record.png" /></td>
+    </tr>
+    <tr>
+      <td bgcolor="#353E49"></td>
+      <td><table cellpadding="10" width="650"><tr><td>
+
+<h1> Uintah Computational Framework (UCF) </h1>
+
+The Uintah Computational Framework is the software infrastructure on
+which all Uintah simulations are run.  Visit <a
+href="intro.html#ucf">here</a> for a general overview of the UCF.
+<p/>
+
+The main conceptual pieces of the UCF include:
+<ul>
+  <li><a href="#scheduler">Scheduler</a></li>
+  <li><a href="#taskgraph">Task Graph</a></li>
+  <li></li>
+</ul>
+
+<a name="scheduler"/>
+<h2> Scheduler </h2>
+
+The Scheduler in Uintah is responsible for determining the order of
+tasks and ensuring that the correct inter-processor data is made
+available when necessary.  Each component (Arches, ICE, MPM, etc.)
+when run passes a set of tasks to the scheduler.  Each task is
+responsible for computing some subset of variables, and may require
+previously computed variables, possibly from different processors.
+The scheduler will then compile this task information into a task
+graph, and the task graph will contain a sorted order of tasks, along
+with any information necessary to perform inter-process communication
+via MPI.  Then, when the scheduler is executed, the tasks will execute
+in the pre-determined order.
+
+<a name="taskgraph"/>
+<h2> Task Graph </h2>
+
+
+<p/>
+<hr/>
+<a href="index.html">Return to Index.</a>
+
+</td></tr></table>
+      </td>
+    </tr>
+  </table>
+
+</body>
+
+</html>

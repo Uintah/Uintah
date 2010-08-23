@@ -888,7 +888,7 @@ public:
     double memrate = (double(memrefs)*1.e-9)/dt;
     if(pg->myrank() == 0){
       if(niter < toomany) {
-        cerr << "Solve of " << X_label->getName() 
+        cout << "Solve of " << X_label->getName() 
               << " on level " << level->getIndex()
              << " completed in "
              << dt << " seconds ("
@@ -897,7 +897,7 @@ public:
               << mflops<< " MFLOPS, " << memrate << " GB/sec)\n";
       }else{
         if(params->restart){
-           cerr << "CGSolver not converging, requesting smaller timestep\n";
+           cout << "CGSolver not converging, requesting smaller timestep\n";
           new_dw->abortTimestep();
           new_dw->restartTimestep();
         }else {

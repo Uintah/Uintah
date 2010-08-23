@@ -14,7 +14,7 @@
     <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
    <Time>
-       <maxTime>            4.00e-5    </maxTime>
+       <maxTime>            2.00e-5    </maxTime>
        <initTime>           0.0        </initTime>
        <delt_min>           2.4e-14    </delt_min>
        <delt_max>           2.0e-06    </delt_max>
@@ -159,7 +159,7 @@
     <MaterialProperties>
        <ICE>
          <material name = "reactant">
-           <include href="inputs/ICE/MurnahanEOSANFO.xml"/>
+           <include href="inputs/ICE/EOSData/MurnahanEOSANFO.xml"/>
            <dynamic_viscosity>      0.0                 </dynamic_viscosity>
            <thermal_conductivity>   0.0                 </thermal_conductivity>
            <specific_heat>          1515.31             </specific_heat>
@@ -179,7 +179,7 @@
          </material>
 
          <material name = "product">
-           <include href="inputs/ICE/JWLEOSANFO.xml"/>
+           <include href="inputs/ICE/EOSData/JWLEOSANFO.xml"/>
            <dynamic_viscosity>      0.0                 </dynamic_viscosity>
            <thermal_conductivity>   0.0                 </thermal_conductivity>
            <specific_heat>          544.96              </specific_heat>

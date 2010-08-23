@@ -149,17 +149,29 @@ PressureBC::flagMaterialPoint(const Point& p,
 
   } else if (d_surfaceType == "cylinder") {
     // Create a cylindrical annulus with radius-|dxpp|, radius+|dxpp|
-    double tol = dxpp.minComponent();
+    double tol = 0.9*dxpp.minComponent();
     CylinderGeometryPiece* cgp = dynamic_cast<CylinderGeometryPiece*>(d_surface);
+
+    Vector add_ends = tol*(cgp->top()-cgp->bottom())
+                            /(cgp->top()-cgp->bottom()).length();
+
     GeometryPiece* outer = scinew CylinderGeometryPiece(cgp->top(), 
                                                      cgp->bottom(), 
                                                      cgp->radius()+tol);
     GeometryPiece* inner = scinew CylinderGeometryPiece(cgp->top(), 
                                                      cgp->bottom(), 
                                                      cgp->radius()-tol);
+
+    GeometryPiece* end = scinew CylinderGeometryPiece(cgp->top()+add_ends, 
+                                                     cgp->bottom()-add_ends, 
+                                                     cgp->radius());
+
     GeometryPiece* volume = scinew DifferenceGeometryPiece(outer, inner);
-    if (volume->inside(p)) flag = true;
+    if (volume->inside(p) || end->inside(p)){
+      flag = true;
+    }
     delete volume;
+    delete end;
 
   } else if (d_surfaceType == "sphere") {
     // Create a spherical shell with radius-|dxpp|, radius+|dxpp|

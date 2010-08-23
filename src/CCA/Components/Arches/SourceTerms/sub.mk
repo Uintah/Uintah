@@ -11,6 +11,8 @@ SRCS += \
   $(SRCDIR)/WestbrookDryer.cc \
 	$(SRCDIR)/CoalGasMomentum.cc \
 	$(SRCDIR)/Inject.cc \
+	$(SRCDIR)/TabRxnRate.cc \
+	$(SRCDIR)/IntrusionInlet.cc \
   $(SRCDIR)/MMS1.cc
 
 

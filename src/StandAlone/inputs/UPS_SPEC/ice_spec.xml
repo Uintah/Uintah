@@ -33,13 +33,19 @@
             <strength                   spec="REQUIRED DOUBLE" />
             <radius                     spec="REQUIRED DOUBLE 'positive'" />
           </vortex>                
-        </vortices>  
+        </vortices> 
+         
         <gaussianTemperature            spec="OPTIONAL NO_DATA">
           <origin                       spec="REQUIRED VECTOR "/>
           <spread_x                     spec="REQUIRED DOUBLE"/>
           <spread_y                     spec="REQUIRED DOUBLE"/>
           <amplitude                    spec="REQUIRED DOUBLE 'positive'"/>
         </gaussianTemperature>
+        
+        <counterflow                    spec="OPTIONAL NO_DATA">
+          <strainRate                   spec="REQUIRED DOUBLE 'positive'"/>
+          <referenceCell                spec="REQUIRED VECTOR"/>
+        </counterflow>
       </customInitialization>
       
       <ImplicitSolver                   spec="OPTIONAL NO_DATA">

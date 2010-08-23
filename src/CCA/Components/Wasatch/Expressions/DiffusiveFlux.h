@@ -57,7 +57,7 @@ public:
   public:
     /**
      *  \brief Construct a diffusive flux given expressions for
-     *         \f$\phi\f$ and \f$\Gamma$\f
+     *         \f$\phi\f$ and \f$\Gamma\f$
      *
      *  \param phiTag  the Expr::Tag for the scalar field
      *

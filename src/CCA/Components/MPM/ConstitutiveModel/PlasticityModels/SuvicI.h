@@ -55,7 +55,7 @@ namespace Uintah {
 
     The inelastic strain rate is given by
 
-    \f$\dot{\epsilon}}^i_{ij}=A<(X_{ae}-R)/K>^N n_{ij}\exp(-Q/RT)\f$
+    \f$\dot{\epsilon}^i_{ij}=A<(X_{ae}-R)/K>^N n_{ij}\exp(-Q/RT)\f$
 
     where \f$ n_{ij} = {3/2} (S_{ij}-B_{ij})/X_{ae}) \f$, \f$Q, R, T\f$
     are the activation energy, Universal gas constant and the absolute temperature,

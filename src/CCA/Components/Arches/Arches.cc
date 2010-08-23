@@ -35,10 +35,12 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Arches/SourceTerms/ConstSrcTerm.h>
 #include <CCA/Components/Arches/SourceTerms/UnweightedSrcTerm.h>
 #include <CCA/Components/Arches/SourceTerms/MMS1.h>
+#include <CCA/Components/Arches/SourceTerms/TabRxnRate.h>
 #include <CCA/Components/Arches/SourceTerms/CoalGasDevol.h>
 #include <CCA/Components/Arches/SourceTerms/CoalGasMomentum.h> 
 #include <CCA/Components/Arches/SourceTerms/WestbrookDryer.h>
 #include <CCA/Components/Arches/SourceTerms/Inject.h>
+#include <CCA/Components/Arches/SourceTerms/IntrusionInlet.h>
 #include <CCA/Components/Arches/CoalModels/CoalModelFactory.h>
 #include <CCA/Components/Arches/CoalModels/ModelBase.h>
 #include <CCA/Components/Arches/TransportEqns/EqnBase.h>
@@ -58,6 +60,13 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Arches/PropertyModels/PropertyModelBase.h>
 #include <CCA/Components/Arches/PropertyModels/PropertyModelFactory.h>
 #include <CCA/Components/Arches/PropertyModels/ConstProperty.h>
+#include <CCA/Components/Arches/PropertyModels/LaminarPrNo.h>
+#include <CCA/Components/Arches/PropertyModels/ScalarDiss.h>
+#include <CCA/Components/Arches/PropertyModels/ExtentRxn.h>
+#include <CCA/Components/Arches/PropertyModels/TabStripFactor.h>
+#if HAVE_TABPROPS
+# include <CCA/Components/Arches/ChemMix/TabPropsInterface.h>
+#endif 
 
 #include <CCA/Components/Arches/Arches.h>
 #include <CCA/Components/Arches/ArchesLabel.h>
@@ -739,7 +748,18 @@ Arches::scheduleInitialize(const LevelP& level,
                                                 TimeIntegratorStepType::FE);
   init_timelabel_allocated = true;
 
+  // Property model initialization
+  PropertyModelFactory& propFactory = PropertyModelFactory::self(); 
+  PropertyModelFactory::PropMap& all_prop_models = propFactory.retrieve_all_property_models(); 
+  for ( PropertyModelFactory::PropMap::iterator iprop = all_prop_models.begin(); 
+      iprop != all_prop_models.end(); iprop++){
 
+    PropertyModelBase* prop_model = iprop->second; 
+    prop_model->sched_initialize( level, sched ); 
+
+  }
+
+  // Table Lookup 
   string mixmodel = d_props->getMixingModelType(); 
   if ( mixmodel != "TabProps")
     d_props->sched_reComputeProps(sched, patches, matls,
@@ -830,16 +850,6 @@ Arches::scheduleInitialize(const LevelP& level,
   // compute the cell area fraction 
   d_boundaryCondition->sched_setAreaFraction( sched, patches, matls ); 
 
-  // Property model initialization
-  PropertyModelFactory& propFactory = PropertyModelFactory::self(); 
-  PropertyModelFactory::PropMap& all_prop_models = propFactory.retrieve_all_property_models(); 
-  for ( PropertyModelFactory::PropMap::iterator iprop = all_prop_models.begin(); 
-      iprop != all_prop_models.end(); iprop++){
-
-    PropertyModelBase* prop_model = iprop->second; 
-    prop_model->sched_initialize( level, sched ); 
-
-  }
 }
 
 void
@@ -2532,6 +2542,31 @@ void Arches::registerUDSources(ProblemSpecP& db)
         SourceTermBase::Builder* srcBuilder = scinew Inject<SFCZVariable<double> >::Builder(src_name, required_varLabels, d_lab->d_sharedState);
         factory.register_source_term( src_name, srcBuilder ); 
 
+      } else if ( src_type == "tab_rxn_rate" ) {
+        // Adds the tabulated reaction rate 
+        SourceTermBase::Builder* srcBuilder = scinew TabRxnRate::Builder(src_name, required_varLabels, d_lab->d_sharedState);
+        factory.register_source_term( src_name, srcBuilder ); 
+
+      } else if ( src_type == "cc_intrusion_inlet" ) {
+        // Adds a constant to the RHS in specified geometric locations
+        SourceTermBase::Builder* srcBuilder = scinew IntrusionInlet<CCVariable<double> >::Builder(src_name, required_varLabels, d_lab->d_sharedState);
+        factory.register_source_term( src_name, srcBuilder ); 
+
+      } else if ( src_type == "fx_intrusion_inlet" ) {
+        // Adds a constant to the RHS in specified geometric locations
+        SourceTermBase::Builder* srcBuilder = scinew IntrusionInlet<SFCXVariable<double> >::Builder(src_name, required_varLabels, d_lab->d_sharedState);
+        factory.register_source_term( src_name, srcBuilder ); 
+
+      } else if ( src_type == "fy_intrusion_inlet" ) {
+        // Adds a constant to the RHS in specified geometric locations
+        SourceTermBase::Builder* srcBuilder = scinew IntrusionInlet<SFCYVariable<double> >::Builder(src_name, required_varLabels, d_lab->d_sharedState);
+        factory.register_source_term( src_name, srcBuilder ); 
+
+      } else if ( src_type == "fz_intrusion_inlet" ) {
+        // Adds a constant to the RHS in specified geometric locations
+        SourceTermBase::Builder* srcBuilder = scinew IntrusionInlet<SFCZVariable<double> >::Builder(src_name, required_varLabels, d_lab->d_sharedState);
+        factory.register_source_term( src_name, srcBuilder ); 
+
       } else {
         proc0cout << "For source term named: " << src_name << endl;
         proc0cout << "with type: " << src_type << endl;
@@ -2780,13 +2815,39 @@ void Arches::registerPropertyModels(ProblemSpecP& db)
 
       proc0cout << "Found a property model: " << prop_name << endl; 
 
-      if ( prop_type == "ConstantCC" ) {
+      if ( prop_type == "cc_constant" ) {
 
         // An example of a constant CC variable property 
         PropertyModelBase::Builder* the_builder = new ConstProperty<CCVariable<double>, constCCVariable<double> >::Builder( prop_name, d_sharedState ); 
         prop_factory.register_property_model( prop_name, the_builder ); 
 
-      } else if ( prop_type == "ConstantFCX" ) {
+      } else if ( prop_type == "laminar_pr" ) {
+
+        // Laminar Pr number calculation
+        PropertyModelBase::Builder* the_builder = new LaminarPrNo::Builder( prop_name, d_sharedState ); 
+        prop_factory.register_property_model( prop_name, the_builder ); 
+
+      } else if ( prop_type == "scalar_diss" ) {
+
+        // Scalar dissipation rate calculation 
+        if ( prop_name != "scalar_dissipation_rate" )
+          proc0cout << "Note:  " << prop_name  << " renamed to scalar_dissipation_rate. " << endl;
+        PropertyModelBase::Builder* the_builder = new ScalarDiss::Builder( "scalar_dissipation_rate", d_sharedState ); 
+        prop_factory.register_property_model( prop_name, the_builder ); 
+
+      } else if ( prop_type == "extent_rxn" ) {
+
+        // Scalar dissipation rate calculation 
+        PropertyModelBase::Builder* the_builder = new ExtentRxn::Builder( prop_name, d_sharedState ); 
+        prop_factory.register_property_model( prop_name, the_builder ); 
+
+      } else if ( prop_type == "tab_strip_factor" ) {
+
+        // Scalar dissipation rate calculation 
+        PropertyModelBase::Builder* the_builder = new TabStripFactor::Builder( prop_name, d_sharedState ); 
+        prop_factory.register_property_model( prop_name, the_builder ); 
+
+      } else if ( prop_type == "fx_constant" ) {
 
         // An example of a constant FCX variable property 
         PropertyModelBase::Builder* the_builder = new ConstProperty<SFCXVariable<double>, constCCVariable<double> >::Builder( prop_name, d_sharedState ); 
@@ -2794,6 +2855,7 @@ void Arches::registerPropertyModels(ProblemSpecP& db)
 
       } else {
 
+        proc0cout << endl;
         proc0cout << "For property model named: " << prop_name << endl;
         proc0cout << "with type: " << prop_type << endl;
         throw InvalidValue("This property model is not recognized or supported! ", __FILE__, __LINE__); 

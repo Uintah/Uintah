@@ -586,7 +586,7 @@ namespace Uintah {
         if(final_res_norm > params->tolerance || finite(final_res_norm) == 0){
           if(params->restart){
             if(pg->myrank() == 0)
-              cerr << "HypreSolver not converged in " << num_iterations 
+              cout << "HypreSolver not converged in " << num_iterations 
                    << "iterations, final residual= " << final_res_norm 
                    << ", requesting smaller timestep\n";
             //new_dw->abortTimestep();
@@ -648,7 +648,7 @@ namespace Uintah {
 
         double dt=Time::currentSeconds()-tstart;
         if(pg->myrank() == 0){
-          cerr << "Solve of " << X_label->getName() 
+          cout << "Solve of " << X_label->getName() 
                << " on level " << level->getIndex()
                << " completed in " << dt 
                << " seconds (solve only: " << solve_dt 

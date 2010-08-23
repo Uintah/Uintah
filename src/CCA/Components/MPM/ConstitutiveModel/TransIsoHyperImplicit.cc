@@ -621,6 +621,11 @@ TransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
         //_______________________________________fiber contribution term
 
         double cFC[6][6];
+        for(int i=0;i<6;i++){
+         for(int j=0;j<6;j++){
+          cFC[i][j]=0.0;
+         }
+        }
         if (fail[idx] == 2.0 || fail[idx] == 3.0) {
          cFC[0][0] = 0;
          cFC[0][1] = 0;
@@ -716,6 +721,11 @@ TransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
 
          //_________________________________________________Mooney-Rivlin term
          double cMR[6][6];
+         for(int i=0;i<6;i++){
+          for(int j=0;j<6;j++){
+            cMR[i][j]=0.0;
+          }
+         }
          cMR[0][0] = (4./J)*c2*RB(0,0)*RB(0,0)
                     -(4./J)*c2*(RB(0,0)*RB(0,0)+RB(0,0)*RB(0,0))
                     +(2./3.)*cc2MR+(4./9.)*(1./J)*2*c2*I2tilde
@@ -788,6 +798,11 @@ TransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
 
         //_________________________fiber contribution term
         double cFC[6][6];
+         for(int i=0;i<6;i++){
+          for(int j=0;j<6;j++){
+           cFC[i][j]=0.0;
+          }
+         }
          cFC[0][0] = (2./3.)*cc2FC+(4./9.)*(1./J)*cc1+devsFC(0,0)+devsFC(0,0)
               +(-4./3.)*(1./J)*cc1*(DY(0,0)+DY(0,0))+(4./J)*cc1*DY(0,0)*DY(0,0);
          cFC[0][1] = (-1./3.)*cc2FC+devsFC(0,0)+devsFC(1,1)

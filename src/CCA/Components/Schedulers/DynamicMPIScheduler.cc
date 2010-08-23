@@ -441,6 +441,8 @@ DynamicMPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
       }
     }
 
+    if (phaseTasks[currphase] == phaseTasksDone[currphase])  currphase++;
+
     if(!abort && dws[dws.size()-1] && dws[dws.size()-1]->timestepAborted()){
       // TODO - abort might not work with external queue...
       abort = true;
