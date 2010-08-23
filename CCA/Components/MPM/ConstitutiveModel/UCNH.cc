@@ -1300,7 +1300,8 @@ void UCNH::computeStressTensor(const PatchSubset* patches,
                                                             dispNew, pset, px,
                                                             pDefGrad,
                                                             pDefGrad_new,
-                                                            dx, pSize, interpolator);
+                                                            dx, pSize,
+                                                            interpolator);
       }
       else if(!flag->d_doGridReset){
         constNCVariable<Vector> gdisplacement;
@@ -1312,7 +1313,6 @@ void UCNH::computeStressTensor(const PatchSubset* patches,
                                                       dx, pSize,interpolator);
       }
 
-    
       // No "Active Stress" so don't need time
       //      double time = d_sharedState->getElapsedTime();
       for(iter = pset->begin(); iter != pset->end(); iter++){
@@ -1320,7 +1320,8 @@ void UCNH::computeStressTensor(const PatchSubset* patches,
       
         // Compute the displacement gradient and B matrices
         if(d_usePlasticity || d_useDamage){
-          interpolator->findCellAndShapeDerivatives(px[idx], ni, d_S, pSize[idx],pDefGrad[idx]);
+          interpolator->findCellAndShapeDerivatives(px[idx], ni, d_S,
+                                                    pSize[idx],pDefGrad[idx]);
       
           computeGradAndBmats(pDispGrad,ni,d_S, oodx, gDisp, l2g,B, Bnl, dof);
         }
@@ -1337,7 +1338,7 @@ void UCNH::computeStressTensor(const PatchSubset* patches,
           // Compute BeBar
           pRelDefGradBar = pDefGradInc/cbrt(pDefGradInc.Determinant());
 
-          pBeBar_new[idx] = pRelDefGradBar*pBeBar[idx]*pRelDefGradBar.Transpose();
+          pBeBar_new[idx]=pRelDefGradBar*pBeBar[idx]*pRelDefGradBar.Transpose();
         } else {
           J = pDefGrad_new[idx].Determinant();
           Matrix3 bElBar_new = pDefGrad_new[idx]
