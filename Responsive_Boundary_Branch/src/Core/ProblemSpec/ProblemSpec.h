@@ -201,9 +201,9 @@ WARNING
       void getAttributes(std::map<std::string,std::string>& value) const;
 
       //////////
-      // passes back the string associated with value of this node's
-      // attributes into result
-      bool getAttribute(const std::string& value, std::string& result) const;
+      // If 'attribute' is found, then 'result' is set to the attribute's value.  If it is not found,
+      // then 'result' is not modified.
+      bool getAttribute(const std::string& attribute, std::string& result) const;
 
       //////////
       // passes back the double value associated with value of this node's

@@ -36,6 +36,8 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Arches/ChemMix/TabPropsInterface.h>
 #include <CCA/Components/Arches/TransportEqns/EqnFactory.h>
 #include <CCA/Components/Arches/TransportEqns/EqnBase.h>
+#include <CCA/Components/Arches/PropertyModels/PropertyModelBase.h>
+#include <CCA/Components/Arches/PropertyModels/PropertyModelFactory.h>
 
 #include <CCA/Ports/Scheduler.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
@@ -52,11 +54,6 @@ DEALINGS IN THE SOFTWARE.
 
 using namespace std;
 using namespace Uintah;
-
-//--------------------------------------------------------------------------- 
-// TabPropInterface
-//--------------------------------------------------------------------------- 
-
 
 //--------------------------------------------------------------------------- 
 // Default Constructor 
@@ -87,6 +84,8 @@ TabPropsInterface::problemSetup( const ProblemSpecP& propertiesParameters )
   db_tabprops->getWithDefault( "hl_pressure", d_hl_pressure, 0.0); 
   db_tabprops->getWithDefault( "hl_outlet",   d_hl_outlet,   0.0); 
   db_tabprops->getWithDefault( "hl_scalar_init", d_hl_scalar_init, 0.0); 
+  db_tabprops->getWithDefault( "cold_flow", d_coldflow, false); 
+  db_tabprops->getWithDefault( "adiabatic", d_adiabatic, false); 
 
   // need the reference denisty point: (also in PhysicalPropteries object but this was easier than passing it around)
   const ProblemSpecP db_root = db_tabprops->getRootNode(); 
@@ -122,6 +121,7 @@ TabPropsInterface::problemSetup( const ProblemSpecP& propertiesParameters )
   proc0cout << "     Note: If sus crashes here, check to make sure your" << endl;
   proc0cout << "           <TransportEqns><eqn> names match those in the table. " << endl;
 
+  cout_tabledbg << " Creating the independent variable map " << endl;
   for ( unsigned int i = 0; i < d_allIndepVarNames.size(); ++i ){
 
     //put the right labels in the label map
@@ -130,9 +130,28 @@ TabPropsInterface::problemSetup( const ProblemSpecP& propertiesParameters )
     // !! need to add support for variance !!
     if (varName == "heat_loss") {
 
+      cout_tabledbg << " Heat loss being inserted into the indep. var map. " << endl;
+
       d_ivVarMap.insert(make_pair(varName, d_lab->d_heatLossLabel)).first; 
 
+    } else if ( varName == "scalar_variance") {
+
+      cout_tabledbg << " Scalar variance being inserted into the indep. var map. " << endl;
+
+      d_ivVarMap.insert(make_pair(varName, d_lab->d_scalarVarSPLabel)).first; 
+
+    } else if ( varName == "DissipationRate") {
+
+      cout_tabledbg << " Scalar dissipation rate being inserted into the indep. var map. " << endl;
+
+      // dissipation rate comes from a property model 
+      PropertyModelFactory& prop_factory = PropertyModelFactory::self(); 
+      PropertyModelBase& prop = prop_factory.retrieve_property_model( "scalar_dissipation_rate");
+      d_ivVarMap.insert( make_pair( varName, prop.getPropLabel()) ).first; 
+
     } else {
+
+      cout_tabledbg << " Variable: " << varName << " being inserted into the indep. var map"<< endl; 
 
       // then it must be a mixture fraction 
       EqnFactory& eqn_factory = EqnFactory::self();
@@ -183,13 +202,15 @@ TabPropsInterface::sched_getState( const LevelP& level,
       tsk->computes( i->second ); 
     }
 
-    // other dependent vars:
     tsk->computes( d_lab->d_drhodfCPLabel ); // I don't think this is used anywhere...maybe in coldflow? 
-    tsk->computes( d_lab->d_tempINLabel ); // lame ... fix me
-    tsk->computes( d_lab->d_cpINLabel ); 
-    tsk->computes( d_lab->d_co2INLabel ); 
-    tsk->computes( d_lab->d_h2oINLabel ); 
-    tsk->computes( d_lab->d_sootFVINLabel ); 
+    if (!d_coldflow) { 
+    // other dependent vars:
+      tsk->computes( d_lab->d_tempINLabel ); // lame ... fix me
+      tsk->computes( d_lab->d_cpINLabel ); 
+      tsk->computes( d_lab->d_co2INLabel ); 
+      tsk->computes( d_lab->d_h2oINLabel ); 
+      tsk->computes( d_lab->d_sootFVINLabel ); 
+    }
 
     if (d_MAlab)
       tsk->computes( d_lab->d_densityMicroLabel ); 
@@ -200,13 +221,15 @@ TabPropsInterface::sched_getState( const LevelP& level,
       tsk->modifies( i->second ); 
     }
 
-    // other dependent vars:
     tsk->modifies( d_lab->d_drhodfCPLabel ); // I don't think this is used anywhere...maybe in coldflow? 
-    tsk->modifies( d_lab->d_tempINLabel );     // lame .... fix me
-    tsk->modifies( d_lab->d_cpINLabel ); 
-    tsk->modifies( d_lab->d_co2INLabel ); 
-    tsk->modifies( d_lab->d_h2oINLabel ); 
-    tsk->modifies( d_lab->d_sootFVINLabel ); 
+    if (!d_coldflow) { 
+      // other dependent vars:
+      tsk->modifies( d_lab->d_tempINLabel );     // lame .... fix me
+      tsk->modifies( d_lab->d_cpINLabel ); 
+      tsk->modifies( d_lab->d_co2INLabel ); 
+      tsk->modifies( d_lab->d_h2oINLabel ); 
+      tsk->modifies( d_lab->d_sootFVINLabel ); 
+    }
 
     if (d_MAlab)
       tsk->modifies( d_lab->d_densityMicroLabel ); 
@@ -282,23 +305,26 @@ TabPropsInterface::getState( const ProcessorGroup* pc,
       CCVariable<double> drho_df; 
 
       new_dw->allocateAndPut( drho_df, d_lab->d_drhodfCPLabel, matlIndex, patch ); 
-      new_dw->allocateAndPut( arches_temperature, d_lab->d_tempINLabel, matlIndex, patch ); 
-      new_dw->allocateAndPut( arches_cp, d_lab->d_cpINLabel, matlIndex, patch ); 
-      new_dw->allocateAndPut( arches_co2, d_lab->d_co2INLabel, matlIndex, patch ); 
-      new_dw->allocateAndPut( arches_h2o, d_lab->d_h2oINLabel, matlIndex, patch ); 
-      new_dw->allocateAndPut( arches_soot, d_lab->d_sootFVINLabel, matlIndex, patch ); 
+      if (!d_coldflow) { 
+        new_dw->allocateAndPut( arches_temperature, d_lab->d_tempINLabel, matlIndex, patch ); 
+        new_dw->allocateAndPut( arches_cp, d_lab->d_cpINLabel, matlIndex, patch ); 
+        new_dw->allocateAndPut( arches_co2, d_lab->d_co2INLabel, matlIndex, patch ); 
+        new_dw->allocateAndPut( arches_h2o, d_lab->d_h2oINLabel, matlIndex, patch ); 
+        new_dw->allocateAndPut( arches_soot, d_lab->d_sootFVINLabel, matlIndex, patch ); 
+      }
       if (d_MAlab) {
         new_dw->allocateAndPut( mpmarches_denmicro, d_lab->d_densityMicroLabel, matlIndex, patch ); 
         mpmarches_denmicro.initialize(0.0);
       }
 
       drho_df.initialize(0.0);  // this variable might not be actually used anywhere any may just be polution  
-      arches_temperature.initialize(0.0); 
-      arches_cp.initialize(0.0); 
-      arches_co2.initialize(0.0); 
-      arches_h2o.initialize(0.0);
-      arches_soot.initialize(0.0); 
-
+      if ( !d_coldflow ) { 
+        arches_temperature.initialize(0.0); 
+        arches_cp.initialize(0.0); 
+        arches_co2.initialize(0.0); 
+        arches_h2o.initialize(0.0);
+        arches_soot.initialize(0.0); 
+      }
 
     } else { 
 
@@ -314,11 +340,13 @@ TabPropsInterface::getState( const ProcessorGroup* pc,
       // others:
       CCVariable<double> drho_dw; 
       new_dw->getModifiable( drho_dw, d_lab->d_drhodfCPLabel, matlIndex, patch ); 
-      new_dw->getModifiable( arches_temperature, d_lab->d_tempINLabel, matlIndex, patch ); 
-      new_dw->getModifiable( arches_cp, d_lab->d_cpINLabel, matlIndex, patch ); 
-      new_dw->getModifiable( arches_co2, d_lab->d_co2INLabel, matlIndex, patch ); 
-      new_dw->getModifiable( arches_h2o, d_lab->d_h2oINLabel, matlIndex, patch ); 
-      new_dw->getModifiable( arches_soot, d_lab->d_sootFVINLabel, matlIndex, patch ); 
+      if (!d_coldflow) { 
+        new_dw->getModifiable( arches_temperature, d_lab->d_tempINLabel, matlIndex, patch ); 
+        new_dw->getModifiable( arches_cp, d_lab->d_cpINLabel, matlIndex, patch ); 
+        new_dw->getModifiable( arches_co2, d_lab->d_co2INLabel, matlIndex, patch ); 
+        new_dw->getModifiable( arches_h2o, d_lab->d_h2oINLabel, matlIndex, patch ); 
+        new_dw->getModifiable( arches_soot, d_lab->d_sootFVINLabel, matlIndex, patch ); 
+      }
       if (d_MAlab) 
         new_dw->getModifiable( mpmarches_denmicro, d_lab->d_densityMicroLabel, matlIndex, patch ); 
     }
@@ -347,13 +375,14 @@ TabPropsInterface::getState( const ProcessorGroup* pc,
           arches_density[c] = table_value; 
           if (d_MAlab)
             mpmarches_denmicro[c] = table_value; 
-        } else if (i->first == "temperature") {
+        } else if (i->first == "temperature" && !d_coldflow) {
           arches_temperature[c] = table_value; 
-        } else if (i->first == "heat_capacity") {
+        //} else if (i->first == "heat_capacity" && !d_coldflow) {
+        } else if (i->first == "specificheat" && !d_coldflow) {
           arches_cp[c] = table_value; 
-        } else if (i->first == "CO2") {
+        } else if (i->first == "CO2" && !d_coldflow) {
           arches_co2[c] = table_value; 
-        } else if (i->first == "H2O") {
+        } else if (i->first == "H2O" && !d_coldflow) {
           arches_h2o[c] = table_value; 
         }
 
@@ -445,50 +474,60 @@ TabPropsInterface::computeHeatLoss( const ProcessorGroup* pc,
     std::vector<constCCVariable<double> > the_variables; 
     const std::vector<string>& iv_names = getAllIndepVars();
 
-    for ( int i = 0; i < (int) iv_names.size(); i++ ){
+    // exceptions for cold flow or adiabatic cases
+    bool compute_heatloss = true; 
+    if ( d_coldflow ) 
+      compute_heatloss = false; 
+    if ( d_adiabatic ) 
+      compute_heatloss = false; 
 
-      VarMap::iterator ivar = d_ivVarMap.find( iv_names[i] ); 
-      if ( ivar->first != "heat_loss" ){
-        constCCVariable<double> test_Var; 
-        new_dw->get( test_Var, ivar->second, matlIndex, patch, gn, 0 );  
+    if ( compute_heatloss ) { 
 
-        the_variables.push_back( test_Var ); 
-      } else {
-        constCCVariable<double> a_null_var; 
-        the_variables.push_back( a_null_var ); // to preserve the total number of IV otherwise you will have problems below
-      }
-    }
+      for ( int i = 0; i < (int) iv_names.size(); i++ ){
 
-    for (CellIterator iter=patch->getCellIterator(0); !iter.done(); iter++){
-      IntVector c = *iter; 
+        VarMap::iterator ivar = d_ivVarMap.find( iv_names[i] ); 
+        if ( ivar->first != "heat_loss" ){
+          constCCVariable<double> test_Var; 
+          new_dw->get( test_Var, ivar->second, matlIndex, patch, gn, 0 );  
 
-      vector<double> iv; 
-      int index = 0; 
-      for ( std::vector<constCCVariable<double> >::iterator i = the_variables.begin(); i != the_variables.end(); i++){
-
-        if ( d_allIndepVarNames[index] != "heat_loss" ) 
-          iv.push_back( (*i)[c] );
-        else 
-          iv.push_back( 0.0 ); 
-
-        index++; 
+          the_variables.push_back( test_Var ); 
+        } else {
+          constCCVariable<double> a_null_var; 
+          the_variables.push_back( a_null_var ); // to preserve the total number of IV otherwise you will have problems below
+        }
       }
 
-      // actually compute the heat loss: 
-      double sensible_enthalpy  = getSingleState( "sensible_heat", iv ); 
-      double adiabatic_enthalpy = getSingleState( "adiabatic_enthalpy", iv );  
-      double current_heat_loss  = 0.0;
-      double small = 1e-10; 
-      if ( calcEnthalpy )
-        current_heat_loss = ( adiabatic_enthalpy - enthalpy[c] ) / ( sensible_enthalpy + small ); 
+      for (CellIterator iter=patch->getCellIterator(0); !iter.done(); iter++){
+        IntVector c = *iter; 
 
-      if ( current_heat_loss < -1.0 )
-        current_heat_loss = -1.0; 
-      else if ( current_heat_loss > 1.0 ) 
-        current_heat_loss = 1.0; 
+        vector<double> iv; 
+        int index = 0; 
+        for ( std::vector<constCCVariable<double> >::iterator i = the_variables.begin(); i != the_variables.end(); i++){
 
-      heat_loss[c] = current_heat_loss; 
+          if ( d_allIndepVarNames[index] != "heat_loss" ) 
+            iv.push_back( (*i)[c] );
+          else 
+            iv.push_back( 0.0 ); 
 
+          index++; 
+        }
+
+        // actually compute the heat loss: 
+        double sensible_enthalpy  = getSingleState( "sensibleenthalpy", iv ); 
+        double adiabatic_enthalpy = getSingleState( "adiabaticenthalpy", iv );  
+        double current_heat_loss  = 0.0;
+        double small = 1e-10; 
+        if ( calcEnthalpy )
+          current_heat_loss = ( adiabatic_enthalpy - enthalpy[c] ) / ( sensible_enthalpy + small ); 
+
+        if ( current_heat_loss < -1.0 )
+          current_heat_loss = -1.0; 
+        else if ( current_heat_loss > 1.0 ) 
+          current_heat_loss = 1.0; 
+
+        heat_loss[c] = current_heat_loss; 
+
+      }
     }
   }
 }
@@ -531,6 +570,8 @@ TabPropsInterface::computeFirstEnthalpy( const ProcessorGroup* pc,
 
   for (int p=0; p < patches->size(); p++){
 
+    cout_tabledbg << " In TabPropsInterface::getFirstEnthalpy " << endl;
+
     Ghost::GhostType gn = Ghost::None; 
     const Patch* patch = patches->get(p); 
     int archIndex = 0; 
@@ -543,6 +584,8 @@ TabPropsInterface::computeFirstEnthalpy( const ProcessorGroup* pc,
     for ( VarMap::iterator i = d_ivVarMap.begin(); i != d_ivVarMap.end(); i++ ){
 
       if ( i->first != "heat_loss" ){ // heat loss hasn't been computed yet so this is why we have an "if" here. 
+        
+        cout_tabledbg << " Found label =  " << i->first <<  endl;
         constCCVariable<double> test_Var; 
         new_dw->get( test_Var, i->second, matlIndex, patch, gn, 0 );  
 
@@ -561,7 +604,8 @@ TabPropsInterface::computeFirstEnthalpy( const ProcessorGroup* pc,
       for ( std::vector<constCCVariable<double> >::iterator i = the_variables.begin(); i != the_variables.end(); i++){
 
         if ( d_allIndepVarNames[index] != "heat_loss" ) 
-          iv.push_back( (*i)[c] );
+          //iv.push_back( (*i)[c] ); // <--- I am not sure how this worked before. 
+          iv.push_back(0.0);
         else 
           iv.push_back( d_hl_scalar_init ); 
 
@@ -569,8 +613,8 @@ TabPropsInterface::computeFirstEnthalpy( const ProcessorGroup* pc,
       }
 
       double current_heat_loss = d_hl_scalar_init; // may want to make this more sophisticated later(?)
-      double sensible_enthalpy = getSingleState( "sensible_heat", iv ); 
-      double adiab_enthalpy    = getSingleState( "adiabatic_enthalpy", iv ); 
+      double sensible_enthalpy = getSingleState( "sensibleenthalpy", iv ); 
+      double adiab_enthalpy    = getSingleState( "adiabaticenthalpy", iv ); 
       enthalpy[c]     = adiab_enthalpy - current_heat_loss * sensible_enthalpy; 
 
     }
@@ -584,6 +628,8 @@ void
 TabPropsInterface::oldTableHack( const InletStream& inStream, Stream& outStream, bool calcEnthalpy, const string bc_type )
 {
 
+  cout_tabledbg << " In method TabPropsInterface::OldTableHack " << endl;
+
   //This is a temporary hack to get the table stuff working with the new interface
   const std::vector<string>& iv_names = getAllIndepVars();
   std::vector<double> iv(iv_names.size());
@@ -593,7 +639,7 @@ TabPropsInterface::oldTableHack( const InletStream& inStream, Stream& outStream,
 
   for ( int i = 0; i < (int) iv_names.size(); i++){
 
-    if ( (iv_names[i] == "mixture_fraction") || (iv_names[i] == "coal_gas_mix_frac")){
+    if ( (iv_names[i] == "mixture_fraction") || (iv_names[i] == "coal_gas_mix_frac") || (iv_names[i] == "MixtureFraction")){
       iv[i] = inStream.d_mixVars[0]; 
     } else if (iv_names[i] == "mixture_fraction_variance") {
       iv[i] = 0.0;
@@ -635,8 +681,8 @@ TabPropsInterface::oldTableHack( const InletStream& inStream, Stream& outStream,
     double enthalpy          = 0.0; 
     double sensible_enthalpy = 0.0; 
 
-    sensible_enthalpy = getSingleState( "sensible_heat", iv ); 
-    adiab_enthalpy    = getSingleState( "adiabatic_enthalpy", iv ); 
+    sensible_enthalpy = getSingleState( "sensibleenthalpy", iv ); 
+    adiab_enthalpy    = getSingleState( "adiabaticenthalpy", iv ); 
 
     enthalpy          = inStream.d_enthalpy; 
 
@@ -666,14 +712,18 @@ TabPropsInterface::oldTableHack( const InletStream& inStream, Stream& outStream,
 
   }
 
-  outStream.d_temperature = getSingleState( "temperature", iv ); 
   outStream.d_density     = getSingleState( "density", iv ); 
-  outStream.d_cp          = getSingleState( "heat_capacity", iv ); 
-  outStream.d_h2o         = getSingleState( "H2O", iv); 
-  outStream.d_co2         = getSingleState( "CO2", iv);
-  outStream.d_heatLoss    = current_heat_loss; 
-  if (inStream.d_initEnthalpy) outStream.d_enthalpy = init_enthalpy; 
+  if (!d_coldflow) { 
+    outStream.d_temperature = getSingleState( "temperature", iv ); 
+    //outStream.d_cp          = getSingleState( "heat_capacity", iv ); 
+    outStream.d_cp          = getSingleState( "specificheat", iv ); 
+    outStream.d_h2o         = getSingleState( "H2O", iv); 
+    outStream.d_co2         = getSingleState( "CO2", iv);
+    outStream.d_heatLoss    = current_heat_loss; 
+    if (inStream.d_initEnthalpy) outStream.d_enthalpy = init_enthalpy; 
+  }
 
+  cout_tabledbg << " Leaving method TabPropsInterface::OldTableHack " << endl;
 }
 
 //--------------------------------------------------------------------------- 
@@ -738,6 +788,7 @@ TabPropsInterface::sched_dummyInit( const LevelP& level,
   // dependent variables
   for ( MixingRxnModel::VarMap::iterator i = d_dvVarMap.begin(); i != d_dvVarMap.end(); ++i ) {
       tsk->computes( i->second ); 
+      tsk->requires( Task::OldDW, i->second, Ghost::None, 0 ); 
   }
 
   sched->addTask( tsk, level->eachPatch(), d_lab->d_sharedState->allArchesMaterials() ); 
@@ -763,10 +814,13 @@ TabPropsInterface::dummyInit( const ProcessorGroup* pc,
 
     // dependent variables:
     for ( VarMap::iterator i = d_dvVarMap.begin(); i != d_dvVarMap.end(); ++i ){
-     
+    
+      cout_tabledbg << " In TabProps::dummyInit, getting " << i->first << " for initializing. " << endl;
       CCVariable<double>* the_var = new CCVariable<double>; 
       new_dw->allocateAndPut( *the_var, i->second, matlIndex, patch ); 
       (*the_var).initialize(0.0);
+      constCCVariable<double> old_var; 
+      old_dw->get(old_var, i->second, matlIndex, patch, Ghost::None, 0 ); 
       
     }
   }

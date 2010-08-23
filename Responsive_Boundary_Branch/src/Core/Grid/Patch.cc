@@ -2,7 +2,7 @@
 
 The MIT License
 
-Copyright (c) 1997-2009 Center for the Simulation of Accidental Fires and 
+Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
 Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 University of Utah.
 
@@ -822,7 +822,7 @@ Patch::getEdgeCellIterator(const FaceType& face0,
 
   //the bounds of the patch iterators
   IntVector patchLow, patchHigh;
-  IntVector patchExtraLow, patchExtraHigh;
+  IntVector patchExtraLow(0,0,0), patchExtraHigh(0,0,0);
 
   //determine the correct query functions
   switch(type)
@@ -881,6 +881,13 @@ Patch::getEdgeCellIterator(const FaceType& face0,
        
       break;
     default:
+
+      //set these values to quiet a compiler warning about unintialized variables
+      patchLow=IntVector(0,0,0);
+      patchHigh=IntVector(0,0,0);
+      patchExtraLow=IntVector(0,0,0);
+      patchExtraHigh=IntVector(0,0,0);
+
       throw SCIRun::InternalError("Invalid EdgeIteratorType Specified", __FILE__, __LINE__);
   };
   vector<IntVector>loPt(2), hiPt(2); 

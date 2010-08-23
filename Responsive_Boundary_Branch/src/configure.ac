@@ -116,6 +116,16 @@ AC_COPYRIGHT(
 ##
 WOFF_NUMBERS=
 
+##
+## Used to store warnings that should be redisplayed to the user at the
+## end of configure in hopes that the user actually sees them.  Note, 
+## the syntax and use of IMPORTANT_WARNINGS is somewhat picky.  See the
+## 'Check for 64 vs 80 bit floating point number' section below for an
+## example of its use.  (Make sure to increment NUM_IMPORTANT_WARNINGS.)
+##
+declare -a IMPORTANT_WARNINGS
+NUM_IMPORTANT_WARNINGS=0
+
 ## Clean up files that could be left around if configure was 
 ## interrupted (by control-c, ^c) because I do not know how to add
 ## cleanup to the builtin AC function that uses the 'trap' command.
@@ -1018,6 +1028,55 @@ AC_SUBST(MALLOC_TRACE_LIB_FLAG)
 AC_SUBST(MALLOC_TRACE_LIB_DIR_FLAG)
 AC_SUBST(MALLOC_TRACE_LIB_MPI_FLAG)
 
+##  --  Check for 64 vs 80 bit floating point number storage in register precission error ------------------------
+
+# In other words, the processor may use 80 bit floating point number registers, and as long as the
+# data is kept on the processor (in registers) then you get extra precission... however, as soon as
+# the number is stored to memory, it is truncated back to fewer (64?) bits.  At this point, it is possible
+# for the original floating pointloatingpoint number to not compare with itself (ie, if the register data
+# happens to stay around, and the 'old' value is loaded back from memory and then compared to the register).
+# This can cause some very strange and hard to track down errors in the code.  To turn this off, gnu
+# provides the -ffloat-store compiler argument.
+
+# WARNING: The following test case was created by Justin Luitjens.  It seems to work, and I can't 
+# come up with a better version, but I am not convinced that it will catch the problem in all cases...
+
+cat > conftest-fpr.cc <<EOF
+
+#include <iostream>
+
+int main()
+{
+  double a=1;
+  double b=.01;
+
+  int c=a/b;
+  return c != 100; // Shell return codes are backward in that 0 == success, thus the '!='.
+}
+EOF
+
+$CXX $CXXFLAGS conftest-fpr.cc -o conftest-fpr
+./conftest-fpr
+if test $? != 0; then
+   AC_MSG_WARN( ----------------------------------------------------------------------------------------- )
+   AC_MSG_WARN( Floating point - usually 64 vs 80 bit - register precission problem detected. )
+   AC_MSG_WARN( Disabling use of floating point registers with '-ffloat-store' compiler flag. )
+   AC_MSG_WARN( ----------------------------------------------------------------------------------------- )
+   # Note: need '[[' below to get autoconf to create a single '[' in the actual configure file.
+   IMPORTANT_WARNINGS[[$NUM_IMPORTANT_WARNINGS]]="Automatically added -ffloat-store compiler option to C/CXXFLAGS."
+   ((NUM_IMPORTANT_WARNINGS++))
+   CFLAGS="$CFLAGS -ffloat-store"
+   CXXFLAGS="$CXXFLAGS -ffloat-store"
+   # Verify that the compiler accepts the -ffloat-store flag:
+   $CXX $CXXFLAGS conftest-fpr.cc -o conftest-fpr 2>&5
+   if test $? != 0; then
+      rm -f conftest-fpr conftest-fpr.cc
+      AC_MSG_ERROR( Tried to add the -ffloat-store flag but the compiler ($CXX) failed to accept it...\nSee 'WARNING' message above. )
+   fi
+fi
+
+rm -f conftest-fpr conftest-fpr.cc
+
 ##  --  search for Zoltan ------------------------
 
 if test "$with_zoltan"; then
@@ -1791,6 +1850,21 @@ if test "$with_visit"; then
       AC_MSG_ERROR( VisIt requires CMake. Please make sure 'cmake' is in your path!)
    fi
 
+   if test "$with_visit" == "yes"; then 
+      AC_MSG_ERROR( You must provide a DIRECTORY when using --with-visit=DIR. )
+   fi
+   if ! test -f "$with_visit/bin/xml2cmake"; then 
+      AC_MSG_ERROR( Could not find xml2cmake in $with_visit/bin/... )
+   fi
+
+   if test -f "./VisIt/udaReaderMTMD/Makefile.visit"; then
+      old_visit_dir=`grep TOPDIR ./VisIt/udaReaderMTMD/Makefile.visit`
+      if test "$old_visit_dir" != "TOPDIR=$with_visit/src"; then
+      	 AC_MSG_WARN(VisIt target directory has changed - removing old VisIt build directory...)
+	 rm -rf ./VisIt
+      fi
+   fi
+
    CMAKE_LOCATION=`which cmake`
 
    # Verify that cmake is new enough:
@@ -1811,21 +1885,6 @@ if test "$with_visit"; then
       AC_MSG_ERROR(CMake must be version 2.8 or better.  $CMAKE_LOCATION is version $CMAKE_VERSION_STRING.)
    elif test "$CMAKE_VERSION_MINOR" -lt 8; then
       AC_MSG_ERROR(CMake must be version 2.8 or better.  $CMAKE_LOCATION is version $CMAKE_VERSION_STRING.)
-   fi
-
-   if test "$with_visit" == "yes"; then 
-      AC_MSG_ERROR( You must provide a DIRECTORY when using --with-visit=DIR. )
-   fi
-   if ! test -f "$with_visit/bin/xml2cmake"; then 
-      AC_MSG_ERROR( Could not find xml2cmake in $with_visit/bin/... )
-   fi
-
-   if test -f "./VisIt/udaReaderMTMD/Makefile.visit"; then
-      old_visit_dir=`grep TOPDIR ./VisIt/udaReaderMTMD/Makefile.visit`
-      if test "$old_visit_dir" != "TOPDIR=$with_visit/src"; then
-      	 AC_MSG_WARN(VisIt target directory has changed - removing old VisIt build directory)
-	 rm -rf ./VisIt
-      fi
    fi
 
    sci_defs_files="$sci_defs_files VisIt/udaReaderMTMD/avtudaReaderMTMDFileFormat.C"
@@ -3703,6 +3762,24 @@ for testfile in $sci_defs_files; do
 
   fi
 done
+
+###############
+## Re-display any IMPORTANT_WARNINGS that have been collected during configure in hopes
+## that the user actually sees them.
+
+if (( $NUM_IMPORTANT_WARNINGS > 0 )); then
+
+   echo ""
+   echo "NOTE: Some IMPORTANT WARNINGS were generated during configuration.  A summary of"
+   echo "these messages is presented below:"
+   echo
+
+   # Note: need '[[' below to get autoconf to create a single '[' in the actual configure file.
+   for (( i=0; i < $NUM_IMPORTANT_WARNINGS; i++ )); do
+      echo " - " ${IMPORTANT_WARNINGS[[${i}]]}
+   done
+   echo
+fi
 
 #### Clean up: ####
 ## Possible temporary template directories

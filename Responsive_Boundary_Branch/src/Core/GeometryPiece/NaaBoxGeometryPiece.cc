@@ -2,7 +2,7 @@
 
 The MIT License
 
-Copyright (c) 1997-2009 Center for the Simulation of Accidental Fires and 
+Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
 Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 University of Utah.
 
@@ -51,7 +51,14 @@ const string NaaBoxGeometryPiece::TYPE_NAME = "parallelepiped";
 
 NaaBoxGeometryPiece::NaaBoxGeometryPiece(ProblemSpecP& ps)
 {
-  name_ = "Unnamed " + TYPE_NAME + " from PS";
+  string gp_label = "Unamed";
+
+  if( !ps->getAttribute( "label", gp_label ) ) {
+    // "label" and "name" are both used... so check for "label" first, and if it isn't found, then check for "name".
+    ps->getAttribute( "name", gp_label );
+  }
+
+  name_ = gp_label + " " + TYPE_NAME + " from PS";
 
   Point p1, p2, p3, p4;
   ps->require("p1", p1);
@@ -91,6 +98,20 @@ NaaBoxGeometryPiece::init( const Point& p1,
   Point p5 = p1 + (p2minusP1 + p3minusP1 + p4minusP1);
 
   boundingBox_ = Box( p1, p5 );
+
+  if( boundingBox_.degenerate() ) {
+    // 1st point must be '<' second point, so flip them.
+    boundingBox_.fixBoundingBox();
+    if( boundingBox_.degenerate() ) {
+      // If there are still problems, throw an exception...
+
+      std::ostringstream error;
+      error << "NaaBoxGeometryPiece.cc: boundingBox_ for '" + name_ + "' is degenerate..." << boundingBox_ << "\n";
+      error << "See src/Core/GeometryPiece/NaaBoxGeometryPiece.h or the Users Guide for details\n";
+
+      throw ProblemSetupException( error.str(), __FILE__, __LINE__ );
+    }
+  }
 
   dbg << "Creating NaaBoxx with BBox of: " << boundingBox_ << "\n";
 

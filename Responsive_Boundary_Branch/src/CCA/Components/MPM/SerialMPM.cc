@@ -76,10 +76,8 @@ DEALINGS IN THE SOFTWARE.
 #include <sstream>
 
 
-#define USL
-//#undef USL
-//#define MOM_FORM
-#undef MOM_FORM
+//#define USL
+#undef USL
 
 using namespace Uintah;
 
@@ -620,9 +618,9 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
   scheduleExMomIntegrated(                sched, patches, matls);
   scheduleSetGridBoundaryConditions(      sched, patches, matls);
   scheduleSetPrescribedMotion(            sched, patches, matls);
-#ifdef USL
-  scheduleComputeStressTensor(            sched, patches, matls);
-#endif
+  if(!flags->d_use_momentum_form){
+    scheduleComputeStressTensor(          sched, patches, matls);
+  }
   if(flags->d_doExplicitHeatConduction){
     scheduleComputeHeatExchange(          sched, patches, matls);
     scheduleComputeInternalHeatRate(      sched, patches, matls);
@@ -632,15 +630,17 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
   }
   scheduleAddNewParticles(                sched, patches, matls);
   scheduleConvertLocalizedParticles(      sched, patches, matls);
-#ifdef USL
-  scheduleInterpolateToParticlesAndUpdate(sched, patches, matls);
-#endif
-#ifdef MOM_FORM
-  scheduleInterpolateToParticlesAndUpdateMom1(sched, patches, matls);
-  scheduleInterpolateParticleVelToGridMom(    sched, patches, matls);
-  scheduleComputeStressTensor(                sched, patches, matls);
-  scheduleInterpolateToParticlesAndUpdateMom2(sched, patches, matls);
-#endif
+  if(!flags->d_use_momentum_form){
+    scheduleInterpolateToParticlesAndUpdate(sched, patches, matls);
+  }
+  if(flags->d_use_momentum_form){
+    scheduleInterpolateToParticlesAndUpdateMom1(sched, patches, matls);
+    scheduleInterpolateParticleVelToGridMom(    sched, patches, matls);
+    scheduleExMomIntegrated(                    sched, patches, matls);
+    scheduleSetGridBoundaryConditions(          sched, patches, matls);
+    scheduleComputeStressTensor(                sched, patches, matls);
+    scheduleInterpolateToParticlesAndUpdateMom2(sched, patches, matls);
+  }
   scheduleInsertParticles(                    sched, patches, matls);
 
   if(flags->d_canAddMPMMaterial){
@@ -1362,9 +1362,7 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdateMom1(SchedulerP& sched,
   t->requires(Task::OldDW, lb->pVelocityLabel,                  gnone);
   t->requires(Task::OldDW, lb->pSizeLabel,                      gnone);
   t->requires(Task::OldDW, lb->pErosionLabel,                   gnone);
-
-  t->requires(Task::OldDW, lb->pDeformationMeasureLabel,   gnone);
-
+  t->requires(Task::OldDW, lb->pDeformationMeasureLabel,        gnone);
 
   t->computes(lb->pVelocityLabel_preReloc);
   t->computes(lb->pXLabel_preReloc);
@@ -1377,7 +1375,6 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdateMom1(SchedulerP& sched,
 void SerialMPM::scheduleInterpolateToParticlesAndUpdateMom2(SchedulerP& sched,
                                                        const PatchSet* patches,
                                                        const MaterialSet* matls)
-
 {
   if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(),
                            getLevel(patches)->getGrid()->numLevels()))
@@ -1400,17 +1397,17 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdateMom2(SchedulerP& sched,
   t->requires(Task::OldDW, lb->pParticleIDLabel,                gnone);
   t->requires(Task::OldDW, lb->pTemperatureLabel,               gnone);
   t->requires(Task::OldDW, lb->pSizeLabel,                      gnone);
+  t->requires(Task::OldDW, lb->pDeformationMeasureLabel,        gnone);
   t->requires(Task::NewDW, lb->pdTdtLabel_preReloc,             gnone);
   t->requires(Task::NewDW, lb->pErosionLabel_preReloc,          gnone);
-  t->modifies(lb->pVolumeLabel_preReloc);
-
-  t->requires(Task::OldDW, lb->pDeformationMeasureLabel,   gnone);
-
+  t->requires(Task::NewDW, lb->pLocalizedMPMLabel,              gnone);
 
   if(flags->d_with_ice){
     t->requires(Task::NewDW, lb->dTdt_NCLabel,         gac,NGN);
     t->requires(Task::NewDW, lb->massBurnFractionLabel,gac,NGN);
   }
+
+  t->modifies(lb->pVolumeLabel_preReloc);
 
   t->computes(lb->pParticleIDLabel_preReloc);
   t->computes(lb->pTemperatureLabel_preReloc);
@@ -1431,6 +1428,12 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdateMom2(SchedulerP& sched,
   }
   if(flags->d_reductionVars->momentum){
     t->computes(lb->TotalMomentumLabel);
+  }
+  if(flags->d_reductionVars->mass){
+    t->computes(lb->TotalMassLabel);
+  }
+  if(flags->d_reductionVars->volDeformed){
+    t->computes(lb->TotalVolumeDeformedLabel);
   }
 
   // debugging scalar
@@ -1545,6 +1548,7 @@ void SerialMPM::scheduleInterpolateParticleVelToGridMom(SchedulerP& sched,
   t->requires(Task::OldDW, lb->pXLabel,                 gan,NGP);
   t->requires(Task::OldDW, lb->pErosionLabel,           gan,NGP);
   t->requires(Task::OldDW, lb->pSizeLabel,              gan,NGP);
+  t->requires(Task::OldDW, lb->pDeformationMeasureLabel,gan,NGP);
 
   t->requires(Task::NewDW, lb->gMassLabel,          Ghost::None);
   t->modifies(lb->gVelocityStarLabel);
@@ -2461,7 +2465,7 @@ void SerialMPM::findRogueParticles(const ProcessorGroup*,
           // If the localized particles are sufficiently isolated, set
           // a flag for deletion in interpolateToParticlesAndUpdate
           if (numLocInCell[c]<=3 && totalInCells<=3) {
-              isLocalized[*iter]=2;
+              isLocalized[*iter]=-999;
           }
         }  // if localized
       }  // particles
@@ -3678,7 +3682,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
                                    iter != pset->end(); iter++){
         particleIndex idx = *iter;
         if ((pmassNew[idx] <= flags->d_min_part_mass) || pTempNew[idx] < 0. ||
-             (pLocalized[idx]==2)){
+             (pLocalized[idx]==-999)){
           delset->addParticle(idx);
 //        cout << "Material = " << m << " Deleted Particle = " << idx 
 //             << " xold = " << px[idx] << " xnew = " << pxnew[idx]
@@ -3895,6 +3899,8 @@ void SerialMPM::interpolateToParticlesAndUpdateMom2(const ProcessorGroup*,
 
     // DON'T MOVE THESE!!!
     double thermal_energy = 0.0;
+    double totalmass = 0;
+    double partvoldef = 0.;
     int numMPMMatls=d_sharedState->getNumMPMMatls();
     delt_vartype delT;
     old_dw->get(delT, d_sharedState->get_delt_label(), getLevel(patches) );
@@ -3920,6 +3926,7 @@ void SerialMPM::interpolateToParticlesAndUpdateMom2(const ProcessorGroup*,
       constParticleVariable<long64> pids;
       ParticleVariable<long64> pids_new;
       constParticleVariable<double> pErosion;
+      constParticleVariable<int> pLocalized;
       constParticleVariable<Matrix3> pDeformationMeasure;
 
       // for thermal stress analysis
@@ -3941,6 +3948,7 @@ void SerialMPM::interpolateToParticlesAndUpdateMom2(const ProcessorGroup*,
       old_dw->get(pDeformationMeasure, lb->pDeformationMeasureLabel, pset);
 
       new_dw->getModifiable(pvolume,  lb->pVolumeLabel_preReloc,     pset);
+      new_dw->get(pLocalized,         lb->pLocalizedMPMLabel,        pset);
 
       new_dw->allocateAndPut(pmassNew,     lb->pMassLabel_preReloc,       pset);
       new_dw->allocateAndPut(pids_new,     lb->pParticleIDLabel_preReloc, pset);
@@ -4049,7 +4057,8 @@ void SerialMPM::interpolateToParticlesAndUpdateMom2(const ProcessorGroup*,
       for(ParticleSubset::iterator iter  = pset->begin();
                                    iter != pset->end(); iter++){
         particleIndex idx = *iter;
-        if ((pmassNew[idx] <= flags->d_min_part_mass) || pTempNew[idx] < 0. ){
+        if ((pmassNew[idx] <= flags->d_min_part_mass) || pTempNew[idx] < 0. ||
+             (pLocalized[idx]==-999)){
           delset->addParticle(idx);
 //        cout << "Material = " << m << " Deleted Particle = " << idx 
 //             << " xold = " << px[idx] << " xnew = " << pxnew[idx]
@@ -4074,9 +4083,14 @@ void SerialMPM::interpolateToParticlesAndUpdateMom2(const ProcessorGroup*,
     }
 
     // DON'T MOVE THESE!!!
-    
     //__________________________________
     //  reduction variables
+    if(flags->d_reductionVars->mass){
+      new_dw->put(sum_vartype(totalmass),      lb->TotalMassLabel);
+    }
+    if(flags->d_reductionVars->volDeformed){
+      new_dw->put(sum_vartype(partvoldef),     lb->TotalVolumeDeformedLabel);
+    }
     if(flags->d_reductionVars->thermalEnergy){
       new_dw->put(sum_vartype(thermal_energy), lb->ThermalEnergyLabel);
     }
@@ -4415,8 +4429,7 @@ void SerialMPM::interpolateParticleVelToGridMom(const ProcessorGroup*,
         gvelocity_star[c]      /= gmass[c];
       }
 
-      MPMBoundCond bc;
-      bc.setBoundaryCondition(patch,dwi,"Velocity", gvelocity_star,interp_type);
+//    setGridBoundaryConditions handles the BCs for gvelocity_star
     }  // end of materials loop
 
     delete interpolator;

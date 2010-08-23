@@ -177,7 +177,7 @@ MPMPetscSolver::createLocalToGlobalMapping(const ProcessorGroup* d_myworld,
     const PatchSubset* patchsub = perproc_patches->getSubset(p);
     for (int ps = 0; ps<patchsub->size(); ps++) {
       const Patch* patch = patchsub->get(ps);
-      IntVector plowIndex,phighIndex;
+      IntVector plowIndex(0,0,0),phighIndex(0,0,0);
       if(n8or27==8){
         plowIndex = patch->getNodeLowIndex();
         phighIndex = patch->getNodeHighIndex();
@@ -217,7 +217,7 @@ MPMPetscSolver::createLocalToGlobalMapping(const ProcessorGroup* d_myworld,
     //For each neighbor and myself
     for(int i=0;i<neighbors.size();i++){
       const Patch* neighbor = neighbors[i];
-      IntVector plow,phigh;
+      IntVector plow(0,0,0),phigh(0,0,0);
       if(n8or27==8){
         plow = neighbor->getNodeLowIndex();
         phigh = neighbor->getNodeHighIndex();

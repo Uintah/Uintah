@@ -122,7 +122,8 @@ OnDemandDataWarehouse::OnDemandDataWarehouse(const ProcessorGroup* myworld,
      d_lock("DataWarehouse lock"),
      d_finalized( false ),
      d_grid(grid),
-     d_isInitializationDW(isInitializationDW)
+     d_isInitializationDW(isInitializationDW),
+     d_scrubMode(DataWarehouse::ScrubNone)
 {
   restart = false;
   hasRestarted_ = false;
@@ -385,6 +386,7 @@ void
 OnDemandDataWarehouse::exchangeParticleQuantities(DetailedTasks* dts, LoadBalancer* lb, const VarLabel* pos_var,
                                                   int iteration)
 {
+  MALLOC_TRACE_TAG_SCOPE("OnDemandDataWarehouse::exchangeParticleQuantities");
   if( hasRestarted_ ) {
     // If this DW is being used for a timestep restart, then it has already done this...
     return;

@@ -26,6 +26,7 @@
 //     d) Add actual calculation of property in computeProp. 
 //     e) Make sure that you dummyInit any new variables that require OldDW 
 //        values.
+//     f) Make sure that _before_table_lookup is properly set for this property. 
 //   7) Please clean up unused code from this template in your final version
 //   8) Please add comments to this list as you see fit to help the next person
 
@@ -53,8 +54,8 @@ namespace Uintah{
 
     public: 
 
-      CLASSNAMETEMP_PARAMS( std::string prop_name, SimulationStateP& shared_state );
-      ~CLASSNAMETEMP_PARAMS(); 
+      CLASSNAME<TEMP_PARAMS>( std::string prop_name, SimulationStateP& shared_state );
+      ~CLASSNAME<TEMP_PARAMS>(); 
 
       void problemSetup( const ProblemSpecP& db ); 
 
@@ -110,7 +111,8 @@ namespace Uintah{
   template <TEMP_PARAMS>
   CLASSNAME<TEMP_PARAMS>::CLASSNAME( std::string prop_name, SimulationStateP& shared_state ) : PropertyModelBase( prop_name, shared_state )
   {
-    _prop_label = VarLabel::create( prop_name, CCVariable<double>::getTypeDescription() ); 
+
+    _prop_label = VarLabel::create( prop_name, pT::getTypeDescription() ); 
 
     // additional local labels as needed by this class (delete this if it isn't used): 
     std::string name = "something"; 
@@ -118,7 +120,9 @@ namespace Uintah{
     _extra_local_labels.push_back( _something_label ); 
 
     // and so on ....
-      _prop_label = VarLabel::create( prop_name, pT::getTypeDescription() ); 
+
+    // Evaluated before or after table lookup? 
+    _before_table_lookup = false; 
   }
   
   //---------------------------------------------------------------------------
@@ -213,7 +217,10 @@ namespace Uintah{
         iter = patch->getSFCYIterator(); 
       else if ( typeid(pT) == typeid(SFCZVariable<double>) )
         iter = patch->getSFCZIterator(); 
-      else {
+      else if ( typeid(pT) != typeid(CCVariable<double>) && 
+                typeid(pT) != typeid(SFCXVariable<double>) &&
+                typeid(pT) != typeid(SFCYVariable<double>) &&
+                typeid(pT) != typeid(SFCZVariable<double>) ){
         // Bulletproofing
         proc0cout << " While attempting to compute: CLASSNAME.h " << endl;
         proc0cout << " Encountered a type mismatch error.  The current code cannot handle" << endl;

@@ -536,6 +536,16 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 //    sched_updateDensityGuess(sched, patches, matls,
 //                                    d_timeIntegratorLabels[curr_level]);
 
+    // Property models needed before table lookup: 
+    for ( PropertyModelFactory::PropMap::iterator iprop = all_prop_models.begin(); 
+          iprop != all_prop_models.end(); iprop++){
+
+      PropertyModelBase* prop_model = iprop->second; 
+      if ( prop_model->beforeTableLookUp() )
+        prop_model->sched_computeProp( level, sched, curr_level ); 
+
+    }
+
 
     string mixmodel = d_props->getMixingModelType(); 
     if ( mixmodel != "TabProps")
@@ -552,7 +562,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
     }
 
-    // By default, scheduling all property models for evaluation. 
+    // Property models needed after table lookup:
     for ( PropertyModelFactory::PropMap::iterator iprop = all_prop_models.begin(); 
           iprop != all_prop_models.end(); iprop++){
 
@@ -622,6 +632,15 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
         bool initialize_it  = false;
         bool modify_ref_den = false; 
         d_props->sched_reComputeProps_new( level, sched, d_timeIntegratorLabels[curr_level], initialize_it, modify_ref_den ); 
+
+      }
+
+      // Property models after table lookup
+      for ( PropertyModelFactory::PropMap::iterator iprop = all_prop_models.begin(); 
+            iprop != all_prop_models.end(); iprop++){
+
+        PropertyModelBase* prop_model = iprop->second; 
+        prop_model->sched_computeProp( level, sched, curr_level ); 
 
       }
 

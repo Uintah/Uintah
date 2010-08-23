@@ -18,6 +18,7 @@ set path = ($path $fresh_build)
 
 
 #compile comparison utilities and make symbolic links to Uintah/Standalone
+make uintah
 make link_orderAccuracy
 make compare_scalar
 ln -s tools/compare_mms/compare_scalar .

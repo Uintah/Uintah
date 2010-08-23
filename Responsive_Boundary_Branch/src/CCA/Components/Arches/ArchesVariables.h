@@ -189,7 +189,10 @@ namespace Uintah {
 
       //these are sources from the new source term factories
       constCCVariable<double> otherSource;
-      constCCVariable<Vector> otherVectorSource;
+      constCCVariable<Vector> otherVectorSource; 
+      constSFCXVariable<double>  otherFxSource;
+      constSFCYVariable<double>  otherFySource; 
+      constSFCZVariable<double>  otherFzSource; 
 
     }; // End class ArchesVariables
    

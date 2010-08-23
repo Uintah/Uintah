@@ -356,8 +356,7 @@ void AMRICE::refineCoarseFineInterface(const ProcessorGroup*,
                << " Doing refineCoarseFineInterface("<< variable->getName() <<")\t\t\t AMRICE L-" 
                << fineLevel->getIndex() << " Patches: " << *patches << " progressVar " << subCycleProgress
                << endl;
-    bool dbg_onOff = cout_dbg.active();      // is cout_dbg switch on or off
-      
+    
     for(int p=0;p<patches->size();p++){
       const Patch* finePatch = patches->get(p);
       

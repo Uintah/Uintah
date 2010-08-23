@@ -74,16 +74,15 @@ namespace Wasatch{
 
     /**
      *  \brief Construct a ScalarTransportEquation
+     *  \param phiName the name of the solution variable for this ScalarTransportEquation
+     *  \param id the Expr::ExpressionID for the RHS expression for this ScalarTransportEquation
      *
-     *  \param solnExprFactory the Expr::ExpressionFactory object that
-     *         terms associated with the RHS of this transport
-     *         equation should be registered on.
-     *
-     *  \param params the Uintah::ProblemSpec XML description for this
-     *         transport equation.
+     *  Note that the static member methods get_rhs_expr_id and
+     *  get_phi_name can be useful to obtain the appropriate input
+     *  arguments here.
      */
-    ScalarTransportEquation( Expr::ExpressionFactory& solnExprFactory,
-                             Uintah::ProblemSpecP params );
+    ScalarTransportEquation( const std::string phiName,
+                             const Expr::ExpressionID id );
 
     ~ScalarTransportEquation();
 
@@ -96,6 +95,28 @@ namespace Wasatch{
      *  \brief setup the initial conditions for this transport equation.
      */
     Expr::ExpressionID initial_condition( Expr::ExpressionFactory& icFactory );
+
+    /**
+     * \brief Parse the input file to determine the rhs expression id.
+     *        Also registers convective flux, diffusive flux, and
+     *        source term expressions.
+     *
+     *  \param solnExprFactory the Expr::ExpressionFactory object that
+     *         terms associated with the RHS of this transport
+     *         equation should be registered on.
+     *
+     *  \param params the Uintah::ProblemSpec XML description for this
+     *         equation.  Scope should be within the TransportEquation tag.
+     */
+    static Expr::ExpressionID get_rhs_expr_id( Expr::ExpressionFactory& factory, Uintah::ProblemSpecP params );
+
+    /**
+     *  \brief Parse the input file to get the name of this ScalarTransportEquation
+     *
+     *  \param params the Uintah::ProblemSpec XML description for this
+     *         equation. Scope should be within the TransportEquation tag.
+     */
+    static std::string get_phi_name( Uintah::ProblemSpecP params );
 
   private:
 

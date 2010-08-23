@@ -32,6 +32,7 @@ WestbrookDryer::WestbrookDryer( std::string src_name, SimulationStateP& shared_s
   d_WDverLabel = VarLabel::create( "WDver", CCVariable<double>::getTypeDescription() ); 
   _extra_local_labels[3] = d_WDverLabel; 
 
+  _source_type = CC_SRC; 
 }
 
 WestbrookDryer::~WestbrookDryer()

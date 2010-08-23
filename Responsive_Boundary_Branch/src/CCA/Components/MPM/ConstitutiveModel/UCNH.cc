@@ -1010,7 +1010,7 @@ void UCNH::computeStressTensor(const PatchSubset* patches,
         // x -> r, y -> z, z -> theta
         computeAxiSymVelocityGradient(velGrad_new,ni,d_S,S,oodx,gVelocity,px[idx]);
       }
-      
+      pDefGrad_new[idx] = (velGrad_new*delT + Identity)*pDefGrad[idx];  
       velGrad[idx] = velGrad_new;
     }
       
@@ -1241,11 +1241,12 @@ void UCNH::computeStressTensor(const PatchSubset* patches,
   //     double Kmatrix[24][24];
   int dof[24];
   // Unused because each 8 and 27 option have their owndouble v[576];
-  
+ 
+
+  IntVector lowIndex=IntVector(0,0,0),highIndex=IntVector(0,0,0); 
   for(int pp=0;pp<patches->size();pp++){
     const Patch* patch = patches->get(pp);
     
-    IntVector lowIndex,highIndex;
     if(d_8or27==8){
       lowIndex  = patch->getNodeLowIndex();
       highIndex = patch->getNodeHighIndex()+IntVector(1,1,1);

@@ -31,6 +31,7 @@ ConstSrcTerm::problemSetup(const ProblemSpecP& inputdb)
 
   db->getWithDefault("constant",d_constant, 0.); 
 
+  _source_type = CC_SRC; 
 }
 //---------------------------------------------------------------------------
 // Method: Schedule the calculation of the source term 

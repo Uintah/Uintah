@@ -1075,7 +1075,7 @@ void
 Crack::DiscretizeTriangularCracks(const int&m, int& nnode0)
 {
   int k,l,i,j;
-  int neq,num,nstart1,nstart2,n1,n2,n3;
+  int neq,num,nstart1,nstart2,n1=0,n2=0,n3=0;
   Point pt;
 
   for(k=0; k<(int)triangles[m].size(); k++) { 

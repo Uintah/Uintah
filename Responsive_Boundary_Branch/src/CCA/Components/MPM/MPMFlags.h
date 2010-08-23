@@ -113,6 +113,7 @@ namespace Uintah {
 
     bool        d_with_ice;
     bool        d_with_arches;
+    bool        d_use_momentum_form;
     
     // flags for turning on/off the reduction variable calculations
     struct reductionVars{
