@@ -134,6 +134,12 @@ TabPropsInterface::problemSetup( const ProblemSpecP& propertiesParameters )
 
       d_ivVarMap.insert(make_pair(varName, d_lab->d_heatLossLabel)).first; 
 
+    } else if ( varName == "scalar_variance") {
+
+      cout_tabledbg << " Scalar variance being inserted into the indep. var map. " << endl;
+
+      d_ivVarMap.insert(make_pair(varName, d_lab->d_scalarVarSPLabel)).first; 
+
     } else if ( varName == "DissipationRate") {
 
       cout_tabledbg << " Scalar dissipation rate being inserted into the indep. var map. " << endl;
