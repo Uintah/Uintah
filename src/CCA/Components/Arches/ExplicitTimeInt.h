@@ -40,13 +40,21 @@ public:
                               constphiT& RHS, 
                               double dt, double time,
                               const string eqnName );
-    /** @brief A template for time averaging using a Runge-kutta form */  
+    /** @brief A template for time averaging using a Runge-kutta form without density*/  
     template <class phiT, class constphiT>
     void timeAvePhi( const Patch* patch, 
                      phiT& phi, 
                      constphiT& old_phi, 
                      int step, double time );
 
+    /** @brief A template for time averaging using a Runge-kutta form with density */ 
+    template <class phiT, class constphiT>
+    void timeAvePhi( const Patch* patch, 
+                     phiT& phi, 
+                     constphiT& old_phi, 
+                     constphiT& old_den, 
+                     constphiT& new_den, 
+                     int step, double time ); 
 
     Vector ssp_beta, ssp_alpha; 
     Vector time_factor; 
@@ -146,14 +154,19 @@ private:
   }
 
 //---------------------------------------------------------------------------
-// Time averaging 
+// Time averaging W/O density
 //---------------------------------------------------------------------------
+// ----RK AVERAGING
+//     to get the time averaged phi^{time averaged}
+//     See: Gettlieb et al., SIAM Review, vol 43, No 1, pp 89-112
+//          Strong Stability-Preserving High-Order Time Discretization Methods
   template <class phiT, class constphiT>
   void ExplicitTimeInt::timeAvePhi( const Patch* patch, 
                                     phiT& phi, 
                                     constphiT& old_phi, 
                                     int step, double time )
   {
+
 		for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
       IntVector c = *iter; 
 			phi[*iter] = ssp_alpha[step]*old_phi[c] + ssp_beta[step]*phi[c];	
@@ -187,6 +200,36 @@ private:
 #endif  
 
 
+  }
+
+//---------------------------------------------------------------------------
+// Time averaging With Density
+//---------------------------------------------------------------------------
+// ----RK AVERAGING
+//     to get the time averaged phi^{time averaged}
+//     See: Gettlieb et al., SIAM Review, vol 43, No 1, pp 89-112
+//          Strong Stability-Preserving High-Order Time Discretization Methods
+  template <class phiT, class constphiT>
+  void ExplicitTimeInt::timeAvePhi( const Patch* patch, 
+                                    phiT& phi, 
+                                    constphiT& old_phi, 
+                                    constphiT& new_den, 
+                                    constphiT& old_den, 
+                                    int step, double time )
+  {
+
+		for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
+
+      IntVector c = *iter; 
+
+      double pred_density = ssp_alpha[step]*old_den[c] + ssp_beta[step]*new_den[c]; 
+
+      if ( pred_density > 0 ) { 
+			  phi[*iter] = ( ssp_alpha[step] * (old_den[c] * old_phi[c])
+                   +   ssp_beta[step]  * (new_den[c] * phi[c]) ) / pred_density;	
+      }
+
+    }
   }
 
 } //end namespace Uintah
