@@ -606,6 +606,11 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     d_momSolver->solveVelHat(level, sched, d_timeIntegratorLabels[curr_level],
                              d_EKTCorrection);
 
+    for (EqnFactory::EqnMap::iterator iter = scalar_eqns.begin(); iter != scalar_eqns.end(); iter++){
+      EqnBase* eqn = iter->second; 
+        eqn->sched_timeAve( level, sched, curr_level ); 
+    }
+
     // averaging for RKSSP
     if ((curr_level>0)&&(!((d_timeIntegratorType == "RK2")||(d_timeIntegratorType == "BEEmulation")))) {
       d_props->sched_averageRKProps(sched, patches, matls,

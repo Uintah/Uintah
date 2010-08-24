@@ -117,6 +117,14 @@ public:
                 DataWarehouse* old_dw, 
                 DataWarehouse* new_dw  ); 
 
+  void sched_timeAve( const LevelP& level, SchedulerP& sched, int timeSubStep );
+  void timeAve( const ProcessorGroup* pc, 
+                const PatchSubset* patches, 
+                const MaterialSubset* matls, 
+                DataWarehouse* old_dw, 
+                DataWarehouse* new_dw,
+                int timeSubStep );
+
   // ---------------------------------
   // Access functions:
 
