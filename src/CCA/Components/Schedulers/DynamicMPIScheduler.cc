@@ -65,6 +65,11 @@ static DebugStream dbg("DynamicMPIScheduler", false);
 static DebugStream timeout("DynamicMPIScheduler.timings", false);
 static DebugStream queuelength("QueueLength",false);
 
+#ifdef USE_TAU_PROFILING
+extern int create_tau_mapping( const string & taskname,
+			       const PatchSubset * patches );  // ThreadPool.cc
+#endif
+
 ofstream wout;
 
 static
