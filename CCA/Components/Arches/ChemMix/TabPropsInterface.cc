@@ -604,8 +604,8 @@ TabPropsInterface::computeFirstEnthalpy( const ProcessorGroup* pc,
       for ( std::vector<constCCVariable<double> >::iterator i = the_variables.begin(); i != the_variables.end(); i++){
 
         if ( d_allIndepVarNames[index] != "heat_loss" ) 
-          //iv.push_back( (*i)[c] ); // <--- I am not sure how this worked before. 
-          iv.push_back(0.0);
+          iv.push_back( (*i)[c] );
+          //iv.push_back(0.0);
         else 
           iv.push_back( d_hl_scalar_init ); 
 
