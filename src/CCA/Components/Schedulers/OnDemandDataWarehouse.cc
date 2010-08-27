@@ -1307,7 +1307,7 @@ OnDemandDataWarehouse::allocateAndPut(ParticleVariableBase& var,
 			    label->getName(), __FILE__, __LINE__));
   d_lock.readUnlock();
   
-  allocateTemporary(var, pset);
+  var.allocate(pset);
   put(var, label);
 }
 
