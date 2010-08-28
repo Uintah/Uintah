@@ -53,6 +53,7 @@ DEALINGS IN THE SOFTWARE.
 
 #include <fstream>
 #include <iostream>
+#include <iomanip>
 
 
 using std::cerr;
@@ -1287,7 +1288,76 @@ double ViscoScram::computeRhoMicroCM(double pressure,
   double p_gauge = pressure - p_ref;
   double rho_cur;
 
-  if(d_useJWLCEOS) {                // JWL EOS
+  if(d_useJWLEOS) {                        // JWL EOS
+    double Cv = d_JWLEOSData.Cv;
+    double om = d_JWLEOSData.om;
+
+    Pressure = pressure;
+    Temperature = temperature;
+
+    /* Use a hybrid Newton-Bisection Method to compute the rho_micro.
+       The solver guarantees to converge to a solution.
+
+       Modified by:
+       Changwei Xiong
+       Department of Chemistry
+       University of Utah
+    */
+    double epsilon  = 1e-15;
+    double rho_min = 0.0;                             // Such that f(min) < 0
+    double rho_max = pressure*1.001/(om*Cv*temperature); // Such that f(max) > 0
+    IL = rho_min;
+    IR = rho_max;
+
+    double f = 0;
+    double df_drho = 0;
+    double delta_old, delta_new;
+
+    double rho_cur = rho_max/2.0;
+
+    int iter = 0;
+    while(1){
+      f = func(rho_cur,matl);
+      setInterval(f, rho_cur);
+
+      if(fabs((IL-IR)/rho_cur)<epsilon){
+        return (IL+IR)/2.0;
+      }
+
+      delta_new = 1e100;
+      while(1){
+        df_drho   = deri(rho_cur,matl);
+        delta_old = delta_new;
+        delta_new = -f/df_drho;
+        rho_cur  += delta_new;
+
+        if(fabs(delta_new/rho_cur)<epsilon){
+          return rho_cur;
+        }
+
+        if(iter>=100){
+          ostringstream warn;
+          warn << setprecision(15);
+          warn << "ERROR:ICE:JWL::computeRhoMicro not converging. \n";
+          warn << "press= " << pressure << " temp=" << temperature << "\n";
+          warn << "delta= " << delta_new << " rhoM= " << rho_cur << " f = " << f
+               <<" df_drho =" << df_drho << "\n";
+          throw InternalError(warn.str(), __FILE__, __LINE__);
+        }
+
+        if(rho_cur<IL || rho_cur>IR || fabs(delta_new)>fabs(delta_old*0.7)){
+          break;
+        }
+
+        f = func(rho_cur,matl);
+        setInterval(f, rho_cur);
+        iter++;
+      }
+
+      rho_cur = (IL+IR)/2.0;
+      iter++;
+    }
+  } else if(d_useJWLCEOS) {                // JWLC EOS
     double A = d_JWLEOSData.A;
     double B = d_JWLEOSData.B;
     double C = d_JWLEOSData.C;
@@ -1397,7 +1467,23 @@ void ViscoScram::computePressEOSCM(double rho_cur,double& pressure,
   double rho_orig = matl->getInitialDensity();
   double inv_rho_orig = 1./rho_orig;
 
-  if(d_useJWLCEOS) {
+  if(d_useJWLEOS) {
+    double A = d_JWLEOSData.A;
+    double B = d_JWLEOSData.B;
+    double Cv = d_JWLEOSData.Cv;
+    double R1 = d_JWLEOSData.R1;
+    double R2 = d_JWLEOSData.R2;
+    double om = d_JWLEOSData.om;
+
+    double V  = rho_orig/rho_cur;
+    double P1 = A*exp(-R1*V);
+    double P2 = B*exp(-R2*V);
+    double P3 = om*Cv*temperature*rho_cur;
+
+    pressure  = P1 + P2 + P3;
+    dp_drho   = (R1*rho_orig*P1 + R2*rho_orig*P2)/(rho_cur*rho_cur) + om*Cv*temperature;
+    tmp       = dp_drho;
+  } else if(d_useJWLCEOS) {
     double A = d_JWLEOSData.A;
     double B = d_JWLEOSData.B;
     double C = d_JWLEOSData.C;
@@ -1467,6 +1553,51 @@ double ViscoScram::getCompressibility()
   return 1.0/d_bulk;
 }
 
+double ViscoScram::func(double rhoM,const MPMMaterial*  matl){
+  double A = d_JWLEOSData.A;
+  double B = d_JWLEOSData.B;
+  double C = d_JWLEOSData.C;
+  double R1 = d_JWLEOSData.R1;
+  double R2 = d_JWLEOSData.R2;
+  double om = d_JWLEOSData.om;
+
+  if(rhoM == 0){
+    return -Pressure;
+  }
+  double V  = matl->getInitialDensity()/rhoM;
+  double P1 = A*exp(-R1*V);
+  double P2 = B*exp(-R2*V);
+  double P3 = om*SpecificHeat*Temperature*rhoM;
+  return P1 + P2 + P3 - Pressure;
+}
+
+
+double ViscoScram::deri(double rhoM, const MPMMaterial* matl){
+  double A = d_JWLEOSData.A;
+  double B = d_JWLEOSData.B;
+  double C = d_JWLEOSData.C;
+  double R1 = d_JWLEOSData.R1;
+  double R2 = d_JWLEOSData.R2;
+  double om = d_JWLEOSData.om;
+
+  double V  = matl->getInitialDensity()/rhoM;
+  double P1 = A*exp(-R1*V);
+  double P2 = B*exp(-R2*V);
+  double P3 = om*SpecificHeat*Temperature*rhoM;
+  return (P1*R1*V + P2*R2*V + P3)/rhoM;
+}
+
+
+void ViscoScram::setInterval(double f, double rhoM){
+  if(f < 0)
+    IL = rhoM;
+  else if(f > 0)
+    IR = rhoM;
+  else if(f ==0){
+    IL = rhoM;
+    IR = rhoM;
+  }
+}
 
 namespace Uintah {
 
