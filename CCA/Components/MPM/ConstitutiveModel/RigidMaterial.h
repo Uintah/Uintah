@@ -148,13 +148,15 @@ namespace Uintah {
     /*! Function that interacts with ice */
     virtual double computeRhoMicroCM(double pressure,
                                      const double p_ref,
-                                     const MPMMaterial* matl);
+                                     const MPMMaterial* matl,
+                                     double temperature);
 
     /*! Function that interacts with ice */
     virtual void computePressEOSCM(double rho_m, double& press_eos,
                                    double p_ref,
                                    double& dp_drho, double& ss_new,
-                                   const MPMMaterial* matl, double temperature);
+                                   const MPMMaterial* matl,
+                                   double temperature);
 
     /*! Function that interacts with ice */
     virtual double getCompressibility();

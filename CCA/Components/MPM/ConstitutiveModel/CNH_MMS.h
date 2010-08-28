@@ -101,7 +101,7 @@ namespace Uintah {
 
     virtual double computeRhoMicroCM(double pressure,
                                      const double p_ref,
-                                     const MPMMaterial* matl);
+                                     const MPMMaterial* matl,double temperature);
 
     virtual void computePressEOSCM(double rho_m, double& press_eos,
                                    double p_ref,
