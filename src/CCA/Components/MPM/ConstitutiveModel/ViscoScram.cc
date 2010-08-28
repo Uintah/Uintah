@@ -1385,7 +1385,7 @@ double ViscoScram::computeRhoMicroCM(double pressure,
 void ViscoScram::computePressEOSCM(double rho_cur,double& pressure,
                                    double p_ref,
                                    double& dp_drho, double& tmp,
-                                   const MPMMaterial* matl)
+                                   const MPMMaterial* matl, double temperature)
 {
   double rho_orig = matl->getInitialDensity();
   double inv_rho_orig = 1./rho_orig;

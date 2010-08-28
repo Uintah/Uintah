@@ -1068,7 +1068,7 @@ void MPMICE::actuallyInitialize(const ProcessorGroup*,
         sp_vol_CC[c] = 1.0/rho_micro[c];
 
         mpm_matl->getConstitutiveModel()->
-            computePressEOSCM(rho_micro[c],junk, p_ref, junk, tmp,mpm_matl); 
+            computePressEOSCM(rho_micro[c],junk, p_ref, junk, tmp,mpm_matl,Temp_CC[c]); 
         speedSound[c] = sqrt(tmp);
       }
       
@@ -1859,7 +1859,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
           } else if(mpm_matl[m]){    // MPM
             mpm_matl[m]->getConstitutiveModel()->
               computePressEOSCM(rho_micro[m][c],press_eos[m],press_ref,
-                                dp_drho[m], c_2,mpm_matl[m]);
+                                dp_drho[m], c_2,mpm_matl[m],Temp[m][c]);
           }
         }
 
@@ -1922,7 +1922,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
            } else if(mpm_matl[m]){
               mpm_matl[m]->getConstitutiveModel()->
                    computePressEOSCM(rho_micro[m][c],press_eos[m],press_ref,
-                                     dp_drho[m],c_2,mpm_matl[m]);
+                                     dp_drho[m],c_2,mpm_matl[m],Temp[m][c]);
            }
            speedSound[m][c] = sqrt(c_2);         // Isentropic speed of sound
          }
@@ -2211,7 +2211,7 @@ void MPMICE::binaryPressureSearch(  StaticArray<constCCVariable<double> >& Temp,
         if(mpm_matl){       // MPM
            mpm_matl->getConstitutiveModel()->
                 computePressEOSCM(rho_micro[m][c],press_eos[m],press_ref,
-                                  dp_drho[m],c_2,mpm_matl);
+                                  dp_drho[m],c_2,mpm_matl,Temp[m][c]);
         }
         speedSound[m][c] = sqrt(c_2);     // Isentropic speed of sound
       }
@@ -2373,7 +2373,7 @@ void MPMICE::actuallyInitializeAddedMPMMaterial(const ProcessorGroup*,
       sp_vol_CC[c] = 1.0/rho_micro[c];
                                                                               
       mpm_matl->getConstitutiveModel()->
-          computePressEOSCM(rho_micro[c],junk, p_ref, junk, tmp,mpm_matl);
+          computePressEOSCM(rho_micro[c],junk, p_ref, junk, tmp,mpm_matl,Temp_CC[c]);
       speedSound[c] = sqrt(tmp);
     }
   }

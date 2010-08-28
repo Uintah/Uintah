@@ -745,7 +745,7 @@ void UCNH::addRequiresDamageParameter(Task* task,
 void UCNH::computePressEOSCM(const double rho_cur,double& pressure, 
                              const double p_ref,
                              double& dp_drho, double& cSquared,
-                             const MPMMaterial* matl)
+                             const MPMMaterial* matl, double temperature)
 {
   double bulk = d_initialData.Bulk;
   double rho_orig = matl->getInitialDensity();

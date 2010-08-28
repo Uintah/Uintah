@@ -226,7 +226,7 @@ void
 RigidMaterial::computePressEOSCM(double , double& pressure,
                                  double p_ref,
                                  double& dp_drho, double& tmp,
-                                 const MPMMaterial* matl)
+                                 const MPMMaterial* matl, double temperature)
 {
   double K = d_initialData.K;
   double rho_0 = matl->getInitialDensity();

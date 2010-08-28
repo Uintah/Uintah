@@ -676,7 +676,7 @@ double Diamm::computeRhoMicroCM(double pressure,
 void Diamm::computePressEOSCM(double rho_cur, double& pressure,
                                 double p_ref,
                                 double& dp_drho,      double& tmp,
-                                const MPMMaterial* matl)
+                                const MPMMaterial* matl, double temperature)
 {
 
   double bulk = UI[0];
