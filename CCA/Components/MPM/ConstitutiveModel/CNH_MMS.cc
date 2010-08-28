@@ -372,7 +372,7 @@ double CNH_MMS::computeRhoMicroCM(double pressure,
 void CNH_MMS::computePressEOSCM(const double rho_cur,double& pressure, 
                                     const double p_ref,
                                     double& dp_drho, double& tmp,
-                                    const MPMMaterial* matl)
+                                    const MPMMaterial* matl,double temperature)
 {
   double bulk = d_initialData.Bulk;
   double rho_orig = matl->getInitialDensity();

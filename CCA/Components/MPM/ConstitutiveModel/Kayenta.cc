@@ -876,7 +876,7 @@ double Kayenta::computeRhoMicroCM(double pressure,
 void Kayenta::computePressEOSCM(double rho_cur, double& pressure,
                                 double p_ref,
                                 double& dp_drho,      double& tmp,
-                                const MPMMaterial* matl)
+                                const MPMMaterial* matl, double temperature)
 {
 
   double bulk = UI[0];

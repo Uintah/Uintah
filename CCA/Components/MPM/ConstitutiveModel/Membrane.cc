@@ -616,7 +616,7 @@ double Membrane::computeRhoMicroCM(double pressure,
 void Membrane::computePressEOSCM(double rho_cur,double& pressure, 
                                  double p_ref,
                                  double& dp_drho, double& tmp,
-                                 const MPMMaterial* matl)
+                                 const MPMMaterial* matl, double temperature)
 {
   //double p_ref=101325.0;
   double bulk = d_initialData.Bulk;

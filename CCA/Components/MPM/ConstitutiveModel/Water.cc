@@ -376,7 +376,7 @@ double Water::computeRhoMicroCM(double pressure,
 void Water::computePressEOSCM(const double rho_cur,double& pressure, 
                                     const double p_ref,
                                     double& dp_drho, double& tmp,
-                                    const MPMMaterial* matl)
+                                    const MPMMaterial* matl,double temperature)
 {
   double bulk = d_initialData.d_Bulk;
   double rho_orig = matl->getInitialDensity();

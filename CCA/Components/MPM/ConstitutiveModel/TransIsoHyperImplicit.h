@@ -155,7 +155,7 @@ namespace Uintah {
          virtual void computePressEOSCM(double rho_m, double& press_eos,
                                         double p_ref,
                                         double& dp_drho, double& ss_new,
-                                        const MPMMaterial* matl);
+                                        const MPMMaterial* matl,double temperature);
 
          virtual double getCompressibility();
          

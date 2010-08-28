@@ -981,7 +981,7 @@ double ViscoTransIsoHyper::computeRhoMicroCM(double pressure,
 void ViscoTransIsoHyper::computePressEOSCM(const double rho_cur,double& pressure, 
                                       const double p_ref,
                                       double& dp_drho, double& tmp,
-                                      const MPMMaterial* matl)
+                                      const MPMMaterial* matl,double temperature)
 {
   double Bulk = d_initialData.Bulk;
   double rho_orig = matl->getInitialDensity();
