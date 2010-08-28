@@ -110,6 +110,7 @@ namespace Uintah {
       double om;
     };
 
+
     typedef ViscoScramStateData StateData;
     
     const VarLabel* pVolChangeHeatRateLabel;
@@ -241,6 +242,14 @@ namespace Uintah {
 
     /*! Used by MPMICE for pressure equilibriation */
     virtual double getCompressibility();
+
+    double   Pressure;
+    double   Temperature;
+    double   SpecificHeat;
+    double   IL, IR;
+    double func(double rhoM,const MPMMaterial* matl);
+    double deri(double rhoM,const MPMMaterial* matl);
+    void   setInterval(double f, double rhoM);
 
   };
 
