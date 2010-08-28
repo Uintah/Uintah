@@ -960,7 +960,8 @@ void ViscoTransIsoHyper::addComputesAndRequires(Task* ,
 // The "CM" versions use the pressure-volume relationship of the CNH model
 double ViscoTransIsoHyper::computeRhoMicroCM(double pressure, 
                                         const double p_ref,
-                                        const MPMMaterial* matl)
+                                        const MPMMaterial* matl,
+                                        double temperature)
 {
   double rho_orig = matl->getInitialDensity();
   double Bulk = d_initialData.Bulk;
@@ -981,7 +982,8 @@ double ViscoTransIsoHyper::computeRhoMicroCM(double pressure,
 void ViscoTransIsoHyper::computePressEOSCM(const double rho_cur,double& pressure, 
                                       const double p_ref,
                                       double& dp_drho, double& tmp,
-                                      const MPMMaterial* matl,double temperature)
+                                      const MPMMaterial* matl,
+                                      double temperature)
 {
   double Bulk = d_initialData.Bulk;
   double rho_orig = matl->getInitialDensity();

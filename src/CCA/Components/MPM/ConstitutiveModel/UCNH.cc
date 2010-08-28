@@ -745,7 +745,8 @@ void UCNH::addRequiresDamageParameter(Task* task,
 void UCNH::computePressEOSCM(const double rho_cur,double& pressure, 
                              const double p_ref,
                              double& dp_drho, double& cSquared,
-                             const MPMMaterial* matl, double temperature)
+                             const MPMMaterial* matl,
+                             double temperature)
 {
   double bulk = d_initialData.Bulk;
   double rho_orig = matl->getInitialDensity();
@@ -768,7 +769,8 @@ void UCNH::computePressEOSCM(const double rho_cur,double& pressure,
 // The "CM" versions use the pressure-volume relationship of the CNH model
 double UCNH::computeRhoMicroCM(double pressure, 
                                const double p_ref,
-                               const MPMMaterial* matl)
+                               const MPMMaterial* matl,
+                               double temperature)
 {
   double rho_orig = matl->getInitialDensity();
   double bulk = d_initialData.Bulk;

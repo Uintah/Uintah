@@ -1804,7 +1804,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
          rho_micro[m][c] = 1.0/sp_vol_CC[m][c];
         } else if(mpm_matl[m]){                //  M P M
           rho_micro[m][c] =  mpm_matl[m]->getConstitutiveModel()->
-            computeRhoMicroCM(press_new[c],press_ref, mpm_matl[m]); 
+            computeRhoMicroCM(press_new[c],press_ref, mpm_matl[m],Temp[m][c]); 
         }
         mat_volume[m] = (rho_CC_old[m][c]*cell_vol)/rho_micro[m][c];
         total_mat_vol += mat_volume[m];
@@ -1898,7 +1898,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
          } if(mpm_matl[m]){
            rho_micro[m][c] =  
              mpm_matl[m]->getConstitutiveModel()->computeRhoMicroCM(
-                                          press_new[c],press_ref,mpm_matl[m]);
+                                          press_new[c],press_ref,mpm_matl[m],Temp[m][c]);
          }
          vol_frac[m][c]   = rho_CC_new[m][c]/rho_micro[m][c];
          sum += vol_frac[m][c];
@@ -2183,7 +2183,7 @@ void MPMICE::binaryPressureSearch(  StaticArray<constCCVariable<double> >& Temp,
       if(mpm_matl){        // MPM
         rho_micro[m][c] =
           mpm_matl->getConstitutiveModel()->computeRhoMicroCM(
-                                       Pm,press_ref,mpm_matl);
+                                       Pm,press_ref,mpm_matl,Temp[m][c]);
       }
       vol_frac[m][c] = rho_CC_new[m][c]/rho_micro[m][c];
       sum += vol_frac[m][c];
@@ -2238,10 +2238,10 @@ void MPMICE::binaryPressureSearch(  StaticArray<constCCVariable<double> >& Temp,
       if(mpm_matl){        //  MPM
         rhoMicroR =
           mpm_matl->getConstitutiveModel()->computeRhoMicroCM(
-                                       Pright,press_ref,mpm_matl);
+                                       Pright,press_ref,mpm_matl,Temp[m][c]);
         rhoMicroL =
           mpm_matl->getConstitutiveModel()->computeRhoMicroCM(
-                                       Pleft, press_ref,mpm_matl);
+                                       Pleft, press_ref,mpm_matl,Temp[m][c]);
       }
       vfR[m] = rho_CC_new[m][c]/rhoMicroR;
       vfL[m] = rho_CC_new[m][c]/rhoMicroL;

@@ -857,7 +857,8 @@ void Kayenta::addComputesAndRequires(Task*,
 
 double Kayenta::computeRhoMicroCM(double pressure,
                                   const double p_ref,
-                                  const MPMMaterial* matl)
+                                  const MPMMaterial* matl,
+                                  double temperature)
 {
   double rho_orig = matl->getInitialDensity();
   double p_gauge = pressure - p_ref;
@@ -876,7 +877,8 @@ double Kayenta::computeRhoMicroCM(double pressure,
 void Kayenta::computePressEOSCM(double rho_cur, double& pressure,
                                 double p_ref,
                                 double& dp_drho,      double& tmp,
-                                const MPMMaterial* matl, double temperature)
+                                const MPMMaterial* matl, 
+                                double temperature)
 {
 
   double bulk = UI[0];

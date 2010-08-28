@@ -104,6 +104,7 @@ namespace Uintah {
       double A;
       double B;
       double C;
+      double Cv;
       double R1;
       double R2;
       double om;
@@ -134,6 +135,7 @@ namespace Uintah {
 
     // Create datatype for storing model parameters
     bool d_useJWLEOS;
+    bool d_useJWLCEOS;
     bool d_useModifiedEOS;
     bool d_useMurnahanEOS;
     bool d_random;
@@ -227,13 +229,15 @@ namespace Uintah {
     /*! Used by MPMICE for pressure equilibriation */
     virtual double computeRhoMicroCM(double pressure,
                                      const double p_ref,
-                                     const MPMMaterial* matl);
+                                     const MPMMaterial* matl,
+                                     double temperature);
 
     /*! Used by MPMICE for pressure equilibriation */
     virtual void computePressEOSCM(double rho_m, double& press_eos,
                                    double p_ref,
                                    double& dp_drho, double& ss_new,
-                                   const MPMMaterial* matl, double temperature);
+                                   const MPMMaterial* matl,
+                                   double temperature);
 
     /*! Used by MPMICE for pressure equilibriation */
     virtual double getCompressibility();

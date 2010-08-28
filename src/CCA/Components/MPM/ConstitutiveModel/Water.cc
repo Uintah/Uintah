@@ -359,7 +359,8 @@ Water::addComputesAndRequires(Task* ,
 // The "CM" versions use the pressure-volume relationship of the CNH model
 double Water::computeRhoMicroCM(double pressure, 
                                       const double p_ref,
-                                      const MPMMaterial* matl)
+                                      const MPMMaterial* matl,
+                                      double temperature)
 {
   double rho_orig = matl->getInitialDensity();
   double bulk = d_initialData.d_Bulk;
@@ -376,7 +377,8 @@ double Water::computeRhoMicroCM(double pressure,
 void Water::computePressEOSCM(const double rho_cur,double& pressure, 
                                     const double p_ref,
                                     double& dp_drho, double& tmp,
-                                    const MPMMaterial* matl,double temperature)
+                                    const MPMMaterial* matl,
+                                    double temperature)
 {
   double bulk = d_initialData.d_Bulk;
   double rho_orig = matl->getInitialDensity();

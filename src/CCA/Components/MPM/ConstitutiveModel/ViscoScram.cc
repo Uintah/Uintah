@@ -109,10 +109,10 @@ ViscoScram::ViscoScram(ProblemSpecP& ps,MPMFlags* Mflag)
 
   // JWL EOS inputs
   ps->getWithDefault("useJWLEOS", d_useJWLEOS, false);
-  if(d_useJWLEOS) {
+  ps->getWithDefault("useJWLCEOS", d_useJWLCEOS, false);
+  if(d_useJWLEOS || d_useJWLCEOS) {
     ps->require("A",d_JWLEOSData.A);
     ps->require("B",d_JWLEOSData.B);
-    ps->require("C",d_JWLEOSData.C);
     ps->require("R1",d_JWLEOSData.R1);
     ps->require("R2",d_JWLEOSData.R2);
     ps->require("om",d_JWLEOSData.om);
@@ -120,7 +120,12 @@ ViscoScram::ViscoScram(ProblemSpecP& ps,MPMFlags* Mflag)
     d_useMurnahanEOS = false;
     d_useModifiedEOS = false;
   }
-
+  if(d_useJWLEOS) {
+    ps->require("Cv",d_JWLEOSData.Cv);
+  }
+  if(d_useJWLCEOS) {
+    ps->require("C",d_JWLEOSData.C);
+  }
   // Time-temperature data for relaxtion time calculation
   d_tt.T0_WLF = 298.0;
   ps->get("T0", d_tt.T0_WLF);
@@ -1275,13 +1280,14 @@ ViscoScram::addParticleState(std::vector<const VarLabel*>& from,
 
 double ViscoScram::computeRhoMicroCM(double pressure,
                                      const double p_ref,
-                                     const MPMMaterial* matl)
+                                     const MPMMaterial* matl,
+                                     double temperature)
 {
   double rho_orig = matl->getInitialDensity();
   double p_gauge = pressure - p_ref;
   double rho_cur;
 
-  if(d_useJWLEOS) {                // JWL EOS
+  if(d_useJWLCEOS) {                // JWL EOS
     double A = d_JWLEOSData.A;
     double B = d_JWLEOSData.B;
     double C = d_JWLEOSData.C;
@@ -1385,12 +1391,13 @@ double ViscoScram::computeRhoMicroCM(double pressure,
 void ViscoScram::computePressEOSCM(double rho_cur,double& pressure,
                                    double p_ref,
                                    double& dp_drho, double& tmp,
-                                   const MPMMaterial* matl, double temperature)
+                                   const MPMMaterial* matl, 
+                                   double temperature)
 {
   double rho_orig = matl->getInitialDensity();
   double inv_rho_orig = 1./rho_orig;
 
-  if(d_useJWLEOS) {
+  if(d_useJWLCEOS) {
     double A = d_JWLEOSData.A;
     double B = d_JWLEOSData.B;
     double C = d_JWLEOSData.C;

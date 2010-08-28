@@ -366,7 +366,8 @@ MurnahanMPM::addComputesAndRequires(Task* ,
 // The "CM" versions use the pressure-volume relationship of the CNH model
 double MurnahanMPM::computeRhoMicroCM(double pressure, 
                                       const double p_ref,
-                                      const MPMMaterial* matl)
+                                      const MPMMaterial* matl,
+                                      double temperature)
 {
     double rhoM;
     double rho_orig = d_initialData.d_rho0; //matl->getInitialDensity();
@@ -387,7 +388,8 @@ double MurnahanMPM::computeRhoMicroCM(double pressure,
 void MurnahanMPM::computePressEOSCM(const double rhoM,double& pressure, 
                                     const double p_ref,
                                     double& dp_drho, double& tmp,
-                                    const MPMMaterial* matl, double temperature)
+                                    const MPMMaterial* matl,
+                                    double temperature)
 {
     double rho_orig = matl->getInitialDensity();
     double gamma = d_initialData.d_Gamma;
