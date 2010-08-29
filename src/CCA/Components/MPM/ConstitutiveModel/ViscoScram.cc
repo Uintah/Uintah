@@ -1294,7 +1294,7 @@ double ViscoScram::computeRhoMicroCM(double pressure,
 
     Pressure = pressure;
     Temperature = temperature;
-
+    SpecificHeat = Cv;
     /* Use a hybrid Newton-Bisection Method to compute the rho_micro.
        The solver guarantees to converge to a solution.
 
@@ -1556,7 +1556,6 @@ double ViscoScram::getCompressibility()
 double ViscoScram::func(double rhoM,const MPMMaterial*  matl){
   double A = d_JWLEOSData.A;
   double B = d_JWLEOSData.B;
-  double C = d_JWLEOSData.C;
   double R1 = d_JWLEOSData.R1;
   double R2 = d_JWLEOSData.R2;
   double om = d_JWLEOSData.om;
@@ -1575,7 +1574,6 @@ double ViscoScram::func(double rhoM,const MPMMaterial*  matl){
 double ViscoScram::deri(double rhoM, const MPMMaterial* matl){
   double A = d_JWLEOSData.A;
   double B = d_JWLEOSData.B;
-  double C = d_JWLEOSData.C;
   double R1 = d_JWLEOSData.R1;
   double R2 = d_JWLEOSData.R2;
   double om = d_JWLEOSData.om;
