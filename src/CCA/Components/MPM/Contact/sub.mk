@@ -36,6 +36,7 @@ SRCS     += \
 	$(SRCDIR)/SpecifiedBodyContact.cc \
 	$(SRCDIR)/SingleVelContact.cc \
 	$(SRCDIR)/FrictionContact.cc  \
+	$(SRCDIR)/NodalSVFContact.cc \
 	$(SRCDIR)/ApproachContact.cc  \
 	$(SRCDIR)/ContactFactory.cc   \
 	$(SRCDIR)/CompositeContact.cc \
