@@ -127,9 +127,7 @@ protected :
   const MPMArchesLabel* d_MAlab;
 
   bool d_coldflow; 
-
-  const VarLabel* d_dissipation_rate_label; 
-
+  bool d_adiabatic; 
 
 private:
 

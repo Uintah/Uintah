@@ -533,6 +533,15 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     // Evaluate scalar equations that don't have a density guess
     evalDensityGuessEqns = false;
     eqnFactory.sched_evalTransportEqns( level, sched, curr_level, evalDensityGuessEqns, lastTimeSubstep );
+    
+    // Property models needed after table lookup:
+    for ( PropertyModelFactory::PropMap::iterator iprop = all_prop_models.begin(); 
+          iprop != all_prop_models.end(); iprop++){
+
+      PropertyModelBase* prop_model = iprop->second; 
+      prop_model->sched_computeProp( level, sched, curr_level ); 
+
+    }
 
     if (d_standAloneRMCRT) { 
       d_RMCRTRadiationModel->sched_solve( level, sched, d_timeIntegratorLabels[curr_level] );  
@@ -557,6 +566,8 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     // the pressure poisson equation
     d_momSolver->solveVelHat(level, sched, d_timeIntegratorLabels[curr_level],
                              d_EKTCorrection);
+
+    eqnFactory.sched_timeAveraging( level, sched, curr_level );
 
     // averaging for RKSSP
     if ((curr_level>0)&&(!((d_timeIntegratorType == "RK2")||(d_timeIntegratorType == "BEEmulation")))) {
@@ -586,7 +597,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
       }
 
-      // By default, scheduling all property models for evaluation. 
+      // Property models after table lookup
       for ( PropertyModelFactory::PropMap::iterator iprop = all_prop_models.begin(); 
             iprop != all_prop_models.end(); iprop++){
 
@@ -608,22 +619,6 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
                                             d_timeIntegratorLabels[curr_level],
                                             d_EKTCorrection);
     } 
-
-    // Re-Clean all property models and reevaluate after RK averaging to give final values
-    for ( PropertyModelFactory::PropMap::iterator iprop = all_prop_models.begin(); 
-         iprop != all_prop_models.end(); iprop++){
-
-       PropertyModelBase* prop_model = iprop->second; 
-       prop_model->cleanUp(); 
-
-    }
-    for ( PropertyModelFactory::PropMap::iterator iprop = all_prop_models.begin(); 
-          iprop != all_prop_models.end(); iprop++){
-
-      PropertyModelBase* prop_model = iprop->second; 
-      prop_model->sched_computeProp( level, sched, curr_level ); 
-
-    }
 
     d_props->sched_computeDrhodt(sched, patches, matls,
                                  d_timeIntegratorLabels[curr_level],

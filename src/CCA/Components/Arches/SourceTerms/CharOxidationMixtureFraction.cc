@@ -20,7 +20,7 @@ CharOxidationMixtureFraction::CharOxidationMixtureFraction( std::string srcName,
                                                             vector<std::string> reqLabelNames ) 
 : SourceTermBase(srcName, sharedState, reqLabelNames)
 {
-  d_srcLabel = VarLabel::create(srcName, CCVariable<double>::getTypeDescription()); 
+  _src_label = VarLabel::create(srcName, CCVariable<double>::getTypeDescription()); 
 }
 
 CharOxidationMixtureFraction::~CharOxidationMixtureFraction()
@@ -63,23 +63,23 @@ CharOxidationMixtureFraction::sched_computeSource( const LevelP& level, Schedule
   std::string taskname = "CharOxidationMixtureFraction::computeSource";
   Task* tsk = scinew Task(taskname, this, &CharOxidationMixtureFraction::computeSource, timeSubStep);
 
-  if (timeSubStep == 0 && !d_labelSchedInit) {
+  if (timeSubStep == 0 && !_label_sched_init) {
     // Every source term needs to set this flag after the varLabel is computed. 
     // transportEqn.cleanUp should reinitialize this flag at the end of the time step. 
-    d_labelSchedInit = true;
+    _label_sched_init = true;
   }
 
   if( timeSubStep == 0 ) {
-    tsk->computes(d_srcLabel);
+    tsk->computes(_src_label);
   } else {
-    tsk->modifies(d_srcLabel); 
+    tsk->modifies(_src_label); 
   }
 
   for( vector<const VarLabel*>::iterator iGasModel = GasModelLabels_.begin(); iGasModel != GasModelLabels_.end(); ++iGasModel ) {
     tsk->requires( Task::NewDW, *iGasModel, Ghost::None, 0 ); 
   }
 
-  sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials()); 
+  sched->addTask(tsk, level->eachPatch(), _shared_state->allArchesMaterials()); 
 
 }
 //---------------------------------------------------------------------------
@@ -102,14 +102,14 @@ CharOxidationMixtureFraction::computeSource( const ProcessorGroup* pc,
 
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlIndex = d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    int matlIndex = _shared_state->getArchesMaterial(archIndex)->getDWIndex(); 
 
     CCVariable<double> mixFracSrc; 
     if( timeSubStep == 0 ) {
-      new_dw->allocateAndPut( mixFracSrc, d_srcLabel, matlIndex, patch );
+      new_dw->allocateAndPut( mixFracSrc, _src_label, matlIndex, patch );
       mixFracSrc.initialize(0.0);
     } else {
-      new_dw->getModifiable( mixFracSrc, d_srcLabel, matlIndex, patch ); 
+      new_dw->getModifiable( mixFracSrc, _src_label, matlIndex, patch ); 
       mixFracSrc.initialize(0.0);
     } 
 
@@ -149,13 +149,13 @@ CharOxidationMixtureFraction::sched_dummyInit( const LevelP& level, SchedulerP& 
 
   Task* tsk = scinew Task(taskname, this, &CharOxidationMixtureFraction::dummyInit);
 
-  tsk->computes(d_srcLabel);
+  tsk->computes(_src_label);
 
-  for (std::vector<const VarLabel*>::iterator iter = d_extraLocalLabels.begin(); iter != d_extraLocalLabels.end(); iter++){
+  for (std::vector<const VarLabel*>::iterator iter = _extra_local_labels.begin(); iter != _extra_local_labels.end(); iter++){
     tsk->computes(*iter); 
   }
 
-  sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
+  sched->addTask(tsk, level->eachPatch(), _shared_state->allArchesMaterials());
 
 }
 void 
@@ -170,15 +170,15 @@ CharOxidationMixtureFraction::dummyInit( const ProcessorGroup* pc,
 
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlIndex = d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    int matlIndex = _shared_state->getArchesMaterial(archIndex)->getDWIndex(); 
 
     CCVariable<double> src;
 
-    new_dw->allocateAndPut( src, d_srcLabel, matlIndex, patch ); 
+    new_dw->allocateAndPut( src, _src_label, matlIndex, patch ); 
 
     src.initialize(0.0); 
 
-    for (std::vector<const VarLabel*>::iterator iter = d_extraLocalLabels.begin(); iter != d_extraLocalLabels.end(); iter++){
+    for (std::vector<const VarLabel*>::iterator iter = _extra_local_labels.begin(); iter != _extra_local_labels.end(); iter++){
       CCVariable<double> tempVar; 
       new_dw->allocateAndPut(tempVar, *iter, matlIndex, patch ); 
     }

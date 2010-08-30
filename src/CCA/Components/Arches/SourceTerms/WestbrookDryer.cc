@@ -15,23 +15,24 @@ WestbrookDryer::WestbrookDryer( std::string srcName, SimulationStateP& shared_st
                             vector<std::string> req_label_names ) 
 : SourceTermBase(srcName, shared_state, req_label_names)
 { 
-  d_srcLabel = VarLabel::create(srcName, CCVariable<double>::getTypeDescription()); 
+  _src_label = VarLabel::create(srcName, CCVariable<double>::getTypeDescription()); 
 
-  d_srcLabel = VarLabel::create( srcName, CCVariable<double>::getTypeDescription() ); 
+  _src_label = VarLabel::create( srcName, CCVariable<double>::getTypeDescription() ); 
 
-  d_extraLocalLabels.resize(4); 
+  _extra_local_labels.resize(4); 
   d_WDstrippingLabel = VarLabel::create( "WDstrip",  CCVariable<double>::getTypeDescription() ); 
-  d_extraLocalLabels[0] = d_WDstrippingLabel; 
+  _extra_local_labels[0] = d_WDstrippingLabel; 
   
   d_WDextentLabel    = VarLabel::create( "WDextent", CCVariable<double>::getTypeDescription() ); 
-  d_extraLocalLabels[1] = d_WDextentLabel; 
+  _extra_local_labels[1] = d_WDextentLabel; 
 
   d_WDO2Label        = VarLabel::create( "WDo2",     CCVariable<double>::getTypeDescription() ); 
-  d_extraLocalLabels[2] = d_WDO2Label; 
+  _extra_local_labels[2] = d_WDO2Label; 
 
   d_WDverLabel = VarLabel::create( "WDver", CCVariable<double>::getTypeDescription() ); 
-  d_extraLocalLabels[3] = d_WDverLabel; 
+  _extra_local_labels[3] = d_WDverLabel; 
 
+  _source_type = CC_SRC; 
 }
 
 WestbrookDryer::~WestbrookDryer()
@@ -78,26 +79,26 @@ WestbrookDryer::sched_computeSource( const LevelP& level, SchedulerP& sched, int
   std::string taskname = "WestbrookDryer::computeSource";
   Task* tsk = scinew Task(taskname, this, &WestbrookDryer::computeSource, timeSubStep);
 
-  if (timeSubStep == 0 && !d_labelSchedInit) {
+  if (timeSubStep == 0 && !_label_sched_init) {
     // Every source term needs to set this flag after the varLabel is computed. 
     // transportEqn.cleanUp should reinitialize this flag at the end of the time step. 
-    d_labelSchedInit = true;
+    _label_sched_init = true;
 
-    tsk->computes(d_srcLabel);
+    tsk->computes(_src_label);
     tsk->computes(d_WDstrippingLabel); 
     tsk->computes(d_WDextentLabel); 
     tsk->computes(d_WDO2Label); 
     tsk->computes(d_WDverLabel); 
   } else {
-    tsk->modifies(d_srcLabel); 
+    tsk->modifies(_src_label); 
     tsk->modifies(d_WDstrippingLabel); 
     tsk->modifies(d_WDextentLabel);   
     tsk->modifies(d_WDO2Label); 
     tsk->modifies(d_WDverLabel); 
   }
 
-  for (vector<std::string>::iterator iter = d_requiredLabels.begin(); 
-       iter != d_requiredLabels.end(); iter++) { 
+  for (vector<std::string>::iterator iter = _required_labels.begin(); 
+       iter != _required_labels.end(); iter++) { 
     // HERE I WOULD REQUIRE ANY VARIABLES NEEDED TO COMPUTE THE SOURCe
     //tsk->requires( Task::OldDW, .... ); 
   }
@@ -115,7 +116,7 @@ WestbrookDryer::sched_computeSource( const LevelP& level, SchedulerP& sched, int
   tsk->requires( Task::OldDW, hcMassFracLabel,  Ghost::None, 0 ); 
   tsk->requires( Task::OldDW, denLabel,         Ghost::None, 0 ); 
 
-  sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials()); 
+  sched->addTask(tsk, level->eachPatch(), _shared_state->allArchesMaterials()); 
 
 }
 //---------------------------------------------------------------------------
@@ -134,7 +135,7 @@ WestbrookDryer::computeSource( const ProcessorGroup* pc,
 
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlIndex = d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    int matlIndex = _shared_state->getArchesMaterial(archIndex)->getDWIndex(); 
 
     CCVariable<double> CxHyRate; // rate source term  
     CCVariable<double> S; // stripping fraction 
@@ -142,8 +143,8 @@ WestbrookDryer::computeSource( const ProcessorGroup* pc,
     CCVariable<double> w_o2; // mass fraction of O2
     CCVariable<double> ver; 
     
-    if ( new_dw->exists(d_srcLabel, matlIndex, patch ) ){
-      new_dw->getModifiable( CxHyRate, d_srcLabel, matlIndex, patch ); 
+    if ( new_dw->exists(_src_label, matlIndex, patch ) ){
+      new_dw->getModifiable( CxHyRate, _src_label, matlIndex, patch ); 
       new_dw->getModifiable( S, d_WDstrippingLabel, matlIndex, patch ); 
       new_dw->getModifiable( E, d_WDextentLabel, matlIndex, patch ); 
       new_dw->getModifiable( w_o2, d_WDO2Label, matlIndex, patch ); 
@@ -154,7 +155,7 @@ WestbrookDryer::computeSource( const ProcessorGroup* pc,
       w_o2.initialize(0.0); 
       ver.initialize(0.0); 
     } else {
-      new_dw->allocateAndPut( CxHyRate, d_srcLabel, matlIndex, patch );
+      new_dw->allocateAndPut( CxHyRate, _src_label, matlIndex, patch );
       new_dw->allocateAndPut( S, d_WDstrippingLabel, matlIndex, patch );
       new_dw->allocateAndPut( E, d_WDextentLabel, matlIndex, patch );
       new_dw->allocateAndPut( w_o2, d_WDO2Label, matlIndex, patch ); 
@@ -167,8 +168,8 @@ WestbrookDryer::computeSource( const ProcessorGroup* pc,
       ver.initialize(0.0); 
     } 
 
-    for (vector<std::string>::iterator iter = d_requiredLabels.begin(); 
-         iter != d_requiredLabels.end(); iter++) { 
+    for (vector<std::string>::iterator iter = _required_labels.begin(); 
+         iter != _required_labels.end(); iter++) { 
       //CCVariable<double> temp; 
       //old_dw->get( *iter.... ); 
     }
@@ -254,13 +255,13 @@ WestbrookDryer::sched_dummyInit( const LevelP& level, SchedulerP& sched )
 
   Task* tsk = scinew Task(taskname, this, &WestbrookDryer::dummyInit);
 
-  tsk->computes(d_srcLabel);
+  tsk->computes(_src_label);
 
-  for (std::vector<const VarLabel*>::iterator iter = d_extraLocalLabels.begin(); iter != d_extraLocalLabels.end(); iter++){
-    tsk->computes(*iter, d_sharedState->allArchesMaterials()->getUnion()); 
+  for (std::vector<const VarLabel*>::iterator iter = _extra_local_labels.begin(); iter != _extra_local_labels.end(); iter++){
+    tsk->computes(*iter, _shared_state->allArchesMaterials()->getUnion()); 
   }
 
-  sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
+  sched->addTask(tsk, level->eachPatch(), _shared_state->allArchesMaterials());
 
 }
 void 
@@ -275,14 +276,14 @@ WestbrookDryer::dummyInit( const ProcessorGroup* pc,
 
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlIndex = d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    int matlIndex = _shared_state->getArchesMaterial(archIndex)->getDWIndex(); 
 
     CCVariable<double> src;
-    new_dw->allocateAndPut( src, d_srcLabel, matlIndex, patch ); 
+    new_dw->allocateAndPut( src, _src_label, matlIndex, patch ); 
 
     src.initialize(0.0); 
 
-    for (std::vector<const VarLabel*>::iterator iter = d_extraLocalLabels.begin(); iter != d_extraLocalLabels.end(); iter++){
+    for (std::vector<const VarLabel*>::iterator iter = _extra_local_labels.begin(); iter != _extra_local_labels.end(); iter++){
       const VarLabel* tempVL = *iter; 
       CCVariable<double> tempVar; 
       new_dw->allocateAndPut(tempVar, tempVL, matlIndex, patch ); 

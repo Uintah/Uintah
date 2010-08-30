@@ -32,6 +32,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Arches/DQMOM.h>
 #include <CCA/Components/Arches/SourceTerms/SourceTermFactory.h>
 #include <CCA/Components/Arches/SourceTerms/SourceTermBase.h>
+#include <CCA/Components/Arches/SourceTerms/IntrusionInlet.h>
 #include <CCA/Components/Arches/CoalModels/CoalModelFactory.h>
 #include <CCA/Components/Arches/CoalModels/ModelBase.h>
 #include <CCA/Components/Arches/TransportEqns/EqnFactory.h>
@@ -39,7 +40,12 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqnFactory.h>
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqn.h>
 #include <CCA/Components/Arches/TransportEqns/ScalarEqn.h>
+#include <CCA/Components/Arches/PropertyModels/PropertyModelFactory.h>
+#include <CCA/Components/Arches/PropertyModels/PropertyModelBase.h>
 #include <CCA/Components/Arches/PropertyModels/LaminarPrNo.h>
+#include <CCA/Components/Arches/PropertyModels/ScalarDiss.h>
+#include <CCA/Components/Arches/PropertyModels/ExtentRxn.h>
+#include <CCA/Components/Arches/PropertyModels/TabStripFactor.h>
 #if HAVE_TABPROPS
 # include <CCA/Components/Arches/ChemMix/TabPropsInterface.h>
 #endif 
@@ -685,7 +691,18 @@ Arches::scheduleInitialize(const LevelP& level,
                                                 TimeIntegratorStepType::FE);
   init_timelabel_allocated = true;
 
+  // Property model initialization
+  PropertyModelFactory& propFactory = PropertyModelFactory::self(); 
+  PropertyModelFactory::PropMap& all_prop_models = propFactory.retrieve_all_property_models(); 
+  for ( PropertyModelFactory::PropMap::iterator iprop = all_prop_models.begin(); 
+      iprop != all_prop_models.end(); iprop++){
 
+    PropertyModelBase* prop_model = iprop->second; 
+    prop_model->sched_initialize( level, sched ); 
+
+  }
+
+  // Table Lookup 
   string mixmodel = d_props->getMixingModelType(); 
   if ( mixmodel != "TabProps") {
     d_props->sched_reComputeProps(sched, patches, matls,
@@ -758,7 +775,6 @@ Arches::scheduleInitialize(const LevelP& level,
 
   // compute the cell area fraction 
   d_boundaryCondition->sched_setAreaFraction( sched, patches, matls ); 
-    
 }
 
 void

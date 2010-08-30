@@ -7,11 +7,11 @@ using namespace Uintah;
 
 SourceTermBase::SourceTermBase( std::string srcName, SimulationStateP& shared_state,
                                 vector<std::string> required_labels ) : 
-d_srcName(srcName), d_sharedState( shared_state ), d_requiredLabels(required_labels)
+_src_name(srcName), _shared_state( shared_state ), _required_labels(required_labels)
 {
   // Create source term labels in child classes
   // (some have different types, e.g. CCVariable<Vector>)
-  d_labelSchedInit  = false; 
+  _label_sched_init  = false; 
   _init_type = "constant"; 
 }
 
@@ -19,13 +19,13 @@ SourceTermBase::SourceTermBase( std::string srcName,
                                 SimulationStateP& shared_state,
                                 vector<std::string> required_labels,
                                 ArchesLabel* fieldLabels ) : 
-d_srcName(srcName), d_sharedState( shared_state ), d_requiredLabels(required_labels), d_fieldLabels(fieldLabels)
+_src_name(srcName), _shared_state( shared_state ), _required_labels(required_labels), d_fieldLabels(fieldLabels)
 {
-  d_labelSchedInit = false;
+  _label_sched_init = false;
   _init_type = "constant";
 }
 
 SourceTermBase::~SourceTermBase()
 {
-  VarLabel::destroy(d_srcLabel); 
+  VarLabel::destroy(_src_label); 
 }

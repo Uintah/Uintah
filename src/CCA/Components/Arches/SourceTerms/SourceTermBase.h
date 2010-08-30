@@ -45,6 +45,9 @@ public:
 
   virtual ~SourceTermBase();
 
+  /** @brief Indicates the var type of source this is **/ 
+  enum MY_TYPE {CC_SRC, CCVECTOR_SRC, FX_SRC, FY_SRC, FZ_SRC}; 
+
   /** @brief Input file interface */
   virtual void problemSetup(const ProblemSpecP& db) = 0;  
 
@@ -68,13 +71,17 @@ public:
   /** @brief reinitialize the flags that tells the scheduler if the varLabel needs a compute or a modifies. */
   // Note I need two of these flags; 1 for scheduling and 1 for actual execution.
   inline void reinitializeLabel(){ 
-    d_labelSchedInit  = false; };
+    _label_sched_init  = false; };
 
+  /** @brief Returns the source label **/ 
   inline const VarLabel* getSrcLabel(){
-    return d_srcLabel; };
+    return _src_label; };
 
+  /** @brief Returns a list of any extra local labels this source may compute **/ 
   inline const vector<const VarLabel*> getExtraLocalLabels(){
-    return d_extraLocalLabels; }; 
+    return _extra_local_labels; }; 
+
+  inline MY_TYPE getSourceType(){ return _source_type; };
 
   /** @brief Builder class containing instructions on how to build the property model */ 
   class Builder { 
@@ -96,14 +103,21 @@ public:
 
 protected:
 
-  std::string d_srcName;                             ///< User assigned source name 
+  std::string _src_name;                             ///< User assigned source name 
   std::string _init_type;                            ///< Initialization type. 
-  const VarLabel* d_srcLabel;                        ///< Source varlabel
-  bool d_labelSchedInit;                             ///< Boolean to clarify if a "computes" or "requires" is needed
-  SimulationStateP& d_sharedState;                   ///< Local copy of sharedState
-  vector<std::string> d_requiredLabels;              ///< Vector of required labels
-  vector<const VarLabel*> d_extraLocalLabels;        ///< Extra labels that might be useful for storage
+
+
+
   ArchesLabel* d_fieldLabels;                        ///< Field labels (not used by default, only used when source term needs them)
+
+  bool _compute_me;                                  ///< To indicate if calculating this source is needed or has already been computed. 
+  const VarLabel* _src_label;                        ///< Source varlabel
+  bool _label_sched_init;                            ///< Boolean to clarify if a "computes" or "requires" is needed
+  SimulationStateP& _shared_state;                   ///< Local copy of sharedState
+  vector<std::string> _required_labels;              ///< Vector of required labels
+  vector<const VarLabel*> _extra_local_labels;       ///< Extra labels that might be useful for storage
+  
+  MY_TYPE _source_type;                              ///< Source type
 
 
 }; // end SourceTermBase

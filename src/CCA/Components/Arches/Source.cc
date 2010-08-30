@@ -691,25 +691,3 @@ Source::calculatePressMMSSourcePred(const ProcessorGroup* ,
   }
 }
 
-//****************************************************************************
-// Add the momentum source from particle-gas momentum exchange
-//****************************************************************************
-void
-Source::computeParticleSource(const ProcessorGroup*,
-                                const Patch* patch,
-                                CellInformation*,
-                                ArchesVariables* vars,
-                                ArchesConstVariables* constvars)
-{
-
-  for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
-    Vector Dx = patch->dCell();
-    double volume = Dx.x()*Dx.y()*Dx.z();
-    IntVector c = *iter;
-    vars->uVelNonlinearSrc[c] += vars->otherVectorSource[c].x()*volume;
-    vars->vVelNonlinearSrc[c] += vars->otherVectorSource[c].y()*volume;
-    vars->wVelNonlinearSrc[c] += vars->otherVectorSource[c].z()*volume;
-  }
-}
-
-

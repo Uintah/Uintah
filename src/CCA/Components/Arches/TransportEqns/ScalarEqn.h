@@ -129,6 +129,15 @@ public:
                 DataWarehouse* old_dw, 
                 DataWarehouse* new_dw  ); 
 
+  void sched_timeAveraging( const LevelP& level, SchedulerP& sched, int timeSubStep );
+
+  void timeAveraging( const ProcessorGroup* pc, 
+                      const PatchSubset* patches, 
+                      const MaterialSubset* matls, 
+                      DataWarehouse* old_dw, 
+                      DataWarehouse* new_dw,
+                      int timeSubStep );
+
   // ---------------------------------
   // Access functions:
 
@@ -161,6 +170,8 @@ private:
   double d_timestepMultiplier;
 
   vector<std::string> d_sources;
+
+  const VarLabel* d_prNo_label;           ///< Label for the prandlt number 
 
 }; // class ScalarEqn
 } // namespace Uintah

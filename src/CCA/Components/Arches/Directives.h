@@ -4,7 +4,7 @@
 // used by:
 // CoalModels
 #define TINY    1e-16
-#define DEBUG_MODELS
+//#define DEBUG_MODELS
 
 // used by:
 // BoundaryCond_new
@@ -23,7 +23,7 @@
 // DQMOM
 //#define VERIFY_LINEAR_SOLVER
 //#define VERIFY_AB_CONSTRUCTION
-#define DEBUG_MATRICES
+//#define DEBUG_MATRICES
 
 // used by:
 // ExplicitTimeInt

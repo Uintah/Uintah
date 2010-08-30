@@ -32,8 +32,11 @@ ScalarEqn::ScalarEqn( ArchesLabel* fieldLabels, ExplicitTimeInt* timeIntegrator,
 : 
 EqnBase( fieldLabels, timeIntegrator, eqnName )
 {
-  
-  std::string varname = eqnName+"_Fdiff"; 
+ 
+  std::string varname = eqnName; 
+  d_transportVarLabel = VarLabel::create(varname,
+            CCVariable<double>::getTypeDescription()); 
+  varname = eqnName+"_Fdiff"; 
   d_FdiffLabel = VarLabel::create(varname, 
             CCVariable<double>::getTypeDescription());
   varname = eqnName+"_Fconv"; 
@@ -45,10 +48,9 @@ EqnBase( fieldLabels, timeIntegrator, eqnName )
   varname = eqnName+"_old";
   d_oldtransportVarLabel = VarLabel::create(varname,
             CCVariable<double>::getTypeDescription());
-  varname = eqnName;
-  d_transportVarLabel = VarLabel::create(varname,
-            CCVariable<double>::getTypeDescription());
-
+  varname = eqnName+"_scalar_prNo"; 
+  d_prNo_label = VarLabel::create( varname, 
+            CCVariable<double>::getTypeDescription()); 
 }
 
 ScalarEqn::~ScalarEqn()
@@ -78,9 +80,10 @@ ScalarEqn::problemSetup(const ProblemSpecP& inputdb)
   db->getWithDefault( "timestepMultiplier", d_timestepMultiplier, 1.0);
   
   // algorithmic knobs
-  d_use_density_guess = false; // use the density guess rather than the new density from the table...implies that the equation is updated BEFORE properties are computed. 
-  if (db->findBlock("use_density_guess"))
-    d_use_density_guess = true; 
+  //Keep USE_DENSITY_GUESS set to true until the algorithmic details are settled. - Jeremy 
+  d_use_density_guess = true; // use the density guess rather than the new density from the table...implies that the equation is updated BEFORE properties are computed. 
+  //if (db->findBlock("use_density_guess"))
+  //  d_use_density_guess = true; 
 
   // Source terms:
   if (db->findBlock("src")){
@@ -341,7 +344,7 @@ ScalarEqn::buildTransportEqn( const ProcessorGroup* pc,
 
     //Ghost::GhostType  gaf = Ghost::AroundFaces;
     Ghost::GhostType  gac = Ghost::AroundCells;
-    //Ghost::GhostType  gn  = Ghost::None;
+    Ghost::GhostType  gn  = Ghost::None;
 
     const Patch* patch = patches->get(p);
     int archIndex = 0;
@@ -379,16 +382,18 @@ ScalarEqn::buildTransportEqn( const ProcessorGroup* pc,
     new_dw->getModifiable(Fdiff, d_FdiffLabel, matlIndex, patch);
     new_dw->getModifiable(Fconv, d_FconvLabel, matlIndex, patch); 
     new_dw->getModifiable(RHS, d_RHSLabel, matlIndex, patch);
-    //vector<constCCVarWrapper> sourceVars; 
-    //if (d_addSources) { 
-    //  SourceTermFactory& src_factory = SourceTermFactory::self(); 
-    //  for (vector<std::string>::iterator src_iter = d_sources.begin(); src_iter != d_sources.end(); src_iter++){
-    //    constCCVarWrapper temp_var;  // Outside of this scope src is no longer available 
-    //    SourceTermBase& temp_src = src_factory.retrieve_source_term( *src_iter ); 
-    //    new_dw->get(temp_var.data, temp_src.getSrcLabel(), matlIndex, patch, gn, 0);
-    //    sourceVars.push_back(temp_var); 
-    //  }
-    //}
+
+    vector< constCCVariable<double>* > sourceVars;
+    if( d_addSources ) {
+      SourceTermFactory& srcFactory = SourceTermFactory::self();
+      int z = 0;
+      for( vector<string>::iterator iSrc = d_sources.begin(); iSrc != d_sources.end(); ++iSrc, ++z ) {
+        sourceVars.push_back( scinew constCCVariable<double> );
+        SourceTermBase& tempSrc = srcFactory.retrieve_source_term( *iSrc );
+        new_dw->get( *sourceVars[z], tempSrc.getSrcLabel(), matlIndex, patch, gn, 0 );
+      }
+    }
+
     RHS.initialize(0.0); 
     Fconv.initialize(0.0); 
     Fdiff.initialize(0.0);
@@ -408,13 +413,14 @@ ScalarEqn::buildTransportEqn( const ProcessorGroup* pc,
       RHS[c] += Fdiff[c] - Fconv[c];
 
       //-----ADD SOURCES
-      //if (d_addSources) {
-      //  for (vector<constCCVarWrapper>::iterator siter = sourceVars.begin(); siter != sourceVars.end(); siter++){
-      //    RHS[c] += (siter->data)[c] * vol; 
-      //  }
-      //}
-    }
-  }
+      if( d_addSources ) {
+        for( vector< constCCVariable<double>* >::iterator iSource = sourceVars.begin(); iSource != sourceVars.end(); ++iSource ) {
+          RHS[c] += (**iSource)[c] * vol;
+        }
+      }
+    }//end cells
+
+  }//end patches
 }
 
 //---------------------------------------------------------------------------
@@ -434,11 +440,12 @@ ScalarEqn::sched_solveTransportEqn( const LevelP& level,
   tsk->modifies(d_transportVarLabel);
   tsk->modifies(d_oldtransportVarLabel); 
   tsk->requires(Task::NewDW, d_RHSLabel, Ghost::None, 0);
-  if ( d_use_density_guess ) {
-    tsk->requires(Task::NewDW, d_fieldLabels->d_densityGuessLabel, Ghost::None, 0);
-  } else {
+
+  //if ( d_use_density_guess ) {
+  //  tsk->requires(Task::NewDW, d_fieldLabels->d_densityGuessLabel, Ghost::None, 0);
+  //} else {
     tsk->requires(Task::NewDW, d_fieldLabels->d_densityCPLabel, Ghost::None, 0);
-  }
+  //}
 
   // DensityTemp is the density from the last substep (or timestep if substep = 0).
   if(timeSubStep == 0) {
@@ -448,7 +455,6 @@ ScalarEqn::sched_solveTransportEqn( const LevelP& level,
   }
 
   //Old
-  tsk->requires(Task::OldDW, d_transportVarLabel, Ghost::None, 0);
   tsk->requires(Task::OldDW, d_fieldLabels->d_sharedState->get_delt_label(), Ghost::None, 0);
 
   sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
@@ -488,16 +494,12 @@ ScalarEqn::solveTransportEqn( const ProcessorGroup* pc,
     constCCVariable<double> old_den; 
     constCCVariable<double> new_den; 
 
-    new_dw->getModifiable(phi_at_jp1, d_transportVarLabel, matlIndex, patch);
-    new_dw->getModifiable(phi_at_j,   d_oldtransportVarLabel, matlIndex, patch); 
+    new_dw->getModifiable( phi_at_jp1, d_transportVarLabel,    matlIndex, patch);
+    new_dw->getModifiable( phi_at_j,   d_oldtransportVarLabel, matlIndex, patch);
     old_dw->get(rk1_phi, d_transportVarLabel, matlIndex, patch, gn, 0);
     new_dw->get(RHS, d_RHSLabel, matlIndex, patch, gn, 0);
 
-    if (d_use_density_guess) {
-      new_dw->get(new_den, d_fieldLabels->d_densityGuessLabel, matlIndex, patch, gn, 0); 
-    } else {
-      new_dw->get(new_den, d_fieldLabels->d_densityCPLabel, matlIndex, patch, gn, 0);
-    }
+    new_dw->get(new_den, d_fieldLabels->d_densityCPLabel, matlIndex, patch, gn, 0);
 
     if ( timeSubStep == 0 ) {
       old_dw->get(old_den, d_fieldLabels->d_densityCPLabel, matlIndex, patch, gn, 0);
@@ -507,7 +509,7 @@ ScalarEqn::solveTransportEqn( const ProcessorGroup* pc,
 
     // update to get phi^{(j+1)}
     d_timeIntegrator->singlePatchFEUpdate( patch, phi_at_jp1, old_den, new_den, RHS, dt, curr_ssp_time, d_eqnName);
-    
+
     // Compute the current RK time. 
     double factor = d_timeIntegrator->time_factor[timeSubStep]; 
     curr_ssp_time = curr_time + factor * dt;
@@ -565,6 +567,91 @@ ScalarEqn::solveTransportEqn( const ProcessorGroup* pc,
 
   }
 }
+
+//---------------------------------------------------------------------------
+// Method: Schedule Time averaging 
+//---------------------------------------------------------------------------
+void
+ScalarEqn::sched_timeAveraging( const LevelP& level, SchedulerP& sched, int timeSubStep )
+{
+  string taskname = "ScalarEqn::timeAveraging";
+
+  Task* tsk = scinew Task(taskname, this, &ScalarEqn::timeAveraging, timeSubStep);
+
+  //New
+  tsk->modifies(d_transportVarLabel);
+  tsk->modifies(d_oldtransportVarLabel);
+  tsk->requires(Task::NewDW, d_fieldLabels->d_densityCPLabel, Ghost::None, 0);
+
+  //Old
+  tsk->requires(Task::OldDW, d_transportVarLabel, Ghost::None, 0);
+  if( timeSubStep == 0 ) {
+    tsk->requires(Task::OldDW, d_fieldLabels->d_densityCPLabel, Ghost::None, 0); 
+  } else {
+    tsk->requires(Task::NewDW, d_fieldLabels->d_densityTempLabel, Ghost::None, 0);
+  }
+  tsk->requires(Task::OldDW, d_fieldLabels->d_sharedState->get_delt_label(), Ghost::None, 0);
+
+  sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
+}
+//---------------------------------------------------------------------------
+// Method: Time averaging 
+//---------------------------------------------------------------------------
+void 
+ScalarEqn::timeAveraging( const ProcessorGroup* pc, 
+                          const PatchSubset* patches, 
+                          const MaterialSubset* matls, 
+                          DataWarehouse* old_dw, 
+                          DataWarehouse* new_dw,
+                          int timeSubStep )
+{
+  //patch loop
+  for (int p=0; p < patches->size(); p++){
+
+    Ghost::GhostType  gn  = Ghost::None;
+
+    const Patch* patch = patches->get(p);
+    int archIndex = 0;
+    int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+
+    delt_vartype DT;
+    old_dw->get(DT, d_fieldLabels->d_sharedState->get_delt_label());
+    double dt = DT; 
+
+    // Compute the current RK time. 
+    double factor = d_timeIntegrator->time_factor[timeSubStep]; 
+    curr_ssp_time = curr_time + factor * dt;
+
+    // Here, j is the rk step and n is the time step.  
+    //
+    CCVariable<double> phi_at_jp1;   // phi^{(j+1)}
+    constCCVariable<double> phi_at_j; // phi^{n}
+    constCCVariable<double> RHS; 
+    constCCVariable<double> old_den; 
+    constCCVariable<double> new_den; 
+
+    new_dw->getModifiable(phi_at_jp1, d_transportVarLabel, matlIndex, patch);
+    old_dw->get(phi_at_j, d_transportVarLabel, matlIndex, patch, gn, 0);
+    new_dw->get(RHS, d_RHSLabel, matlIndex, patch, gn, 0);
+
+    new_dw->get(new_den, d_fieldLabels->d_densityCPLabel, matlIndex, patch, gn, 0);
+
+    if ( timeSubStep == 0 ) {
+      old_dw->get(old_den, d_fieldLabels->d_densityCPLabel, matlIndex, patch, gn, 0);
+    } else {
+      new_dw->get(old_den, d_fieldLabels->d_densityTempLabel, matlIndex, patch, gn, 0); 
+    }
+
+    //----Time averaging done here. 
+    d_timeIntegrator->timeAvePhi( patch, phi_at_jp1, phi_at_j, new_den, old_den, timeSubStep, curr_ssp_time ); 
+
+    //----BOUNDARY CONDITIONS
+    //    must update BCs for next substep
+    computeBCs( patch, d_eqnName, phi_at_jp1 );
+
+  }
+}
+
 
 //---------------------------------------------------------------------------
 // Method: Compute the boundary conditions. 

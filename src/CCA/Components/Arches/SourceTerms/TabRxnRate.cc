@@ -3,42 +3,44 @@
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/Variables/CCVariable.h>
-#include <CCA/Components/Arches/SourceTerms/MMS1.h>
+#include <CCA/Components/Arches/SourceTerms/TabRxnRate.h>
 
 //===========================================================================
 
 using namespace std;
 using namespace Uintah; 
 
-MMS1::MMS1( std::string srcName, SimulationStateP& sharedState,
-                            vector<std::string> reqLabelNames ) 
-: SourceTermBase(srcName, sharedState, reqLabelNames)
+TabRxnRate::TabRxnRate( std::string src_name, SimulationStateP& shared_state,
+                            vector<std::string> req_label_names ) 
+: SourceTermBase(src_name, shared_state, req_label_names)
 {
-  _src_label = VarLabel::create(srcName, CCVariable<double>::getTypeDescription()); 
+  _label_sched_init = false; 
+  _src_label = VarLabel::create( src_name, CCVariable<double>::getTypeDescription() ); 
 }
 
-MMS1::~MMS1()
+TabRxnRate::~TabRxnRate()
 {}
 //---------------------------------------------------------------------------
 // Method: Problem Setup
 //---------------------------------------------------------------------------
 void 
-MMS1::problemSetup(const ProblemSpecP& inputdb)
+TabRxnRate::problemSetup(const ProblemSpecP& inputdb)
 {
 
   ProblemSpecP db = inputdb; 
 
-  _source_type = CC_SRC; 
+  db->require("rxn_rate",_rxn_rate); 
 
+  _source_type = CC_SRC; 
 }
 //---------------------------------------------------------------------------
 // Method: Schedule the calculation of the source term 
 //---------------------------------------------------------------------------
 void 
-MMS1::sched_computeSource( const LevelP& level, SchedulerP& sched, int timeSubStep )
+TabRxnRate::sched_computeSource( const LevelP& level, SchedulerP& sched, int timeSubStep )
 {
-  std::string taskname = "MMS1::computeSource";
-  Task* tsk = scinew Task(taskname, this, &MMS1::computeSource, timeSubStep);
+  std::string taskname = "TabRxnRate::eval";
+  Task* tsk = scinew Task(taskname, this, &TabRxnRate::computeSource, timeSubStep);
 
   if (timeSubStep == 0 && !_label_sched_init) {
     // Every source term needs to set this flag after the varLabel is computed. 
@@ -50,11 +52,9 @@ MMS1::sched_computeSource( const LevelP& level, SchedulerP& sched, int timeSubSt
     tsk->modifies(_src_label); 
   }
 
-  for (vector<std::string>::iterator iter = _required_labels.begin(); 
-       iter != _required_labels.end(); iter++) { 
-    // HERE I WOULD REQUIRE ANY VARIABLES NEEDED TO COMPUTE THE SOURCe
-    //tsk->requires( Task::OldDW, .... ); 
-  }
+  const VarLabel* the_label = VarLabel::find(_rxn_rate); 
+  tsk->requires( Task::OldDW, the_label, Ghost::None, 0 ); 
+
 
   sched->addTask(tsk, level->eachPatch(), _shared_state->allArchesMaterials()); 
 
@@ -63,55 +63,48 @@ MMS1::sched_computeSource( const LevelP& level, SchedulerP& sched, int timeSubSt
 // Method: Actually compute the source term 
 //---------------------------------------------------------------------------
 void
-MMS1::computeSource( const ProcessorGroup* pc, 
+TabRxnRate::computeSource( const ProcessorGroup* pc, 
                    const PatchSubset* patches, 
                    const MaterialSubset* matls, 
                    DataWarehouse* old_dw, 
                    DataWarehouse* new_dw, 
                    int timeSubStep )
 {
-  double pi = acos(-1.0); 
   //patch loop
   for (int p=0; p < patches->size(); p++){
 
     const Patch* patch = patches->get(p);
     int archIndex = 0;
     int matlIndex = _shared_state->getArchesMaterial(archIndex)->getDWIndex(); 
-    Vector Dx = patch->dCell(); 
 
-    CCVariable<double> mms1Src; 
+    CCVariable<double> rateSrc; 
     if ( new_dw->exists(_src_label, matlIndex, patch ) ){
-      new_dw->getModifiable( mms1Src, _src_label, matlIndex, patch ); 
+      new_dw->getModifiable( rateSrc, _src_label, matlIndex, patch ); 
+      rateSrc.initialize(0.0);
     } else {
-      new_dw->allocateAndPut( mms1Src, _src_label, matlIndex, patch );
-      mms1Src.initialize(0.0);
+      new_dw->allocateAndPut( rateSrc, _src_label, matlIndex, patch );
     } 
 
-    for (vector<std::string>::iterator iter = _required_labels.begin(); 
-         iter != _required_labels.end(); iter++) { 
-      //CCVariable<double> temp; 
-      //old_dw->get( *iter.... ); 
-    }
+    constCCVariable<double> rxn_rate; 
+    const VarLabel* the_label = VarLabel::find(_rxn_rate); 
+    old_dw->get( rxn_rate, the_label, matlIndex, patch, Ghost::None, 0 ); 
 
     for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
       IntVector c = *iter; 
-      double x = c[0]*Dx.x() + Dx.x()/2.; 
-      double y = c[1]*Dx.y() + Dx.y()/2.;
-      //double z = c[2]*Dx.z() + Dx.z()/2.;
-
-      mms1Src[c] = 2.*pi*cos(2.*pi*x)*cos(2.*pi*y) - 2.*pi*sin(2.*pi*x)*sin(2.*pi*y); 
+      rateSrc[c] = rxn_rate[c]; 
     }
   }
 }
+
 //---------------------------------------------------------------------------
 // Method: Schedule dummy initialization
 //---------------------------------------------------------------------------
 void
-MMS1::sched_dummyInit( const LevelP& level, SchedulerP& sched )
+TabRxnRate::sched_dummyInit( const LevelP& level, SchedulerP& sched )
 {
-  string taskname = "MMS1::dummyInit"; 
+  string taskname = "TabRxnRate::dummyInit"; 
 
-  Task* tsk = scinew Task(taskname, this, &MMS1::dummyInit);
+  Task* tsk = scinew Task(taskname, this, &TabRxnRate::dummyInit);
 
   tsk->computes(_src_label);
 
@@ -123,7 +116,7 @@ MMS1::sched_dummyInit( const LevelP& level, SchedulerP& sched )
 
 }
 void 
-MMS1::dummyInit( const ProcessorGroup* pc, 
+TabRxnRate::dummyInit( const ProcessorGroup* pc, 
                       const PatchSubset* patches, 
                       const MaterialSubset* matls, 
                       DataWarehouse* old_dw, 
@@ -135,6 +128,7 @@ MMS1::dummyInit( const ProcessorGroup* pc,
     const Patch* patch = patches->get(p);
     int archIndex = 0;
     int matlIndex = _shared_state->getArchesMaterial(archIndex)->getDWIndex(); 
+
 
     CCVariable<double> src;
 
@@ -148,3 +142,4 @@ MMS1::dummyInit( const ProcessorGroup* pc,
     }
   }
 }
+

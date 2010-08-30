@@ -11,3 +11,5 @@ SRCS += \
 	$(SRCDIR)/ParticleGasMomentum.cc \
 	$(SRCDIR)/UnweightedSrcTerm.cc \
 	$(SRCDIR)/Inject.cc \
+	$(SRCDIR)/TabRxnRate.cc \
+	$(SRCDIR)/IntrusionInlet.cc \

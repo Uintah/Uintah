@@ -263,6 +263,27 @@ EqnFactory::sched_evalTransportEqns( const LevelP& level, SchedulerP& sched, int
 
 }
 
+/** 
+@details
+Fixed a "bug" where the new scalar solver was not time averaging in a
+consistent manner with the other (old) scalars.  This was causing
+general instabilities in certain cases where the new scalars were acting
+as table parameters.  To fix this I had to:
+
+1) Separate out the time averaging in the scalar eqn and schedule it
+later in the algorithm
+2) Create a new timeAve procedure for equations that needed density
+3) Turned off the density guess knob for scalar equations until the
+algorithmic issues are settled.
+-- Jeremy
+*/
+void
+EqnFactory::sched_timeAveraging(const LevelP& level, SchedulerP& sched, int timeSubStep)
+{
+  for( EqnMap::iterator iEqn = eqns_.begin(); iEqn != eqns_.end(); ++iEqn ) {
+    iEqn->second->sched_timeAveraging( level, sched, timeSubStep );
+  }
+}
 
 /**
 @details

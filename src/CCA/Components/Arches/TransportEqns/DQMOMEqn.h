@@ -108,6 +108,9 @@ public:
   /** @brief Schedule the cleanup after this equation. */ 
   void sched_cleanUp( const LevelP&, SchedulerP& sched ); 
 
+  /** @brief Time averaging method required by base class. This method is empty (not needed) at the moment */
+  void sched_timeAveraging( const LevelP& level, SchedulerP& sched, int timeSubStep ){};
+
   /** @brief Actually clean up after the equation. This just reinitializes 
              source term booleans so that the code can determine if the source
              term label should be allocated or just retrieved from the data 

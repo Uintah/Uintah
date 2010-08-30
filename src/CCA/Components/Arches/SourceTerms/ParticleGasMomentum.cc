@@ -19,7 +19,7 @@ ParticleGasMomentum::ParticleGasMomentum( std::string srcName,
                                           vector<std::string> reqLabelNames ) 
 : SourceTermBase(srcName, sharedState, reqLabelNames)
 {
-  d_srcLabel = VarLabel::create(srcName, CCVariable<Vector>::getTypeDescription()); 
+  _src_label = VarLabel::create(srcName, CCVariable<Vector>::getTypeDescription()); 
 }
 
 ParticleGasMomentum::~ParticleGasMomentum()
@@ -43,16 +43,16 @@ ParticleGasMomentum::sched_computeSource( const LevelP& level, SchedulerP& sched
   std::string taskname = "ParticleGasMomentum::computeSource";
   Task* tsk = scinew Task(taskname, this, &ParticleGasMomentum::computeSource, timeSubStep);
 
-  if (timeSubStep == 0 && !d_labelSchedInit) {
+  if (timeSubStep == 0 && !_label_sched_init) {
     // Every source term needs to set this flag after the varLabel is computed. 
     // transportEqn.cleanUp should reinitialize this flag at the end of the time step. 
-    d_labelSchedInit = true;
+    _label_sched_init = true;
   }
 
   if( timeSubStep == 0 ) {
-    tsk->computes(d_srcLabel);
+    tsk->computes(_src_label);
   } else {
-    tsk->modifies(d_srcLabel); 
+    tsk->modifies(_src_label); 
   }
 
   CoalModelFactory& coal_model_factory = CoalModelFactory::self(); 
@@ -68,7 +68,7 @@ ParticleGasMomentum::sched_computeSource( const LevelP& level, SchedulerP& sched
     }
   }
   
-  sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
+  sched->addTask(tsk, level->eachPatch(), _shared_state->allArchesMaterials());
 
 }
 //---------------------------------------------------------------------------
@@ -91,13 +91,13 @@ ParticleGasMomentum::computeSource( const ProcessorGroup* pc,
 
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlIndex = d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    int matlIndex = _shared_state->getArchesMaterial(archIndex)->getDWIndex(); 
     
     CCVariable<Vector> dragSrc; 
     if( timeSubStep == 0 ) {
-      new_dw->allocateAndPut( dragSrc, d_srcLabel, matlIndex, patch );
+      new_dw->allocateAndPut( dragSrc, _src_label, matlIndex, patch );
     } else {
-      new_dw->getModifiable( dragSrc, d_srcLabel, matlIndex, patch ); 
+      new_dw->getModifiable( dragSrc, _src_label, matlIndex, patch ); 
     }
     dragSrc.initialize(Vector(0.,0.,0.));
 
@@ -160,13 +160,13 @@ ParticleGasMomentum::sched_dummyInit( const LevelP& level, SchedulerP& sched )
 
   Task* tsk = scinew Task(taskname, this, &ParticleGasMomentum::dummyInit);
 
-  tsk->computes(d_srcLabel);
+  tsk->computes(_src_label);
 
-  for (std::vector<const VarLabel*>::iterator iter = d_extraLocalLabels.begin(); iter != d_extraLocalLabels.end(); iter++){
+  for (std::vector<const VarLabel*>::iterator iter = _extra_local_labels.begin(); iter != _extra_local_labels.end(); iter++){
     tsk->computes(*iter); 
   }
 
-  sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
+  sched->addTask(tsk, level->eachPatch(), _shared_state->allArchesMaterials());
 
 }
 void 
@@ -181,15 +181,15 @@ ParticleGasMomentum::dummyInit( const ProcessorGroup* pc,
 
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlIndex = d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    int matlIndex = _shared_state->getArchesMaterial(archIndex)->getDWIndex(); 
 
     CCVariable<double> src;
 
-    new_dw->allocateAndPut( src, d_srcLabel, matlIndex, patch ); 
+    new_dw->allocateAndPut( src, _src_label, matlIndex, patch ); 
 
     src.initialize(0.0); 
 
-    for (std::vector<const VarLabel*>::iterator iter = d_extraLocalLabels.begin(); iter != d_extraLocalLabels.end(); iter++){
+    for (std::vector<const VarLabel*>::iterator iter = _extra_local_labels.begin(); iter != _extra_local_labels.end(); iter++){
       CCVariable<double> tempVar; 
       new_dw->allocateAndPut(tempVar, *iter, matlIndex, patch ); 
     }

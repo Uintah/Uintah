@@ -116,6 +116,10 @@ public:
                                 bool evalDensityGuessEqns,
                                 bool cleanup);
 
+  void sched_timeAveraging( const LevelP& level,
+                            SchedulerP&,
+                            int timeSubStep );
+
   ///////////////////////////////////////////////
   // Equation retrieval methods
 
