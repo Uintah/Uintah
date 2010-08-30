@@ -23,7 +23,7 @@ namespace Uintah {
 
 /** 
 * @class TransportEquationBase
-* @author Jeremy Thornock
+* @author Jeremy Thornock, Charles Reid
 * @date Oct 16, 2008 : Initial version \n
 *       July 2010    : Cleanup
 *
@@ -72,6 +72,9 @@ public:
                                         SchedulerP& sched, 
                                         int timeSubStep, 
                                         bool copyOldIntoNew ) = 0;
+
+  /** @brief Time averaging */ 
+  virtual void sched_timeAveraging( const LevelP&, SchedulerP& sched, int timeSubStep ) = 0; 
 
   /** @brief Checks that boundary conditions for this variable are set for every 
    * face for every child */ 
@@ -456,7 +459,11 @@ void EqnBase::initializationFunction( const Patch* patch, phiType& phi )
 
           if ( g_piece->inside(P) )
             phi[c] = d_constant_init; 
+          else 
+            phi[c] = 0.0;
 
+        } else {
+          phi[c] = 0.0;
         }
       }
     // ======= add other initialization functions below here ======

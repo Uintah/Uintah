@@ -1,56 +1,25 @@
-#ifndef Uintah_Component_Arches_MultiPointConst_h
-#define Uintah_Component_Arches_MultiPointConst_h
+
+#ifndef Uintah_Component_Arches_TabRxnRate_h
+#define Uintah_Component_Arches_TabRxnRate_h
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Grid/SimulationStateP.h>
 #include <CCA/Components/Arches/SourceTerms/SourceTermBase.h>
 #include <CCA/Components/Arches/SourceTerms/SourceTermFactory.h>
-#include <Core/GeometryPiece/GeometryPiece.h>
-#include <Core/GeometryPiece/GeometryPieceFactory.h>
-#include <Core/Grid/Box.h>
 
 namespace Uintah{
 
-//---------------------------------------------------------------------------
-// Builder
-class MultiPointConstBuilder: public SourceTermBuilder
-{
-public: 
-  MultiPointConstBuilder(std::string srcName, 
-                      vector<std::string> reqLabelNames, 
-                      SimulationStateP& sharedState);
-  ~MultiPointConstBuilder(); 
-
-  SourceTermBase* build(); 
-
-private:
-
-}; 
-// End Builder
-//---------------------------------------------------------------------------
-
-/** @class    MultiPointConst
-  * @atuhor   Jeremy Thornock
-  * @date     July 2010
-  * 
-  * @brief    Source term for injecting constant sources at specified regions in the flow via geom_objects.
-  *
-  */
-
-class MultiPointConst: public SourceTermBase {
+class TabRxnRate: public SourceTermBase {
 public: 
 
-  MultiPointConst( std::string srcName, SimulationStateP& shared_state, 
+  TabRxnRate( std::string srcName, SimulationStateP& shared_state, 
                 vector<std::string> reqLabelNames );
 
-  ~MultiPointConst();
-
+  ~TabRxnRate();
   /** @brief Interface for the inputfile and set constants */ 
   void problemSetup(const ProblemSpecP& db);
-
   /** @brief Schedule the calculation of the source term */ 
   void sched_computeSource( const LevelP& level, SchedulerP& sched, 
                             int timeSubStep );
-
   /** @brief Actually compute the source term */ 
   void computeSource( const ProcessorGroup* pc, 
                       const PatchSubset* patches, 
@@ -61,22 +30,41 @@ public:
 
   /** @brief Schedule a dummy initialization */ 
   void sched_dummyInit( const LevelP& level, SchedulerP& sched );
-
   void dummyInit( const ProcessorGroup* pc, 
                   const PatchSubset* patches, 
                   const MaterialSubset* matls, 
                   DataWarehouse* old_dw, 
                   DataWarehouse* new_dw );
 
-  inline string getType() {
-    return "MultiPointConst";
+  /** @brief  Return a string with the model type */
+  string getType() {
+    return "TabRxnRate";
   };
+
+  class Builder
+    : public SourceTermBase::Builder { 
+
+    public: 
+
+      Builder( std::string name, vector<std::string> required_label_names, SimulationStateP& shared_state ) 
+        : _name(name), _shared_state(shared_state), _required_label_names(required_label_names){};
+      ~Builder(){}; 
+
+      TabRxnRate* build()
+      { return scinew TabRxnRate( _name, _shared_state, _required_label_names ); };
+
+    private: 
+
+      std::string _name; 
+      SimulationStateP& _shared_state; 
+      vector<std::string> _required_label_names; 
+
+  }; // class Builder 
 
 private:
 
-  double d_constant; 
-  std::vector<GeometryPieceP> d_geomPieces; 
+  std::string _rxn_rate;                      ///< String idenifying which rate should be used. 
 
-}; // end MultiPointConst
+}; // end TabRxnRate
 } // end namespace Uintah
 #endif

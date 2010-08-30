@@ -62,14 +62,14 @@ public:
       Builder( std::string name, 
                vector<std::string> required_label_names, 
                SimulationStateP& shared_state ) : 
-               _name(name), d_sharedState(shared_state), _required_label_names(required_label_names){};
+               _name(name), _shared_state(shared_state), _required_label_names(required_label_names){};
       ~Builder(){};
       DevolMixtureFraction* build() { 
-        return scinew DevolMixtureFraction( _name, d_sharedState, _required_label_names ); 
+        return scinew DevolMixtureFraction( _name, _shared_state, _required_label_names ); 
       }
     private:
       std::string _name;
-      SimulationStateP& d_sharedState;
+      SimulationStateP& _shared_state;
       vector<std::string> _required_label_names;
   }; // class Builder
 

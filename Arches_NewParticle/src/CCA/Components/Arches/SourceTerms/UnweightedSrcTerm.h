@@ -58,14 +58,14 @@ public:
                vector<std::string> required_label_names, 
                SimulationStateP& shared_state,
                ArchesLabel* fieldLabels ) : 
-               _name(name), d_sharedState(shared_state), _required_label_names(required_label_names), d_fieldLabels(fieldLabels) {};
+               _name(name), _shared_state(shared_state), _required_label_names(required_label_names), d_fieldLabels(fieldLabels) {};
       ~Builder(){};
       UnweightedSrcTerm* build() { 
-        return scinew UnweightedSrcTerm( _name, d_sharedState, _required_label_names, d_fieldLabels ); 
+        return scinew UnweightedSrcTerm( _name, _shared_state, _required_label_names, d_fieldLabels ); 
       }
     private:
       std::string _name;
-      SimulationStateP& d_sharedState;
+      SimulationStateP& _shared_state;
       vector<std::string> _required_label_names;
       ArchesLabel* d_fieldLabels;
   }; // class Builder

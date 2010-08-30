@@ -492,7 +492,7 @@ namespace Uintah{
           face_values.plus  = 0.0;
           face_values.minus = 0.0;
 
-          double r; 
+          double r = 0; 
           double psi; 
           double Sup;
           double Sdn;
