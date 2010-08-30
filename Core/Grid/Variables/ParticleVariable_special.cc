@@ -69,8 +69,8 @@ using namespace SCIRun;
   // specialization for T=Point
   template <>
   void ParticleVariable<Point>::gather(ParticleSubset* pset,
-                                       vector<ParticleSubset*> subsets,
-                                       vector<ParticleVariableBase*> srcs,
+                                       const vector<ParticleSubset*> &subsets,
+                                       const vector<ParticleVariableBase*> &srcs,
                                        const vector<const Patch*>& srcPatches,
                                        particleIndex extra)
   {
