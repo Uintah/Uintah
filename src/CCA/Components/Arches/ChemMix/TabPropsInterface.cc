@@ -591,6 +591,7 @@ TabPropsInterface::computeFirstEnthalpy( const ProcessorGroup* pc,
 
         the_variables.push_back( test_Var ); 
       } else {
+
         constCCVariable<double> a_null_var;
         the_variables.push_back( a_null_var ); // to preserve the total number of IV otherwise you will have problems below
       }
@@ -605,7 +606,6 @@ TabPropsInterface::computeFirstEnthalpy( const ProcessorGroup* pc,
 
         if ( d_allIndepVarNames[index] != "heat_loss" ) 
           iv.push_back( (*i)[c] );
-          //iv.push_back(0.0);
         else 
           iv.push_back( d_hl_scalar_init ); 
 
