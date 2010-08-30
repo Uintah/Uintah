@@ -276,6 +276,10 @@ cleantau:
 	rm -f Uintah/CCA/Components/Schedulers/ThreadPool.$(OBJEXT)
 	rm -f Uintah/StandAlone/sus.$(OBJEXT)
 
+cleanVisIt:
+	@echo "Removing udaReaderMTMD directory,"
+	rm -rf VisIt/udaReaderMTMD
+
 ifeq (,$(findstring objs,$(MAKECMDGOALS)))
 # This includes all of the dependencies.  We prepend the absolute path
 # to the obj dir to prevent make from wasting time searching for them
