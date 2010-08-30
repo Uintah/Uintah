@@ -83,6 +83,8 @@ ParticleSubset::ParticleSubset(int num_particles, int matlIndex, const Patch* pa
     d_low(low), d_high(high),
     neighbors(neighbors), neighbor_subsets(neighbor_subsets)
 {
+  //cout << "ParticleSubset contstructor called\n";
+  //WAIT_FOR_DEBUGGER();
   init();
   for(int i=0;i<(int)neighbor_subsets.size();i++)
     neighbor_subsets[i]->addReference();

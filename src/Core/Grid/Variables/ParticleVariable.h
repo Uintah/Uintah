@@ -157,13 +157,13 @@ public:
 
   // specialized for T=Point
   virtual void gather(ParticleSubset* dest,
-                      std::vector<ParticleSubset*> subsets,
-                      std::vector<ParticleVariableBase*> srcs,
+                      const std::vector<ParticleSubset*> &subsets,
+                      const std::vector<ParticleVariableBase*> &srcs,
                       const std::vector<const Patch*>& /*srcPatches*/,
                       particleIndex extra = 0);  
   virtual void gather(ParticleSubset* dest,
-                      std::vector<ParticleSubset*> subsets,
-                      std::vector<ParticleVariableBase*> srcs,
+                      const std::vector<ParticleSubset*> &subsets,
+                      const std::vector<ParticleVariableBase*> &srcs,
                       particleIndex extra = 0);
   
   virtual void unpackMPI(void* buf, int bufsize, int* bufpos,
@@ -373,15 +373,15 @@ private:
   // specialization for T=Point
   template <>
   UINTAHSHARE void ParticleVariable<Point>::gather(ParticleSubset* pset,
-                                       vector<ParticleSubset*> subsets,
-                                       vector<ParticleVariableBase*> srcs,
+                                       const vector<ParticleSubset*> &subsets,
+                                       const vector<ParticleVariableBase*> &srcs,
                                        const vector<const Patch*>& srcPatches,
                                        particleIndex extra);
 
   template<class T>
     void ParticleVariable<T>::gather(ParticleSubset* pset,
-                                     vector<ParticleSubset*> subsets,
-                                     vector<ParticleVariableBase*> srcs,
+                                     const vector<ParticleSubset*> &subsets,
+                                     const vector<ParticleVariableBase*> &srcs,
                                      const vector<const Patch*>& /*srcPatches*/,
                                      particleIndex extra)
   { gather(pset, subsets, srcs, extra); }
@@ -389,8 +389,8 @@ private:
 template<class T>
   void
   ParticleVariable<T>::gather(ParticleSubset* pset,
-                              std::vector<ParticleSubset*> subsets,
-                              std::vector<ParticleVariableBase*> srcs,
+                              const std::vector<ParticleSubset*> &subsets,
+                              const std::vector<ParticleVariableBase*> &srcs,
                               particleIndex extra)
   {
     if(d_pdata && d_pdata->removeReference())
