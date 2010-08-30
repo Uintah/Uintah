@@ -67,7 +67,7 @@ namespace Wasatch{
    *  \brief Obtain the number of ghost cells for a given SpatialOps
    *         field type.
    */
-  template<typename FieldT> inline int getNGhost(){ return FieldT::Ghost::NM; }
+  template<typename FieldT> inline int getNGhost(){ return FieldT::Ghost::NGHOST; }
   template<> inline int getNGhost<double>(){ return 0; };
 
   /**
