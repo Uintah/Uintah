@@ -30,7 +30,7 @@ DEALINGS IN THE SOFTWARE.
 //Allgatherv currently performs poorly on Kraken.  
 //This hack changes the Allgatherv to an allgather 
 //by padding the digits
-//#define AG_HACK  
+#define AG_HACK  
 
 #include <TauProfilerForSCIRun.h>
 #include <CCA/Components/LoadBalancers/ParticleLoadBalancer.h>
@@ -69,7 +69,7 @@ static DebugStream lbout("LBOut",false);
 
 //if defined the space-filling curve will be computed in parallel, this may not be a good idea because the time to compute 
 //the space-filling curve is so small that it might not parallelize well.
-//#define SFC_PARALLEL  
+#define SFC_PARALLEL  
 
 ParticleLoadBalancer::ParticleLoadBalancer(const ProcessorGroup* myworld)
   : LoadBalancerCommon(myworld), sfc(myworld)
@@ -371,6 +371,7 @@ void ParticleLoadBalancer::collectParticles(const Grid* grid, vector<vector<int>
 
 void ParticleLoadBalancer::useSFC(const LevelP& level, int* order)
 {
+  MALLOC_TRACE_TAG_SCOPE("ParticleLoadBalancer::useSFC");
   vector<DistributedIndex> indices; //output
   vector<double> positions;
 
@@ -662,6 +663,7 @@ void ParticleLoadBalancer::assignPatches( const vector<double> &previousProcCost
 
 bool ParticleLoadBalancer::loadBalanceGrid(const GridP& grid, bool force)
 {
+  MALLOC_TRACE_TAG_SCOPE("ParticleLoadBalancer::loadBalanceGrid");
   doing << d_myworld->myrank() << "   APF\n";
   vector<vector<double> > cellCosts;
   vector<vector<double> > particleCosts;
@@ -1049,6 +1051,7 @@ ParticleLoadBalancer::restartInitialize( DataArchive* archive, int time_index, P
 //if it is not a regrid the patch information is stored in grid, if it is during a regrid the patch information is stored in patches
 void ParticleLoadBalancer::getCosts(const Grid* grid, vector<vector<double> >&particle_costs, vector<vector<double> > &cell_costs)
 {
+  MALLOC_TRACE_TAG_SCOPE("ParticleLoadBalancer::getCosts");
   particle_costs.clear();
   cell_costs.clear();
     
@@ -1109,8 +1112,8 @@ void ParticleLoadBalancer::getCosts(const Grid* grid, vector<vector<double> >&pa
 
 bool ParticleLoadBalancer::possiblyDynamicallyReallocate(const GridP& grid, int state)
 {
-  MALLOC_TRACE_TAG_SCOPE("ParticleLoadBalancer::possiblyParticleallyReallocate");
-  TAU_PROFILE("ParticleLoadBalancer::possiblyParticleallyReallocate()", " ", TAU_USER);
+  MALLOC_TRACE_TAG_SCOPE("ParticleLoadBalancer::possiblyDynamicallyReallocate");
+  TAU_PROFILE("ParticleLoadBalancer::possiblyDynamicallyReallocate()", " ", TAU_USER);
 
   if (d_myworld->myrank() == 0)
     dbg << d_myworld->myrank() << " In DLB, state " << state << endl;
