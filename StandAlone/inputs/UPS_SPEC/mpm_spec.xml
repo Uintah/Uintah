@@ -109,7 +109,7 @@
       <contact                           spec="MULTIPLE NO_DATA" >
         <direction                       spec="OPTIONAL VECTOR" />
         <myu                             spec="OPTIONAL DOUBLE 'positive'" /> <!-- Used in NodalSVFContact -->
-        <use_svf                         spec="REQUIRED BOOLEAN"/>            <!-- Used in NodalSVFContact -->
+        <use_svf                         spec="OPTIONAL BOOLEAN"/>            <!-- Used in NodalSVFContact -->
         <mu                              spec="OPTIONAL DOUBLE 'positive'" /> <!-- ONLY USED FOR FRICTION OR APPROACH -->
         <volume_constraint               spec="OPTIONAL DOUBLE 'positive'" /> <!-- ONLY USED FOR FRICTION OR APPROACH -->
         <materials                       spec="OPTIONAL MULTIPLE_INTEGERS" />
