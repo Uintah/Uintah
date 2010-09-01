@@ -605,6 +605,7 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
 
   scheduleApplyExternalLoads(             sched, patches, matls);
   scheduleInterpolateParticlesToGrid(     sched, patches, matls);
+  scheduleExMomInterpolated(              sched, patches, matls);
   scheduleUpdateCohesiveZones(            sched, patches, mpm_matls_sub,
                                                           cz_matls_sub,
                                                           all_matls);
@@ -612,7 +613,6 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
   scheduleAddCohesiveZoneForces(          sched, patches, mpm_matls_sub,
                                                           cz_matls_sub,
                                                           all_matls);
-  scheduleExMomInterpolated(              sched, patches, matls);
   scheduleComputeContactArea(             sched, patches, matls);
   scheduleComputeInternalForce(           sched, patches, matls);
 
