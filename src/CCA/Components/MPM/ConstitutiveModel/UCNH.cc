@@ -580,7 +580,7 @@ void UCNH::initializeCMData(const Patch* patch,
     
     if (d_epsf.dist == "gauss"){
       // Initialize a gaussian random number generator
-      SCIRun::Gaussian gaussGen(d_epsf.mean, d_epsf.std, 0);
+      SCIRun::Gaussian gaussGen(d_epsf.mean, d_epsf.std, d_epsf.seed);
       
       for(;iter != pset->end();iter++){
         pBeBar[*iter]         = Identity;
@@ -1551,7 +1551,7 @@ void UCNH::updateFailedParticlesAndModifyStress(const Matrix3& defGrad,
   if (flag->d_doErosion) {
     // Compute pressure
     double pressure = (1.0/3.0)*pStress.Trace();
-    if (pLocalized || pLocalized_new) {
+    if (pLocalized != 0) {
       if (d_allowNoTension) {
         if (pressure > 0.0) 
             pStress = zero;
