@@ -66,7 +66,7 @@ namespace Uintah {
    ****************************************/
   class CrashPad {
     public:
-      static void clearMessages() {d_messages.clear();}
+      static void clearMessages() {d_messages.str(std::string());}
       static void printMessages(std::ostream &out)
       {
           out << d_messages;
