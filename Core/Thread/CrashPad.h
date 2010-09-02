@@ -45,6 +45,7 @@
 
 #include <ostream>
 #include <string>
+#include <sstream>
 #include <vector>
 
 namespace Uintah {
@@ -65,17 +66,16 @@ namespace Uintah {
    ****************************************/
   class CrashPad {
     public:
-      static void addMessage(std::string msg) {d_messages.push_back(msg);}
       static void clearMessages() {d_messages.clear();}
       static void printMessages(std::ostream &out)
       {
-        for( std::vector<std::string>::iterator iter=d_messages.begin();iter!=d_messages.end();++iter)
-          out << *iter;
+          out << d_messages;
       }
+      static std::stringstream d_messages;
     private:
 
-      static std::vector<std::string> d_messages;
   };
+#define crashout CrashPad::d_messages
 } // End namespace SCIRun
 
 #endif
