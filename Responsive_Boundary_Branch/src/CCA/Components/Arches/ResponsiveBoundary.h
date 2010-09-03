@@ -509,7 +509,7 @@ class ResponsiveBoundary {
         double RB_Reflectivity;
 //	vector<double> dz;
         bool RB_Accelerate;
-	
+        double RB_AccelTime; 	
 	
 	
 	//computed members

@@ -1591,6 +1591,7 @@ ResponsiveBoundary::problemSetup(ProblemSpecP& params,
   params->getWithDefault("SurfaceReflectivity", RB_Reflectivity, 0.07);
   params->getWithDefault("ReferenceTemperature", RB_RefTemp, 298.15);
   params->getWithDefault("Accelerate", RB_Accelerate, false);
+  params->getWithDefault("AccelTime", RB_AccelTime, 3.0);
 
 //Obtain the liquid pool Composition 
   ProblemSpecP rb_db = params->findBlock("FuelComposition");                                     
@@ -1786,7 +1787,6 @@ ResponsiveBoundary::updateResponsiveBoundaryProfile(const ProcessorGroup* /*pc*/
     //Aquire the time step size:
     double rdelta_t;
     double ElapsedTime = d_lab->d_sharedState->getElapsedTime();
-    double AccelTime = 3.0;
     double TFACTOR = 10.0;
     if(initialStep)
     {
@@ -1797,8 +1797,8 @@ ResponsiveBoundary::updateResponsiveBoundaryProfile(const ProcessorGroup* /*pc*/
       delt_vartype delT;   
       old_dw->get(delT, d_lab->d_sharedState->get_delt_label());  
       if (!RB_Accelerate) {rdelta_t = delT;}   
-      if ((RB_Accelerate) && (ElapsedTime >= AccelTime)) {rdelta_t = delT;}
-      if ((RB_Accelerate) && (ElapsedTime < AccelTime)) {rdelta_t = TFACTOR*delT;} 
+      if ((RB_Accelerate) && (ElapsedTime >= RB_AccelTime)) {rdelta_t = delT;}
+      if ((RB_Accelerate) && (ElapsedTime < RB_AccelTime)) {rdelta_t = TFACTOR*delT;} 
     }
     
     // get cellType, density and velocity
