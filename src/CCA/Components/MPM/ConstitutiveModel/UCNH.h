@@ -123,6 +123,7 @@ namespace Uintah {
     // Flags indicating if damage and/or plasticity should be used
     bool d_useDamage;
     bool d_usePlasticity;
+    std::string d_failureCriteria;
       
     // Basic Requirements //
     ////////////////////////
