@@ -60,13 +60,13 @@ PSELIBS :=              \
 #------------------------------------------------------------------------
 #jcs these are currently hacked in and work only for my Mac laptop.
 #    eventually we need to get them working from the configure script.
-SPATIALOPS_INCLUDE := -I/Users/u0033394/projects/SpatialOps/build/include
-SPATIALOPS_LIBRARY := /Users/u0033394/projects/SpatialOps/build/lib/spatialops/libspatialops.a
+SPATIALOPS_INCLUDE := -I/jcs/apps/include
+SPATIALOPS_LIBRARY := /jcs/apps/lib/spatialops/libspatialops.a
 
 EXPRLIB_INCLUDE    := -I/Users/u0033394/projects/ExprLib/buildUintah/install_dir/include
 EXPRLIB_LIBRARY    := /Users/u0033394/projects/ExprLib/buildUintah/install_dir/lib/expression/libexprlib.a
 
-BOOST_INCLUDE      := /jcs/apps/include/boost-1.41.0
+BOOST_INCLUDE      := -I/jcs/apps/include/boost-1.41.0
 BOOST_LIBRARY      := /jcs/apps/lib/boost-1.41.0/libboost_thread-mt.a /jcs/apps/lib/boost-1.41.0/libboost_signals-mt.a
 #------------------------------------------------------------------------
 

@@ -187,8 +187,8 @@ int set_MMS_BCs_FC( const Patch* patch,
               + y_one_zero * vel.y()
               + z_one_zero * vel.z();
   }
-  int IveSetBC = 1; 
-  return IveSetBC; 
+  int nCells = bound_ptr.size(); 
+  return nCells; 
 }                        
                                                 
 } // End namespace Uintah

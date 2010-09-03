@@ -104,10 +104,12 @@ namespace Uintah {
       double A;
       double B;
       double C;
+      double Cv;
       double R1;
       double R2;
       double om;
     };
+
 
     typedef ViscoScramStateData StateData;
     
@@ -134,6 +136,7 @@ namespace Uintah {
 
     // Create datatype for storing model parameters
     bool d_useJWLEOS;
+    bool d_useJWLCEOS;
     bool d_useModifiedEOS;
     bool d_useMurnahanEOS;
     bool d_random;
@@ -227,16 +230,26 @@ namespace Uintah {
     /*! Used by MPMICE for pressure equilibriation */
     virtual double computeRhoMicroCM(double pressure,
                                      const double p_ref,
-                                     const MPMMaterial* matl);
+                                     const MPMMaterial* matl,
+                                     double temperature);
 
     /*! Used by MPMICE for pressure equilibriation */
     virtual void computePressEOSCM(double rho_m, double& press_eos,
                                    double p_ref,
                                    double& dp_drho, double& ss_new,
-                                   const MPMMaterial* matl);
+                                   const MPMMaterial* matl,
+                                   double temperature);
 
     /*! Used by MPMICE for pressure equilibriation */
     virtual double getCompressibility();
+
+    double   Pressure;
+    double   Temperature;
+    double   SpecificHeat;
+    double   IL, IR;
+    double func(double rhoM,const MPMMaterial* matl);
+    double deri(double rhoM,const MPMMaterial* matl);
+    void   setInterval(double f, double rhoM);
 
   };
 

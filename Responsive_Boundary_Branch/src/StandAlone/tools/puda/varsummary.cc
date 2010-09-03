@@ -263,63 +263,11 @@ printMinMax( CommandLineFlags & clf,
   // to do the following switch(), and then cast the variables to
   // what they really are.
 
-  switch( td->getType() ) {
-  case( Uintah::TypeDescription::Matrix3 ) :
-    {
-      double patchMin = ((Matrix3*)(min))->Norm();
-      double patchMax = ((Matrix3*)(max))->Norm();
-
-      if( !clf.be_brief ) {
-        cout << "\t\t\t\tMin Norm: " << patchMin << "\n";
-        cout << "\t\t\t\tMax Norm: " << patchMax << "\n";
-      }
-
-      // Have to cast to 'what it already is' so that compiler won't
-      // complain when instantiating this function for other types.
-      // (Note: When this function if instantiated for, say, a Point,
-      // (ie: another type), this line won't be called, so the cast is
-      // ok.)
-
-      ((MinMaxInfo<Matrix3>*) mmInfo)->updateMinMax( patch->getLevel()->getIndex(), *(Matrix3*)min, *(Matrix3*)max );
-
-      break;
-    }
-  case( Uintah::TypeDescription::Vector ) :
-    {
-      double minMagnitude = ((Vector*)(min))->length();
-      double maxMagnitude = ((Vector*)(max))->length();
-
-      if( minMagnitude > maxMagnitude ) {
-        IntVector * c_temp = c_min;
-        c_min = c_max;
-        c_max = c_temp;
-
-        double temp = minMagnitude;
-        minMagnitude = maxMagnitude;
-        maxMagnitude = temp;
-
-        int cntTemp = minCnt;
-        minCnt = maxCnt;
-        maxCnt = cntTemp;
-      }
-
-      ((MinMaxInfo<Vector>*) mmInfo)->updateMinMax( patch->getLevel()->getIndex(), *(Vector*)min, *(Vector*)max );
-
-      if( !clf.be_brief ) {
-        cout << "\t\t\t\tmin magnitude: " << minMagnitude << "\n";
-        cout << "\t\t\t\tmax magnitude: " << maxMagnitude << "\n";
-      }
-      break;
-    }
-  default: 
-    {
-      if( !clf.be_brief ) {
-        cout << "\t\t\t\tmin value: " << *min << "\n";
-        cout << "\t\t\t\tmax value: " << *max << "\n";
-      }
-      mmInfo->updateMinMax( patch->getLevel()->getIndex(), *min, *max );
-    }
+  if( !clf.be_brief ) {
+    cout << "\t\t\t\tmin value: " << *min << "\n";
+    cout << "\t\t\t\tmax value: " << *max << "\n";
   }
+  mmInfo->updateMinMax( patch->getLevel()->getIndex(), *min, *max );
   if( c_min != NULL && !clf.be_brief ) {
     cout << "\t\t\t\tmin location: " << *c_min << " (Occurrences: ~" << minCnt << ")\n";
   }
@@ -328,6 +276,117 @@ printMinMax( CommandLineFlags & clf,
   }
 
 } // end printMinMax()
+
+template <>
+void
+printMinMax<Matrix3>( CommandLineFlags & clf,
+             const string     & var,
+             int                matl,
+             const Patch      * patch,
+             const Uintah::TypeDescription * td,
+             Matrix3             * min,
+             Matrix3             * max,
+             IntVector        * c_min ,
+             IntVector        * c_max ,
+             int                minCnt, 
+             int                maxCnt )
+{
+  stringstream ss;
+  ss << var << " (matl: " << matl << ")";
+
+  MinMaxInfoBase   * mmBase = globalMinMax[ ss.str() ];
+  MinMaxInfo<Matrix3> * mmInfo = dynamic_cast< MinMaxInfo<Matrix3> *>( mmBase );
+  if( mmInfo == NULL ) {
+    // cout << "Creating new data store for " << var << ", malt: " << matl << " for Type: " << td->getName() << "\n";
+    mmInfo = new MinMaxInfo<Matrix3>();
+    globalMinMax[ ss.str() ] = mmInfo;
+
+  }
+  mmInfo->verifyNumberOfLevels( patch->getLevel()->getIndex() );
+
+  //cout << "Min max for '" << var << "' matl " << matl << " on level " << patch->getLevel()->getIndex() << " is:\n";
+
+  // In order to print out the values in a type-unique way, we have
+  // to do the following switch(), and then cast the variables to
+  // what they really are.
+
+  double patchMin = min->Norm();
+  double patchMax = max->Norm();
+
+  if( !clf.be_brief ) {
+    cout << "\t\t\t\tMin Norm: " << patchMin << "\n";
+    cout << "\t\t\t\tMax Norm: " << patchMax << "\n";
+  }
+
+  // Have to cast to 'what it already is' so that compiler won't
+  // complain when instantiating this function for other types.
+  // (Note: When this function if instantiated for, say, a Point,
+  // (ie: another type), this line won't be called, so the cast is
+  // ok.)
+
+  mmInfo->updateMinMax( patch->getLevel()->getIndex(), *min, *max );
+
+} // end printMinMax()
+template <>
+void
+printMinMax<Vector>( CommandLineFlags & clf,
+             const string     & var,
+             int                matl,
+             const Patch      * patch,
+             const Uintah::TypeDescription * td,
+             Vector             * min,
+             Vector             * max,
+             IntVector        * c_min,
+             IntVector        * c_max,
+             int                minCnt, 
+             int                maxCnt)
+{
+  stringstream ss;
+  ss << var << " (matl: " << matl << ")";
+
+  MinMaxInfoBase   * mmBase = globalMinMax[ ss.str() ];
+  MinMaxInfo<Vector> * mmInfo = dynamic_cast< MinMaxInfo<Vector> *>( mmBase );
+  if( mmInfo == NULL ) {
+    // cout << "Creating new data store for " << var << ", malt: " << matl << " for Type: " << td->getName() << "\n";
+    mmInfo = new MinMaxInfo<Vector>();
+    globalMinMax[ ss.str() ] = mmInfo;
+
+  }
+  mmInfo->verifyNumberOfLevels( patch->getLevel()->getIndex() );
+
+  //cout << "Min max for '" << var << "' matl " << matl << " on level " << patch->getLevel()->getIndex() << " is:\n";
+
+  // In order to print out the values in a type-unique way, we have
+  // to do the following switch(), and then cast the variables to
+  // what they really are.
+
+  double minMagnitude = min->length();
+  double maxMagnitude = max->length();
+
+  if( minMagnitude > maxMagnitude ) {
+    IntVector * c_temp = c_min;
+    c_min = c_max;
+    c_max = c_temp;
+
+    double temp = minMagnitude;
+    minMagnitude = maxMagnitude;
+    maxMagnitude = temp;
+
+    int cntTemp = minCnt;
+    minCnt = maxCnt;
+    maxCnt = cntTemp;
+  }
+
+  ((MinMaxInfo<Vector>*) mmInfo)->updateMinMax( patch->getLevel()->getIndex(), *min, *max );
+
+  if( !clf.be_brief ) {
+    cout << "\t\t\t\tmin magnitude: " << minMagnitude << "\n";
+    cout << "\t\t\t\tmax magnitude: " << maxMagnitude << "\n";
+  }
+} // end printMinMax()
+
+
+
 
 
 ////////////////////////////////////////////////////////////////////////////////////

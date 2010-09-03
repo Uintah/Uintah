@@ -657,7 +657,8 @@ void Diamm::addComputesAndRequires(Task*,
 
 double Diamm::computeRhoMicroCM(double pressure,
                                   const double p_ref,
-                                  const MPMMaterial* matl)
+                                  const MPMMaterial* matl, 
+                                  double temperature)
 {
   double rho_orig = matl->getInitialDensity();
   double p_gauge = pressure - p_ref;
@@ -676,7 +677,8 @@ double Diamm::computeRhoMicroCM(double pressure,
 void Diamm::computePressEOSCM(double rho_cur, double& pressure,
                                 double p_ref,
                                 double& dp_drho,      double& tmp,
-                                const MPMMaterial* matl)
+                                const MPMMaterial* matl, 
+                                double temperature)
 {
 
   double bulk = UI[0];

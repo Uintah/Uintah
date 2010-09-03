@@ -31,6 +31,6 @@ DEALINGS IN THE SOFTWARE.
 namespace Uintah
 {
 
-  std::vector<std::string> CrashPad::d_messages;
+  std::stringstream CrashPad::d_messages;
 
 } //End namespace Uintah

@@ -2,12 +2,14 @@
 \chapter{Arches}
 
 \section{Introduction}
-% please fix....
-The ARCHES component was initially designed for predicting the potential hazard of an explosive device immersed in or near a pool fire of transportation fuel.  Since then, this component has been extended to solve many industrially relevant problems such as industrial flares, oxy-coal combustion processes, and fuel gasification.  
+%
+The ARCHES component was initially designed for predicting the heat-flux from large buoyant pool fires with potential hazard hazards immersed in or near a pool fire of transportation fuel.  Since then, this component has been extended to solve many industrially relevant problems such as industrial flares, oxy-coal combustion processes, and fuel gasification.  
 
-Given the wide range of length and time scales that are present in these examples, ARCHES utilizes models for bridging the molecular (micro) scales to the full, large (macro) scales.  More to come....
+The ARCHES component solves the conservative, finite volume, compressible, low-mach formulation of the Navier-Stokes equation with a pressure projection that includes the effect of variable density, reaction, and heat transfer modes in the gas phase including radiation.  Given the wide range of length and time scales that are present in many combustion problems of interest, ARCHES utilizes models for bridging the molecular (micro) scales to the full, large (macro) scales.  This bridging occurs through the use of subgrid and resolved scale mixing, reaction, and turbulence models. For example, momentum turbulence closure is accomplished by using various large eddy simulation (LES) type closure models. Fast chemistry scales are modeled by preprocessing the full chemical mechanism, modeled in various idealized configurations (e.g., equilibrium or flamelets), then tracking a set of reduced parameters on the LES mesh that map the full thermochemical state-space.  In general, the chemistry is tabulated and stored in a reaction table.  Subgrid turbulence species mixing processes and included by using presumed PDF methods and using models for certain moments of the distribution (e.g., scalar variance and mixture fraction).  The turbulence-species subgrid interaction model description are termed mixing models.  The chemistry and mixing models are usually completely preprocessed together into one tabular format to give a mixing table.  
 
-The ARCHES component solves the conservative, finite volume, low-mach formulation of the Navier-Stokes equation with a pressure projection that includes the effect of variable density, reaction, and many modes of heat transfer including radiation.  
+Note that the sister component, MPMARCHES, couples an MPM description of a solid object to include stationary solids with and without conjugate heat transfer. While run as a separate component, MPMARCHES is simply a wrapped version of ARCHES to include the MPM interface.  
+
+The following gives a brief introduction to a few of the key concepts of the Arches formulation of the transport equations and physical models as well as the CFD algorithm.  Following this explanation, an overview of the ARCHES input parameters are given.  
 
 \section{Governing Equations}
 %
@@ -542,27 +544,23 @@ Starting with the NDF transport equation, the moment transform can be taken, yie
 \mathbf{Ax} = \mathbf{B}.
 \end{equation}
 
-
 \subsubsection{Summary}\label{subsubsec:summary}
 In summary, the DQMOM solution procedure requires solving several transport equations, given by \ref{eq:a-b-transport-eqns}. These transport equations describe the changes in the quadrature weights and weighted abscissas used to approximate the NDF.  The source terms for these transport equations, $a_{\alpha}$ and $b_{n,\alpha}$, come from the solution to a linear system, $\mathbf{Ax}=\mathbf{B}$, in which the vector $\mathbf{x}$ contains the source terms.  This linear system comes from the quadrature-approximated moment trasport equation, equation \ref{eq:quadrature-approximated-moment-xport-eqn}, of which there are $\left(N_{\xi} + 1\right)N$.  It is because this set of equations is linear in the unknowns $a_{\alpha}$ and $b_{n,\alpha}$ that it can be re-cast in the form of a linear system.
-
 
 % ==========================================================
 % =============== Uintah Specifications =========================
 % ==========================================================
-
-
 \section{Uintah Specification}
 %
 \subsection{Basic Inputs}
 %
-In order to run the the Arches component, the correct specification must be made for the simulation controller using the {\it SimulationComponent} tag.  In this case (similar to the other Uintah components) the Arches component is specified as
+Choosing the ARCHES component is done through the simulation controller using the {\it SimulationComponent} tag.  In this case (similar to the other Uintah components) the Arches component is specified as
 %
 \begin{Verbatim}[fontsize=\footnotesize]
 <SimulationComponent type="arches" />
 \end{Verbatim}
 %
-as a child of the {\it Uintah\_specification} section.  
+as a child of the \verb=<Uintah_Specification>= section.  
 
 Most other Arches specifications are located in the {\it CFD$\rightarrow$ARCHES} section of the input file.  Unless otherwise specified, the system of units for all Arches input parameters are SGI. 
 
@@ -577,7 +575,7 @@ Most other Arches specifications are located in the {\it CFD$\rightarrow$ARCHES}
  %
 where  $RHS$ represents all forcing terms in the transport equation for $\phi$ at time level $t$.  For the purposes of this discussion, we have dealt with the implicit nature of the density term by simply assuming we have a density approximation, called $\rho^*$, that suits the current update (for details of the $\rho$ issue, see Section  \ref{Sec:LES_Algorithm}).  
 
-The explicit time integrator is activated (as a child node of {\it CFD$\rightarrow$ARCHES}) by simply inserting the $<$ExplicitIntegrator$>$ node.  Within this node,  the other solvers for the various transport equations will be defined along with a few parameters.  The general structure will look something like this:
+The explicit time integrator is activated (as a child node of \verb=<CFD>=$\rightarrow$\verb=<ARCHES>=) by simply inserting the $<$ExplicitIntegrator$>$ node.  Within this node,  the other solvers for the various transport equations will be defined along with a few parameters.  The general structure will look something like this:
 %
 \begin{Verbatim}[fontsize=\footnotesize]
 <ExplicitSolver>
@@ -668,9 +666,7 @@ This option is often helpful in helping with stability if your simulation is exp
 
 \subsubsection{Implicit Time Integrator}
 %
-Currently the implicit time integrator is not supported. Please check back in subsequent releases.
-
-
+Currently the implicit time integrator is not supported. 
 
 \subsection{Transport Equation Options}\label{Sec:Eqns_options}
 In the current configuration of Arches, transport equations are activated by specifying the option for each equation in a equation-specific node under the {\it ExplicitSolver} node.  Currently, all equation nodes are required except for the enthalpy solver node.  
@@ -732,7 +728,7 @@ The options for the pressure solver include:
 \subsubsection{Mixture Fraction Solver}
 In Arches current configuration, specific scalar variables that require specification.  The mixture fraction equation is one equation that requires definition in order to run any simulation.  This is true independent of the relation of the local density with the mixture fraction value.  
 
-In general, the mixture fraction equation is a conserved scalar equation that is used as a parameter to map the thermo-chemical state of the gas.   In its most simple form, the mixture fraction and density are related by a linear relationship (such as mixing of two non-reacting gasses with different densities).  More complicated state-space relationships are also available, which include subgrid reaction and turbulence mixing.  The role of the mixture fraction with both models is described in Section ADDSECTION.  
+In general, the mixture fraction equation is a conserved scalar equation that is used as a parameter to map the thermo-chemical state of the gas.   In its most simple form, the mixture fraction and density are related by a linear relationship (such as mixing of two non-reacting gasses with different densities).  More complicated state-space relationships are also available, which include subgrid reaction and turbulence mixing.   
 
 By default, the required $<$MixtureFractionSolver$>$ node must be present in the $<$ExplicitSolver$>$ node.  Parameters within the mixture fraction node include; 
 
@@ -824,7 +820,61 @@ If the $<$DORadiationModel$>$ section is found, the model is activated and the r
 
 \end{enumerate}
 
-%\subsection{Initial and Boundary Conditions} 
+\subsection{Initial and Boundary Conditions} 
+%
+\subsubsection{Species Efficiency Calculations}
+%
+The scalar efficiency calculator computes an overall balance on an atomic or molecular species.  The output is a data file placed within the UDA with the prescribed label.  The format of the data file consists of a column of time values and a column of efficiency values.  To save the output to the UDA, one must specify the
+\begin{Verbatim}
+<save label="user_defined_efficiency"/> 
+\end{Verbatim}
+in the data archiver section of the input file.  Note that the user\_defined\_efficiency name is the unique name given to the scalar efficiency (see below). 
+
+The total scalar species is computed as
+%
+\begin{equation}
+\eta_{eff} = \frac{\dot{m}_{out}-\dot{m}_{in}}{\dot{m}_{in}^*}
+\end{equation}    
+%
+where the superscript $*$ in the denominator signifies that the inflow is only summed over inlet boundary conditions.  The value of $\dot{m}_{in}$ in the numerator is summed over all boundary condition types.  The outflow, $\dot{m}_{out}$ is only summed over pressure and outlet type boundary conditions.
+
+The generic setup of the \verb=<ScalarEfficiency>= node should appear as
+\begin{Verbatim}[fontsize=\footnotesize]
+<ScalarEfficiency>
+  <scalar label="my_carbon_efficiency" fuel_ratio="0.78" air_ratio="0.0">
+    <species label="CO2" mol_ratio="0.27272727"/>
+    <inlet>fuel_inlet</inlet>
+  </scalar>
+</ScalarEfficiency>
+\end{Verbatim}
+
+The \verb=<ScalarEfficiency>= node is a child of the \verb=<BoundaryCondition>= node. Parameters within this node include;
+%
+\begin{enumerate}
+\item Scalar: \verb=<scalar>= \\
+{\bf Input Type}: {\it XML node} \\
+{\bf Default}: NA \\
+{\bf Description}: All information about a single atomic or molecular efficiency is encapsulated within this node. The following attributes of \verb=<scalar>= are required
+\begin{itemize}
+\item {\it label}: The user-given name of this species balance.  The efficiency output data file will assume this name.  
+\item {\it fuel\_ratio}: The mass ratio of species to total species mass in the fuel inlet (kg species/total fuel kg)
+\item {\it ox\_ratio}: The mass ratio of species to total species mass in the air (oxidizer) inlet (kg species/total oxidizer hg)
+\end{itemize}
+%
+\item Species:  \verb=<scalar>=$\rightarrow$\verb=<species>= \\
+{\bf Input Type}: {\it XML node} \\
+{\bf Default}: NA \\
+{\bf Description}: This node specifies the specific species that will be used to compute the balance.  Note that multiple \verb=<species>= may be specified in this section if needed. The following attributes are required for this node: 
+\begin{itemize}
+\item {\it label}: The label of the species. 
+\item {\it mol\_ratio}: The molecular weight ratio of the species to the molecule.  For example, in the case where we are computing a balance on the carbon atom and the output species is $CO_2$, we would enter $0.2727$ because ratio $= 12.0/44.0$.  
+\end{itemize} 
+\item Inlet: \verb=<scalar>=$\rightarrow$\verb=<inlet>= \\
+{\bf Input Type}: {\it string} \\
+{\bf Default}: {\it none} \\
+{\bf Description}: This identifies which inlets are associated with this scalar balance.  One may have multiple \verb=<inlet>='s specified. 
+\end{enumerate}
+  
 
 %\subsection{Turbulence Models}
 

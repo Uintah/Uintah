@@ -86,7 +86,7 @@ void ImplicitMatrixBC( CCVariable<Stencil7>& A,
   for( vector<Patch::FaceType>::const_iterator itr = bf.begin(); itr != bf.end(); ++itr ){
     Patch::FaceType face = *itr;
     string bc_kind  = "NotSet";
-    int IveSetBC = 0;
+    int nCells = 0;
     
     int mat_id = 0; // hard coded for pressure
     
@@ -123,7 +123,7 @@ void ImplicitMatrixBC( CCVariable<Stencil7>& A,
             A[c].p = A[c].p + one_or_zero * A[c].e;
             A[c].e = 0.0;
           }
-          IveSetBC += 1;
+          nCells += bound_ptr.size();
           break;
         case Patch::xminus:
           for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) { 
@@ -131,7 +131,7 @@ void ImplicitMatrixBC( CCVariable<Stencil7>& A,
             A[c].p = A[c].p + one_or_zero * A[c].w;
             A[c].w = 0.0;
           }
-          IveSetBC += 1;
+          nCells += bound_ptr.size();
           break;
         case Patch::yplus:
           for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) { 
@@ -139,7 +139,7 @@ void ImplicitMatrixBC( CCVariable<Stencil7>& A,
             A[c].p = A[c].p + one_or_zero * A[c].n;
             A[c].n = 0.0;
           }
-          IveSetBC += 1;
+          nCells += bound_ptr.size();
           break;
         case Patch::yminus:
           for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
@@ -147,7 +147,7 @@ void ImplicitMatrixBC( CCVariable<Stencil7>& A,
             A[c].p = A[c].p + one_or_zero * A[c].s;
             A[c].s = 0.0;
           }
-          IveSetBC += 1;
+          nCells += bound_ptr.size();
           break;
         case Patch::zplus:
           for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
@@ -155,7 +155,7 @@ void ImplicitMatrixBC( CCVariable<Stencil7>& A,
             A[c].p = A[c].p + one_or_zero * A[c].t;
             A[c].t = 0.0;
           }
-          IveSetBC += 1;
+          nCells += bound_ptr.size();
           break;
         case Patch::zminus:
           for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
@@ -163,7 +163,7 @@ void ImplicitMatrixBC( CCVariable<Stencil7>& A,
             A[c].p = A[c].p + one_or_zero * A[c].b;
             A[c].b = 0.0;
           }
-          IveSetBC += 1;
+          nCells += bound_ptr.size();
           break;
         case Patch::numFaces:
           break;
@@ -174,7 +174,7 @@ void ImplicitMatrixBC( CCVariable<Stencil7>& A,
         //  debugging
         if( BC_dbg.active() ) {
           bound_ptr.reset();
-          BC_dbg <<"Face: "<< patch->getFaceName(face) << " one_or_zero " << one_or_zero
+          BC_dbg <<"Face: "<< patch->getFaceName(face) <<" numCellsTouched " << nCells << "\t one_or_zero " << one_or_zero
                <<"\t child " << child  <<" NumChildren "<<numChildren 
                <<"\t BC kind "<< bc_kind
                <<"\t bound_ptr "<< bound_ptr<< endl;
@@ -182,13 +182,19 @@ void ImplicitMatrixBC( CCVariable<Stencil7>& A,
       } // if iterator found
     } // child loop
     cout_BC_CC << "    "<< patch->getFaceName(face) << " \t " << bc_kind << " numChildren: " << numChildren 
-                    << " IveSetBC: " << IveSetBC <<  endl;
-    if(IveSetBC != numChildren){
+               << " nCellsTouched: " << nCells << endl;
+    
+    //__________________________________
+    //  bulletproofing    
+    Patch::FaceIteratorType type = Patch::ExtraPlusEdgeCells;
+    int nFaceCells = numFaceCells(patch,  type, face);
+    
+    if(nCells != nFaceCells){
       ostringstream warn;
-      cout << "ERROR: ICE: ImplicitMatrixBC Boundary conditions were not set correctly (" 
+      warn << "ERROR: ICE: ImplicitMatrixBC Boundary conditions were not set correctly (" 
            << patch->getFaceName(face) << ", " << bc_kind  << " numChildren: " << numChildren 
-           << " IveSetBC: " << IveSetBC << endl;
-      //throw InternalError(warn.str(), __FILE__, __LINE__);
+           << " nCells Touched: " << nCells << " nCells on boundary: "<< nFaceCells<<") " << endl;
+      throw InternalError(warn.str(), __FILE__, __LINE__);
     }
   }  // face loop
   
@@ -270,7 +276,7 @@ void set_imp_DelP_BC( CCVariable<double>& imp_delP,
     
     int mat_id = 0; // hard coded for pressure
     IntVector oneCell = patch->faceDirection(face);
-    int IveSetBC = 0;
+    int nCells = 0;
     string bc_kind  = "NotSet";
     
     int numChildren = patch->getBCDataArray(face)->getNumberChildren(mat_id);
@@ -301,12 +307,12 @@ void set_imp_DelP_BC( CCVariable<double>& imp_delP,
           IntVector adj = c - oneCell;
           imp_delP[c] = one_or_zero * imp_delP[adj];
         }
-        IveSetBC +=1;
+        nCells += bound_ptr.size();
         //__________________________________
         //  debugging
         if( BC_dbg.active() ) {
           bound_ptr.reset();
-          BC_dbg <<"Face: "<< patch->getFaceName(face)
+          BC_dbg <<"Face: "<< patch->getFaceName(face)<<" numCellsTouched " << nCells
                <<"\t child " << child  <<" NumChildren "<<numChildren
                <<"\t BC kind "<< bc_kind <<" \tBC value "<< bc_value
                <<"\t bound_ptr = "<< bound_ptr<< endl;
@@ -315,14 +321,19 @@ void set_imp_DelP_BC( CCVariable<double>& imp_delP,
     } // child loop
     
     cout_BC_CC << "    "<< patch->getFaceName(face) << " \t " << bc_kind << " numChildren: " << numChildren 
-                    << " IveSetBC: " << IveSetBC << endl;
-                    
-    if(IveSetBC != numChildren){
+               << " nCellsTouched: " << nCells << endl;
+    //__________________________________
+    // bulletproofing      
+    Patch::FaceIteratorType type = Patch::ExtraPlusEdgeCells;
+    int nFaceCells = numFaceCells(patch,  type, face);
+    
+              
+    if( nCells != nFaceCells){
       ostringstream warn;
-      cout << "ERROR: ICE: set_imp_DelP_BC Boundary conditions were not set correctly ("
+      warn << "ERROR: ICE: set_imp_DelP_BC Boundary conditions were not set correctly ("
            << patch->getFaceName(face) << ", " << bc_kind  << " numChildren: " << numChildren 
-           << " IveSetBC: " << IveSetBC << endl;
-      //throw InternalError(warn.str(), __FILE__, __LINE__);
+           << " nCells Touched: " << nCells << " nCells on boundary: "<< nFaceCells<<") " << endl;
+      throw InternalError(warn.str(), __FILE__, __LINE__);
     }
   }  // face loop
   
@@ -584,9 +595,9 @@ void setBC(CCVariable<double>& press_CC,
   //  -Ignore lodi bcs during intialization phase AND when
   //   lv->setLodiBcs = false              
   //__________________________________
-  vector<int> IveSetLODIBC(Patch::numFaces);
+  vector<int> nCells_LODI(Patch::numFaces);
   for (int f = 0; f < Patch::numFaces; f++) {
-    IveSetLODIBC[f] = 0;  // bulletproofing
+    nCells_LODI[f] = 0;  // bulletproofing
   }
   
   vector<Patch::FaceType> bf;
@@ -600,7 +611,7 @@ void setBC(CCVariable<double>& press_CC,
     if(kind == "Pressure"       && is_lodi_pressBC 
        && isNotInitialTimestep  && custom_BC_basket->setLodiBcs){
        
-       IveSetLODIBC[face] += 
+       nCells_LODI[face] += 
        FacePress_LODI(patch, press_CC, rho_micro, sharedState,face,
                       custom_BC_basket->lv);
     }
@@ -612,8 +623,8 @@ void setBC(CCVariable<double>& press_CC,
   // Iterate over the faces encompassing the domain
   for( vector<Patch::FaceType>::const_iterator iter = bf.begin(); iter != bf.end(); ++iter ){
     Patch::FaceType face = *iter;
-    int IveSetBC   = 0;
     string bc_kind = "NotSet";
+    int nCells     = 0;
    
     Vector cell_dx = patch->dCell();
     int numChildren = patch->getBCDataArray(face)->getNumberChildren(mat_id);
@@ -625,29 +636,29 @@ void setBC(CCVariable<double>& press_CC,
       bool foundIterator = 
         getIteratorBCValueBCKind<double>( patch, face, child, kind, mat_id,
                                                bc_value, bound_ptr,bc_kind); 
-                                   
+      
       if(foundIterator && bc_kind != "LODI") {                                            
         //__________________________________
         // Dirichlet
         if(bc_kind == "Dirichlet"){
-           IveSetBC += setDirichletBC_CC<double>( press_CC, bound_ptr, bc_value);
+           nCells += setDirichletBC_CC<double>( press_CC, bound_ptr, bc_value);
         }
         //__________________________________
         // Neumann
         else if(bc_kind == "Neumann"){
-           IveSetBC += setNeumannBC_CC<double >( patch, face, press_CC, bound_ptr, bc_value, cell_dx);
+           nCells += setNeumannBC_CC<double >( patch, face, press_CC, bound_ptr, bc_value, cell_dx);
         } 
         //__________________________________
         //  Symmetry
         else if ( bc_kind == "symmetry" || bc_kind == "zeroNeumann" ) {
           bc_value = 0.0;
-          IveSetBC += setNeumannBC_CC<double >( patch, face, press_CC, bound_ptr, bc_value, cell_dx);
+          nCells += setNeumannBC_CC<double >( patch, face, press_CC, bound_ptr, bc_value, cell_dx);
         }
                                           
         //__________________________________
         //  Custom Boundary Conditions
         else if (bc_kind == "MMS_1" && custom_BC_basket->set_MMS_BCs) {
-          IveSetBC += set_MMS_press_BC(patch, face, press_CC, bound_ptr,  bc_kind,
+          nCells += set_MMS_press_BC(patch, face, press_CC, bound_ptr,  bc_kind,
                                        sharedState, 
                                        custom_BC_basket->mms_var_basket,
                                        custom_BC_basket->mms_v);
@@ -655,7 +666,7 @@ void setBC(CCVariable<double>& press_CC,
         //__________________________________
         //  Sine
         else if (bc_kind == "Sine" && custom_BC_basket->set_Sine_BCs) {
-          IveSetBC += set_Sine_press_BC(patch, face, press_CC, bound_ptr,  bc_kind,
+          nCells += set_Sine_press_BC(patch, face, press_CC, bound_ptr,  bc_kind,
                                         sharedState, 
                                         custom_BC_basket->sine_var_basket,
                                         custom_BC_basket->sine_v);
@@ -669,7 +680,7 @@ void setBC(CCVariable<double>& press_CC,
         //  debugging
         if( BC_dbg.active() ) {
           bound_ptr.reset();
-          BC_dbg <<"Face: "<< patch->getFaceName(face) <<" I've set BC " << IveSetBC
+          BC_dbg <<"Face: "<< patch->getFaceName(face) <<" numCellsTouched " << nCells
                <<"\t child " << child  <<" NumChildren "<<numChildren 
                <<"\t BC kind "<< bc_kind <<" \tBC value "<< bc_value
                <<"\t bound_ptr = "<< bound_ptr<< endl;
@@ -678,15 +689,18 @@ void setBC(CCVariable<double>& press_CC,
     }  // child loop
     
     cout_BC_CC << "    "<< patch->getFaceName(face) << " \t " << bc_kind << " numChildren: " << numChildren 
-                        << " IveSetBC: " << IveSetBC << " IveSetLODIBC: " << IveSetLODIBC[face] << endl;
+                        << " nCellsTouched: " << nCells << " nCells_LODI: " << nCells_LODI[face] << endl;
     //__________________________________
     //  bulletproofing   
-    if(IveSetBC != numChildren && (IveSetLODIBC[face] != 1 && isNotInitialTimestep)){
+    Patch::FaceIteratorType type = Patch::ExtraPlusEdgeCells;
+    int nFaceCells = numFaceCells(patch,  type, face);
+    
+    if(nCells != nFaceCells && (nCells_LODI[face] != nFaceCells && isNotInitialTimestep)){
       ostringstream warn;
-      cout << "ERROR: ICE: SetBC(press_CC) Boundary conditions were not set correctly ("
+      warn << "ERROR: ICE: SetBC(press_CC) Boundary conditions were not set correctly ("
            << patch->getFaceName(face) << ", " << bc_kind  << " numChildren: " << numChildren 
-           << " IveSetBC: " << IveSetBC << " IveSetLODIBC: " << IveSetLODIBC[face] <<") " << endl;
-      //throw InternalError(warn.str(), __FILE__, __LINE__);
+           << " nCells Touched: " << nCells << " nCells on boundary: "<< nFaceCells << " nCells_LODI: " << nCells_LODI[face] <<") " << endl;
+      throw InternalError(warn.str(), __FILE__, __LINE__);
     }
   }  // faces loop
 }
@@ -719,9 +733,9 @@ void setBC(CCVariable<double>& var_CC,
   //  -Ignore lodi bcs during intialization phase and when
   //   lv->setLodiBcs = false
   //__________________________________
-  vector<int> IveSetLODIBC(Patch::numFaces);
+  vector<int> nCells_LODI(Patch::numFaces);
   for (int f = 0; f < Patch::numFaces; f++) {
-    IveSetLODIBC[f] = 0;  // bulletproofing
+    nCells_LODI[f] = 0;  // bulletproofing
   }
   
   // Iterate over the faces encompassing the domain
@@ -736,13 +750,11 @@ void setBC(CCVariable<double>& var_CC,
     Lodi_vars* lv = custom_BC_basket->lv;
     if( desc == "Temperature"  && is_tempBC_lodi 
         && isNotInitialTimestep && custom_BC_basket->setLodiBcs ){
-      IveSetLODIBC[face] +=
-      FaceTemp_LODI(patch, face, var_CC, lv, cell_dx, sharedState);
+      nCells_LODI[face] += FaceTemp_LODI(patch, face, var_CC, lv, cell_dx, sharedState);
     }   
-    if (desc == "Density"  && is_rhoBC_lodi 
+    else if (desc == "Density"  && is_rhoBC_lodi 
         && isNotInitialTimestep && custom_BC_basket->setLodiBcs){
-      IveSetLODIBC[face] +=
-      FaceDensity_LODI(patch, face, var_CC, lv, cell_dx);
+      nCells_LODI[face] += FaceDensity_LODI(patch, face, var_CC, lv, cell_dx);
     }
   }
   //__________________________________
@@ -752,7 +764,7 @@ void setBC(CCVariable<double>& var_CC,
   for( vector<Patch::FaceType>::const_iterator iter = bf.begin(); iter != bf.end(); ++iter ){
     Patch::FaceType face = *iter;
     string bc_kind = "NotSet";      
-    int IveSetBC = 0;
+    int nCells = 0;
 
     int numChildren = patch->getBCDataArray(face)->getNumberChildren(mat_id);
 
@@ -768,34 +780,34 @@ void setBC(CCVariable<double>& var_CC,
         //__________________________________
         // Dirichlet
         if(bc_kind == "Dirichlet"){
-           IveSetBC += setDirichletBC_CC<double>( var_CC, bound_ptr, bc_value);
+           nCells += setDirichletBC_CC<double>( var_CC, bound_ptr, bc_value);
         }
         //__________________________________
         // Neumann
         else if(bc_kind == "Neumann"){
-           IveSetBC += setNeumannBC_CC<double >( patch, face, var_CC, bound_ptr, bc_value, cell_dx);
+           nCells += setNeumannBC_CC<double >( patch, face, var_CC, bound_ptr, bc_value, cell_dx);
         }                                   
         //__________________________________
         //  Symmetry
         else if ( bc_kind == "symmetry" || bc_kind == "zeroNeumann" ) {
           bc_value = 0.0;
-          IveSetBC += setNeumannBC_CC<double >( patch, face, var_CC, bound_ptr, bc_value, cell_dx);
+          nCells += setNeumannBC_CC<double >( patch, face, var_CC, bound_ptr, bc_value, cell_dx);
         }
         //__________________________________
         //  Custom Boundary Conditions
         if ( desc == "Temperature" &&custom_BC_basket->setMicroSlipBcs) {
-          IveSetBC += set_MicroSlipTemperature_BC(patch,face,var_CC,
+          nCells += set_MicroSlipTemperature_BC(patch,face,var_CC,
                                                   bound_ptr, bc_kind, bc_value,
                                                   custom_BC_basket->sv);
         }
         else if ( desc == "Temperature" && custom_BC_basket->set_MMS_BCs) {
-          IveSetBC += set_MMS_Temperature_BC(patch, face, var_CC, 
+          nCells += set_MMS_Temperature_BC(patch, face, var_CC, 
                                              bound_ptr, bc_kind, 
                                              custom_BC_basket->mms_var_basket,
                                              custom_BC_basket->mms_v);
         }
         else if ( desc == "Temperature" && custom_BC_basket->set_Sine_BCs) {
-          IveSetBC += set_Sine_Temperature_BC(patch, face, var_CC, 
+          nCells += set_Sine_Temperature_BC(patch, face, var_CC, 
                                               bound_ptr, bc_kind, 
                                               custom_BC_basket->sine_var_basket,
                                               custom_BC_basket->sine_v);
@@ -820,7 +832,7 @@ void setBC(CCVariable<double>& var_CC,
         //  debugging
         if( BC_dbg.active() ) {
           bound_ptr.reset();
-          cout  <<"Face: "<< patch->getFaceName(face) <<" I've set BC " << IveSetBC
+          cout  <<"Face: "<< patch->getFaceName(face) <<" numCellsTouched " << nCells
                <<"\t child " << child  <<" NumChildren "<<numChildren 
                <<"\t BC kind "<< bc_kind <<" \tBC value "<< bc_value
                <<"\t bound_itr "<< bound_ptr << endl;
@@ -829,12 +841,15 @@ void setBC(CCVariable<double>& var_CC,
     }  // child loop
     
     cout_BC_CC << "    "<< patch->getFaceName(face) << " \t " << bc_kind << " numChildren: " << numChildren 
-                        << " IveSetBC: " << IveSetBC << " IveSetLODIBC: " << IveSetLODIBC[face] << endl;
+                        << " nCellsTouched: " << nCells << " nCells_LODI: " << nCells_LODI[face] << endl;
     //__________________________________
     //  bulletproofing
+    Patch::FaceIteratorType type = Patch::ExtraPlusEdgeCells;
+    int nFaceCells = numFaceCells(patch,  type, face);
+    
     bool throwEx = false;
-    if(IveSetBC != numChildren && (IveSetLODIBC[face] != 1 && isNotInitialTimestep)){
-      if( desc == "set_if_sym_BC" && bc_kind == "NotSet" && IveSetBC == 0){
+    if(nCells != nFaceCells && (nCells_LODI[face] != nFaceCells && isNotInitialTimestep)){
+      if( desc == "set_if_sym_BC" && bc_kind == "NotSet"){
         throwEx = false;
       }else{
         throwEx = true;
@@ -843,10 +858,10 @@ void setBC(CCVariable<double>& var_CC,
    
     if(throwEx){
       ostringstream warn;
-      cout << "ERROR: ICE: SetBC(double_CC) Boundary conditions were not set correctly ("<< desc<< ", " 
+      warn << "ERROR: ICE: SetBC(double_CC) Boundary conditions were not set correctly ("<< desc<< ", " 
            << patch->getFaceName(face) << ", " << bc_kind  << " numChildren: " << numChildren 
-           << " IveSetBC: " << IveSetBC << " IveSetLODIBC: " << IveSetLODIBC[face] <<") " << endl;
-      //throw InternalError(warn.str(), __FILE__, __LINE__);
+           << " nCells Touched: " << nCells << " nCells on boundary: "<< nFaceCells << " nCells_LODI: " << nCells_LODI[face] <<") " << endl;
+      throw InternalError(warn.str(), __FILE__, __LINE__);
     }
   }  // faces loop
 }
@@ -877,9 +892,9 @@ void setBC(CCVariable<Vector>& var_CC,
   //  -Ignore lodi bcs during intialization phase and when
   //   lv->setLodiBcs = false
   //__________________________________
-  vector<int> IveSetLODIBC(Patch::numFaces);
+  vector<int> nCells_LODI(Patch::numFaces);
   for (int f = 0; f < Patch::numFaces; f++) {
-    IveSetLODIBC[f] = 0;  // bulletproofing
+    nCells_LODI[f] = 0;  // bulletproofing
   }
   
   // Iterate over the faces encompassing the domain
@@ -894,8 +909,7 @@ void setBC(CCVariable<Vector>& var_CC,
     if( desc == "Velocity"      && is_velBC_lodi 
         && isNotInitialTimestep && custom_BC_basket->setLodiBcs) {
         
-      IveSetLODIBC[face] +=
-      FaceVel_LODI( patch, face, var_CC, lv, cell_dx, sharedState);
+      nCells_LODI[face] += FaceVel_LODI( patch, face, var_CC, lv, cell_dx, sharedState);
     }
   }
   //__________________________________
@@ -904,7 +918,7 @@ void setBC(CCVariable<Vector>& var_CC,
   // Iterate over the faces encompassing the domain
   for( vector<Patch::FaceType>::const_iterator iter = bf.begin(); iter != bf.end(); ++iter ){
     Patch::FaceType face = *iter;
-    int IveSetBC = 0;
+    int nCells = 0;
     string bc_kind = "NotSet";
 
     IntVector oneCell = patch->faceDirection(face);
@@ -925,33 +939,33 @@ void setBC(CCVariable<Vector>& var_CC,
         //__________________________________
         // Dirichlet
         if(bc_kind == "Dirichlet"){
-           IveSetBC += setDirichletBC_CC<Vector>( var_CC, bound_ptr, bc_value);
+           nCells += setDirichletBC_CC<Vector>( var_CC, bound_ptr, bc_value);
         }
         //__________________________________
         // Neumann
         else if(bc_kind == "Neumann"){
-           IveSetBC += setNeumannBC_CC<Vector>( patch, face, var_CC, bound_ptr, bc_value, cell_dx);
+           nCells += setNeumannBC_CC<Vector>( patch, face, var_CC, bound_ptr, bc_value, cell_dx);
         }                                   
         //__________________________________
         //  Symmetry
         else if ( bc_kind == "symmetry" ) {
-          IveSetBC += setSymmetryBC_CC( patch, face, var_CC, bound_ptr);
+          nCells += setSymmetryBC_CC( patch, face, var_CC, bound_ptr);
         }
         //__________________________________
         //  Custom Boundary Conditions
         else if (custom_BC_basket->setMicroSlipBcs) {
-          IveSetBC += set_MicroSlipVelocity_BC(patch,face,var_CC,desc,
+          nCells += set_MicroSlipVelocity_BC(patch,face,var_CC,desc,
                                                bound_ptr, bc_kind, bc_value,
                                                custom_BC_basket->sv);
         }
         else if ( custom_BC_basket->set_MMS_BCs) {
-          IveSetBC += set_MMS_Velocity_BC(patch, face, var_CC, desc,
+          nCells += set_MMS_Velocity_BC(patch, face, var_CC, desc,
                                           bound_ptr, bc_kind, sharedState,
                                           custom_BC_basket->mms_var_basket,
                                           custom_BC_basket->mms_v);
         }
         else if ( custom_BC_basket->set_Sine_BCs) {
-          IveSetBC += set_Sine_Velocity_BC(patch, face, var_CC, desc,
+          nCells += set_Sine_Velocity_BC(patch, face, var_CC, desc,
                                            bound_ptr, bc_kind, sharedState,
                                            custom_BC_basket->sine_var_basket,
                                            custom_BC_basket->sine_v);
@@ -959,21 +973,23 @@ void setBC(CCVariable<Vector>& var_CC,
         //__________________________________
         //  debugging
         if( BC_dbg.active() ) {
-          BC_dbg <<"Face: "<< patch->getFaceName(face) <<" I've set BC " << IveSetBC
+          BC_dbg <<"Face: "<< patch->getFaceName(face) <<" numCellsTouched " << nCells
                <<"\t child " << child  <<" NumChildren "<<numChildren 
                <<"\t BC kind "<< bc_kind <<" \tBC value "<< bc_value
-               <<"\t bound limits = " <<bound_ptr.begin()<<" "<< bound_ptr.end()
-               << endl;
+               <<"\t bound_ptr = "<< bound_ptr<< endl;
         }
       }  // found iterator
     }  // child loop
     cout_BC_CC << "    "<< patch->getFaceName(face) << " \t " << bc_kind << " numChildren: " << numChildren 
-                        << " IveSetBC: " << IveSetBC <<" IveSetLODIBC: " << IveSetLODIBC[face] << endl;
+                        << " nCellsTouched: " << nCells <<" nCells_LODI: " << nCells_LODI[face] << endl;
     //__________________________________
     //  bulletproofing
+    Patch::FaceIteratorType type = Patch::ExtraPlusEdgeCells;
+    int nFaceCells = numFaceCells(patch,  type, face);
+    
     bool throwEx = false;
-    if(IveSetBC != numChildren && (IveSetLODIBC[face] != 1 && isNotInitialTimestep)){
-      if( desc == "set_if_sym_BC" && bc_kind == "NotSet" && IveSetBC == 0){
+    if(nCells != nFaceCells && (nCells_LODI[face] != nFaceCells && isNotInitialTimestep)){
+      if( desc == "set_if_sym_BC" && bc_kind == "NotSet"){
         throwEx = false;
       }else{
         throwEx = true;
@@ -982,10 +998,10 @@ void setBC(CCVariable<Vector>& var_CC,
    
     if(throwEx){
       ostringstream warn;
-      cout << "ERROR: ICE: SetBC(Vector_CC) Boundary conditions were not set correctly ("<< desc<< ", " 
+      warn << "ERROR: ICE: SetBC(Vector_CC) Boundary conditions were not set correctly ("<< desc<< ", " 
            << patch->getFaceName(face) << ", " << bc_kind  << " numChildren: " << numChildren 
-           << " IveSetBC: " << IveSetBC << " IveSetLODIBC: " << IveSetLODIBC[face] <<") " << endl;
-      //throw InternalError(warn.str(), __FILE__, __LINE__);
+           << " nCells Touched: " << nCells << " nCells on boundary: "<< nFaceCells << " nCells_LODI: " << nCells_LODI[face] <<") " << endl;
+      throw InternalError(warn.str(), __FILE__, __LINE__);
     }
   }  // faces loop
 }
@@ -1016,7 +1032,7 @@ void setSpecificVolBC(CCVariable<double>& sp_vol_CC,
   
   for( vector<Patch::FaceType>::const_iterator iter = bf.begin(); iter != bf.end(); ++iter ){
     Patch::FaceType face = *iter;
-    int IveSetBC = 0;
+    int nCells = 0;
     string bc_kind = "NotSet";
        
     IntVector dir= patch->getFaceAxes(face);
@@ -1037,18 +1053,18 @@ void setSpecificVolBC(CCVariable<double>& sp_vol_CC,
         //__________________________________
         // Dirichlet
         if(bc_kind == "Dirichlet"){
-           IveSetBC += setDirichletBC_CC<double>( sp_vol_CC, bound_ptr, bc_value);
+           nCells += setDirichletBC_CC<double>( sp_vol_CC, bound_ptr, bc_value);
         }
         //__________________________________
         // Neumann
         else if(bc_kind == "Neumann"){
-           IveSetBC += setNeumannBC_CC<double >( patch, face, sp_vol_CC, bound_ptr, bc_value, cell_dx);
+           nCells += setNeumannBC_CC<double >( patch, face, sp_vol_CC, bound_ptr, bc_value, cell_dx);
         }                                   
         //__________________________________
         //  Symmetry
         else if ( bc_kind == "symmetry" || bc_kind == "zeroNeumann" ) {
           bc_value = 0.0;
-          IveSetBC += setNeumannBC_CC<double >( patch, face, sp_vol_CC, bound_ptr, bc_value, cell_dx);
+          nCells += setNeumannBC_CC<double >( patch, face, sp_vol_CC, bound_ptr, bc_value, cell_dx);
         }
         //__________________________________
         //  Symmetry
@@ -1065,14 +1081,14 @@ void setSpecificVolBC(CCVariable<double>& sp_vol_CC,
               sp_vol_CC[c] = sp_vol_CC[c]*(rho_CC[c]*cellVol);
             }
           }
-          IveSetBC += 1;
+          nCells += bound_ptr.size();
         }
 
         //__________________________________
         //  debugging
         if( BC_dbg.active() ) {
           bound_ptr.reset();
-          BC_dbg <<"Face: "<< patch->getFaceName(face) <<" I've set BC " << IveSetBC
+          BC_dbg <<"Face: "<< patch->getFaceName(face) <<" numCellsTouched " << nCells
                <<"\t child " << child  <<" NumChildren "<<numChildren 
                <<"\t BC kind "<< bc_kind <<" \tBC value "<< bc_value
                <<"\t bound limits = "<< bound_ptr << endl;
@@ -1081,14 +1097,18 @@ void setSpecificVolBC(CCVariable<double>& sp_vol_CC,
     }  // child loop
     
     cout_BC_CC << "    "<< patch->getFaceName(face) << " \t " << bc_kind << " numChildren: " << numChildren 
-                    << " IveSetBC: " << IveSetBC << endl;
-                    
-    if(IveSetBC != numChildren){
+               << " nCellsTouched: " << nCells << endl;
+    //__________________________________
+    //  bulletproofing
+    Patch::FaceIteratorType type = Patch::ExtraPlusEdgeCells;
+    int nFaceCells = numFaceCells(patch,  type, face);
+                        
+    if(nCells != nFaceCells){
       ostringstream warn;
-      cout  << "ERROR: ICE: setSpecificVolBC Boundary conditions were not set correctly ("<< desc<< ", " 
+      warn << "ERROR: ICE: setSpecificVolBC Boundary conditions were not set correctly ("<< desc<< ", " 
            << patch->getFaceName(face) << ", " << bc_kind  << " numChildren: " << numChildren 
-           << " IveSetBC: " << IveSetBC<<") " << endl;
-      //throw InternalError(warn.str(), __FILE__, __LINE__);
+           << " nCells Touched: " << nCells << " nCells on boundary: "<< nFaceCells<<") " << endl;
+      throw InternalError(warn.str(), __FILE__, __LINE__);
     }
   }  // faces loop
 }
@@ -1112,8 +1132,8 @@ void setSpecificVolBC(CCVariable<double>& sp_vol_CC,
      IntVector adjCell = *bound_ptr - oneCell;
      var_CC[*bound_ptr] = sign.asVector() * var_CC[adjCell];
    }
-   int IveSetBC = 1;
-   return IveSetBC;
+   int nCells = bound_ptr.size();
+   return nCells;
 }
 
 /* --------------------------------------------------------------------- 
@@ -1355,6 +1375,19 @@ void BC_bulletproofing(const ProblemSpecP& prob_spec,
     }
   }
 }
+
+//______________________________________________________________________
+//
+int numFaceCells(const Patch* patch, 
+                 const Patch::FaceIteratorType type,
+                 const Patch::FaceType face)
+{
+  IntVector lo = patch->getFaceIterator(face,type).begin();
+  IntVector hi = patch->getFaceIterator(face,type).end();
+  int numFaceCells = (hi.x()-lo.x())  *  (hi.y()-lo.y())  *  (hi.z()-lo.z());
+  return numFaceCells;
+}
+
 //______________________________________________________________________
 //______________________________________________________________________
 //      S T U B   F U N C T I O N S

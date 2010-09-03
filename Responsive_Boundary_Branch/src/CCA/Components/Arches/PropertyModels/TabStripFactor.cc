@@ -71,9 +71,6 @@ void TabStripFactor::sched_computeProp( const LevelP& level, SchedulerP& sched, 
     tsk->requires( Task::NewDW, the_label, Ghost::None, 0 ); 
     the_label = VarLabel::find(_f_label); 
     tsk->requires( Task::NewDW, the_label, Ghost::None, 0 ); 
-    the_label = VarLabel::find(_ch4_label); 
-    tsk->requires( Task::NewDW, the_label, Ghost::None, 0 ); 
-
 
     sched->addTask( tsk, level->eachPatch(), _shared_state->allArchesMaterials() ); 
     
@@ -113,9 +110,6 @@ void TabStripFactor::computeProp(const ProcessorGroup* pc,
     the_label = VarLabel::find(_f_label);
     constCCVariable<double> f; 
     new_dw->get( f, the_label, matlIndex, patch, Ghost::None, 0 ); 
-    the_label = VarLabel::find(_ch4_label);
-    constCCVariable<double> ch4; 
-    new_dw->get( ch4, the_label, matlIndex, patch, Ghost::None, 0 ); 
 
     CellIterator iter = patch->getCellIterator(); 
 

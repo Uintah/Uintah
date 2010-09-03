@@ -350,7 +350,8 @@ CNH_MMS::addComputesAndRequires(Task* ,
 // The "CM" versions use the pressure-volume relationship of the CNH model
 double CNH_MMS::computeRhoMicroCM(double pressure, 
                                       const double p_ref,
-                                      const MPMMaterial* matl)
+                                      const MPMMaterial* matl,
+                                      double temperature)
 {
   double rho_orig = matl->getInitialDensity();
   double bulk = d_initialData.Bulk;
@@ -372,7 +373,8 @@ double CNH_MMS::computeRhoMicroCM(double pressure,
 void CNH_MMS::computePressEOSCM(const double rho_cur,double& pressure, 
                                     const double p_ref,
                                     double& dp_drho, double& tmp,
-                                    const MPMMaterial* matl)
+                                    const MPMMaterial* matl,
+                                    double temperature)
 {
   double bulk = d_initialData.Bulk;
   double rho_orig = matl->getInitialDensity();

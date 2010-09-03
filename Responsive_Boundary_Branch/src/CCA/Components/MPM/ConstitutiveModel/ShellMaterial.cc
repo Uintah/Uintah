@@ -1202,7 +1202,8 @@ ShellMaterial::particleNormalRotRateUpdate(const PatchSubset* patches,
 double 
 ShellMaterial::computeRhoMicroCM(double pressure, 
                                  const double p_ref,
-                                 const MPMMaterial* matl)
+                                 const MPMMaterial* matl,
+                                 double temperature)
 {
   double rho_orig = matl->getInitialDensity();
   double bulk = d_initialData.Bulk;
@@ -1219,7 +1220,8 @@ void
 ShellMaterial::computePressEOSCM(double rho_cur,double& pressure, 
                                  double p_ref,
                                  double& dp_drho, double& tmp,
-                                 const MPMMaterial* matl)
+                                 const MPMMaterial* matl,
+                                 double temperature)
 {
   double bulk = d_initialData.Bulk;
   double rho_orig = matl->getInitialDensity();

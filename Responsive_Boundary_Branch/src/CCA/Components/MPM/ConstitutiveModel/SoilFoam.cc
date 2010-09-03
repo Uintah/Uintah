@@ -593,7 +593,8 @@ SoilFoam::addComputesAndRequires(Task* task,
 
 double SoilFoam::computeRhoMicroCM(double pressure,
                                       const double /*p_ref*/,
-                                           const MPMMaterial* matl)
+                                      const MPMMaterial* matl,
+                                      double temperature)
 {
 
   //cout << "NO VERSION OF computeRhoMicroCM EXISTS YET FOR SoilFoam"
@@ -614,7 +615,8 @@ double SoilFoam::computeRhoMicroCM(double pressure,
 void SoilFoam::computePressEOSCM(double rho_cur,double& pressure,
                                          double /*p_ref*/,
                                          double& dp_drho, double& tmp,
-                                         const MPMMaterial* matl)
+                                         const MPMMaterial* matl,
+                                         double temperature)
 {
   double rho_orig = matl->getInitialDensity();
   double vol_strain = log(rho_orig/rho_cur);

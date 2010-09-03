@@ -45,37 +45,37 @@
 
 #include <ostream>
 #include <string>
+#include <sstream>
 #include <vector>
 
 namespace Uintah {
-/**************************************
+  /**************************************
 
- CLASS
- CrashPad
+    CLASS
+    CrashPad
 
- KEYWORDS
- Debug, CrashPad
+    KEYWORDS
+    Debug, CrashPad
 
- DESCRIPTION
- Utility class to output error messages after
- a crash.  This is useful when a debugger is
- unavailable or when using a large number of 
- processors.
+    DESCRIPTION
+    Utility class to output error messages after
+    a crash.  This is useful when a debugger is
+    unavailable or when using a large number of 
+    processors.
 
-****************************************/
-class CrashPad {
-public:
-	    static void addMessage(std::string msg) {d_messages.push_back(msg);}
-      static void clearMessages() {d_messages.clear();}
+   ****************************************/
+  class CrashPad {
+    public:
+      static void clearMessages() {d_messages.str(std::string());}
       static void printMessages(std::ostream &out)
       {
-        for( std::vector<std::string>::iterator iter=d_messages.begin();iter!=d_messages.end();++iter)
-          out << *iter;
+          out << d_messages;
       }
-private:
+      static std::stringstream d_messages;
+    private:
 
-  static std::vector<std::string> d_messages;
-};
+  };
+#define crashout CrashPad::d_messages
 } // End namespace SCIRun
 
 #endif
