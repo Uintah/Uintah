@@ -42,15 +42,15 @@ void TiledRegridder::regrid(const vector<Region> &cp, const vector<CCVariable<in
     {
       IntVector i=*ti;
       IntVector searchLow(
-            i[0]*inv_factor[0],
-            i[1]*inv_factor[1],
-            i[2]*inv_factor[2]
+            static_cast<int>(i[0]*inv_factor[0]),
+            static_cast<int>(i[1]*inv_factor[1]),
+            static_cast<int>(i[2]*inv_factor[2])
           );
 
       IntVector searchHigh(
-            searchLow[0]+inv_factor[0],
-            searchLow[1]+inv_factor[1],
-            searchLow[2]+inv_factor[2]
+            static_cast<int>(searchLow[0]+inv_factor[0]),
+            static_cast<int>(searchLow[1]+inv_factor[1]),
+            static_cast<int>(searchLow[2]+inv_factor[2])
           );
       IntVector plow=searchLow*rr;
       

@@ -62,6 +62,9 @@ public:
   /** @brief Dummy init for MPMArches */ 
   virtual void sched_dummyInit( const LevelP&, SchedulerP& sched ) = 0; 
 
+  /** @brief Time averaging */ 
+  virtual void sched_timeAve( const LevelP&, SchedulerP& sched, int timeSubStep ) = 0; 
+
   /** @brief Checks that boundary conditions for this variable are set for every 
    * face for every child */ 
   void sched_checkBCs( const LevelP&, SchedulerP& sched ); 

@@ -108,12 +108,12 @@ WARNING
       virtual void allocate(ParticleSubset*) = 0;
       virtual void allocate(int totalParticles) = 0;
       virtual void gather(ParticleSubset* dest,
-                          std::vector<ParticleSubset*> subsets,
-                          std::vector<ParticleVariableBase*> srcs,
+                          const std::vector<ParticleSubset*> &subsets,
+                          const std::vector<ParticleVariableBase*> &srcs,
                           particleIndex extra = 0) = 0;
       virtual void gather(ParticleSubset* dest,
-                          std::vector<ParticleSubset*> subsets,
-                          std::vector<ParticleVariableBase*> srcs,
+                          const std::vector<ParticleSubset*> &subsets,
+                          const std::vector<ParticleVariableBase*> &srcs,
                           const std::vector<const Patch*>& srcPatches,
                           particleIndex extra = 0) = 0;
       virtual void unpackMPI(void* buf, int bufsize, int* bufpos,

@@ -543,7 +543,8 @@ MWViscoElastic::addComputesAndRequires(Task* ,
 
 double MWViscoElastic::computeRhoMicroCM(double pressure,
                                       const double p_ref,
-                                      const MPMMaterial* matl)
+                                      const MPMMaterial* matl,
+                                      double temperature)
 {
   double rho_orig = matl->getInitialDensity();
   //double p_ref=101325.0;
@@ -566,7 +567,8 @@ double MWViscoElastic::computeRhoMicroCM(double pressure,
 void MWViscoElastic::computePressEOSCM(const double rho_cur, double& pressure,
                                        const double p_ref,
                                        double& dp_drho,      double& tmp,
-                                       const MPMMaterial* matl)
+                                       const MPMMaterial* matl,
+                                       double temperature)
 {
 
   double e_shear = d_initialData.E_Shear;

@@ -123,6 +123,7 @@ namespace Uintah {
     // Flags indicating if damage and/or plasticity should be used
     bool d_useDamage;
     bool d_usePlasticity;
+    std::string d_failureCriteria;
       
     // Basic Requirements //
     ////////////////////////
@@ -222,12 +223,14 @@ namespace Uintah {
     virtual void computePressEOSCM(double rho_m, double& press_eos,
                                    double p_ref,
                                    double& dp_drho, double& ss_new,
-                                   const MPMMaterial* matl);
+                                   const MPMMaterial* matl, 
+                                   double temperature);
     
     // main computation of density from constitutive model's equation of state
     virtual double computeRhoMicroCM(double pressure,
                                      const double p_ref,
-                                     const MPMMaterial* matl);
+                                     const MPMMaterial* matl,
+                                     double temperature);
     
     // compute stable timestep for this patch
     virtual void computeStableTimestep(const Patch* patch,

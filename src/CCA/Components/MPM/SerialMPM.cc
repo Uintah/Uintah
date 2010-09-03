@@ -68,6 +68,8 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Math/MinMax.h>
+#include <Core/Math/Matrix3.h>
+#include <Core/Math/CubicPolyRoots.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/Thread/Mutex.h>
 
@@ -603,6 +605,7 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
 
   scheduleApplyExternalLoads(             sched, patches, matls);
   scheduleInterpolateParticlesToGrid(     sched, patches, matls);
+  scheduleExMomInterpolated(              sched, patches, matls);
   scheduleUpdateCohesiveZones(            sched, patches, mpm_matls_sub,
                                                           cz_matls_sub,
                                                           all_matls);
@@ -610,7 +613,6 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
   scheduleAddCohesiveZoneForces(          sched, patches, mpm_matls_sub,
                                                           cz_matls_sub,
                                                           all_matls);
-  scheduleExMomInterpolated(              sched, patches, matls);
   scheduleComputeContactArea(             sched, patches, matls);
   scheduleComputeInternalForce(           sched, patches, matls);
 
@@ -4192,9 +4194,10 @@ void SerialMPM::updateCohesiveZones(const ProcessorGroup*,
       new_dw->allocateAndPut(czBotMat_new, lb->czBotMatLabel_preReloc,    pset);
       new_dw->allocateAndPut(czFailed_new, lb->czFailedLabel_preReloc,    pset);
 
+
       czlength_new.copyData(czlength);
-      cznorm_new.copyData(cznorm);
-      cztang_new.copyData(cztang);
+//    cznorm_new.copyData(cznorm);
+//    cztang_new.copyData(cztang);
       czids_new.copyData(czids);
       czTopMat_new.copyData(czTopMat);
       czBotMat_new.copyData(czBotMat);
@@ -4241,8 +4244,38 @@ void SerialMPM::updateCohesiveZones(const ProcessorGroup*,
         czDispTop_new[idx]   = czDispTop[idx] + velTop*delT;
         czDispBot_new[idx]   = czDispBot[idx] + velBot*delT;
         czsep_new[idx]       = czDispTop_new[idx] - czDispBot_new[idx];
-        double D_n = Dot(czsep_new[idx],cznorm[idx]);
-        double D_t = Dot(czsep_new[idx],cztang[idx]);
+
+	Vector velchange(0.0,0.0,0.0);
+	Vector dist(0.0,0.0,0.0);
+
+	velchange = velTop - velBot;
+	dist= .5*(velTop + velBot)*delT;
+
+	Vector temp_norm(0.0,0.0,0.0);
+	Vector temp_tang(0.0,0.0,0.0);
+	double theta=0.;
+	Vector axis(0.0,0.0,0.0);
+	Matrix3 Rotation;
+	
+	axis = Cross(cznorm[idx],cztang[idx]);
+	theta = acos(1-(0.5*Dot(czsep_new[idx],czsep_new[idx])));
+	double ca = cos(theta); double sa = sin(theta);
+	Rotation(0,0) = (1.0 - axis[0]*axis[0])*ca + axis[0]*axis[0];
+	Rotation(0,1) = (- axis[0]*axis[1])*ca + axis[0]*axis[1] + axis[2]*sa;
+	Rotation(0,2) = (- axis[0]*axis[2])*ca + axis[0]*axis[2] - axis[1]*sa;
+	Rotation(1,0) = (- axis[1]*axis[0])*ca + axis[1]*axis[0] - axis[2]*sa;
+	Rotation(1,1) = (1.0 - axis[1]*axis[1])*ca + axis[1]*axis[1]; 
+	Rotation(1,2) = (- axis[1]*axis[2])*ca + axis[1]*axis[2] + axis[0]*sa;
+	Rotation(2,0) = (- axis[2]*axis[0])*ca + axis[2]*axis[0] + axis[1]*sa;
+	Rotation(2,1) = (- axis[2]*axis[1])*ca + axis[2]*axis[1] - axis[0]*sa; 
+	Rotation(2,2) = (1.0 - axis[2]*axis[2])*ca + axis[2]*axis[2];
+
+
+	cznorm_new[idx] = Rotation*cznorm[idx];
+	cztang_new[idx] = Rotation*cztang[idx];
+
+        double D_n = Dot(czsep_new[idx],cznorm_new[idx]);
+        double D_t = Dot(czsep_new[idx],cztang_new[idx]);
 
         // Determine if a CZ has failed.  Currently hardwiring failure criteria
         // to fail zone if normal sep is > 4*delta_n or 2*delta_t
@@ -4255,7 +4288,7 @@ void SerialMPM::updateCohesiveZones(const ProcessorGroup*,
           czFailed_new[idx]=1;
           czf=1.0;
         }
-        else if( fabs(D_t) > 20.0*delta_t){
+        else if( fabs(D_t) > 2.0*delta_t){
           czFailed_new[idx]=2;
           czf=1.0;
         } else {
@@ -4272,8 +4305,9 @@ void SerialMPM::updateCohesiveZones(const ProcessorGroup*,
                               + ((r-q)/(r-1.))*(D_n/delta_n))
                               * exp(-D_n/delta_n)
                               * exp(-D_t*D_t/(delta_t*delta_t));
-        czforce_new[idx]     = (normal_stress*cznorm[idx]*czlength_new[idx]
-                             + tang_stress*cztang[idx]*czlength_new[idx])
+
+        czforce_new[idx]     = (normal_stress*cznorm_new[idx]*czlength_new[idx]
+                             + tang_stress*cztang_new[idx]*czlength_new[idx])
                              * (1.0 - czf);
 
 /*

@@ -456,7 +456,8 @@ HypoElasticFortran::addComputesAndRequires( Task*,
 double
 HypoElasticFortran::computeRhoMicroCM( double pressure,
                                        const double p_ref,
-                                       const MPMMaterial* matl )
+                                       const MPMMaterial* matl, 
+                                       double temperature)
 {
   double rho_orig = matl->getInitialDensity();
   //double p_ref=101325.0;
@@ -479,7 +480,8 @@ void
 HypoElasticFortran::computePressEOSCM( double rho_cur, double& pressure,
                                        double p_ref,
                                        double& dp_drho,      double& tmp,
-                                       const MPMMaterial* matl )
+                                       const MPMMaterial* matl, 
+                                       double temperature )
 {
   //double G = d_initialData.G;
   double bulk = d_initialData.K;

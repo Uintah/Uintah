@@ -459,7 +459,8 @@ CompMooneyRivlin::addComputesAndRequires(Task* ,
 
 double CompMooneyRivlin::computeRhoMicroCM(double /*pressure*/,
                                       const double /*p_ref*/,
-                                           const MPMMaterial* /*matl*/)
+                                           const MPMMaterial* /*matl*/,
+                                           double temperature)
 {
 #if 0
   double rho_orig = matl->getInitialDensity();
@@ -482,7 +483,8 @@ double CompMooneyRivlin::computeRhoMicroCM(double /*pressure*/,
 void CompMooneyRivlin::computePressEOSCM(double /*rho_cur*/,double& /*pressure*/,
                                          double /*p_ref*/,
                                          double& /*dp_drho*/, double& /*tmp*/,
-                                         const MPMMaterial* /*matl*/)
+                                         const MPMMaterial* /*matl*/, 
+                                         double temperature)
 {
 #if 0
   double bulk = d_initialData.Bulk;

@@ -146,6 +146,7 @@ WARNING
 
       
     // Simple Burn
+    const VarLabel* detLocalToLabel; // diagnostic labels
     const VarLabel* onSurfaceLabel; // diagnostic labels
     const VarLabel* surfaceTempLabel;
     const VarLabel* totalMassBurnedLabel;

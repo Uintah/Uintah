@@ -269,6 +269,7 @@ MPIScheduler::initiateReduction( DetailedTask          * task )
 void
 MPIScheduler::runTask( DetailedTask         * task, int iteration)
 {
+  MALLOC_TRACE_TAG_SCOPE("MPIScheduler::runTask");
   TAU_PROFILE("MPIScheduler::runTask()", " ", TAU_USER); 
 
   if(waitout.active())
@@ -289,13 +290,14 @@ MPIScheduler::runTask( DetailedTask         * task, int iteration)
   if (trackingVarsPrintLocation_ & SchedulerCommon::PRINT_BEFORE_EXEC) {
     printTrackedVars(task, SchedulerCommon::PRINT_BEFORE_EXEC);
   }
-
   vector<DataWarehouseP> plain_old_dws(dws.size());
   for(int i=0;i<(int)dws.size();i++)
     plain_old_dws[i] = dws[i].get_rep();
   //const char* tag = AllocatorSetDefaultTag(task->getTask()->getName());
-
+ {
+  MALLOC_TRACE_TAG_SCOPE("MPIScheduler::runTask::doit(" + task->getName() + ")" );
   task->doit(d_myworld, dws, plain_old_dws);
+ }
   //AllocatorSetDefaultTag(tag);
 
   if (trackingVarsPrintLocation_ & SchedulerCommon::PRINT_AFTER_EXEC) {
@@ -339,9 +341,7 @@ MPIScheduler::runTask( DetailedTask         * task, int iteration)
   sends_.testsome( d_myworld );
   sendsLock.unlock(); // Dd... could do better?
 
-
   mpi_info_.totaltestmpi += Time::currentSeconds() - teststart;
-  
  
   if(parentScheduler) //add my timings to the parent scheduler
   {
@@ -382,6 +382,7 @@ MPIScheduler::runReductionTask( DetailedTask         * task )
 void
 MPIScheduler::postMPISends( DetailedTask         * task, int iteration )
 {
+  MALLOC_TRACE_TAG_SCOPE("MPIScheduler::postMPISends");
   double sendstart = Time::currentSeconds();
   if( dbg.active()) {
     cerrLock.lock();dbg << d_myworld->myrank() << " postMPISends - task " << *task << '\n';

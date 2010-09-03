@@ -16,6 +16,7 @@
     <bulk_modulus                  spec="OPTIONAL DOUBLE" />
     <bulkPrime                     spec="OPTIONAL DOUBLE" />
     <C                             spec="OPTIONAL DOUBLE" />
+    <Cv                            spec="OPTIONAL DOUBLE" />
     <c1                            spec="OPTIONAL DOUBLE" />
     <c2                            spec="OPTIONAL DOUBLE" />
     <c3                            spec="OPTIONAL DOUBLE" />
@@ -276,6 +277,7 @@
     <tolerance                     spec="OPTIONAL DOUBLE" />
     <useDamage                     spec="OPTIONAL BOOLEAN" />
     <useJWLEOS                     spec="OPTIONAL BOOLEAN" />
+    <useJWLCEOS                    spec="OPTIONAL BOOLEAN" />
     <useMurnahanEOS                spec="OPTIONAL BOOLEAN" />
     <useModifiedEOS                spec="OPTIONAL BOOLEAN" />
     <useObjectiveRate              spec="OPTIONAL BOOLEAN" />        <!-- FIXME: What is the default -->

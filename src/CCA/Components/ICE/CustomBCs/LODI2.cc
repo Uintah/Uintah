@@ -698,10 +698,8 @@ inline void Li(StaticArray<CCVariable<Vector> >& L,
     //__________________________________
     //  debugging 
     vector<IntVector> dbgCells;
-    dbgCells.push_back(IntVector(100,0,0));
-    dbgCells.push_back(IntVector(99,0,0));
-    dbgCells.push_back(IntVector(0,0,0));
-    dbgCells.push_back(IntVector(-1,0,0));
+    dbgCells.push_back(IntVector(199,75,0));
+    dbgCells.push_back(IntVector(199,74,0));
            
     for (int i = 0; i<(int) dbgCells.size(); i++) {
       if (c == dbgCells[i]) {
@@ -891,13 +889,15 @@ int FaceDensity_LODI(const Patch* patch,
   IntVector offset = patch->faceDirection(face);
   double plus_minus_one = (double) offset[P_dir];
   double dx = DX[P_dir];
+  int nCells = 0;
   
   cout_dbg << "\n____________________density"<< endl;
   //__________________________________
   //    S I D E
   Patch::FaceIteratorType MEC = Patch::ExtraMinusEdgeCells;
-  for(CellIterator iter=patch->getFaceIterator(face, MEC); 
-                                                      !iter.done();iter++) {
+  CellIterator iter=patch->getFaceIterator(face, MEC);
+  
+  for(; !iter.done();iter++) {
     IntVector c = *iter;
     IntVector in = c - offset;
     
@@ -910,25 +910,27 @@ int FaceDensity_LODI(const Patch* patch,
     cout_dbg << " c " << c << " in " << in << " rho_CC[c] "<< rho_CC[c] 
              << " drho_dx " << drho_dx << " rho_CC[in] " << rho_CC[in]<<endl;
   }
+  nCells += iter.size();
   
   //__________________________________
   //    E D G E S  -- on boundaryFaces only
   vector<Patch::FaceType> b_faces;
   getBoundaryEdges(patch,face,b_faces);
   
-  vector<Patch::FaceType>::const_iterator iter;  
-  for(iter = b_faces.begin(); iter != b_faces.end(); ++ iter ) {
-    Patch::FaceType face0 = *iter;
+  vector<Patch::FaceType>::const_iterator f;  
+  for(f = b_faces.begin(); f != b_faces.end(); ++f ) {
+    Patch::FaceType face0 = *f;
     
     IntVector offset = IntVector(0,0,0)  - patch->faceDirection(face) 
                                          - patch->faceDirection(face0);
     CellIterator iterLimits =  
                 patch->getEdgeCellIterator(face, face0, Patch::ExtraCellsMinusCorner);
                 
-    for(CellIterator iter = iterLimits;!iter.done();iter++){ 
-      IntVector c = *iter;      
+    for(CellIterator e_iter = iterLimits;!e_iter.done();e_iter++){ 
+      IntVector c = *e_iter;      
       rho_CC[c] = rho_CC[c + offset];
     }
+    nCells+= iterLimits.size();
   }
 
   //__________________________________
@@ -940,8 +942,9 @@ int FaceDensity_LODI(const Patch* patch,
   for(itr = corner.begin(); itr != corner.end(); ++ itr ) {
     IntVector c = *itr;
     rho_CC[c] =  1.7899909957225715000;
+    nCells += 1;
   }  
-  return 1;
+  return nCells;
 }
 
 /*_________________________________________________________________
@@ -975,14 +978,15 @@ int FaceVel_LODI(const Patch* patch,
   IntVector offset = patch->faceDirection(face);
   double plus_minus_one = (double) offset[P_dir];
   double dx = DX[P_dir];
+  int nCells = 0;
 
 
   cout_dbg << "____________________velocity"<< endl;
   //__________________________________
   //    S I D E 
   Patch::FaceIteratorType MEC = Patch::ExtraMinusEdgeCells;
-  for(CellIterator iter=patch->getFaceIterator(face, MEC); 
-                                                      !iter.done();iter++) {
+  CellIterator iter=patch->getFaceIterator(face, MEC);
+  for( ; !iter.done();iter++) {
     IntVector c = *iter;
     IntVector in = c - offset;
     // normal direction velocity
@@ -998,25 +1002,27 @@ int FaceVel_LODI(const Patch* patch,
     vel_CC[c][dir1] = vel_CC[in][dir1] + plus_minus_one * dx * dvel_dir1_dx;
     vel_CC[c][dir2] = vel_CC[in][dir2] + plus_minus_one * dx * dvel_dir2_dx;
   }
+  nCells += iter.size();
   
   //__________________________________
   //    E D G E S  -- on boundaryFaces only
   vector<Patch::FaceType> b_faces;
   getBoundaryEdges(patch,face,b_faces);
   
-  vector<Patch::FaceType>::const_iterator iter;  
-  for(iter = b_faces.begin(); iter != b_faces.end(); ++ iter ) {
-    Patch::FaceType face0 = *iter;
+  vector<Patch::FaceType>::const_iterator f;  
+  for(f = b_faces.begin(); f != b_faces.end(); ++ f ) {
+    Patch::FaceType face0 = *f;
    
     IntVector offset = IntVector(0,0,0)  - patch->faceDirection(face) 
                                          - patch->faceDirection(face0);
     CellIterator iterLimits =  
                 patch->getEdgeCellIterator(face, face0, Patch::ExtraCellsMinusCorner);
                       
-    for(CellIterator iter = iterLimits;!iter.done();iter++){ 
-      IntVector c = *iter;
+    for(CellIterator e_iter = iterLimits;!e_iter.done();e_iter++){ 
+      IntVector c = *e_iter;
       vel_CC[c] = vel_CC[c + offset];
     }
+    nCells+= iterLimits.size();
   }  
   //________________________________________________________
   // C O R N E R S
@@ -1027,8 +1033,9 @@ int FaceVel_LODI(const Patch* patch,
   for(itr = corner.begin(); itr != corner.end(); ++ itr ) {
     IntVector c = *itr;
     vel_CC[c] = Vector(0,0,0);
+    nCells += 1;
   }
-  return 1;
+  return nCells;
 } //end of the function FaceVelLODI() 
 
 /*_________________________________________________________________
@@ -1058,6 +1065,7 @@ int FaceTemp_LODI(const Patch* patch,
   IntVector axes = patch->getFaceAxes(face);
   int P_dir = axes[0];  // principal direction
   double dx = DX[P_dir];
+  int nCells = 0;
   
   IntVector offset = patch->faceDirection(face);
   double plus_minus_one = (double) offset[P_dir];
@@ -1066,8 +1074,8 @@ int FaceTemp_LODI(const Patch* patch,
   //__________________________________
   //    S I D E  
   Patch::FaceIteratorType MEC = Patch::ExtraMinusEdgeCells;
-  for(CellIterator iter=patch->getFaceIterator(face, MEC); 
-                                                      !iter.done();iter++) {
+  CellIterator iter=patch->getFaceIterator(face, MEC);
+  for(; !iter.done();iter++) {
     IntVector c = *iter;
     IntVector in = c - offset;
     double term1 = temp_CC[in]/(rho_CC[in] * speedSound[in] * speedSound[in]);
@@ -1088,24 +1096,26 @@ int FaceTemp_LODI(const Patch* patch,
              << " term5 " << term5
              << " dtemp_dx " << dtemp_dx << endl;
   }
+  nCells += iter.size();
 
   //__________________________________
   //    E D G E S  -- on boundaryFaces only
   vector<Patch::FaceType> b_faces;
   getBoundaryEdges(patch,face,b_faces);
   
-  vector<Patch::FaceType>::const_iterator iter;  
-  for(iter = b_faces.begin(); iter != b_faces.end(); ++ iter ) {
-    Patch::FaceType face0 = *iter;
+  vector<Patch::FaceType>::const_iterator f;  
+  for(f = b_faces.begin(); f != b_faces.end(); ++f ) {
+    Patch::FaceType face0 = *f;
     IntVector offset = IntVector(0,0,0)  - patch->faceDirection(face) 
                                          - patch->faceDirection(face0); 
     CellIterator iterLimits =  
                 patch->getEdgeCellIterator(face, face0, Patch::ExtraCellsMinusCorner);
              
-    for(CellIterator iter = iterLimits;!iter.done();iter++){ 
-      IntVector c = *iter;
+    for(CellIterator e_iter = iterLimits;!e_iter.done(); e_iter++){ 
+      IntVector c = *e_iter;
       temp_CC[c] = temp_CC[c+offset]; 
     }
+    nCells+= iterLimits.size();
   }  
  
   //________________________________________________________
@@ -1117,9 +1127,10 @@ int FaceTemp_LODI(const Patch* patch,
   for(itr = corner.begin(); itr != corner.end(); ++ itr ) {
     IntVector c = *itr;
     temp_CC[c] = 300;
+    nCells += 1;
   }
 
-  return 1;
+  return nCells;
 } //end of function FaceTempLODI()  
 
 
@@ -1150,13 +1161,13 @@ int FacePress_LODI(const Patch* patch,
   IntVector offset = patch->faceDirection(face);
   double plus_minus_one = (double) offset[P_dir];
   double dx = DX[P_dir];
- 
+  int nCells = 0;
   cout_dbg << "\n____________________press"<< endl; 
   
   //__________________________________ 
   Patch::FaceIteratorType MEC = Patch::ExtraMinusEdgeCells;
-  for(CellIterator iter=patch->getFaceIterator(face, MEC); 
-                                                    !iter.done();iter++) {
+  CellIterator iter=patch->getFaceIterator(face, MEC);
+  for( ;!iter.done();iter++) {
 
     IntVector c = *iter;
     IntVector in = c - offset;  
@@ -1166,29 +1177,31 @@ int FacePress_LODI(const Patch* patch,
     double dpress_dx = term1 + term2;
 
     press_CC[c] = press_CC[in] + plus_minus_one * dx * dpress_dx; 
-        
+    #if 0    
     cout_dbg << " c " << c << " in " << in << " press_CC[c] "<< press_CC[c] 
              << " dpress_dx " << dpress_dx << " press_CC[in] " << press_CC[in]<<endl;
-
+    #endif
   }
+  nCells += iter.size();
   
   //__________________________________
   //    E D G E S  -- on boundaryFaces only
   vector<Patch::FaceType> b_faces;
   getBoundaryEdges(patch,face,b_faces);
   
-  vector<Patch::FaceType>::const_iterator iter;  
-  for(iter = b_faces.begin(); iter != b_faces.end(); ++ iter ) {
-    Patch::FaceType face0 = *iter;
+  vector<Patch::FaceType>::const_iterator f;  
+  for(f = b_faces.begin(); f != b_faces.end(); ++f ) {
+    Patch::FaceType face0 = *f;
     IntVector offset = IntVector(0,0,0)  - patch->faceDirection(face) 
                                          - patch->faceDirection(face0); 
     CellIterator iterLimits =  
                 patch->getEdgeCellIterator(face, face0, Patch::ExtraCellsMinusCorner);
              
-    for(CellIterator iter = iterLimits;!iter.done();iter++){ 
-      IntVector c = *iter;
+    for(CellIterator e_iter = iterLimits;!e_iter.done();e_iter++){ 
+      IntVector c = *e_iter;
       press_CC[c] = press_CC[c+offset]; 
     }
+    nCells+= iterLimits.size();
   }  
  
   //________________________________________________________
@@ -1200,8 +1213,9 @@ int FacePress_LODI(const Patch* patch,
   for(itr = corner.begin(); itr != corner.end(); ++ itr ) {
     IntVector c = *itr;
     press_CC[c] = 101325;
+    nCells += 1;
   }
-  return 1;
+  return nCells;
 } 
    
 }  // using namespace Uintah

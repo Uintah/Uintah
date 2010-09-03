@@ -355,7 +355,8 @@ IdealGasMP::addComputesAndRequires(Task* ,
 // The "CM" versions use the pressure-volume relationship of the CNH model
 double IdealGasMP::computeRhoMicroCM(double press, 
                                       const double Temp,
-                                      const MPMMaterial*)
+                                      const MPMMaterial*,
+                                      double temperature)
 {
   double gamma = d_initialData.gamma;
   double cv    = d_initialData.cv;
@@ -371,7 +372,8 @@ double IdealGasMP::computeRhoMicroCM(double press,
 void IdealGasMP::computePressEOSCM(double rhoM,double& pressure, 
                                    double Temp,
                                    double& dp_drho, double& tmp,
-                                   const MPMMaterial*)
+                                   const MPMMaterial*, 
+                                   double temperature)
 {
   double gamma = d_initialData.gamma;
   double cv    = d_initialData.cv;

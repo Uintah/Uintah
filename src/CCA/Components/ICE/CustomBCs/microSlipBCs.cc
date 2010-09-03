@@ -298,7 +298,7 @@ int set_MicroSlipVelocity_BC(const Patch* patch,
                               Slip_vars* sv)                     
 
 {
-  int IveSetBC = 0;
+  int nCells = 0;
   if (var_desc == "Velocity" && (bc_kind == "slip" || bc_kind == "creep")) {
   
     cout_doing << "Setting FaceVel_MicroSlip on face " << face 
@@ -345,7 +345,7 @@ int set_MicroSlipVelocity_BC(const Patch* patch,
         //vel_CC[c][dir1] = ???????;
         //vel_CC[c][dir2] = ???????;
       }
-      IveSetBC +=1;
+      nCells +=bound_ptr.size();
     }
     //__________________________________
     //   CREEP 
@@ -365,10 +365,10 @@ int set_MicroSlipVelocity_BC(const Patch* patch,
         //vel_CC[c][dir1] = ???????;
         //vel_CC[c][dir2] = ???????;
       }
-      IveSetBC +=1;
+      nCells +=bound_ptr.size();;
     }
   }
-  return IveSetBC;
+  return nCells;
 }
 
 /*_________________________________________________________________
@@ -383,7 +383,7 @@ int  set_MicroSlipTemperature_BC(const Patch* patch,
                                  const double wall_temp,
                                  Slip_vars* sv)  
 {
-  int IveSetBC = 0;
+  int nCells = 0;
   if (bc_kind == "slip") {
     cout_doing << "Setting FaceTemp_MicroSlip on face " <<face
                << " wall Temperature " << wall_temp << endl; 
@@ -423,9 +423,9 @@ int  set_MicroSlipTemperature_BC(const Patch* patch,
       // TODO: Jennifer-- put equations here
       temp_CC[c] = Temp_CC[in];  
     }
-    IveSetBC = 1;
+    nCells = bound_ptr.size();
   }
-  return IveSetBC;
+  return nCells;
 } 
 
   

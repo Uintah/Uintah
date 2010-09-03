@@ -403,7 +403,7 @@
           <addSources                   spec="OPTIONAL BOOLEAN"/>
           <conv_scheme                  spec="OPTIONAL STRING 'upwind, super_bee, central'"/> 
           <scaling_const                spec="OPTIONAL DOUBLE"/>                              
-          <use_density_guess            spec="OPTIONAL NO_DATA"/>
+          <!--use_density_guess            spec="OPTIONAL NO_DATA"/--> <!-- Option removed for the time being-->
           <src                          spec="MULTIPLE NO_DATA" 
                                         attribute1="label REQUIRED STRING"/>
           <initialization               spec="OPTIONAL NO_DATA"

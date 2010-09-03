@@ -1194,7 +1194,7 @@ void ImpMPM::scheduleFormQ(SchedulerP& sched,const PatchSet* patches,
   t->requires(Task::ParentNewDW,lb->gVelocityOldLabel,  gnone,0);
   t->requires(Task::ParentNewDW,lb->gAccelerationLabel, gnone,0);
   t->requires(Task::ParentNewDW,lb->gMassAllLabel,      gnone,0);
-  
+
   t->setType(Task::OncePerProc);
   sched->addTask(t, patches, matls);
 }
@@ -1306,6 +1306,7 @@ void ImpMPM::scheduleIterate(SchedulerP& sched,const LevelP& level,
                              const PatchSet* patches, const MaterialSet*)
 {
   d_recompileSubsched = true;
+  printSchedule(patches,cout_doing,"IMPM::scheduleIterate\t");
   Task* task = scinew Task("ImpMPM::iterate", this, &ImpMPM::iterate,level,
                            sched.get_rep());
 
@@ -1758,18 +1759,18 @@ void ImpMPM::iterate(const ProcessorGroup*,
                  <<"\t\t\t IMPM"<< "\n" << "\n";
     }
 
-    Ghost::GhostType  gnone = Ghost::None;
+    Ghost::GhostType  gn = Ghost::None;
     for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int matl = mpm_matl->getDWIndex();
 
       // Needed in computeAcceleration 
       constNCVariable<Vector> velocity, dispNew, internalForce;
-      d_subsched->get_dw(2)->get(velocity, lb->gVelocityLabel,matl,patch,gnone,0);
-      d_subsched->get_dw(2)->get(dispNew,  lb->dispNewLabel,  matl,patch,gnone,0);
+      d_subsched->get_dw(2)->get(velocity,lb->gVelocityLabel,matl,patch,gn,0);
+      d_subsched->get_dw(2)->get(dispNew, lb->dispNewLabel,  matl,patch,gn,0);
       if (flags->d_doMechanics) {
         d_subsched->get_dw(2)->get(internalForce,
-                                    lb->gInternalForceLabel,matl,patch,gnone,0);
+                                     lb->gInternalForceLabel,matl,patch,gn,0);
       }
 
       NCVariable<Vector> velocity_new, dispNew_new, internalForce_new;
@@ -3021,14 +3022,12 @@ void ImpMPM::computeInternalForce(const ProcessorGroup*,
         constParticleVariable<Vector>  psize;
         constParticleVariable<Matrix3> pDeformationMeasure;
 
-        parent_old_dw->get(px,                  lb->pXLabel,                           pset);
-        parent_old_dw->get(psize,               lb->pSizeLabel,                        pset);
+        parent_old_dw->get(px,                  lb->pXLabel,           pset);
+        parent_old_dw->get(psize,               lb->pSizeLabel,        pset);
         parent_old_dw->get(pDeformationMeasure, lb->pDeformationMeasureLabel,          pset);
 
         new_dw->get(pvol,        lb->pVolumeDeformedLabel,  pset);
         new_dw->get(pstress,     lb->pStressLabel_preReloc, pset);
-
-
 
         Matrix3 stressvol;
 
@@ -3037,14 +3036,15 @@ void ImpMPM::computeInternalForce(const ProcessorGroup*,
           particleIndex idx = *iter;
 
           // Get the node indices that surround the cell
-          interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx],pDeformationMeasure[idx]);
+          interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx],
+                                                    pDeformationMeasure[idx]);
 
           stressvol  = pstress[idx]*pvol[idx];
 
           for (int k = 0; k < n8or27; k++){
             if(patch->containsNode(ni[k])){
-              Vector div(d_S[k].x()*oodx[0],d_S[k].y()*oodx[1],
-                                            d_S[k].z()*oodx[2]);
+              Vector div(d_S[k].x()*oodx[0], d_S[k].y()*oodx[1],
+                                             d_S[k].z()*oodx[2]);
               int_force[m][ni[k]] -= (div * pstress[idx])  * pvol[idx];
             }
           }

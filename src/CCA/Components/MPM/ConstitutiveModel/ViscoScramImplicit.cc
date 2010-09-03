@@ -819,7 +819,8 @@ void ViscoScramImplicit::addComputesAndRequires(Task* task,
 // The "CM" versions use the pressure-volume relationship of the CNH model
 double ViscoScramImplicit::computeRhoMicroCM(double pressure, 
                                               const double p_ref,
-                                              const MPMMaterial* matl)
+                                              const MPMMaterial* matl,
+                                              double temperature)
 {
   double rho_orig = matl->getInitialDensity();
   double p_gauge = pressure - p_ref;
@@ -834,7 +835,8 @@ void ViscoScramImplicit::computePressEOSCM(const double rho_cur,
                                             double& pressure, 
                                             const double p_ref,
                                             double& dp_drho, double& tmp,
-                                            const MPMMaterial* matl)
+                                            const MPMMaterial* matl,
+                                            double temperature)
 {
   double rho_orig = matl->getInitialDensity();
 

@@ -327,10 +327,9 @@ void LightTime::computeModelSources(const ProcessorGroup*,
 
           //__________________________________
           // Insert Burn Model Here
-          double burnedMass;
           double rctMass = rctRho[c]*cell_vol;
           double prdMass = prodRho[c]*cell_vol;
-          burnedMass = min(delF[c]*(prdMass+rctMass), rctMass);
+          double burnedMass = min(delF[c]*(prdMass+rctMass), rctMass);
 
           //__________________________________
           // conservation of mass, momentum and energy                           
