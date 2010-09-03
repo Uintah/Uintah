@@ -49,6 +49,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Containers/StaticArray.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Math/MinMax.h>
+#include <Core/Parallel/Parallel.h>
 
 #include <sci_defs/uintah_defs.h>
 #include <Core/Math/Weibull.h>
@@ -392,12 +393,12 @@ void Kayenta::initializeCMData(const Patch* patch,
 
   ParticleVariable<double> peakI1IDist;
   new_dw->allocateAndPut(peakI1IDist, peakI1IDistLabel, pset);
-  cout << "Weibull Variables for PEAKI1I: (initialize CMData)\n"
-       << "Median:          " << wdist.WeibMed
-       << "\nModulus:         " << wdist.WeibMod
-       << "\nReference Vol:   " << wdist.WeibRefVol
-       << "\nSeed:            " << wdist.WeibSeed
-       << "\nPerturb?:        " << wdist.Perturb << std::endl;
+  proc0cout << "Weibull Variables for PEAKI1I: (initialize CMData)\n"
+            << "Median:          " << wdist.WeibMed
+            << "\nModulus:         " << wdist.WeibMod
+            << "\nReference Vol:   " << wdist.WeibRefVol
+            << "\nSeed:            " << wdist.WeibSeed
+            << "\nPerturb?:        " << wdist.Perturb << std::endl;
   if ( wdist.Perturb){
     SCIRun::Weibull weibGen(wdist.WeibMed,wdist.WeibMod,wdist.WeibRefVol,wdist.WeibSeed);
     constParticleVariable<double>pVolume;
