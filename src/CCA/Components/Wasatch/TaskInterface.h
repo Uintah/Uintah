@@ -21,6 +21,7 @@ namespace Expr{
   class ExpressionTree;
   class FieldDeps;
   class FieldManagerList;
+  struct AllocInfo;
 }
 
 namespace SpatialOps{

@@ -16,6 +16,7 @@
 
 namespace Uintah{
   class ProcessorGroup;
+  class DataWarehouse;
 }
 
 namespace Wasatch{
