@@ -346,7 +346,6 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
   t->computes(lb->pDeformationMeasureLabel);
   t->computes(lb->pStressLabel);
   t->computes(lb->pSizeLabel);
-  t->computes(lb->pErosionLabel);
   t->computes(d_sharedState->get_delt_label(),level.get_rep());
   t->computes(lb->pCellNAPIDLabel,zeroth_matl);
   t->computes(lb->NC_CCweightLabel,zeroth_matl);
@@ -445,7 +444,6 @@ void SerialMPM::scheduleInitializeAddedMaterial(const LevelP& level,
   t->computes(lb->pDeformationMeasureLabel,add_matl);
   t->computes(lb->pStressLabel,            add_matl);
   t->computes(lb->pSizeLabel,              add_matl);
-  t->computes(lb->pErosionLabel,           add_matl);
   t->computes(lb->pFiberDirLabel,          add_matl);
   if(!flags->d_doGridReset){
     t->computes(lb->gDisplacementLabel);
@@ -731,7 +729,6 @@ void SerialMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
   t->requires(Task::OldDW, lb->pXLabel,                gan,NGP);
   t->requires(Task::NewDW, lb->pExtForceLabel_preReloc,gan,NGP);
   t->requires(Task::OldDW, lb->pTemperatureLabel,      gan,NGP);
-  t->requires(Task::OldDW, lb->pErosionLabel,          gan,NGP);
   t->requires(Task::OldDW, lb->pSizeLabel,             gan,NGP);
 
   t->requires(Task::OldDW, lb->pDeformationMeasureLabel,   gan,NGP);
@@ -871,6 +868,7 @@ void SerialMPM::scheduleComputeStressTensor(SchedulerP& sched,
 
 }
 
+
 void SerialMPM::scheduleUpdateErosionParameter(SchedulerP& sched,
                                                const PatchSet* patches,
                                                const MaterialSet* matls)
@@ -883,14 +881,12 @@ void SerialMPM::scheduleUpdateErosionParameter(SchedulerP& sched,
 
   Task* t = scinew Task("MPM::updateErosionParameter",
                         this, &SerialMPM::updateErosionParameter);
-  t->requires(Task::OldDW, lb->pErosionLabel,          Ghost::None);
   int numMatls = d_sharedState->getNumMPMMatls();
   for(int m = 0; m < numMatls; m++){
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
     ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
     cm->addRequiresDamageParameter(t, mpm_matl, patches);
   }
-  t->computes(lb->pErosionLabel_preReloc);
   t->computes(lb->pLocalizedMPMLabel);
 
   if(flags->d_deleteRogueParticles){
@@ -1000,7 +996,6 @@ void SerialMPM::scheduleComputeInternalForce(SchedulerP& sched,
   t->requires(Task::OldDW,lb->pVolumeLabel,               gan,NGP);
   t->requires(Task::OldDW,lb->pXLabel,                    gan,NGP);
   t->requires(Task::OldDW,lb->pSizeLabel,                 gan,NGP);
-  t->requires(Task::OldDW,lb->pErosionLabel,              gan,NGP);
 
   t->requires(Task::OldDW, lb->pDeformationMeasureLabel,   gan,NGP);
 
@@ -1275,7 +1270,6 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->requires(Task::OldDW, lb->pSizeLabel,                      gnone);
   t->requires(Task::NewDW, lb->pdTdtLabel_preReloc,             gnone);
   t->requires(Task::NewDW, lb->pLocalizedMPMLabel,              gnone);
-  t->requires(Task::NewDW, lb->pErosionLabel_preReloc,          gnone);
   t->modifies(lb->pVolumeLabel_preReloc);
 
   t->requires(Task::NewDW, lb->pDeformationMeasureLabel_preReloc,        gnone);
@@ -1363,7 +1357,6 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdateMom1(SchedulerP& sched,
   t->requires(Task::OldDW, lb->pMassLabel,                      gnone);
   t->requires(Task::OldDW, lb->pVelocityLabel,                  gnone);
   t->requires(Task::OldDW, lb->pSizeLabel,                      gnone);
-  t->requires(Task::OldDW, lb->pErosionLabel,                   gnone);
   t->requires(Task::OldDW, lb->pDeformationMeasureLabel,        gnone);
 
   t->computes(lb->pVelocityLabel_preReloc);
@@ -1401,7 +1394,6 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdateMom2(SchedulerP& sched,
   t->requires(Task::OldDW, lb->pSizeLabel,                      gnone);
   t->requires(Task::OldDW, lb->pDeformationMeasureLabel,        gnone);
   t->requires(Task::NewDW, lb->pdTdtLabel_preReloc,             gnone);
-  t->requires(Task::NewDW, lb->pErosionLabel_preReloc,          gnone);
   t->requires(Task::NewDW, lb->pLocalizedMPMLabel,              gnone);
 
   if(flags->d_with_ice){
@@ -1548,7 +1540,6 @@ void SerialMPM::scheduleInterpolateParticleVelToGridMom(SchedulerP& sched,
   t->requires(Task::OldDW, lb->pMassLabel,              gan,NGP);
   t->requires(Task::NewDW, lb->pVelocityLabel_preReloc, gan,NGP);
   t->requires(Task::OldDW, lb->pXLabel,                 gan,NGP);
-  t->requires(Task::OldDW, lb->pErosionLabel,           gan,NGP);
   t->requires(Task::OldDW, lb->pSizeLabel,              gan,NGP);
   t->requires(Task::OldDW, lb->pDeformationMeasureLabel,gan,NGP);
 
@@ -1606,7 +1597,6 @@ void SerialMPM::scheduleRefine(const PatchSet* patches,
   t->computes(lb->pDeformationMeasureLabel);
   t->computes(lb->pStressLabel);
   t->computes(lb->pSizeLabel);
-  t->computes(lb->pErosionLabel);
   t->computes(lb->NC_CCweightLabel);
   t->computes(d_sharedState->get_delt_label(),getLevel(patches));
 
@@ -1639,7 +1629,7 @@ void SerialMPM::scheduleRefineInterface(const LevelP& /*fineLevel*/,
                                         SchedulerP& /*scheduler*/,
                                         bool, bool)
 {
-  // do nothing for now
+  //  do nothing for now
 }
 
 void SerialMPM::scheduleCoarsen(const LevelP& /*coarseLevel*/, 
@@ -2070,7 +2060,6 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       constParticleVariable<Point>  px;
       constParticleVariable<double> pmass, pvolume, pTemperature;
       constParticleVariable<Vector> pvelocity, pexternalforce,psize;
-      constParticleVariable<double> pErosion;
       constParticleVariable<Matrix3> pDeformationMeasure;
 
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch,
@@ -2082,7 +2071,6 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       old_dw->get(pvelocity,      lb->pVelocityLabel,      pset);
       old_dw->get(pTemperature,   lb->pTemperatureLabel,   pset);
       old_dw->get(psize,          lb->pSizeLabel,          pset);
-      old_dw->get(pErosion,       lb->pErosionLabel,       pset);
 
       old_dw->get(pDeformationMeasure,  lb->pDeformationMeasureLabel, pset);
 
@@ -2156,7 +2144,6 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
         for(int k = 0; k < n8or27; k++) { // Iterates through the nodes which receive information from the current particle
           node = ni[k];
           if(patch->containsNode(node)) {
-            S[k] *= pErosion[idx];
             gmass[node]          += pmass[idx]                     * S[k];
             gvelocity[node]      += pmom                           * S[k];
             gvolume[node]        += pvolume[idx]                   * S[k];
@@ -2349,12 +2336,6 @@ void SerialMPM::updateErosionParameter(const ProcessorGroup*,
                  << " dwi = " << dwi << " pset* = " << pset << endl;
       }
 
-      // Get the erosion data
-      constParticleVariable<double> pErosion;
-      ParticleVariable<double> pErosion_new;
-      old_dw->get(pErosion, lb->pErosionLabel, pset);
-      new_dw->allocateAndPut(pErosion_new, lb->pErosionLabel_preReloc, pset);
-
       if (cout_dbg.active()){
         cout_dbg << "updateErosionParameter:: Got Erosion data" << endl;
       }
@@ -2371,17 +2352,6 @@ void SerialMPM::updateErosionParameter(const ProcessorGroup*,
 
       if (cout_dbg.active())
         cout_dbg << "updateErosionParameter:: Got Damage Parameter" << endl;
-
-
-      iter = pset->begin(); 
-      for (; iter != pset->end(); iter++) {
-        pErosion_new[*iter] = pErosion[*iter];
-        if (isLocalized[*iter]) {
-          if (flags->d_erosionAlgorithm == "RemoveMass") {
-            pErosion_new[*iter] = 0.1*pErosion[*iter];
-          } 
-        } 
-      }
 
       if(flags->d_deleteRogueParticles){
         // The following looks for localized particles that are isolated
@@ -2605,7 +2575,6 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
       constParticleVariable<double>  p_q;
       constParticleVariable<Matrix3> pstress;
       constParticleVariable<Vector>  psize;
-      constParticleVariable<double>  pErosion;
       constParticleVariable<Matrix3> pDeformationMeasure;
       NCVariable<Vector>             internalforce;
       NCVariable<Matrix3>            gstress;
@@ -2619,7 +2588,6 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
       old_dw->get(pvol,    lb->pVolumeLabel,                 pset);
       old_dw->get(pstress, lb->pStressLabel,                 pset);
       old_dw->get(psize,   lb->pSizeLabel,                   pset);
-      old_dw->get(pErosion,lb->pErosionLabel,                pset);
 
       old_dw->get(pDeformationMeasure, lb->pDeformationMeasureLabel, pset);
 
@@ -2675,7 +2643,6 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
             if(patch->containsNode(ni[k])){
               Vector div(d_S[k].x()*oodx[0],d_S[k].y()*oodx[1],
                          d_S[k].z()*oodx[2]);
-              div *= pErosion[idx];
               internalforce[ni[k]] -= (div * stresspress)  * pvol[idx];
               gstress[ni[k]]       += stressvol * S[k];
             }
@@ -3528,7 +3495,6 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       ParticleVariable<long64> pids_new;
       constParticleVariable<Vector> pdisp;
       ParticleVariable<Vector> pdispnew;
-      constParticleVariable<double> pErosion;
       constParticleVariable<int> pLocalized;
       constParticleVariable<Matrix3> pDeformationMeasure;
 
@@ -3547,7 +3513,6 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       old_dw->get(pmass,        lb->pMassLabel,                      pset);
       old_dw->get(pvelocity,    lb->pVelocityLabel,                  pset);
       old_dw->get(pTemperature, lb->pTemperatureLabel,               pset);
-      new_dw->get(pErosion,     lb->pErosionLabel_preReloc,          pset);
       new_dw->get(pdTdt,        lb->pdTdtLabel_preReloc,             pset);
       new_dw->getModifiable(pvolume,  lb->pVolumeLabel_preReloc,     pset);
       new_dw->get(pLocalized,   lb->pLocalizedMPMLabel,              pset);
@@ -3629,7 +3594,6 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         // Accumulate the contribution from each surrounding vertex
         for (int k = 0; k < flags->d_8or27; k++) {
           IntVector node = ni[k];
-          S[k] *= pErosion[idx];
           vel      += gvelocity_star[node]  * S[k];
           acc      += gacceleration[node]   * S[k];
 
@@ -3786,7 +3750,7 @@ void SerialMPM::interpolateToParticlesAndUpdateMom1(const ProcessorGroup*,
       ParticleVariable<Vector> pvelocitynew;
       constParticleVariable<Vector> pdisp;
       ParticleVariable<Vector> pdispnew;
-      constParticleVariable<double> pmass, pErosion;
+      constParticleVariable<double> pmass;
       constParticleVariable<Matrix3> pDeformationMeasure;
 
       // Get the arrays of grid data on which the new part. values depend
@@ -3798,7 +3762,6 @@ void SerialMPM::interpolateToParticlesAndUpdateMom1(const ProcessorGroup*,
       old_dw->get(pdisp,        lb->pDispLabel,                      pset);
       old_dw->get(pmass,        lb->pMassLabel,                      pset);
       old_dw->get(pvelocity,    lb->pVelocityLabel,                  pset);
-      old_dw->get(pErosion,     lb->pErosionLabel,                   pset);
 
       old_dw->get(pDeformationMeasure, lb->pDeformationMeasureLabel, pset);
 
@@ -3829,7 +3792,6 @@ void SerialMPM::interpolateToParticlesAndUpdateMom1(const ProcessorGroup*,
         // Accumulate the contribution from each surrounding vertex
         for (int k = 0; k < flags->d_8or27; k++) {
           IntVector node = ni[k];
-          S[k] *= pErosion[idx];
           vel      += gvelocity_star[node]  * S[k];
           acc      += gacceleration[node]   * S[k];
         }
@@ -3927,7 +3889,6 @@ void SerialMPM::interpolateToParticlesAndUpdateMom2(const ProcessorGroup*,
       ParticleVariable<double> pmassNew,pvolume,pTempNew;
       constParticleVariable<long64> pids;
       ParticleVariable<long64> pids_new;
-      constParticleVariable<double> pErosion;
       constParticleVariable<int> pLocalized;
       constParticleVariable<Matrix3> pDeformationMeasure;
 
@@ -3944,7 +3905,6 @@ void SerialMPM::interpolateToParticlesAndUpdateMom2(const ProcessorGroup*,
       old_dw->get(pmass,        lb->pMassLabel,                      pset);
       old_dw->get(pids,         lb->pParticleIDLabel,                pset);
       old_dw->get(pTemperature, lb->pTemperatureLabel,               pset);
-      new_dw->get(pErosion,     lb->pErosionLabel_preReloc,          pset);
       new_dw->get(pdTdt,        lb->pdTdtLabel_preReloc,             pset);
 
       old_dw->get(pDeformationMeasure, lb->pDeformationMeasureLabel, pset);
@@ -4017,7 +3977,6 @@ void SerialMPM::interpolateToParticlesAndUpdateMom2(const ProcessorGroup*,
         // Accumulate the contribution from each surrounding vertex
         for (int k = 0; k < flags->d_8or27; k++) {
           IntVector node = ni[k];
-          S[k] *= pErosion[idx];
 
           fricTempRate = frictionTempRate[node]*flags->d_addFrictionWork;
           tempRate += (gTemperatureRate[node] + dTdt[node] +
@@ -4411,7 +4370,7 @@ void SerialMPM::interpolateParticleVelToGridMom(const ProcessorGroup*,
 
       // Create arrays for the particle data
       constParticleVariable<Point>  px;
-      constParticleVariable<double> pmass, pErosion;
+      constParticleVariable<double> pmass;
       constParticleVariable<Vector> pvelocity, psize;
       constParticleVariable<Matrix3> pDeformationMeasure;
 
@@ -4421,7 +4380,6 @@ void SerialMPM::interpolateParticleVelToGridMom(const ProcessorGroup*,
       old_dw->get(px,             lb->pXLabel,             pset);
       old_dw->get(pmass,          lb->pMassLabel,          pset);
       old_dw->get(psize,          lb->pSizeLabel,          pset);
-      old_dw->get(pErosion,       lb->pErosionLabel,       pset);
       new_dw->get(pvelocity,      lb->pVelocityLabel_preReloc,      pset);
 
       old_dw->get(pDeformationMeasure, lb->pDeformationMeasureLabel, pset);
@@ -4451,7 +4409,6 @@ void SerialMPM::interpolateParticleVelToGridMom(const ProcessorGroup*,
         for(int k = 0; k < n8or27; k++) {
           IntVector node = ni[k];
           if(patch->containsNode(node)) {
-            S[k] *= pErosion[idx];
             gvelocity_star[node]      += pmom   * S[k];
           }
         }
@@ -4689,7 +4646,7 @@ SerialMPM::refine(const ProcessorGroup*,
         ParticleVariable<Point>  px;
         ParticleVariable<double> pmass, pvolume, pTemperature;
         ParticleVariable<Vector> pvelocity, pexternalforce, psize, pdisp;
-        ParticleVariable<double> pErosion, pTempPrev,p_q;
+        ParticleVariable<double> pTempPrev,p_q;
         ParticleVariable<int>    pLoadCurve;
         ParticleVariable<long64> pID;
         ParticleVariable<Matrix3> pdeform, pstress;
@@ -4708,7 +4665,6 @@ SerialMPM::refine(const ProcessorGroup*,
           new_dw->allocateAndPut(pLoadCurve,   lb->pLoadCurveIDLabel,   pset);
         }
         new_dw->allocateAndPut(psize,          lb->pSizeLabel,          pset);
-        new_dw->allocateAndPut(pErosion,       lb->pErosionLabel,       pset);
 
         mpm_matl->getConstitutiveModel()->initializeCMData(patch,
                                                            mpm_matl,new_dw);

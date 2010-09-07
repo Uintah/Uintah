@@ -184,7 +184,6 @@ SmallStrainPlastic::SmallStrainPlastic(ProblemSpecP& ps,MPMFlags* Mflag)
   d_stable = StabilityCheckFactory::create(ps);
   if(!d_stable) cerr << "Stability check disabled\n";
 
-  setErosionAlgorithm();
   getInitialPorosityData(ps);
   getInitialDamageData(ps);
   initializeLocalMPMLabels();
@@ -208,10 +207,6 @@ SmallStrainPlastic::SmallStrainPlastic(const SmallStrainPlastic* cm) :
   d_checkTeplaFailureCriterion = cm->d_checkTeplaFailureCriterion;
   d_doMelting = cm->d_doMelting;
   d_checkStressTriax = cm->d_checkStressTriax;
-
-  d_setStressToZero = cm->d_setStressToZero;
-  d_allowNoTension = cm->d_allowNoTension;
-  d_removeMass = cm->d_removeMass;
 
   d_evolvePorosity = cm->d_evolvePorosity;
   d_porosity.f0 = cm->d_porosity.f0 ;
@@ -398,22 +393,6 @@ SmallStrainPlastic::getInitialDamageData(ProblemSpecP& ps)
 }
 
 void 
-SmallStrainPlastic::setErosionAlgorithm()
-{
-  d_setStressToZero = false;
-  d_allowNoTension = false;
-  d_removeMass = false;
-  if (flag->d_doErosion) {
-    if (flag->d_erosionAlgorithm == "RemoveMass") 
-      d_removeMass = true;
-    else if (flag->d_erosionAlgorithm == "AllowNoTension") 
-      d_allowNoTension = true;
-    else if (flag->d_erosionAlgorithm == "ZeroStress") 
-      d_setStressToZero = true;
-  }
-}
-
-void 
 SmallStrainPlastic::addParticleState(std::vector<const VarLabel*>& from,
                                  std::vector<const VarLabel*>& to)
 {
@@ -597,7 +576,6 @@ SmallStrainPlastic::addComputesAndRequires(Task* task,
 
   // Other constitutive model and input dependent computes and requires
   task->requires(Task::OldDW, lb->pTempPreviousLabel, matlset, gnone); 
-  task->requires(Task::OldDW, lb->pErosionLabel,      matlset, gnone);
 
   task->requires(Task::OldDW, pStrainRateLabel,       matlset, gnone);
   task->requires(Task::OldDW, pPlasticStrainLabel,    matlset, gnone);
@@ -710,11 +688,9 @@ SmallStrainPlastic::computeStressTensorExplicit(const PatchSubset* patches,
     // Get the particle stress and temperature
     constParticleVariable<Matrix3> pStress_old;
     constParticleVariable<double>  pTempPrev, pTemp_old;
-    constParticleVariable<double> pErosion;
     old_dw->get(pStress_old, lb->pStressLabel,       pset);
     old_dw->get(pTempPrev,   lb->pTempPreviousLabel, pset); 
     old_dw->get(pTemp_old,   lb->pTemperatureLabel,  pset);
-    old_dw->get(pErosion, lb->pErosionLabel, pset);
 
     // Get the time increment (delT)
     delt_vartype delT;
@@ -805,12 +781,6 @@ SmallStrainPlastic::computeStressTensorExplicit(const PatchSubset* patches,
       pDefGrad_new[idx] = defGrad_new;
       double J_new = defGrad_new.Determinant();
 
-      // If the erosion algorithm sets the stress to zero then don't allow
-      // any deformation.
-      if(d_setStressToZero && pLocalized_old[idx]){
-        pDefGrad_new[idx] = pDefGrad[idx];
-        J_new = pDefGrad[idx].Determinant();
-      }
 
       // Check 1: Check for negative Jacobian (determinant of deformation gradient)
       if (!(J_new > 0.0)) {
@@ -1121,17 +1091,6 @@ SmallStrainPlastic::computeStressTensorExplicit(const PatchSubset* patches,
       kappa_new *= J_new;
       Matrix3 sigma_new = sigma_dev_new + one*(pressure_new - 3.0*kappa_new*CTE*(T_new - T_0));
 
-      // If the particle has already failed, apply various erosion algorithms
-      if (flag->d_doErosion) {
-        if (pLocalized_old[idx]) {
-          if (d_allowNoTension) {
-            if (pressure_new > 0.0) sigma_new = zero;
-            else sigma_new = one*pressure_new;
-          }
-          else if (d_setStressToZero) sigma_new = zero;
-        }
-      }
-
       //-----------------------------------------------------------------------
       // Stage 3: Compute damage 
       //-----------------------------------------------------------------------
@@ -1174,7 +1133,7 @@ SmallStrainPlastic::computeStressTensorExplicit(const PatchSubset* patches,
       bool isLocalized = false;
       double tepla = 0.0;
 
-      if (flag->d_doErosion) {
+      if (flag->d_deleteRogueParticles) {
 
         // Check 1: Look at the temperature
         if (melted) isLocalized = true;
@@ -1251,27 +1210,18 @@ SmallStrainPlastic::computeStressTensorExplicit(const PatchSubset* patches,
           }
         }
 
-        // Use erosion algorithms to treat localized particles
+        // Update localized particles
         if (isLocalized) {
-
           // If the localized particles fail again then set their stress to zero
           if (pLocalized_old[idx]) {
             pDamage_new[idx] = 0.0;
             pPorosity_new[idx] = 0.0;
             sigma_new = zero;
           } else {
-
             // set the particle localization flag to true  
             pLocalized_new[idx] = 1;
             pDamage_new[idx] = 0.0;
             pPorosity_new[idx] = 0.0;
-
-            // Apply various erosion algorithms
-            if (d_allowNoTension) {
-              if (pressure_new > 0.0) sigma_new = zero;
-              else sigma_new = one*pressure_new;
-            }
-            else if (d_setStressToZero) sigma_new = zero;
           }
 
         }

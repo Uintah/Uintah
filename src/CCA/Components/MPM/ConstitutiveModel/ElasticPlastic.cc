@@ -172,7 +172,6 @@ ElasticPlastic::ElasticPlastic(ProblemSpecP& ps,MPMFlags* Mflag)
   ps->get("compute_specific_heat",d_computeSpecificHeat);
   d_Cp = SpecificHeatModelFactory::create(ps);
   
-  setErosionAlgorithm();
   getInitialPorosityData(ps);
   getInitialDamageData(ps);
   //getSpecificHeatData(ps);
@@ -197,11 +196,6 @@ ElasticPlastic::ElasticPlastic(const ElasticPlastic* cm) :
   d_checkTeplaFailureCriterion = cm->d_checkTeplaFailureCriterion;
   d_doMelting = cm->d_doMelting;
   d_checkStressTriax = cm->d_checkStressTriax;
-
-  d_setStressToZero = cm->d_setStressToZero;
-  d_allowNoTension = cm->d_allowNoTension;
-  d_allowNoShear = cm->d_allowNoShear;
-  d_removeMass = cm->d_removeMass;
 
   d_evolvePorosity = cm->d_evolvePorosity;
   d_porosity.f0 = cm->d_porosity.f0 ;
@@ -424,25 +418,6 @@ ElasticPlastic::getSpecificHeatData(ProblemSpecP& ps)
 */
 
 void 
-ElasticPlastic::setErosionAlgorithm()
-{
-  d_setStressToZero = false;
-  d_allowNoTension = false;
-  d_allowNoShear = false;
-  d_removeMass = false;
-  if (flag->d_doErosion) {
-    if (flag->d_erosionAlgorithm == "RemoveMass") 
-      d_removeMass = true;
-    else if (flag->d_erosionAlgorithm == "AllowNoTension") 
-      d_allowNoTension = true;
-    else if (flag->d_erosionAlgorithm == "AllowNoShear") 
-      d_allowNoShear = true;
-    else if (flag->d_erosionAlgorithm == "ZeroStress") 
-      d_setStressToZero = true;
-  }
-}
-
-void 
 ElasticPlastic::addParticleState(std::vector<const VarLabel*>& from,
                                  std::vector<const VarLabel*>& to)
 {
@@ -630,7 +605,6 @@ ElasticPlastic::addComputesAndRequires(Task* task,
 
   // Other constitutive model and input dependent computes and requires
   task->requires(Task::OldDW, lb->pTempPreviousLabel, matlset, gnone); 
-  task->requires(Task::OldDW, lb->pErosionLabel,      matlset, gnone);
 
   task->requires(Task::OldDW, pRotationLabel,         matlset, gnone);
   task->requires(Task::OldDW, pStrainRateLabel,       matlset, gnone);
@@ -749,9 +723,6 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
     old_dw->get(pStress, lb->pStressLabel, pset);
     old_dw->get(pTempPrev,    lb->pTempPreviousLabel, pset); 
     old_dw->get(pTemperature, lb->pTemperatureLabel,  pset);
-
-    constParticleVariable<double> pErosion;
-    old_dw->get(pErosion, lb->pErosionLabel, pset);
 
     // Get the time increment (delT)
     delt_vartype delT;
@@ -875,11 +846,6 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
       tensorF_new = tensorFinc*pDeformGrad[idx];
       pDeformGrad_new[idx] = tensorF_new;
       double J = tensorF_new.Determinant();
-
-      if(d_setStressToZero && pLocalized[idx]){
-        pDeformGrad_new[idx] = pDeformGrad[idx];
-        J = pDeformGrad[idx].Determinant();
-      }
 
       if(pLocalized[idx] && J <=0.0){
         pDeformGrad_new[idx] = one;
@@ -1223,26 +1189,6 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
       // Calculate the total stress
       tensorSig = tensorS + tensorHy;
 
-      // If the particle has already failed, apply various erosion algorithms
-      if (flag->d_doErosion) {
-        if (pLocalized[idx]) {
-          if (d_allowNoTension) {
-            if (p > 0.0){
-               tensorSig = zero;
-            }
-            else{
-               tensorSig = tensorHy;
-            }
-          }
-          if(d_allowNoShear){
-            tensorSig = tensorHy;
-          }
-          else if (d_setStressToZero){
-             tensorSig = zero;
-          }
-        }
-      }
-
       //-----------------------------------------------------------------------
       // Stage 3:
       //-----------------------------------------------------------------------
@@ -1303,7 +1249,7 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
       bool isLocalized = false;
       double tepla = 0.0;
 
-      if (flag->d_doErosion) {
+      if (flag->d_deleteRogueParticles) {
 
         // Check 1: Look at the temperature
         if (melted) isLocalized = true;
@@ -1368,9 +1314,8 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
           }
         }
 
-        // Use erosion algorithms to treat newly localized particles
+        // Update newly localized particles
         if (isLocalized) {
-
           // If the localized particles fail again then set their stress to zero
           if (pLocalized[idx]) {
             pDamage_new[idx] = 0.0;
@@ -1380,24 +1325,9 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
             pLocalized_new[idx] = 1;
             pDamage_new[idx] = 0.0;
             pPorosity_new[idx] = 0.0;
-
-            // Apply various erosion algorithms
-            if (d_allowNoTension){
-              if (p > 0.0){
-                tensorSig = zero;
-              }
-              else{
-                tensorSig = tensorHy;
-              }
-            }
-            else if (d_allowNoShear){
-              tensorSig = tensorHy;
-            }
-            else if (d_setStressToZero){
-              tensorSig = zero;
-            }
           }
         }
+        
       }
 
       //-----------------------------------------------------------------------

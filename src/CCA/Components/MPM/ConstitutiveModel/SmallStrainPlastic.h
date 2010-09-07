@@ -148,11 +148,6 @@ namespace Uintah {
     bool   d_doMelting;
     bool   d_checkStressTriax;
 
-    // Erosion algorithms
-    bool   d_setStressToZero;
-    bool   d_allowNoTension;
-    bool   d_removeMass;
-
     MPMEquationOfState*         d_eos;
     ShearModulusModel*          d_shear;
     MeltingTempModel*           d_melt;
@@ -398,8 +393,6 @@ namespace Uintah {
     void getInitialPorosityData(ProblemSpecP& ps);
 
     void getInitialDamageData(ProblemSpecP& ps);
-
-    void setErosionAlgorithm();
 
   };
 

@@ -67,9 +67,7 @@ MPMFlags::MPMFlags(const ProcessorGroup* myworld)
   d_minGridLevel = 0;
   d_maxGridLevel = 1000;
                       
-  d_doErosion = false;
   d_deleteRogueParticles = false;
-  d_erosionAlgorithm = "none";
   d_doThermalExpansion = true;
 
   d_artificialDampCoeff = 0.0;
@@ -220,13 +218,6 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
   if (!d_do_contact_friction) d_addFrictionWork = 0.0;
 
 
-  ProblemSpecP erosion_ps = mpm_flag_ps->findBlock("erosion");
-  if (erosion_ps) {
-    if (erosion_ps->getAttribute("algorithm", d_erosionAlgorithm)) {
-      if (d_erosionAlgorithm == "none") d_doErosion = false;
-      else d_doErosion = true;
-    }
-  }
   mpm_flag_ps->get("delete_rogue_particles",  d_deleteRogueParticles);
   
   // d_doComputeHeatFlux:
@@ -311,9 +302,7 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
     dbg << " Artificial Viscosity Coeff2 = " << d_artificialViscCoeff2<< endl;
     dbg << " Create New Particles        = " << d_createNewParticles << endl;
     dbg << " Add New Material            = " << d_addNewMaterial << endl;
-    dbg << " Do Erosion ?                = " << d_doErosion << endl;
-    dbg << " Delete Rogue Particles?     = " << d_doErosion << endl;
-    dbg << "  Erosion Algorithm          = " << d_erosionAlgorithm << endl;
+    dbg << " Delete Rogue Particles?     = " << d_deleteRogueParticles << endl;
     dbg << " Use Load Curves             = " << d_useLoadCurves << endl;
     dbg << " Use Cohesive Zones          = " << d_useCohesiveZones << endl;
     dbg << " ForceBC increment factor    = " << d_forceIncrementFactor<< endl;
@@ -364,9 +353,6 @@ MPMFlags::outputProblemSpec(ProblemSpecP& ps)
   }
 
   ps->appendElement("do_contact_friction_heating", d_do_contact_friction);
-
-  ProblemSpecP erosion_ps = ps->appendChild("erosion");
-  erosion_ps->setAttribute("algorithm", d_erosionAlgorithm);
 
   ps->appendElement("delete_rogue_particles",d_deleteRogueParticles);
  

@@ -143,7 +143,6 @@ ShellParticleCreator::createParticles(MPMMaterial* matl,
         ptemperature[pidx]=(*obj)->getInitialData("temperature");
         pdisp[pidx] = Vector(0.,0.,0.);
         pfiberdir[pidx] = Vector(0.0,0.0,0.0);
-        perosion[pidx] = 1.0;
 
         // Calculate particle mass
         double partMass = matl->getInitialDensity()*pvolume[pidx];
@@ -241,7 +240,6 @@ ShellParticleCreator::createParticles(MPMMaterial* matl,
                 pvelocity[pidx]=(*obj)->getInitialVelocity();
                 ptemperature[pidx]=(*obj)->getInitialData("temperature");
                 psp_vol[pidx]=1.0/matl->getInitialDensity(); 
-                perosion[pidx] = 1.0;
                 pfiberdir[pidx] = Vector(0.0,0.0,0.0);
 
                 // Calculate particle mass
