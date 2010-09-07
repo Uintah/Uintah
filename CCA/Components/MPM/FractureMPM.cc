@@ -175,7 +175,6 @@ void FractureMPM::scheduleInitialize(const LevelP& level,
   t->computes(lb->pDeformationMeasureLabel);
   t->computes(lb->pStressLabel);
   t->computes(lb->pSizeLabel);
-  t->computes(lb->pErosionLabel);
   t->computes(lb->pDispGradsLabel);
   t->computes(lb->pStrainEnergyDensityLabel);
   t->computes(d_sharedState->get_delt_label(),level.get_rep());

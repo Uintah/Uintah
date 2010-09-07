@@ -373,7 +373,6 @@ void ImpMPM::scheduleInitialize(const LevelP& level, SchedulerP& sched)
   t->computes(lb->pDeformationMeasureLabel);
   t->computes(lb->pStressLabel);
   t->computes(lb->pCellNAPIDLabel);
-  t->computes(lb->pErosionLabel);  //  only used for imp -> exp transition
   if(flags->d_artificial_viscosity){
     t->computes(lb->p_qLabel);        //  only used for imp -> exp transition
   }
@@ -1428,7 +1427,6 @@ void ImpMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->requires(Task::OldDW, lb->pTempPreviousLabel,     Ghost::None);
   t->requires(Task::OldDW, lb->pDispLabel,             Ghost::None);
   t->requires(Task::OldDW, lb->pSizeLabel,             Ghost::None);
-  t->requires(Task::OldDW, lb->pErosionLabel,          Ghost::None);
   t->requires(Task::NewDW, lb->gTemperatureRateLabel,one_matl,
               Ghost::AroundCells,1);
   t->requires(Task::NewDW, lb->pDeformationMeasureLabel_preReloc,        Ghost::None);
@@ -1444,7 +1442,6 @@ void ImpMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->computes(lb->pTemperatureLabel_preReloc);
   t->computes(lb->pDispLabel_preReloc);
   t->computes(lb->pSizeLabel_preReloc);
-  t->computes(lb->pErosionLabel_preReloc);
   t->computes(lb->pTempPreviousLabel_preReloc);
 
   if(flags->d_artificial_viscosity){
@@ -1481,7 +1478,6 @@ void ImpMPM::scheduleRefine(const PatchSet* patches,
   t->computes(lb->pDeformationMeasureLabel);
   t->computes(lb->pStressLabel);
   t->computes(lb->pCellNAPIDLabel);
-  t->computes(lb->pErosionLabel);  //  only used for imp -> exp transition
   t->computes(d_sharedState->get_delt_label(),getLevel(patches));
 
   t->computes(lb->pExternalHeatFluxLabel);
@@ -3598,9 +3594,7 @@ void ImpMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       new_dw->get(gacceleration,  lb->gAccelerationLabel,dwindex,patch,gac, 1);
 
       old_dw->get(psize,                 lb->pSizeLabel,                 pset);
-      old_dw->get(pEro,                  lb->pErosionLabel,              pset);
       new_dw->allocateAndPut(psizeNew,   lb->pSizeLabel_preReloc,        pset);
-      new_dw->allocateAndPut(pEroNew,    lb->pErosionLabel_preReloc,     pset);
       new_dw->allocateAndPut(pTempPreNew,lb->pTempPreviousLabel_preReloc,pset);
       psizeNew.copyData(psize);
       pEroNew.copyData(pEro);
@@ -4120,7 +4114,7 @@ void ImpMPM::refine(const ProcessorGroup*,
         ParticleVariable<Point>  px;
         ParticleVariable<double> pmass, pvolume, pTemperature;
         ParticleVariable<Vector> pvelocity, pexternalforce, psize, pdisp;
-        ParticleVariable<double> pErosion, pTempPrev;
+        ParticleVariable<double> pTempPrev;
         ParticleVariable<int>    pLoadCurve;
         ParticleVariable<long64> pID;
         ParticleVariable<Matrix3> pdeform, pstress;
@@ -4138,7 +4132,6 @@ void ImpMPM::refine(const ProcessorGroup*,
           new_dw->allocateAndPut(pLoadCurve,   lb->pLoadCurveIDLabel,   pset);
         }
         new_dw->allocateAndPut(psize,          lb->pSizeLabel,          pset);
-        new_dw->allocateAndPut(pErosion,       lb->pErosionLabel,       pset);
                                                                                 
         mpm_matl->getConstitutiveModel()->initializeCMData(patch,
                                                            mpm_matl,new_dw);

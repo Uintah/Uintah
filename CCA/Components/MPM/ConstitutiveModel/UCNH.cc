@@ -85,9 +85,6 @@ UCNH::UCNH(ProblemSpecP& ps, MPMFlags* Mflag)
     
     // Get the failure stress/strain data
     getFailureStrainData(ps);
-    
-    // Set the erosion algorithm
-    setErosionAlgorithm();
 
     ps->getWithDefault("failureCriteria", d_failureCriteria,
                                           "MaximumPrincipalStress");
@@ -134,8 +131,6 @@ UCNH::UCNH(ProblemSpecP& ps, MPMFlags* Mflag, bool plas, bool dam)
     // Get the failure stress/strain data
     getFailureStrainData(ps);
     
-    // Set the erosion algorithm
-    setErosionAlgorithm();
 
     ps->getWithDefault("failureCriteria", d_failureCriteria,
                                           "MaximumPrincipalStress");
@@ -180,8 +175,6 @@ UCNH::UCNH(const UCNH* cm) : ConstitutiveModel(cm), ImplicitCM(cm)
     // Set the failure strain data
     setFailureStrainData(cm);
     
-    // Set the erosion algorithm
-    setErosionAlgorithm(cm);
 
     d_failureCriteria = cm->d_failureCriteria;
 
@@ -239,32 +232,6 @@ void UCNH::setFailureStrainData(const UCNH* cm)
   d_epsf.seed            = cm->d_epsf.seed;
   d_epsf.dist            = cm->d_epsf.dist;
   d_epsf.failureByStress = cm->d_epsf.failureByStress;
-}
-
-void UCNH::setErosionAlgorithm()
-{
-  d_setStressToZero = false;
-  d_allowNoTension  = false;
-  d_removeMass      = false;
-  d_allowNoShear    = false;
-  if (flag->d_doErosion) {
-    if (flag->d_erosionAlgorithm      == "RemoveMass") 
-      d_removeMass      = true;
-    else if (flag->d_erosionAlgorithm == "AllowNoTension") 
-      d_allowNoTension  = true;
-    else if (flag->d_erosionAlgorithm == "ZeroStress") 
-      d_setStressToZero = true;
-    else if (flag->d_erosionAlgorithm == "AllowNoShear") 
-      d_allowNoShear    = true;
-  }
-}
-
-void UCNH::setErosionAlgorithm(const UCNH* cm)
-{
-  d_setStressToZero = cm->d_setStressToZero;
-  d_allowNoTension  = cm->d_allowNoTension;
-  d_removeMass      = cm->d_removeMass;
-  d_allowNoShear    = cm->d_allowNoShear;
 }
 
 void UCNH::outputProblemSpec(ProblemSpecP& ps, bool output_cm_tag)
@@ -675,7 +642,6 @@ void UCNH::addComputesAndRequires(Task* task,
     task->computes(pFailureStrainLabel_preReloc,        matlset);
     task->computes(pLocalizedLabel_preReloc,            matlset);
     
-    task->requires(Task::OldDW, lb->pErosionLabel,      matlset, gnone);
   }
   
   // Universal
@@ -901,7 +867,6 @@ void UCNH::computeStressTensor(const PatchSubset* patches,
     // Old data containers
     constParticleVariable<int>     pLocalized;
     constParticleVariable<Short27> pgCode;
-    constParticleVariable<double>  pErosion;
     constParticleVariable<double>  pFailureStrain, pMass;
     constParticleVariable<double>  pPlasticStrain_old;
     constParticleVariable<long64>  pParticleID;
@@ -947,7 +912,6 @@ void UCNH::computeStressTensor(const PatchSubset* patches,
       old_dw->get(pLocalized,               pLocalizedLabel,        pset);
       old_dw->get(pFailureStrain,           pFailureStrainLabel,    pset);
       old_dw->get(pParticleID,              lb->pParticleIDLabel,   pset);
-      old_dw->get(pErosion,                 lb->pErosionLabel,      pset);
       
       if (flag->d_fracture) {
         new_dw->get(pgCode,    lb->pgCodeLabel, pset);
@@ -1007,16 +971,11 @@ void UCNH::computeStressTensor(const PatchSubset* patches,
           }
           computeVelocityGradient(velGrad_new,ni,d_S,oodx,pgFld,gVelocity,GVelocity);
         } else {
-          if(d_useDamage){ // Erosion
-            double erosion = pErosion[idx];
-            computeVelocityGradient(velGrad_new,ni,d_S, oodx, gVelocity, erosion);
-          } else {         // Else not damaged, dont do erosion
             // Get the node indices that surround the cell
             interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,pSize[idx],
                                                                  pDefGrad[idx]);
             
             computeVelocityGradient(velGrad_new,ni,d_S, oodx, gVelocity);
-          }
         }
       } else {  // axi-symmetric kinematics
         // Get the node indices that surround the cell
@@ -1094,11 +1053,6 @@ void UCNH::computeStressTensor(const PatchSubset* patches,
       defGrad = pDefGradInc*pDefGrad[idx];
 
       
-      // if already failed, use previous defGrad
-      if(d_useDamage && d_setStressToZero && pLocalized[idx]){
-        defGrad = pDefGrad[idx];
-      }
-
       pDefGrad_new[idx] = defGrad;
       
       // 1) Get the volumetric part of the deformation
@@ -1586,23 +1540,6 @@ void UCNH::updateFailedParticlesAndModifyStress(const Matrix3& defGrad,
              << " eps_f = " << pFailureStrain << endl;
       }
     } // pLocalized==0
-  }
-  
-  // If the particle has failed, apply various erosion algorithms
-  if (flag->d_doErosion) {
-    // Compute pressure
-    double pressure = (1.0/3.0)*pStress.Trace();
-    if (pLocalized != 0) {
-      if (d_allowNoTension) {
-        if (pressure > 0.0) 
-            pStress = zero;
-          else 
-            pStress = Identity*pressure;
-      } else if (d_allowNoShear) 
-         pStress = Identity*pressure;
-      else if (d_setStressToZero) 
-        pStress = zero;
-    }
   }
 }
 

@@ -208,7 +208,6 @@ void AMRMPM::scheduleInitialize(const LevelP& level, SchedulerP& sched)
   t->computes(lb->pDeformationMeasureLabel);
   t->computes(lb->pStressLabel);
   t->computes(lb->pSizeLabel);
-  t->computes(lb->pErosionLabel);
   t->computes(d_sharedState->get_delt_label(),level.get_rep());
   t->computes(lb->pCellNAPIDLabel,zeroth_matl);
 
@@ -406,7 +405,6 @@ void AMRMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
   t->requires(Task::OldDW, lb->pXLabel,                  gan,NGP);
   t->requires(Task::NewDW, lb->pExtForceLabel_preReloc,  gan,NGP);
   t->requires(Task::OldDW, lb->pTemperatureLabel,        gan,NGP);
-  t->requires(Task::OldDW, lb->pErosionLabel,            gan,NGP);
   t->requires(Task::OldDW, lb->pSizeLabel,               gan,NGP);
   t->requires(Task::OldDW, lb->pDeformationMeasureLabel, gan,NGP);
   //t->requires(Task::OldDW, lb->pExternalHeatRateLabel, gan,NGP);
@@ -551,9 +549,6 @@ void AMRMPM::scheduleComputeStressTensor(SchedulerP& sched,
 
   sched->addTask(t, patches, matls);
 
-  // Schedule update of the erosion parameter
-  scheduleUpdateErosionParameter(sched, patches, matls);
-
   if (flags->d_reductionVars->accStrainEnergy) 
     scheduleComputeAccStrainEnergy(sched, patches, matls);
 }
@@ -572,7 +567,6 @@ void AMRMPM::scheduleUpdateErosionParameter(SchedulerP& sched,
   Task* t = scinew Task("AMRMPM::updateErosionParameter",
                   this, &AMRMPM::updateErosionParameter);
                   
-  t->requires(Task::OldDW, lb->pErosionLabel,          Ghost::None);
   int numMatls = d_sharedState->getNumMPMMatls();
   
   for(int m = 0; m < numMatls; m++){
@@ -581,7 +575,6 @@ void AMRMPM::scheduleUpdateErosionParameter(SchedulerP& sched,
     cm->addRequiresDamageParameter(t, mpm_matl, patches);
   }
   
-  t->computes(lb->pErosionLabel_preReloc);
   sched->addTask(t, patches, matls);
 }
 //______________________________________________________________________
@@ -607,7 +600,6 @@ void AMRMPM::scheduleComputeInternalForce(SchedulerP& sched,
   t->requires(Task::OldDW,lb->pVolumeLabel,               gan,NGP);
   t->requires(Task::OldDW,lb->pXLabel,                    gan,NGP);
   t->requires(Task::OldDW,lb->pSizeLabel,                 gan,NGP);
-  t->requires(Task::OldDW,lb->pErosionLabel,              gan,NGP);
   t->requires(Task::OldDW, lb->pDeformationMeasureLabel,   gan,NGP);
 
 
@@ -716,7 +708,6 @@ void AMRMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->requires(Task::OldDW, lb->pDispLabel,                         gnone);
   t->requires(Task::OldDW, lb->pSizeLabel,                         gnone);
   t->requires(Task::OldDW, lb->pVolumeLabel,                       gnone);
-  t->requires(Task::NewDW, lb->pErosionLabel_preReloc,             gnone);
   t->requires(Task::NewDW, lb->pDeformationMeasureLabel_preReloc,  gnone);
   t->modifies(lb->pVolumeLabel_preReloc);
 
@@ -765,7 +756,6 @@ void AMRMPM::scheduleRefine(const PatchSet* patches,
   t->computes(lb->pDeformationMeasureLabel);
   t->computes(lb->pStressLabel);
   t->computes(lb->pSizeLabel);
-  t->computes(lb->pErosionLabel);
 
   // Debugging Scalar
   if (flags->d_with_color) {
@@ -941,7 +931,6 @@ void AMRMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       constParticleVariable<Point>  px;
       constParticleVariable<double> pmass, pvolume, pTemperature;
       constParticleVariable<Vector> pvelocity, pexternalforce,psize;
-      constParticleVariable<double> pErosion;
       constParticleVariable<Matrix3> pDeformationMeasure;
 
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch,
@@ -953,7 +942,6 @@ void AMRMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       old_dw->get(pvelocity,            lb->pVelocityLabel,           pset); 
       old_dw->get(pTemperature,         lb->pTemperatureLabel,        pset); 
       old_dw->get(psize,                lb->pSizeLabel,               pset); 
-      old_dw->get(pErosion,             lb->pErosionLabel,            pset); 
       old_dw->get(pDeformationMeasure,  lb->pDeformationMeasureLabel, pset);
       new_dw->get(pexternalforce,       lb->pExtForceLabel_preReloc, pset);
 
@@ -1003,7 +991,6 @@ void AMRMPM::interpolateParticlesToGrid(const ProcessorGroup*,
         for(int k = 0; k < n8or27; k++) {
           node = ni[k];
           if(patch->containsNode(node)) {
-            S[k] *= pErosion[idx];
             gmass[node]          += pmass[idx]                     * S[k];
             gvelocity[node]      += pmom                           * S[k];
             gvolume[node]        += pvolume[idx]                   * S[k];
@@ -1237,43 +1224,6 @@ void AMRMPM::updateErosionParameter(const ProcessorGroup*,
                                     DataWarehouse* old_dw,
                                     DataWarehouse* new_dw)
 {
-  for (int p = 0; p<patches->size(); p++) {
-    const Patch* patch = patches->get(p);
-    printTask(patches, patch,cout_doing,
-              "Doing updateErosionParameter\t\t\t\t");
-
-    int numMPMMatls=d_sharedState->getNumMPMMatls();
-    for(int m = 0; m < numMPMMatls; m++){
-
-      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
-      int dwi = mpm_matl->getDWIndex();
-      ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
-
-      // Get the erosion data
-      constParticleVariable<double> pErosion;
-      ParticleVariable<double> pErosion_new;
-      old_dw->get(pErosion, lb->pErosionLabel, pset);
-      new_dw->allocateAndPut(pErosion_new, lb->pErosionLabel_preReloc, pset);
-
-      // Get the localization info
-      ParticleVariable<int> isLocalized;
-      new_dw->allocateTemporary(isLocalized, pset);
-      ParticleSubset::iterator iter = pset->begin(); 
-      for (; iter != pset->end(); iter++) isLocalized[*iter] = 0;
-      mpm_matl->getConstitutiveModel()->getDamageParameter(patch, isLocalized,
-                                                           dwi, old_dw,new_dw);
-
-      iter = pset->begin(); 
-      for (; iter != pset->end(); iter++) {
-        pErosion_new[*iter] = pErosion[*iter];
-        if (isLocalized[*iter]) {
-          if (flags->d_erosionAlgorithm == "RemoveMass") {
-            pErosion_new[*iter] = 0.1*pErosion[*iter];
-          } 
-        } 
-      }
-    }
-  }
 }
 //______________________________________________________________________
 //
@@ -1316,7 +1266,6 @@ void AMRMPM::computeInternalForce(const ProcessorGroup*,
       constParticleVariable<double>  p_q;
       constParticleVariable<Matrix3> pstress;
       constParticleVariable<Vector>  psize;
-      constParticleVariable<double>  pErosion;
       NCVariable<Vector>             internalforce;
       NCVariable<Matrix3>            gstress;
       constNCVariable<double>        gvolume;
@@ -1330,7 +1279,6 @@ void AMRMPM::computeInternalForce(const ProcessorGroup*,
       old_dw->get(pvol,    lb->pVolumeLabel,    pset);             
       old_dw->get(pstress, lb->pStressLabel,    pset);             
       old_dw->get(psize,   lb->pSizeLabel,      pset);             
-      old_dw->get(pErosion,lb->pErosionLabel,   pset);
       old_dw->get(pDeformationMeasure, lb->pDeformationMeasureLabel, pset);
 
       new_dw->get(gvolume, lb->gVolumeLabel, dwi, patch, Ghost::None, 0);
@@ -1359,7 +1307,6 @@ void AMRMPM::computeInternalForce(const ProcessorGroup*,
                        d_S[k].y()*oodx[1],
                        d_S[k].z()*oodx[2]);
                        
-            div *= pErosion[idx];
             internalforce[ni[k]] -= (div * stresspress)  * pvol[idx];
           }
         }
@@ -1926,7 +1873,6 @@ void AMRMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       ParticleVariable<long64> pids_new;
       constParticleVariable<Vector> pdisp;
       ParticleVariable<Vector> pdispnew;
-      constParticleVariable<double> pErosion;
       ParticleVariable<double> pTempPreNew;
 
       // Get the arrays of grid data on which the new part. values depend
@@ -1944,7 +1890,6 @@ void AMRMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       old_dw->get(pvolume,      lb->pVolumeLabel,                    pset);
       old_dw->get(pvelocity,    lb->pVelocityLabel,                  pset);
       old_dw->get(pTemperature, lb->pTemperatureLabel,               pset);
-      new_dw->get(pErosion,     lb->pErosionLabel_preReloc,          pset);
       new_dw->get(pDeformationMeasure,   lb->pDeformationMeasureLabel_preReloc, pset);
       new_dw->getModifiable(pvolumeNew,  lb->pVolumeLabel_preReloc,             pset);
       
@@ -2251,7 +2196,7 @@ void AMRMPM::refine(const ProcessorGroup*,
         ParticleVariable<Point>  px;
         ParticleVariable<double> pmass, pvolume, pTemperature;
         ParticleVariable<Vector> pvelocity, pexternalforce, psize, pdisp;
-        ParticleVariable<double> pErosion, pTempPrev;
+        ParticleVariable<double> pTempPrev;
         ParticleVariable<int>    pLoadCurve;
         ParticleVariable<long64> pID;
         ParticleVariable<Matrix3> pdeform, pstress;
@@ -2269,7 +2214,6 @@ void AMRMPM::refine(const ProcessorGroup*,
           new_dw->allocateAndPut(pLoadCurve,   lb->pLoadCurveIDLabel,   pset);
         }
         new_dw->allocateAndPut(psize,          lb->pSizeLabel,          pset);
-        new_dw->allocateAndPut(pErosion,       lb->pErosionLabel,       pset);
 
         mpm_matl->getConstitutiveModel()->initializeCMData(patch,
                                                            mpm_matl,new_dw);

@@ -60,13 +60,6 @@ FractureParticleCreator::registerPermanentParticleState(MPMMaterial* /*matl*/)
   //particle_state.push_back(lb->pX0Label);
   //particle_state_preReloc.push_back(lb->pX0Label_preReloc);
 
-  vector<const VarLabel*>::iterator r1,r2;
-  r1 = find(particle_state.begin(), particle_state.end(),d_lb->pErosionLabel);
-  particle_state.erase(r1);
-
-  r2 = find(particle_state_preReloc.begin(), particle_state_preReloc.end(),
-         d_lb->pErosionLabel_preReloc);
-  particle_state_preReloc.erase(r2);
 }
 
 

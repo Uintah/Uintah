@@ -85,9 +85,6 @@ void HeatConduction::scheduleComputeInternalHeatRate(SchedulerP& sched,
   t->requires(Task::OldDW, d_lb->pMassLabel,                      gan, NGP);
   t->requires(Task::OldDW, d_lb->pVolumeLabel,                    gan, NGP);
   t->requires(Task::OldDW, d_lb->pDeformationMeasureLabel,        gan, NGP);
-#ifdef EROSION  
-  t->requires(Task::NewDW, d_lb->pErosionLabel_preReloc,          gan, NGP);
-#endif  
   t->requires(Task::NewDW, d_lb->gTemperatureLabel,               gac, 2*NGP);
   t->requires(Task::NewDW, d_lb->gMassLabel,                      gnone);
   t->computes(d_lb->gdTdtLabel);
@@ -232,9 +229,6 @@ void HeatConduction::computeInternalHeatRate(const ProcessorGroup*,
       constParticleVariable<double> pvol,pMass;
       constParticleVariable<Vector> psize;
       constParticleVariable<Matrix3> deformationGradient;
-#ifdef EROSION      
-      constParticleVariable<double> pErosion;
-#endif      
       ParticleVariable<Vector>      pTemperatureGradient;
       constNCVariable<double>       gTemperature,gMass;
       NCVariable<double>            gdTdt;
@@ -248,9 +242,6 @@ void HeatConduction::computeInternalHeatRate(const ProcessorGroup*,
       old_dw->get(pMass,        d_lb->pMassLabel,                      pset);
       old_dw->get(psize,        d_lb->pSizeLabel,                      pset);
       old_dw->get(deformationGradient, d_lb->pDeformationMeasureLabel, pset);
-#ifdef EROSION      
-      new_dw->get(pErosion,     d_lb->pErosionLabel_preReloc, pset);
-#endif      
       new_dw->get(gTemperature, d_lb->gTemperatureLabel, dwi, patch, gac,2*NGN);
       new_dw->get(gMass,        d_lb->gMassLabel,        dwi, patch, gnone, 0);
       new_dw->allocateAndPut(gdTdt, d_lb->gdTdtLabel,    dwi, patch);
@@ -282,9 +273,6 @@ void HeatConduction::computeInternalHeatRate(const ProcessorGroup*,
 
         pTemperatureGradient[idx] = Vector(0.0,0.0,0.0);
         for (int k = 0; k < d_flag->d_8or27; k++){
-#ifdef EROSION 
-          d_S[k] *= pErosion[idx];
-#endif  
           for (int j = 0; j<3; j++) {
             pTemperatureGradient[idx][j] += 
                   gTemperature[ni[k]] * d_S[k][j] * oodx[j];
@@ -314,9 +302,6 @@ void HeatConduction::computeInternalHeatRate(const ProcessorGroup*,
 
           pTemperatureGradient[idx] = Vector(0.0,0.0,0.0);
           for (int k = 0; k < d_flag->d_8or27; k++){
-#ifdef EROSION 
-            d_S[k] *= pErosion[idx];
-#endif  
             for (int j = 0; j<3; j++) {
               if(pgCode[idx][k]==1) { // above crack
                 pTemperatureGradient[idx][j] +=
