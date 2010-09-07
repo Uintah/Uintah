@@ -302,18 +302,18 @@ SCI_ARG_WITH(boost,
   [with_boost="$withval"
    sci_required_boost=yes],
   [with_boost=""])
-#SCI_ARG_WITH(spatialops,
-#  AC_HELP_STRING(--with-spatialops=DIR,
-#                 Use the SpatialOps library in DIR),
-#  [with_spatialops="$withval"
-#   sci_required_spatialops=yes],
-#  [with_spatialops=""])
-#SCI_ARG_WITH(exprlib,
-#  AC_HELP_STRING(--with-exprlib=DIR,
-#                 Use the ExprLib library in DIR),
-#  [with_exprlib="$withval"
-#   sci_required_exprlib=yes],
-#  [with_exprlib=""])
+SCI_ARG_WITH(spatialops,
+  AC_HELP_STRING(--with-spatialops=DIR,
+                 Use the SpatialOps library in DIR),
+  [with_spatialops="$withval"
+   sci_required_spatialops=yes],
+  [with_spatialops=""])
+SCI_ARG_WITH(exprlib,
+  AC_HELP_STRING(--with-exprlib=DIR,
+                 Use the ExprLib library in DIR),
+  [with_exprlib="$withval"
+   sci_required_exprlib=yes],
+  [with_exprlib=""])
 SCI_ARG_WITH(tabprops,
   AC_HELP_STRING(--with-tabprops=DIR,
                  Use the TabProps library in DIR),
@@ -3531,6 +3531,148 @@ AC_SUBST(HDF5_LIB_DIR_FLAG)	# Place this var in the configVars.mk.in
 sci_defs_files="$sci_defs_files include/sci_defs/hdf5_testdefs.h"
 AC_LANG(C)
 
+##  --  search for Boost ------------------------
+
+if test "$with_boost"; then
+  if test "$with_boost" = "yes"; then
+    AC_MSG_ERROR( --with-boost=DIR requires a DIRectory be provided. )
+  else
+    AC_MSG_CHECKING(for Boost files (For now we are just verifying the existence of lib and .h files)) 
+    if test ! -d $with_boost; then
+      echo ""
+      AC_MSG_ERROR( '$with_boost' directory does not exist. )
+    fi
+    # Check for header files
+    BOOST_INCLUDE_DIR=$with_boost/include/boost
+    for file in signal.hpp shared_ptr.hpp bind.hpp signal.hpp shared_ptr.hpp ref.hpp graph/adjacency_list.hpp graph/graph_traits.hpp \
+                graph/topological_sort.hpp graph/graphviz.hpp graph/breadth_first_search.hpp graph/visitors.hpp graph/transpose_graph.hpp \
+                shared_ptr.hpp any.hpp; do
+      if test ! -f $BOOST_INCLUDE_DIR/$file; then
+        echo ""
+        AC_MSG_ERROR( '$BOOST_INCLUDE_DIR/$file' does not exist. )
+      fi
+    done
+    # Check for libraries files
+    BOOST_LIB_DIR=$with_boost/lib
+    for file in libboost_thread-mt.a libboost_signals-mt.a; do
+      if test ! -f $BOOST_LIB_DIR/$file; then
+        echo ""
+        AC_MSG_WARN( $file lib does not exist... looking for non-mt version...)
+        short_name="`echo $file | cut -f1 -d"-"`.a"
+        if test ! -f $BOOST_LIB_DIR/$short_name; then
+            AC_MSG_ERROR( $BOOST_LIB_DIR/$short_name lib does not exist!)
+        else
+            short_name=`echo $short_name | cut -f1 -d"." | cut -c4-`
+            BOOST_LIB_FLAG="$BOOST_LIB_FLAG -l$short_name"
+        fi
+      else
+        short_name=`echo $file | cut -f1 -d"." | cut -c4-`
+        BOOST_LIB_FLAG="$BOOST_LIB_FLAG -l$short_name"
+      fi
+    done
+  fi
+  AC_MSG_RESULT(Found Boost)
+  DEF_BOOST="#define HAVE_BOOST 1"
+  INC_BOOST_H="-I$with_boost/include"
+  BOOST_LIB_DIR_FLAG="-L$with_boost/lib"
+  HAVE_BOOST="yes"
+fi
+AC_SUBST(HAVE_BOOST)
+AC_SUBST(DEF_BOOST)
+AC_SUBST(INC_BOOST_H)
+AC_SUBST(BOOST_LIB_FLAG)
+AC_SUBST(BOOST_LIB_DIR_FLAG)
+
+##  --  search for SpatialOps Library ------------------------
+
+if test "$with_spatialops"; then
+  if test "$HAVE_BOOST" != "yes"; then
+    AC_MSG_ERROR( --with-spatialops=DIR requires Boost. )
+  fi
+
+  if test "$with_spatialops" = "yes"; then
+    AC_MSG_ERROR( --with-spatialops=DIR requires a DIRectory be provided. )
+  else
+
+    AC_MSG_CHECKING(for SpatialOps files (For now we are just verifying the existence of lib and .h files)) 
+    if test ! -d $with_spatialops; then
+      echo ""
+      AC_MSG_ERROR( '$with_spatialops' directory does not exist. )
+    fi
+    SPOPS_INCLUDE_DIR="include/spatialops"
+    # Check includes
+    for file in FieldFunctions.h LagrangePoly.h LinAlgTrilinos.h LinAlgUBlas.h LinearSystem.h OperatorDatabase.h SFIterator.h \
+                SpatialField.h SpatialFieldStore.h SpatialOperator.h SpatialOpsConfigure.h SpatialOpsDefs.h SpatialOpsTools.h \
+                particles structured; do
+      if test ! -e $with_spatialops/$SPOPS_INCLUDE_DIR/$file; then
+        echo ""
+        AC_MSG_ERROR( '$with_spatialops/$SPOPS_INCLUDE_DIR/$file' does not exist. )
+      fi
+    done
+    # Check lib
+    if test ! -f $with_spatialops/lib/spatialops/libspatialops.a; then
+      echo ""
+      AC_MSG_ERROR( '$with_spatialops/lib/spatialops/libspatialops.a' does not exist. )
+    fi
+  fi
+  AC_MSG_RESULT(yes)
+  DEF_SPATIALOPS="#define HAVE_SPATIALOPS 1"
+  INC_SPATIALOPS_H="-I$with_spatialops/include"
+  SPATIALOPS_LIB_DIR_FLAG="-L$with_spatialops/lib/spatialops"
+  SPATIALOPS_LIB_FLAG="-lspatialops"
+  HAVE_SPATIALOPS="yes"
+fi
+AC_SUBST(HAVE_SPATIALOPS)
+AC_SUBST(DEF_SPATIALOPS)
+AC_SUBST(INC_SPATIALOPS_H)
+AC_SUBST(SPATIALOPS_LIB_FLAG)
+AC_SUBST(SPATIALOPS_LIB_DIR_FLAG)
+
+##  --  search for Exprlib Library ------------------------
+
+if test "$with_exprlib"; then
+  if test "$HAVE_SPATIALOPS" != "yes"; then
+    AC_MSG_ERROR( --with-exprlib=DIR requires SpatialOps. )
+  fi
+
+  if test "$with_exprlib" = "yes"; then
+    AC_MSG_ERROR( --with-exprlib=DIR requires a DIRectory be provided. )
+  else
+
+    AC_MSG_CHECKING(for Exprlib files (For now we are just verifying the existence of lib and .h files)) 
+    if test ! -d $with_exprlib; then
+      echo ""
+      AC_MSG_ERROR( '$with_exprlib' directory does not exist. )
+    fi
+    SPOPS_INCLUDE_DIR="include/expression"
+    # Check includes
+    for file in ExecuteExpression.h ExprDeps.h ExprLib.h Expr_Context.h Expr_Expression.h Expr_ExpressionID.h Expr_FieldManagerList.h \
+                ExpressionBase.h ExpressionFactory.h ExpressionRegistry.h ExpressionTree.h FieldDeps.h FieldManager.h FieldManagerBase.h \
+                Functions.h PlaceHolderExpr.h Tag.h TransportEquation.h uintah; do
+      if test ! -e $with_exprlib/$SPOPS_INCLUDE_DIR/$file; then
+        echo ""
+        AC_MSG_ERROR( '$with_exprlib/$SPOPS_INCLUDE_DIR/$file' does not exist. )
+      fi
+    done
+    # Check lib
+    if test ! -f $with_exprlib/lib/expression/libexprlib.a; then
+      echo ""
+      AC_MSG_ERROR( '$with_exprlib/lib/expression/libexprlib.a' does not exist. )
+    fi
+  fi
+  AC_MSG_RESULT(yes)
+  DEF_EXPRLIB="#define HAVE_EXPRLIB 1"
+  INC_EXPRLIB_H="-I$with_exprlib/include"
+  EXPRLIB_LIB_DIR_FLAG="-L$with_exprlib/lib/expression"
+  EXPRLIB_LIB_FLAG="-lexprlib"
+  HAVE_EXPRLIB="yes"
+fi
+AC_SUBST(HAVE_EXPRLIB)
+AC_SUBST(DEF_EXPRLIB)
+AC_SUBST(INC_EXPRLIB_H)
+AC_SUBST(EXPRLIB_LIB_FLAG)
+AC_SUBST(EXPRLIB_LIB_DIR_FLAG)
+
 ##  --  search for TabProps ------------------------
 
 if test "$with_tabprops"; then
@@ -3563,35 +3705,6 @@ AC_SUBST(DEF_TABPROPS)
 AC_SUBST(INC_TABPROPS_H)
 AC_SUBST(TABPROPS_LIB_FLAG)
 AC_SUBST(TABPROPS_LIB_DIR_FLAG)
-
-##  --  search for Boost ------------------------
-
-if test "$with_boost"; then
-  if test "$with_boost" = "yes"; then
-    AC_MSG_ERROR( --with-boost=DIR requires a DIRectory be provided. )
-  else
-    AC_MSG_CHECKING(for Boost files (For now we are just verifying the existence of lib and .h files)) 
-    if test ! -d $with_boost; then
-      AC_MSG_ERROR( '$with_boost' directory does not exist. )
-    fi
-    for file in include/boost/BSpline.h include/boost/LU.h include/boost/StateTable.h lib/boost/libboost.a; do
-      if test ! -f $with_boost/$file; then
-        AC_MSG_ERROR( '$with_boost/$file' does not exist. )
-      fi
-    done
-  fi
-  AC_MSG_RESULT(yes)
-  DEF_BOOST="#define HAVE_BOOST 1"
-  INC_BOOST_H="-I$with_boost/include"
-  BOOST_LIB_DIR_FLAG="-L$with_boost/lib/boost"
-  BOOST_LIB_FLAG="-lboost"
-  HAVE_BOOST="yes"
-fi
-AC_SUBST(HAVE_BOOST)
-AC_SUBST(DEF_BOOST)
-AC_SUBST(INC_BOOST_H)
-AC_SUBST(BOOST_LIB_FLAG)
-AC_SUBST(BOOST_LIB_DIR_FLAG)
 
 ##  --  search for hypre stuff  ------------------------------------------
 
