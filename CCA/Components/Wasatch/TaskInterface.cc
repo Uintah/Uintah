@@ -100,7 +100,7 @@ namespace Wasatch{
       PropertyMap& properties = (*ifm)->properties();
       PropertyMap::iterator ipm = properties.find("UintahInfo");
       assert( ipm != properties.end() );
-      Expr::IDInfoMap& infomap = boost::any_cast<boost::reference_wrapper<Expr::IDInfoMap> >(ipm->second);
+      Expr::IDInfoMap& infomap = boost::any_cast< boost::reference_wrapper<Expr::IDInfoMap> >(ipm->second);
 
       //______________________________________
       // cycle through each field of this type

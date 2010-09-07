@@ -18,7 +18,7 @@ namespace Wasatch{
     std::string fileName;
     params->get("FileNamePrefix",fileName);
 
-    cout << "Loading TabProps file '" << fileName << "' ... " << flush;
+    std::cout << "Loading TabProps file '" << fileName << "' ... " << std::flush;
 
     StateTable table;
     try{
@@ -26,14 +26,14 @@ namespace Wasatch{
     }
     catch( std::exception& e ){
       std::ostringstream msg;
-      msg << e.what() << endl << endl
-          << "Could not open TabProps file '" << fileName << ".h5'" << endl
-          << "Check to ensure that the file exists in the run dir." << endl
+      msg << e.what() << std::endl << std::endl
+          << "Could not open TabProps file '" << fileName << ".h5'" << std::endl
+          << "Check to ensure that the file exists in the run dir." << std::endl
           << std::endl;
       throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
     }
 
-    cout << "done" << endl;
+    std::cout << "done" << std::endl;
 
     //___________________________________
     // set up any variable aliasing for
@@ -84,8 +84,8 @@ namespace Wasatch{
         throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
       }
 
-      cout << "Constructing property evaluator for '" << dvarName
-           << "' from file '" << fileName << "'." << endl;
+      std::cout << "Constructing property evaluator for '" << dvarName
+                << "' from file '" << fileName << "'." << std::endl;
 
       const BSpline* const spline = table.find_entry( dvarName );
 

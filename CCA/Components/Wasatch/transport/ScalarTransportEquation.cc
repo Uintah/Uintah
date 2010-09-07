@@ -84,7 +84,7 @@ namespace Wasatch{
 
       if( builder == NULL ){
         std::ostringstream msg;
-        msg << "Could not build a diffusive flux expression for '" << phiName << "'" << endl;
+        msg << "Could not build a diffusive flux expression for '" << phiName << "'" << std::endl;
         throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
       }
 

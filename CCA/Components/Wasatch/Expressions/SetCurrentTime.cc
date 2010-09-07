@@ -2,8 +2,6 @@
 
 #include <CCA/Components/Wasatch/Expressions/SetCurrentTime.h>
 
-#include <Core/Grid/SimulationState.h>
-
 namespace Wasatch{
 
   SetCurrentTime::SetCurrentTime( const Uintah::SimulationStateP sharedState,
