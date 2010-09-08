@@ -118,13 +118,18 @@ WOFF_NUMBERS=
 
 ##
 ## Used to store warnings that should be redisplayed to the user at the
-## end of configure in hopes that the user actually sees them.  Note, 
-## the syntax and use of IMPORTANT_WARNINGS is somewhat picky.  See the
-## 'Check for 64 vs 80 bit floating point number' section below for an
-## example of its use.  (Make sure to increment NUM_IMPORTANT_WARNINGS.)
+## end of configure in hopes that the user actually sees them. 
+##
+## Use 'add_important_warning()' to add a warning.
 ##
 declare -a IMPORTANT_WARNINGS
 NUM_IMPORTANT_WARNINGS=0
+add_important_warning()
+{
+   # Note: need '[[' below to get autoconf to create a single '[' in the actual configure file.
+   IMPORTANT_WARNINGS[[$NUM_IMPORTANT_WARNINGS]]=$1
+   ((NUM_IMPORTANT_WARNINGS++))
+}
 
 ## Clean up files that could be left around if configure was 
 ## interrupted (by control-c, ^c) because I do not know how to add
@@ -202,6 +207,18 @@ fi
 ##  initialize the recognized argument lists
 sci_arg_with_list="--no-create --no-recursion"
 sci_arg_enable_list=""
+
+##  --------------------------------------------------------------------
+##  ------------------  optional variable intialization  ---------------
+##  --------------------------------------------------------------------
+
+# Setting variables to 'no' isn't required, but is useful in displaying
+# some error condition information to the user.
+HAVE_HDF5="no"
+HAVE_BOOST="no"
+HAVE_TABPROPS="no"
+HAVE_SPATIALOPS="no"
+HAVE_EXPRLIB="no"
 
 ##  --------------------------------------------------------------------
 ##  ------------------  check for all arguments     --------------------
@@ -473,7 +490,7 @@ SCI_ARG_WITH(MallocTrace,
   [with_malloc_trace=""])
 SCI_ARG_ENABLE(assertion-level,
   AC_HELP_STRING(--enable-assertion-level=N,
-                 Use assertion level N (0-3)),
+                 Use assertion level N (0-3) (Where 0 turns off assertions, and 3 turns on all assertions.)),
   [enable_assertion_level="$enableval"],
   [enable_assertion_level=${enable_assertion_level=3}])
 SCI_ARG_ENABLE(scinew-line-numbers,
@@ -905,6 +922,13 @@ else
   AC_MSG_RESULT(yes ($optimize) )
 fi
 
+# Check to see if assertions are off but optimize is on... and warn user if so...
+if test "$optimize" != "no"; then
+  if test "$ASSERTION_LEVEL" != "0"; then
+    add_important_warning "FYI: You specified an optimized build, but have not turned off assertions... (Use: --enable-assertion-level=0 for fastest performance.)"
+  fi
+fi
+
 if test ! -e "`type $CC | sed 's%^.* /%/%'`"; then
   SCI_MSG_ERROR(Could not find the specified C compiler ($CC))
 fi
@@ -940,8 +964,6 @@ if test "$with_fortran" = no; then
             DEF_NO_FORTRAN="#define NO_FORTRAN";
             NO_FORTRAN="yes";
 fi
-if test "$USE_WASATCH" = yes; then BUILD_WASATCH=yes; fi
-if test "$BUILD_WASATCH" = no; then DEF_WASATCH="#define NO_WASATCH"; fi
 
 # NO_FORTRAN is used in configVars.mk[.in] and DEF_NO_FORTRAN is used in uintah_testdefs.h.in
 
@@ -949,7 +971,6 @@ AC_SUBST(BUILD_ARCHES)
 AC_SUBST(BUILD_ICE)
 AC_SUBST(BUILD_MPM)
 AC_SUBST(BUILD_RADIATION)
-AC_SUBST(BUILD_WASATCH)
 AC_SUBST(DEF_ARCHES)
 AC_SUBST(DEF_ICE)
 AC_SUBST(DEF_MPM)
@@ -1062,9 +1083,7 @@ if test $? != 0; then
    AC_MSG_WARN( Floating point - usually 64 vs 80 bit - register precission problem detected. )
    AC_MSG_WARN( Disabling use of floating point registers with '-ffloat-store' compiler flag. )
    AC_MSG_WARN( ----------------------------------------------------------------------------------------- )
-   # Note: need '[[' below to get autoconf to create a single '[' in the actual configure file.
-   IMPORTANT_WARNINGS[[$NUM_IMPORTANT_WARNINGS]]="Automatically added -ffloat-store compiler option to C/CXXFLAGS."
-   ((NUM_IMPORTANT_WARNINGS++))
+   add_important_warning "Automatically added -ffloat-store compiler option to C/CXXFLAGS."
    CFLAGS="$CFLAGS -ffloat-store"
    CXXFLAGS="$CXXFLAGS -ffloat-store"
    # Verify that the compiler accepts the -ffloat-store flag:
@@ -3573,8 +3592,11 @@ if test "$with_boost"; then
   fi
   AC_MSG_RESULT(Found Boost)
   DEF_BOOST="#define HAVE_BOOST 1"
-  INC_BOOST_H="-I$with_boost/include"
-  BOOST_LIB_DIR_FLAG="-L$with_boost/lib"
+  if test "$with_boost" != "/usr"; then
+    # If with_boost points to /usr, then we don't need to explicitly point to it...
+    INC_BOOST_H="-I$with_boost/include"
+    BOOST_LIB_DIR_FLAG="-L$with_boost/lib"
+  fi
   HAVE_BOOST="yes"
 fi
 AC_SUBST(HAVE_BOOST)
@@ -3705,6 +3727,34 @@ AC_SUBST(DEF_TABPROPS)
 AC_SUBST(INC_TABPROPS_H)
 AC_SUBST(TABPROPS_LIB_FLAG)
 AC_SUBST(TABPROPS_LIB_DIR_FLAG)
+
+##  --  Determine whether we can use WASATCH OR NOT ----------------------
+
+if test "$USE_WASATCH" = yes; then
+  if test "$HAVE_HDF5" == "yes" &&
+     test "$HAVE_BOOST" == "yes" &&
+     test "$HAVE_TABPROPS" == "yes" &&
+     test "$HAVE_SPATIALOPS" == "yes" &&
+     test "$HAVE_EXPRLIB" == "yes"; then
+    BUILD_WASATCH=yes
+  else
+    AC_MSG_ERROR(You specified the use of the Wasatch component but do not have all the of the prereqs: HDF5 ($HAVE_HDF5); Boost ($HAVE_BOOST); TabProps ($HAVE_TABPROPS); SpatialOps ($HAVE_SPATIALOPS); and ExprLib ($HAVE_EXPRLIB).)
+  fi
+else
+  if test "$HAVE_HDF5" == "yes" &&
+     test "$HAVE_BOOST" == "yes" &&
+     test "$HAVE_TABPROPS" == "yes" &&
+     test "$HAVE_SPATIALOPS" == "yes" &&
+     test "$HAVE_EXPRLIB" == "yes"; then
+    BUILD_WASATCH=yes
+    AC_MSG_WARN(All prereqs satisfied, turning on Wasatch component.)
+  fi
+fi
+
+if test "$BUILD_WASATCH" = no; then 
+  DEF_WASATCH="#define NO_WASATCH";
+fi
+AC_SUBST(BUILD_WASATCH)
 
 ##  --  search for hypre stuff  ------------------------------------------
 
