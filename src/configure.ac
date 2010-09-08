@@ -3595,7 +3595,7 @@ if test "$with_boost"; then
   if test "$with_boost" != "/usr"; then
     # If with_boost points to /usr, then we don't need to explicitly point to it...
     INC_BOOST_H="-I$with_boost/include"
-    BOOST_LIB_DIR_FLAG="-L$with_boost/lib"
+    BOOST_LIB_DIR_FLAG="$LDRUN_PREFIX$with_boost/lib -L$with_boost/lib"
   fi
   HAVE_BOOST="yes"
 fi
