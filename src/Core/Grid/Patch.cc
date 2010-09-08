@@ -1085,9 +1085,11 @@ void Patch::cullIntersection(VariableBasis basis, IntVector bl, const Patch* nei
   // line up at least in corners.
   int bad_diffs = 0;
   for (int dim = 0; dim < 3; dim++) {
-    if (diff[dim] == d_extraCells[dim]*2 ) // if it's two times the number of extra cells
-    {                                      // then it is likely overlapping extra cells
-                                           // however, this may not be true if 2*extracells==patchsize
+    // if the patches are adjacent and the difference is two times the number of extra cells
+    // then it is overlapping extra cells
+    if (   (p_int_low[dim]==n_int_high[dim] || n_int_low[dim]==p_int_high[dim]) 
+        && diff[dim] == d_extraCells[dim]*2 ) 
+    {
       bad_diffs++;
     }
     // depending on the region, cull away the portion of the region that in 'this'
