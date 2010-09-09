@@ -427,12 +427,15 @@ DynamicMPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
 
       numTasksDone++;
       phaseTasksDone[reducetask->getTask()->d_phase]++;
-      //cout << d_myworld->myrank() << " finished reduction task(1) " << *reducetask << " scheduled in phase: " << reducetask->getTask()->d_phase << ", tasks finished in that phase: " <<  phaseTasksDone[reducetask->getTask()->d_phase] << " current phase:" << currphase << endl; 
-      currphase++;
-    } 
+      //taskdbg << d_myworld->myrank() << " finished reduction task(1) " << *reducetask << " scheduled in phase: " << reducetask->getTask()->d_phase << ", tasks finished in that phase: " <<  phaseTasksDone[reducetask->getTask()->d_phase] << " current phase:" << currphase << endl; 
+    }
 
     if (numTasksDone < ntasks){
-      if(dts->numExternalReadyTasks()>0 || dts->numInternalReadyTasks()>0) //if there is work to do
+      if (phaseTasks[currphase] == phaseTasksDone[currphase]) {
+        currphase++;
+      } else if(dts->numExternalReadyTasks()>0 || dts->numInternalReadyTasks()>0 ||
+                (phaseSyncTask.find(currphase)!= phaseSyncTask.end() && 
+                 phaseTasksDone[currphase] == phaseTasks[currphase]-1) ) //if there is work to do
       {
         processMPIRecvs(TEST);  //recieve what is ready and do not block
       }
@@ -445,8 +448,6 @@ DynamicMPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
         processMPIRecvs(WAIT_ONCE); //There is no other work to do so block until some receives are completed
       }
     }
-
-    if (phaseTasks[currphase] == phaseTasksDone[currphase])  currphase++;
 
     if(!abort && dws[dws.size()-1] && dws[dws.size()-1]->timestepAborted()){
       // TODO - abort might not work with external queue...
