@@ -85,17 +85,17 @@ namespace Wasatch{
   {
     const StringNames& sName = StringNames::self();
 
-    ScalarRHS::FieldTagInfo info;
+    ScalarRHS<FieldT>::FieldTagInfo info;
     using Expr::Tag;  using Expr::STATE_NONE;
 
     //    info[ ScalarRHS::CONVECTIVE_FLUX_X ] = ???
 
-    info[ ScalarRHS::DIFFUSIVE_FLUX_X ] = Tag( sName.xHeatFlux, STATE_NONE );
-    info[ ScalarRHS::DIFFUSIVE_FLUX_Y ] = Tag( sName.yHeatFlux, STATE_NONE );
-    info[ ScalarRHS::DIFFUSIVE_FLUX_Z ] = Tag( sName.zHeatFlux, STATE_NONE );
+    info[ ScalarRHS<FieldT>::DIFFUSIVE_FLUX_X ] = Tag( sName.xHeatFlux, STATE_NONE );
+    info[ ScalarRHS<FieldT>::DIFFUSIVE_FLUX_Y ] = Tag( sName.yHeatFlux, STATE_NONE );
+    info[ ScalarRHS<FieldT>::DIFFUSIVE_FLUX_Z ] = Tag( sName.zHeatFlux, STATE_NONE );
 
     return factory.register_expression( Tag(sName.temperature+"_rhs",STATE_NONE),
-                                        new ScalarRHS::Builder(info) );
+                                        new ScalarRHS<FieldT>::Builder(info) );
   }
 
   //------------------------------------------------------------------

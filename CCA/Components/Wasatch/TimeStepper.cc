@@ -205,13 +205,13 @@ namespace Wasatch{
   {
     //__________________
     // loop over patches
-    for( int ip=0; ip<patches->size(); ++ip ){
+    for( size_t ip=0; ip<patches->size(); ++ip ){
 
       const Uintah::Patch* const patch = patches->get(ip);
 
       //____________________
       // loop over materials
-      for( int im=0; im<materials->size(); ++im ){
+      for( size_t im=0; im<materials->size(); ++im ){
         
         const int material = materials->get(im);
 

@@ -49,30 +49,69 @@ namespace Wasatch{
     //___________________________________________________________________________
     // resolve the transport equation to be solved and create the adaptor for it.
     //
+    std::cout << "------------------------------------------------" << std::endl;
     std::cout << "Creating transport equation for '" << eqnLabel << "'" << std::endl;
 
     if( eqnLabel == "scalar" ){
-      transeqn = new ScalarTransportEquation( ScalarTransportEquation::get_phi_name( params ),
-                                              ScalarTransportEquation::get_rhs_expr_id( *solnGraphHelper->exprFactory, params ) );
-      adaptor = new EqnTimestepAdaptor<ScalarTransportEquation::FieldT>( transeqn );
-    }
-    else if( eqnLabel == sName.temperature ){
+       // find out if this corresponds to a staggered or non-staggered field
+      std::string staggeredDirection;
+      Uintah::ProblemSpecP scalarStaggeredParams = params->get( "StaggeredDirection", staggeredDirection );
+      
+      if ( scalarStaggeredParams ) {
+        // if staggered, then determine the staggering direction
+        std::cout << "Detected staggered scalar '" << eqnLabel << "'" << std::endl;
+        
+        // make proper calls based on the direction
+        if ( staggeredDirection=="X" ) {
+          std::cout << "Setting up staggered scalar transport equation in direction: '" << staggeredDirection << "'" << std::endl;
+          typedef ScalarTransportEquation< XVolField > ScalarTransEqn;
+          transeqn = new ScalarTransEqn( ScalarTransEqn::get_phi_name( params ),
+                                         ScalarTransEqn::get_rhs_expr_id( *solnGraphHelper->exprFactory, params ) );
+          adaptor = new EqnTimestepAdaptor< XVolField >( transeqn );
+          
+        } else if ( staggeredDirection=="Y" ) {
+          std::cout << "Setting up staggered scalar transport equation in direction: '" << staggeredDirection << "'" << std::endl;
+          typedef ScalarTransportEquation< YVolField > ScalarTransEqn;
+          transeqn = new ScalarTransEqn( ScalarTransEqn::get_phi_name( params ),
+                                         ScalarTransEqn::get_rhs_expr_id( *solnGraphHelper->exprFactory, params ) );
+          adaptor = new EqnTimestepAdaptor< YVolField >( transeqn );
+          
+        } else if (staggeredDirection=="Z") {
+          std::cout << "Setting up staggered scalar transport equation in direction: '" << staggeredDirection << "'" << std::endl;
+          typedef ScalarTransportEquation< ZVolField > ScalarTransEqn;
+          transeqn = new ScalarTransEqn( ScalarTransEqn::get_phi_name( params ),
+                                         ScalarTransEqn::get_rhs_expr_id( *solnGraphHelper->exprFactory, params ) );
+          adaptor = new EqnTimestepAdaptor< ZVolField >( transeqn );
+          
+        } else {
+          std::ostringstream msg;
+          msg << "ERROR: No direction is specified for staggered field '" << eqnLabel << "'. Please revise your input file." << std::endl;
+          throw Uintah::InvalidValue( msg.str(), __FILE__, __LINE__ );                             
+        }
+        
+      } else if ( !scalarStaggeredParams ) {
+        // in this case, the scalar field is not staggered
+        std::cout << "Detected non-staggered scalar '" << eqnLabel << "'" << std::endl;
+        typedef ScalarTransportEquation< ScalarVolField > ScalarTransEqn;
+        transeqn = new ScalarTransEqn( ScalarTransEqn::get_phi_name( params ),
+                                       ScalarTransEqn::get_rhs_expr_id( *solnGraphHelper->exprFactory, params ) );
+        adaptor = new EqnTimestepAdaptor< ScalarVolField >( transeqn );
+      }
+      
+    } else if( eqnLabel == sName.temperature ){
       transeqn = new TemperatureTransportEquation( *solnGraphHelper->exprFactory );
-      adaptor = new EqnTimestepAdaptor<TemperatureTransportEquation::FieldT>( transeqn );
-    }
-
-    /* add additional transport equations here */
-
-    else{
+      adaptor = new EqnTimestepAdaptor< TemperatureTransportEquation::FieldT >( transeqn );
+      
+    } else {
       std::ostringstream msg;
-      msg << "No transport equation was resolved for '" << eqnLabel << "'" << std::endl;
+      msg << "ERROR: No transport equation was specified '" << eqnLabel << "'. Please revise your input file" << std::endl;
       throw Uintah::InvalidValue( msg.str(), __FILE__, __LINE__ );
     }
 
     //_____________________________________________________
     // set up initial conditions on this transport equation
     try{
-      std::cout << "setting ICs for transport equation '" << eqnLabel << "'" << std::endl;
+      std::cout << "Setting initial conditions for transport equation '" << eqnLabel << "'" << std::endl;
       icGraphHelper->rootIDs.insert( transeqn->initial_condition( *icGraphHelper->exprFactory ) );
     }
     catch( std::runtime_error& e ){
@@ -98,7 +137,7 @@ namespace Wasatch{
           << std::endl;
       throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
     }
-
+    std::cout << "------------------------------------------------" << std::endl;
     return adaptor;
   }
   

@@ -11,7 +11,7 @@
     <!-- Set the initial condition for temperature -->
     <BasicExpression label="TIC" type="Cell">
       <TaskList>initialization</TaskList>
-      <NameTag name="temperature" state="STATE_N" />
+      <NameTag name="phi" state="STATE_N" />
       <Constant>543.21</Constant>
     </BasicExpression>
 
@@ -19,7 +19,7 @@
     <!-- Build a scalar transport equation -->
     <TransportEquation equation="scalar">
 
-      <SolutionVariable>temperature</SolutionVariable>
+      <SolutionVariable>phi</SolutionVariable>
 
       <DiffusiveFluxExpression>
         <Direction>X</Direction>
@@ -55,7 +55,7 @@
     <outputInitTimestep/>
     <checkpoint cycle = "2" interval = "0.01"/>
     <compression>gzip</compression>
-    <save label="temperature"/>
+    <save label="phi"/>
 <!--
     <save label="thermal conductivity"/>
 -->
