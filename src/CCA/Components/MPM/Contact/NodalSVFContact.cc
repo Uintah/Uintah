@@ -139,9 +139,7 @@ void NodalSVFContact::exMomIntegrated(const ProcessorGroup*,
     StaticArray<NCVariable<Vector> > gvelocity_old(numMatls);
     StaticArray<NCVariable<Vector> > gForce(numMatls);
 
-    //------------------------------------------------
-    // Retrieve necessary data from DataWarehouse
-    //------------------------------------------------
+    //---------- Retrieve necessary data from DataWarehouse ------------------------------------------------
     old_dw->get(delT, lb->delTLabel, getLevel(patches));
     old_dw->get(NC_CCweight, lb->NC_CCweightLabel, 0, patch, gnone, 0);
     
@@ -154,25 +152,21 @@ void NodalSVFContact::exMomIntegrated(const ProcessorGroup*,
       new_dw->allocateTemporary(gForce[m], patch, Ghost::None, 0);
       new_dw->getModifiable(gvelocity_star[m],lb->gVelocityStarLabel, dwi,patch);
 
-
       for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
         IntVector c = *iter;
-
         gvelocity_old[m][c] = gvelocity_star[m][c];
-  //      gSVF[m][c] = 4.0 * gvolume[m][c] / cellVol;
-        //gSVF[m][c] =  8.0 * NC_CCweight[c] * gvolume[m][c] / cellVol;
-        gSVF[m][c] =  1.0 * NC_CCweight[c] * gvolume[m][c] / cellVol;
+        gSVF[m][c] =  8.0 * NC_CCweight[c] * gvolume[m][c] / cellVol;
       }
     }
-
-    //------------------------------------
-    // Calculate Interaction Force
-    //------------------------------------
+    
+    //cout<<"coeff="<<coeff<<endl;
+    //----------- Calculate Interaction Force -----------------------------------
     for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
       IntVector c = *iter;
         
       if (b_svf==1) { factor = coeff * gSVF[0][c] * gSVF[1][c]; } 
       else          { factor = coeff; } 
+
 
       // If using the model with svf calculation, or if mass is present on 
       // both nodes, calculate a non-zero interaction force based on velocity 
@@ -182,51 +176,29 @@ void NodalSVFContact::exMomIntegrated(const ProcessorGroup*,
         gForce[0][c] = factor * (gvelocity_old[1][c] - gvelocity_old[0][c]);
         gForce[1][c] = factor * (gvelocity_old[0][c] - gvelocity_old[1][c]);
         
-      }
-      else {
-        gForce[0][c] = 0.0;
-        gForce[1][c] = 0.0;
+      } else {
+        gForce[0][c] = Vector(0.0,0.0,0.0); gForce[1][c] = Vector(0.0,0.0,0.0);
       }
        
-    //-------------------------------------
-    // Calculate Updated Velocity
-    //------------------------------------
-      
-      
-    for(int m=0;m<matls->size();m++){
-      //gvelocity_star[m][c] = gvelocity_old[m][c] + (gForce[m][c]/( 4.0 * gmass[m][c])) * delT;    
-      gvelocity_star[m][c] = gvelocity_old[m][c] + (gForce[m][c]/( 1.0 * NC_CCweight[c] * gmass[m][c])) * delT;    
-      //gvelocity_star[m][c] = gvelocity_old[m][c] + (gForce[m][c]/( 8.0 * NC_CCweight[c] * gmass[m][c])) * delT;    
-      //gvelocity_star[0][c] = gvelocity_old[0][c] + (gForce[0][c]/( 8.0 * NC_CCweight[c] * gmass[0][c])) * delT;    
+    //------------Calculate Updated Velocity ------------------------------------
+      gvelocity_star[0][c] = gvelocity_old[0][c] + (gForce[0][c]/( 8.0 * NC_CCweight[c] * gmass[0][c])) * delT;    
+      gvelocity_star[1][c] = gvelocity_old[1][c] + (gForce[1][c]/( 8.0 * NC_CCweight[c] * gmass[1][c])) * delT;    
     
-     // gvelocity_star[1][c] = gvelocity_old[1][c] + (gForce[1][c]/( 8.0 * NC_CCweight[c] * gmass[1][c])) * delT;    
-    }
-
     }//for nodes
-    
-
   }//for patches
-
 }//end exmomentumIntegrated
 
 
-void NodalSVFContact::addComputesAndRequiresInterpolated(SchedulerP & sched,
-                                                  const PatchSet* patches,
-                                                  const MaterialSet* ms)
-{   }
+void NodalSVFContact::addComputesAndRequiresInterpolated(
+                           SchedulerP & sched, const PatchSet* patches, const MaterialSet* ms) {   }
 
-void NodalSVFContact::addComputesAndRequiresIntegrated(SchedulerP & sched,
-                                             const PatchSet* patches,
-                                             const MaterialSet* ms) 
-{
-  Task * t = scinew Task("NodalSVFContact::exMomIntegrated", 
-                      this, &NodalSVFContact::exMomIntegrated);
+void NodalSVFContact::addComputesAndRequiresIntegrated(
+                           SchedulerP & sched, const PatchSet* patches, const MaterialSet* ms) {
+  Task * t = scinew Task("NodalSVFContact::exMomIntegrated", this, &NodalSVFContact::exMomIntegrated);
   
   const MaterialSubset* mss = ms->getUnion();
   t->requires(Task::OldDW, lb->delTLabel);    
-  t->requires(Task::NewDW, lb->gMassLabel,              Ghost::None);
-
+  t->requires(Task::NewDW, lb->gMassLabel,Ghost::None);
   t->modifies(             lb->gVelocityStarLabel, mss);
-
   sched->addTask(t, patches, ms);
 }
