@@ -57,19 +57,6 @@ PSELIBS :=              \
 	Core/Math         \
 	Core/Parallel
 
-#------------------------------------------------------------------------
-#jcs these are currently hacked in and work only for my Mac laptop.
-#    eventually we need to get them working from the configure script.
-SPATIALOPS_INCLUDE := -I/Users/tsaad/development/SpatialOps/build/include
-SPATIALOPS_LIBRARY := /Users/tsaad/development/SpatialOps/build/lib/spatialops/libspatialops.a
-
-EXPRLIB_INCLUDE    := -I/Users/tsaad/development/ExprLib/build/include
-EXPRLIB_LIBRARY    := /Users/tsaad/development/ExprLib/build/lib/expression/libexprlib.a
-
-BOOST_INCLUDE     :=-I/usr/local/include/boost-1.41.0
-BOOST_LIBRARY      := /usr/local/lib/boost-1.41.0/libboost_thread-mt.a /usr/local/lib/boost-1.41.0/libboost_signals-mt.a
-#------------------------------------------------------------------------
-
 LIBS := $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) 	\
         $(EXPRLIB_LIBRARY) $(SPATIALOPS_LIBRARY) 	\
         $(TABPROPS_LIBRARY) $(HDF5_LIBRARY)		\
