@@ -3037,7 +3037,7 @@ echo "$as_me: error: The file or directory parameter ($MallocTrace) specified fo
 if test "${enable_assertion_level+set}" = set; then
   enableval=$enable_assertion_level; enable_assertion_level="$enableval"
 else
-  enable_assertion_level=${enable_assertion_level=3}
+  enable_assertion_level=""
 fi
 
   sci_arg_enable_list="$sci_arg_enable_list --enable-assertion-level --disable-assertion-level"
@@ -3082,7 +3082,7 @@ fi
 
 if test "$enable_memory_initialization" != "no"; then
    DEF_MEMORY_INIT="#define INITIALIZE_MEMORY"
-   if   test "$enable_memory_initialization" == "yes"; then
+   if test "$enable_memory_initialization" = "yes"; then
       memory_init=127
    else
       val=$enable_memory_initialization
@@ -6794,7 +6794,6 @@ echo "$as_me: WARNING: sci-malloc disabled" >&2;}
         ;;
 esac
 
-ASSERTION_LEVEL="$enable_assertion_level"
 THROW_LEVEL="$enable_throw_level"
 extra_cflags=""
 
@@ -6902,9 +6901,29 @@ fi
 
 # Check to see if assertions are off but optimize is on... and warn user if so...
 if test "$optimize" != "no"; then
-  if test "$ASSERTION_LEVEL" != "0"; then
-    add_important_warning "FYI: You specified an optimized build, but have not turned off assertions... (Use: --enable-assertion-level=0 for fastest performance.)"
+
+  ASSERTION_LEVEL="$enable_assertion_level"
+  if test "$ASSERTION_LEVEL" = ""; then
+    add_important_warning "FYI: Configure turned off assertions due to --enable-optimize."
+    ASSERTION_LEVEL=0
+  else
+    if test "$ASSERTION_LEVEL" != "0"; then
+      add_important_warning "You explicitly turned on assertions (Level $ASSERTION_LEVEL) but you also specified --enable-optimize.  You can turn assertions off with --enable-assertion-level=0.  Assertions can significantly decrease performance."
+    fi
   fi
+else
+  # Configuring debug build...
+  ASSERTION_LEVEL="$enable_assertion_level"
+  if test "$ASSERTION_LEVEL" = ""; then
+    # Debug builds default to level 3 assertions.
+    ASSERTION_LEVEL=3
+  fi
+fi
+
+if test $ASSERTION_LEVEL != "0" -a $ASSERTION_LEVEL != "1" -a $ASSERTION_LEVEL != "2" -a $ASSERTION_LEVEL != "3"; then
+  { { echo "$as_me:$LINENO: error: --enable-assertion-level was set to '$ASSERTION_LEVEL', but must be 0, 1, 2, or 3." >&5
+echo "$as_me: error: --enable-assertion-level was set to '$ASSERTION_LEVEL', but must be 0, 1, 2, or 3." >&2;}
+   { (exit 1); exit 1; }; }
 fi
 
 if test ! -e "`type $CC | sed 's%^.* /%/%'`"; then
@@ -11694,7 +11713,7 @@ echo "$as_me: error: VisIt requires CMake. Please make sure 'cmake' is in your p
    { (exit 1); exit 1; }; }
    fi
 
-   if test "$with_visit" == "yes"; then
+   if test "$with_visit" = "yes"; then
       { { echo "$as_me:$LINENO: error: You must provide a DIRECTORY when using --with-visit=DIR. " >&5
 echo "$as_me: error: You must provide a DIRECTORY when using --with-visit=DIR. " >&2;}
    { (exit 1); exit 1; }; }
@@ -11758,7 +11777,7 @@ fi
 
 if test "$with_ofed"; then
 
-   if test "$with_ofed" == "yes"; then
+   if test "$with_ofed" = "yes"; then
       { { echo "$as_me:$LINENO: error: You must specify a directory with the '--with-ofed=DIR' option! " >&5
 echo "$as_me: error: You must specify a directory with the '--with-ofed=DIR' option! " >&2;}
    { (exit 1); exit 1; }; }
@@ -12254,7 +12273,7 @@ fi
 
 if test "$with_mx"; then
 
-   if test "$with_mx" == "yes"; then
+   if test "$with_mx" = "yes"; then
       { { echo "$as_me:$LINENO: error: You must specify a directory with the '--with-mx=DIR' option! " >&5
 echo "$as_me: error: You must specify a directory with the '--with-mx=DIR' option! " >&2;}
    { (exit 1); exit 1; }; }
@@ -45289,11 +45308,11 @@ fi
 ##  --  Determine whether we can use WASATCH OR NOT ----------------------
 
 if test "$USE_WASATCH" = yes; then
-  if test "$HAVE_HDF5" == "yes" &&
-     test "$HAVE_BOOST" == "yes" &&
-     test "$HAVE_TABPROPS" == "yes" &&
-     test "$HAVE_SPATIALOPS" == "yes" &&
-     test "$HAVE_EXPRLIB" == "yes"; then
+  if test "$HAVE_HDF5" = "yes" &&
+     test "$HAVE_BOOST" = "yes" &&
+     test "$HAVE_TABPROPS" = "yes" &&
+     test "$HAVE_SPATIALOPS" = "yes" &&
+     test "$HAVE_EXPRLIB" = "yes"; then
     BUILD_WASATCH=yes
   else
     { { echo "$as_me:$LINENO: error: You specified the use of the Wasatch component but do not have all the of the prereqs: HDF5 ($HAVE_HDF5); Boost ($HAVE_BOOST); TabProps ($HAVE_TABPROPS); SpatialOps ($HAVE_SPATIALOPS); and ExprLib ($HAVE_EXPRLIB)." >&5
@@ -45301,11 +45320,11 @@ echo "$as_me: error: You specified the use of the Wasatch component but do not h
    { (exit 1); exit 1; }; }
   fi
 else
-  if test "$HAVE_HDF5" == "yes" &&
-     test "$HAVE_BOOST" == "yes" &&
-     test "$HAVE_TABPROPS" == "yes" &&
-     test "$HAVE_SPATIALOPS" == "yes" &&
-     test "$HAVE_EXPRLIB" == "yes"; then
+  if test "$HAVE_HDF5" = "yes" &&
+     test "$HAVE_BOOST" = "yes" &&
+     test "$HAVE_TABPROPS" = "yes" &&
+     test "$HAVE_SPATIALOPS" = "yes" &&
+     test "$HAVE_EXPRLIB" = "yes"; then
     BUILD_WASATCH=yes
     { echo "$as_me:$LINENO: WARNING: All prereqs satisfied" >&5
 echo "$as_me: WARNING: All prereqs satisfied" >&2;}
@@ -47400,8 +47419,10 @@ done
 if (( $NUM_IMPORTANT_WARNINGS > 0 )); then
 
    echo ""
+   echo "!!! IMPORTANT WARNINGS - Please Read: !!!"
+   echo ""
    echo "NOTE: Some IMPORTANT WARNINGS were generated during configuration.  A summary of"
-   echo "these messages is presented below:"
+   echo "these messages can be found below:"
    echo
 
    # Note: need '[[' below to get autoconf to create a single '[' in the actual configure file.

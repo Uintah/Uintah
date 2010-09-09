@@ -492,7 +492,7 @@ SCI_ARG_ENABLE(assertion-level,
   AC_HELP_STRING(--enable-assertion-level=N,
                  Use assertion level N (0-3) (Where 0 turns off assertions, and 3 turns on all assertions.)),
   [enable_assertion_level="$enableval"],
-  [enable_assertion_level=${enable_assertion_level=3}])
+  [enable_assertion_level=""])
 SCI_ARG_ENABLE(scinew-line-numbers,
   AC_HELP_STRING(--enable-scinew-line-numbers,
                  Have SCI malloc store the file and line that calls 'scinew'),
@@ -516,7 +516,7 @@ fi
 
 if test "$enable_memory_initialization" != "no"; then
    DEF_MEMORY_INIT="#define INITIALIZE_MEMORY"
-   if   test "$enable_memory_initialization" == "yes"; then
+   if test "$enable_memory_initialization" = "yes"; then
       memory_init=127
    else
       val=$enable_memory_initialization
@@ -827,7 +827,6 @@ case $host in
         ;;
 esac
 
-ASSERTION_LEVEL="$enable_assertion_level"
 THROW_LEVEL="$enable_throw_level"
 extra_cflags=""
 
@@ -924,9 +923,27 @@ fi
 
 # Check to see if assertions are off but optimize is on... and warn user if so...
 if test "$optimize" != "no"; then
-  if test "$ASSERTION_LEVEL" != "0"; then
-    add_important_warning "FYI: You specified an optimized build, but have not turned off assertions... (Use: --enable-assertion-level=0 for fastest performance.)"
+
+  ASSERTION_LEVEL="$enable_assertion_level"
+  if test "$ASSERTION_LEVEL" = ""; then
+    add_important_warning "FYI: Configure turned off assertions due to --enable-optimize."
+    ASSERTION_LEVEL=0
+  else
+    if test "$ASSERTION_LEVEL" != "0"; then
+      add_important_warning "You explicitly turned on assertions (Level $ASSERTION_LEVEL) but you also specified --enable-optimize.  You can turn assertions off with --enable-assertion-level=0.  Assertions can significantly decrease performance."
+    fi
   fi
+else
+  # Configuring debug build...
+  ASSERTION_LEVEL="$enable_assertion_level"
+  if test "$ASSERTION_LEVEL" = ""; then
+    # Debug builds default to level 3 assertions.
+    ASSERTION_LEVEL=3
+  fi
+fi
+
+if test $ASSERTION_LEVEL != "0" -a $ASSERTION_LEVEL != "1" -a $ASSERTION_LEVEL != "2" -a $ASSERTION_LEVEL != "3"; then
+  AC_MSG_ERROR([--enable-assertion-level was set to '$ASSERTION_LEVEL', but must be 0, 1, 2, or 3.])
 fi
 
 if test ! -e "`type $CC | sed 's%^.* /%/%'`"; then
@@ -1869,7 +1886,7 @@ if test "$with_visit"; then
       AC_MSG_ERROR( VisIt requires CMake. Please make sure 'cmake' is in your path!)
    fi
 
-   if test "$with_visit" == "yes"; then 
+   if test "$with_visit" = "yes"; then 
       AC_MSG_ERROR( You must provide a DIRECTORY when using --with-visit=DIR. )
    fi
    if ! test -f "$with_visit/bin/xml2cmake"; then 
@@ -1922,7 +1939,7 @@ AC_SUBST(VISIT_INSTALL_DIR)
 
 if test "$with_ofed"; then
 
-   if test "$with_ofed" == "yes"; then
+   if test "$with_ofed" = "yes"; then
       AC_MSG_ERROR( You must specify a directory with the '--with-ofed=DIR' option! )
    else
       dir="$with_ofed"
@@ -1939,7 +1956,7 @@ fi
 
 if test "$with_mx"; then
 
-   if test "$with_mx" == "yes"; then
+   if test "$with_mx" = "yes"; then
       AC_MSG_ERROR( You must specify a directory with the '--with-mx=DIR' option! )
    else
       dir="$with_mx"
@@ -3731,21 +3748,21 @@ AC_SUBST(TABPROPS_LIB_DIR_FLAG)
 ##  --  Determine whether we can use WASATCH OR NOT ----------------------
 
 if test "$USE_WASATCH" = yes; then
-  if test "$HAVE_HDF5" == "yes" &&
-     test "$HAVE_BOOST" == "yes" &&
-     test "$HAVE_TABPROPS" == "yes" &&
-     test "$HAVE_SPATIALOPS" == "yes" &&
-     test "$HAVE_EXPRLIB" == "yes"; then
+  if test "$HAVE_HDF5" = "yes" &&
+     test "$HAVE_BOOST" = "yes" &&
+     test "$HAVE_TABPROPS" = "yes" &&
+     test "$HAVE_SPATIALOPS" = "yes" &&
+     test "$HAVE_EXPRLIB" = "yes"; then
     BUILD_WASATCH=yes
   else
     AC_MSG_ERROR(You specified the use of the Wasatch component but do not have all the of the prereqs: HDF5 ($HAVE_HDF5); Boost ($HAVE_BOOST); TabProps ($HAVE_TABPROPS); SpatialOps ($HAVE_SPATIALOPS); and ExprLib ($HAVE_EXPRLIB).)
   fi
 else
-  if test "$HAVE_HDF5" == "yes" &&
-     test "$HAVE_BOOST" == "yes" &&
-     test "$HAVE_TABPROPS" == "yes" &&
-     test "$HAVE_SPATIALOPS" == "yes" &&
-     test "$HAVE_EXPRLIB" == "yes"; then
+  if test "$HAVE_HDF5" = "yes" &&
+     test "$HAVE_BOOST" = "yes" &&
+     test "$HAVE_TABPROPS" = "yes" &&
+     test "$HAVE_SPATIALOPS" = "yes" &&
+     test "$HAVE_EXPRLIB" = "yes"; then
     BUILD_WASATCH=yes
     AC_MSG_WARN(All prereqs satisfied, turning on Wasatch component.)
   fi
@@ -3933,8 +3950,10 @@ done
 if (( $NUM_IMPORTANT_WARNINGS > 0 )); then
 
    echo ""
+   echo "!!! IMPORTANT WARNINGS - Please Read: !!!"
+   echo ""
    echo "NOTE: Some IMPORTANT WARNINGS were generated during configuration.  A summary of"
-   echo "these messages is presented below:"
+   echo "these messages can be found below:"
    echo
 
    # Note: need '[[' below to get autoconf to create a single '[' in the actual configure file.
