@@ -7,6 +7,9 @@
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 
+using std::cout;
+using std::endl;
+using std::flush;
 
 namespace Wasatch{
 

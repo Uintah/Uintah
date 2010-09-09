@@ -61,7 +61,7 @@
     <outputInitTimestep/>
     <checkpoint cycle = "2" interval = "0.01"/>
     <compression>gzip</compression>
-    <save label="temperature"/>
+    <save label="mixture fraction"/>
     <!--     <save label="thermal conductivity"/> -->
   </DataArchiver>
 

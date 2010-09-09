@@ -9,16 +9,16 @@
     <!-- ============================ -->
     <TransportEquation		spec="MULTIPLE NO_DATA"
                                 attribute1="equation REQUIRED STRING 'temperature,scalar'">
-
+      
       <SolutionVariable		spec="REQUIRED STRING" />
-
+      
+      <!-- Specify a staggered direction for this scalar. If the scalar is non-staggered, this block is not needed -->                          
+      <StaggeredDirection  spec="OPTIONAL STRING 'X,Y,Z'"/>
+            
+      <!-- Specification of the convective flux -->
       <ConvectiveFluxExpression	spec="OPTIONAL NO_DATA">
         <NameTag		spec="REQUIRED" />
-        <AdvectingVelocity	spec="REQUIRED NO_DATA"
-                                children1="ONE_OF(CHILD NameTag)">
-          <NameTag		spec="REQUIRED" />
-        </AdvectingVelocity>
-        <method			spec="REQUIRED STRING 'central, upwind, superbee'" />
+        <Method			spec="REQUIRED STRING 'central, upwind, superbee'" />
       </ConvectiveFluxExpression>
 
       <!-- Specification of the diffusive flux -->

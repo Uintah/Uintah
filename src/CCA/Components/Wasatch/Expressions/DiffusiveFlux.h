@@ -12,14 +12,16 @@
 /**
  *  \class  DiffusiveFlux
  *  \author James C. Sutherland
- *  \date   June, 2010
+ *  \date	June, 2010
  *
  *  \brief Calculates a simple diffusive flux of the form
- *         \f$ J = -\Gamma \frac{\partial \phi}{\partial x} \f$
+ *         \f$ J_i = -\Gamma \frac{\partial \phi}{\partial x_i} \f$ 
+ *         where \f$i=1,2,3\f$ is the coordinate direction.
+ *         This requires knowledge of a the velocity field.
  *
  *  Note that this requires the diffusion coefficient, \f$\Gamma\f$,
- *  to be evaluated at the same location as \f$J\f$ and \f$\nabla
- *  \phi\f$.
+ *  to be evaluated at the same location as \f$J_i\f$ and 
+ *  \f$\frac{\partial \phi}{\partial x_i}\f$.
  */
 template< typename GradT >
 class DiffusiveFlux
