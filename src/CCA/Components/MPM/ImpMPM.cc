@@ -3557,8 +3557,8 @@ void ImpMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       constParticleVariable<Vector> pvelocity, pacceleration;
       constParticleVariable<Vector> pDispOld,psize;
       ParticleVariable<Vector> pvelnew,paccNew,pDisp,psizeNew;
-      constParticleVariable<double> pmass, pvolume,pTempOld,pEro,pq;
-      ParticleVariable<double> pmassNew,pvolumeNew,pTemp,pEroNew,pqNew;
+      constParticleVariable<double> pmass, pvolume,pTempOld,pq;
+      ParticleVariable<double> pmassNew,pvolumeNew,pTemp,pqNew;
       ParticleVariable<double> pTempPreNew;
       constParticleVariable<Matrix3> pDeformationMeasure;
 
@@ -3597,7 +3597,6 @@ void ImpMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       new_dw->allocateAndPut(psizeNew,   lb->pSizeLabel_preReloc,        pset);
       new_dw->allocateAndPut(pTempPreNew,lb->pTempPreviousLabel_preReloc,pset);
       psizeNew.copyData(psize);
-      pEroNew.copyData(pEro);
       pTempPreNew.copyData(pTempOld);
 
       if(flags->d_artificial_viscosity){
@@ -3614,8 +3613,8 @@ void ImpMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         particleIndex idx = *iter;
 
         // Get the node indices that surround the cell
-        interpolator->findCellAndWeightsAndShapeDerivatives(
-                                                   px[idx],ni,S,d_S,psize[idx],pDeformationMeasure[idx]);
+        interpolator->findCellAndWeightsAndShapeDerivatives(px[idx],ni,S,d_S,
+                                           psize[idx],pDeformationMeasure[idx]);
 
         disp = Vector(0.0,0.0,0.0);
         acc = Vector(0.0,0.0,0.0);
