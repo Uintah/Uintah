@@ -13,7 +13,6 @@
 //-- SpatialOps Includes --//
 #include <spatialops/OperatorDatabase.h>
 #include <spatialops/SpatialFieldStore.h>
-//jcs #include <spatialops/SpatialOperator.h>
 
 
 namespace Wasatch{

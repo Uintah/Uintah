@@ -76,7 +76,7 @@
     <checkpoint cycle = "2" interval = "0.01"/>
     <compression>gzip</compression>
     <save label="mixture fraction"/>
-    <!--     <save label="thermal conductivity"/> -->
+    <save label="thermal conductivity"/>
   </DataArchiver>
 
   <Grid>
