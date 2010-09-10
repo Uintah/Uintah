@@ -21,11 +21,6 @@
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 
-namespace Expr{
-  class ExpressionFactory;
-  class ExpressionID;
-}
-
 
 namespace Wasatch{
 
@@ -160,38 +155,50 @@ namespace Wasatch{
       Expr::ExpressionBuilder* builder = NULL;
       
       if( dir=="X" ){
-        typedef typename DiffusiveFlux<typename MyOpTypes::GradX>::Builder Flux;
         if( diffFluxParams->findBlock("ConstantDiffusivity") ){
+          typedef typename DiffusiveFlux<typename MyOpTypes::GradX>::Builder Flux;
           double coef;
           diffFluxParams->get("ConstantDiffusivity",coef);
           builder = new Flux( phiTag, coef );
         }
-        else if( diffFluxParams->findBlock("DiffusiveCoefficient") ){
-          const Expr::Tag coef = parse_nametag( diffFluxParams->findBlock("DiffusiveCoefficient")->findBlock("NameTag") );
+        else if( diffFluxParams->findBlock("DiffusionCoefficient") ){
+          /**
+           *  \todo need to ensure that the type that the user gives
+           *        for the diffusion coefficient field matches the
+           *        type implied here.  Alternatively, we don't let
+           *        the user specify the type for the diffusion
+           *        coefficient.  But there is the matter of what
+           *        independent variable is used when calculating the
+           *        coefficient...  Arrrgghh.
+           */
+          typedef typename DiffusiveFlux2< typename MyOpTypes::GradX, typename MyOpTypes::InterpC2FX >::Builder Flux;
+          const Expr::Tag coef = parse_nametag( diffFluxParams->findBlock("DiffusionCoefficient")->findBlock("NameTag") );
           builder = new Flux( phiTag, coef );
         }
       }
       else if( dir=="Y" ){
-        typedef typename DiffusiveFlux<typename MyOpTypes::GradY>::Builder Flux;
         if( diffFluxParams->findBlock("ConstantDiffusivity") ){
+          typedef typename DiffusiveFlux<typename MyOpTypes::GradY>::Builder Flux;
           double coef;
           diffFluxParams->get("ConstantDiffusivity",coef);
           builder = new Flux( phiTag, coef );
         }
-        else if( diffFluxParams->findBlock("DiffusiveCoefficient") ){
-          const Expr::Tag coef = parse_nametag( diffFluxParams->findBlock("DiffusiveCoefficient")->findBlock("NameTag") );
+        else if( diffFluxParams->findBlock("DiffusionCoefficient") ){
+          typedef typename DiffusiveFlux2< typename MyOpTypes::GradY, typename MyOpTypes::InterpC2FY >::Builder Flux;
+          const Expr::Tag coef = parse_nametag( diffFluxParams->findBlock("DiffusionCoefficient")->findBlock("NameTag") );
           builder = new Flux( phiTag, coef );
         }
       }
       else if( dir=="Z") {
-        typedef typename DiffusiveFlux<typename MyOpTypes::GradZ>::Builder Flux;
         if( diffFluxParams->findBlock("ConstantDiffusivity") ){
+          typedef typename DiffusiveFlux<typename MyOpTypes::GradZ>::Builder Flux;
           double coef;
           diffFluxParams->get("ConstantDiffusivity",coef);
           builder = new Flux( phiTag, coef );
         }
-        else if( diffFluxParams->findBlock("DiffusiveCoefficient") ){
-          const Expr::Tag coef = parse_nametag( diffFluxParams->findBlock("DiffusiveCoefficient")->findBlock("NameTag") );
+        else if( diffFluxParams->findBlock("DiffusionCoefficient") ){
+          typedef typename DiffusiveFlux2< typename MyOpTypes::GradZ, typename MyOpTypes::InterpC2FZ >::Builder Flux;
+          const Expr::Tag coef = parse_nametag( diffFluxParams->findBlock("DiffusionCoefficient")->findBlock("NameTag") );
           builder = new Flux( phiTag, coef );
         }
       }

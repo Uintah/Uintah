@@ -20,9 +20,7 @@ class TabPropsEvaluator
   typedef std::vector<      FieldT*>  FieldVec;
   typedef std::vector<const FieldT*>  IndepVarVec;
   typedef std::vector<const BSpline*> Evaluators;
-  typedef std::vector<std::string>    VarNames;
-
-  const Expr::Context indepVarContext_;
+  typedef std::vector<Expr::Tag>      VarNames;
 
   const VarNames indepVarNames_;
 
@@ -30,7 +28,6 @@ class TabPropsEvaluator
   Evaluators  evaluators_;
 
   TabPropsEvaluator( const BSpline* const spline,
-                     const Expr::Context ivarContext,
                      const VarNames& ivarNames,
                      const Expr::ExpressionID& id,
                      const Expr::ExpressionRegistry& reg );
@@ -39,11 +36,9 @@ public:
   class Builder : public Expr::ExpressionBuilder
   {
     const BSpline* const spline_;
-    const Expr::Context c_;
     const VarNames ivarNames_;
   public:
     Builder( const BSpline* spline,
-             const Expr::Context ivarContext,
              const VarNames& ivarNames );
 
     Expr::ExpressionBase*
@@ -72,13 +67,11 @@ public:
 template< typename FieldT >
 TabPropsEvaluator<FieldT>::
 TabPropsEvaluator( const BSpline* const spline,
-                   const Expr::Context ivarContext,
                    const VarNames& ivarNames,
                    const Expr::ExpressionID& id,
                    const Expr::ExpressionRegistry& reg  )
   : Expr::Expression<FieldT>(id,reg),
-    indepVarContext_( ivarContext ),
-    indepVarNames_  ( ivarNames   )
+    indepVarNames_( ivarNames   )
 {
   evaluators_.push_back( spline );
 }
@@ -103,7 +96,7 @@ advertise_dependents( Expr::ExprDeps& exprDeps )
 {
   // we depend on expressions for each of the independent variables.
   for( VarNames::const_iterator inam=indepVarNames_.begin(); inam!=indepVarNames_.end(); ++inam ){
-    exprDeps.requires_expression( Expr::Tag( *inam, indepVarContext_ ) );
+    exprDeps.requires_expression( *inam );
   }
 }
 
@@ -118,7 +111,7 @@ bind_fields( const Expr::FieldManagerList& fml )
 
   indepVars_.clear();
   for( VarNames::const_iterator inam=indepVarNames_.begin(); inam!=indepVarNames_.end(); ++inam ){
-    indepVars_.push_back( &fm.field_ref( Expr::Tag(*inam,indepVarContext_) ) );
+    indepVars_.push_back( &fm.field_ref( *inam ) );
   }
 }
 
@@ -184,10 +177,8 @@ evaluate()
 template< typename FieldT >
 TabPropsEvaluator<FieldT>::
 Builder::Builder( const BSpline* const spline,
-                  const Expr::Context context,
                   const VarNames& ivarNames )
   : spline_   ( spline    ),
-    c_        ( context   ),
     ivarNames_( ivarNames )
 {}
 
@@ -199,7 +190,7 @@ TabPropsEvaluator<FieldT>::
 Builder::build( const Expr::ExpressionID& id,
                 const Expr::ExpressionRegistry& reg ) const
 {
-  return new TabPropsEvaluator<FieldT>( spline_, c_, ivarNames_, id, reg );
+  return new TabPropsEvaluator<FieldT>( spline_, ivarNames_, id, reg );
 }
 
 

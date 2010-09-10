@@ -1,9 +1,13 @@
+//--- Local (Wasatch) includes ---//
 #include "Properties.h"
 #include "GraphHelperTools.h"
+#include "ParseTools.h"
 #include "Expressions/TabPropsEvaluator.h"
 
+//--- ExprLib includes ---//
 #include <expression/ExpressionFactory.h>
 
+//--- Uintah includes ---//
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 
@@ -38,19 +42,18 @@ namespace Wasatch{
 
     std::cout << "done" << std::endl;
 
-    //___________________________________
-    // set up any variable aliasing for
-    // independent variables in the table
-    typedef std::map<std::string,std::string> VarNameMap;
-    VarNameMap ivarAliasMap;
+    //___________________________________________________________
+    // get information for the independent variables in the table
+    typedef std::map<std::string,Expr::Tag> VarNameMap;
+    VarNameMap ivarMap;
 
-    for( Uintah::ProblemSpecP aliasParams = params->findBlock("IndependentVariable");
-         aliasParams != 0;
-         aliasParams = aliasParams->findNextBlock("IndependentVariable") ){
-      std::string ivarName, aliasName;
-      aliasParams->getAttribute( "name", ivarName );
-      aliasParams->getAttribute( "alias", aliasName );
-      ivarAliasMap[ivarName] = aliasName;
+    for( Uintah::ProblemSpecP ivarParams = params->findBlock("IndependentVariable");
+         ivarParams != 0;
+         ivarParams = ivarParams->findNextBlock("IndependentVariable") ){
+      std::string ivarTableName;
+      const Expr::Tag ivarTag = parse_nametag( ivarParams->findBlock("NameTag") );
+      ivarParams->get( "NameInTable", ivarTableName );
+      ivarMap[ivarTableName] = ivarTag;
     }
 
     //______________________________________________________________
@@ -58,11 +61,10 @@ namespace Wasatch{
     // exact order dictated by the table.  This order will determine
     // the ordering for the arguments to the evaluator later on.
     typedef std::vector<std::string> Names;
-    Names ivarNames;
+    std::vector<Expr::Tag> ivarNames;
     const Names& ivars = table.get_indepvar_names();
     for( Names::const_iterator inm=ivars.begin(); inm!=ivars.end(); ++inm ){
-      const VarNameMap::const_iterator ii = ivarAliasMap.find(*inm);
-      ivarNames.push_back( ii==ivarAliasMap.end() ? *inm : ii->second );
+      ivarNames.push_back( ivarMap[*inm] );
     }
 
     //________________________________________________________________
@@ -73,26 +75,25 @@ namespace Wasatch{
          dvarParams != 0;
          dvarParams = dvarParams->findNextBlock("ExtractVariable") ){
 
-      //_____________________________________________
-      // extract dependent variable names to alias.
-      std::string dvarName, dvarAlias;
-      dvarParams->getAttribute("name", dvarName );
-      dvarParams->getAttribute("alias",dvarAlias);
+      //_______________________________________
+      // extract dependent variable information
+      const Expr::Tag dvarTag = parse_nametag( dvarParams->findBlock("NameTag") );
 
-      if( !table.has_depvar(dvarName) ){
+      std::string dvarTableName;
+      dvarParams->get( "NameInTable", dvarTableName );
+      if( !table.has_depvar(dvarTableName) ){
         std::ostringstream msg;
         msg << "Table '" << fileName
-            << "' has no dependent variable named '" << dvarName << "'"
+            << "' has no dependent variable named '" << dvarTableName << "'"
             << std::endl;
         throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
       }
 
-      std::cout << "Constructing property evaluator for '" << dvarName
+      std::cout << "Constructing property evaluator for '" << dvarTag
                 << "' from file '" << fileName << "'." << std::endl;
 
-      const BSpline* const spline = table.find_entry( dvarName );
+      const BSpline* const spline = table.find_entry( dvarTableName );
 
-      Expr::Context context = Expr::STATE_NONE;
       Expr::ExpressionBuilder* builder = NULL;
 
       //____________________________________________
@@ -102,24 +103,24 @@ namespace Wasatch{
 
       if( fieldType == "Cell" ){
         typedef TabPropsEvaluator<SpatialOps::structured::SVolField>::Builder PropEvaluator;
-        builder = new PropEvaluator( spline->clone(), context, ivarNames );
+        builder = new PropEvaluator( spline->clone(), ivarNames );
       }
       else if( fieldType == "XFace" ){
         typedef TabPropsEvaluator<SpatialOps::structured::SSurfXField>::Builder PropEvaluator;
-        builder = new PropEvaluator( spline->clone(), context, ivarNames );
+        builder = new PropEvaluator( spline->clone(), ivarNames );
       }
       else if( fieldType == "YFace" ){
         typedef TabPropsEvaluator<SpatialOps::structured::SSurfYField>::Builder PropEvaluator;
-        builder = new PropEvaluator( spline->clone(), context, ivarNames );
+        builder = new PropEvaluator( spline->clone(), ivarNames );
       }
       else if( fieldType == "ZFace" ){
         typedef TabPropsEvaluator<SpatialOps::structured::SSurfZField>::Builder PropEvaluator;
-        builder = new PropEvaluator( spline->clone(), context, ivarNames );
+        builder = new PropEvaluator( spline->clone(), ivarNames );
       }
 
       //____________________________
       // register the expression
-      gh.exprFactory->register_expression( Expr::Tag( dvarAlias, context ), builder );
+      gh.exprFactory->register_expression( dvarTag, builder );
 
     }
 
