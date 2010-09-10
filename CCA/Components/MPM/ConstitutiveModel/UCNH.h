@@ -89,26 +89,27 @@ namespace Uintah {
       double K;
       double Alpha;
     };
-    //typedef UCNHStateData StateData;   // Definition for shorter code, from Plasticity
-      
+
     const VarLabel* bElBarLabel;
     const VarLabel* bElBarLabel_preReloc;
 
     // Damage Requirements //
     /////////////////////////
     // Create datatype for failure strains
-    struct FailureStrainData {
-      double mean;          /*< Mean failure strain */
-      double std;           /*< Standard deviation of failure strain or Weibull modulus */
-      double scale;         /*< Scale parameter for Weibull distribution*/
-      std::string dist;     /*< Failure strain distrinution */
-      int seed;             /*< seed for weibull distribution generator */
-      bool failureByStress; /*<Failure by strain (default) or stress */
+    struct FailureStressOrStrainData {
+      double mean;         /* Mean failure stress, strain or cohesion */
+      double std;          /* Standard deviation of failure strain */
+                           /* or Weibull modulus */
+      double exponent;     /* Exponent used in volume scaling of failure crit */
+      double refVol;       /* Reference volume for scaling failure criteria */
+      std::string scaling; /* Volume scaling method: "none" or "kayenta" */
+      std::string dist;    /* Failure distro: "constant", "gauss" or "weibull"*/
+      int seed;            /* seed for random number distribution generator */
     };
-    const VarLabel* pFailureStrainLabel;
+    const VarLabel* pFailureStressOrStrainLabel;
     const VarLabel* pLocalizedLabel;
     const VarLabel* pDeformRateLabel;
-    const VarLabel* pFailureStrainLabel_preReloc;
+    const VarLabel* pFailureStressOrStrainLabel_preReloc;
     const VarLabel* pLocalizedLabel_preReloc;
     const VarLabel* pDeformRateLabel_preReloc;
     const VarLabel* bBeBarLabel;
@@ -123,7 +124,6 @@ namespace Uintah {
     // Flags indicating if damage and/or plasticity should be used
     bool d_useDamage;
     bool d_usePlasticity;
-    std::string d_failureCriteria;
       
     // Basic Requirements //
     ////////////////////////
@@ -133,14 +133,23 @@ namespace Uintah {
       
     // Damage Requirments //
     ////////////////////////
-    FailureStrainData d_epsf;
+    FailureStressOrStrainData d_epsf;
       
     // Erosion algorithms
-    bool d_setStressToZero; /*<set stress tensor to zero*/
-    bool d_allowNoTension;  /*<retain compressive mean stress after failue*/
-    bool d_allowNoShear;    /*<retain mean stress after failure - no deviatoric stress */
+    bool d_setStressToZero; /* set stress tensor to zero*/
+    bool d_allowNoTension;  /* retain compressive mean stress after failue*/
+    bool d_allowNoShear;    /* retain mean stress after failure, */
+                            /* i.e., no deviatoric stress */
 
-      
+    std::string d_failure_criteria; /* Options are:  "MaximumPrincipalStrain" */
+                                    /* "MaximumPrincipalStress", "MohrColoumb"*/
+
+    // These three are for the MohrColoumb option
+    double d_friction_angle;  // Assumed to come in degrees
+    double d_tensile_cutoff;  // Fraction of the cohesion at which 
+                              // tensile failure occurs
+
+
   ///////////////
   // Functions //
   ///////////////
@@ -269,20 +278,20 @@ namespace Uintah {
                                     DataWarehouse* old_dw,
                                     DataWarehouse* new_dw);
     
- 
+    
   private:
     // Damage requirements //
     /////////////////////////
-    void getFailureStrainData(ProblemSpecP& ps);
-      
-    void setFailureStrainData(const UCNH* cm);
-      
+    void getFailureStressOrStrainData(ProblemSpecP& ps);
+
+    void setFailureStressOrStrainData(const UCNH* cm);
+
     void initializeLocalMPMLabels();
-     
+
     void setErosionAlgorithm();
 
     void setErosionAlgorithm(const UCNH* cm);
- 
+
   protected:
     // compute stress at each particle in the patch
     void computeStressTensorImplicit(const PatchSubset* patches,

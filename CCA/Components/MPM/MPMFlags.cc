@@ -218,7 +218,6 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
   mpm_flag_ps->get("do_contact_friction_heating", d_do_contact_friction);
   if (!d_do_contact_friction) d_addFrictionWork = 0.0;
 
-
    ProblemSpecP erosion_ps = mpm_flag_ps->findBlock("erosion");
    if (erosion_ps) {
      if (erosion_ps->getAttribute("algorithm", d_erosionAlgorithm)) {
@@ -226,7 +225,6 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
        else d_doErosion = true;
      }
    }
-
 
   mpm_flag_ps->get("delete_rogue_particles",  d_deleteRogueParticles);
   

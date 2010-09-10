@@ -2131,9 +2131,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
            iter++){
         particleIndex idx = *iter;
 
-
         interpolator->findCellAndWeights(px[idx],ni,S,psize[idx],pDeformationMeasure[idx]);
-
 
         pmom = pvelocity[idx]*pmass[idx];
         total_mom += pmom;
