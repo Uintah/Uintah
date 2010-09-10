@@ -160,6 +160,10 @@ namespace Uintah {
     bool   d_doMelting;
     bool   d_checkStressTriax;
 
+    // Erosion algorithms
+    bool   d_setStressToZero;
+    bool   d_allowNoTension;
+
     YieldCondition*     d_yield;
     StabilityCheck*     d_stable;
     PlasticityModel*    d_plastic;
@@ -473,6 +477,8 @@ namespace Uintah {
     void getInitialPorosityData(ProblemSpecP& ps);
 
     void getInitialDamageData(ProblemSpecP& ps);
+
+    void setErosionAlgorithm();
 
     //void getSpecificHeatData(ProblemSpecP& ps);
     //double computeSpecificHeat(double T);

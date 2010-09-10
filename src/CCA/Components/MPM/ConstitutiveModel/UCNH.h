@@ -135,6 +135,11 @@ namespace Uintah {
     ////////////////////////
     FailureStrainData d_epsf;
       
+    // Erosion algorithms
+    bool d_setStressToZero; /*<set stress tensor to zero*/
+    bool d_allowNoTension;  /*<retain compressive mean stress after failue*/
+    bool d_allowNoShear;    /*<retain mean stress after failure - no deviatoric stress */
+
       
   ///////////////
   // Functions //
@@ -264,7 +269,7 @@ namespace Uintah {
                                     DataWarehouse* old_dw,
                                     DataWarehouse* new_dw);
     
-    
+ 
   private:
     // Damage requirements //
     /////////////////////////
@@ -273,7 +278,11 @@ namespace Uintah {
     void setFailureStrainData(const UCNH* cm);
       
     void initializeLocalMPMLabels();
-      
+     
+    void setErosionAlgorithm();
+
+    void setErosionAlgorithm(const UCNH* cm);
+ 
   protected:
     // compute stress at each particle in the patch
     void computeStressTensorImplicit(const PatchSubset* patches,

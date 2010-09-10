@@ -2336,10 +2336,6 @@ void SerialMPM::updateErosionParameter(const ProcessorGroup*,
                  << " dwi = " << dwi << " pset* = " << pset << endl;
       }
 
-      if (cout_dbg.active()){
-        cout_dbg << "updateErosionParameter:: Got Erosion data" << endl;
-      }
-
       // Get the localization info
       ParticleVariable<int> isLocalized;
       new_dw->allocateAndPut(isLocalized, lb->pLocalizedMPMLabel, pset);

@@ -197,6 +197,10 @@ ElasticPlastic::ElasticPlastic(const ElasticPlastic* cm) :
   d_doMelting = cm->d_doMelting;
   d_checkStressTriax = cm->d_checkStressTriax;
 
+  d_setStressToZero = cm->d_setStressToZero;
+  d_allowNoTension = cm->d_allowNoTension;
+  d_allowNoShear = cm->d_allowNoShear;
+
   d_evolvePorosity = cm->d_evolvePorosity;
   d_porosity.f0 = cm->d_porosity.f0 ;
   d_porosity.f0_std = cm->d_porosity.f0_std ;
@@ -416,6 +420,22 @@ ElasticPlastic::getSpecificHeatData(ProblemSpecP& ps)
   ps->get("Cp_constn", d_Cp.n);
 }
 */
+
+void 
+ElasticPlastic::setErosionAlgorithm()
+{
+  d_setStressToZero = false;
+  d_allowNoTension = false;
+  d_allowNoShear = false;
+  if (flag->d_doErosion) {
+    if (flag->d_erosionAlgorithm == "AllowNoTension") 
+      d_allowNoTension = true;
+    else if (flag->d_erosionAlgorithm == "AllowNoShear") 
+      d_allowNoShear = true;
+    else if (flag->d_erosionAlgorithm == "ZeroStress") 
+      d_setStressToZero = true;
+  }
+}
 
 void 
 ElasticPlastic::addParticleState(std::vector<const VarLabel*>& from,

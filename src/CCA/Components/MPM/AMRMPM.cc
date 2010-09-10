@@ -1224,6 +1224,28 @@ void AMRMPM::updateErosionParameter(const ProcessorGroup*,
                                     DataWarehouse* old_dw,
                                     DataWarehouse* new_dw)
 {
+  for (int p = 0; p<patches->size(); p++) {
+    const Patch* patch = patches->get(p);
+    printTask(patches, patch,cout_doing,
+              "Doing updateErosionParameter\t\t\t\t");
+
+    int numMPMMatls=d_sharedState->getNumMPMMatls();
+    for(int m = 0; m < numMPMMatls; m++){
+
+      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+      int dwi = mpm_matl->getDWIndex();
+      ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
+
+      // Get the localization info
+      ParticleVariable<int> isLocalized;
+      new_dw->allocateTemporary(isLocalized, pset);
+      ParticleSubset::iterator iter = pset->begin(); 
+      for (; iter != pset->end(); iter++) isLocalized[*iter] = 0;
+      mpm_matl->getConstitutiveModel()->getDamageParameter(patch, isLocalized,
+                                                           dwi, old_dw,new_dw);
+
+    }
+  }
 }
 //______________________________________________________________________
 //

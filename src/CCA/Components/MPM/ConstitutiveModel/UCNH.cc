@@ -86,6 +86,8 @@ UCNH::UCNH(ProblemSpecP& ps, MPMFlags* Mflag)
     // Get the failure stress/strain data
     getFailureStrainData(ps);
 
+    setErosionAlgorithm();
+
     ps->getWithDefault("failureCriteria", d_failureCriteria,
                                           "MaximumPrincipalStress");
   } // End Damage
@@ -131,6 +133,7 @@ UCNH::UCNH(ProblemSpecP& ps, MPMFlags* Mflag, bool plas, bool dam)
     // Get the failure stress/strain data
     getFailureStrainData(ps);
     
+    setErosionAlgorithm();
 
     ps->getWithDefault("failureCriteria", d_failureCriteria,
                                           "MaximumPrincipalStress");
@@ -174,8 +177,9 @@ UCNH::UCNH(const UCNH* cm) : ConstitutiveModel(cm), ImplicitCM(cm)
     
     // Set the failure strain data
     setFailureStrainData(cm);
-    
-
+   
+    setErosionAlgorithm(cm);
+ 
     d_failureCriteria = cm->d_failureCriteria;
 
   } // End Damage Setup
@@ -232,6 +236,28 @@ void UCNH::setFailureStrainData(const UCNH* cm)
   d_epsf.seed            = cm->d_epsf.seed;
   d_epsf.dist            = cm->d_epsf.dist;
   d_epsf.failureByStress = cm->d_epsf.failureByStress;
+}
+
+void UCNH::setErosionAlgorithm()
+{
+  d_setStressToZero = false;
+  d_allowNoTension  = false;
+  d_allowNoShear    = false;
+  if (flag->d_doErosion) {
+    if (flag->d_erosionAlgorithm == "AllowNoTension") 
+      d_allowNoTension  = true;
+    else if (flag->d_erosionAlgorithm == "ZeroStress") 
+      d_setStressToZero = true;
+    else if (flag->d_erosionAlgorithm == "AllowNoShear") 
+      d_allowNoShear    = true;
+  }
+}
+
+void UCNH::setErosionAlgorithm(const UCNH* cm)
+{
+  d_setStressToZero = cm->d_setStressToZero;
+  d_allowNoTension  = cm->d_allowNoTension;
+  d_allowNoShear    = cm->d_allowNoShear;
 }
 
 void UCNH::outputProblemSpec(ProblemSpecP& ps, bool output_cm_tag)
@@ -971,11 +997,15 @@ void UCNH::computeStressTensor(const PatchSubset* patches,
           }
           computeVelocityGradient(velGrad_new,ni,d_S,oodx,pgFld,gVelocity,GVelocity);
         } else {
+          if(d_useDamage){ // Erosion
+            computeVelocityGradient(velGrad_new,ni,d_S, oodx, gVelocity);
+          } else {         // Else not damaged, dont do erosion
             // Get the node indices that surround the cell
             interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,pSize[idx],
                                                                  pDefGrad[idx]);
             
             computeVelocityGradient(velGrad_new,ni,d_S, oodx, gVelocity);
+          }
         }
       } else {  // axi-symmetric kinematics
         // Get the node indices that surround the cell
