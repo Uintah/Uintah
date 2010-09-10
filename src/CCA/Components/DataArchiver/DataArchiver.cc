@@ -2091,10 +2091,13 @@ DataArchiver::initSaveLabels(SchedulerP& sched, bool initTimestep)
     //   make sure that the scheduler shows that that it has been scheduled
     //   to be computed.  Then save it to saveItems.
     VarLabel* var = VarLabel::find((*it).labelName);
-    if (var == NULL) 
-      throw ProblemSetupException((*it).labelName +
-                                  " variable not found to save.", __FILE__, __LINE__);
-
+    if (var == NULL) {
+      if (initTimestep)
+        continue;
+      else
+        throw ProblemSetupException((*it).labelName +
+                                    " variable not found to save.", __FILE__, __LINE__);
+    }
     if ((*it).compressionMode != "")
       var->setCompressionMode((*it).compressionMode);
       
