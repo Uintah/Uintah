@@ -184,6 +184,7 @@ ElasticPlasticHP::ElasticPlasticHP(ProblemSpecP& ps,MPMFlags* Mflag)
   ps->get("compute_specific_heat",d_computeSpecificHeat);
   d_Cp = SpecificHeatModelFactory::create(ps);
   
+  setErosionAlgorithm();
   getInitialPorosityData(ps);
   getInitialDamageData(ps);
   //getSpecificHeatData(ps);
@@ -877,6 +878,10 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset* patches,
       pDeformGrad_new[idx] = tensorF_new;
       double J = tensorF_new.Determinant();
 
+      if(d_setStressToZero && pLocalized[idx]){
+        pDeformGrad_new[idx] = pDeformGrad[idx];
+        J = pDeformGrad[idx].Determinant();
+      }
 
       // Check 1: Look at Jacobian
       if (!(J > 0.0)) {
@@ -1227,6 +1232,17 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset* patches,
       // Calculate the total stress
       tensorSig = tensorS + tensorHy;
 
+      // If the particle has already failed, apply various erosion algorithms
+      if (flag->d_doErosion) {
+        if (pLocalized[idx]) {
+          if (d_allowNoTension) {
+            if (p > 0.0) tensorSig = zero;
+            else tensorSig = tensorHy;
+          }
+          else if (d_setStressToZero) tensorSig = zero;
+        }
+      }
+
       //-----------------------------------------------------------------------
       // Stage 3:
       //-----------------------------------------------------------------------
@@ -1287,7 +1303,7 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset* patches,
       bool isLocalized = false;
       double tepla = 0.0;
 
-      if (flag->d_deleteRogueParticles) {
+      if (flag->d_doErosion) {
 
         // Check 1: Look at the temperature
         if (melted) isLocalized = true;
@@ -1352,18 +1368,27 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset* patches,
           }
         }
 
-        // Update localized particles
+        // Use erosion algorithms to treat localized particles
         if (isLocalized) {
+
           // If the localized particles fail again then set their stress to zero
           if (pLocalized[idx]) {
             pDamage_new[idx] = 0.0;
             pPorosity_new[idx] = 0.0;
             tensorSig = zero;
           } else {
+
             // set the particle localization flag to true  
             pLocalized_new[idx] = 1;
             pDamage_new[idx] = 0.0;
             pPorosity_new[idx] = 0.0;
+
+            // Apply various erosion algorithms
+            if (d_allowNoTension) {
+              if (p > 0.0) tensorSig = zero;
+              else tensorSig = tensorHy;
+            }
+            else if (d_setStressToZero) tensorSig = zero;
           }
 
         }
