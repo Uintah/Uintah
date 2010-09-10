@@ -50,7 +50,6 @@ public:
 
   void advertise_dependents( Expr::ExprDeps& exprDeps );
   void bind_fields( const Expr::FieldManagerList& fml );
-  void bind_operators( const SpatialOps::OperatorDatabase& opDB );
   void evaluate();
 };
 
@@ -114,14 +113,6 @@ bind_fields( const Expr::FieldManagerList& fml )
     indepVars_.push_back( &fm.field_ref( *inam ) );
   }
 }
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-TabPropsEvaluator<FieldT>::
-bind_operators( const SpatialOps::OperatorDatabase& opDB )
-{}
 
 //--------------------------------------------------------------------
 

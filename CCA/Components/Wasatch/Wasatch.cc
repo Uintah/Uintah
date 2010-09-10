@@ -198,27 +198,6 @@ namespace Wasatch{
     //_____________________________________________
     // Build the initial condition expression graph
     GraphHelper* const icGraphHelper = graphCategories_[ INITIALIZATION ];
-
-    //======================= <temporary > ====================== jcs
-    // hack for now to test parsing for creating simple expressions.
-    // Later we won't need this (I don't think).  Transport equation
-    // initialization sets root nodes in the tree, so we don't need to
-    // set them again here. In fact, this will break things in
-    // general.
-    {
-      const Expr::ExpressionFactory* const exprFactory = icGraphHelper->exprFactory;
-      const Expr::ExpressionRegistry& reg = exprFactory->get_registry();
-      const Expr::Tag tempTag("temperature",Expr::STATE_N);
-      if( reg.have_entry(tempTag) ){
-        std::cout << "jcs hack inserting temperature into ic graph" << std::endl;
-        icGraphHelper->rootIDs.insert( reg.get_id(tempTag) );
-      }
-    }
-    //======================= </temporary> ======================
-
-    // jcs we may need to also execute the full time-advance tree
-    // (minus the actual solution update) during initialization.
-    // Otherwise, we cannot set all of the required variables...
     create_tree_on_patches( sched->getLoadBalancer()->getPerProcessorPatchSet(level),
                             sharedState_->allMaterials(),
                             sched,
