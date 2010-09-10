@@ -67,6 +67,7 @@ MPMFlags::MPMFlags(const ProcessorGroup* myworld)
   d_minGridLevel = 0;
   d_maxGridLevel = 1000;
                       
+  d_erosionAlgorithm = "none";
   d_deleteRogueParticles = false;
   d_doThermalExpansion = true;
 
@@ -218,6 +219,15 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
   if (!d_do_contact_friction) d_addFrictionWork = 0.0;
 
 
+   ProblemSpecP erosion_ps = mpm_flag_ps->findBlock("erosion");
+   if (erosion_ps) {
+     if (erosion_ps->getAttribute("algorithm", d_erosionAlgorithm)) {
+       if (d_erosionAlgorithm == "none") d_doErosion = false;
+       else d_doErosion = true;
+     }
+   }
+
+
   mpm_flag_ps->get("delete_rogue_particles",  d_deleteRogueParticles);
   
   // d_doComputeHeatFlux:
@@ -355,6 +365,9 @@ MPMFlags::outputProblemSpec(ProblemSpecP& ps)
   ps->appendElement("do_contact_friction_heating", d_do_contact_friction);
 
   ps->appendElement("delete_rogue_particles",d_deleteRogueParticles);
+
+  ProblemSpecP erosion_ps = ps->appendChild("erosion");
+  erosion_ps->setAttribute("algorithm", d_erosionAlgorithm);
  
   ps->appendElement("extra_solver_flushes", d_extraSolverFlushes);
 

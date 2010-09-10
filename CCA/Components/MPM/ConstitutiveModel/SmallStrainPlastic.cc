@@ -208,6 +208,9 @@ SmallStrainPlastic::SmallStrainPlastic(const SmallStrainPlastic* cm) :
   d_doMelting = cm->d_doMelting;
   d_checkStressTriax = cm->d_checkStressTriax;
 
+  d_setStressToZero = cm->d_setStressToZero;
+  d_allowNoTension = cm->d_allowNoTension;
+
   d_evolvePorosity = cm->d_evolvePorosity;
   d_porosity.f0 = cm->d_porosity.f0 ;
   d_porosity.f0_std = cm->d_porosity.f0_std ;
@@ -390,6 +393,19 @@ SmallStrainPlastic::getInitialDamageData(ProblemSpecP& ps)
   ps->get("initial_std_scalar_damage",         d_scalarDam.D0_std);
   ps->get("critical_scalar_damage",            d_scalarDam.Dc);
   ps->get("initial_scalar_damage_distrib",     d_scalarDam.scalarDamageDist);
+}
+
+void 
+SmallStrainPlastic::setErosionAlgorithm()
+{
+  d_setStressToZero = false;
+  d_allowNoTension = false;
+  if (flag->d_doErosion) {
+    if (flag->d_erosionAlgorithm == "AllowNoTension") 
+      d_allowNoTension = true;
+    else if (flag->d_erosionAlgorithm == "ZeroStress") 
+      d_setStressToZero = true;
+  }
 }
 
 void 
