@@ -53,6 +53,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/MPM/ConstitutiveModel/MWViscoElastic.h>
 #include <CCA/Components/MPM/ConstitutiveModel/Membrane.h>
 #include <CCA/Components/MPM/ConstitutiveModel/MurnahanMPM.h>
+#include <CCA/Components/MPM/ConstitutiveModel/ProgramBurn.h>
 #include <CCA/Components/MPM/ConstitutiveModel/ShellMaterial.h>
 #include <CCA/Components/MPM/ConstitutiveModel/ElasticPlastic.h>
 #include <CCA/Components/MPM/ConstitutiveModel/ElasticPlasticHP.h>
@@ -192,6 +193,9 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
 
   else if (mat_type ==  "murnahanMPM")
     return(scinew MurnahanMPM(child,flags));
+
+  else if (mat_type ==  "program_burn")
+    return(scinew ProgramBurn(child,flags));
 
   else if (mat_type ==  "shell_CNH")
     return(scinew ShellMaterial(child,flags));
