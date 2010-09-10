@@ -17,8 +17,15 @@
     <!-- Set up a tabular property evaluation -->
     <TabProps>
       <FileNamePrefix>AdiabaticEquil</FileNamePrefix>
-      <IndependentVariable name="MixtureFraction" alias="mixture fraction" />
-      <ExtractVariable name="Temperature" alias="temperature" type="Cell" />
+      <IndependentVariable>
+        <NameTag name="mixture fraction" state="STATE_N" />
+        <NameInTable>MixtureFraction</NameInTable>
+      </IndependentVariable>
+      <ExtractVariable>
+        <NameInTable>Temperature</NameInTable>
+        <NameTag name="temperature" state="STATE_NONE" />
+        <Type>Cell</Type>
+      </ExtractVariable>
     </TabProps>
 
     <!-- Build a scalar transport equation -->
@@ -48,7 +55,7 @@
   </Wasatch>
 
   <Time>
-    <maxTime>0.0</maxTime>
+    <maxTime>2.0</maxTime>
     <initTime>0.0</initTime>
     <delt_min>0.001</delt_min>
     <delt_max>2.0</delt_max>
@@ -70,7 +77,7 @@
       <Box label="1">
         <lower>[0,0,0]</lower>
         <upper>[1,1,1]</upper>
-        <resolution>[10,10,10]</resolution>
+        <resolution>[20,10,10]</resolution>
         <!--         <extraCells>[0,0,0]</extraCells> -->
         <patches>[1,1,1]</patches>
       </Box>

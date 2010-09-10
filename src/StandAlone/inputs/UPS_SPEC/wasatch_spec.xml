@@ -29,7 +29,7 @@
         <Direction		spec="REQUIRED STRING 'X,Y,Z'" />
 
         <!-- Specify a constant diffusivity.  A diffusive flux expression will be built. -->
-        <ConstantDiffusivity    spec="REQUIRED DOUBLE" />
+        <ConstantDiffusivity    spec="OPTIONAL DOUBLE" />
 
         <!-- specify an expression for the diffusive coefficient. A diffusive flux expression will be built. -->
         <DiffusionCoefficient   spec="OPTIONAL NO_DATA">
@@ -65,15 +65,17 @@
       <FileNamePrefix		spec="REQUIRED STRING" />
 
       <!-- allow renaming of independent variables from TabProps file -->
-      <IndependentVariable	spec="MULTIPLE NO_DATA"
-                                attribute1="name REQUIRED STRING"
-                                attribute2="alias REQUIRED STRING" />
+      <IndependentVariable	spec="MULTIPLE NO_DATA" >
+        <NameInTable		spec="REQUIRED STRING" />
+        <NameTag		spec="REQUIRED" />
+      </IndependentVariable>
 
       <!-- Select dependent variable(s) to extract from this TabProps file -->
-      <ExtractVariable		spec="MULTIPLE NO_DATA"
-                                attribute1="name REQUIRED STRING"
-                                attribute2="alias REQUIRED STRING"
-                                attribute3="type OPTIONAL STRING 'Cell,XFace,YFace,ZFace'" />
+      <ExtractVariable		spec="MULTIPLE NO_DATA">
+        <NameInTable		spec="REQUIRED STRING" />
+        <NameTag		spec="REQUIRED" />
+        <Type			spec="OPTIONAL STRING 'Cell,XFace,YFace,ZFace'" />
+      </ExtractVariable>
     </TabProps>
 
 
