@@ -6,6 +6,9 @@
 namespace Wasatch{
 
   /**
+   *  \ingroup WasatchFields
+   *  \ingroup WasatchCore
+   *
    *  \class  StringNames
    *  \author James C. Sutherland
    *  \date   June, 2010

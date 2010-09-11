@@ -1,10 +1,18 @@
 #ifndef Wasatch_FieldTypes_h
 #define Wasatch_FieldTypes_h
 
+/**
+ *  \file FieldTypes.h
+ *  \brief Defines field types for use in Wasatch.
+ */
+
 #include <spatialops/structured/FVStaggeredTypes.h>
 
 namespace Wasatch{
 
+  /** \addtogroup WasatchFields
+   *  @{
+   */
 
   typedef SpatialOps::structured::SVolField ScalarVolField; ///< field type for scalar volume
 
@@ -12,7 +20,31 @@ namespace Wasatch{
   typedef SpatialOps::structured::YVolField YVolField;      ///< field type for y-staggered volume
   typedef SpatialOps::structured::ZVolField ZVolField;      ///< field type for z-staggered volume
 
+  /** @} */
 
+  /**
+   *  \ingroup WasatchFields
+   *  \struct FaceTypes
+   *  \brief Define Face field types in terms of a cell field type.
+   *
+   *  Specializations of this struct define te following typedefs:
+   *   - \c XFace - the type of the field on the x-face
+   *   - \c YFace - the type of the field on the yface
+   *   - \c ZFace - the type of the field on the z-face
+   *
+   *  Example usage:
+   *  \code
+   *  typedef FaceTypes< CellT >::XFace XFaceT;
+   *  typedef FaceTypes< CellT >::YFace YFaceT;
+   *  typedef FaceTypes< CellT >::ZFace ZFaceT;
+   *  \endcode
+   *
+   *  Class template specializations exist for the following field types:
+   *   - ScalarVolField
+   *   - XVolField
+   *   - YVolField
+   *   - ZVolField
+   */
   template< typename CellFieldT > struct FaceTypes;  ///< Given the volume field type, defines the flux field types
 
   template<> struct FaceTypes<ScalarVolField>

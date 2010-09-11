@@ -8,9 +8,16 @@
 
 #include <expression/TransportEquation.h>
 
-/** \file */
+/**
+ *  \file ParseEquation.h
+ *  \brief Parser tools for transport equations.
+ */
 
 namespace Wasatch{
+
+  /** \addtogroup WasatchParser
+   *  @{
+   */
 
   /**
    *  \class EqnTimestepAdaptorBase
@@ -73,6 +80,8 @@ namespace Wasatch{
   EqnTimestepAdaptorBase*
   parse_equation( Uintah::ProblemSpecP params,
                   GraphCategories& gc );
+
+  /** @} */
 
 }// namespace Wasatch
 
