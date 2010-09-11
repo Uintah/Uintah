@@ -113,6 +113,7 @@ void NodalSVFContact::exMomIntegrated(const ProcessorGroup*,
   int numMatls = d_sharedState->getNumMPMMatls();
   ASSERTEQ(numMatls, matls->size());
 
+  
 
   for(int p=0;p<patches->size();p++){
     
@@ -143,48 +144,77 @@ void NodalSVFContact::exMomIntegrated(const ProcessorGroup*,
     old_dw->get(delT, lb->delTLabel, getLevel(patches));
     old_dw->get(NC_CCweight, lb->NC_CCweightLabel, 0, patch, gnone, 0);
     
-    for(int m=0;m<matls->size();m++){
-      int dwi = matls->get(m);
-      new_dw->get(gmass[m],lb->gMassLabel, dwi, patch, Ghost::None, 0);
-      new_dw->get(gvolume[m],lb->gVolumeLabel, dwi, patch, Ghost::None, 0);
-      new_dw->allocateTemporary(gSVF[m], patch, Ghost::None, 0);
-      new_dw->allocateTemporary(gvelocity_old[m], patch, Ghost::None, 0);
-      new_dw->allocateTemporary(gForce[m], patch, Ghost::None, 0);
-      new_dw->getModifiable(gvelocity_star[m],lb->gVelocityStarLabel, dwi,patch);
+    int nMatls=matls->size();
+ 
+    // for all combinations of materials m and n, where m!=n, get the datawarehouse index and calculate 
+    // interaction with those indices
+    for(int m=0;m<nMatls;m++){
+      for (int n=0; n<nMatls; n++) {
+            int matl0 = matls->get(m); 
+            int matl1 = matls->get(n);
+            cout<<"m="<<m<<", matl0="<<matl0<<", n="<<n<<", matl1="<<matl1<<endl;
+        if (m!=n) {
+          
+          if((d_matls.requested(m)) && (d_matls.requested(n))) {
 
-      for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
-        IntVector c = *iter;
-        gvelocity_old[m][c] = gvelocity_star[m][c];
-        gSVF[m][c] =  8.0 * NC_CCweight[c] * gvolume[m][c] / cellVol;
-      }
-    }
+          }
+        }// if materials requested are materials to calculate interaction for
+      }// if m!=n
+    } // for n=0:numMatls
+     
+
+         for(int m=0;m<nMatls;m++){
+            int dwi = matls->get(m);
+            new_dw->get(gmass[m],lb->gMassLabel, dwi, patch, Ghost::None, 0);
+            new_dw->get(gvolume[m],lb->gVolumeLabel, dwi, patch, Ghost::None, 0);
+            new_dw->allocateTemporary(gSVF[m], patch, Ghost::None, 0);
+            new_dw->allocateTemporary(gvelocity_old[m], patch, Ghost::None, 0);
+            new_dw->allocateTemporary(gForce[m], patch, Ghost::None, 0);
+            new_dw->getModifiable(gvelocity_star[m],lb->gVelocityStarLabel, dwi,patch);
+
+            for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
+              IntVector c = *iter;
+              gvelocity_old[m][c] = gvelocity_star[m][c];
+              gSVF[m][c] =  8.0 * NC_CCweight[c] * gvolume[m][c] / cellVol;
+            }// for nodes on patch
+          } // for m=0:numMatls
+
     
-    //cout<<"coeff="<<coeff<<endl;
     //----------- Calculate Interaction Force -----------------------------------
-    for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
-      IntVector c = *iter;
+    
+    // for all combinations of materials m and n, where m!=n, get the datawarehouse index and calculate 
+    // interaction with those indices
+            
+    for(int m=0;m<nMatls;m++){
+      for (int n=0; n<nMatls; n++) {
+            
+            for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
+              IntVector c = *iter;
         
-      if (b_svf==1) { factor = coeff * gSVF[0][c] * gSVF[1][c]; } 
-      else          { factor = coeff; } 
+              if (b_svf==1) { factor = coeff * gSVF[m][c] * gSVF[n][c]; } 
+              else          { factor = coeff; } 
 
 
-      // If using the model with svf calculation, or if mass is present on 
-      // both nodes, calculate a non-zero interaction force based on velocity 
-      // difference and the appropriate value of "factor".
-      if ((b_svf==1) || (gmass[0][c]>1.0e-100 && gmass[1][c]>1.0e-100)) { 
+              // If using the model with svf calculation, or if mass is present on 
+              // both nodes, calculate a non-zero interaction force based on velocity 
+              // difference and the appropriate value of "factor".
+              if ((b_svf==1) || (gmass[m][c]>1.0e-100 && gmass[n][c]>1.0e-100)) { 
         
-        gForce[0][c] = factor * (gvelocity_old[1][c] - gvelocity_old[0][c]);
-        gForce[1][c] = factor * (gvelocity_old[0][c] - gvelocity_old[1][c]);
+                gForce[m][c] = factor * (gvelocity_old[n][c] - gvelocity_old[m][c]);
+                gForce[n][c] = factor * (gvelocity_old[m][c] - gvelocity_old[n][c]);
         
-      } else {
-        gForce[0][c] = Vector(0.0,0.0,0.0); gForce[1][c] = Vector(0.0,0.0,0.0);
-      }
+              } else {
+                gForce[m][c] = Vector(0.0,0.0,0.0); gForce[n][c] = Vector(0.0,0.0,0.0);
+              } //else
+
        
     //------------Calculate Updated Velocity ------------------------------------
-      gvelocity_star[0][c] = gvelocity_old[0][c] + (gForce[0][c]/( 8.0 * NC_CCweight[c] * gmass[0][c])) * delT;    
-      gvelocity_star[1][c] = gvelocity_old[1][c] + (gForce[1][c]/( 8.0 * NC_CCweight[c] * gmass[1][c])) * delT;    
+              gvelocity_star[m][c] = gvelocity_old[m][c] + (gForce[m][c]/( 8.0 * NC_CCweight[c] * gmass[m][c])) * delT;    
+              gvelocity_star[n][c] = gvelocity_old[n][c] + (gForce[n][c]/( 8.0 * NC_CCweight[c] * gmass[n][c])) * delT;    
     
-    }//for nodes
+            }//for nodes
+         }//for n materials
+    }//for m materials
   }//for patches
 }//end exmomentumIntegrated
 
