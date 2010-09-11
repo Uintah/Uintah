@@ -7,7 +7,12 @@
 
 #include <expression/Expr_ExpressionID.h>
 
-/** \file */
+/**
+ *  \file GraphHelperTools.h
+ *
+ *  \brief Some helpful typedefs, structs, and enums for dealing with
+ *  the graphs constructed in Wasatch.
+ */
 
 namespace Expr{
   class ExpressionBuilder;
@@ -16,6 +21,10 @@ namespace Expr{
 }
 
 namespace Wasatch{
+
+  /** \addtogroup WasatchGraph
+   *  @{
+   */
 
   /**
    *  \enum Category
@@ -58,10 +67,12 @@ namespace Wasatch{
   };
 
   /**
-   *  Defines a map that provides GraphHelper objects given the \ref
-   *  Wasatch::Category "Category" that they belong to.
+   *  \brief Defines a map that provides GraphHelper objects given the
+   *  \ref Wasatch::Category "Category" that they belong to.
    */
   typedef std::map< Category, GraphHelper* > GraphCategories;
+
+  /** @} */
 
 } // namespace Wasatch
 

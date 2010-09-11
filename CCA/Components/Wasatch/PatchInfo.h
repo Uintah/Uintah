@@ -5,13 +5,16 @@
 
 #include <Core/Grid/Variables/VarLabel.h>
 
-/** \file */
+/**
+ *  \file PatchInfo.h
+ */
 
 namespace SpatialOps{ class OperatorDatabase; }
 
 namespace Wasatch{
 
   /**
+   *  \ingroup WasatchCore
    *  \struct PatchInfo
    *  \author James C. Sutherland
    *  \date   June, 2010
@@ -27,6 +30,8 @@ namespace Wasatch{
   };
 
   /**
+   *  \ingroup WasatchCore
+   *
    *  Defines a map between the patch index (Uintah assigns this) and
    *  the PatchInfo object associated with the patch.  This is
    *  generally only required by Wasatch when pairing operators with

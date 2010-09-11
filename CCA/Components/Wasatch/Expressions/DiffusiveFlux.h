@@ -10,6 +10,7 @@
 
 
 /**
+ *  \ingroup WasatchExpressions
  *  \class  DiffusiveFlux
  *  \author James C. Sutherland
  *  \date	June, 2010
@@ -112,6 +113,7 @@ public:
 
 
 /**
+ *  \ingroup WasatchExpressions
  *  \class  DiffusiveFlux2
  *  \author James C. Sutherland
  *  \date   June, 2010

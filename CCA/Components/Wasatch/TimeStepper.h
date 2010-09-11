@@ -22,6 +22,7 @@ namespace Uintah{
 namespace Wasatch{
 
   /**
+   *  \ingroup WasatchCore
    *  \class  TimeStepper
    *  \author James C. Sutherland
    *  \date   June 2010
@@ -33,6 +34,7 @@ namespace Wasatch{
   {
 
     /**
+     *  \ingroup WasatchCore
      *  \struct FieldInfo
      *  \author James C. Sutherland
      *

@@ -33,6 +33,7 @@ namespace Wasatch{
 
 
   /**
+   *  \ingroup WasatchCore
    *  \class  TaskInterface
    *  \author James C. Sutherland
    *  \date   June, 2010

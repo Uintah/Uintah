@@ -39,6 +39,29 @@
    Wasatch is a Uintah component that interfaces to the Expression
    library and SpatialOps library to facilitate more rapid
    development of time-dependent PDE solvers.
+
+   Wasatch is designed to be a highly flexible simulation component
+   for solution of transient PDEs. Like Uintah itself, Wasatch is
+   based on graph theory.  However, it allows dynamic construction and
+   "discovery" of graphs.  Each node in a graph defines its direct
+   dependencies, and the graph is constructed recursively.  This is in
+   contrast to Uintah where the user must define the graph completely
+   and statically.  This dynamic graph construction allows very easy
+   definition of complex algorithms and results in highly localized
+   changes when modifying models.
+
+   The Wasatch component is designed to insulate users from Uintah to
+   a large degree.  If you find yourself using anything in the Uintah
+   namespace, you are probably doing something wrong.
+
+   Most Wasatch related tools are in the Wasatch namespace.  We do not
+   open up the Uintah namespace intentionally to make it clear when we
+   are using Uintah functionality.
+
+   There is extensive usage of two external libraries: ExprLib and
+   SpatialOps.  These have been developed by James C. Sutherland and
+   support graph construction as well as field/operator operations,
+   respectively.
  
  
    \par Development in Wasatch
@@ -68,6 +91,13 @@
  
     - Task creation.  Uintah tasks are typically created by wrapping
       Expression tree objects using the Wasatch::TaskInterface class.
+
+  \defgroup WasatchExpressions	Expressions in Wasatch
+  \defgroup WasatchFields	Fields and field tools
+  \defgroup WasatchOperators	Operators
+  \defgroup WasatchCore		Wasatch Core
+  \defgroup WasatchGraph	Wasatch Graph
+  \defgroup WasatchParser	Wasatch Parsers
 */
 
 #ifndef Packages_Uintah_CCA_Components_Examples_Wasatch_h
@@ -95,34 +125,12 @@ namespace Wasatch{
   class TimeStepper;
 
   /**
+   *  \ingroup WasatchCore
    *  \class  Wasatch
    *  \author James C. Sutherland
    *  \date   June, 2010
    *
    *  \brief Defines the Wasatch simulation component within Uintah.
-   *
-   *  Wasatch is designed to be a highly flexible simulation component
-   *  for solution of transient PDEs. Like Uintah itself, Wasatch is
-   *  based on graph theory.  However, it allows dynamic construction
-   *  and "discovery" of graphs.  Each node in a graph defines its
-   *  direct dependencies, and the graph is constructed recursively.
-   *  This is in contrast to Uintah where the user must define the
-   *  graph completely and statically.  This dynamic graph
-   *  construction allows very easy definition of complex algorithms
-   *  and results in highly localized changes when modifying models.
-   *
-   *  The Wasatch component is designed to insulate users from Uintah
-   *  to a large degree.  If you find yourself using anything in the
-   *  Uintah namespace, you are probably doing something wrong.
-   *
-   *  Most Wasatch related tools are in the Wasatch namespace.  We do
-   *  not open up the Uintah namespace intentionally to make it clear
-   *  when we are using Uintah functionality.
-   *
-   *  There is extensive usage of two external libraries: ExprLib and
-   *  SpatialOps.  These have been developed by James S. Sutherland
-   *  and support graph construction as well as field/operator
-   *  operations, respectively.
    *
    * \todo Create a tree on the initialization that duplicates the
    *       "advance solution" tree so that we have everything required

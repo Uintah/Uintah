@@ -6,6 +6,7 @@
 #include <expression/Expr_Expression.h>
 
 /**
+ *  \ingroup WasatchExpressions
  *  \class  TabPropsEvaluator
  *  \author James C. Sutherland
  *  \date   June, 2010

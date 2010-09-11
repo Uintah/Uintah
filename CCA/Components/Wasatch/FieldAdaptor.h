@@ -11,23 +11,26 @@
 
 
 /**
- *  \file
+ *  \file FieldAdaptor.h
  *
- *  Translate between Uintah field types and SpatialOps-compatible
- *  field types.  This information is provided for the interface to
- *  the Expression library.  There should be no reason to use it
- *  otherwise.
+ *  \brief provides tools to translate between Uintah field types and
+ *  SpatialOps-compatible field types.
+ *
+ *  This information is provided for the interface to the Expression
+ *  library.  There should be no reason to use it otherwise.
  */
 
 namespace Wasatch{
 
   /**
+   *  \ingroup WasatchFields
    *  \struct SelectUintahFieldType
+   *  \brief Convert SpatialOps field types to Uintah field types
    *
    *  This struct template provides two typedefs that define Uintah
    *  field types from SpatialOps field types:
-   *   - \b type : the Uintah type
-   *   - \b const_type : the Uintah const field type.
+   *   - \c type : the Uintah type
+   *   - \c const_type : the Uintah const field type.
    */
   template<typename FieldT> struct SelectUintahFieldType;
 
@@ -53,6 +56,7 @@ namespace Wasatch{
 
 
   /**
+   *  \ingroup WasatchFields
    *  \brief Given the SpatialOps field type, this returns the
    *         Uintah::TypeDescription for the corresponding Uintah
    *         field type.
@@ -64,6 +68,7 @@ namespace Wasatch{
   }
 
   /**
+   *  \ingroup WasatchFields
    *  \brief Obtain the number of ghost cells for a given SpatialOps
    *         field type.
    */
@@ -71,6 +76,7 @@ namespace Wasatch{
   template<> inline int getNGhost<double>(){ return 0; };
 
   /**
+   *  \ingroup WasatchFields
    *  \brief Obtain the number of ghost cells in each direction for
    *         the given SpatialOps field type as a template parameter.
    *
@@ -87,6 +93,7 @@ namespace Wasatch{
   //====================================================================
 
   /**
+   *  \ingroup WasatchFields
    *  \brief Given the SpatialOps field type as a template parameter,
    *         determine the Uintah GhostType information.
    *

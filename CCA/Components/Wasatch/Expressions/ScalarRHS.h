@@ -18,10 +18,11 @@
 namespace Wasatch{
 
   /**
-   *  @class ScalarRHS
-   *  @author James C. Sutherland
+   *  \ingroup WasatchExpressions
+   *  \class ScalarRHS
+   *  \author James C. Sutherland
    *
-   *  @brief Support for a basic scalar transport equation involving
+   *  \brief Support for a basic scalar transport equation involving
    *         any/all of advection, diffusion and reaction.
    *
    *  The ScalarRHS Expression defines a template class for basic
