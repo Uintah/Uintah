@@ -63,6 +63,8 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
+#include <CCA/Components/Arches/SourceTerms/SourceTermFactory.h>
+#include <CCA/Components/Arches/SourceTerms/SourceTermBase.h>
 
 using namespace Uintah;
 using namespace std;
@@ -230,6 +232,17 @@ EnthalpySolver::problemSetup(const ProblemSpecP& params)
 // ++ jeremy ++ 
   d_source->setBoundary(d_boundaryCondition);
 // -- jeremy --        
+
+  // New Source terms (ala the new transport eqn):
+  if (db->findBlock("src")){
+    string srcname; 
+    for (ProblemSpecP src_db = db->findBlock("src"); src_db != 0; src_db = src_db->findNextBlock("src")){
+      src_db->getAttribute("label", srcname);
+      //which sources are turned on for this equation
+      d_new_sources.push_back( srcname ); 
+
+    }
+  }
 
   d_iteration_number = 0;
 }
@@ -407,22 +420,33 @@ EnthalpySolver::sched_buildLinearMatrix(const LevelP& level,
 
   if ((timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
       &&((!(d_EKTCorrection))||((d_EKTCorrection)&&(doing_EKT_now)))) {
-   if (d_radiationCalc) 
-    if (d_DORadiationCalc) {
-      tsk->computes(d_lab->d_abskgINLabel);
-      tsk->computes(d_lab->d_radiationSRCINLabel);
-      tsk->computes(d_lab->d_radiationFluxEINLabel);
-      tsk->computes(d_lab->d_radiationFluxWINLabel);
-      tsk->computes(d_lab->d_radiationFluxNINLabel);
-      tsk->computes(d_lab->d_radiationFluxSINLabel);
-      tsk->computes(d_lab->d_radiationFluxTINLabel);
-      tsk->computes(d_lab->d_radiationFluxBINLabel);
-      //tsk->computes(d_lab->d_radiationVolqINLabel);
-      tsk->modifies(d_lab->d_radiationVolqINLabel);
+     if (d_radiationCalc) {
+      if (d_DORadiationCalc) {
+        tsk->computes(d_lab->d_abskgINLabel);
+        tsk->computes(d_lab->d_radiationSRCINLabel);
+        tsk->computes(d_lab->d_radiationFluxEINLabel);
+        tsk->computes(d_lab->d_radiationFluxWINLabel);
+        tsk->computes(d_lab->d_radiationFluxNINLabel);
+        tsk->computes(d_lab->d_radiationFluxSINLabel);
+        tsk->computes(d_lab->d_radiationFluxTINLabel);
+        tsk->computes(d_lab->d_radiationFluxBINLabel);
+        //tsk->computes(d_lab->d_radiationVolqINLabel);
+        tsk->modifies(d_lab->d_radiationVolqINLabel);
+      }
+    }
+    // Adding new sources from factory:
+    SourceTermFactory& factory = SourceTermFactory::self(); 
+    for (vector<std::string>::iterator iter = d_new_sources.begin(); 
+        iter != d_new_sources.end(); iter++){
+
+      SourceTermBase& src = factory.retrieve_source_term( *iter ); 
+      const VarLabel* srcLabel = src.getSrcLabel(); 
+      tsk->requires(Task::OldDW, srcLabel, gn, 0); 
+
     }
   }
   else {
-   if (d_radiationCalc) 
+   if (d_radiationCalc) {
     if (d_DORadiationCalc) {
       tsk->modifies(d_lab->d_abskgINLabel);
       tsk->modifies(d_lab->d_radiationSRCINLabel);
@@ -434,6 +458,17 @@ EnthalpySolver::sched_buildLinearMatrix(const LevelP& level,
       tsk->modifies(d_lab->d_radiationFluxBINLabel);
       tsk->modifies(d_lab->d_radiationVolqINLabel);
     }
+   }
+   // Adding new sources from factory:
+   SourceTermFactory& factory = SourceTermFactory::self(); 
+   for (vector<std::string>::iterator iter = d_new_sources.begin(); 
+       iter != d_new_sources.end(); iter++){
+
+     SourceTermBase& src = factory.retrieve_source_term( *iter ); 
+     const VarLabel* srcLabel = src.getSrcLabel(); 
+     tsk->requires(Task::NewDW, srcLabel, gn, 0); 
+
+   }
   }
 
   if (d_MAlab && d_boundaryCondition->getIfCalcEnergyExchange()) {
@@ -578,6 +613,18 @@ void EnthalpySolver::buildLinearMatrix(const ProcessorGroup* pc,
     new_dw->allocateAndPut(enthalpyVars.scalarNonlinearSrc,
                            d_lab->d_enthNonLinSrcSBLMLabel, indx, patch);
     enthalpyVars.scalarNonlinearSrc.initialize(0.0);
+    // Adding new sources from factory:
+    SourceTermFactory& factory = SourceTermFactory::self(); 
+    for (vector<std::string>::iterator iter = d_new_sources.begin(); 
+       iter != d_new_sources.end(); iter++){
+
+      SourceTermBase& src = factory.retrieve_source_term( *iter ); 
+      const VarLabel* srcLabel = src.getSrcLabel(); 
+      // here we have made the assumption that the momentum source is always a vector... 
+      // and that we only have one.  probably want to fix this. 
+      old_dw->get( enthalpyVars.otherSource, srcLabel, indx, patch, Ghost::None, 0); 
+
+    }
   }
   else {
     for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++) {
@@ -591,6 +638,18 @@ void EnthalpySolver::buildLinearMatrix(const ProcessorGroup* pc,
     new_dw->getModifiable(enthalpyVars.scalarNonlinearSrc,
                            d_lab->d_enthNonLinSrcSBLMLabel, indx, patch);
     enthalpyVars.scalarNonlinearSrc.initialize(0.0);
+    // Adding new sources from factory:
+    SourceTermFactory& factory = SourceTermFactory::self(); 
+    for (vector<std::string>::iterator iter = d_new_sources.begin(); 
+       iter != d_new_sources.end(); iter++){
+
+      SourceTermBase& src = factory.retrieve_source_term( *iter ); 
+      const VarLabel* srcLabel = src.getSrcLabel(); 
+      // here we have made the assumption that the momentum source is always a vector... 
+      // and that we only have one.  probably want to fix this. 
+      new_dw->get( enthalpyVars.otherSource, srcLabel, indx, patch, Ghost::None, 0); 
+
+    }
   }
 
   //boundary source terms
@@ -735,6 +794,11 @@ void EnthalpySolver::buildLinearMatrix(const ProcessorGroup* pc,
                                     &enthalpyVars, &constEnthalpyVars);
 
     }
+
+    if (d_new_sources.size() > 0) {
+      d_source->addOtherScalarSource(pc, patch, cellinfo, &enthalpyVars); 
+    }
+
     if (d_conv_scheme > 0) {
       int wall_celltypeval = d_boundaryCondition->wallCellType();
       d_discretize->calculateScalarFluxLimitedConvection
