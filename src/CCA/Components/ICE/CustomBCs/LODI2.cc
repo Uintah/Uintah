@@ -226,21 +226,24 @@ void addRequires_Lodi(Task* t,
     // requires(Task::NewDW, lb->rho_CCLabel,       ice_matls, gn); 
     // requires(Task::NewDW, lb->speedSound_CCLabel,ice_matls, gn); 
   }
-  if(where == "update_press_CC"){
+  else if(where == "velFC_Exchange"){
+    setLODI_bcs = false;
+  }
+  else if(where == "update_press_CC"){
     setLODI_bcs = true;
     //t->requires(Task::NewDW, lb->press_CCLabel,     press_matl,oims,gn, 0);
     t->requires(Task::OldDW, lb->vel_CCLabel,       ice_matls, gn);
     t->requires(Task::NewDW, lb->rho_CCLabel,       ice_matls, gn); 
     t->requires(Task::NewDW, lb->speedSound_CCLabel,ice_matls, gn);
   }
-  if(where == "implicitPressureSolve"){
+  else if(where == "implicitPressureSolve"){
     setLODI_bcs = true;
     t->requires(Task::OldDW, lb->vel_CCLabel,        ice_matls, gn);
     t->requires(Task::NewDW, lb->speedSound_CCLabel, ice_matls, gn);
     t->requires(Task::NewDW, lb->rho_CCLabel,        ice_matls, gn);
   }
    
-  if(where == "imp_update_press_CC"){
+  else if(where == "imp_update_press_CC"){
     setLODI_bcs = true;
     whichDW  = Task::ParentNewDW;
     t->requires(Task::ParentOldDW, lb->vel_CCLabel,        ice_matls, gn);
@@ -248,7 +251,7 @@ void addRequires_Lodi(Task* t,
     t->requires(Task::ParentNewDW, lb->rho_CCLabel,        ice_matls, gn);
     //t->requires(Task::NewDW, lb->press_CCLabel,     press_matl,oims,gn, 0);
   }
-  if(where == "CC_Exchange"){
+  else if(where == "CC_Exchange"){
     setLODI_bcs = true;
     t->requires(Task::NewDW, lb->press_CCLabel,     press_matl,oims,gn, 0);
     t->requires(Task::NewDW, lb->rho_CCLabel,       ice_matls, gn);    
@@ -258,13 +261,15 @@ void addRequires_Lodi(Task* t,
     t->computes(lb->vel_CC_XchangeLabel);
     t->computes(lb->temp_CC_XchangeLabel);
   }
-  if(where == "Advection"){
+  else if(where == "Advection"){
     setLODI_bcs = true;
     t->requires(Task::NewDW, lb->press_CCLabel,     press_matl,oims,gn, 0);
     t->requires(Task::NewDW, lb->gammaLabel,        ice_matls, gn); 
     // requires(Task::NewDW, lb->vel_CCLabel,       ice_matls, gn); 
     // requires(Task::NewDW, lb->rho_CCLabel,       ice_matls, gn); 
     // requires(Task::NewDW, lb->speedSound_CCLabel,ice_matls, gn);
+  }else{
+    throw InternalError("ERROR:ICE: addRequires_Lodi: no preprocessing for this task ("+where+")", __FILE__, __LINE__);
   }
   //__________________________________
   //   All tasks Lodi faces require(maxMach_<face>)
@@ -319,19 +324,19 @@ void  preprocess_Lodi_BCs(DataWarehouse* old_dw,
   }
   //__________________________________
   //    FC exchange
-  if(where == "velFC_Exchange"){
+  else if(where == "velFC_Exchange"){
     setLodiBcs = false;
   }
   //__________________________________
   //    update pressure (explicit and implicit)
-  if(where == "update_press_CC"){ 
+  else if(where == "update_press_CC"){ 
     setLodiBcs = true;
     old_dw->get(lv->vel_CC,     lb->vel_CCLabel,        indx,patch,gn,0);
     new_dw->get(lv->press_CC,   lb->press_CCLabel,      0,   patch,gn,0);  
     new_dw->get(lv->rho_CC,     lb->rho_CCLabel,        indx,patch,gn,0);
     new_dw->get(lv->speedSound, lb->speedSound_CCLabel, indx,patch,gn,0); 
   }
-  if(where == "imp_update_press_CC"){ 
+  else if(where == "imp_update_press_CC"){ 
     setLodiBcs = true;
     DataWarehouse* sub_new_dw = new_dw->getOtherDataWarehouse(Task::NewDW);
     old_dw->get(lv->vel_CC,     lb->vel_CCLabel,        indx,patch,gn,0); 
@@ -341,7 +346,7 @@ void  preprocess_Lodi_BCs(DataWarehouse* old_dw,
   }
   //__________________________________
   //    cc_ Exchange
-  if(where == "CC_Exchange" && matl_indx == indx){
+  else if(where == "CC_Exchange" && matl_indx == indx){
     setLodiBcs = true;
     new_dw->get(lv->vel_CC,     lb->vel_CC_XchangeLabel,indx,patch,gn,0);
     new_dw->get(lv->press_CC,   lb->press_CCLabel,      0,   patch,gn,0);  
@@ -353,13 +358,15 @@ void  preprocess_Lodi_BCs(DataWarehouse* old_dw,
 
   //__________________________________
   //    Advection
-  if(where == "Advection" && matl_indx == indx){
+  else if(where == "Advection" && matl_indx == indx){
     setLodiBcs = true;
     new_dw->get(lv->rho_CC,    lb->rho_CCLabel,        indx,patch,gn,0); 
     new_dw->get(lv->vel_CC,    lb->vel_CCLabel,        indx,patch,gn,0);
     new_dw->get(lv->speedSound,lb->speedSound_CCLabel, indx,patch,gn,0); 
     new_dw->get(lv->gamma,     lb->gammaLabel,         indx,patch,gn,0); 
     new_dw->get(lv->press_CC,  lb->press_CCLabel,      0,   patch,gn,0); 
+  } else{
+    throw InternalError("ERROR:ICE: preprocess_Lodi_BCs: no preprocessing for this task ("+where+")", __FILE__, __LINE__);
   }
   
   //__________________________________
@@ -619,7 +626,7 @@ inline void Li(StaticArray<CCVariable<Vector> >& L,
   double L4 = normalVel * dVel_dx[dir[2]];  // u dw/dx
   double L5 = 0.5 * (normalVel + speedSound) * (dp_dx + A);
   
-  #if 0
+  #if 1
   cout << c << " default L1 " << L1 << " L5 " << L5
      << " dVel_dx " << dVel_dx[n_dir]
      << " dp_dx " << dp_dx << endl;  
@@ -661,17 +668,18 @@ inline void Li(StaticArray<CCVariable<Vector> >& L,
   }
   //__________________________________
   // Subsonic non-reflective outflow
-  if (flowDir == "outFlow" && Mach < 1.0){
+  else if (flowDir == "outFlow" && Mach < 1.0){
     double term1 = 0.5 * K * (press - p_infinity)/domainLength[n_dir];
     
     L1 = rightFace * (term1 + s[1]) + leftFace  * L1;
     L5 = leftFace  * (term1 + s[5]) + rightFace * L5;
+    cout << " L1: " << L1 << " L5: " << L5 << " term1 " << term1 << endl;
   }
   
   //__________________________________
   //Supersonic non-reflective inflow
   // see Thompson II pg 453
-  if (flowDir == "inFlow" && Mach > 1.0){
+  else if (flowDir == "inFlow" && Mach > 1.0){
     L1 = s[1];
     L2 = s[2];
     L3 = s[3];
@@ -790,13 +798,22 @@ void computeLi(StaticArray<CCVariable<Vector> >& L,
       for(CellIterator iter=patch->getFaceIterator(face, MEC); 
           !iter.done();iter++) {
         IntVector c = *iter - offset;
-        IntVector r = c + R_offset;
-        IntVector l = c + L_offset;
-
+        IntVector r  = c + R_offset;
+        IntVector l  = c + L_offset;
+        
+       
+        // first order discretization
         double drho_dx = (rho[r]   - rho[l])/delta; 
         double dp_dx   = (press[r] - press[l])/delta;
         Vector dVel_dx = (vel[r]   - vel[l])/delta;
-                
+     
+        if(face == Patch::xminus){
+//          drho_dx = 0.0;
+//          dp_dx   = 0.0;
+//          dVel_dx = 0.25*dVel_dx;
+          dp_dx = 0.25*dp_dx;
+        }
+        
         vector<double> s(6);
         characteristic_source_terms(dir, grav, rho[c], speedSound[c], s);
 
@@ -900,11 +917,14 @@ int FaceDensity_LODI(const Patch* patch,
   for(; !iter.done();iter++) {
     IntVector c = *iter;
     IntVector in = c - offset;
+    double vel_norm = vel_CC[in][P_dir];
+    double C        = speedSound[in];
     
-    double term1 = L[2][in][P_dir]/(vel_CC[in][P_dir] + d_SMALL_NUM);
-    double term2 = L[5][in][P_dir]/(vel_CC[in][P_dir] + speedSound[in]);
-    double term3 = L[1][in][P_dir]/(vel_CC[in][P_dir] - speedSound[in]);
-    double drho_dx = term1 + (term2 + term3)/(speedSound[in] * speedSound[in]); 
+    double term1 = L[2][in][P_dir]/(vel_norm + d_SMALL_NUM);
+    double term2 = L[5][in][P_dir]/(vel_norm + C);
+    double term3 = L[1][in][P_dir]/(vel_norm - C);
+    double drho_dx = term1 + (term2 + term3)/(C * C); 
+    
     rho_CC[c] = rho_CC[in] + plus_minus_one * dx * drho_dx;
     
     cout_dbg << " c " << c << " in " << in << " rho_CC[c] "<< rho_CC[c] 
@@ -989,18 +1009,25 @@ int FaceVel_LODI(const Patch* patch,
   for( ; !iter.done();iter++) {
     IntVector c = *iter;
     IntVector in = c - offset;
+    double vel_norm = vel_CC[in][P_dir];
+    double C = speedSound[in];
+    
     // normal direction velocity
-    double term1 = L[5][in][P_dir]/(vel_CC[in][P_dir] + speedSound[in]);
-    double term2 = L[1][in][P_dir]/(vel_CC[in][P_dir] - speedSound[in]);
-    double dvel_norm_dx = (1.0/(rho_CC[in] * speedSound[in]) ) * (term1 - term2);
-    vel_CC[c][P_dir] = vel_CC[in][P_dir] + plus_minus_one * dx * dvel_norm_dx; 
-    
+    double term1 = L[5][in][P_dir]/(vel_norm + C);
+    double term2 = L[1][in][P_dir]/(vel_norm - C);
+    double dvel_norm_dx = (1.0/(rho_CC[in] * C) ) * (term1 - term2);
+     
     // transverse velocities
-    double dvel_dir1_dx = L[3][in][P_dir]/(vel_CC[in][P_dir] + d_SMALL_NUM);
-    double dvel_dir2_dx = L[4][in][P_dir]/(vel_CC[in][P_dir] + d_SMALL_NUM);
+    double dvel_dir1_dx = L[3][in][P_dir]/(vel_norm + d_SMALL_NUM);
+    double dvel_dir2_dx = L[4][in][P_dir]/(vel_norm + d_SMALL_NUM);
     
-    vel_CC[c][dir1] = vel_CC[in][dir1] + plus_minus_one * dx * dvel_dir1_dx;
-    vel_CC[c][dir2] = vel_CC[in][dir2] + plus_minus_one * dx * dvel_dir2_dx;
+    vel_CC[c][P_dir] = vel_norm         + plus_minus_one * dx * dvel_norm_dx;
+    vel_CC[c][dir1]  = vel_CC[in][dir1] + plus_minus_one * dx * dvel_dir1_dx;
+    vel_CC[c][dir2]  = vel_CC[in][dir2] + plus_minus_one * dx * dvel_dir2_dx;
+    
+    cout_dbg << " c " << c << " in " << in << " vel_CC[c] "   << vel_CC[c][P_dir]
+             << " dvel_dx " << dvel_norm_dx << " vel_CC[in] " << vel_CC[in][P_dir]<<endl;
+    
   }
   nCells += iter.size();
   
@@ -1078,16 +1105,20 @@ int FaceTemp_LODI(const Patch* patch,
   for(; !iter.done();iter++) {
     IntVector c = *iter;
     IntVector in = c - offset;
-    double term1 = temp_CC[in]/(rho_CC[in] * speedSound[in] * speedSound[in]);
-    double term2 = L[2][in][P_dir]/(vel_CC[in][P_dir] + d_SMALL_NUM);
+    double C        = speedSound[in];
+    double vel_norm = vel_CC[in][P_dir];
+    
+    double term1 = temp_CC[in]/(rho_CC[in] * C * C);
+    double term2 = L[2][in][P_dir]/(vel_norm + d_SMALL_NUM);
     double term3 = ( gamma[in] - 1.0);
-    double term4 = L[5][in][P_dir]/(vel_CC[in][P_dir] + speedSound[in]);
-    double term5 = L[1][in][P_dir]/(vel_CC[in][P_dir] - speedSound[in]);
+    double term4 = L[5][in][P_dir]/(vel_norm + C);
+    double term5 = L[1][in][P_dir]/(vel_norm - C);
     double dtemp_dx = term1 * (-term2 + term3*(term4 + term5) );
+    
     temp_CC[c] = temp_CC[in] + plus_minus_one * dx * dtemp_dx;
    
     cout_dbg << " c " << c << " in " << in << " temp_CC[c] "<< temp_CC[c]
-             << " temp_CC[in] " << temp_CC[in] << endl;
+             << " dtemp_dx " << dtemp_dx << " temp_CC[in] " << temp_CC[in] << endl;
      
     cout_dbg << " term1 " << term1
              << " term2 " << term2
@@ -1171,13 +1202,15 @@ int FacePress_LODI(const Patch* patch,
 
     IntVector c = *iter;
     IntVector in = c - offset;  
+    double vel_norm = lv->vel_CC[in][P_dir];
+    double C = lv->speedSound[in];
     
-    double term1 = L[5][in][P_dir]/(lv->vel_CC[in][P_dir] + lv->speedSound[in]);
-    double term2 = L[1][in][P_dir]/(lv->vel_CC[in][P_dir] - lv->speedSound[in]);
+    double term1 = L[5][in][P_dir]/(vel_norm + C);
+    double term2 = L[1][in][P_dir]/(vel_norm - C);
     double dpress_dx = term1 + term2;
 
     press_CC[c] = press_CC[in] + plus_minus_one * dx * dpress_dx; 
-    #if 0    
+    #if 1    
     cout_dbg << " c " << c << " in " << in << " press_CC[c] "<< press_CC[c] 
              << " dpress_dx " << dpress_dx << " press_CC[in] " << press_CC[in]<<endl;
     #endif
