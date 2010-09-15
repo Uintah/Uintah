@@ -37,6 +37,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Arches/SourceTerms/MMS1.h>
 #include <CCA/Components/Arches/SourceTerms/TabRxnRate.h>
 #include <CCA/Components/Arches/SourceTerms/CoalGasDevol.h>
+#include <CCA/Components/Arches/SourceTerms/CoalGasHeat.h>
 #include <CCA/Components/Arches/SourceTerms/CoalGasMomentum.h> 
 #include <CCA/Components/Arches/SourceTerms/WestbrookDryer.h>
 #include <CCA/Components/Arches/SourceTerms/Inject.h>
@@ -2450,6 +2451,10 @@ void Arches::registerUDSources(ProblemSpecP& db)
         // Sums up the devol. model terms * weights
         SourceTermBase::Builder* src_builder = scinew CoalGasDevol::Builder(src_name, required_varLabels, d_lab->d_sharedState);
         factory.register_source_term( src_name, src_builder ); 
+
+      } else if (src_type == "coal_gas_heat"){
+        SourceTermBase::Builder* src_builder = scinew CoalGasHeat::Builder(src_name, required_varLabels, d_lab->d_sharedState);
+        factory.register_source_term( src_name, src_builder );
 
       } else if (src_type == "coal_gas_momentum"){
         // Momentum coupling for ??? (coal gas or the particle?) 

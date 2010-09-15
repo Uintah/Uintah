@@ -259,6 +259,21 @@ EnthalpySolver::solve(const LevelP& level,
                       bool d_EKTCorrection,
                       bool doing_EKT_now)
 {
+  int timeSubStep = 0;
+  if ( timelabels->integrator_step_number == TimeIntegratorStepNumber::Second )
+    timeSubStep = 1;
+  else if ( timelabels->integrator_step_number == TimeIntegratorStepNumber::Third )
+    timeSubStep = 2;
+
+  // Schedule additional sources for evaluation
+  SourceTermFactory& factory = SourceTermFactory::self();
+  for (vector<std::string>::iterator iter = d_new_sources.begin();
+      iter != d_new_sources.end(); iter++){
+    SourceTermBase& src = factory.retrieve_source_term( *iter );
+    src.sched_computeSource( level, sched, timeSubStep );
+  }
+
+
   //computes stencil coefficients and source terms
   // requires : enthalpyIN, [u,v,w]VelocitySPBC, densityIN, viscosityIN
   // computes : scalCoefSBLM, scalLinSrcSBLM, scalNonLinSrcSBLM
@@ -441,7 +456,7 @@ EnthalpySolver::sched_buildLinearMatrix(const LevelP& level,
 
       SourceTermBase& src = factory.retrieve_source_term( *iter ); 
       const VarLabel* srcLabel = src.getSrcLabel(); 
-      tsk->requires(Task::OldDW, srcLabel, gn, 0); 
+      tsk->requires(Task::NewDW, srcLabel, gn, 0); 
 
     }
   }
@@ -622,8 +637,7 @@ void EnthalpySolver::buildLinearMatrix(const ProcessorGroup* pc,
       const VarLabel* srcLabel = src.getSrcLabel(); 
       // here we have made the assumption that the momentum source is always a vector... 
       // and that we only have one.  probably want to fix this. 
-      old_dw->get( enthalpyVars.otherSource, srcLabel, indx, patch, Ghost::None, 0); 
-
+      new_dw->get( enthalpyVars.otherSource, srcLabel, indx, patch, Ghost::None, 0); 
     }
   }
   else {
@@ -648,7 +662,6 @@ void EnthalpySolver::buildLinearMatrix(const ProcessorGroup* pc,
       // here we have made the assumption that the momentum source is always a vector... 
       // and that we only have one.  probably want to fix this. 
       new_dw->get( enthalpyVars.otherSource, srcLabel, indx, patch, Ghost::None, 0); 
-
     }
   }
 
