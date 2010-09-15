@@ -388,7 +388,8 @@ ProgramBurn::addComputesAndRequires(Task* ,
 double ProgramBurn::computeRhoMicroCM(double pressure, 
                                       const double p_ref,
                                       const MPMMaterial* matl,
-                                      double temperature)
+                                      double temperature,
+                                      double rho_guess)
 {
     cout << "NO VERSION OF computeRhoMicroCM EXISTS YET FOR ProgramBurn"
        << endl;

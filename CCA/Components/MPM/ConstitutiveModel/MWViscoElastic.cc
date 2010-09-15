@@ -544,7 +544,8 @@ MWViscoElastic::addComputesAndRequires(Task* ,
 double MWViscoElastic::computeRhoMicroCM(double pressure,
                                       const double p_ref,
                                       const MPMMaterial* matl,
-                                      double temperature)
+                                      double temperature,
+                                      double rho_guess)
 {
   double rho_orig = matl->getInitialDensity();
   //double p_ref=101325.0;

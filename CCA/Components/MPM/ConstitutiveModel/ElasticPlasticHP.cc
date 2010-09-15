@@ -3365,7 +3365,8 @@ ElasticPlasticHP::computeSpecificHeat(double T)
 double ElasticPlasticHP::computeRhoMicroCM(double pressure,
                                          const double p_ref,
                                          const MPMMaterial* matl, 
-                                         double temperature)
+                                         double temperature,
+                                         double rho_guess)
 {
   double rho_orig = matl->getInitialDensity();
   double bulk = d_initialData.Bulk;

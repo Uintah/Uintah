@@ -356,7 +356,8 @@ IdealGasMP::addComputesAndRequires(Task* ,
 double IdealGasMP::computeRhoMicroCM(double press, 
                                       const double Temp,
                                       const MPMMaterial*,
-                                      double temperature)
+                                      double temperature,
+                                      double rho_guess)
 {
   double gamma = d_initialData.gamma;
   double cv    = d_initialData.cv;

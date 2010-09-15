@@ -149,7 +149,8 @@ namespace Uintah {
     virtual double computeRhoMicroCM(double pressure,
                                      const double p_ref,
                                      const MPMMaterial* matl,
-                                     double temperature);
+                                     double temperature,
+                                     double rho_guess);
 
     /*! Function that interacts with ice */
     virtual void computePressEOSCM(double rho_m, double& press_eos,

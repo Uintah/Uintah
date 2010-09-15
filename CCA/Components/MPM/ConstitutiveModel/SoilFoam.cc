@@ -594,7 +594,8 @@ SoilFoam::addComputesAndRequires(Task* task,
 double SoilFoam::computeRhoMicroCM(double pressure,
                                       const double /*p_ref*/,
                                       const MPMMaterial* matl,
-                                      double temperature)
+                                      double temperature,
+                                      double rho_guess)
 {
 
   //cout << "NO VERSION OF computeRhoMicroCM EXISTS YET FOR SoilFoam"
