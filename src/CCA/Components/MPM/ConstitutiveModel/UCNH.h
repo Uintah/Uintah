@@ -238,7 +238,8 @@ namespace Uintah {
     virtual double computeRhoMicroCM(double pressure,
                                      const double p_ref,
                                      const MPMMaterial* matl,
-                                     double temperature);
+                                     double temperature,
+                                     double rho_guess);
     
     // compute stable timestep for this patch
     virtual void computeStableTimestep(const Patch* patch,

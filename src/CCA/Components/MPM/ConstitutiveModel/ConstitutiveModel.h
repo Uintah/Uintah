@@ -161,7 +161,8 @@ namespace Uintah {
     virtual double computeRhoMicroCM(double pressure,
                                      const double p_ref,
                                      const MPMMaterial* matl,
-                                     double temperature) = 0;
+                                     double temperature,
+                                     double rho_guess) = 0;
 
     virtual void computePressEOSCM(double rho_m, double& press_eos,
                                    double p_ref,
@@ -174,7 +175,7 @@ namespace Uintah {
     virtual Vector getInitialFiberDir();
 
     double computeRhoMicro(double press,double gamma,
-                           double cv, double Temp);
+                           double cv, double Temp, double rho_guess);
          
     void computePressEOS(double rhoM, double gamma,
                          double cv, double Temp,

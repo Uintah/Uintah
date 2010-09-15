@@ -367,7 +367,8 @@ MurnahanMPM::addComputesAndRequires(Task* ,
 double MurnahanMPM::computeRhoMicroCM(double pressure, 
                                       const double p_ref,
                                       const MPMMaterial* matl,
-                                      double temperature)
+                                      double temperature,
+                                      double rho_guess)
 {
     double rhoM;
     double rho_orig = d_initialData.d_rho0; //matl->getInitialDensity();
