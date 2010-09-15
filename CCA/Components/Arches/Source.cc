@@ -268,8 +268,8 @@ Source::addOtherScalarSource( const ProcessorGroup* pc,
 
     Vector Dx = patch->dCell(); 
     double volume = Dx.x()*Dx.y()*Dx.z(); 
-    vars->scalarNonlinearSrc[*iter] += vars->otherSource[*iter]*volume; 
-
+    vars->scalarNonlinearSrc[*iter] += vars->otherSource[*iter]*volume;
+    //cout << "addOtherScalarSource " << vars->otherSource[*iter] << endl; 
   }
 }
 //-----------------------------------------------
