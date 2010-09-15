@@ -96,7 +96,13 @@ SimpleHeatTransfer::problemSetup(const ProblemSpecP& params, int qn)
     db_coal->require("O", yelem[3]);
     db_coal->require("S", yelem[4]);
     db_coal->require("initial_ash_mass", ash_mass_init);
-    db_coal->require("initial_fixcarb_mass", fixcarb_mass_init);
+    //db_coal->require("initial_fixcarb_mass", fixcarb_mass_init);
+    fixcarb_mass_init[0] = 0.0;
+    fixcarb_mass_init[1] = 0.0;
+    fixcarb_mass_init[2] = 0.0;
+    fixcarb_mass_init[3] = 0.0;
+    fixcarb_mass_init[4] = 0.0;
+    fixcarb_mass_init[5] = 0.0;
   } else {
     throw InvalidValue("ERROR: SimpleHeatTransfer: problemSetup(): Missing <Coal_Properties> section in input file!",__FILE__,__LINE__);
   }
