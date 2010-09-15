@@ -10,7 +10,7 @@ n        =  7.4;
 K        =  39.0e-11;
 rho0     = 1160.0;
 P0       = 101325.0;
-rhoMicro = [1159:0.01:1161];
+rhoMicro = [1159.9:.001:1160.1];
 
 #n        = 7.4;
 #K        = 39.0e-11
@@ -31,11 +31,15 @@ for  i=1:length(rhoMicro)
   end        
 end
 
-
-hold off;
+plot(rhoMicro, press, "-;;")
 xlabel ("rhoMicro");
 ylabel ("Pressure");
-plot(rhoMicro, press, "-;StockCode;")
+grid
+
+figure(2)
+plot(rhoMicro, dp_drho,"-;dp/drho;")
+xlabel ("rhoMicro")
+ylabel ("dp/drho")
 grid
 
 pause
