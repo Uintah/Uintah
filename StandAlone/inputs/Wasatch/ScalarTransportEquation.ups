@@ -1,0 +1,165 @@
+<Uintah_specification>
+
+  <Meta>
+    <title>Test scalar transport equation</title>
+  </Meta>
+
+  <SimulationComponent type="wasatch"/>
+
+  <Wasatch>
+
+    <!-- Set the initial condition for non-staggered scalar -->
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="phi1-scalar" state="STATE_N" />
+      <Constant>100.0</Constant>
+    </BasicExpression>
+
+    <!-- Build a non-staggered scalar transport equation -->
+    <TransportEquation equation="generic">
+
+      <SolutionVariable>phi1-scalar</SolutionVariable>
+
+      <DiffusiveFluxExpression>
+        <Direction>X</Direction>
+        <ConstantDiffusivity>3.0</ConstantDiffusivity>
+      </DiffusiveFluxExpression>
+
+      <DiffusiveFluxExpression>
+        <Direction>Y</Direction>
+        <ConstantDiffusivity>2.0</ConstantDiffusivity>
+      </DiffusiveFluxExpression>
+
+      <DiffusiveFluxExpression>
+        <Direction>Z</Direction>
+        <ConstantDiffusivity>1.0</ConstantDiffusivity>
+      </DiffusiveFluxExpression>
+
+    </TransportEquation>
+    
+    <!-- Set the initial condition for x-staggered scalar transport equation -->
+    <BasicExpression type="XVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="phi-xStaggered" state="STATE_N" />
+      <Constant>100.0</Constant>
+    </BasicExpression>
+
+    <!-- Build an x-staggered scalar transport equation -->
+    <TransportEquation equation="generic">
+
+      <SolutionVariable>phi-xStaggered</SolutionVariable>
+
+      <StaggeredDirection>X</StaggeredDirection>
+
+      <DiffusiveFluxExpression>
+        <Direction>X</Direction>
+        <ConstantDiffusivity>1.0</ConstantDiffusivity>
+      </DiffusiveFluxExpression>
+
+      <DiffusiveFluxExpression>
+        <Direction>Y</Direction>
+        <ConstantDiffusivity>2.0</ConstantDiffusivity>
+      </DiffusiveFluxExpression>
+
+      <DiffusiveFluxExpression>
+        <Direction>Z</Direction>
+        <ConstantDiffusivity>3.0</ConstantDiffusivity>
+      </DiffusiveFluxExpression>
+
+    </TransportEquation>    
+    
+    <!-- Set the initial condition for y-staggered scalar transport equation -->
+    <BasicExpression type="YVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="phi-yStaggered" state="STATE_N" />
+      <Constant>200.0</Constant>
+    </BasicExpression>
+
+    <!-- Build a y-staggered scalar transport equation -->
+    <TransportEquation equation="generic">
+
+      <SolutionVariable>phi-yStaggered</SolutionVariable>
+
+      <StaggeredDirection>Y</StaggeredDirection>
+
+      <DiffusiveFluxExpression>
+        <Direction>X</Direction>
+        <ConstantDiffusivity>1.0</ConstantDiffusivity>
+      </DiffusiveFluxExpression>
+
+      <DiffusiveFluxExpression>
+        <Direction>Y</Direction>
+        <ConstantDiffusivity>2.0</ConstantDiffusivity>
+      </DiffusiveFluxExpression>
+
+      <DiffusiveFluxExpression>
+        <Direction>Z</Direction>
+        <ConstantDiffusivity>3.0</ConstantDiffusivity>
+      </DiffusiveFluxExpression>
+
+    </TransportEquation>
+
+    <!-- Set the initial condition for x-staggered scalar transport equation -->
+    <BasicExpression type="ZVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="phi-zStaggered" state="STATE_N" />
+      <Constant>100.0</Constant>
+    </BasicExpression>
+
+    <!-- Build a z-staggered scalar transport equation -->
+    <TransportEquation equation="generic">
+
+      <SolutionVariable>phi-zStaggered</SolutionVariable>
+
+      <StaggeredDirection>Z</StaggeredDirection>
+
+      <DiffusiveFluxExpression>
+        <Direction>X</Direction>
+        <ConstantDiffusivity>1.0</ConstantDiffusivity>
+      </DiffusiveFluxExpression>
+
+      <DiffusiveFluxExpression>
+        <Direction>Y</Direction>
+        <ConstantDiffusivity>2.0</ConstantDiffusivity>
+      </DiffusiveFluxExpression>
+
+      <DiffusiveFluxExpression>
+        <Direction>Z</Direction>
+        <ConstantDiffusivity>3.0</ConstantDiffusivity>
+      </DiffusiveFluxExpression>
+
+    </TransportEquation>
+  </Wasatch>
+
+
+  <Time>
+    <maxTime>1.0</maxTime>
+    <initTime>0.0</initTime>
+    <delt_min>0.01</delt_min>
+    <delt_max>0.5</delt_max>
+    <timestep_multiplier>1.0</timestep_multiplier>
+  </Time>
+
+
+  <DataArchiver>
+    <filebase>wasatch_test.uda</filebase>
+    <outputTimestepInterval>1</outputTimestepInterval>
+    <outputInitTimestep/>
+    <checkpoint cycle = "2" interval = "0.01"/>
+    <compression>gzip</compression>
+    <!-- save label="phi"/ -->
+  </DataArchiver> 
+
+  <Grid>
+    <Level>
+      <Box label="1">
+        <lower>[0,0,0]</lower>
+        <upper>[1,1,1]</upper>
+        <resolution>[10,10,10]</resolution>
+<!--         <extraCells>[0,0,0]</extraCells> -->
+        <patches>[1,1,1]</patches>
+      </Box>
+    </Level>
+  </Grid>
+
+</Uintah_specification>

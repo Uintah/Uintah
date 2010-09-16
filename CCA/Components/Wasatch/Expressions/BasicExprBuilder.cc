@@ -4,6 +4,7 @@
 
 //-- Wasatch includes --//
 #include <CCA/Components/Wasatch/Expressions/BasicExprBuilder.h>
+#include <CCA/Components/Wasatch/FieldAdaptor.h>
 #include <CCA/Components/Wasatch/ParseTools.h>
 
 
@@ -59,26 +60,27 @@ namespace Wasatch{
          exprParams != 0;
          exprParams = exprParams->findNextBlock("BasicExpression") ){
 
-      std::string label, fieldType, taskListName;
-      exprParams->getAttribute("label",label);
+      std::string fieldType, taskListName;
       exprParams->getAttribute("type",fieldType);
       exprParams->require("TaskList",taskListName);
 
       const Expr::Tag tag = parse_nametag( exprParams->findBlock("NameTag") );
 
-      std::cout << "Creating BasicExpression '" << label
-                << "' for variable '" << tag.name()
+      std::cout << "Creating BasicExpression for variable '" << tag.name()
                 << "' with state " << tag.context()
                 << " on task list '" << taskListName << "'"
                 << std::endl;
 
-      if     ( fieldType == "Cell"  )  builder = build_it<SpatialOps::structured::SVolField  >( exprParams );
-      else if( fieldType == "XFace" )  builder = build_it<SpatialOps::structured::SSurfXField>( exprParams );
-      else if( fieldType == "YFace" )  builder = build_it<SpatialOps::structured::SSurfYField>( exprParams );
-      else if( fieldType == "ZFace" )  builder = build_it<SpatialOps::structured::SSurfZField>( exprParams );
-
-      // jcs what about other field types?  Consider specifying cell
-      // type (scalar, x, y, z) and location (center,xface,yface,zface)
+      switch( get_field_type(fieldType) ){
+      case SVOL  :  builder = build_it<SpatialOps::structured::SVolField  >( exprParams );  break;
+      case XVOL  :  builder = build_it<SpatialOps::structured::XVolField  >( exprParams );  break;
+      case YVOL  :  builder = build_it<SpatialOps::structured::YVolField  >( exprParams );  break;
+      case ZVOL  :  builder = build_it<SpatialOps::structured::ZVolField  >( exprParams );  break;
+      default:
+        std::ostringstream msg;
+        msg << "ERROR: unsupported field type '" << fieldType << "'" << endl
+            << __FILE__ << " : " << __LINE__ << endl;
+      }
 
       Category cat;
       if     ( taskListName == "initialization"   )   cat = INITIALIZATION;

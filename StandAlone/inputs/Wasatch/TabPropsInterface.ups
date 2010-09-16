@@ -8,7 +8,7 @@
 
   <Wasatch>
 
-    <BasicExpression label="fIC" type="Cell">
+    <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
       <NameTag name="mixture fraction" state="STATE_N" />
       <Constant>0.5</Constant>
@@ -34,7 +34,7 @@
     </TabProps>
 
     <!-- Build a scalar transport equation -->
-    <TransportEquation equation="scalar">
+    <TransportEquation equation="generic">
 
       <SolutionVariable>mixture fraction</SolutionVariable>
 

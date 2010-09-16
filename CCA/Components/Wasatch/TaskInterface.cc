@@ -206,14 +206,14 @@ namespace Wasatch{
     //       Otherwise we would have binding clashes between different
     //       threads.
     //
-    for( size_t ip=0; ip<patches->size(); ++ip ){
+    for( int ip=0; ip<patches->size(); ++ip ){
 
       const Uintah::Patch* const patch = patches->get(ip);
       const PatchInfoMap::const_iterator ipim = patchInfoMap_.find(patch->getID());
       ASSERT( ipim!=patchInfoMap_.end() );
       const SpatialOps::OperatorDatabase& opdb = *ipim->second.operators;
 
-      for( size_t im=0; im<materials->size(); ++im ){
+      for( int im=0; im<materials->size(); ++im ){
 
         const int material = materials->get(im);
         try{

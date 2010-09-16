@@ -8,7 +8,7 @@
     <!-- Spec for a TransportEquation -->
     <!-- ============================ -->
     <TransportEquation		spec="MULTIPLE NO_DATA"
-                                attribute1="equation REQUIRED STRING 'temperature,scalar'">
+                                attribute1="equation REQUIRED STRING 'generic,temperature">
       
       <SolutionVariable		spec="REQUIRED STRING" />
       
@@ -74,7 +74,7 @@
       <ExtractVariable		spec="MULTIPLE NO_DATA">
         <NameInTable		spec="REQUIRED STRING" />
         <NameTag		spec="REQUIRED" />
-        <Type			spec="OPTIONAL STRING 'Cell,XFace,YFace,ZFace'" />
+        <Type			spec="OPTIONAL STRING 'SVOL,XVOL,YVOL,ZVOL" />
       </ExtractVariable>
     </TabProps>
 

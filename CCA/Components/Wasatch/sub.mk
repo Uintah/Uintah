@@ -35,6 +35,7 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := CCA/Components/Wasatch
 
 SRCS     +=                             \
+        $(SRCDIR)/FieldAdaptor.cc	\
         $(SRCDIR)/GraphHelperTools.cc	\
         $(SRCDIR)/ParseTools.cc		\
 	$(SRCDIR)/Properties.cc		\
