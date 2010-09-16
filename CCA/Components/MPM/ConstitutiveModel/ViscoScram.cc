@@ -1292,7 +1292,7 @@ double ViscoScram::computeRhoMicroCM(double pressure,
 
   if(d_useJWLEOS) {                        // JWL EOS
     double Cv = d_JWLEOSData.Cv;
-    double om = d_JWLEOSData.om;
+    //    double om = d_JWLEOSData.om;
 
     Pressure = pressure;
     Temperature = temperature;
