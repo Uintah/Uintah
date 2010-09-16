@@ -90,7 +90,8 @@
     <failure_exponent       spec="OPTIONAL DOUBLE" />
     <failure_seed           spec="OPTIONAL INTEGER" />
     <failure_by_stress             spec="OPTIONAL BOOLEAN" />
-    <reference_volume              spec="OPTIONAL DOUBLE" />
+    <scaling                       spec="OPTIONAL STRING 'none, kayenta'" />
+    <reference_volume              spec="OPTIONAL DOUBLE 'positive'" />
     <failure_by_pressure           spec="OPTIONAL BOOLEAN" />
     <frac_nucleation               spec="OPTIONAL DOUBLE" />
     <fracture_toughness_curve      spec="OPTIONAL NO_DATA" >
