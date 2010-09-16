@@ -343,7 +343,7 @@ namespace Wasatch{
   {
     const double deltat = 1.0; // jcs should get this from an input file possibly?
 
-    for( size_t im=0; im<matls->size(); ++im ){
+    for( int im=0; im<matls->size(); ++im ){
 
       const int material = matls->get(im);
 
