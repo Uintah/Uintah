@@ -247,6 +247,7 @@ void UCNH::getFailureStressOrStrainData(ProblemSpecP& ps)
   if(d_epsf.dist!="constant"){
     ps->require("failure_std", d_epsf.std); //Std dev (Gauss) or Weibull modulus
   }
+  ps->get("scaling", d_epsf.scaling); //"none" or "kayenta"
   if(d_epsf.scaling!="none"){
     // If doing some sort of scaling, require user to provide a reference volume
     ps->require("reference_volume",d_epsf.refVol);
