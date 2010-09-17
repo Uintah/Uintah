@@ -549,25 +549,25 @@ ElasticPlasticHP::initializeCMData(const Patch* patch,
   //               At present only Gaussian available.
   if (d_porosity.porosityDist != "constant") {
 
-    SCIRun::Gaussian gaussGen(d_porosity.f0, d_porosity.f0_std, 0);
+    SCIRun::Gaussian gaussGen(d_porosity.f0, d_porosity.f0_std, 0, 1, DBL_MAX);
     ParticleSubset::iterator iter = pset->begin();
     for(;iter != pset->end();iter++){
 
       // Generate a Gaussian distributed random number given the mean
       // porosity and the std.
-      pPorosity[*iter] = fabs(gaussGen.rand());
+      pPorosity[*iter] = fabs(gaussGen.rand(1.0));
     }
   }
 
   if (d_scalarDam.scalarDamageDist != "constant") {
 
-    SCIRun::Gaussian gaussGen(d_scalarDam.D0, d_scalarDam.D0_std, 0);
+    SCIRun::Gaussian gaussGen(d_scalarDam.D0, d_scalarDam.D0_std, 0, 1,DBL_MAX);
     ParticleSubset::iterator iter = pset->begin();
     for(;iter != pset->end();iter++){
 
       // Generate a Gaussian distributed random number given the mean
       // damage and the std.
-      pDamage[*iter] = fabs(gaussGen.rand());
+      pDamage[*iter] = fabs(gaussGen.rand(1.0));
     }
   }
 

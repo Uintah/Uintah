@@ -56,11 +56,13 @@ public:
   double WeibMed_;
   double WeibMod_;
   double WeibRefVol_;
+  double WeibExp_;
   MusilRNG *mr_;
   Weibull(double WeibMed=0,
           double WeibMod=1,
           double WeibRefVol=1,
-          int WeibSeed=0);
+          int WeibSeed=0,
+          double WeibExp=1);
           ~Weibull();
 
   // Equation taken from
@@ -69,6 +71,9 @@ public:
   // by R.M. Brannon and O.E. Strack, Sandia National Laboratories
   inline double rand(double PartVol) {
  return WeibMed_*pow(log((*mr_)())/((PartVol/WeibRefVol_)*log(0.5)),1/WeibMod_);
+
+        // med*(log(x)/((V/Vbar)*log(0.5)))^(1/m)
+        // med*((log(x)/log(0.5))*(Vbar/V))^(1/m)
   }
 
   // Probability that x was picked from this Weibull distribution
@@ -77,6 +82,8 @@ public:
    return (WeibMod_/(PartVol/WeibRefVol_))*
            pow((x-WeibMed_)/(PartVol/WeibRefVol_),WeibMod_-1)*
            exp(-pow((x-WeibMed_)/(PartVol/WeibRefVol_),WeibMod_));
+
+          // (m/(V/Vbar))*((x-med)/(V/Vbar))^(m-1) * exp(-((x-med)/(V/Vbar))^m)
   }
 };
 
