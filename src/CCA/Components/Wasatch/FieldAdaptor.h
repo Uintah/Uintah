@@ -22,13 +22,21 @@
 
 namespace Wasatch{
 
-    enum FieldTypes{
-      SVOL, SSURFX, SSURFY, SSURFZ,
-      XVOL, XSURFX, XSURFY, XSURFZ,
-      YVOL, YSURFX, YSURFY, YSURFZ,
-      ZVOL, ZSURFX, ZSURFY, ZSURFZ,
-    };
+  /**
+   *  \enum FieldTypes
+   *  \brief Enumerate the field types in Wasatch.
+   */
+  enum FieldTypes{
+    SVOL, SSURFX, SSURFY, SSURFZ,
+    XVOL, XSURFX, XSURFY, XSURFZ,
+    YVOL, YSURFX, YSURFY, YSURFZ,
+    ZVOL, ZSURFX, ZSURFY, ZSURFZ,
+  };
 
+  /**
+   *  \ingroup WasatchParser
+   *  \brief translate a string describing a field type to the FieldTypes enum.
+   */
   FieldTypes get_field_type( std::string );
 
   /**

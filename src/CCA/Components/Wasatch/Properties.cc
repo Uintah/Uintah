@@ -99,23 +99,34 @@ namespace Wasatch{
       //____________________________________________
       // get the type of field that we will evaluate
       std::string fieldType;
-      dvarParams->getWithDefault( "type", fieldType, "Cell" );
+      dvarParams->getWithDefault( "type", fieldType, "SVOL" );
 
-      if( fieldType == "Cell" ){
+      switch( get_field_type(fieldType) ){
+      case SVOL: {
         typedef TabPropsEvaluator<SpatialOps::structured::SVolField>::Builder PropEvaluator;
         builder = new PropEvaluator( spline->clone(), ivarNames );
+        break;
       }
-      else if( fieldType == "XFace" ){
+      case XVOL: {
         typedef TabPropsEvaluator<SpatialOps::structured::SSurfXField>::Builder PropEvaluator;
         builder = new PropEvaluator( spline->clone(), ivarNames );
+        break;
       }
-      else if( fieldType == "YFace" ){
+      case YVOL: {
         typedef TabPropsEvaluator<SpatialOps::structured::SSurfYField>::Builder PropEvaluator;
         builder = new PropEvaluator( spline->clone(), ivarNames );
+        break;
       }
-      else if( fieldType == "ZFace" ){
+      case ZVOL: {
         typedef TabPropsEvaluator<SpatialOps::structured::SSurfZField>::Builder PropEvaluator;
         builder = new PropEvaluator( spline->clone(), ivarNames );
+        break;
+      }
+      default:
+        std::ostringstream msg;
+        msg << "ERROR: unsupported field type named '" << fieldType << "'" << endl
+            << __FILE__ << " : " << __LINE__ << endl;
+        throw std::runtime_error( msg.str() );
       }
 
       //____________________________
