@@ -322,11 +322,11 @@ void UCNH::outputProblemSpec(ProblemSpecP& ps, bool output_cm_tag)
   if(d_useDamage) {
     cm_ps->appendElement("failure_mean",     d_epsf.mean);
     cm_ps->appendElement("failure_std",      d_epsf.std);
-    cm_ps->appendElement("failure_exponent", d_epsf.exponent);
     cm_ps->appendElement("failure_seed" ,    d_epsf.seed);
     cm_ps->appendElement("failure_distrib",  d_epsf.dist);
     cm_ps->appendElement("failure_criteria", d_failure_criteria);
     cm_ps->appendElement("scaling",          d_epsf.scaling);
+    cm_ps->appendElement("exponent",         d_epsf.exponent);
     cm_ps->appendElement("reference_volume", d_epsf.refVol);
 
     if(d_failure_criteria=="MohrColoumb"){
