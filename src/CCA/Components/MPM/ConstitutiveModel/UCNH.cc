@@ -232,7 +232,7 @@ void UCNH::initializeLocalMPMLabels()
 
 void UCNH::getFailureStressOrStrainData(ProblemSpecP& ps)
 {
-  d_epsf.mean   = 10.0; // Mean (median for Weibull) failure stress or strain
+  d_epsf.mean   = 10.0; // Mean failure stress or strain
   d_epsf.std    = 0.0;  // Std. Dev or Weibull mod. for failure stres or strain
   d_epsf.seed   = 0;    // seed for weibull distribution generator
   d_epsf.dist   = "constant";
