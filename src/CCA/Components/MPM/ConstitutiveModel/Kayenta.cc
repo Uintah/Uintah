@@ -401,7 +401,7 @@ void Kayenta::initializeCMData(const Patch* patch,
             << "\nPerturb?:        " << wdist.Perturb << std::endl;
   if ( wdist.Perturb){
     SCIRun::Weibull weibGen(wdist.WeibMed, wdist.WeibMod, wdist.WeibRefVol,
-                            wdist.WeibSeed,wdist.weibMod);
+                            wdist.WeibSeed,wdist.WeibMod);
     constParticleVariable<double>pVolume;
     new_dw->get(pVolume, lb->pVolumeLabel, pset);
   
