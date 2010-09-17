@@ -52,7 +52,7 @@ namespace Wasatch{
     std::cout << "------------------------------------------------" << std::endl;
     std::cout << "Creating transport equation for '" << eqnLabel << "'" << std::endl;
 
-    if( eqnLabel == "scalar" ){
+    if( eqnLabel == "generic" ){
        // find out if this corresponds to a staggered or non-staggered field
       std::string staggeredDirection;
       Uintah::ProblemSpecP scalarStaggeredParams = params->get( "StaggeredDirection", staggeredDirection );

@@ -24,12 +24,12 @@
       <ExtractVariable>
         <NameInTable>Temperature</NameInTable>
         <NameTag name="temperature" state="STATE_NONE" />
-        <Type>Cell</Type>
+        <Type>SVOL</Type>
       </ExtractVariable>
       <ExtractVariable>
         <NameInTable>Conductivity</NameInTable>
         <NameTag name="thermal conductivity" state="STATE_NONE" />
-        <Type>Cell</Type>
+        <Type>SVOL</Type>
       </ExtractVariable>
     </TabProps>
 
