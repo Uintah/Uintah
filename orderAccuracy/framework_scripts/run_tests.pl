@@ -33,12 +33,12 @@ use XML::Simple;
 use Data::Dumper;
 use Cwd;
 # create object
-$xml = new XML::Simple(forcearray => 1, suppressempty => "");
+$simple = new XML::Simple(forcearray => 1, suppressempty => "");
 $tstFile           = $ARGV[0];
 $config_files_path = $ARGV[1];
 
 # read XML file
-$data = $xml->XMLin("$tstFile");
+my $data = $simple->XMLin("$tstFile");
 
 #__________________________________
 # copy gnuplot script
@@ -58,15 +58,16 @@ $ups_basename    =~ s/.ups//;                     # Removing the extension .ups 
 #__________________________________
 # Read in the test data from xml file
 my $i = 0;
-foreach $e (@{$data->{Test}}){
-  $test_title[$i]     =$e->{Title}->[0];          # test title
-  $sus_cmd[$i]        =$e->{sus_cmd}->[0];        # sus command
-  $compUtil_cmd[$i]   =$e->{compare_cmd}->[0];    # comparison utility command
+my @tests = @{$data->{Test}};
+for($i = 0; $i<=$#tests; $i++){
+  my $test            =$tests[$i];
+  $test_title[$i]     =$test->{Title}[0];          # test title
+  $sus_cmd[$i]        =$test->{sus_cmd}[0];        # sus command
+  $compUtil_cmd[$i]   =$test->{compare_cmd}[0];    # comparison utility command
   
-  #print Dumper($e->{compare_cmd}->[0]);         debugging
-  $i++;     
+  #print Dumper($test);         #debugging
 }
-$num_of_tests=$i;
+$num_of_tests=$#tests;
 
 #__________________________________
 # make a symbolic link to the compareUtils
