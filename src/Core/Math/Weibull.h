@@ -92,11 +92,20 @@ public:
   // Probability that x was picked from this Weibull distribution
   // found on http://www.weibull.com/LifeDataWeb/weibull_probability_density_function.htm
   double prob(double x, double PartVol) {
+
+   // The following is new and hopefully correct
+   double C = pow(WeibRefVol_/PartVol,1./WeibMod_);
+
+   double eta = WeibMed_/pow(log(0.5),1./WeibMod_);
+
+   return WeibMod_/(C*eta)*pow(x/(C*eta),WeibMod_-1.)
+                     *exp(-pow(x/(C*eta),WeibMod_));
+
+   // Old and evidently wrong
    return (WeibMod_/(PartVol/WeibRefVol_))*
            pow((x-WeibMed_)/(PartVol/WeibRefVol_),WeibMod_-1)*
            exp(-pow((x-WeibMed_)/(PartVol/WeibRefVol_),WeibMod_));
 
-          // (m/(V/Vbar))*((x-med)/(V/Vbar))^(m-1) * exp(-((x-med)/(V/Vbar))^m)
   }
 };
 
