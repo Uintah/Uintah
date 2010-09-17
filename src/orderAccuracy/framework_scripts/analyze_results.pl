@@ -10,7 +10,7 @@
 #   - multiple tests to analyze or one
 #    
 #   Loop over tests
-#     - run the comparisonUtility on the uda
+#     - run the postProcess cmd on the uda
 #     - concatenate the results to a master L2norm.dat
 #   end Loop
 #
@@ -43,7 +43,7 @@ foreach $e (@{$data->{Test}}){
   $sus_cmd[$i]        =$e->{sus_cmd}->[0];                  # sus command
   $study[$i]          =$e->{Study}->[0];                    #Study Name
   $x[$i]              =$e->{x}->[0];
-  $compUtil_cmd[$i]   =$e->{compare_cmd}->[0];              #comparison utility command
+  $postProc_cmd[$i]   =$e->{postProcess_cmd}->[0];          #post processing command
   $i++;     
 }
 $num_of_tests=$i -1;
@@ -66,7 +66,7 @@ for ($k = $startLoop; $k<=$endLoop; $k++){
   
   #__________________________________
   # bulletproofing
-  my @stripped_cmd = split(/ /,$compUtil_cmd[$k]);  # remove command options
+  my @stripped_cmd = split(/ /,$postProc_cmd[$k]);  # remove command options
   if (! -e $stripped_cmd[0] ){
     print "\n\n__________________________________\n";
     print "ERROR:analyze_results:\n";
@@ -79,10 +79,10 @@ for ($k = $startLoop; $k<=$endLoop; $k++){
   my $comp_output = "out.$x[$k].cmp";
   $uda  = $ups_basename."_$test_title[$k]".".uda";
   
-  print "\nLaunching:  $compUtil_cmd[$k] -o $comp_output -uda $uda\n\n";
+  print "\nLaunching:  $postProc_cmd[$k] -o $comp_output -uda $uda\n\n";
   `rm -f $comp_output`;  
   
-  @args = ("$compUtil_cmd[$k]","-o","$comp_output","-uda","$uda");
+  @args = ("$postProc_cmd[$k]","-o","$comp_output","-uda","$uda");
   system("@args")==0 or die("ERROR(analyze_Analysis.pl): @args failed: $?");
   
   # concatenate results

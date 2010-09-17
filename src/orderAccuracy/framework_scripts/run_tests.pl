@@ -19,7 +19,7 @@
 #     - replace lines in ups file
 #     - run the test
 #
-#     if(comparison Command )
+#     if(post Process cmd )
 #       -run analyze_results.pl <tst file> < test number> 
 #     endif
 #   end Loop
@@ -66,7 +66,7 @@ for($i = 0; $i<=$#tests; $i++){
   my $test            =$tests[$i];
   $test_title[$i]     =$test->{Title}[0];          # test title
   $sus_cmd[$i]        =$test->{sus_cmd}[0];        # sus command
-  $compUtil_cmd[$i]   =$test->{compare_cmd}[0];    # comparison utility command
+  $postProc_cmd[$i]   =$test->{postProcess_cmd}[0];    # comparison utility command
   
   #print Dumper($test);         #debugging
 }
@@ -75,8 +75,8 @@ $num_of_tests=$#tests;
 #__________________________________
 # make a symbolic link to the compareUtils
 for ($i=0;$i<=$num_of_tests;$i++){
-   if( $compUtil_cmd[$i] ne ''){
-    my @stripped_cmd = split(/ /,$compUtil_cmd[$i]);  # remove command options
+   if( $postProc_cmd[$i] ne ''){
+    my @stripped_cmd = split(/ /,$postProc_cmd[$i]);  # remove command options
     my $cmd = `which $stripped_cmd[0]`;
     system("ln -fs $cmd");
   }
@@ -194,10 +194,10 @@ for ($i=0;$i<=$num_of_tests;$i++){
   
   #__________________________________
   print statsFile "Test Name :       "."$test_title[$i]"."\n";
-  print statsFile "(ups) :     "."$test_ups"."\n";
-  print statsFile "(uda) :     "."$udaFilename"."\n";
-  print statsFile "output:     "."$test_output"."\n";
-  print statsFile "compareCmd: "."$compUtil_cmd[$i]"."\n";
+  print statsFile "(ups) :         "."$test_ups"."\n";
+  print statsFile "(uda) :         "."$udaFilename"."\n";
+  print statsFile "output:         "."$test_output"."\n";
+  print statsFile "postProcessCmd: "."$postProc_cmd[$i]"."\n";
   
   print statsFile "Command Used : "."$sus_cmd[$i] $test_ups"."\n";
   print "Launching: $sus_cmd[$i] $test_ups\n";
@@ -208,7 +208,7 @@ for ($i=0;$i<=$num_of_tests;$i++){
 
   #__________________________________
   # execute comparison
-  if($compUtil_cmd[$i] ne ''){
+  if($postProc_cmd[$i] ne ''){
     print "\nLaunching: analyze_results.pl $tstFile test $i\n";
     @args = ("analyze_results.pl","$tstFile", "$i");
     system("@args")==0 or die("ERROR(run_tests.pl): \t\tFailed running: (@args)\n");
