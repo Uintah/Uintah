@@ -1,5 +1,5 @@
 <config>
-<compareUtil_path></compareUtil_path>
+<postProcessCmd_path></postProcessCmd_path>
 
 <symbolicLinks> 
   /usr/local/home/harman/Builds/Fresh/NB/src/scripts/ /usr/local/home/harman/Builds/Fresh/NB/src/StandAlone/inputs
