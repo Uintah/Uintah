@@ -59,6 +59,9 @@ $ups_basename    =~ s/.ups//;                     # Removing the extension .ups 
 # Read in the test data from xml file
 my $i = 0;
 my @tests = @{$data->{Test}};
+
+#print Dumper(@tests);         #debugging
+       
 for($i = 0; $i<=$#tests; $i++){
   my $test            =$tests[$i];
   $test_title[$i]     =$test->{Title}[0];          # test title
@@ -71,7 +74,7 @@ $num_of_tests=$#tests;
 
 #__________________________________
 # make a symbolic link to the compareUtils
-for ($i=0;$i<$num_of_tests;$i++){
+for ($i=0;$i<=$num_of_tests;$i++){
    if( $compUtil_cmd[$i] ne ''){
     my @stripped_cmd = split(/ /,$compUtil_cmd[$i]);  # remove command options
     my $cmd = `which $stripped_cmd[0]`;
@@ -151,7 +154,7 @@ open(statsFile,">out.stat");
 
 #__________________________________
 # Creating new ups files for each test
-for ($i=0;$i<$num_of_tests;$i++){
+for ($i=0;$i<=$num_of_tests;$i++){
   if (! -e $upsFile ){
     print "\n\nERROR(run_tests.pl): $upsFile, File Not Found";
     print " Now exiting\n";
