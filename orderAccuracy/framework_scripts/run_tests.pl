@@ -90,10 +90,17 @@ my $nTest=0;
 my $line;
 my $insideTest=0;
 my $insideAllTest=0;
+my $insideComment=0;
 
 open(tstFile, "$ARGV[0]") or die("ERROR(run_tests.pl): $ARGV[0], File not found");
 
 while ($line=<tstFile>){
+  if($line=~ /\<!--/){
+    $insideComment=1;
+  }
+  if($line=~ /--\>/){
+    $insideComment=0;
+  }
   if($line=~ /\<AllTests\>/){
     $insideAllTest=1;
   }
@@ -108,7 +115,7 @@ while ($line=<tstFile>){
   } 
   
   # inside of <AllTests>
-  if($insideAllTest){
+  if($insideAllTest && !$insideComment){
     if ($line=~ /\<replace_lines\>/){       # find <replace_lines>
       $nLine=0;
       while (($line=<tstFile>) !~ /\<\/replace_lines\>/){
@@ -119,7 +126,7 @@ while ($line=<tstFile>){
   }
   
   # inside each <Test>
-  if($insideTest){
+  if($insideTest && !$insideComment){
     if ($line=~ /\<replace_lines\>/){       # find <replace_lines>
       $nLine=0;
       while (($line=<tstFile>) !~ /\<\/replace_lines\>/){
