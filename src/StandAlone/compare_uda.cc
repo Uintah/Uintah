@@ -159,6 +159,10 @@ bool compare(double a, double b, double abs_tolerance, double rel_tolerance)
 {
   // Return false only if BOTH absolute and relative comparisons fail.
 
+  if(isnan(a) || isnan(b)){
+    return false;
+  }
+
   double max_abs = fabs(a);
   if (fabs(b) > max_abs) max_abs = fabs(b);
   if (fabs(a - b) > abs_tolerance) {
@@ -173,34 +177,56 @@ bool compare(double a, double b, double abs_tolerance, double rel_tolerance)
 
 bool compare(float a, float b, double abs_tolerance, double rel_tolerance)
 {
+  if(isnan(a) || isnan(b)){
+    return false;
+  }
+
   return compare((double)a, (double)b, abs_tolerance, rel_tolerance);
 }
 
 bool compare(long64 a, long64 b, double /* abs_tolerance */,
              double /* rel_tolerance */)
 {
+  if(isnan(a) || isnan(b)){
+    return false;
+  }
+
   return (a == b); // longs should use an exact comparison
 }
 
 bool compare(int a, int b, double /* abs_tolerance */,
              double /* rel_tolerance */)
 {
+  if(isnan(a) || isnan(b)){
+    return false;
+  }
+
   return (a == b); // int should use an exact comparison
 }
 
 bool compare(Vector a, Vector b, double abs_tolerance, double rel_tolerance)
 {
+  if(isnan(a.length()) || isnan(b.length())){
+    return false;
+  }
+
   return compare(a.x(), b.x(), abs_tolerance, rel_tolerance) &&
     compare(a.y(), b.y(), abs_tolerance, rel_tolerance) &&
     compare(a.z(), b.z(), abs_tolerance, rel_tolerance);
 }
 
 bool compare(Point a, Point b, double abs_tolerance, double rel_tolerance)
-{ return compare(a.asVector(), b.asVector(), abs_tolerance, rel_tolerance); }
+{ 
+  return compare(a.asVector(), b.asVector(), abs_tolerance, rel_tolerance);
+}
 
 bool compare(const Matrix3& a, const Matrix3& b, double abs_tolerance,
              double rel_tolerance)
 {
+  if(isnan(a.Norm()) || isnan(b.Norm())){
+    return false;
+  }
+
   //  for (int i = 0; i < 3; i++)
   //    for (int j = 0; j < 3; j++)
   //      if (!compare(a(i,j), b(i, j), abs_tolerance, rel_tolerance))
