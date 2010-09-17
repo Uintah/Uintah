@@ -87,7 +87,7 @@
     <failure_mean           spec="OPTIONAL DOUBLE" />
     <failure_std            spec="OPTIONAL DOUBLE" />
     <failure_distrib        spec="OPTIONAL STRING 'constant, gauss, weibull'" />
-    <failure_exponent       spec="OPTIONAL DOUBLE" />
+    <exponent               spec="OPTIONAL DOUBLE" />
     <failure_seed           spec="OPTIONAL INTEGER" />
     <failure_by_stress             spec="OPTIONAL BOOLEAN" />
     <scaling                       spec="OPTIONAL STRING 'none, kayenta'" />
