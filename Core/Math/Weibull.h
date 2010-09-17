@@ -80,10 +80,10 @@ public:
   // Include a volume scaling factor
   double C = pow(WeibRefVol_/PartVol,1./WeibMod_);
 
-  double eta = WeibMed_/pow(log(0.5),1./WeibMod_);
+  double eta = WeibMed_/pow(log(2.0),1./WeibMod_);
   
   // New version, easy to read and comprehend!
-  return C*eta*pow(log(y),1./WeibMod_);
+  return C*eta*pow(-log(y),1./WeibMod_);
 
 // Old way, hard to read
 //return WeibMed_*pow(log((*mr_)())/((PartVol/WeibRefVol_)*log(.5)),1/WeibMod_);
