@@ -234,11 +234,13 @@ void UCNH::getFailureStressOrStrainData(ProblemSpecP& ps)
 {
   d_epsf.mean   = 10.0; // Mean (median for Weibull) failure stress or strain
   d_epsf.std    = 0.0;  // Std. Dev or Weibull mod. for failure stres or strain
-  d_epsf.seed   = 0; // seed for weibull distribution generator
+  d_epsf.seed   = 0;    // seed for weibull distribution generator
   d_epsf.dist   = "constant";
   d_epsf.scaling = "none";
-  d_epsf.exponent  = 1.0; // Exponent used in vol. scaling of failure criteria
-  d_epsf.refVol = 1.0; // Reference volume for scaling failure criteria
+  // "exponent" is the value of n used in c=(Vbar/V)^(1/n)
+  // By setting the default value to DBL_MAX, that makes 1/n=0, which makes c=1
+  d_epsf.exponent= DBL_MAX; //Exponent used in vol. scaling of failure criteria
+  d_epsf.refVol  = 1.0;     // Reference volume for scaling failure criteria
 
   ps->require("failure_mean",d_epsf.mean); //Mean val. of failure stress/strain
   ps->get("failure_distrib", d_epsf.dist); //"constant", "weibull" or "gauss"
@@ -247,6 +249,7 @@ void UCNH::getFailureStressOrStrainData(ProblemSpecP& ps)
   if(d_epsf.dist!="constant"){
     ps->require("failure_std", d_epsf.std); //Std dev (Gauss) or Weibull modulus
   }
+
   ps->get("scaling", d_epsf.scaling); //"none" or "kayenta"
   if(d_epsf.scaling!="none"){
     // If doing some sort of scaling, require user to provide a reference volume
@@ -323,6 +326,7 @@ void UCNH::outputProblemSpec(ProblemSpecP& ps, bool output_cm_tag)
     cm_ps->appendElement("failure_seed" ,    d_epsf.seed);
     cm_ps->appendElement("failure_distrib",  d_epsf.dist);
     cm_ps->appendElement("failure_criteria", d_failure_criteria);
+    cm_ps->appendElement("scaling",          d_epsf.scaling);
     cm_ps->appendElement("reference_volume", d_epsf.refVol);
 
     if(d_failure_criteria=="MohrColoumb"){
@@ -626,16 +630,18 @@ void UCNH::initializeCMData(const Patch* patch,
     
     if (d_epsf.dist == "gauss"){
       // Initialize a gaussian random number generator
-      SCIRun::Gaussian gaussGen(d_epsf.mean, d_epsf.std, d_epsf.seed);
+      SCIRun::Gaussian gaussGen(d_epsf.mean,d_epsf.std,d_epsf.seed,
+                                d_epsf.refVol,d_epsf.exponent);
       
       for(;iter != pset->end();iter++){
         pBeBar[*iter]         = Identity;
-        pFailureStrain[*iter] = fabs(gaussGen.rand());
+        pFailureStrain[*iter] = fabs(gaussGen.rand(pVolume[*iter]));
         pLocalized[*iter]     = 0;
       }
     } else if (d_epsf.dist == "weibull"){
       // Initialize a weibull random number generator
-      SCIRun::Weibull weibGen(d_epsf.mean,d_epsf.std,d_epsf.refVol,d_epsf.seed);
+      SCIRun::Weibull weibGen(d_epsf.mean,d_epsf.std,d_epsf.refVol,
+                              d_epsf.seed,d_epsf.exponent);
 
       for(;iter != pset->end();iter++){
         pBeBar[*iter]         = Identity;

@@ -56,13 +56,16 @@ class SCISHARE Gaussian {
 public:
   double mean_;
   double sigma_;
+  double refVol_;
+  double exponent_;
   MusilRNG *mr_;
-  Gaussian(double mean=0, double sigma=1, int seed=0);
+  Gaussian(double mean=0, double sigma=1, int seed=0,
+           double refVol=1, double exponent=0);
   ~Gaussian();
 
   //   pick a random value from this Gaussian distribution
   //      - implemented using the Box-Muller transformation
-  inline double rand() {return sqrt(-2*log((*mr_)()))*cos(2*M_PI*(*mr_)())*sigma_+mean_;}
+  inline double rand(double PartVol) {return sqrt(-2*log((*mr_)()))*cos(2*M_PI*(*mr_)())*sigma_+mean_;}
 
   //   probablility that x was picked from this Gaussian distribution
   double prob(double x) {return exp(-(x-mean_)*(x-mean_)/(2*sigma_*sigma_))/(sigma_*sqrt(2*M_PI));}
