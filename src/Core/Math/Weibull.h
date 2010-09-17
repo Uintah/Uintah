@@ -35,6 +35,10 @@
  *   Department of Mechanical Engineering
  *   University of Utah
  *   April 2009
+ *  Modified by:
+ *   Jim Guilkey
+ *   Schlumberger
+ *   September 2010
  *
  *  Copyright (C) 2009 SCI Group
  */
@@ -70,10 +74,19 @@ public:
   // Effects in Damage Models for Failure and Fragmentation"
   // by R.M. Brannon and O.E. Strack, Sandia National Laboratories
   inline double rand(double PartVol) {
- return WeibMed_*pow(log((*mr_)())/((PartVol/WeibRefVol_)*log(0.5)),1/WeibMod_);
 
-        // med*(log(x)/((V/Vbar)*log(0.5)))^(1/m)
-        // med*((log(x)/log(0.5))*(Vbar/V))^(1/m)
+  // Get the uniformly distributed random #
+  double y = (*mr_)();
+  // Include a volume scaling factor
+  double C = pow(WeibRefVol_/PartVol,1./WeibMod_);
+
+  double eta = WeibMed_/pow(log(0.5),1./WeibMod_);
+  
+  // New version, easy to read and comprehend!
+  return C*eta*pow(log(y),1./WeibMod_);
+
+// Old way, hard to read
+//return WeibMed_*pow(log((*mr_)())/((PartVol/WeibRefVol_)*log(.5)),1/WeibMod_);
   }
 
   // Probability that x was picked from this Weibull distribution
