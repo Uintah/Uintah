@@ -102,9 +102,9 @@ public:
                      *exp(-pow(x/(C*eta),WeibMod_));
 
    // Old and evidently wrong
-   return (WeibMod_/(PartVol/WeibRefVol_))*
-           pow((x-WeibMed_)/(PartVol/WeibRefVol_),WeibMod_-1)*
-           exp(-pow((x-WeibMed_)/(PartVol/WeibRefVol_),WeibMod_));
+//   return (WeibMod_/(PartVol/WeibRefVol_))*
+//           pow((x-WeibMed_)/(PartVol/WeibRefVol_),WeibMod_-1)*
+//           exp(-pow((x-WeibMed_)/(PartVol/WeibRefVol_),WeibMod_));
 
   }
 };
