@@ -48,7 +48,6 @@
 #define SCI_WEIBULL_H__
 
 #include <Core/Math/MusilRNG.h>
-#include <Core/Math/Trig.h> // for M_PI
 #include <cmath>
 
 #include <Core/Math/share.h>
@@ -57,12 +56,12 @@ namespace SCIRun {
 
 class SCISHARE Weibull {
 public:
-  double WeibMed_;
+  double WeibMean_;
   double WeibMod_;
   double WeibRefVol_;
   double WeibExp_;
   MusilRNG *mr_;
-  Weibull(double WeibMed=0,
+  Weibull(double WeibMean=0,
           double WeibMod=1,
           double WeibRefVol=1,
           int WeibSeed=0,
@@ -78,10 +77,11 @@ public:
   // Get the uniformly distributed random #
   double y = (*mr_)();
   // Include a volume scaling factor
-  double C = pow(WeibRefVol_/PartVol,1./WeibMod_);
+  double C = pow(WeibRefVol_/PartVol,1./WeibExp_);
 
-  double eta = WeibMed_/pow(log(2.0),1./WeibMod_);
-  
+  double eta = WeibMean_/tgamma(1./WeibMod_ + 1.0);
+  //double eta = WeibMed_/pow(log(2.0),1./WeibMod_);
+
   // New version, easy to read and comprehend!
   return C*eta*pow(-log(y),1./WeibMod_);
 
@@ -94,9 +94,10 @@ public:
   double prob(double x, double PartVol) {
 
    // The following is new and hopefully correct
-   double C = pow(WeibRefVol_/PartVol,1./WeibMod_);
+   double C = pow(WeibRefVol_/PartVol,1./WeibExp_);
 
-   double eta = WeibMed_/pow(log(0.5),1./WeibMod_);
+   double eta = WeibMean_/tgamma(1./WeibMod_ + 1.0);
+   //double eta = WeibMed_/pow(log(2.0),1./WeibMod_);
 
    return WeibMod_/(C*eta)*pow(x/(C*eta),WeibMod_-1.)
                      *exp(-pow(x/(C*eta),WeibMod_));
