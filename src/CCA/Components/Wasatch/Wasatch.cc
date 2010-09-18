@@ -343,20 +343,15 @@ namespace Wasatch{
   {
     const double deltat = 1.0; // jcs should get this from an input file possibly?
 
-    for( int im=0; im<matls->size(); ++im ){
-
-      const int material = matls->get(im);
-
 //       std::cout << std::endl
-//                 << "Wasatch: executing 'Wasatch::computeDelT()' on all patches and material "
-//                 << material << std::endl;
+//                 << "Wasatch: executing 'Wasatch::computeDelT()' on all patches"
+//                 << std::endl;
 
       new_dw->put( Uintah::delt_vartype(deltat),
                    sharedState_->get_delt_label(),
                    Uintah::getLevel(patches) );
       //                   material );
       // jcs it seems that we cannot specify a material here.  Why not?
-    }
   }
 
   //------------------------------------------------------------------
