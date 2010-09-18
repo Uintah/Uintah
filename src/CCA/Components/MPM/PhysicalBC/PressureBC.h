@@ -136,6 +136,7 @@ WARNING
       GeometryPiece* d_surface;
       std::string d_surfaceType;
       long d_numMaterialPoints;
+      bool d_include_cylinder_ends;
 
       // Load curve information (Pressure and time)
       LoadCurve<double>* d_loadCurve;

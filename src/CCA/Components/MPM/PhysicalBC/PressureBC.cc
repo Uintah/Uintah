@@ -65,6 +65,7 @@ PressureBC::PressureBC(ProblemSpecP& ps, const GridP& grid)
   } else if (go_type == "cylinder") {
     d_surface = scinew CylinderGeometryPiece(child);
     d_surfaceType = "cylinder";
+    child->getWithDefault("include_ends",d_include_cylinder_ends,false);
   } else {
     throw ParameterNotFound("** ERROR ** No surface specified for pressure BC.",
                             __FILE__, __LINE__);
@@ -150,10 +151,10 @@ PressureBC::flagMaterialPoint(const Point& p,
   } else if (d_surfaceType == "cylinder") {
     // Create a cylindrical annulus with radius-|dxpp|, radius+|dxpp|
     double tol = 0.9*dxpp.minComponent();
-    CylinderGeometryPiece* cgp = dynamic_cast<CylinderGeometryPiece*>(d_surface);
+    CylinderGeometryPiece* cgp =dynamic_cast<CylinderGeometryPiece*>(d_surface);
 
     Vector add_ends = tol*(cgp->top()-cgp->bottom())
-                            /(cgp->top()-cgp->bottom()).length();
+                         /(cgp->top()-cgp->bottom()).length();
 
     GeometryPiece* outer = scinew CylinderGeometryPiece(cgp->top(), 
                                                      cgp->bottom(), 
@@ -162,9 +163,17 @@ PressureBC::flagMaterialPoint(const Point& p,
                                                      cgp->bottom(), 
                                                      cgp->radius()-tol);
 
-    GeometryPiece* end = scinew CylinderGeometryPiece(cgp->top()+add_ends, 
-                                                     cgp->bottom()-add_ends, 
-                                                     cgp->radius());
+    GeometryPiece* end;
+
+    if(d_include_cylinder_ends){
+       end = scinew CylinderGeometryPiece(cgp->top()+add_ends, 
+                                          cgp->bottom()-add_ends, 
+                                          cgp->radius());
+    }else{
+       end = scinew CylinderGeometryPiece(Point(9.999e99,0,0), 
+                                          Point(9.998e99,0,0), 
+                                          1.e-15);
+    }
 
     GeometryPiece* volume = scinew DifferenceGeometryPiece(outer, inner);
     if (volume->inside(p) || end->inside(p)){
