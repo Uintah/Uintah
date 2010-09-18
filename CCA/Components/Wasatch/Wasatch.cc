@@ -347,9 +347,9 @@ namespace Wasatch{
 
       const int material = matls->get(im);
 
-      std::cout << std::endl
-                << "Wasatch: executing 'Wasatch::computeDelT()' on all patches and material "
-                << material << std::endl;
+//       std::cout << std::endl
+//                 << "Wasatch: executing 'Wasatch::computeDelT()' on all patches and material "
+//                 << material << std::endl;
 
       new_dw->put( Uintah::delt_vartype(deltat),
                    sharedState_->get_delt_label(),
