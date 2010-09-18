@@ -118,8 +118,22 @@ namespace Wasatch{
         {
           const Expr::Tag fieldTag(fieldInfo.varlabel->getName(), fieldInfo.context );
 
-          if( tree_->has_expression( fieldTag ) )
-            fieldInfo.mode = Expr::COMPUTES;
+          if( tree_->has_expression( fieldTag ) ){
+            if( tree_->get_expression(fieldTag).is_placeholder() ){
+              // jcs: right now we need this to ensure that the
+              // initial conditions are properly pulled in. We will
+              // have problems when we start cleaving trees.  That
+              // will result in improper DW being used. We probably
+              // need to tag expressions that are placeholders and
+              // created from cleaving to distinguish between those
+              // and expressions whose values are determined from
+              // prior timestep information.
+              fieldInfo.mode = Expr::REQUIRES;
+              fieldInfo.useOldDataWarehouse = true;
+            }
+            else
+              fieldInfo.mode = Expr::COMPUTES;
+          }
           else
             fieldInfo.mode = Expr::REQUIRES;
         }
@@ -184,6 +198,7 @@ namespace Wasatch{
     // associated with this patch and task
     //
     // This is called each time a task is executed.
+//     fml_->dump_fields(cout);
     fml_->allocate_fields( info );
     tree_->bind_fields( *fml_ );
     tree_->bind_operators( opDB );
@@ -217,14 +232,15 @@ namespace Wasatch{
 
         const int material = materials->get(im);
         try{
-          cout << endl
-               << "Wasatch: executing '" << taskName_
-               << "' for patch " << patch->getID()
-               << " and material " << material
-               << endl;
+//           cout << endl
+//                << "Wasatch: executing graph '" << taskName_
+//                << "' for patch " << patch->getID()
+//                << " and material " << material
+//                << endl;
           bind_fields_operators( Expr::AllocInfo( oldDW, newDW, material, patch ),
                                  opdb );
           tree_->execute_tree();
+//           cout << "Wasatch: done executing graph '" << taskName_ << "'" << endl;
         }
         catch( exception& e ){
           cout << e.what() << endl;

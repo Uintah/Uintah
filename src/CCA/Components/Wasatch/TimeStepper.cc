@@ -215,10 +215,10 @@ namespace Wasatch{
         
         const int material = materials->get(im);
 
-        std::cout << std::endl
-                  << "Wasatch: executing 'TimeStepper::update_variables()' on patch "
-                  << patch->getID() << " and material " << material
-                  << std::endl;
+//         std::cout << std::endl
+//                   << "Wasatch: executing 'TimeStepper::update_variables()' on patch "
+//                   << patch->getID() << " and material " << material
+//                   << std::endl;
 
         // grab the timestep
         Uintah::delt_vartype deltat;
@@ -226,7 +226,7 @@ namespace Wasatch{
         //newDW->get( deltat, deltaTLabel_, Uintah::getLevel(patches), material );
         newDW->get( deltat, deltaTLabel_ );
 
-        cout << "TimeStepper::update_variables() : dt = " << deltat << endl;
+//         cout << "TimeStepper::update_variables() : dt = " << deltat << endl;
 
         //____________________________________________
         // update variables on this material and patch
