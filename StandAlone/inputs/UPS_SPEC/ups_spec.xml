@@ -118,6 +118,7 @@
       <bottom                 spec="REQUIRED VECTOR" />
       <top                    spec="REQUIRED VECTOR" />
       <radius                 spec="REQUIRED DOUBLE 'positive'" />
+      <include_ends           spec="OPTIONAL BOOLEAN" />
     </cylinder>
 
     <parallelepiped                 spec="OPTIONAL NO_DATA"
