@@ -137,9 +137,10 @@ PressureBC::getType() const
 // contains the surface on which the pressure is to be applied.
 bool
 PressureBC::flagMaterialPoint(const Point& p, 
-                              const Vector& dxpp) const
+                              const Vector& dxpp)
 {
   bool flag = false;
+  d_dxpp=dxpp;
   if (d_surfaceType == "box") {
     // Create box that is min-dxpp, max+dxpp;
     Box box = d_surface->getBoundingBox();
@@ -249,7 +250,8 @@ PressureBC::forcePerParticle(double time) const
 // Calculate the force vector to be applied to a particular
 // material point location
 Vector
-PressureBC::getForceVector(const Point& px, double forcePerParticle) const
+PressureBC::getForceVector(const Point& px, double forcePerParticle,
+                           const double time) const
 {
   Vector force(0.0,0.0,0.0);
   if (d_surfaceType == "box") {
@@ -264,7 +266,14 @@ PressureBC::getForceVector(const Point& px, double forcePerParticle) const
       normal = (gp->top()-gp->bottom())
               /(gp->top()-gp->bottom()).length();
     }
-    force = normal*forcePerParticle;
+    if(!d_axisymmetric_end){
+      force = normal*forcePerParticle;
+    }else{
+      double pArea = px.x()*d_dxpp.x()*1.0; /*(theta = 1 radian)*/
+      double press = pressure(time);
+      double fpP = pArea*press;
+      force = normal*fpP;
+    }
   } else if (d_surfaceType == "sphere") {
     SphereGeometryPiece* gp = dynamic_cast<SphereGeometryPiece*>(d_surface);
     Vector normal = gp->radialDirection(px);

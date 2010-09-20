@@ -90,7 +90,7 @@ WARNING
 
       // Locate and flag the material points to which this pressure BC is
       // to be applied. 
-      bool flagMaterialPoint(const Point& p, const Vector& dxpp) const;
+      bool flagMaterialPoint(const Point& p, const Vector& dxpp);
       
       // Get the load curve number for this pressure BC
       inline int loadCurveID() const {return d_loadCurve->getID();}
@@ -120,7 +120,8 @@ WARNING
       double forcePerParticle(double time) const;
 
       // Get the force vector to be applied at a point 
-      Vector getForceVector(const Point& px, double forcePerParticle) const;
+      Vector getForceVector(const Point& px, double forcePerParticle,
+                            const double time) const;
 
    private:
 
@@ -141,6 +142,9 @@ WARNING
 
       // Load curve information (Pressure and time)
       LoadCurve<double>* d_loadCurve;
+
+    public:
+      Vector d_dxpp;
 
       friend std::ostream& operator<<(std::ostream& out, const Uintah::PressureBC& bc);
    };

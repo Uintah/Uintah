@@ -1364,6 +1364,18 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdateMom1(SchedulerP& sched,
   t->computes(lb->pXXLabel);
   t->computes(lb->pDispLabel_preReloc);
 
+  //__________________________________
+  //  reduction variables
+  if(flags->d_reductionVars->momentum){
+    t->computes(lb->TotalMomentumLabel);
+  }
+  if(flags->d_reductionVars->KE){
+    t->computes(lb->KineticEnergyLabel);
+  }
+  if(flags->d_reductionVars->centerOfMass){
+    t->computes(lb->CenterOfMassPositionLabel);
+  }
+
   sched->addTask(t, patches, matls);
 }
 
@@ -1411,17 +1423,8 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdateMom2(SchedulerP& sched,
 
   //__________________________________
   //  reduction variables
-  if(flags->d_reductionVars->KE){
-    t->computes(lb->KineticEnergyLabel);
-  }
   if(flags->d_reductionVars->thermalEnergy){
     t->computes(lb->ThermalEnergyLabel);
-  }
-  if(flags->d_reductionVars->centerOfMass){
-    t->computes(lb->CenterOfMassPositionLabel);
-  }
-  if(flags->d_reductionVars->momentum){
-    t->computes(lb->TotalMomentumLabel);
   }
   if(flags->d_reductionVars->mass){
     t->computes(lb->TotalMassLabel);
@@ -1817,7 +1820,8 @@ void SerialMPM::initializePressureBC(const ProcessorGroup*,
           for(;iter != pset->end(); iter++){
             particleIndex idx = *iter;
             if (pLoadCurveID[idx] == nofPressureBCs) {
-              pExternalForce[idx] = pbc->getForceVector(px[idx], forcePerPart);
+              pExternalForce[idx] = pbc->getForceVector(px[idx], forcePerPart,
+                                                        time);
             }
           }
         } // matl loop
@@ -3103,7 +3107,7 @@ void SerialMPM::applyExternalLoads(const ProcessorGroup* ,
           } else {
             PressureBC* pbc = pbcP[loadCurveID];
             double force = forcePerPart[loadCurveID];
-            pExternalForce_new[idx] = pbc->getForceVector(px[idx], force);
+            pExternalForce_new[idx] = pbc->getForceVector(px[idx], force, time);
           }
         }
 
