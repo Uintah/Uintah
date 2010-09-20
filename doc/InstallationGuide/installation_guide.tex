@@ -363,7 +363,7 @@ ln -s ../lib/libteem.so libteem.so
 
 \subsection{VisIt Installation}
 
-The latest official release of VisIt is 2.0.2.  The VisIt build system
+The latest official release of VisIt is 2.1.0.  The VisIt build system
 has been changed to CMake, so building the UDA reader plugin for
 previous versions of VisIt (1.x) will no longer be supported, and
 CMake is now also required to build the plugin.
@@ -390,7 +390,7 @@ the official tarball releases.
 \subsubsection{Caveats}
 \label{subsec:VisIt_Caveats}
 \begin{itemize}
-\item If you are upgrading to 2.0 from an earlier version of VisIt
+\item If you are upgrading to 2.1 from an earlier version of VisIt
   (1.x or 2.0 beta), remove your uintah/build/VisIt directory before
   rerunning uintah's configure script, so it gets regenerated for the
   updated version of VisIt.
@@ -429,16 +429,16 @@ visit-install version platform directory
 The version and platform should be apparent from the name of the
 tarball.  You may need to make the script executable, and may need to
 run it as root, depending on what directory you are installing it to.
-For example, the 2.0.2 release for Ubuntu could be installed with:
+For example, the 2.1.0 release for Ubuntu could be installed with:
 \begin{verbatim}
 chmod +x visit-install
-./visit-install 2.0.2 linux-x86_64-ubuntu8 ``visit_bin_dir''
+./visit-install 2.1.0 linux-x86_64-ubuntu8 ``visit_bin_dir''
 \end{verbatim}
 
-If you are installing version 2.0.2, there was a bug in the release that
+If you are installing version 2.1.0, there was a bug in the release that
 hard codes an incorrect path to gcc and g++.  To fix it, open the file:
 \begin{verbatim}
-emacs ``visit_bin_dir''/2.0.2/``platform''/include/PluginVsInstall.cmake
+emacs ``visit_bin_dir''/2.1.0/``platform''/include/PluginVsInstall.cmake
 \end{verbatim}
 
 Comment out the following lines near the top of the file:
@@ -457,15 +457,15 @@ the VisIt webpage, or checkout a copy from the NERSC repository.
 \subsubsection{Downloading VisIt Tarball}
 \label{subsec:VisItVersion2_tarball}
 
-If using a packaged version, download the source tarball (version 2.0
+If using a packaged version, download the source tarball (version 2.1
 or later) and the build\_visit script from
 https://wci.llnl.gov/codes/visit/source.html.  Extract the tarball,
 make a build directory inside the visit directory, and copy
 build\_visit into it:
 
 \begin{verbatim}
-tar xzf visit2.0.2.tar.gz
-cd visit2.0.2
+tar xzf visit2.1.0.tar.gz
+cd visit2.1.0
 mkdir build
 cd build
 cp ../src/svn_bin/build_visit .
@@ -568,7 +568,7 @@ VISIT_OPTION_DEFAULT(VISIT_MPI_COMPILER /usr/bin/mpic++)
 \end{verbatim}
 
 Change directory to the ``src'' folder and run cmake (version 2.8 or
-later of CMake is required for VisIt 2.0).  Note, VisIt builds CMake for
+later of CMake is required for VisIt 2.1).  Note, VisIt builds CMake for
 you, so if your system CMake isn't new enough, use the one
 in the VisIt 'build' directory.
 
@@ -644,7 +644,7 @@ by hand. The instructions for doing this are carefully outlined in the
 VisIt Build Notes file,
 
 \begin{verbatim}
-https://wci.llnl.gov/codes/visit/2.0.2/BUILD_NOTES
+https://wci.llnl.gov/codes/visit/2.1.0/BUILD_NOTES
 \end{verbatim}
 
 \subsubsection{VisIt executable}
@@ -1251,7 +1251,7 @@ cp <some name>.conf ../src/config-site/
 \item Type make again. It should finish successfully and the VisIt executable will be in visit/src/bin
 \item Add 
 \begin{verbatim}
-#define VERSION "2.0.2"
+#define VERSION "2.1.0"
 \end{verbatim}  
 to src/include/visit-config.h
 \item Configure Uintah with (for example): 
