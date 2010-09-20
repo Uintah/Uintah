@@ -46,6 +46,9 @@ DEALINGS IN THE SOFTWARE.
 
 #define d_SMALL_NUM 1e-100
 
+//#define DELT_METHOD
+#undef DELT_METHOD
+
 using namespace Uintah;
 namespace Uintah {
 //__________________________________
@@ -225,6 +228,9 @@ void addRequires_Lodi(Task* t,
     // requires(Task::NewDW, lb->press_CCLabel,     press_matl,oims,gn, 0);
     // requires(Task::NewDW, lb->rho_CCLabel,       ice_matls, gn); 
     // requires(Task::NewDW, lb->speedSound_CCLabel,ice_matls, gn); 
+    /*`==========TESTING==========*/
+    t->requires(Task::OldDW, lb->press_CCLabel, press_matl, oims, gn,0); 
+    /*===========TESTING==========`*/
   }
   else if(where == "velFC_Exchange"){
     setLODI_bcs = false;
@@ -235,12 +241,18 @@ void addRequires_Lodi(Task* t,
     t->requires(Task::OldDW, lb->vel_CCLabel,       ice_matls, gn);
     t->requires(Task::NewDW, lb->rho_CCLabel,       ice_matls, gn); 
     t->requires(Task::NewDW, lb->speedSound_CCLabel,ice_matls, gn);
+/*`==========TESTING==========*/
+     t->requires(Task::OldDW, lb->press_CCLabel, press_matl, oims, gn,0); 
+/*===========TESTING==========`*/
   }
   else if(where == "implicitPressureSolve"){
     setLODI_bcs = true;
     t->requires(Task::OldDW, lb->vel_CCLabel,        ice_matls, gn);
     t->requires(Task::NewDW, lb->speedSound_CCLabel, ice_matls, gn);
     t->requires(Task::NewDW, lb->rho_CCLabel,        ice_matls, gn);
+/*`==========TESTING==========*/
+     t->requires(Task::OldDW, lb->press_CCLabel, press_matl, oims, gn,0); 
+/*===========TESTING==========`*/
   }
    
   else if(where == "imp_update_press_CC"){
@@ -250,6 +262,9 @@ void addRequires_Lodi(Task* t,
     t->requires(Task::ParentNewDW, lb->speedSound_CCLabel, ice_matls, gn);
     t->requires(Task::ParentNewDW, lb->rho_CCLabel,        ice_matls, gn);
     //t->requires(Task::NewDW, lb->press_CCLabel,     press_matl,oims,gn, 0);
+/*`==========TESTING==========*/
+     t->requires(Task::ParentOldDW, lb->press_CCLabel, press_matl, oims, gn,0); 
+/*===========TESTING==========`*/
   }
   else if(where == "CC_Exchange"){
     setLODI_bcs = true;
@@ -257,6 +272,12 @@ void addRequires_Lodi(Task* t,
     t->requires(Task::NewDW, lb->rho_CCLabel,       ice_matls, gn);    
     t->requires(Task::NewDW, lb->gammaLabel,        ice_matls, gn);
     t->requires(Task::NewDW, lb->speedSound_CCLabel,ice_matls, gn);
+    
+/*`==========TESTING==========*/
+     t->requires(Task::OldDW, lb->rho_CCLabel, ice_matls, gn);
+     t->requires(Task::OldDW, lb->temp_CCLabel, ice_matls, gn);
+     t->requires(Task::OldDW, lb->vel_CCLabel,  ice_matls, gn); 
+/*===========TESTING==========`*/
     
     t->computes(lb->vel_CC_XchangeLabel);
     t->computes(lb->temp_CC_XchangeLabel);
@@ -268,6 +289,13 @@ void addRequires_Lodi(Task* t,
     // requires(Task::NewDW, lb->vel_CCLabel,       ice_matls, gn); 
     // requires(Task::NewDW, lb->rho_CCLabel,       ice_matls, gn); 
     // requires(Task::NewDW, lb->speedSound_CCLabel,ice_matls, gn);
+/*`==========TESTING==========*/
+    t->requires(Task::OldDW, lb->rho_CCLabel, ice_matls, gn);
+    t->requires(Task::OldDW, lb->temp_CCLabel,ice_matls, gn);
+    t->requires(Task::OldDW, lb->vel_CCLabel, ice_matls, gn); 
+/*===========TESTING==========`*/
+    
+    t->requires(Task::OldDW, lb->vel_CCLabel,ice_matls, gn);
   }else{
     throw InternalError("ERROR:ICE: addRequires_Lodi: no preprocessing for this task ("+where+")", __FILE__, __LINE__);
   }
@@ -308,10 +336,15 @@ void  preprocess_Lodi_BCs(DataWarehouse* old_dw,
                           Lodi_variable_basket* var_basket)
 {
   cout_doing << "preprocess_Lodi_BCs on patch "<<patch->getID()<< endl;
-  Ghost::GhostType  gn  = Ghost::None;
 
   Material* matl = sharedState->getMaterial(var_basket->iceMatl_indx);
   int indx = matl->getDWIndex();  
+  Ghost::GhostType  gn  = Ghost::None;
+  
+  delt_vartype delT;
+  const Level* level   = patch->getLevel();
+  old_dw->get(delT, sharedState->get_delt_label(),level);
+  lv->delT = delT;
   
   //__________________________________
   //    Equilibration pressure  ICE & MPMICE
@@ -321,6 +354,10 @@ void  preprocess_Lodi_BCs(DataWarehouse* old_dw,
     new_dw->get(lv->press_CC,  lb->press_equil_CCLabel, 0,  patch,gn,0);
     new_dw->get(lv->rho_CC,    lb->rho_CCLabel,        indx,patch,gn,0);
     new_dw->get(lv->speedSound,lb->speedSound_CCLabel, indx,patch,gn,0);
+    
+    /*`==========TESTING==========*/
+    old_dw->get(lv->press_old,   lb->press_CCLabel,       0,patch,gn,0);
+    /*===========TESTING==========`*/
   }
   //__________________________________
   //    FC exchange
@@ -335,6 +372,11 @@ void  preprocess_Lodi_BCs(DataWarehouse* old_dw,
     new_dw->get(lv->press_CC,   lb->press_CCLabel,      0,   patch,gn,0);  
     new_dw->get(lv->rho_CC,     lb->rho_CCLabel,        indx,patch,gn,0);
     new_dw->get(lv->speedSound, lb->speedSound_CCLabel, indx,patch,gn,0); 
+    
+    /*`==========TESTING==========*/
+    old_dw->get(lv->press_old,   lb->press_CCLabel,       0,patch,gn,0);
+    /*===========TESTING==========`*/
+    
   }
   else if(where == "imp_update_press_CC"){ 
     setLodiBcs = true;
@@ -343,28 +385,48 @@ void  preprocess_Lodi_BCs(DataWarehouse* old_dw,
     new_dw->get(lv->rho_CC,     lb->rho_CCLabel,        indx,patch,gn,0);
     new_dw->get(lv->speedSound, lb->speedSound_CCLabel, indx,patch,gn,0); 
     sub_new_dw->get(lv->press_CC,lb->press_CCLabel,      0,  patch,gn,0);
+    
+    /*`==========TESTING==========*/
+    old_dw->get(lv->press_old,   lb->press_CCLabel,       0,patch,gn,0);
+    /*===========TESTING==========`*/
   }
   //__________________________________
   //    cc_ Exchange
-  else if(where == "CC_Exchange" && matl_indx == indx){
-    setLodiBcs = true;
-    new_dw->get(lv->vel_CC,     lb->vel_CC_XchangeLabel,indx,patch,gn,0);
-    new_dw->get(lv->press_CC,   lb->press_CCLabel,      0,   patch,gn,0);  
-    new_dw->get(lv->rho_CC,     lb->rho_CCLabel,        indx,patch,gn,0);
-    new_dw->get(lv->gamma,      lb->gammaLabel,         indx,patch,gn,0);
-    new_dw->get(lv->speedSound, lb->speedSound_CCLabel, indx,patch,gn,0);
+  else if(where == "CC_Exchange"){
+    if (matl_indx == indx) {
+      setLodiBcs = true;
+      //var_basket->Li_scale = 1.0;
+      new_dw->get(lv->vel_CC,     lb->vel_CC_XchangeLabel,indx,patch,gn,0);
+      new_dw->get(lv->press_CC,   lb->press_CCLabel,      0,   patch,gn,0);  
+      new_dw->get(lv->rho_CC,     lb->rho_CCLabel,        indx,patch,gn,0);
+      new_dw->get(lv->gamma,      lb->gammaLabel,         indx,patch,gn,0);
+      new_dw->get(lv->speedSound, lb->speedSound_CCLabel, indx,patch,gn,0);
+
+      /*`==========TESTING==========*/
+      old_dw->get(lv->vel_old,   lb->vel_CCLabel,        indx,patch,gn,0);
+      old_dw->get(lv->temp_old,  lb->temp_CCLabel,       indx,patch,gn,0);
+      /*===========TESTING==========`*/
+    }
   }
   
 
   //__________________________________
   //    Advection
-  else if(where == "Advection" && matl_indx == indx){
-    setLodiBcs = true;
-    new_dw->get(lv->rho_CC,    lb->rho_CCLabel,        indx,patch,gn,0); 
-    new_dw->get(lv->vel_CC,    lb->vel_CCLabel,        indx,patch,gn,0);
-    new_dw->get(lv->speedSound,lb->speedSound_CCLabel, indx,patch,gn,0); 
-    new_dw->get(lv->gamma,     lb->gammaLabel,         indx,patch,gn,0); 
-    new_dw->get(lv->press_CC,  lb->press_CCLabel,      0,   patch,gn,0); 
+  else if(where == "Advection"){
+      if (matl_indx == indx) {
+      setLodiBcs = true;
+      //var_basket->Li_scale = 1.0;
+      new_dw->get(lv->rho_CC,    lb->rho_CCLabel,        indx,patch,gn,0); 
+      new_dw->get(lv->vel_CC,    lb->vel_CCLabel,        indx,patch,gn,0);
+      new_dw->get(lv->speedSound,lb->speedSound_CCLabel, indx,patch,gn,0); 
+      new_dw->get(lv->gamma,     lb->gammaLabel,         indx,patch,gn,0); 
+      new_dw->get(lv->press_CC,  lb->press_CCLabel,      0,   patch,gn,0); 
+      /*`==========TESTING==========*/
+      old_dw->get(lv->rho_old,   lb->rho_CCLabel,        indx,patch,gn,0);
+      old_dw->get(lv->vel_old,   lb->vel_CCLabel,        indx,patch,gn,0);
+      old_dw->get(lv->temp_old,  lb->temp_CCLabel,       indx,patch,gn,0);
+      /*===========TESTING==========`*/
+    }  
   } else{
     throw InternalError("ERROR:ICE: preprocess_Lodi_BCs: no preprocessing for this task ("+where+")", __FILE__, __LINE__);
   }
@@ -626,10 +688,10 @@ inline void Li(StaticArray<CCVariable<Vector> >& L,
   double L4 = normalVel * dVel_dx[dir[2]];  // u dw/dx
   double L5 = 0.5 * (normalVel + speedSound) * (dp_dx + A);
   
-  #if 1
-  cout << c << " default L1 " << L1 << " L5 " << L5
-     << " dVel_dx " << dVel_dx[n_dir]
-     << " dp_dx " << dp_dx << endl;  
+  #if 0
+  cout << "    " << c << " default L1 " << L1 << " L5 " << L5
+       << " dVel_dx " << dVel_dx[n_dir]
+       << " dp_dx " << dp_dx << endl;  
   #endif
   //__________________________________
   //  user_inputs
@@ -673,7 +735,6 @@ inline void Li(StaticArray<CCVariable<Vector> >& L,
     
     L1 = rightFace * (term1 + s[1]) + leftFace  * L1;
     L5 = leftFace  * (term1 + s[5]) + rightFace * L5;
-    cout << " L1: " << L1 << " L5: " << L5 << " term1 " << term1 << endl;
   }
   
   //__________________________________
@@ -807,12 +868,9 @@ void computeLi(StaticArray<CCVariable<Vector> >& L,
         double dp_dx   = (press[r] - press[l])/delta;
         Vector dVel_dx = (vel[r]   - vel[l])/delta;
      
-        if(face == Patch::xminus){
-//          drho_dx = 0.0;
-//          dp_dx   = 0.0;
-//          dVel_dx = 0.25*dVel_dx;
-          dp_dx = 0.25*dp_dx;
-        }
+/*`==========TESTING==========*/
+//        dVel_dx = user_inputs->Li_scale * dVel_dx; 
+/*===========TESTING==========`*/
         
         vector<double> s(6);
         characteristic_source_terms(dir, grav, rho[c], speedSound[c], s);
@@ -900,6 +958,11 @@ int FaceDensity_LODI(const Patch* patch,
   constCCVariable<double>& speedSound = lv->speedSound;
   constCCVariable<Vector>& vel_CC     = lv->vel_CC;  
   
+/*`==========TESTING==========*/
+  constCCVariable<double>& rho_old     = lv->rho_old;
+  double delT = lv->delT; 
+/*===========TESTING==========`*/
+  
   IntVector axes = patch->getFaceAxes(face);
   int P_dir = axes[0];  // principal direction
   
@@ -923,12 +986,26 @@ int FaceDensity_LODI(const Patch* patch,
     double term1 = L[2][in][P_dir]/(vel_norm + d_SMALL_NUM);
     double term2 = L[5][in][P_dir]/(vel_norm + C);
     double term3 = L[1][in][P_dir]/(vel_norm - C);
-    double drho_dx = term1 + (term2 + term3)/(C * C); 
+/*`==========TESTING==========*/
+    double drho_dx =  term1 + (term2 + term3)/(C * C); 
+    
+//    double drho_dx = (term1 + (term2 + term3))/(C * C); 
+/*===========TESTING==========`*/ 
+        
+        
     
     rho_CC[c] = rho_CC[in] + plus_minus_one * dx * drho_dx;
     
     cout_dbg << " c " << c << " in " << in << " rho_CC[c] "<< rho_CC[c] 
-             << " drho_dx " << drho_dx << " rho_CC[in] " << rho_CC[in]<<endl;
+         << " drho_dx " << drho_dx << " rho_CC[in] " << rho_CC[in]<<endl;
+    
+/*`==========TESTING==========*/
+#ifdef DELT_METHOD
+    cout << "    " << c << "\t rho (gradient Calc): " << rho_CC[c];
+    rho_CC[c] = rho_old[c] - delT * (L[2][in][P_dir] + 0.5 * ( L[5][in][P_dir] + L[1][in][P_dir]))/(C*C);
+    cout << "    rho (delT Calc): " << rho_CC[c] <<  " rho_old " << rho_old[c] << endl;
+#endif
+/*===========TESTING==========`*/
   }
   nCells += iter.size();
   
@@ -989,6 +1066,13 @@ int FaceVel_LODI(const Patch* patch,
   StaticArray<CCVariable<Vector> >& L = lv->Li;      
   constCCVariable<double>& rho_CC     = lv->rho_CC;
   constCCVariable<double>& speedSound = lv->speedSound;
+  
+  
+ /*`==========TESTING==========*/
+  constCCVariable<Vector>& vel_old    = lv->vel_old;
+  double delT = lv->delT; 
+/*===========TESTING==========`*/
+  
 
   IntVector dir= patch->getFaceAxes(face);                 
   int P_dir = dir[0];  // principal direction
@@ -1027,7 +1111,19 @@ int FaceVel_LODI(const Patch* patch,
     
     cout_dbg << " c " << c << " in " << in << " vel_CC[c] "   << vel_CC[c][P_dir]
              << " dvel_dx " << dvel_norm_dx << " vel_CC[in] " << vel_CC[in][P_dir]<<endl;
+             
+/*`==========TESTING==========*/
+#ifdef DELT_METHOD
+    cout << "    " << c << "\t vel (gradient calc): " << vel_CC[c][P_dir];
+
+    vel_CC[c][P_dir] = vel_old[c][P_dir] - delT * (0.5 * ( L[5][in][P_dir] - L[1][in][P_dir]))/(rho_CC[c] * C); 
+    vel_CC[c][dir1]  = 0.0;
+    vel_CC[c][dir2]  = 0.0;
     
+    cout << "    vel (delT calc): " << vel_CC[c][P_dir] <<  " vel_old " << vel_old[c][P_dir] << endl;
+#endif
+/*===========TESTING==========`*/
+             
   }
   nCells += iter.size();
   
@@ -1088,6 +1184,11 @@ int FaceTemp_LODI(const Patch* patch,
   constCCVariable<double>& gamma     = lv->gamma;
   constCCVariable<double>& rho_CC    = lv->rho_CC;
   constCCVariable<Vector>& vel_CC   = lv->vel_CC;
+
+ /*`==========TESTING==========*/
+  constCCVariable<double>& temp_old    = lv->temp_old;
+  double delT = lv->delT; 
+/*===========TESTING==========`*/
               
   IntVector axes = patch->getFaceAxes(face);
   int P_dir = axes[0];  // principal direction
@@ -1119,13 +1220,17 @@ int FaceTemp_LODI(const Patch* patch,
    
     cout_dbg << " c " << c << " in " << in << " temp_CC[c] "<< temp_CC[c]
              << " dtemp_dx " << dtemp_dx << " temp_CC[in] " << temp_CC[in] << endl;
-     
-    cout_dbg << " term1 " << term1
-             << " term2 " << term2
-             << " term3 " << term3
-             << " term4 " << term4
-             << " term5 " << term5
-             << " dtemp_dx " << dtemp_dx << endl;
+             
+/*`==========TESTING==========*/
+
+#ifdef DELT_METHOD
+    cout << "    " << c << "\t temp (gradient calc): " << temp_CC[c];
+    term1 = temp_CC[in]/(rho_CC[in] * C * C);
+    
+    temp_CC[c] = temp_old[c] - delT * term1 * ( -L[2][in][P_dir] + 0.5 * (gamma[in] - 1.0) * (L[5][in][P_dir] + L[1][in][P_dir]) ) ;
+    cout << "    temp (delT calc) " << temp_CC[c] <<  " temp_old " << temp_old[c] << endl;
+#endif
+/*===========TESTING==========`*/
   }
   nCells += iter.size();
 
@@ -1188,6 +1293,11 @@ int FacePress_LODI(const Patch* patch,
   Vector DX =patch->dCell();
   IntVector axes = patch->getFaceAxes(face);
   int P_dir = axes[0];  // principal direction
+
+ /*`==========TESTING==========*/
+  constCCVariable<double>& press_old    = lv->press_old;
+  double delT = lv->delT; 
+/*===========TESTING==========`*/
   
   IntVector offset = patch->faceDirection(face);
   double plus_minus_one = (double) offset[P_dir];
@@ -1214,6 +1324,15 @@ int FacePress_LODI(const Patch* patch,
     cout_dbg << " c " << c << " in " << in << " press_CC[c] "<< press_CC[c] 
              << " dpress_dx " << dpress_dx << " press_CC[in] " << press_CC[in]<<endl;
     #endif
+/*`==========TESTING==========*/
+#ifdef DELT_METHOD
+    cout << "    " << c << "\t press (gradient Calc): " << press_CC[c];
+    
+    press_CC[c] = press_old[c] - delT * 0.5 * (L[5][in][P_dir] + L[1][in][P_dir]);
+    
+    cout << "    press (delT calc): " << press_CC[c] <<  " press_old " << press_old[c] << endl;
+#endif
+/*===========TESTING==========`*/
   }
   nCells += iter.size();
   

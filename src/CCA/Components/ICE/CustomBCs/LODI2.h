@@ -70,7 +70,14 @@ namespace Uintah {
     constCCVariable<Vector> vel_CC;
     constCCVariable<double> press_CC;        
     constCCVariable<double> temp_CC;            
-    SCIRun::StaticArray<CCVariable<Vector> > Li;        
+    SCIRun::StaticArray<CCVariable<Vector> > Li;
+/*`==========TESTING==========*/
+    double delT; 
+    constCCVariable<double> rho_old;
+    constCCVariable<double> temp_old;
+    constCCVariable<Vector> vel_old;
+    constCCVariable<double> press_old;
+/*===========TESTING==========`*/        
   };
   
   void addRequires_Lodi(Task* t, 
