@@ -670,7 +670,8 @@ void ImpMPM::initializePressureBC(const ProcessorGroup*,
           for(;iter != pset->end(); iter++){
             particleIndex idx = *iter;
             if (pLoadCurveID[idx] == nofPressureBCs) {
-              pExternalForce[idx] = pbc->getForceVector(px[idx], forcePerPart);
+              pExternalForce[idx] = pbc->getForceVector(px[idx], forcePerPart,
+                                                        time);
             }
           }
 
@@ -1920,7 +1921,7 @@ void ImpMPM::applyExternalLoads(const ProcessorGroup* ,
             } else {
               PressureBC* pbc = pbcP[loadCurveID];
               double force = forceMagPerPart[loadCurveID];
-              pExternalForce_new[idx] = pbc->getForceVector(px[idx], force);
+              pExternalForce_new[idx] = pbc->getForceVector(px[idx],force,time);
             }
           }
         } //end d0_PressureBCs

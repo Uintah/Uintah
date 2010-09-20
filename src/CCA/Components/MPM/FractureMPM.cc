@@ -1209,7 +1209,8 @@ void FractureMPM::initializePressureBC(const ProcessorGroup*,
           for(;iter != pset->end(); iter++){
             particleIndex idx = *iter;
             if (pLoadCurveID[idx] == nofPressureBCs) {
-              pExternalForce[idx] = pbc->getForceVector(px[idx], forcePerPart);
+              pExternalForce[idx] = pbc->getForceVector(px[idx], forcePerPart,
+                                                        time);
             }
           }
         } // matl loop
@@ -2225,7 +2226,7 @@ void FractureMPM::applyExternalLoads(const ProcessorGroup* ,
             } else {
               PressureBC* pbc = pbcP[loadCurveID];
               double force = forcePerPart[loadCurveID];
-              pExternalForce_new[idx] = pbc->getForceVector(px[idx], force);
+              pExternalForce_new[idx] = pbc->getForceVector(px[idx],force,time);
             }
           }
 
