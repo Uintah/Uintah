@@ -504,7 +504,8 @@
       
       <LODI                 spec="OPTIONAL NO_DATA">
         <press_infinity     spec="REQUIRED DOUBLE 'positive'" />
-        <sigma              spec="REQUIRED DOUBLE '0, 1'"/>
+        <sigma              spec="REQUIRED DOUBLE '0, 3.15'"/>
+        <Li_scale           spec="OPTIONAL DOUBLE '0, 1.0'"/>
         <material           spec="REQUIRED STRING"/>
       </LODI>    
       

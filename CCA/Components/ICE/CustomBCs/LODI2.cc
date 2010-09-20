@@ -141,6 +141,7 @@ bool read_LODI_BC_inputs(const ProblemSpecP& prob_spec,
     }
     lodi->require("press_infinity",     vb->press_infinity);
     lodi->getWithDefault("sigma",       vb->sigma, 0.27);
+    lodi->getWithDefault("Li_scale",    vb->Li_scale, 1.0);
     
     ProblemSpecP params = lodi;
     Material* matl = sharedState->parseAndLookupMaterial(params, "material");
@@ -341,10 +342,12 @@ void  preprocess_Lodi_BCs(DataWarehouse* old_dw,
   int indx = matl->getDWIndex();  
   Ghost::GhostType  gn  = Ghost::None;
   
+/*`==========TESTING==========*/
   delt_vartype delT;
   const Level* level   = patch->getLevel();
   old_dw->get(delT, sharedState->get_delt_label(),level);
-  lv->delT = delT;
+  lv->delT = delT; 
+/*===========TESTING==========`*/
   
   //__________________________________
   //    Equilibration pressure  ICE & MPMICE
@@ -409,7 +412,6 @@ void  preprocess_Lodi_BCs(DataWarehouse* old_dw,
     }
   }
   
-
   //__________________________________
   //    Advection
   else if(where == "Advection"){
@@ -655,7 +657,7 @@ inline void Li(StaticArray<CCVariable<Vector> >& L,
                const IntVector& c,
                const Patch::FaceType face,
                const Vector domainLength,
-               const Lodi_variable_basket* user_inputs,
+               const Lodi_variable_basket* vb,
                const double maxMach,
                const vector<double>& s,
                const double press,
@@ -694,9 +696,9 @@ inline void Li(StaticArray<CCVariable<Vector> >& L,
        << " dp_dx " << dp_dx << endl;  
   #endif
   //__________________________________
-  //  user_inputs
-  double p_infinity = user_inputs->press_infinity;
-  double sigma      = user_inputs->sigma;
+  //  vb
+  double p_infinity = vb->press_infinity;
+  double sigma      = vb->sigma;
   
   //____________________________________________________________
   //  Modify the Li terms based on whether or not the normal
@@ -755,11 +757,12 @@ inline void Li(StaticArray<CCVariable<Vector> >& L,
   //__________________________________
   //  compute Di terms in the normal direction based on the 
   // modified Ls  See Sutherland Table 7
-  L[1][c][n_dir] = L1;
-  L[2][c][n_dir] = L2;
-  L[3][c][n_dir] = L3;
-  L[4][c][n_dir] = L4;
-  L[5][c][n_dir] = L5;
+  double scale = vb->Li_scale;
+  L[1][c][n_dir] = L1*scale;
+  L[2][c][n_dir] = L2*scale;
+  L[3][c][n_dir] = L3*scale;
+  L[4][c][n_dir] = L4*scale;
+  L[5][c][n_dir] = L5*scale;
 
   
 
@@ -959,8 +962,10 @@ int FaceDensity_LODI(const Patch* patch,
   constCCVariable<Vector>& vel_CC     = lv->vel_CC;  
   
 /*`==========TESTING==========*/
+#ifdef DELT_METHOD
   constCCVariable<double>& rho_old     = lv->rho_old;
   double delT = lv->delT; 
+#endif
 /*===========TESTING==========`*/
   
   IntVector axes = patch->getFaceAxes(face);
@@ -992,13 +997,12 @@ int FaceDensity_LODI(const Patch* patch,
 //    double drho_dx = (term1 + (term2 + term3))/(C * C); 
 /*===========TESTING==========`*/ 
         
-        
-    
     rho_CC[c] = rho_CC[in] + plus_minus_one * dx * drho_dx;
     
+    #if 0
     cout_dbg << " c " << c << " in " << in << " rho_CC[c] "<< rho_CC[c] 
          << " drho_dx " << drho_dx << " rho_CC[in] " << rho_CC[in]<<endl;
-    
+    #endif
 /*`==========TESTING==========*/
 #ifdef DELT_METHOD
     cout << "    " << c << "\t rho (gradient Calc): " << rho_CC[c];
@@ -1067,13 +1071,13 @@ int FaceVel_LODI(const Patch* patch,
   constCCVariable<double>& rho_CC     = lv->rho_CC;
   constCCVariable<double>& speedSound = lv->speedSound;
   
-  
  /*`==========TESTING==========*/
+#ifdef DELT_METHOD
   constCCVariable<Vector>& vel_old    = lv->vel_old;
   double delT = lv->delT; 
+#endif
 /*===========TESTING==========`*/
   
-
   IntVector dir= patch->getFaceAxes(face);                 
   int P_dir = dir[0];  // principal direction
   int dir1  = dir[1];  // transverse
@@ -1109,9 +1113,10 @@ int FaceVel_LODI(const Patch* patch,
     vel_CC[c][dir1]  = vel_CC[in][dir1] + plus_minus_one * dx * dvel_dir1_dx;
     vel_CC[c][dir2]  = vel_CC[in][dir2] + plus_minus_one * dx * dvel_dir2_dx;
     
+    #if 0
     cout_dbg << " c " << c << " in " << in << " vel_CC[c] "   << vel_CC[c][P_dir]
              << " dvel_dx " << dvel_norm_dx << " vel_CC[in] " << vel_CC[in][P_dir]<<endl;
-             
+    #endif         
 /*`==========TESTING==========*/
 #ifdef DELT_METHOD
     cout << "    " << c << "\t vel (gradient calc): " << vel_CC[c][P_dir];
@@ -1186,8 +1191,10 @@ int FaceTemp_LODI(const Patch* patch,
   constCCVariable<Vector>& vel_CC   = lv->vel_CC;
 
  /*`==========TESTING==========*/
+#ifdef DELT_METHOD
   constCCVariable<double>& temp_old    = lv->temp_old;
-  double delT = lv->delT; 
+  double delT = lv->delT;
+#endif 
 /*===========TESTING==========`*/
               
   IntVector axes = patch->getFaceAxes(face);
@@ -1218,9 +1225,10 @@ int FaceTemp_LODI(const Patch* patch,
     
     temp_CC[c] = temp_CC[in] + plus_minus_one * dx * dtemp_dx;
    
+    #if 0
     cout_dbg << " c " << c << " in " << in << " temp_CC[c] "<< temp_CC[c]
              << " dtemp_dx " << dtemp_dx << " temp_CC[in] " << temp_CC[in] << endl;
-             
+    #endif    
 /*`==========TESTING==========*/
 
 #ifdef DELT_METHOD
@@ -1295,8 +1303,10 @@ int FacePress_LODI(const Patch* patch,
   int P_dir = axes[0];  // principal direction
 
  /*`==========TESTING==========*/
+#ifdef DELT_METHOD
   constCCVariable<double>& press_old    = lv->press_old;
-  double delT = lv->delT; 
+  double delT = lv->delT;
+#endif 
 /*===========TESTING==========`*/
   
   IntVector offset = patch->faceDirection(face);
@@ -1320,7 +1330,8 @@ int FacePress_LODI(const Patch* patch,
     double dpress_dx = term1 + term2;
 
     press_CC[c] = press_CC[in] + plus_minus_one * dx * dpress_dx; 
-    #if 1    
+    
+    #if 0    
     cout_dbg << " c " << c << " in " << in << " press_CC[c] "<< press_CC[c] 
              << " dpress_dx " << dpress_dx << " press_CC[in] " << press_CC[in]<<endl;
     #endif
