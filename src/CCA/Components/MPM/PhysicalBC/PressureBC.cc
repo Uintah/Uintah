@@ -65,7 +65,8 @@ PressureBC::PressureBC(ProblemSpecP& ps, const GridP& grid)
   } else if (go_type == "cylinder") {
     d_surface = scinew CylinderGeometryPiece(child);
     d_surfaceType = "cylinder";
-    child->getWithDefault("include_ends",d_include_cylinder_ends,false);
+    child->getWithDefault("cylinder_end",     d_cylinder_end,     false);
+    child->getWithDefault("axisymmetric_end", d_axisymmetric_end, false);
   } else {
     throw ParameterNotFound("** ERROR ** No surface specified for pressure BC.",
                             __FILE__, __LINE__);
@@ -149,39 +150,36 @@ PressureBC::flagMaterialPoint(const Point& p,
     delete volume;
 
   } else if (d_surfaceType == "cylinder") {
-    // Create a cylindrical annulus with radius-|dxpp|, radius+|dxpp|
     double tol = 0.9*dxpp.minComponent();
     CylinderGeometryPiece* cgp =dynamic_cast<CylinderGeometryPiece*>(d_surface);
 
-    Vector add_ends = tol*(cgp->top()-cgp->bottom())
-                         /(cgp->top()-cgp->bottom()).length();
+    if(!d_cylinder_end && !d_axisymmetric_end){  // Not a cylinder end
+      // Create a cylindrical annulus with radius-|dxpp|, radius+|dxpp|
+      GeometryPiece* outer = scinew CylinderGeometryPiece(cgp->top(), 
+                                                       cgp->bottom(), 
+                                                       cgp->radius()+tol);
+      GeometryPiece* inner = scinew CylinderGeometryPiece(cgp->top(), 
+                                                       cgp->bottom(), 
+                                                       cgp->radius()-tol);
 
-    GeometryPiece* outer = scinew CylinderGeometryPiece(cgp->top(), 
-                                                     cgp->bottom(), 
-                                                     cgp->radius()+tol);
-    GeometryPiece* inner = scinew CylinderGeometryPiece(cgp->top(), 
-                                                     cgp->bottom(), 
-                                                     cgp->radius()-tol);
+      GeometryPiece* volume = scinew DifferenceGeometryPiece(outer, inner);
+      if (volume->inside(p)){
+        flag = true;
+      }
+      delete volume;
 
-    GeometryPiece* end;
+    }else if(d_cylinder_end || d_axisymmetric_end){
+      Vector add_ends = tol*(cgp->top()-cgp->bottom())
+                           /(cgp->top()-cgp->bottom()).length();
 
-    if(d_include_cylinder_ends){
-       end = scinew CylinderGeometryPiece(cgp->top()+add_ends, 
-                                          cgp->bottom()-add_ends, 
-                                          cgp->radius());
-    }else{
-       end = scinew CylinderGeometryPiece(Point(9.999e99,0,0), 
-                                          Point(9.998e99,0,0), 
-                                          1.e-15);
+      GeometryPiece* end = scinew CylinderGeometryPiece(cgp->top()+add_ends, 
+                                                        cgp->bottom()-add_ends,
+                                                        cgp->radius());
+      if (end->inside(p)){
+         flag = true;
+      }
+      delete end;
     }
-
-    GeometryPiece* volume = scinew DifferenceGeometryPiece(outer, inner);
-    if (volume->inside(p) || end->inside(p)){
-      flag = true;
-    }
-    delete volume;
-    delete end;
-
   } else if (d_surfaceType == "sphere") {
     // Create a spherical shell with radius-|dxpp|, radius+|dxpp|
     double tol = dxpp.length();
@@ -195,7 +193,7 @@ PressureBC::flagMaterialPoint(const Point& p,
     delete volume;
 
   } else {
-    throw ParameterNotFound("** ERROR ** Unknown surface specified for pressure BC",
+    throw ParameterNotFound("ERROR: Unknown surface specified for pressure BC",
                             __FILE__, __LINE__);
   }
   
@@ -213,12 +211,20 @@ PressureBC::getSurfaceArea() const
     area = gp->volume()/gp->smallestSide();
   } else if (d_surfaceType == "cylinder") {
     CylinderGeometryPiece* gp = dynamic_cast<CylinderGeometryPiece*>(d_surface);
-    area = gp->surfaceArea();
+    if(!d_cylinder_end && !d_axisymmetric_end){  // Not a cylinder end
+      area = gp->surfaceArea();
+    }
+    else if(d_cylinder_end){
+      area = gp->surfaceAreaEndCaps()/2.0;
+    }
+    else if(d_axisymmetric_end){
+      area = (gp->radius()*gp->radius())/2.0; // area of a 1 radian wedge
+    }
   } else if (d_surfaceType == "sphere") {
     SphereGeometryPiece* gp = dynamic_cast<SphereGeometryPiece*>(d_surface);
     area = gp->surfaceArea();
   } else {
-    throw ParameterNotFound("** ERROR ** Unknown surface specified for pressure BC",
+    throw ParameterNotFound("ERROR: Unknown surface specified for pressure BC",
                             __FILE__, __LINE__);
   }
   return area;
@@ -254,13 +260,17 @@ PressureBC::getForceVector(const Point& px, double forcePerParticle) const
   } else if (d_surfaceType == "cylinder") {
     CylinderGeometryPiece* gp = dynamic_cast<CylinderGeometryPiece*>(d_surface);
     Vector normal = gp->radialDirection(px);
+    if(d_cylinder_end || d_axisymmetric_end){
+      normal = (gp->top()-gp->bottom())
+              /(gp->top()-gp->bottom()).length();
+    }
     force = normal*forcePerParticle;
   } else if (d_surfaceType == "sphere") {
     SphereGeometryPiece* gp = dynamic_cast<SphereGeometryPiece*>(d_surface);
     Vector normal = gp->radialDirection(px);
     force = normal*forcePerParticle;
   } else {
-    throw ParameterNotFound("** ERROR ** Unknown surface specified for pressure BC",
+    throw ParameterNotFound("ERROR: Unknown surface specified for pressure BC",
                             __FILE__, __LINE__);
   }
   return force;
