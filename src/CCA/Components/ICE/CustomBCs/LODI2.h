@@ -58,6 +58,7 @@ namespace Uintah {
     vector<Patch::FaceType> LodiFaces;
     bool saveLiTerms;
     Vector d_gravity;
+    double  Li_scale;
   };    
   //____________________________________________________________
   // This struct contains the additional variables required to 
