@@ -304,10 +304,11 @@ namespace Wasatch{
   {
     needCoords_ = true;
     switch (dir) {
-      case XDIR : xYVolCoord_=true; break;
-      case YDIR : yYVolCoord_=true; break;
-      case ZDIR : zYVolCoord_=true; break;
-      }
+    case XDIR : xYVolCoord_=true; break;
+    case YDIR : yYVolCoord_=true; break;
+    case ZDIR : zYVolCoord_=true; break;
+    default: assert(0);
+    }
   }
   template<> void Wasatch::requires_coordinate<ZVolField>( const Direction dir )
   {
