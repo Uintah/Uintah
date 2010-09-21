@@ -77,9 +77,9 @@ namespace Wasatch{
 
 
     const bool log = true;
-    graphCategories_[ INITIALIZATION     ] = new GraphHelper( new Expr::ExpressionFactory(log) );
-    graphCategories_[ TIMESTEP_SELECTION ] = new GraphHelper( new Expr::ExpressionFactory(log) );
-    graphCategories_[ ADVANCE_SOLUTION   ] = new GraphHelper( new Expr::ExpressionFactory(log) );
+    graphCategories_[ INITIALIZATION     ] = scinew GraphHelper( scinew Expr::ExpressionFactory(log) );
+    graphCategories_[ TIMESTEP_SELECTION ] = scinew GraphHelper( scinew Expr::ExpressionFactory(log) );
+    graphCategories_[ ADVANCE_SOLUTION   ] = scinew GraphHelper( scinew Expr::ExpressionFactory(log) );
   }
 
   //--------------------------------------------------------------------
@@ -137,8 +137,8 @@ namespace Wasatch{
       adaptors_.push_back( parse_equation( transEqnParams, graphCategories_ ) );
     }
 
-    timeStepper_ = new TimeStepper( sharedState_->get_delt_label(),
-                                    *graphCategories_[ ADVANCE_SOLUTION ]->exprFactory );
+    timeStepper_ = scinew TimeStepper( sharedState_->get_delt_label(),
+                                       *graphCategories_[ ADVANCE_SOLUTION ]->exprFactory );
   }
 
   //--------------------------------------------------------------------
@@ -162,7 +162,7 @@ namespace Wasatch{
 
       for( int ipss=0; ipss<patches->size(); ++ipss ){
 
-        SpatialOps::OperatorDatabase* const opdb = new SpatialOps::OperatorDatabase();
+        SpatialOps::OperatorDatabase* const opdb = scinew SpatialOps::OperatorDatabase();
         const Uintah::Patch* const patch = patches->get(ipss);
         build_operators( *patch, *opdb );
         PatchInfo& pi = patchInfoMap_[patch->getID()];
@@ -176,27 +176,27 @@ namespace Wasatch{
     //_____________________________________________________________
     // build expressions to set coordinates.  If any initialization
     // expressions require the coordinates, then this will trigger
-    icGraphHelper->exprFactory->register_expression( Expr::Tag("XSVOL",Expr::STATE_NONE), new Coordinate<SVolField>::Builder(this,XDIR) );
-    icGraphHelper->exprFactory->register_expression( Expr::Tag("YSVOL",Expr::STATE_NONE), new Coordinate<SVolField>::Builder(this,YDIR) );
-    icGraphHelper->exprFactory->register_expression( Expr::Tag("ZSVOL",Expr::STATE_NONE), new Coordinate<SVolField>::Builder(this,ZDIR) );
+    icGraphHelper->exprFactory->register_expression( Expr::Tag("XSVOL",Expr::STATE_NONE), scinew Coordinate<SVolField>::Builder(this,XDIR) );
+    icGraphHelper->exprFactory->register_expression( Expr::Tag("YSVOL",Expr::STATE_NONE), scinew Coordinate<SVolField>::Builder(this,YDIR) );
+    icGraphHelper->exprFactory->register_expression( Expr::Tag("ZSVOL",Expr::STATE_NONE), scinew Coordinate<SVolField>::Builder(this,ZDIR) );
 
-    icGraphHelper->exprFactory->register_expression( Expr::Tag("XXVOL",Expr::STATE_NONE), new Coordinate<XVolField>::Builder(this,XDIR) );
-    icGraphHelper->exprFactory->register_expression( Expr::Tag("YXVOL",Expr::STATE_NONE), new Coordinate<XVolField>::Builder(this,YDIR) );
-    icGraphHelper->exprFactory->register_expression( Expr::Tag("ZXVOL",Expr::STATE_NONE), new Coordinate<XVolField>::Builder(this,ZDIR) );
+    icGraphHelper->exprFactory->register_expression( Expr::Tag("XXVOL",Expr::STATE_NONE), scinew Coordinate<XVolField>::Builder(this,XDIR) );
+    icGraphHelper->exprFactory->register_expression( Expr::Tag("YXVOL",Expr::STATE_NONE), scinew Coordinate<XVolField>::Builder(this,YDIR) );
+    icGraphHelper->exprFactory->register_expression( Expr::Tag("ZXVOL",Expr::STATE_NONE), scinew Coordinate<XVolField>::Builder(this,ZDIR) );
 
-    icGraphHelper->exprFactory->register_expression( Expr::Tag("XYVOL",Expr::STATE_NONE), new Coordinate<YVolField>::Builder(this,XDIR) );
-    icGraphHelper->exprFactory->register_expression( Expr::Tag("YYVOL",Expr::STATE_NONE), new Coordinate<YVolField>::Builder(this,YDIR) );
-    icGraphHelper->exprFactory->register_expression( Expr::Tag("ZYVOL",Expr::STATE_NONE), new Coordinate<YVolField>::Builder(this,ZDIR) );
+    icGraphHelper->exprFactory->register_expression( Expr::Tag("XYVOL",Expr::STATE_NONE), scinew Coordinate<YVolField>::Builder(this,XDIR) );
+    icGraphHelper->exprFactory->register_expression( Expr::Tag("YYVOL",Expr::STATE_NONE), scinew Coordinate<YVolField>::Builder(this,YDIR) );
+    icGraphHelper->exprFactory->register_expression( Expr::Tag("ZYVOL",Expr::STATE_NONE), scinew Coordinate<YVolField>::Builder(this,ZDIR) );
 
-    icGraphHelper->exprFactory->register_expression( Expr::Tag("XZVOL",Expr::STATE_NONE), new Coordinate<ZVolField>::Builder(this,XDIR) );
-    icGraphHelper->exprFactory->register_expression( Expr::Tag("YZVOL",Expr::STATE_NONE), new Coordinate<ZVolField>::Builder(this,YDIR) );
-    icGraphHelper->exprFactory->register_expression( Expr::Tag("ZZVOL",Expr::STATE_NONE), new Coordinate<ZVolField>::Builder(this,ZDIR) );
+    icGraphHelper->exprFactory->register_expression( Expr::Tag("XZVOL",Expr::STATE_NONE), scinew Coordinate<ZVolField>::Builder(this,XDIR) );
+    icGraphHelper->exprFactory->register_expression( Expr::Tag("YZVOL",Expr::STATE_NONE), scinew Coordinate<ZVolField>::Builder(this,YDIR) );
+    icGraphHelper->exprFactory->register_expression( Expr::Tag("ZZVOL",Expr::STATE_NONE), scinew Coordinate<ZVolField>::Builder(this,ZDIR) );
 
     //_____________________________________________
     // Build the initial condition expression graph
     if( !icGraphHelper->rootIDs.empty() ){
 
-      Expr::ExpressionTree* const graph = new Expr::ExpressionTree( *icGraphHelper->exprFactory, -1, "initialization" );
+      Expr::ExpressionTree* const graph = scinew Expr::ExpressionTree( *icGraphHelper->exprFactory, -1, "initialization" );
 
       for( IDSet::const_iterator iid=icGraphHelper->rootIDs.begin(); iid!=icGraphHelper->rootIDs.end(); ++iid ){
         graph->insert_tree( *iid );
@@ -206,7 +206,7 @@ namespace Wasatch{
       // have called back to set that fact. Schedule the coordinate
       // calculation prior to the initialization task.
       if( needCoords_ ){
-        Uintah::Task* task = new Uintah::Task( "coordinates", this, &Wasatch::set_grid_variables );
+        Uintah::Task* task = scinew Uintah::Task( "coordinates", this, &Wasatch::set_grid_variables );
         register_coord_fields( task, localPatches, sharedState_->allMaterials() );
         sched->addTask( task, localPatches, sharedState_->allMaterials() );
       }
@@ -215,7 +215,7 @@ namespace Wasatch{
       // create the TaskInterface and schedule this task for
       // execution.  Note that field dependencies are assigned
       // within the TaskInterface object.
-      TaskInterface* const task = new TaskInterface( graph, patchInfoMap_ );
+      TaskInterface* const task = scinew TaskInterface( graph, patchInfoMap_ );
       task->schedule( sched, localPatches, sharedState_->allMaterials() );
 
       //________________
@@ -242,7 +242,7 @@ namespace Wasatch{
 
     if( tsGraphHelper->rootIDs.size() > 0 ){
 
-      Expr::ExpressionTree* const graph = new Expr::ExpressionTree( *tsGraphHelper->exprFactory, -1, "initialization" );
+      Expr::ExpressionTree* const graph = scinew Expr::ExpressionTree( *tsGraphHelper->exprFactory, -1, "initialization" );
 
       for( IDSet::const_iterator iid=tsGraphHelper->rootIDs.begin(); iid!=tsGraphHelper->rootIDs.end(); ++iid ){
         graph->insert_tree( *iid );
@@ -252,7 +252,7 @@ namespace Wasatch{
       // create the TaskInterface and schedule this task for
       // execution.  Note that field dependencies are assigned
       // within the TaskInterface object.
-      TaskInterface* const task = new TaskInterface( graph, patchInfoMap_ );
+      TaskInterface* const task = scinew TaskInterface( graph, patchInfoMap_ );
       task->schedule( sched, patches, materials );
 
       //________________
@@ -321,7 +321,7 @@ namespace Wasatch{
     // will be available to all expressions if needed.
     const Expr::ExpressionID timeID =
       exprFactory.register_expression( Expr::Tag(StringNames::self().time,Expr::STATE_NONE),
-                                       new SetCurrentTime::Builder(sharedState_) );
+                                       scinew SetCurrentTime::Builder(sharedState_) );
 
     //___________________________________________
     // Plug in each equation that has been set up

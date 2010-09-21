@@ -104,22 +104,22 @@ namespace Wasatch{
       switch( get_field_type(fieldType) ){
       case SVOL: {
         typedef TabPropsEvaluator<SpatialOps::structured::SVolField>::Builder PropEvaluator;
-        builder = new PropEvaluator( spline->clone(), ivarNames );
+        builder = scinew PropEvaluator( spline->clone(), ivarNames );
         break;
       }
       case XVOL: {
         typedef TabPropsEvaluator<SpatialOps::structured::SSurfXField>::Builder PropEvaluator;
-        builder = new PropEvaluator( spline->clone(), ivarNames );
+        builder = scinew PropEvaluator( spline->clone(), ivarNames );
         break;
       }
       case YVOL: {
         typedef TabPropsEvaluator<SpatialOps::structured::SSurfYField>::Builder PropEvaluator;
-        builder = new PropEvaluator( spline->clone(), ivarNames );
+        builder = scinew PropEvaluator( spline->clone(), ivarNames );
         break;
       }
       case ZVOL: {
         typedef TabPropsEvaluator<SpatialOps::structured::SSurfZField>::Builder PropEvaluator;
-        builder = new PropEvaluator( spline->clone(), ivarNames );
+        builder = scinew PropEvaluator( spline->clone(), ivarNames );
         break;
       }
       default:

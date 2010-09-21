@@ -65,23 +65,23 @@ namespace Wasatch{
         if ( staggeredDirection=="X" ) {
           std::cout << "Setting up staggered scalar transport equation in direction: '" << staggeredDirection << "'" << std::endl;
           typedef ScalarTransportEquation< XVolField > ScalarTransEqn;
-          transeqn = new ScalarTransEqn( ScalarTransEqn::get_phi_name( params ),
+          transeqn = scinew ScalarTransEqn( ScalarTransEqn::get_phi_name( params ),
                                          ScalarTransEqn::get_rhs_expr_id( *solnGraphHelper->exprFactory, params ) );
-          adaptor = new EqnTimestepAdaptor< XVolField >( transeqn );
+          adaptor = scinew EqnTimestepAdaptor< XVolField >( transeqn );
           
         } else if ( staggeredDirection=="Y" ) {
           std::cout << "Setting up staggered scalar transport equation in direction: '" << staggeredDirection << "'" << std::endl;
           typedef ScalarTransportEquation< YVolField > ScalarTransEqn;
-          transeqn = new ScalarTransEqn( ScalarTransEqn::get_phi_name( params ),
+          transeqn = scinew ScalarTransEqn( ScalarTransEqn::get_phi_name( params ),
                                          ScalarTransEqn::get_rhs_expr_id( *solnGraphHelper->exprFactory, params ) );
-          adaptor = new EqnTimestepAdaptor< YVolField >( transeqn );
+          adaptor = scinew EqnTimestepAdaptor< YVolField >( transeqn );
           
         } else if (staggeredDirection=="Z") {
           std::cout << "Setting up staggered scalar transport equation in direction: '" << staggeredDirection << "'" << std::endl;
           typedef ScalarTransportEquation< ZVolField > ScalarTransEqn;
-          transeqn = new ScalarTransEqn( ScalarTransEqn::get_phi_name( params ),
+          transeqn = scinew ScalarTransEqn( ScalarTransEqn::get_phi_name( params ),
                                          ScalarTransEqn::get_rhs_expr_id( *solnGraphHelper->exprFactory, params ) );
-          adaptor = new EqnTimestepAdaptor< ZVolField >( transeqn );
+          adaptor = scinew EqnTimestepAdaptor< ZVolField >( transeqn );
           
         } else {
           std::ostringstream msg;
@@ -93,14 +93,14 @@ namespace Wasatch{
         // in this case, the scalar field is not staggered
         std::cout << "Detected non-staggered scalar '" << eqnLabel << "'" << std::endl;
         typedef ScalarTransportEquation< SVolField > ScalarTransEqn;
-        transeqn = new ScalarTransEqn( ScalarTransEqn::get_phi_name( params ),
+        transeqn = scinew ScalarTransEqn( ScalarTransEqn::get_phi_name( params ),
                                        ScalarTransEqn::get_rhs_expr_id( *solnGraphHelper->exprFactory, params ) );
-        adaptor = new EqnTimestepAdaptor< SVolField >( transeqn );
+        adaptor = scinew EqnTimestepAdaptor< SVolField >( transeqn );
       }
       
     } else if( eqnLabel == sName.temperature ){
-      transeqn = new TemperatureTransportEquation( *solnGraphHelper->exprFactory );
-      adaptor = new EqnTimestepAdaptor< TemperatureTransportEquation::FieldT >( transeqn );
+      transeqn = scinew TemperatureTransportEquation( *solnGraphHelper->exprFactory );
+      adaptor = scinew EqnTimestepAdaptor< TemperatureTransportEquation::FieldT >( transeqn );
       
     } else {
       std::ostringstream msg;
