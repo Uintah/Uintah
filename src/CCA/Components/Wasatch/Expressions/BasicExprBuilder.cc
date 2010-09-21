@@ -38,8 +38,8 @@ namespace Wasatch{
     else if( params->findBlock("LinearFunction") ){
       double slope, intercept;
       Uintah::ProblemSpecP valParams = params->findBlock("LinearFunction");
-      valParams->require("slope",slope);
-      valParams->require("intercept",intercept);
+      valParams->getAttribute("slope",slope);
+      valParams->getAttribute("intercept",intercept);
       const Expr::Tag indepVarTag = parse_nametag( valParams->findBlock("NameTag") );
       typedef typename Expr::LinearFunction<FieldT>::Builder Builder;
       builder = new Builder( indepVarTag, slope, intercept );
