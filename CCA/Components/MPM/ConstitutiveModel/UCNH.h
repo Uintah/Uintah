@@ -89,7 +89,7 @@ namespace Uintah {
       double K;
       double Alpha;
     };
-
+      
     const VarLabel* bElBarLabel;
     const VarLabel* bElBarLabel_preReloc;
 
@@ -106,11 +106,25 @@ namespace Uintah {
       std::string dist;    /* Failure distro: "constant", "gauss" or "weibull"*/
       int seed;            /* seed for random number distribution generator */
     };
+
+    //Create datatype for brittle damage
+    struct BrittleDamageData {
+      double r0b;          /* Initial energy threshold (\sqrt{Pa}) */
+      double Gf;           /* Fracture energy (J/m^3) */
+      double constant_D;   /* Shape factor in softening function */
+      double maxDamageInc; /* Maximum damage increment in a time step */
+      bool allowRecovery;  /* Recovery of stiffness allowed */
+      double recoveryCoeff;  /* Fraction of stiffness to be recovered */
+      bool printDamage;    /* Flag to print damage */
+    };
+
     const VarLabel* pFailureStressOrStrainLabel;
     const VarLabel* pLocalizedLabel;
+    const VarLabel* pDamageLabel;
     const VarLabel* pDeformRateLabel;
     const VarLabel* pFailureStressOrStrainLabel_preReloc;
     const VarLabel* pLocalizedLabel_preReloc;
+    const VarLabel* pDamageLabel_preReloc;
     const VarLabel* pDeformRateLabel_preReloc;
     const VarLabel* bBeBarLabel;
     const VarLabel* bBeBarLabel_preReloc;
@@ -134,12 +148,14 @@ namespace Uintah {
     // Damage Requirments //
     ////////////////////////
     FailureStressOrStrainData d_epsf;
+    BrittleDamageData d_brittle_damage;
       
     // Erosion algorithms
     bool d_setStressToZero; /* set stress tensor to zero*/
     bool d_allowNoTension;  /* retain compressive mean stress after failue*/
-    bool d_allowNoShear;    /* retain mean stress after failure, */
+    bool d_allowNoShear;    /* retain mean stress after failure - no deviatoric stress */
                             /* i.e., no deviatoric stress */
+    bool d_brittleDamage;   /* use brittle damage with mesh size control*/
 
     std::string d_failure_criteria; /* Options are:  "MaximumPrincipalStrain" */
                                     /* "MaximumPrincipalStress", "MohrColoumb"*/
@@ -149,7 +165,7 @@ namespace Uintah {
     double d_tensile_cutoff;  // Fraction of the cohesion at which 
                               // tensile failure occurs
 
-
+      
   ///////////////
   // Functions //
   ///////////////
@@ -231,7 +247,7 @@ namespace Uintah {
     virtual void computePressEOSCM(double rho_m, double& press_eos,
                                    double p_ref,
                                    double& dp_drho, double& ss_new,
-                                   const MPMMaterial* matl, 
+                                   const MPMMaterial* matl,
                                    double temperature);
     
     // main computation of density from constitutive model's equation of state
@@ -285,14 +301,18 @@ namespace Uintah {
     /////////////////////////
     void getFailureStressOrStrainData(ProblemSpecP& ps);
 
-    void setFailureStressOrStrainData(const UCNH* cm);
+    void getBrittleDamageData(ProblemSpecP& ps);
 
+    void setFailureStressOrStrainData(const UCNH* cm);      
+
+    void setBrittleDamageData(const UCNH* cm);
+      
     void initializeLocalMPMLabels();
-
+      
     void setErosionAlgorithm();
-
+      
     void setErosionAlgorithm(const UCNH* cm);
-
+      
   protected:
     // compute stress at each particle in the patch
     void computeStressTensorImplicit(const PatchSubset* patches,
@@ -307,6 +327,17 @@ namespace Uintah {
                                               int& pLocalized_new, 
                                               Matrix3& pStress_new,
                                               const long64 particleID);
+
+    // Modify the stress for brittle damage
+    void updateDamageAndModifyStress(const Matrix3& FF, 
+                                     const double& pFailureStrain, 
+                                     double& pFailureStrain_new, 
+                                     const double& pVolume, 
+                                     const double& pDamage,
+                                     double& pDamage_new, 
+                                     Matrix3& pStress_new,
+                                     const long64 particleID);
+      
       
     /*! Compute tangent stiffness matrix */
     void computeTangentStiffnessMatrix(const Matrix3& sigDev, 
