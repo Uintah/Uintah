@@ -248,9 +248,7 @@ namespace Wasatch{
       // execution.  Note that field dependencies are assigned
       // within the TaskInterface object.
       TaskInterface* const task = new TaskInterface( graph, patchInfoMap_ );
-      task->schedule( sched,
-                      sched->getLoadBalancer()->getPerProcessorPatchSet(level),
-                      sharedState_->allMaterials() );
+      task->schedule( sched, patches, materials );
 
       //________________
       // jcs diagnostics
@@ -478,7 +476,6 @@ namespace Wasatch{
       const Uintah::Patch* const patch = patches->get(ip);
       const PatchInfoMap::const_iterator ipim = patchInfoMap_.find(patch->getID());
       ASSERT( ipim!=patchInfoMap_.end() );
-      const SpatialOps::OperatorDatabase& opdb = *ipim->second.operators;
 
       for( int im=0; im<materials->size(); ++im ){
 

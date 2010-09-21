@@ -284,19 +284,21 @@ namespace Wasatch{
   {
     needCoords_ = true;
     switch (dir) {
-      case XDIR : xSVolCoord_=true; break;
-      case YDIR : ySVolCoord_=true; break;
-      case ZDIR : zSVolCoord_=true; break;
-      }
+    case XDIR : xSVolCoord_=true; break;
+    case YDIR : ySVolCoord_=true; break;
+    case ZDIR : zSVolCoord_=true; break;
+    default: assert(0);
+    }
   }
   template<> void Wasatch::requires_coordinate<XVolField>( const Direction dir )
   {
     needCoords_ = true;
     switch (dir) {
-      case XDIR : xXVolCoord_=true; break;
-      case YDIR : yXVolCoord_=true; break;
-      case ZDIR : zXVolCoord_=true; break;
-      }
+    case XDIR : xXVolCoord_=true; break;
+    case YDIR : yXVolCoord_=true; break;
+    case ZDIR : zXVolCoord_=true; break;
+    default: assert(0);
+    }
   }
   template<> void Wasatch::requires_coordinate<YVolField>( const Direction dir )
   {
@@ -311,10 +313,11 @@ namespace Wasatch{
   {
     needCoords_ = true;
     switch (dir) {
-      case XDIR : xZVolCoord_=true; break;
-      case YDIR : yZVolCoord_=true; break;
-      case ZDIR : zZVolCoord_=true; break;
-      }
+    case XDIR : xZVolCoord_=true; break;
+    case YDIR : yZVolCoord_=true; break;
+    case ZDIR : zZVolCoord_=true; break;
+    default: assert(0);
+    }
   }
 
 } // namespace Wasatch
