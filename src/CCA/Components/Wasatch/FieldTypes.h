@@ -14,11 +14,22 @@ namespace Wasatch{
    *  @{
    */
 
-  typedef SpatialOps::structured::SVolField ScalarVolField; ///< field type for scalar volume
 
-  typedef SpatialOps::structured::XVolField XVolField;      ///< field type for x-staggered volume
-  typedef SpatialOps::structured::YVolField YVolField;      ///< field type for y-staggered volume
-  typedef SpatialOps::structured::ZVolField ZVolField;      ///< field type for z-staggered volume
+  /**
+   *  \enum Direction
+   *  \brief enumerates directions
+   */
+  enum Direction{
+    XDIR  = SpatialOps::XDIR::value,
+    YDIR  = SpatialOps::YDIR::value,
+    ZDIR  = SpatialOps::ZDIR::value,
+    NODIR = SpatialOps::NODIR::value
+  };
+
+  typedef SpatialOps::structured::SVolField SVolField;  ///< field type for scalar volume
+  typedef SpatialOps::structured::XVolField XVolField;  ///< field type for x-staggered volume
+  typedef SpatialOps::structured::YVolField YVolField;  ///< field type for y-staggered volume
+  typedef SpatialOps::structured::ZVolField ZVolField;  ///< field type for z-staggered volume
 
   /** @} */
 
@@ -47,7 +58,7 @@ namespace Wasatch{
    */
   template< typename CellFieldT > struct FaceTypes;  ///< Given the volume field type, defines the flux field types
 
-  template<> struct FaceTypes<ScalarVolField>
+  template<> struct FaceTypes<SVolField>
   {
     typedef SpatialOps::structured::SSurfXField XFace;
     typedef SpatialOps::structured::SSurfYField YFace;
