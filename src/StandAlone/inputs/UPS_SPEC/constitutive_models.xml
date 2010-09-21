@@ -39,6 +39,16 @@
     <tensile_cutoff_fraction_of_cohesion spec="OPTIONAL DOUBLE" /> <!-- Range from 0 to infinity -->
     <friction_angle                spec="OPTIONAL DOUBLE" /> <!-- In degrees -->
 
+ <!-- BrittleDamage in UCNH for cnh_damage -->
+      <brittle_damage_initial_threshold  spec="OPTIONAL DOUBLE" />
+      <brittle_damage_fracture_energy    spec="OPTIONAL DOUBLE" />
+      <brittle_damage_constant_D         spec="OPTIONAL DOUBLE" />
+      <brittle_damage_max_damage_increment  spec="OPTIONAL DOUBLE" />
+      <brittle_damage_allowRecovery      spec="OPTIONAL BOOLEAN" />
+      <brittle_damage_recoveryCoeff      spec="OPTIONAL DOUBLE" />
+      <brittle_damage_printDamage        spec="OPTIONAL BOOLEAN" />
+
+
     <Chi                           spec="OPTIONAL DOUBLE" /> <!-- FIXME: What is this? -->
     <coeff_thermal_expansion       spec="OPTIONAL DOUBLE" />
     <CoeffThermalExpansion         spec="OPTIONAL DOUBLE" />
