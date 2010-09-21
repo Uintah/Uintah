@@ -47,9 +47,9 @@ namespace Wasatch{
 //     typedef DiffusiveFlux< Ops::GradZ >::Builder HeatFluxZ;
 
     // fourier heat flux
-    solnExprFactory.register_expression( heatFluxXtag, new HeatFluxX( tcondTag, tempTag ) );
-    solnExprFactory.register_expression( heatFluxYtag, new HeatFluxY( tcondTag, tempTag ) );
-    solnExprFactory.register_expression( heatFluxZtag, new HeatFluxZ( tcondTag, tempTag ) );
+    solnExprFactory.register_expression( heatFluxXtag, scinew HeatFluxX( tcondTag, tempTag ) );
+    solnExprFactory.register_expression( heatFluxYtag, scinew HeatFluxY( tcondTag, tempTag ) );
+    solnExprFactory.register_expression( heatFluxZtag, scinew HeatFluxZ( tcondTag, tempTag ) );
 
     // species heat flux
 
@@ -95,7 +95,7 @@ namespace Wasatch{
     info[ ScalarRHS<FieldT>::DIFFUSIVE_FLUX_Z ] = Tag( sName.zHeatFlux, STATE_NONE );
 
     return factory.register_expression( Tag(sName.temperature+"_rhs",STATE_NONE),
-                                        new ScalarRHS<FieldT>::Builder(info) );
+                                        scinew ScalarRHS<FieldT>::Builder(info) );
   }
 
   //------------------------------------------------------------------

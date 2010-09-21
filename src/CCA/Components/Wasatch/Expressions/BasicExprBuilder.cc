@@ -33,7 +33,7 @@ namespace Wasatch{
     if( params->findBlock("Constant") ){
       double val;  params->get("Constant",val);
       typedef typename Expr::ConstantExpr<FieldT>::Builder Builder;
-      builder = new Builder( val );
+      builder = scinew Builder( val );
     }
     else if( params->findBlock("LinearFunction") ){
       double slope, intercept;
@@ -42,7 +42,7 @@ namespace Wasatch{
       valParams->getAttribute("intercept",intercept);
       const Expr::Tag indepVarTag = parse_nametag( valParams->findBlock("NameTag") );
       typedef typename Expr::LinearFunction<FieldT>::Builder Builder;
-      builder = new Builder( indepVarTag, slope, intercept );
+      builder = scinew Builder( indepVarTag, slope, intercept );
     }
 
     return builder;

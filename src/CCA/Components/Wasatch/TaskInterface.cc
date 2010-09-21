@@ -35,8 +35,8 @@ namespace Wasatch{
       patchInfoMap_( info ),
 
       builtFML_( fml==NULL ),
-      fml_( builtFML_ ? new Expr::FieldManagerList( tree->name() ) : fml ),
-      uintahTask_( new Uintah::Task( tree->name(), this, &TaskInterface::execute ) )
+      fml_( builtFML_ ? scinew Expr::FieldManagerList( tree->name() ) : fml ),
+      uintahTask_( scinew Uintah::Task( tree->name(), this, &TaskInterface::execute ) )
   {
     hasBeenScheduled_ = false;
     tree->register_fields( *fml_ );
@@ -120,6 +120,7 @@ namespace Wasatch{
 
           if( tree_->has_expression( fieldTag ) ){
             if( tree_->get_expression(fieldTag).is_placeholder() ){
+              //
               // jcs: right now we need this to ensure that the
               // initial conditions are properly pulled in. We will
               // have problems when we start cleaving trees.  That
@@ -128,6 +129,14 @@ namespace Wasatch{
               // created from cleaving to distinguish between those
               // and expressions whose values are determined from
               // prior timestep information.
+              //
+              // jcs: this is causing problems when we have
+              // placeholder expressions in initial condition graphs.
+              // There we need to use the "new" data warehouse.  How
+              // are we to know this?  Is this a special case unique
+              // to initialization?  If so, we can pass a flag to the
+              // TaskInterface saying that this is a special case...
+              //
               fieldInfo.mode = Expr::REQUIRES;
               fieldInfo.useOldDataWarehouse = true;
             }

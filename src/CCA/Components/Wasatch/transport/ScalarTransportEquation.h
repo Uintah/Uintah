@@ -159,7 +159,7 @@ namespace Wasatch{
           typedef typename DiffusiveFlux<typename MyOpTypes::GradX>::Builder Flux;
           double coef;
           diffFluxParams->get("ConstantDiffusivity",coef);
-          builder = new Flux( phiTag, coef );
+          builder = scinew Flux( phiTag, coef );
         }
         else if( diffFluxParams->findBlock("DiffusionCoefficient") ){
           /**
@@ -173,7 +173,7 @@ namespace Wasatch{
            */
           typedef typename DiffusiveFlux2< typename MyOpTypes::GradX, typename MyOpTypes::InterpC2FX >::Builder Flux;
           const Expr::Tag coef = parse_nametag( diffFluxParams->findBlock("DiffusionCoefficient")->findBlock("NameTag") );
-          builder = new Flux( phiTag, coef );
+          builder = scinew Flux( phiTag, coef );
         }
       }
       else if( dir=="Y" ){
@@ -181,12 +181,12 @@ namespace Wasatch{
           typedef typename DiffusiveFlux<typename MyOpTypes::GradY>::Builder Flux;
           double coef;
           diffFluxParams->get("ConstantDiffusivity",coef);
-          builder = new Flux( phiTag, coef );
+          builder = scinew Flux( phiTag, coef );
         }
         else if( diffFluxParams->findBlock("DiffusionCoefficient") ){
           typedef typename DiffusiveFlux2< typename MyOpTypes::GradY, typename MyOpTypes::InterpC2FY >::Builder Flux;
           const Expr::Tag coef = parse_nametag( diffFluxParams->findBlock("DiffusionCoefficient")->findBlock("NameTag") );
-          builder = new Flux( phiTag, coef );
+          builder = scinew Flux( phiTag, coef );
         }
       }
       else if( dir=="Z") {
@@ -194,12 +194,12 @@ namespace Wasatch{
           typedef typename DiffusiveFlux<typename MyOpTypes::GradZ>::Builder Flux;
           double coef;
           diffFluxParams->get("ConstantDiffusivity",coef);
-          builder = new Flux( phiTag, coef );
+          builder = scinew Flux( phiTag, coef );
         }
         else if( diffFluxParams->findBlock("DiffusionCoefficient") ){
           typedef typename DiffusiveFlux2< typename MyOpTypes::GradZ, typename MyOpTypes::InterpC2FZ >::Builder Flux;
           const Expr::Tag coef = parse_nametag( diffFluxParams->findBlock("DiffusionCoefficient")->findBlock("NameTag") );
-          builder = new Flux( phiTag, coef );
+          builder = scinew Flux( phiTag, coef );
         }
       }
       
@@ -306,7 +306,7 @@ namespace Wasatch{
     }
     
     return factory.register_expression( Expr::Tag( phiName+"_rhs", Expr::STATE_NONE ),
-                                       new typename ScalarRHS<FieldT>::Builder(info) );
+                                        scinew typename ScalarRHS<FieldT>::Builder(info) );
   }
   
   //------------------------------------------------------------------
