@@ -70,6 +70,11 @@ namespace Wasatch{
     : Uintah::UintahParallelComponent( myworld )
   {
     needCoords_ = false;
+    xSVolCoord_ = ySVolCoord_ = zSVolCoord_ = false;
+    xXVolCoord_ = yXVolCoord_ = zXVolCoord_ = false;
+    xYVolCoord_ = yYVolCoord_ = zYVolCoord_ = false;
+    xZVolCoord_ = yZVolCoord_ = zZVolCoord_ = false;
+
 
     const bool log = true;
     graphCategories_[ INITIALIZATION     ] = new GraphHelper( new Expr::ExpressionFactory(log) );
