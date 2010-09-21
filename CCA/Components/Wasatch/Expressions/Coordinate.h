@@ -31,7 +31,7 @@ namespace Wasatch{
     {
     public:
       Builder( Wasatch* const wasatch, const Direction dir )
-        : wasatch_( wasatch_ ),
+        : wasatch_( wasatch ),
           dir_( dir )
       {}
       Expr::ExpressionBase*
