@@ -92,10 +92,10 @@ namespace Wasatch{
       } else if ( !scalarStaggeredParams ) {
         // in this case, the scalar field is not staggered
         std::cout << "Detected non-staggered scalar '" << eqnLabel << "'" << std::endl;
-        typedef ScalarTransportEquation< ScalarVolField > ScalarTransEqn;
+        typedef ScalarTransportEquation< SVolField > ScalarTransEqn;
         transeqn = new ScalarTransEqn( ScalarTransEqn::get_phi_name( params ),
                                        ScalarTransEqn::get_rhs_expr_id( *solnGraphHelper->exprFactory, params ) );
-        adaptor = new EqnTimestepAdaptor< ScalarVolField >( transeqn );
+        adaptor = new EqnTimestepAdaptor< SVolField >( transeqn );
       }
       
     } else if( eqnLabel == sName.temperature ){

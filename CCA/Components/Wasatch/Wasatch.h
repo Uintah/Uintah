@@ -115,9 +115,11 @@
 //-- Wasatch includes --//
 #include "PatchInfo.h"
 #include "GraphHelperTools.h"
-
+#include "FieldTypes.h"
 
 namespace Expr{ class ExpressionID; }
+
+namespace Uintah{ class Task; }
 
 namespace Wasatch{
 
@@ -200,7 +202,37 @@ namespace Wasatch{
     void scheduleTimeAdvance( const Uintah::LevelP& level, 
                               Uintah::SchedulerP& );
 
+    /**
+     *  \brief specify that we want coordinate information
+     *  \param dir the coordinate (XDIR -> x coord)
+     *
+     *  This method can be called to request the coordinate for the
+     *  given field type. For example,
+     *
+     *  \code requires_coordinate<SVolField>(XDIR) \endcode
+     *
+     *  results in the X-coordinate of the scalar volumes being
+     *  populated as a field.  These can subsequently be used in a
+     *  graph.
+     *
+     *  Note that coordinates have very specific names that should be
+     *  used in the input file.  See Wasatch.cc and specifically the
+     *  implementation of register_coord_fields for more information.
+     */
+    template<typename FieldT> void requires_coordinate( const Direction dir );
+
   private:
+
+    bool needCoords_,
+      xSVolCoord_, ySVolCoord_,zSVolCoord_,
+      xXVolCoord_, yXVolCoord_,zXVolCoord_,
+      xYVolCoord_, yYVolCoord_,zYVolCoord_,
+      xZVolCoord_, yZVolCoord_,zZVolCoord_;
+
+    Uintah::VarLabel *xSVol_, *ySVol_, *zSVol_;
+    Uintah::VarLabel *xXVol_, *yXVol_, *zXVol_;
+    Uintah::VarLabel *xYVol_, *yYVol_, *zYVol_;
+    Uintah::VarLabel *xZVol_, *yZVol_, *zZVol_;
 
     Uintah::SimulationStateP sharedState_; ///< access to some common things like the current timestep.
 
@@ -221,7 +253,7 @@ namespace Wasatch{
     Wasatch( const Wasatch& ); // disallow copying
     Wasatch& operator=( const Wasatch& ); // disallow assignment
 
-    /** a convenience function */
+    /** \brief a convenience function */
     void create_timestepper_on_patches( const Uintah::PatchSet* const localPatches,
                                         const Uintah::MaterialSet* const materials,
                                         Uintah::SchedulerP& sched );
@@ -233,7 +265,57 @@ namespace Wasatch{
                       Uintah::DataWarehouse* old_dw,
                       Uintah::DataWarehouse* new_dw );
 
+    /** \brief sets the requested grid variables - callback for an initialization task */
+    void set_grid_variables( const Uintah::ProcessorGroup* const pg,
+                             const Uintah::PatchSubset* const patches,
+                             const Uintah::MaterialSubset* const materials,
+                             Uintah::DataWarehouse* const oldDW,
+                             Uintah::DataWarehouse* const newDW );
+
+    /** \brief registers requested coordinate fields */
+    void register_coord_fields( Uintah::Task* const task,
+                                const Uintah::PatchSet* const ps,
+                                const Uintah::MaterialSet* const mss );
+
   };
+
+
+  template<> void Wasatch::requires_coordinate<SVolField>( const Direction dir )
+  {
+    needCoords_ = true;
+    switch (dir) {
+      case XDIR : xSVolCoord_=true; break;
+      case YDIR : ySVolCoord_=true; break;
+      case ZDIR : zSVolCoord_=true; break;
+      }
+  }
+  template<> void Wasatch::requires_coordinate<XVolField>( const Direction dir )
+  {
+    needCoords_ = true;
+    switch (dir) {
+      case XDIR : xXVolCoord_=true; break;
+      case YDIR : yXVolCoord_=true; break;
+      case ZDIR : zXVolCoord_=true; break;
+      }
+  }
+  template<> void Wasatch::requires_coordinate<YVolField>( const Direction dir )
+  {
+    needCoords_ = true;
+    switch (dir) {
+      case XDIR : xYVolCoord_=true; break;
+      case YDIR : yYVolCoord_=true; break;
+      case ZDIR : zYVolCoord_=true; break;
+      }
+  }
+  template<> void Wasatch::requires_coordinate<ZVolField>( const Direction dir )
+  {
+    needCoords_ = true;
+    switch (dir) {
+      case XDIR : xZVolCoord_=true; break;
+      case YDIR : yZVolCoord_=true; break;
+      case ZDIR : zZVolCoord_=true; break;
+      }
+  }
 
 } // namespace Wasatch
 

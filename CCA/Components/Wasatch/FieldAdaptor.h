@@ -23,6 +23,7 @@
 namespace Wasatch{
 
   /**
+   *  \ingroup WasatchParser
    *  \enum FieldTypes
    *  \brief Enumerate the field types in Wasatch.
    */
@@ -30,7 +31,7 @@ namespace Wasatch{
     SVOL, SSURFX, SSURFY, SSURFZ,
     XVOL, XSURFX, XSURFY, XSURFZ,
     YVOL, YSURFX, YSURFY, YSURFZ,
-    ZVOL, ZSURFX, ZSURFY, ZSURFZ,
+    ZVOL, ZSURFX, ZSURFY, ZSURFZ
   };
 
   /**
