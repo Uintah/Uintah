@@ -104,10 +104,6 @@ namespace Wasatch{
     void add_fields_to_task( const Uintah::PatchSet* const patches,
                              const Uintah::MaterialSet* const materials );
 
-    /** iterates all Expressions in the ExpressionTree and binds fields/operators. */
-    void bind_fields_operators( const Expr::AllocInfo&,
-                                const SpatialOps::OperatorDatabase& opDB );
-
     /** main execution driver - the callback function exposed to Uintah. */
     void execute( const Uintah::ProcessorGroup* const,
                   const Uintah::PatchSubset* const,
