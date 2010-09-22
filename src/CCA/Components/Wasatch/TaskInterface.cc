@@ -199,23 +199,6 @@ namespace Wasatch{
   //------------------------------------------------------------------
 
   void
-  TaskInterface::bind_fields_operators( const Expr::AllocInfo& info,
-                                        const SpatialOps::OperatorDatabase& opDB )
-  {
-    // wrap fields from Uintah in the strongly typed field managers
-    // and then bind them to the tree.  Then bind all operators
-    // associated with this patch and task
-    //
-    // This is called each time a task is executed.
-//     fml_->dump_fields(cout);
-    fml_->allocate_fields( info );
-    tree_->bind_fields( *fml_ );
-    tree_->bind_operators( opDB );
-  }
-
-  //------------------------------------------------------------------
-
-  void
   TaskInterface::execute( const Uintah::ProcessorGroup* const pg,
                           const Uintah::PatchSubset* const patches,
                           const Uintah::MaterialSubset* const materials,
@@ -246,10 +229,14 @@ namespace Wasatch{
 //                << "' for patch " << patch->getID()
 //                << " and material " << material
 //                << endl;
-          bind_fields_operators( Expr::AllocInfo( oldDW, newDW, material, patch ),
-                                 opdb );
+
+//     fml_->dump_fields(cout);
+          fml_->allocate_fields( Expr::AllocInfo( oldDW, newDW, material, patch ) );
+          tree_->bind_fields( *fml_ );
+          tree_->bind_operators( opdb );
           tree_->execute_tree();
 //           cout << "Wasatch: done executing graph '" << taskName_ << "'" << endl;
+          fml_->deallocate_fields();
         }
         catch( exception& e ){
           cout << e.what() << endl;
