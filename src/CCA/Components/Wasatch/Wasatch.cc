@@ -217,7 +217,7 @@ namespace Wasatch{
       // execution.  Note that field dependencies are assigned
       // within the TaskInterface object.
       TaskInterface* const task = scinew TaskInterface( graph, patchInfoMap_ );
-      task->schedule( sched, localPatches, sharedState_->allMaterials() );
+      task->schedule( sched, localPatches, sharedState_->allMaterials(), true );
 
       //________________
       // jcs diagnostics

@@ -57,9 +57,10 @@ namespace Wasatch{
   void
   TaskInterface::schedule( Uintah::SchedulerP& scheduler,
                            const Uintah::PatchSet* const patches,
-                           const Uintah::MaterialSet* const materials )
+                           const Uintah::MaterialSet* const materials,
+                           const bool forcePlaceHoldersToUseNewDW )
   {
-    add_fields_to_task( patches, materials );
+    add_fields_to_task( patches, materials, forcePlaceHoldersToUseNewDW );
     scheduler->addTask( uintahTask_, patches, materials );
     hasBeenScheduled_ = true;
   }
@@ -68,7 +69,8 @@ namespace Wasatch{
 
   void
   TaskInterface::add_fields_to_task( const Uintah::PatchSet* const patches,
-                                     const Uintah::MaterialSet* const materials )
+                                     const Uintah::MaterialSet* const materials,
+                                     const bool forcePlaceHoldersToUseNewDW )
   {
     // this is done once when the task is scheduled.  The purpose of
     // this method is to collect the fields from the ExpressionTree
@@ -108,43 +110,22 @@ namespace Wasatch{
 
         Expr::FieldInfo& fieldInfo = ii->second;
 
+        //________________
         // set field mode 
-        // 
-        // jcs this is a hack.  On initialization, it takes a STATE_N
-        // to a new DW and on timestepping it does the same for the
-        // solution variable because we must wrap it with an
-        // expression.  Need to figure out a more robust way of
-        // handling this.
         {
           const Expr::Tag fieldTag(fieldInfo.varlabel->getName(), fieldInfo.context );
 
           if( tree_->has_expression( fieldTag ) ){
             if( tree_->get_expression(fieldTag).is_placeholder() ){
-              //
-              // jcs: right now we need this to ensure that the
-              // initial conditions are properly pulled in. We will
-              // have problems when we start cleaving trees.  That
-              // will result in improper DW being used. We probably
-              // need to tag expressions that are placeholders and
-              // created from cleaving to distinguish between those
-              // and expressions whose values are determined from
-              // prior timestep information.
-              //
-              // jcs: this is causing problems when we have
-              // placeholder expressions in initial condition graphs.
-              // There we need to use the "new" data warehouse.  How
-              // are we to know this?  Is this a special case unique
-              // to initialization?  If so, we can pass a flag to the
-              // TaskInterface saying that this is a special case...
-              //
               fieldInfo.mode = Expr::REQUIRES;
-              fieldInfo.useOldDataWarehouse = true;
+              if( !forcePlaceHoldersToUseNewDW ) fieldInfo.useOldDataWarehouse = true;
             }
             else
               fieldInfo.mode = Expr::COMPUTES;
           }
-          else
+          else{
             fieldInfo.mode = Expr::REQUIRES;
+          }
         }
 
         // jcs : old dw is (should be) read only.
