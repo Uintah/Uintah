@@ -152,6 +152,7 @@ using std::vector;
       const VarLabel* CenterOfMassPositionLabel;
       const VarLabel* TotalMomentumLabel;
       const VarLabel* RigidReactionForceLabel;
+      const VarLabel* TotalLocalizedParticleLabel;
 
       const VarLabel* pCellNAPIDLabel;
 

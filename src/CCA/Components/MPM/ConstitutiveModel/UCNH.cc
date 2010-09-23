@@ -806,7 +806,7 @@ void UCNH::addComputesAndRequires(Task* task,
     task->computes(pFailureStressOrStrainLabel_preReloc,        matlset);
     task->computes(pLocalizedLabel_preReloc,                    matlset);
     task->computes(pDamageLabel_preReloc,                       matlset);
-    
+    task->computes(lb->TotalLocalizedParticleLabel);   
   }
   
   // Universal
@@ -866,6 +866,7 @@ void UCNH::addInitialComputesAndRequires(Task* task,
     task->computes(pFailureStressOrStrainLabel, matlset);
     task->computes(pLocalizedLabel,             matlset);
     task->computes(pDamageLabel,                matlset);
+    task->computes(lb->TotalLocalizedParticleLabel);
   }
   
   // Universal
@@ -1008,7 +1009,7 @@ void UCNH::computeStressTensor(const PatchSubset* patches,
   delt_vartype delT;
   old_dw->get(delT, lb->delTLabel, getLevel(patches));
   Ghost::GhostType  gac   = Ghost::AroundCells;
-  
+ 
   // Normal patch loop
   for(int pp=0;pp<patches->size();pp++){
     const Patch* patch = patches->get(pp);
@@ -1018,6 +1019,7 @@ void UCNH::computeStressTensor(const PatchSubset* patches,
     double p = 0.0, sTnorm = 0.0, U = 0.0, W = 0.0;
     double se=0.0;     // Strain energy placeholder
     double c_dil=0.0;  // Speed of sound
+    long64 totalLocalizedParticle = 0;
     Matrix3 pBBar_new(0.0), bEB_new(0.0), bElBarTrial(0.0), pDefGradInc(0.0);
     Matrix3 displacementGradient(0.0), fBar(0.0), defGrad(0.0), normal(0.0);
     Matrix3 tauDev(0.0), tauDevTrial(0.0);
@@ -1203,7 +1205,6 @@ void UCNH::computeStressTensor(const PatchSubset* patches,
       particleIndex idx = *iter;  
     
       pDeformRate[idx] = (velGrad[idx] + velGrad[idx].Transpose())*0.5;
-     
       
       // More Pressure Stabilization
       if(flag->d_doPressureStabilization) {
@@ -1305,6 +1306,7 @@ void UCNH::computeStressTensor(const PatchSubset* patches,
 		  pVolume_new[idx], pDamage[idx], pDamage_new[idx], pStress[idx],
                   pParticleID[idx]);
           pLocalized_new[idx]= pLocalized[idx]; //not really used.
+          if (pDamage_new[idx]>0.0) totalLocalizedParticle+=1;
           //cout << "pLocalized[idx]= " << pLocalized[idx] << endl;
 	}
 	else {
@@ -1351,7 +1353,12 @@ void UCNH::computeStressTensor(const PatchSubset* patches,
         flag->d_reductionVars->strainEnergy) {
       new_dw->put(sum_vartype(se),        lb->StrainEnergyLabel);
     }
-    
+   
+    if (d_brittleDamage) {
+      new_dw->put(sumlong_vartype(totalLocalizedParticle),
+          lb->TotalLocalizedParticleLabel);
+    };
+ 
     delete interpolator;    
   }
 }

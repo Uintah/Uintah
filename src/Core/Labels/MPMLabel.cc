@@ -362,6 +362,10 @@ MPMLabel::MPMLabel()
   RigidReactionForceLabel = VarLabel::create( "RigidReactionForce",
 				 sumvec_vartype::getTypeDescription() );
 
+  TotalLocalizedParticleLabel = VarLabel::create("TotalLocalizedParticle",
+                                   sumlong_vartype::getTypeDescription());
+
+
   // for assigning particle ids
   pCellNAPIDLabel =
     VarLabel::create("cellNAPID", CCVariable<short int>::getTypeDescription());
