@@ -78,13 +78,18 @@ namespace Wasatch{
      *  \param scheduler the Uintah::Scheduler that we will put this task on
      *  \param patches the Uintah::PatchSet associated with this task
      *  \param material the Uintah::MaterialSet associated with this task
+     *  \param forcePlaceHoldersToUseNewDW default is false.  If true,
+     *         then place-holder expressions will use the new DW.
+     *         This can be useful in situations where the tree has
+     *         been cleaved or during initialization.
      *
      *  This sets all field requirements for the Uintah task and
      *  scheduled it for execution.
      */
     void schedule( Uintah::SchedulerP& scheduler,
                    const Uintah::PatchSet* const patches,
-                   const Uintah::MaterialSet* const materials );
+                   const Uintah::MaterialSet* const materials,
+                   const bool forcePlaceHoldersToUseNewDW=false );
    
   private:
 
@@ -102,7 +107,8 @@ namespace Wasatch{
 
     /** advertises field requirements to Uintah. */
     void add_fields_to_task( const Uintah::PatchSet* const patches,
-                             const Uintah::MaterialSet* const materials );
+                             const Uintah::MaterialSet* const materials,
+                             const bool forcePlaceHoldersToUseNewDW );
 
     /** main execution driver - the callback function exposed to Uintah. */
     void execute( const Uintah::ProcessorGroup* const,
