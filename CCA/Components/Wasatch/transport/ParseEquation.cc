@@ -126,7 +126,7 @@ namespace Wasatch{
     //______________________________________________________
     // set up boundary conditions on this transport equation
     try{
-      std::cout << "setting BCs for transport equation '" << eqnLabel << "'" << std::endl;
+      std::cout << "Setting BCs for transport equation '" << eqnLabel << "'" << std::endl;
       transeqn->setup_boundary_conditions( *solnGraphHelper->exprFactory );
     }
     catch( std::runtime_error& e ){

@@ -35,7 +35,7 @@ namespace Wasatch{
   {
     typedef typename OperatorTypeBuilder< Gradient,
                                           CellT,
-                                          typename FaceTypes<CellT>::XFace >::type  	GradX;
+                                          typename FaceTypes<CellT>::XFace >::type  GradX;
     typedef typename OperatorTypeBuilder< Gradient,
                                           CellT,
                                           typename FaceTypes<CellT>::YFace >::type 	GradY;
