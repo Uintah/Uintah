@@ -67,11 +67,11 @@
                  <bulk_modulus>100000.0</bulk_modulus>
                  <shear_modulus>20000.0</shear_modulus>
        <!-- when failure_by_stress is true, values are stress not strain -->
-                 <failure_by_stress>true </failure_by_stress>
-                 <failure_strain_mean> 700 </failure_strain_mean>
-                 <failure_strain_std> 100.0 </failure_strain_std>
+                 <failure_criteria>true </failure_criteria>
+                 <failure_mean> 700 </failure_mean>
+                 <failure_std> 100.0 </failure_std>
        <!-- choices are "constant" or "gauss" (for Gaussian distribution) -->
-                 <failure_strain_distrib>gauss</failure_strain_distrib>
+                 <failure_distrib>gauss</failure_distrib>
                </constitutive_model>
               <thermal_conductivity>1.0</thermal_conductivity>
               <specific_heat>5</specific_heat>
