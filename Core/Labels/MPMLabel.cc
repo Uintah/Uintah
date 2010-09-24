@@ -743,6 +743,7 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(CenterOfMassPositionLabel);
   VarLabel::destroy(TotalMomentumLabel);
   VarLabel::destroy(RigidReactionForceLabel);
+  VarLabel::destroy(TotalLocalizedParticleLabel);
   VarLabel::destroy(pCellNAPIDLabel);
   VarLabel::destroy(pCellNACZIDLabel);
 
