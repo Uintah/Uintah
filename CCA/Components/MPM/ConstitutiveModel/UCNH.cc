@@ -1313,6 +1313,7 @@ void UCNH::computeStressTensor(const PatchSubset* patches,
         updateFailedParticlesAndModifyStress(defGrad, pFailureStrain[idx], 
                                              pLocalized[idx], pLocalized_new[idx],
                                              pStress[idx], pParticleID[idx]);
+          if (pLocalized_new[idx]>0) totalLocalizedParticle+=1;
         }
       }
       
@@ -1354,7 +1355,7 @@ void UCNH::computeStressTensor(const PatchSubset* patches,
       new_dw->put(sum_vartype(se),        lb->StrainEnergyLabel);
     }
    
-    if (d_brittleDamage) {
+    if (d_useDamage) {
       new_dw->put(sumlong_vartype(totalLocalizedParticle),
           lb->TotalLocalizedParticleLabel);
     };
