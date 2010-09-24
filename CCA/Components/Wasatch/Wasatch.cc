@@ -457,10 +457,11 @@ namespace Wasatch{
   template<typename FieldT>
   void set_coord( FieldT& field, const Uintah::Patch* p, const double shift, const int idir )
   {
-    IntVector low, hi;
-    for( int k=low[2]; k<low[2]; ++k ){
-      for( int j=low[1]; j<low[1]; ++j ){
-        for( int i=low[0]; i<low[0]; ++i ){
+    const IntVector lo = field.getLow();
+    const IntVector hi = field.getHigh();
+    for( int k=lo[2]; k<hi[2]; ++k ){
+      for( int j=lo[1]; j<hi[1]; ++j ){
+        for( int i=lo[0]; i<hi[0]; ++i ){
           const IntVector index(i,j,k);
           const SCIRun::Vector xyz = p->getCellPosition(index).vector();
           field[index] = xyz[idir] + shift;
