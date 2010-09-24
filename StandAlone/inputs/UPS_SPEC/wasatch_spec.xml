@@ -15,10 +15,19 @@
       <!-- Specify a staggered direction for this scalar. If the scalar is non-staggered, this block is not needed -->                          
       <StaggeredDirection  spec="OPTIONAL STRING 'X,Y,Z'"/>
             
-      <!-- Specification of the convective flux -->
-      <ConvectiveFluxExpression	spec="OPTIONAL NO_DATA">
-        <NameTag		spec="REQUIRED" />
-        <Method			spec="REQUIRED STRING 'central, upwind, superbee'" />
+      <!-- SPECIFICATION OF THE CONVECTIVE FLUX -->
+      <ConvectiveFluxExpression	spec="MULTIPLE NO_DATA">
+        <!-- SPECIFY THE NAME OF A BASIC EXPRESSION, IF PROVIDED -->
+        <NameTag		spec="OPTIONAL" />
+        <!-- SPECIFY THE INTERPOLATION METHOD -->
+        <Method         spec="REQUIRED STRING 'SOU, CENTRAL, UPWIND, SUPERBEE'" />
+        <!-- SPECIFY THE DIRECTION OF THE FLUX -->
+        <Direction      spec="REQUIRED STRING 'X,Y,Z'"/>
+        <!-- SPECIFY THE ADVECTIVE VELOCITY -->
+        <AdvectiveVelocity  spec="OPTIONAL NO_DATA">
+            <!-- IF AN EXPRESSION FOR THE VELOCITY WAS SPECIFIED, THEN USE THAT -->
+            <NameTag spec="REQUIRED"/>
+        </AdvectiveVelocity>
       </ConvectiveFluxExpression>
 
       <!-- Specification of the diffusive flux -->
@@ -28,10 +37,10 @@
 
         <Direction		spec="REQUIRED STRING 'X,Y,Z'" />
 
-        <!-- Specify a constant diffusivity.  A diffusive flux expression will be built. -->
+        <!-- Specify a constant diffusion coefficient.  A diffusive flux expression will be built. -->
         <ConstantDiffusivity    spec="OPTIONAL DOUBLE" />
 
-        <!-- specify an expression for the diffusive coefficient. A diffusive flux expression will be built. -->
+        <!-- specify an expression for the diffusion coefficient. A diffusive flux expression will be built. -->
         <DiffusionCoefficient   spec="OPTIONAL NO_DATA">
           <NameTag		spec="REQUIRED" />
         </DiffusionCoefficient>
