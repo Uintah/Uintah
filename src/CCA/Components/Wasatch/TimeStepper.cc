@@ -1,8 +1,9 @@
 //-- Wasatch Includes --//
 #include "TimeStepper.h"
 #include "TaskInterface.h"
+#include "CoordHelper.h"
 
-
+//-- ExprLib includes --//
 #include <expression/FieldManager.h>  // for field type mapping
 #include <expression/ExpressionTree.h>
 
@@ -119,7 +120,8 @@ namespace Wasatch{
   TimeStepper::TimeStepper( const Uintah::VarLabel* const deltaTLabel,
                             Expr::ExpressionFactory& factory )
     : factory_( &factory ),
-      deltaTLabel_( deltaTLabel )
+      deltaTLabel_( deltaTLabel ),
+      coordHelper_( new CoordHelper( factory ) )
   {}
 
   //------------------------------------------------------------------
@@ -145,7 +147,8 @@ namespace Wasatch{
       //     will have all sorts of name clashes?
       Expr::ExpressionTree* rhsTree = scinew Expr::ExpressionTree( rhsIDs_, *factory_, -1, "rhs" );
       TaskInterface* rhsTask = scinew TaskInterface( rhsTree, patchInfoMap );
-      rhsTask->schedule( sched, patches, materials );
+      coordHelper_->create_task( sched, patches, materials );
+      rhsTask->schedule( sched, patches, materials, coordHelper_->field_tags() );
       
       // jcs hacked diagnostics - problems in parallel.
       const std::string fname("rhs.dot");
@@ -168,7 +171,7 @@ namespace Wasatch{
     {
       Expr::ExpressionTree* timeTree = scinew Expr::ExpressionTree( timeID, *factory_, -1, "set time" );
       TaskInterface* const timeTask = scinew TaskInterface( timeTree, patchInfoMap );
-      timeTask->schedule( sched, patches, materials );
+      timeTask->schedule( sched, patches, materials, coordHelper_->field_tags() );
     }
 
     //_____________________________________________________

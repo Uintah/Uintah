@@ -1,11 +1,17 @@
 #ifndef Wasatch_CoordHelper_h
 #define Wasatch_CoordHelper_h
 
+//-- Wasatch includes --//
 #include "FieldTypes.h"
+#include "FieldAdaptor.h"
 
 //-- Uintah Framework Includes --//
 #include <CCA/Ports/Scheduler.h>
 #include <CCA/Ports/SchedulerP.h>
+
+//-- ExprLib includes --//
+#include <expression/Tag.h>
+
 
 // forward declarations
 namespace Uintah{
@@ -22,15 +28,18 @@ namespace Wasatch{
   class CoordHelper
   {
     bool needCoords_,
-      xSVolCoord_, ySVolCoord_,zSVolCoord_,
-      xXVolCoord_, yXVolCoord_,zXVolCoord_,
-      xYVolCoord_, yYVolCoord_,zYVolCoord_,
-      xZVolCoord_, yZVolCoord_,zZVolCoord_;
+      xSVolCoord_, ySVolCoord_, zSVolCoord_,
+      xXVolCoord_, yXVolCoord_, zXVolCoord_,
+      xYVolCoord_, yYVolCoord_, zYVolCoord_,
+      xZVolCoord_, yZVolCoord_, zZVolCoord_;
 
     Uintah::VarLabel *xSVol_, *ySVol_, *zSVol_;
     Uintah::VarLabel *xXVol_, *yXVol_, *zXVol_;
     Uintah::VarLabel *xYVol_, *yYVol_, *zYVol_;
     Uintah::VarLabel *xZVol_, *yZVol_, *zZVol_;
+
+    const Expr::Context context_;
+    std::vector<Expr::Tag> fieldTags_;
 
     /** \brief sets the requested grid variables - callback for an initialization task */
     void set_grid_variables( const Uintah::ProcessorGroup* const pg,
@@ -40,9 +49,15 @@ namespace Wasatch{
                              Uintah::DataWarehouse* const newDW );
 
     /** \brief registers requested coordinate fields */
-    void register_coord_fields( Uintah::Task* const task,
-                                const Uintah::PatchSet* const ps,
-                                const Uintah::MaterialSet* const mss );
+    void register_coord_fields( Uintah::Task&,
+                                const Uintah::PatchSet&,
+                                const Uintah::MaterialSet& );
+
+    template<typename FieldT> void reg_field( Uintah::VarLabel*& vl,
+                                              const Expr::Tag tag,
+                                              Uintah::Task& task,
+                                              const Uintah::PatchSet&,
+                                              const Uintah::MaterialSet& );
 
   public:
 
@@ -68,13 +83,33 @@ namespace Wasatch{
      */
     template<typename FieldT> void requires_coordinate( const Direction dir );
 
+    /**
+     *  \brief create a task to calculate the requested coordinates
+     */
     void create_task( Uintah::SchedulerP& sched,
                       const Uintah::PatchSet* patches,
                       const Uintah::MaterialSet* materials );
 
+    const std::vector<Expr::Tag>& field_tags() const{ return fieldTags_; }
+
   };
 
 
+  template<typename FieldT>
+  inline void
+  CoordHelper::reg_field( Uintah::VarLabel*& vl,
+                          const Expr::Tag tag,
+                          Uintah::Task& task,
+                          const Uintah::PatchSet& ps,
+                          const Uintah::MaterialSet& ms )
+  {
+    const Uintah::Task::DomainSpec domain = Uintah::Task::NormalDomain;
+    vl = Uintah::VarLabel::create( tag.field_name(),
+                                   getUintahFieldTypeDescriptor<FieldT>(),
+                                   getUintahGhostDescriptor<FieldT>() );
+    fieldTags_.push_back( tag );
+    task.computes( vl, ps.getUnion(), domain, ms.getUnion(), domain );
+  }
 
   template<> inline void CoordHelper::requires_coordinate<SVolField>( const Direction dir )
   {

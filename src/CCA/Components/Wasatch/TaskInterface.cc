@@ -58,11 +58,21 @@ namespace Wasatch{
   TaskInterface::schedule( Uintah::SchedulerP& scheduler,
                            const Uintah::PatchSet* const patches,
                            const Uintah::MaterialSet* const materials,
-                           const bool forcePlaceHoldersToUseNewDW )
+                           const std::vector<Expr::Tag>& newDWFields )
   {
-    add_fields_to_task( patches, materials, forcePlaceHoldersToUseNewDW );
+    add_fields_to_task( patches, materials, newDWFields );
     scheduler->addTask( uintahTask_, patches, materials );
     hasBeenScheduled_ = true;
+  }
+  //------------------------------------------------------------------
+
+  void
+  TaskInterface::schedule( Uintah::SchedulerP& scheduler,
+                           const Uintah::PatchSet* const patches,
+                           const Uintah::MaterialSet* const materials )
+  {
+    std::vector<Expr::Tag> newDWFields;
+    this->schedule( scheduler, patches, materials, newDWFields );
   }
 
   //------------------------------------------------------------------
@@ -70,7 +80,7 @@ namespace Wasatch{
   void
   TaskInterface::add_fields_to_task( const Uintah::PatchSet* const patches,
                                      const Uintah::MaterialSet* const materials,
-                                     const bool forcePlaceHoldersToUseNewDW )
+                                     const std::vector<Expr::Tag>& newDWFields )
   {
     // this is done once when the task is scheduled.  The purpose of
     // this method is to collect the fields from the ExpressionTree
@@ -118,7 +128,8 @@ namespace Wasatch{
           if( tree_->has_expression( fieldTag ) ){
             if( tree_->get_expression(fieldTag).is_placeholder() ){
               fieldInfo.mode = Expr::REQUIRES;
-              if( !forcePlaceHoldersToUseNewDW ) fieldInfo.useOldDataWarehouse = true;
+              if( find( newDWFields.begin(), newDWFields.end(), fieldTag ) == newDWFields.end() )
+                fieldInfo.useOldDataWarehouse = true;
             }
             else
               fieldInfo.mode = Expr::COMPUTES;
