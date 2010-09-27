@@ -83,21 +83,13 @@ UCNH::UCNH(ProblemSpecP& ps, MPMFlags* Mflag)
     // Initialize local VarLabels
     initializeLocalMPMLabels();
 
- if (flag->d_erosionAlgorithm  == "BrittleDamage") {
+    if (flag->d_erosionAlgorithm  == "BrittleDamage") {
       getBrittleDamageData(ps);
     } else {    
-    ps->require("failure_criteria", d_failure_criteria);
-
-    // Get the failure stress/strain data
-    getFailureStressOrStrainData(ps);
-
-    if(d_failure_criteria=="MohrColoumb"){
-      // The cohesion value that MC needs is the "mean" value in the
-      // FailureStressOrStrainData struct
-      ps->require("friction_angle", d_friction_angle);
-      ps->require("tensile_cutoff_fraction_of_cohesion", d_tensile_cutoff);
+      // Get the failure stress/strain data
+      getFailureStressOrStrainData(ps);
     }
- }
+
     // Set the erosion algorithm
     setErosionAlgorithm();
 
@@ -142,20 +134,14 @@ UCNH::UCNH(ProblemSpecP& ps, MPMFlags* Mflag, bool plas, bool dam)
     initializeLocalMPMLabels();
 
     // Get the brittle damage data
-    if (flag->d_erosionAlgorithm      == "BrittleDamage") {
+    if (flag->d_erosionAlgorithm == "BrittleDamage") {
       getBrittleDamageData(ps);
     } else {
-    ps->require("failure_criteria", d_failure_criteria);
-    // Get the failure stress/strain data
+      ps->require("failure_criteria", d_failure_criteria);
+      // Get the failure stress/strain data
       getFailureStressOrStrainData(ps);
 
-    if(d_failure_criteria=="MohrColoumb"){
-      // The cohesion value that MC needs is the "mean" value in the
-      // FailureStressOrStrainData struct
-      ps->require("friction_angle", d_friction_angle);
-      ps->require("tensile_cutoff_fraction_of_cohesion", d_tensile_cutoff);
-    }
-
+    setErosionAlgorithm();
     }
     
     // Set the erosion algorithm
@@ -259,6 +245,23 @@ void UCNH::getFailureStressOrStrainData(ProblemSpecP& ps)
   d_epsf.exponent= DBL_MAX; //Exponent used in vol. scaling of failure criteria
   d_epsf.refVol = 1.0; // Reference volume for scaling failure criteria
 
+  ps->require("failure_criteria", d_failure_criteria);
+
+  if(d_failure_criteria!="MaximumPrincipalStress" &&
+     d_failure_criteria!="MaximumPrincipalStrain" &&
+     d_failure_criteria!="MohrColoumb"){
+     // The above are the only acceptable options.  If not one of them, bail. 
+     throw ProblemSetupException("<failure_criteria> must be either MaximumPrincipalStress, MaximumPrincipalStrain or MohrColoumb", __FILE__, __LINE__);
+
+  }
+
+  if(d_failure_criteria=="MohrColoumb"){
+    // The cohesion value that MC needs is the "mean" value in the
+    // FailureStressOrStrainData struct
+    ps->require("friction_angle", d_friction_angle);
+    ps->require("tensile_cutoff_fraction_of_cohesion", d_tensile_cutoff);
+  }
+    
   ps->require("failure_mean",d_epsf.mean); //Mean val. of failure stress/strain
   ps->get("failure_distrib", d_epsf.dist); //"constant", "weibull" or "gauss"
 
@@ -297,13 +300,16 @@ void UCNH::setBrittleDamageData(const UCNH* cm)
 {
   d_brittle_damage.r0b   = cm->d_brittle_damage.r0b; // Initial energy threshold
   d_brittle_damage.Gf    = cm->d_brittle_damage.Gf; // Fracture energy
-// Shape constant in softening function
+  // Shape constant in softening function
   d_brittle_damage.constant_D=cm->d_brittle_damage.constant_D; 
-//maximum damage in a time step 
+  //maximum damage in a time step 
   d_brittle_damage.maxDamageInc=cm->d_brittle_damage.maxDamageInc; 
-  d_brittle_damage.allowRecovery=cm->d_brittle_damage.allowRecovery; //allow recovery
-  d_brittle_damage.recoveryCoeff=cm->d_brittle_damage.recoveryCoeff; //fraction of recovery if allowed
-  d_brittle_damage.printDamage = cm->d_brittle_damage.printDamage; //print damage
+  //allow recovery
+  d_brittle_damage.allowRecovery=cm->d_brittle_damage.allowRecovery;
+  //fraction of recovery if allowed
+  d_brittle_damage.recoveryCoeff=cm->d_brittle_damage.recoveryCoeff;
+  //print damage
+  d_brittle_damage.printDamage = cm->d_brittle_damage.printDamage;
 }
 
 void UCNH::getBrittleDamageData(ProblemSpecP& ps)
@@ -315,15 +321,16 @@ void UCNH::getBrittleDamageData(ProblemSpecP& ps)
   d_brittle_damage.allowRecovery=false; // Allow recovery
   d_brittle_damage.recoveryCoeff=1.0; // Fraction of recovery if allowed
   d_brittle_damage.printDamage=false;  // Print damage
-  ps->get("brittle_damage_initial_threshold",    d_brittle_damage.r0b);
-  ps->get("brittle_damage_fracture_energy",      d_brittle_damage.Gf);
-  ps->get("brittle_damage_constant_D",           d_brittle_damage.constant_D);
-  ps->get("brittle_damage_max_damage_increment", d_brittle_damage.maxDamageInc);
-  ps->get("brittle_damage_allowRecovery",        d_brittle_damage.allowRecovery);
-  ps->get("brittle_damage_recoveryCoeff",        d_brittle_damage.recoveryCoeff);
-  ps->get("brittle_damage_printDamage",          d_brittle_damage.printDamage);
-  if (d_brittle_damage.recoveryCoeff <0.0 || d_brittle_damage.recoveryCoeff>1.0) {
-    cerr << "brittle_damage_recoveryCoeff must be between 0.0 and 1.0" << endl;  
+  ps->get("brittle_damage_initial_threshold",   d_brittle_damage.r0b);
+  ps->get("brittle_damage_fracture_energy",     d_brittle_damage.Gf);
+  ps->get("brittle_damage_constant_D",          d_brittle_damage.constant_D);
+  ps->get("brittle_damage_max_damage_increment",d_brittle_damage.maxDamageInc);
+  ps->get("brittle_damage_allowRecovery",       d_brittle_damage.allowRecovery);
+  ps->get("brittle_damage_recoveryCoeff",       d_brittle_damage.recoveryCoeff);
+  ps->get("brittle_damage_printDamage",         d_brittle_damage.printDamage);
+  if (d_brittle_damage.recoveryCoeff <0.0 || d_brittle_damage.recoveryCoeff>1.0)
+  {
+    cerr << "brittle_damage_recoveryCoeff must be between 0.0 and 1.0" << endl;
   }     
 }
 
@@ -860,8 +867,7 @@ void UCNH::addInitialComputesAndRequires(Task* task,
     task->computes(pPlasticStrain_label,matlset);
   
   // Damage
-  if(d_useDamage)
-  {
+  if(d_useDamage) {
     task->computes(bBeBarLabel,                 matlset);
     task->computes(pFailureStressOrStrainLabel, matlset);
     task->computes(pLocalizedLabel,             matlset);
