@@ -216,7 +216,7 @@ namespace Wasatch{
 
     PatchInfoMap patchInfoMap_; ///< Information about each patch
 
-    CoordHelper *icCoordHelper_, *rhsCoordHelper_;
+    CoordHelper *icCoordHelper_;
 
     TimeStepper* timeStepper_;  ///< The TimeStepper used to advance equations registered here.
 

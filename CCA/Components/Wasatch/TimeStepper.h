@@ -21,6 +21,8 @@ namespace Uintah{
 
 namespace Wasatch{
 
+  class CoordHelper;
+
   /**
    *  \ingroup WasatchCore
    *  \class  TimeStepper
@@ -71,6 +73,8 @@ namespace Wasatch{
 
     Expr::ExpressionFactory* const factory_;  ///< the factory that is associated with this time stepper.
     const Uintah::VarLabel* const deltaTLabel_;  ///< label for the time step variable.
+
+    CoordHelper* coordHelper_;
 
     /**
      *  \brief used internally to obtain the appropriate vector
@@ -125,6 +129,11 @@ namespace Wasatch{
 
     /**
      *  \brief schedule the tasks associated with this TimeStepper
+     *
+     *  \param timeID the ExpressionID for the Expression that calculates the time.
+     *  \param localPatches the patches that this task will be executed on
+     *  \param materials the materials that this task will be executed on
+     *  \param sched the scheduler
      */
     void create_tasks( const Expr::ExpressionID timeID,
                        const PatchInfoMap&,

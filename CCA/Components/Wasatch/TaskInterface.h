@@ -78,10 +78,13 @@ namespace Wasatch{
      *  \param scheduler the Uintah::Scheduler that we will put this task on
      *  \param patches the Uintah::PatchSet associated with this task
      *  \param material the Uintah::MaterialSet associated with this task
-     *  \param forcePlaceHoldersToUseNewDW default is false.  If true,
-     *         then place-holder expressions will use the new DW.
-     *         This can be useful in situations where the tree has
-     *         been cleaved or during initialization.
+     *  \param newDWFields - a vector of Expr::Tag indicating fields
+     *         should be pulled from the new DW.  This is particularly
+     *         useful for situations where another task will be
+     *         computing a given field and the ExpressionTree has
+     *         wrapped that field as a PlaceHolderExpr.  This helps us
+     *         determine where the field will exist in Uintah's
+     *         DataWarehouse
      *
      *  This sets all field requirements for the Uintah task and
      *  scheduled it for execution.
@@ -89,8 +92,12 @@ namespace Wasatch{
     void schedule( Uintah::SchedulerP& scheduler,
                    const Uintah::PatchSet* const patches,
                    const Uintah::MaterialSet* const materials,
-                   const bool forcePlaceHoldersToUseNewDW=false );
-   
+                   const std::vector<Expr::Tag>& newDWFields );
+
+    void schedule( Uintah::SchedulerP& scheduler,
+                   const Uintah::PatchSet* const patches,
+                   const Uintah::MaterialSet* const materials );
+
   private:
 
     Expr::ExpressionTree* const tree_;  ///< the underlying ExpressionTree associated with this task.
@@ -108,7 +115,7 @@ namespace Wasatch{
     /** advertises field requirements to Uintah. */
     void add_fields_to_task( const Uintah::PatchSet* const patches,
                              const Uintah::MaterialSet* const materials,
-                             const bool forcePlaceHoldersToUseNewDW );
+                             const std::vector<Expr::Tag>& );
 
     /** main execution driver - the callback function exposed to Uintah. */
     void execute( const Uintah::ProcessorGroup* const,

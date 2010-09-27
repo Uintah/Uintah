@@ -74,7 +74,7 @@ namespace Wasatch{
     graphCategories_[ TIMESTEP_SELECTION ] = scinew GraphHelper( scinew Expr::ExpressionFactory(log) );
     graphCategories_[ ADVANCE_SOLUTION   ] = scinew GraphHelper( scinew Expr::ExpressionFactory(log) );
 
-    icCoordHelper_ = new CoordHelper( *(graphCategories_[INITIALIZATION]->exprFactory) );
+    icCoordHelper_  = new CoordHelper( *(graphCategories_[INITIALIZATION  ]->exprFactory) );
   }
 
   //--------------------------------------------------------------------
@@ -95,6 +95,7 @@ namespace Wasatch{
       delete *i;
     }
 
+    delete icCoordHelper_;
     delete timeStepper_;
   }
 
@@ -179,6 +180,7 @@ namespace Wasatch{
         graph->insert_tree( *iid );
       }
 
+      // set coordinate values as required by the IC graph.
       icCoordHelper_->create_task( sched, localPatches, sharedState_->allMaterials() );
 
       //_______________________________________________________
@@ -186,7 +188,7 @@ namespace Wasatch{
       // execution.  Note that field dependencies are assigned
       // within the TaskInterface object.
       TaskInterface* const task = scinew TaskInterface( graph, patchInfoMap_ );
-      task->schedule( sched, localPatches, sharedState_->allMaterials(), true );
+      task->schedule( sched, localPatches, sharedState_->allMaterials(), icCoordHelper_->field_tags() );
 
       //________________
       // jcs diagnostics
