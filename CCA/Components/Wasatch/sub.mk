@@ -36,6 +36,7 @@ SRCDIR   := CCA/Components/Wasatch
 
 SRCS     +=                             \
         $(SRCDIR)/FieldAdaptor.cc	\
+	$(SRCDIR)/CoordHelper.cc	\
         $(SRCDIR)/GraphHelperTools.cc	\
         $(SRCDIR)/ParseTools.cc		\
 	$(SRCDIR)/Properties.cc		\
