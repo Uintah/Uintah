@@ -121,6 +121,7 @@
       <!-- The following are only used for applying pressure BCs -->
       <cylinder_end           spec="OPTIONAL BOOLEAN" />
       <axisymmetric_end       spec="OPTIONAL BOOLEAN" />
+      <axisymmetric_side      spec="OPTIONAL BOOLEAN" />
     </cylinder>
 
     <parallelepiped                 spec="OPTIONAL NO_DATA"
