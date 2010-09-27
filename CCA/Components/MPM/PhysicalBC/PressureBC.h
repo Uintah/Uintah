@@ -139,6 +139,7 @@ WARNING
       long d_numMaterialPoints;
       bool d_cylinder_end;
       bool d_axisymmetric_end;
+      bool d_axisymmetric_side;
 
       // Load curve information (Pressure and time)
       LoadCurve<double>* d_loadCurve;

@@ -65,8 +65,10 @@ PressureBC::PressureBC(ProblemSpecP& ps, const GridP& grid)
   } else if (go_type == "cylinder") {
     d_surface = scinew CylinderGeometryPiece(child);
     d_surfaceType = "cylinder";
-    child->getWithDefault("cylinder_end",     d_cylinder_end,     false);
-    child->getWithDefault("axisymmetric_end", d_axisymmetric_end, false);
+    CylinderGeometryPiece* cgp =dynamic_cast<CylinderGeometryPiece*>(d_surface);
+    d_cylinder_end=cgp->cylinder_end();
+    d_axisymmetric_end=cgp->axisymmetric_end();
+    d_axisymmetric_side=cgp->axisymmetric_side();
   } else {
     throw ParameterNotFound("** ERROR ** No surface specified for pressure BC.",
                             __FILE__, __LINE__);
@@ -214,6 +216,9 @@ PressureBC::getSurfaceArea() const
     CylinderGeometryPiece* gp = dynamic_cast<CylinderGeometryPiece*>(d_surface);
     if(!d_cylinder_end && !d_axisymmetric_end){  // Not a cylinder end
       area = gp->surfaceArea();
+      if(d_axisymmetric_side){
+        area/=(2.0*M_PI);
+      }
     }
     else if(d_cylinder_end){
       area = gp->surfaceAreaEndCaps()/2.0;
@@ -262,17 +267,18 @@ PressureBC::getForceVector(const Point& px, double forcePerParticle,
   } else if (d_surfaceType == "cylinder") {
     CylinderGeometryPiece* gp = dynamic_cast<CylinderGeometryPiece*>(d_surface);
     Vector normal = gp->radialDirection(px);
+    force = normal*forcePerParticle;
     if(d_cylinder_end || d_axisymmetric_end){
       normal = (gp->top()-gp->bottom())
               /(gp->top()-gp->bottom()).length();
-    }
-    if(!d_axisymmetric_end){
-      force = normal*forcePerParticle;
-    }else{
-      double pArea = px.x()*d_dxpp.x()*1.0; /*(theta = 1 radian)*/
-      double press = pressure(time);
-      double fpP = pArea*press;
-      force = normal*fpP;
+      if(!d_axisymmetric_end){
+        force = normal*forcePerParticle;
+      }else{  // It IS on an axisymmetric end
+        double pArea = px.x()*d_dxpp.x()*1.0; /*(theta = 1 radian)*/
+        double press = pressure(time);
+        double fpP = pArea*press;
+        force = normal*fpP;
+      }
     }
   } else if (d_surfaceType == "sphere") {
     SphereGeometryPiece* gp = dynamic_cast<SphereGeometryPiece*>(d_surface);
