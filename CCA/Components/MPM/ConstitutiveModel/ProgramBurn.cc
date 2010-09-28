@@ -56,8 +56,13 @@ using namespace SCIRun;
 ProgramBurn::ProgramBurn(ProblemSpecP& ps, MPMFlags* Mflag)
   : ConstitutiveModel(Mflag)
 {
-
   d_useModifiedEOS = false;
+
+  // These two parameters are used for the unburned Murnahan EOS
+  ps->require("bulk_modulus", d_initialData.d_Bulk);
+  ps->require("gamma",        d_initialData.d_Gamma);
+
+  // These parameters are used for the product JWL EOS
   ps->require("A",    d_initialData.d_A);
   ps->require("B",    d_initialData.d_B);
   ps->require("R1",   d_initialData.d_R1);
@@ -69,6 +74,10 @@ ProgramBurn::ProgramBurn(ProblemSpecP& ps, MPMFlags* Mflag)
 ProgramBurn::ProgramBurn(const ProgramBurn* cm) : ConstitutiveModel(cm)
 {
   d_useModifiedEOS = cm->d_useModifiedEOS ;
+
+  d_initialData.d_Bulk = cm->d_initialData.d_Bulk;
+  d_initialData.d_Gamma = cm->d_initialData.d_Gamma;
+
   d_initialData.d_A = cm->d_initialData.d_A;
   d_initialData.d_B = cm->d_initialData.d_B;
   d_initialData.d_R1 = cm->d_initialData.d_R1;
@@ -86,9 +95,12 @@ void ProgramBurn::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
   ProblemSpecP cm_ps = ps;
   if (output_cm_tag) {
     cm_ps = ps->appendChild("constitutive_model");
-    cm_ps->setAttribute("type","murnahanMPM");
+    cm_ps->setAttribute("type","program_burn");
   }
   
+  cm_ps->appendElement("bulk_modulus",   d_initialData.d_Bulk);
+  cm_ps->appendElement("gamma",          d_initialData.d_Gamma);
+
   cm_ps->appendElement("A",    d_initialData.d_A);
   cm_ps->appendElement("B",    d_initialData.d_B);
   cm_ps->appendElement("R1",   d_initialData.d_R1);
@@ -204,10 +216,9 @@ void ProgramBurn::computeStressTensor(const PatchSubset* patches,
     for(int pp=0;pp<patches->size();pp++){
     const Patch* patch = patches->get(pp);
     Matrix3 velGrad,Shear;
-    double /*p,*/se=0.;
-//    double c_dil=0.0;
+    double p,se=0.;
+    double c_dil=0.0;
     Vector WaveSpeed(1.e-12,1.e-12,1.e-12);
-//    double onethird = (1.0/3.0);
     Matrix3 Identity;
     Identity.Identity();
 
@@ -248,19 +259,21 @@ void ProgramBurn::computeStressTensor(const PatchSubset* patches,
     new_dw->allocateAndPut(deformationGradient_new,
                                   lb->pDeformationMeasureLabel_preReloc, pset);
 
+    double bulk = d_initialData.d_Bulk;
+    double gamma = d_initialData.d_Gamma;
 //    double A = d_initialData.d_A;
 //    double B = d_initialData.d_B;
 //    double R1 = d_initialData.d_R1;
 //    double R2 = d_initialData.d_R2;
 //    double om = d_initialData.d_om;
-//    double rho0 = d_initialData.d_rho0; // matl->getInitialDensity();
+    double rho0 = d_initialData.d_rho0; // matl->getInitialDensity();
 
     constNCVariable<Vector> gvelocity;
     new_dw->get(gvelocity, lb->gVelocityStarLabel,dwi,patch,gac,NGN);
 
-//  if(!flag->d_doGridReset){
-//    cerr << "The water model doesn't work without resetting the grid" << endl;
-//  }
+    if(!flag->d_doGridReset){
+      cerr << "The program_burn model doesn't work without resetting the grid" << endl;
+    }
 
     for(ParticleSubset::iterator iter = pset->begin();
         iter != pset->end(); iter++){
@@ -287,26 +300,25 @@ void ProgramBurn::computeStressTensor(const PatchSubset* patches,
       deformationGradient_new[idx]=(velGrad*delT+Identity)
                                     *deformationGradient[idx];
 
-#if 0
       double J = deformationGradient_new[idx].Determinant();
-
-      // Calculate rate of deformation D, and deviatoric rate DPrime,
-      Matrix3 D = (velGrad + velGrad.Transpose())*0.5;
-      Matrix3 DPrime = D - Identity*onethird*D.Trace();
-
-      // Get the deformed volume and current density
-      double rho_cur = rho_orig/J;
-      pvolume[idx] = pmass[idx]/rho_cur;
-
-      // Viscous part of the stress
-      Shear = DPrime*(2.*viscosity);
 
       // get the hydrostatic part of the stress
       double jtotheminusgamma = pow(J,-gamma);
       p = bulk*(jtotheminusgamma - 1.0);
 
-      // compute the total stress (volumetric + deviatoric)
-      pstress[idx] = Identity*(-p) + Shear;
+      // Calculate rate of deformation D, and deviatoric rate DPrime,
+//      Matrix3 D = (velGrad + velGrad.Transpose())*0.5;
+//      Matrix3 DPrime = D - Identity*onethird*D.Trace();
+
+      // Get the deformed volume and current density
+      double rho_cur = rho0/J;
+      pvolume[idx] = pmass[idx]/rho_cur;
+
+      // Viscous part of the stress
+//      Shear = DPrime*(2.*viscosity);
+
+      // compute the total stress
+      pstress[idx] = Identity*(-p);
 
       Vector pvelocity_idx = pvelocity[idx];
       c_dil = sqrt((gamma*jtotheminusgamma*bulk)/rho_cur);
@@ -323,6 +335,7 @@ void ProgramBurn::computeStressTensor(const PatchSubset* patches,
       } else {
         p_q[idx] = 0.;
       }
+#if 0
 #endif
     }  // end loop over particles
 
