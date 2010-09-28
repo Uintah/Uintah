@@ -53,6 +53,11 @@ namespace Uintah {
 
     // Create datatype for storing model parameters
     struct CMData {
+      // These two parameters are used for the unburned Murnahan EOS
+      double d_Bulk;
+      double d_Gamma;
+
+     // These parameters are used for the product JWL EOS
       double d_A;
       double d_B;
       double d_R1;
