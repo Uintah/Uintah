@@ -72,9 +72,9 @@ using namespace std;
 //  default is OFF
 
 
-static DebugStream cout_norm("MPMICE_NORMAL_COUT", true);  
+static DebugStream cout_norm("MPMICE_NORMAL_COUT", false);  
 static DebugStream cout_doing("MPMICE_DOING_COUT", false);
-static DebugStream ds_EqPress("DBG_EqPress",true);
+static DebugStream ds_EqPress("DBG_EqPress",false);
 
 MPMICE::MPMICE(const ProcessorGroup* myworld, 
                MPMType mpmtype, const bool doAMR)
