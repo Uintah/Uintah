@@ -32,7 +32,6 @@ TODO
 exclude.txt
 scripts
 
-CCA/Components/SpatialOps
 
 CCA/Components/*.orig
 CCA/Components/*.release
