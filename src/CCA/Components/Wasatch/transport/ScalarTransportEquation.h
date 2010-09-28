@@ -365,7 +365,7 @@ namespace Wasatch{
     // Diffusive Fluxes
     for( Uintah::ProblemSpecP diffFluxParams=params->findBlock("DiffusiveFluxExpression");
         diffFluxParams != 0;
-        diffFluxParams=params->findNextBlock("DiffusiveFluxExpression") ){
+        diffFluxParams=diffFluxParams->findNextBlock("DiffusiveFluxExpression") ){
       
       setup_diffusive_flux_expression<FieldT>( diffFluxParams, phiName, factory, info );
       
@@ -375,7 +375,7 @@ namespace Wasatch{
     // Convective Fluxes
     for( Uintah::ProblemSpecP convFluxParams=params->findBlock("ConvectiveFluxExpression");
         convFluxParams != 0;
-        convFluxParams=params->findNextBlock("ConvectiveFluxExpression") ){
+        convFluxParams=convFluxParams->findNextBlock("ConvectiveFluxExpression") ){
     
       setup_convective_flux_expression<FieldT>( convFluxParams, phiName, factory, info );
       
@@ -385,7 +385,7 @@ namespace Wasatch{
     // Source Terms
     for( Uintah::ProblemSpecP sourceTermParams=params->findBlock("SourceTerm");
         sourceTermParams != 0;
-        sourceTermParams=params->findNextBlock("SourceTerm") ){
+        sourceTermParams=sourceTermParams->findNextBlock("SourceTerm") ){
       
       //      setup_source_term_expression( sourceTermParams, phiName, factory, info );
       
