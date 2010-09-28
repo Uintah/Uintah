@@ -1,0 +1,23 @@
+<config>
+<postProcessCmd_path></postProcessCmd_path>
+
+<symbolicLinks> 
+  /usr/local/home/harman/Builds/Fresh/NB/src/scripts/ /usr/local/home/harman/Builds/Fresh/NB/src/StandAlone/inputs
+</symbolicLinks>
+
+<test>
+  <name>1D_MMS_X</name>
+  <ups>1D_MMS.ups</ups>
+  <tst>dx.tst</tst>
+</test>
+<test>
+  <name>1D_MMS_Y</name>
+  <ups>1D_MMS.ups</ups>
+  <tst>dx.tst</tst>
+</test>
+<test>
+  <name>1D_MMS_Z</name>
+  <ups>1D_MMS.ups</ups>
+  <tst>dx.tst</tst>
+</test>
+</config>
