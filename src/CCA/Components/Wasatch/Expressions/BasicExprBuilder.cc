@@ -46,41 +46,38 @@ namespace Wasatch{
     }
     
     else if ( params->findBlock("SineFunction") ) {
-       double amplitude, frequency, offset;
-       Uintah::ProblemSpecP valParams = params->findBlock("SineFunction");
-       valParams->getAttribute("amplitude",amplitude);
-       valParams->getAttribute("frequency",frequency);
-       valParams->getAttribute("offset",offset);
-       const Expr::Tag indepVarTag = parse_nametag( valParams->findBlock("NameTag") );
-       typedef typename Expr::SinFunction<FieldT>::Builder Builder;
-       builder = new Builder( indepVarTag, amplitude, frequency, offset);
-            cout<<"I AM PARSING SineFunction FUNCTION"<<std::endl;
+      double amplitude, frequency, offset;
+      Uintah::ProblemSpecP valParams = params->findBlock("SineFunction");
+      valParams->getAttribute("amplitude",amplitude);
+      valParams->getAttribute("frequency",frequency);
+      valParams->getAttribute("offset",offset);
+      const Expr::Tag indepVarTag = parse_nametag( valParams->findBlock("NameTag") );
+      typedef typename Expr::SinFunction<FieldT>::Builder Builder;
+      builder = new Builder( indepVarTag, amplitude, frequency, offset);
     }
     
     else if ( params->findBlock("GaussianFunction") ) {
-       double amplitude, deviation, mean, baseline;
-       Uintah::ProblemSpecP valParams = params->findBlock("GaussianFunction");
-       valParams->getAttribute("amplitude",amplitude);
-       valParams->getAttribute("deviation",deviation);
-       valParams->getAttribute("mean",mean);
-       valParams->getAttribute("baseline",baseline);
-       const Expr::Tag indepVarTag = parse_nametag( valParams->findBlock("NameTag") );
-       typedef typename Expr::GaussianFunction<FieldT>::Builder Builder;
-       builder = new Builder( indepVarTag, amplitude, deviation, mean, baseline);
-            cout<<"I AM PARSING Gaussian FUNCTION"<<std::endl;
+      double amplitude, deviation, mean, baseline;
+      Uintah::ProblemSpecP valParams = params->findBlock("GaussianFunction");
+      valParams->getAttribute("amplitude",amplitude);
+      valParams->getAttribute("deviation",deviation);
+      valParams->getAttribute("mean",mean);
+      valParams->getAttribute("baseline",baseline);
+      const Expr::Tag indepVarTag = parse_nametag( valParams->findBlock("NameTag") );
+      typedef typename Expr::GaussianFunction<FieldT>::Builder Builder;
+      builder = new Builder( indepVarTag, amplitude, deviation, mean, baseline);
     }
     
     else if ( params->findBlock("DoubleTanhFunction") ) {
-       double amplitude, width, midpointUp, midpointDown;
-       Uintah::ProblemSpecP valParams = params->findBlock("DoubleTanhFunction");
-       valParams->getAttribute("amplitude",amplitude);
-       valParams->getAttribute("width",width);
-       valParams->getAttribute("midpointUp",midpointUp);
-       valParams->getAttribute("midpointDown",midpointDown);
-       const Expr::Tag indepVarTag = parse_nametag( valParams->findBlock("NameTag") );
-       typedef typename Expr::DoubleTanhFunction<FieldT>::Builder Builder;
-       builder = new Builder( indepVarTag, midpointUp, midpointDown, width, amplitude);
-      cout<<"I AM PARSING DOUBLE TANH FUNCTION"<<std::endl;
+      double amplitude, width, midpointUp, midpointDown;
+      Uintah::ProblemSpecP valParams = params->findBlock("DoubleTanhFunction");
+      valParams->getAttribute("amplitude",amplitude);
+      valParams->getAttribute("width",width);
+      valParams->getAttribute("midpointUp",midpointUp);
+      valParams->getAttribute("midpointDown",midpointDown);
+      const Expr::Tag indepVarTag = parse_nametag( valParams->findBlock("NameTag") );
+      typedef typename Expr::DoubleTanhFunction<FieldT>::Builder Builder;
+      builder = new Builder( indepVarTag, midpointUp, midpointDown, width, amplitude);
     }
     return builder;
   }
@@ -109,10 +106,10 @@ namespace Wasatch{
                 << std::endl;
 
       switch( get_field_type(fieldType) ){
-      case SVOL  :  builder = build_it<SpatialOps::structured::SVolField  >( exprParams );  break;
-      case XVOL  :  builder = build_it<SpatialOps::structured::XVolField  >( exprParams );  break;
-      case YVOL  :  builder = build_it<SpatialOps::structured::YVolField  >( exprParams );  break;
-      case ZVOL  :  builder = build_it<SpatialOps::structured::ZVolField  >( exprParams );  break;
+      case SVOL : builder = build_it<SpatialOps::structured::SVolField  >( exprParams );  break;
+      case XVOL : builder = build_it<SpatialOps::structured::XVolField  >( exprParams );  break;
+      case YVOL : builder = build_it<SpatialOps::structured::YVolField  >( exprParams );  break;
+      case ZVOL : builder = build_it<SpatialOps::structured::ZVolField  >( exprParams );  break;
       default:
         std::ostringstream msg;
         msg << "ERROR: unsupported field type '" << fieldType << "'" << endl
