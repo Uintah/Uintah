@@ -41,6 +41,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/ICE/ICEMaterial.h>
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <CCA/Components/MPM/CohesiveZone/CZMaterial.h>
+#include <CCA/Components/SpatialOps/SpatialOpsMaterial.h>
 #include <CCA/Components/Arches/ArchesMaterial.h>
 #include <Core/Containers/StringUtil.h>
 #include <Core/Malloc/Allocator.h>
@@ -56,11 +57,11 @@ SimulationState::SimulationState(ProblemSpecP &ps)
    delt_label = nonconstDelt;
 
    refineFlag_label = VarLabel::create("refineFlag",
-				       CCVariable<int>::getTypeDescription());
+                                       CCVariable<int>::getTypeDescription());
    oldRefineFlag_label = VarLabel::create("oldRefineFlag",
-				       CCVariable<int>::getTypeDescription());
+                                       CCVariable<int>::getTypeDescription());
    refinePatchFlag_label = VarLabel::create("refinePatchFlag",
-				       PerPatch<int>::getTypeDescription());
+                                       PerPatch<int>::getTypeDescription());
    switch_label = VarLabel::create("switchFlag", 
                                    max_vartype::getTypeDescription());
 
@@ -76,6 +77,7 @@ SimulationState::SimulationState(ProblemSpecP &ps)
   all_cz_matls = 0;
   all_ice_matls = 0;
   all_arches_matls = 0;
+  all_spatialops_matls = 0;
   all_matls = 0;
   orig_all_matls = 0;
   allInOneMatl = 0;
@@ -164,6 +166,11 @@ void SimulationState::registerArchesMaterial(ArchesMaterial* matl)
    registerMaterial(matl);
 }
 
+void SimulationState::registerSpatialOpsMaterial(SpatialOpsMaterial* matl)
+{
+   spatialops_matls.push_back(matl);
+   registerMaterial(matl);
+}
 
 void SimulationState::registerICEMaterial(ICEMaterial* matl)
 {
@@ -214,6 +221,18 @@ void SimulationState::finalizeMaterials()
   for (int i = 0; i<(int)arches_matls.size();i++)
     tmp_arches_matls[i] = arches_matls[i]->getDWIndex();
   all_arches_matls->addAll(tmp_arches_matls);
+
+  if (all_spatialops_matls && all_spatialops_matls->removeReference())
+    delete all_spatialops_matls;
+  all_spatialops_matls = scinew MaterialSet();
+  all_spatialops_matls->addReference();
+  vector<int> tmp_spatialops_matls(spatialops_matls.size());
+#if 0
+  cout << "spatial ops materials= " << (int)spatialops_matls.size()<< endl; 
+#endif
+  for (int i = 0; i<(int)spatialops_matls.size();i++)
+    tmp_spatialops_matls[i] = spatialops_matls[i]->getDWIndex();
+  all_spatialops_matls->addAll(tmp_spatialops_matls);
 
   if (all_ice_matls && all_ice_matls->removeReference())
     delete all_ice_matls;
@@ -273,6 +292,9 @@ void SimulationState::clearMaterials()
   if (all_arches_matls && all_arches_matls->removeReference())
     delete all_arches_matls;
 
+  if (all_spatialops_matls && all_spatialops_matls->removeReference())
+    delete all_spatialops_matls;
+
   if(all_ice_matls && all_ice_matls->removeReference())
     delete all_ice_matls;
 
@@ -284,6 +306,7 @@ void SimulationState::clearMaterials()
   mpm_matls.clear();
   cz_matls.clear();
   arches_matls.clear();
+  spatialops_matls.clear();
   ice_matls.clear();
   simple_matls.clear();
   named_matls.clear();
@@ -296,6 +319,7 @@ void SimulationState::clearMaterials()
   all_mpm_matls = 0;
   all_cz_matls = 0;
   all_arches_matls = 0;
+  all_spatialops_matls = 0;
   all_ice_matls = 0;
   allInOneMatl = 0;
 }
@@ -335,6 +359,12 @@ const MaterialSet* SimulationState::allArchesMaterials() const
 {
   ASSERT(all_arches_matls != 0);
   return all_arches_matls;
+}
+
+const MaterialSet* SimulationState::allSpatialOpsMaterials() const
+{
+  ASSERT(all_spatialops_matls != 0);
+  return all_spatialops_matls;
 }
 
 const MaterialSet* SimulationState::allICEMaterials() const
@@ -380,7 +410,7 @@ Material* SimulationState::getMaterialByName(const std::string& name) const
 //__________________________________
 //
 Material* SimulationState::parseAndLookupMaterial(ProblemSpecP& params,
-						  const std::string& name) const
+                                                  const std::string& name) const
 {
   // for single material problems return matl 0
   Material* result = getMaterial(0);

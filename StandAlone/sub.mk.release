@@ -53,7 +53,7 @@ ifeq ($(BUILD_ARCHES),yes)
   endif
   ARCHES_LIBS        = $(COMPONENTS)/Arches                  \
                        $(COMPONENTS)/Arches/MCRT/ArchesRMCRT \
-                       $(COMPONENTS)/Arches/ChemMix/TabProps 
+                       $(COMPONENTS)/SpatialOps
 endif
 ifeq ($(BUILD_MPM),yes)
   MPM_LIB            = CCA/Components/MPM
@@ -157,13 +157,14 @@ else
 endif
 
 ifeq ($(IS_STATIC_BUILD),yes)
-  LIBS := $(CORE_STATIC_LIBS) $(ZOLTAN_LIBRARY)
+  LIBS := $(CORE_STATIC_LIBS) $(ZOLTAN_LIBRARY) $(TABPROPS_LIBRARY) $(HDF5_LIBRARY)
 else
   LIBS := $(XML2_LIBRARY) $(F_LIBRARY) $(HYPRE_LIBRARY)      \
           $(CANTERA_LIBRARY) $(ZOLTAN_LIBRARY)               \
           $(PETSC_LIBRARY) $(BLAS_LIBRARY) $(LAPACK_LIBRARY) \
           $(MPI_LIBRARY) $(M_LIBRARY) $(THREAD_LIBRARY) $(Z_LIBRARY) \
-          $(TEEM_LIBRARY) $(PNG_LIBRARY)
+          $(TEEM_LIBRARY) $(PNG_LIBRARY) \
+          $(BOOST_LIBRARY)
 endif
 
 include $(SCIRUN_SCRIPTS)/program.mk
@@ -252,6 +253,7 @@ uintah: sus \
         timeextract \
         faceextract \
         link_inputs \
+	link_scripts \
         link_tools \
         link_regression_tester \
 	$(VISIT_STUFF)
@@ -263,7 +265,13 @@ link_inputs:
                echo "Creating link to inputs directory." ; \
 	       ln -sf $(SRCTOP_ABS)/StandAlone/inputs StandAlone/inputs; \
 	   fi )
-          
+	   
+link_scripts:
+	@( if ! test -L StandAlone/scripts; then \
+               echo "Creating link to scripts directory." ; \
+	       ln -sf $(SRCTOP_ABS)/scripts StandAlone/scripts; \
+	   fi )
+	             
 link_orderAccuracy:
 	@( if ! test -L StandAlone/orderAccuracy; then \
                echo "Creating link to orderAccuracy directory." ; \
