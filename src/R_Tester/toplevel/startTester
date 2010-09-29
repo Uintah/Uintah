@@ -28,22 +28,13 @@ BUILD_DIR=/usr/local/home/csafe-tester/"$OS"
 TEST_DATA=/usr/local/home/csafe-tester/"$OS"/TestData
 TEMP_DIR=/usr/local/home/csafe-tester/"$OS"
 
-# test OS, if Linux or IRIX, set appropriate compiler env. vars, else, abort
-if [ "$OS" == "Linux" ]; then
-  CC=gcc-4.2
-  CXX=g++-4.2
-  F77=gfortran-4.2
-elif [ "$OS" == "Darwin" ]; then
-  CC=gcc
-  CXX=c++
-  F77=gfortran
-else
-  echo "Unknown OS. Abort"
+# test OS
+if [ "$OS" != "Linux" ]; then
+  echo "Linux OS is the only OS that is current configured to work. Abort"
   exit -1
 fi
 
-export OS CC CXX F77
-
+export OS
 unset SHELL
 umask 002
 
@@ -341,26 +332,6 @@ else
 fi
 
 #__________________________________
-# Configure Commands
-DBG_CONFIGURE="--enable-debug --enable-64bit --enable-sci-malloc --enable-scinew-line-numbers"
-OPT_CONFIGURE="--enable-64bit --enable-assertion-level=0"
-# set configure command options based on architecture
-if [ "$OS" == "Linux" ]; then
-  export PETSC_ARCH=linux-gnu-amd64
-  COMMON="--with-mpi=/usr/lib/openmpi --with-petsc=/usr/ --with-hypre=/usr/"
-  #COMMON="--enable-package='Uintah' --with-thirdparty=/usr/local/share/SCIRun/Thirdparty/1.25.4/Linux/gcc-4.3.1-2-64bit --with-mpi=/usr/lib/openmpi --with-petsc=/usr/ --with-hypre=/usr/"
-  #COMMON="--enable-package='Uintah' --with-thirdparty=/usr/local/share/SCIRun/Thirdparty/1.25.4/Linux/gcc-4.3.1-2-64bit --with-mpi=/usr/lib/openmpi --with-petsc=/usr/local/share/SCIRun/Thirdparty/1.25.4/Linux/gcc-4.3.1-2-64bit/petsc-2.3.3-p13-openmpi-opt-install/ --with-hypre=/usr/local/share/SCIRun/Thirdparty/1.25.4/Linux/gcc-4.3.1-2-64bit/hypre-2.0.0-openmpi-opt-install"
-  DBG_CONFIGURE="$COMMON $DBG_CONFIGURE"
-  OPT_CONFIGURE="$COMMON '--enable-optimize=-O3 -mfpmath=sse' $OPT_CONFIGURE"
-else
-# Darwin
-  export PETSC_ARCH=darwin9.4.0-c-real-opt
-  COMMON="--enable-package='Uintah Teem' --with-petsc=/usr/sci/projects/Uintah/Thirdparty/1.0.0/Darwin/PPC-9.4.0/gcc-4.0.1-openmpi-32bit --with-hypre=/usr/sci/projects/Uintah/Thirdparty/1.0.0/Darwin/PPC-9.4.0/gcc-4.0.1-openmpi-32bit --with-mpi=/usr/local/openmpi"
-  DBG_CONFIGURE="$COMMON $DBG_CONFIGURE"
-  OPT_CONFIGURE="$COMMON '--enable-optimize=-mcpu=7450 -O2 -fsigned-char -maltivec -mabi=altivec -mpowerpc-gfxopt' $OPT_CONFIGURE"
-fi
-
-#__________________________________
 # create html web page
 rm -f $HTMLLOG
 TITLE=`date`
@@ -374,7 +345,7 @@ echo "LOG: $HTMLLOG" >> $HTMLLOG
 
 #PATH="$BUILDROOT"/src/Packages/Uintah/R_Tester/helpers:"$PATH"
 PATH="$BUILDROOT"/src/R_Tester/helpers:"$PATH"
-export PATH DO_DBG DO_OPT DBG_CONFIGURE OPT_CONFIGURE HTMLLOG WEBLOG VERBOSE
+export PATH DO_DBG DO_OPT HTMLLOG WEBLOG VERBOSE
 
 if [ $VERBOSE == "yes" ]; then
    echo "Running Tests"
