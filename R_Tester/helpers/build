@@ -1,6 +1,64 @@
-mode=$1 # dbg or opt
-CONFIGURE_ARGS=$2 # configure command line arguments
+#!/bin/sh
 
+export OS
+mode=$1 # dbg or opt
+
+#__________________________________
+# construct the configure_command file
+
+if [ "$OS" == "Linux" ]; then
+  export PETSC_ARCH=linux-gnu-amd64
+  
+  
+  DBG_CONFIGURE="    --enable-debug \\
+      --enable-64bit \\
+      --enable-sci-malloc \\ 
+      --enable-scinew-line-numbers \\"
+  
+  OPT_CONFIGURE="    --enable-64bit \\
+      --enable-assertion-level=0 \\
+     '--enable-optimize=-O3 -mfpmath=sse' \\"
+      
+  COMMON="      --with-mpi=/usr/lib/openmpi \\
+       --with-hdf5 \\
+       --with-tabprops=/usr/local/home/jsutherland/UintahTPL \\
+       --with-exprlib=/usr/local/home/jsutherland/UintahTPL \\
+       --with-spatialops=/usr/local/home/jsutherland/UintahTPL \\
+       --with-boost=/usr/local/share/wasatch/Boost-Install/1.44/gcc4.3.2 \\
+       USE_WASATCH=yes \\"
+  
+  ENV="      CC=gcc-4.2 \\
+       CXX=g++-4.2 \\
+       F77=gfortran-4.2"
+       
+  
+elif [ "$OS" == "Darwin" ]; then
+  export PETSC_ARCH=darwin9.4.0-c-real-opt
+  COMMON="    --enable-package='Uintah Teem' \\
+       --with-petsc=/usr/sci/projects/Uintah/Thirdparty/1.0.0/Darwin/PPC-9.4.0/gcc-4.0.1-openmpi-32bit \\
+       --with-hypre=/usr/sci/projects/Uintah/Thirdparty/1.0.0/Darwin/PPC-9.4.0/gcc-4.0.1-openmpi-32bit \\
+       --with-mpi=/usr/local/openmpi \\"
+  DBG_CONFIGURE="$COMMON $DBG_CONFIGURE"
+  OPT_CONFIGURE="$COMMON '--enable-optimize=-mcpu=7450 -O2 -fsigned-char -maltivec -mabi=altivec -mpowerpc-gfxopt' $OPT_CONFIGURE"
+fi
+
+echo "#!/bin/csh" > configure_command
+echo "../../src/configure --enable-package=Uintah \\" >> configure_command
+ 
+if [ "$mode" = "dbg" ]; then
+  echo "$DBG_CONFIGURE" >> configure_command
+  echo "$COMMON" >> configure_command
+  echo "$ENV" >> configure_command
+elif [ "$mode" = "opt" ]; then
+  echo "$OPT_CONFIGURE" >> configure_command
+  echo "$COMMON" >> configure_command
+  echo "$ENV" >> configure_command
+fi
+
+chmod a+x configure_command
+retval="0"
+
+#__________________________________
 echo "" >> $HTMLLOG
 echo "Compiling" >> $HTMLLOG
 echo "==================================" >> $HTMLLOG
@@ -26,6 +84,7 @@ fi
 
 #__________________________________
 #  run configure
+rm -f "$BUILDROOT"/${mode}/configure.log
 ./configure_command > "$BUILDROOT"/${mode}/configure.log 2>&1
 retval=$?
 
