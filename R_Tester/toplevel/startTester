@@ -11,9 +11,9 @@ USE_PREVTREE="no"
 USE_TREE="new"
 SEND_MAIL_TO=""
 MAIL_REMAKE_LOG_TO=""
-DEFAULT_MAIL_TO="csafe-homebrew@cs.utah.edu"
-DEFAULT_REMAKE_LOG_TO="kuzimmer@cs.utah.edu, sparker@cs.utah.edu, dav@cs.utah.edu"
-REPLY_TO="csafe-homebrew@cs.utah.edu"
+DEFAULT_MAIL_TO="uintah-developer@gforge.sci.utah.edu"
+DEFAULT_REMAKE_LOG_TO="dav@cs.utah.edu"
+REPLY_TO="uintah-developer@gforge.sci.utah.edu"
 PARALLELISM=0
 VERBOSE="no"
 WEEKLY="0"
@@ -287,7 +287,7 @@ else
 
 
   echo $PATH
-  svn co https://code.sci.utah.edu/svn/SCIRun/trunk/src src  > "$BUILDROOT"/svn_co.log 2>&1
+  svn co https://code.sci.utah.edu/svn/uintah/trunk/src src  > "$BUILDROOT"/svn_co.log 2>&1
   retval=$?
 
   if [ $VERBOSE == "yes" ]; then
