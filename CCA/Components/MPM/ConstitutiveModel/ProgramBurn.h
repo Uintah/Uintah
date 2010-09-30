@@ -54,17 +54,25 @@ namespace Uintah {
     // Create datatype for storing model parameters
     struct CMData {
       // These two parameters are used for the unburned Murnahan EOS
-      double d_Bulk;
-      double d_Gamma;
+      double d_K;
+      double d_n;
 
-     // These parameters are used for the product JWL EOS
+      // These parameters are used for the product JWL EOS
       double d_A;
       double d_B;
       double d_R1;
       double d_R2;
       double d_om;
       double d_rho0;
+
+      // These parameters are needed for the reaction model
+      Point  d_start_place; // Starting point of the detonation
+      Vector d_direction;   // Direction if starting from a plane (point-normal)
+      double d_D;           // Detonation velocity
     };
+
+    const VarLabel* pProgressFLabel;
+    const VarLabel* pProgressFLabel_preReloc;
 
   protected:
 
