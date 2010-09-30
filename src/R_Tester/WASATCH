@@ -1,5 +1,5 @@
 #!/usr/bin/python
-
+ 
 from os import symlink,environ
 from sys import argv,exit,platform
 from helpers.runSusTests import runSusTests, inputs_root
