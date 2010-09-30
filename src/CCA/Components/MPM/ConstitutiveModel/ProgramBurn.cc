@@ -59,8 +59,8 @@ ProgramBurn::ProgramBurn(ProblemSpecP& ps, MPMFlags* Mflag)
   d_useModifiedEOS = false;
 
   // These two parameters are used for the unburned Murnahan EOS
-  ps->require("bulk_modulus", d_initialData.d_Bulk);
-  ps->require("gamma",        d_initialData.d_Gamma);
+  ps->require("K",    d_initialData.d_K);
+  ps->require("n",d_initialData.d_n);
 
   // These parameters are used for the product JWL EOS
   ps->require("A",    d_initialData.d_A);
@@ -69,14 +69,25 @@ ProgramBurn::ProgramBurn(ProblemSpecP& ps, MPMFlags* Mflag)
   ps->require("R2",   d_initialData.d_R2);
   ps->require("om",   d_initialData.d_om);
   ps->require("rho0", d_initialData.d_rho0);
+
+  // These parameters are needed for the reaction model
+  ps->require("starting_location",  d_initialData.d_start_place);
+  ps->require("D",                  d_initialData.d_D); // Detonation velocity
+  ps->getWithDefault("direction_if_plane", d_initialData.d_direction,
+                                                              Vector(0.,0.,0.));
+
+  pProgressFLabel          = VarLabel::create("p.progressF",
+                               ParticleVariable<double>::getTypeDescription());
+  pProgressFLabel_preReloc = VarLabel::create("p.progressF+",
+                               ParticleVariable<double>::getTypeDescription());
 }
 
 ProgramBurn::ProgramBurn(const ProgramBurn* cm) : ConstitutiveModel(cm)
 {
   d_useModifiedEOS = cm->d_useModifiedEOS ;
 
-  d_initialData.d_Bulk = cm->d_initialData.d_Bulk;
-  d_initialData.d_Gamma = cm->d_initialData.d_Gamma;
+  d_initialData.d_K = cm->d_initialData.d_K;
+  d_initialData.d_n = cm->d_initialData.d_n;
 
   d_initialData.d_A = cm->d_initialData.d_A;
   d_initialData.d_B = cm->d_initialData.d_B;
@@ -84,10 +95,21 @@ ProgramBurn::ProgramBurn(const ProgramBurn* cm) : ConstitutiveModel(cm)
   d_initialData.d_R2 = cm->d_initialData.d_R2;
   d_initialData.d_om = cm->d_initialData.d_om;
   d_initialData.d_rho0 = cm->d_initialData.d_rho0;
+
+  d_initialData.d_start_place = cm->d_initialData.d_start_place;
+  d_initialData.d_direction   = cm->d_initialData.d_direction;
+  d_initialData.d_D           = cm->d_initialData.d_D;
+
+  pProgressFLabel          = VarLabel::create("p.progressF",
+                               ParticleVariable<double>::getTypeDescription());
+  pProgressFLabel_preReloc = VarLabel::create("p.progressF+",
+                               ParticleVariable<double>::getTypeDescription());
 }
 
 ProgramBurn::~ProgramBurn()
 {
+  VarLabel::destroy(pProgressFLabel);
+  VarLabel::destroy(pProgressFLabel_preReloc);
 }
 
 void ProgramBurn::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
@@ -98,8 +120,8 @@ void ProgramBurn::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
     cm_ps->setAttribute("type","program_burn");
   }
   
-  cm_ps->appendElement("bulk_modulus",   d_initialData.d_Bulk);
-  cm_ps->appendElement("gamma",          d_initialData.d_Gamma);
+  cm_ps->appendElement("K",    d_initialData.d_K);
+  cm_ps->appendElement("n",    d_initialData.d_n);
 
   cm_ps->appendElement("A",    d_initialData.d_A);
   cm_ps->appendElement("B",    d_initialData.d_B);
@@ -107,6 +129,10 @@ void ProgramBurn::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
   cm_ps->appendElement("R2",   d_initialData.d_R2);
   cm_ps->appendElement("om",   d_initialData.d_om);
   cm_ps->appendElement("rho0", d_initialData.d_rho0);
+
+  cm_ps->appendElement("starting_location",  d_initialData.d_start_place);
+  cm_ps->appendElement("direction_if_plane", d_initialData.d_direction);
+  cm_ps->appendElement("D",                  d_initialData.d_D);
 }
 
 ProgramBurn* ProgramBurn::clone()
@@ -121,6 +147,14 @@ void ProgramBurn::initializeCMData(const Patch* patch,
   // Initialize the variables shared by all constitutive models
   // This method is defined in the ConstitutiveModel base class.
   initSharedDataForExplicit(patch, matl, new_dw);
+
+  ParticleSubset* pset = new_dw->getParticleSubset(matl->getDWIndex(), patch);
+
+  ParticleVariable<double> pProgress;
+  new_dw->allocateAndPut(pProgress,pProgressFLabel,pset);
+  for(ParticleSubset::iterator iter=pset->begin();iter != pset->end(); iter++){
+    pProgress[*iter] = 0.;
+  }
 
   computeStableTimestep(patch, matl, new_dw);
 }
@@ -141,7 +175,8 @@ void ProgramBurn::allocateCMDataAddRequires(Task* task,
 
 void ProgramBurn::allocateCMDataAdd(DataWarehouse* new_dw,
                                     ParticleSubset* addset,
-                                    map<const VarLabel*, ParticleVariableBase*>* newState,
+                                    map<const VarLabel*,
+                                    ParticleVariableBase*>* newState,
                                     ParticleSubset* delset,
                                     DataWarehouse* )
 {
@@ -154,10 +189,12 @@ void ProgramBurn::allocateCMDataAdd(DataWarehouse* new_dw,
   // be deleted to the particles to be added
 }
 
-void ProgramBurn::addParticleState(std::vector<const VarLabel*>& ,
-                                   std::vector<const VarLabel*>& )
+void ProgramBurn::addParticleState(std::vector<const VarLabel*>& from,
+                                   std::vector<const VarLabel*>& to)
 {
   // Add the local particle state data for this constitutive model.
+  from.push_back(pProgressFLabel);
+  to.push_back(pProgressFLabel_preReloc);
 }
 
 void ProgramBurn::computeStableTimestep(const Patch* patch,
@@ -181,24 +218,15 @@ void ProgramBurn::computeStableTimestep(const Patch* patch,
   double c_dil = 0.0;
   Vector WaveSpeed(1.e-12,1.e-12,1.e-12);
 
-  double A = d_initialData.d_A;
-  double B = d_initialData.d_B;
-  double R1 = d_initialData.d_R1;
-  double R2 = d_initialData.d_R2;
-  double om = d_initialData.d_om;
+  double K = d_initialData.d_K;
+  double n = d_initialData.d_n;
   double rho0 = d_initialData.d_rho0;
-  double cv = matl->getSpecificHeat();
   for(ParticleSubset::iterator iter = pset->begin();iter != pset->end();iter++){
      particleIndex idx = *iter;
      // Compute wave speed at each particle, store the maximum
      double rhoM = pmass[idx]/pvolume[idx];
-     double V = rho0/rhoM;
-     double P1 = A*exp(-R1*V);
-     double P2 = B*exp(-R2*V);
-     double dp_drho = (R1*rho0*P1 + R2*rho0*P2)/(rhoM*rhoM) + om*cv*ptemperature[idx];
-     double c_2 = dp_drho;
-//     c_2 = dp_drho + dp_de * press_CC[c]/(rho_micro[indx][c] * rho_micro[indx][c]);
-     c_dil = sqrt(c_2);
+     double dp_drho = (1./(K*rho0))*pow((rhoM/rho0),n-1.);
+     c_dil = sqrt(dp_drho);
      WaveSpeed=Vector(Max(c_dil+fabs(pvelocity[idx].x()),WaveSpeed.x()),
                       Max(c_dil+fabs(pvelocity[idx].y()),WaveSpeed.y()),
                       Max(c_dil+fabs(pvelocity[idx].z()),WaveSpeed.z()));
@@ -222,13 +250,13 @@ void ProgramBurn::computeStressTensor(const PatchSubset* patches,
     Matrix3 Identity;
     Identity.Identity();
 
+    Vector dx = patch->dCell();
+    double oodx[3] = {1./dx.x(), 1./dx.y(), 1./dx.z()};
+
     ParticleInterpolator* interpolator = flag->d_interpolator->clone(patch);
     vector<IntVector> ni(interpolator->size());
     vector<Vector> d_S(interpolator->size());
     vector<double> S(interpolator->size());
-
-    Vector dx = patch->dCell();
-    double oodx[3] = {1./dx.x(), 1./dx.y(), 1./dx.z()};
 
     int dwi = matl->getDWIndex();
     ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
@@ -236,11 +264,11 @@ void ProgramBurn::computeStressTensor(const PatchSubset* patches,
     ParticleVariable<Matrix3> deformationGradient_new;
     constParticleVariable<Matrix3> deformationGradient;
     ParticleVariable<Matrix3> pstress;
-    constParticleVariable<double> pmass;
+    constParticleVariable<double> pmass,pProgressF;
     ParticleVariable<double> pvolume;
     constParticleVariable<Vector> pvelocity;
     constParticleVariable<Vector> psize;
-    ParticleVariable<double> pdTdt,p_q;
+    ParticleVariable<double> pdTdt,p_q,pProgressF_new;
 
     delt_vartype delT;
     old_dw->get(delT, lb->delTLabel, getLevel(patches));
@@ -251,16 +279,26 @@ void ProgramBurn::computeStressTensor(const PatchSubset* patches,
     old_dw->get(pvelocity,           lb->pVelocityLabel,           pset);
     old_dw->get(deformationGradient, lb->pDeformationMeasureLabel, pset);
     old_dw->get(psize,               lb->pSizeLabel,               pset);
+    old_dw->get(pProgressF,          pProgressFLabel,              pset);
     
-    new_dw->allocateAndPut(pstress,          lb->pStressLabel_preReloc,  pset);
-    new_dw->allocateAndPut(pvolume,          lb->pVolumeLabel_preReloc,  pset);
-    new_dw->allocateAndPut(pdTdt,            lb->pdTdtLabel_preReloc,    pset);
-    new_dw->allocateAndPut(p_q,              lb->p_qLabel_preReloc,      pset);
+    new_dw->allocateAndPut(pstress,          lb->pStressLabel_preReloc,   pset);
+    new_dw->allocateAndPut(pvolume,          lb->pVolumeLabel_preReloc,   pset);
+    new_dw->allocateAndPut(pdTdt,            lb->pdTdtLabel_preReloc,     pset);
+    new_dw->allocateAndPut(p_q,              lb->p_qLabel_preReloc,       pset);
     new_dw->allocateAndPut(deformationGradient_new,
-                                  lb->pDeformationMeasureLabel_preReloc, pset);
+                                  lb->pDeformationMeasureLabel_preReloc,  pset);
 
-    double bulk = d_initialData.d_Bulk;
-    double gamma = d_initialData.d_Gamma;
+    new_dw->allocateAndPut(pProgressF_new,    pProgressFLabel_preReloc,   pset);
+
+    constNCVariable<Vector> gvelocity;
+    new_dw->get(gvelocity, lb->gVelocityStarLabel, dwi, patch, gac, NGN);
+
+//    double cell_vol = dx.x()*dx.y()*dx.z();
+//    double delta_L = 1.5*pow(cell_vol,1./3.)/d_initialData.d_D;
+    double time = d_sharedState->getElapsedTime();
+
+    double K = d_initialData.d_K;
+    double n = d_initialData.d_n;
 //    double A = d_initialData.d_A;
 //    double B = d_initialData.d_B;
 //    double R1 = d_initialData.d_R1;
@@ -268,24 +306,36 @@ void ProgramBurn::computeStressTensor(const PatchSubset* patches,
 //    double om = d_initialData.d_om;
     double rho0 = d_initialData.d_rho0; // matl->getInitialDensity();
 
-    constNCVariable<Vector> gvelocity;
-    new_dw->get(gvelocity, lb->gVelocityStarLabel,dwi,patch,gac,NGN);
-
     if(!flag->d_doGridReset){
-      cerr << "The program_burn model doesn't work without resetting the grid" << endl;
+      cerr << "The program_burn model doesn't work without resetting the grid"
+           << endl;
     }
 
     for(ParticleSubset::iterator iter = pset->begin();
         iter != pset->end(); iter++){
       particleIndex idx = *iter;
-      
+
+      double dist_straight = (px[idx] - d_initialData.d_start_place).length();
+
+      double dist = dist_straight;
+
+      double t_b = dist/d_initialData.d_D;
+
+      if (time >= t_b){
+        pProgressF_new[idx]=1.0;
+      }
+      else{
+        pProgressF_new[idx]=0.0;
+      }
+
       // Assign zero internal heating by default - modify if necessary.
       pdTdt[idx] = 0.0;
 
       velGrad.set(0.0);
       if(!flag->d_axisymmetric){
         // Get the node indices that surround the cell
-        interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx],deformationGradient[idx]);
+        interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx],
+                                                      deformationGradient[idx]);
 
         computeVelocityGradient(velGrad,ni,d_S, oodx, gvelocity);
       } else {  // axi-symmetric kinematics
@@ -303,8 +353,8 @@ void ProgramBurn::computeStressTensor(const PatchSubset* patches,
       double J = deformationGradient_new[idx].Determinant();
 
       // get the hydrostatic part of the stress
-      double jtotheminusgamma = pow(J,-gamma);
-      p = bulk*(jtotheminusgamma - 1.0);
+      double jtotheminusn = pow(J,-n);
+      p = K*(jtotheminusn - 1.0);
 
       // Calculate rate of deformation D, and deviatoric rate DPrime,
 //      Matrix3 D = (velGrad + velGrad.Transpose())*0.5;
@@ -321,7 +371,10 @@ void ProgramBurn::computeStressTensor(const PatchSubset* patches,
       pstress[idx] = Identity*(-p);
 
       Vector pvelocity_idx = pvelocity[idx];
-      c_dil = sqrt((gamma*jtotheminusgamma*bulk)/rho_cur);
+
+      // Compute wave speed at each particle, store the maximum
+      double dp_drho = (1./(K*rho0))*pow((rho_cur/rho0),n-1.);
+      c_dil = sqrt(dp_drho);
       WaveSpeed=Vector(Max(c_dil+fabs(pvelocity_idx.x()),WaveSpeed.x()),
                        Max(c_dil+fabs(pvelocity_idx.y()),WaveSpeed.y()),
                        Max(c_dil+fabs(pvelocity_idx.z()),WaveSpeed.z()));
@@ -329,7 +382,7 @@ void ProgramBurn::computeStressTensor(const PatchSubset* patches,
       // Compute artificial viscosity term
       if (flag->d_artificial_viscosity) {
         double dx_ave = (dx.x() + dx.y() + dx.z())/3.0;
-        double c_bulk = sqrt(bulk/rho_cur);
+        double c_bulk = sqrt(1./(K*rho_cur));
         Matrix3 D=(velGrad + velGrad.Transpose())*0.5;
         p_q[idx] = artificialBulkViscosity(D.Trace(), c_bulk, rho_cur, dx_ave);
       } else {
@@ -386,6 +439,8 @@ void ProgramBurn::addComputesAndRequires(Task* task,
   const MaterialSubset* matlset = matl->thisMaterial();
   addSharedCRForExplicit(task, matlset, patches);
 
+  task->requires(Task::OldDW, pProgressFLabel,   matlset, Ghost::None);
+  task->computes(pProgressFLabel_preReloc,       matlset);
 }
 
 void 
