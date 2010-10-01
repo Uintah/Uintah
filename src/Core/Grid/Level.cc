@@ -30,7 +30,7 @@ DEALINGS IN THE SOFTWARE.
 //Allgatherv currently performs poorly on Kraken.  
 //This hack changes the Allgatherv to an allgather 
 //by padding the digits
-#define AG_HACK  
+//#define AG_HACK  
 
 
 #include <TauProfilerForSCIRun.h>
