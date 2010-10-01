@@ -106,10 +106,6 @@ protected:
   std::string _src_name;                             ///< User assigned source name 
   std::string _init_type;                            ///< Initialization type. 
 
-
-
-  ArchesLabel* d_fieldLabels;                        ///< Field labels (not used by default, only used when source term needs them)
-
   bool _compute_me;                                  ///< To indicate if calculating this source is needed or has already been computed. 
   const VarLabel* _src_label;                        ///< Source varlabel
   bool _label_sched_init;                            ///< Boolean to clarify if a "computes" or "requires" is needed
@@ -117,6 +113,8 @@ protected:
   vector<std::string> _required_labels;              ///< Vector of required labels
   vector<const VarLabel*> _extra_local_labels;       ///< Extra labels that might be useful for storage
   
+  ArchesLabel* d_fieldLabels;                        ///< Field labels (not used by default, only used when source term needs them)
+
   MY_TYPE _source_type;                              ///< Source type
 
 
