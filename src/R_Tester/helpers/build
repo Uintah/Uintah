@@ -28,6 +28,8 @@ if [ "$OS" == "Linux" ]; then
      '--enable-optimize=-O3 -mfpmath=sse' \\"
       
   COMMON="      --with-mpi=/usr/lib/openmpi \\
+       --with-petsc=/usr/ \\
+       --with-hypre=/usr/ \\
        --with-hdf5 \\
        --with-tabprops=/usr/local/home/jsutherland/UintahTPL \\
        --with-exprlib=/usr/local/home/jsutherland/UintahTPL \\
