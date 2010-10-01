@@ -22,6 +22,10 @@ if [ ! -d TestScripts ]; then
   ln -s ../src/R_Tester TestScripts
 fi
 
+if [ ! -f replace_all_GS ]; then
+  ln -s ../src/R_Tester/helpers/replace_all_GS replace_all_GS
+fi
+
 if [ ! -d susdir ]; then
   ln -s build/StandAlone susdir
 fi
