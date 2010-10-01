@@ -21,10 +21,12 @@ namespace Uintah{
   */
 
 class DevolMixtureFraction: public SourceTermBase {
-public: 
 
-  DevolMixtureFraction( std::string srcName, SimulationStateP& shared_state, 
-                vector<std::string> reqLabelNames );
+  public: 
+
+  DevolMixtureFraction( std::string srcName, 
+                        SimulationStateP& shared_state, 
+                        vector<std::string> reqLabelNames );
 
   ~DevolMixtureFraction();
 

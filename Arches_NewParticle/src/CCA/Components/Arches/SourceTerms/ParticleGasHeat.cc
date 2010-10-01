@@ -3,7 +3,7 @@
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/Variables/CCVariable.h>
-#include <CCA/Components/Arches/SourceTerms/CoalGasHeat.h>
+#include <CCA/Components/Arches/SourceTerms/ParticleGasHeat.h>
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqnFactory.h>
 #include <CCA/Components/Arches/CoalModels/CoalModelFactory.h>
 #include <CCA/Components/Arches/TransportEqns/EqnBase.h>
@@ -16,20 +16,22 @@
 using namespace std;
 using namespace Uintah; 
 
-CoalGasHeat::CoalGasHeat( std::string src_name, vector<std::string> label_names, SimulationStateP& shared_state ) 
+ParticleGasHeat::ParticleGasHeat( std::string src_name, 
+                                  vector<std::string> label_names, 
+                                  SimulationStateP& shared_state ) 
 : SourceTermBase( src_name, shared_state, label_names )
 {
   _label_sched_init = false; 
   _src_label = VarLabel::create( src_name, CCVariable<double>::getTypeDescription() ); 
 }
 
-CoalGasHeat::~CoalGasHeat()
+ParticleGasHeat::~ParticleGasHeat()
 {}
 //---------------------------------------------------------------------------
 // Method: Problem Setup
 //---------------------------------------------------------------------------
 void 
-CoalGasHeat::problemSetup(const ProblemSpecP& inputdb)
+ParticleGasHeat::problemSetup(const ProblemSpecP& inputdb)
 {
 
   ProblemSpecP db = inputdb; 
@@ -43,24 +45,38 @@ CoalGasHeat::problemSetup(const ProblemSpecP& inputdb)
 // Method: Schedule the calculation of the source term 
 //---------------------------------------------------------------------------
 void 
-CoalGasHeat::sched_computeSource( const LevelP& level, SchedulerP& sched, int timeSubStep )
+ParticleGasHeat::sched_computeSource( const LevelP& level, SchedulerP& sched, int timeSubStep )
 {
-  std::string taskname = "CoalGasHeat::eval";
-  Task* tsk = scinew Task(taskname, this, &CoalGasHeat::computeSource, timeSubStep);
+  std::string taskname = "ParticleGasHeat::eval";
+  Task* tsk = scinew Task(taskname, this, &ParticleGasHeat::computeSource, timeSubStep);
 
   if (timeSubStep == 0 && !_label_sched_init) {
     // Every source term needs to set this flag after the varLabel is computed. 
     // transportEqn.cleanUp should reinitialize this flag at the end of the time step. 
     _label_sched_init = true;
+  }
 
+  if( timeSubStep == 0 ) {
     tsk->computes(_src_label);
   } else {
     tsk->modifies(_src_label); 
   }
 
-  DQMOMEqnFactory& dqmomFactory  = DQMOMEqnFactory::self(); 
-  CoalModelFactory& modelFactory = CoalModelFactory::self(); 
+  CoalModelFactory& coal_model_factory = CoalModelFactory::self(); 
 
+  // only require particle temperature labels
+  // if there is actually a particle heat transfer model
+  if( coal_model_factory.useHeatTransferModel() ) {
+
+    DQMOMEqnFactory& dqmom_factory  = DQMOMEqnFactory::self(); 
+    for( int iqn=0; iqn < dqmom_factory.get_quad_nodes(); ++iqn ) {
+      HeatTransfer* heat_xfer_model = coal_model_factory.getHeatTransferModel( iqn );
+      tsk->requires( Task::NewDW, heat_xfer_model->getGasSourceLabel(), Ghost::None, 0);
+    }
+
+  }
+
+  /*
   for (int iqn = 0; iqn < dqmomFactory.get_quad_nodes(); iqn++){
     std::string weight_name = "w_qn";
     std::string model_name = _heat_model_name; 
@@ -86,6 +102,7 @@ CoalGasHeat::sched_computeSource( const LevelP& level, SchedulerP& sched, int ti
     tsk->requires( Task::OldDW, tempgasLabel_m, Ghost::None, 0 );
 
   }
+  */
 
   sched->addTask(tsk, level->eachPatch(), _shared_state->allArchesMaterials()); 
 
@@ -94,7 +111,7 @@ CoalGasHeat::sched_computeSource( const LevelP& level, SchedulerP& sched, int ti
 // Method: Actually compute the source term 
 //---------------------------------------------------------------------------
 void
-CoalGasHeat::computeSource( const ProcessorGroup* pc, 
+ParticleGasHeat::computeSource( const ProcessorGroup* pc, 
                    const PatchSubset* patches, 
                    const MaterialSubset* matls, 
                    DataWarehouse* old_dw, 
@@ -112,54 +129,65 @@ CoalGasHeat::computeSource( const ProcessorGroup* pc,
     int archIndex = 0;
     int matlIndex = _shared_state->getArchesMaterial(archIndex)->getDWIndex(); 
 
-    DQMOMEqnFactory& dqmomFactory  = DQMOMEqnFactory::self(); 
-    CoalModelFactory& modelFactory = CoalModelFactory::self(); 
-
     CCVariable<double> heatSrc; 
-    if ( new_dw->exists(_src_label, matlIndex, patch ) ){
-      new_dw->getModifiable( heatSrc, _src_label, matlIndex, patch ); 
-      heatSrc.initialize(0.0);
-    } else {
+    if( timeSubStep == 0 ) {
       new_dw->allocateAndPut( heatSrc, _src_label, matlIndex, patch );
-      heatSrc.initialize(0.0);
-    } 
-
-
-    for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
-      IntVector c = *iter;
-
-
-      for (int iqn = 0; iqn < dqmomFactory.get_quad_nodes(); iqn++){
-        std::string model_name = _heat_model_name; 
-        std::string node;  
-        std::stringstream out; 
-        out << iqn; 
-        node = out.str(); 
-        model_name += "_qn";
-        model_name += node;
-
-        ModelBase& model = modelFactory.retrieve_model( model_name ); 
-
-        constCCVariable<double> qn_gas_heat;
-        const VarLabel* gasModelLabel = model.getGasSourceLabel(); 
- 
-        old_dw->get( qn_gas_heat, gasModelLabel, matlIndex, patch, gn, 0 );
-
-        heatSrc[c] += qn_gas_heat[c];
-        //cout << "Heat source " << qn_gas_heat[c] << " " << node << " " << heatSrc[c] << endl;
-      }
+    } else {
+      new_dw->getModifiable( heatSrc, _src_label, matlIndex, patch ); 
     }
+    heatSrc.initialize(0.0);
+
+    CoalModelFactory& coal_model_factory = CoalModelFactory::self(); 
+
+    if( coal_model_factory.useHeatTransferModel() ) {
+
+      DQMOMEqnFactory& dqmom_factory = DQMOMEqnFactory::self(); 
+      int numEnvironments = dqmom_factory.get_quad_nodes();
+
+      // create a vector to hold heat xfer model constCCVariables
+      vector< constCCVariable<double>* > heatxferCCVars(numEnvironments);
+
+      // populate this vector with constCCVariables associated with heat xfer model
+      for( int iqn=0; iqn < numEnvironments; ++iqn ) {
+        heatxferCCVars[iqn] = scinew constCCVariable<double>;
+        HeatTransfer* heat_xfer_model = coal_model_factory.getHeatTransferModel(iqn);
+        new_dw->get( *(heatxferCCVars[iqn]), heat_xfer_model->getGasSourceLabel(), matlIndex, patch, gn, 0);
+      }
+
+      // next, create the net source term by adding source terms for each quad node together
+      for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
+        IntVector c = *iter; 
+
+        double running_sum = 0.0;
+        for( vector< constCCVariable<double>* >::iterator iHT = heatxferCCVars.begin();
+             iHT != heatxferCCVars.end(); ++iHT ) {
+          running_sum += (**iHT)[c];
+        }
+
+        heatSrc[c] = running_sum;
+
+      }
+
+      // finally, delete constCCVariables created on the stack
+      for( vector< constCCVariable<double>* >::iterator ii = heatxferCCVars.begin(); 
+           ii != heatxferCCVars.end(); ++ii ) {
+        delete *ii;
+      }
+
+    }
+
   }
 }
+
 //---------------------------------------------------------------------------
 // Method: Schedule dummy initialization
 //---------------------------------------------------------------------------
 void
-CoalGasHeat::sched_dummyInit( const LevelP& level, SchedulerP& sched )
+ParticleGasHeat::sched_dummyInit( const LevelP& level, SchedulerP& sched )
 {
-  string taskname = "CoalGasHeat::dummyInit"; 
+  string taskname = "ParticleGasHeat::dummyInit"; 
 
-  Task* tsk = scinew Task(taskname, this, &CoalGasHeat::dummyInit);
+  Task* tsk = scinew Task(taskname, this, &ParticleGasHeat::dummyInit);
 
   tsk->computes(_src_label);
 
@@ -171,7 +199,7 @@ CoalGasHeat::sched_dummyInit( const LevelP& level, SchedulerP& sched )
 
 }
 void 
-CoalGasHeat::dummyInit( const ProcessorGroup* pc, 
+ParticleGasHeat::dummyInit( const ProcessorGroup* pc, 
                          const PatchSubset* patches, 
                          const MaterialSubset* matls, 
                          DataWarehouse* old_dw, 

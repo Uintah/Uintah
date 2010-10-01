@@ -31,8 +31,8 @@ CoalModelFactory::CoalModelFactory()
   yelem.resize(5);
   
   d_useParticleVelocityModel = false;
-  d_useHeatTransferModel = false;
   d_useParticleDensityModel = false;
+  d_useHeatTransferModel = false;
 
 }
 
@@ -77,8 +77,9 @@ void CoalModelFactory::problemSetup(const ProblemSpecP& params)
   DQMOMEqnFactory& dqmom_factory = DQMOMEqnFactory::self(); 
   numQuadNodes = dqmom_factory.get_quad_nodes();  
 
-  d_ParticleDensityModel.resize(numQuadNodes);
   d_ParticleVelocityModel.resize(numQuadNodes);
+  d_ParticleDensityModel.resize(numQuadNodes);
+  d_HeatTransferModel.resize(numQuadNodes);
 
   // ----------------------------------------------
   // Step 1: CoalModelFactory problem setup
@@ -393,6 +394,7 @@ CoalModelFactory::register_model( const std::string name,
   }
 
   if( modelType == "HeatTransfer" ) {
+    d_HeatTransferModel[quad_node] = dynamic_cast<HeatTransfer*>(model);
     d_useHeatTransferModel = true;
   }
 

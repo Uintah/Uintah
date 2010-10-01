@@ -251,6 +251,24 @@ public:
     }
   };
 
+  // ------------------------------------
+  // Get methods for particle heat transfer
+
+  /** @brief   Returns true if there is a particle temperature (heat transfer) model specified in the input file. */
+  const inline bool useHeatTransferModel() {
+    return d_useHeatTransferModel; }
+
+  /** @brief    Return the model object for heat transfer model */
+  HeatTransfer* getHeatTransferModel( int qn ) {
+    if( d_useHeatTransferModel ) {
+      vector<HeatTransfer*>::iterator iHT = d_HeatTransferModel.begin() + qn;
+      return (*iHT);
+    } else {
+      return NULL;
+    }
+  };
+
+
 private:
 
   typedef std::map< std::string, ModelBuilder* > BuildMap;
@@ -271,13 +289,14 @@ private:
   vector<double> yelem;			///< Vector containing initial composition of coal particle
 
   bool d_useParticleVelocityModel;  ///< Boolean: using a particle velocity model?
+  bool d_useParticleDensityModel;   ///< Boolean: using a particle density model? (This is set automatically, based on whether any models require a particle density)
   bool d_useHeatTransferModel;      ///< Boolean: using a heat transfer model?
   bool d_useDevolatilizationModel;  ///< Boolean: using a devolatilization model? (used to see whether there should be a <src> tag in the <MixtureFractionSolver> block)
   bool d_useCharOxidationModel;     ///< Boolean: using a char oxidation model? (used to see whether there should be a <src> tag in the <MixtureFractionSolver> block)
-  bool d_useParticleDensityModel;   ///< Boolean: using a particle density model? (This is set automatically, based on whether any models require a particle density)
 
   vector<ParticleVelocity*> d_ParticleVelocityModel; ///< Vector containing particle velocity models for each environment 
   vector<ParticleDensity*>  d_ParticleDensityModel;  ///< Vector containing particle density models for each environment 
+  vector<HeatTransfer*>     d_HeatTransferModel;     ///< Vector containing particle density models for each environment 
   
   CoalModelFactory();
   ~CoalModelFactory();

@@ -14,9 +14,18 @@
       <PropertyModels                   spec="OPTIONAL NO_DATA" >
         <model                          spec="MULTIPLE NO_DATA" 
                                         attribute1="label REQUIRED STRING"
-                                        attribute2="type REQUIRED STRING 'cc_constant, fx_constant, laminar_pr'">
-          <!-- constant property model --> 
+                                        attribute2="type REQUIRED STRING 'cc_constant, fx_constant, 
+                                                                          scalar_diss, laminar_pr, 
+                                                                          extent_rxn, tab_strip_factor'">
+          <!-- constant property model and scalar dissipation rate model --> 
           <constant                     spec="OPTIONAL DOUBLE"/>
+
+          <!-- extent of reaction model --> 
+          <scalar_label                 spec="OPTIONAL STRING"/>
+          <fuel_mass_fraction           spec="OPTIONAL DOUBLE"/>
+
+          <!-- scalar dissipation rate model --> 
+          <constant_diss                spec="OPTIONAL NO_DATA"/>
 
           <!-- laminar pr --> 
           <atm_pressure                 spec="OPTIONAL DOUBLE"/>
@@ -40,6 +49,12 @@
             <viscosity                  spec="OPTIONAL DOUBLE 'positive'"/>
           </oxidizer>
 
+          <!-- Tabulated stripping factor --> 
+          <X                            spec="OPTIONAL DOUBLE 'positive'"/>
+          <Y                            spec="OPTIONAL DOUBLE 'positive'"/>
+          <co2_label                    spec="OPTIONAL STRING 'co2IN, CO2'"/>
+          <ch4_label                    spec="OPTIONAL STRING 'ch4IN, CH4'"/>
+          <small                        spec="OPTIONAL DOUBLE 'positive'"/>
 
         </model>
       </PropertyModels>
@@ -73,6 +88,7 @@
         <O                              spec="REQUIRED DOUBLE" />
         <S                              spec="REQUIRED DOUBLE" />
         <initial_ash_mass               spec="REQUIRED MULTIPLE_DOUBLES" />
+        <initial_fixcarb_mass           spec="REQUIRED MULTIPLE_DOUBLES" />
         <particle_density               spec="OPTIONAL DOUBLE" />
       </Coal_Properties>
       
@@ -128,8 +144,7 @@
         <TabProps                       spec="OPTIONAL NO_DATA" >
           <inputfile                    spec="REQUIRED STRING" />
           <cold_flow                    spec="OPTIONAL BOOLEAN"/>
-          <strict_mode                  spec="OPTIONAL BOOLEAN" />
-          <diagnostic_mode              spec="OPTIONAL BOOLEAN" />
+          <adiabatic                    spec="OPTIONAL BOOLEAN"/>
           <hl_scalar_init               spec="OPTIONAL DOUBLE" />
           <hl_pressure                  spec="OPTIONAL DOUBLE" />
           <hl_outlet                    spec="OPTIONAL DOUBLE" />
@@ -347,7 +362,7 @@
           <timestepMultiplier           spec="OPTIONAL DOUBLE" />
           <conv_scheme                  spec="OPTIONAL STRING 'upwind, super_bee, central'"/> 
           <scaling_const                spec="OPTIONAL DOUBLE"/>                              
-          <use_density_guess            spec="OPTIONAL NO_DATA"/>
+          <!--use_density_guess            spec="OPTIONAL NO_DATA"/--> <!-- Option removed for the time being-->
           <src                          spec="MULTIPLE NO_DATA" 
                                         attribute1="label REQUIRED STRING"/>
           <initialization               spec="OPTIONAL NO_DATA"
@@ -376,7 +391,10 @@
           <src                          spec="MULTIPLE NO_DATA"
                                         attribute1="label REQUIRED STRING"
                                         attribute2="type REQUIRED STRING 'ConstantSourceTerm, DevolMixtureFraction, CharOxidationMixtureFraction, 
-                                                                          WestbrookDryer, MMS1, ParticleGasMomentumSource'">
+                                                                          WestbrookDryer, MMS1, ParticleGasMomentumSource',
+                                                                          fy_inject_src, fz_inject_src, tab_rxn_rate,
+                                                                          cc_intrusion_inlet, fx_intrusion_inlet,
+                                                                          fy_intrusion_inlet, fz_intrusion_inlet'">
 
             <!-- Specs for coal gas devol mixture fraction source term -->
             <devol_model_name           spec="OPTIONAL STRING" />
@@ -403,10 +421,17 @@
             <Y                          spec="OPTIONAL DOUBLE" />
             <m                          spec="OPTIONAL DOUBLE" />
             <n                          spec="OPTIONAL DOUBLE" />
-            <MW_HydroCarbon             spec="OPTIONAL DOUBLE" />
-            <MF_HC_F1                   spec="OPTIONAL DOUBLE" />
-            <MF_O2_F0                   spec="OPTIONAL DOUBLE" />
+            <fuel_mass_fraction         spec="OPTIONAL DOUBLE" />
+            <oxidizer_O2_mass_fraction  spec="OPTIONAL DOUBLE" />
 
+            <!-- Intrusion inlets --> 
+            <intrusion                  spec="OPTIONAL NO_DATA">
+              <geom_object/>
+            </intrusion>
+            <normal                     spec="OPTIONAL STRING '+X,-X,+Y,-Y,+Z,-Z'"/>
+            <velocity                   spec="OPTIONAL DOUBLE"/>
+            <density                    spec="OPTIONAL DOUBLE"/>
+            <phi                        spec="OPTIONAL DOUBLE"/>
 
           </src>
 
@@ -415,8 +440,10 @@
       </TransportEqns>
 
       <DQMOM                            spec="OPTIONAL NO_DATA" >
-
+      <!--
+      <DQMOM                            spec="OPTIONAL NO_DATA" >
         <type                           spec="OPTIONAL STRING 'unweightedAbs, weightedAbs'" />
+-->
 
         <!-- Tags for verification of DQMOM AX=B solution procedure -->
         <Verify_Linear_Solver           spec="OPTIONAL NO_DATA">
