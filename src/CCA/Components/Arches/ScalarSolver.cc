@@ -57,7 +57,6 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Parallel/Parallel.h>
 #include <CCA/Components/Arches/SourceTerms/SourceTermFactory.h>
 #include <CCA/Components/Arches/SourceTerms/SourceTermBase.h>
-#include <CCA/Components/Arches/CoalModels/CoalModelFactory.h>
 
 using namespace Uintah;
 using namespace std;

@@ -4,6 +4,7 @@
 #include <CCA/Components/Arches/SourceTerms/ConstantSourceTerm.h>
 #include <CCA/Components/Arches/SourceTerms/MMS1.h>
 #include <CCA/Components/Arches/SourceTerms/ParticleGasMomentum.h>
+#include <CCA/Components/Arches/SourceTerms/ParticleGasHeat.h>
 #include <CCA/Components/Arches/SourceTerms/UnweightedSrcTerm.h>
 #include <CCA/Components/Arches/SourceTerms/WestbrookDryer.h>
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqnFactory.h>
@@ -105,6 +106,11 @@ void SourceTermFactory::problemSetup(const ProblemSpecP& params)
         // Adds a constant to RHS
         SourceTermBase::Builder* srcBuilder = scinew ConstantSourceTerm::Builder(srcName, required_varLabels, d_fieldLabels->d_sharedState); 
         register_source_term( srcName, srcBuilder ); 
+
+      } else if (src_type == "ParticleGasHeat" || src_type == "particle_gas_heat" ) {
+        // Add an energy source term due to particles
+        SourceTermBase::Builder* srcBuilder = scinew ParticleGasHeat::Builder(srcName,required_varLabels, d_fieldLabels->d_sharedState);
+        register_source_term( srcName, srcBuilder );
 
       } else if (src_type == "DevolMixtureFraction" || src_type == "devol_mixture_frac"){
         // Add a mixure fraction source due to devolatilization reactions

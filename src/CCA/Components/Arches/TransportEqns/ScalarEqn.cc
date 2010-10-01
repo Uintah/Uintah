@@ -585,6 +585,7 @@ ScalarEqn::sched_timeAveraging( const LevelP& level, SchedulerP& sched, int time
 
   //Old
   tsk->requires(Task::OldDW, d_transportVarLabel, Ghost::None, 0);
+  tsk->requires(Task::NewDW, d_RHSLabel, Ghost::None, 0);
   if( timeSubStep == 0 ) {
     tsk->requires(Task::OldDW, d_fieldLabels->d_densityCPLabel, Ghost::None, 0); 
   } else {

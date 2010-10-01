@@ -9,6 +9,7 @@ SRCS += \
 	$(SRCDIR)/WestbrookDryer.cc \
 	$(SRCDIR)/MMS1.cc \
 	$(SRCDIR)/ParticleGasMomentum.cc \
+	$(SRCDIR)/ParticleGasHeat.cc \
 	$(SRCDIR)/UnweightedSrcTerm.cc \
 	$(SRCDIR)/Inject.cc \
 	$(SRCDIR)/TabRxnRate.cc \

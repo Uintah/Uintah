@@ -57,7 +57,7 @@ ParticleGasMomentum::sched_computeSource( const LevelP& level, SchedulerP& sched
 
   CoalModelFactory& coal_model_factory = CoalModelFactory::self(); 
 
-  // only require weight eqn and particle velocity labels 
+  // only require particle velocity labels 
   // if there is actually a particle velocity model
   if( coal_model_factory.useParticleVelocityModel() ) {
  
@@ -140,7 +140,7 @@ ParticleGasMomentum::computeSource( const ProcessorGroup* pc,
 
       }
 
-      // now delete CCVariables created on the stack with the "scinew" operator
+      // now delete constCCVariables created on the stack with the "scinew" operator
       for( vector< constCCVariable<Vector>* >::iterator ii = dragCCVars.begin(); ii != dragCCVars.end(); ++ii ) {
         delete *ii;
       }

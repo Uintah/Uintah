@@ -1,5 +1,5 @@
-#ifndef Uintah_Component_Arches_CoalGasHeat_h
-#define Uintah_Component_Arches_CoalGasHeat_h
+#ifndef Uintah_Component_Arches_ParticleGasHeat_h
+#define Uintah_Component_Arches_ParticleGasHeat_h
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Grid/SimulationStateP.h>
 #include <CCA/Components/Arches/SourceTerms/SourceTermBase.h>
@@ -7,13 +7,27 @@
 
 namespace Uintah{ 
 
-class CoalGasHeat: public SourceTermBase {
+//===========================================================================
+
+/**
+  * @class    ParticleGasHeat
+  * @author   Julien Pedel
+  * @date     October 2010
+  *           
+  * @brief    
+  * This class needs documentation.
+  *
+  */
+
+class ParticleGasHeat: public SourceTermBase {
 
   public: 
 
-  CoalGasHeat( std::string src_name, vector<std::string> required_label_names, SimulationStateP& shared_state );
+  ParticleGasHeat( std::string src_name, 
+                   vector<std::string> required_label_names,
+                   SimulationStateP& shared_state );
 
-  ~CoalGasHeat();
+  ~ParticleGasHeat();
 
   /** @brief Interface for the inputfile and set constants */ 
   void problemSetup(const ProblemSpecP& db);
@@ -32,23 +46,31 @@ class CoalGasHeat: public SourceTermBase {
 
   /** @brief Schedule a dummy initialization */ 
   void sched_dummyInit( const LevelP& level, SchedulerP& sched );
+
   void dummyInit( const ProcessorGroup* pc, 
                   const PatchSubset* patches, 
                   const MaterialSubset* matls, 
                   DataWarehouse* old_dw, 
                   DataWarehouse* new_dw );
 
+  /** @brief  Return a string with the model type */
+  inline string getType() {
+    return "ParticleGasHeat";
+  };
+
   class Builder
     : public SourceTermBase::Builder { 
 
     public: 
 
-      Builder( std::string name, vector<std::string> required_label_names, SimulationStateP& shared_state ) 
-        : _name(name), _shared_state(shared_state), _required_label_names(required_label_names){};
+      Builder( std::string name, 
+               vector<std::string> required_label_names, 
+               SimulationStateP& shared_state ) : 
+               _name(name), _shared_state(shared_state), _required_label_names(required_label_names){};
       ~Builder(){}; 
-
-      CoalGasHeat* build()
-      { return scinew CoalGasHeat( _name, _required_label_names, _shared_state ); };
+      ParticleGasHeat* build() { 
+        return scinew ParticleGasHeat( _name, _required_label_names, _shared_state); 
+      }
 
     private: 
 
@@ -62,6 +84,6 @@ private:
 
   std::string _heat_model_name; 
 
-}; // end CoalGasHeat
+}; // end ParticleGasHeat
 } // end namespace Uintah
 #endif
