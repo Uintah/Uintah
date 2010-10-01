@@ -60,14 +60,15 @@ WestbrookDryer::problemSetup(const ProblemSpecP& inputdb)
   db->getWithDefault("Y", d_Y, 4);        // C_xH_y
   db->getWithDefault("m", d_m, -0.3);     // [C_xH_y]^m 
   db->getWithDefault("n", d_n, 1.3 );     // [O_2]^n 
-  db->require("MW_HydroCarbon",d_MW_HC);  // Molecular weight of C_xH_y (there may be an OH on the end)
-  db->require("MF_HC_F1", d_MF_HC_f1);    // Mass fraction of C_xH_y when f=1
-  db->require("MF_O2_F0", d_MF_O2_f0);    // Mass fraction of O2 when f=0
+  db->require("fuel_mass_fraction", d_MF_HC_f1);           // Mass fraction of C_xH_y when f=1
+  db->require("oxidizer_O2_mass_fraction", d_MF_O2_f0);    // Mass fraction of O2 when f=0
 
   // hard set some values...may want to change some of these to be inputs
   d_MW_O2 = 32.0; 
   d_R     = 8.314472; 
   d_Press = 101325; 
+
+  d_MW_HC = 12.0*d_X + 1.0*d_Y; // compute the molecular weight from input information
 
 }
 //---------------------------------------------------------------------------

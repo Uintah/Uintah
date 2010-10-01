@@ -195,8 +195,6 @@ public:
                                      SchedulerP&);
   virtual void sched_mmsInitialCondition(const LevelP& level,
                                          SchedulerP&);
-  virtual void sched_blobInit(const LevelP& level,
-                              SchedulerP&);
 
   // GROUP: Access Functions :
   ///////////////////////////////////////////////////////////////////////
@@ -287,12 +285,6 @@ private:
                            DataWarehouse* ,
                            DataWarehouse* new_dw);
                            
-  void blobInit(const ProcessorGroup*,
-                const PatchSubset* patches,
-                const MaterialSubset*,
-                DataWarehouse* ,
-                DataWarehouse* new_dw);
-
 
 
 private:

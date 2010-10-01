@@ -647,13 +647,6 @@ Arches::scheduleInitialize(const LevelP& level,
     sched_mmsInitialCondition(level, sched);
   }
 
-  //========= MOM debugging ===========
-  bool debug_mom = false;
-  if (debug_mom){
-    sched_blobInit(level, sched);
-  }
-  //===================================
-
   // schedule init of cell type
   // require : NONE
   // compute : cellType
@@ -1569,79 +1562,6 @@ Arches::readCCInitialCondition(const ProcessorGroup* ,
     fd.close();  
   }
 }
-//___________________________________________________________________________
-//
-
-
-
-//______________________________________________________________________
-//
-void 
-Arches::sched_blobInit(const LevelP& level,
-                       SchedulerP& sched)
-{
-  // primitive variable initialization
-  Task* tsk = scinew Task( "Arches::blobInit",
-                     this, &Arches::blobInit);
-
-  tsk->modifies(d_extraScalars[0]->getScalarLabel());
-  sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
-}
-//______________________________________________________________________
-//
-void
-Arches::blobInit(const ProcessorGroup* ,
-                 const PatchSubset* patches,
-                 const MaterialSubset*,
-                 DataWarehouse* ,
-                 DataWarehouse* new_dw)
-{
-  //WARNING: Hardcoded to 1 patch!
-  for (int p = 0; p < patches->size(); p++){
-    const Patch* patch = patches->get(p);
-    int archIndex = 0; // only one arches material
-    int indx = d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
-    const VarLabel* extrascalarlabel;
-    CCVariable<double> extrascalar;
-
-    PerPatch<CellInformationP> cellInfoP;
-    new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
-    
-    CellInformation* cellinfo = cellInfoP.get().get_rep();
-
-
-    extrascalarlabel = d_extraScalars[0]->getScalarLabel();
-    new_dw->getModifiable(extrascalar, extrascalarlabel, indx, patch);
-  
-    proc0cout << "WARNING!  SETTING UP A BLOB IN YOUR DOMAIN!" << std::endl;
-    proc0cout << "Turn off debug_mom in Arches.cc to stop this" << std::endl;
-  
-    IntVector idxLo = patch->getFortranCellLowIndex();
-    IntVector idxHi = patch->getFortranCellHighIndex();
-          
-    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-      for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-        for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-          
-          IntVector currCell(colX,colY,colZ);
-                
-          if (cellinfo->xx[colX] >= .4 && cellinfo->xx[colX] <= .6){
-            if (cellinfo->yy[colY] >= .4 && cellinfo->yy[colY] <= .6){
-              if (cellinfo->zz[colZ] >= .4 && cellinfo->zz[colZ] <= .6){
-                      
-                //for (int i=0; i < static_cast<int>(d_extraScalars.size()); i++) {
-                extrascalar[currCell] = .0004513;
-                //}
-                
-              }
-            }
-          } //end if          
-        }
-      }
-    } //end for
-  }  //end patch loop
-}
-
 
 // ****************************************************************************
 // schedule reading of initial condition for velocity and pressure
@@ -1999,4 +1919,3 @@ bool Arches::restartableTimesteps() {
   return d_nlSolver->restartableTimesteps();
 }
  
-

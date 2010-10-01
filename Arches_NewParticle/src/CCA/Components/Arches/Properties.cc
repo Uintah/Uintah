@@ -1219,7 +1219,7 @@ Properties::sched_computePropsFirst_mm(SchedulerP& sched,
     tsk->computes(d_lab->d_co2INLabel);
     tsk->computes(d_lab->d_heatLossLabel);
     tsk->computes(d_lab->d_enthalpyRXNLabel);
-    //tsk->computes(d_lab->d_mixMWLabel); 
+    tsk->computes(d_lab->d_mixMWLabel); 
     if (d_calcReactingScalar){
       tsk->computes(d_lab->d_reactscalarSRCINLabel);
     }
@@ -1465,7 +1465,8 @@ Properties::computePropsFirst_mm(const ProcessorGroup*,
       new_dw->allocateAndPut(enthalpyRXN_new, d_lab->d_enthalpyRXNLabel, indx, patch);
       enthalpyRXN_new.initialize(0.0);
 
-      //new_dw->allocateAndPut(mixMW_new, d_lab->d_mixMWLabel, indx, patch); 
+      new_dw->allocateAndPut(mixMW_new, d_lab->d_mixMWLabel, indx, patch); 
+      mixMW_new.initialize(0.0); 
       //mixMW_new.copyData(mixMW); 
 
       if (d_calcReactingScalar) {

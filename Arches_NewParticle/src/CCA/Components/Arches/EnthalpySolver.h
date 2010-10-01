@@ -245,6 +245,8 @@ private:
   double d_H_air;
   bool d_doMMS;
 
+  vector<string> d_new_sources; 
+
 }; // End class EnthalpySolver
 } // End namespace Uintah
 

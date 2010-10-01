@@ -5,7 +5,8 @@
 using namespace std;
 using namespace Uintah; 
 
-SourceTermBase::SourceTermBase( std::string srcName, SimulationStateP& shared_state,
+SourceTermBase::SourceTermBase( std::string srcName, 
+                                SimulationStateP& shared_state,
                                 vector<std::string> required_labels ) : 
 _src_name(srcName), _shared_state( shared_state ), _required_labels(required_labels)
 {
