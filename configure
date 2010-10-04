@@ -1501,6 +1501,8 @@ if test -n "$ac_init_help"; then
 Optional Features:
   --disable-FEATURE       do not include FEATURE (same as --enable-FEATURE=no)
   --enable-FEATURE[=ARG]  include FEATURE [ARG=yes]
+--enable-wasatch_3p
+ExprLibDownload and build the Wasatch Thirdparty libraries - TabProps
 --enable-static         Build a statically linked version of Uintah
 --enable-verbosity      Turn on verbose configure output
 --enable-threads        Specify a thread implementation (pthreads or irix)
@@ -2892,6 +2894,17 @@ echo "$as_me: error: The file or directory parameter ($visit) specified for --wi
    { (exit 1); exit 1; }; }
   fi
 
+
+
+
+  # Check whether --enable-wasatch_3p was given.
+if test "${enable_wasatch_3p+set}" = set; then
+  enableval=$enable_wasatch_3p; wasatch_3p="yes"
+else
+  wasatch_3p=="no"
+fi
+
+  sci_arg_enable_list="$sci_arg_enable_list --enable-wasatch_3p --disable-wasatch_3p"
 
 
 
@@ -7357,6 +7370,7 @@ if test "$static" = "yes" -o "$SO_OR_ARCHIVE_EXTENSION" = "a"; then
 echo "$as_me: WARNING: Building a statically linked version of Uintah! " >&2;}
   IS_STATIC_BUILD="yes"
   SO_OR_ARCHIVE_EXTENSION=a
+#  LDFLAGS="$LDFLAGS -static"   # FIXME... need -static (at least for gcc)...
   MAKE_ARCHIVES="yes"
   STATIC_BUILD_DEF="#define STATIC_BUILD 1"
 else
@@ -16745,7 +16759,11 @@ if test -e $_sci_lib/../bin/xml2-config; then
     { echo "$as_me:$LINENO: WARNING: Using $_sci_lib/../bin/xml2-config to set libxml2 variables." >&5
 echo "$as_me: WARNING: Using $_sci_lib/../bin/xml2-config to set libxml2 variables." >&2;}
 
-    XML2_LIB_DIR_FLAG=`$_sci_lib/../bin/xml2-config --libs`
+    if test IS_STATIC_BUILD="yes"; then
+       STATIC_FLAG=--static
+    fi
+
+    XML2_LIB_DIR_FLAG=`$_sci_lib/../bin/xml2-config --libs $STATIC_FLAG`
     XML2_LDFLAGS=""
     XML2_LIB_PATH=""
     for i in $XML2_LIB_DIR_FLAG;do
@@ -45147,6 +45165,50 @@ fi
 
 
 
+
+##  --  Handle --enable-wasatch_3p... ------------------------
+
+if test "$wasatch_3p" = "yes"; then
+
+  if test "$HAVE_BOOST" != "yes"; then
+      { { echo "$as_me:$LINENO: error: Option --enable-wasatch_3p requires Boost... <--with-boost=DIR> " >&5
+echo "$as_me: error: Option --enable-wasatch_3p requires Boost... <--with-boost=DIR> " >&2;}
+   { (exit 1); exit 1; }; }
+  fi
+  if test "$HAVE_HDF5" != "yes"; then
+      { { echo "$as_me:$LINENO: error: Option --enable-wasatch_3p requires HDF5... <--with-hdf5=DIR> " >&5
+echo "$as_me: error: Option --enable-wasatch_3p requires HDF5... <--with-hdf5=DIR> " >&2;}
+   { (exit 1); exit 1; }; }
+  fi
+  if test "$with_tabprops"; then
+     { { echo "$as_me:$LINENO: error: Do NOT specify both --with-tabprops and --enable-wasatch_3p " >&5
+echo "$as_me: error: Do NOT specify both --with-tabprops and --enable-wasatch_3p " >&2;}
+   { (exit 1); exit 1; }; }
+  fi
+  if test "$with_spatialops"; then
+     { { echo "$as_me:$LINENO: error: Do NOT specify both --with-spatialops and --enable-wasatch_3p " >&5
+echo "$as_me: error: Do NOT specify both --with-spatialops and --enable-wasatch_3p " >&2;}
+   { (exit 1); exit 1; }; }
+  fi
+  if test "$with_exprlib"; then
+     { { echo "$as_me:$LINENO: error: Do NOT specify both --with-exprlib and --enable-wasatch_3p " >&5
+echo "$as_me: error: Do NOT specify both --with-exprlib and --enable-wasatch_3p " >&2;}
+   { (exit 1); exit 1; }; }
+  fi
+
+  mkdir -p Wasatch3P
+  $path_to_src/build_scripts/build_wasatch_3p.sh `$sci_pwd` "$with_boost" "$with_hdf5"
+
+  if test $? != 0; then
+     { { echo "$as_me:$LINENO: error: Failed to build Wasatch 3p libraries... " >&5
+echo "$as_me: error: Failed to build Wasatch 3p libraries... " >&2;}
+   { (exit 1); exit 1; }; }
+  fi
+
+  with_spatialops=`$sci_pwd`/Wasatch3P/install/SpatialOps
+  with_exprlib=`$sci_pwd`/Wasatch3P/install/ExprLib
+  with_tabprops=`$sci_pwd`/Wasatch3P/install/TabProps
+fi
 
 ##  --  search for SpatialOps Library ------------------------
 

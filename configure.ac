@@ -421,6 +421,12 @@ SCI_ARG_WITH(visit,
   [with_visit="$withval"],
   [with_visit=""])
 
+SCI_ARG_ENABLE(wasatch_3p,
+  AC_HELP_STRING(--enable-wasatch_3p,
+                 Download and build the Wasatch Thirdparty libraries - TabProps, ExprLib, SpatialOps),
+  [wasatch_3p="yes"],
+  [wasatch_3p=="no"])
+
 SCI_ARG_ENABLE(static,
   AC_HELP_STRING(--enable-static,
                  Build a statically linked version of Uintah),
@@ -1024,6 +1030,7 @@ if test "$static" = "yes" -o "$SO_OR_ARCHIVE_EXTENSION" = "a"; then
   AC_MSG_WARN( Building a statically linked version of Uintah! )
   IS_STATIC_BUILD="yes"
   SO_OR_ARCHIVE_EXTENSION=a
+#  LDFLAGS="$LDFLAGS -static"   # FIXME... need -static (at least for gcc)...
   MAKE_ARCHIVES="yes"
   STATIC_BUILD_DEF="#define STATIC_BUILD 1"
 else
@@ -2121,7 +2128,11 @@ if test -e $_sci_lib/../bin/xml2-config; then
     found_xml2_config="yes"
     AC_MSG_WARN(Using $_sci_lib/../bin/xml2-config to set libxml2 variables.)
 
-    XML2_LIB_DIR_FLAG=`$_sci_lib/../bin/xml2-config --libs`
+    if test IS_STATIC_BUILD="yes"; then
+       STATIC_FLAG=--static
+    fi
+
+    XML2_LIB_DIR_FLAG=`$_sci_lib/../bin/xml2-config --libs $STATIC_FLAG`
     XML2_LDFLAGS=""
     XML2_LIB_PATH=""
     for i in $XML2_LIB_DIR_FLAG;do
@@ -3621,6 +3632,38 @@ AC_SUBST(DEF_BOOST)
 AC_SUBST(INC_BOOST_H)
 AC_SUBST(BOOST_LIB_FLAG)
 AC_SUBST(BOOST_LIB_DIR_FLAG)
+
+##  --  Handle --enable-wasatch_3p... ------------------------
+
+if test "$wasatch_3p" = "yes"; then
+
+  if test "$HAVE_BOOST" != "yes"; then
+      AC_MSG_ERROR( Option --enable-wasatch_3p requires Boost... <--with-boost=DIR> )
+  fi
+  if test "$HAVE_HDF5" != "yes"; then
+      AC_MSG_ERROR( Option --enable-wasatch_3p requires HDF5... <--with-hdf5=DIR> )
+  fi
+  if test "$with_tabprops"; then
+     AC_MSG_ERROR( Do NOT specify both --with-tabprops and --enable-wasatch_3p )
+  fi
+  if test "$with_spatialops"; then
+     AC_MSG_ERROR( Do NOT specify both --with-spatialops and --enable-wasatch_3p )
+  fi
+  if test "$with_exprlib"; then
+     AC_MSG_ERROR( Do NOT specify both --with-exprlib and --enable-wasatch_3p )
+  fi
+
+  mkdir -p Wasatch3P
+  $path_to_src/build_scripts/build_wasatch_3p.sh `$sci_pwd` "$with_boost" "$with_hdf5"
+
+  if test $? != 0; then
+     AC_MSG_ERROR( Failed to build Wasatch 3p libraries... )
+  fi
+
+  with_spatialops=`$sci_pwd`/Wasatch3P/install/SpatialOps
+  with_exprlib=`$sci_pwd`/Wasatch3P/install/ExprLib
+  with_tabprops=`$sci_pwd`/Wasatch3P/install/TabProps
+fi
 
 ##  --  search for SpatialOps Library ------------------------
 
