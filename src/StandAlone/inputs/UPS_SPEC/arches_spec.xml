@@ -88,7 +88,7 @@
         <O                              spec="REQUIRED DOUBLE" />
         <S                              spec="REQUIRED DOUBLE" />
         <initial_ash_mass               spec="REQUIRED MULTIPLE_DOUBLES" />
-        <initial_fixcarb_mass           spec="REQUIRED MULTIPLE_DOUBLES" />
+        <initial_fixcarb_mass           spec="OPTIONAL MULTIPLE_DOUBLES" />
         <particle_density               spec="OPTIONAL DOUBLE" />
       </Coal_Properties>
       
@@ -391,7 +391,7 @@
           <src                          spec="MULTIPLE NO_DATA"
                                         attribute1="label REQUIRED STRING"
                                         attribute2="type REQUIRED STRING 'ConstantSourceTerm, DevolMixtureFraction, CharOxidationMixtureFraction, 
-                                                                          WestbrookDryer, MMS1, ParticleGasMomentumSource',
+                                                                          WestbrookDryer, MMS1, ParticleGasMomentumSource,
                                                                           fy_inject_src, fz_inject_src, tab_rxn_rate,
                                                                           cc_intrusion_inlet, fx_intrusion_inlet,
                                                                           fy_intrusion_inlet, fz_intrusion_inlet'">

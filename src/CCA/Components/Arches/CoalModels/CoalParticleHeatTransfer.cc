@@ -104,6 +104,13 @@ CoalParticleHeatTransfer::problemSetup(const ProblemSpecP& params)
         db_coal->require("O", yelem[3]);
         db_coal->require("S", yelem[4]);
         db_coal->require("initial_ash_mass", d_ash_mass);
+        if( params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("Coal_Properties")->findBlock("initial_fixcarb_mass") ) {
+          d_use_fixcarb_mass = true;
+          db_coal->require("initial_fixcarb_mass", d_fixcarb_mass );
+        } else {
+          d_use_fixcarb_mass = false;
+        }
+          
 
         // normalize amounts
         double ysum = yelem[0] + yelem[1] + yelem[2] + yelem[3] + yelem[4];
@@ -577,6 +584,10 @@ CoalParticleHeatTransfer::computeModel( const ProcessorGroup * pc,
       double unscaled_raw_coal_mass;
 
       double unscaled_ash_mass = d_ash_mass[d_quadNode];
+      double unscaled_fixcarb_mass;
+      if( d_use_fixcarb_mass ) {
+        unscaled_fixcarb_mass = d_fixcarb_mass[d_quadNode];
+      }
 
       double FSum = 0.0;
 
@@ -589,6 +600,7 @@ CoalParticleHeatTransfer::computeModel( const ProcessorGroup * pc,
       double Nu;
       double Cpc;
       double Cpa; 
+      double Cph;
       double mp_Cp;
       double rkg;
       double Q_convection;
@@ -642,9 +654,15 @@ CoalParticleHeatTransfer::computeModel( const ProcessorGroup * pc,
 
         // Heat capacity of ash
         Cpa = calc_Cp_ash( unscaled_particle_temperature );
+        
+        // Heat capacity of char
+        Cph = calc_Cp_char( unscaled_particle_temperature );
 
         // Heat capacity
         mp_Cp = (Cpc*unscaled_raw_coal_mass + Cpa*unscaled_ash_mass);
+        if( d_use_fixcarb_mass ) {
+          mp_Cp += (Cph*unscaled_fixcarb_mass);
+        }
 
         // Gas thermal conductivity
         rkg = props(gas_temperature[c], unscaled_particle_temperature); // [=] J/s/m/K
@@ -744,6 +762,23 @@ CoalParticleHeatTransfer::calc_Cp_ash(double Tp){
   double cpa = 593.0 + 0.586*Tp;
   return cpa;  // J/kg/K
 }
+
+
+double
+CoalParticleHeatTransfer::calc_Cp_char(double Tp) {
+  if (Tp < 700) {
+    // correlation is not valid
+    return 1046.0;
+  } else {
+    double Rgas = 8314.3; // J/kg/K
+
+    double z1 = 380.0/Tp;
+    double z2 = 1800.0/Tp;
+    double cp = (Rgas/12.0)*(g1(z1)+2.0*g1(z2));
+    return cp; // J/kg/K
+  }
+}
+
 
 
 double

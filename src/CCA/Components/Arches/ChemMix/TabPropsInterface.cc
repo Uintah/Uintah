@@ -117,6 +117,33 @@ TabPropsInterface::problemSetup( const ProblemSpecP& propertiesParameters )
   d_allIndepVarNames = d_statetbl.get_indepvar_names();
   d_allDepVarNames   = d_statetbl.get_depvar_names();
 
+
+
+  /*
+  cout_tabledbg << " -------------------------------- " << endl;
+  cout_tabledbg << " Now printing all independent variables in table:" << endl;
+  for( unsigned int z=0; z < d_allIndepVarNames.size(); ++z ) {
+    cout_tabledbg << " --> " << d_allIndepVarNames[z] << endl;
+  }
+  cout_tabledbg << " Finished printing all independent variables in table." << endl;
+  cout_tabledbg << " -------------------------------- " << endl;
+
+  cout_tabledbg << endl << endl;
+
+  cout_tabledbg << " -------------------------------- " << endl;
+  cout_tabledbg << " Now printing all dependent variables in table:" << endl;
+  for( unsigned int z=0; z < d_allDepVarNames.size(); ++z ) {
+    cout_tabledbg << " --> " << d_allDepVarNames[z] << endl;
+  }
+  cout_tabledbg << " Finished printing all dependent variables in table." << endl;
+  cout_tabledbg << " -------------------------------- " << endl;
+
+  cout_tabledbg << endl << endl;
+  */
+
+
+
+
   proc0cout << "  Now matching user-defined IV's with table IV's" << endl;
   proc0cout << "     Note: If sus crashes here, check to make sure your" << endl;
   proc0cout << "           <TransportEqns><eqn> names match those in the table. " << endl;
@@ -130,7 +157,7 @@ TabPropsInterface::problemSetup( const ProblemSpecP& propertiesParameters )
     // !! need to add support for variance !!
     if (varName == "heat_loss") {
 
-      cout_tabledbg << " Heat loss being inserted into the indep. var map. " << endl;
+      cout_tabledbg << " Heat loss variable " << varName << " being inserted into the indep. var map. " << endl;
 
       d_ivVarMap[varName] = d_lab->d_heatLossLabel;
 
@@ -378,8 +405,8 @@ TabPropsInterface::getState( const ProcessorGroup* pc,
           }
         } else if (i->first == "temperature" && !d_coldflow) {
           arches_temperature[c] = table_value; 
-        //} else if (i->first == "heat_capacity" && !d_coldflow) {
-        } else if (i->first == "specificheat" && !d_coldflow) {
+        } else if (i->first == "heat_capacity" && !d_coldflow) {
+        //} else if (i->first == "specificheat" && !d_coldflow) {
           arches_cp[c] = table_value; 
         } else if (i->first == "CO2" && !d_coldflow) {
           arches_co2[c] = table_value; 
@@ -511,8 +538,10 @@ TabPropsInterface::computeHeatLoss( const ProcessorGroup* pc,
         }
 
         // actually compute the heat loss: 
-        double sensible_enthalpy  = getSingleState( "sensibleenthalpy", iv ); 
-        double adiabatic_enthalpy = getSingleState( "adiabaticenthalpy", iv );  
+        //double sensible_enthalpy  = getSingleState( "sensibleenthalpy", iv ); 
+        //double adiabatic_enthalpy = getSingleState( "adiabaticenthalpy", iv );  
+        double sensible_enthalpy  = getSingleState( "sensible_heat", iv ); 
+        double adiabatic_enthalpy = getSingleState( "adiabatic_enthalpy", iv );  
         double current_heat_loss  = 0.0;
         double small = 1e-10; 
         if ( calcEnthalpy )
@@ -611,8 +640,10 @@ TabPropsInterface::computeFirstEnthalpy( const ProcessorGroup* pc,
       }
 
       double current_heat_loss = d_hl_scalar_init; // may want to make this more sophisticated later(?)
-      double sensible_enthalpy = getSingleState( "sensibleenthalpy", iv ); 
-      double adiab_enthalpy    = getSingleState( "adiabaticenthalpy", iv ); 
+      //double sensible_enthalpy = getSingleState( "sensibleenthalpy", iv ); 
+      //double adiab_enthalpy    = getSingleState( "adiabaticenthalpy", iv ); 
+      double sensible_enthalpy = getSingleState( "sensible_heat", iv ); 
+      double adiab_enthalpy    = getSingleState( "adiabatic_enthalpy", iv ); 
       enthalpy[c]     = adiab_enthalpy - current_heat_loss * sensible_enthalpy; 
 
     }
@@ -679,8 +710,10 @@ TabPropsInterface::oldTableHack( const InletStream& inStream, Stream& outStream,
     double enthalpy          = 0.0; 
     double sensible_enthalpy = 0.0; 
 
-    sensible_enthalpy = getSingleState( "sensibleenthalpy", iv ); 
-    adiab_enthalpy    = getSingleState( "adiabaticenthalpy", iv ); 
+    //sensible_enthalpy = getSingleState( "sensibleenthalpy", iv ); 
+    //adiab_enthalpy    = getSingleState( "adiabaticenthalpy", iv ); 
+    sensible_enthalpy = getSingleState( "sensible_heat", iv ); 
+    adiab_enthalpy    = getSingleState( "adiabatic_enthalpy", iv ); 
 
     enthalpy          = inStream.d_enthalpy; 
 
@@ -713,8 +746,8 @@ TabPropsInterface::oldTableHack( const InletStream& inStream, Stream& outStream,
   outStream.d_density     = getSingleState( "density", iv ); 
   if (!d_coldflow) { 
     outStream.d_temperature = getSingleState( "temperature", iv ); 
-    //outStream.d_cp          = getSingleState( "heat_capacity", iv ); 
-    outStream.d_cp          = getSingleState( "specificheat", iv ); 
+    outStream.d_cp          = getSingleState( "heat_capacity", iv ); 
+    //outStream.d_cp          = getSingleState( "specificheat", iv ); 
     outStream.d_h2o         = getSingleState( "H2O", iv); 
     outStream.d_co2         = getSingleState( "CO2", iv);
     outStream.d_heatLoss    = current_heat_loss; 
