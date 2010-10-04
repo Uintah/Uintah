@@ -128,6 +128,17 @@
             </Optimization>
         </LinearSolver>
 
+        <!-- particle models --> 
+        <Models>
+            <model label="constant_model" type="ConstantModel">
+                <constant>0.0</constant>
+                <ICVars>
+                    <variable label="A" role="asdfasdfasdfasdf" />
+                </ICVars>
+            </model>
+        </Models>
+
+
         <Weights>
             <!-- w [=] #/m^3 -->
             <doDiff>false</doDiff>

@@ -20,6 +20,9 @@ ParticleGasMomentum::ParticleGasMomentum( std::string srcName,
 : SourceTermBase(srcName, sharedState, reqLabelNames)
 {
   _src_label = VarLabel::create(srcName, CCVariable<Vector>::getTypeDescription()); 
+  _label_sched_init = false; 
+
+  _source_type = CCVECTOR_SRC; 
 }
 
 ParticleGasMomentum::~ParticleGasMomentum()

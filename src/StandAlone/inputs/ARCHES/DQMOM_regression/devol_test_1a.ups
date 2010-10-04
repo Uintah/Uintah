@@ -142,7 +142,6 @@
         </Eqn>
 
         <Eqn label = "coal_gas_mix_frac" type = "CCscalar">
-            <use_density_guess/>
             <doDiff>false</doDiff>
             <doConv>false</doConv>
             <addSources>true</addSources>

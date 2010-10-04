@@ -15,6 +15,8 @@ MMS1::MMS1( std::string srcName, SimulationStateP& sharedState,
 : SourceTermBase(srcName, sharedState, reqLabelNames)
 {
   _src_label = VarLabel::create(srcName, CCVariable<double>::getTypeDescription()); 
+
+  _source_type = CC_SRC; 
 }
 
 MMS1::~MMS1()
@@ -27,8 +29,6 @@ MMS1::problemSetup(const ProblemSpecP& inputdb)
 {
 
   ProblemSpecP db = inputdb; 
-
-  _source_type = CC_SRC; 
 
 }
 //---------------------------------------------------------------------------

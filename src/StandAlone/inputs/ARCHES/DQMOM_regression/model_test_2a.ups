@@ -157,6 +157,9 @@
         <Models>
             <model label="constant_model" type="ConstantModel">
                 <constant>1.0</constant>
+                <ICVars>
+                    <variable label="A" role="asdfasdfasdfasdf" />
+                </ICVars>
             </model>
         </Models>
 
@@ -175,7 +178,6 @@
             <!-- l [=] m -->
             <doDiff>false</doDiff>
             <doConv>false</doConv>
-            <model label="constant_model"/>
             <initialization type="env_constant">
                 <env_constant qn="0" value="1"></env_constant>
                 <env_constant qn="1" value="2"></env_constant>

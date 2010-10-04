@@ -20,7 +20,10 @@ DevolMixtureFraction::DevolMixtureFraction( std::string srcName,
                                             vector<std::string> reqLabelNames ) 
 : SourceTermBase(srcName, sharedState, reqLabelNames)
 {
+  _label_sched_init = false; 
   _src_label = VarLabel::create(srcName, CCVariable<double>::getTypeDescription()); 
+
+  _source_type = CC_SRC; 
 }
 
 DevolMixtureFraction::~DevolMixtureFraction()

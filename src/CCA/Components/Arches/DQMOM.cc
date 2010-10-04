@@ -155,14 +155,15 @@ void DQMOM::problemSetup(const ProblemSpecP& params)
   // Put the moments in lexicographic order
   sort( momentIndexes.begin(), momentIndexes.end(), vector_lexicographic_sort);
 
-  cout << "Size of momentIndexes is " << momentIndexes.size() << ", should be " << N_*(N_xi+1) << endl;
-
+  /*
+  // Print out sorted list of moments
   for( vector< vector<int> >::iterator iM = momentIndexes.begin(); iM != momentIndexes.end(); ++iM ) {
     for( vector<int>::iterator iMM = iM->begin(); iMM != iM->end(); ++iMM ) {
       proc0cout << " " << *iMM;
     }
     proc0cout << endl;
   }
+  */
 
   db->getWithDefault("save_moments", b_save_moments, true);
 #if defined(VERIFY_AB_CONSTRUCTION) || defined(VERIFY_LINEAR_SOLVER)
@@ -210,6 +211,8 @@ void DQMOM::problemSetup(const ProblemSpecP& params)
     N_xi = N_xi + 1;
   }
   
+  cout << "Size of momentIndexes is " << momentIndexes.size() << ", should be " << N_*(N_xi+1) << endl;
+
   // Check to make sure number of total moments specified in input file is correct
   if ( moments != (N_xi+1)*N_ ) {
     proc0cout << "ERROR: DQMOM: ProblemSetup: You specified " << moments << " moments, but you need " << (N_xi+1)*N_ << " moments." << endl;
