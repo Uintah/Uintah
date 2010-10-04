@@ -155,12 +155,12 @@ void NodalSVFContact:: exMomIntegrated( const ProcessorGroup*           ,
      
     for(int m=0;m<numMatls;m++){
       int dwi = matls->get(m);
-      new_dw-> get              (gmass[dwi],          lb->gMassLabel,         dwi, patch, Ghost::None, 0);
-      new_dw-> get              (gvolume[dwi],        lb->gVolumeLabel,       dwi, patch, Ghost::None, 0);
+      new_dw-> get              (gmass[dwi],          lb->gMassLabel,         dwi, patch, gnone, 0);
+      new_dw-> get              (gvolume[dwi],        lb->gVolumeLabel,       dwi, patch, gnone, 0);
       new_dw-> getModifiable    (gvelocity_star[dwi], lb->gVelocityStarLabel, dwi, patch);
-      new_dw-> allocateTemporary(gSVF[dwi],                                        patch, Ghost::None, 0);
-      new_dw-> allocateTemporary(gvelocity_old[dwi],                               patch, Ghost::None, 0);
-      new_dw-> allocateTemporary(gForce[dwi],                                      patch, Ghost::None, 0);
+      new_dw-> allocateTemporary(gSVF[dwi],                                        patch, gnone, 0);
+      new_dw-> allocateTemporary(gvelocity_old[dwi],                               patch, gnone, 0);
+      new_dw-> allocateTemporary(gForce[dwi],                                      patch, gnone, 0);
     } // for m=0:numMatls
    
 
@@ -181,15 +181,17 @@ void NodalSVFContact:: exMomIntegrated( const ProcessorGroup*           ,
       // both nodes," calculate a non-zero interaction force based on velocity 
       // difference and the appropriate value of "factor".
       if ((b_svf==1) || (gmass[beta][c]>1.0e-100 && gmass[alpha][c]>1.0e-100)) { 
-        
         gForce[beta] [c] = factor * (gvelocity_old[alpha][c] - gvelocity_old[beta] [c]);
         gForce[alpha][c] = factor * (gvelocity_old[beta] [c] - gvelocity_old[alpha][c]);
         
-      } else { gForce[beta][c] = Vector(0.0,0.0,0.0); gForce[alpha][c] = Vector(0.0,0.0,0.0); }
+      } else {
+        gForce[beta][c]  = Vector(0.0,0.0,0.0);
+        gForce[alpha][c] = Vector(0.0,0.0,0.0);
+      }
        
       //-- Calculate Updated Velocity ------------------------------------
-      gvelocity_star[beta] [c] = gvelocity_old[beta] [c] + (gForce[beta] [c]/( 8.0 * NC_CCweight[c] * gmass[beta] [c])) * delT;    
-      gvelocity_star[alpha][c] = gvelocity_old[alpha][c] + (gForce[alpha][c]/( 8.0 * NC_CCweight[c] * gmass[alpha][c])) * delT;    
+      gvelocity_star[beta] [c] += (gForce[beta] [c]/( 8.0 * NC_CCweight[c] * gmass[beta] [c])) * delT;    
+      gvelocity_star[alpha][c] += (gForce[alpha][c]/( 8.0 * NC_CCweight[c] * gmass[alpha][c])) * delT;    
     
     }//for nodes
   }//for patches
