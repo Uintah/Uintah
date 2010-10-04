@@ -23,6 +23,8 @@ ParticleGasHeat::ParticleGasHeat( std::string src_name,
 {
   _label_sched_init = false; 
   _src_label = VarLabel::create( src_name, CCVariable<double>::getTypeDescription() ); 
+
+  _source_type = CC_SRC; 
 }
 
 ParticleGasHeat::~ParticleGasHeat()
@@ -37,8 +39,6 @@ ParticleGasHeat::problemSetup(const ProblemSpecP& inputdb)
   ProblemSpecP db = inputdb; 
 
   db->require( "heat_model_name", _heat_model_name ); 
-
-  _source_type = CC_SRC; 
 
 }
 //---------------------------------------------------------------------------

@@ -84,28 +84,42 @@ void CoalModelFactory::problemSetup(const ProblemSpecP& params)
   // ----------------------------------------------
   // Step 1: CoalModelFactory problem setup
 
-  ProblemSpecP dqmom_db = params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("DQMOM");
-  std::string which_dqmom; 
-  dqmom_db->getAttribute( "type", which_dqmom ); 
-  if ( which_dqmom == "unweightedAbs" ) {
-    d_unweighted = true; 
-  } else {
-    d_unweighted = false; 
+  ProblemSpecP dqmom_db;
+  if( params_root->findBlock("CFD") ) {
+    if(params_root->findBlock("CFD")->findBlock("ARCHES") ) {
+      if(params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("DQMOM") ) {
+        dqmom_db = params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("DQMOM");
+        std::string which_dqmom; 
+        dqmom_db->getAttribute( "type", which_dqmom ); 
+        if ( which_dqmom == "unweightedAbs" ) {
+          d_unweighted = true; 
+        } else {
+          d_unweighted = false; 
+        }
+      }
+    }
   }
 
   // Grab coal properties from input file
-  ProblemSpecP db_coalProperties = params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("Coal_Properties");
-  if( db_coalProperties ) {
-    db_coalProperties->require("C", yelem[0]);
-    db_coalProperties->require("H", yelem[1]);
-    db_coalProperties->require("N", yelem[2]);
-    db_coalProperties->require("O", yelem[3]);
-    db_coalProperties->require("S", yelem[4]);
-  } else {
-    //string err_msg="Missing <Coal_Properties> section in input file!";
-    //throw ProblemSetupException(err_msg,__FILE__,__LINE__);
-    for( int i=0; i<5; ++i ) {
-      yelem[i] = 0.0;
+  ProblemSpecP db_coalProperties;
+  if( params_root->findBlock("CFD") ) {
+    if( params_root->findBlock("CFD")->findBlock("ARCHES") ) {
+      if( params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("Coal_Properties") ) {
+        db_coalProperties = params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("Coal_Properties");
+        if( db_coalProperties ) {
+          db_coalProperties->require("C", yelem[0]);
+          db_coalProperties->require("H", yelem[1]);
+          db_coalProperties->require("N", yelem[2]);
+          db_coalProperties->require("O", yelem[3]);
+          db_coalProperties->require("S", yelem[4]);
+        } else {
+          //string err_msg="Missing <Coal_Properties> section in input file!";
+          //throw ProblemSetupException(err_msg,__FILE__,__LINE__);
+          for( int i=0; i<5; ++i ) {
+            yelem[i] = 0.0;
+          }
+        }
+      }
     }
   }
 
@@ -299,8 +313,9 @@ void CoalModelFactory::problemSetup(const ProblemSpecP& params)
       }
     }
 
-    // if using a devolatilization or char oxidation model, check if there is a corresponding <src> tag in <MixtureFractionSolver> block
+    // This block not used, since this isn't how we're specifying source terms anymore
     /*
+    // if using a devolatilization or char oxidation model, check if there is a corresponding <src> tag in <MixtureFractionSolver> block
     if( d_useDevolatilizationModel || d_useCharOxidationModel ) {
       const ProblemSpecP params_root = db->getRootNode();
       if( params_root->findBlock("CFD") ) {

@@ -519,8 +519,8 @@ Arches::problemSetup(const ProblemSpecP& params,
     dqmomFactory.setDQMOMSolver( d_dqmomSolver );
 
     /*
-    // Don't clutter up Arches.cc with DQMOM things
-    // DQMOM things go in the DQMOM class
+    // Don't clutter up Arches.cc with DQMOM things...
+    // DQMOM things go in the DQMOM class!
     
     // require that we have weighted or unweighted explicitly specified as an attribute to DQMOM
     // type = "unweightedAbs" or type = "weighedAbs" 
@@ -589,9 +589,11 @@ Arches::problemSetup(const ProblemSpecP& params,
   */
 
   // Do problem setup stuff for TranpsortEqns (some of these require DQMOM information, which is why this goes after the DQMOM problem setup)
-  if( db->findBlock("TransportEqns")->findBlock("Sources") ) {
-    ProblemSpecP sources_db = db->findBlock("TransportEqns")->findBlock("Sources");
-    srcFactory.problemSetup( sources_db );
+  if( db->findBlock("TransportEqns") ) {
+    if( db->findBlock("TransportEqns")->findBlock("Sources") ) {
+      ProblemSpecP sources_db = db->findBlock("TransportEqns")->findBlock("Sources");
+      srcFactory.problemSetup( sources_db );
+    }
   }
 
   if( db->findBlock("DQMOM") ) {

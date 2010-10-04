@@ -149,18 +149,16 @@
             <TransportEqns>
 
                 <Eqn label="mixture_fraction_2" type = "CCscalar">
-                  <!-- diffusive scalar -->
-                  <doDiff>true</doDiff>
-                  <doConv>true</doConv>
-                  <conv_scheme>super_bee</conv_scheme>
-                  <use_density_guess/>
-                  <initialization type = "constant">
-                    <constant>0.0</constant>
-                  </initialization>
+                    <!-- diffusive scalar -->
+                    <doDiff>true</doDiff>
+                    <doConv>true</doConv>
+                    <conv_scheme>super_bee</conv_scheme>
+                    <initialization type = "constant">
+                        <constant>0.0</constant>
+                    </initialization>
                 </Eqn>
 
                 <Eqn label = "coal_gas_mix_frac" type = "CCscalar">
-                    <use_density_guess/>
                     <doDiff>true</doDiff>
                     <doConv>true</doConv>
                     <addSources>true</addSources>
@@ -292,8 +290,6 @@
                 <use_mixing_model>false</use_mixing_model>
                 <TabProps>
                     <inputfile>CoalModel.h5</inputfile>
-                    <strict_mode>false</strict_mode>
-                    <diagnostic_mode>false</diagnostic_mode>
                 </TabProps>
             </Properties>
             
@@ -326,7 +322,7 @@
                 
                 <MixtureFractionSolver>
                     <convection_scheme>central-upwind</convection_scheme>
-                    <initial_value>0.30</initial_value>
+                    <initial_value>0.00</initial_value>
                 </MixtureFractionSolver>
                 
                 <EnthalpySolver>
