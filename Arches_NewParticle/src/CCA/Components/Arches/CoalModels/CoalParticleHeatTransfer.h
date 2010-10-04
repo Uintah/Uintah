@@ -158,7 +158,15 @@ private:
       @param  Tp    Particle temperature */
   double calc_Cp_ash(double Tp);
 
-  vector<double>  d_ash_mass;     ///< Initial ash mass
+  /** @brief  Calculate the heat capacity of char
+      @param  Tp    Particle temperature */
+  double calc_Cp_char(double Tp);
+
+  vector<double>  d_ash_mass;     ///< Initial ash mass (required)
+  vector<double>  d_fixcarb_mass; ///< Initial fixed carbon mass (optional)
+
+  bool d_use_fixcarb_mass;        ///< Boolean: did user specify initial fixed carbon mass?
+
   double visc;                    ///< Viscosity of gas
   double yelem[5];                ///< Mass fractions of each element in coal (C, H, N, O, S respectively)
   double rhop;                    ///< Density of particle 

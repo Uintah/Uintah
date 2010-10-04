@@ -120,8 +120,8 @@ MixingRxnModel::setMixDVMap( const ProblemSpecP& root_params )
   if ( !d_coldflow ){ 
     var_name = "temperature"; 
     insertIntoMap( var_name ); 
-    //var_name = "heat_capacity"; 
-    var_name = "specificheat"; 
+    var_name = "heat_capacity"; 
+    //var_name = "specificheat"; 
     insertIntoMap( var_name ); 
     var_name = "CO2"; 
     insertIntoMap( var_name ); 
