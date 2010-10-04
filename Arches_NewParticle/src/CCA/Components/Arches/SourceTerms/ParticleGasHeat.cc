@@ -8,7 +8,7 @@
 #include <CCA/Components/Arches/CoalModels/CoalModelFactory.h>
 #include <CCA/Components/Arches/TransportEqns/EqnBase.h>
 #include <CCA/Components/Arches/CoalModels/ModelBase.h>
-#include <CCA/Components/Arches/CoalModels/SimpleHeatTransfer.h>
+#include <CCA/Components/Arches/CoalModels/HeatTransfer.h>
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqn.h>
 
 //===========================================================================
