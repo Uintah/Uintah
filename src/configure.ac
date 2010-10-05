@@ -2128,7 +2128,7 @@ if test -e $_sci_lib/../bin/xml2-config; then
     found_xml2_config="yes"
     AC_MSG_WARN(Using $_sci_lib/../bin/xml2-config to set libxml2 variables.)
 
-    if test IS_STATIC_BUILD="yes"; then
+    if test "$IS_STATIC_BUILD" = "yes"; then
        STATIC_FLAG=--static
     fi
 

@@ -16759,7 +16759,7 @@ if test -e $_sci_lib/../bin/xml2-config; then
     { echo "$as_me:$LINENO: WARNING: Using $_sci_lib/../bin/xml2-config to set libxml2 variables." >&5
 echo "$as_me: WARNING: Using $_sci_lib/../bin/xml2-config to set libxml2 variables." >&2;}
 
-    if test IS_STATIC_BUILD="yes"; then
+    if test "$IS_STATIC_BUILD" = "yes"; then
        STATIC_FLAG=--static
     fi
 
