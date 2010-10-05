@@ -227,8 +227,8 @@ namespace Wasatch{
         Uintah::delt_vartype deltat;
         //jcs this doesn't work:
         //newDW->get( deltat, deltaTLabel_, Uintah::getLevel(patches), material );
-        newDW->get( deltat, deltaTLabel_ );
-
+        oldDW->get( deltat, deltaTLabel_ );
+        
 //         cout << "TimeStepper::update_variables() : dt = " << deltat << endl;
 
         //____________________________________________
