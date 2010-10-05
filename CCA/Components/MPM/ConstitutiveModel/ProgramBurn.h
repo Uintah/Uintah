@@ -60,6 +60,7 @@ namespace Uintah {
       // These parameters are used for the product JWL EOS
       double d_A;
       double d_B;
+      double d_C;
       double d_R1;
       double d_R2;
       double d_om;

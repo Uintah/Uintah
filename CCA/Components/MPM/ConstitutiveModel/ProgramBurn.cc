@@ -299,11 +299,12 @@ void ProgramBurn::computeStressTensor(const PatchSubset* patches,
 
     double K = d_initialData.d_K;
     double n = d_initialData.d_n;
-//    double A = d_initialData.d_A;
-//    double B = d_initialData.d_B;
-//    double R1 = d_initialData.d_R1;
-//    double R2 = d_initialData.d_R2;
-//    double om = d_initialData.d_om;
+    double A = d_initialData.d_A;
+    double B = d_initialData.d_B;
+    double C = d_initialData.d_C;
+    double R1 = d_initialData.d_R1;
+    double R2 = d_initialData.d_R2;
+    double om = d_initialData.d_om;
     double rho0 = d_initialData.d_rho0; // matl->getInitialDensity();
 
     if(!flag->d_doGridReset){
@@ -353,19 +354,23 @@ void ProgramBurn::computeStressTensor(const PatchSubset* patches,
       double J = deformationGradient_new[idx].Determinant();
 
       // get the hydrostatic part of the stress
-      double jtotheminusn = pow(J,-n);
-      p = K*(jtotheminusn - 1.0);
+      if(pProgressF_new[idx] < 1.0){
+        p = (1./(n*K))*(pow(J,-n)-1.);
+      }else{
+        double one_plus_omega = 1.+om;
+        double inv_rho_rat=J; //rho0/rhoM;
+        double rho_rat=1./J;  //rhoM/rho0;
+        double A_e_to_the_R1_rho0_over_rhoM=A*exp(-R1*inv_rho_rat);
+        double B_e_to_the_R2_rho0_over_rhoM=B*exp(-R2*inv_rho_rat);
+        double C_rho_rat_tothe_one_plus_omega=C*pow(rho_rat,one_plus_omega);
 
-      // Calculate rate of deformation D, and deviatoric rate DPrime,
-//      Matrix3 D = (velGrad + velGrad.Transpose())*0.5;
-//      Matrix3 DPrime = D - Identity*onethird*D.Trace();
+        p   = A_e_to_the_R1_rho0_over_rhoM +
+              B_e_to_the_R2_rho0_over_rhoM + C_rho_rat_tothe_one_plus_omega;
+      }
 
       // Get the deformed volume and current density
       double rho_cur = rho0/J;
       pvolume[idx] = pmass[idx]/rho_cur;
-
-      // Viscous part of the stress
-//      Shear = DPrime*(2.*viscosity);
 
       // compute the total stress
       pstress[idx] = Identity*(-p);
