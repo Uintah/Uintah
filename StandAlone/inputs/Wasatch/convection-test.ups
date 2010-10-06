@@ -12,17 +12,21 @@
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
       <NameTag name="phi1-scalar" state="STATE_N" />
-      <!--Constant>100.0</Constant-->
-       <LinearFunction slope="1.0" intercept="5.0">
+      <!--Constant>10.0</Constant-->
+      <!--LinearFunction slope="1.0" intercept="0.0">
           <NameTag name="XSVOL" state="STATE_NONE"/>
-       </LinearFunction>
+      </LinearFunction-->
+      <SineFunction amplitude="10.0" frequency="1.0" offset="0.0">
+         <NameTag name="XSVOL" state="STATE_NONE" />
+       </SineFunction>
+
     </BasicExpression>
     
     <!-- CREATE AN EXPRESSION FOR THE VELOCITY FIELD -->
     <BasicExpression type="XVOL">
       <TaskList>advance_solution</TaskList>
       <NameTag name="advective-velocity-x" state="STATE_N" />
-      <Constant>0.5</Constant>
+      <Constant>1.0</Constant>
     </BasicExpression>
     
     <!-- CREATE AN EXPRESSION FOR THE VELOCITY FIELD -->
@@ -88,7 +92,7 @@
 
 
   <Time>
-    <maxTime>3.0</maxTime>
+    <maxTime>5.0</maxTime>
     <initTime>0.0</initTime>
     <delt_min>0.01</delt_min>
     <delt_max>0.05</delt_max>
@@ -97,7 +101,7 @@
 
 
   <DataArchiver>
-    <filebase>wasatch-convection-test.uda</filebase>
+    <filebase>wasatch-convection-test-sine.uda</filebase>
     <outputTimestepInterval>1</outputTimestepInterval>
     <outputInitTimestep/>
     <checkpoint cycle = "2" interval = "0.01"/>
@@ -109,8 +113,8 @@
     <Level>
       <Box label="1">
         <lower>[0,0,0]</lower>
-        <upper>[10,1,1]</upper>
-        <resolution>[20,10,10]</resolution>
+        <upper>[6.283,1,1]</upper>
+        <resolution>[60,10,10]</resolution>
 <!--         <extraCells>[0,0,0]</extraCells> -->
         <patches>[1,1,1]</patches>
       </Box>

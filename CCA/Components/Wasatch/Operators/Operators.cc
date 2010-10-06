@@ -192,16 +192,14 @@ namespace Wasatch{
     typedef UpwindInterpolant<YVolField,YSurfZField> UpwindYVolYSurfZ;
     opDB.register_new_operator<UpwindYVolYSurfZ>(scinew UpwindYVolYSurfZ(dim, bcPlus[2] ));
     
-    
-    
     typedef UpwindInterpolant<ZVolField,ZSurfXField> UpwindZVolZSurfX;
-    opDB.register_new_operator<UpwindZVolZSurfX>(new UpwindZVolZSurfX(dim, bcPlus[0] ));
+    opDB.register_new_operator<UpwindZVolZSurfX>(scinew UpwindZVolZSurfX(dim, bcPlus[0] ));
     
     typedef UpwindInterpolant<ZVolField,ZSurfYField> UpwindZVolZSurfY;
-    opDB.register_new_operator<UpwindZVolZSurfY>(new UpwindZVolZSurfY(dim, bcPlus[1] ));
+    opDB.register_new_operator<UpwindZVolZSurfY>(scinew UpwindZVolZSurfY(dim, bcPlus[1] ));
     
     typedef UpwindInterpolant<ZVolField,ZSurfZField> UpwindZVolZSurfZ;
-    opDB.register_new_operator<UpwindZVolZSurfZ>(new UpwindZVolZSurfZ(dim, bcPlus[2] ));
+    opDB.register_new_operator<UpwindZVolZSurfZ>(scinew UpwindZVolZSurfZ(dim, bcPlus[2] ));
     
 
     //--------------------------------------------------------
