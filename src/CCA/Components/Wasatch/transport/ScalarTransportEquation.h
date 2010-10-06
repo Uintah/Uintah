@@ -233,11 +233,14 @@ namespace Wasatch{
                                          typename ScalarRHS<FieldT>::FieldTagInfo& info )
   {
     // typedef the fields for the interpolant - cell to face, X, Y, or Z
-    typedef OpTypes<FieldT> MyOpTypes;
-    typedef typename MyOpTypes::InterpC2FX InterpC2FX;
-    typedef typename MyOpTypes::InterpC2FY InterpC2FY;
-    typedef typename MyOpTypes::InterpC2FZ InterpC2FZ;
-  
+//    typedef OpTypes<FieldT> MyOpTypes;
+//    typedef typename MyOpTypes::InterpC2FX InterpC2FX;
+//    typedef typename MyOpTypes::InterpC2FY InterpC2FY;
+//    typedef typename MyOpTypes::InterpC2FZ InterpC2FZ;
+    typedef SpatialOps::structured::XVolField XVolField;  ///< field type for x-staggered volume
+    typedef SpatialOps::structured::YVolField YVolField;  ///< field type for y-staggered volume
+    typedef SpatialOps::structured::ZVolField ZVolField;  ///< field type for z-staggered volume
+    
     Expr::Tag convFluxTag;
     Expr::Tag advVelocityTag;
     
@@ -245,8 +248,13 @@ namespace Wasatch{
     std::string dir;
     convFluxParams->get("Direction",dir);
     
+    // get the interpolation method (UPWIND, CENTRAL, etc...)
+    std::string interpMethod;
+    convFluxParams->get("Method",interpMethod);
+    
     // get the tag for the advective velocity
     Uintah::ProblemSpecP advVelocityTagParam = convFluxParams->findBlock( "AdvectiveVelocity" );
+    
     if (advVelocityTagParam) {
       advVelocityTag = parse_nametag( advVelocityTagParam->findBlock( "NameTag" ) );
       
@@ -255,37 +263,70 @@ namespace Wasatch{
       // from momentum or throw exception
     }
 
-    // see if we have an expression set for the diffusive flux.
+    // see if we have an expression set for the advective flux.
     Uintah::ProblemSpecP nameTagParam = convFluxParams->findBlock("NameTag");
     if( nameTagParam ){      
       convFluxTag = parse_nametag( nameTagParam );
 
-    // build an expression for the convective flux.  
-    } else {       
-      
+    // if no expression was specified, build one for the convective flux.  
+    } else {             
       convFluxTag = Expr::Tag( phiName + "_convective_flux_" + dir, Expr::STATE_NONE );      
       const Expr::Tag phiTag( phiName, Expr::STATE_N );      
       Expr::ExpressionBuilder* builder = NULL;
       
-      if( dir=="X" ){ 
-        typedef UpwindInterpolant< FieldT, typename FaceTypes<FieldT>::XFace > UpwindInterpOpT;
-        typedef typename OperatorTypeBuilder<Interpolant,FieldT,typename FaceTypes<FieldT>::XFace>::type VelInterpOpT;
-        typedef typename ConvectiveFlux<UpwindInterpOpT,VelInterpOpT>::Builder theConvectiveFlux;
-        builder = scinew theConvectiveFlux(phiTag, advVelocityTag);
+      if( dir=="X" ){
+        cout << "SETTING UP CONVECTIVE FLUX EXPRESSION IN X DIRECTION "<< std::endl;
+        
+        if (interpMethod=="UPWIND") {
+          cout << "SETTING UP UPWIND CONVECTION INTERPOLANT IN X DIRECTION "<< std::endl;
+          typedef UpwindInterpolant< FieldT, typename FaceTypes<FieldT>::XFace > UpwindInterpOpT;
+          typedef typename OperatorTypeBuilder<Interpolant,XVolField,typename FaceTypes<FieldT>::XFace>::type VelInterpOpT;
+          typedef typename ConvectiveFluxUpwind<UpwindInterpOpT,VelInterpOpT>::Builder theConvectiveFlux;
+          builder = scinew theConvectiveFlux(phiTag, advVelocityTag);
+          
+        } else if (interpMethod=="CENTRAL") {      
+          cout << "SETTING UP CENTRAL CONVECTION INTERPOLANT IN X DIRECTION "<< std::endl;
+          typedef typename OperatorTypeBuilder<Interpolant,FieldT,typename FaceTypes<FieldT>::XFace>::type InterpPhiVol2PhiFX;
+          typedef typename OperatorTypeBuilder<Interpolant,XVolField,typename FaceTypes<FieldT>::XFace>::type VelInterpOpT;
+          typedef typename ConvectiveFlux<InterpPhiVol2PhiFX,VelInterpOpT>::Builder theConvectiveFlux;
+          builder = scinew theConvectiveFlux(phiTag, advVelocityTag);          
+        }
       
       } else if( dir=="Y" ){        
-        typedef UpwindInterpolant< FieldT, typename FaceTypes<FieldT>::YFace > UpwindInterpOpT;
-        typedef typename OperatorTypeBuilder<Interpolant,FieldT,typename FaceTypes<FieldT>::YFace>::type VelInterpOpT;
-        typedef typename ConvectiveFlux<UpwindInterpOpT,VelInterpOpT>::Builder theConvectiveFlux;
-        builder = scinew theConvectiveFlux(phiTag, advVelocityTag);
+        cout << "SETTING UP CONVECTIVE FLUX EXPRESSION IN Y DIRECTION "<< std::endl;
         
+        if (interpMethod=="UPWIND") {    
+          cout << "SETTING UP UPWIND CONVECTION INTERPOLANT IN Y DIRECTION "<< std::endl;
+          typedef UpwindInterpolant< FieldT, typename FaceTypes<FieldT>::YFace > UpwindInterpOpT;
+          typedef typename OperatorTypeBuilder<Interpolant,YVolField,typename FaceTypes<FieldT>::YFace>::type VelInterpOpT;
+          typedef typename ConvectiveFluxUpwind<UpwindInterpOpT,VelInterpOpT>::Builder theConvectiveFlux;
+          builder = scinew theConvectiveFlux(phiTag, advVelocityTag);
+          
+        } else if (interpMethod == "CENTRAL") {
+          cout << "SETTING UP CENTRAL CONVECTION INTERPOLANT IN Y DIRECTION "<< std::endl;
+          typedef typename OperatorTypeBuilder<Interpolant,YVolField,typename FaceTypes<FieldT>::YFace>::type VelInterpOpT;
+          typedef typename OperatorTypeBuilder<Interpolant,FieldT,typename FaceTypes<FieldT>::YFace>::type InterpPhiVol2PhiFY;
+          typedef typename ConvectiveFlux<InterpPhiVol2PhiFY,VelInterpOpT>::Builder theConvectiveFlux;
+          builder = scinew theConvectiveFlux(phiTag, advVelocityTag);                    
+        }
         
       } else if( dir=="Z") {        
-        typedef UpwindInterpolant< FieldT, typename FaceTypes<FieldT>::ZFace > UpwindInterpOpT;
-        typedef typename OperatorTypeBuilder<Interpolant,FieldT,typename FaceTypes<FieldT>::ZFace>::type VelInterpOpT;
-        typedef typename ConvectiveFlux<UpwindInterpOpT,VelInterpOpT>::Builder theConvectiveFlux;
-        builder = scinew theConvectiveFlux(phiTag, advVelocityTag);
+        cout << "SETTING UP CONVECTIVE FLUX EXPRESSION IN Z DIRECTION "<< std::endl;
         
+        if (interpMethod=="UPWIND") {         
+          cout << "SETTING UP UPWIND CONVECTION INTERPOLANT IN Z DIRECTION "<< std::endl;
+          typedef UpwindInterpolant< FieldT, typename FaceTypes<FieldT>::ZFace > UpwindInterpOpT;
+          typedef typename OperatorTypeBuilder<Interpolant,ZVolField,typename FaceTypes<FieldT>::ZFace>::type VelInterpOpT;
+          typedef typename ConvectiveFluxUpwind<UpwindInterpOpT,VelInterpOpT>::Builder theConvectiveFlux;
+          builder = scinew theConvectiveFlux(phiTag, advVelocityTag);
+          
+        } else if (interpMethod=="CENTRAL") {
+          cout << "SETTING UP CENTRAL CONVECTION INTERPOLANT IN Z DIRECTION "<< std::endl;
+          typedef typename OperatorTypeBuilder<Interpolant,ZVolField,typename FaceTypes<FieldT>::ZFace>::type VelInterpOpT;
+          typedef typename OperatorTypeBuilder<Interpolant,FieldT,typename FaceTypes<FieldT>::ZFace>::type InterpPhiVol2PhiFZ;          
+          typedef typename ConvectiveFlux<InterpPhiVol2PhiFZ,VelInterpOpT>::Builder theConvectiveFlux;
+          builder = scinew theConvectiveFlux(phiTag, advVelocityTag);                    
+        }
       }
       
       if( builder == NULL ){        
