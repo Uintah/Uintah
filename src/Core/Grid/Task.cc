@@ -665,6 +665,9 @@ Task::display( ostream & out ) const
 {
   out <<  Parallel::getMPIRank()<< " " << getName() << " (" << d_tasktype << "): [";
   out << *patch_set;
+  if( d_tasktype ==  Task::Normal && patch_set != NULL){
+    out << ", Level " << getLevel(patch_set)->getIndex();
+  }
   out << ", ";
   out << *matl_set;
   out << ", DWs: ";
@@ -680,7 +683,10 @@ namespace Uintah {
   std::ostream &
   operator << ( std::ostream & out, const Uintah::Task::Dependency & dep )
   {
-    out << "[" << *(dep.var) << ", ";
+    out << "[";
+    out<< left;out.width(20);
+    out << *(dep.var) << ", ";
+     
     if(dep.var->typeDescription()->isReductionVariable()){
       if(dep.reductionLevel) {
         out << " Level: " << dep.reductionLevel->getIndex();
