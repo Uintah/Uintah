@@ -185,7 +185,7 @@ namespace Wasatch{
       set_field_requirements<SO::ZVolField>( updateTask, zVolFields_,   pss, mss );
 
       // we require the timestep value
-      updateTask->requires( Uintah::Task::NewDW, deltaTLabel_ );
+      updateTask->requires( Uintah::Task::OldDW, deltaTLabel_ );
       /* jcs if we specify this, then things fail:
                             pss, Uintah::Task::NormalDomain,
                             mss, Uintah::Task::NormalDomain,
