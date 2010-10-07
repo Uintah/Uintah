@@ -112,7 +112,9 @@ public:
 template <typename PhiVolT, typename PhiFaceT>
 UpwindInterpolant<PhiVolT,PhiFaceT>::
 UpwindInterpolant(const std::vector<int>& dim,const bool hasPlusFace):
-dim_(dim),hasPlusFace_(hasPlusFace) {
+  hasPlusFace_(hasPlusFace),
+  dim_(dim)
+{
   // TSAAD - TODO: MOVE THIS TO FVTOOLS IN SPATIALOPS
   //stride_ = get_stride<DestFieldT>(dim, hasPlusFace)
   const size_t direction = PhiFaceT::Location::FaceDir::value;
