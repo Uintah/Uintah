@@ -14,14 +14,19 @@
 #include "PatchInfo.h"
 #include "FieldAdaptor.h"
 
+#include <list>
+
 namespace Uintah{
   class ProcessorGroup;
   class DataWarehouse;
 }
 
+namespace Expr{ class ExpressionTree; }
+
 namespace Wasatch{
 
   class CoordHelper;
+  class TaskInterface;
 
   /**
    *  \ingroup WasatchCore
@@ -76,6 +81,9 @@ namespace Wasatch{
 
     CoordHelper* coordHelper_;
 
+    std::list< Expr::ExpressionTree* > treeList_;
+    std::list< TaskInterface*  > taskInterfaceList_;
+
     /**
      *  \brief used internally to obtain the appropriate vector
      *         (e.g. scalarFields_) given the type of field we are
@@ -106,6 +114,8 @@ namespace Wasatch{
      */
     TimeStepper( const Uintah::VarLabel* deltaTLabel,
                  Expr::ExpressionFactory& factory );
+
+    ~TimeStepper();
 
     /**
      *  \brief Add a transport equation to this TimeStepper
