@@ -1,19 +1,45 @@
+//-- Wasatch Includes --//
 #include "ParseEquation.h"
-
-#include <iostream>
-
-#include <Core/Exceptions/InvalidValue.h>
-#include <Core/Exceptions/ProblemSetupException.h>
-#include <Core/ProblemSpec/ProblemSpec.h>
-
+#include "../TimeStepper.h"
 #include <CCA/Components/Wasatch/StringNames.h>
 
 //-- Add headers for individual transport equations here --//
 #include "ScalarTransportEquation.h"
 #include "TemperatureTransportEquation.h"
 
+//-- Uintah includes --//
+#include <Core/Exceptions/InvalidValue.h>
+#include <Core/Exceptions/ProblemSetupException.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
+
+//-- Expression Library includes --//
+#include <expression/TransportEquation.h>
+
+#include <iostream>
+
 
 namespace Wasatch{
+
+
+  /**
+   *  \class EqnTimestepAdaptor
+   *  \author James C. Sutherland
+   *  \date June, 2010
+   *
+   *  \brief Strongly typed adaptor provides the key functionality to
+   *         plug a transport equation into a TimeStepper.
+   */
+  template< typename FieldT >
+  class EqnTimestepAdaptor : public EqnTimestepAdaptorBase
+  {
+  public:
+    EqnTimestepAdaptor( Expr::TransportEquation* eqn ) : EqnTimestepAdaptorBase(eqn) {}
+    void hook( TimeStepper& ts ) const
+    {
+      ts.add_equation<FieldT>( eqn_->solution_variable_name(),
+                               eqn_->get_rhs_id() );
+    }
+  };
 
   //==================================================================
 

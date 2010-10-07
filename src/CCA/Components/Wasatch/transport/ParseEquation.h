@@ -4,16 +4,18 @@
 #include <Core/ProblemSpec/ProblemSpecP.h>
 
 #include "../GraphHelperTools.h"
-#include "../TimeStepper.h"
 
-#include <expression/TransportEquation.h>
 
 /**
  *  \file ParseEquation.h
  *  \brief Parser tools for transport equations.
  */
 
+namespace Expr{ class TransportEquation; }
+
 namespace Wasatch{
+
+  class TimeStepper;
 
   /** \addtogroup WasatchParser
    *  @{
@@ -39,27 +41,6 @@ namespace Wasatch{
     virtual void hook( TimeStepper& ts ) const = 0;
     Expr::TransportEquation* equation(){ return eqn_; }
     const Expr::TransportEquation* equation() const{ return eqn_; }
-  };
-
-
-  /**
-   *  \class EqnTimestepAdaptor
-   *  \author James C. Sutherland
-   *  \date June, 2010
-   *
-   *  \brief Strongly typed adaptor provides the key functionality to
-   *         plug a transport equation into a TimeStepper.
-   */
-  template< typename FieldT >
-  class EqnTimestepAdaptor : public EqnTimestepAdaptorBase
-  {
-  public:
-    EqnTimestepAdaptor( Expr::TransportEquation* eqn ) : EqnTimestepAdaptorBase(eqn) {}
-    void hook( TimeStepper& ts ) const
-    {
-      ts.add_equation<FieldT>( eqn_->solution_variable_name(),
-                               eqn_->get_rhs_id() );
-    }
   };
 
 
