@@ -220,6 +220,11 @@ namespace Wasatch{
     if     ( dir=="X" ) fs=ScalarRHS<FieldT>::DIFFUSIVE_FLUX_X;
     else if( dir=="Y" ) fs=ScalarRHS<FieldT>::DIFFUSIVE_FLUX_Y;
     else if( dir=="Z" ) fs=ScalarRHS<FieldT>::DIFFUSIVE_FLUX_Z;
+    else{
+      std::ostringstream msg;
+      msg << "Invalid direction selection for diffusive flux expression" << endl;
+      throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+    }
     
     info[ fs ] = diffFluxTag;
   }
@@ -232,11 +237,6 @@ namespace Wasatch{
                                          Expr::ExpressionFactory& factory,
                                          typename ScalarRHS<FieldT>::FieldTagInfo& info )
   {
-    // typedef the fields for the interpolant - cell to face, X, Y, or Z
-//    typedef OpTypes<FieldT> MyOpTypes;
-//    typedef typename MyOpTypes::InterpC2FX InterpC2FX;
-//    typedef typename MyOpTypes::InterpC2FY InterpC2FY;
-//    typedef typename MyOpTypes::InterpC2FZ InterpC2FZ;
     typedef SpatialOps::structured::XVolField XVolField;  ///< field type for x-staggered volume
     typedef SpatialOps::structured::YVolField YVolField;  ///< field type for y-staggered volume
     typedef SpatialOps::structured::ZVolField ZVolField;  ///< field type for z-staggered volume
@@ -347,7 +347,12 @@ namespace Wasatch{
     if      ( dir=="X" ) fs = ScalarRHS<FieldT>::CONVECTIVE_FLUX_X;
     else if ( dir=="Y" ) fs = ScalarRHS<FieldT>::CONVECTIVE_FLUX_Y;
     else if ( dir=="Z" ) fs = ScalarRHS<FieldT>::CONVECTIVE_FLUX_Z;
-    
+    else{
+      std::ostringstream msg;
+      msg << "Invalid direction selection for convective flux expression" << endl;
+      throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+    }
+
     info[ fs ] = convFluxTag;
   }
   
