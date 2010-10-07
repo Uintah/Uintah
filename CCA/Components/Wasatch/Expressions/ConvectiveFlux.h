@@ -92,8 +92,10 @@ public:
     Builder( const Expr::Tag phiTag,
              const Expr::Tag velTag ):phiT_(phiTag), velT_(velTag) {}
 		
-    Expr::ExpressionBase* build( const Expr::ExpressionID& id,
-                                 const Expr::ExpressionRegistry& reg ) const;		
+    virtual Expr::ExpressionBase* build( const Expr::ExpressionID& id,
+                                         const Expr::ExpressionRegistry& reg ) const;
+
+    virtual ~Builder(){}
   };
 };
 
@@ -134,28 +136,27 @@ class ConvectiveFluxUpwind
   typedef typename VelInterpT::DestFieldType VelFaceT;
   
 public:
-  class Builder : public Expr::ExpressionBuilder
+  class Builder : public ConvectiveFlux<PhiInterpT,VelInterpT>::Builder
   {
-    
-  protected:
-    const Expr::Tag phiT_, velT_;
-    
   public:
     /**
-     *  \brief Construct a convective flux given an expression for
-     *         \f$\phi\f$.
+     *  \brief Construct an upwind convective flux given an expression
+     *         for \f$\phi\f$.
      *
-     *  \param phiTag  the Expr::Tag for the scalar field.
-     *         This is located at cell centroids.
+     *  \param phiTag the Expr::Tag for the scalar field.  This is
+     *         located at cell centroids.
      *
-     *  \param velTag the Expr::Tag for the velocity field.
-     *         The velocity field is a face field.
+     *  \param velTag the Expr::Tag for the velocity field.  The
+     *         velocity field is a face field.
      */
     Builder( const Expr::Tag phiTag,
-             const Expr::Tag velTag ):phiT_(phiTag), velT_(velTag) {}
-		
+             const Expr::Tag velTag ) : ConvectiveFlux<PhiInterpT,VelInterpT>::Builder(phiTag,velTag) {}
+    
     Expr::ExpressionBase* build( const Expr::ExpressionID& id,
-                                 const Expr::ExpressionRegistry& reg ) const;		
+                                 const Expr::ExpressionRegistry& reg ) const
+    {
+      return new ConvectiveFluxUpwind<PhiInterpT,VelInterpT>( this->phiT_, this->velT_, id, reg );
+    }		
   };
   
   ConvectiveFluxUpwind( const Expr::Tag phiTag,
@@ -268,16 +269,6 @@ template< typename PhiInterpT, typename VelInterpT >
 ConvectiveFluxUpwind<PhiInterpT, VelInterpT>::
 ~ConvectiveFluxUpwind()
 {}
-
-//--------------------------------------------------------------------
-
-template< typename PhiInterpT, typename VelInterpT > 
-Expr::ExpressionBase* ConvectiveFluxUpwind<PhiInterpT, VelInterpT>::
-Builder::build( const Expr::ExpressionID& id,
-                const Expr::ExpressionRegistry& reg ) const
-{
-  return new ConvectiveFluxUpwind<PhiInterpT,VelInterpT>( this->phiT_, this->velT_, id, reg );
-}
 
 //--------------------------------------------------------------------
 
