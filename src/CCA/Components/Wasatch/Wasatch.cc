@@ -85,12 +85,11 @@ namespace Wasatch{
       delete i->second.operators;
     }
 
-    for( GraphCategories::iterator igc=graphCategories_.begin(); igc!=graphCategories_.end(); ++igc ){
-      delete igc->second->exprFactory;
-      delete igc->second;
+    for( EquationAdaptors::iterator i=adaptors_.begin(); i!=adaptors_.end(); ++i ){
+      delete *i;
     }
 
-    for( EquationAdaptors::iterator i=adaptors_.begin(); i!=adaptors_.end(); ++i ){
+    for( std::list<TaskInterface*>::iterator i=taskInterfaceList_.begin(); i!=taskInterfaceList_.end(); ++i ){
       delete *i;
     }
 
@@ -100,6 +99,12 @@ namespace Wasatch{
 
     delete icCoordHelper_;
     delete timeStepper_;
+
+    for( GraphCategories::iterator igc=graphCategories_.begin(); igc!=graphCategories_.end(); ++igc ){
+      delete igc->second->exprFactory;
+      delete igc->second;
+    }
+
   }
 
   //--------------------------------------------------------------------
