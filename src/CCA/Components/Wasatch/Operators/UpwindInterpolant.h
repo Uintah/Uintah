@@ -17,20 +17,22 @@
  *  \class     UpwindInterpolant
  *  \author    Tony Saad
  *  \date      July 2010
+ *  \ingroup   WasatchOperators
  *
  *  \brief     Calculates convective flux using upwind interpolation.
  *  
  *  This class is a lightweight operator, i.e. it does NOT implement a
  *  matvec operation. The UpwindInterplant will interpolate the
- *  convective flux \phi u_i where \phi denotes a staggered or
- *  non-staggered field. For example, if \phi denotes the temperature
- *  T, then, \phi is a scalar volume field. On the other hand, if \phi
- *  denotes the momentum \rho u_i, then, \phi is staggered volume
- *  field. The UpwindInterpolant will interpolate the volume field to
- *  its corresponding face field. Thus, if \phi denotes a scalar
+ *  convective flux \f$\phi u_i\f$ where \f$\phi\f$ denotes a
+ *  staggered or non-staggered field. For example, if \f$\phi\f$
+ *  denotes the temperature T, then, \f$\phi\f$ is a scalar volume
+ *  field. On the other hand, if \f$\phi\f$ denotes the momentum
+ *  \f$\rho u_i\f$, then, \f$\phi\f$ is staggered volume field. The
+ *  UpwindInterpolant will interpolate the volume field to its
+ *  corresponding face field. Thus, if \f$\phi\f$ denotes a scalar
  *  field, then the UpwindInterpolant will produce a scalar face
- *  field. Similarly, if \phi was an X-Staggered volume field, then
- *  the UpwindInterpolant will produce an X-Staggered face field.
+ *  field. Similarly, if \f$\phi\f$ was an X-Staggered volume field,
+ *  then the UpwindInterpolant will produce an X-Staggered face field.
  * 
  *  Based on this convention, the UpwindInterpolant class is templated
  *  on two types o fields: the phi field type (PhiVolT) and its
