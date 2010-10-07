@@ -81,7 +81,6 @@ namespace Wasatch{
 
     CoordHelper* coordHelper_;
 
-    std::list< Expr::ExpressionTree* > treeList_;
     std::list< TaskInterface*  > taskInterfaceList_;
 
     /**
