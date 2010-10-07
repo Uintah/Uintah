@@ -93,10 +93,6 @@ namespace Wasatch{
       delete *i;
     }
 
-    for( std::list<TaskInterface*>::iterator i=taskInterfaceList_.begin(); i!=taskInterfaceList_.end(); ++i ){
-      delete *i;
-    }
-
     delete icCoordHelper_;
     delete timeStepper_;
 
