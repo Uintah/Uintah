@@ -137,50 +137,108 @@ public:
    virtual void override(const SoleVariableBase&, const VarLabel*,
 			 const Level* level = 0, int matIndex = -1);
 
+   //__________________________________
    // Particle Variables
    
    virtual ParticleSubset* createParticleSubset(particleIndex numParticles,
-						int matlIndex, const Patch*,
-                                                IntVector low = IntVector(0,0,0),
-                                                IntVector high = IntVector(0,0,0));
-   virtual void saveParticleSubset(ParticleSubset*,int matlIndex, const Patch*,
-                                   IntVector low = IntVector(0,0,0), IntVector high = IntVector(0,0,0));
-   virtual bool haveParticleSubset(int matlIndex, const Patch*, 
+						     int matlIndex, 
+                                               const Patch*,
+                                               IntVector low = IntVector(0,0,0),
+                                               IntVector high = IntVector(0,0,0));
+                                               
+   virtual void saveParticleSubset(ParticleSubset*,
+                                   int matlIndex, 
+                                   const Patch*,
+                                   IntVector low = IntVector(0,0,0), 
+                                   IntVector high = IntVector(0,0,0));
+                                   
+   virtual bool haveParticleSubset(int matlIndex, 
+                                   const Patch*, 
                                    IntVector low = IntVector(0,0,0),
-                                   IntVector high = IntVector(0,0,0), bool exact = false);
-   virtual ParticleSubset* getParticleSubset(int matlIndex, const Patch*,
-                                            IntVector low, IntVector high);
-   virtual ParticleSubset* getParticleSubset(int matlIndex, const Patch*,
-                                            IntVector low, IntVector high, const VarLabel*);
-   virtual ParticleSubset* getParticleSubset(int matlIndex, const Patch*);
-   virtual ParticleSubset* getDeleteSubset(int matlIndex, const Patch*);
+                                   IntVector high = IntVector(0,0,0), 
+                                   bool exact = false);
+                                   
+   virtual ParticleSubset* getParticleSubset(int matlIndex, 
+                                             const Patch*,
+                                             IntVector low, 
+                                             IntVector high);
+                                             
+   virtual ParticleSubset* getParticleSubset(int matlIndex, 
+                                             const Patch*,
+                                             IntVector low, 
+                                             IntVector high, 
+                                             const VarLabel*);
+                                             
+   virtual ParticleSubset* getParticleSubset(int matlIndex, 
+                                             const Patch*);
+                                             
+   virtual ParticleSubset* getDeleteSubset(int matlIndex, 
+                                          const Patch*);
+                                          
    virtual map<const VarLabel*, ParticleVariableBase*>* getNewParticleState(int matlIndex, const Patch*);
+   
    virtual ParticleSubset* getParticleSubset(int matlIndex,
-					     const Patch*, Ghost::GhostType, 
-					     int numGhostCells,
-					     const VarLabel* posvar);
-   virtual ParticleSubset* getParticleSubset(int matlIndex, IntVector low, IntVector high, const Level* level, const Patch* relPatch,
-                                     const VarLabel* posvar);
-   virtual void allocateTemporary(ParticleVariableBase&, ParticleSubset*);
-   virtual void allocateAndPut(ParticleVariableBase&, const VarLabel*,
-			       ParticleSubset*);
-   virtual void get(constParticleVariableBase&, const VarLabel*,
-		    ParticleSubset*);
-   virtual void get(constParticleVariableBase&, const VarLabel*,
-		    int matlIndex, const Patch* patch);
-   virtual void getModifiable(ParticleVariableBase&, const VarLabel*,
-		    ParticleSubset*);
-   virtual void put(ParticleVariableBase&, const VarLabel*,
-		    bool replace = false);
+					          const Patch*, Ghost::GhostType, 
+					          int numGhostCells,
+					          const VarLabel* posvar);
+                                        
+   virtual ParticleSubset* getParticleSubset(int matlIndex, 
+                                             IntVector low, 
+                                             IntVector high, 
+                                             const Level* level, 
+                                             const Patch* relPatch,
+                                             const VarLabel* posvar);
+                                             
+   virtual void allocateTemporary(ParticleVariableBase&, 
+                                  ParticleSubset*);
+                                  
+   virtual void allocateAndPut(ParticleVariableBase&, 
+                               const VarLabel*,
+			          ParticleSubset*);
+                               
+   virtual void get(constParticleVariableBase&, 
+                    const VarLabel*,
+		      ParticleSubset*);
+                    
+   virtual void get(constParticleVariableBase&, 
+                    const VarLabel*,
+		      int matlIndex, 
+                    const Patch* patch);
+
+   virtual void getModifiable(ParticleVariableBase&, 
+                              const VarLabel*,
+		                ParticleSubset*);
+                              
+   virtual void put(ParticleVariableBase&, 
+                    const VarLabel*,
+		      bool replace = false);
+                    
    virtual ParticleVariableBase* getParticleVariable(const VarLabel*,
-						     ParticleSubset*);
-   virtual ParticleVariableBase*
-   getParticleVariable(const VarLabel*, int matlIndex, const Patch* patch);  
+						           ParticleSubset*);
+                                                     
+   virtual ParticleVariableBase* getParticleVariable(const VarLabel*, 
+                                                     int matlIndex, 
+                                                     const Patch* patch);  
    void printParticleSubsets();
 
-   virtual void getCopy(ParticleVariableBase&, const VarLabel*, ParticleSubset*);
-   virtual void copyOut(ParticleVariableBase&, const VarLabel*, ParticleSubset*);
+   virtual void getCopy(ParticleVariableBase&, 
+                        const VarLabel*, 
+                        ParticleSubset*);
+                        
+   virtual void copyOut(ParticleVariableBase&, 
+                        const VarLabel*, 
+                        ParticleSubset*);
 
+     // Remove particles that are no longer relevant
+   virtual void deleteParticles(ParticleSubset* delset);
+
+   virtual void addParticles(const Patch* patch, 
+                             int matlIndex, 
+			        map<const VarLabel*, 
+                             ParticleVariableBase*>* addedstate);
+
+  //__________________________________
+  // Grid Variables
    virtual void print();
    virtual void clear();
    void get(constGridVariableBase& var, const VarLabel* label, int matlIndex, 
@@ -217,11 +275,7 @@ public:
    virtual void put(PerPatchBase&, const VarLabel*,
 		    int matIndex, const Patch*, bool replace = false);
 
-   // Remove particles that are no longer relevant
-   virtual void deleteParticles(ParticleSubset* delset);
 
-   virtual void addParticles(const Patch* patch, int matlIndex, 
-			     map<const VarLabel*, ParticleVariableBase*>* addedstate);
 
    virtual ScrubMode setScrubbing(ScrubMode);
 
