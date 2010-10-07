@@ -484,15 +484,9 @@ WARNING
     void requires(WhichDW, const VarLabel*,
                   const MaterialSubset* matls,
                   Ghost::GhostType gtype, int numGhostCells = 0, bool oldTG=false);
-
+                  
     //////////
-    // Insert Documentation Here:
-    void requires(WhichDW, const VarLabel*,
-                  const PatchSubset* patches, DomainSpec patches_dom,
-                  Ghost::GhostType gtype, int numGhostCells = 0, bool oldTG=false);
-    
-    //////////
-    // Insert Documentation Here:
+    // Insert Documentation Here: 
     void requires(WhichDW, const VarLabel*,
                   const MaterialSubset* matls, DomainSpec matls_dom,
                   Ghost::GhostType gtype, int numGhostCells = 0, bool oldTG=false);
