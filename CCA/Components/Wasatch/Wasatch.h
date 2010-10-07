@@ -126,6 +126,7 @@ namespace Wasatch{
   class EqnTimestepAdaptorBase;
   class TimeStepper;
   class CoordHelper;
+  class TaskInterface;
 
   /**
    *  \ingroup WasatchCore
@@ -222,6 +223,8 @@ namespace Wasatch{
 
     typedef std::vector<EqnTimestepAdaptorBase*> EquationAdaptors;
     EquationAdaptors adaptors_;
+
+    std::list< TaskInterface*  > taskInterfaceList_;
 
     Wasatch( const Wasatch& ); // disallow copying
     Wasatch& operator=( const Wasatch& ); // disallow assignment

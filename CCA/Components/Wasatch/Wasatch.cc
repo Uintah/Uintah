@@ -81,7 +81,6 @@ namespace Wasatch{
 
   Wasatch::~Wasatch()
   {
-    // wipe out the patchInfoMap_ stuff
     for( PatchInfoMap::iterator i=patchInfoMap_.begin(); i!=patchInfoMap_.end(); ++i ){
       delete i->second.operators;
     }
@@ -92,6 +91,10 @@ namespace Wasatch{
     }
 
     for( EquationAdaptors::iterator i=adaptors_.begin(); i!=adaptors_.end(); ++i ){
+      delete *i;
+    }
+
+    for( std::list<TaskInterface*>::iterator i=taskInterfaceList_.begin(); i!=taskInterfaceList_.end(); ++i ){
       delete *i;
     }
 
@@ -189,6 +192,7 @@ namespace Wasatch{
       // within the TaskInterface object.
       TaskInterface* const task = scinew TaskInterface( graph, patchInfoMap_ );
       task->schedule( sched, localPatches, sharedState_->allMaterials(), icCoordHelper_->field_tags() );
+      taskInterfaceList_.push_back( task );
 
       //________________
       // jcs diagnostics
@@ -226,6 +230,7 @@ namespace Wasatch{
       // within the TaskInterface object.
       TaskInterface* const task = scinew TaskInterface( graph, patchInfoMap_ );
       task->schedule( sched, patches, materials );
+      taskInterfaceList_.push_back( task );
 
       //________________
       // jcs diagnostics
@@ -332,6 +337,7 @@ namespace Wasatch{
 //       Expr::ExpressionTree* timeTree = scinew Expr::ExpressionTree( timeID, exprFactory, -1, "set time" );
 //       TaskInterface* const timeTask = scinew TaskInterface( timeTree, patchInfoMap_ );
 //       timeTask->schedule( sched, localPatches, materials );
+//       taskInterfaceList_.push_back( timeTask );
 //     }
   }
 

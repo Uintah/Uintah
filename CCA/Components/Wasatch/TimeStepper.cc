@@ -126,6 +126,19 @@ namespace Wasatch{
 
   //------------------------------------------------------------------
 
+  TimeStepper::~TimeStepper()
+  {
+    delete coordHelper_;
+    for( std::list<Expr::ExpressionTree*>::iterator i=treeList_.begin(); i!=treeList_.end(); ++i ){
+      delete *i;
+    }
+    for( std::list<TaskInterface*>::iterator i=taskInterfaceList_.begin(); i!=taskInterfaceList_.end(); ++i ){
+      delete *i;
+    }
+  }
+
+  //------------------------------------------------------------------
+
   // jcs this should be done on a single patch, since the PatchInfo is for a single patch.
   void
   TimeStepper::create_tasks( const Expr::ExpressionID timeID,
@@ -147,6 +160,10 @@ namespace Wasatch{
       //     will have all sorts of name clashes?
       Expr::ExpressionTree* rhsTree = scinew Expr::ExpressionTree( rhsIDs_, *factory_, -1, "rhs" );
       TaskInterface* rhsTask = scinew TaskInterface( rhsTree, patchInfoMap );
+
+      treeList_.push_back( rhsTree );
+      taskInterfaceList_.push_back( rhsTask );
+
       coordHelper_->create_task( sched, patches, materials );
       rhsTask->schedule( sched, patches, materials, coordHelper_->field_tags() );
       
@@ -171,6 +188,10 @@ namespace Wasatch{
     {
       Expr::ExpressionTree* timeTree = scinew Expr::ExpressionTree( timeID, *factory_, -1, "set time" );
       TaskInterface* const timeTask = scinew TaskInterface( timeTree, patchInfoMap );
+
+      treeList_.push_back( timeTree );
+      taskInterfaceList_.push_back( timeTask );
+
       timeTask->schedule( sched, patches, materials, coordHelper_->field_tags() );
     }
 
