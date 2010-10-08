@@ -149,6 +149,13 @@ protected:
                                           DataWarehouse* old_dw,
                                           DataWarehouse* new_dw);
 
+  void interpolateParticlesToGrid_CFI(const ProcessorGroup*,
+                                      const PatchSubset* patches,
+                                      const MaterialSubset* matls,
+                                      DataWarehouse* old_dw,
+                                      DataWarehouse* new_dw);
+
+
   virtual void computeStressTensor(const ProcessorGroup*,
                                    const PatchSubset* patches,
                                    const MaterialSubset* matls,
@@ -222,6 +229,10 @@ protected:
   virtual void scheduleInterpolateParticlesToGrid(SchedulerP&, 
                                                   const PatchSet*,
                                                   const MaterialSet*);
+                                                  
+  void scheduleInterpolateParticlesToGrid_CFI(SchedulerP&, 
+                                              const PatchSet*,
+                                              const MaterialSet*);
 
   virtual void scheduleComputeStressTensor(SchedulerP&, 
                                            const PatchSet*,
