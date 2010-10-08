@@ -22,7 +22,7 @@ from helpers.modUPS import modUPS
 UNUSED_TESTS = []
 
 TESTS = [
-  ("BasicScalarTransport",	"BasicScalarTransportEquation.ups",	1, 	"Linux",	["exactComparison","no_restart","no_memoryTest"] )
+  ("BasicScalarTransport",      "BasicScalarTransportEquation.ups",     1,      "Linux",        ["exactComparison","no_restart","no_memoryTest"] )
 ]
 
 exit(runSusTests(argv, TESTS, "Wasatch"))
