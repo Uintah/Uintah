@@ -243,7 +243,6 @@ void ProgramBurn::computeStressTensor(const PatchSubset* patches,
 {
     for(int pp=0;pp<patches->size();pp++){
     const Patch* patch = patches->get(pp);
-    Matrix3 velGrad,Shear;
     double p,se=0.;
     double c_dil=0.0;
     Vector WaveSpeed(1.e-12,1.e-12,1.e-12);
@@ -269,6 +268,8 @@ void ProgramBurn::computeStressTensor(const PatchSubset* patches,
     constParticleVariable<Vector> pvelocity;
     constParticleVariable<Vector> psize;
     ParticleVariable<double> pdTdt,p_q,pProgressF_new;
+    ParticleVariable<Matrix3> velGrad;
+
 
     delt_vartype delT;
     old_dw->get(delT, lb->delTLabel, getLevel(patches));
@@ -290,11 +291,11 @@ void ProgramBurn::computeStressTensor(const PatchSubset* patches,
 
     new_dw->allocateAndPut(pProgressF_new,    pProgressFLabel_preReloc,   pset);
 
+    new_dw->allocateTemporary(velGrad,                             pset);
+
     constNCVariable<Vector> gvelocity;
     new_dw->get(gvelocity, lb->gVelocityStarLabel, dwi, patch, gac, NGN);
 
-//    double cell_vol = dx.x()*dx.y()*dx.z();
-//    double delta_L = 1.5*pow(cell_vol,1./3.)/d_initialData.d_D;
     double time = d_sharedState->getElapsedTime();
 
     double K = d_initialData.d_K;
@@ -322,8 +323,13 @@ void ProgramBurn::computeStressTensor(const PatchSubset* patches,
 
       double t_b = dist/d_initialData.d_D;
 
+      double delta_L = 1.5*pow(pmass[idx]/rho0,1./3.)/d_initialData.d_D;
+
       if (time >= t_b){
-        pProgressF_new[idx]=1.0;
+        pProgressF_new[idx] = (time - t_b)/delta_L;
+        if(pProgressF_new[idx]>0.96){
+          pProgressF_new[idx]=1.0;
+        }
       }
       else{
         pProgressF_new[idx]=0.0;
@@ -332,31 +338,87 @@ void ProgramBurn::computeStressTensor(const PatchSubset* patches,
       // Assign zero internal heating by default - modify if necessary.
       pdTdt[idx] = 0.0;
 
-      velGrad.set(0.0);
+      Matrix3 velGrad_new(0.0);
       if(!flag->d_axisymmetric){
         // Get the node indices that surround the cell
         interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx],
                                                       deformationGradient[idx]);
 
-        computeVelocityGradient(velGrad,ni,d_S, oodx, gvelocity);
+        computeVelocityGradient(velGrad_new,ni,d_S, oodx, gvelocity);
       } else {  // axi-symmetric kinematics
         // Get the node indices that surround the cell
         interpolator->findCellAndWeightsAndShapeDerivatives(px[idx],ni,S,d_S,
                                                             psize[idx],
                                                    deformationGradient[idx]);
         // x -> r, y -> z, z -> theta
-        computeAxiSymVelocityGradient(velGrad,ni,d_S,S,oodx,gvelocity,px[idx]);
+        computeAxiSymVelocityGradient(velGrad_new,ni,d_S,S,oodx,gvelocity,
+                                                                  px[idx]);
       }
 
-      deformationGradient_new[idx]=(velGrad*delT+Identity)
+      deformationGradient_new[idx]=(velGrad_new*delT+Identity)
                                     *deformationGradient[idx];
+      velGrad[idx] = velGrad_new;
+    }
+
+    // The following is used only for pressure stabilization
+    CCVariable<double> J_CC;
+    new_dw->allocateTemporary(J_CC,       patch);
+    J_CC.initialize(0.);
+    if(flag->d_doPressureStabilization) {
+      CCVariable<double> vol_0_CC;
+      CCVariable<double> vol_CC;
+      new_dw->allocateTemporary(vol_0_CC, patch);
+      new_dw->allocateTemporary(vol_CC,   patch);
+
+      vol_0_CC.initialize(0.);
+      vol_CC.initialize(0.);
+      for(ParticleSubset::iterator iter = pset->begin();
+          iter != pset->end(); iter++){
+        particleIndex idx = *iter;
+
+        // get the volumetric part of the deformation
+        double J = deformationGradient_new[idx].Determinant();
+
+        // Get the deformed volume
+        double rho_cur = rho0/J;
+        pvolume[idx] = pmass[idx]/rho_cur;
+
+        IntVector cell_index;
+        patch->findCell(px[idx],cell_index);
+
+        vol_CC[cell_index]  +=pvolume[idx];
+        vol_0_CC[cell_index]+=pmass[idx]/rho0;
+      }
+
+      for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++){
+        IntVector c = *iter;
+        J_CC[c]=vol_CC[c]/vol_0_CC[c];
+      }
+    } //end of pressureStabilization loop  at the patch level
+
+    for(ParticleSubset::iterator iter = pset->begin();
+        iter != pset->end(); iter++){
+      particleIndex idx = *iter;
 
       double J = deformationGradient_new[idx].Determinant();
 
-      // get the hydrostatic part of the stress
-      if(pProgressF_new[idx] < 1.0){
-        p = (1./(n*K))*(pow(J,-n)-1.);
-      }else{
+      // More Pressure Stabilization
+      if(flag->d_doPressureStabilization) {
+        IntVector cell_index;
+        patch->findCell(px[idx],cell_index);
+
+        // Change F such that the determinant is equal to the average for
+        // the cell
+        deformationGradient_new[idx]*=cbrt(J_CC[cell_index])/cbrt(J);
+        J=J_CC[cell_index];
+      }
+
+      //  The following computes a pressure for partially burned particles
+      //  as a mixture of Murnahan and JWL pressures, based on pProgressF
+      //  This is as described in Eq. 5 of "JWL++: ..." by Souers, et al.
+      double pM = (1./(n*K))*(pow(J,-n)-1.);
+      double pJWL=pM;
+      if(pProgressF_new[idx] > 0.0){
         double one_plus_omega = 1.+om;
         double inv_rho_rat=J; //rho0/rhoM;
         double rho_rat=1./J;  //rhoM/rho0;
@@ -364,9 +426,12 @@ void ProgramBurn::computeStressTensor(const PatchSubset* patches,
         double B_e_to_the_R2_rho0_over_rhoM=B*exp(-R2*inv_rho_rat);
         double C_rho_rat_tothe_one_plus_omega=C*pow(rho_rat,one_plus_omega);
 
-        p   = A_e_to_the_R1_rho0_over_rhoM +
-              B_e_to_the_R2_rho0_over_rhoM + C_rho_rat_tothe_one_plus_omega;
+        pJWL  = A_e_to_the_R1_rho0_over_rhoM +
+                B_e_to_the_R2_rho0_over_rhoM +
+                C_rho_rat_tothe_one_plus_omega;
       }
+
+      p = pM*(1.0-pProgressF_new[idx]) + pJWL*pProgressF_new[idx];
 
       // Get the deformed volume and current density
       double rho_cur = rho0/J;
@@ -388,7 +453,7 @@ void ProgramBurn::computeStressTensor(const PatchSubset* patches,
       if (flag->d_artificial_viscosity) {
         double dx_ave = (dx.x() + dx.y() + dx.z())/3.0;
         double c_bulk = sqrt(1./(K*rho_cur));
-        Matrix3 D=(velGrad + velGrad.Transpose())*0.5;
+        Matrix3 D=(velGrad[idx] + velGrad[idx].Transpose())*0.5;
         p_q[idx] = artificialBulkViscosity(D.Trace(), c_bulk, rho_cur, dx_ave);
       } else {
         p_q[idx] = 0.;
