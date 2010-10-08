@@ -81,7 +81,7 @@ if [ $# -le 3 ]; then
   INPUTS=`getopt --options=a,c,h,i,m,p,u  --longoptions=all,checkpoints,help,inputFile,memory,performance,uda -- "${tmp[@]}"`                                                                                     
 fi
 echo "------------------------"
-echo ${INPUTS[@]}
+#echo ${INPUTS[@]}
 
 # Note the quotes around `$INPUTS': they are essential!
 eval set -- "$INPUTS"
@@ -99,7 +99,7 @@ while true ; do
     *) echo "Internal error!" ; exit 1 ;;                                 
   esac                                                                          
 done
-echo "Remaining arguments:"
+#echo "Remaining arguments:"
 for arg do 
   echo '--> '"\`$arg'" ;
 done
@@ -127,8 +127,14 @@ if [ ! -d $gold_standard_dir/$testname ]; then
 fi
 
 #__________________________________
+replaced_uda="false"
+replaced_mem="false"
+replaced_perf="false"
+replaced_input="false"
+replaced_checkpoint="false"
+#__________________________________
 # replace UDA
-if [ "$do_uda" = "true" ]; then
+if [[ "$do_uda" = "true"|| "$do_all" = "true" ]]; then
   if [ ! -d $replacement_dir/$testname/*.uda ]; then
     echo "No udas to replace, or not replacing them"
   else
@@ -161,6 +167,7 @@ if [ "$do_uda" = "true" ]; then
     
     if [ "$failcode" = "0" ]; then
       echo "udas successfully replaced"
+      replaced_uda="true"
     fi
     
   fi
@@ -200,6 +207,7 @@ if [ "$do_checkpoint" = "true" ]; then
     
     if [ "$failcode" = "0" ]; then
       echo "checkpoint successfully replaced"
+      replaced_checkpoint="true"
     fi
    
   fi
@@ -214,11 +222,13 @@ if [[ "$do_mem" = "true" || "$do_all" = "true" ]]; then
   else
   
     # replace the memory usage (both normal and restart)
+    failcode="0"
     echo "Replacing $testname memory results"
     
     rm $gold_standard_dir/$testname/*malloc* > /dev/null 2>&1
     
     if [ $? != "0" ]; then
+      failcode="1"
       echo "$testname memory usage replacement failed - could not remove old memory stats file"
     fi
     
@@ -226,8 +236,15 @@ if [[ "$do_mem" = "true" || "$do_all" = "true" ]]; then
     cp $replacement_dir/$testname/restart/restart_malloc_stats $gold_standard_dir/$testname/. > /dev/null 2>&1
     
     if [ $? != "0" ]; then
-     echo "$testname memory usage replacement failed - could not copy the new memory usage file"
+      failcode="1"
+      echo "$testname memory usage replacement failed - could not copy the new memory usage file from either the original uda or the restart"
     fi
+    
+    if [ "$failcode" = "0" ]; then
+      echo "memory stats successfully replaced"
+      replaced_mem="true"
+    fi
+    
   fi
 fi
 
@@ -238,11 +255,13 @@ if  [[ "$do_perf" = "true" || "$do_all" = "true" ]]; then
     echo "No performance stats to replace"
   else
     # replace the performance results (both normal and restart)
+    failcode="0"
     echo "Replacing $testname performance results"
     
     rm $gold_standard_dir/$testname/*timestamp > /dev/null 2>&1
     
     if [ $? != "0" ]; then
+      failcode="1"
       echo "$testname performance replacement failed - could not remove old performance stats"
     fi
     
@@ -250,8 +269,14 @@ if  [[ "$do_perf" = "true" || "$do_all" = "true" ]]; then
     cp $replacement_dir/$testname/restart/restart_timestamp $gold_standard_dir/$testname/. > /dev/null 2>&1
     
     if [ $? != "0" ]; then
-      echo "$testname performance replacement failed - could not copy the new performance stats"
+      failcode="1"
+      echo "$testname performance replacement failed - could not copy the new performance stats from either the original uda or the restart"
     fi
+    if [ "$failcode" = "0" ]; then
+      echo "performance stats successfully replaced"
+      replaced_perf="true"
+    fi
+    
   fi
 fi
 
@@ -271,29 +296,25 @@ if [ "$do_uda" = "true" -o "$do_mem" = "true" -o "$do_perf" = "true" -o "$do_inp
     echo "---------------------------------------------------------------------" >> $logfile
   fi
 
-  echo -n "`date`: user $user " >> $logfile
-  if [ "$do_uda" = "true" ]; then
-    echo -n "replaced uda" >> $logfile
+  echo -n "`date`: user $user Replaced:" >> $logfile
+  if [ "$replaced_uda" = "true" ]; then
+    echo -n " uda," >> $logfile
   fi
   
-  if [ "$do_checkpoint" = "true" ]; then
-    echo -n "replaced checkpoints" >> $logfile
+  if [[ "$replaced_checkpoint" = "true" || "$replaced_uda" = "true" ]]; then
+    echo -n " checkpoints," >> $logfile
   fi
   
-  if [ "$do_mem" = "true" ]; then
-      echo -n "replaced memory usage" >> $logfile
+  if [ "$replaced_mem" = "true" ]; then
+      echo -n " memory usage," >> $logfile
   fi
   
-  if [ "$do_perf" = "true" ]; then
-    echo -n "replaced performance results" >> $logfile
+  if [ "$replaced_perf" = "true" ]; then
+    echo -n " performance results," >> $logfile
   fi
   
   if [ "$do_input" = "true" ]; then
-    echo -n "replaced input file" >> $logfile
-  fi 
-  
-  if [ "$do_all" = "true" ]; then
-    echo -n "replaced uda, checkpoints, memory usage performance results" >> $logfile
+    echo -n " input file," >> $logfile
   fi 
   
   echo -n "       Comment: $comment" >> $logfile
@@ -302,9 +323,9 @@ if [ "$do_uda" = "true" -o "$do_mem" = "true" -o "$do_perf" = "true" -o "$do_inp
 
   #__________________________________
   #  email homebrew whenever there is a change to a GS
-  if [ "$do_uda" = "true" ]; then
+  if [ "$replaced_uda" = "true" ]; then
     tail -1 $logfile > message
-    #mutt  -s "GoldStandard Change:$testname" john.schmidt@utah.edu < message
+    mutt  -s "GoldStandard Change:$testname" john.schmidt@utah.edu < message
   fi
 
 # change groups and permissions so (hopefully) anybody can replace them later
