@@ -187,7 +187,7 @@ void IdealGasMP::computeStressTensor(const PatchSubset* patches,
 {
   for(int pp=0;pp<patches->size();pp++){
     const Patch* patch = patches->get(pp);
-    Matrix3 velGrad,deformationGradientInc;
+    Matrix3 deformationGradientInc;
     double p,se=0.;
     double c_dil=0.0;
     Vector WaveSpeed(1.e-12,1.e-12,1.e-12);
@@ -214,6 +214,7 @@ void IdealGasMP::computeStressTensor(const PatchSubset* patches,
     constParticleVariable<Vector> pvelocity, psize;
     constNCVariable<Vector> gvelocity;
     ParticleVariable<double> pdTdt,p_q;
+    ParticleVariable<Matrix3>      velGrad;
     delt_vartype delT;
     old_dw->get(delT, lb->delTLabel, getLevel(patches));
 
@@ -233,6 +234,8 @@ void IdealGasMP::computeStressTensor(const PatchSubset* patches,
     new_dw->allocateAndPut(p_q,              lb->p_qLabel_preReloc,       pset);
     new_dw->allocateAndPut(deformationGradient_new,
                                    lb->pDeformationMeasureLabel_preReloc, pset);
+    // Temporary Allocations
+    new_dw->allocateTemporary(velGrad,                                    pset);
 
     double gamma = d_initialData.gamma;
     double cv    = d_initialData.cv;
@@ -242,33 +245,88 @@ void IdealGasMP::computeStressTensor(const PatchSubset* patches,
         iter != pset->end(); iter++){
        particleIndex idx = *iter;
 
-      velGrad.set(0.0);
+      Matrix3 velGrad_new(0.0);
       if(!flag->d_axisymmetric){
         // Get the node indices that surround the cell
         interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx],deformationGradient[idx]);
 
-        computeVelocityGradient(velGrad,ni,d_S, oodx, gvelocity);
+        computeVelocityGradient(velGrad_new,ni,d_S, oodx, gvelocity);
       } else {  // axi-symmetric kinematics
         // Get the node indices that surround the cell
         interpolator->findCellAndWeightsAndShapeDerivatives(px[idx],ni,S,d_S,
                                                                   psize[idx],deformationGradient[idx]);
         // x -> r, y -> z, z -> theta
-        computeAxiSymVelocityGradient(velGrad,ni,d_S,S,oodx,gvelocity,px[idx]);
+        computeAxiSymVelocityGradient(velGrad_new,ni,d_S,S,oodx,gvelocity,px[idx]);
       }
-
 
       // Compute the deformation gradient increment using the time_step
       // velocity gradient
       // F_n^np1 = dudx * dt + Identity
-      deformationGradientInc = velGrad * delT + Identity;
+      deformationGradientInc = velGrad_new * delT + Identity;
 
       // Update the deformation gradient tensor to its time n+1 value.
       deformationGradient_new[idx] = deformationGradientInc *
                                      deformationGradient[idx];
 
-      double J = deformationGradient[idx].Determinant();
-      double Jinc = deformationGradientInc.Determinant();
-      double rhoM = rho_orig/J;
+      velGrad[idx] = velGrad_new;
+    }
+
+    // The following is used only for pressure stabilization
+    CCVariable<double> J_CC;
+    new_dw->allocateTemporary(J_CC,       patch);
+    J_CC.initialize(0.);
+    if(flag->d_doPressureStabilization) {
+      CCVariable<double> vol_0_CC;
+      CCVariable<double> vol_CC;
+      new_dw->allocateTemporary(vol_0_CC, patch);
+      new_dw->allocateTemporary(vol_CC,   patch);
+
+      vol_0_CC.initialize(0.);
+      vol_CC.initialize(0.);
+      for(ParticleSubset::iterator iter = pset->begin();
+          iter != pset->end(); iter++){
+        particleIndex idx = *iter;
+
+        // get the volumetric part of the deformation
+        double J = deformationGradient_new[idx].Determinant();
+
+        // Get the deformed volume
+        pvolume[idx]=(pmass[idx]/rho_orig)*J;
+
+        IntVector cell_index;
+        patch->findCell(px[idx],cell_index);
+
+        vol_CC[cell_index]  +=pvolume[idx];
+        vol_0_CC[cell_index]+=pmass[idx]/rho_orig;
+      }
+
+      for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++){
+        IntVector c = *iter;
+        J_CC[c]=vol_CC[c]/vol_0_CC[c];
+      }
+    } //end of pressureStabilization loop  at the patch level
+
+    for(ParticleSubset::iterator iter = pset->begin();
+        iter != pset->end(); iter++){
+       particleIndex idx = *iter;
+
+      // More Pressure Stabilization
+      if(flag->d_doPressureStabilization) {
+        IntVector cell_index;
+        patch->findCell(px[idx],cell_index);
+
+        // get the original volumetric part of the deformation
+        double J = deformationGradient_new[idx].Determinant();
+
+        // Change F such that the determinant is equal to the average for
+        // the cell
+        deformationGradient_new[idx]*=cbrt(J_CC[cell_index])/cbrt(J);
+      }
+
+      double Jold = deformationGradient[idx].Determinant();
+      double Jnew = deformationGradient_new[idx].Determinant();
+      double Jinc = Jnew/Jold;
+      double rhoM = rho_orig/Jnew;
       pvolume[idx]=pmass[idx]/rhoM;
       double dp_drho = (gamma - 1.0)*cv*ptemp[idx];
       double dp_de   = (gamma - 1.0)*rhoM;
@@ -279,7 +337,7 @@ void IdealGasMP::computeStressTensor(const PatchSubset* patches,
       p_q[idx] = 0.;
       if (flag->d_artificial_viscosity) {
         //cerr << "Use the MPM Flag for artificial viscosity" << endl;
-        Matrix3 D=(velGrad + velGrad.Transpose())*0.5;
+        Matrix3 D=(velGrad[idx] + velGrad[idx].Transpose())*0.5;
         double DTrace = D.Trace();
         if(DTrace<0.){
           double dx_ave = (dx.x() + dx.y() + dx.z())/3.0;
@@ -290,12 +348,12 @@ void IdealGasMP::computeStressTensor(const PatchSubset* patches,
       }
 
       // Compute artificial viscosity term
-#if 0      
+#if 0
       if (flag->d_artificial_viscosity) {
         double dx_ave = (dx.x() + dx.y() + dx.z())/3.0;
         //double c_bulk = sqrt(bulk/rho_cur);
         double c_bulk = sqrt(dp_drho);
-        Matrix3 D=(velGrad + velGrad.Transpose())*0.5;
+        Matrix3 D=(velGrad[idx] + velGrad[idx].Transpose())*0.5;
         p_q[idx] = artificialBulkViscosity(D.Trace(), c_bulk, rhoM, dx_ave);
       } else {
         p_q[idx] = 0.;
