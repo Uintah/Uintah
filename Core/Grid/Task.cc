@@ -576,8 +576,10 @@ Task::Dependency* Task::isInDepMap(const DepMap& depMap,
             var->typeDescription()->isReductionVariable())) {
         patches = getPatchSet() ? getPatchSet()->getUnion() : 0;
       }
-      if (dep->patches_dom == Task::CoarseLevel || dep->patches_dom == Task::FineLevel) {
-         patches = 0;  //assume it may access any level
+      if (dep->patches_dom == Task::CoarseLevel){  
+        patches = getLevel(getPatchSet())->getRelativeLevel(-1)->allPatches()->getUnion();
+      }else if (dep->patches_dom == Task::FineLevel) {
+        patches = getLevel(getPatchSet())->getRelativeLevel(1)->allPatches()->getUnion();
       }
     }
     
