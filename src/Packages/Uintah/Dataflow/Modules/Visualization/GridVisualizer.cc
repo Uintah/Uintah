@@ -362,7 +362,10 @@ GridVisualizer::get_current_node_position(Point &location)
     error("GridVisualizer::get_current_node_position: "
           "unknown variable orientation");
   }
-  cerr << "Patch ID: " << level->getPatchFromPoint(location)->getID() << endl;      
+  const Patch* patch = level->getPatchFromPoint(location);
+  if(patch){
+    cerr << "Patch ID: " << patch->getID() << endl;  
+  }    
   return 0;
 }
 
