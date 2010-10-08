@@ -227,8 +227,8 @@ apply_to_field(const PhiVolT &src, PhiFaceT &dest) const {
     for (int j=1; j<=yCount; j++) { // count yCount times
       
       for (int i =1; i<=xCount; i++) { // count xCount times
-        if ((*advVel) > 0) *destFld = *srcFieldMinus;
-        else if ((*advVel) < 0) *destFld = *srcFieldPlus;
+        if ((*advVel) > 0.0) *destFld = *srcFieldMinus;
+        else if ((*advVel) < 0.0) *destFld = *srcFieldPlus;
         else *destFld = 0.0; // may need a better condition here to account
                              // a tolerance value for example.
         
@@ -246,7 +246,7 @@ apply_to_field(const PhiVolT &src, PhiFaceT &dest) const {
     
     srcFieldPlus += incrVolZ - incrVolY;
     srcFieldMinus += incrVolZ - incrVolY;
-    advVel += incrFZ - incrFZ;
-    destFld += incrFZ - incrFZ;    
+    advVel += incrFZ - incrFY;
+    destFld += incrFZ - incrFY;    
   }
 }
