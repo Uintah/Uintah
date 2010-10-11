@@ -222,7 +222,7 @@ void ImplicitMatrixBC( CCVariable<Stencil7>& A,
       const Level* coarseLevel = fineLevel->getCoarserLevel().get_rep();
       
       IntVector cl, ch, fl, fh;
-      getCoarseFineFaceRange(patch, coarseLevel, face, 1, cl, ch, fl, fh);
+      getCoarseFineFaceRange(patch, coarseLevel, face,Patch::ExtraPlusEdgeCells, 1, cl, ch, fl, fh);
  
  
       IntVector refineRatio = fineLevel->getRefinementRatio();
@@ -357,7 +357,7 @@ void set_imp_DelP_BC( CCVariable<double>& imp_delP,
       const Level* coarseLevel = fineLevel->getCoarserLevel().get_rep();
       
       IntVector cl, ch, fl, fh;
-      getCoarseFineFaceRange(patch, coarseLevel, face, 1, cl, ch, fl, fh);
+      getCoarseFineFaceRange(patch, coarseLevel, face, Patch::ExtraPlusEdgeCells, 1, cl, ch, fl, fh);
 
       constCCVariable<double> imp_delP_coarse;
       new_dw->getRegion(imp_delP_coarse, label, 0, coarseLevel,cl, ch);

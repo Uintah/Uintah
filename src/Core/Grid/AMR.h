@@ -46,7 +46,7 @@ DEALINGS IN THE SOFTWARE.
 
 #include <Core/Grid/uintahshare.h>
 
-//#define is_rightFace(face) ( (face == "xminus" || face == "xplus" || face == "yminus" || face == "yplus"|| face == "zminus" || face == "zplus") ?1:0  )
+
 #define is_rightFace(face) ( (face == "xminus" || face == "yminus" ||  face == "zminus" ) ?1:0  )
 namespace Uintah {
 
@@ -864,13 +864,20 @@ UINTAHSHARE void getCoarseLevelRange(const Patch* finePatch, const Level* coarse
                                IntVector& cl, IntVector& ch, IntVector& fl, IntVector& fh, int ngc);
 
 UINTAHSHARE void getCoarseLevelRangeNodes(const Patch* finePatch,
-                                       const Level* coarseLevel, 
-                                       IntVector& cl, IntVector& ch,
-                                       IntVector& fl, IntVector& fh, int ngc);
+                                          const Level* coarseLevel, 
+                                          IntVector& cl, IntVector& ch,
+                                          IntVector& fl, IntVector& fh, int ngc);
 
 // find the range of a coarse-fine interface along a certain face
-UINTAHSHARE void getCoarseFineFaceRange(const Patch* finePatch, const Level* coarseLevel, Patch::FaceType face,
-                                  const int interOrder, IntVector& cl, IntVector& ch, IntVector& fl, IntVector& fh);
+UINTAHSHARE void getCoarseFineFaceRange(const Patch* finePatch, 
+                                        const Level* coarseLevel,
+                                        Patch::FaceType face,
+                                        Patch::FaceIteratorType domain,
+                                        const int interOrder, 
+                                        IntVector& cl, 
+                                        IntVector& ch, 
+                                        IntVector& fl, 
+                                        IntVector& fh);
                                   
 UINTAHSHARE void coarseLevel_CFI_NodeIterator(Patch::FaceType patchFace,
                                               const Patch* coarsePatch, 
