@@ -124,7 +124,7 @@ void getCoarseFineFaceRange(const Patch* finePatch,
                             const Level* coarseLevel, 
                             Patch::FaceType face, 
                             Patch::FaceIteratorType domain,
-                            const int interpolationOrder, 
+                            const int nCells, 
                             IntVector& cl, IntVector& ch, IntVector& fl, IntVector& fh) 
 {
   //__________________________________
@@ -155,11 +155,10 @@ void getCoarseFineFaceRange(const Patch* finePatch,
   
   //__________________________________
   // for higher order interpolation increase the coarse level foot print
-  // by the order of interpolation
-  if(interpolationOrder >= 1){
-    IntVector interRange(interpolationOrder,interpolationOrder,interpolationOrder);
-    cl  -= interRange;
-    ch += interRange;
+  if(nCells >= 1){
+    IntVector moreCells(nCells,nCells,nCells);
+    cl  -= moreCells;
+    ch += moreCells;
   } 
   IntVector crl, crh;
   coarseLevel->findCellIndexRange(crl,crh);
