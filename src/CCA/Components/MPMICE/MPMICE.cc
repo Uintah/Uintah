@@ -277,7 +277,7 @@ void MPMICE::outputProblemSpec(ProblemSpecP& root_ps)
 void MPMICE::scheduleInitialize(const LevelP& level,
                             SchedulerP& sched)
 {
-  printSchedule(level,"MPMICE::scheduleInitialize\t\t\t\t\t");
+  printSchedule(level,"MPMICE::scheduleInitialize");
 
   d_mpm->scheduleInitialize(level, sched);
   d_ice->scheduleInitialize(level, sched);
@@ -639,7 +639,7 @@ void MPMICE::scheduleRefinePressCC(SchedulerP& sched,
                                    const MaterialSubset* press_matl,
                                    const MaterialSet* matls)
 {
-  printSchedule(patches,"MPMICE::scheduleRefinePressCC\t\t\t\t\t");
+  printSchedule(patches,"MPMICE::scheduleRefinePressCC");
     
   MaterialSet* press_matls = scinew MaterialSet();
   press_matls->add(0);
@@ -662,7 +662,7 @@ void MPMICE::scheduleInterpolatePressCCToPressNC(SchedulerP& sched,
   if(!d_mpm->flags->doMPMOnLevel(L_indx,level->getGrid()->numLevels()))
     return;
     
-  printSchedule(patches, "MPMICE::scheduleInterpolatePressCCToPressNC\t\t\t"); 
+  printSchedule(patches, "MPMICE::scheduleInterpolatePressCCToPressNC"); 
     
   Task* t=scinew Task("MPMICE::interpolatePressCCToPressNC",
                     this, &MPMICE::interpolatePressCCToPressNC);
@@ -687,7 +687,7 @@ void MPMICE::scheduleInterpolatePAndGradP(SchedulerP& sched,
                                  getLevel(patches)->getGrid()->numLevels()))
     return;
 
-  printSchedule(patches,"MPMICE::scheduleInterpolatePAndGradP\t\t\t\t");
+  printSchedule(patches,"MPMICE::scheduleInterpolatePAndGradP");
  
   Task* t=scinew Task("MPMICE::interpolatePAndGradP",
                       this, &MPMICE::interpolatePAndGradP);
@@ -715,7 +715,7 @@ void MPMICE::scheduleInterpolateNCToCC_0(SchedulerP& sched,
   if(d_mpm->flags->doMPMOnLevel(getLevel(patches)->getIndex(),
                                 getLevel(patches)->getGrid()->numLevels())){
                                 
-    printSchedule(patches, "MPMICE::scheduleInterpolateNCToCC_0\t\t\t\t");
+    printSchedule(patches, "MPMICE::scheduleInterpolateNCToCC_0");
  
     /* interpolateNCToCC */
     Task* t=scinew Task("MPMICE::interpolateNCToCC_0",
@@ -747,7 +747,7 @@ void MPMICE::scheduleCoarsenCC_0(SchedulerP& sched,
                                     const PatchSet* patches,
                                     const MaterialSet* mpm_matls)
 {
-  printSchedule(patches, "MPMICE::scheduleCoarsenCC_0\t\t\t\t\t");
+  printSchedule(patches, "MPMICE::scheduleCoarsenCC_0");
  
   bool modifies = false;
 
@@ -773,7 +773,7 @@ void MPMICE::scheduleCoarsenNCMass(SchedulerP& sched,
                                    const PatchSet* patches,
                                    const MaterialSet* mpm_matls)
 {
-  printSchedule(patches, "MPMICE::scheduleCoarsenNCMass\t\t\t\t\t");
+  printSchedule(patches, "MPMICE::scheduleCoarsenNCMass");
                                                                                 
   bool modifies = false;
                                                                                 
@@ -791,7 +791,7 @@ void MPMICE::scheduleComputeLagrangianValuesMPM(SchedulerP& sched,
   if(d_mpm->flags->doMPMOnLevel(getLevel(patches)->getIndex(),
                                 getLevel(patches)->getGrid()->numLevels())){
 
-    printSchedule(patches, "MPMICE::scheduleComputeLagrangianValuesMPM\t\t\t");
+    printSchedule(patches, "MPMICE::scheduleComputeLagrangianValuesMPM");
 
     Task* t=scinew Task("MPMICE::computeLagrangianValuesMPM",
                         this, &MPMICE::computeLagrangianValuesMPM);
@@ -831,7 +831,7 @@ void MPMICE::scheduleCoarsenLagrangianValuesMPM(SchedulerP& sched,
                                                 const PatchSet* patches,
                                                 const MaterialSet* mpm_matls)
 {
-  printSchedule(patches,"MPMICE:scheduleCoarsenLagrangianValues mpm_matls\t\t");
+  printSchedule(patches,"MPMICE:scheduleCoarsenLagrangianValues mpm_matls");
 
   scheduleCoarsenVariableCC(sched, patches, mpm_matls, Ilb->rho_CCLabel,
                             1e-12,          true, "std"); // modifies
@@ -849,7 +849,7 @@ void MPMICE::scheduleComputeCCVelAndTempRates(SchedulerP& sched,
                                               const PatchSet* patches,
                                               const MaterialSet* mpm_matls)
 {
-  printSchedule(patches, "MPMICE::scheduleComputeCCVelAndTempRates\t\t\t");
+  printSchedule(patches, "MPMICE::scheduleComputeCCVelAndTempRates");
 
   Task* t=scinew Task("MPMICE::computeCCVelAndTempRates",
                       this, &MPMICE::computeCCVelAndTempRates);               
@@ -883,7 +883,7 @@ void MPMICE::scheduleRefineCC(SchedulerP& sched,
                                  getLevel(patches)->getGrid()->numLevels()))
     return;
 
-  printSchedule(patches, "MPMICE::scheduleRefineCC\t\t\t\t\t");
+  printSchedule(patches, "MPMICE::scheduleRefineCC");
   scheduleRefineVariableCC(sched, patches, mpm_matls, Ilb->dTdt_CCLabel);
   scheduleRefineVariableCC(sched, patches, mpm_matls, Ilb->dVdt_CCLabel);
 }
@@ -898,7 +898,7 @@ void MPMICE::scheduleInterpolateCCToNC(SchedulerP& sched,
                                  getLevel(patches)->getGrid()->numLevels()))
     return;
 
-  printSchedule(patches, "MPMICE::scheduleInterpolateCCToNC\t\t\t\t");  
+  printSchedule(patches, "MPMICE::scheduleInterpolateCCToNC");  
                                                                                 
   Task* t=scinew Task("MPMICE::interpolateCCToNC",
                       this, &MPMICE::interpolateCCToNC);
@@ -936,7 +936,7 @@ void MPMICE::scheduleComputePressure(SchedulerP& sched,
 {
   Task* t = NULL;
 
-  printSchedule(patches, "MPMICE::scheduleComputeEquilibrationPressure\t\t\t");
+  printSchedule(patches, "MPMICE::scheduleComputeEquilibrationPressure");
 
   t = scinew Task("MPMICE::computeEquilibrationPressure",
             this, &MPMICE::computeEquilibrationPressure, press_matl);
@@ -1001,7 +1001,7 @@ void MPMICE::actuallyInitialize(const ProcessorGroup*,
 {
   for(int p=0;p<patches->size();p++){ 
     const Patch* patch = patches->get(p);
-    printTask(patches, patch, "Doing actuallyInitialize \t\t\t\t");
+    printTask(patches, patch, "Doing actuallyInitialize ");
     //__________________________________
     //output material indices
     if(patch->getID() == 0){
@@ -1117,7 +1117,7 @@ void MPMICE::interpolatePressCCToPressNC(const ProcessorGroup*,
 {                            
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    printTask(patches,patch,"Doing interpolatePressCCToPressNC\t\t\t");
+    printTask(patches,patch,"Doing interpolatePressCCToPressNC");
 
     constCCVariable<double> pressCC;
     NCVariable<double> pressNC;
@@ -1153,7 +1153,7 @@ void MPMICE::interpolatePAndGradP(const ProcessorGroup*,
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    printTask(patches,patch,"Doing interpolatePressureToParticles\t\t\t");
+    printTask(patches,patch,"Doing interpolatePressureToParticles");
 
     ParticleInterpolator* interpolator = d_mpm->flags->d_interpolator->clone(patch);
     vector<IntVector> ni(interpolator->size());
@@ -1208,7 +1208,7 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    printTask(patches,patch,"Doing interpolateNCToCC_0\t\t\t\t");
+    printTask(patches,patch,"Doing interpolateNCToCC_0");
 
     int numMatls = d_sharedState->getNumMPMMatls();
     Vector dx = patch->dCell();
@@ -1360,7 +1360,7 @@ void MPMICE::computeLagrangianValuesMPM(const ProcessorGroup*,
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    printTask(patches,patch,"Doing computeLagrangianValuesMPM\t\t\t");
+    printTask(patches,patch,"Doing computeLagrangianValuesMPM");
 
     int numMatls = d_sharedState->getNumMPMMatls();
     Vector dx = patch->dCell();
@@ -1541,7 +1541,7 @@ void MPMICE::computeCCVelAndTempRates(const ProcessorGroup*,
 { 
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    printTask(patches,patch,"Doing computeCCVelAndTempRates\t\t\t");
+    printTask(patches,patch,"Doing computeCCVelAndTempRates");
 
     //__________________________________
     // This is where I interpolate the CC 
@@ -1607,7 +1607,7 @@ void MPMICE::interpolateCCToNC(const ProcessorGroup*,
 { 
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    printTask(patches,patch,"Doing interpolateCCToNC\t\t\t\t");
+    printTask(patches,patch,"Doing interpolateCCToNC");
 
     //__________________________________
     // This is where I interpolate the CC 
@@ -1708,7 +1708,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
 
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    printTask(patches,patch,"Doing computeEquilibrationPressure\t\t\t");
+    printTask(patches,patch,"Doing computeEquilibrationPressure");
 
     double    converg_coeff = 100.;
     double    convergence_crit = converg_coeff * DBL_EPSILON;
@@ -2300,7 +2300,7 @@ void MPMICE::addMaterial(const ProblemSpecP& prob_spec, GridP& grid,
 void MPMICE::scheduleInitializeAddedMaterial(const LevelP& level,
                                              SchedulerP& sched)
 {
-  printSchedule(level,"MPMICE::scheduleInitializeAddedMaterial\t\t\t");
+  printSchedule(level,"MPMICE::scheduleInitializeAddedMaterial");
 
   if(d_sharedState->needAddMaterial() > 0){
     d_ice->scheduleInitializeAddedMaterial(level,sched);
@@ -2340,7 +2340,7 @@ void MPMICE::actuallyInitializeAddedMPMMaterial(const ProcessorGroup*,
   new_dw->unfinalize();
   for(int p=0;p<patches->size();p++){ 
     const Patch* patch = patches->get(p);
-    printTask(patches,patch,"Doing actuallyInitializeAddedMPMMaterial\t\t\t");
+    printTask(patches,patch,"Doing actuallyInitializeAddedMPMMaterial");
    
     double junk=-9, tmp;
     int m    = d_sharedState->getNumMPMMatls() - 1;
@@ -2384,8 +2384,10 @@ void MPMICE::actuallyInitializeAddedMPMMaterial(const ProcessorGroup*,
 void MPMICE::printSchedule(const PatchSet* patches,
                            const string& where){
   if (cout_doing.active()){
-     cout_doing << d_myworld->myrank() << " " 
-                << where << "L-"
+     cout_doing << d_myworld->myrank() << " ";
+     cout_doing << left;
+     cout_doing.width(50);
+     cout_doing << where << "L-"
                 << getLevel(patches)->getIndex()<< endl;
    }  
 }
@@ -2393,8 +2395,10 @@ void MPMICE::printSchedule(const PatchSet* patches,
 void MPMICE::printSchedule(const LevelP& level,
                            const string& where){
   if (cout_doing.active()){
-     cout_doing << d_myworld->myrank() << " " 
-                << where << "L-"
+     cout_doing << d_myworld->myrank() << " ";
+     cout_doing << left;
+     cout_doing.width(50);
+     cout_doing << where << "L-"
                 << level->getIndex()<< endl;
    }  
 }
@@ -2403,8 +2407,10 @@ void MPMICE::printTask(const PatchSubset* patches,
                           const Patch* patch,
                           const string& where){
   if (cout_doing.active()){
-     cout_doing << d_myworld->myrank() << " " 
-                << where << " MPMICE L-"
+     cout_doing << d_myworld->myrank() << " ";
+     cout_doing << left;
+     cout_doing.width(50);
+     cout_doing << where << " MPMICE \tL-"
                 << getLevel(patches)->getIndex()
                 << " patch " << patch->getGridIndex()<< endl;
    }  
@@ -2487,7 +2493,7 @@ void MPMICE::scheduleRefine(const PatchSet* patches,
   d_ice->scheduleRefine(patches, sched);
   d_mpm->scheduleRefine(patches, sched);
 
-  printSchedule(patches,"MPMICE::scheduleRefine\t\t\t\t");
+  printSchedule(patches,"MPMICE::scheduleRefine");
 
   Task* task = scinew Task("MPMICE::refine", this, &MPMICE::refine);
   
@@ -2651,7 +2657,7 @@ MPMICE::refine(const ProcessorGroup*,
 {
   for (int p = 0; p<patches->size(); p++) {
     const Patch* patch = patches->get(p);
-    printTask(patches,patch,"Doing refine\t\t\t\t\t");
+    printTask(patches,patch,"Doing refine");
      
     int numMPMMatls=d_sharedState->getNumMPMMatls();
     
