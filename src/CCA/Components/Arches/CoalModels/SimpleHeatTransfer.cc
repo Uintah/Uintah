@@ -642,14 +642,12 @@ SimpleHeatTransfer::computeModel( const ProcessorGroup * pc,
 
         // Heat capacity
         mp_Cp = (Cpc*unscaled_raw_coal_mass + Cph*unscaled_fixcarb_mass + Cpa*unscaled_ash_mass);
-        //mp_Cp = 1046*(unscaled_raw_coal_mass + unscaled_fixcarb_mass + unscaled_ash_mass);
-
+   
         // Gas thermal conductivity
         rkg = props(gas_temperature, unscaled_particle_temperature); // [=] J/s/m/K
 
         // Q_convection (see Section 5.4 of LES_Coal document)
-        //Q_convection = Nu*pi*blow*rkg*unscaled_length*(gas_temperature - unscaled_particle_temperature);
-        Q_convection = 0.0;
+        Q_convection = Nu*pi*blow*rkg*unscaled_length*(gas_temperature - unscaled_particle_temperature);
 
         // Radiation part: -------------------------
         Q_radiation = 0.0;
