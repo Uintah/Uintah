@@ -119,15 +119,14 @@ void NodalSVFContact:: exMomIntegrated( const ProcessorGroup*           ,
                                         const MaterialSubset*      matls,
                                               DataWarehouse*      old_dw,
                                               DataWarehouse*       new_dw ) {
-  
-
-  int numMatls = 2;
+  int numMatls=matls->size();
   int alpha; int beta; int n=0;
   for(int m=0;m<numMatls;m++){
     if((d_matls.requested(m)) && (n==0)) { alpha = matls->get(m); n++;}
     else                                 { beta  = matls->get(m); }
   }
-  
+ 
+
   for(int p=0;p<patches->size();p++){
     
     const Patch*      patch = patches->get(p);
@@ -176,7 +175,7 @@ void NodalSVFContact:: exMomIntegrated( const ProcessorGroup*           ,
       //Calculate the appropriate value of "factor" based on whether using SVF.
       if (b_svf==1) { factor = coeff * gSVF[beta][c] * gSVF[alpha][c]; } 
       else          { factor = coeff; } 
-
+      
       // "If using the model with svf calculation," or "if mass is present on 
       // both nodes," calculate a non-zero interaction force based on velocity 
       // difference and the appropriate value of "factor".
