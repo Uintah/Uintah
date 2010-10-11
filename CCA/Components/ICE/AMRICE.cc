@@ -556,7 +556,7 @@ void AMRICE::setBC_FineLevel(const ProcessorGroup*,
           // fine level hi & lo cell iter limits
           // coarselevel hi and low index
           IntVector cl, ch, fl, fh;
-          getCoarseFineFaceRange(patch, coarseLevel, face, orderOfInterpolation, cl, ch, fl, fh);
+          getCoarseFineFaceRange(patch, coarseLevel, face, Patch::ExtraPlusEdgeCells, orderOfInterpolation, cl, ch, fl, fh);
 
           constCCVariable<double> cv_coarse, gamma_coarse, vol_frac_coarse;
           coarse_new_dw->getRegion(cv_coarse,      lb->specific_heatLabel, indx, coarseLevel,cl, ch);
