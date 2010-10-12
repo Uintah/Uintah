@@ -204,9 +204,9 @@ ostream& operator<<(ostream& out, ParticleSubset& pset)
         << " patch: " << pset.getPatch() << " (" << (pset.getPatch()?pset.getPatch()->getID():0)
         << "), matl "
         << pset.getMatlIndex() << " range [" << pset.getLow() 
-        << ", " << pset.getHigh() << ") " 
+        << ", " << pset.getHigh() << "]   " 
         << pset.numParticles() << " particles, " 
-        << pset.getNeighbors().size() << " neighbors" ;
+        << pset.getNeighbors().size() << " neighboring patches" ;
     return out;
 }
 } // end namespace Uintah
