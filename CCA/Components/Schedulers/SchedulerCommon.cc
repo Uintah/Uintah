@@ -256,9 +256,9 @@ SchedulerCommon::finalizeNodes(int process /* = 0*/)
       m_graphDoc->output(file_name.c_str());
     }
     
-    m_graphDoc->releaseDocument();
-    m_graphDoc = NULL;
-    m_nodes = NULL;
+    //m_graphDoc->releaseDocument();
+    //m_graphDoc = NULL;
+    //m_nodes = NULL;
 }
 
 void
