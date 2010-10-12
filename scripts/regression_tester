@@ -79,6 +79,7 @@ do_arches=0
 do_mpmarches=0
 do_examples=0
 do_ucf=0
+do_wasatch=0
 do_remove=0
 do_restart=0
 do_mem=0
@@ -107,6 +108,7 @@ usage () {
     echo "  -mpmice_amr    run the mpmice amr tests"
     echo "  -impm          run the implicit mpm tests"
     echo "  -ucf           run the UCF tests"
+    echo "  -wasatch       run the wasatch tests"
     echo "  -dbg           use the dbg (debug) TestData"
     echo "  -opt           use the opt (optimized) TestData"
     echo "  -nompi         do not use mpi"
@@ -137,6 +139,7 @@ for arg in $*; do
             do_arches=1
             do_mpmarches=1
             do_examples=1
+            do_wasatch=1
             MPI_RUN="yes";;
         -arches)
             echo "Scheduling the arches tests . . ."
@@ -182,6 +185,9 @@ for arg in $*; do
         -ucf)
             echo "Scheduling the UCF tests . . ."
             do_ucf=1;;
+        -wasatch)
+            echo "Scheduling the wasatch tests . . ."
+            do_wasatch=1;;
         -clean)
             echo "Removing *.out *.compare and *.uda files . . ."
             do_remove=1;;
@@ -239,6 +245,7 @@ arches_test_cases="dqmom_test_1 dqmom_test_2a dqmom_test_2b dqmom_test_3 dqmom_t
 mpmarches_test_cases="mpmpipe_test methaneFireWContainer"
 examples_test_cases="poisson1"
 ucf_test_cases="LBwoRegrid icePerformanceTest mpmicePerformanceTest"
+wasatch_test_cases="BasicScalarTransportEquation"
 
 # Check if the applications sus and compare_uda are available
 
@@ -585,6 +592,7 @@ if test -n "$ALL"; then
    do_arches=1
    do_mpmarches=1
    do_examples=1
+   do_wasatch=1
 fi
 
 echo
@@ -669,6 +677,12 @@ fi
 if test "$do_ucf" -eq 1; then
     CASE=UCF
     run_case ucf
+    rt_value=$?
+fi
+if test "$do_wasatch" -eq 1; then
+    CASE=WASATCH
+    do_restart=0
+    run_case wasatch
     rt_value=$?
 fi
 if test "$do_remove" -eq 1; then
