@@ -254,8 +254,7 @@ SchedulerCommon::finalizeNodes(int process /* = 0*/)
       ostringstream fname;
       fname << "/taskgraph_" << setw(5) << setfill('0') << process << ".xml";
       string file_name(timestep_dir + fname.str());
-      ofstream graphfile(file_name.c_str());
-      graphfile << m_graphDoc << "\n";
+      m_graphDoc->output(file_name.c_str());
     }
     
     m_graphDoc->releaseDocument();
