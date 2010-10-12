@@ -361,6 +361,7 @@ MPIScheduler::runTask( DetailedTask         * task, int iteration)
   read_counters(0, &dummy, 19, &send_flops);
   mpi_info_.totalcommflops += send_flops;
 #endif
+  emitNode(task, taskstart, dtask, 0, 0, 0);
   
 } // end runTask()
 
