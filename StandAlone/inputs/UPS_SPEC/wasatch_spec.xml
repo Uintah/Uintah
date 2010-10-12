@@ -50,9 +50,10 @@
 
       </DiffusiveFluxExpression>
 
-      <SourceTerm		spec="OPTIONAL NO_DATA">
+      <SourceTermExpression	spec="MULTIPLE NO_DATA">
+        <!-- specify the name of one or more source term expressions to be added to this transport equation -->
         <NameTag		spec="REQUIRED" />
-      </SourceTerm>
+      </SourceTermExpression>
 
     </TransportEquation>
 
