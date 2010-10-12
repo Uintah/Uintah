@@ -109,6 +109,12 @@ namespace Uintah {
                                     const Vector& size,  bool coarse_particle,
                                     const Patch* patch);
                                     
+    virtual void findCellAndWeights(const Point& pos,
+                                    vector<IntVector>& ni,
+                                    vector<double>& S,
+                                    constNCVariable<Stencil7>& zoi);
+                                    
+                                    
     inline void findCellAndShapeDerivatives(const Point& pos,
                                             vector<IntVector>& ni,
                                             vector<Vector>& d_S)
