@@ -680,7 +680,7 @@ if test "$do_ucf" -eq 1; then
     rt_value=$?
 fi
 if test "$do_wasatch" -eq 1; then
-    CASE=WASATCH
+    CASE=Wasatch
     do_restart=0
     run_case wasatch
     rt_value=$?
