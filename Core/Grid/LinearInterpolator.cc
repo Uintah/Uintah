@@ -54,13 +54,14 @@ LinearInterpolator* LinearInterpolator::clone(const Patch* patch)
   return scinew LinearInterpolator(patch);
  }
     
+//__________________________________
 void LinearInterpolator::findCellAndWeights(const Point& pos,
                                            vector<IntVector>& ni, 
                                            vector<double>& S,
                                            const Vector& size,
                                            const Matrix3& defgrad)
 {
-  Point cellpos = d_patch->getLevel()->positionToIndex(pos);
+  Point cellpos = d_patch->getLevel()->positionToIndex(pos );
   int ix = Floor(cellpos.x());
   int iy = Floor(cellpos.y());
   int iz = Floor(cellpos.z());
@@ -86,6 +87,94 @@ void LinearInterpolator::findCellAndWeights(const Point& pos,
   S[5] = fx * fy1 * fz;
   S[6] = fx * fy * fz1;
   S[7] = fx * fy * fz;
+}
+
+//______________________________________________________________________
+//  This interpolation function from equation 14 of 
+//  Jin Ma, Hongbind Lu and Ranga Komanduri
+// "Structured Mesh Refinement in Generalized Interpolation Material Point Method
+//  for Simulation of Dynamic Problems" CMES, vol 12, no 3, pp. 213-227 2006
+void LinearInterpolator::findCellAndWeights(const Point& pos,
+                                            vector<IntVector>& ni,
+                                            vector<double>& S,
+                                            constNCVariable<Stencil7>& zoi)
+{
+
+  Point cellpos = d_patch->getLevel()->positionToIndex(pos );
+
+  int ix = Floor(cellpos.x());
+  int iy = Floor(cellpos.y());
+  int iz = Floor(cellpos.z());
+  
+  ni[0] = IntVector(ix, iy, iz);
+  ni[1] = IntVector(ix, iy, iz+1);
+  ni[2] = IntVector(ix, iy+1, iz);
+  ni[3] = IntVector(ix, iy+1, iz+1);
+  ni[4] = IntVector(ix+1, iy, iz);
+  ni[5] = IntVector(ix+1, iy, iz+1);
+  ni[6] = IntVector(ix+1, iy+1, iz);
+  ni[7] = IntVector(ix+1, iy+1, iz+1);
+  
+  //__________________________________
+  // Paper Nomenclature: Stencil7 Mapping
+  // Lx- :  L.w
+  // Lx+ :  L.e
+  // Ly- :  L.s
+  // Ly+ :  L.n
+  // Lz- :  L.b
+  // Lz+ :  L.t
+   
+  for (int i = 0; i< 8; i++){
+    Point nodepos = d_patch->getLevel()->getNodePosition(ni[i]);
+    double dx = pos.x() - nodepos.x();
+    double dy = pos.y() - nodepos.y();
+    double dz = pos.z() - nodepos.z();
+    double fx, fy, fz;
+    
+    Stencil7 L = zoi[ni[i]];
+
+    if(dx <= -L.w){                       // Lx-
+      fx = 0;
+    }
+    else if ( -L.w <= dx && dx <= 0 ){   // Lx-
+      fx = 1 + dx/L.w;
+    }
+    else if ( 0 <= dx  && dx <= L.e ){    // Lx+
+      fx = 1 - dx/L.e;
+    }
+    else if (L.e <= dx){                  // Lx+
+      fx = 0;
+    }
+
+    if(dy <= -L.s){                       // Ly-
+      fy = 0;
+    }
+    else if ( -L.s <= dy && dy <= 0 ){    // Ly-
+      fy = 1 + dy/L.s;
+    }
+    else if ( 0 <= dy && dy <= L.n ){    // Ly+
+      fy = 1 - dy/L.n;
+    }
+    else if (L.n <= dy){                 // Ly+
+      fy = 0;
+    }
+
+    if(dz <= -L.b){                       // Lz-
+      fz = 0;
+    }
+    else if ( -L.b <= dz && dz <= 0 ){    // Lz-
+      fz = 1 + dz/L.b;
+    }
+    else if ( 0 <= dz && dz <= L.n ){    // Lz+
+      fz = 1 - dz/L.t;
+    }
+    else if (L.t <= dz){                 // Lz+
+      fz = 0;
+    }
+
+    S[i] = fx * fy * fz;
+    //cout << "  pos " << pos << " cellpos " << cellpos << " ix " << ix << " iy " << iy << " fx " << fx << " fy " << fy <<  " fz " << fz << "    S[i] "<< S[i] << endl;
+  }
 }
 
 void LinearInterpolator::findCellAndWeights(const Point& pos,
