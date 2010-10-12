@@ -213,8 +213,7 @@ SchedulerCommon::useInternalDeps()
 {
   // keep track of internal dependencies only if it will emit
   // the taskgraphs (by default).
-  // return emit_taskgraph;
-  return false;
+  return emit_taskgraph;
 }
 
 void
@@ -227,7 +226,7 @@ SchedulerCommon::emitNode( const DetailedTask* task,
 {  
     if (m_nodes == 0)
         return;
-    
+   
     ProblemSpecP node = m_nodes->appendChild("node");
     //m_nodes->appendChild(node);
 
