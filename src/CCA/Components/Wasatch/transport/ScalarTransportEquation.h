@@ -355,7 +355,7 @@ namespace Wasatch{
 
     info[ fs ] = convFluxTag;
   }
-  
+
   //------------------------------------------------------------------
 
   template< typename FieldT >
@@ -432,19 +432,18 @@ namespace Wasatch{
     
     //_____________
     // Source Terms
-    for( Uintah::ProblemSpecP sourceTermParams=params->findBlock("SourceTerm");
+    std::vector<Expr::Tag> srcTags;
+    for( Uintah::ProblemSpecP sourceTermParams=params->findBlock("SourceTermExpression");
         sourceTermParams != 0;
-        sourceTermParams=sourceTermParams->findNextBlock("SourceTerm") ){
+        sourceTermParams=sourceTermParams->findNextBlock("SourceTermExpression") ){
       
-      //      setup_source_term_expression( sourceTermParams, phiName, factory, info );
-      
-      std::ostringstream msg;
-      msg << "Source term support is not yet implemented on scalar transport equation." << endl;
-      throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+      const Expr::Tag srcTag = parse_nametag( sourceTermParams->findBlock("NameTag") );
+      srcTags.push_back( srcTag );
+
     }
     
     return factory.register_expression( Expr::Tag( phiName+"_rhs", Expr::STATE_NONE ),
-                                        scinew typename ScalarRHS<FieldT>::Builder(info) );
+                                        scinew typename ScalarRHS<FieldT>::Builder(info,srcTags) );
   }
   
   //------------------------------------------------------------------
