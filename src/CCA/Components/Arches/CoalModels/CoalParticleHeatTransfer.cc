@@ -693,7 +693,7 @@ CoalParticleHeatTransfer::computeModel( const ProcessorGroup * pc,
         }
       
         heat_rate_ = (Q_convection + Q_radiation)/(mp_Cp*d_pt_scaling_constant);
-        gas_heat_rate_ = 0.0;
+        gas_heat_rate_ = -unscaled_weight*Q_convection;
 
       }
 

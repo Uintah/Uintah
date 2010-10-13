@@ -492,18 +492,6 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
                                            d_EKTCorrection, doing_EKT_now);
     }
 
-//    d_props->sched_reComputeProps(sched, patches, matls,
-//             d_timeIntegratorLabels[curr_level], false, false);
-//    sched_syncRhoF(sched, patches, matls, d_timeIntegratorLabels[curr_level]);
-//    sched_updateDensityGuess(sched, patches, matls,
-//                                    d_timeIntegratorLabels[curr_level]);
-//    d_timeIntegratorLabels[curr_level]->integrator_step_number = TimeIntegratorStepNumber::Second;
-//    d_props->sched_reComputeProps(sched, patches, matls,
-//             d_timeIntegratorLabels[curr_level], false, false);
-//    sched_syncRhoF(sched, patches, matls, d_timeIntegratorLabels[curr_level]);
-//    sched_updateDensityGuess(sched, patches, matls,
-//                                    d_timeIntegratorLabels[curr_level]);
-
     // Property models needed before table lookup: 
     for ( PropertyModelFactory::PropMap::iterator iprop = all_prop_models.begin(); 
           iprop != all_prop_models.end(); iprop++){

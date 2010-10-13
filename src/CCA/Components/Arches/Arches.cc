@@ -518,29 +518,6 @@ Arches::problemSetup(const ProblemSpecP& params,
 
     dqmomFactory.setDQMOMSolver( d_dqmomSolver );
 
-    /*
-    // Don't clutter up Arches.cc with DQMOM things...
-    // DQMOM things go in the DQMOM class!
-    
-    // require that we have weighted or unweighted explicitly specified as an attribute to DQMOM
-    // type = "unweightedAbs" or type = "weighedAbs" 
-    dqmom_db->getAttribute( "type", d_which_dqmom ); 
-
-    ProblemSpecP db_linear_solver = dqmom_db->findBlock("LinearSolver");
-    if( db_linear_solver ) {
-      string d_solverType;
-      db_linear_solver->getWithDefault("type", d_solverType, "LU");
-
-      // currently, unweighted abscissas only work with the optimized solver -- remove this check when other solvers work: 
-      if( d_which_dqmom == "unweightedAbs" && d_solverType != "Optimize" ) {
-        throw ProblemSetupException("Error!: The unweighted abscissas only work with the optimized solver.", __FILE__, __LINE__);
-      }
-    }
-
-    proc0cout << endl;
-    proc0cout << "WARNING: If you are trying to do DQMOM make sure you added the <TimeIntegrator> section!\n"; 
-    */
-
   }
 
   // TODO
@@ -1630,7 +1607,7 @@ Arches::mmsInitialCondition(const ProcessorGroup* ,
     
       if (d_mms == "constantMMS") { 
         pressure[*iter] = d_cp;
-        //scalar[*iter]   = d_phi0;
+        scalar[*iter]   = d_phi0;
         if (d_calcExtraScalars) {
       
           for (int i=0; i < static_cast<int>(d_extraScalars.size()); i++) {
@@ -1643,7 +1620,7 @@ Arches::mmsInitialCondition(const ProcessorGroup* ,
       } else if (d_mms == "almgrenMMS") {         
         pressure[*iter] = -d_amp*d_amp/4 * (cos(4.0*pi*cellinfo->xx[currCell.x()])
                           + cos(4.0*pi*cellinfo->yy[currCell.y()]));
-        //scalar[*iter]   = 0.0;
+        scalar[*iter]   = 0.0;
       }
     }
 

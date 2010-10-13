@@ -38,7 +38,7 @@ ParticleGasHeat::problemSetup(const ProblemSpecP& inputdb)
 
   ProblemSpecP db = inputdb; 
 
-  db->require( "heat_model_name", _heat_model_name ); 
+  //db->require( "heat_model_name", _heat_model_name ); 
 
 }
 //---------------------------------------------------------------------------
@@ -76,33 +76,6 @@ ParticleGasHeat::sched_computeSource( const LevelP& level, SchedulerP& sched, in
 
   }
 
-  /*
-  for (int iqn = 0; iqn < dqmomFactory.get_quad_nodes(); iqn++){
-    std::string weight_name = "w_qn";
-    std::string model_name = _heat_model_name; 
-    std::string node;  
-    std::stringstream out; 
-    out << iqn; 
-    node = out.str(); 
-    weight_name += node; 
-    model_name += "_qn";
-    model_name += node; 
-
-    EqnBase& eqn = dqmomFactory.retrieve_scalar_eqn( weight_name );
-
-    const VarLabel* tempLabel_w = eqn.getTransportEqnLabel();
-    tsk->requires( Task::OldDW, tempLabel_w, Ghost::None, 0 ); 
-
-    ModelBase& model = modelFactory.retrieve_model( model_name ); 
-    
-    const VarLabel* tempLabel_m = model.getModelLabel(); 
-    tsk->requires( Task::OldDW, tempLabel_m, Ghost::None, 0 );
-
-    const VarLabel* tempgasLabel_m = model.getGasSourceLabel();
-    tsk->requires( Task::OldDW, tempgasLabel_m, Ghost::None, 0 );
-
-  }
-  */
 
   sched->addTask(tsk, level->eachPatch(), _shared_state->allArchesMaterials()); 
 
