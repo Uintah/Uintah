@@ -171,6 +171,8 @@ private:
 
   vector<std::string> d_sources;
 
+  bool d_laminar_pr; 
+
   const VarLabel* d_prNo_label;           ///< Label for the prandlt number 
 
 }; // class ScalarEqn

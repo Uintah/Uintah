@@ -1556,7 +1556,7 @@ Arches::sched_mmsInitialCondition(const LevelP& level,
   tsk->modifies(d_lab->d_vVelocitySPBCLabel);
   tsk->modifies(d_lab->d_wVelocitySPBCLabel);
   tsk->modifies(d_lab->d_pressurePSLabel);
-  //tsk->modifies(d_lab->d_scalarSPLabel);
+  tsk->modifies(d_lab->d_scalarSPLabel);
   tsk->requires(Task::NewDW, d_lab->d_cellInfoLabel, Ghost::None);
 
   if (d_calcExtraScalars){
@@ -1587,13 +1587,13 @@ Arches::mmsInitialCondition(const ProcessorGroup* ,
     SFCYVariable<double> vVelocity;
     SFCZVariable<double> wVelocity;
     CCVariable<double> pressure;
-    //CCVariable<double> scalar;
+    CCVariable<double> scalar;
     
     new_dw->getModifiable(uVelocity, d_lab->d_uVelocitySPBCLabel, indx, patch);
     new_dw->getModifiable(vVelocity, d_lab->d_vVelocitySPBCLabel, indx, patch);
     new_dw->getModifiable(wVelocity, d_lab->d_wVelocitySPBCLabel, indx, patch);
     new_dw->getModifiable(pressure,  d_lab->d_pressurePSLabel,    indx, patch);
-    //new_dw->getModifiable(scalar,    d_lab->d_scalarSPLabel,      indx, patch);
+    new_dw->getModifiable(scalar,    d_lab->d_scalarSPLabel,      indx, patch);
    
     PerPatch<CellInformationP> cellInfoP;
     new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
