@@ -145,48 +145,5 @@ ParticleVelocity::dummyInit( const ProcessorGroup* pc,
   }
 }
 
-/*
-//---------------------------------------------------------------------------
-// Method: Schedule the initialization of special variables unique to model
-//---------------------------------------------------------------------------
-void 
-ParticleVelocity::sched_initVars( const LevelP& level, SchedulerP& sched )
-{
-  std::string taskname = "ParticleVelocity::initVars";
-  Task* tsk = scinew Task(taskname, this, &ParticleVelocity::initVars);
-
-  tsk->computes( d_modelLabel );
-  tsk->computes( d_gasLabel   );
-
-  sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials()); 
-}
-
-//-------------------------------------------------------------------------
-// Method: Initialize special variables unique to the model
-//-------------------------------------------------------------------------
-void
-ParticleVelocity::initVars( const ProcessorGroup * pc, 
-                            const PatchSubset    * patches, 
-                            const MaterialSubset * matls, 
-                            DataWarehouse        * old_dw, 
-                            DataWarehouse        * new_dw )
-{
-  for( int p=0; p < patches->size(); p++ ) {
-
-    const Patch* patch = patches->get(p);
-    int archIndex = 0;
-    int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
-
-    CCVariable<Vector> model_value; 
-    new_dw->allocateAndPut( model_value, d_modelLabel, matlIndex, patch ); 
-    model_value.initialize( Vector(0.0,0.0,0.0) );
-
-    CCVariable<Vector> gas_value; 
-    new_dw->allocateAndPut( gas_value, d_gasLabel, matlIndex, patch ); 
-    gas_value.initialize( Vector(0.0,0.0,0.0) );
-
-  }
-}
-*/
 
 
