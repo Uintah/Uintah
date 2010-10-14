@@ -8,7 +8,7 @@ UNUSED = [  ("test_cyl_pene_hypo_jc_ero", "test_cyl_pene_hypo_jc_ero.ups", 1, "A
             ]
 
 
-#  Test syntax: ( "name", "input file", # processors, "OS", ["flags1","flag2"])
+#  Test syntax: ( "folder name", "input file", # processors, "OS", ["flags1","flag2"])
 #  flags: 
 #       no_uda_comparison:      - skip the uda comparisons
 #       no_memoryTest:          - skip all memory checks
@@ -21,7 +21,8 @@ UNUSED = [  ("test_cyl_pene_hypo_jc_ero", "test_cyl_pene_hypo_jc_ero.ups", 1, "A
 #       rel_tolerance=[double]  - relative tolerance used in comparisons
 #       exactComparison         - set absolute/relative tolerance = 0  for uda comparisons
 #       startFromCheckpoint     - start test from checkpoint. (/usr/local/home/csafe-tester/CheckPoints/..../testname.uda.000)
-
+#
+#  Note: the "folder name" must be the same as input file without the extension.
 TESTS = [  
            ("disks2mat4patch",                 "disks2mat4patch.ups",                4,  "Linux", ["exactComparison"]),    \
            ("heatcond2mat",                   "heatcond2mat.ups",                   1,  "Linux", ["exactComparison"]),    \
