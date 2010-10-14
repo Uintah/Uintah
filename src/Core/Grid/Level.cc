@@ -963,13 +963,18 @@ IntVector Level::mapCellToFiner(const IntVector& idx) const
   }    
   return fineCell + offset;
 }
-
+//__________________________________
+// mapNodeToCoarser:
+// Example; 1D grid with refinement ratio = 4
+//  Coarse Node index: 10                  11    
+//                     |                   |       
+//                 ----*----*----*----*----*-----  
+//                     |                   |       
+//  Fine Node Index    40   41   42   43   44      
+//                            
+//  What is returned   10   10   10   10   11
 IntVector Level::mapNodeToCoarser(const IntVector& idx) const
 {
-  cout << "WARNING: level::mapNodeToCoarser.  This function should not be used since \n"
-       << " you can't map a fine node to a coarse node in a consistent manner. \n"
-       << " Draw a coarse cell and then 4 fine cells inside of the coarse cell and \n"
-       << " ask yourself what coarse node should the node in the middle of the fine cells map to." << endl;
   return (idx+d_refinementRatio-IntVector(1,1,1))/d_refinementRatio;
 }
 
