@@ -966,6 +966,10 @@ IntVector Level::mapCellToFiner(const IntVector& idx) const
 
 IntVector Level::mapNodeToCoarser(const IntVector& idx) const
 {
+  cout << "WARNING: level::mapNodeToCoarser.  This function should not be used since \n"
+       << " you can't map a fine node to a coarse node in a consistent manner. \n"
+       << " Draw a coarse cell and then 4 fine cells inside of the coarse cell and \n"
+       << " ask yourself what coarse node should the node in the middle of the fine cells map to." << endl;
   return (idx+d_refinementRatio-IntVector(1,1,1))/d_refinementRatio;
 }
 
