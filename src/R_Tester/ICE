@@ -12,7 +12,7 @@ hotBlob_AMR_3L_ups = modUPS("%s/ICE" % inputs_root(), \
 
 UNUSED = [  ]
 
-#  Test syntax: ( "name", "input file", # processors, "OS", ["flags1","flag2"])
+#  Test syntax: ( "folder name", "input file", # processors, "OS", ["flags1","flag2"])
 #  flags: 
 #       no_uda_comparison:      - skip the uda comparisons
 #       no_memoryTest:          - skip all memory checks
@@ -25,7 +25,8 @@ UNUSED = [  ]
 #       rel_tolerance=[double]  - relative tolerance used in comparisons
 #       exactComparison         - set absolute/relative tolerance = 0  for uda comparisons
 #       startFromCheckpoint     - start test from checkpoint. (/usr/local/home/csafe-tester/CheckPoints/..../testname.uda.000) 
-
+#
+#  Note: the "folder name" must be the same as input file without the extension.
 TESTS = [   ("advect",          "advect.ups",           1, "Linux", ["exactComparison"]),      \
             ("advect",          "advect.ups",           1, "Darwin", ["doesTestRun"]),  \
             ("riemann_sm",      "riemann_sm.ups",       1, "Linux", ["exactComparison"]),      \

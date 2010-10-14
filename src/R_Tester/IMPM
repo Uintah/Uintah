@@ -4,7 +4,7 @@ from sys import argv,exit
 from helpers.runSusTests import runSusTests
 
 
-#  Test syntax: ( "name", "input file", # processors, "OS", ["flags1","flag2"])
+#  Test syntax: ( "folder name", "input file", # processors, "OS", ["flags1","flag2"])
 #  flags: 
 #       no_uda_comparison:      - skip the uda comparisons
 #       no_memoryTest:          - skip all memory checks
@@ -17,7 +17,8 @@ from helpers.runSusTests import runSusTests
 #       rel_tolerance=[double]  - relative tolerance used in comparison
 #       exactComparison         - set absolute/relative tolerance = 0  for uda comparisons
 #       startFromCheckpoint     - start test from checkpoint. (/usr/local/home/csafe-tester/CheckPoints/..../testname.uda.000)
-
+#
+#  Note: the "folder name" must be the same as input file without the extension.
 UNUSED = [ ("4disks2matsv", "4disks_2d.2matsv.ups", 4, "Linux"), \
     	]
 

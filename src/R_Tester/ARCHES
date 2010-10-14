@@ -9,7 +9,7 @@ methane8patch_ups = modUPS("%s/ARCHES" % inputs_root(), \
                            "methane_explicit_table.ups", \
                            ["<patches>[2,2,2]</patches>"]) 
                             
-#  Test syntax: ( "name", "input file", # processors, "OS", ["flags1","flag2"])
+#  Test syntax: ( "folder name", "input file", # processors, "OS", ["flags1","flag2"])
 #  flags: 
 #       no_uda_comparison:      - skip the uda comparisons
 #       no_memoryTest:          - skip all memory checks
@@ -22,7 +22,8 @@ methane8patch_ups = modUPS("%s/ARCHES" % inputs_root(), \
 #       rel_tolerance=[double]  - relative tolerance used in comparisons
 #       exactComparison         - set absolute/relative tolerance = 0  for uda comparisons
 #       startFromCheckpoint     - start test from checkpoint. (/usr/local/home/csafe-tester/CheckPoints/..../testname.uda.000)
-
+#
+#  Note: the "folder name" must be the same as input file without the extension.
 UNUSED_TESTS = []
 TESTS = [
     ("constantMMS", "mms/constantMMS.ups", 1.1, "Linux", ["exactComparison"]),
