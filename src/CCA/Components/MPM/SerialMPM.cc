@@ -4164,6 +4164,7 @@ void SerialMPM::updateCohesiveZones(const ProcessorGroup*,
       double delta_n = cz_matl->getCharLengthNormal();
       double tau_max = cz_matl->getCohesiveTangentialStrength();
       double delta_t = cz_matl->getCharLengthTangential();
+      double delta_s = delta_t;
 
       double phi_n = M_E*sig_max*delta_n;
       double phi_t = sqrt(M_E/2)*tau_max*delta_t;
@@ -4203,37 +4204,85 @@ void SerialMPM::updateCohesiveZones(const ProcessorGroup*,
         czDispBot_new[idx]   = czDispBot[idx] + velBot*delT;
         czsep_new[idx]       = czDispTop_new[idx] - czDispBot_new[idx];
 
-	Vector velchange(0.0,0.0,0.0);
-	Vector dist(0.0,0.0,0.0);
+	double disp = czsep_new[idx].length();
 
-	velchange = velTop - velBot;
-	dist= .5*(velTop + velBot)*delT;
+	Vector axis = Cross(cznorm[idx],czsep_new[idx]/disp);
+	double theta = acos(1.0-(0.5*Dot(czsep_new[idx],czsep_new[idx])));
 
-	Vector temp_norm(0.0,0.0,0.0);
-	Vector temp_tang(0.0,0.0,0.0);
-	double theta=0.;
-	Vector axis(0.0,0.0,0.0);
-	Matrix3 Rotation;
-	
-	axis = Cross(cznorm[idx],cztang[idx]);
-	theta = acos(1-(0.5*Dot(czsep_new[idx],czsep_new[idx])));
 	double ca = cos(theta); double sa = sin(theta);
-	Rotation(0,0) = (1.0 - axis[0]*axis[0])*ca + axis[0]*axis[0];
-	Rotation(0,1) = (- axis[0]*axis[1])*ca + axis[0]*axis[1] + axis[2]*sa;
-	Rotation(0,2) = (- axis[0]*axis[2])*ca + axis[0]*axis[2] - axis[1]*sa;
-	Rotation(1,0) = (- axis[1]*axis[0])*ca + axis[1]*axis[0] - axis[2]*sa;
-	Rotation(1,1) = (1.0 - axis[1]*axis[1])*ca + axis[1]*axis[1]; 
-	Rotation(1,2) = (- axis[1]*axis[2])*ca + axis[1]*axis[2] + axis[0]*sa;
-	Rotation(2,0) = (- axis[2]*axis[0])*ca + axis[2]*axis[0] + axis[1]*sa;
-	Rotation(2,1) = (- axis[2]*axis[1])*ca + axis[2]*axis[1] - axis[0]*sa; 
-	Rotation(2,2) = (1.0 - axis[2]*axis[2])*ca + axis[2]*axis[2];
 
+	Matrix3 Rotation;
+	Rotation(0,0) = (ca - axis[0]*axis[0])*ca + axis[0]*axis[0];
+	Rotation(0,1) = (- axis[0]*axis[1])*ca + axis[0]*axis[1] - axis[2]*sa;
+	Rotation(0,2) = (- axis[0]*axis[2])*ca + axis[0]*axis[2] + axis[1]*sa;
+	Rotation(1,0) = (- axis[1]*axis[0])*ca + axis[1]*axis[0] + axis[2]*sa;
+	Rotation(1,1) = (ca - axis[1]*axis[1])*ca + axis[1]*axis[1]; 
+	Rotation(1,2) = (- axis[1]*axis[2])*ca + axis[1]*axis[2] - axis[0]*sa;
+	Rotation(2,0) = (- axis[2]*axis[0])*ca + axis[2]*axis[0] - axis[1]*sa;
+	Rotation(2,1) = (- axis[2]*axis[1])*ca + axis[2]*axis[1] + axis[0]*sa; 
+	Rotation(2,2) = (ca - axis[2]*axis[2])*ca + axis[2]*axis[2];
 
-	cznorm_new[idx] = Rotation*cznorm[idx];
-	cztang_new[idx] = Rotation*cztang[idx];
+	if (disp > 0){
+		cznorm_new[idx]=Rotation*cznorm[idx];
+		Vector axisx(1.0,0.0,0.0);
+		Vector axisy(0.0,1.0,0.0);
+		Vector axisz(0.0,0.0,1.0);
+		double alpha = 0.; double beta = 0.; double gamma = 0.;
+		Matrix3 Rotationx;
+		Matrix3 Rotationy;
+		Matrix3 Rotationz;
+		if (fabs(Rotation(2,0) != 1)){
+			beta = -asin(Rotation(2,0));
+			alpha = atan(Rotation(2,1)/Rotation(2,2));
+			gamma = atan(Rotation(1,0)/Rotation(0,0));
+		}
+		else {
+			gamma = 0;
+			alpha = gamma + atan(Rotation(0,1)/Rotation(0,2));
+			beta = 3.142/2;
+		}
+		Rotationx(0,0) = (cos(alpha) - axisx[0]*axisx[0])*cos(alpha) + axisx[0]*axisx[0];
+		Rotationx(0,1) = (- axisx[0]*axisx[1])*cos(alpha) + axisx[0]*axisx[1] - axisx[2]*sin(alpha);
+		Rotationx(0,2) = (- axisx[0]*axisx[2])*cos(alpha) + axisx[0]*axisx[2] + axisx[1]*sin(alpha);
+		Rotationx(1,0) = (- axisx[1]*axisx[0])*cos(alpha) + axisx[1]*axisx[0] + axisx[2]*sin(alpha);
+		Rotationx(1,1) = (cos(alpha) - axisx[1]*axisx[1])*cos(alpha) + axisx[1]*axisx[1]; 
+		Rotationx(1,2) = (- axisx[1]*axisx[2])*cos(alpha) + axisx[1]*axisx[2] - axisx[0]*sin(alpha);
+		Rotationx(2,0) = (- axisx[2]*axisx[0])*cos(alpha) + axisx[2]*axisx[0] - axisx[1]*sin(alpha);
+		Rotationx(2,1) = (- axisx[2]*axisx[1])*cos(alpha) + axisx[2]*axisx[1] + axisx[0]*sin(alpha); 
+		Rotationx(2,2) = (cos(alpha) - axisx[2]*axisx[2])*cos(alpha) + axisx[2]*axisx[2];
 
-        double D_n = Dot(czsep_new[idx],cznorm_new[idx]);
-        double D_t = Dot(czsep_new[idx],cztang_new[idx]);
+		Rotationy(0,0) = (cos(beta) - axisy[0]*axisy[0])*cos(alpha) + axisy[0]*axisy[0];
+		Rotationy(0,1) = (- axisy[0]*axisy[1])*cos(beta) + axisy[0]*axisy[1] - axisy[2]*sin(beta);
+		Rotationy(0,2) = (- axisy[0]*axisy[2])*cos(beta) + axisy[0]*axisy[2] + axisy[1]*sin(beta);
+		Rotationy(1,0) = (- axisy[1]*axisy[0])*cos(beta) + axisy[1]*axisy[0] + axisy[2]*sin(beta);
+		Rotationy(1,1) = (cos(beta) - axisy[1]*axisy[1])*cos(beta) + axisy[1]*axisy[1]; 
+		Rotationy(1,2) = (- axisy[1]*axisy[2])*cos(beta) + axisy[1]*axisy[2] - axisy[0]*sin(beta);
+		Rotationy(2,0) = (- axisy[2]*axisy[0])*cos(beta) + axisy[2]*axisy[0] - axisy[1]*sin(beta);
+		Rotationy(2,1) = (- axisy[2]*axisy[1])*cos(beta) + axisy[2]*axisy[1] + axisy[0]*sin(beta); 
+		Rotationy(2,2) = (cos(beta) - axisy[2]*axisy[2])*cos(beta) + axisy[2]*axisy[2];
+
+		Rotationz(0,0) = (cos(gamma) - axisz[0]*axisz[0])*cos(gamma) + axisz[0]*axisz[0];
+		Rotationz(0,1) = (- axisz[0]*axisz[1])*cos(gamma) + axisz[0]*axisz[1] - axisz[2]*sin(gamma);
+		Rotationz(0,2) = (- axisz[0]*axisz[2])*cos(gamma) + axisz[0]*axisz[2] + axisz[1]*sin(gamma);
+		Rotationz(1,0) = (- axisz[1]*axisz[0])*cos(gamma) + axisz[1]*axisz[0] + axisz[2]*sin(gamma);
+		Rotationz(1,1) = (cos(gamma) - axisz[1]*axisz[1])*cos(gamma) + axisz[1]*axisz[1]; 
+		Rotationz(1,2) = (- axisz[1]*axisz[2])*cos(gamma) + axisz[1]*axisz[2] - axisz[0]*sin(gamma);
+		Rotationz(2,0) = (- axisz[2]*axisz[0])*cos(gamma) + axisz[2]*axisz[0] - axisz[1]*sin(gamma);
+		Rotationz(2,1) = (- axisz[2]*axisz[1])*cos(gamma) + axisz[2]*axisz[1] + axisz[0]*sin(gamma); 
+		Rotationz(2,2) = (cos(gamma) - axisz[2]*axisz[2])*cos(gamma) + axisz[2]*axisz[2];
+
+		cztang_new[idx] = Rotationz*Rotationy*Rotationx*cztang[idx];
+	}
+	else {
+		cznorm_new[idx]=cznorm[idx];
+		cztang_new[idx]=cztang[idx];
+	}
+
+	Vector cztang2 = Cross(cztang_new[idx],cznorm_new[idx]);
+
+        double D_n  = Dot(czsep_new[idx],cznorm_new[idx]);
+        double D_t1 = Dot(czsep_new[idx],cztang_new[idx]);
+        double D_t2 = Dot(czsep_new[idx],cztang2);
 
         // Determine if a CZ has failed.  Currently hardwiring failure criteria
         // to fail zone if normal sep is > 4*delta_n or 2*delta_t
@@ -4246,7 +4295,11 @@ void SerialMPM::updateCohesiveZones(const ProcessorGroup*,
           czFailed_new[idx]=1;
           czf=1.0;
         }
-        else if( fabs(D_t) > 2.0*delta_t){
+        else if( fabs(D_t1) > 2.0*delta_t){
+          czFailed_new[idx]=2;
+          czf=1.0;
+        } 
+        else if( fabs(D_t2) > 2.0*delta_s){
           czFailed_new[idx]=2;
           czf=1.0;
         } else {
@@ -4254,18 +4307,25 @@ void SerialMPM::updateCohesiveZones(const ProcessorGroup*,
         }
 
         double normal_stress  = (phi_n/delta_n)*exp(-D_n/delta_n)*
-                              ((D_n/delta_n)*exp((-D_t*D_t)/(delta_t*delta_t))
+                              ((D_n/delta_n)*exp((-D_t1*D_t1)/(delta_t*delta_t))
                               + ((1.-q)/(r-1.))
-                         *(1.-exp(-D_t*D_t/(delta_t*delta_t)))*(r-D_n/delta_n));
+                       *(1.-exp(-D_t1*D_t1/(delta_t*delta_t)))*(r-D_n/delta_n));
 
-        double tang_stress  = (phi_n/delta_n)*(2.*delta_n/delta_t)*(D_t/delta_t)
+        double tang1_stress =(phi_n/delta_n)*(2.*delta_n/delta_t)*(D_t1/delta_t)
                               * (q
                               + ((r-q)/(r-1.))*(D_n/delta_n))
                               * exp(-D_n/delta_n)
-                              * exp(-D_t*D_t/(delta_t*delta_t));
+                              * exp(-D_t1*D_t1/(delta_t*delta_t));
+
+        double tang2_stress =(phi_n/delta_n)*(2.*delta_n/delta_s)*(D_t2/delta_s)
+                              * (q
+                              + ((r-q)/(r-1.))*(D_n/delta_n))
+                              * exp(-D_n/delta_n)
+                              * exp(-D_t2*D_t2/(delta_s*delta_s));
 
         czforce_new[idx]     = (normal_stress*cznorm_new[idx]*czlength_new[idx]
-                             + tang_stress*cztang_new[idx]*czlength_new[idx])
+                             + tang1_stress*cztang_new[idx]*czlength_new[idx]
+                             + tang2_stress*cztang2*czlength_new[idx])
                              * (1.0 - czf);
 
 /*

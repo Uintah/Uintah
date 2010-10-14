@@ -120,7 +120,7 @@ void NodalSVFContact:: exMomIntegrated( const ProcessorGroup*           ,
                                               DataWarehouse*      old_dw,
                                               DataWarehouse*       new_dw ) {
   int numMatls=matls->size();
-  int alpha; int beta; int n=0;
+  int alpha=0; int beta=0; int n=0;
   for(int m=0;m<numMatls;m++){
     if((d_matls.requested(m)) && (n==0)) { alpha = matls->get(m); n++;}
     else                                 { beta  = matls->get(m); }
