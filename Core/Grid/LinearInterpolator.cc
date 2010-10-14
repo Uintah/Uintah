@@ -99,24 +99,64 @@ void LinearInterpolator::findCellAndWeights(const Point& pos,
                                             vector<double>& S,
                                             constNCVariable<Stencil7>& zoi)
 {
+  const Level* level = d_patch->getLevel();
+  IntVector refineRatio(level->getRefinementRatio());
 
-  Point cellpos = d_patch->getLevel()->positionToIndex(pos );
-
-  int ix = Floor(cellpos.x());
-  int iy = Floor(cellpos.y());
-  int iz = Floor(cellpos.z());
-  
-  ni[0] = IntVector(ix, iy, iz);
-  ni[1] = IntVector(ix, iy, iz+1);
-  ni[2] = IntVector(ix, iy+1, iz);
-  ni[3] = IntVector(ix, iy+1, iz+1);
-  ni[4] = IntVector(ix+1, iy, iz);
-  ni[5] = IntVector(ix+1, iy, iz+1);
-  ni[6] = IntVector(ix+1, iy+1, iz);
-  ni[7] = IntVector(ix+1, iy+1, iz+1);
-  
   //__________________________________
-  // Paper Nomenclature: Stencil7 Mapping
+  // Identify the nodes that are along the coarse fine interface
+  //
+  //             |           |
+  //             |           |
+  //  ___________*__o__o__o__o________
+  //    |  |  |  |  .  .  .  |        
+  //  __|__|__|__*..o..o..o..o        
+  //    |  |  |  |  .  . 0 . |        
+  //  __|__|__|__*..o..o..o..o        
+  //    |  |  |  |  .  .  .  |        
+  //  __|__|__|__*..o..o..o..o        
+  //    |  |  |  |  .  .  .  |        
+  //  __|__|__|__*__o__o__o__o________
+  //             |           |        
+  //             |           |         
+  //             |           |        
+  //  Coarse fine interface nodes: *
+  //  Ghost nodes on the fine level: o  (technically these don't exist
+  //  Particle postition on the coarse level: 0
+  
+  const int ngn = 0;
+  IntVector lo = d_patch->getNodeLowIndex(ngn);
+  IntVector hi = d_patch->getNodeHighIndex(ngn) - IntVector(1,1,1);
+  
+  // Find node index of coarse cell and then map that node to fine level
+  const Level* coarseLevel = level->getCoarserLevel().get_rep();
+  IntVector ni_c = coarseLevel->getCellIndex(pos);
+  IntVector ni_f = coarseLevel->mapNodeToFiner(ni_c);
+  
+  int ix = ni_f.x();
+  int iy = ni_f.y();
+  int iz = ni_f.z();
+  
+  // loop over all (o) nodes and find which lie on the CFI
+  for(int x = 0; x<= refineRatio.x(); x++){
+    for(int y = 0; y<= refineRatio.y(); y++){
+      for(int z = 0; z<= refineRatio.z(); z++){
+      
+        IntVector node = IntVector(ix + x, iy + y, iz + z);
+        //    x-,y-,z- patch face   x+, y+, z+ patch face
+        if( (node.x() == lo.x() || node.x() == hi.x() ) ||
+            (node.y() == lo.y() || node.y() == hi.y() ) ||
+            (node.z() == lo.z() || node.z() == hi.z() ) ) {
+          ni.push_back(node);
+          cout << " ni " << node << endl;
+        } 
+      }
+    }
+  }
+  
+  cout << " ni.size " << ni.size() << endl;
+
+  //__________________________________
+  // Reference Nomenclature: Stencil7 Mapping
   // Lx- :  L.w
   // Lx+ :  L.e
   // Ly- :  L.s
@@ -124,17 +164,17 @@ void LinearInterpolator::findCellAndWeights(const Point& pos,
   // Lz- :  L.b
   // Lz+ :  L.t
    
-  for (int i = 0; i< 8; i++){
-    Point nodepos = d_patch->getLevel()->getNodePosition(ni[i]);
+  for (int i = 0; i< ni.size(); i++){
+    Point nodepos = level->getNodePosition(ni[i]);
     double dx = pos.x() - nodepos.x();
     double dy = pos.y() - nodepos.y();
     double dz = pos.z() - nodepos.z();
-    double fx, fy, fz;
+    double fx = -9, fy = -9, fz = -9;
     
-    Stencil7 L = zoi[ni[i]];
+    Stencil7 L = zoi[ni[i]];  // fine level
 
     if(dx <= -L.w){                       // Lx-
-      fx = 0;
+      fx = 0; 
     }
     else if ( -L.w <= dx && dx <= 0 ){   // Lx-
       fx = 1 + dx/L.w;
@@ -173,7 +213,7 @@ void LinearInterpolator::findCellAndWeights(const Point& pos,
     }
 
     S[i] = fx * fy * fz;
-    //cout << "  pos " << pos << " cellpos " << cellpos << " ix " << ix << " iy " << iy << " fx " << fx << " fy " << fy <<  " fz " << fz << "    S[i] "<< S[i] << endl;
+    cout << "  pos " << pos << " node " << ni[i] << " fx " << fx << " fy " << fy <<  " fz " << fz << "    S[i] "<< S[i] << endl;
   }
 }
 
