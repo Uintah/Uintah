@@ -965,7 +965,7 @@ IntVector Level::mapCellToFiner(const IntVector& idx) const
 }
 //__________________________________
 // mapNodeToCoarser:
-// Example; 1D grid with refinement ratio = 4
+// Example: 1D grid with refinement ratio = 4
 //  Coarse Node index: 10                  11    
 //                     |                   |       
 //                 ----*----*----*----*----*-----  
@@ -978,6 +978,16 @@ IntVector Level::mapNodeToCoarser(const IntVector& idx) const
   return (idx+d_refinementRatio-IntVector(1,1,1))/d_refinementRatio;
 }
 
+//__________________________________
+// mapNodeToFiner:
+// Example: 1D grid with refinement ratio = 4
+//  Coarse Node index: 10                  11    
+//                     |                   |       
+//                 ----*----*----*----*----*-----  
+//                     |                   |       
+//  Fine Node Index    40   41   42   43   44      
+//                            
+//  What is returned   40                  44
 IntVector Level::mapNodeToFiner(const IntVector& idx) const
 {
   return idx*grid->getLevel(d_index+1)->d_refinementRatio;
