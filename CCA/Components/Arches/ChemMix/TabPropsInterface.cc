@@ -581,21 +581,33 @@ TabPropsInterface::computeFirstEnthalpy( const ProcessorGroup* pc,
     new_dw->getModifiable( enthalpy, d_lab->d_enthalpySPLabel, matlIndex, patch ); 
       
     std::vector<constCCVariable<double> > the_variables; 
-    for ( VarMap::iterator i = d_ivVarMap.begin(); i != d_ivVarMap.end(); i++ ){
 
-      if ( i->first != "heat_loss" ){ // heat loss hasn't been computed yet so this is why we have an "if" here. 
-        
-        cout_tabledbg << " Found label =  " << i->first <<  endl;
-        constCCVariable<double> test_Var; 
-        new_dw->get( test_Var, i->second, matlIndex, patch, gn, 0 );  
+    for ( vector<string>::iterator i = d_allIndepVarNames.begin(); i != d_allIndepVarNames.end(); i++){
+
+      const VarMap::iterator iv_iter = d_ivVarMap.find( *i ); 
+      
+      if ( iv_iter == d_ivVarMap.end() ) {
+        cout << " For variable named: " << *i << endl;
+        throw InternalError("Error: Could not map this label to the correct Uintah grid variable." ,__FILE__,__LINE__);
+      }
+
+      if ( *i != "heat_loss" ) { // heat loss hasn't been computed yet so this is why 
+                                 // we have an "if" here.
+        cout_tabledbg << " Found label = " << iv_iter->first << endl;
+        constCCVariable<double> test_Var;
+        new_dw->get( test_Var, iv_iter->second, matlIndex, patch, gn, 0 ); 
 
         the_variables.push_back( test_Var ); 
+
       } else {
 
         constCCVariable<double> a_null_var;
-        the_variables.push_back( a_null_var ); // to preserve the total number of IV otherwise you will have problems below
+        the_variables.push_back( a_null_var ); // to preserve the total number of 
+                                               // IV otherwise you will have problems below
+
       }
     }
+
 
     for (CellIterator iter=patch->getCellIterator(0); !iter.done(); iter++){
       IntVector c = *iter; 
