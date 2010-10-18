@@ -154,6 +154,12 @@ protected:
                                       const MaterialSubset* matls,
                                       DataWarehouse* old_dw,
                                       DataWarehouse* new_dw);
+                                      
+  void coarsenNodalData_CFI(const ProcessorGroup*,
+                            const PatchSubset* patches,
+                            const MaterialSubset* matls,
+                            DataWarehouse* old_dw,
+                            DataWarehouse* new_dw);
 
 
   virtual void computeStressTensor(const ProcessorGroup*,
@@ -233,6 +239,10 @@ protected:
   void scheduleInterpolateParticlesToGrid_CFI(SchedulerP&, 
                                               const PatchSet*,
                                               const MaterialSet*);
+                                              
+  void scheduleCoarsenNodalData_CFI(SchedulerP&, 
+                                    const PatchSet*,
+                                    const MaterialSet*);
 
   virtual void scheduleComputeStressTensor(SchedulerP&, 
                                            const PatchSet*,

@@ -270,6 +270,9 @@ MPMLabel::MPMLabel()
   gZOILabel     = VarLabel::create("g.zoi",
 			NCVariable<Stencil7>::getTypeDescription());
 
+  gSumWeightsLabel= VarLabel::create("g.sumInterpWeights",
+			NCVariable<double>::getTypeDescription());
+
   cVolumeLabel  = VarLabel::create( "c.volume",
                      CCVariable<double>::getTypeDescription() );
 
@@ -835,9 +838,10 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(gNormalRotMassLabel); 
   VarLabel::destroy(gNormalRotAccLabel); 
   
-   // particle Debugging labels
+   // Debugging labels
   VarLabel::destroy(pColorLabel);
-  VarLabel::destroy(pColorLabel_preReloc); 
+  VarLabel::destroy(pColorLabel_preReloc);
+  VarLabel::destroy(gSumWeightsLabel);  // sum of the interpolation weights
 
   // For Cohesive Zones
   VarLabel::destroy(czLengthLabel);
