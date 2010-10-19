@@ -349,6 +349,9 @@ main( int argc, char *argv[], char *env[] )
     } else if(arg == "-TRACK") {
       track = true;
       track_or_die = true;
+    } else if (arg=="-reduce_uda")
+    {
+      reduce_uda=true;
     } else if(arg == "-combine_patches") {
       combine_patches = true;
     } else if( arg == "-arches"  || arg == "-ice"      || arg == "-impm"     || arg == "-mpm"      || arg == "-mpmarches"  ||
