@@ -1048,7 +1048,8 @@ OnDemandDataWarehouse::getNewParticleState(int matlIndex, const Patch* patch)
 }
 
 
-
+//__________________________________
+//
 bool
 OnDemandDataWarehouse::haveParticleSubset(int matlIndex, const Patch* patch,
                                           IntVector low /* = (0,0,0) */,
@@ -1071,9 +1072,11 @@ OnDemandDataWarehouse::haveParticleSubset(int matlIndex, const Patch* patch,
   else
     return true;
 }
-
+//__________________________________
+//
 ParticleSubset*
-OnDemandDataWarehouse::getParticleSubset(int matlIndex, const Patch* patch,
+OnDemandDataWarehouse::getParticleSubset(int matlIndex, 
+                                         const Patch* patch,
                                          Ghost::GhostType gtype,
                                          int numGhostCells,
                                          const VarLabel* pos_var)
@@ -1089,6 +1092,8 @@ OnDemandDataWarehouse::getParticleSubset(int matlIndex, const Patch* patch,
   return getParticleSubset(matlIndex, lowIndex, highIndex, patch->getLevel(), patch, pos_var);
 }
 
+//__________________________________
+//
 ParticleSubset*
 OnDemandDataWarehouse::getParticleSubset(int matlIndex, IntVector lowIndex, IntVector highIndex, 
                                          const Level* level, const Patch* relPatch, const VarLabel* pos_var)
@@ -1097,10 +1102,11 @@ OnDemandDataWarehouse::getParticleSubset(int matlIndex, IntVector lowIndex, IntV
   TAU_PROFILE("OnDemandDataWarehouse::getParticleSubset-b", " ", TAU_USER);
   // relPatch can be NULL if trying to get a particle subset for an arbitrary spot on the level
   Patch::selectType neighbors;
-  if (relPatch && lowIndex == relPatch->getExtraCellLowIndex() && highIndex == relPatch->getExtraCellHighIndex())
+  if (relPatch && lowIndex == relPatch->getExtraCellLowIndex() && highIndex == relPatch->getExtraCellHighIndex()){
     neighbors.push_back(relPatch);
-  else
+  }else{
     level->selectPatches(lowIndex, highIndex, neighbors);
+  }
   
   particleIndex totalParticles = 0;
   vector<ParticleVariableBase*> neighborvars;
@@ -2338,12 +2344,15 @@ void OnDemandDataWarehouse::logMemoryUse(ostream& out, unsigned long& total,
 
 inline void
 OnDemandDataWarehouse::checkGetAccess(const VarLabel* label,
-                                      int matlIndex, const Patch* patch,
-                                      Ghost::GhostType gtype,int numGhostCells)
+                                      int matlIndex, 
+                                      const Patch* patch,
+                                      Ghost::GhostType gtype,
+                                      int numGhostCells)
 {
 #if 1
 #if SCI_ASSERTION_LEVEL >= 1
   list<RunningTaskInfo>* runningTasks = getRunningTasksInfo();
+  
   if (runningTasks != 0) {
     for (list<RunningTaskInfo>::iterator iter = runningTasks->begin();
         iter != runningTasks->end(); iter++) {
@@ -2678,10 +2687,9 @@ OnDemandDataWarehouse::checkAccesses(RunningTaskInfo* currentTaskInfo,
     Patch::getGhostOffsets(label->typeDescription()->getType(), dep->gtype,
                            dep->numGhostCells, lowOffset, highOffset);    
 
-    constHandle<PatchSubset> patches =
-      dep->getPatchesUnderDomain(domainPatches);
-    constHandle<MaterialSubset> matls =
-      dep->getMaterialsUnderDomain(domainMatls);
+    constHandle<PatchSubset> patches =  dep->getPatchesUnderDomain(domainPatches);
+    constHandle<MaterialSubset> matls = dep->getMaterialsUnderDomain(domainMatls);
+    
     if (label->typeDescription() &&
         label->typeDescription()->isReductionVariable()) {
       patches = default_patches.get_rep();
