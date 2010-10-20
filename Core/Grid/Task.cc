@@ -169,6 +169,7 @@ Task::requires(WhichDW dw,
   else if (matls != 0 && matls->size() == 0) {
     return; // no materials, no dependency
   }
+
   Dependency* dep = scinew Dependency(Requires, this, dw, var, oldTG, patches, matls,
                                       patches_dom, matls_dom,
                                       gtype, numGhostCells);
@@ -178,7 +179,6 @@ Task::requires(WhichDW dw,
   else
     req_head=dep;
   req_tail=dep;
-
   if (dw == OldDW)
     d_requiresOldDW.insert(make_pair(var, dep));
   else
@@ -311,7 +311,6 @@ Task::requires(WhichDW dw,
   else
     req_head=dep;
   req_tail=dep;
-
   if (dw == OldDW)
     d_requiresOldDW.insert(make_pair(var, dep));
   else
@@ -571,37 +570,40 @@ Task::Dependency* Task::isInDepMap(const DepMap& depMap,
     const PatchSubset* patches = dep->patches;
     const MaterialSubset* matls = dep->matls;
 
-    if (patches == 0) {
-      if (!(var->typeDescription() &&
-            var->typeDescription()->isReductionVariable())) {
-        patches = getPatchSet() ? getPatchSet()->getUnion() : 0;
+    bool hasPatches=false, hasMatls=false;
+
+    if(patches==0) //if patches==0 then the requirement for patches is satisfied
+    {
+      hasPatches=true;
+    }
+    else
+    {
+      if(dep->patches_dom == Task::CoarseLevel)  //check that the level of the patches matches the coarse level
+      {
+        hasPatches=getLevel(getPatchSet())->getRelativeLevel(-1)==getLevel(patches);
       }
-      if (dep->patches_dom == Task::CoarseLevel){  
-        patches = getLevel(getPatchSet())->getRelativeLevel(-1)->allPatches()->getUnion();
-      }else if (dep->patches_dom == Task::FineLevel) {
-        patches = getLevel(getPatchSet())->getRelativeLevel(1)->allPatches()->getUnion();
+      else if(dep->patches_dom == Task::FineLevel) //check that the level of the patches matches the fine level
+      {
+        hasPatches=getLevel(getPatchSet())->getRelativeLevel(1)==getLevel(patches);
+      }
+      else  //check that the patches subset contain the requested patch
+      {
+        hasPatches=patches->contains(patch);
       }
     }
     
-    if (matls == 0){
-      matls = getMaterialSet() ? getMaterialSet()->getUnion() : 0;
+    if (matls == 0) //if matls==0 then the requierment for matls is satisfied
+    {
+      hasMatls=true;
     }
-    
-    if (patches == 0 && matls == 0){
-      return dep; // assume it is for any matl or patch
-    }else if (patches == 0) {
-      // assume it is for any patch
-      if (matls->contains(matlIndex)){
-        return dep;
-      }
-    }else if (matls == 0) {
-      // assume it is for any matl
-      if (patches->contains(patch)){
-        return dep; 
-      }
-    }else if (patches->contains(patch) && matls->contains(matlIndex)){
+    else  //check thta the malts subset contains the matlIndex
+    {
+      hasMatls=matls->contains(matlIndex);
+    }
+   
+    if(hasMatls && hasPatches)  //if this dependency contains both the matls and patches return the dependency
       return dep;
-    }
+
     found_iter++;
   }
   return 0;
@@ -964,7 +966,9 @@ Task::displayAll(ostream& out) const
 void Task::setMapping(int dwmap[TotalDWs])
 {
   for(int i=0;i<TotalDWs;i++)
+  {
     this->dwmap[i]=dwmap[i];
+  }
 }
 
 //__________________________________
