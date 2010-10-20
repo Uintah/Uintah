@@ -1102,9 +1102,22 @@ OnDemandDataWarehouse::getParticleSubset(int matlIndex, IntVector lowIndex, IntV
   TAU_PROFILE("OnDemandDataWarehouse::getParticleSubset-b", " ", TAU_USER);
   // relPatch can be NULL if trying to get a particle subset for an arbitrary spot on the level
   Patch::selectType neighbors;
-  if (relPatch && lowIndex == relPatch->getExtraCellLowIndex() && highIndex == relPatch->getExtraCellHighIndex()){
+
+  ASSERT(relPatch!=0); //you should pass in the patch on which the task was called on
+
+  if(relPatch->getLevel()!=level) //case where the get is on a coarse or fine level
+  {
+    level->selectPatches(lowIndex, highIndex, neighbors);  //find all intersecting patches with the range
+  }
+  //single patch case on the same level:  
+  //check if the indices are contained within the patch
+  else if (Max(lowIndex,relPatch->getExtraCellLowIndex())==lowIndex && Min(highIndex,relPatch->getExtraCellHighIndex())==highIndex)
+  { 
+    //just add this patch, do not query the whole level
     neighbors.push_back(relPatch);
-  }else{
+  }
+  else  //same level but the range does not match the patch so intersect patches on this level
+  {  
     level->selectPatches(lowIndex, highIndex, neighbors);
   }
   

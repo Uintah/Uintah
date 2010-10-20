@@ -1152,7 +1152,7 @@ void AMRMPM::interpolateParticlesToGrid_CFI(const ProcessorGroup*,
       ParticleSubset* pset=0;
       
       // get the particles 
-      pset = old_dw->getParticleSubset(dwi, cl, ch, coarseLevel, NULL,lb->pXLabel);
+      pset = old_dw->getParticleSubset(dwi, cl, ch, coarseLevel, finePatch,lb->pXLabel);
       cout << *pset << endl;
 
       old_dw->get(pColor_coarse,      lb->pColorLabel,              pset);
