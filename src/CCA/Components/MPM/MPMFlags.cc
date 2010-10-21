@@ -34,6 +34,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/LinearInterpolator.h>
 #include <Core/Grid/Node27Interpolator.h>
 #include <Core/Grid/cpdiInterpolator.h>
+#include <Core/Grid/axiCpdiInterpolator.h>
 #include <Core/Grid/TOBSplineInterpolator.h>
 #include <Core/Grid/BSplineInterpolator.h>
 #include <Core/Parallel/ProcessorGroup.h>
@@ -276,8 +277,12 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
     d_interpolator = scinew BSplineInterpolator();
     d_8or27 = 64;
   } else if(d_interpolator_type=="cpdi"){
-    d_interpolator = scinew cpdiInterpolator();
     d_8or27 = 64;
+    if(d_axisymmetric){
+      d_interpolator = scinew axiCpdiInterpolator();
+    } else{
+      d_interpolator = scinew cpdiInterpolator();
+    }
   }else{
     ostringstream warn;
     warn << "ERROR:MPM: invalid interpolation type ("<<d_interpolator_type << ")"

@@ -27,7 +27,6 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-
 #include <Core/Grid/cpdiInterpolator.h>
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/Level.h>
@@ -72,15 +71,14 @@ void cpdiInterpolator::findCellAndWeights(const Point& pos,
 
   vector<Vector> relative_node_reference_location(8,Vector(0.0,0.0,0.0));
   // constuct the position vectors to each node in the reference configuration relative to the particle center:
-  relative_node_reference_location[0]= Vector(-lx,-ly,-lz); // x1    , y1    , z1
-  relative_node_reference_location[1]= Vector( lx,-ly,-lz); // x1+r1x, y1    , z1
-  relative_node_reference_location[2]= Vector( lx, ly,-lz); // x1+r1x, y1+r2y, z1
-  relative_node_reference_location[3]= Vector(-lx, ly,-lz); // x1    , y1+r2y, z1
-  relative_node_reference_location[4]= Vector(-lx,-ly,lz); // x1    , y1    , z1+r3z
-  relative_node_reference_location[5]= Vector( lx,-ly, lz); // x1+r1x, y1    , z1+r3z
-  relative_node_reference_location[6]= Vector( lx, ly, lz); // x1+r1x, y1+r2y, z1+r3z
-  relative_node_reference_location[7]= Vector(-lx, ly, lz); // x1    , y1+r2y, z1+r3z
-  int i;
+  relative_node_reference_location[0]=Vector(-lx,-ly,-lz);//x1    ,y1    ,z1
+  relative_node_reference_location[1]=Vector( lx,-ly,-lz);//x1+r1x,y1    ,z1
+  relative_node_reference_location[2]=Vector( lx, ly,-lz);//x1+r1x,y1+r2y,z1
+  relative_node_reference_location[3]=Vector(-lx, ly,-lz);//x1    ,y1+r2y,z1
+  relative_node_reference_location[4]=Vector(-lx,-ly, lz);//x1    ,y1    ,z1+r3z
+  relative_node_reference_location[5]=Vector( lx,-ly, lz);//x1+r1x,y1    ,z1+r3z
+  relative_node_reference_location[6]=Vector( lx, ly, lz);//x1+r1x,y1+r2y,z1+r3z
+  relative_node_reference_location[7]=Vector(-lx, ly, lz);//x1    ,y1+r2y,z1+r3z
   Vector r1=Vector(2.0*lx,0.0,0.0);
   Vector r2=Vector(0.0,2.0*ly,0.0);
   Vector r3=Vector(0.0,0.0,2.0*lz);
@@ -101,7 +99,7 @@ void cpdiInterpolator::findCellAndWeights(const Point& pos,
   vector<double> phi(8);
 
  // now  we will loop over each of these "nodes" or corners and use the deformation gradient to find the current location: 
-  for(i=0;i<8;i++){
+  for(int i=0;i<8;i++){
     int i8  = i*8;
     int i81 = i*8+1;
     int i82 = i*8+2;
@@ -116,7 +114,7 @@ void cpdiInterpolator::findCellAndWeights(const Point& pos,
     iy = Floor(current_corner_pos.y());
     iz = Floor(current_corner_pos.z());
 
-    ni[i8] = IntVector(ix    , iy  , iz  ); // x1    , y1    , z1
+    ni[i8]  = IntVector(ix  , iy  , iz  ); // x1    , y1    , z1
     ni[i81] = IntVector(ix+1, iy  , iz  ); // x1+r1x, y1    , z1
     ni[i82] = IntVector(ix+1, iy+1, iz  ); // x1+r1x, y1+r2y, z1
     ni[i83] = IntVector(ix  , iy+1, iz  ); // x1    , y1+r2y, z1
@@ -149,20 +147,14 @@ void cpdiInterpolator::findCellAndWeights(const Point& pos,
     S[i85] = one_over_8*phi[5];
     S[i86] = one_over_8*phi[6];
     S[i87] = one_over_8*phi[7];
-
-
-
   }
-
-
-
- }
+}
  
 void cpdiInterpolator::findCellAndShapeDerivatives(const Point& pos,
-                                                     vector<IntVector>& ni,
-                                                     vector<Vector>& d_S,
-                                                     const Vector& size,
-                                                     const Matrix3& defgrad)
+                                                   vector<IntVector>& ni,
+                                                   vector<Vector>& d_S,
+                                                   const Vector& size,
+                                                   const Matrix3& defgrad)
 {
   Point cellpos = d_patch->getLevel()->positionToIndex(Point(pos));
   double lx = size.x()/2.0;
@@ -232,8 +224,6 @@ void cpdiInterpolator::findCellAndShapeDerivatives(const Point& pos,
   alpha[7][1]   =  one_over_4V*(r2[0]*r3[2]-r2[2]*r3[0]+r1[0]*r3[2]-r1[2]*r3[0]-r1[0]*r2[2]+r1[2]*r2[0]);
   alpha[7][2]   =  one_over_4V*(-r2[0]*r3[1]+r2[1]*r3[0]-r1[0]*r3[1]+r1[1]*r3[0]+r1[0]*r2[1]-r1[1]*r2[0]);
 
-  
-
  // now  we will loop over each of these "nodes" or corners and use the deformation gradient to find the current location: 
   for(i=0;i<8;i++){
     int i8  = i*8;
@@ -250,7 +240,7 @@ void cpdiInterpolator::findCellAndShapeDerivatives(const Point& pos,
     iy = Floor(current_corner_pos.y());
     iz = Floor(current_corner_pos.z());
 
-    ni[i8] = IntVector(ix    , iy  , iz  ); // x1    , y1    , z1
+    ni[i8]  = IntVector(ix  , iy  , iz  ); // x1    , y1    , z1
     ni[i81] = IntVector(ix+1, iy  , iz  ); // x1+r1x, y1    , z1
     ni[i82] = IntVector(ix+1, iy+1, iz  ); // x1+r1x, y1+r2y, z1
     ni[i83] = IntVector(ix  , iy+1, iz  ); // x1    , y1+r2y, z1
@@ -306,14 +296,7 @@ void cpdiInterpolator::findCellAndShapeDerivatives(const Point& pos,
     d_S[i87][0] = alpha[i][0]*phi[7];
     d_S[i87][1] = alpha[i][1]*phi[7];
     d_S[i87][2] = alpha[i][2]*phi[7];
- 
-
   }
-
-
-  //cout<<"done with findcellandweightsandshapederivatives \n";
-
-
 }
 
 void cpdiInterpolator::findCellAndWeightsAndShapeDerivatives(const Point& pos,
@@ -339,7 +322,6 @@ void cpdiInterpolator::findCellAndWeightsAndShapeDerivatives(const Point& pos,
   relative_node_reference_location[5]= Vector( lx,-ly, lz); // x1+r1x, y1    , z1+r3z
   relative_node_reference_location[6]= Vector( lx, ly, lz); // x1+r1x, y1+r2y, z1+r3z
   relative_node_reference_location[7]= Vector(-lx, ly, lz); // x1    , y1+r2y, z1+r3z
-  int i;
   Vector current_corner_pos;
   double fx;
   double fy;
@@ -398,7 +380,7 @@ void cpdiInterpolator::findCellAndWeightsAndShapeDerivatives(const Point& pos,
  
 
  // now  we will loop over each of these "nodes" and use the deformation gradient to find the current location: 
-  for(i=0;i<8;i++){
+  for(int i=0;i<8;i++){
     //    first we need to find the position vector of the ith corner of the particle:
     current_corner_pos = Vector(cellpos) + defgrad*relative_node_reference_location[i];
     int i8  = i*8;
@@ -478,14 +460,7 @@ void cpdiInterpolator::findCellAndWeightsAndShapeDerivatives(const Point& pos,
     d_S[i87][0] = alpha[i][0]*phi[7];
     d_S[i87][1] = alpha[i][1]*phi[7];
     d_S[i87][2] = alpha[i][2]*phi[7];
-
-    
- 
   }
-
-
-  //cout<<"done with findcellandweightsandshapederivatives \n";
-
 }
 
 int cpdiInterpolator::size()
