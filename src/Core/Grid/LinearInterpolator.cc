@@ -94,8 +94,11 @@ void LinearInterpolator::findCellAndWeights(const Point& pos,
 //  Jin Ma, Hongbind Lu and Ranga Komanduri
 // "Structured Mesh Refinement in Generalized Interpolation Material Point Method
 //  for Simulation of Dynamic Problems" CMES, vol 12, no 3, pp. 213-227 2006
+//  This function is only called when coarse level particles, in the pseudo
+//  extra cells are interpolating information to the CFI nodes.
+
 void LinearInterpolator::findCellAndWeights(const Point& pos,
-                                            vector<IntVector>& ni,
+                                            vector<IntVector>& CFI_ni,
                                             vector<double>& S,
                                             constNCVariable<Stencil7>& zoi)
 {
@@ -103,7 +106,7 @@ void LinearInterpolator::findCellAndWeights(const Point& pos,
   IntVector refineRatio(level->getRefinementRatio());
 
   //__________________________________
-  // Identify the nodes that are along the coarse fine interface
+  // Identify the nodes that are along the coarse fine interface (*)
   //
   //             |           |
   //             |           |
@@ -120,12 +123,12 @@ void LinearInterpolator::findCellAndWeights(const Point& pos,
   //             |           |         
   //             |           |        
   //  Coarse fine interface nodes: *
-  //  Ghost nodes on the fine level: o  (technically these don't exist
+  //  ExtraCell nodes on the fine level: o  (technically these don't exist)
   //  Particle postition on the coarse level: 0
-  
+
   const int ngn = 0;
-  IntVector lo = d_patch->getNodeLowIndex(ngn);
-  IntVector hi = d_patch->getNodeHighIndex(ngn) - IntVector(1,1,1);
+  IntVector finePatch_lo = d_patch->getNodeLowIndex(ngn);
+  IntVector finePatch_hi = d_patch->getNodeHighIndex(ngn) - IntVector(1,1,1);
   
   // Find node index of coarse cell and then map that node to fine level
   const Level* coarseLevel = level->getCoarserLevel().get_rep();
@@ -135,26 +138,22 @@ void LinearInterpolator::findCellAndWeights(const Point& pos,
   int ix = ni_f.x();
   int iy = ni_f.y();
   int iz = ni_f.z();
-  
-  // loop over all (o) nodes and find which lie on the CFI
+
+  // loop over all (o) nodes and find which lie on edge of the patch or the CFI
   for(int x = 0; x<= refineRatio.x(); x++){
     for(int y = 0; y<= refineRatio.y(); y++){
       for(int z = 0; z<= refineRatio.z(); z++){
       
-        IntVector node = IntVector(ix + x, iy + y, iz + z);
-        //    x-,y-,z- patch face   x+, y+, z+ patch face
-        if( (node.x() == lo.x() || node.x() == hi.x() ) ||
-            (node.y() == lo.y() || node.y() == hi.y() ) ||
-            (node.z() == lo.z() || node.z() == hi.z() ) ) {
-          ni.push_back(node);
-          cout << " ni " << node << endl;
+        IntVector extraCell_node = IntVector(ix + x, iy + y, iz + z);
+         // this is an inside test
+         if( node == Max(extraCell_node, finePatch_lo) && node == Min(extraCell_node, finePatch_hi) ) {  
+          CFI_ni.push_back(node);
+          //cout << "    ni " << node << endl;
         } 
       }
     }
   }
   
-  cout << " ni.size " << ni.size() << endl;
-
   //__________________________________
   // Reference Nomenclature: Stencil7 Mapping
   // Lx- :  L.w
@@ -164,15 +163,51 @@ void LinearInterpolator::findCellAndWeights(const Point& pos,
   // Lz- :  L.b
   // Lz+ :  L.t
    
-  for (int i = 0; i< ni.size(); i++){
-    Point nodepos = level->getNodePosition(ni[i]);
+  for (int i = 0; i< CFI_ni.size(); i++){
+    Point nodepos = level->getNodePosition(CFI_ni[i]);
     double dx = pos.x() - nodepos.x();
     double dy = pos.y() - nodepos.y();
     double dz = pos.z() - nodepos.z();
     double fx = -9, fy = -9, fz = -9;
     
-    Stencil7 L = zoi[ni[i]];  // fine level
-
+    Stencil7 L = zoi[CFI_ni[i]];  // fine level zoi
+    
+/*`==========TESTING==========*/
+#if 0
+  if(ni[i].x() == 100 && (ni[i].z() == 1 || ni[i].z() == 2)){
+    cout << "  findCellAndWeights " << ni[i] << endl;
+    cout << "    dx " << dx << " L.w " << L.w << " L.e " << L.e << endl;
+    cout << "    dy " << dy << " L.n " << L.n << " L.s " << L.s << endl;
+    
+   if(dx <= -L.w){                       // Lx-
+      cout << "     fx = 0;" << endl; 
+    }
+    else if ( -L.w <= dx && dx <= 0 ){   // Lx-
+     cout << "     fx = 1 + dx/L.w; " << endl;
+    }
+    else if ( 0 <= dx  && dx <= L.e ){    // Lx+
+      cout << "     fx = 1 - dx/L.e; " << endl;
+    }
+    else if (L.e <= dx){                  // Lx+
+      cout << "     fx = 0; " << endl;
+    }
+    
+    if(dy <= -L.s){                       // Ly-
+      cout << "     fy = 0; " << endl;
+    }
+    else if ( -L.s <= dy && dy <= 0 ){    // Ly-
+      cout << "     fy = 1 + dy/L.s; " << endl;
+    }
+    else if ( 0 <= dy && dy <= L.n ){    // Ly+
+      cout << "     fy = 1 - dy/L.n; " << endl;
+    }
+    else if (L.n <= dy){                 // Ly+
+      cout << "     fy = 0; " << endl;
+    } 
+  } 
+#endif
+/*===========TESTING==========`*/
+  
     if(dx <= -L.w){                       // Lx-
       fx = 0; 
     }
@@ -212,8 +247,16 @@ void LinearInterpolator::findCellAndWeights(const Point& pos,
       fz = 0;
     }
 
-    S[i] = fx * fy * fz;
-    cout << "  pos " << pos << " node " << ni[i] << " fx " << fx << " fy " << fy <<  " fz " << fz << "    S[i] "<< S[i] << endl;
+    double s = fx * fy * fz;
+    S.push_back(s);
+    
+/*`==========TESTING==========*/
+#if 0
+    if(ni[i].x() == 100 && (ni[i].z() == 1 || ni[i].z() == 2)){
+      cout <<"     fx " << fx << " fy " << fy <<  " fz " << fz << "    S[i] "<< s<< endl;
+    }
+#endif 
+/*===========TESTING==========`*/
   }
 }
 
