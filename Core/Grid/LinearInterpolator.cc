@@ -146,8 +146,8 @@ void LinearInterpolator::findCellAndWeights(const Point& pos,
       
         IntVector extraCell_node = IntVector(ix + x, iy + y, iz + z);
          // this is an inside test
-         if( node == Max(extraCell_node, finePatch_lo) && node == Min(extraCell_node, finePatch_hi) ) {  
-          CFI_ni.push_back(node);
+         if(extraCell_node == Max(extraCell_node, finePatch_lo) && extraCell_node == Min(extraCell_node, finePatch_hi) ) {  
+          CFI_ni.push_back(extraCell_node);
           //cout << "    ni " << node << endl;
         } 
       }
