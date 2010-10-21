@@ -295,12 +295,13 @@ void AMRMPM::scheduleTimeAdvance(const LevelP & level,
     const PatchSet* patches = level->eachPatch();
     scheduleInterpolateParticlesToGrid(     sched, patches, matls);
   }
-  
+
   for (int l = 0; l < maxLevels; l++) {
     const LevelP& level = grid->getLevel(l);
     const PatchSet* patches = level->eachPatch();
     scheduleInterpolateParticlesToGrid_CFI( sched, patches, matls);
   }
+
   for (int l = 0; l < maxLevels; l++) {
     const LevelP& level = grid->getLevel(l);
     const PatchSet* patches = level->eachPatch();
@@ -357,24 +358,25 @@ void AMRMPM::scheduleComputeZoneOfInfluence(SchedulerP& sched,
                                             const PatchSet* patches,
                                             const MaterialSet* matls)
 {
-  if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(),
-                           getLevel(patches)->getGrid()->numLevels()))
-    return;
+  const Level* level = getLevel(patches);
+  int L_indx = level->getIndex();
 
-  MaterialSubset* one_matl = scinew MaterialSubset();
-  one_matl->add(0);
-  one_matl->addReference();
-                                                                                
-  printSchedule(patches,cout_doing,"AMRMPM::scheduleComputeZoneOfInfluence");                                                                                
-  Task* t = scinew Task("AMRMPM::computeZoneOfInfluence",
-                  this, &AMRMPM::computeZoneOfInfluence);
-                                                                                
-  t->computes(lb->gZOILabel, one_matl);
-                                                                                
-  sched->addTask(t, patches, matls);
+  if(L_indx > 0 ){
+    MaterialSubset* one_matl = scinew MaterialSubset();
+    one_matl->add(0);
+    one_matl->addReference();
 
-  if (one_matl->removeReference())
-    delete one_matl;
+    printSchedule(patches,cout_doing,"AMRMPM::scheduleComputeZoneOfInfluence");                                                                                
+    Task* t = scinew Task("AMRMPM::computeZoneOfInfluence",
+                    this, &AMRMPM::computeZoneOfInfluence);
+
+    t->computes(lb->gZOILabel, one_matl);
+
+    sched->addTask(t, patches, matls);
+
+    if (one_matl->removeReference())
+      delete one_matl;
+  }
 }
 
 //______________________________________________________________________
@@ -383,9 +385,10 @@ void AMRMPM::scheduleApplyExternalLoads(SchedulerP& sched,
                                         const PatchSet* patches,
                                         const MaterialSet* matls)
 {
-  if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(), 
-                           getLevel(patches)->getGrid()->numLevels()))
+  const Level* level = getLevel(patches);
+  if (!flags->doMPMOnLevel(level->getIndex(), level->getGrid()->numLevels())){
     return;
+  }
 
   printSchedule(patches,cout_doing,"AMRMPM::scheduleApplyExternalLoads");
 
@@ -404,9 +407,11 @@ void AMRMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
                                                 const PatchSet* patches,
                                                 const MaterialSet* matls)
 {
-  if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(), 
-                           getLevel(patches)->getGrid()->numLevels()))
+
+  const Level* level = getLevel(patches);
+  if (!flags->doMPMOnLevel(level->getIndex(), level->getGrid()->numLevels())){
     return;
+  }
     
   printSchedule(patches,cout_doing,"AMRMPM::scheduleInterpolateParticlesToGrid");
   
@@ -479,15 +484,12 @@ void AMRMPM::scheduleCoarsenNodalData_CFI(SchedulerP& sched,
   int L_indx = fineLevel->getIndex();
   
   if(L_indx > 0 ){
-    const Level* fineLevel = getLevel(patches);
-
     printSchedule(patches,cout_doing,"AMRMPM::scheduleCoarsenNodalData_CFI");
 
     Task* t = scinew Task("AMRMPM::coarsenNodalData_CFI",
                      this,&AMRMPM::coarsenNodalData_CFI);
 
     Ghost::GhostType  gn  = Ghost::None;
-    Task::DomainSpec  ND  = Task::NormalDomain;
     t->requires(Task::NewDW, lb->gMassLabel,          gn,0);    
     t->requires(Task::NewDW, lb->gSumWeightsLabel,    gn,0);
 
@@ -586,9 +588,10 @@ void AMRMPM::scheduleComputeStressTensor(SchedulerP& sched,
                                          const PatchSet* patches,
                                          const MaterialSet* matls)
 {
-  if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(), 
-                           getLevel(patches)->getGrid()->numLevels()))
+  const Level* level = getLevel(patches);
+  if (!flags->doMPMOnLevel(level->getIndex(), level->getGrid()->numLevels())){
     return;
+  }
   
   printSchedule(patches,cout_doing,"AMRMPM::scheduleComputeStressTensor");
   
@@ -620,9 +623,10 @@ void AMRMPM::scheduleUpdateErosionParameter(SchedulerP& sched,
                                             const PatchSet* patches,
                                             const MaterialSet* matls)
 {
-  if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(), 
-                           getLevel(patches)->getGrid()->numLevels()))
+  const Level* level = getLevel(patches);
+  if (!flags->doMPMOnLevel(level->getIndex(), level->getGrid()->numLevels())){
     return;
+  }
     
   printSchedule(patches,cout_doing,"AMRMPM::scheduleUpdateErosionParameter");
 
@@ -645,9 +649,10 @@ void AMRMPM::scheduleComputeInternalForce(SchedulerP& sched,
                                           const PatchSet* patches,
                                           const MaterialSet* matls)
 {
-  if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(), 
-                           getLevel(patches)->getGrid()->numLevels()))
+  const Level* level = getLevel(patches);
+  if (!flags->doMPMOnLevel(level->getIndex(), level->getGrid()->numLevels())){
     return;
+  }
 
   printSchedule(patches,cout_doing,"AMRMPM::scheduleComputeInternalForce");
    
@@ -677,9 +682,10 @@ void AMRMPM::scheduleComputeAndIntegrateAcceleration(SchedulerP& sched,
                                                      const PatchSet* patches,
                                                      const MaterialSet* matls)
 {
-  if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(),
-                           getLevel(patches)->getGrid()->numLevels()))
+  const Level* level = getLevel(patches);
+  if (!flags->doMPMOnLevel(level->getIndex(), level->getGrid()->numLevels())){
     return;
+  }
 
   printSchedule(patches,cout_doing,"AMRMPM::scheduleComputeAndIntegrateAcceleration");
 
@@ -705,9 +711,11 @@ void AMRMPM::scheduleSetGridBoundaryConditions(SchedulerP& sched,
                                                   const MaterialSet* matls)
 
 {
-  if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(), 
-                           getLevel(patches)->getGrid()->numLevels()))
+  const Level* level = getLevel(patches);
+  if (!flags->doMPMOnLevel(level->getIndex(), level->getGrid()->numLevels())){
     return;
+  }
+  
   printSchedule(patches,cout_doing,"AMRMPM::scheduleSetGridBoundaryConditions");
   Task* t=scinew Task("AMRMPM::setGridBoundaryConditions",
                this, &AMRMPM::setGridBoundaryConditions);
@@ -733,9 +741,10 @@ void AMRMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
                                                      const MaterialSet* matls)
 
 {
-  if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(), 
-                           getLevel(patches)->getGrid()->numLevels()))
+  const Level* level = getLevel(patches);
+  if (!flags->doMPMOnLevel(level->getIndex(), level->getGrid()->numLevels())){
     return;
+  }
 
   printSchedule(patches,cout_doing,"AMRMPM::scheduleInterpolateToParticlesAndUpdate");
   
@@ -752,7 +761,7 @@ void AMRMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
 
   t->requires(Task::NewDW, lb->gAccelerationLabel,              gac,NGN);
   t->requires(Task::NewDW, lb->gVelocityStarLabel,              gac,NGN);
-  t->requires(Task::NewDW, lb->gZOILabel,                       gac,NGN);
+//  t->requires(Task::NewDW, lb->gZOILabel,                       gac,NGN);
   
   if(getLevel(patches)->hasCoarserLevel()){
     t->requires(Task::CoarseNewDW, lb->gAccelerationLabel, 0, Task::CoarseLevel, mss, DS, gac, NGN);
@@ -1082,6 +1091,36 @@ void AMRMPM::interpolateParticlesToGrid(const ProcessorGroup*,
           }
         }
       } // End of particle loop
+      
+      
+      /*`==========TESTING==========*/
+#if 1
+      if(patch->hasCoarseFaces() ){ 
+        vector<Patch::FaceType> cf;
+        patch->getCoarseFaces(cf);
+
+        // Iterate over coarse/fine interface faces
+        vector<Patch::FaceType>::const_iterator iter;  
+        for (iter  = cf.begin(); iter != cf.end(); ++iter){
+          Patch::FaceType patchFace = *iter;
+          
+          if( patch->getFaceName(patchFace) == "xplus" ){
+            cout << "  working on fine patch face " << patch->getFaceName(patchFace)<<  endl;
+
+            CellIterator f_iter=patch->getFaceIterator(patchFace, Patch::FaceNodes);
+            for(; !f_iter.done(); f_iter++) {
+              IntVector node = *f_iter;
+              if(node.z() == 1 || node.z() == 2){
+                cout << "    node: " << node << " sum_S[k] " << gSum_S[node] << endl;
+              }
+            }
+          }
+        }
+      }
+#endif 
+    /*===========TESTING==========`*/
+      
+      
 
       for(NodeIterator iter=patch->getExtraNodeIterator();
                        !iter.done();iter++){
@@ -1117,17 +1156,16 @@ void AMRMPM::interpolateParticlesToGrid_CFI(const ProcessorGroup*,
 
     int numMatls = d_sharedState->getNumMPMMatls();
     ParticleInterpolator* interpolator = flags->d_interpolator->clone(finePatch);
-//    vector<IntVector> ni(interpolator->size());
-    vector<IntVector> ni;
-    vector<double> S(interpolator->size());
-
+    
     constNCVariable<Stencil7> zoi_fine;
     IntVector cl, ch, fl, fh;
 
-    int nGhostCells = 0;
-    int nBoundaryCells = 1;
- 
     // Determine extents for coarser level particle data
+    IntVector refineRatio(fineLevel->getRefinementRatio());
+    
+    int nBoundaryCells = Max(refineRatio.x(), refineRatio.y(), refineRatio.z());
+    int nGhostCells = 0;
+    
     getCoarseLevelRangeNodes(finePatch, coarseLevel, cl, ch, fl, fh, nGhostCells, nBoundaryCells);
     cout << "  coarseLevel: " << coarseLevel->getIndex() << " cl: " << cl << " ch: " << ch<< " fl: " << fl << " fh " << fh << endl;
 
@@ -1160,19 +1198,16 @@ void AMRMPM::interpolateParticlesToGrid_CFI(const ProcessorGroup*,
       old_dw->get(px_coarse,          lb->pXLabel,                  pset);       
       old_dw->get(pmass_coarse,       lb->pMassLabel,               pset);       
       old_dw->get(pDefMeasure_coarse, lb->pDeformationMeasureLabel, pset);
-
-      int n8or27=flags->d_8or27;
-
+      
       for (ParticleSubset::iterator iter = pset->begin();iter != pset->end(); iter++){
         particleIndex idx = *iter;
 
         // Get the node indices that surround the cell
         vector<IntVector> ni;
+        vector<double> S;
+
         interpolator->findCellAndWeights(px_coarse[idx],ni,S,zoi_fine);
-
-        //interpolator->findCellAndWeights(px_coarse[idx],ni,S,psize_coarse[idx],pDefMeasure_coarse[idx]);
-
-
+        
         //Vector pmom = pvelocity[idx]*pmass[idx];
 
         // Add each particles contribution to the local mass & velocity 
@@ -1183,10 +1218,46 @@ void AMRMPM::interpolateParticlesToGrid_CFI(const ProcessorGroup*,
           //S[k] *= pErosion[idx];
           gmass_fine[fineNode] += pmass_coarse[idx] * S[k];
           
-          cout << " Px_coarse: " << px_coarse[idx] << " patch level: " << fineLevel->getIndex() << " particle level " << pColor_coarse[idx] << " fineFnode " << fineNode << " S[k] " << S[k] 
-               << " sum_S[k] " << gSum_S[fineNode]<< " zoi " << (zoi_fine[fineNode]) << endl;
+/*`==========TESTING==========*/
+#if 1
+          if(fineNode.x() == 30 && (fineNode.y() == 34 || fineNode.y() == 33) && fineNode.z() == 1 ){
+            cout << "    fineNode " << fineNode << " ni.size " << ni.size() << " S[k] " << S[k] << " sum_S[k] " << gSum_S[fineNode]<< " \t zoi " << (zoi_fine[fineNode]) << endl;
+          }
+#endif 
+/*===========TESTING==========`*/
+          
         }
       } // End of particle loop
+      
+    
+/*`==========TESTING==========*/
+#if 1
+      if(finePatch->hasCoarseFaces() ){ 
+        vector<Patch::FaceType> cf;
+        finePatch->getCoarseFaces(cf);
+
+        // Iterate over coarse/fine interface faces
+        vector<Patch::FaceType>::const_iterator iter;  
+        for (iter  = cf.begin(); iter != cf.end(); ++iter){
+          Patch::FaceType patchFace = *iter;
+          
+          if( finePatch->getFaceName(patchFace) == "xplus" ){
+            cout << "  working on fine patch face " << finePatch->getFaceName(patchFace)<<  endl;
+
+            CellIterator f_iter=finePatch->getFaceIterator(patchFace, Patch::FaceNodes);
+            for(; !f_iter.done(); f_iter++) {
+              IntVector node = *f_iter;
+              if(node.z() == 1 || node.z() == 2 ){
+                cout << "    node: " << node<< " sum_S[k] " << gSum_S[node]<< " \t zoi " << (zoi_fine[node]) << endl;
+              }
+            }
+          }
+          
+        }
+      } 
+#endif
+/*===========TESTING==========`*/
+      
 #if 0
       for(NodeIterator iter=patch->getExtraNodeIterator();!iter.done();iter++){
         IntVector c = *iter;
@@ -1279,9 +1350,19 @@ void AMRMPM::coarsenNodalData_CFI(const ProcessorGroup*,
                 
                 IntVector f_node = coarseLevel->mapNodeToFiner(c_node);
                 
-                cout << "      coarseLevel CFI Cells L-" << coarseLevel->getIndex() << " c_node: " << c_node << " fineNode: " << f_node << endl;
+/*`==========TESTING==========*/
                 gmass_coarse[c_node]  = gmass_fine[f_node];
                 gSum_S_coarse[c_node] = gSum_S_fine[f_node];
+                
+#if 1
+                if(coarsePatch->getFaceName(patchFace) == "xplus" ) {
+                  if(f_node.z() == 1 || f_node.z() == 2 ){
+                    cout << "      coarseLevel CFI Cells L-" << coarseLevel->getIndex() << " c_node: " << c_node << " fineNode: " << f_node 
+                         << " sum_S: " << gSum_S_coarse[c_node] << endl;
+                  }
+                }
+#endif 
+/*===========TESTING==========`*/
               }
             }  // isRight_CP_FP_pair
           }  // end CFI face loop
@@ -1733,7 +1814,14 @@ void AMRMPM::computeZoneOfInfluence(const ProcessorGroup*,
                                     DataWarehouse* new_dw)
 {
   const Level* level = getLevel(patches);
+  
+  ASSERT(level->hasCoarserLevel() );
+  
   NCVariable<Stencil7> zoi;
+  
+  const Level* coarseLevel = level->getCoarserLevel().get_rep();
+  Vector coarse_dx = coarseLevel->dCell();
+  
   
   //__________________________________
   //  Initialize the interior nodes
@@ -1746,6 +1834,9 @@ void AMRMPM::computeZoneOfInfluence(const ProcessorGroup*,
     
     for(NodeIterator iter = patch->getNodeIterator();!iter.done();iter++){
       IntVector c = *iter;
+      
+/*`==========TESTING==========*/
+#if 1
       zoi[c].p=-9876543210e99;
       zoi[c].w= dx.x();
       zoi[c].e= dx.x();
@@ -1753,9 +1844,26 @@ void AMRMPM::computeZoneOfInfluence(const ProcessorGroup*,
       zoi[c].n= dx.y();
       zoi[c].b= dx.z();
       zoi[c].t= dx.z();
+#endif 
+
+#if 0      
+      zoi[c].p=-9876543210e99;
+      zoi[c].w= coarse_dx.x();
+      zoi[c].e= coarse_dx.x();
+      zoi[c].s= coarse_dx.y();
+      zoi[c].n= coarse_dx.y();
+      zoi[c].b= coarse_dx.z();
+      zoi[c].t= coarse_dx.z();
+#endif
+/*===========TESTING==========`*/
+      
+      
     }
   }
-
+  
+  
+/*`==========TESTING==========*/
+#if 0
   //__________________________________
   // set the ZOI coarse
   // look up at the finer level patches
@@ -1814,6 +1922,7 @@ void AMRMPM::computeZoneOfInfluence(const ProcessorGroup*,
                 IntVector c = *n_iter;
                 //cout << " coarseLevels CFI Cells L-" << level->getIndex() << " " << c << endl;
                 zoi[c][element]=fine_dx[p_dir];
+                //zoi[c][element]=coarse_dx[p_dir];
               }
             }
           }  // patch face loop
@@ -1821,22 +1930,21 @@ void AMRMPM::computeZoneOfInfluence(const ProcessorGroup*,
       }  // finePatches loop
     }  // has finer level
   }  // patches loop
-   
-   
+#endif
+/*===========TESTING==========`*/    
   //__________________________________
   // set the ZOI in cells in which there are overlaping coarse level nodes
   // look down for coarse level patches 
   for(int p=0;p<patches->size();p++){
-    const Patch* patch = patches->get(p);
+    const Patch* finePatch = patches->get(p);
     
-    new_dw->getModifiable(zoi, lb->gZOILabel, 0,patch);
+    new_dw->getModifiable(zoi, lb->gZOILabel, 0,finePatch);
       
     // underlying coarse level
     if( level->hasCoarserLevel() ) {
-      //const Level* coarseLevel = level->getCoarserLevel().get_rep();
       
       Level::selectType coarsePatches;
-      patch->getCoarseLevelPatches(coarsePatches);
+      finePatch->getCoarseLevelPatches(coarsePatches);
 
       for(int p=0;p<coarsePatches.size();p++){  
         const Patch* coarsePatch = coarsePatches[p];
@@ -1844,9 +1952,9 @@ void AMRMPM::computeZoneOfInfluence(const ProcessorGroup*,
         
         //__________________________________
         // Iterate over coarsefine interface faces
-        if(patch->hasCoarseFaces() ){
+        if(finePatch->hasCoarseFaces() ){
           vector<Patch::FaceType> cf;
-          patch->getCoarseFaces(cf);
+          finePatch->getCoarseFaces(cf);
           
           vector<Patch::FaceType>::const_iterator iter;  
           for (iter  = cf.begin(); iter != cf.end(); ++iter){
@@ -1858,12 +1966,12 @@ void AMRMPM::computeZoneOfInfluence(const ProcessorGroup*,
             NodeIterator n_iter(IntVector(-8,-8,-8),IntVector(-9,-9,-9));
             bool isRight_CP_FP_pair;
             
-            fineLevel_CFI_NodeIterator( patchFace,coarsePatch, patch,
+            fineLevel_CFI_NodeIterator( patchFace,coarsePatch, finePatch,
                                           n_iter ,isRight_CP_FP_pair);
                                           
             int element = patchFace;
             
-            IntVector dir = patch->getFaceAxes(patchFace);        // face axes
+            IntVector dir = finePatch->getFaceAxes(patchFace);        // face axes
             int p_dir = dir[0];                                    // normal direction 
             
             // Is this the right coarse/fine patch pair
@@ -1878,9 +1986,9 @@ void AMRMPM::computeZoneOfInfluence(const ProcessorGroup*,
           }  // face interator
         }  // patch has coarse face
       }  // coarsePatches loop
-    }  // has finer level                                                                              
-
+    }  // has finer level
   }  // patch loop
+
 }
 
 
@@ -2128,8 +2236,8 @@ void AMRMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
     vector<double> S(interpolator->size());
     Ghost::GhostType  gac = Ghost::AroundCells;
 
-    constNCVariable<Stencil7> ZOI_CUR,ZOI_FINE;
-    new_dw->get(ZOI_CUR, lb->gZOILabel, 0, patch, gac, NGN);
+   // constNCVariable<Stencil7> ZOI_CUR,ZOI_FINE;
+   // new_dw->get(ZOI_CUR, lb->gZOILabel, 0, patch, gac, NGN);
 
     // Performs the interpolation from the cell vertices of the grid
     // acceleration and velocity to the particles to update their
