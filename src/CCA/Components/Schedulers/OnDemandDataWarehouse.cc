@@ -1153,7 +1153,7 @@ OnDemandDataWarehouse::getParticleSubset(int matlIndex, IntVector lowIndex, IntV
       }
       ParticleSubset* pset;
 
-      if (relPatch && relPatch != neighbor) {
+      if (relPatch->getLevel()==level && relPatch != neighbor) {
         relPatch->cullIntersection(Patch::CellBased, IntVector(0,0,0), realNeighbor, newLow, newHigh);
         if (newLow == newHigh) {
           continue;
@@ -1206,12 +1206,12 @@ OnDemandDataWarehouse::get(constParticleVariableBase& constVar,
   int matlIndex = pset->getMatlIndex();
   const Patch* patch = pset->getPatch();
 
-  // a null patch means that there is no patch center for the pset
+  // pset center patch and neighbor patch are not in same level
   // (probably on an AMR copy data timestep)
-  if((patch && 
-        pset->getLow()  == patch->getExtraCellLowIndex()   && 
-        pset->getHigh() == patch->getExtraCellHighIndex()) ||
-      pset->getNeighbors().size() == 0){
+  if ((pset->getNeighbors().size() == 0) ||
+      (pset->getNeighbors().front()->getLevel() == patch->getLevel() &&
+       pset->getLow()  == patch->getExtraCellLowIndex()              &&
+       pset->getHigh() == patch->getExtraCellHighIndex()             )){
     get(constVar, label, matlIndex, patch);
   }
   else {
@@ -2623,17 +2623,21 @@ OnDemandDataWarehouse::getCurrentTaskInfo()
 DataWarehouse*
 OnDemandDataWarehouse::getOtherDataWarehouse(Task::WhichDW dw, RunningTaskInfo* info)
 {
+  d_lock.readLock();
   int dwindex = info->d_task->mapDataWarehouse(dw);
   DataWarehouse* result = (*info->dws)[dwindex].get_rep();
+  d_lock.readUnlock();
   return result;
 }
 
 DataWarehouse*
 OnDemandDataWarehouse::getOtherDataWarehouse(Task::WhichDW dw)
 {
+  d_lock.readLock();
   RunningTaskInfo* info = getCurrentTaskInfo();
   int dwindex = info->d_task->mapDataWarehouse(dw);
   DataWarehouse* result = (*info->dws)[dwindex].get_rep();
+  d_lock.readUnlock();
   return result;
 }
 
