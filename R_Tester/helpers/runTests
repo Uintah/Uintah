@@ -26,13 +26,6 @@ use_html=1
 rm -f "$BUILDROOT"/dbg/log "$BUILDROOT"/opt/log "$BUILDROOT"/dbg/summary_log "$BUILDROOT"/opt/summary_log 
 
 
-# Only run optimized weekly tests
-WKLY_STRING=" "
-if [ "$WEEKLY" == "1" ]; then
-  WKLY_STRING=" Weekly"
-  DO_DBG="0"
-fi
-
 #if VERBOSE is on, then have all output go to stdout instead of log
 
 #__________________________________
@@ -122,9 +115,9 @@ chmod -R g+w "$TEST_DATA" > /dev/null 2>&1
 # 
 if [ "$VERBOSE" = "no" -a "$SEND_MAIL_TO" != "" ]; then
   if [ $failed = "0" ]; then
-    subject="SUCCESS:$WKLY_STRING Regression tests on `hostname`"
+    subject="SUCCESS: Regression tests on `hostname`"
   else
-    subject="FAILURE:$WKLY_STRING  Regression tests on `hostname`***"
+    subject="FAILURE:  Regression tests on `hostname`***"
   fi
 
   cat > "$BUILDROOT"/mail.msg <<EOF
