@@ -2,116 +2,67 @@
 #!/bin/sh#
 #______________________________________________________________________
 # run:  This shell script
-#         - creates the symbolic links to the testscripts, inputs, goldstandards, and various component tests
 #         - Loop over all the components tests
 #         - set locks if a component's tests fails.
-
-
-
 # $TEST_DATA, $BUILD_DIR $BUILDROOT, $mode, $HTMLLOG, $PARALLELISM, and $MAKE_PARALLELISM must be set
 
 mode=$1
 failed=0
-USER_FLAG=""
-
-if [ ! -d "$TEST_DATA" ]; then
-  echo "TEST_DATA directory doesn't exist: $TEST_DATA"
-  exit -1;
-fi
-
-if [ ! -d "${TEST_DATA}/${mode}" ]; then
-  mkdir "${TEST_DATA}/${mode}"
-fi
-
-cd "${BUILDROOT}/${mode}"
-#__________________________________
-#  create the Symbolic links
-if [ ! -d TestScripts ]; then
-  ln -s ../src/R_Tester TestScripts
-fi
-
-if [ ! -f replace_all_GS ]; then
-  ln -s ../src/R_Tester/helpers/replace_all_GS replace_all_GS
-fi
-
-if [ ! -d susdir ]; then
-  ln -s build/StandAlone susdir
-fi
-
-if [ ! -d inputs ]; then
-  ln -s ../src/StandAlone/inputs inputs
-fi
-
-if [ ! -d CheckPoints ]; then
-  ln -s /usr/local/home/csafe-tester/CheckPoints CheckPoints
-fi
-
-# remove this in case it points to the wrong place
-if [ -d goldStandard ]; then
-  rm -f goldStandard
-fi
-ln -s "${TEST_DATA}/${mode}" goldStandard
-
-summary_log="${BUILDROOT}/${mode}/summary_log"
-rm -f $summary_log
 
 cd TestScripts
 
-
 #__________________________________
 #  main loop over components RT tests
-for test in ""; do
+for componentTest in ""; do
   
   # if the file is an executable
-  if [ -f "$test" -a -x "$test" ]; then
+  if [ -f "$componentTest" -a -x "$componentTest" ]; then
 
 #   echo ""
-#   echo "Running test \"${test}-${mode}\" at `date`"
+#   echo "Running test \"${componentTest}-${mode}\" at `date`"
     #__________________________________
     # create the do<component>tests  python script
     cd "${BUILDROOT}/${mode}"
-    doTestScript="do${test}tests"
+    doTestScript="do${componentTest}tests"
     echo "#!/bin/tcsh" > "$doTestScript"
     echo "setenv PATH $PATH" >> "$doTestScript"
     echo "setenv OS $OS" >> "$doTestScript"
     echo "setenv SCI_DEBUG \"\"" >> "$doTestScript"
 
-    echo "python TestScripts/$test susdir inputs goldStandard $mode $PARALLELISM "'$1' >> "$doTestScript"
+    echo "python TestScripts/$componentTest susdir inputs goldStandard $mode $PARALLELISM "'$1' >> "$doTestScript"
  
     /bin/chmod a+x "$doTestScript"
-    
     
     #__________________________________
     # run the python script that contains all the
     # tests for that component
-    rm -f "${BUILDROOT}/${mode}/${test}-short.log"
-    "$doTestScript" > "${test}.log"  2>&1
+    rm -f "${BUILDROOT}/${mode}/${componentTest}-short.log"
+    "$doTestScript" > "${componentTest}.log"  2>&1
     retval=$?
     
-    cat "${test}.log" >> "$summary_log"
-    cat "${test}.log" >> "$HTMLLOG"
+    cat "${componentTest}.log" >> "$summary_log"
+    cat "${componentTest}.log" >> "$HTMLLOG"
     
     cd TestScripts
 
     #__________________________________
-    # Setting and removing component locks
+    # Setting or removing component locks
     if [ $retval = "0" ]; then
-      echo "Passed: ${test}-${mode} tests! "
+      echo "Passed: ${componentTest}-${mode} tests! "
  
       # It was successful, so it can remove the lock
-      if [ -d "${BUILD_DIR}/${test}-${mode}.lock" ]; then
-          # test ran successfully - remove the lock
-          rm "${BUILD_DIR}/${test}-${mode}.lock"
+      if [ -d "${BUILD_DIR}/${componentTest}-${mode}.lock" ]; then
+          rm "${BUILD_DIR}/${componentTest}-${mode}.lock"
       fi
     elif [ $retval = "3" ]; then
-      echo "Skipped: ${test}-$mode tests"
+      echo "Skipped: ${componentTest}-$mode tests"
     else
-      echo "Failed: ${test}-${mode} tests"
-      if [ ! -d "${BUILD_DIR}/${test}-${mode}.lock" ]; then
-        ln -s "$BUILDROOT" "${BUILD_DIR}/${test}-${mode}.lock" > /dev/null 2>&1
+      echo "Failed: ${componentTest}-${mode} tests"
+      if [ ! -d "${BUILD_DIR}/${componentTest}-${mode}.lock" ]; then
+        ln -s "$BUILDROOT" "${BUILD_DIR}/${componentTest}-${mode}.lock" > /dev/null 2>&1
       fi
-      if [ -f "${BUILDROOT}/${mode}/${test}-short.log" ]; then
-        cat "${BUILDROOT}/${mode}/${test}-short.log"
+      if [ -f "${BUILDROOT}/${mode}/${componentTest}-short.log" ]; then
+        cat "${BUILDROOT}/${mode}/${componentTest}-short.log"
       fi
       failed=1
     fi
