@@ -35,6 +35,8 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/Node27Interpolator.h>
 #include <Core/Grid/cpdiInterpolator.h>
 #include <Core/Grid/axiCpdiInterpolator.h>
+#include <Core/Grid/fastCpdiInterpolator.h>
+#include <Core/Grid/fastAxiCpdiInterpolator.h>
 #include <Core/Grid/TOBSplineInterpolator.h>
 #include <Core/Grid/BSplineInterpolator.h>
 #include <Core/Parallel/ProcessorGroup.h>
@@ -160,7 +162,7 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
      cerr << "nodes8or27 is deprecated, use " << endl;
      cerr << "<interpolator>type</interpolator>" << endl;
      cerr << "where type is one of the following:" << endl;
-     cerr << "linear, gimp, 3rdorderBS,cpdi" << endl;
+     cerr << "linear, gimp, 3rdorderBS, cpdi, fastcpdi" << endl;
     exit(1);
   }
 
@@ -282,6 +284,13 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
       d_interpolator = scinew axiCpdiInterpolator();
     } else{
       d_interpolator = scinew cpdiInterpolator();
+    }
+  } else if(d_interpolator_type=="fastcpdi"){
+    d_8or27 = 27;
+    if(d_axisymmetric){
+      d_interpolator = scinew fastAxiCpdiInterpolator();
+    } else{
+      d_interpolator = scinew fastCpdiInterpolator();
     }
   }else{
     ostringstream warn;
