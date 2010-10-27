@@ -1,6 +1,12 @@
+#______________________________________________________________________
+# run:  This shell script
+#         - creates the symbolic links to the testscripts, inputs, goldstandards, and various component tests
+#         - Loop over all the components tests
+#         - set locks if a component's tests fails.
+
 #!/bin/sh
 
-# $USER, $TEST_DATA, $BUILD_DIR $BUILDROOT, $WEEKLY, $mode, $HTMLLOG, $PARALLELISM, and $MAKE_PARALLELISM must be set
+# $TEST_DATA, $BUILD_DIR $BUILDROOT, $WEEKLY, $mode, $HTMLLOG, $PARALLELISM, and $MAKE_PARALLELISM must be set
 
 mode=$1
 failed=0
@@ -16,8 +22,8 @@ if [ ! -d "${TEST_DATA}/${mode}" ]; then
 fi
 
 cd "${BUILDROOT}/${mode}"
-
-# Symbolic links
+#__________________________________
+#  create the Symbolic links
 if [ ! -d TestScripts ]; then
   ln -s ../src/R_Tester TestScripts
 fi
@@ -49,28 +55,13 @@ rm -f $summary_log
 
 cd TestScripts
 
-# select files desired by a particular user
-if [ "$USER" != "" ]; then
-  if [ ! -d users/$USER ]; then
-    echo "src/R_Tester/users/$USER does not exist."
-    echo "Please create and place tests there and run again."
-    exit 1
-  fi
-  
-  # this line is so in the test file (which is a python script), it knows
-  # where to look for the helpers package (directory)
-  cd users/$USER
-  for file in *; do
-    cp $file ../../$file-$USER
-  done
-  
-  USER_FLAG="-$USER"
-  cd ../..
-fi
+
 #__________________________________
-for test in *$USER_FLAG; do
-# match this test to being run in a daily or weekly context
-# also match to a user context - if no user is selected, USER is ""
+#  main loop over components RT tests
+
+for test in ""; do
+  # match this test to being run in a daily or weekly context
+  # also match to a user context
   runThisTest=0;
   if [ "$WEEKLY" = "1" ]; then
     case "$test" in
@@ -91,18 +82,15 @@ for test in *$USER_FLAG; do
   if [ "$runThisTest" = "0" ]; then
     continue
   fi
- 
+  
+  
+  # if the file is an executable
   if [ -f "$test" -a -x "$test" ]; then
-    if [ "$WithArches" = "no" -a "$test" = "ARCHES" ]; then
-      echo ""
-      echo "Skipping test \"${test}-${mode}\" at `date`"
-      echo "(ARCHES did not compile)"
-      failed=1
-      continue; # skip arches test
-    fi
+
 #   echo ""
 #   echo "Running test \"${test}-${mode}\" at `date`"
-
+    #__________________________________
+    # create the do<component>tests  python script
     cd "${BUILDROOT}/${mode}"
     doTestScript="do${test}tests"
     echo "#!/bin/tcsh" > "$doTestScript"
@@ -113,6 +101,11 @@ for test in *$USER_FLAG; do
     echo "python TestScripts/$test susdir inputs goldStandard $mode $PARALLELISM "'$1' >> "$doTestScript"
  
     /bin/chmod a+x "$doTestScript"
+    
+    
+    #__________________________________
+    # run the python script that contains all the
+    # tests for that component
     rm -f "${BUILDROOT}/${mode}/${test}-short.log"
     "$doTestScript" > "${test}.log"  2>&1
     retval=$?
@@ -122,6 +115,8 @@ for test in *$USER_FLAG; do
     
     cd TestScripts
 
+    #__________________________________
+    # Setting and removing component locks
     if [ $retval = "0" ]; then
       echo "Passed: ${test}-${mode} tests! "
  
@@ -145,10 +140,6 @@ for test in *$USER_FLAG; do
   fi
 done
 
-if [ "$USER" != "" ]; then
-  cd "${BUILDROOT}/${mode}/R_TesterScripts"
-  rm *$USER_FLAG
-fi
 
 echo ""
 echo "Finished $mode tests on `date`"
