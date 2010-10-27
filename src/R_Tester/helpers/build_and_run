@@ -1,14 +1,15 @@
 #!/bin/sh
-
+#______________________________________________________________________
+#  This script calls two separate scripts to 
+#  compile the code and run the regression testss
+#
 # $BUILD_DIR $BUILDROOT, $HTMLLOG, $NOTESTS, $PARALLELISM, $COMPILE, and $MAKE_PARALLELISM must be set
 
 mode=$1 # dbg or opt
-
-WithArches="yes"
-
-export WithArches
 retval=0
 
+#__________________________________
+#  Create the build directory and compile the code.
 if [ "$COMPILE" = "yes" ]; then
   # create the build directory 
   if [ ! -d "${BUILDROOT}/${mode}/build" ]; then
@@ -27,7 +28,56 @@ if [ "$COMPILE" = "yes" ]; then
 fi
 
 #__________________________________
-#  Run the tests
+# If the code compiled successfully
+#    - generate the symbolic links
+#    - check for the goldStandards
+if [ "$retval" = "0" -a "$NOTESTS" = "0" ]; then
+  cd "${BUILDROOT}/${mode}"
+
+  if [ ! -d TestScripts ]; then
+    ln -s ../src/R_Tester TestScripts
+  fi
+
+  if [ ! -f replace_all_GS ]; then
+    ln -s ../src/R_Tester/helpers/replace_all_GS replace_all_GS
+  fi
+
+  if [ ! -d susdir ]; then
+    ln -s build/StandAlone susdir
+  fi
+
+  if [ ! -d inputs ]; then
+    ln -s ../src/StandAlone/inputs inputs
+  fi
+
+  if [ ! -d CheckPoints ]; then
+    ln -s /usr/local/home/csafe-tester/CheckPoints CheckPoints
+  fi
+
+  # remove this in case it points to the wrong place
+  if [ -d goldStandard ]; then
+    rm -f goldStandard
+  fi
+  ln -s "${TEST_DATA}/${mode}" goldStandard
+
+  summary_log="${BUILDROOT}/${mode}/summary_log"
+  rm -f $summary_log
+  
+
+  # checking for GoldStandards
+  if [ ! -d "$TEST_DATA" ]; then
+    echo "TEST_DATA directory doesn't exist: $TEST_DATA"
+    exit -1;
+  fi
+
+  if [ ! -d "${TEST_DATA}/${mode}" ]; then
+    mkdir "${TEST_DATA}/${mode}"
+  fi
+fi
+
+
+#__________________________________
+#  Run the component tests
 if [ "$retval" = "0" -a "$NOTESTS" = "0" ]; then
   run $1
   retval=$?
