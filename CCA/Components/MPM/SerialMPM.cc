@@ -2944,7 +2944,7 @@ void SerialMPM::setPrescribedMotion(const ProcessorGroup*,
       // Now we need to construct the rotation matrix and its time rate:
       // We are only interested in the rotation information at the next specified time since the rotations specified should be relative to the previously specified time.  For example if I specify Theta=90 at time=1.0, and Theta = 91 and time=2.0 the total rotation at time=2.0 will be 181 degrees.
       //
-      const double pi = 3.1415926535897932384626433832795028841972;
+      const double pi = M_PI; //3.1415926535897932384626433832795028841972;
       const double degtorad= pi/180.0;
       double PrescribedTheta = d_prescribedAngle[s+1]; //The final angle of rotation
       double thetat = PrescribedTheta*degtorad*(time-t1)/(t2-t1); // rotation angle at current time
@@ -4239,7 +4239,7 @@ void SerialMPM::updateCohesiveZones(const ProcessorGroup*,
 		else {
 			gamma = 0;
 			alpha = gamma + atan(Rotation(0,1)/Rotation(0,2));
-			beta = 3.142/2;
+			beta = 0.5*M_PI;
 		}
 		Rotationx(0,0) = (cos(alpha) - axisx[0]*axisx[0])*cos(alpha) + axisx[0]*axisx[0];
 		Rotationx(0,1) = (- axisx[0]*axisx[1])*cos(alpha) + axisx[0]*axisx[1] - axisx[2]*sin(alpha);
