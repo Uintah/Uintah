@@ -1,12 +1,14 @@
+
+#!/bin/sh#
 #______________________________________________________________________
 # run:  This shell script
 #         - creates the symbolic links to the testscripts, inputs, goldstandards, and various component tests
 #         - Loop over all the components tests
 #         - set locks if a component's tests fails.
 
-#!/bin/sh
 
-# $TEST_DATA, $BUILD_DIR $BUILDROOT, $WEEKLY, $mode, $HTMLLOG, $PARALLELISM, and $MAKE_PARALLELISM must be set
+
+# $TEST_DATA, $BUILD_DIR $BUILDROOT, $mode, $HTMLLOG, $PARALLELISM, and $MAKE_PARALLELISM must be set
 
 mode=$1
 failed=0
@@ -58,31 +60,7 @@ cd TestScripts
 
 #__________________________________
 #  main loop over components RT tests
-
 for test in ""; do
-  # match this test to being run in a daily or weekly context
-  # also match to a user context
-  runThisTest=0;
-  if [ "$WEEKLY" = "1" ]; then
-    case "$test" in
-      *.wk*) runThisTest=1
-            ;;
-      *)    runThisTest=0
-            ;;
-    esac
-  else
-    case "$test" in
-      *.wk*) runThisTest=0
-            ;;
-      *)    runThisTest=1
-            ;;
-    esac
-  fi
- 
-  if [ "$runThisTest" = "0" ]; then
-    continue
-  fi
-  
   
   # if the file is an executable
   if [ -f "$test" -a -x "$test" ]; then
