@@ -20,7 +20,6 @@ WEEKLY="0"
 NOTESTS="0"
 MONTHLYBACKUP="no"
 mallocstrict="no"
-USER=""
 DO_DBG="1"
 DO_OPT="1"
 
@@ -117,12 +116,6 @@ while [ "$#" -gt 0 ]; do
     -help)
         show_help=1
         ;;
-    -user)
-        if [ "$#" -gt 1 ]; then
-            shift
-            USER="$1"
-        fi
-        ;;
      *)
         echo "$1: Unknown option, -help for help"
         exit 1
@@ -130,12 +123,6 @@ while [ "$#" -gt 0 ]; do
      esac
      shift
 done
-
-if [ "$USER" != "" ]; then
-  if [ "$USE_DEFAULT_BUILD" = "yes" -o "$USE_DEFAULT_TEST_DATA" = "yes" ]; then
-    show_help="1"
-  fi
-fi
 
 # usage string - exit
 if [ $show_help != "0" ]; then
@@ -157,9 +144,6 @@ if [ $show_help != "0" ]; then
             -weekly:                Run longer regression tests (meant for once a week)
             -build_dir:             Change the directory where SCIRun is downloaded to.
             -test_data:             Change the GoldStandard directory.
-            -user <user>:           Run the tests in Test/users/<user>/ instead of Test/
-              You must use either the -use_tree or -build_dir options and
-              the -test_data option
             -help:                  Display this option summary
 EOF
     exit 0
@@ -170,7 +154,7 @@ if [ "$WEEKLY" == "1" ]; then
 fi
 
 PATH="$PATH":"$SCRIPT_DIR":/usr/bin:/local/bin:/usr/sci/local/bin/:/usr/gnu/bin:/usr/local/bin:/bin:/usr/lib:.
-export PATH WEEKLY mallocstrict NOTESTS USER COMPILE
+export PATH WEEKLY mallocstrict NOTESTS COMPILE
 
 # set number of processors to use when building
 if [ "$PARALLELISM" == "0" ]; then
@@ -198,10 +182,6 @@ if [ $WEEKLY == "1" ]; then
   ID=`date +%a%b%d%y`
 else
   ID=`date +%m%d%y`
-fi
-
-if [ "$USER" != "" ]; then
-  ID="$ID"-"$USER"
 fi
 
 if [ $USE_TREE != "new" ]; then

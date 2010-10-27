@@ -12,7 +12,7 @@ hotBlob_AMR_3L_ups = modUPS("%s/ICE" % inputs_root(), \
 
 UNUSED = [  ]
 
-#  Test syntax: ( "folder name", "input file", # processors, "OS", ["flags1","flag2"])
+#  Test syntax: ( "folder name", "input file", # processors, "OS",["flags1","flag2"])
 #  flags: 
 #       no_uda_comparison:      - skip the uda comparisons
 #       no_memoryTest:          - skip all memory checks
