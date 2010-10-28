@@ -218,11 +218,11 @@ apply_to_field( const PhiVolT &src, PhiFaceT &dest ) const
   // In y direction, it will be nx. In z direction, it will be nx*ny
   typename PhiFaceT::const_iterator advVel = advectiveVelocity_->begin() + stride_;
 
-  for (int k=1; k<=zCount; k++) { // count zCount times
+  for (size_t k=1; k<=zCount; k++) { // count zCount times
     
-    for (int j=1; j<=yCount; j++) { // count yCount times
+    for (size_t j=1; j<=yCount; j++) { // count yCount times
       
-      for (int i =1; i<=xCount; i++) { // count xCount times
+      for (size_t i =1; i<=xCount; i++) { // count xCount times
         if ((*advVel) > 0.0) *destFld = *srcFieldMinus;
         else if ((*advVel) < 0.0) *destFld = *srcFieldPlus;
         else *destFld = 0.0; // may need a better condition here to account
