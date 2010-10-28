@@ -11,15 +11,17 @@ failed=0
 
 cd TestScripts
 
+# find all the component tests which are python scripts
+componentTests=`file * | grep python | cut -d: -f1`
+
 #__________________________________
 #  main loop over components RT tests
-for componentTest in ""; do
-  
+for componentTest in $componentTests; do
   # if the file is an executable
   if [ -f "$componentTest" -a -x "$componentTest" ]; then
 
-#   echo ""
-#   echo "Running test \"${componentTest}-${mode}\" at `date`"
+    #echo ""
+    #echo "Running test \"${componentTest}-${mode}\" at `date`"
     #__________________________________
     # create the do<component>tests  python script
     cd "${BUILDROOT}/${mode}"
