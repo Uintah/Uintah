@@ -113,6 +113,9 @@ WARNING
    string getCohesiveFilename() const;
    bool getDoRotation() const;
 
+   void computeRotationMatrix(Matrix3& Rotation, Matrix3& Rotation_tang,
+                              const Vector& norm, const Vector czsep) const;
+
  private:
 
    MPMLabel* d_lb;
