@@ -163,6 +163,7 @@
         <sig_max                           spec="OPTIONAL DOUBLE" />
         <tau_max                           spec="OPTIONAL DOUBLE" />
         <cz_filename                       spec="REQUIRED STRING" />
+        <do_rotation                       spec="OPTIONAL BOOLEAN" />
       </cohesive_zone>
       <thermal_contact                   spec="OPTIONAL NO_DATA" />
     </MPM>
