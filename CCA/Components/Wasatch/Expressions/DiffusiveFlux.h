@@ -6,7 +6,7 @@
 
 //-- SpatialOps includes --//
 #include <spatialops/OperatorDatabase.h>
-#include <spatialops/SpatialFieldStore.h>
+#include <spatialops/structured/SpatialFieldStore.h>  // jcs need to rework spatialops install structure
 
 
 /**

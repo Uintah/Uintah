@@ -14,7 +14,7 @@
 
 //-- SpatialOps includes --//
 #include <spatialops/OperatorDatabase.h>
-#include <spatialops/SpatialFieldStore.h>
+#include <spatialops/structured/SpatialFieldStore.h>
 
 /**
  *  \ingroup WasatchExpressions

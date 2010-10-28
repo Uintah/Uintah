@@ -45235,8 +45235,8 @@ echo "$as_me: error: '$with_spatialops' directory does not exist. " >&2;}
     fi
     SPOPS_INCLUDE_DIR="include/spatialops"
     # Check includes
-    for file in FieldFunctions.h LagrangePoly.h LinAlgTrilinos.h LinAlgUBlas.h LinearSystem.h OperatorDatabase.h SFIterator.h \
-                SpatialField.h SpatialFieldStore.h SpatialOperator.h SpatialOpsConfigure.h SpatialOpsDefs.h SpatialOpsTools.h \
+    for file in FieldFunctions.h LinAlgTrilinos.h LinAlgUBlas.h LinearSystem.h OperatorDatabase.h \
+                SpatialOperator.h SpatialOpsConfigure.h SpatialOpsDefs.h SpatialOpsTools.h \
                 particles structured; do
       if test ! -e $with_spatialops/$SPOPS_INCLUDE_DIR/$file; then
         echo ""
