@@ -67,6 +67,7 @@ ln -s "${TEST_DATA}/${mode}" goldStandard
 
 summary_log="${BUILDROOT}/${mode}/summary_log"
 rm -f $summary_log
+touch $summary_log
 
 
 # checking for GoldStandards
