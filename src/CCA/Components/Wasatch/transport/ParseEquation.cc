@@ -92,21 +92,21 @@ namespace Wasatch{
           std::cout << "Setting up staggered scalar transport equation in direction: '" << staggeredDirection << "'" << std::endl;
           typedef ScalarTransportEquation< XVolField > ScalarTransEqn;
           transeqn = scinew ScalarTransEqn( ScalarTransEqn::get_phi_name( params ),
-                                         ScalarTransEqn::get_rhs_expr_id( *solnGraphHelper->exprFactory, params ) );
+                                            ScalarTransEqn::get_rhs_expr_id( *solnGraphHelper->exprFactory, params ) );
           adaptor = scinew EqnTimestepAdaptor< XVolField >( transeqn );
           
         } else if ( staggeredDirection=="Y" ) {
           std::cout << "Setting up staggered scalar transport equation in direction: '" << staggeredDirection << "'" << std::endl;
           typedef ScalarTransportEquation< YVolField > ScalarTransEqn;
           transeqn = scinew ScalarTransEqn( ScalarTransEqn::get_phi_name( params ),
-                                         ScalarTransEqn::get_rhs_expr_id( *solnGraphHelper->exprFactory, params ) );
+                                            ScalarTransEqn::get_rhs_expr_id( *solnGraphHelper->exprFactory, params ) );
           adaptor = scinew EqnTimestepAdaptor< YVolField >( transeqn );
           
         } else if (staggeredDirection=="Z") {
           std::cout << "Setting up staggered scalar transport equation in direction: '" << staggeredDirection << "'" << std::endl;
           typedef ScalarTransportEquation< ZVolField > ScalarTransEqn;
           transeqn = scinew ScalarTransEqn( ScalarTransEqn::get_phi_name( params ),
-                                         ScalarTransEqn::get_rhs_expr_id( *solnGraphHelper->exprFactory, params ) );
+                                            ScalarTransEqn::get_rhs_expr_id( *solnGraphHelper->exprFactory, params ) );
           adaptor = scinew EqnTimestepAdaptor< ZVolField >( transeqn );
           
         } else {
