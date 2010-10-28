@@ -172,7 +172,7 @@ apply_to_field( const PhiVolT &src, PhiFaceT &dest ) const
       incrFZ = 1;
       incrVolY = 1;
       incrVolZ = 1;
-      if (hasPlusFace_[0]) incrFY++;  // jcs should this be incremented by NGHOST?
+      if (hasPlusFace_[0]) incrFY++;
       xCount = dim_[0] + 2*SrcGhost::NGHOST -1;
       yCount = dim_[1] + 2*SrcGhost::NGHOST;
       zCount = dim_[2] + 2*SrcGhost::NGHOST;
@@ -218,13 +218,10 @@ apply_to_field( const PhiVolT &src, PhiFaceT &dest ) const
   // In y direction, it will be nx. In z direction, it will be nx*ny
   typename PhiFaceT::const_iterator advVel = advectiveVelocity_->begin() + stride_;
 
-  // jcs should this start at NGHOST rather than 1?
   for (int k=1; k<=zCount; k++) { // count zCount times
     
-    // jcs should this start at NGHOST rather than 1?
     for (int j=1; j<=yCount; j++) { // count yCount times
       
-      // jcs should this start at NGHOST rather than 1?
       for (int i =1; i<=xCount; i++) { // count xCount times
         if ((*advVel) > 0.0) *destFld = *srcFieldMinus;
         else if ((*advVel) < 0.0) *destFld = *srcFieldPlus;
