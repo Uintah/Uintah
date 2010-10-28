@@ -2252,8 +2252,8 @@ void SerialMPM::addCohesiveZoneForces(const ProcessorGroup*,
 //        double length = sqrt(czlength[idx]);
 //        Vector size(length,length,length);
         Vector size(0.1,0.1,0.1);
-	Matrix3 defgrad;
-	defgrad.Identity();
+        Matrix3 defgrad;
+        defgrad.Identity();
 
         // Get the node indices that surround the cell
         interpolator->findCellAndWeights(czx[idx],ni,S,size,defgrad);
@@ -4180,8 +4180,8 @@ void SerialMPM::updateCohesiveZones(const ProcessorGroup*,
 //        double length = sqrt(czlength[idx]);
 //        Vector size(length,length,length);
         Vector size(0.1,0.1,0.1);
-	Matrix3 defgrad;
-	defgrad.Identity();
+        Matrix3 defgrad;
+        defgrad.Identity();
 
         // Get the node indices that surround the cell
         interpolator->findCellAndWeights(czx[idx],ni,S,size,defgrad);
@@ -4204,81 +4204,81 @@ void SerialMPM::updateCohesiveZones(const ProcessorGroup*,
         czDispBot_new[idx]   = czDispBot[idx] + velBot*delT;
         czsep_new[idx]       = czDispTop_new[idx] - czDispBot_new[idx];
 
-	double disp = czsep_new[idx].length();
+        double disp = czsep_new[idx].length();
 
-	Vector axis = Cross(cznorm[idx],czsep_new[idx]/disp);
-	double theta = acos(1.0-(0.5*Dot(czsep_new[idx],czsep_new[idx])));
+        Vector axis = Cross(cznorm[idx],czsep_new[idx]/disp);
+        double theta = acos(1.0-(0.5*Dot(czsep_new[idx],czsep_new[idx])));
 
-	double ca = cos(theta); double sa = sin(theta);
+        double ca = cos(theta); double sa = sin(theta);
 
-	Matrix3 Rotation;
-	Rotation(0,0) = (ca - axis[0]*axis[0])*ca + axis[0]*axis[0];
-	Rotation(0,1) = (- axis[0]*axis[1])*ca + axis[0]*axis[1] - axis[2]*sa;
-	Rotation(0,2) = (- axis[0]*axis[2])*ca + axis[0]*axis[2] + axis[1]*sa;
-	Rotation(1,0) = (- axis[1]*axis[0])*ca + axis[1]*axis[0] + axis[2]*sa;
-	Rotation(1,1) = (ca - axis[1]*axis[1])*ca + axis[1]*axis[1]; 
-	Rotation(1,2) = (- axis[1]*axis[2])*ca + axis[1]*axis[2] - axis[0]*sa;
-	Rotation(2,0) = (- axis[2]*axis[0])*ca + axis[2]*axis[0] - axis[1]*sa;
-	Rotation(2,1) = (- axis[2]*axis[1])*ca + axis[2]*axis[1] + axis[0]*sa; 
-	Rotation(2,2) = (ca - axis[2]*axis[2])*ca + axis[2]*axis[2];
+        if (disp > 0){
+          Matrix3 Rotation;
+          Rotation(0,0) = (ca - axis[0]*axis[0])*ca + axis[0]*axis[0];
+          Rotation(0,1) = (- axis[0]*axis[1])*ca + axis[0]*axis[1] - axis[2]*sa;
+          Rotation(0,2) = (- axis[0]*axis[2])*ca + axis[0]*axis[2] + axis[1]*sa;
+          Rotation(1,0) = (- axis[1]*axis[0])*ca + axis[1]*axis[0] + axis[2]*sa;
+          Rotation(1,1) = (ca - axis[1]*axis[1])*ca + axis[1]*axis[1]; 
+          Rotation(1,2) = (- axis[1]*axis[2])*ca + axis[1]*axis[2] - axis[0]*sa;
+          Rotation(2,0) = (- axis[2]*axis[0])*ca + axis[2]*axis[0] - axis[1]*sa;
+          Rotation(2,1) = (- axis[2]*axis[1])*ca + axis[2]*axis[1] + axis[0]*sa; 
+          Rotation(2,2) = (ca - axis[2]*axis[2])*ca + axis[2]*axis[2];
 
-	if (disp > 0){
-		cznorm_new[idx]=Rotation*cznorm[idx];
-		Vector axisx(1.0,0.0,0.0);
-		Vector axisy(0.0,1.0,0.0);
-		Vector axisz(0.0,0.0,1.0);
-		double alpha = 0.; double beta = 0.; double gamma = 0.;
-		Matrix3 Rotationx;
-		Matrix3 Rotationy;
-		Matrix3 Rotationz;
-		if (fabs(Rotation(2,0) != 1)){
-			beta = -asin(Rotation(2,0));
-			alpha = atan(Rotation(2,1)/Rotation(2,2));
-			gamma = atan(Rotation(1,0)/Rotation(0,0));
-		}
-		else {
-			gamma = 0;
-			alpha = gamma + atan(Rotation(0,1)/Rotation(0,2));
-			beta = 0.5*M_PI;
-		}
-		Rotationx(0,0) = (cos(alpha) - axisx[0]*axisx[0])*cos(alpha) + axisx[0]*axisx[0];
-		Rotationx(0,1) = (- axisx[0]*axisx[1])*cos(alpha) + axisx[0]*axisx[1] - axisx[2]*sin(alpha);
-		Rotationx(0,2) = (- axisx[0]*axisx[2])*cos(alpha) + axisx[0]*axisx[2] + axisx[1]*sin(alpha);
-		Rotationx(1,0) = (- axisx[1]*axisx[0])*cos(alpha) + axisx[1]*axisx[0] + axisx[2]*sin(alpha);
-		Rotationx(1,1) = (cos(alpha) - axisx[1]*axisx[1])*cos(alpha) + axisx[1]*axisx[1]; 
-		Rotationx(1,2) = (- axisx[1]*axisx[2])*cos(alpha) + axisx[1]*axisx[2] - axisx[0]*sin(alpha);
-		Rotationx(2,0) = (- axisx[2]*axisx[0])*cos(alpha) + axisx[2]*axisx[0] - axisx[1]*sin(alpha);
-		Rotationx(2,1) = (- axisx[2]*axisx[1])*cos(alpha) + axisx[2]*axisx[1] + axisx[0]*sin(alpha); 
-		Rotationx(2,2) = (cos(alpha) - axisx[2]*axisx[2])*cos(alpha) + axisx[2]*axisx[2];
+          cznorm_new[idx]=Rotation*cznorm[idx];
+          Vector axisx(1.0,0.0,0.0);
+          Vector axisy(0.0,1.0,0.0);
+          Vector axisz(0.0,0.0,1.0);
+          double alpha = 0.; double beta = 0.; double gamma = 0.;
+          Matrix3 Rotationx;
+          Matrix3 Rotationy;
+          Matrix3 Rotationz;
+          if (fabs(Rotation(2,0) != 1)){
+            beta = -asin(Rotation(2,0));
+            alpha = atan(Rotation(2,1)/Rotation(2,2));
+            gamma = atan(Rotation(1,0)/Rotation(0,0));
+          }
+          else {
+            gamma = 0;
+            alpha = gamma + atan(Rotation(0,1)/Rotation(0,2));
+            beta = 0.5*M_PI;
+          }
+          Rotationx(0,0) = (cos(alpha) - axisx[0]*axisx[0])*cos(alpha) + axisx[0]*axisx[0];
+          Rotationx(0,1) = (- axisx[0]*axisx[1])*cos(alpha) + axisx[0]*axisx[1] - axisx[2]*sin(alpha);
+          Rotationx(0,2) = (- axisx[0]*axisx[2])*cos(alpha) + axisx[0]*axisx[2] + axisx[1]*sin(alpha);
+          Rotationx(1,0) = (- axisx[1]*axisx[0])*cos(alpha) + axisx[1]*axisx[0] + axisx[2]*sin(alpha);
+          Rotationx(1,1) = (cos(alpha) - axisx[1]*axisx[1])*cos(alpha) + axisx[1]*axisx[1]; 
+          Rotationx(1,2) = (- axisx[1]*axisx[2])*cos(alpha) + axisx[1]*axisx[2] - axisx[0]*sin(alpha);
+          Rotationx(2,0) = (- axisx[2]*axisx[0])*cos(alpha) + axisx[2]*axisx[0] - axisx[1]*sin(alpha);
+          Rotationx(2,1) = (- axisx[2]*axisx[1])*cos(alpha) + axisx[2]*axisx[1] + axisx[0]*sin(alpha); 
+          Rotationx(2,2) = (cos(alpha) - axisx[2]*axisx[2])*cos(alpha) + axisx[2]*axisx[2];
 
-		Rotationy(0,0) = (cos(beta) - axisy[0]*axisy[0])*cos(alpha) + axisy[0]*axisy[0];
-		Rotationy(0,1) = (- axisy[0]*axisy[1])*cos(beta) + axisy[0]*axisy[1] - axisy[2]*sin(beta);
-		Rotationy(0,2) = (- axisy[0]*axisy[2])*cos(beta) + axisy[0]*axisy[2] + axisy[1]*sin(beta);
-		Rotationy(1,0) = (- axisy[1]*axisy[0])*cos(beta) + axisy[1]*axisy[0] + axisy[2]*sin(beta);
-		Rotationy(1,1) = (cos(beta) - axisy[1]*axisy[1])*cos(beta) + axisy[1]*axisy[1]; 
-		Rotationy(1,2) = (- axisy[1]*axisy[2])*cos(beta) + axisy[1]*axisy[2] - axisy[0]*sin(beta);
-		Rotationy(2,0) = (- axisy[2]*axisy[0])*cos(beta) + axisy[2]*axisy[0] - axisy[1]*sin(beta);
-		Rotationy(2,1) = (- axisy[2]*axisy[1])*cos(beta) + axisy[2]*axisy[1] + axisy[0]*sin(beta); 
-		Rotationy(2,2) = (cos(beta) - axisy[2]*axisy[2])*cos(beta) + axisy[2]*axisy[2];
+          Rotationy(0,0) = (cos(beta) - axisy[0]*axisy[0])*cos(alpha) + axisy[0]*axisy[0];
+          Rotationy(0,1) = (- axisy[0]*axisy[1])*cos(beta) + axisy[0]*axisy[1] - axisy[2]*sin(beta);
+          Rotationy(0,2) = (- axisy[0]*axisy[2])*cos(beta) + axisy[0]*axisy[2] + axisy[1]*sin(beta);
+          Rotationy(1,0) = (- axisy[1]*axisy[0])*cos(beta) + axisy[1]*axisy[0] + axisy[2]*sin(beta);
+          Rotationy(1,1) = (cos(beta) - axisy[1]*axisy[1])*cos(beta) + axisy[1]*axisy[1]; 
+          Rotationy(1,2) = (- axisy[1]*axisy[2])*cos(beta) + axisy[1]*axisy[2] - axisy[0]*sin(beta);
+          Rotationy(2,0) = (- axisy[2]*axisy[0])*cos(beta) + axisy[2]*axisy[0] - axisy[1]*sin(beta);
+          Rotationy(2,1) = (- axisy[2]*axisy[1])*cos(beta) + axisy[2]*axisy[1] + axisy[0]*sin(beta); 
+          Rotationy(2,2) = (cos(beta) - axisy[2]*axisy[2])*cos(beta) + axisy[2]*axisy[2];
 
-		Rotationz(0,0) = (cos(gamma) - axisz[0]*axisz[0])*cos(gamma) + axisz[0]*axisz[0];
-		Rotationz(0,1) = (- axisz[0]*axisz[1])*cos(gamma) + axisz[0]*axisz[1] - axisz[2]*sin(gamma);
-		Rotationz(0,2) = (- axisz[0]*axisz[2])*cos(gamma) + axisz[0]*axisz[2] + axisz[1]*sin(gamma);
-		Rotationz(1,0) = (- axisz[1]*axisz[0])*cos(gamma) + axisz[1]*axisz[0] + axisz[2]*sin(gamma);
-		Rotationz(1,1) = (cos(gamma) - axisz[1]*axisz[1])*cos(gamma) + axisz[1]*axisz[1]; 
-		Rotationz(1,2) = (- axisz[1]*axisz[2])*cos(gamma) + axisz[1]*axisz[2] - axisz[0]*sin(gamma);
-		Rotationz(2,0) = (- axisz[2]*axisz[0])*cos(gamma) + axisz[2]*axisz[0] - axisz[1]*sin(gamma);
-		Rotationz(2,1) = (- axisz[2]*axisz[1])*cos(gamma) + axisz[2]*axisz[1] + axisz[0]*sin(gamma); 
-		Rotationz(2,2) = (cos(gamma) - axisz[2]*axisz[2])*cos(gamma) + axisz[2]*axisz[2];
+          Rotationz(0,0) = (cos(gamma) - axisz[0]*axisz[0])*cos(gamma) + axisz[0]*axisz[0];
+          Rotationz(0,1) = (- axisz[0]*axisz[1])*cos(gamma) + axisz[0]*axisz[1] - axisz[2]*sin(gamma);
+          Rotationz(0,2) = (- axisz[0]*axisz[2])*cos(gamma) + axisz[0]*axisz[2] + axisz[1]*sin(gamma);
+          Rotationz(1,0) = (- axisz[1]*axisz[0])*cos(gamma) + axisz[1]*axisz[0] + axisz[2]*sin(gamma);
+          Rotationz(1,1) = (cos(gamma) - axisz[1]*axisz[1])*cos(gamma) + axisz[1]*axisz[1]; 
+          Rotationz(1,2) = (- axisz[1]*axisz[2])*cos(gamma) + axisz[1]*axisz[2] - axisz[0]*sin(gamma);
+          Rotationz(2,0) = (- axisz[2]*axisz[0])*cos(gamma) + axisz[2]*axisz[0] - axisz[1]*sin(gamma);
+          Rotationz(2,1) = (- axisz[2]*axisz[1])*cos(gamma) + axisz[2]*axisz[1] + axisz[0]*sin(gamma); 
+          Rotationz(2,2) = (cos(gamma) - axisz[2]*axisz[2])*cos(gamma) + axisz[2]*axisz[2];
 
-		cztang_new[idx] = Rotationz*Rotationy*Rotationx*cztang[idx];
-	}
-	else {
-		cznorm_new[idx]=cznorm[idx];
-		cztang_new[idx]=cztang[idx];
-	}
+          cztang_new[idx] = Rotationz*Rotationy*Rotationx*cztang[idx];
+        }
+        else {
+          cznorm_new[idx]=cznorm[idx];
+          cztang_new[idx]=cztang[idx];
+        }
 
-	Vector cztang2 = Cross(cztang_new[idx],cznorm_new[idx]);
+        Vector cztang2 = Cross(cztang_new[idx],cznorm_new[idx]);
 
         double D_n  = Dot(czsep_new[idx],cznorm_new[idx]);
         double D_t1 = Dot(czsep_new[idx],cztang_new[idx]);
