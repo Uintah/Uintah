@@ -6878,7 +6878,7 @@ elif test "$debug" = "yes"; then
 echo "${ECHO_T}yes (-g) " >&6; }
 else
   OGL_ERR_MACRO="#define OGL_DBG 1"
-  extra_cflags="$debug ${extra_cflags}"
+  extra_cflags="$debug ${extra_cflags} -DNDEBUG"
   { echo "$as_me:$LINENO: result: yes ($debug) " >&5
 echo "${ECHO_T}yes ($debug) " >&6; }
 fi

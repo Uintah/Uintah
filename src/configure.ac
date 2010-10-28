@@ -899,7 +899,7 @@ elif test "$debug" = "yes"; then
   AC_MSG_RESULT(yes (-g) )
 else
   OGL_ERR_MACRO="#define OGL_DBG 1"
-  extra_cflags="$debug ${extra_cflags}"
+  extra_cflags="$debug ${extra_cflags} -DNDEBUG"
   AC_MSG_RESULT(yes ($debug) )
 fi
 
