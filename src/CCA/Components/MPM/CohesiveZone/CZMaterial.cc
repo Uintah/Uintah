@@ -69,6 +69,7 @@ CZMaterial::standardInitialization(ProblemSpecP& ps, MPMFlags* flags)
   ps->require("sig_max",d_sig_max);
   ps->require("tau_max",d_tau_max);
   ps->require("cz_filename",d_cz_filename);
+  ps->getWithDefault("do_rotation",d_do_rotation,false);
 }
 
 // Default constructor
@@ -97,6 +98,7 @@ ProblemSpecP CZMaterial::outputProblemSpec(ProblemSpecP& ps)
   cz_ps->appendElement("sig_max",d_sig_max);
   cz_ps->appendElement("tau_max",d_tau_max);
   cz_ps->appendElement("cz_filename",d_cz_filename);
+  cz_ps->appendElement("do_rotation",d_do_rotation);
 
   return cz_ps;
 }
@@ -110,6 +112,7 @@ CZMaterial::copyWithoutGeom(ProblemSpecP& ps,const CZMaterial* mat,
   d_sig_max = mat->d_sig_max;
   d_tau_max = mat->d_tau_max;
   d_cz_filename = mat->d_cz_filename;
+  d_do_rotation = mat->d_do_rotation;
 
 //  d_cohesive_zone = scinew CohesiveZone(this,flags);
 }
@@ -142,4 +145,9 @@ double CZMaterial::getCohesiveTangentialStrength() const
 string CZMaterial::getCohesiveFilename() const
 {
   return d_cz_filename;
+}
+
+bool CZMaterial::getDoRotation() const
+{
+  return d_do_rotation;
 }

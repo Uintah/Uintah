@@ -111,6 +111,7 @@ WARNING
    double getCohesiveNormalStrength() const;
    double getCohesiveTangentialStrength() const;
    string getCohesiveFilename() const;
+   bool getDoRotation() const;
 
  private:
 
@@ -121,6 +122,7 @@ WARNING
    double d_delta_t;
    double d_sig_max;
    double d_tau_max;
+   bool d_do_rotation;
    string d_cz_filename;
 
    // Prevent copying of this class
