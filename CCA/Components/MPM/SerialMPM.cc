@@ -4154,8 +4154,6 @@ void SerialMPM::updateCohesiveZones(const ProcessorGroup*,
 
 
       czlength_new.copyData(czlength);
-//    cznorm_new.copyData(cznorm);
-//    cztang_new.copyData(cztang);
       czids_new.copyData(czids);
       czTopMat_new.copyData(czTopMat);
       czBotMat_new.copyData(czBotMat);
@@ -4165,6 +4163,7 @@ void SerialMPM::updateCohesiveZones(const ProcessorGroup*,
       double tau_max = cz_matl->getCohesiveTangentialStrength();
       double delta_t = cz_matl->getCharLengthTangential();
       double delta_s = delta_t;
+      bool rotate_CZs= cz_matl->getDoRotation();
 
       double phi_n = M_E*sig_max*delta_n;
       double phi_t = sqrt(M_E/2)*tau_max*delta_t;
@@ -4205,13 +4204,11 @@ void SerialMPM::updateCohesiveZones(const ProcessorGroup*,
         czsep_new[idx]       = czDispTop_new[idx] - czDispBot_new[idx];
 
         double disp = czsep_new[idx].length();
+        if (disp > 0 && rotate_CZs){
+          Vector axis = Cross(cznorm[idx],czsep_new[idx]/disp);
+          double theta = acos(1.0-(0.5*Dot(czsep_new[idx],czsep_new[idx])));
+          double ca = cos(theta); double sa = sin(theta);
 
-        Vector axis = Cross(cznorm[idx],czsep_new[idx]/disp);
-        double theta = acos(1.0-(0.5*Dot(czsep_new[idx],czsep_new[idx])));
-
-        double ca = cos(theta); double sa = sin(theta);
-
-        if (disp > 0){
           Matrix3 Rotation;
           Rotation(0,0) = (ca - axis[0]*axis[0])*ca + axis[0]*axis[0];
           Rotation(0,1) = (- axis[0]*axis[1])*ca + axis[0]*axis[1] - axis[2]*sa;
