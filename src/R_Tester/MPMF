@@ -1,8 +1,10 @@
 #!/usr/bin/python
 
 from sys import argv,exit
+from os import environ
 from helpers.runSusTests import runSusTests
 
+#______________________________________________________________________
 #  Test syntax: ( "folder name", "input file", # processors, "OS", ["flags1","flag2"])
 #  flags: 
 #       no_uda_comparison:      - skip the uda comparisons
@@ -18,9 +20,20 @@ from helpers.runSusTests import runSusTests
 #       startFromCheckpoint     - start test from checkpoint. (/usr/local/home/csafe-tester/CheckPoints/..../testname.uda.000)
 #
 #  Note: the "folder name" must be the same as input file without the extension.
+#______________________________________________________________________
 
-TESTS = [   ("regressionFMPM", "regressionFMPM.ups", 4, "Linux",  ["no_restart"]), \
-            ("regressionFMPM", "regressionFMPM.ups", 4, "Darwin", ["doesTestRun","no_restart"]) \
-    	]
+NIGHTLYTESTS = [   ("regressionFMPM", "regressionFMPM.ups", 4, "Linux",  ["no_restart"]), \
+                   ("regressionFMPM", "regressionFMPM.ups", 4, "Darwin", ["doesTestRun","no_restart"]) \
+    	        ]
+               
+# Tests that are run during local regression testing               
+LOCALTESTS =   [   ("regressionFMPM", "regressionFMPM.ups", 4, "Linux",  ["no_restart"]) ]
+
+
+#__________________________________
+if environ['LOCAL_OR_NIGHTLY_TEST'] == "local":
+  TESTS = LOCALTESTS
+else:
+  TESTS = NIGHTLYTESTS
 
 exit(runSusTests(argv, TESTS, "MPMF"))

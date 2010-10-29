@@ -1,8 +1,8 @@
 #!/usr/bin/python
-
+from os import environ
 from sys import argv,exit
 from helpers.runSusTests import runSusTests
-
+#______________________________________________________________________
 #  Test syntax: ( "folder name", "input file", # processors, "OS", ["flags1","flag2"])
 #  flags: 
 #       no_uda_comparison:      - skip the uda comparisons
@@ -18,9 +18,24 @@ from helpers.runSusTests import runSusTests
 #       startFromCheckpoint     - start test from checkpoint. (/usr/local/home/csafe-tester/CheckPoints/..../testname.uda.000)
 #
 #  Note: the "folder name" must be the same as input file without the extension.
-TESTS = [   ("HePlume",       "HePlume.ups",     1.1, "Linux",  ["exactComparison"]), \
-            ("HePlume",       "HePlume.ups",     1.1, "Darwin", ["doesTestRun"]), \
-            ("JP8_Radiation", "JP8_Radiation.ups", 4, "Linux",  ["exactComparison"])
-    	]
+#______________________________________________________________________
+
+NIGHTLYTESTS = [   ("HePlume",       "HePlume.ups",     1.1, "Linux",  ["exactComparison"]), \
+                   ("HePlume",       "HePlume.ups",     1.1, "Darwin", ["doesTestRun"]), \
+                   ("JP8_Radiation", "JP8_Radiation.ups", 4, "Linux",  ["exactComparison"])
+    	        ]
+               
+               
+# Tests that are run during local regression testing               
+LOCALTESTS   = [   ("HePlume",       "HePlume.ups",     1.1, "Linux",  ["exactComparison"]), \
+                   ("HePlume",       "HePlume.ups",     1.1, "Darwin", ["doesTestRun"]), \
+                   ("JP8_Radiation", "JP8_Radiation.ups", 4, "Linux",  ["exactComparison"])
+    	        ]
+
+#__________________________________
+if environ['LOCAL_OR_NIGHTLY_TEST'] == "local":
+  TESTS = LOCALTESTS
+else:
+  TESTS = NIGHTLYTESTS
 
 exit(runSusTests(argv, TESTS, "Models"))

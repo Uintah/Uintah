@@ -1,26 +1,27 @@
 #!/bin/sh
 
 # to differentiate among the build names & even directories
-OS=`uname -s`
-
-USE_DEFAULT_BUILD="yes"
-SCRIPT_DIR=/usr/local/home/csafe-tester/scripts
-USE_DEFAULT_TEST_DATA="yes"
 COMPILE="yes"
-USE_PREVTREE="no"
-USE_TREE="new"
-SEND_MAIL_TO=""
-MAIL_REMAKE_LOG_TO=""
 DEFAULT_MAIL_TO="uintah-developer@gforge.sci.utah.edu"
 DEFAULT_REMAKE_LOG_TO="dav@cs.utah.edu"
-REPLY_TO="uintah-developer@gforge.sci.utah.edu"
-PARALLELISM=0
-VERBOSE="no"
-NOTESTS="0"
-MONTHLYBACKUP="no"
-mallocstrict="no"
 DO_DBG="1"
 DO_OPT="1"
+LOCAL_OR_NIGHTLY_TEST="nightly"
+MAIL_REMAKE_LOG_TO=""
+mallocstrict="no"
+MONTHLYBACKUP="no"
+NOTESTS="0"
+OS=`uname -s`
+PARALLELISM=0
+REPLY_TO="uintah-developer@gforge.sci.utah.edu"
+SCRIPT_DIR=/usr/local/home/csafe-tester/scripts
+SEND_MAIL_TO=""
+USE_DEFAULT_BUILD="yes"
+USE_DEFAULT_TEST_DATA="yes"
+USE_PREVTREE="no"
+USE_TREE="new"
+VERBOSE="no"
+
 
 BUILD_DIR=/usr/local/home/csafe-tester/"$OS"
 TEST_DATA=/usr/local/home/csafe-tester/"$OS"/TestData
@@ -145,7 +146,7 @@ fi
 
 
 PATH="$PATH":"$SCRIPT_DIR":/usr/bin:/local/bin:/usr/sci/local/bin/:/usr/gnu/bin:/usr/local/bin:/bin:/usr/lib:.
-export PATH mallocstrict NOTESTS COMPILE
+export PATH mallocstrict NOTESTS COMPILE LOCAL_OR_NIGHTLY_TEST
 
 # set number of processors to use when building
 if [ "$PARALLELISM" == "0" ]; then
