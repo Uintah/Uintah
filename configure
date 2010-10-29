@@ -6873,12 +6873,12 @@ echo "${ECHO_T}no" >&6; }
   DEBUG=no
 elif test "$debug" = "yes"; then
   OGL_ERR_MACRO="#define OGL_DBG 1"
-  extra_cflags="-g ${extra_cflags} -DNDEBUG"
+  extra_cflags="-g ${extra_cflags}"
   { echo "$as_me:$LINENO: result: yes (-g) " >&5
 echo "${ECHO_T}yes (-g) " >&6; }
 else
   OGL_ERR_MACRO="#define OGL_DBG 1"
-  extra_cflags="$debug ${extra_cflags} -DNDEBUG"
+  extra_cflags="$debug ${extra_cflags}"
   { echo "$as_me:$LINENO: result: yes ($debug) " >&5
 echo "${ECHO_T}yes ($debug) " >&6; }
 fi
@@ -6891,7 +6891,7 @@ echo $ECHO_N "checking whether optimize was enabled... $ECHO_C" >&6; }
 if test "$optimize" = "no"; then
   if test "$debug" = "no"; then
     # neither debug nor optimize specified, DEFAULT TO: optimized
-    extra_cflags="-O2 ${extra_cflags}"
+    extra_cflags="-O2 -DNDEBUG ${extra_cflags}"
     { echo "$as_me:$LINENO: result: no (default to -O2) " >&5
 echo "${ECHO_T}no (default to -O2) " >&6; }
   else
@@ -6903,11 +6903,11 @@ echo "${ECHO_T}no (default to -O2) " >&6; }
 echo "${ECHO_T}no (${no_optimize_flag}) " >&6; }
   fi
 elif test "$optimize" = "yes"; then
-  extra_cflags="-O2 ${extra_cflags}"
+  extra_cflags="-O2 -DNDEBUG ${extra_cflags}"
   { echo "$as_me:$LINENO: result: yes (-O2) " >&5
 echo "${ECHO_T}yes (-O2) " >&6; }
 else
-  extra_cflags="$optimize ${extra_cflags}"
+  extra_cflags="$optimize -DNDEBUG ${extra_cflags}"
   { echo "$as_me:$LINENO: result: yes ($optimize) " >&5
 echo "${ECHO_T}yes ($optimize) " >&6; }
 fi

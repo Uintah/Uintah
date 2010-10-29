@@ -895,11 +895,11 @@ if test "$debug" = "no"; then
   DEBUG=no
 elif test "$debug" = "yes"; then
   OGL_ERR_MACRO="#define OGL_DBG 1"
-  extra_cflags="-g ${extra_cflags} -DNDEBUG"
+  extra_cflags="-g ${extra_cflags}"
   AC_MSG_RESULT(yes (-g) )
 else
   OGL_ERR_MACRO="#define OGL_DBG 1"
-  extra_cflags="$debug ${extra_cflags} -DNDEBUG"
+  extra_cflags="$debug ${extra_cflags}"
   AC_MSG_RESULT(yes ($debug) )
 fi
 
@@ -910,7 +910,7 @@ AC_MSG_CHECKING(whether optimize was enabled)
 if test "$optimize" = "no"; then
   if test "$debug" = "no"; then
     # neither debug nor optimize specified, DEFAULT TO: optimized
-    extra_cflags="-O2 ${extra_cflags}"
+    extra_cflags="-O2 -DNDEBUG ${extra_cflags}"
     AC_MSG_RESULT(no (default to -O2) )
   else
     # Debug mode specified
@@ -920,10 +920,10 @@ if test "$optimize" = "no"; then
     AC_MSG_RESULT(no (${no_optimize_flag}) )
   fi
 elif test "$optimize" = "yes"; then
-  extra_cflags="-O2 ${extra_cflags}"
+  extra_cflags="-O2 -DNDEBUG ${extra_cflags}"
   AC_MSG_RESULT(yes (-O2) )
 else
-  extra_cflags="$optimize ${extra_cflags}"
+  extra_cflags="$optimize -DNDEBUG ${extra_cflags}"
   AC_MSG_RESULT(yes ($optimize) )
 fi
 
