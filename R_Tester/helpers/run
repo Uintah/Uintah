@@ -38,7 +38,7 @@ rm -f "${BUILDROOT}/${mode}/${componentTest}-short.log"
 "$doTestScript" > "${componentTest}.log"  2>&1
 retval=$?
 
-cat "${componentTest}.log" >> "$summary_log"
+cat "${componentTest}.log" >> summary_log
 cat "${componentTest}.log" >> "$HTMLLOG"
 
 cd TestScripts
