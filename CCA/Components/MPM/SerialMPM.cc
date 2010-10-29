@@ -4168,7 +4168,9 @@ void SerialMPM::updateCohesiveZones(const ProcessorGroup*,
       double phi_n = M_E*sig_max*delta_n;
       double phi_t = sqrt(M_E/2)*tau_max*delta_t;
       double q = phi_t/phi_n;
-      q=1.;
+      // From the text following Eq. 15 in Nitin's paper it is a little hard
+      // to tell what r should be, but zero seems like a reasonable value
+      // based on the example problem in that paper
       double r=0.;
 
       // Loop over particles
