@@ -29,7 +29,7 @@ def nullCallback (test, susdir, inputsdir, compare_root, dbg_opt, max_parallelis
 # all of the paramaters given to runSusTest
 def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
  
-  if len(argv) < 6 or len(argv) > 7 or not argv[4] in ["dbg", "opt"] :
+  if len(argv) < 6 or len(argv) > 7 or not argv[4] in ["dbg", "opt", "local"] :
     print "usage: %s <susdir> <inputsdir> <testdata_goldstandard> <dbg_opt> " \
              "<max_parallelsim> <test>" % argv[0]
     print "    where <test> is optional"
@@ -60,8 +60,7 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
   
   # If run from startTester, tell it to output logs in web dir
   # otherwise, save it in the build, and display links
-  try:
-
+  if dbg_opt != "local":
     # if webpath exists, use that, otherwise, use BUILDROOT/dbg_opt
     outputpath    = "%s-%s" % (environ['HTMLLOG'], dbg_opt)
     weboutputpath = "%s-%s" % (environ['WEBLOG'],  dbg_opt)
@@ -72,8 +71,7 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
       system("chmod -R 775 %s" % outputpath)
     except Exception:
       pass
-
-  except Exception:
+  else:
     outputpath = startpath
     weboutputpath = startpath
 
@@ -222,6 +220,8 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
       continue
     if do_opt == 0 and dbg_opt == "opt":
       continue
+    if do_debug == "local":
+       continue
       
     if dbg_opt == "opt":
       do_memory = 0

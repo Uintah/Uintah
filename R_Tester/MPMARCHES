@@ -4,7 +4,7 @@ from os import symlink,environ
 from sys import argv,exit,platform
 from helpers.runSusTests import runSusTests, inputs_root
 from helpers.modUPS import modUPS
-
+#______________________________________________________________________
 #  Test syntax: ( "folder name", "input file", # processors, "OS", ["flags1","flag2"])
 #  flags: 
 #       no_uda_comparison:      - skip the uda comparisons
@@ -20,11 +20,21 @@ from helpers.modUPS import modUPS
 #       startFromCheckpoint     - start test from checkpoint. (/usr/local/home/csafe-tester/CheckPoints/..../testname.uda.000)
 #
 #  Note: the "folder name" must be the same as input file without the extension.
+#______________________________________________________________________
 
-TESTS = [
-        ("mpmpipe_test", "mpmpipe_test.ups", 8, "Linux", ["exactComparison"]),
-        ("methaneFireWContainer", "methaneFireWContainer.ups", 1.1, "Linux", ["exactComparison","no_restart"])
-] 
-                     
+NIGHTLYTESTS = [  ("mpmpipe_test",           "mpmpipe_test.ups",          8,  "Linux", ["exactComparison"]),
+                  ("methaneFireWContainer", "methaneFireWContainer.ups", 1.1, "Linux", ["exactComparison","no_restart"])
+               ]
+               
+LOCALTESTS =   [  ("mpmpipe_test",           "mpmpipe_test.ups",          8,  "Linux", ["exactComparison"]),
+                  ("methaneFireWContainer", "methaneFireWContainer.ups", 1.1, "Linux", ["exactComparison","no_restart"])
+               ]  
+
+#__________________________________
+if environ['LOCAL_OR_NIGHTLY_TEST'] == "local":
+  TESTS = LOCALTESTS
+else:
+  TESTS = NIGHTLYTESTS
+       
 exit(runSusTests(argv, TESTS, "MPMARCHES"))
 

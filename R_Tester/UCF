@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-from os import chdir,getcwd,mkdir,system
+from os import chdir,getcwd,mkdir,system, environ
 from sys import argv,exit,platform
 from helpers.runSusTests import runSusTests, inputs_root
 from helpers.modUPS import modUPS
@@ -23,6 +23,7 @@ from helpers.modUPS import modUPS
 #       startFromCheckpoint     - start test from checkpoint. (/usr/local/home/csafe-tester/CheckPoints/..../testname.uda.000) 
 #
 #  Note: the "folder name" must be the same as input file without the extension.
+#______________________________________________________________________
 
 UNUSED = [ ("ice_perf_test",    "icePerformanceTest.ups",    1, "Linux","", ["do_performance_test"]),  \
            ("mpmice_perf_test", "mpmicePerformanceTest.ups", 1, "Linux","", ["do_performance_test"]), \

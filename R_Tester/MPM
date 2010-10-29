@@ -1,13 +1,10 @@
 #!/usr/bin/python
 
 from sys import argv,exit
+from os import environ
 from helpers.runSusTests import runSusTests
 
-UNUSED = [  ("test_cyl_pene_hypo_jc_ero", "test_cyl_pene_hypo_jc_ero.ups", 1, "ALL"), \
-	    ("testConvert1MAdd", "testConvert1MAdd.ups", 1, "ALL"), \
-            ]
-
-
+#______________________________________________________________________
 #  Test syntax: ( "folder name", "input file", # processors, "OS", ["flags1","flag2"])
 #  flags: 
 #       no_uda_comparison:      - skip the uda comparisons
@@ -23,38 +20,72 @@ UNUSED = [  ("test_cyl_pene_hypo_jc_ero", "test_cyl_pene_hypo_jc_ero.ups", 1, "A
 #       startFromCheckpoint     - start test from checkpoint. (/usr/local/home/csafe-tester/CheckPoints/..../testname.uda.000)
 #
 #  Note: the "folder name" must be the same as input file without the extension.
-TESTS = [  
-           ("disks2mat4patch",                 "disks2mat4patch.ups",                4,  "Linux", ["exactComparison"]),    \
-           ("heatcond2mat",                   "heatcond2mat.ups",                   1,  "Linux", ["exactComparison"]),    \
-           ("inclined_plane_sphere",          "inclined_plane_sphere.ups",          1,  "Linux", ["exactComparison"]),    \
-           ("foam_crush",                     "foam_crush.ups",                     4,  "Linux", ["exactComparison"]),    \
-           ("periodic_disks",                 "periodic_disks.ups",                 6,  "Linux", ["exactComparison"]),    \
-           ("const_test_hypo",                "const_test_hypo.ups",                1,  "Linux", ["exactComparison"]),    \
-           ("const_test_cmr",                 "const_test_cmr.ups",                 1,  "Linux", ["exactComparison"]),    \
-           ("const_test_nhp",                 "const_test_nhp.ups",                 1,  "Linux", ["exactComparison"]),    \
-           ("const_test_vs",                  "const_test_vs.ups",                  1,  "Linux", ["exactComparison"]),    \
-           ("adiCuJC4000s696K",               "adiCuJC4000s696K.ups",               1,  "Linux", ["exactComparison"]),    \
-           ("adiCuMTS4000s696K",              "adiCuMTS4000s696K.ups",              1,  "Linux", ["exactComparison"]),    \
-           ("adiCuPTW4000s696K",              "adiCuPTW4000s696K.ups",              1,  "Linux", ["exactComparison"]),    \
-           ("adiCuSCG4000s696K",              "adiCuSCG4000s696K.ups",              1,  "Linux", ["exactComparison"]),    \
-           ("adiCuZA4000s696K",               "adiCuZA4000s696K.ups",               1,  "Linux", ["exactComparison"]),    \
-           ("test_corrug_plate",              "test_corrug_plate.ups",              1,  "Linux", ["exactComparison"]),    \
-           ("test_cyl_pene_no_ero",           "test_cyl_pene_no_ero.ups",           1,  "Linux", ["exactComparison"]),    \
-           ("test_gurson_beckerdrucker_mts",  "test_gurson_beckerdrucker_mts.ups",  1,  "Linux", ["exactComparison"]),    \
+#______________________________________________________________________
+
+NIGHTLYTESTS = [  
+                 ("disks2mat4patch",                 "disks2mat4patch.ups",                4,  "Linux", ["exactComparison"]),    \
+                 ("heatcond2mat",                   "heatcond2mat.ups",                   1,  "Linux", ["exactComparison"]),    \
+                 ("inclined_plane_sphere",          "inclined_plane_sphere.ups",          1,  "Linux", ["exactComparison"]),    \
+                 ("foam_crush",                     "foam_crush.ups",                     4,  "Linux", ["exactComparison"]),    \
+                 ("periodic_disks",                 "periodic_disks.ups",                 6,  "Linux", ["exactComparison"]),    \
+                 ("const_test_hypo",                "const_test_hypo.ups",                1,  "Linux", ["exactComparison"]),    \
+                 ("const_test_cmr",                 "const_test_cmr.ups",                 1,  "Linux", ["exactComparison"]),    \
+                 ("const_test_nhp",                 "const_test_nhp.ups",                 1,  "Linux", ["exactComparison"]),    \
+                 ("const_test_vs",                  "const_test_vs.ups",                  1,  "Linux", ["exactComparison"]),    \
+                 ("adiCuJC4000s696K",               "adiCuJC4000s696K.ups",               1,  "Linux", ["exactComparison"]),    \
+                 ("adiCuMTS4000s696K",              "adiCuMTS4000s696K.ups",              1,  "Linux", ["exactComparison"]),    \
+                 ("adiCuPTW4000s696K",              "adiCuPTW4000s696K.ups",              1,  "Linux", ["exactComparison"]),    \
+                 ("adiCuSCG4000s696K",              "adiCuSCG4000s696K.ups",              1,  "Linux", ["exactComparison"]),    \
+                 ("adiCuZA4000s696K",               "adiCuZA4000s696K.ups",               1,  "Linux", ["exactComparison"]),    \
+                 ("test_corrug_plate",              "test_corrug_plate.ups",              1,  "Linux", ["exactComparison"]),    \
+                 ("test_cyl_pene_no_ero",           "test_cyl_pene_no_ero.ups",           1,  "Linux", ["exactComparison"]),    \
+                 ("test_gurson_beckerdrucker_mts",  "test_gurson_beckerdrucker_mts.ups",  1,  "Linux", ["exactComparison"]),    \
            
-           ("disks2mat4patch",                "disks2mat4patch.ups",                4,  "Darwin", ["doesTestRun"]),    \
-           ("heatcond2mat",                   "heatcond2mat.ups",                   1,  "Darwin", ["doesTestRun"]),    \
-           ("inclined_plane_sphere",          "inclined_plane_sphere.ups",          1,  "Darwin", ["doesTestRun"]),    \
-           ("const_test_cmr",                 "const_test_cmr.ups",                 1,  "Darwin", ["doesTestRun"]),    \
-           ("const_test_nhp",                 "const_test_nhp.ups",                 1,  "Darwin", ["doesTestRun"]),    \
-           ("adiCuJC4000s696K",               "adiCuJC4000s696K.ups",               1,  "Darwin", ["doesTestRun"]),    \
-           ("adiCuMTS4000s696K",              "adiCuMTS4000s696K.ups",              1,  "Darwin", ["doesTestRun"]),    \
-           ("adiCuPTW4000s696K",              "adiCuPTW4000s696K.ups",              1,  "Darwin", ["doesTestRun"]),    \
-           ("adiCuSCG4000s696K",              "adiCuSCG4000s696K.ups",              1,  "Darwin", ["doesTestRun"]),    \
-           ("adiCuZA4000s696K",               "adiCuZA4000s696K.ups",               1,  "Darwin", ["doesTestRun"]),    \
-           ("test_corrug_plate",              "test_corrug_plate.ups",              1,  "Darwin", ["doesTestRun"]),    \
-           ("test_cyl_pene_no_ero",           "test_cyl_pene_no_ero.ups",           1,  "Darwin", ["doesTestRun"]),    \
-           ("test_gurson_beckerdrucker_mts",  "test_gurson_beckerdrucker_mts.ups",  1,  "Darwin", ["doesTestRun"]),    \
-    	]
+                 ("disks2mat4patch",                "disks2mat4patch.ups",                4,  "Darwin", ["doesTestRun"]),    \
+                 ("heatcond2mat",                   "heatcond2mat.ups",                   1,  "Darwin", ["doesTestRun"]),    \
+                 ("inclined_plane_sphere",          "inclined_plane_sphere.ups",          1,  "Darwin", ["doesTestRun"]),    \
+                 ("const_test_cmr",                 "const_test_cmr.ups",                 1,  "Darwin", ["doesTestRun"]),    \
+                 ("const_test_nhp",                 "const_test_nhp.ups",                 1,  "Darwin", ["doesTestRun"]),    \
+                 ("adiCuJC4000s696K",               "adiCuJC4000s696K.ups",               1,  "Darwin", ["doesTestRun"]),    \
+                 ("adiCuMTS4000s696K",              "adiCuMTS4000s696K.ups",              1,  "Darwin", ["doesTestRun"]),    \
+                 ("adiCuPTW4000s696K",              "adiCuPTW4000s696K.ups",              1,  "Darwin", ["doesTestRun"]),    \
+                 ("adiCuSCG4000s696K",              "adiCuSCG4000s696K.ups",              1,  "Darwin", ["doesTestRun"]),    \
+                 ("adiCuZA4000s696K",               "adiCuZA4000s696K.ups",               1,  "Darwin", ["doesTestRun"]),    \
+                 ("test_corrug_plate",              "test_corrug_plate.ups",              1,  "Darwin", ["doesTestRun"]),    \
+                 ("test_cyl_pene_no_ero",           "test_cyl_pene_no_ero.ups",           1,  "Darwin", ["doesTestRun"]),    \
+                 ("test_gurson_beckerdrucker_mts",  "test_gurson_beckerdrucker_mts.ups",  1,  "Darwin", ["doesTestRun"])
+    	       ]
+              
+              
+# Tests that are run during local regression testing              
+LOCALTESTS = [  
+                 ("disks2mat4patch",                 "disks2mat4patch.ups",                4,  "Linux", ["exactComparison"]),    \
+                 ("heatcond2mat",                   "heatcond2mat.ups",                   1,  "Linux", ["exactComparison"]),    \
+                 ("inclined_plane_sphere",          "inclined_plane_sphere.ups",          1,  "Linux", ["exactComparison"]),    \
+                 ("foam_crush",                     "foam_crush.ups",                     4,  "Linux", ["exactComparison"]),    \
+                 ("periodic_disks",                 "periodic_disks.ups",                 6,  "Linux", ["exactComparison"]),    \
+                 ("const_test_hypo",                "const_test_hypo.ups",                1,  "Linux", ["exactComparison"]),    \
+                 ("const_test_cmr",                 "const_test_cmr.ups",                 1,  "Linux", ["exactComparison"]),    \
+                 ("const_test_nhp",                 "const_test_nhp.ups",                 1,  "Linux", ["exactComparison"]),    \
+                 ("const_test_vs",                  "const_test_vs.ups",                  1,  "Linux", ["exactComparison"]),    \
+                 ("adiCuJC4000s696K",               "adiCuJC4000s696K.ups",               1,  "Linux", ["exactComparison"]),    \
+                 ("adiCuMTS4000s696K",              "adiCuMTS4000s696K.ups",              1,  "Linux", ["exactComparison"]),    \
+                 ("adiCuPTW4000s696K",              "adiCuPTW4000s696K.ups",              1,  "Linux", ["exactComparison"]),    \
+                 ("adiCuSCG4000s696K",              "adiCuSCG4000s696K.ups",              1,  "Linux", ["exactComparison"]),    \
+                 ("adiCuZA4000s696K",               "adiCuZA4000s696K.ups",               1,  "Linux", ["exactComparison"]),    \
+                 ("test_corrug_plate",              "test_corrug_plate.ups",              1,  "Linux", ["exactComparison"]),    \
+                 ("test_cyl_pene_no_ero",           "test_cyl_pene_no_ero.ups",           1,  "Linux", ["exactComparison"]),    \
+                 ("test_gurson_beckerdrucker_mts",  "test_gurson_beckerdrucker_mts.ups",  1,  "Linux", ["exactComparison"])
+    	       ]
+
+UNUSED =      [  ("test_cyl_pene_hypo_jc_ero", "test_cyl_pene_hypo_jc_ero.ups", 1, "ALL"), \
+	          ("testConvert1MAdd", "testConvert1MAdd.ups", 1, "ALL"), \
+              ]
+#__________________________________
+if environ['LOCAL_OR_NIGHTLY_TEST'] == "local":
+  TESTS = LOCALTESTS
+else:
+  TESTS = NIGHTLYTESTS
+
 
 exit(runSusTests(argv, TESTS, "MPM"))
