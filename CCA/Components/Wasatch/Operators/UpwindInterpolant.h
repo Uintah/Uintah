@@ -12,6 +12,7 @@
 #include <cmath>
 #include "spatialops/SpatialOpsDefs.h"
 #include "spatialops/structured/FVTools.h"
+#include "spatialops/structured/FVStaggeredIndexHelper.h"
 
 /**
  *  \class     UpwindInterpolant
@@ -50,10 +51,12 @@ private:
   // volume in question. For the x direction, theStride = 0. 
   // For the y direction, stride_ = nx. For the z direction, stride_=nx*ny.
   size_t stride_; 
-  // extra face
-  const std::vector<bool> hasPlusFace_;
-  // dimension of the domain
-  const std::vector<int> dim_;
+  // IndexHelper object - help in calculating stride
+  SpatialOps::structured::IndexHelper<PhiVolT,PhiFaceT> indexHelper_;
+  // some counters to help in the evaluate member function
+  std::vector<size_t> xyzCount_;
+  std::vector<size_t> xyzVolIncr_;
+  std::vector<size_t> xyzFaceIncr_;
   
 public:
   
@@ -111,29 +114,45 @@ public:
 template <typename PhiVolT, typename PhiFaceT>
 UpwindInterpolant<PhiVolT,PhiFaceT>::
 UpwindInterpolant( const std::vector<int>& dim, const std::vector<bool> hasPlusFace )
-  : hasPlusFace_(hasPlusFace),
-    dim_(dim)
+  : indexHelper_(dim,hasPlusFace[0],hasPlusFace[1],hasPlusFace[2])
 {
-  // TSAAD - TODO: MOVE THIS TO FVTOOLS IN SPATIALOPS
-  //stride_ = get_stride<DestFieldT>(dim, hasPlusFace)
-  switch ( PhiFaceT::Location::FaceDir::value ) {
-      
-  case SpatialOps::XDIR::value:
-    stride_ = 1;
-    break;
-      
-  case SpatialOps::YDIR::value:
-    stride_ = SpatialOps::structured::get_nx_with_ghost<SrcFieldType>(dim[0],hasPlusFace[0]);
-    break;
-      
-  case SpatialOps::ZDIR::value:
-    stride_ = SpatialOps::structured::get_nx_with_ghost<SrcFieldType>(dim[0],hasPlusFace[0])
-            * SpatialOps::structured::get_ny_with_ghost<SrcFieldType>(dim[1],hasPlusFace[1]);
-    break;
-      
-  default:
-    break;
+  
+  stride_ = indexHelper_.calculate_stride();
+  xyzCount_.resize(3);
+  xyzVolIncr_.resize(3);
+  xyzFaceIncr_.resize(3);  
+  
+  int nGhost = 2*SrcGhost::NGHOST;
+  for (int i=0;i<=2;i++) {
+    xyzFaceIncr_[i] = 0;
+    xyzVolIncr_[i] = 0;
+    xyzCount_[i] = dim[i] + nGhost;
   }
+  
+  const size_t direction = PhiFaceT::Location::FaceDir::value;
+  switch (direction) {
+      
+    case SpatialOps::XDIR::value:
+      xyzFaceIncr_[1] = 1;
+      xyzVolIncr_[1] = 1;
+      if (hasPlusFace[0]) xyzFaceIncr_[1] += 1;
+      xyzCount_[0] -= 1;
+      break;
+      
+    case SpatialOps::YDIR::value:
+      xyzFaceIncr_[2] = stride_;
+      xyzVolIncr_[2] = stride_;      
+      if (hasPlusFace[1]) xyzFaceIncr_[2] += stride_;
+      xyzCount_[1] -= 1;
+      break;
+      
+    case SpatialOps::ZDIR::value:
+      // NOTE: for the z direction, xyzVolIncr & xyzFaceIncr are all zero.
+      // no need to set them here as they are initialized to zero previously.
+      if (hasPlusFace[2]) xyzFaceIncr_[2] += stride_;
+      xyzCount_[2] -= 1;
+      break;
+  }  
 }
 
 //--------------------------------------------------------------------
@@ -161,53 +180,12 @@ void
 UpwindInterpolant<PhiVolT,PhiFaceT>::
 apply_to_field( const PhiVolT &src, PhiFaceT &dest ) const
 {   
-  // jcs can't we set all of this at construction?
-  size_t xCount, yCount, zCount, incrFY=0, incrFZ=0, incrVolY=0, incrVolZ=0;
-
-  const size_t direction = PhiFaceT::Location::FaceDir::value;
-  switch (direction) {
-      
-    case SpatialOps::XDIR::value:
-      incrFY = 1;
-      incrFZ = 1;
-      incrVolY = 1;
-      incrVolZ = 1;
-      if (hasPlusFace_[0]) incrFY++;
-      xCount = dim_[0] + 2*SrcGhost::NGHOST -1;
-      yCount = dim_[1] + 2*SrcGhost::NGHOST;
-      zCount = dim_[2] + 2*SrcGhost::NGHOST;
-      break;
-      
-    case SpatialOps::YDIR::value:
-      incrVolY = 0;
-      incrVolZ = stride_;
-      incrFY = 0;
-      incrFZ = stride_;
-      if (hasPlusFace_[1]) incrFZ += stride_;
-      xCount = dim_[0] + 2*SrcGhost::NGHOST;
-      yCount = dim_[1] + 2*SrcGhost::NGHOST-1;
-      zCount = dim_[2] + 2*SrcGhost::NGHOST;
-      break;
-      
-    case SpatialOps::ZDIR::value:
-      incrVolY = 0;
-      incrVolZ = 0;
-      incrFY = 0;
-      incrFZ = 0;
-      if (hasPlusFace_[2]) incrFZ += stride_;      
-      xCount = dim_[0] + 2*SrcGhost::NGHOST;
-      yCount = dim_[1] + 2*SrcGhost::NGHOST;
-      zCount = dim_[2] + 2*SrcGhost::NGHOST-1;
-      break;
-  }  
-
   /* Algorithm: TSAAD - TODO - DESCRIBE ALGORITHM IN DETAIL
    * Loop over faces
    */
   //
   // Source field on the minus side of a face
   typename PhiVolT::const_iterator srcFieldMinus = src.begin();
-  
   // Source field on the plus side of a face
   typename PhiVolT::const_iterator srcFieldPlus = src.begin() + stride_; 
   // Destination field (face). Starts on the first face for that particular field
@@ -218,31 +196,31 @@ apply_to_field( const PhiVolT &src, PhiFaceT &dest ) const
   // In y direction, it will be nx. In z direction, it will be nx*ny
   typename PhiFaceT::const_iterator advVel = advectiveVelocity_->begin() + stride_;
 
-  for (size_t k=1; k<=zCount; k++) { // count zCount times
+  for (size_t k=1; k<=xyzCount_[2]; k++) { // count zCount times
     
-    for (size_t j=1; j<=yCount; j++) { // count yCount times
+    for (size_t j=1; j<=xyzCount_[1]; j++) { // count yCount times
       
-      for (size_t i =1; i<=xCount; i++) { // count xCount times
+      for (size_t i =1; i<=xyzCount_[0]; i++) { // count xCount times
         if ((*advVel) > 0.0) *destFld = *srcFieldMinus;
         else if ((*advVel) < 0.0) *destFld = *srcFieldPlus;
-        else *destFld = 0.0; // may need a better condition here to account
+        else *destFld = 0.0; // may need a better condition here to account for
                              // a tolerance value for example.
         
-        ++destFld;
-        ++srcFieldPlus;
         ++srcFieldMinus;
+        ++srcFieldPlus;
+        ++destFld;
         ++advVel;
       }
       
-      srcFieldPlus  += incrVolY;
-      srcFieldMinus += incrVolY;
-      advVel  += incrFY;
-      destFld += incrFY;   
+      srcFieldMinus += xyzVolIncr_[1];      
+      srcFieldPlus  += xyzVolIncr_[1];
+      destFld += xyzFaceIncr_[1];   
+      advVel  += xyzFaceIncr_[1];
     }
-    
-    srcFieldPlus  += incrVolZ - incrVolY;
-    srcFieldMinus += incrVolZ - incrVolY;
-    advVel  += incrFZ - incrFY;
-    destFld += incrFZ - incrFY;    
+
+    srcFieldMinus += xyzVolIncr_[2];
+    srcFieldPlus  += xyzVolIncr_[2];
+    destFld += xyzFaceIncr_[2];    
+    advVel  += xyzFaceIncr_[2];
   }
 }
