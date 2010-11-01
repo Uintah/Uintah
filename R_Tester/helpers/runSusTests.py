@@ -233,13 +233,20 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
 
     #__________________________________
     # bulletproofing
-    # does gold standard exists
+    # Does gold standard exists?
+    # If it doesn't then either throw an error (local RT) or generate it (Nightly RT).
     try:
       chdir(compare_root)
       chdir(testname)
     except Exception:
+      if dbg_opt == "local":
+        print "ERROR: The gold standard for the (%s) test does not exist." % testname
+        print "To generate it run: \n   make xxxx"
+        exit(1) 
+      
       chdir(compare_root)
       mkdir(testname)
+      
     
     if startFrom == "checkpoint":
       try:
