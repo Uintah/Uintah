@@ -29,11 +29,22 @@ NIGHTLYTESTS = [   ("regressionFMPM", "regressionFMPM.ups", 4, "Linux",  ["no_re
 # Tests that are run during local regression testing               
 LOCALTESTS =   [   ("regressionFMPM", "regressionFMPM.ups", 4, "Linux",  ["no_restart"]) ]
 
+#__________________________________
+
+def getNightlyTests() :
+  return TESTS
+
+def getLocalTests() :
+  return TESTS
 
 #__________________________________
-if environ['LOCAL_OR_NIGHTLY_TEST'] == "local":
-  TESTS = LOCALTESTS
-else:
-  TESTS = NIGHTLYTESTS
 
-exit(runSusTests(argv, TESTS, "MPMF"))
+if __name__ == "__main__":
+
+  if environ['LOCAL_OR_NIGHTLY_TEST'] == "local":
+    TESTS = LOCALTESTS
+  else:
+    TESTS = NIGHTLYTESTS
+
+  result = runSusTests(argv, TESTS, "MPMF")
+  exit( result )

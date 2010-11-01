@@ -56,7 +56,6 @@ NIGHTLYTESTS = [
                  ("test_gurson_beckerdrucker_mts",  "test_gurson_beckerdrucker_mts.ups",  1,  "Darwin", ["doesTestRun"])
     	       ]
               
-              
 # Tests that are run during local regression testing              
 LOCALTESTS = [  
                  ("disks2mat4patch",                 "disks2mat4patch.ups",                4,  "Linux", ["exactComparison"]),    \
@@ -81,11 +80,24 @@ LOCALTESTS = [
 UNUSED =      [  ("test_cyl_pene_hypo_jc_ero", "test_cyl_pene_hypo_jc_ero.ups", 1, "ALL"), \
 	          ("testConvert1MAdd", "testConvert1MAdd.ups", 1, "ALL"), \
               ]
+
 #__________________________________
-if environ['LOCAL_OR_NIGHTLY_TEST'] == "local":
-  TESTS = LOCALTESTS
-else:
-  TESTS = NIGHTLYTESTS
 
+def getNightlyTests() :
+  return NIGHTLYTESTS
 
-exit(runSusTests(argv, TESTS, "MPM"))
+def getLocalTests() :
+  return LOCALTESTS
+
+#__________________________________
+
+if __name__ == "__main__":
+
+  if environ['LOCAL_OR_NIGHTLY_TEST'] == "local":
+    TESTS = LOCALTESTS
+  else:
+    TESTS = NIGHTLYTESTS
+
+  result = runSusTests(argv, TESTS, "MPM")
+  exit( result )
+

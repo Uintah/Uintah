@@ -5,12 +5,13 @@ from os import environ
 from helpers.runSusTests import runSusTests, inputs_root
 from helpers.modUPS import modUPS
 
-hotBlob_AMR_3L_ups = modUPS("%s/ICE" % inputs_root(), \
-                           "hotBlob_AMR.ups", \
-                           ["<max_levels>3</max_levels>",\
-                            "<lattice_refinement_ratio> [[5,5,1],[2,2,1]]  </lattice_refinement_ratio>",\
-                            "<filebase>AMR_HotBlob_3L.uda</filebase>"])
+#hotBlob_AMR_3L_ups = modUPS("%s/ICE" % inputs_root(), \
+#                           "hotBlob_AMR.ups", \
+#                           ["<max_levels>3</max_levels>",\
+#                            "<lattice_refinement_ratio> [[5,5,1],[2,2,1]]  </lattice_refinement_ratio>",\
+#                            "<filebase>AMR_HotBlob_3L.uda</filebase>"])
 
+#______________________________________________________________________
 #  Test syntax: ( "folder name", "input file", # processors, "OS",["flags1","flag2"])
 #  flags: 
 #       no_uda_comparison:      - skip the uda comparisons
@@ -42,19 +43,38 @@ NIGHTLYTESTS = [   ("advect",          "advect.ups",           1, "Linux", ["exa
                    ("advect2matAMR",   "advect2matAMR.ups",    1, "Linux", ["exactComparison"]),      \
                    ("advect2matAMR",   "advect2matAMR.ups",    1, "Darwin", ["doesTestRun"]),  \
                    ("hotBlob_AMR",     "hotBlob_AMR.ups",      4, "Linux", ["exactComparison"]),  \
-                   ("hotBlob_AMR_3L", hotBlob_AMR_3L_ups,      4, "Linux", ["exactComparison"]),  \
                    ("impAdvectAMR",    "impAdvectAMR.ups", 1.1, "Linux", ["exactComparison"])
               ]
+
+#                   ("hotBlob_AMR_3L", hotBlob_AMR_3L_ups,      4, "Linux", ["exactComparison"]),  \
 
 # Tests that are run during local regression testing
 LOCALTESTS = [   ("advect",           "advect.ups",           1, "Linux", ["exactComparison"]),    \
                  ("riemann_sm",       "riemann_sm.ups",       1, "Linux", ["exactComparison"])        
               ]
+hotBlob_AMR_3L_ups = modUPS("%s/ICE" % inputs_root(), \
+                           "hotBlob_AMR.ups", \
+                           ["<max_levels>3</max_levels>",\
+                            "<lattice_refinement_ratio> [[5,5,1],[2,2,1]]  </lattice_refinement_ratio>",\
+                            "<filebase>AMR_HotBlob_3L.uda</filebase>"])
 
+#__________________________________
 
-if environ['LOCAL_OR_NIGHTLY_TEST'] == "local":
-  TESTS = LOCALTESTS
-else:
-  TESTS = NIGHTLYTESTS
+def getNightlyTests() :
+  return TESTS
 
-exit(runSusTests(argv, TESTS, "ICE"))
+def getLocalTests() :
+  return TESTS
+
+#__________________________________
+
+if __name__ == "__main__":
+
+  if environ['LOCAL_OR_NIGHTLY_TEST'] == "local":
+    TESTS = LOCALTESTS
+  else:
+    TESTS = NIGHTLYTESTS
+
+  result = runSusTests(argv, TESTS, "ICE")
+  exit( result )
+

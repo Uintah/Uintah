@@ -1,7 +1,10 @@
 #!/usr/bin/python
-from os import environ
-from sys import argv,exit
-from helpers.runSusTests import runSusTests
+
+from os import symlink,environ
+from sys import argv,exit,platform
+from helpers.runSusTests import runSusTests, inputs_root
+from helpers.modUPS import modUPS
+
 #______________________________________________________________________
 #  Test syntax: ( "folder name", "input file", # processors, "OS", ["flags1","flag2"])
 #  flags: 
@@ -20,22 +23,31 @@ from helpers.runSusTests import runSusTests
 #  Note: the "folder name" must be the same as input file without the extension.
 #______________________________________________________________________
 
-NIGHTLYTESTS = [   ("HePlume",       "HePlume.ups",     1.1, "Linux",  ["exactComparison"]), \
-                   ("HePlume",       "HePlume.ups",     1.1, "Darwin", ["doesTestRun"]), \
-                   ("JP8_Radiation", "JP8_Radiation.ups", 4, "Linux",  ["exactComparison"])
-    	        ]
+NIGHTLYTESTS = [  ("mpmpipe_test",           "mpmpipe_test.ups",          8,  "Linux", ["exactComparison"]),
+                  ("methaneFireWContainer", "methaneFireWContainer.ups", 1.1, "Linux", ["exactComparison","no_restart"])
+               ]
                
-               
-# Tests that are run during local regression testing               
-LOCALTESTS   = [   ("HePlume",       "HePlume.ups",     1.1, "Linux",  ["exactComparison"]), \
-                   ("HePlume",       "HePlume.ups",     1.1, "Darwin", ["doesTestRun"]), \
-                   ("JP8_Radiation", "JP8_Radiation.ups", 4, "Linux",  ["exactComparison"])
-    	        ]
+LOCALTESTS =   [  ("mpmpipe_test",           "mpmpipe_test.ups",          8,  "Linux", ["exactComparison"]),
+                  ("methaneFireWContainer", "methaneFireWContainer.ups", 1.1, "Linux", ["exactComparison","no_restart"])
+               ]  
 
 #__________________________________
-if environ['LOCAL_OR_NIGHTLY_TEST'] == "local":
-  TESTS = LOCALTESTS
-else:
-  TESTS = NIGHTLYTESTS
+                     
+def getNightlyTests() :
+  return TESTS
 
-exit(runSusTests(argv, TESTS, "Models"))
+def getLocalTests() :
+  return TESTS
+
+#__________________________________
+
+if __name__ == "__main__":
+
+  if environ['LOCAL_OR_NIGHTLY_TEST'] == "local":
+    TESTS = LOCALTESTS
+  else:
+    TESTS = NIGHTLYTESTS
+
+  result = runSusTests(argv, TESTS, "MPMARCHES")
+  exit( result )
+

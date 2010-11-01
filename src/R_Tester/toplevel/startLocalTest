@@ -85,7 +85,10 @@ fi
 #__________________________________
 # Have the user pick a component
 # find all the component tests which are python scripts
-componentTests=`file TestScripts/* | grep python | cut -d: -f1 | cut -d/ -f2`
+
+#componentTests=`file TestScripts/* | grep python | cut -d: -f1 | cut -d/ -f2`
+componentTests=`ls TestScripts/*.py | grep -v __init__ | sed "s/.py//g" | sed "s,TestScripts/,,g"`
+
 list=""
 n="0"
 for comp in $componentTests; do
@@ -118,7 +121,7 @@ echo "setenv PATH $PATH"      >> "$doTestScript"
 echo "setenv OS $OS"          >> "$doTestScript"
 echo "setenv SCI_DEBUG \"\""  >> "$doTestScript"
 
-echo "python TestScripts/$componentTest susdir inputs goldStandard local $PARALLELISM "'$1' >> "$doTestScript"
+echo "python TestScripts/$componentTest.py susdir inputs goldStandard local $PARALLELISM "'$1' >> "$doTestScript"
 
 /bin/chmod a+x "$doTestScript"
 
