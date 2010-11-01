@@ -2,7 +2,7 @@
 
 #______________________________________________________________________
 #  startLocalTest:
-#     This script executes the regression tests for a single component
+#     This script executes the local regression tests for a single component
 
 
 #__________________________________
@@ -13,7 +13,6 @@ mallocstrict="no"
 OS=`uname -s`
 PARALLELISM=8
 WEBLOG=""
-
 BUILD_DIR=/dev/null
 
 export mallocstrict  BUILD_DIR  HTMLLOG WEBLOG LOCAL_OR_NIGHTLY_TEST OS
@@ -22,50 +21,18 @@ export mallocstrict  BUILD_DIR  HTMLLOG WEBLOG LOCAL_OR_NIGHTLY_TEST OS
 unset SHELL
 umask 002
 
-show_help=0
-if [ "$#" == 0 ]; then
-    show_help=1
+if [ "$#" != 1 ]; then
+  echo "Usage: startLocalTest \<Path to Build Directory\>"
+  exit
 fi
 
-# command line arguments
-while [ "$#" -gt 0 ]; do
-    case "$1" in
-    -build_dir)
-        if [ "$#" -gt 1 ]; then
-            shift
-            BUILD_DIR="$1"
-        fi
-        ;;
-    -component)
-        if [ "$#" -gt 1 ]; then
-            shift
-            componentTest="$1"
-        fi
-        ;;
-    -help)
-        show_help=1
-        ;;
-     *)
-        echo "$1: Unknown option, -help for help"
-        exit 1
-        ;;
-     esac
-     shift
-done
+BUILD_DIR="$1"
 
-# usage string - exit
-if [ $show_help != "0" ]; then
-    cat <<EOF
-    Usage: localTests_masterScript 
-        Options:
-            -build_dir:             The top level directory the code was compiled in.  For example, 100110SCIRun/opt_Linux.
-            -component:             Component regression test to run.
-            -help:                  Display this option summary
-EOF
-    exit 0
+
+if [ ! -d "${BUILD_DIR}" ]; then
+  echo "ERROR: The build directory $BUILD_DIR does not exist.  Now exiting"
+  exit -1
 fi
-
-
 
 
 cd "${BUILD_DIR}"
@@ -74,7 +41,7 @@ TEST_DATA="${BUILD_DIR}/TestData"
 #__________________________________
 #    - generate the symbolic links
 #    - check for the goldStandards
-mkdir local_RT
+mkdir local_RT >& /dev/null
 cd    local_RT
 
 if [ ! -d TestScripts ]; then
@@ -98,19 +65,51 @@ if [ -d goldStandard ]; then
 fi
 ln -s "${TEST_DATA}" goldStandard
 
-
-# checking for GoldStandards
+#__________________________________
+# bulletproofing
 if [ ! -d "$TEST_DATA" ]; then
-  echo "TEST_DATA directory doesn't exist: $TEST_DATA"
+  echo "ERROR: TestData directory doesn't exist: $TEST_DATA.  Now exiting"
   exit -1;
 fi
 
+if [ ! -f susdir/sus ]; then
+  echo "ERROR: The executable sus was not found.  Please compile it by running make uintah.  Now exiting"
+  exit -1;
+fi
+if [ ! -f susdir/compare_uda ]; then
+  echo "ERROR: The comparison utility compare_uda was not found.  Please compile it by running make uintah.  Now exiting"
+  exit -1;
+fi
+
+
+#__________________________________
+# Have the user pick a component
+# find all the component tests which are python scripts
+componentTests=`file TestScripts/* | grep python | cut -d: -f1 | cut -d/ -f2`
+list=""
+n="0"
+for comp in $componentTests; do
+  list="$list $comp - off,"
+  n=$(( $n + 1 ))
+done
+echo $list
+
+componentTest=`dialog --stdout --separate-output --checklist "Select the component for local regression testing" 20 50 40 $list`
+if [ $? != 0 ] ; then                                                                
+  echo "cancel selected"                                                                  
+  exit                                                                                    
+fi 
+
 #__________________________________
 # Now run the test
-echo "TIME STAMP: Regression Tester Starting at:"
+echo ""
+echo ""
 date
-echo "Running Tests"
+echo "Running $componentTest Tests"
 
+# clean up old test results
+/bin/rm $componentTest.log >/dev/null
+/bin/rm -rf $componentTest-results >/dev/null
 
 # create the do<component>tests  python script
 doTestScript="do${componentTest}tests"
@@ -132,8 +131,8 @@ retval=$?
 
 cat ${componentTest}.log
 
-echo "TIME STAMP: REGRESSION TESTER DONE AT:"
-date
+echo ""
+echo ""
 
-exit $retval
+exit
 
