@@ -16,10 +16,10 @@ UNUSED_TESTS = [   ("poisson2", "poisson2.ups", 1) ]
 #__________________________________
 
 def getNightlyTests() :
-  return TESTS
+  return NIGHTLYTESTS
 
 def getLocalTests() :
-  return TESTS
+  return LOCALTESTS
 
 #__________________________________
 

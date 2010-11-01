@@ -32,10 +32,10 @@ LOCALTESTS =   [   ("regressionFMPM", "regressionFMPM.ups", 4, "Linux",  ["no_re
 #__________________________________
 
 def getNightlyTests() :
-  return TESTS
+  return NIGHTLYTESTS
 
 def getLocalTests() :
-  return TESTS
+  return LOCALTESTS
 
 #__________________________________
 
