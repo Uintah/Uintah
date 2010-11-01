@@ -61,10 +61,10 @@ hotBlob_AMR_3L_ups = modUPS("%s/ICE" % inputs_root(), \
 #__________________________________
 
 def getNightlyTests() :
-  return TESTS
+  return NIGHTLYTESTS
 
 def getLocalTests() :
-  return TESTS
+  return LOCALTESTS
 
 #__________________________________
 

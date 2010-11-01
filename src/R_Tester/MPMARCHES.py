@@ -34,10 +34,10 @@ LOCALTESTS =   [  ("mpmpipe_test",           "mpmpipe_test.ups",          8,  "L
 #__________________________________
                      
 def getNightlyTests() :
-  return TESTS
+  return NIGHTLYTESTS
 
 def getLocalTests() :
-  return TESTS
+  return LOCALTESTS
 
 #__________________________________
 

@@ -53,10 +53,10 @@ LOCALTESTS =  [    ("massX",                 "massX.ups",                 1,  "L
 #__________________________________
 
 def getNightlyTests() :
-  return TESTS
+  return NIGHTLYTESTS
 
 def getLocalTests() :
-  return TESTS
+  return LOCALTESTS
 
 #__________________________________
 

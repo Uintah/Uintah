@@ -37,10 +37,10 @@ LOCALTESTS   = [   ("HePlume",       "HePlume.ups",     1.1, "Linux",  ["exactCo
 #__________________________________
 
 def getNightlyTests() :
-  return TESTS
+  return NIGHTLYTESTS
 
 def getLocalTests() :
-  return TESTS
+  return LOCALTESTS
 
 #__________________________________
 
