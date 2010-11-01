@@ -277,6 +277,6 @@ runLocalRT:
 	@echo "Now running local regression tester"
 	@echo "____________________________________"       
 	cd $(OBJTOP_ABS)
-	$(SRCTOP)/R_Tester/toplevel/startLocalTest -build_dir $(OBJTOP_ABS) -component ICE
+	$(SRCTOP)/R_Tester/toplevel/startLocalTest $(OBJTOP_ABS)
 	@echo "____________________________________"
 	@echo ""
