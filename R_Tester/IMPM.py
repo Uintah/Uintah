@@ -45,9 +45,20 @@ LOCALTESTS = [    ("4disks_2d.1mat",   "4disks_2d.1mat.ups", 1,   "None"), \
     	       ]       
 
 #__________________________________
-if environ['LOCAL_OR_NIGHTLY_TEST'] == "local":
-  TESTS = LOCALTESTS
-else:
-  TESTS = NIGHTLYTESTS
-  
-exit(runSusTests(argv, TESTS, "IMPM"))
+
+def getNightlyTests() :
+  return TESTS
+
+def getLocalTests() :
+  return TESTS
+
+if __name__ == "__main__":
+
+  if environ['LOCAL_OR_NIGHTLY_TEST'] == "local":
+    TESTS = LOCALTESTS
+  else:
+    TESTS = NIGHTLYTESTS
+
+  result = runSusTests(argv, TESTS, "IMPM")
+  exit( result )
+

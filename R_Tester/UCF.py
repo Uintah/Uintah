@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-from os import chdir,getcwd,mkdir,system, environ
+from os import chdir,getcwd,mkdir,system,environ
 from sys import argv,exit,platform
 from helpers.runSusTests import runSusTests, inputs_root
 from helpers.modUPS import modUPS
@@ -45,64 +45,73 @@ TESTS = [ ("ice_perf_test",    "icePerformanceTest.ups",    1, "Linux", ["do_per
 SCALE_TESTS = []
 retval = 0
 
-for test in SCALE_TESTS:
+def getNightlyTests() :
+  return TESTS
 
-  iterations = test[2]
+def getLocalTests() :
+  return TESTS
+
+if __name__ == "__main__":
+
+  for test in SCALE_TESTS:
   
-  # Starting resolution.  Double each iteration
-  xpatches = test[4]
-  ypatches = test[5]
-  zpatches = test[6]
-
-  xres = test[7]
-  yres = test[8]
-  zres = test[9]
-
-  max_parallelism = float(argv[5])
-
-  # do tests n times, double the procs each time, and double res and patches 
-  for i in range(0, iterations):
-    procs = 2**i
-    if procs > max_parallelism:
-      iterations=i  
-      break
-
-    # substitute the new resolution and patch configuration in the UPS file.
-    newUPS = modUPS("%s/UCF" % (inputs_root()), test[1], \
-                    ["<patches>[%d,%d,%d]</patches>" % (xpatches, ypatches, zpatches), "<resolution>[%d,%d,%d]</resolution>" % (xres,yres,zres)])
-    TESTS.append(("%s-%dproc" % (test[0],procs), newUPS, procs, test[3], ["do_performance_test"]))
-
-    # double the patches and resolution for the next run.
-    if xpatches <= ypatches and xpatches <= zpatches:
-      xpatches = xpatches*2
-    elif ypatches <= xpatches and ypatches <= zpatches:
-      ypatches = ypatches*2
-    else:
-      zpatches = zpatches*2
-
-    if xres <= yres and xres <= zres:
-      xres = xres*2
-    elif yres <= xres and yres <= zres:
-      yres = yres*2
-    else:
-      zres = zres*2
-
-code = runSusTests(argv, TESTS, "UCF")
-
-for test in SCALE_TESTS:
-
-  if retval != 3:
+    iterations = test[2]
     
-    # This dir should exist now, and each tests' subdir should be underneath
-    chdir("%s/UCF-results" % getcwd())
-    mkdir(test[0])
-
-    # Gather results into the log file
-    system("echo Scalability results for %s >> %s/scalability.log.txt" % (test[0], test[0]))
+    # Starting resolution.  Double each iteration
+    xpatches = test[4]
+    ypatches = test[5]
+    zpatches = test[6]
+  
+    xres = test[7]
+    yres = test[8]
+    zres = test[9]
+  
+    max_parallelism = float(argv[5])
+  
+    # do tests n times, double the procs each time, and double res and patches 
     for i in range(0, iterations):
       procs = 2**i
-      # Find the last average time/timestep and append it along it with its numprocs to a log file
-      system("echo %d `grep Time %s-%dproc/sus.log.txt | tail -n1 | awk '{print $10}'` >> %s/scalability.log.txt" % (procs, test[0], procs, test[0]))
-    system("cat %s/scalability.log.txt" % test[0])
-
-exit(code)
+      if procs > max_parallelism:
+        iterations=i  
+        break
+  
+      # substitute the new resolution and patch configuration in the UPS file.
+      newUPS = modUPS("%s/UCF" % (inputs_root()), test[1], \
+                      ["<patches>[%d,%d,%d]</patches>" % (xpatches, ypatches, zpatches), "<resolution>[%d,%d,%d]</resolution>" % (xres,yres,zres)])
+      TESTS.append(("%s-%dproc" % (test[0],procs), newUPS, procs, test[3], ["do_performance_test"]))
+  
+      # double the patches and resolution for the next run.
+      if xpatches <= ypatches and xpatches <= zpatches:
+        xpatches = xpatches*2
+      elif ypatches <= xpatches and ypatches <= zpatches:
+        ypatches = ypatches*2
+      else:
+        zpatches = zpatches*2
+  
+      if xres <= yres and xres <= zres:
+        xres = xres*2
+      elif yres <= xres and yres <= zres:
+        yres = yres*2
+      else:
+        zres = zres*2
+  
+  result = runSusTests(argv, TESTS, "UCF")
+  
+  for test in SCALE_TESTS:
+  
+    if retval != 3:
+      
+      # This dir should exist now, and each tests' subdir should be underneath
+      chdir("%s/UCF-results" % getcwd())
+      mkdir(test[0])
+  
+      # Gather results into the log file
+      system("echo Scalability results for %s >> %s/scalability.log.txt" % (test[0], test[0]))
+      for i in range(0, iterations):
+        procs = 2**i
+        # Find the last average time/timestep and append it along it with its numprocs to a log file
+        system("echo %d `grep Time %s-%dproc/sus.log.txt | tail -n1 | awk '{print $10}'` >> %s/scalability.log.txt" % (procs, test[0], procs, test[0]))
+      system("cat %s/scalability.log.txt" % test[0])
+  
+  exit( result )
+  

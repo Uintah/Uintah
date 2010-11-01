@@ -3,6 +3,7 @@
 from sys import argv,exit
 from os import environ
 from helpers.runSusTests import runSusTests
+
 #______________________________________________________________________
 #  Test syntax: ( "folder name", "input file", # processors, "OS", ["flags1","flag2",...])
 #  flags: 
@@ -50,9 +51,21 @@ LOCALTESTS =  [    ("massX",                 "massX.ups",                 1,  "L
     	       ]
 
 #__________________________________
-if environ['LOCAL_OR_NIGHTLY_TEST'] == "local":
-  TESTS = LOCALTESTS
-else:
-  TESTS = NIGHTLYTESTS
-  
-exit(runSusTests(argv, TESTS, "MPMICE"))
+
+def getNightlyTests() :
+  return TESTS
+
+def getLocalTests() :
+  return TESTS
+
+#__________________________________
+
+if __name__ == "__main__":
+
+  if environ['LOCAL_OR_NIGHTLY_TEST'] == "local":
+    TESTS = LOCALTESTS
+  else:
+    TESTS = NIGHTLYTESTS
+
+  result = runSusTests(argv, TESTS, "MPMICE")
+  exit( result )

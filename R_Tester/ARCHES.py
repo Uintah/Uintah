@@ -5,10 +5,9 @@ from sys import argv,exit,platform
 from helpers.runSusTests import runSusTests, inputs_root
 from helpers.modUPS import modUPS
 
-
-methane8patch_ups = modUPS("%s/ARCHES" % inputs_root(), \
-                           "methane_explicit_table.ups", \
-                           ["<patches>[2,2,2]</patches>"]) 
+#methane8patch_ups = modUPS("%s/ARCHES" % inputs_root(), \
+#                           "methane_explicit_table.ups", \
+#                           ["<patches>[2,2,2]</patches>"]) 
                            
 #______________________________________________________________________                            
 #  Test syntax: ( "folder name", "input file", # processors, "OS", ["flags1","flag2"])
@@ -63,12 +62,24 @@ LOCALTESTS = [
    ("dqmom_test_4",            "DQMOM_regression/dqmom_test_4.ups",   1.1,  "Linux",   ["exactComparison"])
 ]
 
+#__________________________________
+
+def getNightlyTests() :
+  return TESTS
+
+def getLocalTests() :
+  return TESTS
 
 #__________________________________
-if environ['LOCAL_OR_NIGHTLY_TEST'] == "local":
-  TESTS = LOCALTESTS
-else:
-  TESTS = NIGHTLYTESTS
 
-exit(runSusTests(argv, TESTS, "ARCHES"))
+if __name__ == "__main__":
+
+  if environ['LOCAL_OR_NIGHTLY_TEST'] == "local":
+    TESTS = LOCALTESTS
+  else:
+    TESTS = NIGHTLYTESTS
+
+  result = runSusTests(argv, TESTS, "ARCHES")
+  exit( result )
+
 

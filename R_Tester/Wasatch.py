@@ -1,9 +1,10 @@
 #!/usr/bin/python
-
+ 
 from os import symlink,environ
 from sys import argv,exit,platform
 from helpers.runSusTests import runSusTests, inputs_root
 from helpers.modUPS import modUPS
+
 #______________________________________________________________________
 #  Test syntax: ( "folder name", "input file", # processors, "OS", ["flags1","flag2"])
 #  flags: 
@@ -22,19 +23,35 @@ from helpers.modUPS import modUPS
 #  Note: the "folder name" must be the same as input file without the extension.
 #______________________________________________________________________
 
-NIGHTLYTESTS = [  ("mpmpipe_test",           "mpmpipe_test.ups",          8,  "Linux", ["exactComparison"]),
-                  ("methaneFireWContainer", "methaneFireWContainer.ups", 1.1, "Linux", ["exactComparison","no_restart"])
-               ]
-               
-LOCALTESTS =   [  ("mpmpipe_test",           "mpmpipe_test.ups",          8,  "Linux", ["exactComparison"]),
-                  ("methaneFireWContainer", "methaneFireWContainer.ups", 1.1, "Linux", ["exactComparison","no_restart"])
-               ]  
+UNUSED_TESTS = []
+
+NIGHTLYTESTS = [
+  ("BasicScalarTransportEquation",      "BasicScalarTransportEquation.ups",     1,      "Linux",        ["exactComparison","no_restart","no_memoryTest"] )
+]
+
+
+# Tests that are run during local regression testing
+LOCALTESTS = [
+  ("BasicScalarTransportEquation",      "BasicScalarTransportEquation.ups",     1,      "Linux",        ["exactComparison","no_restart","no_memoryTest"] )
+]
 
 #__________________________________
-if environ['LOCAL_OR_NIGHTLY_TEST'] == "local":
-  TESTS = LOCALTESTS
-else:
-  TESTS = NIGHTLYTESTS
-       
-exit(runSusTests(argv, TESTS, "MPMARCHES"))
+
+def getNightlyTests() :
+  return TESTS
+
+def getLocalTests() :
+  return TESTS
+
+#__________________________________
+
+if __name__ == "__main__":
+
+  if environ['LOCAL_OR_NIGHTLY_TEST'] == "local":
+    TESTS = LOCALTESTS
+  else:
+    TESTS = NIGHTLYTESTS
+
+  result = runSusTests(argv, TESTS, "Wasatch")
+  exit( result )
 

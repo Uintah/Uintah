@@ -1,0 +1,203 @@
+#! /usr/bin/python
+
+from optparse import OptionParser
+
+from sys import argv
+import os
+import shutil
+import subprocess
+
+from helpers.runSusTests import nameoftest, input, num_processes, testOS
+
+####################################################################################
+
+sus    = ""   # full path to sus executable
+inputs = ""   # full path to src/Standalone/inputs/
+
+####################################################################################
+
+#script_dir=os.sys.path[0]
+
+usage = "%prog [options]\n\n" \
+        "   generateGoldStandards creates a sub-directory for the test_file.\n" \
+        "   Note, multiple tests may be specified: -t ICE -t MPM etc."
+
+parser = OptionParser( usage, add_help_option=False )
+
+parser.set_defaults( verbose=False, 
+                     parallelism=1 )
+
+parser.add_option( "-v", action="store_true", dest="verbose", help="Enable verbosity" )
+parser.add_option( "-j", type="int", dest="parallelism",      help="Set make parallelism" )
+parser.add_option( "-h", "--help", action="help",             help="Show this help message" )
+
+parser.add_option( "-t", dest="test_file",                    help="Name of specific test script (eg: ICE) [REQUIRED/Multiple allowed]",
+                   action="append", type="string" )
+
+parser.add_option( "-b", dest="build_directory",              help="Uintah build directory [REQUIRED]",
+                   action="store", type="string" )
+
+parser.add_option( "-s", dest="src_directory",                help="Uintah src directory [defaults to .../bin/../src]",
+                   action="store", type="string" )
+
+####################################################################################
+
+def error( error_msg ) :
+    print ""
+    print "ERROR: " + error_msg
+    print ""
+    parser.print_help()
+    print ""
+    exit( 1 )
+
+####################################################################################
+
+def validateArgs( options, args ) :
+    global sus, inputs
+
+    if len( args ) > 0 :
+        error( "Unknown command line args: " + str( args ) )
+
+    if not options.build_directory :
+        error( "Uintah build directory is required..." )
+    elif options.build_directory[0] != "/" : 
+        error( "Uintah build directory must be an absolute path (ie, it must start with '/')." )
+    elif options.build_directory[-1] == "/" : 
+        # Cut off the trailing '/'
+        options.build_directory = options.build_directory[0:-1]
+
+    if not options.test_file :
+        error( "A test file must be specified..." )
+
+    if not os.path.isdir( options.build_directory ) :
+        error( "Build directory '" + options.build_directory + "' does not exist." )
+
+    sus = options.build_directory + "/StandAlone/sus"
+
+    if not os.path.isfile( sus ) :
+        error( "'sus' not here: '" + sus + "'" )
+
+    if not options.src_directory :
+        # Cut off the <bin> and replace it with 'src'
+        last_slash = options.build_directory.rfind( "/" )
+        options.src_directory = options.build_directory[0:last_slash] + "/src"
+
+    if not os.path.isdir( options.src_directory ) :
+        error( "Src directory '" + options.src_directory + "' does not exist." )
+
+    inputs = options.src_directory + "/StandAlone/inputs"
+
+    if not os.path.isdir( inputs ) :
+        error( "'inputs' directory not found here: '" + inputs )
+
+####################################################################################
+
+def generateGS() :
+
+    global sus, inputs
+    try :
+        (options, leftover_args ) = parser.parse_args()
+    except :
+        print "" # Print an extra newline at end of output for clarity
+        exit( 1 )
+
+    validateArgs( options, leftover_args )
+
+    if options.verbose :
+        print "Building Gold Standards in " + os.getcwd()
+
+    ##############################################################
+    # Determine if the code has been modified (svn stat)
+
+    process = subprocess.Popen( "svn stat " + options.src_directory, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE )
+    ( stdout, sterr ) = process.communicate()
+    result = process.returncode
+
+    if result != 0 :
+        print ""
+        print "WARNING:  SVN 'stat' failed to run correctly, so generateGoldStandards.py can not tell"
+        print "          if your tree is 'up to date'.  Are you sure you want to continue generating"
+        print "          new gold standards at this time? [y/n]"
+        print ""
+        # FIXME: read in response and act accordingly
+
+    #
+    # if svn fails to run, or returns differences, then
+    # ask the user what they want to do 
+    ##############################################################
+
+    ##############################################################
+    # Determine if configVars has changed... if not, let the user
+    # know this...
+    #
+    #configVars = options.build_directory + "/configVars.mk"
+    #shutil.copy( configVars, "." )
+    ##############################################################
+
+    ##############################################################
+    # - Determine if/where mpirun is...
+    # - Determine if sus was built with MPI...
+    #
+    ##############################################################
+
+    components = options.test_file
+
+    # Warn user if directories already exist
+    some_dirs_already_exist = False
+    for component in components :
+        if os.path.isdir( component ) :
+            if not some_dirs_already_exist :
+                some_dirs_already_exist = True
+                print ""
+                print "Note, the following directories already exist: ",
+            else :
+                print ", ",
+            os.sys.stdout.write( component )
+    if some_dirs_already_exist :
+        print ""
+        print "Delete existing sub-directories?  (If 'no', script will exit.) [y/n]"
+        # FIXME: read in response and act accordingly
+        #shutil.rmtree( "*" )
+
+    for component in components :
+
+        os.mkdir( component )
+        os.chdir( component )
+
+        # Create a symbolic link to the 'inputs' directory so some .ups files will be able
+        # to find what they need...
+        if not os.path.islink( "inputs" ) :
+            os.symlink( inputs, "inputs" )
+
+
+        # Pull the list of tests from the the 'component's python module's 'TESTS' variable:
+        # (Need to 'import' the module first.)
+        if options.verbose :
+            print "Python importing " + component
+        THE_COMPONENT = __import__( component )
+        tests = THE_COMPONENT.getLocalTests()
+        
+        if options.verbose :
+            print "About to run tests for: " + component
+
+        for test in tests :
+            np = float( num_processes( test ) )
+            mpirun = ""
+            if np > 1.0 :
+                mpirun = "mpirun -np 1 "
+
+                command = mpirun + sus + " " + inputs + "/" + component + "/" + input( test ) # + " >> sus_log " 
+            else :
+                command = sus + " " + inputs + "/" + component + "/" + input( test ) # + " >> sus_log " 
+
+            print "Running command: " + command
+
+            os.system( command )
+        os.chdir( ".." )
+
+
+####################################################################################
+
+if __name__ == "__main__":
+    generateGS()
+    exit( 0 )
