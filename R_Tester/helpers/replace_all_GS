@@ -6,17 +6,17 @@
 # bulletproofing
 @ numFiles = `find . -maxdepth 1 -name "*-short.log" | wc -w`
 if ( $numFiles == 0 ) then
-  echo "I couldn't find any failed regression tests. Now exiting"
+  echo "ERROR:Replace_all_GS: couldn't find any failed regression tests. Now exiting"
   exit
 endif
 
 if (! -e goldStandard ) then
-  echo "I couldn't find the goldStandard directory. Now exiting"
+  echo "ERROR:Replace_all_GS: I couldn't find the goldStandard directory. Now exiting"
   exit
 endif
 
 if (! -e TestScripts ) then
-  echo "I couldn't find the TestScripts directory. Now exiting"
+  echo "ERROR:Replace_all_GS: I couldn't find the TestScripts directory. Now exiting"
   exit
 endif
 

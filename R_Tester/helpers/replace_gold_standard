@@ -122,7 +122,7 @@ user=`whoami`
 #__________________________________
 # bulletproofing
 if [ ! -d $gold_standard_dir/$testname ]; then
-  echo "$gold_standard_dir/$testname does not exist!"
+  echo "ERROR: $gold_standard_dir/$testname does not exist.  Now exiting!"
   exit 1
 fi
 
@@ -335,7 +335,7 @@ if [ "$do_uda" = "true" -o "$do_mem" = "true" -o "$do_perf" = "true" -o "$do_inp
 
   find "$gold_standard_dir/$testname" -user `whoami` -exec chmod g+wrX {} \;
   find "$gold_standard_dir/$testname" -user `whoami` -exec chmod o+rX {}  \; 
-  find "$gold_standard_dir/$testname" -user `whoami` -exec chgrp csafe {} \;
+  find "$gold_standard_dir/$testname" -user `whoami` -exec chgrp csafe {} >& /dev/null \;
 
 
 fi

@@ -108,7 +108,7 @@ date
 echo "Running $componentTest Tests"
 
 # clean up old test results
-/bin/rm $componentTest.log >/dev/null
+/bin/rm -f $componentTest.log >/dev/null
 /bin/rm -rf $componentTest-results >/dev/null
 
 # create the do<component>tests  python script
@@ -126,13 +126,12 @@ echo "python TestScripts/$componentTest susdir inputs goldStandard local $PARALL
 # run the python script that contains all the
 # tests for that component
 
-"$doTestScript" > "${componentTest}.log"  2>&1
+"$doTestScript" | tee "${componentTest}.log"
+
 retval=$?
 
-cat ${componentTest}.log
-
 echo ""
 echo ""
 
-exit
+exit $retval
 
