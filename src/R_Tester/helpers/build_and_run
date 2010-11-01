@@ -88,7 +88,7 @@ cd TestScripts
 failed=0
 
 # find all the component tests which are python scripts
-componentTests=`file * | grep python | cut -d: -f1`
+componentTests=`ls *.py | grep -v __init__ | sed "s/.py//g"`
 
 #  main loop over components RT tests
 for componentTest in $componentTests; do
