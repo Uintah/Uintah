@@ -116,10 +116,11 @@ echo "Running $componentTest Tests"
 
 # create the do<component>tests  python script
 doTestScript="do${componentTest}tests"
-echo "#!/bin/tcsh"            >  "$doTestScript"
-echo "setenv PATH $PATH"      >> "$doTestScript"
-echo "setenv OS $OS"          >> "$doTestScript"
-echo "setenv SCI_DEBUG \"\""  >> "$doTestScript"
+echo "#!/bin/tcsh"                                         >  "$doTestScript"
+echo "setenv PATH $PATH"                                   >> "$doTestScript"
+echo "setenv OS $OS"                                       >> "$doTestScript"
+echo "setenv SCI_DEBUG \"\""                               >> "$doTestScript"
+echo "setenv LOCAL_OR_NIGHTLY_TEST $LOCAL_OR_NIGHTLY_TEST" >> "$doTestScript"
 
 echo "python TestScripts/$componentTest.py susdir inputs goldStandard local $PARALLELISM "'$1' >> "$doTestScript"
 

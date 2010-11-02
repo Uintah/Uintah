@@ -58,9 +58,9 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
   if len(argv) == 7:
     solotest = argv[6]
   
-  # If run from startTester, tell it to output logs in web dir
-  # otherwise, save it in the build, and display links
-  if dbg_opt != "local":
+  # If running Nightly RT, output logs in web dir
+  # otherwise, save it in the build
+  if environ['LOCAL_OR_NIGHTLY_TEST'] != "nightly" :
     # if webpath exists, use that, otherwise, use BUILDROOT/dbg_opt
     outputpath    = "%s-%s" % (environ['HTMLLOG'], dbg_opt)
     weboutputpath = "%s-%s" % (environ['WEBLOG'],  dbg_opt)
