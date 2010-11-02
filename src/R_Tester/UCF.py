@@ -32,86 +32,33 @@ UNUSED = [ ("ice_perf_test",    "icePerformanceTest.ups",    1, "Linux","", ["do
            ("switcher",       "JP8-switch.ups",     8, "NONE") 
 ]
 
-TESTS = [ ("ice_perf_test",    "icePerformanceTest.ups",    1, "Linux", ["do_performance_test"]),  \
-          ("mpmice_perf_test", "mpmicePerformanceTest.ups", 1, "Linux", ["do_performance_test"]), \
-          ("LBwoRegrid", "LBwoRegrid.ups", 2, "Linux", ["exactComparison"])
-        ]
+NIGHTLYTESTS = [ ("ice_perf_test",    "icePerformanceTest.ups",    1, "Linux", ["do_performance_test"]),  \
+                 ("mpmice_perf_test", "mpmicePerformanceTest.ups", 1, "Linux", ["do_performance_test"]), \
+                 ("LBwoRegrid",       "LBwoRegrid.ups",            2, "Linux", ["exactComparison"])
+               ]
 
-#______________________________________________________________________
-# Scalability tests -
-# last 6 args are start patches x,y,z and start res x,y,z
-# The 4th argument is the number of times to double the processor count
-#SCALE_TESTS = [ ("ice_scale_test", "iceScalabilityTest.ups", 8, "Linux",1,1,1,50,50,50)]
-SCALE_TESTS = []
-retval = 0
+LOCALTESTS = [ ("ice_perf_test",    "icePerformanceTest.ups",    1, "Linux", ["do_performance_test"]),  \
+               ("mpmice_perf_test", "mpmicePerformanceTest.ups", 1, "Linux", ["do_performance_test"]), \
+               ("LBwoRegrid",        "LBwoRegrid.ups",           2, "Linux", ["exactComparison"])
+             ]
+
+#__________________________________
 
 def getNightlyTests() :
-  return TESTS
+  return NIGHTLYTESTS
 
 def getLocalTests() :
-  return TESTS
+  return LOCALTESTS
+
+#__________________________________
 
 if __name__ == "__main__":
 
-  for test in SCALE_TESTS:
-  
-    iterations = test[2]
-    
-    # Starting resolution.  Double each iteration
-    xpatches = test[4]
-    ypatches = test[5]
-    zpatches = test[6]
-  
-    xres = test[7]
-    yres = test[8]
-    zres = test[9]
-  
-    max_parallelism = float(argv[5])
-  
-    # do tests n times, double the procs each time, and double res and patches 
-    for i in range(0, iterations):
-      procs = 2**i
-      if procs > max_parallelism:
-        iterations=i  
-        break
-  
-      # substitute the new resolution and patch configuration in the UPS file.
-      newUPS = modUPS("%s/UCF" % (inputs_root()), test[1], \
-                      ["<patches>[%d,%d,%d]</patches>" % (xpatches, ypatches, zpatches), "<resolution>[%d,%d,%d]</resolution>" % (xres,yres,zres)])
-      TESTS.append(("%s-%dproc" % (test[0],procs), newUPS, procs, test[3], ["do_performance_test"]))
-  
-      # double the patches and resolution for the next run.
-      if xpatches <= ypatches and xpatches <= zpatches:
-        xpatches = xpatches*2
-      elif ypatches <= xpatches and ypatches <= zpatches:
-        ypatches = ypatches*2
-      else:
-        zpatches = zpatches*2
-  
-      if xres <= yres and xres <= zres:
-        xres = xres*2
-      elif yres <= xres and yres <= zres:
-        yres = yres*2
-      else:
-        zres = zres*2
-  
+  if environ['LOCAL_OR_NIGHTLY_TEST'] == "local":
+    TESTS = LOCALTESTS
+  else:
+    TESTS = NIGHTLYTESTS
+
   result = runSusTests(argv, TESTS, "UCF")
-  
-  for test in SCALE_TESTS:
-  
-    if retval != 3:
-      
-      # This dir should exist now, and each tests' subdir should be underneath
-      chdir("%s/UCF-results" % getcwd())
-      mkdir(test[0])
-  
-      # Gather results into the log file
-      system("echo Scalability results for %s >> %s/scalability.log.txt" % (test[0], test[0]))
-      for i in range(0, iterations):
-        procs = 2**i
-        # Find the last average time/timestep and append it along it with its numprocs to a log file
-        system("echo %d `grep Time %s-%dproc/sus.log.txt | tail -n1 | awk '{print $10}'` >> %s/scalability.log.txt" % (procs, test[0], procs, test[0]))
-      system("cat %s/scalability.log.txt" % test[0])
-  
   exit( result )
   
