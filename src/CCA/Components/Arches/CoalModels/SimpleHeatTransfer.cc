@@ -96,6 +96,7 @@ SimpleHeatTransfer::problemSetup(const ProblemSpecP& params, int qn)
     db_coal->require("O", yelem[3]);
     db_coal->require("S", yelem[4]);
     db_coal->require("initial_ash_mass", ash_mass_init);
+    db_coal->require("initial_fixcarb_mass", fixcarb_mass_init);
   } else {
     throw InvalidValue("ERROR: SimpleHeatTransfer: problemSetup(): Missing <Coal_Properties> section in input file!",__FILE__,__LINE__);
   }
@@ -229,7 +230,7 @@ SimpleHeatTransfer::problemSetup(const ProblemSpecP& params, int qn)
   out << qn; 
   string node = out.str();
 
-  // thermal conductivity (of particles, I think???)
+  // Absorption coefficient of particle
   std::string abskpName = "abskp_qn";
   abskpName += node; 
   d_abskp = VarLabel::create(abskpName, CCVariable<double>::getTypeDescription());
@@ -545,6 +546,7 @@ SimpleHeatTransfer::computeModel( const ProcessorGroup * pc,
       double gas_temperature = temperature[c];
 
       double unscaled_ash_mass = ash_mass_init[d_quadNode];
+      double unscaled_fixcarb_mass = fixcarb_mass_init[d_quadNode];
       double density = den[c];
       // viscosity should be grabbed from data warehouse... right now it's constant
 
@@ -558,6 +560,7 @@ SimpleHeatTransfer::computeModel( const ProcessorGroup * pc,
       double Re;
       double Nu;
       double Cpc;
+      double Cph;
       double Cpa; 
       double mp_Cp;
       double rkg;
@@ -631,12 +634,15 @@ SimpleHeatTransfer::computeModel( const ProcessorGroup * pc,
         // Heat capacity of raw coal
         Cpc = heatcp( unscaled_particle_temperature );
 
+        // Heat capacity of char
+        Cph = heatcph( unscaled_particle_temperature );
+ 
         // Heat capacity of ash
         Cpa = heatap( unscaled_particle_temperature );
 
         // Heat capacity
-        mp_Cp = (Cpc*unscaled_raw_coal_mass + Cpa*unscaled_ash_mass);
-
+        mp_Cp = (Cpc*unscaled_raw_coal_mass + Cph*unscaled_fixcarb_mass + Cpa*unscaled_ash_mass);
+   
         // Gas thermal conductivity
         rkg = props(gas_temperature, unscaled_particle_temperature); // [=] J/s/m/K
 
@@ -658,7 +664,7 @@ SimpleHeatTransfer::computeModel( const ProcessorGroup * pc,
       
         heat_rate_ = (Q_convection + Q_radiation)/(mp_Cp*d_pt_scaling_constant);
         //cout << "Qconv " << Q_convection << " Qrad " << Q_radiation << endl;
-        gas_heat_rate_ = 0.0;
+        gas_heat_rate_ = -unscaled_weight*Q_convection;
  
       }
 
@@ -770,9 +776,9 @@ SimpleHeatTransfer::g1( double z){
 
 double
 SimpleHeatTransfer::heatcp(double Tp){
-  if (Tp < 273) {
+  if (Tp < 700) {
     // correlation is not valid
-    return 0.0;
+    return 1046.0;
   } else {
     double MW [5] = { 12., 1., 14., 16., 32.}; // Atomic weight of elements (C,H,N,O,S)
     double Rgas = 8314.3; // J/kg/K
@@ -790,6 +796,20 @@ SimpleHeatTransfer::heatcp(double Tp){
   }
 }
 
+double
+SimpleHeatTransfer::heatcph(double Tp){
+  if (Tp < 700) {
+    // correlation is not valid
+    return 1046.0;
+  } else {
+    double Rgas = 8314.3; // J/kg/K
+
+    double z1 = 380.0/Tp;
+    double z2 = 1800.0/Tp;
+    double cp = (Rgas/12.0)*(g1(z1)+2.0*g1(z2));
+    return cp; // J/kg/K
+  }
+}
 
 double
 SimpleHeatTransfer::heatap(double Tp){

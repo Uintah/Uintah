@@ -60,7 +60,10 @@ SRCS += \
         $(SRCDIR)/Task.cc                  \
         $(SRCDIR)/TOBSplineInterpolator.cc \
         $(SRCDIR)/UnknownVariable.cc       \
-	$(SRCDIR)/cpdiInterpolator.cc
+	$(SRCDIR)/cpdiInterpolator.cc  \
+        $(SRCDIR)/fastCpdiInterpolator.cc \
+	$(SRCDIR)/axiCpdiInterpolator.cc \
+        $(SRCDIR)/fastAxiCpdiInterpolator.cc
 
 PSELIBS := \
         Core/Geometry   \

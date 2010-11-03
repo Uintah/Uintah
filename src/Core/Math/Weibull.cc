@@ -46,13 +46,15 @@
 
 namespace SCIRun {
 
-Weibull::Weibull(double WeibMed,
+Weibull::Weibull(double WeibMean,
                  double WeibMod,
                  double WeibRefVol,
-                 int WeibSeed) 
-  : WeibMed_(WeibMed),
+                 int WeibSeed,
+                 double WeibExp) 
+  : WeibMean_(WeibMean),
     WeibMod_(WeibMod),
     WeibRefVol_(WeibRefVol),
+    WeibExp_(WeibExp),
     mr_(new MusilRNG(WeibSeed))
 {
 }

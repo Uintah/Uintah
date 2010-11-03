@@ -2,8 +2,7 @@
 
 # should have the environmental variables:
 # PATH, OS, PARALLELISM, TMPDIR, BUILD_DIR, VERBOSE,
-# BUILDROOT, TEST_DATA, OPT_CONFIGURE,HTMLLOG,WEBLOG, DBG_CONFIGURE,
-# OPT_CONFIGURE, SEND_MAIL_TO, REPLY_TO  DO_OPT DO_DBG all set
+# BUILDROOT, TEST_DATA,HTMLLOG,WEBLOG, SEND_MAIL_TO, REPLY_TO  DO_OPT DO_DBG all set
 
 PATH="$BUILDROOT"/src/R_Tester/helpers:"$PATH":/usr/sbin
 export PATH OS MAKE_PARALLELISM PARALLELISM TMPDIR BUILD_DIR BUILDROOT TEST_DATA
@@ -27,13 +26,6 @@ use_html=1
 rm -f "$BUILDROOT"/dbg/log "$BUILDROOT"/opt/log "$BUILDROOT"/dbg/summary_log "$BUILDROOT"/opt/summary_log 
 
 
-# Only run optimized weekly tests
-WKLY_STRING=" "
-if [ "$WEEKLY" == "1" ]; then
-  WKLY_STRING=" Weekly"
-  DO_DBG="0"
-fi
-
 #if VERBOSE is on, then have all output go to stdout instead of log
 
 #__________________________________
@@ -46,9 +38,9 @@ if [ "$DO_DBG" == "1" ]; then
 
   # compile and run
   if [ $VERBOSE = "yes" ]; then
-    build_and_run "dbg" "$DBG_CONFIGURE"
+    build_and_run "dbg"
   else
-    build_and_run "dbg" "$DBG_CONFIGURE" > "$BUILDROOT"/dbg/log 2>&1
+    build_and_run "dbg" > "$BUILDROOT"/dbg/log 2>&1
   fi
   
   # set flags
@@ -70,9 +62,9 @@ if [ "$DO_OPT" == "1" ]; then
 
   # compile and run   
   if [ $VERBOSE = "yes" ]; then
-    build_and_run "opt" "$OPT_CONFIGURE"
+    build_and_run "opt"
   else
-    build_and_run "opt" "$OPT_CONFIGURE" > "$BUILDROOT"/opt/log 2>&1
+    build_and_run "opt" > "$BUILDROOT"/opt/log 2>&1
   fi
 
   retval=$?
@@ -123,9 +115,9 @@ chmod -R g+w "$TEST_DATA" > /dev/null 2>&1
 # 
 if [ "$VERBOSE" = "no" -a "$SEND_MAIL_TO" != "" ]; then
   if [ $failed = "0" ]; then
-    subject="SUCCESS:$WKLY_STRING Regression tests on `hostname`"
+    subject="SUCCESS: Regression tests on `hostname`"
   else
-    subject="FAILURE:$WKLY_STRING  Regression tests on `hostname`***"
+    subject="FAILURE:  Regression tests on `hostname`***"
   fi
 
   cat > "$BUILDROOT"/mail.msg <<EOF

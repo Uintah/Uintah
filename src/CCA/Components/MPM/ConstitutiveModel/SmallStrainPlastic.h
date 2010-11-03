@@ -151,7 +151,6 @@ namespace Uintah {
     // Erosion algorithms
     bool   d_setStressToZero;
     bool   d_allowNoTension;
-    bool   d_removeMass;
 
     MPMEquationOfState*         d_eos;
     ShearModulusModel*          d_shear;
@@ -318,7 +317,8 @@ namespace Uintah {
     virtual double computeRhoMicroCM(double pressure,
                                      const double p_ref,
                                      const MPMMaterial* matl,
-                                     double temperature);
+                                     double temperature,
+                                     double rho_guess);
 
     ////////////////////////////////////////////////////////////////////////
     /*! \brief Sockets for MPM-ICE */

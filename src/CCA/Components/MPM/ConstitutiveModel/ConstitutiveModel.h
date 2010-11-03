@@ -161,7 +161,8 @@ namespace Uintah {
     virtual double computeRhoMicroCM(double pressure,
                                      const double p_ref,
                                      const MPMMaterial* matl,
-                                     double temperature) = 0;
+                                     double temperature,
+                                     double rho_guess) = 0;
 
     virtual void computePressEOSCM(double rho_m, double& press_eos,
                                    double p_ref,
@@ -174,7 +175,7 @@ namespace Uintah {
     virtual Vector getInitialFiberDir();
 
     double computeRhoMicro(double press,double gamma,
-                           double cv, double Temp);
+                           double cv, double Temp, double rho_guess);
          
     void computePressEOS(double rhoM, double gamma,
                          double cv, double Temp,
@@ -275,25 +276,6 @@ namespace Uintah {
           }
       };
 
-
-    inline void computeVelocityGradient(Matrix3& velGrad,
-                                        vector<IntVector>& ni,
-                                        vector<Vector>& d_S,
-                                        const double* oodx, 
-                                        constNCVariable<Vector>& gVelocity,
-                                        double erosion)
-      {
-          for(int k = 0; k < flag->d_8or27; k++) {
-            const Vector& gvel = gVelocity[ni[k]];
-            d_S[k] *= erosion;
-            for (int j = 0; j<3; j++){
-              double d_SXoodx = d_S[k][j]*oodx[j];
-              for (int i = 0; i<3; i++) {
-                velGrad(i,j) += gvel[i] * d_SXoodx;
-              }
-            }
-          }
-      };
 
      inline void computeAxiSymVelocityGradient(Matrix3& velGrad,
                                              vector<IntVector>& ni,

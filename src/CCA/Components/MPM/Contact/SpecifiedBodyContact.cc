@@ -249,11 +249,13 @@ void SpecifiedBodyContact::exMomIntegrated(const ProcessorGroup*,
     StaticArray<constNCVariable<double> > gmass(numMatls);
     StaticArray<NCVariable<Vector> >      gvelocity_star(numMatls);
     StaticArray<constNCVariable<Vector> > gvelocity(numMatls);
+    StaticArray<constNCVariable<Vector> > ginternalForce(numMatls);
 
     for(int m=0;m<matls->size();m++){
      int dwi = matls->get(m);
      new_dw->get(gmass[m], lb->gMassLabel,dwi ,patch, Ghost::None, 0);
      new_dw->getModifiable(gvelocity_star[m],  lb->gVelocityStarLabel, dwi,patch); // -> v*^k+1
+     new_dw->get(ginternalForce[m], lb->gInternalForceLabel, dwi, patch, Ghost::None, 0); // -> v*^k+1
     }
     
     delt_vartype delT;
@@ -292,7 +294,8 @@ void SpecifiedBodyContact::exMomIntegrated(const ProcessorGroup*,
         if(!compare(gmass[d_material][c],0.)){
           Vector old_vel = gvelocity_star[n][c];
           gvelocity_star[n][c] =  new_vel;
-          reaction_force += gmass[n][c]*(new_vel-old_vel)/delT;
+          //reaction_force += gmass[n][c]*(new_vel-old_vel)/delT;
+          reaction_force -= ginternalForce[n][c];
         }
       }
     }
@@ -326,6 +329,7 @@ void SpecifiedBodyContact::addComputesAndRequiresIntegrated(SchedulerP & sched,
   const MaterialSubset* mss = ms->getUnion();
   t->requires(Task::OldDW, lb->delTLabel);    
   t->requires(Task::NewDW, lb->gMassLabel, Ghost::None);
+  t->requires(Task::NewDW, lb->gInternalForceLabel, Ghost::None);
   t->modifies(             lb->gVelocityStarLabel,   mss);
   t->computes(lb->RigidReactionForceLabel);
 

@@ -19,7 +19,7 @@
     <Title>8</Title>
     <sus_cmd>mpirun -np 1 sus -mpi</sus_cmd>
     <Study>Res.Study</Study>
-    <compare_cmd>arches_mms.m </compare_cmd>
+    <postProcess_cmd>arches_mms.m </postProcess_cmd>
     <x>8</x>
     <replace_lines>
       <resolution>   [8,8,8]          </resolution>
@@ -30,7 +30,7 @@
     <Title>16</Title>
     <sus_cmd>mpirun -np 1 sus -mpi</sus_cmd>
     <Study>Res.Study</Study>
-    <compare_cmd>arches_mms.m  </compare_cmd>
+    <postProcess_cmd>arches_mms.m  </postProcess_cmd>
     <x>16</x>
     <replace_lines>
       <resolution>   [16,16,16]          </resolution>
@@ -41,7 +41,7 @@
     <Title>32</Title>
     <sus_cmd>mpirun -np 1 sus -mpi</sus_cmd>
     <Study>Res.Study</Study>
-    <compare_cmd>arches_mms.m </compare_cmd>
+    <postProcess_cmd>arches_mms.m </postProcess_cmd>
     <x>32</x>
     <replace_lines>
       <resolution>   [32,32,32]          </resolution>
@@ -52,7 +52,7 @@
     <Title>64</Title>
     <sus_cmd>mpirun -np 1 sus -mpi</sus_cmd>
     <Study>Res.Study</Study>
-    <compare_cmd>arches_mms.m </compare_cmd>
+    <postProcess_cmd>arches_mms.m </postProcess_cmd>
     <x>64</x>
     <replace_lines>
       <resolution>   [64,64,64]          </resolution>
@@ -63,7 +63,7 @@
     <Title>128</Title>
     <sus_cmd>mpirun -np 1 sus -mpi</sus_cmd>
     <Study>Res.Study</Study>
-    <compare_cmd>arches_mms.m </compare_cmd>
+    <postProcess_cmd>arches_mms.m </postProcess_cmd>
     <x>128</x>
     <replace_lines>
       <resolution>   [128,128,128]          </resolution>

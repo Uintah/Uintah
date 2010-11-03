@@ -4,6 +4,7 @@
 
 //-- Wasatch includes --//
 #include <CCA/Components/Wasatch/Expressions/BasicExprBuilder.h>
+#include <CCA/Components/Wasatch/FieldAdaptor.h>
 #include <CCA/Components/Wasatch/ParseTools.h>
 
 
@@ -32,18 +33,52 @@ namespace Wasatch{
     if( params->findBlock("Constant") ){
       double val;  params->get("Constant",val);
       typedef typename Expr::ConstantExpr<FieldT>::Builder Builder;
-      builder = new Builder( val );
+      builder = scinew Builder( val );
     }
     else if( params->findBlock("LinearFunction") ){
       double slope, intercept;
       Uintah::ProblemSpecP valParams = params->findBlock("LinearFunction");
-      valParams->require("slope",slope);
-      valParams->require("intercept",intercept);
+      valParams->getAttribute("slope",slope);
+      valParams->getAttribute("intercept",intercept);
       const Expr::Tag indepVarTag = parse_nametag( valParams->findBlock("NameTag") );
       typedef typename Expr::LinearFunction<FieldT>::Builder Builder;
-      builder = new Builder( indepVarTag, slope, intercept );
+      builder = scinew Builder( indepVarTag, slope, intercept );
     }
-
+    
+    else if ( params->findBlock("SineFunction") ) {
+      double amplitude, frequency, offset;
+      Uintah::ProblemSpecP valParams = params->findBlock("SineFunction");
+      valParams->getAttribute("amplitude",amplitude);
+      valParams->getAttribute("frequency",frequency);
+      valParams->getAttribute("offset",offset);
+      const Expr::Tag indepVarTag = parse_nametag( valParams->findBlock("NameTag") );
+      typedef typename Expr::SinFunction<FieldT>::Builder Builder;
+      builder = new Builder( indepVarTag, amplitude, frequency, offset);
+    }
+    
+    else if ( params->findBlock("GaussianFunction") ) {
+      double amplitude, deviation, mean, baseline;
+      Uintah::ProblemSpecP valParams = params->findBlock("GaussianFunction");
+      valParams->getAttribute("amplitude",amplitude);
+      valParams->getAttribute("deviation",deviation);
+      valParams->getAttribute("mean",mean);
+      valParams->getAttribute("baseline",baseline);
+      const Expr::Tag indepVarTag = parse_nametag( valParams->findBlock("NameTag") );
+      typedef typename Expr::GaussianFunction<FieldT>::Builder Builder;
+      builder = new Builder( indepVarTag, amplitude, deviation, mean, baseline);
+    }
+    
+    else if ( params->findBlock("DoubleTanhFunction") ) {
+      double amplitude, width, midpointUp, midpointDown;
+      Uintah::ProblemSpecP valParams = params->findBlock("DoubleTanhFunction");
+      valParams->getAttribute("amplitude",amplitude);
+      valParams->getAttribute("width",width);
+      valParams->getAttribute("midpointUp",midpointUp);
+      valParams->getAttribute("midpointDown",midpointDown);
+      const Expr::Tag indepVarTag = parse_nametag( valParams->findBlock("NameTag") );
+      typedef typename Expr::DoubleTanhFunction<FieldT>::Builder Builder;
+      builder = new Builder( indepVarTag, midpointUp, midpointDown, width, amplitude);
+    }
     return builder;
   }
 
@@ -59,26 +94,27 @@ namespace Wasatch{
          exprParams != 0;
          exprParams = exprParams->findNextBlock("BasicExpression") ){
 
-      std::string label, fieldType, taskListName;
-      exprParams->getAttribute("label",label);
+      std::string fieldType, taskListName;
       exprParams->getAttribute("type",fieldType);
       exprParams->require("TaskList",taskListName);
 
       const Expr::Tag tag = parse_nametag( exprParams->findBlock("NameTag") );
 
-      std::cout << "Creating BasicExpression '" << label
-                << "' for variable '" << tag.name()
+      std::cout << "Creating BasicExpression for variable '" << tag.name()
                 << "' with state " << tag.context()
                 << " on task list '" << taskListName << "'"
                 << std::endl;
 
-      if     ( fieldType == "Cell"  )  builder = build_it<SpatialOps::structured::SVolField  >( exprParams );
-      else if( fieldType == "XFace" )  builder = build_it<SpatialOps::structured::SSurfXField>( exprParams );
-      else if( fieldType == "YFace" )  builder = build_it<SpatialOps::structured::SSurfYField>( exprParams );
-      else if( fieldType == "ZFace" )  builder = build_it<SpatialOps::structured::SSurfZField>( exprParams );
-
-      // jcs what about other field types?  Consider specifying cell
-      // type (scalar, x, y, z) and location (center,xface,yface,zface)
+      switch( get_field_type(fieldType) ){
+      case SVOL : builder = build_it<SpatialOps::structured::SVolField  >( exprParams );  break;
+      case XVOL : builder = build_it<SpatialOps::structured::XVolField  >( exprParams );  break;
+      case YVOL : builder = build_it<SpatialOps::structured::YVolField  >( exprParams );  break;
+      case ZVOL : builder = build_it<SpatialOps::structured::ZVolField  >( exprParams );  break;
+      default:
+        std::ostringstream msg;
+        msg << "ERROR: unsupported field type '" << fieldType << "'" << endl
+            << __FILE__ << " : " << __LINE__ << endl;
+      }
 
       Category cat;
       if     ( taskListName == "initialization"   )   cat = INITIALIZATION;

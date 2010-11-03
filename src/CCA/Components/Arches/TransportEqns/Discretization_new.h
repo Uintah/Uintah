@@ -244,7 +244,7 @@ namespace Uintah{
       /** @brief Computes the flux term, \f$ int_A div{\rho u \phi} \cdot dA \f$, where u is the velocity
        *          in the normal (coord) direction.  Note version has density. */
       inline double getFlux( const double area, FaceData1D den, FaceData1D vel, 
-          FaceData1D phi, constCCVariable<Vector> areaFraction, IntVector coord, IntVector c )
+          FaceData1D phi, constCCVariable<Vector>& areaFraction, IntVector coord, IntVector c )
       {
         double F; 
         FaceData1D areaFrac;
@@ -268,7 +268,7 @@ namespace Uintah{
       /** @brief Computes the flux term, \f$ int_A div{u \phi} \cdot dA \f$, where u is the velocity
        *          in the normal (coord) direction.  Note version does not have density. */
       inline double getFlux( const double area, FaceData1D vel, FaceData1D phi, 
-          constCCVariable<Vector> areaFraction, IntVector coord, IntVector c )
+          constCCVariable<Vector>& areaFraction, IntVector coord, IntVector c )
       {
         double F; 
         FaceData1D areaFrac;
@@ -297,7 +297,7 @@ namespace Uintah{
       
       /** @brief Return the face velocity for a CC cell given a CC velocity VECTOR */
       inline FaceData1D getFaceVelocity( const IntVector c, const CCVariable<double>& F, 
-          constCCVariable<Vector> vel, const IntVector coord ){
+          constCCVariable<Vector>& vel, const IntVector coord ){
 
         FaceData1D the_vel;
         the_vel.minus = 0.0;
@@ -346,7 +346,7 @@ namespace Uintah{
 
       /** @brief Return the face velocity for a CC cell given an FCX vel */
       inline FaceData1D getFaceVelocity( const IntVector c, const CCVariable<double>& F, 
-          constSFCXVariable<double> vel ){
+          constSFCXVariable<double>& vel ){
         // cell-centered, x-direction
         FaceData1D the_vel; 
         the_vel.minus = vel[c];
@@ -356,7 +356,7 @@ namespace Uintah{
       }
       /** @brief Return the face velocity for a CC cell given an FCY vel */
       inline FaceData1D getFaceVelocity( const IntVector c, const CCVariable<double>& F, 
-          constSFCYVariable<double> vel ){
+          constSFCYVariable<double>& vel ){
         // cell-centered, y-direction
         FaceData1D the_vel; 
         the_vel.minus = vel[c];
@@ -366,7 +366,7 @@ namespace Uintah{
       }
       /** @brief Return the face velocity for a CC cell given an FCZ vel */
       inline FaceData1D getFaceVelocity( const IntVector c, const CCVariable<double>& F, 
-          constSFCZVariable<double> vel ){
+          constSFCZVariable<double>& vel ){
         // cell-centered, z-direction
         FaceData1D the_vel; 
         the_vel.minus = vel[c];
@@ -752,6 +752,7 @@ namespace Uintah{
 
 #endif
         }
+        
         // Boundaries
         vector<Patch::FaceType> bf;
         vector<Patch::FaceType>::const_iterator bf_iter;

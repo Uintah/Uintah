@@ -38,6 +38,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/ICE/EOS/Gruneisen.h>
 #include <CCA/Components/ICE/EOS/Tillotson.h>
 #include <CCA/Components/ICE/EOS/Thomsen_Hartka_water.h>
+#include <Core/Parallel/Parallel.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Malloc/Allocator.h>
@@ -62,6 +63,22 @@ EquationOfState* EquationOfStateFactory::create(ProblemSpecP& ps)
   if(!EOS_ps->getAttribute("type",EOS)){
     throw ProblemSetupException("ERROR ICE: Cannot find EOS 'type' tag", __FILE__, __LINE__); 
   }
+  
+  // warnings
+  if (EOS == "Murnahan"){
+    proc0cout << "______________________________________________________\n"
+          << "  ICE: EOS: WARNING: \n"
+          << "  The Murnahan equation of state has a discontinuity in dp_drho at the \n"
+          << "  reference density (rho0)."
+          << "  This will cause the Equilibration pressure calculation to fail\n"
+          << "  under certain circumstances.\n"
+          << "  Run the octave script: \n"
+          << "    src/CCA/Components/ICE/Matlab/Murnahan.m \n"
+          << "  to see the issue. \n"
+          << "______________________________________________________\n" << endl;
+  }
+  
+  
   if (EOS == "ideal_gas") 
     return(scinew IdealGas(EOS_ps));
   else if (EOS == "hard_sphere_gas") 

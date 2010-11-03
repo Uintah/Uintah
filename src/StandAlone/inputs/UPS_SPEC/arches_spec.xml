@@ -86,6 +86,7 @@
         <O                              spec="REQUIRED DOUBLE" />
         <S                              spec="REQUIRED DOUBLE" />
         <initial_ash_mass               spec="REQUIRED MULTIPLE_DOUBLES" />
+        <initial_fixcarb_mass           spec="REQUIRED MULTIPLE_DOUBLES" />
         <particle_density               spec="OPTIONAL DOUBLE" />
       </Coal_Properties>
       
@@ -202,6 +203,7 @@
           <ReferenceTemperature          spec="OPTIONAL DOUBLE"/>
           <Accelerate                    spec="OPTIONAL BOOLEAN"/>
           <AccelTime                     spec="OPTIONAL DOUBLE"/>
+          <K_Factor                      spec="OPTIONAL DOUBLE"/>
           <FuelComposition               spec="OPTIONAL NO_DATA">
             <N_OCTANE                    spec="OPTIONAL BOOLEAN"/>
             <N_OCTANEX                   spec="OPTIONAL DOUBLE"/>
@@ -459,9 +461,8 @@
             <Y                          spec="OPTIONAL DOUBLE" />
             <m                          spec="OPTIONAL DOUBLE" />
             <n                          spec="OPTIONAL DOUBLE" />
-            <MW_HydroCarbon             spec="OPTIONAL DOUBLE" />
-            <MF_HC_F1                   spec="OPTIONAL DOUBLE" />
-            <MF_O2_F0                   spec="OPTIONAL DOUBLE" />
+            <fuel_mass_fraction         spec="OPTIONAL DOUBLE" />
+            <oxidizer_O2_mass_fraction  spec="OPTIONAL DOUBLE" />
 
             <!-- Intrusion inlets --> 
             <intrusion                  spec="OPTIONAL NO_DATA">

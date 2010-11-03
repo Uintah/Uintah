@@ -1,8 +1,9 @@
 //-- Wasatch Includes --//
 #include "TimeStepper.h"
 #include "TaskInterface.h"
+#include "CoordHelper.h"
 
-
+//-- ExprLib includes --//
 #include <expression/FieldManager.h>  // for field type mapping
 #include <expression/ExpressionTree.h>
 
@@ -119,8 +120,19 @@ namespace Wasatch{
   TimeStepper::TimeStepper( const Uintah::VarLabel* const deltaTLabel,
                             Expr::ExpressionFactory& factory )
     : factory_( &factory ),
-      deltaTLabel_( deltaTLabel )
+      deltaTLabel_( deltaTLabel ),
+      coordHelper_( new CoordHelper( factory ) )
   {}
+
+  //------------------------------------------------------------------
+
+  TimeStepper::~TimeStepper()
+  {
+    delete coordHelper_;
+    for( std::list<TaskInterface*>::iterator i=taskInterfaceList_.begin(); i!=taskInterfaceList_.end(); ++i ){
+      delete *i;
+    }
+  }
 
   //------------------------------------------------------------------
 
@@ -145,7 +157,11 @@ namespace Wasatch{
       //     will have all sorts of name clashes?
       Expr::ExpressionTree* rhsTree = scinew Expr::ExpressionTree( rhsIDs_, *factory_, -1, "rhs" );
       TaskInterface* rhsTask = scinew TaskInterface( rhsTree, patchInfoMap );
-      rhsTask->schedule( sched, patches, materials );
+
+      taskInterfaceList_.push_back( rhsTask );
+
+      coordHelper_->create_task( sched, patches, materials );
+      rhsTask->schedule( sched, patches, materials, coordHelper_->field_tags() );
       
       // jcs hacked diagnostics - problems in parallel.
       const std::string fname("rhs.dot");
@@ -168,7 +184,10 @@ namespace Wasatch{
     {
       Expr::ExpressionTree* timeTree = scinew Expr::ExpressionTree( timeID, *factory_, -1, "set time" );
       TaskInterface* const timeTask = scinew TaskInterface( timeTree, patchInfoMap );
-      timeTask->schedule( sched, patches, materials );
+
+      taskInterfaceList_.push_back( timeTask );
+
+      timeTask->schedule( sched, patches, materials, coordHelper_->field_tags() );
     }
 
     //_____________________________________________________
@@ -182,7 +201,7 @@ namespace Wasatch{
       set_field_requirements<SO::ZVolField>( updateTask, zVolFields_,   pss, mss );
 
       // we require the timestep value
-      updateTask->requires( Uintah::Task::NewDW, deltaTLabel_ );
+      updateTask->requires( Uintah::Task::OldDW, deltaTLabel_ );
       /* jcs if we specify this, then things fail:
                             pss, Uintah::Task::NormalDomain,
                             mss, Uintah::Task::NormalDomain,
@@ -205,28 +224,28 @@ namespace Wasatch{
   {
     //__________________
     // loop over patches
-    for( size_t ip=0; ip<patches->size(); ++ip ){
+    for( int ip=0; ip<patches->size(); ++ip ){
 
       const Uintah::Patch* const patch = patches->get(ip);
 
       //____________________
       // loop over materials
-      for( size_t im=0; im<materials->size(); ++im ){
+      for( int im=0; im<materials->size(); ++im ){
         
         const int material = materials->get(im);
 
-        std::cout << std::endl
-                  << "Wasatch: executing 'TimeStepper::update_variables()' on patch "
-                  << patch->getID() << " and material " << material
-                  << std::endl;
+//         std::cout << std::endl
+//                   << "Wasatch: executing 'TimeStepper::update_variables()' on patch "
+//                   << patch->getID() << " and material " << material
+//                   << std::endl;
 
         // grab the timestep
         Uintah::delt_vartype deltat;
         //jcs this doesn't work:
         //newDW->get( deltat, deltaTLabel_, Uintah::getLevel(patches), material );
-        newDW->get( deltat, deltaTLabel_ );
-
-        cout << "TimeStepper::update_variables() : dt = " << deltat << endl;
+        oldDW->get( deltat, deltaTLabel_ );
+        
+//         cout << "TimeStepper::update_variables() : dt = " << deltat << endl;
 
         //____________________________________________
         // update variables on this material and patch

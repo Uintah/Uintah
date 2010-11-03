@@ -57,7 +57,7 @@ MurnahanMPM::MurnahanMPM(ProblemSpecP& ps, MPMFlags* Mflag)
 {
 
   d_useModifiedEOS = false;
-  ps->require("bulk_modulus", d_initialData.d_Bulk);
+  ps->require("K", d_initialData.d_K);
   ps->require("gamma",        d_initialData.d_Gamma);
   ps->require("viscosity",    d_initialData.d_Viscosity);
   ps->require("pressure",     d_initialData.d_P0);
@@ -67,7 +67,7 @@ MurnahanMPM::MurnahanMPM(ProblemSpecP& ps, MPMFlags* Mflag)
 MurnahanMPM::MurnahanMPM(const MurnahanMPM* cm) : ConstitutiveModel(cm)
 {
   d_useModifiedEOS = cm->d_useModifiedEOS ;
-  d_initialData.d_Bulk = cm->d_initialData.d_Bulk;
+  d_initialData.d_K = cm->d_initialData.d_K;
   d_initialData.d_Viscosity = cm->d_initialData.d_Viscosity;
   d_initialData.d_Gamma = cm->d_initialData.d_Gamma;
   d_initialData.d_P0 = cm->d_initialData.d_P0;
@@ -85,7 +85,7 @@ void MurnahanMPM::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
     cm_ps->setAttribute("type","murnahanMPM");
   }
   
-  cm_ps->appendElement("bulk_modulus",d_initialData.d_Bulk);
+  cm_ps->appendElement("K",d_initialData.d_K);
   cm_ps->appendElement("gamma",       d_initialData.d_Gamma);
   cm_ps->appendElement("pressure",    d_initialData.d_P0);
   cm_ps->appendElement("viscosity",   d_initialData.d_Viscosity);
@@ -163,11 +163,11 @@ void MurnahanMPM::computeStableTimestep(const Patch* patch,
   double c_dil = 0.0;
   Vector WaveSpeed(1.e-12,1.e-12,1.e-12);
 
-  double bulk = d_initialData.d_Bulk;
+  double K = d_initialData.d_K;
   for(ParticleSubset::iterator iter = pset->begin();iter != pset->end();iter++){
      particleIndex idx = *iter;
      // Compute wave speed at each particle, store the maximum
-     c_dil = sqrt((bulk)*pvolume[idx]/pmass[idx]);
+     c_dil = sqrt((K)*pvolume[idx]/pmass[idx]);
      WaveSpeed=Vector(Max(c_dil+fabs(pvelocity[idx].x()),WaveSpeed.x()),
                       Max(c_dil+fabs(pvelocity[idx].y()),WaveSpeed.y()),
                       Max(c_dil+fabs(pvelocity[idx].z()),WaveSpeed.z()));
@@ -231,7 +231,7 @@ void MurnahanMPM::computeStressTensor(const PatchSubset* patches,
                                   lb->pDeformationMeasureLabel_preReloc, pset);
 
     double viscosity = d_initialData.d_Viscosity;
-    double bulk  = d_initialData.d_Bulk;
+    double K  = d_initialData.d_K;
     double gamma = d_initialData.d_Gamma;
 
     double rho_orig = d_initialData.d_rho0; // matl->getInitialDensity();
@@ -282,13 +282,13 @@ void MurnahanMPM::computeStressTensor(const PatchSubset* patches,
 
       // get the hydrostatic part of the stress
       double jtotheminusgamma = pow(J,-gamma);
-      p = bulk*(jtotheminusgamma - 1.0);
+      p = K*(jtotheminusgamma - 1.0);
 
       // compute the total stress (volumetric + deviatoric)
       pstress[idx] = Identity*(-p) + Shear;
 
       Vector pvelocity_idx = pvelocity[idx];
-      c_dil = sqrt((gamma*jtotheminusgamma*bulk)/rho_cur);
+      c_dil = sqrt((gamma*jtotheminusgamma*K)/rho_cur);
       WaveSpeed=Vector(Max(c_dil+fabs(pvelocity_idx.x()),WaveSpeed.x()),
                        Max(c_dil+fabs(pvelocity_idx.y()),WaveSpeed.y()),
                        Max(c_dil+fabs(pvelocity_idx.z()),WaveSpeed.z()));
@@ -296,7 +296,7 @@ void MurnahanMPM::computeStressTensor(const PatchSubset* patches,
       // Compute artificial viscosity term
       if (flag->d_artificial_viscosity) {
         double dx_ave = (dx.x() + dx.y() + dx.z())/3.0;
-        double c_bulk = sqrt(bulk/rho_cur);
+        double c_bulk = sqrt(K/rho_cur);
         Matrix3 D=(velGrad + velGrad.Transpose())*0.5;
         p_q[idx] = artificialBulkViscosity(D.Trace(), c_bulk, rho_cur, dx_ave);
       } else {
@@ -367,19 +367,20 @@ MurnahanMPM::addComputesAndRequires(Task* ,
 double MurnahanMPM::computeRhoMicroCM(double pressure, 
                                       const double p_ref,
                                       const MPMMaterial* matl,
-                                      double temperature)
+                                      double temperature,
+                                      double rho_guess)
 {
     double rhoM;
     double rho_orig = d_initialData.d_rho0; //matl->getInitialDensity();
     double gamma = d_initialData.d_Gamma;
-    double bulk = d_initialData.d_Bulk;
+    double K = d_initialData.d_K;
     double P0 = d_initialData.d_P0;
     
     if(pressure >=P0){
-      rhoM = rho_orig * pow((gamma*bulk*(pressure-P0)+1.0),1./gamma);
+      rhoM = rho_orig * pow((gamma*K*(pressure-P0)+1.0),1./gamma);
     }
     else {
-      rhoM = rho_orig * pow((pressure/P0),bulk*P0);
+      rhoM = rho_orig * pow((pressure/P0),K*P0);
     }
 
     return rhoM;
@@ -393,25 +394,25 @@ void MurnahanMPM::computePressEOSCM(const double rhoM,double& pressure,
 {
     double rho_orig = matl->getInitialDensity();
     double gamma = d_initialData.d_Gamma;
-    double bulk = d_initialData.d_Bulk;
+    double K = d_initialData.d_K;
     double P0 = d_initialData.d_P0;
     
   // Pointwise computation of thermodynamic quantities
     if(rhoM>=rho_orig)
     {
-        pressure = P0 + (1./(gamma*bulk))*(pow(rhoM/rho_orig,gamma)-1.);
-        dp_drho  = (1./(bulk*rho_orig))*pow((rhoM/rho_orig),gamma-1.);
+        pressure = P0 + (1./(gamma*K))*(pow(rhoM/rho_orig,gamma)-1.);
+        dp_drho  = (1./(K*rho_orig))*pow((rhoM/rho_orig),gamma-1.);
     }
     else {
-        pressure    = P0*pow(rhoM/rho_orig, (1./(bulk*P0)));
-        dp_drho  = (1./(bulk*rho_orig))*pow(rhoM/rho_orig,(1./(bulk*P0)-1));
+        pressure    = P0*pow(rhoM/rho_orig, (1./(K*P0)));
+        dp_drho  = (1./(K*rho_orig))*pow(rhoM/rho_orig,(1./(K*P0)-1));
     }
 
 }
 
 double MurnahanMPM::getCompressibility()
 {
-  return 1.0/d_initialData.d_Bulk;
+  return 1.0/d_initialData.d_K;
 }
 
 

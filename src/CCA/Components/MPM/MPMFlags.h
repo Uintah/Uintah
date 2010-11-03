@@ -85,9 +85,9 @@ namespace Uintah {
     int         d_minGridLevel; // Only do MPM on this grid level
     int         d_maxGridLevel; // Only do MPM on this grid level
     bool        doMPMOnLevel(int level, int numLevels) const;
-    
+   
     std::string d_erosionAlgorithm; // Algorithm to erode material points
-
+ 
     double      d_artificialDampCoeff;
     double      d_artificialViscCoeff1; // Artificial viscosity coefficient 1
     double      d_artificialViscCoeff2; // Artificial viscosity coefficient 2

@@ -211,7 +211,6 @@ SmallStrainPlastic::SmallStrainPlastic(const SmallStrainPlastic* cm) :
 
   d_setStressToZero = cm->d_setStressToZero;
   d_allowNoTension = cm->d_allowNoTension;
-  d_removeMass = cm->d_removeMass;
 
   d_evolvePorosity = cm->d_evolvePorosity;
   d_porosity.f0 = cm->d_porosity.f0 ;
@@ -402,11 +401,8 @@ SmallStrainPlastic::setErosionAlgorithm()
 {
   d_setStressToZero = false;
   d_allowNoTension = false;
-  d_removeMass = false;
   if (flag->d_doErosion) {
-    if (flag->d_erosionAlgorithm == "RemoveMass") 
-      d_removeMass = true;
-    else if (flag->d_erosionAlgorithm == "AllowNoTension") 
+    if (flag->d_erosionAlgorithm == "AllowNoTension") 
       d_allowNoTension = true;
     else if (flag->d_erosionAlgorithm == "ZeroStress") 
       d_setStressToZero = true;
@@ -504,25 +500,25 @@ SmallStrainPlastic::initializeCMData(const Patch* patch,
   //               At present only Gaussian available.
   if (d_porosity.porosityDist != "constant") {
 
-    SCIRun::Gaussian gaussGen(d_porosity.f0, d_porosity.f0_std, 0);
+    SCIRun::Gaussian gaussGen(d_porosity.f0, d_porosity.f0_std, 0, 1, DBL_MAX);
     ParticleSubset::iterator iter = pset->begin();
     for(;iter != pset->end();iter++){
 
       // Generate a Gaussian distributed random number given the mean
       // porosity and the std.
-      pPorosity[*iter] = fabs(gaussGen.rand());
+      pPorosity[*iter] = fabs(gaussGen.rand(1.0));
     }
   }
 
   if (d_scalarDam.scalarDamageDist != "constant") {
 
-    SCIRun::Gaussian gaussGen(d_scalarDam.D0, d_scalarDam.D0_std, 0);
+    SCIRun::Gaussian gaussGen(d_scalarDam.D0, d_scalarDam.D0_std, 0, 1,DBL_MAX);
     ParticleSubset::iterator iter = pset->begin();
     for(;iter != pset->end();iter++){
 
       // Generate a Gaussian distributed random number given the mean
       // damage and the std.
-      pDamage[*iter] = fabs(gaussGen.rand());
+      pDamage[*iter] = fabs(gaussGen.rand(1.0));
     }
   }
 
@@ -597,7 +593,6 @@ SmallStrainPlastic::addComputesAndRequires(Task* task,
 
   // Other constitutive model and input dependent computes and requires
   task->requires(Task::OldDW, lb->pTempPreviousLabel, matlset, gnone); 
-  task->requires(Task::OldDW, lb->pErosionLabel,      matlset, gnone);
 
   task->requires(Task::OldDW, pStrainRateLabel,       matlset, gnone);
   task->requires(Task::OldDW, pPlasticStrainLabel,    matlset, gnone);
@@ -710,11 +705,9 @@ SmallStrainPlastic::computeStressTensorExplicit(const PatchSubset* patches,
     // Get the particle stress and temperature
     constParticleVariable<Matrix3> pStress_old;
     constParticleVariable<double>  pTempPrev, pTemp_old;
-    constParticleVariable<double> pErosion;
     old_dw->get(pStress_old, lb->pStressLabel,       pset);
     old_dw->get(pTempPrev,   lb->pTempPreviousLabel, pset); 
     old_dw->get(pTemp_old,   lb->pTemperatureLabel,  pset);
-    old_dw->get(pErosion, lb->pErosionLabel, pset);
 
     // Get the time increment (delT)
     delt_vartype delT;
@@ -1638,7 +1631,8 @@ SmallStrainPlastic::voidNucleationFactor(double ep)
 double SmallStrainPlastic::computeRhoMicroCM(double pressure,
                                          const double p_ref,
                                          const MPMMaterial* matl,
-                                         double temperature)
+                                         double temperature,
+                                         double rho_guess)
 {
   double rho_orig = matl->getInitialDensity();
   double bulk = d_initialData.Bulk;

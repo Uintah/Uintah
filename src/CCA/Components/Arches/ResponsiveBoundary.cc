@@ -188,7 +188,7 @@ cout << "Start TimeStep." << endl;
         double BPT = RB_mix->BubblePointT(P,x);
 
 
-	RB_mix->film_Flux_Main(getST(), getTinfinity(),P,x,RB_BulkComposition,PD,U,RT);
+	RB_mix->film_Flux_Main(getST(), getTinfinity(),P,x,RB_BulkComposition,PD,U,RT,RB_Kfactor);
         double HTC = RB_mix->getHeatTransferCoeff(); 
         RB_ConvectiveHeatFlux = HTC*(RB_Tinfinity - getST());
          
@@ -217,8 +217,8 @@ cout << "Start TimeStep." << endl;
 
                 SurfaceTemperature();
 	        for (int i = 0; i < c; i++) { x.at(i) = getX(i); }
-                if (getST() < RB_BPT) { RB_mix->film_Flux_Main(getST(), getTinfinity(), getSystemPressure(),x,RB_BulkComposition,PD,U,RT);}
-                else {RB_mix->film_Fluxes(getST(),RT,x,P,getSumEnergy(),RB_Tinfinity,PD,U);}
+                if (getST() < RB_BPT) { RB_mix->film_Flux_Main(getST(), getTinfinity(), getSystemPressure(),x,RB_BulkComposition,PD,U,RT,RB_Kfactor);}
+                else {RB_mix->film_Fluxes(getST(),RT,x,P,getSumEnergy(),RB_Tinfinity,PD,U,RB_Kfactor);}
 
 		RB_FV = RB_mix->getSumMflux()/RB_VaporDensity;
                 RB_MF = RB_mix->getSumMflux();
@@ -1133,7 +1133,7 @@ void ResponsiveBoundary::EnergyBalance(int rkcycle)
 
         if (getST() < BPT) //Less than the Boiling Point
         {
-          RB_mix->film_Flux_Main(getST(),getTinfinity(),P,x,RB_BulkComposition,PD,U,RT);
+          RB_mix->film_Flux_Main(getST(),getTinfinity(),P,x,RB_BulkComposition,PD,U,RT,RB_Kfactor);
           double evapload = RB_mix->getSumEflux();
           Qr = Qr - evapload;
         }
@@ -1279,7 +1279,7 @@ for (unsigned int ii = 0; ii < RB_EnergySave.size(); ii++) {cout << "EnergySave[
               if ((temptest < 1e-6) && (energytest > 0)) {FF[ii] = 0;}
               else {FF[ii] = energytest;}
             }
-            RB_mix->film_Fluxes(getST(),RT,x,P,getSumEnergy(),getTinfinity(),PD,U);
+            RB_mix->film_Fluxes(getST(),RT,x,P,getSumEnergy(),getTinfinity(),PD,U,RB_Kfactor);
           }
         }
 
@@ -1592,6 +1592,7 @@ ResponsiveBoundary::problemSetup(ProblemSpecP& params,
   params->getWithDefault("ReferenceTemperature", RB_RefTemp, 298.15);
   params->getWithDefault("Accelerate", RB_Accelerate, false);
   params->getWithDefault("AccelTime", RB_AccelTime, 3.0);
+  params->getWithDefault("K_Factor", RB_Kfactor, 1.00);
 
 //Obtain the liquid pool Composition 
   ProblemSpecP rb_db = params->findBlock("FuelComposition");                                     

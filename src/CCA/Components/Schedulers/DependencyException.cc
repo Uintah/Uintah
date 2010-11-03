@@ -58,9 +58,13 @@ string DependencyException::makeMessage(const Task* task,
   ostringstream str;
   str << "Task Dependency Error: (" << has << ") has no corresponding (";
   str << needs << ") for " << label->getName();
-  if (patch)
+  if (patch){
     str << " on patch " << patch->getID();
-  str << " for material " << matlIndex;
+    str << ", Level-" << patch->getLevel()->getIndex();
+  }
+  
+  str << ", for material " << matlIndex;
+  
   if (task != 0) {
     str << " in task " << task->getName();
   }

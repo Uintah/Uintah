@@ -210,7 +210,6 @@ ElasticPlasticHP::ElasticPlasticHP(const ElasticPlasticHP* cm) :
 
   d_setStressToZero = cm->d_setStressToZero;
   d_allowNoTension = cm->d_allowNoTension;
-  d_removeMass = cm->d_removeMass;
 
   d_evolvePorosity = cm->d_evolvePorosity;
   d_porosity.f0 = cm->d_porosity.f0 ;
@@ -442,11 +441,8 @@ ElasticPlasticHP::setErosionAlgorithm()
 {
   d_setStressToZero = false;
   d_allowNoTension = false;
-  d_removeMass = false;
   if (flag->d_doErosion) {
-    if (flag->d_erosionAlgorithm == "RemoveMass") 
-      d_removeMass = true;
-    else if (flag->d_erosionAlgorithm == "AllowNoTension") 
+    if (flag->d_erosionAlgorithm == "AllowNoTension") 
       d_allowNoTension = true;
     else if (flag->d_erosionAlgorithm == "ZeroStress") 
       d_setStressToZero = true;
@@ -553,25 +549,25 @@ ElasticPlasticHP::initializeCMData(const Patch* patch,
   //               At present only Gaussian available.
   if (d_porosity.porosityDist != "constant") {
 
-    SCIRun::Gaussian gaussGen(d_porosity.f0, d_porosity.f0_std, 0);
+    SCIRun::Gaussian gaussGen(d_porosity.f0, d_porosity.f0_std, 0, 1, DBL_MAX);
     ParticleSubset::iterator iter = pset->begin();
     for(;iter != pset->end();iter++){
 
       // Generate a Gaussian distributed random number given the mean
       // porosity and the std.
-      pPorosity[*iter] = fabs(gaussGen.rand());
+      pPorosity[*iter] = fabs(gaussGen.rand(1.0));
     }
   }
 
   if (d_scalarDam.scalarDamageDist != "constant") {
 
-    SCIRun::Gaussian gaussGen(d_scalarDam.D0, d_scalarDam.D0_std, 0);
+    SCIRun::Gaussian gaussGen(d_scalarDam.D0, d_scalarDam.D0_std, 0, 1,DBL_MAX);
     ParticleSubset::iterator iter = pset->begin();
     for(;iter != pset->end();iter++){
 
       // Generate a Gaussian distributed random number given the mean
       // damage and the std.
-      pDamage[*iter] = fabs(gaussGen.rand());
+      pDamage[*iter] = fabs(gaussGen.rand(1.0));
     }
   }
 
@@ -646,7 +642,6 @@ ElasticPlasticHP::addComputesAndRequires(Task* task,
 
   // Other constitutive model and input dependent computes and requires
   task->requires(Task::OldDW, lb->pTempPreviousLabel, matlset, gnone); 
-  task->requires(Task::OldDW, lb->pErosionLabel,      matlset, gnone);
 
   task->requires(Task::OldDW, pRotationLabel,         matlset, gnone);
   task->requires(Task::OldDW, pStrainRateLabel,       matlset, gnone);
@@ -767,9 +762,6 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset* patches,
     constParticleVariable<double> pTemperature;
     old_dw->get(pStress,      lb->pStressLabel, pset);
     old_dw->get(pTemperature, lb->pTemperatureLabel,  pset);
-
-    constParticleVariable<double> pErosion;
-    old_dw->get(pErosion, lb->pErosionLabel, pset);
 
     // Get the time increment (delT)
     delt_vartype delT;
@@ -3373,7 +3365,8 @@ ElasticPlasticHP::computeSpecificHeat(double T)
 double ElasticPlasticHP::computeRhoMicroCM(double pressure,
                                          const double p_ref,
                                          const MPMMaterial* matl, 
-                                         double temperature)
+                                         double temperature,
+                                         double rho_guess)
 {
   double rho_orig = matl->getInitialDensity();
   double bulk = d_initialData.Bulk;

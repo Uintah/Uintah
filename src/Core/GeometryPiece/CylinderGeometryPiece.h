@@ -152,6 +152,9 @@ WARNING
     inline Point bottom() const {return d_bottom;}
     inline double radius() const {return d_radius;}
     inline double height() const { return (d_top-d_bottom).length();}
+    inline bool cylinder_end() const {return d_cylinder_end;}
+    inline bool axisymmetric_end() const {return d_axisymmetric_end;}
+    inline bool axisymmetric_side() const {return d_axisymmetric_side;}
     
   protected:
     
@@ -164,6 +167,9 @@ WARNING
     Point d_bottom;
     Point d_top;
     double d_radius;
+    bool d_cylinder_end;
+    bool d_axisymmetric_end;
+    bool d_axisymmetric_side;
   };
 } // End namespace Uintah
       

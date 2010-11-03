@@ -1087,8 +1087,100 @@ in the \tt <MPM> \normalfont section of the input file.
 to failure based on a stress or strain as given below, thus yielding an
 elastic-plastic model with failure.  Note that the post-failure behaviour of
 simulations is not always robust.  The input section for damage and plasticity is
-similar to that for UCNH without \tt <useDamage> \normalfont and \tt <usePlasticity> \normalfont.
+similar to that for UCNH without \tt <useDamage> \normalfont and \tt <usePlasticity>. \normalfont
 
+When a particle has failed, the value of the particle variable \tt p.localized \normalfont
+will be larger than one (0 means the particle has not failed) and can be output in the \tt DataArchiver
+\normalfont section of the input file. In addition, the total number of failed particles as
+a function of time \tt TotalLocalizedParticle \normalfont can be output. 
+
+Another damage model that can be used with \tt <cnh\_damage> \normalfont and
+\tt <cnhp\_damage> \normalfont is a subset of the brittle damage model of LS-DYNA's Concrete
+ Model 159 (FHWA-HRT-057-062, 2007). The model is invoked by the following MPMFlag
+\begin{Verbatim}[fontsize=\footnotesize]
+     <erosion algorithm="BrittleDamage"/>
+\end{Verbatim}
+in the \tt <MPM> \normalfont section of the input file. Two key features of the model are the use of
+progressive (as opposed to sudden) damage due to softening to improve numerical stability, 
+and the reduction of mesh size sensitivity via the specification of fracture energy. 
+
+Brittle damage occurs when the mean stress $\sigma_{kk}/3$ is tensile
+and the energy $\tau_b$, related to the maximum principal 
+strain $\epsilon_{max}$, has exceeded a threshold value $r_0^b$
+
+\begin{equation}
+\sigma_{kk}>0, \phantom{ijkl}
+\tau_b = \sqrt{E \epsilon_{max}^2} \geq r_0^b
+\end{equation}
+where $E$ is the Young's modulus. If at the next time step the mean stress is less than
+zero (compressive), the damage mechanism can be optionally inactivated such that the current stress 
+is set temporarily to a fraction of the undamaged stress to 
+model stiffness recovery due to crack closing. When the mean stress becomes tensile again,
+the value of the previous maximum damage $d$ can be restored; recovery is a user option in Uintah
+but should be used with caution since stiffening is more prone to instability.
+The softening function for brittle damage is assumed to be
+\begin{equation}
+d(\tau_b)= \frac{0.999}{D} \left(\frac{1+D}{1+D \exp^{-C(\tau_b-r_0^b)}} \right)
+\end{equation}
+where $C$ and $D$ are constants that define the shape of the softening
+stress-strain curve.
+  
+To regulate mesh size sensitivity, the fracture energy
+($G_f$), defined as the area under the stress-displacement
+curve for displacement larger than $x_0$ (the displacement at peak strength), is to be maintained constant.
+The user needs to input $G_f$ and $D$; $C$ is calculated internally. 
+
+The maximum increment of damage that can accumulate over a single time
+step is a user-defined input to avoid excessive damage accumulation over
+a single time step to reduce numerical instability.
+
+The brittle damage model is applicable to \tt <cnh\_damage> \normalfont and 
+\tt <cnhp\_damage>. \normalfont For \tt cnh\_damage, \normalfont 
+the parameters for brittle damage can be specified as
+
+\begin{Verbatim}[fontsize=\footnotesize]
+                <constitutive_model type="cnh_damage">
+               <shear_modulus>3.52e9</shear_modulus>
+                 <bulk_modulus>8.9e9</bulk_modulus>
+   <brittle_damage_initial_threshold>57.0 </brittle_damage_initial_threshold>
+  <brittle_damage_fracture_energy>11.2</brittle_damage_fracture_energy>
+  <brittle_damage_constant_D>0.1</brittle_damage_constant_D>
+ <brittle_damage_max_damage_increment>0.1</brittle_damage_max_damage_increment>
+<brittle_damage_allowRecovery> false </brittle_damage_allowRecovery>
+<brittle_damage_recoveryCoeff> 1.0 </brittle_damage_recoveryCoeff>
+   <brittle_damage_printDamage> false </brittle_damage_printDamage>
+                </constitutive_model>
+
+\end{Verbatim}
+
+The tags in the input file for brittle damage are shown in the following table.
+
+\begin{table}[ht]
+\centering
+\begin{tabular} {c c l}
+\hline
+Tag & Symbol & Description \\
+\hline
+brittle\_damage\_initial\_threshold & $r_0^b$ &  material property \\
+brittle\_damage\_fracture\_energy & $G_f$ &  material property \\
+brittle\_damage\_constant\_D & $D$ & material property \\
+brittle\_damage\_max\_damage\_increment & & optional, default=0.1 \\
+brittle\_damage\_allowRecovery & & allow crack closing (stiffening) \\
+& & optional, default=false \\
+brittle\_damage\_recoveryCoeff & & fraction of undamaged stress to recover\\
+& & (between 0 and 1), optional\\
+& & default=1.0 (full recovery) used only\\
+& & when brittle\_damage\_allowRecovery \\
+& & is set to true  \\
+brittle\_damage\_printDamage & & print the state of damage \\
+& & of damaged particles, default=false \\
+& & (to reduce large amounts of output) \\
+\hline
+\end{tabular}
+\end{table}
+
+When a particle is damaged, the value of the particle variable \tt p.damage \normalfont
+can be output in the \tt DataArchiver \normalfont section of the input file.
 
 \item{\bf Compressible Mooney-Rivlin Model} This model is generally parameterized
 for rubber type materials.  Usage is as follows:

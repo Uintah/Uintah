@@ -130,6 +130,7 @@ protected:
   virtual bool     HasInvariantMetaData(void) const { return false; };
   virtual bool     HasInvariantSIL(void) const { return false; };
 
+  void             AddExpressionsToMetadata(avtDatabaseMetaData *md);
 
   // DATA MEMBERS
   bool useExtraCells;

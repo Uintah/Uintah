@@ -1191,7 +1191,7 @@ RBMixerProperties::MTCoefficient(double T, double Tinf, double P, double PD, dou
 
            ft = L/Sh; //Boundary Layer film thickness (meters)
 
-           M_KC[i][j] = M_Dab[i][j]/ft; //  Mass transfer coefficient;
+           M_KC[i][j] = M_Kfactor*M_Dab[i][j]/ft; //  Mass transfer coefficient;
 		
 	   }}}
 
@@ -1422,7 +1422,7 @@ RBMixerProperties::MoleFraction(vector<double> m)
 //*********************************************************************************************************************
 //*********************************************************************************************************************
 void
-RBMixerProperties::film_Flux_Main(double T,double Tinf,double P,vector<double> x,vector<double> Yb,double PD,double U,double RT)
+RBMixerProperties::film_Flux_Main(double T,double Tinf,double P,vector<double> x,vector<double> Yb,double PD,double U,double RT,double factor)
 {
 
         M_convergeFluxProblem = 0;
@@ -1430,6 +1430,8 @@ RBMixerProperties::film_Flux_Main(double T,double Tinf,double P,vector<double> x
         int Limit = 25;
         double perturb = 2e-11;
       
+        M_Kfactor = factor; //adjustment factor for mass transfer coefficients
+
         while (counter <= Limit)
         {
           film_Fluxes(T,Tinf,P,x,Yb,PD,U,RT);
@@ -1469,7 +1471,7 @@ RBMixerProperties::film_Flux_Main(double T,double Tinf,double P,vector<double> x
 //*********************************************************************************************************************
 //*********************************************************************************************************************
 void
-RBMixerProperties::film_Fluxes(double T, double RT, vector<double> x, double P, double Energy, double Tinf, double PD, double U)
+RBMixerProperties::film_Fluxes(double T, double RT, vector<double> x, double P, double Energy, double Tinf, double PD, double U,double factor)
 {
 
         int n = M_NOC;
@@ -1477,6 +1479,7 @@ RBMixerProperties::film_Fluxes(double T, double RT, vector<double> x, double P, 
         double LiquidEvap = 0;
         double MW[n];
 
+        M_Kfactor = factor; //adjustment factor for mass transfer coefficients
 
         film_VLE(T,P,x);
         

@@ -210,8 +210,6 @@ public:
                                      SchedulerP&);
   virtual void sched_mmsInitialCondition(const LevelP& level,
                                          SchedulerP&);
-  virtual void sched_blobInit(const LevelP& level,
-                              SchedulerP&);
   virtual void sched_weightInit( const LevelP& level, 
                                 SchedulerP& ); 
   virtual void sched_weightedAbsInit( const LevelP& level, 
@@ -307,12 +305,6 @@ private:
                            DataWarehouse* ,
                            DataWarehouse* new_dw);
                            
-  void blobInit(const ProcessorGroup*,
-                const PatchSubset* patches,
-                const MaterialSubset*,
-                DataWarehouse* ,
-                DataWarehouse* new_dw);
-
   void weightInit( const ProcessorGroup*,
                   const PatchSubset* patches,
                   const MaterialSubset*,
