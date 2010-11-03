@@ -60,6 +60,7 @@ SRCS   += \
         $(SRCDIR)/Water.cc                      \
         $(SRCDIR)/ViscoPlastic.cc               \
         $(SRCDIR)/MurnahanMPM.cc                \
+        $(SRCDIR)/ProgramBurn.cc                \
         $(SRCDIR)/UCNH.cc                       \
         $(SRCDIR)/SoilFoam.cc
 

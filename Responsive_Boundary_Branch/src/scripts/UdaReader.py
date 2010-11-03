@@ -82,7 +82,7 @@ class Uda:
     def __init__(self,uda=None):
         self.name = uda
         self.output_file_names = []
-
+        self.output_particle_file_names = []
 
     def read(self,uda=None):
 
@@ -141,6 +141,11 @@ class Uda:
         self.timestep_vtk()
         self.output_vtk_file(root_element)
 
+    def output_vtk_particle(self,filename = None):
+        root_element = self.create_root_element(vtk_type = 'Collection')
+        self.timestep_vtk_particle()
+        self.output_vtk_file_particle(root_element)
+
 
     def create_root_element(self,vtk_type):
         elems = self.index_tree.getroot()
@@ -165,7 +170,18 @@ class Uda:
                 # ts.output_vtk(filename)
                 self.output_file_names.append(filename)
                 ts.output_vtk(filename)
+
+    def timestep_vtk_particle(self):
+        name = self.name.split('.')[0]
+        for ts in self.timesteps:
+            for level in ts.grid.levels:
+                filename_particle = name + '.L' + repr(level.id) + '_' +\
+                    str(ts.timestepNumber) + '.vtu'
+                # ts.output_vtk(filename)
+                self.output_particle_file_names.append(filename_particle)
+                ts.output_vtk_particle(filename_particle)
             
+
     def output_vtk_file(self,root_element):
         collection = ET.SubElement(root_element,"Collection")
         for i in range(len(self.output_file_names)):
@@ -174,12 +190,30 @@ class Uda:
             data_set.attrib['group'] = ''
             data_set.attrib['part'] = '0'
             data_set.attrib['file'] = str(self.output_file_names[i])
+            
+        indent(root_element)         
+        # ET.dump(root_element)
+        tree = ET.ElementTree(root_element)
+        name = self.name.split('.')[0]
+        tree.write(name + '.pvd')
+
+    def output_vtk_file_particle(self,root_element):
+        collection = ET.SubElement(root_element,"Collection")
+        for i in range(len(self.output_particle_file_names)):
+            data_set_particle = ET.SubElement(collection,"DataSet")
+            data_set_particle.attrib['timestep'] = str(self.timesteps[i].currentTime)
+            data_set_particle.attrib['group'] = ''
+            data_set_particle.attrib['part'] = '0'
+
+            data_set_particle.attrib['file'] = str(self.output_particle_file_names[i])
                   
         indent(root_element)         
         # ET.dump(root_element)
         tree = ET.ElementTree(root_element)
         name = self.name.split('.')[0]
         tree.write(name + '.pvd')
+
+
 
 
 class Timestep:
@@ -241,6 +275,9 @@ class Timestep:
 
     def output_vtk(self,filename):
         self.grid.output_vtk(filename)
+
+    def output_vtk_particle(self,filename):
+        self.grid.output_vtk_particle(filename)
 
 class Grid:
     def __init__(self,grid):
@@ -328,6 +365,12 @@ class Grid:
             elem_tree = ET.ElementTree(elem)
             elem_tree.write(filename)
 
+    def output_vtk_particle(self,filename):
+        for level in self.levels:
+            elem = level.vtk_element_particle()
+            elem_tree = ET.ElementTree(elem)
+            elem_tree.write(filename)
+
 
 class Level:
     def __init__(self,level):
@@ -406,7 +449,22 @@ class Level:
         indent(vtkfile_elem)
         # ET.dump(vtkfile_elem)
         return vtkfile_elem
-    
+
+
+    def vtk_element_particle(self):
+
+        vtkfile_elem = create_vtkfile_element(vtk_type='UnstructuredGrid')
+        unstructured_data_elem = ET.Element('UnstructuredGrid')
+
+        for patch in self.patches:
+            elem = patch.vtk_element_particle(unstructured_data_elem)
+            unstructured_data_elem.append(elem)
+                
+        vtkfile_elem.append(unstructured_data_elem)
+        indent(vtkfile_elem)
+        # ET.dump(vtkfile_elem)
+        return vtkfile_elem
+
 
 class Patch:
     def __init__(self,patch):
@@ -481,7 +539,7 @@ class Patch:
 
     def vtk_element(self,root_elem):
         extent = self.get_extent()
-        num_points = self.get_num_particles(mat_id)
+#        num_points = self.get_num_particles(mat_id)
         lo = extent[0]
         # subtract off the plus_neighbor values from the hi extent
         # hi = extent[1] - plus_neighbor
@@ -557,6 +615,38 @@ class Patch:
         # ET.dump(patch_elem)
         return patch_elem
 
+    def vtk_element_particle(self,root_elem):
+#        num_points = self.get_num_particles(mat_id)
+        num_points = 0
+        patch_elem = ET.Element('Piece')
+        patch_elem.attrib['NumberOfPoints'] = repr(num_points)
+        patch_elem.attrib['NumberOfCells'] = '0'
+        
+
+        celldata_elem = ET.Element('CellData')
+        cells_elem = ET.Element('Cells')
+        pointdata_elem = ET.Element('PointData')
+        points_elem = ET.Element('Points')
+
+        for variable in self.variables:
+            variable_type = variable.type.split('<')[0]
+            elem = variable.vtk_element()
+            
+            if variable_type == 'ParticleVariable':
+                data_type = variable.data_type
+                if data_type == 'Point':
+                    points_elem.append(elem)
+                else:
+                    pointdata_elem.append(elem)
+
+        patch_elem.append(celldata_elem)
+        patch_elem.append(pointdata_elem)
+        patch_elem.append(points_elem)
+        patch_elem.append(cells_elem)
+
+        indent(patch_elem)
+        # ET.dump(patch_elem)
+        return patch_elem
 
 class Variable:
     def __init__(self,variable):
@@ -615,8 +705,8 @@ class Variable:
         variable_type = self.type.split('<')[0]
         # print variable_type
 
-        if variable_type != 'CCVariable' and variable_type != 'NCVariable':
-            return None
+#        if variable_type != 'CCVariable' and variable_type != 'NCVariable':
+#            return None
                     
         var_elem = ET.Element('DataArray')
         var_elem.attrib['type'] = 'Float64'

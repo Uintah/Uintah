@@ -122,6 +122,7 @@ ViscoScram::ViscoScram(ProblemSpecP& ps,MPMFlags* Mflag)
     d_useModifiedEOS = false;
   }
   if(d_useJWLEOS) {
+    d_useJWLCEOS = false;
     ps->require("Cv",d_JWLEOSData.Cv);
   }
   if(d_useJWLCEOS) {
@@ -1282,7 +1283,8 @@ ViscoScram::addParticleState(std::vector<const VarLabel*>& from,
 double ViscoScram::computeRhoMicroCM(double pressure,
                                      const double p_ref,
                                      const MPMMaterial* matl,
-                                     double temperature)
+                                     double temperature,
+                                     double rho_guess)
 {
   double rho_orig = matl->getInitialDensity();
   double p_gauge = pressure - p_ref;
@@ -1290,22 +1292,15 @@ double ViscoScram::computeRhoMicroCM(double pressure,
 
   if(d_useJWLEOS) {                        // JWL EOS
     double Cv = d_JWLEOSData.Cv;
-    double om = d_JWLEOSData.om;
+    //    double om = d_JWLEOSData.om;
 
     Pressure = pressure;
     Temperature = temperature;
     SpecificHeat = Cv;
-    /* Use a hybrid Newton-Bisection Method to compute the rho_micro.
-       The solver guarantees to converge to a solution.
 
-       Modified by:
-       Changwei Xiong
-       Department of Chemistry
-       University of Utah
-    */
     double epsilon  = 1e-15;
-    double rho_min = 0.0;                             // Such that f(min) < 0
-    double rho_max = pressure*1.001/(om*Cv*temperature); // Such that f(max) > 0
+    double rho_min = 0.0;                      // Such that f(min) < 0
+    double rho_max = 100000; //pressure*1.001*rho_orig/(om*Cv*temperature)*1.3431907e7; // Such that f(max) > 0
     IL = rho_min;
     IR = rho_max;
 
@@ -1313,23 +1308,23 @@ double ViscoScram::computeRhoMicroCM(double pressure,
     double df_drho = 0;
     double delta_old, delta_new;
 
-    double rho_cur = rho_max/2.0;
+    double rho_cur = rho_guess <= rho_max ? rho_guess : rho_max/2.0;
+    //double rhoM_start = rhoM;
 
     int iter = 0;
     while(1){
       f = func(rho_cur,matl);
       setInterval(f, rho_cur);
-
       if(fabs((IL-IR)/rho_cur)<epsilon){
         return (IL+IR)/2.0;
       }
 
-      delta_new = 1e100;
+      delta_new = 1;
       while(1){
-        df_drho   = deri(rho_cur,matl);
+        df_drho = deri(rho_cur,matl);
         delta_old = delta_new;
         delta_new = -f/df_drho;
-        rho_cur  += delta_new;
+        rho_cur += delta_new;
 
         if(fabs(delta_new/rho_cur)<epsilon){
           return rho_cur;
@@ -1357,6 +1352,8 @@ double ViscoScram::computeRhoMicroCM(double pressure,
       rho_cur = (IL+IR)/2.0;
       iter++;
     }
+
+
   } else if(d_useJWLCEOS) {                // JWLC EOS
     double A = d_JWLEOSData.A;
     double B = d_JWLEOSData.B;
@@ -1457,7 +1454,6 @@ double ViscoScram::computeRhoMicroCM(double pressure,
   return rho_cur;
 
 }
-
 void ViscoScram::computePressEOSCM(double rho_cur,double& pressure,
                                    double p_ref,
                                    double& dp_drho, double& tmp,
@@ -1478,11 +1474,14 @@ void ViscoScram::computePressEOSCM(double rho_cur,double& pressure,
     double V  = rho_orig/rho_cur;
     double P1 = A*exp(-R1*V);
     double P2 = B*exp(-R2*V);
-    double P3 = om*Cv*temperature*rho_cur;
+    double P3 = om*Cv*temperature/V;
 
-    pressure  = P1 + P2 + P3;
-    dp_drho   = (R1*rho_orig*P1 + R2*rho_orig*P2)/(rho_cur*rho_cur) + om*Cv*temperature;
-    tmp       = dp_drho;
+    double press = P1 + P2 + P3;
+    pressure   = press;
+    double dpdrho = (R1*rho_orig*P1 + R2*rho_orig*P2)/(rho_cur*rho_cur) + om*Cv*temperature/rho_orig;
+    dp_drho = dpdrho;
+    tmp = dp_drho;
+
   } else if(d_useJWLCEOS) {
     double A = d_JWLEOSData.A;
     double B = d_JWLEOSData.B;
@@ -1566,8 +1565,8 @@ double ViscoScram::func(double rhoM,const MPMMaterial*  matl){
   double V  = matl->getInitialDensity()/rhoM;
   double P1 = A*exp(-R1*V);
   double P2 = B*exp(-R2*V);
-  double P3 = om*SpecificHeat*Temperature*rhoM;
-  return P1 + P2 + P3 - Pressure;
+  double P3 = om*SpecificHeat*Temperature/V;
+  return (P1 + P2 + P3) - Pressure;
 }
 
 
@@ -1581,8 +1580,8 @@ double ViscoScram::deri(double rhoM, const MPMMaterial* matl){
   double V  = matl->getInitialDensity()/rhoM;
   double P1 = A*exp(-R1*V);
   double P2 = B*exp(-R2*V);
-  double P3 = om*SpecificHeat*Temperature*rhoM;
-  return (P1*R1*V + P2*R2*V + P3)/rhoM;
+  double P3 = om*SpecificHeat*Temperature/V;
+  return (P1*R1*V + P2*R2*V+P3)/rhoM;
 }
 
 

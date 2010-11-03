@@ -379,7 +379,7 @@ namespace Uintah {
       
     if(delt < d_timeinfo->delt_min){
       if(d_myworld->myrank() == 0)
-        cerr << "WARNING: raising delt from " << delt
+        cout << "WARNING: raising delt from " << delt
              << " to minimum: " << d_timeinfo->delt_min << '\n';
       delt = d_timeinfo->delt_min;
     }
@@ -387,7 +387,7 @@ namespace Uintah {
         d_timeinfo->max_delt_increase < 1.e90 &&
         delt > (1+d_timeinfo->max_delt_increase)*prev_delt) {
       if(d_myworld->myrank() == 0)
-        cerr << "WARNING (a): lowering delt from " << delt 
+        cout << "WARNING (a): lowering delt from " << delt 
              << " to maxmimum: " << (1+d_timeinfo->max_delt_increase)*prev_delt
              << " (maximum increase of " << d_timeinfo->max_delt_increase
              << ")\n";
@@ -395,14 +395,14 @@ namespace Uintah {
     }
     if( t <= d_timeinfo->initial_delt_range && delt > d_timeinfo->max_initial_delt ) {
       if(d_myworld->myrank() == 0)
-        cerr << "WARNING (b): lowering delt from " << delt 
+        cout << "WARNING (b): lowering delt from " << delt 
              << " to maximum: " << d_timeinfo->max_initial_delt
              << " (for initial timesteps)\n";
       delt = d_timeinfo->max_initial_delt;
     }
     if( delt > d_timeinfo->delt_max ) {
       if(d_myworld->myrank() == 0) {
-        cerr << "WARNING (c): lowering delt from " << delt 
+        cout << "WARNING (c): lowering delt from " << delt 
              << " to maximum: " << d_timeinfo->delt_max << '\n';
       }
       delt = d_timeinfo->delt_max;
@@ -420,7 +420,7 @@ namespace Uintah {
       }
       if (delt != orig_delt) {
         if(d_myworld->myrank() == 0)
-          cerr << "WARNING (d): lowering delt from " << orig_delt 
+          cout << "WARNING (d): lowering delt from " << orig_delt 
                << " to " << delt
                << " to line up with output/checkpoint time\n";
       }

@@ -98,7 +98,7 @@ WARNING
          //PARAMETERS UNIQUE TO THIS MODEL FROM UPS FILE
          double d_myu;
          bool b_svf;
-         
+         IntVector d_materials;
       public:
          // Constructor
          NodalSVFContact(const ProcessorGroup* myworld,

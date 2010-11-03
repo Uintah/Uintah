@@ -1,0 +1,141 @@
+#!/bin/sh
+
+#______________________________________________________________________
+#  startLocalTest:
+#     This script executes the local regression tests for a single component
+
+
+#__________________________________
+# define environmental variables and export them
+HTMLLOG=""
+LOCAL_OR_NIGHTLY_TEST="local"
+mallocstrict="no"
+OS=`uname -s`
+PARALLELISM=8
+WEBLOG=""
+BUILD_DIR=/dev/null
+
+export mallocstrict  BUILD_DIR  HTMLLOG WEBLOG LOCAL_OR_NIGHTLY_TEST OS
+
+#__________________________________
+unset SHELL
+umask 002
+
+if [ "$#" != 1 ]; then
+  echo "Usage: startLocalTest \<Path to Build Directory\>"
+  exit
+fi
+
+BUILD_DIR="$1"
+
+
+if [ ! -d "${BUILD_DIR}" ]; then
+  echo "ERROR: The build directory $BUILD_DIR does not exist.  Now exiting"
+  exit -1
+fi
+
+
+cd "${BUILD_DIR}"
+
+TEST_DATA="${BUILD_DIR}/TestData"
+#__________________________________
+#    - generate the symbolic links
+#    - check for the goldStandards
+mkdir local_RT >& /dev/null
+cd    local_RT
+
+if [ ! -d TestScripts ]; then
+  ln -s ../../src/R_Tester TestScripts
+fi
+
+if [ ! -f replace_all_GS ]; then
+  ln -s ../../src/R_Tester/helpers/replace_all_GS replace_all_GS
+fi
+
+if [ ! -d susdir ]; then
+  ln -s ../StandAlone susdir
+fi
+
+if [ ! -d inputs ]; then
+  ln -s ../../src/StandAlone/inputs inputs
+fi
+
+if [ -d goldStandard ]; then
+  rm -f goldStandard
+fi
+ln -s "${TEST_DATA}" goldStandard
+
+#__________________________________
+# bulletproofing
+if [ ! -d "$TEST_DATA" ]; then
+  echo "ERROR: TestData directory doesn't exist: $TEST_DATA.  Now exiting"
+  exit -1;
+fi
+
+if [ ! -f susdir/sus ]; then
+  echo "ERROR: The executable sus was not found.  Please compile it by running make uintah.  Now exiting"
+  exit -1;
+fi
+if [ ! -f susdir/compare_uda ]; then
+  echo "ERROR: The comparison utility compare_uda was not found.  Please compile it by running make uintah.  Now exiting"
+  exit -1;
+fi
+
+
+#__________________________________
+# Have the user pick a component
+# find all the component tests which are python scripts
+
+#componentTests=`file TestScripts/* | grep python | cut -d: -f1 | cut -d/ -f2`
+componentTests=`ls TestScripts/*.py | grep -v __init__ | sed "s/.py//g" | sed "s,TestScripts/,,g"`
+
+list=""
+n="0"
+for comp in $componentTests; do
+  list="$list $comp - off,"
+  n=$(( $n + 1 ))
+done
+echo $list
+
+componentTest=`dialog --stdout --separate-output --checklist "Select the component for local regression testing" 20 50 40 $list`
+if [ $? != 0 ] ; then                                                                
+  echo "cancel selected"                                                                  
+  exit                                                                                    
+fi 
+
+#__________________________________
+# Now run the test
+echo ""
+echo ""
+date
+echo "Running $componentTest Tests"
+
+# clean up old test results
+/bin/rm -f $componentTest.log >/dev/null
+/bin/rm -rf $componentTest-results >/dev/null
+
+# create the do<component>tests  python script
+doTestScript="do${componentTest}tests"
+echo "#!/bin/tcsh"                                         >  "$doTestScript"
+echo "setenv PATH $PATH"                                   >> "$doTestScript"
+echo "setenv OS $OS"                                       >> "$doTestScript"
+echo "setenv SCI_DEBUG \"\""                               >> "$doTestScript"
+echo "setenv LOCAL_OR_NIGHTLY_TEST $LOCAL_OR_NIGHTLY_TEST" >> "$doTestScript"
+
+echo "python TestScripts/$componentTest.py susdir inputs goldStandard local $PARALLELISM "'$1' >> "$doTestScript"
+
+/bin/chmod a+x "$doTestScript"
+
+#__________________________________
+# run the python script that contains all the
+# tests for that component
+
+"$doTestScript" | tee "${componentTest}.log"
+
+retval=$?
+
+echo ""
+echo ""
+
+exit $retval
+

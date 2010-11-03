@@ -29,7 +29,7 @@ def nullCallback (test, susdir, inputsdir, compare_root, dbg_opt, max_parallelis
 # all of the paramaters given to runSusTest
 def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
  
-  if len(argv) < 6 or len(argv) > 7 or not argv[4] in ["dbg", "opt"] :
+  if len(argv) < 6 or len(argv) > 7 or not argv[4] in ["dbg", "opt", "local"] :
     print "usage: %s <susdir> <inputsdir> <testdata_goldstandard> <dbg_opt> " \
              "<max_parallelsim> <test>" % argv[0]
     print "    where <test> is optional"
@@ -58,10 +58,9 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
   if len(argv) == 7:
     solotest = argv[6]
   
-  # If run from startTester, tell it to output logs in web dir
-  # otherwise, save it in the build, and display links
-  try:
-
+  # If running Nightly RT, output logs in web dir
+  # otherwise, save it in the build
+  if environ['LOCAL_OR_NIGHTLY_TEST'] != "nightly" :
     # if webpath exists, use that, otherwise, use BUILDROOT/dbg_opt
     outputpath    = "%s-%s" % (environ['HTMLLOG'], dbg_opt)
     weboutputpath = "%s-%s" % (environ['WEBLOG'],  dbg_opt)
@@ -72,8 +71,7 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
       system("chmod -R 775 %s" % outputpath)
     except Exception:
       pass
-
-  except Exception:
+  else:
     outputpath = startpath
     weboutputpath = startpath
 
@@ -144,6 +142,9 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
   failcode       = 0
   solotest_found = 0
   comp_time0 = time()
+  
+  # clean up any old log files
+  system("rm -rf %s/%s-short.log" % (startpath,ALGO))
  
   for test in TESTS:
 
@@ -219,6 +220,8 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
       continue
     if do_opt == 0 and dbg_opt == "opt":
       continue
+    if do_debug == "local":
+       continue
       
     if dbg_opt == "opt":
       do_memory = 0
@@ -230,13 +233,20 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
 
     #__________________________________
     # bulletproofing
-    # does gold standard exists
+    # Does gold standard exists?
+    # If it doesn't then either throw an error (local RT) or generate it (Nightly RT).
     try:
       chdir(compare_root)
       chdir(testname)
     except Exception:
+      if dbg_opt == "local":
+        print "ERROR: The gold standard for the (%s) test does not exist." % testname
+        print "To generate it run: \n   make xxxx"
+        exit(1) 
+      
       chdir(compare_root)
       mkdir(testname)
+      
     
     if startFrom == "checkpoint":
       try:
@@ -266,7 +276,7 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
       print "Remove %s/%s before running this test" % (resultsdir, testname)
       exit(1)
 
-    system("echo '%s/replace_gold_standard %s %s/%s-results %s $1 \"$2\"' > %s/replace_gold_standard" % (helperspath, compare_root, startpath, ALGO, testname, testname))
+    system("echo '%s/replace_gold_standard %s %s/%s-results %s' > %s/replace_gold_standard" % (helperspath, compare_root, startpath, ALGO, testname, testname))
     system("chmod gu+rwx %s/replace_gold_standard" % testname)
 
     chdir(testname)
@@ -525,7 +535,7 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
       print "\t\tMake sure the problem makes checkpoints before finishing"
     
     print sus_log_msg
-    system("echo '  -- %s%s test failed to complete' >> %s/%s-short.log" % (testname,restart_text,startpath,ALGO))
+    system("echo '  -- %s%s test did not run to completion' >> %s/%s-short.log" % (testname,restart_text,startpath,ALGO))
     return_code = 1
   else:
     # Sus completed successfully - now run memory,compar_uda and performance tests
@@ -626,15 +636,15 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
     # print error codes
     # if comparison, memory, performance tests fail, return here, so mem_leak tests can run
     if compUda_RC == 5*256 or compUda_RC == 1*256:
-      system("echo '  -- %s%s test failed comparison tests' >> %s/%s-short.log" % (testname,restart_text,startpath,ALGO))
+      system("echo '  --%s-- \t%s test failed comparison tests' >> %s/%s-short.log" % (testname,restart_text,startpath,ALGO))
       return_code = 2;
         
     if performance_RC == 2*256:
-      system("echo '  -- %s%s test failed performance tests' >> %s/%s-short.log" % (testname,restart_text,startpath,ALGO))
+      system("echo '  --%s-- \t%s test failed performance tests' >> %s/%s-short.log" % (testname,restart_text,startpath,ALGO))
       return_code = 2;
     
     if memory_RC == 1*256 or memory_RC == 2*256:
-      system("echo '  -- %s%s test failed memory tests' >> %s/%s-short.log" % (testname,restart_text,startpath,ALGO))
+      system("echo '  --%s-- \t%s test failed memory tests' >> %s/%s-short.log" % (testname,restart_text,startpath,ALGO))
       return_code = 2;
     
     if return_code != 0:

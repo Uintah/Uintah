@@ -9,6 +9,7 @@
 
 //-- Wasatch includes --//
 #include "Operators.h"
+#include <CCA/Components/Wasatch/Operators/UpwindInterpolant.h>
 
 //-- Uintah includes --//
 #include <Core/Grid/Patch.h>
@@ -161,6 +162,45 @@ namespace Wasatch{
     opDB.register_new_operator<InterpYVolSSurfY>( InterpYVolSSurfY::Assembler( dim, bcPlus[0], bcPlus[1], bcPlus[2] ) );
     opDB.register_new_operator<InterpZVolSSurfZ>( InterpZVolSSurfZ::Assembler( dim, bcPlus[0], bcPlus[1], bcPlus[2] ) );
 
+    //--------------------------------------------------------
+    // UPWIND interpolants - phi volume to phi surface
+    //--------------------------------------------------------    
+    typedef UpwindInterpolant<SVolField,SSurfXField> UpwindSVolSSurfX;
+    opDB.register_new_operator<UpwindSVolSSurfX>(scinew UpwindSVolSSurfX(dim, bcPlus) );
+    
+    typedef UpwindInterpolant<SVolField,SSurfYField> UpwindSVolSSurfY;
+    opDB.register_new_operator<UpwindSVolSSurfY>(scinew UpwindSVolSSurfY(dim, bcPlus ));
+
+    typedef UpwindInterpolant<SVolField,SSurfZField> UpwindSVolSSurfZ;
+    opDB.register_new_operator<UpwindSVolSSurfZ>(scinew UpwindSVolSSurfZ(dim, bcPlus ));
+
+    typedef UpwindInterpolant<XVolField,XSurfXField> UpwindXVolXSurfX;
+    opDB.register_new_operator<UpwindXVolXSurfX>(scinew UpwindXVolXSurfX(dim, bcPlus ));
+    
+    typedef UpwindInterpolant<XVolField,XSurfYField> UpwindXVolXSurfY;
+    opDB.register_new_operator<UpwindXVolXSurfY>(scinew UpwindXVolXSurfY(dim, bcPlus ));
+    
+    typedef UpwindInterpolant<XVolField,XSurfZField> UpwindXVolXSurfZ;
+    opDB.register_new_operator<UpwindXVolXSurfZ>(scinew UpwindXVolXSurfZ(dim, bcPlus ));
+
+    typedef UpwindInterpolant<YVolField,YSurfXField> UpwindYVolYSurfX;
+    opDB.register_new_operator<UpwindYVolYSurfX>(scinew UpwindYVolYSurfX(dim, bcPlus ));
+    
+    typedef UpwindInterpolant<YVolField,YSurfYField> UpwindYVolYSurfY;
+    opDB.register_new_operator<UpwindYVolYSurfY>(scinew UpwindYVolYSurfY(dim, bcPlus ));
+    
+    typedef UpwindInterpolant<YVolField,YSurfZField> UpwindYVolYSurfZ;
+    opDB.register_new_operator<UpwindYVolYSurfZ>(scinew UpwindYVolYSurfZ(dim, bcPlus ));
+    
+    typedef UpwindInterpolant<ZVolField,ZSurfXField> UpwindZVolZSurfX;
+    opDB.register_new_operator<UpwindZVolZSurfX>(scinew UpwindZVolZSurfX(dim, bcPlus ));
+    
+    typedef UpwindInterpolant<ZVolField,ZSurfYField> UpwindZVolZSurfY;
+    opDB.register_new_operator<UpwindZVolZSurfY>(scinew UpwindZVolZSurfY(dim, bcPlus ));
+    
+    typedef UpwindInterpolant<ZVolField,ZSurfZField> UpwindZVolZSurfZ;
+    opDB.register_new_operator<UpwindZVolZSurfZ>(scinew UpwindZVolZSurfZ(dim, bcPlus ));
+    
 
     //--------------------------------------------------------
     // scalar surface to staggered volumes (pressure gradients)

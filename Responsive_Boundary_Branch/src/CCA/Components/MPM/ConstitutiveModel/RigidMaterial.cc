@@ -218,7 +218,8 @@ double
 RigidMaterial::computeRhoMicroCM(double ,
                                  const double ,
                                  const MPMMaterial* matl,
-                                 double temperature)
+                                 double temperature,
+                                 double rho_guess)
 {
   return matl->getInitialDensity();
 }

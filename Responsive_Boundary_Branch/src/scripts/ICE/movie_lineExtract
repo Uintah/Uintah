@@ -46,27 +46,34 @@ foreach X ( $ts[*]:q)
   /bin/rm -f $fname
   #__________________________________
   # ExtractData from the data file
-  lineextract -v delP_Dilatate -o delP.dat  -l 0 -cellCoords -timestep $timestep -istart -1 0 0 -iend 100000 0 0 -m 0 -uda $uda
-  lineextract -v vel_CC        -o vel.dat   -l 0 -cellCoords -timestep $timestep -istart -1 0 0 -iend 100000 0 0 -m 0 -uda $uda
-  lineextract -v press_CC      -o press.dat -l 0 -cellCoords -timestep $timestep -istart -1 0 0 -iend 100000 0 0 -m 0 -uda $uda
-  lineextract -v rho_CC        -o rho.dat   -l 0 -cellCoords -timestep $timestep -istart -1 0 0 -iend 100000 0 0 -m 0 -uda $uda
-  lineextract -v temp_CC       -o temp.dat  -l 0 -cellCoords -timestep $timestep -istart -1 0 0 -iend 100000 0 0 -m 0 -uda $uda
+  lineextract -v delP_Dilatate -o delP.dat  -l 0 -cellCoords -timestep $timestep -istart -1 50 0 -iend 1000 50 0  -m 0 -uda $uda >& /dev/null
+  lineextract -v vel_CC        -o vel.dat   -l 0 -cellCoords -timestep $timestep -istart -1 50 0 -iend 1000 50 0  -m 0 -uda $uda >& /dev/null
+  lineextract -v press_CC      -o press.dat -l 0 -cellCoords -timestep $timestep -istart -1 50 0 -iend 1000 50 0  -m 0 -uda $uda >& /dev/null
+  lineextract -v rho_CC        -o rho.dat   -l 0 -cellCoords -timestep $timestep -istart -1 50 0 -iend 1000 50 0  -m 0 -uda $uda >& /dev/null
+  lineextract -v temp_CC       -o temp.dat  -l 0 -cellCoords -timestep $timestep -istart -1 50 0 -iend 1000 50 0  -m 0 -uda $uda >& /dev/null
+  
+  lineextract -v mass_L_CC     -o mass_L.dat -l 0 -cellCoords -timestep $timestep -istart -1 50 0 -iend 1000 50 0  -m 0 -uda $uda >& /dev/null
+  lineextract -v mom_L_ME_CC   -o mom_L.dat  -l 0 -cellCoords -timestep $timestep -istart -1 50 0 -iend 1000 50 0  -m 0 -uda $uda >& /dev/null
+  lineextract -v eng_L_ME_CC   -o eng_L.dat  -l 0 -cellCoords -timestep $timestep -istart -1 50 0 -iend 1000 50 0  -m 0 -uda $uda >& /dev/null
 
-  scripts/ICE/gradient.m -dat delP.dat  -pDir 1 > /dev/null
-  scripts/ICE/gradient.m -dat vel.dat   -pDir 1 > /dev/null
-  scripts/ICE/gradient.m -dat press.dat -pDir 1 > /dev/null
-  scripts/ICE/gradient.m -dat rho.dat   -pDir 1 > /dev/null
-  scripts/ICE/gradient.m -dat temp.dat  -pDir 1 > /dev/null
-  #scripts/ICE/removeBraces vel.dat
+  #scripts/ICE/gradient.m -dat delP.dat  -pDir 1 > /dev/null
+  #scripts/ICE/gradient.m -dat vel.dat   -pDir 1 > /dev/null
+  #scripts/ICE/gradient.m -dat press.dat -pDir 1 > /dev/null
+  #scripts/ICE/gradient.m -dat rho.dat   -pDir 1 > /dev/null
+  #scripts/ICE/gradient.m -dat temp.dat  -pDir 1 > /dev/null
+  scripts/ICE/removeBraces vel.dat  >& /dev/null
+  scripts/ICE/removeBraces mom_L.dat >& /dev/null
 
   mv *.dat $uda/.
 
   rm -f gp
 
 cat > gp << fin
-set terminal x11 1
-set terminal postscript color solid "Times-Roman" 12 size 8.88889 in, 6.68 in
-set output "plot.ps"
+#set terminal x11 1
+#set terminal postscript color solid "Times-Roman" 12
+#set output "plot.ps"
+set terminal png size 1024,768
+set output "$fname"
 
 #__________________________________
 # generate the  plot script
@@ -78,7 +85,7 @@ set mytics
 set grid xtics ytics
 set pointsize 1.0
 set title ""
-set xrange [0.0:1.0]
+set xrange [-0.01:1.01]
 #__________________________________
 #   Pressure
 #__________________________________
@@ -87,9 +94,14 @@ set size 0.51,0.51
 set origin 0.0,0.0
 set yrange [101000:102000]
 set ylabel "Pressure"
-set y2tics
+#set y2tics
+
+c1 = 101325 + 101325 * 0.001
+c2 = 101325 - 101325 * 0.001
 plot  '$uda/press.dat'  using 1:4            t 'p' with linespoints,\
-      '$uda/press.dat'  using 1:5  axes x1y2 t 'grad p' with linespoints
+       c1 t '',\
+       c2 t ''
+
 
 #__________________________________
 #   Temperature
@@ -97,8 +109,10 @@ plot  '$uda/press.dat'  using 1:4            t 'p' with linespoints,\
 set origin 0.5,0.0
 set yrange [299.2:310.0]
 set ylabel "Temperature"
+set y2tics
+
 plot  '$uda/temp.dat'  using 1:4            t 'Temp' with linespoints,\
-      '$uda/temp.dat'  using 1:5  axes x1y2 t 'grad Temp' with linespoints
+      '$uda/eng_L.dat' using 1:4 axes x1y2  t 'eng_L' with linespoints
 
 #__________________________________
 #  velocity x-component
@@ -106,16 +120,16 @@ plot  '$uda/temp.dat'  using 1:4            t 'Temp' with linespoints,\
 set origin 0.0,0.5
 set yrange [-5:5]
 set ylabel "Velocity"
-plot  '$uda/vel.dat'   using 1:4            t 'x-vel' with linespoints,\
-      '$uda/vel.dat'   using 1:7  axes x1y2 t 'grad x-vel' with linespoints
+plot  '$uda/vel.dat'   using 1:4            t 'u-vel' with linespoints,\
+      '$uda/mom_L.dat' using 1:4 axes x1y2  t 'mom_L' with linespoints
 #__________________________________
 #   density
 #__________________________________
 set origin 0.5,0.5
-set yrange [1.172:1.187]
+set yrange [1.7:1.9]
 set ylabel "Density"
-plot  '$uda/rho.dat'  using 1:4            t 'rho' with linespoints,\
-      '$uda/rho.dat'  using 1:5  axes x1y2 t 'grad rho' with linespoints
+plot  '$uda/rho.dat'    using 1:4            t 'rho' with linespoints,\
+      '$uda/mass_L.dat' using 1:4 axes x1y2  t 'mass_L' with linespoints
 
 set nomultiplot 
 fin
@@ -123,8 +137,8 @@ fin
   # plot it up
   gnuplot gp
   
-  convert plot.ps $fname
-  mogrify -rotate 90 $fname
+  #convert plot.ps $fname
+  #mogrify -rotate 90 $fname
  # mogrify -geometry 700x500 $fname
 
   @ timestep = $timestep + 1

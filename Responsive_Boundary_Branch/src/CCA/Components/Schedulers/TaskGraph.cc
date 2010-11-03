@@ -67,8 +67,8 @@ using namespace Uintah;
 using namespace SCIRun;
 using namespace std;
 
-static DebugStream dbg0("TaskGraph0", false);
-static DebugStream dbg("TaskGraph", false);
+static DebugStream dbg0("TaskGraph", false);
+static DebugStream dbg("TaskGraphDetailed", false);
 static DebugStream compdbg("FindComp", false);
 
 #undef UINTAHSHARE

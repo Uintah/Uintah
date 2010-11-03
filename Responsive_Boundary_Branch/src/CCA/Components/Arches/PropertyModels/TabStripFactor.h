@@ -6,7 +6,7 @@
 #include <Core/Grid/SimulationState.h>
 
 /** 
-* @class  TabStripFac
+* @class  TabStripFactor
 * @author Jeremy Thornock
 * @date   Aug 2010
 * 
@@ -27,7 +27,7 @@
 *   <PropertyModels>
 *     <model label="my_model" type="tab_strip_factor">
 *       <X>DOUBLE</X>                  <!-- number of carbon atoms --> 
-*       <Y>DOUBLE</Y>                  <!-- number of carbon atoms --> 
+*       <Y>DOUBLE</Y>                  <!-- number of hydrogen atoms --> 
 *       <fuel_mass_fraction>DOUBLE</fuel_mass_fraction>          <!-- mass fraction of hydrocarbon at f=1 --> 
 *       <co2_label>STRING</co2_label>  <!-- label name for co2 --> 
 *       <ch4_label>STRING</ch4_label>  <!-- label name for ch4 --> 

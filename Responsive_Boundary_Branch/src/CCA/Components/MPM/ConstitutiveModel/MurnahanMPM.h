@@ -34,7 +34,14 @@ DEALINGS IN THE SOFTWARE.
 //    Features:
 //      Usage:
 
-
+// Equation of state outlined in: 
+// F.D. Murnaghan, 'The Compressibility of Media under Extreme Pressures', 
+// in Proceedings of the National Academy of Sciences, vol. 30, pp. 244-247, 1944.
+// 
+// For Brief:
+// P=P0+1/K*((V0/V)^g-1) 
+// 
+// 
 
 #ifndef __MURNAHAN_CONSTITUTIVE_MODEL_H__
 #define __MURNAHAN_CONSTITUTIVE_MODEL_H__
@@ -52,11 +59,11 @@ namespace Uintah {
   public:
 
     // Create datatype for storing model parameters
-    struct CMData {
-      double d_Bulk;
-      double d_rho0;
-      double d_Gamma;
-      double d_P0;
+    struct CMData {             // Assumed unit; Description
+      double d_K;               // Pa^-1         Compressibility of the material
+      double d_rho0;            // kg/m^3        Reference density of material in normal state
+      double d_Gamma;		// unitless      
+      double d_P0;		// Pa            Reference Pressure
       double d_Viscosity;
     };
 
@@ -130,7 +137,8 @@ namespace Uintah {
     virtual double computeRhoMicroCM(double pressure,
                                      const double p_ref,
                                      const MPMMaterial* matl,
-                                     double temperature);
+                                     double temperature,
+                                     double rho_guess);
 
     virtual void computePressEOSCM(double rho_m, double& press_eos,
                                    double p_ref,

@@ -1,0 +1,125 @@
+<Uintah_specification>
+
+  <Meta>
+    <title>Test scalar transport equation</title>
+  </Meta>
+
+  <SimulationComponent type="wasatch"/>
+
+  <Wasatch>
+
+    <!-- Set the initial condition for non-staggered scalar -->
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="phi1-scalar" state="STATE_N" />
+      <!--Constant>10.0</Constant-->
+      <!--LinearFunction slope="1.0" intercept="0.0">
+          <NameTag name="XSVOL" state="STATE_NONE"/>
+      </LinearFunction-->
+      <SineFunction amplitude="10.0" frequency="1.0" offset="0.0">
+         <NameTag name="XSVOL" state="STATE_NONE" />
+       </SineFunction>
+
+    </BasicExpression>
+    
+    <!-- CREATE AN EXPRESSION FOR THE VELOCITY FIELD -->
+    <BasicExpression type="XVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="advective-velocity-x" state="STATE_N" />
+      <Constant>1.0</Constant>
+    </BasicExpression>
+    
+    <!-- CREATE AN EXPRESSION FOR THE VELOCITY FIELD -->
+    <BasicExpression type="YVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="advective-velocity-y" state="STATE_N" />
+      <Constant>0.0</Constant>
+    </BasicExpression>
+    
+    <!-- CREATE AN EXPRESSION FOR THE VELOCITY FIELD -->
+    <BasicExpression type="ZVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="advective-velocity-z" state="STATE_N" />
+      <Constant>0.0</Constant>
+    </BasicExpression>
+    
+    <!-- Build a non-staggered scalar transport equation -->
+    <TransportEquation equation="generic">
+      <!--StaggeredDirection>X</StaggeredDirection-->
+      <SolutionVariable>phi1-scalar</SolutionVariable>
+      
+      <!--DiffusiveFluxExpression>
+        <Direction>X</Direction>
+        <ConstantDiffusivity>3.0</ConstantDiffusivity>
+      </DiffusiveFluxExpression>
+
+      <DiffusiveFluxExpression>
+        <Direction>Y</Direction>
+        <ConstantDiffusivity>2.0</ConstantDiffusivity>
+      </DiffusiveFluxExpression>
+
+      <DiffusiveFluxExpression>
+        <Direction>Z</Direction>
+        <ConstantDiffusivity>1.0</ConstantDiffusivity>
+      </DiffusiveFluxExpression-->
+
+      <ConvectiveFluxExpression>
+        <Method>UPWIND</Method> 
+        <Direction>X</Direction>
+        <AdvectiveVelocity>
+            <NameTag name="advective-velocity-x" state="STATE_N"/>
+        </AdvectiveVelocity>
+      </ConvectiveFluxExpression>
+
+      <ConvectiveFluxExpression>
+        <Method>UPWIND</Method>
+        <Direction>Y</Direction>
+        <AdvectiveVelocity>
+            <NameTag name="advective-velocity-y" state="STATE_N"/>
+        </AdvectiveVelocity>
+      </ConvectiveFluxExpression>
+
+      <ConvectiveFluxExpression>
+        <Method>UPWIND</Method>
+        <Direction>Z</Direction>
+        <AdvectiveVelocity>
+            <NameTag name="advective-velocity-z" state="STATE_N"/>
+        </AdvectiveVelocity>
+      </ConvectiveFluxExpression>
+
+    </TransportEquation>
+  </Wasatch>
+
+
+  <Time>
+    <maxTime>5.0</maxTime>
+    <initTime>0.0</initTime>
+    <delt_min>0.01</delt_min>
+    <delt_max>0.05</delt_max>
+    <timestep_multiplier>1.0</timestep_multiplier>
+  </Time>
+
+
+  <DataArchiver>
+    <filebase>wasatch-convection-test-sine.uda</filebase>
+    <outputTimestepInterval>1</outputTimestepInterval>
+    <outputInitTimestep/>
+    <checkpoint cycle = "2" interval = "0.01"/>
+    <compression>gzip</compression>
+    <save label="phi1-scalar"/>
+  </DataArchiver> 
+
+  <Grid>
+    <Level>
+      <Box label="1">
+        <lower>[0,0,0]</lower>
+        <upper>[6.283,1,1]</upper>
+        <resolution>[60,10,10]</resolution>
+<!--         <extraCells>[0,0,0]</extraCells> -->
+        <patches>[1,1,1]</patches>
+      </Box>
+      <periodic>[1,1,1]</periodic>
+    </Level>
+  </Grid>
+
+</Uintah_specification>

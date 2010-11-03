@@ -1048,7 +1048,8 @@ OnDemandDataWarehouse::getNewParticleState(int matlIndex, const Patch* patch)
 }
 
 
-
+//__________________________________
+//
 bool
 OnDemandDataWarehouse::haveParticleSubset(int matlIndex, const Patch* patch,
                                           IntVector low /* = (0,0,0) */,
@@ -1071,9 +1072,11 @@ OnDemandDataWarehouse::haveParticleSubset(int matlIndex, const Patch* patch,
   else
     return true;
 }
-
+//__________________________________
+//
 ParticleSubset*
-OnDemandDataWarehouse::getParticleSubset(int matlIndex, const Patch* patch,
+OnDemandDataWarehouse::getParticleSubset(int matlIndex, 
+                                         const Patch* patch,
                                          Ghost::GhostType gtype,
                                          int numGhostCells,
                                          const VarLabel* pos_var)
@@ -1089,6 +1092,8 @@ OnDemandDataWarehouse::getParticleSubset(int matlIndex, const Patch* patch,
   return getParticleSubset(matlIndex, lowIndex, highIndex, patch->getLevel(), patch, pos_var);
 }
 
+//__________________________________
+//
 ParticleSubset*
 OnDemandDataWarehouse::getParticleSubset(int matlIndex, IntVector lowIndex, IntVector highIndex, 
                                          const Level* level, const Patch* relPatch, const VarLabel* pos_var)
@@ -1097,10 +1102,24 @@ OnDemandDataWarehouse::getParticleSubset(int matlIndex, IntVector lowIndex, IntV
   TAU_PROFILE("OnDemandDataWarehouse::getParticleSubset-b", " ", TAU_USER);
   // relPatch can be NULL if trying to get a particle subset for an arbitrary spot on the level
   Patch::selectType neighbors;
-  if (relPatch && lowIndex == relPatch->getExtraCellLowIndex() && highIndex == relPatch->getExtraCellHighIndex())
+
+  ASSERT(relPatch!=0); //you should pass in the patch on which the task was called on
+
+  if(relPatch->getLevel()!=level) //case where the get is on a coarse or fine level
+  {
+    level->selectPatches(lowIndex, highIndex, neighbors);  //find all intersecting patches with the range
+  }
+  //single patch case on the same level:  
+  //check if the indices are contained within the patch
+  else if (Max(lowIndex,relPatch->getExtraCellLowIndex())==lowIndex && Min(highIndex,relPatch->getExtraCellHighIndex())==highIndex)
+  { 
+    //just add this patch, do not query the whole level
     neighbors.push_back(relPatch);
-  else
+  }
+  else  //same level but the range does not match the patch so intersect patches on this level
+  {  
     level->selectPatches(lowIndex, highIndex, neighbors);
+  }
   
   particleIndex totalParticles = 0;
   vector<ParticleVariableBase*> neighborvars;
@@ -1134,7 +1153,7 @@ OnDemandDataWarehouse::getParticleSubset(int matlIndex, IntVector lowIndex, IntV
       }
       ParticleSubset* pset;
 
-      if (relPatch && relPatch != neighbor) {
+      if (relPatch->getLevel()==level && relPatch != neighbor) {
         relPatch->cullIntersection(Patch::CellBased, IntVector(0,0,0), realNeighbor, newLow, newHigh);
         if (newLow == newHigh) {
           continue;
@@ -1187,12 +1206,12 @@ OnDemandDataWarehouse::get(constParticleVariableBase& constVar,
   int matlIndex = pset->getMatlIndex();
   const Patch* patch = pset->getPatch();
 
-  // a null patch means that there is no patch center for the pset
+  // pset center patch and neighbor patch are not in same level
   // (probably on an AMR copy data timestep)
-  if((patch && 
-        pset->getLow()  == patch->getExtraCellLowIndex()   && 
-        pset->getHigh() == patch->getExtraCellHighIndex()) ||
-      pset->getNeighbors().size() == 0){
+  if ((pset->getNeighbors().size() == 0) ||
+      (pset->getNeighbors().front()->getLevel() == patch->getLevel() &&
+       pset->getLow()  == patch->getExtraCellLowIndex()              &&
+       pset->getHigh() == patch->getExtraCellHighIndex()             )){
     get(constVar, label, matlIndex, patch);
   }
   else {
@@ -2338,12 +2357,15 @@ void OnDemandDataWarehouse::logMemoryUse(ostream& out, unsigned long& total,
 
 inline void
 OnDemandDataWarehouse::checkGetAccess(const VarLabel* label,
-                                      int matlIndex, const Patch* patch,
-                                      Ghost::GhostType gtype,int numGhostCells)
+                                      int matlIndex, 
+                                      const Patch* patch,
+                                      Ghost::GhostType gtype,
+                                      int numGhostCells)
 {
 #if 1
 #if SCI_ASSERTION_LEVEL >= 1
   list<RunningTaskInfo>* runningTasks = getRunningTasksInfo();
+  
   if (runningTasks != 0) {
     for (list<RunningTaskInfo>::iterator iter = runningTasks->begin();
         iter != runningTasks->end(); iter++) {
@@ -2601,17 +2623,21 @@ OnDemandDataWarehouse::getCurrentTaskInfo()
 DataWarehouse*
 OnDemandDataWarehouse::getOtherDataWarehouse(Task::WhichDW dw, RunningTaskInfo* info)
 {
+  d_lock.readLock();
   int dwindex = info->d_task->mapDataWarehouse(dw);
   DataWarehouse* result = (*info->dws)[dwindex].get_rep();
+  d_lock.readUnlock();
   return result;
 }
 
 DataWarehouse*
 OnDemandDataWarehouse::getOtherDataWarehouse(Task::WhichDW dw)
 {
+  d_lock.readLock();
   RunningTaskInfo* info = getCurrentTaskInfo();
   int dwindex = info->d_task->mapDataWarehouse(dw);
   DataWarehouse* result = (*info->dws)[dwindex].get_rep();
+  d_lock.readUnlock();
   return result;
 }
 
@@ -2678,10 +2704,9 @@ OnDemandDataWarehouse::checkAccesses(RunningTaskInfo* currentTaskInfo,
     Patch::getGhostOffsets(label->typeDescription()->getType(), dep->gtype,
                            dep->numGhostCells, lowOffset, highOffset);    
 
-    constHandle<PatchSubset> patches =
-      dep->getPatchesUnderDomain(domainPatches);
-    constHandle<MaterialSubset> matls =
-      dep->getMaterialsUnderDomain(domainMatls);
+    constHandle<PatchSubset> patches =  dep->getPatchesUnderDomain(domainPatches);
+    constHandle<MaterialSubset> matls = dep->getMaterialsUnderDomain(domainMatls);
+    
     if (label->typeDescription() &&
         label->typeDescription()->isReductionVariable()) {
       patches = default_patches.get_rep();

@@ -6,13 +6,13 @@
    DTD/XML Schema:
 
      This file is similar to a DTD or an XML Schema, however we didn't
-     use either of these approaches for the following reasons: DTD's
+     use either of these approaches for the following reasons: DTDs
      do not (easily) allow you to have optional Tags and Tags that may
      appear in any order.  They also don't do (minimal) validation of
      the type of data in each tag.  XML Schema may actually allow for
      some or all of this type of validation, however, we don't have an
      XML library capable of using XML Schema (as libxml2 (the lib we
-     use) doesn't (yet?) support it.  We could have tried using
+     use) doesn't (yet?) support it).  We could have tried using
      another XML library (off-line), such as Xerces, but we wanted the
      validation to take place as the code begins to execute.
 
@@ -23,7 +23,7 @@
      <name spec="..." 
            attribute#="..."
            children#="..."
-           need_applies_to=""
+           need_applies_to="..."
      >
 
      need_applies_to="<var>..." => An optional parameter.  If present, the tag refers to a parent
@@ -118,6 +118,10 @@
       <bottom                 spec="REQUIRED VECTOR" />
       <top                    spec="REQUIRED VECTOR" />
       <radius                 spec="REQUIRED DOUBLE 'positive'" />
+      <!-- The following are only used for applying pressure BCs -->
+      <cylinder_end           spec="OPTIONAL BOOLEAN" />
+      <axisymmetric_end       spec="OPTIONAL BOOLEAN" />
+      <axisymmetric_side      spec="OPTIONAL BOOLEAN" />
     </cylinder>
 
     <parallelepiped                 spec="OPTIONAL NO_DATA"
@@ -321,7 +325,7 @@
     <SimulationComponent          spec="REQUIRED NO_DATA"
                                     attribute1="type REQUIRED STRING 'angio, arches, burger, ice, impm, mpm, mpmarches, 
                                                                       mpmf, mpmice, amrmpm,
-                                                                      wasatch,
+                                                                      wasatch, reduce_uda,
                                                                       poisson1, poisson2, poisson3, poisson4, benchmark, rigidmpmice, 
                                                                       rmpmice, smpm, smpmice, spatialops, switcher, wave, solvertest'" >
                                   <!-- The 'type' above is used in CCA/Components/Parent/ComponentFactory.cc -->
@@ -357,9 +361,8 @@
                                         attribute2="state REQUIRED STRING 'STATE_NONE,STATE_NP1,STATE_N'" />
     <!-- Spec for basic expression types -->
     <BasicExpression			spec="MULTIPLE NO_DATA"
-                                        attribute1="label REQUIRED STRING"
-                                        attribute2="type REQUIRED STRING 'Cell,XFace,YFace,ZFace'"
-                                        children1="ONE_OF(CHILD Constant,LinearFunction)" >
+                                        attribute1="type REQUIRED STRING 'SVOL,XVOL,YVOL,ZVOL"
+                                        children1="ONE_OF(CHILD Constant,LinearFunction,SineFunction,GaussianFunction,DoubleTanhFunction)" >
       <TaskList				spec="REQUIRED STRING 'initialization,timestep_size,advance_solution'" />
       <NameTag				spec="REQUIRED" />
       <Constant				spec="OPTIONAL DOUBLE" />
@@ -369,6 +372,33 @@
         <!-- jcs need to specify independent variable for this function -->
         <NameTag			spec="REQUIRED" />
       </LinearFunction>
+      
+      <!-- Sine function with frequency, amplitude, and offset !-->
+      <SineFunction    spec="OPTIONAL NO_DATA"
+                                  attribute1="amplitude REQUIRED DOUBLE"
+                                  attribute2="frequency REQUIRED DOUBLE"
+                                  attribute3="offset REQUIRED DOUBLE">
+        <NameTag             spec="REQUIRED"/>
+      </SineFunction>
+      
+      <!-- double hyperbolic tangent !-->
+      <DoubleTanhFunction    spec="OPTIONAL NO_DATA"
+                                  attribute1="amplitude REQUIRED DOUBLE"
+                                  attribute2="width REQUIRED DOUBLE"
+                                  attribute3="midpointUp REQUIRED DOUBLE"
+                                  attribute4="midpointDown REQUIRED DOUBLE">
+        <NameTag             spec="REQUIRED"/>
+      </DoubleTanhFunction>
+      
+      <!-- Gaussian distribution !-->
+      <GaussianFunction    spec="OPTIONAL NO_DATA"
+                                  attribute1="amplitude REQUIRED DOUBLE"
+                                  attribute2="deviation REQUIRED DOUBLE"
+                                  attribute3="mean REQUIRED DOUBLE"
+                                  attribute4="baseline REQUIRED DOUBLE">
+        <NameTag             spec="REQUIRED"/>
+      </GaussianFunction>
+
       
     </BasicExpression>
     <!-- ========================================= -->
@@ -502,7 +532,8 @@
       
       <LODI                 spec="OPTIONAL NO_DATA">
         <press_infinity     spec="REQUIRED DOUBLE 'positive'" />
-        <sigma              spec="REQUIRED DOUBLE '0, 1'"/>
+        <sigma              spec="REQUIRED DOUBLE '0, 3.15'"/>
+        <Li_scale           spec="OPTIONAL DOUBLE '0, 1.0'"/>
         <material           spec="REQUIRED STRING"/>
       </LODI>    
       
@@ -534,8 +565,7 @@
                               attribute2="var       REQUIRED STRING 'Neumann, Dirichlet, symmetry, LODI, computeFromDensity, Sine, creep, slip Custom'"
                               attribute3="label     REQUIRED STRING " >
                                                                 
-          <value            spec="OPTIONAL STRING" /> <!-- ERROR... it is required for some, but not for Dirichlet!!!
-                                                         also, type can be different for different labels... how to handle? --> 
+          <value            spec="REQUIRED STRING"  need_applies_to="var Neumann Dirichlet LODI computeFromDensity Sine creep slip Custom" />
         </BCType>
       </Face>
     </BoundaryConditions>

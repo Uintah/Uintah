@@ -27,24 +27,16 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-
 #include <CCA/Components/MPM/CohesiveZone/CohesiveZone.h>
-#include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
-#include <Core/Exceptions/ProblemSetupException.h>
-#include <Core/GeometryPiece/GeometryObject.h>
-#include <Core/Grid/Box.h>
-#include <Core/Grid/Variables/CellIterator.h>
-#include <Core/Grid/Patch.h>
-#include <Core/Grid/Variables/VarLabel.h>
-#include <Core/GeometryPiece/GeometryPiece.h>
-#include <Core/GeometryPiece/FileGeometryPiece.h>
-#include <Core/GeometryPiece/SmoothGeomPiece.h>
-#include <Core/Labels/MPMLabel.h>
-#include <CCA/Components/MPM/PhysicalBC/MPMPhysicalBCFactory.h>
 #include <CCA/Components/MPM/CohesiveZone/CZMaterial.h>
-#include <CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
+#include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <CCA/Components/MPM/MPMFlags.h>
+#include <CCA/Components/MPM/PhysicalBC/MPMPhysicalBCFactory.h>
 #include <CCA/Ports/DataWarehouse.h>
+#include <Core/Exceptions/ProblemSetupException.h>
+#include <Core/Grid/Patch.h>
+#include <Core/Labels/MPMLabel.h>
+
 #include <fstream>
 #include <iostream>
 
@@ -53,6 +45,11 @@ using std::vector;
 using std::cerr;
 using std::ofstream;
 
+//______________________________________________________________________
+//  Reference: N. P. Daphalapukar, Hongbing Lu, Demir Coker, Ranga Komanduri,
+// " Simulation of dynamic crack growth using the generalized interpolation material
+// point (GIMP) method," Int J. Fract, 2007, 143:79-102
+//______________________________________________________________________
 CohesiveZone::CohesiveZone(CZMaterial* czmat, MPMFlags* flags,
                            SimulationStateP& ss)
 {
@@ -69,12 +66,13 @@ CohesiveZone::~CohesiveZone()
 {
   delete d_lb;
 }
-
+//______________________________________________________________________
 ParticleSubset* 
 CohesiveZone::createCohesiveZones(CZMaterial* matl,
                                  particleIndex numCohesiveZones,
                                  CCVariable<short int>& cellNAPID,
-                                 const Patch* patch,DataWarehouse* new_dw,
+                                 const Patch* patch,
+                                 DataWarehouse* new_dw,
                                  const string filename)
 {
   int dwi = matl->getDWIndex();
@@ -158,6 +156,8 @@ CohesiveZone::createCohesiveZones(CZMaterial* matl,
   return subset;
 }
 
+//__________________________________
+//
 ParticleSubset* 
 CohesiveZone::allocateVariables(particleIndex numCZs, 
                                 int dwi, const Patch* patch,
@@ -182,6 +182,8 @@ CohesiveZone::allocateVariables(particleIndex numCZs,
   return subset;
 }
 
+//__________________________________
+//
 particleIndex 
 CohesiveZone::countCohesiveZones(const Patch* patch, const string filename)
 {
@@ -208,17 +210,20 @@ CohesiveZone::countCohesiveZones(const Patch* patch, const string filename)
 
   return sum;
 }
-
+//__________________________________
+//
 vector<const VarLabel* > CohesiveZone::returnCohesiveZoneState()
 {
   return d_cz_state;
 }
-
+//__________________________________
+//
 vector<const VarLabel* > CohesiveZone::returnCohesiveZoneStatePreReloc()
 {
   return d_cz_state_preReloc;
 }
-
+//__________________________________
+//
 void CohesiveZone::registerPermanentCohesiveZoneState(CZMaterial* czmat)
 {
   d_cz_state.push_back(d_lb->czLengthLabel);
@@ -254,8 +259,10 @@ void CohesiveZone::registerPermanentCohesiveZoneState(CZMaterial* czmat)
   d_cz_state.push_back(d_lb->czIDLabel);
   d_cz_state_preReloc.push_back(d_lb->czIDLabel_preReloc);
 }
-
-void CohesiveZone::scheduleInitialize(const LevelP& level, SchedulerP& sched,
+//__________________________________
+//
+void CohesiveZone::scheduleInitialize(const LevelP& level, 
+                                      SchedulerP& sched,
                                       CZMaterial* czmat)
 {
   Task* t = scinew Task("CohesiveZone::initialize",
@@ -292,6 +299,8 @@ void CohesiveZone::scheduleInitialize(const LevelP& level, SchedulerP& sched,
     delete zeroth_matl; // shouln't happen, but...
 }
 
+//__________________________________
+//
 void CohesiveZone::initialize(const ProcessorGroup*,
                               const PatchSubset* patches,
                               const MaterialSubset* cz_matls,

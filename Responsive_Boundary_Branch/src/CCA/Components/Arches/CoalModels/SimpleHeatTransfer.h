@@ -150,7 +150,7 @@ private:
 
   /** @brief  Calculate heat capacity of particle */
   double heatcp(double Tp);
-
+  double heatcph(double Tp);
   
   const VarLabel* d_raw_coal_mass_label;        ///< Label for raw coal mass
   const VarLabel* d_particle_temperature_label; ///< Label for particle temperature
@@ -162,6 +162,7 @@ private:
   double visc;
   double yelem[5];              ///< Fractions of each element in coal (C, H, N, O, S respectively)
   vector<double>  ash_mass_init;         ///< Initial ash mass
+  vector<double>  fixcarb_mass_init;
   double rhop;                  ///< Density of particle 
 
   double Pr;

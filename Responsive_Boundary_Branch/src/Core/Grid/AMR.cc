@@ -96,16 +96,24 @@ void getCoarseLevelRange(const Patch* finePatch, const Level* coarseLevel,
 }
 
 //______________________________________________________________________
+// This returns the exclusive node range
 void getCoarseLevelRangeNodes(const Patch* finePatch, const Level* coarseLevel, 
                               IntVector& cl, IntVector& ch,
-                              IntVector& fl, IntVector& fh, int ngc)
+                              IntVector& fl, IntVector& fh, 
+                              int ngc, 
+                              int nBoundaryCells)
 {
-  finePatch->computeVariableExtents(Patch::NodeBased, IntVector(0,0,0), Ghost::AroundNodes,ngc, fl, fh); 
+  IntVector boundaryCells(nBoundaryCells, nBoundaryCells, nBoundaryCells);
+  
+  finePatch->computeVariableExtents(Patch::NodeBased, boundaryCells, Ghost::AroundNodes,ngc, fl, fh);
+  
+cout << "getCoarseLevelRangeNodes: NGC " << ngc << endl;
+cout << "    fl: " << fl << " fh " << fh << endl;
   
   // coarse region we need to get from the dw
-  cl = finePatch->getLevel()->mapNodeToCoarser(fl) - IntVector(ngc,ngc,ngc);
-  ch = finePatch->getLevel()->mapNodeToCoarser(fh) + IntVector(ngc,ngc,ngc);
-
+  cl = finePatch->getLevel()->mapCellToCoarser(fl);
+  ch = finePatch->getLevel()->mapCellToCoarser(fh);
+cout << "    cl: " << cl << " ch " << ch << endl;
   //__________________________________
   // coarseHigh and coarseLow cannot lie outside
   // of the coarselevel index range
@@ -113,6 +121,7 @@ void getCoarseLevelRangeNodes(const Patch* finePatch, const Level* coarseLevel,
   coarseLevel->findNodeIndexRange(cl_tmp,ch_tmp);
   cl = Max(cl_tmp, cl);
   ch = Min(ch_tmp, ch);
+cout << "    cl: " << cl << " ch " << ch << endl;
 
   // fine region to work over
   fl = finePatch->getNodeLowIndex();
@@ -120,14 +129,18 @@ void getCoarseLevelRangeNodes(const Patch* finePatch, const Level* coarseLevel,
 }
 
 //______________________________________________________________________
-void getCoarseFineFaceRange(const Patch* finePatch, const Level* coarseLevel, Patch::FaceType face,
-                            const int interpolationOrder, IntVector& cl, IntVector& ch, IntVector& fl, IntVector& fh) 
+void getCoarseFineFaceRange(const Patch* finePatch, 
+                            const Level* coarseLevel, 
+                            Patch::FaceType face, 
+                            Patch::FaceIteratorType domain,
+                            const int nCells, 
+                            IntVector& cl, IntVector& ch, IntVector& fl, IntVector& fh) 
 {
   //__________________________________
   // fine level hi & lo cell iter limits
   // coarselevel hi and low index
   const Level* fineLevel = finePatch->getLevel();
-  CellIterator iter_tmp = finePatch->getFaceIterator(face, Patch::ExtraPlusEdgeCells);
+  CellIterator iter_tmp = finePatch->getFaceIterator(face, domain);
   fl = iter_tmp.begin();
   fh = iter_tmp.end();
   
@@ -151,11 +164,10 @@ void getCoarseFineFaceRange(const Patch* finePatch, const Level* coarseLevel, Pa
   
   //__________________________________
   // for higher order interpolation increase the coarse level foot print
-  // by the order of interpolation
-  if(interpolationOrder >= 1){
-    IntVector interRange(interpolationOrder,interpolationOrder,interpolationOrder);
-    cl  -= interRange;
-    ch += interRange;
+  if(nCells >= 1){
+    IntVector moreCells(nCells,nCells,nCells);
+    cl  -= moreCells;
+    ch += moreCells;
   } 
   IntVector crl, crh;
   coarseLevel->findCellIndexRange(crl,crh);

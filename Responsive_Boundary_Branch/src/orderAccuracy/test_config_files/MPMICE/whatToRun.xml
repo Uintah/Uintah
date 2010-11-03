@@ -1,5 +1,5 @@
 <config>
-<compareUtil_path>orderAccuracy/comparisonUtils</compareUtil_path>
+<postProcessCmd_path>orderAccuracy/comparisonUtils</postProcessCmd_path>
 <test>
   <name>Rayleigh</name>
   <ups>rayleigh.ups</ups>

@@ -21,6 +21,7 @@ namespace Expr{
   class ExpressionTree;
   class FieldDeps;
   class FieldManagerList;
+  struct AllocInfo;
 }
 
 namespace SpatialOps{
@@ -32,6 +33,7 @@ namespace Wasatch{
 
 
   /**
+   *  \ingroup WasatchCore
    *  \class  TaskInterface
    *  \author James C. Sutherland
    *  \date   June, 2010
@@ -76,14 +78,26 @@ namespace Wasatch{
      *  \param scheduler the Uintah::Scheduler that we will put this task on
      *  \param patches the Uintah::PatchSet associated with this task
      *  \param material the Uintah::MaterialSet associated with this task
+     *  \param newDWFields - a vector of Expr::Tag indicating fields
+     *         should be pulled from the new DW.  This is particularly
+     *         useful for situations where another task will be
+     *         computing a given field and the ExpressionTree has
+     *         wrapped that field as a PlaceHolderExpr.  This helps us
+     *         determine where the field will exist in Uintah's
+     *         DataWarehouse
      *
      *  This sets all field requirements for the Uintah task and
      *  scheduled it for execution.
      */
     void schedule( Uintah::SchedulerP& scheduler,
                    const Uintah::PatchSet* const patches,
+                   const Uintah::MaterialSet* const materials,
+                   const std::vector<Expr::Tag>& newDWFields );
+
+    void schedule( Uintah::SchedulerP& scheduler,
+                   const Uintah::PatchSet* const patches,
                    const Uintah::MaterialSet* const materials );
-   
+
   private:
 
     Expr::ExpressionTree* const tree_;  ///< the underlying ExpressionTree associated with this task.
@@ -100,11 +114,8 @@ namespace Wasatch{
 
     /** advertises field requirements to Uintah. */
     void add_fields_to_task( const Uintah::PatchSet* const patches,
-                             const Uintah::MaterialSet* const materials );
-
-    /** iterates all Expressions in the ExpressionTree and binds fields/operators. */
-    void bind_fields_operators( const Expr::AllocInfo&,
-                                const SpatialOps::OperatorDatabase& opDB );
+                             const Uintah::MaterialSet* const materials,
+                             const std::vector<Expr::Tag>& );
 
     /** main execution driver - the callback function exposed to Uintah. */
     void execute( const Uintah::ProcessorGroup* const,

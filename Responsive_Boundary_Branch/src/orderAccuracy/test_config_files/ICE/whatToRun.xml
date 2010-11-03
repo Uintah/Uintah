@@ -1,5 +1,5 @@
 <config>
-<compareUtil_path>/home/harman/Builds/Fresh/NB/opt_Linux/Packages/Uintah/StandAlone/tools/compare_mms:/home/harman/working_on/orderAccuracy/comparisonUtils</compareUtil_path>
+<postProcessCmd_path>/home/harman/Builds/Fresh/NB/opt_Linux/Packages/Uintah/StandAlone/tools/compare_mms:/home/harman/working_on/orderAccuracy/comparisonUtils</postProcessCmd_path>
 
 <symbolicLinks> 
   /usr/local/home/harman/Builds/Fresh/NB/src/scripts/ /usr/local/home/harman/Builds/Fresh/NB/src/StandAlone/inputs

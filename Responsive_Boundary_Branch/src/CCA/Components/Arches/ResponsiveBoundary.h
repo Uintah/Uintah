@@ -510,7 +510,7 @@ class ResponsiveBoundary {
 //	vector<double> dz;
         bool RB_Accelerate;
         double RB_AccelTime; 	
-	
+        double RB_Kfactor; //adjustment factor for mass transfer coefficients (for validation purposes)
 	
 	//computed members
 	vector<vector<double>*> RB_J;  // diffusive fluxes.

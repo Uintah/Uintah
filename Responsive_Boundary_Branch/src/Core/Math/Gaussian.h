@@ -56,16 +56,36 @@ class SCISHARE Gaussian {
 public:
   double mean_;
   double sigma_;
+  double refVol_;
+  double exponent_;
   MusilRNG *mr_;
-  Gaussian(double mean=0, double sigma=1, int seed=0);
+  Gaussian(double mean=0, double sigma=1, int seed=0,
+           double refVol=1, double exponent=0);
   ~Gaussian();
 
   //   pick a random value from this Gaussian distribution
   //      - implemented using the Box-Muller transformation
-  inline double rand() {return sqrt(-2*log((*mr_)()))*cos(2*M_PI*(*mr_)())*sigma_+mean_;}
+  inline double rand(double PartVol) {
+
+   // scale the distribution according to a reference volume
+   double C = pow(refVol_/PartVol,1./exponent_);
+
+   double x = (*mr_)();
+   double y = (*mr_)();
+
+   return C*(sqrt(-2.*log(x))*cos(2.*M_PI*y)*sigma_+mean_);
+
+  }
 
   //   probablility that x was picked from this Gaussian distribution
-  double prob(double x) {return exp(-(x-mean_)*(x-mean_)/(2*sigma_*sigma_))/(sigma_*sqrt(2*M_PI));}
+  double prob(double x, double PartVol) {
+
+   // scale the distribution according to a reference volume
+   double C = pow(refVol_/PartVol,1./exponent_);
+
+   return exp(-(x-C*mean_)*(x-C*mean_)/(2*C*C*sigma_*sigma_))
+                                                       /(C*sigma_*sqrt(2*M_PI));
+  }
 };
 
 } // End namespace SCIRun

@@ -14,9 +14,10 @@
        <initTime>           0.0         </initTime>
        <delt_min>           0.0         </delt_min>
        <delt_max>           1.0         </delt_max>
-       <delt_init>          1.0e-4      </delt_init>
-       <max_delt_increase>    2.0       </max_delt_increase>
+       <delt_init>          1.0e-7      </delt_init>
+       <max_delt_increase>    1.0       </max_delt_increase>
        <timestep_multiplier>0.8 </timestep_multiplier>
+       <!--<max_Timesteps>         16 </max_Timesteps> -->
    </Time>
    
    <LoadBalancer type="DLB">
@@ -32,8 +33,10 @@
       <LODI>
         <press_infinity> 1.01325e+05             </press_infinity>
         <sigma>          0.27                    </sigma>
-        <ice_material_index> 0                   </ice_material_index>
+        <material> atmosphere                    </material>
+        <Li_scale>    0.1                        </Li_scale>
       </LODI>
+
       <!--  pseudo dye injection jet -->
       <Face circle = "x-" origin = "-0.1 0.0 0.0" radius = ".001">
         <BCType id = "all" label = "scalar-f"            var = "Dirichlet">
@@ -57,7 +60,7 @@
         <BCType id = "all"  label = "SpecificVol"       var = "computeFromDensity">
                               <value> 0.0  </value>
         </BCType>
-        <BCType id = "0"    label = "scalar-f"          var = "Dirichlet">
+        <BCType id = "1"    label = "scalar-f"          var = "Dirichlet">
                               <value> 0.0</value>
         </BCType>
       </Face>
@@ -81,7 +84,7 @@
         <BCType id = "all"  label = "SpecificVol"       var = "computeFromDensity">
                               <value> 0.0  </value>
         </BCType>
-        <BCType id = "0"    label = "scalar-f"          var = "Dirichlet">
+        <BCType id = "1"    label = "scalar-f"          var = "Dirichlet">
                               <value> 0.0</value>
         </BCType>
       </Face>
@@ -105,6 +108,7 @@
                               <value> 0.0</value>
         </BCType>
       </Face>
+
       <Face side = "x+">
         <BCType id = "1"  label = "Velocity"          var = "Neumann">
                               <value> [0.,0.,0.] </value>
@@ -122,6 +126,7 @@
                               <value> 0.0</value>
         </BCType>
       </Face>
+      
       <Face side = "y-">
         <BCType id = "0"    label = "Pressure"        var = "Neumann">
                               <value> 0.0   </value>
@@ -138,7 +143,7 @@
         <BCType id = "all" label = "SpecificVol"      var = "computeFromDensity">
                               <value> 0.0  </value>
         </BCType>
-        <BCType id = "0"    label = "scalar-f"           var = "Dirichlet">
+        <BCType id = "1"    label = "scalar-f"           var = "Dirichlet">
                               <value> 0.0</value>
         </BCType>
       </Face>
@@ -158,7 +163,7 @@
         <BCType id = "all" label = "SpecificVol"      var = "computeFromDensity">
                               <value> 0.0  </value>
         </BCType>
-        <BCType id = "0"    label = "scalar-f"         var = "Dirichlet">
+        <BCType id = "1"    label = "scalar-f"         var = "Dirichlet">
                               <value> 0.0</value>
         </BCType>
       </Face>
@@ -188,8 +193,10 @@
     <!--   O  U  P  U  T     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
    <DataArchiver>
-      <filebase>cyl_crossFlow2.uda</filebase>
+      <filebase>cyl_crossFlow.uda</filebase>
       <outputInterval>0.1</outputInterval>
+      <!--<outputTimestepInterval> 1 </outputTimestepInterval> -->
+      <outputInitTimestep/>
       <save label = "press_CC"/>
       <save label = "vol_frac_CC"/>
       <save label = "vel_CC"/>
@@ -197,6 +204,9 @@
       <save label = "temp_CC"/>
       <save label = "delP_Dilatate"/>
       <save label = "scalar-f"/>
+      <save label = "rhs"/>
+      <save label = "Li1"/>
+      <save label = "Li5"/>
       <save label = "TotalMass"/>
       <save label = "TotalMomentum"/>
       <save label = "p.x"             levels = "-1"/>
@@ -293,7 +303,7 @@
          </material>
       </ICE>       
        <MPM>
-         <material>
+         <material name="unknown">
            <density>             8900.0         </density>
            <constitutive_model type = "comp_neo_hook">
               <useModifiedEOS>     true          </useModifiedEOS>

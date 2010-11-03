@@ -1218,7 +1218,7 @@ Properties::sched_computePropsFirst_mm(SchedulerP& sched,
     tsk->requires(Task::OldDW, d_lab->d_cpINLabel,     gn, 0);
     tsk->requires(Task::OldDW, d_lab->d_co2INLabel,    gn, 0);
     tsk->requires(Task::OldDW, d_lab->d_heatLossLabel, gn, 0);
-    tsk->requires(Task::OldDW, d_lab->d_mixMWLabel,    gn, 0); 
+    //tsk->requires(Task::OldDW, d_lab->d_mixMWLabel,    gn, 0); 
     /*
     tsk->requires(Task::OldDW, d_lab->d_enthalpyRXNLabel, gn, 0);
     */
@@ -1477,7 +1477,7 @@ Properties::computePropsFirst_mm(const ProcessorGroup*,
       old_dw->get(cpIN,     d_lab->d_cpINLabel,     indx, patch,gn, 0);
       old_dw->get(co2IN,    d_lab->d_co2INLabel,    indx, patch,gn, 0);
       old_dw->get(heatLoss, d_lab->d_heatLossLabel, indx, patch,gn, 0);
-      old_dw->get(mixMW,    d_lab->d_mixMWLabel,    indx, patch,gn, 0); 
+      //old_dw->get(mixMW,    d_lab->d_mixMWLabel,    indx, patch,gn, 0); 
 
       /*
       old_dw->get(enthalpyRXN, d_lab->d_enthalpyRXNLabel, indx, patch,
@@ -1503,7 +1503,8 @@ Properties::computePropsFirst_mm(const ProcessorGroup*,
       enthalpyRXN_new.initialize(0.0);
 
       new_dw->allocateAndPut(mixMW_new, d_lab->d_mixMWLabel, indx, patch); 
-      mixMW_new.copyData(mixMW); 
+      mixMW_new.initialize(0.0); 
+      //mixMW_new.copyData(mixMW); 
 
       if (d_calcReactingScalar) {
         new_dw->allocateAndPut(reactScalarSrc_new, d_lab->d_reactscalarSRCINLabel,indx, patch);

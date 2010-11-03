@@ -270,6 +270,9 @@ MPMLabel::MPMLabel()
   gZOILabel     = VarLabel::create("g.zoi",
 			NCVariable<Stencil7>::getTypeDescription());
 
+  gSumWeightsLabel= VarLabel::create("g.sumInterpWeights",
+			NCVariable<double>::getTypeDescription());
+
   cVolumeLabel  = VarLabel::create( "c.volume",
                      CCVariable<double>::getTypeDescription() );
 
@@ -361,6 +364,10 @@ MPMLabel::MPMLabel()
 
   RigidReactionForceLabel = VarLabel::create( "RigidReactionForce",
 				 sumvec_vartype::getTypeDescription() );
+
+  TotalLocalizedParticleLabel = VarLabel::create("TotalLocalizedParticle",
+                                   sumlong_vartype::getTypeDescription());
+
 
   // for assigning particle ids
   pCellNAPIDLabel =
@@ -739,6 +746,7 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(CenterOfMassPositionLabel);
   VarLabel::destroy(TotalMomentumLabel);
   VarLabel::destroy(RigidReactionForceLabel);
+  VarLabel::destroy(TotalLocalizedParticleLabel);
   VarLabel::destroy(pCellNAPIDLabel);
   VarLabel::destroy(pCellNACZIDLabel);
 
@@ -830,9 +838,10 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(gNormalRotMassLabel); 
   VarLabel::destroy(gNormalRotAccLabel); 
   
-   // particle Debugging labels
+   // Debugging labels
   VarLabel::destroy(pColorLabel);
-  VarLabel::destroy(pColorLabel_preReloc); 
+  VarLabel::destroy(pColorLabel_preReloc);
+  VarLabel::destroy(gSumWeightsLabel);  // sum of the interpolation weights
 
   // For Cohesive Zones
   VarLabel::destroy(czLengthLabel);

@@ -155,10 +155,10 @@ class RBMixerProperties {
 	void MassFraction();
 	void MassFraction(vector<double>);
         vector<double> MoleFraction(vector<double>);
-        void film_Fluxes(double, double, vector<double>, double, double, double, double, double);
-	void film_Fluxes(double,double,double,vector<double>,vector<double>,double,double,double);
+        void film_Fluxes(double, double, vector<double>, double, double, double, double, double,double); //boiling
+	void film_Fluxes(double,double,double,vector<double>,vector<double>,double,double,double); //non-boiling
 	void film_Fluxes(vector<double>);
-        void film_Flux_Main(double,double,double,vector<double>,vector<double>,double,double,double);
+        void film_Flux_Main(double,double,double,vector<double>,vector<double>,double,double,double,double);
 	void Residual(vector<double>,vector<double>);
 	void computeTheta(int);
 
@@ -208,7 +208,8 @@ class RBMixerProperties {
 
 
 	double M_LDEN;
-	double M_LMC;	
+	double M_LMC;
+        double M_Kfactor;  //Adjustment parameter for mass transfer coefficients (for validation purposes)		
 
 };
 

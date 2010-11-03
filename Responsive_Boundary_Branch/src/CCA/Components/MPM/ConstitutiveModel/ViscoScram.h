@@ -101,10 +101,10 @@ namespace Uintah {
     };
     // JWL Equation of State Variables
     struct JWLEOS {
-      double A;
-      double B;
-      double C;
-      double Cv;
+      double A;        // Pa
+      double B;        // Pa
+      double C;        // Pa
+      double Cv;       // Pa/K
       double R1;
       double R2;
       double om;
@@ -231,7 +231,8 @@ namespace Uintah {
     virtual double computeRhoMicroCM(double pressure,
                                      const double p_ref,
                                      const MPMMaterial* matl,
-                                     double temperature);
+                                     double temperature,
+                                     double rho_guess);
 
     /*! Used by MPMICE for pressure equilibriation */
     virtual void computePressEOSCM(double rho_m, double& press_eos,

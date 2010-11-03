@@ -58,6 +58,7 @@ namespace Uintah {
     vector<Patch::FaceType> LodiFaces;
     bool saveLiTerms;
     Vector d_gravity;
+    double  Li_scale;
   };    
   //____________________________________________________________
   // This struct contains the additional variables required to 
@@ -70,7 +71,14 @@ namespace Uintah {
     constCCVariable<Vector> vel_CC;
     constCCVariable<double> press_CC;        
     constCCVariable<double> temp_CC;            
-    SCIRun::StaticArray<CCVariable<Vector> > Li;        
+    SCIRun::StaticArray<CCVariable<Vector> > Li;
+/*`==========TESTING==========*/
+    double delT; 
+    constCCVariable<double> rho_old;
+    constCCVariable<double> temp_old;
+    constCCVariable<Vector> vel_old;
+    constCCVariable<double> press_old;
+/*===========TESTING==========`*/        
   };
   
   void addRequires_Lodi(Task* t, 

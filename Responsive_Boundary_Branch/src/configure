@@ -726,7 +726,6 @@ BUILD_ARCHES
 BUILD_ICE
 BUILD_MPM
 BUILD_RADIATION
-BUILD_WASATCH
 DEF_ARCHES
 DEF_ICE
 DEF_MPM
@@ -881,16 +880,27 @@ DEF_HDF5
 INC_HDF5_H
 HDF5_LIB_FLAG
 HDF5_LIB_DIR_FLAG
-HAVE_TABPROPS
-DEF_TABPROPS
-INC_TABPROPS_H
-TABPROPS_LIB_FLAG
-TABPROPS_LIB_DIR_FLAG
 HAVE_BOOST
 DEF_BOOST
 INC_BOOST_H
 BOOST_LIB_FLAG
 BOOST_LIB_DIR_FLAG
+HAVE_SPATIALOPS
+DEF_SPATIALOPS
+INC_SPATIALOPS_H
+SPATIALOPS_LIB_FLAG
+SPATIALOPS_LIB_DIR_FLAG
+HAVE_EXPRLIB
+DEF_EXPRLIB
+INC_EXPRLIB_H
+EXPRLIB_LIB_FLAG
+EXPRLIB_LIB_DIR_FLAG
+HAVE_TABPROPS
+DEF_TABPROPS
+INC_TABPROPS_H
+TABPROPS_LIB_FLAG
+TABPROPS_LIB_DIR_FLAG
+BUILD_WASATCH
 HAVE_HYPRE
 DEF_HYPRE
 INC_HYPRE_H
@@ -1491,6 +1501,8 @@ if test -n "$ac_init_help"; then
 Optional Features:
   --disable-FEATURE       do not include FEATURE (same as --enable-FEATURE=no)
   --enable-FEATURE[=ARG]  include FEATURE [ARG=yes]
+--enable-wasatch_3p
+ExprLibDownload and build the Wasatch Thirdparty libraries - TabProps
 --enable-static         Build a statically linked version of Uintah
 --enable-verbosity      Turn on verbose configure output
 --enable-threads        Specify a thread implementation (pthreads or irix)
@@ -1511,7 +1523,8 @@ Optional Features:
                           Force all new'd and malloc'd memory to be initialied
                           to the value given - defaults to 127.
 --enable-assertion-level=N
-                          Use assertion level N (0-3)
+                          Use assertion level N (0-3) (Where 0 turns off
+                          assertions, and 3 turns on all assertions.)
 --enable-scinew-line-numbers
                           Have SCI malloc store the file and line that calls
                           'scinew'
@@ -1539,6 +1552,8 @@ Optional Packages:
 --with-hypre=DIR        Use the hypre installation in DIR
 --with-petsc=DIR        Use the petsc installation in DIR
 --with-boost=DIR        Use the Boost library in DIR
+--with-spatialops=DIR   Use the SpatialOps library in DIR
+--with-exprlib=DIR      Use the ExprLib library in DIR
 --with-tabprops=DIR     Use the TabProps library in DIR
 --with-zoltan=DIR       Use the Zoltan installation in DIR
 --with-unipetsc=DIR     Use the unipetsc installation in DIR
@@ -2058,13 +2073,18 @@ WOFF_NUMBERS=
 
 ##
 ## Used to store warnings that should be redisplayed to the user at the
-## end of configure in hopes that the user actually sees them.  Note,
-## the syntax and use of IMPORTANT_WARNINGS is somewhat picky.  See the
-## 'Check for 64 vs 80 bit floating point number' section below for an
-## example of its use.  (Make sure to increment NUM_IMPORTANT_WARNINGS.)
+## end of configure in hopes that the user actually sees them.
+##
+## Use 'add_important_warning()' to add a warning.
 ##
 declare -a IMPORTANT_WARNINGS
 NUM_IMPORTANT_WARNINGS=0
+add_important_warning()
+{
+   # Note: need '[[' below to get autoconf to create a single '[' in the actual configure file.
+   IMPORTANT_WARNINGS[$NUM_IMPORTANT_WARNINGS]=$1
+   ((NUM_IMPORTANT_WARNINGS++))
+}
 
 ## Clean up files that could be left around if configure was
 ## interrupted (by control-c, ^c) because I do not know how to add
@@ -2289,6 +2309,18 @@ fi
 ##  initialize the recognized argument lists
 sci_arg_with_list="--no-create --no-recursion"
 sci_arg_enable_list=""
+
+##  --------------------------------------------------------------------
+##  ------------------  optional variable intialization  ---------------
+##  --------------------------------------------------------------------
+
+# Setting variables to 'no' isn't required, but is useful in displaying
+# some error condition information to the user.
+HAVE_HDF5="no"
+HAVE_BOOST="no"
+HAVE_TABPROPS="no"
+HAVE_SPATIALOPS="no"
+HAVE_EXPRLIB="no"
 
 ##  --------------------------------------------------------------------
 ##  ------------------  check for all arguments     --------------------
@@ -2569,18 +2601,42 @@ echo "$as_me: error: The file or directory parameter ($boost) specified for --wi
   fi
 
 
-#SCI_ARG_WITH(spatialops,
-#  AC_HELP_STRING(--with-spatialops=DIR,
-#                 Use the SpatialOps library in DIR),
-#  [with_spatialops="$withval"
-#   sci_required_spatialops=yes],
-#  [with_spatialops=""])
-#SCI_ARG_WITH(exprlib,
-#  AC_HELP_STRING(--with-exprlib=DIR,
-#                 Use the ExprLib library in DIR),
-#  [with_exprlib="$withval"
-#   sci_required_exprlib=yes],
-#  [with_exprlib=""])
+
+
+# Check whether --with-spatialops was given.
+if test "${with_spatialops+set}" = set; then
+  withval=$with_spatialops; with_spatialops="$withval"
+   sci_required_spatialops=yes
+else
+  with_spatialops=""
+fi
+
+  sci_arg_with_list="$sci_arg_with_list --with-spatialops --without-spatialops"
+  if test -n "$spatialops" -a ! -e "$spatialops"; then
+    { { echo "$as_me:$LINENO: error: The file or directory parameter ($spatialops) specified for --with-spatialops does not exist!  Please verify that the path and file are correct." >&5
+echo "$as_me: error: The file or directory parameter ($spatialops) specified for --with-spatialops does not exist!  Please verify that the path and file are correct." >&2;}
+   { (exit 1); exit 1; }; }
+  fi
+
+
+
+
+# Check whether --with-exprlib was given.
+if test "${with_exprlib+set}" = set; then
+  withval=$with_exprlib; with_exprlib="$withval"
+   sci_required_exprlib=yes
+else
+  with_exprlib=""
+fi
+
+  sci_arg_with_list="$sci_arg_with_list --with-exprlib --without-exprlib"
+  if test -n "$exprlib" -a ! -e "$exprlib"; then
+    { { echo "$as_me:$LINENO: error: The file or directory parameter ($exprlib) specified for --with-exprlib does not exist!  Please verify that the path and file are correct." >&5
+echo "$as_me: error: The file or directory parameter ($exprlib) specified for --with-exprlib does not exist!  Please verify that the path and file are correct." >&2;}
+   { (exit 1); exit 1; }; }
+  fi
+
+
 
 
 # Check whether --with-tabprops was given.
@@ -2841,6 +2897,17 @@ echo "$as_me: error: The file or directory parameter ($visit) specified for --wi
 
 
 
+  # Check whether --enable-wasatch_3p was given.
+if test "${enable_wasatch_3p+set}" = set; then
+  enableval=$enable_wasatch_3p; wasatch_3p="yes"
+else
+  wasatch_3p=="no"
+fi
+
+  sci_arg_enable_list="$sci_arg_enable_list --enable-wasatch_3p --disable-wasatch_3p"
+
+
+
   # Check whether --enable-static was given.
 if test "${enable_static+set}" = set; then
   enableval=$enable_static; static="yes"
@@ -2983,7 +3050,7 @@ echo "$as_me: error: The file or directory parameter ($MallocTrace) specified fo
 if test "${enable_assertion_level+set}" = set; then
   enableval=$enable_assertion_level; enable_assertion_level="$enableval"
 else
-  enable_assertion_level=${enable_assertion_level=3}
+  enable_assertion_level=""
 fi
 
   sci_arg_enable_list="$sci_arg_enable_list --enable-assertion-level --disable-assertion-level"
@@ -3028,7 +3095,7 @@ fi
 
 if test "$enable_memory_initialization" != "no"; then
    DEF_MEMORY_INIT="#define INITIALIZE_MEMORY"
-   if   test "$enable_memory_initialization" == "yes"; then
+   if test "$enable_memory_initialization" = "yes"; then
       memory_init=127
    else
       val=$enable_memory_initialization
@@ -6740,7 +6807,6 @@ echo "$as_me: WARNING: sci-malloc disabled" >&2;}
         ;;
 esac
 
-ASSERTION_LEVEL="$enable_assertion_level"
 THROW_LEVEL="$enable_throw_level"
 extra_cflags=""
 
@@ -6825,7 +6891,7 @@ echo $ECHO_N "checking whether optimize was enabled... $ECHO_C" >&6; }
 if test "$optimize" = "no"; then
   if test "$debug" = "no"; then
     # neither debug nor optimize specified, DEFAULT TO: optimized
-    extra_cflags="-O2 ${extra_cflags}"
+    extra_cflags="-O2 -DNDEBUG ${extra_cflags}"
     { echo "$as_me:$LINENO: result: no (default to -O2) " >&5
 echo "${ECHO_T}no (default to -O2) " >&6; }
   else
@@ -6837,13 +6903,40 @@ echo "${ECHO_T}no (default to -O2) " >&6; }
 echo "${ECHO_T}no (${no_optimize_flag}) " >&6; }
   fi
 elif test "$optimize" = "yes"; then
-  extra_cflags="-O2 ${extra_cflags}"
+  extra_cflags="-O2 -DNDEBUG ${extra_cflags}"
   { echo "$as_me:$LINENO: result: yes (-O2) " >&5
 echo "${ECHO_T}yes (-O2) " >&6; }
 else
-  extra_cflags="$optimize ${extra_cflags}"
+  extra_cflags="$optimize -DNDEBUG ${extra_cflags}"
   { echo "$as_me:$LINENO: result: yes ($optimize) " >&5
 echo "${ECHO_T}yes ($optimize) " >&6; }
+fi
+
+# Check to see if assertions are off but optimize is on... and warn user if so...
+if test "$optimize" != "no"; then
+
+  ASSERTION_LEVEL="$enable_assertion_level"
+  if test "$ASSERTION_LEVEL" = ""; then
+    add_important_warning "FYI: Configure turned off assertions due to --enable-optimize."
+    ASSERTION_LEVEL=0
+  else
+    if test "$ASSERTION_LEVEL" != "0"; then
+      add_important_warning "You explicitly turned on assertions (Level $ASSERTION_LEVEL) but you also specified --enable-optimize.  You can turn assertions off with --enable-assertion-level=0.  Assertions can significantly decrease performance."
+    fi
+  fi
+else
+  # Configuring debug build...
+  ASSERTION_LEVEL="$enable_assertion_level"
+  if test "$ASSERTION_LEVEL" = ""; then
+    # Debug builds default to level 3 assertions.
+    ASSERTION_LEVEL=3
+  fi
+fi
+
+if test $ASSERTION_LEVEL != "0" -a $ASSERTION_LEVEL != "1" -a $ASSERTION_LEVEL != "2" -a $ASSERTION_LEVEL != "3"; then
+  { { echo "$as_me:$LINENO: error: --enable-assertion-level was set to '$ASSERTION_LEVEL', but must be 0, 1, 2, or 3." >&5
+echo "$as_me: error: --enable-assertion-level was set to '$ASSERTION_LEVEL', but must be 0, 1, 2, or 3." >&2;}
+   { (exit 1); exit 1; }; }
 fi
 
 if test ! -e "`type $CC | sed 's%^.* /%/%'`"; then
@@ -6941,11 +7034,8 @@ if test "$with_fortran" = no; then
             DEF_NO_FORTRAN="#define NO_FORTRAN";
             NO_FORTRAN="yes";
 fi
-if test "$USE_WASATCH" = yes; then BUILD_WASATCH=yes; fi
-if test "$BUILD_WASATCH" = no; then DEF_WASATCH="#define NO_WASATCH"; fi
 
 # NO_FORTRAN is used in configVars.mk[.in] and DEF_NO_FORTRAN is used in uintah_testdefs.h.in
-
 
 
 
@@ -7280,6 +7370,7 @@ if test "$static" = "yes" -o "$SO_OR_ARCHIVE_EXTENSION" = "a"; then
 echo "$as_me: WARNING: Building a statically linked version of Uintah! " >&2;}
   IS_STATIC_BUILD="yes"
   SO_OR_ARCHIVE_EXTENSION=a
+#  LDFLAGS="$LDFLAGS -static"   # FIXME... need -static (at least for gcc)...
   MAKE_ARCHIVES="yes"
   STATIC_BUILD_DEF="#define STATIC_BUILD 1"
 else
@@ -7370,9 +7461,7 @@ echo "$as_me: WARNING: Floating point - usually 64 vs 80 bit - register precissi
 echo "$as_me: WARNING: Disabling use of floating point registers with '-ffloat-store' compiler flag. " >&2;}
    { echo "$as_me:$LINENO: WARNING: ----------------------------------------------------------------------------------------- " >&5
 echo "$as_me: WARNING: ----------------------------------------------------------------------------------------- " >&2;}
-   # Note: need '[[' below to get autoconf to create a single '[' in the actual configure file.
-   IMPORTANT_WARNINGS[$NUM_IMPORTANT_WARNINGS]="Automatically added -ffloat-store compiler option to C/CXXFLAGS."
-   ((NUM_IMPORTANT_WARNINGS++))
+   add_important_warning "Automatically added -ffloat-store compiler option to C/CXXFLAGS."
    CFLAGS="$CFLAGS -ffloat-store"
    CXXFLAGS="$CXXFLAGS -ffloat-store"
    # Verify that the compiler accepts the -ffloat-store flag:
@@ -11638,7 +11727,7 @@ echo "$as_me: error: VisIt requires CMake. Please make sure 'cmake' is in your p
    { (exit 1); exit 1; }; }
    fi
 
-   if test "$with_visit" == "yes"; then
+   if test "$with_visit" = "yes"; then
       { { echo "$as_me:$LINENO: error: You must provide a DIRECTORY when using --with-visit=DIR. " >&5
 echo "$as_me: error: You must provide a DIRECTORY when using --with-visit=DIR. " >&2;}
    { (exit 1); exit 1; }; }
@@ -11702,7 +11791,7 @@ fi
 
 if test "$with_ofed"; then
 
-   if test "$with_ofed" == "yes"; then
+   if test "$with_ofed" = "yes"; then
       { { echo "$as_me:$LINENO: error: You must specify a directory with the '--with-ofed=DIR' option! " >&5
 echo "$as_me: error: You must specify a directory with the '--with-ofed=DIR' option! " >&2;}
    { (exit 1); exit 1; }; }
@@ -12198,7 +12287,7 @@ fi
 
 if test "$with_mx"; then
 
-   if test "$with_mx" == "yes"; then
+   if test "$with_mx" = "yes"; then
       { { echo "$as_me:$LINENO: error: You must specify a directory with the '--with-mx=DIR' option! " >&5
 echo "$as_me: error: You must specify a directory with the '--with-mx=DIR' option! " >&2;}
    { (exit 1); exit 1; }; }
@@ -16670,7 +16759,11 @@ if test -e $_sci_lib/../bin/xml2-config; then
     { echo "$as_me:$LINENO: WARNING: Using $_sci_lib/../bin/xml2-config to set libxml2 variables." >&5
 echo "$as_me: WARNING: Using $_sci_lib/../bin/xml2-config to set libxml2 variables." >&2;}
 
-    XML2_LIB_DIR_FLAG=`$_sci_lib/../bin/xml2-config --libs`
+    if test "$IS_STATIC_BUILD" = "yes"; then
+       STATIC_FLAG=--static
+    fi
+
+    XML2_LIB_DIR_FLAG=`$_sci_lib/../bin/xml2-config --libs $STATIC_FLAG`
     XML2_LDFLAGS=""
     XML2_LIB_PATH=""
     for i in $XML2_LIB_DIR_FLAG;do
@@ -45007,6 +45100,230 @@ ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $
 ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
+##  --  search for Boost ------------------------
+
+if test "$with_boost"; then
+  if test "$with_boost" = "yes"; then
+    { { echo "$as_me:$LINENO: error: --with-boost=DIR requires a DIRectory be provided. " >&5
+echo "$as_me: error: --with-boost=DIR requires a DIRectory be provided. " >&2;}
+   { (exit 1); exit 1; }; }
+  else
+    { echo "$as_me:$LINENO: checking for Boost files (For now we are just verifying the existence of lib and .h files)" >&5
+echo $ECHO_N "checking for Boost files (For now we are just verifying the existence of lib and .h files)... $ECHO_C" >&6; }
+    if test ! -d $with_boost; then
+      echo ""
+      { { echo "$as_me:$LINENO: error: '$with_boost' directory does not exist. " >&5
+echo "$as_me: error: '$with_boost' directory does not exist. " >&2;}
+   { (exit 1); exit 1; }; }
+    fi
+    # Check for header files
+    BOOST_INCLUDE_DIR=$with_boost/include/boost
+    for file in signal.hpp shared_ptr.hpp bind.hpp signal.hpp shared_ptr.hpp ref.hpp graph/adjacency_list.hpp graph/graph_traits.hpp \
+                graph/topological_sort.hpp graph/graphviz.hpp graph/breadth_first_search.hpp graph/visitors.hpp graph/transpose_graph.hpp \
+                shared_ptr.hpp any.hpp; do
+      if test ! -f $BOOST_INCLUDE_DIR/$file; then
+        echo ""
+        { { echo "$as_me:$LINENO: error: '$BOOST_INCLUDE_DIR/$file' does not exist. " >&5
+echo "$as_me: error: '$BOOST_INCLUDE_DIR/$file' does not exist. " >&2;}
+   { (exit 1); exit 1; }; }
+      fi
+    done
+    # Check for libraries files
+    BOOST_LIB_DIR=$with_boost/lib
+    for file in libboost_thread-mt.a libboost_signals-mt.a; do
+      if test ! -f $BOOST_LIB_DIR/$file; then
+        echo ""
+        { echo "$as_me:$LINENO: WARNING: $file lib does not exist... looking for non-mt version..." >&5
+echo "$as_me: WARNING: $file lib does not exist... looking for non-mt version..." >&2;}
+        short_name="`echo $file | cut -f1 -d"-"`.a"
+        if test ! -f $BOOST_LIB_DIR/$short_name; then
+            { { echo "$as_me:$LINENO: error: $BOOST_LIB_DIR/$short_name lib does not exist!" >&5
+echo "$as_me: error: $BOOST_LIB_DIR/$short_name lib does not exist!" >&2;}
+   { (exit 1); exit 1; }; }
+        else
+            short_name=`echo $short_name | cut -f1 -d"." | cut -c4-`
+            BOOST_LIB_FLAG="$BOOST_LIB_FLAG -l$short_name"
+        fi
+      else
+        short_name=`echo $file | cut -f1 -d"." | cut -c4-`
+        BOOST_LIB_FLAG="$BOOST_LIB_FLAG -l$short_name"
+      fi
+    done
+  fi
+  { echo "$as_me:$LINENO: result: Found Boost" >&5
+echo "${ECHO_T}Found Boost" >&6; }
+  DEF_BOOST="#define HAVE_BOOST 1"
+  if test "$with_boost" != "/usr"; then
+    # If with_boost points to /usr, then we don't need to explicitly point to it...
+    INC_BOOST_H="-I$with_boost/include"
+    BOOST_LIB_DIR_FLAG="$LDRUN_PREFIX$with_boost/lib -L$with_boost/lib"
+  fi
+  HAVE_BOOST="yes"
+fi
+
+
+
+
+
+
+##  --  Handle --enable-wasatch_3p... ------------------------
+
+if test "$wasatch_3p" = "yes"; then
+
+  if test "$HAVE_BOOST" != "yes"; then
+      { { echo "$as_me:$LINENO: error: Option --enable-wasatch_3p requires Boost... <--with-boost=DIR> " >&5
+echo "$as_me: error: Option --enable-wasatch_3p requires Boost... <--with-boost=DIR> " >&2;}
+   { (exit 1); exit 1; }; }
+  fi
+  if test "$HAVE_HDF5" != "yes"; then
+      { { echo "$as_me:$LINENO: error: Option --enable-wasatch_3p requires HDF5... <--with-hdf5=DIR> " >&5
+echo "$as_me: error: Option --enable-wasatch_3p requires HDF5... <--with-hdf5=DIR> " >&2;}
+   { (exit 1); exit 1; }; }
+  fi
+  if test "$with_tabprops"; then
+     { { echo "$as_me:$LINENO: error: Do NOT specify both --with-tabprops and --enable-wasatch_3p " >&5
+echo "$as_me: error: Do NOT specify both --with-tabprops and --enable-wasatch_3p " >&2;}
+   { (exit 1); exit 1; }; }
+  fi
+  if test "$with_spatialops"; then
+     { { echo "$as_me:$LINENO: error: Do NOT specify both --with-spatialops and --enable-wasatch_3p " >&5
+echo "$as_me: error: Do NOT specify both --with-spatialops and --enable-wasatch_3p " >&2;}
+   { (exit 1); exit 1; }; }
+  fi
+  if test "$with_exprlib"; then
+     { { echo "$as_me:$LINENO: error: Do NOT specify both --with-exprlib and --enable-wasatch_3p " >&5
+echo "$as_me: error: Do NOT specify both --with-exprlib and --enable-wasatch_3p " >&2;}
+   { (exit 1); exit 1; }; }
+  fi
+
+  mkdir -p Wasatch3P
+  $path_to_src/build_scripts/build_wasatch_3p.sh `$sci_pwd` "$with_boost" "$with_hdf5"
+
+  if test $? != 0; then
+     { { echo "$as_me:$LINENO: error: Failed to build Wasatch 3p libraries... " >&5
+echo "$as_me: error: Failed to build Wasatch 3p libraries... " >&2;}
+   { (exit 1); exit 1; }; }
+  fi
+
+  with_spatialops=`$sci_pwd`/Wasatch3P/install/SpatialOps
+  with_exprlib=`$sci_pwd`/Wasatch3P/install/ExprLib
+  with_tabprops=`$sci_pwd`/Wasatch3P/install/TabProps
+fi
+
+##  --  search for SpatialOps Library ------------------------
+
+if test "$with_spatialops"; then
+  if test "$HAVE_BOOST" != "yes"; then
+    { { echo "$as_me:$LINENO: error: --with-spatialops=DIR requires Boost. " >&5
+echo "$as_me: error: --with-spatialops=DIR requires Boost. " >&2;}
+   { (exit 1); exit 1; }; }
+  fi
+
+  if test "$with_spatialops" = "yes"; then
+    { { echo "$as_me:$LINENO: error: --with-spatialops=DIR requires a DIRectory be provided. " >&5
+echo "$as_me: error: --with-spatialops=DIR requires a DIRectory be provided. " >&2;}
+   { (exit 1); exit 1; }; }
+  else
+
+    { echo "$as_me:$LINENO: checking for SpatialOps files (For now we are just verifying the existence of lib and .h files)" >&5
+echo $ECHO_N "checking for SpatialOps files (For now we are just verifying the existence of lib and .h files)... $ECHO_C" >&6; }
+    if test ! -d $with_spatialops; then
+      echo ""
+      { { echo "$as_me:$LINENO: error: '$with_spatialops' directory does not exist. " >&5
+echo "$as_me: error: '$with_spatialops' directory does not exist. " >&2;}
+   { (exit 1); exit 1; }; }
+    fi
+    SPOPS_INCLUDE_DIR="include/spatialops"
+    # Check includes
+    for file in FieldFunctions.h LinAlgTrilinos.h LinAlgUBlas.h LinearSystem.h OperatorDatabase.h \
+                SpatialOperator.h SpatialOpsConfigure.h SpatialOpsDefs.h SpatialOpsTools.h \
+                particles structured; do
+      if test ! -e $with_spatialops/$SPOPS_INCLUDE_DIR/$file; then
+        echo ""
+        { { echo "$as_me:$LINENO: error: '$with_spatialops/$SPOPS_INCLUDE_DIR/$file' does not exist. " >&5
+echo "$as_me: error: '$with_spatialops/$SPOPS_INCLUDE_DIR/$file' does not exist. " >&2;}
+   { (exit 1); exit 1; }; }
+      fi
+    done
+    # Check lib
+    if test ! -f $with_spatialops/lib/spatialops/libspatialops.a; then
+      echo ""
+      { { echo "$as_me:$LINENO: error: '$with_spatialops/lib/spatialops/libspatialops.a' does not exist. " >&5
+echo "$as_me: error: '$with_spatialops/lib/spatialops/libspatialops.a' does not exist. " >&2;}
+   { (exit 1); exit 1; }; }
+    fi
+  fi
+  { echo "$as_me:$LINENO: result: yes" >&5
+echo "${ECHO_T}yes" >&6; }
+  DEF_SPATIALOPS="#define HAVE_SPATIALOPS 1"
+  INC_SPATIALOPS_H="-I$with_spatialops/include"
+  SPATIALOPS_LIB_DIR_FLAG="-L$with_spatialops/lib/spatialops"
+  SPATIALOPS_LIB_FLAG="-lspatialops"
+  HAVE_SPATIALOPS="yes"
+fi
+
+
+
+
+
+
+##  --  search for Exprlib Library ------------------------
+
+if test "$with_exprlib"; then
+  if test "$HAVE_SPATIALOPS" != "yes"; then
+    { { echo "$as_me:$LINENO: error: --with-exprlib=DIR requires SpatialOps. " >&5
+echo "$as_me: error: --with-exprlib=DIR requires SpatialOps. " >&2;}
+   { (exit 1); exit 1; }; }
+  fi
+
+  if test "$with_exprlib" = "yes"; then
+    { { echo "$as_me:$LINENO: error: --with-exprlib=DIR requires a DIRectory be provided. " >&5
+echo "$as_me: error: --with-exprlib=DIR requires a DIRectory be provided. " >&2;}
+   { (exit 1); exit 1; }; }
+  else
+
+    { echo "$as_me:$LINENO: checking for Exprlib files (For now we are just verifying the existence of lib and .h files)" >&5
+echo $ECHO_N "checking for Exprlib files (For now we are just verifying the existence of lib and .h files)... $ECHO_C" >&6; }
+    if test ! -d $with_exprlib; then
+      echo ""
+      { { echo "$as_me:$LINENO: error: '$with_exprlib' directory does not exist. " >&5
+echo "$as_me: error: '$with_exprlib' directory does not exist. " >&2;}
+   { (exit 1); exit 1; }; }
+    fi
+    SPOPS_INCLUDE_DIR="include/expression"
+    # Check includes
+    for file in ExecuteExpression.h ExprDeps.h ExprLib.h Expr_Context.h Expr_Expression.h Expr_ExpressionID.h Expr_FieldManagerList.h \
+                ExpressionBase.h ExpressionFactory.h ExpressionRegistry.h ExpressionTree.h FieldDeps.h FieldManager.h FieldManagerBase.h \
+                Functions.h PlaceHolderExpr.h Tag.h TransportEquation.h uintah; do
+      if test ! -e $with_exprlib/$SPOPS_INCLUDE_DIR/$file; then
+        echo ""
+        { { echo "$as_me:$LINENO: error: '$with_exprlib/$SPOPS_INCLUDE_DIR/$file' does not exist. " >&5
+echo "$as_me: error: '$with_exprlib/$SPOPS_INCLUDE_DIR/$file' does not exist. " >&2;}
+   { (exit 1); exit 1; }; }
+      fi
+    done
+    # Check lib
+    if test ! -f $with_exprlib/lib/expression/libexprlib.a; then
+      echo ""
+      { { echo "$as_me:$LINENO: error: '$with_exprlib/lib/expression/libexprlib.a' does not exist. " >&5
+echo "$as_me: error: '$with_exprlib/lib/expression/libexprlib.a' does not exist. " >&2;}
+   { (exit 1); exit 1; }; }
+    fi
+  fi
+  { echo "$as_me:$LINENO: result: yes" >&5
+echo "${ECHO_T}yes" >&6; }
+  DEF_EXPRLIB="#define HAVE_EXPRLIB 1"
+  INC_EXPRLIB_H="-I$with_exprlib/include"
+  EXPRLIB_LIB_DIR_FLAG="-L$with_exprlib/lib/expression"
+  EXPRLIB_LIB_FLAG="-lexprlib"
+  HAVE_EXPRLIB="yes"
+fi
+
+
+
+
+
+
 ##  --  search for TabProps ------------------------
 
 if test "$with_tabprops"; then
@@ -45050,41 +45367,35 @@ fi
 
 
 
-##  --  search for Boost ------------------------
+##  --  Determine whether we can use WASATCH OR NOT ----------------------
 
-if test "$with_boost"; then
-  if test "$with_boost" = "yes"; then
-    { { echo "$as_me:$LINENO: error: --with-boost=DIR requires a DIRectory be provided. " >&5
-echo "$as_me: error: --with-boost=DIR requires a DIRectory be provided. " >&2;}
-   { (exit 1); exit 1; }; }
+if test "$USE_WASATCH" = yes; then
+  if test "$HAVE_HDF5" = "yes" &&
+     test "$HAVE_BOOST" = "yes" &&
+     test "$HAVE_TABPROPS" = "yes" &&
+     test "$HAVE_SPATIALOPS" = "yes" &&
+     test "$HAVE_EXPRLIB" = "yes"; then
+    BUILD_WASATCH=yes
   else
-    { echo "$as_me:$LINENO: checking for Boost files (For now we are just verifying the existence of lib and .h files)" >&5
-echo $ECHO_N "checking for Boost files (For now we are just verifying the existence of lib and .h files)... $ECHO_C" >&6; }
-    if test ! -d $with_boost; then
-      { { echo "$as_me:$LINENO: error: '$with_boost' directory does not exist. " >&5
-echo "$as_me: error: '$with_boost' directory does not exist. " >&2;}
+    { { echo "$as_me:$LINENO: error: You specified the use of the Wasatch component but do not have all the of the prereqs: HDF5 ($HAVE_HDF5); Boost ($HAVE_BOOST); TabProps ($HAVE_TABPROPS); SpatialOps ($HAVE_SPATIALOPS); and ExprLib ($HAVE_EXPRLIB)." >&5
+echo "$as_me: error: You specified the use of the Wasatch component but do not have all the of the prereqs: HDF5 ($HAVE_HDF5); Boost ($HAVE_BOOST); TabProps ($HAVE_TABPROPS); SpatialOps ($HAVE_SPATIALOPS); and ExprLib ($HAVE_EXPRLIB)." >&2;}
    { (exit 1); exit 1; }; }
-    fi
-    for file in include/boost/BSpline.h include/boost/LU.h include/boost/StateTable.h lib/boost/libboost.a; do
-      if test ! -f $with_boost/$file; then
-        { { echo "$as_me:$LINENO: error: '$with_boost/$file' does not exist. " >&5
-echo "$as_me: error: '$with_boost/$file' does not exist. " >&2;}
-   { (exit 1); exit 1; }; }
-      fi
-    done
   fi
-  { echo "$as_me:$LINENO: result: yes" >&5
-echo "${ECHO_T}yes" >&6; }
-  DEF_BOOST="#define HAVE_BOOST 1"
-  INC_BOOST_H="-I$with_boost/include"
-  BOOST_LIB_DIR_FLAG="-L$with_boost/lib/boost"
-  BOOST_LIB_FLAG="-lboost"
-  HAVE_BOOST="yes"
+else
+  if test "$HAVE_HDF5" = "yes" &&
+     test "$HAVE_BOOST" = "yes" &&
+     test "$HAVE_TABPROPS" = "yes" &&
+     test "$HAVE_SPATIALOPS" = "yes" &&
+     test "$HAVE_EXPRLIB" = "yes"; then
+    BUILD_WASATCH=yes
+    { echo "$as_me:$LINENO: WARNING: All prereqs satisfied" >&5
+echo "$as_me: WARNING: All prereqs satisfied" >&2;}
+  fi
 fi
 
-
-
-
+if test "$BUILD_WASATCH" = no; then
+  DEF_WASATCH="#define NO_WASATCH";
+fi
 
 
 ##  --  search for hypre stuff  ------------------------------------------
@@ -46428,7 +46739,6 @@ BUILD_ARCHES!$BUILD_ARCHES$ac_delim
 BUILD_ICE!$BUILD_ICE$ac_delim
 BUILD_MPM!$BUILD_MPM$ac_delim
 BUILD_RADIATION!$BUILD_RADIATION$ac_delim
-BUILD_WASATCH!$BUILD_WASATCH$ac_delim
 DEF_ARCHES!$DEF_ARCHES$ac_delim
 DEF_ICE!$DEF_ICE$ac_delim
 DEF_MPM!$DEF_MPM$ac_delim
@@ -46443,6 +46753,7 @@ SOFLAGS!$SOFLAGS$ac_delim
 IS_STATIC_BUILD!$IS_STATIC_BUILD$ac_delim
 SO_OR_ARCHIVE_EXTENSION!$SO_OR_ARCHIVE_EXTENSION$ac_delim
 DEF_MALLOC_TRACE!$DEF_MALLOC_TRACE$ac_delim
+INC_MALLOC_TRACE_H!$INC_MALLOC_TRACE_H$ac_delim
 _ACEOF
 
   if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 97; then
@@ -46484,7 +46795,6 @@ _ACEOF
 ac_delim='%!_!# '
 for ac_last_try in false false false false false :; do
   cat >conf$$subs.sed <<_ACEOF
-INC_MALLOC_TRACE_H!$INC_MALLOC_TRACE_H$ac_delim
 MALLOC_TRACE_LIB_FLAG!$MALLOC_TRACE_LIB_FLAG$ac_delim
 MALLOC_TRACE_LIB_DIR_FLAG!$MALLOC_TRACE_LIB_DIR_FLAG$ac_delim
 MALLOC_TRACE_LIB_MPI_FLAG!$MALLOC_TRACE_LIB_MPI_FLAG$ac_delim
@@ -46581,6 +46891,7 @@ HAVE_CBLAS!$HAVE_CBLAS$ac_delim
 INC_BLAS_H!$INC_BLAS_H$ac_delim
 BLAS_LIB_FLAG!$BLAS_LIB_FLAG$ac_delim
 BLAS_LIB_DIR_FLAG!$BLAS_LIB_DIR_FLAG$ac_delim
+DEF_BLAS!$DEF_BLAS$ac_delim
 _ACEOF
 
   if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 97; then
@@ -46622,7 +46933,6 @@ _ACEOF
 ac_delim='%!_!# '
 for ac_last_try in false false false false false :; do
   cat >conf$$subs.sed <<_ACEOF
-DEF_BLAS!$DEF_BLAS$ac_delim
 DEF_CBLAS!$DEF_CBLAS$ac_delim
 HAVE_LAPACK!$HAVE_LAPACK$ac_delim
 DEF_LAPACK!$DEF_LAPACK$ac_delim
@@ -46665,16 +46975,27 @@ DEF_HDF5!$DEF_HDF5$ac_delim
 INC_HDF5_H!$INC_HDF5_H$ac_delim
 HDF5_LIB_FLAG!$HDF5_LIB_FLAG$ac_delim
 HDF5_LIB_DIR_FLAG!$HDF5_LIB_DIR_FLAG$ac_delim
-HAVE_TABPROPS!$HAVE_TABPROPS$ac_delim
-DEF_TABPROPS!$DEF_TABPROPS$ac_delim
-INC_TABPROPS_H!$INC_TABPROPS_H$ac_delim
-TABPROPS_LIB_FLAG!$TABPROPS_LIB_FLAG$ac_delim
-TABPROPS_LIB_DIR_FLAG!$TABPROPS_LIB_DIR_FLAG$ac_delim
 HAVE_BOOST!$HAVE_BOOST$ac_delim
 DEF_BOOST!$DEF_BOOST$ac_delim
 INC_BOOST_H!$INC_BOOST_H$ac_delim
 BOOST_LIB_FLAG!$BOOST_LIB_FLAG$ac_delim
 BOOST_LIB_DIR_FLAG!$BOOST_LIB_DIR_FLAG$ac_delim
+HAVE_SPATIALOPS!$HAVE_SPATIALOPS$ac_delim
+DEF_SPATIALOPS!$DEF_SPATIALOPS$ac_delim
+INC_SPATIALOPS_H!$INC_SPATIALOPS_H$ac_delim
+SPATIALOPS_LIB_FLAG!$SPATIALOPS_LIB_FLAG$ac_delim
+SPATIALOPS_LIB_DIR_FLAG!$SPATIALOPS_LIB_DIR_FLAG$ac_delim
+HAVE_EXPRLIB!$HAVE_EXPRLIB$ac_delim
+DEF_EXPRLIB!$DEF_EXPRLIB$ac_delim
+INC_EXPRLIB_H!$INC_EXPRLIB_H$ac_delim
+EXPRLIB_LIB_FLAG!$EXPRLIB_LIB_FLAG$ac_delim
+EXPRLIB_LIB_DIR_FLAG!$EXPRLIB_LIB_DIR_FLAG$ac_delim
+HAVE_TABPROPS!$HAVE_TABPROPS$ac_delim
+DEF_TABPROPS!$DEF_TABPROPS$ac_delim
+INC_TABPROPS_H!$INC_TABPROPS_H$ac_delim
+TABPROPS_LIB_FLAG!$TABPROPS_LIB_FLAG$ac_delim
+TABPROPS_LIB_DIR_FLAG!$TABPROPS_LIB_DIR_FLAG$ac_delim
+BUILD_WASATCH!$BUILD_WASATCH$ac_delim
 HAVE_HYPRE!$HAVE_HYPRE$ac_delim
 DEF_HYPRE!$DEF_HYPRE$ac_delim
 INC_HYPRE_H!$INC_HYPRE_H$ac_delim
@@ -46687,7 +47008,7 @@ LIBOBJS!$LIBOBJS$ac_delim
 LTLIBOBJS!$LTLIBOBJS$ac_delim
 _ACEOF
 
-  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 63; then
+  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 73; then
     break
   elif $ac_last_try; then
     { { echo "$as_me:$LINENO: error: could not make $CONFIG_STATUS" >&5
@@ -47160,8 +47481,10 @@ done
 if (( $NUM_IMPORTANT_WARNINGS > 0 )); then
 
    echo ""
+   echo "!!! IMPORTANT WARNINGS - Please Read: !!!"
+   echo ""
    echo "NOTE: Some IMPORTANT WARNINGS were generated during configuration.  A summary of"
-   echo "these messages is presented below:"
+   echo "these messages can be found below:"
    echo
 
    # Note: need '[[' below to get autoconf to create a single '[' in the actual configure file.
