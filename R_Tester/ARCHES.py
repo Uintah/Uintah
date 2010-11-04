@@ -2,12 +2,19 @@
 
 from os import symlink,environ
 from sys import argv,exit,platform
-from helpers.runSusTests import runSusTests, inputs_root
+from helpers.runSusTests import runSusTests, inputs_root, generatingGoldStandards
 from helpers.modUPS import modUPS
 
-#methane8patch_ups = modUPS("%s/ARCHES" % inputs_root(), \
-#                           "methane_explicit_table.ups", \
-#                           ["<patches>[2,2,2]</patches>"]) 
+the_dir = generatingGoldStandards()
+
+if the_dir == "" :
+  the_dir = "%s/ARCHES" % inputs_root()
+else :
+  the_dir = the_dir + "/ARCHES"
+
+methane8patch_ups = modUPS( the_dir,                         \
+                            "methane_explicit_table.ups",    \
+                            ["<patches>[2,2,2]</patches>"] )
                            
 #______________________________________________________________________                            
 #  Test syntax: ( "folder name", "input file", # processors, "OS", ["flags1","flag2"])
@@ -36,8 +43,8 @@ NIGHTLYTESTS = [
    ("periodic",                "periodicTurb/periodic.ups",           1.1,  "Darwin",  ["doesTestRun","no_dbg"]),
    ("methane_explicit_table",  "methane_explicit_table.ups",          1.1,  "Linux",   ["exactComparison"]),
    ("methane_explicit_table",  "methane_explicit_table.ups",          1.1,  "Darwin",  ["doesTestRun"]),
-#   ("methane8patch",           methane8patch_ups,                     8,    "Linux",   ["exactComparison"]),
-#   ("methane8patch",           methane8patch_ups,                     8,    "Darwin",  ["doesTestRun"]),
+   ("methane8patch",           methane8patch_ups,                     8,    "Linux",   ["exactComparison"]),
+   ("methane8patch",           methane8patch_ups,                     8,    "Darwin",  ["doesTestRun"]),
    ("dqmom_test_1",            "DQMOM_regression/dqmom_test_1.ups",   1.1,  "Linux",   ["exactComparison"]),
    ("dqmom_test_2a",           "DQMOM_regression/dqmom_test_2a.ups",  1.1,  "Linux",   ["exactComparison"]),
    ("dqmom_test_2b",           "DQMOM_regression/dqmom_test_2b.ups",  1.1,  "Linux",   ["exactComparison"]),
@@ -53,7 +60,7 @@ LOCALTESTS = [
    ("periodic",                "periodicTurb/periodic.ups",           1.1,  "Linux",   ["exactComparison"]),
    ("helium_RT",               "helium_RT.ups",                       1.1,  "Linux",   ["exactComparison"]),
    ("methane_explicit_table",  "methane_explicit_table.ups",          1.1,  "Linux",   ["exactComparison"]),
-#   ("methane8patch",           methane8patch_ups,                     8,    "Linux",   ["exactComparison"]),
+   ("methane8patch",           methane8patch_ups,                     8,    "Linux",   ["exactComparison"]),
    ("dqmom_test_1",            "DQMOM_regression/dqmom_test_1.ups",   1.1,  "Linux",   ["exactComparison"]),
    ("dqmom_test_2a",           "DQMOM_regression/dqmom_test_2a.ups",  1.1,  "Linux",   ["exactComparison"]),
    ("dqmom_test_2b",           "DQMOM_regression/dqmom_test_2b.ups",  1.1,  "Linux",   ["exactComparison"]),

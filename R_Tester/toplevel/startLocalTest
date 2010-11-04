@@ -4,7 +4,6 @@
 #  startLocalTest:
 #     This script executes the local regression tests for a single component
 
-
 #__________________________________
 # define environmental variables and export them
 HTMLLOG=""
@@ -28,12 +27,10 @@ fi
 
 BUILD_DIR="$1"
 
-
 if [ ! -d "${BUILD_DIR}" ]; then
   echo "ERROR: The build directory $BUILD_DIR does not exist.  Now exiting"
   exit -1
 fi
-
 
 cd "${BUILD_DIR}"
 
@@ -81,12 +78,23 @@ if [ ! -f susdir/compare_uda ]; then
   exit -1;
 fi
 
+if test "$TERM" == "dumb" -o "$TERM" == "emacs"; then
+  echo
+  echo "ERROR: startLocalTest requires a fully functional terminal... you have '$TERM'.  Goodbye."
+  echo
+  exit                                                                                    
+fi
+if test "$EMACS" == "t"; then
+  echo
+  echo "ERROR: startLocalTest cannot be run from within emacs...  Goodbye."
+  echo
+  exit                                                                                    
+fi
 
 #__________________________________
 # Have the user pick a component
 # find all the component tests which are python scripts
 
-#componentTests=`file TestScripts/* | grep python | cut -d: -f1 | cut -d/ -f2`
 componentTests=`ls TestScripts/*.py | grep -v __init__ | sed "s/.py//g" | sed "s,TestScripts/,,g"`
 
 list=""
@@ -99,7 +107,9 @@ echo $list
 
 componentTest=`dialog --stdout --separate-output --checklist "Select the component for local regression testing" 20 50 40 $list`
 if [ $? != 0 ] ; then                                                                
-  echo "cancel selected"                                                                  
+  echo ""
+  echo "Cancel selected... Goodbye."                                                                  
+  echo ""
   exit                                                                                    
 fi 
 
@@ -121,8 +131,7 @@ echo "setenv PATH $PATH"                                   >> "$doTestScript"
 echo "setenv OS $OS"                                       >> "$doTestScript"
 echo "setenv SCI_DEBUG \"\""                               >> "$doTestScript"
 echo "setenv LOCAL_OR_NIGHTLY_TEST $LOCAL_OR_NIGHTLY_TEST" >> "$doTestScript"
-
-echo "python TestScripts/$componentTest.py susdir inputs goldStandard local $PARALLELISM "'$1' >> "$doTestScript"
+echo "python -u TestScripts/$componentTest.py susdir inputs goldStandard local $PARALLELISM "'$1' >> "$doTestScript"
 
 /bin/chmod a+x "$doTestScript"
 

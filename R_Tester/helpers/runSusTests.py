@@ -2,10 +2,17 @@
 
 from os import environ,rmdir,mkdir,path,system,chdir,stat,getcwd,pathsep,symlink
 from time import asctime,localtime,strftime,time
-from sys import argv,exit
+from sys import argv,exit,stdout
 from string import upper,rstrip,rsplit
 from modUPS import modUPS
 from commands import getoutput
+
+####
+# Assuming that running python with the '-u' arg doesn't fix the i/o buffering problem, this line
+# can be added after print statements:
+#
+# stdout.flush() # Make sure that output (via 'tee' command (from calling script)) is actually printed...
+####
 
 def nameoftest (test):
     return test[0]
@@ -23,6 +30,19 @@ def userFlags (test):
     return test[-1]
 def nullCallback (test, susdir, inputsdir, compare_root, dbg_opt, max_parallelism):
     pass
+
+#______________________________________________________________________
+# Used by toplevel/generateGoldStandards.py
+
+inputs_dir = ""
+
+def setGeneratingGoldStandards( inputs ) :
+    global inputs_dir
+    inputs_dir = inputs
+
+def generatingGoldStandards() :
+    global inputs_dir
+    return inputs_dir
     
 #______________________________________________________________________
 # if a callback is given, it is executed before running each test and given
@@ -61,16 +81,23 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
   # If running Nightly RT, output logs in web dir
   # otherwise, save it in the build
   if environ['LOCAL_OR_NIGHTLY_TEST'] != "nightly" :
-    # if webpath exists, use that, otherwise, use BUILDROOT/dbg_opt
-    outputpath    = "%s-%s" % (environ['HTMLLOG'], dbg_opt)
-    weboutputpath = "%s-%s" % (environ['WEBLOG'],  dbg_opt)
-    try:
-      # make outputpath/dbg or opt dirs
-      environ['outputlinks'] ="1"
-      mkdir(outputpath)
-      system("chmod -R 775 %s" % outputpath)
-    except Exception:
-      pass
+
+    if environ['HTMLLOG'] != "" and environ['WEBLOG'] != "" :
+
+      # if webpath exists, use that, otherwise, use BUILDROOT/dbg_opt
+      outputpath    = "%s-%s" % (environ['HTMLLOG'], dbg_opt)
+      weboutputpath = "%s-%s" % (environ['WEBLOG'],  dbg_opt)
+
+      try:
+        # make outputpath/dbg or opt dirs
+        environ['outputlinks'] ="1"
+        mkdir(outputpath)
+        system("chmod -R 775 %s" % outputpath)
+      except Exception:
+        pass
+    else:
+      outputpath = startpath
+      weboutputpath = startpath
   else:
     outputpath = startpath
     weboutputpath = startpath
@@ -133,8 +160,6 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
     print "Performing %s-%s test %s." % (ALGO, dbg_opt, solotest)
   print "===================================="
   print ""
-
-  
 
   #______________________________________________________________________
   # Loop over tests 
@@ -235,6 +260,7 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
     # bulletproofing
     # Does gold standard exists?
     # If it doesn't then either throw an error (local RT) or generate it (Nightly RT).
+
     try:
       chdir(compare_root)
       chdir(testname)
@@ -353,7 +379,7 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
       system( "echo 'This test last passed with %s'> %s" %(svn_revision, svn_file))  
     #__________________________________
     # end of test loop
-    
+
   chdir("..")
 
   system("chgrp -R csafe %s > /dev/null 2>&1" % resultsdir)
@@ -508,6 +534,7 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
 
   # actually run the test!
   short_cmd = command.replace(susdir+'/','')
+
   print "Command Line: %s %s" % (short_cmd, susinput)
   rc = system("%s %s > sus.log.txt 2>&1" % (command, susinput))
   
