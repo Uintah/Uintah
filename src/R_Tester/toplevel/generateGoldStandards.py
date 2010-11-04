@@ -7,7 +7,7 @@ import os
 import shutil
 import subprocess
 
-from helpers.runSusTests import nameoftest, input, num_processes, testOS
+from helpers.runSusTests import nameoftest, input, num_processes, testOS, setGeneratingGoldStandards
 
 ####################################################################################
 
@@ -90,6 +90,8 @@ def validateArgs( options, args ) :
     if not os.path.isdir( inputs ) :
         error( "'inputs' directory not found here: '" + inputs )
 
+    setGeneratingGoldStandards( inputs )
+
 ####################################################################################
 
 def generateGS() :
@@ -144,20 +146,33 @@ def generateGS() :
 
     # Warn user if directories already exist
     some_dirs_already_exist = False
+
     for component in components :
         if os.path.isdir( component ) :
             if not some_dirs_already_exist :
                 some_dirs_already_exist = True
                 print ""
-                print "Note, the following directories already exist: ",
+                print "Note, the following gold standards already exist: ",
             else :
                 print ", ",
             os.sys.stdout.write( component )
+
     if some_dirs_already_exist :
-        print ""
-        print "Delete existing sub-directories?  (If 'no', script will exit.) [y/n]"
-        # FIXME: read in response and act accordingly
-        #shutil.rmtree( "*" )
+        answer = ""
+        while answer != "n" and answer != "y" :
+            print ""
+            print "Delete existing gold standards?  (If 'no', script will exit.) [y/n]"
+            answer = os.sys.stdin.readline()[:-1]
+            if answer == "n" :
+                print ""
+                print "Goodbye."
+                print ""
+                exit( 0 )
+
+        for component in components :
+            if os.path.isdir( component ) :
+                print "Deleting " + component
+                shutil.rmtree( component )
 
     for component in components :
 
@@ -169,18 +184,29 @@ def generateGS() :
         if not os.path.islink( "inputs" ) :
             os.symlink( inputs, "inputs" )
 
-
         # Pull the list of tests from the the 'component's python module's 'TESTS' variable:
         # (Need to 'import' the module first.)
         if options.verbose :
-            print "Python importing " + component
+            print "Python importing " + component + ".py"
         THE_COMPONENT = __import__( component )
+
         tests = THE_COMPONENT.getLocalTests()
         
         if options.verbose :
             print "About to run tests for: " + component
 
         for test in tests :
+
+            # FIXME: NOT SURE IF THIS IS RIGHT, BUT IT APPEARS TO MATCH WHAT THE RUN TESTS SCRIPT NEEDS:
+            print "About to run test: " + nameoftest( test )
+            os.mkdir( nameoftest( test ) )
+            os.chdir( nameoftest( test ) )
+
+            # Create (yet) another symbolic link to the 'inputs' directory so some .ups files will be able
+            # to find what they need...  (Needed for, at least, methane8patch (ARCHES) test.)
+            if not os.path.islink( "inputs" ) :
+                os.symlink( inputs, "inputs" )
+
             np = float( num_processes( test ) )
             mpirun = ""
             if np > 1.0 :
@@ -193,7 +219,9 @@ def generateGS() :
             print "Running command: " + command
 
             os.system( command )
-        os.chdir( ".." )
+            os.chdir( ".." ) # Back to the component (eg: 'ICE') directory
+
+        os.chdir( ".." ) # Back to the TestData directory
 
 
 ####################################################################################
