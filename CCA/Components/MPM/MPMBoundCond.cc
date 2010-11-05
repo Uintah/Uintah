@@ -242,34 +242,34 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
         Iterator nbound_ptr;
         Iterator nu;  // not used
 
-        if(type=="Temperature"){
-          const BoundCondBase *bcb = 
-            patch->getArrayBCValues(face,dwi,type,nu,nbound_ptr,child);
+//         if(type=="Temperature"){
+//           const BoundCondBase *bcb = 
+//             patch->getArrayBCValues(face,dwi,type,nu,nbound_ptr,child);
 
-          const BoundCond<double>* bc = 
-            dynamic_cast<const BoundCond<double>*>(bcb);
-          if (bc != 0){
-            if (bc->getBCType__NEW() == "Dirichlet") {
-              double bcv = bc->getValue();
-              for (nbound_ptr.reset(); !nbound_ptr.done();nbound_ptr++){
-                IntVector nd = *nbound_ptr;
-                variable[nd] = bcv;
-              }
-              if(interp_type=="gimp" || interp_type=="3rdorderBS" || interp_type=="cpdi"){
-                for(NodeIterator it(l,h); !it.done(); it++) {
-                  IntVector nd = *it;
-                  variable[nd] = bcv;
-                }
-              }
-            }
-            delete bc;
-          } else
-            delete bcb;
-        }
+//           const BoundCond<double>* bc = 
+//             dynamic_cast<const BoundCond<double>*>(bcb);
+//           if (bc != 0){
+//             if (bc->getBCType__NEW() == "Dirichlet") {
+//               double bcv = bc->getValue();
+//               for (nbound_ptr.reset(); !nbound_ptr.done();nbound_ptr++){
+//                 IntVector nd = *nbound_ptr;
+//                 variable[nd] = bcv;
+//               }
+//               if(interp_type=="gimp" || interp_type=="3rdorderBS" || interp_type=="cpdi"){
+//                 for(NodeIterator it(l,h); !it.done(); it++) {
+//                   IntVector nd = *it;
+//                   variable[nd] = bcv;
+//                 }
+//               }
+//             }
+//             delete bc;
+//           } else
+//             delete bcb;
+//         }
 
 // Used in MPMICE.
-#if 1
-        if(type=="Pressure"){
+//#if 1
+        if(type=="Pressure" || type=="Temperature"){
           const BoundCondBase *bcb = 
             patch->getArrayBCValues(face,dwi,type,nu,nbound_ptr, child);
 
@@ -332,7 +332,7 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
           } else
           delete bcb;
         }
-#endif
+//#endif
       }  // child
     } else
       continue;
