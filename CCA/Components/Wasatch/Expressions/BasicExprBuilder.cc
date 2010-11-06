@@ -120,6 +120,11 @@ namespace Wasatch{
       if     ( taskListName == "initialization"   )   cat = INITIALIZATION;
       else if( taskListName == "timestep_size"    )   cat = TIMESTEP_SELECTION;
       else if( taskListName == "advance_solution" )   cat = ADVANCE_SOLUTION;
+      else{
+        std::ostringstream msg;
+        msg << "ERROR: unsupported task list '" << taskListName << "'" << endl
+            << __FILE__ << " : " << __LINE__ << endl;
+      }
 
       GraphHelper* const graphHelper = gc[cat];
       graphHelper->exprFactory->register_expression( tag, builder );
