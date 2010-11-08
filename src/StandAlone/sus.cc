@@ -728,6 +728,8 @@ main( int argc, char *argv[], char *env[] )
     cout << "Sus: going down successfully\n";
   }
 
+  // use exitAll(0) since return does not work
+  Thread::exitAll(0);
   return 0;
 
 } // end main()
