@@ -215,10 +215,11 @@ ViscoScram::ViscoScram(const ViscoScram* cm) : ConstitutiveModel(cm)
 
   // JWL EOS inputs
   d_useJWLEOS = cm->d_useJWLEOS;
-  if(d_useJWLEOS){
+  if(d_useJWLEOS || d_useJWLCEOS){
     d_JWLEOSData.A =   cm->d_JWLEOSData.A;
     d_JWLEOSData.B =   cm->d_JWLEOSData.B;
     d_JWLEOSData.C =   cm->d_JWLEOSData.C;
+    d_JWLEOSData.Cv =   cm->d_JWLEOSData.Cv;
     d_JWLEOSData.R1 =   cm->d_JWLEOSData.R1;
     d_JWLEOSData.R2 =   cm->d_JWLEOSData.R2;
     d_JWLEOSData.om =   cm->d_JWLEOSData.om;
@@ -326,10 +327,12 @@ void ViscoScram::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
 
   // JWL EOS inputs
   cm_ps->appendElement("useJWLEOS", d_useJWLEOS);
-  if(d_useJWLEOS){
+  cm_ps->appendElement("useJWLCEOS", d_useJWLCEOS);
+  if(d_useJWLEOS || d_useJWLCEOS){
     cm_ps->appendElement("A",     d_JWLEOSData.A);
     cm_ps->appendElement("B",     d_JWLEOSData.B);
     cm_ps->appendElement("C",     d_JWLEOSData.C);
+    cm_ps->appendElement("Cv",     d_JWLEOSData.Cv);
     cm_ps->appendElement("R1",     d_JWLEOSData.R1);
     cm_ps->appendElement("R2",     d_JWLEOSData.R2);
     cm_ps->appendElement("om",     d_JWLEOSData.om);
@@ -1319,7 +1322,7 @@ double ViscoScram::computeRhoMicroCM(double pressure,
         return (IL+IR)/2.0;
       }
 
-      delta_new = 1;
+      delta_new = 1e100;
       while(1){
         df_drho = deri(rho_cur,matl);
         delta_old = delta_new;
@@ -1333,7 +1336,7 @@ double ViscoScram::computeRhoMicroCM(double pressure,
         if(iter>=100){
           ostringstream warn;
           warn << setprecision(15);
-          warn << "ERROR:ICE:JWL::computeRhoMicro not converging. \n";
+          warn << "ERROR:MPM:ViscoSCRAM:JWL::computeRhoMicro not converging. \n";
           warn << "press= " << pressure << " temp=" << temperature << "\n";
           warn << "delta= " << delta_new << " rhoM= " << rho_cur << " f = " << f
                <<" df_drho =" << df_drho << "\n";
@@ -1418,7 +1421,7 @@ double ViscoScram::computeRhoMicroCM(double pressure,
          rhoM=fabs(rhoM);
          if(count>=150){
            ostringstream warn;
-           warn << "ERROR:ICE:JWLC::computeRhoMicro not converging. \n";
+           warn << "ERROR:MPM:ViscoScram:JWLC::computeRhoMicro not converging. \n";
            warn << "press= " << pressure << "\n";
            warn << "delta= " << delta << " rhoM= " << rhoM << " f = " << f
                 <<" df_drho =" << df_drho << "\n";
@@ -1552,6 +1555,7 @@ double ViscoScram::getCompressibility()
   return 1.0/d_bulk;
 }
 
+// Func used in Newton-Bisection Solver for JWL Temperature Dependent EOS
 double ViscoScram::func(double rhoM,const MPMMaterial*  matl){
   double A = d_JWLEOSData.A;
   double B = d_JWLEOSData.B;
@@ -1569,7 +1573,7 @@ double ViscoScram::func(double rhoM,const MPMMaterial*  matl){
   return (P1 + P2 + P3) - Pressure;
 }
 
-
+// deri used in Newton-Bisection Solver for JWL Temperature Dependent EOS
 double ViscoScram::deri(double rhoM, const MPMMaterial* matl){
   double A = d_JWLEOSData.A;
   double B = d_JWLEOSData.B;
@@ -1584,7 +1588,7 @@ double ViscoScram::deri(double rhoM, const MPMMaterial* matl){
   return (P1*R1*V + P2*R2*V+P3)/rhoM;
 }
 
-
+// setInterval used in Newton-Bisection Solver for JWL Temperature Dependent EOS
 void ViscoScram::setInterval(double f, double rhoM){
   if(f < 0)
     IL = rhoM;
