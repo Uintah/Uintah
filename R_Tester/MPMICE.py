@@ -19,7 +19,9 @@ from helpers.runSusTests import runSusTests
 #       exactComparison         - set absolute/relative tolerance = 0  for uda comparisons
 #       startFromCheckpoint     - start test from checkpoint. (/usr/local/home/csafe-tester/CheckPoints/..../testname.uda.000)
 #
-#  Note: the "folder name" must be the same as input file without the extension.
+#  Notes: 
+#  The "folder name" must be the same as input file without the extension.
+#  If the processors is > 1.0 then mpirun command will be used
 #______________________________________________________________________
 
 NIGHTLYTESTS = [   ("massX",                 "massX.ups",                 1,  "Linux", ["exactComparison"]),   \
@@ -42,12 +44,7 @@ NIGHTLYTESTS = [   ("massX",                 "massX.ups",                 1,  "L
               
 # Tests that are run during local regression testing
 LOCALTESTS =  [    ("massX",                 "massX.ups",                 1,  "Linux", ["exactComparison"]),   \
-                   ("guni2dRT",              "guni2dRT.ups",              4,  "Linux", ["exactComparison"]),   \
-                   ("SteadyBurn_2dRT",       "SteadyBurn_2dRT.ups",       4,  "Linux", ["exactComparison"]),   \
-                   ("TBurner_2dRT",          "TBurner_2dRT.ups",          4,  "Linux", ["exactComparison"]),   \
-                   ("TRWnoz",                "TRWnoz.ups",                1,  "Linux", ["exactComparison"]),   \
-                   ("testConvertMPMICEAdd",  "testConvertMPMICEAdd.ups",  1,  "Linux", ["exactComparison"]),   \
-                   ("advect_2L_MI",          "advect_2L_MI.ups",          1,  "Linux", ["exactComparison"])
+                   ("guni2dRT",              "guni2dRT.ups",              4,  "Linux", ["exactComparison"])
     	       ]
 
 #__________________________________

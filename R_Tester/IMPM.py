@@ -19,7 +19,9 @@ from helpers.runSusTests import runSusTests
 #       exactComparison         - set absolute/relative tolerance = 0  for uda comparisons
 #       startFromCheckpoint     - start test from checkpoint. (/usr/local/home/csafe-tester/CheckPoints/..../testname.uda.000)
 #
-#  Note: the "folder name" must be the same as input file without the extension.
+#  Notes: 
+#  The "folder name" must be the same as input file without the extension.
+#  If the processors is > 1.0 then mpirun command will be used
 #______________________________________________________________________
 
 UNUSED = [ ("4disks2matsv", "4disks_2d.2matsv.ups", 4, "Linux"), \

@@ -267,7 +267,7 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
     except Exception:
       if dbg_opt == "local":
         print "ERROR: The gold standard for the (%s) test does not exist." % testname
-        print "To generate it run: \n   make xxxx"
+        print "To generate it run: \n   make gold_standards"
         exit(1) 
       
       chdir(compare_root)

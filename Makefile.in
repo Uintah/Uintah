@@ -278,7 +278,7 @@ gold_standards :
 	 components=`$(SRCTOP_ABS)/R_Tester/helpers/selectComponents.sh $(SRCTOP_ABS)/R_Tester`; \
 	 if test "$$?" == 0; then                            \
             export PYTHONPATH="$(SRCTOP_ABS)/R_Tester/toplevel:$(SRCTOP_ABS)/R_Tester"; \
-            $(SRCTOP)/R_Tester/toplevel/generateGoldStandards.py -b $(OBJTOP_ABS) -s $(SRCTOP_ABS) $$components -j $(MAKE_PARALLELISM) -v; \
+            ../$(SRCTOP)/R_Tester/toplevel/generateGoldStandards.py -b $(OBJTOP_ABS) -s $(SRCTOP_ABS) $$components -j $(MAKE_PARALLELISM) -v; \
          fi
 
 #__________________________________

@@ -34,7 +34,9 @@ hotBlob_AMR_3L_ups = modUPS( the_dir,                       \
 #       exactComparison         - set absolute/relative tolerance = 0  for uda comparisons
 #       startFromCheckpoint     - start test from checkpoint. (/usr/local/home/csafe-tester/CheckPoints/..../testname.uda.000) 
 #
-#  Note: the "folder name" must be the same as input file without the extension.
+#  Notes: 
+#  The "folder name" must be the same as input file without the extension.
+#  If the processors is > 1.0 then mpirun command will be used
 #______________________________________________________________________
 
 NIGHTLYTESTS = [   ("advect",           "advect.ups",            1, "Linux", ["exactComparison"]),      \
@@ -58,7 +60,7 @@ NIGHTLYTESTS = [   ("advect",           "advect.ups",            1, "Linux", ["e
 
 # Tests that are run during local regression testing
 LOCALTESTS = [   ("advect",           "advect.ups",           1, "Linux", ["exactComparison"]),    \
-                 ("riemann_sm",       "riemann_sm.ups",       1, "Linux", ["exactComparison"])        
+                 ("riemann_sm",       "riemann_sm.ups",       1, "Linux", ["exactComparison"])       
               ]
 #__________________________________
 
