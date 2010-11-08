@@ -97,7 +97,7 @@ for componentTest in $componentTests; do
 
     #echo ""
     #echo "Running test \"${componentTest}-${mode}\" at `date`"
-    run $mode $componentTest
+    runComponentTests $mode $componentTest
     retval=$?
 
     if [ $retval = "1" ]; then
