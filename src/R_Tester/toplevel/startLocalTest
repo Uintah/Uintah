@@ -65,7 +65,12 @@ ln -s "${TEST_DATA}" goldStandard
 #__________________________________
 # bulletproofing
 if [ ! -d "$TEST_DATA" ]; then
-  echo "ERROR: TestData directory doesn't exist: $TEST_DATA.  Now exiting"
+  echo "__________________________________"
+  echo "ERROR: gold standards directory doesn't exist: $TEST_DATA."
+  echo "Run the command:"
+  echo "    make gold_standards"
+  echo " to generate them.  Now exiting"
+  echo "__________________________________"
   exit -1;
 fi
 
@@ -95,17 +100,17 @@ fi
 # Have the user pick a component
 # find all the component tests which are python scripts
 
-componentTests=`ls TestScripts/*.py | grep -v __init__ | sed "s/.py//g" | sed "s,TestScripts/,,g"`
+allComponentTests=`ls TestScripts/*.py | grep -v __init__ | sed "s/.py//g" | sed "s,TestScripts/,,g"`
 
 list=""
 n="0"
-for comp in $componentTests; do
+for comp in $allComponentTests; do
   list="$list $comp - off,"
   n=$(( $n + 1 ))
 done
 echo $list
 
-componentTest=`dialog --stdout --separate-output --checklist "Select the component for local regression testing" 20 50 40 $list`
+selectedCompTests=`dialog --stdout --separate-output --checklist "Select the component for local regression testing" 20 50 40 $list`
 if [ $? != 0 ] ; then                                                                
   echo ""
   echo "Cancel selected... Goodbye."                                                                  
@@ -114,37 +119,38 @@ if [ $? != 0 ] ; then
 fi 
 
 #__________________________________
-# Now run the test
+# Now run the tests
 echo ""
 echo ""
 date
-echo "Running $componentTest Tests"
+for componentTest in $selectedCompTests; do
+  echo "Running $componentTest Tests"
 
-# clean up old test results
-/bin/rm -f $componentTest.log >/dev/null
-/bin/rm -rf $componentTest-results >/dev/null
+  # clean up old test results
+  /bin/rm -f $componentTest.log >/dev/null
+  /bin/rm -rf $componentTest-results >/dev/null
 
-# create the do<component>tests  python script
-doTestScript="do${componentTest}tests"
-echo "#!/bin/tcsh"                                         >  "$doTestScript"
-echo "setenv PATH $PATH"                                   >> "$doTestScript"
-echo "setenv OS $OS"                                       >> "$doTestScript"
-echo "setenv SCI_DEBUG \"\""                               >> "$doTestScript"
-echo "setenv LOCAL_OR_NIGHTLY_TEST $LOCAL_OR_NIGHTLY_TEST" >> "$doTestScript"
-echo "python -u TestScripts/$componentTest.py susdir inputs goldStandard local $PARALLELISM "'$1' >> "$doTestScript"
+  # create the do<component>tests  python script
+  doTestScript="do${componentTest}tests"
+  echo "#!/bin/tcsh"                                         >  "$doTestScript"
+  echo "setenv PATH $PATH"                                   >> "$doTestScript"
+  echo "setenv OS $OS"                                       >> "$doTestScript"
+  echo "setenv SCI_DEBUG \"\""                               >> "$doTestScript"
+  echo "setenv LOCAL_OR_NIGHTLY_TEST $LOCAL_OR_NIGHTLY_TEST" >> "$doTestScript"
+  echo "python -u TestScripts/$componentTest.py susdir inputs goldStandard local $PARALLELISM "'$1' >> "$doTestScript"
 
-/bin/chmod a+x "$doTestScript"
+  /bin/chmod a+x "$doTestScript"
 
-#__________________________________
-# run the python script that contains all the
-# tests for that component
+  #__________________________________
+  # run the python script that contains all the
+  # tests for that component
 
-"$doTestScript" | tee "${componentTest}.log"
+  "$doTestScript" | tee "${componentTest}.log"
 
-retval=$?
+  retval=$?
 
-echo ""
-echo ""
-
+  echo ""
+  echo ""
+done
 exit $retval
 

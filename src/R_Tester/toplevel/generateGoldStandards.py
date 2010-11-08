@@ -210,11 +210,12 @@ def generateGS() :
             np = float( num_processes( test ) )
             mpirun = ""
             if np > 1.0 :
-                mpirun = "mpirun -np 1 "
+                np = int( np )
+                mpirun = "mpirun -np %s  " % np
 
-                command = mpirun + sus + " " + inputs + "/" + component + "/" + input( test ) # + " >> sus_log " 
+                command = mpirun + sus + " " + inputs + "/" + component + "/" + input( test )  + " >> sus_log " 
             else :
-                command = sus + " " + inputs + "/" + component + "/" + input( test ) # + " >> sus_log " 
+                command = sus + " " + inputs + "/" + component + "/" + input( test )  + " >> sus_log " 
 
             print "Running command: " + command
 
