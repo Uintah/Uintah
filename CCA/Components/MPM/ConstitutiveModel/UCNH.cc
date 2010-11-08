@@ -1712,19 +1712,15 @@ void UCNH::addParticleState(std::vector<const VarLabel*>& from,
   } //end pDamage <=0.0
 
   // pressure >0.0; possible damage
-  else { 
+  else {
 
       // Compute Finger tensor (left Cauchy-Green) 
       Matrix3 bb = defGrad*defGrad.Transpose();
       // Compute Eulerian strain tensor
       Matrix3 ee = (Identity - bb.Inverse())*0.5;      
       // Compute the maximum principal strain
-      Vector  eigval(0.0, 0.0, 0.0);
-      Matrix3 eigvec(0.0);
-
-      ee.eigen(eigval, eigvec);
-      //The first eigenvalue returned by "eigen" is always the largest 
-      double epsMax = eigval[0];
+      double epsMax=0.,epsMed=0.,epsMin=0.;
+      ee.getEigenValues(epsMax,epsMed,epsMin);
 
       // Young's modulus
       double young = 9.0*d_initialData.Bulk*d_initialData.tauDev/\
@@ -1787,16 +1783,12 @@ void UCNH::updateFailedParticlesAndModifyStress(const Matrix3& defGrad,
 {
   Matrix3 Identity, zero(0.0); Identity.Identity();
 
-  // Compute the maximum principal strain or stress
-  Vector  eigval(0.0, 0.0, 0.0);
-  Matrix3 eigvec(0.0);
-
   // Find if the particle has failed
   pLocalized_new = pLocalized;
   if(d_failure_criteria=="MaximumPrincipalStress"){
-    pStress.eigen(eigval, eigvec);
+    double maxEigen=0.,medEigen=0.,minEigen=0.;
+    pStress.getEigenValues(maxEigen,medEigen,minEigen);
     //The first eigenvalue returned by "eigen" is always the largest 
-    double maxEigen = eigval[0];
     if (maxEigen > pFailureStr){
       pLocalized_new = 1;
     }
@@ -1811,8 +1803,8 @@ void UCNH::updateFailedParticlesAndModifyStress(const Matrix3& defGrad,
     // Compute Eulerian strain tensor
     Matrix3 ee = (Identity - bb.Inverse())*0.5;
 
-    ee.eigen(eigval, eigvec);
-    double maxEigen = eigval[0];
+    double maxEigen=0.,medEigen=0.,minEigen=0.;
+    ee.getEigenValues(maxEigen,medEigen,minEigen);
     if (maxEigen > pFailureStr){
       pLocalized_new = 1;
     }
@@ -1822,10 +1814,9 @@ void UCNH::updateFailedParticlesAndModifyStress(const Matrix3& defGrad,
     }
   }
   else if(d_failure_criteria=="MohrColoumb"){
-    pStress.eigen(eigval, eigvec);
-    //The first eigenvalue returned by "eigen" is always the largest 
-    double maxEigen = eigval[0];
-    double minEigen = eigval[2];
+    double maxEigen=0.,medEigen=0.,minEigen=0.;
+    pStress.getEigenValues(maxEigen,medEigen,minEigen);
+
     double cohesion = pFailureStr;
     if (pLocalized == 0){
 
