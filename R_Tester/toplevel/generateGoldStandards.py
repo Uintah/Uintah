@@ -219,7 +219,13 @@ def generateGS() :
 
             print "Running command: " + command
 
-            os.system( command )
+            rc = os.system( command )
+            
+            # catch if sus doesn't run to completion
+            if rc != 0:
+              print "\nERROR: %s: Test (%s) failed to complete\n" % (component,test)
+              exit(-1)
+            
             os.chdir( ".." ) # Back to the component (eg: 'ICE') directory
 
         os.chdir( ".." ) # Back to the TestData directory
