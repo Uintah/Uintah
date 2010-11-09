@@ -789,7 +789,7 @@ void Kayenta::computeStressTensor(const PatchSubset* patches,
 	  double J = deformationGradient_new[idx].Determinant();
 	  // Check 1: Look at Jacobian
 	  if (J<=0.0||J>20.0) {
-	      cout<<"negative or huge J encountered (J="<<J<<", deleting particle "<<endl;
+	      cout<<"negative or huge J encountered (J="<<J<<", deleting particle" << endl;
 
 	    constParticleVariable<long64> pParticleID;
 	    old_dw->get(pParticleID, lb->pParticleIDLabel, pset);
@@ -799,6 +799,8 @@ void Kayenta::computeStressTensor(const PatchSubset* patches,
 	    }else if(d_removeMass){
 	      pLocalized_new[idx]=-999;
 	      cout<< "localizing (deleting) particle "<<pParticleID[idx]<<endl;
+              cout<< "material = " << dwi << ", Momentum deleted = " 
+                                          << pvelocity[idx]*pmass[idx] <<endl;
 	    }else{
 	      cerr << getpid() 
 		   << "**ERROR** Negative Jacobian of deformation gradient, no erosion algorithm set" << endl;
