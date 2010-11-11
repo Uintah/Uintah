@@ -285,4 +285,4 @@ gold_standards :
 #  to execute the local regression tester
 runLocalRT:
 	@cd $(OBJTOP_ABS)
-	@$(SRCTOP)/R_Tester/toplevel/startLocalTest $(OBJTOP_ABS)
+	@$(SRCTOP)/R_Tester/toplevel/startLocalTest $(OBJTOP_ABS) $(SRCTOP_ABS)

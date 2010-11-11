@@ -27,7 +27,7 @@ for comp in $componentTests; do
   n=$(( $n + 1 ))
 done
 
-componentTest=`dialog --stdout --separate-output --checklist "Select the component for local regression testing" 20 50 40 $list`
+componentTest=`dialog --stdout --separate-output --checklist "Select the component for local regression testing" 20 61 15 $list`
 if [ $? != 0 ] ; then
   echo "Cancel selected..." > /dev/stderr
   exit 1

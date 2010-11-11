@@ -21,7 +21,7 @@ def input (test):
 def num_processes (test):
     return test[2]
 def testOS(test):
-    return test[3]
+    return upper(test[3])
 def inputs_root ():
     return argv[2]
 def date ():
@@ -78,29 +78,22 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
   if len(argv) == 7:
     solotest = argv[6]
   
+  
+  outputpath = startpath
+  weboutputpath = startpath
   # If running Nightly RT, output logs in web dir
   # otherwise, save it in the build
-  if environ['LOCAL_OR_NIGHTLY_TEST'] != "nightly" :
+  if environ['LOCAL_OR_NIGHTLY_TEST'] == "nightly" :
+    outputpath    = "%s-%s" % (environ['HTMLLOG'], dbg_opt)
+    weboutputpath = "%s-%s" % (environ['WEBLOG'],  dbg_opt)
 
-    if environ['HTMLLOG'] != "" and environ['WEBLOG'] != "" :
-
-      # if webpath exists, use that, otherwise, use BUILDROOT/dbg_opt
-      outputpath    = "%s-%s" % (environ['HTMLLOG'], dbg_opt)
-      weboutputpath = "%s-%s" % (environ['WEBLOG'],  dbg_opt)
-
-      try:
-        # make outputpath/dbg or opt dirs
-        environ['outputlinks'] ="1"
-        mkdir(outputpath)
-        system("chmod -R 775 %s" % outputpath)
-      except Exception:
-        pass
-    else:
-      outputpath = startpath
-      weboutputpath = startpath
-  else:
-    outputpath = startpath
-    weboutputpath = startpath
+    try:
+      # make outputpath/dbg or opt dirs
+      environ['outputlinks'] ="1"
+      mkdir(outputpath)
+      system("chmod -R 775 %s" % outputpath)
+    except Exception:
+      pass
 
   #__________________________________
   # bulletproofing
@@ -177,8 +170,8 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
     
     if solotest != "" and testname != solotest:
       continue
-
-    if testOS(test) != environ['OS'] and testOS(test) != "ALL":
+    
+    if testOS(test) != upper(environ['OS']) and testOS(test) != "ALL":
       continue
       
     print "__________________"
