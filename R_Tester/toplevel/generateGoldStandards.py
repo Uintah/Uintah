@@ -231,9 +231,9 @@ def generateGS() :
                 np = int( np )
                 mpirun = "mpirun -np %s  " % np
 
-                command = mpirun + sus + " " + inputs + "/" + component + "/" + input( test )  + " >> sus_log " 
+                command = mpirun + sus + " -svnStat -svnDiff " + inputs + "/" + component + "/" + input( test )  + " >> sus_log.txt " 
             else :
-                command = sus + " " + inputs + "/" + component + "/" + input( test )  + " >> sus_log " 
+                command = sus + " -svnStat -svnDiff " + inputs + "/" + component + "/" + input( test )  + " >> sus_log.txt " 
 
             print "Running command: " + command
 
