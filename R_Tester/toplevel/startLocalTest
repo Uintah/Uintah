@@ -120,9 +120,6 @@ else
 
   selectedCompTests=`dialog --stdout --separate-output --checklist "Select the component for local regression testing" 20 61 15 $list`
 
-  echo "here: $selectedCompTests" 
-  exit
-
   if [ $? != 0 ] ; then                                                                
     echo ""
     echo "Cancel selected... Goodbye."                                                                  
