@@ -2,13 +2,16 @@
 import os
 import shutil
 from optparse import OptionParser
-from sys import argv
+from sys import argv, exit
 from string import upper
 
 
 # bulletproofing
 if os.sys.version_info <= (2,4):
-  print "\n\n ERROR:  Your python version is too old.  You must use version 2.5 or greater. \n\n"
+  print ""
+  print "ERROR: Your python version [" + str( os.sys.version_info ) + "] is too old.\n" + \
+        "       You must use version 2.5 or greater (but NOT version 3.x!). \n\n"
+  print ""
   exit( 1 )
 
 import subprocess
