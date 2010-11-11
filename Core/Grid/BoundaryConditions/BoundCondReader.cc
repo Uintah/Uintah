@@ -149,6 +149,7 @@ BCGeomBase* BoundCondReader::createBoundaryConditionFace(ProblemSpecP& face_ps,
   std::string fc;
   int plusMinusFaces, p_dir;
   BCGeomBase* bcGeom;
+
   if (values.find("side") != values.end()) {
     fc = values["side"];
     whichPatchFace(fc, face_side, plusMinusFaces, p_dir);
@@ -283,7 +284,14 @@ BCGeomBase* BoundCondReader::createBoundaryConditionFace(ProblemSpecP& face_ps,
       " Valid options (side, circle, rectangle, annulus";
     throw ProblemSetupException(warn.str(), __FILE__, __LINE__);  
   }
-  
+
+  // name the boundary condition object:
+  std::string bcname; 
+  if (values.find("name") != values.end()){
+    std::string name = values["name"];
+    BCR_dbg << "Setting name to: " << name << endl;
+    bcGeom->setBCName( name ); 
+  }
 
   BCR_dbg << "Face = " << fc << endl;
   return bcGeom;
@@ -698,6 +706,9 @@ void BoundCondReader::combineBCS_NEW()
           other_bc = (*other_index)->clone();
 
           diff_bc = scinew DifferenceBCData(side_bc,other_bc);
+
+          diff_bc->setBCName( side_bc->getBCName() ); //make sure the new piece has the right name
+
           rearranged.addBCData(mat_id,diff_bc->clone());
           rearranged.addBCData(mat_id,other_bc->clone());
           delete diff_bc;
@@ -715,6 +726,9 @@ void BoundCondReader::combineBCS_NEW()
 
           side_bc = dynamic_cast<SideBCData*>((*side_index)->clone());
           diff_bc = scinew DifferenceBCData(side_bc,union_bc->clone());
+
+          diff_bc->setBCName( side_bc->getBCName() ); //make sure the new piece has the right name
+
           rearranged.addBCData(mat_id,diff_bc->clone());
           delete side_bc;
           delete diff_bc;

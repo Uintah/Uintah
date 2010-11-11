@@ -97,10 +97,25 @@ public:
     }
   }
 
+  void sched_computeBCArea( SchedulerP& sched, 
+                            const PatchSet* patches, 
+                            const MaterialSet* matls );
+
+
+  typedef std::map< std::string, const VarLabel* > LabelMap; 
+
 private: 
  
   //variables
   const ArchesLabel* d_fieldLabels;
+
+  LabelMap areaMap; 
+
+  void computeBCArea( const ProcessorGroup*, 
+                      const PatchSubset* patches, 
+                      const MaterialSubset*, 
+                      DataWarehouse*, 
+                      DataWarehouse* new_dw );
 
 
 
