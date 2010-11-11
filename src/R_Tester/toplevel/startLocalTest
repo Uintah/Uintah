@@ -84,40 +84,52 @@ if [ ! -f susdir/compare_uda ]; then
   exit -1;
 fi
 
-if test "$TERM" == "dumb" -o "$TERM" == "emacs"; then
-  echo
-  echo "ERROR: startLocalTest requires a fully functional terminal... you have '$TERM'.  Goodbye."
-  echo
-  exit                                                                                    
+# If the env var TEST_COMPONENTS is set, use it instead of asking user for component list...
+if test ${TEST_COMPONENTS:+1}; then
+    echo ""
+    echo "Using TEST_COMPONENTS env var for list of components to test: ($TEST_COMPONENTS)"
+    selectedCompTests=$TEST_COMPONENTS
+else
+  if test "$TERM" == "dumb" -o "$TERM" == "emacs"; then
+    echo
+    echo "ERROR: startLocalTest requires a fully functional terminal... you have '$TERM'."
+    echo "       (Consider setting environment variable TEST_COMPONENTS.)  Goodbye."
+    echo
+    exit                                                                                    
+  fi
+  if test "$EMACS" == "t"; then
+    echo
+    echo "ERROR: startLocalTest cannot be run from within emacs..."
+    echo "       (Consider setting environment variable TEST_COMPONENTS.)  Goodbye."
+    echo
+    exit                                                                                    
+  fi
+  #__________________________________
+  # Have the user pick a component
+  # find all the component tests which are python scripts
+
+  allComponentTests=`ls TestScripts/*.py | grep -v __init__ | sed "s/.py//g" | sed "s,TestScripts/,,g"`
+
+  list=""
+  n="0"
+  for comp in $allComponentTests; do
+    list="$list $comp - off,"
+    n=$(( $n + 1 ))
+  done
+  echo $list
+
+  selectedCompTests=`dialog --stdout --separate-output --checklist "Select the component for local regression testing" 20 61 15 $list`
+
+  echo "here: $selectedCompTests" 
+  exit
+
+  if [ $? != 0 ] ; then                                                                
+    echo ""
+    echo "Cancel selected... Goodbye."                                                                  
+    echo ""
+    exit                                                                                    
+  fi 
 fi
-if test "$EMACS" == "t"; then
-  echo
-  echo "ERROR: startLocalTest cannot be run from within emacs...  Goodbye."
-  echo
-  exit                                                                                    
-fi
-
-#__________________________________
-# Have the user pick a component
-# find all the component tests which are python scripts
-
-allComponentTests=`ls TestScripts/*.py | grep -v __init__ | sed "s/.py//g" | sed "s,TestScripts/,,g"`
-
-list=""
-n="0"
-for comp in $allComponentTests; do
-  list="$list $comp - off,"
-  n=$(( $n + 1 ))
-done
-echo $list
-
-selectedCompTests=`dialog --stdout --separate-output --checklist "Select the component for local regression testing" 20 61 15 $list`
-if [ $? != 0 ] ; then                                                                
-  echo ""
-  echo "Cancel selected... Goodbye."                                                                  
-  echo ""
-  exit                                                                                    
-fi 
 
 #__________________________________
 # Now run the tests
