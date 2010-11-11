@@ -997,7 +997,12 @@ go to Section 10.}
 Install the suite of developer tools that are packaged with Mac OS X.
 These can be found in the "Optional Installs" directory on the Mac OS
 X Installation CD for newer versions (i.e. Tiger, Leopard) or on the
-included Developer CD if your version of OSX is older).  Double-click
+included Developer CD if your version of OSX is older). If you don't
+have the installation CD you can download older versions from:
+\begin{verbatim}
+  \url{http://connect.apple.com}
+\end{verbatim}
+ Double-click
 the XCodeTools.mpkg and follow the installer instructions.  This will
 install GCC, as well as many other useful developer tools.
 
@@ -1048,7 +1053,11 @@ the disk image from this site, mounting it, double-clicking the
 installer application, and following instructions.
 
 \subsection{Installing an LAM MPI}
-Download LAM MPI from \url{http://www.lam-mpi.org/7.1/download.php}
+We recommend that you avoid using fink to install LAM MPI.
+The files and libraries are installed in non-traditional locations 
+and Uintah cannot find them. (11/10/2010) \\
+
+Download LAM MPI from \url{http://www.lam-mpi.org}
 version 7.1.4 or newer.  Make a new directory in \textasciitilde/ for
 this and all of the following source packages.  This documentation
 assumes this directory is \textasciitilde/Uintah.  Inside this
