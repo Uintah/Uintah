@@ -80,12 +80,29 @@ TabPropsInterface::problemSetup( const ProblemSpecP& propertiesParameters )
   
   // Obtain object parameters
   db_tabprops->require( "inputfile", tableFileName );
-
   db_tabprops->getWithDefault( "hl_pressure", d_hl_pressure, 0.0); 
   db_tabprops->getWithDefault( "hl_outlet",   d_hl_outlet,   0.0); 
   db_tabprops->getWithDefault( "hl_scalar_init", d_hl_scalar_init, 0.0); 
   db_tabprops->getWithDefault( "cold_flow", d_coldflow, false); 
-  db_tabprops->getWithDefault( "adiabatic", d_adiabatic, false); 
+
+  // only solve for heat loss if a working radiation model is found
+  const ProblemSpecP params_root = db_tabprops->getRootNode();
+  ProblemSpecP db_radiation = params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ExplicitSolver")->findBlock("EnthalpySolver")->findBlock("DORadiationModel");
+  d_adiabatic = true; 
+  if (db_radiation) { 
+    proc0cout << "Found a working radiation model -- will implement case with heat loss" << endl;
+    d_adiabatic = false; 
+  } else { 
+    proc0cout << "No working radiation model found -- will NOT implement case with heat loss" << endl;
+    d_adiabatic = true; 
+  }
+ 
+  d_coal_table = false; 
+  if ( db_tabprops->findBlock("coal") ) { 
+    d_coal_table = true; 
+    db_tabprops->findBlock("coal")->getAttribute("fp_label",d_fp_label);
+    db_tabprops->findBlock("coal")->getAttribute("eta_label",d_eta_label); 
+  }
 
   // need the reference denisty point: (also in PhysicalPropteries object but this was easier than passing it around)
   const ProblemSpecP db_root = db_tabprops->getRootNode(); 
@@ -270,6 +287,9 @@ TabPropsInterface::getState( const ProcessorGroup* pc,
     std::vector<constCCVariable<double> > indep_storage; 
     const std::vector<string>& iv_names = getAllIndepVars();
 
+    int coal_fp_index  = -1; 
+    int coal_eta_index = -1; 
+
     for ( int i = 0; i < (int) iv_names.size(); i++ ){
 
       VarMap::iterator ivar = d_ivVarMap.find( iv_names[i] ); 
@@ -277,6 +297,25 @@ TabPropsInterface::getState( const ProcessorGroup* pc,
       constCCVariable<double> the_var; 
       new_dw->get( the_var, ivar->second, matlIndex, patch, gn, 0 );
       indep_storage.push_back( the_var ); 
+
+      if (d_coal_table) {
+        if ( iv_names[i] == d_fp_label )
+          coal_fp_index = i;
+        if ( iv_names[i] == d_eta_label ) 
+          coal_eta_index = i; 
+      }
+    }
+
+    if ( d_coal_table && coal_fp_index == -1 ) {
+
+      proc0cout << "Could not match PRIMARY mixture fraction label to table variables!" << endl;
+      throw InvalidValue("Error: Please make sure that the label attribute for the coal node child of <TabProps> matches a <TransportEqn> label.", __FILE__, __LINE__);  
+
+    }
+    if ( d_coal_table && coal_eta_index == -1 ) {
+
+      proc0cout << "Could not match ETA mixture fraction label to table variables!" << endl;
+      throw InvalidValue("Error: Please make sure that the label attribute for the coal node child of <TabProps> matches a <TransportEqn> label.", __FILE__, __LINE__);  
 
     }
 
@@ -355,7 +394,7 @@ TabPropsInterface::getState( const ProcessorGroup* pc,
     new_dw->getModifiable( arches_density, d_lab->d_densityCPLabel, matlIndex, patch ); 
 
     // Go through the patch and populate the requested state variables
-    for (CellIterator iter=patch->getExtraCellIterator(); !iter.done(); iter++){
+    for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
 
       IntVector c = *iter; 
 
@@ -365,8 +404,32 @@ TabPropsInterface::getState( const ProcessorGroup* pc,
         iv.push_back( (*i)[c] );
       }
 
+      if ( d_coal_table ) { 
+
+        // we transport f_p and eta for coal
+        // need to compute f_p and pass that rather than f 
+        // here we replace the value of f_p with the derived f
+        // please see the white coal book for questions
+        
+        double f = 0.0; 
+        
+        if ( iv[coal_eta_index] < 1.0 ) {
+
+          f = iv[coal_fp_index] / ( 1.0 - iv[coal_eta_index] ); 
+
+        } else { 
+
+          f = 0.0; 
+
+        }
+
+        iv[coal_fp_index] = f;
+
+      }
+
       // retrieve all depenedent variables from table
-      for ( std::map< string, CCVariable<double>* >::iterator i = depend_storage.begin(); i != depend_storage.end(); ++i ){
+      for ( std::map< string, CCVariable<double>* >::iterator i = depend_storage.begin(); 
+            i != depend_storage.end(); ++i ){
   
         double table_value = getSingleState( i->first, iv ); 
         (*i->second)[c] = table_value;
@@ -387,8 +450,101 @@ TabPropsInterface::getState( const ProcessorGroup* pc,
         }
 
       }
-
     }
+
+    // set boundary property values: 
+    vector<Patch::FaceType> bf;
+    vector<Patch::FaceType>::const_iterator bf_iter;
+    patch->getBoundaryFaces(bf);
+
+    // Loop over all boundary faces on this patch
+    for (bf_iter = bf.begin(); bf_iter != bf.end(); bf_iter++){
+      Patch::FaceType face = *bf_iter; 
+
+      int numChildren = patch->getBCDataArray(face)->getNumberChildren(matlIndex);
+      for (int child = 0; child < numChildren; child++){
+
+        std::vector<double> iv; 
+        for ( int i = 0; i < (int) iv_names.size(); i++ ){
+
+          Iterator nu;
+          Iterator bound_ptr; 
+          std::string variable_name = iv_names[i]; 
+
+          const BoundCondBase* bc = patch->getArrayBCValues( face, matlIndex,
+		                                          		           variable_name, bound_ptr,
+                                                             nu, child );
+
+          const BoundCond<double> *new_bcs =  dynamic_cast<const BoundCond<double> *>(bc);
+
+          if ( new_bcs == 0 ) {
+            cout << "Error: For variable named " << variable_name << endl;
+            throw InvalidValue( "When trying to compute properties at a boundary, found boundary specification missing in the <Grid> section of the input file.", __FILE__, __LINE__); 
+          }
+          double bc_value     = new_bcs->getValue(); 
+          std::string bc_kind = new_bcs->getBCType__NEW(); 
+
+          //begin to loop over all boundary cells: 
+          for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++){
+
+            IntVector c = *bound_ptr; 
+            //loop over all IV's and fill with current values: 
+            for ( std::vector<constCCVariable<double> >::iterator i = indep_storage.begin(); 
+                  i != indep_storage.end(); ++i ) {
+              if ( bc_kind == "Dirichlet" ) 
+                iv.push_back( bc_value ); 
+              else
+                iv.push_back( (*i)[c] );
+            }
+
+            // if this is coal, we need to compute f from f_p and eta
+            if ( d_coal_table ) { 
+
+              double f = 0.0; 
+              
+              if ( iv[coal_eta_index] < 1.0 ) {
+
+                f = iv[coal_fp_index] / ( 1.0 - iv[coal_eta_index] ); 
+
+              } else { 
+
+                f = 0.0; 
+
+              }
+
+              iv[coal_fp_index] = f;
+
+
+            } 
+
+            // retrieve all depenedent variables from table
+            for ( std::map< string, CCVariable<double>* >::iterator i = depend_storage.begin(); 
+                  i != depend_storage.end(); ++i ){
+  
+              double table_value = getSingleState( i->first, iv ); 
+              (*i->second)[c] = table_value;
+
+              if (i->first == "density") {
+                arches_density[c] = table_value; 
+                if (d_MAlab)
+                  mpmarches_denmicro[c] = table_value; 
+              } else if (i->first == "temperature" && !d_coldflow) {
+                arches_temperature[c] = table_value; 
+              //} else if (i->first == "heat_capacity" && !d_coldflow) {
+              } else if (i->first == "specificheat" && !d_coldflow) {
+                arches_cp[c] = table_value; 
+              } else if (i->first == "CO2" && !d_coldflow) {
+                arches_co2[c] = table_value; 
+              } else if (i->first == "H2O" && !d_coldflow) {
+                arches_h2o[c] = table_value; 
+              }
+
+            }
+          } // end boundary loop 
+        }
+      }
+    }
+
 
     for ( CCMap::iterator i = depend_storage.begin(); i != depend_storage.end(); ++i ){
       delete i->second;

@@ -180,7 +180,6 @@ void UnionBCData::determineIteratorLimits(Patch::FaceType face,
   d_nodes = UnionIterator(nodes); 
 
 
-
 #if 0
   IntVector l,h;
   patch->getFaceCells(face,0,l,h);
