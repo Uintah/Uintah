@@ -1,14 +1,17 @@
 #! /usr/bin/env python
 import os
+import shutil
 from optparse import OptionParser
 from sys import argv
-import shutil
+from string import upper
+
 
 # bulletproofing
 if os.sys.version_info <= (2,4):
   print "\n\n ERROR:  Your python version is too old.  You must use version 2.5 or greater. \n\n"
 
 import subprocess
+
 from helpers.runSusTests import nameoftest, input, num_processes, testOS, setGeneratingGoldStandards
 
 ####################################################################################
@@ -145,6 +148,17 @@ def generateGS() :
     ##############################################################
 
     components = options.test_file
+    
+    # Exit if the component hasn't been compiled.  Note, not all components
+    # are listed in the configVars.mk file 
+    configVars = options.build_directory + "/configVars.mk"
+    for component in components :
+      
+      searchString = "BUILD_%s=no" % upper(component)  # search for BUILD_<COMPONENT>=no
+      for line in open(configVars):
+        if searchString in line:
+          print "\n ERROR: the component (%s) was not compiled.  You must compile it before you can generate the gold standards\n" % component
+          exit( 1 ) 
 
     # Warn user if directories already exist
     some_dirs_already_exist = False
