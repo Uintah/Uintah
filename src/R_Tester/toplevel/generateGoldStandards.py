@@ -1,12 +1,14 @@
-#! /usr/bin/python
-
-from optparse import OptionParser
-
-from sys import argv
+#! /usr/bin/env python
 import os
+from optparse import OptionParser
+from sys import argv
 import shutil
-import subprocess
 
+# bulletproofing
+if os.sys.version_info <= (2,4):
+  print "\n\n ERROR:  Your python version is too old.  You must use version 2.5 or greater. \n\n"
+
+import subprocess
 from helpers.runSusTests import nameoftest, input, num_processes, testOS, setGeneratingGoldStandards
 
 ####################################################################################

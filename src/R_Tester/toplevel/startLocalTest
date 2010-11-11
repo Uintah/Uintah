@@ -20,12 +20,13 @@ export mallocstrict  BUILD_DIR  HTMLLOG WEBLOG LOCAL_OR_NIGHTLY_TEST OS
 unset SHELL
 umask 002
 
-if [ "$#" != 1 ]; then
-  echo "Usage: startLocalTest \<Path to Build Directory\>"
+if [ "$#" != 2 ]; then
+  echo "Usage: startLocalTest <Path to Build Directory> <path to src directory>"
   exit
 fi
 
 BUILD_DIR="$1"
+SRCTOP="$2"
 
 if [ ! -d "${BUILD_DIR}" ]; then
   echo "ERROR: The build directory $BUILD_DIR does not exist.  Now exiting"
@@ -42,11 +43,11 @@ mkdir local_RT >& /dev/null
 cd    local_RT
 
 if [ ! -d TestScripts ]; then
-  ln -s ../../src/R_Tester TestScripts
+  ln -s ${SRCTOP}/R_Tester TestScripts
 fi
 
 if [ ! -f replace_all_GS ]; then
-  ln -s ../../src/R_Tester/helpers/replace_all_GS replace_all_GS
+  ln -s ${SRCTOP}/R_Tester/helpers/replace_all_GS replace_all_GS
 fi
 
 if [ ! -d susdir ]; then
@@ -54,7 +55,7 @@ if [ ! -d susdir ]; then
 fi
 
 if [ ! -d inputs ]; then
-  ln -s ../../src/StandAlone/inputs inputs
+  ln -s ${SRCTOP}/StandAlone/inputs inputs
 fi
 
 if [ -d goldStandard ]; then
@@ -110,7 +111,7 @@ for comp in $allComponentTests; do
 done
 echo $list
 
-selectedCompTests=`dialog --stdout --separate-output --checklist "Select the component for local regression testing" 20 50 40 $list`
+selectedCompTests=`dialog --stdout --separate-output --checklist "Select the component for local regression testing" 20 61 15 $list`
 if [ $? != 0 ] ; then                                                                
   echo ""
   echo "Cancel selected... Goodbye."                                                                  
