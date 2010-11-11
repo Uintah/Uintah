@@ -125,16 +125,23 @@ def generateGS() :
     result = process.returncode
 
     if result != 0 :
-        print ""
-        print "WARNING:  SVN 'stat' failed to run correctly, so generateGoldStandards.py can not tell"
-        print "          if your tree is 'up to date'.  Are you sure you want to continue generating"
-        print "          new gold standards at this time? [y/n]"
-        print ""
-        # FIXME: read in response and act accordingly
+        answer = ""
+        while answer != "n" and answer != "y" :
+            print ""
+            print "WARNING:  SVN 'stat' failed to run correctly, so generateGoldStandards.py cannot tell"
+            print "          if your tree is 'up to date'.  Are you sure you want to continue generating"
+            print "          new gold standards at this time? [y/n]"
+            print ""
 
+            answer = os.sys.stdin.readline()[:-1]
+            if answer == "n" :
+                print ""
+                print "Goodbye."
+                print ""
+                exit( 0 )
     #
     # !!!FIXME!!!: if svn fails to run, or returns differences, then
-    # ask the user what they want to do 
+    # ask the user what they want to do.  This is not complete yet!!!
     ##############################################################
 
     ##############################################################
