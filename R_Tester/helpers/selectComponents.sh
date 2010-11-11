@@ -1,19 +1,37 @@
 #! /bin/sh
 
 #
-# This script asks the user which RT components they want to test (eg: MPM, ARCHES, Wasatch, etc)
-# and then prints out a string (to be consumed by another script) with those components.
+# This script asks the user (using a textual 'dialog' box) which RT
+# components they want to test (eg: MPM, ARCHES, Wasatch, etc) and
+# then prints out a string (to be consumed by another script) in the
+# form of...
 #
+# -t COMP1 -t COMP2 [...]
+#
+# ...where COMP? => MPM, ICE, ARCHES, MPMARCHES, etc
+#
+# Note, if the environment variable TEST_COMPONENTS is set, then no
+# dialog is displayed and the TEST_COMPONENTS value is displayed.
+#
+
+if test ${TEST_COMPONENTS:+1}; then
+  for comp in $TEST_COMPONENTS; do 
+    echo "-t $comp "
+  done
+  exit 0
+fi
 
 if test "$TERM" == "dumb" -o "$TERM" == "emacs"; then
   echo > /dev/stderr
-  echo "ERROR: `basename $0` requires a fully functional terminal... you have '$TERM'.  Goodbye." > /dev/stderr
+  echo "ERROR: `basename $0` requires a fully functional terminal... you have '$TERM'." > /dev/stderr
+  echo "       (Consider setting environment variable TEST_COMPONENTS.)  Goodbye." > /dev/stderr
   echo > /dev/stderr
   exit 1
 fi
 if test "$EMACS" == "t"; then
   echo > /dev/stderr
-  echo "ERROR: `basename $0` cannot be run from within emacs...  Goodbye." > /dev/stderr
+  echo "ERROR: `basename $0` cannot be run from within emacs..." > /dev/stderr
+  echo "       (Consider setting environment variable TEST_COMPONENTS.)  Goodbye." > /dev/stderr
   echo > /dev/stderr
   exit 1
 fi

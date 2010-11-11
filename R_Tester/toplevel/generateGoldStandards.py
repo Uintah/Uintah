@@ -9,6 +9,7 @@ from string import upper
 # bulletproofing
 if os.sys.version_info <= (2,4):
   print "\n\n ERROR:  Your python version is too old.  You must use version 2.5 or greater. \n\n"
+  exit( 1 )
 
 import subprocess
 
@@ -129,12 +130,12 @@ def generateGS() :
         # FIXME: read in response and act accordingly
 
     #
-    # if svn fails to run, or returns differences, then
+    # !!!FIXME!!!: if svn fails to run, or returns differences, then
     # ask the user what they want to do 
     ##############################################################
 
     ##############################################################
-    # Determine if configVars has changed... if not, let the user
+    # !!!FIXME!!!: Determine if configVars has changed... if not, let the user
     # know this...
     #
     #configVars = options.build_directory + "/configVars.mk"
@@ -142,9 +143,10 @@ def generateGS() :
     ##############################################################
 
     ##############################################################
+    # !!!FIXME!!!:
     # - Determine if/where mpirun is...
     # - Determine if sus was built with MPI...
-    #
+    # - Determine (ask the user?) if the (sus) binary is up to date.
     ##############################################################
 
     components = options.test_file
