@@ -490,9 +490,9 @@ main( int argc, char *argv[], char *env[] )
     // Run svn commands on Packages/Uintah 
     if (do_svnDiff || do_svnStat){
 #if defined(REDSTORM)
-      cerr << "WARNING:  SVN DIFF is disabled.\n";
+      cout << "WARNING:  SVN DIFF is disabled.\n";
 #else
-      cerr << "____SVN_____________________________________________________________\n";
+      cout << "____SVN_____________________________________________________________\n";
       string sdir = string(sci_getenv("SCIRUN_SRCDIR"));
       if(do_svnDiff){
         string cmd = "svn diff " + sdir;
@@ -504,7 +504,7 @@ main( int argc, char *argv[], char *env[] )
         cmd = "svn stat -u " + sdir;
         system(cmd.c_str());
       }
-      cerr << "____SVN_______________________________________________________________\n";
+      cout << "____SVN_______________________________________________________________\n";
 #endif
     }
   }
