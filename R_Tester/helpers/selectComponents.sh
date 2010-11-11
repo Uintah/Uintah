@@ -14,6 +14,14 @@
 # dialog is displayed and the TEST_COMPONENTS value is displayed.
 #
 
+#
+# Notes:
+# 
+# - The 'output' (stdout) of this script is grabbed by the script that calls
+#   it, so (echo'd) messages are 'hidden' unless explicitly sent to "> /dev/stderr"... 
+#   which needs to be done for all error messages.
+#
+
 if test ${TEST_COMPONENTS:+1}; then
   for comp in $TEST_COMPONENTS; do 
     echo "-t $comp "
@@ -44,6 +52,16 @@ for comp in $componentTests; do
   list="$list $comp - off,"
   n=$(( $n + 1 ))
 done
+
+# 'dialog' does not (natively) exist under OSX, so let user know...
+if ! test `which dialog > /dev/null`; then
+  echo "" > /dev/stderr
+  echo "ERROR: the 'dialog' shell command not found.  (Use 'fink' to install under OSX.)" > /dev/stderr
+  echo "       Please install 'dialog', or use the environment variable TEST_COMPONENTS." > /dev/stderr
+  echo "" > /dev/stderr
+  exit 1
+fi
+
 
 componentTest=`dialog --stdout --separate-output --checklist "Select the component for local regression testing" 20 61 15 $list`
 if [ $? != 0 ] ; then
