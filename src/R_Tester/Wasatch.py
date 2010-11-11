@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
  
 from os import symlink,environ
 from sys import argv,exit,platform
@@ -28,15 +28,15 @@ from helpers.modUPS import modUPS
 UNUSED_TESTS = []
 
 NIGHTLYTESTS = [
-  ("BasicScalarTransportEquation",      "BasicScalarTransportEquation.ups",     1,      "Linux",	["exactComparison","no_restart","no_memoryTest","do_performance_test"] ),
-  ("TabPropsInterface",	      		"TabPropsInterface.ups",     		1,      "Linux",        ["exactComparison","no_restart","no_memoryTest","do_performance_test"] )
+  ("BasicScalarTransportEquation",      "BasicScalarTransportEquation.ups",     1,      "Linux",        ["exactComparison","no_restart","no_memoryTest","do_performance_test"] ),
+  ("TabPropsInterface",                 "TabPropsInterface.ups",                1,      "Linux",        ["exactComparison","no_restart","no_memoryTest","do_performance_test"] )
 ]
 
 
 # Tests that are run during local regression testing
 LOCALTESTS = [
-  ("BasicScalarTransportEquation",      "BasicScalarTransportEquation.ups",     1,      "Linux",        ["exactComparison","no_restart","no_memoryTest"] ),
-  ("TabPropsInterface",	      		"TabPropsInterface.ups",     		1,      "Linux",        ["exactComparison","no_restart","no_memoryTest","do_performance_test"] )
+  ("BasicScalarTransportEquation",      "BasicScalarTransportEquation.ups",     1,      "All",        ["exactComparison","no_restart","no_memoryTest"] ),
+  ("TabPropsInterface",                 "TabPropsInterface.ups",                1,      "All",        ["exactComparison","no_restart","no_memoryTest","do_performance_test"] )
 ]
 
 #__________________________________

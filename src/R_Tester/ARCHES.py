@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 from os import symlink,environ
 from sys import argv,exit,platform
@@ -57,18 +57,18 @@ NIGHTLYTESTS = [
 
 # Tests that are run during local regression testing
 LOCALTESTS = [
-   ("constantMMS",             "mms/constantMMS.ups",                 1.1,  "Linux",   ["exactComparison"]),
-   ("almgrenMMS",              "mms/almgrenMMS.ups",                  1.1,  "Linux",   ["exactComparison"]),
-   ("periodic",                "periodicTurb/periodic.ups",           1.1,  "Linux",   ["exactComparison"]),
-   ("helium_RT",               "helium_RT.ups",                       1.1,  "Linux",   ["exactComparison"]),
-   ("methane_explicit_table",  "methane_explicit_table.ups",          1.1,  "Linux",   ["exactComparison"]),
-   ("methane8patch",           methane8patch_ups,                     8,    "Linux",   ["exactComparison"]),
-   ("dqmom_test_1",            "DQMOM_regression/dqmom_test_1.ups",   1.1,  "Linux",   ["exactComparison"]),
-   ("dqmom_test_2a",           "DQMOM_regression/dqmom_test_2a.ups",  1.1,  "Linux",   ["exactComparison"]),
-   ("dqmom_test_2b",           "DQMOM_regression/dqmom_test_2b.ups",  1.1,  "Linux",   ["exactComparison"]),
-   ("dqmom_test_2c",           "DQMOM_regression/dqmom_test_2c.ups",  1.1,  "Linux",   ["exactComparison"]),
-   ("dqmom_test_3",            "DQMOM_regression/dqmom_test_3.ups",   1.1,  "Linux",   ["exactComparison"]),
-   ("dqmom_test_4",            "DQMOM_regression/dqmom_test_4.ups",   1.1,  "Linux",   ["exactComparison"])
+   ("constantMMS",             "mms/constantMMS.ups",                 1.1,  "All",   ["exactComparison"]),
+   ("almgrenMMS",              "mms/almgrenMMS.ups",                  1.1,  "All",   ["exactComparison"]),
+   ("periodic",                "periodicTurb/periodic.ups",           1.1,  "All",   ["exactComparison"]),
+   ("helium_RT",               "helium_RT.ups",                       1.1,  "All",   ["exactComparison"]),
+   ("methane_explicit_table",  "methane_explicit_table.ups",          1.1,  "All",   ["exactComparison"]),
+   ("methane8patch",           methane8patch_ups,                     8,    "All",   ["exactComparison"]),
+   ("dqmom_test_1",            "DQMOM_regression/dqmom_test_1.ups",   1.1,  "All",   ["exactComparison"]),
+   ("dqmom_test_2a",           "DQMOM_regression/dqmom_test_2a.ups",  1.1,  "All",   ["exactComparison"]),
+   ("dqmom_test_2b",           "DQMOM_regression/dqmom_test_2b.ups",  1.1,  "All",   ["exactComparison"]),
+   ("dqmom_test_2c",           "DQMOM_regression/dqmom_test_2c.ups",  1.1,  "All",   ["exactComparison"]),
+   ("dqmom_test_3",            "DQMOM_regression/dqmom_test_3.ups",   1.1,  "All",   ["exactComparison"]),
+   ("dqmom_test_4",            "DQMOM_regression/dqmom_test_4.ups",   1.1,  "All",   ["exactComparison"])
 ]
 
 #__________________________________

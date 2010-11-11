@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 from sys import argv, exit
 from os import environ
@@ -59,8 +59,8 @@ NIGHTLYTESTS = [   ("advect",           "advect.ups",            1, "Linux", ["e
 
 
 # Tests that are run during local regression testing
-LOCALTESTS = [   ("advect",           "advect.ups",           1, "Linux", ["exactComparison"]),    \
-                 ("riemann_sm",       "riemann_sm.ups",       1, "Linux", ["exactComparison"])       
+LOCALTESTS = [   ("advect",           "advect.ups",           1, "ALL", ["exactComparison"]),    \
+                 ("riemann_sm",       "riemann_sm.ups",       1, "All", ["exactComparison"])       
               ]
 #__________________________________
 
