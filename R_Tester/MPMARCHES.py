@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 from os import symlink,environ
 from sys import argv,exit,platform
