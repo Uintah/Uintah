@@ -332,7 +332,7 @@ void LightTime::computeModelSources(const ProcessorGroup*,
           double burnedMass = min(delF[c]*(prdMass+rctMass), rctMass);
 
           //__________________________________
-          // conservation of mass, momentum and energy                           
+          // conservation of mass, momentum and energy
           mass_src_0[c] -= burnedMass;
           mass_src_1[c] += burnedMass;
 
