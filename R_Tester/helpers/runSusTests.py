@@ -49,7 +49,7 @@ def generatingGoldStandards() :
 # all of the paramaters given to runSusTest
 def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
  
-  if len(argv) < 6 or len(argv) > 7 or not argv[4] in ["dbg", "opt", "local"] :
+  if len(argv) < 6 or len(argv) > 7 or not argv[4] in ["dbg", "opt", "unknown"] :
     print "usage: %s <susdir> <inputsdir> <testdata_goldstandard> <dbg_opt> " \
              "<max_parallelsim> <test>" % argv[0]
     print "    where <test> is optional"
@@ -84,9 +84,12 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
   # If running Nightly RT, output logs in web dir
   # otherwise, save it in the build
   if environ['LOCAL_OR_NIGHTLY_TEST'] == "nightly" :
-    outputpath    = "%s-%s" % (environ['HTMLLOG'], dbg_opt)
-    weboutputpath = "%s-%s" % (environ['WEBLOG'],  dbg_opt)
-
+    try:
+      outputpath    = "%s-%s" % (environ['HTMLLOG'], dbg_opt)
+      weboutputpath = "%s-%s" % (environ['WEBLOG'],  dbg_opt)
+    except Exception:
+      pass
+      
     try:
       # make outputpath/dbg or opt dirs
       environ['outputlinks'] ="1"
@@ -233,13 +236,20 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
         if flags[i] == "exactComparison":
           abs_tolerance = 0.0
           rel_tolerance = 0.0
+    
+    #Warnings
+    if dbg_opt == "dbg" and do_performance == 1:
+      print "\nERROR: performance tests cannot be run with a debug build, skipping this test\n"
+      continue
            
     if do_debug == 0 and dbg_opt == "dbg":
+      print "\nWARNING: skipping this test (do_debug: %s, dbg_opt: %s)\n" % (do_debug, dbg_opt)
       continue
+    
     if do_opt == 0 and dbg_opt == "opt":
+      print "\nWARNING: skipping this test (do_opt: %s, dbg_opt: %s)\n" % (do_opt, dbg_opt)
       continue
-    if do_debug == "local":
-       continue
+    
       
     if dbg_opt == "opt":
       do_memory = 0
@@ -253,19 +263,19 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
     # bulletproofing
     # Does gold standard exists?
     # If it doesn't then either throw an error (local RT) or generate it (Nightly RT).
-
     try:
       chdir(compare_root)
       chdir(testname)
     except Exception:
-      if dbg_opt == "local":
+      if environ['LOCAL_OR_NIGHTLY_TEST'] == "local" :
         print "ERROR: The gold standard for the (%s) test does not exist." % testname
         print "To generate it run: \n   make gold_standards"
         exit(1) 
-      
-      chdir(compare_root)
-      mkdir(testname)
-      
+        
+      if environ['LOCAL_OR_NIGHTLY_TEST'] == "nightly" :     
+        print "gold Standard being created for  (%s)" % testname
+        chdir(compare_root)
+        mkdir(testname)
     
     if startFrom == "checkpoint":
       try:
@@ -455,6 +465,7 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
 
   # if doing performance tests, strip the output and checkpoints portions
   if do_performance_test == 1:
+      
     inputxml = modUPS("", inputxml,["<outputInterval>0</outputInterval>",
                                     "<outputTimestepInterval>0</outputTimestepInterval>",
                                     '<checkpoint cycle="0" interval="0"/>'])
@@ -583,6 +594,7 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
         short_message = rstrip(short_message_file.readline(500))
       except Exception:
         short_message = ""
+        
       if performance_RC == 0:
         print "\tPerformance tests passed."
         if short_message != "":
@@ -614,15 +626,20 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
         if compUda_RC == 10 * 256:
           print "\t*** Input file(s) differs from the goldstandard"
           print "%s" % replace_msg
+          
         elif compUda_RC == 1 * 256 or compUda_RC == 5*256:
           print "\t*** Warning, test %s failed uda comparison with error code %s" % (testname, compUda_RC)
           print compare_msg
+          
           if startFrom != "restart":
            print "%s" % replace_msg
+        
         elif compUda_RC == 65280: # (-1 return code)
           print "\tComparison tests passed.  (Note: No dat files to compare.)"
+        
         else:
           print "\tComparison tests passed.  (Note: No previous gold standard.)"
+      
       else:
         print "\tComparison tests passed."
     #__________________________________
