@@ -744,7 +744,7 @@ private:
                  const bool xminus, const bool xplus, 
                  const bool yminus, const bool yplus, 
                  const bool zminus, const bool zplus, 
-                 double actual_flow_rate ); 
+                 double& actual_flow_rate ); 
 
   void setFlatProfS( const Patch* patch, 
                  CCVariable<double>& scalar, 
@@ -752,8 +752,7 @@ private:
                  const CCVariable<int>& cellType, const double area, const int inlet_type, 
                  const bool xminus, const bool xplus, 
                  const bool yminus, const bool yplus, 
-                 const bool zminus, const bool zplus, 
-                 double actual_flow_rate ); 
+                 const bool zminus, const bool zplus );
   
   bool turbinlet;
   int ilow;
