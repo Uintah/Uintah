@@ -54,7 +54,7 @@ for comp in $componentTests; do
 done
 
 # 'dialog' does not (natively) exist under OSX, so let user know...
-if ! test `which dialog > /dev/null`; then
+if ! test `which dialog`; then
   echo "" > /dev/stderr
   echo "ERROR: the 'dialog' shell command not found.  (Use 'fink' to install under OSX.)" > /dev/stderr
   echo "       Please install 'dialog', or use the environment variable TEST_COMPONENTS." > /dev/stderr
