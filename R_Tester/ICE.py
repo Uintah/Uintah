@@ -35,8 +35,9 @@ hotBlob_AMR_3L_ups = modUPS( the_dir,                       \
 #       startFromCheckpoint     - start test from checkpoint. (/usr/local/home/csafe-tester/CheckPoints/..../testname.uda.000) 
 #
 #  Notes: 
-#  The "folder name" must be the same as input file without the extension.
-#  If the processors is > 1.0 then mpirun command will be used
+#  1) The "folder name" must be the same as input file without the extension.
+#  2) If the processors is > 1.0 then an mpirun command will be used
+#  3) Performance_tests are not run on a debug build.
 #______________________________________________________________________
 
 NIGHTLYTESTS = [   ("advect",           "advect.ups",            1, "Linux", ["exactComparison"]),      \

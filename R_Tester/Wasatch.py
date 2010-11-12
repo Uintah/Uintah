@@ -1,8 +1,8 @@
 #!/usr/bin/env python
  
-from os import symlink,environ
-from sys import argv,exit,platform
-from helpers.runSusTests import runSusTests, inputs_root
+from sys import argv, exit
+from os import environ
+from helpers.runSusTests import runSusTests, inputs_root, generatingGoldStandards
 from helpers.modUPS import modUPS
 
 #______________________________________________________________________
@@ -21,22 +21,23 @@ from helpers.modUPS import modUPS
 #       startFromCheckpoint     - start test from checkpoint. (/usr/local/home/csafe-tester/CheckPoints/..../testname.uda.000)
 #
 #  Notes: 
-#  The "folder name" must be the same as input file without the extension.
-#  If the processors is > 1.0 then an mpirun command will be used
+#  1) The "folder name" must be the same as input file without the extension.
+#  2) If the processors is > 1.0 then an mpirun command will be used
+#  3) Performance_tests are not run on a debug build.
 #______________________________________________________________________
 
 UNUSED_TESTS = []
 
 NIGHTLYTESTS = [
-  ("BasicScalarTransportEquation",      "BasicScalarTransportEquation.ups",     1,      "Linux",        ["exactComparison","no_restart","no_memoryTest","do_performance_test"] ),
-  ("TabPropsInterface",                 "TabPropsInterface.ups",                1,      "Linux",        ["exactComparison","no_restart","no_memoryTest","do_performance_test"] )
+  ("BasicScalarTransportEquation",      "BasicScalarTransportEquation.ups",     1,      "Linux",        ["exactComparison","no_restart","no_memoryTest"] ), \
+  ("TabPropsInterface",                 "TabPropsInterface.ups",                1,      "Linux",        ["exactComparison","no_restart","no_memoryTest"] )
 ]
 
 
 # Tests that are run during local regression testing
 LOCALTESTS = [
-  ("BasicScalarTransportEquation",      "BasicScalarTransportEquation.ups",     1,      "All",        ["exactComparison","no_restart","no_memoryTest"] ),
-  ("TabPropsInterface",                 "TabPropsInterface.ups",                1,      "All",        ["exactComparison","no_restart","no_memoryTest","do_performance_test"] )
+  ("BasicScalarTransportEquation",      "BasicScalarTransportEquation.ups",     1,      "All",        ["exactComparison","no_restart","no_memoryTest"] ), \
+  ("TabPropsInterface",                 "TabPropsInterface.ups",                1,      "All",        ["exactComparison","no_restart","no_memoryTest"] )
 ]
 
 #__________________________________
