@@ -147,7 +147,7 @@ for componentTest in $selectedCompTests; do
   echo "setenv OS $OS"                                       >> "$doTestScript"
   echo "setenv SCI_DEBUG \"\""                               >> "$doTestScript"
   echo "setenv LOCAL_OR_NIGHTLY_TEST $LOCAL_OR_NIGHTLY_TEST" >> "$doTestScript"
-  echo "python -u TestScripts/$componentTest.py susdir inputs goldStandard local $PARALLELISM "'$1' >> "$doTestScript"
+  echo "python -u TestScripts/$componentTest.py susdir inputs goldStandard unknown $PARALLELISM "'$1' >> "$doTestScript"
 
   /bin/chmod a+x "$doTestScript"
 
