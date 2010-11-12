@@ -1299,7 +1299,7 @@ BoundaryCondition::setProfile(const ProcessorGroup*,
                           yminus, yplus, 
                           zminus, zplus, 
                           actual_flow_rate ); 
-
+                          
             d_flowInlets[indx]->flowRate = actual_flow_rate;
             new_dw->put(delt_vartype(actual_flow_rate),
                         d_flowInlets[indx]->d_flowRate_label);
@@ -1324,16 +1324,14 @@ BoundaryCondition::setProfile(const ProcessorGroup*,
                           fi->calcStream.d_density, cellType, area, fi->d_cellTypeID, 
                           xminus, xplus, 
                           yminus, yplus, 
-                          zminus, zplus, 
-                          actual_flow_rate ); 
+                          zminus, zplus ); 
 
             setFlatProfS( patch, 
                           scalar, 
                           fi->streamMixturefraction.d_mixVars[0], cellType, area, fi->d_cellTypeID, 
                           xminus, xplus, 
                           yminus, yplus, 
-                          zminus, zplus, 
-                          actual_flow_rate ); 
+                          zminus, zplus );  
 
             if (d_enthalpySolve) {
 
@@ -1342,8 +1340,7 @@ BoundaryCondition::setProfile(const ProcessorGroup*,
                             fi->calcStream.d_enthalpy, cellType, area, fi->d_cellTypeID, 
                             xminus, xplus, 
                             yminus, yplus, 
-                            zminus, zplus, 
-                            actual_flow_rate ); 
+                            zminus, zplus ); 
             }
 
             break; 
@@ -1444,7 +1441,7 @@ BoundaryCondition::setFlatProfV( const Patch* patch,
                              const bool xminus, const bool xplus, 
                              const bool yminus, const bool yplus, 
                              const bool zminus, const bool zplus, 
-                             double actual_flow_rate ) 
+                             double& actual_flow_rate ) 
 {
   vector<Patch::FaceType>::const_iterator fiter;
   vector<Patch::FaceType> bf;
@@ -1580,8 +1577,7 @@ BoundaryCondition::setFlatProfS( const Patch* patch,
                              const CCVariable<int>& cellType, const double area, const int check_type, 
                              const bool xminus, const bool xplus, 
                              const bool yminus, const bool yplus, 
-                             const bool zminus, const bool zplus, 
-                             double actual_flow_rate ) 
+                             const bool zminus, const bool zplus )
 {
   vector<Patch::FaceType>::const_iterator fiter;
   vector<Patch::FaceType> bf;

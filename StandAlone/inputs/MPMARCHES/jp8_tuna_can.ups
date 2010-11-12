@@ -199,7 +199,6 @@
             
             <BoundaryConditions>
                 <FlowInlet>
-                    <ramping_inlet_flowrate>false</ramping_inlet_flowrate>
                     <!-- We used here the same regression rate as Sandia used for their
                          2m JP8 experiments: 1.6 mm/min = 0.00002666(6) m/s, assuming
                          linear in time fuel consumption.
@@ -215,17 +214,14 @@
                             <radius> 0.5 </radius>
                         </cylinder>
                     </geom_object>
-                    <InletVelocity>0</InletVelocity>
                 </FlowInlet>
                 
                 <FlowInlet>
                     <!-- cross wind -->
-                    <ramping_inlet_flowrate>false</ramping_inlet_flowrate>
                     <InletVelocity>1.02</InletVelocity>
                     <mixture_fraction>0.0</mixture_fraction>
                     <geom_object>
                     </geom_object>
-                    <Flow_rate>0</Flow_rate>
                 </FlowInlet>
                 
                 <WallBC>
