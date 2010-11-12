@@ -7,7 +7,7 @@
                                                                         ideal_gas, membrane, murnahanMPM, mw_visco_elastic, rigid, shell_CNH,
                                                                         small_strain_plastic, trans_iso_hyper, visco_plastic,
                                                                         visco_scram, visco_trans_iso_hyper, water, kayenta, diamm, cnh_mms, 
-                                                                        cnh_damage, cnhp_damage, UCNH'">
+                                                                        cnh_damage, cnhp_damage, UCNH, program_burn'">
     <A                             spec="OPTIONAL DOUBLE" />
     <allow_no_tension              spec="OPTIONAL BOOLEAN" />
     <alpha                         spec="OPTIONAL DOUBLE" />
@@ -73,6 +73,9 @@
       <D5                          spec="OPTIONAL DOUBLE" />
     </damage_model>
     <DCp_DTemperature              spec="OPTIONAL DOUBLE" />
+    <D                             spec="OPTIONAL DOUBLE" />  <!-- FIXME: what are these for? -->
+    <starting_location             spec="OPTIONAL VECTOR" />  <!-- FIXME: what are these for? -->
+    <direction_if_plane            spec="OPTIONAL VECTOR" />  <!-- FIXME: what are these for? -->
     <delH                          spec="OPTIONAL DOUBLE" /> <!-- FIXME: what is this for? -->
     <direction_of_symm             spec="OPTIONAL VECTOR" />
     <do_melting                    spec="OPTIONAL BOOLEAN" />
@@ -136,6 +139,7 @@
     <initial_std_scalar_damage     spec="OPTIONAL DOUBLE" />
     <isothermal                    spec="OPTIONAL BOOLEAN" />
     <K                             spec="OPTIONAL DOUBLE" />
+    <n                             spec="OPTIONAL DOUBLE" />
     <meanstrain_nucleation         spec="OPTIONAL DOUBLE" />
     <melting_temp_model            spec="OPTIONAL NO_DATA"
                                      attribute1="type REQUIRED STRING 'constant_Tm, scg_Tm'" >
