@@ -17,7 +17,7 @@ area=1.;
 dx=domain/(NN-1);
 volp=dx/PPC;
 
-dt=CFL*(1./40.)/c;
+dt=CFL*dx/c;
 
 if problem_type==1  %impulsively loaded bar
     period = sqrt(16.*bar_length*bar_length*density/E);
