@@ -82,7 +82,7 @@ using namespace Uintah;
 #include <CCA/Components/Arches/fortran/bcuvel_fort.h>
 #include <CCA/Components/Arches/fortran/bcvvel_fort.h>
 #include <CCA/Components/Arches/fortran/bcwvel_fort.h>
-#include <CCA/Components/Arches/fortran/profv_fort.h>
+//#include <CCA/Components/Arches/fortran/profv_fort.h>
 #include <CCA/Components/Arches/fortran/intrusion_computevel_fort.h>
 #include <CCA/Components/Arches/fortran/mmbcenthalpy_energyex_fort.h>
 #include <CCA/Components/Arches/fortran/mmbcvelocity_momex_fort.h>
