@@ -426,6 +426,8 @@
             <n                          spec="OPTIONAL DOUBLE" />
             <fuel_mass_fraction         spec="OPTIONAL DOUBLE" />
             <oxidizer_O2_mass_fraction  spec="OPTIONAL DOUBLE" />
+            <scalar_label               spec="OPTIONAL STRING" />
+            <mw_label                   spec="OPTIONAL STRING" />
 
             <!-- Intrusion inlets --> 
             <intrusion                  spec="OPTIONAL NO_DATA">

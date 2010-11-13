@@ -110,6 +110,9 @@ private:
   const VarLabel* d_WDverLabel; 
   // * but stored in the new_Dw
 
+  std::string d_scalar_label; 
+  std::string d_mw_label; 
+
 }; // end WestbrookDryer
 } // end namespace Uintah
 #endif
