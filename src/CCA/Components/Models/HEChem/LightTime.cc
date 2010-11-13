@@ -127,11 +127,11 @@ void LightTime::problemSetup(GridP&, SimulationStateP& sharedState,
   mymatls = scinew MaterialSet();
 
   vector<int> m;
-  m.push_back(0);                                 // needed for the pressure and NC_CCWeight
+  m.push_back(0);                   // needed for the pressure and NC_CCWeight
   m.push_back(matl0->getDWIndex());
   m.push_back(matl1->getDWIndex());
 
-  mymatls->addAll_unique(m);                    // elimiate duplicate entries
+  mymatls->addAll_unique(m);        // eliminate duplicate entries
   mymatls->addReference(); 
 }
 //______________________________________________________________________
@@ -196,7 +196,7 @@ void LightTime::scheduleComputeModelSources(SchedulerP& sched,
   // Products
   t->requires(Task::NewDW,  Ilb->rho_CCLabel,      prod_matl, gn);
   t->requires(Task::NewDW,  Ilb->vol_frac_CCLabel, prod_matl, gn);
-  
+
   //__________________________________
   // Reactants
   t->requires(Task::NewDW, Ilb->vol_frac_CCLabel,  react_matl, gn);
@@ -270,7 +270,6 @@ void LightTime::computeModelSources(const ProcessorGroup*,
     new_dw->get(rctRho,        Ilb->rho_CCLabel,       m0,patch,gn, 0);
     new_dw->get(rctSpvol,      Ilb->sp_vol_CCLabel,    m0,patch,gn, 0);
     new_dw->get(vol_frac_rct,  Ilb->vol_frac_CCLabel,  m0,patch,gn, 0);
-    new_dw->get(vol_frac_prd,  Ilb->vol_frac_CCLabel,  m1,patch,gn, 0);
     new_dw->get(cv_reactant,   Ilb->specific_heatLabel,m0,patch,gn, 0);
     new_dw->allocateAndPut(Fr, reactedFractionLabel,   m0,patch);
     new_dw->allocateAndPut(delF, delFLabel,            m0,patch);
@@ -279,7 +278,8 @@ void LightTime::computeModelSources(const ProcessorGroup*,
 
     //__________________________________
     // Product Data, 
-    new_dw->get(prodRho,       Ilb->rho_CCLabel,   m1,patch,gn, 0);
+    new_dw->get(prodRho,       Ilb->rho_CCLabel,       m1,patch,gn, 0);
+    new_dw->get(vol_frac_prd,  Ilb->vol_frac_CCLabel,  m1,patch,gn, 0);
 
     const Level* level = patch->getLevel();
     double time = d_sharedState->getElapsedTime();
@@ -317,7 +317,7 @@ void LightTime::computeModelSources(const ProcessorGroup*,
       if((vol_frac_rct[c] + vol_frac_prd[c]) > VF_SUM){
         if (time >= t_b && rctRho[c] > d_TINY_RHO){
           Fr[c] = (time - t_b)/delta_L;
-         
+
           if(Fr[c] > .96) {
             Fr[c] = 1.0;
           }
