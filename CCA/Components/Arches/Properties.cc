@@ -244,7 +244,7 @@ Properties::problemSetup(const ProblemSpecP& params)
     if (db_enthalpy_solver->findBlock("DORadiationModel"))
       d_radiationCalc = true; 
     else 
-      cout << "ATTENTION: NO WORKING RADIATION MODEL TURNED ON!" << endl; 
+      proc0cout << "ATTENTION: NO WORKING RADIATION MODEL TURNED ON!" << endl; 
 
     if (d_radiationCalc) {
 
