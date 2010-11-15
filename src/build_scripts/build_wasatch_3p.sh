@@ -67,6 +67,7 @@ INSTALL_HERE=$1/Wasatch3P/install/SpatialOps
 run \
 "cmake \
  -DENABLE_TESTS=OFF \
+ -DBoost_DIR=$BOOST_DIR \
  -DTabProps_PREPROCESSOR=OFF \
  -DHDF5_DIR=$HDF5_DIR \
  -DCMAKE_INSTALL_PREFIX=${INSTALL_HERE} \
