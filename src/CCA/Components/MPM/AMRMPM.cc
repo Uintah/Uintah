@@ -1,4 +1,4 @@
-/*
+ /*
 
 The MIT License
 
@@ -501,81 +501,6 @@ void AMRMPM::scheduleCoarsenNodalData_CFI(SchedulerP& sched,
   }
 }
 
-#if 0
-//______________________________________________________________________
-//   JIMS VERSION
-void AMRMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
-                                                const PatchSet* patches,
-                                                const MaterialSet* matls)
-{
-  if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(), 
-                           getLevel(patches)->getGrid()->numLevels()))
-    return;
-    
-  printSchedule(patches,cout_doing,"AMRMPM::scheduleInterpolateParticlesToGrid");
-  
-
-  Task* t = scinew Task("AMRMPM::interpolateParticlesToGrid",
-                   this,&AMRMPM::interpolateParticlesToGrid);
-  Ghost::GhostType  gan = Ghost::AroundNodes;
-  Ghost::GhostType  gac = Ghost::AroundCells;
-  
-  t->requires(Task::OldDW, lb->pXLabel,                gan,NGP);
-  t->requires(Task::OldDW, lb->pSizeLabel,             gan,NGP);
-  t->requires(Task::OldDW, lb->pDeformationMeasureLabel,gan,NGP);
-  t->requires(Task::OldDW, lb->pMassLabel,             gan,NGP);
-  t->requires(Task::OldDW, lb->pVolumeLabel,           gan,NGP);
-  t->requires(Task::OldDW, lb->pErosionLabel,          gan,NGP);
-  t->requires(Task::OldDW, lb->pVelocityLabel,         gan,NGP);
-  t->requires(Task::OldDW, lb->pTemperatureLabel,      gan,NGP);
-  t->requires(Task::NewDW, lb->pExtForceLabel_preReloc,gan,NGP);
-  t->requires(Task::NewDW, lb->gZOILabel,              gac,NGN);
-
-  MaterialSubset* one_matl = scinew MaterialSubset();
-  one_matl->add(0);
-  one_matl->addReference();
-
-  //Task::WhichDW C_oldDW = Task::CoarseOldDW;
-  
-  if(getLevel(patches)->hasCoarserLevel()){
-    const MaterialSubset* mss = matls->getUnion();
-    Task::DomainSpec DS = Task::NormalDomain;
-    t->requires(Task::CoarseOldDW, lb->pXLabel,           0,Task::CoarseLevel, mss, DS, gan, NGP);
-    t->requires(Task::CoarseOldDW, lb->pMassLabel,        0,Task::CoarseLevel, mss, DS, gan, NGP);
-    t->requires(Task::CoarseOldDW, lb->pSizeLabel,        0,Task::CoarseLevel, mss, DS, gan, NGP);
-    t->requires(Task::CoarseOldDW, lb->pVolumeLabel,      0,Task::CoarseLevel, mss, DS, gan, NGP);
-    t->requires(Task::CoarseOldDW, lb->pErosionLabel,     0,Task::CoarseLevel, mss, DS, gan, NGP);
-    t->requires(Task::CoarseOldDW, lb->pVelocityLabel,    0,Task::CoarseLevel, mss, DS, gan, NGP);
-    t->requires(Task::CoarseOldDW, lb->pTemperatureLabel, 0,Task::CoarseLevel, mss, DS, gan, NGP);
-    t->requires(Task::CoarseNewDW, lb->pExtForceLabel_preReloc, 0,Task::CoarseLevel, mss, DS, gan, NGP);
-    t->requires(Task::CoarseNewDW, lb->gZOILabel,         0,Task::CoarseLevel, one_matl, DS, gac, NGN);
-  }
-  if(getLevel(patches)->hasFinerLevel()){
-    const MaterialSubset* mss = matls->getUnion();
-    Task::DomainSpec DS = Task::NormalDomain;
-    bool  fat = false;  // possibly (F)rom (A)nother (T)askgraph
-    t->requires(Task::OldDW, lb->pXLabel,                 0,Task::FineLevel, mss, DS, gan, NGP, fat);
-    t->requires(Task::OldDW, lb->pMassLabel,              0,Task::FineLevel, mss, DS, gan, NGP,fat);
-    t->requires(Task::OldDW, lb->pSizeLabel,              0,Task::FineLevel, mss, DS, gan, NGP,fat);
-    t->requires(Task::OldDW, lb->pVolumeLabel,            0,Task::FineLevel, mss, DS, gan, NGP,fat);
-    t->requires(Task::OldDW, lb->pErosionLabel,           0,Task::FineLevel, mss, DS, gan, NGP,fat);
-    t->requires(Task::OldDW, lb->pVelocityLabel,          0,Task::FineLevel, mss, DS, gan, NGP,fat);
-    t->requires(Task::OldDW, lb->pTemperatureLabel,       0,Task::FineLevel, mss, DS, gan, NGP,fat);
-    t->requires(Task::NewDW, lb->pExtForceLabel_preReloc, 0,Task::FineLevel, mss, DS, gan, NGP,fat);
-    t->requires(Task::NewDW, lb->gZOILabel,               0,Task::FineLevel, one_matl, DS, gac, NGN, fat);
-  }
-
-  t->computes(lb->gMassLabel);
-  t->computes(lb->gVolumeLabel);
-  t->computes(lb->gVelocityLabel);
-  t->computes(lb->gExternalForceLabel);
-
-  sched->addTask(t, patches, matls);
-
-  if (one_matl->removeReference())
-    delete one_matl;
-}
-#endif
 
 //______________________________________________________________________
 //
