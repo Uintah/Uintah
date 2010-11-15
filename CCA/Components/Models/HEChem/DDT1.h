@@ -152,6 +152,7 @@ WARNING
     const VarLabel* totalMassBurnedLabel;
     const VarLabel* totalHeatReleasedLabel;
     const VarLabel* burningLabel;   
+    const VarLabel* crackedEnoughLabel;   
     const VarLabel* TsLabel;
     const VarLabel* numPPCLabel;
     // JWL++

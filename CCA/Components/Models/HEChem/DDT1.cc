@@ -83,6 +83,7 @@ DDT1::DDT1(const ProcessorGroup* myworld,
 
   detLocalToLabel = VarLabel::create("detLocalTo",
                                       CCVariable<double>::getTypeDescription());
+
   detonatingLabel = VarLabel::create("detonating",
                                       CCVariable<double>::getTypeDescription());
   //__________________________________
@@ -90,7 +91,7 @@ DDT1::DDT1(const ProcessorGroup* myworld,
   d_saveConservedVars = scinew saveConservedVars();
   onSurfaceLabel   = VarLabel::create("onSurface",
                                        CCVariable<double>::getTypeDescription());
-    
+
   surfaceTempLabel = VarLabel::create("surfaceTemp",
                                        CCVariable<double>::getTypeDescription());
     
@@ -99,7 +100,10 @@ DDT1::DDT1(const ProcessorGroup* myworld,
 
   burningLabel     = VarLabel::create("burning",
                                        CCVariable<double>::getTypeDescription());
-    
+
+  crackedEnoughLabel   = VarLabel::create("crackedEnough",
+                                          CCVariable<double>::getTypeDescription());
+        
   totalMassBurnedLabel  = VarLabel::create( "totalMassBurned",
                                              sum_vartype::getTypeDescription() );
     
@@ -124,6 +128,7 @@ DDT1::~DDT1()
   VarLabel::destroy(surfaceTempLabel);
   VarLabel::destroy(onSurfaceLabel);
   VarLabel::destroy(burningLabel);
+  VarLabel::destroy(crackedEnoughLabel);
   VarLabel::destroy(totalMassBurnedLabel);
   VarLabel::destroy(totalHeatReleasedLabel);
   VarLabel::destroy(numPPCLabel);
@@ -268,6 +273,7 @@ void DDT1::scheduleInitialize(SchedulerP& sched,
   t->computes(burningLabel,         react_matl);
   t->computes(detLocalToLabel,      react_matl);
   t->computes(surfaceTempLabel,     react_matl);
+  t->computes(crackedEnoughLabel,   react_matl);
   sched->addTask(t, level->eachPatch(), d_mymatls);
 }
 
@@ -284,16 +290,18 @@ void DDT1::initialize(const ProcessorGroup*,
     cout_doing << "Doing Initialize on patch " << patch->getID()<< "\t\t\t STEADY_BURN" << endl;
     
     // This section is needed for outputting F and burn on each timestep
-    CCVariable<double> F, burn, Ts,det;
+    CCVariable<double> F, burn, Ts, det, crack;
     new_dw->allocateAndPut(F,    reactedFractionLabel, m0, patch);
     new_dw->allocateAndPut(burn, burningLabel,         m0, patch);
     new_dw->allocateAndPut(Ts,   surfaceTempLabel,     m0, patch);
     new_dw->allocateAndPut(det,  detLocalToLabel,      m0, patch,Ghost::AroundCells,1);
+    new_dw->allocateAndPut(crack,crackedEnoughLabel,   m0, patch);
  
     F.initialize(0.0);
     burn.initialize(0.0);
     det.initialize(0.0);
     Ts.initialize(0.0);
+    crack.initialize(0.0);
   }
 }
 
@@ -340,9 +348,15 @@ void DDT1::scheduleComputeModelSources(SchedulerP& sched,
     
   printSchedule(level,"DDT1::scheduleComputeNumPPC\t\t\t");  
     
-  t1->requires(Task::OldDW, Mlb->pXLabel,          react_matl, gn);
+  t1->requires(Task::OldDW, Mlb->pXLabel,               react_matl, gn);
   t1->computes(numPPCLabel, react_matl);
-    
+  if(d_useCrackModel){  // Because there is a particle loop already in computeNumPPC, 
+                        //  we will put crack threshold determination there as well
+    t1->requires(Task::NewDW, Ilb->press_equil_CCLabel, d_one_matl, gac, 1);
+    t1->requires(Task::OldDW, pCrackRadiusLabel,        react_matl, gn);
+    t1->computes(crackedEnoughLabel,    react_matl);
+  }
+  
   sched->addTask(t1, level->eachPatch(), d_mymatls);
     
   //__________________________________
@@ -371,6 +385,7 @@ void DDT1::scheduleComputeModelSources(SchedulerP& sched,
   t->requires(Task::NewDW, Ilb->rho_CCLabel,          react_matl, gn);
   t->requires(Task::NewDW, Mlb->gMassLabel,           react_matl, gac,1);
   t->requires(Task::NewDW, numPPCLabel,               react_matl, gac,1);
+  t->requires(Task::NewDW, crackedEnoughLabel,        react_matl, gac,1);
 
   //__________________________________
   // Computes
@@ -412,6 +427,7 @@ void DDT1::computeNumPPC(const ProcessorGroup*,
                          const ModelInfo* mi)
 {
     int m0 = d_matl0->getDWIndex(); /* reactant material */
+    Ghost::GhostType  gac = Ghost::AroundCells;
     
     /* Patch Iteration */
     for(int p=0;p<patches->size();p++){
@@ -425,10 +441,20 @@ void DDT1::computeNumPPC(const ProcessorGroup*,
         old_dw->get(px, Mlb->pXLabel, pset);
         
         /* Indicating cells containing how many particles */
-        CCVariable<double> pFlag;
-        new_dw->allocateAndPut(pFlag,       numPPCLabel,      m0, patch);
+        CCVariable<double> pFlag, crack;
+        new_dw->allocateAndPut(pFlag,       numPPCLabel,        m0, patch);
+        new_dw->allocateAndPut(crack,       crackedEnoughLabel, m0, patch);
         pFlag.initialize(0.0);
+        crack.initialize(0.0);
         
+        // get cracked burning stuff
+        constCCVariable<double> press_CC; 
+        constParticleVariable<double> crackRad;  // store the level of cracking 
+        if(d_useCrackModel){
+           old_dw->get(crackRad,    pCrackRadiusLabel, pset); 
+           new_dw->get(press_CC,    Ilb->press_equil_CCLabel, 0,  patch, gac, 1);
+        }
+
         /* count how many reactant particles in each cell */
         for(ParticleSubset::iterator iter=pset->begin(), iter_end=pset->end();
             iter != iter_end; iter++){
@@ -436,6 +462,15 @@ void DDT1::computeNumPPC(const ProcessorGroup*,
             IntVector c;
             patch->findCell(px[idx],c);
             pFlag[c] += 1.0;
+
+            // if cracked burning is enabled register if crack threshold is exceeded
+            if(d_useCrackModel){
+              double crackWidthThreshold = sqrt(8.0e8/pow(press_CC[c],2.84));
+        
+              if(crackRad[*iter] > crackWidthThreshold) {
+                crack[c] = 1;
+              }
+            } 
         }    
         setBC(pFlag, "zeroNeumann", patch, d_sharedState, m0, new_dw);
     }
@@ -476,7 +511,7 @@ void DDT1::computeModelSources(const ProcessorGroup*,
     CCVariable<double> sp_vol_src_0, sp_vol_src_1;
     // Burning related
     CCVariable<double> onSurface, surfTemp;
-    CCVariable<int>    crackedEnough;
+    constCCVariable<double>    crackedEnough;
     // Detonation Related
     CCVariable<double> Fr, delF;       
     // Diagnostics/Thresholds                     
@@ -488,7 +523,6 @@ void DDT1::computeModelSources(const ProcessorGroup*,
     constCCVariable<Vector> rctvel_CC;
     constNCVariable<double> NC_CCweight, rctMass_NC;
     constParticleVariable<Point> px;
-    constParticleVariable<double> crackRad;  // store the level of cracking 
     // Old Product Quantities
     constCCVariable<double> prodRho;
     // Domain Wide Variables
@@ -513,8 +547,8 @@ void DDT1::computeModelSources(const ProcessorGroup*,
     new_dw->get(pFlag,         numPPCLabel,           m0, patch,gac,1);
     if(d_useCrackModel){
       old_dw->get(px,          Mlb->pXLabel,      pset);
-      old_dw->get(crackRad,    pCrackRadiusLabel, pset); 
-      old_dw->get(previousDetLocal,    detLocalToLabel, m0, patch, gac, 1); 
+      old_dw->get(previousDetLocal,    detLocalToLabel,    m0, patch, gac, 1); 
+      new_dw->get(crackedEnough,       crackedEnoughLabel, m0, patch, gac, 1);
     }
     //__________________________________
     // Product Data, 
@@ -557,27 +591,13 @@ void DDT1::computeModelSources(const ProcessorGroup*,
     new_dw->allocateAndPut(onSurface,    onSurfaceLabel,          m0,patch);
     new_dw->allocateAndPut(surfTemp,     surfaceTempLabel,        m0,patch);
     
-    new_dw->allocateTemporary(crackedEnough, patch, gac, 1);
     Fr.initialize(0.);
     delF.initialize(0.);
     burningCell.initialize(0.);
     detonating.initialize(0.);
     detLocalTo.initialize(0.);
-    crackedEnough.initialize(0);
     surfTemp.initialize(0.);
     onSurface.initialize(0.);
-
-    // determing which cells have a crack radius > threshold
-    if(d_useCrackModel){
-      for(ParticleSubset::iterator iter = pset->begin(); iter != pset->end(); iter++ ){
-        IntVector c = level->getCellIndex(px[*iter]);
-        double crackWidthThreshold = sqrt(8.0e8/pow(press_CC[c],2.84));
-        
-        if(crackRad[*iter] > crackWidthThreshold) {
-          crackedEnough[c] = 1;
-        }
-      }
-    }
 
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m0);
     double cv_rct = mpm_matl->getSpecificHeat();
