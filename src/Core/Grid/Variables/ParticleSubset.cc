@@ -200,13 +200,12 @@ particleIndex ParticleSubset::addParticles(particleIndex count)
 namespace Uintah {
 ostream& operator<<(ostream& out, ParticleSubset& pset)
 {
-    out << &pset
-        << " patch: " << pset.getPatch() << " (" << (pset.getPatch()?pset.getPatch()->getID():0)
+    out << "pset (patch: " << *(pset.getPatch()) << " (" << (pset.getPatch()?pset.getPatch()->getID():0)
         << "), matl "
         << pset.getMatlIndex() << " range [" << pset.getLow() 
         << ", " << pset.getHigh() << "]   " 
         << pset.numParticles() << " particles, " 
-        << pset.getNeighbors().size() << " neighboring patches" ;
+        << pset.getNeighbors().size() << " neighboring patches)" ;
     return out;
 }
 } // end namespace Uintah
