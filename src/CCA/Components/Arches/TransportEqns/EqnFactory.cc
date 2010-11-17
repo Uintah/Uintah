@@ -194,6 +194,11 @@ EqnFactory::sched_dummyInit( const LevelP& level, SchedulerP& sched )
   for( EqnMap::iterator iEqn = eqns_.begin(); iEqn != eqns_.end(); ++iEqn ) {
     iEqn->second->sched_dummyInit( level, sched );
   }
+
+  string taskname = "EqnFactory::initializeMinTimestepLabel";
+  Task* tsk = scinew Task(taskname, this, &EqnFactory::initializeMinTimestepLabel);
+  tsk->computes(d_fieldLabels->d_MinScalarTimestepLabel);
+  sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
 }
 
 

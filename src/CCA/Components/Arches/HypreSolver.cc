@@ -393,8 +393,8 @@ HypreSolver::pressLinearSolve()
   /* I have set this up so you can change to use different
      solvers and preconditioners without re-compiling.  Just
      change the ksptype in the ups files to different numbers:
-     0  = SMG
-     1  = PFMG
+     0  = SMG (Semi-coarsening Multigrid solver)
+     1  = PFMG (ParFlow Multigrid solver)
      10 = SMG as the preconditoner and CG as the solver
      11 = PFMG as the preconditioner and CG as the solver (default)
      17 = Jacobi as the preconditioner and CG as the solver

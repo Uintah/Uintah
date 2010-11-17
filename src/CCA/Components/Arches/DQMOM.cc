@@ -35,26 +35,8 @@
 
 using namespace Uintah;
 
-DQMOM::DQMOM(ArchesLabel* fieldLabels) : d_fieldLabels(fieldLabels)
-{
-  string varname;
-  varname = "normB";
-  d_normBLabel = VarLabel::create(varname, CCVariable<double>::getTypeDescription());
-  varname = "normX";
-  d_normXLabel = VarLabel::create(varname, CCVariable<double>::getTypeDescription());
-  varname = "normRes";
-  d_normResLabel = VarLabel::create(varname, CCVariable<double>::getTypeDescription());
-  varname = "normResNormalizedB";
-  d_normResNormalizedLabelB = VarLabel::create(varname, CCVariable<double>::getTypeDescription());
-  varname = "normResNormalizedX";
-  d_normResNormalizedLabelX = VarLabel::create(varname, CCVariable<double>::getTypeDescription());
-  varname = "conditionNumber";
-  d_conditionNumberLabel = VarLabel::create(varname, CCVariable<double>::getTypeDescription());
-}
-
-
-DQMOM::DQMOM(ArchesLabel* fieldLabels, std::string which_dqmom):
-d_fieldLabels(fieldLabels), d_which_dqmom(which_dqmom)
+DQMOM::DQMOM(ArchesLabel* fieldLabels):
+d_fieldLabels(fieldLabels)
 {
   string varname;
   varname = "normB";
@@ -89,6 +71,7 @@ void DQMOM::problemSetup(const ProblemSpecP& params)
 {
   ProblemSpecP db = params; 
 
+  db->getAttribute("type", d_which_dqmom );
   if ( d_which_dqmom == "unweightedAbs" ) {
     d_unweighted = true; 
   } else {
@@ -211,7 +194,7 @@ void DQMOM::problemSetup(const ProblemSpecP& params)
     N_xi = N_xi + 1;
   }
   
-  cout << "Size of momentIndexes is " << momentIndexes.size() << ", should be " << N_*(N_xi+1) << endl;
+  proc0cout << "Size of momentIndexes is " << momentIndexes.size() << ", should be " << N_*(N_xi+1) << endl;
 
   // Check to make sure number of total moments specified in input file is correct
   if ( moments != (N_xi+1)*N_ ) {
@@ -225,8 +208,13 @@ void DQMOM::problemSetup(const ProblemSpecP& params)
     throw InvalidValue( "ERROR: DQMOM: ProblemSetup: The number of moment indices specified was incorrect! Need ",__FILE__,__LINE__);
   }
 
+  bool use_all_moments;
   if( b_save_moments ) {
-    DQMOM::populateMomentsMap(momentIndexes);
+    use_all_moments = true;
+    DQMOM::populateMomentsMap(momentIndexes, use_all_moments);
+  } else {
+    use_all_moments = false;
+    DQMOM::populateMomentsMap(momentIndexes, use_all_moments);
   }
 
 #if defined(VERIFY_AB_CONSTRUCTION)
@@ -246,6 +234,11 @@ void DQMOM::problemSetup(const ProblemSpecP& params)
     db_linear_solver->getWithDefault("type", d_solverType, "LU");
 
     b_optimize = false;
+
+    if( d_solverType != "Optimize" && d_which_dqmom == "unweightedAbs" ) {
+      string err_msg = "ERROR: Arches: DQMOM: The unweighted DQMOM formulation only works with the optimized solver.  You specified solver type "+d_solverType+"\n";
+      throw ProblemSetupException(err_msg,__FILE__,__LINE__);
+    }
 
     if( d_solverType == "Lapack-invert" ) {
       b_useLapack = true;
@@ -293,8 +286,119 @@ void DQMOM::problemSetup(const ProblemSpecP& params)
     throw ProblemSetupException(err_msg,__FILE__,__LINE__);
   }
 
-
 }
+
+//-----------------------
+// Schedule dummy solve
+//-----------------------
+void
+DQMOM::sched_dummyInit( const LevelP& level, SchedulerP& sched )
+{
+  proc0cout << "DQMOM dummy init being called." << endl;
+
+  string taskname = "DQMOM::dummyInit";
+  Task* tsk = scinew Task(taskname, this, &DQMOM::dummyInit );
+
+  // computing/modifying the actual moments
+  for( MomentMap::iterator iMoment = DQMOMMoments.begin();
+       iMoment != DQMOMMoments.end(); ++iMoment ) {
+    tsk->computes( iMoment->second );
+  }
+
+  for( MomentMap::iterator iMoment = DQMOMMomentsMean.begin();
+       iMoment != DQMOMMomentsMean.end(); ++iMoment ) {
+    tsk->computes( iMoment->second );
+  }
+
+  sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
+}
+
+void
+DQMOM::dummyInit( const ProcessorGroup* pc, 
+                     const PatchSubset* patches, 
+                     const MaterialSubset* matls, 
+                     DataWarehouse* old_dw, 
+                     DataWarehouse* new_dw )
+{
+  //patch loop
+  for (int p=0; p < patches->size(); p++){
+
+    const Patch* patch = patches->get(p);
+    int archIndex = 0;
+    int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+
+    for( MomentMap::iterator iMoment = DQMOMMoments.begin(); 
+         iMoment != DQMOMMoments.end(); ++iMoment ) {
+      CCVariable<double> moment;
+      new_dw->allocateAndPut( moment, iMoment->second, matlIndex, patch );
+      moment.initialize(0.0);
+    }
+
+    for( MomentMap::iterator iMoment = DQMOMMomentsMean.begin(); 
+         iMoment != DQMOMMomentsMean.end(); ++iMoment ) {
+      CCVariable<double> moment;
+      new_dw->allocateAndPut( moment, iMoment->second, matlIndex, patch );
+      moment.initialize(0.0);
+    }
+
+  }//end patches
+}
+
+//-----------------------------------
+// Schedule variable initialization
+//-----------------------------------
+void
+DQMOM::sched_initVars( const LevelP& level, SchedulerP& sched )
+{
+  string taskname = "DQMOM::initVars";
+  Task* tsk = scinew Task(taskname, this, &DQMOM::initVars );
+
+  // computing/modifying the actual moments
+  for( MomentMap::iterator iMoment = DQMOMMoments.begin();
+       iMoment != DQMOMMoments.end(); ++iMoment ) {
+    tsk->computes( iMoment->second );
+  }
+
+  for( MomentMap::iterator iMoment = DQMOMMomentsMean.begin();
+       iMoment != DQMOMMomentsMean.end(); ++iMoment ) {
+    tsk->computes( iMoment->second );
+  }
+
+  sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
+}
+
+void
+DQMOM::initVars( const ProcessorGroup* pc, 
+                 const PatchSubset* patches, 
+                 const MaterialSubset* matls, 
+                 DataWarehouse* old_dw, 
+                 DataWarehouse* new_dw )
+{
+  //patch loop
+  for (int p=0; p < patches->size(); p++){
+
+    const Patch* patch = patches->get(p);
+    int archIndex = 0;
+    int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+
+    for( MomentMap::iterator iMoment = DQMOMMoments.begin(); 
+         iMoment != DQMOMMoments.end(); ++iMoment ) {
+      CCVariable<double> moment;
+      new_dw->allocateAndPut( moment, iMoment->second, matlIndex, patch );
+      moment.initialize(0.0);
+    }
+
+    for( MomentMap::iterator iMoment = DQMOMMomentsMean.begin(); 
+         iMoment != DQMOMMomentsMean.end(); ++iMoment ) {
+      CCVariable<double> moment;
+      new_dw->allocateAndPut( moment, iMoment->second, matlIndex, patch );
+      moment.initialize(0.0);
+    }
+
+  }//end patches
+}
+
+
 
 // *************************************************************
 // Populate the moments map (contains a label for each moment)
@@ -308,16 +412,24 @@ void DQMOM::problemSetup(const ProblemSpecP& params)
   *           <save_moments>true</save_moments>.
   */
 void
-DQMOM::populateMomentsMap( std::vector<MomentVector> allMoments )
+DQMOM::populateMomentsMap( std::vector<MomentVector> allMoments, bool use_all_moments )
 { 
   proc0cout << endl;
   proc0cout << "******* Moment Registration ********" << endl;
   proc0cout << endl;
 
   vector<MomentVector>::iterator iAllMoments = allMoments.begin();
-  //for( unsigned int zz = 0; zz <= 2*N_xi; ++zz, ++iAllMoments ) { 
-  //  // only saving moment 0, moment 1, and moment 2 (for now)
-  for( ; iAllMoments != allMoments.end(); ++iAllMoments ) {
+
+  vector<MomentVector>::iterator iEnd;
+  if( use_all_moments ) {
+    iEnd = allMoments.end();
+  } else {
+    // only save the 0th, 1st, and 2nd moments 
+    // (this only works if the moments have been put in lexicographical order)
+    iEnd = iAllMoments + 1 + 2*N_xi;
+  }
+
+  for( ; iAllMoments != iEnd; ++iAllMoments ) {
 
     string name = "moment_";
     std::stringstream out;
@@ -597,11 +709,19 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
       vector< constCCVariable<double>* > tempCCVector = weightedAbscissaModelsCCVars[counter];
       for( unsigned int ss=0; ss < modelsList.size(); ++ss ) {
         new_dw->get( (*tempCCVector[ss]), modelsList[ss], matlIndex, patch, Ghost::None, 0 );
+
 #ifdef DEBUG_MODELS
-        ////cmr
-        //cout << "Model " << modelsList[ss]->getName() << " has value " << (*tempCCVector[ss])[IntVector(1,2,3)] << endl;
+        if( patch->getCellLowIndex().x() < 1  && patch->getCellHighIndex().x() > 1 ) {
+          if( patch->getCellLowIndex().y() < 35 && patch->getCellHighIndex().y() > 35 ) {
+            if( patch->getCellLowIndex().z() < 35 && patch->getCellHighIndex().z() > 35 ) {
+              cout << "Model " << modelsList[ss]->getName() << " has value " << (*tempCCVector[ss])[IntVector(1,35,35)] << endl;
+            }
+          }
+        }
 #endif
+
       }
+
 
       ++counter;
     }
@@ -727,20 +847,26 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
         // Assign solution vector X (from AX=B) to weight and 
         // weighted abscissa source terms
 
-#ifdef DEBUG_MODELS
-        if( c == IntVector(1,2,3) ) {
-          cout << endl; 
-          cout << "DQMOM B vector: -------------------------" << endl;
 
-          for( int iRow = 0; iRow < dimension; ++iRow ) {
-            cout << " " << (*BB)[iRow] << endl;
+#if defined(DEBUG_MODELS)
+        if( patch->getCellLowIndex().x() < 1  && patch->getCellHighIndex().x() > 1 ) {
+          if( patch->getCellLowIndex().y() < 35 && patch->getCellHighIndex().y() > 35 ) {
+            if( patch->getCellLowIndex().z() < 35 && patch->getCellHighIndex().z() > 35 ) {
+              if( c == IntVector(1,35,35) ) {
+                cout << "DQMOM B vector: -------------------" << endl;
+                for( int iRow = 0; iRow < dimension; ++iRow ) {
+                  cout << " " << (*BB)[iRow] << endl;
+                }
+                cout << endl;
+
+                cout << "DQMOM X vector: -------------------" << endl;
+                for( int iRow = 0; iRow < dimension; ++iRow ) {
+                  cout << " " << (*XX)[iRow] << endl;
+                }
+                cout << endl;
+              }
+            }
           }
-        }
-
-
-        if( c == IntVector(1,2,3) ) {
-          cout << endl;
-          cout << "DQMOM solution vector: -------------------" << endl;
         }
 #endif
 
@@ -757,12 +883,6 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
           }
 
           (**iter)[c] = (*XX)[z];
-
-#ifdef DEBUG_MODELS
-          if( c == IntVector(1,2,3) ) {
-            cout << "Wts: X[" << z << "] = " << (*XX)[z] << endl;
-          }
-#endif
 
           ++z;
         }
@@ -782,12 +902,6 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
           }
 
           (**iter)[c] = (*XX)[z];
-
-#ifdef DEBUG_MODELS
-          if( c == IntVector(1,2,3) ) {
-            cout << "WAs: X[" << z << "] = " << (*XX)[z] << endl;
-          }
-#endif
 
           ++z;
         }
@@ -1376,66 +1490,6 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
           }
           ++z;
         }
-
-
-        //for( vector<DQMOMEqn*>::iterator iEqn = weightEqns.begin(); 
-        //     iEqn != weightEqns.end(); ++iEqn ) {
-        //  const VarLabel* source_label = (*iEqn)->getSourceLabel();
-        //  CCVariable<double> tempCCVar;
-        //  if( new_dw->exists(source_label, matlIndex, patch) ) {
-        //    new_dw->getModifiable(tempCCVar, source_label, matlIndex, patch);
-        //  } else {
-        //    new_dw->allocateAndPut(tempCCVar, source_label, matlIndex, patch);
-        //  }
-
-        //  if (z >= dimension ) {
-        //    stringstream err_msg;
-        //    err_msg << "ERROR: Arches: DQMOM: Trying to access solution of AX=B system, but had array out of bounds! Accessing element " << z << " of " << dimension << endl;
-        //    throw InvalidValue(err_msg.str(),__FILE__,__LINE__);
-        //  } else if( fabs(normResNormalizedX[c]) > d_solver_tolerance ) {
-        //    tempCCVar[c] = 0.0;
-        //  } else if( isnan( (*XX)[z] ) ) {
-        //    tempCCVar[c] = 0.0;
-        //  } else if( b_calcConditionNumber == true && conditionNumber[c] > d_maxConditionNumber ) {
-        //    tempCCVar[c] = 0.0;
-        //    conditionNumber[c] = -1.0; 
-        //  } else {
-        //    tempCCVar[c] = (*XX)[z];
-        //  }
-        //  ++z;
-        //}
-  
-
-
-        // Weighted abscissa equations:
-
-        //for( vector<DQMOMEqn*>::iterator iEqn = weightedAbscissaEqns.begin(); 
-        //     iEqn != weightedAbscissaEqns.end(); ++iEqn) {
-        //  const VarLabel* source_label = (*iEqn)->getSourceLabel();
-        //  CCVariable<double> tempCCVar;
-        //  if (new_dw->exists(source_label, matlIndex, patch)) {
-        //    new_dw->getModifiable(tempCCVar, source_label, matlIndex, patch);
-        //  } else {
-        //    new_dw->allocateAndPut(tempCCVar, source_label, matlIndex, patch);
-        //  }
-  
-        //  // Make sure several critera are met for an acceptable solution
-        //  if (z >= dimension ) {
-        //    stringstream err_msg;
-        //    err_msg << "ERROR: Arches: DQMOM: Trying to access solution of AX=B system, but had array out of bounds! Accessing element " << z << " of " << dimension << endl;
-        //    throw InvalidValue(err_msg.str(),__FILE__,__LINE__);
-        //  } else if( fabs(normResNormalizedX[c]) > d_solver_tolerance ) {
-        //    tempCCVar[c] = 0;
-        //  } else if( isnan( (*XX)[z] ) ){
-        //    tempCCVar[c] = 0;
-        //  } else if( b_calcConditionNumber == true && conditionNumber[c] > d_maxConditionNumber ) {
-        //    tempCCVar[c] = 0.0;
-        //    conditionNumber[c] = -1.0; 
-        //  } else {
-        //    tempCCVar[c] = (*XX)[z];
-        //  }
-        //  ++z;
-        //}
   
         delete AA;
         delete BB;

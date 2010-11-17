@@ -340,7 +340,7 @@ Balachandar::computeParticleVelocity( const ProcessorGroup* pc,
     const VarLabel* particle_density_label = coal_model_factory.getParticleDensityLabel(d_quadNode);
 
     constCCVariable<double> weight;
-    constCCVariable<double> wtd_length;
+    constCCVariable<double> particle_length;
     constCCVariable<double> gas_density;
     constCCVariable<double> particle_density;
     constCCVariable<Vector> gas_velocity;
@@ -349,7 +349,7 @@ Balachandar::computeParticleVelocity( const ProcessorGroup* pc,
     if( timeSubStep == 0 ) {
 
       old_dw->get( weight, d_weight_label, matlIndex, patch, gn, 0 );
-      old_dw->get( wtd_length, d_length_label, matlIndex, patch, gn, 0 );
+      old_dw->get( particle_length, d_length_label, matlIndex, patch, gn, 0 );
 
       old_dw->get( gas_density, d_fieldLabels->d_densityCPLabel, matlIndex, patch, gn, 0 );
       // particle density is calculated before other models... but not before particle velocity
@@ -363,7 +363,7 @@ Balachandar::computeParticleVelocity( const ProcessorGroup* pc,
     } else {
 
       new_dw->get( weight, d_weight_label, matlIndex, patch, gn, 0 );
-      new_dw->get( wtd_length, d_length_label, matlIndex, patch, gn, 0 );
+      new_dw->get( particle_length, d_length_label, matlIndex, patch, gn, 0 );
 
       new_dw->get( gas_density, d_fieldLabels->d_densityCPLabel, matlIndex, patch, gn, 0 );
       new_dw->get( particle_density, particle_density_label, matlIndex, patch, gn, 0 );
@@ -379,7 +379,7 @@ Balachandar::computeParticleVelocity( const ProcessorGroup* pc,
 
       Vector gasVel = gas_velocity[c];
 
-      if( weight[c] < d_w_small ) {
+      if( !d_unweighted && weight[c] < d_w_small ) {
 
         particle_velocity[c] = gasVel;
 
@@ -394,7 +394,12 @@ Balachandar::computeParticleVelocity( const ProcessorGroup* pc,
         rhoRatio = particle_density[c]/gasDensity;
         beta = 1/( 2*rhoRatio + 1 );
 
-        double length = (wtd_length[c]/weight[c])*d_length_scaling_factor;
+        double length;
+        if( d_unweighted ) {
+          length = particle_length[c]*d_length_scaling_factor;
+        } else {
+          length = (particle_length[c]/weight[c])*d_length_scaling_factor;
+        }
 
         double length_ratio = length/d_eta;
 
@@ -433,19 +438,10 @@ Balachandar::computeParticleVelocity( const ProcessorGroup* pc,
         double newPartMag = gasVel.length() - diff;
         
         if( fabs(gasVel.length()) < TINY ) {
-          ////cmr
-          //if( c==IntVector(1,1,1) ) {
-          //  cout << "Balachandar = [ 0.0, 0.0, 0.0 ]" << endl; 
-          //}
           particle_velocity[c] = Vector(0.0,0.0,0.0);
         } else {
-          ////cmr
-          //if( c==IntVector(1,1,1) ) {
-          //  cout << "Balachandar = (gasVel/gasVel.length())*(newPartMag) = (" << gasVel << "/" << gasVel.length() << ")*(" << newPartMag << ") = " << (gasVel/gasVel.length())*newPartMag << endl;
-          //}
           particle_velocity[c] = ( gasVel/gasVel.length() )*(newPartMag);
         }
-
 
       }//end if weight is small
 
@@ -513,7 +509,4 @@ Balachandar::initVars( const ProcessorGroup * pc,
 
   }//end patches
 }
-
-
-
 

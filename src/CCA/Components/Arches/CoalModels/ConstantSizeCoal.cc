@@ -298,10 +298,10 @@ ConstantSizeCoal::computeParticleDensity( const ProcessorGroup* pc,
     CCVariable<double> density;
 
     constCCVariable<double> weight;
-    constCCVariable<double> wa_length;
-    constCCVariable<double> wa_raw_coal_mass;
-    constCCVariable<double> wa_char_mass;
-    constCCVariable<double> wa_moisture_mass;
+    constCCVariable<double> length;
+    constCCVariable<double> raw_coal_mass;
+    constCCVariable<double> char_mass;
+    constCCVariable<double> moisture_mass;
 
     if( timeSubStep == 0 ) {
 
@@ -309,13 +309,13 @@ ConstantSizeCoal::computeParticleDensity( const ProcessorGroup* pc,
       density.initialize(0.0);
 
       old_dw->get( weight, d_weight_label, matlIndex, patch, gn, 0 );
-      old_dw->get( wa_length, d_length_label, matlIndex, patch, gn, 0 );
-      old_dw->get( wa_raw_coal_mass, d_raw_coal_mass_label, matlIndex, patch, gn, 0 );
+      old_dw->get( length, d_length_label, matlIndex, patch, gn, 0 );
+      old_dw->get( raw_coal_mass, d_raw_coal_mass_label, matlIndex, patch, gn, 0 );
       if(d_useChar) {
-        old_dw->get( wa_char_mass, d_char_mass_label, matlIndex, patch, gn, 0 );
+        old_dw->get( char_mass, d_char_mass_label, matlIndex, patch, gn, 0 );
       }
       if(d_useMoisture) {
-        old_dw->get( wa_moisture_mass, d_moisture_mass_label, matlIndex, patch, gn, 0 );
+        old_dw->get( moisture_mass, d_moisture_mass_label, matlIndex, patch, gn, 0 );
       }
 
     } else {
@@ -323,13 +323,13 @@ ConstantSizeCoal::computeParticleDensity( const ProcessorGroup* pc,
       new_dw->getModifiable( density, d_density_label, matlIndex, patch );
 
       new_dw->get( weight, d_weight_label, matlIndex, patch, gn, 0 );
-      new_dw->get( wa_length, d_length_label, matlIndex, patch, gn, 0 );
-      new_dw->get( wa_raw_coal_mass, d_raw_coal_mass_label, matlIndex, patch, gn, 0 );
+      new_dw->get( length, d_length_label, matlIndex, patch, gn, 0 );
+      new_dw->get( raw_coal_mass, d_raw_coal_mass_label, matlIndex, patch, gn, 0 );
       if(d_useChar) {
-        new_dw->get( wa_char_mass, d_char_mass_label, matlIndex, patch, gn, 0 );
+        new_dw->get( char_mass, d_char_mass_label, matlIndex, patch, gn, 0 );
       }
       if(d_useMoisture) {
-        new_dw->get( wa_moisture_mass, d_moisture_mass_label, matlIndex, patch, gn, 0 );
+        new_dw->get( moisture_mass, d_moisture_mass_label, matlIndex, patch, gn, 0 );
       }
 
     }
@@ -347,7 +347,7 @@ ConstantSizeCoal::computeParticleDensity( const ProcessorGroup* pc,
       double unscaled_char_mass;
       double unscaled_moisture_mass;
 
-      if(weight_is_small) {
+      if(!d_unweighted && weight_is_small) {
 
         unscaled_weight = 0.0;
         unscaled_length = 0.0;
@@ -362,13 +362,32 @@ ConstantSizeCoal::computeParticleDensity( const ProcessorGroup* pc,
       } else {
 
         unscaled_weight = weight[c]*d_w_scaling_constant;
-        unscaled_length = (wa_length[c]*d_length_scaling_constant)/weight[c];
-        unscaled_rc_mass = (wa_raw_coal_mass[c]*d_rc_scaling_constant)/weight[c];
+
+        if( d_unweighted ) {
+          unscaled_length = length[c]*d_length_scaling_constant;
+        } else {
+          unscaled_length = (length[c]*d_length_scaling_constant)/weight[c];
+        }
+
+        if( d_unweighted ) {
+          unscaled_rc_mass = raw_coal_mass[c]*d_rc_scaling_constant;
+        } else {
+          unscaled_rc_mass = (raw_coal_mass[c]*d_rc_scaling_constant)/weight[c];
+        }
+
         if(d_useChar) {
-          unscaled_char_mass = (wa_char_mass[c]*d_char_scaling_constant)/weight[c];
+          if( d_unweighted ) {
+            unscaled_char_mass = char_mass[c]*d_char_scaling_constant;
+          } else {
+            unscaled_char_mass = (char_mass[c]*d_char_scaling_constant)/weight[c];
+          }
         }
         if(d_useMoisture) {
-          unscaled_moisture_mass = (wa_moisture_mass[c]*d_moisture_scaling_constant)/weight[c];
+          if( d_unweighted ) {
+            unscaled_moisture_mass = moisture_mass[c]*d_moisture_scaling_constant;
+          } else {
+            unscaled_moisture_mass = (moisture_mass[c]*d_moisture_scaling_constant)/weight[c];
+          }
         }
 
       }
@@ -384,6 +403,13 @@ ConstantSizeCoal::computeParticleDensity( const ProcessorGroup* pc,
       }
 
       density[c] = (6.0*m_p)/(pow(unscaled_length,3)*pi);
+
+#ifdef DEBUG_MODELS
+      if( isnan(density[c]) ) {
+        proc0cout << "something is nan! from constant size density model qn " << d_quadNode << endl;
+        proc0cout << "density = " << density[c] << endl;
+      }
+#endif
 
     }//end for cells
 

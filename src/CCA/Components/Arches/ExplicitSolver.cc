@@ -374,7 +374,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     }
 
     // calculating source terms here because otherwise source terms added to mixture fraction equation are the old values for the first time sub-step 
-    // (which leads to incorrect source terms after time-averaging)
+    // (which leads to "wrong" source terms after time-averaging)
     // the values of the gas-phase source terms from DQMOM models are already calculated above
     // the source term calculation is simply being moved out of the equation solver and executed earlier
     // using this approach, the source term for the mixture fraction "eta" (extra scalar) will now match the source term for the mixture fraction "scalarSP" (calculated in ScalarSolver class)
@@ -783,33 +783,19 @@ int ExplicitSolver::noSolve(const LevelP& level,
   CoalModelFactory& modelFactory = CoalModelFactory::self(); 
   EqnFactory& eqnFactory = EqnFactory::self();
   SourceTermFactory& sourceFactory = SourceTermFactory::self();
+  PropertyModelFactory& propertyFactory = PropertyModelFactory::self(); 
 
-  sourceFactory.sched_dummyInit( level, sched );
-    
   if ( dqmomFactory.getDoDQMOM() ) {
     dqmomFactory.sched_dummyInit( level, sched );
+
     modelFactory.sched_dummyInit( level, sched );
   }
 
   eqnFactory.sched_dummyInit( level, sched );
 
-  SourceTermFactory& src_factory = SourceTermFactory::self();
-  SourceTermFactory::SourceMap& sources = src_factory.retrieve_all_sources(); 
-  
-  for( SourceTermFactory::SourceMap::iterator iter = sources.begin(); iter != sources.end(); ++iter ){
-    SourceTermBase* src = iter->second; 
-    src->sched_dummyInit( level, sched ); 
-  }
+  sourceFactory.sched_dummyInit( level, sched );
 
-  PropertyModelFactory& propFactory = PropertyModelFactory::self(); 
-  PropertyModelFactory::PropMap& all_prop_models = propFactory.retrieve_all_property_models(); 
-  for ( PropertyModelFactory::PropMap::iterator iprop = all_prop_models.begin(); 
-      iprop != all_prop_models.end(); iprop++){
-
-    PropertyModelBase* prop_model = iprop->second; 
-    prop_model->sched_dummyInit( level, sched ); 
-
-  }
+  propertyFactory.sched_dummyInit( level, sched );
 
   string mixmodel = d_props->getMixingModelType(); 
   if ( mixmodel == "TabProps" )

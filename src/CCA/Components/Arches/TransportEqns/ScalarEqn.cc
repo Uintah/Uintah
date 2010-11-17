@@ -582,9 +582,11 @@ ScalarEqn::solveTransportEqn( const ProcessorGroup* pc,
       
       new_min_delta_t *= d_timestepMultiplier;
       EqnFactory& eqnFactory  = EqnFactory::self(); 
-      //cmr
+
       //cout << "Hi from equation " << d_eqnName << ", about to set minimum timestep var to " << new_min_delta_t << endl;
-      eqnFactory.setMinTimestepVar( d_eqnName, new_min_delta_t );
+      if( new_min_delta_t != 0.0 ) {
+        eqnFactory.setMinTimestepVar( d_eqnName, new_min_delta_t );
+      }
 
     }
 

@@ -79,6 +79,34 @@ ParticleDensity::problemSetup(const ProblemSpecP& params )
 
 }
 
+//---------------------------------------------------------------------------
+// Method: Schedule dummy initialization
+//---------------------------------------------------------------------------
+/** @details  
+This method is a dummy initialization required by MPMArches. 
+All models must be required() and computed() to copy them over 
+without actually doing anything.  (Silly, isn't it?)
+ */
+void
+ParticleDensity::sched_dummyInit( const LevelP& level, SchedulerP& sched )
+{
+  string taskname = "ParticleDensity::dummyInit"; 
+
+  Ghost::GhostType  gn = Ghost::None;
+
+  Task* tsk = scinew Task(taskname, this, &ParticleDensity::dummyInit);
+
+  tsk->requires( Task::OldDW, d_density_label, gn, 0);
+  tsk->requires( Task::OldDW, d_modelLabel,    gn, 0);
+  tsk->requires( Task::OldDW, d_gasLabel,      gn, 0);
+
+  tsk->computes(d_density_label);
+  tsk->computes(d_modelLabel);
+  tsk->computes(d_gasLabel); 
+
+  sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
+}
+
 
 //-------------------------------------------------------------------------
 // Method: Actually do the dummy initialization
@@ -111,18 +139,23 @@ ParticleDensity::dummyInit( const ProcessorGroup* pc,
 
     CCVariable<double> ModelTerm;
     CCVariable<double> GasModelTerm;
+    CCVariable<double> ParticleDensity;
     
     constCCVariable<double> oldModelTerm;
     constCCVariable<double> oldGasModelTerm;
+    constCCVariable<double> oldParticleDensity;
 
-    new_dw->allocateAndPut( ModelTerm,    d_modelLabel, matlIndex, patch );
-    new_dw->allocateAndPut( GasModelTerm, d_gasLabel,   matlIndex, patch ); 
+    new_dw->allocateAndPut( ModelTerm,       d_modelLabel,    matlIndex, patch );
+    new_dw->allocateAndPut( GasModelTerm,    d_gasLabel,      matlIndex, patch ); 
+    new_dw->allocateAndPut( ParticleDensity, d_density_label, matlIndex, patch );
 
-    old_dw->get( oldModelTerm,    d_modelLabel, matlIndex, patch, gn, 0 );
-    old_dw->get( oldGasModelTerm, d_gasLabel,   matlIndex, patch, gn, 0 );
+    old_dw->get( oldModelTerm,       d_modelLabel,    matlIndex, patch, gn, 0 );
+    old_dw->get( oldGasModelTerm,    d_gasLabel,      matlIndex, patch, gn, 0 );
+    old_dw->get( oldParticleDensity, d_density_label, matlIndex, patch, gn, 0 );
     
     ModelTerm.copyData(oldModelTerm);
     GasModelTerm.copyData(oldGasModelTerm);
+    ParticleDensity.copyData(oldParticleDensity);
   }
 }
 

@@ -75,7 +75,10 @@ public:
                  DataWarehouse        * old_dw, 
                  DataWarehouse        * new_dw );
 
-  /** @brief  Actually do dummy solve (sched_dummyInit is defined in ModelBase parent class) */
+  /** @brief Schedule the dummy initialization required by MPMArches */
+  void sched_dummyInit( const LevelP& level, SchedulerP& sched );
+
+  /** @brief  Actually do dummy initialization */
   void dummyInit( const ProcessorGroup* pc, 
                   const PatchSubset* patches, 
                   const MaterialSubset* matls, 
@@ -118,8 +121,9 @@ protected:
   double d_low;      ///< Low clip value for length (if applicable)
   double d_high;     ///< High clip value for length (if applicable)
 
-  bool d_doLowClip;  ///< Boolean: do low clipping for length?
-  bool d_doHighClip; ///< Boolean: do high clipping for length?
+  bool d_doLowClip;    ///< Boolean: do low clipping for length?
+  bool d_doHighClip;   ///< Boolean: do high clipping for length?
+  bool d_useGasSource; ///< Boolean: create a gas source corresponding to the (particle) constant source term?
 
   bool d_reachedLowClip;  ///< Boolean: has the low clip been reached?
   bool d_reachedHighClip; ///< Boolean: has the high clip been reached?

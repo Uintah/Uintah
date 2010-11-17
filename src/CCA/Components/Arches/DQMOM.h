@@ -54,8 +54,6 @@ class DQMOM {
 
 public:
 
-  DQMOM( ArchesLabel* fieldLabels, std::string which_dqmom );
-
   DQMOM( ArchesLabel* fieldLabels );
 
   ~DQMOM();
@@ -66,9 +64,29 @@ public:
    */
   void problemSetup( const ProblemSpecP& params );
 
+  /** @brief  Schedule dummy initialization for MPMArches */
+  void sched_dummyInit( const LevelP&, SchedulerP& sched );
+
+  /** @brief  Dummy initialization for MPMArches */
+  void dummyInit( const ProcessorGroup* pc, 
+                     const PatchSubset* patches, 
+                     const MaterialSubset* matls, 
+                     DataWarehouse* old_dw, 
+                     DataWarehouse* new_dw );
+
+  /** @brief  Schedule initialization of any variables needing initialization */
+  void sched_initVars( const LevelP& level, SchedulerP& sched);
+
+  /** @brief  Actually initialize any variables needing initialization */
+  void initVars( const ProcessorGroup* pc, 
+                 const PatchSubset* patches, 
+                 const MaterialSubset* matls, 
+                 DataWarehouse* old_dw, 
+                 DataWarehouse* new_dw );
+
   /** @brief              Populate the map containing labels for each moment 
       @param allMoments   Vector containing all moment indices specified by user in <Moment> blocks within <DQMOM> block */
-  void populateMomentsMap( vector<MomentVector> allMoments );
+  void populateMomentsMap( vector<MomentVector> allMoments, bool use_all_moments );
 
   /** @brief Schedule creation of linear solver object, creation of AX=B system, and solution of linear system. 
   */
@@ -103,10 +121,18 @@ public:
     */
     void destroyLinearSystem();
 
-    /** @brief Access function for boolean, whether to calculate/save moments */
+    /** @brief Access function for boolean: calculate/save moments? */
     bool getSaveMoments() {
       return b_save_moments; }
   
+    /** @brief  Access function for boolean: is the DQMOM solver type "unweighted"? */
+    bool isUnweighted() {
+      return d_unweighted; }
+
+    /** @brief  Access function for boolean: is the DQMOM solver type "weighted"? */
+    bool isWeighted() { 
+      return !d_unweighted; }
+
     const VarLabel* d_normBLabel; 
 
 private:
@@ -145,8 +171,8 @@ private:
       @details
       This is a much faster "power" function for the optimal DQMOM abscissas.
       Since the optimal abscissas are KNOWN to be -1, 0, or 1, 
-      calculating the powers of the optimal abscissas is very easy and doesn't need the actual
-      power function pow().
+      calculating the powers of the optimal abscissas is very easy and doesn't need 
+      to incur the cost of the actual power function pow().
       */
   inline int my_pow( int abscissa, int power )
   {

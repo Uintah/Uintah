@@ -376,7 +376,7 @@ KobayashiSarofimDevol::computeModel( const ProcessorGroup * pc,
     CCVariable<double> char_production_rate;
 
     constCCVariable<double> weight;
-    constCCVariable<double> wa_raw_coal_mass;
+    constCCVariable<double> raw_coal_mass;
     constCCVariable<double> temperature; // holds gas OR particle temperature...
 
     if( timeSubStep == 0 ) {
@@ -393,7 +393,7 @@ KobayashiSarofimDevol::computeModel( const ProcessorGroup * pc,
       }
 
       old_dw->get( weight, d_weight_label, matlIndex, patch, gn, 0 );
-      old_dw->get( wa_raw_coal_mass, d_raw_coal_mass_label, matlIndex, patch, gn, 0 );
+      old_dw->get( raw_coal_mass, d_raw_coal_mass_label, matlIndex, patch, gn, 0 );
 
       if(d_useTparticle) {
         old_dw->get( temperature, d_particle_temperature_label, matlIndex, patch, gn, 0 );
@@ -411,7 +411,7 @@ KobayashiSarofimDevol::computeModel( const ProcessorGroup * pc,
       }
 
       new_dw->get( weight, d_weight_label, matlIndex, patch, gn, 0 );
-      new_dw->get( wa_raw_coal_mass, d_raw_coal_mass_label, matlIndex, patch, gn, 0 );
+      new_dw->get( raw_coal_mass, d_raw_coal_mass_label, matlIndex, patch, gn, 0 );
       
       if(d_useTparticle) {
         new_dw->get( temperature, d_particle_temperature_label, matlIndex, patch, gn, 0 );
@@ -429,28 +429,41 @@ KobayashiSarofimDevol::computeModel( const ProcessorGroup * pc,
       bool weight_is_small = (weight[c] < d_w_small) || (weight[c] == 0.0);
 
       // devol_rate: raw caol internal coordinate source G
-      double devol_rate_ = 0.0;
+      double devol_rate_;
 
       // gas_devol_rate: gas source
-      double gas_devol_rate_ = 0.0;
+      double gas_devol_rate_;
 
       // char_production_rate: char internal coordinate source G
-      double char_production_rate_ = 0.0;
+      double char_production_rate_;
 
 
+      double unscaled_weight;
       double unscaled_temperature;
       double unscaled_raw_coal_mass;
 
-      if (!weight_is_small) {
+      double scaled_raw_coal_mass;
+      double scaled_temperature;
 
-        double unscaled_weight;
-        double scaled_raw_coal_mass;
+      if (!d_unweighted && weight_is_small) {
+
+        devol_rate_ = 0.0;
+        gas_devol_rate_ = 0.0;
+        char_production_rate_ = 0.0;
+
+      } else {
 
         unscaled_weight = weight[c]*d_w_scaling_constant;
 
         if (d_useTparticle) {
           // particle temp
-          unscaled_temperature = temperature[c]*d_pt_scaling_constant/weight[c];
+          if( d_unweighted ) {
+            scaled_temperature = temperature[c];
+            unscaled_temperature = scaled_temperature*d_pt_scaling_constant;
+          } else {
+            scaled_temperature = (temperature[c]/weight[c]);
+            unscaled_temperature = scaled_temperature*d_pt_scaling_constant;
+          }
         } else {
           // particle temp = gas temp
           unscaled_temperature = temperature[c];
@@ -459,7 +472,11 @@ KobayashiSarofimDevol::computeModel( const ProcessorGroup * pc,
           unscaled_temperature = TINY;
         }
 
-        scaled_raw_coal_mass = wa_raw_coal_mass[c]/weight[c];
+        if( d_unweighted ) {
+          scaled_raw_coal_mass = raw_coal_mass[c];
+        } else {
+          scaled_raw_coal_mass = raw_coal_mass[c]/weight[c];
+        }
         unscaled_raw_coal_mass = scaled_raw_coal_mass*d_rc_scaling_constant;
 
         k1 = A1*exp(-E1/(R_*unscaled_temperature)); // [=] 1/s
@@ -481,49 +498,6 @@ KobayashiSarofimDevol::computeModel( const ProcessorGroup * pc,
             char_production_rate_ = 0.0;
           }
         }
- 
-
-        // FIXME - see ConstantDensityInert class for details
-        /*
-        //double big_rate = 1.0e10; // Limit model terms to 1e10
-
-        if( fabs(testVal_part*dt) > scaled_raw_coal_mass ) {
-
-          // too much devolatilization! set to maximum possible
-          testVal_part = -scaled_raw_coal_mass/dt;
-          devol_rate_ = testVal_part;
-          // -----------------
-          // total amt reacted = -(k1 + k2)*unscaled_raw_coal_mass*unscaled_weight
-          // total amt into gas = (Y1 k1 + Y2 k2)*unscaled_raw_coal_mass*unscaled_weight
-          //
-          // when total amt reacted = unscaled_raw_coal_mass*unscaled_weight ,
-          // there is no -(k1+k2) contained in it... 
-          // so divide it out to get total amt into gas's (unscaled_raw_coal_mass*unscaled_weight)
-          testVal_gas = (Y1_*k1 + Y2_*k2)*((unscaled_raw_coal_mass*unscaled_weight)/(k1+k2)); // [=] kg/m^3
-          if( testVal_gas > TINY ) {
-            gas_devol_rate_ = testVal_gas;
-          } else {
-            gas_devol_rate_ = 0.0;
-          }
-
-
-        } else if( fabs(testVal_part) > big_rate ) {
-        
-          // devolatilizing too fast! limit rate to maximum possible
-          // (or, some arbitrarily large number)
-          testVal_part = -big_rate;
-          devol_rate_ = testVal_part;
-
-          testVal_gas = (Y1_*k1 + Y2_*k2)*((big_rate*d_rc_scaling_constant)*(weight[c]*d_w_scaling_constant))/(-k1+k2);
-          gas_devol_rate_ = testVal_gas;
-
-        } else {
-          // treat devolatilization like normal
-          
-          [see code]
-
-        }
-        */
 
       }
 
@@ -534,10 +508,11 @@ KobayashiSarofimDevol::computeModel( const ProcessorGroup * pc,
       }
 
 #ifdef DEBUG_MODELS
-      if( c == IntVector(1,2,3) ) {
+      if( c == IntVector(1,35,35) ) {
         cout << endl;
         cout << "Kobayashi Model: QN " << d_quadNode << endl;
-        cout << "  For temperature = " << unscaled_temperature << " and raw coal mass = " << unscaled_raw_coal_mass << endl;
+        cout << "  For scaled (unscaled) temperature = " << scaled_temperature << " (" << unscaled_temperature;
+            cout << ") and scaled (unscaled) raw coal mass = " << scaled_raw_coal_mass << " (" << unscaled_raw_coal_mass << ")" << endl;
         cout << "  Coal devolatilization rate for qn " << d_quadNode << " = " << devol_rate_ << endl;
         cout << "  Gas production rate for qn " << d_quadNode << " = " << gas_devol_rate_ << endl;
         cout << endl;

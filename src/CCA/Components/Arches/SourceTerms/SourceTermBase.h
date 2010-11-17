@@ -113,7 +113,9 @@ protected:
   vector<std::string> _required_labels;              ///< Vector of required labels
   vector<const VarLabel*> _extra_local_labels;       ///< Extra labels that might be useful for storage
   
-  ArchesLabel* d_fieldLabels;                        ///< Field labels (not used by default, only used when source term needs them)
+  ArchesLabel* _fieldLabels;                         ///< Field labels (not used by default, only used when source term needs them)
+
+  bool d_label_init;
 
   MY_TYPE _source_type;                              ///< Source type
 

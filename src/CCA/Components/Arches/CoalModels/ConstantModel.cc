@@ -70,6 +70,8 @@ ConstantModel::problemSetup(const ProblemSpecP& inputdb )
 
   db->require("constant",d_constant); 
 
+  db->getWithDefault("gas_source",d_useGasSource,false);
+
   if( d_icLabels.size() != 1 ) {
     std::stringstream errmsg;
     errmsg << "ERROR: Arches: ConstantModel: You did not specify the correct number of internal coordinates in the <ICVars> block. ";
@@ -126,6 +128,33 @@ ConstantModel::problemSetup(const ProblemSpecP& inputdb )
 
   d_constant /= d_ic_scaling_constant;
 
+}
+
+
+//---------------------------------------------------------------------------
+// Method: Schedule dummy initialization
+//---------------------------------------------------------------------------
+/** @details  
+This method is a dummy initialization required by MPMArches. 
+All models must be required() and computed() to copy them over 
+without actually doing anything.  (Silly, isn't it?)
+ */
+void
+ConstantModel::sched_dummyInit( const LevelP& level, SchedulerP& sched )
+{
+  string taskname = "ConstantModel::dummyInit"; 
+
+  Ghost::GhostType  gn = Ghost::None;
+
+  Task* tsk = scinew Task(taskname, this, &ConstantModel::dummyInit);
+
+  tsk->requires( Task::OldDW, d_modelLabel, gn, 0);
+  tsk->requires( Task::OldDW, d_gasLabel,   gn, 0);
+
+  tsk->computes(d_modelLabel);
+  tsk->computes(d_gasLabel); 
+
+  sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
 }
 
 //-------------------------------------------------------------------------
@@ -283,16 +312,15 @@ ConstantModel::computeModel( const ProcessorGroup* pc,
 
     CCVariable<double> model; 
     CCVariable<double> gas_source;
-    constCCVariable<double> wa_internal_coordinate;
+    constCCVariable<double> internal_coordinate;
     constCCVariable<double> weight;
-    CCVariable<double> internal_coordinate;
 
     if( timeSubStep == 0 ) {
 
       new_dw->allocateAndPut( gas_source, d_gasLabel, matlIndex, patch );
       new_dw->allocateAndPut( model, d_modelLabel, matlIndex, patch );
 
-      old_dw->get( wa_internal_coordinate, d_ic_label, matlIndex, patch, gn, 0 );
+      old_dw->get( internal_coordinate, d_ic_label, matlIndex, patch, gn, 0 );
       old_dw->get( weight, d_weight_label, matlIndex, patch, gn, 0 );
 
     } else {
@@ -300,7 +328,7 @@ ConstantModel::computeModel( const ProcessorGroup* pc,
       new_dw->getModifiable( model, d_modelLabel, matlIndex, patch ); 
       new_dw->getModifiable( gas_source, d_gasLabel, matlIndex, patch ); 
 
-      new_dw->get( wa_internal_coordinate, d_ic_label, matlIndex, patch, gn, 0 );
+      new_dw->get( internal_coordinate, d_ic_label, matlIndex, patch, gn, 0 );
       new_dw->get( weight, d_weight_label, matlIndex, patch, gn, 0 );
 
     }
@@ -309,23 +337,23 @@ ConstantModel::computeModel( const ProcessorGroup* pc,
     
     for( CellIterator iter = patch->getCellIterator(); !iter.done(); ++iter ) {
       IntVector c = *iter;
-      gas_source[c] = -(d_constant*d_ic_scaling_constant)*(weight[c]*d_w_scaling_constant);
-      //model[c] = d_constant;
+      if( d_useGasSource ) {
+        gas_source[c] = -(d_constant*d_ic_scaling_constant)*(weight[c]*d_w_scaling_constant);
+      }
     }
 
     if( d_doLowClip ) { 
       for( CellIterator iter=patch->getCellIterator(); !iter.done(); iter++ ) {
         IntVector c = *iter;
-        double icval = (wa_internal_coordinate[c]/weight[c])*d_ic_scaling_constant;
+        double icval;
+        if( d_unweighted ) {
+          icval = internal_coordinate[c]*d_ic_scaling_constant;
+        } else {
+          icval = (internal_coordinate[c]/weight[c])*d_ic_scaling_constant;
+        }
         if( icval <= (d_low+TINY) ) {
           model[c] = 0.0;
           gas_source[c] = 0.0;
-
-          ////cmr
-          //if( d_quadNode == 0 && c==IntVector(1,1,1) ) {
-          //  cout << "Constant Model clipping the constant model at " << model[IntVector(1,1,1)] << " because internal coordinate is too small: " << (wa_internal_coordinate[c]/weight[c])*d_ic_scaling_constant << " smaller than " << (d_low+TINY) << endl;
-          //}
-
         }
       }
     }
@@ -333,18 +361,18 @@ ConstantModel::computeModel( const ProcessorGroup* pc,
     if( d_doHighClip ) {
       for( CellIterator iter = patch->getCellIterator(); !iter.done(); ++iter ) {
         IntVector c = *iter;
-        double icval = (wa_internal_coordinate[c]/weight[c])*d_ic_scaling_constant;
+        double icval;
+        if( d_unweighted ) {
+          icval = internal_coordinate[c]*d_ic_scaling_constant;
+        } else { 
+          icval = (internal_coordinate[c]/weight[c])*d_ic_scaling_constant;
+        }
         if( icval >= d_high ) {
           model[c] = 0.0;
           gas_source[c] = 0.0;
         }
       }
     }
-
-    ////cmr
-    //if( d_quadNode == 0 ) {
-    //  cout << "Constant Model: at the end of the day, the internal coordinate " << d_ic_label->getName() << " is " << wa_internal_coordinate[IntVector(1,1,1)]/weight[IntVector(1,1,1)] << " and the constant model is = " << model[IntVector(1,1,1)] << endl;
-    //}
-
+  
   }
 }

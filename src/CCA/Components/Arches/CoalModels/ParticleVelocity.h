@@ -55,12 +55,15 @@ public:
   /** @brief Schedule the initialization of special/local variables unique to model */
   virtual void sched_initVars( const LevelP& level, SchedulerP& sched ) = 0;
 
+  /** @brief  Schedule dummy initialization (this calls the ModelBase method, and also schedules computation of particle velocity label) */
+  virtual void sched_dummyInit( const LevelP& level, SchedulerP& sched );
+
   /** @brief  Actually do dummy initialization (sched_dummyInit is defined in ModelBase parent class) */
-  void dummyInit( const ProcessorGroup* pc, 
-                  const PatchSubset* patches, 
-                  const MaterialSubset* matls, 
-                  DataWarehouse* old_dw, 
-                  DataWarehouse* new_dw );
+  virtual void dummyInit( const ProcessorGroup* pc, 
+                          const PatchSubset* patches, 
+                          const MaterialSubset* matls, 
+                          DataWarehouse* old_dw, 
+                          DataWarehouse* new_dw );
 
   ////////////////////////////////////////////////
   // Model computation method

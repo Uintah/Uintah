@@ -74,8 +74,6 @@ public:
 
 private:
 
-  //double d_constant; 
-  //std::string d_dragModelName;
 
 }; // end ParticleGasMomentum
 } // end namespace Uintah
