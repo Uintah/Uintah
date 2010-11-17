@@ -119,11 +119,10 @@ MomentumSolver::problemSetup(const ProblemSpecP& params)
     d_source->problemSetup(db);
   }
 
-  // ++ jeremy ++
+// ++ jeremy ++
   d_source->setBoundary(d_boundaryCondition);
-  // -- jeremy --            
+// -- jeremy --            
 
-  // New source terms (a la TransportEqn framework)
   // add source terms using new SourceTerm and TransportEqn framework
   if( db->findBlock("src") ){
     string srcname;
@@ -344,17 +343,6 @@ void MomentumSolver::solveVelHat(const LevelP& level,
   } else if ( timelabels->integrator_step_number == TimeIntegratorStepNumber::Third ) {
     timeSubStep = 2; 
   }
-
-  /*
-  // NOTE: This is commented out because the calculation of the source term is the responsibility of the SourceTermFactory, not the MomentumSolver
-  // Schedule additional sources for evaluation
-  SourceTermFactory& factory = SourceTermFactory::self(); 
-  for (vector<std::string>::iterator iter = d_new_sources.begin(); 
-      iter != d_new_sources.end(); iter++){
-    SourceTermBase& src = factory.retrieve_source_term( *iter ); 
-    src.sched_computeSource( level, sched, timeSubStep ); 
-  }
-  */
 
   sched_buildLinearMatrixVelHat(sched, patches, matls, 
                                 timelabels, d_EKTCorrection);
@@ -684,15 +672,6 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
       velocityVars.wFmms.initialize(0.0);
     }
 
-    // Adding new sources from factory:
-    SourceTermFactory& srcFactory = SourceTermFactory::self(); 
-    for (vector<std::string>::iterator iter = d_new_sources.begin(); iter != d_new_sources.end(); iter++){
-      SourceTermBase& src = srcFactory.retrieve_source_term( *iter ); 
-      const VarLabel* srcLabel = src.getSrcLabel(); 
-      // here we have made the assumption that the momentum source is always a vector... 
-      // and that we only have one.  probably want to fix this. 
-      new_dw->get( velocityVars.otherVectorSource, srcLabel, indx, patch, Ghost::None, 0); 
-    }
 
     //__________________________________
     //  compute coefficients
@@ -862,7 +841,8 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
 
       switch (src_type) {
         case SourceTermBase::CCVECTOR_SRC: 
-          { new_dw->get( velocityVars.otherVectorSource, srcLabel, indx, patch, Ghost::None, 0); 
+        { 
+          new_dw->get( velocityVars.otherVectorSource, srcLabel, indx, patch, Ghost::None, 0); 
           Vector Dx  = patch->dCell();
           double vol = Dx.x()*Dx.y()*Dx.z();
           for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
@@ -870,19 +850,32 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
             velocityVars.uVelNonlinearSrc[c]  += velocityVars.otherVectorSource[c].x()*vol;
             velocityVars.vVelNonlinearSrc[c]  += velocityVars.otherVectorSource[c].y()*vol;
             velocityVars.wVelNonlinearSrc[c]  += velocityVars.otherVectorSource[c].z()*vol;
-          }} 
-          break; 
+
+            if( c == IntVector(1,34,34) ) {
+              cout << endl;
+              cout << "Gas x-velocity has source term " << velocityVars.otherVectorSource[c].x() << "*" << vol << " = " << velocityVars.otherVectorSource[c].x()*vol;
+              cout << "Gas y-velocity has source term " << velocityVars.otherVectorSource[c].y() << "*" << vol << " = " << velocityVars.otherVectorSource[c].y()*vol;
+              cout << "Gas z-velocity has source term " << velocityVars.otherVectorSource[c].z() << "*" << vol << " = " << velocityVars.otherVectorSource[c].z()*vol;
+              cout << endl;
+            }                                               
+
+          }
+        } 
+        break; 
         case SourceTermBase::FX_SRC:
-          { new_dw->get( velocityVars.otherFxSource, srcLabel, indx, patch, Ghost::None, 0);
+        { 
+          new_dw->get( velocityVars.otherFxSource, srcLabel, indx, patch, Ghost::None, 0);
           Vector Dx  = patch->dCell();
           double vol = Dx.x()*Dx.y()*Dx.z();
           for (CellIterator iter=patch->getSFCXIterator(); !iter.done(); iter++){
             IntVector c = *iter;
             velocityVars.uVelNonlinearSrc[c]  += velocityVars.otherFxSource[c]*vol;
-          }} 
-          break; 
+          }
+        } 
+        break; 
         case SourceTermBase::FY_SRC: 
-          { new_dw->get( velocityVars.otherFySource, srcLabel, indx, patch, Ghost::None, 0);
+        { 
+          new_dw->get( velocityVars.otherFySource, srcLabel, indx, patch, Ghost::None, 0);
           Vector Dx  = patch->dCell();
           double vol = Dx.x()*Dx.y()*Dx.z();
           for (CellIterator iter=patch->getSFCYIterator(); !iter.done(); iter++){
@@ -891,14 +884,16 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
           }} 
           break; 
         case SourceTermBase::FZ_SRC:
-          { new_dw->get( velocityVars.otherFzSource, srcLabel, indx, patch, Ghost::None, 0);
+        { 
+          new_dw->get( velocityVars.otherFzSource, srcLabel, indx, patch, Ghost::None, 0);
           Vector Dx  = patch->dCell();
           double vol = Dx.x()*Dx.y()*Dx.z();
           for (CellIterator iter=patch->getSFCZIterator(); !iter.done(); iter++){
             IntVector c = *iter;
             velocityVars.wVelNonlinearSrc[c]  += velocityVars.otherFzSource[c]*vol;
-          }} 
-          break; 
+          }
+        } 
+        break; 
         default: 
           proc0cout << "For source term of type: " << src_type << endl;
           throw InvalidValue("Error: Trying to add a source term to momentum equation with incompatible type",__FILE__, __LINE__); 

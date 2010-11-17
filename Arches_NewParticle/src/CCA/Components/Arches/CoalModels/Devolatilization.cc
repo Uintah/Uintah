@@ -70,6 +70,33 @@ Devolatilization::problemSetup(const ProblemSpecP& params)
 }
 
 
+//---------------------------------------------------------------------------
+// Method: Schedule dummy initialization
+//---------------------------------------------------------------------------
+/** @details  
+This method is a dummy initialization required by MPMArches. 
+All models must be required() and computed() to copy them over 
+without actually doing anything.  (Silly, isn't it?)
+ */
+void
+Devolatilization::sched_dummyInit( const LevelP& level, SchedulerP& sched )
+{
+  string taskname = "Devolatilization::dummyInit"; 
+
+  Ghost::GhostType  gn = Ghost::None;
+
+  Task* tsk = scinew Task(taskname, this, &Devolatilization::dummyInit);
+
+  tsk->requires( Task::OldDW, d_modelLabel, gn, 0);
+  tsk->requires( Task::OldDW, d_gasLabel,   gn, 0);
+
+  tsk->computes(d_modelLabel);
+  tsk->computes(d_gasLabel); 
+
+  sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
+}
+
+
 //-------------------------------------------------------------------------
 // Method: Actually do the dummy initialization
 //-------------------------------------------------------------------------
@@ -82,7 +109,6 @@ This method was originally in ModelBase, but it requires creating CCVariables
  is model-dependent.  Putting the method here eliminates if statements in 
  ModelBase and keeps the ModelBase class as generic as possible.
 
-@see ModelBase::sched_dummyInit()
 @see ExplicitSolver::noSolve()
 
  */

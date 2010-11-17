@@ -15,10 +15,13 @@
 using namespace std;
 using namespace Uintah; 
 
-UnweightedSrcTerm::UnweightedSrcTerm( std::string srcName, SimulationStateP& sharedState,
-                            vector<std::string> reqLabelNames, ArchesLabel* fieldLabels ) 
+UnweightedSrcTerm::UnweightedSrcTerm( std::string srcName, 
+                                      SimulationStateP& sharedState,
+                                      vector<std::string> reqLabelNames, 
+                                      ArchesLabel* fieldLabels ) 
 : SourceTermBase(srcName, sharedState, reqLabelNames, fieldLabels )
 {
+  _label_sched_init = false; 
   _src_label = VarLabel::create(srcName, CCVariable<double>::getTypeDescription()); 
 }
 
@@ -31,7 +34,9 @@ UnweightedSrcTerm::~UnweightedSrcTerm()
 void 
 UnweightedSrcTerm::problemSetup(const ProblemSpecP& inputdb)
 {
+
   //ProblemSpecP db = inputdb; 
+
   _source_type = CC_SRC; 
 }
 
@@ -72,10 +77,11 @@ UnweightedSrcTerm::sched_computeSource( const LevelP& level, SchedulerP& sched, 
     // require particle velocity
     if( coalFactory.useParticleVelocityModel() ) {
       d_particle_velocity_label = coalFactory.getParticleVelocityLabel( quadNode );
+      tsk->requires( Task::NewDW, d_particle_velocity_label, Ghost::AroundCells, 1 );
     } else {
-      d_particle_velocity_label = d_fieldLabels->d_newCCVelocityLabel;
+      d_particle_velocity_label = _fieldLabels->d_newCCVelocityLabel;
+      tsk->requires( Task::OldDW, d_particle_velocity_label, Ghost::AroundCells, 1 );
     }
-    tsk->requires( Task::NewDW, d_particle_velocity_label, Ghost::AroundCells, 1 );
   }
 
   sched->addTask(tsk, level->eachPatch(), _shared_state->allArchesMaterials()); 
@@ -125,10 +131,11 @@ UnweightedSrcTerm::computeSource( const ProcessorGroup* pc,
       int quadNode = dqmom_eqn->getQuadNode();
       if( coalFactory.useParticleVelocityModel() ) {
         d_particle_velocity_label = coalFactory.getParticleVelocityLabel( quadNode );
+        new_dw->get(partVel, d_particle_velocity_label, matlIndex, patch, Ghost::AroundCells, 1 );
       } else {
-        d_particle_velocity_label = d_fieldLabels->d_newCCVelocityLabel;
+        d_particle_velocity_label = _fieldLabels->d_newCCVelocityLabel;
+        old_dw->get(partVel, d_particle_velocity_label, matlIndex, patch, Ghost::AroundCells, 1 );
       }
-      new_dw->get(partVel, d_particle_velocity_label, matlIndex, patch, Ghost::AroundCells, 1 );
     }      
 
     Vector Dx = patch->dCell();

@@ -74,6 +74,10 @@ ConstantDensityCoal::problemSetup(const ProblemSpecP& params)
       if( params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("Coal_Properties") ) {
         ProblemSpecP db_coal = params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("Coal_Properties");
         db_coal->require("initial_ash_mass", d_ash_mass);
+        db_coal->require("particle_density", d_density );
+        // NOTE: If the density specified here is very different from the density calculated using the boundary condition mass/length,
+        // the coal particle size will experience a large jump (dL/dt) immediately after entering the domain (as it will immediately be 
+        // subject to the constant density specified here, rather than the density determined from boundary condition mass/length)
       } else {
         throw InvalidValue("ERROR: CoalParticleHeatTransfer: problemSetup(): Missing <Coal_Properties> section in input file. Please specify the elemental composition of the coal and the initial ash mass.",__FILE__,__LINE__);
       }
@@ -314,7 +318,6 @@ ConstantDensityCoal::initVars( const ProcessorGroup * pc,
     if( length < TINY ) {
       length = TINY;
     }
-    d_density = mass / ( 4.0/3.0 * pi * pow(length/2.0,3) );
 
     CCVariable<double> model_value; 
     new_dw->allocateAndPut( model_value, d_modelLabel, matlIndex, patch ); 
@@ -415,7 +418,7 @@ ConstantDensityCoal::sched_computeModel( const LevelP& level, SchedulerP& sched,
   std::string taskname = "ConstantDensityCoal::computeModel";
   Task* tsk = scinew Task(taskname, this, &ConstantDensityCoal::computeModel, timeSubStep );
 
-  Ghost::GhostType gn = Ghost::None;
+  //Ghost::GhostType gn = Ghost::None;
 
   if( timeSubStep == 0 && !d_labelSchedInit) {
     // Every model term needs to set this flag after the varLabel is computed. 
@@ -428,18 +431,21 @@ ConstantDensityCoal::sched_computeModel( const LevelP& level, SchedulerP& sched,
     tsk->computes(d_modelLabel);
     tsk->computes(d_gasLabel); 
 
-    tsk->requires(Task::OldDW, d_weight_label, gn, 0 );
-    tsk->requires(Task::OldDW, d_length_label, gn, 0 );
+    //tsk->requires(Task::OldDW, d_weight_label, gn, 0 );
+    //tsk->requires(Task::OldDW, d_length_label, gn, 0 );
 
   } else {
 
     tsk->modifies(d_modelLabel);
     tsk->modifies(d_gasLabel);  
 
-    tsk->requires(Task::NewDW, d_weight_label, gn, 0 );
-    tsk->requires(Task::NewDW, d_length_label, gn, 0 );
+    //tsk->requires(Task::NewDW, d_weight_label, gn, 0 );
+    //tsk->requires(Task::NewDW, d_length_label, gn, 0 );
 
   }
+
+  /*
+  // Commenting out to see if the length model terms are screwing things up
 
   // also need the source terms "G" for each mass internal coordinate
   DQMOMEqnFactory& dqmomFactory = DQMOMEqnFactory::self();
@@ -457,6 +463,7 @@ ConstantDensityCoal::sched_computeModel( const LevelP& level, SchedulerP& sched,
     }
 
   }
+  */
 
   sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials()); 
 
@@ -505,7 +512,7 @@ ConstantDensityCoal::computeModel( const ProcessorGroup * pc,
 {
   for( int p=0; p < patches->size(); p++ ) {  // Patch loop
 
-    Ghost::GhostType  gn  = Ghost::None;
+    //Ghost::GhostType  gn  = Ghost::None;
 
     const Patch* patch = patches->get(p);
     int archIndex = 0;
@@ -514,7 +521,7 @@ ConstantDensityCoal::computeModel( const ProcessorGroup * pc,
     CCVariable<double> model;
     CCVariable<double> model_gasSource; // always 0 for density
 
-    constCCVariable<double> wa_length;
+    constCCVariable<double> length;
     constCCVariable<double> weight;
 
     if( timeSubStep == 0 ) {
@@ -522,20 +529,27 @@ ConstantDensityCoal::computeModel( const ProcessorGroup * pc,
       new_dw->allocateAndPut( model, d_modelLabel, matlIndex, patch );
       new_dw->allocateAndPut( model_gasSource, d_gasLabel, matlIndex, patch ); 
 
-      old_dw->get(wa_length, d_length_label, matlIndex, patch, gn, 0 );
+      /*
+      old_dw->get(length, d_length_label, matlIndex, patch, gn, 0 );
       old_dw->get( weight, d_weight_label, matlIndex, patch, gn, 0 );
+      */
 
     } else {
 
       new_dw->getModifiable( model, d_modelLabel, matlIndex, patch ); 
       new_dw->getModifiable( model_gasSource, d_gasLabel, matlIndex, patch ); 
 
-      new_dw->get(wa_length, d_length_label, matlIndex, patch, gn, 0 );
+      /*
+      new_dw->get(length, d_length_label, matlIndex, patch, gn, 0 );
       new_dw->get( weight, d_weight_label, matlIndex, patch, gn, 0 );
+      */
 
     }
     model.initialize(0.0);
     model_gasSource.initialize(0.0);
+
+    /*
+    // Commenting this out...
 
     // make a vector of all the mass internal coordinate model terms
     DQMOMEqnFactory& dqmomFactory = DQMOMEqnFactory::self();
@@ -560,39 +574,37 @@ ConstantDensityCoal::computeModel( const ProcessorGroup * pc,
     }//end mass labels
 
     for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
-      
       IntVector c = *iter; 
       
       // weight - check if small
       bool weight_is_small = (weight[c] < d_w_small) || (weight[c] == 0.0);
-
       double model_sum = 0.0;
-
       int z=0;
       for( vector< constCCVariable<double>* >::iterator iM = modelCCVars.begin(); iM != modelCCVars.end(); ++iM, ++z ) {
         model_sum += (**iM)[c] * d_massScalingConstants[z];
       }
 
-      double unscaled_length;
-      double unscaled_rc_mass;
-      double unscaled_char_mass;
-      double unscaled_moisture_mass;
+      if( !d_unweighted && weight_is_small) {
 
-      //double mass;
-
-      if(weight_is_small) {
-
-        unscaled_length = 0.0;
-        unscaled_rc_mass = 0.0;
-        unscaled_char_mass = 0.0;
-        unscaled_moisture_mass = 0.0;
+        model[c] = 0.0;
 
       } else {
 
-        unscaled_length = (wa_length[c]*d_length_scaling_constant)/weight[c];
+        double unscaled_length_old;
+        if( d_unweighted ) {
+          unscaled_length_old = length[c]*d_length_scaling_constant;
+        } else {
+          unscaled_length_old = (length[c]*d_length_scaling_constant)/weight[c];
+        }
 
         // see the White Book, Ch. 4, p. 93
-        model[c] = ( 2/(pi*d_density*unscaled_length*unscaled_length) )*( model_sum );
+        if( unscaled_length_old < TINY ) {
+          unscaled_length_old = TINY;
+        }
+        double unscaled_RHS = ( 2/(pi*d_density*unscaled_length_old*unscaled_length_old) )*( model_sum );
+        double scaled_RHS   = unscaled_RHS/d_length_scaling_constant;
+
+        model[c] = scaled_RHS;
 
       }
 
@@ -601,6 +613,8 @@ ConstantDensityCoal::computeModel( const ProcessorGroup * pc,
     for( vector< constCCVariable<double>* >::iterator iM = modelCCVars.begin(); iM != modelCCVars.end(); ++iM ) {
       delete (*iM);
     }
+
+    */
 
   }//end patch loop
 

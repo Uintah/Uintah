@@ -405,7 +405,7 @@ Source::computeEnthalpyRadThinSrc(const ProcessorGroup*,
   // Get the patch and variable indices
   IntVector idxLo = patch->getFortranCellLowIndex();
   IntVector idxHi = patch->getFortranCellHighIndex();
-  double tref = 298; // warning, read it in
+  double tref = 298.0; // warning, read it in
   fort_enthalpyradthinsrc(idxLo, idxHi, vars->scalarNonlinearSrc,
                           vars->temperature, constvars->absorption,
                           cellinfo->sew, cellinfo->sns, cellinfo->stb, tref);

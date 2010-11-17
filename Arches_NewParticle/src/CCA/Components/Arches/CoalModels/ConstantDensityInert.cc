@@ -406,6 +406,7 @@ ConstantDensityInert::sched_computeModel( const LevelP& level, SchedulerP& sched
 }
 
 
+//---------------------------------------------------------------------------
 // Method: Actually compute the source term 
 //---------------------------------------------------------------------------
 /** 
@@ -456,14 +457,13 @@ ConstantDensityInert::computeModel( const ProcessorGroup * pc,
 
     delt_vartype delta_t;
     old_dw->get( delta_t, d_fieldLabels->d_sharedState->get_delt_label() );
-    double dt = delta_t;
 
     CCVariable<double> model;
     CCVariable<double> model_gasSource; // always 0 for density
 
     constCCVariable<double> weight;
-    constCCVariable<double> wa_length;
-    constCCVariable<double> wa_mass;
+    constCCVariable<double> length;
+    constCCVariable<double> mass;
 
     if( timeSubStep == 0 ) {
 
@@ -471,8 +471,8 @@ ConstantDensityInert::computeModel( const ProcessorGroup * pc,
       new_dw->allocateAndPut( model_gasSource, d_gasLabel, matlIndex, patch ); 
 
       old_dw->get( weight,   d_weight_label,        matlIndex, patch, gn, 0 );
-      old_dw->get(wa_length, d_length_label,        matlIndex, patch, gn, 0 );
-      old_dw->get(wa_mass,   d_particle_mass_label, matlIndex, patch, gn, 0 );
+      old_dw->get(length, d_length_label,        matlIndex, patch, gn, 0 );
+      old_dw->get(mass,   d_particle_mass_label, matlIndex, patch, gn, 0 );
 
     } else {
 
@@ -480,8 +480,8 @@ ConstantDensityInert::computeModel( const ProcessorGroup * pc,
       new_dw->getModifiable( model_gasSource, d_gasLabel, matlIndex, patch ); 
     
       new_dw->get( weight,   d_weight_label,        matlIndex, patch, gn, 0 );
-      new_dw->get(wa_length, d_length_label,        matlIndex, patch, gn, 0 );
-      new_dw->get(wa_mass,   d_particle_mass_label, matlIndex, patch, gn, 0 );
+      new_dw->get(length, d_length_label,        matlIndex, patch, gn, 0 );
+      new_dw->get(mass,   d_particle_mass_label, matlIndex, patch, gn, 0 );
 
     }
     model.initialize(0.0);
@@ -512,15 +512,15 @@ ConstantDensityInert::computeModel( const ProcessorGroup * pc,
     for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
       IntVector c = *iter; 
 
+      // weight - check if small
       bool weight_is_small = (weight[c] < d_w_small) || (weight[c] == 0.0);
-      //bool mass_is_small = fabs(wa_mass[c] < TINY);
       double model_sum = 0.0;
       int z=0;
       for( vector< constCCVariable<double>* >::iterator iM = modelCCVars.begin(); iM != modelCCVars.end(); ++iM, ++z ) {
         model_sum += (**iM)[c] * d_massScalingConstants[z] ;
       }
 
-      if(weight_is_small /*|| mass_is_small */ ) {
+      if(!d_unweighted && weight_is_small) {
 
         model[c] = 0.0;
 
@@ -532,7 +532,13 @@ ConstantDensityInert::computeModel( const ProcessorGroup * pc,
 #endif
 
       } else {
-        double unscaled_length_old = (wa_length[c]*d_length_scaling_constant)/weight[c];
+        
+        double unscaled_length_old;
+        if( d_unweighted ) {
+          unscaled_length_old = length[c]*d_length_scaling_constant;
+        } else {
+          unscaled_length_old = (length[c]*d_length_scaling_constant)/weight[c];
+        }
 
         // see the White Book, Ch. 4, p. 93
         if( unscaled_length_old < TINY ) {
@@ -543,48 +549,7 @@ ConstantDensityInert::computeModel( const ProcessorGroup * pc,
 
         model[c] = scaled_RHS;
 
-#ifdef DEBUG_MODELS
-        //cmr
-        if( c==IntVector(1,2,3) && d_quadNode==0 ) {
-          cout << "ConstantDensityInert model QN " << d_quadNode << " has value " << model[c] << " for a particle mass of " << (wa_mass[c]/weight[c]) << endl;
-        }
-#endif
-
-        double unscaled_length_new = unscaled_length_old + dt*unscaled_RHS;
-
-        if( d_doLengthLowClip && (unscaled_length_new < d_length_low) ) {
-          // length is shrinking by too much!|
-          // set RHS to the value that yields the lowest possible value of length
-          // (low clip value is unscaled, and unscaled_length is scaled, but model term must be SCALED...)
-
-          double unscaled_RHS_max = (d_length_low - unscaled_length_old)/dt;
-          double scaled_RHS_max   = unscaled_RHS_max/d_length_scaling_constant;
-
-          model[c] = scaled_RHS_max;
-
-#ifdef DEBUG_MODELS
-          //cmr
-          if( c==IntVector(1,2,3) && d_quadNode==0 ) {
-            cout << "ConstantDensityInert model QN " << d_quadNode << " low-clipped at " << model[c] << " for a particle mass of " << (wa_mass[c]/weight[c]) << endl;
-          }
-#endif
-
-        }
-
-        if( d_doLengthHighClip && (unscaled_length_new > d_length_hi) ) {
-          // length is growing by too much!
-          // set RHS to the value that yields the highest possible value of length
-          // (high clip value is unscaled, and unscaled_length is scaled, but model term must be UNSCALED...)
-
-          double unscaled_RHS_max = (d_length_hi - unscaled_length_old)/dt;
-          double scaled_RHS_max   = unscaled_RHS_max/d_length_scaling_constant;
-
-          model[c] = scaled_RHS_max;
-        }
-
-
       }
-
     }//end cell loop
 
     for( vector< constCCVariable<double>* >::iterator iM = modelCCVars.begin(); iM != modelCCVars.end(); ++iM ) {

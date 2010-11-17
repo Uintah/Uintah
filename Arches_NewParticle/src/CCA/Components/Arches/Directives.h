@@ -3,7 +3,7 @@
 
 // used by:
 // CoalModels
-#define TINY    1e-16
+#define TINY    1e-10
 //#define DEBUG_MODELS
 
 // used by:

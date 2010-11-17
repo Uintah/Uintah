@@ -99,6 +99,36 @@ ParticleVelocity::problemSetup(const ProblemSpecP& params)
 }
 
 
+
+//---------------------------------------------------------------------------
+// Method: Schedule dummy initialization
+//---------------------------------------------------------------------------
+/** @details  
+This method is a dummy initialization required by MPMArches. 
+All models must be required() and computed() to copy them over 
+without actually doing anything.  (Silly, isn't it?)
+ */
+void
+ParticleVelocity::sched_dummyInit( const LevelP& level, SchedulerP& sched )
+{
+  string taskname = "ParticleVelocity::dummyInit"; 
+
+  Ghost::GhostType  gn = Ghost::None;
+
+  Task* tsk = scinew Task(taskname, this, &ParticleVelocity::dummyInit);
+
+  tsk->requires( Task::OldDW, d_velocity_label,   gn, 0);
+  tsk->requires( Task::OldDW, d_modelLabel, gn, 0);
+  tsk->requires( Task::OldDW, d_gasLabel,   gn, 0);
+
+  tsk->computes(d_velocity_label);
+  tsk->computes(d_modelLabel);
+  tsk->computes(d_gasLabel); 
+
+  sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
+}
+
+
 //-------------------------------------------------------------------------
 // Method: Actually do the dummy initialization
 //-------------------------------------------------------------------------
@@ -130,18 +160,23 @@ ParticleVelocity::dummyInit( const ProcessorGroup* pc,
 
     CCVariable<Vector> ModelTerm;
     CCVariable<Vector> GasModelTerm;
+    CCVariable<Vector> particleVelocity;
     
     constCCVariable<Vector> oldModelTerm;
     constCCVariable<Vector> oldGasModelTerm;
+    constCCVariable<Vector> oldParticleVelocity;
 
-    new_dw->allocateAndPut( ModelTerm,    d_modelLabel, matlIndex, patch );
-    new_dw->allocateAndPut( GasModelTerm, d_gasLabel,   matlIndex, patch ); 
+    new_dw->allocateAndPut( ModelTerm,        d_modelLabel,     matlIndex, patch );
+    new_dw->allocateAndPut( GasModelTerm,     d_gasLabel,       matlIndex, patch ); 
+    new_dw->allocateAndPut( particleVelocity, d_velocity_label, matlIndex, patch );
 
-    old_dw->get( oldModelTerm,    d_modelLabel, matlIndex, patch, gn, 0 );
-    old_dw->get( oldGasModelTerm, d_gasLabel,   matlIndex, patch, gn, 0 );
+    old_dw->get( oldModelTerm,        d_modelLabel,     matlIndex, patch, gn, 0 );
+    old_dw->get( oldGasModelTerm,     d_gasLabel,       matlIndex, patch, gn, 0 );
+    old_dw->get( oldParticleVelocity, d_velocity_label, matlIndex, patch, gn, 0 );
     
     ModelTerm.copyData(oldModelTerm);
     GasModelTerm.copyData(oldGasModelTerm);
+    particleVelocity.copyData(oldParticleVelocity);
   }
 }
 

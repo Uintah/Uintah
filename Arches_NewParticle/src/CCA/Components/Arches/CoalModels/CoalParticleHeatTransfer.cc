@@ -457,7 +457,7 @@ CoalParticleHeatTransfer::computeModel( const ProcessorGroup * pc,
     constCCVariable<Vector> gas_velocity;
 
     // temperature
-    constCCVariable<double> wa_particle_temperature;
+    constCCVariable<double> particle_temperature;
     constCCVariable<double> gas_temperature;
 
     // radiation
@@ -467,10 +467,10 @@ CoalParticleHeatTransfer::computeModel( const ProcessorGroup * pc,
 
     // DQMOM internal coordinates
     constCCVariable<double> weight;
-    constCCVariable<double> wa_raw_coal_mass;
-    constCCVariable<double> wa_particle_length;
-    constCCVariable<double> wa_char_mass;
-    constCCVariable<double> wa_moisture_mass;
+    constCCVariable<double> raw_coal_mass;
+    constCCVariable<double> particle_length;
+    constCCVariable<double> char_mass;
+    constCCVariable<double> moisture_mass;
 
     if( timeSubStep == 0 ) {
 
@@ -496,7 +496,7 @@ CoalParticleHeatTransfer::computeModel( const ProcessorGroup * pc,
       old_dw->get( gas_velocity, d_fieldLabels->d_newCCVelocityLabel, matlIndex, patch, gn, 0 );
 
       // temperature
-      old_dw->get( wa_particle_temperature, d_particle_temperature_label, matlIndex, patch, gn, 0);
+      old_dw->get( particle_temperature, d_particle_temperature_label, matlIndex, patch, gn, 0);
       old_dw->get( gas_temperature, d_gas_temperature_label, matlIndex, patch, gn, 0 );
 
       // radiation
@@ -508,15 +508,15 @@ CoalParticleHeatTransfer::computeModel( const ProcessorGroup * pc,
 
       // DQMOM internal coordinates
       old_dw->get( weight, d_weight_label, matlIndex, patch, gn, 0 );
-      old_dw->get( wa_raw_coal_mass, d_raw_coal_mass_label, matlIndex, patch, gn, 0 );
+      old_dw->get( raw_coal_mass, d_raw_coal_mass_label, matlIndex, patch, gn, 0 );
       if(d_useLength) {
-        old_dw->get( wa_particle_length, d_length_label, matlIndex, patch, gn, 0 );
+        old_dw->get( particle_length, d_length_label, matlIndex, patch, gn, 0 );
       }
       if(d_useChar) {
-        old_dw->get( wa_char_mass, d_char_mass_label, matlIndex, patch, gn, 0 );
+        old_dw->get( char_mass, d_char_mass_label, matlIndex, patch, gn, 0 );
       }
       if(d_useMoisture) {
-        old_dw->get( wa_moisture_mass, d_moisture_mass_label, matlIndex, patch, gn, 0 );
+        old_dw->get( moisture_mass, d_moisture_mass_label, matlIndex, patch, gn, 0 );
       }
 
 
@@ -539,7 +539,7 @@ CoalParticleHeatTransfer::computeModel( const ProcessorGroup * pc,
       new_dw->get( gas_velocity, d_fieldLabels->d_newCCVelocityLabel, matlIndex, patch, gn, 0 );
 
       // temperature
-      new_dw->get( wa_particle_temperature, d_particle_temperature_label, matlIndex, patch, gn, 0);
+      new_dw->get( particle_temperature, d_particle_temperature_label, matlIndex, patch, gn, 0);
       new_dw->get( gas_temperature, d_gas_temperature_label, matlIndex, patch, gn, 0 );
 
       // radiation
@@ -551,15 +551,15 @@ CoalParticleHeatTransfer::computeModel( const ProcessorGroup * pc,
 
       // DQMOM internal coordinates
       new_dw->get( weight, d_weight_label, matlIndex, patch, gn, 0 );
-      new_dw->get( wa_raw_coal_mass, d_raw_coal_mass_label, matlIndex, patch, gn, 0 );
+      new_dw->get( raw_coal_mass, d_raw_coal_mass_label, matlIndex, patch, gn, 0 );
       if(d_useLength) {
-        new_dw->get( wa_particle_length, d_length_label, matlIndex, patch, gn, 0 );
+        new_dw->get( particle_length, d_length_label, matlIndex, patch, gn, 0 );
       }
       if(d_useChar) {
-        new_dw->get( wa_char_mass, d_char_mass_label, matlIndex, patch, gn, 0 );
+        new_dw->get( char_mass, d_char_mass_label, matlIndex, patch, gn, 0 );
       }
       if(d_useMoisture) {
-        new_dw->get( wa_moisture_mass, d_moisture_mass_label, matlIndex, patch, gn, 0 );
+        new_dw->get( moisture_mass, d_moisture_mass_label, matlIndex, patch, gn, 0 );
       }
 
     }
@@ -584,7 +584,7 @@ CoalParticleHeatTransfer::computeModel( const ProcessorGroup * pc,
       double unscaled_raw_coal_mass;
 
       double unscaled_ash_mass = d_ash_mass[d_quadNode];
-      double unscaled_fixcarb_mass;
+      double unscaled_fixcarb_mass = 0.0;
       if( d_use_fixcarb_mass ) {
         unscaled_fixcarb_mass = d_fixcarb_mass[d_quadNode];
       }
@@ -606,7 +606,11 @@ CoalParticleHeatTransfer::computeModel( const ProcessorGroup * pc,
       double Q_convection;
       double Q_radiation;
 
-      if (weight_is_small) {
+      double dummy_Apsc = 0.0;
+      double dummy_FSum = 0.0;
+      double dummy_Eb   = 0.0;
+
+      if ( !d_unweighted && weight_is_small) {
 
         scaled_weight = 0.0;
         unscaled_weight = 0.0;
@@ -630,13 +634,25 @@ CoalParticleHeatTransfer::computeModel( const ProcessorGroup * pc,
         scaled_weight = weight[c];
         unscaled_weight = weight[c]*d_w_scaling_constant;
 
-        scaled_particle_temperature = wa_particle_temperature[c]/scaled_weight;
+        if( d_unweighted ) {
+          scaled_particle_temperature = particle_temperature[c];
+        } else {
+          scaled_particle_temperature = particle_temperature[c]/scaled_weight;
+        }
         unscaled_particle_temperature = scaled_particle_temperature*d_pt_scaling_constant;
 
-        scaled_length = wa_particle_length[c]/scaled_weight;
+        if( d_unweighted ) {
+          scaled_length = particle_length[c];
+        } else {
+          scaled_length = particle_length[c]/scaled_weight;
+        }
         unscaled_length = scaled_length*d_length_scaling_constant;
 
-        scaled_raw_coal_mass = wa_raw_coal_mass[c]/scaled_weight;
+        if( d_unweighted ) {
+          scaled_raw_coal_mass = raw_coal_mass[c];
+        } else {
+          scaled_raw_coal_mass = raw_coal_mass[c]/scaled_weight;
+        }
         unscaled_raw_coal_mass = scaled_raw_coal_mass*d_rc_scaling_constant;
 
         // ---------------------------------------------
@@ -675,20 +691,21 @@ CoalParticleHeatTransfer::computeModel( const ProcessorGroup * pc,
         // Radiation part: 
 
         Q_radiation = 0.0;
+        abskp_ = 0.0;
 
         if (b_radiation) {
 
           double Qabs = 0.8;
-	        double Apsc = (pi/4)*Qabs*pow(unscaled_length,2);
-	        double Eb = 4*sigma*pow(unscaled_particle_temperature,4);
+          double Apsc = (pi/4)*Qabs*pow(unscaled_length,2);
+          double Eb = 4*sigma*pow(unscaled_particle_temperature,4);
 
           FSum = radiationVolqIN[c];    
-	        Q_radiation = Apsc*(FSum - Eb);
-	        abskp_ = pi/4*Qabs*unscaled_weight*pow(unscaled_length,2); 
+          Q_radiation = Apsc*(FSum - Eb);
+          abskp_ = pi/4*Qabs*unscaled_weight*pow(unscaled_length,2); 
 
-        } else {
-
-          abskp_ = 0.0;
+          dummy_Apsc = Apsc;
+          dummy_FSum = FSum;
+          dummy_Eb = Eb;
 
         }
       
@@ -701,15 +718,25 @@ CoalParticleHeatTransfer::computeModel( const ProcessorGroup * pc,
       gas_heat_rate[c] = gas_heat_rate_;
       abskp[c] = abskp_;
 
-#ifdef DEBUG_MODELS
-      if( c == IntVector(1,2,3) ) {
+      if( c == IntVector(3,35,22) || c == IntVector(120,35,22) ) {
         cout << endl;
-        cout << "Coal particle heat transfer: -------------" << endl;
-        cout << "Heating rate for qn " << d_quadNode << " is ~ Q_convection + Q_radiation = " << Q_convection << " + " << Q_radiation << " = " << heat_rate_ << endl;
+        cout << "Coal particle heat transfer: Cell " << c << " -------------" << endl;
+        cout << "Current particle temperature is " << scaled_particle_temperature << "(" << unscaled_particle_temperature << ")" << endl;
+        cout << "Qradiation = Absc*(Fsum - Eb) = " << dummy_Apsc << " * (" << dummy_FSum << " - " << dummy_Eb << ") = " << dummy_Apsc*(dummy_FSum - dummy_Eb) << endl;
+        cout << "Heating rate for qn " << d_quadNode << " = (Q_convection + Q_radiation)/(mp_Cp * d_pt_scaling_constant) = (" << Q_convection << " + " << Q_radiation << ")/(" << mp_Cp << " + " << d_pt_scaling_constant << ") = " << heat_rate_ << endl;
         cout << "Gas heating rate for qn " << d_quadNode << " is " << gas_heat_rate_ << endl;
         cout << endl;
       }
 
+#ifdef DEBUG_MODELS
+      if( c == IntVector(1,35,35) ) {
+        cout << endl;
+        cout << "Coal particle heat transfer: Cell " << c << " -------------" << endl;
+        cout << "Current particle temperature is " << scaled_particle_temperature << "(" << unscaled_particle_temperature << ")" << endl;
+        cout << "Heating rate for qn " << d_quadNode << " is ~ Q_convection + Q_radiation = " << Q_convection << " + " << Q_radiation << " = " << heat_rate_ << endl;
+        cout << "Gas heating rate for qn " << d_quadNode << " is " << gas_heat_rate_ << endl;
+        cout << endl;
+      }
 #endif
  
     }//end cell loop

@@ -37,7 +37,7 @@ namespace Uintah{
     // 2) Custom Data Managers
     // 3) Helper/Utility type functions
     // 4) Interpolation
-    // 5) Discreization 
+    // 5) Discretization 
     //
     // ** These functions are intended to be the only ones accessed by the 
     //    transport equations. 

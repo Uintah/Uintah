@@ -29,12 +29,16 @@
   * <BCType id="0" label="vel_qn0" var="Dirichlet"> \n
   *   <value>[1.0,1.0,1.0]</value> \n
   * </BCType> \n
+  *
   * \n
+  *
   * and NOT set like this, \n
   * \n
   * <BCtype id="0" label="u_velocity_internal_coordinate" var="Dirichlet"> \n
   *   <value>1.0</value> \n
   * \n
+  * This keeps the user from having to specify the boundary condition twice
+  * (and potentially making mistakes by using two different values)
   *
   */
 
@@ -162,6 +166,58 @@ private:
   double d_uvel_scaling_factor;     ///< Scaling factor for u velocity internal coordinate
   double d_vvel_scaling_factor;     ///< Scaling factor for v velocity internal coordinate
   double d_wvel_scaling_factor;     ///< Scaling factor for w velocity internal coordinate
+
+
+
+  ////////////////////////////////////////////////////////
+
+
+
+  Vector cart2sph( Vector X ) {
+    // converts cartesean to spherical coords
+    double mag   = pow( X.x(), 2.0 );
+    double magxy = mag;
+    double z = 0;
+    double y = 0;
+#ifdef YDIM
+    mag   += pow( X.y(), 2.0 );
+    magxy = mag;
+    y = X.y();
+#endif
+#ifdef ZDIM
+    mag += pow( X.z(), 2.0 );
+    z = X.z();
+#endif
+
+    mag   = pow(mag, 1./2.);
+    magxy = pow(magxy, 1./2.);
+
+    double elev = atan2( z, magxy );
+    double az   = atan2( y, X.x() );
+
+    Vector answer(az, elev, mag);
+    return answer;
+
+  };
+
+  Vector sph2cart( Vector X ) {
+    // converts spherical to cartesian coords
+    double x = 0.;
+    double y = 0.;
+    double z = 0.;
+
+    double rcoselev = X.z() * cos(X.y());
+    x = rcoselev * cos(X.x());
+#ifdef YDIM
+    y = rcoselev * sin(X.x());
+#endif
+#ifdef ZDIM
+    z = X.z()*sin(X.y());
+#endif
+    Vector answer(x,y,z);
+    return answer;
+  };
+
 
 };
 } // end namespace Uintah

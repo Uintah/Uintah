@@ -13,9 +13,11 @@ class ArchesLabel;
 class UnweightedSrcTerm: public SourceTermBase {
 public: 
 
+  /*
   UnweightedSrcTerm( std::string srcName, 
                      SimulationStateP& shared_state, 
                      vector<std::string> reqLabelNames );
+  */
 
   UnweightedSrcTerm( std::string srcName,
                      SimulationStateP& shared_state,
@@ -58,16 +60,16 @@ public:
                vector<std::string> required_label_names, 
                SimulationStateP& shared_state,
                ArchesLabel* fieldLabels ) : 
-               _name(name), _shared_state(shared_state), _required_label_names(required_label_names), d_fieldLabels(fieldLabels) {};
+               _name(name), _shared_state(shared_state), _required_label_names(required_label_names), _fieldLabels(fieldLabels) {};
       ~Builder(){};
       UnweightedSrcTerm* build() { 
-        return scinew UnweightedSrcTerm( _name, _shared_state, _required_label_names, d_fieldLabels ); 
+        return scinew UnweightedSrcTerm( _name, _shared_state, _required_label_names, _fieldLabels ); 
       }
     private:
       std::string _name;
       SimulationStateP& _shared_state;
       vector<std::string> _required_label_names;
-      ArchesLabel* d_fieldLabels;
+      ArchesLabel* _fieldLabels;
   }; // class Builder
 
 private:

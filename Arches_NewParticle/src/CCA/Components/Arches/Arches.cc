@@ -40,8 +40,9 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqnFactory.h>
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqn.h>
 #include <CCA/Components/Arches/TransportEqns/ScalarEqn.h>
-#include <CCA/Components/Arches/PropertyModels/PropertyModelFactory.h>
 #include <CCA/Components/Arches/PropertyModels/PropertyModelBase.h>
+#include <CCA/Components/Arches/PropertyModels/PropertyModelFactory.h>
+#include <CCA/Components/Arches/PropertyModels/ConstProperty.h>
 #include <CCA/Components/Arches/PropertyModels/LaminarPrNo.h>
 #include <CCA/Components/Arches/PropertyModels/ScalarDiss.h>
 #include <CCA/Components/Arches/PropertyModels/ExtentRxn.h>
@@ -229,7 +230,7 @@ Arches::problemSetup(const ProblemSpecP& params,
   db->getWithDefault("turnonMixedModel",    d_mixedModel,false);
   db->getWithDefault("recompileTaskgraph",  d_recompile,false);
 
-  // Shouldn't this block go in the nonlinear solver's problemSetup()?  - Charles
+  // Shouldn't this block go in the nonlinear solver's problemSetup()?
   string nlSolver;
   if (db->findBlock("ExplicitSolver")){
     nlSolver = "explicit";
@@ -337,6 +338,9 @@ Arches::problemSetup(const ProblemSpecP& params,
   CoalModelFactory& coalFactory = CoalModelFactory::self();
   coalFactory.setArchesLabel( d_lab );
 
+  PropertyModelFactory& propertyFactory = PropertyModelFactory::self();
+  propertyFactory.setArchesLabel( d_lab );
+
   ProblemSpecP transportEqn_db = db->findBlock("TransportEqns");
   if (transportEqn_db) {
     // register transport eqns
@@ -346,6 +350,13 @@ Arches::problemSetup(const ProblemSpecP& params,
     // since some source terms need DQMOM information
   } else {
     proc0cout << "No *extra* transport equations found." << endl;
+  }
+
+  ProblemSpecP propmodels_db = db->findBlock("PropertyModels"); 
+  if ( propmodels_db ){
+    propertyFactory.problemSetup( propmodels_db );
+  } else {
+    proc0cout << "No property models found." << endl;
   }
 
   // read properties
@@ -500,9 +511,10 @@ Arches::problemSetup(const ProblemSpecP& params,
   // ----- DQMOM STUFF:
 
   // If there is at least one DQMOM block, set up the DQMOM equation factory
-  if ( db->findBlock("DQMOM") ) {
+  ProblemSpecP dqmom_db = db->findBlock("DQMOM");
+  if ( dqmom_db ) {
     d_doDQMOM = true;
-    
+
     // assume there is only 1 <DQMOM> for now...
     d_dqmomSolver = scinew DQMOM(d_lab);
 
@@ -510,7 +522,6 @@ Arches::problemSetup(const ProblemSpecP& params,
     // uncomment next line when that assumption changes
     //d_dqmomSolvers.push_back(dqmomSolver);
 
-    ProblemSpecP dqmom_db = db->findBlock("DQMOM");
     dqmomFactory.problemSetup( dqmom_db );
     coalFactory.problemSetup(dqmom_db);
     d_dqmomSolver->problemSetup( dqmom_db ); 
@@ -539,20 +550,20 @@ Arches::problemSetup(const ProblemSpecP& params,
     d_doDQMOM = true;
 
     // Figure out what kind of DQMOM factory to create
-    string dqmom_type;
-    dqmom_db->getWithDefault("type",dqmom_type,"none");
+    string dqmom_physics;
+    dqmom_db->getWithDefault("physics",dqmom_physics,"none");
 
     // Depending on the type, need to initialize different model factories
-    if( dqmom_type == "coal" ) {
+    if( dqmom_physics == "coal" ) {
       // Set up coal model factory
       CoalModelFactory& model_factory = CoalModelFactory::self();
       model_factory.setArchesLabel( d_lab ); 
       model_factory.problemSetup(dqmom_db);
 
-    } else if (dqmom_type == "soot" ) {
+    } else if (dqmom_physics == "soot" ) {
       throw ProblemSetupException("ERROR: Arches: DQMOM for soot is not currently supported.",__FILE__,__LINE__);
 
-    } else if (dqmom_type == "none" ) {
+    } else if (dqmom_physics == "none" ) {
       // TODO 
       // add a generic DQMOM models folder
       // with a generic DQMOM models factory
@@ -598,7 +609,6 @@ Arches::scheduleInitialize(const LevelP& level,
   //           viscosityIN
   sched_paramInit(level, sched);
 
-
   // -----------------------------------
   // Scalar equations (and source terms) initialization
   EqnFactory& eqnFactory = EqnFactory::self(); 
@@ -613,7 +623,6 @@ Arches::scheduleInitialize(const LevelP& level,
 
   SourceTermFactory& sourceFactory = SourceTermFactory::self();
   sourceFactory.sched_sourceInit(level, sched);
-
 
   // ----------------------------------
   if (d_set_initial_condition) {
@@ -665,14 +674,7 @@ Arches::scheduleInitialize(const LevelP& level,
 
   // Property model initialization
   PropertyModelFactory& propFactory = PropertyModelFactory::self(); 
-  PropertyModelFactory::PropMap& all_prop_models = propFactory.retrieve_all_property_models(); 
-  for ( PropertyModelFactory::PropMap::iterator iprop = all_prop_models.begin(); 
-      iprop != all_prop_models.end(); iprop++){
-
-    PropertyModelBase* prop_model = iprop->second; 
-    prop_model->sched_initialize( level, sched ); 
-
-  }
+  propFactory.sched_propertyInit( level, sched );
 
   // Table Lookup 
   string mixmodel = d_props->getMixingModelType(); 
@@ -731,18 +733,16 @@ Arches::scheduleInitialize(const LevelP& level,
 
     // initialize DQMOM transport equations
     dqmom_factory.sched_weightInit(level, sched);
-    dqmom_factory.sched_weightedAbscissaInit(level, sched);
+    if( d_dqmomSolver->isUnweighted() ) {
+      dqmom_factory.sched_abscissaInit(level, sched);
+    } else {
+      dqmom_factory.sched_weightedAbscissaInit(level, sched);
+    }
+    dqmom_factory.sched_solverInit(level, sched);
+    dqmom_factory.sched_checkBCs(level, sched);
 
     // initialize DQMOM models
     model_factory.sched_modelInit(level, sched);
-
-    // check to make sure that all dqmom equations have BCs set. 
-    DQMOMEqnFactory::EqnMap& dqmom_eqns = dqmom_factory.retrieve_all_eqns(); 
-    for (DQMOMEqnFactory::EqnMap::iterator ieqn=dqmom_eqns.begin(); ieqn != dqmom_eqns.end(); ieqn++){
-      EqnBase* eqn = ieqn->second; 
-      eqn->sched_checkBCs( level, sched ); 
-    }
-
   }
 
   // compute the cell area fraction 
@@ -1161,7 +1161,6 @@ Arches::scheduleComputeStableTimestep(const LevelP& level,
   tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,      gac, 1);
   tsk->requires(Task::NewDW, d_lab->d_cellInfoLabel, gn);
 
-  //cmr
   DQMOMEqnFactory& dqmomFactory = DQMOMEqnFactory::self();
   if( dqmomFactory.getDoDQMOM() ) {
     tsk->requires(Task::NewDW, d_lab->d_MinDQMOMTimestepLabel,  gn);
@@ -1354,31 +1353,25 @@ Arches::computeStableTimeStep(const ProcessorGroup* ,
       }
     }
 
-    //cmr
     EqnFactory& eqnFactory = EqnFactory::self();
     if( eqnFactory.useScalarEqns() ) {
       delt_vartype MinScalarTimestep;
       new_dw->get( MinScalarTimestep, d_lab->d_MinScalarTimestepLabel );
       double min_scalar_timestep = MinScalarTimestep;
-      /*
       if( min_scalar_timestep < delta_t2 ) {
         proc0cout << "Resetting minimum timestep from " << delta_t2 << " to " << min_scalar_timestep << " due to scalar transport equation Courant condition." << endl;
       }
-      */
       delta_t2 = Min(min_scalar_timestep,delta_t2);
     }
 
-    //cmr
     DQMOMEqnFactory& dqmomFactory = DQMOMEqnFactory::self();
     if( dqmomFactory.getDoDQMOM() ) {
       delt_vartype MinDQMOMTimestep;
       new_dw->get( MinDQMOMTimestep, d_lab->d_MinDQMOMTimestepLabel );
       double min_dqmom_timestep = MinDQMOMTimestep;
-      /*
       if( min_dqmom_timestep < delta_t2 ) {
         proc0cout << "Resetting minimum timestep from " << delta_t2 << " to " << min_dqmom_timestep << " due to DQMOM transport equation Courant condition." << endl;
       }
-      */
       delta_t2 = Min(min_dqmom_timestep,delta_t2);
     }
 

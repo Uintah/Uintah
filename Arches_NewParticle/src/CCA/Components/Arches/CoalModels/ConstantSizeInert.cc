@@ -258,8 +258,8 @@ ConstantSizeInert::computeParticleDensity( const ProcessorGroup* pc,
     CCVariable<double> density;
 
     constCCVariable<double> weight;
-    constCCVariable<double> wa_length;
-    constCCVariable<double> wa_particle_mass;
+    constCCVariable<double> length;
+    constCCVariable<double> particle_mass;
 
     if( timeSubStep == 0 ) {
       
@@ -267,16 +267,16 @@ ConstantSizeInert::computeParticleDensity( const ProcessorGroup* pc,
       density.initialize(0.0);
 
       old_dw->get( weight, d_weight_label, matlIndex, patch, gn, 0 );
-      old_dw->get( wa_length, d_length_label, matlIndex, patch, gn, 0 );
-      old_dw->get( wa_particle_mass, d_particle_mass_label, matlIndex, patch, gn, 0 );
+      old_dw->get( length, d_length_label, matlIndex, patch, gn, 0 );
+      old_dw->get( particle_mass, d_particle_mass_label, matlIndex, patch, gn, 0 );
 
     } else {
 
       new_dw->getModifiable( density, d_density_label, matlIndex, patch );
 
       new_dw->get( weight, d_weight_label, matlIndex, patch, gn, 0 );
-      new_dw->get( wa_length, d_length_label, matlIndex, patch, gn, 0 );
-      new_dw->get( wa_particle_mass, d_particle_mass_label, matlIndex, patch, gn, 0 );
+      new_dw->get( length, d_length_label, matlIndex, patch, gn, 0 );
+      new_dw->get( particle_mass, d_particle_mass_label, matlIndex, patch, gn, 0 );
 
     }
 
@@ -291,15 +291,25 @@ ConstantSizeInert::computeParticleDensity( const ProcessorGroup* pc,
       double unscaled_length;
       double unscaled_mass;
 
-      if(weight_is_small) {
+      if(!d_unweighted && weight_is_small) {
         unscaled_weight = 0.0;
         unscaled_length = 0.0;
         unscaled_mass = 0.0;
 
       } else {
         unscaled_weight = weight[c]*d_w_scaling_constant;
-        unscaled_length = (wa_length[c]*d_length_scaling_constant)/weight[c];
-        unscaled_mass = (wa_particle_mass[c]*d_mass_scaling_constant)/weight[c];
+        
+        if( d_unweighted ) {
+          unscaled_length = length[c]*d_length_scaling_constant;
+        } else {
+          unscaled_length = (length[c]*d_length_scaling_constant)/weight[c];
+        }
+
+        if( d_unweighted ) {
+          unscaled_mass = particle_mass[c]*d_mass_scaling_constant;
+        } else {
+          unscaled_mass = (particle_mass[c]*d_mass_scaling_constant)/weight[c];
+        }
 
       }
 

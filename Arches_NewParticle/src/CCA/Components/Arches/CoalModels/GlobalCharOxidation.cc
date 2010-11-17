@@ -73,6 +73,7 @@ GlobalCharOxidation::GlobalCharOxidation( std::string modelName,
   nu.push_back( 2.0/2.0 );
   oxidizer_name_.push_back("O2");
 
+  // Uncomment one of the following lines:
   A_.push_back( 2.30 );   E_.push_back( 9.29e7*(JoulesToKiloCals) ); ///< Baxter 1987 (all ranks)
   //A_.push_back( 0.30 );   E_.push_back( 1.49e8*(JoulesToKiloCals) ); ///< Field et al 1967 (all ranks)
   //A_.push_back( 1.03 );   E_.push_back( 7.49e7*(JoulesToKiloCals) ); ///< Baxter 1987 (hv Bituminous A)
@@ -103,6 +104,7 @@ GlobalCharOxidation::GlobalCharOxidation( std::string modelName,
   nu.push_back( 2.0/2.0 );
   oxidizer_name_.push_back("CO2");
 
+  // Uncomment one of the following lines:
   A_.push_back( 3.419);   E_.push_back( 1.30e8*(JoulesToKiloCals) ); ///< Baxter 1987 (lignite)
   //A_.push_back( 1160 );   E_.push_back( 2.59e8*(JoulesToKiloCals) ); ///< Baxter 1987 (hv Bituminous A)
   //A_.push_back( 4890 );   E_.push_back( 2.60e8*(JoulesToKiloCals) ); ///< Baxter 1987 (hv Bituminous C)
@@ -122,6 +124,7 @@ GlobalCharOxidation::GlobalCharOxidation( std::string modelName,
   nu.push_back( 1.0/2.0 );
   oxidizer_name_.push_back("H2O");
 
+  // Uncomment one of the following lines
   A_.push_back( 4.26e4 );   E_.push_back( 3.16e8*(JoulesToKiloCals) ); ///< Otto et al 1979 (lignite)
   //A_.push_back( 208    );   E_.push_back( 2.40e8*(JoulesToKiloCals) ); ///< Otto et al 1979 (lignite)
 
@@ -412,8 +415,8 @@ GlobalCharOxidation::computeModel( const ProcessorGroup * pc,
     int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
 
     constCCVariable<double> weight;
-    constCCVariable<double> wa_length;
-    constCCVariable<double> wa_char_mass;
+    constCCVariable<double> length;
+    constCCVariable<double> char_mass;
     constCCVariable<double> temperature; // holds gas OR particle temperature...
     constCCVariable<double> turbulent_viscosity;
 
@@ -440,8 +443,8 @@ GlobalCharOxidation::computeModel( const ProcessorGroup * pc,
       }
 
       old_dw->get( weight,       d_weight_label,    matlIndex, patch, gn, 0 );
-      old_dw->get( wa_length,    d_length_label,    matlIndex, patch, gn, 0 );
-      old_dw->get( wa_char_mass, d_char_mass_label, matlIndex, patch, gn, 0 );
+      old_dw->get( length,       d_length_label,    matlIndex, patch, gn, 0 );
+      old_dw->get( char_mass,    d_char_mass_label, matlIndex, patch, gn, 0 );
       if(d_useTparticle) {
         old_dw->get( temperature, d_particle_temperature_label, matlIndex, patch, gn, 0 );
       } else {
@@ -465,8 +468,8 @@ GlobalCharOxidation::computeModel( const ProcessorGroup * pc,
       }
 
       new_dw->get( weight,       d_weight_label,    matlIndex, patch, gn, 0 );
-      new_dw->get( wa_length,    d_length_label,    matlIndex, patch, gn, 0 );
-      new_dw->get( wa_char_mass, d_char_mass_label, matlIndex, patch, gn, 0 );
+      new_dw->get( length,       d_length_label,    matlIndex, patch, gn, 0 );
+      new_dw->get( char_mass,    d_char_mass_label, matlIndex, patch, gn, 0 );
       if(d_useTparticle) {
         new_dw->get( temperature, d_particle_temperature_label, matlIndex, patch, gn, 0 );
       } else {
@@ -480,13 +483,19 @@ GlobalCharOxidation::computeModel( const ProcessorGroup * pc,
 
       IntVector c = *iter; 
 
-      double unscaled_char_mass = (wa_char_mass[c]/(weight[c]+TINY))*d_char_scaling_constant;
+      double unscaled_char_mass;
+      if( d_unweighted ) {
+        unscaled_char_mass = char_mass[c]*d_char_scaling_constant;
+      } else {
+        unscaled_char_mass = (char_mass[c]/weight[c])*d_char_scaling_constant;
+      }
 
       bool weight_is_small = (weight[c] < d_w_small) || (weight[c] == 0.0) || (unscaled_char_mass < TINY);
+      bool char_is_small = (unscaled_char_mass < TINY);
 
       double char_rxn_rate_ = 0.0;
 
-      if(weight_is_small) {
+      if( (!d_unweighted && weight_is_small) || char_is_small ) {
         
         // set gas model terms (3 of them) equal to 0
         int z=0;
@@ -512,8 +521,11 @@ GlobalCharOxidation::computeModel( const ProcessorGroup * pc,
         unscaled_weight = weight[c]*d_w_scaling_constant;
 
         if (d_useTparticle) {
-          // particle temp
-          unscaled_temperature = temperature[c]*d_pt_scaling_constant/weight[c];
+          if( d_unweighted) {
+            unscaled_temperature = temperature[c]*d_pt_scaling_constant;
+          } else {
+            unscaled_temperature = temperature[c]*d_pt_scaling_constant/weight[c];
+          }
         } else {
           // particle temp = gas temp
           unscaled_temperature = temperature[c];
@@ -522,7 +534,11 @@ GlobalCharOxidation::computeModel( const ProcessorGroup * pc,
           unscaled_temperature = TINY;
         }
 
-        unscaled_length = (wa_length[c]/weight[c])*d_length_scaling_constant;
+        if( d_unweighted ) {
+          unscaled_length = length[c]*d_length_scaling_constant;
+        } else {
+          unscaled_length = (length[c]/weight[c])*d_length_scaling_constant;
+        }
         if( unscaled_length < TINY ) {
           unscaled_length = TINY;
         }
@@ -534,7 +550,8 @@ GlobalCharOxidation::computeModel( const ProcessorGroup * pc,
         // Mass transfer coefficients
         z=0;
         vector< constCCVariable<double>* >::iterator iOxidizer = oxidizerCCVars.begin();
-        for( vector< CCVariable<double>* >::iterator iGasModel = gasModelCCVars.begin(); iGasModel != gasModelCCVars.end(); ++iGasModel, ++iOxidizer, ++z) {
+        for( vector< CCVariable<double>* >::iterator iGasModel = gasModelCCVars.begin(); 
+             iGasModel != gasModelCCVars.end(); ++iGasModel, ++iOxidizer, ++z) {
           /// Mass transfer coefficients for char oxidation reactions are given by the expression:
           /// \f$ k_{m} = \frac{ 2 D_{om} }{ d_{p} } = \frac{ 2 \nu_{T,fluid} }
           k_m[z] = 2*(turbulent_viscosity[c]/Sc_[z])/unscaled_length;

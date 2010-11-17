@@ -436,11 +436,11 @@ InertParticleHeatTransfer::computeModel( const ProcessorGroup * pc,
     //-------------------------------------------------------
     // Temperatures (gas and particle)
 
-    constCCVariable<double> wa_particle_temperature;
+    constCCVariable<double> particle_temperature;
     if( new_dw->exists(d_particle_temperature_label, matlIndex, patch) ) {
-      new_dw->get( wa_particle_temperature, d_particle_temperature_label, matlIndex, patch, gn, 0);
+      new_dw->get( particle_temperature, d_particle_temperature_label, matlIndex, patch, gn, 0);
     } else {
-      old_dw->get( wa_particle_temperature, d_particle_temperature_label, matlIndex, patch, gn, 0);
+      old_dw->get( particle_temperature, d_particle_temperature_label, matlIndex, patch, gn, 0);
     }
 
     constCCVariable<double> gas_temperature;
@@ -473,18 +473,18 @@ InertParticleHeatTransfer::computeModel( const ProcessorGroup * pc,
       old_dw->get( weight, d_weight_label, matlIndex, patch, gn, 0 );
     }
 
-    constCCVariable<double> wa_particle_length;
+    constCCVariable<double> particle_length;
     if( new_dw->exists(d_length_label, matlIndex, patch) ) {
-      new_dw->get( wa_particle_length, d_length_label, matlIndex, patch, gn, 0 );
+      new_dw->get( particle_length, d_length_label, matlIndex, patch, gn, 0 );
     } else {
-      old_dw->get( wa_particle_length, d_length_label, matlIndex, patch, gn, 0 );
+      old_dw->get( particle_length, d_length_label, matlIndex, patch, gn, 0 );
     }
 
-    constCCVariable<double> wa_particle_mass;
+    constCCVariable<double> particle_mass;
     if( new_dw->exists(d_particle_mass_label, matlIndex, patch) ) {
-      new_dw->get( wa_particle_mass, d_particle_mass_label, matlIndex, patch, gn, 0 );
+      new_dw->get( particle_mass, d_particle_mass_label, matlIndex, patch, gn, 0 );
     } else {
-      old_dw->get( wa_particle_mass, d_particle_mass_label, matlIndex, patch, gn, 0 );
+      old_dw->get( particle_mass, d_particle_mass_label, matlIndex, patch, gn, 0 );
     }
 
 
@@ -520,7 +520,7 @@ InertParticleHeatTransfer::computeModel( const ProcessorGroup * pc,
       double Q_convection;
       double Q_radiation;
 
-      if (weight_is_small) {
+      if (!d_unweighted && weight_is_small) {
 
         scaled_weight = 0.0;
         unscaled_weight = 0.0;
@@ -540,13 +540,25 @@ InertParticleHeatTransfer::computeModel( const ProcessorGroup * pc,
         scaled_weight = weight[c];
         unscaled_weight = weight[c]*d_w_scaling_constant;
 
-        scaled_particle_temperature = wa_particle_temperature[c]/scaled_weight;
+        if( d_unweighted ) {
+          scaled_particle_temperature = particle_temperature[c];
+        } else {
+          scaled_particle_temperature = particle_temperature[c]/scaled_weight;
+        }
         unscaled_particle_temperature = scaled_particle_temperature*d_pt_scaling_constant;
 
-        scaled_length = wa_particle_length[c]/scaled_weight;
+        if( d_unweighted ) {
+          scaled_length = particle_length[c];
+        } else {
+          scaled_length = particle_length[c]/scaled_weight;
+        }
         unscaled_length = scaled_length*d_length_scaling_constant;
 
-        scaled_particle_mass = wa_particle_mass[c]/scaled_weight;
+        if( d_unweighted ) {
+          scaled_particle_mass = particle_mass[c];
+        } else {
+          scaled_particle_mass = particle_mass[c]/scaled_weight;
+        }
         unscaled_particle_mass = scaled_particle_mass*d_mass_scaling_constant;
 
         // ---------------------------------------------

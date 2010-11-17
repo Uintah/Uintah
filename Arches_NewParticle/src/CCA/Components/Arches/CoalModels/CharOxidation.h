@@ -47,7 +47,10 @@ public:
                  DataWarehouse        * old_dw, 
                  DataWarehouse        * new_dw );
 
-  /** @brief  Actually do dummy initialization (sched_dummyInit is defined in ModelBase parent class) */
+  /** @brief Schedule the dummy initialization required by MPMArches */
+  void sched_dummyInit( const LevelP& level, SchedulerP& sched );
+
+  /** @brief  Actually do dummy initialization */
   void dummyInit( const ProcessorGroup* pc, 
                   const PatchSubset* patches, 
                   const MaterialSubset* matls, 

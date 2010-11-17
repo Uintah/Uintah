@@ -108,7 +108,7 @@ DQMOMEqn::problemSetup(const ProblemSpecP& inputdb )
     d_weightLabel = eqn.getTransportEqnLabel();
     d_w_small = eqn.getSmallClip();
     if( d_w_small == 0.0 ) {
-      d_w_small = 1e-16;
+      d_w_small = TINY;
     }
   }
 
@@ -555,7 +555,7 @@ DQMOMEqn::buildTransportEqn( const ProcessorGroup* pc,
     if (d_doConv) {
       d_disc->computeConv( patch, Fconv, oldPhi, uVel, vVel, wVel, partVel, areaFraction, d_convScheme ); 
     }
-  
+
     //----DIFFUSION
     if (d_doDiff) {
       d_disc->computeDiff( patch, Fdiff, oldPhi, mu_t, areaFraction, d_turbPrNo, matlIndex, d_eqnName );
@@ -586,27 +586,18 @@ DQMOMEqn::buildTransportEqn( const ProcessorGroup* pc,
           }            
         }
 #endif
-        //if (d_addExtraSources) {
-
-        //  // Get the factory of source terms
-        //  SourceTermFactory& src_factory = SourceTermFactory::self();
-        //  for (vector<std::string>::iterator src_iter = d_sources.begin(); src_iter != d_sources.end(); src_iter++){
-        //   //constCCVariable<double> extra_src; 
-        //   SourceTermBase& temp_src = src_factory.retrieve_source_term( *src_iter );
-        //   new_dw->get(extra_src, temp_src.getSrcLabel(), matlIndex, patch, gn, 0);
-
-        //   // Add to the RHS
-        //   RHS[c] += extra_src[c]*vol;
-        //  }
-        //}
+      
       }
-    }//end cells
 
 #ifdef DEBUG_MODELS
-    proc0cout << "Particle velocity = " << partVel[IntVector(1,2,3)] << endl;
-    proc0cout << "Gas velocity = [" << uVel[IntVector(1,2,3)] << ", " << vVel[IntVector(1,2,3)] << ", " << wVel[IntVector(1,2,3)] << "]" << endl;
-    proc0cout << "RHS = Fconv + Fdiff + src*vol = " << Fconv[IntVector(1,2,3)] << " + " << Fdiff[IntVector(1,2,3)] << " + " << src[IntVector(1,2,3)] << "*" << vol << " = " << RHS[IntVector(1,2,3)] << endl;
+      // for a particular equation,
+      // for a particular cell,
+      // print out RHS = Fconv + Fdiff + src*vol
 #endif
+
+    }//end cells
+
+
 
   }//end patches
 }
@@ -633,12 +624,6 @@ DQMOMEqn::sched_solveTransportEqn( const LevelP& level,
   //Old
   tsk->requires(Task::OldDW, d_transportVarLabel, Ghost::None, 0);
   tsk->requires(Task::OldDW, d_fieldLabels->d_sharedState->get_delt_label(), Ghost::None, 0 );
-
-  //cmr
-  //tsk->requires( Task::OldDW, d_fieldLabels->d_MinTimestepLabel );
-  //tsk->requires( Task::NewDW, d_fieldLabels->d_MinTimestepLabel );
-  //tsk->modifies( d_fieldLabels->d_MinTimestepLabel );
-
   tsk->requires(Task::OldDW, d_fieldLabels->d_sharedState->get_delt_label(), level.get_rep());
 
   sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
@@ -657,16 +642,6 @@ DQMOMEqn::solveTransportEqn( const ProcessorGroup* pc,
                              int timeSubStep,
                              bool copyOldIntoNew )
 {
-  //cmr
-  /*
-  min_vartype MinTimestep;
-  //old_dw->get( MinTimestep, d_fieldLabels->d_MinTimestepLabel );
-  new_dw->get( MinTimestep, d_fieldLabels->d_MinTimestepLabel );
-  double current_min_delta_t = MinTimestep;
-  new_dw->put( min_vartype(current_min_delta_t+1.0), d_fieldLabels->d_MinTimestepLabel );
-  //new_dw->put( min_vartype(current_min_delta_t+1.0), d_fieldLabels->d_MinTimestepLabel, getLevel(patches) );
-  */
-
   //patch loop
   for (int p=0; p < patches->size(); p++){
 
@@ -680,10 +655,6 @@ DQMOMEqn::solveTransportEqn( const ProcessorGroup* pc,
     old_dw->get(DT, d_fieldLabels->d_sharedState->get_delt_label());
     double dt = DT; 
 
-    //delt_vartype CurrTimestep;
-    //old_dw->get( CurrTimestep, d_fieldLabels->d_sharedState->get_delt_label());
-    //double delta_t = CurrTimestep;
-
     // Here, j is the rk step and n is the time step.  
     CCVariable<double> phi_at_jp1;   // phi^{(j+1)}
     CCVariable<double> phi_at_j;     // phi^{(j)}
@@ -695,20 +666,47 @@ DQMOMEqn::solveTransportEqn( const ProcessorGroup* pc,
     old_dw->get(rk1_phi, d_transportVarLabel, matlIndex, patch, gn, 0);
     new_dw->get(RHS, d_RHSLabel, matlIndex, patch, gn, 0);
 
+
 #ifdef DEBUG_MODELS
-    proc0cout << "Eqn " << d_eqnName << ": forward euler update" << endl;
-    proc0cout << "Before: phi = " << phi_at_jp1[IntVector(1,2,3)] << endl;
-    Vector dx=patch->dCell();
-    double vol= dx.x()*dx.y()*dx.z();
-    proc0cout << "RHS*(dt/vol) = " << RHS[IntVector(1,2,3)] << "*(" << dt << "/" << vol << ") = " << (RHS[IntVector(1,2,3)])*(dt/vol) << endl;
+    // for a particular equation,
+    // for a particular cell, 
+    // print what phi is before the FE update
+    // print out RHS*(dt/vol)
+
+    //if( d_eqnName == "Tp_qn0" ) {
+    //  if( patch->getCellLowIndex().x() < 1  && patch->getCellHighIndex().x() > 1 ) {
+    //    if( patch->getCellLowIndex().y() < 34 && patch->getCellHighIndex().y() > 34 ) {
+    //      if( patch->getCellLowIndex().z() < 33 && patch->getCellHighIndex().z() > 33 ) {
+    //        
+    //        cout << "Equation Tp_qn0: " << endl;
+    //        cout << "    Before: phi = " << phi_at_jp1[IntVector(1,34,33)] << endl;
+    //        Vector dx=patch->dCell();
+    //        double vol= dx.x()*dx.y()*dx.z();
+    //        cout << "    RHS*(dt/vol) = " << RHS[IntVector(1,34,33)] << "*(" << dt << "/" << vol << ") = " << (RHS[IntVector(1,34,33)])*(dt/vol) << endl;
+    //      }
+    //    }
+    //  }
+    //}
 #endif
 
     // update to get phi^{(j+1)}
     d_timeIntegrator->singlePatchFEUpdate( patch, phi_at_jp1, RHS, dt, curr_ssp_time, d_eqnName );
 
+
 #ifdef DEBUG_MODELS
-    proc0cout << "After: phi = " << phi_at_jp1[IntVector(1,2,3)] << endl;
-    proc0cout << endl;
+    // for a particular equation,
+    // for a particular cell,
+    // print what phi is after the FE update
+
+    //if( d_eqnName == "Tp_qn0" ) {
+    //  if( patch->getCellLowIndex().x() < 1  && patch->getCellHighIndex().x() > 1 ) {
+    //    if( patch->getCellLowIndex().y() < 34 && patch->getCellHighIndex().y() > 34 ) {
+    //      if( patch->getCellLowIndex().z() < 33 && patch->getCellHighIndex().z() > 33 ) {
+    //        cout << "    After: phi = " << phi_at_jp1[IntVector(1,34,33)] << endl;
+    //      }
+    //    }
+    //  }
+    //}
 #endif
     
     // Compute the current RK time
@@ -739,49 +737,34 @@ DQMOMEqn::solveTransportEqn( const ProcessorGroup* pc,
       // this IS the last time sub-step
 
       // The calculation procedure looks something like this:
-      // 1. Compute the error between the last Runge Kutta time substeps
+      // 1. Compute the "error" between the last two Runge Kutta time substeps
       // 2. Use this error to estimate a new minimum timestep, and store that minimum timestep
       
       double new_min_delta_t = 1e16;
       for( CellIterator iter = patch->getCellIterator(); !iter.done(); ++iter ) {
         IntVector c = *iter;
 
-        // Step 1: Compute error
-        // error = ( phi^{(1)}-phi^{n} )/delta_t - RHS(\phi^{(1)})
+        /// Step 1: Compute error
+        /// \f$ Err = \frac{ ( \phi^{(1)} - \phi^{n} ) }{ \Delta t } - RHS( \phi^{(1)} ) \f$
         double error = (phi_at_j[c] - rk1_phi[c])/dt - RHS[c];
         double deltat = fabs( phi_at_jp1[c]/(error+TINY) );
 
         // Step 2: Estimate new min. timestep
-        // min_delta_t_stable = phi^{j+1} / error [=] phi/(phi/time) [=] time
+        // \f$ \Delta t_{min,stable} = \frac{ phi^{j+1} }{ Err } \f$
+        // Units: \f$ \frac{ \phi }{ \frac{phi}{time} } [=] time \f$
         if( fabs(error) > TINY ) {
           new_min_delta_t = min( deltat, new_min_delta_t);
         }
-
-        /*
-        //cmr
-        if( new_min_delta_t < 0 ) {
-          cout << "Equation " << d_eqnName << ": " << endl;
-          cout << "Error = [ phi^(j) - phi^(n) ]/dt - RHS  =  [ ";
-          cout << phi_at_j[c] << " - " << rk1_phi[c] << " ] / " << dt;
-          cout << " - " << RHS[c];
-          cout << " = " << error << endl;
-
-          cout << "Delta_t = phi^(j+1) / error = " << phi_at_jp1[c] << "/" << error;
-          cout << " = " << deltat << endl;
-
-          int a = 0; ++a;
-        }
-        */
 
       }//end cells
       
       new_min_delta_t *= d_timestepMultiplier;
       DQMOMEqnFactory& dqmomFactory  = DQMOMEqnFactory::self(); 
-      /*
-      //cmr
-      cout << "Hi from equation " << d_eqnName << ", about to set minimum timestep var to " << new_min_delta_t << endl;
-      */
-      dqmomFactory.setMinTimestepVar( d_eqnName, new_min_delta_t );
+
+      //cout << "Hi from equation " << d_eqnName << ", about to set minimum timestep var to " << new_min_delta_t << endl;
+      if( new_min_delta_t != 0.0) {
+        dqmomFactory.setMinTimestepVar( d_eqnName, new_min_delta_t );
+      }
 
     }
 
@@ -808,16 +791,18 @@ DQMOMEqn::sched_getUnscaledValues( const LevelP& level, SchedulerP& sched )
   tsk->modifies(d_transportVarLabel); 
 
   if( !d_weight ) {
-    string name = "w_qn"; 
-    string node; 
-    std::stringstream out; 
-    out << d_quadNode; 
-    node = out.str(); 
-    name += node; 
+    if( !d_unweighted ) {
+      string name = "w_qn"; 
+      string node; 
+      std::stringstream out; 
+      out << d_quadNode; 
+      node = out.str(); 
+      name += node; 
 
-    EqnBase& eqn = dqmomFactory.retrieve_scalar_eqn( name ); 
-    
-    tsk->requires( Task::NewDW, eqn.getTransportEqnLabel(), gn, 0 ); 
+      EqnBase& eqn = dqmomFactory.retrieve_scalar_eqn( name ); 
+      
+      tsk->requires( Task::NewDW, eqn.getTransportEqnLabel(), gn, 0 ); 
+    }
   }
  
   sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
@@ -1001,9 +986,6 @@ DQMOMEqn::sched_dummyInit( const LevelP& level, SchedulerP& sched )
   tsk->computes(d_FdiffLabel);
   tsk->computes(d_RHSLabel);
   tsk->computes(d_sourceLabel); 
-  tsk->computes(d_FconvLabel);
-  tsk->computes(d_FdiffLabel);
-  tsk->computes(d_RHSLabel);
 
   sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
 }
@@ -1040,6 +1022,8 @@ DQMOMEqn::dummyInit( const ProcessorGroup* pc,
     new_dw->allocateAndPut( fdiff, d_FdiffLabel, matlIndex, patch );
     new_dw->allocateAndPut( rhs, d_RHSLabel, matlIndex, patch );
 
+    old_phi.initialize(0.0);
+    ic.initialize(0.0);
     src.initialize(0.0);
     fconv.initialize(0.0);
     fdiff.initialize(0.0);
@@ -1047,14 +1031,6 @@ DQMOMEqn::dummyInit( const ProcessorGroup* pc,
 
     old_dw->get(phi_oldDW, d_transportVarLabel, matlIndex, patch, gn, 0);
     phi.copyData( phi_oldDW ); 
-    phi.copyData(phi_oldDW);
-
-    old_phi.initialize(0.0);
-    ic.initialize(0.0);
-    src.initialize(0.0);
-    fconv.initialize(0.0);
-    fdiff.initialize(0.0);
-    rhs.initialize(0.0);
 
   }
 }

@@ -261,6 +261,7 @@ DragModel::sched_computeModel( const LevelP& level,
     tsk->requires( Task::OldDW, d_fieldLabels->d_densityCPLabel,   gn, 0);   // gas density
     tsk->requires( Task::OldDW, d_fieldLabels->d_newCCVelocityLabel, gn, 0 ); // gas velocity
     tsk->requires( Task::OldDW, d_velocity_label, gn, 0 ); // particle velocity
+
     // particle density is always calculated FIRST, so get it from the new DW
     tsk->requires( Task::NewDW, particle_density_label, gn, 0); // particle density 
 
@@ -296,6 +297,214 @@ DragModel::sched_computeModel( const LevelP& level,
 }
 
 //---------------------------------------------------------------------------
+// Method: A more efficient way to compute the source term
+//---------------------------------------------------------------------------
+/*
+void
+DragModel::computeModel( const ProcessorGroup* pc, 
+                         const PatchSubset* patches, 
+                         const MaterialSubset* matls, 
+                         DataWarehouse* old_dw, 
+                         DataWarehouse* new_dw,
+                         int timeSubStep )
+{
+  for (int p=0; p < patches->size(); p++){
+
+    Ghost::GhostType  gn  = Ghost::None;
+
+    const Patch* patch = patches->get(p);
+    int archIndex = 0;
+    int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
+
+    // move this assignment to a private member
+    CoalModelFactory& coalFactory = CoalModelFactory::self();
+    const VarLabel* particle_density_label = coalFactory.getParticleDensityLabel(d_quadNode);
+
+    constCCVariable<double> gas_density;
+    constCCVariable<double> particle_density;
+
+    constCCVariable<Vector> gas_velocity;
+    constCCVariable<Vector> particle_velocity;
+
+    constCCVariable<double> particle_length; 
+    constCCVariable<double> weight;
+
+    CCVariable<Vector> drag_particle;
+    CCVariable<Vector> drag_gas; 
+    CCVariable<double> uvel_model;
+    CCVariable<double> vvel_model;
+    CCVariable<double> wvel_model;
+
+    if( timeSubStep == 0 ) {
+
+      old_dw->get( gas_density, d_fieldLabels->d_densityCPLabel, matlIndex, patch, gn, 0);
+
+      // particle density is always calculated FIRST, so get from new DW
+      new_dw->get( particle_density, particle_density_label, matlIndex, patch, gn, 0);
+
+      old_dw->get( gas_velocity, d_fieldLabels->d_newCCVelocityLabel, matlIndex, patch, gn, 0);
+      old_dw->get( particle_velocity, d_velocity_label, matlIndex, patch, gn, 0);
+
+      old_dw->get( particle_length, d_length_label, matlIndex, patch, gn, 0 );
+      old_dw->get( weight, d_weight_label, matlIndex, patch, gn, 0 );
+
+      new_dw->allocateAndPut( drag_particle, d_modelLabel, matlIndex, patch );
+      drag_particle.initialize(Vector(0.,0.,0.));
+
+      new_dw->allocateAndPut( drag_gas, d_gasLabel, matlIndex, patch );
+      drag_gas.initialize(Vector(0.,0.,0.));
+
+      new_dw->allocateAndPut( uvel_model, d_uvel_model_label, matlIndex, patch );
+      uvel_model.initialize(0.0);
+
+      new_dw->allocateAndPut( vvel_model, d_vvel_model_label, matlIndex, patch );
+      vvel_model.initialize(0.0);
+
+      new_dw->allocateAndPut( wvel_model, d_wvel_model_label, matlIndex, patch );
+      wvel_model.initialize(0.0);
+
+    } else { 
+
+      new_dw->get( gas_density, d_fieldLabels->d_densityTempLabel, matlIndex, patch, gn, 0);
+      new_dw->get( particle_density, particle_density_label, matlIndex, patch, gn, 0);
+
+      new_dw->get( gas_velocity, d_fieldLabels->d_newCCVelocityLabel, matlIndex, patch, gn, 0);
+      new_dw->get( particle_velocity, d_velocity_label, matlIndex, patch, gn, 0);
+
+      new_dw->get( particle_length, d_length_label, matlIndex, patch, gn, 0 );
+      new_dw->get( weight, d_weight_label, matlIndex, patch, gn, 0 );
+
+      new_dw->getModifiable( drag_particle, d_modelLabel, matlIndex, patch ); 
+      new_dw->getModifiable( drag_gas, d_gasLabel, matlIndex, patch ); 
+
+      new_dw->getModifiable( uvel_model, d_uvel_model_label, matlIndex, patch );
+      new_dw->getModifiable( vvel_model, d_vvel_model_label, matlIndex, patch );
+      new_dw->getModifiable( wvel_model, d_wvel_model_label, matlIndex, patch );
+
+    }
+
+
+    for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
+      IntVector c = *iter; 
+
+      if( !d_unweighted && weight[c] < d_w_small ) {
+        drag_particle[c] = Vector(0.,0.,0.);
+        drag_gas[c] = Vector(0.,0.,0.);
+      } else {
+
+        double length;
+        if( d_unweighted ) {
+          length = particle_length[c]*d_length_scaling_factor;  
+        } else {
+          length = (particle_length[c]/weight[c])*d_length_scaling_factor;   
+        }
+
+        Vector gasVel = gas_velocity[c];
+        Vector partVel = particle_velocity[c];
+
+        double rhop = particle_density[c];
+
+        double x_diff = ( gasVel.x() - partVel.x() );
+        double y_diff = ( gasVel.y() - partVel.y() );
+        double z_diff = ( gasVel.z() - partVel.z() );
+        double diff   = fabs(gasVel.length() - partVel.length());
+        double Re     = (diff*length)/d_visc;
+
+        double phi;
+        if(Re < 1) {
+          phi = 1;
+        } else if(Re>1000) {
+          phi = 0.0183*Re;
+        } else {
+          phi = 1. + .15*pow(Re, 0.687);
+        }
+
+        double t_p;
+
+        if( length > TINY ) {
+
+          t_p = (rhop/(18*d_visc))*pow(length,2); 
+
+          uvel_model[c]    = (phi/t_p)*(x_diff) + d_gravity.x();
+          vvel_model[c]    = (phi/t_p)*(y_diff) + d_gravity.y();
+          wvel_model[c]    = (phi/t_p)*(z_diff) + d_gravity.z();
+          drag_particle[c] = Vector( uvel_model[c], vvel_model[c], wvel_model[c] );
+
+          double prefix = -(weight[c]*d_w_scaling_factor)*(rhop/6)*pi*(phi/t_p)*pow(length,3);
+          double gasSrc_x = prefix*x_diff;
+          double gasSrc_y = prefix*y_diff;
+          double gasSrc_z = prefix*z_diff;
+          drag_gas[c] = Vector( gasSrc_x, gasSrc_y, gasSrc_z );
+
+          if( c == IntVector(2,35,35) ) {
+            cout << endl;
+            cout << "Drag model: QN " << d_quadNode << ": Gas vel = " << gasVel << endl;
+            cout << "Gas drag = prefix*diff = " << prefix << "*" << Vector(x_diff,y_diff,z_diff) << " = " << drag_gas[c] << endl;
+            cout << "phi (for Re = " << Re << ") = ";
+                if( Re < 1 ) {
+                  cout << "1 (" << phi << ")" << endl;
+                } else if( Re > 1000) {
+                  cout << "0.0183*Re = " << phi << endl;
+                } else {
+                  cout << "1.0 + 0.15 * Re^(0.687) = 1.0 + 0.15*" << pow(Re,0.687) << " = " << phi << endl;
+                }
+            cout << "tau_p = (rhop/(18*d_visc))*pow(length,2) = (" << rhop << "/(18*" << d_visc << "))*" << length*length << " = " << t_p << endl;
+            cout << "X-Vel = (phi/t_p)*(x_diff) + d_gravity.x() = (" << phi << "/" << t_p << ")*(" << x_diff << ") + " << d_gravity.x() << " = " << drag_particle[c].x() << endl;
+            cout << "Y-Vel = (phi/t_p)*(y_diff) + d_gravity.y() = (" << phi << "/" << t_p << ")*(" << y_diff << ") = " << drag_particle[c].y() << endl;
+            cout << "Z-Vel = (phi/t_p)*(z_diff) + d_gravity.z() = (" << phi << "/" << t_p << ")*(" << z_diff << ") = " << drag_particle[c].z() << endl;
+            cout << endl;
+          }
+
+#ifdef DEBUG_MODELS
+          if( isnan(gasSrc_x) || isnan(gasSrc_y) || isnan(gasSrc_z) ) {
+            proc0cout << "something is nan! from drag model qn " << d_quadNode << endl;
+            proc0cout << "gas src x = " << uvel_model[c]  << endl;
+            proc0cout << "gas src y = " << vvel_model[c]  << endl;
+            proc0cout << "gas src z = " << wvel_model[c]  << endl;
+          }
+
+          if( c == IntVector(2,35,35) ) {
+            cout << endl;
+            cout << "Drag model: QN " << d_quadNode << ": Gas vel = " << gasVel << endl;
+            cout << "Gas drag = prefix*diff = " << prefix << "*" << Vector(x_diff,y_diff,z_diff) << " = " << drag_gas[c] << endl;
+            cout << "phi (for Re = " << Re << ") = ";
+                if( Re < 1 ) {
+                  cout << "1 (" << phi << ")" << endl;
+                } else if( Re > 1000) {
+                  cout << "0.0183*Re = " << phi << endl;
+                } else {
+                  cout << "1.0 + 0.15 * Re^(0.687) = 1.0 + 0.15*" << pow(Re,0.687) << " = " << phi << endl;
+                }
+            cout << "tau_p = (rhop/(18*d_visc))*pow(length,2) = (" << rhop << "/(18*" << d_visc << "))*" << length*length << " = " << t_p << endl;
+            cout << "X-Vel = (phi/t_p)*(x_diff) + d_gravity.x() = (" << phi << "/" << t_p << ")*(" << x_diff << ") + " << d_gravity.x() << " = " << drag_particle[c].x() << endl;
+            cout << "Y-Vel = (phi/t_p)*(y_diff) + d_gravity.y() = (" << phi << "/" << t_p << ")*(" << y_diff << ") = " << drag_particle[c].y() << endl;
+            cout << "Z-Vel = (phi/t_p)*(z_diff) + d_gravity.z() = (" << phi << "/" << t_p << ")*(" << z_diff << ") = " << drag_particle[c].z() << endl;
+            cout << endl;
+          }
+
+ #endif 
+
+        } else {
+
+          uvel_model[c]    = 0.0;
+          vvel_model[c]    = 0.0;
+          wvel_model[c]    = 0.0;
+          drag_particle[c] = 0.0;
+          drag_gas[c]      = 0.0;
+
+        }
+
+      }//end if small weight  
+    }// end cells
+  }//end patches
+}
+*/
+
+
+
+
+
+//---------------------------------------------------------------------------
 // Method: Actually compute the source term 
 //---------------------------------------------------------------------------
 void
@@ -324,7 +533,7 @@ DragModel::computeModel( const ProcessorGroup* pc,
     constCCVariable<Vector> gas_velocity;
     constCCVariable<Vector> particle_velocity;
 
-    constCCVariable<double> w_particle_length; 
+    constCCVariable<double> particle_length; 
     constCCVariable<double> weight;
 
     CCVariable<Vector> drag_particle;
@@ -343,7 +552,7 @@ DragModel::computeModel( const ProcessorGroup* pc,
       old_dw->get( gas_velocity, d_fieldLabels->d_newCCVelocityLabel, matlIndex, patch, gn, 0);
       old_dw->get( particle_velocity, d_velocity_label, matlIndex, patch, gn, 0);
 
-      old_dw->get( w_particle_length, d_length_label, matlIndex, patch, gn, 0 );
+      old_dw->get( particle_length, d_length_label, matlIndex, patch, gn, 0 );
       old_dw->get( weight, d_weight_label, matlIndex, patch, gn, 0 );
 
       new_dw->allocateAndPut( drag_particle, d_modelLabel, matlIndex, patch );
@@ -369,7 +578,7 @@ DragModel::computeModel( const ProcessorGroup* pc,
       new_dw->get( gas_velocity, d_fieldLabels->d_newCCVelocityLabel, matlIndex, patch, gn, 0);
       new_dw->get( particle_velocity, d_velocity_label, matlIndex, patch, gn, 0);
 
-      new_dw->get( w_particle_length, d_length_label, matlIndex, patch, gn, 0 );
+      new_dw->get( particle_length, d_length_label, matlIndex, patch, gn, 0 );
       new_dw->get( weight, d_weight_label, matlIndex, patch, gn, 0 );
 
       new_dw->getModifiable( drag_particle, d_modelLabel, matlIndex, patch ); 
@@ -381,26 +590,39 @@ DragModel::computeModel( const ProcessorGroup* pc,
 
     }
 
-
     for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
-      IntVector c = *iter; 
+      IntVector c = *iter;
 
-      if( weight[c] < d_w_small ) {
+      if( !d_unweighted && weight[c] < d_w_small ) {
         drag_particle[c] = Vector(0.,0.,0.);
         drag_gas[c] = Vector(0.,0.,0.);
+
       } else {
-        double length = w_particle_length[c]/weight[c]*d_length_scaling_factor;   
+
+        double length;
+        if( d_unweighted ) {
+          length = particle_length[c]*d_length_scaling_factor;
+        } else {
+          length = (particle_length[c]/weight[c])*d_length_scaling_factor;
+        }
 
         Vector gasVel = gas_velocity[c];
         Vector partVel = particle_velocity[c];
 
         double rhop = particle_density[c];
 
-        double x_diff = ( gasVel.x() - partVel.x() );
-        double y_diff = ( gasVel.y() - partVel.y() );
-        double z_diff = ( gasVel.z() - partVel.z() );
-        double diff   = fabs(gasVel.length() - partVel.length());
-        double Re     = (diff*length)/d_visc;
+        //double x_diff = ( gasVel.x() - partVel.x() );
+        //double y_diff = ( gasVel.y() - partVel.y() );
+        //double z_diff = ( gasVel.z() - partVel.z() );
+
+        Vector cartGas = gasVel;
+        Vector sphGas = cart2sph( cartGas );
+
+        Vector cartPart = partVel;
+        Vector sphPart = cart2sph( cartPart );
+
+        double diff = sphGas.z() - sphPart.z();
+        double Re  = abs(diff)*length / d_visc;
 
         double phi;
         if(Re < 1) {
@@ -411,57 +633,57 @@ DragModel::computeModel( const ProcessorGroup* pc,
           phi = 1. + .15*pow(Re, 0.687);
         }
 
-        double t_p;
-
         if( length > TINY ) {
 
-          t_p = (rhop/(18*d_visc))*pow(length,2); 
+          double t_p = (rhop/(18*d_visc))*pow(length,2);
 
-          uvel_model[c]    = (phi/t_p)*(x_diff + d_gravity.x());
-          vvel_model[c]    = (phi/t_p)*(y_diff + d_gravity.y());
-          wvel_model[c]    = (phi/t_p)*(z_diff + d_gravity.z());
+          uvel_model[c] = (phi/t_p)*(cartGas.x()-cartPart.x())+d_gravity.x();
+          vvel_model[c] = (phi/t_p)*(cartGas.y()-cartPart.y())+d_gravity.y();
+          wvel_model[c] = (phi/t_p)*(cartGas.z()-cartPart.z())+d_gravity.z();
           drag_particle[c] = Vector( uvel_model[c], vvel_model[c], wvel_model[c] );
 
-          double prefix = -(weight[c]*d_w_scaling_factor)*(rhop/6)*pi*(phi/t_p)*pow(length,3);
-          double gasSrc_x = prefix*x_diff;
-          double gasSrc_y = prefix*y_diff;
-          double gasSrc_z = prefix*z_diff;
-          drag_gas[c] = Vector( gasSrc_x, gasSrc_y, gasSrc_z );
+          double prefix = -weight[c] * d_w_scaling_factor * rhop * (1/6) * pi * phi * (1/t_p) * pow(length,3);
+          double gas_x = prefix * (cartGas.x() - cartPart.x());
+          double gas_y = prefix * (cartGas.y() - cartPart.y());
+          double gas_z = prefix * (cartGas.z() - cartPart.z());
+          drag_gas[c] = Vector( gas_x, gas_y, gas_z );
 
 #ifdef DEBUG_MODELS
-          //cmr
-          if( c == IntVector(1,2,3) ) {
+          if( c == IntVector(1,34,34) ) {
             cout << endl;
-            cout << "Drag model: QN " << d_quadNode << ": diff = [ " << x_diff << ", " << y_diff << ", " << z_diff << " ] " << endl;
-            cout << "Drag model: QN " << d_quadNode << ": Gas velocity = " << gasVel << " and particle velocity = " << partVel << endl;
-            cout << endl;
-
-            /*
-            cout << endl;
-            cout << "Drag model: QN " << d_quadNode << ": Gas drag = prefix*diff = " << prefix << "*" << Vector(x_diff,y_diff,z_diff) << " = " << drag_gas[c] << endl;
+            cout << "Drag model J, cell " << c << ": QN " << d_quadNode << ": Gas vel = " << gasVel << endl;
+            cout << "Prefix = -weight*rhop*(1/6)*pi*phi*(1/tau_p)*pow(length,3) = -" << weight[c] << "*" << rhop << "*(1/6)*pi*phi*(1/" << t_p << ")*" << pow(length,3) << " = " << prefix << endl;
+            cout << "Gas drag = prefix*diff = " << prefix << "*" << (cartGas - cartPart) << " = " << drag_gas[c] << endl;
+            cout << "phi (for Re = " << Re << ") = ";
+                if( Re < 1 ) {
+                  cout << "1 (" << phi << ")" << endl;
+                } else if( Re > 1000) {
+                  cout << "0.0183*Re = " << phi << endl;
+                } else {
+                  cout << "1.0 + 0.15 * Re^(0.687) = 1.0 + 0.15*" << pow(Re,0.687) << " = " << phi << endl;
+                }
             cout << "tau_p = (rhop/(18*d_visc))*pow(length,2) = (" << rhop << "/(18*" << d_visc << "))*" << length*length << " = " << t_p << endl;
-            cout << "X-Vel = (phi/t_p)*(x_diff + d_gravity.x()) = (" << phi << "/" << t_p << ")*(" << x_diff << ") = " << drag_gas[c].x() << endl;
-            cout << "Y-Vel = (phi/t_p)*(y_diff + d_gravity.y()) = (" << phi << "/" << t_p << ")*(" << y_diff << ") = " << drag_gas[c].y() << endl;
-            cout << "Z-Vel = (phi/t_p)*(z_diff + d_gravity.z()) = (" << phi << "/" << t_p << ")*(" << z_diff << ") = " << drag_gas[c].z() << endl;
+            cout << "X-Vel = (phi/t_p)*(x_diff) + d_gravity.x() = (" << phi << "/" << t_p << ")*(" << cartGas.x() - cartPart.x() << ") + " << d_gravity.x() << " = " << drag_particle[c].x() << endl;
+            cout << "Y-Vel = (phi/t_p)*(y_diff) + d_gravity.y() = (" << phi << "/" << t_p << ")*(" << cartGas.y() - cartPart.y() << ") + " << d_gravity.y() << " = " << drag_particle[c].y() << endl;
+            cout << "Z-Vel = (phi/t_p)*(z_diff) + d_gravity.z() = (" << phi << "/" << t_p << ")*(" << cartGas.z() - cartPart.z() << ") + " << d_gravity.z() << " = " << drag_particle[c].z() << endl;
             cout << endl;
-            */
           }
- #endif 
+#endif
 
-        } else {
+        }//end if length is tiny
 
-          uvel_model[c]    = 0.0;
-          vvel_model[c]    = 0.0;
-          wvel_model[c]    = 0.0;
-          drag_particle[c] = 0.0;
-          drag_gas[c]      = 0.0;
+      }
 
-        }
+    } //end cells
 
-      }//end if small weight  
-    }// end cells
   }//end patches
 }
+
+
+
+
+
+
 
 void
 DragModel::sched_computeParticleVelocity( const LevelP& level,
@@ -521,9 +743,9 @@ DragModel::computeParticleVelocity( const ProcessorGroup* pc,
     constCCVariable<Vector> gas_velocity;
 
     constCCVariable<double> weight;
-    constCCVariable<double> wtd_particle_uvel;
-    constCCVariable<double> wtd_particle_vvel;
-    constCCVariable<double> wtd_particle_wvel;
+    constCCVariable<double> particle_uvel;
+    constCCVariable<double> particle_vvel;
+    constCCVariable<double> particle_wvel;
 
     CCVariable<Vector> particle_velocity;
 
@@ -532,9 +754,9 @@ DragModel::computeParticleVelocity( const ProcessorGroup* pc,
       old_dw->get( gas_velocity, d_fieldLabels->d_newCCVelocityLabel, matlIndex, patch, gn, 0);
 
       old_dw->get( weight, d_weight_label, matlIndex, patch, gn, 0 );
-      old_dw->get( wtd_particle_uvel, d_uvel_label, matlIndex, patch, gn, 0 );
-      old_dw->get( wtd_particle_vvel, d_vvel_label, matlIndex, patch, gn, 0 );
-      old_dw->get( wtd_particle_wvel, d_wvel_label, matlIndex, patch, gn, 0 );
+      old_dw->get( particle_uvel, d_uvel_label, matlIndex, patch, gn, 0 );
+      old_dw->get( particle_vvel, d_vvel_label, matlIndex, patch, gn, 0 );
+      old_dw->get( particle_wvel, d_wvel_label, matlIndex, patch, gn, 0 );
 
       new_dw->allocateAndPut( particle_velocity, d_velocity_label, matlIndex, patch );
       particle_velocity.initialize( Vector(0.0, 0.0, 0.0) );
@@ -544,9 +766,9 @@ DragModel::computeParticleVelocity( const ProcessorGroup* pc,
       new_dw->get( gas_velocity, d_fieldLabels->d_newCCVelocityLabel, matlIndex, patch, gn, 0);
 
       new_dw->get( weight, d_weight_label, matlIndex, patch, gn, 0 );
-      new_dw->get( wtd_particle_uvel, d_uvel_label, matlIndex, patch, gn, 0 );
-      new_dw->get( wtd_particle_vvel, d_vvel_label, matlIndex, patch, gn, 0 );
-      new_dw->get( wtd_particle_wvel, d_wvel_label, matlIndex, patch, gn, 0 );
+      new_dw->get( particle_uvel, d_uvel_label, matlIndex, patch, gn, 0 );
+      new_dw->get( particle_vvel, d_vvel_label, matlIndex, patch, gn, 0 );
+      new_dw->get( particle_wvel, d_wvel_label, matlIndex, patch, gn, 0 );
 
       new_dw->getModifiable( particle_velocity, d_velocity_label, matlIndex, patch );
 
@@ -558,47 +780,27 @@ DragModel::computeParticleVelocity( const ProcessorGroup* pc,
       IntVector c = *iter; 
 
       bool weight_is_small = (weight[c] <= d_w_small) || (weight[c] == 0.0);
-      double U, V, W;
-      if(weight_is_small) {
-        U = 0.0;
-        V = 0.0;
-        W = 0.0;
-      } else {
-        U = (wtd_particle_uvel[c]/weight[c])*d_uvel_scaling_factor;
-        V = (wtd_particle_vvel[c]/weight[c])*d_vvel_scaling_factor;
-        W = (wtd_particle_wvel[c]/weight[c])*d_wvel_scaling_factor;
+
+      double U = 0.0;
+      double V = 0.0;
+      double W = 0.0;
+
+      if( !weight_is_small) {
+
+        if( d_unweighted ) {
+          U = particle_uvel[c]*d_uvel_scaling_factor;
+          V = particle_vvel[c]*d_vvel_scaling_factor;
+          W = particle_wvel[c]*d_wvel_scaling_factor;
+        } else {
+          U = (particle_uvel[c]/weight[c])*d_uvel_scaling_factor;
+          V = (particle_vvel[c]/weight[c])*d_vvel_scaling_factor;
+          W = (particle_wvel[c]/weight[c])*d_wvel_scaling_factor;
+        }
+
       }
       particle_velocity[c] = Vector(U,V,W);
 
     }
-
-    //cmr
-    // TODO - add this to the class description in the header file
-
-    // NOTE: When tracking particle velocity as an internal coordinate,
-    //       it is broken up into three separate scalars.
-    //       HOWEVER, we still have to treat it as a Vector in the code,
-    //       so when the boundary conditions for particle velocity are set,
-    //       they are set as a Vector
-    //
-    //       Velocity boundary conditions and velocity internal coordinate
-    //       boundary values are set via "vel_qn" vectors at each boundary,
-    //       NOT through the DQMOM scalars!!!
-    //
-    // e.g., if the input file contains
-    // 
-    //      <BCType id = "0" label = "vel_qn0" var = "Dirichlet">
-    //        <value>[5.0,1.0,3.0]</value>
-    //      </BCType>
-    //
-    // Then "vel_qn0" will be set to Vector(5.0, 1.0, 3.0),
-    // and "uvel_internal_coordinate" will be set to 5.0
-    //     "vvel_internal_coordinate" will be set to 1.0
-    //     "wvel_internal_coordinate" will be set to 3.0
-    // (no boundary condition is explicitly set for the internal coordinates)
-    //
-    // This keeps from having to specify the boundary condition twice
-    // (and potential mistakes from using two different values)
 
     // Now apply boundary conditions
     if (d_gasBC) {
@@ -612,7 +814,6 @@ DragModel::computeParticleVelocity( const ProcessorGroup* pc,
 
   }//end patch loop
 }
-
 
 
 //---------------------------------------------------------------------------
@@ -654,14 +855,14 @@ DragModel::initVars( const ProcessorGroup * pc,
     int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
 
     constCCVariable<double> weight;
-    constCCVariable<double> wa_uvel;
-    constCCVariable<double> wa_vvel;
-    constCCVariable<double> wa_wvel;
+    constCCVariable<double> uvel;
+    constCCVariable<double> vvel;
+    constCCVariable<double> wvel;
 
     new_dw->get( weight,  d_weight_label, matlIndex, patch, Ghost::None, 0 );
-    new_dw->get( wa_uvel, d_uvel_label,   matlIndex, patch, Ghost::None, 0 );
-    new_dw->get( wa_vvel, d_vvel_label,   matlIndex, patch, Ghost::None, 0 );
-    new_dw->get( wa_wvel, d_wvel_label,   matlIndex, patch, Ghost::None, 0 );
+    new_dw->get( uvel, d_uvel_label,   matlIndex, patch, Ghost::None, 0 );
+    new_dw->get( vvel, d_vvel_label,   matlIndex, patch, Ghost::None, 0 );
+    new_dw->get( wvel, d_wvel_label,   matlIndex, patch, Ghost::None, 0 );
 
     CCVariable<Vector> model_value; 
     new_dw->allocateAndPut( model_value, d_modelLabel, matlIndex, patch ); 
@@ -679,13 +880,26 @@ DragModel::initVars( const ProcessorGroup * pc,
 
       bool weight_is_small = ( weight[c] < TINY ) || (weight[c] == 0.0);
       
-      if( weight_is_small ) {
-        particle_velocity[c] = Vector( 0.0, 0.0, 0.0 );
-      } else {
-        double uvel = wa_uvel[c]/weight[c];
-        double vvel = wa_vvel[c]/weight[c];
-        double wvel = wa_wvel[c]/weight[c];
-        particle_velocity[c] = Vector(uvel,vvel,wvel);
+      particle_velocity[c] = Vector( 0.0, 0.0, 0.0 );
+
+      if( !weight_is_small ) {
+
+        double cell_uvel = 0.0;
+        double cell_vvel = 0.0;
+        double cell_wvel = 0.0;
+
+        if( d_unweighted ) {
+          cell_uvel = uvel[c];
+          cell_vvel = vvel[c];
+          cell_wvel = wvel[c];
+        } else {
+          cell_uvel = uvel[c]/weight[c];
+          cell_vvel = vvel[c]/weight[c];
+          cell_wvel = wvel[c]/weight[c];
+        }
+
+        particle_velocity[c] = Vector(cell_uvel,cell_vvel,cell_wvel);
+
       }
 
     }//end cells

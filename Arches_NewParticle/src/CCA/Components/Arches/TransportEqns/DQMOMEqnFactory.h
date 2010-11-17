@@ -53,6 +53,17 @@ public:
                    DataWarehouse* old_dw,
                    DataWarehouse* new_dw);
 
+  /** @brief  Schedule initialization of unweighted abscissa equations */
+  void sched_abscissaInit( const LevelP& level,
+                           SchedulerP& );
+
+  /** @brief  Actually initialize unweighted abscissa equations */
+  void abscissaInit( const ProcessorGroup*,
+                     const PatchSubset* patches,
+                     const MaterialSubset*,
+                     DataWarehouse* old_dw,
+                     DataWarehouse* new_dw);
+
   /** @brief  Schedule initialization of weighted abscissa equations */
   void sched_weightedAbscissaInit( const LevelP& level, 
                                    SchedulerP& ); 
@@ -63,6 +74,12 @@ public:
                              const MaterialSubset*,
                              DataWarehouse* old_dw,
                              DataWarehouse* new_dw);
+
+  /** @brief  Schedule initialization of DQMOM solver */
+  void sched_solverInit( const LevelP& level, SchedulerP& sched);
+
+  /** @brief  Schedule boundary condition check */
+  void sched_checkBCs( const LevelP& level, SchedulerP& sched);
 
   /** @brief  Schedule dummy initialization for MPM nosolve (calls dummySolve of all objects owned/managed by the factory) */
   void sched_dummyInit( const LevelP& level, SchedulerP& );

@@ -52,7 +52,7 @@ void DQMOMEqnFactory::problemSetup(const ProblemSpecP& params)
     d_doDQMOM = true;
   }
 
-  dqmom_db->getWithDefault("type", d_dqmom_type, "weightedAbs");
+  dqmom_db->getAttribute("type",d_dqmom_type);
 
   if( d_labelSet == false ){
     string err_msg = "ERROR: Arches: EqnFactory: You must set the EqnFactory field labels using setArchesLabel() before you run the problem setup method!";
@@ -244,6 +244,100 @@ DQMOMEqnFactory::weightInit( const ProcessorGroup* ,
 
 
 //---------------------------------------------------------------------------
+// Method: schedule initialization of DQMOM unweighted abscissa equations
+//---------------------------------------------------------------------------
+void
+DQMOMEqnFactory::sched_abscissaInit( const LevelP& level, SchedulerP& sched)
+{
+  proc0cout << "Scheduling abscissa init" << endl;
+  Task* tsk = scinew Task("DQMOMEqnFactory::abscissaInit",this,&DQMOMEqnFactory::abscissaInit);
+
+  EqnMap& dqmom_eqns = retrieve_all_eqns();
+
+  for(EqnMap::iterator iEqn = dqmom_eqns.begin(); iEqn != dqmom_eqns.end(); ++iEqn) {
+    DQMOMEqn* eqn = dynamic_cast<DQMOMEqn*>( iEqn->second );
+
+    if( !eqn->weight() ) {
+      tsk->computes( eqn->getTransportEqnLabel()    );
+      tsk->computes( eqn->getoldTransportEqnLabel() );
+      tsk->computes( eqn->getUnscaledLabel()        );
+      tsk->computes( eqn->getSourceLabel()          );
+    //} else {
+    //  tsk->requires( Task::NewDW, eqn->getTransportEqnLabel(), Ghost::None, 0);
+    }
+  }
+
+  if( d_labelSet ) {
+    sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
+  } else {
+    throw InvalidValue("ERROR: Arches: DQMOMEqnFactory: Cannot schedule abscissa initialization task becuase no labels are set!",__FILE__,__LINE__);
+  }
+}
+
+
+
+//---------------------------------------------------------------------------
+// Method: initialize weighted abscissa equations
+//---------------------------------------------------------------------------
+void 
+DQMOMEqnFactory::abscissaInit( const ProcessorGroup* ,
+                               const PatchSubset* patches,
+                               const MaterialSubset*,
+                               DataWarehouse* old_dw,
+                               DataWarehouse* new_dw )
+{
+  proc0cout << "Initializing DQMOM abscissa equations." << endl;
+
+  for (int p=0; p<patches->size(); ++p) {
+    //assume only 1 material for now
+    int archIndex = 0;
+    int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
+    const Patch* patch = patches->get(p);
+
+    for( EqnMap::iterator iEqn = eqns_.begin(); iEqn != eqns_.end(); ++iEqn) {
+
+      DQMOMEqn* eqn = dynamic_cast<DQMOMEqn*>(iEqn->second);
+      string eqn_name = iEqn->first;
+
+      if( !eqn->weight() ) {
+        // abscissa equation
+        const VarLabel* sourceLabel  = eqn->getSourceLabel();
+        const VarLabel* phiLabel     = eqn->getTransportEqnLabel(); 
+        const VarLabel* oldPhiLabel  = eqn->getoldTransportEqnLabel(); 
+        const VarLabel* phiLabel_icv = eqn->getUnscaledLabel();
+
+        CCVariable<double> source;
+        CCVariable<double> phi; 
+        CCVariable<double> oldPhi; 
+        CCVariable<double> phi_icv;
+        
+        new_dw->allocateAndPut( source,  sourceLabel,  matlIndex, patch ); 
+        new_dw->allocateAndPut( phi,     phiLabel,     matlIndex, patch ); 
+        new_dw->allocateAndPut( oldPhi,  oldPhiLabel,  matlIndex, patch ); 
+        new_dw->allocateAndPut( phi_icv, phiLabel_icv, matlIndex, patch ); 
+ 
+        source.initialize(0.0);
+        phi.initialize(0.0);
+        oldPhi.initialize(0.0);
+        phi_icv.initialize(0.0);
+      
+        // initialize phi
+        eqn->initializationFunction( patch, phi );
+
+        // do boundary conditions
+        eqn->computeBCs( patch, eqn_name, phi );
+      }
+    }
+    proc0cout << endl;
+  }
+}
+
+
+
+
+
+
+//---------------------------------------------------------------------------
 // Method: schedule initialization of DQMOM weighted abscissa equations
 //---------------------------------------------------------------------------
 void
@@ -273,6 +367,9 @@ DQMOMEqnFactory::sched_weightedAbscissaInit( const LevelP& level, SchedulerP& sc
     throw InvalidValue("ERROR: Arches: DQMOMEqnFactory: Cannot schedule weighted abscissa initialization task becuase no labels are set!",__FILE__,__LINE__);
   }
 }
+
+
+
 
 //---------------------------------------------------------------------------
 // Method: initialize weighted abscissa equations
@@ -344,6 +441,26 @@ DQMOMEqnFactory::weightedAbscissaInit( const ProcessorGroup* ,
 }
 
 //---------------------------------------------------------------------------
+// Method: initialize the DQMOM solver
+//---------------------------------------------------------------------------
+void
+DQMOMEqnFactory::sched_solverInit( const LevelP& level, SchedulerP& sched ) 
+{
+  d_dqmomSolver->sched_initVars(level, sched);
+}
+
+//---------------------------------------------------------------------------
+// Method: Check to ensure BCs are set
+//---------------------------------------------------------------------------
+void
+DQMOMEqnFactory::sched_checkBCs( const LevelP& level, SchedulerP& sched ) 
+{
+  for( EqnMap::iterator iEqn = eqns_.begin(); iEqn != eqns_.end(); ++iEqn ) {
+    iEqn->second->sched_checkBCs(level, sched);
+  }
+}
+
+//---------------------------------------------------------------------------
 // Method: Dummy initialization for MPM Arches
 //---------------------------------------------------------------------------
 void
@@ -352,6 +469,14 @@ DQMOMEqnFactory::sched_dummyInit( const LevelP& level, SchedulerP& sched )
   for( EqnMap::iterator iEqn = eqns_.begin(); iEqn != eqns_.end(); ++iEqn ) {
     iEqn->second->sched_dummyInit( level, sched );
   }
+  
+  d_dqmomSolver->sched_dummyInit( level, sched );
+
+  // initialize the DQMOM minimum timestep label
+  string taskname = "DQMOMEqnFactory::initializeMinTimestepLabel";
+  Task* tsk = scinew Task(taskname, this, &DQMOMEqnFactory::initializeMinTimestepLabel);
+  tsk->computes(d_fieldLabels->d_MinDQMOMTimestepLabel);
+  sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
 }
 
 
@@ -486,10 +611,13 @@ The reason this method is used, rather than having each DQMOMEqn modify a variab
 the memory usage of the program during the taskgraph compilation spikes extreemely high (i.e. > 2 GB).
 
 I don't know why this happens, but this is a (hopefully!) temporary and somewhat unelegant workaround.
+
+-Charles
  */
 void
 DQMOMEqnFactory::setMinTimestepVar( string eqnName, double new_min )
 {
+  proc0cout << "DQMOM equation " << eqnName << " resetting timestep from " << d_MinTimestepVar << " to " << new_min << endl;
   d_MinTimestepVar = Min(new_min, d_MinTimestepVar );
 }
 

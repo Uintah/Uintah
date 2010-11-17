@@ -14,16 +14,18 @@ _src_name(srcName), _shared_state( shared_state ), _required_labels(required_lab
   // (some have different types, e.g. CCVariable<Vector>)
   _label_sched_init  = false; 
   _init_type = "constant"; 
+  d_label_init = false;
 }
 
 SourceTermBase::SourceTermBase( std::string srcName, 
                                 SimulationStateP& shared_state,
                                 vector<std::string> required_labels,
                                 ArchesLabel* fieldLabels ) : 
-_src_name(srcName), _shared_state( shared_state ), _required_labels(required_labels), d_fieldLabels(fieldLabels)
+_src_name(srcName), _shared_state( shared_state ), _required_labels(required_labels), _fieldLabels(fieldLabels)
 {
   _label_sched_init = false;
   _init_type = "constant";
+  d_label_init = true;
 }
 
 SourceTermBase::~SourceTermBase()

@@ -31,8 +31,8 @@ ModelBase::~ModelBase()
   VarLabel::destroy(d_gasLabel); 
 }
 
-// Constructor/destructor for parent class is also called from constructor/destructor
-// of child class.
+// Constructor/destructor for parent class is also called 
+// from the constructor/destructor of child class.
 // 
 // Functions defined here will be overridden if redefined in a child class.
 // The child class can explicitly call the parent class method, like this:
@@ -42,33 +42,4 @@ ModelBase::~ModelBase()
 //
 // Functions not redefined in child class will use the ModelBase version.
 
-
-//---------------------------------------------------------------------------
-// Method: Schedule dummy initialization
-//---------------------------------------------------------------------------
-/** @details  
-This method is the same for all models, as all models must require() and compute()
- the gas phase source term and the actual model term.
-
-However, the implementation (as opposed to the schedule) requires knowledge of the 
- variable type (e.g. double or Vector), so the dummyInit() method must be defined 
- explicitly in the particular model classes - not here.
- */
-void
-ModelBase::sched_dummyInit( const LevelP& level, SchedulerP& sched )
-{
-  string taskname = "ModelBase::dummyInit"; 
-
-  Ghost::GhostType  gn = Ghost::None;
-
-  Task* tsk = scinew Task(taskname, this, &ModelBase::dummyInit);
-
-  tsk->requires( Task::OldDW, d_modelLabel, gn, 0);
-  tsk->requires( Task::OldDW, d_gasLabel,   gn, 0);
-
-  tsk->computes(d_modelLabel);
-  tsk->computes(d_gasLabel); 
-
-  sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
-}
 
