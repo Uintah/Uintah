@@ -31,8 +31,11 @@ DEALINGS IN THE SOFTWARE.
 #include <iostream>
 #include <cstdlib>
 #include <cstdio>
+#include <Core/Parallel/uintahshare.h>
+#include <Core/Parallel/Parallel.h>
 
 using namespace std;
+using namespace Uintah;
 
 extern "C" {
 
@@ -52,10 +55,12 @@ void bombed_(char *mes, int len_mes)
 
 void logmes_(char *mes, int len_mes)
 {
+ if( Uintah::Parallel::getMPIRank() == 0 ){
   for(int i=0;i<len_mes;i++){
     putchar(mes[i]);
   }
-  cerr << "\n";
+  proc0cout << "\n";
+ }
 
   return;
 }
