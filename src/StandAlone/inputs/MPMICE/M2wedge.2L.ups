@@ -18,7 +18,7 @@
        <delt_min>           0.0         </delt_min>
        <delt_max>           1.0         </delt_max>
        <delt_init>          1.0e-4      </delt_init>
-      <!-- <max_Timesteps> 400 </max_Timesteps>--> 
+       <max_Timesteps> 100 </max_Timesteps>
        <timestep_multiplier>0.8 </timestep_multiplier>
    </Time>
 
@@ -109,8 +109,8 @@
     <!--____________________________________________________________________-->
    <DataArchiver>
       <filebase>M2wedge.2L.uda</filebase>
-      <outputInterval>0.000005</outputInterval>
-      <!-- <outputTimestepInterval> 2 </outputTimestepInterval>--> 
+      <!--<outputInterval>0.000005</outputInterval>-->
+      <outputTimestepInterval> 2 </outputTimestepInterval>
       <save label = "press_equil_CC"/>
       <save label = "vol_frac_CC"/>
       <save label = "sp_vol_CC"/>
@@ -119,12 +119,15 @@
       <save label = "rho_CC"/>
       <save label = "temp_CC"/>
       <save label = "mom_source_CC"/>  
+      <save label = "g.mass"          levels = "-1"/>
       <save label = "p.x"             levels = "-1"/>
       <save label = "p.volume"        levels = "-1"/>
       <save label = "p.velocity"      levels = "-1"/>
+      <save label = "p.particleID"    levels = "-1"/>
       <save label="mag_grad_press_CC"/>
       <save label="refineFlag"/>
-      <checkpoint cycle = "2" timestepInterval = "100"/>
+      <checkpoint cycle = "2" timestepInterval = "50"/>
+      <!--<checkpoint cycle = "2" timestepInterval = "100"/> -->
    </DataArchiver>
 
     <!--____________________________________________________________________-->
