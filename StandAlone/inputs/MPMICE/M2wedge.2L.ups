@@ -199,8 +199,8 @@
                
                 
                <geom_object>
-                    <tri>
-                      <name>wedge40</name>
+                    <tri label = "wedge">
+                      <name>inputs/MPMICE/complex_MPM_geometries/wedge40</name>
                     </tri>
                     <res>              [2,2,1]          </res>
                     <velocity>         [696.,0.,0.]     </velocity>
@@ -225,9 +225,7 @@
                     <min>           [-1.5,-1.05,-1.25]    </min>
                     <max>           [1.5,1.05,1.25]   </max>
                 </box>
-              <tri label = "gpicehole">
-                   <name>wedge40</name>
-                </tri>
+              <tri label = "wedge"></tri>
               </difference>
                <res>                      [2,2,1]       </res>
                <velocity>           [0.0,0.0,0.0]    </velocity>
