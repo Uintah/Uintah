@@ -141,7 +141,7 @@ Kayenta::Kayenta(ProblemSpecP& ps,MPMFlags* Mflag)
   KMMRXV( UI, UI, UI, nx, namea, keya, rinit, rdim, iadvct, itype );
 
   d_NINSV=nx;
-  cout << "d_NINSV = " << d_NINSV << endl;
+  proc0cout << "d_NINSV = " << d_NINSV << endl;
 //  for(int i = 0;i<d_NINSV; i++){
 //    cout << rinit[i] << endl;
 //  }
@@ -389,7 +389,7 @@ void Kayenta::initializeCMData(const Patch* patch,
 
   StaticArray<ParticleVariable<double> > ISVs(d_NINSV+1);
 
-  cout << "In initializeCMData" << endl;
+  proc0cout << "In initializeCMData" << endl;
   for(int i=0;i<d_NINSV;i++){
     new_dw->allocateAndPut(ISVs[i],ISVLabels[i], pset);
     ParticleSubset::iterator iter = pset->begin();
@@ -1298,11 +1298,11 @@ Kayenta::getInputParameters(ProblemSpecP& ps)
 
   ps->get("PEAKI1IDIST",wdist.WeibDist);
   WeibullParser(wdist);
-  cout << "Weibull Variables for PEAKI1I (getInputParameters):\n"
-       << "Median:            " << wdist.WeibMed
-       << "\nModulus:         " << wdist.WeibMod
-       << "\nReference Vol:   " << wdist.WeibRefVol
-       << "\nSeed:            " << wdist.WeibSeed << std::endl;
+  proc0cout << "Weibull Variables for PEAKI1I (getInputParameters):\n"
+            << "Median:            " << wdist.WeibMed
+            << "\nModulus:         " << wdist.WeibMod
+            << "\nReference Vol:   " << wdist.WeibRefVol
+            << "\nSeed:            " << wdist.WeibSeed << std::endl;
 }
 
 void
@@ -1331,13 +1331,11 @@ Kayenta::initializeLocalMPMLabels()
 
   char *ISV[d_NINSV];
   ISV[0] = strtok(keya, "|"); // Splits | between words in string
-  //cout << "ISV's Requested are :: " << ISV[0] << endl; 
   ISVNames.push_back(ISV[0]);
   for(int i = 1; i < d_NINSV ; i++)
   {
 // If you specify NULL, by default it will start again from the previous stop.
         ISV[i] = strtok (NULL, "|"); 
-        //cout << "ISV's Requested are :: " << ISV[i] << endl; //
 	ISVNames.push_back(ISV[i]);
   }
 
