@@ -76,8 +76,8 @@ static DebugStream amr_doing("AMRMPM", false);
 //__________________________________
 //   TODO:
 // - We only need to compute ZOI when the grid changes
-// write a task to zero the nodes on the coarse level directly below the fine level at the CFI.
-// interpolateToParticlesAndUpdate_CFI()  Only get a region of particles on coarse level around
+//
+// -interpolateToParticlesAndUpdate_CFI()  Only get a region of particles on coarse level around
 // the fine patch.  Currently, I'm getting the entire particle set for the coarse level
 
 
@@ -313,7 +313,7 @@ void AMRMPM::scheduleTimeAdvance(const LevelP & level,
   for (int l = 0; l < maxLevels; l++) {
     const LevelP& level = grid->getLevel(l);
     const PatchSet* patches = level->eachPatch();
-    scheduleCoarsenNodalData_CFI( sched, patches, matls);
+    scheduleCoarsenNodalData_CFI( sched, patches, matls, coarsenData);
   }
 
   for (int l = 0; l < maxLevels; l++) {
@@ -334,6 +334,13 @@ void AMRMPM::scheduleTimeAdvance(const LevelP & level,
     const PatchSet* patches = level->eachPatch();
     scheduleComputeStressTensor(            sched, patches, matls);
   }
+ 
+ // zero the nodal data at the CFI on the coarse level 
+ for (int l = 0; l < maxLevels; l++) {
+    const LevelP& level = grid->getLevel(l);
+    const PatchSet* patches = level->eachPatch();
+    scheduleCoarsenNodalData_CFI( sched, patches, matls, zeroData);
+  }
   
   for (int l = 0; l < maxLevels; l++) {
     const LevelP& level = grid->getLevel(l);
@@ -341,9 +348,8 @@ void AMRMPM::scheduleTimeAdvance(const LevelP & level,
     scheduleInterpolateToParticlesAndUpdate(sched, patches, matls);
   }
   
-  //TO DO:  Need to zero out the nodes on the coarse level, directly under overlapping
-  // fine nodes so you don't double count contributions
-  
+
+    
   for (int l = 0; l < maxLevels; l++) {
     const LevelP& level = grid->getLevel(l);
     const PatchSet* patches = level->eachPatch();
@@ -495,24 +501,36 @@ void AMRMPM::scheduleInterpolateParticlesToGrid_CFI(SchedulerP& sched,
 //  Copy fine node data to coarse level at CFI
 void AMRMPM::scheduleCoarsenNodalData_CFI(SchedulerP& sched,
                                           const PatchSet* patches,           
-                                          const MaterialSet* matls)          
+                                          const MaterialSet* matls,
+                                          const coarsenFlag flag)          
 {
-  const Level* fineLevel = getLevel(patches);
-  int L_indx = fineLevel->getIndex();
+  const Level* level = getLevel(patches);
   
-  if(L_indx > 0 ){
-    printSchedule(patches,cout_doing,"AMRMPM::scheduleCoarsenNodalData_CFI");
-
+  if(level->hasFinerLevel()){
+  
+    string txt = "(zero)";
+    if (flag == coarsenData){
+      txt = "(coarsen)";
+    }
+    printSchedule(patches,cout_doing,"AMRMPM::scheduleCoarsenNodalData_CFI "+txt);
+    
     Task* t = scinew Task("AMRMPM::coarsenNodalData_CFI",
-                     this,&AMRMPM::coarsenNodalData_CFI);
+                     this,&AMRMPM::coarsenNodalData_CFI, flag);
 
     Ghost::GhostType  gn  = Ghost::None;
-    t->requires(Task::NewDW, lb->gMassLabel,          gn,0);    
-    t->requires(Task::NewDW, lb->gSumWeightsLabel,    gn,0);
+    Task::DomainSpec  ND  = Task::NormalDomain;
+    #define allPatches 0
+    #define allMatls 0
+
+/*`==========TESTING==========*/
+    // need to add all the variables
+    t->requires(Task::NewDW, lb->gMassLabel,       allPatches, Task::FineLevel,allMatls, ND, gn,0);
+    t->requires(Task::NewDW, lb->gSumWeightsLabel, allPatches, Task::FineLevel,allMatls, ND, gn,0);
 
     // need to add all the other variables
     t->modifies(lb->gMassLabel);
-    t->modifies(lb->gSumWeightsLabel);
+    t->modifies(lb->gSumWeightsLabel); 
+/*===========TESTING==========`*/
 
     sched->addTask(t, patches, matls);
   }
@@ -764,12 +782,8 @@ void AMRMPM::scheduleInterpolateToParticlesAndUpdate_CFI(SchedulerP& sched,
     #define allMatls 0
     t->requires(Task::OldDW, d_sharedState->get_delt_label() );
 
-
- //   t->requires(Task::NewDW, lb->gZOILabel,                       gac,NGN);
-//    t->requires(Task::NewDW, lb->gAccelerationLabel,              gac,NGN);
-//    t->requires(Task::NewDW, lb->gVelocityStarLabel,              gac,NGN);
-    t->requires(Task::NewDW, lb->gMassLabel,              allPatches, Task::FineLevel,allMatls, ND, gn,0);
-    t->requires(Task::NewDW, lb->gZOILabel,               allPatches, Task::FineLevel,allMatls, ND, gn,0);
+    t->requires(Task::NewDW, lb->gMassLabel, allPatches, Task::FineLevel,allMatls, ND, gn,0);
+    t->requires(Task::NewDW, lb->gZOILabel,  allPatches, Task::FineLevel,allMatls, ND, gn,0);
     
     t->modifies(lb->gSumWeightsLabel);
     t->modifies(lb->pXLabel_preReloc);
@@ -1251,7 +1265,8 @@ void AMRMPM::coarsenNodalData_CFI(const ProcessorGroup*,
                                   const PatchSubset* finePatches,          
                                   const MaterialSubset* ,                  
                                   DataWarehouse* old_dw,                   
-                                  DataWarehouse* new_dw)                   
+                                  DataWarehouse* new_dw,
+                                  const coarsenFlag flag)                   
 {
   //__________________________________
   // From the fine patch look down for coarse level patches
@@ -1276,21 +1291,27 @@ void AMRMPM::coarsenNodalData_CFI(const ProcessorGroup*,
       for(int p=0;p<coarsePatches.size();p++){  
         const Patch* coarsePatch = coarsePatches[p];
 
-        printTask(finePatches,finePatch,cout_doing,"Doing coarsenNodalData_CFI");
+        string txt = "(zero)";
+        if (flag == coarsenData){
+          txt = "(coarsen)";
+        }
+        printTask(finePatches,finePatch,cout_doing,"Doing coarsenNodalData_CFI"+txt);
 
         int numMatls = d_sharedState->getNumMPMMatls();
         for(int m = 0; m < numMatls; m++){
           MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
           int dwi = mpm_matl->getDWIndex();
-
+          
+          
           // get fine level data
           constNCVariable<double> gmass_fine;
           constNCVariable<double> gSum_S_fine;
           Ghost::GhostType  gn = Ghost::None;
-
-          new_dw->get(gmass_fine,     lb->gMassLabel,       dwi, finePatch, gn, 0);
-          new_dw->get(gSum_S_fine,    lb->gSumWeightsLabel, dwi, finePatch, gn, 0);            
-
+          if(flag == coarsenData){
+            new_dw->get(gmass_fine,     lb->gMassLabel,       dwi, finePatch, gn, 0);
+            new_dw->get(gSum_S_fine,    lb->gSumWeightsLabel, dwi, finePatch, gn, 0);            
+          }
+          
           // get coarse level data
           NCVariable<double> gmass_coarse;
           NCVariable<double> gSum_S_coarse;
@@ -1323,10 +1344,19 @@ void AMRMPM::coarsenNodalData_CFI(const ProcessorGroup*,
                 
                 IntVector f_node = coarseLevel->mapNodeToFiner(c_node);
                 
-/*`==========TESTING==========*/
-                gmass_coarse[c_node]  = gmass_fine[f_node];
-                gSum_S_coarse[c_node] = gSum_S_fine[f_node];
+                switch(flag)
+                {
+                  case coarsenData:
+                    gmass_coarse[c_node]  = gmass_fine[f_node];
+                    gSum_S_coarse[c_node] = gSum_S_fine[f_node];
+                    break;
+                  case zeroData:
+                    gmass_coarse[c_node]  = 0;
+                    gSum_S_coarse[c_node] = 0;
+                    break;
+                }
                 
+/*`==========TESTING==========*/                
 #if 1
                 if(coarsePatch->getFaceName(patchFace) == "xplus" ) {
                   if(f_node.z() == 1 || f_node.z() == 2 ){
@@ -2044,7 +2074,7 @@ void AMRMPM::interpolateToParticlesAndUpdate_CFI(const ProcessorGroup*,
           
           new_dw->getModifiable(px_coarse,          lb->pXLabel_preReloc,    pset);       
           new_dw->getModifiable(pmass_coarse,       lb->pMassLabel_preReloc, pset);   
-  #if 1
+
           for (ParticleSubset::iterator iter = pset->begin();iter != pset->end(); iter++){
             particleIndex idx = *iter;
 
@@ -2059,14 +2089,15 @@ void AMRMPM::interpolateToParticlesAndUpdate_CFI(const ProcessorGroup*,
             for(int k = 0; k < ni.size(); k++) {
               
               fineNode = ni[k];
+/*`==========TESTING==========*/
               if(fineNode.z() == 0){
-                cout << " working on node: " << fineNode << endl;
-              }
+                cout << " working on node: " << fineNode << " S[k] " << S[k] << endl;
+              } 
+/*===========TESTING==========`*/
               gSum_S[fineNode] -= S[k];
               pmass_coarse[idx] += pmass_coarse[idx] + gmass_fine[fineNode] * S[k];
             }
           } // End of particle loop
-    #endif
         } // End loop over materials 
       
       delete interpolator;
@@ -2136,8 +2167,7 @@ AMRMPM::errorEstimate(const ProcessorGroup* group,
   
     for(int p=0;p<patches->size();p++){  
       const Patch* coarsePatch = patches->get(p);
-      printTask(patches, coarsePatch,cout_doing,
-                "Doing errorEstimate\t\t\t\t\t");
+      printTask(patches, coarsePatch,cout_doing,"Doing errorEstimate\t\t\t\t\t");
      
       CCVariable<int> refineFlag;
       PerPatch<PatchFlagP> refinePatchFlag;
@@ -2145,7 +2175,7 @@ AMRMPM::errorEstimate(const ProcessorGroup* group,
       new_dw->getModifiable(refineFlag, d_sharedState->get_refineFlag_label(),
                             0, coarsePatch);
       new_dw->get(refinePatchFlag, d_sharedState->get_refinePatchFlag_label(),
-                  0, coarsePatch);
+                           0, coarsePatch);
 
       PatchFlag* refinePatch = refinePatchFlag.get().get_rep();
     
