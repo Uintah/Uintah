@@ -73,6 +73,14 @@ using namespace std;
 static DebugStream cout_doing("AMRMPM", false);
 static DebugStream amr_doing("AMRMPM", false);
 
+//__________________________________
+//   TODO:
+// - We only need to compute ZOI when the grid changes
+// write a task to zero the nodes on the coarse level directly below the fine level at the CFI.
+// interpolateToParticlesAndUpdate_CFI()  Only get a region of particles on coarse level around
+// the fine patch.  Currently, I'm getting the entire particle set for the coarse level
+
+
 // From ThreadPool.cc:  Used for syncing cerr'ing so it is easier to read.
 extern Mutex cerrLock;
 
@@ -332,6 +340,15 @@ void AMRMPM::scheduleTimeAdvance(const LevelP & level,
     const PatchSet* patches = level->eachPatch();
     scheduleInterpolateToParticlesAndUpdate(sched, patches, matls);
   }
+  
+  //TO DO:  Need to zero out the nodes on the coarse level, directly under overlapping
+  // fine nodes so you don't double count contributions
+  
+  for (int l = 0; l < maxLevels; l++) {
+    const LevelP& level = grid->getLevel(l);
+    const PatchSet* patches = level->eachPatch();
+    scheduleInterpolateToParticlesAndUpdate_CFI(sched, patches, matls);
+  }
 }
 
 //______________________________________________________________________
@@ -458,11 +475,11 @@ void AMRMPM::scheduleInterpolateParticlesToGrid_CFI(SchedulerP& sched,
     #define allPatches 0
     #define allMatls 0
     
+    t->requires(Task::NewDW, lb->gZOILabel,   gn, 0);
     t->requires(Task::OldDW, lb->pColorLabel,              allPatches, Task::CoarseLevel,allMatls, ND, gn,0);
     t->requires(Task::OldDW, lb->pSizeLabel,               allPatches, Task::CoarseLevel,allMatls, ND, gn,0);
     t->requires(Task::OldDW, lb->pXLabel,                  allPatches, Task::CoarseLevel,allMatls, ND, gn,0);
     t->requires(Task::OldDW, lb->pMassLabel,               allPatches, Task::CoarseLevel,allMatls, ND, gn,0);
-    t->requires(Task::OldDW, lb->gZOILabel,                allPatches, Task::CoarseLevel,allMatls, ND, gn,0);
     t->requires(Task::OldDW, lb->pDeformationMeasureLabel, allPatches, Task::CoarseLevel,allMatls, ND, gn,0);    
     
     // need to add all the other variables
@@ -686,16 +703,7 @@ void AMRMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
 
   t->requires(Task::NewDW, lb->gAccelerationLabel,              gac,NGN);
   t->requires(Task::NewDW, lb->gVelocityStarLabel,              gac,NGN);
-//  t->requires(Task::NewDW, lb->gZOILabel,                       gac,NGN);
   
-  if(getLevel(patches)->hasCoarserLevel()){
-    t->requires(Task::CoarseNewDW, lb->gAccelerationLabel, 0, Task::CoarseLevel, mss, DS, gac, NGN);
-    t->requires(Task::CoarseNewDW, lb->gVelocityStarLabel, 0, Task::CoarseLevel, mss, DS, gac, NGN);
-  }
-  if(getLevel(patches)->hasFinerLevel()){
-    t->requires(Task::NewDW, lb->gAccelerationLabel, 0,Task::FineLevel,  mss, DS, gac, NGN, fat);
-    t->requires(Task::NewDW, lb->gVelocityStarLabel, 0,Task::FineLevel,  mss, DS, gac, NGN, fat);
-  }
   t->requires(Task::OldDW, lb->pXLabel,                            gnone);
   t->requires(Task::OldDW, lb->pMassLabel,                         gnone);
   t->requires(Task::OldDW, lb->pParticleIDLabel,                   gnone);
@@ -722,6 +730,7 @@ void AMRMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->computes(lb->ThermalEnergyLabel);
   t->computes(lb->CenterOfMassPositionLabel);
   t->computes(lb->TotalMomentumLabel);
+  t->modifies(lb->gSumWeightsLabel);
   
   // debugging scalar
   if(flags->d_with_color) {
@@ -731,6 +740,45 @@ void AMRMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   
   sched->addTask(t, patches, matls);
 }
+
+//______________________________________________________________________
+//
+void AMRMPM::scheduleInterpolateToParticlesAndUpdate_CFI(SchedulerP& sched,
+                                                         const PatchSet* patches,
+                                                         const MaterialSet* matls)
+
+{
+  const Level* level = getLevel(patches);
+  
+  if(level->hasFinerLevel()){
+
+    printSchedule(patches,cout_doing,"AMRMPM::scheduleInterpolateToParticlesAndUpdate_CFI");
+
+    Task* t=scinew Task("AMRMPM::interpolateToParticlesAndUpdate_CFI",
+                  this, &AMRMPM::interpolateToParticlesAndUpdate_CFI);
+
+    Ghost::GhostType  gn  = Ghost::None;
+    Ghost::GhostType gac  = Ghost::AroundCells;
+    Task::DomainSpec  ND  = Task::NormalDomain;
+    #define allPatches 0
+    #define allMatls 0
+    t->requires(Task::OldDW, d_sharedState->get_delt_label() );
+
+
+ //   t->requires(Task::NewDW, lb->gZOILabel,                       gac,NGN);
+//    t->requires(Task::NewDW, lb->gAccelerationLabel,              gac,NGN);
+//    t->requires(Task::NewDW, lb->gVelocityStarLabel,              gac,NGN);
+    t->requires(Task::NewDW, lb->gMassLabel,              allPatches, Task::FineLevel,allMatls, ND, gn,0);
+    t->requires(Task::NewDW, lb->gZOILabel,               allPatches, Task::FineLevel,allMatls, ND, gn,0);
+    
+    t->modifies(lb->gSumWeightsLabel);
+    t->modifies(lb->pXLabel_preReloc);
+    t->modifies(lb->pMassLabel_preReloc);
+
+    sched->addTask(t, patches, matls);
+  }
+}
+
 //______________________________________________________________________
 //
 void AMRMPM::scheduleRefine(const PatchSet* patches, 
@@ -1581,9 +1629,6 @@ void AMRMPM::computeZoneOfInfluence(const ProcessorGroup*,
     
     for(NodeIterator iter = patch->getNodeIterator();!iter.done();iter++){
       IntVector c = *iter;
-      
-/*`==========TESTING==========*/
-#if 1
       zoi[c].p=-9876543210e99;
       zoi[c].w= dx.x();
       zoi[c].e= dx.x();
@@ -1591,26 +1636,9 @@ void AMRMPM::computeZoneOfInfluence(const ProcessorGroup*,
       zoi[c].n= dx.y();
       zoi[c].b= dx.z();
       zoi[c].t= dx.z();
-#endif 
-
-#if 0      
-      zoi[c].p=-9876543210e99;
-      zoi[c].w= coarse_dx.x();
-      zoi[c].e= coarse_dx.x();
-      zoi[c].s= coarse_dx.y();
-      zoi[c].n= coarse_dx.y();
-      zoi[c].b= coarse_dx.z();
-      zoi[c].t= coarse_dx.z();
-#endif
-/*===========TESTING==========`*/
-      
-      
     }
   }
   
-  
-/*`==========TESTING==========*/
-#if 0
   //__________________________________
   // set the ZOI coarse
   // look up at the finer level patches
@@ -1677,8 +1705,8 @@ void AMRMPM::computeZoneOfInfluence(const ProcessorGroup*,
       }  // finePatches loop
     }  // has finer level
   }  // patches loop
-#endif
-/*===========TESTING==========`*/    
+  
+      
   //__________________________________
   // set the ZOI in cells in which there are overlaping coarse level nodes
   // look down for coarse level patches 
@@ -1809,8 +1837,6 @@ void AMRMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
     vector<double> S(interpolator->size());
     Ghost::GhostType  gac = Ghost::AroundCells;
 
-   // constNCVariable<Stencil7> ZOI_CUR,ZOI_FINE;
-   // new_dw->get(ZOI_CUR, lb->gZOILabel, 0, patch, gac, NGN);
 
     // Performs the interpolation from the cell vertices of the grid
     // acceleration and velocity to the particles to update their
@@ -1841,10 +1867,9 @@ void AMRMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       ParticleVariable<Vector> pdispnew;
       ParticleVariable<double> pTempPreNew;
 
-      // Get the arrays of grid data on which the new part. values depend
+      // Get the arrays of grid data on which the new particle values depend
       constNCVariable<Vector> gvelocity_star, gacceleration;
-      constNCVariable<Vector> gv_star_coarse, gacc_coarse;
-      constNCVariable<Vector> gv_star_fine, gacc_fine;
+      NCVariable<double> gSum_S;
       double Cp =mpm_matl->getSpecificHeat();
 
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
@@ -1879,112 +1904,41 @@ void AMRMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       psizeNew.copyData(psize);
 
       Ghost::GhostType  gac = Ghost::AroundCells;
-      new_dw->get(gvelocity_star,  lb->gVelocityStarLabel,   dwi,patch,gac,NGP);
-      new_dw->get(gacceleration,   lb->gAccelerationLabel,   dwi,patch,gac,NGP);
+      new_dw->get(gvelocity_star,    lb->gVelocityStarLabel,   dwi,patch,gac,NGP);
+      new_dw->get(gacceleration,     lb->gAccelerationLabel,   dwi,patch,gac,NGP);
+      new_dw->getModifiable(gSum_S,  lb->gSumWeightsLabel,     dwi,patch);
 
-#if 0
-      // Get finer level data
-      const Patch* finePatch = NULL;  
-      Level::selectType finePatches; 
-      
-      if(getLevel(patches)->hasFinerLevel()){
-        patch->getFineLevelPatches(finePatches);
-      }
-      
-      if(finePatches.size() > 0){
-         const Level* fineLevel = getLevel(patches)->getFinerLevel().get_rep();
-         
-         IntVector ghostCells(1,1,1);
-         IntVector FH(-9999,-9999,-9999);
-         IntVector FL(9999,9999,9999);
-         
-         for(int i=0;i<finePatches.size();i++){
-            finePatch = finePatches[i];
-            IntVector cl, ch, fl, fh;
-            getFineLevelRangeNodes(patch, finePatch, cl, ch, fl, fh, ghostCells);
-            FL=Min(fl,FL);
-            FH=Max(fh,FH);
-         }
-         new_dw->getRegion(gv_star_fine,  lb->gVelocityStarLabel, dwi,
-                                          fineLevel, FL, FH, false);
-         new_dw->getRegion(gacc_fine,     lb->gAccelerationLabel, dwi,
-                                          fineLevel, FL, FH, false);
-         new_dw->getRegion(ZOI_FINE,      lb->gZOILabel, 0,
-                                          fineLevel, FL, FH, false);
-      }
-      
-      // Get coarser level data
-      if(getLevel(patches)->hasCoarserLevel()){
-         const Level* coarseLevel = getLevel(patches)->getCoarserLevel().get_rep();
-         IntVector cl, ch, fl, fh;
-         getCoarseLevelRangeNodes(patch, coarseLevel, cl, ch, fl, fh, 1);
-         
-         new_dw->getRegion(gv_star_coarse, lb->gVelocityStarLabel, dwi,
-                                           coarseLevel, cl, ch, false);
-         new_dw->getRegion(gacc_coarse,    lb->gAccelerationLabel, dwi,
-                                           coarseLevel, cl, ch, false);
-//         new_dw->getRegion(zoi_coarse,     lb->gZOILabel, 0,
-//                                           coarseLevel, cl, ch, false);
-      }
-#endif
       // Loop over particles
-      //bool get_finer = true;
-      //bool coarse_part = false;
-      //int num_cur, num_fine, num_coarse;
-      //int n8or27=flags->d_8or27;
+      int n8or27=flags->d_8or27;
          
-      for(ParticleSubset::iterator iter = pset->begin();
-          iter != pset->end(); iter++){
+      for(ParticleSubset::iterator iter = pset->begin();iter != pset->end(); iter++){
         particleIndex idx = *iter;
 
-/*`==========TESTING==========*/
-#if 0
-        // Get the node indices that surround the cell
-        interpolator->findCellAndWeights(px[idx],ni,S,ZOI_CUR,ZOI_FINE,
-                                         get_finer,num_cur,num_fine,
-                                         num_coarse,psize[idx],
-                                         coarse_part,finePatch); 
-#endif
         // Get the node indices that surround the cell                
         interpolator->findCellAndWeights(px[idx],ni,S,psize[idx],pDeformationMeasure[idx]);    
-/*===========TESTING==========`*/
+/*`==========TESTING==========*/
+// hardwiring for testing
+//        Vector vel(100.0,0.0,0.0);
 
-        Vector vel(100.0,0.0,0.0);
-        Vector acc(0.0,0.0,0.0);
+/*===========TESTING==========`*/
+      Vector acc(0.0, 0.0, 0.0); 
+      Vector vel(0.0, 0.0, 0.0);
 
         // Accumulate the contribution from vertices on this level
- /*`==========TESTING==========*/
-#if 0
-//       for (int k = 0; k < num_cur; k++) { 
-
        for(int k = 0; k < n8or27; k++) {
-
           IntVector node = ni[k];
-          S[k] *= pErosion[idx];
+          //S[k] *= pErosion[idx];
           vel      += gvelocity_star[node]  * S[k];
           acc      += gacceleration[node]   * S[k];
+          gSum_S[node] -= S[k];
         }
-#endif
-/*===========TESTING==========`*/        
-
         
-        
-/*`==========TESTING==========*/
-#if 0
-        // Accumulate the contribution from vertices on the finer level
-        for (int k = num_cur; k < num_cur+num_fine; k++) {
-          IntVector node = ni[k];
-          S[k] *= pErosion[idx];
-          vel      += gv_star_fine[node]  * S[k];
-          acc      += gacc_fine[node]     * S[k];
-        } 
-#endif
-/*===========TESTING==========`*/
 
         // Update the particle's position and velocity
         pxnew[idx]           = px[idx]    + vel*delT*move_particles;
         pdispnew[idx]        = pdisp[idx] + vel*delT;
         pvelocitynew[idx]    = pvelocity[idx]    + acc*delT;
+        
         // pxx is only useful if we're not in normal grid resetting mode.
         pxx[idx]             = px[idx]    + pdispnew[idx];
         pTempNew[idx]        = pTemperature[idx];
@@ -2019,6 +1973,106 @@ void AMRMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
     }
     delete interpolator;
   }
+}
+
+//______________________________________________________________________
+//
+void AMRMPM::interpolateToParticlesAndUpdate_CFI(const ProcessorGroup*,
+                                                 const PatchSubset* coarsePatches,
+                                                 const MaterialSubset* ,
+                                                 DataWarehouse* old_dw,
+                                                 DataWarehouse* new_dw)
+{
+  const Level* coarseLevel = getLevel(coarsePatches);
+  const Level* fineLevel = coarseLevel->getFinerLevel().get_rep();
+  
+  for(int p=0;p<coarsePatches->size();p++){
+    const Patch* coarsePatch = coarsePatches->get(p);
+    printTask(coarsePatches,coarsePatch,cout_doing,"interpolateToParticlesAndUpdate_CFI");
+
+    int numMatls = d_sharedState->getNumMPMMatls();
+    
+    
+    constNCVariable<Stencil7> zoi_fine;
+    IntVector cl, ch, fl, fh;
+
+    // Determine extents for coarser level particle data
+    IntVector refineRatio(fineLevel->getRefinementRatio());
+    
+    int nBoundaryCells = Max(refineRatio.x(), refineRatio.y(), refineRatio.z());
+    int nGhostCells = 0;
+    Level::selectType finePatches;
+    coarsePatch->getFineLevelPatches(finePatches);
+
+    for(int i=0;i<finePatches.size();i++){
+      const Patch* finePatch = finePatches[i]; 
+      
+      if(finePatch->hasBoundaryFaces()){
+
+        ParticleInterpolator* interpolator = flags->d_interpolator->clone(finePatch);
+        
+        getFineLevelRangeNodes(coarsePatch, finePatch, cl, ch, fl, fh, nGhostCells,nBoundaryCells);
+
+        cout << "  coarseLevel: " << coarseLevel->getIndex() << " cl: " << cl << " ch: " << ch << " fl: " << fl << " fh " << fh << endl;
+
+        new_dw->get(zoi_fine, lb->gZOILabel, 0, finePatch, Ghost::None, 0 );
+
+        for(int m = 0; m < numMatls; m++){
+          MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+          int dwi = mpm_matl->getDWIndex();
+
+          // get fine level grid data
+          constNCVariable<double> gmass_fine;
+          NCVariable<double>gSum_S;
+          new_dw->get(gmass_fine,        lb->gMassLabel,       dwi, finePatch, Ghost::None, 0 );
+          new_dw->getModifiable(gSum_S,  lb->gSumWeightsLabel, dwi, finePatch);
+          
+          // get coarse level particle data
+          ParticleVariable<Point>  px_coarse;
+          ParticleVariable<double> pmass_coarse;
+          ParticleSubset* pset=0;
+          
+/*`==========TESTING==========*/
+          // get the particles for a region around the fine patch
+          //pset = old_dw->getParticleSubset(dwi, coarsePatch, cl, ch, lb->pXLabel);
+
+          // get the particles for the entire coarse patch
+          // This needs to be fixed  
+          pset = old_dw->getParticleSubset(dwi, coarsePatch);
+          cout << *pset << endl; 
+/*===========TESTING==========`*/
+          
+          new_dw->getModifiable(px_coarse,          lb->pXLabel_preReloc,    pset);       
+          new_dw->getModifiable(pmass_coarse,       lb->pMassLabel_preReloc, pset);   
+  #if 1
+          for (ParticleSubset::iterator iter = pset->begin();iter != pset->end(); iter++){
+            particleIndex idx = *iter;
+
+            // Get the node indices that surround the cell
+            vector<IntVector> ni;
+            vector<double> S;
+
+            interpolator->findCellAndWeights(px_coarse[idx],ni,S,zoi_fine);
+
+            // Add each nodes contribution to the particle's mass & velocity 
+            IntVector fineNode;
+            for(int k = 0; k < ni.size(); k++) {
+              
+              fineNode = ni[k];
+              if(fineNode.z() == 0){
+                cout << " working on node: " << fineNode << endl;
+              }
+              gSum_S[fineNode] -= S[k];
+              pmass_coarse[idx] += pmass_coarse[idx] + gmass_fine[fineNode] * S[k];
+            }
+          } // End of particle loop
+    #endif
+        } // End loop over materials 
+      
+      delete interpolator;
+      }  // if has boundary face
+    }  // End loop over fine patches 
+  }  // End loop over patches
 }
 
 
