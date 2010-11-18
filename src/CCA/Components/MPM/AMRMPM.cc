@@ -710,12 +710,8 @@ void AMRMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   
   Task* t=scinew Task("AMRMPM::interpolateToParticlesAndUpdate",
                 this, &AMRMPM::interpolateToParticlesAndUpdate);
-
-  Task::DomainSpec DS = Task::NormalDomain;
   Ghost::GhostType gac   = Ghost::AroundCells;
   Ghost::GhostType gnone = Ghost::None;
-  bool  fat = false;  // possibly (F)rom (A)nother (T)askgraph
-  const MaterialSubset* mss = matls->getUnion();
 
   t->requires(Task::OldDW, d_sharedState->get_delt_label() );
 
@@ -752,7 +748,7 @@ void AMRMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   
   // debugging scalar
   if(flags->d_with_color) {
-    t->requires(Task::OldDW, lb->pColorLabel,  Ghost::None);
+    t->requires(Task::OldDW, lb->pColorLabel,  gnone);
     t->computes(lb->pColorLabel_preReloc);
   }
   
@@ -776,7 +772,6 @@ void AMRMPM::scheduleInterpolateToParticlesAndUpdate_CFI(SchedulerP& sched,
                   this, &AMRMPM::interpolateToParticlesAndUpdate_CFI);
 
     Ghost::GhostType  gn  = Ghost::None;
-    Ghost::GhostType gac  = Ghost::AroundCells;
     Task::DomainSpec  ND  = Task::NormalDomain;
     #define allPatches 0
     #define allMatls 0
@@ -1156,7 +1151,7 @@ void AMRMPM::interpolateParticlesToGrid_CFI(const ProcessorGroup*,
     getCoarseLevelRangeNodes(finePatch, coarseLevel, cl, ch, fl, fh, nGhostCells, nBoundaryCells);
     cout << "  coarseLevel: " << coarseLevel->getIndex() << " cl: " << cl << " ch: " << ch<< " fl: " << fl << " fh " << fh << endl;
 
-    new_dw->getRegion(zoi_fine, lb->gZOILabel, 0, fineLevel, fl,fh,false);
+    new_dw->get(zoi_fine, lb->gZOILabel, 0, finePatch, Ghost::None, 0 );
 
     for(int m = 0; m < numMatls; m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
@@ -1177,6 +1172,7 @@ void AMRMPM::interpolateParticlesToGrid_CFI(const ProcessorGroup*,
       ParticleSubset* pset=0;
       
       // get the particles 
+      cout << " AAA " << endl;
       pset = old_dw->getParticleSubset(dwi, cl, ch, coarseLevel, finePatch,lb->pXLabel);
       cout << *pset << endl;
 
@@ -1865,8 +1861,6 @@ void AMRMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
     ParticleInterpolator* interpolator = flags->d_interpolator->clone(patch);
     vector<IntVector> ni(interpolator->size());
     vector<double> S(interpolator->size());
-    Ghost::GhostType  gac = Ghost::AroundCells;
-
 
     // Performs the interpolation from the cell vertices of the grid
     // acceleration and velocity to the particles to update their
@@ -1960,7 +1954,10 @@ void AMRMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
           //S[k] *= pErosion[idx];
           vel      += gvelocity_star[node]  * S[k];
           acc      += gacceleration[node]   * S[k];
-          gSum_S[node] -= S[k];
+/*`==========TESTING==========*/
+// This doesn't work on multiple patches.
+//          gSum_S[node] -= S[k]; 
+/*===========TESTING==========`*/
         }
         
 
