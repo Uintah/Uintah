@@ -1269,7 +1269,7 @@ OnDemandDataWarehouse::getModifiable(ParticleVariableBase& var,
        SCI_THROW(UnknownVariable(label->getName(), getID(), patch, matlIndex, "", __FILE__, __LINE__));
      d_varDB.get(label, matlIndex, patch, var);
    } else {
-     SCI_THROW(InternalError("getParticleVariable should not be used with ghost cells", __FILE__, __LINE__));
+     SCI_THROW(InternalError("getModifiable (Particle Variable (" + label->getName() +") ).  The particleSubset low/high index does not match the patch low/high indices", __FILE__, __LINE__));
    }
   d_lock.readUnlock();
 }
@@ -1284,7 +1284,7 @@ OnDemandDataWarehouse::getParticleVariable(const VarLabel* label,
    if(pset->getLow() == patch->getExtraCellLowIndex() && pset->getHigh() == patch->getExtraCellHighIndex()){
      return getParticleVariable(label, matlIndex, patch);
    } else {
-     SCI_THROW(InternalError("getParticleVariable should not be used with ghost cells", __FILE__, __LINE__));
+     SCI_THROW(InternalError("getParticleVariable (Particle Variable (" + label->getName() +") ).  The particleSubset low/high index does not match the patch low/high indices", __FILE__, __LINE__));
    }
 }
 
