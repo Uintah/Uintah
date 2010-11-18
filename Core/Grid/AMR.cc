@@ -50,28 +50,46 @@ void getFineLevelRange(const Patch* coarsePatch, const Patch* finePatch,
   ch = finePatch->getLevel()->mapCellToCoarser(fh);
 }
 
-void getFineLevelRangeNodes(const Patch* coarsePatch, const Patch* finePatch,
+//______________________________________________________________________
+//
+void getFineLevelRangeNodes(const Patch* coarsePatch, 
+                            const Patch* finePatch,
                             IntVector& cl, IntVector& ch,
-                            IntVector& fl, IntVector& fh,IntVector ghost)
+                            IntVector& fl, IntVector& fh,
+                            int ngc,
+                            int nBoundaryCells)
 {
+  IntVector boundaryCells(nBoundaryCells, nBoundaryCells, nBoundaryCells);
+  
+  finePatch->computeVariableExtents(Patch::NodeBased, boundaryCells, Ghost::AroundNodes,ngc, fl, fh);
+
   cl = coarsePatch->getExtraNodeLowIndex();
   ch = coarsePatch->getExtraNodeHighIndex();
-  fl = coarsePatch->getLevel()->mapNodeToFiner(cl) - ghost;
-  fh = coarsePatch->getLevel()->mapNodeToFiner(ch) + ghost;
-
-  fl = Max(fl, finePatch->getNodeLowIndex());
-  fh = Min(fh, finePatch->getNodeHighIndex());
+  
+  IntVector fl_tmp = coarsePatch->getLevel()->mapNodeToFiner(cl);
+  IntVector fh_tmp = coarsePatch->getLevel()->mapNodeToFiner(ch);
+  
+  //Take the intersection 
+  fl = Max(fl_tmp, fl);
+  fh = Min(fh_tmp, fh);
 
   cl = Max(cl, finePatch->getLevel()->mapNodeToCoarser(fl));
   ch = Min(ch, finePatch->getLevel()->mapNodeToCoarser(fh));
 
+#if 0
+  cout << "getFineLevelRangeNodes_new: ghost " << ngc << " boundaryCells " << boundaryCells << endl;
+  cout << " comp variable extents fl:" << fl << " fh " << fh << endl;
+  cout << "    fl: " << fl << " fh " << fh << endl;
+  cout << "    cl: " << cl << " ch " << ch << endl;
+#endif
   if (ch.x() <= cl.x() || ch.y() <= cl.y() || ch.z() <= cl.z()) {
     // the expanded fine region was outside the coarse region, so
     // return an invalid fine region
     fl = fh;
   }
-
 }
+
+
 //______________________________________________________________________
 void getCoarseLevelRange(const Patch* finePatch, const Level* coarseLevel, 
                          IntVector& cl, IntVector& ch, IntVector& fl, IntVector& fh, int ngc)
@@ -107,13 +125,10 @@ void getCoarseLevelRangeNodes(const Patch* finePatch, const Level* coarseLevel,
   
   finePatch->computeVariableExtents(Patch::NodeBased, boundaryCells, Ghost::AroundNodes,ngc, fl, fh);
   
-cout << "getCoarseLevelRangeNodes: NGC " << ngc << endl;
-cout << "    fl: " << fl << " fh " << fh << endl;
-  
   // coarse region we need to get from the dw
   cl = finePatch->getLevel()->mapCellToCoarser(fl);
   ch = finePatch->getLevel()->mapCellToCoarser(fh);
-cout << "    cl: " << cl << " ch " << ch << endl;
+  
   //__________________________________
   // coarseHigh and coarseLow cannot lie outside
   // of the coarselevel index range
@@ -121,8 +136,12 @@ cout << "    cl: " << cl << " ch " << ch << endl;
   coarseLevel->findNodeIndexRange(cl_tmp,ch_tmp);
   cl = Max(cl_tmp, cl);
   ch = Min(ch_tmp, ch);
-cout << "    cl: " << cl << " ch " << ch << endl;
-
+  
+#if 0
+  cout << "getCoarseLevelRangeNodes: NGC " << ngc << endl;
+  cout << "    fl: " << fl << " fh " << fh << endl;
+  cout << "    cl: " << cl << " ch " << ch << endl;
+#endif
   // fine region to work over
   fl = finePatch->getNodeLowIndex();
   fh = finePatch->getNodeHighIndex();
