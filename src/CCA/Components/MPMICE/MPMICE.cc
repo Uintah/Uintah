@@ -3011,10 +3011,12 @@ void MPMICE::coarsenVariableNC(const ProcessorGroup*,
       coarsePatch->getFineLevelPatches(finePatches);
       for(int i=0;i<finePatches.size();i++){
         const Patch* finePatch = finePatches[i];
-  
+        
         IntVector cl, ch, fl, fh;
-        IntVector ghost(refineRatio.x()/2,refineRatio.y()/2,refineRatio.z()/2);
-        getFineLevelRangeNodes(coarsePatch, finePatch, cl, ch, fl, fh,ghost);
+        int nBoundaryCells = 1;
+        int ngc = 0;
+        getFineLevelRangeNodes(coarsePatch, finePatch, cl, ch, fl, fh,ngc,nBoundaryCells);
+        
         if (fh.x() <= fl.x() || fh.y() <= fl.y() || fh.z() <= fl.z()) {
           continue;
         }
