@@ -112,6 +112,10 @@ public:
   };
 
 protected:
+  enum coarsenFlag{
+    coarsenData,
+    zeroData,
+  };
 
   virtual void actuallyInitialize(const ProcessorGroup*,
                                   const PatchSubset* patches,
@@ -159,7 +163,8 @@ protected:
                             const PatchSubset* patches,
                             const MaterialSubset* matls,
                             DataWarehouse* old_dw,
-                            DataWarehouse* new_dw);
+                            DataWarehouse* new_dw,
+                            const coarsenFlag flag);
 
 
   virtual void computeStressTensor(const ProcessorGroup*,
@@ -248,7 +253,8 @@ protected:
                                               
   void scheduleCoarsenNodalData_CFI(SchedulerP&, 
                                     const PatchSet*,
-                                    const MaterialSet*);
+                                    const MaterialSet*,
+                                    const coarsenFlag flag);
 
   virtual void scheduleComputeStressTensor(SchedulerP&, 
                                            const PatchSet*,
