@@ -150,12 +150,6 @@ public:
         lb = Mlb;
   };
 
-
-  enum bctype { NONE=0,
-                FIXED,
-                SYMMETRY,
-                NEIGHBOR };
-  
   enum IntegratorType {
     Explicit,
     Implicit 

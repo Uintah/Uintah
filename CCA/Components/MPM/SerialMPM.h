@@ -164,11 +164,6 @@ public:
         flags->d_with_arches = true;
   };
 
-  enum bctype { NONE=0,
-                FIXED,
-                SYMMETRY,
-                NEIGHBOR };
-
   enum IntegratorType {
     Explicit,
     Implicit,
