@@ -367,7 +367,7 @@ ScalarEqn::sched_buildTransportEqn( const LevelP& level, SchedulerP& sched, int 
   }
   
   //-----OLD-----
-  tsk->requires(Task::OldDW, d_fieldLabels->d_areaFractionLabel, Ghost::AroundCells, 1); 
+  tsk->requires(Task::OldDW, d_fieldLabels->d_areaFractionLabel, Ghost::AroundCells, 2); 
 
   sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
 }
@@ -413,7 +413,7 @@ ScalarEqn::buildTransportEqn( const ProcessorGroup* pc,
     new_dw->get(mu_t,         d_fieldLabels->d_viscosityCTSLabel, matlIndex, patch, gac, 1); 
     new_dw->get(uVel,         d_fieldLabels->d_uVelocitySPBCLabel, matlIndex, patch, gac, 1); 
     new_dw->get(prNo, d_prNo_label, matlIndex, patch, gn, 0); 
-    old_dw->get(areaFraction, d_fieldLabels->d_areaFractionLabel, matlIndex, patch, gac, 1); 
+    old_dw->get(areaFraction, d_fieldLabels->d_areaFractionLabel, matlIndex, patch, gac, 2); 
 
     double vol = Dx.x();
 #ifdef YDIM
