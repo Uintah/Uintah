@@ -223,7 +223,7 @@ namespace Wasatch{
 //                << endl;
 
 //     fml_->dump_fields(cout);
-          fml_->allocate_fields( Expr::AllocInfo( oldDW, newDW, material, patch ) );
+          fml_->allocate_fields( Expr::AllocInfo( oldDW, newDW, material, patch, pg ) );
           tree_->bind_fields( *fml_ );
           tree_->bind_operators( opdb );
           tree_->execute_tree();
