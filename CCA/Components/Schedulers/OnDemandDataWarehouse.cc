@@ -957,6 +957,7 @@ ParticleSubset* OnDemandDataWarehouse::queryPSetDB(psetDBType &subsetDB, const P
   //otherwise filter out particles that are not within this range
   constParticleVariable<Point> pos;
 
+  ASSERT(subset!=0);
   get(pos, pos_var, subset);
 
   ParticleSubset* newsubset=scinew ParticleSubset(0, matlIndex, patch->getRealPatch(),low,high);
