@@ -48,6 +48,7 @@ SideBCData::SideBCData()
 {
   d_cells=GridIterator(IntVector(0,0,0),IntVector(0,0,0));
   d_nodes=GridIterator(IntVector(0,0,0),IntVector(0,0,0));
+  d_bcname = "NotSet"; 
 }
 
 

@@ -49,15 +49,26 @@ C
          DO 30 K=KST,KEND
             DO 20 J=JST,JEND
                if (xminus) then
+C                 We are on the x-minus face
                   i = ist -1
+
+C                 PCELL = cellType 
+C                 FFIELD = -1 (cellType if in flow domain)
+C                 this if statement verifies we are not inside flow domain
                   IF (PCELL(I,J,K).NE.FFIELD) THEN
 
-                     if (lprobone.or.lprobthree) tg(i,j,k) = 0.0d0
-                     if (lprobtwo)then
-                     tg(i,j,k) = 0.0d0
+                     if (lprobone.or.lprobthree) then
+                        tg(i,j,k) = 0.0d0
                      end if
+                     if (lprobtwo) then
+                        tg(i,j,k) = 0.0d0
+                     end if
+
                      ABSKG(I,J,K) = 1.0d0  
-                     tg(i,j,k) = 293.0d0
+
+                    tg(i,j,k) = 293.0d0
+C                    (cmr)
+C                     tg(i,j,k) = 3000.0d0
 
                  END IF
                endif
@@ -70,7 +81,9 @@ C
                      tg(i,j,k) = 0.0d0
                      end if
                      ABSKG(I,J,K) = 1.0d0
-                     tg(i,j,k) = 293.0d0
+                    tg(i,j,k) = 293.0d0
+C                    (cmr)
+C                     tg(i,j,k) = 3000.0d0
 
                   END IF
                endif
@@ -90,6 +103,8 @@ C
                      end if
                      ABSKG(I,J,K) = 1.0d0
                      tg(i,j,k) = 293.0d0
+C                    (cmr)
+C                    tg(i,j,k) = 3000.0d0
 
                   END IF
                endif
@@ -103,6 +118,8 @@ C
                      end if
                      ABSKG(I,J,K) = 1.0d0
                      tg(i,j,k) = 293.0d0
+C                    (cmr)
+C                    tg(i,j,k) = 3000.0d0
 
                   END IF
                endif
@@ -122,6 +139,8 @@ C
                      end if
                      ABSKG(I,J,K) = 1.0d0 
                      tg(i,j,k) = 293.0d0
+C                    (cmr)
+C                    tg(i,j,k) = 3000.0d0
  
                  END IF
                endif
@@ -135,6 +154,8 @@ C
                      end if
                      ABSKG(I,J,K) = 1.0d0 
                      tg(i,j,k) = 293.0d0
+C                    (cmr)
+C                    tg(i,j,k) = 3000.0d0
 
                   END IF
                endif

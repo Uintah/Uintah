@@ -1,13 +1,14 @@
 #ifndef UT_PropertyModelFactory_h
 #define UT_PropertyModelFactory_h
 
+#include <CCA/Components/Arches/ArchesLabel.h>
 #include <CCA/Components/Arches/PropertyModels/PropertyModelBase.h> 
 #include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/SimulationStateP.h>
-#include <map>
-#include <vector>
-#include <string>
+//#include <map>
+//#include <vector>
+//#include <string>
 
 /**
  *  @class  PropertyModelFactory
@@ -27,10 +28,29 @@
 class PropertyModelFactory
 {
 public:
+
+  typedef std::map< std::string, PropertyModelBase::Builder* > BuildMap;
+  typedef std::map< std::string, PropertyModelBase*    > PropMap;
+
   /**
    *  @brief obtain a reference to the PropertyModelFactory.
    */
   static PropertyModelFactory& self();
+
+  ////////////////////////////////////////////////
+  // Initialization/setup methods
+
+	/** @brief	Grab input parameters from the ups file. */
+	void problemSetup( const ProblemSpecP & params);
+
+  /** @brief  Schedule initialization of property models */
+  void sched_propertyInit( const LevelP& level, SchedulerP& ); 
+  
+  /** @brief  Schedule dummy initialization of property models */
+  void sched_dummyInit( const LevelP& level, SchedulerP& );
+
+  /////////////////////////////////////////////////////
+  // Property model retrieval
 
   /**
    *  @brief Register a property model. 
@@ -53,17 +73,27 @@ public:
    */
   PropertyModelBase& retrieve_property_model( const std::string name );
 
-  typedef std::map< std::string, PropertyModelBase::Builder* > BuildMap;
-  typedef std::map< std::string, PropertyModelBase*    > PropMap;
+	////////////////////////////////////////////////
+	// Get/set methods
 
   /** @brief Returns the list of all property models in Map form. */ 
   PropMap& retrieve_all_property_models(){
     return _property_models; }; 
 
+  /** @brief  Set the ArchesLabel class so that CoalModelFactory can use field labels from Arches */
+  void setArchesLabel( ArchesLabel * fieldLabels ) {
+    d_fieldLabels = fieldLabels;
+    d_labelSet = true;
+  };
+
 private:
+
+  ArchesLabel* d_fieldLabels;
 
   BuildMap  _builders;          ///< Builder map
   PropMap   _property_models;   ///< Property model map
+
+  bool d_labelSet;              ///< Boolean: has the ArchesLabel been set using setArchesLabel() method?
 
   PropertyModelFactory();
   ~PropertyModelFactory();

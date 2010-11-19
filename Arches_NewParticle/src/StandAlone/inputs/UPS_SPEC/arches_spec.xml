@@ -144,10 +144,12 @@
         <TabProps                       spec="OPTIONAL NO_DATA" >
           <inputfile                    spec="REQUIRED STRING" />
           <cold_flow                    spec="OPTIONAL BOOLEAN"/>
-          <adiabatic                    spec="OPTIONAL BOOLEAN"/>
           <hl_scalar_init               spec="OPTIONAL DOUBLE" />
           <hl_pressure                  spec="OPTIONAL DOUBLE" />
           <hl_outlet                    spec="OPTIONAL DOUBLE" />
+          <coal                         spec="OPTIONAL NO_DATA" 
+                                        attribute1="fp_label REQUIRED STRING"     
+                                        attribute2="eta_label REQUIRED STRING"/> <!-- Attributes must match the transported IVs specified in the TransportEqn node --> 
         </TabProps>
 
         <emperical_soot               spec="OPTIONAL BOOLEAN" />
@@ -181,9 +183,16 @@
         <sulfur_balance_es              spec="OPTIONAL BOOLEAN" />
         <ramping_inlet_flowrate         spec="OPTIONAL BOOLEAN" />
         <FlowInlet                      spec="MULTIPLE NO_DATA" >
+          <velocity_type                spec="OPTIONAL STRING 'flat, function, vector, file, geometry'"/>
+          <scalar_type                  spec="OPTIONAL STRING 'flat, function, file, geometry'"/>
+  
+          <vel_vector                   spec="OPTIONAL DOUBLE"/>
+          <vel_filename                 spec="OPTIONAL STRING"/>
+          <scalar_filename              spec="OPTIONAL STRING"/>
+          <vel_function                 spec="OPTIONAL STRING"/>
+          <scalar_function              spec="OPTIONAL STRING"/>
+
           <name                         spec="OPTIONAL STRING" />
-          <ramping_inlet_flowrate       spec="OPTIONAL BOOLEAN" />
-          <SulfurMassFractionInFuel     spec="OPTIONAL DOUBLE '0,1'" />
           <Flow_rate                    spec="OPTIONAL DOUBLE" />
           <InletVelocity                spec="OPTIONAL DOUBLE" />
           <mixture_fraction             spec="REQUIRED DOUBLE" />
@@ -331,7 +340,7 @@
           <linear_solver                spec="REQUIRED STRING 'hypre, petsc'" />
           <parameters                   spec="REQUIRED NO_DATA" >
             <max_iter                   spec="REQUIRED INTEGER 'positive'" />
-            <preconditioner             spec="REQUIRED STRING 'jacobi, pfmg'" />
+            <preconditioner             spec="REQUIRED STRING 'jacobi, pfmg, smg, none'" />
             <res_tol                    spec="REQUIRED DOUBLE" />
             <solver                     spec="REQUIRED STRING 'cg'" />
           </parameters>
@@ -423,6 +432,8 @@
             <n                          spec="OPTIONAL DOUBLE" />
             <fuel_mass_fraction         spec="OPTIONAL DOUBLE" />
             <oxidizer_O2_mass_fraction  spec="OPTIONAL DOUBLE" />
+            <scalar_label               spec="OPTIONAL STRING" />
+            <mw_label                   spec="OPTIONAL STRING" />
 
             <!-- Intrusion inlets --> 
             <intrusion                  spec="OPTIONAL NO_DATA">
@@ -439,11 +450,8 @@
 
       </TransportEqns>
 
-      <DQMOM                            spec="OPTIONAL NO_DATA" >
-      <!--
-      <DQMOM                            spec="OPTIONAL NO_DATA" >
-        <type                           spec="OPTIONAL STRING 'unweightedAbs, weightedAbs'" />
--->
+      <DQMOM                            spec="OPTIONAL NO_DATA"
+                                        attribute1="type OPTIONAL STRING 'unweightedAbs, weightedAbs">
 
         <!-- Tags for verification of DQMOM AX=B solution procedure -->
         <Verify_Linear_Solver           spec="OPTIONAL NO_DATA">
@@ -531,6 +539,7 @@
 
             <!-- Constant model -->
             <constant                   spec="OPTIONAL DOUBLE"/>
+            <gas_source                 spec="OPTIONAL BOOLEAN"/>
 
             <!-- Kobayashi Sarofim model -->
             <A1                         spec="OPTIONAL DOUBLE" />

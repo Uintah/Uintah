@@ -39,6 +39,9 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Arches/Mixing/Stream.h>
 #include <CCA/Components/Arches/Mixing/InletStream.h>
 
+#include <Core/Grid/Variables/SFCXVariable.h>
+#include <Core/Grid/Variables/SFCYVariable.h>
+#include <Core/Grid/Variables/SFCZVariable.h>
 #include   <vector>
 
 /**************************************
@@ -734,6 +737,22 @@ private:
                      DataWarehouse* old_dw,
                      DataWarehouse* new_dw);
 
+  void setFlatProfV( const Patch* patch, 
+                 SFCXVariable<double>& u, SFCYVariable<double>& v, SFCZVariable<double>& w, 
+                 const CCVariable<int>& cellType, const double area, const int inlet_type, 
+                 const double flow_rate, const double inlet_vel, const double density, 
+                 const bool xminus, const bool xplus, 
+                 const bool yminus, const bool yplus, 
+                 const bool zminus, const bool zplus, 
+                 double& actual_flow_rate ); 
+
+  void setFlatProfS( const Patch* patch, 
+                 CCVariable<double>& scalar, 
+                 double value, 
+                 const CCVariable<int>& cellType, const double area, const int inlet_type, 
+                 const bool xminus, const bool xplus, 
+                 const bool yminus, const bool yplus, 
+                 const bool zminus, const bool zplus );
   
   bool turbinlet;
   int ilow;
@@ -756,6 +775,9 @@ private:
   double *Rturb;
 
 private:
+
+
+
   // GROUP:  Local DataTypes :
   ////////////////////////////////////////////////////////////////////////
   // FlowInlet
@@ -766,12 +788,20 @@ private:
     FlowInlet(int cellID, bool calcVariance, bool reactingScalarSolve);
     ~FlowInlet();
     FlowInlet& operator=(const FlowInlet& copy);
+
+    enum InletVelType { VEL_FLAT_PROFILE, VEL_FUNCTION, VEL_VECTOR, VEL_FILE_INPUT };
+    enum InletScalarType { SCALAR_FLAT_PROFILE, SCALAR_FUNCTION, SCALAR_FILE_INPUT };
+
+    InletVelType d_inletVelType; 
+    InletScalarType d_inletScalarType; 
+
     int d_cellTypeID;          // define enum for cell type
     bool d_calcVariance;
     bool d_reactingScalarSolve;
     // inputs
     double flowRate;           
     double inletVel;           
+    Vector d_velocity_vector; 
     double fcr;
     double fsr;
     int d_prefill_index;

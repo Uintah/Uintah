@@ -82,7 +82,7 @@ using namespace Uintah;
 #include <CCA/Components/Arches/fortran/bcuvel_fort.h>
 #include <CCA/Components/Arches/fortran/bcvvel_fort.h>
 #include <CCA/Components/Arches/fortran/bcwvel_fort.h>
-#include <CCA/Components/Arches/fortran/profv_fort.h>
+//#include <CCA/Components/Arches/fortran/profv_fort.h>
 #include <CCA/Components/Arches/fortran/intrusion_computevel_fort.h>
 #include <CCA/Components/Arches/fortran/mmbcenthalpy_energyex_fort.h>
 #include <CCA/Components/Arches/fortran/mmbcvelocity_momex_fort.h>
@@ -1230,9 +1230,11 @@ BoundaryCondition::setProfile(const ProcessorGroup*,
                               DataWarehouse* new_dw)
 {
   for (int p = 0; p < patches->size(); p++) {
+
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
     int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+
     constCCVariable<int> cellType;
     CCVariable<double> density;
     SFCXVariable<double> uVelocity;
@@ -1242,27 +1244,17 @@ BoundaryCondition::setProfile(const ProcessorGroup*,
     SFCYVariable<double> vVelRhoHat;
     SFCZVariable<double> wVelRhoHat;
     CCVariable<double> scalar;
-    CCVariable<double> reactscalar;
     CCVariable<double> enthalpy;
 
+    new_dw->get(cellType, d_lab->d_cellTypeLabel, indx, patch, Ghost::None, 0);
     new_dw->getModifiable(uVelocity, d_lab->d_uVelocitySPBCLabel, indx, patch);
     new_dw->getModifiable(vVelocity, d_lab->d_vVelocitySPBCLabel, indx, patch);
     new_dw->getModifiable(wVelocity, d_lab->d_wVelocitySPBCLabel, indx, patch);
     new_dw->getModifiable(uVelRhoHat, d_lab->d_uVelRhoHatLabel, indx, patch);
     new_dw->getModifiable(vVelRhoHat, d_lab->d_vVelRhoHatLabel, indx, patch);
     new_dw->getModifiable(wVelRhoHat, d_lab->d_wVelRhoHatLabel, indx, patch);
-    
-    // get cellType, density and velocity
-    new_dw->get(cellType, d_lab->d_cellTypeLabel, indx, patch, Ghost::None,
-                Arches::ZEROGHOSTCELLS);
     new_dw->getModifiable(density, d_lab->d_densityCPLabel, indx, patch);
     new_dw->getModifiable(scalar, d_lab->d_scalarSPLabel, indx, patch);
-      // reactscalar will be zero at the boundaries, so no further calculation
-      // is required.
-    if (d_reactingScalarSolve){
-      new_dw->getModifiable(reactscalar, d_lab->d_reactscalarSPLabel, indx, patch);
-    }
-    
     if (d_enthalpySolve){ 
       new_dw->getModifiable(enthalpy, d_lab->d_enthalpySPLabel, indx, patch);
     }
@@ -1270,18 +1262,22 @@ BoundaryCondition::setProfile(const ProcessorGroup*,
     IntVector idxLo = patch->getFortranCellLowIndex();
     IntVector idxHi = patch->getFortranCellHighIndex();
     bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
-    bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
+    bool xplus =  patch->getBCType(Patch::xplus)  != Patch::Neighbor;
     bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
-    bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
+    bool yplus =  patch->getBCType(Patch::yplus)  != Patch::Neighbor;
     bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
-    bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
+    bool zplus =  patch->getBCType(Patch::zplus)  != Patch::Neighbor;
 
     // loop thru the flow inlets to set all the components of velocity and density
     if (d_inletBoundary) {
+
       double time = 0.0; 
+
       for (int indx = 0; indx < d_numInlets; indx++) {
+
         sum_vartype area_var;
         new_dw->get(area_var, d_flowInlets[indx]->d_area_label);
+
         double area = area_var;
         double actual_flow_rate;
       
@@ -1291,25 +1287,87 @@ BoundaryCondition::setProfile(const ProcessorGroup*,
 
         proc0cout << "Actual area for inlet: " << fi->d_inlet_name << " = " << area << endl;
         proc0cout << endl;
-        
-        fort_profv(uVelocity, vVelocity, wVelocity, idxLo, idxHi,
-                   cellType, area, fi->d_cellTypeID, fi->flowRate, fi->inletVel,
-                   fi->calcStream.d_density,
-                   xminus, xplus, yminus, yplus, zminus, zplus, time,
-                   fi->d_ramping_inlet_flowrate, actual_flow_rate);
 
-        d_flowInlets[indx]->flowRate = actual_flow_rate;
-        new_dw->put(delt_vartype(actual_flow_rate),
-                    d_flowInlets[indx]->d_flowRate_label);
+        switch ( fi->d_inletVelType ){
+          case FlowInlet::VEL_FLAT_PROFILE:
 
-        fort_profscalar(idxLo, idxHi, density, cellType,
-                        fi->calcStream.d_density, fi->d_cellTypeID,
-                        xminus, xplus, yminus, yplus, zminus, zplus);
-        if (d_enthalpySolve){
-          fort_profscalar(idxLo, idxHi, enthalpy, cellType,
-                          fi->calcStream.d_enthalpy, fi->d_cellTypeID,
-                          xminus, xplus, yminus, yplus, zminus, zplus);
+            setFlatProfV( patch, 
+                          uVelocity, vVelocity, wVelocity, 
+                          cellType, area, fi->d_cellTypeID, 
+                          fi->flowRate, fi->inletVel, fi->calcStream.d_density, 
+                          xminus, xplus, 
+                          yminus, yplus, 
+                          zminus, zplus, 
+                          actual_flow_rate ); 
+                          
+            d_flowInlets[indx]->flowRate = actual_flow_rate;
+            new_dw->put(delt_vartype(actual_flow_rate),
+                        d_flowInlets[indx]->d_flowRate_label);
+
+            break; 
+          case FlowInlet::VEL_FUNCTION:
+
+            break; 
+          case FlowInlet::VEL_VECTOR:
+
+            break; 
+          case FlowInlet::VEL_FILE_INPUT:
+
+            break; 
         }
+
+        switch ( fi->d_inletScalarType ){
+          case FlowInlet::SCALAR_FLAT_PROFILE:
+
+            setFlatProfS( patch, 
+                          density, 
+                          fi->calcStream.d_density, cellType, area, fi->d_cellTypeID, 
+                          xminus, xplus, 
+                          yminus, yplus, 
+                          zminus, zplus ); 
+
+            setFlatProfS( patch, 
+                          scalar, 
+                          fi->streamMixturefraction.d_mixVars[0], cellType, area, fi->d_cellTypeID, 
+                          xminus, xplus, 
+                          yminus, yplus, 
+                          zminus, zplus );  
+
+            if (d_enthalpySolve) {
+
+              setFlatProfS( patch, 
+                            enthalpy, 
+                            fi->calcStream.d_enthalpy, cellType, area, fi->d_cellTypeID, 
+                            xminus, xplus, 
+                            yminus, yplus, 
+                            zminus, zplus ); 
+            }
+
+            break; 
+          case FlowInlet::SCALAR_FUNCTION:
+
+            break; 
+          case FlowInlet::SCALAR_FILE_INPUT:
+
+            break; 
+        }
+
+        
+        //fort_profv(uVelocity, vVelocity, wVelocity, idxLo, idxHi,
+        //           cellType, area, fi->d_cellTypeID, fi->flowRate, fi->inletVel,
+        //           fi->calcStream.d_density,
+        //           xminus, xplus, yminus, yplus, zminus, zplus, time,
+        //           fi->d_ramping_inlet_flowrate, actual_flow_rate);
+
+
+        //fort_profscalar(idxLo, idxHi, density, cellType,
+        //                fi->calcStream.d_density, fi->d_cellTypeID,
+        //                xminus, xplus, yminus, yplus, zminus, zplus);
+        //if (d_enthalpySolve){
+        //  fort_profscalar(idxLo, idxHi, enthalpy, cellType,
+        //                  fi->calcStream.d_enthalpy, fi->d_cellTypeID,
+        //                  xminus, xplus, yminus, yplus, zminus, zplus);
+        //}
       }
     }
 
@@ -1341,23 +1399,15 @@ BoundaryCondition::setProfile(const ProcessorGroup*,
       }
     }
 
-    if (d_inletBoundary) {
-      for (int ii = 0; ii < d_numInlets; ii++) {
-        double scalarValue = 
-               d_flowInlets[ii]->streamMixturefraction.d_mixVars[0];
-        fort_profscalar(idxLo, idxHi, scalar, cellType,
-                        scalarValue, d_flowInlets[ii]->d_cellTypeID,
-                        xminus, xplus, yminus, yplus, zminus, zplus);
-        double reactScalarValue;
-        if (d_reactingScalarSolve) {
-          reactScalarValue = 
-               d_flowInlets[ii]->streamMixturefraction.d_rxnVars[0];
-          fort_profscalar(idxLo, idxHi, reactscalar, cellType,
-                          reactScalarValue, d_flowInlets[ii]->d_cellTypeID,
-                          xminus, xplus, yminus, yplus, zminus, zplus);
-        }
-      }
-    }
+    //if (d_inletBoundary) {
+    //  for (int ii = 0; ii < d_numInlets; ii++) {
+    //    double scalarValue = 
+    //           d_flowInlets[ii]->streamMixturefraction.d_mixVars[0];
+    //    fort_profscalar(idxLo, idxHi, scalar, cellType,
+    //                    scalarValue, d_flowInlets[ii]->d_cellTypeID,
+    //                    xminus, xplus, yminus, yplus, zminus, zplus);
+    //  }
+    // }
 
     if (d_pressureBoundary) {
       double scalarValue = 
@@ -1365,14 +1415,6 @@ BoundaryCondition::setProfile(const ProcessorGroup*,
       fort_profscalar(idxLo, idxHi, scalar, cellType, scalarValue,
                       d_pressureBC->d_cellTypeID,
                       xminus, xplus, yminus, yplus, zminus, zplus);
-      double reactScalarValue;
-      if (d_reactingScalarSolve) {
-        reactScalarValue = 
-             d_pressureBC->streamMixturefraction.d_rxnVars[0];
-        fort_profscalar(idxLo, idxHi, reactscalar, cellType,
-                        reactScalarValue, d_pressureBC->d_cellTypeID,
-                        xminus, xplus, yminus, yplus, zminus, zplus);
-      }
     }
 
     if (d_outletBoundary) {
@@ -1381,77 +1423,187 @@ BoundaryCondition::setProfile(const ProcessorGroup*,
       fort_profscalar(idxLo, idxHi, scalar, cellType, scalarValue,
                       d_outletBC->d_cellTypeID,
                       xminus, xplus, yminus, yplus, zminus, zplus);
-      double reactScalarValue;
-      if (d_reactingScalarSolve) {
-        reactScalarValue = 
-             d_outletBC->streamMixturefraction.d_rxnVars[0];
-        fort_profscalar(idxLo, idxHi, reactscalar, cellType,
-                        reactScalarValue, d_outletBC->d_cellTypeID,
-                        xminus, xplus, yminus, yplus, zminus, zplus);
-      }
     }
     uVelRhoHat.copyData(uVelocity); 
     vVelRhoHat.copyData(vVelocity); 
     wVelRhoHat.copyData(wVelocity); 
 
-    if (d_calcExtraScalars) {
-      for (int i=0; i < static_cast<int>(d_extraScalars->size()); i++) {
-        string extra_scalar_name = d_extraScalars->at(i)->getScalarName();
-        CCVariable<double> extra_scalar;
-        new_dw->getModifiable(extra_scalar,
-                              d_extraScalars->at(i)->getScalarLabel(),indx, patch);
+  }
+}
 
-        if (d_inletBoundary) {
-          for (int ii = 0; ii < d_numInlets; ii++) {
-            int BC_ID = d_flowInlets[ii]->d_cellTypeID;
+// set a velocity profile for a boundary 
+// should replace the klunky fortran routines
+void 
+BoundaryCondition::setFlatProfV( const Patch* patch, 
+                             SFCXVariable<double>& u, SFCYVariable<double>& v, SFCZVariable<double>& w, 
+                             const CCVariable<int>& cellType, const double area, const int inlet_type, 
+                             const double flow_rate, const double inlet_vel, const double density, 
+                             const bool xminus, const bool xplus, 
+                             const bool yminus, const bool yplus, 
+                             const bool zminus, const bool zplus, 
+                             double& actual_flow_rate ) 
+{
+  vector<Patch::FaceType>::const_iterator fiter;
+  vector<Patch::FaceType> bf;
+  patch->getBoundaryFaces(bf);
+  Vector Dx = patch->dCell(); 
 
-            double extra_scalar_value;
-            for (int j=0; j < static_cast<int>(d_extraScalarBCs.size()); j++)
-              if ((d_extraScalarBCs[j]->d_scalar_name == extra_scalar_name)&&
-                  (d_extraScalarBCs[j]->d_BC_ID) == BC_ID)
-                extra_scalar_value = d_extraScalarBCs[j]->d_scalarBC_value;
+  double ave_normal_vel = 0; 
+  double tiny = 1.0e-16; 
 
-                fort_profscalar(idxLo, idxHi, extra_scalar, cellType,
-                                extra_scalar_value, BC_ID,
-                                xminus, xplus, yminus, yplus, zminus, zplus);
+  // for normal flow inlet BC: 
+  if ( flow_rate < tiny ) { //ie, it is zero
+    ave_normal_vel   = inlet_vel;
+    actual_flow_rate = ave_normal_vel * density * area; 
+  } else { 
+    if ( area < tiny ) {
+      ave_normal_vel   = 0.0;
+      actual_flow_rate = 0.0; 
+    } else {
+      ave_normal_vel = flow_rate / ( area * density ); 
+      actual_flow_rate = flow_rate; 
+    }
+  }
+
+  for (fiter = bf.begin(); fiter !=bf.end(); fiter++){
+    Patch::FaceType face = *fiter;
+
+    //get the face direction
+    IntVector insideCellDir = patch->faceDirection(face);
+    switch (face) {
+      case Patch::xminus:
+        for ( CellIterator citer = patch->getFaceIterator( face, Patch::InteriorFaceCells );
+              !citer.done(); citer++ ){
+
+          IntVector c  = *citer; 
+          IntVector cb = *citer + insideCellDir; 
+
+          if ( cellType[cb] == inlet_type ) { 
+            u[c]  = ave_normal_vel; 
+            u[cb] = ave_normal_vel; 
+            v[cb] = 0.0; 
+            w[cb] = 0.0;
           }
         }
+        break;
+      case Patch::xplus:
+        for ( CellIterator citer = patch->getFaceIterator( face, Patch::InteriorFaceCells );
+              !citer.done(); citer++ ){
 
-        if (d_pressureBoundary) {
-          int BC_ID = d_pressureBC->d_cellTypeID;
-
-          double extra_scalar_value;
-          for (int j=0; j < static_cast<int>(d_extraScalarBCs.size()); j++){
-            if ((d_extraScalarBCs[j]->d_scalar_name == extra_scalar_name)&&
-                (d_extraScalarBCs[j]->d_BC_ID) == BC_ID){
-              extra_scalar_value = d_extraScalarBCs[j]->d_scalarBC_value;
-            }
+          IntVector c  = *citer; 
+          IntVector cb = *citer + insideCellDir; 
+          IntVector cbb= *citer + insideCellDir + insideCellDir; 
+          
+          if ( cellType[cb] == inlet_type ) { 
+            u[cb] = ave_normal_vel; 
+            u[cbb]= ave_normal_vel; 
+            v[cb] = 0.0; 
+            w[cb] = 0.0;
           }
-          fort_profscalar(idxLo, idxHi, extra_scalar, cellType,
-                          extra_scalar_value, BC_ID,
-                          xminus, xplus, yminus, yplus, zminus, zplus);
         }
+        break; 
+      case Patch::yminus:
+        for ( CellIterator citer = patch->getFaceIterator( face, Patch::InteriorFaceCells );
+              !citer.done(); citer++ ){
 
-        if (d_outletBoundary) {
-          int BC_ID = d_outletBC->d_cellTypeID;
+          IntVector c  = *citer; 
+          IntVector cb = *citer + insideCellDir; 
 
-          double extra_scalar_value;
-          for (int j=0; j < static_cast<int>(d_extraScalarBCs.size()); j++){
-            if ((d_extraScalarBCs[j]->d_scalar_name == extra_scalar_name)&&
-                (d_extraScalarBCs[j]->d_BC_ID) == BC_ID){
-              extra_scalar_value = d_extraScalarBCs[j]->d_scalarBC_value;
-            }
+          if ( cellType[cb] == inlet_type ) { 
+            v[c]  = ave_normal_vel; 
+            v[cb] = ave_normal_vel; 
+            u[cb] = 0.0; 
+            w[cb] = 0.0;
           }
-
-          fort_profscalar(idxLo, idxHi, extra_scalar, cellType,
-                          extra_scalar_value, BC_ID,
-                                xminus, xplus, yminus, yplus, zminus, zplus);
         }
-      }
+        break; 
+      case Patch::yplus:
+        for ( CellIterator citer = patch->getFaceIterator( face, Patch::InteriorFaceCells );
+              !citer.done(); citer++ ){
+
+          IntVector c  = *citer; 
+          IntVector cb = *citer + insideCellDir; 
+          IntVector cbb= *citer + insideCellDir + insideCellDir; 
+
+          if ( cellType[cb] == inlet_type ) { 
+            v[cb] = ave_normal_vel; 
+            v[cbb]= ave_normal_vel;
+            u[cb] = 0.0; 
+            w[cb] = 0.0;
+          }
+        }
+        break; 
+      case Patch::zminus: 
+        for ( CellIterator citer = patch->getFaceIterator( face, Patch::InteriorFaceCells );
+              !citer.done(); citer++ ){
+
+          IntVector c  = *citer; 
+          IntVector cb = *citer + insideCellDir; 
+
+          if ( cellType[c] == inlet_type ) { 
+            w[c]  = ave_normal_vel; 
+            w[cb] = ave_normal_vel; 
+            u[cb] = 0.0; 
+            v[cb] = 0.0;
+          }
+        }
+        break; 
+      case Patch::zplus:
+        for ( CellIterator citer = patch->getFaceIterator( face, Patch::InteriorFaceCells );
+              !citer.done(); citer++ ){
+
+          IntVector c  = *citer; 
+          IntVector cb = *citer + insideCellDir; 
+          IntVector cbb= *citer + insideCellDir + insideCellDir; 
+
+          if ( cellType[cb] == inlet_type ) { 
+            w[cb] = ave_normal_vel; 
+            w[cbb]= ave_normal_vel; 
+            u[cb] = 0.0; 
+            v[cb] = 0.0;
+          }
+        }
+        break; 
     }
   }
 }
 
+// set a scalar profile for a boundary 
+// should replace the klunky fortran routines
+void 
+BoundaryCondition::setFlatProfS( const Patch* patch, 
+                             CCVariable<double>& scalar, 
+                             double set_point, 
+                             const CCVariable<int>& cellType, const double area, const int check_type, 
+                             const bool xminus, const bool xplus, 
+                             const bool yminus, const bool yplus, 
+                             const bool zminus, const bool zplus )
+{
+  vector<Patch::FaceType>::const_iterator fiter;
+  vector<Patch::FaceType> bf;
+  patch->getBoundaryFaces(bf);
+  Vector Dx = patch->dCell(); 
+
+  int archIndex = 0; 
+
+  for (fiter = bf.begin(); fiter !=bf.end(); fiter++){
+    Patch::FaceType face = *fiter;
+
+    //get the face direction
+    IntVector insideCellDir = patch->faceDirection(face);
+
+    for ( CellIterator citer = patch->getFaceIterator( face, Patch::InteriorFaceCells );
+          !citer.done(); citer++ ){
+
+      IntVector cb = *citer + insideCellDir; 
+
+      if (cellType[cb] == check_type ) 
+        scalar[cb] = set_point; 
+
+    }
+  }
+}
+                             
 
 //****************************************************************************
 // Apply turbulence fluctuations to the inlet profile
@@ -2481,20 +2633,83 @@ BoundaryCondition::FlowInlet::~FlowInlet()
 void 
 BoundaryCondition::FlowInlet::problemSetup(ProblemSpecP& params)
 {
-  params->getWithDefault("Flow_rate", flowRate,0.0);
-  params->getWithDefault("InletVelocity", inletVel,0.0);
-// ramping function is the same for all inlets where ramping is on  
-  params->getWithDefault("ramping_inlet_flowrate",
-                         d_ramping_inlet_flowrate, false);
-  // This parameter only needs to be set for fuel inlets for which
-  // mixture fraction > 0, if there is an air inlet, and air has some CO2,
-  // this air CO2 will be counted in the balance automatically
-  // params->getWithDefault("CarbonMassFractionInFuel", fcr, 0.0);
-  params->getWithDefault("SulfurMassFractionInFuel", fsr, 0.0);
+
+
+  // ---- Velocity inlet information ---- 
+  std::string input_type; 
+  params->getWithDefault("velocity_type", input_type, "flat");
+  if ( input_type == "flat" ) {
+
+    if ( params->findBlock( "Flow_rate" ) && params->findBlock("InletVelocity") ) 
+      throw InvalidValue("Error: Flow_rate and InletVelocity cannot both be specified in FlowInlet BC", __FILE__, __LINE__); 
+
+    if ( params->findBlock( "Flow_rate" ) ) {
+      params->getWithDefault("Flow_rate", flowRate,0.0);
+      inletVel = 0.0; 
+    } else if ( params->findBlock( "InletVelocity" ) ) { 
+      params->getWithDefault("InletVelocity", inletVel,0.0);
+      flowRate = 0.0; 
+    } 
+
+    d_inletVelType = FlowInlet::VEL_FLAT_PROFILE; 
+
+  } else if ( input_type == "function" ) {
+      
+    throw InvalidValue("Error: velocity_type = function not yet supported. ", __FILE__, __LINE__); 
+
+  } else if ( input_type == "vector" ) {
+
+    throw InvalidValue("Error: velocity_type = vector not yet supported. ", __FILE__, __LINE__); 
+
+  } else if ( input_type == "file" ) {
+
+    std::string filename; 
+    params->require("vel_filename", filename); 
+
+    d_inletVelType = FlowInlet::VEL_FILE_INPUT; 
+
+  } else 
+      throw InvalidValue("Error: FlowInlet velocity_type not recognized.", __FILE__, __LINE__); 
+
+  // ---- Scalar inlet information --- 
+  params->getWithDefault("scalar_type", input_type, "flat");
+  if ( input_type == "flat" ) {
+
+    double mixfrac;
+    double mixfrac2; 
+    mixfrac2 = 0.0; 
+
+    params->require("mixture_fraction", mixfrac);
+    streamMixturefraction.d_mixVars.push_back(mixfrac);
+    streamMixturefraction.d_has_second_mixfrac = false; 
+
+    if (params->findBlock("mixture_fraction_2")){
+      params->require("mixture_fraction_2", mixfrac2); 
+      streamMixturefraction.d_f2 = mixfrac2; 
+      streamMixturefraction.d_has_second_mixfrac = true;
+    }
+
+    d_inletScalarType = FlowInlet::SCALAR_FLAT_PROFILE;
+
+  } else if ( input_type == "function" ) {
+      
+    throw InvalidValue("Error: scalar_type = function not yet supported. ", __FILE__, __LINE__); 
+
+  } else if ( input_type == "file" ) {
+
+    std::string filename; 
+    params->require("scalar_filename", filename); 
+
+    d_inletScalarType = FlowInlet::SCALAR_FILE_INPUT; 
+
+  } else 
+      throw InvalidValue("Error: FlowInlet scalar_type not recognized.", __FILE__, __LINE__); 
+
   // check to see if this will work
   ProblemSpecP geomObjPS = params->findBlock("geom_object");
   params->getWithDefault("name",d_inlet_name,"not named"); 
   GeometryPieceFactory::create(geomObjPS, d_geomPiece);
+
   // loop thru all the inlet geometry objects
   //for (ProblemSpecP geom_obj_ps = params->findBlock("geom_object");
   //     geom_obj_ps != 0; 
@@ -2510,31 +2725,15 @@ BoundaryCondition::FlowInlet::problemSetup(ProblemSpecP& params)
   //  }
   //}
 
-  double mixfrac;
-  double mixfrac2; 
-  params->require("mixture_fraction", mixfrac);
-  streamMixturefraction.d_mixVars.push_back(mixfrac);
-
-  mixfrac2 = 0.0; 
-  streamMixturefraction.d_has_second_mixfrac = false; 
-  if (params->findBlock("mixture_fraction_2")){
-    params->require("mixture_fraction_2", mixfrac2); 
-    streamMixturefraction.d_f2 = mixfrac2; 
-    streamMixturefraction.d_has_second_mixfrac = true;
-  }
 
   if (d_calcVariance){
     streamMixturefraction.d_mixVarVariance.push_back(0.0);
   }
-  double reactscalar;
-  if (d_reactingScalarSolve) {
-    params->require("reacting_scalar", reactscalar);
-    streamMixturefraction.d_rxnVars.push_back(reactscalar);
-  }
  
   //Prefill a geometry object with the flow inlet condition 
   d_prefill = params->findBlock("Prefill"); 
-  if (params->findBlock("Prefill")){
+  if (params->findBlock("Prefill") ){
+
     ProblemSpecP db_prefill = params->findBlock("Prefill");
     std::string prefill_direction = "null"; 
     db_prefill->getAttribute("direction",prefill_direction); 
