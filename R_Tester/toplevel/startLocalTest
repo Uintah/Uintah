@@ -155,7 +155,7 @@ for componentTest in $selectedCompTests; do
   # run the python script that contains all the
   # tests for that component
 
-  "$doTestScript" | tee "${componentTest}.log"
+  "./$doTestScript" | tee "${componentTest}.log"
 
   retval=$?
 
