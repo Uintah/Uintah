@@ -61,7 +61,7 @@ fprintf('Species in table:\n');
 speciesList{1}
 
 fprintf('Enter a species that you want plotted ...\n')
-whichsp = input('vs. Mixture fraction: (use single quote)');
+whichsp = input('vs. Mixture fraction: ','s');
 fprintf('a) Fixed Heat Loss \n');
 fprintf('b) Fixed Scalar Variance \n');
 whichplot = input('Enter a choice ( a or b ): ','s');
