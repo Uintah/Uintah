@@ -128,6 +128,10 @@ protected :
 
   bool d_coldflow; 
   bool d_adiabatic; 
+  bool d_coal_table; 
+
+  std::string d_fp_label; 
+  std::string d_eta_label; 
 
 private:
 

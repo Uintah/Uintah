@@ -62,6 +62,8 @@ WestbrookDryer::problemSetup(const ProblemSpecP& inputdb)
   db->getWithDefault("n", d_n, 1.3 );     // [O_2]^n 
   db->require("fuel_mass_fraction", d_MF_HC_f1);           // Mass fraction of C_xH_y when f=1
   db->require("oxidizer_O2_mass_fraction", d_MF_O2_f0);    // Mass fraction of O2 when f=0
+  db->require("scalar_label", d_scalar_label);   // The name of the transported scalar
+  db->require("mw_label", d_mw_label);           // The name of the MW label
 
   // hard set some values...may want to change some of these to be inputs
   d_MW_O2 = 32.0; 
@@ -106,10 +108,9 @@ WestbrookDryer::sched_computeSource( const LevelP& level, SchedulerP& sched, int
 
   const VarLabel* temperatureLabel = VarLabel::find( "tempIN" ); 
   const VarLabel* fLabel = VarLabel::find( "scalarSP" ); 
-  const VarLabel* mixMWLabel = VarLabel::find( "mixMW" ); 
+  const VarLabel* mixMWLabel = VarLabel::find( d_mw_label ); 
   const VarLabel* denLabel = VarLabel::find( "densityCP" ); 
-  // KLUDGE
-  const VarLabel* hcMassFracLabel = VarLabel::find( "hcMassFrac" ); // this needs to be generalized
+  const VarLabel* hcMassFracLabel = VarLabel::find( d_scalar_label );
 
   tsk->requires( Task::OldDW, temperatureLabel, Ghost::None, 0 ); 
   tsk->requires( Task::OldDW, fLabel,           Ghost::None, 0 ); 
@@ -183,9 +184,9 @@ WestbrookDryer::computeSource( const ProcessorGroup* pc,
 
     const VarLabel* temperatureLabel = VarLabel::find( "tempIN" ); 
     const VarLabel* fLabel           = VarLabel::find( "scalarSP" ); 
-    const VarLabel* mixMWLabel       = VarLabel::find( "mixMW" );
+    const VarLabel* mixMWLabel       = VarLabel::find( d_mw_label );
     const VarLabel* denLabel         = VarLabel::find( "densityCP" ); 
-    const VarLabel* hcMassFracLabel  = VarLabel::find( "hcMassFrac" ); // this needs to me generalized
+    const VarLabel* hcMassFracLabel  = VarLabel::find( d_scalar_label ); 
 
     old_dw->get( T, temperatureLabel, matlIndex, patch, Ghost::None, 0 ); 
     old_dw->get( f, fLabel,           matlIndex, patch, Ghost::None, 0 ); 

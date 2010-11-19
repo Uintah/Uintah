@@ -144,4 +144,3 @@ MixingRxnModel::addAdditionalDV( std::vector<string>& vars )
     insertIntoMap( *ivar ); 
   }
 }
-
