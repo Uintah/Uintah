@@ -143,8 +143,6 @@
           <inputfile                    spec="REQUIRED STRING" />
           <cold_flow                    spec="OPTIONAL BOOLEAN"/>
           <hl_scalar_init               spec="OPTIONAL DOUBLE" />
-          <hl_pressure                  spec="OPTIONAL DOUBLE" />
-          <hl_outlet                    spec="OPTIONAL DOUBLE" />
           <coal                         spec="OPTIONAL NO_DATA" 
                                         attribute1="fp_label REQUIRED STRING"     
                                         attribute2="eta_label REQUIRED STRING"/> <!-- Attributes must match the transported IVs specified in the TransportEqn node --> 
