@@ -66,9 +66,7 @@ C                 this if statement verifies we are not inside flow domain
 
                      ABSKG(I,J,K) = 1.0d0  
 
-                    tg(i,j,k) = 293.0d0
-C                    (cmr)
-C                     tg(i,j,k) = 3000.0d0
+                    tg(i,j,k) = tg(ist,j,k)
 
                  END IF
                endif
@@ -81,9 +79,7 @@ C                     tg(i,j,k) = 3000.0d0
                      tg(i,j,k) = 0.0d0
                      end if
                      ABSKG(I,J,K) = 1.0d0
-                    tg(i,j,k) = 293.0d0
-C                    (cmr)
-C                     tg(i,j,k) = 3000.0d0
+                     tg(i,j,k) = tg(iend,j,k)
 
                   END IF
                endif
@@ -102,9 +98,7 @@ C                     tg(i,j,k) = 3000.0d0
                      tg(i,j,k) = 0.0d0
                      end if
                      ABSKG(I,J,K) = 1.0d0
-                     tg(i,j,k) = 293.0d0
-C                    (cmr)
-C                    tg(i,j,k) = 3000.0d0
+                     tg(i,j,k) = tg(i,jst,k)
 
                   END IF
                endif
@@ -117,9 +111,7 @@ C                    tg(i,j,k) = 3000.0d0
                      tg(i,j,k) = 0.0d0
                      end if
                      ABSKG(I,J,K) = 1.0d0
-                     tg(i,j,k) = 293.0d0
-C                    (cmr)
-C                    tg(i,j,k) = 3000.0d0
+                     tg(i,j,k) = tg(i,jend,k)
 
                   END IF
                endif
@@ -138,9 +130,7 @@ C                    tg(i,j,k) = 3000.0d0
                      tg(i,j,k) = 0.0d0
                      end if
                      ABSKG(I,J,K) = 1.0d0 
-                     tg(i,j,k) = 293.0d0
-C                    (cmr)
-C                    tg(i,j,k) = 3000.0d0
+                     tg(i,j,k) = tg(i,j,kst)
  
                  END IF
                endif
@@ -153,9 +143,7 @@ C                    tg(i,j,k) = 3000.0d0
                      tg(i,j,k) = 0.0d0
                      end if
                      ABSKG(I,J,K) = 1.0d0 
-                     tg(i,j,k) = 293.0d0
-C                    (cmr)
-C                    tg(i,j,k) = 3000.0d0
+                     tg(i,j,k) = tg(i,j,kend)
 
                   END IF
                endif
