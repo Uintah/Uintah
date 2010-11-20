@@ -50,6 +50,39 @@ void getFineLevelRange(const Patch* coarsePatch, const Patch* finePatch,
   ch = finePatch->getLevel()->mapCellToCoarser(fh);
 }
 
+
+
+/*`==========TESTING==========*/
+void getFineLevelRangeNodes_old(const Patch* coarsePatch, const Patch* finePatch,
+                            IntVector& cl, IntVector& ch,
+                            IntVector& fl, IntVector& fh,IntVector ghost)
+{
+  cl = coarsePatch->getExtraNodeLowIndex();
+  ch = coarsePatch->getExtraNodeHighIndex();
+  fl = coarsePatch->getLevel()->mapNodeToFiner(cl) - ghost;
+  fh = coarsePatch->getLevel()->mapNodeToFiner(ch) + ghost;
+
+  fl = Max(fl, finePatch->getNodeLowIndex());
+  fh = Min(fh, finePatch->getNodeHighIndex());
+
+  cl = Max(cl, finePatch->getLevel()->mapNodeToCoarser(fl));
+  ch = Min(ch, finePatch->getLevel()->mapNodeToCoarser(fh));
+
+  if (ch.x() <= cl.x() || ch.y() <= cl.y() || ch.z() <= cl.z()) {
+    // the expanded fine region was outside the coarse region, so
+    // return an invalid fine region
+    fl = fh;
+  }
+#if 0
+cout << "getFineLevelRangeNodes: NGC " << ghost << endl;
+cout << "    fl: " << fl << " fh " << fh << endl;
+cout << "    cl: " << cl << " ch " << ch << endl;
+#endif
+} 
+/*===========TESTING==========`*/
+
+
+
 //______________________________________________________________________
 //
 void getFineLevelRangeNodes(const Patch* coarsePatch, 

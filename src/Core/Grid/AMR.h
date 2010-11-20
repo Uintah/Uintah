@@ -855,12 +855,20 @@ UINTAHSHARE void getFineLevelRange(const Patch* coarsePatch, const Patch* finePa
                                     IntVector& fl, IntVector& fh);
 
 // As above, but do the same for nodes, and include ghost data & boundary cell requirements                                        
+/*`==========TESTING==========*/
+UINTAHSHARE void getFineLevelRangeNodes_old(const Patch* coarsePatch, 
+                                        const Patch* finePatch,
+                                        IntVector& cl, IntVector& ch,
+                                        IntVector& fl, IntVector& fh, 
+                                        IntVector ghost);
+
 UINTAHSHARE void getFineLevelRangeNodes(const Patch* coarsePatch, 
                                         const Patch* finePatch,
                                         IntVector& cl, IntVector& ch,
                                         IntVector& fl, IntVector& fh, 
                                         int ghost,
-                                        int nBoundaryCells);
+                                        int nBoundaryCells); 
+/*===========TESTING==========`*/
 
 // find the range of values to get from the coarseLevel that coincides with coarsePatch
 // ngc is the number of ghost cells to get at the fine level
