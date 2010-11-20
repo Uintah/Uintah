@@ -65,6 +65,7 @@ ProgramBurn::ProgramBurn(ProblemSpecP& ps, MPMFlags* Mflag)
   // These parameters are used for the product JWL EOS
   ps->require("A",    d_initialData.d_A);
   ps->require("B",    d_initialData.d_B);
+  ps->require("C",    d_initialData.d_C);
   ps->require("R1",   d_initialData.d_R1);
   ps->require("R2",   d_initialData.d_R2);
   ps->require("om",   d_initialData.d_om);
@@ -458,8 +459,6 @@ void ProgramBurn::computeStressTensor(const PatchSubset* patches,
       } else {
         p_q[idx] = 0.;
       }
-#if 0
-#endif
     }  // end loop over particles
 
     WaveSpeed = dx/WaveSpeed;
