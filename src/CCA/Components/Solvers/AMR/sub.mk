@@ -30,7 +30,6 @@
 # 
 # Makefile fragment for this subdirectory
 
-include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCDIR   := CCA/Components/Solvers/AMR
 
@@ -72,5 +71,3 @@ LIBS := $(XML2_LIBRARY) $(MPI_LIBRARY) $(BLAS_LIBRARY) $(LAPACK_LIBRARY)
 ifeq ($(HAVE_HYPRE),yes)
 LIBS := $(LIBS) $(HYPRE_LIBRARY) 
 endif
-
-include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
