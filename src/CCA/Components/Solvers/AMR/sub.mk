@@ -36,14 +36,15 @@ SRCDIR   := CCA/Components/Solvers/AMR
 
 
 ifeq ($(HAVE_HYPRE),yes)
-  
+
   SRCS += $(SRCDIR)/AMRSolver.cc \
 	$(SRCDIR)/HypreDriver.cc \
 	$(SRCDIR)/HypreDriverStruct.cc \
 	$(SRCDIR)/HypreDriverSStruct.cc
+
   SUBDIRS := \
-        $(SRCDIR)/HypreSolvers \
-        $(SRCDIR)/HyprePreconds
+	$(SRCDIR)/HypreSolvers \
+	$(SRCDIR)/HyprePreconds
 
   include $(SCIRUN_SCRIPTS)/recurse.mk
 
@@ -73,4 +74,3 @@ LIBS := $(LIBS) $(HYPRE_LIBRARY)
 endif
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
-

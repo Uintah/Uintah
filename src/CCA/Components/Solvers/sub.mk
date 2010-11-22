@@ -40,7 +40,8 @@ SRCS     += \
 	$(SRCDIR)/SolverFactory.cc
 
 ifeq ($(HAVE_HYPRE),yes)
-  SRCS += $(SRCDIR)/HypreSolver.cc 
+  SRCS += $(SRCDIR)/HypreSolver.cc
+  
   SUBDIRS := $(SRCDIR)/AMR
   
   include $(SCIRUN_SCRIPTS)/recurse.mk
