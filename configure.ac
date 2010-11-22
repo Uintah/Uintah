@@ -3210,140 +3210,147 @@ if test -z "$PETSC_ARCH"; then
    AC_MSG_ERROR(PETSC_ARCH environment var is not set.  Please set.)
 fi
 
-# Make sure we have either mpi or mpi-uni, blas, and lapack
-# It seems that under AIX and OSF, the libs that cover blas also cover lapack
-if (test "$HAVE_MPI" = "yes" || test "$HAVE_MPI_UNI" = "yes") && test "$HAVE_BLAS" = "yes" && 
-   (test "$PETSC_ARCH" = "aix5.1.0.0" || test "$PETSC_ARCH" = "dec" ||
-    test "$HAVE_LAPACK" = "yes"); then
+# Handle --without option
 
-  _sci_lib_dir=
-  _sci_inc=
+if test "$with_petsc" == "no"; then
+  AC_MSG_WARN( "PETSc disabled." )
+else  
 
-  for petsc_arch in "$PETSC_ARCH" linux-gnu linux-gnu-c-opt; do
-    if test "$HAVE_PETSC" = "yes"; then
-      break
-    fi
+  # Make sure we have either mpi or mpi-uni, blas, and lapack
+  # It seems that under AIX and OSF, the libs that cover blas also cover lapack
+  if (test "$HAVE_MPI" = "yes" || test "$HAVE_MPI_UNI" = "yes") && test "$HAVE_BLAS" = "yes" && 
+     (test "$PETSC_ARCH" = "aix5.1.0.0" || test "$PETSC_ARCH" = "dec" ||
+      test "$HAVE_LAPACK" = "yes"); then
 
-    PETSC_SUB=lib/libO
+    _sci_lib_dir=
+    _sci_inc=
 
-    if test "$with_petsc"; then
-
-      ####################################################
-      # The newer (2.3+) versions of petsc don't use the libO anymore...
-      have23=`echo "$with_petsc" | grep "2.3."`
-      if test -z "$have23" ; then
-         petsc_version_major=`grep PETSC_VERSION_MAJOR $with_petsc/include/petscversion.h | grep define | awk '{print $3}'`
-         petsc_version_minor=`grep PETSC_VERSION_MINOR $with_petsc/include/petscversion.h | grep define | awk '{print $3}'`
-         if test "$petsc_version_major" -eq 2 ; then
-            if test "$petsc_version_minor" -eq 3 ; then
-               have23=true
-            fi
-         fi
+    for petsc_arch in "$PETSC_ARCH" linux-gnu linux-gnu-c-opt; do
+      if test "$HAVE_PETSC" = "yes"; then
+        break
       fi
-      if test "$have23"; then
-         PETSC_SUB=lib
+
+      PETSC_SUB=lib/libO
+
+      if test "$with_petsc"; then
+
+        ####################################################
+        # The newer (2.3+) versions of petsc don't use the libO anymore...
+        have23=`echo "$with_petsc" | grep "2.3."`
+        if test -z "$have23" ; then
+           petsc_version_major=`grep PETSC_VERSION_MAJOR $with_petsc/include/petscversion.h | grep define | awk '{print $3}'`
+           petsc_version_minor=`grep PETSC_VERSION_MINOR $with_petsc/include/petscversion.h | grep define | awk '{print $3}'`
+           if test "$petsc_version_major" -eq 2 ; then
+              if test "$petsc_version_minor" -eq 3 ; then
+                 have23=true
+              fi
+           fi
+        fi
+        if test "$have23"; then
+           PETSC_SUB=lib
+        fi
+        ####################################################
+
+        _sci_lib_dir="$with_petsc/$PETSC_SUB/$petsc_arch"
+        _sci_inc="$with_petsc/bmake/$petsc_arch $with_petsc/include"
+      else
+        # Modify _sci_dirs to have correct path information:
+        for i in $sci_thirdparty_dir; do
+          if test ! -d "$i"; then
+            continue
+          fi
+
+          #this is where the lib actually lives
+          if test ! -d "$i/$PETSC_VERSION_DIR/$PETSC_SUB/$petsc_arch"; then
+            continue
+          fi
+
+          _sci_lib_dir="$_sci_lib_dir $i/$PETSC_VERSION_DIR/$PETSC_SUB/$petsc_arch"
+          _sci_inc="$_sci_inc $i/$PETSC_VERSION_DIR/include $i/$PETSC_VERSION_DIR/bmake/$petsc_arch"
+        done  
       fi
-      ####################################################
 
-      _sci_lib_dir="$with_petsc/$PETSC_SUB/$petsc_arch"
-      _sci_inc="$with_petsc/bmake/$petsc_arch $with_petsc/include"
-    else
-      # Modify _sci_dirs to have correct path information:
-      for i in $sci_thirdparty_dir; do
-        if test ! -d "$i"; then
-          continue
-        fi
-  
-        #this is where the lib actually lives
-        if test ! -d "$i/$PETSC_VERSION_DIR/$PETSC_SUB/$petsc_arch"; then
-          continue
-        fi
-  
-        _sci_lib_dir="$_sci_lib_dir $i/$PETSC_VERSION_DIR/$PETSC_SUB/$petsc_arch"
-        _sci_inc="$_sci_inc $i/$PETSC_VERSION_DIR/include $i/$PETSC_VERSION_DIR/bmake/$petsc_arch"
-      done  
-    fi
+      # For Petsc 2.2 use this line below:   petsc petscvec petscmat petscdm petscsnes petscts petscksp $LAPACK_LIB_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $MPI_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG $DL_LIB_FLAG,
+      # Use -DMPIPP_H so we don't include mpi++.h where we don't want it.
 
-    # For Petsc 2.2 use this line below:   petsc petscvec petscmat petscdm petscsnes petscts petscksp $LAPACK_LIB_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $MPI_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG $DL_LIB_FLAG,
-    # Use -DMPIPP_H so we don't include mpi++.h where we don't want it.
-
-    SCI_TRY_LINK(PETSC,
-                 petsc libraries and headers (petsc_arch = $petsc_arch),
-                 petsc.h,
-                 $_sci_inc /usr/include/petsc,
-                 petsc petscvec petscmat petscdm petscsnes petscts petscksp,
-                 $_sci_lib_dir,
-                 $INC_MPI_H -DMPIPP_H $LAPACK_LIB_DIR_FLAG $LAPACK_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $MALLOC_TRACE_LIB_DIR_FLAG $MALLOC_TRACE_LIB_FLAG $M_LIB_FLAG $MPI_LIB_DIR_FLAG $MPI_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG $DL_LIB_FLAG $THREAD_LIB_FLAG,
-                 ,
-                 optional)
-
-    if test "$HAVE_PETSC" = "yes" ; then
-      DEF_PETSC="#define HAVE_PETSC 1"
-    fi    
-  done  
-  if test "$with_petsc" && test ! "$DEF_PETSC"; then
-    echo
-    AC_MSG_ERROR(One or more of the PETSc components is missing.)
-    echo
-  fi
-
-  #  --  search for uni-petsc  --------------------------------------------
-
-  if test "$HAVE_PETSC" != "yes" ; then
-
-    # Only check for uni petsc if petsc not found.
-    _sci_lib=""
-    _sci_inc=""
-
-    if test "$with_unipetsc"; then
-      _sci_lib="$with_unipetsc/$PETSC_SUB/$PETSC_ARCH"
-      _sci_inc="$with_unipetsc/bmake/$PETSC_ARCH $with_unipetsc/include"
-    fi
-
-    # For petsc 2.2 use this line below:  petsc petscvec petscmat petscdm petscsnes petscts petscksp,
-    # Use -DMPIPP_H so we don't include mpi++.h where we don't want it.
-    SCI_TRY_LINK(PETSC_UNI,
-                 petsc-uni libraries and headers,
-                 petsc.h,
-                 $_sci_inc /usr/include/petsc,
-                 petsc petscvec petscmat petscdm petscsnes petscts petscksp,
-                 $_sci_lib,
-                 $LAPACK_LIB_DIR_FLAG $LAPACK_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $INC_MPI_UNI_H $MPI_UNI_LIB_DIR_FLAG $MPI_UNI_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG -DMPIPP_H,
-                 ,
-                 optional)
-
-    if test "$HAVE_PETSC_UNI" = "yes" ; then
-      DEF_PETSC_UNI="#define PETSC_UNI 1"
-    else
-      # Give it a shot on the old petsc-uni version
-      SCI_TRY_LINK(PETSC_UNI,
-                   petsc libraries and headers - old2,
+      SCI_TRY_LINK(PETSC,
+                   petsc libraries and headers (petsc_arch = $petsc_arch),
                    petsc.h,
                    $_sci_inc /usr/include/petsc,
-                   petsc petscvec petscmat petscdm petscsnes petscts,
+                   petsc petscvec petscmat petscdm petscsnes petscts petscksp,
+                   $_sci_lib_dir,
+                   $INC_MPI_H -DMPIPP_H $LAPACK_LIB_DIR_FLAG $LAPACK_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $MALLOC_TRACE_LIB_DIR_FLAG $MALLOC_TRACE_LIB_FLAG $M_LIB_FLAG $MPI_LIB_DIR_FLAG $MPI_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG $DL_LIB_FLAG $THREAD_LIB_FLAG,
+                   ,
+                   optional)
+
+      if test "$HAVE_PETSC" = "yes" ; then
+        DEF_PETSC="#define HAVE_PETSC 1"
+      fi    
+    done  
+    if test "$with_petsc" && test ! "$DEF_PETSC"; then
+      echo
+      AC_MSG_ERROR(One or more of the PETSc components is missing.)
+      echo
+    fi
+
+    #  --  search for uni-petsc  --------------------------------------------
+
+    if test "$HAVE_PETSC" != "yes" ; then
+
+      # Only check for uni petsc if petsc not found.
+      _sci_lib=""
+      _sci_inc=""
+
+      if test "$with_unipetsc"; then
+        _sci_lib="$with_unipetsc/$PETSC_SUB/$PETSC_ARCH"
+        _sci_inc="$with_unipetsc/bmake/$PETSC_ARCH $with_unipetsc/include"
+      fi
+
+      # For petsc 2.2 use this line below:  petsc petscvec petscmat petscdm petscsnes petscts petscksp,
+      # Use -DMPIPP_H so we don't include mpi++.h where we don't want it.
+      SCI_TRY_LINK(PETSC_UNI,
+                   petsc-uni libraries and headers,
+                   petsc.h,
+                   $_sci_inc /usr/include/petsc,
+                   petsc petscvec petscmat petscdm petscsnes petscts petscksp,
                    $_sci_lib,
                    $LAPACK_LIB_DIR_FLAG $LAPACK_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $INC_MPI_UNI_H $MPI_UNI_LIB_DIR_FLAG $MPI_UNI_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG -DMPIPP_H,
                    ,
                    optional)
+
       if test "$HAVE_PETSC_UNI" = "yes" ; then
         DEF_PETSC_UNI="#define PETSC_UNI 1"
-      fi  
+      else
+        # Give it a shot on the old petsc-uni version
+        SCI_TRY_LINK(PETSC_UNI,
+                     petsc libraries and headers - old2,
+                     petsc.h,
+                     $_sci_inc /usr/include/petsc,
+                     petsc petscvec petscmat petscdm petscsnes petscts,
+                     $_sci_lib,
+                     $LAPACK_LIB_DIR_FLAG $LAPACK_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $INC_MPI_UNI_H $MPI_UNI_LIB_DIR_FLAG $MPI_UNI_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG -DMPIPP_H,
+                     ,
+                     optional)
+        if test "$HAVE_PETSC_UNI" = "yes" ; then
+          DEF_PETSC_UNI="#define PETSC_UNI 1"
+        fi  
+      fi
+
+      if test "$with_unipetsc" && test ! "$DEF_PETSC_UNI"; then
+        echo
+        AC_MSG_ERROR(One or more of the UNI-PETSC components is missing.)
+        echo
+      fi
     fi
 
-    if test "$with_unipetsc" && test ! "$DEF_PETSC_UNI"; then
-      echo
-      AC_MSG_ERROR(One or more of the UNI-PETSC components is missing.)
-      echo
-    fi
+  else
+    AC_MSG_WARN(One or more of MPI or BLAS or LAPACK is missing.)
+    AC_MSG_WARN(HAVE_MPI: $HAVE_MPI)
+    AC_MSG_WARN(HAVE_MPI_UNI: $HAVE_MPI_UNI)
+    AC_MSG_WARN(HAVE_BLAS: $HAVE_BLAS)
+    AC_MSG_WARN(HAVE_LAPACK: $HAVE_LAPACK)
+    AC_MSG_WARN(Not configuring PETSc.)
   fi
-
-else
-  AC_MSG_WARN(One or more of MPI or BLAS or LAPACK is missing.)
-  AC_MSG_WARN(HAVE_MPI: $HAVE_MPI)
-  AC_MSG_WARN(HAVE_MPI_UNI: $HAVE_MPI_UNI)
-  AC_MSG_WARN(HAVE_BLAS: $HAVE_BLAS)
-  AC_MSG_WARN(HAVE_LAPACK: $HAVE_LAPACK)
-  AC_MSG_WARN(Not configuring PETSc.)
 fi
 
 AC_SUBST(HAVE_PETSC)
@@ -3822,39 +3829,44 @@ _sci_lib=
 _sci_inc=
 _sci_optional=optional
 
-if test "$with_hypre" = "yes"; then
-  _sci_optional=required
-elif test "$with_hypre"; then
-  _sci_lib="$with_hypre/lib"
-  _sci_inc="$with_hypre/include"
-  _sci_optional=specific
-fi
+# Handle --without option
+if test "$with_hypre" = "no"; then
+   AC_MSG_WARN( "Hypre is turned off." )
+else
+   if test "$with_hypre" = "yes"; then
+      _sci_optional=required
+   elif test "$with_hypre"; then
+      _sci_lib="$with_hypre/lib"
+      _sci_inc="$with_hypre/include"
+      _sci_optional=specific
+   fi
 
-# # We used to also check for HYPRE_blas, but hypre 1.9 doesn't have it,
-# # so we aren't going to check for it in any version.  If the other 3
-# # libs exist, we will assume that HYPRE_blas is there if it is needed.
-# SCI_TRY_LINK(HYPRE,HYPRE libraries and headers,HYPRE.h,$_sci_inc,
-#                          HYPRE_struct_mv HYPRE_struct_ls HYPRE_sstruct_mv HYPRE_sstruct_ls HYPRE_LSI HYPRE_superlu HYPRE_utilities,
-#                          $_sci_lib,-lm,,$_sci_optional)
+   # # We used to also check for HYPRE_blas, but hypre 1.9 doesn't have it,
+   # # so we aren't going to check for it in any version.  If the other 3
+   # # libs exist, we will assume that HYPRE_blas is there if it is needed.
+   # SCI_TRY_LINK(HYPRE,HYPRE libraries and headers,HYPRE.h,$_sci_inc,
+   #                          HYPRE_struct_mv HYPRE_struct_ls HYPRE_sstruct_mv HYPRE_sstruct_ls HYPRE_LSI HYPRE_superlu HYPRE_utilities,
+   #                          $_sci_lib,-lm,,$_sci_optional)
 
-# We should just be able to link vs. libHYPRE.so...
-#   Also, libHYPRE has some C++ stuff in it, so we need to be in C++ mode...
-AC_LANG([C++])
-SCI_TRY_LINK(HYPRE,HYPRE libraries and headers,HYPRE.h,$_sci_inc,
-                         HYPRE,
-                         $_sci_lib,
-                         $MPI_LIB_DIR_FLAG $MPI_LIB_FLAG $MALLOC_TRACE_LIB_DIR_FLAG $MALLOC_TRACE_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG $M_LIB_FLAG $DL_LIB_FLAG $THREAD_LIB_FLAG,
-                         ,
-                         $_sci_optional)
-AC_LANG([C])
+   # We should just be able to link vs. libHYPRE.so...
+   #   Also, libHYPRE has some C++ stuff in it, so we need to be in C++ mode...
+   AC_LANG([C++])
+   SCI_TRY_LINK(HYPRE,HYPRE libraries and headers,HYPRE.h,$_sci_inc,
+                            HYPRE,
+                            $_sci_lib,
+                            $MPI_LIB_DIR_FLAG $MPI_LIB_FLAG $MALLOC_TRACE_LIB_DIR_FLAG $MALLOC_TRACE_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG $M_LIB_FLAG $DL_LIB_FLAG $THREAD_LIB_FLAG,
+                            ,
+                            $_sci_optional)
+   AC_LANG([C])
 
-if test "$HAVE_HYPRE" = "yes" ; then
-  DEF_HYPRE="#define HAVE_HYPRE 1"
-fi
+   if test "$HAVE_HYPRE" = "yes" ; then
+      DEF_HYPRE="#define HAVE_HYPRE 1"
+   fi
 
-if test "$with_hypre" && test ! "$DEF_HYPRE"; then
-  echo
-  AC_MSG_ERROR(One or more of the HYPRE components is missing.)
+   if test "$with_hypre" && test ! "$DEF_HYPRE"; then
+      echo
+      AC_MSG_ERROR(One or more of the HYPRE components is missing.)
+   fi
 fi
 
 AC_SUBST(HAVE_HYPRE)
