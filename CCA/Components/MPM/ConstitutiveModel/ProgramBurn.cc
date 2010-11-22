@@ -92,6 +92,7 @@ ProgramBurn::ProgramBurn(const ProgramBurn* cm) : ConstitutiveModel(cm)
 
   d_initialData.d_A = cm->d_initialData.d_A;
   d_initialData.d_B = cm->d_initialData.d_B;
+  d_initialData.d_C = cm->d_initialData.d_C;
   d_initialData.d_R1 = cm->d_initialData.d_R1;
   d_initialData.d_R2 = cm->d_initialData.d_R2;
   d_initialData.d_om = cm->d_initialData.d_om;
@@ -126,6 +127,7 @@ void ProgramBurn::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
 
   cm_ps->appendElement("A",    d_initialData.d_A);
   cm_ps->appendElement("B",    d_initialData.d_B);
+  cm_ps->appendElement("C",    d_initialData.d_C);
   cm_ps->appendElement("R1",   d_initialData.d_R1);
   cm_ps->appendElement("R2",   d_initialData.d_R2);
   cm_ps->appendElement("om",   d_initialData.d_om);
@@ -314,13 +316,34 @@ void ProgramBurn::computeStressTensor(const PatchSubset* patches,
            << endl;
     }
 
+    double A_d=d_initialData.d_direction.x();
+    double B_d=d_initialData.d_direction.y();
+    double C_d=d_initialData.d_direction.z();
+
+    double x0=d_initialData.d_start_place.x();
+    double y0=d_initialData.d_start_place.y();
+    double z0=d_initialData.d_start_place.z();
+
+    double D_d = -A_d*x0 - B_d*y0 - C_d*z0;
+    double denom = 1.0;
+    double plane = 0.;
+
+    if(d_initialData.d_direction.length() > 0.0){
+      plane = 1.0;
+      denom = sqrt(A_d*A_d + B_d*B_d + C_d*C_d);
+    }
+
     for(ParticleSubset::iterator iter = pset->begin();
         iter != pset->end(); iter++){
       particleIndex idx = *iter;
 
-      double dist_straight = (px[idx] - d_initialData.d_start_place).length();
+      Point p = px[idx];
 
-      double dist = dist_straight;
+      double dist_plane = fabs(A_d*p.x() + B_d*p.y() + C_d*p.z() + D_d)/denom;
+
+      double dist_straight = (p - d_initialData.d_start_place).length();
+
+      double dist = dist_plane*plane + dist_straight*(1.-plane);
 
       double t_b = dist/d_initialData.d_D;
 
