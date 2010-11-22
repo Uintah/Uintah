@@ -68,6 +68,7 @@ run \
 "cmake \
  -DENABLE_TESTS=OFF \
  -DBoost_DIR=$BOOST_DIR \
+ -DBoostOutput=OFF \
  -DTabProps_PREPROCESSOR=OFF \
  -DHDF5_DIR=$HDF5_DIR \
  -DCMAKE_INSTALL_PREFIX=${INSTALL_HERE} \
