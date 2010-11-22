@@ -299,35 +299,35 @@ void DirectSolve::scheduleSolve(const LevelP& level, SchedulerP& sched,
     {
       DirectStencil7<SFCXTypes>* that = scinew DirectStencil7<SFCXTypes>(level.get_rep(), matls, A, which_A_dw, x, modifies_x, b, which_b_dw, dparams);
       Handle<DirectStencil7<SFCXTypes> > handle = that;
-      task = scinew Task("Matrix solve", that, &DirectStencil7<SFCXTypes>::solve, handle);
+      task = scinew Task("DirectSolve::Matrix solve (SFCX)", that, &DirectStencil7<SFCXTypes>::solve, handle);
     }
     break;
   case TypeDescription::SFCYVariable:
     {
       DirectStencil7<SFCYTypes>* that = scinew DirectStencil7<SFCYTypes>(level.get_rep(), matls, A, which_A_dw, x, modifies_x, b, which_b_dw, dparams);
       Handle<DirectStencil7<SFCYTypes> > handle = that;
-      task = scinew Task("Matrix solve", that, &DirectStencil7<SFCYTypes>::solve, handle);
+      task = scinew Task("DirectSolve::Matrix solve (SFCY)", that, &DirectStencil7<SFCYTypes>::solve, handle);
     }
     break;
   case TypeDescription::SFCZVariable:
     {
       DirectStencil7<SFCZTypes>* that = scinew DirectStencil7<SFCZTypes>(level.get_rep(), matls, A, which_A_dw, x, modifies_x, b, which_b_dw, dparams);
       Handle<DirectStencil7<SFCZTypes> > handle = that;
-      task = scinew Task("Matrix solve", that, &DirectStencil7<SFCZTypes>::solve, handle);
+      task = scinew Task("DirectSolve::Matrix solve (SFCZ)", that, &DirectStencil7<SFCZTypes>::solve, handle);
     }
     break;
   case TypeDescription::CCVariable:
     {
       DirectStencil7<CCTypes>* that = scinew DirectStencil7<CCTypes>(level.get_rep(), matls, A, which_A_dw, x, modifies_x, b, which_b_dw, dparams);
       Handle<DirectStencil7<CCTypes> > handle = that;
-      task = scinew Task("Matrix solve", that, &DirectStencil7<CCTypes>::solve, handle);
+      task = scinew Task("DirectSolve::Matrix solve (CC)", that, &DirectStencil7<CCTypes>::solve, handle);
     }
     break;
   case TypeDescription::NCVariable:
     {
       DirectStencil7<NCTypes>* that = scinew DirectStencil7<NCTypes>(level.get_rep(), matls, A, which_A_dw, x, modifies_x, b, which_b_dw, dparams);
       Handle<DirectStencil7<NCTypes> > handle = that;
-      task = scinew Task("Matrix solve", that, &DirectStencil7<NCTypes>::solve, handle);
+      task = scinew Task("DirectSolve::Matrix solve (NC)", that, &DirectStencil7<NCTypes>::solve, handle);
     }
     break;
   default:
