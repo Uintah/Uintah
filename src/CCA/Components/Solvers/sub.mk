@@ -68,7 +68,7 @@ PSELIBS := \
 LIBS := $(XML2_LIBRARY) $(MPI_LIBRARY) $(BLAS_LIBRARY) $(LAPACK_LIBRARY)
 
 ifeq ($(HAVE_HYPRE),yes)
-LIBS := $(LIBS) $(HYPRE_LIBRARY) 
+  LIBS := $(LIBS) $(HYPRE_LIBRARY) 
 endif
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
