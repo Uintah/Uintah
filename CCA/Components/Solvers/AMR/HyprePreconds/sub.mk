@@ -30,45 +30,11 @@
 # 
 # Makefile fragment for this subdirectory
 
-include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
+SRCDIR   := CCA/Components/Solvers/AMR/HyprePreconds
 
-SRCDIR   := CCA/Components/Solvers
-
-SRCS     += \
-	$(SRCDIR)/CGSolver.cc \
-	$(SRCDIR)/DirectSolve.cc \
-	$(SRCDIR)/SolverFactory.cc
-
-ifeq ($(HAVE_HYPRE),yes)
-  SRCS += $(SRCDIR)/HypreSolver.cc 
-  SUBDIRS := $(SRCDIR)/AMR
-  
-  include $(SCIRUN_SCRIPTS)/recurse.mk
-
-endif # if $(HAVE_HYPRE)
-
-PSELIBS := \
-	Core/Containers                  \
-	Core/Exceptions                  \
-	Core/Geometry                    \
-	Core/Thread                      \
-	Core/Util                        \
-	Core/Geometry                    \
-	CCA/Ports        \
-	Core/Exceptions  \
-	Core/Grid        \
-	Core/Util        \
-	Core/Disclosure  \
-	Core/Parallel    \
-	Core/ProblemSpec \
-	\
-	Core/Math
-
-LIBS := $(XML2_LIBRARY) $(MPI_LIBRARY) $(BLAS_LIBRARY) $(LAPACK_LIBRARY)
-
-ifeq ($(HAVE_HYPRE),yes)
-LIBS := $(LIBS) $(HYPRE_LIBRARY) 
-endif
-
-include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
-
+SRCS += $(SRCDIR)/HyprePrecondBase.cc \
+        $(SRCDIR)/HyprePrecondSMG.cc \
+        $(SRCDIR)/HyprePrecondPFMG.cc \
+        $(SRCDIR)/HyprePrecondSparseMSG.cc \
+        $(SRCDIR)/HyprePrecondJacobi.cc \
+        $(SRCDIR)/HyprePrecondDiagonal.cc
