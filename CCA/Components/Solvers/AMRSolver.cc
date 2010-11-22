@@ -162,7 +162,7 @@ AMRSolver::scheduleSolve(const LevelP& level, SchedulerP& sched,
                             Handle<HypreDriver>);
                             
   func = &HypreDriver::solve<CCTypes>;
-  task = scinew Task("Matrix solve CC", that, func, handle);
+  task = scinew Task("AMRSolver::Matrix solve CC", that, func, handle);
       
   //__________________________________
   // computes and requires for A, X and rhs
