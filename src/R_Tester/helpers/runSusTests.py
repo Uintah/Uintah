@@ -456,7 +456,7 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
   #__________________________________
   # Does mpirun command exist or has the environmental variable been set?
   MPIRUN = "mpirun"
-  rc = system("which mpirun")
+  rc = system("which mpirun>&/dev/null")
   
   if rc == 256:  # mpirun not found
     try:
