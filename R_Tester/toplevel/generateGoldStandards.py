@@ -113,6 +113,19 @@ def generateGS() :
         exit( 1 )
 
     validateArgs( options, leftover_args )
+    
+    #__________________________________
+    # Does mpirun command exist or has the environmental variable been set?
+    MPIRUN = "mpirun"
+    rc = os.system("which mpirun>&/dev/null")
+
+    if rc == 256:  # mpirun not found
+      try:
+        MPIRUN = os.environ['MPIRUN']
+      except Exception:
+        print "ERROR:generateGoldStandards.py  mpirun command not found."
+        print "Please set the environmental variable MPIRUN or add mpirun to your path"
+        exit (1)
 
     if options.verbose :
         print "Building Gold Standards in " + os.getcwd()
@@ -239,7 +252,7 @@ def generateGS() :
             mpirun = ""
             if np > 1.0 :
                 np = int( np )
-                mpirun = "mpirun -np %s  " % np
+                mpirun = "%s -np %s  " % (MPIRUN,np)
 
                 command = mpirun + sus + " -svnStat -svnDiff " + inputs + "/" + component + "/" + input( test )  + " >> sus_log.txt " 
             else :
