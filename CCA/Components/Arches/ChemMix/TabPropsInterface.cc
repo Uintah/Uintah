@@ -405,9 +405,6 @@ TabPropsInterface::getState( const ProcessorGroup* pc,
 
       IntVector c = *iter; 
 
-      if ( c == IntVector( 0,8,8 ) )
-        cout << " IN TABPROPS " << endl;
-
       // fill independent variables
       std::vector<double> iv; 
       for ( std::vector<constCCVariable<double> >::iterator i = indep_storage.begin(); i != indep_storage.end(); ++i ) {
@@ -995,6 +992,13 @@ TabPropsInterface::getSplineInfo()
   for ( MixingRxnModel::VarMap::iterator i = d_dvVarMap.begin(); i != d_dvVarMap.end(); ++i ) {
 
     const BSpline* spline = d_statetbl.find_entry( i->first ); 
+
+    if ( spline == NULL ) {
+      ostringstream exception; 
+      exception << "Error: could not find spline information for variable " << i->first << " \n" << 
+        "Please check your dependent variable list and match it to your requested variables. " << endl;
+      throw InternalError(exception.str(), __FILE__, __LINE__); 
+    }
 
     insertIntoSplineMap( i->first, spline ); 
 
