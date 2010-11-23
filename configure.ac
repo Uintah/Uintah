@@ -2128,7 +2128,7 @@ if test -e $_sci_lib/../bin/xml2-config; then
     found_xml2_config="yes"
     AC_MSG_WARN(Using $_sci_lib/../bin/xml2-config to set libxml2 variables.)
 
-    if test "$IS_STATIC_BUILD" = "yes"; then
+    if test "$IS_STATIC_BUILD" = "yes" -a "$IS_OSX" != "yes"; then
        STATIC_FLAG=--static
     fi
 
@@ -3608,11 +3608,12 @@ if test "$with_boost"; then
     done
     # Check for libraries files
     BOOST_LIB_DIR=$with_boost/lib
-    for file in libboost_thread-mt.a libboost_signals-mt.a; do
-      if test ! -f $BOOST_LIB_DIR/$file; then
+    for file in libboost_thread-mt libboost_signals-mt libboost_serialization; do
+      EXT=$SO_OR_ARCHIVE_EXTENSION
+      if test ! -f $BOOST_LIB_DIR/$file.$EXT; then
         echo ""
-        AC_MSG_WARN( $file lib does not exist... looking for non-mt version...)
-        short_name="`echo $file | cut -f1 -d"-"`.a"
+        AC_MSG_WARN( $file.$EXT lib does not exist... looking for non-mt version...)
+        short_name="`echo $file | cut -f1 -d"-"`.$EXT"
         if test ! -f $BOOST_LIB_DIR/$short_name; then
             AC_MSG_ERROR( $BOOST_LIB_DIR/$short_name lib does not exist!)
         else
