@@ -452,11 +452,23 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
     blah = environ['HTMLLOG']
   except Exception:
     output_to_browser=0
-
-  # set the command name for mpirun - differs on different platforms
-  MPIHEAD="mpirun -np"
+  
+  #__________________________________
+  # Does mpirun command exist or has the environmental variable been set?
+  MPIRUN = "mpirun"
+  rc = system("which mpirun")
+  
+  if rc == 256:  # mpirun not found
+    try:
+      MPIRUN = environ['MPIRUN']
+    except Exception:
+      print "ERROR:runSusTests.py  mpirun command not found."
+      print "Please set the environmental variable MPIRUN or add mpirun to your path"
+      exit (1)
+      
+  MPIHEAD="%s -np" % MPIRUN
   if environ['OS'] == "Linux":
-    MPIHEAD="mpirun -x MALLOC_STATS -x SCI_SIGNALMODE -np" 
+    MPIHEAD="%s -x MALLOC_STATS -x SCI_SIGNALMODE -np" % MPIRUN 
 
   # set where to view the log files
   logpath = environ['WEBLOG']
