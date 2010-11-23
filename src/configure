@@ -16759,7 +16759,7 @@ if test -e $_sci_lib/../bin/xml2-config; then
     { echo "$as_me:$LINENO: WARNING: Using $_sci_lib/../bin/xml2-config to set libxml2 variables." >&5
 echo "$as_me: WARNING: Using $_sci_lib/../bin/xml2-config to set libxml2 variables." >&2;}
 
-    if test "$IS_STATIC_BUILD" = "yes"; then
+    if test "$IS_STATIC_BUILD" = "yes" -a "$IS_OSX" != "yes"; then
        STATIC_FLAG=--static
     fi
 
@@ -45138,12 +45138,13 @@ echo "$as_me: error: '$BOOST_INCLUDE_DIR/$file' does not exist. " >&2;}
     done
     # Check for libraries files
     BOOST_LIB_DIR=$with_boost/lib
-    for file in libboost_thread-mt.a libboost_signals-mt.a; do
-      if test ! -f $BOOST_LIB_DIR/$file; then
+    for file in libboost_thread-mt libboost_signals-mt libboost_serialization; do
+      EXT=$SO_OR_ARCHIVE_EXTENSION
+      if test ! -f $BOOST_LIB_DIR/$file.$EXT; then
         echo ""
-        { echo "$as_me:$LINENO: WARNING: $file lib does not exist... looking for non-mt version..." >&5
-echo "$as_me: WARNING: $file lib does not exist... looking for non-mt version..." >&2;}
-        short_name="`echo $file | cut -f1 -d"-"`.a"
+        { echo "$as_me:$LINENO: WARNING: $file.$EXT lib does not exist... looking for non-mt version..." >&5
+echo "$as_me: WARNING: $file.$EXT lib does not exist... looking for non-mt version..." >&2;}
+        short_name="`echo $file | cut -f1 -d"-"`.$EXT"
         if test ! -f $BOOST_LIB_DIR/$short_name; then
             { { echo "$as_me:$LINENO: error: $BOOST_LIB_DIR/$short_name lib does not exist!" >&5
 echo "$as_me: error: $BOOST_LIB_DIR/$short_name lib does not exist!" >&2;}
