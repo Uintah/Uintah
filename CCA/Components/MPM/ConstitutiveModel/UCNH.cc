@@ -1167,7 +1167,8 @@ void UCNH::computeStressTensor(const PatchSubset* patches,
         computeAxiSymVelocityGradient(velGrad_new,ni,d_S,S,oodx,gVelocity,
                                                                  px[idx]);
       }
-      pDefGrad_new[idx] = (velGrad_new*delT + Identity)*pDefGrad[idx]; 
+      pDefGradInc = (velGrad_new*delT + Identity);
+      pDefGrad_new[idx] = pDefGradInc*pDefGrad[idx]; 
       velGrad[idx] = velGrad_new;
     }
       
@@ -1223,9 +1224,12 @@ void UCNH::computeStressTensor(const PatchSubset* patches,
         // Change F such that the determinant is equal to the average for
         // the cell
         pDefGrad_new[idx]*=cbrt(J_CC[cell_index])/cbrt(J);
+        pDefGradInc = pDefGrad_new[idx]*pDefGrad[idx].Inverse();
       }
-      
-      pDefGradInc = pDefGrad_new[idx]*pDefGrad[idx].Inverse();
+      else{
+        pDefGradInc = (velGrad[idx]*delT + Identity);
+      }
+
       Jinc    = pDefGradInc.Determinant();
       defGrad = pDefGrad_new[idx];
 
