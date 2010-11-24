@@ -78,7 +78,7 @@ static DebugStream cout_CST("HEP",false);
 static DebugStream cout_CST1("HEP1",false);
 static DebugStream CSTi("HEPi",false);
 static DebugStream CSTir("HEPir",false);
-
+static DebugStream cout_visco("ViscoPlastic", false);
 
 ViscoPlastic::ViscoPlastic(ProblemSpecP& ps, MPMFlags* Mflag) :
   ConstitutiveModel(Mflag), ImplicitCM()
@@ -362,6 +362,7 @@ ViscoPlastic::addInitialComputesAndRequires(Task* task,
   task->computes(pPlasticTempLabel, matlset);
   task->computes(pPlasticTempIncLabel, matlset);
   task->computes(pFailureVariableLabel, matlset);
+  task->computes(lb->TotalLocalizedParticleLabel);
 
   // Add internal evolution variables computed by plasticity model
   d_plastic->addInitialComputesAndRequires(task, matl, patch);
@@ -525,7 +526,7 @@ ViscoPlastic::addComputesAndRequires(Task* task,
   task->computes(pPlasticTempLabel_preReloc,    matlset);
   task->computes(pPlasticTempIncLabel_preReloc, matlset);
   task->computes(pFailureVariableLabel_preReloc, matlset);
-
+  task->computes(lb->TotalLocalizedParticleLabel);
   // Add internal evolution variables computed by plasticity model
   d_plastic->addComputesAndRequires(task, matl, patches);
 
@@ -595,6 +596,7 @@ ViscoPlastic::computeStressTensor(const PatchSubset* patches,
     double oodx[3] = {1./dx.x(), 1./dx.y(), 1./dx.z()};
     //double dx_ave = (dx.x() + dx.y() + dx.z())/3.0;
 
+    long64 totalLocalizedParticle = 0;
     // Get the set of particles
     int dwi = matl->getDWIndex();
 
@@ -816,6 +818,7 @@ ViscoPlastic::computeStressTensor(const PatchSubset* patches,
 //         pDamage_new[idx] = pDamage[idx];
 //         pPorosity_new[idx] = pPorosity[idx];
         pLocalized_new[idx] = pLocalized[idx];
+        if (pLocalized_new[idx]==1) totalLocalizedParticle+=1;
         pFailureVariable_new[idx] = pFailureVariable[idx];
         pPlasticTemperature_new[idx] = pPlasticTemperature[idx];
         pPlasticTempInc_new[idx] = 0.0;
@@ -903,7 +906,7 @@ ViscoPlastic::computeStressTensor(const PatchSubset* patches,
 
       //already localized; copy the old values to new
       if (pLocalized[idx]==1) {
-
+         totalLocalizedParticle+=1;
          if (d_setStressToZero) {
              pStress_new[idx] = zero;
          } else if (d_allowNoTension) {
@@ -961,7 +964,7 @@ ViscoPlastic::computeStressTensor(const PatchSubset* patches,
         // Compute stability criterion
         pLocalized_new[idx] = pLocalized[idx];
         pFailureVariable_new[idx] = pFailureVariable[idx];
-      
+        if (pLocalized_new[idx]==1) totalLocalizedParticle+=1;  
       // plastic
       } else {
 
@@ -1006,7 +1009,7 @@ ViscoPlastic::computeStressTensor(const PatchSubset* patches,
              pFailureVariable[idx], pLocalized[idx], pLocalized_new[idx], 
              tensorSig, pParticleID[idx], temp_new, Tm_cur);
         }
-
+        if (pLocalized_new[idx]==1) totalLocalizedParticle+=1;
           // Rotate the stress back to the laboratory coordinates
           // Save the new data
           tensorSig = (tensorR*tensorSig)*(tensorR.Transpose());
@@ -1033,7 +1036,14 @@ ViscoPlastic::computeStressTensor(const PatchSubset* patches,
                                      tensorD(1,2)*avgStress(1,2)))*
           pVolume_deformed[idx]*delT;
         totalStrainEnergy += pStrainEnergy;
-      }            
+      }  //else {          
+      //   totalLocalizedParticle+=1;
+      //}
+
+      if (cout_visco.active()) {
+	cout_visco << " totalLocalizedParticle = " << totalLocalizedParticle
+	           << " pLocalized_new[idx] = " << pLocalized_new[idx] <<endl;
+      }
 
       // Compute wave speed at each particle, store the maximum
       Vector pVel = pVelocity[idx];
@@ -1052,6 +1062,10 @@ ViscoPlastic::computeStressTensor(const PatchSubset* patches,
         flag->d_reductionVars->strainEnergy) {
       new_dw->put(sum_vartype(totalStrainEnergy), lb->StrainEnergyLabel);
     }
+
+     new_dw->put(sumlong_vartype(totalLocalizedParticle),
+          lb->TotalLocalizedParticleLabel);
+
     delete interpolator;
   } //end patch
 
@@ -3107,10 +3121,11 @@ if (!d_varf.failureByStress) {  //failure by strain only
   ee = (Identity - bb.Inverse())*0.5;    
 }
 
+  double maxEigen=0.0, medEigen=0.0, minEigen=0.0;
   if (d_varf.failureByStress) {
-      pStress_new.eigen(eigval, eigvec);  //principal stress
-  } else if (!d_varf.failureByPressure) { //failure by strain
-      ee.eigen(eigval, eigvec);          //principal strain 
+      pStress_new.getEigenValues(maxEigen,medEigen,minEigen); //principal stress
+  } else if (!d_varf.failureByPressure) { //failure by strain 
+      ee.getEigenValues(maxEigen,medEigen,minEigen);;          //principal strain 
   }
 
 double epsMax;
@@ -3119,7 +3134,7 @@ double epsMax;
   if (d_varf.failureByPressure) {
       epsMax = pressure;
   } else {
-    epsMax = Max(eigval[0], eigval[2]); //max principal stress or strain
+    epsMax = maxEigen; //max principal stress or strain
   }
 
 //  cout << "e0= " << eigval[0] << ", e2=" << eigval[2] << endl;
