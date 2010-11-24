@@ -1225,15 +1225,10 @@ void UCNH::computeStressTensor(const PatchSubset* patches,
         pDefGrad_new[idx]*=cbrt(J_CC[cell_index])/cbrt(J);
       }
       
-      // 1) Compute the deformation gradient increment using the time_step
-      //    velocity gradient (F_n^np1 = dudx * dt + Identity)
-      // 2) Update the deformation gradient tensor to its time n+1 value.
-      pDefGradInc = velGrad[idx]*delT + Identity;
+      pDefGradInc = pDefGrad_new[idx]*pDefGrad[idx].Inverse();
       Jinc    = pDefGradInc.Determinant();
-      defGrad = pDefGradInc*pDefGrad[idx];
+      defGrad = pDefGrad_new[idx];
 
-      pDefGrad_new[idx] = defGrad;
-      
       // 1) Get the volumetric part of the deformation
       // 2) Compute the deformed volume and new density
       J               = defGrad.Determinant();
